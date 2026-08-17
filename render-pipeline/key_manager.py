@@ -32,9 +32,14 @@ def model_for(tier: str) -> str:
 
 
 def write_story(channel: str, keys: list[dict], seed: str,
-                vtype: str = "short", tier: str = "normal", on_limit=None) -> dict:
+                vtype: str = "short", tier: str = "normal", on_limit=None, on_ok=None) -> dict:
     """Viết 1 data-story cho kênh: bám key sticky, đổi key khi limit, hạ model nếu cần.
-    on_limit(key_id): callback khi 1 key bị rate-limit -> tầng trên cho key NGHỈ (cool_key) chống die."""
+    on_limit(key_id): key bị rate-limit -> cho NGHỈ. on_ok(key_id): key viết OK -> đánh dấu SỐNG (khỏi health-check riêng)."""
+    def _ok(k, r):
+        if on_ok and k.get("id"):
+            try: on_ok(k["id"])
+            except Exception: pass
+        return r
     if not keys:
         raise SystemExit("❌ Chưa có Gemini key nào — thêm ở tab 🎬 Render Studio.")
     order = key_order(channel, keys)
@@ -46,7 +51,7 @@ def write_story(channel: str, keys: list[dict], seed: str,
             time.sleep(1.5)                       # nhịp nhẹ giữa các key -> không burst -> không bị coi là spam
         try:
             print(f"   🔑 kênh {channel} dùng key [{tag}] · model {model}")
-            return CB.generate(seed, vtype, api_key=k["key"], model_name=model)
+            return _ok(k, CB.generate(seed, vtype, api_key=k["key"], model_name=model))
         except CB.RateLimited:
             tried.append(tag)
             if on_limit and k.get("id"):
@@ -58,7 +63,7 @@ def write_story(channel: str, keys: list[dict], seed: str,
                 model = "gemini-2.5-flash"
                 print(f"   ↓ model cao không có cho [{tag}] → hạ {model}")
                 try:
-                    return CB.generate(seed, vtype, api_key=k["key"], model_name=model)
+                    return _ok(k, CB.generate(seed, vtype, api_key=k["key"], model_name=model))
                 except CB.RateLimited:
                     tried.append(tag)
                     if on_limit and k.get("id"):

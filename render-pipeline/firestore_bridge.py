@@ -35,7 +35,8 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         cooling = x.get("cooling_until", "")
         if cooling and cooling > now and not include_cooling:
             continue                                  # đang nghỉ -> bỏ qua vòng này
-        out.append({"id": d.id, "key": x["key"], "email": x.get("email", "")})
+        out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
+                    "last_checked": x.get("last_checked", ""), "alive": x.get("alive")})
     return out
 
 

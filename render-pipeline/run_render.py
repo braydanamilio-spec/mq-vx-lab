@@ -70,6 +70,12 @@ def run_one(ch, keys, n_shorts=3, report=None):
     Đọc ch['make_long'] (mặc định True) và ch['n_shorts'] (mặc định 3) do dashboard đặt."""
     channel = ch.get("name"); tier = ch.get("tier", "normal"); niche = ch.get("niche") or channel
     cool = lambda kid: FB.cool_key(kid)
+    _marked = set()   # key viết OK lúc dùng thật -> đánh dấu SỐNG 1 lần/run (khỏi health-check riêng, đỡ tốn)
+    def okcb(kid):
+        if kid and kid not in _marked:
+            _marked.add(kid)
+            try: FB.mark_key_alive(kid, True, "ok (dùng thật)")
+            except Exception: pass
     R = report if report is not None else {"done": 0, "fails": []}
     os.makedirs("out", exist_ok=True)
     do_long = ch.get("make_long", True)
@@ -94,7 +100,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 if attempt > 1:
                     lst("running", f"🔧 Tự thử lại nhẹ hơn ({nr} race)…")
                 _, plan, subtopics, ok, info = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
-                                                            on_status=lst, on_limit=cool, avoid=avoid, n_races=nr)
+                                                            on_status=lst, on_limit=cool, avoid=avoid, n_races=nr, on_ok=okcb)
                 last_err = None; break
             except Exception as e:
                 last_err = e; traceback.print_exc()
@@ -136,7 +142,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 sout = os.path.join("out", DS.slug(channel) + f"_short{i}.mp4")
                 if satt > 1:
                     sst("running", "🔧 Tự thử lại short…")
-                _, story, sok, sinfo = DS.make_video(channel, sub, "short", sout, keys=keys, tier=tier, on_status=sst, on_limit=cool)
+                _, story, sok, sinfo = DS.make_video(channel, sub, "short", sout, keys=keys, tier=tier, on_status=sst, on_limit=cool, on_ok=okcb)
                 serr = None; break
             except Exception as e:
                 serr = e; traceback.print_exc(); print(f"   🔧 SHORT {channel}#{i} lỗi lần {satt}: {str(e)[:100]}")
@@ -158,7 +164,7 @@ def main():
         raise SystemExit("❌ Thiếu OWNER_UID (uid chủ — set ở workflow).")
     cfg = FB.read_config(OWNER)
     # NHỊP 30': chỉ chạy khi có lệnh "Render ngay" (run_now) HOẶC đúng giờ mẻ đêm (18h UTC).
-    from datetime import datetime, timezone
+    from datetime import datetime, timezone, timedelta
     event = os.environ.get("GITHUB_EVENT_NAME", "")
     run_now = bool(cfg.get("run_now"))
     is_nightly = datetime.now(timezone.utc).hour == 18
@@ -172,10 +178,14 @@ def main():
     keys = FB.read_keys(OWNER)
     if not keys:
         raise SystemExit("❌ Chưa có Gemini key — thêm ở tab 🎬 Render Studio.")
-    # HEALTH CHECK (1 lần/ngày ở đầu cron): test mọi key -> mark 🟢/🔴 + gom key CHẾT
+    # HEALTH CHECK — TIẾT KIỆM: mỗi key tối đa 1 lần/~20h (tránh spam list_models -> limit + tốn quota).
+    # Key nào đã check trong 20h (kể cả tự-đánh-dấu-sống lúc VIẾT thật) -> BỎ QUA.
     import content_brain as CB
     dead_keys = []
+    fresh = (datetime.now(timezone.utc) - timedelta(hours=20)).isoformat()
     for k in FB.read_keys(OWNER, include_cooling=True):
+        if k.get("last_checked") and k["last_checked"] > fresh:
+            continue                 # còn tươi -> khỏi test lại, đỡ tốn
         alive, reason = CB.test_key(k["key"])
         if alive is None:            # KHÔNG chắc (lỗi tạm) -> giữ trạng thái cũ, tránh báo chết OAN
             print(f"   … key {k.get('email') or k['id']}: {reason}")

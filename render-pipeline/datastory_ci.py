@@ -183,7 +183,7 @@ def qc(mp4):
     return ok, {"dur": round(dur, 1), "audio": ach == "audio", "res": wh}
 
 
-def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None, on_status=None, on_limit=None):
+def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None, on_status=None, on_limit=None, on_ok=None):
     """keys: list [{id,key,email}] (production, từ Firestore); None -> dùng GEMINI_API_KEY env (local).
     on_status(status, step, **extra): ghi trạng thái realtime. on_limit(key_id): cho key nghỉ khi limit."""
     st = on_status or (lambda *a, **k: None)
@@ -195,7 +195,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
             raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
         keys = [{"id": "env", "key": api_key or os.environ["GEMINI_API_KEY"], "email": "local"}]
     st("writing", "Gemini viết kịch bản")
-    story = KM.write_story(channel, keys, seed, vtype, tier, on_limit=on_limit)   # bám key theo kênh, limit -> nghỉ + đổi
+    story = KM.write_story(channel, keys, seed, vtype, tier, on_limit=on_limit, on_ok=on_ok)   # bám key theo kênh, limit -> nghỉ + đổi
     score = (story.get("self_score") or {}).get("total")
     st("rendering", "Giọng + ảnh + render", title=story.get("title"), score=score)
     sdir = os.path.join(PUB, "narration", "_ci_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
@@ -222,7 +222,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
 
 
 def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
-              on_status=None, on_limit=None, n_races=6, avoid=None):
+              on_status=None, on_limit=None, n_races=6, avoid=None, on_ok=None):
     """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info)."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)   # QUAN TRỌNG: render cwd=ENG -> path tuyệt đối (nếu không QC/enqueue tìm không ra file -> 0 giây)
@@ -238,7 +238,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     for i, sub in enumerate(subtopics):
         st("writing", f"Viết race {i+1}/{len(subtopics)}: {sub[:28]}")
         try:
-            stories.append(KM.write_story(channel, keys, sub, "long", tier, on_limit=on_limit))
+            stories.append(KM.write_story(channel, keys, sub, "long", tier, on_limit=on_limit, on_ok=on_ok))
         except Exception as e:
             print(f"   ⚠️ bỏ race '{sub[:30]}': {e}")
     if len(stories) < 2:
