@@ -1,9 +1,8 @@
-name: MM0 Render Factory (production 24/7)
+name: MM0 Render Factory (10 luồng song song)
 
-# NHÀ MÁY: đọc key/kênh/config từ Firestore -> mỗi kênh 1 long + 2-3 short -> đẩy Drive -> AutoPublisher đăng.
-# GitHub tự đọc Gemini key từ Firestore qua GCP_SA_KEY (Claude KHÔNG chạm key).
-# Secrets cần: GCP_SA_KEY, FIREBASE_PROJECT_ID, OWNER_UID, AUTOPUBLISHER_REPO, AUTOPUBLISHER_TOKEN
-# Cron: sửa lịch bên dưới. Chạy tay: Actions -> Run workflow.
+# NHÀ MÁY 10 LUỒNG: job "plan" điều phối (gating + health-check + re-render + xuất danh sách kênh),
+# rồi job "render" chạy MỖI KÊNH 1 LUỒNG song song (matrix, tối đa 10). Video tự rải đều 33 kho Drive.
+# Secrets: GCP_SA_KEY, FIREBASE_PROJECT_ID, OWNER_UID, AUTOPUBLISHER_REPO, AUTOPUBLISHER_TOKEN, GEMINI_SYSTEM_PROMPT
 
 on:
   workflow_dispatch:
@@ -14,44 +13,53 @@ on:
     - cron: "*/30 * * * *"  # mỗi 30': kiểm cờ "Render ngay" từ dashboard (nhẹ, free)
 
 jobs:
-  factory:
+  # ── ĐIỀU PHỐI: quyết định có chạy không + health-check + re-render + liệt kê kênh ─────────────
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 60
+    outputs:
+      channels: ${{ steps.plan.outputs.channels }}
     steps:
-      - name: Checkout render repo
-        uses: actions/checkout@v4
-
-      - name: Checkout AutoPublisher (private, để enqueue Drive)
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ secrets.AUTOPUBLISHER_REPO }}   # vd braydanamilio-spec/mm0-auto-publisher
-          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}       # PAT đọc repo private
-          path: _autopublisher
-
-      - uses: actions/setup-node@v4
-        with: { node-version: "22" }
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-
+      - name: Python deps (nhẹ - cho gate + plan)
+        run: pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+             google-api-python-client google-auth pyyaml
+      - name: Service account file
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+      # GATE NHẸ: nhịp 30' không có lệnh -> run=false -> BỎ QUA setup nặng (npm/chrome/ffmpeg) => free hơn.
+      - name: Gate (--gate)
+        id: gate
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          FORCE: ${{ github.event.inputs.force }}
+        run: python render-pipeline/run_render.py --gate
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with: { node-version: "22" }
       - name: Thư viện hệ thống
+        if: steps.gate.outputs.run == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
             libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
             libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg libasound2
-
-      - name: Python deps
-        run: pip install --quiet google-generativeai edge-tts google-cloud-firestore \
-             google-api-python-client google-auth pyyaml
-
-      - name: npm ci + Chrome
+      - name: npm ci + Chrome (cho re-render nếu có)
+        if: steps.gate.outputs.run == 'true'
         working-directory: engine-remotion
         run: npm ci && npx remotion browser ensure
-
-      - name: Service account file
-        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
-
-      - name: CHẠY NHÀ MÁY (đọc Firestore -> render -> Drive)
+      - name: ĐIỀU PHỐI (--plan) -> xuất danh sách kênh
+        id: plan
+        if: steps.gate.outputs.run == 'true'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
@@ -62,14 +70,62 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
           FORCE: ${{ github.event.inputs.force }}
-          PIPELINE_VERSION: "v2"   # bump khi có fix chất lượng breaking -> "Dọn bản cũ" chỉ xóa phiên bản cũ hơn
-        run: python render-pipeline/run_render.py
+          PIPELINE_VERSION: "v2"
+        run: python render-pipeline/run_render.py --plan
 
+  # ── RENDER SONG SONG: mỗi kênh 1 luồng (tối đa 10 cùng lúc), video rải đều 33 kho ────────────
+  render:
+    needs: plan
+    if: needs.plan.outputs.channels != '' && needs.plan.outputs.channels != '[]'
+    strategy:
+      max-parallel: 10        # ≤20 (giới hạn free); 10 luồng an toàn, để dư
+      fail-fast: false        # 1 kênh lỗi KHÔNG hủy các kênh khác
+      matrix:
+        channel: ${{ fromJson(needs.plan.outputs.channels) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Thư viện hệ thống
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
+            libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg libasound2
+      - name: Python deps
+        run: pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+             google-api-python-client google-auth pyyaml
+      - name: npm ci + Chrome
+        working-directory: engine-remotion
+        run: npm ci && npx remotion browser ensure
+      - name: Service account file
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+      - name: RENDER kênh ${{ matrix.channel }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
+          GEMINI_SYSTEM_PROMPT: ${{ secrets.GEMINI_SYSTEM_PROMPT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          PIPELINE_VERSION: "v2"
+        run: python render-pipeline/run_render.py --channel "${{ matrix.channel }}"
       - name: Backup video (nếu chưa đẩy Drive được)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: factory-out
+          name: out-${{ matrix.channel }}
           path: out/*.mp4
           retention-days: 3
           if-no-files-found: ignore

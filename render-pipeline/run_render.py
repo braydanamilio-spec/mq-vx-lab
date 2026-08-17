@@ -309,5 +309,125 @@ def main():
             print(f"   ⚠️ email lỗi: {e}")
 
 
+def gate_mode():
+    """KIỂM NHANH (read-only, nhẹ) có nên chạy mẻ này không -> workflow bỏ qua setup nặng lúc nhịp 30' (free)."""
+    from datetime import datetime, timezone
+    run = "false"
+    if OWNER:
+        try:
+            cfg = FB.read_config(OWNER)
+            event = os.environ.get("GITHUB_EVENT_NAME", "")
+            run_now = bool(cfg.get("run_now"))
+            is_nightly = datetime.now(timezone.utc).hour == 18
+            enabled = bool(cfg.get("enabled")) or os.environ.get("FORCE") == "1"
+            if ((event != "schedule") or run_now or is_nightly) and (enabled or run_now):
+                run = "true"
+        except Exception:
+            traceback.print_exc()
+    gh = os.environ.get("GITHUB_OUTPUT")
+    if gh:
+        with open(gh, "a") as f:
+            f.write(f"run={run}\n")
+    print(f"GATE run={run}")
+
+
+def plan_mode():
+    """ĐIỀU PHỐI (matrix 10 luồng): gating + health-check + re-render — CHẠY 1 LẦN — rồi xuất danh sách kênh
+    cho các job render song song. Các job render KHÔNG lặp health-check/re-render (đỡ tốn API)."""
+    import json
+    from datetime import datetime, timezone, timedelta
+    def out_channels(lst):
+        payload = json.dumps(lst)
+        gh = os.environ.get("GITHUB_OUTPUT")
+        if gh:
+            with open(gh, "a") as f:
+                f.write(f"channels={payload}\n")
+        print(f"PLAN channels={payload}")
+    if not OWNER:
+        out_channels([]); raise SystemExit("❌ Thiếu OWNER_UID.")
+    cfg = FB.read_config(OWNER)
+    event = os.environ.get("GITHUB_EVENT_NAME", "")
+    run_now = bool(cfg.get("run_now"))
+    is_nightly = datetime.now(timezone.utc).hour == 18
+    if event == "schedule" and not run_now and not is_nightly:
+        print("⏭ Nhịp kiểm 30' — không có lệnh Render ngay, bỏ qua (free)."); return out_channels([])
+    if run_now:
+        FB.set_config(OWNER, {"run_now": None, "run_now_done_at": datetime.now(timezone.utc).isoformat()})
+        print("⚡ Nhận lệnh 'Render ngay'.")
+    if not cfg.get("enabled") and os.environ.get("FORCE") != "1" and not run_now:
+        print("⏸ Pipeline TẮT — bật ở Render Studio hoặc bấm Render ngay."); return out_channels([])
+    keys = FB.read_keys(OWNER)
+    if not keys:
+        print("❌ Chưa có Gemini key."); return out_channels([])
+    # HEALTH CHECK (throttled 20h) — chỉ ở plan, 10 luồng không lặp.
+    import content_brain as CB
+    fresh = (datetime.now(timezone.utc) - timedelta(hours=20)).isoformat(); dead = []
+    for k in FB.read_keys(OWNER, include_cooling=True):
+        if k.get("last_checked") and k["last_checked"] > fresh:
+            continue
+        alive, reason = CB.test_key(k["key"])
+        if alive is None:
+            continue
+        FB.mark_key_alive(k["id"], alive, reason)
+        if not alive:
+            dead.append(f"{k.get('email') or k['id']} — {reason[:70]}")
+    if dead:
+        print(f"⚠️ {len(dead)} Gemini key CHẾT: {dead}")
+    global RESERVE_LONG, RESERVE_SHORT
+    RESERVE_LONG = int(cfg.get("reserve_long", RESERVE_LONG) or RESERVE_LONG)
+    RESERVE_SHORT = int(cfg.get("reserve_short", RESERVE_SHORT) or RESERVE_SHORT)
+    # GUARD KHO GẦN ĐẦY (tính tổng cả 33 kho).
+    safety_pct = float(cfg.get("drive_safety_pct", DRIVE_SAFETY_PCT) or DRIVE_SAFETY_PCT)
+    used, cap = FB.drive_usage(OWNER)
+    if cap and used / cap >= safety_pct:
+        note = (f"⛔ Kho Drive {used/cap*100:.0f}% đầy (ngưỡng {safety_pct*100:.0f}%) — NGỪNG render mẻ này. "
+                f"Thêm tài khoản Drive hoặc upload+dọn bớt rồi chạy lại.")
+        print(note)
+        FB.set_config(OWNER, {"last_safety_stop": note, "last_safety_at": datetime.now(timezone.utc).isoformat()})
+        try:
+            import alert_email; alert_email.send_alert("⛔ MM0 Render dừng: kho Drive gần đầy", note)
+        except Exception:
+            pass
+        return out_channels([])
+    FB.set_config(OWNER, {"last_safety_stop": None, "stop": None})   # kho ổn + xoá cờ dừng cũ
+    try:
+        process_requests(keys, {"done": 0, "fails": []})   # 🔄 render lại (thay bản cũ) — 1 lần ở plan
+    except Exception:
+        traceback.print_exc()
+    channels = [c["name"] for c in FB.read_channels(OWNER) if c.get("name")]
+    print(f"▶ {len(channels)} kênh -> render SONG SONG.")
+    out_channels(channels)
+
+
+def channel_mode(name):
+    """RENDER 1 KÊNH (1 luồng của matrix). Đọc reserve + tôn trọng cờ Dừng (per-clip trong run_one)."""
+    if not OWNER:
+        raise SystemExit("❌ Thiếu OWNER_UID.")
+    cfg = FB.read_config(OWNER)
+    global RESERVE_LONG, RESERVE_SHORT
+    RESERVE_LONG = int(cfg.get("reserve_long", RESERVE_LONG) or RESERVE_LONG)
+    RESERVE_SHORT = int(cfg.get("reserve_short", RESERVE_SHORT) or RESERVE_SHORT)
+    if cfg.get("stop"):
+        print(f"⛔ Đang dừng — bỏ {name}."); return
+    keys = FB.read_keys(OWNER)
+    if not keys:
+        raise SystemExit("❌ Chưa có Gemini key.")
+    chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]
+    if not chs:
+        print(f"⚠️ Kênh {name} không còn (đã xóa) — bỏ."); return
+    report = {"done": 0, "fails": []}
+    try:
+        run_one(chs[0], keys, report=report)
+    except BaseException as e:
+        traceback.print_exc(); report["fails"].append(f"{name}: {str(e)[:120]}")
+    print(f"✅ {name}: {report['done']} video · {len(report['fails'])} lỗi.")   # lỗi hiện ở dashboard (rsAlert), không spam email
+
+
 if __name__ == "__main__":
-    main()
+    if "--plan" in sys.argv:
+        plan_mode()
+    elif "--channel" in sys.argv:
+        i = sys.argv.index("--channel")
+        channel_mode(sys.argv[i + 1] if i + 1 < len(sys.argv) else "")
+    else:
+        main()   # tuần tự (fallback / chạy tay)
