@@ -16,12 +16,19 @@ import content_brain as CB
 
 
 def key_order(channel: str, keys: list[dict]) -> list[dict]:
-    """Thứ tự thử key cho 1 kênh: BẮT ĐẦU từ key sticky của kênh, rồi xoay vòng (ổn định, không random).
-    QUAN TRỌNG: sort key theo id TRƯỚC -> Firestore trả thứ tự nào thì sticky vẫn KHÔNG đổi."""
-    ks = sorted(keys, key=lambda k: str(k.get("id") or k.get("email") or k.get("key", "")))
-    n = len(ks)
+    """Thứ tự thử key cho 1 kênh (theo yêu cầu user):
+    1. ƯU TIÊN key LÂU CHƯA XÀI NHẤT (last_used cũ / chưa xài lần nào) -> chia đều, key nghỉ đủ lâu.
+    2. NÉ key VỪA bỏ chặn: cooling_until mới -> đẩy xuống CUỐI (để nghỉ thêm, tránh bị chặn lại lâu hơn).
+       -> sort theo max(last_used, cooling_until) TĂNG DẦN: "" (chưa xài/chưa chặn) đứng đầu, vừa-bỏ-chặn cuối.
+    3. XOAY theo kênh -> 10 luồng SONG SONG không cùng chọn 1 key đầu (không dội 1 project -> tránh bị chặn)."""
+    n = len(keys)
     if n == 0:
         return []
+    def idle(k):   # cũ nhất -> nhỏ nhất -> ưu tiên; id để tiebreak ổn định
+        return (max(str(k.get("last_used") or ""), str(k.get("cooling_until") or "")), str(k.get("id") or ""))
+    ks = sorted(keys, key=idle)
+    if n == 1:
+        return ks
     start = int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) % n
     return [ks[(start + i) % n] for i in range(n)]
 

@@ -36,14 +36,18 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         if cooling and cooling > now and not include_cooling:
             continue                                  # đang nghỉ -> bỏ qua vòng này
         out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
-                    "last_checked": x.get("last_checked", ""), "alive": x.get("alive")})
+                    "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
+                    "last_used": x.get("last_used", ""), "cooling_until": cooling})
     return out
 
 
-def mark_key_alive(key_id: str, alive: bool, reason: str = ""):
-    """Ghi trạng thái sống/chết + LÝ DO + thời điểm check -> dashboard hiện 🟢/🔴 + tooltip vì sao."""
-    _db().collection("gemini_keys").document(key_id).set(
-        {"alive": alive, "dead_reason": ("" if alive else reason), "last_checked": _now()}, merge=True)
+def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = False):
+    """Ghi trạng thái sống/chết + LÝ DO + thời điểm check -> dashboard hiện 🟢/🔴 + tooltip vì sao.
+    used=True: đánh dấu VỪA DÙNG THẬT -> stamp last_used (để lần sau ưu tiên key lâu chưa xài)."""
+    patch = {"alive": alive, "dead_reason": ("" if alive else reason), "last_checked": _now()}
+    if used:
+        patch["last_used"] = _now()
+    _db().collection("gemini_keys").document(key_id).set(patch, merge=True)
 
 
 def cool_key(key_id: str, minutes: int = 90):

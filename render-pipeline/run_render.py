@@ -80,7 +80,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
     def okcb(kid):
         if kid and kid not in _marked:
             _marked.add(kid)
-            try: FB.mark_key_alive(kid, True, "ok (dùng thật)")
+            try: FB.mark_key_alive(kid, True, "ok (dùng thật)", used=True)   # stamp last_used -> lần sau ưu tiên key lâu chưa xài
             except Exception: pass
     R = report if report is not None else {"done": 0, "fails": []}
     def _stopped():   # nút ⛔ Dừng: kiểm GIỮA các clip -> clip đang render vẫn xong (không hư), rồi mới ngừng.
