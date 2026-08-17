@@ -43,7 +43,7 @@ def _pick_model(genai, prefer="flash", api_key=""):
         _MODEL_CACHE[api_key] = cache
     return cache.get(prefer) or cache.get("flash")
 MIN_SCORE = 90         # thang 100 — < 90 -> viết lại (chuẩn top USA)
-MAX_TRIES = 2          # số vòng viết lại tối đa (2 = tiết kiệm token Gemini free; dùng bản TỐT NHẤT nếu chưa đạt)
+MAX_TRIES = 3          # số vòng viết lại tối đa — PHẢI đạt >= MIN_SCORE, chưa đạt thì viết lại (không hạ chuẩn)
 
 # --------------------------------------------------------------------------- #
 #  SYSTEM PROMPT — đóng khuôn chất lượng (bản rút gọn của BRAIN_RULES.md)
@@ -206,7 +206,6 @@ def generate(seed: str, vtype: str = "short", api_key: str = None, model_name: s
 
     feedback = ""
     last = None
-    best = None; best_score = -1        # bản HỢP LỆ điểm cao nhất -> dùng nếu chưa chạm MIN_SCORE (không phí token đã tiêu)
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious attempt was rejected: {feedback}\nFix it and raise the score." if feedback else "")
         try:
@@ -242,8 +241,6 @@ def generate(seed: str, vtype: str = "short", api_key: str = None, model_name: s
             print(f"   ↻ vòng {attempt}: {feedback}")
             continue
         if score < MIN_SCORE:
-            if score > best_score:
-                best, best_score = story, score      # giữ bản valid tốt nhất
             feedback = f"Điểm tự chấm {score}/100 < {MIN_SCORE}. Viết lại hay hơn (hook reveal mạnh hơn, twist sắc hơn, bớt lặp)."
             print(f"   ↻ vòng {attempt}: điểm {score}/100 — viết lại")
             continue
@@ -252,12 +249,9 @@ def generate(seed: str, vtype: str = "short", api_key: str = None, model_name: s
         print(f"   ✅ đạt vòng {attempt}: {score}/100 — {story['title']!r}")
         return story
 
-    # Hết lượt mà chưa chạm MIN_SCORE: DÙNG bản tốt nhất (đã valid) -> không phí token/render, vẫn ra video khá.
-    if best is not None:
-        best["vtype"] = vtype
-        print(f"   ⚠️ chưa đạt {MIN_SCORE} sau {MAX_TRIES} vòng — dùng bản TỐT NHẤT {best_score}/100.")
-        return best
-    raise Exception(f"Không tạo được bản hợp lệ sau {MAX_TRIES} vòng cho {seed!r}.")
+    # PHẢI đạt >= MIN_SCORE: chưa đạt sau MAX_TRIES -> BỎ chủ đề (thà bỏ còn hơn ra rác), KHÔNG hạ chuẩn.
+    raise Exception(f"Sau {MAX_TRIES} vòng vẫn < {MIN_SCORE} (điểm cuối "
+                    f"{(last or {}).get('self_score', {}).get('total', '?')}/100). Bỏ {seed!r}.")
 
 
 PILLAR_SYS = ("You plan themed content for a TOP US data channel. Given a niche, propose DISTINCT, "
