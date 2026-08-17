@@ -53,6 +53,19 @@ def cool_key(key_id: str, minutes: int = 90):
     _db().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
 
 
+def drive_usage(owner: str):
+    """Tổng dung lượng ĐÃ DÙNG / SỨC CHỨA của mọi kho Drive (bytes) -> guard 'kho gần đầy' trước khi render."""
+    used = cap = 0
+    try:
+        for d in _db().collection("storage_accounts").where("owner", "==", owner).stream():
+            x = d.to_dict() or {}
+            used += (x.get("used", 0) or 0)
+            cap += (x.get("cap_gb", 15) or 15) * 1_000_000_000
+    except Exception as e:
+        print(f"   ⚠️ drive_usage lỗi ({e})")
+    return used, cap
+
+
 def read_channels(owner: str) -> list[dict]:
     db = _db(); out = []
     for d in db.collection("render_channels").where("owner", "==", owner).stream():

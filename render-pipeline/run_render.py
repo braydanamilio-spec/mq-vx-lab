@@ -15,6 +15,11 @@ import datastory_ci as DS
 
 OWNER = os.environ.get("OWNER_UID")
 PVER = os.environ.get("PIPELINE_VERSION", "v2")   # phiên bản pipeline (fix handle/tràn/che/hướng ảnh) -> dọn thông minh chỉ xóa bản CŨ
+# AN TOÀN: render là làm DỰ TRỮ (kho), upload là pipeline riêng. Mỗi kênh giữ tối đa N video dự trữ
+# (khi target=0) -> KHÔNG render vô hạn làm phình Drive. Chỉnh ở render_config.reserve_long/short.
+RESERVE_LONG = 10
+RESERVE_SHORT = 30
+DRIVE_SAFETY_PCT = 0.90   # kho ≥90% đầy -> ngừng render mẻ này (tránh phình + lỗi ghi khi hết chỗ)
 
 
 def _make_thumb(video):
@@ -84,13 +89,12 @@ def run_one(ch, keys, n_shorts=3, report=None):
     os.makedirs("out", exist_ok=True)
     do_long = ch.get("make_long", True)
     n_shorts = int(ch.get("n_shorts", n_shorts) or 0)
-    # MỤC TIÊU số video/kênh (0 = không giới hạn): đủ rồi thì bỏ qua, khỏi làm dư.
-    long_target = int(ch.get("long_target", 0) or 0)
-    short_target = int(ch.get("short_target", 0) or 0)
-    if do_long and long_target and FB.count_done(OWNER, channel, "long") >= long_target:
-        do_long = False; print(f"🎯 {channel}: đủ {long_target} long — bỏ qua long.")
-    if short_target:
-        n_shorts = max(0, min(n_shorts, short_target - FB.count_done(OWNER, channel, "short")))
+    # MỤC TIÊU/DỰ TRỮ số video/kênh: target>0 = mục tiêu người đặt; target=0 = mức DỰ TRỮ AN TOÀN (khỏi phình vô hạn).
+    long_target = int(ch.get("long_target", 0) or 0) or RESERVE_LONG
+    short_target = int(ch.get("short_target", 0) or 0) or RESERVE_SHORT
+    if do_long and FB.count_done(OWNER, channel, "long") >= long_target:
+        do_long = False; print(f"🎯 {channel}: đủ {long_target} long (dự trữ) — bỏ qua long.")
+    n_shorts = max(0, min(n_shorts, short_target - FB.count_done(OWNER, channel, "short")))
     subtopics = []
     if do_long:
         # ---- LONG ---- SELF-HEAL: render lỗi -> tự thử lại NHẸ hơn (4 race -> 2).
@@ -258,6 +262,23 @@ def main():
     channels = [c for c in FB.read_channels(OWNER) if c.get("name")]
     if not channels:
         print("⚠️ Chưa cấu hình kênh render nào (thêm ở tab Render Studio)."); return
+    # AN TOÀN dự trữ (chỉnh được ở dashboard): mức giữ mỗi kênh khi target=0.
+    global RESERVE_LONG, RESERVE_SHORT
+    RESERVE_LONG = int(cfg.get("reserve_long", RESERVE_LONG) or RESERVE_LONG)
+    RESERVE_SHORT = int(cfg.get("reserve_short", RESERVE_SHORT) or RESERVE_SHORT)
+    # ---- GUARD KHO GẦN ĐẦY: render là làm DỰ TRỮ, nhưng kho đầy thì NGỪNG (tránh phình + lỗi ghi khi hết chỗ) ----
+    safety_pct = float(cfg.get("drive_safety_pct", DRIVE_SAFETY_PCT) or DRIVE_SAFETY_PCT)
+    used, cap = FB.drive_usage(OWNER)
+    if cap and used / cap >= safety_pct:
+        note = (f"⛔ Kho Drive {used/cap*100:.0f}% đầy (ngưỡng an toàn {safety_pct*100:.0f}%) — NGỪNG render mẻ này "
+                f"để tránh phình/lỗi. Thêm tài khoản Drive (Storage→Connect) hoặc upload+dọn bớt rồi chạy lại.")
+        print(note)
+        FB.set_config(OWNER, {"last_safety_stop": note, "last_safety_at": datetime.now(timezone.utc).isoformat()})
+        try:
+            import alert_email; alert_email.send_alert("⛔ MM0 Render dừng: kho Drive gần đầy", note)
+        except Exception: pass
+        return
+    FB.set_config(OWNER, {"last_safety_stop": None})   # kho ổn -> xoá cảnh báo cũ
     max_run = int(cfg.get("max_per_run", 0) or 0)   # 0 = không giới hạn; >0 = dừng sau N video/lần
     FB.set_config(OWNER, {"stop": None})             # xoá cờ dừng cũ khi bắt đầu run mới
     print(f"▶ Pipeline: {len(channels)} kênh · {len(keys)} key" + (f" · tối đa {max_run} video" if max_run else ""))
