@@ -20,6 +20,9 @@ engine-remotion/public/**
 !engine-remotion/public/sfx/
 !engine-remotion/public/sfx/whoosh.mp3
 !engine-remotion/public/sfx/ding.mp3
+!engine-remotion/public/sfx/cheer.mp3
+!engine-remotion/public/sfx/impact.mp3
+!engine-remotion/public/sfx/pop.mp3
 
 # --- an toàn: KHÔNG bao giờ đẩy secret / output / rác ---
 *.env
@@ -45,3 +48,4 @@ render-pipeline/README.md
 # bản đồ topojson (import TĨNH trong WorldMapRace -> bắt buộc có)
 !engine-remotion/public/geo/
 !engine-remotion/public/geo/countries-110m.json
+!engine-remotion/public/geo/states-10m.json

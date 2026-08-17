@@ -39,6 +39,12 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     return out
 
 
+def mark_key_alive(key_id: str, alive: bool):
+    """Ghi trạng thái sống/chết + thời điểm check -> dashboard hiện 🟢/🔴."""
+    _db().collection("gemini_keys").document(key_id).set(
+        {"alive": alive, "last_checked": _now()}, merge=True)
+
+
 def cool_key(key_id: str, minutes: int = 90):
     """Đánh dấu key nghỉ N phút sau khi bị 429/quota (chống hammer -> chống die)."""
     from datetime import timedelta

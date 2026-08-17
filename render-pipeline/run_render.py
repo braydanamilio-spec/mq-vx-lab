@@ -92,6 +92,16 @@ def main():
     keys = FB.read_keys(OWNER)
     if not keys:
         raise SystemExit("❌ Chưa có Gemini key — thêm ở tab 🎬 Render Studio.")
+    # HEALTH CHECK (1 lần/ngày ở đầu cron): test mọi key -> mark 🟢/🔴 + gom key CHẾT
+    import content_brain as CB
+    dead_keys = []
+    for k in FB.read_keys(OWNER, include_cooling=True):
+        alive = CB.test_key(k["key"])
+        FB.mark_key_alive(k["id"], alive)
+        if not alive:
+            dead_keys.append(k.get("email") or k["id"])
+    if dead_keys:
+        print(f"⚠️ {len(dead_keys)} Gemini key CHẾT: {dead_keys}")
     channels = [c for c in FB.read_channels(OWNER) if c.get("name")]
     if not channels:
         print("⚠️ Chưa cấu hình kênh render nào (thêm ở tab Render Studio)."); return
@@ -101,13 +111,16 @@ def main():
         run_one(ch, keys, report=report)
     print(f"✅ Xong: {report['done']} video · {len(report['fails'])} lỗi.")
     # EMAIL CẢNH BÁO — chống spam: CHỈ gửi khi CÓ LỖI, gộp 1 email cho cả lần chạy.
-    if report["fails"]:
+    if report["fails"] or dead_keys:
         try:
             import alert_email
-            body = (f"MM0 Render Factory — {len(report['fails'])} job LỖI (đã xong {report['done']}):\n\n"
-                    + "\n".join("• " + f for f in report["fails"])
+            lines = []
+            if dead_keys:
+                lines.append(f"🔴 {len(dead_keys)} Gemini key CHẾT (cần thay/xoá): " + ", ".join(dead_keys))
+            lines += ["❌ " + f for f in report["fails"]]
+            body = (f"MM0 Render Factory — {report['done']} video xong:\n\n" + "\n".join(lines)
                     + "\n\nXem chi tiết: https://mm0-auto-publisher.web.app/#render")
-            alert_email.send_alert(f"⚠️ MM0 Render: {len(report['fails'])} job lỗi", body)
+            alert_email.send_alert(f"⚠️ MM0 Render: {len(report['fails'])} lỗi · {len(dead_keys)} key chết", body)
         except Exception as e:
             print(f"   ⚠️ email lỗi: {e}")
 

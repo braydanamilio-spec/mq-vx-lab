@@ -87,6 +87,16 @@ class RateLimited(Exception):
     """Key hết quota/bị rate-limit -> tầng trên đổi key khác."""
 
 
+def test_key(api_key: str) -> bool:
+    """Kiểm key Gemini còn SỐNG không (list_models chạy được). Dùng cho health check."""
+    try:
+        genai = _genai(api_key)
+        list(genai.list_models())
+        return True
+    except Exception:
+        return False
+
+
 def _genai(api_key=None):
     try:
         import google.generativeai as genai
