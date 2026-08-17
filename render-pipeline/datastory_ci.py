@@ -153,6 +153,15 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
                     "--concurrency=2", "--log=error"], cwd=ENG, check=True)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
+    if ok:                                          # QC THẨM MỸ (Gemini Vision) — chống chồng chéo/xấu
+        try:
+            import qc_vision
+            vok, vinfo = qc_vision.check_visual(out, api_key=keys[0]["key"])
+            info["visual"] = vinfo
+            if not vok:
+                ok = False
+        except Exception as e:
+            print("   ⚠️ vision qc skip:", e)
     print(f"   {'✅' if ok else '❌'} QC {info}")
     return out, story, ok, info
 
@@ -187,6 +196,15 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
                     "--concurrency=2", "--log=error"], cwd=ENG, check=True)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
+    if ok:
+        try:
+            import qc_vision
+            vok, vinfo = qc_vision.check_visual(out, api_key=keys[0]["key"])
+            info["visual"] = vinfo
+            if not vok:
+                ok = False
+        except Exception as e:
+            print("   ⚠️ vision qc skip:", e)
     print(f"   {'✅' if ok else '❌'} QC long {info}")
     return out, plan, subtopics, ok, info
 
