@@ -32,10 +32,11 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
         print("   ⚠️ enqueue lỗi (giữ artifact):", e); return False
 
 
-def run_one(ch, keys, n_shorts=3):
+def run_one(ch, keys, n_shorts=3, report=None):
     """1 kênh/ngày: 1 LONG (pillar 5-6 race) + n_shorts SHORT dọc (viết lại từ chủ đề con)."""
     channel = ch.get("name"); tier = ch.get("tier", "normal"); niche = ch.get("niche") or channel
     cool = lambda kid: FB.cool_key(kid)
+    R = report if report is not None else {"done": 0, "fails": []}
     os.makedirs("out", exist_ok=True)
     # ---- LONG ----
     ljob = FB.new_job(OWNER, channel, "long")
@@ -47,11 +48,11 @@ def run_one(ch, keys, n_shorts=3):
         if ok:
             enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
                                           "description": plan.get("hook", "")}, "long")
-            lst("done", "Long đã đẩy Drive", title=plan.get("pillar_title"))
+            lst("done", "Long đã đẩy Drive", title=plan.get("pillar_title")); R["done"] += 1
         else:
-            lst("failed", f"QC long trượt: {info}")
+            lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
     except Exception as e:
-        traceback.print_exc(); lst("failed", str(e)[:140])
+        traceback.print_exc(); lst("failed", str(e)[:140]); R["fails"].append(f"{channel} LONG: {str(e)[:100]}")
     # ---- SHORTS (viết LẠI cho 9:16 từ 2-3 chủ đề con của long) ----
     for i, sub in enumerate(subtopics[:n_shorts]):
         sjob = FB.new_job(OWNER, channel, "short")
@@ -62,11 +63,11 @@ def run_one(ch, keys, n_shorts=3):
             if sok:
                 enqueue_drive(channel, sout, story, "short")
                 sst("done", "Short đã đẩy Drive", title=story.get("title"),
-                    score=(story.get("self_score") or {}).get("total"))
+                    score=(story.get("self_score") or {}).get("total")); R["done"] += 1
             else:
-                sst("failed", f"QC short trượt: {sinfo}")
+                sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt")
         except Exception as e:
-            traceback.print_exc(); sst("failed", str(e)[:120])
+            traceback.print_exc(); sst("failed", str(e)[:120]); R["fails"].append(f"{channel} SHORT {i}: {str(e)[:100]}")
     print(f"   ✅ {channel}: xong long + {min(n_shorts, len(subtopics))} short")
 
 
@@ -83,9 +84,20 @@ def main():
     if not channels:
         print("⚠️ Chưa cấu hình kênh render nào (thêm ở tab Render Studio)."); return
     print(f"▶ Pipeline: {len(channels)} kênh · {len(keys)} key")
+    report = {"done": 0, "fails": []}
     for ch in channels:
-        run_one(ch, keys)
-    print("✅ Xong tất cả.")
+        run_one(ch, keys, report=report)
+    print(f"✅ Xong: {report['done']} video · {len(report['fails'])} lỗi.")
+    # EMAIL CẢNH BÁO — chống spam: CHỈ gửi khi CÓ LỖI, gộp 1 email cho cả lần chạy.
+    if report["fails"]:
+        try:
+            import alert_email
+            body = (f"MM0 Render Factory — {len(report['fails'])} job LỖI (đã xong {report['done']}):\n\n"
+                    + "\n".join("• " + f for f in report["fails"])
+                    + "\n\nXem chi tiết: https://mm0-auto-publisher.web.app/#render")
+            alert_email.send_alert(f"⚠️ MM0 Render: {len(report['fails'])} job lỗi", body)
+        except Exception as e:
+            print(f"   ⚠️ email lỗi: {e}")
 
 
 if __name__ == "__main__":

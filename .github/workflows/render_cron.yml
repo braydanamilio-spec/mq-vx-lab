@@ -57,6 +57,9 @@ jobs:
           OWNER_UID: ${{ secrets.OWNER_UID }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           GEMINI_SYSTEM_PROMPT: ${{ secrets.GEMINI_SYSTEM_PROMPT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
           FORCE: ${{ github.event.inputs.force }}
         run: python render-pipeline/run_render.py
 
