@@ -38,11 +38,13 @@ def check_visual(mp4: str, api_key: str = None, model_name: str = None, min_scor
         akey = api_key or os.environ.get("GEMINI_API_KEY", "")
         mn = model_name or CB._pick_model(genai, "flash", akey) or "gemini-3.5-flash"
         model = genai.GenerativeModel(mn)
-        prompt = ("This is ONE frame from a data bar-chart-race video (dense labels/numbers are NORMAL and fine). "
-                  "Rate overall visual quality 0-100. Only give a LOW score (<50) if the frame is genuinely BROKEN: "
-                  "mostly black/empty, severe unreadable overlap everywhere, or major text cut off. "
-                  "A clean, readable chart with many labels is HIGH (80+). "
-                  'Return STRICT JSON only: {"score": 0-100, "issues": [str]}')
+        prompt = ("This is ONE frame from a data-story video (dense labels/numbers are NORMAL). Rate visual quality 0-100. "
+                  "CHECK and LIST in issues any of: (a) elements OVERLAPPING/OCCLUDING each other (caption over watermark, "
+                  "label over label, image over text); (b) text/numbers CUT OFF at frame edges; (c) any image too SMALL/awkward "
+                  "or OVERFLOWING the frame edges; (d) mostly black/empty. "
+                  "Only give score <50 if GENUINELY broken (severe overlap everywhere, mostly black, major cutoff). "
+                  "Clean, readable, well-sized = 80+. "
+                  'Return STRICT JSON only: {"score": 0-100, "occluded": true|false, "issues": [str]}')
         scores, issues = [], []
         for st in stills:
             img = {"mime_type": "image/jpeg", "data": open(st, "rb").read()}

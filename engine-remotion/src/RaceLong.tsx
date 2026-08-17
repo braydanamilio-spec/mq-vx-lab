@@ -134,8 +134,8 @@ const KaraokeCaption: React.FC<{ subs?: Word[] }> = ({ subs }) => {
   const chunk = sent.slice(cs, cs + CH);
   const c0 = chunk[0].t; const app = interpolate(now, [c0 - 0.12, c0 + 0.12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
-    <div style={{ position: "absolute", bottom: 90, left: 0, width: "100%", display: "flex", justifyContent: "center", pointerEvents: "none", opacity: app }}>
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0 16px", padding: "16px 42px", background: "rgba(6,10,20,0.82)", border: "1px solid #ffffff1c", borderRadius: 22, whiteSpace: "nowrap", boxShadow: "0 10px 34px #0008" }}>
+    <div style={{ position: "absolute", bottom: 96, left: 0, width: "100%", display: "flex", justifyContent: "center", pointerEvents: "none", opacity: app }}>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0 16px", padding: "16px 42px", maxWidth: "80%", background: "rgba(6,10,20,0.82)", border: "1px solid #ffffff1c", borderRadius: 22, whiteSpace: "nowrap", overflow: "hidden", boxShadow: "0 10px 34px #0008" }}>
         {chunk.map((s, i) => {
           const active = now >= s.t && now < s.t + s.d;
           return <span key={i} style={{ fontSize: 52, fontWeight: 900, color: active ? "#F5B301" : "#EAF2FF", transform: active ? "scale(1.08)" : "none", textShadow: active ? "0 0 26px #F5B301aa" : "none" }}>{s.w}</span>;
