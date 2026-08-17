@@ -33,7 +33,7 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
                           topic=story.get("topic") or story.get("title"),
                           title=story.get("title"), description=desc,
                           hashtags=story.get("hashtags"), tags=story.get("tags"))
-        return (created or {}).get("id")          # trả Drive file id -> lưu vào job để XEM trên web
+        return created or None                     # trả cả {id, account} -> lưu vào job để XEM/stream trên web
     except Exception as e:
         print("   ⚠️ enqueue lỗi (giữ artifact):", e); return None
 
@@ -78,10 +78,11 @@ def run_one(ch, keys, n_shorts=3, report=None):
             if last_err is not None:
                 lst("failed", f"Tự thử lại vẫn lỗi: {str(last_err)[:120]}"); R["fails"].append(f"{channel} LONG: {str(last_err)[:100]}")
             elif ok:
-                did = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
-                                                    "description": plan.get("hook", "")}, "long")
+                info = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
+                                                     "description": plan.get("hook", "")}, "long")
+                did = (info or {}).get("id"); acc = (info or {}).get("account", "")
                 lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
-                    drive_id=did or "", preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
+                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
             else:
                 lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
         except Exception as e:
@@ -115,10 +116,11 @@ def run_one(ch, keys, n_shorts=3, report=None):
         if serr is not None:
             sst("failed", f"Tự thử lại vẫn lỗi: {str(serr)[:110]}"); R["fails"].append(f"{channel} SHORT {i}: {str(serr)[:100]}")
         elif sok:
-            did = enqueue_drive(channel, sout, story, "short")
+            info = enqueue_drive(channel, sout, story, "short")
+            did = (info or {}).get("id"); acc = (info or {}).get("account", "")
             sst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)", title=story.get("title"),
                 score=(story.get("self_score") or {}).get("total"),
-                drive_id=did or "", preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
+                drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
         else:
             sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt")
     print(f"   ✅ {channel}: xong long + {min(n_shorts, len(subtopics))} short")
