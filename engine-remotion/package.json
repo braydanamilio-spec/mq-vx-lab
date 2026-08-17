@@ -1,0 +1,29 @@
+{
+  "name": "engine-remotion",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@remotion/bundler": "^4.0.505",
+    "@remotion/cli": "^4.0.505",
+    "@remotion/google-fonts": "^4.0.505",
+    "@remotion/lottie": "^4.0.505",
+    "@remotion/renderer": "^4.0.505",
+    "d3-array": "^3.2.4",
+    "d3-geo": "^3.1.1",
+    "d3-scale": "^4.0.2",
+    "d3-shape": "^3.2.0",
+    "lottie-web": "^5.13.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "remotion": "^4.0.505",
+    "topojson-client": "^3.1.0"
+  }
+}

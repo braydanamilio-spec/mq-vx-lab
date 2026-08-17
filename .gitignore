@@ -1,0 +1,43 @@
+# === MM0-RENDER REPO — CHỈ đẩy phần CẦN để render video ===
+# Loại TẤT CẢ ở gốc, chỉ giữ 3 thứ: .github (workflows) + engine-remotion + render-pipeline.
+/*
+!/.gitignore
+!/.github/
+!/engine-remotion/
+!/render-pipeline/
+
+# --- trong engine-remotion: loại node_modules + 120GB public (chỉ giữ asset nhẹ BẮT BUỘC) ---
+engine-remotion/node_modules/
+engine-remotion/public/**
+!engine-remotion/public/ci_sample_race.json
+!engine-remotion/public/img/
+!engine-remotion/public/img/_fallback.jpg
+!engine-remotion/public/music/
+!engine-remotion/public/music/carefree.mp3
+!engine-remotion/public/music/broke_pad.mp3
+!engine-remotion/public/music/mind_pad32.mp3
+!engine-remotion/public/music/mindloop_pad.mp3
+!engine-remotion/public/sfx/
+!engine-remotion/public/sfx/whoosh.mp3
+!engine-remotion/public/sfx/ding.mp3
+
+# --- an toàn: KHÔNG bao giờ đẩy secret / output / rác ---
+*.env
+sources.env
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.wav
+*.log
+.DS_Store
+__pycache__/
+*.pyc
+
+# docs bí kíp + prompt secret — KHÔNG push (giữ local)
+render-pipeline/PROMPT_SECRET.txt
+render-pipeline/BRAIN_RULES.md
+render-pipeline/BRAND_KIT.md
+render-pipeline/BRAND_PACK.md
+render-pipeline/ROADMAP.md
+render-pipeline/README.md

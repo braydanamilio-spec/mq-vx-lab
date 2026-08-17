@@ -1,0 +1,32 @@
+{
+  "frames": [
+    { "t": 2010, "data": [
+      { "name": "California", "value": 37.3 },
+      { "name": "Texas", "value": 25.2 },
+      { "name": "New York", "value": 19.4 },
+      { "name": "Florida", "value": 18.8 },
+      { "name": "Illinois", "value": 12.8 }
+    ]},
+    { "t": 2015, "data": [
+      { "name": "California", "value": 39.1 },
+      { "name": "Texas", "value": 27.5 },
+      { "name": "Florida", "value": 20.2 },
+      { "name": "New York", "value": 19.8 },
+      { "name": "Illinois", "value": 12.8 }
+    ]},
+    { "t": 2020, "data": [
+      { "name": "California", "value": 39.5 },
+      { "name": "Texas", "value": 29.1 },
+      { "name": "Florida", "value": 21.5 },
+      { "name": "New York", "value": 20.2 },
+      { "name": "Pennsylvania", "value": 13.0 }
+    ]},
+    { "t": 2024, "data": [
+      { "name": "California", "value": 39.0 },
+      { "name": "Texas", "value": 30.5 },
+      { "name": "Florida", "value": 22.6 },
+      { "name": "New York", "value": 19.9 },
+      { "name": "Pennsylvania", "value": 13.0 }
+    ]}
+  ]
+}

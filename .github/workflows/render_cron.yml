@@ -1,0 +1,70 @@
+name: MM0 Render Factory (production 24/7)
+
+# NHÀ MÁY: đọc key/kênh/config từ Firestore -> mỗi kênh 1 long + 2-3 short -> đẩy Drive -> AutoPublisher đăng.
+# GitHub tự đọc Gemini key từ Firestore qua GCP_SA_KEY (Claude KHÔNG chạm key).
+# Secrets cần: GCP_SA_KEY, FIREBASE_PROJECT_ID, OWNER_UID, AUTOPUBLISHER_REPO, AUTOPUBLISHER_TOKEN
+# Cron: sửa lịch bên dưới. Chạy tay: Actions -> Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      force: { description: "FORCE=1 chạy dù pipeline đang tắt", default: "1" }
+  schedule:
+    - cron: "0 18 * * *"   # 18:00 UTC ~ 01:00 VN — đổi tuỳ ý
+
+jobs:
+  factory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout render repo
+        uses: actions/checkout@v4
+
+      - name: Checkout AutoPublisher (private, để enqueue Drive)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}   # vd braydanamilio-spec/mm0-auto-publisher
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}       # PAT đọc repo private
+          path: _autopublisher
+
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Thư viện hệ thống
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
+            libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg libasound2
+
+      - name: Python deps
+        run: pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+             google-api-python-client google-auth pyyaml
+
+      - name: npm ci + Chrome
+        working-directory: engine-remotion
+        run: npm ci && npx remotion browser ensure
+
+      - name: Service account file
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+
+      - name: CHẠY NHÀ MÁY (đọc Firestore -> render -> Drive)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
+          GEMINI_SYSTEM_PROMPT: ${{ secrets.GEMINI_SYSTEM_PROMPT }}
+          FORCE: ${{ github.event.inputs.force }}
+        run: python render-pipeline/run_render.py
+
+      - name: Backup video (nếu chưa đẩy Drive được)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: factory-out
+          path: out/*.mp4
+          retention-days: 3
+          if-no-files-found: ignore

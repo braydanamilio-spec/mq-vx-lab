@@ -1,0 +1,66 @@
+name: Render Data-Story (A-Z auto)
+
+# Chạy driver A-Z: Gemini viết -> giọng+karaoke -> ảnh theo lời -> render -> QC -> artifact.
+# Máy tắt vẫn chạy. Cần secret: GEMINI_API_KEY (thả ở Settings → Secrets → Actions).
+# Chạy tay: Actions → "Render Data-Story (A-Z auto)" → Run workflow (nhập seed).
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel: { description: "Tên kênh (khớp channels.yaml)", default: "DATARACE" }
+      seed:    { description: "Chủ đề/seed cho Gemini", default: "US billionaires pay lower tax rate than teachers" }
+      type:    { description: "short | long", default: "short", type: choice, options: ["short","long"] }
+      tier:    { description: "normal | flagship (flagship dùng model cao hơn)", default: "normal" }
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Python 3.11
+        uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Thư viện hệ thống (chromium + ffmpeg)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+            libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 \
+            libasound2t64 libpango-1.0-0 libcairo2 libatspi2.0-0 || \
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+            libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 \
+            libasound2 libpango-1.0-0 libcairo2 libatspi2.0-0
+
+      - name: Python deps
+        run: pip install --quiet google-generativeai edge-tts
+
+      - name: npm ci + Chrome headless
+        working-directory: engine-remotion
+        run: |
+          npm ci
+          npx remotion browser ensure
+
+      - name: RENDER (A-Z)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_SYSTEM_PROMPT: ${{ secrets.GEMINI_SYSTEM_PROMPT }}
+        run: |
+          mkdir -p out
+          python render-pipeline/datastory_ci.py \
+            --channel "${{ github.event.inputs.channel }}" \
+            --seed "${{ github.event.inputs.seed }}" \
+            --type "${{ github.event.inputs.type }}" \
+            --tier "${{ github.event.inputs.tier }}" \
+            --out "out/datastory.mp4"
+
+      - name: Info
+        run: ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 out/datastory.mp4 || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: datastory-mp4
+          path: out/datastory.mp4
+          retention-days: 7

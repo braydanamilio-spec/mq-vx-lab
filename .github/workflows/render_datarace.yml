@@ -1,0 +1,71 @@
+name: Render Data Race (pilot)
+
+# PILOT v1: chứng minh GitHub render được video Remotion khi MÁY TẮT.
+# v1 xuất file ra ARTIFACT tải về (CHƯA cần Drive/secret).
+# Chạy tay: tab Actions -> "Render Data Race (pilot)" -> Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      composition:
+        description: "Composition id (Race = ngang 16:9, RaceShort = dọc 9:16)"
+        default: "Race"
+        type: choice
+        options: ["Race", "RaceShort"]
+      concurrency:
+        description: "Số luồng render (CI ~2 CPU nên để 2)"
+        default: "2"
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Cài thư viện hệ thống cho Chromium + ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg \
+            libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+            libgbm1 libasound2t64 libpango-1.0-0 libcairo2 libatspi2.0-0 || \
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+            libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 \
+            libxrandr2 libgbm1 libasound2 libpango-1.0-0 libcairo2 libatspi2.0-0
+
+      - name: npm ci (engine-remotion)
+        working-directory: engine-remotion
+        run: npm ci
+
+      - name: Tải Chrome headless cho Remotion
+        working-directory: engine-remotion
+        run: npx remotion browser ensure
+
+      - name: RENDER video
+        working-directory: engine-remotion
+        run: |
+          mkdir -p out
+          npx remotion render src/index.ts "${{ github.event.inputs.composition }}" \
+            out/datarace.mp4 \
+            --props=./public/ci_sample_race.json \
+            --gl=swiftshader \
+            --concurrency=${{ github.event.inputs.concurrency }} \
+            --log=verbose
+
+      - name: Thông tin file xuất ra
+        working-directory: engine-remotion
+        run: ls -lh out/ && ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 out/datarace.mp4 || true
+
+      - name: Upload video (tải về từ tab Actions)
+        uses: actions/upload-artifact@v4
+        with:
+          name: datarace-mp4
+          path: engine-remotion/out/datarace.mp4
+          retention-days: 7
