@@ -41,3 +41,7 @@ render-pipeline/BRAND_KIT.md
 render-pipeline/BRAND_PACK.md
 render-pipeline/ROADMAP.md
 render-pipeline/README.md
+
+# bản đồ topojson (import TĨNH trong WorldMapRace -> bắt buộc có)
+!engine-remotion/public/geo/
+!engine-remotion/public/geo/countries-110m.json

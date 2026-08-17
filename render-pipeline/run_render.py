@@ -29,13 +29,13 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
         if srcs:
             desc += "\n\nSources: " + " · ".join(srcs[:3])
         desc += "\n\nMusic: Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 3.0"
-        enqueue(channel=channel, video=out, vtype=vtype,
-                topic=story.get("topic") or story.get("title"),
-                title=story.get("title"), description=desc,
-                hashtags=story.get("hashtags"), tags=story.get("tags"))
-        return True
+        created = enqueue(channel=channel, video=out, vtype=vtype,
+                          topic=story.get("topic") or story.get("title"),
+                          title=story.get("title"), description=desc,
+                          hashtags=story.get("hashtags"), tags=story.get("tags"))
+        return (created or {}).get("id")          # trả Drive file id -> lưu vào job để XEM trên web
     except Exception as e:
-        print("   ⚠️ enqueue lỗi (giữ artifact):", e); return False
+        print("   ⚠️ enqueue lỗi (giữ artifact):", e); return None
 
 
 def run_one(ch, keys, n_shorts=3, report=None):
@@ -56,9 +56,10 @@ def run_one(ch, keys, n_shorts=3, report=None):
         if subtopics:
             FB.save_topics(OWNER, channel, subtopics)     # ghi vào ngân hàng chủ đề
         if ok:
-            enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
-                                          "description": plan.get("hook", "")}, "long")
-            lst("done", "Long đã đẩy Drive", title=plan.get("pillar_title")); R["done"] += 1
+            did = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
+                                                "description": plan.get("hook", "")}, "long")
+            lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
+                drive_id=did or "", preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
         else:
             lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
     except Exception as e:
@@ -71,9 +72,10 @@ def run_one(ch, keys, n_shorts=3, report=None):
             sout = os.path.join("out", DS.slug(channel) + f"_short{i}.mp4")
             _, story, sok, sinfo = DS.make_video(channel, sub, "short", sout, keys=keys, tier=tier, on_status=sst, on_limit=cool)
             if sok:
-                enqueue_drive(channel, sout, story, "short")
-                sst("done", "Short đã đẩy Drive", title=story.get("title"),
-                    score=(story.get("self_score") or {}).get("total")); R["done"] += 1
+                did = enqueue_drive(channel, sout, story, "short")
+                sst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)", title=story.get("title"),
+                    score=(story.get("self_score") or {}).get("total"),
+                    drive_id=did or "", preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
             else:
                 sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt")
         except Exception as e:
