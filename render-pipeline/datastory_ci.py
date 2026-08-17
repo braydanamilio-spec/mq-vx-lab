@@ -133,6 +133,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
     """keys: list [{id,key,email}] (production, từ Firestore); None -> dùng GEMINI_API_KEY env (local).
     on_status(status, step, **extra): ghi trạng thái realtime. on_limit(key_id): cho key nghỉ khi limit."""
     st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)   # QUAN TRỌNG: render chạy cwd=ENG -> phải tuyệt đối, nếu không file lạc chỗ (QC/enqueue tìm không ra -> 0 giây)
     print(f"▶ {channel} [{vtype}] seed={seed!r}")
     import key_manager as KM
     if keys is None:
@@ -170,6 +171,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
               on_status=None, on_limit=None, n_races=6, avoid=None):
     """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info)."""
     st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)   # QUAN TRỌNG: render cwd=ENG -> path tuyệt đối (nếu không QC/enqueue tìm không ra file -> 0 giây)
     import key_manager as KM
     import content_brain as CB
     keys = keys or [{"id": "env", "key": api_key or os.environ["GEMINI_API_KEY"], "email": "local"}]
