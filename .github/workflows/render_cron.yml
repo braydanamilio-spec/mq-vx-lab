@@ -62,6 +62,7 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
           FORCE: ${{ github.event.inputs.force }}
+          PIPELINE_VERSION: "v2"   # bump khi có fix chất lượng breaking -> "Dọn bản cũ" chỉ xóa phiên bản cũ hơn
         run: python render-pipeline/run_render.py
 
       - name: Backup video (nếu chưa đẩy Drive được)

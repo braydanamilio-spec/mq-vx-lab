@@ -97,9 +97,9 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
         print(f"   ⚠️ count_done lỗi ({e}) -> coi như 0"); return 0
 
 
-def new_job(owner: str, channel: str, vtype: str = "short") -> str:
+def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "") -> str:
     db = _db(); ref = db.collection("render_jobs").document()
-    ref.set({"owner": owner, "channel": channel, "type": vtype,
+    ref.set({"owner": owner, "channel": channel, "type": vtype, "pver": pver,   # pver = phiên bản pipeline -> dọn thông minh (chỉ xóa bản CŨ)
              "status": "queued", "step": "bắt đầu", "created_at": _now()})
     return ref.id
 

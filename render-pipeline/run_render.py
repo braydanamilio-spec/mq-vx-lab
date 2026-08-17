@@ -14,6 +14,7 @@ import firestore_bridge as FB
 import datastory_ci as DS
 
 OWNER = os.environ.get("OWNER_UID")
+PVER = os.environ.get("PIPELINE_VERSION", "v2")   # phiên bản pipeline (fix handle/tràn/che/hướng ảnh) -> dọn thông minh chỉ xóa bản CŨ
 
 
 def _make_thumb(video):
@@ -90,7 +91,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
     subtopics = []
     if do_long:
         # ---- LONG ---- SELF-HEAL: render lỗi -> tự thử lại NHẸ hơn (4 race -> 2).
-        ljob = FB.new_job(OWNER, channel, "long")
+        ljob = FB.new_job(OWNER, channel, "long", pver=PVER)
         lst = lambda s, step, **x: FB.update_job(ljob, status=s, step=step, **x)
         plan = ok = info = None; last_err = None
         for attempt, nr in enumerate([4, 2], start=1):
@@ -134,7 +135,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
             traceback.print_exc(); R["fails"].append(f"{channel} PLAN: {str(e)[:100]}")
     # ---- SHORTS (viết LẠI cho 9:16 từ 2-3 chủ đề con) ----
     for i, sub in enumerate(subtopics[:n_shorts]):
-        sjob = FB.new_job(OWNER, channel, "short")
+        sjob = FB.new_job(OWNER, channel, "short", pver=PVER)
         sst = lambda s, step, **x: FB.update_job(sjob, status=s, step=step, **x)
         story = sok = sinfo = None; serr = None
         for satt in (1, 2):                                # SELF-HEAL: thử lại 1 lần nếu lỗi
