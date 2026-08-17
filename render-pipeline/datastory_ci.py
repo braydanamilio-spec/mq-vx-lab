@@ -122,6 +122,33 @@ def _intro_from_story(story, hook_bg, sdir, tag=""):
     return intro
 
 
+_HANDLES = None
+def channel_handle(channel):
+    """Handle @ đúng theo KÊNH (đọc brands.json). Fallback @<kênh>hq. Tránh gắn nhầm @dataracehq cho mọi kênh."""
+    global _HANDLES
+    if _HANDLES is None:
+        _HANDLES = {}
+        src = os.environ.get("AUTOPUBLISHER_SRC", "")
+        cands = []
+        if src:
+            cands.append(os.path.join(os.path.dirname(src.rstrip("/")), "config", "brands.json"))
+        cands += [os.path.join(ENG, "..", "MM0-AutoPublisher", "config", "brands.json"),
+                  os.path.join(os.path.dirname(ENG), "MM0-AutoPublisher", "config", "brands.json")]
+        for p in cands:
+            try:
+                if p and os.path.exists(p):
+                    b = json.load(open(p)); items = b if isinstance(b, list) else list(b.values())
+                    for v in items:
+                        cid = re.sub(r"[^a-z0-9]", "", (v.get("id") or v.get("display") or "").lower())
+                        if cid and v.get("handle"):
+                            _HANDLES[cid] = v["handle"]
+                    break
+            except Exception:
+                pass
+    key = re.sub(r"[^a-z0-9]", "", (channel or "").lower())
+    return _HANDLES.get(key) or ("@" + key + "hq")
+
+
 def build_props(story, sdir, port, music="music/carefree.mp3", handle="@dataracehq"):
     """SHORT / 1-race: intro hook + 1 race."""
     race, bg0 = _race_from_story(story, sdir, port)
@@ -167,7 +194,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
     st("rendering", "Giọng + ảnh + render", title=story.get("title"), score=score)
     sdir = os.path.join(PUB, "narration", "_ci_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     comp = "RaceLongV" if vtype == "short" else "RaceLong"
-    props = build_props(story, sdir, vtype == "short")
+    props = build_props(story, sdir, vtype == "short", handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_ci_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render {comp} …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", comp, out,
@@ -211,7 +238,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     if len(stories) < 2:
         raise SystemExit("❌ Long cần ≥2 race hợp lệ.")
     st("rendering", f"Render long ({len(stories)} race)", title=plan.get("pillar_title"))
-    props = build_long_props(stories, sdir)
+    props = build_long_props(stories, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_long_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render RaceLong ({len(stories)} race) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "RaceLong", out,
