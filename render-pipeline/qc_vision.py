@@ -51,8 +51,11 @@ def check_visual(mp4: str, api_key: str = None, model_name: str = None, min_scor
             resp = model.generate_content([prompt, img],
                                           generation_config={"response_mime_type": "application/json", "temperature": 0.1})
             r = CB._extract_json(resp.text) or {}
-            scores.append(float(r.get("score", 0) or 0))
+            sc = float(r.get("score", 0) or 0)
+            scores.append(sc)
             issues += (r.get("issues") or [])
+            if sc >= min_score + 20:      # khung này đã RÕ ĐẸP -> khỏi soi thêm khung (TIẾT KIỆM token Gemini free)
+                break
         if not scores:
             return True, {"note": "vision-empty-skip"}
     except Exception as e:
