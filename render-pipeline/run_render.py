@@ -52,7 +52,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
         avoid = FB.recent_topics(OWNER, channel)          # chủ đề đã dùng -> tránh trùng
         lout = os.path.join("out", DS.slug(channel) + "_long.mp4")
         _, plan, subtopics, ok, info = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
-                                                    on_status=lst, on_limit=cool, avoid=avoid)
+                                                    on_status=lst, on_limit=cool, avoid=avoid, n_races=4)
         if subtopics:
             FB.save_topics(OWNER, channel, subtopics)     # ghi vào ngân hàng chủ đề
         if ok:
