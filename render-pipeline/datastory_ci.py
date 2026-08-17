@@ -270,6 +270,9 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
                 ok = False
         except Exception as e:
             print("   ⚠️ vision qc skip:", e)
+    scs = [(s.get("self_score") or {}).get("total") for s in stories if (s.get("self_score") or {}).get("total")]
+    if scs:
+        info["score"] = round(sum(scs) / len(scs))   # điểm QC long = TB các race -> hiện trên dashboard
     print(f"   {'✅' if ok else '❌'} QC long {info}")
     return out, plan, subtopics, ok, info
 

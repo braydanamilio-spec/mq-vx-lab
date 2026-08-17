@@ -116,6 +116,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                                                    "description": plan.get("hook", "")}, "long")
                 did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
                 lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
+                    score=(info or {}).get("score"),
                     dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
                     drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
             else:
