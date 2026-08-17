@@ -162,6 +162,55 @@ def run_one(ch, keys, n_shorts=3, report=None):
     print(f"   ✅ {channel}: xong long + {min(n_shorts, len(subtopics))} short")
 
 
+def _trash_old(account_name, file_id):
+    """Đưa file CŨ vào thùng rác Drive (render lại -> thay thế đúng bản đó)."""
+    if not (account_name and file_id):
+        return False
+    try:
+        src = os.environ.get("AUTOPUBLISHER_SRC")
+        if src and src not in sys.path:
+            sys.path.insert(0, src)
+        import storage as ST
+        for a in ST.pool_accounts():
+            if a.get("name") == account_name:
+                ST.account_drive(a).svc.files().update(fileId=file_id, body={"trashed": True}).execute()
+                print(f"   🗑 đã bỏ bản cũ {file_id} (kho {account_name})"); return True
+    except Exception as e:
+        print("   ⚠️ bỏ bản cũ lỗi:", str(e)[:90])
+    return False
+
+
+def process_requests(keys, report):
+    """YÊU CẦU RENDER LẠI (nút 🔄): render lại đúng chủ đề -> đẩy Drive -> BỎ bản cũ (thay thế)."""
+    for req in FB.read_render_requests(OWNER):
+        ch = req.get("channel"); typ = req.get("type", "short"); seed = req.get("seed", "")
+        if not (ch and seed):
+            FB.mark_request_done(req["id"], "thiếu thông tin"); continue
+        job = FB.new_job(OWNER, ch, typ, pver=PVER)
+        st = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
+        cool = lambda kid: FB.cool_key(kid)
+        try:
+            st("running", f"🔄 Render lại: {seed[:40]}")
+            out = os.path.join("out", DS.slug(ch) + "_rr.mp4")
+            if typ == "long":
+                _, plan, _subs, ok, info = DS.make_long(ch, seed, out, keys=keys, on_status=st, on_limit=cool, n_races=4)
+                story = {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"), "description": plan.get("hook", "")}
+            else:
+                _, story, ok, info = DS.make_video(ch, seed, "short", out, keys=keys, on_status=st, on_limit=cool)
+            if ok:
+                eq = enqueue_drive(ch, out, story, typ)
+                did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
+                _trash_old(req.get("replace_account"), req.get("replace_id"))
+                st("done", "Render lại xong — đã thay thế bản cũ", title=story.get("title"),
+                   dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
+                   drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""))
+                report["done"] += 1; FB.mark_request_done(req["id"], "done")
+            else:
+                st("failed", f"Render lại QC trượt: {info}"); FB.mark_request_done(req["id"], "qc-trượt")
+        except Exception as e:
+            traceback.print_exc(); st("failed", str(e)[:120]); FB.mark_request_done(req["id"], "lỗi")
+
+
 def main():
     if not OWNER:
         raise SystemExit("❌ Thiếu OWNER_UID (uid chủ — set ở workflow).")
@@ -205,6 +254,7 @@ def main():
     FB.set_config(OWNER, {"stop": None})             # xoá cờ dừng cũ khi bắt đầu run mới
     print(f"▶ Pipeline: {len(channels)} kênh · {len(keys)} key" + (f" · tối đa {max_run} video" if max_run else ""))
     report = {"done": 0, "fails": []}
+    process_requests(keys, report)   # 🔄 xử lý yêu cầu render lại (thay thế bản cũ) TRƯỚC
     for ch in channels:
         if FB.read_config(OWNER).get("stop"):        # ⛔ nút Dừng ngay trên dashboard
             FB.set_config(OWNER, {"stop": None}); print("⛔ Dừng theo yêu cầu — ngưng các kênh còn lại."); break

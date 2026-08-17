@@ -65,6 +65,18 @@ def read_config(owner: str) -> dict:
     return (d.to_dict() or {}) if d.exists else {}
 
 
+def read_render_requests(owner: str) -> list[dict]:
+    """Yêu cầu RENDER LẠI (từ nút 🔄 trên dashboard) đang chờ xử lý."""
+    db = _db(); out = []
+    for d in db.collection("render_requests").where("owner", "==", owner).where("status", "==", "pending").stream():
+        x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
+    return out
+
+
+def mark_request_done(req_id: str, note: str = "done"):
+    _db().collection("render_requests").document(req_id).set({"status": "done", "note": note, "done_at": _now()}, merge=True)
+
+
 def set_config(owner: str, patch: dict):
     """Ghi/merge render_config (vd xoá cờ run_now sau khi đã nhận lệnh)."""
     _db().collection("render_config").document(owner).set(patch, merge=True)
