@@ -205,7 +205,10 @@ def main():
     for ch in channels:
         if FB.read_config(OWNER).get("stop"):        # ⛔ nút Dừng ngay trên dashboard
             FB.set_config(OWNER, {"stop": None}); print("⛔ Dừng theo yêu cầu — ngưng các kênh còn lại."); break
-        run_one(ch, keys, report=report)
+        try:
+            run_one(ch, keys, report=report)         # 1 kênh lỗi (kể cả SystemExit) KHÔNG được giết cả mẻ
+        except BaseException as e:
+            traceback.print_exc(); report["fails"].append(f"{ch.get('name')}: {str(e)[:120]}")
         if max_run and report["done"] >= max_run:
             print(f"🎯 Đạt {max_run} video/lần chạy — dừng."); break
     print(f"✅ Xong: {report['done']} video · {len(report['fails'])} lỗi.")

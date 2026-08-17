@@ -249,7 +249,7 @@ def generate(seed: str, vtype: str = "short", api_key: str = None, model_name: s
         print(f"   ✅ đạt vòng {attempt}: {score}/100 — {story['title']!r}")
         return story
 
-    raise SystemExit(f"❌ Sau {MAX_TRIES} vòng vẫn chưa đạt chuẩn (điểm cuối "
+    raise Exception(f"Sau {MAX_TRIES} vòng vẫn chưa đạt chuẩn (điểm cuối "
                      f"{(last or {}).get('self_score', {}).get('total', '?')}/100). "
                      f"Bỏ chủ đề {seed!r} — chọn chủ đề khác. (Đúng tinh thần: thà bỏ còn hơn ra rác.)")
 

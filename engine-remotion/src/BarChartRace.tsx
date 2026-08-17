@@ -66,7 +66,7 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
   const labelW = port ? 300 : 330;                          // cột TÊN (canh phải) — KHÔNG chồng thanh
   const hero = (!port && (photos || images || logos || themePhotos || coldPhoto)) ? shown[0] : null;   // #1 hiện LỚN bên phải (ảnh thực thể / ảnh chủ đề theo leader)
   const heroW = hero ? 380 : 0;
-  const chartW = W - (M + labelW) - M - (port ? 300 : 180) - heroW; // chừa chỗ số cuối thanh + hero (dọc: chừa RỘNG để số dài không bị cắt mép)
+  const chartW = W - (M + labelW) - M - (port ? 300 : 230) - heroW; // chừa chỗ số cuối thanh + hero (RỘNG hơn để nhãn "215K USD" không tràn mép)
   const intro = interpolate(f, [0, 12], [0, 1], { extrapolateRight: "clamp" });
 
   return (

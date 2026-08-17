@@ -110,10 +110,15 @@ def _race_from_story(story, sdir, port, tag=""):
             if isinstance(nm, str) and len(nm) > 16:
                 d["name"] = nm[:15].rstrip() + "…"
     spf = max(2.0, min(11.0, (0.9 * cum) / max(1, nfr - 1)))
+    # UNIT gọn: bỏ chú thích trong ngoặc + cap ngắn -> nhãn giá trị KHÔNG tràn mép (vd "USD (chained 2017)"->"USD").
+    unit = re.sub(r"\s*\(.*?\)", "", story["race"].get("unit", "") or "").strip()
+    unit = re.sub(r"\b(chained|nominal|current|constant|real|per\s+capita|dollars?)\b", "", unit, flags=re.I).strip()
+    unit = unit[:6]
+    title = (story["race"].get("title_label", "") or "")[:40]   # tiêu đề chart cũng cap tránh tràn
     return {"frames": frames, "secondsPerFrame": round(spf, 3), "durationSec": round(cum + 1.0, 2),
             "narration": rel(race_mp3), "subs": all_subs, "chart": "bars",
             "bg": shots[0], "shots": shots,
-            "title": story["race"].get("title_label", ""), "unit": story["race"].get("unit", "")}, shots[0]
+            "title": title, "unit": unit}, shots[0]
 
 
 def _intro_from_story(story, hook_bg, sdir, tag=""):
@@ -242,7 +247,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
         except Exception as e:
             print(f"   ⚠️ bỏ race '{sub[:30]}': {e}")
     if len(stories) < 2:
-        raise SystemExit("❌ Long cần ≥2 race hợp lệ.")
+        raise Exception("Long cần ≥2 race hợp lệ.")   # Exception (không SystemExit) -> retry/loop bắt được, không giết cả mẻ
     st("rendering", f"Render long ({len(stories)} race)", title=plan.get("pillar_title"))
     props = build_long_props(stories, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_long_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
