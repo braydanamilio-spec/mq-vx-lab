@@ -187,6 +187,7 @@ def process_requests(keys, report):
         ch = req.get("channel"); typ = req.get("type", "short"); seed = req.get("seed", "")
         if not (ch and seed):
             FB.mark_request_done(req["id"], "thiếu thông tin"); continue
+        FB.mark_request_status(req["id"], "processing")   # KHÓA hủy: đã bắt đầu render lại
         job = FB.new_job(OWNER, ch, typ, pver=PVER)
         st = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
         cool = lambda kid: FB.cool_key(kid)
@@ -202,6 +203,7 @@ def process_requests(keys, report):
                 eq = enqueue_drive(ch, out, story, typ)
                 did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
                 _trash_old(req.get("replace_account"), req.get("replace_id"))
+                FB.delete_jobs_by_drive(OWNER, req.get("replace_id"))   # dọn job cũ (bản đã bị thay thế)
                 st("done", "Render lại xong — đã thay thế bản cũ", title=story.get("title"),
                    dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""))

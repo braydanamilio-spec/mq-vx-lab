@@ -73,6 +73,22 @@ def read_render_requests(owner: str) -> list[dict]:
     return out
 
 
+def delete_jobs_by_drive(owner: str, drive_id: str):
+    """Xóa bản ghi job cũ theo drive_id (sau khi render lại đã thay thế + bỏ file cũ)."""
+    if not drive_id:
+        return
+    for d in (_db().collection("render_jobs").where("owner", "==", owner).where("drive_id", "==", drive_id).stream()):
+        try:
+            d.reference.delete()
+        except Exception:
+            pass
+
+
+def mark_request_status(req_id: str, status: str):
+    """processing = đã bắt đầu render lại -> dashboard KHÓA nút hủy."""
+    _db().collection("render_requests").document(req_id).set({"status": status, "started_at": _now()}, merge=True)
+
+
 def mark_request_done(req_id: str, note: str = "done"):
     _db().collection("render_requests").document(req_id).set({"status": "done", "note": note, "done_at": _now()}, merge=True)
 
