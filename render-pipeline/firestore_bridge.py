@@ -40,7 +40,8 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
             # (health-check dùng include_cooling=True -> vẫn lấy key chết để RE-TEST -> tự mở lại 🟢 nếu Google bỏ chặn)
         out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
                     "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
-                    "last_used": x.get("last_used", ""), "cooling_until": cooling})
+                    "last_used": x.get("last_used", ""), "cooling_until": cooling,
+                    "dead_since": x.get("dead_since", "")})
     return out
 
 
@@ -50,6 +51,12 @@ def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = Fals
     patch = {"alive": alive, "dead_reason": ("" if alive else reason), "last_checked": _now()}
     if used:
         patch["last_used"] = _now()
+    if alive:
+        patch["dead_since"] = None                     # sống lại -> xoá mốc chết
+    else:
+        cur = _db().collection("gemini_keys").document(key_id).get()
+        if not (cur.exists and (cur.to_dict() or {}).get("dead_since")):
+            patch["dead_since"] = _now()               # stamp mốc chết LẦN ĐẦU (giữ nguyên nếu đã chết từ trước)
     _db().collection("gemini_keys").document(key_id).set(patch, merge=True)
 
 

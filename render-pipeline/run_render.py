@@ -356,13 +356,14 @@ def plan_mode():
         print("⚡ Nhận lệnh 'Render ngay'.")
     if not cfg.get("enabled") and os.environ.get("FORCE") != "1" and not run_now:
         print("⏸ Pipeline TẮT — bật ở Render Studio hoặc bấm Render ngay."); return out_channels([])
-    keys = FB.read_keys(OWNER)
-    if not keys:
+    all_keys = FB.read_keys(OWNER, include_cooling=True)   # TẤT CẢ (kể cả chết/cooling) -> health-check test hết
+    if not all_keys:
         print("❌ Chưa có Gemini key."); return out_channels([])
-    # HEALTH CHECK (throttled 20h) — chỉ ở plan, 10 luồng không lặp.
+    # HEALTH CHECK (throttled 20h) — chỉ ở plan, 10 luồng không lặp. Chạy TRƯỚC khi lọc key sống -> key vừa hồi được nhận lại.
     import content_brain as CB
+    now_iso = datetime.now(timezone.utc).isoformat()
     fresh = (datetime.now(timezone.utc) - timedelta(hours=20)).isoformat(); dead = []
-    for k in FB.read_keys(OWNER, include_cooling=True):
+    for k in all_keys:
         if k.get("last_checked") and k["last_checked"] > fresh:
             continue
         alive, reason = CB.test_key(k["key"])
@@ -373,6 +374,31 @@ def plan_mode():
             dead.append(f"{k.get('email') or k['id']} — {reason[:70]}")
     if dead:
         print(f"⚠️ {len(dead)} Gemini key CHẾT: {dead}")
+    # CẢNH BÁO KEY CHẾT QUÁ LÂU (mặc định >72h): project chết hẳn, không tự mở -> nhắc anh THAY.
+    stale_h = int(cfg.get("dead_key_alert_hours", 72) or 72)
+    stale_cut = (datetime.now(timezone.utc) - timedelta(hours=stale_h)).isoformat()
+    stale = [(k.get("email") or k["id"], k.get("dead_since", ""))
+             for k in FB.read_keys(OWNER, include_cooling=True)
+             if k.get("alive") is False and k.get("dead_since") and k["dead_since"] < stale_cut]
+    FB.set_config(OWNER, {"stale_keys": [s[0] for s in stale], "stale_keys_at": now_iso})   # -> dashboard banner
+    if stale:
+        msg = (f"🔴 {len(stale)} Gemini key CHẾT quá {stale_h}h (project không tự mở lại) — NÊN THAY:\n"
+               + "\n".join(f"  • {e} (chết từ {d[:16]})" for e, d in stale)
+               + "\n\nThay ở: https://mm0-auto-publisher.web.app/#render (tab Render → Key API).")
+        print(msg)
+        try:
+            import alert_email; alert_email.send_alert(f"🔴 MM0: {len(stale)} Gemini key chết quá {stale_h}h — thay key", msg)
+        except Exception:
+            pass
+    keys = FB.read_keys(OWNER)   # key SỐNG dùng được (sau health-check -> gồm key vừa hồi)
+    if not keys:
+        note = "⚠️ KHÔNG còn Gemini key SỐNG nào — thêm/thay key ở Render Studio."
+        print(note)
+        try:
+            import alert_email; alert_email.send_alert("⚠️ MM0 Render dừng: hết key Gemini sống", note)
+        except Exception:
+            pass
+        return out_channels([])
     global RESERVE_LONG, RESERVE_SHORT
     RESERVE_LONG = int(cfg.get("reserve_long", RESERVE_LONG) or RESERVE_LONG)
     RESERVE_SHORT = int(cfg.get("reserve_short", RESERVE_SHORT) or RESERVE_SHORT)
