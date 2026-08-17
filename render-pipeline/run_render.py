@@ -8,7 +8,7 @@ Env: OWNER_UID (uid chủ), GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID,
      AUTOPUBLISHER_SRC (đường dẫn tới MM0-AutoPublisher/src để enqueue). FORCE=1 để chạy dù đang tắt.
 """
 from __future__ import annotations
-import os, sys, traceback
+import os, sys, traceback, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import firestore_bridge as FB
 import datastory_ci as DS
@@ -16,8 +16,25 @@ import datastory_ci as DS
 OWNER = os.environ.get("OWNER_UID")
 
 
+def _make_thumb(video):
+    """Trích 1 khung ĐẸP (giữa-cuối, lúc bars cao/số lớn) làm thumbnail — dùng cho YouTube + gallery."""
+    try:
+        dur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                              "-of", "default=nk=1:nw=1", video], capture_output=True, text=True).stdout.strip()
+        try:
+            at = max(1.0, float(dur) * 0.62)
+        except ValueError:
+            at = 3.0
+        thumb = os.path.splitext(video)[0] + "_thumb.jpg"
+        subprocess.run(["ffmpeg", "-y", "-ss", str(at), "-i", video, "-frames:v", "1",
+                        "-vf", "scale=1280:-1", thumb], check=True, capture_output=True)
+        return thumb if os.path.exists(thumb) else None
+    except Exception as e:
+        print("   ⚠️ thumbnail lỗi:", str(e)[:80]); return None
+
+
 def enqueue_drive(channel, out, story, vtype) -> bool:
-    """Đẩy video + sidecar lên Drive _QUEUE qua enqueue.py của AutoPublisher (nếu có)."""
+    """Đẩy video + sidecar (+ thumbnail) lên Drive _QUEUE qua enqueue.py của AutoPublisher (nếu có)."""
     try:
         src = os.environ.get("AUTOPUBLISHER_SRC")
         if src and src not in sys.path:
@@ -32,7 +49,8 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
         created = enqueue(channel=channel, video=out, vtype=vtype,
                           topic=story.get("topic") or story.get("title"),
                           title=story.get("title"), description=desc,
-                          hashtags=story.get("hashtags"), tags=story.get("tags"))
+                          hashtags=story.get("hashtags"), tags=story.get("tags"),
+                          thumbnail=_make_thumb(out))   # trích khung từ video -> thumbnail YouTube + gallery
         return created or None                     # trả cả {id, account} -> lưu vào job để XEM/stream trên web
     except Exception as e:
         print("   ⚠️ enqueue lỗi (giữ artifact):", e); return None
