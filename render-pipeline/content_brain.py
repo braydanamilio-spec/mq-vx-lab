@@ -224,6 +224,11 @@ def generate(seed: str, vtype: str = "short", api_key: str = None, model_name: s
                     continue
             if "429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg:
                 raise RateLimited(str(e))     # tầng trên đổi sang key khác
+            # 403/project bị CHẶN/khoá quyền -> KEY (project) này hỏng, TỰ ĐỔI sang key khác (project khác), đừng giết cả kênh.
+            if ("denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg
+                    or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))     # coi như key hỏng -> rotate + cooldown -> health-check sau đánh dấu chết
             raise
         try:
             story = _extract_json(resp.text)

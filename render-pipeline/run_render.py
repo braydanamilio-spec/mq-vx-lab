@@ -415,6 +415,11 @@ def channel_mode(name):
     chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]
     if not chs:
         print(f"⚠️ Kênh {name} không còn (đã xóa) — bỏ."); return
+    # STAGGER theo kênh (0-18s): 10 luồng KHÔNG gọi Gemini/Drive cùng 1 khoảnh khắc -> đỡ bị coi là burst/lạm dụng.
+    import time
+    delay = sum(ord(c) for c in name) % 18
+    if delay:
+        print(f"   ⏳ {name}: giãn {delay}s (chống burst song song)…"); time.sleep(delay)
     report = {"done": 0, "fails": []}
     try:
         run_one(chs[0], keys, report=report)
