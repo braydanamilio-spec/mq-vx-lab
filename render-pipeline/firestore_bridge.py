@@ -64,6 +64,11 @@ def read_config(owner: str) -> dict:
     return (d.to_dict() or {}) if d.exists else {}
 
 
+def set_config(owner: str, patch: dict):
+    """Ghi/merge render_config (vd xoá cờ run_now sau khi đã nhận lệnh)."""
+    _db().collection("render_config").document(owner).set(patch, merge=True)
+
+
 def recent_topics(owner: str, channel: str, n: int = 80) -> list[str]:
     """Chủ đề ĐÃ dùng cho kênh -> đưa cho Gemini để TRÁNH trùng (chống 'reused content')."""
     d = _db().collection("render_topics").document(f"{owner}__{channel}").get()

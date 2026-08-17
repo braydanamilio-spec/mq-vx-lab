@@ -48,14 +48,26 @@ def run_one(ch, keys, n_shorts=3, report=None):
     ljob = FB.new_job(OWNER, channel, "long")
     lst = lambda s, step, **x: FB.update_job(ljob, status=s, step=step, **x)
     subtopics = []
+    # SELF-HEAL: render lỗi -> tự thử lại NHẸ hơn (4 race -> 2) trước khi báo lỗi.
+    plan = ok = info = None; last_err = None
+    for attempt, nr in enumerate([4, 2], start=1):
+        try:
+            avoid = FB.recent_topics(OWNER, channel)      # chủ đề đã dùng -> tránh trùng
+            lout = os.path.join("out", DS.slug(channel) + "_long.mp4")
+            if attempt > 1:
+                lst("running", f"🔧 Tự thử lại nhẹ hơn ({nr} race)…")
+            _, plan, subtopics, ok, info = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
+                                                        on_status=lst, on_limit=cool, avoid=avoid, n_races=nr)
+            last_err = None; break
+        except Exception as e:
+            last_err = e; traceback.print_exc()
+            print(f"   🔧 LONG {channel} lỗi lần {attempt} ({nr} race): {str(e)[:120]}")
     try:
-        avoid = FB.recent_topics(OWNER, channel)          # chủ đề đã dùng -> tránh trùng
-        lout = os.path.join("out", DS.slug(channel) + "_long.mp4")
-        _, plan, subtopics, ok, info = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
-                                                    on_status=lst, on_limit=cool, avoid=avoid, n_races=4)
         if subtopics:
             FB.save_topics(OWNER, channel, subtopics)     # ghi vào ngân hàng chủ đề
-        if ok:
+        if last_err is not None:
+            lst("failed", f"Tự thử lại vẫn lỗi: {str(last_err)[:120]}"); R["fails"].append(f"{channel} LONG: {str(last_err)[:100]}")
+        elif ok:
             did = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
                                                 "description": plan.get("hook", "")}, "long")
             lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
@@ -68,18 +80,25 @@ def run_one(ch, keys, n_shorts=3, report=None):
     for i, sub in enumerate(subtopics[:n_shorts]):
         sjob = FB.new_job(OWNER, channel, "short")
         sst = lambda s, step, **x: FB.update_job(sjob, status=s, step=step, **x)
-        try:
-            sout = os.path.join("out", DS.slug(channel) + f"_short{i}.mp4")
-            _, story, sok, sinfo = DS.make_video(channel, sub, "short", sout, keys=keys, tier=tier, on_status=sst, on_limit=cool)
-            if sok:
-                did = enqueue_drive(channel, sout, story, "short")
-                sst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)", title=story.get("title"),
-                    score=(story.get("self_score") or {}).get("total"),
-                    drive_id=did or "", preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
-            else:
-                sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt")
-        except Exception as e:
-            traceback.print_exc(); sst("failed", str(e)[:120]); R["fails"].append(f"{channel} SHORT {i}: {str(e)[:100]}")
+        story = sok = sinfo = None; serr = None
+        for satt in (1, 2):                                # SELF-HEAL: thử lại 1 lần nếu lỗi
+            try:
+                sout = os.path.join("out", DS.slug(channel) + f"_short{i}.mp4")
+                if satt > 1:
+                    sst("running", "🔧 Tự thử lại short…")
+                _, story, sok, sinfo = DS.make_video(channel, sub, "short", sout, keys=keys, tier=tier, on_status=sst, on_limit=cool)
+                serr = None; break
+            except Exception as e:
+                serr = e; traceback.print_exc(); print(f"   🔧 SHORT {channel}#{i} lỗi lần {satt}: {str(e)[:100]}")
+        if serr is not None:
+            sst("failed", f"Tự thử lại vẫn lỗi: {str(serr)[:110]}"); R["fails"].append(f"{channel} SHORT {i}: {str(serr)[:100]}")
+        elif sok:
+            did = enqueue_drive(channel, sout, story, "short")
+            sst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)", title=story.get("title"),
+                score=(story.get("self_score") or {}).get("total"),
+                drive_id=did or "", preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
+        else:
+            sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt")
     print(f"   ✅ {channel}: xong long + {min(n_shorts, len(subtopics))} short")
 
 
@@ -87,8 +106,18 @@ def main():
     if not OWNER:
         raise SystemExit("❌ Thiếu OWNER_UID (uid chủ — set ở workflow).")
     cfg = FB.read_config(OWNER)
-    if not cfg.get("enabled") and os.environ.get("FORCE") != "1":
-        print("⏸ Pipeline đang TẮT — bật ở tab Render Studio, hoặc chạy FORCE=1."); return
+    # NHỊP 30': chỉ chạy khi có lệnh "Render ngay" (run_now) HOẶC đúng giờ mẻ đêm (18h UTC).
+    from datetime import datetime, timezone
+    event = os.environ.get("GITHUB_EVENT_NAME", "")
+    run_now = bool(cfg.get("run_now"))
+    is_nightly = datetime.now(timezone.utc).hour == 18
+    if event == "schedule" and not run_now and not is_nightly:
+        print("⏭ Nhịp kiểm 30' — không có lệnh Render ngay, bỏ qua (free)."); return
+    if run_now:
+        FB.set_config(OWNER, {"run_now": None, "run_now_done_at": datetime.now(timezone.utc).isoformat()})
+        print("⚡ Nhận lệnh 'Render ngay' từ dashboard.")
+    if not cfg.get("enabled") and os.environ.get("FORCE") != "1" and not run_now:
+        print("⏸ Pipeline đang TẮT — bật ở tab Render Studio, hoặc bấm Render ngay."); return
     keys = FB.read_keys(OWNER)
     if not keys:
         raise SystemExit("❌ Chưa có Gemini key — thêm ở tab 🎬 Render Studio.")

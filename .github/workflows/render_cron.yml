@@ -10,7 +10,8 @@ on:
     inputs:
       force: { description: "FORCE=1 chạy dù pipeline đang tắt", default: "1" }
   schedule:
-    - cron: "0 18 * * *"   # 18:00 UTC ~ 01:00 VN — đổi tuỳ ý
+    - cron: "0 18 * * *"    # 18:00 UTC ~ 01:00 VN: mẻ đêm đầy đủ
+    - cron: "*/30 * * * *"  # mỗi 30': kiểm cờ "Render ngay" từ dashboard (nhẹ, free)
 
 jobs:
   factory:
