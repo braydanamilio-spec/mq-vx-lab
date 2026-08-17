@@ -26,7 +26,7 @@ def _is_image(b: bytes) -> bool:
             or b[:4] == b"GIF8" or (b[:4] == b"RIFF" and b[8:12] == b"WEBP"))
 
 
-def fetch_image(query, dest):
+def fetch_image(query, dest, orient=None):
     """Tải 1 ảnh từ Openverse — ƯU TIÊN CC0/Public Domain (KHÔNG cần ghi nguồn, an toàn bản quyền).
     Fallback sang commercial nếu không có CC0. Lỗi/ảnh hỏng -> trả None (engine tự dùng ảnh fallback)."""
     query = re.sub(r"\b(chart|graph|screenshot|data|statistics|dashboard|trading|diagram|infographic)\b",
@@ -35,9 +35,15 @@ def fetch_image(query, dest):
         u = "https://api.openverse.org/v1/images/?" + urllib.parse.urlencode(params)
         with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=20) as r:
             return json.load(r).get("results") or []
+    ar = {"tall": "tall", "wide": "wide"}.get(orient or "")   # KHỚP ĐỊNH DẠNG: short=dọc(tall), long=ngang(wide)
+    base = {"page_size": 3, "license": "cc0,pdm", "mature": "false"}
+    if ar:
+        base["aspect_ratio"] = ar
     try:
         # CHỈ CC0 + Public Domain -> KHÔNG cần ghi nguồn, an toàn bản quyền 100%. Không có -> dùng ảnh fallback.
-        res = _try({"q": query, "page_size": 3, "license": "cc0,pdm", "mature": "false"})
+        res = _try({"q": query, **base})
+        if not res and ar:
+            res = _try({"q": query, "page_size": 3, "license": "cc0,pdm", "mature": "false"})   # bỏ lọc hướng nếu 0 kết quả
         if not res:
             res = _try({"q": " ".join(query.split()[:2]), "page_size": 3, "license": "cc0,pdm", "mature": "false"})  # rút gọn từ khoá thử lại
         if not res:
@@ -90,7 +96,7 @@ def _race_from_story(story, sdir, port, tag=""):
         cum += _dur(m) or (subs[-1]["t"] - cum + subs[-1]["d"] if subs else 0)  # offset theo độ dài THẬT mp3
         seg_mp3.append(m)
         q = (n.get("visual") or {}).get("query") or story.get("topic", "")
-        img = fetch_image(q, os.path.join(idir, f"s{i}.jpg"))
+        img = fetch_image(q, os.path.join(idir, f"s{i}.jpg"), orient="tall" if port else "wide")
         shots.append(rel(img) if img else (shots[-1] if shots else None))
     FB = "img/_fallback.jpg"
     firstok = next((s for s in shots if s), None) or FB
