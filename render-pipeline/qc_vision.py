@@ -8,39 +8,52 @@ import subprocess
 import content_brain as CB
 
 
-def _still(mp4: str, frac: float = 0.5):
+def _stills(mp4: str, fracs=(0.4, 0.7)):
+    """Trích VÀI khung ở các mốc ỔN ĐỊNH (giữa race), tránh intro/outro/chuyển cảnh."""
     dur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
                           "-of", "default=nk=1:nw=1", mp4], capture_output=True, text=True).stdout.strip()
     try:
-        at = max(1.0, float(dur) * frac)
+        d = float(dur)
     except ValueError:
-        at = 3.0
-    out = mp4 + ".qc.jpg"
-    subprocess.run(["ffmpeg", "-y", "-ss", str(at), "-i", mp4, "-frames:v", "1",
-                    "-vf", "scale=720:-1", out], capture_output=True)
-    return out if os.path.exists(out) else None
+        d = 10.0
+    outs = []
+    for i, fr in enumerate(fracs):
+        at = max(1.0, d * fr)
+        out = f"{mp4}.qc{i}.jpg"
+        subprocess.run(["ffmpeg", "-y", "-ss", str(at), "-i", mp4, "-frames:v", "1",
+                        "-vf", "scale=720:-1", out], capture_output=True)
+        if os.path.exists(out):
+            outs.append(out)
+    return outs
 
 
-def check_visual(mp4: str, api_key: str = None, model_name: str = None, min_score: int = 85):
-    """Trả (ok, info). ok=False nếu chồng chéo hoặc điểm < min_score."""
-    still = _still(mp4)
-    if not still:
+def check_visual(mp4: str, api_key: str = None, model_name: str = None, min_score: int = 55):
+    """QC thẩm mỹ LƯỢNG THỨ: nhiều khung -> lấy điểm CAO NHẤT (1 khung chuyển cảnh xấu không giết cả video).
+    Chỉ loại video THẬT SỰ hỏng (đen/vỡ/chồng nặng khắp nơi). Fail-OPEN khi lỗi Vision. Trả (ok, info)."""
+    stills = _stills(mp4)
+    if not stills:
         return True, {"note": "no-still-skip"}
     try:
         genai = CB._genai(api_key)
         akey = api_key or os.environ.get("GEMINI_API_KEY", "")
         mn = model_name or CB._pick_model(genai, "flash", akey) or "gemini-3.5-flash"
         model = genai.GenerativeModel(mn)
-        img = {"mime_type": "image/jpeg", "data": open(still, "rb").read()}
-        prompt = ("This is one frame from a data bar-chart-race video. Rate its visual quality 0-100. "
-                  "Give a LOW score if ANY: text or numbers overlap each other, text/numbers cut off at "
-                  "frame edges, unreadable or low contrast, frame is mostly black/empty, or it looks broken. "
-                  "High score = clean, readable, professional, nothing overlapping. "
-                  'Return STRICT JSON only: {"score": 0-100, "overlap": true|false, "issues": [str]}')
-        resp = model.generate_content([prompt, img],
-                                      generation_config={"response_mime_type": "application/json", "temperature": 0.1})
-        r = CB._extract_json(resp.text)
+        prompt = ("This is ONE frame from a data bar-chart-race video (dense labels/numbers are NORMAL and fine). "
+                  "Rate overall visual quality 0-100. Only give a LOW score (<50) if the frame is genuinely BROKEN: "
+                  "mostly black/empty, severe unreadable overlap everywhere, or major text cut off. "
+                  "A clean, readable chart with many labels is HIGH (80+). "
+                  'Return STRICT JSON only: {"score": 0-100, "issues": [str]}')
+        scores, issues = [], []
+        for st in stills:
+            img = {"mime_type": "image/jpeg", "data": open(st, "rb").read()}
+            resp = model.generate_content([prompt, img],
+                                          generation_config={"response_mime_type": "application/json", "temperature": 0.1})
+            r = CB._extract_json(resp.text) or {}
+            scores.append(float(r.get("score", 0) or 0))
+            issues += (r.get("issues") or [])
+        if not scores:
+            return True, {"note": "vision-empty-skip"}
     except Exception as e:
         return True, {"note": f"vision-skip: {str(e)[:80]}"}   # fail-open
-    ok = (r.get("score", 0) >= min_score) and not r.get("overlap")
-    return ok, r
+    best = max(scores)
+    return best >= min_score, {"score": round(best), "avg": round(sum(scores) / len(scores)), "frames": len(scores), "issues": issues[:4]}

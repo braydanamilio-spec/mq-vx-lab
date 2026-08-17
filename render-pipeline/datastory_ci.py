@@ -97,6 +97,12 @@ def _race_from_story(story, sdir, port, tag=""):
     shots = [s or firstok for s in shots]
     race_mp3 = os.path.join(sdir, f"race{tag}.mp3"); _concat(seg_mp3, race_mp3)
     frames = story["race"]["frames"]; nfr = len(frames)
+    # TIỀN-KIỂM (miễn phí, TRƯỚC render): cắt tên ≤16 ký tự -> chống cắt mép/chồng nhãn (thủ phạm điểm visual thấp).
+    for fr in frames:
+        for d in fr.get("data", []):
+            nm = d.get("name")
+            if isinstance(nm, str) and len(nm) > 16:
+                d["name"] = nm[:15].rstrip() + "…"
     spf = max(2.0, min(11.0, (0.9 * cum) / max(1, nfr - 1)))
     return {"frames": frames, "secondsPerFrame": round(spf, 3), "durationSec": round(cum + 1.0, 2),
             "narration": rel(race_mp3), "subs": all_subs, "chart": "bars",
