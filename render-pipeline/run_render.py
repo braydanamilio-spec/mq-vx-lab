@@ -112,10 +112,11 @@ def run_one(ch, keys, n_shorts=3, report=None):
             if last_err is not None:
                 lst("failed", f"Tự thử lại vẫn lỗi: {str(last_err)[:120]}"); R["fails"].append(f"{channel} LONG: {str(last_err)[:100]}")
             elif ok:
-                info = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
-                                                     "description": plan.get("hook", "")}, "long")
-                did = (info or {}).get("id"); acc = (info or {}).get("account", "")
+                eq = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
+                                                   "description": plan.get("hook", "")}, "long")
+                did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
                 lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
+                    dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
                     drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
             else:
                 lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
@@ -150,10 +151,11 @@ def run_one(ch, keys, n_shorts=3, report=None):
         if serr is not None:
             sst("failed", f"Tự thử lại vẫn lỗi: {str(serr)[:110]}"); R["fails"].append(f"{channel} SHORT {i}: {str(serr)[:100]}")
         elif sok:
-            info = enqueue_drive(channel, sout, story, "short")
-            did = (info or {}).get("id"); acc = (info or {}).get("account", "")
+            eq = enqueue_drive(channel, sout, story, "short")
+            did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
             sst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)", title=story.get("title"),
                 score=(story.get("self_score") or {}).get("total"),
+                dur=(sinfo or {}).get("dur", 0), size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""),
                 drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
         else:
             sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt")

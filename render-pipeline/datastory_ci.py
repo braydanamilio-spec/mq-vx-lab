@@ -185,7 +185,11 @@ def qc(mp4):
     ach = ff(["-select_streams", "a", "-show_entries", "stream=codec_type", "-of", "default=nk=1:nw=1"])
     wh = ff(["-select_streams", "v", "-show_entries", "stream=width,height", "-of", "csv=p=0:s=x"])
     ok = dur >= 5 and ach == "audio"
-    return ok, {"dur": round(dur, 1), "audio": ach == "audio", "res": wh}
+    try:
+        size_mb = round(os.path.getsize(mp4) / 1e6, 1)
+    except Exception:
+        size_mb = 0
+    return ok, {"dur": round(dur, 1), "audio": ach == "audio", "res": wh, "size_mb": size_mb}
 
 
 def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None, on_status=None, on_limit=None, on_ok=None):
