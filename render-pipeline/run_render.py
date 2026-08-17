@@ -424,7 +424,9 @@ def channel_mode(name):
 
 
 if __name__ == "__main__":
-    if "--plan" in sys.argv:
+    if "--gate" in sys.argv:
+        gate_mode()
+    elif "--plan" in sys.argv:
         plan_mode()
     elif "--channel" in sys.argv:
         i = sys.argv.index("--channel")
