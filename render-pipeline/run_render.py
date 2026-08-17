@@ -374,20 +374,31 @@ def plan_mode():
             dead.append(f"{k.get('email') or k['id']} — {reason[:70]}")
     if dead:
         print(f"⚠️ {len(dead)} Gemini key CHẾT: {dead}")
-    # CẢNH BÁO KEY CHẾT QUÁ LÂU (mặc định >72h): project chết hẳn, không tự mở -> nhắc anh THAY.
-    stale_h = int(cfg.get("dead_key_alert_hours", 72) or 72)
-    stale_cut = (datetime.now(timezone.utc) - timedelta(hours=stale_h)).isoformat()
-    stale = [(k.get("email") or k["id"], k.get("dead_since", ""))
-             for k in FB.read_keys(OWNER, include_cooling=True)
-             if k.get("alive") is False and k.get("dead_since") and k["dead_since"] < stale_cut]
-    FB.set_config(OWNER, {"stale_keys": [s[0] for s in stale], "stale_keys_at": now_iso})   # -> dashboard banner
-    if stale:
-        msg = (f"🔴 {len(stale)} Gemini key CHẾT quá {stale_h}h (project không tự mở lại) — NÊN THAY:\n"
-               + "\n".join(f"  • {e} (chết từ {d[:16]})" for e, d in stale)
-               + "\n\nThay ở: https://mm0-auto-publisher.web.app/#render (tab Render → Key API).")
+    # CẢNH BÁO KEY CHẾT — 2 MỨC: ⚠️ >warn_h (72h, THEO DÕI, có thể còn tự mở) · 🔴 >repl_h (7 ngày, THAY NGAY, chết hẳn).
+    warn_h = int(cfg.get("dead_key_warn_hours", 72) or 72)
+    repl_h = int(cfg.get("dead_key_replace_hours", 168) or 168)
+    warn_cut = (datetime.now(timezone.utc) - timedelta(hours=warn_h)).isoformat()
+    repl_cut = (datetime.now(timezone.utc) - timedelta(hours=repl_h)).isoformat()
+    dead_all = [(k.get("email") or k["id"], k.get("dead_since", ""))
+                for k in FB.read_keys(OWNER, include_cooling=True)
+                if k.get("alive") is False and k.get("dead_since")]
+    repl = [x for x in dead_all if x[1] < repl_cut]                     # chết > repl_h
+    warn = [x for x in dead_all if repl_cut <= x[1] < warn_cut]         # chết trong [warn_h, repl_h)
+    FB.set_config(OWNER, {"stale_keys_warn": [e for e, _ in warn],
+                          "stale_keys_replace": [e for e, _ in repl], "stale_keys_at": now_iso})
+    if warn or repl:
+        parts = []
+        if repl:
+            parts.append(f"🔴 {len(repl)} key CHẾT quá {repl_h // 24} ngày — THAY NGAY (project chết hẳn):\n"
+                         + "\n".join(f"  • {e} (chết từ {d[:16]})" for e, d in repl))
+        if warn:
+            parts.append(f"⚠️ {len(warn)} key chết quá {warn_h}h — THEO DÕI (có thể còn tự mở lại):\n"
+                         + "\n".join(f"  • {e} (chết từ {d[:16]})" for e, d in warn))
+        msg = "\n\n".join(parts) + "\n\nQuản lý key: https://mm0-auto-publisher.web.app/#render (tab Render → Key API)."
         print(msg)
+        subj = (f"🔴 MM0: {len(repl)} key cần THAY NGAY" if repl else f"⚠️ MM0: {len(warn)} key chết >{warn_h}h theo dõi")
         try:
-            import alert_email; alert_email.send_alert(f"🔴 MM0: {len(stale)} Gemini key chết quá {stale_h}h — thay key", msg)
+            import alert_email; alert_email.send_alert(subj, msg)
         except Exception:
             pass
     keys = FB.read_keys(OWNER)   # key SỐNG dùng được (sau health-check -> gồm key vừa hồi)
