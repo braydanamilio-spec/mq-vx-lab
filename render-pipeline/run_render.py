@@ -23,9 +23,15 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
         if src and src not in sys.path:
             sys.path.insert(0, src)
         from enqueue import enqueue
+        # GHI NGUỒN NHẠC (Kevin MacLeod CC-BY) + nguồn số liệu -> tránh claim bản quyền, đúng chính sách.
+        desc = (story.get("description") or "")
+        srcs = story.get("sources") or []
+        if srcs:
+            desc += "\n\nSources: " + " · ".join(srcs[:3])
+        desc += "\n\nMusic: Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 3.0"
         enqueue(channel=channel, video=out, vtype=vtype,
                 topic=story.get("topic") or story.get("title"),
-                title=story.get("title"), description=story.get("description"),
+                title=story.get("title"), description=desc,
                 hashtags=story.get("hashtags"), tags=story.get("tags"))
         return True
     except Exception as e:
@@ -43,8 +49,12 @@ def run_one(ch, keys, n_shorts=3, report=None):
     lst = lambda s, step, **x: FB.update_job(ljob, status=s, step=step, **x)
     subtopics = []
     try:
+        avoid = FB.recent_topics(OWNER, channel)          # chủ đề đã dùng -> tránh trùng
         lout = os.path.join("out", DS.slug(channel) + "_long.mp4")
-        _, plan, subtopics, ok, info = DS.make_long(channel, niche, lout, keys=keys, tier=tier, on_status=lst, on_limit=cool)
+        _, plan, subtopics, ok, info = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
+                                                    on_status=lst, on_limit=cool, avoid=avoid)
+        if subtopics:
+            FB.save_topics(OWNER, channel, subtopics)     # ghi vào ngân hàng chủ đề
         if ok:
             enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
                                           "description": plan.get("hook", "")}, "long")

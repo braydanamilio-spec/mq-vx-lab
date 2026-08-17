@@ -30,9 +30,10 @@ def fetch_image(query, dest):
         with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=20) as r:
             return json.load(r).get("results") or []
     try:
-        res = _try({"q": query, "page_size": 1, "license": "cc0,pdm", "mature": "false"})  # public domain trước
+        # CHỈ CC0 + Public Domain -> KHÔNG cần ghi nguồn, an toàn bản quyền 100%. Không có -> dùng ảnh fallback.
+        res = _try({"q": query, "page_size": 3, "license": "cc0,pdm", "mature": "false"})
         if not res:
-            res = _try({"q": query, "page_size": 1, "license_type": "commercial", "mature": "false"})
+            res = _try({"q": " ".join(query.split()[:2]), "page_size": 3, "license": "cc0,pdm", "mature": "false"})  # rút gọn từ khoá thử lại
         if not res:
             return None
         with urllib.request.urlopen(urllib.request.Request(res[0]["url"], headers=UA), timeout=30) as r:
@@ -157,7 +158,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
 
 
 def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
-              on_status=None, on_limit=None, n_races=6):
+              on_status=None, on_limit=None, n_races=6, avoid=None):
     """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info)."""
     st = on_status or (lambda *a, **k: None)
     import key_manager as KM
@@ -165,7 +166,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ["GEMINI_API_KEY"], "email": "local"}]
     st("writing", "Lập pillar (chủ đề con)")
     k0 = KM.key_order(channel, keys)[0]
-    plan = CB.plan_pillar(niche, n_races, api_key=k0["key"], model_name=KM.model_for(tier))
+    plan = CB.plan_pillar(niche, n_races, api_key=k0["key"], model_name=KM.model_for(tier), avoid=avoid)
     subtopics = plan.get("subtopics", [])[:n_races]
     sdir = os.path.join(PUB, "narration", "_long_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     stories = []

@@ -58,6 +58,21 @@ def read_config(owner: str) -> dict:
     return (d.to_dict() or {}) if d.exists else {}
 
 
+def recent_topics(owner: str, channel: str, n: int = 80) -> list[str]:
+    """Chủ đề ĐÃ dùng cho kênh -> đưa cho Gemini để TRÁNH trùng (chống 'reused content')."""
+    d = _db().collection("render_topics").document(f"{owner}__{channel}").get()
+    return (((d.to_dict() or {}).get("topics") or [])[-n:]) if d.exists else []
+
+
+def save_topics(owner: str, channel: str, topics: list[str]):
+    """Lưu chủ đề vừa dùng (cap 300 gần nhất)."""
+    ref = _db().collection("render_topics").document(f"{owner}__{channel}")
+    d = ref.get()
+    cur = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
+    cur = (cur + [t for t in topics if t])[-300:]
+    ref.set({"owner": owner, "channel": channel, "topics": cur}, merge=True)
+
+
 def new_job(owner: str, channel: str, vtype: str = "short") -> str:
     db = _db(); ref = db.collection("render_jobs").document()
     ref.set({"owner": owner, "channel": channel, "type": vtype,

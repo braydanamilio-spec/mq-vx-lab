@@ -229,15 +229,21 @@ PILLAR_SYS = ("You plan themed content for a TOP US data channel. Given a niche,
               "with REAL public data available. No overlap between sub-topics. No sensitive/political-partisan topics.")
 
 
-def plan_pillar(niche: str, n: int = 6, api_key: str = None, model_name: str = None) -> dict:
-    """Lập 1 pillar cho video LONG: {pillar_title, hook, subtopics:[str x n]} — mỗi subtopic 1 race khác nhau."""
+def plan_pillar(niche: str, n: int = 6, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Lập 1 pillar cho video LONG: {pillar_title, hook, subtopics:[str x n]} — mỗi subtopic 1 race khác nhau.
+    avoid: danh sách chủ đề ĐÃ dùng -> BẮT BUỘC tránh (chống trùng lặp / reused content)."""
     genai = _genai(api_key)
     akey = api_key or os.environ.get("GEMINI_API_KEY", "")
     prefer = "pro" if (model_name and "pro" in model_name) else "flash"
     mname = model_name or MODEL
+    avoid_txt = ""
+    if avoid:
+        avoid_txt = ("\nDO NOT repeat or closely resemble ANY of these already-used topics "
+                     "(pick completely fresh angles): " + " | ".join(avoid[-60:]))
     prompt = (f'Niche: "{niche}". Propose {n} DISTINCT sub-topics for a US bar-chart-race compilation. '
               f'Return STRICT JSON: {{"pillar_title": str (<=40 chars, punchy), "hook": str (one shock line), '
-              f'"subtopics": [str x {n}]}}. Each subtopic = short search-friendly phrase, real US data, different angle.')
+              f'"subtopics": [str x {n}]}}. Each subtopic = short search-friendly phrase, real US data, different angle.'
+              + avoid_txt)
     for _try in range(2):
         try:
             model = genai.GenerativeModel(mname, system_instruction=PILLAR_SYS)
