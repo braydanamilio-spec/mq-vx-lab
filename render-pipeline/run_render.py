@@ -39,44 +39,66 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
 
 
 def run_one(ch, keys, n_shorts=3, report=None):
-    """1 kênh/ngày: 1 LONG (pillar 5-6 race) + n_shorts SHORT dọc (viết lại từ chủ đề con)."""
+    """1 kênh theo TEMPLATE của kênh: make_long (1 long pillar) + n_shorts SHORT dọc.
+    Đọc ch['make_long'] (mặc định True) và ch['n_shorts'] (mặc định 3) do dashboard đặt."""
     channel = ch.get("name"); tier = ch.get("tier", "normal"); niche = ch.get("niche") or channel
     cool = lambda kid: FB.cool_key(kid)
     R = report if report is not None else {"done": 0, "fails": []}
     os.makedirs("out", exist_ok=True)
-    # ---- LONG ----
-    ljob = FB.new_job(OWNER, channel, "long")
-    lst = lambda s, step, **x: FB.update_job(ljob, status=s, step=step, **x)
+    do_long = ch.get("make_long", True)
+    n_shorts = int(ch.get("n_shorts", n_shorts) or 0)
+    # MỤC TIÊU số video/kênh (0 = không giới hạn): đủ rồi thì bỏ qua, khỏi làm dư.
+    long_target = int(ch.get("long_target", 0) or 0)
+    short_target = int(ch.get("short_target", 0) or 0)
+    if do_long and long_target and FB.count_done(OWNER, channel, "long") >= long_target:
+        do_long = False; print(f"🎯 {channel}: đủ {long_target} long — bỏ qua long.")
+    if short_target:
+        n_shorts = max(0, min(n_shorts, short_target - FB.count_done(OWNER, channel, "short")))
     subtopics = []
-    # SELF-HEAL: render lỗi -> tự thử lại NHẸ hơn (4 race -> 2) trước khi báo lỗi.
-    plan = ok = info = None; last_err = None
-    for attempt, nr in enumerate([4, 2], start=1):
+    if do_long:
+        # ---- LONG ---- SELF-HEAL: render lỗi -> tự thử lại NHẸ hơn (4 race -> 2).
+        ljob = FB.new_job(OWNER, channel, "long")
+        lst = lambda s, step, **x: FB.update_job(ljob, status=s, step=step, **x)
+        plan = ok = info = None; last_err = None
+        for attempt, nr in enumerate([4, 2], start=1):
+            try:
+                avoid = FB.recent_topics(OWNER, channel)      # chủ đề đã dùng -> tránh trùng
+                lout = os.path.join("out", DS.slug(channel) + "_long.mp4")
+                if attempt > 1:
+                    lst("running", f"🔧 Tự thử lại nhẹ hơn ({nr} race)…")
+                _, plan, subtopics, ok, info = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
+                                                            on_status=lst, on_limit=cool, avoid=avoid, n_races=nr)
+                last_err = None; break
+            except Exception as e:
+                last_err = e; traceback.print_exc()
+                print(f"   🔧 LONG {channel} lỗi lần {attempt} ({nr} race): {str(e)[:120]}")
         try:
-            avoid = FB.recent_topics(OWNER, channel)      # chủ đề đã dùng -> tránh trùng
-            lout = os.path.join("out", DS.slug(channel) + "_long.mp4")
-            if attempt > 1:
-                lst("running", f"🔧 Tự thử lại nhẹ hơn ({nr} race)…")
-            _, plan, subtopics, ok, info = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
-                                                        on_status=lst, on_limit=cool, avoid=avoid, n_races=nr)
-            last_err = None; break
+            if subtopics:
+                FB.save_topics(OWNER, channel, subtopics)     # ghi vào ngân hàng chủ đề
+            if last_err is not None:
+                lst("failed", f"Tự thử lại vẫn lỗi: {str(last_err)[:120]}"); R["fails"].append(f"{channel} LONG: {str(last_err)[:100]}")
+            elif ok:
+                did = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
+                                                    "description": plan.get("hook", "")}, "long")
+                lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
+                    drive_id=did or "", preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
+            else:
+                lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
         except Exception as e:
-            last_err = e; traceback.print_exc()
-            print(f"   🔧 LONG {channel} lỗi lần {attempt} ({nr} race): {str(e)[:120]}")
-    try:
-        if subtopics:
-            FB.save_topics(OWNER, channel, subtopics)     # ghi vào ngân hàng chủ đề
-        if last_err is not None:
-            lst("failed", f"Tự thử lại vẫn lỗi: {str(last_err)[:120]}"); R["fails"].append(f"{channel} LONG: {str(last_err)[:100]}")
-        elif ok:
-            did = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
-                                                "description": plan.get("hook", "")}, "long")
-            lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
-                drive_id=did or "", preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
-        else:
-            lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
-    except Exception as e:
-        traceback.print_exc(); lst("failed", str(e)[:140]); R["fails"].append(f"{channel} LONG: {str(e)[:100]}")
-    # ---- SHORTS (viết LẠI cho 9:16 từ 2-3 chủ đề con của long) ----
+            traceback.print_exc(); lst("failed", str(e)[:140]); R["fails"].append(f"{channel} LONG: {str(e)[:100]}")
+    else:
+        # TEMPLATE "chỉ short": lấy subtopics KHÔNG render long (rẻ, nhanh).
+        try:
+            import content_brain as CB, key_manager as KM
+            k0 = KM.key_order(channel, keys)[0]
+            plan = CB.plan_pillar(niche, max(n_shorts, 3), api_key=k0["key"], model_name=KM.model_for(tier),
+                                  avoid=FB.recent_topics(OWNER, channel))
+            subtopics = (plan.get("subtopics") or [])[:max(n_shorts, 3)]
+            if subtopics:
+                FB.save_topics(OWNER, channel, subtopics)
+        except Exception as e:
+            traceback.print_exc(); R["fails"].append(f"{channel} PLAN: {str(e)[:100]}")
+    # ---- SHORTS (viết LẠI cho 9:16 từ 2-3 chủ đề con) ----
     for i, sub in enumerate(subtopics[:n_shorts]):
         sjob = FB.new_job(OWNER, channel, "short")
         sst = lambda s, step, **x: FB.update_job(sjob, status=s, step=step, **x)
@@ -134,10 +156,16 @@ def main():
     channels = [c for c in FB.read_channels(OWNER) if c.get("name")]
     if not channels:
         print("⚠️ Chưa cấu hình kênh render nào (thêm ở tab Render Studio)."); return
-    print(f"▶ Pipeline: {len(channels)} kênh · {len(keys)} key")
+    max_run = int(cfg.get("max_per_run", 0) or 0)   # 0 = không giới hạn; >0 = dừng sau N video/lần
+    FB.set_config(OWNER, {"stop": None})             # xoá cờ dừng cũ khi bắt đầu run mới
+    print(f"▶ Pipeline: {len(channels)} kênh · {len(keys)} key" + (f" · tối đa {max_run} video" if max_run else ""))
     report = {"done": 0, "fails": []}
     for ch in channels:
+        if FB.read_config(OWNER).get("stop"):        # ⛔ nút Dừng ngay trên dashboard
+            FB.set_config(OWNER, {"stop": None}); print("⛔ Dừng theo yêu cầu — ngưng các kênh còn lại."); break
         run_one(ch, keys, report=report)
+        if max_run and report["done"] >= max_run:
+            print(f"🎯 Đạt {max_run} video/lần chạy — dừng."); break
     print(f"✅ Xong: {report['done']} video · {len(report['fails'])} lỗi.")
     # EMAIL CẢNH BÁO — chống spam: CHỈ gửi khi CÓ LỖI, gộp 1 email cho cả lần chạy.
     if report["fails"] or dead_keys:

@@ -84,6 +84,15 @@ def save_topics(owner: str, channel: str, topics: list[str]):
     ref.set({"owner": owner, "channel": channel, "topics": cur}, merge=True)
 
 
+def count_done(owner: str, channel: str, vtype: str = None) -> int:
+    """Đếm số video ĐÃ XONG của 1 kênh (để so mục tiêu long/short target)."""
+    q = (_db().collection("render_jobs").where("owner", "==", owner)
+         .where("channel", "==", channel).where("status", "==", "done"))
+    if vtype:
+        q = q.where("type", "==", vtype)
+    return sum(1 for _ in q.stream())
+
+
 def new_job(owner: str, channel: str, vtype: str = "short") -> str:
     db = _db(); ref = db.collection("render_jobs").document()
     ref.set({"owner": owner, "channel": channel, "type": vtype,
