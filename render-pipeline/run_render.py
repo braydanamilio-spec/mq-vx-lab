@@ -8,7 +8,7 @@ Env: OWNER_UID (uid chủ), GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID,
      AUTOPUBLISHER_SRC (đường dẫn tới MM0-AutoPublisher/src để enqueue). FORCE=1 để chạy dù đang tắt.
 """
 from __future__ import annotations
-import os, sys, traceback, subprocess
+import os, sys, traceback, subprocess, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import firestore_bridge as FB
 import datastory_ci as DS
@@ -36,6 +36,15 @@ def _make_thumb(video):
 def enqueue_drive(channel, out, story, vtype) -> bool:
     """Đẩy video + sidecar (+ thumbnail) lên Drive _QUEUE qua enqueue.py của AutoPublisher (nếu có)."""
     try:
+        # ĐẶT TÊN FILE = KÊNH__tiêu-đề (để search được cả trong Drive lẫn kho tổng, biết ngay của kênh nào).
+        _title = story.get("title") or story.get("topic") or vtype
+        _safe = re.sub(r"[^A-Za-z0-9]+", "-", f"{channel}__{_title}").strip("-")[:80]
+        _new = os.path.join(os.path.dirname(out), _safe + os.path.splitext(out)[1])
+        if _new != out and not os.path.exists(_new):
+            try:
+                os.rename(out, _new); out = _new
+            except Exception:
+                pass
         src = os.environ.get("AUTOPUBLISHER_SRC")
         if src and src not in sys.path:
             sys.path.insert(0, src)
