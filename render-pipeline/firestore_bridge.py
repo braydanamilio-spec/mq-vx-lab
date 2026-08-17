@@ -35,6 +35,9 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         cooling = x.get("cooling_until", "")
         if cooling and cooling > now and not include_cooling:
             continue                                  # đang nghỉ -> bỏ qua vòng này
+        if x.get("alive") is False and not include_cooling:
+            continue                                  # RENDER: bỏ key đã biết CHẾT (403/khoá) -> khỏi phí lượt.
+            # (health-check dùng include_cooling=True -> vẫn lấy key chết để RE-TEST -> tự mở lại 🟢 nếu Google bỏ chặn)
         out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
                     "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
                     "last_used": x.get("last_used", ""), "cooling_until": cooling})
