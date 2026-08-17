@@ -78,6 +78,9 @@ def run_one(ch, keys, n_shorts=3, report=None):
             try: FB.mark_key_alive(kid, True, "ok (dùng thật)")
             except Exception: pass
     R = report if report is not None else {"done": 0, "fails": []}
+    def _stopped():   # nút ⛔ Dừng: kiểm GIỮA các clip -> clip đang render vẫn xong (không hư), rồi mới ngừng.
+        try: return bool(FB.read_config(OWNER).get("stop"))
+        except Exception: return False
     os.makedirs("out", exist_ok=True)
     do_long = ch.get("make_long", True)
     n_shorts = int(ch.get("n_shorts", n_shorts) or 0)
@@ -137,6 +140,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
             traceback.print_exc(); R["fails"].append(f"{channel} PLAN: {str(e)[:100]}")
     # ---- SHORTS (viết LẠI cho 9:16 từ 2-3 chủ đề con) ----
     for i, sub in enumerate(subtopics[:n_shorts]):
+        if _stopped():   # ⛔ đã xong clip trước -> ngừng, KHÔNG bắt đầu clip mới (tiết kiệm, không dở dang).
+            print(f"   ⛔ {channel}: dừng theo yêu cầu — xong clip hiện tại, bỏ {n_shorts - i} short còn lại."); break
         sjob = FB.new_job(OWNER, channel, "short", pver=PVER)
         sst = lambda s, step, **x: FB.update_job(sjob, status=s, step=step, **x)
         story = sok = sinfo = None; serr = None
