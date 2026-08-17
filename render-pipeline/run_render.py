@@ -147,10 +147,13 @@ def main():
     import content_brain as CB
     dead_keys = []
     for k in FB.read_keys(OWNER, include_cooling=True):
-        alive = CB.test_key(k["key"])
-        FB.mark_key_alive(k["id"], alive)
+        alive, reason = CB.test_key(k["key"])
+        if alive is None:            # KHÔNG chắc (lỗi tạm) -> giữ trạng thái cũ, tránh báo chết OAN
+            print(f"   … key {k.get('email') or k['id']}: {reason}")
+            continue
+        FB.mark_key_alive(k["id"], alive, reason)
         if not alive:
-            dead_keys.append(k.get("email") or k["id"])
+            dead_keys.append(f"{k.get('email') or k['id']} — {reason[:70]}")
     if dead_keys:
         print(f"⚠️ {len(dead_keys)} Gemini key CHẾT: {dead_keys}")
     channels = [c for c in FB.read_channels(OWNER) if c.get("name")]

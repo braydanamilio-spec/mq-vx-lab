@@ -3,6 +3,15 @@ import React from "react";
 import { BarChartRace, RaceProps, calcRace } from "./BarChartRace";
 import { WorldMapRace } from "./WorldMapRace";
 
+// ẢNH AN TOÀN: nếu 1 ảnh (tải về) lỗi/hỏng -> tự đổi sang _fallback.jpg, KHÔNG làm VỠ cả render.
+// Remotion: có onError thì <Img> gọi handler thay vì ném lỗi hủy render.
+const FB_IMG = staticFile("img/_fallback.jpg");
+const SafeImg: React.FC<any> = ({ src, ...rest }) => {
+  const [s, setS] = React.useState(src);
+  React.useEffect(() => { setS(src); }, [src]);
+  return <Img src={s} onError={() => { if (s !== FB_IMG) setS(FB_IMG); }} {...rest} />;
+};
+
 const cfmt = (v: number) => v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1) + "K" : v < 100 ? String(Number(v.toFixed(1))) : String(Math.round(v));
 // số cho COLD-OPEN: rõ nghĩa (nghìn tỉ/tỉ) thay vì K khó hiểu
 const coldNum = (v: number, unit: string) => {
@@ -21,7 +30,7 @@ const ColdOpen: React.FC<Cold> = ({ name, value, unit = "", photo, logo, color =
   const hookO = interpolate(f, [42, 56], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
     <AbsoluteFill style={{ background: "#05070e", fontFamily: "'Poppins',Arial", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-      {photo ? <AbsoluteFill><Img src={staticFile(photo)} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom})`, filter: "brightness(0.92) saturate(1.05)" }} /></AbsoluteFill> : null}
+      {photo ? <AbsoluteFill><SafeImg src={staticFile(photo)} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom})`, filter: "brightness(0.92) saturate(1.05)" }} /></AbsoluteFill> : null}
       {/* làm tối VỪA để chữ rõ nhưng ảnh vẫn thấy rõ, sang */}
       <AbsoluteFill style={{ background: photo ? "linear-gradient(180deg, rgba(5,7,14,0.35) 0%, rgba(5,7,14,0.18) 40%, rgba(5,7,14,0.5) 100%)" : "radial-gradient(circle at 50% 42%, rgba(5,7,14,0.15), rgba(5,7,14,0.85) 78%)" }} />
       {photo ? <AbsoluteFill style={{ background: "radial-gradient(ellipse 46% 34% at 50% 46%, rgba(5,7,14,0.55), rgba(5,7,14,0) 75%)" }} /> : null}
@@ -61,7 +70,7 @@ const IllustrationInsert: React.FC<{ subs?: Word[]; shots?: string[] }> = ({ sub
     : { position: "absolute", right: 80, top: height * 0.5 - 150, transform: `scale(${0.9 + Math.min(1, pop) * 0.1})`, width: 470, height: 300 };
   return (
     <div style={{ ...box, borderRadius: 22, overflow: "hidden", border: "3px solid #ffffffcc", boxShadow: "0 22px 60px #000b", opacity: inO, zIndex: 5 }}>
-      <Img src={staticFile(img)} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${z})` }} />
+      <SafeImg src={staticFile(img)} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${z})` }} />
     </div>
   );
 };
@@ -73,7 +82,7 @@ const BgImage: React.FC<{ src?: string; dim?: number }> = ({ src, dim = 0.55 }) 
   const z = interpolate(f, [0, Math.max(1, durationInFrames)], [1.06, 1.2], { extrapolateRight: "clamp" });
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
-      <Img src={staticFile(src)} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${z})`, filter: "saturate(1.05)" }} />
+      <SafeImg src={staticFile(src)} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${z})`, filter: "saturate(1.05)" }} />
       <AbsoluteFill style={{ background: `linear-gradient(180deg, rgba(7,10,20,${dim}) 0%, rgba(7,10,20,${dim + 0.18}) 55%, rgba(7,10,20,0.92) 100%)` }} />
     </AbsoluteFill>
   );
@@ -100,8 +109,8 @@ const DynamicBg: React.FC<{ subs?: Word[]; shots?: string[]; fallback?: string }
     : "linear-gradient(90deg, rgba(6,9,17,0.82) 0%, rgba(6,9,17,0.5) 55%, rgba(6,9,17,0.12) 100%)";
   return (
     <AbsoluteFill style={{ overflow: "hidden", background: "#070a14" }}>
-      <Img src={staticFile(prev)} style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
-      <Img src={staticFile(cur)} style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", transform: `scale(${z})`, opacity: fade }} />
+      <SafeImg src={staticFile(prev)} style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+      <SafeImg src={staticFile(cur)} style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", transform: `scale(${z})`, opacity: fade }} />
       <AbsoluteFill style={{ background: "rgba(6,9,17,0.28)" }} />
       <AbsoluteFill style={{ background: readMask }} />
       <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(6,9,17,0) 55%, rgba(6,9,17,0.82) 100%)" }} />

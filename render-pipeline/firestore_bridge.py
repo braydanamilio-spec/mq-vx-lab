@@ -39,10 +39,10 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     return out
 
 
-def mark_key_alive(key_id: str, alive: bool):
-    """Ghi trạng thái sống/chết + thời điểm check -> dashboard hiện 🟢/🔴."""
+def mark_key_alive(key_id: str, alive: bool, reason: str = ""):
+    """Ghi trạng thái sống/chết + LÝ DO + thời điểm check -> dashboard hiện 🟢/🔴 + tooltip vì sao."""
     _db().collection("gemini_keys").document(key_id).set(
-        {"alive": alive, "last_checked": _now()}, merge=True)
+        {"alive": alive, "dead_reason": ("" if alive else reason), "last_checked": _now()}, merge=True)
 
 
 def cool_key(key_id: str, minutes: int = 90):

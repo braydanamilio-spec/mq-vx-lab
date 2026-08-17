@@ -33,9 +33,12 @@ def _pick_model(genai, prefer="flash", api_key=""):
         except Exception:
             ms = []
         ms = [m for m in ms if not any(b in m for b in bad)]
-        flash = ([m for m in ms if "flash" in m and "lite" not in m and "preview" not in m]
+        ok3 = lambda m: not any(v in m for v in ("2.5", "2.0", "1.5", "1.0"))   # né 2.x/1.x (list_models có nhưng gọi 404 với user MỚI)
+        flash = ([m for m in ms if "flash" in m and "lite" not in m and "preview" not in m and ok3(m)]
+                 or [m for m in ms if "flash" in m and ok3(m)]
+                 or [m for m in ms if "flash" in m and "lite" not in m and "preview" not in m]
                  or [m for m in ms if "flash" in m] or ms)
-        pro = ([m for m in ms if "pro" in m] or flash)
+        pro = ([m for m in ms if "pro" in m and ok3(m)] or [m for m in ms if "pro" in m] or flash)
         cache = {"flash": flash[0] if flash else None, "pro": pro[0] if pro else None}
         _MODEL_CACHE[api_key] = cache
     return cache.get(prefer) or cache.get("flash")
@@ -87,14 +90,27 @@ class RateLimited(Exception):
     """Key hết quota/bị rate-limit -> tầng trên đổi key khác."""
 
 
-def test_key(api_key: str) -> bool:
-    """Kiểm key Gemini còn SỐNG không (list_models chạy được). Dùng cho health check."""
-    try:
-        genai = _genai(api_key)
-        list(genai.list_models())
-        return True
-    except Exception:
-        return False
+def test_key(api_key: str):
+    """Health check 1 key -> trả (alive, reason).
+    alive=True SỐNG · False CHẾT THẬT (sai/khoá) · None KHÔNG CHẮC (lỗi tạm -> giữ trạng thái cũ, không đánh chết oan).
+    Có THỬ LẠI để chống báo-chết-oan do trục trặc mạng tạm trên CI."""
+    import time
+    DEAD = ("api key not valid", "api_key_invalid", "invalid api key", "invalid_argument",
+            "permission_denied", "permission denied", "forbidden", "disabled", "not enabled",
+            "has not been used", "consumer", "unregistered", "401", "403")
+    last = ""
+    for i in range(3):
+        try:
+            genai = _genai(api_key)
+            if list(genai.list_models()):
+                return True, "ok"
+            return True, "ok"
+        except Exception as e:
+            last = str(e); low = last.lower()
+            if any(s in low for s in DEAD):
+                return False, last[:150]          # lỗi xác thực THẬT -> chết chắc
+            time.sleep(1.2 * (i + 1))             # lỗi tạm (timeout/503/quota/mạng) -> nghỉ rồi thử lại
+    return None, ("không chắc: " + last[:130])    # hết lần thử vẫn lỗi tạm -> KHÔNG kết luận chết
 
 
 def _genai(api_key=None):

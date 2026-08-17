@@ -20,9 +20,15 @@ UA = {"User-Agent": "mm0-render/1.0"}
 def slug(s): return re.sub(r"[^a-z0-9]+", "_", s.lower()).strip("_")[:40] or "x"
 
 
+def _is_image(b: bytes) -> bool:
+    """Nhận diện ảnh THẬT browser giải mã được (jpg/png/gif/webp) -> chống file hỏng/HTML làm VỠ render."""
+    return (b[:3] == b"\xff\xd8\xff" or b[:8] == b"\x89PNG\r\n\x1a\n"
+            or b[:4] == b"GIF8" or (b[:4] == b"RIFF" and b[8:12] == b"WEBP"))
+
+
 def fetch_image(query, dest):
     """Tải 1 ảnh từ Openverse — ƯU TIÊN CC0/Public Domain (KHÔNG cần ghi nguồn, an toàn bản quyền).
-    Fallback sang commercial nếu không có CC0. Lỗi -> trả None."""
+    Fallback sang commercial nếu không có CC0. Lỗi/ảnh hỏng -> trả None (engine tự dùng ảnh fallback)."""
     query = re.sub(r"\b(chart|graph|screenshot|data|statistics|dashboard|trading|diagram|infographic)\b",
                    "", query, flags=re.I).strip() or query   # tránh ảnh chart/watermark
     def _try(params):
@@ -36,9 +42,18 @@ def fetch_image(query, dest):
             res = _try({"q": " ".join(query.split()[:2]), "page_size": 3, "license": "cc0,pdm", "mature": "false"})  # rút gọn từ khoá thử lại
         if not res:
             return None
-        with urllib.request.urlopen(urllib.request.Request(res[0]["url"], headers=UA), timeout=30) as r:
-            open(dest, "wb").write(r.read())
-        return dest if os.path.getsize(dest) > 2000 else None
+        for cand in res[:3]:                              # thử vài kết quả cho tới khi ra 1 ảnh HỢP LỆ
+            try:
+                with urllib.request.urlopen(urllib.request.Request(cand["url"], headers=UA), timeout=30) as r:
+                    ctype = (r.headers.get("Content-Type") or "").lower()
+                    data = r.read()
+                if len(data) < 2000 or ("image" not in ctype and not _is_image(data)) or not _is_image(data):
+                    continue                              # HTML/redirect/hỏng/định dạng lạ -> bỏ, thử ảnh khác
+                open(dest, "wb").write(data)
+                return dest
+            except Exception:
+                continue
+        return None
     except Exception as e:
         print(f"   ⚠️ ảnh '{query[:30]}' lỗi: {e}"); return None
 
