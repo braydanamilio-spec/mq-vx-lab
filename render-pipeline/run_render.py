@@ -231,7 +231,8 @@ def main():
     from datetime import datetime, timezone, timedelta
     event = os.environ.get("GITHUB_EVENT_NAME", "")
     run_now = bool(cfg.get("run_now"))
-    is_nightly = datetime.now(timezone.utc).hour == 18
+    is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 6, 12, 18])
+                  and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
     if event == "schedule" and not run_now and not is_nightly:
         print("⏭ Nhịp kiểm 30' — không có lệnh Render ngay, bỏ qua (free)."); return
     if run_now:
@@ -318,7 +319,8 @@ def gate_mode():
             cfg = FB.read_config(OWNER)
             event = os.environ.get("GITHUB_EVENT_NAME", "")
             run_now = bool(cfg.get("run_now"))
-            is_nightly = datetime.now(timezone.utc).hour == 18
+            is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 6, 12, 18])
+                  and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
             enabled = bool(cfg.get("enabled")) or os.environ.get("FORCE") == "1"
             if ((event != "schedule") or run_now or is_nightly) and (enabled or run_now):
                 run = "true"
@@ -348,7 +350,8 @@ def plan_mode():
     cfg = FB.read_config(OWNER)
     event = os.environ.get("GITHUB_EVENT_NAME", "")
     run_now = bool(cfg.get("run_now"))
-    is_nightly = datetime.now(timezone.utc).hour == 18
+    is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 6, 12, 18])
+                  and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
     if event == "schedule" and not run_now and not is_nightly:
         print("⏭ Nhịp kiểm 30' — không có lệnh Render ngay, bỏ qua (free)."); return out_channels([])
     if run_now:
