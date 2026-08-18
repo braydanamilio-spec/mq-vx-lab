@@ -297,6 +297,121 @@ def plan_pillar(niche: str, n: int = 6, api_key: str = None, model_name: str = N
     return d
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# KÊNH #1 GUESS — sinh bộ câu đố. Ép LOGIC tuyệt đối + ẢNH khớp đáp án 100% + SẠCH bản quyền.
+GUESS_SYS = (
+ "You are the head writer of a #1 US 'guess the...' viral shorts channel. You produce guessing quizzes "
+ "that are addictive, factually PERFECT, and copyright-safe. Absolute rules you never break:\n"
+ "1) LOGIC: each clue must uniquely identify EXACTLY ONE real answer — no other real answer can fit. "
+ "If a clue could point to two things, it is WRONG. State the unique_reason for every round.\n"
+ "2) FACTS: every clue and every stat must be TRUE, real, publicly-verifiable. Never invent numbers. "
+ "Prefer round, well-known figures. If unsure of a number, use a safer widely-known fact instead.\n"
+ "3) IMAGE MATCH: img_query must describe the ANSWER's own subject so a stock/CC search returns an image "
+ "that clearly SHOWS the answer (e.g. a city -> its skyline; a landmark -> the landmark; a company -> its "
+ "product/headquarters). The shown image must match the answer 100%.\n"
+ "4) COPYRIGHT SAFE: NEVER require a photo of a specific living person. To guess a person/CEO, the image is "
+ "their CONTEXT (company product, HQ, city) and the answer is their NAME as text; clues describe them.\n"
+ "5) DIFFICULTY rises each round. No politics/partisan, no tragedy, no NSFW.\n"
+ "6) NARRATION is spoken aloud: punchy, dramatic, guides the viewer to guess, builds suspense on the countdown, "
+ "then a satisfying reveal. Natural spoken English, short sentences."
+)
+
+GUESS_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
+{
+  "title": str,                 // internal title
+  "category": str,              // e.g. "US cities", "US billionaires' empires", "US landmarks"
+  "intro_vo": str,              // 1-2 spoken sentences hooking + telling them to guess before time runs out
+  "rounds": [                   // 3 to 5 rounds, difficulty rising
+    {
+      "q": str,                 // on-screen question, <=5 words, e.g. "Guess this US city"
+      "clue": str,              // on-screen clue, <=8 words, 2-3 facts joined by " · " that UNIQUELY fit the answer
+      "answer": str,            // the answer shown as TEXT (UPPERCASE), <=22 chars
+      "stat": str,              // one TRUE shock stat about the answer, <=26 chars, may end with 1 emoji
+      "img_query": str,         // search phrase describing the ANSWER's subject (matches answer 100%, CC0-friendly)
+      "vo_clue": str,           // spoken while tiles reveal + countdown: tease the clue, tell them to guess
+      "vo_reveal": str,         // spoken at reveal: name the answer + the stat, dramatic
+      "unique_reason": str      // WHY this clue fits ONLY this answer (proof of unique logic)
+    }
+  ],
+  "outro_vo": str,              // spoken CTA: ask their score, follow for daily
+  "title_yt": str,              // YouTube title, punchy, <=70 chars, include the hook (e.g. "99% FAIL")
+  "description": str,           // 2-3 lines
+  "hashtags": [str],            // 4-6, no spaces
+  "tags": [str],                // 8-12 SEO tags
+  "self_score": { "logic": int, "uniqueness": int, "image_match": int, "hook": int, "total": int }
+}
+Every round MUST be solvable from the clue alone by a knowledgeable US viewer, and MUST have exactly one correct answer."""
+
+
+def _validate_guess(d: dict) -> list[str]:
+    errs = []
+    rounds = d.get("rounds") or []
+    if not isinstance(rounds, list) or not (3 <= len(rounds) <= 5):
+        errs.append("cần 3–5 rounds")
+    for i, r in enumerate(rounds):
+        for k in ("q", "clue", "answer", "stat", "img_query", "vo_clue", "vo_reveal", "unique_reason"):
+            if not str((r or {}).get(k, "")).strip():
+                errs.append(f"round {i+1} thiếu '{k}'")
+    for k in ("intro_vo", "outro_vo", "title_yt", "category"):
+        if not str(d.get(k, "")).strip():
+            errs.append(f"thiếu '{k}'")
+    return errs
+
+
+def generate_guess(category: str, n_rounds: int = 3, api_key: str = None, model_name: str = None,
+                   avoid: list = None) -> dict:
+    """Sinh 1 bộ câu đố GUESS đạt chuẩn (logic + khớp ảnh + sạch bản quyền). Viết lại tới khi self_score>=MIN_SCORE.
+    avoid: danh sách đáp án ĐÃ dùng -> tránh trùng."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    model = genai.GenerativeModel(mname, system_instruction=GUESS_SYS)
+    resolved = False
+    avoid_txt = ("\nDo NOT reuse any of these already-used answers: " + " | ".join(avoid[-80:])) if avoid else ""
+    base = (f'Make a "Guess the {category}" quiz for US viewers with EXACTLY {n_rounds} rounds, difficulty rising.\n'
+            f'{GUESS_SCHEMA}{avoid_txt}')
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious attempt rejected: {feedback}\nFix and raise the score." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=GUESS_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"JSON lỗi ({e}). Trả JSON hợp lệ đúng schema."; continue
+        errs = _validate_guess(d)
+        sc = d.get("self_score") or {}
+        score = sc.get("total", 0)
+        # ép logic & khớp ảnh: 2 tiêu chí này PHẢI cao, không chỉ nhìn total
+        logic_ok = min(int(sc.get("logic", 0)), int(sc.get("uniqueness", 0)), int(sc.get("image_match", 0)))
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "Lỗi cấu trúc: " + "; ".join(errs[:6]); print(f"   ↻ guess vòng {attempt}: {feedback}"); continue
+        if logic_ok < 95:
+            feedback = (f"logic/uniqueness/image_match={logic_ok}/100 < 95. Mỗi clue PHẢI chỉ đúng 1 đáp án; "
+                        f"stat phải THẬT; img_query phải khiến ảnh hiện ĐÚNG đáp án. Sửa round yếu.")
+            print(f"   ↻ guess vòng {attempt}: {feedback}"); continue
+        if score < MIN_SCORE:
+            feedback = f"Điểm {score}/100 < {MIN_SCORE}. Hook mạnh hơn, clue thông minh hơn, reveal sốc hơn."
+            print(f"   ↻ guess vòng {attempt}: điểm {score} — viết lại"); continue
+        d["vtype"] = "guess"
+        print(f"   ✅ GUESS đạt vòng {attempt}: total {score}, logic {logic_ok} — {d.get('title_yt')!r}")
+        return d
+    raise Exception(f"GUESS sau {MAX_TRIES} vòng chưa đạt (logic {logic_ok if last else '?'}). Bỏ {category!r}.")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--type", dest="vtype", choices=["long", "short"], default="short")

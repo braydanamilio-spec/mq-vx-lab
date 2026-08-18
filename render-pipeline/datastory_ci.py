@@ -26,9 +26,10 @@ def _is_image(b: bytes) -> bool:
             or b[:4] == b"GIF8" or (b[:4] == b"RIFF" and b[8:12] == b"WEBP"))
 
 
-def fetch_image(query, dest, orient=None):
+def fetch_image(query, dest, orient=None, verify=None, max_check=4):
     """Tải 1 ảnh từ Openverse — ƯU TIÊN CC0/Public Domain (KHÔNG cần ghi nguồn, an toàn bản quyền).
-    Fallback sang commercial nếu không có CC0. Lỗi/ảnh hỏng -> trả None (engine tự dùng ảnh fallback)."""
+    verify(path)->True/False/None: kiểm ảnh có KHỚP chủ đề không (dùng cho GUESS). True=nhận, False=thử ảnh khác,
+    None=không kiểm được (Vision lỗi) -> nhớ làm dự phòng. Lỗi/ảnh hỏng/không khớp -> trả None."""
     query = re.sub(r"\b(chart|graph|screenshot|data|statistics|dashboard|trading|diagram|infographic)\b",
                    "", query, flags=re.I).strip() or query   # tránh ảnh chart/watermark
     def _try(params):
@@ -36,19 +37,22 @@ def fetch_image(query, dest, orient=None):
         with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=20) as r:
             return json.load(r).get("results") or []
     ar = {"tall": "tall", "wide": "wide"}.get(orient or "")   # KHỚP ĐỊNH DẠNG: short=dọc(tall), long=ngang(wide)
-    base = {"page_size": 3, "license": "cc0,pdm", "mature": "false"}
+    pg = max(6, max_check + 2) if verify else 3               # cần verify -> lấy nhiều ứng viên hơn để chọn ảnh KHỚP
+    base = {"page_size": pg, "license": "cc0,pdm", "mature": "false"}
     if ar:
         base["aspect_ratio"] = ar
     try:
         # CHỈ CC0 + Public Domain -> KHÔNG cần ghi nguồn, an toàn bản quyền 100%. Không có -> dùng ảnh fallback.
         res = _try({"q": query, **base})
         if not res and ar:
-            res = _try({"q": query, "page_size": 3, "license": "cc0,pdm", "mature": "false"})   # bỏ lọc hướng nếu 0 kết quả
+            res = _try({"q": query, "page_size": pg, "license": "cc0,pdm", "mature": "false"})   # bỏ lọc hướng nếu 0 kết quả
         if not res:
-            res = _try({"q": " ".join(query.split()[:2]), "page_size": 3, "license": "cc0,pdm", "mature": "false"})  # rút gọn từ khoá thử lại
+            res = _try({"q": " ".join(query.split()[:2]), "page_size": pg, "license": "cc0,pdm", "mature": "false"})  # rút gọn từ khoá thử lại
         if not res:
             return None
-        for cand in res[:3]:                              # thử vài kết quả cho tới khi ra 1 ảnh HỢP LỆ
+        fallback = None                                   # ảnh hợp lệ nhưng Vision không kiểm được -> dùng nếu không có ảnh KHỚP
+        checked = 0
+        for cand in res:                                  # duyệt cho tới khi ra 1 ảnh HỢP LỆ (+ KHỚP nếu có verify)
             try:
                 with urllib.request.urlopen(urllib.request.Request(cand["url"], headers=UA), timeout=30) as r:
                     ctype = (r.headers.get("Content-Type") or "").lower()
@@ -56,10 +60,21 @@ def fetch_image(query, dest, orient=None):
                 if len(data) < 2000 or ("image" not in ctype and not _is_image(data)) or not _is_image(data):
                     continue                              # HTML/redirect/hỏng/định dạng lạ -> bỏ, thử ảnh khác
                 open(dest, "wb").write(data)
-                return dest
+                if not verify:
+                    return dest
+                v = verify(dest)                          # KIỂM khớp chủ đề
+                if v is True:
+                    return dest
+                if v is None and fallback is None:        # Vision lỗi -> giữ ảnh đầu tiên làm dự phòng
+                    fallback = data
+                checked += 1
+                if checked >= max_check:
+                    break
             except Exception:
                 continue
-        return None
+        if verify and fallback is not None:               # không ảnh nào KHỚP chắc, nhưng có ảnh dự phòng (Vision down)
+            open(dest, "wb").write(fallback); return dest
+        return None                                       # verify bật mà không ảnh nào khớp -> THÀ KHÔNG ẢNH còn hơn ảnh SAI
     except Exception as e:
         print(f"   ⚠️ ảnh '{query[:30]}' lỗi: {e}"); return None
 
@@ -275,6 +290,112 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
         info["score"] = round(sum(scs) / len(scs))   # điểm QC long = TB các race -> hiện trên dashboard
     print(f"   {'✅' if ok else '❌'} QC long {info}")
     return out, plan, subtopics, ok, info
+
+
+def _mix_track(clips, total, out):
+    """Ghép các đoạn giọng vào 1 track theo offset tuyệt đối (giây) + nền im lặng cố định độ dài.
+    clips=[(path, start_sec)]. Không overlap -> amix normalize=0 giữ nguyên âm lượng."""
+    inputs, filt, labels = [], [], []
+    for i, (p, st_) in enumerate(clips):
+        inputs += ["-i", p]
+        filt.append(f"[{i}:a]adelay={int(st_*1000)}:all=1[a{i}]")
+        labels.append(f"[a{i}]")
+    si = len(clips)
+    inputs += ["-f", "lavfi", "-t", f"{total:.3f}", "-i", "anullsrc=r=44100:cl=stereo"]
+    filt.append(f"[{si}:a]volume=0[base]")
+    filt.append("[base]" + "".join(labels) + f"amix=inputs={len(clips)+1}:normalize=0:duration=first[out]")
+    subprocess.run(["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(filt),
+                    "-map", "[out]", "-ac", "2", "-ar", "44100", out], check=True, capture_output=True)
+
+
+def build_guess_props(story, sdir, handle="@guessdaily", music="music/km_ascending.mp3", api_key=None):
+    """Dựng props GuessShort: TTS mỗi vòng (clue+reveal) + ảnh KHỚP đáp án (Vision verify) + timing bám giọng + 1 track."""
+    rel = lambda p: os.path.relpath(p, PUB)
+    rounds_in = story.get("rounds") or []
+    intro_mp3 = os.path.join(sdir, "intro.mp3")
+    idur, _, _ = TK.synth(story.get("intro_vo") or "Can you guess them all?", intro_mp3)
+    introSec = round(idur + 0.5, 2)
+    clips = [(intro_mp3, 0.0)]
+    rounds_out = []
+    cum = 0.0  # offset (giây) từ đầu vùng vòng
+    for i, r in enumerate(rounds_in):
+        clue_mp3 = os.path.join(sdir, f"r{i}_clue.mp3")
+        rev_mp3 = os.path.join(sdir, f"r{i}_reveal.mp3")
+        cdur, _, _ = TK.synth(r.get("vo_clue") or r.get("clue") or r.get("q") or "Guess this.", clue_mp3)
+        rdur_, _, _ = TK.synth(r.get("vo_reveal") or r.get("answer") or "", rev_mp3)
+        revSec = round(max(2.8, cdur + 0.7), 2)          # đủ thời gian đếm ngược 3-2-1 + khoảng hồi hộp
+        dur = round(revSec + rdur_ + 0.9, 2)             # giữ đáp án sau reveal
+        # ẢNH KHỚP ĐÁP ÁN 100%: query từ img_query; Vision xác minh ảnh RÕ là đáp án -> không thì THÀ bỏ ảnh (mosaic nền)
+        img_rel = None
+        q = (r.get("img_query") or r.get("answer") or "").strip()
+        subject = (r.get("img_query") or r.get("answer") or "").strip()
+        if q:
+            dest = os.path.join(PUB, "img", "_guess", slug(story.get("category", "g")) + f"_{i}.jpg")
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            vf = None
+            if api_key:
+                import qc_vision
+                vf = lambda p: qc_vision.verify_image(p, subject, api_key=api_key)
+            got = fetch_image(q, dest, orient="tall", verify=vf)
+            if got:
+                img_rel = rel(dest)
+            else:
+                print(f"   ⚠️ round {i+1}: không có ảnh CC0 khớp '{subject[:30]}' -> để nền mosaic (không dùng ảnh sai)")
+        rounds_out.append({"q": r.get("q"), "clue": r.get("clue"), "answer": r.get("answer"),
+                           "stat": r.get("stat"), "img": img_rel, "dur": dur, "revSec": revSec})
+        clips.append((clue_mp3, introSec + cum))
+        clips.append((rev_mp3, introSec + cum + revSec))
+        cum += dur
+    outro_mp3 = os.path.join(sdir, "outro.mp3")
+    odur, _, _ = TK.synth(story.get("outro_vo") or "How many did you get?", outro_mp3)
+    outroSec = round(odur + 0.4, 2)
+    clips.append((outro_mp3, introSec + cum))
+    total = round(introSec + cum + outroSec, 2)
+    track = os.path.join(sdir, "track.mp3")
+    _mix_track(clips, total, track)
+    return {"title": (story.get("title_yt") or story.get("title") or "GUESS").upper(),
+            "handle": handle, "color": "#F5B301", "accent": "#ff375f",
+            "introSec": introSec, "outroSec": outroSec, "sfx": True,
+            "rounds": rounds_out, "audio": rel(track), "music": music}
+
+
+def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n_rounds=3,
+               avoid=None, on_status=None, on_limit=None, on_ok=None):
+    """KÊNH #1 GUESS A-Z: Gemini sinh câu đố (logic + khớp ảnh) -> giọng + ảnh + SFX -> render GuessShort -> QC + thumb.
+    Trả (out, story, ok, info)."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    import key_manager as KM
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    if not keys[0]["key"]:
+        raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    st("writing", f"Gemini soạn câu đố ({category})")
+    story = KM.write_guess(channel, keys, category, n_rounds, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    score = (story.get("self_score") or {}).get("total")
+    st("rendering", "Giọng + ảnh + SFX + render", title=story.get("title_yt"), score=score)
+    sdir = os.path.join(PUB, "narration", "_guess_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
+    props = build_guess_props(story, sdir, handle=channel_handle(channel), api_key=keys[0]["key"])
+    pf = os.path.join(PUB, f"_guess_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
+    print(f"   🎞️ render GuessShort ({len(props['rounds'])} vòng) …")
+    subprocess.run(["npx", "remotion", "render", "src/index.ts", "GuessShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out)
+    info["score"] = score
+    # thumbnail đi kèm (GuessThumb): câu hỏi to + mảnh ghép
+    try:
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        tprops = {"kind": "thumb", "bigLine": (story.get("rounds") or [{}])[0].get("q", "CAN YOU\nNAME IT?").upper(),
+                  "topLine": "99% FAIL 👀"}
+        tf = os.path.join(PUB, f"_guessthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "GuessThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ thumb skip:", e)
+    print(f"   {'✅' if ok else '❌'} QC guess {info}")
+    return out, story, ok, info
 
 
 def main():

@@ -10,19 +10,23 @@ const SafeImg: React.FC<any> = ({ src, ...rest }) => {
 };
 
 type Word = { t: number; d: number; w: string };
-export type Round = { q: string; clue?: string; answer: string; stat?: string; img?: string };
+// dur = độ dài vòng (giây, khớp giọng); revSec = giây tới lúc REVEAL trong vòng. Có thì bám giọng chuẩn, không thì fallback roundSec*0.66.
+export type Round = { q: string; clue?: string; answer: string; stat?: string; img?: string; dur?: number; revSec?: number };
 export type GuessProps = {
   title?: string; handle?: string; color?: string; accent?: string;
   rounds: Round[]; roundSec?: number; introSec?: number;
-  audio?: string; music?: string; subs?: Word[];
+  audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
 };
 
 const FPS = 30;
+const rdur = (r: Round, rsec: number) => (r.dur && r.dur > 0 ? r.dur : rsec);   // độ dài 1 vòng
 export const calcGuess = ({ props }: any) => {
   const rs: Round[] = props.rounds || [];
   const rsec = props.roundSec || 7;
   const isec = props.introSec ?? 1.6;
-  return { durationInFrames: Math.round((isec + rs.length * rsec + 1.2) * FPS), fps: FPS, width: 1080, height: 1920 };
+  const tail = props.outroSec ?? 1.2;
+  const total = rs.reduce((a, r) => a + rdur(r, rsec), 0);
+  return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS, width: 1080, height: 1920 };
 };
 
 // hash cố định [0,1) -> thứ tự mảnh ghép biến mất KHÔNG đổi theo frame (Remotion cần deterministic, tránh flicker)
@@ -69,9 +73,9 @@ const RingClock: React.FC<{ frac: number; label: number; accent: string }> = ({ 
 };
 
 // 1 VÒNG ĐOÁN: mảnh ghép mở dần + đồng hồ 3-2-1 -> REVEAL (đáp án bung + tia + stat)
-const GuessRound: React.FC<{ r: Round; color: string; accent: string; sec: number; idx: number }> = ({ r, color, accent, sec, idx }) => {
+const GuessRound: React.FC<{ r: Round; color: string; accent: string; sec: number; idx: number; sfx?: boolean }> = ({ r, color, accent, sec, idx, sfx }) => {
   const f = useCurrentFrame(); const dur = sec * FPS;
-  const revF = Math.round(dur * 0.66);                       // mốc reveal (66% vòng)
+  const revF = r.revSec && r.revSec > 0 ? Math.round(r.revSec * FPS) : Math.round(dur * 0.66);   // mốc reveal (bám giọng nếu có revSec)
   const revealed = f >= revF;
   const mosaicP = interpolate(f, [0, revF], [0, 1], { extrapolateRight: "clamp" });  // % mảnh ghép đã mở
   const blur = interpolate(f, [0, revF - 6, revF], [12, 5, 0], { extrapolateRight: "clamp" });  // blur nền nhẹ, sắc dần
@@ -87,6 +91,15 @@ const GuessRound: React.FC<{ r: Round; color: string; accent: string; sec: numbe
   const raysO = interpolate(f, [revF, revF + 6, revF + 30], [0, 0.5, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
     <AbsoluteFill style={{ background: "#0a0c14" }}>
+      {/* SFX: 3 tick đếm ngược + whoosh cận reveal + impact & ding lúc bung đáp án */}
+      {sfx ? [0, 1, 2].map((k) => (
+        <Sequence key={"t" + k} from={Math.max(0, revF - Math.round((3 - k) * FPS * 0.55))} durationInFrames={6}>
+          <Audio src={staticFile("sfx/pop.mp3")} volume={0.45} />
+        </Sequence>
+      )) : null}
+      {sfx ? <Sequence from={Math.max(0, revF - 8)} durationInFrames={16}><Audio src={staticFile("sfx/whoosh.mp3")} volume={0.5} /></Sequence> : null}
+      {sfx ? <Sequence from={revF} durationInFrames={45}><Audio src={staticFile("sfx/impact.mp3")} volume={0.7} /></Sequence> : null}
+      {sfx ? <Sequence from={revF + 3} durationInFrames={45}><Audio src={staticFile("sfx/ding.mp3")} volume={0.4} /></Sequence> : null}
       {r.img ? <AbsoluteFill><SafeImg src={staticFile(r.img)} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom})`, filter: `blur(${blur}px) brightness(${1 - dim})` }} /></AbsoluteFill> : null}
       {/* mảnh ghép che ảnh, mở dần */}
       {!revealed ? <MosaicTiles p={mosaicP} accent={accent} /> : null}
@@ -119,7 +132,7 @@ const GuessRound: React.FC<{ r: Round; color: string; accent: string; sec: numbe
 };
 
 export const GuessShort: React.FC<GuessProps> = (props) => {
-  const { title = "GUESS THE USA", handle = "@guessusa", color = "#F5B301", accent = "#ff375f", rounds = [], roundSec = 7, introSec = 1.6, audio, music, subs = [] } = props;
+  const { title = "GUESS THE USA", handle = "@guessusa", color = "#F5B301", accent = "#ff375f", rounds = [], roundSec = 7, introSec = 1.6, audio, music, subs = [], sfx = true } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
   const introF = Math.round(introSec * fps);
   const introP = spring({ frame: f, fps, config: { damping: 12, stiffness: 140 } });
@@ -133,12 +146,16 @@ export const GuessShort: React.FC<GuessProps> = (props) => {
           <div style={{ color: color, fontWeight: 800, fontSize: 40, marginTop: 18, opacity: introP }}>Can you get them all? 👀</div>
         </AbsoluteFill>
       </Sequence>
-      {/* CÁC VÒNG */}
-      {rounds.map((r, i) => (
-        <Sequence key={i} from={introF + i * roundSec * fps} durationInFrames={roundSec * fps}>
-          <GuessRound r={r} color={color} accent={accent} sec={roundSec} idx={i} />
-        </Sequence>
-      ))}
+      {/* CÁC VÒNG — offset cộng dồn theo độ dài từng vòng (bám giọng) */}
+      {rounds.map((r, i) => {
+        const sec = rdur(r, roundSec);
+        const from = introF + Math.round(rounds.slice(0, i).reduce((a, rr) => a + rdur(rr, roundSec), 0) * fps);
+        return (
+          <Sequence key={i} from={from} durationInFrames={Math.round(sec * fps)}>
+            <GuessRound r={r} color={color} accent={accent} sec={sec} idx={i} sfx={sfx} />
+          </Sequence>
+        );
+      })}
       {/* handle góc */}
       <div style={{ position: "absolute", bottom: 54, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 34, textShadow: "0 2px 10px #000" }}>{handle}</div>
       {/* karaoke caption (nếu có subs) */}

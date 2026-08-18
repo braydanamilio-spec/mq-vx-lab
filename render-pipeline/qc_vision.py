@@ -8,6 +8,29 @@ import subprocess
 import content_brain as CB
 
 
+def verify_image(path: str, subject: str, api_key: str = None, model_name: str = None):
+    """Gemini Vision: ảnh này có RÕ RÀNG là `subject` không? (dùng cho GUESS — ép ảnh khớp đáp án 100%).
+    Trả True (khớp) / False (KHÔNG khớp) / None (không kiểm được -> Vision lỗi/quota). None để caller fail-open."""
+    try:
+        genai = CB._genai(api_key)
+        akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+        mn = model_name or CB._pick_model(genai, "flash", akey) or "gemini-3.5-flash"
+        model = genai.GenerativeModel(mn)
+        prompt = (f'Look at this photo. Does it CLEARLY and RECOGNIZABLY show: "{subject}"? '
+                  f'Count it as a match ONLY if someone familiar with "{subject}" would confidently recognize it '
+                  f'(e.g. an iconic skyline/landmark/subject actually visible). A generic, ambiguous, or unrelated '
+                  f'photo (random construction, plain building, wrong place) is NOT a match. '
+                  'Return STRICT JSON only: {"match": true|false, "see": "<=6 words of what is shown"}')
+        img = {"mime_type": "image/jpeg", "data": open(path, "rb").read()}
+        resp = model.generate_content([prompt, img],
+                                      generation_config={"response_mime_type": "application/json", "temperature": 0.0})
+        r = CB._extract_json(resp.text) or {}
+        return bool(r.get("match"))
+    except Exception as e:
+        print(f"   ⚠️ verify_image lỗi (bỏ qua kiểm): {str(e)[:70]}")
+        return None
+
+
 def _stills(mp4: str, fracs=(0.4, 0.7)):
     """Trích VÀI khung ở các mốc ỔN ĐỊNH (giữa race), tránh intro/outro/chuyển cảnh."""
     dur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
