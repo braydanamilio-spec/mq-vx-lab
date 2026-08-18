@@ -245,3 +245,45 @@ def write_ranked(channel: str, keys: list[dict], niche: str, tier: str = "normal
         if rnd == 0:
             time.sleep(65)
     raise CB.RateLimited(f"Tất cả {len(keys)} key hết quota (RANKED). Thêm key hoặc chờ reset.")
+
+
+def write_scaled(channel: str, keys: list[dict], niche: str, tier: str = "normal",
+                 avoid: list = None, on_limit=None, on_ok=None) -> dict:
+    """Sinh so sánh kích thước SCALED — bám key sticky, đổi key khi limit."""
+    def _ok(k, r):
+        if on_ok and k.get("id"):
+            try: on_ok(k["id"])
+            except Exception: pass
+        return r
+    if not keys:
+        raise SystemExit("❌ Chưa có Gemini key nào — thêm ở tab 🎬 Render Studio.")
+    order = key_order(channel, keys); model = model_for(tier)
+
+    def _cool(k, exc):
+        if not (on_limit and k.get("id")): return
+        low = str(exc).lower()
+        mins = 1.5 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        try: on_limit(k["id"], mins)
+        except TypeError: on_limit(k["id"])
+
+    for rnd in range(2):
+        for idx, k in enumerate(order):
+            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            if idx: time.sleep(1.5)
+            try:
+                print(f"   🔑 SCALED {channel} key [{tag}] · model {model}")
+                _count(k)
+                return _ok(k, CB.generate_scaled(niche, api_key=k["key"], model_name=model, avoid=avoid))
+            except CB.RateLimited as e:
+                _cool(k, e); continue
+            except Exception as e:
+                if "404" in str(e) and model != "gemini-2.5-flash":
+                    model = "gemini-2.5-flash"
+                    try:
+                        _count(k); return _ok(k, CB.generate_scaled(niche, api_key=k["key"], model_name=model, avoid=avoid))
+                    except CB.RateLimited as e2:
+                        _cool(k, e2); continue
+                raise
+        if rnd == 0:
+            time.sleep(65)
+    raise CB.RateLimited(f"Tất cả {len(keys)} key hết quota (SCALED). Thêm key hoặc chờ reset.")

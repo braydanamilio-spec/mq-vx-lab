@@ -614,6 +614,108 @@ def generate_ranked(niche: str, api_key: str = None, model_name: str = None, avo
     raise Exception(f"RANKED sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# KÊNH #4 SCALED — sinh so sánh KÍCH THƯỚC vật lý thật (emoji đúng tỉ lệ).
+SCALED_SYS = (
+ "You are the creator of a #1 US 'size comparison' viral channel. You compare the REAL physical size of things "
+ "drawn to scale. Absolute rules:\n"
+ "1) REAL MEASUREMENTS: every value is a TRUE physical measurement of ONE dimension (length OR height OR "
+ "diameter) in ONE consistent unit for all items. Never invent numbers. State the dimension in subtitle.\n"
+ "2) Each item MUST have a single representative EMOJI that clearly depicts it (🐋 🚌 🗽 🏢 🦕 🌍 etc.).\n"
+ "3) 4-6 items, ORDERED SMALLEST→LARGEST (largest last = climax). Keep the size ratio within ~200x so every "
+ "item is still visible; include a familiar reference (human/bus) when helpful.\n"
+ "4) NO politics, no tragedy, no NSFW. Broadly fascinating to US viewers.\n"
+ "5) NARRATION spoken aloud: punchy hook, one vivid line per item as it appears, jaw-drop on the biggest, CTA. Short natural sentences."
+)
+
+SCALED_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
+{
+  "title": str,            // <=26 chars, e.g. "HOW BIG IS A BLUE WHALE?"
+  "subtitle": str,         // the dimension + unit, e.g. "length compared (meters)"
+  "unit": str,             // e.g. "m"
+  "items": [               // 4-6, ORDERED smallest -> largest
+    { "name": str, "emoji": str, "value": number, "disp": str, "vo": str }   // value = real, same unit; disp e.g. "30 m"
+  ],
+  "intro_vo": str,
+  "outro_vo": str,
+  "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
+  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+}
+Values must be real, same unit, ascending. Each item needs a fitting emoji."""
+
+
+def _validate_scaled(d: dict) -> list[str]:
+    errs = []
+    its = d.get("items") or []
+    if not (3 <= len(its) <= 7):
+        errs.append("items cần 3–7")
+    vals = []
+    for i, it in enumerate(its):
+        if not str((it or {}).get("name", "")).strip():
+            errs.append(f"item[{i}] thiếu name")
+        if not str((it or {}).get("emoji", "")).strip():
+            errs.append(f"item[{i}] thiếu emoji")
+        if not isinstance((it or {}).get("value"), (int, float)):
+            errs.append(f"item[{i}] value không phải số")
+        else:
+            vals.append(it["value"])
+        if not str((it or {}).get("vo", "")).strip():
+            errs.append(f"item[{i}] thiếu vo")
+    if vals and vals != sorted(vals):
+        errs.append("items phải xếp NHỎ→LỚN")
+    for k in ("title", "subtitle", "intro_vo", "outro_vo", "title_yt"):
+        if not str(d.get(k, "")).strip():
+            errs.append(f"thiếu '{k}'")
+    return errs
+
+
+def generate_scaled(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 so sánh kích thước SCALED (đo thật + emoji + narration). Viết lại tới khi đạt."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    model = genai.GenerativeModel(mname, system_instruction=SCALED_SYS)
+    resolved = False
+    avoid_txt = ("\nAvoid topics already used: " + " | ".join(avoid[-60:])) if avoid else ""
+    base = (f'Make a size comparison in the niche "{niche}".\n{SCALED_SCHEMA}{avoid_txt}')
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=SCALED_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"JSON lỗi ({e})."; continue
+        errs = _validate_scaled(d)
+        sc = d.get("self_score") or {}
+        score = sc.get("total", 0); acc = int(sc.get("accuracy", 0))
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "Lỗi cấu trúc: " + "; ".join(errs[:6]); print(f"   ↻ scaled vòng {attempt}: {feedback}"); continue
+        if acc < 95:
+            feedback = f"accuracy={acc}<95. Chỉ dùng số đo THẬT (cùng đơn vị). Đổi item nếu không chắc số."
+            print(f"   ↻ scaled vòng {attempt}: {feedback}"); continue
+        if score < MIN_SCORE:
+            feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, cú chốt to nhất sốc hơn."; print(f"   ↻ scaled vòng {attempt}: điểm {score}"); continue
+        d["vtype"] = "scaled"
+        print(f"   ✅ SCALED đạt vòng {attempt}: total {score}, acc {acc} — {d.get('title')!r}")
+        return d
+    raise Exception(f"SCALED sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--type", dest="vtype", choices=["long", "short"], default="short")
