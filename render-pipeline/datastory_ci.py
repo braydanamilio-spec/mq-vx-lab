@@ -314,6 +314,67 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
     return out, story, ok, info
 
 
+def build_ranked_props(story, sdir, handle="@rankedusa", music="music/km_ascending.mp3"):
+    """Dựng props RankedShort: TTS (intro + mỗi item + outro) -> timing bám giọng + 1 track. Không cần ảnh."""
+    rel = lambda p: os.path.relpath(p, PUB)
+    intro_mp3 = os.path.join(sdir, "intro.mp3"); outro_mp3 = os.path.join(sdir, "outro.mp3")
+    idur, _, _ = TK.synth(story.get("intro_vo") or story.get("title") or "Let's rank these.", intro_mp3)
+    introSec = round(idur + 0.4, 2)
+    items_in = story.get("items") or []
+    items_out, clips, cum = [], [(intro_mp3, 0.0)], 0.0
+    for i, it in enumerate(items_in):
+        p = os.path.join(sdir, f"it{i}.mp3")
+        du, _, _ = TK.synth(it.get("vo") or f"{it.get('name','')} is {it.get('tier','')} tier.", p)
+        dur = round(du + 0.35, 2)
+        items_out.append({"name": it.get("name"), "tier": it.get("tier"), "stat": it.get("stat"), "dur": dur})
+        clips.append((p, introSec + cum)); cum += dur
+    odur, _, _ = TK.synth(story.get("outro_vo") or "Agree? Comment your S tier.", outro_mp3)
+    outroSec = round(odur + 0.4, 2)
+    clips.append((outro_mp3, introSec + cum))
+    total = round(introSec + cum + outroSec, 2)
+    track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
+    return {"title": (story.get("title") or "TIER LIST"), "subtitle": story.get("subtitle", ""),
+            "handle": handle, "color": "#7C5CFF", "accent": "#7C5CFF", "sfx": True,
+            "introSec": introSec, "itemSec": 1.7, "outroSec": outroSec,
+            "items": items_out, "audio": rel(track), "music": music}
+
+
+def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
+                avoid=None, on_status=None, on_limit=None, on_ok=None):
+    """KÊNH #3 RANKED A-Z: Gemini sinh tier list (tiêu chí + số liệu thật) -> giọng -> render RankedShort -> QC + thumb."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    import key_manager as KM
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    if not keys[0]["key"]:
+        raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    st("writing", f"Gemini xếp hạng ({niche})")
+    story = KM.write_ranked(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    score = (story.get("self_score") or {}).get("total")
+    st("rendering", "Giọng + render tier list", title=story.get("title_yt") or story.get("title"), score=score)
+    sdir = os.path.join(PUB, "narration", "_ranked_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
+    props = build_ranked_props(story, sdir, handle=channel_handle(channel))
+    pf = os.path.join(PUB, f"_ranked_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
+    print(f"   🎞️ render RankedShort ({len(props['items'])} item) …")
+    subprocess.run(["npx", "remotion", "render", "src/index.ts", "RankedShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out); info["score"] = score
+    try:
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        big = (story.get("title") or "WHAT'S\nS-TIER?").upper()
+        tprops = {"kind": "thumb", "bigLine": big, "topLine": "you'll rage 😤"}
+        tf = os.path.join(PUB, f"_rankedthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "RankedThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ thumb skip:", e)
+    print(f"   {'✅' if ok else '❌'} QC ranked {info}")
+    return out, story, ok, info
+
+
 def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
               on_status=None, on_limit=None, n_races=6, avoid=None, on_ok=None):
     """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info)."""

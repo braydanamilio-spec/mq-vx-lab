@@ -516,6 +516,104 @@ def generate_mapped(niche: str, api_key: str = None, model_name: str = None, avo
     raise Exception(f"MAPPED sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# KÊNH #3 RANKED — sinh tier list S/A/B/C/D (xếp hạng có tiêu chí + số liệu thật).
+RANKED_SYS = (
+ "You are the host of a #1 US 'tier list' viral channel. You rank things into S/A/B/C/D tiers by a CLEAR, "
+ "stated criterion. Absolute rules:\n"
+ "1) CRITERION FIRST: state one objective criterion (e.g. 'by 2023 US sales', 'by average rating', 'by speed'). "
+ "Tier placement must be CONSISTENT with it — the best by that criterion are S, worst are D. No contradictions.\n"
+ "2) FACTS: every stat must be TRUE and verifiable. Never invent numbers. If unsure, pick a topic you know.\n"
+ "3) 7-10 items total, spread across tiers, with a clear S tier (1-2 items). Use well-known US-relevant items.\n"
+ "4) NO politics/partisan, no tragedy, no NSFW, no ranking real private people.\n"
+ "5) ORDER items for a DRAMATIC reveal that ENDS on the S tier (reveal low tiers first, S last = climax).\n"
+ "6) NARRATION spoken aloud: punchy hook, one spicy line per item as it drops into its tier, big S-tier payoff, CTA. Short natural sentences."
+)
+
+RANKED_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
+{
+  "title": str,            // on-screen, <=24 chars, e.g. "FAST FOOD, RANKED"
+  "subtitle": str,         // basis shown small, e.g. "by US sales"
+  "criterion": str,        // the objective measure used
+  "items": [               // 7-10, ORDERED for reveal (low tiers first, S tier LAST)
+    { "name": str, "tier": "S"|"A"|"B"|"C"|"D", "stat": str, "vo": str }   // stat <=12 chars; vo = one spoken line
+  ],
+  "intro_vo": str,
+  "outro_vo": str,
+  "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
+  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+}
+Tiers must be consistent with the criterion. The LAST items must be the S tier."""
+
+
+def _validate_ranked(d: dict) -> list[str]:
+    errs = []
+    its = d.get("items") or []
+    if not (5 <= len(its) <= 12):
+        errs.append("items cần 5–12")
+    tiers_ok = {"S", "A", "B", "C", "D", "F"}
+    for i, it in enumerate(its):
+        if not str((it or {}).get("name", "")).strip():
+            errs.append(f"item[{i}] thiếu name")
+        if str((it or {}).get("tier", "")).upper() not in tiers_ok:
+            errs.append(f"item[{i}] tier lạ")
+        if not str((it or {}).get("vo", "")).strip():
+            errs.append(f"item[{i}] thiếu vo")
+    if not any(str((it or {}).get("tier", "")).upper() == "S" for it in its):
+        errs.append("cần ít nhất 1 item tier S")
+    for k in ("title", "subtitle", "criterion", "intro_vo", "outro_vo", "title_yt"):
+        if not str(d.get(k, "")).strip():
+            errs.append(f"thiếu '{k}'")
+    return errs
+
+
+def generate_ranked(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 tier list RANKED (xếp hạng có tiêu chí + số liệu thật + narration). Viết lại tới khi đạt."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    model = genai.GenerativeModel(mname, system_instruction=RANKED_SYS)
+    resolved = False
+    avoid_txt = ("\nAvoid topics already used: " + " | ".join(avoid[-60:])) if avoid else ""
+    base = (f'Make a tier list in the niche "{niche}".\n{RANKED_SCHEMA}{avoid_txt}')
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=RANKED_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"JSON lỗi ({e})."; continue
+        errs = _validate_ranked(d)
+        sc = d.get("self_score") or {}
+        score = sc.get("total", 0); lo = min(int(sc.get("accuracy", 0)), int(sc.get("logic", 0)))
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "Lỗi cấu trúc: " + "; ".join(errs[:6]); print(f"   ↻ ranked vòng {attempt}: {feedback}"); continue
+        if lo < 95:
+            feedback = f"accuracy/logic={lo}<95. Tiêu chí phải rõ, tier khớp tiêu chí, stat THẬT. Sửa item mâu thuẫn."
+            print(f"   ↻ ranked vòng {attempt}: {feedback}"); continue
+        if score < MIN_SCORE:
+            feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, S-tier payoff sốc hơn."; print(f"   ↻ ranked vòng {attempt}: điểm {score}"); continue
+        d["vtype"] = "ranked"
+        print(f"   ✅ RANKED đạt vòng {attempt}: total {score}, acc/logic {lo} — {d.get('title')!r}")
+        return d
+    raise Exception(f"RANKED sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--type", dest="vtype", choices=["long", "short"], default="short")
