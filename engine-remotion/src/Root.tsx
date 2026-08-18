@@ -12,6 +12,7 @@ import { MappedShort, calcMapped } from "./MappedShort"; // kênh #2 MAPPED (cho
 import { BrandMapped } from "./BrandMapped";             // brand kênh #2 MAPPED
 import { RankedShort, calcRanked } from "./RankedShort";  // kênh #3 RANKED (tier list)
 import { BrandRanked2 } from "./BrandRanked2";            // brand kênh #3 RANKED
+import { ScaledShort, calcScaled } from "./ScaledShort";  // kênh #4 SCALED (so sánh kích thước)
 import { BrandBroke } from "./BrandBroke";
 import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
@@ -93,6 +94,14 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="BrandRanked2Banner" component={BrandRanked2} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
     <Composition id="BrandRanked2Watermark" component={BrandRanked2} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
     <Composition id="RankedThumb" component={BrandRanked2} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
+    {/* KÊNH #4 SCALED — so sánh kích thước */}
+    <Composition id="ScaledShort" component={ScaledShort} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcScaled}
+      defaultProps={{ title: "HOW BIG IS A BLUE WHALE?", subtitle: "length compared", color: "#2FA84F", accent: "#2FA84F", handle: "@scaledusa", items: [
+        { name: "Human", emoji: "🧍", value: 1.7, disp: "1.7 m" },
+        { name: "Great White", emoji: "🦈", value: 6, disp: "6 m" },
+        { name: "School Bus", emoji: "🚌", value: 12, disp: "12 m" },
+        { name: "Blue Whale", emoji: "🐋", value: 30, disp: "30 m" },
+      ] }} />
 
     {/* THUMBNAIL data-driven (mỗi video 1 thumb, đọc props) */}
     <Composition id="Thumb" component={Thumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ bigLine: "SO HIGH?!", topLine: "WHY IS RENT" }} calculateMetadata={calcThumb} />
