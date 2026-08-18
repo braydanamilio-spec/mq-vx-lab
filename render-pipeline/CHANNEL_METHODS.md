@@ -46,7 +46,9 @@ Mục tiêu: phá thế "10 kênh cùng 1 motif bar-race". Mỗi kênh 1 cơ ch�
 | 2 | 🗺️ MAPPED | @mappedusa | #22D3EE | `MappedShort.tsx` + `BrandMapped.tsx` (geoAlbersUsa) | choropleth US "nóng dần" + pin số + bảng xếp hạng | ✅ **FULL A-Z** (engine+brand+não+dispatch) |
 | 3 | 🏆 RANKED | @rankedusa | #7C5CFF | `RankedShort.tsx` + `BrandRanked2.tsx` | bảng tier S/A/B/C/D thẻ lật xếp hạng | ✅ **FULL A-Z** (engine+brand+não+dispatch) |
 | 4 | 📏 SCALED | @scaledusa | #2FA84F | `ScaledShort.tsx` + `BrandScaled.tsx` | so sánh KÍCH THƯỚC vật lý (emoji đúng tỉ lệ trên nền) | ✅ **FULL A-Z** (engine+brand+não+dispatch) |
-| 5 | ⏳ THEN×NOW | @thennowusa | #EC4899 | build mới | timeline chẻ đôi XƯA/NAY (split trước-sau) | chờ |
+| 5 | ⏳ THEN×NOW | @thennowusa | #EC4899 | `ThenNowShort.tsx` + `BrandThenNow.tsx` | split XƯA(sepia)/NAY(hồng) + con số biến đổi | ✅ **FULL A-Z** (engine+brand+não+dispatch) |
+
+> 🎉 **WAVE 1 HOÀN TẤT** — cả 5 kênh motif đã xong A-Z (engine + brand + não + dispatch + doc), test local từng bước. Bật kênh chỉ cần đặt `format`.
 
 ### ⚙️ Cách BẬT 1 kênh motif (GUESS/MAPPED) — config kênh trong dashboard/Firestore
 Đặt field **`format`** cho kênh: `"guess"` · `"mapped"` · `"ranked"` · `"scaled"` → `run_one` tự route sang `make_guess`/`make_mapped`/`make_ranked`/`make_scaled` (short-only, theo `short_target`).
@@ -54,6 +56,7 @@ Mục tiêu: phá thế "10 kênh cùng 1 motif bar-race". Mỗi kênh 1 cơ ch�
 - MAPPED: `niche`/`category` (vd `"US demographics"`, `"cost of living"`) → Gemini tự chọn metric có số liệu THẬT.
 - RANKED: `niche`/`category` (vd `"US fast food"`, `"streaming services"`) → Gemini tự xếp tier theo tiêu chí + số liệu THẬT.
 - SCALED: `niche`/`category` (vd `"ocean animals"`, `"tallest buildings"`, `"planets"`) → Gemini so sánh kích thước THẬT + emoji.
+- THENNOW: `niche`/`category` (vd `"cost of living"`, `"technology"`, `"salaries"`) → Gemini so sánh giá trị XƯA/NAY THẬT + mức biến đổi.
 - Không đặt `format` → kênh chạy data-race như cũ (không phá kênh cũ).
 
 ### Pipeline 2 kênh này (đã build + test local)
