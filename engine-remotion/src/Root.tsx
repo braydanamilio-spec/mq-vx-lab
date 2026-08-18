@@ -13,6 +13,7 @@ import { BrandMapped } from "./BrandMapped";             // brand kênh #2 MAPPE
 import { RankedShort, calcRanked } from "./RankedShort";  // kênh #3 RANKED (tier list)
 import { BrandRanked2 } from "./BrandRanked2";            // brand kênh #3 RANKED
 import { ScaledShort, calcScaled } from "./ScaledShort";  // kênh #4 SCALED (so sánh kích thước)
+import { BrandScaled } from "./BrandScaled";             // brand kênh #4 SCALED
 import { BrandBroke } from "./BrandBroke";
 import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
@@ -102,6 +103,11 @@ export const RemotionRoot: React.FC = () => (
         { name: "School Bus", emoji: "🚌", value: 12, disp: "12 m" },
         { name: "Blue Whale", emoji: "🐋", value: 30, disp: "30 m" },
       ] }} />
+    {/* BRAND kênh #4 SCALED */}
+    <Composition id="BrandScaledAvatar" component={BrandScaled} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="BrandScaledBanner" component={BrandScaled} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="BrandScaledWatermark" component={BrandScaled} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
+    <Composition id="ScaledThumb" component={BrandScaled} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
 
     {/* THUMBNAIL data-driven (mỗi video 1 thumb, đọc props) */}
     <Composition id="Thumb" component={Thumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ bigLine: "SO HIGH?!", topLine: "WHY IS RENT" }} calculateMetadata={calcThumb} />
