@@ -199,5 +199,17 @@ def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "") -> s
     return ref.id
 
 
+_LAST_JOB_WRITE = {}
+
+
 def update_job(job_id: str, **patch):
-    _db().collection("render_jobs").document(job_id).set(patch, merge=True)
+    # TIẾT KIỆM Firestore write: cập nhật status TRUNG GIAN (writing/rendering/qc) tối đa 1 lần/15s/job;
+    # trạng thái CUỐI (done/failed/ratelimited) LUÔN ghi. -> giảm mạnh số ghi (tránh cạn quota free 20K/ngày).
+    import time as _t
+    st = patch.get("status")
+    if st not in ("done", "failed", "ratelimited"):
+        now = _t.time()
+        if now - _LAST_JOB_WRITE.get(job_id, 0) < 15:
+            return
+        _LAST_JOB_WRITE[job_id] = now
+    _retry(lambda: _db().collection("render_jobs").document(job_id).set(patch, merge=True))
