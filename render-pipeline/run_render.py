@@ -501,6 +501,17 @@ def channel_mode(name):
         if report["done"] - before == 0:       # 0 video MỚI = đủ target / hết quota / kho đầy (upload fail) → ngừng (đừng hammer)
             print(f"   ⏹ {name}: vòng {rounds} ra 0 video (đủ target/hết quota/kho đầy) → ngừng."); break
     print(f"✅ {name}: TỔNG {report['done']} video · {len(report['fails'])} lỗi (qua {rounds} vòng).")
+    # GHI số request/key hôm nay -> theo dõi quota còn free + chia đều lần sau.
+    try:
+        import key_manager as KM
+        from datetime import datetime as _dt, timezone as _tz
+        reqs = KM.flush_requests(); today = _dt.now(_tz.utc).isoformat()[:10]
+        for kid, cnt in reqs.items():
+            FB.incr_key_requests(kid, cnt, today)
+        if reqs:
+            print(f"   📊 {name}: +{sum(reqs.values())} request lên {len(reqs)} key.")
+    except Exception:
+        traceback.print_exc()
 
 
 if __name__ == "__main__":

@@ -38,11 +38,24 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         if x.get("alive") is False and not include_cooling:
             continue                                  # RENDER: bỏ key đã biết CHẾT (403/khoá) -> khỏi phí lượt.
             # (health-check dùng include_cooling=True -> vẫn lấy key chết để RE-TEST -> tự mở lại 🟢 nếu Google bỏ chặn)
+        today = now[:10]
+        req_today = int(x.get("req_today", 0) or 0) if x.get("req_date") == today else 0   # sang ngày mới -> coi như 0 (quota reset)
         out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
                     "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
                     "last_used": x.get("last_used", ""), "cooling_until": cooling,
-                    "dead_since": x.get("dead_since", "")})
+                    "dead_since": x.get("dead_since", ""), "req_today": req_today})
     return out
+
+
+def incr_key_requests(key_id: str, n: int, today: str):
+    """Cộng dồn số REQUEST hôm nay của 1 key (reset khi sang ngày mới) -> tính quota còn free trước ngưỡng."""
+    ref = _db().collection("gemini_keys").document(key_id)
+    d = ref.get()
+    x = (d.to_dict() or {}) if d.exists else {}
+    if x.get("req_date") == today:
+        ref.set({"req_today": int(x.get("req_today", 0) or 0) + int(n)}, merge=True)
+    else:
+        ref.set({"req_today": int(n), "req_date": today}, merge=True)
 
 
 def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = False):

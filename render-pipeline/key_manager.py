@@ -15,21 +15,40 @@ import time
 import content_brain as CB
 
 
+_RR = [0]   # bộ đếm round-robin trong tiến trình -> mỗi lần chọn key XOAY 1 nấc -> video kế dùng key KHÁC (không dội 1 key)
+_REQ = {}   # đếm số request/key TRONG tiến trình -> flush cuối phiên vào req_today (biết còn bao nhiêu quota)
+
+
+def _count(k):
+    kid = k.get("id")
+    if kid:
+        _REQ[kid] = _REQ.get(kid, 0) + 1
+
+
+def flush_requests() -> dict:
+    """Lấy (và xóa) bảng đếm request/key trong tiến trình -> caller ghi vào Firestore req_today."""
+    global _REQ
+    out = dict(_REQ); _REQ = {}
+    return out
+
+
 def key_order(channel: str, keys: list[dict]) -> list[dict]:
-    """Thứ tự thử key cho 1 kênh (theo yêu cầu user):
-    1. ƯU TIÊN key LÂU CHƯA XÀI NHẤT (last_used cũ / chưa xài lần nào) -> chia đều, key nghỉ đủ lâu.
-    2. NÉ key VỪA bỏ chặn: cooling_until mới -> đẩy xuống CUỐI (để nghỉ thêm, tránh bị chặn lại lâu hơn).
-       -> sort theo max(last_used, cooling_until) TĂNG DẦN: "" (chưa xài/chưa chặn) đứng đầu, vừa-bỏ-chặn cuối.
-    3. XOAY theo kênh -> 10 luồng SONG SONG không cùng chọn 1 key đầu (không dội 1 project -> tránh bị chặn)."""
+    """Thứ tự thử key cho 1 kênh (theo yêu cầu user — CHIA ĐỀU, tránh dội 1 key bị chặn):
+    1. ƯU TIÊN key ÍT REQUEST HÔM NAY NHẤT (req_today nhỏ) -> chia đều tải, còn nhiều quota free.
+    2. NÉ key VỪA bỏ chặn + ưu tiên lâu chưa xài: max(last_used, cooling_until) tăng dần.
+    3. XOAY theo kênh + ROUND-ROBIN mỗi lần -> 10 luồng không dồn 1 key, video kế trong 1 kênh cũng đổi key."""
     n = len(keys)
     if n == 0:
         return []
-    def idle(k):   # cũ nhất -> nhỏ nhất -> ưu tiên; id để tiebreak ổn định
-        return (max(str(k.get("last_used") or ""), str(k.get("cooling_until") or "")), str(k.get("id") or ""))
-    ks = sorted(keys, key=idle)
+    def score(k):
+        return (int(k.get("req_today") or 0),                                   # 1. ít request hôm nay -> ưu tiên (chia đều + còn quota)
+                max(str(k.get("last_used") or ""), str(k.get("cooling_until") or "")),  # 2. né key vừa mở chặn + lâu chưa xài
+                str(k.get("id") or ""))
+    ks = sorted(keys, key=score)
     if n == 1:
         return ks
-    start = int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) % n
+    start = (int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) + _RR[0]) % n
+    _RR[0] += 1                                                                  # xoay 1 nấc mỗi lần chọn -> spread đều trong phiên
     return [ks[(start + i) % n] for i in range(n)]
 
 
@@ -72,6 +91,7 @@ def write_story(channel: str, keys: list[dict], seed: str,
                 time.sleep(1.5)                   # nhịp nhẹ giữa các key -> không burst -> không bị coi là spam
             try:
                 print(f"   🔑 kênh {channel} dùng key [{tag}] · model {model}")
+                _count(k)
                 return _ok(k, CB.generate(seed, vtype, api_key=k["key"], model_name=model))
             except CB.RateLimited as e:
                 tried.append(tag); _cool(k, e)
@@ -82,6 +102,7 @@ def write_story(channel: str, keys: list[dict], seed: str,
                     model = "gemini-2.5-flash"
                     print(f"   ↓ model cao không có cho [{tag}] → hạ {model}")
                     try:
+                        _count(k)
                         return _ok(k, CB.generate(seed, vtype, api_key=k["key"], model_name=model))
                     except CB.RateLimited as e2:
                         tried.append(tag); _cool(k, e2)
