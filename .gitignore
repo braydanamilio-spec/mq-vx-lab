@@ -5,6 +5,7 @@
 !/.github/
 !/engine-remotion/
 !/render-pipeline/
+!/HANDOFF.md
 
 # --- trong engine-remotion: loại node_modules + 120GB public (chỉ giữ asset nhẹ BẮT BUỘC) ---
 engine-remotion/node_modules/
