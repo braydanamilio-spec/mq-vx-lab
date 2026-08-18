@@ -41,7 +41,9 @@ def key_order(channel: str, keys: list[dict]) -> list[dict]:
     if n == 0:
         return []
     def score(k):
-        return (int(k.get("req_today") or 0),                                   # 1. ít request hôm nay -> ưu tiên (chia đều + còn quota)
+        # req_today (Firestore, xuyên phiên) + _REQ (đã dùng TRONG phiên này) -> key CÒN NHIỀU QUOTA lên đầu.
+        used = int(k.get("req_today") or 0) + _REQ.get(k.get("id"), 0)
+        return (used,                                                           # 1. ít dùng nhất (còn quota) -> ưu tiên
                 max(str(k.get("last_used") or ""), str(k.get("cooling_until") or "")),  # 2. né key vừa mở chặn + lâu chưa xài
                 str(k.get("id") or ""))
     ks = sorted(keys, key=score)

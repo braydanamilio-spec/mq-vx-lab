@@ -22,6 +22,13 @@ RESERVE_SHORT = 30
 DRIVE_SAFETY_PCT = 0.90   # kho ≥90% đầy -> ngừng render mẻ này (tránh phình + lỗi ghi khi hết chỗ)
 
 
+def _is_ratelimit(err) -> bool:
+    """True nếu lỗi do HẾT QUOTA/rate-limit (TẠM) -> KHÔNG tính 'Lỗi', vòng/phiên sau tự thử lại (dùng key còn quota)."""
+    s = str(err).lower()
+    return ("hết quota" in s or "đều hết" in s or "quota" in s or "429" in s
+            or "resource_exhausted" in s or "rate limit" in s or "ratelimit" in s or "per minute" in s)
+
+
 def _make_thumb(video):
     """Trích 1 khung ĐẸP (giữa-cuối, lúc bars cao/số lớn) làm thumbnail — dùng cho YouTube + gallery."""
     try:
@@ -95,6 +102,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
     if do_long and FB.count_done(OWNER, channel, "long") >= long_target:
         do_long = False; print(f"🎯 {channel}: đủ {long_target} long (dự trữ) — bỏ qua long.")
     n_shorts = max(0, min(n_shorts, short_target - FB.count_done(OWNER, channel, "short")))
+    if not do_long and n_shorts <= 0:      # ĐỦ CẢ long+short -> thoát NGAY (không gọi Gemini) -> made=0 SẠCH (phân biệt với lỗi quota)
+        print(f"🎯 {channel}: đủ target (long+short) — không làm gì thêm."); return
     subtopics = []
     if do_long:
         # ---- LONG ---- SELF-HEAL: render lỗi -> tự thử lại NHẸ hơn (4 race -> 2).
@@ -116,7 +125,9 @@ def run_one(ch, keys, n_shorts=3, report=None):
         try:
             if subtopics:
                 FB.save_topics(OWNER, channel, subtopics)     # ghi vào ngân hàng chủ đề
-            if last_err is not None:
+            if last_err is not None and _is_ratelimit(last_err):
+                lst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1   # KHÔNG tính Lỗi
+            elif last_err is not None:
                 lst("failed", f"Tự thử lại vẫn lỗi: {str(last_err)[:120]}"); R["fails"].append(f"{channel} LONG: {str(last_err)[:100]}")
             elif ok:
                 eq = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
@@ -158,7 +169,9 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 serr = None; break
             except Exception as e:
                 serr = e; traceback.print_exc(); print(f"   🔧 SHORT {channel}#{i} lỗi lần {satt}: {str(e)[:100]}")
-        if serr is not None:
+        if serr is not None and _is_ratelimit(serr):
+            sst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1   # KHÔNG tính Lỗi
+        elif serr is not None:
             sst("failed", f"Tự thử lại vẫn lỗi: {str(serr)[:110]}"); R["fails"].append(f"{channel} SHORT {i}: {str(serr)[:100]}")
         elif sok:
             eq = enqueue_drive(channel, sout, story, "short")
@@ -487,12 +500,13 @@ def channel_mode(name):
     delay = sum(ord(c) for c in name) % 18
     if delay:
         print(f"   ⏳ {name}: giãn {delay}s (chống burst song song)…"); time.sleep(delay)
-    report = {"done": 0, "fails": []}
+    report = {"done": 0, "fails": [], "rl": 0}
     # VÒNG LẶP A-Z: làm LIÊN TỤC nhiều mẻ trong 1 phiên tới khi — ĐỦ TARGET / HẾT GIỜ (trừ hao) / HẾT QUOTA / KHO ĐẦY / bấm Dừng.
     budget_s = int(cfg.get("batch_budget_min", 210) or 210) * 60    # ngân sách mềm 1 phiên (mặc định 3.5h -> 6 phiên/ngày không chồng lấn)
     HARD_S = 330 * 60                                               # cứng: timeout workflow 350' - chừa ~20' buffer
     max_run = int(cfg.get("max_per_run", 0) or 0)                   # 0 = ∞ (vòng lặp tự giới hạn theo target/quota/giờ); >0 = trần cứng/kênh/phiên
-    start = time.monotonic(); rounds = 0; last_dur = 0
+    MAX_EMPTY = int(cfg.get("empty_retry", 4) or 4)                 # số vòng LIỀN ra 0 video (do rate-limit) rồi mới chịu ngừng -> quota cạn thật
+    start = time.monotonic(); rounds = 0; last_dur = 0; empty_streak = 0
     while True:
         rounds += 1
         remain = min(budget_s, HARD_S) - (time.monotonic() - start)
@@ -504,16 +518,28 @@ def channel_mode(name):
         chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]   # re-read: target có thể đổi giữa chừng
         if not chs:
             print(f"   ⚠️ {name}: kênh đã bị xóa → ngừng."); break
-        before = report["done"]; t0 = time.monotonic()
+        before = report["done"]; before_rl = report.get("rl", 0); t0 = time.monotonic()
         try:
             run_one(chs[0], keys, report=report)
-        except BaseException:
-            traceback.print_exc(); report["fails"].append(f"{name} vòng {rounds}")
+        except BaseException as e:
+            traceback.print_exc()
+            (report.__setitem__("rl", report.get("rl", 0) + 1) if _is_ratelimit(e) else report["fails"].append(f"{name} vòng {rounds}"))
         last_dur = time.monotonic() - t0
-        if report["done"] - before == 0:       # 0 video MỚI = đủ target / hết quota / kho đầy (upload fail) → ngừng (đừng hammer)
-            print(f"   ⏹ {name}: vòng {rounds} ra 0 video (đủ target/hết quota/kho đầy) → ngừng."); break
-        if max_run and report["done"] >= max_run:
-            print(f"   🎯 {name}: đạt trần {max_run} video/phiên → ngừng."); break
+        made = report["done"] - before; rl = report.get("rl", 0) - before_rl
+        if made > 0:
+            empty_streak = 0
+            if max_run and report["done"] >= max_run:
+                print(f"   🎯 {name}: đạt trần {max_run} video/phiên → ngừng."); break
+            continue
+        # ---- made == 0 ----
+        if rl == 0:                             # KHÔNG làm + KHÔNG dính rate-limit = ĐỦ TARGET (run_one thoát sớm) -> ngừng hẳn
+            print(f"   🎯 {name}: đủ target (hoặc không còn việc) → ngừng."); break
+        # made==0 VÌ RATE-LIMIT -> CHỜ rồi thử KEY KHÁC (còn quota) / per-minute reset -> KHÔNG bỏ kênh oan khi chưa đủ target
+        empty_streak += 1
+        if empty_streak >= MAX_EMPTY:
+            print(f"   ⏹ {name}: {MAX_EMPTY} vòng liền dính rate-limit (quota cạn thật) → ngừng, phiên sau làm tiếp."); break
+        wait = min(120, 40 * empty_streak)
+        print(f"   ⏳ {name}: vòng {rounds} hết quota tạm → chờ {wait}s rồi thử KEY KHÁC (còn quota)…"); time.sleep(wait)
     print(f"✅ {name}: TỔNG {report['done']} video · {len(report['fails'])} lỗi (qua {rounds} vòng).")
     # GHI số request/key hôm nay -> theo dõi quota còn free + chia đều lần sau.
     try:
