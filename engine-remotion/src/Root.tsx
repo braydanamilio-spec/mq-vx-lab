@@ -9,6 +9,7 @@ import { ShortGen, calcShortGen } from "./ShortGen";
 import { GuessShort, calcGuess } from "./GuessShort";   // kênh #1 GUESS (đố/đoán)
 import { BrandGuess } from "./BrandGuess";              // brand kênh #1 GUESS
 import { MappedShort, calcMapped } from "./MappedShort"; // kênh #2 MAPPED (choropleth US)
+import { BrandMapped } from "./BrandMapped";             // brand kênh #2 MAPPED
 import { BrandBroke } from "./BrandBroke";
 import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
@@ -71,6 +72,11 @@ export const RemotionRoot: React.FC = () => (
         { state: "Ohio", value: 66990, disp: "$66,990" }, { state: "Georgia", value: 71355, disp: "$71,355" },
         { state: "Arizona", value: 72581, disp: "$72,581" }, { state: "Oregon", value: 76362, disp: "$76,362" },
       ] }} />
+    {/* BRAND kênh #2 MAPPED */}
+    <Composition id="BrandMappedAvatar" component={BrandMapped} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="BrandMappedBanner" component={BrandMapped} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="BrandMappedWatermark" component={BrandMapped} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
+    <Composition id="MappedThumb" component={BrandMapped} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
 
     {/* THUMBNAIL data-driven (mỗi video 1 thumb, đọc props) */}
     <Composition id="Thumb" component={Thumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ bigLine: "SO HIGH?!", topLine: "WHY IS RENT" }} calculateMetadata={calcThumb} />
