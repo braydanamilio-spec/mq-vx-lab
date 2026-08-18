@@ -25,9 +25,14 @@ storageBucket: mm0-shard-b.firebasestorage.app
 - **Dashboard**: init app Firebase thứ 2 (web config B) + đăng nhập ẩn danh B → listener/ghi `render_jobs` trỏ B. Fallback A nếu B chưa sẵn.
 - **Rules B**: render_jobs cho user đã auth đọc/ghi (single-user, job = metadata không nhạy cảm). Pipeline (SA) bypass rules.
 
-## Trạng thái wiring
+## Trạng thái wiring — ✅ XONG HẾT (18/8)
 - [x] Provision Project B + creds + secrets
-- [ ] Rules B + anon auth
-- [ ] Pipeline route render_jobs → B
-- [ ] Workflow pass creds B
-- [ ] Dashboard đọc render_jobs từ B
+- [x] Rules B (render_jobs public read/write — không dùng anon auth vì Identity Platform đòi billing)
+- [x] Pipeline route render_jobs → B (`_db_jobs()`, backward-compat)
+- [x] Workflow pass creds B (sa_b.json + env)
+- [x] Dashboard đọc render_jobs từ CẢ A+B (gộp, không mất video cũ, khỏi migrate); ghi/dọn → B
+
+## Kích hoạt
+- Mẻ render tới: pipeline ghi render_jobs MỚI vào B. Video cũ vẫn ở A (dashboard đọc cả 2).
+- Nếu muốn TẮT shard: bỏ 2 secret `GCP_SA_KEY_B`/`FIREBASE_PROJECT_ID_B` (pipeline tự về A); dashboard tự fallback nếu init B lỗi.
+- KHÔNG dùng anon auth (đòi billing) → rules B để public cho render_jobs (metadata không nhạy cảm, single-user).
