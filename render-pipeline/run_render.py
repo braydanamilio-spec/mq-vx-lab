@@ -448,16 +448,19 @@ def plan_mode():
     # HEALTH CHECK (throttled 20h) — chỉ ở plan, 10 luồng không lặp. Chạy TRƯỚC khi lọc key sống -> key vừa hồi được nhận lại.
     import content_brain as CB
     now_iso = datetime.now(timezone.utc).isoformat()
-    force_health = bool(cfg.get("force_health"))   # nút "Kiểm key NGAY" -> bỏ qua giới hạn 20h, test LẠI hết
-    fresh = (datetime.now(timezone.utc) - timedelta(hours=20)).isoformat(); dead = []
+    force_health = bool(cfg.get("force_health"))   # nút "Kiểm key NGAY" -> bỏ qua giới hạn, test LẠI HẾT (kể cả chết hẳn)
+    fresh = (datetime.now(timezone.utc) - timedelta(hours=20)).isoformat()
+    perm_fresh = (datetime.now(timezone.utc) - timedelta(hours=int(cfg.get("perm_recheck_hours", 168) or 168))).isoformat()  # chết hẳn: test lại mỗi ~7 ngày (phòng check NHẦM / Google mở lại)
+    dead = []
     import time as _t
     _PERM = ("denied", "suspended", "invalid", "permission", "forbidden", "401", "not valid", "unregistered")
     MAX_CHECK = int(cfg.get("health_max_per_cycle", 12) or 12)   # test tối đa N key/mẻ (rải qua nhiều mẻ) -> KHÔNG dội cả loạt = chống burst
     tested = 0
     for k in all_keys:
-        if k.get("dead_kind") == "permanent" and not force_health:
-            continue                                   # CHẾT HẲN (denied/suspended) -> KHÔNG test lại (không phục hồi + đỡ gọi phí)
-        if k.get("last_checked") and k["last_checked"] > fresh and not force_health:
+        # CHẾT HẲN -> KHÔNG test mỗi mẻ (đỡ phí), NHƯNG vẫn test lại HIẾM (mỗi ~7 ngày) -> phòng check nhầm / Google mở khoá lại -> không mất oan.
+        if k.get("dead_kind") == "permanent" and not force_health and (k.get("last_checked", "") or "") > perm_fresh:
+            continue
+        if k.get("dead_kind") != "permanent" and k.get("last_checked") and k["last_checked"] > fresh and not force_health:
             continue
         if tested >= MAX_CHECK and not force_health:
             break                                       # đủ N/mẻ -> phần còn lại để mẻ SAU (health-check rải đều, không spam)
