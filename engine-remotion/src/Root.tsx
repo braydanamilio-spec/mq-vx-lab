@@ -10,6 +10,7 @@ import { GuessShort, calcGuess } from "./GuessShort";   // kênh #1 GUESS (đố
 import { BrandGuess } from "./BrandGuess";              // brand kênh #1 GUESS
 import { MappedShort, calcMapped } from "./MappedShort"; // kênh #2 MAPPED (choropleth US)
 import { BrandMapped } from "./BrandMapped";             // brand kênh #2 MAPPED
+import { RankedShort, calcRanked } from "./RankedShort";  // kênh #3 RANKED (tier list)
 import { BrandBroke } from "./BrandBroke";
 import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
@@ -77,6 +78,15 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="BrandMappedBanner" component={BrandMapped} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
     <Composition id="BrandMappedWatermark" component={BrandMapped} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
     <Composition id="MappedThumb" component={BrandMapped} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
+    {/* KÊNH #3 RANKED — tier list */}
+    <Composition id="RankedShort" component={RankedShort} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcRanked}
+      defaultProps={{ title: "FAST FOOD, RANKED", subtitle: "by US sales", color: "#7C5CFF", accent: "#7C5CFF", handle: "@rankedusa", tiers: ["S", "A", "B", "C", "D"], items: [
+        { name: "McDonald's", tier: "S", stat: "$53B" }, { name: "Starbucks", tier: "S", stat: "$31B" },
+        { name: "Chick-fil-A", tier: "A", stat: "$21B" }, { name: "Taco Bell", tier: "A", stat: "$15B" },
+        { name: "Wendy's", tier: "B", stat: "$12B" }, { name: "Dunkin'", tier: "B", stat: "$11B" },
+        { name: "Subway", tier: "C", stat: "$10B" }, { name: "Domino's", tier: "C", stat: "$9B" },
+        { name: "Arby's", tier: "D", stat: "$5B" },
+      ] }} />
 
     {/* THUMBNAIL data-driven (mỗi video 1 thumb, đọc props) */}
     <Composition id="Thumb" component={Thumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ bigLine: "SO HIGH?!", topLine: "WHY IS RENT" }} calculateMetadata={calcThumb} />
