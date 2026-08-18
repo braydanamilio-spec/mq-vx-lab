@@ -11,6 +11,7 @@ import { BrandGuess } from "./BrandGuess";              // brand kênh #1 GUESS
 import { MappedShort, calcMapped } from "./MappedShort"; // kênh #2 MAPPED (choropleth US)
 import { BrandMapped } from "./BrandMapped";             // brand kênh #2 MAPPED
 import { RankedShort, calcRanked } from "./RankedShort";  // kênh #3 RANKED (tier list)
+import { BrandRanked2 } from "./BrandRanked2";            // brand kênh #3 RANKED
 import { BrandBroke } from "./BrandBroke";
 import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
@@ -87,6 +88,11 @@ export const RemotionRoot: React.FC = () => (
         { name: "Subway", tier: "C", stat: "$10B" }, { name: "Domino's", tier: "C", stat: "$9B" },
         { name: "Arby's", tier: "D", stat: "$5B" },
       ] }} />
+    {/* BRAND kênh #3 RANKED */}
+    <Composition id="BrandRanked2Avatar" component={BrandRanked2} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="BrandRanked2Banner" component={BrandRanked2} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="BrandRanked2Watermark" component={BrandRanked2} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
+    <Composition id="RankedThumb" component={BrandRanked2} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
 
     {/* THUMBNAIL data-driven (mỗi video 1 thumb, đọc props) */}
     <Composition id="Thumb" component={Thumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ bigLine: "SO HIGH?!", topLine: "WHY IS RENT" }} calculateMetadata={calcThumb} />
