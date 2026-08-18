@@ -96,6 +96,37 @@ Khác Wave 1 (motif đồ họa). Dạng: narration lôi cuốn + footage/ảnh 
 - Điều kiện chạy: kênh phải **đã Kết nối YouTube** (`connections/<owner>__<kênh>__youtube` có refresh_token) — bước này user tự làm (OAuth).
 - `invalid_grant` khi list_queue = 1 kết nối Drive cũ ở `connections` (khác 48 kho `storage_accounts` đều sống) → đã bỏ qua tự động, vô hại.
 
+## 🆕 THÊM 1 KÊNH MỚI — QUY TRÌNH ĐỒNG BỘ (RULE bắt buộc, làm ĐỦ các bước)
+> Thêm kênh KHÔNG chỉ là thêm 1 dòng — phải đồng bộ ĐỦ để "chọn là sản xuất + brand + đăng" chạy trơn.
+> Có 3 loại kênh, làm theo loại tương ứng:
+
+### Loại A — Kênh MOTIF mới (đồ hoạ riêng, vd GUESS/MAPPED/RANKED/SCALED/THENNOW)
+1. **Engine** `engine-remotion/src/<X>Short.tsx` — composition riêng (test render local: still + full, soi ảnh, sửa chồng chéo).
+2. **Brand** `engine-remotion/src/Brand<X>.tsx` (avatar/banner/watermark/thumb) + đăng ký cả 2 vào `src/Root.tsx`.
+3. **Não** `render-pipeline/content_brain.py`: `generate_<x>()` + `_validate_<x>()` (ép logic/accuracy ≥95, viết lại nếu trượt).
+4. **Key** `key_manager.py`: `write_<x>()` (bám+xoay key, cùng khuôn write_story).
+5. **Dựng** `datastory_ci.py`: `build_<x>_props()` + `make_<x>()` (edge-tts + [ảnh CC0 **Vision verify** nếu có ảnh] + SFX + timing bám giọng + thumb) — test local với story giả.
+6. **Dispatch** `run_render.py`: thêm `"<x>"` vào set `fmt in (...)` + vào map `mk = {...}`.
+7. **Dashboard** `MM0-AutoPublisher/dashboard/index.html`: thêm vào `RS_PRESETS` (fmt/accent/[style]/niche) + `RS_BRANDS` (d/a/t/h/ic/ht/niche) + `.cat`. (Form dropdown + brand kit + avatar TỰ nhận.)
+8. **Handle** `MM0-AutoPublisher/config/brands.json`: thêm entry (display/handle/accent/tagline/category/hashtags).
+9. **Deploy** dashboard (`firebase deploy --only hosting`) + **doc** (cập nhật bảng kênh + file NÀY).
+
+### Loại B — Kênh TÀI LIỆU mới (Wave 2, dùng chung engine Cinematic) — NHANH
+KHÔNG cần engine/brand/brain mới. Chỉ:
+1. `RS_PRESETS`: `{name, fmt:"doc", accent, accent2, style, niche}`.
+2. `RS_BRANDS` + `.cat` + `brands.json` (handle/accent/tagline).
+3. `Root.tsx`: thêm 1 dòng vào mảng `BrandDoc` (id/name/emoji/accent). Deploy + doc.
+→ Đã có `generate_doc`/`make_doc` + dispatch `format="doc"` lo hết.
+
+### Loại C — Kênh DATA-RACE mới (engine bar-race có sẵn)
+Chỉ `RS_PRESETS` (không fmt) + `RS_BRANDS` + `brands.json`. Deploy. (Pipeline race mặc định lo.)
+
+### ✅ Kiểm nghiệm thu sau khi thêm
+- Dropdown "📺 Kênh & Chủ đề Render" + panel "📋 Kế hoạch" thấy kênh mới (số thứ tự + badge format).
+- Brand kit (2 dropdown) render avatar/cover/mô tả/tag đúng.
+- Bấm thêm → `render_channels` có `format`+`accent`(+`style`) → mẻ render tới route đúng maker.
+- (Khi có key) chạy test 1 video đầu-cuối trước khi bật rộng.
+
 ## 🛠️ TỰ CHỮA LỖI
 Cơ chế tự chữa lỗi + quy trình diagnose + lỗi đã gặp: **`ERROR_PLAYBOOK.md`**. Bug-log chi tiết: `PIPELINE_RULES.md`.
 
