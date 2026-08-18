@@ -9,8 +9,7 @@ on:
     inputs:
       force: { description: "FORCE=1 chạy dù pipeline đang tắt", default: "1" }
   schedule:
-    - cron: "0 18 * * *"    # 18:00 UTC ~ 01:00 VN: mẻ đêm đầy đủ
-    - cron: "*/30 * * * *"  # mỗi 30': kiểm cờ "Render ngay" từ dashboard (nhẹ, free)
+    - cron: "*/10 * * * *"  # mỗi 10': nhận "Render ngay" nhanh + mở mẻ theo giờ (0/4/8/12/16/20 UTC). Chống trùng bằng last_session_at.
 
 jobs:
   # ── ĐIỀU PHỐI: quyết định có chạy không + health-check + re-render + liệt kê kênh ─────────────

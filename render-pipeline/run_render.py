@@ -322,7 +322,13 @@ def gate_mode():
             is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 4, 8, 12, 16, 20])
                   and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
             enabled = bool(cfg.get("enabled")) or os.environ.get("FORCE") == "1"
-            if ((event != "schedule") or run_now or is_nightly) and (enabled or run_now):
+            # CHỐNG TRÙNG: mở mẻ MỚI theo giờ chỉ khi chưa có phiên nào chạy gần đây (< ngân sách phiên) -> tránh */10 kích nhiều lần.
+            last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("batch_budget_min", 210) or 210); recently = False
+            if last:
+                try: recently = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() < gap_min * 60
+                except Exception: recently = False
+            batch_ok = is_nightly and not recently
+            if ((event != "schedule") or run_now or batch_ok) and (enabled or run_now):
                 run = "true"
         except Exception:
             traceback.print_exc()
@@ -352,8 +358,13 @@ def plan_mode():
     run_now = bool(cfg.get("run_now"))
     is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 4, 8, 12, 16, 20])
                   and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
-    if event == "schedule" and not run_now and not is_nightly:
-        print("⏭ Nhịp kiểm 30' — không có lệnh Render ngay, bỏ qua (free)."); return out_channels([])
+    last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("batch_budget_min", 210) or 210); recently = False
+    if last:
+        try: recently = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() < gap_min * 60
+        except Exception: recently = False
+    if event == "schedule" and not run_now and (not is_nightly or recently):
+        print("⏭ Nhịp kiểm — chưa tới giờ mẻ / phiên gần đây còn chạy, bỏ qua (free)."); return out_channels([])
+    FB.set_config(OWNER, {"last_session_at": datetime.now(timezone.utc).isoformat()})   # đánh dấu phiên bắt đầu -> chống trùng
     if run_now:
         FB.set_config(OWNER, {"run_now": None, "run_now_done_at": datetime.now(timezone.utc).isoformat()})
         print("⚡ Nhận lệnh 'Render ngay'.")
@@ -480,6 +491,7 @@ def channel_mode(name):
     # VÒNG LẶP A-Z: làm LIÊN TỤC nhiều mẻ trong 1 phiên tới khi — ĐỦ TARGET / HẾT GIỜ (trừ hao) / HẾT QUOTA / KHO ĐẦY / bấm Dừng.
     budget_s = int(cfg.get("batch_budget_min", 210) or 210) * 60    # ngân sách mềm 1 phiên (mặc định 3.5h -> 6 phiên/ngày không chồng lấn)
     HARD_S = 330 * 60                                               # cứng: timeout workflow 350' - chừa ~20' buffer
+    max_run = int(cfg.get("max_per_run", 0) or 0)                   # 0 = ∞ (vòng lặp tự giới hạn theo target/quota/giờ); >0 = trần cứng/kênh/phiên
     start = time.monotonic(); rounds = 0; last_dur = 0
     while True:
         rounds += 1
@@ -500,6 +512,8 @@ def channel_mode(name):
         last_dur = time.monotonic() - t0
         if report["done"] - before == 0:       # 0 video MỚI = đủ target / hết quota / kho đầy (upload fail) → ngừng (đừng hammer)
             print(f"   ⏹ {name}: vòng {rounds} ra 0 video (đủ target/hết quota/kho đầy) → ngừng."); break
+        if max_run and report["done"] >= max_run:
+            print(f"   🎯 {name}: đạt trần {max_run} video/phiên → ngừng."); break
     print(f"✅ {name}: TỔNG {report['done']} video · {len(report['fails'])} lỗi (qua {rounds} vòng).")
     # GHI số request/key hôm nay -> theo dõi quota còn free + chia đều lần sau.
     try:
