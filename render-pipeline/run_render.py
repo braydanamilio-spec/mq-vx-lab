@@ -440,8 +440,12 @@ def plan_mode():
     global RESERVE_LONG, RESERVE_SHORT
     RESERVE_LONG = int(cfg.get("reserve_long", RESERVE_LONG) or RESERVE_LONG)
     RESERVE_SHORT = int(cfg.get("reserve_short", RESERVE_SHORT) or RESERVE_SHORT)
-    # ĐỒNG BỘ dung lượng THẬT mọi kho -> storage_accounts.used (render upload KHÔNG tự cập nhật -> phải sync cho display + guard đúng).
-    try:
+    # ĐỒNG BỘ dung lượng THẬT mọi kho -> storage_accounts.used. TIẾT KIỆM: chỉ ~1 lần/20h (không mỗi phiên) — 37 ghi Firestore.
+    _sync_fresh = (datetime.now(timezone.utc) - timedelta(hours=20)).isoformat()
+    if (cfg.get("usage_synced_at") or "") > _sync_fresh:
+        pass   # đã sync trong 20h -> bỏ qua (dùng nút 🔄 Đồng bộ dung lượng trên dashboard nếu cần ngay)
+    else:
+      try:
         import storage as ST
         synced = 0
         for acc in ST.pool_accounts():
@@ -453,8 +457,9 @@ def plan_mode():
                 synced += 1
             except Exception:
                 pass
+        FB.set_config(OWNER, {"usage_synced_at": datetime.now(timezone.utc).isoformat()})
         print(f"   💾 Đã đồng bộ dung lượng thật {synced} kho.")
-    except Exception as e:
+      except Exception as e:
         print(f"   ⚠️ Sync dung lượng kho lỗi: {e}")
     # GUARD KHO GẦN ĐẦY (tính tổng cả 33 kho, dùng số VỪA sync).
     safety_pct = float(cfg.get("drive_safety_pct", DRIVE_SAFETY_PCT) or DRIVE_SAFETY_PCT)
