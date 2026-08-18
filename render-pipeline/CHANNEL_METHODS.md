@@ -37,6 +37,24 @@ Moat (bí mật) nằm ở GitHub Secret `GEMINI_SYSTEM_PROMPT` + local `PROMPT_
 
 > Kế hoạch phân biệt hình ảnh 10 kênh (mỗi kênh 1 motif riêng, không lặp) = phase sau. STATEWARS đi trước với engine bản đồ.
 
+## 🆕 5 KÊNH MỚI — motif KHÁC HẲN data-race (đang build lần lượt)
+Mục tiêu: phá thế "10 kênh cùng 1 motif bar-race". Mỗi kênh 1 cơ chế hình ảnh riêng, USA-viral, đẹp, KHÔNG lặp.
+
+| # | Kênh | Handle | Màu | Engine (mới) | Cơ chế hình ảnh (motif) | TT |
+|---|---|---|---|---|---|---|
+| 1 | 🤔 GUESS | @guessdaily | #F5B301 + #ff375f | `GuessShort.tsx` + `BrandGuess.tsx` | **mảnh ghép mở dần + đồng hồ đếm giờ + đáp án bung** — ép đoán trước khi lộ | ✅ engine+brand chuẩn |
+| 2 | 🗺️ MAPPED | @mappedusa | #22D3EE | `WorldMapRace.tsx` (có sẵn, tinh chỉnh) | bản đồ US sáng dần từng bang (choropleth động) | kế tiếp |
+| 3 | 🏆 RANKED | @rankedusa | #7C5CFF | build mới | bảng tier S/A/B/C thẻ lật xếp hạng | chờ |
+| 4 | 📏 SCALED | @scaledusa | #2FA84F | build mới | so sánh KÍCH THƯỚC vật lý (thu/phóng cạnh nhau) | chờ |
+| 5 | ⏳ THEN×NOW | @thennowusa | #EC4899 | build mới | timeline chẻ đôi XƯA/NAY (split trước-sau) | chờ |
+
+### GUESS — method chi tiết + ⚠️ POLICY (bắt buộc)
+- **Thể loại**: Guess the City · Guess the Billionaire's Empire · Guess the Landmark · Guess the Brand (qua sản phẩm) · Guess the State.
+- **Cơ chế**: intro 🤔 → mỗi vòng: ảnh bị lưới ô che, mở dần (viền hồng glow) + câu hỏi + clue + đồng hồ vòng 3-2-1 → REVEAL đáp án (chữ) bung + tia + stat sốc.
+- **⚠️ ẢNH — TUYỆT ĐỐI SẠCH BẢN QUYỀN**: chỉ dùng ảnh **CC0/public-domain** (Openverse/Pexels/Wikimedia PD). KHÔNG scrape ảnh chân dung/paparazzi người nổi tiếng (bản quyền + quyền hình ảnh → chặn monetize).
+  - Đố người nổi tiếng/doanh nhân → **ảnh là BỐI CẢNH của họ** (trụ sở, sản phẩm, thành phố) + clue ("Bỏ học Harvard · 2.9 tỷ user"); **đáp án = TÊN dạng chữ**, không cần mặt họ. Chân dung chỉ khi có bản PD/CC chính thức.
+- **Props**: `{ title, handle, color, accent, roundSec, rounds:[{q, clue, answer, stat, img}], audio, subs, music }`. `calcGuess` tự tính độ dài. Deterministic (hash sin) → không flicker.
+
 ## 🛠️ TỰ CHỮA LỖI
 Cơ chế tự chữa lỗi + quy trình diagnose + lỗi đã gặp: **`ERROR_PLAYBOOK.md`**. Bug-log chi tiết: `PIPELINE_RULES.md`.
 
