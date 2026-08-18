@@ -6,6 +6,7 @@ import { loadFont as loadAnton } from "@remotion/google-fonts/Anton";
 loadAnton();  // Anton = condensed heavy display -> hook/số kiểu top data-channel USA (thay Poppins bo tròn generic)
 import { LongBroke, calcLong } from "./LongBroke";
 import { ShortGen, calcShortGen } from "./ShortGen";
+import { GuessShort, calcGuess } from "./GuessShort";   // kênh #1 GUESS (đố/đoán)
 import { BrandBroke } from "./BrandBroke";
 import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
@@ -43,6 +44,12 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="RaceShort" component={BarChartRace} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ frames: [{ t: 2000, data: [{ name: "A", value: 1 }] }] }} calculateMetadata={calcRace} />
     <Composition id="LongBroke" component={LongBroke} durationInFrames={5425} fps={30} width={1920} height={1080} defaultProps={{ scenes: [], slug: "broke_long" }} calculateMetadata={calcLong} />
     <Composition id="ShortGen" component={ShortGen} durationInFrames={600} fps={30} width={1080} height={1920} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcShortGen} />
+    <Composition id="GuessShort" component={GuessShort} durationInFrames={660} fps={30} width={1080} height={1920} calculateMetadata={calcGuess}
+      defaultProps={{ title: "GUESS THE US CITY", handle: "@guessusa", color: "#F5B301", accent: "#ff375f", roundSec: 7, rounds: [
+        { q: "Guess this US city", clue: "8.3M people · Wall Street", answer: "NEW YORK CITY", stat: "Rent: $3,900/mo 😳" },
+        { q: "Which US city is this?", clue: "Hollywood · 4M people", answer: "LOS ANGELES", stat: "Avg home: $970K" },
+        { q: "Name this skyline", clue: "Windy City · Lake Michigan", answer: "CHICAGO", stat: "3rd biggest US metro" },
+      ] }} />
     <Composition id="LongV2" component={LongV2} durationInFrames={600} fps={30} width={1920} height={1080} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcV2} />
 
     {/* THUMBNAIL data-driven (mỗi video 1 thumb, đọc props) */}
