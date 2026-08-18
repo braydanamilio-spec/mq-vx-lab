@@ -181,13 +181,21 @@ def save_topics(owner: str, channel: str, topics: list[str]):
 
 
 def count_done(owner: str, channel: str, vtype: str = None) -> int:
-    """Đếm số video ĐÃ XONG của 1 kênh (để so mục tiêu long/short target)."""
+    """Đếm số video ĐÃ XONG của 1 kênh (để so mục tiêu long/short target).
+    DÙNG aggregation count() = ~1 read (KHÔNG stream từng doc -> tránh đốt quota Firestore free khi kho lớn)."""
     try:
         q = (_db().collection("render_jobs").where("owner", "==", owner)
              .where("channel", "==", channel).where("status", "==", "done"))
         if vtype:
             q = q.where("type", "==", vtype)
-        return sum(1 for _ in q.stream())
+        try:
+            res = q.count().get()                # aggregation: 1 read thay vì N reads
+            # client trả [[AggregationResult]] hoặc [AggregationResult] tuỳ version
+            row = res[0]
+            ar = row[0] if isinstance(row, (list, tuple)) else row
+            return int(ar.value)
+        except Exception as e:
+            print(f"   ⚠️ count() agg lỗi ({e}) -> fallback stream"); return sum(1 for _ in q.stream())
     except Exception as e:                       # thiếu composite index / lỗi tạm -> 0 (đừng làm sập run)
         print(f"   ⚠️ count_done lỗi ({e}) -> coi như 0"); return 0
 
