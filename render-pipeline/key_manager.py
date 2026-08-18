@@ -53,11 +53,11 @@ def write_story(channel: str, keys: list[dict], seed: str,
     model = model_for(tier)
 
     def _cool(k, exc):
-        """Cho key NGHỈ — giới hạn PHÚT (per-minute/region) reset nhanh -> nghỉ NGẮN 2'; quota NGÀY -> nghỉ 90'."""
+        """Cho key NGHỈ — giới hạn PHÚT (per-minute/region) reset sau 60s -> nghỉ 90s (dư 30s cho chắc); quota NGÀY -> 90'."""
         if not (on_limit and k.get("id")):
             return
         low = str(exc).lower()
-        mins = 2 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        mins = 1.5 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
         try:
             on_limit(k["id"], mins)
         except TypeError:
@@ -87,8 +87,8 @@ def write_story(channel: str, keys: list[dict], seed: str,
                         tried.append(tag); _cool(k, e2)
                         continue
                 raise
-        if rnd == 0:                              # hết loạt key ở vòng 1 -> chờ ~50s cho giới hạn PHÚT reset, thử lại 1 lần
-            print(f"   ⏳ Cả {len(order)} key dính giới hạn — chờ 50s cho giới hạn PHÚT reset rồi thử lại…")
-            time.sleep(50)
+        if rnd == 0:                              # hết loạt key ở vòng 1 -> chờ 65s (>60s) cho giới hạn PHÚT reset hẳn, thử lại 1 lần
+            print(f"   ⏳ Cả {len(order)} key dính giới hạn — chờ 65s cho giới hạn PHÚT reset rồi thử lại…")
+            time.sleep(65)
     raise CB.RateLimited(f"Tất cả {len(keys)} key đều hết quota (đã thử 2 vòng: {', '.join(tried)}). "
                          f"Thêm key hoặc chờ reset ngày.")
