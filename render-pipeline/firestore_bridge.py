@@ -72,10 +72,12 @@ def incr_key_requests(key_id: str, n: int, today: str):
         ref.set({"req_today": int(n), "req_date": today}, merge=True)
 
 
-def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = False):
+def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = False, kind: str = ""):
     """Ghi trạng thái sống/chết + LÝ DO + thời điểm check -> dashboard hiện 🟢/🔴 + tooltip vì sao.
+    kind='permanent' -> CHẾT HẲN (denied/suspended/key sai), KHÔNG tự phục hồi -> health-check bỏ qua test lại.
     used=True: đánh dấu VỪA DÙNG THẬT -> stamp last_used (để lần sau ưu tiên key lâu chưa xài)."""
-    patch = {"alive": alive, "dead_reason": ("" if alive else reason), "last_checked": _now()}
+    patch = {"alive": alive, "dead_reason": ("" if alive else reason), "last_checked": _now(),
+             "dead_kind": ("" if alive else kind)}     # "" = có thể tự hồi; "permanent" = chết hẳn
     if used:
         patch["last_used"] = _now()
     if alive:

@@ -450,15 +450,27 @@ def plan_mode():
     now_iso = datetime.now(timezone.utc).isoformat()
     force_health = bool(cfg.get("force_health"))   # nút "Kiểm key NGAY" -> bỏ qua giới hạn 20h, test LẠI hết
     fresh = (datetime.now(timezone.utc) - timedelta(hours=20)).isoformat(); dead = []
+    import time as _t
+    _PERM = ("denied", "suspended", "invalid", "permission", "forbidden", "401", "not valid", "unregistered")
+    MAX_CHECK = int(cfg.get("health_max_per_cycle", 12) or 12)   # test tối đa N key/mẻ (rải qua nhiều mẻ) -> KHÔNG dội cả loạt = chống burst
+    tested = 0
     for k in all_keys:
+        if k.get("dead_kind") == "permanent" and not force_health:
+            continue                                   # CHẾT HẲN (denied/suspended) -> KHÔNG test lại (không phục hồi + đỡ gọi phí)
         if k.get("last_checked") and k["last_checked"] > fresh and not force_health:
             continue
+        if tested >= MAX_CHECK and not force_health:
+            break                                       # đủ N/mẻ -> phần còn lại để mẻ SAU (health-check rải đều, không spam)
+        if tested:
+            _t.sleep(0.5)                               # GIÃN giữa mỗi test -> không burst -> tránh dội server/bị coi spam
         alive, reason = CB.test_key(k["key"])
+        tested += 1
         if alive is None:
             continue
-        FB.mark_key_alive(k["id"], alive, reason)
+        kind = "permanent" if (not alive and any(s in (reason or "").lower() for s in _PERM)) else ""
+        FB.mark_key_alive(k["id"], alive, reason, kind=kind)
         if not alive:
-            dead.append(f"{k.get('email') or k['id']} — {reason[:70]}")
+            dead.append(f"{k.get('email') or k['id']} — {reason[:70]}{' [CHẾT HẲN]' if kind else ''}")
     if dead:
         print(f"⚠️ {len(dead)} Gemini key CHẾT: {dead}")
     if force_health:
