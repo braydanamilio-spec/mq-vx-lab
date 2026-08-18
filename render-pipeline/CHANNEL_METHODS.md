@@ -51,7 +51,7 @@ Mục tiêu: phá thế "10 kênh cùng 1 motif bar-race". Mỗi kênh 1 cơ ch�
 > 🎉 **WAVE 1 HOÀN TẤT** — cả 5 kênh motif đã xong A-Z (engine + brand + não + dispatch + doc), test local từng bước. Bật kênh chỉ cần đặt `format`.
 
 ### ⚙️ Cách BẬT 1 kênh motif (GUESS/MAPPED) — config kênh trong dashboard/Firestore
-Đặt field **`format`** cho kênh: `"guess"` · `"mapped"` · `"ranked"` · `"scaled"` → `run_one` tự route sang `make_guess`/`make_mapped`/`make_ranked`/`make_scaled` (short-only, theo `short_target`).
+Đặt field **`format`** cho kênh: `"guess"` · `"mapped"` · `"ranked"` · `"scaled"` · `"thennow"` · `"doc"` → `run_one` route sang maker tương ứng (short-only, theo `short_target`). `doc` (Wave 2) đọc thêm `style`/`accent`/`accent2`/`niche`.
 - GUESS: thêm `category` (vd `"US cities"`, `"famous historical scientists"`, `"US landmarks"`).
 - MAPPED: `niche`/`category` (vd `"US demographics"`, `"cost of living"`) → Gemini tự chọn metric có số liệu THẬT.
 - RANKED: `niche`/`category` (vd `"US fast food"`, `"streaming services"`) → Gemini tự xếp tier theo tiêu chí + số liệu THẬT.
@@ -67,13 +67,20 @@ Khác Wave 1 (motif đồ họa). Dạng: narration lôi cuốn + footage/ảnh 
 
 | # | Kênh | Niche | Nguồn ảnh FREE | Ghi chú policy |
 |---|---|---|---|---|
-| A | 🌌 COSMOS | Vũ trụ, thiên hà, hố đen, "chuyện gì nếu..." | **NASA/ESA = public domain** (kho khổng lồ) | ✅ siêu an toàn |
-| B | 🌊 THE DEEP | Sinh vật biển sâu, đại dương bí ẩn | NOAA / Wikimedia PD | ✅ an toàn |
-| C | 🔬 WHY? | Hiện tượng tự nhiên/khoa học "vì sao X" | CC0/PD | ✅ an toàn |
-| D | 👑 EMPIRE | Tiểu sử doanh nhân/nổi tiếng — **FACELESS** (bối cảnh + tên chữ) | CC0 bối cảnh (cty/sản phẩm/thành phố) | ⚠️ KHÔNG ảnh chân dung bản quyền |
-| E | 🌍 UNSOLVED | Bí ẩn/hiện tượng CHƯA lời giải (địa danh, cổ vật, không gian) | CC0/PD | ⚠️ KHÔNG true-crime nạn nhân thật (pháp lý + demonetize) |
+| A | 🌌 COSMOS | Vũ trụ, thiên hà, hố đen, "chuyện gì nếu..." | **NASA/ESA = public domain** (kho khổng lồ) | ✅ **BUILD XONG** (dùng chung) |
+| B | 🌊 THE DEEP | Sinh vật biển sâu, đại dương bí ẩn | NOAA / Wikimedia PD | ✅ **BUILD XONG** |
+| C | 🔬 WHY? | Hiện tượng tự nhiên/khoa học "vì sao X" | CC0/PD | ✅ **BUILD XONG** |
+| D | 👑 EMPIRE | Tiểu sử doanh nhân/nổi tiếng — **FACELESS** (bối cảnh + tên chữ) | CC0 bối cảnh (cty/sản phẩm/thành phố) | ✅ **BUILD XONG** |
+| E | 🌍 UNSOLVED | Bí ẩn/hiện tượng CHƯA lời giải (địa danh, cổ vật, không gian) | CC0/PD | ✅ **BUILD XONG** |
 
-> ❌ True-crime nạn nhân thật, rừng-kỳ-bí cụ thể tên người: BỎ (rủi ro). Thứ tự làm: hoàn tất Wave 1 (motif) trước, rồi Wave 2.
+> ❌ True-crime nạn nhân thật, rừng-kỳ-bí cụ thể tên người: BỎ (rủi ro).
+
+### Wave 2 — pipeline DÙNG CHUNG (5 kênh 1 engine)
+- **Engine**: `Cinematic.tsx` / `CinematicShort` (có sẵn) — ảnh CC0 + Ken Burns + caption động + nền cosmic fallback.
+- **Brand**: `BrandDoc.tsx` PARAMETRIC → 5 kênh (chỉ khác emoji/tên/accent). Compositions `BrandDoc<Tên>Avatar/Banner/Watermark` + `Doc<Tên>Thumb`.
+- **Não**: `content_brain.generate_doc(niche, style)` → hook + 6-9 cảnh (nar + img_query) + outro, ép accuracy. `key_manager.write_doc`.
+- **Dựng**: `datastory_ci.make_doc(channel, niche, style, accent, accent2)` → giọng edge-tts mỗi cảnh + ảnh CC0 (**Vision verify khớp + loại watermark/caption to**) + render Cinematic.
+- **Bật kênh**: đặt `format="doc"` + `niche` + `style` + `accent`/`accent2` trong config kênh (dashboard). Thumb = trích khung video (ảnh NASA đẹp sẵn).
 
 ### GUESS — method chi tiết + ⚠️ POLICY (bắt buộc)
 - **Thể loại**: Guess the City · Guess the Billionaire's Empire · Guess the Landmark · Guess the Brand (qua sản phẩm) · Guess the State.
