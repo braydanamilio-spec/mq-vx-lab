@@ -245,6 +245,75 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
     return out, story, ok, info
 
 
+def build_mapped_props(story, sdir, handle="@mappedusa", music="music/km_ascending.mp3"):
+    """Dựng props MappedShort: TTS (intro+bloom+3 top+outro) -> timing bám giọng + 1 track. Không cần ảnh."""
+    rel = lambda p: os.path.relpath(p, PUB)
+    intro_mp3 = os.path.join(sdir, "intro.mp3"); bloom_mp3 = os.path.join(sdir, "bloom.mp3"); outro_mp3 = os.path.join(sdir, "outro.mp3")
+    idur, _, _ = TK.synth(story.get("intro_vo") or story.get("title") or "Which state wins?", intro_mp3)
+    bdur, _, _ = TK.synth(story.get("bloom_vo") or "Watch the map light up.", bloom_mp3)
+    tops = (story.get("top") or [])[:3]
+    top_mp3, top_durs = [], []
+    for i, t in enumerate(tops):
+        p = os.path.join(sdir, f"top{i}.mp3")
+        du, _, _ = TK.synth(t.get("vo") or f"{t.get('state','')} {t.get('disp','')}", p)
+        top_mp3.append(p); top_durs.append(du)
+    odur, _, _ = TK.synth(story.get("outro_vo") or "Follow for more maps.", outro_mp3)
+    introSec = round(idur + 0.4, 2); bloomSec = round(bdur + 0.5, 2)
+    popSec = round((max(top_durs) if top_durs else 1.4) + 0.5, 2)
+    outroSec = round(odur + 0.4, 2)
+    nTop = len(tops)
+    # track: intro@0, bloom@introSec, top rank r (0=#1) reveal ở slot (nTop-1-r), outro cuối
+    popStart = introSec + bloomSec
+    clips = [(intro_mp3, 0.0), (bloom_mp3, introSec)]
+    for r, p in enumerate(top_mp3):
+        slot = nTop - 1 - r                               # #1 hiện SAU CÙNG (climax) -> khớp composition
+        clips.append((p, popStart + slot * popSec))
+    clips.append((outro_mp3, popStart + nTop * popSec))
+    total = round(popStart + nTop * popSec + outroSec, 2)
+    track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
+    return {"title": (story.get("title") or "BY STATE"), "unit": story.get("unit", ""),
+            "handle": handle, "color": "#22D3EE", "accent": "#22D3EE", "topN": nTop,
+            "introSec": introSec, "bloomSec": bloomSec, "popSec": popSec, "outroSec": outroSec,
+            "data": story.get("data") or [], "audio": rel(track), "music": music}
+
+
+def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
+                avoid=None, on_status=None, on_limit=None, on_ok=None):
+    """KÊNH #2 MAPPED A-Z: Gemini sinh metric+số liệu bang THẬT -> giọng -> render MappedShort -> QC + thumb.
+    Trả (out, story, ok, info)."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    import key_manager as KM
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    if not keys[0]["key"]:
+        raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    st("writing", f"Gemini soạn bản đồ ({niche})")
+    story = KM.write_mapped(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    score = (story.get("self_score") or {}).get("total")
+    st("rendering", "Giọng + render bản đồ", title=story.get("title_yt") or story.get("title"), score=score)
+    sdir = os.path.join(PUB, "narration", "_mapped_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
+    props = build_mapped_props(story, sdir, handle=channel_handle(channel))
+    pf = os.path.join(PUB, f"_mapped_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
+    print(f"   🎞️ render MappedShort ({len(props['data'])} bang) …")
+    subprocess.run(["npx", "remotion", "render", "src/index.ts", "MappedShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out); info["score"] = score
+    try:
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        big = (story.get("title") or "WHICH STATE\nWINS?").upper()
+        tprops = {"kind": "thumb", "bigLine": big, "topLine": "#1 will shock you"}
+        tf = os.path.join(PUB, f"_mappedthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "MappedThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ thumb skip:", e)
+    print(f"   {'✅' if ok else '❌'} QC mapped {info}")
+    return out, story, ok, info
+
+
 def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
               on_status=None, on_limit=None, n_races=6, avoid=None, on_ok=None):
     """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info)."""

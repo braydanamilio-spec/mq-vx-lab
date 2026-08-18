@@ -415,6 +415,107 @@ def generate_guess(category: str, n_rounds: int = 3, api_key: str = None, model_
     raise Exception(f"GUESS sau {MAX_TRIES} vòng chưa đạt (logic {logic_ok if last else '?'}). Bỏ {category!r}.")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# KÊNH #2 MAPPED — sinh 1 metric + số liệu THẬT theo bang US + narration (choropleth).
+MAPPED_SYS = (
+ "You are the data lead of a #1 US 'mapped' viral channel that reveals a single US metric as an animated map. "
+ "Absolute rules:\n"
+ "1) DATA IS REAL: every state value must be a TRUE, publicly-verifiable figure (US Census, BLS, CDC, FBI UCR, "
+ "IRS, etc.). Never invent numbers. Cite the source + year. If unsure of exact values, choose a metric you KNOW.\n"
+ "2) Use OFFICIAL state names (e.g. 'California', 'New York', 'Massachusetts'). Provide 18-30 states incl. the "
+ "clear TOP 3 and a few notable/low ones so the map reads well.\n"
+ "3) LOGIC: the ranking must be correct and internally consistent (top values really are the highest).\n"
+ "4) NO politics/partisan, no tragedy exploitation. Metric must be broadly interesting to US viewers.\n"
+ "5) NARRATION spoken aloud: punchy hook, build tension as the map 'heats up', dramatic top-3 reveal, CTA. Short natural sentences."
+)
+
+MAPPED_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
+{
+  "title": str,            // on-screen metric title, <=28 chars, e.g. "HIGHEST INCOME BY STATE"
+  "unit": str,             // small subtitle, e.g. "median household income"
+  "source": str,           // e.g. "US Census, 2023"
+  "data": [                // 18-30 states with REAL values
+    { "state": str, "value": number, "disp": str }   // disp = formatted, e.g. "$98,461" or "12.4"
+  ],
+  "top": [                 // exactly 3, ranked #1..#3 (must match the 3 highest in data)
+    { "state": str, "disp": str, "vo": str }          // vo = one spoken dramatic line naming state + figure
+  ],
+  "intro_vo": str,         // hook + what the map shows
+  "bloom_vo": str,         // spoken while the whole map colors in (the pattern/story)
+  "outro_vo": str,         // CTA
+  "title_yt": str,         // <=70 chars, punchy
+  "description": str, "hashtags": [str], "tags": [str],
+  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+}
+Values must be real. 'top' must be the true top-3 of 'data'."""
+
+
+def _validate_mapped(d: dict) -> list[str]:
+    errs = []
+    data = d.get("data") or []
+    if not (10 <= len(data) <= 40):
+        errs.append("data cần 10–40 bang")
+    for i, r in enumerate(data):
+        if not str((r or {}).get("state", "")).strip():
+            errs.append(f"data[{i}] thiếu state")
+        if not isinstance((r or {}).get("value"), (int, float)):
+            errs.append(f"data[{i}] value không phải số")
+    top = d.get("top") or []
+    if len(top) != 3:
+        errs.append("top cần đúng 3")
+    for k in ("title", "unit", "source", "intro_vo", "bloom_vo", "outro_vo", "title_yt"):
+        if not str(d.get(k, "")).strip():
+            errs.append(f"thiếu '{k}'")
+    return errs
+
+
+def generate_mapped(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 câu chuyện MAPPED (metric + số liệu bang THẬT + narration). Viết lại tới khi accuracy&total đạt."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    model = genai.GenerativeModel(mname, system_instruction=MAPPED_SYS)
+    resolved = False
+    avoid_txt = ("\nAvoid metrics already used: " + " | ".join(avoid[-60:])) if avoid else ""
+    base = (f'Pick ONE surprising US metric in the niche "{niche}" and map it by state.\n{MAPPED_SCHEMA}{avoid_txt}')
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.8, "response_mime_type": "application/json"})
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=MAPPED_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"JSON lỗi ({e})."; continue
+        errs = _validate_mapped(d)
+        sc = d.get("self_score") or {}
+        score = sc.get("total", 0); acc = int(sc.get("accuracy", 0))
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "Lỗi cấu trúc: " + "; ".join(errs[:6]); print(f"   ↻ mapped vòng {attempt}: {feedback}"); continue
+        if acc < 95:
+            feedback = f"accuracy={acc}<95. Chỉ dùng metric có số liệu THẬT chắc chắn (Census/BLS/CDC/FBI). Đổi metric nếu không chắc số."
+            print(f"   ↻ mapped vòng {attempt}: {feedback}"); continue
+        if score < MIN_SCORE:
+            feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, reveal sốc hơn."; print(f"   ↻ mapped vòng {attempt}: điểm {score}"); continue
+        d["vtype"] = "mapped"
+        print(f"   ✅ MAPPED đạt vòng {attempt}: total {score}, acc {acc} — {d.get('title')!r}")
+        return d
+    raise Exception(f"MAPPED sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--type", dest="vtype", choices=["long", "short"], default="short")
