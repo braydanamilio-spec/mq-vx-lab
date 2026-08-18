@@ -211,24 +211,39 @@ def save_topics(owner: str, channel: str, topics: list[str]):
     ref.set({"owner": owner, "channel": channel, "topics": cur}, merge=True)
 
 
-def count_done(owner: str, channel: str, vtype: str = None) -> int:
-    """Đếm số video ĐÃ XONG của 1 kênh (để so mục tiêu long/short target).
-    DÙNG aggregation count() = ~1 read (KHÔNG stream từng doc -> tránh đốt quota Firestore free khi kho lớn)."""
+def _shard_on() -> bool:
+    """Có bật shard render_jobs sang Project B không (creds B đầy đủ)."""
+    k = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B")
+    return bool(k and os.environ.get("FIREBASE_PROJECT_ID_B") and os.path.exists(k))
+
+
+def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
+    q = (db.collection("render_jobs").where("owner", "==", owner)
+         .where("channel", "==", channel).where("status", "==", "done"))
+    if vtype:
+        q = q.where("type", "==", vtype)
     try:
-        q = (_db_jobs().collection("render_jobs").where("owner", "==", owner)
-             .where("channel", "==", channel).where("status", "==", "done"))
-        if vtype:
-            q = q.where("type", "==", vtype)
+        res = q.count().get()                    # aggregation: ~1 read thay vì N
+        row = res[0]; ar = row[0] if isinstance(row, (list, tuple)) else row
+        return int(ar.value)
+    except Exception:
+        return sum(1 for _ in q.stream())
+
+
+def count_done(owner: str, channel: str, vtype: str = None) -> int:
+    """Đếm số video ĐÃ XONG của 1 kênh (so target). Đếm CẢ Project B (job mới) + A (job CŨ trước shard) -> không sót, không làm THỪA.
+    Dùng aggregation count() = ~1 read/project."""
+    total = 0
+    try:
+        total += _count_jobs(_db_jobs(), owner, channel, vtype)          # B (hoặc A nếu chưa shard)
+    except Exception as e:
+        print(f"   ⚠️ count_done B lỗi ({e})")
+    if _shard_on():                                                       # có shard -> cộng thêm job cũ còn ở A
         try:
-            res = q.count().get()                # aggregation: 1 read thay vì N reads
-            # client trả [[AggregationResult]] hoặc [AggregationResult] tuỳ version
-            row = res[0]
-            ar = row[0] if isinstance(row, (list, tuple)) else row
-            return int(ar.value)
+            total += _count_jobs(_db(), owner, channel, vtype)
         except Exception as e:
-            print(f"   ⚠️ count() agg lỗi ({e}) -> fallback stream"); return sum(1 for _ in q.stream())
-    except Exception as e:                       # thiếu composite index / lỗi tạm -> 0 (đừng làm sập run)
-        print(f"   ⚠️ count_done lỗi ({e}) -> coi như 0"); return 0
+            print(f"   ⚠️ count_done A lỗi ({e})")
+    return total
 
 
 def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "") -> str:
