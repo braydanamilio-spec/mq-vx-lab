@@ -25,26 +25,40 @@ def _now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def _retry(fn, tries=5):
+    """Thử lại khi Firestore 429/RESOURCE_EXHAUSTED (burst đọc/ghi dồn) -> KHÔNG để burst tạm chặn gate/render."""
+    import time as _t
+    for i in range(tries):
+        try:
+            return fn()
+        except Exception as e:
+            s = str(e)
+            if ("RESOURCE_EXHAUSTED" in s or "Quota exceeded" in s or "429" in s) and i < tries - 1:
+                _t.sleep(1.5 * (i + 1)); continue
+            raise
+
+
 def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     """Trả key CÒN DÙNG được (bỏ qua key đang cooldown do vừa bị rate-limit)."""
-    db = _db(); out = []; now = _now()
-    for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
-        x = d.to_dict() or {}
-        if not x.get("key"):
-            continue
-        cooling = x.get("cooling_until", "")
-        if cooling and cooling > now and not include_cooling:
-            continue                                  # đang nghỉ -> bỏ qua vòng này
-        if x.get("alive") is False and not include_cooling:
-            continue                                  # RENDER: bỏ key đã biết CHẾT (403/khoá) -> khỏi phí lượt.
-            # (health-check dùng include_cooling=True -> vẫn lấy key chết để RE-TEST -> tự mở lại 🟢 nếu Google bỏ chặn)
-        today = now[:10]
-        req_today = int(x.get("req_today", 0) or 0) if x.get("req_date") == today else 0   # sang ngày mới -> coi như 0 (quota reset)
-        out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
-                    "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
-                    "last_used": x.get("last_used", ""), "cooling_until": cooling,
-                    "dead_since": x.get("dead_since", ""), "req_today": req_today})
-    return out
+    def _do():
+        db = _db(); out = []; now = _now()
+        for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
+            x = d.to_dict() or {}
+            if not x.get("key"):
+                continue
+            cooling = x.get("cooling_until", "")
+            if cooling and cooling > now and not include_cooling:
+                continue                                  # đang nghỉ -> bỏ qua vòng này
+            if x.get("alive") is False and not include_cooling:
+                continue                                  # RENDER: bỏ key đã biết CHẾT (403/khoá) -> khỏi phí lượt.
+            today = now[:10]
+            req_today = int(x.get("req_today", 0) or 0) if x.get("req_date") == today else 0   # sang ngày mới -> coi như 0
+            out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
+                        "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
+                        "last_used": x.get("last_used", ""), "cooling_until": cooling,
+                        "dead_since": x.get("dead_since", ""), "req_today": req_today})
+        return out
+    return _retry(_do)
 
 
 def incr_key_requests(key_id: str, n: int, today: str):
@@ -103,15 +117,19 @@ def drive_usage(owner: str):
 
 
 def read_channels(owner: str) -> list[dict]:
-    db = _db(); out = []
-    for d in db.collection("render_channels").where("owner", "==", owner).stream():
-        x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
-    return out
+    def _do():
+        db = _db(); out = []
+        for d in db.collection("render_channels").where("owner", "==", owner).stream():
+            x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
+        return out
+    return _retry(_do)
 
 
 def read_config(owner: str) -> dict:
-    d = _db().collection("render_config").document(owner).get()
-    return (d.to_dict() or {}) if d.exists else {}
+    def _do():
+        d = _db().collection("render_config").document(owner).get()
+        return (d.to_dict() or {}) if d.exists else {}
+    return _retry(_do)
 
 
 def read_render_requests(owner: str) -> list[dict]:
@@ -144,7 +162,7 @@ def mark_request_done(req_id: str, note: str = "done"):
 
 def set_config(owner: str, patch: dict):
     """Ghi/merge render_config (vd xoá cờ run_now sau khi đã nhận lệnh)."""
-    _db().collection("render_config").document(owner).set(patch, merge=True)
+    _retry(lambda: _db().collection("render_config").document(owner).set(patch, merge=True))
 
 
 def recent_topics(owner: str, channel: str, n: int = 80) -> list[str]:
