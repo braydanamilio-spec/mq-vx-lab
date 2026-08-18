@@ -96,7 +96,7 @@ jobs:
     needs: plan
     if: needs.plan.outputs.channels != '' && needs.plan.outputs.channels != '[]'
     strategy:
-      max-parallel: 10        # ≤20 (giới hạn free); 10 luồng an toàn, để dư
+      max-parallel: 15        # trần GitHub free = 20 job/tài khoản; để 15 (dư 5 cho plan + cron AutoPublisher). Thêm kênh >15 -> phần dư XẾP HÀNG (không lỗi).
       fail-fast: false        # 1 kênh lỗi KHÔNG hủy các kênh khác
       matrix:
         channel: ${{ fromJson(needs.plan.outputs.channels) }}
