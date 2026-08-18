@@ -448,9 +448,10 @@ def plan_mode():
     # HEALTH CHECK (throttled 20h) — chỉ ở plan, 10 luồng không lặp. Chạy TRƯỚC khi lọc key sống -> key vừa hồi được nhận lại.
     import content_brain as CB
     now_iso = datetime.now(timezone.utc).isoformat()
+    force_health = bool(cfg.get("force_health"))   # nút "Kiểm key NGAY" -> bỏ qua giới hạn 20h, test LẠI hết
     fresh = (datetime.now(timezone.utc) - timedelta(hours=20)).isoformat(); dead = []
     for k in all_keys:
-        if k.get("last_checked") and k["last_checked"] > fresh:
+        if k.get("last_checked") and k["last_checked"] > fresh and not force_health:
             continue
         alive, reason = CB.test_key(k["key"])
         if alive is None:
@@ -460,6 +461,9 @@ def plan_mode():
             dead.append(f"{k.get('email') or k['id']} — {reason[:70]}")
     if dead:
         print(f"⚠️ {len(dead)} Gemini key CHẾT: {dead}")
+    if force_health:
+        try: FB.set_config(OWNER, {"force_health": None, "force_health_done_at": now_iso})   # đã kiểm xong -> tắt cờ
+        except Exception: pass
     # CẢNH BÁO KEY CHẾT — 2 MỨC: ⚠️ >warn_h (72h, THEO DÕI, có thể còn tự mở) · 🔴 >repl_h (7 ngày, THAY NGAY, chết hẳn).
     warn_h = int(cfg.get("dead_key_warn_hours", 72) or 72)
     repl_h = int(cfg.get("dead_key_replace_hours", 168) or 168)
