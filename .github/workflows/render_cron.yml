@@ -45,6 +45,21 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.gate.outputs.run == 'true'
         with: { node-version: "22" }
+      - name: Cache node_modules (khỏi npm ci lại)
+        if: steps.gate.outputs.run == 'true'
+        id: cache-node
+        uses: actions/cache@v4
+        with:
+          path: engine-remotion/node_modules
+          key: node-modules-${{ hashFiles('engine-remotion/package-lock.json') }}
+      - name: Cache Chrome Remotion (khỏi tải lại)
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.remotion
+            ~/.cache/remotion
+          key: remotion-chrome-${{ hashFiles('engine-remotion/package-lock.json') }}
       - name: Thư viện hệ thống
         if: steps.gate.outputs.run == 'true'
         run: |
@@ -52,10 +67,14 @@ jobs:
           sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
             libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
             libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg libasound2
-      - name: npm ci + Chrome (cho re-render nếu có)
+      - name: npm ci (chỉ khi cache MISS)
+        if: steps.gate.outputs.run == 'true' && steps.cache-node.outputs.cache-hit != 'true'
+        working-directory: engine-remotion
+        run: npm ci
+      - name: Ensure Chrome (cache -> gần như tức thì)
         if: steps.gate.outputs.run == 'true'
         working-directory: engine-remotion
-        run: npm ci && npx remotion browser ensure
+        run: npx remotion browser ensure
       - name: ĐIỀU PHỐI (--plan) -> xuất danh sách kênh
         id: plan
         if: steps.gate.outputs.run == 'true'
@@ -94,6 +113,19 @@ jobs:
         with: { node-version: "22" }
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
+      - name: Cache node_modules (khỏi npm ci lại)
+        id: cache-node
+        uses: actions/cache@v4
+        with:
+          path: engine-remotion/node_modules
+          key: node-modules-${{ hashFiles('engine-remotion/package-lock.json') }}
+      - name: Cache Chrome Remotion (khỏi tải lại)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.remotion
+            ~/.cache/remotion
+          key: remotion-chrome-${{ hashFiles('engine-remotion/package-lock.json') }}
       - name: Thư viện hệ thống
         run: |
           sudo apt-get update
@@ -103,9 +135,13 @@ jobs:
       - name: Python deps
         run: pip install --quiet google-generativeai edge-tts google-cloud-firestore \
              google-api-python-client google-auth pyyaml
-      - name: npm ci + Chrome
+      - name: npm ci (chỉ khi cache MISS)
+        if: steps.cache-node.outputs.cache-hit != 'true'
         working-directory: engine-remotion
-        run: npm ci && npx remotion browser ensure
+        run: npm ci
+      - name: Ensure Chrome (cache -> gần như tức thì)
+        working-directory: engine-remotion
+        run: npx remotion browser ensure
       - name: Service account file
         run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
       - name: RENDER kênh ${{ matrix.channel }}
