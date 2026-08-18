@@ -25,43 +25,94 @@ export const calcGuess = ({ props }: any) => {
   return { durationInFrames: Math.round((isec + rs.length * rsec + 1.2) * FPS), fps: FPS, width: 1080, height: 1920 };
 };
 
-// 1 VÒNG ĐOÁN: ảnh mờ dần + câu hỏi + đếm ngược 3-2-1 -> REVEAL (rõ + đáp án đập vào + stat)
+// hash cố định [0,1) -> thứ tự mảnh ghép biến mất KHÔNG đổi theo frame (Remotion cần deterministic, tránh flicker)
+const hash01 = (n: number) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+// LƯỚI MẢNH GHÉP: ô che ảnh, biến mất dần theo p (0..1). Ép người xem đoán trước khi lộ hết.
+const COLS = 6, ROWS = 10;
+const MosaicTiles: React.FC<{ p: number; accent: string }> = ({ p, accent }) => {
+  const tiles = [];
+  for (let row = 0; row < ROWS; row++) for (let col = 0; col < COLS; col++) {
+    const i = row * COLS + col;
+    const ord = hash01(i + 1);                                  // mốc biến mất của ô
+    const tp = Math.max(0, Math.min(1, (p - ord) / 0.08));      // 0=còn che, 1=đã mở
+    if (tp >= 1) continue;                                      // ô đã mở -> bỏ (ảnh lộ)
+    const dark = (row + col) % 2 === 0 ? "#11151f" : "#0b0e17";
+    const edge = tp > 0.01 && tp < 1;                           // ô đang mở -> viền sáng accent
+    tiles.push(
+      <div key={i} style={{
+        position: "absolute", left: `${(col / COLS) * 100}%`, top: `${(row / ROWS) * 100}%`,
+        width: `${100 / COLS}%`, height: `${100 / ROWS}%`,
+        background: `linear-gradient(135deg, ${dark}, #05070d)`,
+        border: edge ? `2px solid ${accent}` : "1px solid #ffffff10",
+        opacity: 1 - tp, transform: `scale(${1 - tp * 0.35}) rotate(${tp * (ord > 0.5 ? 8 : -8)}deg)`,
+        boxShadow: edge ? `0 0 22px ${accent}bb` : "none",
+      }} />
+    );
+  }
+  return <AbsoluteFill>{tiles}</AbsoluteFill>;
+};
+
+// ĐỒNG HỒ đếm giờ: vòng tròn vơi dần + số 3-2-1 ở giữa
+const RingClock: React.FC<{ frac: number; label: number; accent: string }> = ({ frac, label, accent }) => {
+  const R = 150, C = 2 * Math.PI * R;
+  return (
+    <div style={{ position: "relative", width: 360, height: 360, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <svg width={360} height={360} style={{ position: "absolute", transform: "rotate(-90deg)" }}>
+        <circle cx={180} cy={180} r={R} fill="none" stroke="#ffffff22" strokeWidth={18} />
+        <circle cx={180} cy={180} r={R} fill="none" stroke={accent} strokeWidth={18} strokeLinecap="round"
+          strokeDasharray={C} strokeDashoffset={C * (1 - frac)} style={{ filter: `drop-shadow(0 0 16px ${accent})` }} />
+      </svg>
+      <div style={{ fontFamily: "Anton, Poppins, Arial", fontWeight: 900, fontSize: 210, color: "#fff", textShadow: `0 0 50px ${accent}, 0 8px 30px #000` }}>{label}</div>
+    </div>
+  );
+};
+
+// 1 VÒNG ĐOÁN: mảnh ghép mở dần + đồng hồ 3-2-1 -> REVEAL (đáp án bung + tia + stat)
 const GuessRound: React.FC<{ r: Round; color: string; accent: string; sec: number; idx: number }> = ({ r, color, accent, sec, idx }) => {
   const f = useCurrentFrame(); const dur = sec * FPS;
   const revF = Math.round(dur * 0.66);                       // mốc reveal (66% vòng)
   const revealed = f >= revF;
-  const blur = interpolate(f, [0, revF - 6, revF], [26, 14, 0], { extrapolateRight: "clamp" });   // mờ -> rõ khi reveal
-  const dim = interpolate(f, [revF - 8, revF], [0.62, 0.28], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const zoom = interpolate(f, [0, dur], [1.14, 1.24]);
-  // đếm ngược 3-2-1 trước reveal
+  const mosaicP = interpolate(f, [0, revF], [0, 1], { extrapolateRight: "clamp" });  // % mảnh ghép đã mở
+  const blur = interpolate(f, [0, revF - 6, revF], [12, 5, 0], { extrapolateRight: "clamp" });  // blur nền nhẹ, sắc dần
+  const dim = interpolate(f, [revF - 8, revF], [0.5, 0.24], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const zoom = interpolate(f, [0, dur], [1.12, 1.22]);
+  // đồng hồ đếm ngược 3-2-1
   const cdTotal = revF; const remain = Math.max(0, cdTotal - f);
-  const cd = Math.min(3, Math.ceil((remain / cdTotal) * 3));
-  const cdPulse = 1 + 0.14 * Math.sin((f % 30) / 30 * Math.PI);
+  const frac = remain / cdTotal;                             // vòng vơi dần 1 -> 0
+  const cd = Math.min(3, Math.max(1, Math.ceil((remain / cdTotal) * 3)));
   const ans = spring({ frame: f - revF, fps: FPS, config: { damping: 10, stiffness: 170 } });
-  const flash = interpolate(f, [revF, revF + 4, revF + 16], [0, 0.5, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const flash = interpolate(f, [revF, revF + 4, revF + 16], [0, 0.55, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const rays = interpolate(f, [revF, revF + 20], [0.4, 1.6], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }); // tia bung
+  const raysO = interpolate(f, [revF, revF + 6, revF + 30], [0, 0.5, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
     <AbsoluteFill style={{ background: "#0a0c14" }}>
       {r.img ? <AbsoluteFill><SafeImg src={staticFile(r.img)} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom})`, filter: `blur(${blur}px) brightness(${1 - dim})` }} /></AbsoluteFill> : null}
-      <AbsoluteFill style={{ background: `linear-gradient(180deg, #000c 0%, #0000 26%, #0000 62%, #000d 100%)` }} />
+      {/* mảnh ghép che ảnh, mở dần */}
+      {!revealed ? <MosaicTiles p={mosaicP} accent={accent} /> : null}
+      <AbsoluteFill style={{ background: `linear-gradient(180deg, #000d 0%, #0000 24%, #0000 60%, #000e 100%)` }} />
       {flash > 0 ? <AbsoluteFill style={{ background: accent, opacity: flash }} /> : null}
       {/* câu hỏi trên */}
       <div style={{ position: "absolute", top: 120, left: 0, right: 0, textAlign: "center", padding: "0 60px" }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 34, letterSpacing: 1, padding: "10px 24px", borderRadius: 14, fontFamily: "Poppins, Arial" }}>ROUND {idx + 1}</div>
         <div style={{ color: "#fff", fontWeight: 900, fontSize: 62, lineHeight: 1.05, marginTop: 22, textShadow: "0 4px 24px #000c", fontFamily: "Poppins, Arial", textWrap: "balance" as any }}>{r.q}</div>
-        {r.clue && !revealed ? <div style={{ color: "#cbd5e1", fontWeight: 600, fontSize: 36, marginTop: 16, textShadow: "0 2px 12px #000c" }}>🔎 {r.clue}</div> : null}
+        {r.clue && !revealed ? <div style={{ color: "#e5e7eb", fontWeight: 700, fontSize: 36, marginTop: 16, textShadow: "0 2px 12px #000e" }}>🔎 {r.clue}</div> : null}
       </div>
-      {/* đếm ngược giữa */}
+      {/* đồng hồ đếm ngược giữa */}
       {!revealed ? (
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ fontFamily: "Poppins, Arial", fontWeight: 900, fontSize: 320, color: accent, transform: `scale(${cdPulse})`, textShadow: `0 0 60px ${accent}, 0 10px 40px #000` }}>{cd}</div>
+          <RingClock frac={frac} label={cd} accent={accent} />
         </div>
       ) : null}
-      {/* REVEAL: đáp án đập vào */}
+      {/* REVEAL: tia bung + đáp án đập vào */}
       {revealed ? (
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transform: `scale(${0.6 + ans * 0.4})`, opacity: ans }}>
-          <div style={{ color: "#fff", fontWeight: 900, fontSize: 118, lineHeight: 1, textAlign: "center", padding: "0 40px", textShadow: `0 6px 40px #000, 0 0 40px ${accent}88`, fontFamily: "Poppins, Arial" }}>{r.answer}</div>
-          {r.stat ? <div style={{ marginTop: 26, background: accent, color: "#0a0c14", fontWeight: 900, fontSize: 46, padding: "14px 34px", borderRadius: 18, fontFamily: "Poppins, Arial" }}>{r.stat}</div> : null}
-        </div>
+        <AbsoluteFill style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {raysO > 0 ? <div style={{ position: "absolute", width: 900, height: 900, borderRadius: "50%", transform: `scale(${rays})`, opacity: raysO, background: `radial-gradient(circle, ${accent}00 40%, ${accent}66 55%, ${accent}00 70%)` }} /> : null}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", transform: `scale(${0.6 + ans * 0.4})`, opacity: ans }}>
+            <div style={{ color: "#fff", fontWeight: 900, fontSize: 118, lineHeight: 1, textAlign: "center", padding: "0 40px", textShadow: `0 6px 40px #000, 0 0 40px ${accent}88`, fontFamily: "Poppins, Arial" }}>{r.answer}</div>
+            {r.stat ? <div style={{ marginTop: 26, background: accent, color: "#0a0c14", fontWeight: 900, fontSize: 46, padding: "14px 34px", borderRadius: 18, fontFamily: "Poppins, Arial" }}>{r.stat}</div> : null}
+          </div>
+        </AbsoluteFill>
       ) : null}
     </AbsoluteFill>
   );
