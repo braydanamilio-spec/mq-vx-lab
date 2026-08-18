@@ -21,6 +21,21 @@ def _db():
     return firestore.Client(project=project, credentials=creds)
 
 
+_DBJ = [None]
+def _db_jobs():
+    """Client cho collection render_jobs -> Project B (SHARD, giảm tải A) nếu có creds B; KHÔNG thì dùng A (backward-compatible)."""
+    key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B")
+    project = os.environ.get("FIREBASE_PROJECT_ID_B")
+    if not (key and project and os.path.exists(key)):
+        return _db()                                   # chưa cấu hình shard -> A như cũ
+    if _DBJ[0] is None:
+        from google.cloud import firestore
+        from google.oauth2 import service_account
+        creds = service_account.Credentials.from_service_account_file(key)
+        _DBJ[0] = firestore.Client(project=project, credentials=creds)
+    return _DBJ[0]
+
+
 def _now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -160,7 +175,7 @@ def delete_jobs_by_drive(owner: str, drive_id: str):
     """Xóa bản ghi job cũ theo drive_id (sau khi render lại đã thay thế + bỏ file cũ)."""
     if not drive_id:
         return
-    for d in (_db().collection("render_jobs").where("owner", "==", owner).where("drive_id", "==", drive_id).stream()):
+    for d in (_db_jobs().collection("render_jobs").where("owner", "==", owner).where("drive_id", "==", drive_id).stream()):
         try:
             d.reference.delete()
         except Exception:
@@ -200,7 +215,7 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
     """Đếm số video ĐÃ XONG của 1 kênh (để so mục tiêu long/short target).
     DÙNG aggregation count() = ~1 read (KHÔNG stream từng doc -> tránh đốt quota Firestore free khi kho lớn)."""
     try:
-        q = (_db().collection("render_jobs").where("owner", "==", owner)
+        q = (_db_jobs().collection("render_jobs").where("owner", "==", owner)
              .where("channel", "==", channel).where("status", "==", "done"))
         if vtype:
             q = q.where("type", "==", vtype)
@@ -217,7 +232,7 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
 
 
 def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "") -> str:
-    db = _db(); ref = db.collection("render_jobs").document()
+    db = _db_jobs(); ref = db.collection("render_jobs").document()
     ref.set({"owner": owner, "channel": channel, "type": vtype, "pver": pver,   # pver = phiên bản pipeline -> dọn thông minh (chỉ xóa bản CŨ)
              "status": "queued", "step": "bắt đầu", "created_at": _now()})
     return ref.id
@@ -237,4 +252,4 @@ def update_job(job_id: str, **patch):
         if now - _LAST_JOB_WRITE.get(job_id, 0) < 90:
             return
         _LAST_JOB_WRITE[job_id] = now
-    _retry(lambda: _db().collection("render_jobs").document(job_id).set(patch, merge=True))
+    _retry(lambda: _db_jobs().collection("render_jobs").document(job_id).set(patch, merge=True))
