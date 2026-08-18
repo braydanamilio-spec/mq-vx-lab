@@ -571,7 +571,8 @@ def channel_mode(name):
             print(f"   ⏱ {name}: còn {remain/60:.0f}' < ước tính {need/60:.0f}'/mẻ → DỪNG, phiên sau tự làm tiếp (tránh treo/phí)."); break
         if FB.read_config(OWNER).get("stop"):
             print(f"   ⛔ {name}: có lệnh Dừng → ngừng."); break
-        chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]   # re-read: target có thể đổi giữa chừng
+        if rounds % 3 == 0:        # target đổi giữa chừng HIẾM -> refresh mỗi 3 vòng (cắt ~66% read 15-kênh/vòng), còn lại dùng chs đã có
+            chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]
         if not chs:
             print(f"   ⚠️ {name}: kênh đã bị xóa → ngừng."); break
         before = report["done"]; before_rl = report.get("rl", 0); t0 = time.monotonic()
