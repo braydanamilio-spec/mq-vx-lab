@@ -97,7 +97,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
 
     # ── FORMAT ĐẶC BIỆT (short-only, motif riêng): GUESS / MAPPED ── route sang make_guess/make_mapped.
     fmt = (ch.get("format") or "").lower()
-    if fmt in ("guess", "mapped", "ranked", "scaled"):
+    if fmt in ("guess", "mapped", "ranked", "scaled", "thennow"):
         short_target = int(ch.get("short_target", 0) or 0) or RESERVE_SHORT
         need = max(0, short_target - FB.count_done(OWNER, channel, "short"))
         n = min(int(ch.get("n_shorts", n_shorts) or 3) or 3, need)
@@ -116,7 +116,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
             for att in (1, 2):
                 try:
                     if att > 1: jst("running", f"🔧 Tự thử lại {fmt}…")
-                    mk = {"guess": DS.make_guess, "mapped": DS.make_mapped, "ranked": DS.make_ranked, "scaled": DS.make_scaled}[fmt]
+                    mk = {"guess": DS.make_guess, "mapped": DS.make_mapped, "ranked": DS.make_ranked,
+                          "scaled": DS.make_scaled, "thennow": DS.make_thennow}[fmt]
                     _, story, ok, info = mk(channel, cat, out, keys=keys, tier=tier,
                                             avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb)
                     err = None; break

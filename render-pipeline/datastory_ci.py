@@ -437,6 +437,68 @@ def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
     return out, story, ok, info
 
 
+def build_thennow_props(story, sdir, handle="@thennowusa", music="music/km_ossuary_air.mp3"):
+    """Dựng props ThenNowShort: TTS (intro + mỗi cặp + outro) -> timing bám giọng + 1 track."""
+    rel = lambda p: os.path.relpath(p, PUB)
+    intro_mp3 = os.path.join(sdir, "intro.mp3"); outro_mp3 = os.path.join(sdir, "outro.mp3")
+    idur, _, _ = TK.synth(story.get("intro_vo") or story.get("title") or "Then versus now.", intro_mp3)
+    introSec = round(idur + 0.4, 2)
+    pairs_in = story.get("pairs") or []
+    pairs_out, clips, cum = [], [(intro_mp3, 0.0)], 0.0
+    for i, p in enumerate(pairs_in):
+        mp = os.path.join(sdir, f"pair{i}.mp3")
+        du, _, _ = TK.synth(p.get("vo") or f"{p.get('label','')}: {p.get('thenVal','')} then, {p.get('nowVal','')} now.", mp)
+        dur = round(du + 0.6, 2)
+        pairs_out.append({"label": p.get("label"), "thenYear": p.get("thenYear"), "thenVal": p.get("thenVal"),
+                          "nowYear": p.get("nowYear"), "nowVal": p.get("nowVal"), "change": p.get("change"), "dur": dur})
+        clips.append((mp, introSec + cum)); cum += dur
+    odur, _, _ = TK.synth(story.get("outro_vo") or "Which change shocked you most?", outro_mp3)
+    outroSec = round(odur + 0.4, 2)
+    clips.append((outro_mp3, introSec + cum))
+    total = round(introSec + cum + outroSec, 2)
+    track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
+    return {"title": (story.get("title") or "THEN vs NOW"),
+            "handle": handle, "color": "#EC4899", "accent": "#EC4899", "sfx": True,
+            "introSec": introSec, "pairSec": 4.5, "outroSec": outroSec,
+            "pairs": pairs_out, "audio": rel(track), "music": music}
+
+
+def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
+                 avoid=None, on_status=None, on_limit=None, on_ok=None):
+    """KÊNH #5 THEN×NOW A-Z: Gemini sinh so sánh xưa/nay (giá trị thật) -> giọng -> render ThenNowShort -> QC + thumb."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    import key_manager as KM
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    if not keys[0]["key"]:
+        raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    st("writing", f"Gemini so sánh xưa/nay ({niche})")
+    story = KM.write_thennow(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    score = (story.get("self_score") or {}).get("total")
+    st("rendering", "Giọng + render xưa/nay", title=story.get("title_yt") or story.get("title"), score=score)
+    sdir = os.path.join(PUB, "narration", "_thennow_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
+    props = build_thennow_props(story, sdir, handle=channel_handle(channel))
+    pf = os.path.join(PUB, f"_thennow_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
+    print(f"   🎞️ render ThenNowShort ({len(props['pairs'])} cặp) …")
+    subprocess.run(["npx", "remotion", "render", "src/index.ts", "ThenNowShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out); info["score"] = score
+    try:
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        big = (story.get("title") or "THEN vs\nNOW").upper()
+        tprops = {"kind": "thumb", "bigLine": big, "topLine": "the change is wild"}
+        tf = os.path.join(PUB, f"_thennowthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "ThenNowThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ thumb skip:", e)
+    print(f"   {'✅' if ok else '❌'} QC thennow {info}")
+    return out, story, ok, info
+
+
 def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
               on_status=None, on_limit=None, n_races=6, avoid=None, on_ok=None):
     """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info)."""

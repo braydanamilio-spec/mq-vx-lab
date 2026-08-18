@@ -716,6 +716,97 @@ def generate_scaled(niche: str, api_key: str = None, model_name: str = None, avo
     raise Exception(f"SCALED sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# KÊNH #5 THEN×NOW — sinh so sánh XƯA/NAY (giá trị thật + mức biến đổi).
+THENNOW_SYS = (
+ "You are the creator of a #1 US 'then vs now' nostalgia channel. Each pair shows how ONE thing changed from a "
+ "past year to now, with REAL numbers. Absolute rules:\n"
+ "1) REAL VALUES: thenVal (past) and nowVal (present) are TRUE, verifiable figures for the SAME thing in the SAME "
+ "unit. Never invent. The change (×N or +N%) must match the numbers.\n"
+ "2) One clear THEME across all pairs (e.g. 'cost of living 1970 vs today', 'tech then vs now').\n"
+ "3) 2-4 pairs. Use round, recognizable figures. thenYear/nowYear are real years.\n"
+ "4) NO politics/partisan, no tragedy, no NSFW. Nostalgic + jaw-dropping for US viewers.\n"
+ "5) NARRATION spoken aloud: hook, one punchy line per pair contrasting then vs now, CTA. Short natural sentences."
+)
+
+THENNOW_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
+{
+  "title": str,            // <=28 chars, e.g. "COST OF LIVING: THEN vs NOW"
+  "theme": str,            // the common thread
+  "pairs": [               // 2-4
+    { "label": str, "thenYear": str, "thenVal": str, "nowYear": str, "nowVal": str, "change": str, "vo": str }
+    // change = "×10" or "+880%"; vo = one spoken line
+  ],
+  "intro_vo": str,
+  "outro_vo": str,
+  "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
+  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+}
+Values must be real and the change must match them."""
+
+
+def _validate_thennow(d: dict) -> list[str]:
+    errs = []
+    ps = d.get("pairs") or []
+    if not (2 <= len(ps) <= 4):
+        errs.append("pairs cần 2–4")
+    for i, p in enumerate(ps):
+        for k in ("label", "thenYear", "thenVal", "nowYear", "nowVal", "vo"):
+            if not str((p or {}).get(k, "")).strip():
+                errs.append(f"pair[{i}] thiếu '{k}'")
+    for k in ("title", "theme", "intro_vo", "outro_vo", "title_yt"):
+        if not str(d.get(k, "")).strip():
+            errs.append(f"thiếu '{k}'")
+    return errs
+
+
+def generate_thennow(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 so sánh XƯA/NAY (giá trị thật + biến đổi + narration). Viết lại tới khi đạt."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    model = genai.GenerativeModel(mname, system_instruction=THENNOW_SYS)
+    resolved = False
+    avoid_txt = ("\nAvoid themes already used: " + " | ".join(avoid[-60:])) if avoid else ""
+    base = (f'Make a then-vs-now comparison in the niche "{niche}".\n{THENNOW_SCHEMA}{avoid_txt}')
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=THENNOW_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"JSON lỗi ({e})."; continue
+        errs = _validate_thennow(d)
+        sc = d.get("self_score") or {}
+        score = sc.get("total", 0); acc = int(sc.get("accuracy", 0))
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "Lỗi cấu trúc: " + "; ".join(errs[:6]); print(f"   ↻ thennow vòng {attempt}: {feedback}"); continue
+        if acc < 95:
+            feedback = f"accuracy={acc}<95. thenVal/nowVal phải THẬT cùng đơn vị, change khớp số. Đổi cặp nếu không chắc."
+            print(f"   ↻ thennow vòng {attempt}: {feedback}"); continue
+        if score < MIN_SCORE:
+            feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, tương phản xưa/nay sốc hơn."; print(f"   ↻ thennow vòng {attempt}: điểm {score}"); continue
+        d["vtype"] = "thennow"
+        print(f"   ✅ THENNOW đạt vòng {attempt}: total {score}, acc {acc} — {d.get('title')!r}")
+        return d
+    raise Exception(f"THENNOW sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--type", dest="vtype", choices=["long", "short"], default="short")
