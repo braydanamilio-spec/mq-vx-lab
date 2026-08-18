@@ -82,6 +82,13 @@ Khác Wave 1 (motif đồ họa). Dạng: narration lôi cuốn + footage/ảnh 
   - Đố người nổi tiếng/doanh nhân → **ảnh là BỐI CẢNH của họ** (trụ sở, sản phẩm, thành phố) + clue ("Bỏ học Harvard · 2.9 tỷ user"); **đáp án = TÊN dạng chữ**, không cần mặt họ. Chân dung chỉ khi có bản PD/CC chính thức.
 - **Props**: `{ title, handle, color, accent, roundSec, rounds:[{q, clue, answer, stat, img}], audio, subs, music }`. `calcGuess` tự tính độ dài. Deterministic (hash sin) → không flicker.
 
+## 📤 AUTO-PUBLISH (đăng YouTube tự động)
+- Render xong → job lưu kèm title/description/hashtags/tags (`run_render.py`).
+- `MM0-AutoPublisher/src/auto_enqueue.py` (chạy trong `main.py` trước `publish_yt_queue`): tự đẩy video của kênh **đã bật `auto_publish`** vào `yt_queue`. **Mặc định TẮT**; dedup theo `drive_file_id`; trần ~6/ngày/kênh (chống spam).
+- Bật/tắt: dashboard → mỗi kênh có nút **🟢/⚪ Auto-đăng** (ghi `settings/overrides__<uid>.auto_publish[TÊN kênh]`).
+- Điều kiện chạy: kênh phải **đã Kết nối YouTube** (`connections/<owner>__<kênh>__youtube` có refresh_token) — bước này user tự làm (OAuth).
+- `invalid_grant` khi list_queue = 1 kết nối Drive cũ ở `connections` (khác 48 kho `storage_accounts` đều sống) → đã bỏ qua tự động, vô hại.
+
 ## 🛠️ TỰ CHỮA LỖI
 Cơ chế tự chữa lỗi + quy trình diagnose + lỗi đã gặp: **`ERROR_PLAYBOOK.md`**. Bug-log chi tiết: `PIPELINE_RULES.md`.
 
