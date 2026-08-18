@@ -42,11 +42,20 @@ Mục tiêu: phá thế "10 kênh cùng 1 motif bar-race". Mỗi kênh 1 cơ ch�
 
 | # | Kênh | Handle | Màu | Engine (mới) | Cơ chế hình ảnh (motif) | TT |
 |---|---|---|---|---|---|---|
-| 1 | 🤔 GUESS | @guessdaily | #F5B301 + #ff375f | `GuessShort.tsx` + `BrandGuess.tsx` | **mảnh ghép mở dần + đồng hồ đếm giờ + đáp án bung** — ép đoán trước khi lộ | ✅ engine+brand chuẩn |
-| 2 | 🗺️ MAPPED | @mappedusa | #22D3EE | `WorldMapRace.tsx` (có sẵn, tinh chỉnh) | bản đồ US sáng dần từng bang (choropleth động) | kế tiếp |
+| 1 | 🤔 GUESS | @guessdaily | #F5B301 + #ff375f | `GuessShort.tsx` + `BrandGuess.tsx` | **mảnh ghép mở dần + đồng hồ đếm giờ + đáp án bung** — ép đoán trước khi lộ | ✅ **FULL A-Z** (engine+brand+não+dispatch) |
+| 2 | 🗺️ MAPPED | @mappedusa | #22D3EE | `MappedShort.tsx` + `BrandMapped.tsx` (geoAlbersUsa) | choropleth US "nóng dần" + pin số + bảng xếp hạng | ✅ **FULL A-Z** (engine+brand+não+dispatch) |
 | 3 | 🏆 RANKED | @rankedusa | #7C5CFF | build mới | bảng tier S/A/B/C thẻ lật xếp hạng | chờ |
 | 4 | 📏 SCALED | @scaledusa | #2FA84F | build mới | so sánh KÍCH THƯỚC vật lý (thu/phóng cạnh nhau) | chờ |
 | 5 | ⏳ THEN×NOW | @thennowusa | #EC4899 | build mới | timeline chẻ đôi XƯA/NAY (split trước-sau) | chờ |
+
+### ⚙️ Cách BẬT 1 kênh motif (GUESS/MAPPED) — config kênh trong dashboard/Firestore
+Đặt field **`format`** cho kênh: `"guess"` hoặc `"mapped"` → `run_one` tự route sang `make_guess`/`make_mapped` (short-only, theo `short_target`).
+- GUESS: thêm `category` (vd `"US cities"`, `"famous historical scientists"`, `"US landmarks"`).
+- MAPPED: `niche`/`category` (vd `"US demographics"`, `"cost of living"`) → Gemini tự chọn metric có số liệu THẬT.
+- Không đặt `format` → kênh chạy data-race như cũ (không phá kênh cũ).
+
+### Pipeline 2 kênh này (đã build + test local)
+`content_brain.generate_guess/generate_mapped` (ép logic/accuracy ≥95, viết lại nếu trượt) → `key_manager.write_guess/write_mapped` (bám+xoay key) → `datastory_ci.make_guess/make_mapped` (edge-tts giọng + [GUESS: ảnh CC0 + **Vision verify khớp đáp án**, MAPPED: số liệu bang] + SFX + timing bám giọng + thumb brand) → render `GuessShort`/`MappedShort` → QC → enqueue Drive.
 
 ## 🌊 WAVE 2 — 5 kênh KỂ CHUYỆN/TÀI LIỆU (có footage, tái dùng engine Cinematic/BEYOND, KHÔNG cần engine motif mới)
 Khác Wave 1 (motif đồ họa). Dạng: narration lôi cuốn + footage/ảnh PD + nhạc. Chọn theo viral + ảnh free + an toàn policy.
