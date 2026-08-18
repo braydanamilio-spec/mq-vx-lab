@@ -48,6 +48,19 @@ Mục tiêu: phá thế "10 kênh cùng 1 motif bar-race". Mỗi kênh 1 cơ ch�
 | 4 | 📏 SCALED | @scaledusa | #2FA84F | build mới | so sánh KÍCH THƯỚC vật lý (thu/phóng cạnh nhau) | chờ |
 | 5 | ⏳ THEN×NOW | @thennowusa | #EC4899 | build mới | timeline chẻ đôi XƯA/NAY (split trước-sau) | chờ |
 
+## 🌊 WAVE 2 — 5 kênh KỂ CHUYỆN/TÀI LIỆU (có footage, tái dùng engine Cinematic/BEYOND, KHÔNG cần engine motif mới)
+Khác Wave 1 (motif đồ họa). Dạng: narration lôi cuốn + footage/ảnh PD + nhạc. Chọn theo viral + ảnh free + an toàn policy.
+
+| # | Kênh | Niche | Nguồn ảnh FREE | Ghi chú policy |
+|---|---|---|---|---|
+| A | 🌌 COSMOS | Vũ trụ, thiên hà, hố đen, "chuyện gì nếu..." | **NASA/ESA = public domain** (kho khổng lồ) | ✅ siêu an toàn |
+| B | 🌊 THE DEEP | Sinh vật biển sâu, đại dương bí ẩn | NOAA / Wikimedia PD | ✅ an toàn |
+| C | 🔬 WHY? | Hiện tượng tự nhiên/khoa học "vì sao X" | CC0/PD | ✅ an toàn |
+| D | 👑 EMPIRE | Tiểu sử doanh nhân/nổi tiếng — **FACELESS** (bối cảnh + tên chữ) | CC0 bối cảnh (cty/sản phẩm/thành phố) | ⚠️ KHÔNG ảnh chân dung bản quyền |
+| E | 🌍 UNSOLVED | Bí ẩn/hiện tượng CHƯA lời giải (địa danh, cổ vật, không gian) | CC0/PD | ⚠️ KHÔNG true-crime nạn nhân thật (pháp lý + demonetize) |
+
+> ❌ True-crime nạn nhân thật, rừng-kỳ-bí cụ thể tên người: BỎ (rủi ro). Thứ tự làm: hoàn tất Wave 1 (motif) trước, rồi Wave 2.
+
 ### GUESS — method chi tiết + ⚠️ POLICY (bắt buộc)
 - **Thể loại**: Guess the City · Guess the Billionaire's Empire · Guess the Landmark · Guess the Brand (qua sản phẩm) · Guess the State.
 - **Cơ chế**: intro 🤔 → mỗi vòng: ảnh bị lưới ô che, mở dần (viền hồng glow) + câu hỏi + clue + đồng hồ vòng 3-2-1 → REVEAL đáp án (chữ) bung + tia + stat sốc.
