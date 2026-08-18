@@ -15,6 +15,7 @@ import { BrandRanked2 } from "./BrandRanked2";            // brand kênh #3 RANK
 import { ScaledShort, calcScaled } from "./ScaledShort";  // kênh #4 SCALED (so sánh kích thước)
 import { BrandScaled } from "./BrandScaled";             // brand kênh #4 SCALED
 import { ThenNowShort, calcThenNow } from "./ThenNowShort"; // kênh #5 THEN×NOW (xưa/nay)
+import { BrandThenNow } from "./BrandThenNow";           // brand kênh #5 THEN×NOW
 import { BrandBroke } from "./BrandBroke";
 import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
@@ -116,6 +117,11 @@ export const RemotionRoot: React.FC = () => (
         { label: "Movie Ticket", thenYear: "1970", thenVal: "$1.55", nowYear: "2024", nowVal: "$11.50", change: "×7" },
         { label: "New House", thenYear: "1970", thenVal: "$23K", nowYear: "2024", nowVal: "$420K", change: "×18" },
       ] }} />
+    {/* BRAND kênh #5 THEN×NOW */}
+    <Composition id="BrandThenNowAvatar" component={BrandThenNow} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="BrandThenNowBanner" component={BrandThenNow} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="BrandThenNowWatermark" component={BrandThenNow} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
+    <Composition id="ThenNowThumb" component={BrandThenNow} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
 
     {/* THUMBNAIL data-driven (mỗi video 1 thumb, đọc props) */}
     <Composition id="Thumb" component={Thumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ bigLine: "SO HIGH?!", topLine: "WHY IS RENT" }} calculateMetadata={calcThumb} />
