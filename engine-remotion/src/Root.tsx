@@ -8,6 +8,7 @@ import { LongBroke, calcLong } from "./LongBroke";
 import { ShortGen, calcShortGen } from "./ShortGen";
 import { GuessShort, calcGuess } from "./GuessShort";   // kênh #1 GUESS (đố/đoán)
 import { BrandGuess } from "./BrandGuess";              // brand kênh #1 GUESS
+import { MappedShort, calcMapped } from "./MappedShort"; // kênh #2 MAPPED (choropleth US)
 import { BrandBroke } from "./BrandBroke";
 import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
@@ -57,6 +58,19 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="BrandGuessBanner" component={BrandGuess} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
     <Composition id="BrandGuessWatermark" component={BrandGuess} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
     <Composition id="GuessThumb" component={BrandGuess} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
+    {/* KÊNH #2 MAPPED — choropleth US states */}
+    <Composition id="MappedShort" component={MappedShort} durationInFrames={330} fps={30} width={1080} height={1920} calculateMetadata={calcMapped}
+      defaultProps={{ title: "HIGHEST INCOME BY STATE", unit: "median household income", color: "#22D3EE", accent: "#22D3EE", handle: "@mappedusa", topN: 3, data: [
+        { state: "Maryland", value: 98461, disp: "$98,461" }, { state: "Massachusetts", value: 96505, disp: "$96,505" },
+        { state: "New Jersey", value: 97126, disp: "$97,126" }, { state: "California", value: 91905, disp: "$91,905" },
+        { state: "New York", value: 81386, disp: "$81,386" }, { state: "Texas", value: 73035, disp: "$73,035" },
+        { state: "Florida", value: 67917, disp: "$67,917" }, { state: "Mississippi", value: 52719, disp: "$52,719" },
+        { state: "West Virginia", value: 55217, disp: "$55,217" }, { state: "Alabama", value: 59609, disp: "$59,609" },
+        { state: "Washington", value: 90325, disp: "$90,325" }, { state: "Colorado", value: 87598, disp: "$87,598" },
+        { state: "Virginia", value: 87249, disp: "$87,249" }, { state: "Illinois", value: 78433, disp: "$78,433" },
+        { state: "Ohio", value: 66990, disp: "$66,990" }, { state: "Georgia", value: 71355, disp: "$71,355" },
+        { state: "Arizona", value: 72581, disp: "$72,581" }, { state: "Oregon", value: 76362, disp: "$76,362" },
+      ] }} />
 
     {/* THUMBNAIL data-driven (mỗi video 1 thumb, đọc props) */}
     <Composition id="Thumb" component={Thumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ bigLine: "SO HIGH?!", topLine: "WHY IS RENT" }} calculateMetadata={calcThumb} />
