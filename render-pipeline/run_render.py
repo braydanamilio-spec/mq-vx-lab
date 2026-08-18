@@ -577,11 +577,12 @@ def channel_mode(name):
     keys = FB.read_keys(OWNER)
     if not keys:
         raise SystemExit("❌ Chưa có Gemini key.")
-    chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]
-    if not chs:
+    one = FB.read_one_channel(OWNER, name)   # 1 read (không đọc cả 15 kênh)
+    if not one:
         print(f"⚠️ Kênh {name} không còn (đã xóa) — bỏ."); return
-    if chs[0].get("paused"):
+    if one.get("paused"):
         print(f"⏸ {name}: đang PAUSE — bỏ qua (bấm ▶ Chạy để tiếp)."); return
+    chs = [one]
     # STAGGER theo kênh (0-18s): 10 luồng KHÔNG gọi Gemini/Drive cùng 1 khoảnh khắc -> đỡ bị coi là burst/lạm dụng.
     import time
     delay = sum(ord(c) for c in name) % 18
@@ -602,11 +603,12 @@ def channel_mode(name):
             print(f"   ⏱ {name}: còn {remain/60:.0f}' < ước tính {need/60:.0f}'/mẻ → DỪNG, phiên sau tự làm tiếp (tránh treo/phí)."); break
         if FB.read_config(OWNER).get("stop"):
             print(f"   ⛔ {name}: có lệnh Dừng → ngừng."); break
-        chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]   # refresh mỗi vòng: bắt PAUSE + đổi target kịp (1 vòng = 1 video/phút -> read không đáng kể)
-        if not chs:
+        one = FB.read_one_channel(OWNER, name)   # 1 READ/vòng (thay vì 15): bắt PAUSE + đổi target kịp, tiết kiệm Firestore
+        if not one:
             print(f"   ⚠️ {name}: kênh đã bị xóa → ngừng."); break
-        if chs[0].get("paused"):   # ⏸ PAUSE: clip hiện tại đã XONG (check ở đầu vòng sau) -> dừng, giữ nguyên tiến độ, KHÔNG cắt ngang
+        if one.get("paused"):   # ⏸ PAUSE: clip hiện tại đã XONG (check ở đầu vòng sau) -> dừng, giữ nguyên tiến độ, KHÔNG cắt ngang
             print(f"   ⏸ {name}: đã PAUSE (đã làm xong clip đang dở + upload) → ngừng."); break
+        chs = [one]
         before = report["done"]; before_rl = report.get("rl", 0); t0 = time.monotonic()
         try:
             run_one(chs[0], keys, report=report)

@@ -127,6 +127,20 @@ def read_channels(owner: str) -> list[dict]:
     return _retry(_do)
 
 
+def read_one_channel(owner: str, name: str) -> dict | None:
+    """Đọc ĐÚNG 1 kênh theo tên (1 read) — dùng trong vòng lặp render để check pause/target mà KHÔNG đọc cả 15 kênh."""
+    def _do():
+        q = (_db().collection("render_channels").where("owner", "==", owner)
+             .where("name", "==", name).limit(1).stream())
+        for d in q:
+            x = d.to_dict() or {}; x["id"] = d.id; return x
+        return None
+    try:
+        return _retry(_do)
+    except Exception:
+        return None
+
+
 def read_config(owner: str) -> dict:
     def _do():
         d = _db().collection("render_config").document(owner).get()
