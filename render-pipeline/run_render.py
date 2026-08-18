@@ -72,7 +72,7 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
                           topic=story.get("topic") or story.get("title"),
                           title=story.get("title"), description=desc,
                           hashtags=story.get("hashtags"), tags=story.get("tags"),
-                          thumbnail=_make_thumb(out))   # trích khung từ video -> thumbnail YouTube + gallery
+                          thumbnail=(story.get("_thumb") if (story.get("_thumb") and os.path.exists(story.get("_thumb"))) else _make_thumb(out)))   # thumb brand (GUESS/MAPPED) nếu có, không thì trích khung
         return created or None                     # trả cả {id, account} -> lưu vào job để XEM/stream trên web
     except Exception as e:
         print("   ⚠️ enqueue lỗi (giữ artifact):", e); return None
@@ -94,6 +94,56 @@ def run_one(ch, keys, n_shorts=3, report=None):
         try: return bool(FB.read_config(OWNER).get("stop"))
         except Exception: return False
     os.makedirs("out", exist_ok=True)
+
+    # ── FORMAT ĐẶC BIỆT (short-only, motif riêng): GUESS / MAPPED ── route sang make_guess/make_mapped.
+    fmt = (ch.get("format") or "").lower()
+    if fmt in ("guess", "mapped"):
+        short_target = int(ch.get("short_target", 0) or 0) or RESERVE_SHORT
+        need = max(0, short_target - FB.count_done(OWNER, channel, "short"))
+        n = min(int(ch.get("n_shorts", n_shorts) or 3) or 3, need)
+        if n <= 0:
+            print(f"🎯 {channel}: đủ target {fmt} — bỏ qua."); return
+        cat = ch.get("category") or niche
+        avoid = FB.recent_topics(OWNER, channel)
+        made_here = []
+        for i in range(n):
+            if _stopped():
+                print(f"   ⛔ {channel}: dừng — bỏ {n - i} clip còn lại."); break
+            job = FB.new_job(OWNER, channel, "short", pver=PVER)
+            jst = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
+            out = os.path.join("out", DS.slug(channel) + f"_{fmt}{i}.mp4")
+            story = ok = info = None; err = None
+            for att in (1, 2):
+                try:
+                    if att > 1: jst("running", f"🔧 Tự thử lại {fmt}…")
+                    mk = DS.make_guess if fmt == "guess" else DS.make_mapped
+                    _, story, ok, info = mk(channel, cat, out, keys=keys, tier=tier,
+                                            avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb)
+                    err = None; break
+                except Exception as e:
+                    err = e; traceback.print_exc(); print(f"   🔧 {fmt.upper()} {channel}#{i} lỗi lần {att}: {str(e)[:100]}")
+            if err is not None and _is_ratelimit(err):
+                jst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1
+            elif err is not None:
+                jst("failed", f"Tự thử lại vẫn lỗi: {str(err)[:110]}"); R["fails"].append(f"{channel} {fmt} {i}: {str(err)[:100]}")
+            elif ok:
+                story["title"] = story.get("title_yt") or story.get("title")   # YT title + tên file dùng bản punchy
+                if info and info.get("thumb"): story["_thumb"] = info["thumb"]  # thumb brand đẹp
+                # tránh trùng lần sau: nhớ đáp án (guess) / metric (mapped)
+                made_here += [r.get("answer") for r in (story.get("rounds") or []) if r.get("answer")] or [story.get("title", "")]
+                eq = enqueue_drive(channel, out, story, "short")
+                did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
+                jst("done", "Đã đẩy Drive" if did else "Xong (chưa đẩy Drive)", title=story.get("title"),
+                    score=(story.get("self_score") or {}).get("total"),
+                    dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
+                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
+            else:
+                jst("failed", f"QC {fmt} trượt: {info}"); R["fails"].append(f"{channel} {fmt} {i}: QC trượt")
+        if made_here:
+            try: FB.save_topics(OWNER, channel, [str(x) for x in made_here if x])
+            except Exception: pass
+        print(f"   ✅ {channel}: xong {fmt} ({R['done']} clip)"); return
+
     do_long = ch.get("make_long", True)
     n_shorts = int(ch.get("n_shorts", n_shorts) or 0)
     # MỤC TIÊU/DỰ TRỮ số video/kênh: target>0 = mục tiêu người đặt; target=0 = mức DỰ TRỮ AN TOÀN (khỏi phình vô hạn).
