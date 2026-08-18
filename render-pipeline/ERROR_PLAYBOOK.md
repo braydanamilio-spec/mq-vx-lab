@@ -38,3 +38,22 @@
 2. KHÔNG raise `SystemExit` trong pipeline (dùng `Exception`) — kẻo giết cả mẻ.
 3. Mọi vòng lặp tài nguyên (key/kho) phải có **failover** + **cooldown đúng độ dài** (phút vs ngày).
 4. Thêm dòng vào bảng §1 + ghi bug-log.
+
+## 5. 🛡️ CHỐNG KHOÁ KEY GEMINI (avoid ban — an toàn tương lai)
+**Vì sao free Gemini project bị khoá ("403 denied access — contact support"):** burst request quá nhanh, tạo bulk key/project cùng lúc/1 IP, hoặc Google quét vùng/ToS. Nội dung mình an toàn (data/tài liệu, không NSFW/spam) nên rủi ro chính là PATTERN request + cách tạo key.
+
+**Pipeline ĐÃ có (tự động):**
+- Chia đều tải: `key_order` ưu tiên key ÍT dùng (req_today nhỏ) + round-robin → không dội 1 key.
+- Cooldown khi chạm limit: per-minute → nghỉ 90s; quota ngày → 90'. Retry có giãn (65s) trước khi coi là fail.
+- Cách 1.5s giữa mỗi key trong 1 lần viết → không bắn dồn.
+- Theo dõi `req_today`, ước hạn ngạch còn lại (~250/key/ngày), ưu tiên key còn quota.
+- **Key denied/suspended → đánh dấu CHẾT ngay + loại khỏi vòng** (không thử lại vô ích, không dội key hỏng).
+- Health-check mỗi mẻ (`plan_mode` → `test_key` → `mark_key_alive`) → tự loại key chết, tự hồi key sống lại.
+
+**RULE tạo/dùng key (user — quan trọng nhất để tránh khoá tiếp):**
+1. Tạo key từ **tài khoản Google THẬT, khác nhau**, KHÔNG tạo hàng loạt cùng lúc/cùng 1 IP (Google quét bulk-creation).
+2. Mỗi account chỉ vài key; giãn thời gian tạo (đừng tạo 20 key/10 phút).
+3. Giữ **dưới ~250 req/key/ngày** (pipeline tự chia — đừng chỉnh trần lên quá cao).
+4. KHÔNG dùng lại project đã bị khoá; thay bằng project/account mới.
+5. Giữ số kênh/target hợp lý so với số key sống (dashboard hiện "ước còn ~X request").
+→ Cứ để pipeline tự chia + cooldown; đừng ép burst. Thấy `🔴 Thay ngay` tăng thì bổ sung key mới (account khác).
