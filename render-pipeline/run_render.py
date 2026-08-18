@@ -231,7 +231,7 @@ def main():
     from datetime import datetime, timezone, timedelta
     event = os.environ.get("GITHUB_EVENT_NAME", "")
     run_now = bool(cfg.get("run_now"))
-    is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 6, 12, 18])
+    is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 4, 8, 12, 16, 20])
                   and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
     if event == "schedule" and not run_now and not is_nightly:
         print("⏭ Nhịp kiểm 30' — không có lệnh Render ngay, bỏ qua (free)."); return
@@ -319,7 +319,7 @@ def gate_mode():
             cfg = FB.read_config(OWNER)
             event = os.environ.get("GITHUB_EVENT_NAME", "")
             run_now = bool(cfg.get("run_now"))
-            is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 6, 12, 18])
+            is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 4, 8, 12, 16, 20])
                   and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
             enabled = bool(cfg.get("enabled")) or os.environ.get("FORCE") == "1"
             if ((event != "schedule") or run_now or is_nightly) and (enabled or run_now):
@@ -350,7 +350,7 @@ def plan_mode():
     cfg = FB.read_config(OWNER)
     event = os.environ.get("GITHUB_EVENT_NAME", "")
     run_now = bool(cfg.get("run_now"))
-    is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 6, 12, 18])
+    is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 4, 8, 12, 16, 20])
                   and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
     if event == "schedule" and not run_now and not is_nightly:
         print("⏭ Nhịp kiểm 30' — không có lệnh Render ngay, bỏ qua (free)."); return out_channels([])
@@ -478,7 +478,7 @@ def channel_mode(name):
         print(f"   ⏳ {name}: giãn {delay}s (chống burst song song)…"); time.sleep(delay)
     report = {"done": 0, "fails": []}
     # VÒNG LẶP A-Z: làm LIÊN TỤC nhiều mẻ trong 1 phiên tới khi — ĐỦ TARGET / HẾT GIỜ (trừ hao) / HẾT QUOTA / KHO ĐẦY / bấm Dừng.
-    budget_s = int(cfg.get("batch_budget_min", 300) or 300) * 60    # ngân sách mềm 1 phiên (mặc định 5h)
+    budget_s = int(cfg.get("batch_budget_min", 210) or 210) * 60    # ngân sách mềm 1 phiên (mặc định 3.5h -> 6 phiên/ngày không chồng lấn)
     HARD_S = 330 * 60                                               # cứng: timeout workflow 350' - chừa ~20' buffer
     start = time.monotonic(); rounds = 0; last_dur = 0
     while True:
