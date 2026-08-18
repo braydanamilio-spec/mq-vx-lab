@@ -557,8 +557,10 @@ def plan_mode():
         process_requests(keys, {"done": 0, "fails": []})   # 🔄 render lại (thay bản cũ) — 1 lần ở plan
     except Exception:
         traceback.print_exc()
-    channels = [c["name"] for c in FB.read_channels(OWNER) if c.get("name")]
-    print(f"▶ {len(channels)} kênh -> render SONG SONG.")
+    all_ch = [c for c in FB.read_channels(OWNER) if c.get("name")]
+    channels = [c["name"] for c in all_ch if not c.get("paused")]   # ⏸ kênh PAUSE -> KHÔNG vào matrix (không làm mẻ mới)
+    n_paused = len(all_ch) - len(channels)
+    print(f"▶ {len(channels)} kênh -> render SONG SONG." + (f" (⏸ {n_paused} kênh đang pause, bỏ qua)" if n_paused else ""))
     out_channels(channels)
 
 
@@ -578,6 +580,8 @@ def channel_mode(name):
     chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]
     if not chs:
         print(f"⚠️ Kênh {name} không còn (đã xóa) — bỏ."); return
+    if chs[0].get("paused"):
+        print(f"⏸ {name}: đang PAUSE — bỏ qua (bấm ▶ Chạy để tiếp)."); return
     # STAGGER theo kênh (0-18s): 10 luồng KHÔNG gọi Gemini/Drive cùng 1 khoảnh khắc -> đỡ bị coi là burst/lạm dụng.
     import time
     delay = sum(ord(c) for c in name) % 18
@@ -598,10 +602,11 @@ def channel_mode(name):
             print(f"   ⏱ {name}: còn {remain/60:.0f}' < ước tính {need/60:.0f}'/mẻ → DỪNG, phiên sau tự làm tiếp (tránh treo/phí)."); break
         if FB.read_config(OWNER).get("stop"):
             print(f"   ⛔ {name}: có lệnh Dừng → ngừng."); break
-        if rounds % 3 == 0:        # target đổi giữa chừng HIẾM -> refresh mỗi 3 vòng (cắt ~66% read 15-kênh/vòng), còn lại dùng chs đã có
-            chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]
+        chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]   # refresh mỗi vòng: bắt PAUSE + đổi target kịp (1 vòng = 1 video/phút -> read không đáng kể)
         if not chs:
             print(f"   ⚠️ {name}: kênh đã bị xóa → ngừng."); break
+        if chs[0].get("paused"):   # ⏸ PAUSE: clip hiện tại đã XONG (check ở đầu vòng sau) -> dừng, giữ nguyên tiến độ, KHÔNG cắt ngang
+            print(f"   ⏸ {name}: đã PAUSE (đã làm xong clip đang dở + upload) → ngừng."); break
         before = report["done"]; before_rl = report.get("rl", 0); t0 = time.monotonic()
         try:
             run_one(chs[0], keys, report=report)
