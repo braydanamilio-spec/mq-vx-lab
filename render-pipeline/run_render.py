@@ -135,6 +135,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 eq = enqueue_drive(channel, out, story, "short")
                 did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
                 jst("done", "Đã đẩy Drive" if did else "Xong (chưa đẩy Drive)", title=story.get("title"),
+                    description=story.get("description", ""), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue đăng đủ metadata
                     score=(story.get("self_score") or {}).get("total"),
                     dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
                     drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
@@ -228,6 +229,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
             eq = enqueue_drive(channel, sout, story, "short")
             did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
             sst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)", title=story.get("title"),
+                description=story.get("description", ""), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue
                 score=(story.get("self_score") or {}).get("total"),
                 dur=(sinfo or {}).get("dur", 0), size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""),
                 drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
