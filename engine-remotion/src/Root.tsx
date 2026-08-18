@@ -7,6 +7,7 @@ loadAnton();  // Anton = condensed heavy display -> hook/số kiểu top data-ch
 import { LongBroke, calcLong } from "./LongBroke";
 import { ShortGen, calcShortGen } from "./ShortGen";
 import { GuessShort, calcGuess } from "./GuessShort";   // kênh #1 GUESS (đố/đoán)
+import { BrandGuess } from "./BrandGuess";              // brand kênh #1 GUESS
 import { BrandBroke } from "./BrandBroke";
 import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
@@ -51,6 +52,11 @@ export const RemotionRoot: React.FC = () => (
         { q: "Name this skyline", clue: "Windy City · Lake Michigan", answer: "CHICAGO", stat: "3rd biggest US metro" },
       ] }} />
     <Composition id="LongV2" component={LongV2} durationInFrames={600} fps={30} width={1920} height={1080} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcV2} />
+    {/* BRAND kênh #1 GUESS */}
+    <Composition id="BrandGuessAvatar" component={BrandGuess} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="BrandGuessBanner" component={BrandGuess} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="BrandGuessWatermark" component={BrandGuess} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
+    <Composition id="GuessThumb" component={BrandGuess} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
 
     {/* THUMBNAIL data-driven (mỗi video 1 thumb, đọc props) */}
     <Composition id="Thumb" component={Thumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ bigLine: "SO HIGH?!", topLine: "WHY IS RENT" }} calculateMetadata={calcThumb} />
