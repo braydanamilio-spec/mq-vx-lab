@@ -75,7 +75,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
     """1 kênh theo TEMPLATE của kênh: make_long (1 long pillar) + n_shorts SHORT dọc.
     Đọc ch['make_long'] (mặc định True) và ch['n_shorts'] (mặc định 3) do dashboard đặt."""
     channel = ch.get("name"); tier = ch.get("tier", "normal"); niche = ch.get("niche") or channel
-    cool = lambda kid: FB.cool_key(kid)
+    cool = lambda kid, mins=90: FB.cool_key(kid, mins)   # giới hạn PHÚT -> nghỉ ngắn; quota NGÀY -> 90'
     _marked = set()   # key viết OK lúc dùng thật -> đánh dấu SỐNG 1 lần/run (khỏi health-check riêng, đỡ tốn)
     def okcb(kid):
         if kid and kid not in _marked:
@@ -199,7 +199,7 @@ def process_requests(keys, report):
         FB.mark_request_status(req["id"], "processing")   # KHÓA hủy: đã bắt đầu render lại
         job = FB.new_job(OWNER, ch, typ, pver=PVER)
         st = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
-        cool = lambda kid: FB.cool_key(kid)
+        cool = lambda kid, mins=90: FB.cool_key(kid, mins)   # giới hạn PHÚT -> nghỉ ngắn; quota NGÀY -> 90'
         try:
             st("running", f"🔄 Render lại: {seed[:40]}")
             out = os.path.join("out", DS.slug(ch) + "_rr.mp4")

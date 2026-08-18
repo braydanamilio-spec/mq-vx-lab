@@ -51,31 +51,44 @@ def write_story(channel: str, keys: list[dict], seed: str,
         raise SystemExit("❌ Chưa có Gemini key nào — thêm ở tab 🎬 Render Studio.")
     order = key_order(channel, keys)
     model = model_for(tier)
-    tried = []
-    for idx, k in enumerate(order):
-        tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
-        if idx:
-            time.sleep(1.5)                       # nhịp nhẹ giữa các key -> không burst -> không bị coi là spam
+
+    def _cool(k, exc):
+        """Cho key NGHỈ — giới hạn PHÚT (per-minute/region) reset nhanh -> nghỉ NGẮN 2'; quota NGÀY -> nghỉ 90'."""
+        if not (on_limit and k.get("id")):
+            return
+        low = str(exc).lower()
+        mins = 2 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
         try:
-            print(f"   🔑 kênh {channel} dùng key [{tag}] · model {model}")
-            return _ok(k, CB.generate(seed, vtype, api_key=k["key"], model_name=model))
-        except CB.RateLimited:
-            tried.append(tag)
-            if on_limit and k.get("id"):
-                on_limit(k["id"])                 # cho key này NGHỈ (cooldown) -> vòng sau bỏ qua, không hammer
-            print(f"   ⚠️ key [{tag}] hết quota → nghỉ + đổi key kế")
-            continue
-        except Exception as e:
-            if "404" in str(e) and model != "gemini-2.5-flash":
-                model = "gemini-2.5-flash"
-                print(f"   ↓ model cao không có cho [{tag}] → hạ {model}")
-                try:
-                    return _ok(k, CB.generate(seed, vtype, api_key=k["key"], model_name=model))
-                except CB.RateLimited:
-                    tried.append(tag)
-                    if on_limit and k.get("id"):
-                        on_limit(k["id"])
-                    continue
-            raise
-    raise CB.RateLimited(f"Tất cả {len(keys)} key đều hết quota (đã thử: {', '.join(tried)}). "
-                         f"Chờ reset (thường theo ngày) hoặc thêm key ở tab Render Studio.")
+            on_limit(k["id"], mins)
+        except TypeError:
+            on_limit(k["id"])                     # callback cũ chỉ nhận 1 tham số
+
+    tried = []
+    for rnd in range(2):                          # 2 VÒNG: nếu CẢ LOẠT key dính giới hạn PHÚT -> chờ reset rồi thử lại (cứu kênh khỏi fail oan).
+        tried = []
+        for idx, k in enumerate(order):
+            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            if idx:
+                time.sleep(1.5)                   # nhịp nhẹ giữa các key -> không burst -> không bị coi là spam
+            try:
+                print(f"   🔑 kênh {channel} dùng key [{tag}] · model {model}")
+                return _ok(k, CB.generate(seed, vtype, api_key=k["key"], model_name=model))
+            except CB.RateLimited as e:
+                tried.append(tag); _cool(k, e)
+                print(f"   ⚠️ key [{tag}] hết quota → nghỉ + đổi key kế")
+                continue
+            except Exception as e:
+                if "404" in str(e) and model != "gemini-2.5-flash":
+                    model = "gemini-2.5-flash"
+                    print(f"   ↓ model cao không có cho [{tag}] → hạ {model}")
+                    try:
+                        return _ok(k, CB.generate(seed, vtype, api_key=k["key"], model_name=model))
+                    except CB.RateLimited as e2:
+                        tried.append(tag); _cool(k, e2)
+                        continue
+                raise
+        if rnd == 0:                              # hết loạt key ở vòng 1 -> chờ ~50s cho giới hạn PHÚT reset, thử lại 1 lần
+            print(f"   ⏳ Cả {len(order)} key dính giới hạn — chờ 50s cho giới hạn PHÚT reset rồi thử lại…")
+            time.sleep(50)
+    raise CB.RateLimited(f"Tất cả {len(keys)} key đều hết quota (đã thử 2 vòng: {', '.join(tried)}). "
+                         f"Thêm key hoặc chờ reset ngày.")
