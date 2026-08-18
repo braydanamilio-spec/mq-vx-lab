@@ -807,6 +807,101 @@ def generate_thennow(niche: str, api_key: str = None, model_name: str = None, av
     raise Exception(f"THENNOW sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# WAVE 2 — kênh KỂ CHUYỆN/TÀI LIỆU (Cosmos/Deep/Why/Empire/Unsolved). Dùng chung engine Cinematic.
+DOC_SYS = (
+ "You are the head writer of a #1 US cinematic documentary shorts channel. You write tight, factual, "
+ "awe-inducing narration that hooks in 2 seconds and never lets go. Absolute rules:\n"
+ "1) FACTS ONLY: everything stated must be TRUE and publicly verifiable. Never invent. If unsure, pick a safer true fact.\n"
+ "2) HOOK hard: first line is a jaw-dropping question or shocking fact. Build tension scene to scene, payoff at the end.\n"
+ "3) Each scene has ONE spoken sentence (natural spoken English, vivid, concise) + an img_query describing a "
+ "REAL visual that a CC0/public-domain stock/Wikimedia/NASA search will return (matches the sentence).\n"
+ "4) COPYRIGHT SAFE: img_query must be describable by public-domain imagery (space=NASA, ocean=NOAA, nature/CC0). "
+ "For a person, the visual is their CONTEXT (place/work), never a copyrighted portrait unless long-dead (public domain).\n"
+ "5) NO politics/partisan, NO real tragedy/victims, no NSFW, no medical/financial advice.\n"
+ "6) Tone = the given style. 6-9 scenes total for a ~45-70s short."
+)
+
+DOC_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
+{
+  "title": str,            // punchy on-screen title, <=32 chars
+  "hook": str,             // spoken opening line (the shock)
+  "scenes": [              // 6-9 scenes, in order
+    { "nar": str,          // ONE spoken sentence
+      "img_query": str,    // real visual, CC0/PD-friendly, matches the sentence
+      "title": str }       // OPTIONAL chapter word shown big ("" if none)
+  ],
+  "outro": str,            // spoken closing + soft CTA (follow for more)
+  "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
+  "self_score": { "accuracy": int, "hook": int, "flow": int, "total": int }
+}
+Every fact must be true. img_query must be findable in public-domain/CC0 imagery."""
+
+
+def _validate_doc(d: dict) -> list[str]:
+    errs = []
+    sc = d.get("scenes") or []
+    if not (5 <= len(sc) <= 12):
+        errs.append("scenes cần 5–12")
+    for i, s in enumerate(sc):
+        if not str((s or {}).get("nar", "")).strip():
+            errs.append(f"scene[{i}] thiếu nar")
+        if not str((s or {}).get("img_query", "")).strip():
+            errs.append(f"scene[{i}] thiếu img_query")
+    for k in ("title", "hook", "title_yt"):
+        if not str(d.get(k, "")).strip():
+            errs.append(f"thiếu '{k}'")
+    return errs
+
+
+def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
+                 model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 kịch bản TÀI LIỆU (narration + img_query mỗi cảnh) cho engine Cinematic. Viết lại tới khi đạt."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    model = genai.GenerativeModel(mname, system_instruction=DOC_SYS)
+    resolved = False
+    avoid_txt = ("\nAvoid topics already used: " + " | ".join(avoid[-60:])) if avoid else ""
+    base = (f'Niche: "{niche}". Tone/style: {style}. Write ONE cinematic documentary short.\n{DOC_SCHEMA}{avoid_txt}')
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.9, "response_mime_type": "application/json"})
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=DOC_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"JSON lỗi ({e})."; continue
+        errs = _validate_doc(d)
+        sc = d.get("self_score") or {}
+        score = sc.get("total", 0); acc = int(sc.get("accuracy", 0))
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "Lỗi cấu trúc: " + "; ".join(errs[:6]); print(f"   ↻ doc vòng {attempt}: {feedback}"); continue
+        if acc < 92:
+            feedback = f"accuracy={acc}<92. Chỉ nêu SỰ THẬT kiểm chứng được. Sửa câu sai/bịa."
+            print(f"   ↻ doc vòng {attempt}: {feedback}"); continue
+        if score < MIN_SCORE:
+            feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, mạch cuốn hơn."; print(f"   ↻ doc vòng {attempt}: điểm {score}"); continue
+        d["vtype"] = "doc"
+        print(f"   ✅ DOC đạt vòng {attempt}: total {score}, acc {acc} — {d.get('title')!r}")
+        return d
+    raise Exception(f"DOC sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--type", dest="vtype", choices=["long", "short"], default="short")

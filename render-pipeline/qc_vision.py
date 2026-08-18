@@ -20,6 +20,8 @@ def verify_image(path: str, subject: str, api_key: str = None, model_name: str =
                   f'Count it as a match ONLY if someone familiar with "{subject}" would confidently recognize it '
                   f'(e.g. an iconic skyline/landmark/subject actually visible). A generic, ambiguous, or unrelated '
                   f'photo (random construction, plain building, wrong place) is NOT a match. '
+                  'ALSO set match=false if a LARGE watermark, logo, or a text caption bar covers a significant part '
+                  'of the image (small unobtrusive credits are OK). '
                   'Return STRICT JSON only: {"match": true|false, "see": "<=6 words of what is shown"}')
         img = {"mime_type": "image/jpeg", "data": open(path, "rb").read()}
         resp = model.generate_content([prompt, img],

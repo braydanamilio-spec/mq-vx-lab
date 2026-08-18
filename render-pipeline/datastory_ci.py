@@ -499,6 +499,66 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
     return out, story, ok, info
 
 
+def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE", accent2="#F5B301", handle="@doc"):
+    """Dựng props Cinematic (Wave 2): intro chapter + cảnh ảnh (fetch + Vision verify khớp) + outro chapter.
+    Asset: PUB/<slug>/*.mp3 (giọng) + PUB/<slug>/clips/*.jpg (ảnh). dur tính bằng FRAME (30fps)."""
+    FPS = 30
+    slug_ = "_doc_" + slug(channel)
+    sdir = os.path.join(PUB, slug_); cdir = os.path.join(sdir, "clips")
+    os.makedirs(cdir, exist_ok=True)
+    scenes_out = []
+    import qc_vision
+    vf_for = (lambda subj: (lambda p: qc_vision.verify_image(p, subj, api_key=api_key))) if api_key else (lambda subj: None)
+
+    def add_scene(i, nar, kind, img_query=None, title=""):
+        amp3 = os.path.join(sdir, f"s{i}.mp3")
+        dur_s, _subs, _ = TK.synth(nar or title or "…", amp3)
+        durF = max(48, round((dur_s + 0.5) * FPS))
+        # KHÔNG truyền subs (TK trả dạng TỪ, Cinematic cần dạng CÂU) -> để engine tự tạo caption từ nar (khớp giọng đều).
+        sc = {"type": kind, "audio": f"s{i}.mp3", "dur": durF, "nar": nar or "", "title": title or ""}
+        if kind != "chapter" and img_query:
+            got = fetch_image(img_query, os.path.join(cdir, f"s{i}.jpg"), orient="tall", verify=vf_for(img_query))
+            if got:
+                sc["clip"] = f"s{i}.jpg"
+            else:
+                sc["type"] = "chapter"; sc["title"] = title or (story.get("title") or "")  # không ảnh khớp -> cosmic bg (không dùng ảnh sai)
+        scenes_out.append(sc)
+
+    i = 0
+    add_scene(i, story.get("hook") or story.get("title"), "chapter", title=story.get("title")); i += 1
+    for s in (story.get("scenes") or []):
+        add_scene(i, s.get("nar"), "scene", img_query=s.get("img_query"), title=s.get("title", "")); i += 1
+    add_scene(i, story.get("outro") or "Follow for more.", "chapter", title=""); i += 1
+    return {"scenes": scenes_out, "slug": slug_, "handle": handle, "accent": accent, "accent2": accent2}
+
+
+def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style="awe, cinematic",
+             imgsrc=None, accent="#22D3EE", accent2="#F5B301", avoid=None,
+             on_status=None, on_limit=None, on_ok=None):
+    """WAVE 2 A-Z: Gemini viết tài liệu -> giọng + ảnh CC0 (Vision verify) -> render Cinematic -> QC + thumb."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    import key_manager as KM
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    if not keys[0]["key"]:
+        raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    st("writing", f"Gemini viết tài liệu ({niche})")
+    story = KM.write_doc(channel, keys, niche, style, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    score = (story.get("self_score") or {}).get("total")
+    st("rendering", "Giọng + ảnh + render điện ảnh", title=story.get("title_yt") or story.get("title"), score=score)
+    props = build_doc_props(story, channel, imgsrc=imgsrc, api_key=keys[0]["key"],
+                            accent=accent, accent2=accent2, handle=channel_handle(channel))
+    pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
+    print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
+    subprocess.run(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out); info["score"] = score
+    print(f"   {'✅' if ok else '❌'} QC doc {info}")
+    return out, story, ok, info
+
+
 def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
               on_status=None, on_limit=None, n_races=6, avoid=None, on_ok=None):
     """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info)."""
