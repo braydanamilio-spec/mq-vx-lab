@@ -413,7 +413,23 @@ def plan_mode():
     global RESERVE_LONG, RESERVE_SHORT
     RESERVE_LONG = int(cfg.get("reserve_long", RESERVE_LONG) or RESERVE_LONG)
     RESERVE_SHORT = int(cfg.get("reserve_short", RESERVE_SHORT) or RESERVE_SHORT)
-    # GUARD KHO GẦN ĐẦY (tính tổng cả 33 kho).
+    # ĐỒNG BỘ dung lượng THẬT mọi kho -> storage_accounts.used (render upload KHÔNG tự cập nhật -> phải sync cho display + guard đúng).
+    try:
+        import storage as ST
+        synced = 0
+        for acc in ST.pool_accounts():
+            if acc.get("owner") and acc["owner"] != OWNER:
+                continue
+            try:
+                stt = ST.account_status(acc)
+                FB.update_storage_used(OWNER, acc["name"], stt.get("used", 0), acc.get("cap_gb"))
+                synced += 1
+            except Exception:
+                pass
+        print(f"   💾 Đã đồng bộ dung lượng thật {synced} kho.")
+    except Exception as e:
+        print(f"   ⚠️ Sync dung lượng kho lỗi: {e}")
+    # GUARD KHO GẦN ĐẦY (tính tổng cả 33 kho, dùng số VỪA sync).
     safety_pct = float(cfg.get("drive_safety_pct", DRIVE_SAFETY_PCT) or DRIVE_SAFETY_PCT)
     used, cap = FB.drive_usage(OWNER)
     if cap and used / cap >= safety_pct:
@@ -458,11 +474,30 @@ def channel_mode(name):
     if delay:
         print(f"   ⏳ {name}: giãn {delay}s (chống burst song song)…"); time.sleep(delay)
     report = {"done": 0, "fails": []}
-    try:
-        run_one(chs[0], keys, report=report)
-    except BaseException as e:
-        traceback.print_exc(); report["fails"].append(f"{name}: {str(e)[:120]}")
-    print(f"✅ {name}: {report['done']} video · {len(report['fails'])} lỗi.")   # lỗi hiện ở dashboard (rsAlert), không spam email
+    # VÒNG LẶP A-Z: làm LIÊN TỤC nhiều mẻ trong 1 phiên tới khi — ĐỦ TARGET / HẾT GIỜ (trừ hao) / HẾT QUOTA / KHO ĐẦY / bấm Dừng.
+    budget_s = int(cfg.get("batch_budget_min", 300) or 300) * 60    # ngân sách mềm 1 phiên (mặc định 5h)
+    HARD_S = 330 * 60                                               # cứng: timeout workflow 350' - chừa ~20' buffer
+    start = time.monotonic(); rounds = 0; last_dur = 0
+    while True:
+        rounds += 1
+        remain = min(budget_s, HARD_S) - (time.monotonic() - start)
+        need = max(last_dur * 1.3, 20 * 60)    # TRỪ HAO: ước tính mẻ tới = mẻ vừa rồi ×1.3 (tối thiểu 20')
+        if rounds > 1 and remain < need:       # còn ít giờ hơn 1 mẻ -> DỪNG, để phiên SAU làm (tránh bị timeout giết giữa chừng = phí)
+            print(f"   ⏱ {name}: còn {remain/60:.0f}' < ước tính {need/60:.0f}'/mẻ → DỪNG, phiên sau tự làm tiếp (tránh treo/phí)."); break
+        if FB.read_config(OWNER).get("stop"):
+            print(f"   ⛔ {name}: có lệnh Dừng → ngừng."); break
+        chs = [c for c in FB.read_channels(OWNER) if c.get("name") == name]   # re-read: target có thể đổi giữa chừng
+        if not chs:
+            print(f"   ⚠️ {name}: kênh đã bị xóa → ngừng."); break
+        before = report["done"]; t0 = time.monotonic()
+        try:
+            run_one(chs[0], keys, report=report)
+        except BaseException:
+            traceback.print_exc(); report["fails"].append(f"{name} vòng {rounds}")
+        last_dur = time.monotonic() - t0
+        if report["done"] - before == 0:       # 0 video MỚI = đủ target / hết quota / kho đầy (upload fail) → ngừng (đừng hammer)
+            print(f"   ⏹ {name}: vòng {rounds} ra 0 video (đủ target/hết quota/kho đầy) → ngừng."); break
+    print(f"✅ {name}: TỔNG {report['done']} video · {len(report['fails'])} lỗi (qua {rounds} vòng).")
 
 
 if __name__ == "__main__":

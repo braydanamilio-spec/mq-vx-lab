@@ -67,6 +67,15 @@ def cool_key(key_id: str, minutes: int = 90):
     _db().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
 
 
+def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
+    """Ghi dung lượng THẬT của 1 kho vào storage_accounts.used (render upload KHÔNG tự cập nhật số này ->
+    phải sync để display + guard-kho-đầy chính xác). Doc id khớp Worker: {owner}__{name}."""
+    patch = {"used": int(used or 0), "used_synced_at": _now()}
+    if cap_gb:
+        patch["cap_gb"] = cap_gb
+    _db().collection("storage_accounts").document(f"{owner}__{name}").set(patch, merge=True)
+
+
 def drive_usage(owner: str):
     """Tổng dung lượng ĐÃ DÙNG / SỨC CHỨA của mọi kho Drive (bytes) -> guard 'kho gần đầy' trước khi render."""
     used = cap = 0
