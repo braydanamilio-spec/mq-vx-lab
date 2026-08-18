@@ -16,6 +16,7 @@ import { ScaledShort, calcScaled } from "./ScaledShort";  // kênh #4 SCALED (so
 import { BrandScaled } from "./BrandScaled";             // brand kênh #4 SCALED
 import { ThenNowShort, calcThenNow } from "./ThenNowShort"; // kênh #5 THEN×NOW (xưa/nay)
 import { BrandThenNow } from "./BrandThenNow";           // brand kênh #5 THEN×NOW
+import { BrandDoc } from "./BrandDoc";                   // brand PARAMETRIC Wave 2 (Cosmos/Deep/Why/Empire/Unsolved)
 import { BrandBroke } from "./BrandBroke";
 import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
@@ -122,6 +123,19 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="BrandThenNowBanner" component={BrandThenNow} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
     <Composition id="BrandThenNowWatermark" component={BrandThenNow} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
     <Composition id="ThenNowThumb" component={BrandThenNow} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
+    {/* WAVE 2 — 5 brand tài liệu (parametric BrandDoc) */}
+    {[
+      { id: "Cosmos", name: "COSMOS", emoji: "🌌", accent: "#7C5CFF", accent2: "#22D3EE", handle: "@cosmosdaily", tagline: "The universe, explained." },
+      { id: "Deep", name: "THE DEEP", emoji: "🌊", accent: "#0EA5E9", accent2: "#22D3EE", handle: "@thedeepdaily", tagline: "The ocean's darkest secrets." },
+      { id: "Why", name: "WHY", emoji: "🔬", accent: "#F59E0B", accent2: "#F5B301", handle: "@whydaily", tagline: "Why everything is the way it is." },
+      { id: "Empire", name: "EMPIRE", emoji: "👑", accent: "#EAB308", accent2: "#F5B301", handle: "@empiredaily", tagline: "How they built it all." },
+      { id: "Unsolved", name: "UNSOLVED", emoji: "🌍", accent: "#EF4444", accent2: "#F59E0B", handle: "@unsolveddaily", tagline: "Mysteries with no answer." },
+    ].flatMap((b) => ([
+      <Composition key={b.id + "A"} id={`BrandDoc${b.id}Avatar`} component={BrandDoc} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar", name: b.name, emoji: b.emoji, accent: b.accent, accent2: b.accent2, handle: b.handle, tagline: b.tagline }} />,
+      <Composition key={b.id + "B"} id={`BrandDoc${b.id}Banner`} component={BrandDoc} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner", name: b.name, emoji: b.emoji, accent: b.accent, accent2: b.accent2, handle: b.handle, tagline: b.tagline }} />,
+      <Composition key={b.id + "W"} id={`BrandDoc${b.id}Watermark`} component={BrandDoc} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark", name: b.name, emoji: b.emoji, accent: b.accent, accent2: b.accent2 }} />,
+      <Composition key={b.id + "T"} id={`Doc${b.id}Thumb`} component={BrandDoc} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb", name: b.name, emoji: b.emoji, accent: b.accent, accent2: b.accent2, handle: b.handle }} />,
+    ]))}
 
     {/* THUMBNAIL data-driven (mỗi video 1 thumb, đọc props) */}
     <Composition id="Thumb" component={Thumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ bigLine: "SO HIGH?!", topLine: "WHY IS RENT" }} calculateMetadata={calcThumb} />

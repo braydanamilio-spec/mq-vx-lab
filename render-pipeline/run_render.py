@@ -97,7 +97,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
 
     # ── FORMAT ĐẶC BIỆT (short-only, motif riêng): GUESS / MAPPED ── route sang make_guess/make_mapped.
     fmt = (ch.get("format") or "").lower()
-    if fmt in ("guess", "mapped", "ranked", "scaled", "thennow"):
+    if fmt in ("guess", "mapped", "ranked", "scaled", "thennow", "doc"):
         short_target = int(ch.get("short_target", 0) or 0) or RESERVE_SHORT
         need = max(0, short_target - FB.count_done(OWNER, channel, "short"))
         n = min(int(ch.get("n_shorts", n_shorts) or 3) or 3, need)
@@ -116,10 +116,16 @@ def run_one(ch, keys, n_shorts=3, report=None):
             for att in (1, 2):
                 try:
                     if att > 1: jst("running", f"🔧 Tự thử lại {fmt}…")
-                    mk = {"guess": DS.make_guess, "mapped": DS.make_mapped, "ranked": DS.make_ranked,
-                          "scaled": DS.make_scaled, "thennow": DS.make_thennow}[fmt]
-                    _, story, ok, info = mk(channel, cat, out, keys=keys, tier=tier,
-                                            avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb)
+                    if fmt == "doc":     # Wave 2 tài liệu: truyền style/accent riêng của kênh
+                        _, story, ok, info = DS.make_doc(channel, cat, out, keys=keys, tier=tier,
+                                                         style=ch.get("style", "awe, cinematic"),
+                                                         accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"),
+                                                         avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb)
+                    else:
+                        mk = {"guess": DS.make_guess, "mapped": DS.make_mapped, "ranked": DS.make_ranked,
+                              "scaled": DS.make_scaled, "thennow": DS.make_thennow}[fmt]
+                        _, story, ok, info = mk(channel, cat, out, keys=keys, tier=tier,
+                                                avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb)
                     err = None; break
                 except Exception as e:
                     err = e; traceback.print_exc(); print(f"   🔧 {fmt.upper()} {channel}#{i} lỗi lần {att}: {str(e)[:100]}")
