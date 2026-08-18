@@ -74,10 +74,18 @@ def write_story(channel: str, keys: list[dict], seed: str,
     model = model_for(tier)
 
     def _cool(k, exc):
-        """Cho key NGHỈ — giới hạn PHÚT (per-minute/region) reset sau 60s -> nghỉ 90s (dư 30s cho chắc); quota NGÀY -> 90'."""
-        if not (on_limit and k.get("id")):
+        """Key CHẾT vĩnh viễn (denied/suspended) -> đánh dấu chết (loại khỏi vòng). Giới hạn PHÚT -> nghỉ 90s; quota NGÀY -> 90'."""
+        if not k.get("id"):
             return
         low = str(exc).lower()
+        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+            try:
+                import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key")
+            except Exception:
+                pass
+            return
+        if not (on_limit and k.get("id")):
+            return
         mins = 1.5 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
         try:
             on_limit(k["id"], mins)
@@ -131,8 +139,14 @@ def write_guess(channel: str, keys: list[dict], category: str, n_rounds: int = 3
     model = model_for(tier)
 
     def _cool(k, exc):
-        if not (on_limit and k.get("id")): return
+        if not k.get("id"): return
         low = str(exc).lower()
+        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+            try:
+                import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
+            except Exception: pass
+            return
+        if not on_limit: return
         mins = 1.5 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
@@ -176,8 +190,14 @@ def write_mapped(channel: str, keys: list[dict], niche: str, tier: str = "normal
     order = key_order(channel, keys); model = model_for(tier)
 
     def _cool(k, exc):
-        if not (on_limit and k.get("id")): return
+        if not k.get("id"): return
         low = str(exc).lower()
+        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+            try:
+                import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
+            except Exception: pass
+            return
+        if not on_limit: return
         mins = 1.5 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
@@ -218,8 +238,14 @@ def write_ranked(channel: str, keys: list[dict], niche: str, tier: str = "normal
     order = key_order(channel, keys); model = model_for(tier)
 
     def _cool(k, exc):
-        if not (on_limit and k.get("id")): return
+        if not k.get("id"): return
         low = str(exc).lower()
+        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+            try:
+                import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
+            except Exception: pass
+            return
+        if not on_limit: return
         mins = 1.5 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
@@ -260,8 +286,14 @@ def write_scaled(channel: str, keys: list[dict], niche: str, tier: str = "normal
     order = key_order(channel, keys); model = model_for(tier)
 
     def _cool(k, exc):
-        if not (on_limit and k.get("id")): return
+        if not k.get("id"): return
         low = str(exc).lower()
+        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+            try:
+                import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
+            except Exception: pass
+            return
+        if not on_limit: return
         mins = 1.5 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
@@ -302,8 +334,14 @@ def write_thennow(channel: str, keys: list[dict], niche: str, tier: str = "norma
     order = key_order(channel, keys); model = model_for(tier)
 
     def _cool(k, exc):
-        if not (on_limit and k.get("id")): return
+        if not k.get("id"): return
         low = str(exc).lower()
+        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+            try:
+                import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
+            except Exception: pass
+            return
+        if not on_limit: return
         mins = 1.5 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
@@ -344,8 +382,14 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
     order = key_order(channel, keys); model = model_for(tier)
 
     def _cool(k, exc):
-        if not (on_limit and k.get("id")): return
+        if not k.get("id"): return
         low = str(exc).lower()
+        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+            try:
+                import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
+            except Exception: pass
+            return
+        if not on_limit: return
         mins = 1.5 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
