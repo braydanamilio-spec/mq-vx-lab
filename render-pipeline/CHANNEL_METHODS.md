@@ -45,14 +45,15 @@ Mục tiêu: phá thế "10 kênh cùng 1 motif bar-race". Mỗi kênh 1 cơ ch�
 | 1 | 🤔 GUESS | @guessdaily | #F5B301 + #ff375f | `GuessShort.tsx` + `BrandGuess.tsx` | **mảnh ghép mở dần + đồng hồ đếm giờ + đáp án bung** — ép đoán trước khi lộ | ✅ **FULL A-Z** (engine+brand+não+dispatch) |
 | 2 | 🗺️ MAPPED | @mappedusa | #22D3EE | `MappedShort.tsx` + `BrandMapped.tsx` (geoAlbersUsa) | choropleth US "nóng dần" + pin số + bảng xếp hạng | ✅ **FULL A-Z** (engine+brand+não+dispatch) |
 | 3 | 🏆 RANKED | @rankedusa | #7C5CFF | `RankedShort.tsx` + `BrandRanked2.tsx` | bảng tier S/A/B/C/D thẻ lật xếp hạng | ✅ **FULL A-Z** (engine+brand+não+dispatch) |
-| 4 | 📏 SCALED | @scaledusa | #2FA84F | build mới | so sánh KÍCH THƯỚC vật lý (thu/phóng cạnh nhau) | chờ |
+| 4 | 📏 SCALED | @scaledusa | #2FA84F | `ScaledShort.tsx` + `BrandScaled.tsx` | so sánh KÍCH THƯỚC vật lý (emoji đúng tỉ lệ trên nền) | ✅ **FULL A-Z** (engine+brand+não+dispatch) |
 | 5 | ⏳ THEN×NOW | @thennowusa | #EC4899 | build mới | timeline chẻ đôi XƯA/NAY (split trước-sau) | chờ |
 
 ### ⚙️ Cách BẬT 1 kênh motif (GUESS/MAPPED) — config kênh trong dashboard/Firestore
-Đặt field **`format`** cho kênh: `"guess"` · `"mapped"` · `"ranked"` → `run_one` tự route sang `make_guess`/`make_mapped`/`make_ranked` (short-only, theo `short_target`).
+Đặt field **`format`** cho kênh: `"guess"` · `"mapped"` · `"ranked"` · `"scaled"` → `run_one` tự route sang `make_guess`/`make_mapped`/`make_ranked`/`make_scaled` (short-only, theo `short_target`).
 - GUESS: thêm `category` (vd `"US cities"`, `"famous historical scientists"`, `"US landmarks"`).
 - MAPPED: `niche`/`category` (vd `"US demographics"`, `"cost of living"`) → Gemini tự chọn metric có số liệu THẬT.
 - RANKED: `niche`/`category` (vd `"US fast food"`, `"streaming services"`) → Gemini tự xếp tier theo tiêu chí + số liệu THẬT.
+- SCALED: `niche`/`category` (vd `"ocean animals"`, `"tallest buildings"`, `"planets"`) → Gemini so sánh kích thước THẬT + emoji.
 - Không đặt `format` → kênh chạy data-race như cũ (không phá kênh cũ).
 
 ### Pipeline 2 kênh này (đã build + test local)
