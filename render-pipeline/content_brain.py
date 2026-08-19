@@ -822,6 +822,27 @@ DOC_SYS = (
  "6) Tone = the given style. 6-9 scenes total for a ~45-70s short."
 )
 
+# SPECULATIVE (Wave 5 — FUTUREUSA/UNSEENUSA): KHÁC DOC_SYS ở đúng 1 chỗ quan trọng — rule #4 ở trên bắt img_query
+# phải tìm được ảnh CC0 THẬT, mâu thuẫn trực tiếp với kênh speculative (ảnh do AI vẽ 100%, ai_only=True bên
+# fetch_image() -> không bao giờ tìm Openverse). Không dùng chung DOC_SYS cho 2 kênh này -> Gemini sẽ tự bó hẹp
+# img_query về cảnh "tìm được ảnh thật", làm content mất chất tưởng tượng/lý thuyết. Rule accuracy vẫn giữ NGHIÊM
+# (niche riêng của từng kênh tự quy định rõ cái gì phải bám khoa học thật, cái gì được suy đoán).
+DOC_SYS_SPECULATIVE = (
+ "You are the head writer of a #1 US visionary/speculative documentary shorts channel. You write tight, "
+ "awe-inducing narration that hooks in 2 seconds and never lets go. Absolute rules:\n"
+ "1) Follow the niche's own STRICT grounding rules exactly — some speculative content must stay grounded in "
+ "real science/trends even though the IMAGERY is imagined; others are pure creative speculation. Obey whatever "
+ "the niche text specifies.\n"
+ "2) HOOK hard: first line is a jaw-dropping question or vivid imagined scene. Build tension scene to scene, payoff at the end.\n"
+ "3) Each scene has ONE spoken sentence (natural spoken English, vivid, concise) + an img_query describing the "
+ "IMAGINED/THEORETICAL visual for an AI artist to paint — it does NOT need to be a real photographable scene, "
+ "describe it vividly and specifically like a concept-art brief (no need for CC0/stock-photo-findable imagery).\n"
+ "4) Use clearly speculative framing language wherever the niche requires it ('could', 'might', 'imagine', "
+ "'scientists believe', 'one vision of') — never state speculation as settled fact.\n"
+ "5) NO politics/partisan, NO real tragedy/victims, no NSFW, no medical/financial advice.\n"
+ "6) Tone = the given style. 6-9 scenes total for a ~45-70s short."
+)
+
 DOC_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
 {
   "title": str,            // punchy on-screen title, <=32 chars
@@ -855,13 +876,16 @@ def _validate_doc(d: dict) -> list[str]:
 
 
 def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
-                 model_name: str = None, avoid: list = None) -> dict:
-    """Sinh 1 kịch bản TÀI LIỆU (narration + img_query mỗi cảnh) cho engine Cinematic. Viết lại tới khi đạt."""
+                 model_name: str = None, avoid: list = None, speculative: bool = False) -> dict:
+    """Sinh 1 kịch bản TÀI LIỆU (narration + img_query mỗi cảnh) cho engine Cinematic. Viết lại tới khi đạt.
+    speculative=True (Wave 5): img_query mô tả cảnh TƯỞNG TƯỢNG cho AI vẽ — KHÔNG bó buộc phải tìm được ảnh
+    CC0 thật (khác DOC_SYS mặc định)."""
+    sysp = DOC_SYS_SPECULATIVE if speculative else DOC_SYS
     genai = _genai(api_key)
     akey = api_key or os.environ.get("GEMINI_API_KEY", "")
     prefer = "pro" if (model_name and "pro" in model_name) else "flash"
     mname = model_name or MODEL
-    model = genai.GenerativeModel(mname, system_instruction=DOC_SYS)
+    model = genai.GenerativeModel(mname, system_instruction=sysp)
     resolved = False
     avoid_txt = ("\nAvoid topics already used: " + " | ".join(avoid[-60:])) if avoid else ""
     base = (f'Niche: "{niche}". Tone/style: {style}. Write ONE cinematic documentary short.\n{DOC_SCHEMA}{avoid_txt}')
@@ -875,7 +899,7 @@ def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
                 mn = _pick_model(genai, prefer, akey); resolved = True
                 if mn and mn != mname:
-                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=DOC_SYS); continue
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=sysp); continue
             if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):

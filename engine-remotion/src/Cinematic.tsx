@@ -9,7 +9,7 @@ import { AbsoluteFill, Audio, Sequence, OffthreadVideo, Img, staticFile, interpo
 type HUD = { kind: string; value?: number; from?: number; to?: number; unit?: string; label?: string; marks?: string[] };
 type Sub = { t: string; s: number; d: number };
 type Scene = { type: string; clip?: string; clip2?: string; fx?: string; audio: string; dur: number; nar: string; amp?: number[]; hud?: HUD; title?: string; num?: string; subs?: Sub[] };
-export type CProps = { scenes: Scene[]; slug: string; handle?: string; accent?: string; accent2?: string; ink?: string };
+export type CProps = { scenes: Scene[]; slug: string; handle?: string; accent?: string; accent2?: string; ink?: string; music?: string };
 export const calcCinematic = ({ props }: { props: CProps }) => ({ durationInFrames: Math.max(1, props.scenes.reduce((a, s) => a + s.dur, 0)) });
 const ci = (v: number, a: number, b: number, x: number, y: number) => interpolate(v, [a, b], [x, y], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 const WEAK = new Set(["a", "an", "the", "and", "but", "or", "to", "of", "in", "on", "for", "with", "is", "are", "was", "were", "that", "it", "its", "at", "as", "by", "so", "if"]);
@@ -188,7 +188,7 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
   );
 };
 
-export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent = "#22D3EE", accent2 = "#F5B301", ink = "#EAF8FF" }) => {
+export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent = "#22D3EE", accent2 = "#F5B301", ink = "#EAF8FF", music }) => {
   const f = useCurrentFrame(); const st: number[] = []; scenes.reduce((a, s, i) => (st[i] = a, a + s.dur), 0);
   let idx = 0; for (let k = 0; k < scenes.length; k++) if (f >= st[k]) idx = k; const s = scenes[idx], l = f - st[idx];
   // KHÔNG fade-về-đen giữa cảnh (comp render 1 cảnh/lúc -> fade sẽ chớp ĐEN mỗi chuyển cảnh).
@@ -222,6 +222,8 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent 
       {/* (bỏ film grain feTurbulence — vẽ lại mỗi frame quá nặng, làm render chậm 3-4x; không đáng) */}
       {handle && <div style={{ position: "absolute", top: 40, right: 48, color: "#ffffffbb", fontSize: 30, fontWeight: 800 }}>{handle}</div>}
       {scenes.map((sc, j) => <Sequence key={j} from={st[j]} durationInFrames={sc.dur}><Audio src={staticFile(`${slug}/${sc.audio}`)} /></Sequence>)}
+      {/* NHẠC NỀN (mới) — cực nhẹ (0.12 đỉnh) để KHÔNG đè lời thoại, fade-in/out mượt đầu-cuối, loop suốt video. */}
+      {music && <Audio src={staticFile(music)} loop volume={Math.min(ci(f, 0, 30, 0, 1), ci(f, total - 40, total, 1, 0)) * 0.12} />}
     </AbsoluteFill>
   );
 };

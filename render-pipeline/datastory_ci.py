@@ -577,10 +577,15 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
 
 
 def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE", accent2="#F5B301", handle="@doc",
-                    ai_style=None, ai_only=False):
+                    ai_style=None, ai_only=False, music=None):
     """Dựng props Cinematic (Wave 2): intro chapter + cảnh ảnh (fetch + Vision verify khớp) + outro chapter.
     Asset: PUB/<slug>/*.mp3 (giọng) + PUB/<slug>/clips/*.jpg (ảnh). dur tính bằng FRAME (30fps).
-    ai_style/ai_only: kênh speculative (không có ảnh thật để so) -> gu vẽ riêng + bỏ qua Openverse hẳn."""
+    ai_style/ai_only: kênh speculative (không có ảnh thật để so) -> gu vẽ riêng + bỏ qua Openverse hẳn.
+    music: nhạc nền cực nhẹ xuyên suốt — MẶC ĐỊNH TẮT (None). 13 kênh doc-format có tông rất khác nhau
+    (awe/eerie/deadpan/ominous...) -> 1 bài nhạc chung ép lên hết dễ bị lệch tông ("kỳ" — đúng như user
+    lo). CHỈ bật khi đã NGHE THẬT + chọn đúng bài hợp tông từng kênh (đặt field 'music' riêng ở
+    render_channels), không đoán theo tên file. File PHẢI `git ls-files` xác nhận có trên git trước khi
+    dùng (xem PIPELINE_RULES.md — bài học 404 nhạc)."""
     FPS = 30
     slug_ = "_doc_" + slug(channel)
     sdir = os.path.join(PUB, slug_); cdir = os.path.join(sdir, "clips")
@@ -610,15 +615,19 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     for s in (story.get("scenes") or []):
         add_scene(i, s.get("nar"), "scene", img_query=s.get("img_query"), title=s.get("title", "")); i += 1
     add_scene(i, story.get("outro") or "Follow for more.", "chapter", title=""); i += 1
-    return {"scenes": scenes_out, "slug": slug_, "handle": handle, "accent": accent, "accent2": accent2}
+    props = {"scenes": scenes_out, "slug": slug_, "handle": handle, "accent": accent, "accent2": accent2}
+    if music:
+        props["music"] = music
+    return props
 
 
 def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style="awe, cinematic",
              imgsrc=None, accent="#22D3EE", accent2="#F5B301", avoid=None,
-             on_status=None, on_limit=None, on_ok=None, resume_story=None, ai_style=None, ai_only=False):
+             on_status=None, on_limit=None, on_ok=None, resume_story=None, ai_style=None, ai_only=False, music=None):
     """WAVE 2 A-Z: Gemini viết tài liệu -> giọng + ảnh CC0 (Vision verify) -> render Cinematic -> QC + thumb.
     ai_style/ai_only: kênh speculative (tương lai/vũ trụ suy đoán, KHÔNG có ảnh thật để tìm) -> gu vẽ
-    riêng nhất quán + bỏ qua tìm Openverse hẳn (đỡ phí round-trip mạng chắc chắn trật)."""
+    riêng nhất quán + bỏ qua tìm Openverse hẳn (đỡ phí round-trip mạng chắc chắn trật).
+    music: mặc định None (im lặng) — chỉ đặt khi đã nghe thật + hợp tông kênh, xem build_doc_props()."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
     import key_manager as KM
@@ -629,12 +638,12 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
         st("writing", f"Gemini viết tài liệu ({niche})")
-        story = KM.write_doc(channel, keys, niche, style, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+        story = KM.write_doc(channel, keys, niche, style, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok, speculative=ai_only)
     score = (story.get("self_score") or {}).get("total")
     st("rendering", "Giọng + ảnh + render điện ảnh", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     props = build_doc_props(story, channel, imgsrc=imgsrc, api_key=keys[0]["key"],
                             accent=accent, accent2=accent2, handle=channel_handle(channel),
-                            ai_style=ai_style, ai_only=ai_only)
+                            ai_style=ai_style, ai_only=ai_only, music=music)
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
