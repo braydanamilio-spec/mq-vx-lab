@@ -23,8 +23,15 @@ storageBucket: mm0-shard-c.firebasestorage.app
 
 ## Trạng thái
 - [x] Provision project + Firestore + SA + IAM + secrets + web config + rules khóa
-- [ ] **WIRING (làm khi A reset, 1 lượt):** publisher (`MM0-AutoPublisher/src/*`) route yt_queue/connections/videos → C; workflow publish pass creds C; dashboard init app Firebase thứ 3 (config C) đọc queue/connections từ C.
-- [ ] Migrate dữ liệu publish A→C (đọc A đúng 1 lượt).
+- [x] **CODE WIRING XONG (gated, mặc định TẮT = A y cũ):**
+  - Render: `firestore_bridge._db_meta()` route config/channels/keys/storage/topics/requests → B khi `SHARD_META=1`.
+  - Publish: `firestore_state` tách `self.db`(A shared) vs `self.pub`(C owned) khi `SHARD_PUBLISH=1`; `auto_enqueue` đọc render_jobs từ B, ghi yt_queue vào C.
+  - Secrets B+C đã nạp cả 2 repo (mq-vx-lab + mm0-auto-publisher); workflow ghi creds + cờ.
+- [ ] **KHI A RESET (~14h VN) — chỉ 3 bước:**
+  1. Chạy migrate: repo mq-vx-lab → workflow_dispatch `migrate_to_shards.py` (đọc A 1 lượt → B+C). Hoặc local nếu có creds A.
+  2. Bật cờ: `gh variable set SHARD_META -R braydanamilio-spec/mq-vx-lab -b 1` và `gh variable set SHARD_PUBLISH -R braydanamilio-spec/mm0-auto-publisher -b 1`.
+  3. Dashboard: thêm app Firebase thứ 3 (config C) đọc videos/yt_queue/counters từ C (hiện đọc A) — display, làm sau khi test.
+- Shared (settings/connections/channels/storage_reservations) GIỮ ở A → Worker/dashboard ghi A không đổi.
 
 ## Nguyên tắc chống nghẽn (xem [[mm0-no-quota-waste]])
 Render đọc/ghi CHỈ B, publish CHỈ C, dashboard load-once cả 3 + cache dự phòng → 1 project cạn, 2 cái kia vẫn chạy.
