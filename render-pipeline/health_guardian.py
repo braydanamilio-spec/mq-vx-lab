@@ -21,7 +21,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import firestore_bridge as FB
 
 OWNER = os.environ.get("OWNER_UID")
-STALE_HOURS = 6      # job render 1 kênh hiếm khi quá 6h thật (matrix timeout 350') -> quá là coi như treo
+STALE_HOURS = float(os.environ.get("STALE_HOURS_OVERRIDE") or 6)   # job render 1 kênh hiếm khi quá 6h thật (matrix timeout 350')
+# -> quá STALE_HOURS là coi như treo. Chỉnh STALE_HOURS_OVERRIDE khi chạy tay (workflow_dispatch) để can thiệp NGAY,
+# không đợi đủ 6h — vd 1 job kẹt cổng render biết chắc đã treo lúc chưa tới 6h.
 SILENT_HOURS = 12     # 12h không có video nào xong dù render đang bật -> báo động thật, không phải quota tạm
 
 

@@ -10,6 +10,8 @@ on:
   schedule:
     - cron: "7 * * * *"   # mỗi giờ, phút 07 (lệch nhịp render_cron để đỡ chồng burst đọc Firestore)
   workflow_dispatch:
+    inputs:
+      stale_hours: { description: "Ngưỡng coi job là treo (giờ) — để trống dùng mặc định 6", default: "" }
 
 concurrency: { group: mm0-health-guardian, cancel-in-progress: false }
 
@@ -33,4 +35,5 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
           OWNER_UID: ${{ secrets.OWNER_UID }}
+          STALE_HOURS_OVERRIDE: ${{ github.event.inputs.stale_hours }}
         run: python render-pipeline/health_guardian.py
