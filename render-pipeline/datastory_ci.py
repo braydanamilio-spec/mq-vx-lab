@@ -37,11 +37,16 @@ def _ckpt_json(d, cap=300_000):
         return ""
 
 
-def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image") -> bool:
+DEFAULT_AI_STYLE = "realistic, editorial-style photo illustration"
+
+
+def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", style=None) -> bool:
     """DỰ PHÒNG khi Openverse KHÔNG có ảnh CC0 khớp: nhờ Gemini VẼ ảnh minh hoạ (Nano Banana).
     Quota TÁCH RIÊNG khỏi quota viết kịch bản (model khác nhau) -> dùng thoải mái, không đụng key đang
     viết chữ. ~500 ảnh/ngày/key free, không cần thẻ. Lỗi/an toàn nội dung/hết quota -> trả False,
-    caller tự lùi về fallback cũ (mosaic/cosmic bg) — KHÔNG BAO GIỜ làm crash pipeline."""
+    caller tự lùi về fallback cũ (mosaic/cosmic bg) — KHÔNG BAO GIỜ làm crash pipeline.
+    style: phong cách vẽ (vd "cinematic sci-fi concept art") — mặc định ảnh báo chí thật, đổi cho kênh
+    speculative (tương lai/vũ trụ suy đoán) nơi KHÔNG có ảnh thật để so nên cần 1 gu vẽ riêng, nhất quán."""
     if not api_key:
         return False
     try:
@@ -49,7 +54,7 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image") ->
         client = genai2.Client(api_key=api_key)
         resp = client.models.generate_content(
             model=model,
-            contents=f"A realistic, editorial-style photo illustration of: {prompt}. No text, no watermark, no logo.")
+            contents=f"A {style or DEFAULT_AI_STYLE} of: {prompt}. No text, no watermark, no logo.")
         data = None
         for cand in (resp.candidates or []):
             for part in ((cand.content and cand.content.parts) or []):
@@ -65,12 +70,17 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image") ->
         print(f"   ⚠️ Nano Banana '{prompt[:30]}' lỗi: {str(e)[:100]}"); return False
 
 
-def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None, ai_prompt=None):
+def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None, ai_prompt=None,
+                ai_style=None, ai_only=False):
     """Tải 1 ảnh từ Openverse — ƯU TIÊN CC0/Public Domain (KHÔNG cần ghi nguồn, an toàn bản quyền).
     verify(path)->True/False/None: kiểm ảnh có KHỚP chủ đề không (dùng cho GUESS). True=nhận, False=thử ảnh khác,
     None=không kiểm được (Vision lỗi) -> nhớ làm dự phòng. Lỗi/ảnh hỏng/không khớp -> trả None.
     ai_key: nếu có + Openverse KHÔNG tìm ra ảnh nào -> DỰ PHÒNG bằng Gemini vẽ ảnh (Nano Banana) trước
-    khi bỏ cuộc hẳn. ai_prompt (tuỳ chọn): mô tả rõ hơn cho AI vẽ, mặc định dùng lại 'query'."""
+    khi bỏ cuộc hẳn. ai_prompt (tuỳ chọn): mô tả rõ hơn cho AI vẽ, mặc định dùng lại 'query'.
+    ai_style: phong cách vẽ riêng (kênh speculative — tương lai/vũ trụ suy đoán — không có ảnh thật để
+    so nên cần gu vẽ nhất quán, khác ảnh báo chí mặc định). ai_only=True: BỎ QUA Openverse hẳn, đi thẳng
+    vào AI vẽ — dùng khi CHẮC CHẮN không có ảnh thật (chủ đề tưởng tượng/tương lai) -> đỡ phí 3 lượt tìm
+    Openverse chắc chắn trật (mỗi lượt tốn round-trip mạng) trước khi mới vẽ."""
     query = re.sub(r"\b(chart|graph|screenshot|data|statistics|dashboard|trading|diagram|infographic)\b",
                    "", query, flags=re.I).strip() or query   # tránh ảnh chart/watermark
     def _try(params):
@@ -116,14 +126,16 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
         if verify and fallback is not None:               # không ảnh nào KHỚP chắc, nhưng có ảnh dự phòng (Vision down)
             open(dest, "wb").write(fallback); return dest
         return None                                       # verify bật mà không ảnh nào khớp -> THÀ KHÔNG ẢNH còn hơn ảnh SAI
-    try:
-        got = _openverse()
-    except Exception as e:
-        print(f"   ⚠️ ảnh '{query[:30]}' lỗi: {e}"); got = None
+    got = None
+    if not ai_only:
+        try:
+            got = _openverse()
+        except Exception as e:
+            print(f"   ⚠️ ảnh '{query[:30]}' lỗi: {e}"); got = None
     if got:
         return got
-    if ai_key and _generate_image_ai(ai_prompt or query, dest, ai_key):   # KHÔNG có ảnh thật khớp -> chữa cháy bằng AI vẽ
-        print(f"   🎨 '{query[:30]}': không có ảnh CC0 khớp -> đã dùng Nano Banana vẽ thay.")
+    if ai_key and _generate_image_ai(ai_prompt or query, dest, ai_key, style=ai_style):   # KHÔNG có ảnh thật khớp -> chữa cháy bằng AI vẽ
+        print(f"   🎨 '{query[:30]}': {'ai_only' if ai_only else 'không có ảnh CC0 khớp'} -> đã dùng Nano Banana vẽ.")
         return dest
     return None
 
@@ -564,16 +576,19 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
     return out, story, ok, info
 
 
-def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE", accent2="#F5B301", handle="@doc"):
+def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE", accent2="#F5B301", handle="@doc",
+                    ai_style=None, ai_only=False):
     """Dựng props Cinematic (Wave 2): intro chapter + cảnh ảnh (fetch + Vision verify khớp) + outro chapter.
-    Asset: PUB/<slug>/*.mp3 (giọng) + PUB/<slug>/clips/*.jpg (ảnh). dur tính bằng FRAME (30fps)."""
+    Asset: PUB/<slug>/*.mp3 (giọng) + PUB/<slug>/clips/*.jpg (ảnh). dur tính bằng FRAME (30fps).
+    ai_style/ai_only: kênh speculative (không có ảnh thật để so) -> gu vẽ riêng + bỏ qua Openverse hẳn."""
     FPS = 30
     slug_ = "_doc_" + slug(channel)
     sdir = os.path.join(PUB, slug_); cdir = os.path.join(sdir, "clips")
     os.makedirs(cdir, exist_ok=True)
     scenes_out = []
     import qc_vision
-    vf_for = (lambda subj: (lambda p: qc_vision.verify_image(p, subj, api_key=api_key))) if api_key else (lambda subj: None)
+    # ai_only: ảnh nào cũng do AI vẽ theo prompt, không có "ảnh thật tải về" để verify khớp/sai -> khỏi tốn Vision API.
+    vf_for = (lambda subj: (lambda p: qc_vision.verify_image(p, subj, api_key=api_key))) if (api_key and not ai_only) else (lambda subj: None)
 
     def add_scene(i, nar, kind, img_query=None, title=""):
         amp3 = os.path.join(sdir, f"s{i}.mp3")
@@ -582,7 +597,8 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
         # KHÔNG truyền subs (TK trả dạng TỪ, Cinematic cần dạng CÂU) -> để engine tự tạo caption từ nar (khớp giọng đều).
         sc = {"type": kind, "audio": f"s{i}.mp3", "dur": durF, "nar": nar or "", "title": title or ""}
         if kind != "chapter" and img_query:
-            got = fetch_image(img_query, os.path.join(cdir, f"s{i}.jpg"), orient="tall", verify=vf_for(img_query), ai_key=api_key)
+            got = fetch_image(img_query, os.path.join(cdir, f"s{i}.jpg"), orient="tall", verify=vf_for(img_query),
+                              ai_key=api_key, ai_style=ai_style, ai_only=ai_only)
             if got:
                 sc["clip"] = f"s{i}.jpg"
             else:
@@ -599,8 +615,10 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
 
 def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style="awe, cinematic",
              imgsrc=None, accent="#22D3EE", accent2="#F5B301", avoid=None,
-             on_status=None, on_limit=None, on_ok=None, resume_story=None):
-    """WAVE 2 A-Z: Gemini viết tài liệu -> giọng + ảnh CC0 (Vision verify) -> render Cinematic -> QC + thumb."""
+             on_status=None, on_limit=None, on_ok=None, resume_story=None, ai_style=None, ai_only=False):
+    """WAVE 2 A-Z: Gemini viết tài liệu -> giọng + ảnh CC0 (Vision verify) -> render Cinematic -> QC + thumb.
+    ai_style/ai_only: kênh speculative (tương lai/vũ trụ suy đoán, KHÔNG có ảnh thật để tìm) -> gu vẽ
+    riêng nhất quán + bỏ qua tìm Openverse hẳn (đỡ phí round-trip mạng chắc chắn trật)."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
     import key_manager as KM
@@ -615,7 +633,8 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     score = (story.get("self_score") or {}).get("total")
     st("rendering", "Giọng + ảnh + render điện ảnh", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     props = build_doc_props(story, channel, imgsrc=imgsrc, api_key=keys[0]["key"],
-                            accent=accent, accent2=accent2, handle=channel_handle(channel))
+                            accent=accent, accent2=accent2, handle=channel_handle(channel),
+                            ai_style=ai_style, ai_only=ai_only)
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,

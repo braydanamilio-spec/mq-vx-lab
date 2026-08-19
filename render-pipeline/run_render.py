@@ -144,7 +144,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
                         _, story, ok, info = DS.make_doc(channel, cat, out, keys=keys, tier=tier,
                                                          style=ch.get("style", "awe, cinematic"),
                                                          accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"),
-                                                         avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
+                                                         avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story,
+                                                         ai_style=ch.get("ai_style"), ai_only=bool(ch.get("ai_only")))   # Wave 5 speculative: gu vẽ riêng + bỏ qua Openverse
                     elif fmt in ("swarm", "pulse", "clockwork", "longshot"):   # Wave 4: 1 accent riêng/kênh, không style/accent2
                         mk4 = {"swarm": DS.make_swarm, "pulse": DS.make_pulse,
                                "clockwork": DS.make_clockwork, "longshot": DS.make_longshot}[fmt]
