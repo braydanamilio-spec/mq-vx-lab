@@ -1,0 +1,33 @@
+name: MM0 Seed New Channels (-> B)
+
+# Tạo doc render_channels cho 10 kênh mới trên Project B. Idempotent. Mặc định dry-run.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "1 = chỉ xem (không ghi); 0 = tạo thật"
+        default: "1"
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Deps
+        run: pip install --quiet google-cloud-firestore google-auth
+      - name: SA file (B)
+        run: echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+      - name: Seed
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "0" ]; then
+            python render-pipeline/seed_new_channels.py
+          else
+            python render-pipeline/seed_new_channels.py --dry-run
+          fi
