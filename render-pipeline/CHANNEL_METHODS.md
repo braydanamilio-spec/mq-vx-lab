@@ -119,6 +119,24 @@ Cảm hứng từ 1 hệ "epistemic-grammar" channel khác (dream-motion, agent 
 - **`niche` field = nơi thêm guardrail** — không cần code mới, chỉ cần viết rõ ràng buộc ("STRICT: chỉ dùng case CÓ THẬT...") ngay trong text niche, Gemini đọc field này mỗi lần viết. Áp dụng khi kênh chạm chủ đề dễ bịa (luật, tài chính, y tế...).
 - **Seed idempotent, dry-run trước** (`seed_new_channels_wave3.py --dry-run` rồi bỏ cờ) — script mẫu cho các wave sau, đọc owner từ kênh mẫu sẵn có, `merge:True` an toàn chạy lại.
 
+## 🌊 WAVE 4 — 4 kênh ENGINE RIÊNG hoàn toàn mới (19/8, không dùng chung doc/motif cũ)
+Đột phá thật (không phải doc reskin) — mỗi kênh 1 ngôn ngữ hình ảnh chưa từng có trong 26 kênh trước: thời gian/tỉ lệ, cường độ giác quan, mật độ đám đông, xác suất/may rủi. Build trực tiếp (không qua agent tự mày mò — học từ lần đầu tốn token), render-verify từng cái (avatar + still giữa animation) trước khi tích hợp.
+
+| # | Kênh | Engine | Cơ chế hình ảnh | Accent |
+|---|---|---|---|---|
+| L | 🐝 SWARMUSA | `SwarmShort.tsx` + `BrandSwarm.tsx` | hàng trăm hạt bay từ mép vào, hội tụ thành silhouette (stadium/city/person/circle/grid) + số đếm lớn | `#0D9488` |
+| M | 📟 PULSEUSA | `PulseShort.tsx` + `BrandPulse.tsx` | gauge bán nguyệt kim vật lý (spring), đổi màu lạnh→nóng, rung+shockwave khi extreme | `#EA580C` |
+| N | ⏱️ CLOCKWORKUSA | `ClockworkShort.tsx` + `BrandClockwork.tsx` | thanh/mặt đồng hồ nén thời gian, quét nhanh→chậm, zoom dramatic vào hero reveal cuối | `#C2410C` |
+| O | 🎲 LONGSHOTUSA | `LongshotShort.tsx` + `BrandLongshot.tsx` | tháp xác suất dọc (log-scale), token leo bậc, camera scroll/zoom lên khi hiếm dần | `#4F46E5` |
+
+**Backend đầy đủ** (giống hệt cấu trúc Wave 1, KHÔNG rút gọn): `content_brain.generate_swarm/pulse/clockwork/longshot` (accuracy≥95 + MIN_SCORE + viết lại) → `key_manager.write_swarm/pulse/clockwork/longshot` (dùng chung helper `_write_wave4`) → `datastory_ci.build_X_props`+`make_X` (TTS bám giọng + thumb branded qua composition `XThumb`) → `run_render.py` dispatch (`fmt in (...,"swarm","pulse","clockwork","longshot")`, nhánh riêng truyền `accent` mặc định/kênh).
+
+**Bài học build lần này (quan trọng, đọc trước khi build engine mới khác):**
+- **KHÔNG giao 4 agent tự mày mò song song build từ đầu** — tốn token rất nhiều (mỗi agent tự code+render+soi+sửa lặp) mà không kiểm soát được. Lần đầu bị huỷ giữa chừng vì lý do này.
+- **Nhưng 8 file dở dang agent để lại (chưa xoá, chưa commit) hoá ra DÙNG ĐƯỢC** — render-verify lại thấy cả 4 đều đẹp (chỉ LONGSHOT có 1 lỗi nhãn mốc đè token, sửa 1 chỗ CSS là xong). LUẬT: trước khi build lại từ đầu, LUÔN kiểm file cũ (kể cả của agent bị huỷ) — `git status` thấy file lạ (`??`) → đọc thử, render thử trước khi bỏ.
+- **`npx remotion still ... --frame=N`**: mặc định frame=0 chỉ ra được khung intro (thường trống/chưa có hiệu ứng) — LUÔN test ở khung GIỮA animation (`--frame=90` trở lên) mới thấy hiệu ứng thật để đánh giá.
+- **Test composition tạm trong Root.tsx**: chèn trước `</>);`(đóng React Fragment, KHÔNG phải `</Compositions>`) — nhớ backup + revert sau khi test xong, đừng để lẫn vào bản chính thức.
+
 ## 📤 AUTO-PUBLISH (đăng YouTube tự động)
 - Render xong → job lưu kèm title/description/hashtags/tags (`run_render.py`).
 - `MM0-AutoPublisher/src/auto_enqueue.py` (chạy trong `main.py` trước `publish_yt_queue`): tự đẩy video của kênh **đã bật `auto_publish`** vào `yt_queue`. **Mặc định TẮT**; dedup theo `drive_file_id`; trần ~6/ngày/kênh (chống spam).

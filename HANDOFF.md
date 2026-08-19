@@ -4,7 +4,7 @@
 > Cập nhật: 19/8/2026 (sau đợt sharding 3-project + Wave 3 + round-cap rotation).
 
 ## 1. Dự án là gì (1 dòng)
-100% FREE, máy tắt vẫn chạy 24/7: **26 kênh USA** tự sản xuất video (data-race + 5 motif đồ hoạ + 11 tài liệu điện ảnh) → render trên **GitHub Actions** → đẩy **Google Drive** → **MM0-AutoPublisher** tự đăng YouTube/FB/IG.
+100% FREE, máy tắt vẫn chạy 24/7: **30 kênh USA** tự sản xuất video (10 data-race + 5 motif đồ hoạ Wave 1 + 11 tài liệu điện ảnh Wave 2-3 + 4 engine riêng Wave 4) → render trên **GitHub Actions** → đẩy **Google Drive** → **MM0-AutoPublisher** tự đăng YouTube/FB/IG.
 
 ## 2. Đọc theo thứ tự
 1. **`render-pipeline/CHANNEL_METHODS.md`** — method + repo TỪNG kênh + **kiến trúc 3-project Firestore** (đọc kỹ phần này trước khi đụng bất kỳ collection nào).
@@ -35,10 +35,11 @@
 - **Workflow trùng tên giữa 2 repo, chỉ 1 bản CHẠY THẬT.** `mq-vx-lab/.github/workflows/{publish,cleanup,publish_social,stats}.yml` (public runner, checkout code private lúc chạy) mới là bản có cron LIVE. Bản y hệt ở `mm0-auto-publisher/.github/workflows/` đã TẮT cron có chủ đích (chỉ `workflow_dispatch` để test tay, có comment "⛔ CRON ĐÃ CHUYỂN sang repo public" trong file). **Sửa env/secret của publish PHẢI sửa ở `mq-vx-lab`**, và luôn `gh run list -R braydanamilio-spec/<repo> --workflow=X.yml --limit 5` kiểm bản nào thực sự chạy gần đây trước khi tin đã xong.
 - **Round-cap rotation.** Mặc định mỗi kênh làm tối đa **10 long / 30 short** rồi nhường slot GitHub Actions matrix cho kênh khác (check SAU khi video hoàn tất, không cắt ngang) — target tổng (100L/300S) vẫn là đích, chỉ đạt dần qua nhiều phiên thay vì dồn 1 phiên. Đổi ở dashboard "🔁 Xoay vòng" hoặc `render_config.round_long/round_short` (0 = không giới hạn, về hành vi cũ).
 
-## 7. Đang làm gì (26 kênh, cập nhật khi đổi)
+## 7. Đang làm gì (30 kênh, cập nhật khi đổi)
 - **10 kênh data-race gốc** (DATARACE/STATEWARS/MONEYMOVES/POWERPLAY/GRIDIRON/SCREENKINGS/PAYCHECK/BODYUSA/RIDEUSA/EATSUSA) — target 100L/300S, ổn định lâu.
 - **5 kênh motif Wave 1** (GUESSUSA/MAPPEDUSA/RANKEDUSA/SCALEDUSA/THENNOWUSA) — short-only, engine riêng.
 - **5+6 kênh tài liệu Wave 2+3** (COSMOS/THEDEEP/WHYUSA/EMPIREUSA/UNSOLVED + GRIDUSA/RULEDUSA/VAULTUSA/LEDGERUSA/SIGNALUSA/MARGINUSA) — short-only, engine Cinematic chung, Wave 3 có guardrail chống bịa nguồn riêng (RULEDUSA/LEDGERUSA rủi ro cao nhất).
+- **4 kênh engine riêng Wave 4** (SWARMUSA/PULSEUSA/CLOCKWORKUSA/LONGSHOTUSA) — mỗi kênh 1 engine Remotion hoàn toàn mới (không dùng chung doc/motif), đã render-verify trước khi tích hợp. Chi tiết: CHANNEL_METHODS.md phần Wave 4.
 - Cơ chế đã có: round-cap rotation công bằng · chia Drive tự cân bằng 67+ kho + reservation chống tràn · chia key round-robin + đếm quota req_today · rate-limit tự chờ+đổi key · dừng-theo-clip (không cắt ngang) · dọn job ma · 2 mức cảnh báo key chết (72h/7d, phân biệt tạm/vĩnh viễn) · target/bulk-edit · dashboard 3-app router (A/B/C) · QC ảnh Vision-verify + QC kỹ thuật ffprobe sau render.
 - **Auto-publish**: có sẵn code (`auto_enqueue.py`), mặc định TẮT theo từng kênh — cần user tự Kết nối YouTube (OAuth) rồi bật nút 🟢 Auto-đăng mới chạy thật.
 - **CÒN THIẾU:** chưa có video nào render xong cho 6 kênh Wave 3 (mới seed 19/8) — cần theo dõi chất lượng đầu ra khi có. Round-cap chưa xác nhận bằng dữ liệu live phiên đầy đủ đầu tiên (code đã verify kỹ, chờ dữ liệu tự nhiên).
