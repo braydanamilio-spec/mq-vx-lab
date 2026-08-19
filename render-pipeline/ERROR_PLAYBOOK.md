@@ -57,3 +57,6 @@
 4. KHÔNG dùng lại project đã bị khoá; thay bằng project/account mới.
 5. Giữ số kênh/target hợp lý so với số key sống (dashboard hiện "ước còn ~X request").
 → Cứ để pipeline tự chia + cooldown; đừng ép burst. Thấy `🔴 Thay ngay` tăng thì bổ sung key mới (account khác).
+
+## ⛔ RULE: KHÔNG ĐỐT FIRESTORE QUOTA BẰNG TEST TAY
+KHÔNG `gh workflow run` render / health-check lặp để "test" — đốt reads → cạn 50K/ngày → pipeline đứng tới reset. Verify bằng đọc code + log run cũ, KHÔNG kích run mới. (18/8 làm thế = đốt 92K reads, cạn A.)
