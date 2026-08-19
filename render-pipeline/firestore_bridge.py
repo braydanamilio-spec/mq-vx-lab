@@ -36,6 +36,15 @@ def _db_jobs():
     return _DBJ[0]
 
 
+def _db_meta():
+    """Client cho META render (config·channels·gemini_keys·storage·topics·requests).
+    Bật cờ SHARD_META=1 (khi đã migrate sang Project B) -> đọc/ghi meta trên B (render CHỈ đụng B, cách ly A).
+    Chưa bật (mặc định) -> A như cũ (backward-compatible)."""
+    if os.environ.get("SHARD_META") == "1":
+        return _db_jobs()          # B (đã cấu hình creds B); _db_jobs tự fallback A nếu thiếu creds
+    return _db()
+
+
 def _now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -56,7 +65,7 @@ def _retry(fn, tries=5):
 def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     """Trả key CÒN DÙNG được (bỏ qua key đang cooldown do vừa bị rate-limit)."""
     def _do():
-        db = _db(); out = []; now = _now()
+        db = _db_meta(); out = []; now = _now()
         for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
             x = d.to_dict() or {}
             if not x.get("key"):
@@ -78,7 +87,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
 
 def incr_key_requests(key_id: str, n: int, today: str):
     """Cộng dồn số REQUEST hôm nay của 1 key (reset khi sang ngày mới) -> tính quota còn free trước ngưỡng."""
-    ref = _db().collection("gemini_keys").document(key_id)
+    ref = _db_meta().collection("gemini_keys").document(key_id)
     d = ref.get()
     x = (d.to_dict() or {}) if d.exists else {}
     if x.get("req_date") == today:
@@ -98,17 +107,17 @@ def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = Fals
     if alive:
         patch["dead_since"] = None                     # sống lại -> xoá mốc chết
     else:
-        cur = _db().collection("gemini_keys").document(key_id).get()
+        cur = _db_meta().collection("gemini_keys").document(key_id).get()
         if not (cur.exists and (cur.to_dict() or {}).get("dead_since")):
             patch["dead_since"] = _now()               # stamp mốc chết LẦN ĐẦU (giữ nguyên nếu đã chết từ trước)
-    _db().collection("gemini_keys").document(key_id).set(patch, merge=True)
+    _db_meta().collection("gemini_keys").document(key_id).set(patch, merge=True)
 
 
 def cool_key(key_id: str, minutes: int = 90):
     """Đánh dấu key nghỉ N phút sau khi bị 429/quota (chống hammer -> chống die)."""
     from datetime import timedelta
     until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
-    _db().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
+    _db_meta().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
 
 
 def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
@@ -117,14 +126,14 @@ def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
     patch = {"used": int(used or 0), "used_synced_at": _now()}
     if cap_gb:
         patch["cap_gb"] = cap_gb
-    _db().collection("storage_accounts").document(f"{owner}__{name}").set(patch, merge=True)
+    _db_meta().collection("storage_accounts").document(f"{owner}__{name}").set(patch, merge=True)
 
 
 def drive_usage(owner: str):
     """Tổng dung lượng ĐÃ DÙNG / SỨC CHỨA của mọi kho Drive (bytes) -> guard 'kho gần đầy' trước khi render."""
     used = cap = 0
     try:
-        for d in _db().collection("storage_accounts").where("owner", "==", owner).stream():
+        for d in _db_meta().collection("storage_accounts").where("owner", "==", owner).stream():
             x = d.to_dict() or {}
             used += (x.get("used", 0) or 0)
             cap += (x.get("cap_gb", 15) or 15) * 1_000_000_000
@@ -135,7 +144,7 @@ def drive_usage(owner: str):
 
 def read_channels(owner: str) -> list[dict]:
     def _do():
-        db = _db(); out = []
+        db = _db_meta(); out = []
         for d in db.collection("render_channels").where("owner", "==", owner).stream():
             x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
         return out
@@ -145,7 +154,7 @@ def read_channels(owner: str) -> list[dict]:
 def read_one_channel(owner: str, name: str) -> dict | None:
     """Đọc ĐÚNG 1 kênh theo tên (1 read) — dùng trong vòng lặp render để check pause/target mà KHÔNG đọc cả 15 kênh."""
     def _do():
-        q = (_db().collection("render_channels").where("owner", "==", owner)
+        q = (_db_meta().collection("render_channels").where("owner", "==", owner)
              .where("name", "==", name).limit(1).stream())
         for d in q:
             x = d.to_dict() or {}; x["id"] = d.id; return x
@@ -158,14 +167,14 @@ def read_one_channel(owner: str, name: str) -> dict | None:
 
 def read_config(owner: str) -> dict:
     def _do():
-        d = _db().collection("render_config").document(owner).get()
+        d = _db_meta().collection("render_config").document(owner).get()
         return (d.to_dict() or {}) if d.exists else {}
     return _retry(_do)
 
 
 def read_render_requests(owner: str) -> list[dict]:
     """Yêu cầu RENDER LẠI (từ nút 🔄 trên dashboard) đang chờ xử lý."""
-    db = _db(); out = []
+    db = _db_meta(); out = []
     for d in db.collection("render_requests").where("owner", "==", owner).where("status", "==", "pending").stream():
         x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
     return out
@@ -184,27 +193,27 @@ def delete_jobs_by_drive(owner: str, drive_id: str):
 
 def mark_request_status(req_id: str, status: str):
     """processing = đã bắt đầu render lại -> dashboard KHÓA nút hủy."""
-    _db().collection("render_requests").document(req_id).set({"status": status, "started_at": _now()}, merge=True)
+    _db_meta().collection("render_requests").document(req_id).set({"status": status, "started_at": _now()}, merge=True)
 
 
 def mark_request_done(req_id: str, note: str = "done"):
-    _db().collection("render_requests").document(req_id).set({"status": "done", "note": note, "done_at": _now()}, merge=True)
+    _db_meta().collection("render_requests").document(req_id).set({"status": "done", "note": note, "done_at": _now()}, merge=True)
 
 
 def set_config(owner: str, patch: dict):
     """Ghi/merge render_config (vd xoá cờ run_now sau khi đã nhận lệnh)."""
-    _retry(lambda: _db().collection("render_config").document(owner).set(patch, merge=True))
+    _retry(lambda: _db_meta().collection("render_config").document(owner).set(patch, merge=True))
 
 
 def recent_topics(owner: str, channel: str, n: int = 80) -> list[str]:
     """Chủ đề ĐÃ dùng cho kênh -> đưa cho Gemini để TRÁNH trùng (chống 'reused content')."""
-    d = _db().collection("render_topics").document(f"{owner}__{channel}").get()
+    d = _db_meta().collection("render_topics").document(f"{owner}__{channel}").get()
     return (((d.to_dict() or {}).get("topics") or [])[-n:]) if d.exists else []
 
 
 def save_topics(owner: str, channel: str, topics: list[str]):
     """Lưu chủ đề vừa dùng (cap 300 gần nhất)."""
-    ref = _db().collection("render_topics").document(f"{owner}__{channel}")
+    ref = _db_meta().collection("render_topics").document(f"{owner}__{channel}")
     d = ref.get()
     cur = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
     cur = (cur + [t for t in topics if t])[-300:]
