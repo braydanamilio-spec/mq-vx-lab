@@ -146,6 +146,14 @@ Cảm hứng từ 1 hệ "epistemic-grammar" channel khác (dream-motion, agent 
 - **Playlist tự động** (19/8, kích hoạt): mỗi video upload qua `publish_yt_queue.py` tự vào playlist **"Long Videos"** hoặc **"Shorts"** (theo `type`), tạo/tìm ngay trong ĐÚNG kênh đang upload (mỗi kênh OAuth riêng → không thể lẫn playlist chéo kênh dù trùng tên). `_ensure_playlist()` tìm theo tên trước, không tạo trùng. Lỗi playlist (nếu có) KHÔNG làm hỏng upload (try/except riêng).
 - ⛔ **End Screen (subscribe + video liên quan cuối clip) — CHỦ ĐỘNG KHÔNG LÀM** (quyết định của user 19/8): cho là gây nhàm chán, dễ khiến người xem thoát. Đừng đề xuất lại trừ khi user chủ động hỏi.
 
+## 💾 LƯU KỊCH BẢN CHI TIẾT (đề phòng sự cố, 19/8)
+- Mỗi video lúc `status="done"` được ghi kèm field **`script`** (JSON, `_script_json()` trong `run_render.py`) vào **Firestore project B** (`render_jobs`) — CHỦ ĐỘNG tách khỏi Drive, vì lý do đúng: nếu 1 tài khoản Drive bị khoá TRƯỚC KHI video kịp đăng, video+sidecar trong tài khoản đó mất cùng lúc, nhưng `script` ở Firestore (hạ tầng khác) vẫn còn.
+- Short (mọi format guess/mapped/ranked/scaled/thennow/doc/wave4): `script` = toàn bộ `story` (lời thoại từng vòng/scene/item, ảnh query, self_score...) trừ `_thumb` (path tạm cục bộ, vô nghĩa sau khi xong).
+- Long (data-race pillar): `make_long()` nay trả thêm `stories` (dữ liệu ĐẦY ĐỦ từng race, trước đây bị bỏ) → `script` = `{pillar_title, hook, races: stories}`.
+- Mục đích: có sự cố (mất file/Drive) → render lại **MIỄN PHÍ + NHANH** thẳng từ `script` (TTS + Remotion) — KHÔNG cần gọi lại Gemini (đỡ tốn quota/tiền, khỏi lo trùng/lệch nội dung).
+- Chi phí: vài KB/video, cap 300KB/video phòng hờ (`_script_json` tự cắt bớt nếu quá lớn) — dư sức nằm trong 1GiB free tier của Firestore dù hàng vạn video.
+- Nhân bản FILE VIDEO (khác với lưu script) — CHƯA LÀM, để sau (quyết định user 19/8): khi làm chỉ nhân bản video CHƯA ĐĂNG (đã đăng thì YouTube đã lưu bản chính rồi, nhân bản làm gì).
+
 ## 🆕 THÊM 1 KÊNH MỚI — QUY TRÌNH ĐỒNG BỘ (RULE bắt buộc, làm ĐỦ các bước)
 > Thêm kênh KHÔNG chỉ là thêm 1 dòng — phải đồng bộ ĐỦ để "chọn là sản xuất + brand + đăng" chạy trơn.
 > Có 3 loại kênh, làm theo loại tương ứng:

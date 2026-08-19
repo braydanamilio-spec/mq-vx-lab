@@ -8,7 +8,7 @@ Env: OWNER_UID (uid chủ), GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID,
      AUTOPUBLISHER_SRC (đường dẫn tới MM0-AutoPublisher/src để enqueue). FORCE=1 để chạy dù đang tắt.
 """
 from __future__ import annotations
-import os, sys, traceback, subprocess, re, random
+import os, sys, traceback, subprocess, re, random, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import firestore_bridge as FB
 import datastory_ci as DS
@@ -44,6 +44,17 @@ def _make_thumb(video):
         return thumb if os.path.exists(thumb) else None
     except Exception as e:
         print("   ⚠️ thumbnail lỗi:", str(e)[:80]); return None
+
+
+def _script_json(d, cap=300_000):
+    """JSON kịch bản chi tiết (lời thoại/scene/số liệu) kèm vào job LÚC 'done' -> lưu ở Firestore (project B),
+    TÁCH KHỎI Drive -> nếu 1 tài khoản Drive bị khoá/mất TRƯỚC KHI đăng, kịch bản vẫn còn -> render lại
+    MIỄN PHÍ + NHANH (khỏi gọi lại Gemini). Rẻ: mỗi video vài KB, cả 1GiB free tier dư sức chứa hàng vạn video."""
+    try:
+        s = json.dumps(d, ensure_ascii=False, default=str)
+        return s[:cap] if len(s) > cap else s
+    except Exception:
+        return ""
 
 
 def enqueue_drive(channel, out, story, vtype) -> bool:
@@ -161,7 +172,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     description=story.get("description", ""), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue đăng đủ metadata
                     score=(story.get("self_score") or {}).get("total"),
                     dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
-                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1; R["done_short"] = R.get("done_short", 0) + 1
+                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+                    script=_script_json({k: v for k, v in story.items() if k != "_thumb"})); R["done"] += 1; R["done_short"] = R.get("done_short", 0) + 1
             else:
                 jst("failed", f"QC {fmt} trượt: {info}"); R["fails"].append(f"{channel} {fmt} {i}: QC trượt")
         if made_here:
@@ -191,7 +203,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 lout = os.path.join("out", DS.slug(channel) + "_long.mp4")
                 if attempt > 1:
                     lst("running", f"🔧 Tự thử lại nhẹ hơn ({nr} race)…")
-                _, plan, subtopics, ok, info = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
+                _, plan, subtopics, ok, info, stories = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
                                                             on_status=lst, on_limit=cool, avoid=avoid, n_races=nr, on_ok=okcb)
                 last_err = None; break
             except Exception as e:
@@ -211,7 +223,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
                     score=(info or {}).get("score"),
                     dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
-                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
+                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+                    script=_script_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"), "races": stories})); R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
             else:
                 lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
         except Exception as e:
@@ -255,7 +268,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 description=story.get("description", ""), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue
                 score=(story.get("self_score") or {}).get("total"),
                 dur=(sinfo or {}).get("dur", 0), size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""),
-                drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1; R["done_short"] = R.get("done_short", 0) + 1
+                drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+                script=_script_json({k: v for k, v in story.items() if k != "_thumb"})); R["done"] += 1; R["done_short"] = R.get("done_short", 0) + 1
         else:
             sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt")
     print(f"   ✅ {channel}: xong long + {min(n_shorts, len(subtopics))} short")
@@ -293,10 +307,12 @@ def process_requests(keys, report):
             st("running", f"🔄 Render lại: {seed[:40]}")
             out = os.path.join("out", DS.slug(ch) + "_rr.mp4")
             if typ == "long":
-                _, plan, _subs, ok, info = DS.make_long(ch, seed, out, keys=keys, on_status=st, on_limit=cool, n_races=4)
+                _, plan, _subs, ok, info, _stories = DS.make_long(ch, seed, out, keys=keys, on_status=st, on_limit=cool, n_races=4)
                 story = {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"), "description": plan.get("hook", "")}
+                script = _script_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"), "races": _stories})
             else:
                 _, story, ok, info = DS.make_video(ch, seed, "short", out, keys=keys, on_status=st, on_limit=cool)
+                script = _script_json({k: v for k, v in story.items() if k != "_thumb"})
             if ok:
                 eq = enqueue_drive(ch, out, story, typ)
                 did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
@@ -304,7 +320,8 @@ def process_requests(keys, report):
                 FB.delete_jobs_by_drive(OWNER, req.get("replace_id"))   # dọn job cũ (bản đã bị thay thế)
                 st("done", "Render lại xong — đã thay thế bản cũ", title=story.get("title"),
                    dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
-                   drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""))
+                   drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+                   script=script)
                 report["done"] += 1; FB.mark_request_done(req["id"], "done")
             else:
                 st("failed", f"Render lại QC trượt: {info}"); FB.mark_request_done(req["id"], "qc-trượt")

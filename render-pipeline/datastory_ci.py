@@ -852,7 +852,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     if scs:
         info["score"] = round(sum(scs) / len(scs))   # điểm QC long = TB các race -> hiện trên dashboard
     print(f"   {'✅' if ok else '❌'} QC long {info}")
-    return out, plan, subtopics, ok, info
+    return out, plan, subtopics, ok, info, stories
 
 
 def _mix_track(clips, total, out):
