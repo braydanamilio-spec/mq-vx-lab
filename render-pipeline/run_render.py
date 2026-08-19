@@ -8,7 +8,7 @@ Env: OWNER_UID (uid chủ), GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID,
      AUTOPUBLISHER_SRC (đường dẫn tới MM0-AutoPublisher/src để enqueue). FORCE=1 để chạy dù đang tắt.
 """
 from __future__ import annotations
-import os, sys, traceback, subprocess, re
+import os, sys, traceback, subprocess, re, random
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import firestore_bridge as FB
 import datastory_ci as DS
@@ -580,6 +580,10 @@ def plan_mode():
         traceback.print_exc()
     all_ch = [c for c in FB.read_channels(OWNER) if c.get("name")]
     channels = [c["name"] for c in all_ch if not c.get("paused")]   # ⏸ kênh PAUSE -> KHÔNG vào matrix (không làm mẻ mới)
+    # XÁO THỨ TỰ mỗi phiên: Firestore trả channels theo ID tài liệu (~alphabet cố định) -> KHÔNG xáo thì cùng nhóm
+    # đầu bảng chữ cái LUÔN vào 18 slot đầu (ưu tiên), nhóm cuối LUÔN bị đẩy xuống chờ mỗi phiên -> thiên vị có hệ
+    # thống. Xáo ngẫu nhiên -> mỗi phiên 1 nhóm khác được ưu tiên, công bằng thật sự về lâu dài.
+    random.shuffle(channels)
     n_paused = len(all_ch) - len(channels)
     print(f"▶ {len(channels)} kênh -> render SONG SONG." + (f" (⏸ {n_paused} kênh đang pause, bỏ qua)" if n_paused else ""))
     out_channels(channels)
