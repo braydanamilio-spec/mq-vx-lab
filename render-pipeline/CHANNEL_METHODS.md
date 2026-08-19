@@ -11,6 +11,18 @@
 
 Moat (bí mật) nằm ở GitHub Secret `GEMINI_SYSTEM_PROMPT` + local `PROMPT_SECRET.txt` (gitignore). KHÔNG đẩy public.
 
+## 🔀 Kiến trúc 3-project Firestore (19/8 — chống 1 project cạn quota kéo cả hệ thống đứng)
+| Project | Chứa | Ai đọc/ghi |
+|---|---|---|
+| **A** `mm0-auto-publisher` | settings/connections/channels/fb_pages/links/**gemini_keys**(nhạy cảm, cần auth)/**storage_accounts**(connect-worker chỉ biết A) | dashboard + connect-worker |
+| **B** `mm0-shard-b` | render_config/render_channels/render_topics/render_requests/render_jobs | render pipeline (`_db_meta()`/`_db_jobs()`) |
+| **C** `mm0-shard-c` | videos/counters/quota/yt_queue/social_queue | publisher (`self.pub`) |
+
+Chi tiết đầy đủ: `SHARD_SETUP.md` (B) + `SHARD_C_SETUP.md` (C). **BÀI HỌC ĐAU (đọc trước khi động vào bất kỳ collection nào):**
+- **storage_accounts PHẢI ở A** — connect-worker (Cloudflare Worker, external, KHÔNG biết B/C tồn tại) ghi trực tiếp vào A khi connect/sync/xoá kho Drive. Route sang B/C = dashboard đọc 1 nơi, Worker ghi nơi khác → nút "Đồng bộ dung lượng" bấm hoài không đổi (lỗi thật đã xảy ra 19/8, xem PIPELINE_RULES.md §7).
+- **2 REPO CÓ THỂ CÓ WORKFLOW TRÙNG TÊN — chỉ 1 bản chạy thật.** `mq-vx-lab` (public, root `.github/workflows/`) có bản sao publish.yml/cleanup.yml/publish_social.yml/stats.yml của `mm0-auto-publisher`. **Bản ở mq-vx-lab MỚI LÀ BẢN LIVE** (cron thật); bản ở mm0-auto-publisher đã tắt cron có chủ đích (chỉ workflow_dispatch để test tay — có comment "⛔ CRON ĐÃ CHUYỂN sang repo public" ngay trong file). Sửa env/secret 1 workflow → LUÔN `gh run list` kiểm bản nào thực sự có lịch sử chạy gần đây trước khi tin "sửa xong".
+- **gemini_keys tuyệt đối KHÔNG public trên B** — dù B rules mở cho render_jobs+4 collection meta khác, gemini_keys vẫn khoá vì chứa API key thật; dashboard app B không auth.
+
 ## Luồng chạy (1 dòng)
 `content_brain.py` (Gemini viết kịch bản, chuẩn ≥90) → `datastory_ci.py` (dựng data + ảnh Openverse CC0 + edge-tts karaoke) → `engine-remotion` render MP4 1080p → `run_render.py` enqueue → Drive → AutoPublisher đăng.
 
@@ -89,6 +101,24 @@ Khác Wave 1 (motif đồ họa). Dạng: narration lôi cuốn + footage/ảnh 
   - Đố người nổi tiếng/doanh nhân → **ảnh là BỐI CẢNH của họ** (trụ sở, sản phẩm, thành phố) + clue ("Bỏ học Harvard · 2.9 tỷ user"); **đáp án = TÊN dạng chữ**, không cần mặt họ. Chân dung chỉ khi có bản PD/CC chính thức.
 - **Props**: `{ title, handle, color, accent, roundSec, rounds:[{q, clue, answer, stat, img}], audio, subs, music }`. `calcGuess` tự tính độ dài. Deterministic (hash sin) → không flicker.
 
+## 🌊 WAVE 3 — 6 kênh TÀI LIỆU thêm (19/8, cùng engine Wave 2, KHÔNG engine mới)
+Cảm hứng từ 1 hệ "epistemic-grammar" channel khác (dream-motion, agent thủ công/phim — KHÔNG port nguyên quy trình vì phá vỡ tự động 24/7 của MM0). Chỉ lấy Ý TƯỞNG chủ đề + kỷ luật guardrail, giữ nguyên pipeline tự động Gemini+Cinematic.
+
+| # | Kênh | Niche | Style | Accent | Guardrail RIÊNG (chống bịa) |
+|---|---|---|---|---|---|
+| F | ⚡ GRIDUSA | Hệ thống vô hình (lưới điện, data center, chuỗi cung ứng) | technical, tense | `#64748B` | chỉ dùng fact kỹ thuật đã ghi nhận |
+| G | ⚖️ RULEDUSA | Phán quyết pháp lý bất ngờ (cà chua=rau, burrito≠sandwich) | dry, deadpan | `#E11D48` | **STRICT: chỉ case/quy định CÓ THẬT, nêu rõ toà/cơ quan+năm; không chắc thật → chọn case khác đã biết** — rủi ro cao nhất (Gemini dễ bịa case luật nghe như thật) |
+| H | 🔍 VAULTUSA | Cách chuyên gia phát hiện hàng giả/gian lận | precise, investigative | `#B45309` | chỉ phương pháp đã ghi nhận, không gán vụ việc cụ thể trừ khi nổi tiếng công khai |
+| I | 🧾 LEDGERUSA | Phí/thuế được tính ra sao | sharp, procedural | `#15803D` | **STRICT: chỉ giải thích công thức, số liệu MINH HOẠ không phải thật, không tư vấn tài chính** |
+| J | 📡 SIGNALUSA | Thuật toán quyết định tin cậy ra sao (điểm tín dụng, lọc spam) | cool, technical | `#A21CAF` | không khung âm mưu, không cáo buộc công ty cụ thể chưa kiểm chứng |
+| K | 📐 MARGINUSA | Sản xuất chính xác/dung sai kỹ thuật | tight, technical | `#1E40AF` | chỉ tiêu chuẩn ISO/ANSI thật + ví dụ lịch sử có thật |
+
+**Bài học rút ra khi build Wave 3 (ghi để không quên):**
+- **Kiểm màu accent TRÙNG trước khi seed** — lúc đầu chọn nhầm GRIDUSA trùng hệt màu EATSUSA (`#A3E635`); phải rà cả bảng 20 kênh cũ trước khi chốt màu mới, không chỉ đoán bằng mắt.
+- **KHÔNG dùng lại format `ranked`/`scaled` cho kênh thứ 2** — schema cố định (tier S/A/B/C/D hay trục kích thước) khiến 2 kênh nhìn giống hệt nhau trên feed. Wave 3 toàn bộ dùng `doc` (đã chứng minh linh hoạt qua 5 kênh, style/accent khác nhau đủ để không nhàm).
+- **`niche` field = nơi thêm guardrail** — không cần code mới, chỉ cần viết rõ ràng buộc ("STRICT: chỉ dùng case CÓ THẬT...") ngay trong text niche, Gemini đọc field này mỗi lần viết. Áp dụng khi kênh chạm chủ đề dễ bịa (luật, tài chính, y tế...).
+- **Seed idempotent, dry-run trước** (`seed_new_channels_wave3.py --dry-run` rồi bỏ cờ) — script mẫu cho các wave sau, đọc owner từ kênh mẫu sẵn có, `merge:True` an toàn chạy lại.
+
 ## 📤 AUTO-PUBLISH (đăng YouTube tự động)
 - Render xong → job lưu kèm title/description/hashtags/tags (`run_render.py`).
 - `MM0-AutoPublisher/src/auto_enqueue.py` (chạy trong `main.py` trước `publish_yt_queue`): tự đẩy video của kênh **đã bật `auto_publish`** vào `yt_queue`. **Mặc định TẮT**; dedup theo `drive_file_id`; trần ~6/ngày/kênh (chống spam).
@@ -111,11 +141,13 @@ Khác Wave 1 (motif đồ họa). Dạng: narration lôi cuốn + footage/ảnh 
 8. **Handle** `MM0-AutoPublisher/config/brands.json`: thêm entry (display/handle/accent/tagline/category/hashtags).
 9. **Deploy** dashboard (`firebase deploy --only hosting`) + **doc** (cập nhật bảng kênh + file NÀY).
 
-### Loại B — Kênh TÀI LIỆU mới (Wave 2, dùng chung engine Cinematic) — NHANH
+### Loại B — Kênh TÀI LIỆU mới (Wave 2/3, dùng chung engine Cinematic) — NHANH
 KHÔNG cần engine/brand/brain mới. Chỉ:
 1. `RS_PRESETS`: `{name, fmt:"doc", accent, accent2, style, niche}`.
 2. `RS_BRANDS` + `.cat` + `brands.json` (handle/accent/tagline).
 3. `Root.tsx`: thêm 1 dòng vào mảng `BrandDoc` (id/name/emoji/accent). Deploy + doc.
+4. **⚠️ KIỂM MÀU TRÙNG** trước khi chốt accent — rà cả bảng kênh cũ (giống bài học Wave 3 GRIDUSA).
+5. **⚠️ Chủ đề dễ bịa (luật/tài chính/y tế/kỹ thuật cụ thể)?** → viết guardrail thẳng vào `niche` (vd "STRICT: chỉ dùng case/số liệu CÓ THẬT, nêu nguồn"). Xem mẫu Wave 3 RULEDUSA/LEDGERUSA.
 → Đã có `generate_doc`/`make_doc` + dispatch `format="doc"` lo hết.
 
 ### Loại C — Kênh DATA-RACE mới (engine bar-race có sẵn)
