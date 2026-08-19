@@ -65,7 +65,7 @@ def _retry(fn, tries=5):
 def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     """Trả key CÒN DÙNG được (bỏ qua key đang cooldown do vừa bị rate-limit)."""
     def _do():
-        db = _db_meta(); out = []; now = _now()
+        db = _db(); out = []; now = _now()
         for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
             x = d.to_dict() or {}
             if not x.get("key"):
@@ -87,7 +87,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
 
 def incr_key_requests(key_id: str, n: int, today: str):
     """Cộng dồn số REQUEST hôm nay của 1 key (reset khi sang ngày mới) -> tính quota còn free trước ngưỡng."""
-    ref = _db_meta().collection("gemini_keys").document(key_id)
+    ref = _db().collection("gemini_keys").document(key_id)
     d = ref.get()
     x = (d.to_dict() or {}) if d.exists else {}
     if x.get("req_date") == today:
@@ -107,17 +107,17 @@ def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = Fals
     if alive:
         patch["dead_since"] = None                     # sống lại -> xoá mốc chết
     else:
-        cur = _db_meta().collection("gemini_keys").document(key_id).get()
+        cur = _db().collection("gemini_keys").document(key_id).get()
         if not (cur.exists and (cur.to_dict() or {}).get("dead_since")):
             patch["dead_since"] = _now()               # stamp mốc chết LẦN ĐẦU (giữ nguyên nếu đã chết từ trước)
-    _db_meta().collection("gemini_keys").document(key_id).set(patch, merge=True)
+    _db().collection("gemini_keys").document(key_id).set(patch, merge=True)
 
 
 def cool_key(key_id: str, minutes: int = 90):
     """Đánh dấu key nghỉ N phút sau khi bị 429/quota (chống hammer -> chống die)."""
     from datetime import timedelta
     until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
-    _db_meta().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
+    _db().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
 
 
 def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
