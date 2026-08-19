@@ -26,6 +26,17 @@ def _is_image(b: bytes) -> bool:
             or b[:4] == b"GIF8" or (b[:4] == b"RIFF" and b[8:12] == b"WEBP"))
 
 
+def _ckpt_json(d, cap=300_000):
+    """CHECKPOINT: JSON kịch bản (giống _script_json bên run_render.py) — lưu NGAY khi Gemini viết xong,
+    TRƯỚC bước render tốn thời gian nhất. Nếu phiên bị huỷ/treo/lỗi ngay sau đó, kịch bản đã lưu -> phiên
+    SAU dùng lại được (khỏi gọi Gemini lại, khỏi tốn quota, khỏi đổi nội dung/chủ đề đã lưu vào ngân hàng)."""
+    try:
+        s = json.dumps(d, ensure_ascii=False, default=str)
+        return s[:cap] if len(s) > cap else s
+    except Exception:
+        return ""
+
+
 def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image") -> bool:
     """DỰ PHÒNG khi Openverse KHÔNG có ảnh CC0 khớp: nhờ Gemini VẼ ảnh minh hoạ (Nano Banana).
     Quota TÁCH RIÊNG khỏi quota viết kịch bản (model khác nhau) -> dùng thoải mái, không đụng key đang
@@ -245,9 +256,10 @@ def qc(mp4):
     return ok, {"dur": round(dur, 1), "audio": ach == "audio", "res": wh, "size_mb": size_mb}
 
 
-def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None, on_status=None, on_limit=None, on_ok=None):
+def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """keys: list [{id,key,email}] (production, từ Firestore); None -> dùng GEMINI_API_KEY env (local).
-    on_status(status, step, **extra): ghi trạng thái realtime. on_limit(key_id): cho key nghỉ khi limit."""
+    on_status(status, step, **extra): ghi trạng thái realtime. on_limit(key_id): cho key nghỉ khi limit.
+    resume_story: kịch bản ĐÃ CÓ (checkpoint từ phiên trước bị huỷ/lỗi) -> dùng lại, bỏ qua gọi Gemini."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)   # QUAN TRỌNG: render chạy cwd=ENG -> phải tuyệt đối, nếu không file lạc chỗ (QC/enqueue tìm không ra -> 0 giây)
     print(f"▶ {channel} [{vtype}] seed={seed!r}")
@@ -256,10 +268,13 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
         if not (api_key or os.environ.get("GEMINI_API_KEY")):
             raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
         keys = [{"id": "env", "key": api_key or os.environ["GEMINI_API_KEY"], "email": "local"}]
-    st("writing", "Gemini viết kịch bản")
-    story = KM.write_story(channel, keys, seed, vtype, tier, on_limit=on_limit, on_ok=on_ok)   # bám key theo kênh, limit -> nghỉ + đổi
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", "Gemini viết kịch bản")
+        story = KM.write_story(channel, keys, seed, vtype, tier, on_limit=on_limit, on_ok=on_ok)   # bám key theo kênh, limit -> nghỉ + đổi
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + ảnh + render", title=story.get("title"), score=score)
+    st("rendering", "Giọng + ảnh + render", title=story.get("title"), score=score, script=_ckpt_json(story))
     sdir = os.path.join(PUB, "narration", "_ci_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     comp = "RaceLongV" if vtype == "short" else "RaceLong"
     props = build_props(story, sdir, vtype == "short", handle=channel_handle(channel))
@@ -316,7 +331,7 @@ def build_mapped_props(story, sdir, handle="@mappedusa", music="music/km_ascendi
 
 
 def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
-                avoid=None, on_status=None, on_limit=None, on_ok=None):
+                avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH #2 MAPPED A-Z: Gemini sinh metric+số liệu bang THẬT -> giọng -> render MappedShort -> QC + thumb.
     Trả (out, story, ok, info)."""
     st = on_status or (lambda *a, **k: None)
@@ -325,10 +340,13 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    st("writing", f"Gemini soạn bản đồ ({niche})")
-    story = KM.write_mapped(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", f"Gemini soạn bản đồ ({niche})")
+        story = KM.write_mapped(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + render bản đồ", title=story.get("title_yt") or story.get("title"), score=score)
+    st("rendering", "Giọng + render bản đồ", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     sdir = os.path.join(PUB, "narration", "_mapped_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     props = build_mapped_props(story, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_mapped_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
@@ -378,7 +396,7 @@ def build_ranked_props(story, sdir, handle="@rankedusa", music="music/km_ascendi
 
 
 def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
-                avoid=None, on_status=None, on_limit=None, on_ok=None):
+                avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH #3 RANKED A-Z: Gemini sinh tier list (tiêu chí + số liệu thật) -> giọng -> render RankedShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -386,10 +404,13 @@ def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    st("writing", f"Gemini xếp hạng ({niche})")
-    story = KM.write_ranked(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", f"Gemini xếp hạng ({niche})")
+        story = KM.write_ranked(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + render tier list", title=story.get("title_yt") or story.get("title"), score=score)
+    st("rendering", "Giọng + render tier list", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     sdir = os.path.join(PUB, "narration", "_ranked_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     props = build_ranked_props(story, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_ranked_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
@@ -440,7 +461,7 @@ def build_scaled_props(story, sdir, handle="@scaledusa", music="music/km_ascendi
 
 
 def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
-                avoid=None, on_status=None, on_limit=None, on_ok=None):
+                avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH #4 SCALED A-Z: Gemini sinh so sánh kích thước (đo thật + emoji) -> giọng -> render ScaledShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -448,10 +469,13 @@ def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    st("writing", f"Gemini so sánh kích thước ({niche})")
-    story = KM.write_scaled(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", f"Gemini so sánh kích thước ({niche})")
+        story = KM.write_scaled(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + render so sánh", title=story.get("title_yt") or story.get("title"), score=score)
+    st("rendering", "Giọng + render so sánh", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     sdir = os.path.join(PUB, "narration", "_scaled_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     props = build_scaled_props(story, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_scaled_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
@@ -502,7 +526,7 @@ def build_thennow_props(story, sdir, handle="@thennowusa", music="music/km_ossua
 
 
 def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
-                 avoid=None, on_status=None, on_limit=None, on_ok=None):
+                 avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH #5 THEN×NOW A-Z: Gemini sinh so sánh xưa/nay (giá trị thật) -> giọng -> render ThenNowShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -510,10 +534,13 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    st("writing", f"Gemini so sánh xưa/nay ({niche})")
-    story = KM.write_thennow(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", f"Gemini so sánh xưa/nay ({niche})")
+        story = KM.write_thennow(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + render xưa/nay", title=story.get("title_yt") or story.get("title"), score=score)
+    st("rendering", "Giọng + render xưa/nay", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     sdir = os.path.join(PUB, "narration", "_thennow_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     props = build_thennow_props(story, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_thennow_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
@@ -572,7 +599,7 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
 
 def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style="awe, cinematic",
              imgsrc=None, accent="#22D3EE", accent2="#F5B301", avoid=None,
-             on_status=None, on_limit=None, on_ok=None):
+             on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """WAVE 2 A-Z: Gemini viết tài liệu -> giọng + ảnh CC0 (Vision verify) -> render Cinematic -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -580,10 +607,13 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    st("writing", f"Gemini viết tài liệu ({niche})")
-    story = KM.write_doc(channel, keys, niche, style, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", f"Gemini viết tài liệu ({niche})")
+        story = KM.write_doc(channel, keys, niche, style, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + ảnh + render điện ảnh", title=story.get("title_yt") or story.get("title"), score=score)
+    st("rendering", "Giọng + ảnh + render điện ảnh", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     props = build_doc_props(story, channel, imgsrc=imgsrc, api_key=keys[0]["key"],
                             accent=accent, accent2=accent2, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
@@ -625,7 +655,7 @@ def build_swarm_props(story, sdir, handle="@swarmusa", accent="#0D9488", music="
 
 
 def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
-               accent="#0D9488", avoid=None, on_status=None, on_limit=None, on_ok=None):
+               accent="#0D9488", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH SWARM A-Z: Gemini sinh mật độ/số lượng thật -> giọng -> render SwarmShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -633,10 +663,13 @@ def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    st("writing", f"Gemini tính mật độ/số lượng ({niche})")
-    story = KM.write_swarm(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", f"Gemini tính mật độ/số lượng ({niche})")
+        story = KM.write_swarm(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + render hạt", title=story.get("title_yt") or story.get("title"), score=score)
+    st("rendering", "Giọng + render hạt", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     sdir = os.path.join(PUB, "narration", "_swarm_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     props = build_swarm_props(story, sdir, handle=channel_handle(channel), accent=accent)
     pf = os.path.join(PUB, f"_swarm_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
@@ -686,7 +719,7 @@ def build_pulse_props(story, sdir, handle="@pulseusa", accent="#EA580C", music="
 
 
 def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
-              accent="#EA580C", avoid=None, on_status=None, on_limit=None, on_ok=None):
+              accent="#EA580C", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH PULSE A-Z: Gemini sinh cường độ giác quan thật -> giọng -> render PulseShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -694,10 +727,13 @@ def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    st("writing", f"Gemini so sánh cường độ ({niche})")
-    story = KM.write_pulse(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", f"Gemini so sánh cường độ ({niche})")
+        story = KM.write_pulse(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + render gauge", title=story.get("title_yt") or story.get("title"), score=score)
+    st("rendering", "Giọng + render gauge", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     sdir = os.path.join(PUB, "narration", "_pulse_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     props = build_pulse_props(story, sdir, handle=channel_handle(channel), accent=accent)
     pf = os.path.join(PUB, f"_pulse_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
@@ -751,7 +787,7 @@ def build_clockwork_props(story, sdir, handle="@clockworkusa", accent="#C2410C",
 
 
 def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
-                   accent="#C2410C", avoid=None, on_status=None, on_limit=None, on_ok=None):
+                   accent="#C2410C", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH CLOCKWORK A-Z: Gemini nén thời gian thật -> giọng -> render ClockworkShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -759,10 +795,13 @@ def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    st("writing", f"Gemini nén thời gian ({niche})")
-    story = KM.write_clockwork(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", f"Gemini nén thời gian ({niche})")
+        story = KM.write_clockwork(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + render đồng hồ", title=story.get("title_yt") or story.get("title"), score=score)
+    st("rendering", "Giọng + render đồng hồ", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     sdir = os.path.join(PUB, "narration", "_clockwork_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     props = build_clockwork_props(story, sdir, handle=channel_handle(channel), accent=accent)
     pf = os.path.join(PUB, f"_clockwork_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
@@ -811,7 +850,7 @@ def build_longshot_props(story, sdir, handle="@longshotusa", accent="#4F46E5", m
 
 
 def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
-                  accent="#4F46E5", avoid=None, on_status=None, on_limit=None, on_ok=None):
+                  accent="#4F46E5", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH LONGSHOT A-Z: Gemini sinh xác suất thật -> giọng -> render LongshotShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -819,10 +858,13 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    st("writing", f"Gemini tính xác suất thật ({niche})")
-    story = KM.write_longshot(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", f"Gemini tính xác suất thật ({niche})")
+        story = KM.write_longshot(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + render tháp xác suất", title=story.get("title_yt") or story.get("title"), score=score)
+    st("rendering", "Giọng + render tháp xác suất", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     sdir = os.path.join(PUB, "narration", "_longshot_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     props = build_longshot_props(story, sdir, handle=channel_handle(channel), accent=accent)
     pf = os.path.join(PUB, f"_longshot_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
@@ -847,28 +889,38 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
 
 
 def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
-              on_status=None, on_limit=None, n_races=6, avoid=None, on_ok=None):
-    """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info)."""
+              on_status=None, on_limit=None, n_races=6, avoid=None, on_ok=None, resume_checkpoint=None):
+    """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info, stories).
+    resume_checkpoint: {"pillar_title","hook","races":[...]} ĐÃ CÓ (checkpoint phiên trước bị huỷ/lỗi lúc
+    render) -> dùng lại, bỏ qua gọi Gemini lập pillar + viết lại từng race."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)   # QUAN TRỌNG: render cwd=ENG -> path tuyệt đối (nếu không QC/enqueue tìm không ra file -> 0 giây)
     import key_manager as KM
     import content_brain as CB
     keys = keys or [{"id": "env", "key": api_key or os.environ["GEMINI_API_KEY"], "email": "local"}]
-    st("writing", "Lập pillar (chủ đề con)")
-    k0 = KM.key_order(channel, keys)[0]
-    plan = CB.plan_pillar(niche, n_races, api_key=k0["key"], model_name=KM.model_for(tier), avoid=avoid)
-    subtopics = plan.get("subtopics", [])[:n_races]
     sdir = os.path.join(PUB, "narration", "_long_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
-    stories = []
-    for i, sub in enumerate(subtopics):
-        st("writing", f"Viết race {i+1}/{len(subtopics)}: {sub[:28]}")
-        try:
-            stories.append(KM.write_story(channel, keys, sub, "long", tier, on_limit=on_limit, on_ok=on_ok))
-        except Exception as e:
-            print(f"   ⚠️ bỏ race '{sub[:30]}': {e}")
-    if len(stories) < 2:
-        raise Exception("Long cần ≥2 race hợp lệ.")   # Exception (không SystemExit) -> retry/loop bắt được, không giết cả mẻ
-    st("rendering", f"Render long ({len(stories)} race)", title=plan.get("pillar_title"))
+    if resume_checkpoint and (resume_checkpoint.get("races") or []):
+        st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+        stories = resume_checkpoint["races"]
+        subtopics = [s.get("topic") or s.get("title") for s in stories if (s.get("topic") or s.get("title"))]
+        plan = {"pillar_title": resume_checkpoint.get("pillar_title"), "hook": resume_checkpoint.get("hook"),
+                "subtopics": subtopics}
+    else:
+        st("writing", "Lập pillar (chủ đề con)")
+        k0 = KM.key_order(channel, keys)[0]
+        plan = CB.plan_pillar(niche, n_races, api_key=k0["key"], model_name=KM.model_for(tier), avoid=avoid)
+        subtopics = plan.get("subtopics", [])[:n_races]
+        stories = []
+        for i, sub in enumerate(subtopics):
+            st("writing", f"Viết race {i+1}/{len(subtopics)}: {sub[:28]}")
+            try:
+                stories.append(KM.write_story(channel, keys, sub, "long", tier, on_limit=on_limit, on_ok=on_ok))
+            except Exception as e:
+                print(f"   ⚠️ bỏ race '{sub[:30]}': {e}")
+        if len(stories) < 2:
+            raise Exception("Long cần ≥2 race hợp lệ.")   # Exception (không SystemExit) -> retry/loop bắt được, không giết cả mẻ
+    st("rendering", f"Render long ({len(stories)} race)", title=plan.get("pillar_title"),
+       script=_ckpt_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"), "races": stories}))
     props = build_long_props(stories, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_long_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render RaceLong ({len(stories)} race) …")
@@ -961,7 +1013,7 @@ def build_guess_props(story, sdir, handle="@guessdaily", music="music/km_ascendi
 
 
 def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n_rounds=3,
-               avoid=None, on_status=None, on_limit=None, on_ok=None):
+               avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH #1 GUESS A-Z: Gemini sinh câu đố (logic + khớp ảnh) -> giọng + ảnh + SFX -> render GuessShort -> QC + thumb.
     Trả (out, story, ok, info)."""
     st = on_status or (lambda *a, **k: None)
@@ -970,10 +1022,13 @@ def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    st("writing", f"Gemini soạn câu đố ({category})")
-    story = KM.write_guess(channel, keys, category, n_rounds, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
+    else:
+        st("writing", f"Gemini soạn câu đố ({category})")
+        story = KM.write_guess(channel, keys, category, n_rounds, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     score = (story.get("self_score") or {}).get("total")
-    st("rendering", "Giọng + ảnh + SFX + render", title=story.get("title_yt"), score=score)
+    st("rendering", "Giọng + ảnh + SFX + render", title=story.get("title_yt"), score=score, script=_ckpt_json(story))
     sdir = os.path.join(PUB, "narration", "_guess_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     props = build_guess_props(story, sdir, handle=channel_handle(channel), api_key=keys[0]["key"])
     pf = os.path.join(PUB, f"_guess_{slug(channel)}.json"); json.dump(props, open(pf, "w"))

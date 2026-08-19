@@ -161,6 +161,22 @@ Cảm hứng từ 1 hệ "epistemic-grammar" channel khác (dream-motion, agent 
 - Đã nối vào GUESSUSA (`build_guess_props`) và mọi kênh doc-format Wave2/3 (`build_doc_props`). DATA RACE (`_race_from_story`) CHƯA nối (đang tự lùi về "dùng lại ảnh cảnh trước" khi thiếu, ít ưu tiên hơn).
 - Lỗi/hết quota/an toàn nội dung → `_generate_image_ai()` trả False, KHÔNG BAO GIỜ crash pipeline, tự lùi về fallback cũ.
 
+## 🩺 HEALTH GUARDIAN — tự canh + tự chữa mỗi giờ (19/8)
+- File mới: `render-pipeline/health_guardian.py` + `.github/workflows/health_guardian.yml` (cron mỗi giờ phút 07).
+- **Tự chữa**: job render "treo" (status queued/running/writing/rendering/qc) quá `STALE_HOURS` (mặc định 6h) → tự đánh dấu `failed`. Trước đây việc này CHỈ chạy bằng JavaScript phía dashboard (JS trong `index.html`, cần MỞ trình duyệt mới chạy) → không ai mở dashboard = job treo mãi = `has_active_render()` coi cổng còn "đang chạy" **VÔ THỜI HẠN** → chặn hết mọi phiên render mới. Đây LÀ nguyên nhân sự cố thật đêm 19/8 (EATSUSA treo gần 3h, kéo theo 26 job cũ khác kẹt sẵn từ trước, video ngừng tăng nhiều giờ).
+- **Cảnh báo thật**: 12h liền không có video "done" nào dù render đang bật → `sys.exit(1)` → GitHub TỰ GỬI EMAIL cho chủ repo (free có sẵn, không cần dịch vụ thông báo ngoài nào).
+- **Can thiệp khẩn cấp**: `workflow_dispatch` có input `stale_hours` (đọc qua env `STALE_HOURS_OVERRIDE`) → chạy tay với ngưỡng thấp (vd 1h) để dọn NGAY, không đợi đủ 6h. Lệnh: `gh workflow run health_guardian.yml -f stale_hours=1`.
+- **Bài học rút ra cùng đêm đó**: `render_cron.yml` là workflow production DUY NHẤT thiếu khoá `concurrency` (mọi workflow khác đều có) → đã thêm `concurrency: { group: mm0-render-cron, cancel-in-progress: false }`. Lượt trigger mới giờ XẾP HÀNG thay vì chạy chồng.
+
+## ♻️ CHECKPOINT/RESUME — không render lại từ đầu khi bị huỷ/treo (19/8)
+- Vấn đề: trước đây bất kỳ job nào bị huỷ (mất mạng, GitHub kill, `gh run cancel`) hay lỗi giữa chừng đều MẤT SẠCH — kể cả khi Gemini đã viết XONG kịch bản (bước tốn quota nhất), phiên sau phải viết lại từ đầu.
+- Fix: MỌI hàm `make_X()` (12 hàm: video/mapped/ranked/scaled/thennow/doc/swarm/pulse/clockwork/longshot/guess/long) giờ:
+  1. Ngay khi Gemini viết xong kịch bản (TRƯỚC bước render tốn thời gian nhất) → tự ghi checkpoint vào field `script` của job (qua `on_status`/`st("rendering", ..., script=_ckpt_json(story))`) — TÁI DÙNG đúng cơ chế lưu kịch bản đã có, không thêm hạ tầng mới.
+  2. Nhận thêm tham số `resume_story=` (hoặc `resume_checkpoint=` cho `make_long`) — có truyền vào thì BỎ QUA gọi Gemini, dùng thẳng kịch bản cũ.
+- `firestore_bridge.py` thêm `find_resumable(owner, channel, vtype)` (tìm job **status="failed"** gần nhất còn `script` — CHỈ lấy job đã chắc chắn không ai xử lý, an toàn tuyệt đối, không đụng job đang chạy thật) và `clear_resumed(job_id)` (dùng xong 1 lần thì xoá, tránh lặp lại kịch bản lỗi vô hạn).
+- `run_render.py`: mỗi nhánh (short/motif/wave4, long, short-từ-subtopics) gọi `find_resumable()` 1 lần trước vòng lặp, dùng cho **video đầu tiên** rồi tiêu ngay; thử lại lần 2 trong cùng phiên (self-heal) KHÔNG dùng lại checkpoint (lỗi có thể do chính kịch bản đó).
+- Kết hợp với Health Guardian: job treo → Health Guardian đánh dấu `failed` (giữ nguyên `script`) → phiên render TIẾP THEO tự động nhặt lại, không tốn quota Gemini viết lại, không lệch/trùng chủ đề.
+
 ## 🆕 THÊM 1 KÊNH MỚI — QUY TRÌNH ĐỒNG BỘ (RULE bắt buộc, làm ĐỦ các bước)
 > Thêm kênh KHÔNG chỉ là thêm 1 dòng — phải đồng bộ ĐỦ để "chọn là sản xuất + brand + đăng" chạy trơn.
 > Có 3 loại kênh, làm theo loại tương ứng:

@@ -128,6 +128,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                       # dashboard tự set cho brand kit), KHÔNG phải gợi ý chủ đề. Đụng nhầm = Gemini nhận "24" làm niche.
         avoid = FB.recent_topics(OWNER, channel)
         made_here = []
+        resumed = FB.find_resumable(OWNER, channel, "short")   # CHECKPOINT: job cũ lỗi/treo nhưng còn kịch bản -> dùng lại 1 lần
         for i in range(n):
             if _stopped():
                 print(f"   ⛔ {channel}: dừng — bỏ {n - i} clip còn lại."); break
@@ -135,28 +136,31 @@ def run_one(ch, keys, n_shorts=3, report=None):
             jst = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
             out = os.path.join("out", DS.slug(channel) + f"_{fmt}{i}.mp4")
             story = ok = info = None; err = None
+            resume_story = (resumed or {}).get("story")   # chỉ dùng cho clip ĐẦU (i=0) rồi tiêu luôn, clip sau viết mới bình thường
             for att in (1, 2):
                 try:
-                    if att > 1: jst("running", f"🔧 Tự thử lại {fmt}…")
+                    if att > 1: jst("running", f"🔧 Tự thử lại {fmt}…"); resume_story = None   # thử lại lần 2 -> KHÔNG dùng lại kịch bản resume (lỗi có thể do chính nó)
                     if fmt == "doc":     # Wave 2 tài liệu: truyền style/accent riêng của kênh
                         _, story, ok, info = DS.make_doc(channel, cat, out, keys=keys, tier=tier,
                                                          style=ch.get("style", "awe, cinematic"),
                                                          accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"),
-                                                         avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb)
+                                                         avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
                     elif fmt in ("swarm", "pulse", "clockwork", "longshot"):   # Wave 4: 1 accent riêng/kênh, không style/accent2
                         mk4 = {"swarm": DS.make_swarm, "pulse": DS.make_pulse,
                                "clockwork": DS.make_clockwork, "longshot": DS.make_longshot}[fmt]
                         _defacc = {"swarm": "#0D9488", "pulse": "#EA580C", "clockwork": "#C2410C", "longshot": "#4F46E5"}[fmt]
                         _, story, ok, info = mk4(channel, cat, out, keys=keys, tier=tier, accent=ch.get("accent", _defacc),
-                                                 avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb)
+                                                 avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
                     else:
                         mk = {"guess": DS.make_guess, "mapped": DS.make_mapped, "ranked": DS.make_ranked,
                               "scaled": DS.make_scaled, "thennow": DS.make_thennow}[fmt]
                         _, story, ok, info = mk(channel, cat, out, keys=keys, tier=tier,
-                                                avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb)
+                                                avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
                     err = None; break
                 except Exception as e:
                     err = e; traceback.print_exc(); print(f"   🔧 {fmt.upper()} {channel}#{i} lỗi lần {att}: {str(e)[:100]}")
+            if resumed:   # dù ok hay lỗi -> đã THỬ dùng checkpoint này rồi, không đưa cho clip kế/phiên sau nữa (tránh lặp vô hạn 1 kịch bản lỗi)
+                FB.clear_resumed(resumed["job_id"]); resumed = None
             if err is not None and _is_ratelimit(err):
                 jst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1
             elif err is not None:
@@ -197,18 +201,25 @@ def run_one(ch, keys, n_shorts=3, report=None):
         ljob = FB.new_job(OWNER, channel, "long", pver=PVER)
         lst = lambda s, step, **x: FB.update_job(ljob, status=s, step=step, **x)
         plan = ok = info = None; last_err = None
+        resumed_long = FB.find_resumable(OWNER, channel, "long")   # CHECKPOINT: phiên trước lỗi/treo nhưng còn kịch bản
         for attempt, nr in enumerate([4, 2], start=1):
             try:
                 avoid = FB.recent_topics(OWNER, channel)      # chủ đề đã dùng -> tránh trùng
                 lout = os.path.join("out", DS.slug(channel) + "_long.mp4")
-                if attempt > 1:
+                rck = None
+                if attempt == 1 and resumed_long:
+                    rck = resumed_long["story"]   # chỉ dùng lần 1; lần 2 (thử nhẹ hơn) viết mới bình thường
+                elif attempt > 1:
                     lst("running", f"🔧 Tự thử lại nhẹ hơn ({nr} race)…")
                 _, plan, subtopics, ok, info, stories = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
-                                                            on_status=lst, on_limit=cool, avoid=avoid, n_races=nr, on_ok=okcb)
+                                                            on_status=lst, on_limit=cool, avoid=avoid, n_races=nr, on_ok=okcb,
+                                                            resume_checkpoint=rck)
                 last_err = None; break
             except Exception as e:
                 last_err = e; traceback.print_exc()
                 print(f"   🔧 LONG {channel} lỗi lần {attempt} ({nr} race): {str(e)[:120]}")
+        if resumed_long:
+            FB.clear_resumed(resumed_long["job_id"])
         try:
             if subtopics:
                 FB.save_topics(OWNER, channel, subtopics)     # ghi vào ngân hàng chủ đề
@@ -242,21 +253,25 @@ def run_one(ch, keys, n_shorts=3, report=None):
         except Exception as e:
             traceback.print_exc(); R["fails"].append(f"{channel} PLAN: {str(e)[:100]}")
     # ---- SHORTS (viết LẠI cho 9:16 từ 2-3 chủ đề con) ----
+    resumed_short = FB.find_resumable(OWNER, channel, "short")   # CHECKPOINT: phiên trước lỗi/treo nhưng còn kịch bản
     for i, sub in enumerate(subtopics[:n_shorts]):
         if _stopped():   # ⛔ đã xong clip trước -> ngừng, KHÔNG bắt đầu clip mới (tiết kiệm, không dở dang).
             print(f"   ⛔ {channel}: dừng theo yêu cầu — xong clip hiện tại, bỏ {n_shorts - i} short còn lại."); break
         sjob = FB.new_job(OWNER, channel, "short", pver=PVER)
         sst = lambda s, step, **x: FB.update_job(sjob, status=s, step=step, **x)
         story = sok = sinfo = None; serr = None
+        resume_story = (resumed_short or {}).get("story")   # chỉ short ĐẦU tiên dùng, các short sau viết mới bình thường (chủ đề khác)
         for satt in (1, 2):                                # SELF-HEAL: thử lại 1 lần nếu lỗi
             try:
                 sout = os.path.join("out", DS.slug(channel) + f"_short{i}.mp4")
                 if satt > 1:
-                    sst("running", "🔧 Tự thử lại short…")
-                _, story, sok, sinfo = DS.make_video(channel, sub, "short", sout, keys=keys, tier=tier, on_status=sst, on_limit=cool, on_ok=okcb)
+                    sst("running", "🔧 Tự thử lại short…"); resume_story = None
+                _, story, sok, sinfo = DS.make_video(channel, sub, "short", sout, keys=keys, tier=tier, on_status=sst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
                 serr = None; break
             except Exception as e:
                 serr = e; traceback.print_exc(); print(f"   🔧 SHORT {channel}#{i} lỗi lần {satt}: {str(e)[:100]}")
+        if resumed_short:
+            FB.clear_resumed(resumed_short["job_id"]); resumed_short = None
         if serr is not None and _is_ratelimit(serr):
             sst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1   # KHÔNG tính Lỗi
         elif serr is not None:

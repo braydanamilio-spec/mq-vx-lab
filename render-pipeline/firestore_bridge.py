@@ -8,7 +8,7 @@ với AutoPublisher: biến GOOGLE_APPLICATION_CREDENTIALS + FIREBASE_PROJECT_ID
 Chạy trên GitHub Actions: workflow ghi secret GCP_SA_KEY ra /tmp/sa.json rồi set 2 biến trên.
 """
 from __future__ import annotations
-import os
+import os, json
 from datetime import datetime, timezone
 
 
@@ -313,6 +313,40 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
         except Exception as e:
             print(f"   ⚠️ count_done A lỗi ({e})")
     return total
+
+
+def find_resumable(owner: str, channel: str, vtype: str):
+    """CHECKPOINT: job THẤT BẠI gần nhất của kênh này còn giữ kịch bản (script, ghi lúc 'rendering' —
+    TRƯỚC bước render tốn thời gian nhất) -> dùng lại thay vì gọi Gemini viết mới, đỡ tốn quota + tránh
+    lệch nội dung/chủ đề đã ghi vào ngân hàng. CHỈ lấy job status='failed' (đã CHẮC CHẮN không ai còn xử
+    lý — do lỗi thật hoặc Health Guardian tự đánh dấu job treo) -> an toàn, không đụng job đang chạy thật.
+    Trả {'job_id', 'story'} hoặc None (không có gì để resume -> viết mới bình thường như cũ)."""
+    try:
+        db = _db_jobs()
+        q = (db.collection("render_jobs").where("owner", "==", owner).where("channel", "==", channel)
+             .where("type", "==", vtype).where("status", "==", "failed"))
+        cands = [(d.id, d.to_dict() or {}) for d in q.stream()]
+        cands = [(i, j) for i, j in cands if j.get("script")]
+        if not cands:
+            return None
+        cands.sort(key=lambda x: x[1].get("created_at", ""), reverse=True)   # ưu tiên bản GẦN NHẤT
+        job_id, job = cands[0]
+        story = json.loads(job["script"])
+        if not story:
+            return None
+        return {"job_id": job_id, "story": story}
+    except Exception as e:
+        print(f"   ⚠️ find_resumable lỗi ({e}) — bỏ qua, viết mới bình thường"); return None
+
+
+def clear_resumed(job_id: str):
+    """Đã DÙNG XONG checkpoint (resume thành công hoặc thất bại lại) -> xoá script khỏi job CŨ,
+    tránh 2 lần resume cùng 1 kịch bản (lẫn lộn/trùng)."""
+    try:
+        _db_jobs().collection("render_jobs").document(job_id).set(
+            {"script": "", "step": "♻️ đã dùng để resume phiên sau"}, merge=True)
+    except Exception as e:
+        print(f"   ⚠️ clear_resumed {job_id} lỗi: {e}")
 
 
 def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "") -> str:
