@@ -26,7 +26,8 @@ from google.cloud import firestore
 from google.oauth2 import service_account
 
 TO_B = ["render_config", "render_channels", "gemini_keys",
-        "storage_accounts", "render_topics", "render_requests"]
+        "render_topics", "render_requests"]
+# storage_accounts GIỮ Ở A — connect-worker (Cloudflare Worker, biết mỗi Project A) quản lý connect/sync/xoá kho Drive.
 TO_C = ["videos", "counters", "quota", "yt_queue", "social_queue"]
 
 
