@@ -26,10 +26,40 @@ def _is_image(b: bytes) -> bool:
             or b[:4] == b"GIF8" or (b[:4] == b"RIFF" and b[8:12] == b"WEBP"))
 
 
-def fetch_image(query, dest, orient=None, verify=None, max_check=4):
+def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image") -> bool:
+    """DỰ PHÒNG khi Openverse KHÔNG có ảnh CC0 khớp: nhờ Gemini VẼ ảnh minh hoạ (Nano Banana).
+    Quota TÁCH RIÊNG khỏi quota viết kịch bản (model khác nhau) -> dùng thoải mái, không đụng key đang
+    viết chữ. ~500 ảnh/ngày/key free, không cần thẻ. Lỗi/an toàn nội dung/hết quota -> trả False,
+    caller tự lùi về fallback cũ (mosaic/cosmic bg) — KHÔNG BAO GIỜ làm crash pipeline."""
+    if not api_key:
+        return False
+    try:
+        from google import genai as genai2
+        client = genai2.Client(api_key=api_key)
+        resp = client.models.generate_content(
+            model=model,
+            contents=f"A realistic, editorial-style photo illustration of: {prompt}. No text, no watermark, no logo.")
+        data = None
+        for cand in (resp.candidates or []):
+            for part in ((cand.content and cand.content.parts) or []):
+                if getattr(part, "inline_data", None) and part.inline_data.data:
+                    data = part.inline_data.data; break
+            if data:
+                break
+        if not data or len(data) < 2000 or not _is_image(data):
+            return False
+        open(dest, "wb").write(data)
+        return True
+    except Exception as e:
+        print(f"   ⚠️ Nano Banana '{prompt[:30]}' lỗi: {str(e)[:100]}"); return False
+
+
+def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None, ai_prompt=None):
     """Tải 1 ảnh từ Openverse — ƯU TIÊN CC0/Public Domain (KHÔNG cần ghi nguồn, an toàn bản quyền).
     verify(path)->True/False/None: kiểm ảnh có KHỚP chủ đề không (dùng cho GUESS). True=nhận, False=thử ảnh khác,
-    None=không kiểm được (Vision lỗi) -> nhớ làm dự phòng. Lỗi/ảnh hỏng/không khớp -> trả None."""
+    None=không kiểm được (Vision lỗi) -> nhớ làm dự phòng. Lỗi/ảnh hỏng/không khớp -> trả None.
+    ai_key: nếu có + Openverse KHÔNG tìm ra ảnh nào -> DỰ PHÒNG bằng Gemini vẽ ảnh (Nano Banana) trước
+    khi bỏ cuộc hẳn. ai_prompt (tuỳ chọn): mô tả rõ hơn cho AI vẽ, mặc định dùng lại 'query'."""
     query = re.sub(r"\b(chart|graph|screenshot|data|statistics|dashboard|trading|diagram|infographic)\b",
                    "", query, flags=re.I).strip() or query   # tránh ảnh chart/watermark
     def _try(params):
@@ -41,7 +71,7 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4):
     base = {"page_size": pg, "license": "cc0,pdm", "mature": "false"}
     if ar:
         base["aspect_ratio"] = ar
-    try:
+    def _openverse():
         # CHỈ CC0 + Public Domain -> KHÔNG cần ghi nguồn, an toàn bản quyền 100%. Không có -> dùng ảnh fallback.
         res = _try({"q": query, **base})
         if not res and ar:
@@ -75,8 +105,16 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4):
         if verify and fallback is not None:               # không ảnh nào KHỚP chắc, nhưng có ảnh dự phòng (Vision down)
             open(dest, "wb").write(fallback); return dest
         return None                                       # verify bật mà không ảnh nào khớp -> THÀ KHÔNG ẢNH còn hơn ảnh SAI
+    try:
+        got = _openverse()
     except Exception as e:
-        print(f"   ⚠️ ảnh '{query[:30]}' lỗi: {e}"); return None
+        print(f"   ⚠️ ảnh '{query[:30]}' lỗi: {e}"); got = None
+    if got:
+        return got
+    if ai_key and _generate_image_ai(ai_prompt or query, dest, ai_key):   # KHÔNG có ảnh thật khớp -> chữa cháy bằng AI vẽ
+        print(f"   🎨 '{query[:30]}': không có ảnh CC0 khớp -> đã dùng Nano Banana vẽ thay.")
+        return dest
+    return None
 
 
 def _concat(mp3s, out):
@@ -517,7 +555,7 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
         # KHÔNG truyền subs (TK trả dạng TỪ, Cinematic cần dạng CÂU) -> để engine tự tạo caption từ nar (khớp giọng đều).
         sc = {"type": kind, "audio": f"s{i}.mp3", "dur": durF, "nar": nar or "", "title": title or ""}
         if kind != "chapter" and img_query:
-            got = fetch_image(img_query, os.path.join(cdir, f"s{i}.jpg"), orient="tall", verify=vf_for(img_query))
+            got = fetch_image(img_query, os.path.join(cdir, f"s{i}.jpg"), orient="tall", verify=vf_for(img_query), ai_key=api_key)
             if got:
                 sc["clip"] = f"s{i}.jpg"
             else:
@@ -899,7 +937,7 @@ def build_guess_props(story, sdir, handle="@guessdaily", music="music/km_ascendi
             if api_key:
                 import qc_vision
                 vf = lambda p: qc_vision.verify_image(p, subject, api_key=api_key)
-            got = fetch_image(q, dest, orient="tall", verify=vf)
+            got = fetch_image(q, dest, orient="tall", verify=vf, ai_key=api_key, ai_prompt=subject)
             if got:
                 img_rel = rel(dest)
             else:

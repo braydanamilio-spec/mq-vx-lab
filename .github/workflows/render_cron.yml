@@ -146,7 +146,7 @@ jobs:
             libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
             libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg libasound2
       - name: Python deps
-        run: pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+        run: pip install --quiet google-generativeai google-genai edge-tts google-cloud-firestore \
              google-api-python-client google-auth pyyaml
       - name: npm ci (chỉ khi cache MISS)
         if: steps.cache-node.outputs.cache-hit != 'true'

@@ -154,6 +154,13 @@ Cảm hứng từ 1 hệ "epistemic-grammar" channel khác (dream-motion, agent 
 - Chi phí: vài KB/video, cap 300KB/video phòng hờ (`_script_json` tự cắt bớt nếu quá lớn) — dư sức nằm trong 1GiB free tier của Firestore dù hàng vạn video.
 - Nhân bản FILE VIDEO (khác với lưu script) — CHƯA LÀM, để sau (quyết định user 19/8): khi làm chỉ nhân bản video CHƯA ĐĂNG (đã đăng thì YouTube đã lưu bản chính rồi, nhân bản làm gì).
 
+## 🎨 ẢNH AI DỰ PHÒNG — Nano Banana (19/8)
+- `fetch_image()` trong `datastory_ci.py`: khi Openverse (CC0) KHÔNG tìm ra ảnh khớp chủ đề → trước khi bỏ cuộc (mosaic/cosmic bg), thử `_generate_image_ai()` nhờ **Gemini 2.5 Flash Image ("Nano Banana")** vẽ ảnh minh hoạ thay. Chỉ chữa cháy, KHÔNG thay thế Openverse (ảnh thật vẫn ưu tiên trước).
+- Quota **tách riêng hoàn toàn** khỏi quota viết kịch bản (khác model) → dùng ngay 40+ key Gemini hiện có, không tốn gì thêm. ~500 ảnh/ngày/key free.
+- SDK dùng `google-genai` (KHÁC package `google-generativeai` đang dùng viết chữ) — API: `client.models.generate_content(model="gemini-2.5-flash-image", contents=prompt)`, đọc `candidates[0].content.parts[i].inline_data.data` (đã là raw bytes, không cần base64 decode). Đã cài vào `render_cron.yml` (render job).
+- Đã nối vào GUESSUSA (`build_guess_props`) và mọi kênh doc-format Wave2/3 (`build_doc_props`). DATA RACE (`_race_from_story`) CHƯA nối (đang tự lùi về "dùng lại ảnh cảnh trước" khi thiếu, ít ưu tiên hơn).
+- Lỗi/hết quota/an toàn nội dung → `_generate_image_ai()` trả False, KHÔNG BAO GIỜ crash pipeline, tự lùi về fallback cũ.
+
 ## 🆕 THÊM 1 KÊNH MỚI — QUY TRÌNH ĐỒNG BỘ (RULE bắt buộc, làm ĐỦ các bước)
 > Thêm kênh KHÔNG chỉ là thêm 1 dòng — phải đồng bộ ĐỦ để "chọn là sản xuất + brand + đăng" chạy trơn.
 > Có 3 loại kênh, làm theo loại tương ứng:
