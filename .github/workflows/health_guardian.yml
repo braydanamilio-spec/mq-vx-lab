@@ -1,0 +1,36 @@
+name: MM0 Health Guardian (canh hệ thống mỗi giờ)
+
+# Thay việc phải tự check tay mỗi giờ: chạy 24/7 dù máy tắt / không ai mở dashboard.
+#   1. Tự chữa job render bị "treo" (>6h không xong) -> mở lại cổng render nếu đang bị kẹt.
+#   2. Nếu 12h liền không có video nào xong dù render đang bật -> workflow FAIL -> GitHub TỰ GỬI EMAIL
+#      báo lỗi cho chủ repo (tính năng free có sẵn, không cần dịch vụ thông báo nào khác).
+# Secrets: GCP_SA_KEY, FIREBASE_PROJECT_ID, GCP_SA_KEY_B, FIREBASE_PROJECT_ID_B, OWNER_UID (đã có sẵn).
+
+on:
+  schedule:
+    - cron: "7 * * * *"   # mỗi giờ, phút 07 (lệch nhịp render_cron để đỡ chồng burst đọc Firestore)
+  workflow_dispatch:
+
+concurrency: { group: mm0-health-guardian, cancel-in-progress: false }
+
+jobs:
+  guardian:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install --quiet google-cloud-firestore
+      - name: Service account file
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+          echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+      - name: Health check + tự chữa
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+        run: python render-pipeline/health_guardian.py
