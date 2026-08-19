@@ -119,6 +119,14 @@ Cảm hứng từ 1 hệ "epistemic-grammar" channel khác (dream-motion, agent 
 - **`niche` field = nơi thêm guardrail** — không cần code mới, chỉ cần viết rõ ràng buộc ("STRICT: chỉ dùng case CÓ THẬT...") ngay trong text niche, Gemini đọc field này mỗi lần viết. Áp dụng khi kênh chạm chủ đề dễ bịa (luật, tài chính, y tế...).
 - **Seed idempotent, dry-run trước** (`seed_new_channels_wave3.py --dry-run` rồi bỏ cờ) — script mẫu cho các wave sau, đọc owner từ kênh mẫu sẵn có, `merge:True` an toàn chạy lại.
 
+## 🚀 WAVE 5 — 2 kênh SPECULATIVE, 100% ảnh AI vẽ (19/8)
+Insight: quota ảnh Nano Banana (~500 ảnh/ngày/key × 40+ key ≈ 20.000 ảnh/ngày lý thuyết) **tách riêng hoàn toàn** khỏi quota viết kịch bản — đang bỏ phí 100%. 2 kênh mới nhắm đúng chỗ **không thể có ảnh thật để tìm** — nên ảnh AI không phải "chữa cháy" như GUESS/doc mà là **lựa chọn duy nhất hợp lý**.
+- **FUTUREUSA** (`#3B82F6`/`#A855F7`) — tương lai suy đoán (thành phố, công nghệ, đời sống 50-200 năm tới). Narration BẮT BUỘC ngôn ngữ suy đoán ("could"/"might"/"imagine if"), không khẳng định như sự thật.
+- **UNSEENUSA** (`#4C1D95`/`#A78BFA`) — vật lý thiên văn lý thuyết CÓ THẬT nhưng chưa camera nào chụp được (lỗ đen, ngoại hành tinh, vũ trụ sơ khai). Narration BẮT BUỘC bám khoa học thật; chỉ HÌNH ẢNH là suy đoán nghệ thuật, luôn khung "artist's impression" — không bao giờ nói ảnh là ảnh chụp thật.
+- Dùng lại format "doc" có sẵn (Cinematic engine, KHÔNG cần engine/brand Remotion mới — parametric `BrandDoc` đã đủ, chỉ seed Firestore + dashboard).
+- Thêm mới `ai_style`/`ai_only` vào `fetch_image()→build_doc_props()→make_doc()` (datastory_ci.py): `ai_style` = gu vẽ riêng nhất quán (khác ảnh báo chí mặc định); `ai_only=True` = bỏ qua tìm Openverse hẳn (chắc chắn trật, đỡ phí round-trip mạng) + bỏ qua Vision-verify (ảnh nào cũng do AI vẽ theo prompt, không có "ảnh tải về" để so khớp/sai).
+- Seed: `render-pipeline/seed_new_channels_wave5.py` (giống mẫu wave3/4, idempotent).
+
 ## 🌊 WAVE 4 — 4 kênh ENGINE RIÊNG hoàn toàn mới (19/8, không dùng chung doc/motif cũ)
 Đột phá thật (không phải doc reskin) — mỗi kênh 1 ngôn ngữ hình ảnh chưa từng có trong 26 kênh trước: thời gian/tỉ lệ, cường độ giác quan, mật độ đám đông, xác suất/may rủi. Build trực tiếp (không qua agent tự mày mò — học từ lần đầu tốn token), render-verify từng cái (avatar + still giữa animation) trước khi tích hợp.
 
