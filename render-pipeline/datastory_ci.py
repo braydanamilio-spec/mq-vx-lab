@@ -559,6 +559,255 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     return out, story, ok, info
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# WAVE 4 — 4 engine mới: SWARM (mật độ hạt), PULSE (gauge cường độ), CLOCKWORK (nén thời gian), LONGSHOT (xác suất).
+
+def build_swarm_props(story, sdir, handle="@swarmusa", accent="#0D9488", music="music/km_ascending.mp3"):
+    """Dựng props SwarmShort: TTS (intro + mỗi item + outro) -> timing bám giọng + 1 track."""
+    rel = lambda p: os.path.relpath(p, PUB)
+    intro_mp3 = os.path.join(sdir, "intro.mp3"); outro_mp3 = os.path.join(sdir, "outro.mp3")
+    idur, _, _ = TK.synth(story.get("intro_vo") or story.get("title") or "How many fit?", intro_mp3)
+    introSec = round(idur + 0.4, 2)
+    items_in = story.get("items") or []
+    items_out, clips, cum = [], [(intro_mp3, 0.0)], 0.0
+    for i, it in enumerate(items_in):
+        p = os.path.join(sdir, f"it{i}.mp3")
+        du, _, _ = TK.synth(it.get("vo") or f"{it.get('label','')}, {it.get('countDisp','')}.", p)
+        dur = round(du + 0.4, 2)
+        items_out.append({"label": it.get("label"), "count": it.get("count"), "countDisp": it.get("countDisp"),
+                          "shape": it.get("shape") or "circle", "emoji": it.get("emoji"), "dur": dur})
+        clips.append((p, introSec + cum)); cum += dur
+    odur, _, _ = TK.synth(story.get("outro_vo") or "Follow for more real numbers.", outro_mp3)
+    outroSec = round(odur + 0.4, 2)
+    clips.append((outro_mp3, introSec + cum))
+    total = round(introSec + cum + outroSec, 2)
+    track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
+    return {"title": (story.get("title") or "HOW MANY FIT?"), "handle": handle, "color": accent, "accent": accent,
+            "sfx": True, "items": items_out, "audio": rel(track), "music": music}
+
+
+def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
+               accent="#0D9488", avoid=None, on_status=None, on_limit=None, on_ok=None):
+    """KÊNH SWARM A-Z: Gemini sinh mật độ/số lượng thật -> giọng -> render SwarmShort -> QC + thumb."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    import key_manager as KM
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    if not keys[0]["key"]:
+        raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    st("writing", f"Gemini tính mật độ/số lượng ({niche})")
+    story = KM.write_swarm(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    score = (story.get("self_score") or {}).get("total")
+    st("rendering", "Giọng + render hạt", title=story.get("title_yt") or story.get("title"), score=score)
+    sdir = os.path.join(PUB, "narration", "_swarm_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
+    props = build_swarm_props(story, sdir, handle=channel_handle(channel), accent=accent)
+    pf = os.path.join(PUB, f"_swarm_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
+    print(f"   🎞️ render SwarmShort ({len(props['items'])} mục) …")
+    subprocess.run(["npx", "remotion", "render", "src/index.ts", "SwarmShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out); info["score"] = score
+    try:
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        big = (story.get("title") or "HOW MANY?").upper()
+        tprops = {"kind": "thumb", "bigLine": big, "topLine": "the real number"}
+        tf = os.path.join(PUB, f"_swarmthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "SwarmThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ thumb SWARM lỗi:", str(e)[:80])
+    print(f"   {'✅' if ok else '❌'} QC swarm {info}")
+    return out, story, ok, info
+
+
+def build_pulse_props(story, sdir, handle="@pulseusa", accent="#EA580C", music="music/km_ascending.mp3"):
+    """Dựng props PulseShort: TTS (intro + mỗi item + outro) -> timing bám giọng + 1 track."""
+    rel = lambda p: os.path.relpath(p, PUB)
+    intro_mp3 = os.path.join(sdir, "intro.mp3"); outro_mp3 = os.path.join(sdir, "outro.mp3")
+    idur, _, _ = TK.synth(story.get("intro_vo") or story.get("title") or "How intense is it?", intro_mp3)
+    introSec = round(idur + 0.4, 2)
+    items_in = story.get("items") or []
+    items_out, clips, cum = [], [(intro_mp3, 0.0)], 0.0
+    for i, it in enumerate(items_in):
+        p = os.path.join(sdir, f"it{i}.mp3")
+        du, _, _ = TK.synth(it.get("vo") or f"{it.get('label','')}, {it.get('disp','')}.", p)
+        dur = round(du + 0.4, 2)
+        items_out.append({"label": it.get("label"), "emoji": it.get("emoji"), "value": it.get("value"),
+                          "disp": it.get("disp"), "extreme": bool(it.get("extreme")), "dur": dur})
+        clips.append((p, introSec + cum)); cum += dur
+    odur, _, _ = TK.synth(story.get("outro_vo") or "Follow for more real intensity checks.", outro_mp3)
+    outroSec = round(odur + 0.4, 2)
+    clips.append((outro_mp3, introSec + cum))
+    total = round(introSec + cum + outroSec, 2)
+    track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
+    return {"title": (story.get("title") or "HOW INTENSE?"), "handle": handle, "color": accent, "accent": accent,
+            "sfx": True, "unit": story.get("unit") or "", "maxScale": story.get("maxScale") or 100,
+            "items": items_out, "audio": rel(track), "music": music}
+
+
+def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
+              accent="#EA580C", avoid=None, on_status=None, on_limit=None, on_ok=None):
+    """KÊNH PULSE A-Z: Gemini sinh cường độ giác quan thật -> giọng -> render PulseShort -> QC + thumb."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    import key_manager as KM
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    if not keys[0]["key"]:
+        raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    st("writing", f"Gemini so sánh cường độ ({niche})")
+    story = KM.write_pulse(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    score = (story.get("self_score") or {}).get("total")
+    st("rendering", "Giọng + render gauge", title=story.get("title_yt") or story.get("title"), score=score)
+    sdir = os.path.join(PUB, "narration", "_pulse_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
+    props = build_pulse_props(story, sdir, handle=channel_handle(channel), accent=accent)
+    pf = os.path.join(PUB, f"_pulse_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
+    print(f"   🎞️ render PulseShort ({len(props['items'])} mục) …")
+    subprocess.run(["npx", "remotion", "render", "src/index.ts", "PulseShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out); info["score"] = score
+    try:
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        big = (story.get("title") or "HOW INTENSE?").upper()
+        tprops = {"kind": "thumb", "bigLine": big, "topLine": "redline this"}
+        tf = os.path.join(PUB, f"_pulsethumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "PulseThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ thumb PULSE lỗi:", str(e)[:80])
+    print(f"   {'✅' if ok else '❌'} QC pulse {info}")
+    return out, story, ok, info
+
+
+def build_clockwork_props(story, sdir, handle="@clockworkusa", accent="#C2410C", music="music/km_ascending.mp3"):
+    """Dựng props ClockworkShort: TTS (intro + mỗi waypoint + hero + outro) -> timing bám giọng + 1 track."""
+    rel = lambda p: os.path.relpath(p, PUB)
+    intro_mp3 = os.path.join(sdir, "intro.mp3")
+    idur, _, _ = TK.synth(story.get("intro_vo") or story.get("title") or "Let's compress time.", intro_mp3)
+    introSec = round(idur + 0.4, 2)
+    wps_in = story.get("waypoints") or []
+    wps_out, clips, cum = [], [(intro_mp3, 0.0)], 0.0
+    for i, w in enumerate(wps_in):
+        p = os.path.join(sdir, f"wp{i}.mp3")
+        du, _, _ = TK.synth(w.get("vo") or w.get("label") or "", p)
+        wps_out.append({"label": w.get("label"), "atPercent": w.get("atPercent")})
+        clips.append((p, introSec + cum)); cum += round(du + 0.4, 2)
+    hero = story.get("hero") or {}
+    hero_mp3 = os.path.join(sdir, "hero.mp3")
+    hdur, _, _ = TK.synth(hero.get("vo") or hero.get("label") or "", hero_mp3)
+    clips.append((hero_mp3, introSec + cum)); heroSec = round(hdur + 0.4, 2) + 2.0   # +2s giữ khung reveal
+    outro_mp3 = os.path.join(sdir, "outro.mp3")
+    odur, _, _ = TK.synth(story.get("outro_vo") or "Follow for more perspective shifts.", outro_mp3)
+    outroSec = round(odur + 0.4, 2)
+    clips.append((outro_mp3, introSec + cum + heroSec))
+    total = round(introSec + cum + heroSec + outroSec, 2)
+    track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
+    return {"title": (story.get("title") or "TIME, COMPRESSED"), "handle": handle, "color": accent, "accent": accent,
+            "sfx": True, "scaleLabel": story.get("scaleLabel") or "",
+            "waypoints": wps_out, "hero": {"label": hero.get("label"), "atPercent": hero.get("atPercent"),
+            "realValue": hero.get("realValue")}, "audio": rel(track), "music": music}
+
+
+def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
+                   accent="#C2410C", avoid=None, on_status=None, on_limit=None, on_ok=None):
+    """KÊNH CLOCKWORK A-Z: Gemini nén thời gian thật -> giọng -> render ClockworkShort -> QC + thumb."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    import key_manager as KM
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    if not keys[0]["key"]:
+        raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    st("writing", f"Gemini nén thời gian ({niche})")
+    story = KM.write_clockwork(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    score = (story.get("self_score") or {}).get("total")
+    st("rendering", "Giọng + render đồng hồ", title=story.get("title_yt") or story.get("title"), score=score)
+    sdir = os.path.join(PUB, "narration", "_clockwork_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
+    props = build_clockwork_props(story, sdir, handle=channel_handle(channel), accent=accent)
+    pf = os.path.join(PUB, f"_clockwork_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
+    print(f"   🎞️ render ClockworkShort ({len(props['waypoints'])} mốc) …")
+    subprocess.run(["npx", "remotion", "render", "src/index.ts", "ClockworkShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out); info["score"] = score
+    try:
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        big = (story.get("title") or "TIME COMPRESSED").upper()
+        tprops = {"kind": "thumb", "bigLine": big, "topLine": "you won't believe it"}
+        tf = os.path.join(PUB, f"_clockworkthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "ClockworkThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ thumb CLOCKWORK lỗi:", str(e)[:80])
+    print(f"   {'✅' if ok else '❌'} QC clockwork {info}")
+    return out, story, ok, info
+
+
+def build_longshot_props(story, sdir, handle="@longshotusa", accent="#4F46E5", music="music/km_ascending.mp3"):
+    """Dựng props LongshotShort: TTS (intro + mỗi item + outro) -> timing bám giọng + 1 track."""
+    rel = lambda p: os.path.relpath(p, PUB)
+    intro_mp3 = os.path.join(sdir, "intro.mp3"); outro_mp3 = os.path.join(sdir, "outro.mp3")
+    idur, _, _ = TK.synth(story.get("intro_vo") or story.get("title") or "What are the real odds?", intro_mp3)
+    introSec = round(idur + 0.4, 2)
+    items_in = story.get("items") or []
+    items_out, clips, cum = [], [(intro_mp3, 0.0)], 0.0
+    for i, it in enumerate(items_in):
+        p = os.path.join(sdir, f"it{i}.mp3")
+        du, _, _ = TK.synth(it.get("vo") or f"{it.get('label','')}, {it.get('oddsDisp','')}.", p)
+        dur = round(du + 0.4, 2)
+        items_out.append({"label": it.get("label"), "emoji": it.get("emoji"), "oddsDisp": it.get("oddsDisp"),
+                          "logValue": it.get("logValue"), "dur": dur})
+        clips.append((p, introSec + cum)); cum += dur
+    odur, _, _ = TK.synth(story.get("outro_vo") or "Follow for more real odds.", outro_mp3)
+    outroSec = round(odur + 0.4, 2)
+    clips.append((outro_mp3, introSec + cum))
+    total = round(introSec + cum + outroSec, 2)
+    track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
+    return {"title": (story.get("title") or "WHAT ARE THE ODDS?"), "handle": handle, "color": accent, "accent": accent,
+            "sfx": True, "items": items_out, "audio": rel(track), "music": music}
+
+
+def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
+                  accent="#4F46E5", avoid=None, on_status=None, on_limit=None, on_ok=None):
+    """KÊNH LONGSHOT A-Z: Gemini sinh xác suất thật -> giọng -> render LongshotShort -> QC + thumb."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    import key_manager as KM
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    if not keys[0]["key"]:
+        raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    st("writing", f"Gemini tính xác suất thật ({niche})")
+    story = KM.write_longshot(channel, keys, niche, tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    score = (story.get("self_score") or {}).get("total")
+    st("rendering", "Giọng + render tháp xác suất", title=story.get("title_yt") or story.get("title"), score=score)
+    sdir = os.path.join(PUB, "narration", "_longshot_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
+    props = build_longshot_props(story, sdir, handle=channel_handle(channel), accent=accent)
+    pf = os.path.join(PUB, f"_longshot_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
+    print(f"   🎞️ render LongshotShort ({len(props['items'])} mục) …")
+    subprocess.run(["npx", "remotion", "render", "src/index.ts", "LongshotShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out); info["score"] = score
+    try:
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        big = (story.get("title") or "REAL ODDS").upper()
+        tprops = {"kind": "thumb", "bigLine": big, "topLine": "the real odds"}
+        tf = os.path.join(PUB, f"_longshotthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "LongshotThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ thumb LONGSHOT lỗi:", str(e)[:80])
+    print(f"   {'✅' if ok else '❌'} QC longshot {info}")
+    return out, story, ok, info
+
+
 def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
               on_status=None, on_limit=None, n_races=6, avoid=None, on_ok=None):
     """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info)."""

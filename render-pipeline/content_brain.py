@@ -902,6 +902,400 @@ def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
     raise Exception(f"DOC sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# WAVE 4 — 4 engine mới: SWARM (mật độ hạt), PULSE (gauge cường độ), CLOCKWORK (nén thời gian), LONGSHOT (xác suất).
+SWARM_SYS = (
+ "You are the creator of a #1 US channel that visualizes REAL crowd/quantity numbers as a satisfying particle swarm. "
+ "Absolute rules:\n"
+ "1) REAL COUNTS ONLY: every number is a true, verifiable real-world quantity (stadium capacity, population, biology "
+ "counts, natural phenomena counts). Never invent.\n"
+ "2) NEUTRAL CONTEXTS ONLY: stadiums, cities, nature, biology, everyday objects. NEVER protests/crowds-as-political-event, "
+ "never disaster crowds, never sensitive gatherings.\n"
+ "3) 3-5 items, each a DIFFERENT kind of quantity (don't repeat the same category of number twice in one video).\n"
+ "4) shape must be exactly one of: stadium, city, person, circle, grid — pick whichever best matches the item's context.\n"
+ "5) NARRATION spoken aloud: hook, one punchy line per item, CTA. Short natural sentences."
+)
+SWARM_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
+{
+  "title": str,            // <=26 chars, e.g. "HOW MANY FIT?"
+  "items": [               // 3-5
+    { "label": str, "count": number, "countDisp": str, "shape": "stadium"|"city"|"person"|"circle"|"grid", "emoji": str, "vo": str }
+    // countDisp = pretty formatted real number, e.g. "82,500"
+  ],
+  "intro_vo": str,
+  "outro_vo": str,
+  "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
+  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+}
+Counts must be real numbers. shape must be exactly one of the 5 listed."""
+
+
+def _validate_swarm(d: dict) -> list[str]:
+    errs = []
+    its = d.get("items") or []
+    if not (3 <= len(its) <= 6):
+        errs.append("items cần 3–6")
+    shapes = {"stadium", "city", "person", "circle", "grid"}
+    for i, it in enumerate(its):
+        if not str((it or {}).get("label", "")).strip():
+            errs.append(f"item[{i}] thiếu label")
+        if not isinstance((it or {}).get("count"), (int, float)):
+            errs.append(f"item[{i}] count không phải số")
+        if str((it or {}).get("shape", "")) not in shapes:
+            errs.append(f"item[{i}] shape lạ")
+        if not str((it or {}).get("vo", "")).strip():
+            errs.append(f"item[{i}] thiếu vo")
+    for k in ("title", "intro_vo", "outro_vo", "title_yt"):
+        if not str(d.get(k, "")).strip():
+            errs.append(f"thiếu '{k}'")
+    return errs
+
+
+def generate_swarm(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 kịch bản SWARM (mật độ/số lượng thật + narration). Viết lại tới khi đạt."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    model = genai.GenerativeModel(mname, system_instruction=SWARM_SYS)
+    resolved = False
+    avoid_txt = ("\nAvoid topics already used: " + " | ".join(avoid[-60:])) if avoid else ""
+    base = (f'Make a crowd/quantity visualization in the niche "{niche}".\n{SWARM_SCHEMA}{avoid_txt}')
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=SWARM_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"JSON lỗi ({e})."; continue
+        errs = _validate_swarm(d)
+        sc = d.get("self_score") or {}
+        score = sc.get("total", 0); acc = int(sc.get("accuracy", 0))
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "Lỗi cấu trúc: " + "; ".join(errs[:6]); print(f"   ↻ swarm vòng {attempt}: {feedback}"); continue
+        if acc < 95:
+            feedback = f"accuracy={acc}<95. Chỉ dùng số lượng THẬT. Đổi item nếu không chắc số."
+            print(f"   ↻ swarm vòng {attempt}: {feedback}"); continue
+        if score < MIN_SCORE:
+            feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, số cuối gây sốc hơn."; print(f"   ↻ swarm vòng {attempt}: điểm {score}"); continue
+        d["vtype"] = "swarm"
+        print(f"   ✅ SWARM đạt vòng {attempt}: total {score}, acc {acc} — {d.get('title')!r}")
+        return d
+    raise Exception(f"SWARM sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
+
+
+PULSE_SYS = (
+ "You are the creator of a #1 US channel comparing REAL sensory intensities (loudness dB, brightness lux, heat °F, "
+ "g-force, radiation, etc) on a dramatic analog gauge. Absolute rules:\n"
+ "1) REAL MEASURED VALUES ONLY, all in the SAME unit for one video (never mix dB with °F in one video). Never invent.\n"
+ "2) Pick ONE unit/dimension per video (loudness OR heat OR g-force OR brightness...) — vary which dimension across "
+ "different videos on this channel, but stay consistent WITHIN one video.\n"
+ "3) 3-5 items ascending intensity, the LAST one should be genuinely extreme (mark extreme=true only for truly "
+ "dangerous/record-breaking values).\n"
+ "4) NO politics, no NSFW, no real injury/death imagery — describe the physical intensity, not harm to a specific person.\n"
+ "5) NARRATION spoken aloud: hook, one punchy line per item, CTA. Short natural sentences."
+)
+PULSE_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
+{
+  "title": str,            // <=26 chars, e.g. "HOW LOUD?"
+  "unit": str,              // e.g. "dB"
+  "maxScale": number,       // the gauge's max value (a bit above the largest item's value)
+  "items": [                // 3-5, ASCENDING value
+    { "label": str, "emoji": str, "value": number, "disp": str, "extreme": bool, "vo": str }
+    // disp = pretty display e.g. "180 dB"; extreme=true ONLY for the genuinely record/dangerous item(s)
+  ],
+  "intro_vo": str,
+  "outro_vo": str,
+  "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
+  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+}
+Values must be real, same unit, ascending."""
+
+
+def _validate_pulse(d: dict) -> list[str]:
+    errs = []
+    its = d.get("items") or []
+    if not (3 <= len(its) <= 6):
+        errs.append("items cần 3–6")
+    if not isinstance(d.get("maxScale"), (int, float)):
+        errs.append("thiếu maxScale số")
+    vals = []
+    for i, it in enumerate(its):
+        if not str((it or {}).get("label", "")).strip():
+            errs.append(f"item[{i}] thiếu label")
+        if not isinstance((it or {}).get("value"), (int, float)):
+            errs.append(f"item[{i}] value không phải số")
+        else:
+            vals.append(it["value"])
+        if not str((it or {}).get("vo", "")).strip():
+            errs.append(f"item[{i}] thiếu vo")
+    if vals and vals != sorted(vals):
+        errs.append("items phải xếp TĂNG DẦN")
+    for k in ("title", "unit", "intro_vo", "outro_vo", "title_yt"):
+        if not str(d.get(k, "")).strip():
+            errs.append(f"thiếu '{k}'")
+    return errs
+
+
+def generate_pulse(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 kịch bản PULSE (cường độ giác quan thật + narration). Viết lại tới khi đạt."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    model = genai.GenerativeModel(mname, system_instruction=PULSE_SYS)
+    resolved = False
+    avoid_txt = ("\nAvoid units/topics already used: " + " | ".join(avoid[-60:])) if avoid else ""
+    base = (f'Make an intensity-gauge comparison in the niche "{niche}".\n{PULSE_SCHEMA}{avoid_txt}')
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=PULSE_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"JSON lỗi ({e})."; continue
+        errs = _validate_pulse(d)
+        sc = d.get("self_score") or {}
+        score = sc.get("total", 0); acc = int(sc.get("accuracy", 0))
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "Lỗi cấu trúc: " + "; ".join(errs[:6]); print(f"   ↻ pulse vòng {attempt}: {feedback}"); continue
+        if acc < 95:
+            feedback = f"accuracy={acc}<95. Chỉ dùng số đo THẬT, cùng đơn vị. Đổi item nếu không chắc số."
+            print(f"   ↻ pulse vòng {attempt}: {feedback}"); continue
+        if score < MIN_SCORE:
+            feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, item cuối cực đoan hơn."; print(f"   ↻ pulse vòng {attempt}: điểm {score}"); continue
+        d["vtype"] = "pulse"
+        print(f"   ✅ PULSE đạt vòng {attempt}: total {score}, acc {acc} — {d.get('title')!r}")
+        return d
+    raise Exception(f"PULSE sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
+
+
+CLOCKWORK_SYS = (
+ "You are the creator of a #1 US channel that compresses HUGE real timespans onto a single scale (a clock/timeline) "
+ "to reveal a shocking true perspective. Absolute rules:\n"
+ "1) REAL TIMESPANS ONLY: the total scale and every waypoint position are TRUE, verifiable durations/dates. Never invent.\n"
+ "2) atPercent (0-100) is the waypoint's REAL proportional position within the total compressed scale — compute it "
+ "correctly from the real numbers (do the math).\n"
+ "3) The hero event must be a GENUINELY tiny/recent sliver relative to the whole scale (a real 'you won't believe how "
+ "little time this actually is' fact) with atPercent very close to 100.\n"
+ "4) 3-5 waypoints plus the hero. NO politics, no tragedy, no NSFW.\n"
+ "5) NARRATION spoken aloud: hook, one punchy line per waypoint, big reveal line for hero, CTA."
+)
+CLOCKWORK_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
+{
+  "title": str,             // <=26 chars, e.g. "EARTH'S HISTORY"
+  "scaleLabel": str,        // e.g. "24 HOURS = 4.5 BILLION YEARS"
+  "waypoints": [             // 3-5, ORDERED by atPercent ascending
+    { "label": str, "atPercent": number, "vo": str }
+  ],
+  "hero": { "label": str, "atPercent": number, "realValue": str, "vo": str },
+  // realValue = the shocking real duration to display big, e.g. "1.7 SECONDS"
+  "intro_vo": str,
+  "outro_vo": str,
+  "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
+  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+}
+atPercent values must be mathematically correct real proportions."""
+
+
+def _validate_clockwork(d: dict) -> list[str]:
+    errs = []
+    wps = d.get("waypoints") or []
+    if not (3 <= len(wps) <= 6):
+        errs.append("waypoints cần 3–6")
+    pcts = []
+    for i, w in enumerate(wps):
+        if not str((w or {}).get("label", "")).strip():
+            errs.append(f"waypoint[{i}] thiếu label")
+        if not isinstance((w or {}).get("atPercent"), (int, float)):
+            errs.append(f"waypoint[{i}] atPercent không phải số")
+        else:
+            pcts.append(w["atPercent"])
+    if pcts and pcts != sorted(pcts):
+        errs.append("waypoints phải xếp atPercent TĂNG DẦN")
+    hero = d.get("hero") or {}
+    for k in ("label", "atPercent", "realValue", "vo"):
+        if not str(hero.get(k, "")).strip() and not isinstance(hero.get(k), (int, float)):
+            errs.append(f"hero thiếu '{k}'")
+    for k in ("title", "scaleLabel", "intro_vo", "outro_vo", "title_yt"):
+        if not str(d.get(k, "")).strip():
+            errs.append(f"thiếu '{k}'")
+    return errs
+
+
+def generate_clockwork(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 kịch bản CLOCKWORK (nén thời gian thật + narration). Viết lại tới khi đạt."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    model = genai.GenerativeModel(mname, system_instruction=CLOCKWORK_SYS)
+    resolved = False
+    avoid_txt = ("\nAvoid topics already used: " + " | ".join(avoid[-60:])) if avoid else ""
+    base = (f'Make a time-compression reveal in the niche "{niche}".\n{CLOCKWORK_SCHEMA}{avoid_txt}')
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=CLOCKWORK_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"JSON lỗi ({e})."; continue
+        errs = _validate_clockwork(d)
+        sc = d.get("self_score") or {}
+        score = sc.get("total", 0); acc = int(sc.get("accuracy", 0))
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "Lỗi cấu trúc: " + "; ".join(errs[:6]); print(f"   ↻ clockwork vòng {attempt}: {feedback}"); continue
+        if acc < 95:
+            feedback = f"accuracy={acc}<95. atPercent phải tính ĐÚNG từ số liệu thật. Đổi ví dụ nếu không chắc số."
+            print(f"   ↻ clockwork vòng {attempt}: {feedback}"); continue
+        if score < MIN_SCORE:
+            feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, hero reveal sốc hơn."; print(f"   ↻ clockwork vòng {attempt}: điểm {score}"); continue
+        d["vtype"] = "clockwork"
+        print(f"   ✅ CLOCKWORK đạt vòng {attempt}: total {score}, acc {acc} — {d.get('title')!r}")
+        return d
+    raise Exception(f"CLOCKWORK sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
+
+
+LONGSHOT_SYS = (
+ "You are the creator of a #1 US channel revealing REAL probability/odds of everyday and rare events, climbing a "
+ "log-scale ladder. Absolute rules:\n"
+ "1) REAL, SOURCED ODDS ONLY: every probability is a true, verifiable published figure (lottery odds, actuarial/CDC/"
+ "NOAA/NHTSA-style published statistics, sports/game odds). Never invent a number.\n"
+ "2) logValue = log10(the odds denominator) — e.g. odds of 1-in-100 -> logValue=2; 1-in-1,000,000 -> logValue=6. "
+ "Compute it correctly from oddsDisp.\n"
+ "3) 3-5 items, ORDERED least-rare to MOST-rare (ascending logValue), ending on a genuinely jaw-dropping real longshot.\n"
+ "4) NO politics, no medical-diagnosis framing, no gambling encouragement — describe real statistical odds only, never advise betting.\n"
+ "5) NARRATION spoken aloud: hook, one punchy line per item, big reveal line for the final longshot, CTA."
+)
+LONGSHOT_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
+{
+  "title": str,             // <=26 chars, e.g. "WHAT ARE THE ODDS?"
+  "items": [                 // 3-5, ORDERED logValue ASCENDING (common -> rare)
+    { "label": str, "emoji": str, "oddsDisp": str, "logValue": number, "vo": str }
+    // oddsDisp = "1 in 292,201,338" style; logValue = log10 of that denominator
+  ],
+  "intro_vo": str,
+  "outro_vo": str,
+  "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
+  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+}
+Odds must be real and sourced; logValue must match oddsDisp's denominator."""
+
+
+def _validate_longshot(d: dict) -> list[str]:
+    errs = []
+    its = d.get("items") or []
+    if not (3 <= len(its) <= 6):
+        errs.append("items cần 3–6")
+    logs = []
+    for i, it in enumerate(its):
+        if not str((it or {}).get("label", "")).strip():
+            errs.append(f"item[{i}] thiếu label")
+        if not str((it or {}).get("oddsDisp", "")).strip():
+            errs.append(f"item[{i}] thiếu oddsDisp")
+        if not isinstance((it or {}).get("logValue"), (int, float)):
+            errs.append(f"item[{i}] logValue không phải số")
+        else:
+            logs.append(it["logValue"])
+        if not str((it or {}).get("vo", "")).strip():
+            errs.append(f"item[{i}] thiếu vo")
+    if logs and logs != sorted(logs):
+        errs.append("items phải xếp logValue TĂNG DẦN (thường -> hiếm)")
+    for k in ("title", "intro_vo", "outro_vo", "title_yt"):
+        if not str(d.get(k, "")).strip():
+            errs.append(f"thiếu '{k}'")
+    return errs
+
+
+def generate_longshot(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 kịch bản LONGSHOT (xác suất thật + narration). Viết lại tới khi đạt."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    model = genai.GenerativeModel(mname, system_instruction=LONGSHOT_SYS)
+    resolved = False
+    avoid_txt = ("\nAvoid topics already used: " + " | ".join(avoid[-60:])) if avoid else ""
+    base = (f'Make a real-odds ladder in the niche "{niche}".\n{LONGSHOT_SCHEMA}{avoid_txt}')
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=LONGSHOT_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"JSON lỗi ({e})."; continue
+        errs = _validate_longshot(d)
+        sc = d.get("self_score") or {}
+        score = sc.get("total", 0); acc = int(sc.get("accuracy", 0))
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "Lỗi cấu trúc: " + "; ".join(errs[:6]); print(f"   ↻ longshot vòng {attempt}: {feedback}"); continue
+        if acc < 95:
+            feedback = f"accuracy={acc}<95. Chỉ dùng xác suất THẬT có nguồn. Đổi item nếu không chắc số."
+            print(f"   ↻ longshot vòng {attempt}: {feedback}"); continue
+        if score < MIN_SCORE:
+            feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, longshot cuối sốc hơn."; print(f"   ↻ longshot vòng {attempt}: điểm {score}"); continue
+        d["vtype"] = "longshot"
+        print(f"   ✅ LONGSHOT đạt vòng {attempt}: total {score}, acc {acc} — {d.get('title')!r}")
+        return d
+    raise Exception(f"LONGSHOT sau {MAX_TRIES} vòng chưa đạt. Bỏ {niche!r}.")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--type", dest="vtype", choices=["long", "short"], default="short")

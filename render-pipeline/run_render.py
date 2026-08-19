@@ -107,7 +107,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
 
     # ── FORMAT ĐẶC BIỆT (short-only, motif riêng): GUESS / MAPPED ── route sang make_guess/make_mapped.
     fmt = (ch.get("format") or "").lower()
-    if fmt in ("guess", "mapped", "ranked", "scaled", "thennow", "doc"):
+    if fmt in ("guess", "mapped", "ranked", "scaled", "thennow", "doc", "swarm", "pulse", "clockwork", "longshot"):
         short_target = int(ch.get("short_target", 0) or 0) or RESERVE_SHORT
         need = max(0, short_target - FB.count_done(OWNER, channel, "short"))
         n = min(int(ch.get("n_shorts", n_shorts) or 3) or 3, need)
@@ -132,6 +132,12 @@ def run_one(ch, keys, n_shorts=3, report=None):
                                                          style=ch.get("style", "awe, cinematic"),
                                                          accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"),
                                                          avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb)
+                    elif fmt in ("swarm", "pulse", "clockwork", "longshot"):   # Wave 4: 1 accent riêng/kênh, không style/accent2
+                        mk4 = {"swarm": DS.make_swarm, "pulse": DS.make_pulse,
+                               "clockwork": DS.make_clockwork, "longshot": DS.make_longshot}[fmt]
+                        _defacc = {"swarm": "#0D9488", "pulse": "#EA580C", "clockwork": "#C2410C", "longshot": "#4F46E5"}[fmt]
+                        _, story, ok, info = mk4(channel, cat, out, keys=keys, tier=tier, accent=ch.get("accent", _defacc),
+                                                 avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb)
                     else:
                         mk = {"guess": DS.make_guess, "mapped": DS.make_mapped, "ranked": DS.make_ranked,
                               "scaled": DS.make_scaled, "thennow": DS.make_thennow}[fmt]

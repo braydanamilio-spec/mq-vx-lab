@@ -415,3 +415,71 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
         if rnd == 0:
             time.sleep(65)
     raise CB.RateLimited(f"Tất cả {len(keys)} key hết quota (DOC). Thêm key hoặc chờ reset.")
+
+
+def _write_wave4(fn_name, label, channel, keys, niche, tier, avoid, on_limit, on_ok):
+    """Dùng CHUNG cho SWARM/PULSE/CLOCKWORK/LONGSHOT (Wave 4) — cùng khuôn write_scaled, chỉ khác hàm sinh."""
+    def _ok(k, r):
+        if on_ok and k.get("id"):
+            try: on_ok(k["id"])
+            except Exception: pass
+        return r
+    if not keys:
+        raise SystemExit("❌ Chưa có Gemini key nào — thêm ở tab 🎬 Render Studio.")
+    order = key_order(channel, keys); model = model_for(tier)
+    gen = getattr(CB, fn_name)
+
+    def _cool(k, exc):
+        if not k.get("id"): return
+        low = str(exc).lower()
+        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+            try:
+                import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")
+            except Exception: pass
+            return
+        if not on_limit: return
+        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        try: on_limit(k["id"], mins)
+        except TypeError: on_limit(k["id"])
+
+    for rnd in range(2):
+        for idx, k in enumerate(order):
+            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            if idx: time.sleep(1.5)
+            try:
+                print(f"   🔑 {label} {channel} key [{tag}] · model {model}")
+                _count(k)
+                return _ok(k, gen(niche, api_key=k["key"], model_name=model, avoid=avoid))
+            except CB.RateLimited as e:
+                _cool(k, e); continue
+            except Exception as e:
+                if "404" in str(e) and model != "gemini-2.5-flash":
+                    model = "gemini-2.5-flash"
+                    try:
+                        _count(k); return _ok(k, gen(niche, api_key=k["key"], model_name=model, avoid=avoid))
+                    except CB.RateLimited as e2:
+                        _cool(k, e2); continue
+                raise
+        if rnd == 0:
+            time.sleep(65)
+    raise CB.RateLimited(f"Tất cả {len(keys)} key hết quota ({label}). Thêm key hoặc chờ reset.")
+
+
+def write_swarm(channel: str, keys: list[dict], niche: str, tier: str = "normal", avoid: list = None, on_limit=None, on_ok=None) -> dict:
+    """Sinh kịch bản SWARM — bám key sticky, đổi key khi limit."""
+    return _write_wave4("generate_swarm", "SWARM", channel, keys, niche, tier, avoid, on_limit, on_ok)
+
+
+def write_pulse(channel: str, keys: list[dict], niche: str, tier: str = "normal", avoid: list = None, on_limit=None, on_ok=None) -> dict:
+    """Sinh kịch bản PULSE — bám key sticky, đổi key khi limit."""
+    return _write_wave4("generate_pulse", "PULSE", channel, keys, niche, tier, avoid, on_limit, on_ok)
+
+
+def write_clockwork(channel: str, keys: list[dict], niche: str, tier: str = "normal", avoid: list = None, on_limit=None, on_ok=None) -> dict:
+    """Sinh kịch bản CLOCKWORK — bám key sticky, đổi key khi limit."""
+    return _write_wave4("generate_clockwork", "CLOCKWORK", channel, keys, niche, tier, avoid, on_limit, on_ok)
+
+
+def write_longshot(channel: str, keys: list[dict], niche: str, tier: str = "normal", avoid: list = None, on_limit=None, on_ok=None) -> dict:
+    """Sinh kịch bản LONGSHOT — bám key sticky, đổi key khi limit."""
+    return _write_wave4("generate_longshot", "LONGSHOT", channel, keys, niche, tier, avoid, on_limit, on_ok)
