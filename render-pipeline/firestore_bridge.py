@@ -126,14 +126,14 @@ def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
     patch = {"used": int(used or 0), "used_synced_at": _now()}
     if cap_gb:
         patch["cap_gb"] = cap_gb
-    _db_meta().collection("storage_accounts").document(f"{owner}__{name}").set(patch, merge=True)
+    _db().collection("storage_accounts").document(f"{owner}__{name}").set(patch, merge=True)
 
 
 def drive_usage(owner: str):
     """Tổng dung lượng ĐÃ DÙNG / SỨC CHỨA của mọi kho Drive (bytes) -> guard 'kho gần đầy' trước khi render."""
     used = cap = 0
     try:
-        for d in _db_meta().collection("storage_accounts").where("owner", "==", owner).stream():
+        for d in _db().collection("storage_accounts").where("owner", "==", owner).stream():
             x = d.to_dict() or {}
             used += (x.get("used", 0) or 0)
             cap += (x.get("cap_gb", 15) or 15) * 1_000_000_000
