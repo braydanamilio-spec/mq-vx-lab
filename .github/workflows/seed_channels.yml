@@ -7,6 +7,9 @@ on:
       dry_run:
         description: "1 = chỉ xem (không ghi); 0 = tạo thật"
         default: "1"
+      script:
+        description: "Script seed cần chạy"
+        default: "render-pipeline/seed_new_channels.py"
 
 jobs:
   seed:
@@ -27,7 +30,7 @@ jobs:
           OWNER_UID: ${{ secrets.OWNER_UID }}
         run: |
           if [ "${{ github.event.inputs.dry_run }}" = "0" ]; then
-            python render-pipeline/seed_new_channels.py
+            python "${{ github.event.inputs.script }}"
           else
-            python render-pipeline/seed_new_channels.py --dry-run
+            python "${{ github.event.inputs.script }}" --dry-run
           fi
