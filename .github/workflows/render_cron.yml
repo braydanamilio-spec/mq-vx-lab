@@ -29,6 +29,7 @@ jobs:
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
           echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json   # shard: render_jobs -> Project B
+          echo '${{ secrets.GCP_SA_KEY_C }}' > /tmp/sa_c.json   # đọc hiệu suất video đã đăng -> Project C (feedback loop chọn chủ đề)
       # GATE NHẸ: nhịp 30' không có lệnh -> run=false -> BỎ QUA setup nặng (npm/chrome/ffmpeg) => free hơn.
       - name: Gate (--gate)
         id: gate
@@ -37,6 +38,8 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
+          FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
           SHARD_META: ${{ vars.SHARD_META }}   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
           OWNER_UID: ${{ secrets.OWNER_UID }}
           FORCE: ${{ github.event.inputs.force }}
@@ -88,6 +91,8 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
+          FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
           SHARD_META: ${{ vars.SHARD_META }}   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
           OWNER_UID: ${{ secrets.OWNER_UID }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
@@ -154,12 +159,15 @@ jobs:
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
           echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json   # shard: render_jobs -> Project B
+          echo '${{ secrets.GCP_SA_KEY_C }}' > /tmp/sa_c.json   # đọc hiệu suất video đã đăng -> Project C (feedback loop chọn chủ đề)
       - name: RENDER kênh ${{ matrix.channel }}
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
+          FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
           SHARD_META: ${{ vars.SHARD_META }}   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
           OWNER_UID: ${{ secrets.OWNER_UID }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src

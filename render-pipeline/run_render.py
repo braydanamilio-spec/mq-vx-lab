@@ -82,6 +82,16 @@ def run_one(ch, keys, n_shorts=3, report=None):
     """1 kênh theo TEMPLATE của kênh: make_long (1 long pillar) + n_shorts SHORT dọc.
     Đọc ch['make_long'] (mặc định True) và ch['n_shorts'] (mặc định 3) do dashboard đặt."""
     channel = ch.get("name"); tier = ch.get("tier", "normal"); niche = ch.get("niche") or channel
+    # FEEDBACK LOOP: video ĐÃ ĐĂNG xem nhiều -> gợi ý Gemini bám GU khán giả thật (KHÔNG lặp chủ đề, chỉ học phong cách).
+    # Rỗng tới khi user kết nối YouTube + có video đăng thật -> tự động có tác dụng khi đó, không cần sửa gì thêm.
+    try:
+        _perf = FB.top_titles(OWNER, channel, n=8)
+        if _perf:
+            niche = niche + ("\n\nTOP PERFORMING videos on this channel so far (real audience data) — "
+                              "lean into what STYLE/ANGLE resonates here, but pick a genuinely NEW topic, "
+                              "never repeat one of these: " + "; ".join(_perf))
+    except Exception:
+        pass
     cool = lambda kid, mins=90: FB.cool_key(kid, mins)   # giới hạn PHÚT -> nghỉ ngắn; quota NGÀY -> 90'
     _marked = set()   # key viết OK lúc dùng thật -> đánh dấu SỐNG 1 lần/run (khỏi health-check riêng, đỡ tốn)
     def okcb(kid):
@@ -103,7 +113,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
         n = min(int(ch.get("n_shorts", n_shorts) or 3) or 3, need)
         if n <= 0:
             print(f"🎯 {channel}: đủ target {fmt} — bỏ qua."); return
-        cat = ch.get("category") or niche
+        cat = niche   # ⚠️ KHÔNG dùng ch.get("category") — field đó giờ chứa mã YouTube category SỐ ("24"/"27"/"28",
+                      # dashboard tự set cho brand kit), KHÔNG phải gợi ý chủ đề. Đụng nhầm = Gemini nhận "24" làm niche.
         avoid = FB.recent_topics(OWNER, channel)
         made_here = []
         for i in range(n):

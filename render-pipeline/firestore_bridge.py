@@ -36,6 +36,51 @@ def _db_jobs():
     return _DBJ[0]
 
 
+_DBP = [None]
+def _db_pub():
+    """Client cho collection videos (Project C, publish) -> ĐỌC hiệu suất video đã đăng cho feedback loop chọn
+    chủ đề (xem top_titles). Không có creds C -> None (feature tắt êm, không lỗi)."""
+    key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_C")
+    project = os.environ.get("FIREBASE_PROJECT_ID_C")
+    if not (key and project and os.path.exists(key)):
+        return None
+    if _DBP[0] is None:
+        from google.cloud import firestore
+        from google.oauth2 import service_account
+        creds = service_account.Credentials.from_service_account_file(key)
+        _DBP[0] = firestore.Client(project=project, credentials=creds)
+    return _DBP[0]
+
+
+def top_titles(owner: str, channel: str, n: int = 8) -> list[str]:
+    """Tiêu đề N video ĐÃ ĐĂNG xem nhiều nhất của kênh -> đưa vào prompt Gemini làm gợi ý
+    "phong cách/góc độ đang ăn khách" (KHÔNG lặp chủ đề, chỉ học GU khán giả thật).
+    Rỗng nếu chưa có creds C / chưa có video nào đăng (điều bình thường tới khi user kết nối YouTube)."""
+    db = _db_pub()
+    if db is None:
+        return []
+    try:
+        col = db.collection("videos").where("owner", "==", owner).where("channel", "==", channel).where("status", "==", "posted")
+        try:
+            from google.cloud.firestore_v1 import Query
+            docs = list(col.order_by("stats.views", direction=Query.DESCENDING).limit(n).stream())
+        except Exception:
+            docs = list(col.limit(60).stream())              # thiếu index -> lấy thô rồi tự sort
+            docs.sort(key=lambda d: ((d.to_dict() or {}).get("stats") or {}).get("views", 0), reverse=True)
+            docs = docs[:n]
+        out = []
+        for d in docs:
+            x = d.to_dict() or {}
+            t = (x.get("title") or "").strip()
+            v = ((x.get("stats") or {}).get("views") or 0)
+            if t and v > 0:
+                out.append(f"{t} ({v} views)")
+        return out
+    except Exception as e:
+        print(f"   ⚠️ top_titles lỗi ({e}) — bỏ qua feedback, chạy bình thường")
+        return []
+
+
 def _db_meta():
     """Client cho META render (config·channels·gemini_keys·storage·topics·requests).
     Bật cờ SHARD_META=1 (khi đã migrate sang Project B) -> đọc/ghi meta trên B (render CHỈ đụng B, cách ly A).
