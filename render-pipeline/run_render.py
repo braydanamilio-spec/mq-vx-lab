@@ -407,7 +407,7 @@ def gate_mode():
             # (0/4/8/12/16/20 UTC): với round-cap, phiên tự xong sớm (10 long/30 short/kênh) rồi để trống luồng
             # tới giờ cố định tiếp theo là lãng phí. Sàn tối thiểu session_gap_min (mặc định 15') chống trigger dồn
             # dập nếu check active lỗi. Chỉnh session_gap_min ở render_config nếu muốn thưa hơn.
-            last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", 15) or 15); recently = False
+            last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", 30) or 30); recently = False
             if last:
                 try:
                     elapsed_min = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60
@@ -443,7 +443,7 @@ def plan_mode():
     event = os.environ.get("GITHUB_EVENT_NAME", "")
     run_now = bool(cfg.get("run_now"))
     # MỞ PHIÊN MỚI ngay khi phiên trước XONG HẲN — xem giải thích đầy đủ trong gate_mode().
-    last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", 15) or 15); recently = False
+    last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", 30) or 30); recently = False
     if last:
         try:
             elapsed_min = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60

@@ -294,8 +294,9 @@ def has_active_render(owner: str) -> bool:
         res = q.count().get()                     # aggregation: ~1 read
         row = res[0]; ar = row[0] if isinstance(row, (list, tuple)) else row
         return int(ar.value) > 0
-    except Exception:
-        return False    # lỗi đọc (vd thiếu index) -> coi như KHÔNG active (fail-open, tránh gate treo mãi)
+    except Exception as e:
+        print(f"   ⚠️ has_active_render lỗi ({e}) — coi như KHÔNG active (fail-open, tránh gate treo mãi)")
+        return False
 
 
 def count_done(owner: str, channel: str, vtype: str = None) -> int:
