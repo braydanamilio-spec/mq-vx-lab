@@ -405,7 +405,7 @@ def gate_mode():
             enabled = bool(cfg.get("enabled")) or os.environ.get("FORCE") == "1"
             # MỞ PHIÊN MỚI ngay khi phiên trước XONG HẲN (còn job active ở B thì chưa) — KHÔNG còn ép đúng giờ cố định
             # (0/4/8/12/16/20 UTC): với round-cap, phiên tự xong sớm (10 long/30 short/kênh) rồi để trống luồng
-            # tới giờ cố định tiếp theo là lãng phí. Sàn tối thiểu session_gap_min (mặc định 15') chống trigger dồn
+            # tới giờ cố định tiếp theo là lãng phí. Sàn tối thiểu session_gap_min (mặc định 30') chống trigger dồn
             # dập nếu check active lỗi. Chỉnh session_gap_min ở render_config nếu muốn thưa hơn.
             last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", 30) or 30); recently = False
             if last:
