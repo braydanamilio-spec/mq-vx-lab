@@ -1,0 +1,42 @@
+name: MM0 Trend Scout (quét gu viết kênh lớn, hàng tuần)
+
+# Quét TITLE (yt-dlp, KHÔNG tải video) của vài kênh lớn tham khảo -> Gemini tự tóm tắt GU VIẾT
+# (hook/twist/cách đặt câu) -> lưu Firestore -> content_brain tự đọc thêm khi viết kịch bản.
+# KHÔNG copy chủ đề. Chạy hàng tuần (xu hướng đổi chậm, khỏi tốn quota/CI phí quét mỗi ngày).
+# Secrets: GCP_SA_KEY_B (hoặc GCP_SA_KEY), FIREBASE_PROJECT_ID_B, OWNER_UID (đã có sẵn).
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"   # thứ 2 hàng tuần, 8h UTC
+  workflow_dispatch:
+    inputs:
+      dry_run: { description: "1 = chỉ xem (không lưu)", default: "0" }
+
+concurrency: { group: mm0-trend-scout, cancel-in-progress: false }
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install --quiet yt-dlp google-generativeai google-cloud-firestore
+      - name: Service account file
+        run: |
+          echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+      - name: Trend Scout
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "1" ]; then
+            python render-pipeline/trend_scout.py --dry-run
+          else
+            python render-pipeline/trend_scout.py
+          fi

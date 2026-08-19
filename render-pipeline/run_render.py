@@ -103,6 +103,15 @@ def run_one(ch, keys, n_shorts=3, report=None):
                               "never repeat one of these: " + "; ".join(_perf))
     except Exception:
         pass
+    # TREND SCOUT (trend_scout.py, quét title kênh lớn tham khảo -> Gemini tự tóm gu viết) -> KHÔNG copy
+    # chủ đề, chỉ học công thức hook/twist. Rỗng tới khi trend_scout.py chạy lần đầu (bình thường).
+    try:
+        _trends = FB.read_trend_scout(OWNER, channel)
+        if _trends:
+            niche = niche + ("\n\nSTYLE PATTERNS from top channels in this space (learn the ANGLE/HOOK "
+                              "technique, never copy a topic): " + " | ".join(_trends))
+    except Exception:
+        pass
     cool = lambda kid, mins=90: FB.cool_key(kid, mins)   # giới hạn PHÚT -> nghỉ ngắn; quota NGÀY -> 90'
     _marked = set()   # key viết OK lúc dùng thật -> đánh dấu SỐNG 1 lần/run (khỏi health-check riêng, đỡ tốn)
     def okcb(kid):

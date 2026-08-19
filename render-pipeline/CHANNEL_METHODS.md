@@ -119,6 +119,14 @@ Cảm hứng từ 1 hệ "epistemic-grammar" channel khác (dream-motion, agent 
 - **`niche` field = nơi thêm guardrail** — không cần code mới, chỉ cần viết rõ ràng buộc ("STRICT: chỉ dùng case CÓ THẬT...") ngay trong text niche, Gemini đọc field này mỗi lần viết. Áp dụng khi kênh chạm chủ đề dễ bịa (luật, tài chính, y tế...).
 - **Seed idempotent, dry-run trước** (`seed_new_channels_wave3.py --dry-run` rồi bỏ cờ) — script mẫu cho các wave sau, đọc owner từ kênh mẫu sẵn có, `merge:True` an toàn chạy lại.
 
+## 🔎 TREND SCOUT — học gu viết kênh lớn, tự động hàng tuần (19/8)
+`render-pipeline/trend_scout.py` + `.github/workflows/trend_scout.yml` (cron thứ 2 hàng tuần, hoặc chạy tay `workflow_dispatch`):
+1. `yt-dlp --flat-playlist` lấy TITLE (KHÔNG tải video) của vài kênh lớn tham khảo trong `SOURCES` (hiện có Zack D Films, Kurzgesagt, The Infographics Show).
+2. Gemini (quota chữ có sẵn, key đầu trong pool) đọc titles → tự tóm tắt 2-3 câu **GU VIẾT** (hook/twist/cách đặt câu) — **KHÔNG tóm chủ đề**, tránh copy nội dung.
+3. Lưu Firestore (`FB.save_trend_scout`, ghi đè không cộng dồn) → `run_render.py` tự đọc (`FB.read_trend_scout`) và chèn vào `niche` trước khi gọi Gemini viết kịch bản thật — giống hệt cơ chế `top_titles()` (học phong cách, luôn viết chủ đề MỚI, không lặp).
+- Thêm kênh tham khảo mới: thêm 1 dòng vào `SOURCES` trong `trend_scout.py`, không cần sửa code khác.
+- 100% free: yt-dlp free/mã nguồn mở, Gemini dùng quota chữ dư sẵn (không mở key/account mới). Đã test thật 3 URL nguồn (yt-dlp lấy title thành công cả 3, không tải video).
+
 ## 🚀 WAVE 5 — 2 kênh SPECULATIVE, 100% ảnh AI vẽ (19/8)
 Insight: quota ảnh Nano Banana (~500 ảnh/ngày/key × 40+ key ≈ 20.000 ảnh/ngày lý thuyết) **tách riêng hoàn toàn** khỏi quota viết kịch bản — đang bỏ phí 100%. 2 kênh mới nhắm đúng chỗ **không thể có ảnh thật để tìm** — nên ảnh AI không phải "chữa cháy" như GUESS/doc mà là **lựa chọn duy nhất hợp lý**.
 - **FUTUREUSA** (`#3B82F6`/`#A855F7`) — tương lai suy đoán (thành phố, công nghệ, đời sống 50-200 năm tới). Narration BẮT BUỘC ngôn ngữ suy đoán ("could"/"might"/"imagine if"), không khẳng định như sự thật.

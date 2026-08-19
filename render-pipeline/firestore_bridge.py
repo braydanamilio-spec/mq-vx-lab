@@ -265,6 +265,25 @@ def save_topics(owner: str, channel: str, topics: list[str]):
     ref.set({"owner": owner, "channel": channel, "topics": cur}, merge=True)
 
 
+def read_trend_scout(owner: str, channel: str) -> list[str]:
+    """Xu hướng/góc độ (tóm tắt bởi Gemini từ title kênh lớn tham khảo, xem trend_scout.py) -> đưa
+    thêm vào niche khi viết kịch bản. Rỗng nếu chưa quét lần nào (bình thường)."""
+    try:
+        d = _db_meta().collection("trend_scout").document(f"{owner}__{channel}").get()
+        return (d.to_dict() or {}).get("trends") or [] if d.exists else []
+    except Exception as e:
+        print(f"   ⚠️ read_trend_scout lỗi ({e})"); return []
+
+
+def save_trend_scout(owner: str, channel: str, trends: list[str]):
+    """Ghi đè (không cộng dồn vô hạn) — mỗi lần quét lại là bản MỚI thay bản cũ, tránh phình."""
+    try:
+        _db_meta().collection("trend_scout").document(f"{owner}__{channel}").set(
+            {"owner": owner, "channel": channel, "trends": trends[:5], "updated_at": _now()}, merge=True)
+    except Exception as e:
+        print(f"   ⚠️ save_trend_scout {channel} lỗi: {e}")
+
+
 def _shard_on() -> bool:
     """Có bật shard render_jobs sang Project B không (creds B đầy đủ)."""
     k = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B")
