@@ -13,6 +13,14 @@ import { BrandMapped } from "./BrandMapped";             // brand kênh #2 MAPPE
 import { RankedShort, calcRanked } from "./RankedShort";  // kênh #3 RANKED (tier list)
 import { BrandRanked2 } from "./BrandRanked2";            // brand kênh #3 RANKED
 import { ScaledShort, calcScaled } from "./ScaledShort";  // kênh #4 SCALED (so sánh kích thước)
+import { SwarmShort, calcSwarm } from "./SwarmShort";  // kênh #7 SWARM (mật độ đám đông, hạt bay lấp đầy)
+import { BrandSwarm } from "./BrandSwarm";
+import { PulseShort, calcPulse } from "./PulseShort";  // kênh #8 PULSE (cường độ giác quan, gauge kim)
+import { BrandPulse } from "./BrandPulse";
+import { ClockworkShort, calcClockwork } from "./ClockworkShort";  // kênh #9 CLOCKWORK (nén thời gian)
+import { BrandClockwork } from "./BrandClockwork";
+import { LongshotShort, calcLongshot } from "./LongshotShort";  // kênh #10 LONGSHOT (xác suất thật)
+import { BrandLongshot } from "./BrandLongshot";
 import { BrandScaled } from "./BrandScaled";             // brand kênh #4 SCALED
 import { ThenNowShort, calcThenNow } from "./ThenNowShort"; // kênh #5 THEN×NOW (xưa/nay)
 import { BrandThenNow } from "./BrandThenNow";           // brand kênh #5 THEN×NOW
@@ -166,5 +174,25 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="GenDemoV" component={GenDemo} durationInFrames={120} fps={30} width={1080} height={1920} defaultProps={{ arch: "office", seed: 1, channel: "broke", nar: "" }} />
     <Composition id="ConceptDemo" component={ConceptDemo} durationInFrames={90} fps={30} width={1920} height={1080} defaultProps={{ name: "subscriptions", caption: "" }} />
     <Composition id="LottiePrev" component={LottiePrev} durationInFrames={90} fps={30} width={1080} height={1080} defaultProps={{ file: "a.json" }} />
+      <Composition id="SwarmShort" component={SwarmShort} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcSwarm} />
+    <Composition id="BrandSwarmAvatar" component={BrandSwarm} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="BrandSwarmBanner" component={BrandSwarm} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="BrandSwarmWatermark" component={BrandSwarm} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
+    <Composition id="SwarmThumb" component={BrandSwarm} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
+    <Composition id="PulseShort" component={PulseShort} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcPulse} />
+    <Composition id="BrandPulseAvatar" component={BrandPulse} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="BrandPulseBanner" component={BrandPulse} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="BrandPulseWatermark" component={BrandPulse} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
+    <Composition id="PulseThumb" component={BrandPulse} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
+    <Composition id="ClockworkShort" component={ClockworkShort} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcClockwork} />
+    <Composition id="BrandClockworkAvatar" component={BrandClockwork} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="BrandClockworkBanner" component={BrandClockwork} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="BrandClockworkWatermark" component={BrandClockwork} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
+    <Composition id="ClockworkThumb" component={BrandClockwork} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
+    <Composition id="LongshotShort" component={LongshotShort} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcLongshot} />
+    <Composition id="BrandLongshotAvatar" component={BrandLongshot} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="BrandLongshotBanner" component={BrandLongshot} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="BrandLongshotWatermark" component={BrandLongshot} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
+    <Composition id="LongshotThumb" component={BrandLongshot} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
   </>
 );
