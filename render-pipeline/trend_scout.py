@@ -73,7 +73,10 @@ def main():
     dry = "--dry-run" in sys.argv
     if not OWNER:
         sys.exit("❌ Thiếu OWNER_UID.")
-    keys = FB.read_keys(OWNER)
+    try:
+        keys = FB.read_keys(OWNER)
+    except Exception as e:
+        print(f"⏸ Firestore nghẽn tạm ({e}) — bỏ qua lần này, tuần sau tự chạy lại."); return   # KHÔNG crash CI vì lỗi tạm thời
     if not keys:
         sys.exit("❌ Chưa có Gemini key.")
     key = keys[0]["key"]
