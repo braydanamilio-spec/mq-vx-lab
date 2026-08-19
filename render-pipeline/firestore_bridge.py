@@ -239,6 +239,20 @@ def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
         return sum(1 for _ in q.stream())
 
 
+def has_active_render(owner: str) -> bool:
+    """Còn job render nào ĐANG CHẠY THẬT (B) không -> gate mở phiên MỚI ngay khi phiên trước xong hẳn
+    (thay vì đoán 1 khoảng thời gian cố định) -> lấp khoảng nghỉ hiệu quả, không chồng phiên, không chờ oan."""
+    try:
+        db = _db_jobs()
+        q = (db.collection("render_jobs").where("owner", "==", owner)
+             .where("status", "in", ["queued", "running", "writing", "rendering", "qc"]))
+        res = q.count().get()                     # aggregation: ~1 read
+        row = res[0]; ar = row[0] if isinstance(row, (list, tuple)) else row
+        return int(ar.value) > 0
+    except Exception:
+        return False    # lỗi đọc (vd thiếu index) -> coi như KHÔNG active (fail-open, tránh gate treo mãi)
+
+
 def count_done(owner: str, channel: str, vtype: str = None) -> int:
     """Đếm số video ĐÃ XONG của 1 kênh (so target). Đếm CẢ Project B (job mới) + A (job CŨ trước shard) -> không sót, không làm THỪA.
     Dùng aggregation count() = ~1 read/project."""

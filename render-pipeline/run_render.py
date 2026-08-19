@@ -391,15 +391,18 @@ def gate_mode():
             cfg = FB.read_config(OWNER)
             event = os.environ.get("GITHUB_EVENT_NAME", "")
             run_now = bool(cfg.get("run_now"))
-            is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 4, 8, 12, 16, 20])
-                  and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
             enabled = bool(cfg.get("enabled")) or os.environ.get("FORCE") == "1"
-            # CHỐNG TRÙNG: mở mẻ MỚI theo giờ chỉ khi chưa có phiên nào chạy gần đây (< ngân sách phiên) -> tránh */10 kích nhiều lần.
-            last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("batch_budget_min", 210) or 210); recently = False
+            # MỞ PHIÊN MỚI ngay khi phiên trước XONG HẲN (còn job active ở B thì chưa) — KHÔNG còn ép đúng giờ cố định
+            # (0/4/8/12/16/20 UTC): với round-cap, phiên tự xong sớm (10 long/30 short/kênh) rồi để trống luồng
+            # tới giờ cố định tiếp theo là lãng phí. Sàn tối thiểu session_gap_min (mặc định 15') chống trigger dồn
+            # dập nếu check active lỗi. Chỉnh session_gap_min ở render_config nếu muốn thưa hơn.
+            last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", 15) or 15); recently = False
             if last:
-                try: recently = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() < gap_min * 60
+                try:
+                    elapsed_min = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60
+                    recently = (elapsed_min < gap_min) or FB.has_active_render(OWNER)
                 except Exception: recently = False
-            batch_ok = is_nightly and not recently
+            batch_ok = not recently
             if ((event != "schedule") or run_now or batch_ok) and (enabled or run_now):
                 run = "true"
         except Exception:
@@ -428,14 +431,15 @@ def plan_mode():
     cfg = FB.read_config(OWNER)
     event = os.environ.get("GITHUB_EVENT_NAME", "")
     run_now = bool(cfg.get("run_now"))
-    is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 4, 8, 12, 16, 20])
-                  and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
-    last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("batch_budget_min", 210) or 210); recently = False
+    # MỞ PHIÊN MỚI ngay khi phiên trước XONG HẲN — xem giải thích đầy đủ trong gate_mode().
+    last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", 15) or 15); recently = False
     if last:
-        try: recently = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() < gap_min * 60
+        try:
+            elapsed_min = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60
+            recently = (elapsed_min < gap_min) or FB.has_active_render(OWNER)
         except Exception: recently = False
-    if event == "schedule" and not run_now and (not is_nightly or recently):
-        print("⏭ Nhịp kiểm — chưa tới giờ mẻ / phiên gần đây còn chạy, bỏ qua (free)."); return out_channels([])
+    if event == "schedule" and not run_now and recently:
+        print("⏭ Nhịp kiểm — phiên gần đây còn trong hạn nghỉ, bỏ qua (free)."); return out_channels([])
     FB.set_config(OWNER, {"last_session_at": datetime.now(timezone.utc).isoformat()})   # đánh dấu phiên bắt đầu -> chống trùng
     if run_now:
         FB.set_config(OWNER, {"run_now": None, "run_now_done_at": datetime.now(timezone.utc).isoformat()})
