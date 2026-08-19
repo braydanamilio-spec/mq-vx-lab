@@ -143,6 +143,8 @@ Cảm hứng từ 1 hệ "epistemic-grammar" channel khác (dream-motion, agent 
 - Bật/tắt: dashboard → mỗi kênh có nút **🟢/⚪ Auto-đăng** (ghi `settings/overrides__<uid>.auto_publish[TÊN kênh]`).
 - Điều kiện chạy: kênh phải **đã Kết nối YouTube** (`connections/<owner>__<kênh>__youtube` có refresh_token) — bước này user tự làm (OAuth).
 - `invalid_grant` khi list_queue = 1 kết nối Drive cũ ở `connections` (khác 48 kho `storage_accounts` đều sống) → đã bỏ qua tự động, vô hại.
+- **Playlist tự động** (19/8, kích hoạt): mỗi video upload qua `publish_yt_queue.py` tự vào playlist **"Long Videos"** hoặc **"Shorts"** (theo `type`), tạo/tìm ngay trong ĐÚNG kênh đang upload (mỗi kênh OAuth riêng → không thể lẫn playlist chéo kênh dù trùng tên). `_ensure_playlist()` tìm theo tên trước, không tạo trùng. Lỗi playlist (nếu có) KHÔNG làm hỏng upload (try/except riêng).
+- ⛔ **End Screen (subscribe + video liên quan cuối clip) — CHỦ ĐỘNG KHÔNG LÀM** (quyết định của user 19/8): cho là gây nhàm chán, dễ khiến người xem thoát. Đừng đề xuất lại trừ khi user chủ động hỏi.
 
 ## 🆕 THÊM 1 KÊNH MỚI — QUY TRÌNH ĐỒNG BỘ (RULE bắt buộc, làm ĐỦ các bước)
 > Thêm kênh KHÔNG chỉ là thêm 1 dòng — phải đồng bộ ĐỦ để "chọn là sản xuất + brand + đăng" chạy trơn.
