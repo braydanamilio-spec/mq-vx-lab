@@ -144,7 +144,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     description=story.get("description", ""), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue đăng đủ metadata
                     score=(story.get("self_score") or {}).get("total"),
                     dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
-                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
+                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1; R["done_short"] = R.get("done_short", 0) + 1
             else:
                 jst("failed", f"QC {fmt} trượt: {info}"); R["fails"].append(f"{channel} {fmt} {i}: QC trượt")
         if made_here:
@@ -194,7 +194,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
                     score=(info or {}).get("score"),
                     dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
-                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
+                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
             else:
                 lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
         except Exception as e:
@@ -238,7 +238,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 description=story.get("description", ""), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue
                 score=(story.get("self_score") or {}).get("total"),
                 dur=(sinfo or {}).get("dur", 0), size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""),
-                drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1
+                drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else "")); R["done"] += 1; R["done_short"] = R.get("done_short", 0) + 1
         else:
             sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt")
     print(f"   ✅ {channel}: xong long + {min(n_shorts, len(subtopics))} short")
@@ -593,6 +593,12 @@ def channel_mode(name):
     budget_s = int(cfg.get("batch_budget_min", 210) or 210) * 60    # ngân sách mềm 1 phiên (mặc định 3.5h -> 6 phiên/ngày không chồng lấn)
     HARD_S = 330 * 60                                               # cứng: timeout workflow 350' - chừa ~20' buffer
     max_run = int(cfg.get("max_per_run", 0) or 0)                   # 0 = ∞ (vòng lặp tự giới hạn theo target/quota/giờ); >0 = trần cứng/kênh/phiên
+    # ROUND CAP (xoay vòng công bằng): mỗi kênh làm TỐI ĐA round_long/round_short video RỒI NHƯỜNG SLOT (không cắt ngang —
+    # check SAU khi run_one() hoàn tất trọn video). Mặc định 10 long/30 short -> phiên xong sớm hơn, kênh khác kịp có lượt.
+    # 0 = không giới hạn round (giữ hành vi cũ, chạy tới hết target/giờ/quota).
+    _rl, _rs = cfg.get("round_long"), cfg.get("round_short")        # None (chưa set) = mặc định 10/30; 0 = anh chọn "không giới hạn"
+    round_long = int(_rl) if _rl is not None else 10
+    round_short = int(_rs) if _rs is not None else 30
     MAX_EMPTY = int(cfg.get("empty_retry", 4) or 4)                 # số vòng LIỀN ra 0 video (do rate-limit) rồi mới chịu ngừng -> quota cạn thật
     start = time.monotonic(); rounds = 0; last_dur = 0; empty_streak = 0
     while True:
@@ -621,6 +627,10 @@ def channel_mode(name):
             empty_streak = 0
             if max_run and report["done"] >= max_run:
                 print(f"   🎯 {name}: đạt trần {max_run} video/phiên → ngừng."); break
+            dl, ds = report.get("done_long", 0), report.get("done_short", 0)
+            if (round_long and dl >= round_long) or (round_short and ds >= round_short):
+                print(f"   🔁 {name}: đạt round {dl} long/{ds} short (trần {round_long or '∞'}/{round_short or '∞'}) "
+                      f"— video đang làm ĐÃ XONG, nhường slot cho kênh khác. Target còn thiếu sẽ tiếp ở lượt sau."); break
             continue
         # ---- made == 0 ----
         if rl == 0:                             # KHÔNG làm + KHÔNG dính rate-limit = ĐỦ TARGET (run_one thoát sớm) -> ngừng hẳn
