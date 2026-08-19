@@ -11,6 +11,12 @@ on:
   schedule:
     - cron: "*/10 * * * *"  # mỗi 10': nhận "Render ngay" nhanh + mở mẻ theo giờ (0/4/8/12/16/20 UTC). Chống trùng bằng last_session_at.
 
+# KHOÁ CHỐNG CHỒNG PHIÊN (19/8, phát hiện thiếu sau sự cố job treo): last_session_at ở tầng app chỉ
+# "check rồi mới ghi" — không atomic, 2 lượt trigger gần sát giờ (tick lịch trùng lúc chạy tay) vẫn có
+# khe hở race condition cùng lọt gate. Khoá NÀY ở tầng GitHub mới chặn triệt để: lượt trigger mới xếp
+# HÀNG ĐỢI (không huỷ phiên đang chạy dở, không chạy chồng) — giống mọi workflow khác đã có sẵn khoá này.
+concurrency: { group: mm0-render-cron, cancel-in-progress: false }
+
 jobs:
   # ── ĐIỀU PHỐI: quyết định có chạy không + health-check + re-render + liệt kê kênh ─────────────
   plan:
