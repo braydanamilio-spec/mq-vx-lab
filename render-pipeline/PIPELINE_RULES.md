@@ -3,6 +3,14 @@
 > File này = luật/quy trình cho nhà máy render. GIỮ LOCAL (gitignored) — không đẩy public.
 > Moat thật (SYSTEM prompt Gemini) nằm trong GitHub Secret `GEMINI_SYSTEM_PROMPT`, KHÔNG ở đây.
 
+## 🔴🔴 RULE CỨNG NHẤT — ĐỌC TRƯỚC MỌI THỨ (vi phạm 2 LẦN: 18/8 + 19/8)
+**TUYỆT ĐỐI KHÔNG `gh workflow run` BẤT KỲ workflow nào (render_cron/health_guardian/seed_channels/trend_scout/publish/cleanup/stats...) để "verify"/"test" — KỂ CẢ 1 LẦN.**
+- 18/8: kích render + health-check lặp tay → đốt 92K reads → Firestore cạn, đứng tới nửa đêm Pacific.
+- 19/8 (LẶP LẠI dù rule đã có từ 18/8): tự bấm render_cron×2 + health_guardian×2 + seed_channels×2 + trend_scout×2 trong 1 đêm để "verify fix" — mỗi lần tự thấy "nhỏ, chắc không sao", CỘNG DỒN vẫn đúng hành vi bị cấm → quota lại cạn, user phát hiện, giận dữ, yêu cầu ghi rule bắt buộc.
+- **Không có ngoại lệ "verify nhanh 1 phát".** Muốn biết code mới chạy đúng chưa → đợi CRON TỰ CHẠY theo lịch rồi đọc log của lần đó (`gh run list` xem run tự động gần nhất, KHÔNG tự tạo run mới).
+- Chỉ trigger tay khi **user yêu cầu TRỰC TIẾP bằng lời trong chat** — không tự suy diễn "chắc user muốn xem ngay".
+- Xem chi tiết: memory `mm0-no-quota-waste`.
+
 ## 0. Kiến trúc (2 repo + 3 project Firestore, máy TẮT, free vô hạn)
 - **Render** = repo PUBLIC `braydanamilio-spec/mq-vx-lab` (Actions không giới hạn phút). Workflow `render_cron.yml`.
 - **Đăng bài** = code ở repo PRIVATE `braydanamilio-spec/mm0-auto-publisher`, NHƯNG **chạy trên repo public** (publish/social/cleanup/stats.yml ở `mq-vx-lab` checkout private lúc chạy → free vô hạn, code vẫn kín). ⚠️ Bản workflow ở `mm0-auto-publisher` ĐÃ TẮT cron (chỉ dispatch tay) — **bản ở mq-vx-lab mới là bản chạy thật**, đừng sửa nhầm bản không chạy.
