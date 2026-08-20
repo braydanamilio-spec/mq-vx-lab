@@ -493,10 +493,17 @@ def update_job(job_id: str, **patch):
 _BEAT = {"job": None, "th": None}
 
 
+# NHỊP 5 PHÚT (không phải 2'): 18 kênh chạy song song mà ghi mỗi 2' = ~13K lượt ghi/ngày, ngốn gần
+# trọn hạn mức FREE 20K/ngày của Firestore -> 20/8 publish_social ăn "ResourceExhausted: 429 Quota
+# exceeded". Mốc coi-là-chết là 45' nên 5'/nhịp vẫn còn 9 nhịp dự phòng, thừa an toàn, mà lượng ghi
+# giảm 2.5 lần (~5K/ngày).
+BEAT_SEC = 300
+
+
 def _beat_loop():
     import time as _t
     while True:
-        _t.sleep(120)
+        _t.sleep(BEAT_SEC)
         jid = _BEAT.get("job")
         if not jid:
             continue
