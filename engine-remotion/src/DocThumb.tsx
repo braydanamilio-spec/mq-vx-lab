@@ -17,10 +17,38 @@ export type DocThumbProps = {
 };
 
 // AUTO-FIT: tiêu đề dài phải NHỎ lại cho vừa khung (bài học chữ tràn khung avatar brand).
+// CHAR_W đo THẬT từ ảnh render (không đoán): Poppins weight 800-900 IN HOA có bề rộng trung bình
+// ~0.58em/ký tự. Trước đây để 0.5 -> fitSize tưởng chữ hẹp hơn thực ~16% -> tiêu đề/nhãn/hook đều
+// tính ra cỡ chữ QUÁ TO -> tràn quá lề phải và lòi ra ngoài nền pill (thấy rõ khi test chữ dài).
+// Để 0.62 (dư an toàn trên mức đo 0.58) vì còn letterSpacing cộng thêm.
+const CHAR_W = 0.62;
 const fitSize = (lines: string[], maxW: number, base: number) => {
   const longest = lines.reduce((a, l) => Math.max(a, l.length), 1);
-  const est = longest * base * 0.5;           // ~0.5em/ký tự, ước lượng bảo thủ (rộng hơn thực)
+  const est = longest * base * CHAR_W;
   return est > maxW ? Math.floor((base * maxW) / est) : base;
+};
+
+// XUỐNG DÒNG KHÔNG BAO GIỜ MẤT CHỮ.
+// TRƯỚC ĐÂY: gói cứng 13 ký tự/dòng rồi `if (lines.length === 3) break` -> tiêu đề dài bị CẮT CỤT
+// GIỮA CÂU (thử thật: "The State Americans Are Fleeing The Fastest And It Is Not California"
+// hiện ra thành "THE STATE / AMERICANS ARE / FLEEING THE" — cụt, mất nghĩa, phản tác dụng CTR).
+// GIỜ: nới dần hạn mức ký tự/dòng cho tới khi TOÀN BỘ chữ nằm gọn trong maxLines; cỡ chữ do
+// fitSize() tự thu lại. Thà chữ nhỏ hơn một chút còn hơn mất nghĩa.
+const wrapAll = (words: string[], maxLines: number, startPer = 13): string[] => {
+  let per = startPer;
+  for (let guard = 0; guard < 10; guard++) {
+    const ls: string[] = [];
+    let cur = "";
+    for (const w of words) {
+      if (!cur) cur = w;
+      else if ((cur + " " + w).length <= per) cur += " " + w;
+      else { ls.push(cur); cur = w; }
+    }
+    if (cur) ls.push(cur);
+    if (ls.length <= maxLines) return ls;
+    per = Math.ceil(per * 1.25) + 1;
+  }
+  return [words.join(" ")];   // cực đoan: 1 dòng, fitSize lo phần thu nhỏ
 };
 
 export const DocThumb: React.FC<DocThumbProps> = ({
@@ -30,19 +58,18 @@ export const DocThumb: React.FC<DocThumbProps> = ({
   // CÔNG THỨC CTR: SỐ LIỆU GÂY SỐC + CÂU HỎI MỞ (không trả lời) > tiêu đề dài.
   // Có stat -> bố cục "số to + nhãn + câu hỏi". Không có stat -> lùi về bố cục tiêu đề (bên dưới).
   const useStat = !!String(stat).trim();
-  // Tối đa 3 dòng, mỗi dòng <=13 ký tự -> chữ luôn TO, đọc được ở thumbnail nhỏ.
-  const words = (big || "").toUpperCase().trim().split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let cur = "";
-  for (const w of words) {
-    if (!cur) cur = w;
-    else if ((cur + " " + w).length <= 13) cur += " " + w;
-    else { lines.push(cur); cur = w; }
-    if (lines.length === 3) break;
-  }
-  if (cur && lines.length < 3) lines.push(cur);
+  // CHỐNG THUMBNAIL TRẮNG: Gemini thi thoảng trả tiêu đề rỗng -> trước đây ra ảnh trống trơn chỉ có
+  // tên kênh. Lùi về kicker để luôn có chữ.
+  const bigSafe = (big || "").trim() || kicker || "";
+  // Tối đa 4 dòng, ưu tiên ~13 ký tự/dòng -> chữ TO; dài quá thì wrapAll tự nới (không cắt chữ).
+  const words = bigSafe.toUpperCase().trim().split(/\s+/).filter(Boolean);
+  const lines = words.length ? wrapAll(words, 4, 13) : [];
   // Vùng chữ thật = 1280 - left(62) - right(300) = 918px. Trước đây fit theo 1080 -> chữ TRÀN sát mép phải.
   const fs = fitSize(lines, 900, 138);
+  // HOOK: trước đây cỡ chữ CỐ ĐỊNH 44 + nowrap -> câu hỏi dài TRÀN HẲN RA NGOÀI KHUNG, bị cắt cụt
+  // ("...WANTS TO TA"). Giờ auto-fit; ngắn thì 1 dòng chữ to, quá dài thì xuống dòng thay vì tràn.
+  const hookFit = fitSize([String(hook)], 820, 44);
+  const hookWrap = hookFit < 32;
 
   return (
     <AbsoluteFill style={{ background: "#07080f", fontFamily: "'Poppins',Arial", overflow: "hidden" }}>
@@ -113,7 +140,10 @@ export const DocThumb: React.FC<DocThumbProps> = ({
           } as React.CSSProperties}>{stat}</div>
           {statLabel ? (
             <div style={{
-              marginTop: 6, fontSize: 46, fontWeight: 800, letterSpacing: 2, color: "#EAF6FF",
+              // auto-fit như hook: nhãn dài ("IN UNPAID MEDICAL BILLS EVERY SINGLE YEAR") từng sát mép
+              // 850 (không phải 918) vì letterSpacing 2px/ký tự còn cộng thêm bề rộng
+              marginTop: 6, fontSize: fitSize([String(statLabel)], 850, 46), fontWeight: 800,
+              letterSpacing: 2, color: "#EAF6FF",
               whiteSpace: "nowrap", WebkitTextStroke: "6px #05060c", paintOrder: "stroke fill",
               textShadow: "0 6px 22px rgba(0,0,0,0.95)",
             } as React.CSSProperties}>{statLabel.toUpperCase()}</div>
@@ -121,12 +151,17 @@ export const DocThumb: React.FC<DocThumbProps> = ({
           {hook ? (
             // CÂU HỎI MỞ trên nền accent -> mắt dừng lại, tạo khoảng trống tò mò (không trả lời trong ảnh)
             <div style={{
-              marginTop: 18, display: "inline-block", padding: "10px 26px", borderRadius: 12,
+              marginTop: 18, display: "inline-block", maxWidth: "100%", padding: "10px 26px", borderRadius: 12,
               background: `linear-gradient(90deg, ${accent}, ${accent2})`,
               boxShadow: `0 0 34px ${accent}88`,
             }}>
               <span style={{
-                fontSize: 44, fontWeight: 900, letterSpacing: 1, color: "#05060c", whiteSpace: "nowrap",
+                // LUÔN cho xuống dòng (không nowrap): nowrap + maxWidth = chữ LÒI RA NGOÀI nền pill
+                // (nền bị cắt ở maxWidth còn chữ vẫn chạy tiếp) — đúng lỗi đã thấy khi test hook dài.
+                // Cho wrap thì pill tự cao lên, chữ không bao giờ ra khỏi nền.
+                fontSize: hookWrap ? 36 : hookFit, fontWeight: 900, letterSpacing: 1, color: "#05060c",
+                whiteSpace: "normal", lineHeight: hookWrap ? 1.15 : 1.05,
+                display: "block",
               }}>{hook.toUpperCase()}</span>
             </div>
           ) : null}

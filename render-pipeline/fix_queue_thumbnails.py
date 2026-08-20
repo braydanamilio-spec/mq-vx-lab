@@ -50,20 +50,84 @@ if AP_SRC and AP_SRC not in sys.path:
     sys.path.insert(0, AP_SRC)
 import storage as ST  # noqa: E402
 
-# Màu THẬT từng kênh (khớp RS_BRANDS trên dashboard, đã patch vào Firestore render_channels ở
-# phiên này). accent2 chỉ cần khác accent khi accent trùng #F5B301 (mặc định) -> tránh vàng-trên-vàng.
+# Màu THẬT từng kênh (accent = màu thương hiệu, khớp RS_BRANDS dashboard + Firestore render_channels).
+#
+# accent2 QUAN TRỌNG HƠN accent ở thumbnail: DocThumb tô SỐ LIỆU TO NHẤT (thứ đập vào mắt đầu tiên)
+# bằng accent2, còn accent chỉ hiện ở thanh kicker nhỏ + nền gradient của pill câu hỏi. Nếu để accent2
+# trống -> DocThumb lấy mặc định #F5B301 -> 9/10 kênh gốc có số liệu VÀNG Y HỆT NHAU = nhìn như cùng
+# một lò sản xuất hàng loạt (đúng thứ YouTube/Facebook đánh dấu rủi ro). Vì vậy MỖI kênh được gán 1
+# accent2 riêng, trải đều dải màu (cyan/vàng/mint/gold/lục/sky/hồng/aqua/hổ phách/cam) và tương phản
+# tốt với accent của chính kênh đó.
 ACCENTS = {
-    "DATARACE":    ("#F5B301", "#22D3EE"),
-    "STATEWARS":   ("#E4562B", "#F5B301"),
-    "MONEYMOVES":  ("#2FA84F", "#F5B301"),
-    "POWERPLAY":   ("#22D3EE", "#F5B301"),
-    "GRIDIRON":    ("#FB923C", "#F5B301"),
-    "SCREENKINGS": ("#EC4899", "#F5B301"),
-    "PAYCHECK":    ("#2DD4BF", "#F5B301"),
-    "BODYUSA":     ("#7C5CFF", "#F5B301"),
-    "RIDEUSA":     ("#38BDF8", "#F5B301"),
-    "EATSUSA":     ("#A3E635", "#F5B301"),
+    "DATARACE":    ("#F5B301", "#22D3EE"),   # vàng  -> số cyan
+    "STATEWARS":   ("#E4562B", "#FFD93D"),   # đỏ    -> số vàng
+    "MONEYMOVES":  ("#2FA84F", "#7CF6C0"),   # lục   -> số mint
+    "POWERPLAY":   ("#22D3EE", "#F5B301"),   # cyan  -> số vàng gold
+    "GRIDIRON":    ("#FB923C", "#4ADE80"),   # cam   -> số lục
+    "SCREENKINGS": ("#EC4899", "#38BDF8"),   # hồng  -> số sky
+    "PAYCHECK":    ("#2DD4BF", "#FB7185"),   # teal  -> số hồng đào
+    "BODYUSA":     ("#7C5CFF", "#5EEAD4"),   # tím   -> số aqua
+    "RIDEUSA":     ("#38BDF8", "#FACC15"),   # sky   -> số hổ phách
+    "EATSUSA":     ("#A3E635", "#F97316"),   # chanh -> số cam
 }
+
+
+# Từ bỏ khi tìm ảnh: hư từ + từ "câu view" (không mô tả VẬT THỂ nào để chụp) + số/đơn vị.
+_STOP = set("""a an the of in on for at to from by with and or but as is are was were be been being this that these those
+it its his her their our your my we you they he she i us them me
+how why what when where which who whom whose than then so if not no nor do does did done
+real really truth true hidden secret shocking brutal terrifying wild wildest silent silently quietly
+actually nobody everyone america american americas us usa state states new old big biggest most least
+you're isn't aren't don't doesn't didn't can't won't it's thats that's here there now ever never
+cost costs price prices money dollar dollars year years day days time times thing things
+about into over under after before between across against during through
+one two three four five six seven eight nine ten first last next best worst top
+got get gets getting make makes made making take takes took taking keep keeps keeping
+kill kills killed killing save saves saved saving hide hides hiding hidden beat beats
+outsold outsell conquer conquers conquered flee flees fleeing fled leave leaves left
+break breaks broke broken build builds built change changes changed turn turns turned
+behind quietly update updates
+""".split())
+
+
+_VKEY = "__chua_doc__"
+
+
+def _vision_key():
+    """1 key Gemini để Vision kiểm ảnh. Ưu tiên biến môi trường; không có -> đọc từ Firestore
+    (gemini_keys, cùng nguồn với dây chuyền render). Không có key -> trả None: script vẫn chạy,
+    chỉ là không kiểm được ảnh (fail-open, không chặn cả mẻ)."""
+    global _VKEY
+    if _VKEY != "__chua_doc__":
+        return _VKEY
+    _VKEY = os.environ.get("GEMINI_API_KEY") or None
+    if not _VKEY:
+        try:
+            import firestore_bridge as FB
+            ks = FB.read_keys(os.environ.get("OWNER_UID"))
+            _VKEY = (ks[0].get("key") if ks else None) or None
+        except Exception as e:
+            print("   ⚠️ không đọc được key Gemini (bỏ kiểm ảnh):", str(e)[:70])
+            _VKEY = None
+    print("   🔎 Kiểm ảnh bằng Vision:", "BẬT" if _VKEY else "TẮT (không có key)")
+    return _VKEY
+
+
+def image_query(title: str, topic: str) -> str:
+    """Rút 2-3 TỪ KHÓA VẬT THỂ từ tiêu đề để tìm ảnh.
+
+    TRƯỚC ĐÂY ném nguyên cả câu tiêu đề vào Openverse -> câu dài toàn hư từ ("The State Where 1 in 4
+    Adults Are in Medical Debt") khiến Openverse trả ảnh lạc đề hoàn toàn (thử thật: ra ảnh toà nhà
+    cổ năm 1909). Tiêu đề tiếng Anh thường đặt CHỦ THỂ Ở CUỐI câu, nên lấy các từ mang nghĩa gần
+    cuối cho ra chủ thể sát nhất ("medical debt", "original movies", "fast food milkshakes").
+    Không rút được từ nào -> trả "" -> DocThumb dùng nền gradient thiết kế sẵn (vẫn đẹp, và CHẮC CHẮN
+    tốt hơn một tấm ảnh sai chủ đề)."""
+    import re as _re
+    words = _re.findall(r"[A-Za-z']+", f"{title} {topic}")
+    keep = [w for w in words if len(w) > 2 and w.lower() not in _STOP]
+    if not keep:
+        return ""
+    return " ".join(keep[-3:]).lower()
 
 
 def build_thumb(channel: str, title: str, topic: str, dest_local: str) -> bool:
@@ -74,9 +138,22 @@ def build_thumb(channel: str, title: str, topic: str, dest_local: str) -> bool:
     os.makedirs(bg_dir, exist_ok=True)
     bg_local = os.path.join(bg_dir, "bg.jpg")
     bg_rel = ""
+    q = image_query(title, topic)
+    # ẢNH PHẢI KHỚP NỘI DUNG 100%: Openverse CC0 nghiêng nhiều về ảnh tư liệu cũ nên tìm theo từ khoá
+    # thôi VẪN ra ảnh lạc đề (thử thật: "nợ y tế" -> ảnh toà nhà năm 1909). Bắt Gemini Vision nhìn từng
+    # ảnh ứng viên và CHỈ nhận ảnh nó xác nhận đúng chủ đề; duyệt tới 5 ảnh, không ảnh nào khớp -> BỎ
+    # ẢNH HẲN, dùng nền gradient thiết kế sẵn. Thà không ảnh còn hơn ảnh sai — nền gradient vẫn đẹp,
+    # còn ảnh sai chủ đề là lừa người xem (và kéo tụt CTR/độ tin cậy của kênh).
+    vkey = _vision_key()
+    verify = None
+    if vkey:
+        import qc_vision as QV
+        verify = lambda p: QV.verify_image(p, q, api_key=vkey)   # True/False/None(Vision lỗi -> fail-open)
     try:
-        if fetch_image(topic or title, bg_local, orient="wide"):
+        if q and fetch_image(q, bg_local, orient="wide", verify=verify, max_check=5):
             bg_rel = f"{tag}/bg.jpg"
+        elif q:
+            print(f"     ℹ️ không có ảnh CC0 nào KHỚP '{q}' -> dùng nền thiết kế")
     except Exception as e:
         print("     ⚠️ fetch_image lỗi:", str(e)[:80])
     tprops = {"bg": bg_rel, "big": title, "kicker": channel, "accent": accent, "accent2": accent2}
@@ -106,20 +183,28 @@ def build_thumb(channel: str, title: str, topic: str, dest_local: str) -> bool:
 
 
 def replace_thumb_on_drive(drv, parent_id: str, thumb_name: str, local_path: str) -> bool:
-    """Upload ảnh MỚI trước (tên tạm) -> chỉ xoá ảnh CŨ sau khi upload mới thành công -> đổi tên
-    ảnh mới về đúng tên cũ. Không bao giờ để video ở trạng thái KHÔNG có thumbnail nào."""
-    tmp_name = thumb_name + ".new.jpg"
-    up = drv.upload_file(parent_id, local_path, name=tmp_name)
+    """Thay ảnh thumbnail TẠI CHỖ, đảm bảo lúc đăng LUÔN tìm thấy đúng ảnh của đúng video.
+
+    Lúc đăng, main.py gọi find_file(parent_id, sidecar["thumbnail"]) — tìm ĐÚNG TÊN FILE trong ĐÚNG
+    THƯ MỤC chứa video đó. Nên chỉ cần giữ nguyên tên + thư mục là khớp 100%.
+
+    THỨ TỰ QUAN TRỌNG (bản đầu làm SAI): trước đây upload tên tạm -> xoá ảnh cũ -> đổi tên. Nếu hỏng
+    ở giữa (mạng/quota/CI bị huỷ) thì ảnh cũ ĐÃ MẤT mà ảnh mới CHƯA có tên đúng -> find_file trả None
+    -> video lên YouTube KHÔNG có thumbnail. Giờ: upload ảnh mới NGAY VỚI TÊN THẬT (Drive cho phép
+    trùng tên) rồi mới xoá ảnh cũ theo id đã ghi trước. Mọi thời điểm đều tồn tại ít nhất một file
+    đúng tên -> không bao giờ có khoảng trống."""
+    old_id = drv.find_file(parent_id, thumb_name)          # ghi nhớ id ảnh cũ TRƯỚC
+    up = drv.upload_file(parent_id, local_path, name=thumb_name)
     new_id = (up or {}).get("id")
     if not new_id:
-        return False
-    old_id = drv.find_file(parent_id, thumb_name)
+        return False                                        # upload hỏng -> ảnh cũ còn nguyên, không mất gì
     if old_id and old_id != new_id:
         try:
             drv.delete(old_id)
         except Exception as e:
-            print("     ⚠️ xoá thumbnail cũ lỗi (bỏ qua, vẫn còn 2 file):", str(e)[:80])
-    drv.svc.files().update(fileId=new_id, body={"name": thumb_name}, fields="id").execute()
+            # Không xoá được -> còn 2 file trùng tên, find_file lấy 1 trong 2: cả hai đều là thumbnail
+            # hợp lệ của CHÍNH video này -> không sai video, chỉ tốn chỗ. Ghi log để dọn sau.
+            print(f"     ⚠️ không xoá được ảnh cũ {old_id} ({str(e)[:60]}) — còn 2 bản trùng tên")
     return True
 
 
