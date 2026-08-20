@@ -155,7 +155,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
                                                          accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"),
                                                          avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story,
                                                          ai_style=ch.get("ai_style"), ai_only=bool(ch.get("ai_only")),   # Wave 5 speculative: gu vẽ riêng + bỏ qua Openverse
-                                                         music=ch.get("music"))   # mặc định KHÔNG có -> im lặng như trước; chỉ bật khi đã nghe thật + chọn đúng bài hợp tông
+                                                         music=ch.get("music"),   # mặc định KHÔNG có -> im lặng như trước; chỉ bật khi đã nghe thật + chọn đúng bài hợp tông
+                                                         mode=ch.get("mode"), host_prompt=ch.get("host_prompt"))   # Wave 7: duel/file = gu hình ảnh riêng; host_prompt = mascot nhất quán (Nano Banana)
                     elif fmt in ("swarm", "pulse", "clockwork", "longshot"):   # Wave 4: 1 accent riêng/kênh, không style/accent2
                         mk4 = {"swarm": DS.make_swarm, "pulse": DS.make_pulse,
                                "clockwork": DS.make_clockwork, "longshot": DS.make_longshot}[fmt]

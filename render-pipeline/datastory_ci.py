@@ -70,6 +70,20 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
         print(f"   ⚠️ Nano Banana '{prompt[:30]}' lỗi: {str(e)[:100]}"); return False
 
 
+def _generate_character_ref(channel, prompt, api_key) -> str | None:
+    """WAVE 7 — HOST nhất quán: sinh 1 ảnh nhân vật THAM CHIẾU duy nhất/kênh, CACHE lại (file trong
+    public/ luôn, khỏi copy) -> mọi video sau tái dùng NGUYÊN ảnh này, KHÔNG tốn thêm quota Nano Banana
+    mỗi video. Trả về path TƯƠNG ĐỐI (staticFile() cần) hoặc None nếu vẽ lỗi."""
+    rel = f"_host_{slug(channel)}.png"
+    dest = os.path.join(PUB, rel)
+    if os.path.exists(dest) and os.path.getsize(dest) > 2000:
+        return rel
+    style = "clean flat vector cartoon mascot, simple bold shapes, thick outline, solid plain background, front-facing three-quarter view, friendly expression, no text"
+    if _generate_image_ai(prompt, dest, api_key, style=style):
+        return rel
+    return None
+
+
 def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None, ai_prompt=None,
                 ai_style=None, ai_only=False):
     """Tải 1 ảnh từ Openverse — ƯU TIÊN CC0/Public Domain (KHÔNG cần ghi nguồn, an toàn bản quyền).
@@ -577,7 +591,7 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
 
 
 def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE", accent2="#F5B301", handle="@doc",
-                    ai_style=None, ai_only=False, music=None):
+                    ai_style=None, ai_only=False, music=None, mode=None, host_prompt=None):
     """Dựng props Cinematic (Wave 2): intro chapter + cảnh ảnh (fetch + Vision verify khớp) + outro chapter.
     Asset: PUB/<slug>/*.mp3 (giọng) + PUB/<slug>/clips/*.jpg (ảnh). dur tính bằng FRAME (30fps).
     ai_style/ai_only: kênh speculative (không có ảnh thật để so) -> gu vẽ riêng + bỏ qua Openverse hẳn.
@@ -618,12 +632,19 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     props = {"scenes": scenes_out, "slug": slug_, "handle": handle, "accent": accent, "accent2": accent2}
     if music:
         props["music"] = music
+    if mode:
+        props["mode"] = mode
+    if host_prompt and api_key:
+        ref = _generate_character_ref(channel, host_prompt, api_key)
+        if ref:
+            props["host"] = ref
     return props
 
 
 def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style="awe, cinematic",
              imgsrc=None, accent="#22D3EE", accent2="#F5B301", avoid=None,
-             on_status=None, on_limit=None, on_ok=None, resume_story=None, ai_style=None, ai_only=False, music=None):
+             on_status=None, on_limit=None, on_ok=None, resume_story=None, ai_style=None, ai_only=False, music=None,
+             mode=None, host_prompt=None):
     """WAVE 2 A-Z: Gemini viết tài liệu -> giọng + ảnh CC0 (Vision verify) -> render Cinematic -> QC + thumb.
     ai_style/ai_only: kênh speculative (tương lai/vũ trụ suy đoán, KHÔNG có ảnh thật để tìm) -> gu vẽ
     riêng nhất quán + bỏ qua tìm Openverse hẳn (đỡ phí round-trip mạng chắc chắn trật).
@@ -643,7 +664,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     st("rendering", "Giọng + ảnh + render điện ảnh", title=story.get("title_yt") or story.get("title"), score=score, script=_ckpt_json(story))
     props = build_doc_props(story, channel, imgsrc=imgsrc, api_key=keys[0]["key"],
                             accent=accent, accent2=accent2, handle=channel_handle(channel),
-                            ai_style=ai_style, ai_only=ai_only, music=music)
+                            ai_style=ai_style, ai_only=ai_only, music=music, mode=mode, host_prompt=host_prompt)
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
