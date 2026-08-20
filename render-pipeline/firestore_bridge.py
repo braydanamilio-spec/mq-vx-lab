@@ -315,13 +315,36 @@ def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
 def has_active_render(owner: str) -> bool:
     """Còn job render nào ĐANG CHẠY THẬT (B) không -> gate mở phiên MỚI ngay khi phiên trước xong hẳn
     (thay vì đoán 1 khoảng thời gian cố định) -> lấp khoảng nghỉ hiệu quả, không chồng phiên, không chờ oan."""
+    ACTIVE = ["queued", "running", "writing", "rendering", "qc"]
+    GHOST_H = 6      # > 6h = CHẮC CHẮN chết (workflow timeout 350' = 5.8h) -> không thể còn chạy thật
     try:
         db = _db_jobs()
         q = (db.collection("render_jobs").where("owner", "==", owner)
-             .where("status", "in", ["queued", "running", "writing", "rendering", "qc"]))
-        res = q.count().get()                     # aggregation: ~1 read
+             .where("status", "in", ACTIVE))
+        res = q.count().get()                     # aggregation: ~1 read (đường nhanh, ca phổ biến = 0)
         row = res[0]; ar = row[0] if isinstance(row, (list, tuple)) else row
-        return int(ar.value) > 0
+        n = int(ar.value)
+        if n == 0:
+            return False
+        # 20/8: TRƯỚC ĐÂY return n>0 luôn -> job MA (tiến trình đã chết nhưng status kẹt ở qc/writing)
+        # bị tính là "đang chạy" -> CHẶN mọi mẻ render mới cho tới khi health_guardian dọn (chỉ dọn khi
+        # job đủ 6h). Sáng 20/8: 39 job kẹt vì bug treo Gemini Vision -> gate khoá suốt, mẻ 12:00 UTC
+        # sắp mất trắng dù KHÔNG có gì chạy thật. Giờ đọc thêm để BỎ QUA job quá GHOST_H giờ -> gate tự
+        # lành, không phụ thuộc health_guardian chạy đúng lúc.
+        from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+        cut = _dt.now(_tz.utc) - _td(hours=GHOST_H)
+        live = 0
+        for d in q.limit(60).stream():            # chỉ chạy khi n>0; 60 = trần an toàn (matrix tối đa 18)
+            ca = (d.to_dict() or {}).get("created_at")
+            try:
+                if _dt.fromisoformat(str(ca).replace("Z", "+00:00")) > cut:
+                    live += 1
+                    break                          # thấy 1 job CÒN SỐNG là đủ kết luận -> dừng đọc sớm
+            except Exception:
+                live += 1; break                   # không đọc được giờ -> coi như còn sống (an toàn, không chồng phiên)
+        if live == 0:
+            print(f"   🧹 {n} job 'active' đều quá {GHOST_H}h (job ma, tiến trình đã chết) -> KHÔNG chặn phiên mới.")
+        return live > 0
     except Exception as e:
         print(f"   ⚠️ has_active_render lỗi ({e}) — coi như KHÔNG active (fail-open, tránh gate treo mãi)")
         return False
