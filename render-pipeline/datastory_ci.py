@@ -270,6 +270,10 @@ def build_long_props(stories, sdir, music="music/carefree.mp3", handle="@datarac
     return {"races": races, "intro": intro, "handle": handle, "music": music}
 
 
+class _HookDone(Exception):
+    """Đã lấy được khung hook mở đầu -> nhảy khỏi khối dựng DocThumb (không cần vẽ chồng chữ)."""
+
+
 SAFE_TOP = 0.58   # phụ đề cháy vào khung nằm ở ĐÁY -> lấy 58% trên là vùng sạch chữ
 FRAME_BLUR = 9    # khung video vốn đã đầy nhãn/số -> mờ 9 thì chữ cũ tan thành kết cấu (đã thử 0/5/9)
 
@@ -603,6 +607,13 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
     # dùng LUÔN cho thumbnail, khỏi cần Gemini trả thêm field mới. Nền = ảnh THẬT đã tuyển cho câu giữa
     # bài (props["races"][0]["shots"]), không phải khung cắt từ video render.
     try:
+        # ƯU TIÊN: KHUNG HOOK MỞ ĐẦU render nét từ chính composition (khớp video 100%,
+        # không phải vẽ chồng chữ). Không đạt QC -> rơi xuống dựng DocThumb bên dưới.
+        _thumb0 = out.rsplit(".", 1)[0] + ".jpg"
+        _kk = ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
+        if still_hook_thumb(comp, pf, _thumb0, api_key=_kk, title=(story.get("title") or channel)):
+            print("   ✅ thumbnail = KHUNG HOOK MỞ ĐẦU (render nét)")
+            raise _HookDone(_thumb0)
         shots = (props.get("races") or [{}])[0].get("shots") or []
         bg_rel = shots[len(shots) // 2] if shots else ""
         if bg_rel and not os.path.exists(os.path.join(PUB, bg_rel)):
@@ -617,6 +628,8 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
                         f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
         if os.path.exists(thumb):
             story["_thumb"] = thumb; info["thumb"] = thumb
+    except _HookDone as h:
+        story["_thumb"] = h.args[0]; info["thumb"] = h.args[0]
     except Exception as e:
         print("   ⚠️ DocThumb bỏ qua (dùng khung cắt mặc định):", str(e)[:90])
     print(f"   {'✅' if ok else '❌'} QC {info}")
@@ -1016,6 +1029,13 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     # không chữ, CTR thấp). Giờ: khung đẹp của CHÍNH video làm nền + chữ hook to + màu brand kênh.
     # Lỗi -> bỏ qua, caller tự lùi về _make_thumb() cũ (không bao giờ chặn pipeline).
     try:
+        # ƯU TIÊN: KHUNG HOOK MỞ ĐẦU render nét từ chính composition (khớp video 100%,
+        # không phải vẽ chồng chữ). Không đạt QC -> rơi xuống dựng DocThumb bên dưới.
+        _thumb0 = out.rsplit(".", 1)[0] + ".jpg"
+        _kk = ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
+        if still_hook_thumb("CinematicShort", pf, _thumb0, api_key=_kk, title=(story.get("title_yt") or story.get("title") or channel)):
+            print("   ✅ thumbnail = KHUNG HOOK MỞ ĐẦU (render nét)")
+            raise _HookDone(_thumb0)
         # NỀN = ẢNH GỐC SẠCH của chính video (public/<slug>/clips/sN.jpg), KHÔNG phải khung cắt từ video
         # đã render: khung render đã CHÁY phụ đề + HUD vào ảnh -> thumbnail bị chữ đè chữ, rất xấu.
         # Ảnh gốc là ảnh đã tuyển (Openverse CC0 hoặc AI vẽ) -> nét, và MỖI VIDEO MỘT ẢNH KHÁC NHAU
@@ -1043,6 +1063,8 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
                         f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
         if os.path.exists(thumb):
             story["_thumb"] = thumb; info["thumb"] = thumb
+    except _HookDone as h:
+        story["_thumb"] = h.args[0]; info["thumb"] = h.args[0]
     except Exception as e:
         print("   ⚠️ DocThumb bỏ qua (dùng khung cắt mặc định):", str(e)[:90])
     print(f"   {'✅' if ok else '❌'} QC doc {info}")
@@ -1393,6 +1415,13 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     # thumbnail riêng cho bản LONG (nội dung mid-roll monetize, giá trị cao). Lấy hook_stat/hook_caption
     # của RACE ĐẦU (đại diện cả pillar) + ảnh thật đã tuyển làm nền.
     try:
+        # ƯU TIÊN: KHUNG HOOK MỞ ĐẦU render nét từ chính composition (khớp video 100%,
+        # không phải vẽ chồng chữ). Không đạt QC -> rơi xuống dựng DocThumb bên dưới.
+        _thumb0 = out.rsplit(".", 1)[0] + ".jpg"
+        _kk = ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
+        if still_hook_thumb("RaceLong", pf, _thumb0, api_key=_kk, title=(plan.get("pillar_title") or channel)):
+            print("   ✅ thumbnail = KHUNG HOOK MỞ ĐẦU (render nét)")
+            raise _HookDone(_thumb0)
         first = stories[0] if stories else {}
         shots = (props.get("races") or [{}])[0].get("shots") or []
         bg_rel = shots[len(shots) // 2] if shots else ""
@@ -1408,6 +1437,8 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
                         f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
         if os.path.exists(thumb):
             plan["_thumb"] = thumb; info["thumb"] = thumb
+    except _HookDone as h:
+        plan["_thumb"] = h.args[0]; info["thumb"] = h.args[0]
     except Exception as e:
         print("   ⚠️ DocThumb (long) bỏ qua:", str(e)[:90])
     print(f"   {'✅' if ok else '❌'} QC long {info}")
