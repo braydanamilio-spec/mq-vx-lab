@@ -43,7 +43,7 @@ ENG = os.path.join(os.path.dirname(ROOT), "engine-remotion")
 PUB = os.path.join(ENG, "public")
 
 sys.path.insert(0, ROOT)
-from datastory_ci import fetch_image, slug, photo_score  # noqa: E402  — tái dùng: ảnh thật CC0 + slug helper
+from datastory_ci import fetch_image, slug, photo_score, ensure_yt_thumb  # noqa: E402  — tái dùng: ảnh thật CC0 + slug helper
 
 AP_SRC = os.environ.get("AUTOPUBLISHER_SRC")
 if AP_SRC and AP_SRC not in sys.path:
@@ -263,7 +263,8 @@ def frame_from_video(video: str, dest: str) -> bool:
     return best_s > 0
 
 
-def build_thumb(channel: str, title: str, topic: str, dest_local: str, video_local: str = "") -> bool:
+def build_thumb(channel: str, title: str, topic: str, dest_local: str, video_local: str = "",
+                variant: int = 0) -> bool:
     """Dựng 1 ảnh thumbnail DocThumb tại dest_local. Trả True/False."""
     accent, accent2 = ACCENTS.get(channel, ("#22D3EE", "#F5B301"))
     tag = f"_fixq_{slug(channel)}_{abs(hash(dest_local)) % 999999}"
@@ -274,7 +275,10 @@ def build_thumb(channel: str, title: str, topic: str, dest_local: str, video_loc
     # ƯU TIÊN 0 — KHUNG HOOK MỞ ĐẦU dùng thẳng làm thumbnail. Video hệ thống đặt hook ngay đầu bài
     # (tiêu đề lớn + số sốc + ảnh nền thật) nên khung đó VỐN ĐÃ là thumbnail hoàn chỉnh, khớp nội
     # dung tuyệt đối và không cần vẽ chồng chữ. Chỉ nhận khi Vision chấm đạt.
-    if video_local and os.path.exists(video_local):
+    # variant = số lần user đã bấm "tạo lại". Mỗi lần đi một ĐƯỜNG KHÁC để không ra lại đúng tấm cũ:
+    #   0 -> khung hook mở đầu   1 -> khung ảnh thật khác trong video
+    #   2 -> ảnh CC0/AI theo chủ đề   >=3 -> bố cục DocThumb (số liệu + câu hỏi)
+    if variant == 0 and video_local and os.path.exists(video_local):
         try:
             from datastory_ci import opening_thumb
             if opening_thumb(video_local, dest_local, api_key=_vision_key(), title=title):
@@ -284,7 +288,7 @@ def build_thumb(channel: str, title: str, topic: str, dest_local: str, video_loc
             print("     ⚠️ khung mở đầu bỏ qua:", str(e)[:70])
     # ƯU TIÊN 1 — FOOTAGE THẬT TRONG CHÍNH VIDEO (bắt buộc): khớp nội dung 100%, mỗi video một ảnh
     # khác nhau, không bao giờ "nền đơn điệu".
-    if video_local and os.path.exists(video_local) and frame_from_video(video_local, bg_local):
+    if variant <= 1 and video_local and os.path.exists(video_local) and frame_from_video(video_local, bg_local):
         if _render_thumb(channel, title, f"{tag}/bg.jpg", tag, dest_local, bg_dir, bg_local, bg_blur=BG_BLUR):
             if _thumb_ok(dest_local, title):
                 return True
@@ -293,7 +297,7 @@ def build_thumb(channel: str, title: str, topic: str, dest_local: str, video_loc
             print("     ↩️ thử nền khác vì QC thumbnail trượt")
         os.makedirs(bg_dir, exist_ok=True)
     # ƯU TIÊN 2 — ảnh CC0 khớp chủ đề (chỉ khi không rút được khung nào từ video)
-    q = image_query(title, topic)
+    q = image_query(title, topic) if variant <= 2 else ""
     # ẢNH PHẢI KHỚP NỘI DUNG 100%: Openverse CC0 nghiêng nhiều về ảnh tư liệu cũ nên tìm theo từ khoá
     # thôi VẪN ra ảnh lạc đề (thử thật: "nợ y tế" -> ảnh toà nhà năm 1909). Bắt Gemini Vision nhìn từng
     # ảnh ứng viên và CHỈ nhận ảnh nó xác nhận đúng chủ đề; duyệt tới 5 ảnh, không ảnh nào khớp -> BỎ
@@ -452,8 +456,22 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="chỉ liệt kê, không đổi gì")
     ap.add_argument("--limit", type=int, default=0, help="dừng sau N video (0 = không giới hạn)")
     ap.add_argument("--channel", default="", help="chỉ xử lý 1 kênh (để chạy SONG SONG mỗi kênh 1 luồng)")
+    ap.add_argument("--requests", action="store_true",
+                    help="CHỈ xử lý các yêu cầu 'tạo lại' user bấm trên dashboard")
     a = ap.parse_args()
     only = a.channel.strip().upper()
+
+    # CHẾ ĐỘ YÊU CẦU: chỉ làm những video user đã bấm "tạo lại" trên dashboard.
+    req_variant, want_ids, reqs = {}, None, []
+    if a.requests:
+        import firestore_bridge as FB
+        reqs = FB.read_thumb_requests(os.environ.get("OWNER_UID"))
+        want_ids = {r.get("drive_id") for r in reqs if r.get("drive_id")}
+        for r in reqs:
+            req_variant[r.get("drive_id")] = int(r.get("attempt") or 0)
+        print(f"🔁 {len(reqs)} yêu cầu tạo lại thumbnail từ dashboard.")
+        if not want_ids:
+            _report(0, 0, 0); return
 
     _load_keys(only or "MM0")     # gieo theo kênh -> mỗi luồng song song bắt đầu ở 1 key khác nhau
     accounts = ST.pool_accounts()
@@ -482,6 +500,9 @@ def main():
                 if only and channel != only:
                     skip += 1
                     continue
+                if want_ids is not None and f["id"] not in want_ids:
+                    skip += 1
+                    continue
                 title = sidecar.get("title") or sidecar.get("topic") or f["name"]
                 topic = sidecar.get("topic") or title
                 print(f"  🎯 [{channel}] {f['name']} -> {thumb_name}")
@@ -498,13 +519,16 @@ def main():
                     print("     ⚠️ tải video lỗi (sẽ tìm ảnh CC0 thay):", str(e)[:70])
                     vid = ""
                 try:
-                    built = build_thumb(channel, title, topic, local, video_local=vid)
+                    built = build_thumb(channel, title, topic, local, video_local=vid,
+                                       variant=int(req_variant.get(f["id"], 0)))
                 finally:
                     if vid and os.path.exists(vid):
                         try:
                             os.remove(vid)
                         except Exception:
                             pass
+                if built:
+                    ensure_yt_thumb(local)   # chốt 1280x720 + <2MB trước khi lên Drive
                 if not built:
                     print("     ⚠️ dựng thumbnail thất bại -> bỏ qua video này (giữ nguyên ảnh cũ).")
                     err += 1
@@ -513,6 +537,11 @@ def main():
                 if new_tid:
                     done += 1
                     _save_thumb_id(f["id"], new_tid)
+                    for r in reqs:
+                        if r.get("drive_id") == f["id"]:
+                            import firestore_bridge as _FB
+                            _FB.mark_thumb_request(r["id"], "done", "đã tạo lại",
+                                                   attempt=int(r.get("attempt") or 0) + 1)
                 else:
                     print("     ⚠️ upload thumbnail mới thất bại -> bỏ qua (giữ nguyên ảnh cũ).")
                     err += 1

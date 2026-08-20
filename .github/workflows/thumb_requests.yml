@@ -1,0 +1,79 @@
+name: MM0 Thumbnail Requests (tạo lại theo yêu cầu từ dashboard)
+
+# Gom các yêu cầu "🔄 Tạo lại thumbnail" user bấm trên dashboard rồi làm MỘT LƯỢT mỗi 30 phút.
+# Vì sao gom mà không kích ngay từng cái: mỗi lần kích tốn 1 runner, bấm 10 ảnh là giành hết chỗ
+# của render_cron (trần 20 job song song của tài khoản) -> nghẽn sản xuất video, lợi bất cập hại.
+#
+# Mỗi lần tạo lại đi một ĐƯỜNG KHÁC (attempt tăng dần) để không ra lại đúng tấm ảnh cũ:
+#   lần 1 khung hook mở đầu · lần 2 khung ảnh thật khác trong video
+#   lần 3 ảnh CC0/AI theo chủ đề · lần 4+ bố cục DocThumb (số liệu + câu hỏi)
+# Không có yêu cầu nào -> thoát trong ~30 giây, gần như không tốn gì.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+concurrency: { group: mm0-thumb-requests, cancel-in-progress: false }
+
+jobs:
+  redo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Cache node_modules
+        id: cache-node
+        uses: actions/cache@v4
+        with:
+          path: engine-remotion/node_modules
+          key: node-modules-${{ hashFiles('engine-remotion/package-lock.json') }}
+      - name: Cache Chrome Remotion
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.remotion
+            ~/.cache/remotion
+          key: remotion-chrome-${{ hashFiles('engine-remotion/package-lock.json') }}
+      - name: Thư viện hệ thống
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
+            libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y libasound2
+      - name: Python deps
+        # 2 lệnh riêng — gộp làm pip nổ "resolution-too-deep" (sự cố 20/8).
+        run: |
+          pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+            google-api-python-client google-auth pyyaml
+          pip install --quiet pillow google-genai
+      - name: npm ci (chỉ khi cache MISS)
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        working-directory: engine-remotion
+        run: npm ci
+      - name: Ensure Chrome
+        working-directory: engine-remotion
+        run: npx remotion browser ensure
+      - name: Service account
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+      - name: Xử lý yêu cầu tạo lại
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          SHARD_META: ${{ vars.SHARD_META }}
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+        run: |
+          echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+          python render-pipeline/fix_queue_thumbnails.py --requests

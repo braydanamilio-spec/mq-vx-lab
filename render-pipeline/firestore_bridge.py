@@ -266,6 +266,31 @@ def get_script_by_drive(owner: str, drive_id: str):
     return None
 
 
+def read_thumb_requests(owner: str, limit: int = 40) -> list[dict]:
+    """Yêu cầu TẠO LẠI THUMBNAIL từ nút trên dashboard (collection thumb_requests)."""
+    out = []
+    try:
+        q = (_db_meta().collection("thumb_requests").where("owner", "==", owner)
+             .where("status", "==", "pending"))
+        for d in q.stream():
+            x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
+            if len(out) >= limit:
+                break
+    except Exception as e:
+        print(f"   ⚠️ read_thumb_requests lỗi: {e}")
+    return out
+
+
+def mark_thumb_request(req_id: str, status: str, note: str = "", attempt: int = None):
+    try:
+        patch = {"status": status, "note": note[:120], "done_at": _now()}
+        if attempt is not None:
+            patch["attempt"] = attempt
+        _db_meta().collection("thumb_requests").document(req_id).set(patch, merge=True)
+    except Exception as e:
+        print(f"   ⚠️ mark_thumb_request lỗi: {e}")
+
+
 def mark_request_status(req_id: str, status: str):
     """processing = đã bắt đầu render lại -> dashboard KHÓA nút hủy."""
     _db_meta().collection("render_requests").document(req_id).set({"status": status, "started_at": _now()}, merge=True)

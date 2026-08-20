@@ -354,6 +354,36 @@ def run_render_cmd(cmd, cwd, timeout=RENDER_TIMEOUT, label=""):
         raise subprocess.CalledProcessError(proc.returncode, cmd)
 
 
+# CHUẨN THUMBNAIL YOUTUBE (áp cho CẢ long lẫn short — YouTube chỉ nhận thumbnail tuỳ chỉnh 16:9,
+# Shorts cũng vậy, nó tự cắt khi hiển thị dọc): 1280x720, JPG, dưới 2MB (trần cứng của YouTube).
+YT_THUMB_W, YT_THUMB_H, YT_THUMB_MAX = 1280, 720, 2 * 1024 * 1024
+
+
+def ensure_yt_thumb(path: str) -> bool:
+    """Chốt chặn CUỐI trước khi ảnh rời máy: ép đúng 1280x720 và dưới 2MB.
+
+    Vì sao cần dù các nhánh đều đã xuất 1280x720: chỉ cần MỘT nhánh sau này đổi kích thước là
+    YouTube từ chối thumbnail SILENT (youtube_uploader bắt lỗi rồi bỏ qua để không chặn upload)
+    -> video lên mà không có thumbnail, nhìn log thành công nên không ai biết. Kiểm ở đây thì
+    không nhánh nào lọt được."""
+    try:
+        from PIL import Image
+        im = Image.open(path)
+        if im.size != (YT_THUMB_W, YT_THUMB_H):
+            print(f"   🔧 thumbnail {im.size} != {YT_THUMB_W}x{YT_THUMB_H} -> ép lại đúng cỡ")
+            im = im.convert("RGB").resize((YT_THUMB_W, YT_THUMB_H), Image.LANCZOS)
+            im.save(path, "JPEG", quality=90)
+        q = 90
+        while os.path.getsize(path) > YT_THUMB_MAX and q >= 60:
+            q -= 10                                    # hiếm khi chạm (ảnh thật ~100KB) nhưng vẫn chặn
+            Image.open(path).convert("RGB").save(path, "JPEG", quality=q)
+            print(f"   🔧 thumbnail > 2MB -> nén lại chất lượng {q}")
+        return os.path.getsize(path) <= YT_THUMB_MAX
+    except Exception as e:
+        print("   ⚠️ không kiểm được cỡ thumbnail:", str(e)[:70])
+        return True                                    # fail-open: thà thử upload còn hơn bỏ ảnh
+
+
 SAFE_TOP = 0.58   # phụ đề cháy vào khung nằm ở ĐÁY -> lấy 58% trên là vùng sạch chữ
 FRAME_BLUR = 9    # khung video vốn đã đầy nhãn/số -> mờ 9 thì chữ cũ tan thành kết cấu (đã thử 0/5/9)
 
@@ -494,6 +524,7 @@ def still_hook_thumb(comp_id, props_path, dest_jpg, frame=90, api_key=None, titl
                        capture_output=True, timeout=90, check=True)
         if not os.path.exists(dest_jpg):
             return False
+        ensure_yt_thumb(dest_jpg)
         if api_key:
             import qc_vision as QV
             ok, info = QV.check_thumb(dest_jpg, title=title, api_key=api_key, min_score=min_score)
@@ -682,7 +713,10 @@ def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
         subprocess.run(["npx", "remotion", "still", "src/index.ts", "DocThumb", thumb,
                         f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"],
                        cwd=ENG, check=True, timeout=180)
-        return thumb if os.path.exists(thumb) else ""
+        if os.path.exists(thumb):
+            ensure_yt_thumb(thumb)
+            return thumb
+        return ""
     except Exception as e:
         print("   ⚠️ DocThumb lỗi:", str(e)[:90])
         return ""
