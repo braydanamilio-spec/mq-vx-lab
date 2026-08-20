@@ -246,7 +246,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     lst("running", f"🔧 Tự thử lại nhẹ hơn ({nr} race)…")
                 _, plan, subtopics, ok, info, stories = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
                                                             on_status=lst, on_limit=cool, avoid=avoid, n_races=nr, on_ok=okcb,
-                                                            resume_checkpoint=rck)
+                                                            resume_checkpoint=rck,
+                                                            accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"))
                 last_err = None; break
             except Exception as e:
                 last_err = e; traceback.print_exc()
@@ -299,7 +300,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 sout = os.path.join("out", DS.slug(channel) + f"_short{i}.mp4")
                 if satt > 1:
                     sst("running", "🔧 Tự thử lại short…"); resume_story = None
-                _, story, sok, sinfo = DS.make_video(channel, sub, "short", sout, keys=keys, tier=tier, on_status=sst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
+                _, story, sok, sinfo = DS.make_video(channel, sub, "short", sout, keys=keys, tier=tier, on_status=sst, on_limit=cool, on_ok=okcb, resume_story=resume_story,
+                                                      accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"))
                 serr = None; break
             except Exception as e:
                 serr = e; traceback.print_exc(); print(f"   🔧 SHORT {channel}#{i} lỗi lần {satt}: {str(e)[:100]}")

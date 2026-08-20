@@ -285,7 +285,8 @@ def qc(mp4):
     return ok, {"dur": round(dur, 1), "audio": ach == "audio", "res": wh, "size_mb": size_mb}
 
 
-def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
+def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None, on_status=None, on_limit=None, on_ok=None, resume_story=None,
+                accent="#22D3EE", accent2="#F5B301"):
     """keys: list [{id,key,email}] (production, từ Firestore); None -> dùng GEMINI_API_KEY env (local).
     on_status(status, step, **extra): ghi trạng thái realtime. on_limit(key_id): cho key nghỉ khi limit.
     resume_story: kịch bản ĐÃ CÓ (checkpoint từ phiên trước bị huỷ/lỗi) -> dùng lại, bỏ qua gọi Gemini."""
@@ -323,6 +324,29 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
                 ok = False
         except Exception as e:
             print("   ⚠️ vision qc skip:", e)
+    # THUMBNAIL BRAND (DocThumb, dùng chung với 21 kênh doc) — 10 kênh GỐC (data-race) trước đây KHÔNG
+    # có thumbnail riêng, rơi vào _make_thumb() ở run_render.py: cắt đại 1 khung TỪ VIDEO ĐÃ RENDER (dính
+    # phụ đề/HUD cháy vào ảnh). Đây là 10 kênh có TOÀN BỘ 705 video đã đăng thật từ trước tới giờ, đáng
+    # nâng cấp nhất. Data-race đã sẵn "hook_stat"/"hook_caption" (số to dùng ngay ở intro video) -> tái
+    # dùng LUÔN cho thumbnail, khỏi cần Gemini trả thêm field mới. Nền = ảnh THẬT đã tuyển cho câu giữa
+    # bài (props["races"][0]["shots"]), không phải khung cắt từ video render.
+    try:
+        shots = (props.get("races") or [{}])[0].get("shots") or []
+        bg_rel = shots[len(shots) // 2] if shots else ""
+        if bg_rel and not os.path.exists(os.path.join(PUB, bg_rel)):
+            bg_rel = ""
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        tprops = {"bg": bg_rel, "big": (story.get("title") or channel), "kicker": channel,
+                  "accent": accent, "accent2": accent2,
+                  "stat": str(story.get("hook_stat") or "").strip(),
+                  "statLabel": str(story.get("hook_caption") or "").strip()}
+        tf = os.path.join(PUB, f"_racethumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "DocThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        if os.path.exists(thumb):
+            story["_thumb"] = thumb; info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ DocThumb bỏ qua (dùng khung cắt mặc định):", str(e)[:90])
     print(f"   {'✅' if ok else '❌'} QC {info}")
     return out, story, ok, info
 
@@ -986,7 +1010,8 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
 
 
 def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
-              on_status=None, on_limit=None, n_races=6, avoid=None, on_ok=None, resume_checkpoint=None):
+              on_status=None, on_limit=None, n_races=6, avoid=None, on_ok=None, resume_checkpoint=None,
+              accent="#22D3EE", accent2="#F5B301"):
     """LONG 16:9 = pillar 5-6 race cùng chủ đề. Trả (out, plan, subtopics, ok, info, stories).
     resume_checkpoint: {"pillar_title","hook","races":[...]} ĐÃ CÓ (checkpoint phiên trước bị huỷ/lỗi lúc
     render) -> dùng lại, bỏ qua gọi Gemini lập pillar + viết lại từng race."""
@@ -1038,6 +1063,27 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     scs = [(s.get("self_score") or {}).get("total") for s in stories if (s.get("self_score") or {}).get("total")]
     if scs:
         info["score"] = round(sum(scs) / len(scs))   # điểm QC long = TB các race -> hiện trên dashboard
+    # THUMBNAIL BRAND (DocThumb) — cùng lý do đã áp cho make_video(): 10 kênh gốc trước đây KHÔNG có
+    # thumbnail riêng cho bản LONG (nội dung mid-roll monetize, giá trị cao). Lấy hook_stat/hook_caption
+    # của RACE ĐẦU (đại diện cả pillar) + ảnh thật đã tuyển làm nền.
+    try:
+        first = stories[0] if stories else {}
+        shots = (props.get("races") or [{}])[0].get("shots") or []
+        bg_rel = shots[len(shots) // 2] if shots else ""
+        if bg_rel and not os.path.exists(os.path.join(PUB, bg_rel)):
+            bg_rel = ""
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        tprops = {"bg": bg_rel, "big": (plan.get("pillar_title") or channel), "kicker": channel,
+                  "accent": accent, "accent2": accent2,
+                  "stat": str(first.get("hook_stat") or "").strip(),
+                  "statLabel": str(first.get("hook_caption") or "").strip()}
+        tf = os.path.join(PUB, f"_longthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "DocThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        if os.path.exists(thumb):
+            plan["_thumb"] = thumb; info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ DocThumb (long) bỏ qua:", str(e)[:90])
     print(f"   {'✅' if ok else '❌'} QC long {info}")
     return out, plan, subtopics, ok, info, stories
 
