@@ -497,7 +497,11 @@ def opening_thumb(out_video, dest_jpg, api_key=None, title="", min_score=70):
     os.makedirs(tmpd, exist_ok=True)
     best, best_s = None, -1
     # GIÂY TUYỆT ĐỐI (không phải %): hook nằm ở 2-8s đầu với MỌI độ dài video.
-    marks = [t for t in (3.0, 4.5, 6.0, 2.2) if t < dur * 0.9] or [min(2.0, dur / 2)]
+    # LẤY SỚM NHƯ DRIVE: Drive hiện preview bằng khung ĐẦU video và tấm nào cũng đúng cảnh hook ->
+    # bằng chứng cảnh hook đã hiện đầy đủ ngay từ giây đầu. Bản trước lấy 3.0/4.5/6.0s là QUÁ MUỘN,
+    # nhiều video đã chuyển sang cảnh khác. Thử 1.0s trước (qua fade mở màn), rồi 0.5s, rồi mới tới
+    # các mốc muộn hơn để phòng video có intro dài.
+    marks = [t for t in (1.0, 0.5, 1.8, 3.0, 4.5) if t < dur * 0.9] or [min(0.5, dur / 2)]
     for i, t in enumerate(marks):
         cand = os.path.join(tmpd, f"_op{i}.jpg")
         try:
@@ -508,8 +512,11 @@ def opening_thumb(out_video, dest_jpg, api_key=None, title="", min_score=70):
         # LỌC MIỄN PHÍ TRƯỚC KHI GỌI VISION: cảnh hook (chữ lớn trên ẢNH nền thật) có ~29% pixel
         # phẳng, còn khung biểu đồ thuần đồ hoạ là ~66% (đo thật trên video của hệ thống). Chặn ở 45%
         # -> video KHÔNG có cảnh hook (bản render đời đầu) bị loại ngay, không tiêu lượt Gemini nào.
+        # NGƯỠNG 63 (không phải 45): lượt chạy 150 video cho thấy khung bị loại nằm ở 49-61%, trong
+        # khi video CHỈ CÓ biểu đồ đo được 65-67%. Đặt 45 là loại nhầm chính các cảnh hook có nền
+        # ảnh tối/đơn giản. Chỉ chặn trường hợp CHẮC CHẮN là đồ hoạ, còn lại để Vision phán.
         _flat = photo_score(cand)[0]
-        if _flat > 45:
+        if _flat > 63:
             print(f"   ↩️ khung {t:.1f}s là đồ hoạ/biểu đồ ({_flat:.0f}% phẳng) — bỏ")
             continue
         ok, info = QV.check_thumb(cand, title=title, api_key=api_key, min_score=min_score)
