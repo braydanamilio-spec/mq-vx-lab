@@ -90,6 +90,15 @@ def _db_meta():
     return _db()
 
 
+def _db_keys():
+    """Project chứa gemini_keys. SHARD_KEYS=1 -> B (render hết dùng chung hạn mức với publish).
+
+    ĐỌC VÀ GHI PHẢI CÙNG MỘT NƠI: nếu đọc key ở B mà ghi req_today/alive/cooling sang A thì bộ đếm
+    bên B mãi bằng 0 -> key_order() tưởng mọi key đều chưa dùng -> chia key sai lệch, dồn tải vào
+    vài key rồi lại 429. Vì vậy MỌI hàm đụng gemini_keys đều đi qua đây."""
+    return _db_jobs() if os.environ.get("SHARD_KEYS") == "1" else _db()
+
+
 def _now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -132,7 +141,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         # này mỗi phiên -> ăn hết hạn mức đọc của A -> publish VÀ CẢ bước lập kế hoạch render đều
         # ăn "ResourceExhausted: 429" (20/8 chặn sản xuất ~13 tiếng tới lúc quota reset).
         # Lùi-về-A giữ cho thay đổi này AN TOÀN: chưa copy sang B thì chạy y như trước.
-        db = _db_jobs() if os.environ.get("SHARD_KEYS") == "1" else _db()
+        db = _db_keys()
         out = []; now = _now()
         for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
             x = d.to_dict() or {}
@@ -180,7 +189,7 @@ def incr_key_requests(key_id: str, n: int, today: str):
     (Nhánh sang-ngày-mới vẫn đọc-rồi-ghi vì cần biết req_date cũ để quyết định reset hay cộng dồn — hiếm khi
     2 luồng cùng trúng đúng khoảnh khắc sang ngày, rủi ro thấp hơn nhiều.)"""
     from google.cloud import firestore
-    ref = _db().collection("gemini_keys").document(key_id)
+    ref = _db_keys().collection("gemini_keys").document(key_id)
     d = ref.get()
     x = (d.to_dict() or {}) if d.exists else {}
     if x.get("req_date") == today:
@@ -200,17 +209,17 @@ def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = Fals
     if alive:
         patch["dead_since"] = None                     # sống lại -> xoá mốc chết
     else:
-        cur = _db().collection("gemini_keys").document(key_id).get()
+        cur = _db_keys().collection("gemini_keys").document(key_id).get()
         if not (cur.exists and (cur.to_dict() or {}).get("dead_since")):
             patch["dead_since"] = _now()               # stamp mốc chết LẦN ĐẦU (giữ nguyên nếu đã chết từ trước)
-    _db().collection("gemini_keys").document(key_id).set(patch, merge=True)
+    _db_keys().collection("gemini_keys").document(key_id).set(patch, merge=True)
 
 
 def cool_key(key_id: str, minutes: int = 90):
     """Đánh dấu key nghỉ N phút sau khi bị 429/quota (chống hammer -> chống die)."""
     from datetime import timedelta
     until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
-    _db().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
+    _db_keys().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
 
 
 def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
