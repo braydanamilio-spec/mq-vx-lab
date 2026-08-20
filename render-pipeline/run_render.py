@@ -17,6 +17,10 @@ OWNER = os.environ.get("OWNER_UID")
 PVER = os.environ.get("PIPELINE_VERSION", "v2")   # phiên bản pipeline (fix handle/tràn/che/hướng ảnh) -> dọn thông minh chỉ xóa bản CŨ
 # AN TOÀN: render là làm DỰ TRỮ (kho), upload là pipeline riêng. Mỗi kênh giữ tối đa N video dự trữ
 # (khi target=0) -> KHÔNG render vô hạn làm phình Drive. Chỉnh ở render_config.reserve_long/short.
+# NGHỈ GIỮA 2 PHIÊN: trước để 30' -> máy đứng không suốt nửa tiếng sau mỗi phiên dù đã xong việc.
+# has_active_render() đã chặn chồng phiên rồi nên hạ xuống 12' là an toàn: phiên mới mở ngay khi
+# phiên cũ dứt hẳn -> tận dụng tối đa thời gian, không tăng rủi ro chạy đè.
+SESSION_GAP_MIN = 12
 RESERVE_LONG = 10
 RESERVE_SHORT = 30
 DRIVE_SAFETY_PCT = 0.90   # kho ≥90% đầy -> ngừng render mẻ này (tránh phình + lỗi ghi khi hết chỗ)
@@ -550,7 +554,7 @@ def gate_mode():
             # (0/4/8/12/16/20 UTC): với round-cap, phiên tự xong sớm (10 long/30 short/kênh) rồi để trống luồng
             # tới giờ cố định tiếp theo là lãng phí. Sàn tối thiểu session_gap_min (mặc định 30') chống trigger dồn
             # dập nếu check active lỗi. Chỉnh session_gap_min ở render_config nếu muốn thưa hơn.
-            last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", 30) or 30); recently = False
+            last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", SESSION_GAP_MIN) or SESSION_GAP_MIN); recently = False
             if last:
                 try:
                     elapsed_min = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60
@@ -586,7 +590,7 @@ def plan_mode():
     event = os.environ.get("GITHUB_EVENT_NAME", "")
     run_now = bool(cfg.get("run_now"))
     # MỞ PHIÊN MỚI ngay khi phiên trước XONG HẲN — xem giải thích đầy đủ trong gate_mode().
-    last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", 30) or 30); recently = False
+    last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", SESSION_GAP_MIN) or SESSION_GAP_MIN); recently = False
     if last:
         try:
             elapsed_min = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60
@@ -730,10 +734,37 @@ def plan_mode():
     # MAX_MATRIX (khớp max-parallel YAML) -> mỗi phiên LUÔN 1 đợt, xong đúng hạn, nhường lượt sòng phẳng
     # cho phiên sau (đã xáo ngẫu nhiên nên nhóm bị cắt lần này ưu tiên lần sau).
     MAX_MATRIX = 18   # PHẢI khớp strategy.max-parallel trong .github/workflows/render_cron.yml
+
+    # CHỈ XẾP KÊNH CÒN VIỆC — 20/8: trước đây lấy đại 18 kênh mà KHÔNG xét kênh nào đã đủ chỉ tiêu.
+    # Kênh đủ target vẫn được cấp 1 slot, job khởi động rồi thoát ngay -> nhìn dashboard thấy "đang
+    # chạy 3" trong khi đã cấp 18 slot: phí 15 luồng mỗi phiên. Đếm phần CÒN THIẾU trước (count_done
+    # dùng aggregation, ~1 read/kênh nên rẻ), bỏ kênh đã đủ, rồi ưu tiên kênh thiếu NHIỀU nhất.
+    _by_ch = {c.get("name"): c for c in all_ch}
+    need = []
+    for nm in channels:
+        c = _by_ch.get(nm) or {}
+        lt = int(c.get("long_target", 0) or 0) or RESERVE_LONG
+        stt = int(c.get("short_target", 0) or 0) or RESERVE_SHORT
+        try:
+            nl = max(0, lt - FB.count_done(OWNER, nm, "long")) if c.get("make_long", True) else 0
+            ns = max(0, stt - FB.count_done(OWNER, nm, "short"))
+        except Exception as e:
+            print(f"   ⚠️ đếm {nm} lỗi ({str(e)[:50]}) -> vẫn cho vào hàng"); nl = ns = 1
+        if nl + ns > 0:
+            need.append((nl + ns, nm))
+    n_full = len(channels) - len(need)
+    if need:
+        need.sort(key=lambda x: -x[0])            # thiếu nhiều -> làm trước, lấp đủ 18 slot
+        channels = [nm for _, nm in need]
+    else:
+        print("🎯 Mọi kênh đã đủ chỉ tiêu — không mở phiên (khỏi đốt runner).")
+        return out_channels([])
     if len(channels) > MAX_MATRIX:
-        print(f"   ✂️ {len(channels)} kênh > {MAX_MATRIX} slot/phiên -> chỉ lấy {MAX_MATRIX} (đã xáo ngẫu nhiên), phần còn lại ưu tiên phiên sau.")
+        print(f"   ✂️ {len(channels)} kênh còn việc > {MAX_MATRIX} slot -> lấy {MAX_MATRIX} kênh thiếu nhiều nhất, phần còn lại ưu tiên phiên sau.")
         channels = channels[:MAX_MATRIX]
-    print(f"▶ {len(channels)} kênh -> render SONG SONG." + (f" (⏸ {n_paused} kênh đang pause, bỏ qua)" if n_paused else ""))
+    print(f"▶ {len(channels)} kênh -> render SONG SONG."
+          + (f" (⏸ {n_paused} pause)" if n_paused else "")
+          + (f" (🎯 {n_full} kênh đã đủ chỉ tiêu, bỏ qua)" if n_full else ""))
     out_channels(channels)
 
 
