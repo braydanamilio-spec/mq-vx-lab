@@ -51,7 +51,10 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
         return False
     try:
         from google import genai as genai2
-        client = genai2.Client(api_key=api_key)
+        # timeout 120s (SDK google-genai nhận ms qua http_options) — cùng lớp lỗi treo vĩnh viễn như
+        # generate_content() thiếu timeout bên content_brain.py (xem GEN_OPTS ở đó): vẽ ảnh treo -> job
+        # đứng im tới khi bị giết sau 6h. Có timeout -> throw -> except bên dưới trả False -> lùi fallback.
+        client = genai2.Client(api_key=api_key, http_options={"timeout": 120_000})
         resp = client.models.generate_content(
             model=model,
             contents=f"A {style or DEFAULT_AI_STYLE} of: {prompt}. No text, no watermark, no logo.")

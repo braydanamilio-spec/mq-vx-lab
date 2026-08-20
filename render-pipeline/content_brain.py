@@ -42,6 +42,12 @@ def _pick_model(genai, prefer="flash", api_key=""):
         cache = {"flash": flash[0] if flash else None, "pro": pro[0] if pro else None}
         _MODEL_CACHE[api_key] = cache
     return cache.get(prefer) or cache.get("flash")
+# TIMEOUT cho MỌI lệnh gọi Gemini viết kịch bản. 20/8 — nguyên nhân gốc khiến 30 kênh mới CHƯA TỪNG
+# có 1 video thành công nào: generate_content() KHÔNG timeout -> mạng/API chập chờn là TREO VĨNH VIỄN
+# (không throw nên except/retry bên dưới vô dụng), job đứng ở "writing"/"qc" tới khi bị giết sau 6h.
+# 45/72 job của kênh mới chết đúng kiểu này. Kênh cũ (data-race) đi đường khác nên thoát. 180s = dư cho
+# bản nháp dài nhất, vẫn cắt sớm hơn nhiều so với timeout workflow (350').
+GEN_OPTS = {"timeout": 180}
 MIN_SCORE = 90         # thang 100 — < 90 -> viết lại (chuẩn top USA)
 MAX_TRIES = 3          # số vòng viết lại tối đa — PHẢI đạt >= MIN_SCORE, chưa đạt thì viết lại (không hạ chuẩn)
 
@@ -212,6 +218,7 @@ def generate(seed: str, vtype: str = "short", api_key: str = None, model_name: s
             resp = model.generate_content(
                 prompt,
                 generation_config={"temperature": 0.9, "response_mime_type": "application/json"},
+                request_options=GEN_OPTS,
             )
         except Exception as e:
             msg = str(e).lower()
@@ -282,7 +289,7 @@ def plan_pillar(niche: str, n: int = 6, api_key: str = None, model_name: str = N
     for _try in range(2):
         try:
             model = genai.GenerativeModel(mname, system_instruction=PILLAR_SYS)
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.95, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.95, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
             break
         except Exception as e:
             msg = str(e).lower()
@@ -378,7 +385,7 @@ def generate_guess(category: str, n_rounds: int = 3, api_key: str = None, model_
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious attempt rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
         except Exception as e:
             msg = str(e).lower()
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
@@ -483,7 +490,7 @@ def generate_mapped(niche: str, api_key: str = None, model_name: str = None, avo
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.8, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.8, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
         except Exception as e:
             msg = str(e).lower()
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
@@ -581,7 +588,7 @@ def generate_ranked(niche: str, api_key: str = None, model_name: str = None, avo
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
         except Exception as e:
             msg = str(e).lower()
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
@@ -683,7 +690,7 @@ def generate_scaled(niche: str, api_key: str = None, model_name: str = None, avo
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
         except Exception as e:
             msg = str(e).lower()
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
@@ -774,7 +781,7 @@ def generate_thennow(niche: str, api_key: str = None, model_name: str = None, av
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
         except Exception as e:
             msg = str(e).lower()
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
@@ -945,7 +952,7 @@ def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.9, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.9, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
         except Exception as e:
             msg = str(e).lower()
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
@@ -1052,7 +1059,7 @@ def generate_swarm(niche: str, api_key: str = None, model_name: str = None, avoi
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
         except Exception as e:
             msg = str(e).lower()
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
@@ -1152,7 +1159,7 @@ def generate_pulse(niche: str, api_key: str = None, model_name: str = None, avoi
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
         except Exception as e:
             msg = str(e).lower()
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
@@ -1252,7 +1259,7 @@ def generate_clockwork(niche: str, api_key: str = None, model_name: str = None, 
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
         except Exception as e:
             msg = str(e).lower()
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
@@ -1350,7 +1357,7 @@ def generate_longshot(niche: str, api_key: str = None, model_name: str = None, a
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
-            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"})
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.85, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
         except Exception as e:
             msg = str(e).lower()
             if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
