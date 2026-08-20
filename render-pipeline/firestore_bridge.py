@@ -131,12 +131,21 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
 
 
 def incr_key_requests(key_id: str, n: int, today: str):
-    """Cộng dồn số REQUEST hôm nay của 1 key (reset khi sang ngày mới) -> tính quota còn free trước ngưỡng."""
+    """Cộng dồn số REQUEST hôm nay của 1 key (reset khi sang ngày mới) -> tính quota còn free trước ngưỡng.
+    ~10 kênh chạy SONG SONG có thể cùng dùng chung 1 key (key_order xoay vòng qua TẤT CẢ key của owner) và
+    đều gọi hàm này gần như đồng thời cuối phiên (channel_mode() flush) -> đọc-rồi-ghi (read x, set x+n) là
+    RACE: worker A đọc req_today=5, worker B cũng đọc 5 (trước khi A ghi xong), A ghi 5+3=8, B ghi 5+2=7 ->
+    ghi của B ĐÈ MẤT phần cộng của A -> req_today bị đếm THIẾU -> key tưởng còn nhiều quota hơn thực tế
+    (làm sai lệch key_order() ưu tiên "ít request nhất"). Dùng Increment() NGUYÊN TỬ (Firestore cộng dồn
+    ở server, không cần đọc trước) cho nhánh cùng ngày -> hết race ở trường hợp phổ biến nhất (trong ngày).
+    (Nhánh sang-ngày-mới vẫn đọc-rồi-ghi vì cần biết req_date cũ để quyết định reset hay cộng dồn — hiếm khi
+    2 luồng cùng trúng đúng khoảnh khắc sang ngày, rủi ro thấp hơn nhiều.)"""
+    from google.cloud import firestore
     ref = _db().collection("gemini_keys").document(key_id)
     d = ref.get()
     x = (d.to_dict() or {}) if d.exists else {}
     if x.get("req_date") == today:
-        ref.set({"req_today": int(x.get("req_today", 0) or 0) + int(n)}, merge=True)
+        ref.set({"req_today": firestore.Increment(int(n))}, merge=True)
     else:
         ref.set({"req_today": int(n), "req_date": today}, merge=True)
 

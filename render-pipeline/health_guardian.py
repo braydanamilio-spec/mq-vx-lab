@@ -64,7 +64,17 @@ def check_alive() -> bool:
         db = FB._db_jobs()
         cutoff = (_now() - timedelta(hours=SILENT_HOURS)).isoformat()
         q = db.collection("render_jobs").where("owner", "==", OWNER).where("status", "==", "done")
-        recent = [d for d in q.stream() if (d.to_dict() or {}).get("created_at", "") >= cutoff]
+        # TRƯỚC ĐÂY: q.stream() không giới hạn -> đọc TOÀN BỘ lịch sử job 'done' (hàng nghìn doc, chỉ tăng
+        # dần) MỖI GIỜ chỉ để biết có job nào done trong SILENT_HOURS gần đây -> tốn quota đọc free tier vô
+        # ích (đã cạn quota 2 lần trong tháng). Sắp theo created_at GIẢM DẦN + limit -> chỉ đọc vài chục doc
+        # GẦN NHẤT là đủ kết luận đúng. Thiếu composite index (owner+status+order by created_at) -> fallback
+        # limit thô (giống top_titles() đã làm) — vẫn giới hạn được số đọc, không đọc cả collection nữa.
+        try:
+            from google.cloud.firestore_v1 import Query
+            docs = list(q.order_by("created_at", direction=Query.DESCENDING).limit(20).stream())
+        except Exception:
+            docs = list(q.limit(200).stream())
+        recent = [d for d in docs if (d.to_dict() or {}).get("created_at", "") >= cutoff]
         if recent:
             print(f"   ✅ {len(recent)} video 'done' trong {SILENT_HOURS}h qua -> hệ thống sống khoẻ.")
             return True

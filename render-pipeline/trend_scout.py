@@ -89,8 +89,19 @@ def main():
 
     digest: dict[str, list[str]] = {}   # {kênh MM0: [câu tóm tắt xu hướng, ...]}
     for src in sources:
-        url = (src or {}).get("url"); applies_to = (src or {}).get("applies_to") or []
-        if not url or not applies_to:
+        # DỮ LIỆU TỪ DASHBOARD (Firestore render_config.trend_sources) KHÔNG được tin tưởng cấu trúc:
+        # nếu 1 phần tử không phải object (vd user lỡ lưu list string) thì (src or {}).get(...) sẽ NÉM
+        # AttributeError (str không có .get) -> crash cả main() -> KHÔNG lưu được trend cho BẤT KỲ kênh nào,
+        # kể cả các nguồn khác hợp lệ. Bỏ qua phần tử sai định dạng thay vì crash cả lần quét.
+        if not isinstance(src, dict):
+            print(f"   ⏭ bỏ qua nguồn sai định dạng (không phải object): {src!r}"); continue
+        url = src.get("url"); applies_to = src.get("applies_to") or []
+        if isinstance(applies_to, str):
+            applies_to = [applies_to]                  # lỡ lưu 1 chuỗi thay vì mảng -> coi như 1 kênh, KHÔNG lặp qua từng ký tự
+        elif not isinstance(applies_to, list):
+            applies_to = []
+        applies_to = [a for a in applies_to if isinstance(a, str) and a.strip()]
+        if not url or not isinstance(url, str) or not applies_to:
             print(f"   ⏭ bỏ qua nguồn thiếu url/applies_to: {src}"); continue
         handle = src.get("handle") or url
         print(f"🔎 {handle} …")
