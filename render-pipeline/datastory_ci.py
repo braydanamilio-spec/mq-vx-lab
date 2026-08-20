@@ -293,6 +293,13 @@ def _clip_words(s: str, n: int) -> str:
 # KHÔNG dùng cho still_hook_thumb: nguồn là PNG chưa nén, làm nét thêm chỉ tạo viền giả.
 SHARPEN = "unsharp=5:5:0.9:5:5:0.0"
 
+# TRẦN THỜI GIAN 1 LỆNH RENDER. Không có trần = Remotion treo thì job treo tới hết 120' của
+# GitHub, giữ khoá concurrency, mọi phiên sau bị huỷ (đúng sự cố 20/8: GRIDIRON+PAYCHECK treo
+# 2 tiếng nuốt trọn 3 phiên). Số liệu thật: cả một kênh (nhiều video) chạy xong lâu nhất 27'.
+# Đặt 30'/lệnh = rộng rãi cho long 1080p trên máy 2 nhân, mà treo thì tự ném TimeoutExpired ->
+# lớp retry sẵn có bắt được, job chuyển "failed" gọn gàng thay vì đơ.
+RENDER_TIMEOUT = 1800
+
 SAFE_TOP = 0.58   # phụ đề cháy vào khung nằm ở ĐÁY -> lấy 58% trên là vùng sạch chữ
 FRAME_BLUR = 9    # khung video vốn đã đầy nhãn/số -> mờ 9 thì chữ cũ tan thành kết cấu (đã thử 0/5/9)
 
@@ -678,7 +685,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
     print(f"   🎞️ render {comp} …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", comp, out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     if ok:                                          # QC THẨM MỸ (Gemini Vision) — chống chồng chéo/xấu
@@ -782,7 +789,7 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
     print(f"   🎞️ render MappedShort ({len(props['data'])} bang) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "MappedShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -853,7 +860,7 @@ def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
     print(f"   🎞️ render RankedShort ({len(props['items'])} item) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "RankedShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -926,7 +933,7 @@ def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
     print(f"   🎞️ render ScaledShort ({len(props['items'])} vật) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "ScaledShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -998,7 +1005,7 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
     print(f"   🎞️ render ThenNowShort ({len(props['pairs'])} cặp) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "ThenNowShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1100,7 +1107,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     # QC HÌNH ẢNH SAU RENDER (Gemini Vision) — make_video() (data-race gốc) đã có bước này từ đầu,
@@ -1211,7 +1218,7 @@ def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
     print(f"   🎞️ render SwarmShort ({len(props['items'])} mục) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "SwarmShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1282,7 +1289,7 @@ def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
     print(f"   🎞️ render PulseShort ({len(props['items'])} mục) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "PulseShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1356,7 +1363,7 @@ def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
     print(f"   🎞️ render ClockworkShort ({len(props['waypoints'])} mốc) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "ClockworkShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1425,7 +1432,7 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
     print(f"   🎞️ render LongshotShort ({len(props['items'])} mục) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "LongshotShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1487,7 +1494,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     print(f"   🎞️ render RaceLong ({len(stories)} race) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "RaceLong", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     if ok:
@@ -1626,7 +1633,7 @@ def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n
     print(f"   🎞️ render GuessShort ({len(props['rounds'])} vòng) …")
     subprocess.run(["npx", "remotion", "render", "src/index.ts", "GuessShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True)
+                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     info["score"] = score
