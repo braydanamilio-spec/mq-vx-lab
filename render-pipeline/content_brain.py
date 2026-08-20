@@ -879,6 +879,54 @@ def _validate_doc(d: dict) -> list[str]:
     return errs
 
 
+AUDIT_SYS = (
+ "You are an independent fact-checker and YouTube monetization-policy reviewer. You did NOT write this script "
+ "and you have NO stake in it passing. Be skeptical and strict — your job is to CATCH problems, not to be nice.\n"
+ "Check EVERY spoken line for:\n"
+ "(a) FALSE or unverifiable factual claims — a specific number, date, ranking, record, or named case that is wrong, "
+ "made up, or that you cannot confirm from well-known public knowledge. Confidently-worded invented stats are the "
+ "single most common failure — flag them.\n"
+ "(b) YouTube advertiser-friendly risk: real tragedy/victims described in detail, graphic violence/crime detail, "
+ "partisan politics, medical/financial advice, adult themes, hateful or demeaning framing about any group.\n"
+ "(c) Claims stated as settled fact that are actually contested/speculative without hedging language.\n"
+ "Judge the SCRIPT AS WRITTEN. Ignore how cinematic or engaging it is — that is not your job."
+)
+AUDIT_SCHEMA = """Return STRICT JSON only:
+{
+  "verdict": "pass" | "fix",
+  "risk": "none" | "low" | "high",          // advertiser-friendliness risk
+  "problems": [str]                          // each: quote the exact problem line + say WHY (<=25 words). [] if none.
+}"""
+
+
+def audit_doc(d: dict, api_key: str = None, model_name: str = None) -> tuple[bool, list]:
+    """LỚP KIỂM CHỨNG ĐỘC LẬP (khác self_score): self_score do CHÍNH model vừa viết tự chấm -> một fact bịa
+    nhưng viết tự tin vẫn tự cho 92+ điểm (điểm yếu cố hữu, không thể tự sửa bằng prompt chặt hơn). Ở đây gọi
+    1 lệnh Gemini RIÊNG, system prompt của người soi (không biết/không dính dáng gì tới bản nháp) -> bắt được
+    fact sai + rủi ro chính sách kiếm tiền YouTube mà tự-chấm bỏ lọt.
+    CHỈ chạy 1 lần cho bản ĐÃ QUA self_score (không phải mỗi vòng viết lại) -> tốn tối đa 1 call/video.
+    FAIL-OPEN: lỗi/hết quota/timeout -> trả (True, []) cho qua, KHÔNG chặn pipeline (giống qc_vision)."""
+    lines = [d.get("hook") or ""] + [s.get("nar") or "" for s in (d.get("scenes") or [])] + [d.get("outro") or ""]
+    body = "\n".join(f"- {ln}" for ln in lines if ln)
+    if not body:
+        return True, []
+    try:
+        genai = _genai(api_key)
+        mn = model_name or MODEL
+        model = genai.GenerativeModel(mn, system_instruction=AUDIT_SYS)
+        resp = model.generate_content(
+            f"Script lines:\n{body}\n\n{AUDIT_SCHEMA}",
+            generation_config={"temperature": 0.0, "response_mime_type": "application/json"},
+            request_options={"timeout": 45})   # LUÔN đặt timeout — xem bài học treo Gemini Vision 20/8 ở qc_vision.py
+        r = _extract_json(resp.text) or {}
+    except Exception as e:
+        print(f"   ⚠️ audit bỏ qua (fail-open): {str(e)[:70]}")
+        return True, []
+    probs = [p for p in (r.get("problems") or []) if isinstance(p, str)][:6]
+    ok = (r.get("verdict") != "fix") and (r.get("risk") != "high")
+    return ok, probs
+
+
 def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
                  model_name: str = None, avoid: list = None, speculative: bool = False) -> dict:
     """Sinh 1 kịch bản TÀI LIỆU (narration + img_query mỗi cảnh) cho engine Cinematic. Viết lại tới khi đạt.
@@ -893,7 +941,7 @@ def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
     resolved = False
     avoid_txt = ("\nAvoid topics already used: " + " | ".join(avoid[-60:])) if avoid else ""
     base = (f'Niche: "{niche}". Tone/style: {style}. Write ONE cinematic documentary short.\n{DOC_SCHEMA}{avoid_txt}')
-    feedback = ""; last = None
+    feedback = ""; last = None; audits = 0
     for attempt in range(1, MAX_TRIES + 1):
         prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix and raise the score." if feedback else "")
         try:
@@ -924,6 +972,17 @@ def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
             print(f"   ↻ doc vòng {attempt}: {feedback}"); continue
         if score < MIN_SCORE:
             feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, mạch cuốn hơn."; print(f"   ↻ doc vòng {attempt}: điểm {score}"); continue
+        # ĐÃ QUA TỰ-CHẤM -> soi lại bằng LỚP ĐỘC LẬP (bắt fact bịa tự tin + rủi ro chính sách kiếm tiền).
+        # Tối đa 2 lượt soi/video: soi mãi mà vẫn vướng thì nhận bản cuối (fail-open) — tránh đốt quota vô hạn.
+        if audits < 2:
+            audits += 1
+            a_ok, a_probs = audit_doc(d, api_key=api_key, model_name=model_name)
+            if not a_ok and a_probs:
+                feedback = ("Người kiểm chứng ĐỘC LẬP bác bỏ (SỬA ĐÚNG các câu này, thay bằng sự thật kiểm chứng "
+                            "được / bỏ hẳn nếu vướng chính sách quảng cáo): " + " | ".join(a_probs))
+                print(f"   ↻ doc vòng {attempt}: audit bác — {a_probs[0][:90]}"); continue
+            if a_probs:
+                print(f"   ⚠️ audit ghi chú (vẫn cho qua): {a_probs[0][:80]}")
         d["vtype"] = "doc"
         print(f"   ✅ DOC đạt vòng {attempt}: total {score}, acc {acc} — {d.get('title')!r}")
         return d
