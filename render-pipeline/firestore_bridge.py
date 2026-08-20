@@ -229,7 +229,8 @@ def read_config(owner: str) -> dict:
 def read_render_requests(owner: str) -> list[dict]:
     """Yêu cầu RENDER LẠI (từ nút 🔄 trên dashboard) đang chờ xử lý."""
     db = _db_meta(); out = []
-    for d in db.collection("render_requests").where("owner", "==", owner).where("status", "==", "pending").stream():
+    # limit 40: hàng đợi yêu cầu render lại hiếm khi dài; chặn để lỡ sai điều kiện cũng không quét cả bảng.
+    for d in db.collection("render_requests").where("owner", "==", owner).where("status", "==", "pending").limit(40).stream():
         x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
     return out
 
@@ -238,7 +239,9 @@ def delete_jobs_by_drive(owner: str, drive_id: str):
     """Xóa bản ghi job cũ theo drive_id (sau khi render lại đã thay thế + bỏ file cũ)."""
     if not drive_id:
         return
-    for d in (_db_jobs().collection("render_jobs").where("owner", "==", owner).where("drive_id", "==", drive_id).stream()):
+    # limit 5: một drive_id chỉ gắn với 1-2 job; không chặn thì lỡ query sai điều kiện là quét cả bảng.
+    for d in (_db_jobs().collection("render_jobs").where("owner", "==", owner)
+              .where("drive_id", "==", drive_id).limit(5).stream()):
         try:
             d.reference.delete()
         except Exception:
@@ -254,7 +257,7 @@ def get_script_by_drive(owner: str, drive_id: str):
         return None
     try:
         for d in (_db_jobs().collection("render_jobs").where("owner", "==", owner)
-                  .where("drive_id", "==", drive_id).stream()):
+                  .where("drive_id", "==", drive_id).limit(3).stream()):
             s = (d.to_dict() or {}).get("script")
             if s:
                 try:
@@ -271,7 +274,7 @@ def read_thumb_requests(owner: str, limit: int = 40) -> list[dict]:
     out = []
     try:
         q = (_db_meta().collection("thumb_requests").where("owner", "==", owner)
-             .where("status", "==", "pending"))
+             .where("status", "==", "pending").limit(limit))   # chặn ngay ở TRUY VẤN, không phải sau khi đã đọc về
         for d in q.stream():
             x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
             if len(out) >= limit:
@@ -354,8 +357,15 @@ def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
         res = q.count().get()                    # aggregation: ~1 read thay vì N
         row = res[0]; ar = row[0] if isinstance(row, (list, tuple)) else row
         return int(ar.value)
-    except Exception:
-        return sum(1 for _ in q.stream())
+    except Exception as e:
+        # ĐỪNG lùi về đếm thủ công cả collection: khi quota cạn thì count() lỗi -> stream() đọc HÀNG
+        # NGHÌN doc -> càng cạn nhanh hơn (vòng xoáy chết, đúng sự cố 20/8). Đếm có giới hạn: đủ để
+        # biết "đã đạt target chưa" vì target lớn nhất chỉ 30.
+        try:
+            return sum(1 for _ in q.limit(200).stream())
+        except Exception:
+            print(f"   ⚠️ đếm {channel}/{vtype} lỗi ({str(e)[:50]}) -> coi như 0, phiên sau đếm lại")
+            return 0
 
 
 def has_active_render(owner: str) -> bool:
@@ -428,7 +438,10 @@ def find_resumable(owner: str, channel: str, vtype: str):
         db = _db_jobs()
         q = (db.collection("render_jobs").where("owner", "==", owner).where("channel", "==", channel)
              .where("type", "==", vtype).where("status", "==", "failed"))
-        cands = [(d.id, d.to_dict() or {}) for d in q.stream()]
+        # limit 25: hàm này chạy 36 lần/phiên (18 kênh x 2 loại). Không giới hạn thì mỗi lần quét
+        # TOÀN BỘ job failed (hàng trăm) -> vài nghìn lượt đọc/phiên, thừa sức thổi bay hạn mức free.
+        # Chỉ cần vài ứng viên gần nhất là đủ chọn checkpoint.
+        cands = [(d.id, d.to_dict() or {}) for d in q.limit(25).stream()]
         cands = [(i, j) for i, j in cands if j.get("script")]
         if not cands:
             return None
