@@ -47,7 +47,8 @@ jobs:
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
           FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
-          SHARD_META: ${{ vars.SHARD_META }}   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
+          SHARD_META: ${{ vars.SHARD_META }}
+          SHARD_KEYS: ${{ vars.SHARD_KEYS }}   # =1 khi đã copy gemini_keys sang B (render hết đụng hạn mức Project A của publish)   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
           OWNER_UID: ${{ secrets.OWNER_UID }}
           FORCE: ${{ github.event.inputs.force }}
         run: python render-pipeline/run_render.py --gate
@@ -100,7 +101,8 @@ jobs:
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
           FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
-          SHARD_META: ${{ vars.SHARD_META }}   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
+          SHARD_META: ${{ vars.SHARD_META }}
+          SHARD_KEYS: ${{ vars.SHARD_KEYS }}   # =1 khi đã copy gemini_keys sang B (render hết đụng hạn mức Project A của publish)   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
           OWNER_UID: ${{ secrets.OWNER_UID }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           GEMINI_SYSTEM_PROMPT: ${{ secrets.GEMINI_SYSTEM_PROMPT }}
@@ -184,7 +186,8 @@ jobs:
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
           FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
-          SHARD_META: ${{ vars.SHARD_META }}   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
+          SHARD_META: ${{ vars.SHARD_META }}
+          SHARD_KEYS: ${{ vars.SHARD_KEYS }}   # =1 khi đã copy gemini_keys sang B (render hết đụng hạn mức Project A của publish)   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
           OWNER_UID: ${{ secrets.OWNER_UID }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           GEMINI_SYSTEM_PROMPT: ${{ secrets.GEMINI_SYSTEM_PROMPT }}

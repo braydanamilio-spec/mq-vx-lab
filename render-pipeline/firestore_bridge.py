@@ -126,7 +126,14 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         return hit[1]
 
     def _do():
-        db = _db(); out = []; now = _now()
+        # ĐỌC TỪ PROJECT B TRƯỚC (nếu đã copy key sang B), B rỗng thì lùi về A như cũ.
+        # Vì sao: gemini_keys là thứ DUY NHẤT còn lại mà render dùng chung Project A với publish
+        # (SHARD_META=1 đã đưa config/channels/topics/requests sang B). 18 luồng render đọc bảng
+        # này mỗi phiên -> ăn hết hạn mức đọc của A -> publish VÀ CẢ bước lập kế hoạch render đều
+        # ăn "ResourceExhausted: 429" (20/8 chặn sản xuất ~13 tiếng tới lúc quota reset).
+        # Lùi-về-A giữ cho thay đổi này AN TOÀN: chưa copy sang B thì chạy y như trước.
+        db = _db_jobs() if os.environ.get("SHARD_KEYS") == "1" else _db()
+        out = []; now = _now()
         for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
             x = d.to_dict() or {}
             if not x.get("key"):
@@ -144,6 +151,20 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
                         "dead_since": x.get("dead_since", ""), "req_today": req_today})
         return out
     res = _retry(_do)
+    if not res and os.environ.get("SHARD_KEYS") == "1":
+        # B rỗng (chưa copy key sang) -> lùi về A, KHÔNG để pipeline tưởng là hết key rồi dừng.
+        def _fallbackA():
+            db = _db(); out2 = []
+            for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
+                x = d.to_dict() or {}
+                if x.get("key"):
+                    out2.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
+                                 "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
+                                 "last_used": x.get("last_used", ""), "cooling_until": x.get("cooling_until", ""),
+                                 "dead_since": x.get("dead_since", ""), "req_today": 0})
+            return out2
+        print("   ℹ️ SHARD_KEYS=1 nhưng Project B chưa có key -> dùng tạm Project A")
+        res = _retry(_fallbackA)
     _KEYS_CACHE[ck] = (__import__('time').time(), res)
     return res
 
