@@ -455,3 +455,36 @@ def update_job(job_id: str, **patch):
     # (≈20 nhịp tim lỡ) là kết luận chết được, gate thoát nhanh hơn 12 lần.
     patch = dict(patch); patch["updated_at"] = _now()
     _retry(lambda: _db_jobs().collection("render_jobs").document(job_id).set(patch, merge=True))
+    # NHỊP TIM THẬT: bật/tắt theo trạng thái vừa ghi (xem _beat_loop bên dưới).
+    _beat_set(None if st in ("done", "failed", "ratelimited") else job_id)
+
+
+# ── NHỊP TIM NỀN ────────────────────────────────────────────────────────────────────────────────
+# update_job() CHỈ ghi khi CÓ NGƯỜI GỌI — nó là bộ hãm ghi, không phải máy phát nhịp. Mà bước nặng
+# nhất (`npx remotion render`) chạy liền 20-40 phút KHÔNG gọi update_job lần nào -> job im lặng suốt,
+# rồi health_guardian thấy "im lặng quá 30'" và GIẾT NHẦM job đang render khoẻ mạnh (20/8: 15 job bị
+# giết oan ngay giữa phiên). Luồng nền này đóng dấu updated_at mỗi 2 phút chừng nào tiến trình còn
+# sống -> "im lặng" mới thực sự đồng nghĩa với "đã chết".
+_BEAT = {"job": None, "th": None}
+
+
+def _beat_loop():
+    import time as _t
+    while True:
+        _t.sleep(120)
+        jid = _BEAT.get("job")
+        if not jid:
+            continue
+        try:
+            _db_jobs().collection("render_jobs").document(jid).set({"updated_at": _now()}, merge=True)
+        except Exception:
+            pass          # mạng chập chờn -> bỏ nhịp này, nhịp sau ghi bù
+
+
+def _beat_set(job_id):
+    import threading
+    _BEAT["job"] = job_id
+    if job_id and _BEAT.get("th") is None:
+        th = threading.Thread(target=_beat_loop, daemon=True)   # daemon -> không giữ tiến trình khi xong
+        _BEAT["th"] = th
+        th.start()
