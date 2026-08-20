@@ -245,8 +245,13 @@ def run_one(ch, keys, n_shorts=3, report=None):
             elif last_err is not None:
                 lst("failed", f"Tự thử lại vẫn lỗi: {str(last_err)[:120]}"); R["fails"].append(f"{channel} LONG: {str(last_err)[:100]}")
             elif ok:
+                # _thumb PHẢI đi kèm: trước đây chỗ này dựng dict MỚI từ plan nên bỏ rơi plan["_thumb"]
+                # -> enqueue_drive không thấy thumbnail, lùi về _make_thumb() cắt khung thô. Nghĩa là
+                # MỌI video long đăng lên đều mất tấm thumbnail hook vừa dựng công phu.
                 eq = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
-                                                   "description": plan.get("hook", "")}, "long")
+                                                   "description": plan.get("hook", ""),
+                                                   "sources": plan.get("sources") or [],
+                                                   "_thumb": plan.get("_thumb") or (info or {}).get("thumb")}, "long")
                 did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
                 lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
                     score=(info or {}).get("score"),
