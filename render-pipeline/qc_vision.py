@@ -93,3 +93,47 @@ def check_visual(mp4: str, api_key: str = None, model_name: str = None, min_scor
         return True, {"note": f"vision-skip: {str(e)[:80]}"}   # fail-open
     best = max(scores)
     return best >= min_score, {"score": round(best), "avg": round(sum(scores) / len(scores)), "frames": len(scores), "issues": issues[:4]}
+
+
+def check_thumb(jpg: str, title: str = "", api_key: str = None, model_name: str = None,
+                min_score: int = 60):
+    """QC VISUAL RIÊNG CHO THUMBNAIL (ảnh tĩnh 1280x720) — trước đây CHỈ video được soi, thumbnail
+    đẩy thẳng lên Drive không ai kiểm, nên lỗi chữ tràn/chồng/nền chán lọt hết ra ngoài.
+
+    Soi đúng những lỗi CHẾT NGƯỜI của thumbnail:
+      - chữ TRÀN/CẮT CỤT ở mép khung (lỗi đã gặp thật: hook lòi ra ngoài nền pill)
+      - chữ ĐÈ NHAU / đè lên chủ thể chính của ảnh
+      - chữ không đọc nổi (tương phản kém với nền)
+      - nền trống trơn/đơn điệu (thiếu ảnh thật) -> khuyên đổi nền
+    Trả (ok, info). Fail-OPEN khi Vision lỗi/hết quota (không chặn cả mẻ vì QC hỏng)."""
+    if not os.path.exists(jpg):
+        return True, {"note": "no-thumb-skip"}
+    try:
+        genai = CB._genai(api_key)
+        akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+        mn = model_name or CB._pick_model(genai, "flash", akey) or "gemini-3.5-flash"
+        model = genai.GenerativeModel(mn)
+        prompt = (
+            "This is a YouTube THUMBNAIL (1280x720). Judge it as a thumbnail, not as a photo.\n"
+            "Score 0-100 and LIST every problem you actually see in `issues`:\n"
+            "(a) any text CUT OFF or running past the frame edge;\n"
+            "(b) text OVERLAPPING other text, or text spilling outside its colored button/pill background;\n"
+            "(c) text hard to read (poor contrast against what is behind it);\n"
+            "(d) the background is empty/plain/monotone with no real imagery;\n"
+            "(e) the big number and the small label under it collide or touch.\n"
+            + (f'The thumbnail is for a video titled: "{title}". Set topic_match=false if the background '
+               "image clearly shows something unrelated to that title.\n" if title else "")
+            + "Clean, fully-visible, readable text with real imagery behind it = 85+. "
+            "Score below 60 ONLY if genuinely broken (text cut off, overlapping, or unreadable).\n"
+            'Return STRICT JSON only: {"score": 0-100, "issues": [str], "topic_match": true|false}'
+        )
+        img = {"mime_type": "image/jpeg", "data": open(jpg, "rb").read()}
+        resp = model.generate_content([prompt, img],
+                                      generation_config={"response_mime_type": "application/json", "temperature": 0.1},
+                                      request_options={"timeout": 30})
+        r = CB._extract_json(resp.text) or {}
+    except Exception as e:
+        return True, {"note": f"vision-skip: {str(e)[:80]}"}   # fail-open
+    sc = float(r.get("score", 0) or 0)
+    info = {"score": round(sc), "issues": (r.get("issues") or [])[:4], "topic_match": r.get("topic_match")}
+    return sc >= min_score, info

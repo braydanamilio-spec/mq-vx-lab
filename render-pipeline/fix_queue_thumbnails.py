@@ -130,7 +130,91 @@ def image_query(title: str, topic: str) -> str:
     return " ".join(keep[-3:]).lower()
 
 
-def build_thumb(channel: str, title: str, topic: str, dest_local: str) -> bool:
+# Phụ đề/HUD cháy vào khung nằm ở ĐÁY video (Cinematic: bottom 120px ngang / 520px dọc; RaceLong:
+# bottom 96-104px). Cắt lấy phần TRÊN 58% chiều cao -> chắc chắn KHÔNG dính chữ, mà vẫn là footage
+# thật của chính video đó. Đây là lý do bản thumbnail cũ xấu: nó cắt NGUYÊN khung nên dính chữ đè chữ.
+SAFE_TOP = 0.58
+# Khung video của kênh dữ liệu đầy nhãn/số sẵn. Thử thật: để nguyên -> chữ cũ đâm xuyên số liệu,
+# rối mắt; mờ 5 vẫn đọc được "$1.4"/"Titanic"; mờ 9 thì chữ cũ tan hẳn thành kết cấu mà màu sắc +
+# bố cục footage THẬT vẫn còn -> chọn 9.
+BG_BLUR = 9
+
+
+def _probe_dur(video: str) -> float:
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                            "-of", "default=nw=1:nk=1", video],
+                           capture_output=True, text=True, timeout=60)
+        return float((r.stdout or "0").strip() or 0)
+    except Exception:
+        return 0.0
+
+
+def _score_frame(path: str) -> float:
+    """Chấm điểm 1 khung: ưu tiên khung GIÀU CHI TIẾT + RỰC MÀU (footage thật, cảnh chính) và loại
+    khung tối thui / đơn sắc (fade đen, nền trơn giữa 2 cảnh) — chính là những khung làm thumbnail chán."""
+    try:
+        from PIL import Image, ImageStat
+        im = Image.open(path).convert("RGB")
+        im.thumbnail((320, 320))
+        st = ImageStat.Stat(im)
+        detail = sum(st.stddev) / 3.0                 # chênh lệch sáng-tối = có chi tiết, không phẳng
+        bright = sum(st.mean) / 3.0
+        r, g, b = st.mean
+        colorful = (max(r, g, b) - min(r, g, b))      # lệch kênh màu = ảnh có màu, không xám xịt
+        if bright < 26:                               # gần như đen (fade chuyển cảnh) -> loại
+            return 0.0
+        return detail * 1.6 + colorful * 1.2 + min(bright, 150) * 0.25
+    except Exception:
+        return 1.0                                    # không chấm được -> vẫn chấp nhận
+
+
+def frame_from_video(video: str, dest: str) -> bool:
+    """LẤY ẢNH NỀN TỪ CHÍNH VIDEO (yêu cầu bắt buộc: footage thật, khớp nội dung 100%).
+
+    Ảnh gốc từng cảnh lúc render đã bị máy CI xoá sau mỗi job, NHƯNG file video vẫn nằm trên Drive —
+    trong đó chứa đúng footage đó. Rút 6 khung rải đều thân bài (bỏ 12% đầu/cuối vì là intro/outro
+    chữ chạy), CẮT PHẦN TRÊN {SAFE_TOP:.0%} để không dính phụ đề, rồi chọn khung ĐIỂM CAO NHẤT
+    (nhiều chi tiết + rực màu) làm nền. Thất bại -> trả False để lùi sang Openverse/gradient."""
+    dur = _probe_dur(video)
+    if dur <= 0:
+        return False
+    marks = [dur * p for p in (0.15, 0.28, 0.42, 0.56, 0.70, 0.84)]
+    best, best_s = None, -1.0
+    tmpdir = os.path.dirname(dest)
+    for i, t in enumerate(marks):
+        cand = os.path.join(tmpdir, f"_f{i}.jpg")
+        try:
+            subprocess.run(
+                ["ffmpeg", "-y", "-ss", f"{t:.2f}", "-i", video, "-frames:v", "1",
+                 # crop=toàn bộ chiều rộng, chiều cao = 58% tính từ đỉnh -> cắt bỏ hẳn dải phụ đề
+                 "-vf", f"crop=iw:ih*{SAFE_TOP}:0:0,scale=1280:-2",
+                 "-q:v", "3", cand],
+                capture_output=True, timeout=90, check=True)
+        except Exception:
+            continue
+        if not os.path.exists(cand):
+            continue
+        s = _score_frame(cand)
+        if s > best_s:
+            best_s, best = s, cand
+    if not best:
+        return False
+    try:
+        if os.path.exists(dest):
+            os.remove(dest)
+        os.rename(best, dest)
+    except Exception:
+        return False
+    for i in range(len(marks)):                       # dọn khung thừa
+        try:
+            os.remove(os.path.join(tmpdir, f"_f{i}.jpg"))
+        except Exception:
+            pass
+    return best_s > 0
+
+
+def build_thumb(channel: str, title: str, topic: str, dest_local: str, video_local: str = "") -> bool:
     """Dựng 1 ảnh thumbnail DocThumb tại dest_local. Trả True/False."""
     accent, accent2 = ACCENTS.get(channel, ("#22D3EE", "#F5B301"))
     tag = f"_fixq_{slug(channel)}_{abs(hash(dest_local)) % 999999}"
@@ -138,6 +222,17 @@ def build_thumb(channel: str, title: str, topic: str, dest_local: str) -> bool:
     os.makedirs(bg_dir, exist_ok=True)
     bg_local = os.path.join(bg_dir, "bg.jpg")
     bg_rel = ""
+    # ƯU TIÊN 1 — FOOTAGE THẬT TRONG CHÍNH VIDEO (bắt buộc): khớp nội dung 100%, mỗi video một ảnh
+    # khác nhau, không bao giờ "nền đơn điệu".
+    if video_local and os.path.exists(video_local) and frame_from_video(video_local, bg_local):
+        if _render_thumb(channel, title, f"{tag}/bg.jpg", tag, dest_local, bg_dir, bg_local, bg_blur=BG_BLUR):
+            if _thumb_ok(dest_local, title):
+                return True
+            # QC visual chấm trượt (chữ tràn/chồng/khó đọc) -> KHÔNG đẩy ảnh hỏng lên Drive, thử tiếp
+            # nhánh ảnh CC0 bên dưới thay vì chấp nhận đại.
+            print("     ↩️ thử nền khác vì QC thumbnail trượt")
+        os.makedirs(bg_dir, exist_ok=True)
+    # ƯU TIÊN 2 — ảnh CC0 khớp chủ đề (chỉ khi không rút được khung nào từ video)
     q = image_query(title, topic)
     # ẢNH PHẢI KHỚP NỘI DUNG 100%: Openverse CC0 nghiêng nhiều về ảnh tư liệu cũ nên tìm theo từ khoá
     # thôi VẪN ra ảnh lạc đề (thử thật: "nợ y tế" -> ảnh toà nhà năm 1909). Bắt Gemini Vision nhìn từng
@@ -156,7 +251,36 @@ def build_thumb(channel: str, title: str, topic: str, dest_local: str) -> bool:
             print(f"     ℹ️ không có ảnh CC0 nào KHỚP '{q}' -> dùng nền thiết kế")
     except Exception as e:
         print("     ⚠️ fetch_image lỗi:", str(e)[:80])
-    tprops = {"bg": bg_rel, "big": title, "kicker": channel, "accent": accent, "accent2": accent2}
+    if not _render_thumb(channel, title, bg_rel, tag, dest_local, bg_dir, bg_local):
+        return False
+    _thumb_ok(dest_local, title)     # chấm + ghi log (đây đã là phương án cuối, không lùi thêm được)
+    return True
+
+
+def _thumb_ok(jpg: str, title: str) -> bool:
+    """QC VISUAL ẢNH THÀNH PHẨM (yêu cầu: kiểm chất lượng cả thumbnail, không chỉ video).
+    Không có key Vision -> coi như đạt (fail-open, không chặn cả mẻ)."""
+    vkey = _vision_key()
+    if not vkey:
+        return True
+    try:
+        import qc_vision as QV
+        ok, info = QV.check_thumb(jpg, title=title, api_key=vkey)
+    except Exception as e:
+        print("     ⚠️ QC thumbnail lỗi (bỏ qua):", str(e)[:70])
+        return True
+    if ok:
+        print(f"     ✅ QC thumbnail {info.get('score')}/100")
+    else:
+        print(f"     ❌ QC thumbnail {info.get('score')}/100 — {'; '.join(info.get('issues') or [])[:110]}")
+    return ok
+
+
+def _render_thumb(channel, title, bg_rel, tag, dest_local, bg_dir, bg_local, bg_blur=0) -> bool:
+    """Gọi Remotion dựng DocThumb + dọn file tạm (dùng chung cho cả nhánh footage lẫn nhánh CC0)."""
+    accent, accent2 = ACCENTS.get(channel, ("#22D3EE", "#F5B301"))
+    tprops = {"bg": bg_rel, "big": title, "kicker": channel, "accent": accent, "accent2": accent2,
+              "bgBlur": bg_blur}
     tf = os.path.join(PUB, f"{tag}.json")
     json.dump(tprops, open(tf, "w"))
     ok = False
@@ -212,7 +336,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true", help="chỉ liệt kê, không đổi gì")
     ap.add_argument("--limit", type=int, default=0, help="dừng sau N video (0 = không giới hạn)")
+    ap.add_argument("--channel", default="", help="chỉ xử lý 1 kênh (để chạy SONG SONG mỗi kênh 1 luồng)")
     a = ap.parse_args()
+    only = a.channel.strip().upper()
 
     accounts = ST.pool_accounts()
     print(f"📦 {len(accounts)} tài khoản Drive pool.")
@@ -237,6 +363,9 @@ def main():
                 if channel not in ACCENTS or not thumb_name:
                     skip += 1
                     continue
+                if only and channel != only:
+                    skip += 1
+                    continue
                 title = sidecar.get("title") or sidecar.get("topic") or f["name"]
                 topic = sidecar.get("topic") or title
                 print(f"  🎯 [{channel}] {f['name']} -> {thumb_name}")
@@ -244,7 +373,23 @@ def main():
                     done += 1
                     continue
                 local = os.path.join(tempfile.gettempdir(), thumb_name)
-                if not build_thumb(channel, title, topic, local):
+                # TẢI VIDEO để rút footage thật làm nền (yêu cầu: ảnh phải khớp nội dung video).
+                # Xoá ngay sau khi rút xong -> không phình đĩa CI dù chạy hàng trăm video.
+                vid = os.path.join(tempfile.gettempdir(), "v_" + f["name"])
+                try:
+                    drv.download(f["id"], vid)
+                except Exception as e:
+                    print("     ⚠️ tải video lỗi (sẽ tìm ảnh CC0 thay):", str(e)[:70])
+                    vid = ""
+                try:
+                    built = build_thumb(channel, title, topic, local, video_local=vid)
+                finally:
+                    if vid and os.path.exists(vid):
+                        try:
+                            os.remove(vid)
+                        except Exception:
+                            pass
+                if not built:
                     print("     ⚠️ dựng thumbnail thất bại -> bỏ qua video này (giữ nguyên ảnh cũ).")
                     err += 1
                     continue

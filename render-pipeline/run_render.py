@@ -343,16 +343,27 @@ def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story
                            ai_style=ch.get("ai_style"), ai_only=bool(ch.get("ai_only")),
                            music=ch.get("music"),
                            mode=ch.get("mode"), host_prompt=ch.get("host_prompt"))
+    # 8 engine đồ hoạ dưới đây nay cũng dựng thumbnail DocThumb (số liệu sốc + câu hỏi mở + nền là
+    # KHUNG THẬT rút từ chính video) -> phải truyền accent2 thật, nếu không số liệu 9 kênh sẽ cùng
+    # một màu mặc định = nhìn như hàng loạt.
     if fmt in ("swarm", "pulse", "clockwork", "longshot"):   # Wave 4: 1 accent riêng/kênh
         mk4 = {"swarm": DS.make_swarm, "pulse": DS.make_pulse,
                "clockwork": DS.make_clockwork, "longshot": DS.make_longshot}[fmt]
         _defacc = {"swarm": "#0D9488", "pulse": "#EA580C", "clockwork": "#C2410C", "longshot": "#4F46E5"}[fmt]
+        _def2 = {"swarm": "#5EEAD4", "pulse": "#FCA5A5", "clockwork": "#FCD34D", "longshot": "#A5B4FC"}[fmt]
         return mk4(ch.get("name"), cat, out, keys=keys, tier=tier, accent=ch.get("accent", _defacc),
+                   accent2=ch.get("accent2", _def2),
                    avoid=avoid, on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
     if fmt in ("guess", "mapped", "ranked", "scaled", "thennow"):
         mk = {"guess": DS.make_guess, "mapped": DS.make_mapped, "ranked": DS.make_ranked,
               "scaled": DS.make_scaled, "thennow": DS.make_thennow}[fmt]
+        if fmt == "guess":                                   # GUESS chưa nhận accent (bố cục câu đố riêng)
+            return mk(ch.get("name"), cat, out, keys=keys, tier=tier,
+                      avoid=avoid, on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
+        _da = {"mapped": "#059669", "ranked": "#D946EF", "scaled": "#0284C7", "thennow": "#9333EA"}[fmt]
+        _d2 = {"mapped": "#FDBA74", "ranked": "#67E8F9", "scaled": "#FDE68A", "thennow": "#86EFAC"}[fmt]
         return mk(ch.get("name"), cat, out, keys=keys, tier=tier,
+                  accent=ch.get("accent", _da), accent2=ch.get("accent2", _d2),
                   avoid=avoid, on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
     # format trống = 10 kênh GỐC data-race
     return DS.make_video(ch.get("name"), cat, "short", out, keys=keys, tier=tier,

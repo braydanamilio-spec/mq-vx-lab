@@ -270,6 +270,92 @@ def build_long_props(stories, sdir, music="music/carefree.mp3", handle="@datarac
     return {"races": races, "intro": intro, "handle": handle, "music": music}
 
 
+SAFE_TOP = 0.58   # phụ đề cháy vào khung nằm ở ĐÁY -> lấy 58% trên là vùng sạch chữ
+FRAME_BLUR = 9    # khung video vốn đã đầy nhãn/số -> mờ 9 thì chữ cũ tan thành kết cấu (đã thử 0/5/9)
+
+
+def frame_bg(video: str, dest_dir: str, rel_prefix: str):
+    """Rút 1 KHUNG ĐẸP NHẤT TỪ CHÍNH VIDEO làm nền thumbnail (footage thật -> khớp nội dung 100%).
+
+    Dùng cho các engine ĐỒ HOẠ THUẦN (guess/mapped/ranked/scaled/thennow/swarm/pulse/clockwork/
+    longshot): chúng KHÔNG tải ảnh thật nào, nên trước đây thumbnail chỉ là chữ trên nền màu phẳng —
+    vừa chán vừa na ná nhau giữa các video. Giờ lấy chính hình ảnh video làm nền.
+    Rút 6 khung rải đều thân bài, cắt 58% trên (tránh phụ đề), chọn khung nhiều chi tiết + rực màu
+    nhất, bỏ khung đen (fade chuyển cảnh). Trả đường dẫn TƯƠNG ĐỐI trong public/ hoặc "" nếu hỏng."""
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                            "-of", "default=nw=1:nk=1", video], capture_output=True, text=True, timeout=60)
+        dur = float((r.stdout or "0").strip() or 0)
+    except Exception:
+        return ""
+    if dur <= 0:
+        return ""
+    os.makedirs(dest_dir, exist_ok=True)
+    best, best_s = None, -1.0
+    for i, p in enumerate((0.15, 0.28, 0.42, 0.56, 0.70, 0.84)):
+        cand = os.path.join(dest_dir, f"_f{i}.jpg")
+        try:
+            subprocess.run(["ffmpeg", "-y", "-ss", f"{dur * p:.2f}", "-i", video, "-frames:v", "1",
+                            "-vf", f"crop=iw:ih*{SAFE_TOP}:0:0,scale=1280:-2", "-q:v", "3", cand],
+                           capture_output=True, timeout=90, check=True)
+        except Exception:
+            continue
+        try:
+            from PIL import Image, ImageStat
+            im = Image.open(cand).convert("RGB"); im.thumbnail((320, 320))
+            stt = ImageStat.Stat(im)
+            bright = sum(stt.mean) / 3.0
+            s = 0.0 if bright < 26 else (sum(stt.stddev) / 3.0) * 1.6 \
+                + (max(stt.mean) - min(stt.mean)) * 1.2 + min(bright, 150) * 0.25
+        except Exception:
+            s = 1.0
+        if s > best_s:
+            best_s, best = s, cand
+    if not best or best_s <= 0:
+        return ""
+    final = os.path.join(dest_dir, "thumbbg.jpg")
+    try:
+        if os.path.exists(final):
+            os.remove(final)
+        os.rename(best, final)
+    except Exception:
+        return ""
+    return f"{rel_prefix}/thumbbg.jpg"
+
+
+def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
+              accent="#22D3EE", accent2="#F5B301", bg_rel="", bg_blur=0):
+    """Dựng thumbnail chuẩn nhà (DocThumb) — DÙNG CHUNG cho MỌI engine.
+
+    Trước đây mỗi nhóm kênh một kiểu thumbnail riêng: 21 kênh doc + 10 kênh gốc dùng DocThumb (số
+    liệu sốc + câu hỏi mở + ảnh thật), còn 9 kênh motif vẫn dùng Brand*Thumb kiểu cũ = chữ trên nền
+    màu phẳng, KHÔNG số liệu, KHÔNG câu hỏi. Gộp hết về 1 công thức đã được duyệt.
+    Trả đường dẫn ảnh hoặc "" nếu lỗi (caller tự lùi về cách cũ)."""
+    try:
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        tprops = {"bg": bg_rel, "big": big, "kicker": channel, "accent": accent, "accent2": accent2,
+                  "stat": str(stat or "").strip(), "statLabel": str(stat_label or "").strip(),
+                  "hook": str(hook or "").strip(), "bgBlur": bg_blur}
+        tf = os.path.join(PUB, f"_dthumb_{slug(channel)}.json")
+        json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "DocThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"],
+                       cwd=ENG, check=True, timeout=180)
+        return thumb if os.path.exists(thumb) else ""
+    except Exception as e:
+        print("   ⚠️ DocThumb lỗi:", str(e)[:90])
+        return ""
+    finally:
+        # Dọn khung tạm rút từ video (mỗi video 1 thư mục) — không dọn thì public/ phình dần
+        # suốt phiên render 18 kênh song song.
+        if str(bg_rel).startswith("_tb_"):
+            try:
+                import shutil
+                shutil.rmtree(os.path.join(PUB, str(bg_rel).split("/")[0]), ignore_errors=True)
+            except Exception:
+                pass
+
+
 def qc(mp4):
     """QC kỹ thuật: đủ giây + có audio + đúng khung."""
     def ff(args): return subprocess.run(["ffprobe", "-v", "error", *args, mp4],
@@ -384,6 +470,7 @@ def build_mapped_props(story, sdir, handle="@mappedusa", music="music/km_ascendi
 
 
 def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
+                accent="#059669", accent2="#FDBA74",
                 avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH #2 MAPPED A-Z: Gemini sinh metric+số liệu bang THẬT -> giọng -> render MappedShort -> QC + thumb.
     Trả (out, story, ok, info)."""
@@ -411,11 +498,16 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
     ok, info = qc(out); info["score"] = score
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
-        big = (story.get("title") or "WHICH STATE\nWINS?").upper()
-        tprops = {"kind": "thumb", "bigLine": big, "topLine": "#1 will shock you"}
-        tf = os.path.join(PUB, f"_mappedthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
-        subprocess.run(["npx", "remotion", "still", "src/index.ts", "MappedThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        _t = (story.get("top") or [{}])[0]
+        _stat, _lab = _t.get("disp", ""), _t.get("state", "")
+        _hook = story.get("title") or "WHICH STATE WINS?"
+        _bg = frame_bg(out, os.path.join(PUB, "_tb_mapped_" + slug(channel)),
+                       "_tb_mapped_" + slug(channel))
+        _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
+                        stat=_stat, stat_label=_lab, hook=_hook,
+                        accent=accent, accent2=accent2, bg_rel=_bg,
+                        bg_blur=(FRAME_BLUR if _bg else 0))
+        thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
         print("   ⚠️ thumb skip:", e)
@@ -449,6 +541,7 @@ def build_ranked_props(story, sdir, handle="@rankedusa", music="music/km_ascendi
 
 
 def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
+                accent="#D946EF", accent2="#67E8F9",
                 avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH #3 RANKED A-Z: Gemini sinh tier list (tiêu chí + số liệu thật) -> giọng -> render RankedShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
@@ -475,11 +568,17 @@ def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
     ok, info = qc(out); info["score"] = score
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
-        big = (story.get("title") or "WHAT'S\nS-TIER?").upper()
-        tprops = {"kind": "thumb", "bigLine": big, "topLine": "you'll rage 😤"}
-        tf = os.path.join(PUB, f"_rankedthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
-        subprocess.run(["npx", "remotion", "still", "src/index.ts", "RankedThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        _s = [i for i in (story.get("items") or []) if i.get("tier") == "S"]
+        _t = (_s or (story.get("items") or [{}]))[-1]
+        _stat, _lab = _t.get("stat", ""), _t.get("name", "")
+        _hook = story.get("title") or "WHAT'S S-TIER?"
+        _bg = frame_bg(out, os.path.join(PUB, "_tb_ranked_" + slug(channel)),
+                       "_tb_ranked_" + slug(channel))
+        _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
+                        stat=_stat, stat_label=_lab, hook=_hook,
+                        accent=accent, accent2=accent2, bg_rel=_bg,
+                        bg_blur=(FRAME_BLUR if _bg else 0))
+        thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
         print("   ⚠️ thumb skip:", e)
@@ -514,6 +613,7 @@ def build_scaled_props(story, sdir, handle="@scaledusa", music="music/km_ascendi
 
 
 def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
+                accent="#0284C7", accent2="#FDE68A",
                 avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH #4 SCALED A-Z: Gemini sinh so sánh kích thước (đo thật + emoji) -> giọng -> render ScaledShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
@@ -540,11 +640,16 @@ def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
     ok, info = qc(out); info["score"] = score
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
-        big = (story.get("title") or "HOW BIG\nREALLY?").upper()
-        tprops = {"kind": "thumb", "bigLine": big, "topLine": "you won't believe it"}
-        tf = os.path.join(PUB, f"_scaledthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
-        subprocess.run(["npx", "remotion", "still", "src/index.ts", "ScaledThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        _t = (story.get("items") or [{}])[-1]
+        _stat, _lab = _t.get("disp", ""), _t.get("name", "")
+        _hook = story.get("title") or "HOW BIG REALLY?"
+        _bg = frame_bg(out, os.path.join(PUB, "_tb_scaled_" + slug(channel)),
+                       "_tb_scaled_" + slug(channel))
+        _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
+                        stat=_stat, stat_label=_lab, hook=_hook,
+                        accent=accent, accent2=accent2, bg_rel=_bg,
+                        bg_blur=(FRAME_BLUR if _bg else 0))
+        thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
         print("   ⚠️ thumb skip:", e)
@@ -579,7 +684,8 @@ def build_thennow_props(story, sdir, handle="@thennowusa", music="music/km_ossua
 
 
 def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
-                 avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
+                 accent="#9333EA", accent2="#86EFAC",
+                avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH #5 THEN×NOW A-Z: Gemini sinh so sánh xưa/nay (giá trị thật) -> giọng -> render ThenNowShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -605,11 +711,16 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
     ok, info = qc(out); info["score"] = score
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
-        big = (story.get("title") or "THEN vs\nNOW").upper()
-        tprops = {"kind": "thumb", "bigLine": big, "topLine": "the change is wild"}
-        tf = os.path.join(PUB, f"_thennowthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
-        subprocess.run(["npx", "remotion", "still", "src/index.ts", "ThenNowThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        _t = (story.get("pairs") or [{}])[0]
+        _stat, _lab = _t.get("change", ""), _t.get("label", "")
+        _hook = (f"{_t.get('thenVal','')} → {_t.get('nowVal','')}").strip(" →") or story.get("title", "")
+        _bg = frame_bg(out, os.path.join(PUB, "_tb_thennow_" + slug(channel)),
+                       "_tb_thennow_" + slug(channel))
+        _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
+                        stat=_stat, stat_label=_lab, hook=_hook,
+                        accent=accent, accent2=accent2, bg_rel=_bg,
+                        bg_blur=(FRAME_BLUR if _bg else 0))
+        thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
         print("   ⚠️ thumb skip:", e)
@@ -776,7 +887,7 @@ def build_swarm_props(story, sdir, handle="@swarmusa", accent="#0D9488", music="
 
 
 def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
-               accent="#0D9488", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
+               accent="#0D9488", accent2="#5EEAD4", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH SWARM A-Z: Gemini sinh mật độ/số lượng thật -> giọng -> render SwarmShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -802,11 +913,17 @@ def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
     ok, info = qc(out); info["score"] = score
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
-        big = (story.get("title") or "HOW MANY?").upper()
-        tprops = {"kind": "thumb", "bigLine": big, "topLine": "the real number"}
-        tf = os.path.join(PUB, f"_swarmthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
-        subprocess.run(["npx", "remotion", "still", "src/index.ts", "SwarmThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        _its = story.get("items") or [{}]
+        _t = max(_its, key=lambda x: x.get("count") or 0)
+        _stat, _lab = _t.get("countDisp", ""), _t.get("label", "")
+        _hook = story.get("title") or "HOW MANY, REALLY?"
+        _bg = frame_bg(out, os.path.join(PUB, "_tb_swarm_" + slug(channel)),
+                       "_tb_swarm_" + slug(channel))
+        _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
+                        stat=_stat, stat_label=_lab, hook=_hook,
+                        accent=accent, accent2=accent2, bg_rel=_bg,
+                        bg_blur=(FRAME_BLUR if _bg else 0))
+        thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
         print("   ⚠️ thumb SWARM lỗi:", str(e)[:80])
@@ -840,7 +957,7 @@ def build_pulse_props(story, sdir, handle="@pulseusa", accent="#EA580C", music="
 
 
 def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
-              accent="#EA580C", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
+              accent="#EA580C", accent2="#FCA5A5", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH PULSE A-Z: Gemini sinh cường độ giác quan thật -> giọng -> render PulseShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -866,11 +983,16 @@ def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
     ok, info = qc(out); info["score"] = score
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
-        big = (story.get("title") or "HOW INTENSE?").upper()
-        tprops = {"kind": "thumb", "bigLine": big, "topLine": "redline this"}
-        tf = os.path.join(PUB, f"_pulsethumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
-        subprocess.run(["npx", "remotion", "still", "src/index.ts", "PulseThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        _t = (story.get("items") or [{}])[-1]
+        _stat, _lab = _t.get("disp", ""), _t.get("label", "")
+        _hook = story.get("title") or "HOW INTENSE?"
+        _bg = frame_bg(out, os.path.join(PUB, "_tb_pulse_" + slug(channel)),
+                       "_tb_pulse_" + slug(channel))
+        _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
+                        stat=_stat, stat_label=_lab, hook=_hook,
+                        accent=accent, accent2=accent2, bg_rel=_bg,
+                        bg_blur=(FRAME_BLUR if _bg else 0))
+        thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
         print("   ⚠️ thumb PULSE lỗi:", str(e)[:80])
@@ -908,7 +1030,7 @@ def build_clockwork_props(story, sdir, handle="@clockworkusa", accent="#C2410C",
 
 
 def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
-                   accent="#C2410C", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
+                   accent="#C2410C", accent2="#FCD34D", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH CLOCKWORK A-Z: Gemini nén thời gian thật -> giọng -> render ClockworkShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -934,11 +1056,16 @@ def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
     ok, info = qc(out); info["score"] = score
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
-        big = (story.get("title") or "TIME COMPRESSED").upper()
-        tprops = {"kind": "thumb", "bigLine": big, "topLine": "you won't believe it"}
-        tf = os.path.join(PUB, f"_clockworkthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
-        subprocess.run(["npx", "remotion", "still", "src/index.ts", "ClockworkThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        _t = story.get("hero") or {}
+        _stat, _lab = _t.get("realValue", ""), _t.get("label", "")
+        _hook = story.get("scaleLabel") or story.get("title", "")
+        _bg = frame_bg(out, os.path.join(PUB, "_tb_clockwork_" + slug(channel)),
+                       "_tb_clockwork_" + slug(channel))
+        _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
+                        stat=_stat, stat_label=_lab, hook=_hook,
+                        accent=accent, accent2=accent2, bg_rel=_bg,
+                        bg_blur=(FRAME_BLUR if _bg else 0))
+        thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
         print("   ⚠️ thumb CLOCKWORK lỗi:", str(e)[:80])
@@ -971,7 +1098,7 @@ def build_longshot_props(story, sdir, handle="@longshotusa", accent="#4F46E5", m
 
 
 def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
-                  accent="#4F46E5", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
+                  accent="#4F46E5", accent2="#A5B4FC", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH LONGSHOT A-Z: Gemini sinh xác suất thật -> giọng -> render LongshotShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -997,11 +1124,16 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
     ok, info = qc(out); info["score"] = score
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
-        big = (story.get("title") or "REAL ODDS").upper()
-        tprops = {"kind": "thumb", "bigLine": big, "topLine": "the real odds"}
-        tf = os.path.join(PUB, f"_longshotthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
-        subprocess.run(["npx", "remotion", "still", "src/index.ts", "LongshotThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        _t = (story.get("items") or [{}])[-1]
+        _stat, _lab = _t.get("oddsDisp", ""), _t.get("label", "")
+        _hook = story.get("title") or "WHAT ARE THE ODDS?"
+        _bg = frame_bg(out, os.path.join(PUB, "_tb_longshot_" + slug(channel)),
+                       "_tb_longshot_" + slug(channel))
+        _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
+                        stat=_stat, stat_label=_lab, hook=_hook,
+                        accent=accent, accent2=accent2, bg_rel=_bg,
+                        bg_blur=(FRAME_BLUR if _bg else 0))
+        thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
         print("   ⚠️ thumb LONGSHOT lỗi:", str(e)[:80])
@@ -1182,14 +1314,17 @@ def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     info["score"] = score
-    # thumbnail đi kèm (GuessThumb): câu hỏi to + mảnh ghép
+    # thumbnail: cùng công thức nhà (DocThumb). GUESS là câu đố -> KHÔNG lộ đáp án: dùng bố cục
+    # TIÊU ĐỀ (câu hỏi to) + pill "99% FAIL", nền là khung thật rút từ chính video.
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
-        tprops = {"kind": "thumb", "bigLine": (story.get("rounds") or [{}])[0].get("q", "CAN YOU\nNAME IT?").upper(),
-                  "topLine": "99% FAIL 👀"}
-        tf = os.path.join(PUB, f"_guessthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
-        subprocess.run(["npx", "remotion", "still", "src/index.ts", "GuessThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        _r0 = (story.get("rounds") or [{}])[0]
+        _bg = frame_bg(out, os.path.join(PUB, "_tb_guess_" + slug(channel)), "_tb_guess_" + slug(channel))
+        _th = doc_thumb(channel, out, big=_r0.get("q") or "CAN YOU NAME IT?",
+                        stat="", stat_label="", hook="",
+                        accent="#84CC16", accent2="#FDE047", bg_rel=_bg,
+                        bg_blur=(FRAME_BLUR if _bg else 0))
+        thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
         print("   ⚠️ thumb skip:", e)

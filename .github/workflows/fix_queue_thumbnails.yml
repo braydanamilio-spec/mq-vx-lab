@@ -25,7 +25,16 @@ concurrency: { group: mm0-fix-queue-thumbnails, cancel-in-progress: false }
 jobs:
   fix:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 350
+    strategy:
+      # MỖI KÊNH 1 LUỒNG: phải TẢI VIDEO về để rút khung hình thật làm nền, nên chạy tuần tự cả 770
+      # video sẽ mất nhiều giờ. Chia 10 luồng -> mỗi luồng ~77 video. fail-fast=false: 1 kênh lỗi
+      # không giết các kênh còn lại.
+      fail-fast: false
+      max-parallel: 5     # để dành luồng cho render_cron/publish đang chạy theo lịch
+      matrix:
+        channel: [DATARACE, STATEWARS, MONEYMOVES, POWERPLAY, GRIDIRON,
+                  SCREENKINGS, PAYCHECK, BODYUSA, RIDEUSA, EATSUSA]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -53,12 +62,12 @@ jobs:
       - name: Thư viện hệ thống
         run: |
           sudo apt-get update
-          sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
             libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
             libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y libasound2
       - name: Python deps
         run: pip install --quiet google-cloud-firestore google-api-python-client google-auth pyyaml \
-             google-generativeai
+             google-generativeai pillow
       - name: npm ci (chỉ khi cache MISS)
         if: steps.cache-node.outputs.cache-hit != 'true'
         working-directory: engine-remotion
@@ -68,7 +77,7 @@ jobs:
         run: npx remotion browser ensure
       - name: Service account file (A đọc pool Drive qua Firestore connections)
         run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
-      - name: Chạy fix_queue_thumbnails
+      - name: Chạy fix_queue_thumbnails cho kênh ${{ matrix.channel }}
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
@@ -78,4 +87,4 @@ jobs:
           ARGS=""
           if [ "${{ github.event.inputs.dry_run }}" != "false" ]; then ARGS="$ARGS --dry-run"; fi
           if [ "${{ github.event.inputs.limit }}" != "0" ]; then ARGS="$ARGS --limit ${{ github.event.inputs.limit }}"; fi
-          python render-pipeline/fix_queue_thumbnails.py $ARGS
+          python render-pipeline/fix_queue_thumbnails.py --channel "${{ matrix.channel }}" $ARGS

@@ -14,6 +14,7 @@ export type DocThumbProps = {
   hook?: string;      // CÂU HỎI MỞ gây tò mò, KHÔNG trả lời: "IS YOURS ON THE LIST?"
   accent?: string;
   accent2?: string;
+  bgBlur?: number;    // làm mờ nền (px). Dùng khi nền lấy từ KHUNG VIDEO — xem ghi chú ở phần render.
 };
 
 // AUTO-FIT: tiêu đề dài phải NHỎ lại cho vừa khung (bài học chữ tràn khung avatar brand).
@@ -53,7 +54,7 @@ const wrapAll = (words: string[], maxLines: number, startPer = 13): string[] => 
 
 export const DocThumb: React.FC<DocThumbProps> = ({
   bg, big, kicker = "", stat = "", statLabel = "", hook = "",
-  accent = "#22D3EE", accent2 = "#F5B301",
+  accent = "#22D3EE", accent2 = "#F5B301", bgBlur = 0,
 }) => {
   // CÔNG THỨC CTR: SỐ LIỆU GÂY SỐC + CÂU HỎI MỞ (không trả lời) > tiêu đề dài.
   // Có stat -> bố cục "số to + nhãn + câu hỏi". Không có stat -> lùi về bố cục tiêu đề (bên dưới).
@@ -75,9 +76,15 @@ export const DocThumb: React.FC<DocThumbProps> = ({
     <AbsoluteFill style={{ background: "#07080f", fontFamily: "'Poppins',Arial", overflow: "hidden" }}>
       {/* 1. ẢNH THẬT của video — hơi phóng to + lệch phải để chừa chỗ chữ bên trái */}
       {bg ? (
+        // bgBlur > 0: nền lấy từ KHUNG VIDEO. Khung video của kênh dữ liệu vốn ĐÃ ĐẦY CHỮ (nhãn biểu
+        // đồ, số, năm) -> để nguyên thì chữ cũ đâm xuyên qua số liệu của thumbnail, nhìn rối (đã thử
+        // thật). Làm mờ nhẹ + phóng to hơn chút: chữ cũ tan thành kết cấu nền, còn màu sắc/bố cục
+        // footage THẬT của chính video vẫn giữ -> vừa khớp nội dung, vừa không chồng chữ.
         <Img src={staticFile(bg)} style={{
           width: "100%", height: "100%", objectFit: "cover",
-          transform: "scale(1.12) translateX(6%)", filter: "contrast(1.15) saturate(1.25) brightness(0.92)",
+          transform: `scale(${bgBlur ? 1.22 : 1.12}) translateX(6%)`,
+          filter: `contrast(1.15) saturate(1.25) brightness(${bgBlur ? 0.82 : 0.92})`
+                  + (bgBlur ? ` blur(${bgBlur}px)` : ""),
         }} />
       ) : (
         // DỰ PHÒNG khi không trích được khung: KHÔNG để nền phẳng chán — dựng nền có chiều sâu bằng
