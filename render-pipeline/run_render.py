@@ -642,6 +642,17 @@ def plan_mode():
     # thống. Xáo ngẫu nhiên -> mỗi phiên 1 nhóm khác được ưu tiên, công bằng thật sự về lâu dài.
     random.shuffle(channels)
     n_paused = len(all_ch) - len(channels)
+    # 20/8: comment ở trên ("18 slot đầu") LUÔN giả định matrix chỉ có tối đa MAX_MATRIX kênh/phiên — nhưng
+    # code TRƯỚC ĐÂY gửi NGUYÊN list (không cắt) -> khi tổng kênh > max-parallel (18, YAML), GitHub KHÔNG bỏ
+    # qua phần dư mà XẾP HÀNG chạy tiếp đợt 2/3 NỐI TIẾP trong CÙNG workflow run -> 1 "phiên" kéo dài
+    # 7-10+ tiếng (40 kênh/18 = 3 đợt × ~3.5h) thay vì ~3.5h như thiết kế, giữ khoá concurrency quá lâu,
+    # nuốt mất cơ hội của các mẻ 4h kế tiếp -> tổng video/ngày sụt hẳn dù không lỗi gì. Cắt về đúng
+    # MAX_MATRIX (khớp max-parallel YAML) -> mỗi phiên LUÔN 1 đợt, xong đúng hạn, nhường lượt sòng phẳng
+    # cho phiên sau (đã xáo ngẫu nhiên nên nhóm bị cắt lần này ưu tiên lần sau).
+    MAX_MATRIX = 18   # PHẢI khớp strategy.max-parallel trong .github/workflows/render_cron.yml
+    if len(channels) > MAX_MATRIX:
+        print(f"   ✂️ {len(channels)} kênh > {MAX_MATRIX} slot/phiên -> chỉ lấy {MAX_MATRIX} (đã xáo ngẫu nhiên), phần còn lại ưu tiên phiên sau.")
+        channels = channels[:MAX_MATRIX]
     print(f"▶ {len(channels)} kênh -> render SONG SONG." + (f" (⏸ {n_paused} kênh đang pause, bỏ qua)" if n_paused else ""))
     out_channels(channels)
 
