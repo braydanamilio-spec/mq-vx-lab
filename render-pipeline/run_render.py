@@ -372,8 +372,12 @@ def main():
     from datetime import datetime, timezone, timedelta
     event = os.environ.get("GITHUB_EVENT_NAME", "")
     run_now = bool(cfg.get("run_now"))
+    # 20/8: cron khai báo mỗi 10' nhưng GitHub Actions THỰC TẾ hay trễ 30-50' (nghẽn nền tảng, quan sát
+    # nhiều lần đêm nay) -> cửa sổ cũ minute<25 bị TRƯỢT HẲN mẻ 04h UTC (lần chạy trước 03:55, lần sau
+    # 04:28, đều ngoài [xx:00,xx:25)). Nới lên minute<55 (gần hết giờ) để chịu được độ trễ lịch thực tế,
+    # vẫn an toàn không lấn giờ mẻ kế (batch_hours cách nhau ít nhất 4h).
     is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 4, 8, 12, 16, 20])
-                  and datetime.now(timezone.utc).minute < 25)   # GIỜ MẺ (mặc định mỗi 6h): chưa đủ target -> phiên mới tự chạy suốt ngày
+                  and datetime.now(timezone.utc).minute < 55)
     if event == "schedule" and not run_now and not is_nightly:
         print("⏭ Nhịp kiểm 30' — không có lệnh Render ngay, bỏ qua (free)."); return
     if run_now:
