@@ -453,10 +453,13 @@ def opening_thumb(out_video, dest_jpg, api_key=None, title="", min_score=70):
     liệu sốc + ảnh nền thật). Đó chính là tấm thumbnail tốt nhất có thể có — khớp nội dung tuyệt đối
     vì nó LÀ video, và không cần vẽ chồng thêm chữ (vẽ thêm sẽ thành chữ đè chữ).
 
-    Lấy vài khung trong 4-20% đầu (bỏ khoảnh khắc fade-in đen), rồi để Gemini Vision CHẤM CHÍNH NÓ
-    NHƯ MỘT THUMBNAIL (qc_vision.check_thumb: chữ có bị cắt mép không, có đè nhau không, đọc được
-    không, nền có trống trơn không). Đạt >= min_score -> dùng luôn. Không đạt -> trả False để lùi về
-    dựng DocThumb như thường.
+    Mốc chụp tính bằng GIÂY TUYỆT ĐỐI, KHÔNG theo % thời lượng: cảnh hook luôn nằm ở ~2-8 giây đầu
+    dù video dài 30 giây hay 7 phút. Bản đầu lấy 6/11/16% nên với video long 7 phút hoá ra chụp ở
+    giây 25/46/67 — trượt hẳn khỏi intro, ra khung giữa bài (đã tính lại và thấy rõ).
+
+    Gemini Vision CHẤM CHÍNH NÓ NHƯ MỘT THUMBNAIL (qc_vision.check_thumb: chữ có bị cắt mép không,
+    có đè nhau không, đọc được không, nền có trống trơn không). Đạt >= min_score -> dùng luôn.
+    Không đạt -> trả False để lùi về dựng DocThumb như thường.
     Không có key Vision -> KHÔNG dùng (không dám lấy khung chưa ai kiểm làm mặt tiền video)."""
     if not api_key:
         return False
@@ -479,21 +482,30 @@ def opening_thumb(out_video, dest_jpg, api_key=None, title="", min_score=70):
         _w, _h = (int(x) for x in (rr.stdout or "0x0").strip().split("x")[:2])
     except Exception:
         _w = _h = 0
-    if _h > _w and _w > 0:   # dọc -> nền mờ + khung đầy đủ ở giữa
-        VF = ("split=2[bg][fg];"
-              "[bg]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,boxblur=22:2[b];"
-              "[fg]scale=-2:720[f];[b][f]overlay=(W-w)/2:0")
+    if _h > _w and _w > 0:   # dọc -> cắt cửa sổ 16:9 BÁM KHỐI CHỮ (giống still_hook_thumb)
+        _ch = int(_w * 9 / 16)
+        _y0 = max(0, min(_h - _ch, int(_h * 0.51 - _ch / 2)))
+        VF = f"crop={_w}:{_ch}:0:{_y0},scale=1280:720"
     else:                    # ngang -> lấy thẳng
         VF = "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720"
     tmpd = os.path.dirname(dest_jpg) or "."
     os.makedirs(tmpd, exist_ok=True)
     best, best_s = None, -1
-    for i, p in enumerate((0.06, 0.11, 0.16)):
+    # GIÂY TUYỆT ĐỐI (không phải %): hook nằm ở 2-8s đầu với MỌI độ dài video.
+    marks = [t for t in (3.0, 4.5, 6.0, 2.2) if t < dur * 0.9] or [min(2.0, dur / 2)]
+    for i, t in enumerate(marks):
         cand = os.path.join(tmpd, f"_op{i}.jpg")
         try:
-            subprocess.run(["ffmpeg", "-y", "-ss", f"{dur * p:.2f}", "-i", out_video, "-frames:v", "1",
+            subprocess.run(["ffmpeg", "-y", "-ss", f"{t:.2f}", "-i", out_video, "-frames:v", "1",
                             "-vf", VF, "-q:v", "2", cand], capture_output=True, timeout=90, check=True)
         except Exception:
+            continue
+        # LỌC MIỄN PHÍ TRƯỚC KHI GỌI VISION: cảnh hook (chữ lớn trên ẢNH nền thật) có ~29% pixel
+        # phẳng, còn khung biểu đồ thuần đồ hoạ là ~66% (đo thật trên video của hệ thống). Chặn ở 45%
+        # -> video KHÔNG có cảnh hook (bản render đời đầu) bị loại ngay, không tiêu lượt Gemini nào.
+        _flat = photo_score(cand)[0]
+        if _flat > 45:
+            print(f"   ↩️ khung {t:.1f}s là đồ hoạ/biểu đồ ({_flat:.0f}% phẳng) — bỏ")
             continue
         ok, info = QV.check_thumb(cand, title=title, api_key=api_key, min_score=min_score)
         sc = info.get("score") or 0
