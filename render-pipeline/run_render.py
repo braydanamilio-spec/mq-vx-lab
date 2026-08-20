@@ -57,6 +57,19 @@ def _script_json(d, cap=300_000):
         return ""
 
 
+def _desc_src(story) -> str:
+    """Mô tả + DẪN NGUỒN. Kênh data-race đã ghi nguồn từ đầu (xem enqueue_drive), nhưng đường kênh
+    doc/motif (30/40 kênh) TRƯỚC ĐÂY chỉ đăng description trần -> video nêu đầy số liệu/mốc/vụ án mà
+    KHÔNG có nguồn nào. Với kênh dữ liệu/tài liệu, dẫn nguồn vừa là chất lượng, vừa là bằng chứng
+    'nội dung giáo dục, có kiểm chứng' khi YouTube xét bật kiếm tiền, vừa là chỗ dựa nếu bị report
+    thông tin sai. Gemini trả 'sources' trong DOC_SCHEMA (bắt buộc nêu tổ chức + báo cáo + năm THẬT)."""
+    desc = (story.get("description") or "").strip()
+    srcs = [s for s in (story.get("sources") or []) if isinstance(s, str) and s.strip()]
+    if srcs:
+        desc += "\n\nSources: " + " · ".join(s.strip() for s in srcs[:4])
+    return desc
+
+
 def enqueue_drive(channel, out, story, vtype) -> bool:
     """Đẩy video + sidecar (+ thumbnail) lên Drive _QUEUE qua enqueue.py của AutoPublisher (nếu có)."""
     try:
@@ -193,7 +206,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 eq = enqueue_drive(channel, out, story, "short")
                 did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
                 jst("done", "Đã đẩy Drive" if did else "Xong (chưa đẩy Drive)", title=story.get("title"),
-                    description=story.get("description", ""), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue đăng đủ metadata
+                    description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue đăng đủ metadata
                     score=(story.get("self_score") or {}).get("total"),
                     dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
                     drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
@@ -300,7 +313,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
             eq = enqueue_drive(channel, sout, story, "short")
             did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
             sst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)", title=story.get("title"),
-                description=story.get("description", ""), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue
+                description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue
                 score=(story.get("self_score") or {}).get("total"),
                 dur=(sinfo or {}).get("dur", 0), size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""),
                 drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),

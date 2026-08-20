@@ -865,6 +865,11 @@ DOC_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   ],
   "outro": str,            // spoken closing + soft CTA (follow for more)
   "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
+  "sources": [str],        // 2-4 REAL public sources backing the specific numbers/claims used above,
+                           // e.g. "FBI Uniform Crime Report 2023", "NOAA NCEI Billion-Dollar Disasters",
+                           // "US Census Bureau ACS 2022". Name the ORGANISATION + dataset/report + year.
+                           // NEVER invent a source. If a claim has no real source you can name, REPLACE
+                           // that claim with one you can source.
   "self_score": { "accuracy": int, "hook": int, "flow": int, "total": int }
 }
 Every fact must be true. img_query must be findable in public-domain/CC0 imagery."""
