@@ -18,8 +18,8 @@ PVER = os.environ.get("PIPELINE_VERSION", "v2")   # phiên bản pipeline (fix h
 # AN TOÀN: render là làm DỰ TRỮ (kho), upload là pipeline riêng. Mỗi kênh giữ tối đa N video dự trữ
 # (khi target=0) -> KHÔNG render vô hạn làm phình Drive. Chỉnh ở render_config.reserve_long/short.
 # NGHỈ GIỮA 2 PHIÊN: trước để 30' -> máy đứng không suốt nửa tiếng sau mỗi phiên dù đã xong việc.
-# has_active_render() đã chặn chồng phiên rồi nên hạ xuống 12' là an toàn: phiên mới mở ngay khi
-# phiên cũ dứt hẳn -> tận dụng tối đa thời gian, không tăng rủi ro chạy đè.
+# GitHub concurrency (group mm0-render-cron, cancel-in-progress:false) ĐÃ bảo đảm không bao giờ có
+# 2 phiên render chạy đè — lượt mới xếp hàng chờ lượt cũ xong. Nên chỉ cần sàn nghỉ này là đủ.
 SESSION_GAP_MIN = 12
 RESERVE_LONG = 10
 RESERVE_SHORT = 30
@@ -552,13 +552,22 @@ def gate_mode():
             enabled = bool(cfg.get("enabled")) or os.environ.get("FORCE") == "1"
             # MỞ PHIÊN MỚI ngay khi phiên trước XONG HẲN (còn job active ở B thì chưa) — KHÔNG còn ép đúng giờ cố định
             # (0/4/8/12/16/20 UTC): với round-cap, phiên tự xong sớm (10 long/30 short/kênh) rồi để trống luồng
-            # tới giờ cố định tiếp theo là lãng phí. Sàn tối thiểu session_gap_min (mặc định 30') chống trigger dồn
-            # dập nếu check active lỗi. Chỉnh session_gap_min ở render_config nếu muốn thưa hơn.
+            # tới giờ cố định tiếp theo là lãng phí. Chỉnh session_gap_min ở render_config nếu muốn thưa hơn.
+            #
+            # ⚠️ ĐỪNG THÊM LẠI has_active_render() VÀO ĐÂY (đã gỡ 20/8).
+            # Nó đọc render_jobs để đoán "có phiên đang chạy không" — nhưng đó là SUY ĐOÁN từ dữ liệu
+            # có thể sai (job ma do tiến trình chết đột ngột), và MỌI lần dây chuyền đứng hôm nay đều
+            # do nó: 39 job ma khoá cổng 6 tiếng, rồi 10 job ma khoá thêm 5 tiếng nữa. Vá bằng cách
+            # rút mốc phát hiện job chết xuống 30' thì lại sinh lỗi mới: health_guardian giết nhầm 15
+            # job đang render khoẻ mạnh.
+            # Việc chặn chồng phiên KHÔNG cần suy đoán: GitHub concurrency (group mm0-render-cron,
+            # cancel-in-progress:false) BẢO ĐẢM ở tầng hạ tầng rằng lượt mới xếp hàng chờ lượt cũ xong.
+            # Cổng này chỉ cần giữ đúng một việc: sàn nghỉ tối thiểu giữa 2 phiên.
             last = cfg.get("last_session_at", ""); gap_min = int(cfg.get("session_gap_min", SESSION_GAP_MIN) or SESSION_GAP_MIN); recently = False
             if last:
                 try:
                     elapsed_min = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60
-                    recently = (elapsed_min < gap_min) or FB.has_active_render(OWNER)
+                    recently = elapsed_min < gap_min
                 except Exception: recently = False
             batch_ok = not recently
             if ((event != "schedule") or run_now or batch_ok) and (enabled or run_now):
@@ -594,7 +603,7 @@ def plan_mode():
     if last:
         try:
             elapsed_min = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60
-            recently = (elapsed_min < gap_min) or FB.has_active_render(OWNER)
+            recently = elapsed_min < gap_min
         except Exception: recently = False
     if event == "schedule" and not run_now and recently:
         print("⏭ Nhịp kiểm — phiên gần đây còn trong hạn nghỉ, bỏ qua (free)."); return out_channels([])

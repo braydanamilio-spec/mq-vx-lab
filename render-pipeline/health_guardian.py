@@ -22,9 +22,12 @@ import firestore_bridge as FB
 
 OWNER = os.environ.get("OWNER_UID")
 STALE_HOURS = float(os.environ.get("STALE_HOURS_OVERRIDE") or 6)   # job render 1 kênh hiếm khi quá 6h thật (matrix timeout 350')
-# Job còn sống ghi nhịp tim ~90s/lần (update_job). Im lặng 30' = lỡ ~20 nhịp -> chết chắc.
+# Job còn sống có LUỒNG NỀN đóng dấu updated_at mỗi 2' (firestore_bridge._beat_loop).
+# Im lặng 45' = lỡ ~22 nhịp -> chết chắc. KHÔNG hạ thấp hơn: cổng render nay KHÔNG còn phụ
+# thuộc vào việc dọn job ma (đã gỡ has_active_render khỏi gate) nên không có lý do gì phải
+# giết gấp; giết sớm chỉ rước rủi ro chém nhầm job đang render (đã xảy ra 20/8: 15 job).
 # Đặt rộng rãi so với 90s để KHÔNG giết oan job đang render 1 clip nặng (render lâu vẫn có nhịp).
-STALE_BEAT_MIN = float(os.environ.get("STALE_BEAT_MIN") or 30)
+STALE_BEAT_MIN = float(os.environ.get("STALE_BEAT_MIN") or 45)
 # -> quá STALE_HOURS là coi như treo. Chỉnh STALE_HOURS_OVERRIDE khi chạy tay (workflow_dispatch) để can thiệp NGAY,
 # không đợi đủ 6h — vd 1 job kẹt cổng render biết chắc đã treo lúc chưa tới 6h.
 SILENT_HOURS = 12     # 12h không có video nào xong dù render đang bật -> báo động thật, không phải quota tạm
