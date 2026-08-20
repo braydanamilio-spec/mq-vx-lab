@@ -612,6 +612,14 @@ def opening_thumb(out_video, dest_jpg, api_key=None, title="", min_score=70):
             print(f"   ↩️ khung {t:.1f}s là đồ hoạ/biểu đồ ({_flat:.0f}% phẳng) — bỏ")
             continue
         ok, info = QV.check_thumb(cand, title=title, api_key=api_key, min_score=min_score)
+        # VISION HỎNG (hết quota/mạng) -> check_thumb fail-open: ok=True nhưng KHÔNG có "score".
+        # Bản trước lấy score=0 rồi so với min_score=70 -> LOẠI SẠCH: 788/820 khung hook bị vứt oan
+        # chỉ vì Gemini hết quota, dù ảnh hoàn toàn tốt. Không chấm được thì TIN vào bộ lọc tất định
+        # phía trên (đã loại khung đồ hoạ theo % phẳng) và NHẬN khung này.
+        if info.get("note", "").startswith(("vision-skip", "no-thumb")) or "score" not in info:
+            print(f"   ✅ khung mở đầu {t:.1f}s: Vision không chấm được -> nhận (đã qua bộ lọc đồ hoạ)")
+            best, best_s = cand, max(min_score, 1)
+            break
         sc = info.get("score") or 0
         print(f"   🖼️ khung mở đầu {t:.1f}s: {sc}/100"
               + ("" if ok else f" — {'; '.join(info.get('issues') or [])[:80]}"))

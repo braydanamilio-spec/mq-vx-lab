@@ -114,6 +114,13 @@ def _load_keys(channel_seed: str = ""):
             ks = [k for k in FB.read_keys(os.environ.get("OWNER_UID")) if k.get("key")]
         except Exception as e:
             print("   ⚠️ không đọc được key Gemini (bỏ kiểm ảnh):", str(e)[:70])
+    # Bắt tín hiệu hết quota từ TẦNG DƯỚI: verify_image/check_thumb đều nuốt lỗi (fail-open) nên
+    # except của ta không bao giờ chạy -> lượt 20/8 ăn 1590 lỗi 429 mà không đổi key lần nào.
+    try:
+        import qc_vision as _QV
+        _QV.on_quota = _vision_off
+    except Exception:
+        pass
     if ks and len(ks) > 1:
         # 1) Sắp theo luật của dây chuyền render (key ÍT DÙNG nhất lên đầu, né key vừa hết chặn).
         #    Gieo CÙNG một hạt cho mọi kênh -> mọi luồng nhận CÙNG thứ tự nền.

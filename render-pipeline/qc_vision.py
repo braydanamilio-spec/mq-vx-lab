@@ -7,6 +7,20 @@ import os
 import subprocess
 import content_brain as CB
 
+# BÁO HẾT QUOTA RA NGOÀI: các hàm dưới đây đều fail-open (nuốt lỗi, trả kết quả "cho qua") để một
+# lỗi Vision không chặn cả dây chuyền. Nhưng nuốt luôn cả 429 thì caller KHÔNG BIẾT để đổi key ->
+# lượt 20/8 ăn 1590 lỗi 429 mà cơ chế xoay key không chạy lần nào vì không nhận được tín hiệu.
+# Caller nào cần biết thì gán qc_vision.on_quota = hàm_của_mình; ai không gán thì hành vi y như cũ.
+on_quota = None
+
+
+def _report_quota(err):
+    if on_quota and any(x in str(err) for x in ("429", "quota", "exceeded", "RESOURCE_EXHAUSTED")):
+        try:
+            on_quota(err)
+        except Exception:
+            pass
+
 
 def verify_image(path: str, subject: str, api_key: str = None, model_name: str = None):
     """Gemini Vision: ảnh này có RÕ RÀNG là `subject` không? (dùng cho GUESS — ép ảnh khớp đáp án 100%).
@@ -30,6 +44,7 @@ def verify_image(path: str, subject: str, api_key: str = None, model_name: str =
         r = CB._extract_json(resp.text) or {}
         return bool(r.get("match"))
     except Exception as e:
+        _report_quota(e)
         print(f"   ⚠️ verify_image lỗi (bỏ qua kiểm): {str(e)[:70]}")
         return None
 
@@ -90,6 +105,7 @@ def check_visual(mp4: str, api_key: str = None, model_name: str = None, min_scor
         if not scores:
             return True, {"note": "vision-empty-skip"}
     except Exception as e:
+        _report_quota(e)
         return True, {"note": f"vision-skip: {str(e)[:80]}"}   # fail-open
     best = max(scores)
     return best >= min_score, {"score": round(best), "avg": round(sum(scores) / len(scores)), "frames": len(scores), "issues": issues[:4]}
@@ -133,6 +149,7 @@ def check_thumb(jpg: str, title: str = "", api_key: str = None, model_name: str 
                                       request_options={"timeout": 30})
         r = CB._extract_json(resp.text) or {}
     except Exception as e:
+        _report_quota(e)
         return True, {"note": f"vision-skip: {str(e)[:80]}"}   # fail-open
     sc = float(r.get("score", 0) or 0)
     info = {"score": round(sc), "issues": (r.get("issues") or [])[:4], "topic_match": r.get("topic_match")}
