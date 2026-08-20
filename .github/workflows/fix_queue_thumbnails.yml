@@ -1,0 +1,79 @@
+name: MM0 Fix Queue Thumbnails (one-time, manual)
+
+# MỘT LẦN: nâng cấp thumbnail cho video 10 kênh gốc ĐÃ RENDER nhưng còn nằm trong Drive _QUEUE
+# (chưa đăng, chưa lên lịch) — dùng DocThumb (title thật + màu kênh thật + ảnh thật fetch lại
+# theo topic). KHÔNG đụng file video. Xem chi tiết + giới hạn thật: render-pipeline/fix_queue_thumbnails.py
+#
+# CHỈ workflow_dispatch — KHÔNG cron. Chạy bằng nút "Run workflow" trên tab Actions, hoặc yêu cầu
+# Claude chạy TRỰC TIẾP bằng lời trong chat (theo PIPELINE_RULES.md — không tự trigger để "test").
+# Luôn chạy dry_run=true trước để xem trước danh sách, rồi mới chạy dry_run=false cho thật.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Chạy thử — chỉ liệt kê, không đổi gì"
+        type: boolean
+        default: true
+      limit:
+        description: "Giới hạn số video xử lý (0 = không giới hạn)"
+        type: string
+        default: "0"
+
+concurrency: { group: mm0-fix-queue-thumbnails, cancel-in-progress: false }
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Cache node_modules (khỏi npm ci lại)
+        id: cache-node
+        uses: actions/cache@v4
+        with:
+          path: engine-remotion/node_modules
+          key: node-modules-${{ hashFiles('engine-remotion/package-lock.json') }}
+      - name: Cache Chrome Remotion (khỏi tải lại)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.remotion
+            ~/.cache/remotion
+          key: remotion-chrome-${{ hashFiles('engine-remotion/package-lock.json') }}
+      - name: Thư viện hệ thống
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
+            libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y libasound2
+      - name: Python deps
+        run: pip install --quiet google-cloud-firestore google-api-python-client google-auth pyyaml
+      - name: npm ci (chỉ khi cache MISS)
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        working-directory: engine-remotion
+        run: npm ci
+      - name: Ensure Chrome (cache -> gần như tức thì)
+        working-directory: engine-remotion
+        run: npx remotion browser ensure
+      - name: Service account file (A đọc pool Drive qua Firestore connections)
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+      - name: Chạy fix_queue_thumbnails
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.dry_run }}" != "false" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ "${{ github.event.inputs.limit }}" != "0" ]; then ARGS="$ARGS --limit ${{ github.event.inputs.limit }}"; fi
+          python render-pipeline/fix_queue_thumbnails.py $ARGS
