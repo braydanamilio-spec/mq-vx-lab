@@ -350,7 +350,7 @@ def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story
         mk4 = {"swarm": DS.make_swarm, "pulse": DS.make_pulse,
                "clockwork": DS.make_clockwork, "longshot": DS.make_longshot}[fmt]
         _defacc = {"swarm": "#0D9488", "pulse": "#EA580C", "clockwork": "#C2410C", "longshot": "#4F46E5"}[fmt]
-        _def2 = {"swarm": "#5EEAD4", "pulse": "#FCA5A5", "clockwork": "#FCD34D", "longshot": "#A5B4FC"}[fmt]
+        _def2 = {"swarm": "#F0ABFC", "pulse": "#FCA5A5", "clockwork": "#FCD34D", "longshot": "#A5B4FC"}[fmt]
         return mk4(ch.get("name"), cat, out, keys=keys, tier=tier, accent=ch.get("accent", _defacc),
                    accent2=ch.get("accent2", _def2),
                    avoid=avoid, on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)

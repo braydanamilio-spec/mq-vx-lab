@@ -274,6 +274,27 @@ SAFE_TOP = 0.58   # phụ đề cháy vào khung nằm ở ĐÁY -> lấy 58% tr
 FRAME_BLUR = 9    # khung video vốn đã đầy nhãn/số -> mờ 9 thì chữ cũ tan thành kết cấu (đã thử 0/5/9)
 
 
+def photo_score(path: str):
+    """Khung này là ẢNH THẬT hay chỉ là ĐỒ HOẠ/BIỂU ĐỒ?
+
+    Đo trên video thật: khung biểu đồ có 66-71% pixel TRÙNG HỆT pixel bên cạnh (mảng màu phẳng) và
+    ít màu; ảnh chụp thì <15% và rất nhiều màu. Cần phân biệt vì nền thumbnail lấy từ khung biểu đồ
+    (dù đã làm mờ) trông tẻ nhạt, KHÔNG hook — phải lùi sang ảnh thật/AI vẽ theo chủ đề.
+    Trả (flat_percent, so_mau, la_anh_that)."""
+    try:
+        from PIL import Image
+        im = Image.open(path).convert("RGB")
+        im.thumbnail((240, 240))
+        w, h = im.size
+        raw = list(im.getdata())
+        same = sum(1 for y in range(h) for x in range(w - 1) if raw[y * w + x] == raw[y * w + x + 1])
+        flat = same / max(1, w * h) * 100
+        cols = len({(r >> 3, g >> 3, b >> 3) for r, g, b in raw})
+        return flat, cols, (flat < 15 and cols > 1400)
+    except Exception:
+        return 100.0, 0, False
+
+
 def frame_bg(video: str, dest_dir: str, rel_prefix: str):
     """Rút 1 KHUNG ĐẸP NHẤT TỪ CHÍNH VIDEO làm nền thumbnail (footage thật -> khớp nội dung 100%).
 
@@ -292,7 +313,8 @@ def frame_bg(video: str, dest_dir: str, rel_prefix: str):
         return ""
     os.makedirs(dest_dir, exist_ok=True)
     best, best_s = None, -1.0
-    for i, p in enumerate((0.15, 0.28, 0.42, 0.56, 0.70, 0.84)):
+    # 12 mốc (trước 6): ảnh thật chỉ chèn vài giây trong bài -> lấy thưa là trượt hết vào biểu đồ
+    for i, p in enumerate((0.10, 0.18, 0.26, 0.34, 0.42, 0.50, 0.58, 0.66, 0.74, 0.82, 0.88, 0.93)):
         cand = os.path.join(dest_dir, f"_f{i}.jpg")
         try:
             subprocess.run(["ffmpeg", "-y", "-ss", f"{dur * p:.2f}", "-i", video, "-frames:v", "1",
@@ -300,6 +322,9 @@ def frame_bg(video: str, dest_dir: str, rel_prefix: str):
                            capture_output=True, timeout=90, check=True)
         except Exception:
             continue
+        flat, cols, is_photo = photo_score(cand)
+        if not is_photo:
+            continue          # khung đồ hoạ/biểu đồ -> KHÔNG dùng làm nền (tẻ nhạt, không hook)
         try:
             from PIL import Image, ImageStat
             im = Image.open(cand).convert("RGB"); im.thumbnail((320, 320))
@@ -323,16 +348,177 @@ def frame_bg(video: str, dest_dir: str, rel_prefix: str):
     return f"{rel_prefix}/thumbbg.jpg"
 
 
+def still_hook_thumb(comp_id, props_path, dest_jpg, frame=40, api_key=None, title="", min_score=65):
+    """THUMBNAIL = CHÍNH KHUNG HOOK MỞ ĐẦU, render TRỰC TIẾP từ Remotion (không cắt từ video).
+
+    Vì sao không cắt từ mp4: video đã nén H.264 -> chữ rỗ, ảnh mềm, đúng kiểu "thumbnail mờ". Render
+    still từ cùng composition + cùng props cho ra khung Y HỆT nhưng SẮC NÉT tuyệt đối, đúng kích cỡ.
+    Đây là ảnh hook đã được thiết kế sẵn ở đầu bài -> khớp nội dung 100%, không phải vẽ chồng chữ.
+
+    Composition dọc (short 1080x1920) -> lồng nguyên khung vào giữa khung 1280x720, nền là chính nó
+    phóng to + làm mờ (ép cắt 16:9 sẽ xén mất chữ hai bên — đã thử thật).
+    Có key -> Vision chấm chất lượng cảnh hook trước khi nhận. Trả True/False."""
+    raw = dest_jpg + ".raw.png"
+    try:
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", comp_id, raw,
+                        f"--props=./{os.path.relpath(props_path, ENG)}",
+                        f"--frame={int(frame)}", "--log=error"],
+                       cwd=ENG, check=True, timeout=180)
+        if not os.path.exists(raw):
+            return False
+        from PIL import Image
+        w, h = Image.open(raw).size
+        vf = ("scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720" if w >= h else
+              "split=2[bg][fg];[bg]scale=1280:720:force_original_aspect_ratio=increase,"
+              "crop=1280:720,boxblur=22:2[b];[fg]scale=-2:720[f];[b][f]overlay=(W-w)/2:0")
+        subprocess.run(["ffmpeg", "-y", "-i", raw, "-vf", vf, "-q:v", "2", dest_jpg],
+                       capture_output=True, timeout=90, check=True)
+        if not os.path.exists(dest_jpg):
+            return False
+        if api_key:
+            import qc_vision as QV
+            ok, info = QV.check_thumb(dest_jpg, title=title, api_key=api_key, min_score=min_score)
+            print(f"   🖼️ QC cảnh hook: {info.get('score')}/100"
+                  + ("" if ok else f" — {'; '.join(info.get('issues') or [])[:90]}"))
+            if not ok:
+                return False      # hook xấu -> lùi về dựng DocThumb
+        return True
+    except Exception as e:
+        print("   ⚠️ still hook lỗi:", str(e)[:80])
+        return False
+    finally:
+        try:
+            os.remove(raw)
+        except Exception:
+            pass
+
+
+def opening_thumb(out_video, dest_jpg, api_key=None, title="", min_score=70):
+    """DÙNG THẲNG KHUNG MỞ ĐẦU VIDEO LÀM THUMBNAIL.
+
+    Cấu trúc video của hệ thống đặt HOOK NGAY ĐẦU BÀI: một khung đã thiết kế sẵn (tiêu đề lớn + số
+    liệu sốc + ảnh nền thật). Đó chính là tấm thumbnail tốt nhất có thể có — khớp nội dung tuyệt đối
+    vì nó LÀ video, và không cần vẽ chồng thêm chữ (vẽ thêm sẽ thành chữ đè chữ).
+
+    Lấy vài khung trong 4-20% đầu (bỏ khoảnh khắc fade-in đen), rồi để Gemini Vision CHẤM CHÍNH NÓ
+    NHƯ MỘT THUMBNAIL (qc_vision.check_thumb: chữ có bị cắt mép không, có đè nhau không, đọc được
+    không, nền có trống trơn không). Đạt >= min_score -> dùng luôn. Không đạt -> trả False để lùi về
+    dựng DocThumb như thường.
+    Không có key Vision -> KHÔNG dùng (không dám lấy khung chưa ai kiểm làm mặt tiền video)."""
+    if not api_key:
+        return False
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                            "-of", "default=nw=1:nk=1", out_video],
+                           capture_output=True, text=True, timeout=60)
+        dur = float((r.stdout or "0").strip() or 0)
+    except Exception:
+        return False
+    if dur <= 0:
+        return False
+    import qc_vision as QV
+    # Video DỌC (short 1080x1920): ép về 16:9 kiểu cắt giữa sẽ XÉN MẤT CHỮ hai bên (đã thử thật).
+    # -> lồng NGUYÊN khung vừa chiều cao vào giữa, nền là chính khung đó phóng to + làm mờ.
+    try:
+        rr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v",
+                             "-show_entries", "stream=width,height", "-of", "csv=p=0:s=x", out_video],
+                            capture_output=True, text=True, timeout=60)
+        _w, _h = (int(x) for x in (rr.stdout or "0x0").strip().split("x")[:2])
+    except Exception:
+        _w = _h = 0
+    if _h > _w and _w > 0:   # dọc -> nền mờ + khung đầy đủ ở giữa
+        VF = ("split=2[bg][fg];"
+              "[bg]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,boxblur=22:2[b];"
+              "[fg]scale=-2:720[f];[b][f]overlay=(W-w)/2:0")
+    else:                    # ngang -> lấy thẳng
+        VF = "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720"
+    tmpd = os.path.dirname(dest_jpg) or "."
+    os.makedirs(tmpd, exist_ok=True)
+    best, best_s = None, -1
+    for i, p in enumerate((0.06, 0.11, 0.16)):
+        cand = os.path.join(tmpd, f"_op{i}.jpg")
+        try:
+            subprocess.run(["ffmpeg", "-y", "-ss", f"{dur * p:.2f}", "-i", out_video, "-frames:v", "1",
+                            "-vf", VF, "-q:v", "2", cand], capture_output=True, timeout=90, check=True)
+        except Exception:
+            continue
+        ok, info = QV.check_thumb(cand, title=title, api_key=api_key, min_score=min_score)
+        sc = info.get("score") or 0
+        print(f"   🖼️ khung mở đầu {int(p*100)}%: {sc}/100"
+              + ("" if ok else f" — {'; '.join(info.get('issues') or [])[:80]}"))
+        if sc > best_s:
+            best_s, best = sc, cand
+        if ok:
+            break
+    if best is None or best_s < min_score:
+        return False
+    try:
+        if os.path.exists(dest_jpg):
+            os.remove(dest_jpg)
+        os.rename(best, dest_jpg)
+        return True
+    except Exception:
+        return False
+
+
+def hook_bg(channel, out_video, subject, keys=None, api_key=None):
+    """NỀN HOOK cho thumbnail — luôn cố ra một ảnh THẬT, LIÊN QUAN, BẮT MẮT.
+
+    Thứ tự (dừng ở cái đầu tiên có được):
+      1. Khung ẢNH THẬT rút từ chính video (chỉ nhận khung ảnh chụp, KHÔNG nhận khung biểu đồ —
+         xem photo_score). Đây là ảnh khớp nội dung 100%.
+      2. Ảnh CC0 Openverse theo chủ đề; không có thì Nano Banana (Gemini) VẼ ảnh minh hoạ đúng chủ
+         đề — fetch_image() đã lo sẵn chuỗi này.
+    Kênh đồ hoạ thuần (biểu đồ/bản đồ/tier list) không có ảnh chụp nào trong video nên hầu như luôn
+    rơi xuống bước 2 — đúng ý đồ: thà một tấm ảnh thật/vẽ đúng chủ đề còn hơn khung biểu đồ làm mờ
+    nhìn tẻ nhạt, không ai bấm vào.
+    Trả (đường_dẫn_tương_đối, có_phải_khung_video)."""
+    d = os.path.join(PUB, "_tb_" + slug(channel))
+    rel = "_tb_" + slug(channel)
+    got = frame_bg(out_video, d, rel)
+    if got:
+        return got, True
+    key = api_key or ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
+    try:
+        os.makedirs(d, exist_ok=True)
+        dest = os.path.join(d, "hook.jpg")
+        subj = (subject or channel).strip()
+        if fetch_image(subj, dest, orient="wide", ai_key=key,
+                       ai_prompt=f"dramatic cinematic editorial photo illustrating: {subj}. "
+                                 f"No text, no words, no charts, no watermark."):
+            return f"{rel}/hook.jpg", False
+    except Exception as e:
+        print("   ⚠️ hook_bg:", str(e)[:80])
+    return "", False
+
+
 def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
-              accent="#22D3EE", accent2="#F5B301", bg_rel="", bg_blur=0):
+              accent="#22D3EE", accent2="#F5B301", bg_rel="", bg_blur=0,
+              api_key_for_thumb=None, comp_id="", props_path="", hook_frame=40):
     """Dựng thumbnail chuẩn nhà (DocThumb) — DÙNG CHUNG cho MỌI engine.
 
     Trước đây mỗi nhóm kênh một kiểu thumbnail riêng: 21 kênh doc + 10 kênh gốc dùng DocThumb (số
     liệu sốc + câu hỏi mở + ảnh thật), còn 9 kênh motif vẫn dùng Brand*Thumb kiểu cũ = chữ trên nền
     màu phẳng, KHÔNG số liệu, KHÔNG câu hỏi. Gộp hết về 1 công thức đã được duyệt.
     Trả đường dẫn ảnh hoặc "" nếu lỗi (caller tự lùi về cách cũ)."""
+    thumb = out.rsplit(".", 1)[0] + ".jpg"
+    # BƯỚC 0 — ưu tiên cao nhất: KHUNG HOOK MỞ ĐẦU của chính video. Video hệ thống đặt hook ngay đầu
+    # bài (tiêu đề lớn + số sốc + ảnh nền thật) nên khung đó vốn ĐÃ là một thumbnail hoàn chỉnh, khớp
+    # nội dung tuyệt đối. Chỉ nhận khi Gemini Vision chấm đạt (không cắt chữ/không đè/đọc được).
+    _k = api_key_for_thumb or os.environ.get("GEMINI_API_KEY")
     try:
-        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        # (a) NÉT NHẤT: render lại khung hook từ chính composition + props (không qua nén video).
+        if comp_id and props_path and still_hook_thumb(comp_id, props_path, thumb, frame=hook_frame,
+                                                       api_key=_k, title=big):
+            print("   ✅ thumbnail = KHUNG HOOK MỞ ĐẦU (render nét từ composition)")
+            return thumb
+        # (b) không có props (vd render lại từ checkpoint) -> cắt khung đầu từ video
+        if _k and opening_thumb(out, thumb, api_key=_k, title=big):
+            print("   ✅ thumbnail = khung hook mở đầu (cắt từ video)")
+            return thumb
+    except Exception as e:
+        print("   ⚠️ khung mở đầu bỏ qua:", str(e)[:70])
+    try:
         tprops = {"bg": bg_rel, "big": big, "kicker": channel, "accent": accent, "accent2": accent2,
                   "stat": str(stat or "").strip(), "statLabel": str(stat_label or "").strip(),
                   "hook": str(hook or "").strip(), "bgBlur": bg_blur}
@@ -501,12 +687,13 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (story.get("top") or [{}])[0]
         _stat, _lab = _t.get("disp", ""), _t.get("state", "")
         _hook = story.get("title") or "WHICH STATE WINS?"
-        _bg = frame_bg(out, os.path.join(PUB, "_tb_mapped_" + slug(channel)),
-                       "_tb_mapped_" + slug(channel))
+        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
                         accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _bg else 0))
+                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
+                        comp_id="MappedShort", props_path=pf,)
         thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
@@ -572,12 +759,13 @@ def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (_s or (story.get("items") or [{}]))[-1]
         _stat, _lab = _t.get("stat", ""), _t.get("name", "")
         _hook = story.get("title") or "WHAT'S S-TIER?"
-        _bg = frame_bg(out, os.path.join(PUB, "_tb_ranked_" + slug(channel)),
-                       "_tb_ranked_" + slug(channel))
+        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
                         accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _bg else 0))
+                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
+                        comp_id="RankedShort", props_path=pf,)
         thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
@@ -643,12 +831,13 @@ def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (story.get("items") or [{}])[-1]
         _stat, _lab = _t.get("disp", ""), _t.get("name", "")
         _hook = story.get("title") or "HOW BIG REALLY?"
-        _bg = frame_bg(out, os.path.join(PUB, "_tb_scaled_" + slug(channel)),
-                       "_tb_scaled_" + slug(channel))
+        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
                         accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _bg else 0))
+                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
+                        comp_id="ScaledShort", props_path=pf,)
         thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
@@ -714,12 +903,13 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (story.get("pairs") or [{}])[0]
         _stat, _lab = _t.get("change", ""), _t.get("label", "")
         _hook = (f"{_t.get('thenVal','')} → {_t.get('nowVal','')}").strip(" →") or story.get("title", "")
-        _bg = frame_bg(out, os.path.join(PUB, "_tb_thennow_" + slug(channel)),
-                       "_tb_thennow_" + slug(channel))
+        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
                         accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _bg else 0))
+                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
+                        comp_id="ThenNowShort", props_path=pf,)
         thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
@@ -887,7 +1077,7 @@ def build_swarm_props(story, sdir, handle="@swarmusa", accent="#0D9488", music="
 
 
 def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
-               accent="#0D9488", accent2="#5EEAD4", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
+               accent="#0D9488", accent2="#F0ABFC", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
     """KÊNH SWARM A-Z: Gemini sinh mật độ/số lượng thật -> giọng -> render SwarmShort -> QC + thumb."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)
@@ -917,12 +1107,13 @@ def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = max(_its, key=lambda x: x.get("count") or 0)
         _stat, _lab = _t.get("countDisp", ""), _t.get("label", "")
         _hook = story.get("title") or "HOW MANY, REALLY?"
-        _bg = frame_bg(out, os.path.join(PUB, "_tb_swarm_" + slug(channel)),
-                       "_tb_swarm_" + slug(channel))
+        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
                         accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _bg else 0))
+                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
+                        comp_id="SwarmShort", props_path=pf,)
         thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
@@ -986,12 +1177,13 @@ def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (story.get("items") or [{}])[-1]
         _stat, _lab = _t.get("disp", ""), _t.get("label", "")
         _hook = story.get("title") or "HOW INTENSE?"
-        _bg = frame_bg(out, os.path.join(PUB, "_tb_pulse_" + slug(channel)),
-                       "_tb_pulse_" + slug(channel))
+        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
                         accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _bg else 0))
+                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
+                        comp_id="PulseShort", props_path=pf,)
         thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
@@ -1059,12 +1251,13 @@ def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = story.get("hero") or {}
         _stat, _lab = _t.get("realValue", ""), _t.get("label", "")
         _hook = story.get("scaleLabel") or story.get("title", "")
-        _bg = frame_bg(out, os.path.join(PUB, "_tb_clockwork_" + slug(channel)),
-                       "_tb_clockwork_" + slug(channel))
+        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
                         accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _bg else 0))
+                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
+                        comp_id="ClockworkShort", props_path=pf,)
         thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
@@ -1127,12 +1320,13 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (story.get("items") or [{}])[-1]
         _stat, _lab = _t.get("oddsDisp", ""), _t.get("label", "")
         _hook = story.get("title") or "WHAT ARE THE ODDS?"
-        _bg = frame_bg(out, os.path.join(PUB, "_tb_longshot_" + slug(channel)),
-                       "_tb_longshot_" + slug(channel))
+        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
                         accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _bg else 0))
+                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
+                        comp_id="LongshotShort", props_path=pf,)
         thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:
@@ -1319,11 +1513,12 @@ def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
         _r0 = (story.get("rounds") or [{}])[0]
-        _bg = frame_bg(out, os.path.join(PUB, "_tb_guess_" + slug(channel)), "_tb_guess_" + slug(channel))
+        _bg, _isfr = hook_bg(channel, out, _r0.get("answer") or story.get("category") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=_r0.get("q") or "CAN YOU NAME IT?",
                         stat="", stat_label="", hook="",
                         accent="#84CC16", accent2="#FDE047", bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _bg else 0))
+                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None))
         thumb = _th or thumb
         info["thumb"] = thumb
     except Exception as e:

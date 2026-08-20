@@ -43,7 +43,7 @@ ENG = os.path.join(os.path.dirname(ROOT), "engine-remotion")
 PUB = os.path.join(ENG, "public")
 
 sys.path.insert(0, ROOT)
-from datastory_ci import fetch_image, slug  # noqa: E402  — tái dùng: ảnh thật CC0 + slug helper
+from datastory_ci import fetch_image, slug, photo_score  # noqa: E402  — tái dùng: ảnh thật CC0 + slug helper
 
 AP_SRC = os.environ.get("AUTOPUBLISHER_SRC")
 if AP_SRC and AP_SRC not in sys.path:
@@ -179,7 +179,9 @@ def frame_from_video(video: str, dest: str) -> bool:
     dur = _probe_dur(video)
     if dur <= 0:
         return False
-    marks = [dur * p for p in (0.15, 0.28, 0.42, 0.56, 0.70, 0.84)]
+    # 12 mốc: ảnh thật chỉ chèn vài giây -> lấy thưa là trượt hết vào đoạn biểu đồ
+    marks = [dur * p for p in (0.10, 0.18, 0.26, 0.34, 0.42, 0.50, 0.58,
+                               0.66, 0.74, 0.82, 0.88, 0.93)]
     best, best_s = None, -1.0
     tmpdir = os.path.dirname(dest)
     for i, t in enumerate(marks):
@@ -195,6 +197,8 @@ def frame_from_video(video: str, dest: str) -> bool:
             continue
         if not os.path.exists(cand):
             continue
+        if not photo_score(cand)[2]:
+            continue          # khung biểu đồ/đồ hoạ -> bỏ, nền phải là ẢNH THẬT mới hook
         s = _score_frame(cand)
         if s > best_s:
             best_s, best = s, cand
@@ -222,6 +226,17 @@ def build_thumb(channel: str, title: str, topic: str, dest_local: str, video_loc
     os.makedirs(bg_dir, exist_ok=True)
     bg_local = os.path.join(bg_dir, "bg.jpg")
     bg_rel = ""
+    # ƯU TIÊN 0 — KHUNG HOOK MỞ ĐẦU dùng thẳng làm thumbnail. Video hệ thống đặt hook ngay đầu bài
+    # (tiêu đề lớn + số sốc + ảnh nền thật) nên khung đó VỐN ĐÃ là thumbnail hoàn chỉnh, khớp nội
+    # dung tuyệt đối và không cần vẽ chồng chữ. Chỉ nhận khi Vision chấm đạt.
+    if video_local and os.path.exists(video_local):
+        try:
+            from datastory_ci import opening_thumb
+            if opening_thumb(video_local, dest_local, api_key=_vision_key(), title=title):
+                print("     ✅ dùng KHUNG HOOK MỞ ĐẦU của video")
+                return True
+        except Exception as e:
+            print("     ⚠️ khung mở đầu bỏ qua:", str(e)[:70])
     # ƯU TIÊN 1 — FOOTAGE THẬT TRONG CHÍNH VIDEO (bắt buộc): khớp nội dung 100%, mỗi video một ảnh
     # khác nhau, không bao giờ "nền đơn điệu".
     if video_local and os.path.exists(video_local) and frame_from_video(video_local, bg_local):
@@ -245,10 +260,13 @@ def build_thumb(channel: str, title: str, topic: str, dest_local: str, video_loc
         import qc_vision as QV
         verify = lambda p: QV.verify_image(p, q, api_key=vkey)   # True/False/None(Vision lỗi -> fail-open)
     try:
-        if q and fetch_image(q, bg_local, orient="wide", verify=verify, max_check=5):
-            bg_rel = f"{tag}/bg.jpg"
+        if q and fetch_image(q, bg_local, orient="wide", verify=verify, max_check=5,
+                             ai_key=vkey,
+                             ai_prompt=f"dramatic cinematic editorial photo illustrating: {q}. "
+                                       f"No text, no words, no charts, no watermark."):
+            bg_rel = f"{tag}/bg.jpg"     # ảnh CC0 khớp, hoặc Nano Banana vẽ đúng chủ đề
         elif q:
-            print(f"     ℹ️ không có ảnh CC0 nào KHỚP '{q}' -> dùng nền thiết kế")
+            print(f"     ℹ️ không ra được ảnh nào cho '{q}' -> dùng nền thiết kế")
     except Exception as e:
         print("     ⚠️ fetch_image lỗi:", str(e)[:80])
     if not _render_thumb(channel, title, bg_rel, tag, dest_local, bg_dir, bg_local):
