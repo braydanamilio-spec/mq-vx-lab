@@ -66,8 +66,13 @@ jobs:
             libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
             libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y libasound2
       - name: Python deps
-        run: pip install --quiet google-cloud-firestore google-api-python-client google-auth pyyaml \
-             google-generativeai pillow
+        # CHIA 2 LỆNH, KHÔNG gộp: gộp tất cả vào 1 lệnh làm bộ giải phụ thuộc của pip nổ
+        # "resolution-too-deep" -> cả 10 luồng chết ngay ở bước cài (sự cố 20/8, 0 video được xử lý).
+        # Dòng 1 giữ ĐÚNG bộ đã chạy ổn định trong render_cron.yml; pillow cài riêng.
+        run: |
+          pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+            google-api-python-client google-auth pyyaml
+          pip install --quiet pillow
       - name: npm ci (chỉ khi cache MISS)
         if: steps.cache-node.outputs.cache-hit != 'true'
         working-directory: engine-remotion
