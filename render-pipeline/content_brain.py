@@ -865,6 +865,13 @@ DOC_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   ],
   "outro": str,            // spoken closing + soft CTA (follow for more)
   "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
+  // ── THUMBNAIL (điểm nhấn của video, để vẽ ảnh bìa gây tò mò) ──
+  "thumb_stat": str,       // THE single most shocking REAL number in this video, formatted SHORT for a
+                           // thumbnail: "$4.7B", "92%", "1 IN 6", "40,000x". <=8 chars. Must be a number
+                           // that actually appears in the narration above. "" if the video has no number.
+  "thumb_label": str,      // <=20 chars, what that number IS: "OF US TAP WATER", "PER SECOND"
+  "thumb_hook": str,       // <=22 chars, an OPEN QUESTION or doubt that creates curiosity — do NOT answer
+                           // it in the thumbnail: "IS YOURS ON THE LIST?", "WHY?", "NOBODY NOTICED"
   "sources": [str],        // 2-4 REAL public sources backing the specific numbers/claims used above,
                            // e.g. "FBI Uniform Crime Report 2023", "NOAA NCEI Billion-Dollar Disasters",
                            // "US Census Bureau ACS 2022". Name the ORGANISATION + dataset/report + year.

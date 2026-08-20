@@ -687,6 +687,39 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
                 ok = False
         except Exception as e:
             print("   ⚠️ vision qc skip:", e)
+    # THUMBNAIL BRAND (DocThumb) — trước đây 21 kênh doc chỉ cắt đại 1 khung hình làm thumbnail (mờ nhạt,
+    # không chữ, CTR thấp). Giờ: khung đẹp của CHÍNH video làm nền + chữ hook to + màu brand kênh.
+    # Lỗi -> bỏ qua, caller tự lùi về _make_thumb() cũ (không bao giờ chặn pipeline).
+    try:
+        # NỀN = ẢNH GỐC SẠCH của chính video (public/<slug>/clips/sN.jpg), KHÔNG phải khung cắt từ video
+        # đã render: khung render đã CHÁY phụ đề + HUD vào ảnh -> thumbnail bị chữ đè chữ, rất xấu.
+        # Ảnh gốc là ảnh đã tuyển (Openverse CC0 hoặc AI vẽ) -> nét, và MỖI VIDEO MỘT ẢNH KHÁC NHAU
+        # -> thumbnail 21 kênh doc không bị giống hệt nhau.
+        clips = [s.get("clip") for s in (props.get("scenes") or []) if s.get("clip")]
+        bg_rel = ""
+        if clips:
+            # bỏ ảnh cảnh đầu (hay là ảnh mở bài chung chung) nếu còn ảnh khác -> lấy ảnh giữa bài, đúng
+            # cao trào, khác nhau giữa các video cùng kênh.
+            pick = clips[len(clips) // 2] if len(clips) > 1 else clips[0]
+            cand = f"{slug_}/clips/{pick}"
+            if os.path.exists(os.path.join(PUB, cand)):
+                bg_rel = cand
+        thumb = out.rsplit(".", 1)[0] + ".jpg"
+        tprops = {"bg": bg_rel,
+                  "big": (story.get("title") or story.get("title_yt") or channel),
+                  "kicker": channel, "accent": accent, "accent2": accent2,
+                  # điểm nhấn của video: số liệu sốc + câu hỏi mở (Gemini trích sẵn, xem DOC_SCHEMA).
+                  # Không có số -> DocThumb tự lùi về bố cục tiêu đề.
+                  "stat": (story.get("thumb_stat") or "").strip(),
+                  "statLabel": (story.get("thumb_label") or "").strip(),
+                  "hook": (story.get("thumb_hook") or "").strip()}
+        tf = os.path.join(PUB, f"_docthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
+        subprocess.run(["npx", "remotion", "still", "src/index.ts", "DocThumb", thumb,
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+        if os.path.exists(thumb):
+            story["_thumb"] = thumb; info["thumb"] = thumb
+    except Exception as e:
+        print("   ⚠️ DocThumb bỏ qua (dùng khung cắt mặc định):", str(e)[:90])
     print(f"   {'✅' if ok else '❌'} QC doc {info}")
     return out, story, ok, info
 
