@@ -672,6 +672,18 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
                     "--concurrency=2", "--log=error"], cwd=ENG, check=True)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
+    # QC HÌNH ẢNH SAU RENDER (Gemini Vision) — make_video() (data-race gốc) đã có bước này từ đầu,
+    # make_doc() (Wave 2+, 20/40 kênh tính cả Wave 6/7 mới) TRƯỚC ĐÂY THIẾU hẳn -> chỉ QC kỹ thuật
+    # (giây/tiếng/khung hình), lọt cảnh chồng chéo/xấu/vỡ layout ra thẳng YouTube. Thêm cho khớp chuẩn.
+    if ok:
+        try:
+            import qc_vision
+            vok, vinfo = qc_vision.check_visual(out, api_key=keys[0]["key"])
+            info["visual"] = vinfo
+            if not vok:
+                ok = False
+        except Exception as e:
+            print("   ⚠️ vision qc skip:", e)
     print(f"   {'✅' if ok else '❌'} QC doc {info}")
     return out, story, ok, info
 
