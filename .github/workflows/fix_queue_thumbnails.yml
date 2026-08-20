@@ -23,7 +23,55 @@ on:
 concurrency: { group: mm0-fix-queue-thumbnails, cancel-in-progress: false }
 
 jobs:
+  # ── TIỀN KIỂM (~2 phút) ─────────────────────────────────────────────────────────────────────
+  # Vì sao có bước này: 20/8 một lỗi pip vặt làm CẢ 10 LUỒNG chết ở bước cài, mà phải chờ hết lượt
+  # mới biết -> mất 2 tiếng cho 0 video. Giờ kiểm nhanh những thứ HAY HỎNG (cài thư viện, import
+  # được script, đọc được Drive) trên MỘT máy; không đạt thì 10 luồng nặng KHÔNG khởi động.
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Cài thư viện (đúng bộ mà job thật dùng)
+        run: |
+          pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+            google-api-python-client google-auth pyyaml
+          pip install --quiet pillow
+      - name: ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Kiểm import + đọc Drive + ffmpeg
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+          python - <<'PY'
+          import os, sys, subprocess
+          sys.path.insert(0, "render-pipeline")
+          import fix_queue_thumbnails as F          # gãy ở đây = thiếu thư viện / lỗi cú pháp
+          print("✔ import script OK")
+          from PIL import Image; print("✔ pillow OK")
+          assert subprocess.run(["ffmpeg","-version"],capture_output=True).returncode == 0
+          assert subprocess.run(["ffprobe","-version"],capture_output=True).returncode == 0
+          print("✔ ffmpeg/ffprobe OK")
+          accs = F.ST.pool_accounts()
+          assert accs, "KHÔNG đọc được tài khoản Drive nào -> sai secret hoặc hỏng kết nối"
+          print(f"✔ đọc được {len(accs)} kho Drive")
+          k = F._vision_key()
+          print("✔ key Gemini:", "CÓ" if k else "KHÔNG (sẽ bỏ qua bước chấm ảnh)")
+          PY
+
   fix:
+    needs: preflight        # tiền kiểm trượt -> KHÔNG đốt 10 luồng
     runs-on: ubuntu-latest
     timeout-minutes: 350
     strategy:
