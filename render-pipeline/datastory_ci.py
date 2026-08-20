@@ -218,8 +218,8 @@ def _intro_from_story(story, hook_bg, sdir, tag=""):
     rel = lambda p: os.path.relpath(p, PUB)
     hook_mp3 = os.path.join(sdir, f"hook{tag}.mp3")
     hdur, _, _ = TK.synth(story.get("hook") or story["title"], hook_mp3)
-    intro = {"kicker": (story.get("topic", "")[:34]).upper(),
-             "title": (story.get("hook_title") or story.get("topic", "")[:24]).upper(),
+    intro = {"kicker": _clip_words(story.get("topic", ""), 34).upper(),
+             "title": (story.get("hook_title") or _clip_words(story.get("topic", ""), 24)).upper(),
              "sec": round(hdur + 0.5, 2), "bg": hook_bg, "audio": rel(hook_mp3)}
     if story.get("hook_stat"): intro["bignum"] = story["hook_stat"]
     if story.get("hook_caption"): intro["bigcap"] = story["hook_caption"]
@@ -272,6 +272,20 @@ def build_long_props(stories, sdir, music="music/carefree.mp3", handle="@datarac
 
 class _HookDone(Exception):
     """Đã lấy được khung hook mở đầu -> nhảy khỏi khối dựng DocThumb (không cần vẽ chồng chữ)."""
+
+
+def _clip_words(s: str, n: int) -> str:
+    """Cắt ngắn THEO TỪ, không cắt giữa chữ.
+
+    Trước đây cắt thô `s[:34]` -> kicker cảnh hook hiện ra cụt lủn giữa từ, ví dụ "THE NET WORTH OF
+    THE 10 RICHEST BI" (thấy rõ khi render khung hook làm thumbnail). Lỗi này nằm ngay CẢNH ĐẦU của
+    mọi video data-race nên vừa xấu trong video vừa xấu trên thumbnail."""
+    s = (s or "").strip()
+    if len(s) <= n:
+        return s
+    cut = s[:n]
+    sp = cut.rfind(" ")
+    return (cut[:sp] if sp > n * 0.5 else cut).rstrip(" ,;:-")
 
 
 SAFE_TOP = 0.58   # phụ đề cháy vào khung nằm ở ĐÁY -> lấy 58% trên là vùng sạch chữ
