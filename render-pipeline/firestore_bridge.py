@@ -245,6 +245,27 @@ def delete_jobs_by_drive(owner: str, drive_id: str):
             pass
 
 
+def get_script_by_drive(owner: str, drive_id: str):
+    """Lấy KỊCH BẢN đã lưu của video cũ (theo drive_id) để RENDER LẠI đúng nội dung đó.
+    Mỗi video 'done' được đóng kèm script (xem _script_json ở run_render.py) -> bấm 🔄 không cần
+    gọi lại Gemini: vừa KHỎI TỐN QUOTA, vừa ra ĐÚNG video cũ (chỉ khác bản dựng), thay vì viết một
+    kịch bản MỚI hoàn toàn khác như trước đây. Không có/hỏng -> None (tự viết mới như cũ)."""
+    if not drive_id:
+        return None
+    try:
+        for d in (_db_jobs().collection("render_jobs").where("owner", "==", owner)
+                  .where("drive_id", "==", drive_id).stream()):
+            s = (d.to_dict() or {}).get("script")
+            if s:
+                try:
+                    return json.loads(s)
+                except Exception:
+                    return None
+    except Exception as e:
+        print(f"   ⚠️ get_script_by_drive lỗi ({e}) — viết mới bình thường")
+    return None
+
+
 def mark_request_status(req_id: str, status: str):
     """processing = đã bắt đầu render lại -> dashboard KHÓA nút hủy."""
     _db_meta().collection("render_requests").document(req_id).set({"status": status, "started_at": _now()}, merge=True)

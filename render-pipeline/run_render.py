@@ -170,25 +170,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
             for att in (1, 2):
                 try:
                     if att > 1: jst("running", f"🔧 Tự thử lại {fmt}…"); resume_story = None   # thử lại lần 2 -> KHÔNG dùng lại kịch bản resume (lỗi có thể do chính nó)
-                    if fmt == "doc":     # Wave 2 tài liệu: truyền style/accent riêng của kênh
-                        _, story, ok, info = DS.make_doc(channel, cat, out, keys=keys, tier=tier,
-                                                         style=ch.get("style", "awe, cinematic"),
-                                                         accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"),
-                                                         avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story,
-                                                         ai_style=ch.get("ai_style"), ai_only=bool(ch.get("ai_only")),   # Wave 5 speculative: gu vẽ riêng + bỏ qua Openverse
-                                                         music=ch.get("music"),   # mặc định KHÔNG có -> im lặng như trước; chỉ bật khi đã nghe thật + chọn đúng bài hợp tông
-                                                         mode=ch.get("mode"), host_prompt=ch.get("host_prompt"))   # Wave 7: duel/file = gu hình ảnh riêng; host_prompt = mascot nhất quán (Nano Banana)
-                    elif fmt in ("swarm", "pulse", "clockwork", "longshot"):   # Wave 4: 1 accent riêng/kênh, không style/accent2
-                        mk4 = {"swarm": DS.make_swarm, "pulse": DS.make_pulse,
-                               "clockwork": DS.make_clockwork, "longshot": DS.make_longshot}[fmt]
-                        _defacc = {"swarm": "#0D9488", "pulse": "#EA580C", "clockwork": "#C2410C", "longshot": "#4F46E5"}[fmt]
-                        _, story, ok, info = mk4(channel, cat, out, keys=keys, tier=tier, accent=ch.get("accent", _defacc),
-                                                 avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
-                    else:
-                        mk = {"guess": DS.make_guess, "mapped": DS.make_mapped, "ranked": DS.make_ranked,
-                              "scaled": DS.make_scaled, "thennow": DS.make_thennow}[fmt]
-                        _, story, ok, info = mk(channel, cat, out, keys=keys, tier=tier,
-                                                avoid=(avoid + made_here), on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
+                    _, story, ok, info = _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb,
+                                                         resume_story=resume_story, avoid=(avoid + made_here))
                     err = None; break
                 except Exception as e:
                     err = e; traceback.print_exc(); print(f"   🔧 {fmt.upper()} {channel}#{i} lỗi lần {att}: {str(e)[:100]}")
@@ -343,27 +326,85 @@ def _trash_old(account_name, file_id):
     return False
 
 
+def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story=None, avoid=None):
+    """ĐỊNH TUYẾN SHORT theo format của kênh — NGUỒN DUY NHẤT, dùng chung cho cả render thường
+    (run_one) lẫn render lại (process_requests, nút 🔄).
+
+    TRƯỚC ĐÂY process_requests LUÔN gọi DS.make_video (engine data-race) bất kể kênh format gì ->
+    bấm 🔄 trên 30/40 kênh (doc + motif + wave4) render RA SAI ENGINE hoàn toàn, mất luôn
+    accent/style/mode/host_prompt của kênh. Gộp về 1 hàm để 2 đường đi không bao giờ lệch nhau nữa.
+    """
+    avoid = avoid or []
+    if fmt == "doc":     # Wave 2 tài liệu: truyền style/accent riêng của kênh
+        return DS.make_doc(ch.get("name"), cat, out, keys=keys, tier=tier,
+                           style=ch.get("style", "awe, cinematic"),
+                           accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"),
+                           avoid=avoid, on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story,
+                           ai_style=ch.get("ai_style"), ai_only=bool(ch.get("ai_only")),
+                           music=ch.get("music"),
+                           mode=ch.get("mode"), host_prompt=ch.get("host_prompt"))
+    if fmt in ("swarm", "pulse", "clockwork", "longshot"):   # Wave 4: 1 accent riêng/kênh
+        mk4 = {"swarm": DS.make_swarm, "pulse": DS.make_pulse,
+               "clockwork": DS.make_clockwork, "longshot": DS.make_longshot}[fmt]
+        _defacc = {"swarm": "#0D9488", "pulse": "#EA580C", "clockwork": "#C2410C", "longshot": "#4F46E5"}[fmt]
+        return mk4(ch.get("name"), cat, out, keys=keys, tier=tier, accent=ch.get("accent", _defacc),
+                   avoid=avoid, on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
+    if fmt in ("guess", "mapped", "ranked", "scaled", "thennow"):
+        mk = {"guess": DS.make_guess, "mapped": DS.make_mapped, "ranked": DS.make_ranked,
+              "scaled": DS.make_scaled, "thennow": DS.make_thennow}[fmt]
+        return mk(ch.get("name"), cat, out, keys=keys, tier=tier,
+                  avoid=avoid, on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story)
+    # format trống = 10 kênh GỐC data-race
+    return DS.make_video(ch.get("name"), cat, "short", out, keys=keys, tier=tier,
+                         on_status=jst, on_limit=cool, on_ok=okcb, resume_story=resume_story,
+                         accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"))
+
+
 def process_requests(keys, report):
-    """YÊU CẦU RENDER LẠI (nút 🔄): render lại đúng chủ đề -> đẩy Drive -> BỎ bản cũ (thay thế)."""
+    """YÊU CẦU RENDER LẠI (nút 🔄): render lại đúng chủ đề -> đẩy Drive -> BỎ bản cũ (thay thế).
+
+    DÙNG LẠI KỊCH BẢN ĐÃ LƯU của chính video cũ (get_script_by_drive) -> KHỎI gọi Gemini: đúng
+    mục đích "giữ kịch bản để sau có vấn đề thì render lại được" (không tốn quota, ra ĐÚNG nội
+    dung cũ). Không có kịch bản (video render trước 19/8, chưa có tính năng) -> viết mới như cũ.
+    Và định tuyến engine qua _dispatch_short theo format THẬT của kênh (trước đây luôn ép
+    make_video = engine data-race -> bấm 🔄 ở 30/40 kênh ra sai engine + mất accent/style/mode).
+    """
+    chans = {(c.get("name") or "").upper(): c for c in FB.read_channels(OWNER)}
     for req in FB.read_render_requests(OWNER):
         ch = req.get("channel"); typ = req.get("type", "short"); seed = req.get("seed", "")
         if not (ch and seed):
             FB.mark_request_done(req["id"], "thiếu thông tin"); continue
         FB.mark_request_status(req["id"], "processing")   # KHÓA hủy: đã bắt đầu render lại
+        cfg = chans.get(str(ch).upper()) or {"name": ch}
+        fmt = (cfg.get("format") or "").lower()
         job = FB.new_job(OWNER, ch, typ, pver=PVER)
         st = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
         cool = lambda kid, mins=90: FB.cool_key(kid, mins)   # giới hạn PHÚT -> nghỉ ngắn; quota NGÀY -> 90'
         try:
-            st("running", f"🔄 Render lại: {seed[:40]}")
+            # GIỌNG RIÊNG của kênh (giống run_one) — thiếu bước này thì bản render lại đọc giọng
+            # mặc định, khác hẳn các video còn lại của kênh.
+            try:
+                import tts_karaoke as _TK
+                _TK.set_voice(cfg.get("voice"), cfg.get("voice_rate"))
+            except Exception:
+                pass
+            old = FB.get_script_by_drive(OWNER, req.get("replace_id"))
+            st("running", ("♻️ Render lại (dùng kịch bản cũ): " if old else "🔄 Render lại: ") + seed[:40])
             out = os.path.join("out", DS.slug(ch) + "_rr.mp4")
             if typ == "long":
-                _, plan, _subs, ok, info, _stories = DS.make_long(ch, seed, out, keys=keys, on_status=st, on_limit=cool, n_races=4)
+                _, plan, _subs, ok, info, _stories = DS.make_long(
+                    ch, seed, out, keys=keys, on_status=st, on_limit=cool, n_races=4,
+                    resume_checkpoint=(old if isinstance(old, dict) and old.get("races") else None),
+                    accent=cfg.get("accent", "#22D3EE"), accent2=cfg.get("accent2", "#F5B301"))
                 story = {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"), "description": plan.get("hook", "")}
                 script = _script_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"), "races": _stories})
             else:
-                _, story, ok, info = DS.make_video(ch, seed, "short", out, keys=keys, on_status=st, on_limit=cool)
+                _, story, ok, info = _dispatch_short(
+                    cfg, fmt, seed, out, keys, cfg.get("tier", "normal"), st, cool, None,
+                    resume_story=(old if isinstance(old, dict) and not old.get("races") else None))
                 script = _script_json({k: v for k, v in story.items() if k != "_thumb"})
             if ok:
+                if info and info.get("thumb"): story["_thumb"] = info["thumb"]   # thumbnail DocThumb đẹp (giống run_one)
                 eq = enqueue_drive(ch, out, story, typ)
                 did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
                 _trash_old(req.get("replace_account"), req.get("replace_id"))
