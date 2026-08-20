@@ -90,41 +90,72 @@ behind quietly update updates
 """.split())
 
 
-_VKEY = "__chua_doc__"
-_VDEAD = False   # đã dính 429 (hết quota) -> ngừng gọi Vision cho phần còn lại của mẻ
+# ── KEY GEMINI: XOAY VÒNG, KHÔNG DỘI 1 KEY ─────────────────────────────────────────────────────
+# GỐC CỦA 313 LỖI 429 (20/8): bản đầu lấy ks[0] — LUÔN key thứ nhất. Mà workflow chạy 10 kênh SONG
+# SONG, tức 10 tiến trình cùng dội đúng một key, trong khi Gemini free chỉ ~15 request/phút/key.
+# Dây chuyền render đã có key_manager.key_order() chia đều rất kỹ (ưu tiên key ít dùng, né key vừa
+# hết chặn, xoay theo kênh) — script này chỉ việc dùng lại, thay vì tự chế một cách tệ hơn.
+_KEYS, _KI, _VDEAD = None, 0, False
 
 
-def _vision_off(err) -> bool:
-    """Hết quota thì TẮT Vision cho cả mẻ. Lượt chạy 20/8 gọi verify_image 313 lần rồi ăn 429 liên
-    tục — mỗi lần vẫn tốn round-trip mà chắc chắn thất bại, làm chậm cả mẻ mà không được gì."""
-    global _VDEAD
-    if any(x in str(err) for x in ("429", "quota", "exceeded", "RESOURCE_EXHAUSTED")):
-        if not _VDEAD:
-            print("   ⛔ Gemini hết quota -> TẮT kiểm ảnh cho phần còn lại của mẻ (vẫn chạy bình thường)")
-        _VDEAD = True
-    return _VDEAD
+def _load_keys(channel_seed: str = ""):
+    """Nạp danh sách key + xếp thứ tự theo ĐÚNG luật của dây chuyền render, gieo theo tên kênh ->
+    10 luồng song song bắt đầu ở 10 key KHÁC nhau thay vì cùng đâm vào key đầu."""
+    global _KEYS
+    if _KEYS is not None:
+        return _KEYS
+    ks = []
+    env = os.environ.get("GEMINI_API_KEY")
+    if env:
+        ks = [{"id": "env", "key": env}]
+    else:
+        try:
+            import firestore_bridge as FB
+            ks = [k for k in FB.read_keys(os.environ.get("OWNER_UID")) if k.get("key")]
+        except Exception as e:
+            print("   ⚠️ không đọc được key Gemini (bỏ kiểm ảnh):", str(e)[:70])
+    if ks and len(ks) > 1:
+        # 1) Sắp theo luật của dây chuyền render (key ÍT DÙNG nhất lên đầu, né key vừa hết chặn).
+        #    Gieo CÙNG một hạt cho mọi kênh -> mọi luồng nhận CÙNG thứ tự nền.
+        try:
+            import key_manager as KM
+            ks = KM.key_order("MM0", ks)
+        except Exception:
+            pass
+        # 2) Rồi XOAY theo ĐÚNG VỊ TRÍ kênh trong danh sách chạy song song -> chia đều tuyệt đối.
+        #    (Để key_order tự gieo bằng md5(tên kênh) thì vẫn đụng: thử thật 10 kênh chỉ ra 5-6 key
+        #    khác nhau, có key ôm tới 4 kênh — vẫn đủ để dính 429.)
+        names = list(ACCENTS)
+        if channel_seed in names:
+            off = names.index(channel_seed) % len(ks)
+            ks = ks[off:] + ks[:off]
+    _KEYS = ks
+    print(f"   🔎 Kiểm ảnh bằng Vision: {'BẬT' if ks else 'TẮT (không có key)'} · {len(ks)} key xoay vòng")
+    return _KEYS
 
 
 def _vision_key():
-    """1 key Gemini để Vision kiểm ảnh. Ưu tiên biến môi trường; không có -> đọc từ Firestore
-    (gemini_keys, cùng nguồn với dây chuyền render). Không có key -> trả None: script vẫn chạy,
-    chỉ là không kiểm được ảnh (fail-open, không chặn cả mẻ)."""
-    global _VKEY
-    if _VDEAD:
+    ks = _load_keys()
+    if _VDEAD or not ks:
         return None
-    if _VKEY != "__chua_doc__":
-        return _VKEY
-    _VKEY = os.environ.get("GEMINI_API_KEY") or None
-    if not _VKEY:
-        try:
-            import firestore_bridge as FB
-            ks = FB.read_keys(os.environ.get("OWNER_UID"))
-            _VKEY = (ks[0].get("key") if ks else None) or None
-        except Exception as e:
-            print("   ⚠️ không đọc được key Gemini (bỏ kiểm ảnh):", str(e)[:70])
-            _VKEY = None
-    print("   🔎 Kiểm ảnh bằng Vision:", "BẬT" if _VKEY else "TẮT (không có key)")
-    return _VKEY
+    return ks[_KI % len(ks)].get("key")
+
+
+def _vision_off(err) -> bool:
+    """Dính 429 -> CHUYỂN SANG KEY KHÁC (không tắt hẳn như bản trước). Chỉ khi đã thử hết mọi key
+    mà vẫn 429 thì mới tắt kiểm ảnh cho phần còn lại của mẻ."""
+    global _KI, _VDEAD
+    if not any(x in str(err) for x in ("429", "quota", "exceeded", "RESOURCE_EXHAUSTED")):
+        return _VDEAD
+    ks = _load_keys() or []
+    _KI += 1
+    if _KI >= len(ks):
+        if not _VDEAD:
+            print(f"   ⛔ đã thử hết {len(ks)} key đều hết quota -> tắt kiểm ảnh cho phần còn lại của mẻ")
+        _VDEAD = True
+    else:
+        print(f"   🔄 key hết quota -> đổi sang key #{_KI + 1}/{len(ks)}")
+    return _VDEAD
 
 
 def image_query(title: str, topic: str) -> str:
@@ -379,6 +410,7 @@ def main():
     a = ap.parse_args()
     only = a.channel.strip().upper()
 
+    _load_keys(only or "MM0")     # gieo theo kênh -> mỗi luồng song song bắt đầu ở 1 key khác nhau
     accounts = ST.pool_accounts()
     print(f"📦 {len(accounts)} tài khoản Drive pool.")
     done = skip = err = 0
