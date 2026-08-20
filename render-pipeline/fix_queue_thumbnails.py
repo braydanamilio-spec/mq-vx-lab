@@ -399,7 +399,52 @@ def replace_thumb_on_drive(drv, parent_id: str, thumb_name: str, local_path: str
             # Không xoá được -> còn 2 file trùng tên, find_file lấy 1 trong 2: cả hai đều là thumbnail
             # hợp lệ của CHÍNH video này -> không sai video, chỉ tốn chỗ. Ghi log để dọn sau.
             print(f"     ⚠️ không xoá được ảnh cũ {old_id} ({str(e)[:60]}) — còn 2 bản trùng tên")
-    return True
+    sweep_junk(drv, parent_id, thumb_name, keep_id=new_id)
+    return new_id
+
+
+def _save_thumb_id(drive_video_id: str, thumb_id: str):
+    """Ghi id ảnh MỚI vào bản ghi job của đúng video đó -> dashboard hiện được ảnh vừa tạo lại
+    (không ghi thì web vẫn trỏ vào id ảnh CŨ đã bị xoá -> hiện ảnh vỡ)."""
+    if not (drive_video_id and thumb_id):
+        return
+    try:
+        import firestore_bridge as FB
+        db = FB._db_jobs()
+        for d in (db.collection("render_jobs").where("owner", "==", os.environ.get("OWNER_UID"))
+                  .where("drive_id", "==", drive_video_id).stream()):
+            d.reference.set({"thumb_id": thumb_id, "thumb_at": FB._now()}, merge=True)
+    except Exception as e:
+        print("     ⚠️ không ghi được thumb_id:", str(e)[:60])
+
+
+def sweep_junk(drv, parent_id: str, thumb_name: str, keep_id: str = ""):
+    """DỌN FILE RÁC quanh thumbnail — chạy mỗi lần thay ảnh nên kho không bao giờ phình.
+
+    Rác sinh ra từ 2 nguồn: (a) bản đầu của script này dùng tên tạm "<tên>.jpg.new.jpg", hỏng giữa
+    chừng là để lại; (b) mỗi lần tạo lại ảnh mà không xoá được bản cũ -> tồn tại NHIỀU file TRÙNG
+    TÊN trong cùng thư mục, lúc đăng find_file lấy đại 1 cái -> có thể lấy nhầm bản cũ.
+    Ở đây quét đúng thư mục của video đó: xoá hết file tên tạm, và với các file trùng tên thumbnail
+    thì CHỈ GIỮ bản vừa upload."""
+    n = 0
+    try:
+        q = f"'{parent_id}' in parents and trashed = false"
+        res = drv.svc.files().list(q=q, fields="files(id,name)", pageSize=100).execute()
+        for f in res.get("files", []):
+            nm, fid = f.get("name", ""), f.get("id")
+            is_tmp = nm.endswith(".new.jpg") or nm.endswith(".tmp.jpg")
+            is_dup = (nm == thumb_name and keep_id and fid != keep_id)
+            if not (is_tmp or is_dup):
+                continue
+            try:
+                drv.delete(fid); n += 1
+            except Exception:
+                pass
+    except Exception as e:
+        print("     ⚠️ dọn rác bỏ qua:", str(e)[:60])
+    if n:
+        print(f"     🧹 dọn {n} file rác (tên tạm / trùng tên)")
+    return n
 
 
 def main():
@@ -464,8 +509,10 @@ def main():
                     print("     ⚠️ dựng thumbnail thất bại -> bỏ qua video này (giữ nguyên ảnh cũ).")
                     err += 1
                     continue
-                if replace_thumb_on_drive(drv, f["parents"][0], thumb_name, local):
+                new_tid = replace_thumb_on_drive(drv, f["parents"][0], thumb_name, local)
+                if new_tid:
                     done += 1
+                    _save_thumb_id(f["id"], new_tid)
                 else:
                     print("     ⚠️ upload thumbnail mới thất bại -> bỏ qua (giữ nguyên ảnh cũ).")
                     err += 1

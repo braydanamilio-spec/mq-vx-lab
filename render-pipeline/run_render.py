@@ -196,7 +196,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue đăng đủ metadata
                     score=(story.get("self_score") or {}).get("total"),
                     dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
-                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+                    drive_id=did or "", drive_account=acc, thumb_id=(eq or {}).get("thumb_id", ""), preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
                     script=_script_json({k: v for k, v in story.items() if k != "_thumb"})); R["done"] += 1; R["done_short"] = R.get("done_short", 0) + 1
             else:
                 jst("failed", f"QC {fmt} trượt: {info}"); R["fails"].append(f"{channel} {fmt} {i}: QC trượt")
@@ -260,7 +260,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
                     score=(info or {}).get("score"),
                     dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
-                    drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+                    drive_id=did or "", drive_account=acc, thumb_id=(eq or {}).get("thumb_id", ""), preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
                     script=_script_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"), "races": stories})); R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
             else:
                 lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
@@ -310,7 +310,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue
                 score=(story.get("self_score") or {}).get("total"),
                 dur=(sinfo or {}).get("dur", 0), size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""),
-                drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+                drive_id=did or "", drive_account=acc, thumb_id=(eq or {}).get("thumb_id", ""), preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
                 script=_script_json({k: v for k, v in story.items() if k != "_thumb"})); R["done"] += 1; R["done_short"] = R.get("done_short", 0) + 1
         else:
             sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt")
@@ -431,7 +431,7 @@ def process_requests(keys, report):
                 FB.delete_jobs_by_drive(OWNER, req.get("replace_id"))   # dọn job cũ (bản đã bị thay thế)
                 st("done", "Render lại xong — đã thay thế bản cũ", title=story.get("title"),
                    dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
-                   drive_id=did or "", drive_account=acc, preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+                   drive_id=did or "", drive_account=acc, thumb_id=(eq or {}).get("thumb_id", ""), preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
                    script=script)
                 report["done"] += 1; FB.mark_request_done(req["id"], "done")
             else:
