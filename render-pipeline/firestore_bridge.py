@@ -107,8 +107,24 @@ def _retry(fn, tries=5):
             raise
 
 
+_KEYS_CACHE = {}      # (owner, include_cooling) -> (thời điểm, kết quả)
+KEYS_TTL = 180        # giây
+
+
 def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
-    """Trả key CÒN DÙNG được (bỏ qua key đang cooldown do vừa bị rate-limit)."""
+    """Trả key CÒN DÙNG được (bỏ qua key đang cooldown do vừa bị rate-limit).
+
+    CÓ ĐỆM 3 PHÚT trong tiến trình: bảng gemini_keys nằm ở Project A — CÙNG project với publish —
+    mà mỗi lần gọi là đọc TOÀN BỘ key. 18 luồng render đọc lặp lại nhiều lần/phiên thì giành sạch
+    hạn mức đọc của Project A, khiến publish/publish_social ăn "ResourceExhausted: 429" (sự cố
+    20/8) dù bản thân render vẫn chạy (render_jobs ở Project B nên không bị ảnh hưởng).
+    3 phút đủ ngắn để nhận key vừa được thêm/hồi quota, đủ dài để cắt phần lớn lượt đọc lặp."""
+    import time as _t
+    ck = (owner, include_cooling)
+    hit = _KEYS_CACHE.get(ck)
+    if hit and (_t.time() - hit[0]) < KEYS_TTL:
+        return hit[1]
+
     def _do():
         db = _db(); out = []; now = _now()
         for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
@@ -127,7 +143,9 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
                         "last_used": x.get("last_used", ""), "cooling_until": cooling,
                         "dead_since": x.get("dead_since", ""), "req_today": req_today})
         return out
-    return _retry(_do)
+    res = _retry(_do)
+    _KEYS_CACHE[ck] = (__import__('time').time(), res)
+    return res
 
 
 def incr_key_requests(key_id: str, n: int, today: str):
