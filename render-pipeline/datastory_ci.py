@@ -299,6 +299,60 @@ SHARPEN = "unsharp=5:5:0.9:5:5:0.0"
 # Đặt 30'/lệnh = rộng rãi cho long 1080p trên máy 2 nhân, mà treo thì tự ném TimeoutExpired ->
 # lớp retry sẵn có bắt được, job chuyển "failed" gọn gàng thay vì đơ.
 RENDER_TIMEOUT = 1800
+# CANH THEO GIỜ THỰC: trần 30' vẫn có nghĩa là MẤT 30' mới biết nó treo. Bộ canh dưới đây đo CPU
+# THẬT của tiến trình render mỗi 20s; render là việc nặng CPU (swiftshader) nên CPU đứng im nghĩa
+# là ĐANG TREO chứ không phải đang chờ mạng -> giết sớm ở phút thứ 6 để lớp retry chạy lại NGAY
+# trong cùng phiên, thay vì bỏ phí nửa tiếng rồi chờ phiên sau.
+STALL_SEC = 360      # CPU gần như không nhúc nhích liên tục ngần này -> coi là treo
+STALL_TICK = 20      # nhịp lấy mẫu
+
+
+def _cpu_seconds(pid: int):
+    """Tổng thời gian CPU của tiến trình + các tiến trình con (Linux). Không đọc được -> None."""
+    try:
+        with open(f"/proc/{pid}/stat") as f:
+            p = f.read().rsplit(") ", 1)[1].split()
+        # utime, stime, cutime, cstime (đơn vị tick) — cộng cả con vì Remotion đẻ nhiều tiến trình Chrome
+        return (int(p[11]) + int(p[12]) + int(p[13]) + int(p[14])) / os.sysconf("SC_CLK_TCK")
+    except Exception:
+        return None
+
+
+def run_render_cmd(cmd, cwd, timeout=RENDER_TIMEOUT, label=""):
+    """Chạy lệnh render CÓ CANH TREO THỜI GIAN THỰC.
+
+    subprocess.run(timeout=...) chỉ cứu được ở phút thứ 30. Hàm này bám tiến trình: cứ 20s đo CPU
+    tích luỹ; nếu suốt STALL_SEC mà CPU tăng không đáng kể -> kết luận treo, giết ngay và ném
+    TimeoutExpired để lớp retry sẵn có xử lý. Máy không đọc được /proc (vd macOS) -> tự bỏ qua phần
+    canh CPU, vẫn còn trần cứng timeout."""
+    import time as _t
+    proc = subprocess.Popen(cmd, cwd=cwd)
+    t0 = _t.time()
+    last_cpu, last_move = _cpu_seconds(proc.pid), _t.time()
+    while True:
+        try:
+            proc.wait(timeout=STALL_TICK)
+            break                                    # đã xong
+        except subprocess.TimeoutExpired:
+            pass
+        now = _t.time()
+        if now - t0 > timeout:                       # trần cứng — chốt chặn cuối
+            proc.kill(); proc.wait()
+            raise subprocess.TimeoutExpired(cmd, timeout)
+        cur = _cpu_seconds(proc.pid)
+        if cur is None or last_cpu is None:
+            last_cpu = cur
+            continue                                 # không đo được -> chỉ dựa vào trần cứng
+        if cur - last_cpu > 1.0:                     # có làm việc thật -> reset đồng hồ đứng im
+            last_cpu, last_move = cur, now
+        elif now - last_move > STALL_SEC:
+            proc.kill(); proc.wait()
+            print(f"   ⛔ {label or 'render'}: CPU đứng im {int(now - last_move)}s -> TREO, giết sớm "
+                  f"(khỏi phí {int(timeout - (now - t0))}s còn lại)")
+            raise subprocess.TimeoutExpired(cmd, int(now - t0))
+    if proc.returncode != 0:
+        raise subprocess.CalledProcessError(proc.returncode, cmd)
+
 
 SAFE_TOP = 0.58   # phụ đề cháy vào khung nằm ở ĐÁY -> lấy 58% trên là vùng sạch chữ
 FRAME_BLUR = 9    # khung video vốn đã đầy nhãn/số -> mờ 9 thì chữ cũ tan thành kết cấu (đã thử 0/5/9)
@@ -683,9 +737,9 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
     props = build_props(story, sdir, vtype == "short", handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_ci_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render {comp} …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", comp, out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", comp, out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label=comp)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     if ok:                                          # QC THẨM MỸ (Gemini Vision) — chống chồng chéo/xấu
@@ -787,9 +841,9 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
     props = build_mapped_props(story, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_mapped_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render MappedShort ({len(props['data'])} bang) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "MappedShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "MappedShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="MappedShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -858,9 +912,9 @@ def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
     props = build_ranked_props(story, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_ranked_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render RankedShort ({len(props['items'])} item) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "RankedShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RankedShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="RankedShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -931,9 +985,9 @@ def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
     props = build_scaled_props(story, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_scaled_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render ScaledShort ({len(props['items'])} vật) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "ScaledShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "ScaledShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="ScaledShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1003,9 +1057,9 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
     props = build_thennow_props(story, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_thennow_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render ThenNowShort ({len(props['pairs'])} cặp) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "ThenNowShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "ThenNowShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="ThenNowShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1105,9 +1159,9 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
                             ai_style=ai_style, ai_only=ai_only, music=music, mode=mode, host_prompt=host_prompt)
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="CinematicShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     # QC HÌNH ẢNH SAU RENDER (Gemini Vision) — make_video() (data-race gốc) đã có bước này từ đầu,
@@ -1216,9 +1270,9 @@ def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
     props = build_swarm_props(story, sdir, handle=channel_handle(channel), accent=accent)
     pf = os.path.join(PUB, f"_swarm_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render SwarmShort ({len(props['items'])} mục) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "SwarmShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "SwarmShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="SwarmShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1287,9 +1341,9 @@ def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
     props = build_pulse_props(story, sdir, handle=channel_handle(channel), accent=accent)
     pf = os.path.join(PUB, f"_pulse_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render PulseShort ({len(props['items'])} mục) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "PulseShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "PulseShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="PulseShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1361,9 +1415,9 @@ def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
     props = build_clockwork_props(story, sdir, handle=channel_handle(channel), accent=accent)
     pf = os.path.join(PUB, f"_clockwork_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render ClockworkShort ({len(props['waypoints'])} mốc) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "ClockworkShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "ClockworkShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="ClockworkShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1430,9 +1484,9 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
     props = build_longshot_props(story, sdir, handle=channel_handle(channel), accent=accent)
     pf = os.path.join(PUB, f"_longshot_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render LongshotShort ({len(props['items'])} mục) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "LongshotShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "LongshotShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="LongshotShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -1492,9 +1546,9 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     props = build_long_props(stories, sdir, handle=channel_handle(channel))
     pf = os.path.join(PUB, f"_long_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render RaceLong ({len(stories)} race) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "RaceLong", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RaceLong", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="RaceLong")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     if ok:
@@ -1631,9 +1685,9 @@ def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n
     props = build_guess_props(story, sdir, handle=channel_handle(channel), api_key=keys[0]["key"])
     pf = os.path.join(PUB, f"_guess_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render GuessShort ({len(props['rounds'])} vòng) …")
-    subprocess.run(["npx", "remotion", "render", "src/index.ts", "GuessShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "GuessShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, check=True, timeout=RENDER_TIMEOUT)
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="GuessShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     info["score"] = score
