@@ -514,7 +514,7 @@ def opening_thumb(out_video, dest_jpg, api_key=None, title="", min_score=70):
             continue
         ok, info = QV.check_thumb(cand, title=title, api_key=api_key, min_score=min_score)
         sc = info.get("score") or 0
-        print(f"   🖼️ khung mở đầu {int(p*100)}%: {sc}/100"
+        print(f"   🖼️ khung mở đầu {t:.1f}s: {sc}/100"
               + ("" if ok else f" — {'; '.join(info.get('issues') or [])[:80]}"))
         if sc > best_s:
             best_s, best = sc, cand
@@ -1129,7 +1129,8 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
             # bỏ ảnh cảnh đầu (hay là ảnh mở bài chung chung) nếu còn ảnh khác -> lấy ảnh giữa bài, đúng
             # cao trào, khác nhau giữa các video cùng kênh.
             pick = clips[len(clips) // 2] if len(clips) > 1 else clips[0]
-            cand = f"{slug_}/clips/{pick}"
+            # slug_ chỉ tồn tại trong build_doc_props(); dùng ở đây là NameError (pyflakes bắt được).
+            cand = f"_doc_{slug(channel)}/clips/{pick}"
             if os.path.exists(os.path.join(PUB, cand)):
                 bg_rel = cand
         thumb = out.rsplit(".", 1)[0] + ".jpg"

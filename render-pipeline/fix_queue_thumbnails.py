@@ -91,6 +91,18 @@ behind quietly update updates
 
 
 _VKEY = "__chua_doc__"
+_VDEAD = False   # đã dính 429 (hết quota) -> ngừng gọi Vision cho phần còn lại của mẻ
+
+
+def _vision_off(err) -> bool:
+    """Hết quota thì TẮT Vision cho cả mẻ. Lượt chạy 20/8 gọi verify_image 313 lần rồi ăn 429 liên
+    tục — mỗi lần vẫn tốn round-trip mà chắc chắn thất bại, làm chậm cả mẻ mà không được gì."""
+    global _VDEAD
+    if any(x in str(err) for x in ("429", "quota", "exceeded", "RESOURCE_EXHAUSTED")):
+        if not _VDEAD:
+            print("   ⛔ Gemini hết quota -> TẮT kiểm ảnh cho phần còn lại của mẻ (vẫn chạy bình thường)")
+        _VDEAD = True
+    return _VDEAD
 
 
 def _vision_key():
@@ -98,6 +110,8 @@ def _vision_key():
     (gemini_keys, cùng nguồn với dây chuyền render). Không có key -> trả None: script vẫn chạy,
     chỉ là không kiểm được ảnh (fail-open, không chặn cả mẻ)."""
     global _VKEY
+    if _VDEAD:
+        return None
     if _VKEY != "__chua_doc__":
         return _VKEY
     _VKEY = os.environ.get("GEMINI_API_KEY") or None
@@ -255,10 +269,17 @@ def build_thumb(channel: str, title: str, topic: str, dest_local: str, video_loc
     # ẢNH HẲN, dùng nền gradient thiết kế sẵn. Thà không ảnh còn hơn ảnh sai — nền gradient vẫn đẹp,
     # còn ảnh sai chủ đề là lừa người xem (và kéo tụt CTR/độ tin cậy của kênh).
     vkey = _vision_key()
-    verify = None
     if vkey:
         import qc_vision as QV
-        verify = lambda p: QV.verify_image(p, q, api_key=vkey)   # True/False/None(Vision lỗi -> fail-open)
+
+        def verify(pth):
+            try:
+                return QV.verify_image(pth, q, api_key=vkey)
+            except Exception as e:
+                _vision_off(e)      # 429 -> tắt Vision cả mẻ, khỏi gọi vô ích
+                return None
+    else:
+        verify = None
     try:
         if q and fetch_image(q, bg_local, orient="wide", verify=verify, max_check=5,
                              ai_key=vkey,
