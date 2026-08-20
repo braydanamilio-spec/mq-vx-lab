@@ -11,6 +11,30 @@
 - Chỉ trigger tay khi **user yêu cầu TRỰC TIẾP bằng lời trong chat** — không tự suy diễn "chắc user muốn xem ngay".
 - Xem chi tiết: memory `mm0-no-quota-waste`.
 
+## 🔴 BÀI HỌC 20/8 — 5 LỖI CÙNG MỘT KIỂU SAI (đọc trước khi sửa dây chuyền)
+
+Cả ngày 20/8 dây chuyền "lúc treo lúc lỗi", vá 3-4 vòng mới ra gốc. Kiểu sai lặp lại:
+**suy đoán trạng thái từ dữ liệu không đáng tin, thay vì dùng thứ đã được bảo đảm sẵn.**
+
+| # | Triệu chứng | Gốc thật | Cách chữa |
+|---|---|---|---|
+| 1 | Dây chuyền đứng 6h rồi 5h, không lỗi nào | Cổng render hỏi `has_active_render()` — SUY ĐOÁN "có phiên đang chạy" từ bảng `render_jobs`; job ma (tiến trình chết đột ngột trên CI) làm nó sai | **Gỡ hẳn.** GitHub `concurrency` ĐÃ bảo đảm không chồng phiên ở tầng hạ tầng. Đừng làm lại việc đó bằng dữ liệu tệ hơn |
+| 2 | 15 job đang render khoẻ bị đánh "mất nhịp tim" rồi giết | `update_job()` là BỘ HÃM GHI, không phải máy phát nhịp — `npx remotion render` chạy 20-40' không gọi nó lần nào | Luồng nền đóng dấu `updated_at` mỗi 2' (`firestore_bridge._beat_loop`) |
+| 3 | Dashboard "đang chạy 3" dù cấp 18 slot | `plan_mode` xếp đại 18 kênh, không xét kênh nào ĐÃ ĐỦ chỉ tiêu -> job mở ra rồi thoát ngay | Đếm phần còn thiếu TRƯỚC khi xếp matrix |
+| 4 | 3 phiên liên tiếp bị huỷ | 2 job treo giữ khoá `concurrency`, mà trần `timeout-minutes` để 350' (kênh chậm nhất thật chỉ 27') | Hạ trần xuống 120' |
+| 5 | 313 lỗi 429 Gemini | `fix_queue_thumbnails` lấy `ks[0]` — LUÔN key thứ nhất, trong khi chạy 10 kênh song song -> 10 tiến trình dội 1 key, 9 key kia nằm không | Dùng lại `key_manager.key_order()` + xoay theo VỊ TRÍ kênh |
+
+**Ba luật rút ra:**
+1. **`py_compile` KHÔNG đủ.** Nó chỉ kiểm cú pháp. Hai lỗi `name 'p' is not defined` và `undefined name 'slug_'` lọt qua nó và chỉ lộ khi chạy thật trên 150 video. → **Luôn chạy `pyflakes` trước khi đẩy.**
+2. **Đừng tự chế lại thứ dây chuyền đã có.** Lỗi 429 sinh ra chỉ vì viết lại phần chọn key thay vì gọi `key_order()` có sẵn.
+3. **Ngưỡng phải calibrate trên NHIỀU mẫu.** Ngưỡng lọc khung biểu đồ đặt 45% dựa trên đúng 2 mẫu -> loại nhầm hàng loạt cảnh hook thật (thực tế nằm ở 49-61%, biểu đồ mới là 65-67%).
+
+**Công cụ tự kiểm (chạy free, không tốn token):**
+```bash
+python3 render-pipeline/test_thumb_pipeline.py     # 33 phép kiểm cơ chế thumbnail
+python3 render-pipeline/check_thumbs.py --stress   # dựng ảnh mẫu 19 kênh + ca chữ xấu nhất
+```
+
 ## 0. Kiến trúc (2 repo + 3 project Firestore, máy TẮT, free vô hạn)
 - **Render** = repo PUBLIC `braydanamilio-spec/mq-vx-lab` (Actions không giới hạn phút). Workflow `render_cron.yml`.
 - **Đăng bài** = code ở repo PRIVATE `braydanamilio-spec/mm0-auto-publisher`, NHƯNG **chạy trên repo public** (publish/social/cleanup/stats.yml ở `mq-vx-lab` checkout private lúc chạy → free vô hạn, code vẫn kín). ⚠️ Bản workflow ở `mm0-auto-publisher` ĐÃ TẮT cron (chỉ dispatch tay) — **bản ở mq-vx-lab mới là bản chạy thật**, đừng sửa nhầm bản không chạy.
