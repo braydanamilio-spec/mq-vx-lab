@@ -359,6 +359,15 @@ def main():
     if not OWNER:
         raise SystemExit("❌ Thiếu OWNER_UID (uid chủ — set ở workflow).")
     cfg = FB.read_config(OWNER)
+    # 🔎 Trend Scout "Quét ngay" từ dashboard: lồng vào ĐÚNG nhịp poll 30' đã có sẵn -> KHÔNG tạo Actions run mới.
+    if cfg.get("trend_scout_run_now"):
+        FB.set_config(OWNER, {"trend_scout_run_now": None})
+        print("🔎 Nhận lệnh 'Quét trend ngay' từ dashboard.")
+        try:
+            import trend_scout
+            trend_scout.main()
+        except BaseException as e:
+            print(f"⚠️ trend_scout lỗi (bỏ qua, không ảnh hưởng render): {e}")
     # NHỊP 30': chỉ chạy khi có lệnh "Render ngay" (run_now) HOẶC đúng giờ mẻ đêm (18h UTC).
     from datetime import datetime, timezone, timedelta
     event = os.environ.get("GITHUB_EVENT_NAME", "")

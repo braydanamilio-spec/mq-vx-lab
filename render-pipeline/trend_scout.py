@@ -23,8 +23,10 @@ import firestore_bridge as FB
 
 OWNER = os.environ.get("OWNER_UID")
 
-# Kênh THAM KHẢO (chỉ đọc title public, KHÔNG tải video/vi phạm bản quyền) -> áp dụng cho kênh MM0 nào.
-SOURCES = [
+# Kênh THAM KHẢO mặc định (chỉ đọc title public, KHÔNG tải video/vi phạm bản quyền) -> áp dụng cho kênh MM0 nào.
+# User có thể thêm/xoá kênh ngay trên dashboard (tab Render Studio -> 🔎 Trend Scout) -> lưu vào
+# render_config.trend_sources -> đè lên danh sách mặc định này (KHÔNG cần sửa code).
+DEFAULT_SOURCES = [
     {"handle": "Zack D Films", "url": "https://www.youtube.com/@ZackDFilms/videos",
      "applies_to": ["FUTUREUSA", "UNSEENUSA", "COSMOS", "THEDEEP", "UNSOLVED"]},
     {"handle": "Kurzgesagt", "url": "https://www.youtube.com/@kurzgesagt/videos",
@@ -74,6 +76,7 @@ def main():
     if not OWNER:
         sys.exit("❌ Thiếu OWNER_UID.")
     try:
+        cfg = FB.read_config(OWNER)
         keys = FB.read_keys(OWNER)
     except Exception as e:
         print(f"⏸ Firestore nghẽn tạm ({e}) — bỏ qua lần này, tuần sau tự chạy lại."); return   # KHÔNG crash CI vì lỗi tạm thời
@@ -81,10 +84,17 @@ def main():
         sys.exit("❌ Chưa có Gemini key.")
     key = keys[0]["key"]
 
+    custom = cfg.get("trend_sources")   # user tự thêm/xoá kênh tham khảo trên dashboard -> ưu tiên hơn mặc định
+    sources = custom if (isinstance(custom, list) and custom) else DEFAULT_SOURCES
+
     digest: dict[str, list[str]] = {}   # {kênh MM0: [câu tóm tắt xu hướng, ...]}
-    for src in SOURCES:
-        print(f"🔎 {src['handle']} …")
-        titles = fetch_titles(src["url"])
+    for src in sources:
+        url = (src or {}).get("url"); applies_to = (src or {}).get("applies_to") or []
+        if not url or not applies_to:
+            print(f"   ⏭ bỏ qua nguồn thiếu url/applies_to: {src}"); continue
+        handle = src.get("handle") or url
+        print(f"🔎 {handle} …")
+        titles = fetch_titles(url)
         if not titles:
             print("   ⏭ bỏ qua (không lấy được title)"); continue
         try:
@@ -94,13 +104,15 @@ def main():
         if not trend:
             print("   ⏭ Gemini trả rỗng, bỏ qua"); continue
         print(f"   ✅ {trend[:110]}")
-        for ch in src["applies_to"]:
+        for ch in applies_to:
             digest.setdefault(ch, []).append(trend)
 
     if dry:
         print("\n(dry) sẽ lưu:\n" + json.dumps(digest, ensure_ascii=False, indent=2)); return
     for ch, trends in digest.items():
         FB.save_trend_scout(OWNER, ch, trends)
+    from datetime import datetime, timezone
+    FB.set_config(OWNER, {"trend_scout_last_run": datetime.now(timezone.utc).isoformat()})
     print(f"\n✅ đã cập nhật xu hướng cho {len(digest)} kênh MM0.")
 
 
