@@ -498,7 +498,8 @@ def hook_bg(channel, out_video, subject, keys=None, api_key=None):
 
 def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
               accent="#22D3EE", accent2="#F5B301", bg_rel="", bg_blur=0,
-              api_key_for_thumb=None, comp_id="", props_path="", hook_frame=40):
+              api_key_for_thumb=None, comp_id="", props_path="", hook_frame=40,
+              bg_provider=None):
     """Dựng thumbnail chuẩn nhà (DocThumb) — DÙNG CHUNG cho MỌI engine.
 
     Trước đây mỗi nhóm kênh một kiểu thumbnail riêng: 21 kênh doc + 10 kênh gốc dùng DocThumb (số
@@ -522,6 +523,16 @@ def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
             return thumb
     except Exception as e:
         print("   ⚠️ khung mở đầu bỏ qua:", str(e)[:70])
+    # Tới đây = khung hook trượt QC -> BÂY GIỜ mới đi kiếm ảnh nền (trước đây kiếm sẵn từ đầu ->
+    # mỗi video đều tốn ffmpeg + lượt Openverse + có khi cả lượt Nano Banana vẽ, dù phần lớn video
+    # dùng khung hook và vứt hết công đó đi).
+    if bg_provider is not None and not bg_rel:
+        try:
+            bg_rel, _is_frame = bg_provider()
+            if _is_frame:
+                bg_blur = FRAME_BLUR
+        except Exception as e:
+            print("   ⚠️ bg_provider lỗi:", str(e)[:70])
     try:
         tprops = {"bg": bg_rel, "big": big, "kicker": channel, "accent": accent, "accent2": accent2,
                   "stat": str(stat or "").strip(), "statLabel": str(stat_label or "").strip(),
@@ -700,11 +711,11 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (story.get("top") or [{}])[0]
         _stat, _lab = _t.get("disp", ""), _t.get("state", "")
         _hook = story.get("title") or "WHICH STATE WINS?"
-        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
-                        accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        accent=accent, accent2=accent2,
+                        bg_provider=lambda: hook_bg(channel, out,
+                            _hook or story.get("title") or channel, keys=keys),
                         api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
                         comp_id="MappedShort", props_path=pf,)
         thumb = _th or thumb
@@ -772,11 +783,11 @@ def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (_s or (story.get("items") or [{}]))[-1]
         _stat, _lab = _t.get("stat", ""), _t.get("name", "")
         _hook = story.get("title") or "WHAT'S S-TIER?"
-        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
-                        accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        accent=accent, accent2=accent2,
+                        bg_provider=lambda: hook_bg(channel, out,
+                            _hook or story.get("title") or channel, keys=keys),
                         api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
                         comp_id="RankedShort", props_path=pf,)
         thumb = _th or thumb
@@ -844,11 +855,11 @@ def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (story.get("items") or [{}])[-1]
         _stat, _lab = _t.get("disp", ""), _t.get("name", "")
         _hook = story.get("title") or "HOW BIG REALLY?"
-        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
-                        accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        accent=accent, accent2=accent2,
+                        bg_provider=lambda: hook_bg(channel, out,
+                            _hook or story.get("title") or channel, keys=keys),
                         api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
                         comp_id="ScaledShort", props_path=pf,)
         thumb = _th or thumb
@@ -916,11 +927,11 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (story.get("pairs") or [{}])[0]
         _stat, _lab = _t.get("change", ""), _t.get("label", "")
         _hook = (f"{_t.get('thenVal','')} → {_t.get('nowVal','')}").strip(" →") or story.get("title", "")
-        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
-                        accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        accent=accent, accent2=accent2,
+                        bg_provider=lambda: hook_bg(channel, out,
+                            _hook or story.get("title") or channel, keys=keys),
                         api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
                         comp_id="ThenNowShort", props_path=pf,)
         thumb = _th or thumb
@@ -1129,11 +1140,11 @@ def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = max(_its, key=lambda x: x.get("count") or 0)
         _stat, _lab = _t.get("countDisp", ""), _t.get("label", "")
         _hook = story.get("title") or "HOW MANY, REALLY?"
-        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
-                        accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        accent=accent, accent2=accent2,
+                        bg_provider=lambda: hook_bg(channel, out,
+                            _hook or story.get("title") or channel, keys=keys),
                         api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
                         comp_id="SwarmShort", props_path=pf,)
         thumb = _th or thumb
@@ -1199,11 +1210,11 @@ def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (story.get("items") or [{}])[-1]
         _stat, _lab = _t.get("disp", ""), _t.get("label", "")
         _hook = story.get("title") or "HOW INTENSE?"
-        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
-                        accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        accent=accent, accent2=accent2,
+                        bg_provider=lambda: hook_bg(channel, out,
+                            _hook or story.get("title") or channel, keys=keys),
                         api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
                         comp_id="PulseShort", props_path=pf,)
         thumb = _th or thumb
@@ -1273,11 +1284,11 @@ def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = story.get("hero") or {}
         _stat, _lab = _t.get("realValue", ""), _t.get("label", "")
         _hook = story.get("scaleLabel") or story.get("title", "")
-        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
-                        accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        accent=accent, accent2=accent2,
+                        bg_provider=lambda: hook_bg(channel, out,
+                            _hook or story.get("title") or channel, keys=keys),
                         api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
                         comp_id="ClockworkShort", props_path=pf,)
         thumb = _th or thumb
@@ -1342,11 +1353,11 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
         _t = (story.get("items") or [{}])[-1]
         _stat, _lab = _t.get("oddsDisp", ""), _t.get("label", "")
         _hook = story.get("title") or "WHAT ARE THE ODDS?"
-        _bg, _isfr = hook_bg(channel, out, _hook or story.get("title") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=(story.get("title_yt") or story.get("title") or channel),
                         stat=_stat, stat_label=_lab, hook=_hook,
-                        accent=accent, accent2=accent2, bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        accent=accent, accent2=accent2,
+                        bg_provider=lambda: hook_bg(channel, out,
+                            _hook or story.get("title") or channel, keys=keys),
                         api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None),
                         comp_id="LongshotShort", props_path=pf,)
         thumb = _th or thumb
@@ -1544,11 +1555,11 @@ def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n
     try:
         thumb = out.rsplit(".", 1)[0] + ".jpg"
         _r0 = (story.get("rounds") or [{}])[0]
-        _bg, _isfr = hook_bg(channel, out, _r0.get("answer") or story.get("category") or channel, keys=keys)
         _th = doc_thumb(channel, out, big=_r0.get("q") or "CAN YOU NAME IT?",
                         stat="", stat_label="", hook="",
-                        accent="#84CC16", accent2="#FDE047", bg_rel=_bg,
-                        bg_blur=(FRAME_BLUR if _isfr else 0),
+                        accent="#84CC16", accent2="#FDE047",
+                        bg_provider=lambda: hook_bg(channel, out,
+                            _r0.get("answer") or story.get("category") or channel, keys=keys),
                         api_key_for_thumb=((keys or [{}])[0].get("key") if keys else None))
         thumb = _th or thumb
         info["thumb"] = thumb
