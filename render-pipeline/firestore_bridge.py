@@ -316,7 +316,8 @@ def has_active_render(owner: str) -> bool:
     """Còn job render nào ĐANG CHẠY THẬT (B) không -> gate mở phiên MỚI ngay khi phiên trước xong hẳn
     (thay vì đoán 1 khoảng thời gian cố định) -> lấp khoảng nghỉ hiệu quả, không chồng phiên, không chờ oan."""
     ACTIVE = ["queued", "running", "writing", "rendering", "qc"]
-    GHOST_H = 6      # > 6h = CHẮC CHẮN chết (workflow timeout 350' = 5.8h) -> không thể còn chạy thật
+    GHOST_H = 6      # job CŨ (chưa có updated_at): > 6h = chắc chắn chết (workflow timeout 350' = 5.8h)
+    STALE_MIN = 30   # job MỚI (có nhịp tim ~90s/lần): im lặng 30' ≈ lỡ 20 nhịp -> chết. Nhanh hơn 12 lần.
     try:
         db = _db_jobs()
         q = (db.collection("render_jobs").where("owner", "==", owner)
@@ -332,12 +333,17 @@ def has_active_render(owner: str) -> bool:
         # sắp mất trắng dù KHÔNG có gì chạy thật. Giờ đọc thêm để BỎ QUA job quá GHOST_H giờ -> gate tự
         # lành, không phụ thuộc health_guardian chạy đúng lúc.
         from datetime import datetime as _dt, timezone as _tz, timedelta as _td
-        cut = _dt.now(_tz.utc) - _td(hours=GHOST_H)
+        now_ = _dt.now(_tz.utc)
+        cut_created = now_ - _td(hours=GHOST_H)          # job CŨ chưa có updated_at -> đành đo theo tuổi
+        cut_beat = now_ - _td(minutes=STALE_MIN)         # job MỚI có nhịp tim -> đo theo lần ghi cuối
         live = 0
         for d in q.limit(60).stream():            # chỉ chạy khi n>0; 60 = trần an toàn (matrix tối đa 18)
-            ca = (d.to_dict() or {}).get("created_at")
+            x = d.to_dict() or {}
+            ts, cut = x.get("updated_at"), cut_beat
+            if not ts:                            # job tạo TRƯỚC bản vá nhịp tim -> lùi về đo tuổi
+                ts, cut = x.get("created_at"), cut_created
             try:
-                if _dt.fromisoformat(str(ca).replace("Z", "+00:00")) > cut:
+                if _dt.fromisoformat(str(ts).replace("Z", "+00:00")) > cut:
                     live += 1
                     break                          # thấy 1 job CÒN SỐNG là đủ kết luận -> dừng đọc sớm
             except Exception:
@@ -421,4 +427,10 @@ def update_job(job_id: str, **patch):
         if now - _LAST_JOB_WRITE.get(job_id, 0) < 90:
             return
         _LAST_JOB_WRITE[job_id] = now
+    # ĐÓNG DẤU THỜI GIAN mỗi lần ghi = NHỊP TIM có mốc. Trước đây job có nhịp tim (ghi lại mỗi ~90s)
+    # nhưng KHÔNG lưu mốc -> muốn biết job còn sống hay đã chết chỉ còn cách đo TUỔI (created_at), phải
+    # chờ tới 6h mới dám kết luận "chết" -> job ma khoá gate has_active_render() suốt 6 TIẾNG dù tiến
+    # trình đã chết từ lâu (20/8: 39 job ma chặn mọi mẻ render mới). Có mốc này -> chỉ cần ~30' im lặng
+    # (≈20 nhịp tim lỡ) là kết luận chết được, gate thoát nhanh hơn 12 lần.
+    patch = dict(patch); patch["updated_at"] = _now()
     _retry(lambda: _db_jobs().collection("render_jobs").document(job_id).set(patch, merge=True))

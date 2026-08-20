@@ -22,6 +22,9 @@ import firestore_bridge as FB
 
 OWNER = os.environ.get("OWNER_UID")
 STALE_HOURS = float(os.environ.get("STALE_HOURS_OVERRIDE") or 6)   # job render 1 kênh hiếm khi quá 6h thật (matrix timeout 350')
+# Job còn sống ghi nhịp tim ~90s/lần (update_job). Im lặng 30' = lỡ ~20 nhịp -> chết chắc.
+# Đặt rộng rãi so với 90s để KHÔNG giết oan job đang render 1 clip nặng (render lâu vẫn có nhịp).
+STALE_BEAT_MIN = float(os.environ.get("STALE_BEAT_MIN") or 30)
 # -> quá STALE_HOURS là coi như treo. Chỉnh STALE_HOURS_OVERRIDE khi chạy tay (workflow_dispatch) để can thiệp NGAY,
 # không đợi đủ 6h — vd 1 job kẹt cổng render biết chắc đã treo lúc chưa tới 6h.
 SILENT_HOURS = 12     # 12h không có video nào xong dù render đang bật -> báo động thật, không phải quota tạm
@@ -38,13 +41,22 @@ def heal_stale_jobs() -> int:
     try:
         db = FB._db_jobs()
         cutoff = (_now() - timedelta(hours=STALE_HOURS)).isoformat()
+        # NHỊP TIM: update_job() nay đóng dấu updated_at mỗi lần ghi (~90s/lần khi job còn sống).
+        # Im lặng quá STALE_BEAT_MIN phút = lỡ ~20 nhịp = tiến trình đã chết -> dọn NGAY, khỏi chờ đủ
+        # STALE_HOURS(6h). Nhờ vậy dashboard không còn hiện "Đang làm (39)" hàng giờ trong khi thực tế
+        # chẳng có gì chạy (đúng thứ gây hiểu lầm 20/8). Job CŨ chưa có updated_at -> vẫn theo mốc 6h.
+        beat_cut = (_now() - timedelta(minutes=STALE_BEAT_MIN)).isoformat()
         q = db.collection("render_jobs").where("owner", "==", OWNER).where("status", "in", list(active))
         for d in q.stream():
             job = d.to_dict() or {}
-            if (job.get("created_at") or "9999") < cutoff:
+            beat = job.get("updated_at")
+            dead = (beat < beat_cut) if beat else ((job.get("created_at") or "9999") < cutoff)
+            if dead:
                 try:
+                    why = (f"⏱ Im lặng quá {STALE_BEAT_MIN}' (mất nhịp tim)" if beat
+                           else f"⏱ Quá {STALE_HOURS}h")
                     d.reference.set({"status": "failed",
-                                     "step": f"⏱ Quá {STALE_HOURS}h — job treo, health_guardian tự dọn"},
+                                     "step": f"{why} — job treo, health_guardian tự dọn"},
                                     merge=True)
                     n += 1
                 except Exception as e:
