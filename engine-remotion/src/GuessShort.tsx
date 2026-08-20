@@ -74,8 +74,10 @@ const RingClock: React.FC<{ frac: number; label: number; accent: string }> = ({ 
 
 // 1 VÒNG ĐOÁN: mảnh ghép mở dần + đồng hồ 3-2-1 -> REVEAL (đáp án bung + tia + stat)
 const GuessRound: React.FC<{ r: Round; color: string; accent: string; sec: number; idx: number; sfx?: boolean }> = ({ r, color, accent, sec, idx, sfx }) => {
-  const f = useCurrentFrame(); const dur = sec * FPS;
-  const revF = r.revSec && r.revSec > 0 ? Math.round(r.revSec * FPS) : Math.round(dur * 0.66);   // mốc reveal (bám giọng nếu có revSec)
+  const f = useCurrentFrame(); const dur = Math.max(1, sec * FPS);
+  // ép >=7: nếu revSec rất nhỏ (bám giọng khớp 1 câu ngắn), revF-6 có thể <=0 -> khoảng [0, revF-6, revF] không tăng dần
+  // -> Remotion interpolate() throw "must be strictly increasing".
+  const revF = Math.max(7, r.revSec && r.revSec > 0 ? Math.round(r.revSec * FPS) : Math.round(dur * 0.66));
   const revealed = f >= revF;
   const mosaicP = interpolate(f, [0, revF], [0, 1], { extrapolateRight: "clamp" });  // % mảnh ghép đã mở
   const blur = interpolate(f, [0, revF - 6, revF], [12, 5, 0], { extrapolateRight: "clamp" });  // blur nền nhẹ, sắc dần

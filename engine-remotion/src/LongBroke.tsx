@@ -127,7 +127,13 @@ export const LongBroke: React.FC<LProps> = ({ scenes, slug, persona = BROKE_PERS
       {s.source && <div style={{ position: "absolute", right: 28, bottom: 18, fontSize: 22, color: "#6b6457" }}>Source: {s.source} (approx.)</div>}
       {(s.type === "pct" || s.type === "crowd" || s.type === "houses" || s.type === "stat") && <div style={{ position: "absolute", right: 28, bottom: 18, fontSize: 22, color: "#6b6457" }}>Source: Harvard JCHS / U.S. Census / NLIHC (approx.)</div>}
       <div style={{ position: "absolute", top: 30, right: 40, fontSize: 26, color: "#6b6457", fontWeight: 700 }}>{handle}</div>
-      <Audio src={staticFile("music/broke_pad.mp3")} loop volume={(fr) => interpolate(fr, [0, 40, TOTAL - 50, TOTAL], [0, 0.16, 0.16, 0], { extrapolateRight: "clamp" })} />
+      {/* nhạc nền fade in/out: video ngắn (TOTAL<=90 frame, vd bản QC render ít cảnh) làm TOTAL-50 < 40
+          -> mốc [0,40,TOTAL-50,TOTAL] không tăng dần -> Remotion interpolate() throw NGAY TRONG callback volume (crash cả render).
+          Tách thành 2 khoảng riêng (fade-in / fade-out) rồi lấy min, giống pattern an toàn trong Cinematic.tsx. */}
+      <Audio src={staticFile("music/broke_pad.mp3")} loop volume={(fr) => Math.min(
+        interpolate(fr, [0, 40], [0, 0.16], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+        interpolate(fr, [Math.max(41, TOTAL - 50), Math.max(42, TOTAL)], [0.16, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+      )} />
       {scenes.map((sc, j) => <Sequence key={j} from={starts[j]} durationInFrames={sc.dur}><Audio src={staticFile(`${slug}/${sc.audio}`)} /></Sequence>)}
     </AbsoluteFill>
   );

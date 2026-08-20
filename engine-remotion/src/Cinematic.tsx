@@ -57,7 +57,9 @@ const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; sub
 
 // ─── DATA-HUD (moat) ───
 const HudView: React.FC<{ hud: HUD; l: number; d: number; accent: string; accent2: string }> = ({ hud, l, d, accent, accent2 }) => {
-  const p = ci(l, 8, Math.min(d * 0.6, 50), 0, 1);
+  // cảnh rất ngắn (d*0.6 < 8) -> khoảng [8, d*0.6] bị đảo ngược -> Remotion interpolate() throw "must be strictly increasing".
+  // ép mốc sau luôn > 8 để khoảng luôn tăng dần, kể cả cảnh HUD chỉ dài vài frame.
+  const p = ci(l, 8, Math.max(9, Math.min(d * 0.6, 50)), 0, 1);
   const { width, height } = useVideoConfig(); const port = height > width; // dọc (short) vs ngang (long)
   if (hud.kind === "counter" || hud.kind === "countdown") {
     // Đếm LÊN tới SỐ Ý NGHĨA rồi GIỮ (năm/giá trị). KHÔNG tụt về 0 (trước đây countdown->0 hiện "MILAN FALLS 0" vô nghĩa).
@@ -154,7 +156,8 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
   const half = s.dur / 2; const useC2 = !!s.clip2 && l >= half;
   const clip = useC2 ? s.clip2 : s.clip;
   const cl = useC2 ? l - half : l;                 // frame trong PHÂN ĐOẠN
-  const cdur = s.clip2 ? half : s.dur;              // độ dài phân đoạn
+  // ép >=1: nếu s.dur là 0 (cảnh lỗi/rỗng), ci(cl,0,cdur,...) bên dưới sẽ nhận khoảng [0,0] -> Remotion interpolate() throw
+  const cdur = Math.max(1, s.clip2 ? half : s.dur);   // độ dài phân đoạn
   const seg = useC2 ? idx + 1 : idx;               // đổi hướng KB giữa 2 phân đoạn
   const isImg = !!clip && /\.(jpg|jpeg|png|webp)$/i.test(clip);
   const amt = isImg ? 0.13 : 0.16; const base = isImg ? 1.06 : 1.11;

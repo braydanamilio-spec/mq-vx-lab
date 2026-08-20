@@ -81,7 +81,10 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
 
       {/* PIN SỐ nhỏ trên map (không hộp chữ -> không chồng/tràn dù bang nhỏ sát nhau) */}
       {ranked.map((d, i) => {
-        const order = topN - 1 - i;
+        // dùng ranked.length (số mục THỰC SỰ hiển thị) chứ không phải topN prop: nếu data.length < topN
+        // (vd chỉ có 1-2 bang), calcMapped() đã tính durationInFrames theo topN đã CLAMP xuống data.length,
+        // nhưng topN prop ở đây vẫn giữ giá trị gốc (vd 3) -> order bị tính sai -> pin/hạng mục pop SAU KHI video đã hết.
+        const order = ranked.length - 1 - i;
         const at = popStart + order * Math.round(popSec * fps);
         const s = spring({ frame: f - at, fps, config: { damping: 12, stiffness: 170 } });
         if (f < at) return null;
@@ -97,7 +100,10 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
       {/* BẢNG XẾP HẠNG ở DƯỚI (vùng trống, chống chồng tuyệt đối) — #3->#1 pop, #1 nổi accent */}
       <div style={{ position: "absolute", left: 70, right: 70, bottom: 150, display: "flex", flexDirection: "column", gap: 16 }}>
         {ranked.map((d, i) => {
-          const order = topN - 1 - i;
+          // dùng ranked.length (số mục THỰC SỰ hiển thị) chứ không phải topN prop: nếu data.length < topN
+          // (vd chỉ có 1-2 bang), calcMapped() đã tính durationInFrames theo topN đã CLAMP xuống data.length,
+          // nhưng topN prop ở đây vẫn giữ giá trị gốc (vd 3) -> order bị tính sai -> pin/hạng mục pop SAU KHI video đã hết.
+          const order = ranked.length - 1 - i;
           const at = popStart + order * Math.round(popSec * fps);
           const s = spring({ frame: f - at, fps, config: { damping: 13, stiffness: 150 } });
           const lead = i === 0;

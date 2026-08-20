@@ -34,7 +34,8 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
   const port = H > W;
   // vị trí trong chuỗi keyframe
   const tf = Math.min((frames.length - 1), f / fps / spf);
-  const i0 = Math.min(frames.length - 2, Math.floor(tf)); const fr = tf - i0;
+  // clamp về 0: nếu chỉ có 1 keyframe (frames.length===1) thì frames.length-2 = -1 -> frames[-1] undefined -> crash
+  const i0 = Math.max(0, Math.min(frames.length - 2, Math.floor(tf))); const fr = tf - i0;
   const a = frames[i0], b = frames[Math.min(frames.length - 1, i0 + 1)];
   const names = Array.from(new Set([...a.data, ...b.data].map(d => d.name)));
   const val = (kf: Keyframe, n: string) => (kf.data.find(d => d.name === n)?.value ?? 0);

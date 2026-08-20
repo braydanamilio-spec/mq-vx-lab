@@ -41,7 +41,8 @@ export const WorldMapRace: React.FC<RaceProps> = (props) => {
 
   // giá trị hiện tại theo thời gian (nội suy như bar race)
   const tf = Math.min(frames.length - 1, f / fps / spf);
-  const i0 = Math.min(frames.length - 2, Math.floor(tf)); const fr = tf - i0;
+  // clamp về 0: nếu chỉ có 1 keyframe (frames.length===1) thì frames.length-2 = -1 -> frames[-1] undefined -> crash
+  const i0 = Math.max(0, Math.min(frames.length - 2, Math.floor(tf))); const fr = tf - i0;
   const a = frames[i0], b = frames[Math.min(frames.length - 1, i0 + 1)];
   const smooth = fr * fr * (3 - 2 * fr);
   const names = Array.from(new Set([...a.data, ...b.data].map(d => d.name)));
