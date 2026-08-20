@@ -9,7 +9,7 @@ import { AbsoluteFill, Audio, Sequence, OffthreadVideo, Img, staticFile, interpo
 type HUD = { kind: string; value?: number; from?: number; to?: number; unit?: string; label?: string; marks?: string[] };
 type Sub = { t: string; s: number; d: number };
 type Scene = { type: string; clip?: string; clip2?: string; fx?: string; audio: string; dur: number; nar: string; amp?: number[]; hud?: HUD; title?: string; num?: string; subs?: Sub[] };
-export type CProps = { scenes: Scene[]; slug: string; handle?: string; accent?: string; accent2?: string; ink?: string; music?: string };
+export type CProps = { scenes: Scene[]; slug: string; handle?: string; accent?: string; accent2?: string; ink?: string; music?: string; mode?: "duel" | "file"; host?: string };
 export const calcCinematic = ({ props }: { props: CProps }) => ({ durationInFrames: Math.max(1, props.scenes.reduce((a, s) => a + s.dur, 0)) });
 const ci = (v: number, a: number, b: number, x: number, y: number) => interpolate(v, [a, b], [x, y], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 const WEAK = new Set(["a", "an", "the", "and", "but", "or", "to", "of", "in", "on", "for", "with", "is", "are", "was", "were", "that", "it", "its", "at", "as", "by", "so", "if"]);
@@ -26,7 +26,7 @@ const chunkWords = (ws: string[]): string[][] => {
   return ch;
 };
 // Caption karaoke: nếu có subs (mốc CÂU từ edge-tts) -> neo đúng lúc voice nói (khớp tiếng). Không có -> chia đều cả cảnh.
-const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; subs?: Sub[] }> = ({ nar, l, d, accent, subs }) => {
+const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; subs?: Sub[]; mode?: "duel" | "file" }> = ({ nar, l, d, accent, subs, mode }) => {
   const lines: { words: string[]; s: number; e: number }[] = [];
   if (subs && subs.length) {
     for (const sb of subs) {
@@ -48,6 +48,17 @@ const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; sub
   const lineOp = Math.min(1, Math.max(0, (l - cur.s) / 5)); // fade-in mỗi dòng -> mượt, hết cắt cứng
   const { width, height } = useVideoConfig(); const port = height > width; // dọc (short) vs ngang (long)
   const fs = port ? 58 : 64; const bottom = port ? 520 : 120; const pad = port ? "0 70px" : "0 140px"; // dọc: nâng caption khỏi vùng UI Shorts
+  if (mode === "file") {
+    // Kiểu MÁY ĐÁNH CHỮ: gõ từng ký tự tới đúng frame hiện tại (không highlight từ theo giọng — hợp gu hồ sơ/giấy tờ).
+    const full = cur.words.join(" ");
+    const typedFrac = Math.min(1, Math.max(0, (l - cur.s) / cd));
+    const shown = full.slice(0, Math.round(full.length * typedFrac));
+    return (
+      <div style={{ position: "absolute", left: 0, right: 0, bottom, textAlign: "center", padding: pad, opacity: lineOp }}>
+        <span style={{ fontSize: fs * 0.72, fontWeight: 700, color: "#F3EEE3", fontFamily: "'Courier New',monospace", letterSpacing: 1, textShadow: "0 3px 20px rgba(0,0,0,0.9)", background: "#00000066", padding: "10px 22px", borderRadius: 4 }}>{shown}<span style={{ opacity: Math.floor(l / 8) % 2 ? 1 : 0, color: accent }}>▌</span></span>
+      </div>
+    );
+  }
   return (
     <div style={{ position: "absolute", left: 0, right: 0, bottom, textAlign: "center", padding: pad, opacity: lineOp }}>
       {cur.words.map((x, i) => { const on = i === active; return <span key={i} style={{ fontSize: fs, fontWeight: 900, color: on ? accent : "#EAF8FF", margin: "0 9px", display: "inline-block", transform: on ? "scale(1.09)" : "scale(1)", textShadow: on ? `0 3px 26px rgba(0,0,0,0.9), 0 0 22px ${accent}88` : "0 3px 26px rgba(0,0,0,0.9)" }}>{x}</span>; })}
@@ -150,7 +161,7 @@ const FxLayer: React.FC<{ kind: string; l: number }> = ({ kind, l }) => {
   );
 };
 
-const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; accent2: string; idx: number }> = ({ s, l, slug, accent, accent2, idx }) => {
+const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; accent2: string; idx: number; mode?: "duel" | "file" }> = ({ s, l, slug, accent, accent2, idx, mode }) => {
   const f = useCurrentFrame();
   // CẮT NHANH: cảnh có clip2 -> nửa đầu clip, nửa sau clip2 (đổi hình giữa cảnh, nhịp dồn, hết đứng hình)
   const half = s.dur / 2; const useC2 = !!s.clip2 && l >= half;
@@ -175,6 +186,17 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
   return (
     <AbsoluteFill style={{ background: "#080910", isolation: "isolate" }}>
       <ThemedBase accent={accent} accent2={accent2} f={f} />
+      {mode === "duel" && (
+        // Nhuộm nửa trái/phải xen kẽ theo cảnh -> cảm giác 2 phe đối đầu xuyên suốt video (không cần script tách 2 số liệu/cảnh).
+        <AbsoluteFill style={{ pointerEvents: "none" }}>
+          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(90deg, ${idx % 2 === 0 ? accent : accent2}22 0%, transparent 45%, transparent 55%, ${idx % 2 === 0 ? accent2 : accent}22 100%)` }} />
+          <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, transparent, ${idx % 2 === 0 ? accent : accent2}, transparent)`, boxShadow: `0 0 24px ${idx % 2 === 0 ? accent : accent2}` }} />
+        </AbsoluteFill>
+      )}
+      {mode === "file" && (
+        // Giấy ố vàng + lưới sợi giấy nhẹ -> gu "hồ sơ giải mật" thay vì nền cosmic/cinematic thường.
+        <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 30%, #2b2620cc 0%, #14120eee 60%, #0a0906 100%)", mixBlendMode: "multiply" }} />
+      )}
       {clip && (
         <div key={clip} style={{ position: "absolute", inset: 0, mixBlendMode: "screen", transform: `scale(${kb * punch}) translate(${panX}px, ${panY}px) rotate(${rot}deg)`, filter: "brightness(1.28) contrast(1.1) saturate(1.14)" }}>
           {isImg
@@ -187,11 +209,15 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
       <AbsoluteFill style={{ boxShadow: "inset 0 0 380px 110px rgba(0,0,0,0.45)" }} />
       {s.fx && <FxLayer kind={s.fx} l={l} />}
       {s.hud && <HudView hud={s.hud} l={l} d={s.dur} accent={accent} accent2={accent2} />}
+      {mode === "file" && l < 18 && (
+        // Thanh bôi đen "giải mật" kéo ra đầu mỗi cảnh -> đúng gu case-file, khác hẳn dissolve/push-in thường.
+        <AbsoluteFill style={{ background: "#0a0a0a", transform: `translateY(${ci(l, 0, 18, 0, -100)}%)` }} />
+      )}
     </AbsoluteFill>
   );
 };
 
-export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent = "#22D3EE", accent2 = "#F5B301", ink = "#EAF8FF", music }) => {
+export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent = "#22D3EE", accent2 = "#F5B301", ink = "#EAF8FF", music, mode, host }) => {
   const f = useCurrentFrame(); const st: number[] = []; scenes.reduce((a, s, i) => (st[i] = a, a + s.dur), 0);
   let idx = 0; for (let k = 0; k < scenes.length; k++) if (f >= st[k]) idx = k; const s = scenes[idx], l = f - st[idx];
   // KHÔNG fade-về-đen giữa cảnh (comp render 1 cảnh/lúc -> fade sẽ chớp ĐEN mỗi chuyển cảnh).
@@ -218,10 +244,21 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent 
   }
   return (
     <AbsoluteFill style={{ background: "#02030A", fontFamily: "'Poppins',Arial", opacity: vidFade }}>
-      {inCross && <AbsoluteFill><Scene1 s={scenes[prevIdx]} l={prevL} slug={slug} accent={accent} accent2={accent2} idx={prevIdx} /></AbsoluteFill>}
-      <AbsoluteFill style={{ opacity: curOpacity, transform: curTransform }}><Scene1 s={s} l={l} slug={slug} accent={accent} accent2={accent2} idx={idx} /></AbsoluteFill>
+      {inCross && <AbsoluteFill><Scene1 s={scenes[prevIdx]} l={prevL} slug={slug} accent={accent} accent2={accent2} idx={prevIdx} mode={mode} /></AbsoluteFill>}
+      <AbsoluteFill style={{ opacity: curOpacity, transform: curTransform }}><Scene1 s={s} l={l} slug={slug} accent={accent} accent2={accent2} idx={idx} mode={mode} /></AbsoluteFill>
       {/* LUÔN hiện caption (kể cả chapter -> voice đọc nar đều có sub); dùng subs (mốc câu) để khớp tiếng */}
-      <Caption nar={s.nar} l={l} d={s.dur} accent={accent} subs={s.subs} />
+      <Caption nar={s.nar} l={l} d={s.dur} accent={accent} subs={s.subs} mode={mode} />
+      {host && (() => {
+        // HOST nhất quán (Nano Banana, ảnh tham chiếu giữ nguyên nhân vật) — đứng góc dưới, hơi thở/lắc nhẹ theo spring, xuyên suốt video.
+        const { width, height } = useVideoConfig(); const port = height > width;
+        const bob = spring({ frame: f % 90, fps: 30, config: { damping: 100, stiffness: 40 } });
+        const w = port ? 340 : 300;
+        return (
+          <div style={{ position: "absolute", left: port ? 20 : 40, bottom: port ? 560 : 40, width: w, transform: `translateY(${Math.sin(f / 22) * 6}px) scale(${0.98 + bob * 0.02})`, filter: "drop-shadow(0 14px 30px rgba(0,0,0,0.55))" }}>
+            <Img src={staticFile(host)} style={{ width: "100%", height: "auto" }} />
+          </div>
+        );
+      })()}
       {/* (bỏ film grain feTurbulence — vẽ lại mỗi frame quá nặng, làm render chậm 3-4x; không đáng) */}
       {handle && <div style={{ position: "absolute", top: 40, right: 48, color: "#ffffffbb", fontSize: 30, fontWeight: 800 }}>{handle}</div>}
       {scenes.map((sc, j) => <Sequence key={j} from={st[j]} durationInFrames={sc.dur}><Audio src={staticFile(`${slug}/${sc.audio}`)} /></Sequence>)}
