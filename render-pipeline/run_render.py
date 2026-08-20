@@ -102,6 +102,16 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
                           hashtags=story.get("hashtags"), tags=story.get("tags"),
                           thumbnail=(story.get("_thumb") if (story.get("_thumb") and os.path.exists(story.get("_thumb"))) else _make_thumb(out)))   # thumb brand (GUESS/MAPPED) nếu có, không thì trích khung
         return created or None                     # trả cả {id, account} -> lưu vào job để XEM/stream trên web
+    except SystemExit as e:
+        # enqueue.py dùng raise SystemExit khi kênh THIẾU trong channels.yaml. SystemExit kế thừa
+        # BaseException chứ KHÔNG phải Exception -> "except Exception" bên dưới KHÔNG bắt được, nó
+        # xuyên thẳng lên và GIẾT CẢ KÊNH giữa chừng: video vừa render xong (QC 96 điểm) bị vứt,
+        # job kẹt mãi ở trạng thái "qc" vì không kịp ghi done/failed, mà GitHub vẫn báo success nên
+        # không ai thấy. Ngày 20/8: 27/40 kênh thiếu trong channels.yaml -> mất TOÀN BỘ video của
+        # chúng suốt nhiều tuần. Bắt riêng ở đây để một kênh lỗi cấu hình không kéo sập cả phiên.
+        print(f"   ❌ enqueue TỪ CHỐI kênh {channel}: {e}")
+        print(f"      -> thêm '{channel}' vào MM0-AutoPublisher/config/channels.yaml rồi render lại.")
+        return None
     except Exception as e:
         print("   ⚠️ enqueue lỗi (giữ artifact):", e); return None
 

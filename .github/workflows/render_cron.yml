@@ -157,8 +157,13 @@ jobs:
             libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
             libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg libasound2
       - name: Python deps
-        run: pip install --quiet google-generativeai google-genai edge-tts google-cloud-firestore \
-             google-api-python-client google-auth pyyaml
+        run: |
+          pip install --quiet google-generativeai google-genai edge-tts google-cloud-firestore \
+            google-api-python-client google-auth pyyaml
+          # pillow: BẮT BUỘC — still_hook_thumb/photo_score/ensure_yt_thumb đều dùng PIL. Thiếu thì
+          # thumbnail khung hook chết lặng ("No module named 'PIL'") và video lên không có ảnh đẹp.
+          # Cài Ở LỆNH RIÊNG: gộp vào dòng trên làm pip nổ "resolution-too-deep" (sự cố 20/8).
+          pip install --quiet pillow
       - name: npm ci (chỉ khi cache MISS)
         if: steps.cache-node.outputs.cache-hit != 'true'
         working-directory: engine-remotion
