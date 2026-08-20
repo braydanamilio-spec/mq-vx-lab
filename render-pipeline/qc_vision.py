@@ -25,7 +25,8 @@ def verify_image(path: str, subject: str, api_key: str = None, model_name: str =
                   'Return STRICT JSON only: {"match": true|false, "see": "<=6 words of what is shown"}')
         img = {"mime_type": "image/jpeg", "data": open(path, "rb").read()}
         resp = model.generate_content([prompt, img],
-                                      generation_config={"response_mime_type": "application/json", "temperature": 0.0})
+                                      generation_config={"response_mime_type": "application/json", "temperature": 0.0},
+                                      request_options={"timeout": 30})   # cùng bug thiếu timeout như check_visual() — xem comment ở đó
         r = CB._extract_json(resp.text) or {}
         return bool(r.get("match"))
     except Exception as e:
@@ -73,8 +74,13 @@ def check_visual(mp4: str, api_key: str = None, model_name: str = None, min_scor
         scores, issues = [], []
         for st in stills:
             img = {"mime_type": "image/jpeg", "data": open(st, "rb").read()}
+            # request_options timeout=30s: KHÔNG có timeout -> lệnh gọi Gemini Vision từng bị TREO VÔ THỜI
+            # HẠN khi mạng/API chập chờn (mất mạng KHÔNG throw exception -> except bên dưới không bắt được),
+            # kẹt job ở "qc" hàng giờ, gần hết cả 40 kênh cùng lúc bị treo (phát hiện 20/8). Có timeout ->
+            # hết giờ tự throw TimeoutError -> except fail-open bên dưới bắt được, video qua QC bình thường.
             resp = model.generate_content([prompt, img],
-                                          generation_config={"response_mime_type": "application/json", "temperature": 0.1})
+                                          generation_config={"response_mime_type": "application/json", "temperature": 0.1},
+                                          request_options={"timeout": 30})
             r = CB._extract_json(resp.text) or {}
             sc = float(r.get("score", 0) or 0)
             scores.append(sc)
