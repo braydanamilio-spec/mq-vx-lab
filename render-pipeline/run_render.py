@@ -125,6 +125,14 @@ def run_one(ch, keys, n_shorts=3, report=None):
         except Exception: return False
     os.makedirs("out", exist_ok=True)
 
+    # GIỌNG ĐỌC RIÊNG TỪNG KÊNH (chống "nội dung hàng loạt" — xem tts_karaoke.set_voice).
+    # Đặt 1 lần ở đây -> mọi TK.synth() trong cả phiên của kênh này tự dùng đúng giọng.
+    try:
+        import tts_karaoke as _TK
+        _TK.set_voice(ch.get("voice"), ch.get("voice_rate"))
+    except Exception:
+        pass
+
     # ── FORMAT ĐẶC BIỆT (short-only, motif riêng): GUESS / MAPPED ── route sang make_guess/make_mapped.
     fmt = (ch.get("format") or "").lower()
     if fmt in ("guess", "mapped", "ranked", "scaled", "thennow", "doc", "swarm", "pulse", "clockwork", "longshot"):

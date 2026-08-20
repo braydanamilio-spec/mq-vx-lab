@@ -111,8 +111,26 @@ def _to_srt(subs: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def synth(text: str, mp3_path: str, voice: str = DEFAULT_VOICE, rate: str = DEFAULT_RATE):
-    """Trả (duration_giây, subs[Word], srt_text). subs đúng format RaceLong."""
+_ACTIVE = {"voice": None, "rate": None}
+
+
+def set_voice(voice: str = None, rate: str = None):
+    """Đặt GIỌNG + TỐC ĐỘ cho kênh đang render (gọi 1 lần ở đầu mỗi kênh trong run_render.py).
+    Mọi TK.synth() sau đó tự dùng — khỏi phải sửa 20+ điểm gọi rải rác.
+
+    VÌ SAO CẦN: trước đây CẢ 40 kênh dùng CHUNG 1 giọng (en-US-AndrewNeural) + 21 kênh dùng chung
+    engine Cinematic -> video 40 kênh nghe/nhìn gần như y hệt nhau. Đây đúng là thứ chính sách
+    "inauthentic / mass-produced content" của YouTube nhắm tới (rủi ro bật kiếm tiền lớn nhất của
+    hệ 40 kênh cùng chủ). Mỗi kênh 1 giọng riêng = khác biệt THẬT, 100% free (edge-tts)."""
+    _ACTIVE["voice"] = voice or None
+    _ACTIVE["rate"] = rate or None
+
+
+def synth(text: str, mp3_path: str, voice: str = None, rate: str = None):
+    """Trả (duration_giây, subs[Word], srt_text). subs đúng format RaceLong.
+    voice/rate=None -> lấy theo kênh đang render (set_voice), không có thì về mặc định."""
+    voice = voice or _ACTIVE["voice"] or DEFAULT_VOICE
+    rate = rate or _ACTIVE["rate"] or DEFAULT_RATE
     sentences = asyncio.run(_run(text, mp3_path, voice, rate))
     subs = _expand_words(sentences)
     dur = (subs[-1]["t"] + subs[-1]["d"]) if subs else 0.0
