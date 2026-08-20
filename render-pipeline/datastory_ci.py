@@ -288,6 +288,11 @@ def _clip_words(s: str, n: int) -> str:
     return (cut[:sp] if sp > n * 0.5 else cut).rstrip(" ,;:-")
 
 
+# LÀM NÉT khung cắt từ VIDEO ĐÃ NÉN: H.264 làm mềm nét chữ. lanczos (thu nhỏ sắc hơn) + unsharp
+# nhẹ -> đo trên khung thật: độ nét biên 29.8 -> 33.7 (+13%), chữ gọn hẳn, không rỗ.
+# KHÔNG dùng cho still_hook_thumb: nguồn là PNG chưa nén, làm nét thêm chỉ tạo viền giả.
+SHARPEN = "unsharp=5:5:0.9:5:5:0.0"
+
 SAFE_TOP = 0.58   # phụ đề cháy vào khung nằm ở ĐÁY -> lấy 58% trên là vùng sạch chữ
 FRAME_BLUR = 9    # khung video vốn đã đầy nhãn/số -> mờ 9 thì chữ cũ tan thành kết cấu (đã thử 0/5/9)
 
@@ -415,7 +420,7 @@ def still_hook_thumb(comp_id, props_path, dest_jpg, frame=90, api_key=None, titl
         from PIL import Image
         w, h = Image.open(raw).size
         if w >= h:
-            vf = "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720"
+            vf = "scale=1280:720:force_original_aspect_ratio=increase:flags=lanczos,crop=1280:720"
         else:
             # VIDEO DỌC: thử lồng nguyên khung vào giữa (pillarbox) thì ra dải hẹp, chữ bé tí, hai
             # bên là vệt mờ xấu — đã render thử và thấy rõ. Thay bằng CẮT CỬA SỔ 16:9 BÁM KHỐI CHỮ:
@@ -423,7 +428,7 @@ def still_hook_thumb(comp_id, props_path, dest_jpg, frame=90, api_key=None, titl
             # rồi phóng lên 1280x720 -> chữ TO, rõ, vẫn thấy ảnh nền thật.
             ch_ = int(w * 9 / 16)
             y0 = max(0, min(h - ch_, int(h * 0.51 - ch_ / 2)))
-            vf = f"crop={w}:{ch_}:0:{y0},scale=1280:720"
+            vf = f"crop={w}:{ch_}:0:{y0},scale=1280:720:flags=lanczos"
         subprocess.run(["ffmpeg", "-y", "-i", raw, "-vf", vf, "-q:v", "2", dest_jpg],
                        capture_output=True, timeout=90, check=True)
         if not os.path.exists(dest_jpg):
@@ -485,9 +490,9 @@ def opening_thumb(out_video, dest_jpg, api_key=None, title="", min_score=70):
     if _h > _w and _w > 0:   # dọc -> cắt cửa sổ 16:9 BÁM KHỐI CHỮ (giống still_hook_thumb)
         _ch = int(_w * 9 / 16)
         _y0 = max(0, min(_h - _ch, int(_h * 0.51 - _ch / 2)))
-        VF = f"crop={_w}:{_ch}:0:{_y0},scale=1280:720"
+        VF = f"crop={_w}:{_ch}:0:{_y0},scale=1280:720:flags=lanczos,{SHARPEN}"
     else:                    # ngang -> lấy thẳng
-        VF = "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720"
+        VF = f"scale=1280:720:force_original_aspect_ratio=increase:flags=lanczos,crop=1280:720,{SHARPEN}"
     tmpd = os.path.dirname(dest_jpg) or "."
     os.makedirs(tmpd, exist_ok=True)
     best, best_s = None, -1
