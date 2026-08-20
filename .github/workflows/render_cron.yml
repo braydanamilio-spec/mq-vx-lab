@@ -1,7 +1,8 @@
-name: MM0 Render Factory (10 luồng song song)
+name: MM0 Render Factory (18 luồng song song)
 
 # NHÀ MÁY 10 LUỒNG: job "plan" điều phối (gating + health-check + re-render + xuất danh sách kênh),
-# rồi job "render" chạy MỖI KÊNH 1 LUỒNG song song (matrix, tối đa 10). Video tự rải đều 33 kho Drive.
+# rồi job "render" chạy MỖI KÊNH 1 LUỒNG song song (matrix, tối đa 18 — khớp max-parallel dưới +
+# MAX_MATRIX trong run_render.py plan_mode(), 2 nơi PHẢI khớp nhau). Video tự rải đều kho Drive.
 # Secrets: GCP_SA_KEY, FIREBASE_PROJECT_ID, OWNER_UID, AUTOPUBLISHER_REPO, AUTOPUBLISHER_TOKEN, GEMINI_SYSTEM_PROMPT
 
 on:
