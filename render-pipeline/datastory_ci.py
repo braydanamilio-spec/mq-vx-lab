@@ -352,7 +352,35 @@ def frame_bg(video: str, dest_dir: str, rel_prefix: str):
     return f"{rel_prefix}/thumbbg.jpg"
 
 
-def still_hook_thumb(comp_id, props_path, dest_jpg, frame=40, api_key=None, title="", min_score=65):
+def hook_frame_of(props: dict, fps: int = 30, default: int = 90) -> int:
+    """Chọn ĐÚNG frame mà cảnh hook đã hiện ĐẦY ĐỦ.
+
+    KHÔNG được dùng số cố định: độ dài intro bằng độ dài LỜI ĐỌC intro nên mỗi video một khác
+    (props["introSec"]), và các hiệu ứng còn fade vào sau đó — ví dụ RaceLong cho dòng hook hiện dần
+    từ frame 42 đến 56, nên chụp ở frame 40 sẽ ra ảnh CHƯA CÓ dòng hook (đã kiểm trong RaceLong.tsx).
+    Lấy 72% chặng intro: chắc chắn qua hết fade-in mà chưa sang cảnh kế. Sàn 60 frame (2s) để không
+    bao giờ rơi vào đoạn fade mở màn."""
+    sec = 0.0
+    try:
+        # 3 dạng props đang dùng trong hệ thống:
+        #   motif (swarm/ranked/…): props["introSec"]
+        #   data-race (RaceLong/RaceLongV): props["intro"]["sec"]  — cảnh hook có kicker+title+bignum
+        #   tài liệu (Cinematic):        props["scenes"][0]["dur"] tính bằng FRAME, không phải giây
+        if props.get("introSec"):
+            sec = float(props["introSec"])
+        elif isinstance(props.get("intro"), dict) and props["intro"].get("sec"):
+            sec = float(props["intro"]["sec"])
+        elif props.get("scenes"):
+            d0 = float((props["scenes"][0] or {}).get("dur") or 0)   # ĐƠN VỊ FRAME
+            return max(60, int(d0 * 0.6)) if d0 > 0 else default
+    except Exception:
+        sec = 0.0
+    if sec <= 0:
+        return default
+    return max(60, int(sec * fps * 0.72))
+
+
+def still_hook_thumb(comp_id, props_path, dest_jpg, frame=90, api_key=None, title="", min_score=65):
     """THUMBNAIL = CHÍNH KHUNG HOOK MỞ ĐẦU, render TRỰC TIẾP từ Remotion (không cắt từ video).
 
     Vì sao không cắt từ mp4: video đã nén H.264 -> chữ rỗ, ảnh mềm, đúng kiểu "thumbnail mờ". Render
@@ -372,9 +400,16 @@ def still_hook_thumb(comp_id, props_path, dest_jpg, frame=40, api_key=None, titl
             return False
         from PIL import Image
         w, h = Image.open(raw).size
-        vf = ("scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720" if w >= h else
-              "split=2[bg][fg];[bg]scale=1280:720:force_original_aspect_ratio=increase,"
-              "crop=1280:720,boxblur=22:2[b];[fg]scale=-2:720[f];[b][f]overlay=(W-w)/2:0")
+        if w >= h:
+            vf = "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720"
+        else:
+            # VIDEO DỌC: thử lồng nguyên khung vào giữa (pillarbox) thì ra dải hẹp, chữ bé tí, hai
+            # bên là vệt mờ xấu — đã render thử và thấy rõ. Thay bằng CẮT CỬA SỔ 16:9 BÁM KHỐI CHỮ:
+            # cụm hook (kicker + tiêu đề + số liệu + chú thích) nằm quanh 51% chiều cao, cắt quanh đó
+            # rồi phóng lên 1280x720 -> chữ TO, rõ, vẫn thấy ảnh nền thật.
+            ch_ = int(w * 9 / 16)
+            y0 = max(0, min(h - ch_, int(h * 0.51 - ch_ / 2)))
+            vf = f"crop={w}:{ch_}:0:{y0},scale=1280:720"
         subprocess.run(["ffmpeg", "-y", "-i", raw, "-vf", vf, "-q:v", "2", dest_jpg],
                        capture_output=True, timeout=90, check=True)
         if not os.path.exists(dest_jpg):
@@ -498,7 +533,7 @@ def hook_bg(channel, out_video, subject, keys=None, api_key=None):
 
 def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
               accent="#22D3EE", accent2="#F5B301", bg_rel="", bg_blur=0,
-              api_key_for_thumb=None, comp_id="", props_path="", hook_frame=40,
+              api_key_for_thumb=None, comp_id="", props_path="", hook_frame=0,
               bg_provider=None):
     """Dựng thumbnail chuẩn nhà (DocThumb) — DÙNG CHUNG cho MỌI engine.
 
@@ -513,7 +548,13 @@ def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
     _k = api_key_for_thumb or os.environ.get("GEMINI_API_KEY")
     try:
         # (a) NÉT NHẤT: render lại khung hook từ chính composition + props (không qua nén video).
-        if comp_id and props_path and still_hook_thumb(comp_id, props_path, thumb, frame=hook_frame,
+        _hf = hook_frame
+        if comp_id and props_path and not _hf:
+            try:                       # tự suy frame từ độ dài intro THẬT của chính video này
+                _hf = hook_frame_of(json.load(open(props_path)))
+            except Exception:
+                _hf = 90
+        if comp_id and props_path and still_hook_thumb(comp_id, props_path, thumb, frame=_hf,
                                                        api_key=_k, title=big):
             print("   ✅ thumbnail = KHUNG HOOK MỞ ĐẦU (render nét từ composition)")
             return thumb
