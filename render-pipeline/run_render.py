@@ -1165,6 +1165,20 @@ def plan_mode():
         traceback.print_exc()
     all_ch = [c for c in FB.read_channels(OWNER) if c.get("name")]
     try:
+        # LINT ĐỒNG BỘ KÊNH: mọi kênh render PHẢI có trong channels.yaml của publisher — thiếu là
+        # video QC đạt vẫn bị enqueue TỪ CHỐI (đêm 21/8: DEBTUSA/FILEUSA/VOXUSA sót từ đầu, 3 video
+        # QC 97-98 của DEBTUSA bị vứt). Phép so TẬP HỢP tự động, không đếm tay nữa.
+        import yaml as _yaml
+        _src = os.environ.get("AUTOPUBLISHER_SRC", "")
+        _yp = os.path.join(os.path.dirname(_src.rstrip("/")), "config", "channels.yaml") if _src else ""
+        if _yp and os.path.exists(_yp):
+            _have_yaml = set((_yaml.safe_load(open(_yp)) or {}).get("channels") or {})
+            _missing = sorted({c.get("name") for c in all_ch if c.get("name")} - _have_yaml)
+            if _missing:
+                print(f"   🚨 {len(_missing)} kênh render THIẾU trong channels.yaml (video sẽ bị enqueue từ chối): {_missing}")
+    except Exception:
+        traceback.print_exc()
+    try:
         _pf = policy_lint(all_ch)       # audit chính sách tự động (0 quota)
         policy_autofix(all_ch, _pf)     # thiếu rào chắn -> máy tự nối câu STRICT chuẩn
     except Exception:

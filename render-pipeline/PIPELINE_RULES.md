@@ -190,6 +190,10 @@ gh run view <id> --repo braydanamilio-spec/mq-vx-lab --log
 
 - **⭐ Render treo 'CPU đứng im 360s' hàng loạt (đêm 21/8, lane UNSOLVED 7/7 lệnh render chết, 0 video)**: Remotion `<Img>` CHỜ VÔ HẠN ảnh 404/hỏng (`Error loading image ... s5_1.jpg`) -> 0% CPU -> watchdog giết sau 6'/lần -> cháy cả lane. RaceLong có SafeImg từ đầu, Cinematic THIẾU. FIX 2 tầng: SafeImg (onError -> _fallback.jpg, render đi tiếp) cho mọi <Img> của Cinematic + `prune_ghost_clips()` lọc ảnh <1KB/không tồn tại khỏi props trước khi ghi. KIỂM CHỨNG: tái hiện đúng ca (props có ảnh ma) — trước treo, sau hoàn tất 5.9s. LUẬT: mọi component nhận ảnh động PHẢI dùng SafeImg, không bao giờ <Img> trần.
 
+- **⭐⭐ HẠN MỨC GEMINI FREE THẬT = 20 request/NGÀY/KEY** (Google in thẳng trong lỗi 429 đêm 21/8: `generate_content_free_tier_requests, limit: 20, model: gemini-3.5-flash`). 56 key = **1.120 gọi/ngày TỔNG** — không phải ~14K như mọi ước tính trước. Chi phí ~4.5-6 gọi/video → trần thực tế **~150-250 video/ngày**. Muốn 1.000 video/ngày: cần ~250+ key HOẶC trả phí Gemini. MỌI kế hoạch quota phải tính từ con số 20 này.
+- **SafeImg fix ĐÃ ĂN trên CI** (DEBTUSA đêm 21/8): 6 render hoàn tất thật (QC 96-98, 51-75MB), watchdog 0 lần giết — hết bệnh treo chờ ảnh. Cổng opening bắt được nền trơn thật; điều-kiện-2 (ít màu) giết oan 2/6 video màu trầm → đã hạ thành cảnh báo, giữ chặn cứng dark>=75.
+- **3 kênh SÓT khỏi channels.yaml từ đầu (DEBTUSA/FILEUSA/VOXUSA)**: video QC đạt bị enqueue từ chối. Đợt vá "27 kênh" ngày 20/8 không phủ đủ. FIX: thêm 3 kênh (53 tổng) + LINT SO TẬP HỢP render_channels↔channels.yaml chạy mỗi plan — không bao giờ đếm tay nữa.
+
 > **🔴 NGUYÊN NHÂN GỐC CHUNG của 15 bug trên — đọc kỹ, đừng lặp lại:**
 > 1. **Bám `keys[0]`** — 3 khâu riêng biệt (vẽ ảnh · Vision QC · kiểm khớp ảnh) đều mắc CÙNG lỗi này, và em fix từng cái một qua 3 lần thay vì rà cả lớp ngay lần đầu. **Hễ sửa một chỗ bám `keys[0]`, PHẢI `grep -n "keys\[0\]" *.py` rà hết.**
 > 2. **Lỗi bị try/except nuốt** — sync kho hỏng nhiều ngày, key rotation là code chết, vision fail-open âm thầm. **Mọi `except` bọc bước QUAN TRỌNG phải in ra, và phải có phép đo (đếm/log số) chứ không chỉ "không thấy lỗi".**

@@ -1506,8 +1506,18 @@ def opening_is_flat(mp4: str, at: float = 1.2):
     dark, sat, cols = flat_bg_metrics(jpg)
     try: os.remove(jpg)
     except OSError: pass
-    flat = (dark >= 75 and cols < 900) or (cols < 500 and sat < 25)
-    return (not flat), {"dark": round(dark, 1), "sat": round(sat, 1), "colors": cols}
+    # ĐO THẬT đêm 21/8 (DEBTUSA, 6 video render thành công đầu tiên): video THẬT của hệ có sat
+    # 10-13.6 và colors 417-738 — bảng màu doc-style trầm là BÌNH THƯỜNG. Điều kiện (cols<500 &
+    # sat<25) giết oan 2/6 video tốt (dark chỉ 35-37%, tức có ảnh thật, không hề "nền trơn").
+    # Chữ-trên-nền-trơn thật sự có chữ ký dark>=75 (đo: 91.9%) -> giữ điều kiện ĐÓ làm chặn cứng,
+    # ca ít-màu hạ xuống CẢNH BÁO ghi vào info để soi, không giết video.
+    flat = (dark >= 75 and cols < 900)
+    warn = (cols < 500 and sat < 25 and not flat)
+    info = {"dark": round(dark, 1), "sat": round(sat, 1), "colors": cols}
+    if warn:
+        info["note"] = "màu trầm/ít màu — soi bằng mắt nếu lặp"
+        print(f"   ⚠️ mở đầu màu trầm (sat {sat:.0f}, {cols} màu) — cho qua, ghi nhận để soi")
+    return (not flat), info
 
 
 def fresh_out(out: str):
