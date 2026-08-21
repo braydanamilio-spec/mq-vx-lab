@@ -1242,7 +1242,7 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     # ai_only: ảnh nào cũng do AI vẽ theo prompt, không có "ảnh thật tải về" để verify khớp/sai -> khỏi tốn Vision API.
     vf_for = (lambda subj: (lambda p: qc_vision.verify_image(p, subj, api_key=api_key))) if (api_key and not ai_only) else (lambda subj: None)
 
-    def add_scene(i, nar, kind, img_query=None, title="", hook=None):
+    def add_scene(i, nar, kind, img_query=None, title="", hook=None, alt_queries=None):
         amp3 = os.path.join(sdir, f"s{i}.mp3")
         dur_s, _subs, _ = TK.synth(nar or title or "…", amp3)
         durF = max(48, round((dur_s + 0.5) * FPS))
@@ -1259,8 +1259,16 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
             for _p in extra_paths:                     # dọn file cũ của video trước -> không nhận nhầm
                 try: os.remove(_p)
                 except OSError: pass
-            got = fetch_image(img_query, os.path.join(cdir, f"s{i}.jpg"), orient="tall", verify=vf_for(img_query),
-                              ai_key=api_key, ai_style=ai_style, ai_only=ai_only, extra=extra_paths)
+            # THỬ LẦN LƯỢT nhiều truy vấn: cảnh mở đầu BẮT BUỘC phải có ảnh thật, không được rơi
+            # về nền trơn. Openverse trượt từ khoá này thì thử từ khoá khác trước khi bỏ cuộc.
+            got = None
+            for _q in [img_query] + list(alt_queries or []):
+                if not _q:
+                    continue
+                got = fetch_image(_q, os.path.join(cdir, f"s{i}.jpg"), orient="tall", verify=vf_for(_q),
+                                  ai_key=api_key, ai_style=ai_style, ai_only=ai_only, extra=extra_paths)
+                if got:
+                    break
             if got:
                 sc["clip"] = f"s{i}.jpg"
                 _cl = [f"s{i}.jpg"] + [os.path.basename(_p) for _p in extra_paths if os.path.exists(_p)]
@@ -1270,6 +1278,7 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
             # (ThemedBase) + phụ đề. TRƯỚC ĐÂY hạ xuống 'chapter' -> hiện thẻ CHỮ TO trên nền trơn giữa
             # video, đúng thứ user không muốn. Thà nền tông kênh còn hơn một thẻ tiêu đề chen ngang.
         scenes_out.append(sc)
+        return sc
 
     # KHÔNG INTRO, KHÔNG OUTRO (rule của user). Trước đây dựng 2 thẻ chapter — chữ to trên nền
     # cosmic, không ảnh — kẹp đầu và cuối video. Vì thumbnail lấy đúng khung MỞ ĐẦU nên mọi video
@@ -1297,7 +1306,14 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
             _q = str(story.get("thumb_hook") or "").strip()
             if _stat or _q:
                 hk = {"stat": _stat[:8], "label": _lab[:20], "line": _q[:22]}
-        add_scene(i, nar, "scene", img_query=sc0.get("img_query"), title=sc0.get("title", ""), hook=hk); i += 1
+        _alts = None
+        if k == 0:
+            # dự phòng cho cảnh MỞ ĐẦU: img_query các cảnh sau, rồi tới tiêu đề/chủ đề. Mở đầu mà
+            # không có footage thì cả video hỏng ngay giây đầu -> cố tới cùng.
+            _alts = [x.get("img_query") for x in _scs[1:4] if x.get("img_query")]
+            _alts += [story.get("title_yt"), story.get("title"), story.get("topic")]
+        add_scene(i, nar, "scene", img_query=sc0.get("img_query"), title=sc0.get("title", ""),
+                  hook=hk, alt_queries=_alts); i += 1
     props = {"scenes": scenes_out, "slug": slug_, "handle": handle, "accent": accent, "accent2": accent2}
     if music:
         props["music"] = music
@@ -1337,7 +1353,8 @@ def qc_structure(props, fps=30):
     if not (scenes[0].get("hook") or {}).get("stat") and not (scenes[0].get("hook") or {}).get("line"):
         issues.append("cảnh mở đầu thiếu lớp hook (số liệu/câu hỏi)")
     if not scenes[0].get("clip"):
-        issues.append("cảnh mở đầu không có footage")
+        # CHẶN CỨNG: đúng thứ user cấm — mở đầu bằng chữ trên nền đen, không có ảnh hook liên quan.
+        return False, issues + ["cảnh MỞ ĐẦU không có footage (chữ trên nền trơn) — CẤM"]
     # nhịp cắt: mỗi ảnh không được đứng quá ~3.5s
     slow = []
     for k, x in enumerate(scenes):
