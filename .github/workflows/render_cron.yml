@@ -118,7 +118,11 @@ jobs:
     needs: plan
     if: needs.plan.outputs.channels != '' && needs.plan.outputs.channels != '[]'
     strategy:
-      max-parallel: 18        # trần GitHub free = 20 job/tài khoản; để 18 (dư 2 cho đăng bài — đăng là queue nên đủ). Thêm kênh >18 -> phần dư XẾP HÀNG (không lỗi).
+      max-parallel: 10        # 10 KÊNH/vòng, mỗi kênh 1 long + 3 short = 10 long + 30 short đúng mẻ user đặt.
+                              # (Trần GitHub free là 20 job/tài khoản, nên 10 vẫn dư chỗ cho đăng bài.)
+                              # Trước để 18: hồi đó mỗi luồng chỉ đẻ short rời rạc nên cần nhiều luồng;
+                              # giờ 1 luồng ra 4 video gắn nhau, 10 luồng là vừa mẻ. Kênh dư XẾP HÀNG
+                              # phiên sau -> xoay vòng đều, không kênh nào bị bỏ.
       fail-fast: false        # 1 kênh lỗi KHÔNG hủy các kênh khác
       matrix:
         channel: ${{ fromJson(needs.plan.outputs.channels) }}
