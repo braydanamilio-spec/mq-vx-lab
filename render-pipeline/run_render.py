@@ -595,6 +595,50 @@ def gate_mode():
     print(f"GATE run={run}")
 
 
+# Mốc bản vá xoay key vẽ ảnh (commit "Ve anh AI + Vision QC xoay vong 56 key"). Video của kênh
+# ai_only tạo TRƯỚC mốc này ra đời khi MỌI lời gọi vẽ ảnh đều 429 -> mọi cảnh bị hạ xuống thẻ chữ
+# nền cosmic, không có ảnh nào. Đo thật: 0 ảnh vẽ được / 209 lần lỗi (21/8) và 0/158 (20/8).
+AI_IMG_FIXED_AT = "2026-08-21T11:30:00+00:00"
+SWEEP_PER_SESSION = 12      # trần mỗi phiên: render lại vẫn tốn thời gian, không để nó nuốt cả mẻ mới
+
+
+def sweep_ai_quality(all_ch, cfg):
+    """Xếp hàng render lại cho video KHÔNG ĐẠT CHUẨN của các kênh vẽ ảnh AI.
+
+    Chỉ TẠO YÊU CẦU, không tự render: process_requests ở đầu phiên kế sẽ dựng lại từ kịch bản đã
+    lưu (không tốn quota Gemini viết bài, ra đúng nội dung cũ), đẩy Drive rồi BỎ bản cũ vào thùng
+    rác + xoá bản ghi job -> phần dọn dẹp nằm sẵn trong luồng đó.
+    Rải tối đa SWEEP_PER_SESSION mỗi phiên cho tới hết, rồi tự tắt bằng cờ trong config."""
+    if cfg.get("ai_img_sweep_done"):
+        return
+    targets = [c for c in all_ch if c.get("ai_only") and c.get("name")]
+    if not targets:
+        FB.set_config(OWNER, {"ai_img_sweep_done": True}); return
+    pending = {r.get("replace_id") for r in FB.read_render_requests(OWNER) if r.get("replace_id")}
+    made, seen_any = 0, False
+    for c in targets:
+        if made >= SWEEP_PER_SESSION:
+            break
+        for j in FB.find_done_before(OWNER, c["name"], "short", AI_IMG_FIXED_AT,
+                                     limit=SWEEP_PER_SESSION - made):
+            seen_any = True
+            did = j.get("drive_id") or ""
+            if did and did in pending:
+                continue
+            rid = FB.new_render_request(OWNER, c["name"], j.get("type") or "short",
+                                        j.get("title") or j.get("topic") or "",
+                                        did, j.get("drive_account") or "")
+            FB.mark_job_requeued(j["id"], rid)
+            made += 1
+            if made >= SWEEP_PER_SESSION:
+                break
+    if made:
+        print(f"   ♻️ Xếp render lại {made} video chưa đạt chuẩn (kênh vẽ ảnh AI) — phiên sau xử lý.")
+    elif not seen_any:
+        FB.set_config(OWNER, {"ai_img_sweep_done": True})
+        print("   ✅ Đã xử lý xong toàn bộ video tồn của kênh vẽ ảnh AI.")
+
+
 def plan_mode():
     """ĐIỀU PHỐI (matrix 10 luồng): gating + health-check + re-render — CHẠY 1 LẦN — rồi xuất danh sách kênh
     cho các job render song song. Các job render KHÔNG lặp health-check/re-render (đỡ tốn API)."""
@@ -750,6 +794,10 @@ def plan_mode():
     except Exception:
         traceback.print_exc()
     all_ch = [c for c in FB.read_channels(OWNER) if c.get("name")]
+    try:
+        sweep_ai_quality(all_ch, cfg)   # xếp render lại các video ra đời khi bước vẽ ảnh AI còn hỏng
+    except Exception:
+        traceback.print_exc()
     channels = [c["name"] for c in all_ch if not c.get("paused")]   # ⏸ kênh PAUSE -> KHÔNG vào matrix (không làm mẻ mới)
     # XÁO THỨ TỰ mỗi phiên: Firestore trả channels theo ID tài liệu (~alphabet cố định) -> KHÔNG xáo thì cùng nhóm
     # đầu bảng chữ cái LUÔN vào 18 slot đầu (ưu tiên), nhóm cuối LUÔN bị đẩy xuống chờ mỗi phiên -> thiên vị có hệ

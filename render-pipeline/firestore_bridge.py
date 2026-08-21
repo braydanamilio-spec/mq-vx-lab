@@ -289,6 +289,50 @@ def read_render_requests(owner: str) -> list[dict]:
     return out
 
 
+def find_done_before(owner: str, channel: str, vtype: str, before_iso: str, limit: int = 12) -> list[dict]:
+    """Video ĐÃ XONG của 1 kênh, tạo TRƯỚC mốc `before_iso` — dùng để xếp render lại những bản ra đời
+    khi pipeline còn lỗi. Truy vấn khớp ĐÚNG composite index đã deploy
+    (owner+channel+type+status+created_at) nên không phải quét bảng.
+    Bỏ qua bản đã xếp hàng rồi (requeued) để chạy nhiều phiên không tạo trùng."""
+    try:
+        q = (_db_jobs().collection("render_jobs")
+             .where("owner", "==", owner).where("channel", "==", channel)
+             .where("type", "==", vtype).where("status", "==", "done")
+             .where("created_at", "<", before_iso)
+             .order_by("created_at").limit(int(limit)))
+        out = []
+        for d in q.stream():
+            x = d.to_dict() or {}
+            if x.get("requeued"):
+                continue
+            x["id"] = d.id
+            out.append(x)
+        return out
+    except Exception as e:
+        print(f"   ⚠️ find_done_before {channel}: {str(e)[:90]}")
+        return []
+
+
+def new_render_request(owner: str, channel: str, vtype: str, seed: str,
+                       replace_id: str = "", replace_account: str = "") -> str:
+    """Tạo yêu cầu render lại — CÙNG schema với nút 🔄 trên dashboard, nên process_requests xử lý
+    y hệt: dựng lại từ kịch bản đã lưu, đẩy Drive, rồi BỎ bản cũ vào thùng rác."""
+    ref = _db_meta().collection("render_requests").document()
+    ref.set({"owner": owner, "channel": channel, "type": vtype, "seed": seed or "",
+             "replace_id": replace_id or "", "replace_account": replace_account or "",
+             "status": "pending", "created_at": _now()})
+    return ref.id
+
+
+def mark_job_requeued(job_id: str, req_id: str = ""):
+    """Đánh dấu job đã xếp hàng render lại -> phiên sau không tạo yêu cầu trùng cho nó nữa."""
+    try:
+        _db_jobs().collection("render_jobs").document(job_id).set(
+            {"requeued": True, "rerender": "chờ render lại", "rerender_req": req_id}, merge=True)
+    except Exception:
+        pass
+
+
 def delete_jobs_by_drive(owner: str, drive_id: str):
     """Xóa bản ghi job cũ theo drive_id (sau khi render lại đã thay thế + bỏ file cũ)."""
     if not drive_id:
