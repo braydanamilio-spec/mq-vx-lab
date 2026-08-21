@@ -460,6 +460,9 @@ def has_active_render(owner: str) -> bool:
         return False
 
 
+_LEGACY_COUNT = {}     # (owner, kênh, loại) -> số job cũ ở Project A (bất biến)
+
+
 def count_done(owner: str, channel: str, vtype: str = None) -> int:
     """Đếm số video ĐÃ XONG của 1 kênh (so target). Đếm CẢ Project B (job mới) + A (job CŨ trước shard) -> không sót, không làm THỪA.
     Dùng aggregation count() = ~1 read/project."""
@@ -468,11 +471,19 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
         total += _count_jobs(_db_jobs(), owner, channel, vtype)          # B (hoặc A nếu chưa shard)
     except Exception as e:
         print(f"   ⚠️ count_done B lỗi ({e})")
-    if _shard_on():                                                       # có shard -> cộng thêm job cũ còn ở A
-        try:
-            total += _count_jobs(_db(), owner, channel, vtype)
-        except Exception as e:
-            print(f"   ⚠️ count_done A lỗi ({e})")
+    if _shard_on():
+        # Job CŨ nằm ở A là dữ liệu LỊCH SỬ — từ khi bật shard (19/8) không có job mới nào ghi vào A
+        # nữa, nên con số này KHÔNG BAO GIỜ ĐỔI. Trước đây đếm lại mỗi lần gọi: plan_mode gọi cho
+        # 40 kênh × 2 loại = 80 lượt đọc THỪA trên Project A mỗi phiên, cộng thêm mỗi kênh gọi lại
+        # trong run_one. Đệm theo tiến trình -> mỗi (kênh, loại) chỉ đọc A đúng 1 lần.
+        ck = (owner, channel, vtype)
+        if ck not in _LEGACY_COUNT:
+            try:
+                _LEGACY_COUNT[ck] = _count_jobs(_db(), owner, channel, vtype)
+            except Exception as e:
+                print(f"   ⚠️ count_done A lỗi ({e})")
+                _LEGACY_COUNT[ck] = 0
+        total += _LEGACY_COUNT[ck]
     return total
 
 
