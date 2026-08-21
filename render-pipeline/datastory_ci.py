@@ -1422,6 +1422,22 @@ def opening_is_flat(mp4: str, at: float = 1.2):
     return (not flat), {"dark": round(dark, 1), "sat": round(sat, 1), "colors": cols}
 
 
+def fresh_out(out: str):
+    """XOÁ file cũ cùng tên TRƯỚC khi render — chống lẫn bản không đạt chuẩn của vòng trước.
+
+    Vì sao cần: tên file đầu ra cố định theo kênh (vd out/xxx_docshort0.mp4) nên MỖI VÒNG trong
+    cùng một phiên đều ghi đè đúng chỗ đó. Nhiều nơi lại suy ra thumbnail = <out>.jpg. Nếu vòng
+    này render/thumbnail hỏng giữa chừng mà file vòng TRƯỚC còn nằm đó, bước đẩy Drive có thể vớ
+    phải bản cũ -> video mới đăng kèm ảnh của video khác. Dọn sạch trước là hết cả lớp lỗi này."""
+    for f in (out, out.rsplit(".", 1)[0] + ".jpg", out.rsplit(".", 1)[0] + "_thumb.jpg",
+              out.rsplit(".", 1)[0] + "_open.jpg"):
+        try:
+            if os.path.exists(f):
+                os.remove(f)
+        except OSError:
+            pass
+
+
 def qc_structure(props, fps=30):
     """QC CẤU TRÚC — kiểm bằng LOGIC, không gọi API, không tốn quota.
 
@@ -1606,7 +1622,7 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix=""):
     Không gọi Gemini, không tải ảnh lại: dùng lại nguyên giọng + ảnh của phần đó -> short bám sát
     100% nội dung long, đúng rule '1 long sinh ra 3 short'.
     Trả (ok, info) — thumbnail gắn vào story['_thumb'] như make_doc."""
-    out = os.path.abspath(out)
+    out = os.path.abspath(out); fresh_out(out)      # dọn bản vòng trước, tránh lẫn
     pf = os.path.join(PUB, f"_docshort_{slug(channel)}_{prefix or '0'}.json")
     json.dump(props, open(pf, "w"))
     sok, sissues = qc_structure(props)
@@ -1664,7 +1680,7 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
     Trả (out, plan, subtopics, ok, info, parts) — parts = [{"story","props"}] để caller dựng short.
     """
     st = on_status or (lambda *a, **k: None)
-    out = os.path.abspath(out)
+    out = os.path.abspath(out); fresh_out(out)      # dọn bản vòng trước, tránh lẫn
     import key_manager as KM
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
