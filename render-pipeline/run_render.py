@@ -14,7 +14,17 @@ import firestore_bridge as FB
 import datastory_ci as DS
 
 OWNER = os.environ.get("OWNER_UID")
-PVER = os.environ.get("PIPELINE_VERSION", "v3")   # phiên bản pipeline (fix handle/tràn/che/hướng ảnh) -> dọn thông minh chỉ xóa bản CŨ
+PVER = os.environ.get("PIPELINE_VERSION", "v3")
+# pver theo ENGINE THẬT của video, không phải theo ngày: v3 = chuẩn Cinematic mới (cảnh hook footage,
+# không intro/outro, cắt 2-3s, SFX) — CHỈ engine doc/Cinematic đổi. Data-race/motif/wave4 KHÔNG đổi
+# engine hôm 21/8 -> video mới của chúng vẫn "v2" như video cũ -> "Dọn bản cũ" không bao giờ coi
+# video tốt của DATARACE là bản lỗi. Nhãn v3 chỉ dán lên thứ THẬT SỰ ra từ engine mới.
+CLASSIC_PVER = "v2"
+
+
+def _pv(fmt: str, cinematic: bool = False) -> str:
+    return PVER if (cinematic or (fmt or "").lower() == "doc") else CLASSIC_PVER
+   # phiên bản pipeline (fix handle/tràn/che/hướng ảnh) -> dọn thông minh chỉ xóa bản CŨ
 # AN TOÀN: render là làm DỰ TRỮ (kho), upload là pipeline riêng. Mỗi kênh giữ tối đa N video dự trữ
 # (khi target=0) -> KHÔNG render vô hạn làm phình Drive. Chỉnh ở render_config.reserve_long/short.
 # NGHỈ GIỮA 2 PHIÊN: trước để 30' -> máy đứng không suốt nửa tiếng sau mỗi phiên dù đã xong việc.
@@ -239,7 +249,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
         for i in range(n):
             if _stopped():
                 print(f"   ⛔ {channel}: dừng — bỏ {n - i} clip còn lại."); break
-            job = FB.new_job(OWNER, channel, "short", pver=PVER)
+            job = FB.new_job(OWNER, channel, "short", pver=_pv(fmt))
             jst = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
             out = os.path.join("out", DS.slug(channel) + f"_{fmt}{i}.mp4")
             story = ok = info = None; err = None
@@ -300,7 +310,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
     subtopics = []
     if do_long:
         # ---- LONG ---- SELF-HEAL: render lỗi -> tự thử lại NHẸ hơn (4 race -> 2).
-        ljob = FB.new_job(OWNER, channel, "long", pver=PVER)
+        ljob = FB.new_job(OWNER, channel, "long", pver=CLASSIC_PVER)
         lst = lambda s, step, **x: FB.update_job(ljob, status=s, step=step, **x)
         plan = ok = info = None; last_err = None
         resumed_long = FB.find_resumable(OWNER, channel, "long")   # CHECKPOINT: phiên trước lỗi/treo nhưng còn kịch bản
@@ -365,7 +375,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
     for i, sub in enumerate(subtopics[:n_shorts]):
         if _stopped():   # ⛔ đã xong clip trước -> ngừng, KHÔNG bắt đầu clip mới (tiết kiệm, không dở dang).
             print(f"   ⛔ {channel}: dừng theo yêu cầu — xong clip hiện tại, bỏ {n_shorts - i} short còn lại."); break
-        sjob = FB.new_job(OWNER, channel, "short", pver=PVER)
+        sjob = FB.new_job(OWNER, channel, "short", pver=CLASSIC_PVER)
         sst = lambda s, step, **x: FB.update_job(sjob, status=s, step=step, **x)
         story = sok = sinfo = None; serr = None
         resume_story = (resumed_short or {}).get("story")   # chỉ short ĐẦU tiên dùng, các short sau viết mới bình thường (chủ đề khác)
@@ -424,7 +434,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
     tăng: 1 lần lập pillar + 3 lần viết doc, dùng chung cho cả long lẫn 3 short (short dùng lại
     nguyên giọng + ảnh của phần tương ứng). Trả True nếu đã ra được long."""
     channel = ch.get("name")
-    ljob = FB.new_job(OWNER, channel, "long", pver=PVER)
+    ljob = FB.new_job(OWNER, channel, "long", pver=_pv("doc"))
     lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
     try:
         avoid = FB.recent_topics(OWNER, channel)
@@ -465,7 +475,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
     for pi, part in enumerate(parts):
         if stopped():
             print(f"   ⛔ {channel}: dừng — bỏ {len(parts) - pi} short còn lại."); break
-        sjob = FB.new_job(OWNER, channel, "short", pver=PVER)
+        sjob = FB.new_job(OWNER, channel, "short", pver=_pv("doc"))
         sst = lambda st, step, **x: FB.update_job(sjob, status=st, step=step, **x)
         try:
             sout = os.path.join("out", DS.slug(channel) + f"_docshort{pi}.mp4")
@@ -500,7 +510,7 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R):
     dùng bản Cinematic (make_doc_long, đã kiểm chứng end-to-end). Short vẫn giữ motif riêng của kênh
     -> kênh không mất bản sắc, mà vẫn đúng rule 'short đi sau long và bám nội dung long'."""
     channel = ch.get("name")
-    ljob = FB.new_job(OWNER, channel, "long", pver=PVER)
+    ljob = FB.new_job(OWNER, channel, "long", pver=_pv("", cinematic=True))
     lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
     try:
         lout = os.path.join("out", DS.slug(channel) + "_motiflong.mp4")
@@ -543,7 +553,7 @@ def _motif_shorts(ch, fmt, keys, tier, subs, cool, okcb, R, stopped, avoid):
     for i, sub in enumerate(subs):
         if stopped():
             print(f"   ⛔ {channel}: dừng — bỏ {len(subs) - i} short còn lại."); break
-        job = FB.new_job(OWNER, channel, "short", pver=PVER)
+        job = FB.new_job(OWNER, channel, "short", pver=_pv(fmt))
         jst = lambda st, step, **x: FB.update_job(job, status=st, step=step, **x)
         out = os.path.join("out", DS.slug(channel) + f"_{fmt}{i}.mp4")
         story = ok = info = None; err = None
@@ -637,7 +647,7 @@ def process_requests(keys, report):
         FB.mark_request_status(req["id"], "processing")   # KHÓA hủy: đã bắt đầu render lại
         cfg = chans.get(str(ch).upper()) or {"name": ch}
         fmt = (cfg.get("format") or "").lower()
-        job = FB.new_job(OWNER, ch, typ, pver=PVER)
+        job = FB.new_job(OWNER, ch, typ, pver=_pv(fmt))
         st = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
         cool = lambda kid, mins=90: FB.cool_key(kid, mins)   # giới hạn PHÚT -> nghỉ ngắn; quota NGÀY -> 90'
         try:
