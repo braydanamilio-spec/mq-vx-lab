@@ -34,7 +34,13 @@ const Card: React.FC<{ it: RankItem; s: number; accent: string }> = ({ it, s, ac
     background: "#0e1326", border: `2px solid ${accent}66`, borderRadius: 16, padding: it.img ? 8 : "14px 20px",
     display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: it.img ? 150 : 0, boxShadow: "0 8px 22px #0007" }}>
     {it.img ? <SafeImg src={staticFile(it.img)} style={{ width: 150, height: 104, objectFit: "cover", borderRadius: 10 }} /> : null}
-    <div style={{ color: "#fff", fontWeight: 900, fontSize: it.img ? 30 : 40, lineHeight: 1, textAlign: "center", whiteSpace: "nowrap" }}>{it.name}</div>
+    {/* Tên hạng mục do Gemini sinh, KHÔNG bị giới hạn độ dài trong schema. Trước đây để nowrap +
+        cỡ chữ cố định -> tên dài ("MCDONALD'S QUARTER POUNDER WITH CHEESE") TRÀN HẲN ra ngoài thẻ.
+        Nay: cho xuống dòng + tự thu cỡ chữ theo độ dài (giống cách ScaledShort vốn đã làm đúng). */}
+    <div style={{ color: "#fff", fontWeight: 900,
+      fontSize: Math.max(18, (it.img ? 30 : 40) - Math.max(0, String(it.name || "").length - 14) * 1.4),
+      lineHeight: 1.05, textAlign: "center", whiteSpace: "normal", overflowWrap: "break-word",
+      maxWidth: it.img ? 150 : 260 }}>{it.name}</div>
     {it.stat ? <div style={{ color: accent, fontWeight: 800, fontSize: 24 }}>{it.stat}</div> : null}
   </div>
 );
