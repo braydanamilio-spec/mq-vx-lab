@@ -164,6 +164,42 @@ def _ratio_plan(channel, want_shorts, long_target):
     return need_long, max(0, min(int(want_shorts or 0), room))
 
 
+# ── CHỐNG TRÙNG THEO CỤM NICHE (50 kênh) ────────────────────────────────────────────────────────
+# recent_topics chỉ chống trùng TRONG một kênh. Nhưng nhiều kênh chung lãnh địa (VAULTUSA và
+# LEDGERUSA đều tiền-bạc) có thể ra chủ đề gần giống nhau CÙNG NGÀY mà không ai hay — đúng
+# "reused content" mà chính sách phạt, chỉ là rải trên 2 kênh. Cụm dưới đây gom các kênh giao
+# lãnh địa; khi viết cho 1 kênh, avoid = chủ đề của CHÍNH nó (60) + của anh em cùng cụm (20/kênh,
+# tối đa 3 kênh gần nhất trong cụm). Chi phí: +≤3 lượt đọc/luồng (đã có đệm _TOPICS_CACHE).
+NICHE_CLUSTERS = [
+    {"DATARACE", "MONEYMOVES", "BROKE", "PAYCHECK", "VAULTUSA", "LEDGERUSA", "DEBTUSA", "MARGINUSA", "PRICEDUSA"},
+    {"STATEWARS", "MAPPEDUSA", "VERSUSUSA", "GRIDUSA"},
+    {"BODYUSA", "INSIDE_YOU", "PULSEUSA"},
+    {"CRIMEUSA", "FAKEUSA", "RULEDUSA", "UNSOLVED", "FILEUSA"},
+    {"EATSUSA", "FARMUSA"},
+    {"RIDEUSA", "HAULUSA", "SIGNALUSA", "MADEUSA", "BUILTUSA"},
+    {"COSMOS", "FUTUREUSA", "THEDEEP", "UNDERUSA", "UNSEENUSA"},
+    {"DISASTERUSA", "WILDUSA"},
+    {"SCREENKINGS", "BRANDEDUSA", "POWERPLAY", "EMPIREUSA"},
+    {"FIRSTUSA", "CLOCKWORKUSA", "THENNOWUSA", "RELICUSA"},
+]
+
+
+def _avoid_for(channel: str) -> list:
+    """Danh sách chủ đề cần tránh = của kênh (60) + của các kênh CÙNG CỤM (20/kênh, ≤3 kênh).
+    Cap ~120 mục để không phình prompt (tốn token đầu vào)."""
+    out = FB.recent_topics(OWNER, channel, n=60)
+    for cl in NICHE_CLUSTERS:
+        if channel in cl:
+            sibs = sorted(x for x in cl if x != channel)[:3]
+            for sb in sibs:
+                try:
+                    out = out + FB.recent_topics(OWNER, sb, n=20)
+                except Exception:
+                    pass
+            break
+    return out[-120:]
+
+
 def run_one(ch, keys, n_shorts=3, report=None):
     """1 kênh theo TEMPLATE của kênh: make_long (1 long pillar) + n_shorts SHORT dọc.
     Đọc ch['make_long'] (mặc định True) và ch['n_shorts'] (mặc định 3) do dashboard đặt."""
@@ -238,12 +274,12 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     # bằng cách cho short chạy ĐÚNG các subtopic mà long vừa kể.
                     _subs = _motif_long(ch, keys, tier, niche, n, cool, okcb, R)
                     if _subs:
-                        avoid = FB.recent_topics(OWNER, channel)
+                        avoid = _avoid_for(channel)
                         _motif_shorts(ch, fmt, keys, tier, _subs[:n], cool, okcb, R, _stopped, avoid)
                         return
         cat = niche   # ⚠️ KHÔNG dùng ch.get("category") — field đó giờ chứa mã YouTube category SỐ ("24"/"27"/"28",
                       # dashboard tự set cho brand kit), KHÔNG phải gợi ý chủ đề. Đụng nhầm = Gemini nhận "24" làm niche.
-        avoid = FB.recent_topics(OWNER, channel)
+        avoid = _avoid_for(channel)
         made_here = []
         resumed = FB.find_resumable(OWNER, channel, "short")   # CHECKPOINT: job cũ lỗi/treo nhưng còn kịch bản -> dùng lại 1 lần
         for i in range(n):
@@ -316,7 +352,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
         resumed_long = FB.find_resumable(OWNER, channel, "long")   # CHECKPOINT: phiên trước lỗi/treo nhưng còn kịch bản
         for attempt, nr in enumerate([4, 2], start=1):
             try:
-                avoid = FB.recent_topics(OWNER, channel)      # chủ đề đã dùng -> tránh trùng
+                avoid = _avoid_for(channel)      # chủ đề đã dùng CỦA KÊNH + CỤM -> tránh trùng chéo kênh
                 lout = os.path.join("out", DS.slug(channel) + "_long.mp4")
                 rck = None
                 if attempt == 1 and resumed_long:
@@ -437,7 +473,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
     ljob = FB.new_job(OWNER, channel, "long", pver=_pv("doc"))
     lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
     try:
-        avoid = FB.recent_topics(OWNER, channel)
+        avoid = _avoid_for(channel)
         lout = os.path.join("out", DS.slug(channel) + "_doclong.mp4")
         lo, plan, subs, ok, info, parts = DS.make_doc_long(
             channel, niche, lout, keys=keys, tier=tier, on_status=lst, on_limit=cool, on_ok=okcb,
@@ -516,7 +552,7 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R):
         lout = os.path.join("out", DS.slug(channel) + "_motiflong.mp4")
         lo, plan, subs, ok, info, _parts = DS.make_doc_long(
             channel, niche, lout, keys=keys, tier=tier, on_status=lst, on_limit=cool, on_ok=okcb,
-            avoid=FB.recent_topics(OWNER, channel), n_parts=max(1, n_parts),
+            avoid=_avoid_for(channel), n_parts=max(1, n_parts),
             accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"),
             ai_style=ch.get("ai_style"), ai_only=bool(ch.get("ai_only")),
             music=ch.get("music"), mode=ch.get("mode"), host_prompt=ch.get("host_prompt"))
