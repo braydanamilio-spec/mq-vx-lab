@@ -40,6 +40,72 @@ def _ckpt_json(d, cap=300_000):
 DEFAULT_AI_STYLE = "realistic, editorial-style photo illustration"
 
 
+# ── POOL KEY CHO VIỆC TỐN QUOTA ẢNH (vẽ Nano Banana) ─────────────────────────────────────────
+# Trước đây mọi lời gọi vẽ ảnh đều nhận api_key=keys[0]["key"] — TỨC LÀ CẢ PHIÊN CHỈ DÙNG ĐÚNG 1
+# KEY, trong khi phần viết kịch bản xoay đủ 56 key. Hạn mức ảnh của key đó cạn gần như ngay lập tức
+# rồi MỌI ảnh sau đều 429 -> lùi hết về nền dự phòng.
+# Số liệu thật phiên 07:11Z ngày 21/8: 0 ảnh vẽ được / 209 lần lỗi, riêng UNSEENUSA (kênh vẽ AI
+# 100%) lỗi 172/172 -> 25 video của kênh đó ra lò bằng nền chữa cháy chứ không phải ảnh AI.
+# Pool này xoay vòng key riêng cho ảnh: gặp 429 thì ĐÁNH DẤU key đó hết hạn mức ảnh (chỉ trong
+# phiên) rồi thử key kế. Tách khỏi pool của key_manager vì hết quota ẢNH không có nghĩa là key đó
+# hỏng cho việc VIẾT CHỮ (hai model, hai hạn mức khác nhau).
+_AI_POOL = {"keys": [], "dead": set()}
+
+
+def set_ai_pool(keys):
+    """Nạp danh sách key cho việc vẽ ảnh. Gọi 1 lần ở đầu mỗi make_* (nơi đã có sẵn 'keys')."""
+    _AI_POOL["keys"] = [k.get("key") for k in (keys or []) if k.get("key")]
+    _AI_POOL["dead"] = set()
+    _VIS_DEAD.clear()
+
+
+def _ai_candidates(first=""):
+    """Key để thử vẽ ảnh: key gọi vào trước (giữ hành vi cũ), rồi tới các key còn hạn mức."""
+    out = [k for k in ([first] if first else []) if k not in _AI_POOL["dead"]]
+    for k in _AI_POOL["keys"]:
+        if k not in _AI_POOL["dead"] and k not in out:
+            out.append(k)
+    return out
+
+
+def _is_quota_err(e) -> bool:
+    t = str(e)
+    return "429" in t or "RESOURCE_EXHAUSTED" in t or "exceeded your current quota" in t
+
+
+_VIS_DEAD = set()      # key đã hết hạn mức VISION trong phiên (khác hạn mức vẽ ảnh và viết chữ)
+
+
+def _vision_key(keys):
+    for k in (keys or []):
+        kk = k.get("key")
+        if kk and kk not in _VIS_DEAD:
+            return kk
+    return ((keys or [{}])[0] or {}).get("key", "")
+
+
+def _check_visual_rot(mp4, keys, tries=3, **kw):
+    """check_visual nhưng ĐỔI KEY khi gặp 429, thay vì bỏ qua QC luôn.
+
+    qc_vision fail-open: hết quota thì trả (True, {"note": "vision-skip: 429 ..."}) — video vẫn
+    lọt qua nhưng KHÔNG hề được soi. Trước đây mọi lời gọi đều dùng keys[0] nên chỉ cần key đầu
+    cạn là QC hình ảnh TẮT HẲN cho toàn bộ phần còn lại của phiên (log 21/8 đầy 'vision-skip: 429').
+    Giờ gặp 429 -> đánh dấu key đó rồi thử key kế, tối đa `tries` key để không đốt cả pool cho 1 video."""
+    import qc_vision            # import cục bộ: module này KHÔNG import qc_vision ở đầu file
+    info = {}
+    for _ in range(max(1, tries)):
+        k = _vision_key(keys)
+        if not k:
+            break
+        ok, info = qc_vision.check_visual(mp4, api_key=k, **kw)
+        note = str(info.get("note") or "")
+        if note.startswith("vision-skip") and _is_quota_err(note):
+            _VIS_DEAD.add(k)
+            continue
+        return ok, info
+    return True, (info or {"note": "vision-skip: hết key còn hạn mức"})
+
+
 def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", style=None) -> bool:
     """DỰ PHÒNG khi Openverse KHÔNG có ảnh CC0 khớp: nhờ Gemini VẼ ảnh minh hoạ (Nano Banana).
     Quota TÁCH RIÊNG khỏi quota viết kịch bản (model khác nhau) -> dùng thoải mái, không đụng key đang
@@ -47,14 +113,17 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
     caller tự lùi về fallback cũ (mosaic/cosmic bg) — KHÔNG BAO GIỜ làm crash pipeline.
     style: phong cách vẽ (vd "cinematic sci-fi concept art") — mặc định ảnh báo chí thật, đổi cho kênh
     speculative (tương lai/vũ trụ suy đoán) nơi KHÔNG có ảnh thật để so nên cần 1 gu vẽ riêng, nhất quán."""
-    if not api_key:
+    cands = _ai_candidates(api_key)
+    if not cands:
         return False
-    try:
+    last_quota = None
+    for _i, _k in enumerate(cands):
+      try:
         from google import genai as genai2
         # timeout 120s (SDK google-genai nhận ms qua http_options) — cùng lớp lỗi treo vĩnh viễn như
         # generate_content() thiếu timeout bên content_brain.py (xem GEN_OPTS ở đó): vẽ ảnh treo -> job
         # đứng im tới khi bị giết sau 6h. Có timeout -> throw -> except bên dưới trả False -> lùi fallback.
-        client = genai2.Client(api_key=api_key, http_options={"timeout": 120_000})
+        client = genai2.Client(api_key=_k, http_options={"timeout": 120_000})
         resp = client.models.generate_content(
             model=model,
             contents=f"A {style or DEFAULT_AI_STYLE} of: {prompt}. No text, no watermark, no logo.")
@@ -66,11 +135,22 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
             if data:
                 break
         if not data or len(data) < 2000 or not _is_image(data):
-            return False
+            return False          # model trả về rỗng/không phải ảnh -> đổi key cũng vô ích
         open(dest, "wb").write(data)
+        if _i:
+            print(f"   🔑 vẽ ảnh: đã xoay sang key thứ {_i + 1} (key trước hết hạn mức ảnh)")
         return True
-    except Exception as e:
-        print(f"   ⚠️ Nano Banana '{prompt[:30]}' lỗi: {str(e)[:100]}"); return False
+      except Exception as e:
+        if _is_quota_err(e):
+            _AI_POOL["dead"].add(_k)      # key này hết hạn mức ẢNH trong phiên -> thử key kế
+            last_quota = e
+            continue
+        # lỗi KHÁC (chặn nội dung, prompt hỏng, mạng) -> đổi key cũng thế, dừng luôn cho đỡ tốn
+        print(f"   ⚠️ Nano Banana '{prompt[:30]}' lỗi: {str(e)[:100]}")
+        return False
+    if last_quota is not None:
+        print(f"   ⚠️ Nano Banana '{prompt[:30]}': đã thử {len(cands)} key, tất cả hết hạn mức ảnh.")
+    return False
 
 
 def _generate_character_ref(channel, prompt, api_key) -> str | None:
@@ -655,6 +735,8 @@ def hook_bg(channel, out_video, subject, keys=None, api_key=None):
     got = frame_bg(out_video, d, rel)
     if got:
         return got, True
+    if keys:
+        set_ai_pool(keys)   # nền thumbnail cũng có thể phải nhờ Nano Banana vẽ -> cho xoay cả pool
     key = api_key or ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
     try:
         os.makedirs(d, exist_ok=True)
@@ -767,6 +849,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
         if not (api_key or os.environ.get("GEMINI_API_KEY")):
             raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
         keys = [{"id": "env", "key": api_key or os.environ["GEMINI_API_KEY"], "email": "local"}]
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -787,7 +870,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
     if ok:                                          # QC THẨM MỸ (Gemini Vision) — chống chồng chéo/xấu
         try:
             import qc_vision
-            vok, vinfo = qc_vision.check_visual(out, api_key=keys[0]["key"])
+            vok, vinfo = _check_visual_rot(out, keys)
             info["visual"] = vinfo
             if not vok:
                 ok = False
@@ -872,6 +955,7 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -943,6 +1027,7 @@ def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1016,6 +1101,7 @@ def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1088,6 +1174,7 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1189,6 +1276,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1212,7 +1300,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     if ok:
         try:
             import qc_vision
-            vok, vinfo = qc_vision.check_visual(out, api_key=keys[0]["key"])
+            vok, vinfo = _check_visual_rot(out, keys)
             info["visual"] = vinfo
             if not vok:
                 ok = False
@@ -1301,6 +1389,7 @@ def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1372,6 +1461,7 @@ def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1446,6 +1536,7 @@ def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1515,6 +1606,7 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1561,6 +1653,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     out = os.path.abspath(out)   # QUAN TRỌNG: render cwd=ENG -> path tuyệt đối (nếu không QC/enqueue tìm không ra file -> 0 giây)
     import key_manager as KM   # CB đã import ở đầu file — không cần import lại
     keys = keys or [{"id": "env", "key": api_key or os.environ["GEMINI_API_KEY"], "email": "local"}]
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     sdir = os.path.join(PUB, "narration", "_long_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     if resume_checkpoint and (resume_checkpoint.get("races") or []):
         st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
@@ -1595,7 +1688,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     if ok:
         try:
             import qc_vision
-            vok, vinfo = qc_vision.check_visual(out, api_key=keys[0]["key"])
+            vok, vinfo = _check_visual_rot(out, keys)
             info["visual"] = vinfo
             if not vok:
                 ok = False
@@ -1715,6 +1808,7 @@ def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
