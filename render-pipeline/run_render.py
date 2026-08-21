@@ -1174,6 +1174,10 @@ def channel_mode(name):
         wait = min(120, 40 * empty_streak)
         print(f"   ⏳ {name}: vòng {rounds} hết quota tạm → chờ {wait}s rồi thử KEY KHÁC (còn quota)…"); time.sleep(wait)
     print(f"✅ {name}: TỔNG {report['done']} video · {len(report['fails'])} lỗi (qua {rounds} vòng).")
+    try:
+        print("   " + FB.write_report())   # SỐ ĐO THẬT lượt ghi Firestore — khỏi ước lượng lần sau
+    except Exception:
+        pass
     # GHI số request/key hôm nay -> theo dõi quota còn free + chia đều lần sau.
     try:
         import key_manager as KM

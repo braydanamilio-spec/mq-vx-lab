@@ -103,6 +103,27 @@ def _now():
     return datetime.now(timezone.utc).isoformat()
 
 
+# ── ĐẾM LƯỢT GHI FIRESTORE (đo thật, không ước lượng) ──────────────────────────────────────────
+# Vì sao: suốt 21/8 phải ƯỚC LƯỢNG xem cái gì đốt hạn mức ghi, mỗi lần lại soi log từ đầu.
+# Có bộ đếm thì cuối mỗi phiên tự in ra con số THẬT theo từng hàm -> nhìn log là biết ngay,
+# khỏi đoán, khỏi phải điều tra lại lần sau.
+_WRITES = {"n": 0, "by": {}}
+
+
+def _cw(tag: str):
+    _WRITES["n"] += 1
+    _WRITES["by"][tag] = _WRITES["by"].get(tag, 0) + 1
+
+
+def write_report() -> str:
+    """Chuỗi 1-2 dòng tổng kết lượt ghi Firestore của tiến trình này."""
+    if not _WRITES["n"]:
+        return "🧮 Firestore: 0 lượt ghi."
+    top = sorted(_WRITES["by"].items(), key=lambda x: -x[1])[:6]
+    return ("🧮 Firestore: " + str(_WRITES["n"]) + " lượt GHI · "
+            + " · ".join(f"{k}={v}" for k, v in top))
+
+
 def _retry(fn, tries=5):
     """Thử lại khi Firestore 429/RESOURCE_EXHAUSTED (burst đọc/ghi dồn) -> KHÔNG để burst tạm chặn gate/render."""
     import time as _t
@@ -189,6 +210,7 @@ def incr_key_requests(key_id: str, n: int, today: str):
     (Nhánh sang-ngày-mới vẫn đọc-rồi-ghi vì cần biết req_date cũ để quyết định reset hay cộng dồn — hiếm khi
     2 luồng cùng trúng đúng khoảnh khắc sang ngày, rủi ro thấp hơn nhiều.)"""
     from google.cloud import firestore
+    _cw("incr_key_requests")
     ref = _db_keys().collection("gemini_keys").document(key_id)
     d = ref.get()
     x = (d.to_dict() or {}) if d.exists else {}
@@ -241,6 +263,7 @@ def cool_key(key_id: str, minutes: int = 20):
         return
     from datetime import timedelta
     until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
+    _cw("cool_key")
     _db_keys().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
     _COOLED[key_id] = until_ts
     # XOÁ ĐỆM read_keys NGAY: nếu không, tiến trình này còn dùng danh sách cũ tới 3 phút và tiếp tục
@@ -452,6 +475,7 @@ def where_am_i() -> str:
 
 def set_config(owner: str, patch: dict):
     """Ghi/merge render_config (vd xoá cờ run_now sau khi đã nhận lệnh)."""
+    _cw("set_config")
     _retry(lambda: _db_meta().collection("render_config").document(owner).set(patch, merge=True))
 
 
@@ -467,6 +491,7 @@ def save_topics(owner: str, channel: str, topics: list[str]):
     d = ref.get()
     cur = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
     cur = (cur + [t for t in topics if t])[-300:]
+    _cw("save_topics")
     ref.set({"owner": owner, "channel": channel, "topics": cur}, merge=True)
 
 
@@ -633,6 +658,7 @@ def clear_resumed(job_id: str):
 
 
 def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "") -> str:
+    _cw("new_job")
     db = _db_jobs(); ref = db.collection("render_jobs").document()
     ref.set({"owner": owner, "channel": channel, "type": vtype, "pver": pver,   # pver = phiên bản pipeline -> dọn thông minh (chỉ xóa bản CŨ)
              "status": "queued", "step": "bắt đầu", "created_at": _now()})
@@ -663,6 +689,7 @@ def update_job(job_id: str, **patch):
     # chờ tới 6h mới dám kết luận "chết" -> job ma khoá gate has_active_render() suốt 6 TIẾNG dù tiến
     # trình đã chết từ lâu (20/8: 39 job ma chặn mọi mẻ render mới). Có mốc này -> chỉ cần ~30' im lặng
     # (≈20 nhịp tim lỡ) là kết luận chết được, gate thoát nhanh hơn 12 lần.
+    _cw("update_job")
     patch = dict(patch); patch["updated_at"] = _now()
     _retry(lambda: _db_jobs().collection("render_jobs").document(job_id).set(patch, merge=True))
     # NHỊP TIM THẬT: bật/tắt theo trạng thái vừa ghi (xem _beat_loop bên dưới).
@@ -696,6 +723,7 @@ def _beat_loop():
         if not jid:
             continue
         try:
+            _cw("nhip_tim")
             _db_jobs().collection("render_jobs").document(jid).set({"updated_at": _now()}, merge=True)
         except Exception:
             pass          # mạng chập chờn -> bỏ nhịp này, nhịp sau ghi bù
