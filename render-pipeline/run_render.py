@@ -966,6 +966,19 @@ def plan_mode():
         except Exception:
             pass
     keys = FB.read_keys(OWNER)   # key SỐNG dùng được (sau health-check -> gồm key vừa hồi)
+    # CHẨN ĐOÁN QUOTA: in rõ pool còn bao nhiêu key. Sự cố 21/8: log báo "quota cạn thật" trong khi
+    # thực tế chỉ 5/56 key khả dụng — số còn lại đang NGHỈ 90' do dính 429 trước đó trong CÙNG phiên.
+    # Không có dòng này thì không phân biệt được "hết quota thật" với "pool teo vì cooldown".
+    try:
+        _all = FB.read_keys(OWNER, include_cooling=True)
+        _dead = sum(1 for k in _all if k.get("alive") is False)
+        _cool_n = len(_all) - _dead - len(keys)
+        print(f"🔑 Pool key: {len(keys)} dùng được / {len(_all)} tổng "
+              f"({_cool_n} đang nghỉ · {_dead} hỏng vĩnh viễn)")
+        if len(keys) <= 5 and len(_all) > 10:
+            print(f"   ⚠️ Chỉ {len(keys)}/{len(_all)} key khả dụng — phần lớn đang NGHỈ, không phải hết quota vĩnh viễn.")
+    except Exception:
+        pass
     if not keys:
         note = "⚠️ KHÔNG còn Gemini key SỐNG nào — thêm/thay key ở Render Studio."
         print(note)
