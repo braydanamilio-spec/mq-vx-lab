@@ -506,7 +506,16 @@ def find_resumable(owner: str, channel: str, vtype: str):
         # limit 25: hàm này chạy 36 lần/phiên (18 kênh x 2 loại). Không giới hạn thì mỗi lần quét
         # TOÀN BỘ job failed (hàng trăm) -> vài nghìn lượt đọc/phiên, thừa sức thổi bay hạn mức free.
         # Chỉ cần vài ứng viên gần nhất là đủ chọn checkpoint.
-        cands = [(d.id, d.to_dict() or {}) for d in q.limit(25).stream()]
+        # ƯU TIÊN sắp theo MỚI NHẤT rồi lấy 5 — vừa đúng thứ ta cần (checkpoint gần nhất), vừa cắt
+        # 80% lượt đọc: hàm này chạy 54 lần/phiên (18 kênh x 3 đường) nên 25 -> 5 là bớt ~1.100
+        # lượt đọc mỗi phiên. Thiếu composite index thì lùi về quét thô 25 như cũ (giống cách
+        # top_titles đã làm) -> không gãy khi index chưa tạo.
+        try:
+            from google.cloud.firestore_v1 import Query
+            cands = [(d.id, d.to_dict() or {})
+                     for d in q.order_by("created_at", direction=Query.DESCENDING).limit(5).stream()]
+        except Exception:
+            cands = [(d.id, d.to_dict() or {}) for d in q.limit(25).stream()]
         cands = [(i, j) for i, j in cands if j.get("script")]
         if not cands:
             return None

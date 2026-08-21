@@ -1559,8 +1559,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     render) -> dùng lại, bỏ qua gọi Gemini lập pillar + viết lại từng race."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out)   # QUAN TRỌNG: render cwd=ENG -> path tuyệt đối (nếu không QC/enqueue tìm không ra file -> 0 giây)
-    import key_manager as KM
-    import content_brain as CB
+    import key_manager as KM   # CB đã import ở đầu file — không cần import lại
     keys = keys or [{"id": "env", "key": api_key or os.environ["GEMINI_API_KEY"], "email": "local"}]
     sdir = os.path.join(PUB, "narration", "_long_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     if resume_checkpoint and (resume_checkpoint.get("races") or []):
