@@ -86,6 +86,20 @@ def _compose_grid(paths, cell=320, pad=6):
     return buf.getvalue(), n, cols
 
 
+def _decoy_image():
+    """Ảnh MỒI: nhiễu xám vô nghĩa — không thể 'rõ ràng là' bất kỳ chủ đề nào. Dùng để KIỂM GIÁM
+    KHẢO: model nào chấm ô này = true tức đang gật bừa (yes-bias) -> cả kết quả không đáng tin."""
+    from PIL import Image
+    import io, random
+    rnd = random.Random(7)          # cố định seed -> ảnh mồi ổn định giữa các lần chạy
+    im = Image.new("RGB", (320, 320))
+    im.putdata([(g, g, g) for g in (rnd.randint(70, 180) for _ in range(320 * 320))])
+    b = io.BytesIO(); im.save(b, "JPEG", quality=70); return b.getvalue()
+
+
+GRID_MAX = 6   # quá 6 ô model bắt đầu lẫn thứ tự ô -> chia lô, mỗi lô vẫn 1 lệnh
+
+
 def verify_grid(items, api_key=None, model_name=None):
     """KIỂM KHỚP HÀNG LOẠT — items=[(path, subject)] -> list[True/False/None] CÙNG THỨ TỰ,
     bằng ĐÚNG MỘT lệnh Vision (ý tưởng của user 21/8: ghép hết footage vào 1 ảnh rồi check 1 lần).
@@ -96,18 +110,31 @@ def verify_grid(items, api_key=None, model_name=None):
     verify_image trả None)."""
     if not items:
         return []
+    if len(items) > GRID_MAX:      # chia lô — model định vị ô kém khi lưới quá đông
+        out = []
+        for k in range(0, len(items), GRID_MAX):
+            out += verify_grid(items[k:k + GRID_MAX], api_key=api_key, model_name=model_name)
+        return out
     try:
-        data, n, cols = _compose_grid([p for p, _ in items])
+        import tempfile, os as _os
+        # Ô MỒI đặt ở CUỐI lưới với một chủ đề rất cụ thể — ảnh nhiễu không thể khớp nó.
+        _dp = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+        _dp.write(_decoy_image()); _dp.close()
+        _paths = [p for p, _ in items] + [_dp.name]
+        _subjects = [sub for _, sub in items] + ["the Golden Gate Bridge at sunset"]
+        data, n, cols = _compose_grid(_paths)
+        try: _os.remove(_dp.name)
+        except OSError: pass
         genai = CB._genai(api_key)
         akey = api_key or os.environ.get("GEMINI_API_KEY", "")
         mn = model_name or CB._pick_model(genai, "flash", akey) or "gemini-3.5-flash"
         model = genai.GenerativeModel(mn)
-        subj = "\n".join(f'{k + 1}. "{s}"' for k, (_p, s) in enumerate(items))
+        subj = "\n".join(f'{k + 1}. "{s}"' for k, s in enumerate(_subjects))
         prompt = (f"This is a contact sheet of {n} photos arranged left-to-right, top-to-bottom, "
                   f"{cols} per row, numbered 1..{n} in that order. For each photo i, decide if it "
                   f"CLEARLY and RECOGNIZABLY shows the subject listed for i:\n{subj}\n"
-                  "Generic, ambiguous or unrelated photos are false. Also false if a LARGE watermark, "
-                  "logo or text bar ruins the photo (small credits are OK). "
+                  "Generic, ambiguous or unrelated photos are false. If you are UNSURE, answer false. "
+                  "Also false if a LARGE watermark, logo or text bar ruins the photo (small credits are OK). "
                   'Return STRICT JSON only: {"matches": [true|false, ...]} with exactly '
                   + str(n) + " values, same order.")
         resp = model.generate_content([prompt, {"mime_type": "image/jpeg", "data": data}],
@@ -116,8 +143,12 @@ def verify_grid(items, api_key=None, model_name=None):
         r = CB._extract_json(resp.text) or {}
         ms = r.get("matches")
         if isinstance(ms, list) and len(ms) == n:
-            return [bool(x) for x in ms]
-        return [None] * n
+            ms = [bool(x) for x in ms]
+            if ms[-1]:                         # giám khảo chấm Ô MỒI = khớp -> đang gật bừa
+                print("   🧪 verify_grid: model chấm ô MỒI = true (yes-bias) -> loại cả kết quả, fail-open")
+                return [None] * len(items)
+            return ms[:-1]                     # bỏ ô mồi, trả đúng thứ tự items
+        return [None] * len(items)
     except Exception as e:
         _report_quota(e)
         return [None] * len(items)
