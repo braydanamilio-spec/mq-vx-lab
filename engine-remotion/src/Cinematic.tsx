@@ -181,7 +181,57 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
   const punch = 1 + 0.04 * (1 - ci(cl, 0, 7, 0, 1)); // "cắt punch" nhẹ đầu mỗi phân đoạn -> năng lượng
   if (s.type === "chapter") {
     const p = spring({ frame: l, fps: 30, config: { damping: 16 } });
-    return (<AbsoluteFill><CosmicBg f={f} /><div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity: p, transform: `scale(${0.92 + p * 0.08})` }}><div style={{ textAlign: "center", padding: "0 120px" }}><div style={{ width: 120, height: 8, background: accent, borderRadius: 6, margin: "0 auto 40px", boxShadow: `0 0 24px ${accent}` }} /><div style={{ fontSize: 120, fontWeight: 900, color: "#EAF8FF", lineHeight: 1.05, textShadow: `0 0 40px ${accent}66` }}>{(s.title || "").toUpperCase()}</div></div></div></AbsoluteFill>);
+    // NỀN: có ảnh thật -> dùng ảnh (Ken Burns nhẹ) + lớp phủ tối cho chữ nổi; không có -> CosmicBg như cũ.
+    // Cảnh MỞ ĐẦU luôn là chapter, mà thumbnail lấy đúng khung mở đầu -> trước đây mọi video ra một
+    // tấm CHỮ TRÊN NỀN ĐEN giống hệt nhau, không có footage nào. Đây là chỗ sửa gốc.
+    return (<AbsoluteFill>
+      {clip ? (<>
+        <div key={clip} style={{ position: "absolute", inset: 0, transform: `scale(${kb * punch}) translate(${panX}px, ${panY}px)` }}>
+          {isImg
+            ? <Img src={staticFile(`${slug}/clips/${clip}`)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 32%" }} />
+            : <OffthreadVideo src={staticFile(`${slug}/clips/${clip}`)} muted loop style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+        </div>
+        {/* Lớp phủ ĐỦ TỐI để chữ tiêu đề 120px luôn đọc được trên mọi ảnh (kể cả ảnh sáng/nhiều chi tiết) */}
+        <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(3,6,16,0.74) 0%, rgba(3,6,16,0.58) 42%, rgba(3,6,16,0.88) 100%)" }} />
+        <AbsoluteFill style={{ boxShadow: "inset 0 0 340px 120px rgba(0,0,0,0.55)" }} />
+      </>) : <CosmicBg f={f} />}
+      {(() => {
+        // ĐA DẠNG BỐ CỤC: 4 kiểu mở đầu, chọn theo hash tiêu đề -> mỗi video một kiểu, nhưng ỔN ĐỊNH
+        // (render lại ra y hệt). Trước đây mọi video dùng chung đúng 1 mô-típ (gạch ngang + chữ giữa)
+        // nên xem liền mấy cái là thấy lặp.
+        const t = (s.title || "").toUpperCase();
+        let h = 0; for (let k = 0; k < t.length; k++) h = (h * 31 + t.charCodeAt(k)) >>> 0;
+        const v = h % 4;
+        const rule = (w: number, mx: string) => (
+          <div style={{ width: w, height: 8, background: accent, borderRadius: 6, margin: mx, boxShadow: `0 0 24px ${accent}` }} />
+        );
+        const title = (size: number, align: "center" | "left") => (
+          <div style={{ fontSize: size, fontWeight: 900, color: "#EAF8FF", lineHeight: 1.04, textAlign: align, textShadow: `0 0 40px ${accent}66, 0 4px 24px rgba(0,0,0,.75)` }}>{t}</div>
+        );
+        const wrap = (justify: string, align: string, pad: string, inner: React.ReactNode) => (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: justify, justifyContent: "center", flexDirection: "column", padding: pad, opacity: p, transform: `scale(${0.94 + p * 0.06})` }}>
+            <div style={{ width: "100%", textAlign: align as any }}>{inner}</div>
+          </div>
+        );
+        if (v === 1)  // canh TRÁI, gạch dọc bên mép -> gu tin nhanh
+          return wrap("center", "left", "0 110px", <>
+            <div style={{ display: "flex", gap: 28 }}>
+              <div style={{ width: 10, alignSelf: "stretch", background: accent, borderRadius: 6, boxShadow: `0 0 24px ${accent}` }} />
+              {title(104, "left")}
+            </div></>);
+        if (v === 2)  // chữ dồn XUỐNG DƯỚI, gạch trên -> để lộ ảnh nền phía trên
+          return wrap("flex-end", "left", "0 110px 190px", <>
+            {rule(160, "0 0 34px")}
+            {title(100, "left")}</>);
+        if (v === 3)  // chữ dồn LÊN TRÊN, gạch dưới
+          return wrap("flex-start", "left", "230px 110px 0", <>
+            {title(100, "left")}
+            {rule(160, "34px 0 0")}</>);
+        return wrap("center", "center", "0 120px", <>   {/* v===0: kiểu giữa như cũ */}
+          {rule(120, "0 auto 40px")}
+          {title(116, "center")}</>);
+      })()}
+    </AbsoluteFill>);
   }
   return (
     <AbsoluteFill style={{ background: "#080910", isolation: "isolate" }}>

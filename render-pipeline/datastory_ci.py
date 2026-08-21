@@ -1236,17 +1236,22 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
         durF = max(48, round((dur_s + 0.5) * FPS))
         # KHÔNG truyền subs (TK trả dạng TỪ, Cinematic cần dạng CÂU) -> để engine tự tạo caption từ nar (khớp giọng đều).
         sc = {"type": kind, "audio": f"s{i}.mp3", "dur": durF, "nar": nar or "", "title": title or ""}
-        if kind != "chapter" and img_query:
+        if img_query:
             got = fetch_image(img_query, os.path.join(cdir, f"s{i}.jpg"), orient="tall", verify=vf_for(img_query),
                               ai_key=api_key, ai_style=ai_style, ai_only=ai_only)
             if got:
-                sc["clip"] = f"s{i}.jpg"
-            else:
+                sc["clip"] = f"s{i}.jpg"     # chapter cũng nhận ảnh nền (Cinematic.tsx phủ tối cho chữ nổi)
+            elif kind != "chapter":
                 sc["type"] = "chapter"; sc["title"] = title or (story.get("title") or "")  # không ảnh khớp -> cosmic bg (không dùng ảnh sai)
         scenes_out.append(sc)
 
     i = 0
-    add_scene(i, story.get("hook") or story.get("title"), "chapter", title=story.get("title")); i += 1
+    # CẢNH MỞ ĐẦU cũng lấy ẢNH THẬT làm nền, dùng img_query của cảnh 1 (sát nội dung hook nhất).
+    # Trước đây mở đầu là thẻ chữ trơn trên nền cosmic; mà thumbnail lấy đúng khung mở đầu -> mọi
+    # video ra một tấm CHỮ TRÊN NỀN ĐEN na ná nhau, không có footage nào.
+    _sc0 = (story.get("scenes") or [{}])[0]
+    add_scene(i, story.get("hook") or story.get("title"), "chapter",
+              img_query=_sc0.get("img_query"), title=story.get("title")); i += 1
     for s in (story.get("scenes") or []):
         add_scene(i, s.get("nar"), "scene", img_query=s.get("img_query"), title=s.get("title", "")); i += 1
     add_scene(i, story.get("outro") or "Follow for more.", "chapter", title=""); i += 1
