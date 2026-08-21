@@ -1094,6 +1094,10 @@ def plan_mode():
     except Exception:
         traceback.print_exc()
     try:
+        FB.sync_keys_from_a(OWNER)      # key mới thêm trên dashboard (ghi vào A) -> render thấy được
+    except Exception:
+        traceback.print_exc()
+    try:
         sweep_ai_quality(all_ch, cfg)   # xếp render lại các video ra đời khi bước vẽ ảnh AI còn hỏng
     except Exception:
         traceback.print_exc()

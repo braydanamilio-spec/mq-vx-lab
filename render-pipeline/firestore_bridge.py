@@ -330,6 +330,46 @@ _COOLED = {}   # key_id -> mốc (epoch) hết nghỉ ĐÃ GHI, để khỏi ghi
 _KEY_DATE_OK = {}   # key_id -> ngày đã xác nhận req_date (bỏ lượt đọc lặp ở incr_key_requests)
 
 
+def sync_keys_from_a(owner: str) -> int:
+    """ĐỒNG BỘ KEY MỚI A -> B, tự động mỗi phiên (gọi 1 lần trong plan).
+
+    Khe hở phát hiện 21/8: dashboard/Worker ghi key Gemini mới vào A (Worker chỉ biết A), nhưng
+    SHARD_KEYS=1 nên render đọc key từ B. read_keys chỉ lùi về A khi B RỖNG HOÀN TOÀN — nghĩa là
+    key thêm sau đợt migrate 56 key sẽ VÔ HÌNH với render vĩnh viễn, trừ khi nhớ bấm workflow
+    migrate_keys tay. User thêm key để cứu quota mà hệ không hề dùng tới.
+
+    Chi phí: 1 lượt đọc bảng A/phiên (~56 doc) + chỉ GHI key B còn thiếu (bình thường 0 ghi).
+    Ghi qua _soft -> quota chết cũng không gãy plan."""
+    if os.environ.get("SHARD_KEYS") != "1":
+        return 0
+    try:
+        db_a = _db()
+        db_b = _db_jobs()
+        if db_a is db_b:
+            return 0
+        _cr("sync_keys_A", 56)
+        have = {d.id for d in db_b.collection("gemini_keys").where("owner", "==", owner).stream()}
+        _cr("sync_keys_B", 56)
+        added = 0
+        for d in db_a.collection("gemini_keys").where("owner", "==", owner).stream():
+            if d.id in have:
+                continue
+            x = d.to_dict() or {}
+            if not x.get("key"):
+                continue
+            _cw("sync_keys")
+            _soft(lambda _id=d.id, _x=x: db_b.collection("gemini_keys").document(_id).set(_x, merge=True),
+                  "sync_keys")
+            added += 1
+        if added:
+            _KEYS_CACHE.clear()
+            print(f"   🔑 Đồng bộ {added} key MỚI từ A sang B (dashboard thêm sau đợt migrate).")
+        return added
+    except Exception as e:
+        print(f"   ⚠️ sync_keys A->B lỗi (bỏ qua): {str(e)[:80]}")
+        return 0
+
+
 def cool_key(key_id: str, minutes: int = 20):
     """Đánh dấu key nghỉ N phút sau khi bị 429/quota (chống hammer -> chống die).
 
