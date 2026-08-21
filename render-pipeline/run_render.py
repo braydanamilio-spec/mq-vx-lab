@@ -189,13 +189,25 @@ def run_one(ch, keys, n_shorts=3, report=None):
         # Kênh doc-format trước đây rẽ thẳng vào nhánh CHỈ-SHORT nên ra "0 long · 3 short" — sai mô
         # hình. Giờ nếu kênh còn thiếu long thì dựng LONG trước, và 3 short được đẻ ra từ ĐÚNG các
         # phần của long đó (dùng lại giọng + ảnh, KHÔNG gọi thêm Gemini).
-        if fmt == "doc" and ch.get("make_long", True):
+        if ch.get("make_long", True):
             _lt = int(ch.get("long_target", 0) or 0) or RESERVE_LONG
             if FB.count_done(OWNER, channel, "long") < _lt:
-                made = _doc_long_then_shorts(ch, keys, tier, niche, n, cool, okcb, R, _stopped)
-                if made:
-                    return          # phiên này đã ra long + short bám nội dung -> xong
-                print(f"   ↩️ {channel}: long doc không đạt — quay về làm short rời phiên này.")
+                if fmt == "doc":
+                    # Kênh doc: short DÙNG LẠI luôn props từng phần của long -> khớp 100%, 0 thêm Gemini.
+                    if _doc_long_then_shorts(ch, keys, tier, niche, n, cool, okcb, R, _stopped):
+                        return
+                    print(f"   ↩️ {channel}: long doc không đạt — quay về làm short rời phiên này.")
+                else:
+                    # Kênh motif (swarm/pulse/ranked/...): component của chúng ép cứng khổ DỌC
+                    # (SwarmShort đặt width/height ngay trong calculateMetadata, PulseShort có hằng
+                    # W/H) — ép sang 16:9 sẽ ra long vỡ bố cục. Nên long dùng bản Cinematic 16:9
+                    # (đã kiểm chứng), còn SHORT giữ nguyên motif riêng của kênh. Ràng buộc nội dung
+                    # bằng cách cho short chạy ĐÚNG các subtopic mà long vừa kể.
+                    _subs = _motif_long(ch, keys, tier, niche, n, cool, okcb, R)
+                    if _subs:
+                        avoid = FB.recent_topics(OWNER, channel)
+                        _motif_shorts(ch, fmt, keys, tier, _subs[:n], cool, okcb, R, _stopped, avoid)
+                        return
         cat = niche   # ⚠️ KHÔNG dùng ch.get("category") — field đó giờ chứa mã YouTube category SỐ ("24"/"27"/"28",
                       # dashboard tự set cho brand kit), KHÔNG phải gợi ý chủ đề. Đụng nhầm = Gemini nhận "24" làm niche.
         avoid = FB.recent_topics(OWNER, channel)
@@ -451,6 +463,88 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
             script=_script_json(st_))
         R["done"] += 1
     return True
+
+
+def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R):
+    """LONG 16:9 cho kênh MOTIF. Trả list subtopic để short chạy đúng nội dung đó, hoặc [] nếu hỏng.
+
+    Component motif (SwarmShort/PulseShort/...) ép cứng khổ DỌC nên không render 16:9 được -> long
+    dùng bản Cinematic (make_doc_long, đã kiểm chứng end-to-end). Short vẫn giữ motif riêng của kênh
+    -> kênh không mất bản sắc, mà vẫn đúng rule 'short đi sau long và bám nội dung long'."""
+    channel = ch.get("name")
+    ljob = FB.new_job(OWNER, channel, "long", pver=PVER)
+    lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
+    try:
+        lout = os.path.join("out", DS.slug(channel) + "_motiflong.mp4")
+        lo, plan, subs, ok, info, _parts = DS.make_doc_long(
+            channel, niche, lout, keys=keys, tier=tier, on_status=lst, on_limit=cool, on_ok=okcb,
+            avoid=FB.recent_topics(OWNER, channel), n_parts=max(1, n_parts),
+            accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"),
+            ai_style=ch.get("ai_style"), ai_only=bool(ch.get("ai_only")),
+            music=ch.get("music"), mode=ch.get("mode"), host_prompt=ch.get("host_prompt"))
+    except (Exception, SystemExit) as e:
+        traceback.print_exc()
+        if _is_ratelimit(e):
+            lst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1
+        else:
+            lst("failed", f"LONG motif lỗi: {str(e)[:120]}"); R["fails"].append(f"{channel} LONG: {str(e)[:100]}")
+        return []
+    if subs:
+        FB.save_topics(OWNER, channel, subs)
+    if not ok:
+        lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
+        return []
+    eq = enqueue_drive(channel, lo, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
+                                     "description": plan.get("hook", ""),
+                                     "sources": plan.get("sources") or [],
+                                     "_thumb": (info or {}).get("thumb")}, "long")
+    did = (eq or {}).get("id")
+    lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
+        score=(info or {}).get("score"), dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0),
+        res=(info or {}).get("res", ""), drive_id=did or "", drive_account=(eq or {}).get("account", ""),
+        thumb_id=(eq or {}).get("thumb_id", ""),
+        preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+        script=_script_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"), "parts": subs}))
+    R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
+    return subs
+
+
+def _motif_shorts(ch, fmt, keys, tier, subs, cool, okcb, R, stopped, avoid):
+    """SHORT theo motif riêng của kênh, chạy ĐÚNG các subtopic mà long vừa kể -> bám nội dung long."""
+    channel = ch.get("name")
+    for i, sub in enumerate(subs):
+        if stopped():
+            print(f"   ⛔ {channel}: dừng — bỏ {len(subs) - i} short còn lại."); break
+        job = FB.new_job(OWNER, channel, "short", pver=PVER)
+        jst = lambda st, step, **x: FB.update_job(job, status=st, step=step, **x)
+        out = os.path.join("out", DS.slug(channel) + f"_{fmt}{i}.mp4")
+        story = ok = info = None; err = None
+        for att in (1, 2):
+            try:
+                if att > 1:
+                    jst("running", "🔧 Tự thử lại short…")
+                _, story, ok, info = _dispatch_short(ch, fmt, sub, out, keys, tier, jst, cool, okcb,
+                                                     resume_story=None, avoid=avoid)
+                err = None; break
+            except (Exception, SystemExit) as e:
+                err = e; traceback.print_exc()
+                print(f"   🔧 SHORT {channel}#{i} lỗi lần {att}: {str(e)[:100]}")
+        if err is not None and _is_ratelimit(err):
+            jst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1; continue
+        if err is not None:
+            jst("failed", f"Tự thử lại vẫn lỗi: {str(err)[:110]}"); R["fails"].append(f"{channel} SHORT {i}: {str(err)[:100]}"); continue
+        if not ok:
+            jst("failed", f"QC trượt: {info}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt"); continue
+        eq = enqueue_drive(channel, out, story, "short")
+        did = (eq or {}).get("id")
+        jst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)",
+            title=story.get("title_yt") or story.get("title"), score=(info or {}).get("score"),
+            dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0),
+            res=(info or {}).get("res", ""), drive_id=did or "", drive_account=(eq or {}).get("account", ""),
+            thumb_id=(eq or {}).get("thumb_id", ""),
+            preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+            script=_script_json(story))
+        R["done"] += 1
 
 
 def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story=None, avoid=None):
