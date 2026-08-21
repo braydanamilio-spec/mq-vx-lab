@@ -56,7 +56,7 @@ def top_titles(owner: str, channel: str, n: int = 8) -> list[str]:
     """Tiêu đề N video ĐÃ ĐĂNG xem nhiều nhất của kênh -> đưa vào prompt Gemini làm gợi ý
     "phong cách/góc độ đang ăn khách" (KHÔNG lặp chủ đề, chỉ học GU khán giả thật).
     Rỗng nếu chưa có creds C / chưa có video nào đăng (điều bình thường tới khi user kết nối YouTube)."""
-    _cr("top_titles", 60)
+    _cr("top_titles", n)   # limit(n) — trước ghi 60 là ĐẾM SAI (máy đo phải đúng trước tiên)
     db = _db_pub()
     if db is None:
         return []

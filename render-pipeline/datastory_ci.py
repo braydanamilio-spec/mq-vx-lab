@@ -1300,11 +1300,16 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
             # THỬ LẦN LƯỢT nhiều truy vấn: cảnh mở đầu BẮT BUỘC phải có ảnh thật, không được rơi
             # về nền trơn. Openverse trượt từ khoá này thì thử từ khoá khác trước khi bỏ cuộc.
             got = None
+            # NGÂN SÁCH VISION THEO VAI TRÒ CẢNH: cảnh MỞ ĐẦU là mặt tiền (thumbnail + 3s giữ chân)
+            # -> đáng 4 lượt kiểm/ứng viên. Cảnh sau là b-roll lướt ~2.6s, đã qua lọc từ khoá +
+            # lọc deterministic -> 2 lượt là đủ. Ở 1.000 video/ngày, riêng chỗ này cắt ~nửa số
+            # lệnh gọi Vision (mục ăn Gemini lớn nhất toàn pipeline).
+            _mc = 4 if i == 0 else 2
             for _q in [img_query] + list(alt_queries or []):
                 if not _q:
                     continue
                 got = fetch_image(_q, os.path.join(cdir, f"{prefix}s{i}.jpg"), orient="tall", verify=vf_for(_q),
-                                  ai_key=api_key, ai_style=ai_style, ai_only=ai_only, extra=extra_paths)
+                                  max_check=_mc, ai_key=api_key, ai_style=ai_style, ai_only=ai_only, extra=extra_paths)
                 if got:
                     break
             if got:
