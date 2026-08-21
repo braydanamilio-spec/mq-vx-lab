@@ -241,3 +241,27 @@ Cơ chế tự chữa lỗi + quy trình diagnose + lỗi đã gặp: **`ERROR_P
 2. Mở dashboard → tab Render Studio: chỉnh kênh/target → bấm chạy, hoặc để cron tự chạy.
 3. Cần đổi cách làm 1 kênh: sửa engine/`datastory_ci.py`; nội dung: sửa `content_brain.py` + Secret prompt.
 4. Bug/đổi mới → ghi vào `PIPELINE_RULES.md`. Đổi cấu trúc kênh/method → cập nhật file NÀY.
+
+
+## 🌟 WAVE 8 — 10 kênh doc-format mới (21/8, chuẩn pipeline ĐÃ KIỂM CHỨNG)
+Method: format="doc" -> tự vào luồng chuẩn: **1 long (3 phần) + 3 short bám nội dung long** ·
+cảnh hook footage thật (cấm chữ-nền-đen, 2 cổng chặn) · cắt 2-3s · SFX · không intro/outro/CTA ·
+thumbnail khung hook · verify ảnh theo lưới + ô mồi · 3 pool key xoay theo kênh.
+Niche nhạy cảm có sẵn câu STRICT (policy_lint pass 10/10). Data: `render-pipeline/wave8_channels.json`.
+Seed: workflow `seed_channels.yml` (dry-run trước). Brand: brands.json (màu/handle duy nhất toàn 50 kênh).
+
+| Kênh | Niche 1 dòng | Giọng | Màu |
+|---|---|---|---|
+| MADEUSA | đồ Mỹ được sản xuất thế nào (nhà máy/quy trình) | Davis | #E76F51 |
+| BUILTUSA | siêu công trình & kỳ quan kỹ thuật Mỹ | Tony | #457B9D |
+| UNDERUSA | dưới lòng nước Mỹ: hầm/hang/ống (tài liệu công khai) | Jason | #5E548E |
+| RELICUSA | nước Mỹ bỏ hoang & vì sao (cấm cổ vũ trespass) | Aria | #8D6A4F |
+| FIRSTUSA | những "lần đầu tiên" của nước Mỹ (mốc lịch sử thật) | Jenny | #B22234 |
+| BRANDEDUSA | chuyện gốc logo/thương hiệu Mỹ (chỉ sử liệu) | Nancy | #111827 |
+| PRICEDUSA | giải phẫu giá: mỗi đô-la của ly latte đi đâu | Brandon | #0F766E |
+| HAULUSA | hàng hoá di chuyển khắp Mỹ: cảng/rail/truck | Christopher | #CA8A04 |
+| FAKEUSA | hàng giả & scam bị bóc bằng data FTC/CBP (cấm how-to) | Amber | #DC2626 |
+| FARMUSA | thức ăn Mỹ đến từ đâu: nông trại quy mô (USDA) | Roger | #65A30D |
+
+Khác biệt với 42 kênh cũ: không kênh nào trùng lãnh địa (manufacturing/engineering/underground/
+abandoned/firsts/brand-origin/price-anatomy/logistics/anti-scam/agriculture đều là đất mới).

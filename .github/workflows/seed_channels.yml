@@ -1,15 +1,17 @@
-name: MM0 Seed New Channels (-> B)
+name: MM0 Seed Channels Wave 8 (một lần, chạy tay)
 
-# Tạo doc render_channels cho 10 kênh mới trên Project B. Idempotent. Mặc định dry-run.
+# Ghi 10 kênh Wave 8 vào render_channels (Project B). Data: render-pipeline/wave8_channels.json.
+# Chạy dry_run=true trước để xem, rồi chạy thật. set merge=True nên chạy lại không hỏng gì.
+
 on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "1 = chỉ xem (không ghi); 0 = tạo thật"
-        default: "1"
-      script:
-        description: "Script seed cần chạy"
-        default: "render-pipeline/seed_new_channels.py"
+        description: "Chạy thử — chỉ liệt kê, không ghi"
+        type: boolean
+        default: true
+
+concurrency: { group: mm0-seed-channels, cancel-in-progress: false }
 
 jobs:
   seed:
@@ -19,18 +21,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - name: Deps
+      - name: Python deps
         run: pip install --quiet google-cloud-firestore google-auth
-      - name: SA file (B)
-        run: echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
-      - name: Seed
+      - name: Service accounts
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+          echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+      - name: Seed Wave 8
         env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          SHARD_META: ${{ vars.SHARD_META }}
           OWNER_UID: ${{ secrets.OWNER_UID }}
         run: |
-          if [ "${{ github.event.inputs.dry_run }}" = "0" ]; then
-            python "${{ github.event.inputs.script }}"
-          else
-            python "${{ github.event.inputs.script }}" --dry-run
-          fi
+          ARGS=""
+          if [ "${{ github.event.inputs.dry_run }}" != "false" ]; then ARGS="--dry-run"; fi
+          python render-pipeline/seed_channels_wave8.py $ARGS
