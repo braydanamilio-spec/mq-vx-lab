@@ -122,6 +122,33 @@ def _cr(tag: str, n: int = 1):
     _READS["by"][tag] = _READS["by"].get(tag, 0) + n
 
 
+def flush_soft() -> int:
+    """XẢ các lượt ghi quan trọng bị rơi lúc tắt-ghi (job done/new/topics). Gọi CUỐI LUỒNG —
+    lúc đó cửa sổ 20' thường đã qua hoặc quota vừa hồi. Không xả được thì thôi (phiên sau
+    Health Guardian/target tự cân), nhưng phần lớn trường hợp cứu được count_done khỏi đếm thiếu
+    -> không LÀM DƯ video. Trả số lượt xả thành công."""
+    import time as _t
+    if not _PENDING:
+        return 0
+    if _t.time() < _WQ_DEAD["until"]:
+        # thử 1 lượt thăm dò: quota có khi đã hồi trước hạn
+        fn, tag = _PENDING[0]
+        try:
+            _retry(fn, tries=1); _PENDING.pop(0); _WQ_DEAD["until"] = 0
+        except Exception:
+            return 0
+    ok = 0
+    while _PENDING:
+        fn, tag = _PENDING.pop(0)
+        try:
+            _retry(fn, tries=2); ok += 1; _cw(f"xả:{tag}")
+        except Exception:
+            _PENDING.insert(0, (fn, tag)); break
+    if ok:
+        print(f"   💾 Đã xả lại {ok} lượt ghi bị hoãn (job/topics) — count_done không đếm thiếu.")
+    return ok
+
+
 def write_report() -> str:
     """Chuỗi 1-2 dòng tổng kết lượt ghi Firestore của tiến trình này."""
     if not _WRITES["n"]:
@@ -159,6 +186,9 @@ KEYS_TTL = 180        # giây
 # chạy tiếp. Cái giá: dashboard mù tạm thời + mất checkpoint resume trong 20' — rẻ hơn vô hạn so
 # với 0 video.
 _WQ_DEAD = {"until": 0.0, "warned": False}
+_PENDING = []   # các lượt ghi QUAN TRỌNG bị rơi trong cửa sổ tắt-ghi -> xả lại cuối luồng
+_PENDING_TAGS = ("update_job", "new_job", "save_topics")   # mất done-write là count_done đếm thiếu -> LÀM DƯ video
+_PENDING_CAP = 300
 
 
 def _wq_exhausted(e) -> bool:
@@ -172,12 +202,16 @@ def _soft(fn, tag: str):
     import time as _t
     if _t.time() < _WQ_DEAD["until"]:
         _WRITES["by"]["(bỏ-vì-quota)"] = _WRITES["by"].get("(bỏ-vì-quota)", 0) + 1
+        if tag in _PENDING_TAGS and len(_PENDING) < _PENDING_CAP:
+            _PENDING.append((fn, tag))     # set(merge) idempotent -> xả lại sau an toàn
         return None
     try:
         return _retry(fn, tries=2)
     except Exception as e:
         if _wq_exhausted(e):
             _WQ_DEAD["until"] = _t.time() + 20 * 60
+            if tag in _PENDING_TAGS and len(_PENDING) < _PENDING_CAP:
+                _PENDING.append((fn, tag))
             if not _WQ_DEAD["warned"]:
                 _WQ_DEAD["warned"] = True
                 print(f"🩹 Firestore HẾT HẠN MỨC GHI ({tag}) -> tắt ghi telemetry 20', SẢN XUẤT CHẠY TIẾP. "

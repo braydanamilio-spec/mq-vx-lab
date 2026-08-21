@@ -1175,6 +1175,7 @@ def channel_mode(name):
         print(f"   ⏳ {name}: vòng {rounds} hết quota tạm → chờ {wait}s rồi thử KEY KHÁC (còn quota)…"); time.sleep(wait)
     print(f"✅ {name}: TỔNG {report['done']} video · {len(report['fails'])} lỗi (qua {rounds} vòng).")
     try:
+        FB.flush_soft()                    # xả ghi done/topics bị hoãn -> count_done không đếm thiếu
         print("   " + FB.write_report())   # SỐ ĐO THẬT lượt ghi Firestore — khỏi ước lượng lần sau
     except Exception:
         pass
