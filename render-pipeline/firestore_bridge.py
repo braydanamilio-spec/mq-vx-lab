@@ -531,7 +531,12 @@ def update_job(job_id: str, **patch):
     st = patch.get("status")
     if st not in ("done", "failed", "ratelimited"):
         now = _t.time()
-        if now - _LAST_JOB_WRITE.get(job_id, 0) < 90:
+        # HÃM 5 PHÚT (trước 90s). Tính thật: ở đỉnh 172 video/giờ, mỗi video ~7 lượt ghi -> 28.896
+        # lượt/ngày trong khi gói FREE chỉ cho 20.000 -> cạn sau ~16 tiếng, đúng sự cố 20/8. Phần
+        # lớn số đó là các mốc trạng thái trung gian (writing/rendering/qc) chỉ để dashboard nhìn
+        # cho đẹp. Hãm 5' cắt gần hết chúng mà KHÔNG mất gì: nhịp tim (cũng 5') vẫn báo job còn
+        # sống, còn done/failed thì LUÔN ghi ngay không qua hãm.
+        if now - _LAST_JOB_WRITE.get(job_id, 0) < 300:
             return
         _LAST_JOB_WRITE[job_id] = now
     # ĐÓNG DẤU THỜI GIAN mỗi lần ghi = NHỊP TIM có mốc. Trước đây job có nhịp tim (ghi lại mỗi ~90s)
