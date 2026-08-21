@@ -610,7 +610,7 @@ def gate_mode():
 # Mốc bản vá xoay key vẽ ảnh (commit "Ve anh AI + Vision QC xoay vong 56 key"). Video của kênh
 # ai_only tạo TRƯỚC mốc này ra đời khi MỌI lời gọi vẽ ảnh đều 429 -> mọi cảnh bị hạ xuống thẻ chữ
 # nền cosmic, không có ảnh nào. Đo thật: 0 ảnh vẽ được / 209 lần lỗi (21/8) và 0/158 (20/8).
-AI_IMG_FIXED_AT = "2026-08-21T11:30:00+00:00"
+AI_IMG_FIXED_AT = "2026-08-21T12:30:00+00:00"
 SWEEP_PER_SESSION = 12      # trần mỗi phiên: render lại vẫn tốn thời gian, không để nó nuốt cả mẻ mới
 
 
@@ -623,7 +623,11 @@ def sweep_ai_quality(all_ch, cfg):
     Rải tối đa SWEEP_PER_SESSION mỗi phiên cho tới hết, rồi tự tắt bằng cờ trong config."""
     if cfg.get("ai_img_sweep_done"):
         return
-    targets = [c for c in all_ch if c.get("ai_only") and c.get("name")]
+    # MỌI kênh doc-format đều dính, không riêng kênh vẽ AI: bản cũ dựng 2 thẻ chữ (intro/outro),
+    # cảnh mở đầu không có footage, và mỗi cảnh đứng yên 1 ảnh 6-8s. ai_only nặng nhất (0 ảnh nào)
+    # nhưng kênh doc thường cũng không đạt chuẩn DATARACE -> quét hết.
+    targets = [c for c in all_ch
+               if c.get("name") and (c.get("ai_only") or (c.get("format") or "").lower() == "doc")]
     if not targets:
         FB.set_config(OWNER, {"ai_img_sweep_done": True}); return
     pending = {r.get("replace_id") for r in FB.read_render_requests(OWNER) if r.get("replace_id")}
@@ -645,10 +649,10 @@ def sweep_ai_quality(all_ch, cfg):
             if made >= SWEEP_PER_SESSION:
                 break
     if made:
-        print(f"   ♻️ Xếp render lại {made} video chưa đạt chuẩn (kênh vẽ ảnh AI) — phiên sau xử lý.")
+        print(f"   ♻️ Xếp render lại {made} video chưa đạt chuẩn (kênh doc-format) — phiên sau xử lý.")
     elif not seen_any:
         FB.set_config(OWNER, {"ai_img_sweep_done": True})
-        print("   ✅ Đã xử lý xong toàn bộ video tồn của kênh vẽ ảnh AI.")
+        print("   ✅ Đã xử lý xong toàn bộ video tồn chưa đạt chuẩn.")
 
 
 def plan_mode():
