@@ -186,6 +186,8 @@ gh run view <id> --repo braydanamilio-spec/mq-vx-lab --log
 
 - **Giám khảo Vision phải TỰ CHỨNG MINH đáng tin**: verify_grid chèn Ô MỒI (ảnh nhiễu + chủ đề cụ thể) cuối mỗi lưới — model chấm ô mồi = true tức đang gật bừa (yes-bias) -> loại cả kết quả, fail-open. Kèm: tối đa 6 ô/lưới (đông hơn model lẫn thứ tự), "không chắc = false". Đếm tần suất dòng 🧪 trong log = tỉ lệ giám khảo bị loại — số đo độ tin thật.
 
+- **6/10 giọng Wave 8 không tồn tại trên edge-tts** (Davis/Tony/Jason/Nancy/Brandon/Amber là Azure trả phí): bắt được nhờ kiểm `edge_tts.list_voices()` TRƯỚC khi seed — 6 kênh suýt chết ngay video đầu. LUẬT: config tham chiếu dịch vụ ngoài (tên giọng/model/API) PHẢI kiểm với danh sách SỐNG, không tin tên 'nghe quen'.
+
 > **🔴 NGUYÊN NHÂN GỐC CHUNG của 15 bug trên — đọc kỹ, đừng lặp lại:**
 > 1. **Bám `keys[0]`** — 3 khâu riêng biệt (vẽ ảnh · Vision QC · kiểm khớp ảnh) đều mắc CÙNG lỗi này, và em fix từng cái một qua 3 lần thay vì rà cả lớp ngay lần đầu. **Hễ sửa một chỗ bám `keys[0]`, PHẢI `grep -n "keys\[0\]" *.py` rà hết.**
 > 2. **Lỗi bị try/except nuốt** — sync kho hỏng nhiều ngày, key rotation là code chết, vision fail-open âm thầm. **Mọi `except` bọc bước QUAN TRỌNG phải in ra, và phải có phép đo (đếm/log số) chứ không chỉ "không thấy lỗi".**
