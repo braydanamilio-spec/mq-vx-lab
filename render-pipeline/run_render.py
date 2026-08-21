@@ -906,12 +906,48 @@ def policy_lint(all_ch):
                 flags.append(f"{nm} ({label}: cần '{want}')")
                 break
     if flags:
-        print(f"   🛡️ CHÍNH SÁCH: {len(flags)} kênh nhạy cảm CHƯA có rào chắn trong niche -> thêm câu STRICT:")
+        print(f"   🛡️ CHÍNH SÁCH: {len(flags)} kênh nhạy cảm CHƯA có rào chắn trong niche -> TỰ VÁ:")
         for f_ in flags:
             print(f"      ⚠️ {f_}")
     else:
         print("   🛡️ CHÍNH SÁCH: mọi kênh nhạy cảm đều có rào chắn trong niche.")
     return flags
+
+
+# Câu STRICT chuẩn theo nhóm rủi ro — máy TỰ NỐI vào niche khi lint phát hiện thiếu (đêm 21/8
+# lint chỉ ra 6 kênh: GRIDIRON/DATARACE/LEDGERUSA tài chính, MAPPEDUSA/BODYUSA sức khoẻ,
+# STATEWARS crime). Để danh sách nằm chờ người sửa là kiểu lỗi "rule không có cổng chặn" —
+# nên vá luôn bằng máy: ghi mềm, quota chết thì phiên sau tự làm lại.
+_GUARD_SENTENCE = {
+    "crime":     " STRICT: statistics and documented facts only; no graphic detail, no victim identification, no glorification.",
+    "thảm hoạ":  " STRICT: factual causes and data only; no victim detail or sensationalized tragedy.",
+    "quân sự":   " STRICT: capability, budgets and documented facts only; never glorify violence.",
+    "tài chính": " STRICT: real figures from cited public sources; illustrative only, never personal financial advice.",
+    "sức khoẻ":  " STRICT: educational information only, not medical advice; cite real studies/agencies.",
+}
+
+
+def policy_autofix(all_ch, flags):
+    """Nối câu STRICT chuẩn vào niche của kênh bị lint gắn cờ. Ghi qua _soft -> không bao giờ
+    làm gãy plan; ghi xong thì phiên sau lint tự im (niche đã có STRICT)."""
+    if not flags:
+        return 0
+    by_name = {c.get("name"): c for c in all_ch}
+    fixed = 0
+    for f_ in flags:
+        nm = f_.split(" (")[0]
+        label = f_.split("(")[1].split(":")[0] if "(" in f_ else ""
+        c = by_name.get(nm)
+        guard = _GUARD_SENTENCE.get(label)
+        if not (c and guard) or "strict" in str(c.get("niche", "")).lower():
+            continue
+        new_niche = (str(c.get("niche") or "").rstrip(". ") + "." + guard)
+        FB._soft(lambda _n=nm, _v=new_niche: FB._db_meta().collection("render_channels")
+                 .document(f"{OWNER}__{_n}").set({"niche": _v}, merge=True), "policy_autofix")
+        fixed += 1
+    if fixed:
+        print(f"   🛡️ Đã gửi bản vá STRICT cho {fixed} kênh (ghi mềm — quota chết thì phiên sau tự ghi lại).")
+    return fixed
 
 
 def sweep_ai_quality(all_ch, cfg):
@@ -1129,7 +1165,8 @@ def plan_mode():
         traceback.print_exc()
     all_ch = [c for c in FB.read_channels(OWNER) if c.get("name")]
     try:
-        policy_lint(all_ch)             # audit chính sách 40 kênh tự động (0 quota)
+        _pf = policy_lint(all_ch)       # audit chính sách tự động (0 quota)
+        policy_autofix(all_ch, _pf)     # thiếu rào chắn -> máy tự nối câu STRICT chuẩn
     except Exception:
         traceback.print_exc()
     try:
