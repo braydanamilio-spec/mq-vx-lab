@@ -14,7 +14,7 @@ import firestore_bridge as FB
 import datastory_ci as DS
 
 OWNER = os.environ.get("OWNER_UID")
-PVER = os.environ.get("PIPELINE_VERSION", "v2")   # phiên bản pipeline (fix handle/tràn/che/hướng ảnh) -> dọn thông minh chỉ xóa bản CŨ
+PVER = os.environ.get("PIPELINE_VERSION", "v3")   # phiên bản pipeline (fix handle/tràn/che/hướng ảnh) -> dọn thông minh chỉ xóa bản CŨ
 # AN TOÀN: render là làm DỰ TRỮ (kho), upload là pipeline riêng. Mỗi kênh giữ tối đa N video dự trữ
 # (khi target=0) -> KHÔNG render vô hạn làm phình Drive. Chỉnh ở render_config.reserve_long/short.
 # NGHỈ GIỮA 2 PHIÊN: trước để 30' -> máy đứng không suốt nửa tiếng sau mỗi phiên dù đã xong việc.

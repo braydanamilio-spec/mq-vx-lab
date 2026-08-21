@@ -110,7 +110,7 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
           FORCE: ${{ github.event.inputs.force }}
-          PIPELINE_VERSION: "v2"
+          PIPELINE_VERSION: "v3"   # v3 = chuẩn 21/8: cảnh hook footage thật, KHÔNG intro/outro, cắt 2-3s, SFX, thumbnail khung hook. Bump theo luật 4c: video v2 (chuẩn cũ) giờ phân biệt được với v3 -> "Dọn bản cũ" trên dashboard xoá đúng đám cũ, không đụng bản mới.
         run: python render-pipeline/run_render.py --plan
 
   # ── RENDER SONG SONG: mỗi kênh 1 luồng (tối đa 10 cùng lúc), video rải đều 33 kho ────────────
@@ -197,7 +197,7 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
-          PIPELINE_VERSION: "v2"
+          PIPELINE_VERSION: "v3"   # v3 = chuẩn 21/8: cảnh hook footage thật, KHÔNG intro/outro, cắt 2-3s, SFX, thumbnail khung hook. Bump theo luật 4c: video v2 (chuẩn cũ) giờ phân biệt được với v3 -> "Dọn bản cũ" trên dashboard xoá đúng đám cũ, không đụng bản mới.
         run: python render-pipeline/run_render.py --channel "${{ matrix.channel }}"
       - name: Backup video (nếu chưa đẩy Drive được)
         if: always()

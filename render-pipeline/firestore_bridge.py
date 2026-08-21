@@ -56,6 +56,7 @@ def top_titles(owner: str, channel: str, n: int = 8) -> list[str]:
     """Tiêu đề N video ĐÃ ĐĂNG xem nhiều nhất của kênh -> đưa vào prompt Gemini làm gợi ý
     "phong cách/góc độ đang ăn khách" (KHÔNG lặp chủ đề, chỉ học GU khán giả thật).
     Rỗng nếu chưa có creds C / chưa có video nào đăng (điều bình thường tới khi user kết nối YouTube)."""
+    _cr("top_titles", 60)
     db = _db_pub()
     if db is None:
         return []
@@ -310,6 +311,7 @@ def drive_usage(owner: str):
 
 
 def read_channels(owner: str) -> list[dict]:
+    _cr("read_channels", 40)
     def _do():
         db = _db_meta(); out = []
         for d in db.collection("render_channels").where("owner", "==", owner).stream():
@@ -333,6 +335,7 @@ def read_one_channel(owner: str, name: str) -> dict | None:
 
 
 def read_config(owner: str) -> dict:
+    _cr("read_config", 1)
     def _do():
         d = _db_meta().collection("render_config").document(owner).get()
         return (d.to_dict() or {}) if d.exists else {}
@@ -341,6 +344,7 @@ def read_config(owner: str) -> dict:
 
 def read_render_requests(owner: str) -> list[dict]:
     """Yêu cầu RENDER LẠI (từ nút 🔄 trên dashboard) đang chờ xử lý."""
+    _cr("read_render_requests", 5)
     db = _db_meta(); out = []
     # limit 40: hàng đợi yêu cầu render lại hiếm khi dài; chặn để lỡ sai điều kiện cũng không quét cả bảng.
     for d in db.collection("render_requests").where("owner", "==", owner).where("status", "==", "pending").limit(40).stream():
@@ -620,6 +624,7 @@ _LEGACY_COUNT = {}     # (owner, kênh, loại) -> số job cũ ở Project A (b
 def count_done(owner: str, channel: str, vtype: str = None) -> int:
     """Đếm số video ĐÃ XONG của 1 kênh (so target). Đếm CẢ Project B (job mới) + A (job CŨ trước shard) -> không sót, không làm THỪA.
     Dùng aggregation count() = ~1 read/project."""
+    _cr("count_done", 1)
     total = 0
     try:
         total += _count_jobs(_db_jobs(), owner, channel, vtype)          # B (hoặc A nếu chưa shard)
@@ -647,6 +652,7 @@ def find_resumable(owner: str, channel: str, vtype: str):
     lệch nội dung/chủ đề đã ghi vào ngân hàng. CHỈ lấy job status='failed' (đã CHẮC CHẮN không ai còn xử
     lý — do lỗi thật hoặc Health Guardian tự đánh dấu job treo) -> an toàn, không đụng job đang chạy thật.
     Trả {'job_id', 'story'} hoặc None (không có gì để resume -> viết mới bình thường như cũ)."""
+    _cr("find_resumable", 5)
     try:
         db = _db_jobs()
         q = (db.collection("render_jobs").where("owner", "==", owner).where("channel", "==", channel)
