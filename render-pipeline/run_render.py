@@ -828,6 +828,43 @@ AI_IMG_FIXED_AT = "2026-08-21T12:30:00+00:00"
 SWEEP_PER_SESSION = 12      # trần mỗi phiên: render lại vẫn tốn thời gian, không để nó nuốt cả mẻ mới
 
 
+# Nhóm chủ đề NHẠY CẢM theo chính sách quảng cáo YouTube + rào chắn kỳ vọng trong niche prompt.
+# Máy lint này chạy trong plan (niche đã tải sẵn -> 0 quota thêm), in cảnh báo kênh thiếu rào chắn
+# — audit 40 kênh TỰ ĐỘNG mỗi phiên thay vì rà tay.
+_POLICY_RISK = {
+    "crime":     (("crime", "criminal", "heist", "murder"), "statistics/no graphic detail"),
+    "thảm hoạ":  (("disaster", "tragedy", "accident"),      "no victim detail/glorification"),
+    "quân sự":   (("defense", "military", "weapon"),        "capability/cost only, no violence"),
+    "tài chính": (("debt", "money", "invest", "tax", "finance", "profit"), "never personal financial advice"),
+    "sức khoẻ":  (("body", "health", "medical", "psycholog"), "educational only, not medical advice"),
+}
+_GUARD_WORDS = ("strict", "never", "no graphic", "not medical", "not financial", "statistics only",
+                "illustrative", "educational", "no gore", "no victim")
+
+
+def policy_lint(all_ch):
+    """Soi niche THẬT (từ Firestore) của mọi kênh: chủ đề nhạy cảm mà niche không chứa từ rào chắn
+    -> cảnh báo. Chỉ đọc dữ liệu đã có trong tay, không gọi API nào."""
+    flags = []
+    for c in all_ch:
+        nm = c.get("name") or "?"
+        niche = str(c.get("niche") or "").lower()
+        if not niche:
+            continue
+        guarded = any(g in niche for g in _GUARD_WORDS)
+        for label, (keys, want) in _POLICY_RISK.items():
+            if any(k in niche for k in keys) and not guarded:
+                flags.append(f"{nm} ({label}: cần '{want}')")
+                break
+    if flags:
+        print(f"   🛡️ CHÍNH SÁCH: {len(flags)} kênh nhạy cảm CHƯA có rào chắn trong niche -> thêm câu STRICT:")
+        for f_ in flags:
+            print(f"      ⚠️ {f_}")
+    else:
+        print("   🛡️ CHÍNH SÁCH: mọi kênh nhạy cảm đều có rào chắn trong niche.")
+    return flags
+
+
 def sweep_ai_quality(all_ch, cfg):
     """Xếp hàng render lại cho video KHÔNG ĐẠT CHUẨN của các kênh vẽ ảnh AI.
 
@@ -1042,6 +1079,10 @@ def plan_mode():
     except Exception:
         traceback.print_exc()
     all_ch = [c for c in FB.read_channels(OWNER) if c.get("name")]
+    try:
+        policy_lint(all_ch)             # audit chính sách 40 kênh tự động (0 quota)
+    except Exception:
+        traceback.print_exc()
     try:
         sweep_ai_quality(all_ch, cfg)   # xếp render lại các video ra đời khi bước vẽ ảnh AI còn hỏng
     except Exception:
