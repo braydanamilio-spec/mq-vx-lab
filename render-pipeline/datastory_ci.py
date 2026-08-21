@@ -1526,6 +1526,36 @@ def fresh_out(out: str):
             pass
 
 
+def prune_ghost_clips(props: dict):
+    """LỌC ẢNH MA khỏi props ngay trước khi ghi: mọi clip/clips phải TỒN TẠI và >1KB trên đĩa.
+
+    Vì sao (21/8): render UNSOLVED treo 7/7 lần vì Remotion chờ vô hạn một ảnh đăng ký trong props
+    nhưng không nạp được lúc render -> CPU 0% -> watchdog giết sau 6'/lần, cả lane 0 video. SafeImg
+    bên TSX đã chặn tầng render; tầng này chặn từ gốc: ảnh ma không bao giờ vào props."""
+    base = os.path.join(PUB, props.get("slug", ""), "clips")
+    def ok(f):
+        try:
+            fp = os.path.join(base, f)
+            return os.path.exists(fp) and os.path.getsize(fp) > 1000
+        except OSError:
+            return False
+    dropped = 0
+    for sc in props.get("scenes") or []:
+        cl = [c for c in (sc.get("clips") or ([sc["clip"]] if sc.get("clip") else [])) if ok(c)]
+        dropped += len(sc.get("clips") or ([sc.get("clip")] if sc.get("clip") else [])) - len(cl)
+        if cl:
+            sc["clip"] = cl[0]
+            if len(cl) > 1:
+                sc["clips"] = cl
+            else:
+                sc.pop("clips", None)
+        else:
+            sc.pop("clip", None); sc.pop("clips", None)
+    if dropped:
+        print(f"   🧹 prune_ghost_clips: bỏ {dropped} ảnh ma khỏi props (không để render chờ ảnh không tồn tại)")
+    return props
+
+
 def qc_structure(props, fps=30):
     """QC CẤU TRÚC — kiểm bằng LOGIC, không gọi API, không tốn quota.
 
@@ -1599,6 +1629,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
         print(f"   ⚠️ cấu trúc: {_it}")
     if not _sok:
         raise Exception("QC cấu trúc KHÔNG ĐẠT: " + "; ".join(_sissues))
+    prune_ghost_clips(props)
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
@@ -1712,6 +1743,7 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix=""):
     Trả (ok, info) — thumbnail gắn vào story['_thumb'] như make_doc."""
     out = os.path.abspath(out); fresh_out(out)      # dọn bản vòng trước, tránh lẫn
     pf = os.path.join(PUB, f"_docshort_{slug(channel)}_{prefix or '0'}.json")
+    prune_ghost_clips(props)
     json.dump(props, open(pf, "w"))
     sok, sissues = qc_structure(props)
     for it in sissues:
@@ -1809,6 +1841,7 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
         long_props["music"] = music
     if mode:
         long_props["mode"] = mode
+    prune_ghost_clips(long_props)
     pf = os.path.join(PUB, f"_doclong_{slug(channel)}.json"); json.dump(long_props, open(pf, "w"))
     st("rendering", f"Render LONG 16:9 ({len(all_scenes)} cảnh, {len(parts)} phần)")
     print(f"   🎞️ render Cinematic 16:9 ({len(all_scenes)} cảnh / {len(parts)} phần) …")

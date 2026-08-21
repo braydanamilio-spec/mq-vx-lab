@@ -12,6 +12,16 @@ type Scene = { type: string; clip?: string; clip2?: string; clips?: string[]; fx
 export type CProps = { scenes: Scene[]; slug: string; handle?: string; accent?: string; accent2?: string; ink?: string; music?: string; mode?: "duel" | "file"; host?: string };
 export const calcCinematic = ({ props }: { props: CProps }) => ({ durationInFrames: Math.max(1, props.scenes.reduce((a, s) => a + s.dur, 0)) });
 const ci = (v: number, a: number, b: number, x: number, y: number) => interpolate(v, [a, b], [x, y], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+// 1 ảnh hỏng/thiếu KHÔNG được giết cả video: <Img> mặc định CHỜ VÔ HẠN ảnh không nạp được ->
+// CPU 0% -> watchdog giết sau 6' (sự cố 21/8: 7/7 lệnh render của UNSOLVED chết kiểu này, cả
+// lane 0 video). RaceLong đã có SafeImg từ đầu — Cinematic thiếu. onError -> đổi sang ảnh nền
+// dự phòng, render đi tiếp.
+const FB_IMG = staticFile("img/_fallback.jpg");
+const SafeImg: React.FC<any> = ({ src, ...rest }) => {
+  const [s, setS] = React.useState(src);
+  React.useEffect(() => { setS(src); }, [src]);
+  return <Img src={s} onError={() => { if (s !== FB_IMG) setS(FB_IMG); }} {...rest} />;
+};
 const WEAK = new Set(["a", "an", "the", "and", "but", "or", "to", "of", "in", "on", "for", "with", "is", "are", "was", "were", "that", "it", "its", "at", "as", "by", "so", "if"]);
 
 const W = (s: string): number => (s.toLowerCase().match(/[aeiouy]+/g) || []).length || 1; // ước lượng âm tiết
@@ -192,7 +202,7 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
       {clip ? (<>
         <div key={clip} style={{ position: "absolute", inset: 0, transform: `scale(${kb * punch}) translate(${panX}px, ${panY}px)` }}>
           {isImg
-            ? <Img src={staticFile(`${slug}/clips/${clip}`)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 32%" }} />
+            ? <SafeImg src={staticFile(`${slug}/clips/${clip}`)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 32%" }} />
             : <OffthreadVideo src={staticFile(`${slug}/clips/${clip}`)} muted loop style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
         </div>
         {/* Lớp phủ ĐỦ TỐI để chữ tiêu đề 120px luôn đọc được trên mọi ảnh (kể cả ảnh sáng/nhiều chi tiết) */}
@@ -254,7 +264,7 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
       {clip && (
         <div key={clip} style={{ position: "absolute", inset: 0, mixBlendMode: "screen", transform: `scale(${kb * punch}) translate(${panX}px, ${panY}px) rotate(${rot}deg)`, filter: "brightness(1.28) contrast(1.1) saturate(1.14)" }}>
           {isImg
-            ? <Img src={staticFile(`${slug}/clips/${clip}`)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 28%" }} />
+            ? <SafeImg src={staticFile(`${slug}/clips/${clip}`)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 28%" }} />
             : <OffthreadVideo src={staticFile(`${slug}/clips/${clip}`)} muted loop style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
         </div>
       )}
@@ -339,7 +349,7 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent 
         const w = port ? 340 : 300;
         return (
           <div style={{ position: "absolute", left: port ? 20 : 40, bottom: port ? 560 : 40, width: w, transform: `translateY(${Math.sin(f / 22) * 6}px) scale(${0.98 + bob * 0.02})`, filter: "drop-shadow(0 14px 30px rgba(0,0,0,0.55))" }}>
-            <Img src={staticFile(host)} style={{ width: "100%", height: "auto" }} />
+            <SafeImg src={staticFile(host)} style={{ width: "100%", height: "auto" }} />
           </div>
         );
       })()}
