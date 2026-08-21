@@ -218,11 +218,31 @@ def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = Fals
     _db_keys().collection("gemini_keys").document(key_id).set(patch, merge=True)
 
 
-def cool_key(key_id: str, minutes: int = 90):
-    """Đánh dấu key nghỉ N phút sau khi bị 429/quota (chống hammer -> chống die)."""
+_COOLED = {}   # key_id -> mốc (epoch) hết nghỉ ĐÃ GHI, để khỏi ghi lại cùng một thứ
+
+
+def cool_key(key_id: str, minutes: int = 20):
+    """Đánh dấu key nghỉ N phút sau khi bị 429/quota (chống hammer -> chống die).
+
+    KHỬ TRÙNG LẶP GHI — đây là chỗ đốt hạn mức Firestore nặng nhất và là VÒNG LẶP TỰ SÁT:
+    mỗi lỗi 429 của Gemini biến thành 1 lượt GHI Firestore. Đo thật phiên 12:14Z ngày 21/8:
+    1.201 lỗi 429 trong MỘT phiên -> 1.201 lượt ghi vào project B; nhân ~15 phiên/ngày là
+    ~18.000, gần trọn hạn mức free 20.000/ngày. Càng nhiều 429 càng ghi nhiều -> Firestore chết
+    -> cả dây chuyền đứng, dù đã tách 3 project.
+    Mà các lượt ghi đó gần như VÔ NGHĨA: key đang nghỉ tới 14:05 thì ghi thêm "nghỉ tới 14:05"
+    hàng trăm lần nữa cũng không đổi gì. Giờ chỉ ghi khi mốc nghỉ THỰC SỰ lùi xa thêm >60s.
+    Bộ nhớ đệm này theo tiến trình -> mỗi luồng tự giữ, không cần đọc thêm."""
+    import time as _t
+    now = _t.time()
+    until_ts = now + minutes * 60
+    prev = _COOLED.get(key_id, 0)
+    if prev > now and until_ts <= prev + 60:
+        _KEYS_CACHE.clear()        # vẫn phải xoá đệm để lượt chọn key kế tiếp né đúng key này
+        return
     from datetime import timedelta
     until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
     _db_keys().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
+    _COOLED[key_id] = until_ts
     # XOÁ ĐỆM read_keys NGAY: nếu không, tiến trình này còn dùng danh sách cũ tới 3 phút và tiếp tục
     # chọn đúng key vừa bị phạt -> ăn thêm 429 liên tiếp, đúng thứ cool_key sinh ra để tránh.
     _KEYS_CACHE.clear()
