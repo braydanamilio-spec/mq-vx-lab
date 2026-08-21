@@ -709,6 +709,13 @@ def plan_mode():
         pass   # đã sync trong 20h -> bỏ qua (dùng nút 🔄 Đồng bộ dung lượng trên dashboard nếu cần ngay)
     else:
       try:
+        # storage.py nằm trong repo AutoPublisher (checkout vào _autopublisher/src) -> PHẢI nạp path
+        # trước khi import. Thiếu dòng này thì plan_mode chết ngay "No module named 'storage'" và
+        # NGUYÊN khâu đồng bộ dung lượng kho không bao giờ chạy -> storage_accounts.used đứng yên,
+        # guard "kho gần đầy" chấm trên số cũ. (Lỗi âm thầm vì đã bọc try/except.)
+        _src = os.environ.get("AUTOPUBLISHER_SRC")
+        if _src and _src not in sys.path:
+            sys.path.insert(0, _src)
         import storage as ST
         synced = 0
         for acc in ST.pool_accounts():
