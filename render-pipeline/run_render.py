@@ -43,9 +43,21 @@ def _make_thumb(video):
         except ValueError:
             at = 3.0
         thumb = os.path.splitext(video)[0] + "_thumb.jpg"
+        # ÉP ĐÚNG 1280x720. Bản cũ dùng scale=1280:-1 (cao TỰ TÍNH) -> với short 1080x1920 ra
+        # 1280x2276, YouTube TỪ CHỐI thumbnail mà youtube_uploader lại nuốt lỗi để không chặn
+        # upload -> video lên KHÔNG có thumbnail, log vẫn báo thành công nên không ai biết.
+        # Khung dọc thì đặt vừa vào giữa, hai bên lấp bằng chính nó phóng to + làm mờ (đẹp hơn
+        # viền đen, không méo hình như kéo giãn).
+        vf = ("split[a][b];"
+              "[a]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,boxblur=20:2[bg];"
+              "[b]scale=1280:720:force_original_aspect_ratio=decrease[fg];"
+              "[bg][fg]overlay=(W-w)/2:(H-h)/2")
         subprocess.run(["ffmpeg", "-y", "-ss", str(at), "-i", video, "-frames:v", "1",
-                        "-vf", "scale=1280:-1", thumb], check=True, capture_output=True, timeout=300)
-        return thumb if os.path.exists(thumb) else None
+                        "-filter_complex", vf, thumb], check=True, capture_output=True, timeout=300)
+        if not os.path.exists(thumb):
+            return None
+        DS.ensure_yt_thumb(thumb)       # chốt chặn cuối: đúng cỡ + dưới 2MB
+        return thumb
     except Exception as e:
         print("   ⚠️ thumbnail lỗi:", str(e)[:80]); return None
 
