@@ -1409,6 +1409,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     props = build_doc_props(story, channel, imgsrc=imgsrc, api_key=keys[0]["key"],
                             accent=accent, accent2=accent2, handle=channel_handle(channel),
                             ai_style=ai_style, ai_only=ai_only, music=music, mode=mode, host_prompt=host_prompt)
+    story["_music"] = bool(music)   # có nhạc thật -> enqueue mới ghi công CC-BY (bắt buộc theo license)
     # QC CẤU TRÚC TRƯỚC KHI RENDER: rẻ (không API) và chặn sớm — render xong mới phát hiện hỏng là
     # phí trắng ~2-4 phút CPU + lượt Vision. Đây là lớp mà QC visual KHÔNG thay được (xem qc_structure).
     _sok, _sissues = qc_structure(props)
