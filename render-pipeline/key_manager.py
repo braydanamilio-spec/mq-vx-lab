@@ -32,6 +32,15 @@ def flush_requests() -> dict:
     return out
 
 
+# Nghỉ bao lâu khi dính 429 KHÔNG rõ loại. Thông báo của Gemini free thường chỉ là
+# "429 You exceeded your current quota" — không nói RPM hay RPD, nên trước đây mặc định cho nghỉ 90'.
+# Đo thật 21/8: mỗi 429 cắt 1 key khỏi vòng xoay 90 phút -> pool 56 key TEO XUỐNG 5 ngay trong một
+# phiên, rồi hệ in "quota cạn thật" và bỏ cuộc, trong khi 51 key kia chỉ đang nghỉ.
+# 20' là mức cân: pool hồi lại NGAY TRONG phiên (phiên dài 40-60'), còn nếu key cạn hạn mức NGÀY
+# thật thì nó 429 lại và nghỉ tiếp — chỉ tốn 1 lệnh gọi phí mỗi 20', rẻ hơn nhiều so với đứng hình.
+AMBIG_COOL_MIN = 20
+
+
 def key_order(channel: str, keys: list[dict]) -> list[dict]:
     """Thứ tự thử key cho 1 kênh (theo yêu cầu user — CHIA ĐỀU, tránh dội 1 key bị chặn):
     1. ƯU TIÊN key ÍT REQUEST HÔM NAY NHẤT (req_today nhỏ) -> chia đều tải, còn nhiều quota free.
@@ -86,7 +95,7 @@ def write_story(channel: str, keys: list[dict], seed: str,
             return
         if not (on_limit and k.get("id")):
             return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
         try:
             on_limit(k["id"], mins)
         except TypeError:
@@ -147,7 +156,7 @@ def write_guess(channel: str, keys: list[dict], category: str, n_rounds: int = 3
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -198,7 +207,7 @@ def write_mapped(channel: str, keys: list[dict], niche: str, tier: str = "normal
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -246,7 +255,7 @@ def write_ranked(channel: str, keys: list[dict], niche: str, tier: str = "normal
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -294,7 +303,7 @@ def write_scaled(channel: str, keys: list[dict], niche: str, tier: str = "normal
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -342,7 +351,7 @@ def write_thennow(channel: str, keys: list[dict], niche: str, tier: str = "norma
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -391,7 +400,7 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -439,7 +448,7 @@ def _write_wave4(fn_name, label, channel, keys, niche, tier, avoid, on_limit, on
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else 90
+        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
