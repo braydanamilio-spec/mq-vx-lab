@@ -107,7 +107,12 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
         srcs = story.get("sources") or []
         if srcs:
             desc += "\n\nSources: " + " · ".join(srcs[:3])
-        desc += "\n\nMusic: Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 3.0"
+        # CHỈ ghi công nhạc KHI VIDEO THẬT SỰ CÓ NHẠC. Nhạc nền mặc định TẮT (music=None, chỉ bật
+        # cho kênh có cấu hình 'music') nhưng dòng này trước đây ghi VÔ ĐIỀU KIỆN -> phần lớn video
+        # không hề có nhạc mà mô tả vẫn ghi công Kevin MacLeod. Mô tả sai sự thật là điểm trừ khi
+        # YouTube xét kênh, và ghi công một license mình không dùng thì chẳng được gì.
+        if story.get("_music"):
+            desc += "\n\nMusic: Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 3.0"
         created = enqueue(channel=channel, video=out, vtype=vtype,
                           topic=story.get("topic") or story.get("title"),
                           title=story.get("title"), description=desc,

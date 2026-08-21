@@ -1314,6 +1314,24 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
             _alts += [story.get("title_yt"), story.get("title"), story.get("topic")]
         add_scene(i, nar, "scene", img_query=sc0.get("img_query"), title=sc0.get("title", ""),
                   hook=hk, alt_queries=_alts); i += 1
+    # LỚP CUỐI cho cảnh MỞ ĐẦU: đã thử img_query của chính nó -> img_query 3 cảnh sau -> tiêu đề
+    # -> Gemini vẽ (fetch_image tự lo), mà vẫn trắng tay thì MƯỢN ảnh của cảnh sau đã có.
+    # Mượn ảnh thay vì đảo thứ tự cảnh: đảo thứ tự sẽ làm lời thoại mất mạch, còn mượn ảnh thì
+    # mở đầu vẫn có footage thật liên quan mà câu chuyện giữ nguyên trình tự.
+    if scenes_out and not scenes_out[0].get("clip"):
+        for _later in scenes_out[1:]:
+            if _later.get("clip"):
+                _srcp = os.path.join(cdir, _later["clip"])
+                _dstp = os.path.join(cdir, "s0_lead.jpg")
+                try:
+                    import shutil
+                    shutil.copyfile(_srcp, _dstp)
+                    scenes_out[0]["clip"] = "s0_lead.jpg"
+                    scenes_out[0].pop("clips", None)
+                    print(f"   ↩️ cảnh mở đầu mượn ảnh của cảnh sau ({_later['clip']}) — không để mở đầu nền trơn")
+                except Exception:
+                    pass
+                break
     props = {"scenes": scenes_out, "slug": slug_, "handle": handle, "accent": accent, "accent2": accent2}
     if music:
         props["music"] = music
