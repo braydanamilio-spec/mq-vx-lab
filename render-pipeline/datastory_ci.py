@@ -1344,6 +1344,46 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     return props
 
 
+def flat_bg_metrics(path: str):
+    """Đo khung ảnh: (%điểm tối, độ bão hoà TB, số màu). Dùng để biết khung có phải NỀN TRƠN không."""
+    try:
+        from PIL import Image
+        im = Image.open(path).convert("RGB"); im.thumbnail((240, 240))
+        raw = list(im.getdata()); n = max(1, len(raw))
+        lum = [(r * 299 + g * 587 + b * 114) // 1000 for r, g, b in raw]
+        dark = sum(1 for x in lum if x < 40) / n * 100
+        sat = sum(max(r, g, b) - min(r, g, b) for r, g, b in raw) / n
+        cols = len({(r >> 3, g >> 3, b >> 3) for r, g, b in raw})
+        return dark, sat, cols
+    except Exception:
+        return 0.0, 999.0, 9999      # đo không được -> coi như ĐẠT, không chặn oan
+
+
+def opening_is_flat(mp4: str, at: float = 1.2):
+    """KHUNG MỞ ĐẦU có phải 'chữ trên nền trơn' không? Đo bằng PIXEL, KHÔNG gọi API, không tốn quota.
+
+    Đây là chốt chặn SAU RENDER cho đúng rule: mở đầu BẮT BUỘC là ảnh nền hook thật.
+    qc_structure chặn trước render dựa trên props; hàm này soi VIDEO THẬT ĐÃ DỰNG — bắt cả trường
+    hợp props có 'clip' nhưng ảnh hỏng/không hiện ra.
+
+    Ngưỡng đo trên khung render thật (21/8):
+        có footage rực rỡ   : 43.9% tối · bão hoà 78.9 · 1983 màu -> ĐẠT
+        ảnh thật TỐI, xỉn   : 68.0% tối · bão hoà 31.1 ·  401 màu -> ĐẠT (không bắt oan ảnh tối)
+        NỀN TRƠN (cần bắt)  : 91.9% tối · bão hoà 14.2 ·  342 màu -> BẮT
+    Trả (ok, info)."""
+    jpg = os.path.splitext(mp4)[0] + "_open.jpg"
+    try:
+        subprocess.run(["ffmpeg", "-y", "-ss", str(at), "-i", mp4, "-frames:v", "1", jpg],
+                       check=True, capture_output=True, timeout=120)
+    except Exception as e:
+        return True, {"note": f"không trích được khung: {str(e)[:60]}"}   # fail-open, đừng chặn oan
+    dark, sat, cols = flat_bg_metrics(jpg)
+    try: os.remove(jpg)
+    except OSError: pass
+    flat = (dark >= 75 and cols < 900) or (cols < 500 and sat < 25)
+    return (not flat), {"dark": round(dark, 1), "sat": round(sat, 1), "colors": cols}
+
+
 def qc_structure(props, fps=30):
     """QC CẤU TRÚC — kiểm bằng LOGIC, không gọi API, không tốn quota.
 
@@ -1427,6 +1467,18 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     # QC HÌNH ẢNH SAU RENDER (Gemini Vision) — make_video() (data-race gốc) đã có bước này từ đầu,
     # make_doc() (Wave 2+, 20/40 kênh tính cả Wave 6/7 mới) TRƯỚC ĐÂY THIẾU hẳn -> chỉ QC kỹ thuật
     # (giây/tiếng/khung hình), lọt cảnh chồng chéo/xấu/vỡ layout ra thẳng YouTube. Thêm cho khớp chuẩn.
+    if ok:
+        # CHỐT RULE MỞ ĐẦU (đo pixel, KHÔNG tốn quota): mở đầu PHẢI là ảnh nền hook thật, cấm chữ
+        # trên nền trơn. Soi VIDEO ĐÃ DỰNG nên bắt được cả ca props có 'clip' mà ảnh không hiện ra.
+        # Đặt TRƯỚC Vision vì rẻ hơn nhiều, và Vision vốn KHÔNG bắt được lỗi này (nó chấm khuyết
+        # tật; thẻ chữ thì sạch và đọc rõ nên luôn 80+ — xem ghi chú ở qc_structure).
+        # CHỈ áp cho make_doc (Cinematic, nền là ảnh thật). Engine data-race mở bằng đồ hoạ có chủ
+        # đích (ít màu, nền tối) nên áp vào đó sẽ bắt oan.
+        _fok, _finfo = opening_is_flat(out)
+        info["opening"] = _finfo
+        if not _fok:
+            print(f"   ❌ mở đầu là NỀN TRƠN (tối {_finfo.get('dark')}% · {_finfo.get('colors')} màu) — loại")
+            ok = False
     if ok:
         try:
             import qc_vision
