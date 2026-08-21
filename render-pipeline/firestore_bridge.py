@@ -401,6 +401,35 @@ def mark_request_done(req_id: str, note: str = "done"):
     _db_meta().collection("render_requests").document(req_id).set({"status": "done", "note": note, "done_at": _now()}, merge=True)
 
 
+def where_am_i() -> str:
+    """In RÕ mỗi client đang nối vào project NÀO — hết đoán mò khi dính 429.
+
+    Vì sao cần (21/8): _db_jobs() TỰ LÙI về A khi thiếu/hỏng creds B. Nên khi thấy '429 Quota
+    exceeded' lúc ghi render_config, không thể biết đang cạn hạn mức của B hay của A — mà hai
+    project có gói riêng, nâng nhầm project thì không giải quyết được gì.
+    Trả chuỗi 1 dòng, gọi lúc bắt đầu plan."""
+    def _pid(c):
+        try:
+            return getattr(c, "project", None) or "?"
+        except Exception:
+            return "?"
+    parts = []
+    try: parts.append(f"A={_pid(_db())}")
+    except Exception: parts.append("A=lỗi")
+    try:
+        jb = _db_jobs()
+        tag = "B" if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B") else "B(thiếu creds)"
+        parts.append(f"{tag}={_pid(jb)}")
+    except Exception: parts.append("B=lỗi")
+    try:
+        pb = _db_pub()
+        parts.append(f"C={_pid(pb) if pb else 'tắt'}")
+    except Exception: parts.append("C=lỗi")
+    parts.append(f"SHARD_META={os.environ.get('SHARD_META') or '0'}")
+    parts.append(f"SHARD_KEYS={os.environ.get('SHARD_KEYS') or '0'}")
+    return "🗺️ Firestore: " + " · ".join(parts)
+
+
 def set_config(owner: str, patch: dict):
     """Ghi/merge render_config (vd xoá cờ run_now sau khi đã nhận lệnh)."""
     _retry(lambda: _db_meta().collection("render_config").document(owner).set(patch, merge=True))

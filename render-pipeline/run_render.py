@@ -870,9 +870,14 @@ def sweep_ai_quality(all_ch, cfg):
 
 
 def plan_mode():
-    """ĐIỀU PHỐI (matrix 10 luồng): gating + health-check + re-render — CHẠY 1 LẦN — rồi xuất danh sách kênh
+    """ĐIỀU PHỐI (matrix 18 luồng): gating + health-check + re-render — CHẠY 1 LẦN — rồi xuất danh sách kênh
     cho các job render song song. Các job render KHÔNG lặp health-check/re-render (đỡ tốn API)."""
     import json
+    # IN TRƯỚC MỌI LỆNH GHI: dính 429 thì vẫn biết đang nối vào project nào (B thật hay đã lùi về A).
+    try:
+        print(FB.where_am_i())
+    except Exception:
+        pass
     from datetime import datetime, timezone, timedelta
     def out_channels(lst):
         payload = json.dumps(lst)
