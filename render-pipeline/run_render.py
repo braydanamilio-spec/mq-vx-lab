@@ -1098,6 +1098,24 @@ def plan_mode():
     except Exception:
         traceback.print_exc()
     try:
+        # TỰ-SEED WAVE 8: workflow seed chạy tay 21/8 dính đúng lúc B cạn quota ghi. Thay vì hẹn
+        # người chạy lại, plan tự so wave8_channels.json với danh sách kênh -> thiếu thì ghi (qua
+        # _soft: quota chết thì lượt sau tự thử tiếp). Đủ 10 kênh rồi thì đoạn này thành no-op 0 ghi.
+        import json as _j
+        _w8p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wave8_channels.json")
+        if os.path.exists(_w8p):
+            _have = {c.get("name") for c in all_ch}
+            _miss = {k: v for k, v in _j.load(open(_w8p)).items() if k not in _have}
+            if _miss:
+                _db = FB._db_meta()
+                for _nm, _cfg in _miss.items():
+                    FB._soft(lambda _n=_nm, _c=_cfg: _db.collection("render_channels")
+                             .document(f"{OWNER}__{_n}").set({**_c, "owner": OWNER}, merge=True),
+                             "seed_wave8")
+                print(f"   🌱 Tự-seed Wave 8: đã gửi {len(_miss)} kênh còn thiếu (quota chết thì phiên sau tự thử lại).")
+    except Exception:
+        traceback.print_exc()
+    try:
         sweep_ai_quality(all_ch, cfg)   # xếp render lại các video ra đời khi bước vẽ ảnh AI còn hỏng
     except Exception:
         traceback.print_exc()
