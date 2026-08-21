@@ -35,7 +35,12 @@ jobs:
             libasound2 libpango-1.0-0 libcairo2 libatspi2.0-0
 
       - name: Python deps
-        run: pip install --quiet google-generativeai edge-tts
+        # pillow + google-genai: datastory_ci nay cần PIL (photo_score/ensure_yt_thumb/still_hook_thumb)
+        # và google-genai (Nano Banana vẽ ảnh). Thiếu -> thumbnail khung hook chết lặng, đúng lỗi
+        # đã gặp ở render_cron ngày 20/8. Cài ở lệnh RIÊNG (gộp làm pip nổ resolution-too-deep).
+        run: |
+          pip install --quiet google-generativeai edge-tts
+          pip install --quiet pillow google-genai
 
       - name: npm ci + Chrome headless
         working-directory: engine-remotion
