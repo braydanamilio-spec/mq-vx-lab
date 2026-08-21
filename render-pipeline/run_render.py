@@ -185,6 +185,17 @@ def run_one(ch, keys, n_shorts=3, report=None):
         n = min(int(ch.get("n_shorts", n_shorts) or 3) or 3, need)
         if n <= 0:
             print(f"🎯 {channel}: đủ target {fmt} — bỏ qua."); return
+        # ── LONG TRƯỚC, SHORT SAU (rule user: 1 long -> 3 short, short bám nội dung long) ──
+        # Kênh doc-format trước đây rẽ thẳng vào nhánh CHỈ-SHORT nên ra "0 long · 3 short" — sai mô
+        # hình. Giờ nếu kênh còn thiếu long thì dựng LONG trước, và 3 short được đẻ ra từ ĐÚNG các
+        # phần của long đó (dùng lại giọng + ảnh, KHÔNG gọi thêm Gemini).
+        if fmt == "doc" and ch.get("make_long", True):
+            _lt = int(ch.get("long_target", 0) or 0) or RESERVE_LONG
+            if FB.count_done(OWNER, channel, "long") < _lt:
+                made = _doc_long_then_shorts(ch, keys, tier, niche, n, cool, okcb, R, _stopped)
+                if made:
+                    return          # phiên này đã ra long + short bám nội dung -> xong
+                print(f"   ↩️ {channel}: long doc không đạt — quay về làm short rời phiên này.")
         cat = niche   # ⚠️ KHÔNG dùng ch.get("category") — field đó giờ chứa mã YouTube category SỐ ("24"/"27"/"28",
                       # dashboard tự set cho brand kit), KHÔNG phải gợi ý chủ đề. Đụng nhầm = Gemini nhận "24" làm niche.
         avoid = FB.recent_topics(OWNER, channel)
@@ -364,6 +375,82 @@ def _trash_old(account_name, file_id):
     except Exception as e:
         print("   ⚠️ bỏ bản cũ lỗi:", str(e)[:90])
     return False
+
+
+def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopped):
+    """Kênh doc: dựng 1 LONG rồi ĐẺ RA n_shorts SHORT từ chính các phần của long đó.
+
+    Rule user: short đi SAU long và bám nội dung long (1 long -> 3 short). Chi phí Gemini KHÔNG
+    tăng: 1 lần lập pillar + 3 lần viết doc, dùng chung cho cả long lẫn 3 short (short dùng lại
+    nguyên giọng + ảnh của phần tương ứng). Trả True nếu đã ra được long."""
+    channel = ch.get("name")
+    ljob = FB.new_job(OWNER, channel, "long", pver=PVER)
+    lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
+    try:
+        avoid = FB.recent_topics(OWNER, channel)
+        lout = os.path.join("out", DS.slug(channel) + "_doclong.mp4")
+        lo, plan, subs, ok, info, parts = DS.make_doc_long(
+            channel, niche, lout, keys=keys, tier=tier, on_status=lst, on_limit=cool, on_ok=okcb,
+            avoid=avoid, n_parts=max(1, n_shorts), accent=ch.get("accent", "#22D3EE"),
+            accent2=ch.get("accent2", "#F5B301"), ai_style=ch.get("ai_style"),
+            ai_only=bool(ch.get("ai_only")), music=ch.get("music"), mode=ch.get("mode"),
+            host_prompt=ch.get("host_prompt"))
+    except (Exception, SystemExit) as e:
+        traceback.print_exc()
+        if _is_ratelimit(e):
+            lst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1
+        else:
+            lst("failed", f"LONG doc lỗi: {str(e)[:120]}"); R["fails"].append(f"{channel} LONG: {str(e)[:100]}")
+        return False
+    if subs:
+        FB.save_topics(OWNER, channel, subs)
+    if not ok:
+        lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
+        return False
+    eq = enqueue_drive(channel, lo, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
+                                     "description": plan.get("hook", ""),
+                                     "sources": plan.get("sources") or [],
+                                     "_thumb": (info or {}).get("thumb")}, "long")
+    did = (eq or {}).get("id")
+    lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
+        score=(info or {}).get("score"), dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0),
+        res=(info or {}).get("res", ""), drive_id=did or "", drive_account=(eq or {}).get("account", ""),
+        thumb_id=(eq or {}).get("thumb_id", ""),
+        preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+        script=_script_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"),
+                             "parts": [p["topic"] for p in parts]}))
+    R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
+
+    # ---- SHORT: mỗi phần của long -> 1 short, bám nội dung 100% ----
+    for pi, part in enumerate(parts):
+        if stopped():
+            print(f"   ⛔ {channel}: dừng — bỏ {len(parts) - pi} short còn lại."); break
+        sjob = FB.new_job(OWNER, channel, "short", pver=PVER)
+        sst = lambda st, step, **x: FB.update_job(sjob, status=st, step=step, **x)
+        try:
+            sout = os.path.join("out", DS.slug(channel) + f"_docshort{pi}.mp4")
+            sst("rendering", f"Short {pi + 1}/{len(parts)} (từ long)")
+            sok, sinfo = DS.render_short_from_props(channel, part["props"], part["story"], sout,
+                                                    keys=keys, prefix=f"p{pi}")
+        except (Exception, SystemExit) as e:
+            traceback.print_exc()
+            sst("failed", f"Short lỗi: {str(e)[:120]}"); R["fails"].append(f"{channel} SHORT {pi}: {str(e)[:100]}")
+            continue
+        if not sok:
+            sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {pi}: QC trượt")
+            continue
+        st_ = part["story"]
+        seq = enqueue_drive(channel, sout, st_, "short")
+        sdid = (seq or {}).get("id")
+        sst("done", "Short đã đẩy Drive" if sdid else "Short xong (chưa đẩy Drive)",
+            title=st_.get("title_yt") or st_.get("title"), score=(sinfo or {}).get("score"),
+            dur=(sinfo or {}).get("dur", 0), size_mb=(sinfo or {}).get("size_mb", 0),
+            res=(sinfo or {}).get("res", ""), drive_id=sdid or "", drive_account=(seq or {}).get("account", ""),
+            thumb_id=(seq or {}).get("thumb_id", ""),
+            preview=(("https://drive.google.com/file/d/%s/preview" % sdid) if sdid else ""),
+            script=_script_json(st_))
+        R["done"] += 1
+    return True
 
 
 def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story=None, avoid=None):

@@ -1224,7 +1224,7 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
 
 
 def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE", accent2="#F5B301", handle="@doc",
-                    ai_style=None, ai_only=False, music=None, mode=None, host_prompt=None):
+                    ai_style=None, ai_only=False, music=None, mode=None, host_prompt=None, prefix=""):
     """Dựng props Cinematic (Wave 2): CHỈ các cảnh có ảnh (fetch + Vision verify khớp) — KHÔNG intro/outro.
     Asset: PUB/<slug>/*.mp3 (giọng) + PUB/<slug>/clips/*.jpg (ảnh). dur tính bằng FRAME (30fps).
     ai_style/ai_only: kênh speculative (không có ảnh thật để so) -> gu vẽ riêng + bỏ qua Openverse hẳn.
@@ -1243,11 +1243,11 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     vf_for = (lambda subj: (lambda p: qc_vision.verify_image(p, subj, api_key=api_key))) if (api_key and not ai_only) else (lambda subj: None)
 
     def add_scene(i, nar, kind, img_query=None, title="", hook=None, alt_queries=None):
-        amp3 = os.path.join(sdir, f"s{i}.mp3")
+        amp3 = os.path.join(sdir, f"{prefix}s{i}.mp3")
         dur_s, _subs, _ = TK.synth(nar or title or "…", amp3)
         durF = max(48, round((dur_s + 0.5) * FPS))
         # KHÔNG truyền subs (TK trả dạng TỪ, Cinematic cần dạng CÂU) -> để engine tự tạo caption từ nar (khớp giọng đều).
-        sc = {"type": kind, "audio": f"s{i}.mp3", "dur": durF, "nar": nar or "", "title": title or ""}
+        sc = {"type": kind, "audio": f"{prefix}s{i}.mp3", "dur": durF, "nar": nar or "", "title": title or ""}
         if hook:
             sc["hook"] = hook          # cảnh MỞ ĐẦU: số liệu to + nhãn + câu hỏi mở, đè lên footage
         if img_query:
@@ -1255,7 +1255,7 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
             # các đoạn ~2.6s, mỗi đoạn MỘT ẢNH KHÁC — lấy hết trong CÙNG 1 lần tìm Openverse nên
             # không tốn thêm lượt gọi API nào. Tối đa 3 ảnh/cảnh (đủ nhịp, không phình thời gian tải).
             segs = max(1, min(3, round(durF / (2.6 * FPS))))
-            extra_paths = [os.path.join(cdir, f"s{i}_{k}.jpg") for k in range(1, segs)]
+            extra_paths = [os.path.join(cdir, f"{prefix}s{i}_{k}.jpg") for k in range(1, segs)]
             for _p in extra_paths:                     # dọn file cũ của video trước -> không nhận nhầm
                 try: os.remove(_p)
                 except OSError: pass
@@ -1265,13 +1265,13 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
             for _q in [img_query] + list(alt_queries or []):
                 if not _q:
                     continue
-                got = fetch_image(_q, os.path.join(cdir, f"s{i}.jpg"), orient="tall", verify=vf_for(_q),
+                got = fetch_image(_q, os.path.join(cdir, f"{prefix}s{i}.jpg"), orient="tall", verify=vf_for(_q),
                                   ai_key=api_key, ai_style=ai_style, ai_only=ai_only, extra=extra_paths)
                 if got:
                     break
             if got:
-                sc["clip"] = f"s{i}.jpg"
-                _cl = [f"s{i}.jpg"] + [os.path.basename(_p) for _p in extra_paths if os.path.exists(_p)]
+                sc["clip"] = f"{prefix}s{i}.jpg"
+                _cl = [f"{prefix}s{i}.jpg"] + [os.path.basename(_p) for _p in extra_paths if os.path.exists(_p)]
                 if len(_cl) > 1:
                     sc["clips"] = _cl              # engine tự chia đều thời lượng cho từng ảnh
             # KHÔNG có ảnh -> giữ nguyên type 'scene', chỉ thiếu clip: engine vẫn vẽ nền theo tông kênh
@@ -1322,11 +1322,11 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
         for _later in scenes_out[1:]:
             if _later.get("clip"):
                 _srcp = os.path.join(cdir, _later["clip"])
-                _dstp = os.path.join(cdir, "s0_lead.jpg")
+                _dstp = os.path.join(cdir, f"{prefix}s0_lead.jpg")
                 try:
                     import shutil
                     shutil.copyfile(_srcp, _dstp)
-                    scenes_out[0]["clip"] = "s0_lead.jpg"
+                    scenes_out[0]["clip"] = f"{prefix}s0_lead.jpg"
                     scenes_out[0].pop("clips", None)
                     print(f"   ↩️ cảnh mở đầu mượn ảnh của cảnh sau ({_later['clip']}) — không để mở đầu nền trơn")
                 except Exception:
@@ -1560,6 +1560,136 @@ def build_swarm_props(story, sdir, handle="@swarmusa", accent="#0D9488", music="
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
     return {"title": (story.get("title") or "HOW MANY FIT?"), "handle": handle, "color": accent, "accent": accent,
             "sfx": True, "items": items_out, "audio": rel(track), "music": music}
+
+
+def render_short_from_props(channel, props, story, out, keys=None, prefix=""):
+    """Dựng 1 SHORT 9:16 từ props ĐÃ CÓ (do make_doc_long tạo cho từng phần của long).
+
+    Không gọi Gemini, không tải ảnh lại: dùng lại nguyên giọng + ảnh của phần đó -> short bám sát
+    100% nội dung long, đúng rule '1 long sinh ra 3 short'.
+    Trả (ok, info) — thumbnail gắn vào story['_thumb'] như make_doc."""
+    out = os.path.abspath(out)
+    pf = os.path.join(PUB, f"_docshort_{slug(channel)}_{prefix or '0'}.json")
+    json.dump(props, open(pf, "w"))
+    sok, sissues = qc_structure(props)
+    for it in sissues:
+        print(f"   ⚠️ short cấu trúc: {it}")
+    if not sok:
+        return False, {"note": "QC cấu trúc: " + "; ".join(sissues)}
+    print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="CinematicShort(part)")
+    ok, info = qc(out)
+    if ok:
+        fok, finfo = opening_is_flat(out)
+        info["opening"] = finfo
+        if not fok:
+            print(f"   ❌ mở đầu NỀN TRƠN (tối {finfo.get('dark')}%) — loại"); ok = False
+    if ok:
+        try:
+            vok, vinfo = _check_visual_rot(out, keys)
+            info["visual"] = vinfo
+            if not vok:
+                ok = False
+        except Exception as e:
+            print("   ⚠️ vision qc skip:", e)
+    # thumbnail = KHUNG HOOK MỞ ĐẦU render nét từ chính props này (khớp video 100%)
+    try:
+        t0 = out.rsplit(".", 1)[0] + ".jpg"
+        kk = ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
+        if still_hook_thumb("CinematicShort", pf, t0,
+                            api_key=kk, title=(story.get("title_yt") or story.get("title") or channel)):
+            story["_thumb"] = t0
+            print("   ✅ thumbnail = KHUNG HOOK MỞ ĐẦU (render nét)")
+    except Exception as e:
+        print("   ⚠️ thumbnail bỏ qua:", str(e)[:70])
+    return ok, info
+
+
+def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", style="awe, cinematic",
+                  on_status=None, on_limit=None, on_ok=None, avoid=None, n_parts=3,
+                  accent="#22D3EE", accent2="#F5B301", ai_style=None, ai_only=False, music=None,
+                  mode=None, host_prompt=None):
+    """LONG 16:9 cho kênh doc-format — và ĐẺ RA LUÔN props của n_parts SHORT gắn liền nội dung.
+
+    Rule user: short phải ĐI SAU long và bám nội dung long (1 long -> 3 short). Trước đây 10 format
+    đặc biệt (doc/guess/mapped/...) rẽ vào nhánh CHỈ-SHORT trong run_one nên kênh ra 3 short mà
+    KHÔNG có long nào — sai hẳn mô hình.
+
+    Cách làm RẺ: 1 lần lập pillar + n_parts lần viết doc. Mỗi phần dựng props MỘT LẦN (giọng + ảnh),
+    rồi dùng CHUNG cho cả hai đầu ra:
+      - LONG  = ghép scenes của tất cả các phần -> render composition 'Cinematic' (1920x1080)
+      - SHORT = props của TỪNG phần -> render 'CinematicShort' (1080x1920)
+    Không tốn thêm lượt Gemini nào cho short, và nội dung khớp tuyệt đối với long.
+
+    Trả (out, plan, subtopics, ok, info, parts) — parts = [{"story","props"}] để caller dựng short.
+    """
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    import key_manager as KM
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    if not keys[0]["key"]:
+        raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
+    set_ai_pool(keys)
+
+    st("writing", f"Lập pillar {n_parts} phần ({niche[:40]})")
+    k0 = KM.key_order(channel, keys)[0]
+    plan = CB.plan_pillar(niche, n_parts, api_key=k0["key"], model_name=KM.model_for(tier), avoid=avoid)
+    subs = [x for x in (plan.get("subtopics") or []) if x][:n_parts]
+    if not subs:
+        raise Exception("plan_pillar không trả subtopic nào")
+
+    parts, all_scenes = [], []
+    for pi, sub in enumerate(subs):
+        st("writing", f"Viết phần {pi + 1}/{len(subs)}: {str(sub)[:40]}")
+        story = KM.write_doc(channel, keys, sub, style, tier, avoid=avoid,
+                             on_limit=on_limit, on_ok=on_ok, speculative=ai_only)
+        pr = build_doc_props(story, channel, api_key=keys[0]["key"], accent=accent, accent2=accent2,
+                             handle=channel_handle(channel), ai_style=ai_style, ai_only=ai_only,
+                             music=music, mode=mode, host_prompt=host_prompt, prefix=f"p{pi}_")
+        sok, sissues = qc_structure(pr)
+        for it in sissues:
+            print(f"   ⚠️ phần {pi + 1} cấu trúc: {it}")
+        if not sok:
+            print(f"   ⏭️ bỏ phần {pi + 1}: " + "; ".join(sissues))
+            continue
+        story["_music"] = bool(music)
+        parts.append({"story": story, "props": pr, "topic": sub})
+        all_scenes += pr["scenes"]
+
+    if not all_scenes:
+        raise Exception("không phần nào đạt QC cấu trúc")
+
+    long_props = {"scenes": all_scenes, "slug": "_doc_" + slug(channel),
+                  "handle": channel_handle(channel), "accent": accent, "accent2": accent2}
+    if music:
+        long_props["music"] = music
+    if mode:
+        long_props["mode"] = mode
+    pf = os.path.join(PUB, f"_doclong_{slug(channel)}.json"); json.dump(long_props, open(pf, "w"))
+    st("rendering", f"Render LONG 16:9 ({len(all_scenes)} cảnh, {len(parts)} phần)")
+    print(f"   🎞️ render Cinematic 16:9 ({len(all_scenes)} cảnh / {len(parts)} phần) …")
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "Cinematic", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="Cinematic(long)")
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out)
+    if ok:
+        fok, finfo = opening_is_flat(out)
+        info["opening"] = finfo
+        if not fok:
+            print(f"   ❌ LONG mở đầu NỀN TRƠN (tối {finfo.get('dark')}%) — loại"); ok = False
+    if ok:
+        try:
+            vok, vinfo = _check_visual_rot(out, keys)
+            info["visual"] = vinfo
+            if not vok:
+                ok = False
+        except Exception as e:
+            print("   ⚠️ vision qc skip:", e)
+    plan["_parts"] = [p["topic"] for p in parts]
+    return out, plan, [p["topic"] for p in parts], ok, info, parts
 
 
 def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
