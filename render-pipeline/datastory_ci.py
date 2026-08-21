@@ -1688,6 +1688,18 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
                 ok = False
         except Exception as e:
             print("   ⚠️ vision qc skip:", e)
+    # THUMBNAIL LONG = khung hook mở đầu render nét từ CHÍNH props long. Long là 16:9 nên khung này
+    # đã đúng tỉ lệ thumbnail (1280x720) — không phải cắt/độn gì. Thiếu bước này thì enqueue nhận
+    # _thumb=None và rơi về _make_thumb() cắt khung thô (test_thumb_pipeline bắt đúng chỗ này).
+    try:
+        t0 = out.rsplit(".", 1)[0] + ".jpg"
+        kk = ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
+        if still_hook_thumb("Cinematic", pf, t0, api_key=kk,
+                            title=(plan.get("pillar_title") or channel)):
+            info["thumb"] = t0
+            print("   ✅ thumbnail LONG = KHUNG HOOK MỞ ĐẦU (render nét)")
+    except Exception as e:
+        print("   ⚠️ thumbnail long bỏ qua:", str(e)[:70])
     plan["_parts"] = [p["topic"] for p in parts]
     return out, plan, [p["topic"] for p in parts], ok, info, parts
 

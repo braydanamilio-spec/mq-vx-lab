@@ -175,7 +175,11 @@ def t_khop_luc_dang():
     src = open(os.path.join(ROOT, "run_render.py")).read()
     lines = src.split("\n")
     calls = [i for i, l in enumerate(lines) if "enqueue_drive(" in l and "def " not in l]
-    check("có đủ 4 đường đăng", len(calls) == 4, f"tìm thấy {len(calls)}")
+    # 8 đường đăng hiện có (đổi kiến trúc thì SỬA SỐ NÀY — đó là mục đích của phép đếm: bắt lập
+    # trình viên rà lại, không để lọt một đường đăng mới mà quên mang thumbnail):
+    #   dispatch-short · data-race long · data-race short · doc-long · short-từ-long
+    #   · motif-long · motif-short · render-lại (process_requests)
+    check("có đủ 8 đường đăng", len(calls) == 8, f"tìm thấy {len(calls)}")
     for i in calls:
         # Gom đúng lời gọi (cân bằng ngoặc) rồi lấy THAM SỐ THỨ 3 — không quét cả khối, vì dòng kế
         # thường có "(eq or {})" khiến bộ test tưởng nhầm là dict literal.
@@ -206,7 +210,11 @@ def t_khop_luc_dang():
         else:                              # truyền biến -> biến đó phải được gán _thumb trước khi đăng
             var = third.split(".")[0]
             before = "\n".join(lines[max(0, i - 30):i])
-            ok = f'{var}["_thumb"]' in before or f'{var}["_thumb"]' in src
+            # _thumb có thể được gán ở datastory_ci (render_short_from_props đặt story["_thumb"])
+            # -> cùng một object dict, nên phải soi cả file đó, không chỉ run_render.py.
+            ds = open(os.path.join(ROOT, "datastory_ci.py")).read()
+            ok = (f'{var}["_thumb"]' in before or f'{var}["_thumb"]' in src
+                  or 'story["_thumb"]' in ds)
             why = f'biến `{third}` chưa từng được gán ["_thumb"]'
         check(f"dòng {i+1} mang thumbnail ({third[:18]})", ok, why)
 
