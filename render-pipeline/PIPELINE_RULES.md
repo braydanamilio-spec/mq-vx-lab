@@ -177,6 +177,11 @@ gh run view <id> --repo braydanamilio-spec/mq-vx-lab --log
 - **Dashboard báo kho Drive "đã kết nối" dù token chết**: chỉ biết khi bấm nút 🩺. FIX: publisher tự ghi health mỗi phiên (0 lệnh gọi API thêm).
 - **Nhìn 481 tưởng mất 700 video**: dashboard đọc `limit(300)` từ A + 300 từ B = trần 600, không nói ra. FIX: hiện cảnh báo khi chạm trần.
 
+- **2 listener dashboard KHÔNG GIỚI HẠN trên render_jobs** (đốt hạn mức ĐỌC âm thầm): đường lùi khi thiếu index mở realtime listener trên TOÀN BỘ bảng và giữ mở suốt. FIX: đường lùi cũng `limit(300)`.
+- **Đọc lặp vô ích**: `recent_topics` 6 điểm gọi/kênh cho cùng 1 doc; `incr_key_requests` đọc-trước-ghi mỗi lần flush. FIX: đệm theo tiến trình (xoá khi save_topics) + chỉ đọc lần đầu/key/ngày.
+- **PVER v2→v3 (21/8)**: chuẩn mới = cảnh hook footage thật · không intro/outro · cắt 2-3s · SFX · thumbnail khung hook. Video v2 = chuẩn cũ, dọn bằng nút "Dọn bản cũ".
+- **Máy đo hoàn chỉnh**: mỗi luồng in `🧮 Firestore: N GHI (...) | M ĐỌC (...)` + `🔑 Pool key: N/56` + `🗺️ Firestore: A/B/C`. ĐỌC 3 DÒNG NÀY TRƯỚC khi điều tra bất kỳ nghi vấn quota nào.
+
 > **🔴 NGUYÊN NHÂN GỐC CHUNG của 15 bug trên — đọc kỹ, đừng lặp lại:**
 > 1. **Bám `keys[0]`** — 3 khâu riêng biệt (vẽ ảnh · Vision QC · kiểm khớp ảnh) đều mắc CÙNG lỗi này, và em fix từng cái một qua 3 lần thay vì rà cả lớp ngay lần đầu. **Hễ sửa một chỗ bám `keys[0]`, PHẢI `grep -n "keys\[0\]" *.py` rà hết.**
 > 2. **Lỗi bị try/except nuốt** — sync kho hỏng nhiều ngày, key rotation là code chết, vision fail-open âm thầm. **Mọi `except` bọc bước QUAN TRỌNG phải in ra, và phải có phép đo (đếm/log số) chứ không chỉ "không thấy lỗi".**
