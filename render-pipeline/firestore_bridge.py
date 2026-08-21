@@ -633,7 +633,10 @@ _BEAT = {"job": None, "th": None}
 # trọn hạn mức FREE 20K/ngày của Firestore -> 20/8 publish_social ăn "ResourceExhausted: 429 Quota
 # exceeded". Mốc coi-là-chết là 45' nên 5'/nhịp vẫn còn 9 nhịp dự phòng, thừa an toàn, mà lượng ghi
 # giảm 2.5 lần (~5K/ngày).
-BEAT_SEC = 300
+BEAT_SEC = 900   # 15' — health_guardian coi job chết sau STALE_BEAT_MIN=45' im lặng, tức vẫn còn 3
+                 # nhịp dự phòng. Trước để 5' -> 18 luồng x 12 nhịp/giờ x ~1.5h = ~320 lượt GHI mỗi
+                 # phiên chỉ để chứng minh "còn sống". Project B free chỉ 20K ghi/ngày mà render đã
+                 # ăn gần hết (sự cố 21/8: B cạn ghi lúc 10:21Z) -> cắt 3 lần phần này.
 
 
 def _beat_loop():
