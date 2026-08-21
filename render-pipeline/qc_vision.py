@@ -68,6 +68,61 @@ def _stills(mp4: str, fracs=(0.4, 0.7)):
     return outs
 
 
+def _compose_grid(paths, cell=320, pad=6):
+    """Ghép N ảnh thành 1 tấm lưới (thứ tự trái->phải, trên->xuống). Trả (jpeg_bytes, n, cols).
+    Tách riêng khỏi verify_grid để TEST ĐƯỢC không cần gọi API."""
+    from PIL import Image
+    import io, math
+    n = len(paths)
+    cols = math.ceil(math.sqrt(n)); rows = math.ceil(n / cols)
+    W = cols * cell + (cols + 1) * pad; H = rows * cell + (rows + 1) * pad
+    grid = Image.new("RGB", (W, H), (255, 255, 255))
+    for k, pth in enumerate(paths):
+        im = Image.open(pth).convert("RGB"); im.thumbnail((cell, cell))
+        x = pad + (k % cols) * (cell + pad) + (cell - im.width) // 2
+        y = pad + (k // cols) * (cell + pad) + (cell - im.height) // 2
+        grid.paste(im, (x, y))
+    buf = io.BytesIO(); grid.save(buf, "JPEG", quality=82)
+    return buf.getvalue(), n, cols
+
+
+def verify_grid(items, api_key=None, model_name=None):
+    """KIỂM KHỚP HÀNG LOẠT — items=[(path, subject)] -> list[True/False/None] CÙNG THỨ TỰ,
+    bằng ĐÚNG MỘT lệnh Vision (ý tưởng của user 21/8: ghép hết footage vào 1 ảnh rồi check 1 lần).
+
+    Trước: mỗi ứng viên 1 lệnh gọi -> 12-16 gọi/video, là mục ăn Gemini lớn NHẤT toàn pipeline.
+    Giờ: ghép lưới trái->phải trên->xuống, prompt liệt kê chủ đề kỳ vọng theo số thứ tự, model
+    trả {"matches":[...]} đúng độ dài. Lỗi/không parse được -> [None]*n (caller fail-open y như
+    verify_image trả None)."""
+    if not items:
+        return []
+    try:
+        data, n, cols = _compose_grid([p for p, _ in items])
+        genai = CB._genai(api_key)
+        akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+        mn = model_name or CB._pick_model(genai, "flash", akey) or "gemini-3.5-flash"
+        model = genai.GenerativeModel(mn)
+        subj = "\n".join(f'{k + 1}. "{s}"' for k, (_p, s) in enumerate(items))
+        prompt = (f"This is a contact sheet of {n} photos arranged left-to-right, top-to-bottom, "
+                  f"{cols} per row, numbered 1..{n} in that order. For each photo i, decide if it "
+                  f"CLEARLY and RECOGNIZABLY shows the subject listed for i:\n{subj}\n"
+                  "Generic, ambiguous or unrelated photos are false. Also false if a LARGE watermark, "
+                  "logo or text bar ruins the photo (small credits are OK). "
+                  'Return STRICT JSON only: {"matches": [true|false, ...]} with exactly '
+                  + str(n) + " values, same order.")
+        resp = model.generate_content([prompt, {"mime_type": "image/jpeg", "data": data}],
+                                      generation_config={"response_mime_type": "application/json", "temperature": 0.0},
+                                      request_options={"timeout": 45})
+        r = CB._extract_json(resp.text) or {}
+        ms = r.get("matches")
+        if isinstance(ms, list) and len(ms) == n:
+            return [bool(x) for x in ms]
+        return [None] * n
+    except Exception as e:
+        _report_quota(e)
+        return [None] * len(items)
+
+
 def check_visual(mp4: str, api_key: str = None, model_name: str = None, min_score: int = 55):
     """QC thẩm mỹ LƯỢNG THỨ: nhiều khung -> lấy điểm CAO NHẤT (1 khung chuyển cảnh xấu không giết cả video).
     Chỉ loại video THẬT SỰ hỏng (đen/vỡ/chồng nặng khắp nơi). Fail-OPEN khi lỗi Vision. Trả (ok, info)."""

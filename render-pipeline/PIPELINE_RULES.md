@@ -182,6 +182,8 @@ gh run view <id> --repo braydanamilio-spec/mq-vx-lab --log
 - **PVER v2→v3 (21/8)**: chuẩn mới = cảnh hook footage thật · không intro/outro · cắt 2-3s · SFX · thumbnail khung hook. Video v2 = chuẩn cũ, dọn bằng nút "Dọn bản cũ".
 - **Máy đo hoàn chỉnh**: mỗi luồng in `🧮 Firestore: N GHI (...) | M ĐỌC (...)` + `🔑 Pool key: N/56` + `🗺️ Firestore: A/B/C`. ĐỌC 3 DÒNG NÀY TRƯỚC khi điều tra bất kỳ nghi vấn quota nào.
 
+- **Chấm ảnh HÀNG LOẠT (ý tưởng user)**: ghép các ứng viên của 1 cảnh vào 1 ảnh lưới (`qc_vision.verify_grid`) -> 1 lệnh Vision/cảnh thay vì 1 lệnh/ảnh. Video doc: ~8-14 gọi verify -> 3-4. Mù cả lưới -> fail-open; chấm hết False -> bỏ (thà không ảnh còn hơn ảnh sai). Muốn cắt nữa: gom CẢ VIDEO vào 1 lưới (verify_grid đã hỗ trợ subject riêng từng ô) = 1 gọi/video.
+
 > **🔴 NGUYÊN NHÂN GỐC CHUNG của 15 bug trên — đọc kỹ, đừng lặp lại:**
 > 1. **Bám `keys[0]`** — 3 khâu riêng biệt (vẽ ảnh · Vision QC · kiểm khớp ảnh) đều mắc CÙNG lỗi này, và em fix từng cái một qua 3 lần thay vì rà cả lớp ngay lần đầu. **Hễ sửa một chỗ bám `keys[0]`, PHẢI `grep -n "keys\[0\]" *.py` rà hết.**
 > 2. **Lỗi bị try/except nuốt** — sync kho hỏng nhiều ngày, key rotation là code chết, vision fail-open âm thầm. **Mọi `except` bọc bước QUAN TRỌNG phải in ra, và phải có phép đo (đếm/log số) chứ không chỉ "không thấy lỗi".**

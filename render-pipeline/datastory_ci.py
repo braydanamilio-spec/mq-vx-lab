@@ -117,6 +117,31 @@ def _verify_image_rot(path, subject, first_key="", tries=3):
     return None                            # thật sự không kiểm được -> caller fail-open như cũ
 
 
+def _verify_grid_rot(pairs, first_key="", tries=3):
+    """verify_grid (chấm hàng loạt 1 lệnh) + ĐỔI KEY khi 429 — cùng sổ _VIS_DEAD với các khâu Vision khác."""
+    import qc_vision
+    seen = []
+    for _ in range(max(1, tries)):
+        k = None
+        for cand in ([first_key] if first_key else []) + list(_AI_POOL["keys"]):
+            if cand and cand not in _VIS_DEAD and cand not in seen:
+                k = cand; break
+        if not k:
+            break
+        seen.append(k)
+        hit = {"q": False}
+        prev = getattr(qc_vision, "on_quota", None)
+        qc_vision.on_quota = (lambda err, _h=hit: _h.__setitem__("q", True))
+        try:
+            r = qc_vision.verify_grid(pairs, api_key=k)
+        finally:
+            qc_vision.on_quota = prev
+        if not hit["q"]:
+            return r
+        _VIS_DEAD.add(k)
+    return [None] * len(pairs)
+
+
 def _check_visual_rot(mp4, keys, tries=3, **kw):
     """check_visual nhưng ĐỔI KEY khi gặp 429, thay vì bỏ qua QC luôn.
 
@@ -201,7 +226,7 @@ def _generate_character_ref(channel, prompt, api_key) -> str | None:
 
 
 def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None, ai_prompt=None,
-                ai_style=None, ai_only=False, extra=None):
+                ai_style=None, ai_only=False, extra=None, verify_many=None):
     """Tải 1 ảnh từ Openverse — ƯU TIÊN CC0/Public Domain (KHÔNG cần ghi nguồn, an toàn bản quyền).
     verify(path)->True/False/None: kiểm ảnh có KHỚP chủ đề không (dùng cho GUESS). True=nhận, False=thử ảnh khác,
     None=không kiểm được (Vision lỗi) -> nhớ làm dự phòng. Lỗi/ảnh hỏng/không khớp -> trả None.
@@ -235,6 +260,48 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
         # DANH SÁCH (không phải 1 ảnh): Vision hỏng/429 thì MỌI ứng viên trả None -> nếu chỉ giữ 1 ảnh
         # dự phòng thì cả cảnh chỉ có 1 hình, mất hẳn nhịp cắt 2-3s (log 21/8: "7 cảnh giữ một ảnh
         # quá 3.5s"). Giữ đủ `need` ảnh dự phòng -> nhịp cắt vẫn chạy dù Vision đang down.
+        if verify_many and not verify:
+            need = 1 + len(extra or [])
+            # CHẤM HÀNG LOẠT (1 lệnh Vision cho cả cảnh, ý tưởng của user): tải trước tối đa
+            # max_check + need ứng viên HỢP LỆ, ghép lưới chấm 1 lần, giữ ảnh True theo thứ tự.
+            # Cả lưới không chấm được (None) -> fail-open lấy need ảnh đầu (y hệ verify None cũ).
+            # Có kết quả mà 0 ảnh True -> trả None (THÀ KHÔNG ẢNH còn hơn ảnh SAI).
+            import shutil
+            cds = []
+            for cand in res:
+                try:
+                    with urllib.request.urlopen(urllib.request.Request(cand["url"], headers=UA), timeout=30) as r:
+                        ctype = (r.headers.get("Content-Type") or "").lower()
+                        data = r.read()
+                    if len(data) < 2000 or ("image" not in ctype and not _is_image(data)) or not _is_image(data):
+                        continue
+                    cds.append(data)
+                    if len(cds) >= max_check + need:
+                        break
+                except Exception:
+                    continue
+            if not cds:
+                return None
+            tmp = []
+            for k, d0 in enumerate(cds):
+                tp = f"{dest}.cand{k}.jpg"; open(tp, "wb").write(d0); tmp.append(tp)
+            try:
+                vs = verify_many([(t, query) for t in tmp])
+                if all(v is None for v in vs):
+                    chosen = tmp[:need]                     # Vision mù -> fail-open như cũ
+                else:
+                    chosen = [tmp[k] for k, v in enumerate(vs) if v is True][:need]
+                if not chosen:
+                    return None
+                shutil.copyfile(chosen[0], dest)
+                for k, _p in enumerate(extra or []):
+                    if k + 1 < len(chosen):
+                        shutil.copyfile(chosen[k + 1], _p)
+                return dest
+            finally:
+                for t in tmp:
+                    try: os.remove(t)
+                    except OSError: pass
         fallback = []                                     # ảnh hợp lệ nhưng Vision không kiểm được
         checked = 0
         picked = []                                       # NHIỀU ảnh khác nhau từ CÙNG 1 lần tìm -> cắt cảnh 2-3s
@@ -1277,8 +1344,10 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     scenes_out = []
     import qc_vision
     # ai_only: ảnh nào cũng do AI vẽ theo prompt, không có "ảnh thật tải về" để verify khớp/sai -> khỏi tốn Vision API.
-    # XOAY KEY cho khâu kiểm khớp ảnh: kẹt keys[0] thì key đầu cạn là tắt hẳn kiểm khớp cả phiên.
-    vf_for = (lambda subj: (lambda p: _verify_image_rot(p, subj, first_key=api_key))) if (api_key and not ai_only) else (lambda subj: None)
+    # CHẤM HÀNG LOẠT (1 lệnh/cảnh thay vì 1 lệnh/ảnh) + xoay key. ai_only (ảnh AI vẽ) -> khỏi kiểm.
+    vm_on = bool(api_key and not ai_only)
+    vf_for = lambda subj: None      # đường từng-ảnh tắt cho doc — giữ chữ ký fetch_image cho caller khác
+    vm_for = (lambda: (lambda pairs: _verify_grid_rot(pairs, first_key=api_key))) if vm_on else (lambda: None)
 
     def add_scene(i, nar, kind, img_query=None, title="", hook=None, alt_queries=None):
         amp3 = os.path.join(sdir, f"{prefix}s{i}.mp3")
@@ -1309,7 +1378,8 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
                 if not _q:
                     continue
                 got = fetch_image(_q, os.path.join(cdir, f"{prefix}s{i}.jpg"), orient="tall", verify=vf_for(_q),
-                                  max_check=_mc, ai_key=api_key, ai_style=ai_style, ai_only=ai_only, extra=extra_paths)
+                                  verify_many=vm_for(), max_check=_mc, ai_key=api_key, ai_style=ai_style,
+                                  ai_only=ai_only, extra=extra_paths)
                 if got:
                     break
             if got:
