@@ -133,6 +133,27 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
         print("   ⚠️ enqueue lỗi (giữ artifact):", e); return None
 
 
+SHORT_PER_LONG = 3        # RULE CỨNG: 1 long kèm đúng 3 short
+
+
+def _ratio_plan(channel, want_shorts, long_target):
+    """LUẬT TỈ LỆ 1 LONG : 3 SHORT — tự chữa mọi kênh, bất kể cấu hình cũ.
+
+    Vì sao cần dù luồng mới đã 'long trước, short sau': nhiều kênh ĐANG lệch sẵn từ thời code cũ
+    (CRIMEUSA 0 long/3 short, EATSUSA 8 long/26 short), và kênh nào đặt make_long=False thì vĩnh
+    viễn không có long. Chốt bằng SỐ ĐẾM THẬT thay vì tin cấu hình:
+        short được phép tối đa = 3 x số long ĐÃ CÓ
+    Hết chỗ short -> BẮT BUỘC làm long trước (kể cả make_long=False), tới khi đủ long_target.
+    Trả (phải_làm_long, số_short_được_phép)."""
+    L = FB.count_done(OWNER, channel, "long")
+    S = FB.count_done(OWNER, channel, "short")
+    room = max(0, SHORT_PER_LONG * L - S)          # chỗ trống theo tỉ lệ HIỆN TẠI
+    need_long = (room <= 0) and (L < long_target)  # short đã kín -> phải thêm long mới mở được chỗ
+    if need_long:
+        room = max(room, SHORT_PER_LONG)           # long sắp làm xong sẽ mở thêm 3 chỗ
+    return need_long, max(0, min(int(want_shorts or 0), room))
+
+
 def run_one(ch, keys, n_shorts=3, report=None):
     """1 kênh theo TEMPLATE của kênh: make_long (1 long pillar) + n_shorts SHORT dọc.
     Đọc ch['make_long'] (mặc định True) và ch['n_shorts'] (mặc định 3) do dashboard đặt."""
@@ -183,14 +204,16 @@ def run_one(ch, keys, n_shorts=3, report=None):
         short_target = int(ch.get("short_target", 0) or 0) or RESERVE_SHORT
         need = max(0, short_target - FB.count_done(OWNER, channel, "short"))
         n = min(int(ch.get("n_shorts", n_shorts) or 3) or 3, need)
-        if n <= 0:
+        _lt = int(ch.get("long_target", 0) or 0) or RESERVE_LONG
+        _need_long, n = _ratio_plan(channel, n, _lt)   # LUẬT 1 long : 3 short
+        if n <= 0 and not _need_long:
             print(f"🎯 {channel}: đủ target {fmt} — bỏ qua."); return
         # ── LONG TRƯỚC, SHORT SAU (rule user: 1 long -> 3 short, short bám nội dung long) ──
         # Kênh doc-format trước đây rẽ thẳng vào nhánh CHỈ-SHORT nên ra "0 long · 3 short" — sai mô
         # hình. Giờ nếu kênh còn thiếu long thì dựng LONG trước, và 3 short được đẻ ra từ ĐÚNG các
         # phần của long đó (dùng lại giọng + ảnh, KHÔNG gọi thêm Gemini).
-        if ch.get("make_long", True):
-            _lt = int(ch.get("long_target", 0) or 0) or RESERVE_LONG
+        # _need_long=True -> BẮT BUỘC làm long dù kênh đặt make_long=False (tỉ lệ đang lệch).
+        if ch.get("make_long", True) or _need_long:
             if FB.count_done(OWNER, channel, "long") < _lt:
                 if fmt == "doc":
                     # Kênh doc: short DÙNG LẠI luôn props từng phần của long -> khớp 100%, 0 thêm Gemini.
@@ -267,6 +290,11 @@ def run_one(ch, keys, n_shorts=3, report=None):
     if do_long and FB.count_done(OWNER, channel, "long") >= long_target:
         do_long = False; print(f"🎯 {channel}: đủ {long_target} long (dự trữ) — bỏ qua long.")
     n_shorts = max(0, min(n_shorts, short_target - FB.count_done(OWNER, channel, "short")))
+    # LUẬT 1 long : 3 short — chốt bằng số đếm thật, tự chữa kênh đang lệch.
+    _need_long, n_shorts = _ratio_plan(channel, n_shorts, long_target)
+    if _need_long and not do_long:
+        do_long = True
+        print(f"⚖️ {channel}: short đã kín theo tỉ lệ 1:3 — bắt buộc làm LONG trước.")
     if not do_long and n_shorts <= 0:      # ĐỦ CẢ long+short -> thoát NGAY (không gọi Gemini) -> made=0 SẠCH (phân biệt với lỗi quota)
         print(f"🎯 {channel}: đủ target (long+short) — không làm gì thêm."); return
     subtopics = []
