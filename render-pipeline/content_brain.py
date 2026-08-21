@@ -348,7 +348,9 @@ GUESS_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   "description": str,           // 2-3 lines
   "hashtags": [str],            // 4-6, no spaces
   "tags": [str],                // 8-12 SEO tags
-  "self_score": { "logic": int, "uniqueness": int, "image_match": int, "hook": int, "total": int }
+  // MỖI mục chấm ĐỘC LẬP thang 0-100 (KHÔNG phải điểm thành phần cộng vào total).
+  //   accuracy = % câu/số liệu KIỂM CHỨNG ĐƯỢC; toàn bộ đều thật -> 100.
+  "self_score": { "logic":0-100, "uniqueness":0-100, "image_match":0-100, "hook":0-100, "total":0-100 }
 }
 Every round MUST be solvable from the clue alone by a knowledgeable US viewer, and MUST have exactly one correct answer."""
 
@@ -452,7 +454,9 @@ MAPPED_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   "outro_vo": str,         // CTA
   "title_yt": str,         // <=70 chars, punchy
   "description": str, "hashtags": [str], "tags": [str],
-  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+  // MỖI mục chấm ĐỘC LẬP thang 0-100 (KHÔNG phải điểm thành phần cộng vào total).
+  //   accuracy = % câu/số liệu KIỂM CHỨNG ĐƯỢC; toàn bộ đều thật -> 100.
+  "self_score": { "accuracy":0-100, "logic":0-100, "hook":0-100, "total":0-100 }
 }
 Values must be real. 'top' must be the true top-3 of 'data'."""
 
@@ -548,7 +552,9 @@ RANKED_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   "intro_vo": str,
   "outro_vo": str,
   "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
-  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+  // MỖI mục chấm ĐỘC LẬP thang 0-100 (KHÔNG phải điểm thành phần cộng vào total).
+  //   accuracy = % câu/số liệu KIỂM CHỨNG ĐƯỢC; toàn bộ đều thật -> 100.
+  "self_score": { "accuracy":0-100, "logic":0-100, "hook":0-100, "total":0-100 }
 }
 Tiers must be consistent with the criterion. The LAST items must be the S tier."""
 
@@ -646,7 +652,9 @@ SCALED_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   "intro_vo": str,
   "outro_vo": str,
   "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
-  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+  // MỖI mục chấm ĐỘC LẬP thang 0-100 (KHÔNG phải điểm thành phần cộng vào total).
+  //   accuracy = % câu/số liệu KIỂM CHỨNG ĐƯỢC; toàn bộ đều thật -> 100.
+  "self_score": { "accuracy":0-100, "logic":0-100, "hook":0-100, "total":0-100 }
 }
 Values must be real, same unit, ascending. Each item needs a fitting emoji."""
 
@@ -747,7 +755,9 @@ THENNOW_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   "intro_vo": str,
   "outro_vo": str,
   "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
-  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+  // MỖI mục chấm ĐỘC LẬP thang 0-100 (KHÔNG phải điểm thành phần cộng vào total).
+  //   accuracy = % câu/số liệu KIỂM CHỨNG ĐƯỢC; toàn bộ đều thật -> 100.
+  "self_score": { "accuracy":0-100, "logic":0-100, "hook":0-100, "total":0-100 }
 }
 Values must be real and the change must match them."""
 
@@ -877,7 +887,9 @@ DOC_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
                            // "US Census Bureau ACS 2022". Name the ORGANISATION + dataset/report + year.
                            // NEVER invent a source. If a claim has no real source you can name, REPLACE
                            // that claim with one you can source.
-  "self_score": { "accuracy": int, "hook": int, "flow": int, "total": int }
+  // MỖI mục chấm ĐỘC LẬP thang 0-100 (KHÔNG phải điểm thành phần cộng vào total).
+  //   accuracy = % câu/số liệu KIỂM CHỨNG ĐƯỢC; toàn bộ đều thật -> 100.
+  "self_score": { "accuracy":0-100, "hook":0-100, "flow":0-100, "total":0-100 }
 }
 Every fact must be true. img_query must be findable in public-domain/CC0 imagery."""
 
@@ -1031,7 +1043,9 @@ SWARM_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   "intro_vo": str,
   "outro_vo": str,
   "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
-  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+  // MỖI mục chấm ĐỘC LẬP thang 0-100 (KHÔNG phải điểm thành phần cộng vào total).
+  //   accuracy = % câu/số liệu KIỂM CHỨNG ĐƯỢC; toàn bộ đều thật -> 100.
+  "self_score": { "accuracy":0-100, "logic":0-100, "hook":0-100, "total":0-100 }
 }
 Counts must be real numbers. shape must be exactly one of the 5 listed."""
 
@@ -1127,7 +1141,9 @@ PULSE_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   "intro_vo": str,
   "outro_vo": str,
   "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
-  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+  // MỖI mục chấm ĐỘC LẬP thang 0-100 (KHÔNG phải điểm thành phần cộng vào total).
+  //   accuracy = % câu/số liệu KIỂM CHỨNG ĐƯỢC; toàn bộ đều thật -> 100.
+  "self_score": { "accuracy":0-100, "logic":0-100, "hook":0-100, "total":0-100 }
 }
 Values must be real, same unit, ascending."""
 
@@ -1227,7 +1243,9 @@ CLOCKWORK_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   "intro_vo": str,
   "outro_vo": str,
   "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
-  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+  // MỖI mục chấm ĐỘC LẬP thang 0-100 (KHÔNG phải điểm thành phần cộng vào total).
+  //   accuracy = % câu/số liệu KIỂM CHỨNG ĐƯỢC; toàn bộ đều thật -> 100.
+  "self_score": { "accuracy":0-100, "logic":0-100, "hook":0-100, "total":0-100 }
 }
 atPercent values must be mathematically correct real proportions."""
 
@@ -1325,7 +1343,9 @@ LONGSHOT_SCHEMA = """Return STRICT JSON with EXACTLY these keys:
   "intro_vo": str,
   "outro_vo": str,
   "title_yt": str, "description": str, "hashtags": [str], "tags": [str],
-  "self_score": { "accuracy": int, "logic": int, "hook": int, "total": int }
+  // MỖI mục chấm ĐỘC LẬP thang 0-100 (KHÔNG phải điểm thành phần cộng vào total).
+  //   accuracy = % câu/số liệu KIỂM CHỨNG ĐƯỢC; toàn bộ đều thật -> 100.
+  "self_score": { "accuracy":0-100, "logic":0-100, "hook":0-100, "total":0-100 }
 }
 Odds must be real and sourced; logValue must match oddsDisp's denominator."""
 
