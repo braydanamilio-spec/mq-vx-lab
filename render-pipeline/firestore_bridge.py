@@ -149,6 +149,42 @@ _KEYS_CACHE = {}      # (owner, include_cooling) -> (thời điểm, kết quả
 KEYS_TTL = 180        # giây
 
 
+
+# ── GHI MỀM (best-effort) — SẢN XUẤT KHÔNG BAO GIỜ CHẾT VÌ TELEMETRY ────────────────────────────
+# Nhận thức gốc (21/8, do user chỉ ra): hạn mức ĐỌC (50K/ngày) và GHI (20K/ngày) là HAI QUOTA
+# RIÊNG. B cạn GHI nhưng ĐỌC vẫn còn — mà render chỉ cần ĐỌC (config/kênh/key/topics) để làm
+# video và đẩy Drive; mọi lượt GHI (job, trạng thái, cờ, cooldown) chỉ là telemetry cho dashboard.
+# Trước đây một lượt ghi 429 là plan_mode/lane CHẾT NGUYÊN PHIÊN -> mất cả ngày sản xuất chỉ vì
+# không ghi được bảng theo dõi. Giờ: ghi hỏng vì quota -> BÁO RÕ 1 LẦN, tắt ghi 20', sản xuất
+# chạy tiếp. Cái giá: dashboard mù tạm thời + mất checkpoint resume trong 20' — rẻ hơn vô hạn so
+# với 0 video.
+_WQ_DEAD = {"until": 0.0, "warned": False}
+
+
+def _wq_exhausted(e) -> bool:
+    t = str(e)
+    return "RESOURCE_EXHAUSTED" in t or "Quota exceeded" in t or "429" in t
+
+
+def _soft(fn, tag: str):
+    """Chạy 1 lượt GHI best-effort. Trả kết quả fn() hoặc None nếu đang trong cửa sổ tắt-ghi.
+    Lỗi KHÔNG-phải-quota vẫn ném lên như cũ (đó là lỗi thật cần thấy)."""
+    import time as _t
+    if _t.time() < _WQ_DEAD["until"]:
+        _WRITES["by"]["(bỏ-vì-quota)"] = _WRITES["by"].get("(bỏ-vì-quota)", 0) + 1
+        return None
+    try:
+        return _retry(fn, tries=2)
+    except Exception as e:
+        if _wq_exhausted(e):
+            _WQ_DEAD["until"] = _t.time() + 20 * 60
+            if not _WQ_DEAD["warned"]:
+                _WQ_DEAD["warned"] = True
+                print(f"🩹 Firestore HẾT HẠN MỨC GHI ({tag}) -> tắt ghi telemetry 20', SẢN XUẤT CHẠY TIẾP. "
+                      f"Dashboard sẽ mù tạm thời; video vẫn render + đẩy Drive bình thường.")
+            return None
+        raise
+
 def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     """Trả key CÒN DÙNG được (bỏ qua key đang cooldown do vừa bị rate-limit).
 
@@ -224,15 +260,15 @@ def incr_key_requests(key_id: str, n: int, today: str):
     # cộng dồn). Khi tiến trình này đã ghi req_date=today rồi thì các lần sau Increment thẳng —
     # 56 key x nhiều lần flush = hàng chục lượt đọc mỗi luồng, cắt được sạch.
     if _KEY_DATE_OK.get(key_id) == today:
-        ref.set({"req_today": firestore.Increment(int(n))}, merge=True)
+        _soft(lambda: ref.set({"req_today": firestore.Increment(int(n))}, merge=True), "incr_key_requests")
         return
     _cr("incr_key_requests")
     d = ref.get()
     x = (d.to_dict() or {}) if d.exists else {}
     if x.get("req_date") == today:
-        ref.set({"req_today": firestore.Increment(int(n))}, merge=True)
+        _soft(lambda: ref.set({"req_today": firestore.Increment(int(n))}, merge=True), "incr_key_requests")
     else:
-        ref.set({"req_today": int(n), "req_date": today}, merge=True)
+        _soft(lambda: ref.set({"req_today": int(n), "req_date": today}, merge=True), "incr_key_requests")
     _KEY_DATE_OK[key_id] = today
 
 
@@ -253,7 +289,7 @@ def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = Fals
         cur = _db_keys().collection("gemini_keys").document(key_id).get()
         if not (cur.exists and (cur.to_dict() or {}).get("dead_since")):
             patch["dead_since"] = _now()               # stamp mốc chết LẦN ĐẦU (giữ nguyên nếu đã chết từ trước)
-    _db_keys().collection("gemini_keys").document(key_id).set(patch, merge=True)
+    _soft(lambda: _db_keys().collection("gemini_keys").document(key_id).set(patch, merge=True), "mark_key_alive")
 
 
 _COOLED = {}   # key_id -> mốc (epoch) hết nghỉ ĐÃ GHI, để khỏi ghi lại cùng một thứ
@@ -281,7 +317,7 @@ def cool_key(key_id: str, minutes: int = 20):
     from datetime import timedelta
     until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
     _cw("cool_key")
-    _db_keys().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
+    _soft(lambda: _db_keys().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True), "cool_key")
     _COOLED[key_id] = until_ts
     # XOÁ ĐỆM read_keys NGAY: nếu không, tiến trình này còn dùng danh sách cũ tới 3 phút và tiếp tục
     # chọn đúng key vừa bị phạt -> ăn thêm 429 liên tiếp, đúng thứ cool_key sinh ra để tránh.
@@ -294,7 +330,7 @@ def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
     patch = {"used": int(used or 0), "used_synced_at": _now()}
     if cap_gb:
         patch["cap_gb"] = cap_gb
-    _db().collection("storage_accounts").document(f"{owner}__{name}").set(patch, merge=True)
+    _soft(lambda: _db().collection("storage_accounts").document(f"{owner}__{name}").set(patch, merge=True), "update_storage_used")
 
 
 def drive_usage(owner: str):
@@ -381,17 +417,18 @@ def new_render_request(owner: str, channel: str, vtype: str, seed: str,
     """Tạo yêu cầu render lại — CÙNG schema với nút 🔄 trên dashboard, nên process_requests xử lý
     y hệt: dựng lại từ kịch bản đã lưu, đẩy Drive, rồi BỎ bản cũ vào thùng rác."""
     ref = _db_meta().collection("render_requests").document()
-    ref.set({"owner": owner, "channel": channel, "type": vtype, "seed": seed or "",
+    _soft(lambda: ref.set({"owner": owner, "channel": channel, "type": vtype, "seed": seed or "",
              "replace_id": replace_id or "", "replace_account": replace_account or "",
-             "status": "pending", "created_at": _now()})
+             "status": "pending", "created_at": _now()}), "new_render_request")
     return ref.id
 
 
 def mark_job_requeued(job_id: str, req_id: str = ""):
     """Đánh dấu job đã xếp hàng render lại -> phiên sau không tạo yêu cầu trùng cho nó nữa."""
     try:
-        _db_jobs().collection("render_jobs").document(job_id).set(
-            {"requeued": True, "rerender": "chờ render lại", "rerender_req": req_id}, merge=True)
+        _soft(lambda: _db_jobs().collection("render_jobs").document(job_id).set(
+            {"requeued": True, "rerender": "chờ render lại", "rerender_req": req_id}, merge=True),
+            "mark_job_requeued")
     except Exception:
         pass
 
@@ -404,7 +441,7 @@ def delete_jobs_by_drive(owner: str, drive_id: str):
     for d in (_db_jobs().collection("render_jobs").where("owner", "==", owner)
               .where("drive_id", "==", drive_id).limit(5).stream()):
         try:
-            d.reference.delete()
+            _soft(lambda: d.reference.delete(), "delete_jobs_by_drive")
         except Exception:
             pass
 
@@ -450,18 +487,18 @@ def mark_thumb_request(req_id: str, status: str, note: str = "", attempt: int = 
         patch = {"status": status, "note": note[:120], "done_at": _now()}
         if attempt is not None:
             patch["attempt"] = attempt
-        _db_meta().collection("thumb_requests").document(req_id).set(patch, merge=True)
+        _soft(lambda: _db_meta().collection("thumb_requests").document(req_id).set(patch, merge=True), "mark_thumb_request")
     except Exception as e:
         print(f"   ⚠️ mark_thumb_request lỗi: {e}")
 
 
 def mark_request_status(req_id: str, status: str):
     """processing = đã bắt đầu render lại -> dashboard KHÓA nút hủy."""
-    _db_meta().collection("render_requests").document(req_id).set({"status": status, "started_at": _now()}, merge=True)
+    _soft(lambda: _db_meta().collection("render_requests").document(req_id).set({"status": status, "started_at": _now()}, merge=True), "mark_request_status")
 
 
 def mark_request_done(req_id: str, note: str = "done"):
-    _db_meta().collection("render_requests").document(req_id).set({"status": "done", "note": note, "done_at": _now()}, merge=True)
+    _soft(lambda: _db_meta().collection("render_requests").document(req_id).set({"status": "done", "note": note, "done_at": _now()}, merge=True), "mark_request_done")
 
 
 def where_am_i() -> str:
@@ -496,7 +533,7 @@ def where_am_i() -> str:
 def set_config(owner: str, patch: dict):
     """Ghi/merge render_config (vd xoá cờ run_now sau khi đã nhận lệnh)."""
     _cw("set_config")
-    _retry(lambda: _db_meta().collection("render_config").document(owner).set(patch, merge=True))
+    _soft(lambda: _db_meta().collection("render_config").document(owner).set(patch, merge=True), "set_config")
 
 
 _TOPICS_CACHE = {}   # (owner,channel) -> list; xoá khi save_topics (nguồn đổi duy nhất trong phiên)
@@ -526,7 +563,7 @@ def save_topics(owner: str, channel: str, topics: list[str]):
     cur = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
     cur = (cur + [t for t in topics if t])[-300:]
     _cw("save_topics")
-    ref.set({"owner": owner, "channel": channel, "topics": cur}, merge=True)
+    _soft(lambda: ref.set({"owner": owner, "channel": channel, "topics": cur}, merge=True), "save_topics")
 
 
 def read_trend_scout(owner: str, channel: str) -> list[str]:
@@ -542,8 +579,8 @@ def read_trend_scout(owner: str, channel: str) -> list[str]:
 def save_trend_scout(owner: str, channel: str, trends: list[str]):
     """Ghi đè (không cộng dồn vô hạn) — mỗi lần quét lại là bản MỚI thay bản cũ, tránh phình."""
     try:
-        _db_meta().collection("trend_scout").document(f"{owner}__{channel}").set(
-            {"owner": owner, "channel": channel, "trends": trends[:5], "updated_at": _now()}, merge=True)
+        _soft(lambda: _db_meta().collection("trend_scout").document(f"{owner}__{channel}").set(
+            {"owner": owner, "channel": channel, "trends": trends[:5], "updated_at": _now()}, merge=True), "save_trend_scout")
     except Exception as e:
         print(f"   ⚠️ save_trend_scout {channel} lỗi: {e}")
 
@@ -687,17 +724,17 @@ def clear_resumed(job_id: str):
     """Đã DÙNG XONG checkpoint (resume thành công hoặc thất bại lại) -> xoá script khỏi job CŨ,
     tránh 2 lần resume cùng 1 kịch bản (lẫn lộn/trùng)."""
     try:
-        _db_jobs().collection("render_jobs").document(job_id).set(
-            {"script": "", "step": "♻️ đã dùng để resume phiên sau"}, merge=True)
+        _soft(lambda: _db_jobs().collection("render_jobs").document(job_id).set(
+            {"script": "", "step": "♻️ đã dùng để resume phiên sau"}, merge=True), "clear_resumed")
     except Exception as e:
         print(f"   ⚠️ clear_resumed {job_id} lỗi: {e}")
 
 
 def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "") -> str:
     _cw("new_job")
-    db = _db_jobs(); ref = db.collection("render_jobs").document()
-    ref.set({"owner": owner, "channel": channel, "type": vtype, "pver": pver,   # pver = phiên bản pipeline -> dọn thông minh (chỉ xóa bản CŨ)
-             "status": "queued", "step": "bắt đầu", "created_at": _now()})
+    db = _db_jobs(); ref = db.collection("render_jobs").document()   # id sinh OFFLINE -> quota chết vẫn có id
+    _soft(lambda: ref.set({"owner": owner, "channel": channel, "type": vtype, "pver": pver,   # pver = phiên bản pipeline -> dọn thông minh (chỉ xóa bản CŨ)
+             "status": "queued", "step": "bắt đầu", "created_at": _now()}), "new_job")
     return ref.id
 
 
@@ -727,7 +764,7 @@ def update_job(job_id: str, **patch):
     # (≈20 nhịp tim lỡ) là kết luận chết được, gate thoát nhanh hơn 12 lần.
     _cw("update_job")
     patch = dict(patch); patch["updated_at"] = _now()
-    _retry(lambda: _db_jobs().collection("render_jobs").document(job_id).set(patch, merge=True))
+    _soft(lambda: _db_jobs().collection("render_jobs").document(job_id).set(patch, merge=True), "update_job")
     # NHỊP TIM THẬT: bật/tắt theo trạng thái vừa ghi (xem _beat_loop bên dưới).
     _beat_set(None if st in ("done", "failed", "ratelimited") else job_id)
 
