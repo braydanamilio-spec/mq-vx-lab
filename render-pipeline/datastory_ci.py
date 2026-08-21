@@ -232,7 +232,10 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
             res = _try({"q": " ".join(query.split()[:2]), "page_size": pg, "license": "cc0,pdm", "mature": "false"})  # rút gọn từ khoá thử lại
         if not res:
             return None
-        fallback = None                                   # ảnh hợp lệ nhưng Vision không kiểm được -> dùng nếu không có ảnh KHỚP
+        # DANH SÁCH (không phải 1 ảnh): Vision hỏng/429 thì MỌI ứng viên trả None -> nếu chỉ giữ 1 ảnh
+        # dự phòng thì cả cảnh chỉ có 1 hình, mất hẳn nhịp cắt 2-3s (log 21/8: "7 cảnh giữ một ảnh
+        # quá 3.5s"). Giữ đủ `need` ảnh dự phòng -> nhịp cắt vẫn chạy dù Vision đang down.
+        fallback = []                                     # ảnh hợp lệ nhưng Vision không kiểm được
         checked = 0
         picked = []                                       # NHIỀU ảnh khác nhau từ CÙNG 1 lần tìm -> cắt cảnh 2-3s
         need = 1 + len(extra or [])                       # mà KHÔNG tốn thêm lượt gọi Openverse nào
@@ -250,17 +253,18 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
                     v = verify(dest)                      # KIỂM khớp chủ đề
                     if v is True:
                         picked.append(data)
-                    elif v is None and fallback is None:  # Vision lỗi -> giữ ảnh đầu tiên làm dự phòng
-                        fallback = data
+                    elif v is None and len(fallback) < need:   # Vision lỗi -> gom đủ ảnh dự phòng
+                        fallback.append(data)
                     checked += 1
-                    if checked >= max_check and picked:   # hết ngân sách kiểm mà đã có ảnh -> dừng
+                    # hết ngân sách kiểm VÀ đã đủ ảnh (khớp hoặc dự phòng) -> dừng
+                    if checked >= max_check and (picked or len(fallback) >= need):
                         break
                 if len(picked) >= need:
                     break
             except Exception:
                 continue
-        if not picked and verify and fallback is not None:  # không ảnh nào KHỚP chắc, nhưng có ảnh dự phòng (Vision down)
-            picked = [fallback]
+        if not picked and verify and fallback:            # không ảnh nào KHỚP chắc, nhưng có ảnh dự phòng (Vision down)
+            picked = fallback
         if not picked:
             return None                                   # verify bật mà không ảnh nào khớp -> THÀ KHÔNG ẢNH còn hơn ảnh SAI
         open(dest, "wb").write(picked[0])
