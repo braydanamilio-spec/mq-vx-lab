@@ -1054,8 +1054,9 @@ def plan_mode():
     # nuốt mất cơ hội của các mẻ 4h kế tiếp -> tổng video/ngày sụt hẳn dù không lỗi gì. Cắt về đúng
     # MAX_MATRIX (khớp max-parallel YAML) -> mỗi phiên LUÔN 1 đợt, xong đúng hạn, nhường lượt sòng phẳng
     # cho phiên sau (đã xáo ngẫu nhiên nên nhóm bị cắt lần này ưu tiên lần sau).
-    MAX_MATRIX = 10   # PHẢI khớp strategy.max-parallel trong .github/workflows/render_cron.yml
-                      # 10 kênh/vòng x (1 long + 3 short) = 10 long + 30 short — đúng mẻ user đặt.
+    MAX_MATRIX = 18   # PHẢI khớp strategy.max-parallel trong .github/workflows/render_cron.yml
+                      # Mẻ 10 long/30 short do round_long/round_short lo (trần TỪNG KÊNH mỗi phiên),
+                      # không phải do số luồng -> 18 luồng vẫn đúng mẻ, chỉ phục vụ được nhiều kênh hơn.
 
     # CHỈ XẾP KÊNH CÒN VIỆC — 20/8: trước đây lấy đại 18 kênh mà KHÔNG xét kênh nào đã đủ chỉ tiêu.
     # Kênh đủ target vẫn được cấp 1 slot, job khởi động rồi thoát ngay -> nhìn dashboard thấy "đang

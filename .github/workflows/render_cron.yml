@@ -1,7 +1,7 @@
-name: MM0 Render Factory (10 kênh/vòng · 10 long + 30 short)
+name: MM0 Render Factory (18 luồng song song)
 
 # NHÀ MÁY 10 LUỒNG: job "plan" điều phối (gating + health-check + re-render + xuất danh sách kênh),
-# rồi job "render" chạy MỖI KÊNH 1 LUỒNG song song (matrix, tối đa 10 — khớp max-parallel dưới +
+# rồi job "render" chạy MỖI KÊNH 1 LUỒNG song song (matrix, tối đa 18 — khớp max-parallel dưới +
 # MAX_MATRIX trong run_render.py plan_mode(), 2 nơi PHẢI khớp nhau). Video tự rải đều kho Drive.
 # Secrets: GCP_SA_KEY, FIREBASE_PROJECT_ID, OWNER_UID, AUTOPUBLISHER_REPO, AUTOPUBLISHER_TOKEN, GEMINI_SYSTEM_PROMPT
 
@@ -118,11 +118,10 @@ jobs:
     needs: plan
     if: needs.plan.outputs.channels != '' && needs.plan.outputs.channels != '[]'
     strategy:
-      max-parallel: 10        # 10 KÊNH/vòng, mỗi kênh 1 long + 3 short = 10 long + 30 short đúng mẻ user đặt.
-                              # (Trần GitHub free là 20 job/tài khoản, nên 10 vẫn dư chỗ cho đăng bài.)
-                              # Trước để 18: hồi đó mỗi luồng chỉ đẻ short rời rạc nên cần nhiều luồng;
-                              # giờ 1 luồng ra 4 video gắn nhau, 10 luồng là vừa mẻ. Kênh dư XẾP HÀNG
-                              # phiên sau -> xoay vòng đều, không kênh nào bị bỏ.
+      max-parallel: 18        # trần GitHub free = 20 job/tài khoản; để 18 (dư 2 cho đăng bài).
+                              # SỐ LUỒNG và MẺ 10 long/30 short là HAI THỨ KHÁC NHAU: round_long/round_short
+                              # (mặc định 10/30) là trần CHO TỪNG KÊNH trong một phiên, không phải tổng phiên.
+                              # Nên chạy 18 luồng vẫn đúng mẻ — chỉ là nhiều kênh được phục vụ hơn mỗi vòng.
       fail-fast: false        # 1 kênh lỗi KHÔNG hủy các kênh khác
       matrix:
         channel: ${{ fromJson(needs.plan.outputs.channels) }}
