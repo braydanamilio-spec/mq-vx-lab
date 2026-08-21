@@ -1402,7 +1402,11 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     if not _scs:
         _scs = [{"nar": story.get("hook") or story.get("title") or "", "img_query": story.get("title")}]
     _hook = (story.get("hook") or "").strip()
-    _outro = (story.get("outro") or "").strip()
+    # KHÔNG gộp outro: schema doc định nghĩa outro = "spoken closing + soft CTA (follow for more)"
+    # — đúng loại câu rule user CẤM. Tệ hơn ở bản long ghép 3 phần: CTA của phần 1/2 rơi vào GIỮA
+    # video (mốc 1/3, 2/3) — người xem nghe "follow for more" khi video còn 2/3 nội dung.
+    # Video kết thúc ở câu nội dung cuối cùng, không đuôi thừa.
+    _outro = ""
     i = 0
     for k, sc0 in enumerate(_scs):
         nar = (sc0.get("nar") or "").strip()
