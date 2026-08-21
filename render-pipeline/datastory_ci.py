@@ -84,6 +84,39 @@ def _vision_key(keys):
     return ((keys or [{}])[0] or {}).get("key", "")
 
 
+def _verify_image_rot(path, subject, first_key="", tries=3):
+    """verify_image nhưng ĐỔI KEY khi 429 — chốt 'ảnh phải khớp nội dung 100%'.
+
+    qc_vision.verify_image trả None khi Vision lỗi/hết quota, và caller fail-open (nhận ảnh chưa
+    kiểm). Trước đây nó dùng đúng keys[0] nên key đầu cạn là khâu KIỂM KHỚP TẮT HẲN cho cả phiên
+    -> ảnh tải về không ai soi, đúng lý do footage lệch nội dung (log 21/8: CRIMEUSA 278 lần
+    'verify_image lỗi'). Giờ gặp 429 thì đánh dấu key rồi thử key kế.
+    Trả True/False/None y như bản gốc (None = thật sự không kiểm được -> caller fail-open)."""
+    import qc_vision
+    seen = []
+    for _ in range(max(1, tries)):
+        k = None
+        for cand in ([first_key] if first_key else []) + list(_AI_POOL["keys"]):
+            if cand and cand not in _VIS_DEAD and cand not in seen:
+                k = cand; break
+        if not k:
+            break
+        seen.append(k)
+        hit = {"quota": False}
+        prev = getattr(qc_vision, "on_quota", None)
+        def _cb(err, _h=hit):
+            _h["quota"] = True
+        qc_vision.on_quota = _cb
+        try:
+            r = qc_vision.verify_image(path, subject, api_key=k)
+        finally:
+            qc_vision.on_quota = prev
+        if not hit["quota"]:
+            return r                       # đã kiểm được (True/False) hoặc lỗi khác -> trả luôn
+        _VIS_DEAD.add(k)                   # key này hết hạn mức Vision -> thử key kế
+    return None                            # thật sự không kiểm được -> caller fail-open như cũ
+
+
 def _check_visual_rot(mp4, keys, tries=3, **kw):
     """check_visual nhưng ĐỔI KEY khi gặp 429, thay vì bỏ qua QC luôn.
 
@@ -1240,7 +1273,8 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     scenes_out = []
     import qc_vision
     # ai_only: ảnh nào cũng do AI vẽ theo prompt, không có "ảnh thật tải về" để verify khớp/sai -> khỏi tốn Vision API.
-    vf_for = (lambda subj: (lambda p: qc_vision.verify_image(p, subj, api_key=api_key))) if (api_key and not ai_only) else (lambda subj: None)
+    # XOAY KEY cho khâu kiểm khớp ảnh: kẹt keys[0] thì key đầu cạn là tắt hẳn kiểm khớp cả phiên.
+    vf_for = (lambda subj: (lambda p: _verify_image_rot(p, subj, first_key=api_key))) if (api_key and not ai_only) else (lambda subj: None)
 
     def add_scene(i, nar, kind, img_query=None, title="", hook=None, alt_queries=None):
         amp3 = os.path.join(sdir, f"{prefix}s{i}.mp3")
