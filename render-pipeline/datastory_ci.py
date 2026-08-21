@@ -168,7 +168,7 @@ def _generate_character_ref(channel, prompt, api_key) -> str | None:
 
 
 def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None, ai_prompt=None,
-                ai_style=None, ai_only=False):
+                ai_style=None, ai_only=False, extra=None):
     """Tải 1 ảnh từ Openverse — ƯU TIÊN CC0/Public Domain (KHÔNG cần ghi nguồn, an toàn bản quyền).
     verify(path)->True/False/None: kiểm ảnh có KHỚP chủ đề không (dùng cho GUESS). True=nhận, False=thử ảnh khác,
     None=không kiểm được (Vision lỗi) -> nhớ làm dự phòng. Lỗi/ảnh hỏng/không khớp -> trả None.
@@ -185,7 +185,8 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
         with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=20) as r:
             return json.load(r).get("results") or []
     ar = {"tall": "tall", "wide": "wide"}.get(orient or "")   # KHỚP ĐỊNH DẠNG: short=dọc(tall), long=ngang(wide)
-    pg = max(6, max_check + 2) if verify else 3               # cần verify -> lấy nhiều ứng viên hơn để chọn ảnh KHỚP
+    _need = 1 + len(extra or [])
+    pg = max(6, max_check + 2, _need * 3) if verify else max(3, _need * 3)   # cần verify/nhiều ảnh -> lấy nhiều ứng viên hơn
     base = {"page_size": pg, "license": "cc0,pdm", "mature": "false"}
     if ar:
         base["aspect_ratio"] = ar
@@ -200,29 +201,40 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
             return None
         fallback = None                                   # ảnh hợp lệ nhưng Vision không kiểm được -> dùng nếu không có ảnh KHỚP
         checked = 0
-        for cand in res:                                  # duyệt cho tới khi ra 1 ảnh HỢP LỆ (+ KHỚP nếu có verify)
+        picked = []                                       # NHIỀU ảnh khác nhau từ CÙNG 1 lần tìm -> cắt cảnh 2-3s
+        need = 1 + len(extra or [])                       # mà KHÔNG tốn thêm lượt gọi Openverse nào
+        for cand in res:                                  # duyệt cho tới khi đủ ảnh HỢP LỆ (+ KHỚP nếu có verify)
             try:
                 with urllib.request.urlopen(urllib.request.Request(cand["url"], headers=UA), timeout=30) as r:
                     ctype = (r.headers.get("Content-Type") or "").lower()
                     data = r.read()
                 if len(data) < 2000 or ("image" not in ctype and not _is_image(data)) or not _is_image(data):
                     continue                              # HTML/redirect/hỏng/định dạng lạ -> bỏ, thử ảnh khác
-                open(dest, "wb").write(data)
                 if not verify:
-                    return dest
-                v = verify(dest)                          # KIỂM khớp chủ đề
-                if v is True:
-                    return dest
-                if v is None and fallback is None:        # Vision lỗi -> giữ ảnh đầu tiên làm dự phòng
-                    fallback = data
-                checked += 1
-                if checked >= max_check:
+                    picked.append(data)
+                else:
+                    open(dest, "wb").write(data)          # verify cần đọc từ file
+                    v = verify(dest)                      # KIỂM khớp chủ đề
+                    if v is True:
+                        picked.append(data)
+                    elif v is None and fallback is None:  # Vision lỗi -> giữ ảnh đầu tiên làm dự phòng
+                        fallback = data
+                    checked += 1
+                    if checked >= max_check and picked:   # hết ngân sách kiểm mà đã có ảnh -> dừng
+                        break
+                if len(picked) >= need:
                     break
             except Exception:
                 continue
-        if verify and fallback is not None:               # không ảnh nào KHỚP chắc, nhưng có ảnh dự phòng (Vision down)
-            open(dest, "wb").write(fallback); return dest
-        return None                                       # verify bật mà không ảnh nào khớp -> THÀ KHÔNG ẢNH còn hơn ảnh SAI
+        if not picked and verify and fallback is not None:  # không ảnh nào KHỚP chắc, nhưng có ảnh dự phòng (Vision down)
+            picked = [fallback]
+        if not picked:
+            return None                                   # verify bật mà không ảnh nào khớp -> THÀ KHÔNG ẢNH còn hơn ảnh SAI
+        open(dest, "wb").write(picked[0])
+        for _k, _p in enumerate(extra or []):             # ảnh phụ: thiếu thì thôi, caller tự kiểm tồn tại
+            if _k + 1 < len(picked):
+                open(_p, "wb").write(picked[_k + 1])
+        return dest                                       # verify bật mà không ảnh nào khớp -> THÀ KHÔNG ẢNH còn hơn ảnh SAI
     got = None
     if not ai_only:
         try:
@@ -1213,7 +1225,7 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
 
 def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE", accent2="#F5B301", handle="@doc",
                     ai_style=None, ai_only=False, music=None, mode=None, host_prompt=None):
-    """Dựng props Cinematic (Wave 2): intro chapter + cảnh ảnh (fetch + Vision verify khớp) + outro chapter.
+    """Dựng props Cinematic (Wave 2): CHỈ các cảnh có ảnh (fetch + Vision verify khớp) — KHÔNG intro/outro.
     Asset: PUB/<slug>/*.mp3 (giọng) + PUB/<slug>/clips/*.jpg (ảnh). dur tính bằng FRAME (30fps).
     ai_style/ai_only: kênh speculative (không có ảnh thật để so) -> gu vẽ riêng + bỏ qua Openverse hẳn.
     music: nhạc nền cực nhẹ xuyên suốt — MẶC ĐỊNH TẮT (None). 13 kênh doc-format có tông rất khác nhau
@@ -1230,31 +1242,62 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     # ai_only: ảnh nào cũng do AI vẽ theo prompt, không có "ảnh thật tải về" để verify khớp/sai -> khỏi tốn Vision API.
     vf_for = (lambda subj: (lambda p: qc_vision.verify_image(p, subj, api_key=api_key))) if (api_key and not ai_only) else (lambda subj: None)
 
-    def add_scene(i, nar, kind, img_query=None, title=""):
+    def add_scene(i, nar, kind, img_query=None, title="", hook=None):
         amp3 = os.path.join(sdir, f"s{i}.mp3")
         dur_s, _subs, _ = TK.synth(nar or title or "…", amp3)
         durF = max(48, round((dur_s + 0.5) * FPS))
         # KHÔNG truyền subs (TK trả dạng TỪ, Cinematic cần dạng CÂU) -> để engine tự tạo caption từ nar (khớp giọng đều).
         sc = {"type": kind, "audio": f"s{i}.mp3", "dur": durF, "nar": nar or "", "title": title or ""}
+        if hook:
+            sc["hook"] = hook          # cảnh MỞ ĐẦU: số liệu to + nhãn + câu hỏi mở, đè lên footage
         if img_query:
+            # CẮT CẢNH 2-3 GIÂY: một cảnh dài 6-8s mà đứng yên 1 tấm ảnh là nhàm. Chia cảnh thành
+            # các đoạn ~2.6s, mỗi đoạn MỘT ẢNH KHÁC — lấy hết trong CÙNG 1 lần tìm Openverse nên
+            # không tốn thêm lượt gọi API nào. Tối đa 3 ảnh/cảnh (đủ nhịp, không phình thời gian tải).
+            segs = max(1, min(3, round(durF / (2.6 * FPS))))
+            extra_paths = [os.path.join(cdir, f"s{i}_{k}.jpg") for k in range(1, segs)]
+            for _p in extra_paths:                     # dọn file cũ của video trước -> không nhận nhầm
+                try: os.remove(_p)
+                except OSError: pass
             got = fetch_image(img_query, os.path.join(cdir, f"s{i}.jpg"), orient="tall", verify=vf_for(img_query),
-                              ai_key=api_key, ai_style=ai_style, ai_only=ai_only)
+                              ai_key=api_key, ai_style=ai_style, ai_only=ai_only, extra=extra_paths)
             if got:
-                sc["clip"] = f"s{i}.jpg"     # chapter cũng nhận ảnh nền (Cinematic.tsx phủ tối cho chữ nổi)
-            elif kind != "chapter":
-                sc["type"] = "chapter"; sc["title"] = title or (story.get("title") or "")  # không ảnh khớp -> cosmic bg (không dùng ảnh sai)
+                sc["clip"] = f"s{i}.jpg"
+                _cl = [f"s{i}.jpg"] + [os.path.basename(_p) for _p in extra_paths if os.path.exists(_p)]
+                if len(_cl) > 1:
+                    sc["clips"] = _cl              # engine tự chia đều thời lượng cho từng ảnh
+            # KHÔNG có ảnh -> giữ nguyên type 'scene', chỉ thiếu clip: engine vẫn vẽ nền theo tông kênh
+            # (ThemedBase) + phụ đề. TRƯỚC ĐÂY hạ xuống 'chapter' -> hiện thẻ CHỮ TO trên nền trơn giữa
+            # video, đúng thứ user không muốn. Thà nền tông kênh còn hơn một thẻ tiêu đề chen ngang.
         scenes_out.append(sc)
 
+    # KHÔNG INTRO, KHÔNG OUTRO (rule của user). Trước đây dựng 2 thẻ chapter — chữ to trên nền
+    # cosmic, không ảnh — kẹp đầu và cuối video. Vì thumbnail lấy đúng khung MỞ ĐẦU nên mọi video
+    # ra một tấm chữ-trên-nền-đen na ná nhau, và người xem phải chờ hết thẻ mới thấy nội dung.
+    # Giờ: video VÀO THẲNG cảnh có footage. Lời hook gộp vào cảnh 1, lời kết gộp vào cảnh cuối
+    # -> không mất chữ nào, chỉ bỏ 2 thẻ tiêu đề.
+    _scs = [x for x in (story.get("scenes") or []) if (x.get("nar") or x.get("img_query"))]
+    if not _scs:
+        _scs = [{"nar": story.get("hook") or story.get("title") or "", "img_query": story.get("title")}]
+    _hook = (story.get("hook") or "").strip()
+    _outro = (story.get("outro") or "").strip()
     i = 0
-    # CẢNH MỞ ĐẦU cũng lấy ẢNH THẬT làm nền, dùng img_query của cảnh 1 (sát nội dung hook nhất).
-    # Trước đây mở đầu là thẻ chữ trơn trên nền cosmic; mà thumbnail lấy đúng khung mở đầu -> mọi
-    # video ra một tấm CHỮ TRÊN NỀN ĐEN na ná nhau, không có footage nào.
-    _sc0 = (story.get("scenes") or [{}])[0]
-    add_scene(i, story.get("hook") or story.get("title"), "chapter",
-              img_query=_sc0.get("img_query"), title=story.get("title")); i += 1
-    for s in (story.get("scenes") or []):
-        add_scene(i, s.get("nar"), "scene", img_query=s.get("img_query"), title=s.get("title", "")); i += 1
-    add_scene(i, story.get("outro") or "Follow for more.", "chapter", title=""); i += 1
+    for k, sc0 in enumerate(_scs):
+        nar = (sc0.get("nar") or "").strip()
+        if k == 0 and _hook and not nar.startswith(_hook):
+            nar = f"{_hook} {nar}".strip()          # hook đọc ngay trên footage, không cần thẻ riêng
+        if k == len(_scs) - 1 and _outro and _outro not in nar:
+            nar = f"{nar} {_outro}".strip()         # lời kết nối vào cảnh cuối, bỏ thẻ outro
+        # CẢNH 1 = CẢNH HOOK (giống kênh 01/02/03): footage thật + SỐ LIỆU TO + câu hỏi mở đè lên,
+        # đọc luôn lời hook. Không phải thẻ tiêu đề chờ sẵn — vào là hook ngay.
+        hk = None
+        if k == 0:
+            _stat = str(story.get("thumb_stat") or "").strip()
+            _lab = str(story.get("thumb_label") or "").strip()
+            _q = str(story.get("thumb_hook") or "").strip()
+            if _stat or _q:
+                hk = {"stat": _stat[:8], "label": _lab[:20], "line": _q[:22]}
+        add_scene(i, nar, "scene", img_query=sc0.get("img_query"), title=sc0.get("title", ""), hook=hk); i += 1
     props = {"scenes": scenes_out, "slug": slug_, "handle": handle, "accent": accent, "accent2": accent2}
     if music:
         props["music"] = music

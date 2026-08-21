@@ -8,7 +8,7 @@ import { AbsoluteFill, Audio, Sequence, OffthreadVideo, Img, staticFile, interpo
 //   hud (data-HUD, tuỳ chọn): { kind:"timeline"|"scale"|"counter"|"countdown", value?, from?, to?, unit?, label?, marks?:string[] }
 type HUD = { kind: string; value?: number; from?: number; to?: number; unit?: string; label?: string; marks?: string[] };
 type Sub = { t: string; s: number; d: number };
-type Scene = { type: string; clip?: string; clip2?: string; fx?: string; audio: string; dur: number; nar: string; amp?: number[]; hud?: HUD; title?: string; num?: string; subs?: Sub[] };
+type Scene = { type: string; clip?: string; clip2?: string; clips?: string[]; fx?: string; audio: string; dur: number; nar: string; amp?: number[]; hud?: HUD; title?: string; num?: string; subs?: Sub[]; hook?: { stat?: string; label?: string; line?: string } };
 export type CProps = { scenes: Scene[]; slug: string; handle?: string; accent?: string; accent2?: string; ink?: string; music?: string; mode?: "duel" | "file"; host?: string };
 export const calcCinematic = ({ props }: { props: CProps }) => ({ durationInFrames: Math.max(1, props.scenes.reduce((a, s) => a + s.dur, 0)) });
 const ci = (v: number, a: number, b: number, x: number, y: number) => interpolate(v, [a, b], [x, y], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
@@ -164,12 +164,16 @@ const FxLayer: React.FC<{ kind: string; l: number }> = ({ kind, l }) => {
 const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; accent2: string; idx: number; mode?: "duel" | "file" }> = ({ s, l, slug, accent, accent2, idx, mode }) => {
   const f = useCurrentFrame();
   // CẮT NHANH: cảnh có clip2 -> nửa đầu clip, nửa sau clip2 (đổi hình giữa cảnh, nhịp dồn, hết đứng hình)
-  const half = s.dur / 2; const useC2 = !!s.clip2 && l >= half;
-  const clip = useC2 ? s.clip2 : s.clip;
-  const cl = useC2 ? l - half : l;                 // frame trong PHÂN ĐOẠN
-  // ép >=1: nếu s.dur là 0 (cảnh lỗi/rỗng), ci(cl,0,cdur,...) bên dưới sẽ nhận khoảng [0,0] -> Remotion interpolate() throw
-  const cdur = Math.max(1, s.clip2 ? half : s.dur);   // độ dài phân đoạn
-  const seg = useC2 ? idx + 1 : idx;               // đổi hướng KB giữa 2 phân đoạn
+  // CẮT NHANH: s.clips = nhiều ảnh cho MỘT cảnh -> chia đều thời lượng, ~2-3s đổi hình một lần.
+  // (clip2 là bản cũ chỉ chia đôi; vẫn đỡ để props cũ không gãy.)
+  const list: string[] = (s.clips && s.clips.length ? s.clips : (s.clip2 ? [s.clip!, s.clip2] : (s.clip ? [s.clip] : [])));
+  const nSeg = Math.max(1, list.length);
+  const segLen = Math.max(1, s.dur / nSeg);        // ép >=1: s.dur=0 (cảnh lỗi) -> interpolate() sẽ throw
+  const segI = Math.min(nSeg - 1, Math.floor(l / segLen));
+  const clip = list[segI];
+  const cl = l - segI * segLen;                    // frame trong PHÂN ĐOẠN
+  const cdur = Math.max(1, segLen);                // độ dài phân đoạn
+  const seg = idx + segI;                          // đổi hướng Ken Burns giữa các phân đoạn
   const isImg = !!clip && /\.(jpg|jpeg|png|webp)$/i.test(clip);
   const amt = isImg ? 0.13 : 0.16; const base = isImg ? 1.06 : 1.11;
   const zoomIn = seg % 2 === 0;
@@ -254,6 +258,33 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
             : <OffthreadVideo src={staticFile(`${slug}/clips/${clip}`)} muted loop style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
         </div>
       )}
+      {s.hook && (() => {
+        // LỚP HOOK cảnh mở đầu (giống kênh 01/02/03): SỐ LIỆU TO + nhãn + câu hỏi mở, đè lên footage
+        // thật. Vào video là hook ngay — KHÔNG thẻ intro chờ sẵn. Thumbnail lấy đúng khung này nên
+        // ảnh bìa cũng thành một tấm hook có số liệu, không còn chữ trơn trên nền đen.
+        const hk = s.hook as { stat?: string; label?: string; line?: string };
+        const t = (hk.stat || "") + (hk.line || "");
+        let h = 0; for (let k = 0; k < t.length; k++) h = (h * 31 + t.charCodeAt(k)) >>> 0;
+        const v = h % 4;                                    // 4 bố cục -> không lặp một mô-típ
+        // hiện nhanh (12fr) -> giữ ~2.5s -> mờ đi, nhường chỗ cho footage. Không giữ suốt cảnh:
+        // số liệu to che hình cả 8 giây thì lại thành "tấm bảng chữ" đúng thứ cần tránh.
+        const ein2 = Math.min(ci(l, 0, 12, 0, 1), ci(l, 78, 96, 1, 0));
+        const pos: any = v === 0 ? { alignItems: "center", justifyContent: "center", textAlign: "center" }
+          : v === 1 ? { alignItems: "flex-start", justifyContent: "center", textAlign: "left" }
+          : v === 2 ? { alignItems: "flex-start", justifyContent: "flex-end", textAlign: "left" }
+          : { alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left" };
+        const padV = v === 2 ? "0 100px 300px" : v === 3 ? "260px 100px 0" : "0 100px";
+        return (<AbsoluteFill style={{ pointerEvents: "none" }}>
+          {/* phủ tối vừa đủ: chữ hook luôn đọc được mà vẫn thấy rõ ảnh nền */}
+          <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(3,6,16,.66) 0%, rgba(3,6,16,.34) 45%, rgba(3,6,16,.82) 100%)" }} />
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", padding: padV, opacity: ein2, transform: `translateY(${(1 - ein2) * 26}px)`, ...pos }}>
+            {hk.stat ? <div style={{ fontSize: 210, fontWeight: 900, color: accent2, lineHeight: .94, letterSpacing: -4, textShadow: `0 0 60px ${accent2}55, 0 6px 30px rgba(0,0,0,.8)` }}>{hk.stat}</div> : null}
+            {hk.label ? <div style={{ fontSize: 46, fontWeight: 800, color: "#EAF8FF", letterSpacing: 2, marginTop: 6, textShadow: "0 3px 18px rgba(0,0,0,.85)" }}>{hk.label.toUpperCase()}</div> : null}
+            <div style={{ width: 140, height: 7, background: accent, borderRadius: 6, margin: v === 0 ? "26px auto" : "26px 0", boxShadow: `0 0 22px ${accent}` }} />
+            {hk.line ? <div style={{ fontSize: 62, fontWeight: 900, color: "#EAF8FF", lineHeight: 1.1, textShadow: `0 0 34px ${accent}55, 0 4px 22px rgba(0,0,0,.85)` }}>{hk.line.toUpperCase()}</div> : null}
+          </div>
+        </AbsoluteFill>);
+      })()}
       {/* grade nhẹ ở đáy cho caption (KHÔNG làm tối toàn khung — nền chủ đề đã lo phần không-đen) */}
       <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(4,10,26,0.0) 0%, rgba(2,3,10,0.04) 46%, rgba(2,3,10,0.58) 100%)" }} />
       <AbsoluteFill style={{ boxShadow: "inset 0 0 380px 110px rgba(0,0,0,0.45)" }} />
@@ -275,7 +306,10 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent 
   const einRaw = ci(l, 0, 15, 0, 1); const ein = 1 - Math.pow(1 - einRaw, 3); // easeOutCubic
   const entryScale = 1 + 0.05 * (1 - ein);
   const total = st[scenes.length - 1] + scenes[scenes.length - 1].dur;
-  const vidFade = Math.min(ci(f, 0, 14, 0, 1), ci(f, total - 14, total, 1, 0)); // fade mở/đóng CẢ video
+  // KHÔNG fade đen mở/đóng video (rule user): trước đây 14 frame đầu và 14 frame cuối fade từ/về ĐEN
+  // -> mở video là nửa giây đen (mất hook ngay giây đầu, YouTube tính giữ chân rất gắt ở đoạn này) và
+  // kết thúc cũng chìm vào đen. Giờ vào thẳng hình, kết thúc vẫn còn hình.
+  const vidFade = 1;
   // CROSS-DISSOLVE chuyên nghiệp KHÔNG-ĐEN: đầu mỗi cảnh, cảnh TRƯỚC còn hiện phía dưới, cảnh MỚI mờ chồng lên.
   // 2 lớp đều có hình -> không bao giờ về đen. (cảnh trước chạy quá dur ~13fr, clip loop/ảnh tĩnh vẫn có nội dung)
   const X = 13; const inCross = idx > 0 && l < X; const prevIdx = idx - 1;
@@ -312,6 +346,30 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent 
       {/* (bỏ film grain feTurbulence — vẽ lại mỗi frame quá nặng, làm render chậm 3-4x; không đáng) */}
       {handle && <div style={{ position: "absolute", top: 40, right: 48, color: "#ffffffbb", fontSize: 30, fontWeight: 800 }}>{handle}</div>}
       {scenes.map((sc, j) => <Sequence key={j} from={st[j]} durationInFrames={sc.dur}><Audio src={staticFile(`${slug}/${sc.audio}`)} /></Sequence>)}
+      {/* TIẾNG CHUYỂN CẢNH: whoosh ngắn 0.42s ở MỌI điểm cắt — cả chuyển cảnh lẫn đổi ảnh trong cảnh.
+          Dùng CHUNG kho sfx với BarChartRace/RaceLong/SwarmShort (9 engine khác) -> nghe đồng bộ cả
+          hệ. Âm lượng 0.4 đúng mức SwarmShort đặt cho whoosh mỗi nhịp (0.55-0.6 để dành cho cú mở
+          màn), đủ nghe mà không lấn lời thoại. */}
+      {(() => {
+        const cuts: number[] = [];
+        scenes.forEach((sc, j) => {
+          const n = Math.max(1, (sc.clips && sc.clips.length) ? sc.clips.length : (sc.clip2 ? 2 : 1));
+          const segLen = Math.max(1, sc.dur / n);
+          for (let q = 0; q < n; q++) {
+            const at = Math.round(st[j] + q * segLen);
+            if (at > 0) cuts.push(at);
+          }
+        });
+        return (<>
+          {/* CÚ MỞ MÀN: whoosh mạnh hơn ngay giây đầu, giống cold-open của RaceLong -> vào là có lực */}
+          <Sequence from={2} durationInFrames={18}><Audio src={staticFile("sfx/whoosh.mp3")} volume={0.55} /></Sequence>
+          {cuts.map((at, q) => (
+            <Sequence key={`sfx${q}`} from={at} durationInFrames={12}>
+              <Audio src={staticFile("sfx/whoosh.mp3")} volume={0.4} />
+            </Sequence>
+          ))}
+        </>);
+      })()}
       {/* NHẠC NỀN (mới) — cực nhẹ (0.12 đỉnh) để KHÔNG đè lời thoại, fade-in/out mượt đầu-cuối, loop suốt video. */}
       {music && <Audio src={staticFile(music)} loop volume={Math.min(ci(f, 0, 30, 0, 1), ci(f, total - 40, total, 1, 0)) * 0.12} />}
     </AbsoluteFill>
