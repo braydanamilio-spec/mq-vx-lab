@@ -73,6 +73,7 @@ python3 render-pipeline/check_thumbs.py --stress   # dựng ảnh mẫu 19 kênh
 ## 4. Chuẩn chất lượng
 - Long 16:9 ~8-12', 4-6 race/pillar cùng chủ đề. Short 9:16 30-55s, VIẾT LẠI (không crop). Mục tiêu/kênh: 100 long + 200-300 short.
 - Hook 3s: ảnh+chart+số NGAY, giọng từ frame 0, KHÔNG card chữ tĩnh, KHÔNG outro/CTA.
+  → Luật này CÓ TỪ ĐẦU nhưng code trôi mất nhiều ngày (dựng 2 thẻ chapter kẹp đầu-cuối). Nay đã có cổng chặn thật — xem **mục 4d**, đừng sửa code các phần đó mà không đọc 4d.
 - Ảnh CC0/PDM (khỏi ghi nguồn); nhạc Kevin MacLeod CC-BY (ghi nguồn trong description). Nội dung gốc → monetize OK.
 - Xóa Drive: CHỈ khi đã đăng ≥2 nền tảng (YouTube + FB/IG). Giữ lâu (archive).
 - **ẢNH khớp ĐỊNH DẠNG + NỘI DUNG**: short lấy ảnh DỌC (aspect_ratio=tall), long lấy ảnh NGANG (wide) — đã làm trong fetch_image(orient). Query ảnh phải BÁM đúng câu đang nói (Gemini visual.query = 2-5 từ cụ thể, danh từ hình ảnh được — không trừu tượng). Mục tiêu: ảnh khớp nội dung ~100%.
@@ -81,6 +82,38 @@ python3 render-pipeline/check_thumbs.py --stress   # dựng ảnh mẫu 19 kênh
   - Ảnh (nền/minh hoạ/hero) **KHÔNG quá nhỏ, KHÔNG tràn khung**: nền full-bleed objectFit cover; ảnh minh hoạ short = ~74% rộng khung dọc, long = hộp cố định phải; hero long ~68% cao. Ảnh phải khớp hướng (short=dọc, long=ngang).
   - QC-vision là CỔNG KIỂM BẮT BUỘC: chấm occlusion + ảnh quá nhỏ/tràn + text tràn mép. Ngưỡng nới (chỉ loại video hỏng thật) nhưng LUÔN log điểm + issue để soi.
 - **10 KÊNH PHẢI KHÁC BIỆT RÕ** (không cùng 1 motip lặp lại): mỗi kênh KHÁC về kiểu đồ hoạ + layout + màu + chuyển động, không chỉ đổi accent. Ý tưởng phân hoá: STATEWARS→BẢN ĐỒ bang (WorldMapRace + states-10m.json, đã có engine); DATARACE→bar-race vàng/tiền; MONEYMOVES→ticker giá/hoá đơn; POWERPLAY→bong bóng market-cap/logo; GRIDIRON→bảng điểm sân cỏ; SCREENKINGS→poster/box-office; PAYCHECK→cuống lương; BODYUSA→infographic cơ thể; RIDEUSA→showcase xe; EATSUSA→thẻ menu/calo. → CẦN build dần, mỗi kênh 1 template engine riêng (KHÔNG dùng chung RaceLong cho cả 10).
+
+## 4d. 🔴 CHUẨN CẤU TRÚC VIDEO — MỖI LUẬT GẮN VỚI 1 CỔNG CHẶN (21/8)
+
+**Bài học gốc:** luật "KHÔNG card chữ tĩnh, KHÔNG outro/CTA" đã nằm ở mục 4 TỪ TRƯỚC, nhưng code
+vẫn dựng 2 thẻ chapter kẹp đầu-cuối suốt nhiều ngày. Rule viết ra mà không có cổng chặn thì code
+sẽ trôi khỏi rule mà không ai biết. Từ nay MỖI luật phải kèm cột "chặn ở đâu" — không có cổng thì
+coi như chưa có luật.
+
+| # | LUẬT | Chặn ở đâu (code) | Chặn cứng? |
+|---|------|-------------------|-----------|
+| 1 | **1 long : 3 short**, short đi SAU long và bám nội dung long | `run_render._ratio_plan()` — short tối đa = 3 × số long ĐÃ CÓ; hết chỗ thì BUỘC làm long, kể cả `make_long=False` | ✅ cứng |
+| 2 | **KHÔNG intro, KHÔNG outro** (không thẻ chữ kẹp đầu/cuối) | `build_doc_props()` chỉ dựng cảnh nội dung; lời hook gộp vào cảnh 1, lời kết vào cảnh cuối. `qc_structure()` đếm `type=="chapter"` | ⚠️ cảnh báo |
+| 3 | **Mở đầu = cảnh hook có FOOTAGE THẬT** — cấm chữ trên nền trơn | 6 lớp dự phòng trong `add_scene` (query cảnh 1 → 3 cảnh sau → tiêu đề → Gemini vẽ → mượn ảnh cảnh sau) → `qc_structure()` CHẶN nếu cảnh 0 không có clip → `opening_is_flat()` soi VIDEO ĐÃ DỰNG | ✅ cứng, 2 lớp |
+| 4 | **Ảnh khớp nội dung 100%** | `_verify_image_rot()` (Gemini Vision, XOAY KEY khi 429). Không khớp → `False` → bỏ ảnh, thử ảnh khác | ⚠️ fail-open khi cả pool cạn |
+| 5 | **Cắt cảnh 2-3s**, không đứng yên 1 ảnh | `add_scene`: `segs = round(dur / 2.6s)`, tối đa 3 ảnh/cảnh, lấy trong CÙNG 1 lần tìm Openverse. `qc_structure()` cảnh báo nếu 1 ảnh đứng > 3.5s | ⚠️ cảnh báo |
+| 6 | **Có tiếng chuyển cảnh** | `Cinematic.tsx`: whoosh 0.55 mở màn + 0.4 mỗi nhịp cắt, dùng CHUNG `public/sfx/` với 9 engine khác | — |
+| 7 | **KHÔNG fade đen đầu/cuối** | `Cinematic.tsx`: `vidFade = 1` (trước là fade 14 frame hai đầu) | — |
+| 8 | **Không lặp một mô-típ** | 4 bố cục hook chọn theo hash tiêu đề → mỗi video một kiểu nhưng ỔN ĐỊNH khi render lại | — |
+| 9 | **Mô tả không được ghi sai** | Credit nhạc CC-BY chỉ thêm khi `story["_music"]` thật | ✅ cứng |
+
+### Thứ tự 3 lớp QC (rẻ trước, đắt sau)
+1. **`qc_structure(props)` — TRƯỚC render, miễn phí.** 0 ảnh / mở đầu không footage → CHẶN, khỏi phí 2-4 phút CPU.
+2. **`opening_is_flat(mp4)` — SAU render, miễn phí.** Đo pixel khung giây 1.2. Ngưỡng đo thật: có footage 43.9% tối · 1983 màu → đạt; ảnh thật TỐI 68.0% · 401 màu → vẫn đạt (không bắt oan); nền trơn 91.9% · 342 màu → BẮT. CHỈ áp cho `make_doc` (engine data-race mở bằng đồ hoạ có chủ đích).
+3. **`_check_visual_rot(mp4)` — Vision, tốn quota.** Đặt CUỐI.
+
+### ⚠️ Vision KHÔNG thay được luật cứng
+`check_visual` chấm **khuyết tật**, không chấm **chuẩn hấp dẫn** — prompt ghi rõ *"chỉ dưới 50 nếu THỰC SỰ vỡ; sạch, đọc được = 80+"*. Một thẻ chữ trên nền đen thì sạch và đọc rất rõ → luôn 80+. Nó làm đúng việc được giao; việc đó không bao gồm "video có nhàm không". **Cái gì ĐO ĐƯỢC thì phải chặn bằng code, đừng giao cho AI.**
+
+### Mọi khâu tốn quota Gemini PHẢI xoay key
+Ba khâu, ba pool riêng (hết quota ẢNH không có nghĩa key hỏng cho VIẾT CHỮ):
+`_AI_POOL` (vẽ ảnh) · `_VIS_DEAD` (Vision: `check_visual` + `verify_image`) · `key_manager` (viết kịch bản).
+Bám `keys[0]` = key đầu cạn là khâu đó TẮT HẲN cả phiên mà log vẫn "thành công".
 
 ## 4b. TIẾT KIỆM TOKEN GEMINI (free ít token) — VẪN GIỮ CHẤT LƯỢNG (rule bắt buộc)
 - Viết kịch bản: MIN_SCORE=90 **CỨNG** — chưa đạt thì VIẾT LẠI (MAX_TRIES=3), KHÔNG hạ chuẩn/không lấy bản <90; hết lượt vẫn <90 thì BỎ chủ đề (thà bỏ còn hơn ra rác). Token tiết kiệm nhờ thường đạt ngay vòng 1 (Gemini 94-100), không phải hạ bar.
