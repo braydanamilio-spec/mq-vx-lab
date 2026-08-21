@@ -37,14 +37,14 @@ def _make_thumb(video):
     """Trích 1 khung ĐẸP (giữa-cuối, lúc bars cao/số lớn) làm thumbnail — dùng cho YouTube + gallery."""
     try:
         dur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                              "-of", "default=nk=1:nw=1", video], capture_output=True, text=True).stdout.strip()
+                              "-of", "default=nk=1:nw=1", video], capture_output=True, text=True, timeout=60).stdout.strip()
         try:
             at = max(1.0, float(dur) * 0.62)
         except ValueError:
             at = 3.0
         thumb = os.path.splitext(video)[0] + "_thumb.jpg"
         subprocess.run(["ffmpeg", "-y", "-ss", str(at), "-i", video, "-frames:v", "1",
-                        "-vf", "scale=1280:-1", thumb], check=True, capture_output=True)
+                        "-vf", "scale=1280:-1", thumb], check=True, capture_output=True, timeout=300)
         return thumb if os.path.exists(thumb) else None
     except Exception as e:
         print("   ⚠️ thumbnail lỗi:", str(e)[:80]); return None
@@ -187,7 +187,11 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     _, story, ok, info = _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb,
                                                          resume_story=resume_story, avoid=(avoid + made_here))
                     err = None; break
-                except Exception as e:
+                except (Exception, SystemExit) as e:
+                    # BẮT CẢ SystemExit: key_manager/datastory_ci ném SystemExit khi hết Gemini key
+                    # ("Chưa có Gemini key nào"). SystemExit kế thừa BaseException nên "except
+                    # Exception" KHÔNG bắt -> nó xuyên lên giết cả kênh giữa chừng, để job ma kẹt ở
+                    # "writing"/"qc" mà GitHub vẫn báo success (đúng lỗi đã gặp với enqueue 20/8).
                     err = e; traceback.print_exc(); print(f"   🔧 {fmt.upper()} {channel}#{i} lỗi lần {att}: {str(e)[:100]}")
             if resumed:   # dù ok hay lỗi -> đã THỬ dùng checkpoint này rồi, không đưa cho clip kế/phiên sau nữa (tránh lặp vô hạn 1 kịch bản lỗi)
                 FB.clear_resumed(resumed["job_id"]); resumed = None
@@ -246,7 +250,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                                                             resume_checkpoint=rck,
                                                             accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"))
                 last_err = None; break
-            except Exception as e:
+            except (Exception, SystemExit) as e:
                 last_err = e; traceback.print_exc()
                 print(f"   🔧 LONG {channel} lỗi lần {attempt} ({nr} race): {str(e)[:120]}")
         if resumed_long:
@@ -305,7 +309,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 _, story, sok, sinfo = DS.make_video(channel, sub, "short", sout, keys=keys, tier=tier, on_status=sst, on_limit=cool, on_ok=okcb, resume_story=resume_story,
                                                       accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"))
                 serr = None; break
-            except Exception as e:
+            except (Exception, SystemExit) as e:
                 serr = e; traceback.print_exc(); print(f"   🔧 SHORT {channel}#{i} lỗi lần {satt}: {str(e)[:100]}")
         if resumed_short:
             FB.clear_resumed(resumed_short["job_id"]); resumed_short = None
@@ -446,7 +450,7 @@ def process_requests(keys, report):
                 report["done"] += 1; FB.mark_request_done(req["id"], "done")
             else:
                 st("failed", f"Render lại QC trượt: {info}"); FB.mark_request_done(req["id"], "qc-trượt")
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             traceback.print_exc(); st("failed", str(e)[:120]); FB.mark_request_done(req["id"], "lỗi")
 
 

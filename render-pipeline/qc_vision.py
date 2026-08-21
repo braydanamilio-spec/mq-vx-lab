@@ -52,7 +52,7 @@ def verify_image(path: str, subject: str, api_key: str = None, model_name: str =
 def _stills(mp4: str, fracs=(0.4, 0.7)):
     """Trích VÀI khung ở các mốc ỔN ĐỊNH (giữa race), tránh intro/outro/chuyển cảnh."""
     dur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                          "-of", "default=nk=1:nw=1", mp4], capture_output=True, text=True).stdout.strip()
+                          "-of", "default=nk=1:nw=1", mp4], capture_output=True, text=True, timeout=60).stdout.strip()
     try:
         d = float(dur)
     except ValueError:
@@ -62,7 +62,7 @@ def _stills(mp4: str, fracs=(0.4, 0.7)):
         at = max(1.0, d * fr)
         out = f"{mp4}.qc{i}.jpg"
         subprocess.run(["ffmpeg", "-y", "-ss", str(at), "-i", mp4, "-frames:v", "1",
-                        "-vf", "scale=720:-1", out], capture_output=True)
+                        "-vf", "scale=720:-1", out], capture_output=True, timeout=300)
         if os.path.exists(out):
             outs.append(out)
     return outs

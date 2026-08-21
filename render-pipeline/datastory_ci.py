@@ -160,13 +160,13 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
 def _concat(mp3s, out):
     lst = out + ".txt"; open(lst, "w").write("".join(f"file '{m}'\n" for m in mp3s))
     subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", out],
-                   check=True, capture_output=True)
+                   check=True, capture_output=True, timeout=300)
 
 
 def _dur(path):
     """Độ dài THẬT của file (giây) — dùng để cộng dồn offset sub chính xác (chống lệch dần)."""
     o = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                        "-of", "default=nk=1:nw=1", path], capture_output=True, text=True).stdout.strip()
+                        "-of", "default=nk=1:nw=1", path], capture_output=True, text=True, timeout=60).stdout.strip()
     try:
         return float(o)
     except ValueError:
@@ -742,7 +742,7 @@ def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
 def qc(mp4):
     """QC kỹ thuật: đủ giây + có audio + đúng khung."""
     def ff(args): return subprocess.run(["ffprobe", "-v", "error", *args, mp4],
-                                        capture_output=True, text=True).stdout.strip()
+                                        capture_output=True, text=True, timeout=60).stdout.strip()
     dur = float(ff(["-show_entries", "format=duration", "-of", "default=nk=1:nw=1"]) or 0)
     ach = ff(["-select_streams", "a", "-show_entries", "stream=codec_type", "-of", "default=nk=1:nw=1"])
     wh = ff(["-select_streams", "v", "-show_entries", "stream=width,height", "-of", "csv=p=0:s=x"])
@@ -818,7 +818,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
                   "statLabel": str(story.get("hook_caption") or "").strip()}
         tf = os.path.join(PUB, f"_racethumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
         subprocess.run(["npx", "remotion", "still", "src/index.ts", "DocThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True, timeout=240)
         if os.path.exists(thumb):
             story["_thumb"] = thumb; info["thumb"] = thumb
     except _HookDone as h:
@@ -1254,7 +1254,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
                   "hook": (story.get("thumb_hook") or "").strip()}
         tf = os.path.join(PUB, f"_docthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
         subprocess.run(["npx", "remotion", "still", "src/index.ts", "DocThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True, timeout=240)
         if os.path.exists(thumb):
             story["_thumb"] = thumb; info["thumb"] = thumb
     except _HookDone as h:
@@ -1628,7 +1628,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
                   "statLabel": str(first.get("hook_caption") or "").strip()}
         tf = os.path.join(PUB, f"_longthumb_{slug(channel)}.json"); json.dump(tprops, open(tf, "w"))
         subprocess.run(["npx", "remotion", "still", "src/index.ts", "DocThumb", thumb,
-                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True)
+                        f"--props=./{os.path.relpath(tf, ENG)}", "--log=error"], cwd=ENG, check=True, timeout=240)
         if os.path.exists(thumb):
             plan["_thumb"] = thumb; info["thumb"] = thumb
     except _HookDone as h:
@@ -1652,7 +1652,7 @@ def _mix_track(clips, total, out):
     filt.append(f"[{si}:a]volume=0[base]")
     filt.append("[base]" + "".join(labels) + f"amix=inputs={len(clips)+1}:normalize=0:duration=first[out]")
     subprocess.run(["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(filt),
-                    "-map", "[out]", "-ac", "2", "-ar", "44100", out], check=True, capture_output=True)
+                    "-map", "[out]", "-ac", "2", "-ar", "44100", out], check=True, capture_output=True, timeout=300)
 
 
 def build_guess_props(story, sdir, handle="@guessdaily", music="music/km_ascending.mp3", api_key=None):
