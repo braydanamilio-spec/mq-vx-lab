@@ -252,15 +252,15 @@ Seed: workflow `seed_channels.yml` (dry-run trước). Brand: brands.json (màu/
 
 | Kênh | Niche 1 dòng | Giọng | Màu |
 |---|---|---|---|
-| MADEUSA | đồ Mỹ được sản xuất thế nào (nhà máy/quy trình) | Davis | #E76F51 |
-| BUILTUSA | siêu công trình & kỳ quan kỹ thuật Mỹ | Tony | #457B9D |
-| UNDERUSA | dưới lòng nước Mỹ: hầm/hang/ống (tài liệu công khai) | Jason | #5E548E |
+| MADEUSA | đồ Mỹ được sản xuất thế nào (nhà máy/quy trình) | Andrew | #E76F51 |
+| BUILTUSA | siêu công trình & kỳ quan kỹ thuật Mỹ | Guy | #457B9D |
+| UNDERUSA | dưới lòng nước Mỹ: hầm/hang/ống (tài liệu công khai) | Brian | #5E548E |
 | RELICUSA | nước Mỹ bỏ hoang & vì sao (cấm cổ vũ trespass) | Aria | #8D6A4F |
 | FIRSTUSA | những "lần đầu tiên" của nước Mỹ (mốc lịch sử thật) | Jenny | #B22234 |
-| BRANDEDUSA | chuyện gốc logo/thương hiệu Mỹ (chỉ sử liệu) | Nancy | #111827 |
-| PRICEDUSA | giải phẫu giá: mỗi đô-la của ly latte đi đâu | Brandon | #0F766E |
+| BRANDEDUSA | chuyện gốc logo/thương hiệu Mỹ (chỉ sử liệu) | Emma | #111827 |
+| PRICEDUSA | giải phẫu giá: mỗi đô-la của ly latte đi đâu | Eric | #0F766E |
 | HAULUSA | hàng hoá di chuyển khắp Mỹ: cảng/rail/truck | Christopher | #CA8A04 |
-| FAKEUSA | hàng giả & scam bị bóc bằng data FTC/CBP (cấm how-to) | Amber | #DC2626 |
+| FAKEUSA | hàng giả & scam bị bóc bằng data FTC/CBP (cấm how-to) | Michelle | #DC2626 |
 | FARMUSA | thức ăn Mỹ đến từ đâu: nông trại quy mô (USDA) | Roger | #65A30D |
 
 Khác biệt với 42 kênh cũ: không kênh nào trùng lãnh địa (manufacturing/engineering/underground/

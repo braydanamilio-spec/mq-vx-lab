@@ -8,7 +8,7 @@
     "tier": "normal",
     "niche": "how iconic American products are actually made — factories, processes, materials. STRICT: real manufacturers and real production numbers only; never invent a process step.",
     "style": "process fascination, satisfying, precise",
-    "voice": "en-US-DavisNeural",
+    "voice": "en-US-AndrewNeural",
     "accent": "#E76F51",
     "accent2": "#FFD166",
     "category": "28"
@@ -22,7 +22,7 @@
     "tier": "normal",
     "niche": "American megastructures & engineering marvels — bridges, dams, tunnels, stadiums. STRICT: real dimensions, costs and dates from engineering records; never invent a spec.",
     "style": "awe of scale, cinematic, engineering wonder",
-    "voice": "en-US-TonyNeural",
+    "voice": "en-US-GuyNeural",
     "accent": "#457B9D",
     "accent2": "#F4A261",
     "category": "28"
@@ -36,7 +36,7 @@
     "tier": "normal",
     "niche": "what lies beneath America — tunnels, caves, pipelines, subways, bunkers (publicly documented only). STRICT: verified public information; never speculate about secure facilities.",
     "style": "mysterious but factual, layered reveal",
-    "voice": "en-US-JasonNeural",
+    "voice": "en-US-BrianNeural",
     "accent": "#5E548E",
     "accent2": "#E0AAFF",
     "category": "27"
@@ -78,7 +78,7 @@
     "tier": "normal",
     "niche": "origin stories and hidden details of famous American brands and logos. STRICT: documented company history only; never state rumors as fact; no trademark disparagement.",
     "style": "sleek, curious, design-focused",
-    "voice": "en-US-NancyNeural",
+    "voice": "en-US-EmmaNeural",
     "accent": "#111827",
     "accent2": "#F43F5E",
     "category": "27"
@@ -92,7 +92,7 @@
     "tier": "normal",
     "niche": "the anatomy of everyday American prices — where each dollar of a latte, sneaker or ticket actually goes. STRICT: real cost breakdowns from public filings/industry reports; illustrative only, never financial advice.",
     "style": "eye-opening, receipt-by-receipt",
-    "voice": "en-US-BrandonNeural",
+    "voice": "en-US-EricNeural",
     "accent": "#0F766E",
     "accent2": "#FDE047",
     "category": "27"
@@ -120,7 +120,7 @@
     "tier": "normal",
     "niche": "counterfeits and consumer scams in America, exposed with official data (FTC, CBP). STRICT: educational consumer protection only; NEVER explain how to counterfeit or run a scam; no victim blaming.",
     "style": "investigative, protective, sharp",
-    "voice": "en-US-AmberNeural",
+    "voice": "en-US-MichelleNeural",
     "accent": "#DC2626",
     "accent2": "#0EA5A5",
     "category": "27"
