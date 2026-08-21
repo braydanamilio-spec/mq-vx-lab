@@ -199,6 +199,9 @@ def incr_key_requests(key_id: str, n: int, today: str):
 
 
 def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = False, kind: str = ""):
+    """(xoá đệm read_keys khi đánh dấu key CHẾT -> vòng chọn key sau không lấy phải nó nữa)"""
+    if not alive:
+        _KEYS_CACHE.clear()
     """Ghi trạng thái sống/chết + LÝ DO + thời điểm check -> dashboard hiện 🟢/🔴 + tooltip vì sao.
     kind='permanent' -> CHẾT HẲN (denied/suspended/key sai), KHÔNG tự phục hồi -> health-check bỏ qua test lại.
     used=True: đánh dấu VỪA DÙNG THẬT -> stamp last_used (để lần sau ưu tiên key lâu chưa xài)."""
@@ -220,6 +223,9 @@ def cool_key(key_id: str, minutes: int = 90):
     from datetime import timedelta
     until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
     _db_keys().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True)
+    # XOÁ ĐỆM read_keys NGAY: nếu không, tiến trình này còn dùng danh sách cũ tới 3 phút và tiếp tục
+    # chọn đúng key vừa bị phạt -> ăn thêm 429 liên tiếp, đúng thứ cool_key sinh ra để tránh.
+    _KEYS_CACHE.clear()
 
 
 def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
