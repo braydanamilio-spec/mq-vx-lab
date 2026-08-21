@@ -158,6 +158,31 @@ gh run view <id> --repo braydanamilio-spec/mq-vx-lab --log
 - **Enqueue lỗi "Không có kênh trong channels.yaml"**: channels.yaml/brands.json sửa LOCAL nhưng CHƯA push repo private → CI dùng bản cũ. LUẬT: sửa config AutoPublisher xong PHẢI `git push` repo private (CI checkout từ đó).
 - **Xem video "Access Denied"/không tìm thấy kho**: file ở kho A, user login account B → chặn chéo. Worker tự-dò 22 kho dính giới hạn 50 subrequest/lần Cloudflare. FIX: (a) lưu `drive_account` vào job lúc enqueue; (b) dashboard dò-kho phía CLIENT (song song, không dính limit) + ghi lại vào job; (c) nút "🔗 Link full quyền" (anyoneWithLink). Video KHÔNG mất — publisher server-side đọc mọi kho.
 - **Handle gắn NHẦM (@dataracehq cho mọi kênh)**: build_props default hardcode. FIX: `channel_handle(channel)` đọc brands.json (handle mỗi kênh khác: @statewarsusa, @moneymovesusa…), fallback @<kênh>hq. LUẬT: thứ gì per-kênh (handle/accent/motif/folder) KHÔNG được hardcode 1 kênh.
+### 📅 21/8 — MỘT NGÀY, 15 BUG. NGUYÊN NHÂN GỐC CHUNG: xem cuối mục này
+
+- **429 Firestore triền miên dù đã tách 3 project** ⭐ GỐC RỄ THẬT: mỗi lỗi 429 của **Gemini** gọi `cool_key()` → **1 lượt GHI Firestore**. Đo thật: 1.201 lỗi 429 trong MỘT phiên → 1.201 lượt ghi vào B; ×15 phiên/ngày ≈ 18.000, gần trọn hạn mức free 20.000. Càng nhiều 429 càng ghi nhiều → Firestore chết → cả dây chuyền đứng. **Tách project KHÔNG cứu được** vì lỗi Gemini đang BIẾN THÀNH lượt ghi Firestore. FIX: `cool_key` khử trùng lặp (chỉ ghi khi mốc nghỉ lùi xa thêm >60s) → giảm 95%.
+- **`accuracy=10 < 92` ép viết lại 2-3 vòng MỌI video**: schema khai `"self_score": {"accuracy": int}` KHÔNG ghi thang điểm → model hiểu là điểm THÀNH PHẦN cộng vào total 100 (giống rubric ngay trên nó) nên trả ~10; code so với 92 → gần như luôn trượt. Đo: chỉ 28/186 video đạt vòng 1 → 378 lần gọi Gemini cho 186 video. FIX: ghi rõ `0-100` cho cả 10 schema. Sau fix: `đạt vòng 1` ở mọi luồng.
+- **Video toàn CHỮ TRÊN NỀN ĐEN**: nhánh `type==="chapter"` trong Cinematic.tsx chỉ vẽ CosmicBg + chữ, KHÔNG nhận ảnh; mà cảnh mở đầu LUÔN là chapter, còn thumbnail lấy đúng khung mở đầu. FIX: bỏ hẳn intro/outro, cảnh 1 thành CẢNH HOOK có footage thật + số liệu to.
+- **0 ảnh AI vẽ được / 209 lỗi**: `_generate_image_ai` nhận `api_key=keys[0]["key"]` → cả phiên dùng ĐÚNG 1 KEY. FIX: `_AI_POOL` xoay vòng.
+- **Vision QC tắt hẳn cả phiên**: `check_visual(api_key=keys[0])` — cùng lỗi. FIX: `_check_visual_rot`.
+- **Ảnh không khớp nội dung**: `verify_image(api_key=keys[0])` — CÙNG LỖI, sót lại sau 2 lần trên. FIX: `_verify_image_rot`.
+- **Nhịp cắt 2-3s chết khi Vision 429**: `fallback` chỉ giữ MỘT ảnh → Vision hỏng thì cả cảnh 1 hình. FIX: `fallback` thành danh sách.
+- **"quota cạn thật" khi mới thử 5/56 key**: mỗi 429 cắt key khỏi vòng xoay **90 phút** → pool teo ngay trong phiên. FIX: `AMBIG_COOL_MIN=20` + in `🔑 Pool key: N/56`.
+- **Đồng bộ dung lượng kho chưa từng chạy**: `plan_mode` thiếu `sys.path` cho `storage` → `No module named 'storage'`, bị try/except nuốt nhiều ngày. FIX: nạp `AUTOPUBLISHER_SRC`.
+- **Bước dọn video cũ trả rỗng**: `find_done_before` dùng `order_by` TĂNG DẦN + bất đẳng thức, mà index chỉ deploy bản DESCENDING. FIX: thêm index ASCENDING.
+- **Short ra thumbnail 1280x2276** (YouTube từ chối âm thầm): `_make_thumb` dùng `scale=1280:-1`. FIX: ép 1280x720, nền mờ lấp hai bên.
+- **Kênh ra "0 long · 3 short"**: 10 format đặc biệt rẽ vào nhánh CHỈ-SHORT, không có đường dựng long. FIX: `make_doc_long` (1 long + 3 short dùng chung giọng/ảnh) + `_ratio_plan` chốt tỉ lệ bằng SỐ ĐẾM THẬT.
+- **Mô tả ghi công nhạc SAI**: credit Kevin MacLeod thêm vô điều kiện trong khi nhạc mặc định TẮT. FIX: chỉ ghi khi `story["_music"]`.
+- **FB không có ảnh bìa**: chỉ YouTube đặt thumbnail. FIX: `set_thumbnail()` (Reels) + tham số `thumb` (video thường).
+- **Dashboard báo kho Drive "đã kết nối" dù token chết**: chỉ biết khi bấm nút 🩺. FIX: publisher tự ghi health mỗi phiên (0 lệnh gọi API thêm).
+- **Nhìn 481 tưởng mất 700 video**: dashboard đọc `limit(300)` từ A + 300 từ B = trần 600, không nói ra. FIX: hiện cảnh báo khi chạm trần.
+
+> **🔴 NGUYÊN NHÂN GỐC CHUNG của 15 bug trên — đọc kỹ, đừng lặp lại:**
+> 1. **Bám `keys[0]`** — 3 khâu riêng biệt (vẽ ảnh · Vision QC · kiểm khớp ảnh) đều mắc CÙNG lỗi này, và em fix từng cái một qua 3 lần thay vì rà cả lớp ngay lần đầu. **Hễ sửa một chỗ bám `keys[0]`, PHẢI `grep -n "keys\[0\]" *.py` rà hết.**
+> 2. **Lỗi bị try/except nuốt** — sync kho hỏng nhiều ngày, key rotation là code chết, vision fail-open âm thầm. **Mọi `except` bọc bước QUAN TRỌNG phải in ra, và phải có phép đo (đếm/log số) chứ không chỉ "không thấy lỗi".**
+> 3. **Rule có mà không có cổng chặn** — luật "KHÔNG card chữ tĩnh" nằm ở mục 4 từ lâu mà code vẫn dựng thẻ chapter. **Xem mục 4d: không có cổng chặn thì coi như chưa có luật.**
+> 4. **Sửa ở tầng triệu chứng** — thấy 429 thì xoay key, rút cooldown… mà mãi mới hỏi "cái gì BIẾN 429 thành lượt ghi Firestore". **Khi một triệu chứng lặp lại lần thứ 3, DỪNG vá và đi ngược chuỗi nhân quả.**
+
 - **Cron đăng ăn quota private (2000'/tháng)**: chuyển publish/social/cleanup/stats sang chạy trên repo PUBLIC (checkout private lúc chạy) → free vô hạn; TẮT cron repo private.
 - **Nhãn giá trị TRÀN MÉP** (vd "215K USD (chained 2017)"): unit dài + thanh dài nhất đẩy nhãn ra ngoài khung. FIX: (a) cắt unit bỏ ngoặc + ≤6 ký tự trong _race_from_story; (b) BarChartRace chừa rộng hơn cho nhãn (landscape 180→230). LUẬT: mọi text trong video phải cap độ dài + test khung.
 - **SystemExit giết CẢ MẺ** (audit): content_brain.generate/make_long raise SystemExit (không phải Exception) → `except Exception` không bắt → 1 kênh trượt QC là abort toàn bộ overnight. FIX: đổi sang Exception + bọc run_one trong `except BaseException` ở main. LUẬT: KHÔNG raise SystemExit trong pipeline, dùng Exception.
