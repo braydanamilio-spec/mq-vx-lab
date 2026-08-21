@@ -139,6 +139,17 @@ export const RemotionRoot: React.FC = () => (
       { id: "Why", name: "WHY", emoji: "🔬", accent: "#F59E0B", accent2: "#F5B301", handle: "@whydaily", tagline: "Why everything is the way it is." },
       { id: "Empire", name: "EMPIRE", emoji: "👑", accent: "#EAB308", accent2: "#F5B301", handle: "@empiredaily", tagline: "How they built it all." },
       { id: "Unsolved", name: "UNSOLVED", emoji: "🌍", accent: "#EF4444", accent2: "#F59E0B", handle: "@unsolveddaily", tagline: "Mysteries with no answer." },
+      // WAVE 8 (21/8) — 10 kênh mới, cùng khuôn parametric (màu/handle khớp brands.json)
+      { id: "Made", name: "MADE USA", emoji: "🏭", accent: "#E76F51", accent2: "#FFD166", handle: "@madeusa", tagline: "How America makes it." },
+      { id: "Built", name: "BUILT USA", emoji: "🏗️", accent: "#457B9D", accent2: "#F4A261", handle: "@builtusa", tagline: "Engineering, at American scale." },
+      { id: "Under", name: "UNDER USA", emoji: "🕳️", accent: "#5E548E", accent2: "#E0AAFF", handle: "@underusa", tagline: "America, underneath." },
+      { id: "Relic", name: "RELIC USA", emoji: "🏚️", accent: "#8D6A4F", accent2: "#D9C5A0", handle: "@relicusa", tagline: "What America left behind." },
+      { id: "First", name: "FIRST USA", emoji: "🥇", accent: "#B22234", accent2: "#FFFFFF", handle: "@firstusa", tagline: "The moment it began." },
+      { id: "Branded", name: "BRANDED USA", emoji: "🔖", accent: "#111827", accent2: "#F43F5E", handle: "@brandedusa", tagline: "The story behind the logo." },
+      { id: "Priced", name: "PRICED USA", emoji: "🧾", accent: "#0F766E", accent2: "#FDE047", handle: "@pricedusa", tagline: "Where your dollar goes." },
+      { id: "Haul", name: "HAUL USA", emoji: "🚛", accent: "#CA8A04", accent2: "#1D4ED8", handle: "@haulusa", tagline: "America in motion." },
+      { id: "Fake", name: "FAKE USA", emoji: "🕵️", accent: "#DC2626", accent2: "#0EA5A5", handle: "@fakeusa", tagline: "Spot the fake." },
+      { id: "Farm", name: "FARM USA", emoji: "🌾", accent: "#65A30D", accent2: "#FBBF24", handle: "@farmusa", tagline: "From soil to shelf." },
     ].flatMap((b) => ([
       <Composition key={b.id + "A"} id={`BrandDoc${b.id}Avatar`} component={BrandDoc} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar", name: b.name, emoji: b.emoji, accent: b.accent, accent2: b.accent2, handle: b.handle, tagline: b.tagline }} />,
       <Composition key={b.id + "B"} id={`BrandDoc${b.id}Banner`} component={BrandDoc} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner", name: b.name, emoji: b.emoji, accent: b.accent, accent2: b.accent2, handle: b.handle, tagline: b.tagline }} />,
