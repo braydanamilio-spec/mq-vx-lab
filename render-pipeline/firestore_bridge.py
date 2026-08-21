@@ -108,6 +108,7 @@ def _now():
 # Có bộ đếm thì cuối mỗi phiên tự in ra con số THẬT theo từng hàm -> nhìn log là biết ngay,
 # khỏi đoán, khỏi phải điều tra lại lần sau.
 _WRITES = {"n": 0, "by": {}}
+_READS = {"n": 0, "by": {}}
 
 
 def _cw(tag: str):
@@ -115,13 +116,19 @@ def _cw(tag: str):
     _WRITES["by"][tag] = _WRITES["by"].get(tag, 0) + 1
 
 
+def _cr(tag: str, n: int = 1):
+    _READS["n"] += n
+    _READS["by"][tag] = _READS["by"].get(tag, 0) + n
+
+
 def write_report() -> str:
     """Chuỗi 1-2 dòng tổng kết lượt ghi Firestore của tiến trình này."""
     if not _WRITES["n"]:
         return "🧮 Firestore: 0 lượt ghi."
     top = sorted(_WRITES["by"].items(), key=lambda x: -x[1])[:6]
-    return ("🧮 Firestore: " + str(_WRITES["n"]) + " lượt GHI · "
-            + " · ".join(f"{k}={v}" for k, v in top))
+    rtop = sorted(_READS["by"].items(), key=lambda x: -x[1])[:6]
+    return ("🧮 Firestore: " + str(_WRITES["n"]) + " GHI (" + " · ".join(f"{k}={v}" for k, v in top) + ")"
+            + " | " + str(_READS["n"]) + " ĐỌC (" + " · ".join(f"{k}={v}" for k, v in rtop) + ")")
 
 
 def _retry(fn, tries=5):
@@ -212,12 +219,20 @@ def incr_key_requests(key_id: str, n: int, today: str):
     from google.cloud import firestore
     _cw("incr_key_requests")
     ref = _db_keys().collection("gemini_keys").document(key_id)
+    # BỎ LƯỢT ĐỌC lặp: đọc-trước-ghi chỉ cần cho lần ĐẦU của key trong ngày (quyết định reset hay
+    # cộng dồn). Khi tiến trình này đã ghi req_date=today rồi thì các lần sau Increment thẳng —
+    # 56 key x nhiều lần flush = hàng chục lượt đọc mỗi luồng, cắt được sạch.
+    if _KEY_DATE_OK.get(key_id) == today:
+        ref.set({"req_today": firestore.Increment(int(n))}, merge=True)
+        return
+    _cr("incr_key_requests")
     d = ref.get()
     x = (d.to_dict() or {}) if d.exists else {}
     if x.get("req_date") == today:
         ref.set({"req_today": firestore.Increment(int(n))}, merge=True)
     else:
         ref.set({"req_today": int(n), "req_date": today}, merge=True)
+    _KEY_DATE_OK[key_id] = today
 
 
 def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = False, kind: str = ""):
@@ -241,6 +256,7 @@ def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = Fals
 
 
 _COOLED = {}   # key_id -> mốc (epoch) hết nghỉ ĐÃ GHI, để khỏi ghi lại cùng một thứ
+_KEY_DATE_OK = {}   # key_id -> ngày đã xác nhận req_date (bỏ lượt đọc lặp ở incr_key_requests)
 
 
 def cool_key(key_id: str, minutes: int = 20):
@@ -479,14 +495,28 @@ def set_config(owner: str, patch: dict):
     _retry(lambda: _db_meta().collection("render_config").document(owner).set(patch, merge=True))
 
 
+_TOPICS_CACHE = {}   # (owner,channel) -> list; xoá khi save_topics (nguồn đổi duy nhất trong phiên)
+
+
 def recent_topics(owner: str, channel: str, n: int = 80) -> list[str]:
-    """Chủ đề ĐÃ dùng cho kênh -> đưa cho Gemini để TRÁNH trùng (chống 'reused content')."""
+    """Chủ đề ĐÃ dùng cho kênh -> đưa cho Gemini để TRÁNH trùng (chống 'reused content').
+
+    ĐỆM THEO TIẾN TRÌNH: bị gọi ở 6 điểm trong run_render; kênh chạy nhiều vòng thì thành hàng
+    chục lượt đọc cho CÙNG một doc chỉ đổi khi chính mình save_topics. Đệm + xoá lúc save_topics
+    -> mỗi kênh còn ~1-2 lượt đọc thật."""
+    ck = (owner, channel)
+    if ck in _TOPICS_CACHE:
+        return _TOPICS_CACHE[ck][-n:]
+    _cr("recent_topics")
     d = _db_meta().collection("render_topics").document(f"{owner}__{channel}").get()
-    return (((d.to_dict() or {}).get("topics") or [])[-n:]) if d.exists else []
+    out = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
+    _TOPICS_CACHE[ck] = out
+    return out[-n:]
 
 
 def save_topics(owner: str, channel: str, topics: list[str]):
     """Lưu chủ đề vừa dùng (cap 300 gần nhất)."""
+    _TOPICS_CACHE.pop((owner, channel), None)   # nguồn vừa đổi -> lượt đọc sau lấy bản mới
     ref = _db_meta().collection("render_topics").document(f"{owner}__{channel}")
     d = ref.get()
     cur = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
