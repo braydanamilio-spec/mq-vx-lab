@@ -42,8 +42,36 @@ def _si_for(word_index: int, bounds: list[int]) -> int:
     return len(bounds) - 1
 
 
+TTS_TIMEOUT = 120     # giây cho MỘT lần gọi
+TTS_TRIES = 3         # số lần thử lại khi mạng chập
+
+
 async def _run(text: str, mp3_path: str, voice: str, rate: str):
-    """Ghi mp3 + gom SentenceBoundary (edge-tts 7.x không có WordBoundary)."""
+    """Ghi mp3 + gom SentenceBoundary — CÓ trần thời gian và thử lại.
+
+    edge-tts là dịch vụ MẠNG của Microsoft. Trước đây gọi trần trụi: không timeout, không retry.
+    Mỗi video gọi hàm này hàng chục lần (intro + từng cảnh + outro) nên qua hàng nghìn lượt, mạng
+    chập là chuyện chắc chắn xảy ra. Hậu quả cũ:
+      - kết nối treo -> KHÔNG có timeout -> job đứng im tới khi hết giờ workflow (đúng loại lỗi
+        treo đã hành cả ngày 20/8)
+      - lỗi mạng -> ném lên tận run_one -> nó thử lại CẢ VIDEO, tức gọi Gemini viết lại từ đầu:
+        tốn quota Gemini chỉ vì một cú nghẽn mạng vài giây.
+    Nay: mỗi lần gọi có trần 120s, hỏng thì thử lại tối đa 3 lần với giãn cách tăng dần, chỉ khi
+    hết lượt mới báo lỗi ra ngoài."""
+    import asyncio as _a
+    last = None
+    for att in range(1, TTS_TRIES + 1):
+        try:
+            return await _a.wait_for(_synth_once(text, mp3_path, voice, rate), timeout=TTS_TIMEOUT)
+        except Exception as e:
+            last = e
+            if att < TTS_TRIES:
+                print(f"   ↻ giọng đọc lỗi lần {att} ({str(e)[:60]}) — thử lại sau {att * 2}s")
+                await _a.sleep(att * 2)
+    raise last
+
+
+async def _synth_once(text: str, mp3_path: str, voice: str, rate: str):
     import edge_tts
     comm = edge_tts.Communicate(text, voice, rate=rate)
     sentences = []
