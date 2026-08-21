@@ -197,6 +197,9 @@ def _avoid_for(channel: str) -> list:
                 except Exception:
                     pass
             break
+    # KHỬ TRÙNG + CẮT GỌN trước khi cap: kênh anh em hay dùng chủ đề chạm nhau -> mục lặp nguyên
+    # văn chỉ tốn token vô ích; tiêu đề dài quá 60 ký tự cắt bớt (đủ để model nhận diện chủ đề).
+    out = list(dict.fromkeys(str(t)[:60] for t in out if t))
     return out[-120:]
 
 
