@@ -1310,6 +1310,45 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     return props
 
 
+def qc_structure(props, fps=30):
+    """QC CẤU TRÚC — kiểm bằng LOGIC, không gọi API, không tốn quota.
+
+    VÌ SAO CẦN (bài học 21/8): đã có QC visual bằng Gemini Vision mà cả loạt video vẫn ra lò
+    toàn chữ trên nền đen. Hai lý do, cả hai đều không phải "Vision kém":
+      1. check_visual chấm KHUYẾT TẬT, không chấm CHUẨN HẤP DẪN — prompt ghi rõ "chỉ dưới 50 nếu
+         THỰC SỰ vỡ; sạch, đọc được = 80+". Thẻ chữ trên nền đen thì sạch và đọc rất rõ -> 80+.
+      2. Lúc đó Vision còn kẹt keys[0] nên 429 liên tục -> fail-open, không hề soi tấm nào.
+    Vision không bao giờ thay được luật cứng. Những thứ dưới đây ĐO ĐƯỢC nên phải chặn bằng code:
+
+    Trả (ok, issues). ok=False CHỈ khi video hỏng về bản chất (không một ảnh nào) — thứ đã tạo ra
+    cả lô hôm nay. Còn lại trả cảnh báo để ghi vào job, không chặn sản xuất."""
+    scenes = props.get("scenes") or []
+    issues = []
+    if not scenes:
+        return False, ["không có cảnh nào"]
+    n_img = sum(1 for x in scenes if x.get("clip"))
+    if n_img == 0:
+        return False, ["KHÔNG cảnh nào có ảnh -> cả video là chữ trên nền trơn"]
+    if n_img < max(1, len(scenes) // 2):
+        issues.append(f"chỉ {n_img}/{len(scenes)} cảnh có ảnh")
+    n_chapter = sum(1 for x in scenes if x.get("type") == "chapter")
+    if n_chapter:
+        issues.append(f"{n_chapter} thẻ chữ (chapter) — rule: không intro/outro")
+    if not (scenes[0].get("hook") or {}).get("stat") and not (scenes[0].get("hook") or {}).get("line"):
+        issues.append("cảnh mở đầu thiếu lớp hook (số liệu/câu hỏi)")
+    if not scenes[0].get("clip"):
+        issues.append("cảnh mở đầu không có footage")
+    # nhịp cắt: mỗi ảnh không được đứng quá ~3.5s
+    slow = []
+    for k, x in enumerate(scenes):
+        n = max(1, len(x.get("clips") or [x.get("clip")] if x.get("clip") else [1]))
+        if (x.get("dur") or 0) / n > 3.5 * fps:
+            slow.append(k)
+    if slow:
+        issues.append(f"{len(slow)} cảnh giữ một ảnh quá 3.5s (nhàm)")
+    return True, issues
+
+
 def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style="awe, cinematic",
              imgsrc=None, accent="#22D3EE", accent2="#F5B301", avoid=None,
              on_status=None, on_limit=None, on_ok=None, resume_story=None, ai_style=None, ai_only=False, music=None,
@@ -1335,6 +1374,13 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     props = build_doc_props(story, channel, imgsrc=imgsrc, api_key=keys[0]["key"],
                             accent=accent, accent2=accent2, handle=channel_handle(channel),
                             ai_style=ai_style, ai_only=ai_only, music=music, mode=mode, host_prompt=host_prompt)
+    # QC CẤU TRÚC TRƯỚC KHI RENDER: rẻ (không API) và chặn sớm — render xong mới phát hiện hỏng là
+    # phí trắng ~2-4 phút CPU + lượt Vision. Đây là lớp mà QC visual KHÔNG thay được (xem qc_structure).
+    _sok, _sissues = qc_structure(props)
+    for _it in _sissues:
+        print(f"   ⚠️ cấu trúc: {_it}")
+    if not _sok:
+        raise Exception("QC cấu trúc KHÔNG ĐẠT: " + "; ".join(_sissues))
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
