@@ -52,9 +52,18 @@ DEFAULT_AI_STYLE = "realistic, editorial-style photo illustration"
 _AI_POOL = {"keys": [], "dead": set()}
 
 
-def set_ai_pool(keys):
-    """Nạp danh sách key cho việc vẽ ảnh. Gọi 1 lần ở đầu mỗi make_* (nơi đã có sẵn 'keys')."""
-    _AI_POOL["keys"] = [k.get("key") for k in (keys or []) if k.get("key")]
+def set_ai_pool(keys, channel: str = ""):
+    """Nạp danh sách key cho việc vẽ ảnh. Gọi 1 lần ở đầu mỗi make_* (nơi đã có sẵn 'keys').
+
+    XOAY THEO KÊNH (cùng chiêu ranked_accounts bên kho Drive): không xoay thì cả 18 luồng song
+    song đều bắt đầu vẽ/kiểm từ CÙNG key đầu danh sách -> hạn mức ảnh/Vision của vài key đầu cháy
+    trước trong khi key cuối ngồi không — pool 56 key mà hiệu dụng chỉ còn vài key."""
+    ks = [k.get("key") for k in (keys or []) if k.get("key")]
+    if channel and len(ks) > 1:
+        import hashlib
+        off = int(hashlib.md5(channel.encode()).hexdigest(), 16) % len(ks)
+        ks = ks[off:] + ks[:off]
+    _AI_POOL["keys"] = ks
     _AI_POOL["dead"] = set()
     _VIS_DEAD.clear()
 
@@ -852,7 +861,7 @@ def hook_bg(channel, out_video, subject, keys=None, api_key=None):
     if got:
         return got, True
     if keys:
-        set_ai_pool(keys)   # nền thumbnail cũng có thể phải nhờ Nano Banana vẽ -> cho xoay cả pool
+        set_ai_pool(keys, channel)   # nền thumbnail cũng có thể phải nhờ Nano Banana vẽ -> cho xoay cả pool
     key = api_key or ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
     try:
         os.makedirs(d, exist_ok=True)
@@ -965,7 +974,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
         if not (api_key or os.environ.get("GEMINI_API_KEY")):
             raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
         keys = [{"id": "env", "key": api_key or os.environ["GEMINI_API_KEY"], "email": "local"}]
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1071,7 +1080,7 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1143,7 +1152,7 @@ def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1217,7 +1226,7 @@ def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1290,7 +1299,7 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1571,7 +1580,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1764,7 +1773,7 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)
+    set_ai_pool(keys, channel)
 
     st("writing", f"Lập pillar {n_parts} phần ({niche[:40]})")
     k0 = KM.key_order(channel, keys)[0]
@@ -1846,7 +1855,7 @@ def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1918,7 +1927,7 @@ def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -1993,7 +2002,7 @@ def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -2063,7 +2072,7 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
@@ -2110,7 +2119,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     out = os.path.abspath(out)   # QUAN TRỌNG: render cwd=ENG -> path tuyệt đối (nếu không QC/enqueue tìm không ra file -> 0 giây)
     import key_manager as KM   # CB đã import ở đầu file — không cần import lại
     keys = keys or [{"id": "env", "key": api_key or os.environ["GEMINI_API_KEY"], "email": "local"}]
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     sdir = os.path.join(PUB, "narration", "_long_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
     if resume_checkpoint and (resume_checkpoint.get("races") or []):
         st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
@@ -2265,7 +2274,7 @@ def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n
     keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
     if not keys[0]["key"]:
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
-    set_ai_pool(keys)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
+    set_ai_pool(keys, channel)   # vẽ ảnh xoay vòng CẢ pool, không kẹt mỗi keys[0] (xem _AI_POOL đầu file)
     if resume_story:
         story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu (khỏi gọi Gemini lại)")
     else:
