@@ -1977,7 +1977,15 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
     else:
         st("writing", f"Lập pillar {n_parts} phần ({niche[:40]})")
         k0 = KM.key_order(channel, keys)[0]
-        plan = CB.plan_pillar(niche, n_parts, api_key=k0["key"], model_name=KM.model_for(tier), avoid=avoid)
+        try:
+            plan = CB.plan_pillar(niche, n_parts, api_key=k0["key"], model_name=KM.model_for(tier), avoid=avoid)
+        except Exception as _e0:
+            _gem = next((k for k in keys if not str(k.get("key", "")).startswith(("gsk_", "cf:"))), None)
+            if "413" in str(_e0) and _gem:
+                # prompt quá cỡ với nhà 8K-token (Groq) -> lập pillar bằng Gemini (nuốt prompt lớn), 22/8
+                plan = CB.plan_pillar(niche, n_parts, api_key=_gem["key"], model_name=KM.model_for(tier), avoid=avoid)
+            else:
+                raise
         subs = [x for x in (plan.get("subtopics") or []) if x][:n_parts]
     if not subs:
         raise Exception("plan_pillar không trả subtopic nào")

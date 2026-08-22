@@ -550,6 +550,8 @@ def plan_pillar(niche: str, n: int = 6, api_key: str = None, model_name: str = N
     akey = api_key or os.environ.get("GEMINI_API_KEY", "")
     prefer = "pro" if (model_name and "pro" in model_name) else "flash"
     mname = model_name or MODEL
+    if str(akey).startswith(("gsk_", "cf:")) and avoid:
+        avoid = avoid[-35:]   # nhà 8K-token/request (Groq TPM 8000, đo thật 22/8: request 9069 bị 413) -> cắt danh sách tránh-trùng cho vừa
     avoid_txt = ""
     if avoid:
         avoid_txt = ("\nDO NOT repeat or closely resemble ANY of these already-used topics "

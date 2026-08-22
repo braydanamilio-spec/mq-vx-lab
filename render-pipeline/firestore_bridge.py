@@ -344,8 +344,13 @@ def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
     bên B khi quota ghi hồi — tự lành, khỏi cần migrate tay."""
     if os.environ.get("SHARD_KEYS") != "1":
         return rows
-    if any(str(r.get("key", "")).startswith("gsk_") for r in rows):
-        return rows        # B đã có key Groq (sync đã ăn) -> không đụng tới quota A nữa
+    _have_gsk = any(str(r.get("key", "")).startswith("gsk_") for r in rows)
+    _have_cf = any(str(r.get("key", "")).startswith("cf:") for r in rows)
+    if _have_gsk and _have_cf:
+        return rows        # B đã đủ cả Groq lẫn CF (sync đã ăn) -> không đụng tới quota A nữa
+    # 22/8 chiều: B cạn quota ĐỌC cả ngày -> sync_keys chết mọi phiên -> 20 key CF user thêm kẹt ở A.
+    # Điều kiện cũ chỉ hợp nhất khi thiếu gsk_ (mà B có gsk_ rồi) -> CF vô hình. Giờ: thiếu BẤT KỲ
+    # nhà nào (gsk_ / cf:) là hợp nhất từ A — 1 lượt đọc A/tiến trình, tự tắt khi sync hồi sau reset.
     try:
         if _db() is _db_keys():
             return rows
