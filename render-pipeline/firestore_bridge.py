@@ -1058,7 +1058,7 @@ def update_job(job_id: str, **patch):
         # sống, còn done/failed thì LUÔN ghi ngay không qua hãm.
         # 22/8: 5' -> 10' (user duyệt): mốc trung gian chỉ để dashboard nhìn; nhịp tim nền 15'
         # vẫn chứng minh "còn sống" (guardian coi chết sau 45' im lặng), video không ảnh hưởng.
-        if now - _LAST_JOB_WRITE.get(job_id, 0) < 600:
+        if now - _LAST_JOB_WRITE.get(job_id, 0) < 720:
             return
         _LAST_JOB_WRITE[job_id] = now
     # ĐÓNG DẤU THỜI GIAN mỗi lần ghi = NHỊP TIM có mốc. Trước đây job có nhịp tim (ghi lại mỗi ~90s)
@@ -1086,7 +1086,7 @@ _BEAT = {"job": None, "th": None}
 # trọn hạn mức FREE 20K/ngày của Firestore -> 20/8 publish_social ăn "ResourceExhausted: 429 Quota
 # exceeded". Mốc coi-là-chết là 45' nên 5'/nhịp vẫn còn 9 nhịp dự phòng, thừa an toàn, mà lượng ghi
 # giảm 2.5 lần (~5K/ngày).
-BEAT_SEC = 900   # 15' — health_guardian coi job chết sau STALE_BEAT_MIN=45' im lặng, tức vẫn còn 3
+BEAT_SEC = 1200   # 15' — health_guardian coi job chết sau STALE_BEAT_MIN=45' im lặng, tức vẫn còn 3
                  # nhịp dự phòng. Trước để 5' -> 18 luồng x 12 nhịp/giờ x ~1.5h = ~320 lượt GHI mỗi
                  # phiên chỉ để chứng minh "còn sống". Project B free chỉ 20K ghi/ngày mà render đã
                  # ăn gần hết (sự cố 21/8: B cạn ghi lúc 10:21Z) -> cắt 3 lần phần này.
