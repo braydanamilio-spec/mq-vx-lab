@@ -439,8 +439,11 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
+    skip = set()   # nhà cung cấp bị BỎ trong lượt gọi này (413: prompt quá cỡ — key nào cùng nhà cũng dính y hệt)
     for rnd in range(2):
         for idx, k in enumerate(order):
+            if any(str(k.get("key", "")).startswith(p) for p in skip):
+                continue
             tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "⛅" if str(k.get("key", "")).startswith("cf:") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
@@ -450,6 +453,15 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
             except CB.RateLimited as e:
                 _cool(k, e); continue
             except Exception as e:
+                if "413" in str(e):
+                    # Groq free giới hạn ~8K token/request — prompt DOC (niche+avoid+ngữ cảnh phần) vượt cỡ
+                    # thì MỌI key cùng nhà đều dính y hệt (22/8: VAULTUSA thử 2 lần/key toàn 413, 0 video).
+                    # -> bỏ cả nhóm nhà đó, đi thẳng tới Gemini (nuốt prompt lớn thoải mái).
+                    pfx = "gsk_" if str(k.get("key", "")).startswith("gsk_") else ("cf:" if str(k.get("key", "")).startswith("cf:") else "")
+                    if pfx:
+                        skip.add(pfx)
+                        print(f"   ↪️ 413 prompt quá cỡ với nhà [{pfx}] — bỏ nhóm này, chuyển key nhà khác.")
+                        continue
                 if "404" in str(e) and model != "gemini-2.5-flash":
                     model = "gemini-2.5-flash"
                     try:
