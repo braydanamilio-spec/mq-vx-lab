@@ -175,8 +175,12 @@ class _GroqShim:
 
     _live_model = None        # model Groq đã xác nhận SỐNG (chia sẻ toàn tiến trình)
 
-    def GenerativeModel(self, model_name):
+    def GenerativeModel(self, model_name, system_instruction=None, **kw):
+        # 22/8: PHẢI nhận system_instruction — plan_pillar/generate_doc đều truyền; thiếu là
+        # TypeError giết cả 18 luồng ngay phiên ĐẦU TIÊN Groq vào trận (07:07Z, sau khi key
+        # Groq được hợp nhất vào pool). Map thành message role=system chuẩn OpenAI.
         self._model = _GroqShim._live_model or GROQ_MODEL   # tên gemini-* được map sang model Groq
+        self._sys = system_instruction
         return self
 
     def _resolve_live_model(self) -> str:
@@ -213,8 +217,10 @@ class _GroqShim:
     def generate_content(self, prompt, generation_config=None, request_options=None):
         import urllib.request, urllib.error
         gc = generation_config or {}
+        msgs = ([{"role": "system", "content": self._sys}] if getattr(self, "_sys", None) else [])
+        msgs.append({"role": "user", "content": prompt if isinstance(prompt, str) else str(prompt)})
         body = {"model": self._model,
-                "messages": [{"role": "user", "content": prompt if isinstance(prompt, str) else str(prompt)}],
+                "messages": msgs,
                 "temperature": gc.get("temperature", 0.9),
                 "max_tokens": 8192}
         if gc.get("response_mime_type") == "application/json":
@@ -271,8 +277,9 @@ class _CfShim:
         self._key = key
         self._acc, self._tok = _cf_parse(key)
 
-    def GenerativeModel(self, model_name):
+    def GenerativeModel(self, model_name, system_instruction=None, **kw):
         self._model = CF_TEXT_MODEL
+        self._sys = system_instruction     # cùng lớp lỗi TypeError như _GroqShim (xem trên)
         return self
 
     def configure(self, **kw):
@@ -313,8 +320,10 @@ class _CfShim:
             body = {"model": CF_VISION_MODEL, "messages": [{"role": "user", "content": content}],
                     "temperature": 0.0, "max_tokens": 1024}   # vision KHÔNG gửi response_format (model vision hay từ chối) — _extract_json tự bóc
         else:
+            msgs = ([{"role": "system", "content": self._sys}] if getattr(self, "_sys", None) else [])
+            msgs.append({"role": "user", "content": text or str(prompt)})
             body = {"model": getattr(self, "_model", CF_TEXT_MODEL),
-                    "messages": [{"role": "user", "content": text or str(prompt)}],
+                    "messages": msgs,
                     "temperature": gc.get("temperature", 0.9), "max_tokens": 8192}
             if gc.get("response_mime_type") == "application/json":
                 body["response_format"] = {"type": "json_object"}
