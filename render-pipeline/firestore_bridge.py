@@ -550,6 +550,13 @@ def cool_key(key_id: str, minutes: int = 20):
         # KHÔNG xoá đệm ở nhánh khử-trùng-lặp: key đã có trong sổ _COOLED cục bộ, key_order tự né
         # (xem key_manager). Xoá ở đây = trong bão 429 mọi read_keys thành lượt đọc THẬT cả bảng.
         return
+    if minutes < 5:
+        # 22/8 tối (B ghi 12K/20K lúc 14:40Z, user lo cạn trước reset): lệnh nghỉ NGẮN (per-minute
+        # 1.1') chỉ cần sổ RAM _COOLED là đủ né trong tiến trình — ghi Firestore cho loại này gần
+        # như vô nghĩa với luồng khác (hết nghỉ trước khi họ kịp đọc). Chỉ nghỉ DÀI (>=5', tức
+        # quota ngày) mới đáng 1 lượt ghi chia sẻ liên luồng. Cắt ~60-80% lượt cool_key trong bão.
+        _COOLED[key_id] = until_ts
+        return
     from datetime import timedelta
     until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
     _cw("cool_key")
