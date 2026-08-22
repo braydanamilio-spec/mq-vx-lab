@@ -1312,8 +1312,12 @@ def channel_mode(name):
         print(f"   ⏳ {name}: giãn {delay}s (chống burst song song)…"); time.sleep(delay)
     report = {"done": 0, "fails": [], "rl": 0}
     # VÒNG LẶP A-Z: làm LIÊN TỤC nhiều mẻ trong 1 phiên tới khi — ĐỦ TARGET / HẾT GIỜ (trừ hao) / HẾT QUOTA / KHO ĐẦY / bấm Dừng.
-    budget_s = int(cfg.get("batch_budget_min", 210) or 210) * 60    # ngân sách mềm 1 phiên (mặc định 3.5h -> 6 phiên/ngày không chồng lấn)
-    HARD_S = 330 * 60                                               # cứng: timeout workflow 350' - chừa ~20' buffer
+    # 22/8: ĐỒNG BỘ với timeout matrix THẬT (165') — bộ số cũ (210'/330') viết thời timeout 350',
+    # hậu quả phiên 07:40Z: 16/18 lane bị trần 150' chém giữa chừng vì lane tưởng còn cả tiếng.
+    # Ngân sách mềm 110' + cứng 150' (chừa 15' buffer setup/flush/render đang dở) -> lane TỰ thoát
+    # sạch sẽ (flush đủ, không job ma, không phí render dở) trước khi workflow kịp chém.
+    budget_s = int(cfg.get("batch_budget_min", 110) or 110) * 60
+    HARD_S = 150 * 60                                               # cứng: timeout matrix 165' - 15' buffer
     max_run = int(cfg.get("max_per_run", 0) or 0)                   # 0 = ∞ (vòng lặp tự giới hạn theo target/quota/giờ); >0 = trần cứng/kênh/phiên
     # ROUND CAP (xoay vòng công bằng): mỗi kênh làm TỐI ĐA round_long/round_short video RỒI NHƯỜNG SLOT (không cắt ngang —
     # check SAU khi run_one() hoàn tất trọn video). Mặc định 10 long/30 short -> phiên xong sớm hơn, kênh khác kịp có lượt.
