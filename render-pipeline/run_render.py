@@ -8,7 +8,7 @@ Env: OWNER_UID (uid chủ), GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID,
      AUTOPUBLISHER_SRC (đường dẫn tới MM0-AutoPublisher/src để enqueue). FORCE=1 để chạy dù đang tắt.
 """
 from __future__ import annotations
-import os, sys, traceback, subprocess, re, random, json
+import os, sys, traceback, subprocess, re, random, json, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import firestore_bridge as FB
 import datastory_ci as DS
@@ -1304,7 +1304,10 @@ def plan_mode():
             need.append((nl + ns, nm))
     n_full = len(channels) - len(need)
     if need:
-        need.sort(key=lambda x: -x[0])            # thiếu nhiều -> làm trước, lấp đủ 18 slot
+        # 22/8 tối: sort thuần theo "thiếu nhiều" từng XÓA SẠCH ưu tiên _pri xếp ở trên (kênh cũ
+        # thiếu 30 video luôn đè kênh mới priority=1) -> sort 2 khóa: priority trước, thiếu sau.
+        _prs = set(_pri)
+        need.sort(key=lambda x: (0 if x[1] in _prs else 1, -x[0]))
         channels = [nm for _, nm in need]
     else:
         print("🎯 Mọi kênh đã đủ chỉ tiêu — không mở phiên (khỏi đốt runner).")

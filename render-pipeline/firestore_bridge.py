@@ -991,9 +991,10 @@ def heal_unpushed(owner: str, hours: int = 8, cap: int = 30) -> int:
         _cr("heal_unpushed", 20)
         q = (_db_jobs().collection("render_jobs").where("owner", "==", owner)
              .where("status", "==", "done").where("created_at", ">=", since).limit(120))
-        healed = 0
+        healed = scanned = 0
         for d in q.stream():
             j = d.to_dict() or {}
+            scanned += 1
             if healed >= cap:
                 break
             if (j.get("drive_id") or "") == "" and j.get("script"):
@@ -1001,8 +1002,9 @@ def heal_unpushed(owner: str, hours: int = 8, cap: int = 30) -> int:
                     {"status": "failed", "note": "tự chữa: xong nhưng chưa đẩy được kho -> render lại từ script"},
                     merge=True), "heal_unpushed")
                 healed += 1
-        if healed:
-            print(f"   🩹 Tự chữa {healed} video done-chưa-đẩy-kho (lật failed -> phiên này render lại từ script).")
+        # LUÔN in 1 dòng (kể cả 0) — phiên 15:36Z heal im lặng không chẩn được nó chạy hay không.
+        print(f"   🩹 heal_unpushed: quét {scanned} job done/8h, chữa {healed} video chưa-đẩy-kho"
+              + (" (lật failed -> render lại từ script)." if healed else "."))
         return healed
     except Exception as e:
         print(f"   ⚠️ heal_unpushed lỗi ({str(e)[:70]}) — bỏ qua, không chặn phiên.")
