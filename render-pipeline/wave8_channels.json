@@ -155,7 +155,7 @@
   "niche": "US everyday-life comedy skits starring two FIXED characters: BALD — a grumpy, overly patriotic bald eagle in a stars-and-stripes necktie, speaks formally (speaker A); BANDIT — a scruffy street-smart raccoon in red sunglasses with a soda cup, sarcastic and clever (speaker B). Topics: fast food, taxes, DMV, Black Friday, road trips, freedom units. STRICT: family-safe, no politics, no real brands or celebrities, fictional characters only.",
   "accent_note": "eagle+raccoon odd couple",
   "long_target": 0,
-  "short_target": 2,
+  "short_target": 8,
   "n_shorts": 2,
   "make_long": false,
   "tier": "normal"
@@ -176,7 +176,7 @@
   "niche": "American suburban-life comedy skits starring two FIXED characters: HANK — a burly friendly dad with a thick mustache, red plaid flannel and trucker cap, loves BBQ, his garage and lawn, plain-spoken (speaker A); DALE — his lanky nosy neighbor who peeks over the picket fence with unsolicited advice (speaker B). Topics: BBQ, lawn care, DIY fails, HOA letters, garage sales, Costco runs. STRICT: family-safe, wholesome irony, no politics, no real brands, fictional characters only.",
   "accent_note": "retro 50s americana",
   "long_target": 0,
-  "short_target": 2,
+  "short_target": 8,
   "n_shorts": 2,
   "make_long": false,
   "tier": "normal"
