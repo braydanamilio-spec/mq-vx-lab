@@ -265,3 +265,12 @@ Seed: workflow `seed_channels.yml` (dry-run trước). Brand: brands.json (màu/
 
 Khác biệt với 42 kênh cũ: không kênh nào trùng lãnh địa (manufacturing/engineering/underground/
 abandoned/firsts/brand-origin/price-anatomy/logistics/anti-scam/agriculture đều là đất mới).
+
+## ⚠️ CHECKLIST BỔ SUNG 22/8 — 3 BẢNG NHÚNG TRONG DASHBOARD PHẢI CẬP NHẬT KHI THÊM KÊNH
+Thêm kênh mà quên 1 trong 3 bảng nhúng ở `MM0-AutoPublisher/dashboard/index.html` là kênh "tàng hình"
+trên UI (đã xảy ra với Wave 8 — thiếu ở cả 3, phát hiện lắt nhắt 3 lần trong 1 ngày):
+1. `RS_BRANDS` (panel Brand kit — profile/cover/desc/tag) + dòng gán `RS_BRANDS.<KÊNH>.cat="<id>"`.
+2. `RS_PRESETS` (dropdown "Kênh & Chủ đề Render" — name/fmt/niche).
+3. `RS_VOICES` (bảng giọng đọc theo kênh).
+Sau khi sửa: chạy node --check toàn bộ inline script (LUẬT) rồi mới deploy hosting.
+Nguồn dữ liệu chuẩn để copy: `wave*_channels.json` (render) + `config/brands.json` (publisher).
