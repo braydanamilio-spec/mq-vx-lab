@@ -56,6 +56,9 @@ def top_titles(owner: str, channel: str, n: int = 8) -> list[str]:
     """Tiêu đề N video ĐÃ ĐĂNG xem nhiều nhất của kênh -> đưa vào prompt Gemini làm gợi ý
     "phong cách/góc độ đang ăn khách" (KHÔNG lặp chủ đề, chỉ học GU khán giả thật).
     Rỗng nếu chưa có creds C / chưa có video nào đăng (điều bình thường tới khi user kết nối YouTube)."""
+    ck = ("tt", owner, channel, n)
+    if ck in _HOT_CACHE:
+        return _HOT_CACHE[ck]           # gu khán giả không đổi trong 1 luồng -> đọc C đúng 1 lần (đo 22/8: 32 lượt/luồng -> 1)
     _cr("top_titles", n)   # limit(n) — trước ghi 60 là ĐẾM SAI (máy đo phải đúng trước tiên)
     db = _db_pub()
     if db is None:
@@ -76,6 +79,7 @@ def top_titles(owner: str, channel: str, n: int = 8) -> list[str]:
             v = ((x.get("stats") or {}).get("views") or 0)
             if t and v > 0:
                 out.append(f"{t} ({v} views)")
+        _HOT_CACHE[("tt", owner, channel, n)] = out
         return out
     except Exception as e:
         print(f"   ⚠️ top_titles lỗi ({e}) — bỏ qua feedback, chạy bình thường")
@@ -173,6 +177,8 @@ def _retry(fn, tries=5):
 
 
 _KEYS_CACHE = {}      # (owner, include_cooling) -> (thời điểm, kết quả)
+_HOT_CACHE = {}       # đệm tiến-trình cho các hàm đọc NÓNG (top_titles/resume/config/count) — 22/8:
+                      # đo VAULTUSA 113 đọc/luồng thì 105 là 4 hàm này gọi lặp cho CÙNG câu trả lời
 KEYS_TTL = 180        # giây
 
 
@@ -596,8 +602,11 @@ def read_one_channel(owner: str, name: str) -> dict | None:
 
 
 def read_config(owner: str) -> dict:
-    _cr("read_config", 1)
     import time as _t
+    _hc = _HOT_CACHE.get(("cfg", owner))
+    if _hc and (_t.time() - _hc[0]) < 60:
+        return dict(_hc[1])             # TTL 60s: stop/run_now trễ tối đa 1' — đổi 17 đọc/luồng còn ~3
+    _cr("read_config", 1)
     if _t.time() < _RQ_DEAD["until"]:
         return dict(_CFG_LAST.get(owner) or {})   # quota đọc chết -> bản đệm/mặc định, không crash
     def _do():
@@ -606,6 +615,7 @@ def read_config(owner: str) -> dict:
     try:
         out = _retry(_do)
         _CFG_LAST[owner] = out
+        _HOT_CACHE[("cfg", owner)] = (_t.time(), out)
         return out
     except Exception as e:
         if _wq_exhausted(e):
@@ -907,7 +917,12 @@ _LEGACY_COUNT = {}     # (owner, kênh, loại) -> số job cũ ở Project A (b
 
 def count_done(owner: str, channel: str, vtype: str = None) -> int:
     """Đếm số video ĐÃ XONG của 1 kênh (so target). Đếm CẢ Project B (job mới) + A (job CŨ trước shard) -> không sót, không làm THỪA.
-    Dùng aggregation count() = ~1 read/project."""
+    Dùng aggregation count() = ~1 read/project. TTL 90s: một mẻ video kéo dài >5' nên mỗi vòng vẫn
+    số tươi; các lần gọi lặp TRONG vòng (gate/target/ratio ~4 lần) dùng đệm — 16 đọc/luồng còn ~4."""
+    import time as _t
+    _hc = _HOT_CACHE.get(("cnt", owner, channel, vtype))
+    if _hc and (_t.time() - _hc[0]) < 90:
+        return _hc[1]
     _cr("count_done", 1)
     total = 0
     try:
@@ -927,6 +942,7 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
                 print(f"   ⚠️ count_done A lỗi ({e})")
                 _LEGACY_COUNT[ck] = 0
         total += _LEGACY_COUNT[ck]
+    _HOT_CACHE[("cnt", owner, channel, vtype)] = (_t.time(), total)
     return total
 
 
@@ -936,6 +952,10 @@ def find_resumable(owner: str, channel: str, vtype: str):
     lệch nội dung/chủ đề đã ghi vào ngân hàng. CHỈ lấy job status='failed' (đã CHẮC CHẮN không ai còn xử
     lý — do lỗi thật hoặc Health Guardian tự đánh dấu job treo) -> an toàn, không đụng job đang chạy thật.
     Trả {'job_id', 'story'} hoặc None (không có gì để resume -> viết mới bình thường như cũ)."""
+    ck = ("rz", owner, channel, vtype)
+    if ck in _HOT_CACHE:
+        lst = _HOT_CACHE[ck]
+        return lst.pop(0) if lst else None   # đã nạp 1 lần -> phát dần, hết thì thôi (phần còn lại phiên sau)
     _cr("find_resumable", 5)
     try:
         db = _db_jobs()
@@ -956,13 +976,19 @@ def find_resumable(owner: str, channel: str, vtype: str):
             cands = [(d.id, d.to_dict() or {}) for d in q.limit(25).stream()]
         cands = [(i, j) for i, j in cands if j.get("script")]
         if not cands:
+            _HOT_CACHE[ck] = []
             return None
         cands.sort(key=lambda x: x[1].get("created_at", ""), reverse=True)   # ưu tiên bản GẦN NHẤT
-        job_id, job = cands[0]
-        story = json.loads(job["script"])
-        if not story:
-            return None
-        return {"job_id": job_id, "story": story}
+        lst = []
+        for job_id, job in cands:
+            try:
+                story = json.loads(job["script"])
+                if story:
+                    lst.append({"job_id": job_id, "story": story})
+            except Exception:
+                continue
+        _HOT_CACHE[ck] = lst
+        return lst.pop(0) if lst else None
     except Exception as e:
         print(f"   ⚠️ find_resumable lỗi ({e}) — bỏ qua, viết mới bình thường"); return None
 
