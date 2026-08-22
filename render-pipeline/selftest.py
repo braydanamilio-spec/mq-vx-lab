@@ -172,9 +172,10 @@ def t_toon():
     """TOON (22/8): validator + né bộ lọc + route fmt trong run_render."""
     import content_brain as CB, datastory_ci as DS
     good = {"title": "The HOA Letter", "scene_base": "backyard BBQ",
-            "frames": [{"prompt": "wide", "line_idx": 0}, {"prompt": "shock", "line_idx": 2},
-                       {"prompt": "tight head-and-shoulders reaction", "line_idx": 4}],
-            "dialog": [{"who": "A", "line": "x"}] * 3 + [{"who": "B", "line": "y"}] * 3,
+            "frames": [{"prompt": "wide", "line_idx": 0}, {"prompt": "lean in", "line_idx": 1},
+                       {"prompt": "shock", "line_idx": 3}, {"prompt": "tight head-and-shoulders reaction", "line_idx": 5},
+                       {"prompt": "punchline pose", "line_idx": 6}],
+            "dialog": [{"who": "A", "line": "x"}] * 4 + [{"who": "B", "line": "y"}] * 4,
             "self_score": {"total": 95}}
     assert CB._validate_toon(good) == [], CB._validate_toon(good)
     bad = dict(good); bad2 = dict(good); bad2["frames"] = []

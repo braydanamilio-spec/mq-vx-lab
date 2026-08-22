@@ -39,10 +39,15 @@ export const ToonShort: React.FC<{
     <AbsoluteFill style={{ background: "#0e0e12", fontFamily: "Arial, sans-serif" }}>
       {frames.map((fr, i) => {
         const rel = f - fr.from;
-        const zoom = 1.02 + 0.035 * Math.min(1, Math.max(0, rel / Math.max(1, fr.dur)));
+        const p = Math.min(1, Math.max(0, rel / Math.max(1, fr.dur)));
+        // CAMERA SỐNG (22/8): đảo hướng theo khung — chẵn zoom-in, lẻ zoom-out nhẹ; kèm trôi ngang
+        // xen kẽ trái/phải 0.8% -> mỗi lần cắt có "hơi máy quay" khác nhau, hết cảm giác lặp.
+        const zoomIn = i % 2 === 0;
+        const zoom = zoomIn ? 1.02 + 0.04 * p : 1.06 - 0.04 * p;
+        const drift = (i % 4 < 2 ? 1 : -1) * 0.8 * p;
         return (
           <Sequence key={i} from={fr.from} durationInFrames={fr.dur}>
-            <AbsoluteFill style={{ transform: `scale(${zoom})` }}>
+            <AbsoluteFill style={{ transform: `scale(${zoom}) translateX(${drift}%)` }}>
               <SafeImg src={staticFile(`${slug}/${fr.img}`)}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </AbsoluteFill>

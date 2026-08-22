@@ -1752,9 +1752,10 @@ TOON_SYS = (
  "You are the head writer of a #1 US comedy shorts channel using two FIXED cartoon characters. "
  "You write tight 18-30 second dialogue skits. Absolute rules:\n"
  "1) STRUCTURE: setup in line 1-2, escalation, then ONE hard punchline at the end. 6-9 lines total, "
- "each line under 14 words, spoken natural American English. Alternate speakers A/B.\n"
+ "each line under 14 words, spoken natural American English. Alternate speakers A/B. 7-10 lines total.\n"
  "2) CHARACTERS stay in the personalities given by the user prompt. Never rename them.\n"
- "3) FRAMES: describe 3-5 keyframes of ONE consistent scene: frame 1 = wide establishing, middle = "
+ "3) FRAMES: describe 5-8 keyframes of ONE consistent scene (a new frame every 1-2 dialogue lines "
+ "so the video cuts every 2-3 seconds): frame 1 = wide establishing, middle = "
  "emotion/pose changes, one frame = tight head-and-shoulders reaction shot (never say 'close-up of face'), "
  "final = punchline reaction. Each frame_prompt describes ONLY what changes (pose/expression/prop), "
  "no camera jargon, no text or signs in the scene.\n"
@@ -1773,9 +1774,9 @@ def _validate_toon(d: dict) -> list:
     if not (d.get("title") or "").strip(): errs.append("thiếu title")
     if not (d.get("scene_base") or "").strip(): errs.append("thiếu scene_base")
     fr = d.get("frames") or []
-    if not (3 <= len(fr) <= 5): errs.append(f"frames={len(fr)} (cần 3-5)")
+    if not (4 <= len(fr) <= 9): errs.append(f"frames={len(fr)} (cần 5-8)")
     dl = d.get("dialog") or []
-    if not (5 <= len(dl) <= 10): errs.append(f"dialog={len(dl)} câu (cần 5-10)")
+    if not (5 <= len(dl) <= 11): errs.append(f"dialog={len(dl)} câu (cần 7-10)")
     for i, l in enumerate(dl):
         if l.get("who") not in ("A", "B"): errs.append(f"dialog[{i}].who phải A/B")
         if len((l.get("line") or "").split()) > 18: errs.append(f"dialog[{i}] quá dài")
@@ -1841,7 +1842,7 @@ TALE_SYS = (
  "drops the listener MID-DRAMA within 2 seconds — never begin with greetings or setup fluff.\n"
  "2) STRUCTURE: 7-11 narration sentences, each under 16 words, spoken natural American English; "
  "escalate stakes; END with a twist or dry punchline. Speaker is always the single narrator 'A'.\n"
- "3) FRAMES: 4-6 keyframes illustrating the beats: frame 1 = establishing the scene, middle = the "
+ "3) FRAMES: 6-9 keyframes illustrating the beats (a new frame every 1-2 sentences so the video cuts every 2-3 seconds): frame 1 = establishing the scene, middle = the "
  "escalations, one tight head-and-shoulders reaction, final = the twist. Each frame_prompt describes "
  "only what is shown (pose/prop/scene), no camera jargon, no text or signs.\n"
  "4) TRUTHFUL & CLEAN: if the channel is factual (history/explainer) every fact must be real and "
@@ -1857,7 +1858,7 @@ def _validate_tale(d: dict) -> list:
     if not (d.get("title") or "").strip(): errs.append("thiếu title")
     if not (d.get("scene_base") or "").strip(): errs.append("thiếu scene_base")
     fr = d.get("frames") or []
-    if not (3 <= len(fr) <= 6): errs.append(f"frames={len(fr)} (cần 4-6)")
+    if not (4 <= len(fr) <= 10): errs.append(f"frames={len(fr)} (cần 6-9)")
     dl = d.get("dialog") or []
     if not (6 <= len(dl) <= 12): errs.append(f"narration={len(dl)} câu (cần 7-11)")
     for i, l in enumerate(dl):

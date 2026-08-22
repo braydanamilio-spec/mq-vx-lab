@@ -280,7 +280,7 @@ Nguồn dữ liệu chuẩn để copy: `wave*_channels.json` (render) + `config
 3 short của một long = CHÍNH 3 skit đó (tái dùng nguyên audio + ảnh — 0 gọi thêm AI) -> luật 1:3 tự khớp.
 **Kịch bản (generate_toon):** 6-9 câu thoại A/B <14 từ/câu, setup→leo thang→1 punchline; tiếng Anh Mỹ
 đời thường; tự chấm **≥95** mới render; title = hook viral kiểu US shorts (xung đột bất ngờ/nỗi đau quen thuộc), câu 1 vào thẳng mâu thuẫn; CẤM chính trị/thương hiệu thật/người thật/NSFW (TOON_SYS).
-**Hình (FLUX-CF):** 3-5 khung CÙNG cảnh (khung 1 wide, giữa đổi biểu cảm, 1 khung head-and-shoulders,
+**Hình (FLUX-CF):** 5-8 khung/skit (story 6-9) CÙNG cảnh — nhịp cắt 2-3s (khung 1 wide, giữa đổi biểu cảm, 1 khung head-and-shoulders,
 chốt phản ứng punchline); STYLE LOCK cố định trong config kênh (toon_style) + "no signs, no lettering,
 no text"; né bộ lọc 8007 bằng bảng _TOON_SAFE; hỏng >40% khung -> LOẠI video (không ra hàng xấu).
 **Giọng:** 2 giọng edge-tts riêng từng nhân vật (voice_a/voice_b trong config) — không đổi tùy tiện
@@ -289,7 +289,7 @@ no text"; né bộ lọc 8007 bằng bảng _TOON_SAFE; hỏng >40% khung -> LO�
 (che luôn chữ giả FLUX), phụ đề **KARAOKE từng chữ** (word-timing từ tts_karaoke) màu theo nhân vật, whoosh giữa khung.
 **QC:** qc() chung (duration/audio/res/size) + score skit; opening_is_flat KHÔNG áp (nền vẽ chủ đích);
 thumbnail = doc_thumb từ khung video.
-**Chi phí chuẩn/skit:** ~2 lượt Groq (viết+chấm) + ~5 ảnh FLUX ≈ 290 neuron + 0 Gemini.
+**Chi phí chuẩn/skit:** ~2 lượt Groq + ~7 ảnh FLUX ≈ 400 neuron + 0 Gemini (38 key CF = ~950 skit/ngày trần).
 **BẢN QUYỀN NHÂN VẬT (bắt buộc):** BALD/BANDIT/HANK/DALE là nhân vật GỐC tự thiết kế (archetype đại bàng/gấu mèo/ông bố Mỹ — không thuộc sở hữu ai); CẤM prompt nhắc tên/nét đặc trưng nhân vật có bản quyền (Muppets, Marvel, Disney, game...); TOON_SYS đã cấm real brands/celebrities; ảnh 100% FLUX tự sinh — không dùng ảnh mạng. Nhân vật mới phải qua vòng "giống ai không?" trước khi chốt.
 **Nguồn sự thật cấu hình:** wave8_channels.json (2 entry toon) — thêm kênh toon mới = copy entry đổi
 nhân vật/style/giọng + đủ checklist 2 repo + 3 bảng nhúng dashboard (mục ⚠️ 22/8 ở trên) +
