@@ -181,6 +181,9 @@ def t_toon():
     bad = dict(good); bad2 = dict(good); bad2["frames"] = []
     assert CB._validate_toon(bad2)
     assert "head-and-shoulders" in DS._toon_safe("extreme close-up of face")
+    # 22/8 đêm: FLUX in chữ giả khi prompt chứa tên HOA / từ 'advertising' (đo 6 lượt vẽ brand thật)
+    _s = DS._toon_safe("PEARL a friendly woman, USA advertising cartoon, UPA look")
+    assert "PEARL" not in _s and "USA" not in _s and "advertising" not in _s and "friendly woman" in _s
     src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "run_render.py")).read()
     assert '"toon"' in src and "make_toon" in src, "run_render chưa route toon"
     tale = {"title": "The Pig War", "scene_base": "island farm 1859",

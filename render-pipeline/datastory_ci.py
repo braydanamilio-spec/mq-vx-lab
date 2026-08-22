@@ -2560,15 +2560,22 @@ if __name__ == "__main__":
 # 3 short đẻ từ CHÍNH 3 skit của long (dùng lại nguyên audio + ảnh, 0 gọi thêm AI) = đúng luật 1:3.
 _TOON_SAFE = [("extreme close-up", "tight head-and-shoulders shot"), ("close-up of face", "head-and-shoulders shot"),
               ("close-up", "tight shot"), ("close up", "tight shot"), ("shooting", "pointing"),
-              ("shoot", "point"), ("gun", "banana"), ("blood", "ketchup")]
+              ("shoot", "point"), ("gun", "banana"), ("blood", "ketchup"),
+              # 22/8 đêm — đo thật bằng 6 lượt vẽ brand: 2 bẫy làm FLUX IN CHỮ GIẢ lên ảnh:
+              # (a) từ vựng quảng cáo ("advertising") -> nó vẽ poster kèm chữ to đùng;
+              # (b) TÊN RIÊNG VIẾT HOA trong prompt (PEARL, MOSE...) -> nó viết thẳng tên lên hộp thư/cửa sổ.
+              ("advertising", "animation"), ("billboard", "backdrop"), ("poster", "backdrop")]
 
 
 def _toon_safe(p: str) -> str:
-    """Né bộ lọc prompt CF (8007 NSFW chặn oan 'close-up of face' — đo thật 22/8)."""
+    """Né bộ lọc prompt CF (8007 NSFW chặn oan 'close-up of face' — đo thật 22/8) + né bẫy chữ giả:
+    token VIẾT-HOA-TOÀN-BỘ >=3 ký tự (PEARL/HANK/BISON/USA/UPA...) bị FLUX vẽ thành chữ trên ảnh
+    -> xoá khỏi prompt (nhân vật đã được mô tả bằng lời ngay sau tên nên không mất nghĩa)."""
     low = p
     for a, b in _TOON_SAFE:
         low = low.replace(a, b).replace(a.title(), b)
-    return low
+    low = re.sub(r"\b[A-Z]{3,}\b", "", low)
+    return re.sub(r"\s{2,}", " ", low).replace(" ,", ",").strip()
 
 
 def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix="",
@@ -2611,10 +2618,13 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
     okn = 0
     for k2, fx in enumerate(fr):
         dest = os.path.join(pub, fx["img"])
-        prompt = f"{story.get('scene_base', '')}. {fx['prompt']}. no signs, no lettering, no text"
-        okimg = _generate_image_ai(prompt, dest, (keys[0] or {}).get("key"), style=toon_style or DEFAULT_AI_STYLE)
+        # _toon_safe cho CẢ prompt LẪN style ngay từ lượt đầu (22/8 đêm): style-lock chứa tên
+        # riêng VIẾT HOA (PEARL/BISON/OWL) và từ "advertising" -> FLUX in chữ giả lên khung hình.
+        _sty = _toon_safe(toon_style or DEFAULT_AI_STYLE)
+        prompt = _toon_safe(f"{story.get('scene_base', '')}. {fx['prompt']}. no signs, no lettering, no text")
+        okimg = _generate_image_ai(prompt, dest, (keys[0] or {}).get("key"), style=_sty)
         if not okimg:
-            okimg = _generate_image_ai(_toon_safe(prompt), dest, (keys[0] or {}).get("key"), style=toon_style or DEFAULT_AI_STYLE)
+            okimg = _generate_image_ai(prompt, dest, (keys[0] or {}).get("key"), style=_sty)
         if okimg:
             okn += 1
         elif k2 > 0:
