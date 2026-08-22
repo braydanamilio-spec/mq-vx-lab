@@ -503,6 +503,19 @@ def sync_keys_from_a(owner: str) -> int:
             _KEYS_CACHE.clear()
         return added
     except Exception as e:
+        if _wq_exhausted(e) and not getattr(sync_keys_from_a, "_retried", False):
+            # 429 lúc plan thường là BURST theo phút (vừa chạy loạt đếm 106 lệnh) — nghỉ 8s thử lại
+            # ĐÚNG 1 lần (cờ _retried chống đệ quy vô hạn khi 429 dai dẳng): sync là đường DUY NHẤT
+            # đưa key mới (Groq/CF user vừa dán) vào trận, trượt phiên này là key chờ thêm ~25'.
+            sync_keys_from_a._retried = True
+            try:
+                import time as _t2; _t2.sleep(8)
+                return sync_keys_from_a(owner)
+            except Exception as e2:
+                print(f"   ⚠️ sync_keys A->B lỗi cả lượt thử lại (bỏ qua): {str(e2)[:80]}")
+                return 0
+            finally:
+                sync_keys_from_a._retried = False
         print(f"   ⚠️ sync_keys A->B lỗi (bỏ qua): {str(e)[:80]}")
         return 0
 
@@ -826,9 +839,14 @@ def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
     if vtype:
         q = q.where("type", "==", vtype)
     try:
-        res = q.count().get()                    # aggregation: ~1 read thay vì N
-        row = res[0]; ar = row[0] if isinstance(row, (list, tuple)) else row
-        return int(ar.value)
+        # _retry: 429 ở đây đa số là BURST THEO PHÚT (plan bắn ~106 lệnh đếm liền tay cho 53 kênh,
+        # 10:17Z 22/8), không phải cạn ngày — backoff 1.5-7.5s là qua. Không retry thì count trả 0
+        # -> _ratio_plan tưởng kênh 0 long 0 short -> ép long sai + target đếm thiếu (làm DƯ video).
+        def _agg():
+            res = q.count().get()                # aggregation: ~1 read thay vì N
+            row = res[0]; ar = row[0] if isinstance(row, (list, tuple)) else row
+            return int(ar.value)
+        return _retry(_agg)
     except Exception as e:
         # ĐỪNG lùi về đếm thủ công cả collection: khi quota cạn thì count() lỗi -> stream() đọc HÀNG
         # NGHÌN doc -> càng cạn nhanh hơn (vòng xoáy chết, đúng sự cố 20/8). Đếm có giới hạn: đủ để
