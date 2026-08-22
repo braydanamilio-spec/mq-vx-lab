@@ -371,6 +371,11 @@ def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
             print(f"   🔑 Hợp nhất {len(extra)} key CHỈ CÓ Ở A (B chưa ghi được) vào pool phiên này.")
         return rows + extra
     except Exception:
+        # 22/8 tối: A nghẽn -> stream ném -> rows vẫn None -> LẦN ĐỌC KẾ THỬ LẠI -> 9 lần x 70 đếm
+        # = 630 đọc A/luồng x 18 luồng, tự tay đấm A gục -> enqueue đọc danh sách kho Drive (cũng ở A)
+        # trả rỗng -> 9 video EMPIREUSA QC 98 bị TỪ CHỐI đẩy kho. Lỗi thì ĐỆM RỖNG luôn: 1 phát/tiến trình.
+        if _A_KEYS["rows"] is None:
+            _A_KEYS["rows"] = []
         return rows   # A đọc lỗi thì thôi — B vẫn là nguồn chính
 
 
@@ -971,6 +976,37 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
         total += _LEGACY_COUNT[ck]
     _HOT_CACHE[("cnt", owner, channel, vtype)] = (_t.time(), total)
     return total
+
+
+def heal_unpushed(owner: str, hours: int = 8, cap: int = 30) -> int:
+    """TỰ CHỮA video 'mồ côi' (22/8): Firestore A nghẽn 1 nhịp -> enqueue tưởng '0 kho Drive' ->
+    9 video EMPIREUSA QC 98 render xong bị TỪ CHỐI đẩy, job ghi done «Xong (chưa đẩy Drive)» rồi
+    runner chết -> file mất, chỉ còn KỊCH BẢN trong job. Hàm này chạy 1 lần/phiên (plan_mode):
+    tìm job done + drive_id RỖNG + có script trong N giờ gần đây -> lật về 'failed' để
+    find_resumable của kênh đó tự nhặt, render lại TỪ SCRIPT (0 quota AI) + đẩy kho tử tế.
+    Rẻ: dùng index (owner,status,created_at) đã deploy; chỉ ghi khi thật sự có nạn nhân."""
+    try:
+        from datetime import timedelta
+        since = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+        _cr("heal_unpushed", 20)
+        q = (_db_jobs().collection("render_jobs").where("owner", "==", owner)
+             .where("status", "==", "done").where("created_at", ">=", since).limit(120))
+        healed = 0
+        for d in q.stream():
+            j = d.to_dict() or {}
+            if healed >= cap:
+                break
+            if (j.get("drive_id") or "") == "" and j.get("script"):
+                _soft(lambda ref=d.reference: ref.set(
+                    {"status": "failed", "note": "tự chữa: xong nhưng chưa đẩy được kho -> render lại từ script"},
+                    merge=True), "heal_unpushed")
+                healed += 1
+        if healed:
+            print(f"   🩹 Tự chữa {healed} video done-chưa-đẩy-kho (lật failed -> phiên này render lại từ script).")
+        return healed
+    except Exception as e:
+        print(f"   ⚠️ heal_unpushed lỗi ({str(e)[:70]}) — bỏ qua, không chặn phiên.")
+        return 0
 
 
 def find_resumable(owner: str, channel: str, vtype: str):

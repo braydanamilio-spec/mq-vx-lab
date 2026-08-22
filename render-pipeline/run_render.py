@@ -1158,6 +1158,12 @@ def plan_mode():
         except Exception:
             pass
         return out_channels([])
+    # TỰ CHỮA video render-xong-nhưng-chưa-đẩy-kho (A nghẽn 1 nhịp là dính, 22/8: 9 video EMPIREUSA)
+    # -> lật failed để lane render lại TỪ SCRIPT đã lưu (0 quota AI). 1 lần/phiên, ghi chỉ khi có nạn nhân.
+    try:
+        FB.heal_unpushed(OWNER)
+    except Exception:
+        pass
     global RESERVE_LONG, RESERVE_SHORT
     RESERVE_LONG = int(cfg.get("reserve_long", RESERVE_LONG) or RESERVE_LONG)
     RESERVE_SHORT = int(cfg.get("reserve_short", RESERVE_SHORT) or RESERVE_SHORT)
