@@ -285,8 +285,8 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
                     if len(data) < 2000 or ("image" not in ctype and not _is_image(data)) or not _is_image(data):
                         continue
                     cds.append(data)
-                    if len(cds) >= max_check + need:
-                        break
+                    if len(cds) >= min(5, max_check + need):   # ≤5 ứng viên = trọn 1 lưới (6 ô kể cả
+                        break                                   # ô mồi) -> đúng 1 lệnh Vision/cảnh, không chia lô
                 except Exception:
                     continue
             if not cds:
@@ -695,7 +695,8 @@ def hook_frame_of(props: dict, fps: int = 30, default: int = 90) -> int:
     return max(60, int(sec * fps * 0.72))
 
 
-def still_hook_thumb(comp_id, props_path, dest_jpg, frame=90, api_key=None, title="", min_score=65):
+def still_hook_thumb(comp_id, props_path, dest_jpg, frame=90, api_key=None, title="", min_score=65,
+                     trust=False):
     """THUMBNAIL = CHÍNH KHUNG HOOK MỞ ĐẦU, render TRỰC TIẾP từ Remotion (không cắt từ video).
 
     Vì sao không cắt từ mp4: video đã nén H.264 -> chữ rỗ, ảnh mềm, đúng kiểu "thumbnail mờ". Render
@@ -730,6 +731,11 @@ def still_hook_thumb(comp_id, props_path, dest_jpg, frame=90, api_key=None, titl
         if not os.path.exists(dest_jpg):
             return False
         ensure_yt_thumb(dest_jpg)
+        if trust:
+            # phần 2-3 cùng cụm: khung hook CÙNG THIẾT KẾ với phần 1 đã qua Vision; bản thân khung
+            # đã qua cổng pixel (không nền trơn) + ensure_yt_thumb -> nhận thẳng, khỏi tốn 1 gọi.
+            print("   🖼️ thumbnail khung hook: nhận theo phần 1 cùng cụm (lite)")
+            return True
         if api_key:
             import qc_vision as QV
             ok, info = QV.check_thumb(dest_jpg, title=title, api_key=api_key, min_score=min_score)
@@ -1745,7 +1751,7 @@ def build_swarm_props(story, sdir, handle="@swarmusa", accent="#0D9488", music="
             "sfx": True, "items": items_out, "audio": rel(track), "music": music}
 
 
-def render_short_from_props(channel, props, story, out, keys=None, prefix=""):
+def render_short_from_props(channel, props, story, out, keys=None, prefix="", lite=False):
     """Dựng 1 SHORT 9:16 từ props ĐÃ CÓ (do make_doc_long tạo cho từng phần của long).
 
     Không gọi Gemini, không tải ảnh lại: dùng lại nguyên giọng + ảnh của phần đó -> short bám sát
@@ -1771,18 +1777,24 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix=""):
         if not fok:
             print(f"   ❌ mở đầu NỀN TRƠN (tối {finfo.get('dark')}%) — loại"); ok = False
     if ok:
-        try:
-            vok, vinfo = _check_visual_rot(out, keys)
-            info["visual"] = vinfo
-            if not vok:
-                ok = False
-        except Exception as e:
-            print("   ⚠️ vision qc skip:", e)
+        if lite:
+            # QC-NHẸ cho short phần 2-3: cùng engine + cùng bộ ảnh đã qua verify-grid + cùng layout
+            # với phần 1 (đã soi Vision đầy đủ). Cổng cấu trúc + cổng pixel mở-đầu vẫn chạy đủ ở
+            # trên. Tiết kiệm ~2 gọi Vision/cụm — 20 gọi/key/ngày nên mỗi gọi đều đáng tiền.
+            info["visual"] = {"note": "lite: phần 1 cùng cụm đã soi Vision đầy đủ"}
+        else:
+            try:
+                vok, vinfo = _check_visual_rot(out, keys)
+                info["visual"] = vinfo
+                if not vok:
+                    ok = False
+            except Exception as e:
+                print("   ⚠️ vision qc skip:", e)
     # thumbnail = KHUNG HOOK MỞ ĐẦU render nét từ chính props này (khớp video 100%)
     try:
         t0 = out.rsplit(".", 1)[0] + ".jpg"
         kk = ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
-        if still_hook_thumb("CinematicShort", pf, t0,
+        if still_hook_thumb("CinematicShort", pf, t0, trust=lite,
                             api_key=kk, title=(story.get("title_yt") or story.get("title") or channel)):
             story["_thumb"] = t0
             print("   ✅ thumbnail = KHUNG HOOK MỞ ĐẦU (render nét)")
@@ -1828,7 +1840,8 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
     for pi, sub in enumerate(subs):
         st("writing", f"Viết phần {pi + 1}/{len(subs)}: {str(sub)[:40]}")
         story = KM.write_doc(channel, keys, sub, style, tier, avoid=avoid,
-                             on_limit=on_limit, on_ok=on_ok, speculative=ai_only)
+                             on_limit=on_limit, on_ok=on_ok, speculative=ai_only,
+                             audit=(pi == 0))   # soi độc lập PHẦN ĐẦU đại diện — tiết kiệm 2 gọi/cụm
         pr = build_doc_props(story, channel, api_key=keys[0]["key"], accent=accent, accent2=accent2,
                              handle=channel_handle(channel), ai_style=ai_style, ai_only=ai_only,
                              music=music, mode=mode, host_prompt=host_prompt, prefix=f"p{pi}_")

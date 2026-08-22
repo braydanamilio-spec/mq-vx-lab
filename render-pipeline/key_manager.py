@@ -379,7 +379,8 @@ def write_thennow(channel: str, keys: list[dict], niche: str, tier: str = "norma
 
 
 def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cinematic", tier: str = "normal",
-              avoid: list = None, on_limit=None, on_ok=None, speculative: bool = False) -> dict:
+              avoid: list = None, on_limit=None, on_ok=None, speculative: bool = False,
+              audit: bool = True) -> dict:
     """Sinh kịch bản TÀI LIỆU (Wave 2) — bám key sticky, đổi key khi limit.
     speculative=True (Wave 5): dùng DOC_SYS_SPECULATIVE (img_query không bó buộc phải tìm ảnh CC0 thật)."""
     def _ok(k, r):
@@ -411,14 +412,14 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
             try:
                 print(f"   🔑 DOC {channel} key [{tag}] · model {model}")
                 _count(k)
-                return _ok(k, CB.generate_doc(niche, style, api_key=k["key"], model_name=model, avoid=avoid, speculative=speculative))
+                return _ok(k, CB.generate_doc(niche, style, api_key=k["key"], model_name=model, avoid=avoid, speculative=speculative, audit=audit))
             except CB.RateLimited as e:
                 _cool(k, e); continue
             except Exception as e:
                 if "404" in str(e) and model != "gemini-2.5-flash":
                     model = "gemini-2.5-flash"
                     try:
-                        _count(k); return _ok(k, CB.generate_doc(niche, style, api_key=k["key"], model_name=model, avoid=avoid, speculative=speculative))
+                        _count(k); return _ok(k, CB.generate_doc(niche, style, api_key=k["key"], model_name=model, avoid=avoid, speculative=speculative, audit=audit))
                     except CB.RateLimited as e2:
                         _cool(k, e2); continue
                 raise

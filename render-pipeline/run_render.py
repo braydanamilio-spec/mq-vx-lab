@@ -520,7 +520,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
             sout = os.path.join("out", DS.slug(channel) + f"_docshort{pi}.mp4")
             sst("rendering", f"Short {pi + 1}/{len(parts)} (từ long)")
             sok, sinfo = DS.render_short_from_props(channel, part["props"], part["story"], sout,
-                                                    keys=keys, prefix=f"p{pi}")
+                                                    keys=keys, prefix=f"p{pi}", lite=(pi > 0))
         except (Exception, SystemExit) as e:
             traceback.print_exc()
             sst("failed", f"Short lỗi: {str(e)[:120]}"); R["fails"].append(f"{channel} SHORT {pi}: {str(e)[:100]}")

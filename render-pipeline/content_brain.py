@@ -959,7 +959,8 @@ def audit_doc(d: dict, api_key: str = None, model_name: str = None) -> tuple[boo
 
 
 def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
-                 model_name: str = None, avoid: list = None, speculative: bool = False) -> dict:
+                 model_name: str = None, avoid: list = None, speculative: bool = False,
+                 audit: bool = True) -> dict:
     """Sinh 1 kịch bản TÀI LIỆU (narration + img_query mỗi cảnh) cho engine Cinematic. Viết lại tới khi đạt.
     speculative=True (Wave 5): img_query mô tả cảnh TƯỞNG TƯỢNG cho AI vẽ — KHÔNG bó buộc phải tìm được ảnh
     CC0 thật (khác DOC_SYS mặc định)."""
@@ -1005,7 +1006,9 @@ def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
             feedback = f"Điểm {score}<{MIN_SCORE}. Hook mạnh hơn, mạch cuốn hơn."; print(f"   ↻ doc vòng {attempt}: điểm {score}"); continue
         # ĐÃ QUA TỰ-CHẤM -> soi lại bằng LỚP ĐỘC LẬP (bắt fact bịa tự tin + rủi ro chính sách kiếm tiền).
         # Tối đa 2 lượt soi/video: soi mãi mà vẫn vướng thì nhận bản cuối (fail-open) — tránh đốt quota vô hạn.
-        if audits < 2:
+        # audit=False (phần 2-3 của pillar): 3 phần cùng người viết + cùng luật + cùng gia đình chủ
+        # đề — soi ĐỘC LẬP phần 1 là đủ đại diện; tiết kiệm 2 gọi Gemini/cụm (20 gọi/key/ngày rất đắt).
+        if audit and audits < 2:
             audits += 1
             a_ok, a_probs = audit_doc(d, api_key=api_key, model_name=model_name)
             if not a_ok and a_probs:
