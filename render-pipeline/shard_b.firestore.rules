@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // META render KHÔNG nhạy cảm (single-user tool). Dashboard app B không auth -> mở; pipeline SA bypass.
+    match /render_jobs/{id}       { allow read, write: if true; }
+    match /render_channels/{id}   { allow read, write: if true; }
+    match /render_config/{id}     { allow read, write: if true; }
+    match /storage_accounts/{id}  { allow read, write: if true; }
+    match /render_topics/{id}     { allow read, write: if true; }
+    match /render_requests/{id}   { allow read, write: if true; }
+    // SỔ THỐNG KÊ 1-DOC cho dashboard (22/8): chỉ số đếm long/short mỗi kênh — không nhạy cảm, CHỈ ĐỌC
+    // (pipeline SA ghi, client không được sửa để số không bị bóp méo).
+    match /render_stats/{id}      { allow read: if true; allow write: if false; }
+    // gemini_keys + còn lại: KHÓA (key API nhạy cảm -> giữ ở A có auth; bản migrate ở B chỉ SA đọc được).
+    match /{document=**}          { allow read, write: if false; }
+  }
+}
