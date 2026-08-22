@@ -496,6 +496,14 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
         else:
             lst("failed", f"LONG doc lỗi: {str(e)[:120]}"); R["fails"].append(f"{channel} LONG: {str(e)[:100]}")
         return False
+    if _rck:
+        FB.clear_resumed(_rck["job_id"])    # đã dùng checkpoint -> job cũ khỏi bị nhặt lại lần nữa
+    # XẢ ĐỆM NGAY SAU KHÂU VIẾT (trước/ngay quanh render dài): checkpoint phải nằm trên Firestore
+    # trước giai đoạn rủi ro nhất, không đợi cuối luồng (luồng bị giết là đệm chết theo tiến trình).
+    try:
+        FB.flush_soft()
+    except Exception:
+        pass
     if subs:
         FB.save_topics(OWNER, channel, subs)
     if not ok:

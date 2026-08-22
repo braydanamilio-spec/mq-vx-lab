@@ -1845,7 +1845,7 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix="", li
 def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", style="awe, cinematic",
                   on_status=None, on_limit=None, on_ok=None, avoid=None, n_parts=3,
                   accent="#22D3EE", accent2="#F5B301", ai_style=None, ai_only=False, music=None,
-                  mode=None, host_prompt=None):
+                  mode=None, host_prompt=None, resume=None):
     """LONG 16:9 cho kênh doc-format — và ĐẺ RA LUÔN props của n_parts SHORT gắn liền nội dung.
 
     Rule user: short phải ĐI SAU long và bám nội dung long (1 long -> 3 short). Trước đây 10 format
@@ -1868,19 +1868,40 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
         raise SystemExit("❌ Chưa có GEMINI_API_KEY / key nào")
     set_ai_pool(keys, channel)
 
-    st("writing", f"Lập pillar {n_parts} phần ({niche[:40]})")
-    k0 = KM.key_order(channel, keys)[0]
-    plan = CB.plan_pillar(niche, n_parts, api_key=k0["key"], model_name=KM.model_for(tier), avoid=avoid)
-    subs = [x for x in (plan.get("subtopics") or []) if x][:n_parts]
+    # ── RESUME TỪNG PHẦN: phiên trước bị giết giữa chừng -> pillar + các phần ĐÃ VIẾT nằm trong
+    # checkpoint, chỉ viết tiếp phần còn thiếu. Mỗi phần đã cứu = 1-2 gọi Gemini không phải trả lại.
+    done_stories = []
+    if resume and resume.get("parts"):
+        plan = {"pillar_title": resume.get("pillar_title"), "hook": resume.get("hook"),
+                "sources": resume.get("sources") or []}
+        subs = [x for x in (resume.get("subs") or []) if x][:n_parts]
+        done_stories = list(resume["parts"])[:len(subs)]
+        st("writing", f"♻️ Resume: {len(done_stories)}/{len(subs)} phần đã có sẵn — khỏi gọi Gemini lại")
+        print(f"   ♻️ resume long: dùng lại pillar + {len(done_stories)} phần đã viết")
+    else:
+        st("writing", f"Lập pillar {n_parts} phần ({niche[:40]})")
+        k0 = KM.key_order(channel, keys)[0]
+        plan = CB.plan_pillar(niche, n_parts, api_key=k0["key"], model_name=KM.model_for(tier), avoid=avoid)
+        subs = [x for x in (plan.get("subtopics") or []) if x][:n_parts]
     if not subs:
         raise Exception("plan_pillar không trả subtopic nào")
 
     parts, all_scenes = [], []
     for pi, sub in enumerate(subs):
-        st("writing", f"Viết phần {pi + 1}/{len(subs)}: {str(sub)[:40]}")
-        story = KM.write_doc(channel, keys, sub, style, tier, avoid=avoid,
-                             on_limit=on_limit, on_ok=on_ok, speculative=ai_only,
-                             audit=(pi == 0))   # soi độc lập PHẦN ĐẦU đại diện — tiết kiệm 2 gọi/cụm
+        if pi < len(done_stories):
+            story = done_stories[pi]          # phần đã viết ở phiên trước
+        else:
+            st("writing", f"Viết phần {pi + 1}/{len(subs)}: {str(sub)[:40]}")
+            story = KM.write_doc(channel, keys, sub, style, tier, avoid=avoid,
+                                 on_limit=on_limit, on_ok=on_ok, speculative=ai_only,
+                                 audit=(pi == 0))   # soi độc lập PHẦN ĐẦU đại diện
+            done_stories.append(story)
+            # CHECKPOINT NGAY sau mỗi phần (không đợi viết đủ): luồng bị giết lúc render thì phiên
+            # sau resume đúng từ đây. Đi qua update_job (đã có đệm-xả khi quota chết).
+            st("writing", f"✔ xong phần {pi + 1}/{len(subs)}",
+               script=_ckpt_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"),
+                                  "sources": plan.get("sources") or [], "subs": subs,
+                                  "parts": done_stories}))
         pr = build_doc_props(story, channel, api_key=keys[0]["key"], accent=accent, accent2=accent2,
                              handle=channel_handle(channel), ai_style=ai_style, ai_only=ai_only,
                              music=music, mode=mode, host_prompt=host_prompt, prefix=f"p{pi}_")
