@@ -2591,8 +2591,9 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
         d, _subs, _srt = TK.synth(dl.get("line", ""), os.path.join(pub, mp3), v, r)
         if d <= 0.1:
             continue
+        words = [{"w": w.get("w", ""), "f": int(float(w.get("t", 0)) * FPS)} for w in (_subs or []) if w.get("w")]
         lines.append({"audio": mp3, "text": dl.get("line", ""), "who": who,
-                      "from": int(t * FPS), "dur": int((d + GAP) * FPS)})
+                      "from": int(t * FPS), "dur": int((d + GAP) * FPS), "words": words})
         t += d + GAP
     if len(lines) < 4:
         raise RuntimeError("TTS quá ít câu")
@@ -2619,6 +2620,21 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
             fx["img"] = fr[k2 - 1]["img"]
     if okn < max(3, int(len(fr) * 0.6)):
         raise RuntimeError(f"chỉ vẽ được {okn}/{len(fr)} khung")
+    # CHUẨN HÌNH ≥95 (user 22/8): Vision chấm cả lưới 1 lệnh — khung nào sai (dị dạng/không đúng
+    # 2 nhân vật/chữ vô nghĩa) thì vẽ lại 1 lần; vẫn sai -> dùng khung liền trước (an toàn hơn ảnh hỏng).
+    try:
+        _subj = "the channel's two cartoon characters clearly drawn, correct anatomy, no gibberish text"
+        _pairs = [(os.path.join(pub, fx["img"]), _subj) for fx in fr]
+        _vr = _verify_grid_rot(_pairs, first_key=(keys[0] or {}).get("key"))
+        for k2, ok2 in enumerate(_vr or []):
+            if ok2 is False:
+                dest = os.path.join(pub, fr[k2]["img"])
+                re_ok = _generate_image_ai(f"{story.get('scene_base', '')}. {spec[k2].get('prompt', '')}. clean correct anatomy, no text",
+                                           dest, (keys[0] or {}).get("key"), style=toon_style or DEFAULT_AI_STYLE)
+                if not re_ok and k2 > 0:
+                    fr[k2]["img"] = fr[k2 - 1]["img"]
+    except Exception as _ve:
+        print("   ⚠️ vision khung toon (bỏ qua):", str(_ve)[:60])
     for fx in fr:
         fx.pop("prompt", None)
     return story, fr, lines, end_f

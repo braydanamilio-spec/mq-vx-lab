@@ -117,4 +117,4 @@ chủ đề đã sát ranh giới quảng cáo. Cách an toàn đang dùng: **lu
 3. Khung vẽ: đúng 2 nhân vật thương hiệu, không dị dạng tay/mặt nặng, không chữ vô nghĩa lộ ngoài
    vùng title card. >40% khung hỏng = video bị loại từ pipeline (đã enforce trong _toon_build).
 4. Long: mỗi skit có title card riêng, chuyển skit có nghỉ ~1s; tổng 3 skit.
-5. Số đo chuẩn: short 18-35s · long 60-110s · QC score ≥90.
+5. Số đo chuẩn: short 18-35s · long 60-110s · **score kịch bản ≥95** · khung vẽ qua Vision-grid (dị dạng/chữ vô nghĩa = vẽ lại) · phụ đề KARAOKE từng chữ sáng theo giọng đọc.

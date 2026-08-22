@@ -279,14 +279,14 @@ Nguồn dữ liệu chuẩn để copy: `wave*_channels.json` (render) + `config
 **Chuẩn sản phẩm:** short 18-30s dọc 9:16 = 1 skit; long 16:9 = tuyển tập 3 skit (title đổi theo skit);
 3 short của một long = CHÍNH 3 skit đó (tái dùng nguyên audio + ảnh — 0 gọi thêm AI) -> luật 1:3 tự khớp.
 **Kịch bản (generate_toon):** 6-9 câu thoại A/B <14 từ/câu, setup→leo thang→1 punchline; tiếng Anh Mỹ
-đời thường; tự chấm ≥90 mới render; CẤM chính trị/thương hiệu thật/người thật/NSFW (TOON_SYS).
+đời thường; tự chấm **≥95** mới render; title = hook viral kiểu US shorts (xung đột bất ngờ/nỗi đau quen thuộc), câu 1 vào thẳng mâu thuẫn; CẤM chính trị/thương hiệu thật/người thật/NSFW (TOON_SYS).
 **Hình (FLUX-CF):** 3-5 khung CÙNG cảnh (khung 1 wide, giữa đổi biểu cảm, 1 khung head-and-shoulders,
 chốt phản ứng punchline); STYLE LOCK cố định trong config kênh (toon_style) + "no signs, no lettering,
 no text"; né bộ lọc 8007 bằng bảng _TOON_SAFE; hỏng >40% khung -> LOẠI video (không ra hàng xấu).
 **Giọng:** 2 giọng edge-tts riêng từng nhân vật (voice_a/voice_b trong config) — không đổi tùy tiện
 (đổi giọng = đổi nhân vật trong tai người xem).
 **Dựng (ToonShort/ToonLong):** khung chuyển theo nhịp thoại + zoom 2-3.5%, title card đè vùng đỉnh
-(che luôn chữ giả FLUX), phụ đề màu theo nhân vật, whoosh giữa khung.
+(che luôn chữ giả FLUX), phụ đề **KARAOKE từng chữ** (word-timing từ tts_karaoke) màu theo nhân vật, whoosh giữa khung.
 **QC:** qc() chung (duration/audio/res/size) + score skit; opening_is_flat KHÔNG áp (nền vẽ chủ đích);
 thumbnail = doc_thumb từ khung video.
 **Chi phí chuẩn/skit:** ~2 lượt Groq (viết+chấm) + ~5 ảnh FLUX ≈ 290 neuron + 0 Gemini.

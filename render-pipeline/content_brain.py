@@ -1759,7 +1759,9 @@ TOON_SYS = (
  "final = punchline reaction. Each frame_prompt describes ONLY what changes (pose/expression/prop), "
  "no camera jargon, no text or signs in the scene.\n"
  "4) CLEAN: no politics, no slurs, no NSFW, no real brand names or celebrities. Family-safe irony is the tone.\n"
- "5) HOOK: the title is a curiosity hook under 8 words; first line must make viewers stay.\n"
+ "5) HOOK: the title is a VIRAL curiosity hook under 8 words in US shorts style (unexpected conflict, "
+ "a challenge, or a relatable pain — e.g. 'The HOA fine', 'Why is gas $9?'); line 1 must hook within 2 "
+ "seconds — start mid-conflict, never with greetings.\n"
  'Return STRICT JSON: {"title": str, "scene_base": str (one sentence, the constant setting), '
  '"frames": [{"prompt": str, "line_idx": int}], "dialog": [{"who": "A"|"B", "line": str}], '
  '"self_score": {"funny": 0-100, "hook": 0-100, "clean": 0-100, "total": 0-100}}'
@@ -1823,8 +1825,8 @@ def generate_toon(niche: str, api_key: str = None, model_name: str = None, avoid
         d["_attempt"] = attempt; last = d
         if errs:
             feedback = "structure: " + "; ".join(errs[:6]); print(f"   ↻ toon vòng {attempt}: {feedback}"); continue
-        if score < 90:
-            feedback = f"total={score}<90 — punchline sắc hơn, hook tò mò hơn."; print(f"   ↻ toon vòng {attempt}: điểm {score}"); continue
+        if score < 95:
+            feedback = f"total={score}<95 — punchline sắc hơn, hook giật hơn, thoại đời hơn."; print(f"   ↻ toon vòng {attempt}: điểm {score}"); continue
         print(f"   ✅ TOON đạt vòng {attempt}: total {score} — '{d.get('title')}'")
         return d
     if last: return last

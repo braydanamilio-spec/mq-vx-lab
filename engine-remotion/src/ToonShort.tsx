@@ -20,7 +20,8 @@ const SafeImg: React.FC<{ src: string; style?: React.CSSProperties }> = ({ src, 
 };
 
 type Frame = { img: string; from: number; dur: number };
-type Line = { audio: string; text: string; who: string; from: number; dur: number };
+type Word = { w: string; f: number };   // f = frame bắt đầu TƯƠNG ĐỐI trong câu (karaoke)
+type Line = { audio: string; text: string; who: string; from: number; dur: number; words?: Word[] };
 
 type Chapter = { text: string; from: number; dur: number };
 
@@ -66,7 +67,14 @@ export const ToonShort: React.FC<{
             background: "rgba(10,10,14,0.78)", color: whoColors[cur.who] || "#fff",
             fontSize: 47, fontWeight: 800, textAlign: "center", lineHeight: 1.22,
             border: `2px solid ${whoColors[cur.who] || color}55`,
-          }}>{cur.text}</div>
+          }}>{cur.words && cur.words.length
+            ? cur.words.map((w, wi) => (
+                <span key={wi} style={{
+                  color: (f - cur.from) >= w.f ? (whoColors[cur.who] || "#fff") : "#ffffff70",
+                  transition: "none", marginRight: 12,
+                }}>{w.w}</span>
+              ))
+            : cur.text}</div>
         </AbsoluteFill>
       )}
       {/* watermark kênh */}
