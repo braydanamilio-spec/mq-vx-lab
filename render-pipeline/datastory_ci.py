@@ -1550,7 +1550,18 @@ def flat_bg_metrics(path: str):
         return 0.0, 999.0, 9999      # đo không được -> coi như ĐẠT, không chặn oan
 
 
-def opening_is_flat(mp4: str, at: float = 1.2):
+DARK_OK_CHANNELS = set((os.environ.get("DARK_OK_CHANNELS")
+                        or "COSMOS,THEDEEP,UNSEENUSA,FUTUREUSA,UNDERUSA").upper().split(","))
+
+
+def _dark_ok(channel) -> bool:
+    """Kênh có thẩm mỹ TỐI CHỦ ĐÍCH (vũ trụ/đáy biển/bí ẩn): mở đầu tối là ĐÚNG CHẤT, không phải
+    lỗi nền trơn. Phát hiện 22/8: cổng dark>=75&cols<900 giết oan 4/6 short COSMOS (dark 75-86%
+    nhưng 737-992 màu — là ảnh không gian thật/nền cosmic có sao, không phải thẻ chữ trống)."""
+    return str(channel or "").upper() in DARK_OK_CHANNELS
+
+
+def opening_is_flat(mp4: str, at: float = 1.2, dark_ok: bool = False):
     """KHUNG MỞ ĐẦU có phải 'chữ trên nền trơn' không? Đo bằng PIXEL, KHÔNG gọi API, không tốn quota.
 
     Đây là chốt chặn SAU RENDER cho đúng rule: mở đầu BẮT BUỘC là ảnh nền hook thật.
@@ -1576,7 +1587,9 @@ def opening_is_flat(mp4: str, at: float = 1.2):
     # sat<25) giết oan 2/6 video tốt (dark chỉ 35-37%, tức có ảnh thật, không hề "nền trơn").
     # Chữ-trên-nền-trơn thật sự có chữ ký dark>=75 (đo: 91.9%) -> giữ điều kiện ĐÓ làm chặn cứng,
     # ca ít-màu hạ xuống CẢNH BÁO ghi vào info để soi, không giết video.
-    flat = (dark >= 75 and cols < 900)
+    # Kênh tối-chủ-đích: chỉ chặn chữ ký NỀN TRƠN THẬT SỰ (đo 21/8: 91.9% tối · 342 màu) —
+    # ngưỡng 88/450 vẫn bắt được thẻ chữ trống nhưng tha cho khung không gian tối giàu màu.
+    flat = (dark >= 88 and cols < 450) if dark_ok else (dark >= 75 and cols < 900)
     warn = (cols < 500 and sat < 25 and not flat)
     info = {"dark": round(dark, 1), "sat": round(sat, 1), "colors": cols}
     if warn:
@@ -1761,7 +1774,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
         # tật; thẻ chữ thì sạch và đọc rõ nên luôn 80+ — xem ghi chú ở qc_structure).
         # CHỈ áp cho make_doc (Cinematic, nền là ảnh thật). Engine data-race mở bằng đồ hoạ có chủ
         # đích (ít màu, nền tối) nên áp vào đó sẽ bắt oan.
-        _fok, _finfo = opening_is_flat(out)
+        _fok, _finfo = opening_is_flat(out, dark_ok=_dark_ok(channel))
         info["opening"] = _finfo
         if not _fok:
             print(f"   ❌ mở đầu là NỀN TRƠN (tối {_finfo.get('dark')}% · {_finfo.get('colors')} màu) — loại")
@@ -1870,7 +1883,7 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix="", li
                     "--concurrency=2", "--log=error"], cwd=ENG, label="CinematicShort(part)")
     ok, info = qc(out)
     if ok:
-        fok, finfo = opening_is_flat(out)
+        fok, finfo = opening_is_flat(out, dark_ok=_dark_ok(channel))
         info["opening"] = finfo
         if not fok:
             print(f"   ❌ mở đầu NỀN TRƠN (tối {finfo.get('dark')}%) — loại"); ok = False
@@ -1993,7 +2006,7 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     if ok:
-        fok, finfo = opening_is_flat(out)
+        fok, finfo = opening_is_flat(out, dark_ok=_dark_ok(channel))
         info["opening"] = finfo
         if not fok:
             print(f"   ❌ LONG mở đầu NỀN TRƠN (tối {finfo.get('dark')}%) — loại"); ok = False
