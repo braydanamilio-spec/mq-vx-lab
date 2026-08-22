@@ -161,6 +161,11 @@ def _ratio_plan(channel, want_shorts, long_target):
     need_long = (room <= 0) and (L < long_target)  # short đã kín -> phải thêm long mới mở được chỗ
     if need_long:
         room = max(room, SHORT_PER_LONG)           # long sắp làm xong sẽ mở thêm 3 chỗ
+    # MINH BẠCH TỈ LỆ (22/8): in số thật để nhìn log là biết vì sao kênh này được làm N short —
+    # tránh cảnh "dashboard hôm nay hiện 0 long · 8 short" gây tưởng vỡ luật trong khi đếm TÍCH LŨY
+    # vẫn chuẩn (hoặc ngược lại: lộ ngay nếu count_done trả số sai).
+    print(f"   ⚖️ {channel}: tích lũy long={L} short={S} -> short được phép {room}"
+          + (" · PHẢI LÀM LONG trước" if need_long else ""))
     return need_long, max(0, min(int(want_shorts or 0), room))
 
 
