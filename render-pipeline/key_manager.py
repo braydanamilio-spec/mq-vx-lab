@@ -56,6 +56,20 @@ def key_order(channel: str, keys: list[dict]) -> list[dict]:
                 max(str(k.get("last_used") or ""), str(k.get("cooling_until") or "")),  # 2. né key vừa mở chặn + lâu chưa xài
                 str(k.get("id") or ""))
     ks = sorted(keys, key=score)
+    # SỔ NGHỈ CỤC BỘ: cool_key ghi Firestore qua _soft — quota ghi chết là lệnh nghỉ RƠI, và
+    # read_keys (đọc từ doc) vẫn trả key đó -> bị chọn lại -> nện tiếp 429. Sổ _COOLED trong RAM
+    # của firestore_bridge luôn đúng bất kể Firestore sống chết -> lọc tại đây là cooldown hoạt
+    # động 100% offline. Hết giờ nghỉ thì key tự quay lại (so mốc thời gian).
+    try:
+        import time as _t
+        import firestore_bridge as _FB
+        _now = _t.time()
+        _cooled = {k for k, v in getattr(_FB, "_COOLED", {}).items() if v > _now}
+        if _cooled:
+            ks = [k for k in ks if k.get("id") not in _cooled] or ks[-1:]   # tất cả nghỉ -> giữ 1 key đỡ crash
+    except Exception:
+        pass
+    n = len(ks)
     if n == 1:
         return ks
     # ƯU TIÊN GROQ CHO KHÂU VIẾT (key_order chỉ phục vụ text — pool Vision/vẽ đã lọc gsk_ riêng):

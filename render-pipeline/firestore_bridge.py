@@ -386,7 +386,8 @@ def cool_key(key_id: str, minutes: int = 20):
     until_ts = now + minutes * 60
     prev = _COOLED.get(key_id, 0)
     if prev > now and until_ts <= prev + 60:
-        _KEYS_CACHE.clear()        # vẫn phải xoá đệm để lượt chọn key kế tiếp né đúng key này
+        # KHÔNG xoá đệm ở nhánh khử-trùng-lặp: key đã có trong sổ _COOLED cục bộ, key_order tự né
+        # (xem key_manager). Xoá ở đây = trong bão 429 mọi read_keys thành lượt đọc THẬT cả bảng.
         return
     from datetime import timedelta
     until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
@@ -821,7 +822,9 @@ def update_job(job_id: str, **patch):
     #   - status trung gian: CHỈ ghi 1 lần/~90s/job (heartbeat thưa cho dashboard biết còn sống); còn lại BỎ.
     import time as _t
     st = patch.get("status")
-    if st not in ("done", "failed", "ratelimited"):
+    if st not in ("done", "failed", "ratelimited") and "script" not in patch:
+        # patch mang 'script' = CHECKPOINT kịch bản (từng-phần) — quý, thưa, và mất là trả Gemini
+        # lần 2 -> MIỄN hãm 300s. Chỉ hãm các mốc trạng thái trang trí (writing/rendering/qc).
         now = _t.time()
         # HÃM 5 PHÚT (trước 90s). Tính thật: ở đỉnh 172 video/giờ, mỗi video ~7 lượt ghi -> 28.896
         # lượt/ngày trong khi gói FREE chỉ cho 20.000 -> cạn sau ~16 tiếng, đúng sự cố 20/8. Phần
