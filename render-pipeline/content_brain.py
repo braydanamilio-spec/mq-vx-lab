@@ -228,10 +228,13 @@ class _GroqShim:
         gc = generation_config or {}
         msgs = ([{"role": "system", "content": self._sys}] if getattr(self, "_sys", None) else [])
         msgs.append({"role": "user", "content": prompt if isinstance(prompt, str) else str(prompt)})
+        # max_tokens 3600 chứ KHÔNG 8192 (GỐC RỄ 413 — đo 14:0xZ 22/8): Groq cộng max_tokens vào
+        # "Requested" khi so trần TPM 8000/request -> khai 8192 là MỌI lệnh đều 413 bất kể prompt
+        # ngắn hay dài. 3600 đủ rộng cho JSON dài nhất của mình (~2.5K token) mà input+max luôn <8K.
         body = {"model": self._model,
                 "messages": msgs,
                 "temperature": gc.get("temperature", 0.9),
-                "max_tokens": 8192}
+                "max_tokens": 3600}
         if gc.get("response_mime_type") == "application/json":
             body["response_format"] = {"type": "json_object"}
         req = urllib.request.Request(
