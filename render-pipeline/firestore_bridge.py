@@ -296,7 +296,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     return res
 
 
-_A_KEYS = {"t": 0.0, "rows": None}   # đọc bảng key ở A tối đa 1 lần/10' mỗi tiến trình
+_A_KEYS = {"rows": None}   # đọc bảng key ở A TỐI ĐA 1 LẦN mỗi tiến trình (A cũng Spark free!)
 
 
 def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
@@ -305,16 +305,22 @@ def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
     Vì sao cần (phát hiện 22/8, phiên quyết định 04:22Z): user thêm 10+ key Groq trên dashboard
     (ghi vào A), nhưng B đang CẠN HẠN MỨC GHI cả ngày nên sync_keys_from_a ghi qua _soft bị nuốt
     -> key mới vô hình với 18 luồng suốt phiên. Hợp nhất lúc ĐỌC thì key mới dùng được NGAY cả
-    khi không ghi nổi vào B. A gói Blaze nên +1 lượt đọc bảng (~70 doc)/10' là rẻ.
+    khi không ghi nổi vào B.
+
+    TIẾT CHẾ (sửa cùng ngày, soi console thật: A cũng là SPARK FREE 50K đọc/ngày, KHÔNG phải Blaze
+    như tưởng): chỉ đọc A khi pool B CHƯA CÓ key gsk_ nào (sync chưa ăn) + tối đa 1 lần/tiến trình.
+    Sync A->B ghi thành công là nhánh này tự tắt — chi phí chỉ tồn tại đúng cửa sổ hỏng. (Bản đầu
+    đọc lại mỗi 10'/luồng ≈ 56K đọc A/ngày = tự tay giết quota A — chặn trước khi kịp xảy ra.)
     Key chỉ-có-ở-A giữ nguyên doc id của A: cool_key/incr ghi set(merge) theo id sẽ tự tạo doc
     bên B khi quota ghi hồi — tự lành, khỏi cần migrate tay."""
-    import time as _t
     if os.environ.get("SHARD_KEYS") != "1":
         return rows
+    if any(str(r.get("key", "")).startswith("gsk_") for r in rows):
+        return rows        # B đã có key Groq (sync đã ăn) -> không đụng tới quota A nữa
     try:
         if _db() is _db_keys():
             return rows
-        if _A_KEYS["rows"] is None or (_t.time() - _A_KEYS["t"]) > 600:
+        if _A_KEYS["rows"] is None:
             _cr("merge_keys_A", 70)
             out = []
             for d in _db().collection("gemini_keys").where("owner", "==", owner).stream():
@@ -324,7 +330,7 @@ def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
                                 "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
                                 "last_used": x.get("last_used", ""), "cooling_until": x.get("cooling_until", ""),
                                 "dead_since": x.get("dead_since", ""), "req_today": 0})
-            _A_KEYS["rows"] = out; _A_KEYS["t"] = _t.time()
+            _A_KEYS["rows"] = out
         have = {r.get("key") for r in rows}
         extra = [r for r in (_A_KEYS["rows"] or []) if r.get("key") not in have]
         if extra:
