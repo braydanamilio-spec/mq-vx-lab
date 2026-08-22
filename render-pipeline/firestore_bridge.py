@@ -241,17 +241,27 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         return hit[1]     # quota ĐỌC đang chết -> bản đệm cũ (dù quá TTL) còn hơn crash luồng
 
     def _do():
-        # ĐỌC TỪ PROJECT B TRƯỚC (nếu đã copy key sang B), B rỗng thì lùi về A như cũ.
-        # Vì sao: gemini_keys là thứ DUY NHẤT còn lại mà render dùng chung Project A với publish
-        # (SHARD_META=1 đã đưa config/channels/topics/requests sang B). 18 luồng render đọc bảng
-        # này mỗi phiên -> ăn hết hạn mức đọc của A -> publish VÀ CẢ bước lập kế hoạch render đều
-        # ăn "ResourceExhausted: 429" (20/8 chặn sản xuất ~13 tiếng tới lúc quota reset).
-        # Lùi-về-A giữ cho thay đổi này AN TOÀN: chưa copy sang B thì chạy y như trước.
+        # TỐI ƯU GỐC 22/8 (thủ phạm số 1 làm B cạn 50K ĐỌC/ngày): trước đây MỖI lượt gọi là quét
+        # cả bảng ~74 doc; nhân số lần làm tươi × 18 luồng × ~15 phiên là 30-40K đọc/ngày chỉ cho
+        # bảng key. Giờ: đọc 1 DOC SNAPSHOT `__snap__<owner>` (sync_keys_from_a dựng lại mỗi phiên
+        # plan) = 1 đọc thay vì 74. Không có snapshot (lần đầu/migrate cũ) thì mới quét bảng như xưa.
+        # Snapshot nằm TRONG collection gemini_keys -> hưởng nguyên rules đã KHÓA (an toàn key).
         db = _db_keys()
         out = []; now = _now()
-        for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
-            x = d.to_dict() or {}
-            if not x.get("key"):
+        rows = None
+        try:
+            _cr("read_keys_snap", 1)
+            sd = db.collection("gemini_keys").document(f"__snap__{owner}").get()
+            if sd.exists:
+                rows = [(x.get("id", ""), x) for x in ((sd.to_dict() or {}).get("keys") or [])]
+        except Exception:
+            rows = None                                   # snapshot hỏng -> quét bảng, đừng chết
+        if rows is None:
+            _cr("read_keys_scan", 70)
+            rows = [(d.id, d.to_dict() or {})
+                    for d in db.collection("gemini_keys").where("owner", "==", owner).stream()]
+        for did, x in rows:
+            if did.startswith("__snap__") or not x.get("key"):
                 continue
             cooling = x.get("cooling_until", "")
             if cooling and cooling > now and not include_cooling:
@@ -260,7 +270,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
                 continue                                  # RENDER: bỏ key đã biết CHẾT (403/khoá) -> khỏi phí lượt.
             today = now[:10]
             req_today = int(x.get("req_today", 0) or 0) if x.get("req_date") == today else 0   # sang ngày mới -> coi như 0
-            out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
+            out.append({"id": did, "key": x["key"], "email": x.get("email", ""),
                         "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
                         "last_used": x.get("last_used", ""), "cooling_until": cooling,
                         "dead_since": x.get("dead_since", ""), "req_today": req_today})
@@ -414,15 +424,20 @@ def sync_keys_from_a(owner: str) -> int:
         # id ngẫu nhiên) -> so id thì key mới thành "đã có" hoặc key cũ bị ghi trùng. Giá trị key
         # là danh tính thật.
         _cr("sync_keys_B", 70)
-        have = set(); nb = 0
+        have = set(); nb = 0; snap_rows = []
         for d in db_b.collection("gemini_keys").where("owner", "==", owner).stream():
+            if d.id.startswith("__snap__"):
+                continue
             nb += 1
-            v = (d.to_dict() or {}).get("key")
-            if v:
-                have.add(v)
+            x = d.to_dict() or {}
+            if x.get("key"):
+                have.add(x["key"])
+                snap_rows.append({**x, "id": d.id})
         _cr("sync_keys_A", 70)
         added = 0; na = 0
         for d in db_a.collection("gemini_keys").where("owner", "==", owner).stream():
+            if d.id.startswith("__snap__"):
+                continue
             na += 1
             x = d.to_dict() or {}
             if not x.get("key") or x["key"] in have:
@@ -430,7 +445,13 @@ def sync_keys_from_a(owner: str) -> int:
             _cw("sync_keys")
             _soft(lambda _id=d.id, _x=x: db_b.collection("gemini_keys").document(_id).set(_x, merge=True),
                   "sync_keys")
+            snap_rows.append({**x, "id": d.id})   # vào snapshot NGAY cả khi lượt ghi doc lẻ bị nuốt
             added += 1
+        # DỰNG SNAPSHOT 1-DOC (tối ưu gốc: read_keys 1 đọc thay vì quét 74 doc) — tái dùng chính
+        # lượt quét trên, KHÔNG tốn thêm lượt đọc nào; 1 lượt ghi/phiên plan.
+        _cw("keys_snapshot")
+        _soft(lambda: db_b.collection("gemini_keys").document(f"__snap__{owner}").set(
+            {"keys": snap_rows, "n": len(snap_rows), "updated_at": _now()}), "keys_snapshot")
         # LUÔN in số đếm — phiên 04:22Z sync im lặng nên không phân biệt được "0 key mới" với
         # "query A trả 0 dòng (owner lệch)" hay "ghi bị nuốt vì B cạn quota ghi".
         print(f"   🔑 Sync key A->B: A={na} · B={nb} · mới={added}"
