@@ -199,7 +199,14 @@ class _GroqShim:
             try: detail = e.read().decode()[:200]
             except Exception: pass
             if e.code == 429:
-                raise RuntimeError(f"429 rate limit (groq): {detail}")
+                # PHÂN LOẠI bằng chính header Groq: còn request trong ngày -> đây là nghẽn THEO PHÚT
+                # (RPM/TPM) -> gắn chữ 'per minute' để _cool cho nghỉ 1.1' thay vì phạt oan 20'.
+                try:
+                    left = int(e.headers.get("x-ratelimit-remaining-requests") or 0)
+                except Exception:
+                    left = 0
+                kind = "per minute" if left > 0 else "daily"
+                raise RuntimeError(f"429 rate limit {kind} (groq): {detail}")
             raise RuntimeError(f"groq HTTP {e.code}: {detail}")
         txt = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
         return type("R", (), {"text": txt})()
