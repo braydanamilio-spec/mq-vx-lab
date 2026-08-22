@@ -883,6 +883,13 @@ def gate_mode():
             event = os.environ.get("GITHUB_EVENT_NAME", "")
             run_now = bool(cfg.get("run_now"))
             enabled = bool(cfg.get("enabled")) or os.environ.get("FORCE") == "1"
+            if not cfg:
+                # 23/8 (20:11Z): B cạn quota ĐỌC -> read_config trả {} -> enabled=False -> GATE ĐÓNG
+                # CẢ ĐÊM dù render + GHI vẫn sống (mẻ ra mắt 5 kênh toon bị giam oan). Hệ sản xuất
+                # 24/7: mất liên lạc config thì MẶC ĐỊNH CHẠY (fail-open) — nút Dừng của user chỉ bị
+                # hoãn tới khi quota đọc hồi, còn fail-closed thì cả dây chuyền đứng máy hàng giờ.
+                print("   ⚠️ Config không đọc được (quota B chết) -> FAIL-OPEN: coi như enabled, cho mẻ chạy.")
+                enabled = True
             # MỞ PHIÊN MỚI ngay khi phiên trước XONG HẲN (còn job active ở B thì chưa) — KHÔNG còn ép đúng giờ cố định
             # (0/4/8/12/16/20 UTC): với round-cap, phiên tự xong sớm (10 long/30 short/kênh) rồi để trống luồng
             # tới giờ cố định tiếp theo là lãng phí. Chỉnh session_gap_min ở render_config nếu muốn thưa hơn.
@@ -1151,6 +1158,12 @@ def plan_mode():
     except Exception:
         pass
     if not keys:
+        import time as _tt2
+        if FB._RQ_DEAD.get("until", 0) > _tt2.time():
+            # 23/8: quota ĐỌC chết thì "0 key" là ẢO (không đọc được, không phải hết key) — đừng
+            # bắn email báo động giả mỗi 30'; phiên sau quota hé là key về.
+            print("⚠️ Không đọc được key (quota đọc chết) — KHÔNG phải hết key. Bỏ mẻ này, phiên sau tự thử.")
+            return out_channels([])
         note = "⚠️ KHÔNG còn Gemini key SỐNG nào — thêm/thay key ở Render Studio."
         print(note)
         try:
