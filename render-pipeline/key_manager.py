@@ -58,6 +58,16 @@ def key_order(channel: str, keys: list[dict]) -> list[dict]:
     ks = sorted(keys, key=score)
     if n == 1:
         return ks
+    # ƯU TIÊN GROQ CHO KHÂU VIẾT (key_order chỉ phục vụ text — pool Vision/vẽ đã lọc gsk_ riêng):
+    # đạn Gemini free chỉ 20 viên/key/ngày và là thứ DUY NHẤT dùng được cho Vision; Groq ~1K/key
+    # chỉ viết được chữ. Không tách thì viết đốt sạch đạn Gemini trước, đến lượt Vision thì đói.
+    # Groq cạn/nghỉ hết -> tự rơi về phần Gemini như cũ, không kẹt.
+    groq = [k for k in ks if str(k.get("key", "")).startswith("gsk_")]
+    gem = [k for k in ks if not str(k.get("key", "")).startswith("gsk_")]
+    if groq:
+        r = (int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) + _RR[0]) % len(groq)
+        _RR[0] += 1
+        return groq[r:] + groq[:r] + gem
     start = (int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) + _RR[0]) % n
     _RR[0] += 1                                                                  # xoay 1 nấc mỗi lần chọn -> spread đều trong phiên
     return [ks[(start + i) % n] for i in range(n)]
