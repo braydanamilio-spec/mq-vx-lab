@@ -196,8 +196,8 @@
   "rate_b": "+2%",
   "color_a": "#FCA5A5",
   "color_b": "#FCA5A5",
-  "toon_style": "modern bold flat cartoon, PEARL a friendly nosy middle-aged woman with high hair bun, red cardigan and iced tea glass, plus everyday American side characters, warm cream background with red accents, thick outlines, expressive poses, no signs, no lettering, no text",
-  "niche": "narrated dramatic everyday-American stories hosted by PEARL — a nosy but warm neighborhood woman (high bun, red cardigan, iced tea) who has seen EVERYTHING on her street. One narrator voice. Stories are FICTIONAL-but-relatable (workplace drama, neighbor feuds, wild customers, family chaos) with an ironic twist ending. No politics, no real brands or celebrities, never presented as real news, family-safe."
+  "toon_style": "modern bold flat cartoon, PEARL a friendly nosy middle-aged american woman with high hair bun, red gingham-trim cardigan, holding a mason jar of sweet iced tea, front-porch americana setting with white picket fence and US-style mailbox, warm cream background with red accents, thick outlines, expressive poses, no signs, no lettering, no text",
+  "niche": "narrated dramatic everyday-American stories hosted by PEARL — a nosy but warm front-porch American woman (high bun, gingham-trim red cardigan, mason jar of sweet tea, white-picket-fence porch) who has seen EVERYTHING on her street. One narrator voice. Stories are FICTIONAL-but-relatable (workplace drama, neighbor feuds, wild customers, family chaos) with an ironic twist ending. No politics, no real brands or celebrities, never presented as real news, family-safe."
  },
  "DUMBHISTORY": {
   "format": "toon",
@@ -236,7 +236,7 @@
   "rate_b": "+0%",
   "color_a": "#7DD3FC",
   "color_b": "#7DD3FC",
-  "toon_style": "minimal clean vector cartoon, THE OWL a deadpan owl wearing a navy necktie often holding a clipboard, plus simple flat human characters, very pale blue-gray background, tiny diagrams and arrows as props, single pale blue accent, flat unimpressed expressions, no signs, no lettering, no text",
-  "niche": "deadpan comedic explainers of things ONLY America has, presented by THE OWL — an unimpressed office owl with a navy necktie and clipboard. One dry narrator voice. Topics: tipping culture, medical bills, sales tax at checkout, college costs, imperial units, HOA rules. STRICT: every fact and number real and verifiable, self-aware irony, no politics, no real brands, family-safe."
+  "toon_style": "minimal clean vector cartoon, THE OWL a deadpan owl wearing a tiny star-spangled uncle-sam top hat and navy necktie, holding a clipboard at a desk piled with forms and receipts, very pale blue-gray background, tiny diagrams and arrows as props, single pale blue accent plus small red-white-blue hat accent, flat unimpressed expressions, no signs, no lettering, no text",
+  "niche": "deadpan comedic explainers of things ONLY America has, presented by THE OWL — an unimpressed owl in a tiny star-spangled Uncle Sam top hat with navy necktie and clipboard. One dry narrator voice. Topics: tipping culture, medical bills, sales tax at checkout, college costs, imperial units, HOA rules. STRICT: every fact and number real and verifiable, self-aware irony, no politics, no real brands, family-safe."
  }
 }
