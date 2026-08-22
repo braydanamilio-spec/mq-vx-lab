@@ -480,12 +480,15 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
     channel = ch.get("name")
     ljob = FB.new_job(OWNER, channel, "long", pver=_pv("doc"))
     lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
+    # RESUME: checkpoint từng-phần của phiên trước chết giữa chừng -> khỏi trả Gemini lần 2
+    _rck = FB.find_resumable(OWNER, channel, "long")
+    _resume = _rck["story"] if (_rck and isinstance(_rck.get("story"), dict) and _rck["story"].get("parts")) else None
     try:
         avoid = _avoid_for(channel)
         lout = os.path.join("out", DS.slug(channel) + "_doclong.mp4")
         lo, plan, subs, ok, info, parts = DS.make_doc_long(
             channel, niche, lout, keys=keys, tier=tier, on_status=lst, on_limit=cool, on_ok=okcb,
-            avoid=avoid, n_parts=max(1, n_shorts), accent=ch.get("accent", "#22D3EE"),
+            avoid=avoid, resume=_resume, n_parts=max(1, n_shorts), accent=ch.get("accent", "#22D3EE"),
             accent2=ch.get("accent2", "#F5B301"), ai_style=ch.get("ai_style"),
             ai_only=bool(ch.get("ai_only")), music=ch.get("music"), mode=ch.get("mode"),
             host_prompt=ch.get("host_prompt"))
