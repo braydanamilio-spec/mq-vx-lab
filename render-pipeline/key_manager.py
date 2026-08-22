@@ -76,22 +76,25 @@ def key_order(channel: str, keys: list[dict]) -> list[dict]:
     # đạn Gemini free chỉ 20 viên/key/ngày và là thứ DUY NHẤT dùng được cho Vision; Groq ~1K/key
     # chỉ viết được chữ. Không tách thì viết đốt sạch đạn Gemini trước, đến lượt Vision thì đói.
     # Groq cạn/nghỉ hết -> tự rơi về phần Gemini như cũ, không kẹt.
-    # CF (cf:) CHÓT BẢNG cho khâu viết: neuron CF là nguồn VẼ ẢNH chính (~2K ảnh/ngày/acct) — chỉ
-    # viết chữ bằng CF khi cả Groq lẫn Gemini đều cạn (thà chậm 1 nhịp còn hơn mai hết đạn vẽ).
+    # THỨ TỰ VIẾT: Groq -> CF -> Gemini (đổi 22/8 theo user). Lý do CF đứng TRƯỚC Gemini ở khâu
+    # viết: đạn Gemini là thứ DUY NHẤT không thay được (Vision kiểm ảnh); Groq trục trặc thì để CF
+    # gánh chữ (ảnh thật vẫn còn Openverse/Pexels, vẽ AI còn Gemini dự phòng) — Vision được bảo toàn.
+    # Groq và CF cùng chạy gpt-oss-120b nên chất lượng chữ Y HỆT, chỉ khác tốc độ/hạn mức.
     groq = [k for k in ks if str(k.get("key", "")).startswith("gsk_")]
     cf = [k for k in ks if str(k.get("key", "")).startswith("cf:")]
     gem = [k for k in ks if k not in groq and k not in cf]
     if groq:
         r = (int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) + _RR[0]) % len(groq)
         _RR[0] += 1
-        return groq[r:] + groq[:r] + gem + cf
-    pool = gem + cf if gem else cf
-    n = len(pool)
-    start = (int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) + _RR[0]) % max(1, len(gem) or n)
+        return groq[r:] + groq[:r] + cf + gem
+    if cf:
+        r = (int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) + _RR[0]) % len(cf)
+        _RR[0] += 1
+        return cf[r:] + cf[:r] + gem
+    n = len(gem)
+    start = (int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) + _RR[0]) % max(1, n)
     _RR[0] += 1                                                                  # xoay 1 nấc mỗi lần chọn -> spread đều trong phiên
-    if gem:
-        return [gem[(start + i) % len(gem)] for i in range(len(gem))] + cf
-    return [pool[(start + i) % n] for i in range(n)]
+    return [gem[(start + i) % n] for i in range(n)]
 
 
 def model_for(tier: str) -> str:

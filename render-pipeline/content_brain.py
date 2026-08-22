@@ -503,10 +503,21 @@ def plan_pillar(niche: str, n: int = 6, api_key: str = None, model_name: str = N
     if avoid:
         avoid_txt = ("\nDO NOT repeat or closely resemble ANY of these already-used topics "
                      "(pick completely fresh angles): " + " | ".join(avoid[-60:]))
-    prompt = (f'Niche: "{niche}". Propose {n} DISTINCT sub-topics for a US bar-chart-race compilation. '
-              f'Return STRICT JSON: {{"pillar_title": str (<=40 chars, punchy), "hook": str (one shock line), '
-              f'"subtopics": [str x {n}]}}. Each subtopic = short search-friendly phrase, real US data, different angle.'
-              + avoid_txt)
+    # ĐẤU LOẠI CHỦ ĐỀ (22/8, nâng chất lượng theo user): key Groq/CF dư lượt -> sinh 3 phương án
+    # pillar trong 1 lệnh + 1 lệnh giám khảo chấm chọn (curiosity gap / stakes / độ mới) thay vì
+    # lấy ý tưởng đầu tiên. Key Gemini (đạn hiếm) giữ 1 lệnh như cũ. Giám khảo lỗi -> phương án 1.
+    multi = str(akey).startswith(("gsk_", "cf:"))
+    if multi:
+        prompt = (f'Niche: "{niche}". Propose 3 ALTERNATIVE pillar plans for a US compilation video, each with a '
+                  f'DIFFERENT angle (e.g. money-shock vs hidden-history vs everyday-mystery). Return STRICT JSON: '
+                  f'{{"plans": [{{"pillar_title": str (<=40 chars, punchy), "hook": str (one shock line), '
+                  f'"subtopics": [str x {n}]}} x 3]}}. Each subtopic = short search-friendly phrase, real US data, '
+                  'different angle within its plan.' + avoid_txt)
+    else:
+        prompt = (f'Niche: "{niche}". Propose {n} DISTINCT sub-topics for a US bar-chart-race compilation. '
+                  f'Return STRICT JSON: {{"pillar_title": str (<=40 chars, punchy), "hook": str (one shock line), '
+                  f'"subtopics": [str x {n}]}}. Each subtopic = short search-friendly phrase, real US data, different angle.'
+                  + avoid_txt)
     for _try in range(2):
         try:
             model = genai.GenerativeModel(mname, system_instruction=PILLAR_SYS)
@@ -521,6 +532,25 @@ def plan_pillar(niche: str, n: int = 6, api_key: str = None, model_name: str = N
                 raise RateLimited(str(e))
             raise
     d = _extract_json(resp.text)
+    if multi:
+        plans = [p for p in (d.get("plans") or []) if p.get("subtopics")][:3]
+        if len(plans) >= 2:
+            try:
+                jm = genai.GenerativeModel(mname, system_instruction=PILLAR_SYS)
+                jp = ("You are a ruthless YouTube strategist. Pick the ONE plan a US audience is MOST likely "
+                      "to click AND finish. Judge: curiosity gap, emotional stakes, freshness (generic = lose). "
+                      'Return STRICT JSON: {"winner": 0|1|2, "why": "<=12 words"}.\nPlans:\n'
+                      + json.dumps(plans, ensure_ascii=False))
+                jr = jm.generate_content(jp, generation_config={"temperature": 0.0, "response_mime_type": "application/json"},
+                                         request_options=GEN_OPTS)
+                w = _extract_json(jr.text) or {}
+                wi = int(w.get("winner", 0)) % len(plans)
+                d = plans[wi]
+                print(f"   🏆 Đấu loại chủ đề: chọn phương án {wi + 1}/3 — {str(w.get('why', ''))[:60]}")
+            except Exception:
+                d = plans[0]           # giám khảo lỗi/hết lượt -> phương án 1, không chặn sản xuất
+        elif plans:
+            d = plans[0]
     d["subtopics"] = [s for s in (d.get("subtopics") or []) if s][:n]
     return d
 
