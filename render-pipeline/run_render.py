@@ -1370,6 +1370,7 @@ def channel_mode(name):
     print(f"✅ {name}: TỔNG {report['done']} video · {len(report['fails'])} lỗi (qua {rounds} vòng).")
     try:
         FB.flush_soft()                    # xả ghi done/topics bị hoãn -> count_done không đếm thiếu
+        FB.update_channel_stats(OWNER, name)   # sổ thống kê 1-doc cho dashboard (số thật mọi kênh, 1 ghi)
         print("   " + FB.write_report())   # SỐ ĐO THẬT lượt ghi Firestore — khỏi ước lượng lần sau
     except Exception:
         pass

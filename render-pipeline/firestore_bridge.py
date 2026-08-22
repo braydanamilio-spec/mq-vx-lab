@@ -915,6 +915,21 @@ def has_active_render(owner: str) -> bool:
 _LEGACY_COUNT = {}     # (owner, kênh, loại) -> số job cũ ở Project A (bất biến)
 
 
+def update_channel_stats(owner: str, channel: str):
+    """SỔ THỐNG KÊ 1-DOC `render_stats/{owner}`: {kênh: {l: long, s: short}} — pipeline ghi cuối mỗi
+    luồng (1 lượt ghi mềm, số lấy từ count_done ĐÃ ĐỆM nên ~0 lượt đọc thêm). Dashboard chỉ đọc đúng
+    1 doc là có số THẬT của mọi kênh — hết cảnh 22/8 mỗi ô một nguồn ("1058 tổng · 74 đã tải ·
+    kênh 7/9/11" đếm từ danh sách cắt) làm user rối."""
+    try:
+        L = count_done(owner, channel, "long")
+        S = count_done(owner, channel, "short")
+        _cw("channel_stats")
+        _soft(lambda: _db_meta().collection("render_stats").document(owner).set(
+            {channel: {"l": int(L), "s": int(S)}, "up": _now()}, merge=True), "channel_stats")
+    except Exception:
+        pass
+
+
 def count_done(owner: str, channel: str, vtype: str = None) -> int:
     """Đếm số video ĐÃ XONG của 1 kênh (so target). Đếm CẢ Project B (job mới) + A (job CŨ trước shard) -> không sót, không làm THỪA.
     Dùng aggregation count() = ~1 read/project. TTL 90s: một mẻ video kéo dài >5' nên mỗi vòng vẫn
