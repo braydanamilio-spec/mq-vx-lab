@@ -125,7 +125,11 @@ def test_key(api_key: str):
     return None, ("không chắc: " + last[:130])    # hết lần thử vẫn lỗi tạm -> KHÔNG kết luận chết
 
 
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+# 22/8: Groq ĐÃ GỠ llama-3.3-70b-versatile (test thật qua dashboard: HTTP 404 "does not exist").
+# Mặc định mới = openai/gpt-oss-120b (test 200 OK, JSON chuẩn). Groq gỡ/thay model khá thường xuyên
+# -> _GroqShim tự dò model SỐNG từ /models khi gặp 404 (danh sách ưu tiên bên dưới), khỏi chết lần nữa.
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+_GROQ_PREF = [GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "groq/compound-mini", "openai/gpt-oss-20b"]
 
 
 class _GroqShim:
@@ -155,9 +159,25 @@ class _GroqShim:
             print(f"   ⚡ Groq •••{tag} — hạn mức CHÍNH THỨC (tự khai trong header): "
                   f"{rpd} req/ngày · còn {left} · {tpm or '?'} token/phút")
 
+    _live_model = None        # model Groq đã xác nhận SỐNG (chia sẻ toàn tiến trình)
+
     def GenerativeModel(self, model_name):
-        self._model = GROQ_MODEL      # tên gemini-* truyền vào được map sang model Groq
+        self._model = _GroqShim._live_model or GROQ_MODEL   # tên gemini-* được map sang model Groq
         return self
+
+    def _resolve_live_model(self) -> str:
+        """Gặp 404 model-đã-gỡ -> hỏi /models rồi chọn model SỐNG theo danh sách ưu tiên."""
+        import urllib.request
+        req = urllib.request.Request("https://api.groq.com/openai/v1/models",
+                                     headers={"Authorization": f"Bearer {self._key}"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            ids = {m.get("id") for m in (json.load(r).get("data") or [])}
+        for want in _GROQ_PREF:
+            if want in ids:
+                _GroqShim._live_model = want
+                print(f"   ⚡ Groq: model '{self._model}' đã bị gỡ -> tự chuyển sang '{want}' (còn sống).")
+                return want
+        raise RuntimeError(f"groq: không còn model nào trong danh sách ưu tiên ({sorted(ids)[:6]}...)")
 
     def configure(self, **kw):
         pass
@@ -198,6 +218,19 @@ class _GroqShim:
             detail = ""
             try: detail = e.read().decode()[:200]
             except Exception: pass
+            if e.code == 404 and "not exist" in detail.lower():
+                # model bị Groq gỡ (đã xảy ra thật với llama-3.3 ngày 22/8) -> dò model sống, thử lại 1 lần
+                self._model = self._resolve_live_model()
+                body["model"] = self._model
+                req2 = urllib.request.Request(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    data=json.dumps(body).encode(),
+                    headers={"Authorization": f"Bearer {self._key}", "Content-Type": "application/json"})
+                with urllib.request.urlopen(req2, timeout=timeout) as r:
+                    self._print_limits(r.headers)
+                    out = json.load(r)
+                txt = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+                return type("R", (), {"text": txt})()
             if e.code == 429:
                 # PHÂN LOẠI bằng chính header Groq: còn request trong ngày -> đây là nghẽn THEO PHÚT
                 # (RPM/TPM) -> gắn chữ 'per minute' để _cool cho nghỉ 1.1' thay vì phạt oan 20'.
