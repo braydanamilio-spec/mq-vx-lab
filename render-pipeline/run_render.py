@@ -1372,10 +1372,10 @@ def channel_mode(name):
         # Đếm theo 00:00Z làm bảng quota "tươi lại" sớm 7 tiếng trong khi sổ Google vẫn tính cú đốt
         # hôm trước -> dashboard báo "còn nhiều" mà key vẫn 429 (sáng 22/8 user vạch ra đúng ca này).
         reqs = KM.flush_requests(); today = (_dt.now(_tz.utc) - __import__("datetime").timedelta(hours=7)).isoformat()[:10]
-        for kid, cnt in reqs.items():
-            FB.incr_key_requests(kid, cnt, today)
+        # GỘP 1 GHI cho cả mẻ (22/8): trước là 1 ghi/key -> 3-8 ghi/luồng; giờ 1 doc __req__ Increment nguyên tử.
+        FB.incr_key_requests_bulk(OWNER, reqs, today)
         if reqs:
-            print(f"   📊 {name}: +{sum(reqs.values())} request lên {len(reqs)} key.")
+            print(f"   📊 {name}: +{sum(reqs.values())} request lên {len(reqs)} key (1 lượt ghi gộp).")
     except Exception:
         traceback.print_exc()
 

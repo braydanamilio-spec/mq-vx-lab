@@ -261,8 +261,8 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
             rows = [(d.id, d.to_dict() or {})
                     for d in db.collection("gemini_keys").where("owner", "==", owner).stream()]
         for did, x in rows:
-            if did.startswith("__snap__") or not x.get("key"):
-                continue
+            if did.startswith("__") or not x.get("key"):
+                continue                                  # bỏ doc hệ thống (__snap__/__req__)
             cooling = x.get("cooling_until", "")
             if cooling and cooling > now and not include_cooling:
                 continue                                  # đang nghỉ -> bỏ qua vòng này
@@ -274,6 +274,19 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
                         "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
                         "last_used": x.get("last_used", ""), "cooling_until": cooling,
                         "dead_since": x.get("dead_since", ""), "req_today": req_today})
+        # OVERLAY sổ đếm gộp __req__ (nguồn sự thật mới của req_today; doc lẻ hết được ghi từ 22/8)
+        try:
+            import datetime as _ddt
+            _cr("req_overlay", 1)
+            rd = db.collection("gemini_keys").document(f"__req__{owner}").get()
+            rx = (rd.to_dict() or {}) if rd.exists else {}
+            gday = (_ddt.datetime.now(_ddt.timezone.utc) - _ddt.timedelta(hours=7)).isoformat()[:10]
+            if rx.get("d") == gday:
+                c = rx.get("c") or {}
+                for r in out:
+                    r["req_today"] = int(c.get(r["id"], 0) or 0)
+        except Exception:
+            pass                                          # overlay hỏng -> giữ số cũ, không chết
         return out
     try:
         res = _retry(_do)
@@ -379,6 +392,24 @@ def incr_key_requests(key_id: str, n: int, today: str):
     _KEY_DATE_OK[key_id] = today
 
 
+def incr_key_requests_bulk(owner: str, counts: dict, today: str):
+    """GỘP SỔ ĐẾM (22/8, user duyệt): 1 lượt GHI cho TẤT CẢ key thay vì 1 ghi/key/luồng.
+
+    Doc `gemini_keys/__req__<owner>`: {"d": ngày-google, "c": {key_id: tổng request}} — mỗi field
+    dùng Increment NGUYÊN TỬ nên 18 luồng cùng ghi không giẫm nhau. owner="__req__" để query
+    where(owner==owner) của scan/sync KHÔNG quét trúng. Sang ngày mới: plan (sync_keys_from_a)
+    reset; read_keys overlay số từ doc này vào rows -> key_order vẫn ưu tiên key ít dùng như cũ."""
+    from google.cloud import firestore
+    items = {str(k): int(v) for k, v in (counts or {}).items() if int(v or 0) > 0}
+    if not items:
+        return
+    _cw("req_counters")
+    patch = {"d": today, "owner": "__req__",
+             "c": {k: firestore.Increment(v) for k, v in items.items()}}
+    _soft(lambda: _db_keys().collection("gemini_keys").document(f"__req__{owner}").set(patch, merge=True),
+          "req_counters")
+
+
 def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = False, kind: str = ""):
     """(xoá đệm read_keys khi đánh dấu key CHẾT -> vòng chọn key sau không lấy phải nó nữa)"""
     if not alive:
@@ -452,6 +483,18 @@ def sync_keys_from_a(owner: str) -> int:
         _cw("keys_snapshot")
         _soft(lambda: db_b.collection("gemini_keys").document(f"__snap__{owner}").set(
             {"keys": snap_rows, "n": len(snap_rows), "updated_at": _now()}), "keys_snapshot")
+        # RESET sổ đếm gộp __req__ khi sang ngày-google mới (Increment cộng dồn mù, không tự reset)
+        try:
+            import datetime as _ddt
+            gday = (_ddt.datetime.now(_ddt.timezone.utc) - _ddt.timedelta(hours=7)).isoformat()[:10]
+            _cr("req_reset", 1)
+            rd = db_b.collection("gemini_keys").document(f"__req__{owner}").get()
+            if rd.exists and (rd.to_dict() or {}).get("d") != gday:
+                _cw("req_reset")
+                _soft(lambda: db_b.collection("gemini_keys").document(f"__req__{owner}").set(
+                    {"d": gday, "owner": "__req__", "c": {}}), "req_reset")
+        except Exception:
+            pass
         # LUÔN in số đếm — phiên 04:22Z sync im lặng nên không phân biệt được "0 key mới" với
         # "query A trả 0 dòng (owner lệch)" hay "ghi bị nuốt vì B cạn quota ghi".
         print(f"   🔑 Sync key A->B: A={na} · B={nb} · mới={added}"
@@ -942,7 +985,9 @@ def update_job(job_id: str, **patch):
         # lớn số đó là các mốc trạng thái trung gian (writing/rendering/qc) chỉ để dashboard nhìn
         # cho đẹp. Hãm 5' cắt gần hết chúng mà KHÔNG mất gì: nhịp tim (cũng 5') vẫn báo job còn
         # sống, còn done/failed thì LUÔN ghi ngay không qua hãm.
-        if now - _LAST_JOB_WRITE.get(job_id, 0) < 300:
+        # 22/8: 5' -> 10' (user duyệt): mốc trung gian chỉ để dashboard nhìn; nhịp tim nền 15'
+        # vẫn chứng minh "còn sống" (guardian coi chết sau 45' im lặng), video không ảnh hưởng.
+        if now - _LAST_JOB_WRITE.get(job_id, 0) < 600:
             return
         _LAST_JOB_WRITE[job_id] = now
     # ĐÓNG DẤU THỜI GIAN mỗi lần ghi = NHỊP TIM có mốc. Trước đây job có nhịp tim (ghi lại mỗi ~90s)
