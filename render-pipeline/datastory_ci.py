@@ -198,7 +198,8 @@ def _cf_flux_image(prompt, dest, key, style=None) -> bool:
     req = urllib.request.Request(
         f"https://api.cloudflare.com/client/v4/accounts/{acc}/ai/run/@cf/black-forest-labs/flux-1-schnell",
         data=_j.dumps(body).encode(),
-        headers={"Authorization": f"Bearer {tok}", "Content-Type": "application/json"})
+        headers={"Authorization": f"Bearer {tok}", "Content-Type": "application/json",
+                 "User-Agent": "Mozilla/5.0 (compatible; MM0-render/1.0)"})
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
             out = _j.load(r)
