@@ -1078,10 +1078,19 @@ def plan_mode():
         FB.set_config(OWNER, {"run_now": None, "run_now_done_at": datetime.now(timezone.utc).isoformat()})
         print("⚡ Nhận lệnh 'Render ngay'.")
     if not cfg.get("enabled") and os.environ.get("FORCE") != "1" and not run_now:
-        print("⏸ Pipeline TẮT — bật ở Render Studio hoặc bấm Render ngay."); return out_channels([])
+        if not cfg:
+            # 23/8: cùng lớp lỗi fail-closed như gate — quota đọc chết thì cfg rỗng KHÔNG có nghĩa là user tắt.
+            print("   ⚠️ Config không đọc được (quota) -> FAIL-OPEN tầng plan: coi như enabled.")
+        else:
+            print("⏸ Pipeline TẮT — bật ở Render Studio hoặc bấm Render ngay."); return out_channels([])
     all_keys = FB.read_keys(OWNER, include_cooling=True)   # TẤT CẢ (kể cả chết/cooling) -> health-check test hết
     if not all_keys:
-        print("❌ Chưa có Gemini key."); return out_channels([])
+        import time as _tt3
+        if FB._RQ_DEAD.get("until", 0) > _tt3.time():
+            print("⚠️ Không đọc được key (quota đọc chết) — KHÔNG phải hết key. Bỏ mẻ, nhịp cron sau tự thử.")
+        else:
+            print("❌ Chưa có Gemini key.")
+        return out_channels([])
     # HEALTH CHECK (throttled 20h) — chỉ ở plan, 10 luồng không lặp. Chạy TRƯỚC khi lọc key sống -> key vừa hồi được nhận lại.
     import content_brain as CB
     now_iso = datetime.now(timezone.utc).isoformat()
