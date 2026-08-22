@@ -290,6 +290,7 @@ no text"; né bộ lọc 8007 bằng bảng _TOON_SAFE; hỏng >40% khung -> LO�
 **QC:** qc() chung (duration/audio/res/size) + score skit; opening_is_flat KHÔNG áp (nền vẽ chủ đích);
 thumbnail = doc_thumb từ khung video.
 **Chi phí chuẩn/skit:** ~2 lượt Groq (viết+chấm) + ~5 ảnh FLUX ≈ 290 neuron + 0 Gemini.
+**BẢN QUYỀN NHÂN VẬT (bắt buộc):** BALD/BANDIT/HANK/DALE là nhân vật GỐC tự thiết kế (archetype đại bàng/gấu mèo/ông bố Mỹ — không thuộc sở hữu ai); CẤM prompt nhắc tên/nét đặc trưng nhân vật có bản quyền (Muppets, Marvel, Disney, game...); TOON_SYS đã cấm real brands/celebrities; ảnh 100% FLUX tự sinh — không dùng ảnh mạng. Nhân vật mới phải qua vòng "giống ai không?" trước khi chốt.
 **Nguồn sự thật cấu hình:** wave8_channels.json (2 entry toon) — thêm kênh toon mới = copy entry đổi
 nhân vật/style/giọng + đủ checklist 2 repo + 3 bảng nhúng dashboard (mục ⚠️ 22/8 ở trên) +
 brand art thật: 2 file vào dashboard/brand/ + RS_BRANDS.<KÊNH>.art={avatar,cover}.
