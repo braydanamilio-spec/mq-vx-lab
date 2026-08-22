@@ -545,3 +545,8 @@ def write_longshot(channel: str, keys: list[dict], niche: str, tier: str = "norm
 def write_toon(channel: str, keys: list[dict], niche: str, tier: str = "normal", avoid: list = None, on_limit=None, on_ok=None) -> dict:
     """Sinh skit TOON (22/8) — cùng khuôn Wave 4: bám key, xoay khi limit."""
     return _write_wave4("generate_toon", "TOON", channel, keys, niche, tier, avoid, on_limit, on_ok)
+
+
+def write_tale(channel: str, keys: list[dict], niche: str, tier: str = "normal", avoid: list = None, on_limit=None, on_ok=None) -> dict:
+    """Sinh chuyện narrator (toon mode story) — cùng khuôn Wave 4."""
+    return _write_wave4("generate_tale", "TALE", channel, keys, niche, tier, avoid, on_limit, on_ok)

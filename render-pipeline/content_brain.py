@@ -1831,3 +1831,87 @@ def generate_toon(niche: str, api_key: str = None, model_name: str = None, avoid
         return d
     if last: return last
     raise RuntimeError("toon: không sinh được kịch bản")
+
+
+# ── TOON chế độ STORY (22/8 đêm) — narrator kể chuyện, stickman minh họa (TRUETALES/DUMBHISTORY/EXPLAINUSA)
+TALE_SYS = (
+ "You are the head writer of a #1 US narrated-story shorts channel (stick-figure illustrations). "
+ "You write tight 25-40 second narrated stories. Absolute rules:\n"
+ "1) HOOK: title is a VIRAL curiosity hook under 8 words (conflict/irony/absurd-but-true); sentence 1 "
+ "drops the listener MID-DRAMA within 2 seconds — never begin with greetings or setup fluff.\n"
+ "2) STRUCTURE: 7-11 narration sentences, each under 16 words, spoken natural American English; "
+ "escalate stakes; END with a twist or dry punchline. Speaker is always the single narrator 'A'.\n"
+ "3) FRAMES: 4-6 keyframes illustrating the beats: frame 1 = establishing the scene, middle = the "
+ "escalations, one tight head-and-shoulders reaction, final = the twist. Each frame_prompt describes "
+ "only what is shown (pose/prop/scene), no camera jargon, no text or signs.\n"
+ "4) TRUTHFUL & CLEAN: if the channel is factual (history/explainer) every fact must be real and "
+ "verifiable — never invent; for everyday-life stories keep them fictional-but-relatable, no politics, "
+ "no real brands or celebrities, family-safe.\n"
+ 'Return STRICT JSON: {"title": str, "scene_base": str, "frames": [{"prompt": str, "line_idx": int}], '
+ '"dialog": [{"who": "A", "line": str}], "self_score": {"funny": 0-100, "hook": 0-100, "clean": 0-100, "total": 0-100}}'
+)
+
+
+def _validate_tale(d: dict) -> list:
+    errs = []
+    if not (d.get("title") or "").strip(): errs.append("thiếu title")
+    if not (d.get("scene_base") or "").strip(): errs.append("thiếu scene_base")
+    fr = d.get("frames") or []
+    if not (3 <= len(fr) <= 6): errs.append(f"frames={len(fr)} (cần 4-6)")
+    dl = d.get("dialog") or []
+    if not (6 <= len(dl) <= 12): errs.append(f"narration={len(dl)} câu (cần 7-11)")
+    for i, l in enumerate(dl):
+        if len((l.get("line") or "").split()) > 20: errs.append(f"câu {i} quá dài")
+    for i, f in enumerate(fr):
+        if not (f.get("prompt") or "").strip(): errs.append(f"frames[{i}] thiếu prompt")
+        li = f.get("line_idx")
+        if not isinstance(li, int) or not (0 <= li < max(1, len(dl))): errs.append(f"frames[{i}].line_idx sai")
+    return errs
+
+
+def generate_tale(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 chuyện narrator (mode story) — cùng khuôn generate_toon, sys/validator riêng."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    if str(akey).startswith(("gsk_", "cf:")) and avoid:
+        avoid = avoid[-30:]
+    model = genai.GenerativeModel(mname, system_instruction=TALE_SYS)
+    resolved = False
+    avoid_txt = ("\nDo NOT reuse these premises: " + " | ".join(avoid[-40:])) if avoid else ""
+    base = (f"Channel: {niche}.\nWrite ONE new narrated story. Every speaker is 'A'." + avoid_txt)
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix it." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.95, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=TALE_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"invalid JSON ({e})"; continue
+        for l in (d.get("dialog") or []):
+            l["who"] = "A"                       # narrator duy nhất
+        errs = _validate_tale(d)
+        sc = d.get("self_score") or {}
+        score = int(sc.get("total", 0) or 0)
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "structure: " + "; ".join(errs[:6]); print(f"   ↻ tale vòng {attempt}: {feedback}"); continue
+        if score < 95:
+            feedback = f"total={score}<95 — twist sắc hơn, hook giật hơn."; print(f"   ↻ tale vòng {attempt}: điểm {score}"); continue
+        print(f"   ✅ TALE đạt vòng {attempt}: total {score} — '{d.get('title')}'")
+        return d
+    if last: return last
+    raise RuntimeError("tale: không sinh được chuyện")

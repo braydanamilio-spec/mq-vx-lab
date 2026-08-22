@@ -687,7 +687,7 @@ def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story
                             voice_a=ch.get("voice_a", "en-US-ChristopherNeural"), rate_a=ch.get("rate_a", "+0%"),
                             voice_b=ch.get("voice_b", "en-US-GuyNeural"), rate_b=ch.get("rate_b", "+8%"),
                             color_a=ch.get("color_a", "#7DD3FC"), color_b=ch.get("color_b", "#FCA5A5"),
-                            display=ch.get("display") or ch.get("name"))
+                            display=ch.get("display") or ch.get("name"), toon_mode=ch.get("toon_mode", "skit"))
     if fmt in ("swarm", "pulse", "clockwork", "longshot"):   # Wave 4: 1 accent riêng/kênh
         mk4 = {"swarm": DS.make_swarm, "pulse": DS.make_pulse,
                "clockwork": DS.make_clockwork, "longshot": DS.make_longshot}[fmt]
@@ -1253,11 +1253,15 @@ def plan_mode():
         sweep_ai_quality(all_ch, cfg)   # xếp render lại các video ra đời khi bước vẽ ảnh AI còn hỏng
     except Exception:
         traceback.print_exc()
-    channels = [c["name"] for c in all_ch if not c.get("paused")]   # ⏸ kênh PAUSE -> KHÔNG vào matrix (không làm mẻ mới)
+    # ƯU TIÊN KÊNH MỚI (22/8, user): kênh priority=1 LUÔN có suất trong matrix (đứng đầu),
+    # kênh cũ xoay ngẫu nhiên phần suất còn lại -> dồn lực cho 5 kênh mới mà cũ không chết hẳn.
+    _pri = [c["name"] for c in all_ch if not c.get("paused") and int(c.get("priority") or 0) >= 1]
+    channels = [c["name"] for c in all_ch if not c.get("paused") and int(c.get("priority") or 0) < 1]
     # XÁO THỨ TỰ mỗi phiên: Firestore trả channels theo ID tài liệu (~alphabet cố định) -> KHÔNG xáo thì cùng nhóm
     # đầu bảng chữ cái LUÔN vào 18 slot đầu (ưu tiên), nhóm cuối LUÔN bị đẩy xuống chờ mỗi phiên -> thiên vị có hệ
     # thống. Xáo ngẫu nhiên -> mỗi phiên 1 nhóm khác được ưu tiên, công bằng thật sự về lâu dài.
     random.shuffle(channels)
+    channels = _pri + channels          # priority đứng đầu -> chắc suất trong MAX_MATRIX
     n_paused = len(all_ch) - len(channels)
     # 20/8: comment ở trên ("18 slot đầu") LUÔN giả định matrix chỉ có tối đa MAX_MATRIX kênh/phiên — nhưng
     # code TRƯỚC ĐÂY gửi NGUYÊN list (không cắt) -> khi tổng kênh > max-parallel (18, YAML), GitHub KHÔNG bỏ
@@ -1431,7 +1435,7 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
                voice_a=ch.get("voice_a", "en-US-ChristopherNeural"), rate_a=ch.get("rate_a", "+0%"),
                voice_b=ch.get("voice_b", "en-US-GuyNeural"), rate_b=ch.get("rate_b", "+8%"),
                color_a=ch.get("color_a", "#7DD3FC"), color_b=ch.get("color_b", "#FCA5A5"),
-               display=ch.get("display") or channel)
+               display=ch.get("display") or channel, toon_mode=ch.get("toon_mode", "skit"))
     try:
         lout = os.path.join("out", DS.slug(channel) + "_toonlong.mp4")
         lo, plan, subs, ok, info, parts = DS.make_toon_long(

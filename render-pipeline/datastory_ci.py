@@ -2573,13 +2573,14 @@ def _toon_safe(p: str) -> str:
 
 def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix="",
                 voice_a="en-US-ChristopherNeural", rate_a="+0%", voice_b="en-US-GuyNeural", rate_b="+8%",
-                toon_style="", resume_story=None, on_status=None):
+                toon_style="", resume_story=None, on_status=None, mode="skit"):
     """Dựng 1 SKIT (viết + TTS từng câu + FLUX khung) — trả (story, frames_rel, lines_rel, end_f).
     frames/lines tính frame TƯƠNG ĐỐI từ 0 (caller tự dời khi ghép long). File mang prefix
     -> long 3 skit không giẫm tên nhau; short tái dùng đúng các file này (0 phí thêm)."""
     import key_manager as KM
     st = on_status or (lambda *a, **k: None)
-    story = resume_story or KM.write_toon(channel, keys, niche, tier=tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    _writer = KM.write_tale if mode == "story" else KM.write_toon   # story = narrator 1 giọng (TRUETALES/DUMBHISTORY/EXPLAINUSA)
+    story = resume_story or _writer(channel, keys, niche, tier=tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     st("writing", f"✔ skit: {story.get('title', '')[:60]}", script=json.dumps(story, ensure_ascii=False))
     dialog = story.get("dialog") or []
     FPS = 30; GAP = 0.20; t = 0.55
@@ -2659,7 +2660,7 @@ def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
               accent="#E4562B", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None,
               toon_style="", voice_a="en-US-ChristopherNeural", rate_a="+0%",
               voice_b="en-US-GuyNeural", rate_b="+8%", color_a="#7DD3FC", color_b="#FCA5A5",
-              display=""):
+              display="", toon_mode="skit"):
     """1 SHORT toon độc lập (dùng khi kênh đã đủ long theo tỉ lệ)."""
     st = on_status or (lambda *a, **k: None)
     out = os.path.abspath(out); fresh_out(out)
@@ -2671,7 +2672,7 @@ def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
         story, fr, lines, _end = _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub,
                                              prefix="s_", voice_a=voice_a, rate_a=rate_a, voice_b=voice_b,
                                              rate_b=rate_b, toon_style=toon_style,
-                                             resume_story=resume_story, on_status=st)
+                                             resume_story=resume_story, on_status=st, mode=toon_mode)
     except RuntimeError as e:
         return out, (resume_story or {}), False, {"err": str(e)[:80]}
     st("rendering", "TOON render")
@@ -2695,7 +2696,7 @@ def make_toon_long(channel, niche, out, keys=None, tier="normal", accent="#E4562
                    avoid=None, on_status=None, on_limit=None, on_ok=None, n_parts=3,
                    toon_style="", voice_a="en-US-ChristopherNeural", rate_a="+0%",
                    voice_b="en-US-GuyNeural", rate_b="+8%", color_a="#7DD3FC", color_b="#FCA5A5",
-                   display="", resume=None):
+                   display="", resume=None, toon_mode="skit"):
     """LONG toon = tuyển tập n_parts skit (ToonLong 16:9, title đổi theo skit).
     Trả (out, plan, subs, ok, info, parts) — parts[{story, props}] để run_render đẻ short 9:16."""
     st = on_status or (lambda *a, **k: None)
@@ -2715,7 +2716,7 @@ def make_toon_long(channel, niche, out, keys=None, tier="normal", accent="#E4562
                                               (avoid or []) + titles, on_limit, on_ok, pub,
                                               prefix=f"p{pi}_", voice_a=voice_a, rate_a=rate_a,
                                               voice_b=voice_b, rate_b=rate_b, toon_style=toon_style,
-                                              resume_story=rs, on_status=st)
+                                              resume_story=rs, on_status=st, mode=toon_mode)
         titles.append(story.get("title", ""))
         parts.append({"story": story,
                       "props": _toon_props(sl, story.get("title", ""), accent, display or channel,

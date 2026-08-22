@@ -294,3 +294,9 @@ thumbnail = doc_thumb từ khung video.
 **Nguồn sự thật cấu hình:** wave8_channels.json (2 entry toon) — thêm kênh toon mới = copy entry đổi
 nhân vật/style/giọng + đủ checklist 2 repo + 3 bảng nhúng dashboard (mục ⚠️ 22/8 ở trên) +
 brand art thật: 2 file vào dashboard/brand/ + RS_BRANDS.<KÊNH>.art={avatar,cover}.
+
+### §TOON mode "story" (22/8 đêm) — TRUETALES · DUMBHISTORY · EXPLAINUSA
+Khác skit: MỘT narrator (giọng A duy nhất), 7-11 câu ≤16 từ, twist/punchline cuối; khung 4-6 minh họa
+beat; TRUETALES = chuyện hư cấu-mà-đời (không giả làm tin thật), DUMBHISTORY/EXPLAINUSA = 100% sự thật
+kiểm chứng được (khóa trong TALE_SYS). Cấu hình: toon_mode:"story" trong wave8_channels.json.
+ƯU TIÊN SUẤT: 5 kênh mới priority=1 -> luôn chiếm 5 slot đầu matrix; 13 slot còn lại kênh cũ xoay.

@@ -156,7 +156,8 @@
   "accent_note": "eagle+raccoon odd couple",
   "n_shorts": 3,
   "make_long": true,
-  "tier": "normal"
+  "tier": "normal",
+  "priority": 1
  },
  "HANKTOWN": {
   "format": "toon",
@@ -175,6 +176,67 @@
   "accent_note": "retro 50s americana",
   "n_shorts": 3,
   "make_long": true,
-  "tier": "normal"
+  "tier": "normal",
+  "priority": 1
+ },
+ "TRUETALES": {
+  "format": "toon",
+  "toon_mode": "story",
+  "make_long": true,
+  "n_shorts": 3,
+  "tier": "normal",
+  "priority": 1,
+  "display": "TRUE TALES USA",
+  "accent": "#DC2626",
+  "accent2": "#FCA5A5",
+  "voice": "en-US-AndrewNeural",
+  "voice_a": "en-US-AndrewNeural",
+  "rate_a": "+2%",
+  "voice_b": "en-US-AndrewNeural",
+  "rate_b": "+2%",
+  "color_a": "#FCA5A5",
+  "color_b": "#FCA5A5",
+  "toon_style": "clean expressive stickman characters on soft white background, bold hand-drawn marker style, thick black strokes, ONE red accent color on key props, dramatic poses, no signs, no lettering, no text",
+  "niche": "narrated dramatic everyday-American stories (workplace drama, neighbor feuds, wild customer encounters, family chaos) told by ONE narrator with stick-figure illustrations. Stories are FICTIONAL-but-relatable slice-of-life — never presented as real news, no politics, no real brands or celebrities, family-safe with an ironic twist ending."
+ },
+ "DUMBHISTORY": {
+  "format": "toon",
+  "toon_mode": "story",
+  "make_long": true,
+  "n_shorts": 3,
+  "tier": "normal",
+  "priority": 1,
+  "display": "DUMB HISTORY",
+  "accent": "#92400E",
+  "accent2": "#FCD34D",
+  "voice": "en-US-BrianNeural",
+  "voice_a": "en-US-BrianNeural",
+  "rate_a": "+0%",
+  "voice_b": "en-US-BrianNeural",
+  "rate_b": "+0%",
+  "color_a": "#FCD34D",
+  "color_b": "#FCD34D",
+  "toon_style": "stickman characters wearing simple period props (tricorn hats, top hats, cowboy hats), aged parchment sepia background with subtle paper texture, hand-drawn ink style, thick strokes, no signs, no lettering, no text",
+  "niche": "absurd-but-TRUE moments of American history told by ONE witty narrator with stick-figure reenactments (the pig war of 1859, the great molasses flood, presidential oddities, gold-rush schemes). STRICT: every fact real and verifiable, cite era/year in narration naturally, no politics of today, long-dead figures only, family-safe humor."
+ },
+ "EXPLAINUSA": {
+  "format": "toon",
+  "toon_mode": "story",
+  "make_long": true,
+  "n_shorts": 3,
+  "tier": "normal",
+  "priority": 1,
+  "display": "EXPLAIN THIS, AMERICA",
+  "accent": "#0369A1",
+  "accent2": "#7DD3FC",
+  "voice": "en-US-SteffanNeural",
+  "voice_a": "en-US-SteffanNeural",
+  "rate_a": "+0%",
+  "voice_b": "en-US-SteffanNeural",
+  "rate_b": "+0%",
+  "color_a": "#7DD3FC",
+  "color_b": "#7DD3FC",
+  "toon_style": "minimal thin line-art stick figures on very pale blue-gray background, deadpan flat expressions, tiny simple diagrams and arrows as props, single pale blue accent, clean vector look, no signs, no lettering, no text",
+  "niche": "deadpan comedic explainers of things ONLY America has (tipping culture, medical bills, sales tax at checkout, college costs, imperial units, HOA rules) told by ONE dry narrator with minimal line-art illustrations. STRICT: every fact/number real and verifiable, self-aware irony, no politics, no real brands, family-safe."
  }
 }

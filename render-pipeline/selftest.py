@@ -182,6 +182,12 @@ def t_toon():
     assert "head-and-shoulders" in DS._toon_safe("extreme close-up of face")
     src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "run_render.py")).read()
     assert '"toon"' in src and "make_toon" in src, "run_render chưa route toon"
+    tale = {"title": "The Pig War", "scene_base": "island farm 1859",
+            "frames": [{"prompt": "wide", "line_idx": 0}, {"prompt": "standoff", "line_idx": 3},
+                       {"prompt": "tight head-and-shoulders", "line_idx": 5}, {"prompt": "twist", "line_idx": 7}],
+            "dialog": [{"who": "A", "line": "x"}] * 8, "self_score": {"total": 96}}
+    assert CB._validate_tale(tale) == [], CB._validate_tale(tale)
+    assert "toon_mode" in src, "dispatch chưa truyền toon_mode"
 
 
 def t_extract_json():
