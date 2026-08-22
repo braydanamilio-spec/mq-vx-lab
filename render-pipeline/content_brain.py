@@ -145,6 +145,9 @@ _GROQ_PREF = [GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "groq/compo
 # (sau Groq và Gemini — để dành neuron cho ảnh, thứ chỉ CF và Gemini làm được).
 CF_TEXT_MODEL = os.environ.get("CF_TEXT_MODEL", "@cf/openai/gpt-oss-120b")
 CF_VISION_MODEL = os.environ.get("CF_VISION_MODEL", "@cf/meta/llama-3.2-11b-vision-instruct")
+# CF cũng gỡ/đổi model như Groq -> danh sách ưu tiên cho tự-dò khi 404/400 model-không-tồn-tại
+_CF_PREF = [CF_TEXT_MODEL, "@cf/openai/gpt-oss-120b", "@cf/openai/gpt-oss-20b",
+            "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/qwen/qwen2.5-coder-32b-instruct"]
 
 
 def _cf_parse(key):
@@ -287,10 +290,27 @@ class _CfShim:
         self._key = key
         self._acc, self._tok = _cf_parse(key)
 
+    _live_model = None    # model CF text đã xác nhận SỐNG (chia sẻ toàn tiến trình, như _GroqShim)
+
     def GenerativeModel(self, model_name, system_instruction=None, **kw):
-        self._model = CF_TEXT_MODEL
+        self._model = _CfShim._live_model or CF_TEXT_MODEL
         self._sys = system_instruction     # cùng lớp lỗi TypeError như _GroqShim (xem trên)
         return self
+
+    def _resolve_live_model(self) -> str:
+        """CF gỡ model text -> hỏi /ai/models/search rồi chọn theo _CF_PREF (bài học llama-3.3 Groq)."""
+        import urllib.request
+        req = urllib.request.Request(
+            f"https://api.cloudflare.com/client/v4/accounts/{self._acc}/ai/models/search?per_page=100",
+            headers=self._hdr())
+        with urllib.request.urlopen(req, timeout=20) as r:
+            ids = {m.get("name") for m in ((json.load(r).get("result")) or [])}
+        for want in _CF_PREF:
+            if want in ids:
+                _CfShim._live_model = want
+                print(f"   ⛅ CF: model '{self._model}' đã bị gỡ -> tự chuyển sang '{want}' (còn sống).")
+                return want
+        raise RuntimeError("cloudflare: không còn model text nào trong danh sách ưu tiên")
 
     def configure(self, **kw):
         pass
@@ -347,7 +367,19 @@ class _CfShim:
             detail = ""
             try: detail = e.read().decode()[:200]
             except Exception: pass
-            if e.code == 429 or "4006" in detail or "neuron" in detail.lower():
+            low = detail.lower()
+            if e.code in (400, 404) and ("no such model" in low or "does not exist" in low or "invalid model" in low or "not found" in low):
+                # CF gỡ model (bài học llama-3.3 bên Groq) -> dò model sống rồi thử lại 1 lần
+                self._model = self._resolve_live_model()
+                body["model"] = self._model
+                req2 = urllib.request.Request(
+                    f"https://api.cloudflare.com/client/v4/accounts/{self._acc}/ai/v1/chat/completions",
+                    data=json.dumps(body).encode(), headers=self._hdr())
+                with urllib.request.urlopen(req2, timeout=timeout) as r:
+                    out = json.load(r)
+                txt2 = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+                return type("R", (), {"text": txt2})()
+            if e.code == 429 or "4006" in detail or "neuron" in low:
                 # 4006 = hết 10K neuron free trong ngày -> để chuỗi chứa '429' cho cool_key/key_order xử như Gemini/Groq
                 raise RuntimeError(f"429 rate limit daily (cloudflare): {detail}")
             raise RuntimeError(f"cloudflare HTTP {e.code}: {detail}")
