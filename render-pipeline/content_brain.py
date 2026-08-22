@@ -130,6 +130,11 @@ def test_key(api_key: str):
 # 22/8: Groq ĐÃ GỠ llama-3.3-70b-versatile (test thật qua dashboard: HTTP 404 "does not exist").
 # Mặc định mới = openai/gpt-oss-120b (test 200 OK, JSON chuẩn). Groq gỡ/thay model khá thường xuyên
 # -> _GroqShim tự dò model SỐNG từ /models khi gặp 404 (danh sách ưu tiên bên dưới), khỏi chết lần nữa.
+# UA tử tế cho mọi lệnh gọi REST qua urllib: api.groq.com/api.cloudflare.com đều nấp sau WAF
+# Cloudflare — UA "Python-urllib" mặc định thi thoảng dính chặn chữ ký bot (403 error code 1010,
+# EMPIREUSA 22/8). UA rõ danh tính + kiểu trình duyệt là hết bị soi.
+UA = "Mozilla/5.0 (compatible; MM0-render/1.0; +https://mm0-auto-publisher.web.app)"
+
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 _GROQ_PREF = [GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "groq/compound-mini", "openai/gpt-oss-20b"]
 
@@ -188,7 +193,7 @@ class _GroqShim:
         """Gặp 404 model-đã-gỡ -> hỏi /models rồi chọn model SỐNG theo danh sách ưu tiên."""
         import urllib.request
         req = urllib.request.Request("https://api.groq.com/openai/v1/models",
-                                     headers={"Authorization": f"Bearer {self._key}"})
+                                     headers={"Authorization": f"Bearer {self._key}", "User-Agent": UA})
         with urllib.request.urlopen(req, timeout=20) as r:
             ids = {m.get("id") for m in (json.load(r).get("data") or [])}
         for want in _GROQ_PREF:
@@ -206,7 +211,7 @@ class _GroqShim:
         # thu hồi vẫn "sống ảo". Lỗi 401/403 nổi lên -> test_key map DEAD; 429 -> map SỐNG-tạm y Gemini.
         import urllib.request, urllib.error
         req = urllib.request.Request("https://api.groq.com/openai/v1/models",
-                                     headers={"Authorization": f"Bearer {self._key}"})
+                                     headers={"Authorization": f"Bearer {self._key}", "User-Agent": UA})
         try:
             with urllib.request.urlopen(req, timeout=20) as r:
                 self._print_limits(r.headers)
@@ -229,7 +234,7 @@ class _GroqShim:
         req = urllib.request.Request(
             "https://api.groq.com/openai/v1/chat/completions",
             data=json.dumps(body).encode(),
-            headers={"Authorization": f"Bearer {self._key}", "Content-Type": "application/json"})
+            headers={"Authorization": f"Bearer {self._key}", "Content-Type": "application/json", "User-Agent": UA})
         timeout = (request_options or {}).get("timeout", 120)
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -246,12 +251,16 @@ class _GroqShim:
                 req2 = urllib.request.Request(
                     "https://api.groq.com/openai/v1/chat/completions",
                     data=json.dumps(body).encode(),
-                    headers={"Authorization": f"Bearer {self._key}", "Content-Type": "application/json"})
+                    headers={"Authorization": f"Bearer {self._key}", "Content-Type": "application/json", "User-Agent": UA})
                 with urllib.request.urlopen(req2, timeout=timeout) as r:
                     self._print_limits(r.headers)
                     out = json.load(r)
                 txt = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
                 return type("R", (), {"text": txt})()
+            if e.code == 403 and "1010" in detail:
+                # WAF Cloudflare của Groq chặn chữ ký bot (lẻ tẻ theo IP runner) -> lỗi TẠM per-minute:
+                # key nghỉ 1.1' + thử key kế, KHÔNG đánh trượt video, KHÔNG giết key.
+                raise RuntimeError(f"429 rate limit per minute (groq WAF 1010): {detail[:80]}")
             if e.code == 429:
                 # PHÂN LOẠI bằng chính header Groq: còn request trong ngày -> đây là nghẽn THEO PHÚT
                 # (RPM/TPM) -> gắn chữ 'per minute' để _cool cho nghỉ 1.1' thay vì phạt oan 20'.
@@ -287,7 +296,7 @@ class _CfShim:
         pass
 
     def _hdr(self):
-        return {"Authorization": f"Bearer {self._tok}", "Content-Type": "application/json"}
+        return {"Authorization": f"Bearer {self._tok}", "Content-Type": "application/json", "User-Agent": UA}
 
     def list_models(self):
         # PING THẬT (health-check): token/account sai -> 401/403 nổi lên -> map DEAD y như Groq.
