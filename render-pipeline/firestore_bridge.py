@@ -186,6 +186,11 @@ KEYS_TTL = 180        # giây
 # chạy tiếp. Cái giá: dashboard mù tạm thời + mất checkpoint resume trong 20' — rẻ hơn vô hạn so
 # với 0 video.
 _WQ_DEAD = {"until": 0.0, "warned": False}
+# ĐỌC-MỀM (22/8): hạn mức ĐỌC của B cũng cạn được (phiên 04:22Z chết 18/18 luồng vì read_keys/
+# read_config ném 429 xuyên _retry). Nguyên tắc y như ghi-mềm: quota chết = dùng bản đệm cũ /
+# mặc định an toàn, KHÔNG BAO GIỜ crash luồng vì một lượt đọc telemetry.
+_RQ_DEAD = {"until": 0.0, "warned": False}
+_CFG_LAST = {}        # owner -> bản render_config đọc được gần nhất (fallback khi quota đọc chết)
 _PENDING = []   # các lượt ghi QUAN TRỌNG bị rơi trong cửa sổ tắt-ghi -> xả lại cuối luồng
 _PENDING_TAGS = ("update_job", "new_job", "save_topics")   # mất done-write là count_done đếm thiếu -> LÀM DƯ video
 _PENDING_CAP = 300
@@ -232,6 +237,8 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     hit = _KEYS_CACHE.get(ck)
     if hit and (_t.time() - hit[0]) < KEYS_TTL:
         return hit[1]
+    if hit and _t.time() < _RQ_DEAD["until"]:
+        return hit[1]     # quota ĐỌC đang chết -> bản đệm cũ (dù quá TTL) còn hơn crash luồng
 
     def _do():
         # ĐỌC TỪ PROJECT B TRƯỚC (nếu đã copy key sang B), B rỗng thì lùi về A như cũ.
@@ -258,23 +265,73 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
                         "last_used": x.get("last_used", ""), "cooling_until": cooling,
                         "dead_since": x.get("dead_since", ""), "req_today": req_today})
         return out
-    res = _retry(_do)
-    if not res and os.environ.get("SHARD_KEYS") == "1":
-        # B rỗng (chưa copy key sang) -> lùi về A, KHÔNG để pipeline tưởng là hết key rồi dừng.
-        def _fallbackA():
-            db = _db(); out2 = []
-            for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
-                x = d.to_dict() or {}
-                if x.get("key"):
-                    out2.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
-                                 "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
-                                 "last_used": x.get("last_used", ""), "cooling_until": x.get("cooling_until", ""),
-                                 "dead_since": x.get("dead_since", ""), "req_today": 0})
-            return out2
-        print("   ℹ️ SHARD_KEYS=1 nhưng Project B chưa có key -> dùng tạm Project A")
-        res = _retry(_fallbackA)
+    try:
+        res = _retry(_do)
+        if not res and os.environ.get("SHARD_KEYS") == "1":
+            # B rỗng (chưa copy key sang) -> lùi về A, KHÔNG để pipeline tưởng là hết key rồi dừng.
+            def _fallbackA():
+                db = _db(); out2 = []
+                for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
+                    x = d.to_dict() or {}
+                    if x.get("key"):
+                        out2.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
+                                     "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
+                                     "last_used": x.get("last_used", ""), "cooling_until": x.get("cooling_until", ""),
+                                     "dead_since": x.get("dead_since", ""), "req_today": 0})
+                return out2
+            print("   ℹ️ SHARD_KEYS=1 nhưng Project B chưa có key -> dùng tạm Project A")
+            res = _retry(_fallbackA)
+        res = _merge_a_keys(owner, res)
+    except Exception as e:
+        # ĐỌC-MỀM: quota đọc cạn thì trả bản đệm cũ (hoặc rỗng) — 18/18 luồng phiên 04:22Z chết
+        # chỉ vì lượt đọc này ném 429 xuyên qua `or keys` của caller (raise ≠ falsy).
+        if _wq_exhausted(e):
+            _RQ_DEAD["until"] = _t.time() + 15 * 60
+            if not _RQ_DEAD["warned"]:
+                _RQ_DEAD["warned"] = True
+                print("🩹 Firestore HẾT HẠN MỨC ĐỌC (read_keys) -> dùng bản đệm cũ 15', luồng chạy tiếp.")
+            return hit[1] if hit else []
+        raise
     _KEYS_CACHE[ck] = (__import__('time').time(), res)
     return res
+
+
+_A_KEYS = {"t": 0.0, "rows": None}   # đọc bảng key ở A tối đa 1 lần/10' mỗi tiến trình
+
+
+def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
+    """HỢP NHẤT key A -> kết quả đọc từ B, so theo GIÁ TRỊ key (không theo doc id).
+
+    Vì sao cần (phát hiện 22/8, phiên quyết định 04:22Z): user thêm 10+ key Groq trên dashboard
+    (ghi vào A), nhưng B đang CẠN HẠN MỨC GHI cả ngày nên sync_keys_from_a ghi qua _soft bị nuốt
+    -> key mới vô hình với 18 luồng suốt phiên. Hợp nhất lúc ĐỌC thì key mới dùng được NGAY cả
+    khi không ghi nổi vào B. A gói Blaze nên +1 lượt đọc bảng (~70 doc)/10' là rẻ.
+    Key chỉ-có-ở-A giữ nguyên doc id của A: cool_key/incr ghi set(merge) theo id sẽ tự tạo doc
+    bên B khi quota ghi hồi — tự lành, khỏi cần migrate tay."""
+    import time as _t
+    if os.environ.get("SHARD_KEYS") != "1":
+        return rows
+    try:
+        if _db() is _db_keys():
+            return rows
+        if _A_KEYS["rows"] is None or (_t.time() - _A_KEYS["t"]) > 600:
+            _cr("merge_keys_A", 70)
+            out = []
+            for d in _db().collection("gemini_keys").where("owner", "==", owner).stream():
+                x = d.to_dict() or {}
+                if x.get("key"):
+                    out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
+                                "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
+                                "last_used": x.get("last_used", ""), "cooling_until": x.get("cooling_until", ""),
+                                "dead_since": x.get("dead_since", ""), "req_today": 0})
+            _A_KEYS["rows"] = out; _A_KEYS["t"] = _t.time()
+        have = {r.get("key") for r in rows}
+        extra = [r for r in (_A_KEYS["rows"] or []) if r.get("key") not in have]
+        if extra:
+            print(f"   🔑 Hợp nhất {len(extra)} key CHỈ CÓ Ở A (B chưa ghi được) vào pool phiên này.")
+        return rows + extra
+    except Exception:
+        return rows   # A đọc lỗi thì thôi — B vẫn là nguồn chính
 
 
 def incr_key_requests(key_id: str, n: int, today: str):
@@ -347,23 +404,33 @@ def sync_keys_from_a(owner: str) -> int:
         db_b = _db_jobs()
         if db_a is db_b:
             return 0
-        _cr("sync_keys_A", 56)
-        have = {d.id for d in db_b.collection("gemini_keys").where("owner", "==", owner).stream()}
-        _cr("sync_keys_B", 56)
-        added = 0
+        # SO THEO GIÁ TRỊ KEY, không theo doc id (22/8): id A/B có thể lệch (dashboard .add() sinh
+        # id ngẫu nhiên) -> so id thì key mới thành "đã có" hoặc key cũ bị ghi trùng. Giá trị key
+        # là danh tính thật.
+        _cr("sync_keys_B", 70)
+        have = set(); nb = 0
+        for d in db_b.collection("gemini_keys").where("owner", "==", owner).stream():
+            nb += 1
+            v = (d.to_dict() or {}).get("key")
+            if v:
+                have.add(v)
+        _cr("sync_keys_A", 70)
+        added = 0; na = 0
         for d in db_a.collection("gemini_keys").where("owner", "==", owner).stream():
-            if d.id in have:
-                continue
+            na += 1
             x = d.to_dict() or {}
-            if not x.get("key"):
+            if not x.get("key") or x["key"] in have:
                 continue
             _cw("sync_keys")
             _soft(lambda _id=d.id, _x=x: db_b.collection("gemini_keys").document(_id).set(_x, merge=True),
                   "sync_keys")
             added += 1
+        # LUÔN in số đếm — phiên 04:22Z sync im lặng nên không phân biệt được "0 key mới" với
+        # "query A trả 0 dòng (owner lệch)" hay "ghi bị nuốt vì B cạn quota ghi".
+        print(f"   🔑 Sync key A->B: A={na} · B={nb} · mới={added}"
+              + (" (ghi qua _soft — B cạn quota ghi thì lượt ghi chờ hồi, ĐỌC đã tự hợp nhất từ A)" if added else ""))
         if added:
             _KEYS_CACHE.clear()
-            print(f"   🔑 Đồng bộ {added} key MỚI từ A sang B (dashboard thêm sau đợt migrate).")
         return added
     except Exception as e:
         print(f"   ⚠️ sync_keys A->B lỗi (bỏ qua): {str(e)[:80]}")
@@ -447,10 +514,24 @@ def read_one_channel(owner: str, name: str) -> dict | None:
 
 def read_config(owner: str) -> dict:
     _cr("read_config", 1)
+    import time as _t
+    if _t.time() < _RQ_DEAD["until"]:
+        return dict(_CFG_LAST.get(owner) or {})   # quota đọc chết -> bản đệm/mặc định, không crash
     def _do():
         d = _db_meta().collection("render_config").document(owner).get()
         return (d.to_dict() or {}) if d.exists else {}
-    return _retry(_do)
+    try:
+        out = _retry(_do)
+        _CFG_LAST[owner] = out
+        return out
+    except Exception as e:
+        if _wq_exhausted(e):
+            _RQ_DEAD["until"] = _t.time() + 15 * 60
+            if not _RQ_DEAD["warned"]:
+                _RQ_DEAD["warned"] = True
+                print("🩹 Firestore HẾT HẠN MỨC ĐỌC (read_config) -> dùng config đệm, luồng chạy tiếp.")
+            return dict(_CFG_LAST.get(owner) or {})
+        raise
 
 
 def read_render_requests(owner: str) -> list[dict]:
@@ -624,8 +705,11 @@ def recent_topics(owner: str, channel: str, n: int = 80) -> list[str]:
     if ck in _TOPICS_CACHE:
         return _TOPICS_CACHE[ck][-n:]
     _cr("recent_topics")
-    d = _db_meta().collection("render_topics").document(f"{owner}__{channel}").get()
-    out = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
+    try:
+        d = _db_meta().collection("render_topics").document(f"{owner}__{channel}").get()
+        out = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
+    except Exception:
+        return []   # đọc lỗi (quota) -> coi như chưa có; KHÔNG đệm để lượt sau thử lại thật
     _TOPICS_CACHE[ck] = out
     return out[-n:]
 
