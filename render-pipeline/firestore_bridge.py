@@ -978,6 +978,42 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
     return total
 
 
+def mirror_connections_to_b() -> int:
+    """GƯƠNG KHO DRIVE A->B (23/8): A cạn quota đọc cả chiều -> enqueue đọc danh sách kho (ở A) trả
+    rỗng -> video render xong bị TỪ CHỐI hàng loạt dù B vẫn sống. Chép connections (đủ refresh_token
+    + root) sang B collection `connections_mirror` — rules B khóa kín (catch-all deny, chỉ service
+    account bypass được) nên token KHÔNG lộ ra client. Publisher fallback đọc gương khi A nghẽn ->
+    A hết là điểm-chết-đơn của khâu đẩy kho. Chạy 1 lần/phiên ở plan; so giá trị, chỉ ghi doc đổi."""
+    try:
+        if _db() is _db_jobs():
+            return 0
+        rows = {}
+        for d in _db().collection("connections").stream():
+            x = d.to_dict() or {}
+            if x.get("refresh_token") and x.get("root"):
+                rows[d.id] = x
+        _cr("mirror_conn_A", max(1, len(rows)))
+        if not rows:
+            return 0
+        col = _db_jobs().collection("connections_mirror")
+        cur = {d.id: (d.to_dict() or {}) for d in col.stream()}
+        _cr("mirror_conn_B", max(1, len(cur)))
+        n = 0
+        keys = ("refresh_token", "root", "client_id", "client_secret", "channel", "owner", "email", "cap_gb")
+        for i, x in rows.items():
+            if any(cur.get(i, {}).get(k) != x.get(k) for k in keys):
+                _soft(lambda ref=col.document(i), v=x: ref.set(v), "mirror_conn")
+                n += 1
+        for i in set(cur) - set(rows):
+            _soft(lambda ref=col.document(i): ref.delete(), "mirror_conn_del")
+        if n:
+            print(f"   🪞 Gương kho Drive A→B: cập nhật {n}/{len(rows)} tài khoản (publisher hết phụ thuộc A).")
+        return n
+    except Exception as e:
+        print(f"   ⚠️ mirror_connections lỗi ({str(e)[:60]}) — A nghẽn thì phiên sau tự thử lại.")
+        return 0
+
+
 def heal_unpushed(owner: str, hours: int = 8, cap: int = 30) -> int:
     """TỰ CHỮA video 'mồ côi' (22/8): Firestore A nghẽn 1 nhịp -> enqueue tưởng '0 kho Drive' ->
     9 video EMPIREUSA QC 98 render xong bị TỪ CHỐI đẩy, job ghi done «Xong (chưa đẩy Drive)» rồi
@@ -986,6 +1022,21 @@ def heal_unpushed(owner: str, hours: int = 8, cap: int = 30) -> int:
     find_resumable của kênh đó tự nhặt, render lại TỪ SCRIPT (0 quota AI) + đẩy kho tử tế.
     Rẻ: dùng index (owner,status,created_at) đã deploy; chỉ ghi khi thật sự có nạn nhân."""
     try:
+        # 23/8: CHỈ chữa khi có ĐƯỜNG ĐẨY KHO — A sống HOẶC gương B có dữ liệu. A chết + gương rỗng
+        # mà vẫn lật failed thì lane render lại xong LẠI bị từ chối -> vòng lặp đốt máy vô ích cả đêm.
+        _path_ok = False
+        try:
+            next(_db().collection("connections").limit(1).stream(), None)
+            _path_ok = True
+        except Exception:
+            try:
+                _path_ok = next(_db_jobs().collection("connections_mirror").limit(1).stream(), None) is not None
+            except Exception:
+                pass
+        if not _path_ok:
+            print("   🩹 heal HOÃN: A nghẽn đọc + gương B chưa có -> đẩy kho chắc chắn từ chối."
+                  " Video giữ script + artifact 3 ngày, tự chữa khi có đường.")
+            return 0
         from datetime import timedelta
         since = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
         _cr("heal_unpushed", 20)

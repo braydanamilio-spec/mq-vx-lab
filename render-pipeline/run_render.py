@@ -1158,6 +1158,12 @@ def plan_mode():
         except Exception:
             pass
         return out_channels([])
+    # GƯƠNG kho Drive A->B (23/8) — publisher fallback khi A nghẽn; phải chạy TRƯỚC heal để
+    # phiên đầu tiên A còn thở là gương sống, heal thấy "có đường đẩy" mà làm việc.
+    try:
+        FB.mirror_connections_to_b()
+    except Exception:
+        pass
     # TỰ CHỮA video render-xong-nhưng-chưa-đẩy-kho (A nghẽn 1 nhịp là dính, 22/8: 9 video EMPIREUSA)
     # -> lật failed để lane render lại TỪ SCRIPT đã lưu (0 quota AI). 1 lần/phiên, ghi chỉ khi có nạn nhân.
     try:
