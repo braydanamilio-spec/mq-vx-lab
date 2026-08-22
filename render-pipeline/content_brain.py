@@ -134,7 +134,8 @@ GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 _GROQ_PREF = [GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "groq/compound-mini", "openai/gpt-oss-20b"]
 
 # Cloudflare Workers AI (22/8): key dạng "cf:<account_id>:<api_token>" — 10K neuron free/ngày/tài
-# khoản (reset 00:00Z) ≈ ~1.300 lượt LLM HOẶC ~2.000 ảnh FLUX 512². Vai trò trong hệ: VẼ ẢNH
+# khoản (reset 00:00Z). SỐ THẬT tự tính từ giá niêm yết (22/8 — số "2K ảnh" của trang thứ 3 SAI ~12 lần):
+# ≈ ~174 ảnh FLUX 1024²/4 bước (58n/ảnh) HOẶC ~60 bài viết ngắn gpt-oss-120b (~166n/bài). Vai trò: VẼ ẢNH
 # (FLUX schnell, ưu tiên TRƯỚC Gemini) + VISION fallback (sau Gemini) + viết chữ CHÓT BẢNG
 # (sau Groq và Gemini — để dành neuron cho ảnh, thứ chỉ CF và Gemini làm được).
 CF_TEXT_MODEL = os.environ.get("CF_TEXT_MODEL", "@cf/openai/gpt-oss-120b")
@@ -344,7 +345,7 @@ class _CfShim:
         txt = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
         if not _CfShim._limits_printed and self._tok:
             _CfShim._limits_printed.add(self._tok[-4:])
-            print(f"   ⛅ CF •••{self._tok[-4:]} hoạt động (free 10K neuron/ngày ≈ ~1.3K lượt viết hoặc ~2K ảnh).")
+            print(f"   ⛅ CF •••{self._tok[-4:]} hoạt động (free 10K neuron/ngày ≈ ~174 ảnh FLUX hoặc ~60 bài viết).")
         return type("R", (), {"text": txt})()
 
 
