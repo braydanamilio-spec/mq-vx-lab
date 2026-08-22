@@ -138,8 +138,22 @@ class _GroqShim:
     cool_key, key_order) xử lý y như key Gemini bị giới hạn. Groq KHÔNG có vision/vẽ ảnh — các pool
     ảnh/Vision đã lọc bỏ gsk_ ở datastory_ci."""
 
+    _limits_printed = set()   # in hạn mức THẬT (Groq tự khai trong header) 1 lần/key/tiến trình
+
     def __init__(self, key):
         self._key = key
+
+    def _print_limits(self, headers):
+        tag = self._key[-4:]
+        if tag in _GroqShim._limits_printed:
+            return
+        rpd = headers.get("x-ratelimit-limit-requests")
+        left = headers.get("x-ratelimit-remaining-requests")
+        tpm = headers.get("x-ratelimit-limit-tokens")
+        if rpd:
+            _GroqShim._limits_printed.add(tag)
+            print(f"   ⚡ Groq •••{tag} — hạn mức CHÍNH THỨC (tự khai trong header): "
+                  f"{rpd} req/ngày · còn {left} · {tpm or '?'} token/phút")
 
     def GenerativeModel(self, model_name):
         self._model = GROQ_MODEL      # tên gemini-* truyền vào được map sang model Groq
@@ -156,6 +170,7 @@ class _GroqShim:
                                      headers={"Authorization": f"Bearer {self._key}"})
         try:
             with urllib.request.urlopen(req, timeout=20) as r:
+                self._print_limits(r.headers)
                 json.load(r)
         except urllib.error.HTTPError as e:
             raise RuntimeError(f"groq HTTP {e.code}: {'invalid api key' if e.code in (401, 403) else 'rate limit' if e.code == 429 else ''}")
@@ -177,6 +192,7 @@ class _GroqShim:
         timeout = (request_options or {}).get("timeout", 120)
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
+                self._print_limits(r.headers)
                 out = json.load(r)
         except urllib.error.HTTPError as e:
             detail = ""
