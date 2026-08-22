@@ -58,12 +58,18 @@ def set_ai_pool(keys, channel: str = ""):
     XOAY THEO KÊNH (cùng chiêu ranked_accounts bên kho Drive): không xoay thì cả 18 luồng song
     song đều bắt đầu vẽ/kiểm từ CÙNG key đầu danh sách -> hạn mức ảnh/Vision của vài key đầu cháy
     trước trong khi key cuối ngồi không — pool 56 key mà hiệu dụng chỉ còn vài key."""
-    ks = [k.get("key") for k in (keys or []) if k.get("key") and not str(k.get("key")).startswith("gsk_")]   # Groq không có vision/vẽ ảnh
-    if channel and len(ks) > 1:
+    raw = [k.get("key") for k in (keys or []) if k.get("key") and not str(k.get("key")).startswith("gsk_")]   # Groq không có vision/vẽ ảnh
+    # CF (cf:) đứng TRƯỚC cho VẼ ẢNH: FLUX free ~2K ảnh/ngày/tài khoản vs Gemini chỉ ~vài trăm tổng
+    # -> đốt CF trước, Gemini để dành cho vision + khi CF cạn. Mỗi nhóm vẫn xoay theo kênh như cũ.
+    cf = [k for k in raw if str(k).startswith("cf:")]
+    gm = [k for k in raw if not str(k).startswith("cf:")]
+    if channel:
         import hashlib
-        off = int(hashlib.md5(channel.encode()).hexdigest(), 16) % len(ks)
-        ks = ks[off:] + ks[:off]
-    _AI_POOL["keys"] = ks
+        for grp in (cf, gm):
+            if len(grp) > 1:
+                off = int(hashlib.md5(channel.encode()).hexdigest(), 16) % len(grp)
+                grp[:] = grp[off:] + grp[:off]
+    _AI_POOL["keys"] = cf + gm
     _AI_POOL["dead"] = set()
     _VIS_DEAD.clear()
 
@@ -86,12 +92,19 @@ _VIS_DEAD = set()      # key đã hết hạn mức VISION trong phiên (khác h
 
 
 def _vision_key(keys):
-    for k in (keys or []):
-        kk = k.get("key")
-        if kk and kk not in _VIS_DEAD and not str(kk).startswith("gsk_"):
+    ks = [k.get("key") for k in (keys or []) if k.get("key")]
+    for kk in [k for k in ks if not str(k).startswith(("gsk_", "cf:"))] + [k for k in ks if str(k).startswith("cf:")]:
+        if kk not in _VIS_DEAD:
             return kk
-    return ((keys or [{}])[0] or {}).get("key", "")
+    return (ks or [""])[0]
 
+
+
+def _vision_order(cands):
+    """VISION: Gemini (AIza) TRƯỚC — giám khảo đã kiểm chứng bằng ô mồi; CF (cf:) làm fallback khi
+    Gemini cạn (neuron CF ưu tiên để VẼ ảnh). Groq (gsk_) không vision -> loại."""
+    cs = [k for k in cands if k and not str(k).startswith("gsk_")]
+    return [k for k in cs if not str(k).startswith("cf:")] + [k for k in cs if str(k).startswith("cf:")]
 
 def _verify_image_rot(path, subject, first_key="", tries=3):
     """verify_image nhưng ĐỔI KEY khi 429 — chốt 'ảnh phải khớp nội dung 100%'.
@@ -105,7 +118,7 @@ def _verify_image_rot(path, subject, first_key="", tries=3):
     seen = []
     for _ in range(max(1, tries)):
         k = None
-        for cand in ([first_key] if (first_key and not str(first_key).startswith("gsk_")) else []) + list(_AI_POOL["keys"]):
+        for cand in _vision_order(([first_key] if first_key else []) + list(_AI_POOL["keys"])):
             if cand and cand not in _VIS_DEAD and cand not in seen:
                 k = cand; break
         if not k:
@@ -132,7 +145,7 @@ def _verify_grid_rot(pairs, first_key="", tries=3):
     seen = []
     for _ in range(max(1, tries)):
         k = None
-        for cand in ([first_key] if (first_key and not str(first_key).startswith("gsk_")) else []) + list(_AI_POOL["keys"]):
+        for cand in _vision_order(([first_key] if first_key else []) + list(_AI_POOL["keys"])):
             if cand and cand not in _VIS_DEAD and cand not in seen:
                 k = cand; break
         if not k:
@@ -173,6 +186,38 @@ def _check_visual_rot(mp4, keys, tries=3, **kw):
     return True, (info or {"note": "vision-skip: hết key còn hạn mức"})
 
 
+def _cf_flux_image(prompt, dest, key, style=None) -> bool:
+    """VẼ ẢNH bằng Cloudflare FLUX.1 schnell (key 'cf:acc:token'). Trả True khi đã ghi ảnh hợp lệ
+    vào dest. Lỗi quota (429/4006 hết neuron) NÉM LÊN để caller xoay key; lỗi khác trả False."""
+    import urllib.request, urllib.error, base64, json as _j
+    _, acc, tok = str(key).split(":", 2)
+    body = {"prompt": f"A {style or DEFAULT_AI_STYLE} of: {prompt}. No text, no watermark, no logo.",
+            "steps": 6}
+    req = urllib.request.Request(
+        f"https://api.cloudflare.com/client/v4/accounts/{acc}/ai/run/@cf/black-forest-labs/flux-1-schnell",
+        data=_j.dumps(body).encode(),
+        headers={"Authorization": f"Bearer {tok}", "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            out = _j.load(r)
+    except urllib.error.HTTPError as e:
+        detail = ""
+        try: detail = e.read().decode()[:200]
+        except Exception: pass
+        if e.code == 429 or "4006" in detail or "neuron" in detail.lower():
+            raise RuntimeError(f"429 hết neuron CF trong ngày: {detail}")
+        print(f"   ⚠️ CF FLUX HTTP {e.code}: {detail[:90]}")
+        return False
+    b64 = ((out.get("result") or {}).get("image")) or ""
+    if not b64:
+        return False
+    data = base64.b64decode(b64)
+    if len(data) < 2000 or not _is_image(data):
+        return False
+    open(dest, "wb").write(data)
+    return True
+
+
 def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", style=None) -> bool:
     """DỰ PHÒNG khi Openverse KHÔNG có ảnh CC0 khớp: nhờ Gemini VẼ ảnh minh hoạ (Nano Banana).
     Quota TÁCH RIÊNG khỏi quota viết kịch bản (model khác nhau) -> dùng thoải mái, không đụng key đang
@@ -185,6 +230,20 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
         return False
     last_quota = None
     for _i, _k in enumerate(cands):
+      if str(_k).startswith("cf:"):
+        # ⛅ Cloudflare FLUX schnell — free ~2K ảnh/ngày/tài khoản, xếp TRƯỚC Gemini trong pool.
+        try:
+            if _cf_flux_image(prompt, dest, _k, style):
+                if _i:
+                    print(f"   🔑 vẽ ảnh: đã xoay sang key thứ {_i + 1} (⛅ CF FLUX)")
+                return True
+            return False               # CF trả về không phải ảnh -> đổi key cũng vô ích (cùng prompt)
+        except Exception as e:
+            if _is_quota_err(e):
+                _AI_POOL["dead"].add(_k); last_quota = e
+                continue               # hết neuron -> thử key kế (CF khác hoặc Gemini)
+            print(f"   ⚠️ CF FLUX '{prompt[:30]}' lỗi: {str(e)[:90]}")
+            continue                   # lỗi lạ phía CF -> vẫn còn đường Gemini phía sau
       try:
         from google import genai as genai2
         # timeout 120s (SDK google-genai nhận ms qua http_options) — cùng lớp lỗi treo vĩnh viễn như

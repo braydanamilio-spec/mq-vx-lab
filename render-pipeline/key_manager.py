@@ -76,15 +76,22 @@ def key_order(channel: str, keys: list[dict]) -> list[dict]:
     # đạn Gemini free chỉ 20 viên/key/ngày và là thứ DUY NHẤT dùng được cho Vision; Groq ~1K/key
     # chỉ viết được chữ. Không tách thì viết đốt sạch đạn Gemini trước, đến lượt Vision thì đói.
     # Groq cạn/nghỉ hết -> tự rơi về phần Gemini như cũ, không kẹt.
+    # CF (cf:) CHÓT BẢNG cho khâu viết: neuron CF là nguồn VẼ ẢNH chính (~2K ảnh/ngày/acct) — chỉ
+    # viết chữ bằng CF khi cả Groq lẫn Gemini đều cạn (thà chậm 1 nhịp còn hơn mai hết đạn vẽ).
     groq = [k for k in ks if str(k.get("key", "")).startswith("gsk_")]
-    gem = [k for k in ks if not str(k.get("key", "")).startswith("gsk_")]
+    cf = [k for k in ks if str(k.get("key", "")).startswith("cf:")]
+    gem = [k for k in ks if k not in groq and k not in cf]
     if groq:
         r = (int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) + _RR[0]) % len(groq)
         _RR[0] += 1
-        return groq[r:] + groq[:r] + gem
-    start = (int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) + _RR[0]) % n
+        return groq[r:] + groq[:r] + gem + cf
+    pool = gem + cf if gem else cf
+    n = len(pool)
+    start = (int(hashlib.md5(channel.encode("utf-8")).hexdigest(), 16) + _RR[0]) % max(1, len(gem) or n)
     _RR[0] += 1                                                                  # xoay 1 nấc mỗi lần chọn -> spread đều trong phiên
-    return [ks[(start + i) % n] for i in range(n)]
+    if gem:
+        return [gem[(start + i) % len(gem)] for i in range(len(gem))] + cf
+    return [pool[(start + i) % n] for i in range(n)]
 
 
 def model_for(tier: str) -> str:
@@ -129,7 +136,7 @@ def write_story(channel: str, keys: list[dict], seed: str,
     for rnd in range(2):                          # 2 VÒNG: nếu CẢ LOẠT key dính giới hạn PHÚT -> chờ reset rồi thử lại (cứu kênh khỏi fail oan).
         tried = []
         for idx, k in enumerate(order):
-            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "⛅" if str(k.get("key", "")).startswith("cf:") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx:
                 time.sleep(1.5)                   # nhịp nhẹ giữa các key -> không burst -> không bị coi là spam
             try:
@@ -188,7 +195,7 @@ def write_guess(channel: str, keys: list[dict], category: str, n_rounds: int = 3
     for rnd in range(2):
         tried = []
         for idx, k in enumerate(order):
-            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "⛅" if str(k.get("key", "")).startswith("cf:") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 GUESS {channel} key [{tag}] · model {model}")
@@ -237,7 +244,7 @@ def write_mapped(channel: str, keys: list[dict], niche: str, tier: str = "normal
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "⛅" if str(k.get("key", "")).startswith("cf:") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 MAPPED {channel} key [{tag}] · model {model}")
@@ -285,7 +292,7 @@ def write_ranked(channel: str, keys: list[dict], niche: str, tier: str = "normal
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "⛅" if str(k.get("key", "")).startswith("cf:") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 RANKED {channel} key [{tag}] · model {model}")
@@ -333,7 +340,7 @@ def write_scaled(channel: str, keys: list[dict], niche: str, tier: str = "normal
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "⛅" if str(k.get("key", "")).startswith("cf:") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 SCALED {channel} key [{tag}] · model {model}")
@@ -381,7 +388,7 @@ def write_thennow(channel: str, keys: list[dict], niche: str, tier: str = "norma
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "⛅" if str(k.get("key", "")).startswith("cf:") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 THENNOW {channel} key [{tag}] · model {model}")
@@ -431,7 +438,7 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "⛅" if str(k.get("key", "")).startswith("cf:") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 DOC {channel} key [{tag}] · model {model}")
@@ -479,7 +486,7 @@ def _write_wave4(fn_name, label, channel, keys, niche, tier, avoid, on_limit, on
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "⛅" if str(k.get("key", "")).startswith("cf:") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 {label} {channel} key [{tag}] · model {model}")

@@ -23,8 +23,10 @@ _MODEL_CACHE = {}   # key -> {"flash":..., "pro":...}  (dò 1 lần/key)
 
 
 def _pick_model(genai, prefer="flash", api_key=""):
-    if str(api_key).startswith("gsk_") or isinstance(genai, _GroqShim):
+    if str(api_key).startswith("gsk_") or type(genai).__name__ == "_GroqShim":
         return GROQ_MODEL
+    if str(api_key).startswith("cf:") or type(genai).__name__ == "_CfShim":
+        return CF_TEXT_MODEL
     """Tự chọn model KHẢ DỤNG cho key này (mỗi key có bộ model khác nhau) -> chống 404."""
     cache = _MODEL_CACHE.get(api_key)
     if not cache:
@@ -130,6 +132,18 @@ def test_key(api_key: str):
 # -> _GroqShim tự dò model SỐNG từ /models khi gặp 404 (danh sách ưu tiên bên dưới), khỏi chết lần nữa.
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 _GROQ_PREF = [GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "groq/compound-mini", "openai/gpt-oss-20b"]
+
+# Cloudflare Workers AI (22/8): key dạng "cf:<account_id>:<api_token>" — 10K neuron free/ngày/tài
+# khoản (reset 00:00Z) ≈ ~1.300 lượt LLM HOẶC ~2.000 ảnh FLUX 512². Vai trò trong hệ: VẼ ẢNH
+# (FLUX schnell, ưu tiên TRƯỚC Gemini) + VISION fallback (sau Gemini) + viết chữ CHÓT BẢNG
+# (sau Groq và Gemini — để dành neuron cho ảnh, thứ chỉ CF và Gemini làm được).
+CF_TEXT_MODEL = os.environ.get("CF_TEXT_MODEL", "@cf/openai/gpt-oss-120b")
+CF_VISION_MODEL = os.environ.get("CF_VISION_MODEL", "@cf/meta/llama-3.2-11b-vision-instruct")
+
+
+def _cf_parse(key):
+    p = str(key).split(":", 2)
+    return (p[1], p[2]) if len(p) == 3 and p[1] and p[2] else ("", "")
 
 
 class _GroqShim:
@@ -245,8 +259,90 @@ class _GroqShim:
         return type("R", (), {"text": txt})()
 
 
+class _CfShim:
+    """Cloudflare Workers AI đội lốt google.generativeai (cùng chiêu _GroqShim). Key 'cf:acc:token'.
+    KHÁC Groq: nhận CẢ ẢNH trong generate_content ([text, {"mime_type","data"}]) -> toàn bộ
+    qc_vision (verify_image/verify_grid/check_visual) dùng key CF mà không sửa dòng nào; ô mồi
+    (decoy) sẵn có tự loại giám khảo CF nếu nó chấm ẩu."""
+
+    _limits_printed = set()
+
+    def __init__(self, key):
+        self._key = key
+        self._acc, self._tok = _cf_parse(key)
+
+    def GenerativeModel(self, model_name):
+        self._model = CF_TEXT_MODEL
+        return self
+
+    def configure(self, **kw):
+        pass
+
+    def _hdr(self):
+        return {"Authorization": f"Bearer {self._tok}", "Content-Type": "application/json"}
+
+    def list_models(self):
+        # PING THẬT (health-check): token/account sai -> 401/403 nổi lên -> map DEAD y như Groq.
+        import urllib.request, urllib.error
+        req = urllib.request.Request(
+            f"https://api.cloudflare.com/client/v4/accounts/{self._acc}/ai/models/search?per_page=1",
+            headers=self._hdr())
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                json.load(r)
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"cloudflare HTTP {e.code}: {'invalid api key' if e.code in (400, 401, 403) else 'rate limit' if e.code == 429 else ''}")
+        return [type("M", (), {"name": "models/" + CF_TEXT_MODEL, "supported_generation_methods": ["generateContent"]})()]
+
+    def generate_content(self, prompt, generation_config=None, request_options=None):
+        import urllib.request, urllib.error, base64
+        gc = generation_config or {}
+        timeout = (request_options or {}).get("timeout", 120)
+        text = prompt if isinstance(prompt, str) else ""
+        img = None
+        if isinstance(prompt, (list, tuple)):               # dạng qc_vision: [prompt, {"mime_type","data"}]
+            for p in prompt:
+                if isinstance(p, str):
+                    text += p
+                elif isinstance(p, dict) and p.get("data"):
+                    img = p
+        if img is not None:
+            content = [{"type": "text", "text": text},
+                       {"type": "image_url", "image_url": {"url": "data:" + img.get("mime_type", "image/jpeg")
+                        + ";base64," + base64.b64encode(img["data"]).decode()}}]
+            body = {"model": CF_VISION_MODEL, "messages": [{"role": "user", "content": content}],
+                    "temperature": 0.0, "max_tokens": 1024}   # vision KHÔNG gửi response_format (model vision hay từ chối) — _extract_json tự bóc
+        else:
+            body = {"model": getattr(self, "_model", CF_TEXT_MODEL),
+                    "messages": [{"role": "user", "content": text or str(prompt)}],
+                    "temperature": gc.get("temperature", 0.9), "max_tokens": 8192}
+            if gc.get("response_mime_type") == "application/json":
+                body["response_format"] = {"type": "json_object"}
+        req = urllib.request.Request(
+            f"https://api.cloudflare.com/client/v4/accounts/{self._acc}/ai/v1/chat/completions",
+            data=json.dumps(body).encode(), headers=self._hdr())
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                out = json.load(r)
+        except urllib.error.HTTPError as e:
+            detail = ""
+            try: detail = e.read().decode()[:200]
+            except Exception: pass
+            if e.code == 429 or "4006" in detail or "neuron" in detail.lower():
+                # 4006 = hết 10K neuron free trong ngày -> để chuỗi chứa '429' cho cool_key/key_order xử như Gemini/Groq
+                raise RuntimeError(f"429 rate limit daily (cloudflare): {detail}")
+            raise RuntimeError(f"cloudflare HTTP {e.code}: {detail}")
+        txt = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        if not _CfShim._limits_printed and self._tok:
+            _CfShim._limits_printed.add(self._tok[-4:])
+            print(f"   ⛅ CF •••{self._tok[-4:]} hoạt động (free 10K neuron/ngày ≈ ~1.3K lượt viết hoặc ~2K ảnh).")
+        return type("R", (), {"text": txt})()
+
+
 def _genai(api_key=None):
     key0 = api_key or os.environ.get("GEMINI_API_KEY", "")
+    if str(key0).startswith("cf:"):
+        return _CfShim(key0)
     if str(key0).startswith("gsk_"):
         return _GroqShim(key0)
     try:
