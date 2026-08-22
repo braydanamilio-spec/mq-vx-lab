@@ -105,7 +105,7 @@ def write_story(channel: str, keys: list[dict], seed: str,
     for rnd in range(2):                          # 2 VÒNG: nếu CẢ LOẠT key dính giới hạn PHÚT -> chờ reset rồi thử lại (cứu kênh khỏi fail oan).
         tried = []
         for idx, k in enumerate(order):
-            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx:
                 time.sleep(1.5)                   # nhịp nhẹ giữa các key -> không burst -> không bị coi là spam
             try:
@@ -164,7 +164,7 @@ def write_guess(channel: str, keys: list[dict], category: str, n_rounds: int = 3
     for rnd in range(2):
         tried = []
         for idx, k in enumerate(order):
-            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 GUESS {channel} key [{tag}] · model {model}")
@@ -213,7 +213,7 @@ def write_mapped(channel: str, keys: list[dict], niche: str, tier: str = "normal
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 MAPPED {channel} key [{tag}] · model {model}")
@@ -261,7 +261,7 @@ def write_ranked(channel: str, keys: list[dict], niche: str, tier: str = "normal
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 RANKED {channel} key [{tag}] · model {model}")
@@ -309,7 +309,7 @@ def write_scaled(channel: str, keys: list[dict], niche: str, tier: str = "normal
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 SCALED {channel} key [{tag}] · model {model}")
@@ -357,7 +357,7 @@ def write_thennow(channel: str, keys: list[dict], niche: str, tier: str = "norma
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 THENNOW {channel} key [{tag}] · model {model}")
@@ -407,7 +407,7 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 DOC {channel} key [{tag}] · model {model}")
@@ -455,7 +455,7 @@ def _write_wave4(fn_name, label, channel, keys, niche, tier, avoid, on_limit, on
 
     for rnd in range(2):
         for idx, k in enumerate(order):
-            tag = k.get("email") or ("••••" + (k.get("key", "")[-4:]))
+            tag = ("⚡" if str(k.get("key", "")).startswith("gsk_") else "") + (k.get("email") or ("••••" + (k.get("key", "")[-4:])))
             if idx: time.sleep(1.5)
             try:
                 print(f"   🔑 {label} {channel} key [{tag}] · model {model}")
