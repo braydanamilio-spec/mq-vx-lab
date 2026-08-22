@@ -1346,7 +1346,10 @@ def channel_mode(name):
     try:
         import key_manager as KM
         from datetime import datetime as _dt, timezone as _tz
-        reqs = KM.flush_requests(); today = _dt.now(_tz.utc).isoformat()[:10]
+        # NGÀY-GOOGLE: quota Gemini reset 07:00Z (nửa đêm Thái Bình Dương), KHÔNG phải 00:00Z.
+        # Đếm theo 00:00Z làm bảng quota "tươi lại" sớm 7 tiếng trong khi sổ Google vẫn tính cú đốt
+        # hôm trước -> dashboard báo "còn nhiều" mà key vẫn 429 (sáng 22/8 user vạch ra đúng ca này).
+        reqs = KM.flush_requests(); today = (_dt.now(_tz.utc) - __import__("datetime").timedelta(hours=7)).isoformat()[:10]
         for kid, cnt in reqs.items():
             FB.incr_key_requests(kid, cnt, today)
         if reqs:
