@@ -110,3 +110,11 @@ chủ đề đã sát ranh giới quảng cáo. Cách an toàn đang dùng: **lu
   mới quyết được có nên chặn giới hạn (chặn ẩu sẽ **làm yếu khả năng chống đăng trùng**).
 - `publish_social._post_one()` chưa có khoá nguyên tử đầy đủ như `run_queue()` — cửa sổ đăng trùng hẹp
   hơn nhưng chưa đóng hẳn.
+
+## §TOON (22/8) — chuẩn nghiệm thu format hoạt hình skit
+1. Mở đầu ≤1s phải thấy khung vẽ + title hook (không thẻ trơn, không im lặng >1.2s).
+2. Thoại nghe rõ 2 giọng phân biệt; phụ đề khớp câu; punchline nằm CUỐI.
+3. Khung vẽ: đúng 2 nhân vật thương hiệu, không dị dạng tay/mặt nặng, không chữ vô nghĩa lộ ngoài
+   vùng title card. >40% khung hỏng = video bị loại từ pipeline (đã enforce trong _toon_build).
+4. Long: mỗi skit có title card riêng, chuyển skit có nghỉ ~1s; tổng 3 skit.
+5. Số đo chuẩn: short 18-35s · long 60-110s · QC score ≥90.
