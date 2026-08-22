@@ -14,13 +14,29 @@ kênh tham chiếu. 1 ảnh ≈ 58 neuron → 5 khung/video ≈ 290n → 1 key C
 từ nhạy cảm ("head-and-shoulders shot" thay "close-up face"), pipeline phải có bảng từ thay thế +
 retry 1 lần khi 8007.
 
-## Kênh đề xuất
-**Chính: BREAKROOM** — hài công sở Mỹ (boss/HR/deadline/meeting) — trần viral cao nhất, thoại
-2 người là format tự nhiên, chất liệu vô tận, brand-safe, RPM khá.
-Phụ (làm sau nếu chính chạy tốt): DUMBHISTORY — tình huống lịch sử Mỹ kể kiểu stickman.
-Brand: nhân vật cố định 2 stickman (nhân viên đầu tròn + boss có cà vạt), STYLE LOCK trong prompt:
-"simple minimalist stickman cartoon, big round white bald heads, dot eyes, thin black stick limbs,
-thick clean black outlines, soft pastel flat colors, subtle paper grain, no text".
+## 2 KÊNH CHỐT (22/8 tối — user yêu cầu nhân vật GỐC đậm chất Mỹ, KHÔNG nhái motip stickman; đã vẽ thử FLUX cả 2, chất lượng đạt):
+
+### CH1 · BALD & BANDIT — cặp đôi lệch pha biểu tượng Mỹ
+Nhân vật: **BALD** — đại bàng hói mặt cau có, đeo cà vạt sao-sọc, yêu nước quá đà, nói chuyện nghiêm
+trang; **BANDIT** — gấu mèo bụi đời đeo kính râm đỏ, cầm ly soda, khôn lỏi, chuyên phá logic của Bald.
+Niche: skit hài về nước Mỹ đời thường (fast food, thuế, freedom units, DMV, Black Friday...).
+STYLE LOCK: "original cartoon duo, a grumpy proud bald eagle with stars-and-stripes necktie standing
+upright, and a scruffy sly raccoon with red sunglasses holding a soda cup, modern bold flat vector
+cartoon, thick outlines, saturated colors with red white blue accents, no signs, no lettering, no text".
+Giọng: Bald = en-US-ChristopherNeural (trầm nghiêm), Bandit = en-US-GuyNeural +8% (lanh).
+
+### CH2 · HANKTOWN — Americana retro thập niên 50-60
+Nhân vật: **HANK** — ông bố Mỹ râu rậm, áo flannel đỏ, mũ trucker, thích BBQ/garage/xe cỏ;
+hàng xóm **DALE** thò đầu qua hàng rào trắng góp chuyện. Niche: đời sống ngoại ô Mỹ hài hước
+(BBQ, sửa xe, HOA, DIY hỏng, mua đồ Costco...).
+STYLE LOCK: "retro 1950s American advertising cartoon, burly friendly dad with thick mustache in red
+plaid flannel and trucker cap, mid-century UPA animation look, halftone print texture, mustard and
+avocado retro palette, thick brush outlines, white picket fence suburb, no signs, no lettering, no text".
+Giọng: Hank = en-US-RogerNeural (ấm), Dale = en-US-EricNeural.
+
+⚠️ Bài học vẽ thử: FLUX hay TỰ VẼ CHỮ GIẢ lên biển hiệu ("AMERICNT") -> mọi prompt PHẢI có
+"no signs, no lettering, no text" + title card của Remotion luôn đè vùng đỉnh; Vision kiểm khung
+thêm tiêu chí "không có chữ vô nghĩa".
 
 ## Pipeline (tái dùng hạ tầng sẵn có)
 1. **Kịch bản**: Groq viết skit 6-10 câu thoại + mô tả 3-5 khung (prompt NHỎ → vừa trần 8K).
