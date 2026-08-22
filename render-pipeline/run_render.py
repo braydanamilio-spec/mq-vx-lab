@@ -293,6 +293,9 @@ def run_one(ch, keys, n_shorts=3, report=None):
         for i in range(n):
             if _stopped():
                 print(f"   ⛔ {channel}: dừng — bỏ {n - i} clip còn lại."); break
+            # LÀM TƯƠI pool key giữa các video (đệm 180s -> ~0 chi phí): key vừa HỒI sau cooldown
+            # quay lại vòng xoay ngay, key MỚI user dán (đã sync ở plan) vào trận không đợi hết luồng.
+            keys = FB.read_keys(OWNER) or keys
             job = FB.new_job(OWNER, channel, "short", pver=_pv(fmt))
             jst = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
             out = os.path.join("out", DS.slug(channel) + f"_{fmt}{i}.mp4")
@@ -417,6 +420,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
     # ---- SHORTS (viết LẠI cho 9:16 từ 2-3 chủ đề con) ----
     resumed_short = FB.find_resumable(OWNER, channel, "short")   # CHECKPOINT: phiên trước lỗi/treo nhưng còn kịch bản
     for i, sub in enumerate(subtopics[:n_shorts]):
+        keys = FB.read_keys(OWNER) or keys      # làm tươi pool giữa các video (đệm 180s)
         if _stopped():   # ⛔ đã xong clip trước -> ngừng, KHÔNG bắt đầu clip mới (tiết kiệm, không dở dang).
             print(f"   ⛔ {channel}: dừng theo yêu cầu — xong clip hiện tại, bỏ {n_shorts - i} short còn lại."); break
         sjob = FB.new_job(OWNER, channel, "short", pver=CLASSIC_PVER)
@@ -530,6 +534,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
     for pi, part in enumerate(parts):
         if stopped():
             print(f"   ⛔ {channel}: dừng — bỏ {len(parts) - pi} short còn lại."); break
+        keys = FB.read_keys(OWNER) or keys      # key hồi cooldown/key mới -> vào trận ngay
         sjob = FB.new_job(OWNER, channel, "short", pver=_pv("doc"))
         sst = lambda st, step, **x: FB.update_job(sjob, status=st, step=step, **x)
         try:
@@ -608,6 +613,7 @@ def _motif_shorts(ch, fmt, keys, tier, subs, cool, okcb, R, stopped, avoid):
     for i, sub in enumerate(subs):
         if stopped():
             print(f"   ⛔ {channel}: dừng — bỏ {len(subs) - i} short còn lại."); break
+        keys = FB.read_keys(OWNER) or keys      # key hồi cooldown/key mới -> vào trận ngay
         job = FB.new_job(OWNER, channel, "short", pver=_pv(fmt))
         jst = lambda st, step, **x: FB.update_job(job, status=st, step=step, **x)
         out = os.path.join("out", DS.slug(channel) + f"_{fmt}{i}.mp4")
