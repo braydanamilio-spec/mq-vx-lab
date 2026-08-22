@@ -22,10 +22,13 @@ const SafeImg: React.FC<{ src: string; style?: React.CSSProperties }> = ({ src, 
 type Frame = { img: string; from: number; dur: number };
 type Line = { audio: string; text: string; who: string; from: number; dur: number };
 
+type Chapter = { text: string; from: number; dur: number };
+
 export const ToonShort: React.FC<{
   slug: string; title: string; color?: string; name?: string;
   frames: Frame[]; lines: Line[]; music?: string; whoColors?: Record<string, string>;
-}> = ({ slug, title, color = "#E4562B", name = "", frames = [], lines = [], music = "", whoColors = {} }) => {
+  chapters?: Chapter[];   // LONG (tuyển tập skit): title card đổi theo skit đang chiếu
+}> = ({ slug, title, color = "#E4562B", name = "", frames = [], lines = [], music = "", whoColors = {}, chapters = [] }) => {
   const f = useCurrentFrame();
   const { durationInFrames: total } = useVideoConfig();
   const ci = (x: number, a: number, b: number, c: number, d: number) =>
@@ -53,7 +56,7 @@ export const ToonShort: React.FC<{
           border: `3px solid ${color}`, color: "#fff", fontSize: 56, fontWeight: 900,
           textAlign: "center", lineHeight: 1.15, textShadow: "0 3px 14px rgba(0,0,0,.6)",
           opacity: ci(f, 0, 12, 0, 1),
-        }}>{title}</div>
+        }}>{chapters.length ? ((chapters.find(c => f >= c.from && f < c.from + c.dur) || { text: title }).text) : title}</div>
       </AbsoluteFill>
       {/* PHỤ ĐỀ theo câu — màu theo nhân vật */}
       {cur && (

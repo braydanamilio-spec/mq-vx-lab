@@ -278,7 +278,11 @@ def run_one(ch, keys, n_shorts=3, report=None):
         # _need_long=True -> BẮT BUỘC làm long dù kênh đặt make_long=False (tỉ lệ đang lệch).
         if ch.get("make_long", True) or _need_long:
             if FB.count_done(OWNER, channel, "long") < _lt:
-                if fmt == "doc":
+                if fmt == "toon":
+                    if _toon_long_then_shorts(ch, keys, tier, niche, n, cool, okcb, R, _stopped):
+                        return
+                    print(f"   ↩️ {channel}: long toon không đạt — làm short rời phiên này.")
+                elif fmt == "doc":
                     # Kênh doc: short DÙNG LẠI luôn props từng phần của long -> khớp 100%, 0 thêm Gemini.
                     if _doc_long_then_shorts(ch, keys, tier, niche, n, cool, okcb, R, _stopped):
                         return
@@ -1413,3 +1417,80 @@ if __name__ == "__main__":
         channel_mode(sys.argv[i + 1] if i + 1 < len(sys.argv) else "")
     else:
         main()   # tuần tự (fallback / chạy tay)
+
+
+def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopped):
+    """Kênh TOON: 1 LONG (tuyển tập 3 skit, 16:9) -> 3 SHORT = chính 3 skit đó (9:16, dùng lại
+    nguyên audio + ảnh — 0 gọi thêm AI). Đúng luật 1:3, chi phí = đúng 3 skit."""
+    channel = ch.get("name")
+    ljob = FB.new_job(OWNER, channel, "long", pver=_pv("toon"))
+    lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
+    _rck = FB.find_resumable(OWNER, channel, "long")
+    _resume = _rck["story"] if (_rck and isinstance(_rck.get("story"), dict) and _rck["story"].get("parts")) else None
+    _kw = dict(toon_style=ch.get("toon_style", ""),
+               voice_a=ch.get("voice_a", "en-US-ChristopherNeural"), rate_a=ch.get("rate_a", "+0%"),
+               voice_b=ch.get("voice_b", "en-US-GuyNeural"), rate_b=ch.get("rate_b", "+8%"),
+               color_a=ch.get("color_a", "#7DD3FC"), color_b=ch.get("color_b", "#FCA5A5"),
+               display=ch.get("display") or channel)
+    try:
+        lout = os.path.join("out", DS.slug(channel) + "_toonlong.mp4")
+        lo, plan, subs, ok, info, parts = DS.make_toon_long(
+            channel, niche, lout, keys=keys, tier=tier, accent=ch.get("accent", "#E4562B"),
+            avoid=_avoid_for(channel), on_status=lst, on_limit=cool, on_ok=okcb,
+            n_parts=max(1, min(3, n_shorts or 3)), resume=_resume, **_kw)
+    except (Exception, SystemExit) as e:
+        traceback.print_exc()
+        if _is_ratelimit(e):
+            lst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1
+        else:
+            lst("failed", f"LONG toon lỗi: {str(e)[:120]}"); R["fails"].append(f"{channel} LONG toon: {str(e)[:100]}")
+        return False
+    if _rck:
+        FB.clear_resumed(_rck["job_id"])
+    try:
+        FB.flush_soft()
+    except Exception:
+        pass
+    if subs:
+        FB.save_topics(OWNER, channel, subs)
+    if not ok:
+        lst("failed", f"QC long toon trượt: {info}"); R["fails"].append(f"{channel} LONG toon: QC trượt")
+        return False
+    eq = enqueue_drive(channel, lo, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
+                                     "description": plan.get("hook", ""), "_thumb": (info or {}).get("thumb")}, "long")
+    did = (eq or {}).get("id")
+    lst("done", "Long toon đã đẩy Drive" if did else "Long toon xong (chưa đẩy Drive)",
+        title=plan.get("pillar_title"), score=(info or {}).get("score"), dur=(info or {}).get("dur", 0),
+        size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""), drive_id=did or "",
+        drive_account=(eq or {}).get("account", ""), thumb_id=(eq or {}).get("thumb_id", ""),
+        preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""))
+    R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
+
+    for pi, part in enumerate(parts):
+        if stopped():
+            print(f"   ⛔ {channel}: dừng — bỏ {len(parts) - pi} short còn lại."); break
+        sjob = FB.new_job(OWNER, channel, "short", pver=_pv("toon"))
+        sst = lambda st, step, **x: FB.update_job(sjob, status=st, step=step, **x)
+        st_ = part["story"]
+        try:
+            sout = os.path.join("out", DS.slug(channel) + f"_toonshort{pi}.mp4")
+            sst("rendering", f"Short toon {pi + 1}/{len(parts)} (từ long)")
+            sok, sinfo = DS.render_toon_short_props(channel, part["props"], st_, sout, keys=keys, prefix=f"p{pi}")
+        except (Exception, SystemExit) as e:
+            traceback.print_exc()
+            sst("failed", f"Short toon lỗi: {str(e)[:120]}"); R["fails"].append(f"{channel} TOON SHORT {pi}: {str(e)[:100]}")
+            continue
+        if not sok:
+            sst("failed", f"QC short toon trượt: {sinfo}"); R["fails"].append(f"{channel} TOON SHORT {pi}: QC trượt")
+            continue
+        meta = {"topic": st_.get("title"), "title": st_.get("title"),
+                "description": (st_.get("dialog") or [{}])[0].get("line", ""), "_thumb": (sinfo or {}).get("thumb")}
+        seq = enqueue_drive(channel, sout, meta, "short")
+        sdid = (seq or {}).get("id")
+        sst("done", "Short toon đã đẩy Drive" if sdid else "Short toon xong (chưa đẩy Drive)",
+            title=st_.get("title"), score=(sinfo or {}).get("score"), dur=(sinfo or {}).get("dur", 0),
+            size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""), drive_id=sdid or "",
+            drive_account=(seq or {}).get("account", ""), thumb_id=(seq or {}).get("thumb_id", ""),
+            preview=(("https://drive.google.com/file/d/%s/preview" % sdid) if sdid else ""))
+        R["done"] += 1
+    return True

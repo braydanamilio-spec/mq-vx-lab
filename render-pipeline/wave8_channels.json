@@ -154,10 +154,8 @@
   "toon_style": "original cartoon duo, a grumpy proud bald eagle with stars-and-stripes necktie standing upright, and a scruffy sly raccoon with red sunglasses holding a soda cup, modern bold flat vector cartoon, thick outlines, saturated colors with red white blue accents, no signs, no lettering, no text",
   "niche": "US everyday-life comedy skits starring two FIXED characters: BALD — a grumpy, overly patriotic bald eagle in a stars-and-stripes necktie, speaks formally (speaker A); BANDIT — a scruffy street-smart raccoon in red sunglasses with a soda cup, sarcastic and clever (speaker B). Topics: fast food, taxes, DMV, Black Friday, road trips, freedom units. STRICT: family-safe, no politics, no real brands or celebrities, fictional characters only.",
   "accent_note": "eagle+raccoon odd couple",
-  "long_target": 0,
-  "short_target": 8,
-  "n_shorts": 2,
-  "make_long": false,
+  "n_shorts": 3,
+  "make_long": true,
   "tier": "normal"
  },
  "HANKTOWN": {
@@ -175,10 +173,8 @@
   "toon_style": "retro 1950s American advertising cartoon, burly friendly dad with thick mustache in red plaid flannel shirt and trucker cap, and his lanky nosy neighbor peeking over a white picket fence, mid-century UPA animation look, halftone print texture, mustard and avocado retro palette, thick brush outlines, no signs, no lettering, no text",
   "niche": "American suburban-life comedy skits starring two FIXED characters: HANK — a burly friendly dad with a thick mustache, red plaid flannel and trucker cap, loves BBQ, his garage and lawn, plain-spoken (speaker A); DALE — his lanky nosy neighbor who peeks over the picket fence with unsolicited advice (speaker B). Topics: BBQ, lawn care, DIY fails, HOA letters, garage sales, Costco runs. STRICT: family-safe, wholesome irony, no politics, no real brands, fictional characters only.",
   "accent_note": "retro 50s americana",
-  "long_target": 0,
-  "short_target": 8,
-  "n_shorts": 2,
-  "make_long": false,
+  "n_shorts": 3,
+  "make_long": true,
   "tier": "normal"
  }
 }

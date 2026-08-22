@@ -2555,7 +2555,9 @@ if __name__ == "__main__":
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TOON (22/8) — skit 2 nhân vật cố định: FLUX vẽ 3-5 khung + thoại 2 giọng + ToonShort.
+# TOON (22/8) — skit 2 nhân vật cố định: FLUX vẽ 3-5 khung + thoại 2 giọng.
+# SHORT = 1 skit (ToonShort 9:16) · LONG = tuyển tập 3 skit (ToonLong 16:9, chapters) ->
+# 3 short đẻ từ CHÍNH 3 skit của long (dùng lại nguyên audio + ảnh, 0 gọi thêm AI) = đúng luật 1:3.
 _TOON_SAFE = [("extreme close-up", "tight head-and-shoulders shot"), ("close-up of face", "head-and-shoulders shot"),
               ("close-up", "tight shot"), ("close up", "tight shot"), ("shooting", "pointing"),
               ("shoot", "point"), ("gun", "banana"), ("blood", "ketchup")]
@@ -2569,33 +2571,23 @@ def _toon_safe(p: str) -> str:
     return low
 
 
-def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
-              accent="#E4562B", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None,
-              toon_style="", voice_a="en-US-ChristopherNeural", rate_a="+0%",
-              voice_b="en-US-GuyNeural", rate_b="+8%", color_a="#7DD3FC", color_b="#FCA5A5",
-              display=""):
-    """KÊNH TOON A-Z: skit thoại A/B -> FLUX vẽ khung (style lock kênh) -> TTS từng câu ->
-    render ToonShort -> QC + thumbnail. Khung hỏng >40% -> fail sạch (không ra video xấu)."""
-    st = on_status or (lambda *a, **k: None)
-    out = os.path.abspath(out); fresh_out(out)
+def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix="",
+                voice_a="en-US-ChristopherNeural", rate_a="+0%", voice_b="en-US-GuyNeural", rate_b="+8%",
+                toon_style="", resume_story=None, on_status=None):
+    """Dựng 1 SKIT (viết + TTS từng câu + FLUX khung) — trả (story, frames_rel, lines_rel, end_f).
+    frames/lines tính frame TƯƠNG ĐỐI từ 0 (caller tự dời khi ghép long). File mang prefix
+    -> long 3 skit không giẫm tên nhau; short tái dùng đúng các file này (0 phí thêm)."""
     import key_manager as KM
-    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
-    set_ai_pool(keys, channel)
-    sl = slug(channel)
-    pub = os.path.join(PUB, sl); os.makedirs(pub, exist_ok=True)
-
-    st("writing", "TOON viết skit")
+    st = on_status or (lambda *a, **k: None)
     story = resume_story or KM.write_toon(channel, keys, niche, tier=tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     st("writing", f"✔ skit: {story.get('title', '')[:60]}", script=json.dumps(story, ensure_ascii=False))
-
     dialog = story.get("dialog") or []
-    # ── TTS từng câu (2 giọng) ──
-    FPS = 30; GAP = 0.20; t = 0.55          # chừa 0.55s đầu cho title đập vào mắt
+    FPS = 30; GAP = 0.20; t = 0.55
     lines = []
     for i, dl in enumerate(dialog):
         who = "A" if dl.get("who") != "B" else "B"
         v, r = (voice_a, rate_a) if who == "A" else (voice_b, rate_b)
-        mp3 = f"line{i}.mp3"
+        mp3 = f"{prefix}line{i}.mp3"
         d, _subs, _srt = TK.synth(dl.get("line", ""), os.path.join(pub, mp3), v, r)
         if d <= 0.1:
             continue
@@ -2603,20 +2595,17 @@ def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
                       "from": int(t * FPS), "dur": int((d + GAP) * FPS)})
         t += d + GAP
     if len(lines) < 4:
-        return out, story, False, {"err": "TTS quá ít câu"}
-    total_f = int(t * FPS) + 16
-
-    # ── FLUX vẽ khung theo line_idx ──
-    st("rendering", "TOON vẽ khung FLUX")
+        raise RuntimeError("TTS quá ít câu")
+    end_f = int(t * FPS) + 16
     spec = sorted((story.get("frames") or []), key=lambda x: int(x.get("line_idx", 0)))
     fr = []
     for k2, fx in enumerate(spec):
         li = min(int(fx.get("line_idx", 0)), len(lines) - 1)
         start = 0 if k2 == 0 else lines[li]["from"]
-        fr.append({"img": f"fr{k2}.jpg", "start": start, "prompt": _toon_safe(str(fx.get("prompt", "")))})
+        fr.append({"img": f"{prefix}fr{k2}.jpg", "from": start, "prompt": _toon_safe(str(fx.get("prompt", "")))})
     for k2 in range(len(fr)):
-        end = fr[k2 + 1]["start"] if k2 + 1 < len(fr) else total_f
-        fr[k2]["from"] = fr[k2]["start"]; fr[k2]["dur"] = max(24, end - fr[k2]["start"])
+        end = fr[k2 + 1]["from"] if k2 + 1 < len(fr) else end_f
+        fr[k2]["dur"] = max(24, end - fr[k2]["from"])
     okn = 0
     for k2, fx in enumerate(fr):
         dest = os.path.join(pub, fx["img"])
@@ -2627,24 +2616,54 @@ def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
         if okimg:
             okn += 1
         elif k2 > 0:
-            fx["img"] = fr[k2 - 1]["img"]      # khung hỏng -> giữ khung trước (đỡ trống), vẫn tính thiếu
+            fx["img"] = fr[k2 - 1]["img"]
     if okn < max(3, int(len(fr) * 0.6)):
-        return out, story, False, {"err": f"chỉ vẽ được {okn}/{len(fr)} khung"}
+        raise RuntimeError(f"chỉ vẽ được {okn}/{len(fr)} khung")
+    for fx in fr:
+        fx.pop("prompt", None)
+    return story, fr, lines, end_f
 
-    props = {"slug": sl, "title": story.get("title", ""), "color": accent, "name": display or channel,
-             "frames": [{"img": x["img"], "from": x["from"], "dur": x["dur"]} for x in fr],
-             "lines": lines, "music": "", "whoColors": {"A": color_a, "B": color_b}}
-    pf = os.path.join(PUB, f"_toon_{sl}.json")
+
+def _toon_props(sl, title, accent, display, fr, lines, color_a, color_b, chapters=None):
+    return {"slug": sl, "title": title, "color": accent, "name": display,
+            "frames": fr, "lines": lines, "music": "", "chapters": chapters or [],
+            "whoColors": {"A": color_a, "B": color_b}}
+
+
+def _toon_render(props, out, comp, label):
+    pf = os.path.join(PUB, f"_toon_{props['slug']}_{comp}.json")
     json.dump(props, open(pf, "w"), ensure_ascii=False)
-
-    st("rendering", "TOON render")
-    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "ToonShort", out,
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", comp, out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, label="ToonShort")
+                    "--concurrency=2", "--log=error"], cwd=ENG,
+                   timeout=(3600 if comp == "ToonLong" else RENDER_TIMEOUT), label=label)
+
+
+def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
+              accent="#E4562B", avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None,
+              toon_style="", voice_a="en-US-ChristopherNeural", rate_a="+0%",
+              voice_b="en-US-GuyNeural", rate_b="+8%", color_a="#7DD3FC", color_b="#FCA5A5",
+              display=""):
+    """1 SHORT toon độc lập (dùng khi kênh đã đủ long theo tỉ lệ)."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out); fresh_out(out)
+    keys = keys or [{"id": "env", "key": api_key or os.environ.get("GEMINI_API_KEY", ""), "email": "local"}]
+    set_ai_pool(keys, channel)
+    sl = slug(channel); pub = os.path.join(PUB, sl); os.makedirs(pub, exist_ok=True)
+    st("writing", "TOON viết skit")
+    try:
+        story, fr, lines, _end = _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub,
+                                             prefix="s_", voice_a=voice_a, rate_a=rate_a, voice_b=voice_b,
+                                             rate_b=rate_b, toon_style=toon_style,
+                                             resume_story=resume_story, on_status=st)
+    except RuntimeError as e:
+        return out, (resume_story or {}), False, {"err": str(e)[:80]}
+    st("rendering", "TOON render")
+    _toon_render(_toon_props(sl, story.get("title", ""), accent, display or channel, fr, lines, color_a, color_b),
+                 out, "ToonShort", "ToonShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     info["score"] = int((story.get("self_score") or {}).get("total", 0) or 0)
-    info["frames_ok"] = okn
     if ok:
         try:
             _th = doc_thumb(channel, out, big=(story.get("title") or channel),
@@ -2654,3 +2673,76 @@ def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
         except Exception as e:
             print("   ⚠️ thumb TOON lỗi:", str(e)[:80])
     return out, story, ok, info
+
+
+def make_toon_long(channel, niche, out, keys=None, tier="normal", accent="#E4562B",
+                   avoid=None, on_status=None, on_limit=None, on_ok=None, n_parts=3,
+                   toon_style="", voice_a="en-US-ChristopherNeural", rate_a="+0%",
+                   voice_b="en-US-GuyNeural", rate_b="+8%", color_a="#7DD3FC", color_b="#FCA5A5",
+                   display="", resume=None):
+    """LONG toon = tuyển tập n_parts skit (ToonLong 16:9, title đổi theo skit).
+    Trả (out, plan, subs, ok, info, parts) — parts[{story, props}] để run_render đẻ short 9:16."""
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out); fresh_out(out)
+    keys = keys or []
+    set_ai_pool(keys, channel)
+    sl = slug(channel); pub = os.path.join(PUB, sl); os.makedirs(pub, exist_ok=True)
+    FPS = 30; SKIT_GAP = int(1.1 * FPS)
+    off = 0; all_fr = []; all_ln = []; chapters = []; parts = []; titles = []
+    done_parts = (resume or {}).get("parts") if isinstance(resume, dict) else None
+    for pi in range(n_parts):
+        st("writing", f"TOON long — skit {pi + 1}/{n_parts}")
+        rs = None
+        if done_parts and pi < len(done_parts):
+            rs = done_parts[pi]                    # checkpoint: skit đã viết phiên trước
+        story, fr, lines, end_f = _toon_build(channel, keys, niche, tier,
+                                              (avoid or []) + titles, on_limit, on_ok, pub,
+                                              prefix=f"p{pi}_", voice_a=voice_a, rate_a=rate_a,
+                                              voice_b=voice_b, rate_b=rate_b, toon_style=toon_style,
+                                              resume_story=rs, on_status=st)
+        titles.append(story.get("title", ""))
+        parts.append({"story": story,
+                      "props": _toon_props(sl, story.get("title", ""), accent, display or channel,
+                                           fr, lines, color_a, color_b)})
+        all_fr += [{**f, "from": f["from"] + off} for f in fr]
+        all_ln += [{**l, "from": l["from"] + off} for l in lines]
+        chapters.append({"text": story.get("title", ""), "from": off, "dur": end_f})
+        off += end_f + SKIT_GAP
+        # CHECKPOINT từng skit: chết giữa chừng thì phiên sau viết tiếp từ skit kế
+        st("writing", f"✔ xong skit {pi + 1}/{n_parts}",
+           script=json.dumps({"parts": [p["story"] for p in parts]}, ensure_ascii=False))
+    lp = _toon_props(sl, titles[0] if titles else channel, accent, display or channel,
+                     all_fr, all_ln, color_a, color_b, chapters=chapters)
+    st("rendering", "TOON long render")
+    _toon_render(lp, out, "ToonLong", "ToonLong")
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out)
+    info["score"] = min([int((p["story"].get("self_score") or {}).get("total", 0) or 0) for p in parts] or [0])
+    if ok:
+        try:
+            _th = doc_thumb(channel, out, big=(titles[0] if titles else channel),
+                            api_key_for_thumb=(keys[0] or {}).get("key") if keys else None)
+            if _th:
+                info["thumb"] = _th
+        except Exception as e:
+            print("   ⚠️ thumb TOON long lỗi:", str(e)[:80])
+    plan = {"pillar_title": (display or channel) + " — " + (titles[0] if titles else ""),
+            "hook": (parts[0]["story"].get("title") if parts else ""), "sources": []}
+    return out, plan, titles, ok, info, parts
+
+
+def render_toon_short_props(channel, props, story, out, keys=None, prefix=""):
+    """SHORT từ props skit có sẵn (audio + ảnh dùng lại nguyên) — 0 gọi AI."""
+    out = os.path.abspath(out); fresh_out(out)
+    _toon_render(props, out, "ToonShort", f"ToonShort({prefix})")
+    ok, info = qc(out)
+    info["score"] = int((story.get("self_score") or {}).get("total", 0) or 0)
+    if ok:
+        try:
+            _th = doc_thumb(channel, out, big=(story.get("title") or channel),
+                            api_key_for_thumb=(keys[0] or {}).get("key") if keys else None)
+            if _th:
+                info["thumb"] = _th
+        except Exception as e:
+            print("   ⚠️ thumb TOON short lỗi:", str(e)[:80])
+    return ok, info
