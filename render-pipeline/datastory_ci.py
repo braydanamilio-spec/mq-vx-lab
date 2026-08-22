@@ -574,13 +574,29 @@ STALL_SEC = 360      # CPU gần như không nhúc nhích liên tục ngần nà
 STALL_TICK = 20      # nhịp lấy mẫu
 
 
-def _cpu_seconds(pid: int):
-    """Tổng thời gian CPU của tiến trình + các tiến trình con (Linux). Không đọc được -> None."""
+def _cpu_seconds(pgid: int):
+    """Tổng CPU SỐNG của CẢ NHÓM tiến trình (cha + mọi con CHƯA thoát), đo qua /proc theo pgrp.
+
+    Bản cũ đọc utime+cutime của MỖI tiến trình cha: cutime/cstime chỉ được Linux cộng SAU KHI con
+    đã thoát và được reap — render LONG thì Chrome con cày 30' trong khi đồng hồ cha đứng im ->
+    watchdog kết luận treo và giết oan ĐÚNG giây STALL_SEC (22/8: mọi long chết ở 360s, toàn bộ
+    kênh bị luật 1:3 chặn short theo -> sản lượng đứng hình 2h). Đo cả nhóm sống thì render thật
+    luôn thấy CPU nhảy; còn treo thật (cả nhóm im) vẫn bị bắt như cũ. Không đọc được /proc -> None
+    (macOS/dev) -> chỉ còn trần cứng, y hành vi cũ."""
     try:
-        with open(f"/proc/{pid}/stat") as f:
-            p = f.read().rsplit(") ", 1)[1].split()
-        # utime, stime, cutime, cstime (đơn vị tick) — cộng cả con vì Remotion đẻ nhiều tiến trình Chrome
-        return (int(p[11]) + int(p[12]) + int(p[13]) + int(p[14])) / os.sysconf("SC_CLK_TCK")
+        total = 0.0; hz = os.sysconf("SC_CLK_TCK"); found = False
+        for d in os.listdir("/proc"):
+            if not d.isdigit():
+                continue
+            try:
+                with open(f"/proc/{d}/stat") as f:
+                    p = f.read().rsplit(") ", 1)[1].split()
+                if int(p[2]) == pgid:                      # pgrp
+                    total += (int(p[11]) + int(p[12])) / hz
+                    found = True
+            except Exception:
+                continue
+        return total if found else None
     except Exception:
         return None
 
@@ -593,7 +609,8 @@ def run_render_cmd(cmd, cwd, timeout=RENDER_TIMEOUT, label=""):
     TimeoutExpired để lớp retry sẵn có xử lý. Máy không đọc được /proc (vd macOS) -> tự bỏ qua phần
     canh CPU, vẫn còn trần cứng timeout."""
     import time as _t
-    proc = subprocess.Popen(cmd, cwd=cwd)
+    import signal
+    proc = subprocess.Popen(cmd, cwd=cwd, start_new_session=True)   # nhóm riêng -> đo/giết CẢ nhóm
     t0 = _t.time()
     last_cpu, last_move = _cpu_seconds(proc.pid), _t.time()
     while True:
@@ -604,7 +621,9 @@ def run_render_cmd(cmd, cwd, timeout=RENDER_TIMEOUT, label=""):
             pass
         now = _t.time()
         if now - t0 > timeout:                       # trần cứng — chốt chặn cuối
-            proc.kill(); proc.wait()
+            try: os.killpg(proc.pid, signal.SIGKILL)
+            except Exception: proc.kill()
+            proc.wait()
             raise subprocess.TimeoutExpired(cmd, timeout)
         cur = _cpu_seconds(proc.pid)
         if cur is None or last_cpu is None:
@@ -613,7 +632,9 @@ def run_render_cmd(cmd, cwd, timeout=RENDER_TIMEOUT, label=""):
         if cur - last_cpu > 1.0:                     # có làm việc thật -> reset đồng hồ đứng im
             last_cpu, last_move = cur, now
         elif now - last_move > STALL_SEC:
-            proc.kill(); proc.wait()
+            try: os.killpg(proc.pid, signal.SIGKILL)
+            except Exception: proc.kill()
+            proc.wait()
             print(f"   ⛔ {label or 'render'}: CPU đứng im {int(now - last_move)}s -> TREO, giết sớm "
                   f"(khỏi phí {int(timeout - (now - t0))}s còn lại)")
             raise subprocess.TimeoutExpired(cmd, int(now - t0))
@@ -2005,7 +2026,8 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
     print(f"   🎞️ render Cinematic 16:9 ({len(all_scenes)} cảnh / {len(parts)} phần) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "Cinematic", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
-                    "--concurrency=2", "--log=error"], cwd=ENG, label="Cinematic(long)")
+                    "--concurrency=2", "--log=error"], cwd=ENG, timeout=3600, label="Cinematic(long)")   # long 10'+ cần 30-50' render trên 2 core — trần riêng 60'
+
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     if ok:
