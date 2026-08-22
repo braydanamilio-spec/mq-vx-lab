@@ -1228,6 +1228,7 @@ def plan_mode():
     except Exception:
         traceback.print_exc()
     try:
+        import time as _tt; _tt.sleep(2.5)   # hạ nhiệt sau loạt đọc policy/requests -> sync khỏi dính burst
         FB.sync_keys_from_a(OWNER)      # key mới thêm trên dashboard (ghi vào A) -> render thấy được
     except Exception:
         traceback.print_exc()
@@ -1285,6 +1286,10 @@ def plan_mode():
         lt = int(c.get("long_target", 0) or 0) or RESERVE_LONG
         stt = int(c.get("short_target", 0) or 0) or RESERVE_SHORT
         try:
+            # RẢI NHỊP 0.35s/kênh (22/8): ~106 lệnh count bắn liền tay là dính 429 BURST THEO PHÚT
+            # của Firestore (13:55Z cả loạt chết dù _retry) -> sync/seed trượt theo. Chậm ~40s/plan
+            # đổi lấy cả loạt đọc sống — rẻ.
+            time.sleep(0.35)
             nl = max(0, lt - FB.count_done(OWNER, nm, "long")) if c.get("make_long", True) else 0
             ns = max(0, stt - FB.count_done(OWNER, nm, "short"))
         except Exception as e:
