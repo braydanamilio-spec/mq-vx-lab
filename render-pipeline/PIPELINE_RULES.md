@@ -194,6 +194,9 @@ gh run view <id> --repo braydanamilio-spec/mq-vx-lab --log
 - **SafeImg fix ĐÃ ĂN trên CI** (DEBTUSA đêm 21/8): 6 render hoàn tất thật (QC 96-98, 51-75MB), watchdog 0 lần giết — hết bệnh treo chờ ảnh. Cổng opening bắt được nền trơn thật; điều-kiện-2 (ít màu) giết oan 2/6 video màu trầm → đã hạ thành cảnh báo, giữ chặn cứng dark>=75.
 - **3 kênh SÓT khỏi channels.yaml từ đầu (DEBTUSA/FILEUSA/VOXUSA)**: video QC đạt bị enqueue từ chối. Đợt vá "27 kênh" ngày 20/8 không phủ đủ. FIX: thêm 3 kênh (53 tổng) + LINT SO TẬP HỢP render_channels↔channels.yaml chạy mỗi plan — không bao giờ đếm tay nữa.
 
+- **🐤 CANARY 0-quota trước mỗi luồng** (22/8): render 12 frame bằng asset tự tạo TRƯỚC khi tiêu gọi Gemini nào — engine hỏng thì luồng dừng ngay, quota nguyên vẹn (bài học 21/8: não viết 15 gọi/luồng xong render mới chết → đốt 1.120 gọi/ngày, 0 video). Đã chạy thật local: OK ~40s, cache theo tiến trình.
+- **Groq tích hợp CHUNG KHO với Gemini** (22/8): key `gsk_` bỏ chung collection gemini_keys → thừa hưởng nguyên đồng bộ A→B, xoay vòng, cooldown, đếm request, health-check. Transport qua `_GroqShim` trong `_genai()` — mọi luồng VIẾT chạy Groq không sửa logic; 429 Groq map y 429 Gemini. Groq KHÔNG có vision/vẽ → mọi pool ảnh/Vision lọc bỏ `gsk_`. Dashboard: dán key gsk_ vào đúng ô key cũ, tự nhận diện; trần quota tính theo loại (Gemini 20 · Groq ~1K — kiểm console.groq.com/settings/limits).
+
 > **🔴 NGUYÊN NHÂN GỐC CHUNG của 15 bug trên — đọc kỹ, đừng lặp lại:**
 > 1. **Bám `keys[0]`** — 3 khâu riêng biệt (vẽ ảnh · Vision QC · kiểm khớp ảnh) đều mắc CÙNG lỗi này, và em fix từng cái một qua 3 lần thay vì rà cả lớp ngay lần đầu. **Hễ sửa một chỗ bám `keys[0]`, PHẢI `grep -n "keys\[0\]" *.py` rà hết.**
 > 2. **Lỗi bị try/except nuốt** — sync kho hỏng nhiều ngày, key rotation là code chết, vision fail-open âm thầm. **Mọi `except` bọc bước QUAN TRỌNG phải in ra, và phải có phép đo (đếm/log số) chứ không chỉ "không thấy lỗi".**

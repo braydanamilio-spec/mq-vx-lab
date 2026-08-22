@@ -23,6 +23,8 @@ _MODEL_CACHE = {}   # key -> {"flash":..., "pro":...}  (dò 1 lần/key)
 
 
 def _pick_model(genai, prefer="flash", api_key=""):
+    if str(api_key).startswith("gsk_") or isinstance(genai, _GroqShim):
+        return GROQ_MODEL
     """Tự chọn model KHẢ DỤNG cho key này (mỗi key có bộ model khác nhau) -> chống 404."""
     cache = _MODEL_CACHE.get(api_key)
     if not cache:
@@ -123,7 +125,74 @@ def test_key(api_key: str):
     return None, ("không chắc: " + last[:130])    # hết lần thử vẫn lỗi tạm -> KHÔNG kết luận chết
 
 
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+
+class _GroqShim:
+    """Groq (OpenAI-compatible) đội lốt giao diện google.generativeai — nhờ vậy TOÀN BỘ luồng viết
+    (generate_doc/plan_pillar/audit + vòng chấm điểm + validator) chạy Groq mà KHÔNG sửa dòng nào.
+
+    Nhận diện tự động: key Groq bắt đầu bằng 'gsk_' (Gemini là 'AIza'). Cùng nằm chung collection
+    gemini_keys -> đồng bộ A→B, xoay vòng, cooldown, đếm request... thừa hưởng nguyên xi.
+    Lỗi 429 của Groq được ném lại thành chuỗi chứa '429'/'rate limit' -> các tầng trên (RateLimited,
+    cool_key, key_order) xử lý y như key Gemini bị giới hạn. Groq KHÔNG có vision/vẽ ảnh — các pool
+    ảnh/Vision đã lọc bỏ gsk_ ở datastory_ci."""
+
+    def __init__(self, key):
+        self._key = key
+
+    def GenerativeModel(self, model_name):
+        self._model = GROQ_MODEL      # tên gemini-* truyền vào được map sang model Groq
+        return self
+
+    def configure(self, **kw):
+        pass
+
+    def list_models(self):
+        # PING THẬT endpoint models — health-check (test_key) đi qua đây; trả tĩnh thì key Groq bị
+        # thu hồi vẫn "sống ảo". Lỗi 401/403 nổi lên -> test_key map DEAD; 429 -> map SỐNG-tạm y Gemini.
+        import urllib.request, urllib.error
+        req = urllib.request.Request("https://api.groq.com/openai/v1/models",
+                                     headers={"Authorization": f"Bearer {self._key}"})
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                json.load(r)
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"groq HTTP {e.code}: {'invalid api key' if e.code in (401, 403) else 'rate limit' if e.code == 429 else ''}")
+        return [type("M", (), {"name": "models/" + GROQ_MODEL, "supported_generation_methods": ["generateContent"]})()]
+
+    def generate_content(self, prompt, generation_config=None, request_options=None):
+        import urllib.request, urllib.error
+        gc = generation_config or {}
+        body = {"model": self._model,
+                "messages": [{"role": "user", "content": prompt if isinstance(prompt, str) else str(prompt)}],
+                "temperature": gc.get("temperature", 0.9),
+                "max_tokens": 8192}
+        if gc.get("response_mime_type") == "application/json":
+            body["response_format"] = {"type": "json_object"}
+        req = urllib.request.Request(
+            "https://api.groq.com/openai/v1/chat/completions",
+            data=json.dumps(body).encode(),
+            headers={"Authorization": f"Bearer {self._key}", "Content-Type": "application/json"})
+        timeout = (request_options or {}).get("timeout", 120)
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                out = json.load(r)
+        except urllib.error.HTTPError as e:
+            detail = ""
+            try: detail = e.read().decode()[:200]
+            except Exception: pass
+            if e.code == 429:
+                raise RuntimeError(f"429 rate limit (groq): {detail}")
+            raise RuntimeError(f"groq HTTP {e.code}: {detail}")
+        txt = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        return type("R", (), {"text": txt})()
+
+
 def _genai(api_key=None):
+    key0 = api_key or os.environ.get("GEMINI_API_KEY", "")
+    if str(key0).startswith("gsk_"):
+        return _GroqShim(key0)
     try:
         import google.generativeai as genai
     except ImportError:

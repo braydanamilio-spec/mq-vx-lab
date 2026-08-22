@@ -247,6 +247,11 @@ def run_one(ch, keys, n_shorts=3, report=None):
     except Exception:
         pass
 
+    # 🐤 PHÁT SÚNG THỬ trước khi tiêu đạn: engine render hỏng -> dừng luồng NGAY, quota còn nguyên
+    # (bài học 21/8: não viết 15 gọi/luồng xong render mới chết -> đốt sạch 1.120 gọi/ngày, 0 video).
+    if not DS.render_canary():
+        R["fails"].append(f"{channel}: engine render hỏng (canary) — không đốt quota")
+        return
     # ── FORMAT ĐẶC BIỆT (short-only, motif riêng): GUESS / MAPPED ── route sang make_guess/make_mapped.
     fmt = (ch.get("format") or "").lower()
     if fmt in ("guess", "mapped", "ranked", "scaled", "thennow", "doc", "swarm", "pulse", "clockwork", "longshot"):

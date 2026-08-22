@@ -58,7 +58,7 @@ def set_ai_pool(keys, channel: str = ""):
     XOAY THEO KÊNH (cùng chiêu ranked_accounts bên kho Drive): không xoay thì cả 18 luồng song
     song đều bắt đầu vẽ/kiểm từ CÙNG key đầu danh sách -> hạn mức ảnh/Vision của vài key đầu cháy
     trước trong khi key cuối ngồi không — pool 56 key mà hiệu dụng chỉ còn vài key."""
-    ks = [k.get("key") for k in (keys or []) if k.get("key")]
+    ks = [k.get("key") for k in (keys or []) if k.get("key") and not str(k.get("key")).startswith("gsk_")]   # Groq không có vision/vẽ ảnh
     if channel and len(ks) > 1:
         import hashlib
         off = int(hashlib.md5(channel.encode()).hexdigest(), 16) % len(ks)
@@ -88,7 +88,7 @@ _VIS_DEAD = set()      # key đã hết hạn mức VISION trong phiên (khác h
 def _vision_key(keys):
     for k in (keys or []):
         kk = k.get("key")
-        if kk and kk not in _VIS_DEAD:
+        if kk and kk not in _VIS_DEAD and not str(kk).startswith("gsk_"):
             return kk
     return ((keys or [{}])[0] or {}).get("key", "")
 
@@ -105,7 +105,7 @@ def _verify_image_rot(path, subject, first_key="", tries=3):
     seen = []
     for _ in range(max(1, tries)):
         k = None
-        for cand in ([first_key] if first_key else []) + list(_AI_POOL["keys"]):
+        for cand in ([first_key] if (first_key and not str(first_key).startswith("gsk_")) else []) + list(_AI_POOL["keys"]):
             if cand and cand not in _VIS_DEAD and cand not in seen:
                 k = cand; break
         if not k:
@@ -132,7 +132,7 @@ def _verify_grid_rot(pairs, first_key="", tries=3):
     seen = []
     for _ in range(max(1, tries)):
         k = None
-        for cand in ([first_key] if first_key else []) + list(_AI_POOL["keys"]):
+        for cand in ([first_key] if (first_key and not str(first_key).startswith("gsk_")) else []) + list(_AI_POOL["keys"]):
             if cand and cand not in _VIS_DEAD and cand not in seen:
                 k = cand; break
         if not k:
@@ -1572,6 +1572,45 @@ def prune_ghost_clips(props: dict):
     return props
 
 
+_CANARY = {"ok": None}
+
+
+def render_canary() -> bool:
+    """PHÁT SÚNG THỬ 0-QUOTA: render 12 frame CinematicShort bằng asset tự tạo (KHÔNG một gọi
+    Gemini nào) TRƯỚC khi luồng bắt đầu tiêu đạn viết kịch bản.
+
+    Bài học 21/8 trả giá đắt nhất: engine render hỏng (treo chờ ảnh) nhưng não vẫn viết đủ 15
+    gọi/luồng x 18 luồng -> đốt sạch 1.120 gọi/ngày của 56 key mà ra 0 video. Nếu hôm đó có phát
+    súng thử này, cả ngày quota còn nguyên. Chi phí: ~30-60s CPU/luồng, cache theo tiến trình.
+    Trả False = engine hỏng -> luồng dừng NGAY với thông báo rõ, quota nguyên vẹn."""
+    if _CANARY["ok"] is not None:
+        return _CANARY["ok"]
+    try:
+        d = os.path.join(PUB, "_canary"); os.makedirs(os.path.join(d, "clips"), exist_ok=True)
+        subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i", "testsrc2=size=540x960:rate=1",
+                        "-frames:v", "1", os.path.join(d, "clips", "c.jpg")],
+                       capture_output=True, timeout=60, check=True)
+        subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=f=200:d=1.5", "-ar", "44100",
+                        os.path.join(d, "a.mp3")], capture_output=True, timeout=60, check=True)
+        pf = os.path.join(PUB, "_canary.json")
+        json.dump({"scenes": [{"type": "scene", "clip": "c.jpg", "audio": "a.mp3", "dur": 45,
+                               "nar": "canary", "hook": {"stat": "1", "line": "OK"}}],
+                   "slug": "_canary", "handle": "@c", "accent": "#22D3EE", "accent2": "#F5B301"},
+                  open(pf, "w"))
+        out = os.path.join(d, "c.mp4")
+        subprocess.run(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
+                        f"--props=./{os.path.relpath(pf, ENG)}", "--frames=0-11",
+                        "--gl=swiftshader", "--concurrency=1", "--log=error"],
+                       cwd=ENG, capture_output=True, timeout=240, check=True)
+        _CANARY["ok"] = os.path.exists(out) and os.path.getsize(out) > 1000
+    except Exception as e:
+        print(f"   🐤 CANARY FAIL — engine render hỏng, DỪNG luồng để không đốt quota: {str(e)[:120]}")
+        _CANARY["ok"] = False
+    if _CANARY["ok"]:
+        print("   🐤 canary render OK (~0 quota) — engine sống, cho phép tiêu đạn Gemini")
+    return _CANARY["ok"]
+
+
 def qc_structure(props, fps=30):
     """QC CẤU TRÚC — kiểm bằng LOGIC, không gọi API, không tốn quota.
 
@@ -1793,7 +1832,7 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix="", li
     # thumbnail = KHUNG HOOK MỞ ĐẦU render nét từ chính props này (khớp video 100%)
     try:
         t0 = out.rsplit(".", 1)[0] + ".jpg"
-        kk = ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
+        kk = next((k.get("key") for k in (keys or []) if k.get("key") and not str(k.get("key")).startswith("gsk_")), None) or os.environ.get("GEMINI_API_KEY")
         if still_hook_thumb("CinematicShort", pf, t0, trust=lite,
                             api_key=kk, title=(story.get("title_yt") or story.get("title") or channel)):
             story["_thumb"] = t0
@@ -1891,7 +1930,7 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
     # _thumb=None và rơi về _make_thumb() cắt khung thô (test_thumb_pipeline bắt đúng chỗ này).
     try:
         t0 = out.rsplit(".", 1)[0] + ".jpg"
-        kk = ((keys or [{}])[0].get("key") if keys else None) or os.environ.get("GEMINI_API_KEY")
+        kk = next((k.get("key") for k in (keys or []) if k.get("key") and not str(k.get("key")).startswith("gsk_")), None) or os.environ.get("GEMINI_API_KEY")
         if still_hook_thumb("Cinematic", pf, t0, api_key=kk,
                             title=(plan.get("pillar_title") or channel)):
             info["thumb"] = t0
