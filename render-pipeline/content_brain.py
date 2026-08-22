@@ -1743,3 +1743,89 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TOON (22/8) — skit hài 2 nhân vật cố định, 3-5 khung FLUX + thoại. Dùng chung 2 kênh
+# (BALD & BANDIT / HANKTOWN) — nhân vật + style lấy từ cấu hình kênh, KHÔNG hardcode ở đây.
+TOON_SYS = (
+ "You are the head writer of a #1 US comedy shorts channel using two FIXED cartoon characters. "
+ "You write tight 18-30 second dialogue skits. Absolute rules:\n"
+ "1) STRUCTURE: setup in line 1-2, escalation, then ONE hard punchline at the end. 6-9 lines total, "
+ "each line under 14 words, spoken natural American English. Alternate speakers A/B.\n"
+ "2) CHARACTERS stay in the personalities given by the user prompt. Never rename them.\n"
+ "3) FRAMES: describe 3-5 keyframes of ONE consistent scene: frame 1 = wide establishing, middle = "
+ "emotion/pose changes, one frame = tight head-and-shoulders reaction shot (never say 'close-up of face'), "
+ "final = punchline reaction. Each frame_prompt describes ONLY what changes (pose/expression/prop), "
+ "no camera jargon, no text or signs in the scene.\n"
+ "4) CLEAN: no politics, no slurs, no NSFW, no real brand names or celebrities. Family-safe irony is the tone.\n"
+ "5) HOOK: the title is a curiosity hook under 8 words; first line must make viewers stay.\n"
+ 'Return STRICT JSON: {"title": str, "scene_base": str (one sentence, the constant setting), '
+ '"frames": [{"prompt": str, "line_idx": int}], "dialog": [{"who": "A"|"B", "line": str}], '
+ '"self_score": {"funny": 0-100, "hook": 0-100, "clean": 0-100, "total": 0-100}}'
+)
+
+
+def _validate_toon(d: dict) -> list:
+    errs = []
+    if not (d.get("title") or "").strip(): errs.append("thiếu title")
+    if not (d.get("scene_base") or "").strip(): errs.append("thiếu scene_base")
+    fr = d.get("frames") or []
+    if not (3 <= len(fr) <= 5): errs.append(f"frames={len(fr)} (cần 3-5)")
+    dl = d.get("dialog") or []
+    if not (5 <= len(dl) <= 10): errs.append(f"dialog={len(dl)} câu (cần 5-10)")
+    for i, l in enumerate(dl):
+        if l.get("who") not in ("A", "B"): errs.append(f"dialog[{i}].who phải A/B")
+        if len((l.get("line") or "").split()) > 18: errs.append(f"dialog[{i}] quá dài")
+    for i, f in enumerate(fr):
+        if not (f.get("prompt") or "").strip(): errs.append(f"frames[{i}] thiếu prompt")
+        li = f.get("line_idx")
+        if not isinstance(li, int) or not (0 <= li < max(1, len(dl))): errs.append(f"frames[{i}].line_idx sai")
+    return errs
+
+
+def generate_toon(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 skit TOON. `niche` = mô tả kênh + 2 nhân vật (từ config kênh). Viết lại tới khi đạt."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    if str(akey).startswith(("gsk_", "cf:")) and avoid:
+        avoid = avoid[-30:]                     # nhà 8K token/request
+    model = genai.GenerativeModel(mname, system_instruction=TOON_SYS)
+    resolved = False
+    avoid_txt = ("\nDo NOT reuse these premises: " + " | ".join(avoid[-40:])) if avoid else ""
+    base = (f"Channel + characters: {niche}.\nWrite ONE new skit. Fresh everyday-America premise."
+            + avoid_txt)
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix it." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.95, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=TOON_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"invalid JSON ({e})"; continue
+        errs = _validate_toon(d)
+        sc = d.get("self_score") or {}
+        score = int(sc.get("total", 0) or 0)
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "structure: " + "; ".join(errs[:6]); print(f"   ↻ toon vòng {attempt}: {feedback}"); continue
+        if score < 90:
+            feedback = f"total={score}<90 — punchline sắc hơn, hook tò mò hơn."; print(f"   ↻ toon vòng {attempt}: điểm {score}"); continue
+        print(f"   ✅ TOON đạt vòng {attempt}: total {score} — '{d.get('title')}'")
+        return d
+    if last: return last
+    raise RuntimeError("toon: không sinh được kịch bản")

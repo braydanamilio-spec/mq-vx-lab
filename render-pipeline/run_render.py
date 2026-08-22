@@ -155,6 +155,10 @@ def _ratio_plan(channel, want_shorts, long_target):
         short được phép tối đa = 3 x số long ĐÃ CÓ
     Hết chỗ short -> BẮT BUỘC làm long trước (kể cả make_long=False), tới khi đủ long_target.
     Trả (phải_làm_long, số_short_được_phép)."""
+    if int(long_target or 0) <= 0:
+        # KÊNH PILOT/SHORT-ONLY CHỦ ĐÍCH (long_target=0, vd TOON đang duyệt gu): không ép long,
+        # short chạy theo short_target. Đủ duyệt thì dashboard đặt long_target>0 -> luật 1:3 siết lại.
+        return False, int(want_shorts or 0)
     L = FB.count_done(OWNER, channel, "long")
     S = FB.count_done(OWNER, channel, "short")
     room = max(0, SHORT_PER_LONG * L - S)          # chỗ trống theo tỉ lệ HIỆN TẠI
@@ -259,7 +263,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
         return
     # ── FORMAT ĐẶC BIỆT (short-only, motif riêng): GUESS / MAPPED ── route sang make_guess/make_mapped.
     fmt = (ch.get("format") or "").lower()
-    if fmt in ("guess", "mapped", "ranked", "scaled", "thennow", "doc", "swarm", "pulse", "clockwork", "longshot"):
+    if fmt in ("guess", "mapped", "ranked", "scaled", "thennow", "doc", "swarm", "pulse", "clockwork", "longshot", "toon"):
         short_target = int(ch.get("short_target", 0) or 0) or RESERVE_SHORT
         need = max(0, short_target - FB.count_done(OWNER, channel, "short"))
         n = min(int(ch.get("n_shorts", n_shorts) or 3) or 3, need)
@@ -671,6 +675,15 @@ def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story
     # 8 engine đồ hoạ dưới đây nay cũng dựng thumbnail DocThumb (số liệu sốc + câu hỏi mở + nền là
     # KHUNG THẬT rút từ chính video) -> phải truyền accent2 thật, nếu không số liệu 9 kênh sẽ cùng
     # một màu mặc định = nhìn như hàng loạt.
+    if fmt == "toon":    # TOON (22/8): skit 2 nhân vật cố định — style/giọng/màu lấy từ config kênh
+        return DS.make_toon(ch.get("name"), cat, out, keys=keys, tier=tier,
+                            accent=ch.get("accent", "#E4562B"), avoid=avoid, on_status=jst,
+                            on_limit=cool, on_ok=okcb, resume_story=resume_story,
+                            toon_style=ch.get("toon_style", ""),
+                            voice_a=ch.get("voice_a", "en-US-ChristopherNeural"), rate_a=ch.get("rate_a", "+0%"),
+                            voice_b=ch.get("voice_b", "en-US-GuyNeural"), rate_b=ch.get("rate_b", "+8%"),
+                            color_a=ch.get("color_a", "#7DD3FC"), color_b=ch.get("color_b", "#FCA5A5"),
+                            display=ch.get("display") or ch.get("name"))
     if fmt in ("swarm", "pulse", "clockwork", "longshot"):   # Wave 4: 1 accent riêng/kênh
         mk4 = {"swarm": DS.make_swarm, "pulse": DS.make_pulse,
                "clockwork": DS.make_clockwork, "longshot": DS.make_longshot}[fmt]

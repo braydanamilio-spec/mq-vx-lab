@@ -34,6 +34,7 @@ import { SayThisMG, calcMG } from "./SayThisMG";
 import { BrandBeyond } from "./BrandBeyond";
 import { BrandLegacy } from "./BrandLegacy";
 import { Cinematic, calcCinematic } from "./Cinematic";
+import { ToonShort, calcToon } from "./ToonShort";
 import { DocThumb } from "./DocThumb";
 import { BarChartRace, calcRace } from "./BarChartRace";
 import { BrandV2 } from "./BrandV2";
@@ -177,6 +178,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="Cinematic" component={Cinematic} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
     <Composition id="DocThumb" component={DocThumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ big: "TITLE" }} />
     <Composition id="CinematicShort" component={Cinematic} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
+    <Composition id="ToonShort" component={ToonShort} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ slug: "", title: "", frames: [], lines: [] }} calculateMetadata={calcToon} />
     <Composition id="LottieTest" component={LottieTest} durationInFrames={120} fps={30} width={1920} height={1080} />
     <Composition id="StickDemo" component={StickDemo} durationInFrames={230} fps={30} width={1080} height={1920} />
     <Composition id="StickStory" component={StickStory} durationInFrames={880} fps={30} width={1080} height={1920} calculateMetadata={calcStory} />

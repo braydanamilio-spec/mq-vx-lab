@@ -167,6 +167,22 @@ def t_dark_ok():
         assert flat == expect_flat, (dark, cols, dk)
 
 
+def t_toon():
+    """TOON (22/8): validator + né bộ lọc + route fmt trong run_render."""
+    import content_brain as CB, datastory_ci as DS
+    good = {"title": "The HOA Letter", "scene_base": "backyard BBQ",
+            "frames": [{"prompt": "wide", "line_idx": 0}, {"prompt": "shock", "line_idx": 2},
+                       {"prompt": "tight head-and-shoulders reaction", "line_idx": 4}],
+            "dialog": [{"who": "A", "line": "x"}] * 3 + [{"who": "B", "line": "y"}] * 3,
+            "self_score": {"total": 95}}
+    assert CB._validate_toon(good) == [], CB._validate_toon(good)
+    bad = dict(good); bad2 = dict(good); bad2["frames"] = []
+    assert CB._validate_toon(bad2)
+    assert "head-and-shoulders" in DS._toon_safe("extreme close-up of face")
+    src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "run_render.py")).read()
+    assert '"toon"' in src and "make_toon" in src, "run_render chưa route toon"
+
+
 def t_extract_json():
     import content_brain as CB
     assert CB._extract_json('```json\n{"a": 1}\n```')["a"] == 1
@@ -183,6 +199,7 @@ def main():
     check("đọc-mềm: quota chết không ném", t_soft_read)
     check("cổng dark_ok theo kênh", t_dark_ok)
     check("_extract_json bóc ```json", t_extract_json)
+    check("toon: validator + safe-words + route", t_toon)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
