@@ -196,8 +196,8 @@
   "rate_b": "+2%",
   "color_a": "#FCA5A5",
   "color_b": "#FCA5A5",
-  "toon_style": "clean expressive stickman characters on soft white background, bold hand-drawn marker style, thick black strokes, ONE red accent color on key props, dramatic poses, no signs, no lettering, no text",
-  "niche": "narrated dramatic everyday-American stories (workplace drama, neighbor feuds, wild customer encounters, family chaos) told by ONE narrator with stick-figure illustrations. Stories are FICTIONAL-but-relatable slice-of-life — never presented as real news, no politics, no real brands or celebrities, family-safe with an ironic twist ending."
+  "toon_style": "modern bold flat cartoon, PEARL a friendly nosy middle-aged woman with high hair bun, red cardigan and iced tea glass, plus everyday American side characters, warm cream background with red accents, thick outlines, expressive poses, no signs, no lettering, no text",
+  "niche": "narrated dramatic everyday-American stories hosted by PEARL — a nosy but warm neighborhood woman (high bun, red cardigan, iced tea) who has seen EVERYTHING on her street. One narrator voice. Stories are FICTIONAL-but-relatable (workplace drama, neighbor feuds, wild customers, family chaos) with an ironic twist ending. No politics, no real brands or celebrities, never presented as real news, family-safe."
  },
  "DUMBHISTORY": {
   "format": "toon",
@@ -216,8 +216,8 @@
   "rate_b": "+0%",
   "color_a": "#FCD34D",
   "color_b": "#FCD34D",
-  "toon_style": "stickman characters wearing simple period props (tricorn hats, top hats, cowboy hats), aged parchment sepia background with subtle paper texture, hand-drawn ink style, thick strokes, no signs, no lettering, no text",
-  "niche": "absurd-but-TRUE moments of American history told by ONE witty narrator with stick-figure reenactments (the pig war of 1859, the great molasses flood, presidential oddities, gold-rush schemes). STRICT: every fact real and verifiable, cite era/year in narration naturally, no politics of today, long-dead figures only, family-safe humor."
+  "toon_style": "vintage woodcut engraving cartoon style with sepia parchment tones, PROFESSOR BISON an american bison wearing a colonial tricorn hat and small round glasses, plus period human characters in simple period dress, thick ink strokes, dignified but silly, no signs, no lettering, no text",
+  "niche": "absurd-but-TRUE moments of American history taught by PROFESSOR BISON — a scholarly american bison in a tricorn hat and round glasses. One witty narrator voice. Real verifiable events only (the pig war 1859, great molasses flood, gold-rush schemes, presidential oddities), cite era/year naturally, long-dead figures only, no modern politics, family-safe humor."
  },
  "EXPLAINUSA": {
   "format": "toon",
@@ -236,7 +236,7 @@
   "rate_b": "+0%",
   "color_a": "#7DD3FC",
   "color_b": "#7DD3FC",
-  "toon_style": "minimal thin line-art stick figures on very pale blue-gray background, deadpan flat expressions, tiny simple diagrams and arrows as props, single pale blue accent, clean vector look, no signs, no lettering, no text",
-  "niche": "deadpan comedic explainers of things ONLY America has (tipping culture, medical bills, sales tax at checkout, college costs, imperial units, HOA rules) told by ONE dry narrator with minimal line-art illustrations. STRICT: every fact/number real and verifiable, self-aware irony, no politics, no real brands, family-safe."
+  "toon_style": "minimal clean vector cartoon, THE OWL a deadpan owl wearing a navy necktie often holding a clipboard, plus simple flat human characters, very pale blue-gray background, tiny diagrams and arrows as props, single pale blue accent, flat unimpressed expressions, no signs, no lettering, no text",
+  "niche": "deadpan comedic explainers of things ONLY America has, presented by THE OWL — an unimpressed office owl with a navy necktie and clipboard. One dry narrator voice. Topics: tipping culture, medical bills, sales tax at checkout, college costs, imperial units, HOA rules. STRICT: every fact and number real and verifiable, self-aware irony, no politics, no real brands, family-safe."
  }
 }

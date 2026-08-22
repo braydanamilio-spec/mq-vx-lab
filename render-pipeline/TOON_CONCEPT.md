@@ -55,3 +55,11 @@ thêm tiêu chí "không có chữ vô nghĩa".
 B1 ToonShort.tsx + make_toon() + selftest mục toon → B2 render 1 video pilot cho user duyệt gu
 → B3 seed kênh BREAKROOM (đủ checklist CHANNEL_METHODS: 2 repo + 3 bảng nhúng dashboard + voices)
 → B4 vào matrix chạy 1 long : 3 short như mọi kênh.
+
+
+## 3 KÊNH STORY (đổi nhân vật 22/8 đêm — user yêu cầu KHÔNG stickman, cartoon đầy đủ):
+- TRUETALES · **PEARL** — bà hàng xóm tóc búi, cardigan đỏ, ly trà đá; flat cartoon kem+đỏ.
+- DUMBHISTORY · **PROFESSOR BISON** — bò rừng Mỹ đội tricorn + kính tròn; khắc gỗ sepia.
+- EXPLAINUSA · **THE OWL** — cú công sở cà vạt navy + clipboard; vector xanh nhạt deadpan.
+Mỗi kênh 1 linh vật dẫn chuyện (narrator) + nhân vật phụ theo chuyện; art profile/cover vẽ FLUX
+từ đúng style-lock video (đồng bộ nhận diện).
