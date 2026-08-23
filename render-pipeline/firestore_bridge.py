@@ -1152,7 +1152,8 @@ def mirror_b_to_b2(owner: str) -> int:
         except Exception:
             pass
         b2.collection("render_config").document("mirror_meta").set({"at": _now()})   # dấu tuổi gương
-        _cr("mirror_b2", 5)
+        # sổ quota phải đếm ĐỦ chi phí của chính gương: ~60 kênh + ~60 topics + 4 doc lẻ đọc từ B
+        _cr("mirror_b2", 124)
         if n:
             print(f"   🪞 Gương B→B2: cập nhật {n} doc (B2 sẵn sàng nhận failover).")
         return n
