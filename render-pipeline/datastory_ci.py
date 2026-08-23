@@ -8,6 +8,7 @@ Local test:
 """
 from __future__ import annotations
 import argparse, json, os, re, subprocess, sys, urllib.parse, urllib.request
+import random
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import content_brain as CB
 import tts_karaoke as TK
@@ -221,6 +222,26 @@ def _cf_flux_image(prompt, dest, key, style=None) -> bool:
     return True
 
 
+# MUỐI PROMPT (23/8, user: "vẫn sợ trùng"): cùng một mô tả, thêm 1 biến thể góc máy/ánh sáng/bố
+# cục -> ảnh AI sinh ra KHÁC NHAU dù chủ đề giống, kể cả khi máy chủ dùng seed cố định. Đây là lớp
+# chống trùng TUYỆT ĐỐI vì mỗi khung được vẽ MỚI, không bốc từ kho chung nào cả.
+_VARY = [
+    "eye-level view, soft daylight from the left",
+    "slightly high angle, warm late-afternoon light",
+    "low angle looking up, crisp cool light",
+    "three-quarter view, gentle rim light from behind",
+    "wide framing with generous empty space, flat even light",
+    "tighter framing, shallow depth, single strong light source",
+    "off-centre composition, cool morning light",
+    "symmetrical head-on composition, soft overcast light",
+]
+
+
+def _salt_prompt(prompt: str) -> str:
+    """Thêm biến thể máy quay/ánh sáng theo NGẪU NHIÊN — không đụng nội dung, chỉ đổi cách nhìn."""
+    return f"{prompt}, {random.choice(_VARY)}" if prompt else prompt
+
+
 def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", style=None) -> bool:
     """DỰ PHÒNG khi Openverse KHÔNG có ảnh CC0 khớp: nhờ Gemini VẼ ảnh minh hoạ (Nano Banana).
     Quota TÁCH RIÊNG khỏi quota viết kịch bản (model khác nhau) -> dùng thoải mái, không đụng key đang
@@ -228,6 +249,7 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
     caller tự lùi về fallback cũ (mosaic/cosmic bg) — KHÔNG BAO GIỜ làm crash pipeline.
     style: phong cách vẽ (vd "cinematic sci-fi concept art") — mặc định ảnh báo chí thật, đổi cho kênh
     speculative (tương lai/vũ trụ suy đoán) nơi KHÔNG có ảnh thật để so nên cần 1 gu vẽ riêng, nhất quán."""
+    prompt = _salt_prompt(prompt)     # 23/8: mỗi lần vẽ một góc/ánh sáng khác -> không thể trùng
     cands = _ai_candidates(api_key)
     if not cands:
         return False
