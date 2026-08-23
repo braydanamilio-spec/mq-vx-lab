@@ -1190,8 +1190,15 @@ def mirror_connections_to_b() -> int:
                 n += 1
         for i in set(cur) - set(rows):
             _soft(lambda ref=col.document(i): ref.delete(), "mirror_conn_del")
+        # SNAPSHOT 1-DOC (23/8 — GỐC của 125K đọc/ngày trên A): publisher đọc danh sách kho bằng
+        # cách quét CẢ COLLECTION 70 doc, đệm chỉ 10' -> mỗi lane 110' làm mới ~11 lần = 770 đọc,
+        # ×18 lane = ~14.000 đọc/phiên chỉ để lấy một danh sách gần như bất biến. Gói cả danh sách
+        # vào 1 doc -> publisher đọc 1 lượt thay vì 70. (Cùng chiêu đã dùng cho 142 key AI.)
+        _snap = [{"id": i, **{k: v for k, v in x.items() if k in keys}} for i, x in rows.items()]
+        _soft(lambda: col.document("__snap__").set({"at": _now(), "n": len(_snap), "accs": _snap}),
+              "mirror_conn_snap")
         if n:
-            print(f"   🪞 Gương kho Drive A→B: cập nhật {n}/{len(rows)} tài khoản (publisher hết phụ thuộc A).")
+            print(f"   🪞 Gương kho Drive A→B: cập nhật {n}/{len(rows)} tài khoản + snapshot 1-doc.")
         return n
     except Exception as e:
         print(f"   ⚠️ mirror_connections lỗi ({str(e)[:60]}) — A nghẽn thì phiên sau tự thử lại.")
