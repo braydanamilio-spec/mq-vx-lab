@@ -2611,6 +2611,37 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
     # vignette khép). ĐÃ BỎ đạo cụ emoji — user: "đừng làm xấu, trông rẻ tiền"; kênh sepia cổ
     # điển (DUMB HISTORY) mà emoji bay vào là hỏng tông ngay.
     lines[-1]["punch"] = True
+    # THẺ SỐ LIỆU (23/8, user: "kết hợp chart/biểu đồ nếu phù hợp"): rút CON SỐ THẬT trong lời kể
+    # -> engine bung thẻ số + thanh chỉ báo. Tối đa 3 thẻ/video và chỉ cho mode essay: nhồi nhiều
+    # là rối, mà format phân tích thì mỗi con số là một cú chốt hạ nên phải nổi bật.
+    if mode == "essay":
+        _num = re.compile(r"(\$?\d[\d,.]*\s?(?:%|percent|million|billion|thousand|grams?|years?|hours?|days?)?)", re.I)
+        _cap = re.compile(r"\b(19|20)\d{2}\b")
+        _n = 0
+        for _l in lines:
+            if _n >= 3:
+                break
+            _t = _l.get("text") or ""
+            # chọn con số ĐÁNG hiện nhất trong câu: có $/%/đơn vị hoặc dấu phân cách > năm trơn
+            _cands = [c[0].strip().rstrip(".,") for c in _num.findall(_t)] if _num.findall(_t) else []
+            _cands = [c for c in [m.group(1).strip().rstrip(".,") for m in _num.finditer(_t)] if len(c) >= 2]
+            if not _cands:
+                continue
+            def _rank(v):
+                sc = 0
+                if any(ch in v for ch in "$%,"):
+                    sc += 3
+                if any(u in v.lower() for u in ("million", "billion", "thousand", "gram", "percent", "year", "hour", "day")):
+                    sc += 2
+                if _cap.fullmatch(v.strip()):
+                    sc -= 2      # năm trơn kém hấp dẫn hơn số liệu
+                return (sc, len(v))
+            _v = max(_cands, key=_rank)
+            _words = [w for w in _t.replace(",", "").split() if not any(c.isdigit() for c in w)]
+            _l["stat"] = {"num": _v, "cap": " ".join(_words[-3:])[:26]}
+            _n += 1
+        if _n:
+            print(f"   📊 Thẻ số liệu: {_n} thẻ (rút từ chính lời kể).")
     end_f = int(t * FPS) + 16
     spec = sorted((story.get("frames") or []), key=lambda x: int(x.get("line_idx", 0)))
     fr = []

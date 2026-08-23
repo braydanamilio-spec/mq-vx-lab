@@ -22,7 +22,7 @@ const SafeImg: React.FC<{ src: string; style?: React.CSSProperties }> = ({ src, 
 type Frame = { img: string; from: number; dur: number };
 type Word = { w: string; f: number };   // f = frame bắt đầu TƯƠNG ĐỐI trong câu (karaoke)
 type Line = { audio: string; text: string; who: string; from: number; dur: number; words?: Word[];
-              punch?: boolean };   // punch = câu chốt -> nhấn bằng cú máy, KHÔNG dùng emoji (23/8)
+              punch?: boolean; stat?: { num: string; cap?: string } };   // stat = thẻ số liệu động (23/8)
 
 type Chapter = { text: string; from: number; dur: number };
 
@@ -85,33 +85,36 @@ export const ToonShort: React.FC<{
           </Sequence>
         );
       })}
-      {/* MỞ ĐẦU = HOOK (23/8): tiêu đề CHỈ hiện 2.6s đầu, chữ lớn, nền tối chuyển sắc phía trên,
-          không hộp viền -> chuyên nghiệp như bìa tạp chí; sau đó trả khung hình cho người xem. */}
+      {/* BANNER MỞ ĐẦU (23/8 — user: "text to bự như banner trên nền footage"): khối chữ CỠ LỚN
+          trên dải màu thương hiệu, đè lên ảnh mở đầu, bung ra rồi tan sau ~2.8s. Long: chớp lại
+          ngắn ở mỗi chương. Đây là cú hook thị giác của 2 giây đầu. */}
       {(() => {
-        const ch = chapters.find(c => f >= c.from && f < c.from + 66);
-        const showT = f < 78 || !!ch;
-        if (!showT) return null;
+        const ch = chapters.find(c => f >= c.from && f < c.from + 70);
+        if (!(f < 84 || ch)) return null;
         const rel = ch ? f - ch.from : f;
-        const inP = Math.min(1, rel / 10);
-        const outP = Math.min(1, Math.max(0, (rel - 60) / 18));
+        const inP = Math.min(1, rel / 12);
+        const outP = Math.min(1, Math.max(0, (rel - 62) / 20));
         const op = inP * (1 - outP);
         const txt = ch ? ch.text : title;
+        const slide = (1 - inP) * 42;
         return (
-          <AbsoluteFill style={{ pointerEvents: "none" }}>
-            <AbsoluteFill style={{
-              background: "linear-gradient(180deg, rgba(8,8,12,.82) 0%, rgba(8,8,12,.55) 42%, rgba(8,8,12,0) 78%)",
-              opacity: op,
-            }} />
-            <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "center", paddingTop: 96 }}>
-              <div style={{ opacity: op, transform: `translateY(${(1 - inP) * 16}px)`, textAlign: "center", maxWidth: 960 }}>
+          <AbsoluteFill style={{ pointerEvents: "none", opacity: op }}>
+            <AbsoluteFill style={{ background: "rgba(8,8,12,.52)" }} />
+            <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: "0 56px" }}>
+              <div style={{ width: "100%", maxWidth: 1000, transform: `translateY(${slide}px)` }}>
                 <div style={{
-                  width: 74, height: 6, background: color, borderRadius: 3,
-                  margin: "0 auto 22px", transform: `scaleX(${inP})`,
-                }} />
+                  display: "inline-block", background: color, color: "#fff",
+                  fontSize: 30, fontWeight: 900, letterSpacing: 3, padding: "10px 20px",
+                  marginBottom: 20, transform: `scaleX(${inP})`, transformOrigin: "left center",
+                }}>{(name || "").toUpperCase()}</div>
                 <div style={{
-                  color: "#fff", fontSize: 62, fontWeight: 900, lineHeight: 1.12,
-                  letterSpacing: -0.5, textShadow: "0 4px 22px rgba(0,0,0,.55)",
+                  color: "#fff", fontSize: 92, fontWeight: 900, lineHeight: 1.04, letterSpacing: -2,
+                  textShadow: "0 6px 30px rgba(0,0,0,.6)", textTransform: "uppercase",
                 }}>{txt}</div>
+                <div style={{
+                  height: 10, background: color, marginTop: 26, borderRadius: 5,
+                  transform: `scaleX(${inP})`, transformOrigin: "left center",
+                }} />
               </div>
             </AbsoluteFill>
           </AbsoluteFill>
@@ -166,6 +169,36 @@ export const ToonShort: React.FC<{
           background: `radial-gradient(ellipse at 50% 52%, rgba(0,0,0,0) 52%, rgba(0,0,0,${0.34 * shake}) 100%)`,
         }} />
       )}
+      {/* THẺ SỐ LIỆU (23/8 — user: "kết hợp chart/biểu đồ nếu phù hợp"): CHỈ hiện khi câu đang đọc
+          có con số thật. Số bung lớn + thanh chỉ báo chạy ngang, nằm góc trên phải để không đè
+          phụ đề. Không có số thì không hiện — tránh nhồi hiệu ứng vô nghĩa. */}
+      {cur && cur.stat && (() => {
+        const rel2 = f - cur.from;
+        const p = Math.min(1, rel2 / 14);
+        const fade = Math.min(1, Math.max(0, (cur.dur - rel2) / 12)) * Math.min(1, rel2 / 6);
+        const pop = 0.82 + 0.18 * Math.min(1, rel2 / 9) + 0.03 * Math.sin(Math.min(p, 1) * Math.PI);
+        return (
+          <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "flex-end", padding: "150px 54px 0 0", pointerEvents: "none" }}>
+            <div style={{
+              opacity: fade, transform: `scale(${pop})`, transformOrigin: "top right", textAlign: "right",
+              background: "rgba(10,10,14,.62)", padding: "18px 26px 20px", borderRadius: 14,
+              borderRight: `8px solid ${color}`,
+            }}>
+              <div style={{ color: "#fff", fontSize: 76, fontWeight: 900, lineHeight: 1, letterSpacing: -1.5,
+                            fontVariantNumeric: "tabular-nums", textShadow: "0 3px 14px rgba(0,0,0,.6)" }}>
+                {cur.stat.num}
+              </div>
+              {cur.stat.cap && (
+                <div style={{ color: "#ffffffcc", fontSize: 26, fontWeight: 700, letterSpacing: 1, marginTop: 8 }}>
+                  {cur.stat.cap.toUpperCase()}
+                </div>
+              )}
+              <div style={{ height: 7, background: color, borderRadius: 4, marginTop: 14,
+                            transform: `scaleX(${Math.min(1, rel2 / 20)})`, transformOrigin: "right center" }} />
+            </div>
+          </AbsoluteFill>
+        );
+      })()}
       {/* watermark kênh */}
       {name && (
         <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "flex-end", padding: 34 }}>
