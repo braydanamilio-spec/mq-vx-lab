@@ -70,7 +70,8 @@ const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; sub
     );
   }
   return (
-    <div style={{ position: "absolute", left: 0, right: 0, bottom, textAlign: "center", padding: pad, opacity: lineOp }}>
+    <div style={{ position: "absolute", left: 0, right: 0, bottom, textAlign: "center", padding: pad, opacity: lineOp,
+                  zIndex: 30, textShadow: "0 2px 18px rgba(0,0,0,.95)" }}>
       {cur.words.map((x, i) => { const on = i === active; return <span key={i} style={{ fontSize: fs, fontWeight: 900, color: on ? accent : "#EAF8FF", margin: "0 9px", display: "inline-block", transform: on ? "scale(1.09)" : "scale(1)", textShadow: on ? `0 3px 26px rgba(0,0,0,0.9), 0 0 22px ${accent}88` : "0 3px 26px rgba(0,0,0,0.9)" }}>{x}</span>; })}
     </div>
   );
@@ -95,7 +96,7 @@ const HudView: React.FC<{ hud: HUD; l: number; d: number; accent: string; accent
     const pop = spring({ frame: l, fps: 30, config: { damping: 13, stiffness: 110 } });
     const glow = 40 + 30 * Math.max(0, 1 - l / 20);
     return (
-      <div style={{ position: "absolute", left: 0, right: 0, top: port ? 340 : 300, textAlign: "center", padding: "0 40px", opacity: Math.min(1, pop * 1.2), transform: `scale(${0.82 + 0.18 * pop}) translateY(${(1 - pop) * 24}px)` }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: port ? 300 : 250, textAlign: "center", padding: "0 40px", opacity: Math.min(1, pop * 1.2), transform: `scale(${0.82 + 0.18 * pop}) translateY(${(1 - pop) * 24}px)` }}>
         <div style={{ fontSize: fs, fontWeight: 900, color: accent, textShadow: `0 0 ${glow}px ${accent}99`, lineHeight: 1, whiteSpace: "nowrap" }}>{numStr}<span style={{ fontSize: fs * 0.5 }}>{hud.unit || ""}</span></div>
         {hud.label && <div style={{ fontSize: port ? 40 : 46, fontWeight: 700, color: "#9FC4E0", marginTop: 12, letterSpacing: 2 }}>{hud.label.toUpperCase()}</div>}
       </div>
@@ -219,11 +220,16 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
         const rule = (w: number, mx: string) => (
           <div style={{ width: w, height: 8, background: accent, borderRadius: 6, margin: mx, boxShadow: `0 0 24px ${accent}` }} />
         );
+        const { width: _vw, height: _vh } = useVideoConfig();   // 23/8: thẻ chữ cần biết khổ dọc/ngang
         const title = (size: number, align: "center" | "left") => (
           <div style={{ fontSize: size, fontWeight: 900, color: "#EAF8FF", lineHeight: 1.04, textAlign: align, textShadow: `0 0 40px ${accent}66, 0 4px 24px rgba(0,0,0,.75)` }}>{t}</div>
         );
+        // 23/8 (user gửi ảnh: "chữ sub đè lên thẻ số liệu"): thẻ chữ trước đây trải TOÀN khung
+        // (inset 0) nên tâm của nó rơi trúng dải phụ đề. Nay chừa sẵn vùng phụ đề phía dưới:
+        // dọc chừa 560px, ngang chừa 170px — hai lớp không còn cửa nào để chạm nhau.
+        const capZone = _vh > _vw ? 560 : 170;      // _vw/_vh lấy ngay dưới đây, khối này không có `port`
         const wrap = (justify: string, align: string, pad: string, inner: React.ReactNode) => (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: justify, justifyContent: "center", flexDirection: "column", padding: pad, opacity: p, transform: `scale(${0.94 + p * 0.06})` }}>
+          <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: capZone, display: "flex", alignItems: justify, justifyContent: "center", flexDirection: "column", padding: pad, opacity: p, transform: `scale(${0.94 + p * 0.06})` }}>
             <div style={{ width: "100%", textAlign: align as any }}>{inner}</div>
           </div>
         );

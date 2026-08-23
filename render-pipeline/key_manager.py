@@ -576,3 +576,94 @@ def write_essay(channel: str, keys: list[dict], niche: str, tier: str = "normal"
     """Sinh BÀI PHÂN TÍCH lật-ngược-niềm-tin (toon mode essay, 23/8) — cùng khuôn Wave 4."""
     return _write_wave4("generate_essay", "ESSAY", channel, keys, niche, tier, avoid, on_limit, on_ok)
 
+
+# ── CỔNG CHẤT LƯỢNG BỌC NGOÀI MỌI HÀM VIẾT (23/8) ───────────────────────────────────────────
+# Bọc ở đây thay vì sửa 12 hàm sinh: mọi format đều đi qua write_* nên chỉ cần một lớp áo.
+# Làm 3 việc, đúng thứ tự rẻ-trước-đắt:
+#   1) TRƯỚC KHI VIẾT: chèn gợi ý TRỤ NỘI DUNG đang ít tập nhất vào niche -> kênh có mạch.
+#   2) SAU KHI VIẾT: so dấu vân từ khoá với tối đa 4000 bài cũ -> trùng ý thì viết lại 1 lần.
+#   3) Kiểm chuẩn kiếm tiền (nguồn, số liệu, câu chữ rủi ro) -> cảnh báo sớm, khỏi tốn công render.
+# Mọi lỗi của cổng đều nuốt: cổng chất lượng KHÔNG được phép làm chết luồng sản xuất.
+import inspect as _inspect
+
+_GATE_NAMES = ("write_story", "write_guess", "write_mapped", "write_ranked", "write_scaled",
+               "write_thennow", "write_doc", "write_swarm", "write_pulse", "write_clockwork",
+               "write_longshot", "write_toon", "write_tale", "write_essay")
+
+
+def _gate_title(d):
+    return str((d or {}).get("title_yt") or (d or {}).get("title") or (d or {}).get("topic") or "")
+
+
+def _gate_text(d):
+    """Ngữ cảnh để so trùng: tiêu đề + hook + 2 câu đầu. Chỉ mỗi tiêu đề thì quá ít từ, so không nổi."""
+    d = d or {}
+    parts = [_gate_title(d), str(d.get("hook") or "")]
+    for key, sub in (("scenes", "nar"), ("dialog", "line"), ("waypoints", "vo"), ("pairs", "vo")):
+        for x in (d.get(key) or [])[:2]:
+            if isinstance(x, dict):
+                parts.append(str(x.get(sub) or ""))
+    return " ".join(p for p in parts if p)[:400]
+
+
+def _wrap_gate(fn):
+    sig_has_avoid = "avoid" in _inspect.signature(fn).parameters
+
+    def inner(channel, keys, *a, **kw):
+        import quality_gate as QG
+        try:
+            import firestore_bridge as _FB
+            import os as _os
+            owner = _os.environ.get("OWNER_UID", "")
+            mem = _FB.read_channel_memory(owner, channel) if owner else {"fps": [], "pillars": {}}
+        except Exception:
+            owner, mem, _FB = "", {"fps": [], "pillars": {}}, None
+
+        # (1) gợi ý trụ nội dung — chỉ chèn khi tham số thứ 3 là 'niche' dạng chuỗi
+        hint = ""
+        try:
+            hint = QG.pillar_hint(mem.get("pillars") or {})
+            if hint and a and isinstance(a[0], str) and len(a[0]) > 12:
+                a = (a[0] + hint,) + a[1:]
+        except Exception:
+            pass
+
+        d = fn(channel, keys, *a, **kw)
+
+        # (2) trùng ý với bài cũ -> viết lại đúng 1 lần (không lặp vô hạn, không đốt key)
+        try:
+            title = _gate_title(d)
+            dup, muc, _ = QG.too_similar(_gate_text(d), mem.get("fps") or [])
+            if dup and sig_has_avoid:
+                print(f"   ♻️ trùng ý {int(muc * 100)}% với bài cũ: '{title[:48]}' -> viết lại 1 lần")
+                kw2 = dict(kw)
+                kw2["avoid"] = list(kw.get("avoid") or []) + [title]
+                d2 = fn(channel, keys, *a, **kw2)
+                if _gate_title(d2):
+                    d = d2
+        except Exception:
+            pass
+
+        # (3) chuẩn kiếm tiền + ghi mạch kênh
+        try:
+            errs = QG.money_safe(d)
+            if errs:
+                print("   ⚠️ chuẩn kiếm tiền: " + " · ".join(errs[:3]))
+            if owner and _FB:
+                _FB.append_channel_memory(owner, channel, QG.fingerprint(_gate_text(d)),
+                                          str((d or {}).get("pillar") or "")[:40])
+        except Exception:
+            pass
+        return d
+
+    inner.__name__ = fn.__name__
+    inner.__doc__ = (fn.__doc__ or "") + "\n\n(bọc thêm cổng chất lượng: mạch kênh · chống trùng ý · chuẩn kiếm tiền)"
+    return inner
+
+
+for _n in _GATE_NAMES:
+    _f = globals().get(_n)
+    if callable(_f) and not getattr(_f, "_gated", False):
+        _g = _wrap_gate(_f)
+        _g._gated = True
+        globals()[_n] = _g

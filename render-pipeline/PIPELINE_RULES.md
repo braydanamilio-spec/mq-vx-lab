@@ -390,3 +390,19 @@ Người viết trả thêm khối `chart {label, unit, items[2-5]{name, value}}
 GIỮA video (mốc câu giữa) trong 4.5 giây. Engine ToonShort dựng cột chạy từ 0 + số đếm lên, nền tối mờ.
 → **LUẬT**: mọi hiệu ứng dựa trên dữ liệu phải có đường "không đủ dữ liệu thì tắt", không bao giờ
 dựng chart từ số tự chế.
+
+### BUG 23/8 — PHỤ ĐỀ ĐÈ LÊN THẺ SỐ LIỆU (ảnh user gửi)
+Thẻ chữ giữa màn trong Cinematic dùng `inset: 0` nên tâm của nó rơi TRÚNG dải phụ đề (bottom 520 ở
+khổ dọc) -> chữ chồng chữ, không đọc được. Fix: thẻ chữ chỉ được dùng vùng trên (`bottom: capZone`
+= 560px dọc / 170px ngang), HUD số liệu nâng lên top 300, phụ đề thêm zIndex 30 + bóng đậm.
+→ **LUẬT BỐ CỤC**: mỗi lớp chữ phải có VÙNG RIÊNG khai báo rõ; không lớp nào được `inset: 0` khi
+màn hình còn lớp chữ khác. Thêm lớp chữ mới = phải khai vùng của nó trước.
+
+### 23/8 — CỔNG CHẤT LƯỢNG CHUNG (quality_gate.py) cho kênh hàng nghìn video
+Bọc ngoài toàn bộ 14 hàm write_* (một lớp áo, không sửa 12 hàm sinh):
+1. Mạch kênh: đếm "trụ nội dung", ép người viết chọn trụ ít tập nhất -> kênh có series thay vì bài rời.
+2. Chống trùng theo Ý: dấu vân từ khoá của (tiêu đề + hook + 2 câu đầu), so bằng OVERLAP (không phải
+   Jaccard — Jaccard bỏ lọt khi 2 tiêu đề dài ngắn khác nhau), ngưỡng 0.5, nhớ 4000 bài/kênh trong 1 doc.
+   Trùng -> viết lại ĐÚNG 1 lần (không lặp vô hạn, không đốt key).
+3. Chuẩn kiếm tiền: ≥2 nguồn, phải có số liệu, chặn cụm từ rủi ro chính sách.
+Đo thật: "Rent 2025 vs 2015…" ~ "How US rent doubled since 2015…" = 0.62 (bắt được), so với bài NASA = 0.0.

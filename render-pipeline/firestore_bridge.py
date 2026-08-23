@@ -1533,3 +1533,39 @@ def append_used_images(owner: str, channel: str, ids: list, cap: int = 600) -> N
         merged = (cur + [str(i) for i in ids])[-cap:]
         ref.set({"ids": merged, "n": len(merged), "at": _now()})
     _soft(_w, "append_used_images")
+
+
+# ── SỔ MẠCH KÊNH (23/8): dấu vân từ khoá + đếm trụ nội dung, 1 doc/kênh ─────────────────────
+# Thay cho render_topics (chỉ nhớ 80 chuỗi): doc này nhớ tới 4000 BỘ TỪ KHOÁ nên còn tác dụng khi
+# kênh đã có hàng nghìn video, mà vẫn chỉ tốn 1 lượt đọc + 1 lượt ghi mỗi lane.
+_FP_CACHE = {}
+
+
+def read_channel_memory(owner: str, channel: str) -> dict:
+    ck = (owner, channel)
+    if ck in _FP_CACHE:
+        return _FP_CACHE[ck]
+    out = {"fps": [], "pillars": {}}
+    try:
+        d = _db_jobs().collection("channel_memory").document(f"{owner}__{channel}").get()
+        if d.exists:
+            x = d.to_dict() or {}
+            out = {"fps": [list(f) for f in (x.get("fps") or [])], "pillars": dict(x.get("pillars") or {})}
+    except Exception as e:
+        print(f"   ⚠️ đọc mạch kênh hụt ({str(e)[:50]}) — coi như kênh mới")
+    _FP_CACHE[ck] = out
+    return out
+
+
+def append_channel_memory(owner: str, channel: str, fp: list, pillar: str = "", cap: int = 4000) -> None:
+    """Ghi thêm 1 bài vào mạch kênh. Cập nhật luôn bộ nhớ tiến trình để video kế tiếp thấy ngay."""
+    if not fp:
+        return
+    mem = read_channel_memory(owner, channel)
+    mem["fps"] = (mem["fps"] + [list(fp)])[-cap:]
+    if pillar:
+        mem["pillars"][pillar] = int(mem["pillars"].get(pillar, 0)) + 1
+    _FP_CACHE[(owner, channel)] = mem
+    _soft(lambda: _db_jobs().collection("channel_memory").document(f"{owner}__{channel}")
+          .set({"fps": mem["fps"], "pillars": mem["pillars"], "n": len(mem["fps"]), "at": _now()}),
+          "channel_memory")
