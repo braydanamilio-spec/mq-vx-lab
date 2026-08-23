@@ -1132,7 +1132,16 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
     try:
         total += _count_jobs(_db_jobs(), owner, channel, vtype)          # B (hoặc A nếu chưa shard)
     except Exception as e:
-        print(f"   ⚠️ count_done B lỗi ({e})")
+        # 23/8: phiên 13:29Z in 108 dòng "đếm ... 429" mà KHÔNG lật B2 — vì lỗi bị nuốt ngay tại
+        # đây. Hậu quả: cả phiên chạy trên B đã cạn đọc (đếm = 0 -> lập kế hoạch sai, và mọi lượt
+        # đọc sau đó đều hụt). 429 ở đây là bằng chứng B chết -> phải lật sang B2 ngay lần đầu.
+        if _wq_exhausted(e) and not _B2["on"] and failover_to_b2(f"count_done 429 ({channel})"):
+            try:
+                total += _count_jobs(_db_jobs(), owner, channel, vtype)
+            except Exception:
+                pass
+        else:
+            print(f"   ⚠️ count_done B lỗi ({e})")
     if _shard_on():
         # Job CŨ nằm ở A là dữ liệu LỊCH SỬ — từ khi bật shard (19/8) không có job mới nào ghi vào A
         # nữa, nên con số này KHÔNG BAO GIỜ ĐỔI. Trước đây đếm lại mỗi lần gọi: plan_mode gọi cho

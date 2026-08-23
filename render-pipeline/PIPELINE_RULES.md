@@ -325,3 +325,10 @@ gh run view <id> --repo braydanamilio-spec/mq-vx-lab --log
    trên máy chủ đã mới (fetch kèm `?cb=` thấy mã mới). → Đã thêm header no-cache cho `**` trong firebase.json.
    → **LUẬT kiểm chứng deploy**: so mã TRÊN MÁY CHỦ (`fetch('/index.html?cb='+Math.random())`) với mã ĐANG CHẠY
    (`typeof window.__ham`), khác nhau thì tải lại kèm `?v=...`, đừng kết luận "đã lên" khi chỉ thấy Deploy complete.
+
+### BUG 23/8 — 429 bị nuốt ở count_done nên KHÔNG lật B2
+Phiên 13:29Z in 108 dòng `⚠️ đếm <kênh>/<loại> lỗi (429 Quota exceeded.)` mà không có dòng `🔀 FAILOVER`.
+Vì `count_done` bắt Exception rồi chỉ in cảnh báo → cả phiên tiếp tục chạy trên B đã cạn đọc: đếm = 0
+(lập kế hoạch sai) và mọi lượt đọc sau đều hụt. Fix: 429 tại đây gọi `failover_to_b2()` rồi đếm lại.
+→ **LUẬT**: mọi chỗ bắt lỗi Firestore phải phân biệt "lỗi thường" và "429 = shard chết". 429 luôn phải
+kích failover, không được chỉ in cảnh báo rồi đi tiếp.
