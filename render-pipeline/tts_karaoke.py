@@ -73,7 +73,15 @@ async def _run(text: str, mp3_path: str, voice: str, rate: str):
 
 async def _synth_once(text: str, mp3_path: str, voice: str, rate: str):
     import edge_tts
-    comm = edge_tts.Communicate(text, voice, rate=rate)
+    # 23/8 (user: "sub giật giật, không khớp giọng"): xin MỐC TỪNG TỪ THẬT từ máy đọc.
+    # Trước đây edge-tts chỉ trả SentenceBoundary (1 mốc/câu) -> hệ phải CHIA ĐỀU theo số ký tự,
+    # nên từ dài/ngắn lệch nhịp và phụ đề nhảy giật. Bật boundary="WordBoundary" là có thời điểm
+    # + thời lượng CHÍNH XÁC của từng từ (đo thật: 13 từ, sai số 0). Máy đọc cũ không hỗ trợ thì
+    # tự lùi về kiểu cũ (không làm hỏng gì).
+    try:
+        comm = edge_tts.Communicate(text, voice, rate=rate, boundary="WordBoundary")
+    except TypeError:
+        comm = edge_tts.Communicate(text, voice, rate=rate)
     sentences = []
     with open(mp3_path, "wb") as f:
         async for chunk in comm.stream():
@@ -94,6 +102,16 @@ LEAD = 0.10   # hiện chữ SỚM hơn giọng ~0.1s (mắt đọc trước tai
 def _expand_words(sentences: list[dict], si_offset: int = 0) -> list[dict]:
     """Mỗi câu -> chia thời lượng ra từng TỪ theo độ dài chữ + có nhịp nghỉ ở dấu câu (siết sync)."""
     words = []
+    # 23/8: mốc trả về ĐÃ LÀ TỪNG TỪ (WordBoundary) -> dùng THẲNG thời điểm thật, tuyệt đối khớp
+    # giọng; chỉ khi máy đọc trả mốc theo CÂU mới phải ước lượng như cũ.
+    if sentences and all(len(x["w"].split()) == 1 for x in sentences):
+        si = 0
+        for k, x in enumerate(sentences):
+            words.append({"t": round(max(0.0, x["t"] - LEAD), 3), "d": round(x["d"], 3),
+                          "w": x["w"], "si": si + si_offset})
+            if re.search(r"[.!?]$", x["w"]):
+                si += 1
+        return words
     for si, s in enumerate(sentences):
         toks = [w for w in re.split(r"\s+", s["w"].strip()) if w]
         if not toks:

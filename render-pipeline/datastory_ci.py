@@ -296,6 +296,18 @@ def _generate_character_ref(channel, prompt, api_key) -> str | None:
     return None
 
 
+# SỔ NHỚ ẢNH ĐÃ DÙNG (23/8): id/url của mọi ảnh đã tải trong tiến trình + danh sách nạp từ
+# Firestore của kênh -> không bao giờ lặp lại tấm cũ trong cùng phiên. Cap 4000 cho nhẹ RAM.
+_IMG_USED: set = set()
+
+
+def note_image_used(ident: str):
+    if ident:
+        _IMG_USED.add(str(ident))
+        if len(_IMG_USED) > 4000:
+            _IMG_USED.clear()
+
+
 def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None, ai_prompt=None,
                 ai_style=None, ai_only=False, extra=None, verify_many=None):
     """Tải 1 ảnh từ Openverse — ƯU TIÊN CC0/Public Domain (KHÔNG cần ghi nguồn, an toàn bản quyền).
@@ -312,11 +324,23 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
     def _try(params):
         u = "https://api.openverse.org/v1/images/?" + urllib.parse.urlencode(params)
         with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=20) as r:
-            return json.load(r).get("results") or []
+            res = json.load(r).get("results") or []
+        # ── CHỐNG TRÙNG ẢNH TOÀN HỆ (23/8, user: "nhiều video nhiều kênh dùng chung 1 footage") ──
+        # Gốc bệnh: luôn lấy TRANG 1 + luôn ưu tiên kết quả đầu -> cùng từ khoá ("college tuition",
+        # "american flag"...) thì mọi video, mọi kênh, mọi ngày đều nhận ĐÚNG một tấm. FIX:
+        #   (a) XÁO thứ tự kết quả -> không phải lúc nào cũng lấy ảnh top-1;
+        #   (b) BỎ ảnh đã dùng gần đây (sổ nhớ dưới đây, dùng chung mọi kênh trong tiến trình).
+        random.shuffle(res)
+        fresh = [x for x in res if str(x.get("id") or x.get("url") or "") not in _IMG_USED]
+        return fresh or res            # hết ảnh mới thì đành dùng lại (thà có ảnh còn hơn trống)
     ar = {"tall": "tall", "wide": "wide"}.get(orient or "")   # KHỚP ĐỊNH DẠNG: short=dọc(tall), long=ngang(wide)
     _need = 1 + len(extra or [])
     pg = max(6, max_check + 2, _need * 3) if verify else max(3, _need * 3)   # cần verify/nhiều ảnh -> lấy nhiều ứng viên hơn
-    base = {"page_size": pg, "license": "cc0,pdm", "mature": "false"}
+    # 23/8 (user: "nhiều video nhiều kênh dùng chung 1 footage"): luôn lấy TRANG 1 nghĩa là mọi
+    # video cùng từ khoá đều bốc từ đúng ~12 ảnh đầu -> trùng là chắc chắn. Lấy TRANG NGẪU NHIÊN
+    # 1-4 -> kho ứng viên rộng gấp 4, kèm xáo thứ tự + bỏ ảnh đã dùng ở _try().
+    base = {"page_size": pg, "license": "cc0,pdm", "mature": "false",
+            "page": random.randint(1, 4)}
     if ar:
         base["aspect_ratio"] = ar
     def _openverse():
@@ -341,6 +365,7 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
             cds = []
             for cand in res:
                 try:
+                    note_image_used(cand.get("id") or cand.get("url"))   # 23/8: nhớ để KHÔNG lặp ở video sau
                     with urllib.request.urlopen(urllib.request.Request(cand["url"], headers=UA), timeout=30) as r:
                         ctype = (r.headers.get("Content-Type") or "").lower()
                         data = r.read()
@@ -1723,6 +1748,22 @@ def qc_structure(props, fps=30):
     issues = []
     if not scenes:
         return False, ["không có cảnh nào"]
+    # ── ĐỘ LẶP HÌNH (23/8, user: "footage lặp đi lặp lại hơi nhiều") ────────────────────────────
+    # Trước đây QC chỉ ĐẾM số ảnh, không kiểm ảnh có TRÙNG NHAU không. Mà mọi đường hỏng đều dẫn
+    # tới lặp: tải footage lỗi -> lấy lại ảnh trước; FLUX vẽ trượt -> dùng khung liền trước; Vision
+    # bắt ảnh sai -> vẽ lại không được -> lại lấy ảnh trước. Kết quả: video "đủ 10 cảnh" nhưng chỉ
+    # có 3 hình thật, xem rất chán mà QC vẫn cho qua.
+    _clips = [str(x.get("clip") or "") for x in scenes if x.get("clip")]
+    if _clips:
+        _uniq = len(set(_clips))
+        _ratio = _uniq / len(_clips)
+        _top = max((_clips.count(c) for c in set(_clips)), default=0)
+        print(f"   🖼️ Độ đa dạng hình: {_uniq}/{len(_clips)} ảnh khác nhau ({_ratio:.0%}), "
+              f"ảnh lặp nhiều nhất {_top} lần")
+        if _ratio < 0.5 or _top > max(3, len(_clips) // 3):
+            issues.append(f"HÌNH LẶP QUÁ NHIỀU: chỉ {_uniq}/{len(_clips)} ảnh khác nhau "
+                          f"(1 ảnh lặp {_top} lần) — video sẽ nhàm, phải vẽ/tải lại")
+
     n_img = sum(1 for x in scenes if x.get("clip"))
     if n_img == 0:
         return False, ["KHÔNG cảnh nào có ảnh -> cả video là chữ trên nền trơn"]
