@@ -374,3 +374,12 @@ endpoint `/api/r2-setup` ở worker. Bật lại = khôi phục 2 chỗ gọi tr
 Lưới an toàn còn 2 lớp và đủ dùng: `heal_unpushed` đẩy lại video hụt kho ở phiên sau + artifact GitHub.
 Bài học: 49/49 token Cloudflare cũ (chỉ có quyền Workers AI) KHÔNG tạo được R2 — muốn R2 phải tạo
 token riêng 3 quyền cho từng tài khoản, chi phí thao tác lớn hơn giá trị mang lại khi Drive đang khoẻ.
+
+### 23/8 chiều — CHỐNG TRÙNG ẢNH XUYÊN LUỒNG & XUYÊN PHIÊN
+Bản sáng nay chỉ có `_IMG_USED` trong RAM MỘT tiến trình. 18 luồng = 18 tiến trình, mỗi phiên lại khởi
+động mới -> hai video khác luồng/khác phiên vẫn rút trúng cùng tấm ảnh (đúng thứ user thấy: "nhiều
+kênh dùng cùng 1 footage"). Nay có sổ Firestore `img_used/{owner}__{channel}` giữ 600 id gần nhất:
+`load_used_images()` móc trong `set_ai_pool` (cửa duy nhất mọi make_* đi qua), `save_used_images()`
+móc trong `qc()` (chạy đúng 1 lần sau render). Chi phí ~110 lượt đọc-ghi/phiên cho 55 kênh.
+→ **LUẬT**: mọi cơ chế "đã dùng rồi thì đừng dùng lại" phải sống ngoài RAM tiến trình, nếu không nó
+chỉ đúng trong đúng một luồng.

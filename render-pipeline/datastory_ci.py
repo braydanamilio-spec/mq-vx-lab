@@ -61,6 +61,13 @@ def set_ai_pool(keys, channel: str = ""):
     trước trong khi key cuối ngồi không — pool 56 key mà hiệu dụng chỉ còn vài key."""
     set_pexels_pool(keys, channel)      # 23/8: nạp luôn pool key Pexels từ cùng danh sách key
     set_pixabay_pool(keys, channel)     # 23/8: và pool Pixabay (nguồn ảnh thứ 5)
+    # 23/8 chiều: nạp SỔ ẢNH ĐÃ DÙNG của kênh -> chống trùng footage xuyên luồng & xuyên phiên.
+    # Đặt ở đây vì set_ai_pool là cửa DUY NHẤT mọi make_* đều đi qua (16 chỗ gọi) — móc 1 lần là đủ.
+    try:
+        import os as _os
+        load_used_images(_os.environ.get("OWNER_UID", ""), channel)
+    except Exception:
+        pass
     raw = [k.get("key") for k in (keys or [])
            if k.get("key") and not str(k.get("key")).startswith(("gsk_", "px:", "pb:"))]   # Groq/Pexels không vẽ ảnh
     # CF (cf:) đứng TRƯỚC cho VẼ ẢNH: FLUX free ~2K ảnh/ngày/tài khoản vs Gemini chỉ ~vài trăm tổng
@@ -358,8 +365,46 @@ def take_credits() -> list:
 def note_image_used(ident: str):
     if ident:
         _IMG_USED.add(str(ident))
+        _IMG_NEW.add(str(ident))
         if len(_IMG_USED) > 4000:
             _IMG_USED.clear()
+
+
+# ── CHỐNG TRÙNG ẢNH XUYÊN PHIÊN (23/8 chiều) ────────────────────────────────────────────────
+# Lỗ hổng của bản trước: `_IMG_USED` chỉ sống trong RAM MỘT tiến trình. 18 luồng là 18 tiến trình
+# riêng, và mỗi phiên lại khởi động mới -> hai video khác luồng (hoặc khác phiên) hoàn toàn có thể
+# rút trúng cùng một tấm ảnh. Đúng thứ user thấy: "nhiều video nhiều kênh dùng cùng 1 footage".
+# Nay ghi sổ ảnh-đã-dùng vào Firestore theo KÊNH: 1 lượt đọc đầu video + 1 lượt ghi cuối video.
+_IMG_NEW: set = set()          # ảnh dùng TRONG video này (để ghi bổ sung, không ghi đè cả sổ)
+_IMG_CH = {"owner": "", "channel": ""}
+IMG_MEMORY = 600               # nhớ 600 ảnh gần nhất/kênh — đủ phủ vài chục video, doc vẫn nhẹ
+
+
+def load_used_images(owner: str, channel: str):
+    """Nạp sổ ảnh đã dùng của kênh vào RAM trước khi dựng video."""
+    _IMG_CH["owner"], _IMG_CH["channel"] = owner or "", channel or ""
+    _IMG_NEW.clear()
+    if not (owner and channel):
+        return
+    try:
+        import firestore_bridge as FB
+        for x in FB.read_used_images(owner, channel):
+            _IMG_USED.add(str(x))
+        print(f"   🧷 chống trùng ảnh: nạp {len(_IMG_USED)} ảnh kênh đã dùng")
+    except Exception as e:
+        print(f"   ⚠️ không nạp được sổ ảnh ({str(e)[:50]}) — chỉ chống trùng trong phiên này")
+
+
+def save_used_images():
+    """Ghi bổ sung ảnh vừa dùng vào sổ kênh (gọi sau khi video xong)."""
+    if not (_IMG_NEW and _IMG_CH["owner"] and _IMG_CH["channel"]):
+        return
+    try:
+        import firestore_bridge as FB
+        FB.append_used_images(_IMG_CH["owner"], _IMG_CH["channel"], list(_IMG_NEW), IMG_MEMORY)
+    except Exception:
+        pass
+    _IMG_NEW.clear()
 
 
 def _nasa_images(query, n=10):
@@ -1318,6 +1363,12 @@ def qc(mp4):
         if silent:
             why.append(f"CÂM (mức âm {round(mean_db,1)}dB) — TTS hỏng, video không có lời")
         info["err"] = " · ".join(why)
+    # 23/8: video đã dựng xong -> chốt sổ ảnh vừa dùng vào Firestore (chống trùng cho video sau).
+    # Móc ở qc() vì mọi make_* đều gọi đúng một lần sau khi render xong.
+    try:
+        save_used_images()
+    except Exception:
+        pass
     return ok, info
 
 

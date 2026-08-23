@@ -1506,3 +1506,30 @@ def list_r2_pending(owner: str, cap: int = 40) -> list[dict]:
 def clear_r2_pending(doc_id: str) -> None:
     _soft(lambda: _db_jobs().collection("r2_pending").document(doc_id).delete(), "clear_r2_pending")
 
+
+# ── SỔ ẢNH ĐÃ DÙNG THEO KÊNH (23/8) — chống trùng footage xuyên luồng & xuyên phiên ──────────
+# 1 doc/kênh, giữ N id gần nhất. Đọc 1 lượt đầu video, ghi 1 lượt cuối video -> ~110 lượt/phiên cho
+# 55 kênh, rẻ hơn nhiều so với cái giá phải trả: video các kênh dùng lại cùng một tấm ảnh.
+
+def read_used_images(owner: str, channel: str) -> list:
+    try:
+        d = _db_jobs().collection("img_used").document(f"{owner}__{channel}").get()
+        return ((d.to_dict() or {}).get("ids") or []) if d.exists else []
+    except Exception:
+        return []
+
+
+def append_used_images(owner: str, channel: str, ids: list, cap: int = 600) -> None:
+    if not ids:
+        return
+    def _w():
+        ref = _db_jobs().collection("img_used").document(f"{owner}__{channel}")
+        cur = []
+        try:
+            d = ref.get()
+            cur = ((d.to_dict() or {}).get("ids") or []) if d.exists else []
+        except Exception:
+            pass
+        merged = (cur + [str(i) for i in ids])[-cap:]
+        ref.set({"ids": merged, "n": len(merged), "at": _now()})
+    _soft(_w, "append_used_images")
