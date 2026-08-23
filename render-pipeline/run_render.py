@@ -1418,6 +1418,14 @@ def plan_mode():
     else:
         print("🎯 Mọi kênh đã đủ chỉ tiêu — không mở phiên (khỏi đốt runner).")
         return out_channels([])
+    # PILOT (23/8 — user: "chưa kiểm tra đẩy lên xong render rồi kịch bản lộn xộn thì sao"): chạy
+    # ĐÚNG 1 KÊNH, 1 short để soi trọn chuỗi viết → soi kịch bản → render → thumbnail → đẩy kho,
+    # trước khi mở 18 luồng. Bật bằng env PILOT_CHANNEL=<TÊN KÊNH>.
+    _pilot = (os.environ.get("PILOT_CHANNEL") or "").strip().upper()
+    if _pilot:
+        channels = [c for c in channels if str(c).upper() == _pilot] or [_pilot]
+        print(f"🧪 PILOT: chỉ chạy {channels[0]} (1 video) để kiểm trọn chuỗi trước khi mở 18 luồng.")
+        return out_channels(channels[:1])
     if len(channels) > MAX_MATRIX:
         print(f"   ✂️ {len(channels)} kênh còn việc > {MAX_MATRIX} slot -> lấy {MAX_MATRIX} kênh thiếu nhiều nhất, phần còn lại ưu tiên phiên sau.")
         channels = channels[:MAX_MATRIX]
@@ -1477,6 +1485,8 @@ def channel_mode(name):
         # chắc, soi kỹ rồi mới nới. Đổi round_long/round_short trên dashboard là ghi đè được.
         _ess = str(one.get("toon_mode", "")).lower() == "essay"
         round_long = int(_rl) if _rl is not None else (1 if _ess else 2)
+        if (os.environ.get("PILOT_CHANNEL") or "").strip():
+            round_long, round_short = 0, 1          # pilot: đúng 1 short, đủ để soi chất lượng
         round_short = int(_rs) if _rs is not None else (3 if _ess else 6)
         print(f"   🎨 TOON chế độ CHẤT: mẻ tối đa {round_long} long / {round_short} short (ảnh dày + rối giấy).")
     MAX_EMPTY = int(cfg.get("empty_retry", 4) or 4)                 # số vòng LIỀN ra 0 video (do rate-limit) rồi mới chịu ngừng -> quota cạn thật
