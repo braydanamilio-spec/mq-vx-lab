@@ -1198,13 +1198,16 @@ def mirror_connections_to_b() -> int:
         return 0
 
 
-def heal_unpushed(owner: str, hours: int = 8, cap: int = 30) -> int:
+def heal_unpushed(owner: str, hours: int = 30, cap: int = 40) -> int:
     """TỰ CHỮA video 'mồ côi' (22/8): Firestore A nghẽn 1 nhịp -> enqueue tưởng '0 kho Drive' ->
     9 video EMPIREUSA QC 98 render xong bị TỪ CHỐI đẩy, job ghi done «Xong (chưa đẩy Drive)» rồi
     runner chết -> file mất, chỉ còn KỊCH BẢN trong job. Hàm này chạy 1 lần/phiên (plan_mode):
     tìm job done + drive_id RỖNG + có script trong N giờ gần đây -> lật về 'failed' để
     find_resumable của kênh đó tự nhặt, render lại TỪ SCRIPT (0 quota AI) + đẩy kho tử tế.
-    Rẻ: dùng index (owner,status,created_at) đã deploy; chỉ ghi khi thật sự có nạn nhân."""
+    Rẻ: dùng index (owner,status,created_at) đã deploy; chỉ ghi khi thật sự có nạn nhân.
+    CỬA SỔ 30h (23/8): quota Firestore reset THEO NGÀY nên sự cố cạn quota luôn kéo dài xuyên đêm —
+    cửa sổ 8h ban đầu quét trượt sạch nạn nhân của chính sự cố mà nó sinh ra để chữa (phiên 07:06Z
+    báo "quét 0 job" trong khi 9 video EMPIREUSA nằm ở mốc 14-17h trước đó)."""
     try:
         # 23/8: CHỈ chữa khi có ĐƯỜNG ĐẨY KHO — A sống HOẶC gương B có dữ liệu. A chết + gương rỗng
         # mà vẫn lật failed thì lane render lại xong LẠI bị từ chối -> vòng lặp đốt máy vô ích cả đêm.
