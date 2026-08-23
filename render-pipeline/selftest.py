@@ -194,6 +194,19 @@ def t_toon():
     assert "toon_mode" in src, "dispatch chưa truyền toon_mode"
 
 
+def t_b2_failover():
+    """B2 (23/8): thiếu env -> failover từ chối êm, _db routing không đổi; cờ _B2 mặc định tắt."""
+    import firestore_bridge as FB
+    saved = dict(os.environ)
+    try:
+        os.environ.pop("FIREBASE_PROJECT_ID_B2", None)
+        assert FB._b2_available() is False
+        assert FB.failover_to_b2("selftest") is False
+        assert FB._B2["on"] is False
+    finally:
+        os.environ.clear(); os.environ.update(saved)
+
+
 def t_extract_json():
     import content_brain as CB
     assert CB._extract_json('```json\n{"a": 1}\n```')["a"] == 1
@@ -210,6 +223,7 @@ def main():
     check("đọc-mềm: quota chết không ném", t_soft_read)
     check("cổng dark_ok theo kênh", t_dark_ok)
     check("_extract_json bóc ```json", t_extract_json)
+    check("B2 failover: thiếu env từ chối êm", t_b2_failover)
     check("toon: validator + safe-words + route", t_toon)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")

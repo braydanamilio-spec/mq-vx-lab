@@ -281,6 +281,11 @@ def _soft(fn, tag: str):
         return _retry(fn, tries=2)
     except Exception as e:
         if _wq_exhausted(e):
+            # 23/8: GHI cạn cũng lật B2 (fn bám client cũ nên lượt này vào _PENDING xả lại trên B2)
+            if not _B2["on"] and failover_to_b2(f"write 429 ({tag})"):
+                if tag in _PENDING_TAGS and len(_PENDING) < _PENDING_CAP:
+                    _PENDING.append((fn, tag))
+                return None
             _WQ_DEAD["until"] = _t.time() + 20 * 60
             if tag in _PENDING_TAGS and len(_PENDING) < _PENDING_CAP:
                 _PENDING.append((fn, tag))
