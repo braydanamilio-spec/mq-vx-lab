@@ -1483,7 +1483,9 @@ def _beat_set(job_id):
         _BEAT["th"] = th
         th.start()
 
-# ── BẾN PHỤ R2: sổ video đang đậu tạm (23/8) ─────────────────────────────────────────────────
+# ── BẾN PHỤ R2: sổ video đang đậu tạm (23/8) — HIỆN ĐANG NGỦ ────────────────────────────────
+# 23/8 chiều: user chốt BỎ R2 ("hơi rối, tránh xung đột lỗi") -> KHÔNG chỗ nào gọi 3 hàm dưới nữa.
+# Giữ lại nguyên vẹn để bật lại trong 1 phút nếu cần; chúng không tự chạy, không tốn quota.
 # Video đẩy Drive hụt -> gửi lên R2 -> ghi 1 doc ở đây. Phiên sau `repush_r2()` tải về và đẩy vào
 # Drive rồi xoá doc + xoá file R2. Nhờ vậy hụt quota/hụt kho KHÔNG còn làm mất công render.
 

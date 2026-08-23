@@ -96,41 +96,6 @@ def _desc_src(story) -> str:
     return desc
 
 
-def _r2_park(out, channel, vtype, story) -> dict | None:
-    """Gửi video (+thumbnail nếu có) lên R2 khi Drive từ chối. Lỗi gì cũng nuốt — đây là lưới cuối."""
-    try:
-        import r2_store as R2
-        keys = []
-        try:
-            keys = FB.read_keys(OWNER) or []
-        except Exception:
-            pass
-        base = f"{channel}/{vtype}/{os.path.basename(out)}"
-        meta = R2.upload(out, base, keys)
-        if not meta:
-            return None
-        th = story.get("_thumb")
-        if th and os.path.exists(th):
-            R2.upload(th, base.rsplit(".", 1)[0] + ".jpg", keys)
-        # LƯU CẢ GÓI ĐĂNG (23/8): thiếu nó thì lúc chuyển từ R2 về Drive, video lên kho với mô tả
-        # rỗng + không tag -> đăng ra là mất hạng. Sổ R2 phải chở đủ thứ enqueue cần.
-        meta.update({"channel": channel, "vtype": vtype, "title": story.get("title") or "",
-                     "topic": story.get("topic") or story.get("title") or "",
-                     "description": (story.get("description") or "")[:4500],
-                     "hashtags": (story.get("hashtags") or [])[:20],
-                     "tags": (story.get("tags") or [])[:30],
-                     "sources": (story.get("sources") or [])[:5],
-                     "credits": (story.get("_credits") or [])[:8],
-                     "music": bool(story.get("_music")),
-                     "thumb_key": (base.rsplit(".", 1)[0] + ".jpg") if (th and os.path.exists(th)) else "",
-                     "has_thumb": bool(th and os.path.exists(th))})
-        FB.add_r2_pending(OWNER, meta)
-        return meta
-    except Exception as e:
-        print(f"   ⚠️ bến phụ R2 lỗi ({str(e)[:70]})")
-        return None
-
-
 def enqueue_drive(channel, out, story, vtype) -> bool:
     """Đẩy video + sidecar (+ thumbnail) lên Drive _QUEUE qua enqueue.py của AutoPublisher (nếu có)."""
     try:
@@ -177,12 +142,6 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
                 FB.count_pushed(OWNER, created["id"], channel, vtype)
         except Exception:
             pass
-        if not (created and created.get("id")):
-            # BẾN PHỤ (23/8): Drive từ chối -> gửi tạm lên Cloudflare R2 + ghi sổ, phiên sau tự
-            # chuyển về Drive. Trước đây tới đây là mất công render (chỉ còn artifact 3 ngày).
-            _r2 = _r2_park(out, channel, vtype, story)
-            if _r2:
-                return {"id": "", "account": "", "r2": _r2}
         return created or None                     # trả cả {id, account} -> lưu vào job để XEM/stream trên web
     except SystemExit as e:
         # enqueue.py dùng raise SystemExit khi kênh THIẾU trong channels.yaml. SystemExit kế thừa
@@ -1122,75 +1081,6 @@ def sweep_ai_quality(all_ch, cfg):
         print("   ✅ Đã xử lý xong toàn bộ video tồn chưa đạt chuẩn.")
 
 
-def repush_r2(cap: int = 12) -> int:
-    """Chuyển video đang đậu ở R2 về Drive (chạy đầu mỗi phiên, sau khi kho đã sẵn sàng).
-
-    23/8 — mắt xích cuối của lưới an toàn: R2 giữ file khi Drive từ chối, hàm này đưa nó về nhà.
-    Chuyển xong mới xoá khỏi R2; chuyển hụt thì để nguyên, phiên sau làm tiếp (không mất bao giờ)."""
-    try:
-        import r2_store as R2
-    except Exception:
-        return 0
-    pend = FB.list_r2_pending(OWNER, cap)
-    if not pend:
-        return 0
-    keys = []
-    try:
-        keys = FB.read_keys(OWNER) or []
-    except Exception:
-        pass
-    print(f"   🅿️ R2: {len(pend)} video đang đậu tạm -> thử chuyển về Drive")
-    moved = 0
-    for m in pend:
-        import tempfile
-        dest = os.path.join(tempfile.gettempdir(), os.path.basename(m.get("key", "video.mp4")))
-        try:
-            if not R2.download(m, dest, keys):
-                continue
-            story = {"title": m.get("title") or "", "topic": m.get("topic") or m.get("title") or "",
-                     "description": m.get("description") or "", "hashtags": m.get("hashtags") or [],
-                     "tags": m.get("tags") or [], "sources": m.get("sources") or [],
-                     "_credits": m.get("credits") or [], "_music": bool(m.get("music"))}
-            # KÉO CẢ THUMBNAIL VỀ (23/8): bỏ quên thì video lên kho không có ảnh -> dashboard báo
-            # "🖼 thiếu thumb" và YouTube lấy khung ngẫu nhiên.
-            if m.get("thumb_key"):
-                _tp = dest.rsplit(".", 1)[0] + ".jpg"
-                if R2.download({**m, "key": m["thumb_key"]}, _tp, keys):
-                    story["_thumb"] = _tp
-            eq = enqueue_drive(m.get("channel", ""), dest, story, m.get("vtype", "short"))
-            if eq and eq.get("id"):
-                R2.delete(m, keys)
-                if m.get("thumb_key"):
-                    R2.delete({**m, "key": m["thumb_key"]}, keys)
-                FB.clear_r2_pending(m.get("_doc"))
-                moved += 1
-        except Exception as e:
-            print(f"      ⚠️ chuyển {m.get('key','')[:40]} hụt ({str(e)[:50]})")
-        finally:
-            try:
-                os.path.exists(dest) and os.remove(dest)
-            except Exception:
-                pass
-    if moved:
-        print(f"   ✅ R2 -> Drive: đã chuyển {moved}/{len(pend)} video, trả lại chỗ trên R2.")
-    # DỌN FILE MỒ CÔI (23/8): file nằm trên R2 mà KHÔNG còn dòng sổ nào trỏ tới (sổ bị xoá, hoặc đã
-    # chuyển về Drive nhưng lệnh xoá hụt) sẽ ăn chỗ mãi mãi -> mỗi phiên quét bỏ, giữ bến luôn thoáng.
-    try:
-        keep = {m.get("key") for m in pend} | {m.get("thumb_key") for m in pend if m.get("thumb_key")}
-        for acc in R2.pool(keys):
-            cl = R2._client(acc)
-            for o in (cl.list_objects_v2(Bucket=acc["bucket"], MaxKeys=1000).get("Contents") or []):
-                if o["Key"] in keep:
-                    continue
-                age_h = (datetime.now(timezone.utc) - o["LastModified"]).total_seconds() / 3600
-                if age_h > 48:
-                    cl.delete_object(Bucket=acc["bucket"], Key=o["Key"])
-                    print(f"   🧹 R2 dọn file mồ côi {o['Key'][:50]} ({age_h/24:.1f} ngày)")
-    except Exception as e:
-        print(f"   ⚠️ dọn mồ côi R2 hụt ({str(e)[:60]})")
-    return moved
-
-
 def plan_mode():
     """ĐIỀU PHỐI (matrix 18 luồng): gating + health-check + re-render — CHẠY 1 LẦN — rồi xuất danh sách kênh
     cho các job render song song. Các job render KHÔNG lặp health-check/re-render (đỡ tốn API)."""
@@ -1347,25 +1237,10 @@ def plan_mode():
         FB.mirror_b_to_b2(OWNER)
     except Exception:
         pass
-    # BÁO SỨC CHỨA BẾN R2 (23/8): in ngay đầu phiên để biết còn chỗ đậu hay không.
-    try:
-        import r2_store as _R2S
-        _st = _R2S.status(FB.read_keys(OWNER) or [])
-        if _st:
-            print("   🅿️ Bến R2: " + " · ".join(f"{x['bucket']} {x['used_gb']}/{x['used_gb']+x['free_gb']}GB" for x in _st))
-            # GHI 1 DOC cho dashboard đọc (1 lượt đọc/lần tải trang) — anh theo dõi dung lượng R2 mà
-            # không phải mở Cloudflare. Cảnh báo sớm khi tổng chạm 8GB/bến.
-            _tot = round(sum(x["used_gb"] for x in _st), 2)
-            FB.set_config(OWNER, {"r2_status": {"at": datetime.now(timezone.utc).isoformat(),
-                                                "buckets": _st, "total_gb": _tot,
-                                                "warn": any(x["used_gb"] >= 8 for x in _st)}})
-    except Exception:
-        pass
-    # BẾN PHỤ R2 -> DRIVE (23/8): đưa video đang đậu tạm về nhà TRƯỚC khi render mẻ mới.
-    try:
-        repush_r2()
-    except Exception as e:
-        print(f"   ⚠️ chuyển R2 về Drive lỗi ({str(e)[:60]})")
+    # 23/8 (user: "mọi logic liên quan tới R2 tạm thời bỏ, tránh xung đột lỗi"): đã NGẮT hoàn toàn
+    # bến phụ R2 khỏi luồng sản xuất. Lưới an toàn còn 2 lớp và cả hai đang chạy: heal_unpushed đẩy
+    # lại video hụt kho ở phiên sau, và mọi bản render đều nằm trong artifact GitHub.
+    # Muốn bật lại: khôi phục _r2_park() trong enqueue_drive + repush_r2() ở đây (xem git 23/8).
     # TỰ CHỮA video render-xong-nhưng-chưa-đẩy-kho -> lật failed để lane render lại TỪ SCRIPT.
     # 23/8: user chốt DỌN SẠCH kho cũ và BỎ 180 video kẹt (chúng làm bằng pipeline cũ: ảnh dễ trùng,
     # sub chưa khớp) -> tắt tự chữa cho tới khi có nhu cầu mới. Bật lại: HEAL_UNPUSHED=1.

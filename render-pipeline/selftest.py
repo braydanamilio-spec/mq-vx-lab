@@ -300,22 +300,16 @@ def t_extract_json():
 
 
 
-def t_r2_pool():
-    """Hồ bến R2: đọc đúng chuỗi r2:..., bỏ dòng hỏng, không trùng, và KHÔNG lọt vào hồ key viết."""
-    import r2_store as R2
-    R2._CACHE["at"] = 0
-    ks = [{"id": "a", "key": "r2:acc1:AK1:SEC1:mm0-park"},
-          {"id": "b", "key": "r2:acc1:AK1:SEC1:mm0-park"},      # trùng -> phải gộp
-          {"id": "c", "key": "r2:acc2:AK2:SEC2:park2"},
-          {"id": "d", "key": "r2:hong"},                         # thiếu trường -> bỏ
-          {"id": "e", "key": "AIzaXXX"}]
-    pool = R2.pool(ks)
-    assert len(pool) == 2, f"pool R2 sai: {pool}"
-    assert pool[0]["endpoint"] == "https://acc1.r2.cloudflarestorage.com", pool[0]
+def t_key_pool_sach():
+    """Hồ key VIẾT không được lẫn key ảnh (px:/pb:) hay khoá lưu trữ (r2:) — 23/8 từng lẫn, gây lỗi 401."""
     import key_manager as KM
+    ks = [{"id": "a", "key": "AIzaTEST"}, {"id": "b", "key": "px:abc"},
+          {"id": "c", "key": "pb:12345678-x"}, {"id": "d", "key": "r2:acc:ak:se:bucket"},
+          {"id": "e", "key": "gsk_z"}]
     order = KM.key_order("CH", ks)
-    assert all(not str(k["key"]).startswith("r2:") for k in order), "key R2 lọt vào hồ viết"
-    print("  ✅ bến R2: gộp trùng + bỏ dòng hỏng + không lẫn vào hồ key viết")
+    assert all(not str(k["key"]).startswith(("px:", "pb:", "r2:")) for k in order), order
+    assert len(order) == 2, order
+    print("  ✅ hồ key viết sạch: chỉ còn key AI (loại px:/pb:/r2:)")
 
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
@@ -330,7 +324,7 @@ def main():
     check("B2 failover: thiếu env từ chối êm", t_b2_failover)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
-    check("bến R2: hồ nhiều tài khoản + không lẫn hồ key viết", t_r2_pool)
+    check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

@@ -365,3 +365,12 @@ kèm `introSec/heroSec/outroSec/totalSec`, engine lấy `totalSec` làm chuẩn,
 Mọi composition có audio phải nhận thời lượng qua props, không tự bịa.
 (Ghi chú: PULSEUSA/SWARMUSA ngắn 15-17s là do kịch bản chỉ có VO cho intro+outro, phần thân không có
 lời — đó là giới hạn THIẾT KẾ của format, không phải lỗi; muốn dài hơn phải thêm VO cho từng item.)
+
+### 23/8 chiều — GỠ BẾN PHỤ R2 khỏi luồng sản xuất
+User chốt bỏ ("hơi rối, tránh xung đột lỗi"). Đã ngắt: `_r2_park()` trong `enqueue_drive`, `repush_r2()`
+và khối báo dung lượng trong plan, boto3 khỏi workflow, toàn bộ giao diện R2 khỏi dashboard.
+GIỮ NGUYÊN (ngủ, không ai gọi): `r2_store.py`, 3 hàm sổ `*_r2_pending` trong firestore_bridge,
+endpoint `/api/r2-setup` ở worker. Bật lại = khôi phục 2 chỗ gọi trong run_render.
+Lưới an toàn còn 2 lớp và đủ dùng: `heal_unpushed` đẩy lại video hụt kho ở phiên sau + artifact GitHub.
+Bài học: 49/49 token Cloudflare cũ (chỉ có quyền Workers AI) KHÔNG tạo được R2 — muốn R2 phải tạo
+token riêng 3 quyền cho từng tài khoản, chi phí thao tác lớn hơn giá trị mang lại khi Drive đang khoẻ.
