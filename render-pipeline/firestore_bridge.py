@@ -1248,7 +1248,7 @@ def mirror_connections_to_b() -> int:
         return 0
 
 
-def heal_unpushed(owner: str, hours: int = 30, cap: int = 40) -> int:
+def heal_unpushed(owner: str, hours: int = 48, cap: int = 120) -> int:
     """TỰ CHỮA video 'mồ côi' (22/8): Firestore A nghẽn 1 nhịp -> enqueue tưởng '0 kho Drive' ->
     9 video EMPIREUSA QC 98 render xong bị TỪ CHỐI đẩy, job ghi done «Xong (chưa đẩy Drive)» rồi
     runner chết -> file mất, chỉ còn KỊCH BẢN trong job. Hàm này chạy 1 lần/phiên (plan_mode):
@@ -1278,21 +1278,25 @@ def heal_unpushed(owner: str, hours: int = 30, cap: int = 40) -> int:
         since = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
         _cr("heal_unpushed", 20)
         q = (_db_jobs().collection("render_jobs").where("owner", "==", owner)
-             .where("status", "==", "done").where("created_at", ">=", since).limit(120))
-        healed = scanned = 0
+             .where("status", "==", "done").where("created_at", ">=", since).limit(400))
+        healed = scanned = orphan = 0
         for d in q.stream():
             j = d.to_dict() or {}
             scanned += 1
+            _is_orphan = (j.get("drive_id") or "") == "" and bool(j.get("script"))
+            if _is_orphan:
+                orphan += 1
             if healed >= cap:
-                break
-            if (j.get("drive_id") or "") == "" and j.get("script"):
+                continue          # vẫn đếm tiếp để biết CÒN BAO NHIÊU (trước đây break -> mù số dư)
+            if _is_orphan:
                 _soft(lambda ref=d.reference: ref.set(
                     {"status": "failed", "note": "tự chữa: xong nhưng chưa đẩy được kho -> render lại từ script"},
                     merge=True), "heal_unpushed")
                 healed += 1
-        # LUÔN in 1 dòng (kể cả 0) — phiên 15:36Z heal im lặng không chẩn được nó chạy hay không.
-        print(f"   🩹 heal_unpushed: quét {scanned} job done/8h, chữa {healed} video chưa-đẩy-kho"
-              + (" (lật failed -> render lại từ script)." if healed else "."))
+        # LUÔN in 1 dòng (kể cả 0) + SỐ CÒN LẠI (23/8): 180 video mồ côi > sức chữa 1 phiên, phải
+        # biết còn bao nhiêu để chắc chắn KHÔNG BỎ SÓT trước khi hết cửa sổ 48h.
+        print(f"   🩹 heal_unpushed: quét {scanned} job done/{hours}h, chữa {healed} video chưa-đẩy-kho"
+              + (f", CÒN LẠI ~{max(0, orphan - healed)} chờ phiên sau." if orphan > healed else "."))
         return healed
     except Exception as e:
         print(f"   ⚠️ heal_unpushed lỗi ({str(e)[:70]}) — bỏ qua, không chặn phiên.")
