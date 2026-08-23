@@ -1173,6 +1173,21 @@ def repush_r2(cap: int = 12) -> int:
                 pass
     if moved:
         print(f"   ✅ R2 -> Drive: đã chuyển {moved}/{len(pend)} video, trả lại chỗ trên R2.")
+    # DỌN FILE MỒ CÔI (23/8): file nằm trên R2 mà KHÔNG còn dòng sổ nào trỏ tới (sổ bị xoá, hoặc đã
+    # chuyển về Drive nhưng lệnh xoá hụt) sẽ ăn chỗ mãi mãi -> mỗi phiên quét bỏ, giữ bến luôn thoáng.
+    try:
+        keep = {m.get("key") for m in pend} | {m.get("thumb_key") for m in pend if m.get("thumb_key")}
+        for acc in R2.pool(keys):
+            cl = R2._client(acc)
+            for o in (cl.list_objects_v2(Bucket=acc["bucket"], MaxKeys=1000).get("Contents") or []):
+                if o["Key"] in keep:
+                    continue
+                age_h = (datetime.now(timezone.utc) - o["LastModified"]).total_seconds() / 3600
+                if age_h > 48:
+                    cl.delete_object(Bucket=acc["bucket"], Key=o["Key"])
+                    print(f"   🧹 R2 dọn file mồ côi {o['Key'][:50]} ({age_h/24:.1f} ngày)")
+    except Exception as e:
+        print(f"   ⚠️ dọn mồ côi R2 hụt ({str(e)[:60]})")
     return moved
 
 
@@ -1338,6 +1353,12 @@ def plan_mode():
         _st = _R2S.status(FB.read_keys(OWNER) or [])
         if _st:
             print("   🅿️ Bến R2: " + " · ".join(f"{x['bucket']} {x['used_gb']}/{x['used_gb']+x['free_gb']}GB" for x in _st))
+            # GHI 1 DOC cho dashboard đọc (1 lượt đọc/lần tải trang) — anh theo dõi dung lượng R2 mà
+            # không phải mở Cloudflare. Cảnh báo sớm khi tổng chạm 8GB/bến.
+            _tot = round(sum(x["used_gb"] for x in _st), 2)
+            FB.set_config(OWNER, {"r2_status": {"at": datetime.now(timezone.utc).isoformat(),
+                                                "buckets": _st, "total_gb": _tot,
+                                                "warn": any(x["used_gb"] >= 8 for x in _st)}})
     except Exception:
         pass
     # BẾN PHỤ R2 -> DRIVE (23/8): đưa video đang đậu tạm về nhà TRƯỚC khi render mẻ mới.
