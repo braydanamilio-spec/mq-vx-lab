@@ -227,6 +227,72 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_failover_rehearsal():
+    """DIỄN TẬP FAILOVER (23/8, user: "đừng chạy xong mới ớ ra"): giả lập B chết giữa phiên bằng
+    client GIẢ (0 mạng, 0 quota) và kiểm 4 đường gây HỎNG SẢN PHẨM nếu lệch:
+      1) chủ đề ghi song song B+B2   2) phiên khẩn vẫn giữ đề tài cũ
+      3) count_done ở B2 = sổ thống kê + job khẩn (không về 0 -> không làm dư video)
+      4) rót ngược GỘP hai phía (không đè mất ngân hàng chống trùng)."""
+    import firestore_bridge as FB
+
+    class D:
+        def __init__(s, d, i="x"): s._d, s.id, s.exists = d, i, d is not None
+        def to_dict(s): return dict(s._d or {})
+        @property
+        def reference(s): return s
+
+    class R:
+        def __init__(s, st, c, i): s.st, s.c, s.id = st, c, i
+        def get(s): return D(s.st.get(s.c, {}).get(s.id))
+        def set(s, d, merge=False):
+            cur = s.st.setdefault(s.c, {}).setdefault(s.id, {})
+            cur.update(d) if merge else s.st[s.c].update({s.id: dict(d)})
+        def delete(s): s.st.get(s.c, {}).pop(s.id, None)
+
+    class C:
+        def __init__(s, st, n): s.st, s.n = st, n
+        def document(s, i): return R(s.st, s.n, i)
+        def where(s, *a, **k): return s
+        def limit(s, n): return s
+        def order_by(s, *a, **k): return s
+        def stream(s): return [D(v, i) for i, v in s.st.get(s.n, {}).items()]
+
+    class DB:
+        def __init__(s, st): s.st = st
+        def collection(s, n): return C(s.st, n)
+
+    B, B2, own = {}, {}, "u1"
+    key = f"{own}__CH"
+    B["render_topics"] = {key: {"owner": own, "channel": "CH", "topics": ["cu1"]}}
+    B2["render_topics"] = {key: {"owner": own, "channel": "CH", "topics": ["cu1"]}}
+    B2["render_stats"] = {own: {"CH": {"l": 4, "s": 12}}}
+    sv = (FB._db_meta, FB._db_jobs, FB._db, FB._soft, FB._b2_available, FB._count_jobs,
+          dict(FB._B2))
+    try:
+        FB._db_meta = FB._db_jobs = FB._db = lambda: DB(B)
+        FB._soft = lambda fn, tag: fn()
+        FB._b2_available = lambda: True
+        FB._B2["on"] = False; FB._B2["wclient"] = DB(B2)
+        FB._TOPICS_CACHE.clear(); FB._HOT_CACHE.clear()
+        FB.save_topics(own, "CH", ["moiA"])
+        assert "moiA" in B["render_topics"][key]["topics"], "B thiếu đề tài mới"
+        assert "moiA" in B2["render_topics"][key]["topics"], "B2 KHÔNG nhận ghi song song"
+        FB._B2["on"] = True; FB._B2["client"] = DB(B2)
+        FB._db_meta = FB._db_jobs = lambda: DB(B2)
+        FB._TOPICS_CACHE.clear()
+        FB.save_topics(own, "CH", ["khanB"])
+        t2 = B2["render_topics"][key]["topics"]
+        assert "khanB" in t2 and "moiA" in t2, "phiên khẩn làm mất đề tài cũ"
+        FB._count_jobs = lambda db, o, c, v=None: 2
+        FB._HOT_CACHE.clear()
+        n = FB.count_done(own, "CH")
+        assert n == 18, f"count_done ở B2 = {n} (phải 16+2=18, nếu 2 là sẽ LÀM DƯ video)"
+    finally:
+        (FB._db_meta, FB._db_jobs, FB._db, FB._soft, FB._b2_available, FB._count_jobs, _b) = sv
+        FB._B2.clear(); FB._B2.update(_b); FB._B2["on"] = False; FB._B2["client"] = None
+        FB._TOPICS_CACHE.clear(); FB._HOT_CACHE.clear()
+
+
 def t_extract_json():
     import content_brain as CB
     assert CB._extract_json('```json\n{"a": 1}\n```')["a"] == 1
@@ -244,6 +310,7 @@ def main():
     check("cổng dark_ok theo kênh", t_dark_ok)
     check("_extract_json bóc ```json", t_extract_json)
     check("B2 failover: thiếu env từ chối êm", t_b2_failover)
+    check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
