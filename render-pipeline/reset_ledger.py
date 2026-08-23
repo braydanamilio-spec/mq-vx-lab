@@ -28,13 +28,22 @@ def _clients():
     nơi thì phải dọn cả 2 nơi, không thể tin "đã xoá xong" từ một client động.
     """
     from google.cloud import firestore as _fs
+    from google.oauth2 import service_account
+    # 23/8: Client(project=...) mặc định dùng GOOGLE_APPLICATION_CREDENTIALS (= service account của
+    # project A) -> 403 trên B/B2. Phải nạp đúng khoá của B (B2 dùng chung khoá này).
+    sa = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B") or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    cred = None
+    try:
+        cred = service_account.Credentials.from_service_account_file(sa)
+    except Exception as e:
+        print(f"⚠️ không đọc được khoá B ({sa}): {str(e)[:60]}")
     out = []
     for label, env_pid in (("B", "FIREBASE_PROJECT_ID_B"), ("B2", "FIREBASE_PROJECT_ID_B2")):
         pid = os.environ.get(env_pid)
         if not pid:
             continue
         try:
-            out.append((f"{label}/{pid}", _fs.Client(project=pid)))
+            out.append((f"{label}/{pid}", _fs.Client(project=pid, credentials=cred)))
         except Exception as e:
             print(f"⚠️ không mở được {label} ({pid}): {str(e)[:60]}")
     return out
