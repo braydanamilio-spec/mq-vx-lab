@@ -22,7 +22,7 @@ const SafeImg: React.FC<{ src: string; style?: React.CSSProperties }> = ({ src, 
 type Frame = { img: string; from: number; dur: number };
 type Word = { w: string; f: number };   // f = frame bắt đầu TƯƠNG ĐỐI trong câu (karaoke)
 type Line = { audio: string; text: string; who: string; from: number; dur: number; words?: Word[];
-              punch?: boolean; emoji?: string };   // punch = câu chốt (rung máy + đạo cụ bay vào)
+              punch?: boolean };   // punch = câu chốt -> nhấn bằng cú máy, KHÔNG dùng emoji (23/8)
 
 type Chapter = { text: string; from: number; dur: number };
 
@@ -36,7 +36,6 @@ export const ToonShort: React.FC<{
   const ci = (x: number, a: number, b: number, c: number, d: number) =>
     interpolate(x, [a, b], [c, d], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const cur = lines.find(l => f >= l.from && f < l.from + l.dur);
-  const curIdx = cur ? lines.indexOf(cur) : -1;
   // ── NẤC 2 (23/8): "CON RỐI GIẤY" — nhân vật nhún/nghiêng theo nhịp thoại thay vì đứng chết ──
   // (a) IMPACT: mỗi câu mới bật ra 1 cú nảy nhẹ tắt dần trong ~10 frame — mắt đọc là "đổi lượt nói";
   // (b) BOB: nhún dọc theo TỪNG TỪ (dùng luôn mốc karaoke) -> cảm giác đang nói, biên độ nhỏ để không nôn;
@@ -49,8 +48,8 @@ export const ToonShort: React.FC<{
   // ── NẤC 3: câu CHỐT -> rung máy + zoom giật (biên độ tắt dần), đạo cụ emoji bay vào ──
   const punchOn = !!(cur && cur.punch);
   const shake = punchOn ? Math.max(0, 1 - relLine / 14) : 0;
-  const shX = shake * Math.sin(f * 1.7) * 1.1;
-  const shY = shake * Math.cos(f * 2.3) * 0.9;
+  const shX = shake * Math.sin(f * 1.7) * 0.75;   // biên độ vừa phải — rung nhẹ mới sang, rung mạnh thành clip TikTok rẻ tiền
+  const shY = shake * Math.cos(f * 2.3) * 0.6;
   return (
     <AbsoluteFill style={{ background: "#0e0e12", fontFamily: "Arial, sans-serif" }}>
       {frames.map((fr, i) => {
@@ -101,22 +100,16 @@ export const ToonShort: React.FC<{
             : cur.text}</div>
         </AbsoluteFill>
       )}
-      {/* NẤC 3 — ĐẠO CỤ BAY VÀO ở câu chốt: emoji cỡ lớn nảy ra từ mép rồi tan (kiểu meme USA) */}
-      {cur && cur.emoji && cur.punch && (() => {
-        const p = Math.min(1, relLine / 12);
-        const pop = p < 1 ? 0.4 + 0.75 * p + 0.18 * Math.sin(p * Math.PI) : 1.05;
-        const fade = Math.min(1, Math.max(0, (cur.dur - relLine) / 12));
-        const side = curIdx % 2 === 0 ? 1 : -1;
-        return (
-          <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", pointerEvents: "none" }}>
-            <div style={{
-              fontSize: 190, opacity: 0.92 * fade,
-              transform: `translate(${side * (26 - 26 * p)}%, ${-14 - 6 * p}%) scale(${pop}) rotate(${side * (16 - 16 * p)}deg)`,
-              filter: "drop-shadow(0 10px 24px rgba(0,0,0,.45))",
-            }}>{cur.emoji}</div>
-          </AbsoluteFill>
-        );
-      })()}
+      {/* NẤC 3 (bản 23/8 — user: "đừng rẻ tiền"): ĐẠO CỤ EMOJI BAY VÀO ĐÃ BỎ HẲN.
+          Câu chốt chỉ nhấn bằng NGÔN NGỮ ĐIỆN ẢNH: cú zoom giật + rung máy tắt dần (xử lý ở khối
+          camera phía trên) + tối 4 góc (vignette) khép nhẹ để mắt dồn vào giữa khung — sang, không
+          làm bẩn khung hình, hợp cả kênh hài lẫn kênh sepia cổ điển. */}
+      {punchOn && (
+        <AbsoluteFill style={{
+          pointerEvents: "none",
+          background: `radial-gradient(ellipse at 50% 52%, rgba(0,0,0,0) 52%, rgba(0,0,0,${0.34 * shake}) 100%)`,
+        }} />
+      )}
       {/* watermark kênh */}
       {name && (
         <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "flex-end", padding: 34 }}>

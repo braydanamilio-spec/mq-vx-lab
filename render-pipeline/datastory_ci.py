@@ -2605,22 +2605,10 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
         t += d + GAP
     if len(lines) < 4:
         raise RuntimeError("TTS quá ít câu")
-    # NẤC 3: đánh dấu CÂU CHỐT (punchline) + chọn đạo cụ emoji theo nội dung -> engine rung máy +
-    # thả emoji bay vào. Chỉ 1 lần/skit để giữ sức nặng (lạm dụng là thành rẻ tiền).
-    _EMO = [(("money", "dollar", "price", "cost", "pay", "tax", "bill", "cheap", "rich", "broke"), "💸"),
-            (("gun", "cop", "police", "arrest", "law", "court", "jail"), "🚨"),
-            (("food", "eat", "burger", "bbq", "grill", "pizza", "coffee", "soda"), "🍔"),
-            (("car", "truck", "drive", "road", "traffic", "gas"), "🚗"),
-            (("house", "home", "lawn", "hoa", "neighbor", "fence", "yard"), "🏠"),
-            (("time", "late", "wait", "hour", "minute", "year"), "⏰"),
-            (("love", "date", "wife", "husband", "marry", "kiss"), "❤️"),
-            (("dumb", "stupid", "fail", "wrong", "oops", "mistake"), "🤦"),
-            (("win", "best", "record", "first", "champion"), "🏆"),
-            (("history", "war", "president", "old", "ancient", "1800", "1900"), "📜")]
-    _last = lines[-1]
-    _low = (_last.get("text") or "").lower()
-    _last["punch"] = True
-    _last["emoji"] = next((e for kws, e in _EMO if any(k in _low for k in kws)), "💥")
+    # NẤC 3 (bản 23/8): đánh dấu CÂU CHỐT để engine nhấn bằng CÚ MÁY (zoom giật + rung nhẹ +
+    # vignette khép). ĐÃ BỎ đạo cụ emoji — user: "đừng làm xấu, trông rẻ tiền"; kênh sepia cổ
+    # điển (DUMB HISTORY) mà emoji bay vào là hỏng tông ngay.
+    lines[-1]["punch"] = True
     end_f = int(t * FPS) + 16
     spec = sorted((story.get("frames") or []), key=lambda x: int(x.get("line_idx", 0)))
     fr = []
