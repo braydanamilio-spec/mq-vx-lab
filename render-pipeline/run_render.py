@@ -1084,6 +1084,16 @@ def sweep_ai_quality(all_ch, cfg):
 def plan_mode():
     """ĐIỀU PHỐI (matrix 18 luồng): gating + health-check + re-render — CHẠY 1 LẦN — rồi xuất danh sách kênh
     cho các job render song song. Các job render KHÔNG lặp health-check/re-render (đỡ tốn API)."""
+    # 23/8 tối — ĐỒNG HỒ CHẶNG: phiên treo 3 lần liên tiếp mà vá timeout Firestore vẫn không hết,
+    # nghĩa là chỗ treo KHÔNG nằm ở nơi mình đoán. In mốc giây trước mỗi việc nặng: lần treo sau chỉ
+    # cần nhìn dòng cuối cùng in ra là biết chính xác đang đứng ở đâu, khỏi đoán tiếp.
+    import time as _T0
+    _t_plan = _T0.time()
+
+    def _moc(ten):
+        print(f"   ⏱ [{_T0.time() - _t_plan:6.1f}s] {ten}", flush=True)
+
+    _moc("bắt đầu điều phối")
     import json
     # IN TRƯỚC MỌI LỆNH GHI: dính 429 thì vẫn biết đang nối vào project nào (B thật hay đã lùi về A).
     try:
@@ -1225,15 +1235,18 @@ def plan_mode():
         return out_channels([])
     # 📟 CHUÔNG QUOTA NGÀY (23/8): đọc sổ tổng 1 lượt -> thấy lũy kế CẢ NGÀY ngay đầu phiên,
     # không còn cảnh đọc cháy ngầm từ trưa mà tối mới lộ (đêm 22/8 đứng máy 9 tiếng vì thế).
+    _moc("quota_pulse")
     FB.quota_pulse(OWNER)   # sổ quota ngày + chuông 60/85% + ≥90% lật B2 CHỦ ĐỘNG (gương còn tươi)
     # GƯƠNG kho Drive A->B (23/8) — publisher fallback khi A nghẽn; phải chạy TRƯỚC heal để
     # phiên đầu tiên A còn thở là gương sống, heal thấy "có đường đẩy" mà làm việc.
     try:
+        _moc("gương kết nối A→B")
         FB.mirror_connections_to_b()
     except Exception:
         pass
     # GƯƠNG B->B2 (23/8): B2 dự phòng luôn có sẵn kênh/config/key — B cạn là failover_to_b2 lật ngay.
     try:
+        _moc("gương B→B2")
         FB.mirror_b_to_b2(OWNER)
     except Exception:
         pass
@@ -1249,6 +1262,7 @@ def plan_mode():
     # không thì mất trắng như 180 video sáng nay. Tắt lại: HEAL_UNPUSHED=0.
     if os.environ.get("HEAL_UNPUSHED", "1") != "0":
         try:
+            _moc("tự chữa video chưa đẩy")
             FB.heal_unpushed(OWNER)
         except Exception:
             pass
@@ -1303,6 +1317,7 @@ def plan_mode():
         process_requests(keys, {"done": 0, "fails": []})   # 🔄 render lại (thay bản cũ) — 1 lần ở plan
     except Exception:
         traceback.print_exc()
+    _moc("đọc danh sách kênh")
     all_ch = [c for c in FB.read_channels(OWNER) if c.get("name")]
     try:
         # LINT ĐỒNG BỘ KÊNH: mọi kênh render PHẢI có trong channels.yaml của publisher — thiếu là
