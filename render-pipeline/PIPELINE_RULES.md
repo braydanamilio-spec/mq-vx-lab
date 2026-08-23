@@ -355,3 +355,13 @@ Fix 2 tầng: (1) synth thử lại 3 lần rồi NÉM LỖI thay vì trả 0; (
 hình (dọc ≥20s, ngang ≥45s) và ĐO MỨC ÂM bằng volumedetect, ≤ -45dB coi là câm -> trượt QC.
 → **LUẬT**: QC phải đo THỨ NGƯỜI XEM NGHE/THẤY, không chỉ đo "file có tồn tại luồng đó không".
 Hàm sinh dữ liệu nền tảng (TTS/ảnh) không được phép trả giá trị rỗng trong im lặng.
+
+### BUG 23/8 — video CLOCKWORK cắt cụt lời (13.2s trong khi giọng 27s)
+Sáng nay chẩn đoán nhầm là "video câm". Đo lại kịch bản: CLOCKWORKUSA có 6 đoạn VO / 69 từ ≈ 27 giây
+lời, mà video chỉ 13.2s. Gốc: `calcClockwork` trong engine tính độ dài bằng HẰNG SỐ CỨNG
+(1.5 + 1.8×số mốc + 3 + 1.5) và **bỏ qua hoàn toàn** thời lượng giọng mà Python đã đo. Fix: Python gửi
+kèm `introSec/heroSec/outroSec/totalSec`, engine lấy `totalSec` làm chuẩn, hằng số chỉ còn là dự phòng.
+→ **LUẬT**: độ dài video PHẢI tính từ độ dài giọng đọc thật, không bao giờ từ hằng số phỏng đoán.
+Mọi composition có audio phải nhận thời lượng qua props, không tự bịa.
+(Ghi chú: PULSEUSA/SWARMUSA ngắn 15-17s là do kịch bản chỉ có VO cho intro+outro, phần thân không có
+lời — đó là giới hạn THIẾT KẾ của format, không phải lỗi; muốn dài hơn phải thêm VO cho từng item.)

@@ -2499,7 +2499,11 @@ def build_clockwork_props(story, sdir, handle="@clockworkusa", accent="#C2410C",
     return {"title": (story.get("title") or "TIME, COMPRESSED"), "handle": handle, "color": accent, "accent": accent,
             "sfx": True, "scaleLabel": story.get("scaleLabel") or "",
             "waypoints": wps_out, "hero": {"label": hero.get("label"), "atPercent": hero.get("atPercent"),
-            "realValue": hero.get("realValue")}, "audio": rel(track), "music": music}
+            "realValue": hero.get("realValue")}, "audio": rel(track), "music": music,
+            # 23/8 — GỬI THỜI LƯỢNG THẬT SANG REMOTION: trước đây composition tự tính độ dài bằng
+            # HẰNG SỐ CỨNG (1.5 + 1.8×mốc + 3 + 1.5) nên video CLOCKWORK dài 13.2s trong khi giọng
+            # đọc tới 27s -> cắt mất hơn nửa lời. Có 4 số này thì độ dài video = độ dài giọng.
+            "introSec": introSec, "heroSec": heroSec, "outroSec": outroSec, "totalSec": total}
 
 
 def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",

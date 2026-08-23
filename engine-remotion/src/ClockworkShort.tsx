@@ -21,8 +21,12 @@ const K = 4.5; // độ "khựng" của easing quét — càng lớn càng nhanh
 
 export const calcClockwork = ({ props }: any) => {
   const wps: Waypoint[] = props.waypoints || [];
+  // 23/8: ƯU TIÊN thời lượng THẬT của giọng đọc (Python gửi kèm totalSec). Công thức hằng số bên
+  // dưới chỉ là phương án dự phòng cho props đời cũ — chính nó đã cắt cụt lời ở CLOCKWORKUSA
+  // (video 13.2s / giọng 27s). Video không bao giờ được ngắn hơn tiếng nói của nó.
+  const real = Number(props.totalSec || 0);
   const sweepSec = Math.max(2.5, wps.length * WAYPOINT_SEC);
-  const total = INTRO_SEC + sweepSec + HERO_SEC + OUTRO_SEC;
+  const total = real > 0.5 ? real + 0.3 : INTRO_SEC + sweepSec + HERO_SEC + OUTRO_SEC;
   return { durationInFrames: Math.round(total * FPS), fps: FPS, width: 1080, height: 1920 };
 };
 
