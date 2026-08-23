@@ -112,7 +112,17 @@ def _r2_park(out, channel, vtype, story) -> dict | None:
         th = story.get("_thumb")
         if th and os.path.exists(th):
             R2.upload(th, base.rsplit(".", 1)[0] + ".jpg", keys)
+        # LƯU CẢ GÓI ĐĂNG (23/8): thiếu nó thì lúc chuyển từ R2 về Drive, video lên kho với mô tả
+        # rỗng + không tag -> đăng ra là mất hạng. Sổ R2 phải chở đủ thứ enqueue cần.
         meta.update({"channel": channel, "vtype": vtype, "title": story.get("title") or "",
+                     "topic": story.get("topic") or story.get("title") or "",
+                     "description": (story.get("description") or "")[:4500],
+                     "hashtags": (story.get("hashtags") or [])[:20],
+                     "tags": (story.get("tags") or [])[:30],
+                     "sources": (story.get("sources") or [])[:5],
+                     "credits": (story.get("_credits") or [])[:8],
+                     "music": bool(story.get("_music")),
+                     "thumb_key": (base.rsplit(".", 1)[0] + ".jpg") if (th and os.path.exists(th)) else "",
                      "has_thumb": bool(th and os.path.exists(th))})
         FB.add_r2_pending(OWNER, meta)
         return meta
@@ -1131,11 +1141,21 @@ def repush_r2(cap: int = 12) -> int:
         try:
             if not R2.download(m, dest, keys):
                 continue
-            story = {"title": m.get("title") or "", "topic": m.get("title") or "",
-                     "description": "", "hashtags": [], "tags": []}
+            story = {"title": m.get("title") or "", "topic": m.get("topic") or m.get("title") or "",
+                     "description": m.get("description") or "", "hashtags": m.get("hashtags") or [],
+                     "tags": m.get("tags") or [], "sources": m.get("sources") or [],
+                     "_credits": m.get("credits") or [], "_music": bool(m.get("music"))}
+            # KÉO CẢ THUMBNAIL VỀ (23/8): bỏ quên thì video lên kho không có ảnh -> dashboard báo
+            # "🖼 thiếu thumb" và YouTube lấy khung ngẫu nhiên.
+            if m.get("thumb_key"):
+                _tp = dest.rsplit(".", 1)[0] + ".jpg"
+                if R2.download({**m, "key": m["thumb_key"]}, _tp, keys):
+                    story["_thumb"] = _tp
             eq = enqueue_drive(m.get("channel", ""), dest, story, m.get("vtype", "short"))
             if eq and eq.get("id"):
                 R2.delete(m, keys)
+                if m.get("thumb_key"):
+                    R2.delete({**m, "key": m["thumb_key"]}, keys)
                 FB.clear_r2_pending(m.get("_doc"))
                 moved += 1
         except Exception as e:
