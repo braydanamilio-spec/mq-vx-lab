@@ -443,3 +443,12 @@ mọi phiên xếp sau — tối nay mất 4 phiên liên tiếp vì đúng chuy
 nhanh, cron 10' sau mở phiên mới.
 → **LUẬT**: trần thời gian phải đặt theo THỜI GIAN CHẠY THẬT (× 4-5 lần), không đặt "cho rộng rãi".
 Trần rộng biến một phiên hỏng thành một giờ đứng máy.
+
+### BUG 23/8 tối — `NameError: name 'story' is not defined` (do chính bản vá gói-đăng)
+Khi bổ sung mô tả/hashtag/tag vào MỌI lệnh ghi `done`, script chèn tự động dùng biến `story` cho cả
+những khối mà biến kịch bản thật tên khác (`st_` trong `_doc_long_then_shorts` và nhánh toon-short).
+Hậu quả: video render XONG rồi mới nổ ở bước ghi sổ — mất công render, job kẹt trạng thái.
+Fix: dò biến thật theo dòng `title=<var>.get(...)` ngay trong khối rồi thay đúng tên; thêm bước quét
+AST tìm mọi hàm dùng `story` mà không gán (đã sạch).
+→ **LUẬT**: sửa hàng loạt bằng script thì PHẢI quét lại bằng AST, đừng tin `python -c "import ast"`
+chỉ kiểm cú pháp — cú pháp đúng vẫn có thể sai TÊN BIẾN theo ngữ cảnh từng khối.

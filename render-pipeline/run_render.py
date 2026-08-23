@@ -582,7 +582,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
         seq = enqueue_drive(channel, sout, st_, "short")
         sdid = (seq or {}).get("id")
         sst("done", "Short đã đẩy Drive" if sdid else "Short xong (chưa đẩy Drive)",
-            description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],
+            description=_desc_src(st_), hashtags=st_.get("hashtags") or [], tags=st_.get("tags") or [],
             title=st_.get("title_yt") or st_.get("title"), score=(sinfo or {}).get("score"),
             dur=(sinfo or {}).get("dur", 0), size_mb=(sinfo or {}).get("size_mb", 0),
             res=(sinfo or {}).get("res", ""), drive_id=sdid or "", drive_account=(seq or {}).get("account", ""),
@@ -1680,7 +1680,7 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
         seq = enqueue_drive(channel, sout, meta, "short")
         sdid = (seq or {}).get("id")
         sst("done", "Short toon đã đẩy Drive" if sdid else "Short toon xong (chưa đẩy Drive)",
-            description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],
+            description=_desc_src(st_), hashtags=st_.get("hashtags") or [], tags=st_.get("tags") or [],
             title=st_.get("title"), score=(sinfo or {}).get("score"), dur=(sinfo or {}).get("dur", 0),
             size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""), drive_id=sdid or "",
             drive_account=(seq or {}).get("account", ""), thumb_id=(seq or {}).get("thumb_id", ""),
