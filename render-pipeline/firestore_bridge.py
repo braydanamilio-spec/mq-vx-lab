@@ -153,6 +153,34 @@ def flush_soft() -> int:
     return ok
 
 
+def flush_rw_ledger(owner: str):
+    """SỔ TỔNG ĐỌC/GHI THEO NGÀY (23/8): đêm 22/8 quota ĐỌC B cháy ngầm từ trưa mà không ai thấy vì
+    chỉ soi từng luồng, không cộng lũy kế cả ngày -> tối lộ ra thì đã muộn, dây chuyền đứng tới reset.
+    Mỗi tiến trình cuối đời cộng dồn số ĐO THẬT vào doc render_stats/__rw__ theo ngày (field-Increment,
+    1 lượt ghi). Plan đọc lại 1 lượt/phiên -> chuông báo 60%/85% NGAY TRONG NGÀY, không đợi chết mới biết."""
+    try:
+        if not (_WRITES["n"] or _READS["n"]):
+            return
+        from google.cloud.firestore_v1 import Increment
+        day = datetime.now(timezone.utc).strftime("%Y%m%d")
+        _soft(lambda: _db_jobs().collection("render_stats").document(f"__rw__{owner}").set(
+            {day: {"r": Increment(_READS["n"]), "w": Increment(_WRITES["n"])}}, merge=True), "rw_ledger")
+    except Exception:
+        pass
+
+
+def read_rw_ledger(owner: str) -> tuple:
+    """(đọc, ghi) lũy kế HÔM NAY từ sổ tổng — plan gọi 1 lần/phiên để rung chuông sớm."""
+    try:
+        _cr("rw_ledger", 1)
+        day = datetime.now(timezone.utc).strftime("%Y%m%d")
+        d = _db_jobs().collection("render_stats").document(f"__rw__{owner}").get()
+        x = ((d.to_dict() or {}).get(day) or {}) if d.exists else {}
+        return int(x.get("r", 0)), int(x.get("w", 0))
+    except Exception:
+        return -1, -1
+
+
 def write_report() -> str:
     """Chuỗi 1-2 dòng tổng kết lượt ghi Firestore của tiến trình này."""
     if not _WRITES["n"]:
