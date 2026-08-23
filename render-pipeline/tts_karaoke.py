@@ -177,10 +177,26 @@ def synth(text: str, mp3_path: str, voice: str = None, rate: str = None):
     voice/rate=None -> lấy theo kênh đang render (set_voice), không có thì về mặc định."""
     voice = voice or _ACTIVE["voice"] or DEFAULT_VOICE
     rate = rate or _ACTIVE["rate"] or DEFAULT_RATE
-    sentences = asyncio.run(_run(text, mp3_path, voice, rate))
-    subs = _expand_words(sentences)
-    dur = (subs[-1]["t"] + subs[-1]["d"]) if subs else 0.0
-    return round(dur, 3), subs, _to_srt(subs)
+    # 23/8 — GỐC CỦA "VIDEO 13 GIÂY CÂM": edge-tts trục trặc (mạng/chặn tạm) thì `sentences` rỗng,
+    # hàm này lặng lẽ trả dur=0.0. Người gọi cộng 0 vào timeline -> ra video ngắn tũn KHÔNG CÓ LỜI,
+    # mà QC cũ chỉ hỏi "có luồng audio không" nên vẫn chấm đạt rồi đẩy lên kho. Nay: thử lại, vẫn
+    # rỗng thì NÉM LỖI để lane đánh dấu hỏng và render lại, thay vì đẻ ra video câm.
+    import time as _t
+    last = None
+    for i, wait in enumerate((0, 2, 5)):
+        if wait:
+            _t.sleep(wait)
+        try:
+            sentences = asyncio.run(_run(text, mp3_path, voice, rate))
+            subs = _expand_words(sentences)
+            dur = (subs[-1]["t"] + subs[-1]["d"]) if subs else 0.0
+        except Exception as e:
+            last, dur, subs = e, 0.0, []
+        if dur > 0.05 or not str(text or "").strip():
+            return round(dur, 3), subs, _to_srt(subs)
+        print(f"   🔁 TTS trả 0 giây (lần {i + 1}/3) — thử lại: {str(text)[:40]}…")
+    raise RuntimeError(f"TTS rỗng sau 3 lần thử ({str(last)[:60] if last else 'không có tiếng'}) — "
+                       f"không dựng video câm.")
 
 
 def main():

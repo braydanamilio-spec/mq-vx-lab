@@ -346,3 +346,12 @@ và bến R2 (`r2:`) bị đem đi gọi API viết chữ: mỗi lượt 1 lần
 key R2 nên mức pha loãng còn nặng hơn. Fix: lọc `px:/pb:/r2:` ngay đầu `key_order`, có test trong selftest.
 → **LUẬT**: mỗi khi thêm LOẠI key mới vào hồ chung, phải lọc nó ra khỏi các hồ không dùng nó
 (viết / vẽ / vision / ảnh thật / lưu trữ) và thêm 1 test chặn hồi quy.
+
+### BUG 23/8 — video 13 giây CÂM vẫn được chấm QC 100
+Ba short CLOCKWORKUSA ra lò 0:13 · 1.8MB · giống hệt nhau. Gốc: `TK.synth()` khi edge-tts trục trặc
+trả `dur=0.0` LẶNG LẼ -> timeline cộng 0 -> video chỉ còn khung tĩnh, không lời. `qc()` lúc đó chỉ hỏi
+"dur>=5 và CÓ luồng audio" — luồng audio câm vẫn tính là có -> đạt 100 -> đẩy thẳng lên kho.
+Fix 2 tầng: (1) synth thử lại 3 lần rồi NÉM LỖI thay vì trả 0; (2) qc() thêm ĐỘ DÀI TỐI THIỂU theo khổ
+hình (dọc ≥20s, ngang ≥45s) và ĐO MỨC ÂM bằng volumedetect, ≤ -45dB coi là câm -> trượt QC.
+→ **LUẬT**: QC phải đo THỨ NGƯỜI XEM NGHE/THẤY, không chỉ đo "file có tồn tại luồng đó không".
+Hàm sinh dữ liệu nền tảng (TTS/ảnh) không được phép trả giá trị rỗng trong im lặng.

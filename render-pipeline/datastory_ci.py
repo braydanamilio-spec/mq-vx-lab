@@ -1281,12 +1281,44 @@ def qc(mp4):
     dur = float(ff(["-show_entries", "format=duration", "-of", "default=nk=1:nw=1"]) or 0)
     ach = ff(["-select_streams", "a", "-show_entries", "stream=codec_type", "-of", "default=nk=1:nw=1"])
     wh = ff(["-select_streams", "v", "-show_entries", "stream=width,height", "-of", "csv=p=0:s=x"])
-    ok = dur >= 5 and ach == "audio"
     try:
         size_mb = round(os.path.getsize(mp4) / 1e6, 1)
     except Exception:
         size_mb = 0
-    return ok, {"dur": round(dur, 1), "audio": ach == "audio", "res": wh, "size_mb": size_mb}
+    # 23/8 — VÁ LỖ QC LỚN: mốc cũ chỉ là "dur >= 5 và CÓ luồng audio". Ba short CLOCKWORKUSA ra lò
+    # 0:13 / 1.8MB / audio CÂM vẫn được chấm QC 100 rồi đẩy thẳng lên kho. Hai thứ phải kiểm thêm:
+    #   1) ĐỘ DÀI TỐI THIỂU theo khổ hình (dọc = short, ngang = long) — 13 giây không phải một video.
+    #   2) CÓ TIẾNG THẬT hay không — luồng audio tồn tại KHÔNG có nghĩa là có người nói.
+    try:
+        _w, _h = (int(x) for x in str(wh).lower().split("x")[:2])
+    except Exception:
+        _w = _h = 0
+    portrait = _h > _w
+    min_dur = 20 if portrait else 45
+    # đo mức âm trung bình: câm hoàn toàn -> ffmpeg trả -91 dB; giọng nói chuẩn hoá -14 LUFS ~ -20 dB
+    mean_db = 0.0
+    try:
+        r = subprocess.run(["ffmpeg", "-hide_banner", "-i", mp4, "-af", "volumedetect",
+                            "-f", "null", "-"], capture_output=True, text=True, timeout=120)
+        for line in (r.stderr or "").splitlines():
+            if "mean_volume:" in line:
+                mean_db = float(line.split("mean_volume:")[1].split("dB")[0].strip())
+    except Exception:
+        mean_db = 0.0
+    silent = mean_db <= -45.0
+    ok = dur >= max(5, min_dur) and ach == "audio" and not silent
+    info = {"dur": round(dur, 1), "audio": ach == "audio", "res": wh, "size_mb": size_mb,
+            "mean_db": round(mean_db, 1)}
+    if not ok:
+        why = []
+        if dur < min_dur:
+            why.append(f"quá ngắn {round(dur,1)}s < {min_dur}s ({'dọc/short' if portrait else 'ngang/long'})")
+        if ach != "audio":
+            why.append("không có luồng âm thanh")
+        if silent:
+            why.append(f"CÂM (mức âm {round(mean_db,1)}dB) — TTS hỏng, video không có lời")
+        info["err"] = " · ".join(why)
+    return ok, info
 
 
 def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None, on_status=None, on_limit=None, on_ok=None, resume_story=None,
