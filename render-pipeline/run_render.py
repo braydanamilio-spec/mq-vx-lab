@@ -1401,6 +1401,14 @@ def channel_mode(name):
     _rl, _rs = cfg.get("round_long"), cfg.get("round_short")        # None (chưa set) = mặc định 10/30; 0 = anh chọn "không giới hạn"
     round_long = int(_rl) if _rl is not None else 10
     round_short = int(_rs) if _rs is not None else 30
+    # 23/8 (user chốt: "nâng chất, giảm lượng"): kênh TOON siết mẻ còn 2 long / 6 short mỗi phiên.
+    # Lý do: toon nay vẽ tới 16 khung/skit (mật độ ảnh ×2-3) + hiệu ứng rối giấy -> mỗi video nặng
+    # gấp bội; chạy ít mà kỹ thì FLUX/Vision có chỗ thở, video nào ra cũng đủ đô, thay vì 30 cái
+    # hao hao nhau. Kênh cũ (doc/race) giữ nguyên nhịp — chúng rẻ và đã ổn định.
+    if str(one.get("format", "")).lower() == "toon":
+        round_long = int(_rl) if _rl is not None else 2
+        round_short = int(_rs) if _rs is not None else 6
+        print(f"   🎨 TOON chế độ CHẤT: mẻ tối đa {round_long} long / {round_short} short (ảnh dày + rối giấy).")
     MAX_EMPTY = int(cfg.get("empty_retry", 4) or 4)                 # số vòng LIỀN ra 0 video (do rate-limit) rồi mới chịu ngừng -> quota cạn thật
     start = time.monotonic(); rounds = 0; last_dur = 0; empty_streak = 0
     while True:

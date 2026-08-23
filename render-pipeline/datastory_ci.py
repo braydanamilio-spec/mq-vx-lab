@@ -2605,6 +2605,22 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
         t += d + GAP
     if len(lines) < 4:
         raise RuntimeError("TTS quá ít câu")
+    # NẤC 3: đánh dấu CÂU CHỐT (punchline) + chọn đạo cụ emoji theo nội dung -> engine rung máy +
+    # thả emoji bay vào. Chỉ 1 lần/skit để giữ sức nặng (lạm dụng là thành rẻ tiền).
+    _EMO = [(("money", "dollar", "price", "cost", "pay", "tax", "bill", "cheap", "rich", "broke"), "💸"),
+            (("gun", "cop", "police", "arrest", "law", "court", "jail"), "🚨"),
+            (("food", "eat", "burger", "bbq", "grill", "pizza", "coffee", "soda"), "🍔"),
+            (("car", "truck", "drive", "road", "traffic", "gas"), "🚗"),
+            (("house", "home", "lawn", "hoa", "neighbor", "fence", "yard"), "🏠"),
+            (("time", "late", "wait", "hour", "minute", "year"), "⏰"),
+            (("love", "date", "wife", "husband", "marry", "kiss"), "❤️"),
+            (("dumb", "stupid", "fail", "wrong", "oops", "mistake"), "🤦"),
+            (("win", "best", "record", "first", "champion"), "🏆"),
+            (("history", "war", "president", "old", "ancient", "1800", "1900"), "📜")]
+    _last = lines[-1]
+    _low = (_last.get("text") or "").lower()
+    _last["punch"] = True
+    _last["emoji"] = next((e for kws, e in _EMO if any(k in _low for k in kws)), "💥")
     end_f = int(t * FPS) + 16
     spec = sorted((story.get("frames") or []), key=lambda x: int(x.get("line_idx", 0)))
     fr = []
@@ -2615,6 +2631,37 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
     for k2 in range(len(fr)):
         end = fr[k2 + 1]["from"] if k2 + 1 < len(fr) else end_f
         fr[k2]["dur"] = max(24, end - fr[k2]["from"])
+    # ── NẤC 1 (23/8, user: "cần chất lượng, giảm số lượng"): TĂNG MẬT ĐỘ ẢNH ──────────────────
+    # Khung nào dài hơn ~3.2s bị CẮT ĐÔI/BA thành các góc máy khác nhau (toàn → cận → qua vai).
+    # Mắt người bắt đầu thấy "ảnh chết" từ ~3s; cắt góc đều đặn là hết cảm giác tĩnh mà KHÔNG
+    # tốn AI viết lại (chỉ thêm lượt vẽ FLUX — CF free). Trần 16 khung/skit để không nổ neuron.
+    MAXD, CAP = int(3.2 * FPS), 16
+    ANGLES = ["wide establishing shot of the whole scene",
+              "medium shot, characters from the waist up",
+              "tight head-and-shoulders shot of the character who is speaking",
+              "over-the-shoulder shot from behind the other character",
+              "low angle shot looking up, dramatic",
+              "side profile two-shot of both characters"]
+    dense, ai = [], 0
+    for k2, fx in enumerate(fr):
+        nsub = max(1, min(3, -(-fx["dur"] // MAXD)))          # trần 3 lát/khung
+        if len(dense) + nsub > CAP:
+            nsub = max(1, CAP - len(dense))
+        step = fx["dur"] // nsub
+        for s in range(nsub):
+            dense.append({
+                "img": f"{prefix}fr{len(dense)}.jpg",
+                "from": fx["from"] + s * step,
+                "dur": (fx["dur"] - s * step) if s == nsub - 1 else step,
+                # lát đầu giữ nguyên ý đạo diễn của AI; lát sau đổi GÓC MÁY (cùng cảnh, cùng nhân vật)
+                "prompt": fx["prompt"] if s == 0 else f"{fx['prompt']}, {ANGLES[(k2 + s) % len(ANGLES)]}",
+            })
+            ai += 1
+        if len(dense) >= CAP:
+            break
+    if dense:
+        fr = dense
+    print(f"   🎞️ Mật độ ảnh: {len(fr)} khung / {end_f / FPS:.0f}s (~{end_f / FPS / max(1, len(fr)):.1f}s/khung)")
     okn = 0
     for k2, fx in enumerate(fr):
         dest = os.path.join(pub, fx["img"])
