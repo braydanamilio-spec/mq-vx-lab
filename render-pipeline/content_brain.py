@@ -421,7 +421,46 @@ def _extract_json(text: str) -> dict:
         t = t.split("```", 2)[1]
         if t.lstrip().lower().startswith("json"):
             t = t.lstrip()[4:]
-    return json.loads(t.strip())
+    return _kill_stale_openers(json.loads(t.strip()))
+
+
+# 23/8 — ĐO THẬT trên 6 video mới: 3/6 mở bài bằng đúng một khuôn "Did you know…". Khán giả Mỹ lướt
+# short nghe câu đó là biết ngay video AI, và kênh nào cũng vào bài giống nhau thì không có chất
+# riêng. Chặn ở ĐÚNG MỘT CHỖ (mọi generator đều bóc JSON qua _extract_json) thay vì sửa 12 prompt.
+_STALE = (
+    "did you know that ", "did you know ", "have you ever wondered ", "have you ever thought about ",
+    "let me tell you ", "in this video ", "today we're going to ", "today we are going to ",
+    "believe it or not, ", "here's something ", "imagine this: ",
+)
+
+
+def _kill_stale_openers(d):
+    """Cắt câu mở sáo rỗng, giữ nguyên phần thông tin phía sau (không bịa thêm chữ nào)."""
+    if not isinstance(d, dict):
+        return d
+
+    def fix(t):
+        s0 = str(t or "").strip()
+        low = s0.lower()
+        for p in _STALE:
+            if low.startswith(p):
+                s0 = s0[len(p):].strip()
+                if s0[:1].islower():
+                    s0 = s0[0].upper() + s0[1:]
+                # giữ nguyên dấu câu gốc: bỏ khuôn mở bài mà biến câu hỏi thành câu kể thì đọc lên ngang phè
+                if not s0.endswith((".", "!", "?", "…")):
+                    s0 += "."
+                return s0
+        return t
+
+    for k in ("hook", "intro_vo", "title"):
+        if d.get(k):
+            d[k] = fix(d[k])
+    for key, sub in (("scenes", "nar"), ("dialog", "line"), ("waypoints", "vo"), ("pairs", "vo")):
+        arr = d.get(key) or []
+        if arr and isinstance(arr[0], dict) and arr[0].get(sub):
+            arr[0][sub] = fix(arr[0][sub])
+    return d
 
 
 def _validate(story: dict, vtype: str) -> list[str]:
