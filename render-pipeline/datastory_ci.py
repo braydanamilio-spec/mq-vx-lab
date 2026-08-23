@@ -324,6 +324,35 @@ def _generate_character_ref(channel, prompt, api_key) -> str | None:
 # SỔ NHỚ ẢNH ĐÃ DÙNG (23/8): id/url của mọi ảnh đã tải trong tiến trình + danh sách nạp từ
 # Firestore của kênh -> không bao giờ lặp lại tấm cũ trong cùng phiên. Cap 4000 cho nhẹ RAM.
 _IMG_USED: set = set()
+# SỔ GHI CÔNG ẢNH (23/8, user hỏi "có phải credit Pexels/Pixabay không"): luật khác nhau theo nguồn
+#   • CC-BY (Openverse, một phần Wikimedia): BẮT BUỘC ghi tác giả + giấy phép
+#   • Pexels / Pixabay / NASA / ảnh Public Domain: KHÔNG bắt buộc, nhưng ghi là đúng phép lịch sự và
+#     giúp YouTube thấy nội dung minh bạch khi xét kiếm tiền.
+# Vì vậy ghi công theo ẢNH THẬT SỰ DÙNG, không phải câu chung chung như bản trước.
+_IMG_CREDITS: list = []
+
+
+def note_credit(cand: dict):
+    """Ghi lại nguồn + tác giả + giấy phép của 1 ảnh vừa dùng (tối đa 12 dòng/video)."""
+    try:
+        src = str(cand.get("id") or "")
+        nguon = ("Pexels" if src.startswith("px:") else "Pixabay" if src.startswith("pb:")
+                 else "NASA" if src.startswith("nasa:") else "Wikimedia Commons" if src.startswith("wm:")
+                 else "Openverse")
+        au = (cand.get("creator") or cand.get("photographer") or cand.get("author") or "").strip()
+        lic = (cand.get("license") or cand.get("license_version") or "").strip()
+        item = " · ".join(x for x in (nguon, au, lic) if x)
+        if item and item not in _IMG_CREDITS and len(_IMG_CREDITS) < 12:
+            _IMG_CREDITS.append(item)
+    except Exception:
+        pass
+
+
+def take_credits() -> list:
+    """Lấy & xoá sổ ghi công (gọi 1 lần khi dựng xong video)."""
+    out = list(_IMG_CREDITS)
+    _IMG_CREDITS.clear()
+    return out
 
 
 def note_image_used(ident: str):
@@ -403,7 +432,7 @@ def _pexels(query, n=12):
             url = src.get("large2x") or src.get("large") or src.get("original")
             if url:
                 out.append({"id": f"px:{ph.get('id')}", "url": url,
-                            "license": f"Pexels ({ph.get('photographer','')})"})
+                            "photographer": ph.get("photographer", ""), "license": "Pexels License"})
         return out
     except Exception as e:
         # 401 = key sai/bị thu hồi · 403/429 = chạm trần -> đều TẮT key đó và nhảy key kế.
@@ -450,7 +479,7 @@ def _pixabay(query, n=12):
             d = json.load(r)
         _slot["used"] += 1
         return [{"id": f"pb:{h.get('id')}", "url": h.get("largeImageURL") or h.get("webformatURL"),
-                 "license": "Pixabay Content License"}
+                 "author": h.get("user", ""), "license": "Pixabay Content License"}
                 for h in (d.get("hits") or []) if h.get("largeImageURL") or h.get("webformatURL")]
     except Exception as e:
         if any(c in str(e) for c in ("400", "401", "403", "429")):
@@ -550,6 +579,7 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
             for cand in res:
                 try:
                     note_image_used(cand.get("id") or cand.get("url"))   # 23/8: nhớ để KHÔNG lặp ở video sau
+                    note_credit(cand)                                   # 23/8: ghi công đúng nguồn/tác giả/giấy phép
                     with urllib.request.urlopen(urllib.request.Request(cand["url"], headers=UA), timeout=30) as r:
                         ctype = (r.headers.get("Content-Type") or "").lower()
                         data = r.read()
@@ -1393,6 +1423,7 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "MappedShort", out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="MappedShort")
+    story["_credits"] = take_credits()   # 23/8: ghi công đúng ảnh đã dùng
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
     try:
@@ -3098,6 +3129,7 @@ def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
     _props = _toon_props(sl, story.get("title", ""), accent, display or channel, fr, lines, color_a, color_b, channel=channel)
     story["_music"] = bool(_props.get("music"))    # có nhạc -> enqueue ghi công Kevin MacLeod (CC-BY)
     _pf = _toon_render(_props, out, "ToonShort", "ToonShort")
+    story["_credits"] = take_credits()   # 23/8: ghi công đúng ảnh đã dùng
     _normalize_loudness(out)          # -14 LUFS trước khi QC đo (QC phải đo đúng file sẽ đăng)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)

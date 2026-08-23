@@ -123,7 +123,11 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
         # YouTube xét kênh, và ghi công một license mình không dùng thì chẳng được gì.
         # 23/8: mở giấy phép ảnh sang CC-BY (kho rộng gấp 5) -> BẮT BUỘC ghi công theo license.
         # Ghi 1 dòng gọn, đúng yêu cầu attribution mà không làm rối mô tả.
-        desc += "\n\nImagery: Openverse & Wikimedia Commons (CC0 / Public Domain / CC BY)."
+        # GHI CÔNG ĐÚNG ẢNH ĐÃ DÙNG (23/8): CC-BY bắt buộc ghi tác giả; Pexels/Pixabay/NASA không bắt
+        # buộc nhưng ghi vẫn hơn (minh bạch nguồn khi YouTube xét kiếm tiền). Không có sổ -> câu chung.
+        _cr = story.get("_credits") or []
+        desc += ("\n\nImagery: " + " | ".join(_cr[:8])) if _cr else \
+                "\n\nImagery: Pexels · Pixabay · Wikimedia Commons · NASA · Openverse (free-license)."
         if story.get("_music"):
             desc += "\n\nMusic: Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 3.0"
         created = enqueue(channel=channel, video=out, vtype=vtype,
