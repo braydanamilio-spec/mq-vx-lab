@@ -308,6 +308,27 @@ def note_image_used(ident: str):
             _IMG_USED.clear()
 
 
+def _nasa_images(query, n=10):
+    """NGUỒN 3 (23/8): NASA Image Library — ~140.000 ảnh, PUBLIC DOMAIN toàn bộ, không cần key.
+    Rất mạnh cho các kênh vũ trụ/khí hậu/công nghệ/khoa học (COSMOS, FUTUREUSA, DISASTERUSA...)
+    và luôn là ảnh THẬT chất lượng cao. Lỗi -> [] (im lặng)."""
+    try:
+        u = "https://images-api.nasa.gov/search?" + urllib.parse.urlencode(
+            {"q": query, "media_type": "image"})
+        with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=20) as r:
+            d = json.load(r)
+        out = []
+        for it in ((d.get("collection") or {}).get("items") or [])[:n]:
+            links = it.get("links") or []
+            href = next((l.get("href") for l in links if l.get("render") == "image"), None)
+            nid = ((it.get("data") or [{}])[0].get("nasa_id")) or href
+            if href:
+                out.append({"id": f"nasa:{nid}", "url": href, "license": "public domain (NASA)"})
+        return out
+    except Exception:
+        return []
+
+
 def _wikimedia(query, n=12):
     """NGUỒN ẢNH THỨ HAI (23/8): Wikimedia Commons — kho ảnh tự do LỚN NHẤT (~100 triệu file),
     không cần key, không giới hạn gọi hợp lý. Vì sao cần: Openverse lọc cc0/pdm cho kho rất hẹp
@@ -374,9 +395,10 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
         res = _try({"q": query, **base})
         # GỘP THÊM WIKIMEDIA (23/8) — kho rộng gấp bội, cùng chuẩn tự do; gộp trước khi lọc/xáo
         # nên ảnh hai nguồn trộn đều, hết cảnh cả hệ dùng chung vài tấm của Openverse.
-        _wm = [x for x in _wikimedia(query) if str(x.get("id")) not in _IMG_USED]
-        if _wm:
-            res = (res or []) + _wm
+        _extra = [x for x in (_wikimedia(query) + _nasa_images(query))
+                  if str(x.get("id")) not in _IMG_USED]
+        if _extra:
+            res = (res or []) + _extra
             random.shuffle(res)
         if not res and ar:
             res = _try({"q": query, "page_size": pg, "license": "cc0,pdm,by", "mature": "false"})   # bỏ lọc hướng nếu 0 kết quả
