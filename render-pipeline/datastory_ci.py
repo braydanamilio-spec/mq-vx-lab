@@ -60,8 +60,9 @@ def set_ai_pool(keys, channel: str = ""):
     song đều bắt đầu vẽ/kiểm từ CÙNG key đầu danh sách -> hạn mức ảnh/Vision của vài key đầu cháy
     trước trong khi key cuối ngồi không — pool 56 key mà hiệu dụng chỉ còn vài key."""
     set_pexels_pool(keys, channel)      # 23/8: nạp luôn pool key Pexels từ cùng danh sách key
+    set_pixabay_pool(keys, channel)     # 23/8: và pool Pixabay (nguồn ảnh thứ 5)
     raw = [k.get("key") for k in (keys or [])
-           if k.get("key") and not str(k.get("key")).startswith(("gsk_", "px:"))]   # Groq/Pexels không vẽ ảnh
+           if k.get("key") and not str(k.get("key")).startswith(("gsk_", "px:", "pb:"))]   # Groq/Pexels không vẽ ảnh
     # CF (cf:) đứng TRƯỚC cho VẼ ẢNH: FLUX free ~2K ảnh/ngày/tài khoản vs Gemini chỉ ~vài trăm tổng
     # -> đốt CF trước, Gemini để dành cho vision + khi CF cạn. Mỗi nhóm vẫn xoay theo kênh như cũ.
     cf = [k for k in raw if str(k).startswith("cf:")]
@@ -414,6 +415,50 @@ def _pexels(query, n=12):
         return []
 
 
+_PB_POOL: list = []
+_PB_CAP = 400                # lượt/key/tiến trình (Pixabay cho 5.000/giờ — rộng hơn Pexels nhiều)
+
+
+def set_pixabay_pool(keys, channel: str = ""):
+    """Pool key Pixabay (23/8) — key ghi dạng 'pb:<KEY>' trong cùng hệ quản lý key của dashboard.
+    Cùng cơ chế Pexels: xoay điểm bắt đầu theo kênh, trần lượt/key, key hỏng thì tắt riêng nó."""
+    global _PB_POOL
+    raw = [str(k.get("key"))[3:] for k in (keys or []) if str(k.get("key") or "").startswith("pb:")]
+    env = os.environ.get("PIXABAY_KEY", "")
+    if env and env not in raw:
+        raw.append(env)
+    if channel and len(raw) > 1:
+        import hashlib
+        i2 = int(hashlib.md5(channel.encode()).hexdigest(), 16) % len(raw)
+        raw = raw[i2:] + raw[:i2]
+    _PB_POOL = [{"k": k, "used": 0, "off": False} for k in raw]
+    if _PB_POOL:
+        print(f"   🧩 Pixabay: {len(_PB_POOL)} key trong pool ({_PB_CAP} lượt/key).")
+
+
+def _pixabay(query, n=12):
+    """NGUỒN 5 (23/8): Pixabay — ~4 triệu ảnh, giấy phép riêng cho phép dùng thương mại, không cần
+    ghi công. Hạn mức rộng nhất nhóm (5.000 lượt/giờ/key). Lỗi/hết hạn mức -> tắt key đó, trả []."""
+    _slot = next((x for x in _PB_POOL if not x["off"] and x["used"] < _PB_CAP), None)
+    if _slot is None:
+        return []
+    try:
+        u = "https://pixabay.com/api/?" + urllib.parse.urlencode(
+            {"key": _slot["k"], "q": query, "image_type": "photo", "per_page": min(max(n, 3), 30),
+             "page": random.randint(1, 3), "safesearch": "true"})
+        with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=20) as r:
+            d = json.load(r)
+        _slot["used"] += 1
+        return [{"id": f"pb:{h.get('id')}", "url": h.get("largeImageURL") or h.get("webformatURL"),
+                 "license": "Pixabay Content License"}
+                for h in (d.get("hits") or []) if h.get("largeImageURL") or h.get("webformatURL")]
+    except Exception as e:
+        if any(c in str(e) for c in ("400", "401", "403", "429")):
+            _slot["off"] = True
+            print(f"   ⏸ 1 key Pixabay hỏng/chạm trần -> nhảy key kế ({sum(1 for x in _PB_POOL if not x['off'])} còn sống).")
+        return []
+
+
 def _wikimedia(query, n=12):
     """NGUỒN ẢNH THỨ HAI (23/8): Wikimedia Commons — kho ảnh tự do LỚN NHẤT (~100 triệu file),
     không cần key, không giới hạn gọi hợp lý. Vì sao cần: Openverse lọc cc0/pdm cho kho rất hẹp
@@ -480,7 +525,7 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
         res = _try({"q": query, **base})
         # GỘP THÊM WIKIMEDIA (23/8) — kho rộng gấp bội, cùng chuẩn tự do; gộp trước khi lọc/xáo
         # nên ảnh hai nguồn trộn đều, hết cảnh cả hệ dùng chung vài tấm của Openverse.
-        _extra = [x for x in (_pexels(query) + _wikimedia(query) + _nasa_images(query))
+        _extra = [x for x in (_pexels(query) + _pixabay(query) + _wikimedia(query) + _nasa_images(query))
                   if str(x.get("id")) not in _IMG_USED]
         if _extra:
             res = (res or []) + _extra

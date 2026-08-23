@@ -52,6 +52,7 @@ jobs:
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+          PIXABAY_KEY: ${{ secrets.PIXABAY_KEY }}
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
           FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
           SHARD_META: ${{ vars.SHARD_META }}
@@ -108,6 +109,7 @@ jobs:
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+          PIXABAY_KEY: ${{ secrets.PIXABAY_KEY }}
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
           FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
           SHARD_META: ${{ vars.SHARD_META }}
@@ -198,6 +200,7 @@ jobs:
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+          PIXABAY_KEY: ${{ secrets.PIXABAY_KEY }}
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
           FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
           SHARD_META: ${{ vars.SHARD_META }}
