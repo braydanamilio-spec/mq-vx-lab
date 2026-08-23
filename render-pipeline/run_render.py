@@ -934,25 +934,9 @@ def gate_mode():
                 run = "true"
         except Exception:
             traceback.print_exc()
-    # CỔNG CUỐI (23/8 — user: "ko đẩy được thì render làm gì"): nếu KHÔNG lấy nổi danh sách kho
-    # Drive thì mọi video render ra đều bị từ chối đẩy (đúng vết 180 video sáng nay) -> đóng cổng,
-    # khỏi đốt phút GitHub. Chỉ đóng khi danh sách RỖNG THẬT, còn lỗi mạng vẫn cho chạy (fail-open)
-    # vì storage.py đã có đệm cũ + B2 + thử lại.
-    if run == "true":
-        try:
-            _src = os.environ.get("AUTOPUBLISHER_SRC")
-            if _src and _src not in sys.path:
-                sys.path.insert(0, _src)
-            import storage as _ST
-            _accs = _ST.pool_accounts()
-            if not _accs:
-                run = "false"
-                print("🛑 GATE ĐÓNG: không đọc được kho Drive nào (đẩy sẽ bị từ chối) — bỏ phiên này,")
-                print("   khỏi phí phút render. Nguyên nhân thường gặp: Firestore cạn quota đọc cả B lẫn B2.")
-            else:
-                print(f"   ✔ kho Drive sẵn sàng: {len(_accs)} kho -> đẩy được, cho chạy.")
-        except Exception as e:
-            print(f"   ⚠️ không kiểm được kho Drive ({str(e)[:70]}) — vẫn cho chạy (fail-open).")
+    # 23/8 tối: khối kiểm kho Drive ĐÃ CHUYỂN sang plan_mode. Lý do: bước --gate chạy TRƯỚC khi
+    # workflow tải mã AutoPublisher về, nên `import storage` luôn ném "No module named 'storage'"
+    # -> cổng im lặng fail-open, không kiểm được gì. Ở plan thì mã đã có sẵn.
     gh = os.environ.get("GITHUB_OUTPUT")
     if gh:
         with open(gh, "a") as f:
@@ -1094,6 +1078,21 @@ def plan_mode():
         print(f"   ⏱ [{_T0.time() - _t_plan:6.1f}s] {ten}", flush=True)
 
     _moc("bắt đầu điều phối")
+    # CỔNG KHO DRIVE (chuyển từ --gate xuống đây): không lấy nổi kho nào thì mọi video render ra đều
+    # bị từ chối đẩy -> thoát sớm, khỏi đốt 18 luồng. Lỗi mạng vẫn cho chạy (fail-open) vì storage.py
+    # đã có đệm + B2 + thử lại.
+    try:
+        _src = os.environ.get("AUTOPUBLISHER_SRC")
+        if _src and _src not in sys.path:
+            sys.path.insert(0, _src)
+        import storage as _ST
+        _accs = _ST.pool_accounts()
+        _moc(f"kho Drive sẵn sàng: {len(_accs)} kho")
+        if not _accs:
+            print("🛑 DỪNG PHIÊN: không đọc được kho Drive nào — render ra cũng bị từ chối đẩy.")
+            return out_channels([])
+    except Exception as e:
+        _moc(f"không kiểm được kho Drive ({str(e)[:60]}) — vẫn chạy (fail-open)")
     import json
     # IN TRƯỚC MỌI LỆNH GHI: dính 429 thì vẫn biết đang nối vào project nào (B thật hay đã lùi về A).
     try:

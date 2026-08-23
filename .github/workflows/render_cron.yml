@@ -50,6 +50,9 @@ jobs:
       - name: Gate (--gate)
         id: gate
         env:
+          # 23/8 tối: cổng kiểm kho Drive im lặng vô dụng vì bước này THIẾU biến trỏ tới mã
+          # AutoPublisher -> `import storage` ném "No module named 'storage'" -> luôn fail-open.
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
