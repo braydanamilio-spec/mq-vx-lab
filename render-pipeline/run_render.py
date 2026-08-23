@@ -1208,12 +1208,16 @@ def plan_mode():
         FB.mirror_b_to_b2(OWNER)
     except Exception:
         pass
-    # TỰ CHỮA video render-xong-nhưng-chưa-đẩy-kho (A nghẽn 1 nhịp là dính, 22/8: 9 video EMPIREUSA)
-    # -> lật failed để lane render lại TỪ SCRIPT đã lưu (0 quota AI). 1 lần/phiên, ghi chỉ khi có nạn nhân.
-    try:
-        FB.heal_unpushed(OWNER)
-    except Exception:
-        pass
+    # TỰ CHỮA video render-xong-nhưng-chưa-đẩy-kho -> lật failed để lane render lại TỪ SCRIPT.
+    # 23/8: user chốt DỌN SẠCH kho cũ và BỎ 180 video kẹt (chúng làm bằng pipeline cũ: ảnh dễ trùng,
+    # sub chưa khớp) -> tắt tự chữa cho tới khi có nhu cầu mới. Bật lại: HEAL_UNPUSHED=1.
+    if os.environ.get("HEAL_UNPUSHED") == "1":
+        try:
+            FB.heal_unpushed(OWNER)
+        except Exception:
+            pass
+    else:
+        print("   🩹 heal_unpushed: TẮT (user dọn kho làm lại từ đầu) — bật lại bằng HEAL_UNPUSHED=1.")
     global RESERVE_LONG, RESERVE_SHORT
     RESERVE_LONG = int(cfg.get("reserve_long", RESERVE_LONG) or RESERVE_LONG)
     RESERVE_SHORT = int(cfg.get("reserve_short", RESERVE_SHORT) or RESERVE_SHORT)
