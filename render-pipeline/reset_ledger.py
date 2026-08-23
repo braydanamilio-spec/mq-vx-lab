@@ -83,6 +83,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--owner", default=OWNER)
+    ap.add_argument("--only-topics", dest="only_topics", action="store_true",
+                    help="CHỈ xoá sổ chủ đề, KHÔNG đụng sổ video")
     ap.add_argument("--topics", action="store_true",
                     help="xoá LUÔN sổ chủ đề (render_topics) — kênh được làm lại đề tài từ đầu")
     a = ap.parse_args()
@@ -90,7 +92,10 @@ def main() -> int:
     err = 0
     for label, db in _clients():
         print(f"\n🗂  {label}")
-        colls = ["render_jobs", "render_stats"] + (["render_topics"] if a.topics else [])
+        # 23/8: --topics phải dùng được RIÊNG. Bật chung với xoá sổ video là mất luôn 77 bản ghi
+        # video đang có (trong đó 12 cái đang chờ render lại) — suýt xoá nhầm.
+        colls = ["render_topics"] if (a.topics and a.only_topics) else \
+                (["render_jobs", "render_stats"] + (["render_topics"] if a.topics else []))
         for coll in colls:
             n, ok, e = _wipe_collection(db, coll, a.dry_run)
             err += e

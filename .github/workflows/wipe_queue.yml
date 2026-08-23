@@ -67,7 +67,7 @@ jobs:
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
           python rp/render-pipeline/fix_dup_connections.py $ARGS
       - name: Reset sổ
-        if: ${{ github.event.inputs.reset_ledger == 'true' }}
+        if: ${{ github.event.inputs.reset_ledger == 'true' || github.event.inputs.reset_topics == 'true' }}
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
@@ -80,4 +80,5 @@ jobs:
           ARGS=""
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
           [ "${{ github.event.inputs.reset_topics }}" = "true" ] && ARGS="$ARGS --topics"
+          [ "${{ github.event.inputs.reset_ledger }}" != "true" ] && ARGS="$ARGS --only-topics"
           python reset_ledger.py $ARGS
