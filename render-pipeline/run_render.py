@@ -1290,8 +1290,11 @@ def plan_mode():
             if _miss:
                 _db = FB._db_meta()
                 for _nm, _cfg in _miss.items():
+                    # 23/8: PHẢI ghi "name" — wave8_channels.json để tên ở KHOÁ dict, seed cũ quên
+                    # đẩy vào doc -> 5 doc KHÔNG TÊN nằm song song 5 doc thật (dashboard đếm 60/55,
+                    # matrix có thể cấp slot cho kênh vô danh). Kèm khoá theo tên chuẩn hoá.
                     FB._soft(lambda _n=_nm, _c=_cfg: _db.collection("render_channels")
-                             .document(f"{OWNER}__{_n}").set({**_c, "owner": OWNER}, merge=True),
+                             .document(f"{OWNER}__{_n}").set({**_c, "name": _n, "owner": OWNER}, merge=True),
                              "seed_wave8")
                 print(f"   🌱 Tự-seed Wave 8: đã gửi {len(_miss)} kênh còn thiếu (quota chết thì phiên sau tự thử lại).")
             # ĐỒNG BỘ CONFIG THEO REV (23/8): kênh ĐÃ TỒN TẠI nhưng file có cfg_rev MỚI HƠN thì đẩy
@@ -1324,6 +1327,10 @@ def plan_mode():
         traceback.print_exc()
     # ƯU TIÊN KÊNH MỚI (22/8, user): kênh priority=1 LUÔN có suất trong matrix (đứng đầu),
     # kênh cũ xoay ngẫu nhiên phần suất còn lại -> dồn lực cho 5 kênh mới mà cũ không chết hẳn.
+    _nameless = [c for c in all_ch if not str(c.get("name") or "").strip()]
+    if _nameless:
+        print(f"   🧹 Bỏ qua {len(_nameless)} doc kênh KHÔNG TÊN (rác seed cũ) — không cấp slot render.")
+        all_ch = [c for c in all_ch if str(c.get("name") or "").strip()]
     _pri = [c["name"] for c in all_ch if not c.get("paused") and int(c.get("priority") or 0) >= 1]
     channels = [c["name"] for c in all_ch if not c.get("paused") and int(c.get("priority") or 0) < 1]
     # XÁO THỨ TỰ mỗi phiên: Firestore trả channels theo ID tài liệu (~alphabet cố định) -> KHÔNG xáo thì cùng nhóm
