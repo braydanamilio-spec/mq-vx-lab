@@ -380,12 +380,22 @@ _IMG_CH = {"owner": "", "channel": ""}
 IMG_MEMORY = 600               # nhớ 600 ảnh gần nhất/kênh — đủ phủ vài chục video, doc vẫn nhẹ
 
 
+_IMG_LOADED: set = set()          # (owner, channel) đã nạp trong tiến trình này
+
+
 def load_used_images(owner: str, channel: str):
-    """Nạp sổ ảnh đã dùng của kênh vào RAM trước khi dựng video."""
+    """Nạp sổ ảnh đã dùng của kênh vào RAM trước khi dựng video.
+
+    TIẾT KIỆM QUOTA: 1 lane làm tới 4 video cho cùng kênh -> chỉ đọc Firestore ĐÚNG 1 LẦN, các video
+    sau dùng lại bộ nhớ trong tiến trình (ảnh vừa dùng đã nằm sẵn trong _IMG_USED). 180 lượt đọc/phiên
+    xuống còn ~55."""
     _IMG_CH["owner"], _IMG_CH["channel"] = owner or "", channel or ""
     _IMG_NEW.clear()
     if not (owner and channel):
         return
+    if (owner, channel) in _IMG_LOADED:
+        return
+    _IMG_LOADED.add((owner, channel))
     try:
         import firestore_bridge as FB
         for x in FB.read_used_images(owner, channel):
