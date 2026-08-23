@@ -140,6 +140,7 @@ def t_soft_read():
     """Quota ĐỌC chết -> read_keys/read_config trả đệm/mặc định, KHÔNG ném (lỗi 18/18 luồng 04:22Z)."""
     import firestore_bridge as FB
     saved = (FB._retry, getattr(FB, "_db_keys"), getattr(FB, "_db_meta"))
+    _b2env = os.environ.pop("FIREBASE_PROJECT_ID_B2", None)   # chặn failover B2 kích hoạt TRONG test
     try:
         FB._retry = lambda fn, tries=5: fn()
 
@@ -156,6 +157,12 @@ def t_soft_read():
         FB._retry, FB._db_keys, FB._db_meta = saved
         FB._KEYS_CACHE.clear()
         FB._RQ_DEAD["until"] = 0
+        if _b2env is not None:
+            os.environ["FIREBASE_PROJECT_ID_B2"] = _b2env
+        # trạng thái failover là GLOBAL tiến trình — test nào lỡ kích phải trả về OFF, không thì
+        # (a) t_b2 phía sau fail oan -> selftest CHẶN CẢ PHIÊN, (b) các test sau chạy nhầm trên B2.
+        FB._B2["on"] = False
+        FB._B2["client"] = None
 
 
 def t_dark_ok():
@@ -198,6 +205,7 @@ def t_b2_failover():
     """B2 (23/8): thiếu env -> failover từ chối êm, _db routing không đổi; cờ _B2 mặc định tắt."""
     import firestore_bridge as FB
     saved = dict(os.environ)
+    FB._B2["on"] = False; FB._B2["client"] = None   # dọn cờ global phòng test trước lỡ kích
     try:
         os.environ.pop("FIREBASE_PROJECT_ID_B2", None)
         assert FB._b2_available() is False
