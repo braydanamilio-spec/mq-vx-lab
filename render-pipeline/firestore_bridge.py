@@ -1279,7 +1279,9 @@ def mirror_connections_to_b() -> int:
         if _db() is _db_jobs():
             return 0
         rows = {}
-        for d in _db().collection("connections").stream():
+        # 23/8 tối: thêm timeout cho lượt quét A. Không có nó, hôm A cạn quota thì riêng lệnh này đã
+        # ngốn 60s+ ngay đầu phiên trước khi cầu dao kịp biết đường đọc đã chết.
+        for d in _db().collection("connections").stream(timeout=20):
             x = d.to_dict() or {}
             if x.get("refresh_token") and x.get("root"):
                 rows[d.id] = x
@@ -1287,7 +1289,7 @@ def mirror_connections_to_b() -> int:
         if not rows:
             return 0
         col = _db_jobs().collection("connections_mirror")
-        cur = {d.id: (d.to_dict() or {}) for d in col.stream()}
+        cur = {d.id: (d.to_dict() or {}) for d in col.stream(timeout=20)}
         _cr("mirror_conn_B", max(1, len(cur)))
         n = 0
         keys = ("refresh_token", "root", "client_id", "client_secret", "channel", "owner", "email", "cap_gb")
