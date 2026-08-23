@@ -928,6 +928,25 @@ def gate_mode():
                 run = "true"
         except Exception:
             traceback.print_exc()
+    # CỔNG CUỐI (23/8 — user: "ko đẩy được thì render làm gì"): nếu KHÔNG lấy nổi danh sách kho
+    # Drive thì mọi video render ra đều bị từ chối đẩy (đúng vết 180 video sáng nay) -> đóng cổng,
+    # khỏi đốt phút GitHub. Chỉ đóng khi danh sách RỖNG THẬT, còn lỗi mạng vẫn cho chạy (fail-open)
+    # vì storage.py đã có đệm cũ + B2 + thử lại.
+    if run == "true":
+        try:
+            _src = os.environ.get("AUTOPUBLISHER_SRC")
+            if _src and _src not in sys.path:
+                sys.path.insert(0, _src)
+            import storage as _ST
+            _accs = _ST.pool_accounts()
+            if not _accs:
+                run = "false"
+                print("🛑 GATE ĐÓNG: không đọc được kho Drive nào (đẩy sẽ bị từ chối) — bỏ phiên này,")
+                print("   khỏi phí phút render. Nguyên nhân thường gặp: Firestore cạn quota đọc cả B lẫn B2.")
+            else:
+                print(f"   ✔ kho Drive sẵn sàng: {len(_accs)} kho -> đẩy được, cho chạy.")
+        except Exception as e:
+            print(f"   ⚠️ không kiểm được kho Drive ({str(e)[:70]}) — vẫn cho chạy (fail-open).")
     gh = os.environ.get("GITHUB_OUTPUT")
     if gh:
         with open(gh, "a") as f:

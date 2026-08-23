@@ -332,3 +332,10 @@ Vì `count_done` bắt Exception rồi chỉ in cảnh báo → cả phiên ti�
 (lập kế hoạch sai) và mọi lượt đọc sau đều hụt. Fix: 429 tại đây gọi `failover_to_b2()` rồi đếm lại.
 → **LUẬT**: mọi chỗ bắt lỗi Firestore phải phân biệt "lỗi thường" và "429 = shard chết". 429 luôn phải
 kích failover, không được chỉ in cảnh báo rồi đi tiếp.
+
+### LUẬT 23/8 — "không đẩy được thì đừng render"
+Render 18 luồng rồi bị từ chối đẩy kho = mất trắng phút GitHub + công AI (đúng vết 180 video sáng 23/8).
+Nay `--gate` kiểm `storage.pool_accounts()` trước khi mở phiên: rỗng thật -> `run=false` + in lý do;
+lỗi mạng -> vẫn chạy (fail-open, vì storage.py có đệm + B2 + thử lại 8s/25s).
+`firestore_pool_accounts` cũng đọc theo thứ tự B -> B2 -> A thay vì B -> A (chiều 23/8 B cạn quota đọc
+nên nhánh cũ rơi thẳng xuống A đã chết).
