@@ -1234,13 +1234,16 @@ def plan_mode():
     # TỰ CHỮA video render-xong-nhưng-chưa-đẩy-kho -> lật failed để lane render lại TỪ SCRIPT.
     # 23/8: user chốt DỌN SẠCH kho cũ và BỎ 180 video kẹt (chúng làm bằng pipeline cũ: ảnh dễ trùng,
     # sub chưa khớp) -> tắt tự chữa cho tới khi có nhu cầu mới. Bật lại: HEAL_UNPUSHED=1.
-    if os.environ.get("HEAL_UNPUSHED") == "1":
+    # 23/8 chiều: sổ đã dọn sạch (0 job) nên tự-chữa KHÔNG còn nguy cơ dựng dậy video cũ; ngược lại
+    # rất cần bật, vì hôm nay quota chập chờn -> video render xong mà đẩy hụt phải được đẩy lại,
+    # không thì mất trắng như 180 video sáng nay. Tắt lại: HEAL_UNPUSHED=0.
+    if os.environ.get("HEAL_UNPUSHED", "1") != "0":
         try:
             FB.heal_unpushed(OWNER)
         except Exception:
             pass
     else:
-        print("   🩹 heal_unpushed: TẮT (user dọn kho làm lại từ đầu) — bật lại bằng HEAL_UNPUSHED=1.")
+        print("   🩹 heal_unpushed: TẮT theo env HEAL_UNPUSHED=0.")
     global RESERVE_LONG, RESERVE_SHORT
     RESERVE_LONG = int(cfg.get("reserve_long", RESERVE_LONG) or RESERVE_LONG)
     RESERVE_SHORT = int(cfg.get("reserve_short", RESERVE_SHORT) or RESERVE_SHORT)
