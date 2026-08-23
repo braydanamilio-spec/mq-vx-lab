@@ -41,15 +41,18 @@ export const ToonShort: React.FC<{
   // (b) BOB: nhún dọc theo TỪNG TỪ (dùng luôn mốc karaoke) -> cảm giác đang nói, biên độ nhỏ để không nôn;
   // (c) TILT: nghiêng nhẹ, hướng ngược nhau theo nhân vật A/B -> hai bên "đối đáp" thấy rõ.
   const relLine = cur ? f - cur.from : 0;
-  const impact = cur ? Math.max(0, 1 - relLine / 10) : 0;                 // 1 -> 0 trong 10 frame
-  const spokenWords = cur && cur.words ? cur.words.filter(w => relLine >= w.f).length : 0;
-  const bob = cur ? Math.sin(relLine / 3.4) * (spokenWords > 0 ? 0.9 : 0) : 0;   // px-ish (%)
-  const tilt = cur ? (cur.who === "B" ? -1 : 1) * (0.55 * impact + 0.12 * Math.sin(relLine / 5)) : 0;
+  // 23/8 (user: "đừng rung rung, không hợp"): format PHÂN TÍCH cần điềm tĩnh, sang trọng —
+  // BỎ HẲN nhún/nghiêng/nảy theo nhịp thoại (thứ hợp skit hài). Chỉ giữ 1 nhịp lướt CỰC NHẸ khi
+  // đổi câu để mắt biết có chuyển ý, và toàn bộ chuyển động còn lại là ken-burns trôi đều.
+  const impact = cur ? Math.max(0, 1 - relLine / 14) : 0;
+  const bob = 0;
+  const tilt = 0;
   // ── NẤC 3: câu CHỐT -> rung máy + zoom giật (biên độ tắt dần), đạo cụ emoji bay vào ──
+  // Câu chốt: KHÔNG rung máy nữa — chỉ khép vignette + nhích zoom rất nhẹ (xem khối camera).
   const punchOn = !!(cur && cur.punch);
-  const shake = punchOn ? Math.max(0, 1 - relLine / 14) : 0;
-  const shX = shake * Math.sin(f * 1.7) * 0.75;   // biên độ vừa phải — rung nhẹ mới sang, rung mạnh thành clip TikTok rẻ tiền
-  const shY = shake * Math.cos(f * 2.3) * 0.6;
+  const shake = punchOn ? Math.max(0, 1 - relLine / 20) : 0;   // chỉ còn dùng cho vignette + zoom
+  const shX = 0;
+  const shY = 0;
   return (
     <AbsoluteFill style={{ background: "#0e0e12", fontFamily: "Arial, sans-serif" }}>
       {frames.map((fr, i) => {
@@ -58,7 +61,7 @@ export const ToonShort: React.FC<{
         // CAMERA SỐNG (22/8): đảo hướng theo khung — chẵn zoom-in, lẻ zoom-out nhẹ; kèm trôi ngang
         // xen kẽ trái/phải 0.8% -> mỗi lần cắt có "hơi máy quay" khác nhau, hết cảm giác lặp.
         const zoomIn = i % 2 === 0;
-        const zoom = (zoomIn ? 1.02 + 0.04 * p : 1.06 - 0.04 * p) + 0.02 * impact + 0.025 * shake;
+        const zoom = (zoomIn ? 1.02 + 0.04 * p : 1.06 - 0.04 * p) + 0.008 * impact + 0.012 * shake;   // nhích rất nhẹ, không giật
         const drift = (i % 4 < 2 ? 1 : -1) * 0.8 * p;
         return (
           <Sequence key={i} from={fr.from} durationInFrames={fr.dur}>
