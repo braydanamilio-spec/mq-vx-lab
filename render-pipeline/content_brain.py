@@ -1859,12 +1859,14 @@ TALE_SYS = (
 ESSAY_SYS = (
  "You are the head writer of a #1 US explainer shorts channel — the kind people SAVE and SHARE "
  "because a belief they held got flipped. You write 30-45 second narrated visual essays. Rules:\n"
- "1) HOOK: title is a curiosity gap under 9 words that promises a reversal ('Foods doctors banned "
- "that actually add years'). Sentence 1 states the surprising claim within 2 seconds — no greetings, "
- "no 'today we will talk about'.\n"
+ "1) HOOK (make-or-break): title is a curiosity gap under 8 words promising a reversal. Sentence 1 "
+ "must be a PUNCH under 9 words that names the stake or the number — e.g. 'Four foods your doctor "
+ "was wrong about.' Never open with a greeting, a definition, or 'today we will talk about'. "
+ "Sentence 2 raises the tension before any explanation begins.\n"
  "2) STRUCTURE: a LIST of 4-6 items, each item = 1-2 narration sentences: name the thing everyone "
  "believes, then the real mechanism in plain words with ONE concrete number or study finding. "
- "8-12 sentences total, each under 18 words, natural American English. Close with a one-line "
+ "7-10 sentences total, each UNDER 13 WORDS (short lines read faster and fit one subtitle "
+ "chunk), natural American English. Close with a one-line "
  "takeaway the viewer can repeat to a friend.\n"
  "3) FRAMES: 6-9 keyframes. Each frame_prompt is a VISUAL METAPHOR of that item, not a literal "
  "illustration — the thing personified, scaled absurdly, or in a place it does not belong (a mug of "
@@ -1894,13 +1896,18 @@ def _validate_essay(d: dict) -> list:
     if not (5 <= len(fr) <= 10):
         errs.append(f"frames={len(fr)} (cần 6-9)")
     dl = d.get("dialog") or []
-    if not (7 <= len(dl) <= 14):
-        errs.append(f"narration={len(dl)} câu (cần 8-12)")
+    if not (6 <= len(dl) <= 12):
+        errs.append(f"narration={len(dl)} câu (cần 7-10)")
     for i, l in enumerate(dl):
         if (l.get("who") or "A") != "A":
             errs.append(f"câu {i}: essay chỉ 1 giọng kể 'A'")
-        if len((l.get("line") or "").split()) > 22:
-            errs.append(f"câu {i} quá dài")
+        # 23/8 (user: "sub hơi dài, video bị dài"): trần 13 từ -> mỗi câu vừa 2-3 cụm phụ đề,
+        # đọc kịp trên điện thoại; câu đầu siết chặt hơn nữa vì nó QUYẾT ĐỊNH giữ chân 2 giây đầu.
+        _n = len((l.get("line") or "").split())
+        if _n > 15:
+            errs.append(f"câu {i} quá dài ({_n} từ, trần 13)")
+    if dl and len((dl[0].get("line") or "").split()) > 11:
+        errs.append("câu MỞ ĐẦU quá dài — hook phải dưới 9 từ")
     if not any(any(ch.isdigit() for ch in (l.get("line") or "")) for l in dl):
         errs.append("thiếu SỐ LIỆU cụ thể (essay phải có ít nhất 1 con số thật)")
     if len([s for s in (d.get("sources") or []) if str(s).strip()]) < 1:

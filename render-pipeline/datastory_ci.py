@@ -2671,21 +2671,73 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
     # CHUẨN HÌNH ≥95 (user 22/8): Vision chấm cả lưới 1 lệnh — khung nào sai (dị dạng/không đúng
     # 2 nhân vật/chữ vô nghĩa) thì vẽ lại 1 lần; vẫn sai -> dùng khung liền trước (an toàn hơn ảnh hỏng).
     try:
-        _subj = "the channel's two cartoon characters clearly drawn, correct anatomy, no gibberish text"
-        _pairs = [(os.path.join(pub, fx["img"]), _subj) for fx in fr]
+        # 23/8 — 2 LỖI VỪA VÁ:
+        # (a) chủ đề chấm bị HARDCODE "hai nhân vật hoạt hình" -> sai hoàn toàn với mode essay
+        #     (tranh ẩn dụ, không có nhân vật) => Vision đánh trượt oan hoặc bỏ lọt sai nội dung.
+        #     Giờ mỗi ô chấm theo ĐÚNG PROMPT CỦA CHÍNH NÓ -> khớp nội dung 100%, đúng ý user.
+        # (b) vẽ lại dùng spec[k2] — nhưng sau khi TĂNG MẬT ĐỘ, fr đã dài hơn spec => lệch prompt
+        #     (thậm chí IndexError). Giờ lấy prompt ngay trong fr[k2].
+        _clean = ("clean composition, correct proportions, no gibberish text, no watermark"
+                  if mode == "essay" else
+                  "the channel's fixed characters clearly drawn, correct anatomy, no gibberish text")
+        _pairs = [(os.path.join(pub, fx["img"]), f"{fx.get('prompt', '')[:120]} — {_clean}") for fx in fr]
         _vr = _verify_grid_rot(_pairs, first_key=(keys[0] or {}).get("key"))
+        _bad = sum(1 for x in (_vr or []) if x is False)
+        if _vr:
+            print(f"   🔍 QC ảnh TRƯỚC render (ghép lưới 1 lệnh): {len(_vr) - _bad}/{len(_vr)} khung khớp nội dung.")
         for k2, ok2 in enumerate(_vr or []):
-            if ok2 is False:
+            if ok2 is False and k2 < len(fr):
                 dest = os.path.join(pub, fr[k2]["img"])
-                re_ok = _generate_image_ai(f"{story.get('scene_base', '')}. {spec[k2].get('prompt', '')}. clean correct anatomy, no text",
-                                           dest, (keys[0] or {}).get("key"), style=toon_style or DEFAULT_AI_STYLE)
+                re_ok = _generate_image_ai(
+                    _toon_safe(f"{story.get('scene_base', '')}. {fr[k2].get('prompt', '')}. {_clean}"),
+                    dest, (keys[0] or {}).get("key"), style=_toon_safe(toon_style or DEFAULT_AI_STYLE))
                 if not re_ok and k2 > 0:
                     fr[k2]["img"] = fr[k2 - 1]["img"]
+        if _bad and len(_vr or []) and _bad / len(_vr) > 0.4:
+            raise RuntimeError(f"QC ảnh: {_bad}/{len(_vr)} khung KHÔNG khớp nội dung -> bỏ bài, viết lại")
+    except RuntimeError:
+        raise
     except Exception as _ve:
         print("   ⚠️ vision khung toon (bỏ qua):", str(_ve)[:60])
     for fx in fr:
         fx.pop("prompt", None)
     return story, fr, lines, end_f
+
+
+def _qc_after_render(out, story, keys, n=6):
+    """QC SAU RENDER (23/8, user yêu cầu): trích n khung TỪ VIDEO THẬT -> ghép lưới -> Vision chấm
+    1 lệnh. Bắt được thứ QC-trước-render KHÔNG thấy: khung đen cuối, phụ đề đè mất hình, ảnh không
+    nạp (fallback xám), chữ dính mép. Trả (ok, tỉ_lệ_khớp). Lỗi vision -> (True, -1) fail-open."""
+    import subprocess, tempfile
+    try:
+        dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                                    "-of", "csv=p=0", out], capture_output=True, text=True,
+                                   timeout=60).stdout.strip() or 0)
+        if dur <= 1:
+            return True, -1
+        tmp = tempfile.mkdtemp(prefix="qcv_")
+        shots = []
+        for k in range(n):
+            at = dur * (0.06 + 0.88 * k / max(1, n - 1))     # trải đều, có lấy sát cuối để bắt khung đen
+            f = os.path.join(tmp, f"s{k}.jpg")
+            subprocess.run(["ffmpeg", "-y", "-ss", f"{at:.2f}", "-i", out, "-frames:v", "1",
+                            "-vf", "scale=640:-2", f], capture_output=True, timeout=120)
+            if os.path.exists(f) and os.path.getsize(f) > 2000:
+                shots.append(f)
+        if len(shots) < 3:
+            return True, -1
+        subj = (f"a frame from a video about: {(story.get('title') or '')[:70]} — "
+                "an illustrated scene with readable subtitle text, NOT a blank or black frame")
+        vr = _verify_grid_rot([(f, subj) for f in shots], first_key=(keys[0] or {}).get("key"))
+        if not vr:
+            return True, -1
+        good = sum(1 for x in vr if x is not False)
+        rate = good / len(vr)
+        print(f"   🔍 QC SAU render: {good}/{len(vr)} khung video đạt ({rate:.0%}).")
+        return rate >= 0.7, rate
+    except Exception as e:
+        print("   ⚠️ QC sau render bỏ qua:", str(e)[:60])
+        return True, -1
 
 
 def _toon_props(sl, title, accent, display, fr, lines, color_a, color_b, chapters=None):
@@ -2728,6 +2780,13 @@ def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     info["score"] = int((story.get("self_score") or {}).get("total", 0) or 0)
+    # QC SAU RENDER (23/8): soi khung THẬT trong video — bắt khung đen/ảnh trắng/phụ đề đè hình.
+    if ok:
+        _vok, _vrate = _qc_after_render(out, story, keys or [])
+        info["visual_after"] = _vrate
+        if not _vok:
+            ok = False
+            info["err"] = f"QC sau render trượt ({_vrate:.0%} khung đạt)"
     if ok:
         try:
             _th = doc_thumb(channel, out, big=(story.get("title") or channel),

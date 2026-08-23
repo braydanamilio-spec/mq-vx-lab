@@ -53,8 +53,17 @@ export const ToonShort: React.FC<{
   const shake = punchOn ? Math.max(0, 1 - relLine / 20) : 0;   // chỉ còn dùng cho vignette + zoom
   const shX = 0;
   const shY = 0;
+  // 23/8 (user: "kết thúc bị khung đen"): LỚP ĐÁY luôn giữ ảnh — khi audio còn chạy mà chuỗi
+  // Sequence khung đã hết, nền trước đây tụt về đen. Giờ luôn có ảnh hiện tại/gần nhất phía sau.
+  const baseImg = (frames.filter(x => f >= x.from).slice(-1)[0] || frames[0] || { img: "" }).img;
   return (
-    <AbsoluteFill style={{ background: "#0e0e12", fontFamily: "Arial, sans-serif" }}>
+    <AbsoluteFill style={{ background: "#0e0e12", fontFamily: "Inter, Helvetica, Arial, sans-serif" }}>
+      {baseImg && (
+        <AbsoluteFill>
+          <SafeImg src={staticFile(`${slug}/${baseImg}`)}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </AbsoluteFill>
+      )}
       {frames.map((fr, i) => {
         const rel = f - fr.from;
         const p = Math.min(1, Math.max(0, rel / Math.max(1, fr.dur)));
@@ -76,33 +85,77 @@ export const ToonShort: React.FC<{
           </Sequence>
         );
       })}
-      {/* TITLE CARD đỉnh — nền mờ đè vùng biển hiệu (chữ giả FLUX nếu lọt cũng bị che) */}
-      <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "center", paddingTop: 64 }}>
-        <div style={{
-          maxWidth: 940, padding: "18px 34px", borderRadius: 22, background: "rgba(10,10,14,0.72)",
-          border: `3px solid ${color}`, color: "#fff", fontSize: 56, fontWeight: 900,
-          textAlign: "center", lineHeight: 1.15, textShadow: "0 3px 14px rgba(0,0,0,.6)",
-          opacity: ci(f, 0, 12, 0, 1),
-        }}>{chapters.length ? ((chapters.find(c => f >= c.from && f < c.from + c.dur) || { text: title }).text) : title}</div>
-      </AbsoluteFill>
-      {/* PHỤ ĐỀ theo câu — màu theo nhân vật */}
-      {cur && (
-        <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 170 }}>
-          <div style={{
-            maxWidth: 920, padding: "16px 30px", borderRadius: 18,
-            background: "rgba(10,10,14,0.78)", color: whoColors[cur.who] || "#fff",
-            fontSize: 47, fontWeight: 800, textAlign: "center", lineHeight: 1.22,
-            border: `2px solid ${whoColors[cur.who] || color}55`,
-          }}>{cur.words && cur.words.length
-            ? cur.words.map((w, wi) => (
+      {/* MỞ ĐẦU = HOOK (23/8): tiêu đề CHỈ hiện 2.6s đầu, chữ lớn, nền tối chuyển sắc phía trên,
+          không hộp viền -> chuyên nghiệp như bìa tạp chí; sau đó trả khung hình cho người xem. */}
+      {(() => {
+        const ch = chapters.find(c => f >= c.from && f < c.from + 66);
+        const showT = f < 78 || !!ch;
+        if (!showT) return null;
+        const rel = ch ? f - ch.from : f;
+        const inP = Math.min(1, rel / 10);
+        const outP = Math.min(1, Math.max(0, (rel - 60) / 18));
+        const op = inP * (1 - outP);
+        const txt = ch ? ch.text : title;
+        return (
+          <AbsoluteFill style={{ pointerEvents: "none" }}>
+            <AbsoluteFill style={{
+              background: "linear-gradient(180deg, rgba(8,8,12,.82) 0%, rgba(8,8,12,.55) 42%, rgba(8,8,12,0) 78%)",
+              opacity: op,
+            }} />
+            <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "center", paddingTop: 96 }}>
+              <div style={{ opacity: op, transform: `translateY(${(1 - inP) * 16}px)`, textAlign: "center", maxWidth: 960 }}>
+                <div style={{
+                  width: 74, height: 6, background: color, borderRadius: 3,
+                  margin: "0 auto 22px", transform: `scaleX(${inP})`,
+                }} />
+                <div style={{
+                  color: "#fff", fontSize: 62, fontWeight: 900, lineHeight: 1.12,
+                  letterSpacing: -0.5, textShadow: "0 4px 22px rgba(0,0,0,.55)",
+                }}>{txt}</div>
+              </div>
+            </AbsoluteFill>
+          </AbsoluteFill>
+        );
+      })()}
+      {/* PHỤ ĐỀ (bản 23/8 — user: "sub hơi dài, chưa đẹp"): CHIA CỤM ~5 TỪ theo mốc karaoke,
+          mỗi lúc chỉ hiện cụm đang đọc -> mắt đọc kịp, không phải nuốt cả câu dài. Bỏ hộp bo viền
+          thô, thay bằng chữ dày có viền tối + dải mờ đáy: sạch, chuẩn caption chuyên nghiệp. */}
+      {cur && (() => {
+        const CH = 5;
+        const ws = (cur.words && cur.words.length)
+          ? cur.words
+          : cur.text.split(/\s+/).filter(Boolean).map((w, k, arr) => ({ w, f: Math.round((cur.dur * 0.9) * k / Math.max(1, arr.length)) }));
+        const groups = [];
+        for (let k = 0; k < ws.length; k += CH) groups.push(ws.slice(k, k + CH));
+        const rel = f - cur.from;
+        let gi = groups.findIndex((g, k) => {
+          const start = g[0].f;
+          const next = groups[k + 1];
+          return rel >= start && (!next || rel < next[0].f);
+        });
+        if (gi < 0) gi = 0;
+        const g = groups[gi] || [];
+        const spoken = (w) => rel >= w.f;
+        return (
+          <AbsoluteFill style={{ pointerEvents: "none" }}>
+            <AbsoluteFill style={{
+              background: "linear-gradient(0deg, rgba(8,8,12,.72) 0%, rgba(8,8,12,.30) 26%, rgba(8,8,12,0) 46%)",
+            }} />
+            <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 186 }}>
+              <div style={{
+                maxWidth: 900, textAlign: "center", fontSize: 58, fontWeight: 900, lineHeight: 1.18,
+                letterSpacing: -0.4, textShadow: "0 3px 12px rgba(0,0,0,.75), 0 0 2px rgba(0,0,0,.9)",
+              }}>{g.map((w, wi) => (
                 <span key={wi} style={{
-                  color: (f - cur.from) >= w.f ? (whoColors[cur.who] || "#fff") : "#ffffff70",
-                  transition: "none", marginRight: 12,
+                  color: spoken(w) ? "#fff" : "rgba(255,255,255,.42)",
+                  marginRight: 14, display: "inline-block",
+                  transform: spoken(w) ? "translateY(-1px)" : "none",
                 }}>{w.w}</span>
-              ))
-            : cur.text}</div>
-        </AbsoluteFill>
-      )}
+              ))}</div>
+            </AbsoluteFill>
+          </AbsoluteFill>
+        );
+      })()}
       {/* NẤC 3 (bản 23/8 — user: "đừng rẻ tiền"): ĐẠO CỤ EMOJI BAY VÀO ĐÃ BỎ HẲN.
           Câu chốt chỉ nhấn bằng NGÔN NGỮ ĐIỆN ẢNH: cú zoom giật + rung máy tắt dần (xử lý ở khối
           camera phía trên) + tối 4 góc (vignette) khép nhẹ để mắt dồn vào giữa khung — sang, không
