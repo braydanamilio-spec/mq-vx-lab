@@ -1927,6 +1927,11 @@ ESSAY_SYS = (
  "celebrities, family-safe. US-centric framing (US prices, US habits, US institutions).\n"
  'Return STRICT JSON: {"title": str, "scene_base": str, "frames": [{"prompt": str, "line_idx": int}], '
  '"dialog": [{"who": "A", "line": str}], "sources": [str], '
+ # 23/8 — CHART ĐỘNG: khi bài có bộ số so sánh được (giá, thời gian, thứ hạng...), trả thêm khối
+ # "chart". Engine sẽ dựng 4-5 giây cột chạy + số đếm lên giữa video. Không có số thì để null,
+ # KHÔNG bịa — thà không có chart còn hơn chart sai.
+ '"chart": {"label": str, "unit": str, "items": [{"name": str (<14 chars), "value": number}]} '
+ 'or null — 2 to 5 items, REAL numbers from your sources, same unit, ordered as they should appear. '
  '"self_score": {"surprise": 0-100, "hook": 0-100, "clean": 0-100, "total": 0-100}}'
 )
 

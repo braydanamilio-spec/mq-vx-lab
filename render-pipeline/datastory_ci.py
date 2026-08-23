@@ -3189,10 +3189,33 @@ _TOON_MUSIC = {"TRUETALES": "music/km_impact_andante.mp3", "DUMBHISTORY": "music
                "HANKTOWN": "music/inspired.mp3"}
 
 
-def _toon_props(sl, title, accent, display, fr, lines, color_a, color_b, chapters=None, channel=""):
+def _chart_props(story, lines):
+    """CHART ĐỘNG (23/8): kịch bản có bộ số thật -> dựng 4.5 giây cột chạy + số đếm lên, đặt vào
+    GIỮA video (sau hook, trước kết) để cắt nhịp và neo con số vào đầu người xem.
+
+    Chỉ nhận số liệu AI trả về trong khối `chart`; thiếu/hỏng thì trả None và video chạy như cũ —
+    thà không có chart còn hơn chart bịa."""
+    c = (story or {}).get("chart") or None
+    if not isinstance(c, dict):
+        return None
+    items = [x for x in (c.get("items") or [])
+             if isinstance(x, dict) and str(x.get("name") or "").strip()
+             and isinstance(x.get("value"), (int, float)) and x["value"] > 0]
+    if not (2 <= len(items) <= 5):
+        return None
+    if not lines:
+        return None
+    mid = lines[max(0, len(lines) // 2 - 1)]
+    return {"label": str(c.get("label") or "")[:40], "unit": str(c.get("unit") or "")[:10],
+            "items": [{"name": str(x["name"])[:14], "value": float(x["value"])} for x in items],
+            "from": int(mid.get("from", 0)), "dur": 135}          # 4.5 giây ở 30fps
+
+
+def _toon_props(sl, title, accent, display, fr, lines, color_a, color_b, chapters=None, channel="", story=None):
     return {"slug": sl, "title": title, "color": accent, "name": display,
             "frames": fr, "lines": lines,
             "music": _TOON_MUSIC.get(str(channel).upper(), ""), "chapters": chapters or [],
+            "chart": _chart_props(story or {}, lines),
             "whoColors": {"A": color_a, "B": color_b}}
 
 
@@ -3228,7 +3251,7 @@ def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
     except RuntimeError as e:
         return out, (resume_story or {}), False, {"err": str(e)[:80]}
     st("rendering", "TOON render")
-    _props = _toon_props(sl, story.get("title", ""), accent, display or channel, fr, lines, color_a, color_b, channel=channel)
+    _props = _toon_props(sl, story.get("title", ""), accent, display or channel, fr, lines, color_a, color_b, channel=channel, story=story)
     story["_music"] = bool(_props.get("music"))    # có nhạc -> enqueue ghi công Kevin MacLeod (CC-BY)
     _pf = _toon_render(_props, out, "ToonShort", "ToonShort")
     story["_credits"] = take_credits()   # 23/8: ghi công đúng ảnh đã dùng
@@ -3285,7 +3308,7 @@ def make_toon_long(channel, niche, out, keys=None, tier="normal", accent="#E4562
         titles.append(story.get("title", ""))
         parts.append({"story": story,
                       "props": _toon_props(sl, story.get("title", ""), accent, display or channel,
-                                           fr, lines, color_a, color_b)})
+                                           fr, lines, color_a, color_b, story=story)})
         all_fr += [{**f, "from": f["from"] + off} for f in fr]
         all_ln += [{**l, "from": l["from"] + off} for l in lines]
         chapters.append({"text": story.get("title", ""), "from": off, "dur": end_f})
@@ -3294,7 +3317,8 @@ def make_toon_long(channel, niche, out, keys=None, tier="normal", accent="#E4562
         st("writing", f"✔ xong skit {pi + 1}/{n_parts}",
            script=json.dumps({"parts": [p["story"] for p in parts]}, ensure_ascii=False))
     lp = _toon_props(sl, titles[0] if titles else channel, accent, display or channel,
-                     all_fr, all_ln, color_a, color_b, chapters=chapters)
+                     all_fr, all_ln, color_a, color_b, chapters=chapters,
+                     story=(parts[0]["story"] if parts else None))
     st("rendering", "TOON long render")
     _toon_render(lp, out, "ToonLong", "ToonLong")
     st("qc", "Kiểm tra chất lượng")

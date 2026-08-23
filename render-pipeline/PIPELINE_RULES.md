@@ -383,3 +383,10 @@ kênh dùng cùng 1 footage"). Nay có sổ Firestore `img_used/{owner}__{channe
 móc trong `qc()` (chạy đúng 1 lần sau render). Chi phí ~110 lượt đọc-ghi/phiên cho 55 kênh.
 → **LUẬT**: mọi cơ chế "đã dùng rồi thì đừng dùng lại" phải sống ngoài RAM tiến trình, nếu không nó
 chỉ đúng trong đúng một luồng.
+
+### 23/8 — CHART ĐỘNG mặc định cho nhóm kể chuyện (toon/essay)
+Người viết trả thêm khối `chart {label, unit, items[2-5]{name, value}}` khi bài có số so sánh được
+(null nếu không có — KHÔNG bịa). `_chart_props()` chốt lại: chỉ nhận 2-5 mục, value > 0, rồi đặt vào
+GIỮA video (mốc câu giữa) trong 4.5 giây. Engine ToonShort dựng cột chạy từ 0 + số đếm lên, nền tối mờ.
+→ **LUẬT**: mọi hiệu ứng dựa trên dữ liệu phải có đường "không đủ dữ liệu thì tắt", không bao giờ
+dựng chart từ số tự chế.

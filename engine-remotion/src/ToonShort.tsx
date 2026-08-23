@@ -30,7 +30,9 @@ export const ToonShort: React.FC<{
   slug: string; title: string; color?: string; name?: string;
   frames: Frame[]; lines: Line[]; music?: string; whoColors?: Record<string, string>;
   chapters?: Chapter[];   // LONG (tuyển tập skit): title card đổi theo skit đang chiếu
-}> = ({ slug, title, color = "#E4562B", name = "", frames = [], lines = [], music = "", whoColors = {}, chapters = [] }) => {
+  // 23/8 — CHART ĐỘNG: bộ số THẬT do người viết trả về; hiện 4.5 giây ở giữa video.
+  chart?: { label?: string; unit?: string; items: { name: string; value: number }[]; from: number; dur: number } | null;
+}> = ({ slug, title, color = "#E4562B", name = "", frames = [], lines = [], music = "", whoColors = {}, chapters = [], chart = null }) => {
   const f = useCurrentFrame();
   const { durationInFrames: total, width: vw, height: vh } = useVideoConfig();
   const isVertical = vh > vw;
@@ -86,6 +88,44 @@ export const ToonShort: React.FC<{
           </Sequence>
         );
       })}
+      {/* CHART ĐỘNG (23/8 — user: "nên thêm chart động cho sinh động"): cột chạy từ 0 lên giá trị
+          thật + số đếm lên, nền tối mờ để chữ nổi. Chỉ hiện khi kịch bản có số liệu thật. */}
+      {chart && chart.items && chart.items.length >= 2 && f >= chart.from && f < chart.from + chart.dur && (() => {
+        const rel = f - chart.from;
+        const inP = Math.min(1, rel / 12);                       // 0.4s bung vào
+        const outP = Math.min(1, Math.max(0, (chart.from + chart.dur - f) / 12));
+        const grow = Math.min(1, Math.max(0, (rel - 8) / 40));   // cột chạy trong ~1.3s
+        const ease = 1 - Math.pow(1 - grow, 3);
+        const max = Math.max(...chart.items.map(x => x.value)) || 1;
+        const fade = Math.min(inP, outP);
+        return (
+          <AbsoluteFill style={{ background: `rgba(8,10,16,${0.78 * fade})`, justifyContent: "center", padding: "0 72px" }}>
+            <div style={{ opacity: fade, transform: `translateY(${(1 - inP) * 26}px)` }}>
+              {chart.label && (
+                <div style={{ color: "#EAF8FF", fontSize: 40, fontWeight: 900, letterSpacing: 0.4, marginBottom: 26, textShadow: "0 3px 22px #000" }}>
+                  {chart.label}{chart.unit ? ` (${chart.unit})` : ""}
+                </div>
+              )}
+              {chart.items.map((it, i) => {
+                const w = Math.max(4, (it.value / max) * 100 * ease);
+                const shown = it.value * ease;
+                const num = shown >= 1000 ? Math.round(shown).toLocaleString("en-US") : (Math.round(shown * 10) / 10).toString();
+                return (
+                  <div key={i} style={{ marginBottom: 20 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 7 }}>
+                      <span style={{ color: "#fff", fontSize: 34, fontWeight: 800 }}>{it.name}</span>
+                      <span style={{ color, fontSize: 38, fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>{num}</span>
+                    </div>
+                    <div style={{ height: 22, borderRadius: 11, background: "#ffffff1a", overflow: "hidden" }}>
+                      <div style={{ width: `${w}%`, height: "100%", borderRadius: 11, background: `linear-gradient(90deg, ${color}, #ffffffcc)` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </AbsoluteFill>
+        );
+      })()}
       {/* BANNER MỞ ĐẦU (23/8 — user: "text to bự như banner trên nền footage"): khối chữ CỠ LỚN
           trên dải màu thương hiệu, đè lên ảnh mở đầu, bung ra rồi tan sau ~2.8s. Long: chớp lại
           ngắn ở mỗi chương. Đây là cú hook thị giác của 2 giây đầu. */}
