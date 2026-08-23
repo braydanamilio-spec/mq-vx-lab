@@ -1186,17 +1186,7 @@ def plan_mode():
         return out_channels([])
     # 📟 CHUÔNG QUOTA NGÀY (23/8): đọc sổ tổng 1 lượt -> thấy lũy kế CẢ NGÀY ngay đầu phiên,
     # không còn cảnh đọc cháy ngầm từ trưa mà tối mới lộ (đêm 22/8 đứng máy 9 tiếng vì thế).
-    try:
-        _lr, _lw = FB.read_rw_ledger(OWNER)
-        if _lr >= 0:
-            _lmsg = f"📟 Sổ quota hôm nay: ĐỌC {_lr:,}/50.000 · GHI {_lw:,}/20.000"
-            if _lr > 42500 or _lw > 17000:
-                _lmsg += " — 🚨 SÁT TRẦN (85%): phiên này chạy tằn tiện tối đa"
-            elif _lr > 30000 or _lw > 12000:
-                _lmsg += " — ⚠️ qua 60%: để mắt, tránh mở việc đọc nặng"
-            print("   " + _lmsg)
-    except Exception:
-        pass
+    FB.quota_pulse(OWNER)   # sổ quota ngày + chuông 60/85% + ≥90% lật B2 CHỦ ĐỘNG (gương còn tươi)
     # GƯƠNG kho Drive A->B (23/8) — publisher fallback khi A nghẽn; phải chạy TRƯỚC heal để
     # phiên đầu tiên A còn thở là gương sống, heal thấy "có đường đẩy" mà làm việc.
     try:
@@ -1375,6 +1365,7 @@ def channel_mode(name):
     """RENDER 1 KÊNH (1 luồng của matrix). Đọc reserve + tôn trọng cờ Dừng (per-clip trong run_one)."""
     if not OWNER:
         raise SystemExit("❌ Thiếu OWNER_UID.")
+    FB.quota_pulse(OWNER)   # lane = tiến trình riêng: ≥90% trần thì tự lật B2 chủ động ngay từ đầu lane
     cfg = FB.read_config(OWNER)
     global RESERVE_LONG, RESERVE_SHORT
     RESERVE_LONG = int(cfg.get("reserve_long", RESERVE_LONG) or RESERVE_LONG)

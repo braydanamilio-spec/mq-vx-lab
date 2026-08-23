@@ -222,6 +222,32 @@ def read_rw_ledger(owner: str) -> tuple:
         return -1, -1
 
 
+def quota_pulse(owner: str):
+    """1 nhịp/tiến trình: đọc sổ quota ngày (1 lượt), in trạng thái, ≥90% trần thì gương tươi + LẬT
+    B2 CHỦ ĐỘNG (23/8, user đề xuất — lật lúc B còn sống = dữ liệu khớp 100%, khỏi chờ chết mới lật).
+    Gọi ở đầu plan VÀ đầu mỗi lane (lane là tiến trình riêng, quyết định của plan không tự lan sang)."""
+    try:
+        r, w = read_rw_ledger(owner)
+        if r < 0:
+            return
+        msg = f"📟 Sổ quota hôm nay: ĐỌC {r:,}/50.000 · GHI {w:,}/20.000"
+        if r > 45000 or w > 18000:
+            print("   " + msg + " — 🚨 ≥90% TRẦN: gương tươi + LẬT B2 CHỦ ĐỘNG trước khi cạn.")
+            try:
+                mirror_b_to_b2(owner)
+            except Exception:
+                pass
+            failover_to_b2("chủ động ≥90% trần ngày")
+        elif r > 42500 or w > 17000:
+            print("   " + msg + " — 🚨 SÁT TRẦN (85%): chạy tằn tiện tối đa")
+        elif r > 30000 or w > 12000:
+            print("   " + msg + " — ⚠️ qua 60%: để mắt, tránh mở việc đọc nặng")
+        else:
+            print("   " + msg)
+    except Exception:
+        pass
+
+
 def write_report() -> str:
     """Chuỗi 1-2 dòng tổng kết lượt ghi Firestore của tiến trình này."""
     if not _WRITES["n"]:
@@ -1084,12 +1110,27 @@ def mirror_b_to_b2(owner: str) -> int:
             d.reference.delete(); drained += 1
         if drained:
             print(f"   🔁 Rót ngược {drained} job từ B2 về B (video phiên khẩn không bị thất lạc).")
+        # 0b) rót ngược ngân hàng chủ đề (đề tài viết trong phiên khẩn) — B2 giữ superset nên set thẳng
+        for d in b2.collection("render_topics").stream():
+            if d.id.startswith(f"{owner}__"):
+                x2 = d.to_dict() or {}
+                t = _db_meta().collection("render_topics").document(d.id)
+                if (t.get().to_dict() or {}) != x2:
+                    t.set(x2)
         # 1) render_channels (toàn bộ của owner)
         cur = {d.id: (d.to_dict() or {}) for d in b2.collection("render_channels").where("owner", "==", owner).stream()}
         for d in _db_meta().collection("render_channels").where("owner", "==", owner).stream():
             x = d.to_dict() or {}
             if cur.get(d.id) != x:
                 b2.collection("render_channels").document(d.id).set(x); n += 1
+        # 1b) render_topics — NGÂN HÀNG CHỦ ĐỀ ĐÃ LÀM (23/8, user chỉ ra): thiếu nó thì phiên khẩn
+        #     trên B2 tưởng "chưa làm gì" -> viết lại đề tài cũ = video trùng nội dung. Gương bắt buộc.
+        curt = {d.id: (d.to_dict() or {}) for d in b2.collection("render_topics").stream()}
+        for d in _db_meta().collection("render_topics").stream():
+            if d.id.startswith(f"{owner}__"):
+                x = d.to_dict() or {}
+                if curt.get(d.id) != x:
+                    b2.collection("render_topics").document(d.id).set(x); n += 1
         # 2) render_config + snapshot keys + __req__ + connections_mirror (mỗi thứ 1-2 doc)
         for col, docid in (("render_config", owner), ("gemini_keys", f"__snap__{owner}"), ("gemini_keys", f"__req__{owner}")):
             try:
