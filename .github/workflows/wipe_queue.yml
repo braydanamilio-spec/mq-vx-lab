@@ -33,6 +33,9 @@ jobs:
           echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
           echo '${{ secrets.GCP_SA_KEY_C }}' > /tmp/sa_c.json
       - name: Wipe
+        # 1 kho token chết không được chặn bước reset sổ phía sau (23/8: ADISONDURHAM invalid_grant
+        # -> job dừng ở đây, sổ không được dọn, dashboard vẫn hiện video cũ).
+        continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
