@@ -22,8 +22,41 @@ def _db():
 
 
 _DBJ = [None]
+_B2 = {"on": False, "client": None}
+
+
+def _b2_available() -> bool:
+    """B2 = Firestore DỰ PHÒNG (23/8, project mm0-shard-b2): cùng service account của B (đã cấp
+    datastore.owner trên B2), chỉ cần FIREBASE_PROJECT_ID_B2 trong env — KHÔNG cần secret mới."""
+    return bool(os.environ.get("FIREBASE_PROJECT_ID_B2") and os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B")
+                and os.path.exists(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B", "")))
+
+
+def failover_to_b2(reason: str) -> bool:
+    """CÔNG TẮC TỰ ĐỘNG: B chính cạn quota (đọc hoặc ghi) -> toàn bộ client B trỏ sang B2 cho phần
+    còn lại của tiến trình. B2 được plan gương sẵn channels/config/keys mỗi phiên khi B khỏe, nên
+    lật sang là chạy được ngay. Đêm 22/8 đứng máy 9 tiếng vì không có đường này."""
+    if _B2["on"] or not _b2_available():
+        return _B2["on"]
+    try:
+        from google.cloud import firestore
+        from google.oauth2 import service_account
+        creds = service_account.Credentials.from_service_account_file(os.environ["GOOGLE_APPLICATION_CREDENTIALS_B"])
+        _B2["client"] = firestore.Client(project=os.environ["FIREBASE_PROJECT_ID_B2"], credentials=creds)
+        _B2["on"] = True
+        _RQ_DEAD["until"] = 0          # mở lại đường đọc — giờ đọc là đọc B2
+        _WQ_DEAD["until"] = 0
+        print(f"🔀 FAILOVER: B chính nghẽn ({reason[:60]}) -> chuyển sang B2 (mm0-shard-b2) cho hết tiến trình.")
+        return True
+    except Exception as e:
+        print(f"   ⚠️ failover B2 lỗi ({str(e)[:60]}) — ở lại B, chạy chế độ đệm.")
+        return False
+
+
 def _db_jobs():
     """Client cho collection render_jobs -> Project B (SHARD, giảm tải A) nếu có creds B; KHÔNG thì dùng A (backward-compatible)."""
+    if _B2["on"] and _B2["client"] is not None:
+        return _B2["client"]
     key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B")
     project = os.environ.get("FIREBASE_PROJECT_ID_B")
     if not (key and project and os.path.exists(key)):
@@ -343,6 +376,11 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         # ĐỌC-MỀM: quota đọc cạn thì trả bản đệm cũ (hoặc rỗng) — 18/18 luồng phiên 04:22Z chết
         # chỉ vì lượt đọc này ném 429 xuyên qua `or keys` của caller (raise ≠ falsy).
         if _wq_exhausted(e):
+            if not _B2["on"] and failover_to_b2("read_keys 429"):   # chỉ lật+thử lại LẦN ĐẦU (chống đệ quy vô hạn)
+                try:
+                    return read_keys(owner, include_cooling=include_cooling)   # thử lại — giờ đọc B2
+                except Exception:
+                    pass
             _RQ_DEAD["until"] = _t.time() + 15 * 60
             if not _RQ_DEAD["warned"]:
                 _RQ_DEAD["warned"] = True
@@ -664,6 +702,11 @@ def read_config(owner: str) -> dict:
         return out
     except Exception as e:
         if _wq_exhausted(e):
+            if not _B2["on"] and failover_to_b2("read_config 429"):
+                try:
+                    return read_config(owner)          # thử lại — giờ đọc B2 (đã gương config)
+                except Exception:
+                    pass
             _RQ_DEAD["until"] = _t.time() + 15 * 60
             if not _RQ_DEAD["warned"]:
                 _RQ_DEAD["warned"] = True
@@ -1004,6 +1047,63 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
         total += _LEGACY_COUNT[ck]
     _HOT_CACHE[("cnt", owner, channel, vtype)] = (_t.time(), total)
     return total
+
+
+def mirror_b_to_b2(owner: str) -> int:
+    """GƯƠNG DỮ LIỆU SỐNG CÒN B->B2 (23/8): kênh + config + snapshot key + gương kho — đủ để failover
+    sang B2 là plan/lane chạy được ngay (job history KHÔNG gương: sống thiếu nó được, đếm lại dần).
+    1 lần/phiên khi B khỏe; so giá trị, chỉ ghi doc đổi (B2 quota riêng, gần như không tốn của B)."""
+    if _B2["on"] or not _b2_available():
+        return 0
+    try:
+        from google.cloud import firestore as _fs
+        from google.oauth2 import service_account as _sa
+        creds = _sa.Credentials.from_service_account_file(os.environ["GOOGLE_APPLICATION_CREDENTIALS_B"])
+        b2 = _fs.Client(project=os.environ["FIREBASE_PROJECT_ID_B2"], credentials=creds)
+        n = 0
+        # 0) DRAIN NGƯỢC: job sinh ra trong lúc chạy tạm B2 (phiên khẩn) -> rót về B rồi xoá ở B2,
+        #    để kho/số đếm ở B đủ video, B2 sạch sẽ chờ lần khẩn sau. (Kênh/config KHÔNG cần chiều
+        #    ngược — nguồn chuẩn của chúng luôn là B, B2 chỉ là bản sao.)
+        drained = 0
+        for d in b2.collection("render_jobs").where("owner", "==", owner).limit(300).stream():
+            x = d.to_dict() or {}
+            _db_jobs().collection("render_jobs").document(d.id).set(x, merge=True)
+            d.reference.delete(); drained += 1
+        if drained:
+            print(f"   🔁 Rót ngược {drained} job từ B2 về B (video phiên khẩn không bị thất lạc).")
+        # 1) render_channels (toàn bộ của owner)
+        cur = {d.id: (d.to_dict() or {}) for d in b2.collection("render_channels").where("owner", "==", owner).stream()}
+        for d in _db_meta().collection("render_channels").where("owner", "==", owner).stream():
+            x = d.to_dict() or {}
+            if cur.get(d.id) != x:
+                b2.collection("render_channels").document(d.id).set(x); n += 1
+        # 2) render_config + snapshot keys + __req__ + connections_mirror (mỗi thứ 1-2 doc)
+        for col, docid in (("render_config", owner), ("gemini_keys", f"__snap__{owner}"), ("gemini_keys", f"__req__{owner}")):
+            try:
+                s = _db_meta().collection(col).document(docid).get() if col == "render_config" else \
+                    _db_keys().collection(col).document(docid).get()
+                if s.exists:
+                    x = s.to_dict() or {}
+                    t = b2.collection(col).document(docid)
+                    if (t.get().to_dict() or {}) != x:
+                        t.set(x); n += 1
+            except Exception:
+                pass
+        try:
+            for d in _db_jobs().collection("connections_mirror").stream():
+                x = d.to_dict() or {}
+                t = b2.collection("connections_mirror").document(d.id)
+                if (t.get().to_dict() or {}) != x:
+                    t.set(x); n += 1
+        except Exception:
+            pass
+        _cr("mirror_b2", 5)
+        if n:
+            print(f"   🪞 Gương B→B2: cập nhật {n} doc (B2 sẵn sàng nhận failover).")
+        return n
+    except Exception as e:
+        print(f"   ⚠️ mirror B→B2 lỗi ({str(e)[:60]}) — phiên sau thử lại.")
+        return 0
 
 
 def mirror_connections_to_b() -> int:

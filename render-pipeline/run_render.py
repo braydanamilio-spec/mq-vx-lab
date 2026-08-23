@@ -1203,6 +1203,11 @@ def plan_mode():
         FB.mirror_connections_to_b()
     except Exception:
         pass
+    # GƯƠNG B->B2 (23/8): B2 dự phòng luôn có sẵn kênh/config/key — B cạn là failover_to_b2 lật ngay.
+    try:
+        FB.mirror_b_to_b2(OWNER)
+    except Exception:
+        pass
     # TỰ CHỮA video render-xong-nhưng-chưa-đẩy-kho (A nghẽn 1 nhịp là dính, 22/8: 9 video EMPIREUSA)
     # -> lật failed để lane render lại TỪ SCRIPT đã lưu (0 quota AI). 1 lần/phiên, ghi chỉ khi có nạn nhân.
     try:
