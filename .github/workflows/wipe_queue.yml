@@ -10,6 +10,7 @@ on:
     inputs:
       dry_run: { description: "Chạy thử (chỉ đếm, không đụng file)", type: boolean, default: true }
       scope: { description: "store = mọi file dưới MM0-STORE · queue = chỉ _QUEUE", type: choice, options: [store, queue], default: store }
+      reset_ledger: { description: "Reset luôn SỔ (render_jobs + số đếm) — dashboard hết hiện video cũ", type: boolean, default: false }
 
 concurrency: { group: mm0-wipe-queue, cancel-in-progress: false }
 
@@ -44,3 +45,20 @@ jobs:
           ARGS=""
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
           python src/wipe_queue.py --scope "${{ github.event.inputs.scope }}" $ARGS
+      - name: Checkout render-pipeline
+        if: ${{ github.event.inputs.reset_ledger == 'true' }}
+        uses: actions/checkout@v4
+        with: { path: rp }
+      - name: Reset sổ
+        if: ${{ github.event.inputs.reset_ledger == 'true' }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          RENDER_OWNER: ${{ vars.RENDER_OWNER }}
+        run: |
+          cd rp/render-pipeline
+          ARGS=""
+          [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
+          python reset_ledger.py $ARGS

@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""RESET SỔ VIDEO (23/8/2026) — làm lại từ đầu cho sạch.
+
+Kho Drive đã dọn bằng `wipe_queue.py`, nhưng dashboard vẫn liệt kê video vì nó đọc **sổ**
+(`render_jobs` ở project B) chứ không đọc Drive. File đã vào thùng rác mà bản ghi còn thì trang vẫn
+hiện — đúng cảnh "dọn rồi mà vẫn thấy video".
+
+Script này xoá bản ghi job đã render xong + reset 2 doc đếm, để số trên dashboard = số THẬT trong kho
+(lúc này là 0). KHÔNG đụng: cấu hình kênh, chủ đề (`render_topics`), key.
+
+    python reset_ledger.py --dry-run     # chỉ đếm
+    python reset_ledger.py               # xoá thật
+"""
+import argparse
+import os
+import sys
+
+import firestore_bridge as FB
+
+OWNER = os.environ.get("RENDER_OWNER", "mm0")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--owner", default=OWNER)
+    a = ap.parse_args()
+
+    db = FB._db_jobs()
+    col = db.collection("render_jobs")
+    n = del_ok = 0
+    err = 0
+    for d in col.stream():
+        n += 1
+        if a.dry_run:
+            continue
+        try:
+            d.reference.delete()
+            del_ok += 1
+        except Exception:
+            err += 1
+        if del_ok and del_ok % 200 == 0:
+            print(f"   … đã xoá {del_ok}", flush=True)
+
+    print(f"📒 render_jobs: thấy {n} bản ghi · xoá {del_ok} · lỗi {err}")
+
+    if not a.dry_run:
+        for path in (f"__pushed__{a.owner}", a.owner):
+            try:
+                db.collection("render_stats").document(path).delete()
+                print(f"   ↺ reset render_stats/{path}")
+            except Exception as e:
+                err += 1
+                print(f"   ⚠️ không reset được render_stats/{path}: {str(e)[:60]}")
+
+    print("✅ Sổ đã reset — dashboard sẽ hiện đúng số video CÓ THẬT trong kho.")
+    return 1 if err else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
