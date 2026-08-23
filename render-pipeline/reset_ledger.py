@@ -53,14 +53,24 @@ def main() -> int:
 
     print(f"📒 render_jobs: thấy {n} bản ghi · xoá {del_ok} · lỗi {err}")
 
+    # 23/8: owner là UID Firebase 28 ký tự, KHÔNG phải "mm0" -> bản trước xoá nhầm tên doc nên
+    # dashboard vẫn hiện "176 video trong kho". render_stats chỉ chứa doc đếm ({owner},
+    # __pushed__{owner}, __rw__{owner}) nên xoá sạch cả collection là đúng và an toàn.
+    st = db.collection("render_stats")
+    try:
+        st_refs = list(st.list_documents(page_size=200))
+    except Exception as e:
+        st_refs = []
+        print(f"   ⚠️ không liệt kê được render_stats: {str(e)[:60]}")
+    print(f"📈 render_stats: {len(st_refs)} doc đếm")
     if not a.dry_run:
-        for path in (f"__pushed__{a.owner}", a.owner):
+        for ref in st_refs:
             try:
-                db.collection("render_stats").document(path).delete()
-                print(f"   ↺ reset render_stats/{path}")
+                ref.delete()
+                print(f"   ↺ xoá render_stats/{ref.id}")
             except Exception as e:
                 err += 1
-                print(f"   ⚠️ không reset được render_stats/{path}: {str(e)[:60]}")
+                print(f"   ⚠️ không xoá được render_stats/{ref.id}: {str(e)[:50]}")
 
     print("✅ Sổ đã reset — dashboard sẽ hiện đúng số video CÓ THẬT trong kho.")
     return 1 if err else 0
