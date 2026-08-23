@@ -436,3 +436,10 @@ Sau khi vá cầu dao cho `_count_jobs` và `heal_unpushed`, phiên VẪN treo ~
 (3) rà cả file, đặt `timeout=20` cho **mọi** `.stream()` còn lại (19 chỗ).
 → **LUẬT**: trong firestore_bridge KHÔNG được tồn tại lệnh gọi mạng nào không có timeout. Thêm hàm
 mới mà quên timeout = thêm một chỗ có thể treo cả phiên và giết các phiên xếp sau.
+
+### 23/8 tối — HẠ TRẦN THỜI GIAN JOB PLAN 60' → 18'
+Bước điều phối khoẻ chỉ mất 2-4 phút. Khi nó treo, khoá `concurrency` giữ luôn hàng đợi và GitHub huỷ
+mọi phiên xếp sau — tối nay mất 4 phiên liên tiếp vì đúng chuyện này. Trần 18' để phiên hỏng chết
+nhanh, cron 10' sau mở phiên mới.
+→ **LUẬT**: trần thời gian phải đặt theo THỜI GIAN CHẠY THẬT (× 4-5 lần), không đặt "cho rộng rãi".
+Trần rộng biến một phiên hỏng thành một giờ đứng máy.

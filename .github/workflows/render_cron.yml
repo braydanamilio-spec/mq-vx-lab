@@ -23,7 +23,10 @@ jobs:
   # ── ĐIỀU PHỐI: quyết định có chạy không + health-check + re-render + liệt kê kênh ─────────────
   plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # 23/8 tối: hạ 60' -> 18'. Bước điều phối khoẻ chỉ mất 2-4'; treo thì giữ khoá concurrency và
+    # GIẾT mọi phiên xếp sau (tối nay mất 4 phiên liên tiếp vì đúng chuyện này). Chết nhanh, cron
+    # 10' sau mở phiên mới — rẻ hơn nhiều so với ôm một phiên hỏng suốt 1 tiếng.
+    timeout-minutes: 18
     outputs:
       channels: ${{ steps.plan.outputs.channels }}
     steps:
