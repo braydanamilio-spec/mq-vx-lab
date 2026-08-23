@@ -59,7 +59,9 @@ def set_ai_pool(keys, channel: str = ""):
     XOAY THEO KÊNH (cùng chiêu ranked_accounts bên kho Drive): không xoay thì cả 18 luồng song
     song đều bắt đầu vẽ/kiểm từ CÙNG key đầu danh sách -> hạn mức ảnh/Vision của vài key đầu cháy
     trước trong khi key cuối ngồi không — pool 56 key mà hiệu dụng chỉ còn vài key."""
-    raw = [k.get("key") for k in (keys or []) if k.get("key") and not str(k.get("key")).startswith("gsk_")]   # Groq không có vision/vẽ ảnh
+    set_pexels_pool(keys, channel)      # 23/8: nạp luôn pool key Pexels từ cùng danh sách key
+    raw = [k.get("key") for k in (keys or [])
+           if k.get("key") and not str(k.get("key")).startswith(("gsk_", "px:"))]   # Groq/Pexels không vẽ ảnh
     # CF (cf:) đứng TRƯỚC cho VẼ ẢNH: FLUX free ~2K ảnh/ngày/tài khoản vs Gemini chỉ ~vài trăm tổng
     # -> đốt CF trước, Gemini để dành cho vision + khi CF cạn. Mỗi nhóm vẫn xoay theo kênh như cũ.
     cf = [k for k in raw if str(k).startswith("cf:")]
@@ -351,7 +353,30 @@ def _nasa_images(query, n=10):
         return []
 
 
+# POOL KEY PEXELS (23/8, user: "thêm chục key xoay vòng cho thoải mái") — dùng CHUNG hệ quản lý
+# key sẵn có: thêm/xoá trên dashboard, key ghi dạng "px:<KEY>". Mỗi key tự đếm lượt, chạm trần
+# hoặc bị 429 thì TẮT key đó và nhảy key kế -> 10 key = 10× hạn mức, không bao giờ kẹt.
 _PEXELS_STATE = {"used": 0, "off": False}
+_PX_POOL: list = []          # [{"k": key, "used": n, "off": bool}]
+_PX_CAP = 150                # lượt/key/tiến trình (nhà cung cấp cho 200/giờ — chừa biên an toàn)
+
+
+def set_pexels_pool(keys, channel: str = ""):
+    """Nạp key Pexels từ pool chung (key bắt đầu bằng 'px:'), xoay điểm bắt đầu theo kênh để 18
+    luồng song song không cùng đốt một key."""
+    global _PX_POOL
+    raw = [str(k.get("key"))[3:] for k in (keys or [])
+           if str(k.get("key") or "").startswith("px:")]
+    env = os.environ.get("PEXELS_KEY", "")
+    if env and env not in raw:
+        raw.append(env)                       # key cũ trong secret vẫn dùng (không mất gì)
+    if channel and len(raw) > 1:
+        import hashlib
+        i = int(hashlib.md5(channel.encode()).hexdigest(), 16) % len(raw)
+        raw = raw[i:] + raw[:i]
+    _PX_POOL = [{"k": k, "used": 0, "off": False} for k in raw]
+    if _PX_POOL:
+        print(f"   🖼️ Pexels: {len(_PX_POOL)} key trong pool (xoay vòng, {_PX_CAP} lượt/key).")
 
 
 def _pexels(query, n=12):
@@ -360,16 +385,17 @@ def _pexels(query, n=12):
     hệ TỰ HẠN CHẾ 120 lượt/tiến trình rồi thôi (các nguồn khác gánh tiếp) — không bao giờ spam.
     Dùng ĐÚNG mục đích (lấy ảnh minh hoạ cho video của mình), KHÔNG dựng lại dịch vụ giống Pexels,
     và có ghi công theo yêu cầu license (dòng 'Imagery:' trong mô tả)."""
-    k = os.environ.get("PEXELS_KEY", "")
-    if not k or _PEXELS_STATE["off"] or _PEXELS_STATE["used"] >= 120:
+    _slot = next((x for x in _PX_POOL if not x["off"] and x["used"] < _PX_CAP), None)
+    if _slot is None:
         return []
+    k = _slot["k"]
     try:
         u = "https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
             {"query": query, "per_page": min(n, 20), "page": random.randint(1, 3)})
         req = urllib.request.Request(u, headers={**UA, "Authorization": k})
         with urllib.request.urlopen(req, timeout=20) as r:
             d = json.load(r)
-        _PEXELS_STATE["used"] += 1
+        _slot["used"] += 1
         out = []
         for ph in (d.get("photos") or []):
             src = (ph.get("src") or {})
@@ -379,9 +405,12 @@ def _pexels(query, n=12):
                             "license": f"Pexels ({ph.get('photographer','')})"})
         return out
     except Exception as e:
-        if "429" in str(e) or "403" in str(e):
-            _PEXELS_STATE["off"] = True          # chạm trần -> tắt hẳn phiên này, nhường nguồn khác
-            print("   ⏸ Pexels chạm giới hạn — chuyển sang Openverse/Wikimedia/NASA.")
+        # 401 = key sai/bị thu hồi · 403/429 = chạm trần -> đều TẮT key đó và nhảy key kế.
+        # (Đo thật 23/8: key sai trả 401, bản đầu chỉ bắt 429/403 nên key hỏng cứ nằm lại pool.)
+        if any(c in str(e) for c in ("401", "403", "429")):
+            _slot["off"] = True
+            _live = sum(1 for x in _PX_POOL if not x["off"])
+            print(f"   ⏸ 1 key Pexels chạm giới hạn -> chuyển key khác (còn {_live} key sống).")
         return []
 
 
