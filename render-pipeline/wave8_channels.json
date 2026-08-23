@@ -151,7 +151,7 @@
   "rate_b": "+0%",
   "color_a": "#FCD34D",
   "color_b": "#FCD34D",
-  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of warm sand, deep amber, charcoal and one teal accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
+  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of warm sand, deep amber, charcoal and one teal accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text, staged in a recognisably American everyday setting with ONE ordinary US object (two at most) (mailbox with red flag, red plastic cup, paper coffee cup, long receipt, pill bottle, pickup truck, fire hydrant) placed naturally where it belongs, never shoehorned, people are ordinary Americans of mixed ages and ethnicities in everyday US clothing, UNCLUTTERED minimal background, only 3-5 elements in frame, no shop shelves, no signage, no brand logos, no product labels, never political",
   "niche": "the hidden real cost behind everyday American purchases — coffee, gas, rent, streaming, insurance, weddings. 4-6 items per video, each with a real US price or percentage and where the money actually goes. STRICT: every number verifiable, no politics, no brands, no advice.",
   "accent_note": "eagle+raccoon odd couple",
   "n_shorts": 3,
@@ -159,7 +159,7 @@
   "tier": "normal",
   "priority": 1,
   "toon_mode": "essay",
-  "cfg_rev": "2026-08-23-essay"
+  "cfg_rev": "2026-08-23-usa3"
  },
  "HANKTOWN": {
   "format": "toon",
@@ -173,7 +173,7 @@
   "rate_b": "+0%",
   "color_a": "#5EEAD4",
   "color_b": "#5EEAD4",
-  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of pale mint, deep teal, bone white and one coral accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
+  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of pale mint, deep teal, bone white and one coral accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text, staged in a recognisably American everyday setting with ONE ordinary US object (two at most) (mailbox with red flag, red plastic cup, paper coffee cup, long receipt, pill bottle, pickup truck, fire hydrant) placed naturally where it belongs, never shoehorned, people are ordinary Americans of mixed ages and ethnicities in everyday US clothing, UNCLUTTERED minimal background, only 3-5 elements in frame, no shop shelves, no signage, no brand logos, no product labels, never political",
   "niche": "strange rules your body runs on — sleep, memory, hunger, pain, aging, immunity. 4-6 items per video, each with a real study finding and one number. STRICT: peer-reviewed sources only, no medical advice, no supplements, family-safe. Every video states it is general information, NOT medical advice.",
   "accent_note": "retro 50s americana",
   "n_shorts": 3,
@@ -181,7 +181,7 @@
   "tier": "normal",
   "priority": 1,
   "toon_mode": "essay",
-  "cfg_rev": "2026-08-23-essay2"
+  "cfg_rev": "2026-08-23-usa3"
  },
  "TRUETALES": {
   "format": "toon",
@@ -200,9 +200,9 @@
   "rate_b": "+2%",
   "color_a": "#FCA5A5",
   "color_b": "#FCA5A5",
-  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of cream, deep red, charcoal and one mint accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
+  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of cream, deep red, charcoal and one mint accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text, staged in a recognisably American everyday setting with ONE ordinary US object (two at most) (mailbox with red flag, red plastic cup, paper coffee cup, long receipt, pill bottle, pickup truck, fire hydrant) placed naturally where it belongs, never shoehorned, people are ordinary Americans of mixed ages and ethnicities in everyday US clothing, UNCLUTTERED minimal background, only 3-5 elements in frame, no shop shelves, no signage, no brand logos, no product labels, never political",
   "niche": "beliefs Americans hold that peer-reviewed evidence flips — food, health, money, safety. Each video lists 4-6 items: the myth everyone repeats, then the real mechanism with one verifiable number. STRICT: real studies only, no medical advice, no politics, no brands. Every video states it is general information, NOT medical advice.",
-  "cfg_rev": "2026-08-23-essay2"
+  "cfg_rev": "2026-08-23-usa3"
  },
  "DUMBHISTORY": {
   "format": "toon",
@@ -221,9 +221,9 @@
   "rate_b": "+0%",
   "color_a": "#FCD34D",
   "color_b": "#FCD34D",
-  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of sepia, parchment cream, ink brown and one faded blue accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
+  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of sepia, parchment cream, ink brown and one faded blue accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text, staged in a recognisably American everyday setting with ONE ordinary US object (two at most) (mailbox with red flag, red plastic cup, paper coffee cup, long receipt, pill bottle, pickup truck, fire hydrant) placed naturally where it belongs, never shoehorned, people are ordinary Americans of mixed ages and ethnicities in everyday US clothing, UNCLUTTERED minimal background, only 3-5 elements in frame, no shop shelves, no signage, no brand logos, no product labels, never political",
   "niche": "absurd-but-TRUE turning points in American history explained as visual metaphors — 4-6 items per video, each with the real year and the real number. STRICT: verifiable events only, long-dead figures, no modern politics, family-safe.",
-  "cfg_rev": "2026-08-23-essay"
+  "cfg_rev": "2026-08-23-usa3"
  },
  "EXPLAINUSA": {
   "format": "toon",
@@ -242,8 +242,8 @@
   "rate_b": "+0%",
   "color_a": "#7DD3FC",
   "color_b": "#7DD3FC",
-  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of pale blue-gray, navy, off-white and one red accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
+  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of pale blue-gray, navy, off-white and one red accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text, staged in a recognisably American everyday setting with ONE ordinary US object (two at most) (mailbox with red flag, red plastic cup, paper coffee cup, long receipt, pill bottle, pickup truck, fire hydrant) placed naturally where it belongs, never shoehorned, people are ordinary Americans of mixed ages and ethnicities in everyday US clothing, UNCLUTTERED minimal background, only 3-5 elements in frame, no shop shelves, no signage, no brand logos, no product labels, never political",
   "niche": "why everyday American systems work the way they do — tipping, medical bills, sales tax, college costs, imperial units, HOA rules. 4-6 items per video, each with a real price or statistic. STRICT: every number real and verifiable, no politics, no brands.",
-  "cfg_rev": "2026-08-23-essay"
+  "cfg_rev": "2026-08-23-usa3"
  }
 }

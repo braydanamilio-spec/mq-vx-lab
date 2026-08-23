@@ -2567,6 +2567,28 @@ _TOON_SAFE = [("extreme close-up", "tight head-and-shoulders shot"), ("close-up 
               ("advertising", "animation"), ("billboard", "backdrop"), ("poster", "backdrop")]
 
 
+# VÂN TAY MỸ (23/8, user chốt): mọi khung của kênh essay phải đọc ra "đây là nước Mỹ" trong 1 nháy.
+# Ghép ở TẦNG VẼ (không chỉ ở prompt AI viết) để cả ảnh vẽ-lại/ảnh fallback đều dính luật -> phong
+# cách đồng nhất suốt kênh. Giữ dạng ĐẠO CỤ/BỐI CẢNH, không phải cờ quạt phủ kín (tránh lố + chính trị).
+# 23/8 (đo bằng 4 ảnh test): bản đầu bắt "bối cảnh Mỹ" nhưng KHÔNG chặn độ rối -> FLUX vẽ nội thất
+# siêu thị chi chít kệ hàng, đẻ ra CHỮ GIẢ ("Coffe Ferricus") và cả LOGO NHÁI (rủi ro bản quyền).
+# Bản này: vân tay Mỹ chỉ 1-2 ĐẠO CỤ, nền tối giản, cấm biển hiệu/nhãn hàng/logo -> giữ được chất
+# editorial sang trọng mà vẫn "đọc ra nước Mỹ" ngay.
+_USA_TAG = ("set in a recognisably American everyday place, with ONE ordinary US object (two at most) "
+            "(curbside mailbox with red flag, red plastic cup, paper coffee cup, long receipt, pill "
+            "bottle, pickup truck, fire hydrant, folding lawn chair), any people are ordinary Americans "
+            "of mixed ages and ethnicities in everyday US clothing; UNCLUTTERED minimal background with "
+            "large flat areas, only 3-5 elements in the whole frame, no shop shelves full of products, "
+            "no signage, no brand logos, no product labels, no flags draped over the scene, not political")
+
+
+def _usa_style(style: str, mode: str) -> str:
+    """Gắn vân tay Mỹ vào style-lock của kênh essay (skit/story giữ nguyên vì đã có nhân vật cố định)."""
+    if mode != "essay" or not style:
+        return style
+    return style if "recognisably American" in style else f"{style}, {_USA_TAG}"
+
+
 def _toon_safe(p: str) -> str:
     """Né bộ lọc prompt CF (8007 NSFW chặn oan 'close-up of face' — đo thật 22/8) + né bẫy chữ giả:
     token VIẾT-HOA-TOÀN-BỘ >=3 ký tự (PEARL/HANK/BISON/USA/UPA...) bị FLUX vẽ thành chữ trên ảnh
@@ -2694,7 +2716,7 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
         dest = os.path.join(pub, fx["img"])
         # _toon_safe cho CẢ prompt LẪN style ngay từ lượt đầu (22/8 đêm): style-lock chứa tên
         # riêng VIẾT HOA (PEARL/BISON/OWL) và từ "advertising" -> FLUX in chữ giả lên khung hình.
-        _sty = _toon_safe(toon_style or DEFAULT_AI_STYLE)
+        _sty = _toon_safe(_usa_style(toon_style or DEFAULT_AI_STYLE, mode))
         prompt = _toon_safe(f"{story.get('scene_base', '')}. {fx['prompt']}. no signs, no lettering, no text")
         okimg = _generate_image_ai(prompt, dest, (keys[0] or {}).get("key"), style=_sty)
         if not okimg:
@@ -2727,7 +2749,7 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
                 dest = os.path.join(pub, fr[k2]["img"])
                 re_ok = _generate_image_ai(
                     _toon_safe(f"{story.get('scene_base', '')}. {fr[k2].get('prompt', '')}. {_clean}"),
-                    dest, (keys[0] or {}).get("key"), style=_toon_safe(toon_style or DEFAULT_AI_STYLE))
+                    dest, (keys[0] or {}).get("key"), style=_toon_safe(_usa_style(toon_style or DEFAULT_AI_STYLE, mode)))
                 if not re_ok and k2 > 0:
                     fr[k2]["img"] = fr[k2 - 1]["img"]
         if _bad and len(_vr or []) and _bad / len(_vr) > 0.4:
