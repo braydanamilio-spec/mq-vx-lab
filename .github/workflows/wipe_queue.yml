@@ -11,6 +11,7 @@ on:
       dry_run: { description: "Chạy thử (chỉ đếm, không đụng file)", type: boolean, default: true }
       scope: { description: "store = mọi file dưới MM0-STORE · queue = chỉ _QUEUE", type: choice, options: [store, queue], default: store }
       fix_dup: { description: "Dọn bản ghi kho TRÙNG TÊN (token chết) — vd ADISONDURHAM", type: boolean, default: false }
+      reset_topics: { description: "Xoá LUÔN sổ chủ đề (kênh làm lại đề tài từ đầu) — cần bật cùng reset_ledger", type: boolean, default: false }
       reset_ledger: { description: "Reset luôn SỔ (render_jobs + số đếm) — dashboard hết hiện video cũ", type: boolean, default: false }
 
 concurrency: { group: mm0-wipe-queue, cancel-in-progress: false }
@@ -78,4 +79,5 @@ jobs:
           cd rp/render-pipeline
           ARGS=""
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
+          [ "${{ github.event.inputs.reset_topics }}" = "true" ] && ARGS="$ARGS --topics"
           python reset_ledger.py $ARGS

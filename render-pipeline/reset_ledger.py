@@ -83,12 +83,15 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--owner", default=OWNER)
+    ap.add_argument("--topics", action="store_true",
+                    help="xoá LUÔN sổ chủ đề (render_topics) — kênh được làm lại đề tài từ đầu")
     a = ap.parse_args()
 
     err = 0
     for label, db in _clients():
         print(f"\n🗂  {label}")
-        for coll in ("render_jobs", "render_stats"):
+        colls = ["render_jobs", "render_stats"] + (["render_topics"] if a.topics else [])
+        for coll in colls:
             n, ok, e = _wipe_collection(db, coll, a.dry_run)
             err += e
             print(f"   {coll:<13} thấy {n:>4} · xoá {ok:>4}" + (f" · lỗi {e}" if e else ""))
