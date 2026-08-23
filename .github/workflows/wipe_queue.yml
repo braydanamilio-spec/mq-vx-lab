@@ -51,7 +51,7 @@ jobs:
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
           python src/wipe_queue.py --scope "${{ github.event.inputs.scope }}" $ARGS
       - name: Checkout render-pipeline
-        if: ${{ github.event.inputs.reset_ledger == 'true' || github.event.inputs.fix_dup == 'true' }}
+        if: ${{ github.event.inputs.reset_ledger == 'true' || github.event.inputs.fix_dup == 'true' || github.event.inputs.reset_topics == 'true' }}
         uses: actions/checkout@v4
         with: { path: rp }
       - name: Dọn bản ghi kho trùng
