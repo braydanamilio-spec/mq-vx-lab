@@ -428,3 +428,11 @@ Fix 3 lớp: (1) cầu dao `_RQ_DEAD` chặn ngay đầu `_count_jobs` — biế
 đã đóng (cạn hạn mức NGÀY ≠ burst theo phút).
 → **LUẬT**: mọi lệnh gọi mạng trong vòng lặp N kênh PHẢI có timeout ngắn + cầu dao dùng chung. Một
 lệnh chậm nhân với N là treo cả phiên, và phiên treo thì giết luôn các phiên sau qua khoá concurrency.
+
+### 23/8 tối — MẮT XÍCH TREO CUỐI: mirror_b_to_b2 + MỌI lượt quét thiếu timeout
+Sau khi vá cầu dao cho `_count_jobs` và `heal_unpushed`, phiên VẪN treo ~16-20'. Thủ phạm còn lại:
+`mirror_b_to_b2()` quét 7 collection, không lượt nào có timeout -> riêng nó ~7 phút khi quota cạn.
+Đã: (1) cầu dao bỏ qua hẳn khi `_RQ_DEAD` đóng; (2) timeout 15-20s cho toàn bộ 12 lệnh trong hàm;
+(3) rà cả file, đặt `timeout=20` cho **mọi** `.stream()` còn lại (19 chỗ).
+→ **LUẬT**: trong firestore_bridge KHÔNG được tồn tại lệnh gọi mạng nào không có timeout. Thêm hàm
+mới mà quên timeout = thêm một chỗ có thể treo cả phiên và giết các phiên xếp sau.

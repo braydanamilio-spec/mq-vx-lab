@@ -108,9 +108,9 @@ def top_titles(owner: str, channel: str, n: int = 8) -> list[str]:
         col = db.collection("videos").where("owner", "==", owner).where("channel", "==", channel).where("status", "==", "posted")
         try:
             from google.cloud.firestore_v1 import Query
-            docs = list(col.order_by("stats.views", direction=Query.DESCENDING).limit(n).stream())
+            docs = list(col.order_by("stats.views", direction=Query.DESCENDING).limit(n).stream(timeout=20))
         except Exception:
-            docs = list(col.limit(60).stream())              # thiếu index -> lấy thô rồi tự sort
+            docs = list(col.limit(60).stream(timeout=20))              # thiếu index -> lấy thô rồi tự sort
             docs.sort(key=lambda d: ((d.to_dict() or {}).get("stats") or {}).get("views", 0), reverse=True)
             docs = docs[:n]
         out = []
@@ -399,7 +399,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         if rows is None:
             _cr("read_keys_scan", 70)
             rows = [(d.id, d.to_dict() or {})
-                    for d in db.collection("gemini_keys").where("owner", "==", owner).stream()]
+                    for d in db.collection("gemini_keys").where("owner", "==", owner).stream(timeout=20)]
         for did, x in rows:
             if did.startswith("__") or not x.get("key"):
                 continue                                  # bỏ doc hệ thống (__snap__/__req__)
@@ -434,7 +434,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
             # B rỗng (chưa copy key sang) -> lùi về A, KHÔNG để pipeline tưởng là hết key rồi dừng.
             def _fallbackA():
                 db = _db(); out2 = []
-                for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
+                for d in db.collection("gemini_keys").where("owner", "==", owner).stream(timeout=20):
                     x = d.to_dict() or {}
                     if x.get("key"):
                         out2.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
@@ -496,7 +496,7 @@ def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
         if _A_KEYS["rows"] is None:
             _cr("merge_keys_A", 70)
             out = []
-            for d in _db().collection("gemini_keys").where("owner", "==", owner).stream():
+            for d in _db().collection("gemini_keys").where("owner", "==", owner).stream(timeout=20):
                 x = d.to_dict() or {}
                 if x.get("key"):
                     out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
@@ -611,7 +611,7 @@ def sync_keys_from_a(owner: str) -> int:
         # là danh tính thật.
         _cr("sync_keys_B", 70)
         have = set(); nb = 0; snap_rows = []
-        for d in db_b.collection("gemini_keys").where("owner", "==", owner).stream():
+        for d in db_b.collection("gemini_keys").where("owner", "==", owner).stream(timeout=20):
             if d.id.startswith("__snap__"):
                 continue
             nb += 1
@@ -621,7 +621,7 @@ def sync_keys_from_a(owner: str) -> int:
                 snap_rows.append({**x, "id": d.id})
         _cr("sync_keys_A", 70)
         added = 0; na = 0
-        for d in db_a.collection("gemini_keys").where("owner", "==", owner).stream():
+        for d in db_a.collection("gemini_keys").where("owner", "==", owner).stream(timeout=20):
             if d.id.startswith("__snap__"):
                 continue
             na += 1
@@ -724,7 +724,7 @@ def drive_usage(owner: str):
     """Tổng dung lượng ĐÃ DÙNG / SỨC CHỨA của mọi kho Drive (bytes) -> guard 'kho gần đầy' trước khi render."""
     used = cap = 0
     try:
-        for d in _db().collection("storage_accounts").where("owner", "==", owner).stream():
+        for d in _db().collection("storage_accounts").where("owner", "==", owner).stream(timeout=20):
             x = d.to_dict() or {}
             used += (x.get("used", 0) or 0)
             cap += (x.get("cap_gb", 15) or 15) * 1_000_000_000
@@ -737,7 +737,7 @@ def read_channels(owner: str) -> list[dict]:
     _cr("read_channels", 40)
     def _do():
         db = _db_meta(); out = []
-        for d in db.collection("render_channels").where("owner", "==", owner).stream():
+        for d in db.collection("render_channels").where("owner", "==", owner).stream(timeout=20):
             x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
         return out
     return _retry(_do)
@@ -747,7 +747,7 @@ def read_one_channel(owner: str, name: str) -> dict | None:
     """Đọc ĐÚNG 1 kênh theo tên (1 read) — dùng trong vòng lặp render để check pause/target mà KHÔNG đọc cả 15 kênh."""
     def _do():
         q = (_db_meta().collection("render_channels").where("owner", "==", owner)
-             .where("name", "==", name).limit(1).stream())
+             .where("name", "==", name).limit(1).stream(timeout=20))
         for d in q:
             x = d.to_dict() or {}; x["id"] = d.id; return x
         return None
@@ -793,7 +793,7 @@ def read_render_requests(owner: str) -> list[dict]:
     _cr("read_render_requests", 5)
     db = _db_meta(); out = []
     # limit 40: hàng đợi yêu cầu render lại hiếm khi dài; chặn để lỡ sai điều kiện cũng không quét cả bảng.
-    for d in db.collection("render_requests").where("owner", "==", owner).where("status", "==", "pending").limit(40).stream():
+    for d in db.collection("render_requests").where("owner", "==", owner).where("status", "==", "pending").limit(40).stream(timeout=20):
         x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
     return out
 
@@ -810,7 +810,7 @@ def find_done_before(owner: str, channel: str, vtype: str, before_iso: str, limi
              .where("created_at", "<", before_iso)
              .order_by("created_at").limit(int(limit)))
         out = []
-        for d in q.stream():
+        for d in q.stream(timeout=20):
             x = d.to_dict() or {}
             if x.get("requeued"):
                 continue
@@ -849,7 +849,7 @@ def delete_jobs_by_drive(owner: str, drive_id: str):
         return
     # limit 5: một drive_id chỉ gắn với 1-2 job; không chặn thì lỡ query sai điều kiện là quét cả bảng.
     for d in (_db_jobs().collection("render_jobs").where("owner", "==", owner)
-              .where("drive_id", "==", drive_id).limit(5).stream()):
+              .where("drive_id", "==", drive_id).limit(5).stream(timeout=20)):
         try:
             _soft(lambda: d.reference.delete(), "delete_jobs_by_drive")
         except Exception:
@@ -865,7 +865,7 @@ def get_script_by_drive(owner: str, drive_id: str):
         return None
     try:
         for d in (_db_jobs().collection("render_jobs").where("owner", "==", owner)
-                  .where("drive_id", "==", drive_id).limit(3).stream()):
+                  .where("drive_id", "==", drive_id).limit(3).stream(timeout=20)):
             s = (d.to_dict() or {}).get("script")
             if s:
                 try:
@@ -883,7 +883,7 @@ def read_thumb_requests(owner: str, limit: int = 40) -> list[dict]:
     try:
         q = (_db_meta().collection("thumb_requests").where("owner", "==", owner)
              .where("status", "==", "pending").limit(limit))   # chặn ngay ở TRUY VẤN, không phải sau khi đã đọc về
-        for d in q.stream():
+        for d in q.stream(timeout=20):
             x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
             if len(out) >= limit:
                 break
@@ -1092,7 +1092,7 @@ def has_active_render(owner: str) -> bool:
         cut_created = now_ - _td(hours=GHOST_H)          # job CŨ chưa có updated_at -> đành đo theo tuổi
         cut_beat = now_ - _td(minutes=STALE_MIN)         # job MỚI có nhịp tim -> đo theo lần ghi cuối
         live = 0
-        for d in q.limit(60).stream():            # chỉ chạy khi n>0; 60 = trần an toàn (matrix tối đa 18)
+        for d in q.limit(60).stream(timeout=20):            # chỉ chạy khi n>0; 60 = trần an toàn (matrix tối đa 18)
             x = d.to_dict() or {}
             ts, cut = x.get("updated_at"), cut_beat
             if not ts:                            # job tạo TRƯỚC bản vá nhịp tim -> lùi về đo tuổi
@@ -1185,6 +1185,13 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
 
 
 def mirror_b_to_b2(owner: str) -> int:
+    # 23/8 tối — MẮT XÍCH TREO CUỐI CÙNG: hàm này quét 7 collection để chép sang B2, mỗi lượt quét
+    # KHÔNG có timeout. Quota đọc cạn -> mỗi lượt trả giá 60s -> riêng nó đã ~7 phút, cộng các hàm
+    # khác thành phiên treo 20-42 phút và giết luôn phiên xếp sau qua khoá concurrency.
+    import time as _t3
+    if _t3.time() < _RQ_DEAD["until"]:
+        print("   🪞 Gương B→B2: bỏ qua (cầu dao quota đang đóng) — chép ở phiên sau")
+        return 0
     """GƯƠNG DỮ LIỆU SỐNG CÒN B->B2 (23/8): kênh + config + snapshot key + gương kho — đủ để failover
     sang B2 là plan/lane chạy được ngay (job history KHÔNG gương: sống thiếu nó được, đếm lại dần).
     1 lần/phiên khi B khỏe; so giá trị, chỉ ghi doc đổi (B2 quota riêng, gần như không tốn của B)."""
@@ -1200,19 +1207,19 @@ def mirror_b_to_b2(owner: str) -> int:
         #    để kho/số đếm ở B đủ video, B2 sạch sẽ chờ lần khẩn sau. (Kênh/config KHÔNG cần chiều
         #    ngược — nguồn chuẩn của chúng luôn là B, B2 chỉ là bản sao.)
         drained = 0
-        for d in b2.collection("render_jobs").where("owner", "==", owner).limit(300).stream():
+        for d in b2.collection("render_jobs").where("owner", "==", owner).limit(300).stream(timeout=20):
             x = d.to_dict() or {}
             _db_jobs().collection("render_jobs").document(d.id).set(x, merge=True)
             d.reference.delete(); drained += 1
         if drained:
             print(f"   🔁 Rót ngược {drained} job từ B2 về B (video phiên khẩn không bị thất lạc).")
         # 0b) rót ngược ngân hàng chủ đề (đề tài viết trong phiên khẩn) — B2 giữ superset nên set thẳng
-        for d in b2.collection("render_topics").stream():
+        for d in b2.collection("render_topics").stream(timeout=20):
             if not d.id.startswith(f"{owner}__"):
                 continue
             x2 = d.to_dict() or {}
             t = _db_meta().collection("render_topics").document(d.id)
-            cur = (t.get().to_dict() or {})
+            cur = (t.get(timeout=15).to_dict() or {})
             # GỘP chứ KHÔNG ĐÈ (23/8): trong lúc B chết, B2 nhận đề tài mới; nhưng B cũng có đề tài
             # cũ mà B2 chưa kịp có. Đè một chiều = MẤT một nửa ngân hàng chống trùng -> vài ngày sau
             # AI viết lại đúng đề tài cũ. Gộp theo thứ tự, bỏ trùng, giữ 300 mục gần nhất.
@@ -1224,15 +1231,15 @@ def mirror_b_to_b2(owner: str) -> int:
                 t.set({"owner": owner, "channel": x2.get("channel") or cur.get("channel"),
                        "topics": merged[-300:]}, merge=True)
         # 1) render_channels (toàn bộ của owner)
-        cur = {d.id: (d.to_dict() or {}) for d in b2.collection("render_channels").where("owner", "==", owner).stream()}
-        for d in _db_meta().collection("render_channels").where("owner", "==", owner).stream():
+        cur = {d.id: (d.to_dict() or {}) for d in b2.collection("render_channels").where("owner", "==", owner).stream(timeout=20)}
+        for d in _db_meta().collection("render_channels").where("owner", "==", owner).stream(timeout=20):
             x = d.to_dict() or {}
             if cur.get(d.id) != x:
                 b2.collection("render_channels").document(d.id).set(x); n += 1
         # 1b) render_topics — NGÂN HÀNG CHỦ ĐỀ ĐÃ LÀM (23/8, user chỉ ra): thiếu nó thì phiên khẩn
         #     trên B2 tưởng "chưa làm gì" -> viết lại đề tài cũ = video trùng nội dung. Gương bắt buộc.
-        curt = {d.id: (d.to_dict() or {}) for d in b2.collection("render_topics").stream()}
-        for d in _db_meta().collection("render_topics").stream():
+        curt = {d.id: (d.to_dict() or {}) for d in b2.collection("render_topics").stream(timeout=20)}
+        for d in _db_meta().collection("render_topics").stream(timeout=20):
             if d.id.startswith(f"{owner}__"):
                 x = d.to_dict() or {}
                 if curt.get(d.id) != x:
@@ -1241,20 +1248,20 @@ def mirror_b_to_b2(owner: str) -> int:
         for col, docid in (("render_config", owner), ("gemini_keys", f"__snap__{owner}"),
                            ("gemini_keys", f"__req__{owner}"), ("render_stats", owner)):
             try:
-                s = _db_meta().collection(col).document(docid).get() if col == "render_config" else \
-                    _db_keys().collection(col).document(docid).get()
+                s = _db_meta().collection(col).document(docid).get(timeout=15) if col == "render_config" else \
+                    _db_keys().collection(col).document(docid).get(timeout=15)
                 if s.exists:
                     x = s.to_dict() or {}
                     t = b2.collection(col).document(docid)
-                    if (t.get().to_dict() or {}) != x:
+                    if (t.get(timeout=15).to_dict() or {}) != x:
                         t.set(x); n += 1
             except Exception:
                 pass
         try:
-            for d in _db_jobs().collection("connections_mirror").stream():
+            for d in _db_jobs().collection("connections_mirror").stream(timeout=20):
                 x = d.to_dict() or {}
                 t = b2.collection("connections_mirror").document(d.id)
-                if (t.get().to_dict() or {}) != x:
+                if (t.get(timeout=15).to_dict() or {}) != x:
                     t.set(x); n += 1
         except Exception:
             pass
@@ -1401,9 +1408,9 @@ def find_resumable(owner: str, channel: str, vtype: str):
         try:
             from google.cloud.firestore_v1 import Query
             cands = [(d.id, d.to_dict() or {})
-                     for d in q.order_by("created_at", direction=Query.DESCENDING).limit(5).stream()]
+                     for d in q.order_by("created_at", direction=Query.DESCENDING).limit(5).stream(timeout=20)]
         except Exception:
-            cands = [(d.id, d.to_dict() or {}) for d in q.limit(25).stream()]
+            cands = [(d.id, d.to_dict() or {}) for d in q.limit(25).stream(timeout=20)]
         cands = [(i, j) for i, j in cands if j.get("script")]
         if not cands:
             _HOT_CACHE[ck] = []
@@ -1531,7 +1538,7 @@ def add_r2_pending(owner: str, meta: dict) -> None:
 def list_r2_pending(owner: str, cap: int = 40) -> list[dict]:
     try:
         q = _db_jobs().collection("r2_pending").where("owner", "==", owner).limit(cap)
-        return [{**(d.to_dict() or {}), "_doc": d.id} for d in q.stream()]
+        return [{**(d.to_dict() or {}), "_doc": d.id} for d in q.stream(timeout=20)]
     except Exception as e:
         print(f"   ⚠️ đọc sổ R2 lỗi ({str(e)[:60]})")
         return []
