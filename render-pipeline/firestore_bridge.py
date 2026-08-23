@@ -46,7 +46,15 @@ def failover_to_b2(reason: str) -> bool:
         _B2["on"] = True
         _RQ_DEAD["until"] = 0          # mở lại đường đọc — giờ đọc là đọc B2
         _WQ_DEAD["until"] = 0
-        print(f"🔀 FAILOVER: B chính nghẽn ({reason[:60]}) -> chuyển sang B2 (mm0-shard-b2) cho hết tiến trình.")
+        age = "?"
+        try:
+            m = _B2["client"].collection("render_config").document("mirror_meta").get()
+            if m.exists:
+                at = datetime.fromisoformat((m.to_dict() or {}).get("at", ""))
+                age = f"{int((datetime.now(timezone.utc) - at).total_seconds() // 60)} phút"
+        except Exception:
+            pass
+        print(f"🔀 FAILOVER: B chính nghẽn ({reason[:60]}) -> chuyển sang B2 (gương tuổi {age}).")
         return True
     except Exception as e:
         print(f"   ⚠️ failover B2 lỗi ({str(e)[:60]}) — ở lại B, chạy chế độ đệm.")
@@ -1102,6 +1110,7 @@ def mirror_b_to_b2(owner: str) -> int:
                     t.set(x); n += 1
         except Exception:
             pass
+        b2.collection("render_config").document("mirror_meta").set({"at": _now()})   # dấu tuổi gương
         _cr("mirror_b2", 5)
         if n:
             print(f"   🪞 Gương B→B2: cập nhật {n} doc (B2 sẵn sàng nhận failover).")
