@@ -38,6 +38,16 @@ def _clients():
     except Exception as e:
         print(f"⚠️ không đọc được khoá B ({sa}): {str(e)[:60]}")
     out = []
+    # 23/8: dashboard vẫn hiện 40 job ngày 18/8 dù B và B2 đã sạch -> sổ CŨ còn nằm ở project A
+    # (thời chưa tách shard, và dbJobs fallback về A khi init B lỗi). Phải dọn cả A.
+    pid_a = os.environ.get("FIREBASE_PROJECT_ID")
+    if pid_a:
+        try:
+            cred_a = service_account.Credentials.from_service_account_file(
+                os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"))
+            out.append((f"A/{pid_a}", _fs.Client(project=pid_a, credentials=cred_a)))
+        except Exception as e:
+            print(f"⚠️ không mở được A ({pid_a}): {str(e)[:60]}")
     for label, env_pid in (("B", "FIREBASE_PROJECT_ID_B"), ("B2", "FIREBASE_PROJECT_ID_B2")):
         pid = os.environ.get(env_pid)
         if not pid:
