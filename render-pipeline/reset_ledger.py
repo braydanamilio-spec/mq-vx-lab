@@ -30,12 +30,21 @@ def main() -> int:
     col = db.collection("render_jobs")
     n = del_ok = 0
     err = 0
-    for d in col.stream():
+    # 23/8: chạy bằng requirements của AutoPublisher thì `col.stream()` ném
+    # AttributeError: '_UnaryStreamMultiCallable' object has no attribute '_retry' (lệch phiên bản
+    # google-cloud-firestore/grpc). `list_documents()` đi đường khác nên không dính; giữ stream() làm
+    # phương án dự phòng.
+    try:
+        refs = list(col.list_documents(page_size=500))
+    except Exception as e:
+        print(f"   ↻ list_documents hỏng ({str(e)[:50]}), dùng stream()")
+        refs = [d.reference for d in col.stream()]
+    for ref in refs:
         n += 1
         if a.dry_run:
             continue
         try:
-            d.reference.delete()
+            ref.delete()
             del_ok += 1
         except Exception:
             err += 1
