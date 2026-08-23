@@ -69,7 +69,14 @@ def key_order(channel: str, keys: list[dict]) -> list[dict]:
             ks = [k for k in ks if k.get("id") not in _cooled] or ks[-1:]   # tất cả nghỉ -> giữ 1 key đỡ crash
     except Exception:
         pass
+    # 23/8 — LỌC KEY KHÔNG PHẢI AI TRƯỚC MỌI VIỆC KHÁC. `gem` bên dưới được định nghĩa là "mọi key
+    # không phải groq/cf", nên key ẢNH (px:/pb:) và key BẾN R2 (r2:) rơi thẳng vào danh sách Gemini
+    # và bị đem đi gọi API viết chữ: mỗi lượt là 1 lần lỗi 400/401, tốn thời gian, còn bị đánh dấu
+    # nghỉ oan. User sắp thêm 10 key R2 -> nếu không lọc, hồ key viết bị pha loãng nặng.
+    ks = [k for k in ks if not str(k.get("key", "")).startswith(("px:", "pb:", "r2:"))]
     n = len(ks)
+    if n == 0:
+        return []
     if n == 1:
         return ks
     # ƯU TIÊN GROQ CHO KHÂU VIẾT (key_order chỉ phục vụ text — pool Vision/vẽ đã lọc gsk_ riêng):

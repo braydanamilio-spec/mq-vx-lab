@@ -11,6 +11,8 @@ Khoá lưu chung hồ key (collection gemini_keys) theo dạng CHUỖI 1 DÒNG:
     r2:<account_id>:<access_key_id>:<secret_access_key>:<bucket>
 Nhiều tài khoản = nhiều dòng; hệ tự xoay vòng, dòng nào đầy/hỏng thì sang dòng kế.
 """
+from __future__ import annotations   # runner còn Python 3.9: cú pháp `dict | None` cần dòng này
+
 import os
 import time
 

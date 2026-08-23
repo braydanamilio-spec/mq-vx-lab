@@ -339,3 +339,10 @@ Nay `--gate` kiểm `storage.pool_accounts()` trước khi mở phiên: rỗng t
 lỗi mạng -> vẫn chạy (fail-open, vì storage.py có đệm + B2 + thử lại 8s/25s).
 `firestore_pool_accounts` cũng đọc theo thứ tự B -> B2 -> A thay vì B -> A (chiều 23/8 B cạn quota đọc
 nên nhánh cũ rơi thẳng xuống A đã chết).
+
+### BUG 23/8 — key ảnh/bến R2 lọt vào HỒ KEY VIẾT
+`key_order()` định nghĩa `gem = mọi key không phải gsk_/cf:` nên key Pexels (`px:`), Pixabay (`pb:`)
+và bến R2 (`r2:`) bị đem đi gọi API viết chữ: mỗi lượt 1 lần lỗi + bị đánh dấu nghỉ oan. Sắp thêm 10
+key R2 nên mức pha loãng còn nặng hơn. Fix: lọc `px:/pb:/r2:` ngay đầu `key_order`, có test trong selftest.
+→ **LUẬT**: mỗi khi thêm LOẠI key mới vào hồ chung, phải lọc nó ra khỏi các hồ không dùng nó
+(viết / vẽ / vision / ảnh thật / lưu trữ) và thêm 1 test chặn hồi quy.

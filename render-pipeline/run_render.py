@@ -1306,6 +1306,14 @@ def plan_mode():
         FB.mirror_b_to_b2(OWNER)
     except Exception:
         pass
+    # BÁO SỨC CHỨA BẾN R2 (23/8): in ngay đầu phiên để biết còn chỗ đậu hay không.
+    try:
+        import r2_store as _R2S
+        _st = _R2S.status(FB.read_keys(OWNER) or [])
+        if _st:
+            print("   🅿️ Bến R2: " + " · ".join(f"{x['bucket']} {x['used_gb']}/{x['used_gb']+x['free_gb']}GB" for x in _st))
+    except Exception:
+        pass
     # BẾN PHỤ R2 -> DRIVE (23/8): đưa video đang đậu tạm về nhà TRƯỚC khi render mẻ mới.
     try:
         repush_r2()
