@@ -15,9 +15,49 @@ import argparse
 import os
 import sys
 
-import firestore_bridge as FB
+import firestore_bridge as FB  # noqa: F401  (giữ để dùng chung cấu hình creds)
 
 OWNER = os.environ.get("RENDER_OWNER", "mm0")
+
+
+def _clients():
+    """Trả [(tên, client)] cho CẢ B và B2.
+
+    23/8 — vì sao phải làm rõ: `FB._db_jobs()` tự chuyển sang B2 khi B nghẽn quota. Lần reset trước
+    nó xoá 546 bản ghi ở B2 còn B vẫn nguyên 40 bản ghi -> dashboard vẫn hiện video cũ. Sổ nằm ở 2
+    nơi thì phải dọn cả 2 nơi, không thể tin "đã xoá xong" từ một client động.
+    """
+    from google.cloud import firestore as _fs
+    out = []
+    for label, env_pid in (("B", "FIREBASE_PROJECT_ID_B"), ("B2", "FIREBASE_PROJECT_ID_B2")):
+        pid = os.environ.get(env_pid)
+        if not pid:
+            continue
+        try:
+            out.append((f"{label}/{pid}", _fs.Client(project=pid)))
+        except Exception as e:
+            print(f"⚠️ không mở được {label} ({pid}): {str(e)[:60]}")
+    return out
+
+
+def _wipe_collection(db, name, dry) -> tuple[int, int, int]:
+    col = db.collection(name)
+    try:
+        refs = list(col.list_documents(page_size=500))
+    except Exception as e:
+        print(f"   ⚠️ không liệt kê được {name}: {str(e)[:60]}")
+        return 0, 0, 1
+    n = len(refs)
+    ok = err = 0
+    if dry:
+        return n, 0, 0
+    for ref in refs:
+        try:
+            ref.delete()
+            ok += 1
+        except Exception:
+            err += 1
+    return n, ok, err
 
 
 def main() -> int:
@@ -26,53 +66,14 @@ def main() -> int:
     ap.add_argument("--owner", default=OWNER)
     a = ap.parse_args()
 
-    db = FB._db_jobs()
-    col = db.collection("render_jobs")
-    n = del_ok = 0
     err = 0
-    # 23/8: chạy bằng requirements của AutoPublisher thì `col.stream()` ném
-    # AttributeError: '_UnaryStreamMultiCallable' object has no attribute '_retry' (lệch phiên bản
-    # google-cloud-firestore/grpc). `list_documents()` đi đường khác nên không dính; giữ stream() làm
-    # phương án dự phòng.
-    try:
-        refs = list(col.list_documents(page_size=500))
-    except Exception as e:
-        print(f"   ↻ list_documents hỏng ({str(e)[:50]}), dùng stream()")
-        refs = [d.reference for d in col.stream()]
-    for ref in refs:
-        n += 1
-        if a.dry_run:
-            continue
-        try:
-            ref.delete()
-            del_ok += 1
-        except Exception:
-            err += 1
-        if del_ok and del_ok % 200 == 0:
-            print(f"   … đã xoá {del_ok}", flush=True)
-
-    print(f"📒 render_jobs: thấy {n} bản ghi · xoá {del_ok} · lỗi {err}")
-
-    # 23/8: owner là UID Firebase 28 ký tự, KHÔNG phải "mm0" -> bản trước xoá nhầm tên doc nên
-    # dashboard vẫn hiện "176 video trong kho". render_stats chỉ chứa doc đếm ({owner},
-    # __pushed__{owner}, __rw__{owner}) nên xoá sạch cả collection là đúng và an toàn.
-    st = db.collection("render_stats")
-    try:
-        st_refs = list(st.list_documents(page_size=200))
-    except Exception as e:
-        st_refs = []
-        print(f"   ⚠️ không liệt kê được render_stats: {str(e)[:60]}")
-    print(f"📈 render_stats: {len(st_refs)} doc đếm")
-    if not a.dry_run:
-        for ref in st_refs:
-            try:
-                ref.delete()
-                print(f"   ↺ xoá render_stats/{ref.id}")
-            except Exception as e:
-                err += 1
-                print(f"   ⚠️ không xoá được render_stats/{ref.id}: {str(e)[:50]}")
-
-    print("✅ Sổ đã reset — dashboard sẽ hiện đúng số video CÓ THẬT trong kho.")
+    for label, db in _clients():
+        print(f"\n🗂  {label}")
+        for coll in ("render_jobs", "render_stats"):
+            n, ok, e = _wipe_collection(db, coll, a.dry_run)
+            err += e
+            print(f"   {coll:<13} thấy {n:>4} · xoá {ok:>4}" + (f" · lỗi {e}" if e else ""))
+    print("\n✅ Sổ đã reset ở CẢ B và B2 — dashboard hiện đúng số video CÓ THẬT trong kho.")
     return 1 if err else 0
 
 

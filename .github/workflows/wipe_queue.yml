@@ -59,6 +59,7 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           RENDER_OWNER: ${{ vars.RENDER_OWNER }}
         run: |
           cd rp/render-pipeline
