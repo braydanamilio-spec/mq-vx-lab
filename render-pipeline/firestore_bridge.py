@@ -1315,6 +1315,13 @@ def mirror_connections_to_b() -> int:
 
 
 def heal_unpushed(owner: str, hours: int = 48, cap: int = 120) -> int:
+    # 23/8 tối — CÙNG BỆNH VỚI _count_jobs: hàm này quét job trong 48h. Khi quota đọc cạn, mỗi lượt
+    # quét chờ hết 60s timeout -> góp phần treo bước điều phối. Cầu dao đã đóng thì bỏ qua hẳn,
+    # phiên sau chữa cũng không muộn (video vẫn nằm nguyên trong artifact + sổ).
+    import time as _t2
+    if _t2.time() < _RQ_DEAD["until"]:
+        print("   🩹 heal_unpushed: bỏ qua (cầu dao quota đang đóng)")
+        return 0
     """TỰ CHỮA video 'mồ côi' (22/8): Firestore A nghẽn 1 nhịp -> enqueue tưởng '0 kho Drive' ->
     9 video EMPIREUSA QC 98 render xong bị TỪ CHỐI đẩy, job ghi done «Xong (chưa đẩy Drive)» rồi
     runner chết -> file mất, chỉ còn KỊCH BẢN trong job. Hàm này chạy 1 lần/phiên (plan_mode):
@@ -1329,11 +1336,11 @@ def heal_unpushed(owner: str, hours: int = 48, cap: int = 120) -> int:
         # mà vẫn lật failed thì lane render lại xong LẠI bị từ chối -> vòng lặp đốt máy vô ích cả đêm.
         _path_ok = False
         try:
-            next(_db().collection("connections").limit(1).stream(), None)
+            next(_db().collection("connections").limit(1).stream(timeout=12), None)
             _path_ok = True
         except Exception:
             try:
-                _path_ok = next(_db_jobs().collection("connections_mirror").limit(1).stream(), None) is not None
+                _path_ok = next(_db_jobs().collection("connections_mirror").limit(1).stream(timeout=12), None) is not None
             except Exception:
                 pass
         if not _path_ok:
@@ -1346,7 +1353,7 @@ def heal_unpushed(owner: str, hours: int = 48, cap: int = 120) -> int:
         q = (_db_jobs().collection("render_jobs").where("owner", "==", owner)
              .where("status", "==", "done").where("created_at", ">=", since).limit(400))
         healed = scanned = orphan = 0
-        for d in q.stream():
+        for d in q.stream(timeout=20):
             j = d.to_dict() or {}
             scanned += 1
             _is_orphan = (j.get("drive_id") or "") == "" and bool(j.get("script"))
