@@ -1,0 +1,46 @@
+name: MM0 Wipe Queue (dọn sạch _QUEUE mọi kho)
+
+# DỌN SẠCH video/thumbnail/sidecar trong _QUEUE của MỌI kho, để làm lại từ đầu.
+# Đi đường storage.py -> danh sách kho lấy từ BẢN GƯƠNG project B, KHÔNG đụng quota project A
+# (bản dọn chạy từ trình duyệt đi qua Worker -> đọc A -> chết khi A cạn quota).
+# Chỉ chạy khi bấm tay: đây là việc phá hủy dữ liệu, không được để cron tự làm.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run: { description: "Chạy thử (chỉ đếm, không đụng file)", type: boolean, default: true }
+      scope: { description: "store = mọi file dưới MM0-STORE · queue = chỉ _QUEUE", type: choice, options: [store, queue], default: store }
+
+concurrency: { group: mm0-wipe-queue, cancel-in-progress: false }
+
+jobs:
+  wipe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout AutoPublisher (private)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: "pip" }
+      - run: pip install -r requirements.txt
+      - name: Ghi service account key (A + B + C)
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+          echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+          echo '${{ secrets.GCP_SA_KEY_C }}' > /tmp/sa_c.json
+      - name: Wipe
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
+          FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
+          SHARD_PUBLISH: ${{ vars.SHARD_PUBLISH }}
+        run: |
+          ARGS=""
+          [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
+          python src/wipe_queue.py --scope "${{ github.event.inputs.scope }}" $ARGS
