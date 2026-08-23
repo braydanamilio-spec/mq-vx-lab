@@ -174,14 +174,14 @@
   "color_a": "#5EEAD4",
   "color_b": "#5EEAD4",
   "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of pale mint, deep teal, bone white and one coral accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
-  "niche": "strange rules your body runs on — sleep, memory, hunger, pain, aging, immunity. 4-6 items per video, each with a real study finding and one number. STRICT: peer-reviewed sources only, no medical advice, no supplements, family-safe.",
+  "niche": "strange rules your body runs on — sleep, memory, hunger, pain, aging, immunity. 4-6 items per video, each with a real study finding and one number. STRICT: peer-reviewed sources only, no medical advice, no supplements, family-safe. Every video states it is general information, NOT medical advice.",
   "accent_note": "retro 50s americana",
   "n_shorts": 3,
   "make_long": true,
   "tier": "normal",
   "priority": 1,
   "toon_mode": "essay",
-  "cfg_rev": "2026-08-23-essay"
+  "cfg_rev": "2026-08-23-essay2"
  },
  "TRUETALES": {
   "format": "toon",
@@ -201,8 +201,8 @@
   "color_a": "#FCA5A5",
   "color_b": "#FCA5A5",
   "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of cream, deep red, charcoal and one mint accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
-  "niche": "beliefs Americans hold that peer-reviewed evidence flips — food, health, money, safety. Each video lists 4-6 items: the myth everyone repeats, then the real mechanism with one verifiable number. STRICT: real studies only, no medical advice, no politics, no brands.",
-  "cfg_rev": "2026-08-23-essay"
+  "niche": "beliefs Americans hold that peer-reviewed evidence flips — food, health, money, safety. Each video lists 4-6 items: the myth everyone repeats, then the real mechanism with one verifiable number. STRICT: real studies only, no medical advice, no politics, no brands. Every video states it is general information, NOT medical advice.",
+  "cfg_rev": "2026-08-23-essay2"
  },
  "DUMBHISTORY": {
   "format": "toon",

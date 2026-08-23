@@ -1870,7 +1870,8 @@ ESSAY_SYS = (
  "illustration — the thing personified, scaled absurdly, or in a place it does not belong (a mug of "
  "beer as a tiny character mopping a street, a brain hiding under a desk, salt crystals as guards). "
  "Describe only what is shown (subject/pose/props/setting), no camera jargon, no text or signs.\n"
- "4) TRUTHFUL: every claim must be REAL and verifiable (peer-reviewed nutrition/medicine/economics/"
+ "4) MONETIZATION-SAFE (YouTube YPP): the video must be ORIGINAL commentary that ADDS analysis — never a plain list read from one article; no shocking/graphic wording, no clickbait the video does not deliver, no health claims phrased as advice ('you should', 'cures'), no medical/financial instructions; state uncertainty when evidence is mixed.\n"
+ "5) TRUTHFUL: every claim must be REAL and verifiable (peer-reviewed nutrition/medicine/economics/"
  "history). Never invent studies or numbers. No medical advice, no politics, no real brands or "
  "celebrities, family-safe. US-centric framing (US prices, US habits, US institutions).\n"
  'Return STRICT JSON: {"title": str, "scene_base": str, "frames": [{"prompt": str, "line_idx": int}], '

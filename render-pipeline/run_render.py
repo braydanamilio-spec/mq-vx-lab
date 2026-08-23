@@ -1546,8 +1546,20 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
     if not ok:
         lst("failed", f"QC long toon trượt: {info}"); R["fails"].append(f"{channel} LONG toon: QC trượt")
         return False
+    # 23/8: gom SOURCES + tóm tắt từ mọi phần -> mô tả có dẫn nguồn (essay bắt buộc có nguồn; trước
+    # đây enqueue chỉ đẩy hook nên nguồn AI viết ra bị vứt = mất điểm tin cậy khi YouTube xét kênh).
+    _src, _bul = [], []
+    for _pt in (plan.get("parts") or parts or []):
+        _st2 = (_pt.get("story") or {}) if isinstance(_pt, dict) else {}
+        for _s in (_st2.get("sources") or []):
+            if _s and _s not in _src:
+                _src.append(_s)
+        if _st2.get("title"):
+            _bul.append("• " + str(_st2["title"]))
+    _desc = (plan.get("hook", "") or "") + (("\n\n" + "\n".join(_bul[:6])) if _bul else "")
     eq = enqueue_drive(channel, lo, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
-                                     "description": plan.get("hook", ""), "_thumb": (info or {}).get("thumb")}, "long")
+                                     "description": _desc, "sources": _src[:6],
+                                     "_thumb": (info or {}).get("thumb")}, "long")
     did = (eq or {}).get("id")
     lst("done", "Long toon đã đẩy Drive" if did else "Long toon xong (chưa đẩy Drive)",
         title=plan.get("pillar_title"), score=(info or {}).get("score"), dur=(info or {}).get("dur", 0),
@@ -1573,8 +1585,12 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
         if not sok:
             sst("failed", f"QC short toon trượt: {sinfo}"); R["fails"].append(f"{channel} TOON SHORT {pi}: QC trượt")
             continue
+        # mô tả short = 2 câu đầu (hook + claim) thay vì 1 câu cụt + kèm nguồn của chính bài đó
+        _ls = [str((d or {}).get("line", "")).strip() for d in (st_.get("dialog") or [])][:2]
         meta = {"topic": st_.get("title"), "title": st_.get("title"),
-                "description": (st_.get("dialog") or [{}])[0].get("line", ""), "_thumb": (sinfo or {}).get("thumb")}
+                "description": " ".join([x for x in _ls if x]),
+                "sources": (st_.get("sources") or [])[:4],
+                "_thumb": (sinfo or {}).get("thumb")}
         seq = enqueue_drive(channel, sout, meta, "short")
         sdid = (seq or {}).get("id")
         sst("done", "Short toon đã đẩy Drive" if sdid else "Short toon xong (chưa đẩy Drive)",

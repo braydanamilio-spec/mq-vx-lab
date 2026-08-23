@@ -2790,8 +2790,19 @@ def make_toon_long(channel, niche, out, keys=None, tier="normal", accent="#E4562
                 info["thumb"] = _th
         except Exception as e:
             print("   ⚠️ thumb TOON long lỗi:", str(e)[:80])
-    plan = {"pillar_title": (display or channel) + " — " + (titles[0] if titles else ""),
-            "hook": (parts[0]["story"].get("title") if parts else ""), "sources": []}
+    # 23/8: tiêu đề long KHÔNG gắn tên kênh (YouTube coi "TÊN KÊNH — tiêu đề" là spam/nhồi từ khoá,
+    # và ăn mất ~15 ký tự hiển thị trên mobile). Lấy hook của phần 1 làm tiêu đề chính, kèm số mục
+    # để hứa hẹn giá trị ("+2 more"). SOURCES gom từ MỌI phần -> mô tả có dẫn nguồn thật (điều kiện
+    # cần khi YouTube xét bật kiếm tiền: nội dung có kiểm chứng, không phải nội dung lặp lại hàng loạt).
+    _allsrc = []
+    for _p in parts:
+        for _s in ((_p.get("story") or {}).get("sources") or []):
+            if _s and _s not in _allsrc:
+                _allsrc.append(_s)
+    _t0 = titles[0] if titles else (display or channel)
+    plan = {"pillar_title": (f"{_t0} (+{len(titles) - 1} more)" if len(titles) > 1 else _t0),
+            "hook": (parts[0]["story"].get("title") if parts else ""),
+            "parts": parts, "sources": _allsrc[:8]}
     return out, plan, titles, ok, info, parts
 
 
