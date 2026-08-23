@@ -465,6 +465,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                                                    "_thumb": plan.get("_thumb") or (info or {}).get("thumb")}, "long")
                 did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
                 lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
+                    description=(plan.get("description") or plan.get("hook") or ""), hashtags=plan.get("hashtags") or [], tags=plan.get("tags") or [],
                     score=(info or {}).get("score"),
                     dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
                     drive_id=did or "", drive_account=acc, thumb_id=(eq or {}).get("thumb_id", ""), preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
@@ -590,6 +591,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
                                      "_thumb": (info or {}).get("thumb")}, "long")
     did = (eq or {}).get("id")
     lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
+        description=(plan.get("description") or plan.get("hook") or ""), hashtags=plan.get("hashtags") or [], tags=plan.get("tags") or [],
         score=(info or {}).get("score"), dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0),
         res=(info or {}).get("res", ""), drive_id=did or "", drive_account=(eq or {}).get("account", ""),
         thumb_id=(eq or {}).get("thumb_id", ""),
@@ -621,6 +623,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
         seq = enqueue_drive(channel, sout, st_, "short")
         sdid = (seq or {}).get("id")
         sst("done", "Short đã đẩy Drive" if sdid else "Short xong (chưa đẩy Drive)",
+            description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],
             title=st_.get("title_yt") or st_.get("title"), score=(sinfo or {}).get("score"),
             dur=(sinfo or {}).get("dur", 0), size_mb=(sinfo or {}).get("size_mb", 0),
             res=(sinfo or {}).get("res", ""), drive_id=sdid or "", drive_account=(seq or {}).get("account", ""),
@@ -666,6 +669,7 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R):
                                      "_thumb": (info or {}).get("thumb")}, "long")
     did = (eq or {}).get("id")
     lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
+        description=(plan.get("description") or plan.get("hook") or ""), hashtags=plan.get("hashtags") or [], tags=plan.get("tags") or [],
         score=(info or {}).get("score"), dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0),
         res=(info or {}).get("res", ""), drive_id=did or "", drive_account=(eq or {}).get("account", ""),
         thumb_id=(eq or {}).get("thumb_id", ""),
@@ -706,6 +710,7 @@ def _motif_shorts(ch, fmt, keys, tier, subs, cool, okcb, R, stopped, avoid):
         did = (eq or {}).get("id")
         jst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)",
             title=story.get("title_yt") or story.get("title"), score=(info or {}).get("score"),
+            description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],
             dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0),
             res=(info or {}).get("res", ""), drive_id=did or "", drive_account=(eq or {}).get("account", ""),
             thumb_id=(eq or {}).get("thumb_id", ""),
@@ -818,6 +823,7 @@ def process_requests(keys, report):
                 _trash_old(req.get("replace_account"), req.get("replace_id"))
                 FB.delete_jobs_by_drive(OWNER, req.get("replace_id"))   # dọn job cũ (bản đã bị thay thế)
                 st("done", "Render lại xong — đã thay thế bản cũ", title=story.get("title"),
+                    description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],
                    dur=(info or {}).get("dur", 0), size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
                    drive_id=did or "", drive_account=acc, thumb_id=(eq or {}).get("thumb_id", ""), preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
                    script=script)
@@ -1731,6 +1737,7 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
                                      "_thumb": (info or {}).get("thumb")}, "long")
     did = (eq or {}).get("id")
     lst("done", "Long toon đã đẩy Drive" if did else "Long toon xong (chưa đẩy Drive)",
+        description=(plan.get("description") or plan.get("hook") or ""), hashtags=plan.get("hashtags") or [], tags=plan.get("tags") or [],
         title=plan.get("pillar_title"), score=(info or {}).get("score"), dur=(info or {}).get("dur", 0),
         size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""), drive_id=did or "",
         drive_account=(eq or {}).get("account", ""), thumb_id=(eq or {}).get("thumb_id", ""),
@@ -1763,6 +1770,7 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
         seq = enqueue_drive(channel, sout, meta, "short")
         sdid = (seq or {}).get("id")
         sst("done", "Short toon đã đẩy Drive" if sdid else "Short toon xong (chưa đẩy Drive)",
+            description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],
             title=st_.get("title"), score=(sinfo or {}).get("score"), dur=(sinfo or {}).get("dur", 0),
             size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""), drive_id=sdid or "",
             drive_account=(seq or {}).get("account", ""), thumb_id=(seq or {}).get("thumb_id", ""),
