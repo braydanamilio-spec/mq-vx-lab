@@ -418,3 +418,13 @@ không dính. Fix: thêm nền thương hiệu cho ThenNowShort.
 Trước: mọi cú cắt đều phát đúng 1 file `whoosh.mp3` cùng âm lượng -> nghe lặp như máy. Nay xoay vòng
 4 mẫu (whoosh/pop/whoosh/impact) + đổi playbackRate (1.0 / 1.16 / 0.88 / 0.95) + đổi âm lượng theo thứ
 tự cắt. Cùng một file phát ở 0.88 và 1.16 nghe như hai tiếng khác nhau -> 0 file mới, 0 quota.
+
+### BUG 23/8 tối — PHIÊN TREO 42 PHÚT Ở BƯỚC ĐIỀU PHỐI (dây chuyền đứng)
+Phiên 15:38Z đứng 42' ở `--plan`. Chuỗi nhân quả: quota đọc cạn -> mỗi lệnh đếm chờ hết 60s timeout
+mặc định -> `_retry` thử lại 5 lần (+15s) -> nhân ~110 lệnh đếm cho 55 kênh = hàng giờ. Tệ hơn: phiên
+treo giữ khoá `concurrency` nên GitHub HUỶ mọi phiên xếp sau (15:54, 16:14) -> dây chuyền đứng hẳn.
+Fix 3 lớp: (1) cầu dao `_RQ_DEAD` chặn ngay đầu `_count_jobs` — biết đường đọc chết thì trả 0 tức thì;
+(2) `timeout=12` cho aggregation + stream — chết thì chết nhanh; (3) `_retry` không thử lại khi cầu dao
+đã đóng (cạn hạn mức NGÀY ≠ burst theo phút).
+→ **LUẬT**: mọi lệnh gọi mạng trong vòng lặp N kênh PHẢI có timeout ngắn + cầu dao dùng chung. Một
+lệnh chậm nhân với N là treo cả phiên, và phiên treo thì giết luôn các phiên sau qua khoá concurrency.

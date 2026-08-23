@@ -297,6 +297,10 @@ def _retry(fn, tries=5):
         except Exception as e:
             s = str(e)
             if ("RESOURCE_EXHAUSTED" in s or "Quota exceeded" in s or "429" in s) and i < tries - 1:
+                # 23/8 tối: chỉ thử lại khi là BURST theo phút. Cạn hạn mức NGÀY mà vẫn thử 5 lần thì
+                # mỗi lệnh mất thêm ~15s vô ích — nhân 110 lệnh là treo cả phiên.
+                if _t.time() < _RQ_DEAD["until"]:
+                    raise
                 _t.sleep(1.5 * (i + 1)); continue
             raise
 
@@ -1018,6 +1022,14 @@ def _shard_on() -> bool:
 
 
 def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
+    # 23/8 TỐI — CẦU DAO CHỐNG TREO PHIÊN: phiên 15:38Z đứng 42 PHÚT ở bước điều phối. Nguyên nhân:
+    # quota đọc cạn -> mỗi lệnh đếm chờ hết 60s timeout, rồi _retry thử lại 5 lần (thêm ~15s), nhân
+    # với ~110 lệnh đếm cho 55 kênh = hàng giờ. Phiên treo còn kéo theo hậu quả dây chuyền: khoá
+    # concurrency của GitHub huỷ luôn các phiên xếp sau (15:54 và 16:14 đều bị huỷ) -> dây chuyền
+    # đứng hẳn. Nay: hễ biết đường đọc đã chết thì trả 0 NGAY, không trả giá 60s cho từng kênh.
+    import time as _t
+    if _t.time() < _RQ_DEAD["until"]:
+        return 0
     q = (db.collection("render_jobs").where("owner", "==", owner)
          .where("channel", "==", channel).where("status", "==", "done"))
     if vtype:
@@ -1027,7 +1039,7 @@ def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
         # 10:17Z 22/8), không phải cạn ngày — backoff 1.5-7.5s là qua. Không retry thì count trả 0
         # -> _ratio_plan tưởng kênh 0 long 0 short -> ép long sai + target đếm thiếu (làm DƯ video).
         def _agg():
-            res = q.count().get()                # aggregation: ~1 read thay vì N
+            res = q.count().get(timeout=12)      # aggregation: ~1 read thay vì N (timeout ngắn: chết thì chết NHANH)
             row = res[0]; ar = row[0] if isinstance(row, (list, tuple)) else row
             return int(ar.value)
         return _retry(_agg)
@@ -1035,8 +1047,21 @@ def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
         # ĐỪNG lùi về đếm thủ công cả collection: khi quota cạn thì count() lỗi -> stream() đọc HÀNG
         # NGHÌN doc -> càng cạn nhanh hơn (vòng xoáy chết, đúng sự cố 20/8). Đếm có giới hạn: đủ để
         # biết "đã đạt target chưa" vì target lớn nhất chỉ 30.
+        if _wq_exhausted(e):
+            # Cạn hạn mức NGÀY (không phải burst): đóng cầu dao 15 phút cho CẢ tiến trình, đừng thử
+            # lại kiểu nào nữa — mọi lệnh đọc sau đều sẽ chết y hệt, chỉ tốn thời gian.
+            if not _B2["on"] and failover_to_b2(f"count_done 429 ({channel})"):
+                try:
+                    return _count_jobs(_db_jobs(), owner, channel, vtype)
+                except Exception:
+                    pass
+            _RQ_DEAD["until"] = _t.time() + 15 * 60
+            if not _RQ_DEAD["warned"]:
+                _RQ_DEAD["warned"] = True
+                print("   🔌 CẦU DAO: quota đọc cạn -> ngừng đếm 15', coi mọi kênh = 0 (phiên sau đếm lại)")
+            return 0
         try:
-            return sum(1 for _ in q.limit(200).stream())
+            return sum(1 for _ in q.limit(200).stream(timeout=12))
         except Exception:
             print(f"   ⚠️ đếm {channel}/{vtype} lỗi ({str(e)[:50]}) -> coi như 0, phiên sau đếm lại")
             return 0
