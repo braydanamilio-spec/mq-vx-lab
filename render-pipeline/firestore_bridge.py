@@ -1067,6 +1067,21 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
         return _hc[1]
     _cr("count_done", 1)
     total = 0
+    if _B2["on"]:
+        # 23/8: B2 KHÔNG chép lịch sử job (cố ý — nặng, ít giá trị). Nếu vẫn đếm job trên B2 thì
+        # thấy ~0 -> tưởng kênh chưa làm gì -> LÀM DƯ so với chỉ tiêu. Lấy số từ SỔ THỐNG KÊ
+        # render_stats/{owner} (1 doc, đã gương sang B2) — đúng con số kênh đã có tới phiên trước.
+        try:
+            d = _B2["client"].collection("render_stats").document(owner).get()
+            ch = ((d.to_dict() or {}).get(str(channel).upper()) or {}) if d.exists else {}
+            base = int(ch.get("l", 0) or 0) + int(ch.get("s", 0) or 0) if not vtype else \
+                   int(ch.get("l" if vtype == "long" else "s", 0) or 0)
+            live = _count_jobs(_db_jobs(), owner, channel, vtype)        # video làm TRONG phiên khẩn
+            total = base + live
+            _HOT_CACHE[("cnt", owner, channel, vtype)] = (_t.time(), total)
+            return total
+        except Exception as e:
+            print(f"   ⚠️ count_done B2 dùng sổ thống kê lỗi ({str(e)[:50]}) — đếm thô.")
     try:
         total += _count_jobs(_db_jobs(), owner, channel, vtype)          # B (hoặc A nếu chưa shard)
     except Exception as e:
@@ -1132,7 +1147,8 @@ def mirror_b_to_b2(owner: str) -> int:
                 if curt.get(d.id) != x:
                     b2.collection("render_topics").document(d.id).set(x); n += 1
         # 2) render_config + snapshot keys + __req__ + connections_mirror (mỗi thứ 1-2 doc)
-        for col, docid in (("render_config", owner), ("gemini_keys", f"__snap__{owner}"), ("gemini_keys", f"__req__{owner}")):
+        for col, docid in (("render_config", owner), ("gemini_keys", f"__snap__{owner}"),
+                           ("gemini_keys", f"__req__{owner}"), ("render_stats", owner)):
             try:
                 s = _db_meta().collection(col).document(docid).get() if col == "render_config" else \
                     _db_keys().collection(col).document(docid).get()
