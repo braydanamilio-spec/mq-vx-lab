@@ -158,7 +158,8 @@
   "make_long": true,
   "tier": "normal",
   "priority": 1,
-  "toon_mode": "essay"
+  "toon_mode": "essay",
+  "cfg_rev": "2026-08-23-essay"
  },
  "HANKTOWN": {
   "format": "toon",
@@ -179,7 +180,8 @@
   "make_long": true,
   "tier": "normal",
   "priority": 1,
-  "toon_mode": "essay"
+  "toon_mode": "essay",
+  "cfg_rev": "2026-08-23-essay"
  },
  "TRUETALES": {
   "format": "toon",
@@ -199,7 +201,8 @@
   "color_a": "#FCA5A5",
   "color_b": "#FCA5A5",
   "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of cream, deep red, charcoal and one mint accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
-  "niche": "beliefs Americans hold that peer-reviewed evidence flips — food, health, money, safety. Each video lists 4-6 items: the myth everyone repeats, then the real mechanism with one verifiable number. STRICT: real studies only, no medical advice, no politics, no brands."
+  "niche": "beliefs Americans hold that peer-reviewed evidence flips — food, health, money, safety. Each video lists 4-6 items: the myth everyone repeats, then the real mechanism with one verifiable number. STRICT: real studies only, no medical advice, no politics, no brands.",
+  "cfg_rev": "2026-08-23-essay"
  },
  "DUMBHISTORY": {
   "format": "toon",
@@ -219,7 +222,8 @@
   "color_a": "#FCD34D",
   "color_b": "#FCD34D",
   "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of sepia, parchment cream, ink brown and one faded blue accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
-  "niche": "absurd-but-TRUE turning points in American history explained as visual metaphors — 4-6 items per video, each with the real year and the real number. STRICT: verifiable events only, long-dead figures, no modern politics, family-safe."
+  "niche": "absurd-but-TRUE turning points in American history explained as visual metaphors — 4-6 items per video, each with the real year and the real number. STRICT: verifiable events only, long-dead figures, no modern politics, family-safe.",
+  "cfg_rev": "2026-08-23-essay"
  },
  "EXPLAINUSA": {
   "format": "toon",
@@ -239,6 +243,7 @@
   "color_a": "#7DD3FC",
   "color_b": "#7DD3FC",
   "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of pale blue-gray, navy, off-white and one red accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
-  "niche": "why everyday American systems work the way they do — tipping, medical bills, sales tax, college costs, imperial units, HOA rules. 4-6 items per video, each with a real price or statistic. STRICT: every number real and verifiable, no politics, no brands."
+  "niche": "why everyday American systems work the way they do — tipping, medical bills, sales tax, college costs, imperial units, HOA rules. 4-6 items per video, each with a real price or statistic. STRICT: every number real and verifiable, no politics, no brands.",
+  "cfg_rev": "2026-08-23-essay"
  }
 }

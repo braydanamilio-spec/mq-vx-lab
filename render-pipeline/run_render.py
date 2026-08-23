@@ -1294,6 +1294,28 @@ def plan_mode():
                              .document(f"{OWNER}__{_n}").set({**_c, "owner": OWNER}, merge=True),
                              "seed_wave8")
                 print(f"   🌱 Tự-seed Wave 8: đã gửi {len(_miss)} kênh còn thiếu (quota chết thì phiên sau tự thử lại).")
+            # ĐỒNG BỘ CONFIG THEO REV (23/8): kênh ĐÃ TỒN TẠI nhưng file có cfg_rev MỚI HƠN thì đẩy
+            # xuống Firestore. Vì sao cần: đổi format 5 kênh (skit -> essay) mà seed cũ chỉ thêm-nếu-thiếu
+            # -> Firestore giữ config cũ, phiên sau vẫn render sai format. Chỉ ghi khi rev khác nhau
+            # (idempotent, không đè lặp lại chỉnh tay của user ở các trường khác).
+            _all_w8 = _j.load(open(_w8p))
+            _by = {c.get("name"): c for c in all_ch}
+            _sync = 0
+            for _nm, _cfg in _all_w8.items():
+                _rev = _cfg.get("cfg_rev")
+                _cur = _by.get(_nm)
+                if not (_rev and _cur) or _cur.get("cfg_rev") == _rev:
+                    continue
+                _patch = {k: v for k, v in _cfg.items() if k not in ("name",)}
+                _patch["cfg_rev"] = _rev
+                _cid = _cur.get("id")
+                if _cid:
+                    FB._soft(lambda _i=_cid, _p=_patch: FB._db_meta().collection("render_channels")
+                             .document(_i).set(_p, merge=True), "sync_cfg_rev")
+                    _sync += 1
+                    _cur.update(_patch)      # lane trong CÙNG phiên này dùng ngay config mới
+            if _sync:
+                print(f"   🔄 Đồng bộ config từ file cho {_sync} kênh (cfg_rev mới) — format/niche/giọng cập nhật ngay phiên này.")
     except Exception:
         traceback.print_exc()
     try:
