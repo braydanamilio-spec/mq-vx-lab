@@ -351,6 +351,40 @@ def _nasa_images(query, n=10):
         return []
 
 
+_PEXELS_STATE = {"used": 0, "off": False}
+
+
+def _pexels(query, n=12):
+    """NGUỒN 4 (23/8): Pexels — kho ảnh HIỆN ĐẠI đẹp nhất nhóm miễn phí (người thật, đời sống Mỹ).
+    Cần key (secret PEXELS_KEY). Tôn trọng giới hạn nhà cung cấp: 200 lượt/giờ, 20.000/tháng nên
+    hệ TỰ HẠN CHẾ 120 lượt/tiến trình rồi thôi (các nguồn khác gánh tiếp) — không bao giờ spam.
+    Dùng ĐÚNG mục đích (lấy ảnh minh hoạ cho video của mình), KHÔNG dựng lại dịch vụ giống Pexels,
+    và có ghi công theo yêu cầu license (dòng 'Imagery:' trong mô tả)."""
+    k = os.environ.get("PEXELS_KEY", "")
+    if not k or _PEXELS_STATE["off"] or _PEXELS_STATE["used"] >= 120:
+        return []
+    try:
+        u = "https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
+            {"query": query, "per_page": min(n, 20), "page": random.randint(1, 3)})
+        req = urllib.request.Request(u, headers={**UA, "Authorization": k})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            d = json.load(r)
+        _PEXELS_STATE["used"] += 1
+        out = []
+        for ph in (d.get("photos") or []):
+            src = (ph.get("src") or {})
+            url = src.get("large2x") or src.get("large") or src.get("original")
+            if url:
+                out.append({"id": f"px:{ph.get('id')}", "url": url,
+                            "license": f"Pexels ({ph.get('photographer','')})"})
+        return out
+    except Exception as e:
+        if "429" in str(e) or "403" in str(e):
+            _PEXELS_STATE["off"] = True          # chạm trần -> tắt hẳn phiên này, nhường nguồn khác
+            print("   ⏸ Pexels chạm giới hạn — chuyển sang Openverse/Wikimedia/NASA.")
+        return []
+
+
 def _wikimedia(query, n=12):
     """NGUỒN ẢNH THỨ HAI (23/8): Wikimedia Commons — kho ảnh tự do LỚN NHẤT (~100 triệu file),
     không cần key, không giới hạn gọi hợp lý. Vì sao cần: Openverse lọc cc0/pdm cho kho rất hẹp
@@ -417,7 +451,7 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
         res = _try({"q": query, **base})
         # GỘP THÊM WIKIMEDIA (23/8) — kho rộng gấp bội, cùng chuẩn tự do; gộp trước khi lọc/xáo
         # nên ảnh hai nguồn trộn đều, hết cảnh cả hệ dùng chung vài tấm của Openverse.
-        _extra = [x for x in (_wikimedia(query) + _nasa_images(query))
+        _extra = [x for x in (_pexels(query) + _wikimedia(query) + _nasa_images(query))
                   if str(x.get("id")) not in _IMG_USED]
         if _extra:
             res = (res or []) + _extra
