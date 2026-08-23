@@ -199,6 +199,18 @@ def t_toon():
             "dialog": [{"who": "A", "line": "x"}] * 8, "self_score": {"total": 96}}
     assert CB._validate_tale(tale) == [], CB._validate_tale(tale)
     assert "toon_mode" in src, "dispatch chưa truyền toon_mode"
+    # ESSAY (23/8 — format phân tích thay skit hài): validator siết hook/số liệu/nguồn + route mode
+    essay = {"title": "Foods doctors banned that add years", "scene_base": "american kitchen",
+             "frames": [{"prompt": "a coffee mug as a tiny character mopping a street", "line_idx": 0}] * 6,
+             "dialog": [{"who": "A", "line": "Coffee was blamed for heart disease for forty years."}] * 8,
+             "sources": ["NIH cohort study 2022"], "self_score": {"total": 96}}
+    essay["dialog"][2] = {"who": "A", "line": "A 2022 NIH study of 500,000 adults found the opposite."}
+    assert CB._validate_essay(essay) == [], CB._validate_essay(essay)
+    _bad = dict(essay); _bad["sources"] = []
+    assert CB._validate_essay(_bad), "essay thiếu nguồn phải bị chặn"
+    import key_manager as KM2
+    assert callable(KM2.write_essay)
+    assert '"essay": KM.write_essay' in open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "datastory_ci.py")).read()
 
 
 def t_b2_failover():

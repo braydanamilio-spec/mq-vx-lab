@@ -550,3 +550,8 @@ def write_toon(channel: str, keys: list[dict], niche: str, tier: str = "normal",
 def write_tale(channel: str, keys: list[dict], niche: str, tier: str = "normal", avoid: list = None, on_limit=None, on_ok=None) -> dict:
     """Sinh chuyện narrator (toon mode story) — cùng khuôn Wave 4."""
     return _write_wave4("generate_tale", "TALE", channel, keys, niche, tier, avoid, on_limit, on_ok)
+
+def write_essay(channel: str, keys: list[dict], niche: str, tier: str = "normal", avoid: list = None, on_limit=None, on_ok=None) -> dict:
+    """Sinh BÀI PHÂN TÍCH lật-ngược-niềm-tin (toon mode essay, 23/8) — cùng khuôn Wave 4."""
+    return _write_wave4("generate_essay", "ESSAY", channel, keys, niche, tier, avoid, on_limit, on_ok)
+

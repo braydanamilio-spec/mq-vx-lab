@@ -1856,6 +1856,63 @@ TALE_SYS = (
 )
 
 
+ESSAY_SYS = (
+ "You are the head writer of a #1 US explainer shorts channel — the kind people SAVE and SHARE "
+ "because a belief they held got flipped. You write 30-45 second narrated visual essays. Rules:\n"
+ "1) HOOK: title is a curiosity gap under 9 words that promises a reversal ('Foods doctors banned "
+ "that actually add years'). Sentence 1 states the surprising claim within 2 seconds — no greetings, "
+ "no 'today we will talk about'.\n"
+ "2) STRUCTURE: a LIST of 4-6 items, each item = 1-2 narration sentences: name the thing everyone "
+ "believes, then the real mechanism in plain words with ONE concrete number or study finding. "
+ "8-12 sentences total, each under 18 words, natural American English. Close with a one-line "
+ "takeaway the viewer can repeat to a friend.\n"
+ "3) FRAMES: 6-9 keyframes. Each frame_prompt is a VISUAL METAPHOR of that item, not a literal "
+ "illustration — the thing personified, scaled absurdly, or in a place it does not belong (a mug of "
+ "beer as a tiny character mopping a street, a brain hiding under a desk, salt crystals as guards). "
+ "Describe only what is shown (subject/pose/props/setting), no camera jargon, no text or signs.\n"
+ "4) TRUTHFUL: every claim must be REAL and verifiable (peer-reviewed nutrition/medicine/economics/"
+ "history). Never invent studies or numbers. No medical advice, no politics, no real brands or "
+ "celebrities, family-safe. US-centric framing (US prices, US habits, US institutions).\n"
+ 'Return STRICT JSON: {"title": str, "scene_base": str, "frames": [{"prompt": str, "line_idx": int}], '
+ '"dialog": [{"who": "A", "line": str}], "sources": [str], '
+ '"self_score": {"surprise": 0-100, "hook": 0-100, "clean": 0-100, "total": 0-100}}'
+)
+
+
+def _validate_essay(d: dict) -> list:
+    """Essay = bài phân tích lật-ngược-niềm-tin (23/8, thay format skit hài): siết HOOK + độ thật.
+    Khác tale: bắt buộc có 'sources' (dẫn nguồn thật) và câu chốt phải là takeaway, không phải punchline."""
+    errs = []
+    if not (d.get("title") or "").strip():
+        errs.append("thiếu title")
+    if len((d.get("title") or "").split()) > 11:
+        errs.append("title quá dài (hook phải <9 từ)")
+    if not (d.get("scene_base") or "").strip():
+        errs.append("thiếu scene_base")
+    fr = d.get("frames") or []
+    if not (5 <= len(fr) <= 10):
+        errs.append(f"frames={len(fr)} (cần 6-9)")
+    dl = d.get("dialog") or []
+    if not (7 <= len(dl) <= 14):
+        errs.append(f"narration={len(dl)} câu (cần 8-12)")
+    for i, l in enumerate(dl):
+        if (l.get("who") or "A") != "A":
+            errs.append(f"câu {i}: essay chỉ 1 giọng kể 'A'")
+        if len((l.get("line") or "").split()) > 22:
+            errs.append(f"câu {i} quá dài")
+    if not any(any(ch.isdigit() for ch in (l.get("line") or "")) for l in dl):
+        errs.append("thiếu SỐ LIỆU cụ thể (essay phải có ít nhất 1 con số thật)")
+    if len([s for s in (d.get("sources") or []) if str(s).strip()]) < 1:
+        errs.append("thiếu sources (bắt buộc dẫn nguồn thật)")
+    for i, f in enumerate(fr):
+        if not (f.get("prompt") or "").strip():
+            errs.append(f"frames[{i}] thiếu prompt")
+        li = f.get("line_idx")
+        if not isinstance(li, int) or not (0 <= li < max(1, len(dl))):
+            errs.append(f"frames[{i}].line_idx sai")
+    return errs
+
+
 def _validate_tale(d: dict) -> list:
     errs = []
     if not (d.get("title") or "").strip(): errs.append("thiếu title")
@@ -1919,3 +1976,51 @@ def generate_tale(niche: str, api_key: str = None, model_name: str = None, avoid
         return d
     if last: return last
     raise RuntimeError("tale: không sinh được chuyện")
+
+def generate_essay(niche: str, api_key: str = None, model_name: str = None, avoid: list = None) -> dict:
+    """Sinh 1 BÀI PHÂN TÍCH (mode essay, 23/8) — lật ngược niềm tin + ẩn dụ hình ảnh; khuôn chung."""
+    genai = _genai(api_key)
+    akey = api_key or os.environ.get("GEMINI_API_KEY", "")
+    prefer = "pro" if (model_name and "pro" in model_name) else "flash"
+    mname = model_name or MODEL
+    if str(akey).startswith(("gsk_", "cf:")) and avoid:
+        avoid = avoid[-30:]
+    model = genai.GenerativeModel(mname, system_instruction=ESSAY_SYS)
+    resolved = False
+    avoid_txt = ("\nDo NOT reuse these premises: " + " | ".join(avoid[-40:])) if avoid else ""
+    base = (f"Channel: {niche}.\nWrite ONE new visual essay that flips a belief. Every speaker is 'A'. Include real sources." + avoid_txt)
+    feedback = ""; last = None
+    for attempt in range(1, MAX_TRIES + 1):
+        prompt = base + (f"\n\nPrevious rejected: {feedback}\nFix it." if feedback else "")
+        try:
+            resp = model.generate_content(prompt, generation_config={"temperature": 0.95, "response_mime_type": "application/json"}, request_options=GEN_OPTS)
+        except Exception as e:
+            msg = str(e).lower()
+            if ("404" in msg or "not found" in msg or "no longer available" in msg) and not resolved:
+                mn = _pick_model(genai, prefer, akey); resolved = True
+                if mn and mn != mname:
+                    mname = mn; model = genai.GenerativeModel(mn, system_instruction=ESSAY_SYS); continue
+            if ("429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg or "ratelimit" in msg
+                    or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))
+            raise
+        try:
+            d = _extract_json(resp.text)
+        except Exception as e:
+            feedback = f"invalid JSON ({e})"; continue
+        for l in (d.get("dialog") or []):
+            l["who"] = "A"                       # narrator duy nhất
+        errs = _validate_essay(d)
+        sc = d.get("self_score") or {}
+        score = int(sc.get("total", 0) or 0)
+        d["_attempt"] = attempt; last = d
+        if errs:
+            feedback = "structure: " + "; ".join(errs[:6]); print(f"   ↻ tale vòng {attempt}: {feedback}"); continue
+        if score < 95:
+            feedback = f"total={score}<95 — twist sắc hơn, hook giật hơn."; print(f"   ↻ tale vòng {attempt}: điểm {score}"); continue
+        print(f"   ✅ TALE đạt vòng {attempt}: total {score} — '{d.get('title')}'")
+        return d
+    if last: return last
+    raise RuntimeError("tale: không sinh được chuyện")
+

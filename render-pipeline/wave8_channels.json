@@ -181,12 +181,12 @@
  },
  "TRUETALES": {
   "format": "toon",
-  "toon_mode": "story",
+  "toon_mode": "essay",
   "make_long": true,
   "n_shorts": 3,
   "tier": "normal",
   "priority": 1,
-  "display": "TRUE TALES USA",
+  "display": "DEAD WRONG",
   "accent": "#DC2626",
   "accent2": "#FCA5A5",
   "voice": "en-US-AndrewNeural",
@@ -196,12 +196,12 @@
   "rate_b": "+2%",
   "color_a": "#FCA5A5",
   "color_b": "#FCA5A5",
-  "toon_style": "modern bold flat cartoon, a friendly nosy middle-aged american woman with high hair bun, red gingham-trim cardigan, holding a mason jar of sweet iced tea, front-porch americana setting with white picket fence and US-style mailbox, warm cream background with red accents, thick outlines, expressive poses, no signs, no lettering, no text",
-  "niche": "narrated dramatic everyday-American stories hosted by PEARL — a nosy but warm front-porch American woman (high bun, gingham-trim red cardigan, mason jar of sweet tea, white-picket-fence porch) who has seen EVERYTHING on her street. One narrator voice. Stories are FICTIONAL-but-relatable (workplace drama, neighbor feuds, wild customers, family chaos) with an ironic twist ending. No politics, no real brands or celebrities, never presented as real news, family-safe."
+  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of cream, deep red, charcoal and one mint accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
+  "niche": "beliefs Americans hold that peer-reviewed evidence flips — food, health, money, safety. Each video lists 4-6 items: the myth everyone repeats, then the real mechanism with one verifiable number. STRICT: real studies only, no medical advice, no politics, no brands."
  },
  "DUMBHISTORY": {
   "format": "toon",
-  "toon_mode": "story",
+  "toon_mode": "essay",
   "make_long": true,
   "n_shorts": 3,
   "tier": "normal",
@@ -216,12 +216,12 @@
   "rate_b": "+0%",
   "color_a": "#FCD34D",
   "color_b": "#FCD34D",
-  "toon_style": "vintage woodcut engraving cartoon style with sepia parchment tones, a professor american bison wearing a colonial tricorn hat and small round glasses, plus period human characters in simple period dress, thick ink strokes, dignified but silly, no signs, no lettering, no text",
-  "niche": "absurd-but-TRUE moments of American history taught by PROFESSOR BISON — a scholarly american bison in a tricorn hat and round glasses. One witty narrator voice. Real verifiable events only (the pig war 1859, great molasses flood, gold-rush schemes, presidential oddities), cite era/year naturally, long-dead figures only, no modern politics, family-safe humor."
+  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of sepia, parchment cream, ink brown and one faded blue accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
+  "niche": "absurd-but-TRUE turning points in American history explained as visual metaphors — 4-6 items per video, each with the real year and the real number. STRICT: verifiable events only, long-dead figures, no modern politics, family-safe."
  },
  "EXPLAINUSA": {
   "format": "toon",
-  "toon_mode": "story",
+  "toon_mode": "essay",
   "make_long": true,
   "n_shorts": 3,
   "tier": "normal",
@@ -236,7 +236,7 @@
   "rate_b": "+0%",
   "color_a": "#7DD3FC",
   "color_b": "#7DD3FC",
-  "toon_style": "minimal clean vector cartoon, a deadpan owl wearing a tiny star-spangled uncle-sam top hat and navy necktie, holding a clipboard at a desk piled with forms and receipts, very pale blue-gray background, tiny diagrams and arrows as props, single pale blue accent plus small red-white-blue hat accent, flat unimpressed expressions, no signs, no lettering, no text",
-  "niche": "deadpan comedic explainers of things ONLY America has, presented by THE OWL — an unimpressed owl in a tiny star-spangled Uncle Sam top hat with navy necktie and clipboard. One dry narrator voice. Topics: tipping culture, medical bills, sales tax at checkout, college costs, imperial units, HOA rules. STRICT: every fact and number real and verifiable, self-aware irony, no politics, no real brands, family-safe."
+  "toon_style": "modern editorial flat illustration, bold visual metaphor, limited palette of pale blue-gray, navy, off-white and one red accent, clean geometric shapes, thick confident outlines, subtle paper grain, magazine-quality, no signs, no lettering, no text",
+  "niche": "why everyday American systems work the way they do — tipping, medical bills, sales tax, college costs, imperial units, HOA rules. 4-6 items per video, each with a real price or statistic. STRICT: every number real and verifiable, no politics, no brands."
  }
 }

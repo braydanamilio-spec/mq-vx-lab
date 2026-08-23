@@ -2586,7 +2586,9 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
     -> long 3 skit không giẫm tên nhau; short tái dùng đúng các file này (0 phí thêm)."""
     import key_manager as KM
     st = on_status or (lambda *a, **k: None)
-    _writer = KM.write_tale if mode == "story" else KM.write_toon   # story = narrator 1 giọng (TRUETALES/DUMBHISTORY/EXPLAINUSA)
+    # 23/8: 3 chế độ — skit (đối thoại 2 nhân vật) · story (kể chuyện 1 giọng) · essay (PHÂN TÍCH
+    # lật-ngược-niềm-tin 1 giọng + ẩn dụ hình ảnh — format thay thế skit hài sau khi user chấm demo).
+    _writer = {"story": KM.write_tale, "essay": KM.write_essay}.get(mode, KM.write_toon)
     story = resume_story or _writer(channel, keys, niche, tier=tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     st("writing", f"✔ skit: {story.get('title', '')[:60]}", script=json.dumps(story, ensure_ascii=False))
     dialog = story.get("dialog") or []
