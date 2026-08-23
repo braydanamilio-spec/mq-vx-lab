@@ -22,7 +22,7 @@ def _db():
 
 
 _DBJ = [None]
-_B2 = {"on": False, "client": None}
+_B2 = {"on": False, "client": None, "wclient": None}
 
 
 def _b2_available() -> bool:
@@ -943,6 +943,23 @@ def save_topics(owner: str, channel: str, topics: list[str]):
     cur = (cur + [t for t in topics if t])[-300:]
     _cw("save_topics")
     _soft(lambda: ref.set({"owner": owner, "channel": channel, "topics": cur}, merge=True), "save_topics")
+    # GHI SONG SONG SANG B2 (23/8, user: "phải khớp, không được trùng phải render lại") — ngân hàng
+    # chủ đề là dữ liệu DUY NHẤT mà trễ 1 phiên gây hậu quả THẬT (viết trùng đề tài -> video bỏ đi).
+    # Vì vậy nó KHÔNG đi theo nhịp gương mà ghi ngay tại chỗ: mỗi video chỉ tốn thêm 1 lượt ghi ở
+    # B2 (kho riêng, không đụng quota B) -> lật sang B2 lúc nào cũng có bản mới nhất, hết trùng.
+    if not _B2["on"] and _b2_available():
+        try:
+            from google.cloud import firestore as _fs2
+            from google.oauth2 import service_account as _sa2
+            if _B2.get("wclient") is None:
+                _B2["wclient"] = _fs2.Client(
+                    project=os.environ["FIREBASE_PROJECT_ID_B2"],
+                    credentials=_sa2.Credentials.from_service_account_file(
+                        os.environ["GOOGLE_APPLICATION_CREDENTIALS_B"]))
+            _B2["wclient"].collection("render_topics").document(f"{owner}__{channel}").set(
+                {"owner": owner, "channel": channel, "topics": cur}, merge=True)
+        except Exception as e:
+            print(f"   ⚠️ ghi chủ đề sang B2 lỗi ({str(e)[:50]}) — gương phiên sau bù.")
 
 
 def read_trend_scout(owner: str, channel: str) -> list[str]:
@@ -1127,11 +1144,21 @@ def mirror_b_to_b2(owner: str) -> int:
             print(f"   🔁 Rót ngược {drained} job từ B2 về B (video phiên khẩn không bị thất lạc).")
         # 0b) rót ngược ngân hàng chủ đề (đề tài viết trong phiên khẩn) — B2 giữ superset nên set thẳng
         for d in b2.collection("render_topics").stream():
-            if d.id.startswith(f"{owner}__"):
-                x2 = d.to_dict() or {}
-                t = _db_meta().collection("render_topics").document(d.id)
-                if (t.get().to_dict() or {}) != x2:
-                    t.set(x2)
+            if not d.id.startswith(f"{owner}__"):
+                continue
+            x2 = d.to_dict() or {}
+            t = _db_meta().collection("render_topics").document(d.id)
+            cur = (t.get().to_dict() or {})
+            # GỘP chứ KHÔNG ĐÈ (23/8): trong lúc B chết, B2 nhận đề tài mới; nhưng B cũng có đề tài
+            # cũ mà B2 chưa kịp có. Đè một chiều = MẤT một nửa ngân hàng chống trùng -> vài ngày sau
+            # AI viết lại đúng đề tài cũ. Gộp theo thứ tự, bỏ trùng, giữ 300 mục gần nhất.
+            merged, seen = [], set()
+            for t0 in list(cur.get("topics") or []) + list(x2.get("topics") or []):
+                if t0 and t0 not in seen:
+                    seen.add(t0); merged.append(t0)
+            if merged != (cur.get("topics") or []):
+                t.set({"owner": owner, "channel": x2.get("channel") or cur.get("channel"),
+                       "topics": merged[-300:]}, merge=True)
         # 1) render_channels (toàn bộ của owner)
         cur = {d.id: (d.to_dict() or {}) for d in b2.collection("render_channels").where("owner", "==", owner).stream()}
         for d in _db_meta().collection("render_channels").where("owner", "==", owner).stream():
