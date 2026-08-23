@@ -1435,8 +1435,12 @@ def channel_mode(name):
     # gấp bội; chạy ít mà kỹ thì FLUX/Vision có chỗ thở, video nào ra cũng đủ đô, thay vì 30 cái
     # hao hao nhau. Kênh cũ (doc/race) giữ nguyên nhịp — chúng rẻ và đã ổn định.
     if str(one.get("format", "")).lower() == "toon":
-        round_long = int(_rl) if _rl is not None else 2
-        round_short = int(_rs) if _rs is not None else 6
+        # 23/8 — PHIÊN RA MẮT: kênh essay siết còn 1 long + 3 short/phiên. Lý do: mỗi video giờ nặng
+        # (16 khung FLUX + QC lưới 2 đầu + loudnorm) và đây là mẻ ĐẦU của format mới -> làm ít mà
+        # chắc, soi kỹ rồi mới nới. Đổi round_long/round_short trên dashboard là ghi đè được.
+        _ess = str(one.get("toon_mode", "")).lower() == "essay"
+        round_long = int(_rl) if _rl is not None else (1 if _ess else 2)
+        round_short = int(_rs) if _rs is not None else (3 if _ess else 6)
         print(f"   🎨 TOON chế độ CHẤT: mẻ tối đa {round_long} long / {round_short} short (ảnh dày + rối giấy).")
     MAX_EMPTY = int(cfg.get("empty_retry", 4) or 4)                 # số vòng LIỀN ra 0 video (do rate-limit) rồi mới chịu ngừng -> quota cạn thật
     start = time.monotonic(); rounds = 0; last_dur = 0; empty_streak = 0
