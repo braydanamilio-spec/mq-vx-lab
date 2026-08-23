@@ -406,3 +406,15 @@ Bọc ngoài toàn bộ 14 hàm write_* (một lớp áo, không sửa 12 hàm s
    Trùng -> viết lại ĐÚNG 1 lần (không lặp vô hạn, không đốt key).
 3. Chuẩn kiếm tiền: ≥2 nguồn, phải có số liệu, chặn cụm từ rủi ro chính sách.
 Đo thật: "Rent 2025 vs 2015…" ~ "How US rent doubled since 2015…" = 0.62 (bắt được), so với bài NASA = 0.0.
+
+### BUG 23/8 — KHUNG ĐEN CUỐI VIDEO (quét tĩnh toàn engine, 0 quota)
+Quét 11 composition đang dùng: chỉ `ThenNowShort` có gốc `<AbsoluteFill>` KHÔNG nền — hai panel chạy
+theo animation, hết nội dung là lộ nền trong suốt và Remotion xuất ra ĐEN. Các engine còn lại
+(Cinematic/Clockwork/Pulse/Swarm/Longshot/Guess/Toon/StickStory/RaceLong) đều có nền full-bleed nên
+không dính. Fix: thêm nền thương hiệu cho ThenNowShort.
+→ **LUẬT**: gốc mọi composition PHẢI có nền đục. Không bao giờ để `<AbsoluteFill>` trần làm lớp dưới cùng.
+
+### 23/8 — ÂM CHUYỂN CẢNH hết đơn điệu
+Trước: mọi cú cắt đều phát đúng 1 file `whoosh.mp3` cùng âm lượng -> nghe lặp như máy. Nay xoay vòng
+4 mẫu (whoosh/pop/whoosh/impact) + đổi playbackRate (1.0 / 1.16 / 0.88 / 0.95) + đổi âm lượng theo thứ
+tự cắt. Cùng một file phát ở 0.88 và 1.16 nghe như hai tiếng khác nhau -> 0 file mới, 0 quota.

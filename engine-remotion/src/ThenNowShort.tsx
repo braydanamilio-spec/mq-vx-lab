@@ -40,7 +40,10 @@ const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number }> = ({ p, a
   const zoomN = interpolate(f, [0, dur], [1.14, 1.06]);
   const HALF = 810;   // (1920 - 140 top - 160 bottom)/2 ~ vùng mỗi panel
   return (
-    <AbsoluteFill>
+    // 23/8 (user: "khung đen kết thúc cuối video"): gốc AbsoluteFill này TRƯỚC ĐÂY KHÔNG CÓ NỀN.
+    // Hai panel bên trong chạy theo animation, hết nội dung (hoặc lúc video còn dài hơn phần hình)
+    // là lộ nền trong suốt -> Remotion xuất ra ĐEN. Nay luôn có nền thương hiệu phía dưới cùng.
+    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 12%, #241a0c 0%, #140f07 55%, #080604 100%)" }}>
       {/* PANEL XƯA (trên) */}
       <div style={{ position: "absolute", top: 150, left: 40, right: 40, height: HALF, borderRadius: 26, overflow: "hidden",
         transform: `translateY(${(1 - thenIn) * -60}px)`, opacity: thenIn, border: `3px solid ${SEPIA}` }}>

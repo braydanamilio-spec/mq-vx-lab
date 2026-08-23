@@ -379,11 +379,20 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent 
         return (<>
           {/* CÚ MỞ MÀN: whoosh mạnh hơn ngay giây đầu, giống cold-open của RaceLong -> vào là có lực */}
           <Sequence from={2} durationInFrames={18}><Audio src={staticFile("sfx/whoosh.mp3")} volume={0.55} /></Sequence>
-          {cuts.map((at, q) => (
+          {/* 23/8 (user: "chỉ có 1 âm thanh chuyển cảnh, nhàm chán lặp đi lặp lại"): XOAY VÒNG 4 mẫu
+              trong kho sfx và đổi cả CAO ĐỘ lẫn ÂM LƯỢNG theo thứ tự cắt. Cùng một file whoosh phát ở
+              tốc độ 0.88 và 1.16 nghe như hai tiếng khác nhau — không tốn thêm file, không tốn quota,
+              mà tai người nghe hết cảm giác lặp. Nhịp mạnh (mỗi 4 cú cắt) dùng 'impact' cho có điểm nhấn. */}
+          {cuts.map((at, q) => {
+            const bank = ["sfx/whoosh.mp3", "sfx/pop.mp3", "sfx/whoosh.mp3", "sfx/impact.mp3"];
+            const src = bank[q % bank.length];
+            const rate = [1.0, 1.16, 0.88, 0.95][q % 4];
+            const vol = src === "sfx/impact.mp3" ? 0.34 : 0.4 - (q % 3) * 0.05;
+            return (
             <Sequence key={`sfx${q}`} from={at} durationInFrames={12}>
-              <Audio src={staticFile("sfx/whoosh.mp3")} volume={0.4} />
-            </Sequence>
-          ))}
+              <Audio src={staticFile(src)} volume={vol} playbackRate={rate} />
+            </Sequence>);
+          })}
         </>);
       })()}
       {/* NHẠC NỀN (mới) — cực nhẹ (0.12 đỉnh) để KHÔNG đè lời thoại, fade-in/out mượt đầu-cuối, loop suốt video. */}
