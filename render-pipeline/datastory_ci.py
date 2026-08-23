@@ -308,6 +308,32 @@ def note_image_used(ident: str):
             _IMG_USED.clear()
 
 
+def _wikimedia(query, n=12):
+    """NGUỒN ẢNH THỨ HAI (23/8): Wikimedia Commons — kho ảnh tự do LỚN NHẤT (~100 triệu file),
+    không cần key, không giới hạn gọi hợp lý. Vì sao cần: Openverse lọc cc0/pdm cho kho rất hẹp
+    (~12 tấm đầu cho mỗi từ khoá) nên nhiều video/kênh trùng ảnh nhau. Trả list giống Openverse
+    ({id,url}) để dùng chung mọi nhánh phía sau. Lỗi mạng -> [] (im lặng, có Openverse gánh)."""
+    try:
+        p = {"action": "query", "format": "json", "generator": "search", "gsrnamespace": "6",
+             "gsrsearch": f"filetype:bitmap {query}", "gsrlimit": n, "prop": "imageinfo",
+             "iiprop": "url|extmetadata", "iiurlwidth": "1600"}
+        u = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode(p)
+        with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=20) as r:
+            d = json.load(r)
+        out = []
+        for pg in (d.get("query", {}).get("pages") or {}).values():
+            ii = (pg.get("imageinfo") or [{}])[0]
+            lic = (((ii.get("extmetadata") or {}).get("LicenseShortName") or {}).get("value") or "").lower()
+            # chỉ nhận giấy phép KHÔNG ràng buộc chia sẻ tương tự (tránh rắc rối license cho video)
+            if not ii.get("thumburl") or "sa" in lic.replace("share", ""):
+                continue
+            out.append({"id": f"wm:{pg.get('pageid')}", "url": ii["thumburl"],
+                        "title": pg.get("title", ""), "license": lic})
+        return out
+    except Exception:
+        return []
+
+
 def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None, ai_prompt=None,
                 ai_style=None, ai_only=False, extra=None, verify_many=None):
     """Tải 1 ảnh từ Openverse — ƯU TIÊN CC0/Public Domain (KHÔNG cần ghi nguồn, an toàn bản quyền).
@@ -339,17 +365,23 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
     # 23/8 (user: "nhiều video nhiều kênh dùng chung 1 footage"): luôn lấy TRANG 1 nghĩa là mọi
     # video cùng từ khoá đều bốc từ đúng ~12 ảnh đầu -> trùng là chắc chắn. Lấy TRANG NGẪU NHIÊN
     # 1-4 -> kho ứng viên rộng gấp 4, kèm xáo thứ tự + bỏ ảnh đã dùng ở _try().
-    base = {"page_size": pg, "license": "cc0,pdm", "mature": "false",
+    base = {"page_size": pg, "license": "cc0,pdm,by", "mature": "false",
             "page": random.randint(1, 4)}
     if ar:
         base["aspect_ratio"] = ar
     def _openverse():
         # CHỈ CC0 + Public Domain -> KHÔNG cần ghi nguồn, an toàn bản quyền 100%. Không có -> dùng ảnh fallback.
         res = _try({"q": query, **base})
+        # GỘP THÊM WIKIMEDIA (23/8) — kho rộng gấp bội, cùng chuẩn tự do; gộp trước khi lọc/xáo
+        # nên ảnh hai nguồn trộn đều, hết cảnh cả hệ dùng chung vài tấm của Openverse.
+        _wm = [x for x in _wikimedia(query) if str(x.get("id")) not in _IMG_USED]
+        if _wm:
+            res = (res or []) + _wm
+            random.shuffle(res)
         if not res and ar:
-            res = _try({"q": query, "page_size": pg, "license": "cc0,pdm", "mature": "false"})   # bỏ lọc hướng nếu 0 kết quả
+            res = _try({"q": query, "page_size": pg, "license": "cc0,pdm,by", "mature": "false"})   # bỏ lọc hướng nếu 0 kết quả
         if not res:
-            res = _try({"q": " ".join(query.split()[:2]), "page_size": pg, "license": "cc0,pdm", "mature": "false"})  # rút gọn từ khoá thử lại
+            res = _try({"q": " ".join(query.split()[:2]), "page_size": pg, "license": "cc0,pdm,by", "mature": "false"})  # rút gọn từ khoá thử lại
         if not res:
             return None
         # DANH SÁCH (không phải 1 ảnh): Vision hỏng/429 thì MỌI ứng viên trả None -> nếu chỉ giữ 1 ảnh

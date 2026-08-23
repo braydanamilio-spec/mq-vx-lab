@@ -121,6 +121,9 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
         # cho kênh có cấu hình 'music') nhưng dòng này trước đây ghi VÔ ĐIỀU KIỆN -> phần lớn video
         # không hề có nhạc mà mô tả vẫn ghi công Kevin MacLeod. Mô tả sai sự thật là điểm trừ khi
         # YouTube xét kênh, và ghi công một license mình không dùng thì chẳng được gì.
+        # 23/8: mở giấy phép ảnh sang CC-BY (kho rộng gấp 5) -> BẮT BUỘC ghi công theo license.
+        # Ghi 1 dòng gọn, đúng yêu cầu attribution mà không làm rối mô tả.
+        desc += "\n\nImagery: Openverse & Wikimedia Commons (CC0 / Public Domain / CC BY)."
         if story.get("_music"):
             desc += "\n\nMusic: Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 3.0"
         created = enqueue(channel=channel, video=out, vtype=vtype,
