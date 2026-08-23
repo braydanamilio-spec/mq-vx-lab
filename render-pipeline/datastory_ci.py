@@ -2610,6 +2610,12 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
     # NẤC 3 (bản 23/8): đánh dấu CÂU CHỐT để engine nhấn bằng CÚ MÁY (zoom giật + rung nhẹ +
     # vignette khép). ĐÃ BỎ đạo cụ emoji — user: "đừng làm xấu, trông rẻ tiền"; kênh sepia cổ
     # điển (DUMB HISTORY) mà emoji bay vào là hỏng tông ngay.
+    # (5) NHỊP THỞ (23/8): lặng 0.4s TRƯỚC câu chốt — thủ pháp kể chuyện cơ bản, câu cuối nặng hơn
+    # hẳn mà không tốn gì. Dời câu cuối lùi lại + nới end_f tương ứng.
+    if len(lines) >= 3:
+        _pause = int(0.4 * FPS)
+        lines[-1]["from"] += _pause
+        t += 0.4
     lines[-1]["punch"] = True
     # THẺ SỐ LIỆU (23/8, user: "kết hợp chart/biểu đồ nếu phù hợp"): rút CON SỐ THẬT trong lời kể
     # -> engine bung thẻ số + thanh chỉ báo. Tối đa 3 thẻ/video và chỉ cho mode essay: nhồi nhiều
@@ -2642,7 +2648,7 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
             _n += 1
         if _n:
             print(f"   📊 Thẻ số liệu: {_n} thẻ (rút từ chính lời kể).")
-    end_f = int(t * FPS) + 16
+    end_f = int(t * FPS) + 16 + 66      # +66 frame (2.2s) cho KẾT BÀI mời theo dõi (23/8)
     spec = sorted((story.get("frames") or []), key=lambda x: int(x.get("line_idx", 0)))
     fr = []
     for k2, fx in enumerate(spec):
@@ -2735,6 +2741,31 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
     return story, fr, lines, end_f
 
 
+def _normalize_loudness(out):
+    """CHUẨN ÂM LƯỢNG NỀN TẢNG -14 LUFS (23/8). Vì sao: YouTube/TikTok tự kéo mọi video về ~-14 LUFS
+    khi phát; video nào xuất nhỏ hơn sẽ nghe MỎNG và YẾU hơn video đối thủ ngay giây đầu (âm lượng
+    là tín hiệu chất lượng vô thức mạnh nhất). Dùng ffmpeg loudnorm 1-pass + true-peak -1.5dB chống
+    méo. Ghi ra file tạm rồi thay thế; lỗi -> giữ nguyên bản cũ (không bao giờ làm hỏng video)."""
+    import subprocess
+    tmp = out.rsplit(".", 1)[0] + "_ln.mp4"
+    try:
+        r = subprocess.run(["ffmpeg", "-y", "-i", out, "-af", "loudnorm=I=-14:TP=-1.5:LRA=11",
+                            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", tmp],
+                           capture_output=True, timeout=900)
+        if r.returncode == 0 and os.path.exists(tmp) and os.path.getsize(tmp) > 100_000:
+            os.replace(tmp, out)
+            print("   🔊 Đã chuẩn hoá âm lượng -14 LUFS (chuẩn YouTube/TikTok).")
+            return True
+        print("   ⚠️ chuẩn âm lượng bỏ qua:", (r.stderr or b"")[-120:].decode("utf8", "ignore"))
+    except Exception as e:
+        print("   ⚠️ chuẩn âm lượng lỗi:", str(e)[:70])
+    finally:
+        if os.path.exists(tmp):
+            try: os.remove(tmp)
+            except Exception: pass
+    return False
+
+
 def _qc_after_render(out, story, keys, n=6):
     """QC SAU RENDER (23/8, user yêu cầu): trích n khung TỪ VIDEO THẬT -> ghép lưới -> Vision chấm
     1 lệnh. Bắt được thứ QC-trước-render KHÔNG thấy: khung đen cuối, phụ đề đè mất hình, ảnh không
@@ -2771,19 +2802,30 @@ def _qc_after_render(out, story, keys, n=6):
         return True, -1
 
 
-def _toon_props(sl, title, accent, display, fr, lines, color_a, color_b, chapters=None):
+# Nhạc nền CC-BY (Kevin MacLeod) — chọn theo kênh cho khỏi trùng tông; volume để rất khẽ trong
+# engine (0.09) nên chỉ đủ "giữ nhịp", không lấn giọng đọc. Ghi công tự thêm vào mô tả (xem enqueue).
+_TOON_MUSIC = {"TRUETALES": "music/km_impact_andante.mp3", "DUMBHISTORY": "music/km_interloper.mp3",
+               "EXPLAINUSA": "music/forecast.mp3", "BALDBANDIT": "music/km_ascending.mp3",
+               "HANKTOWN": "music/inspired.mp3"}
+
+
+def _toon_props(sl, title, accent, display, fr, lines, color_a, color_b, chapters=None, channel=""):
     return {"slug": sl, "title": title, "color": accent, "name": display,
-            "frames": fr, "lines": lines, "music": "", "chapters": chapters or [],
+            "frames": fr, "lines": lines,
+            "music": _TOON_MUSIC.get(str(channel).upper(), ""), "chapters": chapters or [],
             "whoColors": {"A": color_a, "B": color_b}}
 
 
 def _toon_render(props, out, comp, label):
+    """Trả ĐƯỜNG DẪN props (23/8) -> doc_thumb render thẳng KHUNG BANNER từ composition, không phải
+    trích từ video đã nén: chữ sắc, màu đúng, đúng khoảnh khắc hook."""
     pf = os.path.join(PUB, f"_toon_{props['slug']}_{comp}.json")
     json.dump(props, open(pf, "w"), ensure_ascii=False)
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", comp, out,
                     f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
                     "--concurrency=2", "--log=error"], cwd=ENG,
                    timeout=(3600 if comp == "ToonLong" else RENDER_TIMEOUT), label=label)
+    return pf
 
 
 def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
@@ -2806,8 +2848,10 @@ def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
     except RuntimeError as e:
         return out, (resume_story or {}), False, {"err": str(e)[:80]}
     st("rendering", "TOON render")
-    _toon_render(_toon_props(sl, story.get("title", ""), accent, display or channel, fr, lines, color_a, color_b),
-                 out, "ToonShort", "ToonShort")
+    _props = _toon_props(sl, story.get("title", ""), accent, display or channel, fr, lines, color_a, color_b, channel=channel)
+    story["_music"] = bool(_props.get("music"))    # có nhạc -> enqueue ghi công Kevin MacLeod (CC-BY)
+    _pf = _toon_render(_props, out, "ToonShort", "ToonShort")
+    _normalize_loudness(out)          # -14 LUFS trước khi QC đo (QC phải đo đúng file sẽ đăng)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
     info["score"] = int((story.get("self_score") or {}).get("total", 0) or 0)
@@ -2820,7 +2864,10 @@ def make_toon(channel, niche, out, keys=None, api_key=None, tier="normal",
             info["err"] = f"QC sau render trượt ({_vrate:.0%} khung đạt)"
     if ok:
         try:
+            # THUMBNAIL = KHUNG BANNER MỞ ĐẦU render thẳng từ composition (23/8): tiêu đề chữ hoa
+            # cỡ lớn trên ảnh ẩn dụ = đúng thứ ăn click trên trang chủ YouTube, nét hơn hẳn trích video.
             _th = doc_thumb(channel, out, big=(story.get("title") or channel),
+                            accent=accent, comp_id="ToonShort", props_path=_pf, hook_frame=46,
                             api_key_for_thumb=(keys[0] or {}).get("key"))
             if _th:
                 info["thumb"] = _th

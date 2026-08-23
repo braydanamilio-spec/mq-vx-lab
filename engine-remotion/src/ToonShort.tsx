@@ -32,7 +32,8 @@ export const ToonShort: React.FC<{
   chapters?: Chapter[];   // LONG (tuyển tập skit): title card đổi theo skit đang chiếu
 }> = ({ slug, title, color = "#E4562B", name = "", frames = [], lines = [], music = "", whoColors = {}, chapters = [] }) => {
   const f = useCurrentFrame();
-  const { durationInFrames: total } = useVideoConfig();
+  const { durationInFrames: total, width: vw, height: vh } = useVideoConfig();
+  const isVertical = vh > vw;
   const ci = (x: number, a: number, b: number, c: number, d: number) =>
     interpolate(x, [a, b], [c, d], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const cur = lines.find(l => f >= l.from && f < l.from + l.dur);
@@ -144,7 +145,10 @@ export const ToonShort: React.FC<{
             <AbsoluteFill style={{
               background: "linear-gradient(0deg, rgba(8,8,12,.72) 0%, rgba(8,8,12,.30) 26%, rgba(8,8,12,0) 46%)",
             }} />
-            <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 186 }}>
+            <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center",
+              // 23/8: LỀ AN TOÀN — short 9:16 nâng lên 330px vì TikTok/Reels che đáy bằng caption +
+              // nút chia sẻ; long 16:9 giữ 150px (không có UI che).
+              paddingBottom: isVertical ? 330 : 150 }}>
               <div style={{
                 maxWidth: 900, textAlign: "center", fontSize: 58, fontWeight: 900, lineHeight: 1.18,
                 letterSpacing: -0.4, textShadow: "0 3px 12px rgba(0,0,0,.75), 0 0 2px rgba(0,0,0,.9)",
@@ -196,6 +200,29 @@ export const ToonShort: React.FC<{
               <div style={{ height: 7, background: color, borderRadius: 4, marginTop: 14,
                             transform: `scaleX(${Math.min(1, rel2 / 20)})`, transformOrigin: "right center" }} />
             </div>
+          </AbsoluteFill>
+        );
+      })()}
+      {/* (6) KẾT BÀI (23/8): ~2 giây cuối hiện lời mời theo dõi + tên kênh — tăng đăng ký và cho
+          YouTube thấy video có cấu trúc mở-thân-kết rõ ràng (điểm cộng khi xét kiếm tiền). */}
+      {(() => {
+        const left = total - f;
+        if (left > 62 || left < 0) return null;
+        const p = Math.min(1, (62 - left) / 14);
+        return (
+          <AbsoluteFill style={{ pointerEvents: "none", opacity: p }}>
+            <AbsoluteFill style={{ background: "rgba(8,8,12,.62)" }} />
+            <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+              <div style={{ textAlign: "center", transform: `translateY(${(1 - p) * 14}px)` }}>
+                <div style={{ color: "#fff", fontSize: 54, fontWeight: 900, letterSpacing: -0.5 }}>
+                  More things you had wrong?
+                </div>
+                <div style={{ height: 8, width: 120, background: color, borderRadius: 4, margin: "22px auto" }} />
+                <div style={{ color: "#fff", fontSize: 40, fontWeight: 900, letterSpacing: 4 }}>
+                  {(name || "").toUpperCase()}
+                </div>
+              </div>
+            </AbsoluteFill>
           </AbsoluteFill>
         );
       })()}
