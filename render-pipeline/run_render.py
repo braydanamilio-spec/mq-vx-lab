@@ -128,6 +128,13 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
                           title=story.get("title"), description=desc,
                           hashtags=story.get("hashtags"), tags=story.get("tags"),
                           thumbnail=(story.get("_thumb") if (story.get("_thumb") and os.path.exists(story.get("_thumb"))) else _make_thumb(out)))   # thumb brand (GUESS/MAPPED) nếu có, không thì trích khung
+        # SỔ ĐẾM VIDEO ĐÃ LÊN KHO (23/8): 1 chỗ duy nhất mọi đường đẩy đều đi qua -> dashboard đọc
+        # 1 doc là ra con số KHỚP với thư viện, hết cảnh "tổng 1755 mà kho 61".
+        try:
+            if created and created.get("id"):
+                FB.count_pushed(OWNER, created["id"], channel, vtype)
+        except Exception:
+            pass
         return created or None                     # trả cả {id, account} -> lưu vào job để XEM/stream trên web
     except SystemExit as e:
         # enqueue.py dùng raise SystemExit khi kênh THIẾU trong channels.yaml. SystemExit kế thừa

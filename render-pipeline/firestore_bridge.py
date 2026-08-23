@@ -222,6 +222,36 @@ def read_rw_ledger(owner: str) -> tuple:
         return -1, -1
 
 
+def count_pushed(owner: str, drive_id: str = "", channel: str = "", vtype: str = ""):
+    """SỔ ĐẾM VIDEO ĐÃ THẬT SỰ LÊN KHO (23/8 — user: "số phải khớp nhau").
+
+    Vì sao cần: dashboard trước đây lấy "Tổng cộng dồn" bằng cách đếm BẢN GHI JOB (status=done),
+    trong đó có cả video render lại và video CHƯA đẩy được kho -> hiện 1755 trong khi kho chỉ có
+    61. Hai ô đo hai thứ khác nhau nên không bao giờ khớp.
+
+    Giờ: MỌI lượt đẩy kho THÀNH CÔNG (có drive_id) cộng đúng 1 vào doc đếm này. Dashboard đọc 1 doc
+    -> "Tổng" và "Hôm nay" luôn = số video CÓ THẬT trong kho, khớp với thư viện.
+    Chống đếm trùng: nhớ 400 drive_id gần nhất trong RAM tiến trình (render lại cùng video sẽ có
+    drive_id MỚI nên vẫn tính 1 — đúng, vì đó là file mới trong kho)."""
+    if not drive_id:
+        return
+    _seen = count_pushed.__dict__.setdefault("_seen", [])
+    if drive_id in _seen:
+        return
+    _seen.append(drive_id)
+    del _seen[:-400]
+    try:
+        from google.cloud.firestore_v1 import Increment
+        day = datetime.now(timezone.utc).strftime("%Y%m%d")
+        patch = {"total": Increment(1), day: Increment(1), "at": _now()}
+        if channel:
+            patch[f"ch_{str(channel).upper()}"] = Increment(1)
+        _soft(lambda: _db_jobs().collection("render_stats").document(f"__pushed__{owner}")
+              .set(patch, merge=True), "count_pushed")
+    except Exception:
+        pass
+
+
 def quota_pulse(owner: str):
     """1 nhịp/tiến trình: đọc sổ quota ngày (1 lượt), in trạng thái, ≥90% trần thì gương tươi + LẬT
     B2 CHỦ ĐỘNG (23/8, user đề xuất — lật lúc B còn sống = dữ liệu khớp 100%, khỏi chờ chết mới lật).
