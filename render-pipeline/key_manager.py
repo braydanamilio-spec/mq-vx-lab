@@ -551,6 +551,20 @@ def write_tale(channel: str, keys: list[dict], niche: str, tier: str = "normal",
     """Sinh chuyện narrator (toon mode story) — cùng khuôn Wave 4."""
     return _write_wave4("generate_tale", "TALE", channel, keys, niche, tier, avoid, on_limit, on_ok)
 
+def review_script(channel: str, keys: list[dict], story: dict, niche: str = "", tier: str = "normal",
+                  avoid: list = None) -> dict:
+    """SOI LẠI kịch bản 1 lượt trước khi render (23/8). Không có key/lỗi -> trả nguyên bản, KHÔNG chặn."""
+    if not keys or not isinstance(story, dict):
+        return story
+    model = model_for(tier)
+    for k in key_order(channel, keys)[:2]:          # thử tối đa 2 key rồi thôi — đây là bước phụ
+        try:
+            return CB.review_script(story, niche, api_key=k.get("key"), model_name=model, avoid=avoid)
+        except Exception:
+            continue
+    return story
+
+
 def write_essay(channel: str, keys: list[dict], niche: str, tier: str = "normal", avoid: list = None, on_limit=None, on_ok=None) -> dict:
     """Sinh BÀI PHÂN TÍCH lật-ngược-niềm-tin (toon mode essay, 23/8) — cùng khuôn Wave 4."""
     return _write_wave4("generate_essay", "ESSAY", channel, keys, niche, tier, avoid, on_limit, on_ok)

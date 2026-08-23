@@ -2042,3 +2042,49 @@ def generate_essay(niche: str, api_key: str = None, model_name: str = None, avoi
     if last: return last
     raise RuntimeError("tale: không sinh được chuyện")
 
+# ── SOI LẠI KỊCH BẢN 1 LƯỢT TRƯỚC KHI RENDER (23/8, theo yêu cầu) ─────────────────────────────
+# Bài viết xong vẫn có thể: câu dài lê thê, 2 khung tả CÙNG một cảnh (=> ảnh trùng), thiếu số thật,
+# hoặc trùng ý với video cũ của chính kênh. Bước này là 1 lượt gọi AI đóng vai BIÊN TẬP KHÓ TÍNH:
+# sửa tại chỗ rồi trả về đúng khuôn JSON cũ. Hỏng thì trả nguyên bản (không bao giờ chặn render).
+REVIEW_SYS = (
+    "You are a ruthless script editor for a US YouTube channel. You receive ONE script as JSON.\n"
+    "Return the SAME JSON schema, corrected in place. Never add or remove keys. Rules:\n"
+    "1) Every spoken line <= 13 words. Split or cut anything longer. Plain American English.\n"
+    "2) First line must hook in under 9 words. If it does not, rewrite it.\n"
+    "3) No two lines may repeat the same idea. Delete filler, keep the story moving.\n"
+    "4) Every visual/frame description must show a DIFFERENT subject, place and camera angle.\n"
+    "   If two frames would produce a similar photo, rewrite the later one entirely.\n"
+    "5) At least 3 concrete real numbers stay in the script, each tied to its source.\n"
+    "6) Do not invent facts. Keep every existing source. Monetization-safe: no gore, no slurs,\n"
+    "   no medical/financial advice, no real person accused of anything.\n"
+    "Return JSON only."
+)
+
+
+def review_script(d: dict, niche: str = "", api_key: str = None, model_name: str = None,
+                  avoid: list = None) -> dict:
+    """Trả về kịch bản đã soi/sửa. Mọi lỗi -> trả nguyên bản (không chặn render)."""
+    try:
+        genai = _genai(api_key)
+        model = genai.GenerativeModel(model_name or MODEL, system_instruction=REVIEW_SYS)
+        av = ("\nAlready used by this channel, must NOT be repeated: " + " | ".join((avoid or [])[-25:])) if avoid else ""
+        resp = model.generate_content(
+            f"Channel: {niche}.{av}\n\nSCRIPT:\n" + json.dumps(d, ensure_ascii=False),
+            generation_config={"temperature": 0.4, "response_mime_type": "application/json"},
+            request_options=GEN_OPTS)
+        out = _extract_json(resp.text)
+        if not isinstance(out, dict) or not (out.get("dialog") or []):
+            return d
+        for l in (out.get("dialog") or []):
+            l["who"] = l.get("who") or "A"
+        for k in ("self_score", "sources", "_attempt"):
+            if k in d and k not in out:
+                out[k] = d[k]
+        n_fix = sum(1 for a, b in zip(d.get("dialog") or [], out.get("dialog") or [])
+                    if (a.get("line") or "") != (b.get("line") or ""))
+        print(f"   🔎 soi kịch bản: sửa {n_fix}/{len(out.get('dialog') or [])} câu")
+        return out
+    except Exception as e:
+        print(f"   🔎 soi kịch bản bỏ qua ({str(e)[:60]})")
+        return d
+

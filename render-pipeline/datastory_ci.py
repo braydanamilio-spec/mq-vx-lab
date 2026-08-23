@@ -2868,6 +2868,11 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
     # lật-ngược-niềm-tin 1 giọng + ẩn dụ hình ảnh — format thay thế skit hài sau khi user chấm demo).
     _writer = {"story": KM.write_tale, "essay": KM.write_essay}.get(mode, KM.write_toon)
     story = resume_story or _writer(channel, keys, niche, tier=tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
+    # 23/8: SOI LẠI 1 LƯỢT trước khi render — cắt câu dài, bỏ ý lặp, ép mỗi khung tả một cảnh KHÁC
+    # nhau (chống ảnh trùng ngay từ kịch bản), giữ nguyên nguồn. Lỗi thì trả nguyên bản.
+    if not resume_story:
+        st("writing", "Soi lại kịch bản")
+        story = KM.review_script(channel, keys, story, niche=niche, tier=tier, avoid=avoid)
     st("writing", f"✔ skit: {story.get('title', '')[:60]}", script=json.dumps(story, ensure_ascii=False))
     dialog = story.get("dialog") or []
     FPS = 30; GAP = 0.20; t = 0.55

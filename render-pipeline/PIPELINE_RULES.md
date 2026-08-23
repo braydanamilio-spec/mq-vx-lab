@@ -307,3 +307,21 @@ gh run view <id> --repo braydanamilio-spec/mq-vx-lab --log
 - **23/8 · DỌN KHO LÀM LẠI TỪ ĐẦU (user chốt sau khi xem video thật)** — ~1.399 video + thumbnail của pipeline CŨ (ảnh trùng, sub chưa khớp, âm chưa chuẩn) được chuyển vào THÙNG RÁC Drive (hoàn tác được 30 ngày; bước "đổ thùng rác" xoá vĩnh viễn để USER tự bấm — AI không xoá vĩnh viễn dữ liệu). Quy trình an toàn: chỉ đụng đúng `MM0-STORE/_QUEUE/{long,short}` của từng kho, KHÔNG chạm thư mục riêng của user trong cùng Drive (kho ADISONDURHAM có "Kling ai model", "MM0 YOUTUBE 2026"… nằm cạnh); duyệt cây thư mục rồi mới trash từng file, chạy NGẦM có sổ tiến độ. Kèm: tắt `heal_unpushed` (bỏ 180 video kẹt — cũng là hàng pipeline cũ), reset sổ đếm video-đã-lên-kho về 0. LUẫT: thao tác hàng loạt trên kho của user phải (a) khoanh vùng theo thư mục CỦA HỆ, (b) dùng bước hoàn tác được, (c) để bước không-hoàn-tác cho user bấm.
 - **23/8 · NGUỒN ẢNH THỨ 5: PIXABAY** — ~4 triệu ảnh, giấy phép riêng cho phép dùng thương mại và KHÔNG cần ghi công, hạn mức rộng nhất nhóm (5.000 lượt/GIỜ/key). Cắm y hệt Pexels: key dạng `pb:<KEY>` trong cùng hệ quản lý key (dashboard tự nhận diện theo mẫu "<số 6-10>-<chuỗi 20-40>", có nút lấy key + chip lọc + health-check), pool xoay theo kênh, trần 400 lượt/key/tiến trình, key hỏng (400/401/403/429) tắt riêng rồi nhảy key kế. THỨ TỰ LẤY ẢNH hiện tại: Pexels → Pixabay → Wikimedia → NASA → Openverse (gộp rồi XÁO + bỏ ảnh đã dùng) → AI vẽ (FLUX, có muối prompt) khi không tìm được ảnh thật. LUẬT: nguồn nào hạn mức rộng + giấy phép thoáng thì để gần đầu, nguồn cần ghi công/hẹp để sau.
 - **23/8 · GHI CÔNG ẢNH THEO ĐÚNG LUẬT TỪNG NGUỒN (user hỏi "có phải credit Pexels/Pixabay không")** — trả lời: **CC-BY (Openverse, một phần Wikimedia) BẮT BUỘC** ghi tác giả + giấy phép; **Pexels/Pixabay/NASA/Public Domain KHÔNG bắt buộc** nhưng nên ghi (minh bạch nguồn khi YouTube xét kiếm tiền). Bản trước chỉ dán 1 câu chung "Openverse & Wikimedia" -> vừa THIẾU (không nêu tác giả CC-BY) vừa SAI (kể tên nguồn không dùng). FIX: sổ `_IMG_CREDITS` ghi lại nguồn·tác giả·giấy phép của CHÍNH ảnh đã tải (Pexels trả photographer, Pixabay trả user, Openverse/Wikimedia trả creator+license), `take_credits()` gắn vào story, mô tả in tối đa 8 dòng thật; không có sổ mới lùi về câu chung. LUẬT: ghi công phải theo TÀI SẢN THẬT SỰ DÙNG, không phải câu bao đồng — sai cả hai chiều đều là rủi ro pháp lý/uy tín.
+
+### BUG 23/8 — "Pixabay vẫn lỗi" (2 lỗi chồng nhau)
+1. **Deploy bắn nhầm project**: alias Firebase đang là `c` (mm0-shard-c) nên `firebase deploy --only hosting`
+   đẩy bản sửa lên `mm0-shard-c.web.app`, còn dashboard thật `mm0-auto-publisher.web.app` vẫn bản cũ.
+   → **LUẬT**: mọi deploy dashboard PHẢI có `-P a`, và phải kiểm chứng bằng cách đọc mã trên trang thật
+   (vd `String(window.__autoAddKeyFromUrl).includes('@auto')`), không tin dòng "Deploy complete".
+2. **Thêm key im lặng**: `__rsAddKey` bắt buộc có Gmail, nhưng `pixabay.com/api/docs/` KHÔNG hiện email nào
+   → bookmarklet gửi `addkey` không kèm `kmail` → hàm `return alert(...)` chặn, người dùng chỉ thấy "vẫn lỗi".
+   → Fix: thiếu Gmail thì tự đặt nhãn `pixabay-<4 số cuối>@auto` / `pexels-<4 số cuối>@auto`.
+   → **LUẬT**: luồng tự động không được phụ thuộc trường mà trang nguồn có thể không có; luôn có nhãn dự phòng.
+3. Kiểm chứng bằng key GIẢ (`19999999-test...`) rồi xoá, không dùng key thật để thử.
+4. **Dán nửa key**: bấm 2 lần vào key Pixabay chỉ bôi được phần sau dấu gạch (`9860cae...`) → không khớp mẫu
+   `\d{6,10}-...` → rơi nhầm vào nhánh Cloudflare, nút "Thêm key" như chết. Fix: chặn sớm + báo rõ thiếu 8 số đầu.
+   Thêm nút **📋 Dán key từ clipboard** (đọc clipboard, tự nhận nhà cung cấp, tự đặt nhãn) — bỏ được bookmarklet.
+5. **Trang cũ do cache**: deploy xong mà trang vẫn bản cũ (`typeof window.__rsPasteKey === 'undefined'`) dù tệp
+   trên máy chủ đã mới (fetch kèm `?cb=` thấy mã mới). → Đã thêm header no-cache cho `**` trong firebase.json.
+   → **LUẬT kiểm chứng deploy**: so mã TRÊN MÁY CHỦ (`fetch('/index.html?cb='+Math.random())`) với mã ĐANG CHẠY
+   (`typeof window.__ham`), khác nhau thì tải lại kèm `?v=...`, đừng kết luận "đã lên" khi chỉ thấy Deploy complete.
