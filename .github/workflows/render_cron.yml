@@ -32,7 +32,7 @@ jobs:
         with: { python-version: "3.11" }
       - name: Python deps (nhẹ - cho gate + plan)
         run: pip install --quiet google-generativeai edge-tts google-cloud-firestore \
-             google-api-python-client google-auth pyyaml
+             google-api-python-client google-auth pyyaml boto3
       # TỰ KIỂM 10 GIÂY (0 mạng, 0 quota): chạy đúng các đường gọi sản xuất bằng mock — bản push
       # hỏng (shim thiếu chữ ký, thứ tự key sai, đọc-mềm gãy...) FAIL NGAY TẠI ĐÂY, lane không
       # spawn, không đốt gì. Sinh ra từ 3 sự cố 22/8 (system_instruction giết 18/18 luồng...).
@@ -178,7 +178,7 @@ jobs:
       - name: Python deps
         run: |
           pip install --quiet google-generativeai google-genai edge-tts google-cloud-firestore \
-            google-api-python-client google-auth pyyaml
+            google-api-python-client google-auth pyyaml boto3
           # pillow: BẮT BUỘC — still_hook_thumb/photo_score/ensure_yt_thumb đều dùng PIL. Thiếu thì
           # thumbnail khung hook chết lặng ("No module named 'PIL'") và video lên không có ảnh đẹp.
           # Cài Ở LỆNH RIÊNG: gộp vào dòng trên làm pip nổ "resolution-too-deep" (sự cố 20/8).

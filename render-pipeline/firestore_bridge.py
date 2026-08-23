@@ -1482,3 +1482,25 @@ def _beat_set(job_id):
         th = threading.Thread(target=_beat_loop, daemon=True)   # daemon -> không giữ tiến trình khi xong
         _BEAT["th"] = th
         th.start()
+
+# ── BẾN PHỤ R2: sổ video đang đậu tạm (23/8) ─────────────────────────────────────────────────
+# Video đẩy Drive hụt -> gửi lên R2 -> ghi 1 doc ở đây. Phiên sau `repush_r2()` tải về và đẩy vào
+# Drive rồi xoá doc + xoá file R2. Nhờ vậy hụt quota/hụt kho KHÔNG còn làm mất công render.
+
+def add_r2_pending(owner: str, meta: dict) -> None:
+    _soft(lambda: _db_jobs().collection("r2_pending").document(str(meta.get("key"))[:400].replace("/", "__"))
+          .set({**meta, "owner": owner, "at": _now()}), "add_r2_pending")
+
+
+def list_r2_pending(owner: str, cap: int = 40) -> list[dict]:
+    try:
+        q = _db_jobs().collection("r2_pending").where("owner", "==", owner).limit(cap)
+        return [{**(d.to_dict() or {}), "_doc": d.id} for d in q.stream()]
+    except Exception as e:
+        print(f"   ⚠️ đọc sổ R2 lỗi ({str(e)[:60]})")
+        return []
+
+
+def clear_r2_pending(doc_id: str) -> None:
+    _soft(lambda: _db_jobs().collection("r2_pending").document(doc_id).delete(), "clear_r2_pending")
+
