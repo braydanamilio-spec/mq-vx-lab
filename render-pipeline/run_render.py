@@ -139,6 +139,7 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
         # 1 doc là ra con số KHỚP với thư viện, hết cảnh "tổng 1755 mà kho 61".
         try:
             if created and created.get("id"):
+                _ghi_nhan(channel, vtype)          # sổ phiên: giữ luật 1:3 kể cả khi Firestore câm
                 FB.count_pushed(OWNER, created["id"], channel, vtype)
         except Exception:
             pass
@@ -159,6 +160,15 @@ def enqueue_drive(channel, out, story, vtype) -> bool:
 
 SHORT_PER_LONG = 3        # RULE CỨNG: 1 long kèm đúng 3 short
 
+# Sổ ĐẾM TRONG PHIÊN (RAM) — dùng khi Firestore không đọc được. Không có nó thì luật 1:3 chỉ đúng
+# lúc quota khoẻ; đêm 23/8 quota cạn là tỉ lệ vọt lên 1:4.5 mà không ai hay.
+_SESSION_MADE: dict = {}
+
+
+def _ghi_nhan(channel: str, vtype: str):
+    d = _SESSION_MADE.setdefault(channel, {"long": 0, "short": 0})
+    d["long" if vtype == "long" else "short"] += 1
+
 
 def _ratio_plan(channel, want_shorts, long_target):
     """LUẬT TỈ LỆ 1 LONG : 3 SHORT — tự chữa mọi kênh, bất kể cấu hình cũ.
@@ -175,6 +185,13 @@ def _ratio_plan(channel, want_shorts, long_target):
         return False, int(want_shorts or 0)
     L = FB.count_done(OWNER, channel, "long")
     S = FB.count_done(OWNER, channel, "short")
+    # 24/8 — LUẬT 1:3 PHẢI ĐÚNG NGAY CẢ KHI KHÔNG ĐẾM ĐƯỢC. Đêm 23/8 quota đọc cạn -> cầu dao trả
+    # count_done = 0 cho mọi kênh -> `room` tính từ số 0 nên guard mất tác dụng, đo thật ra
+    # 17 long / 77 short = 1:4.5 (vỡ luật). Nay đếm thêm SỐ LÀM TRONG CHÍNH PHIÊN NÀY (biến RAM,
+    # không cần Firestore) và lấy mức CHẶT HƠN giữa hai cách tính.
+    _ss = _SESSION_MADE.setdefault(channel, {"long": 0, "short": 0})
+    L = max(L, _ss["long"])
+    S = max(S, _ss["short"])
     room = max(0, SHORT_PER_LONG * L - S)          # chỗ trống theo tỉ lệ HIỆN TẠI
     need_long = (room <= 0) and (L < long_target)  # short đã kín -> phải thêm long mới mở được chỗ
     if need_long:

@@ -452,3 +452,12 @@ Fix: dò biến thật theo dòng `title=<var>.get(...)` ngay trong khối rồi
 AST tìm mọi hàm dùng `story` mà không gán (đã sạch).
 → **LUẬT**: sửa hàng loạt bằng script thì PHẢI quét lại bằng AST, đừng tin `python -c "import ast"`
 chỉ kiểm cú pháp — cú pháp đúng vẫn có thể sai TÊN BIẾN theo ngữ cảnh từng khối.
+
+### BUG 24/8 — VỠ LUẬT 1 LONG : 3 SHORT khi quota đọc cạn (đo thật 1:4.5)
+Đêm 23/8 cầu dao quota trả `count_done = 0` cho mọi kênh -> `_ratio_plan` tính chỗ trống từ số 0 nên
+guard mất tác dụng. Đo trên phiên 21:24: **17 long / 77 short = 1:4.5**, vượt luật.
+Fix: thêm sổ đếm TRONG PHIÊN (`_SESSION_MADE`, RAM, không cần Firestore), ghi nhận ngay tại
+`enqueue_drive` khi đẩy kho thành công; `_ratio_plan` lấy mức CHẶT HƠN giữa số Firestore và số phiên.
+Thử thật: 0 long -> ép làm long; 1 long -> cho 3 short; 1 long + 3 short -> lại ép long.
+→ **LUẬT**: mọi hạn mức/tỉ lệ phải có đường tính DỰ PHÒNG không phụ thuộc Firestore. Guard chỉ đúng
+khi quota khoẻ là guard hỏng đúng lúc cần nhất.
