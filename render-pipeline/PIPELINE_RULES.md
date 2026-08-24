@@ -535,3 +535,14 @@ dừng nổi. Nay chỉ xoá cờ của máy; thêm chốt ở `--gate`: có `st
 tab phụ không mở listener. Đo thật: tab phụ VẪN 184 lượt đọc -> chặn ở `subscribe()` là chưa đủ vì
 listener còn được mở rải rác (render studio, snapW rời). Đã gỡ, không để code nửa vời.
 → Muốn làm đúng: bọc TẤT CẢ điểm gọi `onSnapshot` qua một cổng duy nhất rồi mới bầu tab chủ.
+
+### 24/8 — MỘT TAB LÀM CHỦ (bản làm ĐÚNG, đã đo)
+Lần 1 thất bại vì chỉ chặn `subscribe()`. Đo lại mới thấy phần lớn lượt đọc đến từ `getDocs/getDoc`
+MỘT-LẦN (nạp key/kênh/job), không phải onSnapshot. Bản đúng chặn CẢ HAI cửa:
+ • `snapW` — tab phụ không mở onSnapshot, nhận dữ liệu tab chủ phát qua BroadcastChannel.
+ • `gdGate/gdocGate` bọc `getDocs/getDoc` (import là HẰNG, không gán đè được — phải thay 18 điểm gọi).
+   Tab chủ đọc thật rồi ghi localStorage; tab phụ đọc từ đó.
+ • Tab chủ đóng >15s -> tab phụ tự lên thay.
+Đo thật: tab chủ 549 lượt đọc · **tab phụ 0 lượt**, dữ liệu vẫn hiện đủ (210 key, 40/40 ảnh).
+→ **LUẬT**: muốn cắt quota ở client thì phải bịt MỌI cửa đọc, không chỉ cửa realtime. Bộ đếm cũ chỉ
+đếm onSnapshot nên che mất phần lớn lượt đọc — sửa đếm trước, rồi mới tối ưu.
