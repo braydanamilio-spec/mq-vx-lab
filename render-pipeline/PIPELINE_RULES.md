@@ -1853,3 +1853,16 @@ Chốt bằng `t_phan_ap_luc_khong_im_lang`.
 **LUẬT: `if <dữ liệu>:` bọc quanh một tính năng thì nhánh `else` PHẢI nói ra là tính năng đó không
 chạy.** Một `if` không có `else` in log là một tính năng có thể chết âm thầm nhiều tháng — đây là lần
 thứ hai trong đêm (lần trước: bước sao lưu kho key, 7.cc).
+
+### 7.ci — "Lấy việc kế" viết ở `main()`, nhưng matrix chạy `channel_mode()` (24/8/2026 tối)
+Đo được trong log mọi lane phiên 17:56Z: kết thúc bằng `⏱ DEBTUSA: còn 58' < ước tính 68'/mẻ → DỪNG`
+rồi thoát — trong khi plan vừa xếp **32 kênh vào HÀNG CHỜ**. Dòng `♻️ Luồng rảnh -> nhận thêm kênh`
+**chưa từng xuất hiện** trong bất kỳ log lane nào: vòng work-stealing được viết trong `main()`, còn
+matrix chạy `run_render.py --channel X` tức vào `channel_mode()`. **Tính năng nằm ở đường vào KHÔNG
+được dùng.** Giá phải trả: 18 lane × ~58 phút bỏ không mỗi phiên (~17 giờ máy), hàng chờ chỉ để đó.
+Nay `channel_mode` có vòng lấy việc kế (giao dịch nguyên tử, trần theo `budget_s`/`HARD_S`, đọc danh
+sách kênh CHỈ khi thật sự có việc để lấy, và ngã về gói `CHANNEL_CFGS` khi gương thiếu kênh).
+Chốt bằng `t_lay_viec_ke_o_dung_duong_vao`.
+**LUẬT: thêm tính năng vào một hàm thì phải kiểm nó có nằm trên ĐƯỜNG CHẠY THẬT không.** Cách kiểm rẻ
+nhất: tìm dòng log đặc trưng của tính năng trong log phiên thật — không thấy dòng nào tức là chưa chạy,
+đừng cho rằng "chắc nó chạy rồi". (Cùng họ 7.br: vá đúng bệnh nhưng sai file.)

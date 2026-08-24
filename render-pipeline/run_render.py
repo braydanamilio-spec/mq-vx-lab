@@ -1836,6 +1836,46 @@ def channel_mode(name):
             print(f"   ⏹ {name}: {MAX_EMPTY} vòng liền dính rate-limit (quota cạn thật) → ngừng, phiên sau làm tiếp."); break
         wait = min(120, 40 * empty_streak)
         print(f"   ⏳ {name}: vòng {rounds} hết quota tạm → chờ {wait}s rồi thử KEY KHÁC (còn quota)…"); time.sleep(wait)
+    # ── XONG KÊNH CỦA MÌNH THÌ LẤY VIỆC KẾ, KHÔNG NGỒI KHÔNG ────────────────────────────────
+    # 24/8 tối — LỖI ĐẶT NHẦM CHỖ, đo được: mọi lane đều kết thúc bằng
+    #   `⏱ DEBTUSA: còn 58' < ước tính 68'/mẻ → DỪNG`
+    # rồi thoát, trong khi plan vừa xếp **32 kênh vào HÀNG CHỜ**. Dòng `♻️ Luồng rảnh -> nhận thêm
+    # kênh` CHƯA TỪNG xuất hiện trong bất kỳ log lane nào — vì vòng lấy-việc-kế được viết trong
+    # `main()`, mà matrix chạy `run_render.py --channel X` tức vào `channel_mode()`. Hai đường vào
+    # khác nhau, tính năng nằm ở đường KHÔNG được dùng.
+    # Giá phải trả: 18 lane × ~58 phút bỏ không mỗi phiên (~17 giờ máy), còn hàng chờ thì chỉ để đó.
+    try:
+        _da_lam = {name}
+        _by_name = {}
+        while True:
+            _con_s = min(budget_s, HARD_S) - (time.monotonic() - start)
+            _need = max(last_dur * 1.3, 20 * 60)
+            if _con_s < _need:
+                break                     # không đủ giờ cho một mẻ nữa -> nghỉ thật
+            if FB.read_config(OWNER).get("stop"):
+                print("   ⛔ Có lệnh Dừng — không lấy thêm việc."); break
+            _ke = FB.lay_viec_ke(OWNER)   # giao dịch nguyên tử -> 18 máy không nhận trùng kênh
+            if not _ke:
+                break                     # hàng chờ rỗng -> hết việc thật
+            if _ke in _da_lam:
+                continue
+            _da_lam.add(_ke)
+            if not _by_name:              # chỉ đọc danh sách kênh khi THẬT SỰ có việc để lấy
+                _by_name = {c.get("name"): c for c in FB.read_channels(OWNER) if c.get("name")}
+            _ch2 = _by_name.get(_ke) or FB._cfg_tu_plan().get(str(_ke).upper())
+            if not _ch2:
+                print(f"   ⚠️ hàng chờ có {_ke} nhưng không thấy cấu hình — bỏ qua."); continue
+            print(f"\n♻️ {name} rảnh -> nhận thêm kênh {_ke} từ hàng chờ "
+                  f"(còn {_con_s / 60:.0f}' ngân sách).")
+            _t2 = time.monotonic()
+            try:
+                run_one(_ch2, keys, report=report)
+            except BaseException as e:
+                traceback.print_exc(); report["fails"].append(f"{_ke}: {str(e)[:120]}")
+            last_dur = time.monotonic() - _t2
+    except Exception as e:
+        print(f"   ⚠️ lấy việc kế hụt ({str(e)[:60]}) — bỏ qua, không ảnh hưởng phần đã làm.")
+
     print(f"✅ {name}: TỔNG {report['done']} video · {len(report['fails'])} lỗi (qua {rounds} vòng).")
     try:
         FB.flush_soft()                    # xả ghi done/topics bị hoãn -> count_done không đếm thiếu

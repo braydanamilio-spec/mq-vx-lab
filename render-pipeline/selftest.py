@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
     check("phản áp lực không chạy được thì phải NÓI RA", t_phan_ap_luc_khong_im_lang)
     check("khâu đăng không dội vào chỗ đã biết là chết", t_publish_khong_doi_vao_cho_da_chet)
     check("sổ quota: đúng ngày reset + cộng đủ 2 cuốn", t_so_quota_dung_ngay_va_gop_du)
@@ -801,6 +802,30 @@ def t_so_hong_phai_het_len():
     i = r.index("FB.get_script_by_drive(")          # LỜI GỌI THẬT, không phải dòng chú thích
     assert "except FB.DocLoi" in r[i: i + 700], \
         "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
+
+
+def t_lay_viec_ke_o_dung_duong_vao():
+    """Vòng "lấy việc kế" phải nằm ở ĐƯỜNG VÀO MÀ MATRIX THẬT SỰ CHẠY (24/8 tối).
+    Đo được: mọi lane kết thúc bằng `⏱ ...: còn 58' < ước tính 68'/mẻ → DỪNG` rồi thoát, trong khi
+    plan vừa xếp 32 kênh vào HÀNG CHỜ. Dòng `♻️ Luồng rảnh -> nhận thêm kênh` CHƯA TỪNG xuất hiện
+    trong log lane nào — vì vòng đó viết trong `main()`, còn matrix chạy `--channel X` tức
+    `channel_mode()`. Tính năng nằm ở đường KHÔNG được dùng ⇒ 18 lane × ~58' bỏ không mỗi phiên."""
+    import ast as _ast
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "run_render.py"), encoding="utf-8").read()
+    t = _ast.parse(src)
+    than = {}
+    for fn in [n for n in _ast.walk(t) if isinstance(n, _ast.FunctionDef)]:
+        if fn.name in ("channel_mode", "main"):
+            e = max(getattr(x, "lineno", 0) for x in _ast.walk(fn))
+            than[fn.name] = "\n".join(src.split("\n")[fn.lineno - 1: e])
+    assert "lay_viec_ke(" in than.get("channel_mode", ""), \
+        "channel_mode (đường matrix THẬT SỰ chạy) không có vòng lấy việc kế -> hàng chờ vô dụng"
+    # và phải có trần thời gian, nếu không lane bị timeout matrix chém giữa chừng
+    kh = than["channel_mode"]
+    i = kh.index("lay_viec_ke(")
+    assert "budget_s" in kh[max(0, i - 900): i] and "HARD_S" in kh[max(0, i - 900): i], \
+        "vòng lấy việc kế thiếu trần ngân sách giờ -> lane bị timeout chém giữa video"
 
 
 def t_phan_ap_luc_khong_im_lang():
