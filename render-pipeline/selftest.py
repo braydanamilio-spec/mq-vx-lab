@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("gương thiếu kênh ≠ kênh bị xoá", t_guong_thieu_kenh_khong_phai_bi_xoa)
     check("thẻ mở đầu KHÔNG thành 'chữ trên nền trơn'", t_the_mo_dau_khong_thanh_nen_tron)
     check("B cạn hạn mức: báo CHUNG, khỏi 18 lane tự khám phá", t_bao_chung_b_can_han_muc)
     check("một bảng phạt key cho CẢ viết lẫn vẽ ảnh", t_mot_bang_phat_key_duy_nhat)
@@ -796,6 +797,46 @@ def t_so_hong_phai_het_len():
     i = r.index("FB.get_script_by_drive(")          # LỜI GỌI THẬT, không phải dòng chú thích
     assert "except FB.DocLoi" in r[i: i + 700], \
         "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
+
+
+def t_guong_thieu_kenh_khong_phai_bi_xoa():
+    """Gương B2 thiếu kênh ≠ kênh bị xoá (24/8 tối — 2 lane mất trắng phiên 16:06Z).
+    Lane lật B2 (gương cũ 156') mà gương thiếu HAULUSA/FAKEUSA -> `read_one_channel` trả None ->
+    lane hiểu là "đã xoá" rồi thoát. Lệnh đọc KHÔNG hỏng, dữ liệu chỉ THIẾU, nên `DocLoi` không đỡ.
+    Plan đã đọc đủ 50 kênh lúc còn đọc được -> gửi kèm cấu hình xuống lane qua CHANNEL_CFGS."""
+    import base64, gzip, json as _j
+    import firestore_bridge as FB
+    cu = os.environ.get("CHANNEL_CFGS")
+    try:
+        bo = {"HAULUSA": {"name": "HAULUSA", "format": "doc"}}
+        os.environ["CHANNEL_CFGS"] = base64.b64encode(
+            gzip.compress(_j.dumps(bo).encode())).decode()
+        FB._CFG_PLAN.clear()
+        c = FB._cfg_tu_plan()
+        assert c.get("HAULUSA", {}).get("format") == "doc", c
+        os.environ.pop("CHANNEL_CFGS")
+        FB._CFG_PLAN.clear()
+        assert FB._cfg_tu_plan() == {"_": {}}, "không có gói thì phải im, giữ hành vi cũ"
+    finally:
+        FB._CFG_PLAN.clear()
+        if cu is not None:
+            os.environ["CHANNEL_CFGS"] = cu
+        else:
+            os.environ.pop("CHANNEL_CFGS", None)
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "firestore_bridge.py"), encoding="utf-8").read()
+    i = src.index("def read_one_channel")
+    than = src[i: i + 3000]
+    assert "_cfg_tu_plan()" in than, "read_one_channel chưa dùng cấu hình plan gửi kèm"
+    r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "run_render.py"), encoding="utf-8").read()
+    assert "cau_hinh=_cfg_goi" in r, "plan chưa gửi kèm cấu hình kênh xuống matrix"
+    wf = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                      ".github", "workflows", "render_cron.yml")
+    if os.path.exists(wf):
+        w = io.open(wf, encoding="utf-8").read()
+        assert "cfgs: ${{ steps.plan.outputs.cfgs }}" in w and "CHANNEL_CFGS:" in w, \
+            "workflow chưa nối gói cấu hình từ plan sang lane"
 
 
 def t_the_mo_dau_khong_thanh_nen_tron():

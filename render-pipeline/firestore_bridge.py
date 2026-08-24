@@ -1176,6 +1176,27 @@ def read_channels(owner: str) -> list[dict]:
     return _retry(_do)
 
 
+_CFG_PLAN: dict = {}
+
+
+def _cfg_tu_plan() -> dict:
+    """Cấu hình kênh do PLAN gửi kèm (env CHANNEL_CFGS: json gzip + base64), giải nén 1 lần."""
+    if _CFG_PLAN:
+        return _CFG_PLAN
+    goi = os.environ.get("CHANNEL_CFGS") or ""
+    if not goi:
+        _CFG_PLAN["_"] = {}
+        return _CFG_PLAN
+    try:
+        import base64 as _b64, gzip as _gz
+        for k, v in json.loads(_gz.decompress(_b64.b64decode(goi)).decode()).items():
+            _CFG_PLAN[str(k).upper()] = v
+    except Exception as e:
+        print(f"   ⚠️ không giải được gói cấu hình kênh từ plan ({str(e)[:50]})")
+        _CFG_PLAN["_"] = {}
+    return _CFG_PLAN
+
+
 class DocLoi(Exception):
     """LỆNH ĐỌC HỎNG — khác hẳn "không tìm thấy". Xem read_one_channel()."""
 
@@ -1201,9 +1222,20 @@ def read_one_channel(owner: str, name: str) -> dict | None:
             x = d.to_dict() or {}; x["id"] = d.id; return x
         return None
     try:
-        return _retry(_do)
+        ra = _retry(_do)
     except Exception as e:
         raise DocLoi(f"đọc kênh {name} hỏng: {str(e)[:120]}") from e
+    if ra is None:
+        # KHÔNG THẤY ≠ ĐÃ XOÁ khi đang đọc GƯƠNG. Phiên 16:06Z: HAULUSA và FAKEUSA mất trắng cả
+        # lane vì lane đã lật B2 (gương cũ 156 phút, B cạn hạn mức từ trước lúc plan chạy nên gương
+        # không được làm tươi) mà gương thiếu đúng hai kênh đó. Lệnh đọc không hỏng, DỮ LIỆU THIẾU
+        # — nên `DocLoi` không đỡ được. Plan thì đã đọc được cả 50 kênh lúc nó còn đọc được và gửi
+        # kèm cấu hình xuống qua CHANNEL_CFGS. Lấy từ đó.
+        goi = _cfg_tu_plan().get(str(name).upper())
+        if goi:
+            print(f"   📦 {name}: gương thiếu kênh này — dùng cấu hình plan gửi kèm (KHÔNG phải bị xoá).")
+            return goi
+    return ra
 
 
 def read_config(owner: str) -> dict:

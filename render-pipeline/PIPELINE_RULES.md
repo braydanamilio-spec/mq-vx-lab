@@ -1770,3 +1770,17 @@ vẫn hiện và vẫn đang chạy, chữ vẫn đọc rõ nhờ đổ bóng. T
 khung MỞ ĐẦU và cuối video mục tiêu là đọc được CTA. Chốt bằng `t_the_mo_dau_khong_thanh_nen_tron`.
 **LUẬT: mỗi lần thêm một lớp phủ toàn màn hình, phải hỏi lại nó có chạm ngưỡng QC nào không —
 QC là luật đã viết ra để chặn chính mình, không phải chỉ để chặn Gemini.**
+
+### 7.cb — GỐC THẬT của 2 lane mất trắng: gương B2 THIẾU kênh, không phải kênh bị xoá (24/8/2026 tối)
+Truy tiếp 7.bm. Log phiên 16:06Z: plan liệt kê `PLAN channels=[... "HAULUSA" ... "FAKEUSA" ...]` — hai
+kênh **vẫn tồn tại**. Nhưng B đã cạn hạn mức đọc từ TRƯỚC lúc plan chạy (`sync_keys A->B lỗi: 429`),
+nên gương B→B2 không được làm tươi; lane lật sang gương **cũ 156 phút** và gương thiếu đúng hai kênh
+đó ⇒ `read_one_channel` trả `None` ⇒ lane khai "đã xoá" rồi thoát. **Lệnh đọc KHÔNG hỏng, dữ liệu chỉ
+THIẾU — nên `DocLoi` (7.bm) không đỡ được ca này.**
+Vá: plan đã đọc đủ 50 kênh lúc nó còn đọc được, nên **gửi thẳng cấu hình xuống lane** (`out_channels`
+nén gzip+base64 → output `cfgs` → env `CHANNEL_CFGS`; 50 kênh ≈ 3KB). `read_one_channel` không thấy
+trong gương thì lấy từ gói đó và nói rõ "gương thiếu kênh này, KHÔNG phải bị xoá".
+Chốt bằng `t_guong_thieu_kenh_khong_phai_bi_xoa`.
+**LUẬT: dữ liệu đã đọc được ở thượng nguồn thì ĐƯA XUỐNG, đừng bắt hạ nguồn đọc lại từ một nguồn có
+thể đã cũ hơn.** Ba biến thể của cùng một câu hỏi "không thấy nghĩa là gì" đã tốn 3 lần vá trong đêm:
+đọc hỏng (7.bm) · dữ liệu thiếu (7.cb) · hết lượt (7.bs).

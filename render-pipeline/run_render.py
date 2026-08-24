@@ -1263,12 +1263,33 @@ def plan_mode():
     except Exception:
         pass
     from datetime import datetime, timezone, timedelta
-    def out_channels(lst):
+    def out_channels(lst, cau_hinh=None):
+        """Trả danh sách kênh cho matrix — VÀ kèm luôn CẤU HÌNH của chúng.
+
+        24/8 tối — hai lane mất trắng cả phiên: HAULUSA và FAKEUSA thoát ngay với "kênh không còn
+        (đã xoá)", trong khi chính plan này vừa liệt kê cả hai. Truy ra: lane đã lật sang **gương
+        B2 cũ 156 phút** (B cạn hạn mức đọc từ trước lúc plan chạy nên gương không được làm tươi),
+        mà gương thiếu hai kênh đó ⇒ `read_one_channel` trả None ⇒ lane hiểu là "bị xoá".
+        Lệnh đọc KHÔNG hỏng, dữ liệu chỉ THIẾU — nên `DocLoi` không đỡ được ca này.
+
+        Cách chắc nhất: plan đã đọc đủ 50 kênh khi nó còn đọc được, vậy thì **đưa thẳng cấu hình
+        xuống cho lane**, khỏi bắt lane đi đọc lại từ một nguồn có thể đã cũ. Nén + base64 cho gọn
+        (50 kênh ≈ 20KB, dư sức trong hạn mức output của GitHub Actions)."""
         payload = json.dumps(lst)
+        goi = ""
+        try:
+            if cau_hinh:
+                import base64 as _b64, gzip as _gz
+                _bo = {str(c.get("name") or ""): c for c in cau_hinh if c.get("name") in set(lst)}
+                goi = _b64.b64encode(_gz.compress(
+                    json.dumps(_bo, ensure_ascii=False, default=str).encode())).decode()
+        except Exception as e:
+            print(f"   ⚠️ không đóng gói được cấu hình kênh ({str(e)[:50]}) — lane tự đọc như cũ")
         gh = os.environ.get("GITHUB_OUTPUT")
         if gh:
             with open(gh, "a") as f:
                 f.write(f"channels={payload}\n")
+                f.write(f"cfgs={goi}\n")
         try:
             FB.flush_rw_ledger(OWNER)   # kể cả plan cũng cộng sổ ngày — mọi ngả thoát đều đi qua đây
         except Exception:
@@ -1686,10 +1707,11 @@ def plan_mode():
         channels = channels[:MAX_MATRIX]
     else:
         FB.dat_hang_cho(OWNER, [])          # không dư -> dọn hàng chờ cũ, tránh luồng lấy việc rác
+    _cfg_goi = all_ch          # cấu hình plan ĐÃ đọc được -> gửi kèm cho lane (xem out_channels)
     print(f"▶ {len(channels)} kênh -> render SONG SONG."
           + (f" (⏸ {n_paused} pause)" if n_paused else "")
           + (f" (🎯 {n_full} kênh đã đủ chỉ tiêu, bỏ qua)" if n_full else ""))
-    out_channels(channels)
+    out_channels(channels, cau_hinh=_cfg_goi)
 
 
 def channel_mode(name):
