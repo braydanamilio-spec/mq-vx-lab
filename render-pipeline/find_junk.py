@@ -77,70 +77,98 @@ def main() -> int:
     vi_du = defaultdict(list)
     can_xoa = []          # (drv, file_id, loại, tên)
     thieu_phu = []
+    # 24/8 — chạy khô bắt được: một file vừa là "file tạm" vừa là "ảnh mồ côi" -> bị đếm HAI lần và
+    # nằm hai lần trong danh sách xoá. Số báo cáo sai thì người dùng mất niềm tin vào công cụ, mà
+    # công cụ dọn file thì niềm tin là tất cả. Mỗi file chỉ được xếp vào ĐÚNG MỘT loại (loại nhỏ
+    # nhất thắng), và danh sách xoá lọc trùng theo id.
+    da_xep = set()
+
+    def _xep(drv, f, loai, nhan=None):
+        if f["id"] in da_xep:
+            return False
+        da_xep.add(f["id"])
+        dem[loai] += 1
+        can_xoa.append((drv, f["id"], loai, nhan or f["name"]))
+        if len(vi_du[loai]) < 3:
+            vi_du[loai].append(nhan or f["name"])
+        return True
+
+    def _quet(drv, folder_id, sau=0, ra=None):
+        """Đi ĐỆ QUY mọi thư mục con, giữ lại thư mục cha của từng file.
+
+        24/8 — bản đầu của hàm này SAI hai chỗ, suýt thành đúng cái lỗi "chết câm" vừa ghi luật:
+          • đi theo đường `root/MM0-STORE/_QUEUE`, trong khi `_QUEUE` là con TRỰC TIẾP của root
+            (xem `wipe_queue.py`) -> soi vào thư mục trống, báo "0 rác" mà tưởng kho sạch;
+          • gọi `child_folder()` thiếu `create=False` — hàm này MẶC ĐỊNH TẠO thư mục, tức công cụ
+            chỉ-đọc lại đi tạo thư mục rỗng trong kho người dùng.
+        Nay quét thẳng từ root và chỉ đọc."""
+        ra = [] if ra is None else ra
+        if sau > 4:
+            return ra
+        tok = None
+        while True:
+            r = drv.svc.files().list(
+                q=f"'{folder_id}' in parents and trashed=false",
+                fields="nextPageToken, files(id,name,size,mimeType,createdTime)",
+                pageSize=1000, pageToken=tok,
+                supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
+            for f in r.get("files", []):
+                if f.get("mimeType") == "application/vnd.google-apps.folder":
+                    _quet(drv, f["id"], sau + 1, ra)
+                else:
+                    f["_thumuc"] = folder_id
+                    ra.append(f)
+            tok = r.get("nextPageToken")
+            if not tok:
+                break
+        return ra
 
     for acc in accs:
         try:
             drv = ST.account_drive(acc)
-            store = drv.child_folder(acc["root"], "MM0-STORE")
-            q = drv.child_folder(store, "_QUEUE")
         except Exception as e:
             print(f"   ⚠️ {acc.get('name')}: mở kho hụt ({str(e)[:60]})")
             continue
-        fs, tok = [], None
         try:
-            while True:
-                r = drv.svc.files().list(q=f"'{q}' in parents and trashed=false",
-                                         fields="nextPageToken, files(id,name,size,mimeType,createdTime)",
-                                         pageSize=1000, pageToken=tok).execute()
-                fs += r.get("files", [])
-                tok = r.get("nextPageToken")
-                if not tok:
-                    break
+            fs = _quet(drv, acc.get("root"))
         except Exception as e:
-            print(f"   ⚠️ {acc.get('name')}: liệt kê hụt ({str(e)[:60]})")
+            print(f"   ⚠️ {acc.get('name')}: quét hụt ({str(e)[:60]})")
             continue
 
-        theo_goc = defaultdict(dict)      # gốc -> {đuôi: file}
-        theo_ten = defaultdict(list)      # tên đầy đủ -> [file] (bắt trùng tên)
+        theo_goc = defaultdict(dict)      # (thư mục, gốc) -> {đuôi: file}
+        theo_ten = defaultdict(list)      # (thư mục, tên) -> [file]  — trùng tên CÙNG thư mục
         for f in fs:
-            ten = f["name"]
-            theo_ten[ten].append(f)
-            duoi = os.path.splitext(ten)[1].lower()
-            theo_goc[_goc(ten)][duoi] = f
+            ten = f["name"]; tm = f["_thumuc"]
+            theo_ten[(tm, ten)].append(f)
+            theo_goc[(tm, _goc(ten))][os.path.splitext(ten)[1].lower()] = f
 
         # loại 1: file tạm
         for f in fs:
             if TAM.search(f["name"]):
-                dem["1"] += 1; can_xoa.append((drv, f["id"], "1", f["name"]))
-                if len(vi_du["1"]) < 3: vi_du["1"].append(f["name"])
-        # loại 2: trùng tên y hệt -> giữ bản mới nhất
-        for ten, ds in theo_ten.items():
+                _xep(drv, f, "1")
+        # loại 2: trùng tên y hệt trong CÙNG thư mục -> giữ bản mới nhất
+        for (_tm, ten), ds in theo_ten.items():
             if len(ds) < 2:
                 continue
             ds.sort(key=lambda x: str(x.get("createdTime") or ""), reverse=True)
             for f in ds[1:]:
-                dem["2"] += 1; can_xoa.append((drv, f["id"], "2", ten))
-                if len(vi_du["2"]) < 3: vi_du["2"].append(f"{ten} (bỏ {len(ds)-1} bản cũ)")
+                _xep(drv, f, "2", f"{ten} (bỏ {len(ds)-1} bản cũ)")
         # loại 3/4/5
-        for goc, m in theo_goc.items():
+        for (_tm, goc), m in theo_goc.items():
             mp4 = m.get(".mp4")
             phu = [m[k] for k in (".jpg", ".jpeg", ".png", ".json", ".txt") if k in m]
             if not mp4:
                 for f in phu:
-                    dem["3"] += 1; can_xoa.append((drv, f["id"], "3", f["name"]))
-                    if len(vi_du["3"]) < 3: vi_du["3"].append(f["name"])
+                    _xep(drv, f, "3")
                 continue
             try:
                 co = int(mp4.get("size") or 0)
             except Exception:
                 co = 0
             if co and co < NHO_NHAT:
-                dem["4"] += 1; can_xoa.append((drv, mp4["id"], "4", f"{mp4['name']} ({co/1024:.0f}KB)"))
-                if len(vi_du["4"]) < 3: vi_du["4"].append(f"{mp4['name']} ({co/1024:.0f}KB)")
+                _xep(drv, mp4, "4", f"{mp4['name']} ({co/1024:.0f}KB)")
                 continue
-            co_json = ".json" in m
-            co_anh = any(k in m for k in (".jpg", ".jpeg", ".png"))
-            if not (co_json or co_anh):
+            if mp4["id"] not in da_xep and not (".json" in m or any(k in m for k in (".jpg", ".jpeg", ".png"))):
                 dem["5"] += 1; thieu_phu.append((acc.get("name"), mp4["name"]))
                 if len(vi_du["5"]) < 3: vi_du["5"].append(f"{acc.get('name')}/{mp4['name']}")
 

@@ -1097,3 +1097,16 @@ chỉ dọn rác". Thêm `find_junk.py`: nhận diện rác theo **từng loại
 Ba chốt an toàn: (a) mặc định `--dry-run`; (b) "xoá" = **bỏ vào thùng rác**, còn khôi phục được —
 đổ thùng rác (xoá vĩnh viễn) **cố ý không nằm trong công cụ**; (c) không bao giờ đụng `.mp4` có đủ
 `.json` + `.jpg`. Đọc kho qua gương ở B nên không tốn hạn mức project A.
+
+**Bổ sung 7.aq — chạy khô bằng Drive GIẢ trước khi đụng kho thật.** `find_junk.py` bản đầu có **ba**
+lỗi mà chỉ chạy khô mới lộ:
+1. Đi theo đường `root/MM0-STORE/_QUEUE` trong khi `_QUEUE` là con **trực tiếp** của root → soi vào
+   thư mục trống, báo "0 rác", tưởng kho sạch (đúng loại lỗi *chết câm*).
+2. Gọi `child_folder()` thiếu `create=False` — hàm này **mặc định TẠO thư mục**, tức một công cụ
+   chỉ-đọc lại đi tạo thư mục rỗng trong kho người dùng.
+3. Một file vừa là "file tạm" vừa là "ảnh mồ côi" → **đếm hai lần** và nằm hai lần trong danh sách xoá.
+→ Nay quét đệ quy thẳng từ root (chỉ đọc), và mỗi file chỉ được xếp vào **đúng một loại**.
+Bài chạy khô dùng Drive giả (0 mạng) kiểm đủ 5 loại + xác nhận video hoàn hảo KHÔNG bị đụng.
+
+**Luật:** công cụ xoá file thì bài kiểm phải chạy TRƯỚC lần chạy thật đầu tiên. Số báo cáo sai một
+lần là mất niềm tin, mà với công cụ dọn kho thì niềm tin là tất cả.
