@@ -1549,3 +1549,28 @@ rất xa. Nhưng rải lệch vẫn đáng sửa: nó làm vài kho đầy sớm
 
 **Luật:** băm để "rải đều" chỉ đều khi khoá băm có **nhiều giá trị hơn số chỗ**. Băm một tập cố định
 55 tên vào 72 chỗ thì mãi mãi chỉ chạm được ~35 chỗ — phải trộn thêm thứ THAY ĐỔI theo từng lượt.
+
+### 7.bi — Đăng bài phải LIỀN MẠCH: long đi cùng short của chính nó (24/8/2026, anh chỉ ra)
+
+**Hai thiếu sót anh phát hiện, cả hai đều có thật:**
+
+**1. Thứ tự đăng gần như NGẪU NHIÊN.** Truy vấn `status==done AND queued==False` **không có
+`order_by`** → Firestore trả theo thứ tự ID doc. Hôm nay lấy một short ở tận cuối kho, mai lấy cái ở
+giữa — kênh nhìn vào không có mạch nào.
+→ Vá: `order_by("created_at", ASCENDING)` = đăng theo đúng thứ tự làm ra, cũ nhất trước.
+
+**2. Long và short trong ngày KHÔNG cùng một bài.** Luật 1 long : 3 short được ép ở khâu **RENDER**,
+nhưng tới khâu **ĐĂNG** chúng là 4 bản ghi rời rạc → dễ thành *long chủ đề A + 3 short chủ đề B, C, D*.
+Người xem bấm short thấy hay, đi tìm bản dài thì không có — **mất trọn ý đồ "short kéo người về long"**.
+→ Vá: `new_job` ghi thêm `cha` (id của long sinh ra short) + `thu_tu`; `auto_enqueue` xếp
+**LONG trước, ngay sau là các short mang `cha` = long đó** theo đúng `thu_tu`. Short mồ côi (format
+chỉ-short, hoặc video cũ chưa có trường này) giữ thứ tự thời gian ở cuối.
+Đã kiểm bằng ví dụ 7 bản ghi trộn lẫn → ra đúng `L1 · S1a · S1b · L2 · S2a · S1c · Sx`.
+
+**Lỗi tôi tự tạo khi vá, bắt được bằng bài kiểm tĩnh:** bản đầu gán `cha=ljob` cho cả nhánh format
+**CHỈ-SHORT** (guess/mapped/ranked…) — nơi `ljob` không tồn tại → **NameError giết cả luồng ngay video
+đầu tiên**. Phát hiện nhờ quét "biến dùng mà chưa gán trong cùng hàm", không phải nhờ chạy thử.
+
+**Trả lời câu "hết quota thì sao":** code đã đúng sẵn — không bỏ video, không báo lỗi giả.
+`⏸ hết quota — dừng đăng hôm nay, phần còn lại để ngày mai` và video giữ nguyên `status=pending`,
+`note=quota_wait`; lượt cron ngày hôm sau tự lấy lại. Lịch **giãn ra**, không mất bài nào.

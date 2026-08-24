@@ -360,7 +360,11 @@ def run_one(ch, keys, n_shorts=3, report=None):
             # LÀM TƯƠI pool key giữa các video (đệm 180s -> ~0 chi phí): key vừa HỒI sau cooldown
             # quay lại vòng xoay ngay, key MỚI user dán (đã sync ở plan) vào trận không đợi hết luồng.
             keys = FB.read_keys(OWNER) or keys
-            job = FB.new_job(OWNER, channel, "short", pver=_pv(fmt))
+            # 24/8: nhánh này là các format CHỈ-SHORT (guess/mapped/ranked/...) — không có LONG cha,
+            # nên `cha` để rỗng. Bản vá đầu gán `cha=ljob` ở đây là SAI: `ljob` không tồn tại trong
+            # hàm này -> NameError giết cả luồng ngay video đầu tiên. Bắt được nhờ bài kiểm tĩnh
+            # "biến chưa gán trước khi dùng", không phải nhờ chạy thử.
+            job = FB.new_job(OWNER, channel, "short", pver=_pv(fmt), thu_tu=i + 1)
             jst = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
             out = os.path.join("out", DS.slug(channel) + f"_{fmt}{i}.mp4")
             story = ok = info = None; err = None
@@ -419,6 +423,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
     if not do_long and n_shorts <= 0:      # ĐỦ CẢ long+short -> thoát NGAY (không gọi Gemini) -> made=0 SẠCH (phân biệt với lỗi quota)
         print(f"🎯 {channel}: đủ target (long+short) — không làm gì thêm."); return
     subtopics = []
+    ljob = ""          # id của LONG trong mẻ này -> short ghi `cha=ljob` để khâu đăng biết chúng cùng một bài
     if do_long:
         # ---- LONG ---- SELF-HEAL: render lỗi -> tự thử lại NHẸ hơn (4 race -> 2).
         ljob = FB.new_job(OWNER, channel, "long", pver=CLASSIC_PVER)
@@ -488,7 +493,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
         keys = FB.read_keys(OWNER) or keys      # làm tươi pool giữa các video (đệm 180s)
         if _stopped():   # ⛔ đã xong clip trước -> ngừng, KHÔNG bắt đầu clip mới (tiết kiệm, không dở dang).
             print(f"   ⛔ {channel}: dừng theo yêu cầu — xong clip hiện tại, bỏ {n_shorts - i} short còn lại."); break
-        sjob = FB.new_job(OWNER, channel, "short", pver=CLASSIC_PVER)
+        sjob = FB.new_job(OWNER, channel, "short", pver=CLASSIC_PVER, cha=ljob, thu_tu=i + 1)
         sst = lambda s, step, **x: FB.update_job(sjob, status=s, step=step, **x)
         story = sok = sinfo = None; serr = None
         resume_story = (resumed_short or {}).get("story")   # chỉ short ĐẦU tiên dùng, các short sau viết mới bình thường (chủ đề khác)
@@ -601,7 +606,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
         if stopped():
             print(f"   ⛔ {channel}: dừng — bỏ {len(parts) - pi} short còn lại."); break
         keys = FB.read_keys(OWNER) or keys      # key hồi cooldown/key mới -> vào trận ngay
-        sjob = FB.new_job(OWNER, channel, "short", pver=_pv("doc"))
+        sjob = FB.new_job(OWNER, channel, "short", pver=_pv("doc"), cha=ljob, thu_tu=pi + 1)
         sst = lambda st, step, **x: FB.update_job(sjob, status=st, step=step, **x)
         try:
             sout = os.path.join("out", DS.slug(channel) + f"_docshort{pi}.mp4")

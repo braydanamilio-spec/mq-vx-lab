@@ -1967,10 +1967,18 @@ def clear_resumed(job_id: str):
         print(f"   ⚠️ clear_resumed {job_id} lỗi: {e}")
 
 
-def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "") -> str:
+def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "", cha: str = "",
+            thu_tu: int = 0) -> str:
+    """`cha` = job id của video LONG đã sinh ra short này · `thu_tu` = short thứ mấy trong long đó.
+
+    24/8 (anh chỉ ra) — thiếu hai trường này thì khâu đăng KHÔNG biết short nào thuộc long nào.
+    Luật 1 long : 3 short đang được ép ở khâu RENDER, nhưng tới khâu ĐĂNG thì chúng là 4 bản ghi rời
+    rạc: hôm nay có thể đăng long của chủ đề A kèm 3 short của chủ đề B, C, D. Người xem bấm vào
+    short thấy hay, tìm bản dài thì không có — mất trọn ý đồ 'short kéo người về long'."""
     _cw("new_job")
     db = _db_jobs(); ref = db.collection("render_jobs").document()   # id sinh OFFLINE -> quota chết vẫn có id
     _soft(lambda: ref.set({"owner": owner, "channel": channel, "type": vtype, "pver": pver,   # pver = phiên bản pipeline -> dọn thông minh (chỉ xóa bản CŨ)
+             "cha": cha or "", "thu_tu": int(thu_tu or 0),
              "status": "queued", "step": "bắt đầu", "created_at": _now()}), "new_job")
     # update_job chỉ nhận (job_id, **patch) — KHÔNG có channel lẫn type. Nhớ hộ ở đây để nhịp sống
     # và bản ghi bóng sang D1 có đủ dữ liệu. Thiếu `type` thì bảng D1 toàn vtype rỗng -> lệnh
