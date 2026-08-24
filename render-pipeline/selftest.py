@@ -970,16 +970,28 @@ def t_noi_man_khong_dung_toi_anh():
                     px[x, y] = (random.randrange(lo, hi), random.randrange(max(0, lo - 15), max(1, hi - 15)),
                                 random.randrange(lo, min(255, hi + 15)))
             im.save(os.path.join(base, ten), quality=92)
-        _anh("sang.jpg", 190, 255, 2); _anh("vua.jpg", 60, 150, 3)
-        pr = {"slug": "_selftest_man", "scenes": [{"clip": "sang.jpg"}, {"clip": "vua.jpg"}]}
+        _anh("sang.jpg", 190, 255, 2); _anh("vua.jpg", 60, 150, 3); _anh("toi.jpg", 10, 60, 4)
+        pr = {"slug": "_selftest_man",
+              "scenes": [{"clip": "sang.jpg"}, {"clip": "vua.jpg"}, {"clip": "toi.jpg"}]}
         goc = {f: hashlib.md5(open(os.path.join(base, f), "rb").read()).hexdigest()
-               for f in ("sang.jpg", "vua.jpg")}
+               for f in ("sang.jpg", "vua.jpg", "toi.jpg")}
         DS.can_man_moi_canh(pr)
         for f, v in goc.items():
             assert v == hashlib.md5(open(os.path.join(base, f), "rb").read()).hexdigest(), \
                 f"{f} bị SỬA — nới lớp phủ không được đụng file ảnh gốc"
-        assert pr["scenes"][0].get("man") in (None, 1.0), "ảnh SÁNG bị nới lớp phủ oan"
-        assert pr["scenes"][1].get("man"), "ảnh bị dìm quá tối mà không được nới"
+        # 24/8 tối — bản test đầu khẳng định "ảnh SÁNG phải giữ man=1". Sau khi hiệu chỉnh mô hình
+        # theo ca thật (mô hình lạc quan ~20 điểm so với khung render), ngay cả ảnh sáng cũng nằm
+        # trên ngưỡng — và nới nó là ĐÚNG, vì lớp phủ 0,74-0,88 vốn quá dày với mọi ảnh. Cái phải
+        # giữ không phải một con số cụ thể mà là hai tính chất KHÔNG THỂ đúng nếu code hỏng:
+        #   • ĐƠN ĐIỆU: ảnh càng tối thì lớp phủ càng phải mỏng;
+        #   • CÓ SÀN: không bao giờ mỏng quá 0.45 (dưới nữa là phụ đề mất nền).
+        m = [sc.get("man", 1.0) for sc in pr["scenes"]]
+        assert m[0] >= m[1] >= m[2], f"lớp phủ không đơn điệu theo độ tối của ảnh: {m}"
+        # ĐƠN ĐIỆU CHẶT giữa hai đầu: ảnh sáng nhất PHẢI giữ lớp phủ dày hơn ảnh tối nhất. Thiếu vế
+        # này thì một bản hỏng "hạ hết về sàn 0.45" vẫn lọt (0.45 ≥ 0.45 ≥ 0.45 là đúng đơn điệu).
+        assert m[0] > m[2], f"ảnh sáng nhất và tối nhất nhận CÙNG lớp phủ -> không phân biệt gì: {m}"
+        assert min(m) >= 0.45, f"nới quá sàn 0.45 -> phụ đề mất nền: {m}"
+        assert m[2] < 1.0, "ảnh tối nhất mà không được nới chút nào"
     finally:
         import shutil
         shutil.rmtree(os.path.join(DS.PUB, "_selftest_man"), ignore_errors=True)

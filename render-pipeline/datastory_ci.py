@@ -2558,12 +2558,14 @@ def _sau_man(path: str, man: float = 1.0):
         return 0.0, 999.0, 9999      # đo không được -> coi như ĐẠT, không chặn oan
 
 
-def can_man_moi_canh(props: dict, nguong: float = 75.0) -> int:
+def can_man_moi_canh(props: dict, nguong: float = 55.0) -> int:
     """Cân độ dày lớp phủ cho TỪNG cảnh, không riêng cảnh mở đầu (24/8/2026 tối).
 
     QC chỉ soi khung mở đầu, nên chữa mỗi cảnh 0 là hết bị loại — nhưng các cảnh sau vẫn bị lớp phủ
     74-88% dìm y như vậy, tức **cả video vẫn xỉn**, chỉ là không ai chặn. Đo thật: ảnh 0,0% tối ra
     93,3% tối sau lớp phủ.
+    `nguong` mặc định 55 (không phải 75) vì cùng lý do như `BIEN` bên `sang_hoa_mo_dau`: mô hình lạc
+    quan ~20 điểm so với khung render thật (đo ở UNSEENUSA: mô hình 70-74% · thật 93-96%).
     Ở đây: cảnh nào sau lớp phủ vượt `nguong` % tối thì hạ `man` cho tới khi đạt (sàn 0.45). Ảnh vốn
     sáng giữ nguyên lớp phủ dày — phụ đề karaoke chạy suốt video nên KHÔNG được bỏ lớp phủ đại trà,
     chỉ nới đúng chỗ ảnh đã tối sẵn (ảnh tối + phủ mỏng thì chữ vẫn đọc rõ).
@@ -2585,7 +2587,8 @@ def can_man_moi_canh(props: dict, nguong: float = 75.0) -> int:
         else:
             sc["man"] = 0.45; n += 1        # tối quá thì nới hết cỡ, còn hơn để đen kịt
     if n:
-        print(f"   🪟 nới lớp phủ cho {n} cảnh bị dìm quá tối (ảnh sáng giữ nguyên).")
+        print(f"   🪟 nới lớp phủ cho {n}/{len(props.get('scenes') or [])} cảnh "
+              f"(ảnh càng tối nới càng nhiều; sàn 0.45 để phụ đề còn nền).")
     return n
 
 
@@ -2610,7 +2613,12 @@ def sang_hoa_mo_dau(props: dict, dark_ok: bool = False) -> str:
     # BIÊN AN TOÀN: `_sau_man` là MÔ HÌNH của lớp phủ, không phải bản render thật (thiếu Ken Burns,
     # objectPosition 32%, bóng chữ hook…). Ca HAULUSA phiên 20:12Z chứng minh: mô hình bảo "đạt",
     # khung thật ra 80% tối rồi bị loại. Mô hình thì phải có biên — ép chặt hơn QC 13 điểm.
-    BIEN = 13.0
+    # HIỆU CHỈNH TỪ CA THẬT, KHÔNG ĐOÁN. Cặp số đo được ở UNSEENUSA phiên 21:52Z:
+    #   mô hình `_sau_man` ≈ 70-74% tối   ·   khung render THẬT 93,5-95,8% tối
+    # tức mô hình lạc quan ~20 điểm, không phải 13. Kênh đó lại là `dark_ok` (ngưỡng nới thành 88)
+    # nên với biên 13 thì trần pre-check thành 75 — cao hơn cả số mô hình ⇒ hàm cứu **im lặng cho
+    # qua** 5 video liền, rồi QC loại đúng 5 cái đó sau khi đã render xong.
+    BIEN = 20.0
 
     def _tron(f, man=1.0):
         """Đo ĐÚNG THỨ QC SẼ ĐO: ảnh SAU khi đã bị lớp phủ của Cinematic dìm xuống.
