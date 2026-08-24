@@ -1394,3 +1394,28 @@ nhưng hạn mức HÔM NAY đã tiêu rồi — không có cách nào hoàn l�
 
 **Luật:** phân biệt "đã bịt chỗ rò" với "đã đầy lại bình". Bịt rò không hoàn lại phần đã mất; báo cáo
 gộp hai thứ đó làm một là báo cáo sai.
+
+### 7.bc — Project C: quả bom ĐÃ NỔ SẴN, chưa ai nhìn tới (24/8/2026)
+
+`auto_enqueue` quét **TOÀN BỘ** `yt_queue` mỗi lượt, **không giới hạn**:
+```
+for d in q_db.collection("yt_queue").where("owner","==",owner).stream()
+```
+Mà `yt_queue` **chỉ phình**: xếp lịch thì nhanh, còn đăng bị **YouTube chặn ở ~6 video/ngày**.
+
+| Ngày | Mục trong hàng đợi | Lượt đọc C/ngày | % trần |
+|---|---|---|---|
+| **hôm nay** | 644 | **61.824** | **123%** ← đã vỡ |
+| +7 | 2.044 | 196.224 | 392% |
+| +30 | 6.644 | 637.824 | 1275% |
+
+→ Vá: chỉ lấy mục **CHƯA ĐĂNG** (`pending`/`processing`/`scheduled`) + `limit(2000)`. Số mục chưa
+đăng luôn nhỏ (bị chính trần YouTube giữ lại) nên truy vấn **không phình theo kho**. Video đã đăng
+vẫn không bị xếp lại nhờ cờ `queued` trên `render_job` — chốt thứ hai.
+**61.824 → ~4.000 lượt (8%).**
+
+**Dự báo ngày mai sau khi bịt hết:** A **26%** · B **22%** · C **8%** · B2 **1%**.
+
+**Luật:** truy vấn nào quét một bảng **chỉ có tăng** thì sớm muộn cũng vỡ — không phải "nếu" mà là
+"khi nào". Mọi `.stream()` không `limit` trên bảng tích luỹ đều là bom hẹn giờ; phải lọc theo trạng
+thái ĐANG hoạt động, không phải theo chủ sở hữu.
