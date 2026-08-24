@@ -464,6 +464,101 @@ def set_pexels_pool(keys, channel: str = ""):
         print(f"   🖼️ Pexels: {len(_PX_POOL)} key trong pool (xoay vòng, {_PX_CAP} lượt/key).")
 
 
+# ── NGUỒN VIDEO THẬT (24/8, user chốt: "thêm nguồn video cho sinh động") ────────────────────
+# Vì sao chọn 2 nguồn này TRƯỚC: Pexels và Pixabay đều có API VIDEO dùng CHUNG key ảnh mình đã có
+# (25 + 18 key) -> 0 thao tác thêm, 0 rủi ro. Mixkit và Dareful KHÔNG có API công khai (phải cào
+# trang, dễ vỡ và sai điều khoản) nên em không làm; Coverr có API nhưng cần key riêng — để sau.
+# Clip tải về là .mp4 ngắn; engine Cinematic đã dựng sẵn OffthreadVideo nên nhận thẳng, không phải
+# sửa engine. Vẫn đi qua sổ chống trùng _IMG_USED như ảnh.
+
+def _pexels_video(query, n=8, tall=True):
+    """Video Pexels (dùng chung key ảnh). Trả [{id,url,w,h,dur}] — ưu tiên file vừa đủ nét, nhẹ."""
+    _slot = next((x for x in _PX_POOL if not x["off"] and x["used"] < _PX_CAP), None)
+    if _slot is None:
+        return []
+    try:
+        u = "https://api.pexels.com/videos/search?" + urllib.parse.urlencode(
+            {"query": query, "per_page": min(n, 15), "page": random.randint(1, 3),
+             "orientation": "portrait" if tall else "landscape", "size": "medium"})
+        req = urllib.request.Request(u, headers={**UA, "Authorization": _slot["k"]})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            j = json.loads(r.read().decode("utf-8", "ignore"))
+        _slot["used"] += 1
+        out = []
+        for v in (j.get("videos") or []):
+            if not (3 <= float(v.get("duration") or 0) <= 30):
+                continue                                  # quá ngắn thì giật, quá dài thì nặng
+            files = sorted([f for f in (v.get("video_files") or []) if (f.get("width") or 0) >= 720],
+                           key=lambda f: f.get("width") or 0)
+            if not files:
+                continue
+            f = files[0]                                   # bản NHỎ NHẤT còn ≥720p -> tải nhanh
+            out.append({"id": f"pxv:{v.get('id')}", "url": f.get("link"), "w": f.get("width"),
+                        "h": f.get("height"), "dur": v.get("duration"),
+                        "creator": (v.get("user") or {}).get("name", ""), "license": "Pexels"})
+        return out
+    except Exception as e:
+        if "429" in str(e) or "401" in str(e) or "403" in str(e):
+            _slot["off"] = True
+        return []
+
+
+def _pixabay_video(query, n=8, tall=True):
+    """Video Pixabay (dùng chung key ảnh). Kho rộng, 5.000 lượt/giờ mỗi key."""
+    _slot = next((x for x in _PB_POOL if not x["off"] and x["used"] < _PB_CAP), None)
+    if _slot is None:
+        return []
+    try:
+        u = "https://pixabay.com/api/videos/?" + urllib.parse.urlencode(
+            {"key": _slot["k"], "q": query, "per_page": min(max(n, 3), 20),
+             "page": random.randint(1, 3), "safesearch": "true"})
+        with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=20) as r:
+            j = json.loads(r.read().decode("utf-8", "ignore"))
+        _slot["used"] += 1
+        out = []
+        for v in (j.get("hits") or []):
+            vids = v.get("videos") or {}
+            f = vids.get("medium") or vids.get("small")
+            if not f or not f.get("url"):
+                continue
+            out.append({"id": f"pbv:{v.get('id')}", "url": f.get("url"), "w": f.get("width"),
+                        "h": f.get("height"), "dur": v.get("duration"),
+                        "creator": v.get("user", ""), "license": "Pixabay"})
+        return out
+    except Exception as e:
+        if "429" in str(e) or "400" in str(e):
+            _slot["off"] = True
+        return []
+
+
+def fetch_clip(query, dest, tall=True, max_mb=14):
+    """Tải 1 CLIP THẬT về `dest` (.mp4). Không có/hỏng -> None để caller lùi về ảnh tĩnh.
+
+    Chống trùng dùng chung sổ ảnh: mỗi clip có id riêng (pxv:/pbv:) nên không bao giờ lặp lại clip
+    đã dùng cho kênh này."""
+    cands = _pexels_video(query, tall=tall) + _pixabay_video(query, tall=tall)
+    random.shuffle(cands)
+    for c in cands:
+        if str(c.get("id")) in _IMG_USED or not c.get("url"):
+            continue
+        try:
+            req = urllib.request.Request(c["url"], headers=UA)
+            with urllib.request.urlopen(req, timeout=45) as r:
+                data = r.read(max_mb * 1024 * 1024 + 1)
+            if len(data) > max_mb * 1024 * 1024 or len(data) < 40000:
+                continue                                   # quá nặng (render lâu) hoặc file hỏng
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            with open(dest, "wb") as f:
+                f.write(data)
+            note_image_used(c["id"])
+            note_credit({"id": c["id"], "creator": c.get("creator"), "license": c.get("license")})
+            print(f"   🎬 clip thật: {os.path.basename(dest)} ({len(data)/1e6:.1f}MB · {c.get('dur')}s · {c.get('license')})")
+            return dest
+        except Exception:
+            continue
+    return None
+
+
 def _pexels(query, n=12):
     """NGUỒN 4 (23/8): Pexels — kho ảnh HIỆN ĐẠI đẹp nhất nhóm miễn phí (người thật, đời sống Mỹ).
     Cần key (secret PEXELS_KEY). Tôn trọng giới hạn nhà cung cấp: 200 lượt/giờ, 20.000/tháng nên
@@ -1805,6 +1900,16 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
             # lọc deterministic -> 2 lượt là đủ. Ở 1.000 video/ngày, riêng chỗ này cắt ~nửa số
             # lệnh gọi Vision (mục ăn Gemini lớn nhất toàn pipeline).
             _mc = 4 if i == 0 else 2
+            # 24/8 — CLIP THẬT XEN KẼ ẢNH TĨNH: cảnh mở đầu và cứ 3 cảnh lấy 1 clip video thật
+            # (Pexels/Pixabay video, dùng chung key ảnh). Hỏng/không có -> lùi về ảnh tĩnh như cũ,
+            # nên không có đường nào làm video xấu đi. Xen kẽ thay vì toàn video: tải nhẹ hơn,
+            # render nhanh hơn, và nhịp hình đa dạng hơn là chuỗi clip liên tục.
+            if os.environ.get("CLIPS_OFF") != "1" and (i == 0 or i % 3 == 0):
+                _cp = fetch_clip(img_query, os.path.join(cdir, f"{prefix}s{i}.mp4"), tall=True)
+                if _cp:
+                    sc["clip"] = f"{prefix}s{i}.mp4"
+                    scenes_out.append(sc)
+                    return sc
             for _q in [img_query] + list(alt_queries or []):
                 if not _q:
                     continue

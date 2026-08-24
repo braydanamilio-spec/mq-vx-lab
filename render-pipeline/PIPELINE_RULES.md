@@ -554,3 +554,15 @@ thường nên tầng trên coi là lỗi lạ và bỏ luôn kênh/lượt sinh
 đổi key và thử lại như với nghẽn quota.
 → **LUẬT**: lỗi NGẪU NHIÊN của một lượt sinh (JSON hỏng, cắt giữa chừng) phải cho thử lại; chỉ lỗi
 CẤU HÌNH (key sai, model không tồn tại, thiếu quyền) mới được coi là chết.
+
+### 24/8 — THÊM NGUỒN VIDEO THẬT (Pexels Video + Pixabay Video)
+User muốn thêm Mixkit / Coverr / Dareful / DVIDS / NARA. Kiểm khả thi trước khi làm:
+ • **Pexels Video + Pixabay Video**: có API chính thức, DÙNG CHUNG key ảnh đã có (25 + 18 key) ->
+   làm ngay, 0 thao tác thêm cho user. ĐÃ LÀM.
+ • **Mixkit, Dareful**: KHÔNG có API công khai -> phải cào trang, dễ vỡ + sai điều khoản. KHÔNG làm.
+ • **Coverr**: có API nhưng cần key riêng. **DVIDS / NARA**: có API, cần đăng ký. Để đợt sau.
+Cách hoạt động: cảnh 0 và mỗi 3 cảnh lấy 1 clip .mp4 (3-30s, ≥720p, ≤14MB, chọn bản nhỏ nhất còn đủ
+nét); hỏng thì lùi về ảnh tĩnh nên không có đường nào làm video xấu đi. Engine Cinematic đã có
+OffthreadVideo nên không phải sửa engine. Clip đi qua CÙNG sổ chống trùng với ảnh (id pxv:/pbv:).
+Tắt khẩn cấp: đặt env `CLIPS_OFF=1`.
+→ **LUẬT**: trước khi hứa thêm nguồn, kiểm API công khai có thật không — nguồn không API thì đừng cào.
