@@ -181,6 +181,31 @@ def nap_so_nghi_chung(force: bool = False):
         pass
 
 
+def _muc_nghi(err) -> int:
+    """PHÂN LOẠI ĐÚNG MỨC NGHỈ theo LOẠI hạn mức — anh chỉ ra 24/8, và đúng là đang gộp làm một.
+
+    Ba loại 429 hoàn toàn khác nhau, chữa ngược nhau:
+      • CHẶN THEO PHÚT/GIÂY (RPM/TPM) — key vẫn tốt, chỉ cần thở 1-2 phút. Cho nghỉ 90' như trước
+        là **ném đi 88 phút hạn mức còn dùng được** của một key hoàn toàn khoẻ. Hồ 153 key mà cứ
+        mỗi cơn RPM lại loại một key suốt 90' thì đến trưa còn vài key là đúng.
+      • CẠN THEO NGÀY (RPD/TPD) — gọi lại trước lúc nhà cung cấp reset là chắc chắn 429, mà lượt
+        hỏng vẫn bị trừ. Phải nghỉ tới **mốc reset thật**, không phải 90'.
+      • KHÔNG RÕ — 20' là mức thoả hiệp: đủ để không dội liên tục, đủ ngắn để không phí key.
+    Mốc reset của Google/Groq free là 00:00 giờ Thái Bình Dương (UTC-7) -> tính đúng số phút còn lại.
+    """
+    import datetime as _d
+    t = str(err or "").lower()
+    if any(x in t for x in ("per minute", "per-minute", "per second", "requests per min",
+                            "rpm", "tpm", "per region", "try again in")):
+        return 2                                  # thở 2 phút rồi vào lại vòng xoay
+    if any(x in t for x in ("per day", "tokens per day", "requests per day", "tpd", "rpd",
+                            "daily", "quota exceeded for quota metric", "free_tier")):
+        gio = _d.datetime.now(_d.timezone.utc) - _d.timedelta(hours=7)     # giờ Thái Bình Dương
+        mai = (gio + _d.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        return max(10, min(int((mai - gio).total_seconds() // 60), 24 * 60))
+    return 20
+
+
 def _vis_die(k, phut: int = _VIS_NGHI_PHUT):
     import time as _t
     _VIS_DEAD[k] = _t.time() + phut * 60
@@ -242,10 +267,10 @@ def _verify_image_rot(path, subject, first_key="", tries=3):
         if not k:
             break
         seen.append(k)
-        hit = {"quota": False}
+        hit = {"quota": False, "err": ""}
         prev = getattr(qc_vision, "on_quota", None)
         def _cb(err, _h=hit):
-            _h["quota"] = True
+            _h["quota"] = True; _h["err"] = str(err or "")
         qc_vision.on_quota = _cb
         try:
             r = qc_vision.verify_image(path, subject, api_key=k)
@@ -253,7 +278,7 @@ def _verify_image_rot(path, subject, first_key="", tries=3):
             qc_vision.on_quota = prev
         if not hit["quota"]:
             return r                       # đã kiểm được (True/False) hoặc lỗi khác -> trả luôn
-        _vis_die(k)                   # key này hết hạn mức Vision -> thử key kế
+        _vis_die(k, _muc_nghi(hit.get("err")))   # nghỉ ĐÚNG mức: RPM 2' · cạn ngày tới mốc reset
     return None                            # thật sự không kiểm được -> caller fail-open như cũ
 
 
@@ -271,14 +296,15 @@ def _verify_grid_rot(pairs, first_key="", tries=3):
         seen.append(k)
         hit = {"q": False}
         prev = getattr(qc_vision, "on_quota", None)
-        qc_vision.on_quota = (lambda err, _h=hit: _h.__setitem__("q", True))
+        qc_vision.on_quota = (lambda err, _h=hit: (_h.__setitem__("q", True),
+                                                   _h.__setitem__("err", str(err or ""))))
         try:
             r = qc_vision.verify_grid(pairs, api_key=k)
         finally:
             qc_vision.on_quota = prev
         if not hit["q"]:
             return r
-        _vis_die(k)
+        _vis_die(k, _muc_nghi(hit.get("err")))
     return [None] * len(pairs)
 
 
@@ -298,7 +324,7 @@ def _check_visual_rot(mp4, keys, tries=3, **kw):
         ok, info = qc_vision.check_visual(mp4, api_key=k, **kw)
         note = str(info.get("note") or "")
         if note.startswith("vision-skip") and _is_quota_err(note):
-            _vis_die(k)
+            _vis_die(k, _muc_nghi(note))     # note mang nguyên văn lỗi 429 -> phân loại được
             continue
         return ok, info
     return True, (info or {"note": "vision-skip: hết key còn hạn mức"})
@@ -382,7 +408,7 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
             return False               # CF trả về không phải ảnh -> đổi key cũng vô ích (cùng prompt)
         except Exception as e:
             if _is_quota_err(e):
-                _ve_die(_k); last_quota = e
+                _ve_die(_k, _muc_nghi(e)); last_quota = e
                 continue               # hết neuron -> thử key kế (CF khác hoặc Gemini)
             print(f"   ⚠️ CF FLUX '{prompt[:30]}' lỗi: {str(e)[:90]}")
             continue                   # lỗi lạ phía CF -> vẫn còn đường Gemini phía sau
@@ -410,7 +436,7 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
         return True
       except Exception as e:
         if _is_quota_err(e):
-            _ve_die(_k)                   # key này hết hạn mức ẢNH -> nghỉ 90', thử key kế
+            _ve_die(_k, _muc_nghi(e))     # nghỉ ĐÚNG mức: chặn theo phút 2' · cạn ngày tới mốc reset
             last_quota = e
             continue
         # lỗi KHÁC (chặn nội dung, prompt hỏng, mạng) -> đổi key cũng thế, dừng luôn cho đỡ tốn

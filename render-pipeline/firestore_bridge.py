@@ -334,6 +334,7 @@ _KEYS_CACHE = {}      # (owner, include_cooling) -> (thời điểm, kết quả
 # cool_key() không nhận `owner` (chữ ký cũ, gọi từ 6 vòng lặp trong key_manager). read_keys luôn chạy
 # trước nó nên ghi nhớ owner ở đây là đủ, khỏi phải đổi chữ ký ở mọi chỗ gọi.
 _OWNER_HINT = [""]
+_JOB_CH: dict = {}          # job_id -> kênh (update_job không nhận channel, new_job nhớ hộ)
 # KHO KEY ẢNH BỀN (24/8) — xem _giu_key_anh().
 _IMG_KEYS: dict = {}
 
@@ -826,6 +827,40 @@ def read_key_rest() -> dict:
                 if isinstance(v, str) and (k.startswith("vis:") or k.startswith("ve:"))}
     except Exception:
         return {}
+
+
+def _db_B_that():
+    """Client B THẬT — KHÔNG bị lật sang B2. `_db_jobs()` khi đang failover trả về B2, nên muốn ghi
+    về B (ví dụ để dashboard nhìn thấy) thì phải có đường riêng này."""
+    key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B")
+    project = os.environ.get("FIREBASE_PROJECT_ID_B")
+    if not (key and project and os.path.exists(key)):
+        return None
+    if _DBJ[0] is None:
+        from google.cloud import firestore
+        from google.oauth2 import service_account
+        _DBJ[0] = firestore.Client(
+            project=project,
+            credentials=service_account.Credentials.from_service_account_file(key))
+    return _DBJ[0]
+
+
+def ghi_nhip_song(job_id: str, channel: str, status: str) -> None:
+    """DASHBOARD MÙ KHI ĐANG FAILOVER (24/8) — sửa chỗ "⚙️ Đang chạy: 0 trong khi 8 luồng đang chạy".
+
+    Cơ chế hỏng: khi B nghẽn, mọi luồng lật sang **B2** và ghi trạng thái job vào đó. Dashboard thì
+    đọc **B**. Thế là trang web thấy 0 job đang chạy suốt cả phiên, còn số liệu thì nhảy lung tung
+    vì một phần nằm B, một phần nằm B2.
+    Điểm mấu chốt: failover kích hoạt do cạn hạn mức **ĐỌC**, còn hạn mức **GHI** của B thường vẫn
+    còn. Nên vẫn ghi được một dòng nhịp sống về B — gộp hết vào MỘT doc để rẻ.
+    Dashboard đọc 1 doc này là thấy đúng số luồng đang chạy, kể cả khi cả phiên chạy trên B2."""
+    own = _OWNER_HINT[0]
+    db = _db_B_that()
+    if not (own and db and job_id):
+        return
+    _cw("nhip_song")
+    _soft(lambda: db.collection("render_stats").document(f"__live__{own}").set(
+        {job_id: {"ch": channel or "", "st": status or "", "at": _now()}}, merge=True), "nhip_song")
 
 
 def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
@@ -1676,6 +1711,13 @@ def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "") -> s
     db = _db_jobs(); ref = db.collection("render_jobs").document()   # id sinh OFFLINE -> quota chết vẫn có id
     _soft(lambda: ref.set({"owner": owner, "channel": channel, "type": vtype, "pver": pver,   # pver = phiên bản pipeline -> dọn thông minh (chỉ xóa bản CŨ)
              "status": "queued", "step": "bắt đầu", "created_at": _now()}), "new_job")
+    _JOB_CH[ref.id] = channel          # update_job không nhận channel -> nhớ hộ cho nhịp sống
+    _OWNER_HINT[0] = _OWNER_HINT[0] or owner
+    if _B2["on"]:
+        try:
+            ghi_nhip_song(ref.id, channel, "queued")
+        except Exception:
+            pass
     return ref.id
 
 
@@ -1709,6 +1751,12 @@ def update_job(job_id: str, **patch):
     # (≈20 nhịp tim lỡ) là kết luận chết được, gate thoát nhanh hơn 12 lần.
     _cw("update_job")
     patch = dict(patch); patch["updated_at"] = _now()
+    # đang chạy trên B2 -> vẫn để lại nhịp sống ở B cho dashboard nhìn thấy (xem ghi_nhip_song)
+    if _B2["on"]:
+        try:
+            ghi_nhip_song(job_id, str(patch.get("channel") or _JOB_CH.get(job_id, "")), str(st or ""))
+        except Exception:
+            pass
     # 24/8 — ĐÓNG CỜ `queued` NGAY LÚC XONG. Vì sao: auto_enqueue (publish, 30'/lượt) trước đây phải
     # quét 40 doc 'done' MỚI NHẤT của TỪNG kênh để tìm video chưa xếp lịch: 55 kênh × 40 × 48 lượt/ngày
     # ≈ 105.000 lượt đọc project B — MỘT MÌNH nó vượt trần 50K/ngày. Có cờ này thì auto_enqueue truy

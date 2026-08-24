@@ -906,3 +906,27 @@ Chi phí ~1 đọc/5'/luồng, đổi lại cắt hàng trăm lượt gọi ch�
 **Luật:** khi N worker cùng dùng chung một hồ tài nguyên có hạn mức, tri thức "cái này đã hết" phải
 nằm ở chỗ **dùng chung**, không phải trong RAM của từng worker. Không có chỗ chung thì mỗi worker sẽ
 tự trả giá để học lại cùng một bài học.
+
+### 7.aj — Nghỉ ĐÚNG MỨC theo loại hạn mức · Dashboard mù khi đang failover (24/8/2026)
+
+**1. Gộp "chặn theo phút" với "cạn theo ngày" làm một mức 90' là sai (anh chỉ ra).**
+Ba loại 429 chữa ngược nhau:
+- **RPM/TPM (theo phút)** — key vẫn tốt, chỉ cần thở. Cho nghỉ 90' là **ném đi 88 phút hạn mức còn
+  dùng được** của một key khoẻ. Hồ 153 key mà mỗi cơn RPM lại loại một key suốt 90' thì tới trưa
+  còn vài key là đúng.
+- **RPD/TPD (theo ngày)** — gọi lại trước mốc reset là chắc chắn 429, mà lượt hỏng vẫn bị trừ.
+- **Không rõ** — 20' là mức thoả hiệp.
+→ `_muc_nghi(err)` đọc nguyên văn lỗi và trả: **2 phút** / **tới 00:00 giờ Thái Bình Dương** / 20 phút.
+Đo thật: `per minute` → 2' · `tokens per day` → 1094' · `free_tier ... per_day` → 1094' · lỗi trống → 20'.
+Áp cho cả 4 đường: `_verify_image_rot`, `_verify_grid_rot`, `_check_visual_rot`, `_generate_image_ai`.
+
+**2. `⚙️ Đang chạy: 0` trong khi 8 luồng đang chạy thật.**
+Khi B nghẽn, mọi luồng lật sang **B2** và ghi trạng thái job vào đó — còn dashboard đọc **B**.
+Trang web mù suốt cả phiên, và số liệu nhảy lung tung vì một phần nằm B, một phần nằm B2.
+Mấu chốt: failover kích hoạt do cạn hạn mức **ĐỌC**, hạn mức **GHI** của B thường vẫn còn.
+→ `ghi_nhip_song()`: đang chạy trên B2 thì vẫn ghi một dòng nhịp sống về **B**, gộp hết vào MỘT doc
+`render_stats/__live__{owner}`. Dashboard đọc 1 doc đó (cùng lượt với sổ đếm, gần như không thêm chi
+phí) và lấy mức LỚN HƠN giữa hai nguồn; mục nào im quá 45' thì bỏ.
+
+**Luật:** shard dự phòng phải giữ cho hệ **chạy được**, nhưng không được làm hệ **mất tiếng nói**.
+Lật shard mà quên đường báo cáo thì người vận hành mù đúng lúc cần nhìn nhất.
