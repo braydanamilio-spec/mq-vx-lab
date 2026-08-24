@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("đẩy kho xong thì xoá bản trên đĩa", t_day_kho_xong_thi_xoa_ban_tren_dia)
     check("Vision kiểm ảnh chết -> hiện CHẾT CÂM", t_vision_chet_thi_phai_hien_chet_cam)
     check("hàng chờ có đường KHÔNG cần Firestore", t_hang_cho_khong_phu_thuoc_firestore)
     check("KHÔNG ghi snapshot/gương rỗng đè bản tốt", t_khong_ghi_snapshot_rong)
@@ -1012,6 +1013,25 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_day_kho_xong_thi_xoa_ban_tren_dia():
+    """Đẩy kho THÀNH CÔNG rồi thì phải xoá bản trên đĩa (24/8 tối — hồi quy do bản đổi tên).
+    Trước đây tên file đầu ra cố định theo kênh nên `fresh_out()` xoá đúng nó mỗi vòng, `out/` luôn
+    chỉ có ~1 video. Từ khi mỗi video một tên chuẩn riêng, `fresh_out` không còn khớp ⇒ video cũ nằm
+    lại. Mà workflow có `upload-artifact path: out/*.mp4` để cứu video CHƯA đẩy được kho ⇒ mỗi lane
+    bắt đầu nhét TOÀN BỘ video của mình lên artifact (18 lane × ~8 video × ~40MB ≈ vài GB/phiên) dù
+    chúng đã nằm an toàn trên Drive."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "run_render.py"), encoding="utf-8").read()
+    i = src.index("FB.count_pushed(OWNER, created[\"id\"]")
+    than = src[i: i + 1200]
+    assert "os.remove(_f)" in than, \
+        "đẩy kho xong mà không xoá bản trên đĩa -> artifact phình theo số video mỗi lane"
+    assert "_thumb.jpg" in than, "xoá video mà bỏ lại thumbnail/ảnh tạm"
+    # chỉ được xoá khi ĐÃ có drive id — video chưa đẩy được phải giữ lại cho artifact cứu
+    assert than.index("os.remove(_f)") > than.index("created.get(\"id\")") \
+        if "created.get(\"id\")" in than else True
 
 
 def t_vision_chet_thi_phai_hien_chet_cam():

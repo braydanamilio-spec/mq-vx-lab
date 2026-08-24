@@ -173,6 +173,21 @@ def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "") -> b
             if created and created.get("id"):
                 _ghi_nhan(channel, vtype)          # sổ phiên: giữ luật 1:3 kể cả khi Firestore câm
                 FB.count_pushed(OWNER, created["id"], channel, vtype)
+                # 24/8 tối — HỒI QUY DO CHÍNH BẢN ĐỔI TÊN: trước đây tên file đầu ra cố định theo
+                # kênh nên `fresh_out()` xoá đúng nó mỗi vòng, thư mục `out/` luôn chỉ có ~1 video.
+                # Từ khi đổi sang tên chuẩn (mỗi video một tên riêng), `fresh_out` không còn khớp
+                # -> video CŨ nằm lại. Mà workflow có bước `upload-artifact path: out/*.mp4` để cứu
+                # video chưa đẩy được kho ⇒ mỗi lane bắt đầu nhét TOÀN BỘ video của mình lên
+                # artifact (18 lane × ~8 video × ~40MB ≈ vài GB/phiên) dù chúng ĐÃ nằm an toàn trên
+                # Drive. Đẩy kho xong thì bản trên đĩa hết nhiệm vụ -> xoá, chỉ giữ cái CHƯA đẩy
+                # được (đúng ý nghĩa của bước backup).
+                for _f in (out, os.path.splitext(out)[0] + ".jpg",
+                           os.path.splitext(out)[0] + "_thumb.jpg"):
+                    try:
+                        if os.path.exists(_f):
+                            os.remove(_f)
+                    except OSError:
+                        pass
         except Exception:
             pass
         return created or None                     # trả cả {id, account} -> lưu vào job để XEM/stream trên web

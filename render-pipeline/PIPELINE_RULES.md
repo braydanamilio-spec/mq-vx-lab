@@ -2090,3 +2090,19 @@ Nay `verify_image` ghi vào `dem_khau("vision ảnh", …)`, nên phiên nào 0/
 Chốt bằng `t_vision_chet_thi_phai_hien_chet_cam` (3 lượt hỏng ⇒ phải ra CHẾT CÂM).
 **LUẬT: mỗi phụ thuộc ngoài mà "hỏng thì bỏ qua" đều phải có người ĐẾM. Không đếm thì `bỏ qua` = `tắt
 hẳn`, và không ai biết mình đang chạy với tính năng đã tắt.**
+
+### 7.cy — HỒI QUY do chính bản đổi tên chuẩn: artifact phình vài GB mỗi phiên (24/8/2026 tối)
+Kiểm end-to-end quy ước đặt tên (anh yêu cầu chiều nay) thì lòi ra tác dụng phụ chưa ai để ý.
+Chuỗi tên vốn rất chặt và ĐÚNG: `upload_to_queue` đặt tên `.json` và thumbnail theo
+`base = basename(video)`, còn sidecar ghi `thumbnail`/`captions` cũng từ chính `vbase` đó ⇒ một cái
+tên video quyết định cả bốn. Vấn đề nằm chỗ khác:
+* Trước: tên file đầu ra CỐ ĐỊNH theo kênh (`out/xxx_docshort0.mp4`) nên `fresh_out()` xoá đúng nó
+  mỗi vòng — thư mục `out/` luôn chỉ có ~1 video.
+* Sau khi đổi sang tên chuẩn (mỗi video một tên riêng), `fresh_out` không còn khớp ⇒ **video cũ nằm
+  lại**. Mà workflow có `upload-artifact path: out/*.mp4` để cứu video CHƯA đẩy được kho ⇒ mỗi lane
+  bắt đầu nhét TOÀN BỘ video của mình lên artifact: 18 lane × ~8 video × ~40MB ≈ **vài GB mỗi phiên**,
+  cho những video ĐÃ nằm an toàn trên Drive.
+Vá: đẩy kho thành công (có `drive_id`) thì xoá bản trên đĩa (video + ảnh + thumb). Bước backup giữ
+đúng ý nghĩa của nó — chỉ còn cái CHƯA đẩy được. Chốt bằng `t_day_kho_xong_thi_xoa_ban_tren_dia`.
+**LUẬT: đổi quy ước đặt tên là đổi một GIẢ ĐỊNH mà nhiều chỗ khác đang dựa vào — phải đi soi mọi nơi
+khớp tên theo mẫu (dọn dẹp, artifact, glob), không chỉ nơi sinh ra tên.**
