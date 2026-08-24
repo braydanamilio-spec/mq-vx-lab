@@ -170,6 +170,26 @@ def _ghi_nhan(channel: str, vtype: str):
     d["long" if vtype == "long" else "short"] += 1
 
 
+def _muc_tieu(ch, channel, vtype):
+    """CHỈ TIÊU HIỆU LỰC của kênh — 24/8, sửa theo đúng ý vận hành.
+
+    Trước đây `long_target`/`short_target` không đặt thì lấy RESERVE 10/30 làm TRẦN TRỌN ĐỜI. Mà
+    10/30 cũng đúng bằng mẻ mỗi vòng (round_long/round_short) -> kênh làm xong ĐÚNG MỘT VÒNG là bị
+    cho nghỉ vĩnh viễn, dù video đã đăng hết và kênh vẫn cần bài mới. Sai mô hình: 10/30 là MẺ MỖI
+    VÒNG, không phải hạn ngạch cả đời.
+
+    Nay:
+      • Anh tự đặt chỉ tiêu trên dashboard (>0)  -> đó là TRẦN THẬT, đạt thì kênh nghỉ.
+      • Không đặt (=0)                           -> KHÔNG có trần trọn đời: mỗi vòng mở thêm đúng
+        một mẻ (đã-có + RESERVE), nên kênh luôn còn việc và luật 1:3 vẫn có mốc để so.
+    Chặn phình kho là việc của DRIVE_SAFETY_PCT (kho ≥90% đầy thì ngừng), không phải của chỉ tiêu."""
+    raw = int(ch.get(f"{vtype}_target", 0) or 0)
+    if raw > 0:
+        return raw
+    da = FB.count_done(OWNER, channel, vtype)
+    return da + (RESERVE_LONG if vtype == "long" else RESERVE_SHORT)
+
+
 def _ratio_plan(channel, want_shorts, long_target):
     """LUẬT TỈ LỆ 1 LONG : 3 SHORT — tự chữa mọi kênh, bất kể cấu hình cũ.
 
@@ -295,10 +315,10 @@ def run_one(ch, keys, n_shorts=3, report=None):
     # ── FORMAT ĐẶC BIỆT (short-only, motif riêng): GUESS / MAPPED ── route sang make_guess/make_mapped.
     fmt = (ch.get("format") or "").lower()
     if fmt in ("guess", "mapped", "ranked", "scaled", "thennow", "doc", "swarm", "pulse", "clockwork", "longshot", "toon"):
-        short_target = int(ch.get("short_target", 0) or 0) or RESERVE_SHORT
+        short_target = _muc_tieu(ch, channel, "short")
         need = max(0, short_target - FB.count_done(OWNER, channel, "short"))
         n = min(int(ch.get("n_shorts", n_shorts) or 3) or 3, need)
-        _lt = int(ch.get("long_target", 0) or 0) or RESERVE_LONG
+        _lt = _muc_tieu(ch, channel, "long")
         _need_long, n = _ratio_plan(channel, n, _lt)   # LUẬT 1 long : 3 short
         if n <= 0 and not _need_long:
             print(f"🎯 {channel}: đủ target {fmt} — bỏ qua."); return
@@ -385,9 +405,9 @@ def run_one(ch, keys, n_shorts=3, report=None):
 
     do_long = ch.get("make_long", True)
     n_shorts = int(ch.get("n_shorts", n_shorts) or 0)
-    # MỤC TIÊU/DỰ TRỮ số video/kênh: target>0 = mục tiêu người đặt; target=0 = mức DỰ TRỮ AN TOÀN (khỏi phình vô hạn).
-    long_target = int(ch.get("long_target", 0) or 0) or RESERVE_LONG
-    short_target = int(ch.get("short_target", 0) or 0) or RESERVE_SHORT
+    # MỤC TIÊU: anh đặt (>0) = trần thật · không đặt = kho trôi, mỗi vòng thêm một mẻ (xem _muc_tieu).
+    long_target = _muc_tieu(ch, channel, "long")
+    short_target = _muc_tieu(ch, channel, "short")
     if do_long and FB.count_done(OWNER, channel, "long") >= long_target:
         do_long = False; print(f"🎯 {channel}: đủ {long_target} long (dự trữ) — bỏ qua long.")
     n_shorts = max(0, min(n_shorts, short_target - FB.count_done(OWNER, channel, "short")))
@@ -1450,25 +1470,33 @@ def plan_mode():
     need = []
     for nm in channels:
         c = _by_ch.get(nm) or {}
-        lt = int(c.get("long_target", 0) or 0) or RESERVE_LONG
-        stt = int(c.get("short_target", 0) or 0) or RESERVE_SHORT
+        # trần THẬT chỉ tồn tại khi anh tự đặt; không đặt = kho trôi (xem _muc_tieu)
+        lt_raw = int(c.get("long_target", 0) or 0)
+        st_raw = int(c.get("short_target", 0) or 0)
         try:
             # RẢI NHỊP 0.35s/kênh (22/8): ~106 lệnh count bắn liền tay là dính 429 BURST THEO PHÚT
             # của Firestore (13:55Z cả loạt chết dù _retry) -> sync/seed trượt theo. Chậm ~40s/plan
             # đổi lấy cả loạt đọc sống — rẻ.
             time.sleep(0.35)
-            nl = max(0, lt - FB.count_done(OWNER, nm, "long")) if c.get("make_long", True) else 0
-            ns = max(0, stt - FB.count_done(OWNER, nm, "short"))
+            dl = FB.count_done(OWNER, nm, "long") if c.get("make_long", True) else 0
+            ds = FB.count_done(OWNER, nm, "short")
         except Exception as e:
-            print(f"   ⚠️ đếm {nm} lỗi ({str(e)[:50]}) -> vẫn cho vào hàng"); nl = ns = 1
-        if nl + ns > 0:
-            need.append((nl + ns, nm))
+            print(f"   ⚠️ đếm {nm} lỗi ({str(e)[:50]}) -> vẫn cho vào hàng"); dl = ds = 0
+        # Kênh CHỈ nghỉ khi anh đã tự đặt CẢ HAI chỉ tiêu và đã đạt. Không đặt -> luôn còn việc,
+        # mỗi vòng làm đúng một mẻ round_long/round_short rồi nhường slot cho kênh khác.
+        if lt_raw and st_raw and dl >= lt_raw and ds >= st_raw:
+            continue
+        need.append((dl + ds, nm))
     n_full = len(channels) - len(need)
     if need:
         # 22/8 tối: sort thuần theo "thiếu nhiều" từng XÓA SẠCH ưu tiên _pri xếp ở trên (kênh cũ
         # thiếu 30 video luôn đè kênh mới priority=1) -> sort 2 khóa: priority trước, thiếu sau.
         _prs = set(_pri)
-        need.sort(key=lambda x: (0 if x[1] in _prs else 1, -x[0]))
+        # 24/8 — CHIA ĐỀU: sắp theo TỔNG VIDEO ĐÃ CÓ, ÍT NHẤT ĐỨNG TRƯỚC. Khoá cũ (-x[0] = thiếu
+        # nhiều nhất) chỉ đúng khi mọi kênh cùng một trần trọn đời; với kho trôi thì "còn thiếu" gần
+        # như bằng nhau ở mọi kênh nên khoá đó vô nghĩa, và kênh nhiều video vẫn được làm tiếp trong
+        # khi kênh mới nằm chờ. Sắp theo số đã có = kênh non được kéo lên ngang bằng trước.
+        need.sort(key=lambda x: (0 if x[1] in _prs else 1, x[0]))
         channels = [nm for _, nm in need]
     else:
         print("🎯 Mọi kênh đã đủ chỉ tiêu — không mở phiên (khỏi đốt runner).")

@@ -2734,16 +2734,32 @@ def build_pulse_props(story, sdir, handle="@pulseusa", accent="#EA580C", music="
     idur, _, _ = TK.synth(story.get("intro_vo") or story.get("title") or "How intense is it?", intro_mp3)
     introSec = round(idur + 0.4, 2)
     items_in = story.get("items") or []
-    items_out, clips, cum = [], [(intro_mp3, 0.0)], 0.0
+    # 24/8 — PULSE RA VIDEO 12,8s VÀ BỊ QC LOẠI HÀNG LOẠT (15 lần trong phiên 08:47, kênh PULSEUSA
+    # chỉ đẩy được 2 video). Vì sao: độ dài clip = TỔNG ĐỘ DÀI GIỌNG ĐỌC, mà mỗi mục chỉ một câu
+    # ngắn -> 5 mục ≈ 12-15s, dưới sàn 20s của QC dọc. Mỗi lần loại là mất trắng một lượt viết
+    # (token AI) + một lượt render — đắt hơn nhiều so với việc giữ mỗi con số trên màn thêm 1 giây.
+    # Nay: đo trước, thiếu bao nhiêu thì RẢI ĐỀU vào các mục (giữ số lâu hơn, người xem kịp đọc),
+    # KHÔNG bịa thêm nội dung và KHÔNG kéo dài giọng đọc.
+    MIN_TONG = 21.0                       # 20s là sàn QC — chừa 1s biên cho sai số ffmpeg
+    dur_tho, paths = [], []
     for i, it in enumerate(items_in):
         p = os.path.join(sdir, f"it{i}.mp3")
         du, _, _ = TK.synth(it.get("vo") or f"{it.get('label','')}, {it.get('disp','')}.", p)
-        dur = round(du + 0.4, 2)
-        items_out.append({"label": it.get("label"), "emoji": it.get("emoji"), "value": it.get("value"),
-                          "disp": it.get("disp"), "extreme": bool(it.get("extreme")), "dur": dur})
-        clips.append((p, introSec + cum)); cum += dur
+        dur_tho.append(round(du + 0.4, 2)); paths.append(p)
     odur, _, _ = TK.synth(story.get("outro_vo") or "Follow for more real intensity checks.", outro_mp3)
     outroSec = round(odur + 0.4, 2)
+    tho = round(introSec + sum(dur_tho) + outroSec, 2)
+    if tho < MIN_TONG and dur_tho:
+        them = (MIN_TONG - tho) / len(dur_tho)
+        them = min(them, 2.5)             # trần 2,5s/mục: quá đà thành lê thê, mất nhịp "pulse"
+        dur_tho = [round(d + them, 2) for d in dur_tho]
+        print(f"   ⏱ PULSE {tho:.1f}s < {MIN_TONG:.0f}s — giữ mỗi mục thêm {them:.1f}s "
+              f"-> {round(introSec + sum(dur_tho) + outroSec, 1)}s (không đổi nội dung)")
+    items_out, clips, cum = [], [(intro_mp3, 0.0)], 0.0
+    for i, it in enumerate(items_in):
+        items_out.append({"label": it.get("label"), "emoji": it.get("emoji"), "value": it.get("value"),
+                          "disp": it.get("disp"), "extreme": bool(it.get("extreme")), "dur": dur_tho[i]})
+        clips.append((paths[i], introSec + cum)); cum += dur_tho[i]
     clips.append((outro_mp3, introSec + cum))
     total = round(introSec + cum + outroSec, 2)
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)

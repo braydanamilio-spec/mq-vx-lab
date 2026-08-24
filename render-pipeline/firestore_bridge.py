@@ -25,6 +25,31 @@ _DBJ = [None]
 _B2 = {"on": False, "client": None, "wclient": None}
 
 
+def _stream_at(q, timeout=20):
+    """`.stream(timeout=)` nhưng KHÔNG chết vì thư viện.
+
+    24/8 — sự cố thật: gương B→B2 hỏng MỌI PHIÊN với
+    `'_UnaryStreamMultiCallable' object has no attribute '_retry'` (lỗi tương thích của
+    google-cloud-firestore — workflow cài bản mới nhất, không ghim phiên bản). Cả hàm gương nằm
+    trong MỘT try nên một lệnh hỏng là mất sạch: B2 không được cập nhật suốt 16 TIẾNG mà không ai
+    biết, tới lúc failover mới lòi ra "gương tuổi 948 phút". Lưới an toàn của hệ đã chết âm thầm.
+    Ở đây: gặp đúng nhóm lỗi tương thích (AttributeError/TypeError) thì gọi lại KHÔNG kèm timeout.
+    Lỗi thật (429, mạng) vẫn ném lên như cũ để cầu dao/failover xử đúng việc của nó."""
+    try:
+        return list(q.stream(timeout=timeout))
+    except (AttributeError, TypeError) as e:
+        print(f"   ⚠️ stream(timeout) không dùng được ({str(e)[:60]}) — gọi lại không timeout")
+        return list(q.stream())
+
+
+def _get_at(ref, timeout=15):
+    """`.get(timeout=)` với cùng lưới an toàn như _stream_at."""
+    try:
+        return ref.get(timeout=timeout)
+    except (AttributeError, TypeError):
+        return ref.get()
+
+
 def _b2_available() -> bool:
     """B2 = Firestore DỰ PHÒNG (23/8, project mm0-shard-b2): cùng service account của B (đã cấp
     datastore.owner trên B2), chỉ cần FIREBASE_PROJECT_ID_B2 trong env — KHÔNG cần secret mới."""
@@ -1257,10 +1282,19 @@ def mirror_b_to_b2(owner: str) -> int:
         #    để kho/số đếm ở B đủ video, B2 sạch sẽ chờ lần khẩn sau. (Kênh/config KHÔNG cần chiều
         #    ngược — nguồn chuẩn của chúng luôn là B, B2 chỉ là bản sao.)
         drained = 0
-        for d in b2.collection("render_jobs").where("owner", "==", owner).limit(300).stream(timeout=20):
-            x = d.to_dict() or {}
-            _db_jobs().collection("render_jobs").document(d.id).set(x, merge=True)
-            d.reference.delete(); drained += 1
+        # 24/8 — TỪNG BƯỚC MỘT CÁI TRY RIÊNG. Trước đây CẢ hàm nằm trong một try: 24/8 bước drain ném
+        # `'_UnaryStreamMultiCallable' object has no attribute '_retry'` (lỗi tương thích thư viện)
+        # -> nhảy thẳng xuống except, KHÔNG chép gì, KHÔNG đóng dấu tuổi. Gương đứng im 16 TIẾNG mà
+        # log chỉ có đúng một dòng cảnh báo -> tới lúc failover mới lòi "gương tuổi 948 phút".
+        # Lưới an toàn của hệ mà hỏng âm thầm thì coi như không có.
+        _hong = []
+        try:
+            for d in _stream_at(b2.collection("render_jobs").where("owner", "==", owner).limit(300)):
+                x = d.to_dict() or {}
+                _db_jobs().collection("render_jobs").document(d.id).set(x, merge=True)
+                d.reference.delete(); drained += 1
+        except Exception as e:
+            _hong.append(f"drain job ({str(e)[:50]})")
         # 24/8 — LỖ MẤT SỐ ĐẾM: trong phiên khẩn (đang chạy B2), `count_pushed` cộng vào
         # render_stats/__pushed__ Ở B2. Bản trước chỉ drain render_jobs nên khi B hồi, những lượt
         # đẩy đó BIẾN MẤT khỏi sổ -> dashboard đếm thiếu, và `count_done` tưởng kênh làm ít hơn
@@ -1283,12 +1317,13 @@ def mirror_b_to_b2(owner: str) -> int:
         if drained:
             print(f"   🔁 Rót ngược {drained} job từ B2 về B (video phiên khẩn không bị thất lạc).")
         # 0b) rót ngược ngân hàng chủ đề (đề tài viết trong phiên khẩn) — B2 giữ superset nên set thẳng
-        for d in b2.collection("render_topics").stream(timeout=20):
+        try:
+          for d in _stream_at(b2.collection("render_topics")):
             if not d.id.startswith(f"{owner}__"):
                 continue
             x2 = d.to_dict() or {}
             t = _db_meta().collection("render_topics").document(d.id)
-            cur = (t.get(timeout=15).to_dict() or {})
+            cur = (_get_at(t).to_dict() or {})
             # GỘP chứ KHÔNG ĐÈ (23/8): trong lúc B chết, B2 nhận đề tài mới; nhưng B cũng có đề tài
             # cũ mà B2 chưa kịp có. Đè một chiều = MẤT một nửa ngân hàng chống trùng -> vài ngày sau
             # AI viết lại đúng đề tài cũ. Gộp theo thứ tự, bỏ trùng, giữ 300 mục gần nhất.
@@ -1299,42 +1334,55 @@ def mirror_b_to_b2(owner: str) -> int:
             if merged != (cur.get("topics") or []):
                 t.set({"owner": owner, "channel": x2.get("channel") or cur.get("channel"),
                        "topics": merged[-300:]}, merge=True)
+        except Exception as e:
+            _hong.append(f"rót chủ đề ({str(e)[:50]})")
         # 1) render_channels (toàn bộ của owner)
-        cur = {d.id: (d.to_dict() or {}) for d in b2.collection("render_channels").where("owner", "==", owner).stream(timeout=20)}
-        for d in _db_meta().collection("render_channels").where("owner", "==", owner).stream(timeout=20):
-            x = d.to_dict() or {}
-            if cur.get(d.id) != x:
-                b2.collection("render_channels").document(d.id).set(x); n += 1
+        try:
+            cur = {d.id: (d.to_dict() or {}) for d in _stream_at(b2.collection("render_channels").where("owner", "==", owner))}
+            for d in _stream_at(_db_meta().collection("render_channels").where("owner", "==", owner)):
+                x = d.to_dict() or {}
+                if cur.get(d.id) != x:
+                    b2.collection("render_channels").document(d.id).set(x); n += 1
+        except Exception as e:
+            _hong.append(f"kênh ({str(e)[:50]})")
         # 1b) render_topics — NGÂN HÀNG CHỦ ĐỀ ĐÃ LÀM (23/8, user chỉ ra): thiếu nó thì phiên khẩn
         #     trên B2 tưởng "chưa làm gì" -> viết lại đề tài cũ = video trùng nội dung. Gương bắt buộc.
-        curt = {d.id: (d.to_dict() or {}) for d in b2.collection("render_topics").stream(timeout=20)}
-        for d in _db_meta().collection("render_topics").stream(timeout=20):
-            if d.id.startswith(f"{owner}__"):
-                x = d.to_dict() or {}
-                if curt.get(d.id) != x:
-                    b2.collection("render_topics").document(d.id).set(x); n += 1
+        try:
+            curt = {d.id: (d.to_dict() or {}) for d in _stream_at(b2.collection("render_topics"))}
+            for d in _stream_at(_db_meta().collection("render_topics")):
+                if d.id.startswith(f"{owner}__"):
+                    x = d.to_dict() or {}
+                    if curt.get(d.id) != x:
+                        b2.collection("render_topics").document(d.id).set(x); n += 1
+        except Exception as e:
+            _hong.append(f"chủ đề ({str(e)[:50]})")
         # 2) render_config + snapshot keys + __req__ + connections_mirror (mỗi thứ 1-2 doc)
         for col, docid in (("render_config", owner), ("gemini_keys", f"__snap__{owner}"),
                            ("gemini_keys", f"__req__{owner}"), ("render_stats", owner)):
             try:
-                s = _db_meta().collection(col).document(docid).get(timeout=15) if col == "render_config" else \
-                    _db_keys().collection(col).document(docid).get(timeout=15)
+                s = _get_at(_db_meta().collection(col).document(docid)) if col == "render_config" else \
+                    _get_at(_db_keys().collection(col).document(docid))
                 if s.exists:
                     x = s.to_dict() or {}
                     t = b2.collection(col).document(docid)
-                    if (t.get(timeout=15).to_dict() or {}) != x:
+                    if (_get_at(t).to_dict() or {}) != x:
                         t.set(x); n += 1
             except Exception:
                 pass
         try:
-            for d in _db_jobs().collection("connections_mirror").stream(timeout=20):
+            for d in _stream_at(_db_jobs().collection("connections_mirror")):
                 x = d.to_dict() or {}
                 t = b2.collection("connections_mirror").document(d.id)
-                if (t.get(timeout=15).to_dict() or {}) != x:
+                if (_get_at(t).to_dict() or {}) != x:
                     t.set(x); n += 1
         except Exception:
             pass
-        b2.collection("render_config").document("mirror_meta").set({"at": _now()})   # dấu tuổi gương
+        # ĐÓNG DẤU TUỔI dù có bước hụt: gương chép được 4/5 phần vẫn tốt hơn nhiều so với bản 16 tiếng
+        # trước. Ghi kèm danh sách bước hỏng để lần failover sau nhìn là biết đang thiếu gì.
+        b2.collection("render_config").document("mirror_meta").set(
+            {"at": _now(), "hong": _hong[:5], "n": n})
+        if _hong:
+            print("   ⚠️ Gương B→B2 hụt bước: " + " · ".join(_hong))
         # sổ quota phải đếm ĐỦ chi phí của chính gương: ~60 kênh + ~60 topics + 4 doc lẻ đọc từ B
         _cr("mirror_b2", 124)
         if n:

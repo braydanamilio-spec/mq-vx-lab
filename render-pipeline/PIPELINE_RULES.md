@@ -698,3 +698,32 @@ video**. Đường chữa đúng là đừng để B cạn (mục 7.y), không p
 **Luật:** trạng thái CHIA SẺ giữa 18 luồng (key nghỉ, kho đầy, chỉ tiêu) không được nằm trong doc
 ảnh dựng-một-lần-mỗi-phiên. Phải có doc gộp ghi-được-trong-phiên, nếu không mỗi luồng sẽ tự trả giá
 để học lại cùng một điều.
+
+### 7.aa — Ba lỗi phiên 08:47: gương B2 chết âm thầm · PULSE quá ngắn · 10/30 hiểu sai (24/8/2026)
+
+**1. Gương B→B2 hỏng MỌI PHIÊN, không ai biết.**
+Log: `⚠️ mirror B→B2 lỗi ('_UnaryStreamMultiCallable' object has no attribute '_retry')` — lỗi
+tương thích của `google-cloud-firestore` (workflow `pip install` không ghim phiên bản) ở lệnh
+`.stream(timeout=…)`. Cả hàm gương nằm trong **một** `try` nên hỏng bước đầu là mất sạch: B2 đứng
+im **16 tiếng**, tới lúc failover mới lòi ra `gương tuổi 948 phút`.
+→ Vá: `_stream_at()/_get_at()` — gặp `AttributeError/TypeError` thì gọi lại không kèm `timeout`
+(lỗi thật 429/mạng vẫn ném lên để cầu dao xử lý); mỗi bước gương có `try` RIÊNG; `mirror_meta` được
+đóng dấu **kể cả khi hụt bước**, kèm danh sách bước hỏng.
+
+**2. PULSE render ra clip 12,8s → QC loại 15 lần/phiên.**
+Độ dài PulseShort = tổng độ dài giọng đọc; mỗi mục một câu ngắn nên 5 mục ≈ 12-15s, dưới sàn 20s.
+Mỗi lần loại mất trắng 1 lượt viết AI + 1 lượt render (PULSEUSA cả phiên chỉ đẩy được 2 video).
+→ Vá: đo trước khi dựng, thiếu bao nhiêu thì **rải đều vào thời gian giữ mỗi mục** (trần 2,5s/mục).
+Không bịa thêm nội dung, không kéo giọng đọc.
+
+**3. `10 long / 30 short` bị dùng làm TRẦN TRỌN ĐỜI.**
+`RESERVE_LONG/RESERVE_SHORT` (10/30) vừa là mẻ mỗi vòng (`round_long/round_short`) vừa là chỉ tiêu
+mặc định → kênh làm xong **đúng một vòng** là bị cho nghỉ vĩnh viễn, dù video đã đăng hết.
+→ Vá: `_muc_tieu()` — anh tự đặt chỉ tiêu trên dashboard (>0) thì đó là trần thật; không đặt (=0)
+thì **kho trôi**: mỗi vòng mở thêm đúng một mẻ, kênh luôn còn việc. Chặn phình kho là việc của
+`DRIVE_SAFETY_PCT` (kho ≥90% thì ngừng), không phải của chỉ tiêu.
+Kèm theo: thứ tự ưu tiên đổi từ "thiếu nhiều nhất" sang **"tổng video ít nhất đứng trước"** — với
+kho trôi thì "còn thiếu" gần như bằng nhau ở mọi kênh nên khoá cũ vô nghĩa, kênh mới sẽ nằm chờ mãi.
+
+**Luật:** hàm nào là LƯỚI AN TOÀN (gương, failover, backup) thì (a) không được để cả thân hàm trong
+một `try`, (b) phải để lại dấu vết đo được mỗi lần chạy — hỏng âm thầm còn tệ hơn không có lưới.
