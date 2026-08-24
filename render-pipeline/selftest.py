@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("bước phụ hỏng phải nói rõ, không im", t_buoc_phu_that_bai_khong_duoc_im)
     check("gương thiếu kênh ≠ kênh bị xoá", t_guong_thieu_kenh_khong_phai_bi_xoa)
     check("thẻ mở đầu KHÔNG thành 'chữ trên nền trơn'", t_the_mo_dau_khong_thanh_nen_tron)
     check("B cạn hạn mức: báo CHUNG, khỏi 18 lane tự khám phá", t_bao_chung_b_can_han_muc)
@@ -799,6 +800,36 @@ def t_so_hong_phai_het_len():
         "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
 
 
+def t_buoc_phu_that_bai_khong_duoc_im():
+    """Bước phụ có `|| true` mà hỏng thì phải NÓI RÕ (24/8 tối, phiên 17:56Z).
+    `backup_vault.py` chết `ModuleNotFoundError: No module named 'storage'` MỌI PHIÊN vì job `plan`
+    trỏ `AUTOPUBLISHER_SRC` vào `_autopublisher/src` mà lại không checkout repo đó. Bước gọi có
+    `|| true` nên workflow vẫn xanh ⇒ kho key coi như KHÔNG được sao lưu suốt thời gian qua."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "backup_vault.py"), encoding="utf-8").read()
+    assert "except ModuleNotFoundError" in src and "🚨" in src, \
+        "backup_vault vẫn để traceback trôi trong log thay vì nói thẳng"
+    wf = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                      ".github", "workflows", "render_cron.yml")
+    if not os.path.exists(wf):
+        return
+    w = io.open(wf, encoding="utf-8").read()
+    # Mọi job đặt AUTOPUBLISHER_SRC thì job đó PHẢI checkout repo publish. Tách theo JOB
+    # (tên job = khoá thụt 2 dấu cách ngay dưới `jobs:`), không tách bừa theo xuống-dòng.
+    # Điều kiện THẬT bị vi phạm không phải "có checkout hay không" — job `plan` CÓ checkout, nhưng
+    # ở dòng 106, tức SAU bước sao lưu ở dòng 72. Nên phải kiểm THỨ TỰ: trong mỗi job, lần checkout
+    # repo publish phải đứng TRƯỚC chỗ dùng AUTOPUBLISHER_SRC đầu tiên.
+    than = w[w.index("\njobs:"):]
+    for job in re.split(r"\n  (?=[A-Za-z_][\w-]*:\n)", than):
+        ten = job.strip().split(":")[0]
+        if "AUTOPUBLISHER_SRC:" not in job:
+            continue
+        assert "path: _autopublisher" in job, \
+            f"job `{ten}` trỏ AUTOPUBLISHER_SRC mà KHÔNG checkout repo publish"
+        assert job.index("path: _autopublisher") < job.index("AUTOPUBLISHER_SRC:"), \
+            f"job `{ten}`: checkout repo publish nằm SAU bước dùng AUTOPUBLISHER_SRC -> bước đó chết"
+
+
 def t_guong_thieu_kenh_khong_phai_bi_xoa():
     """Gương B2 thiếu kênh ≠ kênh bị xoá (24/8 tối — 2 lane mất trắng phiên 16:06Z).
     Lane lật B2 (gương cũ 156') mà gương thiếu HAULUSA/FAKEUSA -> `read_one_channel` trả None ->
@@ -875,9 +906,19 @@ def t_bao_chung_b_can_han_muc():
         import firestore_bridge as FB
         FB._DA_BAO_CAN[0] = False
         assert FB.b_dang_nghi() is False, "chưa ai báo mà đã tưởng B nghỉ"
-        FB.bao_b_can_ngay("429 quota exceeded: requests per day")
+        FB.bao_b_can_ngay("read_config 429")     # chỗ gọi chỉ truyền MẨU TÓM TẮT
         assert kho.get("proj:B"), "không ghi được cờ chung"
         assert FB.b_dang_nghi() is True, "lane sau không đọc thấy cờ"
+        # Log 17:56Z: mẩu tóm tắt không có chữ "per day" -> rơi vào nhánh "không rõ" = 20 phút,
+        # rồi lần ghi sau ĐÈ mất lần ghi đúng. Cờ phải ra mốc CẠN NGÀY và chỉ được dài thêm.
+        import datetime as _dt
+        con = (_dt.datetime.fromisoformat(kho["proj:B"])
+               - _dt.datetime.now(_dt.timezone.utc)).total_seconds() / 60
+        assert con > 120, f"cờ chỉ còn {con:.0f} phút — phải là mốc cạn NGÀY, không phải 20'"
+        dai = kho["proj:B"]
+        FB._DA_BAO_CAN[0] = False
+        FB.bao_b_can_ngay("429 requests per minute, try again in 5s")
+        assert kho["proj:B"] == dai, "cờ dài bị ghi đè bằng cờ ngắn"
         FB._DA_BAO_CAN[0] = False
         src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "firestore_bridge.py"), encoding="utf-8").read()

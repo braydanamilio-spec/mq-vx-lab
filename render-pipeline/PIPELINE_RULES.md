@@ -1784,3 +1784,26 @@ Chốt bằng `t_guong_thieu_kenh_khong_phai_bi_xoa`.
 **LUẬT: dữ liệu đã đọc được ở thượng nguồn thì ĐƯA XUỐNG, đừng bắt hạ nguồn đọc lại từ một nguồn có
 thể đã cũ hơn.** Ba biến thể của cùng một câu hỏi "không thấy nghĩa là gì" đã tốn 3 lần vá trong đêm:
 đọc hỏng (7.bm) · dữ liệu thiếu (7.cb) · hết lượt (7.bs).
+
+### 7.cc — Sao lưu kho key CHẾT MỌI PHIÊN, workflow vẫn xanh (24/8/2026 tối, phiên 17:56Z)
+`backup_vault.py` ném `ModuleNotFoundError: No module named 'storage'` ở **mọi** phiên. Job `plan`
+CÓ checkout repo publish — nhưng ở dòng 106, tức **SAU** bước "Sao lưu kho key" ở dòng 72. Bước gọi
+có `|| true` nên workflow luôn xanh ⇒ **kho key coi như không được sao lưu suốt thời gian qua mà không
+ai biết**. Đúng họ "chết câm", lần này ở tầng workflow chứ không phải tầng code.
+Vá: checkout repo publish lên ĐẦU job (bỏ bản gated trùng ở dưới), và `backup_vault` bắt riêng
+`ModuleNotFoundError` để **nói thẳng** thay vì để traceback trôi.
+Chốt bằng `t_buoc_phu_that_bai_khong_duoc_im` — test kiểm **THỨ TỰ** (checkout phải đứng trước chỗ
+dùng `AUTOPUBLISHER_SRC`), và đã thử ngược: đẩy checkout xuống sau thì test bắt đúng.
+**LUẬT: `|| true` chỉ được dùng khi bước đó thật sự không quan trọng. Việc quan trọng mà nuốt lỗi thì
+phải có người ĐẾM nó — không có ai đếm thì nó sẽ hỏng lặng lẽ hàng tháng.**
+
+### 7.cd — Cờ "B cạn hạn mức" tự hạ hạn xuống 20 phút rồi ghi đè bản đúng (24/8/2026 tối)
+Log phiên 17:56Z, ba dòng liên tiếp: `nghỉ tới 06:59Z` (đúng) → `nghỉ tới 18:33Z` → `nghỉ tới 18:35Z`.
+Hai lỗi trong bản vá 7.bz vừa viết:
+1. `muc_nghi()` phân loại theo NGUYÊN VĂN lỗi, mà chỗ gọi chỉ truyền mẩu tóm tắt `"read_config 429"` —
+   không có chữ "per day" nên rơi vào nhánh "không rõ" = 20 phút. Failover sang B2 là hành động NẶNG,
+   chỉ làm khi B đã nghẽn thật ⇒ mặc định đúng ở đây là CẠN NGÀY, trừ khi nguyên văn nói rõ theo phút.
+2. Ghi sau đè ghi trước ⇒ một lần phân loại nhầm xoá sổ lần phân loại đúng. **Cờ chỉ được DÀI THÊM.**
+**LUẬT: hàm phân loại theo nguyên văn lỗi thì chỗ gọi phải truyền NGUYÊN VĂN, đừng truyền mẩu tóm tắt
+cho người khác đoán.** Và cờ chia sẻ giữa nhiều tiến trình phải theo quy tắc gộp một chiều (max), vì
+thứ tự ghi giữa 18 tiến trình là không xác định.

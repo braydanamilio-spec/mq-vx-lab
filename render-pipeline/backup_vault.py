@@ -83,7 +83,18 @@ def main() -> int:
     src = os.environ.get("AUTOPUBLISHER_SRC")
     if src and src not in sys.path:
         sys.path.insert(0, src)
-    import storage as ST
+    try:
+        import storage as ST
+    except ModuleNotFoundError:
+        # 24/8 tối — `AUTOPUBLISHER_SRC` trỏ vào thư mục KHÔNG TỒN TẠI (job plan quên checkout repo
+        # publish) nên hàm này chết mọi phiên, mà bước gọi có `|| true` nên workflow vẫn xanh: kho
+        # key coi như không được sao lưu suốt thời gian đó, không ai biết. Nói thẳng ra thay vì để
+        # traceback trôi trong log.
+        print(f"🚨 KHÔNG SAO LƯU ĐƯỢC: không thấy module `storage` "
+              f"(AUTOPUBLISHER_SRC={src or 'CHƯA ĐẶT'} — thư mục "
+              f"{'không tồn tại' if src and not os.path.isdir(src) else 'thiếu storage.py'}). "
+              f"Kiểm workflow đã checkout repo publish chưa.")
+        return 1
 
     accs = ST.pool_accounts()
     if not accs:

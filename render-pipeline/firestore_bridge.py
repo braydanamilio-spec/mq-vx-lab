@@ -159,16 +159,41 @@ _DA_BAO_CAN = [False]
 
 
 def bao_b_can_ngay(reason: str = "") -> None:
+    """24/8 tối, soi log phiên 17:56Z — bản đầu SAI hai chỗ, cờ thành vô dụng:
+
+      📣 Đã báo chung: B cạn hạn mức, nghỉ tới 06:59Z   <- đúng
+      📣 Đã báo chung: B cạn hạn mức, nghỉ tới 18:33Z   <- chỉ 20 phút!
+      📣 Đã báo chung: B cạn hạn mức, nghỉ tới 18:35Z   <- và GHI ĐÈ cái đúng ở trên
+
+    1. `muc_nghi()` phân loại theo NGUYÊN VĂN lỗi, mà chỗ gọi chỉ truyền một mẩu tóm tắt
+       (`"read_config 429"`) — không có chữ "per day" nên rơi vào nhánh "không rõ" = 20 phút.
+       Nhưng failover sang B2 là hành động NẶNG, chỉ làm khi B đã nghẽn thật; mặc định đúng ở đây
+       là CẠN NGÀY, trừ khi nguyên văn nói rõ là chặn theo phút.
+    2. Ghi sau đè ghi trước, nên một lần phân loại nhầm là xoá sổ lần phân loại đúng. Cờ chỉ được
+       phép DÀI THÊM, không được ngắn lại."""
     if _DA_BAO_CAN[0]:
         return
     _DA_BAO_CAN[0] = True
     try:
         import hot_db as _H
         import nghi_key as _N
-        phut = _N.muc_nghi(reason or "per day")
-        den = (datetime.now(timezone.utc) + timedelta(minutes=phut)).isoformat()
-        _H.key_nghi_ghi("proj:B", "ngay", den)
-        print(f"   📣 Đã báo chung: B cạn hạn mức, nghỉ tới {den[11:16]}Z — lane sau lật B2 thẳng.")
+        t = str(reason or "").lower()
+        theo_phut = any(x in t for x in ("per minute", "per-minute", "per second", "try again in"))
+        phut = _N.muc_nghi(reason if theo_phut else (reason + " per day"))
+        den = datetime.now(timezone.utc) + timedelta(minutes=phut)
+        gio = datetime.now(timezone.utc).isoformat()
+        for r in (_H.key_nghi_doc(gio) or []):        # KHÔNG rút ngắn cờ đã có
+            if str(r.get("kid") or "") == "proj:B":
+                try:
+                    cu = datetime.fromisoformat(str(r.get("den") or ""))
+                    if cu > den:
+                        print(f"   📣 B đã có cờ nghỉ tới {cu.isoformat()[11:16]}Z (dài hơn) — giữ nguyên.")
+                        return
+                except Exception:
+                    pass
+        _H.key_nghi_ghi("proj:B", "ngay", den.isoformat())
+        print(f"   📣 Đã báo chung: B cạn hạn mức, nghỉ tới {den.isoformat()[11:16]}Z "
+              f"— lane sau lật B2 thẳng.")
     except Exception:
         pass          # D1 chưa bật / hụt -> vẫn chạy như cũ, chỉ mất phần tối ưu
 

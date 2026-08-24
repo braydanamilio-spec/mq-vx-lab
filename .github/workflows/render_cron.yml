@@ -34,6 +34,15 @@ jobs:
       cfgs: ${{ steps.plan.outputs.cfgs }}
     steps:
       - uses: actions/checkout@v4
+      # 24/8 tối — job này TRỎ `AUTOPUBLISHER_SRC` vào `_autopublisher/src` nhưng lại KHÔNG checkout
+      # repo đó, nên `backup_vault.py` chết `ModuleNotFoundError: No module named 'storage'` MỌI
+      # PHIÊN. Bước sao lưu có `|| true` nên workflow vẫn xanh — kho key coi như KHÔNG ĐƯỢC sao lưu
+      # suốt thời gian qua mà không ai biết. Đúng họ "chết câm".
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - name: Python deps (nhẹ - cho gate + plan)
@@ -94,12 +103,8 @@ jobs:
           OWNER_UID: ${{ secrets.OWNER_UID }}
           FORCE: ${{ github.event.inputs.force }}
         run: python render-pipeline/run_render.py --gate
-      - uses: actions/checkout@v4
-        if: steps.gate.outputs.run == 'true'
-        with:
-          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
-          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
-          path: _autopublisher
+      # (checkout repo publish đã làm ở ĐẦU job — phải sớm hơn bước "Sao lưu kho key", xem ghi chú
+      #  trên đó. Bản gated ở đây là bản trùng, bỏ đi cho khỏi hai nguồn.)
       - uses: actions/setup-node@v4
         if: steps.gate.outputs.run == 'true'
         with: { node-version: "22" }
