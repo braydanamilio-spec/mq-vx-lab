@@ -35,7 +35,7 @@ jobs:
         with: { python-version: "3.11" }
       - name: Python deps (nhẹ - cho gate + plan)
         run: pip install --quiet google-generativeai edge-tts google-cloud-firestore \
-             google-api-python-client google-auth pyyaml
+             google-api-python-client google-auth pyyaml cryptography
       # TỰ KIỂM 10 GIÂY (0 mạng, 0 quota): chạy đúng các đường gọi sản xuất bằng mock — bản push
       # hỏng (shim thiếu chữ ký, thứ tự key sai, đọc-mềm gãy...) FAIL NGAY TẠI ĐÂY, lane không
       # spawn, không đốt gì. Sinh ra từ 3 sự cố 22/8 (system_instruction giết 18/18 luồng...).
@@ -47,6 +47,18 @@ jobs:
           echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json   # shard: render_jobs -> Project B
           echo '${{ secrets.GCP_SA_KEY_C }}' > /tmp/sa_c.json   # đọc hiệu suất video đã đăng -> Project C (feedback loop chọn chủ đề)
       # GATE NHẸ: nhịp 30' không có lệnh -> run=false -> BỎ QUA setup nặng (npm/chrome/ffmpeg) => free hơn.
+      # 24/8 — SAO LƯU KHO KEY (mã hoá) ra 3 kho Drive độc lập. Chỉ chạy khi có BACKUP_PASSPHRASE;
+      # không có thì in 1 dòng rồi bỏ qua. Không bao giờ chặn phiên render.
+      - name: Sao lưu kho key (mã hoá)
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: python render-pipeline/backup_vault.py || true
       - name: Gate (--gate)
         id: gate
         env:
