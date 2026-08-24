@@ -1672,3 +1672,27 @@ cứng 1,7/1,6"* — nhưng lại nằm trong `build_ranked_props`. Kết quả:
 không truyền `introSec`/`outroSec`, composition dùng số cứng trong khi giọng dài khác hẳn ⇒ hình lệch
 tiếng, đúng cái bệnh tưởng đã vá. **LUẬT: sửa xong phải ĐẾM số chỗ đã sửa trên TOÀN BỘ họ hàm, đừng
 tin vào một lần sửa.** Nay 9/9 builder truyền mốc thật, chốt bằng `t_moc_intro_outro_that` (đếm ≥9).
+
+### 7.bs — Shard cạn hạn mức bị xử như "cấu hình sai" ⇒ đổ hết sang project A (24/8/2026 tối)
+`firestore_state._sa_client()` ping thử database lúc tạo client; ping hỏng thì trả `None` và **mọi
+lệnh của shard đó rơi về project A**. Nhánh này đúng cho lỗi cấu hình, nhưng SAI hoàn toàn khi lỗi là
+`429 Quota exceeded`: project vẫn đúng, client vẫn dùng được, chỉ là hết lượt hôm nay — vậy mà B cạn
+lại kéo A cạn theo, đúng cái vòng luẩn quẩn mà kiến trúc 3-project sinh ra để chặn (log phiên 16:06Z:
+14 dòng `-> fallback Project A` trong MỘT lane). Nay tách hai nhánh: 429 ⇒ **giữ client, KHÔNG rơi về
+A**, để tầng trên retry / lật gương B2; lỗi khác mới fallback như cũ.
+**LUẬT: "không gọi được" và "hết lượt" là hai chuyện khác nhau — đừng gộp vào một nhánh except.**
+(Cùng họ với 7.bm: đọc hỏng ≠ dữ liệu không tồn tại.)
+
+### 7.bt — Cảnh báo lặp lại mọi phiên mà KHÔNG đường nào xử: `#shorts` (24/8/2026 tối)
+Mọi phiên đều in `⚠️ Short nên có #shorts để YouTube phân loại đúng` — cảnh báo đúng, nhưng
+`autotitle` chỉ thêm thẻ khi nó TỰ đặt lại tiêu đề, còn video có sẵn tiêu đề từ Gemini thì đi thẳng
+qua. Thiếu thẻ này YouTube có thể xếp video dọc vào luồng thường ⇒ mất hẳn kênh phân phối Shorts.
+Nay thêm ngay trong `enqueue_drive` — chỗ DUY NHẤT mọi đường đẩy kho đi qua.
+**LUẬT: một cảnh báo lặp lại mỗi phiên mà không ai xử thì nó không còn là cảnh báo, nó là lỗi.**
+
+### 7.bu — Bước cứu "quá ngắn" lại đẩy video vào lỗi "nhàm" (24/8/2026 tối)
+`keo_du_dai` rải đều số giây thiếu cho mọi cảnh. Nhưng QC ngay bên dưới chặn *"cảnh giữ một ảnh quá
+3,5s (nhàm)"* — cảnh chỉ có 1 ảnh mà cộng thêm giây thì thành đứng hình lâu hơn. Nay rải **cân theo
+SỐ ẢNH** của từng cảnh: cảnh nhiều ảnh thêm giây = thêm nhát cắt, cảnh một ảnh thêm ít thôi. Và bỏ
+trần 2,5s/cảnh ở vòng hai khi ít cảnh quá — video hơi chậm còn xem được, video bị QC vứt thì mất
+trắng cả lượt viết AI lẫn lượt render. Chốt bằng `t_doc_du_dai_va_khong_nham`.

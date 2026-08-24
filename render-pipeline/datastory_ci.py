@@ -2211,14 +2211,33 @@ def keo_du_dai(scenes, fps=30, min_s=21.0, tran_them_s=2.5, ten="clip"):
     tong = sum(int(s.get("dur") or 0) for s in scenes) / float(fps)
     if tong >= min_s:
         return 0.0
-    them = min((min_s - tong) / len(scenes), tran_them_s)
-    if them <= 0.05:
+    # RẢI THEO SỐ ẢNH, KHÔNG RẢI ĐỀU (24/8 tối). QC ngay bên dưới chặn "cảnh giữ một ảnh quá 3.5s
+    # (nhàm)" — rải đều thì cảnh chỉ có 1 ảnh cũng bị cộng thêm giây, tức chính bước cứu video khỏi
+    # "quá ngắn" lại đẩy nó vào lỗi "nhàm". Cảnh nhiều ảnh thì thêm giây = thêm nhát cắt (đỡ chán),
+    # cảnh một ảnh thì thêm giây = đứng hình lâu hơn. Nên cân theo số ảnh của từng cảnh.
+    def _n_anh(x):
+        c = x.get("clips") or ([x.get("clip")] if x.get("clip") else [])
+        return max(1, len(c))
+    tong_w = sum(_n_anh(x) for x in scenes) or len(scenes)
+    can = min_s - tong
+    if can / len(scenes) <= 0.05:
         return 0.0
     for s in scenes:
-        s["dur"] = int(s.get("dur") or 0) + int(round(them * fps))
+        phan = min(can * _n_anh(s) / tong_w, tran_them_s * _n_anh(s))
+        s["dur"] = int(s.get("dur") or 0) + int(round(phan * fps))
     moi = sum(int(s.get("dur") or 0) for s in scenes) / float(fps)
-    print(f"   ⏱ {ten} {tong:.1f}s < {min_s:.0f}s — giữ mỗi cảnh thêm {them:.1f}s -> {moi:.1f}s "
-          f"(không đổi nội dung)")
+    if moi < min_s:
+        # Trần `tran_them_s` mỗi cảnh giữ cho video khỏi lê thê, NHƯNG clip ít cảnh thì trần chặn
+        # trước khi chạm sàn -> QC vẫn loại "quá ngắn", mất trắng một lượt viết AI + một lượt render.
+        # Video hơi chậm còn xem được; video bị vứt thì không. Nên vòng hai bỏ trần, rải nốt phần
+        # thiếu (vẫn cân theo số ảnh).
+        con = min_s - moi
+        for s in scenes:
+            s["dur"] = int(s.get("dur") or 0) + int(round(con * _n_anh(s) / tong_w * fps)) + 1
+        moi = sum(int(s.get("dur") or 0) for s in scenes) / float(fps)
+        print(f"   ⏱ {ten}: phải vượt trần {tran_them_s}s/cảnh mới đủ sàn (ít cảnh) -> {moi:.1f}s")
+    print(f"   ⏱ {ten} {tong:.1f}s < {min_s:.0f}s — thêm {moi - tong:.1f}s, rải theo SỐ ẢNH mỗi cảnh "
+          f"-> {moi:.1f}s (cảnh nhiều ảnh nhận nhiều hơn: thêm giây = thêm nhát cắt, không đứng hình)")
     return moi - tong
 
 

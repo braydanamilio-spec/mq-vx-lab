@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("mốc intro/outro THẬT sang composition (không lệch tiếng)", t_moc_intro_outro_that)
+    check("doc: đủ sàn 21s + rải giây theo SỐ ẢNH (không nhàm)", t_doc_du_dai_va_khong_nham)
     check("mọi short có lưới sàn 21s, kéo dài KHÔNG lệch tiếng", t_short_khong_qua_ngan)
     check("mọi short có phụ đề karaoke bám giọng", t_short_co_phu_de_karaoke)
     check("đọc HỎNG ≠ kênh bị xoá (không giết lane oan)", t_doc_hong_khac_kenh_bi_xoa)
@@ -687,6 +688,27 @@ def t_moc_intro_outro_that():
     n = src.count('"introSec": introSec')
     assert n >= 9, f"chỉ {n}/9 builder truyền mốc intro thật"
     assert src.count('"outroSec": outroSec') >= 9, "thiếu mốc outro thật"
+
+
+def t_doc_du_dai_va_khong_nham():
+    """`keo_du_dai` (format doc) phải LUÔN chạm sàn 21s, và rải giây theo SỐ ẢNH mỗi cảnh.
+    24/8 tối: rải đều thì chính bước cứu video khỏi "quá ngắn" lại đẩy nó vào lỗi QC "cảnh giữ một
+    ảnh quá 3.5s (nhàm)"; còn trần 2,5s/cảnh thì clip ít cảnh không bao giờ chạm sàn -> vẫn bị vứt."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "datastory_ci.py"), encoding="utf-8").read()
+    i = src.index("def keo_du_dai("); ns = {}
+    exec(src[i: src.index("\ndef keo_du_dai_track")], ns)
+    f = ns["keo_du_dai"]
+    for sc in ([{"dur": 90, "clips": ["a", "b", "c"]}, {"dur": 90, "clip": "x"}],
+               [{"dur": 400, "clips": ["a"]}],                       # ít cảnh -> trần chặn
+               [{"dur": 287, "clips": ["a", "b"]}, {"dur": 286, "clip": "c"}]):   # ca thật scaled 19,1s
+        f(sc, fps=30, ten="test")
+        assert sum(x["dur"] for x in sc) / 30.0 >= 21.0, f"chưa chạm sàn: {sc}"
+    nhieu = [{"dur": 90, "clips": ["a", "b", "c"]}, {"dur": 90, "clip": "x"}]
+    f(nhieu, fps=30, ten="test")
+    assert nhieu[0]["dur"] > nhieu[1]["dur"], "cảnh 1 ảnh phải nhận ÍT giây hơn cảnh 3 ảnh"
+    du = [{"dur": 450, "clips": ["a"]}, {"dur": 450, "clip": "b"}]
+    assert f(du, fps=30, ten="test") == 0.0 and du[0]["dur"] == 450, "đủ dài rồi thì KHÔNG được đụng"
 
 
 def t_short_khong_qua_ngan():

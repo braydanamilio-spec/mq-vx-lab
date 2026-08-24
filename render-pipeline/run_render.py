@@ -152,10 +152,20 @@ def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "") -> b
                 "\n\nImagery: Pexels · Pixabay · Wikimedia Commons · NASA · Openverse (free-license)."
         if story.get("_music"):
             desc += "\n\nMusic: Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 3.0"
+        # #shorts NGAY TỪ LÚC ĐẨY KHO (24/8 tối). Log mọi phiên đều có dòng
+        # "⚠️ Short nên có #shorts để YouTube phân loại đúng" — cảnh báo đúng, nhưng không đường nào
+        # xử: `autotitle` chỉ thêm khi TỰ đặt lại tiêu đề, còn video có sẵn tiêu đề từ Gemini thì đi
+        # thẳng qua. Thiếu thẻ này YouTube có thể xếp video dọc vào luồng thường -> mất hẳn kênh
+        # phân phối Shorts. Thêm ở đây vì đây là chỗ DUY NHẤT mọi đường đẩy kho đi qua.
+        _ht = list(story.get("hashtags") or [])
+        if vtype != "long" and not any(str(h).lower().lstrip("#") == "shorts" for h in _ht):
+            _ht = ["#shorts"] + _ht
+        if vtype != "long" and "#shorts" not in desc.lower():
+            desc = desc.rstrip() + "\n\n#shorts"
         created = enqueue(channel=channel, video=out, vtype=vtype,
                           topic=story.get("topic") or story.get("title"),
                           title=story.get("title"), description=desc,
-                          hashtags=story.get("hashtags"), tags=story.get("tags"),
+                          hashtags=_ht, tags=story.get("tags"),
                           thumbnail=(story.get("_thumb") if (story.get("_thumb") and os.path.exists(story.get("_thumb"))) else _make_thumb(out)))   # thumb brand (GUESS/MAPPED) nếu có, không thì trích khung
         # SỔ ĐẾM VIDEO ĐÃ LÊN KHO (23/8): 1 chỗ duy nhất mọi đường đẩy đều đi qua -> dashboard đọc
         # 1 doc là ra con số KHỚP với thư viện, hết cảnh "tổng 1755 mà kho 61".
