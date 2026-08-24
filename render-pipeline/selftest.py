@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("Vision kiểm ảnh chết -> hiện CHẾT CÂM", t_vision_chet_thi_phai_hien_chet_cam)
     check("hàng chờ có đường KHÔNG cần Firestore", t_hang_cho_khong_phu_thuoc_firestore)
     check("KHÔNG ghi snapshot/gương rỗng đè bản tốt", t_khong_ghi_snapshot_rong)
     check("KHÔNG cất gói sao lưu rỗng đè bản tốt", t_khong_cat_goi_sao_luu_rong)
@@ -1011,6 +1012,26 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_vision_chet_thi_phai_hien_chet_cam():
+    """Vision kiểm ảnh hỏng thì phải hiện 🚨 CHẾT CÂM (24/8 tối).
+    `verify_image` trả `None` khi lỗi, và `None` nghĩa là "bỏ qua kiểm" — tức người gọi NHẬN ảnh mà
+    không cần khớp nội dung. Key Vision chết / cạn quota ⇒ **mọi ảnh vào video không qua một lượt
+    kiểm nào**, mà log chỉ có một dòng cảnh báo lẫn trong hàng nghìn dòng. Đúng loại đã trả giá ở
+    ca "clip 0/118": tính năng chết mà nhìn vẫn như đang chạy."""
+    import datastory_ci as DS
+    import qc_vision as QV
+    cu = dict(DS._DEM_KHAU)
+    try:
+        DS._DEM_KHAU.clear()
+        for i in range(3):
+            QV.verify_image(f"/khong/ton/tai/{i}.jpg", "abc", api_key="x")
+        bc = DS.bao_cao_khau()
+        assert "vision ảnh 0/3" in bc, f"khâu Vision chưa vào máy dò: {bc}"
+        assert "CHẾT CÂM" in bc, "Vision hỏng 3/3 mà không hiện CHẾT CÂM"
+    finally:
+        DS._DEM_KHAU.clear(); DS._DEM_KHAU.update(cu)
 
 
 def t_hang_cho_khong_phu_thuoc_firestore():

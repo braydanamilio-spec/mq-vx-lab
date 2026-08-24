@@ -22,6 +22,15 @@ def _report_quota(err):
             pass
 
 
+def _dem_khau(ten: str, duoc: bool) -> None:
+    """Ghi vào máy dò "chết câm" của datastory_ci. Nhập muộn để tránh vòng import."""
+    try:
+        import datastory_ci as _DS
+        _DS.dem_khau(ten, duoc)
+    except Exception:
+        pass
+
+
 def verify_image(path: str, subject: str, api_key: str = None, model_name: str = None):
     """Gemini Vision: ảnh này có RÕ RÀNG là `subject` không? (dùng cho GUESS — ép ảnh khớp đáp án 100%).
     Trả True (khớp) / False (KHÔNG khớp) / None (không kiểm được -> Vision lỗi/quota). None để caller fail-open."""
@@ -42,10 +51,17 @@ def verify_image(path: str, subject: str, api_key: str = None, model_name: str =
                                       generation_config={"response_mime_type": "application/json", "temperature": 0.0},
                                       request_options={"timeout": 30})   # cùng bug thiếu timeout như check_visual() — xem comment ở đó
         r = CB._extract_json(resp.text) or {}
+        _dem_khau("vision ảnh", True)
         return bool(r.get("match"))
     except Exception as e:
         _report_quota(e)
-        print(f"   ⚠️ verify_image lỗi (bỏ qua kiểm): {str(e)[:70]}")
+        # 24/8 tối — KHÂU NÀY HỎNG THÌ IM HOÀN TOÀN. `None` nghĩa là "bỏ qua kiểm", tức người gọi
+        # NHẬN ảnh mà không cần khớp nội dung. Key Vision chết / cạn quota ⇒ mọi ảnh vào video không
+        # qua một lượt kiểm nào, mà log chỉ có một dòng cảnh báo lẫn trong hàng nghìn dòng. Đây đúng
+        # loại sự cố đã trả giá ở ca "clip 0/118": tính năng chết mà nhìn vẫn như đang chạy.
+        # Ghi vào máy dò chết câm -> cả phiên 0/N sẽ hiện 🚨 CHẾT CÂM ở dòng tổng kết.
+        _dem_khau("vision ảnh", False)
+        print(f"   ⚠️ verify_image lỗi (bỏ qua kiểm — ẢNH VÀO VIDEO KHÔNG QUA KIỂM): {str(e)[:60]}")
         return None
 
 

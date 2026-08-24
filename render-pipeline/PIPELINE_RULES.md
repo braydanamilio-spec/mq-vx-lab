@@ -2078,3 +2078,15 @@ Chốt bằng `t_hang_cho_khong_phu_thuoc_firestore` (kiểm từng lệnh có `
 lớp bọc là test bắt.
 **LUẬT: một chuỗi dự phòng chỉ mạnh bằng lệnh YẾU NHẤT đứng TRƯỚC nó. Viết xong đường thay thì phải
 đi ngược lên xem có gì chặn đường tới đó không.**
+
+### 7.cx — Vision kiểm ảnh: khâu hỏng thì IM HOÀN TOÀN, và hậu quả là ảnh sai vào thẳng video (24/8/2026 tối)
+Soi máy dò "chết câm" xem nó đang canh những khâu nào: chỉ có `clip` (+ hai cuốn sổ vừa thêm ở 7.bx).
+`verify_image` — lượt kiểm ảnh CÓ KHỚP NỘI DUNG không — nằm ngoài. Mà hàm này trả `None` khi lỗi, và
+theo hợp đồng thì `None` = **"bỏ qua kiểm"**, tức người gọi NHẬN ảnh. Nghĩa là key Vision chết hoặc cạn
+quota ⇒ **mọi ảnh đi thẳng vào video không qua một lượt kiểm nào**, còn log chỉ có một dòng cảnh báo lẫn
+giữa hàng nghìn dòng. Đúng loại sự cố đã trả giá ở ca "clip 0/118": tính năng chết mà nhìn vẫn như đang chạy.
+Nay `verify_image` ghi vào `dem_khau("vision ảnh", …)`, nên phiên nào 0/N sẽ hiện
+`🚨 CHẾT CÂM: vision ảnh` ở dòng tổng kết; câu cảnh báo cũng nói thẳng *"ẢNH VÀO VIDEO KHÔNG QUA KIỂM"*.
+Chốt bằng `t_vision_chet_thi_phai_hien_chet_cam` (3 lượt hỏng ⇒ phải ra CHẾT CÂM).
+**LUẬT: mỗi phụ thuộc ngoài mà "hỏng thì bỏ qua" đều phải có người ĐẾM. Không đếm thì `bỏ qua` = `tắt
+hẳn`, và không ai biết mình đang chạy với tính năng đã tắt.**
