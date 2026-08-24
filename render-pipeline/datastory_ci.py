@@ -2369,7 +2369,10 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
         # đã render: khung render đã CHÁY phụ đề + HUD vào ảnh -> thumbnail bị chữ đè chữ, rất xấu.
         # Ảnh gốc là ảnh đã tuyển (Openverse CC0 hoặc AI vẽ) -> nét, và MỖI VIDEO MỘT ẢNH KHÁC NHAU
         # -> thumbnail 21 kênh doc không bị giống hệt nhau.
-        clips = [s.get("clip") for s in (props.get("scenes") or []) if s.get("clip")]
+        # 24/8: từ khi có CLIP VIDEO xen kẽ, danh sách này có cả .mp4. Nền thumbnail là ẢNH TĨNH
+        # (DocThumb dựng bằng <Img>) nên phải LỌC BỎ video, không thì thumbnail ra nền trắng.
+        clips = [s.get("clip") for s in (props.get("scenes") or [])
+                 if s.get("clip") and str(s.get("clip")).lower().endswith((".jpg", ".jpeg", ".png"))]
         bg_rel = ""
         if clips:
             # bỏ ảnh cảnh đầu (hay là ảnh mở bài chung chung) nếu còn ảnh khác -> lấy ảnh giữa bài, đúng
