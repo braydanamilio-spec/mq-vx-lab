@@ -1407,7 +1407,14 @@ def mirror_connections_to_b() -> int:
         # ngốn 60s+ ngay đầu phiên trước khi cầu dao kịp biết đường đọc đã chết.
         for d in _db().collection("connections").stream(timeout=20):
             x = d.to_dict() or {}
-            if x.get("refresh_token") and x.get("root"):
+            # 24/8 — GƯƠNG PHẢI CHÉP CẢ TOKEN YOUTUBE/FACEBOOK, KHÔNG CHỈ DRIVE.
+            # Điều kiện cũ đòi có `root` (id thư mục Drive) nên chỉ kho Drive được chép. Hậu quả đo
+            # được hôm nay: A cạn hạn mức từ 09:18, chẩn đoán in rõ "A ❌ CẠN · B còn · C còn" —
+            # render vẫn đẩy kho được (nhờ gương Drive) nhưng KHÔNG ĐĂNG ĐƯỢC CÁI NÀO, vì token
+            # YouTube chỉ nằm ở A. A cạn = điểm chết đơn của cả khâu đăng bài.
+            # Nay chép MỌI connection có refresh_token (drive/youtube/facebook). Rules B khoá kín
+            # (catch-all deny, chỉ service account bypass) nên token không lộ thêm ra đâu cả.
+            if x.get("refresh_token"):
                 rows[d.id] = x
         _cr("mirror_conn_A", max(1, len(rows)))
         if not rows:

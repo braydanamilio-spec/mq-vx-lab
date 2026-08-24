@@ -747,3 +747,26 @@ chết chưa đầy 90 phút sau mốc reset, rồi bị đập tiếp cả ngà
 
 **Luật:** phân biệt **burst thoáng qua** với **cạn hạn mức cả ngày** — cùng mã 429 nhưng chữa ngược
 nhau. Thử lại chỉ đúng cho cái đầu; với cái sau, mỗi lần thử là tự bắn vào chân.
+
+### 7.ac — A cạn = KHÔNG ĐĂNG ĐƯỢC VIDEO NÀO (điểm chết đơn của khâu đăng bài, 24/8/2026)
+
+Chẩn đoán mới (`chan_doan_429`) ở lượt publish 11:50Z in ra đúng thủ phạm:
+`A ❌ CẠN 429 · B còn hạn mức · C còn hạn mức`.
+
+**Vì sao nguy:** token YouTube/Facebook chỉ nằm ở **A**. Gương `connections_mirror` (dựng 23/8) có
+điều kiện `refresh_token AND root` — `root` là id thư mục Drive, nên **chỉ kho Drive được chép**.
+Kết quả: A cạn thì render vẫn chạy, vẫn đẩy kho được (nhờ gương Drive), nhưng **không đăng được cái
+nào** — đúng cảnh "render làm gì khi không đăng được".
+
+**Vá 3 lớp:**
+1. `mirror_connections_to_b`: bỏ điều kiện `root` → chép **mọi** connection có `refresh_token`
+   (drive + youtube + facebook). Rules B khoá kín nên token không lộ thêm.
+2. `State.list_connections` / `get_connection`: gặp 429 ở A thì đọc **gương ở B**, không chết lượt đăng.
+3. `State.get_doc`: lượt publish 11:50Z chết ngay ở dòng đầu — `settings/overrides`, một doc cấu
+   hình TUỲ CHỌN. A cạn → trả `None` + báo, chạy bằng mặc định thay vì giết cả lượt đăng.
+
+**Lưu ý vận hành:** gương chỉ tươi lại được khi plan đọc được A. A đã cạn từ 09:18 hôm nay nên gương
+chưa có token YouTube — lớp bảo vệ này có hiệu lực **từ phiên plan đầu tiên sau khi A hồi** (~07:00Z).
+
+**Luật:** mỗi dữ liệu SỐNG CÒN phải trả lời được câu "project giữ nó chết thì việc gì dừng?".
+Trả lời là "khâu đăng bài" thì bắt buộc phải có gương ở project khác.
