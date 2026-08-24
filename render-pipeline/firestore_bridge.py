@@ -441,8 +441,27 @@ def read_rw_ledger(owner: str) -> tuple:
     xăng đã cạn. Cộng cả hai: +1 lượt đọc mỗi tiến trình, đổi lại con số nói thật.
     (Ngày của hai bên nay đã khớp: cả hai dùng mốc Thái Bình Dương — xem `_ngay_quota`.)"""
     try:
-        _cr("rw_ledger", 2)
         day = _ngay_quota()
+        # ĐANG CHẠY TRÊN GƯƠNG THÌ ĐỪNG ĐỌC SỔ Ở GƯƠNG (24/8 tối, đo được).
+        # `📟 Sổ quota hôm nay: ĐỌC 9.631/50.000` in ra Y HỆT ở ba phiên liên tiếp (16:06Z, 17:56Z,
+        # 20:12Z) — vì sau failover, `_db_jobs()` trả về B2, mà B2 là bản chép ĐÔNG CỨNG từ 13:15Z
+        # (B cạn hạn mức đọc nên gương không làm tươi được nữa). Đọc sổ ở đó là đọc một con số đã
+        # chết, và bức tường ngân sách ra quyết định trên nó.
+        # D1 thì luôn tươi và KHÔNG nằm trong tài nguyên đang cạn — `xa_ngan_sach_d1()` vẫn cộng vào
+        # đó suốt. Lấy từ đấy.
+        if _B2["on"]:
+            try:
+                import hot_db as _H
+                x = _H.ngan_sach_doc(day) or {}
+                r, w = int(x.get("doc", 0) or 0), int(x.get("ghi", 0) or 0)
+                if r or w:
+                    return r, w
+                print("   ⚠️ Sổ quota: đang ở gương B2 mà D1 chưa có số ngày hôm nay -> "
+                      "KHÔNG có số tin được, coi như không đo được.")
+                return -1, -1
+            except Exception:
+                return -1, -1
+        _cr("rw_ledger", 2)
         d = _db_jobs().collection("render_stats").document(f"__rw__{owner}").get()
         x = ((d.to_dict() or {}).get(day) or {}) if d.exists else {}
         r, w = int(x.get("r", 0)), int(x.get("w", 0))

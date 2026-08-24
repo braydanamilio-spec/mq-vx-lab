@@ -1025,6 +1025,29 @@ def t_so_quota_dung_ngay_va_gop_du():
     i = src.index("def read_rw_ledger")
     than = src[i: src.index("\ndef ", i + 10)]
     assert 'collection("quota")' in than, "read_rw_ledger chưa cộng sổ của khâu đăng"
+    # ĐANG Ở GƯƠNG THÌ KHÔNG ĐƯỢC ĐỌC SỔ Ở GƯƠNG. `📟 Sổ quota: ĐỌC 9.631` in ra Y HỆT ba phiên
+    # liên tiếp vì sau failover `_db_jobs()` trả B2 — bản chép đông cứng từ 13:15Z. D1 luôn tươi và
+    # không nằm trong tài nguyên đang cạn.
+    assert '_B2["on"]' in than and "ngan_sach_doc" in than, \
+        "đang chạy trên gương mà vẫn đọc sổ quota từ gương -> con số chết"
+    import sys as _sys, types as _types
+    _that = _sys.modules.get("hot_db")
+    _gia = _types.ModuleType("hot_db")
+    _gia.ngan_sach_doc = lambda ngay: {"doc": 41230, "ghi": 8800}
+    _gia.bat_ghi = _gia.bat_doc = lambda: True
+    _sys.modules["hot_db"] = _gia
+    try:
+        FB._B2["on"] = True
+        assert FB.read_rw_ledger("uid") == (41230, 8800), "không lấy số tươi từ D1 khi ở gương"
+        _gia.ngan_sach_doc = lambda ngay: {"doc": 0, "ghi": 0}
+        assert FB.read_rw_ledger("uid") == (-1, -1), \
+            "D1 trống mà vẫn báo 0 -> lại là con số bịa (xem luật 'không đo được thì đừng báo 0')"
+    finally:
+        FB._B2["on"] = False
+        if _that is not None:
+            _sys.modules["hot_db"] = _that
+        else:
+            _sys.modules.pop("hot_db", None)
     # hai bên phải nói về CÙNG một ngày
     qg = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                       "MM0-AutoPublisher", "src", "quota_guard.py")

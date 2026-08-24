@@ -1912,3 +1912,20 @@ Chốt bằng `t_noi_man_khong_dung_toi_anh` — kiểm **file ảnh gốc khôn
 đổi THÔNG SỐ DỰNG HÌNH, sửa file là làm hỏng nguồn mà nguồn thì không lấy lại được.
 **LUẬT: sửa xong phải hỏi "mình vừa chữa chỗ bị CHẤM hay chỗ người xem THẤY?" — hai chỗ đó thường
 không trùng nhau.**
+
+### 7.cm — Đang chạy trên GƯƠNG mà vẫn đọc sổ quota Ở GƯƠNG (24/8/2026 tối)
+`📟 Sổ quota hôm nay: ĐỌC 9.631/50.000` in ra **y hệt ở ba phiên liên tiếp** (16:06Z · 17:56Z · 20:12Z).
+Nối tiếp 7.ce (sai ngày + thiếu một cuốn sổ), đây là tầng thứ ba: sau failover, `_db_jobs()` trả về
+**B2 — bản chép ĐÔNG CỨNG từ 13:15Z** (B cạn hạn mức đọc nên gương không làm tươi được nữa). Đọc sổ ở
+đó là đọc một con số đã chết, mà bức tường ngân sách thì ra quyết định trên nó.
+Nay: khi `_B2["on"]`, lấy số từ **D1** (`ngan_sach_doc`) — luôn tươi, và **không nằm trong tài nguyên
+đang cạn**, đúng nguyên tắc đã dùng ở 7.bz. D1 chưa có số ngày hôm nay thì trả `-1` = "không đo được",
+KHÔNG bịa 0 (luật 7.cg).
+**LUẬT: nguồn dự phòng chỉ đáng tin cho thứ nó được chép sang. Sổ đo THỜI GIAN THỰC thì bản chép luôn
+sai — phải đọc từ nơi vẫn đang được cập nhật.**
+
+**Ghi nhận đêm nay đã chạy đúng (đo trong log plan 20:12Z):**
+`📦 Đệm bài: mục tiêu 7 ngày/kênh · đói nhất: FAKEUSA=1.5ngày, FARMUSA=2.0ngày, RELICUSA=2.0ngày…`
+— PHẢN ÁP LỰC lần đầu hoạt động sau khi vá `_chu()` (7.ch); `📣 nghỉ tới 06:59Z` + `📣 B đã có cờ nghỉ
+tới 06:59Z (dài hơn) — giữ nguyên` — cờ chung giữ đúng mốc cạn-ngày và không bị ghi đè (7.cd);
+0 `Traceback`, 0 `KHÔNG SAO LƯU` — bước sao lưu kho key đã sống (7.cc).
