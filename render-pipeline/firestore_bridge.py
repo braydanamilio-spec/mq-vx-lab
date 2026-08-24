@@ -26,6 +26,7 @@ _B2 = {"on": False, "client": None, "wclient": None}
 
 
 def _stream_at(q, timeout=20):
+    _cr("_stream_at", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
     """`.stream(timeout=)` nhưng KHÔNG chết vì thư viện.
 
     24/8 — sự cố thật: gương B→B2 hỏng MỌI PHIÊN với
@@ -35,11 +36,15 @@ def _stream_at(q, timeout=20):
     biết, tới lúc failover mới lòi ra "gương tuổi 948 phút". Lưới an toàn của hệ đã chết âm thầm.
     Ở đây: gặp đúng nhóm lỗi tương thích (AttributeError/TypeError) thì gọi lại KHÔNG kèm timeout.
     Lỗi thật (429, mạng) vẫn ném lên như cũ để cầu dao/failover xử đúng việc của nó."""
+    def _tinh(ra):
+        _cr("stream", max(1, len(ra)))     # TỰ TÍNH TIỀN theo SỐ DOC THẬT, khỏi phải nhớ đếm
+        return ra
     try:
-        return list(q.stream(timeout=timeout))
+        return _tinh(list(q.stream(timeout=timeout)))
     except (AttributeError, TypeError) as e:
         print(f"   ⚠️ stream(timeout) không dùng được ({str(e)[:60]}) — gọi lại không timeout")
-        return list(q.stream())
+        _cr("_stream_at", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
+        return _tinh(list(q.stream()))
 
 
 def _get_at(ref, timeout=15):
@@ -48,6 +53,69 @@ def _get_at(ref, timeout=15):
         return ref.get(timeout=timeout)
     except (AttributeError, TypeError):
         return ref.get()
+
+
+# ══ BỨC TƯỜNG QUOTA — ĐẾM Ở TẦNG THẤP, KHÔNG CALL SITE NÀO TRỐN ĐƯỢC (24/8/2026) ══════════════
+#
+# Vì sao phải làm kiểu này thay vì "tối ưu tiếp":
+#   Sổ `_cr()` cũ chỉ đếm ở chỗ CÓ AI ĐÓ NHỚ GẮN VÀO. Đo thật: sổ báo 1.302 lượt đọc trong khi
+#   project B đã dùng >50.000 (vỡ trần, phải failover) — sổ chỉ nhìn thấy ~3% sự thật.
+#   Tối ưu thì GIẢM tiêu thụ, nhưng không bao giờ tạo ra một BỨC TƯỜNG.
+#
+# Ba phần:
+#   1. `_stream_at()` TỰ TÍNH TIỀN theo số doc thật -> mọi lời gọi qua nó tự vào sổ.
+#   2. `nap_nen_ngan_sach()` đọc số CẢ HỆ đã tiêu hôm nay (18 luồng + dashboard chung 1 doc) —
+#      không có bước này thì mỗi luồng chỉ thấy phần mình (~1.300) và tưởng còn dư 97%.
+#   3. `con_ngan_sach()` là bức tường: việc PHỤ dừng ở 70% trần, việc THIẾT YẾU chạy tới cùng.
+#      Thà cạn quota còn hơn mất video đã render — nên ghi kết quả job KHÔNG BAO GIỜ bị chặn.
+# Và `selftest.t_khong_tron_so` bắt buộc mọi lối đọc mới phải gắn sổ, nếu không thì FAIL.
+TRAN_DOC_NGAY = 50_000
+TRAN_GHI_NGAY = 20_000
+MUC_PHU = 0.70
+# nen_doc/nen_ghi = phần CẢ HỆ đã tiêu trước tiến trình này (đọc từ sổ chung).
+# 24/8: bản đầu dùng CHUNG một biến `nen` cho cả đọc lẫn ghi -> báo "GHI 180%" trong khi
+# thực tế chưa ghi gì. Nền đọc và nền ghi là hai con số khác nhau, không được gộp.
+_NGAN_SACH = {"doc": 0, "ghi": 0, "nen_doc": 0.0, "nen_ghi": 0.0, "canh_bao": set()}
+
+
+def _thuc_te(loai: str) -> int:
+    return int(_NGAN_SACH[f"nen_{loai}"]) + int(_NGAN_SACH[loai])
+
+
+def con_ngan_sach(loai: str = "doc", thiet_yeu: bool = False) -> bool:
+    """Còn được phép làm việc này không? Việc thiết yếu luôn được phép."""
+    if thiet_yeu:
+        return True
+    tran = TRAN_DOC_NGAY if loai == "doc" else TRAN_GHI_NGAY
+    return _thuc_te(loai) < tran * MUC_PHU
+
+
+def bao_ngan_sach() -> str:
+    d, g = _thuc_te("doc"), _thuc_te("ghi")
+    return (f"🧱 Ngân sách hôm nay: ĐỌC {d:,}/{TRAN_DOC_NGAY:,} ({d*100//TRAN_DOC_NGAY}%) · "
+            f"GHI {g:,}/{TRAN_GHI_NGAY:,} ({g*100//TRAN_GHI_NGAY}%)")
+
+
+def _tinh_tien(loai: str, n: int = 1):
+    _NGAN_SACH[loai] += max(0, int(n or 0))
+    tran = TRAN_DOC_NGAY if loai == "doc" else TRAN_GHI_NGAY
+    ti = _thuc_te(loai) / float(tran)
+    if ti >= MUC_PHU and loai not in _NGAN_SACH["canh_bao"]:
+        _NGAN_SACH["canh_bao"].add(loai)
+        print(f"   🧱 {loai.upper()} đã dùng {ti*100:.0f}% trần ngày -> DỪNG mọi việc phụ.")
+
+
+def nap_nen_ngan_sach(owner: str) -> None:
+    """Đọc số ĐÃ TIÊU HÔM NAY của cả hệ (1 lượt đọc). Gọi 1 lần đầu tiến trình."""
+    try:
+        ngay = datetime.now(timezone.utc).strftime("%Y%m%d")
+        d = _db_ghi().collection("render_stats").document(f"__rw__{owner}").get(timeout=10)
+        x = ((d.to_dict() or {}).get(ngay) or {}) if d.exists else {}
+        _NGAN_SACH["nen_doc"] = float(x.get("r", 0) or 0)
+        _NGAN_SACH["nen_ghi"] = float(x.get("w", 0) or 0)
+        print("   " + bao_ngan_sach())
+    except Exception as e:
+        print(f"   ⚠️ không đọc được sổ ngân sách ({str(e)[:50]}) — chạy với số của riêng tiến trình")
 
 
 def _b2_available() -> bool:
@@ -156,8 +224,10 @@ def top_titles(owner: str, channel: str, n: int = 8) -> list[str]:
         col = db.collection("videos").where("owner", "==", owner).where("channel", "==", channel).where("status", "==", "posted")
         try:
             from google.cloud.firestore_v1 import Query
+            _cr("top_titles", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
             docs = list(col.order_by("stats.views", direction=Query.DESCENDING).limit(n).stream(timeout=20))
         except Exception:
+            _cr("top_titles", 60)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
             docs = list(col.limit(60).stream(timeout=20))              # thiếu index -> lấy thô rồi tự sort
             docs.sort(key=lambda d: ((d.to_dict() or {}).get("stats") or {}).get("views", 0), reverse=True)
             docs = docs[:n]
@@ -208,11 +278,13 @@ _READS = {"n": 0, "by": {}}
 def _cw(tag: str):
     _WRITES["n"] += 1
     _WRITES["by"][tag] = _WRITES["by"].get(tag, 0) + 1
+    _tinh_tien("ghi", 1)
 
 
 def _cr(tag: str, n: int = 1):
     _READS["n"] += n
     _READS["by"][tag] = _READS["by"].get(tag, 0) + n
+    _tinh_tien("doc", n)
 
 
 def flush_soft() -> int:
@@ -541,6 +613,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
             # B rỗng (chưa copy key sang) -> lùi về A, KHÔNG để pipeline tưởng là hết key rồi dừng.
             def _fallbackA():
                 db = _db(); out2 = []
+                _cr("_fallbackA", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
                 for d in db.collection("gemini_keys").where("owner", "==", owner).stream(timeout=20):
                     x = d.to_dict() or {}
                     if x.get("key"):
@@ -1011,6 +1084,7 @@ def drive_usage(owner: str, moi_nhat: bool = False):
             pass                      # đọc đệm hỏng -> quét thật như cũ, không được chết vì cái đệm
     used = cap = 0
     try:
+        _cr("drive_usage", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         for d in _db().collection("storage_accounts").where("owner", "==", owner).stream(timeout=20):
             x = d.to_dict() or {}
             used += (x.get("used", 0) or 0)
@@ -1038,6 +1112,7 @@ def read_channels(owner: str) -> list[dict]:
 def read_one_channel(owner: str, name: str) -> dict | None:
     """Đọc ĐÚNG 1 kênh theo tên (1 read) — dùng trong vòng lặp render để check pause/target mà KHÔNG đọc cả 15 kênh."""
     def _do():
+        _cr("_do", 1)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         q = (_db_meta().collection("render_channels").where("owner", "==", owner)
              .where("name", "==", name).limit(1).stream(timeout=20))
         for d in q:
@@ -1102,6 +1177,7 @@ def find_done_before(owner: str, channel: str, vtype: str, before_iso: str, limi
              .where("created_at", "<", before_iso)
              .order_by("created_at").limit(int(limit)))
         out = []
+        _cr("find_done_before", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         for d in q.stream(timeout=20):
             x = d.to_dict() or {}
             if x.get("requeued"):
@@ -1140,6 +1216,7 @@ def delete_jobs_by_drive(owner: str, drive_id: str):
     if not drive_id:
         return
     # limit 5: một drive_id chỉ gắn với 1-2 job; không chặn thì lỡ query sai điều kiện là quét cả bảng.
+    _cr("delete_jobs_by_drive", 5)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
     for d in (_db_jobs().collection("render_jobs").where("owner", "==", owner)
               .where("drive_id", "==", drive_id).limit(5).stream(timeout=20)):
         try:
@@ -1156,6 +1233,7 @@ def get_script_by_drive(owner: str, drive_id: str):
     if not drive_id:
         return None
     try:
+        _cr("get_script_by_drive", 3)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         for d in (_db_jobs().collection("render_jobs").where("owner", "==", owner)
                   .where("drive_id", "==", drive_id).limit(3).stream(timeout=20)):
             s = (d.to_dict() or {}).get("script")
@@ -1175,6 +1253,7 @@ def read_thumb_requests(owner: str, limit: int = 40) -> list[dict]:
     try:
         q = (_db_meta().collection("thumb_requests").where("owner", "==", owner)
              .where("status", "==", "pending").limit(limit))   # chặn ngay ở TRUY VẤN, không phải sau khi đã đọc về
+        _cr("read_thumb_requests", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         for d in q.stream(timeout=20):
             x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
             if len(out) >= limit:
@@ -1326,6 +1405,7 @@ def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
          .where("channel", "==", channel).where("status", "==", "done"))
     if vtype:
         q = q.where("type", "==", vtype)
+    _cr("_count_jobs", 200)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
     try:
         # _retry: 429 ở đây đa số là BURST THEO PHÚT (plan bắn ~106 lệnh đếm liền tay cho 53 kênh,
         # 10:17Z 22/8), không phải cạn ngày — backoff 1.5-7.5s là qua. Không retry thì count trả 0
@@ -1353,6 +1433,7 @@ def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
                 print("   🔌 CẦU DAO: quota đọc cạn -> ngừng đếm 15', coi mọi kênh = 0 (phiên sau đếm lại)")
             return 0
         try:
+            _cr("_count_jobs", 200)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
             return sum(1 for _ in q.limit(200).stream(timeout=12))
         except Exception:
             print(f"   ⚠️ đếm {channel}/{vtype} lỗi ({str(e)[:50]}) -> coi như 0, phiên sau đếm lại")
@@ -1384,6 +1465,7 @@ def has_active_render(owner: str) -> bool:
         cut_created = now_ - _td(hours=GHOST_H)          # job CŨ chưa có updated_at -> đành đo theo tuổi
         cut_beat = now_ - _td(minutes=STALE_MIN)         # job MỚI có nhịp tim -> đo theo lần ghi cuối
         live = 0
+        _cr("has_active_render", 60)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         for d in q.limit(60).stream(timeout=20):            # chỉ chạy khi n>0; 60 = trần an toàn (matrix tối đa 18)
             x = d.to_dict() or {}
             ts, cut = x.get("updated_at"), cut_beat
@@ -1483,6 +1565,9 @@ def mirror_b_to_b2(owner: str) -> int:
     import time as _t3
     if _t3.time() < _RQ_DEAD["until"]:
         print("   🪞 Gương B→B2: bỏ qua (cầu dao quota đang đóng) — chép ở phiên sau")
+        return 0
+    if not con_ngan_sach("doc"):
+        print("   🧱 Gương B→B2: hoãn — " + bao_ngan_sach())
         return 0
     """GƯƠNG DỮ LIỆU SỐNG CÒN B->B2 (23/8): kênh + config + snapshot key + gương kho — đủ để failover
     sang B2 là plan/lane chạy được ngay (job history KHÔNG gương: sống thiếu nó được, đếm lại dần).
@@ -1628,6 +1713,7 @@ def mirror_connections_to_b() -> int:
         rows = {}
         # 23/8 tối: thêm timeout cho lượt quét A. Không có nó, hôm A cạn quota thì riêng lệnh này đã
         # ngốn 60s+ ngay đầu phiên trước khi cầu dao kịp biết đường đọc đã chết.
+        _cr("mirror_connections_to_b", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         for d in _db().collection("connections").stream(timeout=20):
             x = d.to_dict() or {}
             # 24/8 — GƯƠNG PHẢI CHÉP CẢ TOKEN YOUTUBE/FACEBOOK, KHÔNG CHỈ DRIVE.
@@ -1643,6 +1729,7 @@ def mirror_connections_to_b() -> int:
         if not rows:
             return _dung_snap_tu_B()
         col = _db_jobs().collection("connections_mirror")
+        _cr("mirror_connections_to_b", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         cur = {d.id: (d.to_dict() or {}) for d in col.stream(timeout=20)}
         _cr("mirror_conn_B", max(1, len(cur)))
         n = 0
@@ -1716,6 +1803,9 @@ def heal_unpushed(owner: str, hours: int = 48, cap: int = 120) -> int:
     if _t2.time() < _RQ_DEAD["until"]:
         print("   🩹 heal_unpushed: bỏ qua (cầu dao quota đang đóng)")
         return 0
+    if not con_ngan_sach("doc"):
+        print("   🧱 heal_unpushed: hoãn — " + bao_ngan_sach())
+        return 0
     """TỰ CHỮA video 'mồ côi' (22/8): Firestore A nghẽn 1 nhịp -> enqueue tưởng '0 kho Drive' ->
     9 video EMPIREUSA QC 98 render xong bị TỪ CHỐI đẩy, job ghi done «Xong (chưa đẩy Drive)» rồi
     runner chết -> file mất, chỉ còn KỊCH BẢN trong job. Hàm này chạy 1 lần/phiên (plan_mode):
@@ -1730,10 +1820,12 @@ def heal_unpushed(owner: str, hours: int = 48, cap: int = 120) -> int:
         # mà vẫn lật failed thì lane render lại xong LẠI bị từ chối -> vòng lặp đốt máy vô ích cả đêm.
         _path_ok = False
         try:
+            _cr("heal_unpushed", 1)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
             next(_db().collection("connections").limit(1).stream(timeout=12), None)
             _path_ok = True
         except Exception:
             try:
+                _cr("heal_unpushed", 1)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
                 _path_ok = next(_db_jobs().collection("connections_mirror").limit(1).stream(timeout=12), None) is not None
             except Exception:
                 pass
@@ -1747,6 +1839,7 @@ def heal_unpushed(owner: str, hours: int = 48, cap: int = 120) -> int:
         q = (_db_jobs().collection("render_jobs").where("owner", "==", owner)
              .where("status", "==", "done").where("created_at", ">=", since).limit(400))
         healed = scanned = orphan = 0
+        _cr("heal_unpushed", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         for d in q.stream(timeout=20):
             j = d.to_dict() or {}
             scanned += 1
@@ -1794,9 +1887,11 @@ def find_resumable(owner: str, channel: str, vtype: str):
         # top_titles đã làm) -> không gãy khi index chưa tạo.
         try:
             from google.cloud.firestore_v1 import Query
+            _cr("find_resumable", 5)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
             cands = [(d.id, d.to_dict() or {})
                      for d in q.order_by("created_at", direction=Query.DESCENDING).limit(5).stream(timeout=20)]
         except Exception:
+            _cr("find_resumable", 25)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
             cands = [(d.id, d.to_dict() or {}) for d in q.limit(25).stream(timeout=20)]
         cands = [(i, j) for i, j in cands if j.get("script")]
         if not cands:
@@ -1945,6 +2040,7 @@ def add_r2_pending(owner: str, meta: dict) -> None:
 def list_r2_pending(owner: str, cap: int = 40) -> list[dict]:
     try:
         q = _db_jobs().collection("r2_pending").where("owner", "==", owner).limit(cap)
+        _cr("list_r2_pending", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         return [{**(d.to_dict() or {}), "_doc": d.id} for d in q.stream(timeout=20)]
     except Exception as e:
         print(f"   ⚠️ đọc sổ R2 lỗi ({str(e)[:60]})")

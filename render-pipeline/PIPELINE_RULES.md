@@ -1135,3 +1135,30 @@ dữ liệu sống (job · số đếm · chủ đề) **chẻ làm đôi** → 
 
 **Luật:** khi một hệ có bản chính và bản dự phòng, phải định nghĩa rõ **ai được GHI**. Cho cả hai
 cùng ghi thì không phải "đồng bộ" — đó là hai sự thật, và rồi sẽ phải chọn tin cái nào.
+
+### 7.as — Vì sao "tối ưu" mãi vẫn vỡ, và bức tường thay cho lời hứa (24/8/2026)
+
+**Con số nói hết:** sổ `_cr()` của pipeline báo **1.302** lượt đọc, trong khi project B đã dùng
+**>50.000** (vỡ trần, phải failover). **Sổ chỉ nhìn thấy ~3% sự thật** — vì `_cr()` chỉ đếm ở chỗ
+*có ai đó nhớ gắn vào*. Mỗi lần thêm code là thêm một lối đọc không ai đếm.
+
+> **Tối ưu = GIẢM mức tiêu thụ. Nó không bao giờ tạo ra một BỨC TƯỜNG.**
+> Hứa "sẽ tiết kiệm" thì lần sau vẫn vỡ. Phải có trần mà code **không thể** vượt và **không thể quên gắn**.
+
+**Bốn phần, làm xong hôm nay:**
+1. `_stream_at()` **tự tính tiền** theo **số doc THẬT** trả về — mọi lời gọi qua nó tự vào sổ, không
+   cần nhớ. (Trước đây các con số trong `_cr("...", 70)` là **ước lượng**, mà pool key đã lên 220.)
+2. **29 câu lệnh đọc** còn lại được gắn sổ (dò bằng AST để chèn đúng đầu câu lệnh, không phá cú pháp).
+3. `nap_nen_ngan_sach()` — đọc số **CẢ HỆ** đã tiêu hôm nay (18 luồng + dashboard cùng cộng vào một
+   doc). Thiếu bước này thì mỗi luồng chỉ thấy phần mình (~1.300) và **tưởng còn dư 97%**, trong khi
+   18 luồng cộng lại đã chạm trần. Đây chính là chỗ khiến "mỗi người tối ưu một mảnh mà tổng vẫn vỡ".
+4. `con_ngan_sach()` là **bức tường**: việc **PHỤ** (gương, tự chữa, quét vét, thống kê) dừng ở **70%**
+   trần; việc **THIẾT YẾU** (ghi kết quả job, sổ đếm) chạy tới cùng — *thà cạn quota còn hơn mất video
+   đã render*.
+
+**Và chốt để không tái phát:** `selftest.t_khong_tron_so` quét mọi lệnh `.stream(` trong
+`firestore_bridge.py`; lệnh nào không gắn sổ và không đi qua `_stream_at` là **FAIL ngay**, chặn phiên.
+Tức từ nay **không thể** thêm một lối đọc trốn sổ mà vẫn push được.
+
+**Luật:** kỷ luật con người không giữ được hạn mức. Chỉ có hai thứ giữ được: **đếm ở tầng thấp nhất**
+(để không ai quên) và **một bài kiểm chặn build** (để không ai thêm lối mới).

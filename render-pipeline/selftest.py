@@ -367,12 +367,37 @@ def main():
     check("bố cục: hook KHÔNG lấn băng phụ đề", t_bo_cuc_khong_chong)
     check("hàng chờ: 18 luồng KHÔNG lấy trùng kênh", t_hang_cho_nguyen_tu)
     check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
+    check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
             print("   - " + f)
         sys.exit(1)
     print("✅ SELFTEST PASS — code lành, cho phép chạy phiên.")
+
+
+def t_khong_tron_so():
+    """CHẶN CODE MỚI THÊM MỘT LỐI ĐỌC KHÔNG AI ĐẾM.
+
+    Đây là gốc của việc "tối ưu mãi vẫn vỡ": sổ `_cr()` chỉ đếm ở chỗ CÓ AI ĐÓ NHỚ GẮN VÀO.
+    Đo thật 24/8: sổ báo 1.302 lượt đọc trong khi project B đã dùng >50.000 — sổ chỉ thấy ~3%.
+    Mỗi lần thêm code là thêm một lối trốn. Bài này quét mọi lệnh quét-cả-bảng (`.stream(`) trong
+    firestore_bridge và bắt buộc quanh đó phải có `_cr(` hoặc đi qua `_stream_at`. Thêm lối đọc mới
+    mà quên đếm là FAIL NGAY TẠI ĐÂY, không phải chờ cháy quota mới biết."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "firestore_bridge.py"), encoding="utf-8").read().split("\n")
+    tron = []
+    for i, ln in enumerate(src):
+        if ".stream(" not in ln or ln.strip().startswith("#"):
+            continue
+        if "_stream_at" in ln:
+            continue                      # đi qua lớp bọc -> hợp lệ
+        vung = "\n".join(src[max(0, i - 6):i + 2])
+        if "_cr(" in vung or "def _stream_at" in vung:
+            continue                      # có gắn sổ ngay trên -> hợp lệ
+        tron.append(f"dòng {i+1}: {ln.strip()[:78]}")
+    assert not tron, ("có lối đọc KHÔNG gắn sổ ngân sách:\n   " + "\n   ".join(tron[:6])
+                      + "\n-> thêm _cr(\"tên\", n) ngay trước, hoặc gọi qua _stream_at()")
 
 
 def t_b2_chi_doc():

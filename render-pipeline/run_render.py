@@ -1314,6 +1314,7 @@ def plan_mode():
         return out_channels([])
     # 📟 CHUÔNG QUOTA NGÀY (23/8): đọc sổ tổng 1 lượt -> thấy lũy kế CẢ NGÀY ngay đầu phiên,
     # không còn cảnh đọc cháy ngầm từ trưa mà tối mới lộ (đêm 22/8 đứng máy 9 tiếng vì thế).
+    FB.nap_nen_ngan_sach(OWNER)   # biết CẢ HỆ đã tiêu bao nhiêu hôm nay, không chỉ phần mình
     _moc("quota_pulse")
     FB.quota_pulse(OWNER)   # sổ quota ngày + chuông 60/85% + ≥90% lật B2 CHỦ ĐỘNG (gương còn tươi)
     # GƯƠNG kho Drive A->B (23/8) — publisher fallback khi A nghẽn; phải chạy TRƯỚC heal để
@@ -1665,6 +1666,7 @@ def channel_mode(name):
         FB.flush_soft()                    # xả ghi done/topics bị hoãn -> count_done không đếm thiếu
         FB.update_channel_stats(OWNER, name)   # sổ thống kê 1-doc cho dashboard (số thật mọi kênh, 1 ghi)
         print("   " + FB.write_report())   # SỐ ĐO THẬT lượt ghi Firestore — khỏi ước lượng lần sau
+        print("   " + FB.bao_ngan_sach())
         try:
             _bc = DS.bao_cao_khau()        # máy dò "chết câm": khâu nào thử nhiều mà 0 lần được
             if _bc:
