@@ -1899,3 +1899,16 @@ Chốt bằng `t_cuu_mo_dau_khong_qua_mat_qc` (kiểm cả việc `Cinematic.tsx
 tính xong mà composition không đọc thì vô nghĩa).
 **LUẬT: trước khi chữa "ảnh xấu", phải kiểm xem thứ mình đo có đúng thứ người xem thấy không. Ở đây
 khoảng cách giữa hai thứ đó là 93 điểm phần trăm.**
+
+### 7.cl — Chữa mỗi khung mở đầu là chữa chỗ BỊ CHẤM, không phải chỗ NGƯỜI XEM THẤY (24/8/2026 tối)
+Nối tiếp 7.ck. QC chỉ soi khung mở đầu, nên nới lớp phủ cho cảnh 0 là hết bị loại — **nhưng các cảnh
+sau vẫn bị lớp phủ 74-88% dìm y hệt**, tức cả video vẫn xỉn, chỉ khác là không ai chặn. Đó đúng là
+thứ anh nói "hình nhàm chán".
+`can_man_moi_canh()` đo TỪNG cảnh qua lớp phủ; cảnh nào vượt 75% tối thì hạ `man` (0.75 → 0.55 → 0.45)
+tới khi đạt. **Ảnh vốn sáng giữ nguyên lớp phủ dày** — phụ đề karaoke chạy suốt video nên không được
+bỏ lớp phủ đại trà, chỉ nới đúng chỗ ảnh đã tối sẵn (ảnh tối + phủ mỏng thì chữ vẫn đọc rõ).
+Chi phí đo: ~40ms/cảnh (đo thật), so với 2-4 phút render là không đáng kể.
+Chốt bằng `t_noi_man_khong_dung_toi_anh` — kiểm **file ảnh gốc không bị sửa một byte**: nới lớp phủ là
+đổi THÔNG SỐ DỰNG HÌNH, sửa file là làm hỏng nguồn mà nguồn thì không lấy lại được.
+**LUẬT: sửa xong phải hỏi "mình vừa chữa chỗ bị CHẤM hay chỗ người xem THẤY?" — hai chỗ đó thường
+không trùng nhau.**

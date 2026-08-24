@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
     check("phản áp lực không chạy được thì phải NÓI RA", t_phan_ap_luc_khong_im_lang)
@@ -873,6 +874,45 @@ def t_cuu_mo_dau_khong_qua_mat_qc():
         t = io.open(eng, encoding="utf-8").read()
         assert "s.man ?? 1" in t and "0.74 * man" in t, \
             "Cinematic chưa nhận độ dày lớp phủ -> Python tính xong nhưng không ai dùng"
+    # Nới lớp phủ phải áp cho MỌI cảnh, không riêng cảnh mở đầu: QC chỉ soi khung đầu nên chữa mỗi
+    # cảnh 0 là hết bị loại, nhưng cả video vẫn xỉn — không ai chặn, và đó mới là thứ người xem thấy.
+    assert src.count("can_man_moi_canh(") >= 4, "chưa cân lớp phủ cho mọi cảnh ở đủ 3 đường"
+
+
+def t_noi_man_khong_dung_toi_anh():
+    """Nới lớp phủ = đổi THÔNG SỐ dựng hình, KHÔNG được sửa file ảnh gốc (24/8 tối).
+    Ảnh gốc còn nguyên thì lần render sau (hoặc render lại từ kịch bản) vẫn ra đúng như vậy; sửa
+    file là làm hỏng nguồn, mà nguồn thì không lấy lại được."""
+    import random, hashlib
+    try:
+        from PIL import Image
+    except ImportError:
+        return
+    import datastory_ci as DS
+    base = os.path.join(DS.PUB, "_selftest_man", "clips")
+    os.makedirs(base, exist_ok=True)
+    try:
+        def _anh(ten, lo, hi, seed):
+            random.seed(seed)
+            im = Image.new("RGB", (320, 180)); px = im.load()
+            for y in range(180):
+                for x in range(320):
+                    px[x, y] = (random.randrange(lo, hi), random.randrange(max(0, lo - 15), max(1, hi - 15)),
+                                random.randrange(lo, min(255, hi + 15)))
+            im.save(os.path.join(base, ten), quality=92)
+        _anh("sang.jpg", 190, 255, 2); _anh("vua.jpg", 60, 150, 3)
+        pr = {"slug": "_selftest_man", "scenes": [{"clip": "sang.jpg"}, {"clip": "vua.jpg"}]}
+        goc = {f: hashlib.md5(open(os.path.join(base, f), "rb").read()).hexdigest()
+               for f in ("sang.jpg", "vua.jpg")}
+        DS.can_man_moi_canh(pr)
+        for f, v in goc.items():
+            assert v == hashlib.md5(open(os.path.join(base, f), "rb").read()).hexdigest(), \
+                f"{f} bị SỬA — nới lớp phủ không được đụng file ảnh gốc"
+        assert pr["scenes"][0].get("man") in (None, 1.0), "ảnh SÁNG bị nới lớp phủ oan"
+        assert pr["scenes"][1].get("man"), "ảnh bị dìm quá tối mà không được nới"
+    finally:
+        import shutil
+        shutil.rmtree(os.path.join(DS.PUB, "_selftest_man"), ignore_errors=True)
 
 
 def t_lay_viec_ke_o_dung_duong_vao():

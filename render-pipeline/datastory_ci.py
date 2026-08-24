@@ -2554,6 +2554,37 @@ def _sau_man(path: str, man: float = 1.0):
         return 0.0, 999.0, 9999      # đo không được -> coi như ĐẠT, không chặn oan
 
 
+def can_man_moi_canh(props: dict, nguong: float = 75.0) -> int:
+    """Cân độ dày lớp phủ cho TỪNG cảnh, không riêng cảnh mở đầu (24/8/2026 tối).
+
+    QC chỉ soi khung mở đầu, nên chữa mỗi cảnh 0 là hết bị loại — nhưng các cảnh sau vẫn bị lớp phủ
+    74-88% dìm y như vậy, tức **cả video vẫn xỉn**, chỉ là không ai chặn. Đo thật: ảnh 0,0% tối ra
+    93,3% tối sau lớp phủ.
+    Ở đây: cảnh nào sau lớp phủ vượt `nguong` % tối thì hạ `man` cho tới khi đạt (sàn 0.45). Ảnh vốn
+    sáng giữ nguyên lớp phủ dày — phụ đề karaoke chạy suốt video nên KHÔNG được bỏ lớp phủ đại trà,
+    chỉ nới đúng chỗ ảnh đã tối sẵn (ảnh tối + phủ mỏng thì chữ vẫn đọc rõ).
+    Trả số cảnh đã nới. Rẻ: ~40ms/cảnh, so với 2-4 phút render là không đáng kể."""
+    base = os.path.join(PUB, props.get("slug", ""), "clips")
+    n = 0
+    for sc in (props.get("scenes") or []):
+        f = sc.get("clip")
+        if not f or sc.get("man"):          # cảnh 0 đã được cân riêng thì thôi
+            continue
+        d, _sa, _c = _sau_man(os.path.join(base, f), 1.0)
+        if d < nguong:
+            continue
+        for m in (0.75, 0.55, 0.45):
+            d2, _s2, _c2 = _sau_man(os.path.join(base, f), m)
+            if d2 < nguong:
+                sc["man"] = m; n += 1
+                break
+        else:
+            sc["man"] = 0.45; n += 1        # tối quá thì nới hết cỡ, còn hơn để đen kịt
+    if n:
+        print(f"   🪟 nới lớp phủ cho {n} cảnh bị dìm quá tối (ảnh sáng giữ nguyên).")
+    return n
+
+
 def sang_hoa_mo_dau(props: dict, dark_ok: bool = False) -> str:
     """CỨU KHUNG MỞ ĐẦU TRƯỚC KHI RENDER, thay vì để QC loại sau khi đã tốn công (24/8/2026 tối).
 
@@ -2774,6 +2805,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     prune_ghost_clips(props)
     # CỨU KHUNG MỞ ĐẦU TRƯỚC KHI RENDER (24/8 tối) — rẻ hơn nhiều so với để QC loại sau khi dựng.
     _ly_do = sang_hoa_mo_dau(props, dark_ok=_dark_ok(channel))
+    can_man_moi_canh(props)
     if _ly_do:
         raise Exception(f"Mở đầu không cứu được: {_ly_do} — dừng TRƯỚC render (đỡ 2-4' CPU)")
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
@@ -2894,7 +2926,8 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix="", li
     out = os.path.abspath(out); fresh_out(out)      # dọn bản vòng trước, tránh lẫn
     pf = os.path.join(PUB, f"_docshort_{slug(channel)}_{prefix or '0'}.json")
     prune_ghost_clips(props)
-    _ly_do = sang_hoa_mo_dau(props, dark_ok=_dark_ok(channel))   # cứu mở đầu trước render (24/8)
+    _ly_do = sang_hoa_mo_dau(props, dark_ok=_dark_ok(channel))
+    can_man_moi_canh(props)   # cứu mở đầu trước render (24/8)
     if _ly_do:
         raise Exception(f"Mở đầu không cứu được: {_ly_do} — dừng TRƯỚC render")
     json.dump(props, open(pf, "w"))
@@ -3032,6 +3065,7 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
         long_props["mode"] = mode
     prune_ghost_clips(long_props)
     _ly_do = sang_hoa_mo_dau(long_props, dark_ok=_dark_ok(channel))   # cứu mở đầu trước render (24/8)
+    can_man_moi_canh(long_props)
     if _ly_do:
         raise Exception(f"Mở đầu LONG không cứu được: {_ly_do} — dừng TRƯỚC render")
     pf = os.path.join(PUB, f"_doclong_{slug(channel)}.json"); json.dump(long_props, open(pf, "w"))
