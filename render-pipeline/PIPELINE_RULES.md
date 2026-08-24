@@ -1944,3 +1944,17 @@ Chốt bằng `t_cong_kho_drive_dong_duoc_that` (so vị trí định nghĩa/l�
 **LUẬT: `except Exception` bọc quanh một QUYẾT ĐỊNH (không chỉ quanh I/O) là chỗ ẩn nấp hoàn hảo cho
 lỗi lập trình. Việc đọc thì bọc được; việc QUYẾT ĐỊNH phải nằm ngoài.** Và: cho một linter chạy qua
 repo là 30 giây, rẻ hơn nhiều so với một cổng an toàn chết âm thầm.
+
+### 7.co — Đường dự phòng B2 bị bỏ qua IM LẶNG suốt (24/8/2026 tối)
+Quét kiểu mới: lấy mọi dòng log đặc trưng trong code rồi đối chiếu với log thật — **dòng nào chưa từng
+xuất hiện là ứng viên "tính năng chết"**. Cách này đã bắt 4 lỗi tối nay; lần này lòi ra
+`📦 Gói sao lưu:` chưa từng in. Truy: bước sao lưu chạy được (7.cc đã vá) nhưng `pool_accounts()` trả
+rỗng — và trong log chỉ có ĐÚNG MỘT dòng `đọc danh sách kho ở B hụt` rồi thẳng tới
+`❌ không đọc được kho Drive nào`. Nhìn thì tưởng đã thử cả B2.
+Thật ra `_b2_client()` trả `None` vì bước đó không được truyền `FIREBASE_PROJECT_ID_B2`, và vòng lặp
+`continue` **không in gì**. Trớ trêu: ngay trong CÙNG FILE, khối B2 phía dưới lại mặc định
+`"mm0-shard-b2"` khi thiếu env — hai chỗ cùng một việc, hai hành vi khác nhau (cùng họ 7.by).
+Vá: `_b2_client()` mặc định `mm0-shard-b2` + in lý do khi vẫn phải bỏ qua; workflow truyền env B2 cho
+bước sao lưu (đồng bộ với 3 bước còn lại). Chốt bằng `t_duong_du_phong_b2_khong_bi_bo_qua_im`.
+**LUẬT: `continue` / `return None` trong một chuỗi dự phòng phải NÓI RA lý do. Chuỗi dự phòng im lặng
+là chuỗi mà không ai biết nó có chạy hay không — và nó sẽ không chạy đúng lúc cần nhất.**

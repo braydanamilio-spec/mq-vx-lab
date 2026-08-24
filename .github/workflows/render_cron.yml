@@ -78,6 +78,7 @@ jobs:
                            # 0 lệch) -> bật đọc từ D1. Số đếm hết phụ thuộc shard B/B2 nào đang sống.
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          FIREBASE_PROJECT_ID_B2: mm0-shard-b2
         run: python render-pipeline/backup_vault.py || true
       - name: Gate (--gate)
         id: gate

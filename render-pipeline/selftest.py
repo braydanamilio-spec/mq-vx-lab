@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("đường dự phòng B2 không bị bỏ qua im lặng", t_duong_du_phong_b2_khong_bi_bo_qua_im)
     check("cổng kho Drive đóng được THẬT (không tự nuốt lỗi)", t_cong_kho_drive_dong_duoc_that)
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
@@ -878,6 +879,36 @@ def t_cuu_mo_dau_khong_qua_mat_qc():
     # Nới lớp phủ phải áp cho MỌI cảnh, không riêng cảnh mở đầu: QC chỉ soi khung đầu nên chữa mỗi
     # cảnh 0 là hết bị loại, nhưng cả video vẫn xỉn — không ai chặn, và đó mới là thứ người xem thấy.
     assert src.count("can_man_moi_canh(") >= 4, "chưa cân lớp phủ cho mọi cảnh ở đủ 3 đường"
+
+
+def t_duong_du_phong_b2_khong_bi_bo_qua_im():
+    """Đường dự phòng B2 không được bỏ qua IM LẶNG (24/8 tối).
+    Log bước sao lưu phiên 20:12Z chỉ có MỘT dòng `đọc danh sách kho ở B hụt` rồi thẳng tới
+    `❌ không đọc được kho Drive nào` — nhìn thì tưởng đã thử cả B2. Thật ra `_b2_client()` trả None
+    vì bước đó không được truyền `FIREBASE_PROJECT_ID_B2`, và vòng lặp `continue` không in gì.
+    Mà ngay TRONG CÙNG FILE, khối B2 phía dưới lại mặc định "mm0-shard-b2" — hai chỗ cùng việc, hai
+    hành vi khác nhau."""
+    ap = os.environ.get("AUTOPUBLISHER_SRC") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "MM0-AutoPublisher", "src")
+    f = os.path.join(ap, "storage.py")
+    if not os.path.exists(f):
+        return
+    src = io.open(f, encoding="utf-8").read()
+    i = src.index("def _b2_client")
+    than = src[i: i + 900]
+    assert '"mm0-shard-b2"' in than, \
+        "_b2_client thiếu mặc định project B2 -> im lặng bỏ qua đường dự phòng khi thiếu env"
+    assert "⚠️" in than, "_b2_client bỏ qua B2 mà không in lý do"
+    wf = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                      ".github", "workflows", "render_cron.yml")
+    if not os.path.exists(wf):
+        return
+    w = io.open(wf, encoding="utf-8").read()
+    # mọi bước gọi tới storage.py đều phải có env B2, nếu không lại rơi đúng cái bẫy trên
+    i = w.index("- name: Sao lưu kho key")
+    j = w.index("run: python render-pipeline/backup_vault.py", i)
+    assert "FIREBASE_PROJECT_ID_B2" in w[i:j], \
+        "bước sao lưu thiếu FIREBASE_PROJECT_ID_B2 -> B2 bị bỏ qua"
 
 
 def t_cong_kho_drive_dong_duoc_that():
