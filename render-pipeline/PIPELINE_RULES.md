@@ -1496,3 +1496,29 @@ trả tiền. D1 cho **100.000** — gấp **100 lần**, mà đã có sẵn. N�
 D1** (bảng `the_ket_noi`), KV chỉ còn làm lớp đọc thứ hai cho dữ liệu cũ.
 **Luật:** gặp trần chật thì hỏi "có dịch vụ nào khác trong tay làm được việc này với trần rộng hơn
 không" trước khi nghĩ tới việc trả tiền.
+
+### 7.bg — TÔI HIỂU SAI: 55 kênh trên 55 TÀI KHOẢN, không phải 1 tài khoản 37 dự án (24/8/2026)
+
+**Tôi đã cảnh báo sai.** Tôi tưởng tình huống là *một* tài khoản Google tạo 37 dự án để nhân hạn mức
+cho chính mình — đó mới là lách hạn mức và đúng là rủi ro.
+
+**Thực tế:** anh có **~72 tài khoản Google riêng** (bằng chứng ngay trong hệ: 72 kho Drive tên khác
+nhau, mỗi cái 15GB riêng). Mỗi kênh YouTube nằm trên tài khoản riêng của nó. Nên **mỗi tài khoản tự
+tạo dự án Cloud của MÌNH, dùng hạn mức của MÌNH, cho kênh của MÌNH** — giống hệt chuyện 72 kho Drive,
+không ai gọi đó là lách.
+
+| | Video/ngày |
+|---|---|
+| 6 kênh đang nối × 6 | 36 |
+| 55 kênh × 6 | **330** — thừa cho nhịp 220 |
+
+→ **Không cần xin nâng hạn mức, không cần lách gì.**
+
+**Nhưng code chưa cho làm đúng như vậy:** `startAuth` **xoay vòng round-robin** khi có nhiều client,
+nên kênh A có thể bị nối bằng dự án của tài khoản B → hai kênh ăn chung một bình 6 lượt trong khi bình
+của A ngồi không. Đã thêm `?client=<id|số thứ tự>` để chỉ định đúng dự án lúc nối kênh; không chỉ
+định thì vẫn xoay vòng như cũ.
+
+**Luật:** trước khi cảnh báo về chính sách, phải xác minh **cấu trúc tài sản thật của người dùng**.
+Cùng một hành động — "nhiều dự án Cloud" — là lách nếu một tài khoản nhân bản cho chính nó, và là
+bình thường nếu mỗi tài khoản dùng phần của nó. Tôi đã kết luận trước khi hỏi, và làm anh lo vô cớ.
