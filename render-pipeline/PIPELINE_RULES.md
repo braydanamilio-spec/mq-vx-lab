@@ -605,3 +605,28 @@ Kiểm bằng lệnh gọi THẬT trước khi viết code (không tin tài li�
  • images-api.nasa.gov `media_type=video` → **200** ✅ không cần key. Trước mình chỉ lấy ẢNH của NASA.
  • loc.gov (Library of Congress) → **403** ❌ chặn bot bằng Cloudflare challenge. KHÔNG dùng được.
 Thứ tự nguồn clip hiện tại: Pexels → Pixabay → NARA → DVIDS → Internet Archive → NASA video.
+
+### 7.x — Key nguồn tư liệu Mỹ: DVIDS dán liền 2 khoá, và bộ kiểm key giết oan (24/8/2026)
+
+**Đo được:**
+- Trang DVIDS `accounts/<id>#tab_applications` có cột tiêu đề **"Public Key/Private Key"**, hiển thị
+  HAI khoá **dính liền không dấu phân cách**: public = `key-` + 13 ký tự (17), private = 40 ký tự.
+  Copy cả ô ra chuỗi 57 ký tự → API trả `403 "API key is not in a valid format"`.
+  Cắt 17 ký tự đầu → **200**, 1.000 kết quả. (Đó là lý do "thêm key DVIDS mãi không được".)
+- Ô thêm key ở dashboard chốt `length < 20` → public key 17 ký tự bị chặn im lặng.
+- Nút "⚡ Kiểm ngay" ném key `nara:`/`dvids:` xuống nhánh cuối (Gemini) → Google 403 →
+  ghi `alive:false, dead_kind:"permanent"` = **giết oan key vừa thêm**.
+- NARA (`catalog.archives.gov`) không trả header CORS → trình duyệt luôn "Failed to fetch",
+  không phân biệt được key sống/chết.
+- Worker gọi DVIDS **không kèm User-Agent** → 403 + trang HTML. Thêm UA là 200.
+  (Pipeline python đã luôn gửi `UA` nên không dính; chỉ Worker thiếu.)
+
+**Đã sửa:**
+- `dashboard/index.html`: chuỗi `key-` 57 ký tự tự **tách lấy public key**; nới chốt độ dài cho
+  đúng dạng `key-…`; nhánh kiểm riêng cho `nara:`/`dvids:` đi qua Worker.
+- `connect-worker/src/worker.js`: thêm route `/api/key-probe?kind=nara|dvids|pexels|pixabay&key=…`
+  (gọi hộ phía server, có UA). Nhà cung cấp trả **trang HTML chặn** ⇒ báo `status 0` (chưa rõ),
+  KHÔNG báo chết — nguyên tắc: không kết luận key hỏng từ một lần chặn tầng mạng.
+
+**Luật:** thêm nguồn key mới thì phải làm ĐỦ 3 chỗ — nhận diện khi dán, nhánh kiểm sống/chết,
+và pipeline đọc. Thiếu nhánh kiểm thì bộ kiểm sẽ đánh chết key tốt.
