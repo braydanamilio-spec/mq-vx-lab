@@ -1418,7 +1418,7 @@ def mirror_connections_to_b() -> int:
                 rows[d.id] = x
         _cr("mirror_conn_A", max(1, len(rows)))
         if not rows:
-            return 0
+            return _dung_snap_tu_B()
         col = _db_jobs().collection("connections_mirror")
         cur = {d.id: (d.to_dict() or {}) for d in col.stream(timeout=20)}
         _cr("mirror_conn_B", max(1, len(cur)))
@@ -1441,7 +1441,47 @@ def mirror_connections_to_b() -> int:
             print(f"   🪞 Gương kho Drive A→B: cập nhật {n}/{len(rows)} tài khoản + snapshot 1-doc.")
         return n
     except Exception as e:
-        print(f"   ⚠️ mirror_connections lỗi ({str(e)[:60]}) — A nghẽn thì phiên sau tự thử lại.")
+        print(f"   ⚠️ mirror_connections lỗi ({str(e)[:60]}) — dựng lại gói từ chính gương ở B.")
+        return _dung_snap_tu_B()
+
+
+def _dung_snap_tu_B() -> int:
+    """DỰNG LẠI doc gói `connections_mirror/__snap__` TỪ CHÍNH GƯƠNG Ở B, không cần đọc A.
+
+    24/8 — MẮT XÍCH GỐC của việc A cháy sạch trong 90 phút. Chuỗi nhân quả đo được:
+      `mirror_connections_to_b` đọc A ở dòng ĐẦU. A cạn -> ném -> return 0 -> doc gói `__snap__`
+      KHÔNG được dựng. Mà `__snap__` chính là lối 1-lượt-đọc của `pool_accounts`. Không có nó thì
+      mỗi luồng rơi xuống lối cũ: thử A 3 lần × ~73 doc, cứ 30 phút một vòng, suốt 165 phút,
+      × 18 luồng ≈ 20.000 lượt đọc A mỗi phiên — mà lượt đọc HỎNG vẫn tính vào hạn mức.
+      Tức là: A cạn khiến hệ đập vào A mạnh hơn. Vòng xoáy tự siết.
+    Bằng chứng trong log phiên 08:47: mọi luồng in `🪞 A nghẽn — dùng GƯƠNG kho ở B: 73 tài khoản`
+    — dòng đó thuộc lối QUÉT 73 doc, tức lối `__snap__` đã hụt.
+
+    Gói dựng từ B luôn dùng được vì các doc gương đã có sẵn đủ token; chỉ thiếu kho MỚI kết nối
+    trong lúc A chết — chấp nhận được, phiên sau A hồi là gói đầy đủ ngay."""
+    try:
+        col = _db_jobs().collection("connections_mirror")
+        keys = ("refresh_token", "root", "client_id", "client_secret", "channel", "owner", "email", "cap_gb")
+        rows = {}
+        for d in _stream_at(col):
+            if d.id == "__snap__":
+                continue
+            x = d.to_dict() or {}
+            if x.get("refresh_token"):
+                rows[d.id] = x
+        if not rows:
+            print("   ⚠️ gương ở B cũng rỗng — không dựng được gói kho.")
+            return 0
+        _cr("snap_tu_B", max(1, len(rows)))
+        _snap = [{"id": i, **{k: v for k, v in x.items() if k in keys}} for i, x in rows.items()]
+        _cw("mirror_conn_snap")
+        _soft(lambda: col.document("__snap__").set({"at": _now(), "n": len(_snap), "accs": _snap,
+                                                    "nguon": "B"}), "mirror_conn_snap")
+        print(f"   🧩 Dựng gói kho từ gương B: {len(_snap)} tài khoản (A không đọc được) — "
+              f"18 luồng phía sau chỉ tốn 1 lượt đọc/luồng thay vì đập vào A.")
+        return len(_snap)
+    except Exception as e:
+        print(f"   ⚠️ dựng gói từ B hụt ({str(e)[:60]})")
         return 0
 
 

@@ -770,3 +770,24 @@ chưa có token YouTube — lớp bảo vệ này có hiệu lực **từ phiên
 
 **Luật:** mỗi dữ liệu SỐNG CÒN phải trả lời được câu "project giữ nó chết thì việc gì dừng?".
 Trả lời là "khâu đăng bài" thì bắt buộc phải có gương ở project khác.
+
+### 7.ad — VÒNG XOÁY TỰ SIẾT: A cạn khiến hệ đập vào A mạnh hơn (24/8/2026)
+
+Đây là mắt xích **gốc** của việc "vừa reset ngày mới đã cháy sạch A". Chuỗi nhân quả đo được:
+
+1. `mirror_connections_to_b` đọc **A ở dòng đầu tiên**. A cạn → ném → `return 0`.
+2. Nên doc gói `connections_mirror/__snap__` **không được dựng**.
+3. Mà `__snap__` chính là lối **1-lượt-đọc** của `pool_accounts`.
+4. Không có nó, mỗi luồng rơi xuống lối cũ: thử A **3 lần × ~73 doc**, cứ 30' một vòng (hết TTL),
+   suốt 165', **× 18 luồng ≈ 20.000 lượt đọc A mỗi phiên**.
+5. Lượt đọc **hỏng vì 429 vẫn tính vào hạn mức** → A bị dìm sâu hơn, hôm sau vừa reset là cháy lại.
+
+Bằng chứng: log phiên 08:47 có `🪞 A nghẽn — dùng GƯƠNG kho ở B: 73 tài khoản` ở **mọi** luồng —
+dòng đó thuộc lối QUÉT 73 doc, tức lối `__snap__` đã hụt.
+
+**Vá:** `_dung_snap_tu_B()` — A không đọc được thì **dựng lại `__snap__` từ chính gương ở B**
+(B còn hạn mức). Gói luôn tươi bất kể A sống hay chết; chỉ thiếu kho MỚI kết nối trong lúc A chết,
+phiên sau A hồi là đầy đủ. 18 luồng phía sau tốn **1 lượt đọc/luồng** thay vì đập vào A.
+
+**Luật:** đường dự phòng KHÔNG được phụ thuộc vào chính thứ nó dự phòng. Gương mà chỉ dựng được khi
+nguồn còn sống thì đúng lúc cần nhất nó sẽ không có.
