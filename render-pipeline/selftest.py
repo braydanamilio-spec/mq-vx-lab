@@ -364,12 +364,32 @@ def main():
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
     check("hồ key ẢNH được bù khi shard trả lời thiếu", t_giu_key_anh)
     check("trí nhớ key cạn SỐNG xuyên video", t_nho_key_can)
+    check("bố cục: hook KHÔNG lấn băng phụ đề", t_bo_cuc_khong_chong)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
             print("   - " + f)
         sys.exit(1)
     print("✅ SELFTEST PASS — code lành, cho phép chạy phiên.")
+
+
+def t_bo_cuc_khong_chong():
+    """CHỮ CHỒNG CHÉO (ảnh chụp 24/8: "$750B" đè "What does it take to keep").
+
+    Hai lớp vẽ độc lập trong Cinematic.tsx: lớp HOOK (số liệu to) và lớp PHỤ ĐỀ. Trước đây biến thể
+    hook neo đáy dùng padding-bottom 300px nên trải xuống tận y≈1620, còn phụ đề ở `bottom: 520`
+    (băng y≈1200-1400) -> đâm ngang qua nhau. Chọn bố cục theo băm tiêu đề nên cứ ~1/4 video dính.
+    Chốt bằng số để sau này ai sửa lùi lại là FAIL ngay tại đây, không phải chờ thấy video xấu."""
+    import os
+    import re
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                     "..", "engine-remotion", "src", "Cinematic.tsx")
+    src = io.open(p, encoding="utf-8").read()
+    cap = int(re.search(r"const fs = port \? \d+ : \d+; const bottom = port \? (\d+)", src).group(1))
+    top = int(re.search(r"const CAP_TOP = (\d+);", src).group(1))
+    # hook phải kết thúc TRÊN mép trên của băng phụ đề, chừa biên cho phụ đề 2-3 dòng (~260px)
+    assert top >= cap + 260, (f"hook neo đáy tới y={1920-top}, băng phụ đề bắt đầu ~y={1920-cap-260} "
+                              f"-> sẽ chồng chữ (CAP_TOP phải >= {cap + 260})")
 
 
 def t_nho_key_can():

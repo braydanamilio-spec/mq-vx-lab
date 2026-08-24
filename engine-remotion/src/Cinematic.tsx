@@ -285,11 +285,20 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
         // hiện nhanh (12fr) -> giữ ~2.5s -> mờ đi, nhường chỗ cho footage. Không giữ suốt cảnh:
         // số liệu to che hình cả 8 giây thì lại thành "tấm bảng chữ" đúng thứ cần tránh.
         const ein2 = Math.min(ci(l, 0, 12, 0, 1), ci(l, 78, 96, 1, 0));
+        // 24/8 — SỬA LỖI CHỮ CHỒNG CHÉO (ảnh chụp DEFENSEUSA "$750B" và CRIMEUSA "1%").
+        // Hai lớp vẽ ĐỘC LẬP nhau nên không lớp nào biết lớp kia đang ở đâu:
+        //   • lớp HOOK: biến thể v===2 neo ĐÁY với padding-bottom 300px -> khối chữ trải tới y≈1620
+        //   • lớp PHỤ ĐỀ: `bottom: 520` -> băng chữ nằm ở y≈1250-1400
+        // Giao nhau -> câu phụ đề đâm ngang qua giữa con số to. Cứ 1/4 số cảnh mở đầu là dính
+        // (bố cục chọn theo băm tiêu đề, v===2 là 1 trong 4).
+        // Cách chữa: CHIA BĂNG CỐ ĐỊNH. Phụ đề giữ nguyên băng đáy; hook bị ép nằm TRỌN phía trên
+        // băng đó. Vẫn giữ đủ 4 bố cục cho đỡ lặp mô-típ, chỉ khác là không cái nào lấn xuống nữa.
+        const CAP_TOP = 860;   // 1920 - 520(bottom phụ đề) - ~640 chừa cho phụ đề 2 dòng + biên an toàn
         const pos: any = v === 0 ? { alignItems: "center", justifyContent: "center", textAlign: "center" }
           : v === 1 ? { alignItems: "flex-start", justifyContent: "center", textAlign: "left" }
           : v === 2 ? { alignItems: "flex-start", justifyContent: "flex-end", textAlign: "left" }
           : { alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left" };
-        const padV = v === 2 ? "0 100px 300px" : v === 3 ? "260px 100px 0" : "0 100px";
+        const padV = v === 2 ? `0 100px ${CAP_TOP}px` : v === 3 ? "260px 100px 0" : `0 100px ${CAP_TOP}px`;
         return (<AbsoluteFill style={{ pointerEvents: "none" }}>
           {/* phủ tối vừa đủ: chữ hook luôn đọc được mà vẫn thấy rõ ảnh nền */}
           <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(3,6,16,.66) 0%, rgba(3,6,16,.34) 45%, rgba(3,6,16,.82) 100%)" }} />

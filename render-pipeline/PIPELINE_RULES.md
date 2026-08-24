@@ -959,3 +959,31 @@ khâu nào thử ≥3 lần mà 0 lần được thì in `🚨 CHẾT CÂM`.
 
 **Luật:** một tính năng không có chỉ số đo được là một tính năng **có thể đã chết mà không ai biết**.
 Và một môi trường chạy không ghim phiên bản là một hệ **không thể lặp lại**, nên cũng không thể gỡ lỗi.
+
+### 7.al — Chữ chồng chéo: hai lớp vẽ độc lập, đúng 1/4 số video dính (24/8/2026)
+
+**Bằng chứng:** ảnh chụp DEFENSEUSA (`$750B`) và CRIMEUSA (`1%`) — con số to bị câu phụ đề đâm ngang
+qua giữa.
+
+**Gốc:** trong `Cinematic.tsx` có HAI lớp vẽ **hoàn toàn độc lập**, không lớp nào biết lớp kia ở đâu:
+- lớp HOOK, biến thể neo đáy: `padding-bottom: 300px` → khối chữ trải tới **y≈1620**
+- lớp PHỤ ĐỀ: `bottom: 520` → băng chữ nằm ở **y≈1200-1400**
+
+Bố cục hook chọn bằng **băm `(stat + line) % 4`** → **đúng 1/4 số video** rơi vào biến thể hỏng.
+Đó là lý do lúc thấy lúc không, và vì sao QC không bắt: video vẫn "sạch, chữ đọc rõ" nên Vision chấm
+80+ (đúng bài học mục qc_structure). Kiểm chứng bằng chính hàm băm: cả hai mẫu anh chụp đều ra v=2.
+
+**Vá 3 lớp:**
+1. `Cinematic.tsx`: **chia băng cố định** — hằng số `CAP_TOP` ép mọi biến thể hook nằm TRỌN phía trên
+   băng phụ đề (chừa 260px cho phụ đề 2-3 dòng). Vẫn giữ đủ 4 bố cục để không lặp mô-típ.
+2. `selftest.py` — `t_bo_cuc_khong_chong`: đọc thẳng hai con số trong `Cinematic.tsx` và bắt buộc
+   `CAP_TOP >= bottom_phụ_đề + 260`. Ai sửa lùi lại là **FAIL ngay tại selftest**, không phải chờ
+   thấy video xấu rồi mới biết.
+3. `find_overlap_videos.py`: chép **nguyên si** hàm băm của TSX, soi kịch bản đã lưu của từng job
+   `done` để tìm ĐÚNG video dính rồi xếp hàng render lại qua `new_render_request` (dựng lại từ kịch
+   bản — **không tốn một lượt gọi AI nào**). Bật bằng `wipe_queue.yml -f fix_overlap=true`.
+   KHÔNG render lại tràn lan: 3/4 số video vốn không sao.
+
+**Luật:** hai lớp đồ hoạ chồng lên nhau mà toạ độ khai báo rời rạc thì sớm muộn cũng đâm nhau.
+Phải có **hằng số băng dùng chung** + một bài kiểm chốt bằng số. Mắt người soi vài video không thay
+được phép tính — nhất là khi lỗi chỉ xuất hiện ở 1/4 trường hợp.
