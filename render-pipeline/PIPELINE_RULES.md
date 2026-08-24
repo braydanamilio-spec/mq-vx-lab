@@ -811,3 +811,28 @@ nguồn còn sống thì đúng lúc cần nhất nó sẽ không có.
 
 **Luật:** thêm tính năng mà không thêm đường log cho ca THẤT BẠI thì tính năng đó có thể chết 100%
 trong nhiều ngày mà không ai biết. Mọi nhánh `return None` im lặng đều là một điểm mù.
+
+### 7.af — GỐC của "clip thật chết + hồ ảnh teo": failover kéo theo mất kho key ảnh (24/8/2026)
+
+Truy tới cùng, ba triệu chứng tưởng rời nhau hoá ra **một gốc**.
+
+**Chứng cứ số:**
+- `🖼️ Pexels:` in **136** lần · `🧩 Pixabay:` chỉ **49** lần → chênh đúng **87**. Tức 87 lượt nạp hồ
+  KHÔNG có key `px:` LẪN `pb:` (Pexels còn "1 key" là nhờ biến môi trường `PEXELS_KEY`, Pixabay
+  không có đường lùi nên im luôn). **Cả hai loại key ảnh cùng biến mất một lúc** — không phải hao mòn.
+- Trong mỗi luồng, thứ tự luôn là `25 1 1 1` lặp lại: video LONG đủ 25 key, 3 SHORT sau đó còn 1.
+- **18/18 luồng đều `🔀 FAILOVER` sang B2** ngay đầu phiên.
+
+**Chuỗi nhân quả:** B cạn → failover → `read_keys` đọc kho key ở **B2** → mà `mirror_b_to_b2` **hỏng
+suốt 16 tiếng** (mục 7.aa) nên bản sao key ở B2 vừa cũ vừa thiếu → **kho key ảnh rơi mất** → không
+còn ảnh thật, phải nhờ AI vẽ (đốt quota Gemini/Cloudflare) → `fetch_clip` không còn ứng viên nào →
+**0 clip thật trên 118 video**, mà không một dòng log nào báo (mục 7.ae).
+
+**Vá 2 lớp (vá gương thôi là chưa đủ):**
+1. Gương B→B2 đã sửa (7.aa).
+2. `_giu_key_anh()`: key ảnh **không hết hạn, không bị phạt nghỉ** → thấy lần nào thì nhớ luôn trong
+   tiến trình; lượt đọc sau thiếu thì **bù lại từ bộ nhớ** kèm cảnh báo. Hồ ảnh không còn phụ thuộc
+   vào việc shard nào đang trả lời. Có test trong `selftest.py`.
+
+**Luật:** dữ liệu KHÔNG BAO GIỜ THAY ĐỔI (key ảnh, key lưu trữ) thì đừng đọc lại nó theo đường có thể
+hỏng. Đọc được một lần là giữ; lượt sau thiếu là bù, không phải là "hết".

@@ -334,6 +334,39 @@ _KEYS_CACHE = {}      # (owner, include_cooling) -> (thời điểm, kết quả
 # cool_key() không nhận `owner` (chữ ký cũ, gọi từ 6 vòng lặp trong key_manager). read_keys luôn chạy
 # trước nó nên ghi nhớ owner ở đây là đủ, khỏi phải đổi chữ ký ở mọi chỗ gọi.
 _OWNER_HINT = [""]
+# KHO KEY ẢNH BỀN (24/8) — xem _giu_key_anh().
+_IMG_KEYS: dict = {}
+
+
+def _giu_key_anh(rows):
+    """KHÔNG BAO GIỜ để hồ key ẢNH biến mất giữa phiên.
+
+    Sự cố truy ra được ở phiên 08:47 (log 118 video):
+      • `🖼️ Pexels:` in 136 lần, `🧩 Pixabay:` chỉ 49 lần — chênh đúng 87. Nghĩa là 87 lượt nạp hồ
+        KHÔNG có key `px:` LẪN `pb:` (Pexels còn "1 key" là nhờ biến môi trường PEXELS_KEY, Pixabay
+        không có đường lùi nên im luôn). Cả hai loại key ảnh cùng biến mất một lúc.
+      • Trong mỗi luồng, thứ tự luôn là `25 1 1 1` lặp lại: video LONG được đủ 25 key, 3 SHORT sau
+        đó chỉ còn 1.
+      • Cả 18 luồng đều đã `🔀 FAILOVER` sang B2 ngay đầu phiên.
+    Ghép lại: sau failover, `read_keys` đọc kho key ở **B2** — mà `mirror_b_to_b2` HỎNG suốt 16 tiếng
+    (lỗi tương thích thư viện, xem mục 7.aa) nên bản sao key ở B2 vừa cũ vừa thiếu. Kho key ảnh rơi
+    mất, hệ phải nhờ AI vẽ ảnh thay cho ảnh thật -> đốt quota Gemini/Cloudflare, và `fetch_clip`
+    không còn ứng viên nào (cả phiên 0 clip thật).
+
+    Gương đã được vá, nhưng CHỈ vá gương là chưa đủ: hồ key ảnh không được phép phụ thuộc vào việc
+    shard nào đang trả lời. Key ảnh không hết hạn, không bị phạt nghỉ, nên một khi đã thấy thì giữ
+    luôn trong tiến trình — lượt đọc sau thiếu thì bù lại từ đây."""
+    rows = rows or []
+    co = [r for r in rows if str(r.get("key") or "").startswith(("px:", "pb:", "nara:", "dvids:"))]
+    if co:
+        for r in co:
+            _IMG_KEYS[r.get("key")] = r          # thấy lần nào thì nhớ lần đó
+        return rows
+    if _IMG_KEYS:
+        print(f"   🧷 Lượt đọc key này KHÔNG có key ảnh nào (shard đang trả lời thiếu) — "
+              f"bù lại {len(_IMG_KEYS)} key ảnh đã nhớ, để ảnh thật và clip không chết oan.")
+        return rows + list(_IMG_KEYS.values())
+    return rows
 _HOT_CACHE = {}       # đệm tiến-trình cho các hàm đọc NÓNG (top_titles/resume/config/count) — 22/8:
                       # đo VAULTUSA 113 đọc/luồng thì 105 là 4 hàm này gọi lặp cho CÙNG câu trả lời
 KEYS_TTL = 180        # giây
@@ -472,7 +505,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
             pass                                          # overlay hỏng -> giữ số cũ, không chết
         return out
     try:
-        res = _retry(_do)
+        res = _giu_key_anh(_retry(_do))
         if not res and os.environ.get("SHARD_KEYS") == "1":
             # B rỗng (chưa copy key sang) -> lùi về A, KHÔNG để pipeline tưởng là hết key rồi dừng.
             def _fallbackA():

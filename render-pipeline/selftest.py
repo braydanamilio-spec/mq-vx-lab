@@ -362,12 +362,26 @@ def main():
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
+    check("hồ key ẢNH được bù khi shard trả lời thiếu", t_giu_key_anh)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
             print("   - " + f)
         sys.exit(1)
     print("✅ SELFTEST PASS — code lành, cho phép chạy phiên.")
+
+
+def t_giu_key_anh():
+    """Hồ key ẢNH không được biến mất khi shard trả lời thiếu (sự cố 24/8: 87/136 lượt nạp hồ mất
+    sạch key px:/pb: sau khi failover sang B2 -> phải nhờ AI vẽ ảnh, 0 clip thật cả phiên)."""
+    import firestore_bridge as FB
+    FB._IMG_KEYS.clear()
+    day = [{"id": "a", "key": "AIzaAAA"}, {"id": "b", "key": "px:PX1"}, {"id": "c", "key": "pb:PB1"}]
+    assert len(FB._giu_key_anh(day)) == 3
+    ra = FB._giu_key_anh([{"id": "a", "key": "AIzaAAA"}])    # shard trả lời thiếu key ảnh
+    co = [r for r in ra if str(r["key"]).startswith(("px:", "pb:"))]
+    assert len(co) == 2, f"phải bù lại 2 key ảnh, thực tế {len(co)}"
+    FB._IMG_KEYS.clear()
 
 
 if __name__ == "__main__":
