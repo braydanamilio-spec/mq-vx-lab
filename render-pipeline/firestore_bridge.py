@@ -112,7 +112,7 @@ def xa_ngan_sach_d1() -> None:
         import hot_db as _H
         if not _H.bat_ghi():
             return
-        ngay = datetime.now(timezone.utc).strftime("%Y%m%d")
+        ngay = _ngay_quota()
         _H.ngan_sach_cong(ngay, _NGAN_SACH["doc"], _NGAN_SACH["ghi"])
     except Exception:
         pass
@@ -130,7 +130,7 @@ def _tinh_tien(loai: str, n: int = 1):
 def nap_nen_ngan_sach(owner: str) -> None:
     """Đọc số ĐÃ TIÊU HÔM NAY của cả hệ (1 lượt đọc). Gọi 1 lần đầu tiến trình."""
     try:
-        ngay = datetime.now(timezone.utc).strftime("%Y%m%d")
+        ngay = _ngay_quota()
         d = _db_ghi().collection("render_stats").document(f"__rw__{owner}").get(timeout=10)
         x = ((d.to_dict() or {}).get(ngay) or {}) if d.exists else {}
         _NGAN_SACH["nen_doc"] = float(x.get("r", 0) or 0)
@@ -401,6 +401,18 @@ def flush_soft() -> int:
     return ok
 
 
+def _ngay_quota() -> str:
+    """NGÀY THEO MỐC RESET CỦA GOOGLE, không phải theo UTC (24/8/2026 tối).
+
+    Sổ quota trước đây đánh số ngày bằng `datetime.now(timezone.utc).strftime("%Y%m%d")`, tức
+    **sang trang lúc 00:00 UTC**. Nhưng hạn mức free của Google reset lúc **00:00 giờ Thái Bình Dương**
+    (07:00-08:00 UTC). Nghĩa là suốt khung 00:00→07:00 UTC mỗi đêm, sổ đã lật sang ngày mới và báo
+    "đã dùng 0" trong khi bình xăng thật vẫn gần cạn — đúng cái khung giờ mà 18 luồng chạy mạnh
+    nhất. Bức tường ngân sách mở toang đúng lúc cần nó nhất.
+    Dùng chung mốc với `nghi_key` (UTC-7) để mọi con số trong hệ nói về cùng một "ngày"."""
+    return (datetime.now(timezone.utc) - timedelta(hours=7)).strftime("%Y%m%d")
+
+
 def flush_rw_ledger(owner: str):
     """SỔ TỔNG ĐỌC/GHI THEO NGÀY (23/8): đêm 22/8 quota ĐỌC B cháy ngầm từ trưa mà không ai thấy vì
     chỉ soi từng luồng, không cộng lũy kế cả ngày -> tối lộ ra thì đã muộn, dây chuyền đứng tới reset.
@@ -410,7 +422,7 @@ def flush_rw_ledger(owner: str):
         if not (_WRITES["n"] or _READS["n"]):
             return
         from google.cloud.firestore_v1 import Increment
-        day = datetime.now(timezone.utc).strftime("%Y%m%d")
+        day = _ngay_quota()
         _soft(lambda: _db_ghi().collection("render_stats").document(f"__rw__{owner}").set(
             {day: {"r": Increment(_READS["n"]), "w": Increment(_WRITES["n"])}}, merge=True), "rw_ledger")
     except Exception:
@@ -418,13 +430,30 @@ def flush_rw_ledger(owner: str):
 
 
 def read_rw_ledger(owner: str) -> tuple:
-    """(đọc, ghi) lũy kế HÔM NAY từ sổ tổng — plan gọi 1 lần/phiên để rung chuông sớm."""
+    """(đọc, ghi) lũy kế HÔM NAY trên project B — CỘNG CẢ HAI CUỐN SỔ.
+
+    24/8 tối — vì sao sổ báo `ĐỌC 9.631/50.000` trong khi B đã trả 429 (tức đã chạm 50.000):
+    project B đang có **hai** cuốn sổ do hai codebase ghi, mà chỗ này chỉ đọc một cuốn.
+      • `render_stats/__rw__{owner}` — nhà máy render ghi (`flush_rw_ledger`).
+      • `quota/__rw__{ngày}`         — khâu ĐĂNG ghi (`MM0-AutoPublisher/src/quota_guard.py`,
+                                        `_client("B")` trỏ đúng vào project B).
+    Mỗi cuốn chỉ thấy một nửa lưu lượng, nên bức tường ngân sách không bao giờ chạm ngưỡng dù bình
+    xăng đã cạn. Cộng cả hai: +1 lượt đọc mỗi tiến trình, đổi lại con số nói thật.
+    (Ngày của hai bên nay đã khớp: cả hai dùng mốc Thái Bình Dương — xem `_ngay_quota`.)"""
     try:
-        _cr("rw_ledger", 1)
-        day = datetime.now(timezone.utc).strftime("%Y%m%d")
+        _cr("rw_ledger", 2)
+        day = _ngay_quota()
         d = _db_jobs().collection("render_stats").document(f"__rw__{owner}").get()
         x = ((d.to_dict() or {}).get(day) or {}) if d.exists else {}
-        return int(x.get("r", 0)), int(x.get("w", 0))
+        r, w = int(x.get("r", 0)), int(x.get("w", 0))
+        try:                       # sổ của khâu đăng — thiếu thì thôi, đừng làm hỏng số chính
+            iso = f"{day[:4]}-{day[4:6]}-{day[6:]}"
+            d2 = _db_jobs().collection("quota").document(f"__rw__{iso}").get(timeout=10)
+            y = (d2.to_dict() or {}) if d2.exists else {}
+            r += int(y.get("r", 0) or 0); w += int(y.get("w", 0) or 0)
+        except Exception:
+            pass
+        return r, w
     except Exception:
         return -1, -1
 
@@ -449,7 +478,7 @@ def count_pushed(owner: str, drive_id: str = "", channel: str = "", vtype: str =
     del _seen[:-400]
     try:
         from google.cloud.firestore_v1 import Increment
-        day = datetime.now(timezone.utc).strftime("%Y%m%d")
+        day = _ngay_quota()
         patch = {"total": Increment(1), day: Increment(1), "at": _now()}
         if channel:
             patch[f"ch_{str(channel).upper()}"] = Increment(1)

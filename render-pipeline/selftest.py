@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("sổ quota: đúng ngày reset + cộng đủ 2 cuốn", t_so_quota_dung_ngay_va_gop_du)
     check("bước phụ hỏng phải nói rõ, không im", t_buoc_phu_that_bai_khong_duoc_im)
     check("gương thiếu kênh ≠ kênh bị xoá", t_guong_thieu_kenh_khong_phai_bi_xoa)
     check("thẻ mở đầu KHÔNG thành 'chữ trên nền trơn'", t_the_mo_dau_khong_thanh_nen_tron)
@@ -798,6 +799,44 @@ def t_so_hong_phai_het_len():
     i = r.index("FB.get_script_by_drive(")          # LỜI GỌI THẬT, không phải dòng chú thích
     assert "except FB.DocLoi" in r[i: i + 700], \
         "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
+
+
+def t_so_quota_dung_ngay_va_gop_du():
+    """Sổ quota phải (a) sang trang ĐÚNG lúc Google reset, (b) cộng CẢ HAI cuốn của project B.
+
+    24/8 tối, số đo tự tố cáo: sổ báo `ĐỌC 9.631/50.000` trong khi B đã trả 429 (tức đã chạm 50.000).
+    Hai lỗi:
+      • Ngày đánh theo 00:00 **UTC**, trong khi hạn mức free reset 00:00 giờ **Thái Bình Dương**
+        (07:00-08:00 UTC) ⇒ suốt khung 00:00→07:00 UTC mỗi đêm sổ báo "đã dùng 0" trong khi bình
+        xăng vẫn gần cạn — đúng khung giờ 18 luồng chạy mạnh nhất.
+      • Project B có HAI cuốn sổ do hai codebase ghi (`render_stats/__rw__{owner}` của nhà máy render
+        và `quota/__rw__{ngày}` của khâu đăng), mà hàm đọc chỉ lấy một cuốn ⇒ mỗi cuốn thấy một nửa.
+    """
+    import datetime as _dt
+    import firestore_bridge as FB
+    mong = (_dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(hours=7)).strftime("%Y%m%d")
+    assert FB._ngay_quota() == mong, "sổ quota không theo mốc reset Thái Bình Dương"
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "firestore_bridge.py"), encoding="utf-8").read()
+    # Soi PHẦN LỆNH thôi — docstring của `_ngay_quota` có nhắc lại đoạn code cũ để giải thích bệnh.
+    import ast as _ast
+    for _n in _ast.walk(_ast.parse(src)):
+        if isinstance(_n, _ast.Call) and getattr(_n.func, "attr", "") == "strftime" \
+                and any(getattr(a, "value", "") == "%Y%m%d" for a in _n.args):
+            _fn = [f.name for f in _ast.walk(_ast.parse(src))
+                   if isinstance(f, _ast.FunctionDef)
+                   and f.lineno <= _n.lineno <= max(getattr(x, "lineno", 0) for x in _ast.walk(f))]
+            assert "_ngay_quota" in _fn, \
+                f"dòng {_n.lineno}: còn đánh số ngày quota theo UTC -> sổ sang trang lệch 7 tiếng"
+    i = src.index("def read_rw_ledger")
+    than = src[i: src.index("\ndef ", i + 10)]
+    assert 'collection("quota")' in than, "read_rw_ledger chưa cộng sổ của khâu đăng"
+    # hai bên phải nói về CÙNG một ngày
+    qg = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                      "MM0-AutoPublisher", "src", "quota_guard.py")
+    if os.path.exists(qg):
+        assert "hours=7" in io.open(qg, encoding="utf-8").read(), \
+            "quota_guard đổi mốc ngày -> hai sổ lại lệch trang"
 
 
 def t_buoc_phu_that_bai_khong_duoc_im():

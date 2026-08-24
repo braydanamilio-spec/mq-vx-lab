@@ -1807,3 +1807,18 @@ Hai lỗi trong bản vá 7.bz vừa viết:
 **LUẬT: hàm phân loại theo nguyên văn lỗi thì chỗ gọi phải truyền NGUYÊN VĂN, đừng truyền mẩu tóm tắt
 cho người khác đoán.** Và cờ chia sẻ giữa nhiều tiến trình phải theo quy tắc gộp một chiều (max), vì
 thứ tự ghi giữa 18 tiến trình là không xác định.
+
+### 7.ce — Bức tường ngân sách mù: sổ báo 9.631/50.000 trong khi B đã 429 (24/8/2026 tối)
+Số đo tự tố cáo. `📟 Sổ quota hôm nay: ĐỌC 9.631/50.000` in ra ở hai phiên LIÊN TIẾP với **con số y
+hệt**, trong khi B trả 429 (tức đã chạm 50.000). Hai lỗi cộng lại:
+1. **Sổ sang trang lệch 7 tiếng.** Ngày đánh bằng `now(utc).strftime("%Y%m%d")` — lật lúc 00:00 UTC,
+   trong khi hạn mức free reset 00:00 giờ Thái Bình Dương (07:00-08:00 UTC). Suốt khung 00:00→07:00
+   UTC mỗi đêm, sổ báo "đã dùng 0" trong khi bình xăng vẫn gần cạn — **đúng khung giờ 18 luồng chạy
+   mạnh nhất**. Nay dùng `_ngay_quota()` (UTC-7), cùng mốc với `nghi_key`.
+2. **Project B có HAI cuốn sổ, hàm đọc chỉ lấy một.** Nhà máy render ghi
+   `render_stats/__rw__{owner}`; khâu ĐĂNG ghi `quota/__rw__{ngày}` (`quota_guard._client("B")` trỏ
+   đúng vào B). Mỗi cuốn thấy một nửa lưu lượng ⇒ tường không bao giờ chạm ngưỡng. Nay `read_rw_ledger`
+   cộng cả hai (+1 lượt đọc/tiến trình, đổi lại con số nói thật).
+Chốt bằng `t_so_quota_dung_ngay_va_gop_du`; đã thử ngược (lén đổi 1 chỗ về UTC → test bắt đúng).
+**LUẬT: con số dùng để RA QUYẾT ĐỊNH mà đứng im hai phiên liên tiếp thì phải nghi nó hỏng, đừng nghi
+hệ thống đang nhàn.** Và mốc "một ngày" phải khớp với mốc reset của nhà cung cấp, không phải UTC.
