@@ -1958,3 +1958,18 @@ Vá: `_b2_client()` mặc định `mm0-shard-b2` + in lý do khi vẫn phải b�
 bước sao lưu (đồng bộ với 3 bước còn lại). Chốt bằng `t_duong_du_phong_b2_khong_bi_bo_qua_im`.
 **LUẬT: `continue` / `return None` trong một chuỗi dự phòng phải NÓI RA lý do. Chuỗi dự phòng im lặng
 là chuỗi mà không ai biết nó có chạy hay không — và nó sẽ không chạy đúng lúc cần nhất.**
+
+### 7.cp — `♻️ Dùng lại kịch bản đã lưu` chưa từng chạy: mỗi video đang trả tiền AI hai lần (24/8/2026 tối)
+Quét dòng-log-chưa-từng-xuất-hiện (7.co) lòi tiếp ca này. Mỗi phiên đều có job `failed` còn giữ kịch
+bản (QC loại mở đầu), nên `find_resumable` LẼ RA phải tìm thấy. Nhưng B cạn hạn mức cả buổi ⇒ lượt đọc
+đó luôn 429 ⇒ hàm trả `None` với một câu *"bỏ qua, viết mới bình thường"* nghe như chuyện vặt.
+**Không vặt:** mỗi lần bỏ qua là gọi Gemini **viết lại một kịch bản đã có sẵn** — thứ đắt nhất trong
+dây chuyền — và điều đó đang xảy ra ở MỌI video. Nay hét lên + ghi vào máy dò chết câm
+(`checkpoint kịch bản`), nên phiên nào không resume nổi lần nào sẽ hiện 🚨 thay vì im.
+**LUẬT: câu chữ trong log định giá trị của sự việc. "Bỏ qua, bình thường" dán lên một khoản lãng phí
+lặp lại ở mọi video thì không ai buồn đọc — và nó sống sót nhiều tháng.**
+
+**Việc để lại cho sáng (cần anh quyết, em không tự làm):** kịch bản hiện chỉ nằm ở Firestore, nên hết
+hạn mức là mất luôn đường resume. `hot_db.ghi_job` chưa chép `script` sang D1. Chép sang thì resume
+chạy được cả khi Firestore cạn — nhưng phải đổi bảng D1 + deploy lại Worker, tức đụng hạ tầng đang
+chạy, nên em dừng ở đây chờ anh.

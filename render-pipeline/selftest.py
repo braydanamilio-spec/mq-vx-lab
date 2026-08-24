@@ -790,10 +790,13 @@ def t_so_hong_phai_het_len():
       • `recent_topics` rỗng = bảo Gemini "kênh chưa làm gì" -> viết lại đề tài cũ -> reused content
       • `read_used_images` rỗng = tắt chống trùng ảnh -> các video xài chung một tấm
       • `get_script_by_drive` trả None khi ĐỌC HỎNG = render lại ra video KHÁC ĐỀ TÀI rồi bỏ bản cũ
-        vào thùng rác — bấm 🔄 mà mất luôn video đang có."""
+        vào thùng rác — bấm 🔄 mà mất luôn video đang có.
+      • `find_resumable` trả None im ru = **gọi Gemini viết lại một kịch bản ĐÃ CÓ SẴN** — thứ đắt
+        nhất trong dây chuyền. Dòng `♻️ Dùng lại kịch bản đã lưu` chưa từng xuất hiện trong log nào,
+        dù mỗi phiên đều có job `failed` còn giữ kịch bản."""
     src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                "firestore_bridge.py"), encoding="utf-8").read()
-    for ten in ("recent_topics", "read_used_images"):
+    for ten in ("recent_topics", "read_used_images", "find_resumable"):
         i = src.index(f"def {ten}(")
         than = src[i: src.index("\ndef ", i + 10)]
         assert "🚨" in than, f"{ten}: đọc hỏng vẫn im lặng"

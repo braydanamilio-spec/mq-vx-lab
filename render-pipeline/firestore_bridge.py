@@ -2139,6 +2139,7 @@ def find_resumable(owner: str, channel: str, vtype: str):
             _cr("find_resumable", 25)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
             cands = [(d.id, d.to_dict() or {}) for d in q.limit(25).stream(timeout=20)]
         cands = [(i, j) for i, j in cands if j.get("script")]
+        _dem_khau_soft("checkpoint kịch bản", True)
         if not cands:
             _HOT_CACHE[ck] = []
             return None
@@ -2154,7 +2155,16 @@ def find_resumable(owner: str, channel: str, vtype: str):
         _HOT_CACHE[ck] = lst
         return lst.pop(0) if lst else None
     except Exception as e:
-        print(f"   ⚠️ find_resumable lỗi ({e}) — bỏ qua, viết mới bình thường"); return None
+        # 24/8 tối — dòng `♻️ Dùng lại kịch bản đã lưu` CHƯA TỪNG xuất hiện trong bất kỳ log nào,
+        # dù mỗi phiên đều có job `failed` còn giữ kịch bản (QC loại mở đầu). Lý do: B cạn hạn mức
+        # cả buổi nên lượt đọc này luôn 429, và câu cảnh báo cũ nói "bỏ qua, viết mới bình thường"
+        # nghe như chuyện vặt. KHÔNG vặt: mỗi lần bỏ qua là **gọi Gemini viết lại một kịch bản đã
+        # có sẵn** — đúng thứ đắt nhất trong dây chuyền, và đang xảy ra ở MỌI video.
+        # Vẫn trả None (không có gì để resume thật), nhưng phải hét lên và vào máy dò chết câm.
+        print(f"   🚨 {channel}: KHÔNG đọc được checkpoint để dùng lại ({str(e)[:60]}) — "
+              f"phải gọi AI viết lại kịch bản ĐÃ CÓ. Đây là lãng phí, không phải chuyện vặt.")
+        _dem_khau_soft("checkpoint kịch bản", False)
+        return None
 
 
 def clear_resumed(job_id: str):
