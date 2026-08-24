@@ -503,3 +503,24 @@ xoá cờ rồi vẫn spawn 18 luồng. Đêm 24/8 tắt máy lúc 03:50Z mà ph
 Cách chặn chắc chắn hiện tại: `gh workflow disable render_cron.yml` (bật lại bằng `enable`).
 → **LUẬT**: cờ do NGƯỜI đặt (stop/pause) chỉ được xoá bởi hành động NGƯỜI (nút Chạy tiếp), tuyệt đối
 không do tiến trình tự xoá. Cần sửa: plan chỉ xoá `last_safety_stop` (cờ do MÁY đặt), giữ nguyên `stop`.
+
+### BUG 24/8 — THUMBNAIL TRẮNG TRÊN DASHBOARD (40 ảnh treo vô hạn)
+Triệu chứng: không thấy ảnh nào, `complete=false`, `naturalWidth=0`, KHÔNG có onerror. Nhưng `fetch()`
+đúng URL đó trả 200 + JPEG 28-46KB. Gốc: 40 thẻ <img> cùng gọi Worker, mà Worker phải lấy bytes từ
+Drive (1-3s/ảnh); trình duyệt chỉ mở 6 kết nối/host -> tất cả xếp hàng và treo. `loading="lazy"` làm
+nặng thêm (không kích hoạt trong bố cục này).
+Fix: ảnh dùng `data-src`, bộ nạp `__rsLoadThumbs` rót TỪNG ĐỢT 6 ảnh, xong cái nào rót cái kế, ảnh
+treo quá 12s thì nhường chỗ. Đo sau khi vá: 0/40 -> 40/40 ảnh hiện.
+→ **LUẬT**: mọi danh sách ảnh đi qua proxy PHẢI có bộ nạp giới hạn số ảnh đồng thời. Trình duyệt
+không báo lỗi khi hàng đợi tắc — nhìn y hệt "ảnh hỏng", rất dễ chẩn đoán nhầm.
+
+### 24/8 — WEB TỰ F5 = ĐỐT QUOTA (đã bỏ)
+Tab ẩn >90s thì ngắt listener để tiết kiệm quota (đúng), nhưng khi quay lại tab thì `location.reload()`
+-> nạp lại toàn bộ kênh/key/video ≈ 200 lượt đọc MỖI LẦN chuyển tab. Nay nối lại listener tại chỗ,
+dữ liệu cũ vẫn trong bộ nhớ trang nên Firestore chỉ gửi phần thay đổi.
+→ **LUẬT**: không bao giờ reload cả trang để khôi phục kết nối — nối lại đúng thứ đã ngắt.
+
+### 24/8 — DÒNG ĐẾM VIDEO TRỘN 2 NGUỒN (nhìn như số nhảy loạn)
+"193 video trong kho · đang nạp 84" trộn sổ đếm LƯỢT ĐẨY cộng dồn với số bản ghi thật, nên bật/tắt bộ
+lọc là con số nhảy 342 -> 79 -> 65. Nay số chính LUÔN là video đang có, cộng dồn ghi riêng có nhãn:
+"81 video (đã đẩy cộng dồn 268 lượt, gồm cả bản đã thay thế)".
