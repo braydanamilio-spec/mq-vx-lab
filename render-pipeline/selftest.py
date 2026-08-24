@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("phản áp lực không chạy được thì phải NÓI RA", t_phan_ap_luc_khong_im_lang)
     check("khâu đăng không dội vào chỗ đã biết là chết", t_publish_khong_doi_vao_cho_da_chet)
     check("sổ quota: đúng ngày reset + cộng đủ 2 cuốn", t_so_quota_dung_ngay_va_gop_du)
     check("bước phụ hỏng phải nói rõ, không im", t_buoc_phu_that_bai_khong_duoc_im)
@@ -800,6 +801,38 @@ def t_so_hong_phai_het_len():
     i = r.index("FB.get_script_by_drive(")          # LỜI GỌI THẬT, không phải dòng chú thích
     assert "except FB.DocLoi" in r[i: i + 700], \
         "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
+
+
+def t_phan_ap_luc_khong_im_lang():
+    """Phản áp lực không chạy được thì phải NÓI RA (24/8 tối).
+    Log plan phiên 16:06Z và 17:56Z không có `📦 Đệm bài` lẫn dòng lỗi nào — `ton_kho()` trả `{}`
+    êm ru nên cả khối `if _ton:` bị bỏ qua. Tính năng anh yêu cầu ("kênh nào sắp hết bài thì tự ưu
+    tiên") chưa từng chạy, mà nhìn log thì tưởng bình thường.
+    Gốc: bảng `render_job` trên D1 ghi owner bằng `_OWNER_HINT[0]` — khởi tạo RỖNG, chỉ được đặt
+    trong `read_keys`/`new_job` ⇒ tiến trình nào gọi `update_job` trước đó ghi `owner=""`, mà
+    `ton_kho(OWNER)` lọc theo owner thật."""
+    import firestore_bridge as FB
+    cu_env = os.environ.get("OWNER_UID")
+    cu_hint = FB._OWNER_HINT[0]
+    try:
+        os.environ["OWNER_UID"] = "UID-THAT"
+        FB._OWNER_HINT[0] = ""
+        assert FB._chu() == "UID-THAT", "owner rơi về rỗng khi chưa gọi read_keys/new_job"
+        FB._OWNER_HINT[0] = "UID-HINT"
+        assert FB._chu() == "UID-HINT" and FB._chu("X") == "X"
+    finally:
+        FB._OWNER_HINT[0] = cu_hint
+        if cu_env is None:
+            os.environ.pop("OWNER_UID", None)
+        else:
+            os.environ["OWNER_UID"] = cu_env
+    fb = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "firestore_bridge.py"), encoding="utf-8").read()
+    assert "_H.ghi_job(_chu()" in fb, "bản ghi D1 vẫn dùng _OWNER_HINT trần -> owner có thể rỗng"
+    r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "run_render.py"), encoding="utf-8").read()
+    i = r.index("_ton = _H.ton_kho(OWNER)")
+    assert "if not _ton:" in r[i: i + 900], "tồn kho rỗng vẫn bị bỏ qua im lặng"
 
 
 def t_publish_khong_doi_vao_cho_da_chet():

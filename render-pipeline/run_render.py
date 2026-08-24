@@ -1667,6 +1667,15 @@ def plan_mode():
     try:
         import hot_db as _H
         _ton = _H.ton_kho(OWNER)
+        if not _ton:
+            # 24/8 tối — KHỐI NÀY TỪNG BỊ BỎ QUA HOÀN TOÀN MÀ KHÔNG MỘT DÒNG LOG. Log plan phiên
+            # 16:06Z và 17:56Z không có `📦 Đệm bài` lẫn dòng lỗi nào: `ton_kho()` trả {} êm ru nên
+            # `if _ton:` rơi thẳng xuống dưới. Tức tính năng anh yêu cầu ("kênh nào sắp hết bài thì
+            # tự ưu tiên") CHƯA TỪNG CHẠY, mà nhìn log thì tưởng bình thường.
+            # Một tính năng không chạy phải NÓI RA. Im lặng ở đây đắt hơn nhiều so với một dòng log.
+            print(f"   📦 Đệm bài: KHÔNG có số tồn kho từ D1 (chế độ {_H.che_do()}) -> "
+                  f"PHẢN ÁP LỰC KHÔNG CHẠY phiên này, thứ tự kênh giữ như cũ. "
+                  f"Nếu lặp lại: soi bảng render_job trên D1 (owner có đúng không, xem _chu()).")
         if _ton:
             def _ngay_con(c):
                 return _ton.get(str(c).upper(), 0) / NHIP_NGAY

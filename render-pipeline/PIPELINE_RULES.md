@@ -1839,3 +1839,17 @@ việc phụ đúng lúc project hết sạch. Đọc sổ hỏng **vì 429** ch
 (mạng) vẫn giữ hành vi cũ. Chốt bằng `t_publish_khong_doi_vao_cho_da_chet`.
 **LUẬT: khi không đo được, đừng báo 0 — hãy báo "không đo được", và nếu lý do KHÔNG đo được chính là
 cái mình đang đo thì đó là câu trả lời.** (Lần thứ tư trong đêm: 7.bm · 7.bs · 7.ce · nay 7.cg.)
+
+### 7.ch — PHẢN ÁP LỰC chưa từng chạy, mà log nhìn vẫn bình thường (24/8/2026 tối)
+Soi log plan hai phiên liên tiếp (16:06Z, 17:56Z): **không có dòng `📦 Đệm bài`, cũng không có dòng
+lỗi nào**. Vì `ton_kho()` trả `{}` êm ru nên cả khối `if _ton:` rơi thẳng qua — tính năng anh yêu cầu
+("kênh nào sắp hết bài lên lịch thì tự động ưu tiên, chia đều") **chưa từng chạy một lần nào**.
+Gốc: bảng `render_job` trên D1 ghi owner bằng `_OWNER_HINT[0]` — biến này khởi tạo **rỗng** và chỉ
+được đặt trong `read_keys`/`new_job`. Tiến trình nào gọi `update_job` trước hai hàm đó ghi hàng loạt
+bản ghi `owner=""`, trong khi `ton_kho(OWNER)` lọc theo owner THẬT ⇒ luôn rỗng. Nay có `_chu()`:
+`owner truyền vào → _OWNER_HINT → env OWNER_UID`, tức luôn có giá trị, không phụ thuộc thứ tự gọi hàm.
+Và tồn kho rỗng nay **in ra một dòng nói rõ phản áp lực không chạy** kèm chỗ cần soi.
+Chốt bằng `t_phan_ap_luc_khong_im_lang`.
+**LUẬT: `if <dữ liệu>:` bọc quanh một tính năng thì nhánh `else` PHẢI nói ra là tính năng đó không
+chạy.** Một `if` không có `else` in log là một tính năng có thể chết âm thầm nhiều tháng — đây là lần
+thứ hai trong đêm (lần trước: bước sao lưu kho key, 7.cc).

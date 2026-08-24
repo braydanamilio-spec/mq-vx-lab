@@ -556,6 +556,19 @@ _KEYS_CACHE = {}      # (owner, include_cooling) -> (thời điểm, kết quả
 # cool_key() không nhận `owner` (chữ ký cũ, gọi từ 6 vòng lặp trong key_manager). read_keys luôn chạy
 # trước nó nên ghi nhớ owner ở đây là đủ, khỏi phải đổi chữ ký ở mọi chỗ gọi.
 _OWNER_HINT = [""]
+
+
+def _chu(owner: str = "") -> str:
+    """UID chủ sở hữu — LUÔN có giá trị.
+
+    24/8 tối: bảng `render_job` trên D1 ghi owner bằng `_OWNER_HINT[0]`, mà biến đó khởi tạo rỗng và
+    chỉ được đặt trong `read_keys`/`new_job`. Tiến trình nào gọi `update_job` trước hai hàm đó (hoặc
+    không gọi chúng) sẽ ghi hàng loạt bản ghi với `owner=""` — và `ton_kho(OWNER)` lọc theo owner
+    THẬT nên trả về rỗng. Hậu quả: khối PHẢN ÁP LỰC ở plan bị bỏ qua HOÀN TOÀN, không một dòng log,
+    tức tính năng anh yêu cầu ("kênh nào sắp hết bài thì ưu tiên") chưa từng chạy.
+    `OWNER_UID` là biến môi trường mọi tiến trình đều có -> lấy làm chốt cuối, khỏi phụ thuộc thứ tự
+    gọi hàm."""
+    return owner or _OWNER_HINT[0] or os.environ.get("OWNER_UID", "") or ""
 _JOB_CH: dict = {}          # job_id -> kênh (update_job không nhận channel, new_job nhớ hộ)
 _JOB_TY: dict = {}          # job_id -> long/short (cùng lý do)
 # KHO KEY ẢNH BỀN (24/8) — xem _giu_key_anh().
@@ -2198,7 +2211,7 @@ def update_job(job_id: str, **patch):
     try:
         import hot_db as _H
         if _H.bat_ghi():
-            _H.ghi_job(_OWNER_HINT[0], job_id, _JOB_CH.get(job_id, ""),
+            _H.ghi_job(_chu(), job_id, _JOB_CH.get(job_id, ""),
                        str(patch.get("type") or _JOB_TY.get(job_id, "")), str(st or ""),
                        str(patch.get("step") or ""),
                        patch.get("title"), patch.get("drive_id"),
