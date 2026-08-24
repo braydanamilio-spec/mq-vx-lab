@@ -1,5 +1,6 @@
 import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { Karaoke } from "./Karaoke";
+import { Bookend } from "./Bookend";
 import React from "react";
 
 // KÊNH #6 SWARM — trực quan hoá MẬT ĐỘ/SỐ LƯỢNG: hàng trăm hạt bay từ mép màn hình vào, hội tụ thành 1 silhouette
@@ -216,6 +217,8 @@ export const SwarmShort: React.FC<SwarmProps> = (props) => {
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
+      <Bookend title={title} handle={handle} accent={accent} color={color}
+               introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );
 };

@@ -370,6 +370,7 @@ def main():
     check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
+    check("mốc intro/outro THẬT sang composition (không lệch tiếng)", t_moc_intro_outro_that)
     check("mọi short có lưới sàn 21s, kéo dài KHÔNG lệch tiếng", t_short_khong_qua_ngan)
     check("mọi short có phụ đề karaoke bám giọng", t_short_co_phu_de_karaoke)
     check("đọc HỎNG ≠ kênh bị xoá (không giết lane oan)", t_doc_hong_khac_kenh_bi_xoa)
@@ -671,6 +672,21 @@ def t_short_co_phu_de_karaoke():
                 "ThenNowShort", "LongshotShort", "ClockworkShort", "GuessShort"):
         t = io.open(os.path.join(eng, ten + ".tsx"), encoding="utf-8").read()
         assert "Karaoke" in t, f"{ten} không vẽ phụ đề karaoke"
+        # GUESS có thẻ mở/kết riêng (ảnh vòng 1 + KetCard), 7 cái còn lại dùng Bookend chung.
+        if ten not in ("GuessShort", "ClockworkShort"):
+            assert "Bookend" in t, f"{ten} vẫn để trống quãng mở đầu/kết thúc"
+
+
+def t_moc_intro_outro_that():
+    """Mọi builder phải truyền mốc intro/outro ĐO ĐƯỢC sang composition (24/8 tối).
+    Thiếu thì composition dùng số cứng (1,7/1,6) trong khi giọng dài khác hẳn -> HÌNH LỆCH TIẾNG,
+    đúng lỗi PULSE 4,7 giây. Bản vá trước gắn nhầm vào `build_ranked_props` nên swarm/pulse/longshot
+    vẫn hở suốt."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "datastory_ci.py"), encoding="utf-8").read()
+    n = src.count('"introSec": introSec')
+    assert n >= 9, f"chỉ {n}/9 builder truyền mốc intro thật"
+    assert src.count('"outroSec": outroSec') >= 9, "thiếu mốc outro thật"
 
 
 def t_short_khong_qua_ngan():

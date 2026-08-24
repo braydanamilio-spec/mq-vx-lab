@@ -2755,7 +2755,8 @@ def build_swarm_props(story, sdir, handle="@swarmusa", accent="#0D9488", music="
     total = keo_du_dai_track(items_out, clips, introSec, outroSec, ten="swarm")
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
     return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "HOW MANY FIT?"), "handle": handle, "color": accent, "accent": accent,
-            "sfx": True, "items": items_out, "audio": rel(track), "music": music}
+            "sfx": True, "items": items_out, "audio": rel(track), "music": music,
+            "introSec": introSec, "outroSec": outroSec}
 
 
 def render_short_from_props(channel, props, story, out, keys=None, prefix="", lite=False):
@@ -3024,7 +3025,8 @@ def build_pulse_props(story, sdir, handle="@pulseusa", accent="#EA580C", music="
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
     return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "HOW INTENSE?"), "handle": handle, "color": accent, "accent": accent,
             "sfx": True, "unit": story.get("unit") or "", "maxScale": story.get("maxScale") or 100,
-            "items": items_out, "audio": rel(track), "music": music}
+            "items": items_out, "audio": rel(track), "music": music,
+            "introSec": introSec, "outroSec": outroSec}
 
 
 def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
@@ -3173,7 +3175,8 @@ def build_longshot_props(story, sdir, handle="@longshotusa", accent="#4F46E5", m
     total = keo_du_dai_track(items_out, clips, introSec, outroSec, ten="longshot")
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
     return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "WHAT ARE THE ODDS?"), "handle": handle, "color": accent, "accent": accent,
-            "sfx": True, "items": items_out, "audio": rel(track), "music": music}
+            "sfx": True, "items": items_out, "audio": rel(track), "music": music,
+            "introSec": introSec, "outroSec": outroSec}
 
 
 def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",

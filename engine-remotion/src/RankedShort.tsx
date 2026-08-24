@@ -1,5 +1,6 @@
 import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { Karaoke } from "./Karaoke";
+import { Bookend } from "./Bookend";
 import React from "react";
 
 // KÊNH #3 RANKED — tier list S/A/B/C/D, thẻ lật vào hạng lần lượt. Motif khác hẳn map/bar/guess.
@@ -107,6 +108,8 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
+      <Bookend title={title} handle={handle} accent={accent} color={color}
+               introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );
 };

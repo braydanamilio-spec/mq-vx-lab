@@ -1,5 +1,6 @@
 import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { Karaoke } from "./Karaoke";
+import { Bookend } from "./Bookend";
 import React from "react";
 
 // KÊNH #5 THEN×NOW — split XƯA (trên) / NAY (dưới) + con số biến đổi. Motif riêng (nostalgia + shock).
@@ -127,6 +128,8 @@ export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
+      <Bookend title={title} handle={handle} accent={accent} color={color}
+               introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );
 };

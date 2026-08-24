@@ -1656,3 +1656,19 @@ vì hụt 0,9 giây** (mất một lượt viết AI + một lượt render). Na
   vì 2 phần trăm giây.
 Hình dạng `clips` không khớp (`n*moi_muc + 2`) thì **để nguyên, không đoán** — thà video ngắn còn hơn
 video lệch tiếng. Chốt bằng `t_short_khong_qua_ngan`.
+
+### 7.bq — Mở đầu và kết thúc SHORT là hai quãng chết (24/8/2026 tối, anh chỉ ra)
+Đo trước khi sửa: trong `introSec` giây đầu, 7 component short chỉ hiện MỘT chip tiêu đề nhỏ trên nền
+gradient — nội dung thật (gauge/bản đồ/bậc thang) mãi hết intro mới chạy. `outroSec` giây cuối thì mọi
+Sequence đã hết, màn hình **đứng ở khung cuối cùng**. Không đen kịt, nhưng chết đúng hai chỗ quyết
+định: giây đầu (giữ chân) và nút theo dõi (chuyển đổi). `engine-remotion/src/Bookend.tsx` = thẻ mở
+(tên kênh + tiêu đề bung theo spring + vệt sáng quét) và thẻ kết (CTA + handle đập nhẹ), **tự đọc
+`durationInFrames`** nên mỗi component chỉ thêm một dòng — không tính lại mốc thì không đẻ ra lỗi lệch
+mốc. Màu lấy từ `accent` của chính kênh nên không bị đồng phục. GUESS giữ thẻ riêng (ảnh vòng 1 + KetCard).
+
+### 7.br — Vá đúng bệnh nhưng SAI FILE: 3 builder vẫn lệch tiếng suốt (24/8/2026 tối)
+Bản vá "truyền mốc THẬT sang composition" hôm nay ghi chú *"thiếu hai dòng này thì PulseShort dùng
+cứng 1,7/1,6"* — nhưng lại nằm trong `build_ranked_props`. Kết quả: swarm, **pulse** và longshot vẫn
+không truyền `introSec`/`outroSec`, composition dùng số cứng trong khi giọng dài khác hẳn ⇒ hình lệch
+tiếng, đúng cái bệnh tưởng đã vá. **LUẬT: sửa xong phải ĐẾM số chỗ đã sửa trên TOÀN BỘ họ hàm, đừng
+tin vào một lần sửa.** Nay 9/9 builder truyền mốc thật, chốt bằng `t_moc_intro_outro_that` (đếm ≥9).

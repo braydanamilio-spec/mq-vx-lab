@@ -1,5 +1,6 @@
 import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { Karaoke } from "./Karaoke";
+import { Bookend } from "./Bookend";
 import React from "react";
 
 // KÊNH #6 LONGSHOT — real odds/probability, items HOP UP a vertical log-scale ladder to their real rung.
@@ -214,6 +215,8 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
+      <Bookend title={title} handle={handle} accent={accent} color={color}
+               introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );
 };

@@ -1,5 +1,6 @@
 import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate, interpolateColors } from "remotion";
 import { Karaoke } from "./Karaoke";
+import { Bookend } from "./Bookend";
 import React, { useMemo } from "react";
 import { geoAlbersUsa, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
@@ -125,6 +126,8 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
+      <Bookend title={title} handle={handle} accent={accent} color={color}
+               introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );
 };

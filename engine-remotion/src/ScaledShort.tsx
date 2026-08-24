@@ -1,5 +1,6 @@
 import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { Karaoke } from "./Karaoke";
+import { Bookend } from "./Bookend";
 import React from "react";
 
 // KÊNH #4 SCALED — so sánh KÍCH THƯỚC vật lý thật, vẽ ĐÚNG TỈ LỆ cạnh nhau. Motif riêng.
@@ -102,6 +103,8 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
+      <Bookend title={title} handle={handle} accent={accent} color={color}
+               introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );
 };
