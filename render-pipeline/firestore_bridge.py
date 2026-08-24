@@ -306,6 +306,9 @@ def _retry(fn, tries=5):
 
 
 _KEYS_CACHE = {}      # (owner, include_cooling) -> (thời điểm, kết quả)
+# cool_key() không nhận `owner` (chữ ký cũ, gọi từ 6 vòng lặp trong key_manager). read_keys luôn chạy
+# trước nó nên ghi nhớ owner ở đây là đủ, khỏi phải đổi chữ ký ở mọi chỗ gọi.
+_OWNER_HINT = [""]
 _HOT_CACHE = {}       # đệm tiến-trình cho các hàm đọc NÓNG (top_titles/resume/config/count) — 22/8:
                       # đo VAULTUSA 113 đọc/luồng thì 105 là 4 hàm này gọi lặp cho CÙNG câu trả lời
 KEYS_TTL = 180        # giây
@@ -373,6 +376,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     20/8) dù bản thân render vẫn chạy (render_jobs ở Project B nên không bị ảnh hưởng).
     3 phút đủ ngắn để nhận key vừa được thêm/hồi quota, đủ dài để cắt phần lớn lượt đọc lặp."""
     import time as _t
+    _OWNER_HINT[0] = owner
     ck = (owner, include_cooling)
     hit = _KEYS_CACHE.get(ck)
     if hit and (_t.time() - hit[0]) < KEYS_TTL:
@@ -388,6 +392,20 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         # Snapshot nằm TRONG collection gemini_keys -> hưởng nguyên rules đã KHÓA (an toàn key).
         db = _db_keys()
         out = []; now = _now()
+        # 24/8 — SỔ NGHỈ DÙNG CHUNG. Vì sao: read_keys đọc doc ẢNH `__snap__` (plan dựng 1 lần/phiên),
+        # nên `cooling_until` do luồng khác vừa ghi KHÔNG BAO GIỜ xuất hiện trong phiên đó. Hệ quả đo
+        # được ở phiên 08:47: mỗi luồng tự đi phát hiện lại cùng những key đã cạn — 44 lượt ghi
+        # cool_key/luồng × 18 luồng ≈ 800 lượt ghi B cho chỉ ~50 key thật, CHƯA kể mỗi lần phát hiện
+        # là một vòng HTTP ăn 429 rồi chờ. Doc `__cool__` gộp mọi lệnh nghỉ dài vào 1 chỗ: 1 lượt đọc
+        # cho cả pool, luồng sau biết ngay key nào đang nghỉ mà không phải thử.
+        cool_map = {}
+        try:
+            _cr("cool_overlay", 1)
+            _cd = db.collection("gemini_keys").document(f"__cool__{owner}").get()
+            if _cd.exists:
+                cool_map = {k: v for k, v in (_cd.to_dict() or {}).items() if isinstance(v, str)}
+        except Exception:
+            pass                      # đọc sổ nghỉ hỏng -> quay về hành vi cũ, không chết
         rows = None
         try:
             _cr("read_keys_snap", 1)
@@ -403,7 +421,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         for did, x in rows:
             if did.startswith("__") or not x.get("key"):
                 continue                                  # bỏ doc hệ thống (__snap__/__req__)
-            cooling = x.get("cooling_until", "")
+            cooling = max(str(x.get("cooling_until", "") or ""), str(cool_map.get(did, "") or ""))
             if cooling and cooling > now and not include_cooling:
                 continue                                  # đang nghỉ -> bỏ qua vòng này
             if x.get("alive") is False and not include_cooling:
@@ -705,6 +723,13 @@ def cool_key(key_id: str, minutes: int = 20):
     until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
     _cw("cool_key")
     _soft(lambda: _db_keys().collection("gemini_keys").document(key_id).set({"cooling_until": until}, merge=True), "cool_key")
+    # ...và vào SỔ NGHỈ GỘP để 17 luồng còn lại thấy được NGAY trong phiên này (doc `__snap__` chỉ
+    # dựng lại ở plan nên một mình nó không truyền tin được giữa các luồng). Thêm 1 lượt ghi ở đây
+    # để cắt ~17 lần phát hiện lặp + 17 lượt ghi + 17 vòng HTTP ăn 429 của các luồng kia.
+    if _OWNER_HINT[0]:
+        _cw("cool_shared")
+        _soft(lambda: _db_keys().collection("gemini_keys").document(f"__cool__{_OWNER_HINT[0]}").set(
+            {key_id: until}, merge=True), "cool_shared")
     _COOLED[key_id] = until_ts
     # XOÁ ĐỆM read_keys NGAY: nếu không, tiến trình này còn dùng danh sách cũ tới 3 phút và tiếp tục
     # chọn đúng key vừa bị phạt -> ăn thêm 429 liên tiếp, đúng thứ cool_key sinh ra để tránh.

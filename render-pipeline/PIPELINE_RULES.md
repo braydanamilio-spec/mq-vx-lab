@@ -673,3 +673,28 @@ mỗi phiên** để trả lời một câu hỏi mà cả 18 luồng nhận CÙ
 `render_stats/__drive_usage__` (project B, TTL 30'): plan quét thật (`moi_nhat=True`) và dựng đệm,
 luồng chỉ đọc 1 doc. Quét hỏng thì **không ghi đè đệm bằng số 0** — guard đọc phải số 0 sẽ tưởng
 kho rỗng và render vô tội vạ.
+
+### 7.z — 18 luồng cùng phát hiện lại một key đã cạn (24/8/2026)
+
+**Đo ở phiên 08:47** (dòng kế toán cuối mỗi luồng): `83-87 GHI (cool_key=44 · update_job=25 · ...)`
+→ **44 lượt ghi cool_key mỗi luồng × 18 luồng ≈ 800 lượt ghi project B** trong khi số key thật sự
+cạn chỉ khoảng 50.
+
+**Gốc:** `read_keys` đọc doc ẢNH `__snap__`, mà ảnh này chỉ được dựng lại ở bước **plan** (1 lần/phiên).
+Nên `cooling_until` do luồng A vừa ghi KHÔNG BAO GIỜ xuất hiện với luồng B trong cùng phiên → mỗi
+luồng phải tự đâm vào key đã chết, ăn 429, rồi ghi lại đúng lệnh nghỉ mà luồng khác vừa ghi. Tốn
+cả lượt ghi lẫn thời gian (mỗi lần phát hiện là một vòng HTTP + chờ).
+
+**Vá:** thêm doc gộp `gemini_keys/__cool__{owner}` — `cool_key` ghi lệnh nghỉ DÀI vào đó
+(`{key_id: until}`, merge), `read_keys` phủ nó lên danh sách bằng 1 lượt đọc. Luồng sau biết ngay
+key nào đang nghỉ, không thử nữa. Cùng khuôn với overlay `__req__` đã có.
+*~800 → ~100 lượt ghi/phiên, và cắt ~17 vòng HTTP-429 lặp cho mỗi key cạn.*
+
+**Ghi nhận kèm (chưa vá, gốc nằm ở chỗ khác):** log phiên 08:47 có `🔀 FAILOVER ... (gương tuổi
+948 phút)` — gương B2 cũ 16 tiếng. `mirror_b_to_b2` chỉ chạy ở plan và tự tắt khi đã lật sang B2,
+nên B ốm dài ngày thì gương không bao giờ tươi lại; `count_done` lúc đó đọc số cũ → dễ **làm dư
+video**. Đường chữa đúng là đừng để B cạn (mục 7.y), không phải nới điều kiện mirror.
+
+**Luật:** trạng thái CHIA SẺ giữa 18 luồng (key nghỉ, kho đầy, chỉ tiêu) không được nằm trong doc
+ảnh dựng-một-lần-mỗi-phiên. Phải có doc gộp ghi-được-trong-phiên, nếu không mỗi luồng sẽ tự trả giá
+để học lại cùng một điều.
