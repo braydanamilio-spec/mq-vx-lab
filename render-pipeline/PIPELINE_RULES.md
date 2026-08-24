@@ -560,7 +560,7 @@ User muốn thêm Mixkit / Coverr / Dareful / DVIDS / NARA. Kiểm khả thi tr�
  • **Pexels Video + Pixabay Video**: có API chính thức, DÙNG CHUNG key ảnh đã có (25 + 18 key) ->
    làm ngay, 0 thao tác thêm cho user. ĐÃ LÀM.
  • **Mixkit, Dareful**: KHÔNG có API công khai -> phải cào trang, dễ vỡ + sai điều khoản. KHÔNG làm.
- • **Coverr**: có API nhưng cần key riêng. **DVIDS / NARA**: có API, cần đăng ký. Để đợt sau.
+ • **Coverr**: ĐÃ LOẠI (xem dòng dưới). **DVIDS / NARA**: có API, đã làm 24/8.
 Cách hoạt động: cảnh 0 và mỗi 3 cảnh lấy 1 clip .mp4 (3-30s, ≥720p, ≤14MB, chọn bản nhỏ nhất còn đủ
 nét); hỏng thì lùi về ảnh tĩnh nên không có đường nào làm video xấu đi. Engine Cinematic đã có
 OffthreadVideo nên không phải sửa engine. Clip đi qua CÙNG sổ chống trùng với ảnh (id pxv:/pbv:).
@@ -572,7 +572,8 @@ Tắt khẩn cấp: đặt env `CLIPS_OFF=1`.
 tự xoay vòng, tự tắt key lỗi. Không có key thì hai nguồn này im lặng bỏ qua (trả rỗng), pipeline chạy
 y như cũ. Đã kiểm: dán key nara giả -> vào hồ với nhãn provider "nara", KHÔNG bị nhận nhầm sang
 Cloudflare (nhánh cf: bắt mọi token lạ nên phải chặn trước nó).
-Coverr: có API nhưng link mp4 ký hạn 15' + đếm hạn mức tải -> ưu tiên thấp, chưa làm.
+**Coverr: LOẠI HẲN (24/8, user chốt)** — link mp4 ký hạn 15' + đếm hạn mức tải, 18 luồng song song
+chạm trần ngay. ĐỪNG thêm lại; nếu ai đó đề xuất nữa thì đọc dòng này.
 
 ### RÀ SOÁT 24/8 — LUỒNG B ↔ B2
 Đã kiểm 4 điểm, 3 điểm LÀNH:
@@ -596,3 +597,11 @@ kho thật có **414** -> user tưởng bấm xoá làm mất video. Nay in rõ 
 danh sách đã nạp.
 → **LUẬT**: khi danh sách bị CẮT BỚT để tiết kiệm quota, con số hiển thị PHẢI nói rõ "đang hiện N/M",
 không được để người đọc tưởng phần hiện là toàn bộ. Tối ưu quota mà làm số liệu nói dối là tối ưu hỏng.
+
+### 24/8 — THÊM 2 NGUỒN VIDEO KHÔNG CẦN KEY: Internet Archive + NASA video
+Kiểm bằng lệnh gọi THẬT trước khi viết code (không tin tài liệu):
+ • archive.org → **200** ✅ không cần key, chứa **PRELINGER ARCHIVES** (user từng nhắc). Lọc theo
+   collection phạm vi công cộng để không dính bản quyền. Thử thật: query "city street 1950s" ra clip.
+ • images-api.nasa.gov `media_type=video` → **200** ✅ không cần key. Trước mình chỉ lấy ẢNH của NASA.
+ • loc.gov (Library of Congress) → **403** ❌ chặn bot bằng Cloudflare challenge. KHÔNG dùng được.
+Thứ tự nguồn clip hiện tại: Pexels → Pixabay → NARA → DVIDS → Internet Archive → NASA video.

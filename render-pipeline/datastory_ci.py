@@ -618,13 +618,81 @@ def _dvids(query, n=8):
         return []
 
 
+def _archive_video(query, n=6):
+    """INTERNET ARCHIVE (24/8) — kho phim PHẠM VI CÔNG CỘNG lớn nhất thế giới, gồm cả PRELINGER
+    ARCHIVES mà user nhắc tới. KHÔNG cần key, không hạn mức công bố.
+
+    Hai bước: tìm mã tư liệu -> hỏi danh sách file -> lấy .mp4 nhỏ nhất. Chỉ nhận tư liệu thuộc
+    phạm vi công cộng (lọc theo collection) để không dính bản quyền."""
+    try:
+        q = (f'({query}) AND mediatype:movies AND (collection:prelinger OR '
+             f'collection:publicmoviescollection OR collection:film_noir OR licenseurl:*publicdomain*)')
+        u = "https://archive.org/advancedsearch.php?" + urllib.parse.urlencode(
+            {"q": q, "fl[]": "identifier", "rows": min(n, 10), "output": "json",
+             "sort[]": "downloads desc"})
+        with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=25) as r:
+            j = json.loads(r.read().decode("utf-8", "ignore"))
+        out = []
+        for d in ((j.get("response") or {}).get("docs") or [])[:n]:
+            ident = d.get("identifier")
+            if not ident:
+                continue
+            try:
+                mu = f"https://archive.org/metadata/{urllib.parse.quote(ident)}"
+                with urllib.request.urlopen(urllib.request.Request(mu, headers=UA), timeout=25) as r2:
+                    meta = json.loads(r2.read().decode("utf-8", "ignore"))
+            except Exception:
+                continue
+            mp4 = [f for f in (meta.get("files") or [])
+                   if str(f.get("name", "")).lower().endswith(".mp4") and int(f.get("size") or 0) > 0]
+            if not mp4:
+                continue
+            f = min(mp4, key=lambda x: int(x.get("size") or 0))     # bản nhẹ nhất -> tải nhanh
+            out.append({"id": f"ia:{ident}", "video": True,
+                        "url": f"https://archive.org/download/{urllib.parse.quote(ident)}/{urllib.parse.quote(f['name'])}",
+                        "creator": "Internet Archive", "license": "Public Domain"})
+        return out
+    except Exception:
+        return []
+
+
+def _nasa_video(query, n=6):
+    """NASA cũng có VIDEO (media_type=video) — trước mình chỉ lấy ảnh. Không cần key."""
+    try:
+        u = "https://images-api.nasa.gov/search?" + urllib.parse.urlencode(
+            {"q": query, "media_type": "video"})
+        with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=25) as r:
+            j = json.loads(r.read().decode("utf-8", "ignore"))
+        out = []
+        for it in ((j.get("collection") or {}).get("items") or [])[:n]:
+            href = it.get("href")
+            if not href:
+                continue
+            try:
+                with urllib.request.urlopen(urllib.request.Request(href, headers=UA), timeout=20) as r2:
+                    files = json.loads(r2.read().decode("utf-8", "ignore"))
+            except Exception:
+                continue
+            # ưu tiên bản ~mobile/small: nhẹ, đủ nét cho nền video
+            mp4 = [f for f in files if str(f).lower().endswith(".mp4")]
+            small = [f for f in mp4 if "small" in f.lower() or "mobile" in f.lower()] or mp4
+            if small:
+                nid = ((it.get("data") or [{}])[0] or {}).get("nasa_id", "")
+                out.append({"id": f"nasav:{nid}", "url": small[0], "video": True,
+                            "creator": "NASA", "license": "Public Domain"})
+        return out
+    except Exception:
+        return []
+
+
 def fetch_clip(query, dest, tall=True, max_mb=14):
     """Tải 1 CLIP THẬT về `dest` (.mp4). Không có/hỏng -> None để caller lùi về ảnh tĩnh.
 
     Chống trùng dùng chung sổ ảnh: mỗi clip có id riêng (pxv:/pbv:) nên không bao giờ lặp lại clip
     đã dùng cho kênh này."""
     cands = (_pexels_video(query, tall=tall) + _pixabay_video(query, tall=tall)
-             + [c for c in (_nara(query) + _dvids(query)) if c.get("video")])
+             + [c for c in (_nara(query) + _dvids(query)) if c.get("video")]
+             + _archive_video(query) + _nasa_video(query))   # 24/8: 2 nguồn KHÔNG cần key
     random.shuffle(cands)
     for c in cands:
         if str(c.get("id")) in _IMG_USED or not c.get("url"):
