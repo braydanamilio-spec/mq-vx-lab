@@ -2194,6 +2194,34 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
     return out, story, ok, info
 
 
+def keo_du_dai(scenes, fps=30, min_s=21.0, tran_them_s=2.5, ten="clip"):
+    """ĐỦ DÀI TỐI THIỂU CHO VIDEO DỌC — dùng chung cho mọi format.
+
+    24/8 — mở rộng bài học từ PULSE. Log phiên 11:00Z cho thấy QC chặn `quá ngắn` ở CẢ BA format:
+    pulse (12.8s ×8, 15.1s ×3), doc (10.6s), scaled (19.1s — hụt đúng 0,9 giây).
+    Độ dài mọi format đều = TỔNG ĐỘ DÀI GIỌNG ĐỌC, mà kịch bản ngắn thì rơi dưới sàn 20s. Mỗi lần
+    bị loại là mất trắng một lượt viết AI + một lượt render — đắt hơn nhiều so với việc giữ mỗi cảnh
+    trên màn thêm một giây. Riêng ca 19.1s thì càng vô lý: vứt cả video vì thiếu chưa tới 1 giây.
+
+    Cách làm: đo trước, thiếu bao nhiêu thì RẢI ĐỀU vào thời lượng các cảnh (giữ hình lâu hơn chút),
+    KHÔNG bịa thêm nội dung, KHÔNG kéo giọng đọc. Trần `tran_them_s` mỗi cảnh để không thành lê thê.
+    Trả số giây đã thêm (0 = không phải đụng tới)."""
+    if not scenes:
+        return 0.0
+    tong = sum(int(s.get("dur") or 0) for s in scenes) / float(fps)
+    if tong >= min_s:
+        return 0.0
+    them = min((min_s - tong) / len(scenes), tran_them_s)
+    if them <= 0.05:
+        return 0.0
+    for s in scenes:
+        s["dur"] = int(s.get("dur") or 0) + int(round(them * fps))
+    moi = sum(int(s.get("dur") or 0) for s in scenes) / float(fps)
+    print(f"   ⏱ {ten} {tong:.1f}s < {min_s:.0f}s — giữ mỗi cảnh thêm {them:.1f}s -> {moi:.1f}s "
+          f"(không đổi nội dung)")
+    return moi - tong
+
+
 def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE", accent2="#F5B301", handle="@doc",
                     ai_style=None, ai_only=False, music=None, mode=None, host_prompt=None, prefix=""):
     """Dựng props Cinematic (Wave 2): CHỈ các cảnh có ảnh (fetch + Vision verify khớp) — KHÔNG intro/outro.
@@ -2326,6 +2354,9 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
                 except Exception:
                     pass
                 break
+    # Sàn 21s: bản LONG luôn dài hơn nhiều nên hàm này tự động không đụng tới -> khỏi cần đoán
+    # long/short từ `prefix` (đoán sai là bỏ sót hoặc kéo nhầm).
+    keo_du_dai(scenes_out, fps=FPS, ten="doc")
     props = {"scenes": scenes_out, "slug": slug_, "handle": handle, "accent": accent, "accent2": accent2}
     if music:
         props["music"] = music

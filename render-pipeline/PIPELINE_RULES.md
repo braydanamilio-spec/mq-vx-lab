@@ -1011,3 +1011,26 @@ cứng ở 18. Máy rảnh biến thành video thay vì thành thời gian chế
 
 **Luật:** chia việc tĩnh chỉ đúng khi mọi phần việc nặng như nhau. Hễ tải lệch nhau là phải chuyển
 sang hàng chờ — và mọi phép lấy việc dùng chung đều phải NGUYÊN TỬ, nếu không sẽ làm trùng.
+
+**Bổ sung 7.am — ba lớp chống chồng chéo của hàng chờ.** Máy chạy độc lập nên "ai xong trước lấy
+tiếp" chỉ an toàn khi việc lấy KHÔNG thể trùng:
+1. **Rời nhau từ gốc** — 18 kênh vào mẻ và phần dư vào hàng chờ là hai tập KHÔNG giao nhau.
+2. **Lấy nguyên tử** — `lay_viec_ke()` dùng giao dịch Firestore; hai máy cùng gọi thì mỗi kênh chỉ
+   về tay đúng một máy. Không có giao dịch: hai máy cùng đọc rồi cùng ghi → render trùng kênh.
+3. **Sổ trong luồng** — mỗi luồng nhớ kênh mình đã làm, gặp lại thì bỏ qua (chống ca luồng chết giữa
+   chừng rồi kênh được xếp lại).
+Cộng với `LANE_BUDGET_MIN` (130'), luồng không bao giờ bị cap 165' cắt ngang giữa một video.
+
+### 7.an — Sàn 20s không chỉ dính PULSE (24/8/2026)
+
+Log phiên 11:00Z: QC chặn `quá ngắn` ở **ba** format — pulse (12.8s ×8, 15.1s ×3), **doc** (10.6s),
+**scaled** (19.1s — hụt đúng 0,9 giây, vứt cả video đã render xong).
+→ Đã thêm `keo_du_dai()` dùng chung và áp cho `build_doc_props`. Bản LONG không bị đụng tới vì luôn
+dài hơn sàn (hàm tự no-op) — khỏi phải đoán long/short từ `prefix`, đoán sai là bỏ sót hoặc kéo nhầm.
+
+**CHƯA áp cho 8 format trộn-một-track** (scaled/ranked/mapped/thennow/swarm/clockwork/longshot/guess)
+và lý do phải nói rõ: các format đó ghép **một** track audio với mốc thời gian CỐ ĐỊNH
+(`_mix_track(clips, total, track)`). Cộng thời lượng vào giữa sẽ **lệch tiếng khỏi hình** — lỗi nặng
+hơn nhiều so với một short bị loại. Cách đúng là làm như đã làm với PULSE: đo trước → cộng vào thời
+lượng → RỒI mới đặt mốc clip. Việc này phải sửa từng builder và cần nhìn video thật để nghiệm thu,
+nên để lại làm ban ngày thay vì vá mù lúc 3h sáng.

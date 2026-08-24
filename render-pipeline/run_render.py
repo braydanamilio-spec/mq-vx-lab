@@ -924,6 +924,7 @@ def main():
     # Nay: plan để phần kênh dư vào HÀNG CHỜ; luồng nào xong thì tự lấy kênh kế (work stealing).
     # Lấy bằng GIAO DỊCH nguyên tử nên 18 máy không bao giờ nhận trùng kênh.
     _t0 = time.time()
+    _da_lam = {str(c.get("name")) for c in channels}     # kênh luồng này đã làm -> không làm lại
     _NGAN_SACH = float(os.environ.get("LANE_BUDGET_MIN", "130")) * 60   # chừa biên trước cap 165'
     _by_name = {c.get("name"): c for c in FB.read_channels(OWNER) if c.get("name")}
     while time.time() - _t0 < _NGAN_SACH:
@@ -937,6 +938,13 @@ def main():
         _ch2 = _by_name.get(_ke)
         if not _ch2:
             print(f"   ⚠️ hàng chờ có {_ke} nhưng không thấy cấu hình kênh — bỏ qua"); continue
+        # CHỐNG CHỒNG CHÉO lớp 2: hàng chờ đã nguyên tử (mỗi kênh về đúng một máy), nhưng nếu một
+        # luồng chết giữa chừng rồi phiên sau xếp lại, hoặc cấu hình đổi, thì kênh có thể đã đủ
+        # chỉ tiêu trước khi tới lượt. Kiểm lại NGAY trước khi làm — 1 lượt đếm (có đệm 90s), rẻ hơn
+        # nhiều so với render dư một mẻ.
+        if _ke in _da_lam:
+            print(f"   ⏭ {_ke} luồng này đã làm trong phiên — bỏ qua (không làm hai lần)."); continue
+        _da_lam.add(_ke)
         _con = int((_NGAN_SACH - (time.time() - _t0)) // 60)
         print(f"\n♻️ Luồng rảnh -> nhận thêm kênh {_ke} từ hàng chờ (còn {_con}' ngân sách).")
         try:
