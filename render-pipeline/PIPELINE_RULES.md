@@ -1445,3 +1445,24 @@ Vài lần mở trang là chạm trần 1.000, rồi bản sao thẻ kết nối
 
 **Luật:** trong một nhà cung cấp có nhiều dịch vụ, phải liệt kê **TỪNG đồng hồ** rồi tìm cái chật nhất.
 Nhìn mỗi con số to nhất (5 triệu dòng D1) rồi yên tâm là cách chắc chắn nhất để vỡ ở chỗ khác.
+
+### 7.be — 26 VIDEO KHÔNG ĐẨY ĐƯỢC KHO: A và B cạn cùng lúc (24/8/2026)
+
+**Bắt được lúc đang chạy, không phải qua log:** soi D1 thấy 26 job `status=done` mà **không có
+`drive_id`**, và bước đều ghi *"chưa đẩy Drive"* (13 long · 11 short · 3 khác).
+
+**Gốc:** `pool_accounts` lấy danh sách kho theo 3 đường Firestore — A (cạn) → gương ở B (cạn) →
+B2 (gương cũ, rỗng) → **trắng tay** → `enqueue` hiểu là *"không có kho nào"* → video ở lại trong
+artifact, không lên kho. Phiên 13:08Z đẩy được 122 video vì lúc đó B chưa cạn; tới 14:54Z thì cả hai
+đã hết.
+
+**Vá — lớp cứu cuối không đụng Firestore:** Worker có bản sao thẻ kết nối trong **KV**, và KV liệt kê
+được. Thêm `/api/drive-pool` trả đúng những trường `pool_accounts` cần. Đo thật: **72 tài khoản, đủ
+`root` + `creds`**, lấy được khi ép tắt cả 3 đường Firestore.
+
+**Vì sao đáng nhớ:** cùng một bản sao KV này đã cứu khâu **soi rác** vài giờ trước, mà tôi **không
+nghĩ tới việc nó cũng cứu được khâu ĐẨY KHO** — đường sống đã có sẵn, chỉ chưa nối. Bài học: khi
+dựng một đường vòng, phải hỏi ngay *"còn chỗ nào khác đang chết vì cùng lý do?"*.
+
+**Luật:** dữ liệu SỐNG CÒN phải có ít nhất một đường đọc **không nằm cùng nhà cung cấp** với đường
+chính. Ba đường mà cùng là Firestore thì đó là **một** đường, không phải ba.
