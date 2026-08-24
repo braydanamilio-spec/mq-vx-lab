@@ -61,6 +61,7 @@ def set_ai_pool(keys, channel: str = ""):
     trước trong khi key cuối ngồi không — pool 56 key mà hiệu dụng chỉ còn vài key."""
     set_pexels_pool(keys, channel)      # 23/8: nạp luôn pool key Pexels từ cùng danh sách key
     set_pixabay_pool(keys, channel)     # 23/8: và pool Pixabay (nguồn ảnh thứ 5)
+    set_gov_pools(keys, channel)        # 24/8: NARA + DVIDS (tư liệu Mỹ, có key mới bật)
     # 23/8 chiều: nạp SỔ ẢNH ĐÃ DÙNG của kênh -> chống trùng footage xuyên luồng & xuyên phiên.
     # Đặt ở đây vì set_ai_pool là cửa DUY NHẤT mọi make_* đều đi qua (16 chỗ gọi) — móc 1 lần là đủ.
     try:
@@ -531,12 +532,99 @@ def _pixabay_video(query, n=8, tall=True):
         return []
 
 
+# ── NGUỒN TƯ LIỆU MỸ (24/8): NARA + DVIDS ───────────────────────────────────────────────────
+# Khác Pexels/Pixabay (ảnh thương mại đẹp nhưng chung chung), hai nguồn này là TƯ LIỆU THẬT của
+# chính phủ Mỹ: phim lưu trữ quốc gia và phim quân đội — thứ Pexels không bao giờ có, và là chất
+# liệu rất mạnh cho kênh lịch sử/thiên tai/quốc phòng.
+# Key lưu chung hồ key: "nara:<key api.data.gov>" · "dvids:<key dvidshub>"
+_NARA_POOL: list = []
+_DVIDS_POOL: list = []
+_GOV_CAP = 200               # lượt/key/tiến trình — cả hai nhà đều ~1.000 lượt/giờ nên rất thoáng
+
+
+def set_gov_pools(keys, channel: str = ""):
+    """Nạp key NARA/DVIDS từ cùng danh sách key (gọi trong set_ai_pool)."""
+    global _NARA_POOL, _DVIDS_POOL
+    _NARA_POOL = [{"k": str(x.get("key"))[5:], "used": 0, "off": False}
+                  for x in (keys or []) if str(x.get("key", "")).startswith("nara:")]
+    _DVIDS_POOL = [{"k": str(x.get("key"))[6:], "used": 0, "off": False}
+                   for x in (keys or []) if str(x.get("key", "")).startswith("dvids:")]
+
+
+def _nara(query, n=8):
+    """Lưu trữ Quốc gia Mỹ (catalog.archives.gov qua api.data.gov). Trả clip/ảnh công cộng."""
+    _slot = next((x for x in _NARA_POOL if not x["off"] and x["used"] < _GOV_CAP), None)
+    if _slot is None:
+        return []
+    try:
+        u = "https://catalog.archives.gov/api/v2/records/search?" + urllib.parse.urlencode(
+            {"q": query, "limit": min(n, 20), "availableOnline": "true"})
+        req = urllib.request.Request(u, headers={**UA, "x-api-key": _slot["k"]})
+        with urllib.request.urlopen(req, timeout=25) as r:
+            j = json.loads(r.read().decode("utf-8", "ignore"))
+        _slot["used"] += 1
+        out = []
+        for hit in ((j.get("body") or {}).get("hits") or {}).get("hits", [])[:n]:
+            src = (hit.get("_source") or {})
+            for dobj in (src.get("digitalObjects") or []):
+                url = dobj.get("objectUrl") or ""
+                if not url:
+                    continue
+                low = url.lower()
+                if low.endswith((".mp4", ".m4v")):
+                    out.append({"id": f"nara:{dobj.get('objectId')}", "url": url, "video": True,
+                                "creator": "U.S. National Archives", "license": "Public Domain"})
+                elif low.endswith((".jpg", ".jpeg", ".png")):
+                    out.append({"id": f"nara:{dobj.get('objectId')}", "url": url, "video": False,
+                                "creator": "U.S. National Archives", "license": "Public Domain"})
+        return out
+    except Exception as e:
+        if any(t in str(e) for t in ("401", "403", "429")):
+            _slot["off"] = True
+        return []
+
+
+def _dvids(query, n=8):
+    """DVIDS — kho phim/ảnh quân đội Mỹ. Tìm rồi lấy link tải của từng mục."""
+    _slot = next((x for x in _DVIDS_POOL if not x["off"] and x["used"] < _GOV_CAP), None)
+    if _slot is None:
+        return []
+    try:
+        u = "https://api.dvidshub.net/search?" + urllib.parse.urlencode(
+            {"q": query, "type": "video", "max_results": min(n, 20), "api_key": _slot["k"]})
+        with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=25) as r:
+            j = json.loads(r.read().decode("utf-8", "ignore"))
+        _slot["used"] += 1
+        out = []
+        for it in (j.get("results") or [])[:n]:
+            vid = it.get("id")
+            if not vid:
+                continue
+            a = "https://api.dvidshub.net/asset?" + urllib.parse.urlencode({"id": vid, "api_key": _slot["k"]})
+            try:
+                with urllib.request.urlopen(urllib.request.Request(a, headers=UA), timeout=25) as r2:
+                    ja = json.loads(r2.read().decode("utf-8", "ignore"))
+                _slot["used"] += 1
+                url = ((ja.get("results") or {}).get("video") or {}).get("src") or ""
+            except Exception:
+                url = ""
+            if url:
+                out.append({"id": f"dvids:{vid}", "url": url, "video": True,
+                            "creator": "DVIDS (U.S. DoD)", "license": "Public Domain"})
+        return out
+    except Exception as e:
+        if any(t in str(e) for t in ("401", "403", "429")):
+            _slot["off"] = True
+        return []
+
+
 def fetch_clip(query, dest, tall=True, max_mb=14):
     """Tải 1 CLIP THẬT về `dest` (.mp4). Không có/hỏng -> None để caller lùi về ảnh tĩnh.
 
     Chống trùng dùng chung sổ ảnh: mỗi clip có id riêng (pxv:/pbv:) nên không bao giờ lặp lại clip
     đã dùng cho kênh này."""
-    cands = _pexels_video(query, tall=tall) + _pixabay_video(query, tall=tall)
+    cands = (_pexels_video(query, tall=tall) + _pixabay_video(query, tall=tall)
+             + [c for c in (_nara(query) + _dvids(query)) if c.get("video")])
     random.shuffle(cands)
     for c in cands:
         if str(c.get("id")) in _IMG_USED or not c.get("url"):

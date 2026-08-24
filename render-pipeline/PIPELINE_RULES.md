@@ -566,3 +566,10 @@ nét); hỏng thì lùi về ảnh tĩnh nên không có đường nào làm vid
 OffthreadVideo nên không phải sửa engine. Clip đi qua CÙNG sổ chống trùng với ảnh (id pxv:/pbv:).
 Tắt khẩn cấp: đặt env `CLIPS_OFF=1`.
 → **LUẬT**: trước khi hứa thêm nguồn, kiểm API công khai có thật không — nguồn không API thì đừng cào.
+
+### 24/8 — NGUỒN TƯ LIỆU MỸ: NARA + DVIDS (bật khi có key)
+`nara:<key api.data.gov>` · `dvids:<key dvidshub>` — thêm vào hồ key như mọi key khác, hệ tự nhận,
+tự xoay vòng, tự tắt key lỗi. Không có key thì hai nguồn này im lặng bỏ qua (trả rỗng), pipeline chạy
+y như cũ. Đã kiểm: dán key nara giả -> vào hồ với nhãn provider "nara", KHÔNG bị nhận nhầm sang
+Cloudflare (nhánh cf: bắt mọi token lạ nên phải chặn trước nó).
+Coverr: có API nhưng link mp4 ký hạn 15' + đếm hạn mức tải -> ưu tiên thấp, chưa làm.
