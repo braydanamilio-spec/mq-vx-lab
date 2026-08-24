@@ -366,12 +366,31 @@ def main():
     check("trí nhớ key cạn SỐNG xuyên video", t_nho_key_can)
     check("bố cục: hook KHÔNG lấn băng phụ đề", t_bo_cuc_khong_chong)
     check("hàng chờ: 18 luồng KHÔNG lấy trùng kênh", t_hang_cho_nguyen_tu)
+    check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
             print("   - " + f)
         sys.exit(1)
     print("✅ SELFTEST PASS — code lành, cho phép chạy phiên.")
+
+
+def t_b2_chi_doc():
+    """B là nguồn GHI duy nhất, B2 chỉ để ĐỌC — chốt bằng code chứ không bằng lời hứa.
+
+    Firestore tách riêng hạn mức đọc (50K) và ghi (20K). Failover sang B2 gần như luôn do cạn ĐỌC,
+    lúc đó ghi vào B vẫn tốt. Bản cũ để `_db_jobs()` trả B2 cho cả đọc lẫn ghi -> dữ liệu sống chẻ
+    làm đôi -> phải rót ngược -> rót ngược cộng Increment từ bản sao -> lệch số. Bài này bắt mọi
+    lệnh ghi phải đi qua `_db_ghi()`."""
+    import re
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "firestore_bridge.py"), encoding="utf-8").read()
+    xau = [m for m in re.findall(r"_soft\(lambda[^\n]*", src) if "_db_jobs()" in m]
+    assert not xau, f"còn {len(xau)} lệnh ghi đi qua _db_jobs() (có thể trỏ sang B2): {xau[0][:80]}"
+    assert "def _db_ghi()" in src, "thiếu _db_ghi()"
+    # và gương KHÔNG được rót ngược render_stats/{owner} (bản sao do chính nó chép sang)
+    assert 'for _sid in (f"__pushed__{owner}",)' in src, \
+        "danh sách rót ngược phải BỎ render_stats/{owner} — chép sang rồi cộng ngược là nhân đôi"
 
 
 def t_hang_cho_nguyen_tu():

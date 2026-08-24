@@ -1110,3 +1110,28 @@ Bài chạy khô dùng Drive giả (0 mạng) kiểm đủ 5 loại + xác nhậ
 
 **Luật:** công cụ xoá file thì bài kiểm phải chạy TRƯỚC lần chạy thật đầu tiên. Số báo cáo sai một
 lần là mất niềm tin, mà với công cụ dọn kho thì niềm tin là tất cả.
+
+### 7.ar — B và B2: giả định gốc SAI, và cách dẹp chuyện "đổ thừa cho nhau" (24/8/2026)
+
+Anh nói: *"cứ đổ thừa B với B2 cho nhau, không đồng bộ được thì dẹp một cái đi"*. Soi lại thì đúng là
+kiến trúc sai từ giả định gốc:
+
+> Firestore có hạn mức **ĐỌC** và **GHI** tách riêng (50K đọc · 20K ghi mỗi ngày).
+> Failover sang B2 gần như **luôn** kích hoạt vì cạn hạn mức **ĐỌC** — lúc đó **ghi vào B vẫn tốt**
+> (đo thật: pipeline ghi ~800 lượt/phiên, còn xa trần 20K).
+
+Nhưng `_db_jobs()` trả B2 cho **cả đọc lẫn ghi**. Hệ quả dây chuyền:
+dữ liệu sống (job · số đếm · chủ đề) **chẻ làm đôi** → dashboard đọc B thấy thiếu → phải có đường
+"rót ngược" B2→B → rót ngược cộng `Increment` từ một **bản sao** → lệch số.
+**Mọi con số sai tối nay đều mọc ra từ đúng chỗ này.**
+
+**Sửa gốc — không dẹp B2, mà lấy lại đúng vai của nó:**
+- **B là nguồn GHI duy nhất** (`_db_ghi()` = luôn B). 10 lệnh ghi đã chuyển hết.
+- **B2 chỉ để ĐỌC** khi B cạn hạn mức đọc. Không còn hai bản ghi thì không còn gì để lệch.
+- **Bỏ `render_stats/{owner}` khỏi danh sách rót ngược** — chính hàm gương CHÉP doc này B→B2, rót
+  ngược lại cộng bản sao đó vào B ⇒ **số đếm mỗi kênh nhân đôi sau mỗi vòng gương-rồi-rót**.
+  Chép một chiều rồi cộng ngược chiều kia là sai từ ý tưởng.
+- Chốt bằng bài `t_b2_chi_doc` trong selftest: còn lệnh ghi nào đi qua `_db_jobs()` là **FAIL**.
+
+**Luật:** khi một hệ có bản chính và bản dự phòng, phải định nghĩa rõ **ai được GHI**. Cho cả hai
+cùng ghi thì không phải "đồng bộ" — đó là hai sự thật, và rồi sẽ phải chọn tin cái nào.

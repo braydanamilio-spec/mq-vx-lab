@@ -86,6 +86,29 @@ def failover_to_b2(reason: str) -> bool:
         return False
 
 
+def _db_ghi():
+    """ĐƯỜNG GHI — LUÔN LÀ B, KHÔNG BAO GIỜ LÀ B2 (24/8/2026).
+
+    Anh nói thẳng: "cứ đổ thừa B với B2 cho nhau, không đồng bộ được thì dẹp một cái đi". Đúng, và
+    soi lại thì giả định gốc của kiến trúc này SAI:
+
+      Firestore có hạn mức ĐỌC và hạn mức GHI **tách riêng** (50K đọc · 20K ghi mỗi ngày). Failover
+      sang B2 gần như luôn được kích hoạt vì cạn hạn mức **ĐỌC** — lúc đó **GHI vào B vẫn tốt**
+      (đo thật: pipeline ghi ~800 lượt/phiên, còn xa trần 20K).
+
+    Nhưng `_db_jobs()` trả B2 cho **cả đọc lẫn ghi**. Thế là dữ liệu sống (job, số đếm, chủ đề) bị
+    chẻ làm đôi giữa hai project → dashboard đọc B thấy thiếu, phải có đường "rót ngược" B2→B, mà
+    rót ngược lại là chỗ dễ **cộng trùng** nhất vì nó cộng `Increment` từ một bản sao. Mọi con số
+    lệch tối nay đều mọc ra từ đúng chỗ này.
+
+    Sửa gốc: **B là nguồn ghi DUY NHẤT · B2 chỉ để ĐỌC.** Không còn hai bản ghi để đồng bộ thì
+    không còn gì để lệch. B2 vẫn giữ nguyên giá trị của nó (cho phiên chạy tiếp khi B cạn ĐỌC),
+    chỉ mất cái vai trò nó không nên có.
+    Ghi vào B mà hỏng thật (cạn cả hạn mức ghi) thì `_soft` xếp hàng và xả sau — như cũ.
+    """
+    return _db_B_that() or _db_jobs()
+
+
 def _db_jobs():
     """Client cho collection render_jobs -> Project B (SHARD, giảm tải A) nếu có creds B; KHÔNG thì dùng A (backward-compatible)."""
     if _B2["on"] and _B2["client"] is not None:
@@ -229,7 +252,7 @@ def flush_rw_ledger(owner: str):
             return
         from google.cloud.firestore_v1 import Increment
         day = datetime.now(timezone.utc).strftime("%Y%m%d")
-        _soft(lambda: _db_jobs().collection("render_stats").document(f"__rw__{owner}").set(
+        _soft(lambda: _db_ghi().collection("render_stats").document(f"__rw__{owner}").set(
             {day: {"r": Increment(_READS["n"]), "w": Increment(_WRITES["n"])}}, merge=True), "rw_ledger")
     except Exception:
         pass
@@ -916,7 +939,7 @@ def dat_hang_cho(owner: str, channels: list) -> int:
     if not owner:
         return 0
     _cw("dat_hang_cho")
-    _soft(lambda: _db_jobs().collection("render_config").document(f"__hangcho__{owner}").set(
+    _soft(lambda: _db_ghi().collection("render_config").document(f"__hangcho__{owner}").set(
         {"cho": list(channels), "at": _now()}), "dat_hang_cho")
     return len(channels)
 
@@ -930,7 +953,8 @@ def lay_viec_ke(owner: str) -> str:
         return ""
     try:
         from google.cloud import firestore as _fs
-        db = _db_jobs()
+        # hàng chờ phải nằm MỘT chỗ cho 18 máy cùng thấy -> luôn là B (xem _db_ghi)
+        db = _db_ghi()
         ref = db.collection("render_config").document(f"__hangcho__{owner}")
         tx = db.transaction()
 
@@ -1104,7 +1128,7 @@ def new_render_request(owner: str, channel: str, vtype: str, seed: str,
 def mark_job_requeued(job_id: str, req_id: str = ""):
     """Đánh dấu job đã xếp hàng render lại -> phiên sau không tạo yêu cầu trùng cho nó nữa."""
     try:
-        _soft(lambda: _db_jobs().collection("render_jobs").document(job_id).set(
+        _soft(lambda: _db_ghi().collection("render_jobs").document(job_id).set(
             {"requeued": True, "rerender": "chờ render lại", "rerender_req": req_id}, merge=True),
             "mark_job_requeued")
     except Exception:
@@ -1495,9 +1519,13 @@ def mirror_b_to_b2(owner: str) -> int:
         # có đường cộng trùng).
         try:
             from google.cloud.firestore_v1 import Increment as _Inc
-            # `__pushed__` từ 24/8 luôn ghi thẳng vào B (xem count_pushed) nên bình thường KHÔNG
-            # còn ở B2. Vẫn giữ trong danh sách rót ngược để vét nốt phần các phiên CŨ đã kẹt lại.
-            for _sid in (f"__pushed__{owner}", owner):
+            # 24/8 — BỎ `render_stats/{owner}` KHỎI DANH SÁCH RÓT NGƯỢC: ĐÂY LÀ MỘT CHỖ CỘNG TRÙNG.
+            # Chính hàm gương này CHÉP `render_stats/{owner}` từ B sang B2 (bản sao đầy đủ, tích luỹ).
+            # Rót ngược lại cộng bản sao đó vào B bằng `Increment` -> số đếm mỗi kênh **nhân đôi**
+            # sau mỗi vòng gương-rồi-rót. Chép một chiều rồi cộng ngược chiều kia là sai từ ý tưởng.
+            # `__pushed__` thì khác: nó KHÔNG nằm trong danh sách chép, chỉ do phiên khẩn cộng vào B2
+            # — nên rót ngược đúng. Và từ 24/8 nó cũng ghi thẳng vào B rồi, giữ đây chỉ để vét phần cũ.
+            for _sid in (f"__pushed__{owner}",):
                 _sd = b2.collection("render_stats").document(_sid).get(timeout=15)
                 if not _sd.exists:
                     continue
@@ -1793,7 +1821,7 @@ def clear_resumed(job_id: str):
     """Đã DÙNG XONG checkpoint (resume thành công hoặc thất bại lại) -> xoá script khỏi job CŨ,
     tránh 2 lần resume cùng 1 kịch bản (lẫn lộn/trùng)."""
     try:
-        _soft(lambda: _db_jobs().collection("render_jobs").document(job_id).set(
+        _soft(lambda: _db_ghi().collection("render_jobs").document(job_id).set(
             {"script": "", "step": "♻️ đã dùng để resume phiên sau"}, merge=True), "clear_resumed")
     except Exception as e:
         print(f"   ⚠️ clear_resumed {job_id} lỗi: {e}")
@@ -1857,7 +1885,7 @@ def update_job(job_id: str, **patch):
     # Chỉ đặt khi job VỪA sang 'done' và patch chưa nói gì về queued -> không bao giờ ghi đè True.
     if st == "done" and "queued" not in patch:
         patch["queued"] = False
-    _soft(lambda: _db_jobs().collection("render_jobs").document(job_id).set(patch, merge=True), "update_job")
+    _soft(lambda: _db_ghi().collection("render_jobs").document(job_id).set(patch, merge=True), "update_job")
     # NHỊP TIM THẬT: bật/tắt theo trạng thái vừa ghi (xem _beat_loop bên dưới).
     _beat_set(None if st in ("done", "failed", "ratelimited") else job_id)
 
@@ -1890,7 +1918,7 @@ def _beat_loop():
             continue
         try:
             _cw("nhip_tim")
-            _db_jobs().collection("render_jobs").document(jid).set({"updated_at": _now()}, merge=True)
+            _db_ghi().collection("render_jobs").document(jid).set({"updated_at": _now()}, merge=True)
         except Exception:
             pass          # mạng chập chờn -> bỏ nhịp này, nhịp sau ghi bù
 
@@ -1910,7 +1938,7 @@ def _beat_set(job_id):
 # Drive rồi xoá doc + xoá file R2. Nhờ vậy hụt quota/hụt kho KHÔNG còn làm mất công render.
 
 def add_r2_pending(owner: str, meta: dict) -> None:
-    _soft(lambda: _db_jobs().collection("r2_pending").document(str(meta.get("key"))[:400].replace("/", "__"))
+    _soft(lambda: _db_ghi().collection("r2_pending").document(str(meta.get("key"))[:400].replace("/", "__"))
           .set({**meta, "owner": owner, "at": _now()}), "add_r2_pending")
 
 
@@ -1924,7 +1952,7 @@ def list_r2_pending(owner: str, cap: int = 40) -> list[dict]:
 
 
 def clear_r2_pending(doc_id: str) -> None:
-    _soft(lambda: _db_jobs().collection("r2_pending").document(doc_id).delete(), "clear_r2_pending")
+    _soft(lambda: _db_ghi().collection("r2_pending").document(doc_id).delete(), "clear_r2_pending")
 
 
 # ── SỔ ẢNH ĐÃ DÙNG THEO KÊNH (23/8) — chống trùng footage xuyên luồng & xuyên phiên ──────────
@@ -1986,6 +2014,6 @@ def append_channel_memory(owner: str, channel: str, fp: list, pillar: str = "", 
     if pillar:
         mem["pillars"][pillar] = int(mem["pillars"].get(pillar, 0)) + 1
     _FP_CACHE[(owner, channel)] = mem
-    _soft(lambda: _db_jobs().collection("channel_memory").document(f"{owner}__{channel}")
+    _soft(lambda: _db_ghi().collection("channel_memory").document(f"{owner}__{channel}")
           .set({"fps": mem["fps"], "pillars": mem["pillars"], "n": len(mem["fps"]), "at": _now()}),
           "channel_memory")
