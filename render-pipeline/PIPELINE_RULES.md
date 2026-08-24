@@ -587,3 +587,12 @@ tưởng kênh làm ít hơn thực tế -> **làm DƯ video**. Nay cộng dồn
 CÒN RỦI RO (chưa xử, cần quyết): khi chạy trên B2, `count_done` lấy số từ `render_stats/{owner}` —
 sổ này vừa bị reset 23/8 nên trong phiên khẩn kế tiếp hệ sẽ đếm thấp hơn thực tế. Sổ tự dựng lại sau
 vài phiên; muốn chắc thì nạp lại số đếm từ số job thật một lần.
+
+### 24/8 — DÒNG ĐẾM NÓI SAI SỰ THẬT (user: "sao lẫn lộn thế")
+Dashboard chỉ NẠP 120 bản ghi mới nhất (limit 40 ở A + 80 ở B — giới hạn đặt 23/8 để tiết kiệm quota),
+nhưng dòng đếm lại in `done.length` như thể đó là kích thước kho. Kết quả: hiện "93 video" trong khi
+kho thật có **414** -> user tưởng bấm xoá làm mất video. Nay in rõ hai phần:
+"📤 414 video trong kho · đang hiện 14 mới nhất". Số 414 lấy từ sổ đếm (1 lượt đọc), không phải đếm
+danh sách đã nạp.
+→ **LUẬT**: khi danh sách bị CẮT BỚT để tiết kiệm quota, con số hiển thị PHẢI nói rõ "đang hiện N/M",
+không được để người đọc tưởng phần hiện là toàn bộ. Tối ưu quota mà làm số liệu nói dối là tối ưu hỏng.
