@@ -194,13 +194,25 @@ def ton_kho(owner: str) -> dict:
 
 
 def suc_dang_ngay() -> int:
-    """Tổng số video CÒN ĐĂNG ĐƯỢC hôm nay, cộng qua mọi dự án YouTube đang bật."""
+    """Tổng số video CÒN ĐĂNG ĐƯỢC hôm nay, cộng qua mọi dự án YouTube đang bật.
+
+    Trả -1 = KHÔNG BIẾT (chưa bật D1, hoặc bảng `yt_project` chưa có dự án nào). Trả 0 = biết chắc
+    đã hết lượt đăng hôm nay.
+
+    24/8 tối — hai chuyện đó đang hiện CÙNG một con số. Log plan in `đăng được hôm nay: 0` trong khi
+    sự thật là bảng dự án còn trống: Worker cộng `con` từ danh sách dự án, danh sách rỗng thì tổng
+    tự nhiên bằng 0. Người đọc log hiểu thành "hết hạn mức đăng", còn thực tế là "chưa khai báo dự
+    án nào". Cùng họ với luật 7.cg (không đo được thì đừng báo 0)."""
     if not (bat_ghi() or bat_doc()):
         return -1
     import datetime as _d
     ngay = (_d.datetime.now(_d.timezone.utc) - _d.timedelta(hours=7)).date().isoformat()
-    r = goi("yt_con_cho", {"ngay": ngay})
-    return int(r.get("con", -1)) if "con" in r else -1
+    r = goi("yt_con_cho", {"ngay": ngay}) or {}
+    if "con" not in r:
+        return -1
+    if not (r.get("rows") or []):
+        return -1          # không có dự án nào trong bảng -> KHÔNG BIẾT, không phải "hết lượt"
+    return int(r.get("con", -1))
 
 
 def don_job_ma(owner: str, gio: int = 6) -> int:

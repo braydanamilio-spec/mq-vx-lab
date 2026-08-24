@@ -2001,3 +2001,17 @@ không bỏ không. Nay vòng lấy việc đo theo `HARD_S`. Chốt bằng `t_l
 hẳn chuỗi `min(budget_s, HARD_S)` trong vòng đó); đã thử ngược: quay về ngưỡng mềm là test bắt.
 **LUẬT: vá xong phải KIỂM CHỨNG BẰNG LOG PHIÊN SAU, đừng dừng ở "code đã đúng chỗ".** Đây là lần thứ
 hai trong đêm một bản vá đúng ý tưởng nhưng không chạy (lần trước: 7.br vá nhầm file).
+
+### 7.cs — `đăng được hôm nay: 0` thật ra là "bảng dự án YouTube còn trống" (24/8/2026 tối)
+Dòng `📦 Đệm bài … đăng được hôm nay: 0` nghe như **hết hạn mức đăng**, nhưng Worker cộng `con` từ
+danh sách dự án trong bảng `yt_project`; danh sách rỗng thì tổng tự nhiên bằng 0. Hai trạng thái hoàn
+toàn khác nhau — "hết lượt" và "chưa khai báo dự án nào" — đang hiện cùng một con số, và con số đó là
+thứ khâu phản áp lực sẽ dùng để quyết định nhịp sản xuất.
+Nay `suc_dang_ngay()` trả **-1 = chưa biết** khi `rows` rỗng, chỉ trả 0 khi có dự án và đã hết lượt
+thật; dòng log nói thẳng *"CHƯA BIẾT (bảng dự án YouTube trên D1 còn trống)"*.
+Chốt bằng `t_suc_dang_phan_biet_chua_biet_voi_het_luot` (3 ca: trống / hết lượt / còn lượt).
+**LUẬT (lần thứ năm trong đêm): 0 là một PHÉP ĐO, không phải chỗ đổ mọi thứ mình không biết.**
+7.bm · 7.bs · 7.ce · 7.cg · nay 7.cs — cùng một sai lầm ở năm chỗ khác nhau.
+
+**Việc để lại cho sáng:** bảng `yt_project` trên D1 chưa có dự án nào ⇒ khâu chọn dự án YouTube theo
+hạn mức chưa có dữ liệu để làm việc. Cần anh khai báo (mỗi kênh 1 dự án Google riêng, 6 video/ngày).

@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("sức đăng: 'chưa biết' ≠ 'hết lượt'", t_suc_dang_phan_biet_chua_biet_voi_het_luot)
     check("phản áp lực không chạy được thì phải NÓI RA", t_phan_ap_luc_khong_im_lang)
     check("khâu đăng không dội vào chỗ đã biết là chết", t_publish_khong_doi_vao_cho_da_chet)
     check("sổ quota: đúng ngày reset + cộng đủ 2 cuốn", t_so_quota_dung_ngay_va_gop_du)
@@ -1007,6 +1008,28 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_suc_dang_phan_biet_chua_biet_voi_het_luot():
+    """`0` và `không biết` phải là hai con số khác nhau (24/8 tối).
+    Log plan in `đăng được hôm nay: 0` trong khi sự thật là bảng `yt_project` trên D1 CÒN TRỐNG —
+    Worker cộng `con` từ danh sách dự án, danh sách rỗng thì tổng bằng 0. Người đọc hiểu thành "hết
+    hạn mức đăng", thực tế là "chưa khai báo dự án nào". Cùng họ luật 7.cg."""
+    import hot_db as H
+    goc_goi, goc_d, goc_g = H.goi, H.bat_doc, H.bat_ghi
+    try:
+        H.bat_doc = H.bat_ghi = lambda: True
+        H.goi = lambda l, t=None, timeout=12: {"rows": [], "con": 0}
+        assert H.suc_dang_ngay() == -1, "bảng dự án trống mà báo 0 = nói 'hết lượt' khi chưa biết gì"
+        H.goi = lambda l, t=None, timeout=12: {"rows": [{"tran_ngay": 6, "da_dung": 6}], "con": 0}
+        assert H.suc_dang_ngay() == 0, "có dự án và hết lượt thật thì phải là 0"
+        H.goi = lambda l, t=None, timeout=12: {"rows": [{"tran_ngay": 6, "da_dung": 2}], "con": 4}
+        assert H.suc_dang_ngay() == 4
+    finally:
+        H.goi, H.bat_doc, H.bat_ghi = goc_goi, goc_d, goc_g
+    r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "run_render.py"), encoding="utf-8").read()
+    assert "CHƯA BIẾT" in r, "dòng Đệm bài chưa nói rõ khi không biết sức đăng"
 
 
 def t_phan_ap_luc_khong_im_lang():

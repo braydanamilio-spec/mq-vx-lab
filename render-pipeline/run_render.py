@@ -1697,7 +1697,9 @@ def plan_mode():
             _doi = [c for c in channels if _ngay_con(c) < NGAY_DEM]
             _suc = _H.suc_dang_ngay()
             print(f"   📦 Đệm bài: mục tiêu {NGAY_DEM:.0f} ngày/kênh (nhịp {NHIP_NGAY:.0f} video/ngày) · "
-                  f"đăng được hôm nay: {_suc if _suc >= 0 else '?'}")
+                  + (f"đăng được hôm nay: {_suc}" if _suc >= 0
+                     else "sức đăng hôm nay: CHƯA BIẾT (bảng dự án YouTube trên D1 còn trống — "
+                          "khai báo dự án thì con số này mới có nghĩa)"))
             if _doi:
                 print("      đói nhất: " + ", ".join(
                     f"{c}={_ngay_con(c):.1f}ngày" for c in _doi[:6]))
