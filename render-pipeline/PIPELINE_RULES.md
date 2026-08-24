@@ -727,3 +727,23 @@ kho trôi thì "còn thiếu" gần như bằng nhau ở mọi kênh nên khoá 
 
 **Luật:** hàm nào là LƯỚI AN TOÀN (gương, failover, backup) thì (a) không được để cả thân hàm trong
 một `try`, (b) phải để lại dấu vết đo được mỗi lần chạy — hỏng âm thầm còn tệ hơn không có lưới.
+
+### 7.ab — Cạn hạn mức rồi vẫn đập vào Firestore: vì sao "vừa reset đã cháy" (24/8/2026)
+
+**Điều bị bỏ sót:** lượt đọc THẤT BẠI vì 429 **vẫn tính vào hạn mức**. Nên khi A cạn, mọi cơ chế
+"thử lại cho chắc" biến thành máy đốt quota:
+- `firestore_state._retry`: 5 lần/lệnh, ~22s chờ — mà cạn hạn mức NGÀY thì thử lại 5 lần cũng vô ích.
+- `storage.firestore_pool_accounts`: vòng `for wait in (0, 8, 25)` × ~73 doc, lặp mỗi 30' (hết TTL)
+  cho **từng luồng**: 18 luồng × 5 lần × 3 × 73 ≈ **20.000 lượt đọc hỏng mỗi phiên**, cộng 33s ngủ.
+
+Log phiên 08:47 xác nhận: mọi luồng in `🪞 A nghẽn — dùng GƯƠNG kho ở B` **từ 09:18** — tức A đã
+chết chưa đầy 90 phút sau mốc reset, rồi bị đập tiếp cả ngày. Sáng sau vừa reset là cháy lại ngay.
+
+**Vá — "đệm âm" (nhớ rằng đã cạn):**
+- `_retry`: 429 lần đầu vẫn thử lại (burst thoáng qua là có thật); hết lượt mà vẫn 429 thì ghi mốc
+  **nghỉ 30 phút**, trong khoảng đó gặp 429 là ném ngay cho tầng trên chuyển sang gương/đệm.
+- `firestore_pool_accounts`: A trả 429 → đặt mốc nghỉ 30' và **đi thẳng sang gương B/B2**, bỏ hẳn
+  vòng thử lại. Đo thật: 33s → **0,07s**, và 0 lượt đọc A.
+
+**Luật:** phân biệt **burst thoáng qua** với **cạn hạn mức cả ngày** — cùng mã 429 nhưng chữa ngược
+nhau. Thử lại chỉ đúng cho cái đầu; với cái sau, mỗi lần thử là tự bắn vào chân.
