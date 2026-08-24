@@ -34,8 +34,13 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - name: Python deps (nhẹ - cho gate + plan)
-        run: pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+        run: |
+          pip install --quiet -c render-pipeline/constraints.txt \
+             google-generativeai edge-tts google-cloud-firestore \
              google-api-python-client google-auth pyyaml cryptography
+          # IN PHIÊN BẢN THƯ VIỆN VÀO LOG (24/8): sự cố gương B→B2 hỏng 16 tiếng là do thư viện
+          # Google tự lên bản mới giữa chừng. Không ghi lại số thì lần sau lại mất hàng giờ đoán.
+          python -c "import importlib.metadata as m; print('📦 thư viện: ' + ' · '.join(f'{p}={m.version(p)}' for p in ('google-cloud-firestore','google-api-core','grpcio','protobuf')))"
       # TỰ KIỂM 10 GIÂY (0 mạng, 0 quota): chạy đúng các đường gọi sản xuất bằng mock — bản push
       # hỏng (shim thiếu chữ ký, thứ tự key sai, đọc-mềm gãy...) FAIL NGAY TẠI ĐÂY, lane không
       # spawn, không đốt gì. Sinh ra từ 3 sự cố 22/8 (system_instruction giết 18/18 luồng...).
@@ -195,8 +200,10 @@ jobs:
             libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg libasound2
       - name: Python deps
         run: |
-          pip install --quiet google-generativeai google-genai edge-tts google-cloud-firestore \
+          pip install --quiet -c render-pipeline/constraints.txt \
+            google-generativeai google-genai edge-tts google-cloud-firestore \
             google-api-python-client google-auth pyyaml
+          python -c "import importlib.metadata as m; print('📦 thư viện: ' + ' · '.join(f'{p}={m.version(p)}' for p in ('google-cloud-firestore','google-api-core','grpcio','protobuf')))"
           # pillow: BẮT BUỘC — still_hook_thumb/photo_score/ensure_yt_thumb đều dùng PIL. Thiếu thì
           # thumbnail khung hook chết lặng ("No module named 'PIL'") và video lên không có ảnh đẹp.
           # Cài Ở LỆNH RIÊNG: gộp vào dòng trên làm pip nổ "resolution-too-deep" (sự cố 20/8).

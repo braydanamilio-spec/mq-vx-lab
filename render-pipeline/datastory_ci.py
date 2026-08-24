@@ -216,6 +216,35 @@ def _vis_die(k, phut: int = _VIS_NGHI_PHUT):
 _VE_DEAD: dict = {}
 _REST_LOADED = [0.0]        # mốc lần cuối kéo sổ nghỉ chung về (đệm 5 phút)
 
+# ── MÁY DÒ "CHẾT CÂM" (24/8) ─────────────────────────────────────────────────────────────────
+# Bài học đắt nhất đêm nay: tính năng clip video CHẾT 100% suốt 118 video mà log vẫn sạch bong,
+# vì mọi đường thất bại đều `return None` không nói gì. Gương B→B2 cũng chết âm thầm 16 tiếng.
+# Cách các hãng lớn chặn loại lỗi này: mỗi phụ thuộc có một CHỈ SỐ TỈ LỆ THÀNH CÔNG, và có cảnh báo
+# riêng cho ca "tụt về 0" — vì 0% là dấu hiệu HỎNG CẤU HÌNH, khác hẳn với 30% (chỉ là chất lượng kém).
+# Ở đây làm bản tối giản: đếm thử/được cho từng khâu, cuối luồng in một dòng, khâu nào CÓ THỬ mà
+# KHÔNG ĐƯỢC LẦN NÀO thì hét lên. Không có chỗ chung để cảnh báo thì ít nhất phải hét vào log.
+_DEM_KHAU: dict = {}
+
+
+def dem_khau(ten: str, duoc: bool):
+    o = _DEM_KHAU.setdefault(ten, {"thu": 0, "duoc": 0})
+    o["thu"] += 1
+    o["duoc"] += 1 if duoc else 0
+
+
+def bao_cao_khau() -> str:
+    """Một dòng tổng kết + hét lên nếu có khâu chết câm. Gọi cuối mỗi luồng."""
+    if not _DEM_KHAU:
+        return ""
+    phan = " · ".join(f"{k} {v['duoc']}/{v['thu']}" for k, v in sorted(_DEM_KHAU.items()))
+    chet = [k for k, v in _DEM_KHAU.items() if v["thu"] >= 3 and v["duoc"] == 0]
+    ra = f"   📈 tỉ lệ dùng được: {phan}"
+    if chet:
+        ra += ("\n   🚨 CHẾT CÂM: " + ", ".join(chet) +
+               " — thử nhiều lần, KHÔNG lần nào được. Đây là hỏng cấu hình/thư viện, "
+               "không phải chất lượng kém. Soi ngay, đừng để lặp lại ca clip 0/118.")
+    return ra
+
 
 def _ve_chet(k) -> bool:
     import time as _t
@@ -857,10 +886,12 @@ def fetch_clip(query, dest, tall=True, max_mb=14):
             note_image_used(c["id"])
             note_credit({"id": c["id"], "creator": c.get("creator"), "license": c.get("license")})
             print(f"   🎬 clip thật: {os.path.basename(dest)} ({len(data)/1e6:.1f}MB · {c.get('dur')}s · {c.get('license')})")
+            dem_khau("clip", True)
             return dest
         except Exception:
             _hong += 1
             continue
+    dem_khau("clip", False)
     if not cands:
         print(f"   🎬✗ không nguồn nào trả clip cho «{str(query)[:40]}» "
               f"(px:{len(_PX_POOL)} pb:{len(_PB_POOL)} nara:{len(_NARA_POOL)} dvids:{len(_DVIDS_POOL)})")

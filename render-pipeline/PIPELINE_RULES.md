@@ -936,3 +936,26 @@ doc `render_stats/__live__{owner}`, dùng `merge` nên **không bao giờ tự m
 vài ngày là chạm trần **1MB** của Firestore → mọi lượt ghi nhịp sống hỏng, mà dashboard lại phải tải
 về một doc ngày càng nặng. `don_nhip_song()` giữ 2 giờ gần nhất rồi ghi đè, chạy 1 lần/phiên ở plan
 (1 đọc + 1 ghi). **Luật: mọi doc gộp ghi bằng `merge` đều phải có đường dọn, nếu không nó là quả bom hẹn giờ.**
+
+### 7.ak — Hai thứ chuẩn ngành mình còn thiếu, và đã bù (24/8/2026)
+
+Rà lại các sự cố đêm nay, hai cái đắt nhất đều KHÔNG phải lỗi logic — mà là thiếu hai nền nếp kỹ
+thuật mà ngành đã chuẩn hoá từ lâu:
+
+**1. Không ghim phiên bản thư viện (reproducible build / lockfile).**
+Workflow chạy `pip install google-cloud-firestore` **không ghim phiên bản** → mỗi phiên cài "bản mới
+nhất tại thời điểm đó". Một bản phát hành mới của Google làm gãy `.stream(timeout=…)` →
+`'_UnaryStreamMultiCallable' object has no attribute '_retry'` → **gương B→B2 chết âm thầm 16 tiếng**.
+Mã nguồn không đổi mà hành vi đổi theo NGÀY CÀI ĐẶT thì không thể suy luận ra sự cố.
+→ `render-pipeline/constraints.txt` (sàn = bản đã qua selftest, trần = chặn nhảy MAJOR) + **in phiên
+bản thư viện vào log mỗi phiên**. Lần sau có sự cố kiểu này: 1 phút đối chiếu thay vì hàng giờ đoán.
+
+**2. Không có chỉ số tỉ lệ thành công → hỏng câm không ai biết.**
+Clip video chết **100% suốt 118 video** mà log vẫn sạch. Cách ngành chặn: mỗi phụ thuộc có một chỉ
+số tỉ lệ thành công, và **cảnh báo riêng cho ca tụt về 0** — vì 0% là dấu hiệu HỎNG CẤU HÌNH, khác
+hẳn 30% (chỉ là chất lượng kém).
+→ `dem_khau()/bao_cao_khau()`: đếm thử/được từng khâu, cuối mỗi luồng in `📈 tỉ lệ dùng được: …`;
+khâu nào thử ≥3 lần mà 0 lần được thì in `🚨 CHẾT CÂM`.
+
+**Luật:** một tính năng không có chỉ số đo được là một tính năng **có thể đã chết mà không ai biết**.
+Và một môi trường chạy không ghim phiên bản là một hệ **không thể lặp lại**, nên cũng không thể gỡ lỗi.

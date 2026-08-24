@@ -1620,6 +1620,12 @@ def channel_mode(name):
         FB.flush_soft()                    # xả ghi done/topics bị hoãn -> count_done không đếm thiếu
         FB.update_channel_stats(OWNER, name)   # sổ thống kê 1-doc cho dashboard (số thật mọi kênh, 1 ghi)
         print("   " + FB.write_report())   # SỐ ĐO THẬT lượt ghi Firestore — khỏi ước lượng lần sau
+        try:
+            _bc = DS.bao_cao_khau()        # máy dò "chết câm": khâu nào thử nhiều mà 0 lần được
+            if _bc:
+                print(_bc)
+        except Exception:
+            pass
         FB.flush_rw_ledger(OWNER)          # cộng vào sổ tổng NGÀY (1 ghi) -> plan rung chuông 60%/85% sớm
     except Exception:
         pass
