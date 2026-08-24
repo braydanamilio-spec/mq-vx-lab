@@ -115,38 +115,7 @@ def _desc_src(story) -> str:
     return desc
 
 
-def _lat(x: str, n: int = 0) -> str:
-    """Làm sạch một mảnh tên file: chỉ giữ chữ và số, nối bằng '-'."""
-    r = re.sub(r"[^A-Za-z0-9]+", "-", str(x or "")).strip("-")
-    return r[:n] if n else r
-
-
-def ten_file(channel: str, story: dict, vtype: str, seri: str = "", bo: str = "") -> str:
-    """TÊN FILE CHUẨN — long, short, thumbnail, file mô tả đều khớp nhau (24/8/2026).
-
-        KENH__YYYYMMDD__SERI__L__tieu-de          (bản dài)
-        KENH__YYYYMMDD__SERI__S1__tieu-de         (short thứ 1 CẮT RA TỪ chính bản dài đó)
-
-    Vì sao đổi: tên cũ là `KENH-tieu-de` — không cho biết short nào thuộc long nào, và sắp theo tên
-    thì lộn xộn. Mở kho ra thấy một đống video rời rạc, muốn biết "3 short này của bài dài nào" phải
-    mở từng cái ra xem.
-    Bốn thứ tên mới giải quyết:
-      • `YYYYMMDD` -> sắp theo tên là ra đúng thứ tự thời gian;
-      • `SERI`     -> long và các short của nó nằm SÁT NHAU khi sắp xếp, tìm một cái ra cả cụm;
-      • `L / S1..` -> nhìn tên biết ngay vai trò và thứ tự trong cụm;
-      • `KENH`     -> vẫn tìm được toàn bộ video của một kênh như cũ.
-    Thumbnail (.jpg) và file mô tả (.json) KHÔNG cần đổi gì: enqueue.py vốn lấy đúng tên gốc của
-    video làm tên cho chúng, nên tên video chuẩn thì cả cụm 3 file tự khớp.
-    """
-    from datetime import datetime as _dt, timezone as _tz
-    ngay = _dt.now(_tz.utc).strftime("%Y%m%d")
-    tieu_de = _lat(story.get("title") or story.get("topic") or vtype, 46)
-    phan = [_lat(channel), ngay]
-    if seri:
-        phan.append(_lat(seri, 6).lower())
-    phan.append(bo or ("L" if vtype == "long" else "S"))
-    phan.append(tieu_de)
-    return "__".join(p for p in phan if p)[:96]
+from ten_chuan import lat as _lat, ten_file          # quy ước đặt tên: MỘT nguồn duy nhất
 
 
 def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "") -> bool:

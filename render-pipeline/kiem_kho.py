@@ -41,21 +41,9 @@ import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 
-# Tên chuẩn mới: KENH__YYYYMMDD__seri__L__tieu-de  (xem run_render.ten_file)
+from ten_chuan import doc_vai as _vai          # dò ô vai trò L/S, không lấy theo vị trí
+
 TEN = re.compile(r"^([A-Za-z0-9]+)__")
-
-
-def _vai(ten: str) -> str:
-    """long/short suy từ tên file. Tên chuẩn mới có ô vai trò `L`/`S1..`; tên cũ thì đoán theo
-    chữ 'long' trong tên, còn lại coi là short (short chiếm đa số nên đoán sai ít hơn)."""
-    p = ten.split("__")
-    if len(p) >= 4:
-        v = p[3].upper()
-        if v == "L":
-            return "l"
-        if v.startswith("S"):
-            return "s"
-    return "l" if "long" in ten.lower() else "s"
 
 
 def _quet(drv, folder_id, sau=0, ra=None):
