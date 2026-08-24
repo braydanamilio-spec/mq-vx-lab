@@ -794,6 +794,40 @@ def cool_key(key_id: str, minutes: int = 20):
     _KEYS_CACHE.clear()
 
 
+# ── SỔ NGHỈ DÙNG CHUNG CHO 18 LUỒNG (24/8) ───────────────────────────────────────────────────
+# Vì sao cần: 18 luồng render là 18 TIẾN TRÌNH TRÊN 18 MÁY KHÁC NHAU, không chia sẻ gì. Luồng 3
+# phát hiện key X đã cạn hạn mức Vision thì 17 luồng kia KHÔNG HỀ BIẾT — mỗi luồng phải tự đâm vào
+# để học lại cùng một điều, mà mỗi lần đâm là một lượt gọi hỏng bị nhà cung cấp trừ hạn mức.
+# Đây chính là mô hình "central rate-limit service" mà các hãng lớn dùng (Envoy ratelimit / Redis
+# token-bucket dùng chung), chỉ khác là mình không có server luôn bật -> dùng 1 doc Firestore làm
+# nơi chốt chung: ghi khi phát hiện (1 lượt ghi), đọc theo đệm 5 phút (1 lượt đọc/5' mỗi luồng).
+def share_key_rest(kind: str, kid: str, until_iso: str) -> None:
+    """Báo cho 17 luồng kia biết: key này đã cạn hạn mức `kind` tới `until_iso`.
+    kind: 'vis' (Vision) | 've' (vẽ ảnh). Ghi mềm — hỏng thì thôi, không cản việc chính."""
+    own = _OWNER_HINT[0]
+    if not (own and kind and kid):
+        return
+    _cw("share_key_rest")
+    _soft(lambda: _db_keys().collection("gemini_keys").document(f"__cool__{own}").set(
+        {f"{kind}:{kid}": until_iso}, merge=True), "share_key_rest")
+
+
+def read_key_rest() -> dict:
+    """Đọc sổ nghỉ chung -> {'vis:<id>': iso, 've:<id>': iso, ...}. Lỗi thì trả rỗng (chạy như cũ)."""
+    own = _OWNER_HINT[0]
+    if not own:
+        return {}
+    try:
+        _cr("read_key_rest", 1)
+        d = _db_keys().collection("gemini_keys").document(f"__cool__{own}").get()
+        if not d.exists:
+            return {}
+        return {k: v for k, v in (d.to_dict() or {}).items()
+                if isinstance(v, str) and (k.startswith("vis:") or k.startswith("ve:"))}
+    except Exception:
+        return {}
+
+
 def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
     """Ghi dung lượng THẬT của 1 kho vào storage_accounts.used (render upload KHÔNG tự cập nhật số này ->
     phải sync để display + guard-kho-đầy chính xác). Doc id khớp Worker: {owner}__{name}."""

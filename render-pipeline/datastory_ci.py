@@ -82,6 +82,7 @@ def set_ai_pool(keys, channel: str = ""):
                 off = int(hashlib.md5(channel.encode()).hexdigest(), 16) % len(grp)
                 grp[:] = grp[off:] + grp[:off]
     _AI_POOL["keys"] = cf + gm
+    nap_so_nghi_chung()        # học từ 17 luồng kia trước khi tự đâm vào key đã cạn
     # 24/8 — KHÔNG XOÁ TRÍ NHỚ "KEY NÀY ĐÃ CẠN" NỮA. Đây là gốc của câu hỏi "42 key Groq, 59 Gemini,
     # 52 CF mà sao mới đầu ngày đã chạm trần".
     # `set_ai_pool` chạy MỘT LẦN MỖI VIDEO (đo phiên 08:47: 136 lần). Hai dòng xoá ở đây làm hệ QUÊN
@@ -126,13 +127,69 @@ def _vis_chet(k) -> bool:
     return True
 
 
+def _kid(k) -> str:
+    """Danh tính key để ghi vào sổ chung — BĂM, không bao giờ ghi key trần ra ngoài."""
+    import hashlib
+    return hashlib.sha1(str(k).encode()).hexdigest()[:12]
+
+
+def _bao_chung(kind: str, k, phut: int):
+    """Báo cho 17 luồng kia biết key này đã cạn — mô hình rate-limit dùng chung."""
+    try:
+        import datetime as _d
+        import firestore_bridge as _FB
+        _FB.share_key_rest(kind, _kid(k),
+                           (_d.datetime.now(_d.timezone.utc) + _d.timedelta(minutes=phut)).isoformat())
+    except Exception:
+        pass
+
+
+def nap_so_nghi_chung(force: bool = False):
+    """Kéo sổ nghỉ CHUNG về (18 luồng học chung một lần thay vì mỗi luồng tự đâm để học lại).
+
+    Đệm 5 phút -> mỗi luồng tốn ~1 lượt đọc/5', đổi lại cắt hàng trăm lượt gọi chắc chắn 429 sang
+    Gemini/CF. Đây là bản "central rate limiter" chạy được trên hạ tầng free: không có server luôn
+    bật thì lấy 1 doc Firestore làm chốt chung."""
+    import time as _t
+    if not force and (_t.time() - _REST_LOADED[0]) < 300:
+        return
+    _REST_LOADED[0] = _t.time()
+    try:
+        import datetime as _d
+        import firestore_bridge as _FB
+        so = _FB.read_key_rest()
+        if not so:
+            return
+        gio = _d.datetime.now(_d.timezone.utc)
+        n = 0
+        for khoa, iso in so.items():
+            kind, _, kid = khoa.partition(":")
+            try:
+                con = (_d.datetime.fromisoformat(iso) - gio).total_seconds()
+            except Exception:
+                continue
+            if con <= 0:
+                continue
+            bang = _VIS_DEAD if kind == "vis" else _VE_DEAD
+            for k in list(_AI_POOL.get("keys") or []):
+                if _kid(k) == kid and k not in bang:
+                    bang[k] = _t.time() + con; n += 1
+        if n:
+            print(f"   🤝 sổ nghỉ chung: {n} key đã bị luồng khác xác nhận là cạn — "
+                  f"luồng này khỏi phải đâm vào để học lại.")
+    except Exception:
+        pass
+
+
 def _vis_die(k, phut: int = _VIS_NGHI_PHUT):
     import time as _t
     _VIS_DEAD[k] = _t.time() + phut * 60
+    _bao_chung("vis", k, phut)
 
 
 # Hồ VẼ ẢNH cũng cần trí nhớ y hệt: {key: mốc hết nghỉ}. Trước đây là set() bị xoá mỗi video.
 _VE_DEAD: dict = {}
+_REST_LOADED = [0.0]        # mốc lần cuối kéo sổ nghỉ chung về (đệm 5 phút)
 
 
 def _ve_chet(k) -> bool:
@@ -149,6 +206,7 @@ def _ve_chet(k) -> bool:
 def _ve_die(k, phut: int = _VIS_NGHI_PHUT):
     import time as _t
     _VE_DEAD[k] = _t.time() + phut * 60
+    _bao_chung("ve", k, phut)
 
 
 def _vision_key(keys):

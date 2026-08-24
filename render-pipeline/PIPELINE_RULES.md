@@ -885,3 +885,24 @@ vẫn cháy sớm.
 **Luật (lặp lại lần thứ ba trong một đêm, nên viết to):** *bất kỳ chỗ nào biết "cái này đã cạn" mà
 lại quên đi theo chu kỳ ngắn, đều là một máy đốt hạn mức.* Trí nhớ phải sống ít nhất bằng chu kỳ
 hạn mức của nhà cung cấp, không phải bằng vòng đời một video.
+
+### 7.ai — Sổ nghỉ DÙNG CHUNG cho 18 luồng (mô hình central rate-limiter, 24/8/2026)
+
+**Lỗ hổng còn lại sau 7.ah:** trí nhớ "key này đã cạn" mới chỉ sống trong MỘT tiến trình. Mà 18 luồng
+render là **18 tiến trình trên 18 máy khác nhau, không chia sẻ gì**. Luồng 3 phát hiện key X cạn thì
+17 luồng kia không hề biết — mỗi luồng phải tự đâm vào để học lại **cùng một điều**, và mỗi lần đâm
+là một lượt gọi hỏng bị nhà cung cấp trừ hạn mức. Nhân 18 luồng × mỗi key = phí thật.
+
+**Chuẩn ngành:** các hãng lớn giải bài này bằng **central rate-limit service** (Envoy ratelimit,
+Redis token-bucket dùng chung) — mọi worker hỏi một chỗ trước khi gọi. Mình không có server luôn bật,
+nên dùng **1 doc Firestore làm chốt chung**: `gemini_keys/__cool__{owner}`.
+- Phát hiện key cạn → `share_key_rest(kind, kid, until)` — 1 lượt ghi mềm.
+- Đầu mỗi video → `nap_so_nghi_chung()` — 1 lượt đọc, đệm 5 phút.
+- Danh tính key ghi bằng **SHA1 12 ký tự**, không bao giờ ghi key trần ra ngoài.
+
+Chi phí ~1 đọc/5'/luồng, đổi lại cắt hàng trăm lượt gọi chắc chắn 429 sang Gemini/CF mỗi phiên.
+Đo thử: luồng mới nạp sổ và biết ngay key đã cạn **mà chưa gọi API lần nào**.
+
+**Luật:** khi N worker cùng dùng chung một hồ tài nguyên có hạn mức, tri thức "cái này đã hết" phải
+nằm ở chỗ **dùng chung**, không phải trong RAM của từng worker. Không có chỗ chung thì mỗi worker sẽ
+tự trả giá để học lại cùng một bài học.
