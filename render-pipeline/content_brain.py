@@ -284,6 +284,13 @@ class _GroqShim:
                 kind = "daily" if ("per day" in _d or "tpd" in _d or "tokens per day" in _d) else \
                        ("per minute" if left > 0 else "daily")
                 raise RateLimited(f"429 rate limit {kind} (groq): {detail}")
+            # 24/8 — LỖI 400 "Failed to generate/validate JSON": Groq đôi lúc trả JSON hỏng ở chế độ
+            # json_object. Đây là lỗi NGẪU NHIÊN của một lượt sinh, KHÔNG phải key hỏng. Trước đây
+            # ném RuntimeError thường -> tầng trên coi là lỗi lạ và bỏ luôn kênh; đo trên phiên
+            # 07:19 có 15 lần như vậy trong 14 luồng. Nay báo là lỗi TẠM để tầng trên đổi key/thử lại.
+            if e.code == 400 and ("failed to generate json" in str(detail).lower()
+                                  or "failed to validate json" in str(detail).lower()):
+                raise RateLimited(f"groq JSON hỏng (thử lại/đổi key): {str(detail)[:90]}")
             raise RuntimeError(f"groq HTTP {e.code}: {detail}")
         txt = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
         return type("R", (), {"text": txt})()

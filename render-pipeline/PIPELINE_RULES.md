@@ -546,3 +546,11 @@ MỘT-LẦN (nạp key/kênh/job), không phải onSnapshot. Bản đúng chặn
 Đo thật: tab chủ 549 lượt đọc · **tab phụ 0 lượt**, dữ liệu vẫn hiện đủ (210 key, 40/40 ảnh).
 → **LUẬT**: muốn cắt quota ở client thì phải bịt MỌI cửa đọc, không chỉ cửa realtime. Bộ đếm cũ chỉ
 đếm onSnapshot nên che mất phần lớn lượt đọc — sửa đếm trước, rồi mới tối ưu.
+
+### BUG 24/8 — Groq HTTP 400 "Failed to generate JSON" bị coi là lỗi CHẾT
+Ở chế độ `json_object`, Groq thỉnh thoảng trả JSON hỏng -> HTTP 400. Trước đây ném `RuntimeError`
+thường nên tầng trên coi là lỗi lạ và bỏ luôn kênh/lượt sinh. Đo phiên 07:19: **15 lần trong 14 luồng**
+= 15 lượt sinh mất trắng (mỗi lượt vài nghìn token). Nay báo là lỗi TẠM (`RateLimited`) -> tầng trên
+đổi key và thử lại như với nghẽn quota.
+→ **LUẬT**: lỗi NGẪU NHIÊN của một lượt sinh (JSON hỏng, cắt giữa chừng) phải cho thử lại; chỉ lỗi
+CẤU HÌNH (key sai, model không tồn tại, thiếu quyền) mới được coi là chết.
