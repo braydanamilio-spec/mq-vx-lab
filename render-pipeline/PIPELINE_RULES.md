@@ -1244,3 +1244,31 @@ chạy, khoá cũ trả *"sai khoá"*.
 
 **Còn lại để gỡ B2 (chưa làm, có lý do):** đợi 1-2 phiên chạy thật với `HOT_MODE=on` xác nhận số
 đếm đúng, rồi mới xoá gương + rót ngược + B2. Xoá cùng lúc với bật là mất đường lùi.
+
+### 7.av — Đếm ĐÚNG: bỏ cộng dồn, đếm lại từ bản ghi (24/8/2026)
+
+**Gốc của "số nhảy tùm lum":** `__pushed__` là bộ đếm **CỘNG DỒN** bằng `Increment`. Kiểu đó sai được
+theo **hai chiều** và **không bao giờ tự sửa**:
+- cộng **thiếu** khi lượt ghi rơi (quota chết, `_soft` nuốt) → số thấp hơn thực tế;
+- cộng **thừa** khi rót ngược từ bản sao B2 → số cao hơn thực tế;
+- và một khi đã lệch thì **lệch vĩnh viễn**, vì không có gì để đối chiếu lại.
+
+→ Nay đếm **thẳng từ bảng `render_job` trên D1**: *"video có thật" = `status='done'` VÀ có `drive_id`*.
+Sai lệch **không tích luỹ được**, vì mỗi lần hỏi là một lần **đếm lại từ sự thật**.
+Dashboard đọc qua cổng `/api/hot-stat` — **cổng CHỈ-ĐỌC-SỐ, không cần `HOT_KEY`**: nhét khoá ghi vào
+trình duyệt là ai mở trang cũng đọc được khoá của cả kho nóng, hạ cấp bảo mật để lấy một con số thì
+không đáng. Cổng này chỉ chạy phép ĐẾM, không trả về một dòng dữ liệu nào.
+
+### 7.aw — Job MA: bản ghi nói dối "đang chạy"
+
+**Đo được:** 75 bản ghi kẹt ở `rendering`/`writing`/`qc`/`ratelimited`, cái **mới nhất cũng đã im
+11 TIẾNG**. Chúng làm ô "⚙️ Đang chạy" sai và khiến người nhìn không biết tin số nào.
+→ `don_job_ma()`: quá **6 giờ** im lặng thì đổi sang `failed`. Ngưỡng 6h an toàn vì một phiên dài
+nhất bị GitHub cắt ở **165 phút**. **KHÔNG xoá** — chỉ thôi nói dối, vẫn giữ để soi nguyên nhân.
+Chạy tự động đầu mỗi phiên.
+
+**Kết quả ngay:** 71 bản ghi được dọn. Sổ giờ là `done 644 · failed 124 · ratelimited 4` — và
+`dangchay` về **0**, khớp với thực tế (phiên đang chạy còn ghi ở Firestore, chưa sang D1).
+
+**Luật:** số đo bằng cách **cộng dồn** thì sai lệch tích luỹ và không sửa được. Số đo bằng cách
+**đếm lại từ bản ghi** thì mỗi lần hỏi là một lần tự sửa. Chọn kiểu thứ hai bất cứ khi nào có thể.

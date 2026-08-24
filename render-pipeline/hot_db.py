@@ -138,6 +138,24 @@ def key_nghi_doc(gio_iso: str) -> list:
     return (goi("key_nghi_doc", {"gio": gio_iso}) or {}).get("rows") or []
 
 
+def don_job_ma(owner: str, gio: int = 6) -> int:
+    """Đổi job "đang chạy" đã im quá `gio` tiếng thành failed. Trả số bản ghi đã đổi.
+
+    24/8 — đo được 75 bản ghi kẹt ở rendering/writing/qc, cái mới nhất cũng đã im 11 TIẾNG.
+    Chúng NÓI DỐI về trạng thái: ô "đang chạy" trên web sai, và người nhìn không biết tin số nào.
+    Ngưỡng 6 giờ an toàn vì một phiên dài nhất bị GitHub cắt ở 165 phút.
+    KHÔNG xoá — chỉ thôi nói dối, vẫn giữ để soi nguyên nhân."""
+    if not bat_ghi():
+        return 0
+    import datetime as _d
+    moc = (_d.datetime.now(_d.timezone.utc) - _d.timedelta(hours=gio)).isoformat()
+    r = goi("don_job_ma", {"owner": owner, "moc": moc})
+    n = int(r.get("doi") or 0)
+    if n:
+        print(f"   🧹 dọn {n} job ma (im quá {gio}h -> đánh dấu failed, không xoá)")
+    return n
+
+
 def ngan_sach_cong(ngay: str, doc: int = 0, ghi: int = 0) -> None:
     if not bat_ghi():
         return

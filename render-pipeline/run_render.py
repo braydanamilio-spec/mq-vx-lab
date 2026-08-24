@@ -1315,6 +1315,11 @@ def plan_mode():
     # 📟 CHUÔNG QUOTA NGÀY (23/8): đọc sổ tổng 1 lượt -> thấy lũy kế CẢ NGÀY ngay đầu phiên,
     # không còn cảnh đọc cháy ngầm từ trưa mà tối mới lộ (đêm 22/8 đứng máy 9 tiếng vì thế).
     FB.nap_nen_ngan_sach(OWNER)   # biết CẢ HỆ đã tiêu bao nhiêu hôm nay, không chỉ phần mình
+    try:
+        import hot_db as _H
+        _H.don_job_ma(OWNER)      # job ma nói dối "đang chạy" -> dọn đầu mỗi phiên, khỏi phải nhớ
+    except Exception:
+        pass
     _moc("quota_pulse")
     FB.quota_pulse(OWNER)   # sổ quota ngày + chuông 60/85% + ≥90% lật B2 CHỦ ĐỘNG (gương còn tươi)
     # GƯƠNG kho Drive A->B (23/8) — publisher fallback khi A nghẽn; phải chạy TRƯỚC heal để
