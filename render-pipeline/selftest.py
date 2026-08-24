@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("KHÔNG ghi snapshot/gương rỗng đè bản tốt", t_khong_ghi_snapshot_rong)
     check("KHÔNG cất gói sao lưu rỗng đè bản tốt", t_khong_cat_goi_sao_luu_rong)
     check("sức đăng: 'chưa biết' ≠ 'hết lượt'", t_suc_dang_phan_biet_chua_biet_voi_het_luot)
     check("phản áp lực không chạy được thì phải NÓI RA", t_phan_ap_luc_khong_im_lang)
@@ -1009,6 +1010,22 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_khong_ghi_snapshot_rong():
+    """Không snapshot/gương nào được ghi bản RỖNG đè bản tốt (24/8 tối — quét cả họ sau 7.ct).
+    Ba chỗ có cùng hình dạng "đọc xong rồi ghi đè": snapshot KEY (`__snap__{owner}`), gói KHO
+    (`snap_kho`), và gói sao lưu vault. Rỗng ở đây gần như luôn là triệu chứng đọc hụt/owner lệch,
+    không phải sự thật — mà hậu quả thì tối đa: `read_keys` đọc snapshot rỗng ⇒ cả dây chuyền tưởng
+    KHÔNG CÓ key AI nào; gói kho rỗng ⇒ 18 luồng từ chối đẩy video đã render xong."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "firestore_bridge.py"), encoding="utf-8").read()
+    for moc, ten in ((f'document(f"__snap__{{owner}}").set(', "snapshot key"),
+                     ('document("snap_kho").set(', "gói kho")):
+        i = src.index(moc)
+        truoc = src[max(0, i - 700): i]
+        assert "if not snap_rows" in truoc or "if not _snap" in truoc, \
+            f"{ten}: ghi đè mà không kiểm rỗng -> bản tốt bị xoá bởi một lượt đọc hụt"
 
 
 def t_khong_cat_goi_sao_luu_rong():

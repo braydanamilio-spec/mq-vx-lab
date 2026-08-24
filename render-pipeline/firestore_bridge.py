@@ -968,9 +968,18 @@ def sync_keys_from_a(owner: str) -> int:
             added += 1
         # DỰNG SNAPSHOT 1-DOC (tối ưu gốc: read_keys 1 đọc thay vì quét 74 doc) — tái dùng chính
         # lượt quét trên, KHÔNG tốn thêm lượt đọc nào; 1 lượt ghi/phiên plan.
-        _cw("keys_snapshot")
-        _soft(lambda: db_b.collection("gemini_keys").document(f"__snap__{owner}").set(
-            {"keys": snap_rows, "n": len(snap_rows), "updated_at": _now()}), "keys_snapshot")
+        # KHÔNG GHI SNAPSHOT RỖNG ĐÈ BẢN TỐT (24/8 tối — cùng loại lỗi suýt xoá sạch kho sao lưu,
+        # xem luật 7.ct). `read_keys` đọc doc ảnh này TRƯỚC; ghi đè nó bằng danh sách rỗng nghĩa là
+        # cả dây chuyền tưởng mình KHÔNG CÓ KEY AI NÀO. Danh sách rỗng ở đây gần như luôn là triệu
+        # chứng (owner lệch, shard trỏ nhầm, đọc trả 0 dòng) chứ không phải sự thật "người dùng đã
+        # xoá hết key".
+        if not snap_rows:
+            print("   🛑 KHÔNG ghi snapshot key: danh sách rỗng — giữ nguyên bản cũ "
+                  "(rỗng ở đây là triệu chứng đọc hụt, không phải 'hết key').")
+        else:
+            _cw("keys_snapshot")
+            _soft(lambda: db_b.collection("gemini_keys").document(f"__snap__{owner}").set(
+                {"keys": snap_rows, "n": len(snap_rows), "updated_at": _now()}), "keys_snapshot")
         # RESET sổ đếm gộp __req__ khi sang ngày-google mới (Increment cộng dồn mù, không tự reset)
         try:
             import datetime as _ddt
@@ -1990,8 +1999,13 @@ def mirror_connections_to_b() -> int:
         # đã đi tìm nguyên nhân suốt đêm. Lỗi chỉ lộ ra khi B2 (không có `_soft` che) ném thẳng.
         # Lưu ý: `__snap__mm0` thì HỢP LỆ (không kết thúc bằng `__`) — chỉ dạng bọc kín hai đầu mới bị cấm.
         _snap = [{"id": i, **{k: v for k, v in x.items() if k in keys}} for i, x in rows.items()]
-        _soft(lambda: col.document("snap_kho").set({"at": _now(), "n": len(_snap), "accs": _snap}),
-              "mirror_conn_snap")
+        if not _snap:
+            # Cùng luật với snapshot key ở trên: gói kho rỗng đè lên gói tốt = 18 luồng phía sau
+            # đọc ra "không có kho nào" rồi từ chối đẩy video đã render xong.
+            print("   🛑 KHÔNG ghi gói kho: danh sách rỗng — giữ nguyên bản cũ.")
+        else:
+            _soft(lambda: col.document("snap_kho").set({"at": _now(), "n": len(_snap), "accs": _snap}),
+                  "mirror_conn_snap")
         if n:
             print(f"   🪞 Gương kho Drive A→B: cập nhật {n}/{len(rows)} tài khoản + snapshot 1-doc.")
         return n

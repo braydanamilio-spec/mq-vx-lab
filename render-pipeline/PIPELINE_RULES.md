@@ -2037,3 +2037,17 @@ một thế giới khác với lúc được viết ra.**
 **Cũng thấy trong log:** `⚠️ kho ADISONDURHAM hụt: invalid_grant` rồi ngay sau đó `✅ đã cất ở kho
 ADISONDURHAM` — tức đang có HAI bản ghi cùng tên, một cái token chết. Đây là việc chờ anh bấm
 `wipe_queue.yml -f fix_dup=true`.
+
+### 7.cu — Quét cả HỌ "ghi bản rỗng đè bản tốt": còn 2 chỗ nữa, cả hai đều chí mạng (24/8/2026 tối)
+Sau 7.ct, soi mọi chỗ có hình dạng "đọc xong rồi ghi đè snapshot". Ra thêm hai chỗ chưa có lớp chặn:
+* **Snapshot KEY** `gemini_keys/__snap__{owner}` — `read_keys` đọc doc này TRƯỚC. Ghi đè bằng danh
+  sách rỗng nghĩa là **cả dây chuyền tưởng mình không có key AI nào**. Xảy ra khi B quét ra 0 doc
+  (owner lệch / shard trỏ nhầm / đang đọc gương không có key) mà A cũng trả 0 dòng.
+* **Gói KHO** `connections_mirror/snap_kho` — gói rỗng ⇒ 18 luồng phía sau đọc ra "không có kho nào"
+  rồi **từ chối đẩy video đã render xong**.
+Nay cả hai in `🛑 KHÔNG ghi … danh sách rỗng — giữ nguyên bản cũ`. (Đường dựng gói kho TỪ GƯƠNG B đã
+có sẵn `if not rows: return 0` từ trước — đúng mẫu, chỉ thiếu ở hai chỗ kia.)
+Chốt bằng `t_khong_ghi_snapshot_rong`; đã thử ngược: gỡ một lớp chặn là test bắt.
+**LUẬT: mọi lệnh GHI ĐÈ một bản sao lưu/gương/snapshot phải hỏi trước "cái tôi sắp ghi có RỖNG
+không?" — vì nguồn của nó là một lượt ĐỌC, và đọc thì hỏng được. Rỗng gần như luôn là triệu chứng,
+không phải sự thật.** Ba chỗ trong một đêm: vault (7.ct) · snapshot key · gói kho.
