@@ -370,6 +370,7 @@ def main():
     check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
+    check("mốc reset nghỉ key theo ĐÚNG nhà cung cấp", t_moc_reset_theo_nha_cung_cap)
     check("mọi workflow ghim phiên bản thư viện", t_moi_workflow_deu_ghim_thu_vien)
     check("mốc intro/outro THẬT sang composition (không lệch tiếng)", t_moc_intro_outro_that)
     check("doc: đủ sàn 21s + rải giây theo SỐ ẢNH (không nhàm)", t_doc_du_dai_va_khong_nham)
@@ -768,6 +769,21 @@ def t_moi_workflow_deu_ghim_thu_vien():
         for goi in ("google-cloud-firestore", "google-api-python-client", "requests"):
             d = [x for x in r.split("\n") if x.strip().startswith(goi)]
             assert d and "<" in d[0], f"{goi} trong requirements.txt thiếu TRẦN phiên bản"
+
+
+def t_moc_reset_theo_nha_cung_cap():
+    """Key cạn theo NGÀY phải nghỉ tới mốc reset CỦA CHÍNH nhà cung cấp đó (24/8 tối).
+    Cloudflare Workers AI reset 00:00 UTC (chính thông báo lỗi ghi "daily free allocation of 10,000
+    neurons"); Google free reset 00:00 giờ Thái Bình Dương. Gộp làm một là treo key Cloudflare thêm
+    7 tiếng sau khi nó đã hồi — mỗi ngày."""
+    import datastory_ci as DS
+    cf = DS._muc_nghi("429 rate limit daily (cloudflare): AiError: used up your daily free "
+                      "allocation of 10,000 neurons")
+    gg = DS._muc_nghi("429 Quota exceeded for quota metric: requests per day (free_tier)")
+    assert DS._muc_nghi("429 requests per minute exceeded, try again in 8s") == 2
+    assert cf > 0 and gg > 0
+    assert cf < gg, f"Cloudflare phải hồi SỚM hơn Google (UTC vs Thái Bình Dương): {cf} vs {gg}"
+    assert gg - cf in range(410, 430), f"lệch hai mốc phải đúng 7 tiếng, thực tế {gg - cf} phút"
 
 
 if __name__ == "__main__":

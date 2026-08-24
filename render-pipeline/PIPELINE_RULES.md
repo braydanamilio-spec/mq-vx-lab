@@ -1710,3 +1710,12 @@ che), các lệnh cài rời đi qua `-c render-pipeline/constraints.txt`. Chố
 là selftest chặn ngay.
 **LUẬT: vá một lỗi thì phải quét TOÀN BỘ chỗ có cùng hình dạng, và để lại một test biết tự quét** —
 bài học lặp lại lần thứ ba trong đêm (7.bm dòng đọc, 7.br mốc intro/outro, giờ là ghim thư viện).
+
+### 7.bw — Cạn NGÀY: mỗi nhà cung cấp reset ở một múi giờ, đang gộp làm một (24/8/2026 tối)
+Log phiên 16:06Z: `429 rate limit daily (cloudflare): ... daily free allocation of 10,000 neurons`.
+`_muc_nghi()` xếp đúng loại (cạn NGÀY, không phải chặn theo phút) nhưng cho nghỉ tới **00:00 giờ Thái
+Bình Dương** — mốc của Google. Cloudflare Workers AI reset **00:00 UTC**, nên key cạn lúc 16:00 UTC bị
+treo tới 07:00 UTC hôm sau trong khi nó đã hồi từ nửa đêm: **ném đi 7 tiếng của một key đã tốt trở
+lại, mỗi ngày**. Nay nhận diện Cloudflare (`cloudflare`/`neuron`/`aierror`) → mốc UTC; Google giữ mốc
+Thái Bình Dương; nhà cung cấp chưa có bằng chứng thì **không đoán**, giữ mốc cũ. Chốt bằng
+`t_moc_reset_theo_nha_cung_cap` (kiểm cả khoảng lệch đúng 7 tiếng).
