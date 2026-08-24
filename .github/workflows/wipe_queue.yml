@@ -17,6 +17,8 @@ on:
       reset_ledger: { description: "Reset luôn SỔ (render_jobs + số đếm) — dashboard hết hiện video cũ", type: boolean, default: false }
       fix_overlap: { description: "Tìm video bị CHỮ CHỒNG CHÉO (lớp hook đè phụ đề) và xếp hàng render lại", type: boolean, default: false }
       find_junk: { description: "SOI FILE RÁC trong kho (file tạm, trùng tên, ảnh mồ côi, video hỏng) — giữ nguyên video tốt", type: boolean, default: false }
+      kiem_kho: { description: "KIỂM KHO: đếm số video THẬT trên Drive rồi ghi đè sổ (sửa 'Tổng cộng dồn' bị phồng)", type: boolean, default: false }
+      render_lai_cu: { description: "Làm mới video dựng bằng ENGINE CŨ (GUESS đen đầu-cuối, PULSE ngắn/lệch tiếng)", type: boolean, default: false }
 
 concurrency: { group: mm0-wipe-queue, cancel-in-progress: false }
 
@@ -56,7 +58,7 @@ jobs:
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
           python src/wipe_queue.py --scope "${{ github.event.inputs.scope }}" $ARGS
       - name: Checkout render-pipeline
-        if: ${{ github.event.inputs.reset_ledger == 'true' || github.event.inputs.fix_dup == 'true' || github.event.inputs.reset_topics == 'true' || github.event.inputs.rebuild_stats == 'true' || github.event.inputs.fix_overlap == 'true' || github.event.inputs.find_junk == 'true' }}
+        if: ${{ github.event.inputs.reset_ledger == 'true' || github.event.inputs.fix_dup == 'true' || github.event.inputs.reset_topics == 'true' || github.event.inputs.rebuild_stats == 'true' || github.event.inputs.fix_overlap == 'true' || github.event.inputs.find_junk == 'true' || github.event.inputs.kiem_kho == 'true' || github.event.inputs.render_lai_cu == 'true' }}
         uses: actions/checkout@v4
         with: { path: rp }
       - name: Dọn bản ghi kho trùng
@@ -101,6 +103,38 @@ jobs:
           ARGS=""
           [ "${{ github.event.inputs.dry_run }}" != "true" ] && ARGS="--xep-hang"
           python find_overlap_videos.py $ARGS
+      - name: Làm mới video dựng bằng engine cũ
+        if: ${{ github.event.inputs.render_lai_cu == 'true' }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          FIREBASE_PROJECT_ID_B2: mm0-shard-b2
+          RENDER_OWNER: ${{ secrets.OWNER_UID }}
+          SHARD_KEYS: "1"
+        run: |
+          cd rp/render-pipeline
+          ARGS=""
+          [ "${{ github.event.inputs.dry_run }}" != "true" ] && ARGS="--xep-hang"
+          python render_lai_cu.py $ARGS
+      # KIỂM KHO chạy CUỐI: các bước trên có bỏ file vào thùng rác / xếp hàng làm lại, nên phải đếm
+      # sau khi kho đã đứng yên thì sổ mới khớp.
+      - name: Kiểm kho (số thật từ Drive -> ghi đè sổ)
+        if: ${{ github.event.inputs.kiem_kho == 'true' }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          FIREBASE_PROJECT_ID_B2: mm0-shard-b2
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/src
+          RENDER_OWNER: ${{ secrets.OWNER_UID }}
+        run: |
+          cd rp/render-pipeline
+          ARGS=""
+          [ "${{ github.event.inputs.dry_run }}" != "true" ] && ARGS="--ghi"
+          python kiem_kho.py $ARGS
       - name: Dựng lại sổ đếm
         if: ${{ github.event.inputs.rebuild_stats == 'true' }}
         env:

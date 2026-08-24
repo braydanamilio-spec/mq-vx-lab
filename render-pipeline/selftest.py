@@ -369,6 +369,8 @@ def main():
     check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
+    check("số video trong kho lấy TỪ DRIVE, không cộng dồn", t_so_kho_lay_tu_drive)
+    check("FB hết nhịp = HOÃN, không vứt video", t_fb_het_nhip_khong_giet_video)
     check("gộp lệnh ghi D1: done/failed xả NGAY, phần dư không mất", t_gop_ghi_d1)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
@@ -556,6 +558,46 @@ def t_giu_key_anh():
     co = [r for r in ra if str(r["key"]).startswith(("px:", "pb:"))]
     assert len(co) == 2, f"phải bù lại 2 key ảnh, thực tế {len(co)}"
     FB._IMG_KEYS.clear()
+
+
+def t_so_kho_lay_tu_drive():
+    """Số "video trong kho" phải SUY RA TỪ DRIVE, không được cộng dồn theo sự kiện (24/8, anh:
+    "1343 video lận có nhầm ko"). Sổ Increment chỉ có chiều lên nên render lại + dọn rác làm nó
+    phồng vĩnh viễn. Ba điều kiện, thiếu cái nào là số lại sai:
+      1. có công cụ kiểm kho,
+      2. nó GHI ĐÈ (`set`) chứ không `Increment`,
+      3. kho nào đọc hụt thì KHÔNG ghi (đọc thiếu mà ghi đè = tự xoá sổ về số thấp)."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "kiem_kho.py"),
+                  encoding="utf-8").read()
+    # Chỉ soi PHẦN LỆNH, bỏ qua chú thích/docstring (bản thân docstring có nhắc chữ Increment để
+    # giải thích cái bệnh) — nếu không thì test tự hỏng vì chính lời giải thích của mình.
+    import ast as _ast
+    cay = _ast.parse(src)
+    for _n in _ast.walk(cay):
+        if isinstance(_n, _ast.Name) and _n.id == "Increment":
+            raise AssertionError("kiem_kho không được dùng Increment — phải ghi đè bằng số thật")
+    assert '.document(f"__pushed__{a.owner}").set(' in src, "kiem_kho phải GHI ĐÈ sổ __pushed__"
+    assert "a.ghi = False" in src and "hong_kho" in src, \
+        "đọc hụt kho nào thì phải TỰ TẮT chế độ ghi, nếu không sổ bị đếm thiếu"
+
+
+def t_fb_het_nhip_khong_giet_video():
+    """Facebook chạm trần nhịp là HOÃN, không phải hỏng (24/8, anh: "a đăng cả facebook").
+    `publish_social` dán nhãn `failed` sau 3 lần lỗi -> nếu hết nhịp FB bị tính là lỗi thì đúng 3
+    lượt cron là video bị VỨT, y hệt bẫy đã vá cho Instagram."""
+    ap = os.environ.get("AUTOPUBLISHER_SRC") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "MM0-AutoPublisher", "src")
+    f1 = os.path.join(ap, "facebook_uploader.py")
+    f2 = os.path.join(ap, "publish_social.py")
+    if not (os.path.exists(f1) and os.path.exists(f2)):
+        return          # repo publish không có ở đây (CI render) -> bỏ qua, không phải lỗi
+    a = io.open(f1, encoding="utf-8").read()
+    b = io.open(f2, encoding="utf-8").read()
+    assert "class HetNhip" in a and "MA_HET_NHIP" in a, "facebook_uploader thiếu nhận diện hết nhịp"
+    assert "except HetNhip:" in a, "Reels hết nhịp mà vẫn rơi xuống đăng video thường = gọi thêm 1 lượt vào Page đang bị chặn"
+    assert "errs_fb_skip" in b, "publish_social chưa hoãn khi FB hết nhịp"
+    assert "(errs_ig_skip or errs_fb_skip) and not errs" in b, \
+        "FB hết nhịp vẫn bị cộng attempts -> 3 lượt cron là video vào dead-letter"
 
 
 if __name__ == "__main__":

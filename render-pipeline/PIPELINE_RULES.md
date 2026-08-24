@@ -1574,3 +1574,34 @@ chỉ-short, hoặc video cũ chưa có trường này) giữ thứ tự thời 
 **Trả lời câu "hết quota thì sao":** code đã đúng sẵn — không bỏ video, không báo lỗi giả.
 `⏸ hết quota — dừng đăng hôm nay, phần còn lại để ngày mai` và video giữ nguyên `status=pending`,
 `note=quota_wait`; lượt cron ngày hôm sau tự lấy lại. Lịch **giãn ra**, không mất bài nào.
+
+### 7.bj — "Tổng cộng dồn 1343" là SỔ CỘNG DỒN, không phải số video trong kho (24/8/2026, anh chỉ ra)
+`render_stats/__pushed__{owner}.total` cộng bằng `Increment(1)` mỗi lượt đẩy kho thành công và
+**không có đường nào trừ**. Ba việc bình thường đều làm nó phồng: render lại (bản cũ vào thùng rác,
+bản mới +1 ⇒ 1 video đếm 2 lần), dọn rác `find_junk --don`, xoá tay trên Drive. Nên con số đúng
+nghĩa đen của nó (số lượt render thành công từ trước tới nay) nhưng SAI với thứ người vận hành muốn
+biết. **LUẬT: một con số hiển thị phải SUY RA TỪ SỰ THẬT HIỆN TẠI, không cộng dồn theo sự kiện — vì
+sự kiện chỉ có chiều lên, kho thì có cả chiều xuống.** Nguồn sự thật duy nhất của "video trong kho"
+= danh sách `.mp4` chưa vào thùng rác trên Drive. Công cụ: `kiem_kho.py` (đi hết kho, đối chiếu
+`render_jobs.drive_id`, GHI ĐÈ sổ bằng `set`, và **xoá bản ghi job trỏ vào file đã mất** — nếu không
+`count_done()` tưởng kênh còn đủ video rồi ngừng làm). Kho nào đọc hụt thì TỰ TẮT chế độ ghi (đọc
+thiếu mà ghi đè = tự hạ sổ xuống số sai). Chốt bằng `t_so_kho_lay_tu_drive`.
+
+### 7.bk — Vá `.tsx` KHÔNG sửa được video đã render; "dọn rác" và "làm mới" là hai việc khác nhau (24/8/2026)
+Anh: *"kêu dọn xoá rồi mà sao vẫn còn"*. Vá engine chỉ đổi cách dựng của các phiên SAU; video trong
+kho là `.mp4` đã đóng gói. `find_junk.py` cũng không đụng vì với nó file đó "đủ .mp4 + .json + .jpg"
+= video TỐT. Phải tách bạch:
+* **DỌN RÁC** — file hỏng/thừa ⇒ bỏ thùng rác, không dựng lại (`find_junk.py`).
+* **LÀM MỚI** — file vẫn chạy nhưng dựng bằng engine CŨ ⇒ phải render lại (`render_lai_cu.py`, có
+  BẢNG MỐC VÁ: kênh dùng motif nào + đẩy kho trước giờ commit vá nào thì dính). Dựng lại từ kịch bản
+  đã lưu nên **không tốn lượt gọi AI**; bản cũ vào thùng rác sau khi bản mới xong.
+
+### 7.bl — Facebook có trần RIÊNG, và hết nhịp FB đang bị tính là "hỏng" ⇒ vứt video (24/8/2026)
+Anh hỏi *"đăng facebook có ảnh hưởng quota ko"*. Trả lời: **không** — FB không dùng chung 10.000
+đơn vị/ngày của YouTube, cũng không đụng Firestore. Nhưng nó có trần riêng (mã 4 app · 17 user ·
+32 page · 613 rate limit · Reels có trần bài/ngày mỗi Page) và trước bản vá hệ KHÔNG nhận ra:
+(1) `upload()` thấy Reels lỗi liền quay về đăng video thường ⇒ gọi thêm một lượt nữa vào đúng Page
+đang bị chặn; (2) `publish_social` đếm 3 lần lỗi là dán `failed` ⇒ **video bị bỏ luôn**, đúng cái bẫy
+đã vá cho Instagram mà FB thì chưa. Nay `_soi()` đọc header `X-App-Usage` (cảnh báo từ 80%) và ném
+`HetNhip` riêng; tầng trên hoãn sang cron sau, KHÔNG cộng `attempts`. Chốt bằng
+`t_fb_het_nhip_khong_giet_video`.
