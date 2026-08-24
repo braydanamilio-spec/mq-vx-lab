@@ -96,12 +96,46 @@ def _desc_src(story) -> str:
     return desc
 
 
-def enqueue_drive(channel, out, story, vtype) -> bool:
-    """Đẩy video + sidecar (+ thumbnail) lên Drive _QUEUE qua enqueue.py của AutoPublisher (nếu có)."""
+def _lat(x: str, n: int = 0) -> str:
+    """Làm sạch một mảnh tên file: chỉ giữ chữ và số, nối bằng '-'."""
+    r = re.sub(r"[^A-Za-z0-9]+", "-", str(x or "")).strip("-")
+    return r[:n] if n else r
+
+
+def ten_file(channel: str, story: dict, vtype: str, seri: str = "", bo: str = "") -> str:
+    """TÊN FILE CHUẨN — long, short, thumbnail, file mô tả đều khớp nhau (24/8/2026).
+
+        KENH__YYYYMMDD__SERI__L__tieu-de          (bản dài)
+        KENH__YYYYMMDD__SERI__S1__tieu-de         (short thứ 1 CẮT RA TỪ chính bản dài đó)
+
+    Vì sao đổi: tên cũ là `KENH-tieu-de` — không cho biết short nào thuộc long nào, và sắp theo tên
+    thì lộn xộn. Mở kho ra thấy một đống video rời rạc, muốn biết "3 short này của bài dài nào" phải
+    mở từng cái ra xem.
+    Bốn thứ tên mới giải quyết:
+      • `YYYYMMDD` -> sắp theo tên là ra đúng thứ tự thời gian;
+      • `SERI`     -> long và các short của nó nằm SÁT NHAU khi sắp xếp, tìm một cái ra cả cụm;
+      • `L / S1..` -> nhìn tên biết ngay vai trò và thứ tự trong cụm;
+      • `KENH`     -> vẫn tìm được toàn bộ video của một kênh như cũ.
+    Thumbnail (.jpg) và file mô tả (.json) KHÔNG cần đổi gì: enqueue.py vốn lấy đúng tên gốc của
+    video làm tên cho chúng, nên tên video chuẩn thì cả cụm 3 file tự khớp.
+    """
+    from datetime import datetime as _dt, timezone as _tz
+    ngay = _dt.now(_tz.utc).strftime("%Y%m%d")
+    tieu_de = _lat(story.get("title") or story.get("topic") or vtype, 46)
+    phan = [_lat(channel), ngay]
+    if seri:
+        phan.append(_lat(seri, 6).lower())
+    phan.append(bo or ("L" if vtype == "long" else "S"))
+    phan.append(tieu_de)
+    return "__".join(p for p in phan if p)[:96]
+
+
+def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "") -> bool:
+    """Đẩy video + sidecar (+ thumbnail) lên Drive _QUEUE qua enqueue.py của AutoPublisher (nếu có).
+
+    `seri` = mã cụm (dùng id job của bản LONG) · `bo` = vai trò trong cụm (L, S1, S2...)."""
     try:
-        # ĐẶT TÊN FILE = KÊNH__tiêu-đề (để search được cả trong Drive lẫn kho tổng, biết ngay của kênh nào).
-        _title = story.get("title") or story.get("topic") or vtype
-        _safe = re.sub(r"[^A-Za-z0-9]+", "-", f"{channel}__{_title}").strip("-")[:80]
+        _safe = ten_file(channel, story, vtype, seri, bo)
         _new = os.path.join(os.path.dirname(out), _safe + os.path.splitext(out)[1])
         if _new != out and not os.path.exists(_new):
             try:
@@ -344,10 +378,12 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     # W/H) — ép sang 16:9 sẽ ra long vỡ bố cục. Nên long dùng bản Cinematic 16:9
                     # (đã kiểm chứng), còn SHORT giữ nguyên motif riêng của kênh. Ràng buộc nội dung
                     # bằng cách cho short chạy ĐÚNG các subtopic mà long vừa kể.
-                    _subs = _motif_long(ch, keys, tier, niche, n, cool, okcb, R)
+                    _hop = []
+                    _subs = _motif_long(ch, keys, tier, niche, n, cool, okcb, R, ra_id=_hop)
                     if _subs:
                         avoid = _avoid_for(channel)
-                        _motif_shorts(ch, fmt, keys, tier, _subs[:n], cool, okcb, R, _stopped, avoid)
+                        _motif_shorts(ch, fmt, keys, tier, _subs[:n], cool, okcb, R, _stopped, avoid,
+                                      ljob=(_hop[0] if _hop else ""))
                         return
         cat = niche   # ⚠️ KHÔNG dùng ch.get("category") — field đó giờ chứa mã YouTube category SỐ ("24"/"27"/"28",
                       # dashboard tự set cho brand kit), KHÔNG phải gợi ý chủ đề. Đụng nhầm = Gemini nhận "24" làm niche.
@@ -392,7 +428,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 if info and info.get("thumb"): story["_thumb"] = info["thumb"]  # thumb brand đẹp
                 # tránh trùng lần sau: nhớ đáp án (guess) / metric (mapped)
                 made_here += [r.get("answer") for r in (story.get("rounds") or []) if r.get("answer")] or [story.get("title", "")]
-                eq = enqueue_drive(channel, out, story, "short")
+                eq = enqueue_drive(channel, out, story, "short", bo=f"S{i+1}")
                 did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
                 jst("done", "Đã đẩy Drive" if did else "Xong (chưa đẩy Drive)", title=story.get("title"),
                     description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue đăng đủ metadata
@@ -463,7 +499,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                 eq = enqueue_drive(channel, lout, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
                                                    "description": plan.get("hook", ""),
                                                    "sources": plan.get("sources") or [],
-                                                   "_thumb": plan.get("_thumb") or (info or {}).get("thumb")}, "long")
+                                                   "_thumb": plan.get("_thumb") or (info or {}).get("thumb")}, "long", seri=ljob, bo="L")
                 did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
                 lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
                     description=(plan.get("description") or plan.get("hook") or ""), hashtags=plan.get("hashtags") or [], tags=plan.get("tags") or [],
@@ -514,7 +550,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
         elif serr is not None:
             sst("failed", f"Tự thử lại vẫn lỗi: {str(serr)[:110]}"); R["fails"].append(f"{channel} SHORT {i}: {str(serr)[:100]}")
         elif sok:
-            eq = enqueue_drive(channel, sout, story, "short")
+            eq = enqueue_drive(channel, sout, story, "short", seri=ljob, bo=f"S{i+1}")
             did = (eq or {}).get("id"); acc = (eq or {}).get("account", "")
             sst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)", title=story.get("title"),
                 description=_desc_src(story), hashtags=story.get("hashtags") or [], tags=story.get("tags") or [],  # cho auto-enqueue
@@ -589,7 +625,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
     eq = enqueue_drive(channel, lo, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
                                      "description": plan.get("hook", ""),
                                      "sources": plan.get("sources") or [],
-                                     "_thumb": (info or {}).get("thumb")}, "long")
+                                     "_thumb": (info or {}).get("thumb")}, "long", seri=ljob, bo="L")
     did = (eq or {}).get("id")
     lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
         description=(plan.get("description") or plan.get("hook") or ""), hashtags=plan.get("hashtags") or [], tags=plan.get("tags") or [],
@@ -621,7 +657,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
             sst("failed", f"QC short trượt: {sinfo}"); R["fails"].append(f"{channel} SHORT {pi}: QC trượt")
             continue
         st_ = part["story"]
-        seq = enqueue_drive(channel, sout, st_, "short")
+        seq = enqueue_drive(channel, sout, st_, "short", seri=ljob, bo=f"S{pi+1}")
         sdid = (seq or {}).get("id")
         sst("done", "Short đã đẩy Drive" if sdid else "Short xong (chưa đẩy Drive)",
             description=_desc_src(st_), hashtags=st_.get("hashtags") or [], tags=st_.get("tags") or [],
@@ -635,7 +671,9 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
     return True
 
 
-def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R):
+def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R, ra_id=None):
+    """`ra_id`: hộp 1 phần tử để trả id job của LONG ra ngoài — short cần nó làm `cha`/`seri`
+    (24/8). Không dùng biến toàn cục để tránh 18 luồng ghi đè nhau."""
     """LONG 16:9 cho kênh MOTIF. Trả list subtopic để short chạy đúng nội dung đó, hoặc [] nếu hỏng.
 
     Component motif (SwarmShort/PulseShort/...) ép cứng khổ DỌC nên không render 16:9 được -> long
@@ -643,6 +681,8 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R):
     -> kênh không mất bản sắc, mà vẫn đúng rule 'short đi sau long và bám nội dung long'."""
     channel = ch.get("name")
     ljob = FB.new_job(OWNER, channel, "long", pver=_pv("", cinematic=True))
+    if ra_id is not None:
+        ra_id.append(ljob)
     lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
     try:
         lout = os.path.join("out", DS.slug(channel) + "_motiflong.mp4")
@@ -667,7 +707,7 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R):
     eq = enqueue_drive(channel, lo, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
                                      "description": plan.get("hook", ""),
                                      "sources": plan.get("sources") or [],
-                                     "_thumb": (info or {}).get("thumb")}, "long")
+                                     "_thumb": (info or {}).get("thumb")}, "long", seri=ljob, bo="L")
     did = (eq or {}).get("id")
     lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)", title=plan.get("pillar_title"),
         description=(plan.get("description") or plan.get("hook") or ""), hashtags=plan.get("hashtags") or [], tags=plan.get("tags") or [],
@@ -680,7 +720,7 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R):
     return subs
 
 
-def _motif_shorts(ch, fmt, keys, tier, subs, cool, okcb, R, stopped, avoid):
+def _motif_shorts(ch, fmt, keys, tier, subs, cool, okcb, R, stopped, avoid, ljob=""):
     """SHORT theo motif riêng của kênh, chạy ĐÚNG các subtopic mà long vừa kể -> bám nội dung long."""
     channel = ch.get("name")
     for i, sub in enumerate(subs):
@@ -707,7 +747,7 @@ def _motif_shorts(ch, fmt, keys, tier, subs, cool, okcb, R, stopped, avoid):
             jst("failed", f"Tự thử lại vẫn lỗi: {str(err)[:110]}"); R["fails"].append(f"{channel} SHORT {i}: {str(err)[:100]}"); continue
         if not ok:
             jst("failed", f"QC trượt: {info}"); R["fails"].append(f"{channel} SHORT {i}: QC trượt"); continue
-        eq = enqueue_drive(channel, out, story, "short")
+        eq = enqueue_drive(channel, out, story, "short", seri=ljob, bo=f"S{i+1}")
         did = (eq or {}).get("id")
         jst("done", "Short đã đẩy Drive" if did else "Short xong (chưa đẩy Drive)",
             title=story.get("title_yt") or story.get("title"), score=(info or {}).get("score"),
@@ -1812,7 +1852,7 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
     _desc = (plan.get("hook", "") or "") + (("\n\n" + "\n".join(_bul[:6])) if _bul else "")
     eq = enqueue_drive(channel, lo, {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"),
                                      "description": _desc, "sources": _src[:6],
-                                     "_thumb": (info or {}).get("thumb")}, "long")
+                                     "_thumb": (info or {}).get("thumb")}, "long", seri=ljob, bo="L")
     did = (eq or {}).get("id")
     lst("done", "Long toon đã đẩy Drive" if did else "Long toon xong (chưa đẩy Drive)",
         description=(plan.get("description") or plan.get("hook") or ""), hashtags=plan.get("hashtags") or [], tags=plan.get("tags") or [],
