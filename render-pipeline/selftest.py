@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("B cạn hạn mức: báo CHUNG, khỏi 18 lane tự khám phá", t_bao_chung_b_can_han_muc)
     check("một bảng phạt key cho CẢ viết lẫn vẽ ảnh", t_mot_bang_phat_key_duy_nhat)
     check("mốc reset nghỉ key theo ĐÚNG nhà cung cấp", t_moc_reset_theo_nha_cung_cap)
     check("mọi workflow ghim phiên bản thư viện", t_moi_workflow_deu_ghim_thu_vien)
@@ -794,6 +795,40 @@ def t_so_hong_phai_het_len():
     i = r.index("FB.get_script_by_drive(")          # LỜI GỌI THẬT, không phải dòng chú thích
     assert "except FB.DocLoi" in r[i: i + 700], \
         "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
+
+
+def t_bao_chung_b_can_han_muc():
+    """B cạn hạn mức là sự thật CHUNG của cả phiên, không phải chuyện riêng từng tiến trình.
+    Log phiên 16:06Z: mỗi lane đều có một dòng `🔀 FAILOVER ... (read_config 429)` RIÊNG — tức cả 18
+    lane, mỗi đứa tự tông vào tường một lần mới biết, mà lượt hỏng vẫn bị trừ hạn mức. Nay lane đầu
+    ghi cờ vào D1 (miễn phí), lane sau đọc thấy thì lật B2 thẳng."""
+    import sys, types
+    that = sys.modules.get("hot_db")
+    gia = types.ModuleType("hot_db"); kho = {}
+    gia.key_nghi_ghi = lambda kid, loai, den: kho.__setitem__(kid, den)
+    gia.key_nghi_doc = lambda gio: [{"kid": k, "den": v} for k, v in kho.items() if v > gio]
+    gia.bat_ghi = lambda: True
+    gia.bat_doc = lambda: True
+    sys.modules["hot_db"] = gia
+    try:
+        import firestore_bridge as FB
+        FB._DA_BAO_CAN[0] = False
+        assert FB.b_dang_nghi() is False, "chưa ai báo mà đã tưởng B nghỉ"
+        FB.bao_b_can_ngay("429 quota exceeded: requests per day")
+        assert kho.get("proj:B"), "không ghi được cờ chung"
+        assert FB.b_dang_nghi() is True, "lane sau không đọc thấy cờ"
+        FB._DA_BAO_CAN[0] = False
+        src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "firestore_bridge.py"), encoding="utf-8").read()
+        i = src.index("def quota_pulse(")
+        assert "b_dang_nghi()" in src[i: i + 900], "lane khởi động chưa hỏi cờ chung"
+        assert "bao_b_can_ngay(" in src[src.index("def failover_to_b2("):][:1400], \
+            "lật B2 xong mà không báo cho lane khác"
+    finally:
+        if that is not None:
+            sys.modules["hot_db"] = that
+        else:
+            sys.modules.pop("hot_db", None)
 
 
 def t_mot_bang_phat_key_duy_nhat():

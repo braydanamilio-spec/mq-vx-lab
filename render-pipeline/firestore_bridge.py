@@ -9,7 +9,7 @@ Chạy trên GitHub Actions: workflow ghi secret GCP_SA_KEY ra /tmp/sa.json rồ
 """
 from __future__ import annotations
 import os, json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 
 def _db():
@@ -147,6 +147,45 @@ def _b2_available() -> bool:
                 and os.path.exists(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B", "")))
 
 
+# ── B CẠN HẠN MỨC NGÀY: BÁO CHUNG QUA D1, KHỎI 18 LANE TỰ KHÁM PHÁ LẠI (24/8/2026 tối) ─────────
+# Log phiên 16:06Z: mỗi lane đều có một dòng `🔀 FAILOVER: B chính nghẽn (read_config 429)` RIÊNG.
+# Nghĩa là cả 18 lane, mỗi đứa tự đi tông vào tường một lần mới biết B đã cạn — mà **lượt hỏng vẫn
+# bị trừ hạn mức**, cộng thêm mấy vòng thử lại 1,5s mỗi vòng. Trạng thái "B cạn tới sáng" là sự thật
+# CHUNG của cả phiên, không phải chuyện riêng của từng tiến trình.
+# Ghi vào D1 (miễn phí, không đụng hạn mức Firestore) dưới dạng một "key nghỉ" tên `proj:B`, dùng lại
+# đúng đường `key_nghi_ghi`/`key_nghi_doc` đã có sẵn. Lane khởi động sau đọc thấy thì **lật B2 ngay
+# từ đầu**, không tốn một lượt 429 nào.
+_DA_BAO_CAN = [False]
+
+
+def bao_b_can_ngay(reason: str = "") -> None:
+    if _DA_BAO_CAN[0]:
+        return
+    _DA_BAO_CAN[0] = True
+    try:
+        import hot_db as _H
+        import nghi_key as _N
+        phut = _N.muc_nghi(reason or "per day")
+        den = (datetime.now(timezone.utc) + timedelta(minutes=phut)).isoformat()
+        _H.key_nghi_ghi("proj:B", "ngay", den)
+        print(f"   📣 Đã báo chung: B cạn hạn mức, nghỉ tới {den[11:16]}Z — lane sau lật B2 thẳng.")
+    except Exception:
+        pass          # D1 chưa bật / hụt -> vẫn chạy như cũ, chỉ mất phần tối ưu
+
+
+def b_dang_nghi() -> bool:
+    """B có đang bị đánh dấu cạn hạn mức (do một lane khác phát hiện) không?"""
+    try:
+        import hot_db as _H
+        gio = datetime.now(timezone.utc).isoformat()
+        for r in (_H.key_nghi_doc(gio) or []):
+            if str(r.get("kid") or "") == "proj:B":
+                return True
+    except Exception:
+        pass
+    return False
+
+
 def failover_to_b2(reason: str) -> bool:
     """CÔNG TẮC TỰ ĐỘNG: B chính cạn quota (đọc hoặc ghi) -> toàn bộ client B trỏ sang B2 cho phần
     còn lại của tiến trình. B2 được plan gương sẵn channels/config/keys mỗi phiên khi B khỏe, nên
@@ -161,6 +200,7 @@ def failover_to_b2(reason: str) -> bool:
         _B2["on"] = True
         _RQ_DEAD["until"] = 0          # mở lại đường đọc — giờ đọc là đọc B2
         _WQ_DEAD["until"] = 0
+        bao_b_can_ngay(reason)         # BÁO CHO 17 LANE CÒN LẠI (xem hàm) — khỏi mỗi đứa tự khám phá
         age = "?"
         try:
             m = _B2["client"].collection("render_config").document("mirror_meta").get()
@@ -406,6 +446,10 @@ def quota_pulse(owner: str):
     B2 CHỦ ĐỘNG (23/8, user đề xuất — lật lúc B còn sống = dữ liệu khớp 100%, khỏi chờ chết mới lật).
     Gọi ở đầu plan VÀ đầu mỗi lane (lane là tiến trình riêng, quyết định của plan không tự lan sang)."""
     try:
+        # Lane nào đó đã phát hiện B cạn -> lật B2 NGAY, khỏi tốn một lượt 429 để tự biết.
+        if not _B2["on"] and b_dang_nghi():
+            print("   📣 Lane khác đã báo: B cạn hạn mức ngày -> lật B2 ngay từ đầu lane.")
+            failover_to_b2("báo chung: B cạn hạn mức ngày")
         r, w = read_rw_ledger(owner)
         if r < 0:
             return

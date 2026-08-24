@@ -1745,3 +1745,18 @@ duy nhất, cả hai đường import chung. Chốt bằng `t_mot_bang_phat_key_
 **LUẬT: một quyết định nghiệp vụ chỉ được có MỘT chỗ quyết. Thấy logic giống nhau ở hai file thì đó
 không phải trùng lặp vô hại — sớm muộn hai bên lệch nhau, và bên lệch sẽ là bên ít ai đọc.**
 (Cùng họ với `ten_chuan.py` tách ra chiều nay vì cùng lý do.)
+
+### 7.bz — 18 lane, mỗi lane tự tông vào tường một lần mới biết B đã cạn (24/8/2026 tối)
+Log phiên 16:06Z: **mỗi** lane có một dòng `🔀 FAILOVER: B chính nghẽn (read_config 429)` riêng. Nghĩa
+là trạng thái "B cạn hạn mức ngày" — một sự thật CHUNG của cả phiên — đang được 18 tiến trình khám
+phá lại 18 lần, mà **mỗi lượt hỏng vẫn bị trừ hạn mức**, cộng thêm vài vòng thử lại 1,5s. Nay lane đầu
+tiên phát hiện thì ghi cờ `proj:B` vào **D1** (miễn phí, không đụng hạn mức Firestore) qua đúng đường
+`key_nghi_ghi` đã có; `quota_pulse` ở đầu mỗi lane đọc cờ và **lật B2 thẳng**, không tốn lượt 429 nào.
+Chốt bằng `t_bao_chung_b_can_han_muc`.
+**LUẬT: cái gì đúng cho cả phiên thì phải phát hiện MỘT lần rồi chia sẻ, đừng để mỗi tiến trình tự
+học lại bằng cách trả giá.** (D1 là chỗ chia sẻ đúng: rẻ, không nằm trong tài nguyên đang cạn.)
+
+**Ghi chú số đo cần soi tiếp:** `📟 Sổ quota hôm nay: ĐỌC 9.631/50.000` trong khi B **đã** trả 429 —
+tức sổ đang đếm THIẾU ~80% lượt đọc thật (dashboard/Worker, auto_enqueue bên repo publish, và lượt
+gương B→B2 đều không vào sổ). Bức tường ngân sách vì thế không bao giờ chạm ngưỡng. Chưa vá đêm nay;
+cách chắc chắn nhất là coi chính cú 429 là nguồn sự thật (đã làm ở 7.bz) thay vì tin con số ước lượng.
