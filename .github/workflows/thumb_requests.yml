@@ -53,7 +53,7 @@ jobs:
       - name: Python deps
         # 2 lệnh riêng — gộp làm pip nổ "resolution-too-deep" (sự cố 20/8).
         run: |
-          pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+          pip install --quiet -c render-pipeline/constraints.txt google-generativeai edge-tts google-cloud-firestore \
             google-api-python-client google-auth pyyaml
           pip install --quiet pillow google-genai
       - name: npm ci (chỉ khi cache MISS)

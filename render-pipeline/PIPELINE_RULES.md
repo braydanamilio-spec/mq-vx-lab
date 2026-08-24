@@ -1696,3 +1696,17 @@ Nay thêm ngay trong `enqueue_drive` — chỗ DUY NHẤT mọi đường đẩy
 SỐ ẢNH** của từng cảnh: cảnh nhiều ảnh thêm giây = thêm nhát cắt, cảnh một ảnh thêm ít thôi. Và bỏ
 trần 2,5s/cảnh ở vòng hai khi ít cảnh quá — video hơi chậm còn xem được, video bị QC vứt thì mất
 trắng cả lượt viết AI lẫn lượt render. Chốt bằng `t_doc_du_dai_va_khong_nham`.
+
+### 7.bv — Ghim phiên bản mới làm ở ĐÚNG MỘT workflow, 13 cái còn lại vẫn hở (24/8/2026 tối)
+`constraints.txt` sinh ra sau sự cố gương chết 16 tiếng (`'_UnaryStreamMultiCallable' object has no
+attribute '_retry'` — thư viện Google ra bản mới làm gãy `.stream(timeout=…)`). Nhưng soi lại: chỉ
+`render_cron.yml` dùng nó, còn **publish · publish_social · stats · health_guardian · trend_scout ·
+migrate · seed_channels · thumb_requests · fix_queue_thumbnails · wipe_queue** vẫn cài "bản mới nhất
+tại thời điểm chạy". Nghĩa là khâu ĐĂNG BÀI có thể vớ đúng bản hỏng vào bất kỳ ngày nào, mà mã nguồn
+thì không đổi một dòng — loại sự cố không thể suy luận được. `requirements.txt` cũng chỉ có SÀN
+(`>=2.16`), không có TRẦN. Nay: requirements.txt ghim cả sàn lẫn trần (mọi workflow cài `-r` đều được
+che), các lệnh cài rời đi qua `-c render-pipeline/constraints.txt`. Chốt bằng
+`t_moi_workflow_deu_ghim_thu_vien` — test QUÉT cả thư mục workflow, nên workflow mới thêm mà quên ghim
+là selftest chặn ngay.
+**LUẬT: vá một lỗi thì phải quét TOÀN BỘ chỗ có cùng hình dạng, và để lại một test biết tự quét** —
+bài học lặp lại lần thứ ba trong đêm (7.bm dòng đọc, 7.br mốc intro/outro, giờ là ghim thư viện).

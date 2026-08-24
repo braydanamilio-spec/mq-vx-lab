@@ -370,6 +370,7 @@ def main():
     check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
+    check("mọi workflow ghim phiên bản thư viện", t_moi_workflow_deu_ghim_thu_vien)
     check("mốc intro/outro THẬT sang composition (không lệch tiếng)", t_moc_intro_outro_that)
     check("doc: đủ sàn 21s + rải giây theo SỐ ẢNH (không nhàm)", t_doc_du_dai_va_khong_nham)
     check("mọi short có lưới sàn 21s, kéo dài KHÔNG lệch tiếng", t_short_khong_qua_ngan)
@@ -738,6 +739,35 @@ def t_short_khong_qua_ngan():
     la = [("a", 0.0), ("b", 0.0)]
     f([{"dur": 3.0}] * 4, la, 1.0, 1.0)
     assert la == [("a", 0.0), ("b", 0.0)], "hình dạng lạ thì PHẢI để nguyên, không đoán"
+
+
+def t_moi_workflow_deu_ghim_thu_vien():
+    """Mọi workflow cài google-cloud-firestore phải ĐI QUA constraints (24/8 tối).
+    Gương B→B2 chết 16 tiếng vì một bản phát hành mới của thư viện Google làm gãy
+    `.stream(timeout=…)`. `constraints.txt` sinh ra để chặn — nhưng soi lại thì CHỈ `render_cron`
+    dùng nó; 13 workflow còn lại (kể cả publish/publish_social) vẫn cài bản mới nhất theo ngày."""
+    goc = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    wf = os.path.join(goc, ".github", "workflows")
+    if not os.path.isdir(wf):
+        return
+    ho = []
+    for ten in sorted(os.listdir(wf)):
+        if not ten.endswith((".yml", ".yaml")):
+            continue
+        t = io.open(os.path.join(wf, ten), encoding="utf-8").read()
+        for dong in t.split("\n"):
+            if "pip install" not in dong or "google-cloud-firestore" not in dong:
+                continue
+            if "constraints.txt" in dong or ">=2.27" in dong:
+                continue
+            ho.append(f"{ten}: {dong.strip()[:70]}")
+    assert not ho, "workflow cài thư viện KHÔNG ghim phiên bản:\n   " + "\n   ".join(ho)
+    req = os.path.join(goc, "MM0-AutoPublisher", "requirements.txt")
+    if os.path.exists(req):
+        r = io.open(req, encoding="utf-8").read()
+        for goi in ("google-cloud-firestore", "google-api-python-client", "requests"):
+            d = [x for x in r.split("\n") if x.strip().startswith(goi)]
+            assert d and "<" in d[0], f"{goi} trong requirements.txt thiếu TRẦN phiên bản"
 
 
 if __name__ == "__main__":

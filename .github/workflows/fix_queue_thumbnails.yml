@@ -41,7 +41,7 @@ jobs:
         with: { python-version: "3.11" }
       - name: Cài thư viện (đúng bộ mà job thật dùng)
         run: |
-          pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+          pip install --quiet -c render-pipeline/constraints.txt google-generativeai edge-tts google-cloud-firestore \
             google-api-python-client google-auth pyyaml
           pip install --quiet pillow google-genai
       - name: ffmpeg
@@ -118,7 +118,7 @@ jobs:
         # "resolution-too-deep" -> cả 10 luồng chết ngay ở bước cài (sự cố 20/8, 0 video được xử lý).
         # Dòng 1 giữ ĐÚNG bộ đã chạy ổn định trong render_cron.yml; pillow cài riêng.
         run: |
-          pip install --quiet google-generativeai edge-tts google-cloud-firestore \
+          pip install --quiet -c render-pipeline/constraints.txt google-generativeai edge-tts google-cloud-firestore \
             google-api-python-client google-auth pyyaml
           pip install --quiet pillow google-genai
       - name: npm ci (chỉ khi cache MISS)
