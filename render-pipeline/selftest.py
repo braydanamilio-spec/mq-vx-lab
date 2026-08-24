@@ -363,12 +363,29 @@ def main():
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
     check("hồ key ẢNH được bù khi shard trả lời thiếu", t_giu_key_anh)
+    check("trí nhớ key cạn SỐNG xuyên video", t_nho_key_can)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
             print("   - " + f)
         sys.exit(1)
     print("✅ SELFTEST PASS — code lành, cho phép chạy phiên.")
+
+
+def t_nho_key_can():
+    """Key đã cạn Vision/vẽ ảnh phải được NHỚ qua video kế. Sự cố 24/8: set_ai_pool xoá sổ mỗi video
+    (136 lần/phiên) -> video sau lại đâm vào đúng key đã 429, mỗi lượt hỏng vẫn trừ hạn mức."""
+    import datastory_ci as DS
+    DS._VIS_DEAD.clear(); DS._VE_DEAD.clear()
+    DS._vis_die("AIzaHET"); DS._ve_die("cf:HET")
+    assert DS._vis_chet("AIzaHET") and DS._ve_chet("cf:HET")
+    DS.set_ai_pool([{"id": "x", "key": "AIzaHET"}, {"id": "y", "key": "cf:HET"}], "KENH")
+    assert DS._vis_chet("AIzaHET"), "set_ai_pool đã xoá mất trí nhớ Vision"
+    assert DS._ve_chet("cf:HET"), "set_ai_pool đã xoá mất trí nhớ vẽ ảnh"
+    import time as _t
+    DS._VIS_DEAD["AIzaHET"] = _t.time() - 1          # hết hạn nghỉ
+    assert not DS._vis_chet("AIzaHET"), "hết hạn nghỉ thì key phải quay lại vòng xoay"
+    DS._VIS_DEAD.clear(); DS._VE_DEAD.clear()
 
 
 def t_giu_key_anh():

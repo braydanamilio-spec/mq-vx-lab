@@ -82,15 +82,23 @@ def set_ai_pool(keys, channel: str = ""):
                 off = int(hashlib.md5(channel.encode()).hexdigest(), 16) % len(grp)
                 grp[:] = grp[off:] + grp[:off]
     _AI_POOL["keys"] = cf + gm
-    _AI_POOL["dead"] = set()
-    _VIS_DEAD.clear()
+    # 24/8 — KHÔNG XOÁ TRÍ NHỚ "KEY NÀY ĐÃ CẠN" NỮA. Đây là gốc của câu hỏi "42 key Groq, 59 Gemini,
+    # 52 CF mà sao mới đầu ngày đã chạm trần".
+    # `set_ai_pool` chạy MỘT LẦN MỖI VIDEO (đo phiên 08:47: 136 lần). Hai dòng xoá ở đây làm hệ QUÊN
+    # SẠCH những key vừa trả 429 ở video trước -> video kế lại lôi đúng những key đã chết ra dùng,
+    # ăn 429 lần nữa, rồi lại quên. Mỗi lượt gọi hỏng VẪN TRỪ vào hạn mức của nhà cung cấp.
+    # Số đo: 108 dòng `verify_image lỗi ... You exceeded your current quota` trong một phiên — gần
+    # như toàn bộ là gọi vào key ĐÃ BIẾT là cạn. Nhân với 3 lần đổi key mỗi ảnh = hàng nghìn lượt
+    # gọi chắc chắn thất bại, tự tay đốt hạn mức Gemini/CF.
+    # Hạn mức là chuyện của NGÀY và của TÀI KHOẢN, không phải của từng video -> trí nhớ phải sống
+    # xuyên video. Có hạn nghỉ để key dính giới hạn THEO PHÚT vẫn quay lại được (xem _vis_chet).
 
 
 def _ai_candidates(first=""):
     """Key để thử vẽ ảnh: key gọi vào trước (giữ hành vi cũ), rồi tới các key còn hạn mức."""
-    out = [k for k in ([first] if first else []) if k not in _AI_POOL["dead"]]
+    out = [k for k in ([first] if first else []) if not _ve_chet(k)]
     for k in _AI_POOL["keys"]:
-        if k not in _AI_POOL["dead"] and k not in out:
+        if not _ve_chet(k) and k not in out:
             out.append(k)
     return out
 
@@ -100,13 +108,53 @@ def _is_quota_err(e) -> bool:
     return "429" in t or "RESOURCE_EXHAUSTED" in t or "exceeded your current quota" in t
 
 
-_VIS_DEAD = set()      # key đã hết hạn mức VISION trong phiên (khác hạn mức vẽ ảnh và viết chữ)
+# key đã hết hạn mức VISION -> {key: mốc hết nghỉ}. Khác hạn mức vẽ ảnh và viết chữ.
+# Có MỐC HẾT NGHỈ chứ không phải chết hẳn: key dính giới hạn THEO PHÚT phải quay lại được, còn key
+# cạn theo NGÀY thì 90' nghỉ cũng đủ để không bị lôi ra dùng lại liên tục.
+_VIS_DEAD: dict = {}
+_VIS_NGHI_PHUT = 90
+
+
+def _vis_chet(k) -> bool:
+    import time as _t
+    h = _VIS_DEAD.get(k)
+    if not h:
+        return False
+    if _t.time() >= h:
+        _VIS_DEAD.pop(k, None)
+        return False
+    return True
+
+
+def _vis_die(k, phut: int = _VIS_NGHI_PHUT):
+    import time as _t
+    _VIS_DEAD[k] = _t.time() + phut * 60
+
+
+# Hồ VẼ ẢNH cũng cần trí nhớ y hệt: {key: mốc hết nghỉ}. Trước đây là set() bị xoá mỗi video.
+_VE_DEAD: dict = {}
+
+
+def _ve_chet(k) -> bool:
+    import time as _t
+    h = _VE_DEAD.get(k)
+    if not h:
+        return False
+    if _t.time() >= h:
+        _VE_DEAD.pop(k, None)
+        return False
+    return True
+
+
+def _ve_die(k, phut: int = _VIS_NGHI_PHUT):
+    import time as _t
+    _VE_DEAD[k] = _t.time() + phut * 60
 
 
 def _vision_key(keys):
     ks = [k.get("key") for k in (keys or []) if k.get("key")]
     for kk in [k for k in ks if not str(k).startswith(("gsk_", "cf:"))] + [k for k in ks if str(k).startswith("cf:")]:
-        if kk not in _VIS_DEAD:
+        if not _vis_chet(kk):
             return kk
     return (ks or [""])[0]
 
@@ -131,7 +179,7 @@ def _verify_image_rot(path, subject, first_key="", tries=3):
     for _ in range(max(1, tries)):
         k = None
         for cand in _vision_order(([first_key] if first_key else []) + list(_AI_POOL["keys"])):
-            if cand and cand not in _VIS_DEAD and cand not in seen:
+            if cand and not _vis_chet(cand) and cand not in seen:
                 k = cand; break
         if not k:
             break
@@ -147,7 +195,7 @@ def _verify_image_rot(path, subject, first_key="", tries=3):
             qc_vision.on_quota = prev
         if not hit["quota"]:
             return r                       # đã kiểm được (True/False) hoặc lỗi khác -> trả luôn
-        _VIS_DEAD.add(k)                   # key này hết hạn mức Vision -> thử key kế
+        _vis_die(k)                   # key này hết hạn mức Vision -> thử key kế
     return None                            # thật sự không kiểm được -> caller fail-open như cũ
 
 
@@ -158,7 +206,7 @@ def _verify_grid_rot(pairs, first_key="", tries=3):
     for _ in range(max(1, tries)):
         k = None
         for cand in _vision_order(([first_key] if first_key else []) + list(_AI_POOL["keys"])):
-            if cand and cand not in _VIS_DEAD and cand not in seen:
+            if cand and not _vis_chet(cand) and cand not in seen:
                 k = cand; break
         if not k:
             break
@@ -172,7 +220,7 @@ def _verify_grid_rot(pairs, first_key="", tries=3):
             qc_vision.on_quota = prev
         if not hit["q"]:
             return r
-        _VIS_DEAD.add(k)
+        _vis_die(k)
     return [None] * len(pairs)
 
 
@@ -192,7 +240,7 @@ def _check_visual_rot(mp4, keys, tries=3, **kw):
         ok, info = qc_vision.check_visual(mp4, api_key=k, **kw)
         note = str(info.get("note") or "")
         if note.startswith("vision-skip") and _is_quota_err(note):
-            _VIS_DEAD.add(k)
+            _vis_die(k)
             continue
         return ok, info
     return True, (info or {"note": "vision-skip: hết key còn hạn mức"})
@@ -276,7 +324,7 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
             return False               # CF trả về không phải ảnh -> đổi key cũng vô ích (cùng prompt)
         except Exception as e:
             if _is_quota_err(e):
-                _AI_POOL["dead"].add(_k); last_quota = e
+                _ve_die(_k); last_quota = e
                 continue               # hết neuron -> thử key kế (CF khác hoặc Gemini)
             print(f"   ⚠️ CF FLUX '{prompt[:30]}' lỗi: {str(e)[:90]}")
             continue                   # lỗi lạ phía CF -> vẫn còn đường Gemini phía sau
@@ -304,7 +352,7 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
         return True
       except Exception as e:
         if _is_quota_err(e):
-            _AI_POOL["dead"].add(_k)      # key này hết hạn mức ẢNH trong phiên -> thử key kế
+            _ve_die(_k)                   # key này hết hạn mức ẢNH -> nghỉ 90', thử key kế
             last_quota = e
             continue
         # lỗi KHÁC (chặn nội dung, prompt hỏng, mạng) -> đổi key cũng thế, dừng luôn cho đỡ tốn

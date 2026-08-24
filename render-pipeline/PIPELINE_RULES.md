@@ -857,3 +857,31 @@ lượt sau vẫn "chưa từng quét" → lại bị chặn. **Vòng lặp ch�
 
 **Luật:** phanh quota chỉ được **hoãn** việc, không được **bỏ rơi** việc. Bất kỳ bước nào mà "bị hoãn"
 đồng nghĩa với "không bao giờ chạy" thì phải xếp vào nhóm thiết yếu.
+
+### 7.ah — GỐC của "42 Groq · 59 Gemini · 52 CF mà mới đầu ngày đã chạm trần" (24/8/2026)
+
+**Số đo phiên 08:47:** `⚠️ verify_image lỗi (… You exceeded your current quota)` **108 lần**;
+`429` tổng **651 lần**; `Quota exceeded` **225 lần** — trên chỉ 118 video.
+
+**Nguyên nhân:** `set_ai_pool()` chạy **một lần mỗi video** (đo được 136 lần/phiên) và trong đó có
+hai dòng:
+```
+_AI_POOL["dead"] = set()      # quên sạch key nào đã cạn hạn mức VẼ ẢNH
+_VIS_DEAD.clear()             # quên sạch key nào đã cạn hạn mức VISION
+```
+Tức là cứ sang video mới, hệ **quên hết** những key vừa trả 429 ở video trước, rồi lôi đúng chúng
+ra dùng lại. Mỗi ảnh còn đổi key tối đa 3 lần → **hàng nghìn lượt gọi chắc chắn thất bại mỗi phiên**.
+Mà **lượt gọi hỏng vẫn bị trừ vào hạn mức** của nhà cung cấp — y hệt bài học Firestore ở mục 7.ab.
+Càng nhiều key càng lâu phát hiện, vì lúc nào cũng còn key "chưa thử" để đâm vào.
+
+**Vá:** trí nhớ key-đã-cạn **sống xuyên video**, có mốc hết nghỉ 90 phút (`_vis_chet/_vis_die`,
+`_ve_chet/_ve_die`) — key dính giới hạn THEO PHÚT vẫn quay lại được, key cạn theo NGÀY không bị lôi
+ra dùng liên tục nữa. Có test `t_nho_key_can` trong `selftest.py`.
+
+**Cộng hưởng với 7.af:** khi kho key ẢNH rơi mất (failover B2), hệ phải nhờ AI VẼ thay cho ảnh thật
+— nhân thêm số lượt gọi Gemini/CF. Hai lỗi này cùng nhau giải thích trọn vẹn vì sao hồ key lớn mà
+vẫn cháy sớm.
+
+**Luật (lặp lại lần thứ ba trong một đêm, nên viết to):** *bất kỳ chỗ nào biết "cái này đã cạn" mà
+lại quên đi theo chu kỳ ngắn, đều là một máy đốt hạn mức.* Trí nhớ phải sống ít nhất bằng chu kỳ
+hạn mức của nhà cung cấp, không phải bằng vòng đời một video.
