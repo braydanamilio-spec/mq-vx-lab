@@ -1605,3 +1605,30 @@ Anh hỏi *"đăng facebook có ảnh hưởng quota ko"*. Trả lời: **không
 đã vá cho Instagram mà FB thì chưa. Nay `_soi()` đọc header `X-App-Usage` (cảnh báo từ 80%) và ném
 `HetNhip` riêng; tầng trên hoãn sang cron sau, KHÔNG cộng `attempts`. Chốt bằng
 `t_fb_het_nhip_khong_giet_video`.
+
+### 7.bm — "Kênh không còn (đã xóa)" là LỜI KHAI SAI của một lệnh đọc hỏng (24/8/2026 tối, phiên 16:06Z)
+Lane HAULUSA và FAKEUSA thoát sau 60 giây với `⚠️ Kênh ... không còn (đã xóa) — bỏ`, trong khi plan
+vừa xếp việc cho chính hai kênh đó vài giây trước. Hai lỗi chồng nhau, cùng họ với luật "chết câm":
+1. `read_one_channel` gọi `.stream(timeout=20)` **trực tiếp**, không qua `_stream_at` — nên vẫn dính
+   đúng lỗi thư viện `'_UnaryStreamMultiCallable' object has no attribute '_retry'` mà `_stream_at`
+   sinh ra để đỡ. **Vá một lỗi ở một chỗ không có nghĩa là đã vá cả họ: phải quét mọi lối đọc.**
+2. `except Exception: return None` — biến một lệnh đọc HỎNG thành một SỰ THẬT SAI ("kênh không tồn
+   tại"). Người gọi tin lời đó rồi bỏ nguyên một lane (~2 tiếng máy); ở vòng lặp giữa phiên còn tệ
+   hơn: kết liễu một lane **đang ra video**.
+**LUẬT: hàm đọc phải phân biệt "không tìm thấy" với "không đọc được".** Nay `read_one_channel` ném
+`FB.DocLoi` khi đọc hỏng; `None` chỉ còn đúng một nghĩa. Đầu lane: thử lại 3 lần rồi dừng với thông
+báo đúng bản chất. Giữa vòng lặp: giữ cấu hình vòng trước, làm tiếp. Chốt bằng `t_doc_hong_khac_kenh_bi_xoa`.
+
+### 7.bn — Render lại LONG đang dùng SAI ENGINE cho mọi kênh không phải DATARACE (24/8/2026 tối)
+Anh hỏi *"kịch bản có dùng để render lại được ko"* — soi ra ba lỗ, hai cái nặng:
+* Nhánh xử lý yêu cầu 🔄 gọi **cứng** `DS.make_long` (long biểu đồ đua cột) cho MỌI kênh. Bấm render
+  lại một long doc/toon/motif là thay video đúng định dạng bằng video **sai hẳn định dạng** — mà bản
+  cũ đã bị bỏ thùng rác ngay sau đó. Nay chia đường đúng như `run_one`: toon → `make_toon_long`;
+  doc + mọi motif → `make_doc_long`; còn lại → `make_long`.
+* Long **doc/motif** chỉ lưu `[p["topic"] for p in parts]` — mấy cái TÊN chủ đề, không phải kịch bản.
+  `make_doc_long(resume=…)` cần `parts` là danh sách **story dict** và cần thêm `subs`; thiếu thì
+  resume bị cắt về 0 phần ⇒ viết mới bằng Gemini, tốn quota đúng việc lẽ ra miễn phí.
+* Long **toon** không lưu kịch bản **gì cả** ⇒ mất trắng, làm lại phải viết từ đầu.
+Nay cả ba đường đi qua `_ks_long(plan, parts)` lưu đủ `pillar_title · hook · sources · subs · parts`
+(story dict thật). Chỉ long DATARACE (`races`) và mọi SHORT là đã lưu đủ từ trước.
+Chốt bằng `t_render_lai_long_dung_engine`.

@@ -369,6 +369,8 @@ def main():
     check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
+    check("đọc HỎNG ≠ kênh bị xoá (không giết lane oan)", t_doc_hong_khac_kenh_bi_xoa)
+    check("render lại LONG dùng ĐÚNG engine của kênh", t_render_lai_long_dung_engine)
     check("số video trong kho lấy TỪ DRIVE, không cộng dồn", t_so_kho_lay_tu_drive)
     check("FB hết nhịp = HOÃN, không vứt video", t_fb_het_nhip_khong_giet_video)
     check("gộp lệnh ghi D1: done/failed xả NGAY, phần dư không mất", t_gop_ghi_d1)
@@ -598,6 +600,40 @@ def t_fb_het_nhip_khong_giet_video():
     assert "errs_fb_skip" in b, "publish_social chưa hoãn khi FB hết nhịp"
     assert "(errs_ig_skip or errs_fb_skip) and not errs" in b, \
         "FB hết nhịp vẫn bị cộng attempts -> 3 lượt cron là video vào dead-letter"
+
+
+def t_doc_hong_khac_kenh_bi_xoa():
+    """Lệnh đọc HỎNG không được biến thành sự thật SAI (24/8 tối, phiên 16:06Z: lane HAULUSA +
+    FAKEUSA thoát sau 60s vì "kênh không còn (đã xóa)", trong khi plan vừa xếp việc cho chúng)."""
+    import firestore_bridge as FB
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "firestore_bridge.py"), encoding="utf-8").read()
+    assert hasattr(FB, "DocLoi"), "thiếu loại lỗi riêng cho 'đọc hỏng'"
+    i = src.index("def read_one_channel")
+    than = src[i:i + 2200]
+    assert "_stream_at" in than, "read_one_channel vẫn gọi .stream() trực tiếp — dính lại lỗi thư viện"
+    assert "raise DocLoi" in than, "đọc hỏng vẫn bị nuốt thành None (= 'kênh đã bị xoá')"
+    r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "run_render.py"), encoding="utf-8").read()
+    assert r.count("except FB.DocLoi") >= 2, "hai chỗ gọi read_one_channel phải xử lý DocLoi riêng"
+
+
+def t_render_lai_long_dung_engine():
+    """Render lại một LONG phải dùng ĐÚNG engine của kênh đó. Bản cũ gọi cứng `DS.make_long`
+    (biểu đồ đua cột) cho mọi kênh -> bấm 🔄 trên long doc/toon là thay bằng video SAI ĐỊNH DẠNG,
+    mà bản cũ đã bị bỏ thùng rác. Và kịch bản long doc/toon phải lưu ĐỦ để resume."""
+    r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "run_render.py"), encoding="utf-8").read()
+    i = r.index("def _lam_render_requests") if "def _lam_render_requests" in r else r.index('if typ == "long":')
+    than = r[i:i + 6000]
+    for ten in ("DS.make_toon_long", "DS.make_doc_long", "DS.make_long"):
+        assert ten in than, f"đường render lại LONG thiếu nhánh {ten}"
+    assert '"parts": [p["topic"] for p in parts]' not in r, \
+        "long doc vẫn lưu mỗi TÊN chủ đề — không resume được (make_doc_long cần story dict)"
+    assert r.count("_ks_long(plan,") >= 3, \
+        "phải có đủ 3 đường long (doc · motif · toon) lưu kịch bản đầy đủ"
+    assert '"subs"' in r[r.index("def _ks_long"): r.index("def _ks_long") + 1400], \
+        "thiếu `subs` thì make_doc_long cắt done_stories về 0 -> resume vô nghĩa"
 
 
 if __name__ == "__main__":

@@ -1132,19 +1132,34 @@ def read_channels(owner: str) -> list[dict]:
     return _retry(_do)
 
 
+class DocLoi(Exception):
+    """LỆNH ĐỌC HỎNG — khác hẳn "không tìm thấy". Xem read_one_channel()."""
+
+
 def read_one_channel(owner: str, name: str) -> dict | None:
-    """Đọc ĐÚNG 1 kênh theo tên (1 read) — dùng trong vòng lặp render để check pause/target mà KHÔNG đọc cả 15 kênh."""
+    """Đọc ĐÚNG 1 kênh theo tên (1 read) — dùng trong vòng lặp render để check pause/target mà KHÔNG
+    đọc cả 15 kênh.
+
+    24/8 tối — SỰ CỐ THẬT, phiên 16:06Z: lane HAULUSA và FAKEUSA thoát sau 60 giây với dòng
+    "⚠️ Kênh ... không còn (đã xóa) — bỏ", trong khi hai kênh đó VẪN CÒN (chính plan vừa xếp việc
+    cho chúng vài giây trước). Hai lỗi chồng nhau, cùng một họ với luật "chết câm":
+      1. hàm này gọi `.stream(timeout=20)` TRỰC TIẾP, không qua `_stream_at` — nên vẫn dính đúng
+         lỗi thư viện `'_UnaryStreamMultiCallable' object has no attribute '_retry'` mà `_stream_at`
+         sinh ra để đỡ;
+      2. `except Exception: return None` — **biến một lệnh đọc HỎNG thành một sự thật SAI**
+         ("kênh không tồn tại"). Người gọi tin lời đó rồi bỏ nguyên một lane (~2 tiếng máy).
+    Nay: đọc qua `_stream_at`, và đọc hỏng thì **NÉM `DocLoi`** để người gọi tự quyết. `None` từ giờ
+    chỉ có đúng một nghĩa: đã đọc được, và kênh THẬT SỰ không còn."""
     def _do():
-        _cr("_do", 1)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         q = (_db_meta().collection("render_channels").where("owner", "==", owner)
-             .where("name", "==", name).limit(1).stream(timeout=20))
-        for d in q:
+             .where("name", "==", name).limit(1))
+        for d in _stream_at(q, 20):
             x = d.to_dict() or {}; x["id"] = d.id; return x
         return None
     try:
         return _retry(_do)
-    except Exception:
-        return None
+    except Exception as e:
+        raise DocLoi(f"đọc kênh {name} hỏng: {str(e)[:120]}") from e
 
 
 def read_config(owner: str) -> dict:

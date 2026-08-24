@@ -83,6 +83,25 @@ def _script_json(d, cap=300_000):
         return ""
 
 
+def _ks_long(plan, parts) -> dict:
+    """KỊCH BẢN ĐỦ ĐỂ RENDER LẠI một video LONG (24/8 tối, anh hỏi "kịch bản đó có dùng để render
+    được ko").
+
+    Soi lại thì câu trả lời trước bản vá này là KHÔNG, với 2 trong 4 loại long:
+      • long doc + long motif: chỉ lưu `[p["topic"] for p in parts]` — tức mấy CÁI TÊN chủ đề, không
+        phải kịch bản. Mà `make_doc_long(resume=…)` cần `parts` là danh sách STORY DICT và cần thêm
+        `subs`; đưa chuỗi vào chỗ dict là hoặc bỏ qua resume (viết mới, tốn Gemini) hoặc vỡ.
+      • long toon: KHÔNG lưu gì cả — mất trắng, muốn làm lại phải viết mới từ đầu.
+    Chỉ long DATARACE (`races`) và mọi SHORT là lưu đủ từ trước.
+
+    Bốn trường dưới đây khớp đúng thứ `make_doc_long`/`make_toon_long` đọc ở nhánh resume. Nặng
+    thêm vài KB/video — đổi lại render lại KHÔNG tốn một lượt gọi AI nào."""
+    return {"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"),
+            "sources": plan.get("sources") or [],
+            "subs": [p.get("topic") for p in (parts or []) if p.get("topic")],
+            "parts": [(p.get("story") or {}) for p in (parts or [])]}
+
+
 def _desc_src(story) -> str:
     """Mô tả + DẪN NGUỒN. Kênh data-race đã ghi nguồn từ đầu (xem enqueue_drive), nhưng đường kênh
     doc/motif (30/40 kênh) TRƯỚC ĐÂY chỉ đăng description trần -> video nêu đầy số liệu/mốc/vụ án mà
@@ -633,8 +652,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
         res=(info or {}).get("res", ""), drive_id=did or "", drive_account=(eq or {}).get("account", ""),
         thumb_id=(eq or {}).get("thumb_id", ""),
         preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
-        script=_script_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"),
-                             "parts": [p["topic"] for p in parts]}))
+        script=_script_json(_ks_long(plan, parts)))
     R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
 
     # ---- SHORT: mỗi phần của long -> 1 short, bám nội dung 100% ----
@@ -715,7 +733,7 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R, ra_id=None):
         res=(info or {}).get("res", ""), drive_id=did or "", drive_account=(eq or {}).get("account", ""),
         thumb_id=(eq or {}).get("thumb_id", ""),
         preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
-        script=_script_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"), "parts": subs}))
+        script=_script_json(_ks_long(plan, _parts)))
     R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
     return subs
 
@@ -846,12 +864,46 @@ def process_requests(keys, report):
             st("running", ("♻️ Render lại (dùng kịch bản cũ): " if old else "🔄 Render lại: ") + seed[:40])
             out = os.path.join("out", DS.slug(ch) + "_rr.mp4")
             if typ == "long":
-                _, plan, _subs, ok, info, _stories = DS.make_long(
-                    ch, seed, out, keys=keys, on_status=st, on_limit=cool, n_races=4,
-                    resume_checkpoint=(old if isinstance(old, dict) and old.get("races") else None),
-                    accent=cfg.get("accent", "#22D3EE"), accent2=cfg.get("accent2", "#F5B301"))
+                # 24/8 tối — LỖI NẶNG: nhánh này gọi CỨNG `DS.make_long` (long DATARACE, biểu đồ
+                # đua cột) cho MỌI kênh. Bấm 🔄 trên một long doc/toon/motif là thay video đúng
+                # định dạng bằng một video SAI HẲN ĐỊNH DẠNG — mà bản cũ thì đã bị bỏ thùng rác.
+                # Lại còn không nhận ra kịch bản cũ (long doc lưu `parts`, không có `races`) nên
+                # viết mới bằng Gemini, tốn quota đúng việc lẽ ra miễn phí.
+                # Nay chia đường ĐÚNG như run_one: toon -> make_toon_long · doc và mọi motif ->
+                # make_doc_long (motif dùng bản Cinematic 16:9) · còn lại -> make_long.
+                _cu = old if isinstance(old, dict) else None
+                if fmt == "toon":
+                    _, plan, _subs, ok, info, _parts = DS.make_toon_long(
+                        ch, seed, out, keys=keys, tier=cfg.get("tier", "normal"),
+                        accent=cfg.get("accent", "#E4562B"), on_status=st, on_limit=cool,
+                        n_parts=max(1, min(3, int(cfg.get("n_shorts", 3) or 3))),
+                        resume=(_cu if (_cu or {}).get("parts") else None),
+                        toon_style=cfg.get("toon_style", ""),
+                        voice_a=cfg.get("voice_a", "en-US-ChristopherNeural"), rate_a=cfg.get("rate_a", "+0%"),
+                        voice_b=cfg.get("voice_b", "en-US-GuyNeural"), rate_b=cfg.get("rate_b", "+8%"),
+                        color_a=cfg.get("color_a", "#7DD3FC"), color_b=cfg.get("color_b", "#FCA5A5"),
+                        display=cfg.get("display") or ch, toon_mode=cfg.get("toon_mode", "skit"))
+                elif fmt in ("doc", "guess", "mapped", "ranked", "scaled", "thennow",
+                             "swarm", "pulse", "clockwork", "longshot"):
+                    _, plan, _subs, ok, info, _parts = DS.make_doc_long(
+                        ch, seed, out, keys=keys, tier=cfg.get("tier", "normal"),
+                        on_status=st, on_limit=cool,
+                        n_parts=max(1, int(cfg.get("n_shorts", 3) or 3)),
+                        resume=(_cu if (_cu or {}).get("parts") else None),
+                        accent=cfg.get("accent", "#22D3EE"), accent2=cfg.get("accent2", "#F5B301"),
+                        ai_style=cfg.get("ai_style"), ai_only=bool(cfg.get("ai_only")),
+                        music=cfg.get("music"), mode=cfg.get("mode"), host_prompt=cfg.get("host_prompt"))
+                else:
+                    _, plan, _subs, ok, info, _parts = DS.make_long(
+                        ch, seed, out, keys=keys, on_status=st, on_limit=cool, n_races=4,
+                        resume_checkpoint=(_cu if (_cu or {}).get("races") else None),
+                        accent=cfg.get("accent", "#22D3EE"), accent2=cfg.get("accent2", "#F5B301"))
+                    _parts = [{"story": x, "topic": (x or {}).get("topic")} for x in (_parts or [])]
                 story = {"topic": plan.get("pillar_title"), "title": plan.get("pillar_title"), "description": plan.get("hook", "")}
-                script = _script_json({"pillar_title": plan.get("pillar_title"), "hook": plan.get("hook"), "races": _stories})
+                script = _script_json({**_ks_long(plan, _parts),
+                                       **({"races": [p["story"] for p in _parts]} if fmt not in (
+                                           "toon", "doc", "guess", "mapped", "ranked", "scaled",
+                                           "thennow", "swarm", "pulse", "clockwork", "longshot") else {})})
             else:
                 _, story, ok, info = _dispatch_short(
                     cfg, fmt, seed, out, keys, cfg.get("tier", "normal"), st, cool, None,
@@ -1668,7 +1720,18 @@ def channel_mode(name):
     keys = FB.read_keys(OWNER)
     if not keys:
         raise SystemExit("❌ Chưa có Gemini key.")
-    one = FB.read_one_channel(OWNER, name)   # 1 read (không đọc cả 15 kênh)
+    # 1 read (không đọc cả 15 kênh). Đọc HỎNG ≠ kênh bị xoá — xem FB.read_one_channel: trước đây
+    # gộp hai chuyện làm một nên một lệnh đọc trục trặc là mất trắng một lane (~2 tiếng máy).
+    import time as _tg
+    one = None
+    for _l in range(3):
+        try:
+            one = FB.read_one_channel(OWNER, name); break
+        except FB.DocLoi as e:
+            if _l == 2:
+                raise SystemExit(f"❌ {name}: {e} — DỪNG lane (KHÔNG phải kênh bị xoá; "
+                                 f"phiên sau tự làm lại).")
+            print(f"   ⚠️ {name}: {e} — thử lại lần {_l + 2}/3…"); _tg.sleep(5 * (_l + 1))
     if not one:
         print(f"⚠️ Kênh {name} không còn (đã xóa) — bỏ."); return
     if one.get("paused"):
@@ -1718,7 +1781,13 @@ def channel_mode(name):
             print(f"   ⏱ {name}: còn {remain/60:.0f}' < ước tính {need/60:.0f}'/mẻ → DỪNG, phiên sau tự làm tiếp (tránh treo/phí)."); break
         if FB.read_config(OWNER).get("stop"):
             print(f"   ⛔ {name}: có lệnh Dừng → ngừng."); break
-        one = FB.read_one_channel(OWNER, name)   # 1 READ/vòng (thay vì 15): bắt PAUSE + đổi target kịp, tiết kiệm Firestore
+        # 1 READ/vòng (thay vì 15): bắt PAUSE + đổi target kịp, tiết kiệm Firestore.
+        # Đọc hỏng giữa chừng thì GIỮ cấu hình vòng trước và làm tiếp — lane đang ra video, không
+        # được để một lệnh đọc trục trặc kết liễu phần giờ còn lại của nó.
+        try:
+            one = FB.read_one_channel(OWNER, name)
+        except FB.DocLoi as e:
+            print(f"   ⚠️ {name}: {e} — giữ cấu hình vòng trước, làm tiếp."); one = chs[0]
         if not one:
             print(f"   ⚠️ {name}: kênh đã bị xóa → ngừng."); break
         if one.get("paused"):   # ⏸ PAUSE: clip hiện tại đã XONG (check ở đầu vòng sau) -> dừng, giữ nguyên tiến độ, KHÔNG cắt ngang
@@ -1859,7 +1928,8 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
         title=plan.get("pillar_title"), score=(info or {}).get("score"), dur=(info or {}).get("dur", 0),
         size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""), drive_id=did or "",
         drive_account=(eq or {}).get("account", ""), thumb_id=(eq or {}).get("thumb_id", ""),
-        preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""))
+        preview=(("https://drive.google.com/file/d/%s/preview" % did) if did else ""),
+        script=_script_json(_ks_long(plan, parts)))
     R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
 
     for pi, part in enumerate(parts):
