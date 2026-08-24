@@ -8,6 +8,7 @@ name: MM0 Wipe Queue (dọn sạch _QUEUE mọi kho)
 on:
   workflow_dispatch:
     inputs:
+      do_wipe: { description: "CÓ dọn kho Drive không (NGUY HIỂM: xoá file). Tắt nếu chỉ chạy việc bảo trì khác", type: boolean, default: false }
       dry_run: { description: "Chạy thử (chỉ đếm, không đụng file)", type: boolean, default: true }
       scope: { description: "store = mọi file dưới MM0-STORE · queue = chỉ _QUEUE", type: choice, options: [store, queue], default: store }
       rebuild_stats: { description: "Dựng lại SỔ ĐẾM từ số job thật (sửa việc phiên khẩn làm dư video)", type: boolean, default: false }
@@ -36,6 +37,7 @@ jobs:
           echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
           echo '${{ secrets.GCP_SA_KEY_C }}' > /tmp/sa_c.json
       - name: Wipe
+        if: ${{ github.event.inputs.do_wipe == 'true' }}
         # 1 kho token chết không được chặn bước reset sổ phía sau (23/8: ADISONDURHAM invalid_grant
         # -> job dừng ở đây, sổ không được dọn, dashboard vẫn hiện video cũ).
         continue-on-error: true
