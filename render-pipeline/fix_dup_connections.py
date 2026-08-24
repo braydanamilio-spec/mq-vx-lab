@@ -52,7 +52,7 @@ def _snapshot(cls) -> list[dict]:
         if not cl:
             continue
         try:
-            d = cl.collection("connections_mirror").document("__snap__").get()
+            d = cl.collection("connections_mirror").document("snap_kho").get()
             if d.exists:
                 accs = (d.to_dict() or {}).get("accs") or []
                 if accs:

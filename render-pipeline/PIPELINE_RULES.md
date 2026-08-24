@@ -1272,3 +1272,30 @@ Chạy tự động đầu mỗi phiên.
 
 **Luật:** số đo bằng cách **cộng dồn** thì sai lệch tích luỹ và không sửa được. Số đo bằng cách
 **đếm lại từ bản ghi** thì mỗi lần hỏi là một lần tự sửa. Chọn kiểu thứ hai bất cứ khi nào có thể.
+
+### 7.ax — DOC ID BỊ FIRESTORE CẤM: lối tối ưu chưa từng chạy ngày nào (24/8/2026)
+
+Lộ ra khi chạy thật `find_junk.py`: B2 ném
+`400 Resource id "__snap__" is invalid because it is reserved`.
+
+**Firestore CẤM doc id khớp mẫu `__...__`** (bọc kín hai đầu — dành riêng cho hệ thống).
+`connections_mirror/__snap__` mang đúng dạng đó, nên **chưa từng ghi được ngày nào**. Lượt ghi đi qua
+`_soft` nên **lỗi bị nuốt**, lượt đọc trả rỗng.
+
+**Hậu quả — đây chính là thứ tôi đi tìm suốt đêm:** lối "1 lượt đọc" (gói danh sách kho vào 1 doc)
+**không bao giờ tồn tại**, nên mọi luồng đều rơi xuống lối **quét 73 doc trên project A**, mỗi 30 phút,
+× 18 luồng. Tôi đã đổ cho `mirror_connections_to_b` hỏng, cho A cạn, cho vòng xoáy tự siết — **đều là
+triệu chứng**. Gốc nằm ở một cái tên.
+
+**Hai cái tôi tự thêm tối nay cũng dính y hệt** — `render_stats/__drive_usage__` và
+`counters/__enqueue_sweep__`: viết xong, tưởng chạy, thực ra chưa bao giờ ghi được. Nghĩa là đệm
+`drive_usage` và mốc "quét vét 6h/lần" đều vô hiệu.
+
+**Vá:** đổi tên → `snap_kho` · `drive_usage_cache` · `enqueue_sweep`.
+**Chốt:** `selftest.t_id_khong_cam` quét mọi `.document("...")` trong 6 file, gặp dạng `__...__` là FAIL.
+Lưu ý `__snap__{owner}` / `__cool__{owner}` / `__pushed__{owner}` **HỢP LỆ** (không kết thúc bằng `__`)
+— bản thay hàng loạt suýt sửa nhầm hai dòng lọc đó, phải trả lại.
+
+**Luật:** `_soft` (ghi mềm, nuốt lỗi) là con dao hai lưỡi — nó cứu pipeline khỏi chết vì quota, nhưng
+cũng **giấu luôn lỗi cấu hình vĩnh viễn**. Mọi thứ đi qua `_soft` phải có bài kiểm TĨNH, vì nó sẽ
+không bao giờ tự la lên.

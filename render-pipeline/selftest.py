@@ -368,12 +368,39 @@ def main():
     check("hàng chờ: 18 luồng KHÔNG lấy trùng kênh", t_hang_cho_nguyen_tu)
     check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
+    check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
             print("   - " + f)
         sys.exit(1)
     print("✅ SELFTEST PASS — code lành, cho phép chạy phiên.")
+
+
+def t_id_khong_cam():
+    """Firestore CẤM doc id khớp mẫu `__...__` (bọc kín hai đầu) — dành riêng cho hệ thống.
+
+    24/8: `connections_mirror/__snap__` mang đúng dạng đó nên **chưa từng ghi được ngày nào**.
+    Lượt ghi đi qua `_soft` nên lỗi bị nuốt, lượt đọc trả rỗng -> lối "1 lượt đọc" không bao giờ có,
+    mọi luồng rơi xuống lối quét 73 doc trên project A. Đó chính là thứ làm A cháy mỗi ngày.
+    Hai cái tôi tự thêm tối nay (`__drive_usage__`, `__enqueue_sweep__`) cũng dính y hệt.
+    Lỗi loại này KHÔNG BAO GIỜ tự lộ vì `_soft` che hết — nên phải bắt bằng bài kiểm tĩnh.
+    Lưu ý: `__snap__mm0` HỢP LỆ (không kết thúc bằng `__`)."""
+    import re
+    thu_muc = os.path.dirname(os.path.abspath(__file__))
+    xau = []
+    for ten in ("firestore_bridge.py", "fix_dup_connections.py", "rebuild_stats.py",
+                "reset_ledger.py", "find_overlap_videos.py", "hot_db.py"):
+        p = os.path.join(thu_muc, ten)
+        if not os.path.exists(p):
+            continue
+        src = io.open(p, encoding="utf-8").read()
+        for m in re.finditer(r'\.document\(\s*f?"([^"{}]+)"', src):
+            i = m.group(1)
+            if re.match(r"^__.*__$", i):
+                xau.append(f"{ten}: {i}")
+    assert not xau, ("doc id bị Firestore CẤM (dạng __...__): " + ", ".join(xau)
+                     + " -> đổi tên, vì _soft sẽ nuốt lỗi và không ai biết")
 
 
 def t_khong_tron_so():

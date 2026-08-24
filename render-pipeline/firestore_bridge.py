@@ -806,7 +806,7 @@ def sync_keys_from_a(owner: str) -> int:
         _cr("sync_keys_B", 70)
         have = set(); nb = 0; snap_rows = []
         for d in db_b.collection("gemini_keys").where("owner", "==", owner).stream(timeout=20):
-            if d.id.startswith("__snap__"):
+            if d.id.startswith("__snap__"):   # doc ảnh key là `__snap__{owner}` — HỢP LỆ (không bọc kín 2 đầu)
                 continue
             nb += 1
             x = d.to_dict() or {}
@@ -816,7 +816,7 @@ def sync_keys_from_a(owner: str) -> int:
         _cr("sync_keys_A", 70)
         added = 0; na = 0
         for d in db_a.collection("gemini_keys").where("owner", "==", owner).stream(timeout=20):
-            if d.id.startswith("__snap__"):
+            if d.id.startswith("__snap__"):   # doc ảnh key là `__snap__{owner}` — HỢP LỆ (không bọc kín 2 đầu)
                 continue
             na += 1
             x = d.to_dict() or {}
@@ -1086,7 +1086,7 @@ def drive_usage(owner: str, moi_nhat: bool = False):
     Số này đổi rất chậm (mỗi video đẩy lên thêm ~10-40MB trên tổng ~1TB) nên 30' là thừa tươi.
     moi_nhat=True để ép quét thật (plan đầu phiên nên dùng, cho doc luôn đúng)."""
     import time as _t
-    _ref = _db_jobs().collection("render_stats").document("__drive_usage__")
+    _ref = _db_jobs().collection("render_stats").document("drive_usage_cache")
     if not moi_nhat:
         try:
             _cr("drive_usage_cache", 1)
@@ -1772,8 +1772,16 @@ def mirror_connections_to_b() -> int:
         # cách quét CẢ COLLECTION 70 doc, đệm chỉ 10' -> mỗi lane 110' làm mới ~11 lần = 770 đọc,
         # ×18 lane = ~14.000 đọc/phiên chỉ để lấy một danh sách gần như bất biến. Gói cả danh sách
         # vào 1 doc -> publisher đọc 1 lượt thay vì 70. (Cùng chiêu đã dùng cho 142 key AI.)
+        #
+        # 24/8 — TÊN DOC TỪNG LÀ `__snap__`, VÀ NÓ CHƯA TỪNG HOẠT ĐỘNG NGÀY NÀO.
+        # Firestore CẤM doc id khớp mẫu `__...__` (dành riêng cho hệ thống) — trả
+        # `400 Resource id "__snap__" is invalid because it is reserved`. Lượt ghi đi qua `_soft`
+        # nên lỗi bị nuốt, lượt đọc thì trả rỗng. Kết quả: lối "1 lượt đọc" không bao giờ có, mọi
+        # luồng đều rơi xuống lối quét 73 doc trên project A — ĐÚNG cái làm A cháy mỗi ngày mà tôi
+        # đã đi tìm nguyên nhân suốt đêm. Lỗi chỉ lộ ra khi B2 (không có `_soft` che) ném thẳng.
+        # Lưu ý: `__snap__mm0` thì HỢP LỆ (không kết thúc bằng `__`) — chỉ dạng bọc kín hai đầu mới bị cấm.
         _snap = [{"id": i, **{k: v for k, v in x.items() if k in keys}} for i, x in rows.items()]
-        _soft(lambda: col.document("__snap__").set({"at": _now(), "n": len(_snap), "accs": _snap}),
+        _soft(lambda: col.document("snap_kho").set({"at": _now(), "n": len(_snap), "accs": _snap}),
               "mirror_conn_snap")
         if n:
             print(f"   🪞 Gương kho Drive A→B: cập nhật {n}/{len(rows)} tài khoản + snapshot 1-doc.")
@@ -1802,7 +1810,7 @@ def _dung_snap_tu_B() -> int:
         keys = ("refresh_token", "root", "client_id", "client_secret", "channel", "owner", "email", "cap_gb")
         rows = {}
         for d in _stream_at(col):
-            if d.id == "__snap__":
+            if d.id == "snap_kho":
                 continue
             x = d.to_dict() or {}
             if x.get("refresh_token"):
@@ -1813,7 +1821,7 @@ def _dung_snap_tu_B() -> int:
         _cr("snap_tu_B", max(1, len(rows)))
         _snap = [{"id": i, **{k: v for k, v in x.items() if k in keys}} for i, x in rows.items()]
         _cw("mirror_conn_snap")
-        _soft(lambda: col.document("__snap__").set({"at": _now(), "n": len(_snap), "accs": _snap,
+        _soft(lambda: col.document("snap_kho").set({"at": _now(), "n": len(_snap), "accs": _snap,
                                                     "nguon": "B"}), "mirror_conn_snap")
         print(f"   🧩 Dựng gói kho từ gương B: {len(_snap)} tài khoản (A không đọc được) — "
               f"18 luồng phía sau chỉ tốn 1 lượt đọc/luồng thay vì đập vào A.")
