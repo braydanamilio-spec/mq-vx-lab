@@ -1997,7 +1997,10 @@ def build_ranked_props(story, sdir, handle="@rankedusa", music="music/km_ascendi
     return {"title": (story.get("title") or "TIER LIST"), "subtitle": story.get("subtitle", ""),
             "handle": handle, "color": "#7C5CFF", "accent": "#7C5CFF", "sfx": True,
             "introSec": introSec, "itemSec": 1.7, "outroSec": outroSec,
-            "items": items_out, "audio": rel(track), "music": music}
+            "items": items_out, "audio": rel(track), "music": music,
+            # 24/8: truyền mốc THẬT sang composition. Thiếu hai dòng này thì PulseShort dùng cứng
+            # 1,7/1,6 -> hình lệch tiếng và video ngắn hơn Python tưởng (xem ghi chú idur() bên TSX).
+            "introSec": introSec, "outroSec": outroSec}
 
 
 def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",

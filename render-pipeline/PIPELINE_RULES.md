@@ -1323,3 +1323,24 @@ không suy suyển. Xoá vĩnh viễn (đổ thùng rác) **cố ý không nằm
 
 **Luật:** trước khi kết luận "kho đầy rác", phải ĐẾM. Ở đây nỗi lo là 100% còn thực tế là 0,6% — nếu
 tin cảm giác mà `wipe_queue` cả kho thì mất trắng 3.512 file tốt.
+
+### 7.az — PULSE: composition BỎ QUA thời lượng Python đo → lệch tiếng-hình 4,7 giây (24/8/2026)
+
+**Triệu chứng ban đầu:** phiên 13:08Z có **24 video PULSE bị QC loại "quá ngắn"** (10,6 / 12,8 / 15,1s),
+tăng gấp đôi so với phiên trước, **dù bản vá kéo dài đã chạy** (log có 3 dòng `⏱ PULSE ... -> 21.0s`).
+
+**Gốc:** `PulseShort.tsx` **không hề đọc `it.dur`** — nó dùng cứng **2,2 giây mỗi mục** và
+**1,7 / 1,6** cho intro/outro. Nên mọi cố gắng kéo dài bên Python đều **vô hiệu**: độ dài luôn là
+`1,7 + n×2,2 + 1,6` → 4-5 mục là 12-15 giây, dưới sàn QC 20s.
+
+**Và đây mới là phần nặng:** track tiếng được ghép theo **mốc THẬT của giọng đọc**, còn hình chuyển
+theo **2,2s cố định**. Tính trên một ví dụ 5 mục: tới mục cuối, **hình chuyển ở 10,5s trong khi
+tiếng đọc tới đó ở 15,2s — lệch 4,7 GIÂY**. Lỗi này có **từ đầu**, chưa ai thấy, vì QC chỉ đo độ dài
+và độ sáng chứ **không đo khớp tiếng-hình**.
+
+**Vá:** `idur()` ưu tiên `it.dur`; `calcPulse` và component lấy `introSec`/`outroSec` từ props;
+`build_pulse_props` truyền hai mốc đó sang. Cùng một ví dụ: **14,3s → 20,6s** và tiếng-hình khớp.
+
+**Luật:** khi Python đo một đằng còn composition tính một nẻo, **im lặng là triệu chứng nguy hiểm
+nhất** — video vẫn ra, vẫn đẹp, chỉ là tiếng lệch hình. Mọi thời lượng phải có **một nguồn duy nhất**,
+và bên vẽ phải ĐỌC nó chứ không tự đoán.

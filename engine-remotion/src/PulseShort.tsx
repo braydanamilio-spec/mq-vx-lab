@@ -5,10 +5,11 @@ import React from "react";
 // Motif riêng hẳn: gauge bán nguyệt (kim vật lý spring, đổi màu lạnh->nóng), redline rung+shockwave khi extreme.
 
 type Word = { t: number; d: number; w: string };
-export type PulseItem = { label: string; emoji?: string; value: number; disp?: string; extreme?: boolean; vo?: string };
+export type PulseItem = { label: string; emoji?: string; value: number; disp?: string; extreme?: boolean; vo?: string;
+                          dur?: number };   // giây, Python đo từ giọng đọc — xem ghi chú ở idur()
 export type PulseProps = {
   title?: string; handle?: string; color?: string; accent?: string;
-  unit: string; maxScale: number; items: PulseItem[];
+  unit: string; maxScale: number; items: PulseItem[]; introSec?: number; outroSec?: number;
   audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
 };
 
@@ -58,11 +59,21 @@ const arcPath = (t0: number, t1: number, r: number, steps = 72) => {
   return pts.join(" ");
 };
 
-const idur = (it: PulseItem, s: number) => s + (it.extreme ? 0.7 : 0);
+// 24/8 — DÙNG ĐÚNG THỜI LƯỢNG PYTHON ĐO TỪ GIỌNG ĐỌC.
+// Trước đây hàm này BỎ QUA `it.dur` và dùng cứng 2,2 giây mỗi mục. Hai hậu quả:
+//   1. Video luôn dài đúng 1,7 + n×2,2 + 1,6 -> 4-5 mục là 12-15 giây, DƯỚI sàn QC 20s.
+//      Mọi cố gắng kéo dài bên Python đều vô ích vì composition không hề đọc `dur`.
+//      (Log 13:08Z: 24 video PULSE bị loại "quá ngắn", đúng các mốc 10,6 / 12,8 / 15,1 giây.)
+//   2. NẶNG HƠN: track tiếng được ghép theo mốc THẬT của giọng đọc, còn hình chuyển ở mốc 2,2s
+//      cố định -> TIẾNG VÀ HÌNH LỆCH NHAU ngay từ mục thứ hai. Lỗi này có từ đầu, không ai thấy
+//      vì QC chỉ đo độ dài và độ sáng, không đo khớp tiếng-hình.
+const idur = (it: PulseItem, s: number) =>
+  (typeof it.dur === "number" && it.dur > 0 ? it.dur : s + (it.extreme ? 0.7 : 0));
 
 export const calcPulse = ({ props }: any) => {
   const its: PulseItem[] = props.items || [];
-  const isec = 1.7, isc = 2.2, tail = 1.6;
+  // intro/outro cũng lấy từ props (Python đo từ giọng thật) — cứng 1,7/1,6 là nguồn lệch thứ hai
+  const isec = props.introSec ?? 1.7, isc = 2.2, tail = props.outroSec ?? 1.6;
   const total = its.reduce((a, it) => a + idur(it, isc), 0);
   return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS, width: W, height: H };
 };
@@ -201,7 +212,7 @@ export const PulseShort: React.FC<PulseProps> = (props) => {
     unit, maxScale, items = [], audio, music, sfx = true } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
 
-  const introSec = 1.7, itemSec = 2.2;
+  const introSec = (props as any).introSec ?? 1.7, itemSec = 2.2;
   const introF = Math.round(introSec * fps);
   const durs = items.map((it) => Math.round(idur(it, itemSec) * fps));
   const starts: number[] = []; let acc = introF;
