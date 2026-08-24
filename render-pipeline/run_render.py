@@ -1667,6 +1667,12 @@ def channel_mode(name):
         FB.update_channel_stats(OWNER, name)   # sổ thống kê 1-doc cho dashboard (số thật mọi kênh, 1 ghi)
         print("   " + FB.write_report())   # SỐ ĐO THẬT lượt ghi Firestore — khỏi ước lượng lần sau
         print("   " + FB.bao_ngan_sach())
+        FB.xa_ngan_sach_d1()          # cộng vào sổ ngân sách chung trên D1 (không tốn quota Firestore)
+        try:
+            import hot_db as _H
+            print("   " + _H.bao_cao())
+        except Exception:
+            pass
         try:
             _bc = DS.bao_cao_khau()        # máy dò "chết câm": khâu nào thử nhiều mà 0 lần được
             if _bc:

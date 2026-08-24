@@ -94,6 +94,21 @@ def bao_ngan_sach() -> str:
             f"GHI {g:,}/{TRAN_GHI_NGAY:,} ({g*100//TRAN_GHI_NGAY}%)")
 
 
+def xa_ngan_sach_d1() -> None:
+    """Cộng số đọc/ghi của tiến trình này vào sổ ngân sách CHUNG trên D1 (1 lệnh, cuối luồng).
+
+    Vì sao để trên D1 chứ không Firestore: sổ ngân sách bị đọc/ghi bởi CẢ 18 luồng + dashboard, tức
+    chính nó cũng là một nguồn tốn quota Firestore — lấy quota để đo quota thì vô lý."""
+    try:
+        import hot_db as _H
+        if not _H.bat_ghi():
+            return
+        ngay = datetime.now(timezone.utc).strftime("%Y%m%d")
+        _H.ngan_sach_cong(ngay, _NGAN_SACH["doc"], _NGAN_SACH["ghi"])
+    except Exception:
+        pass
+
+
 def _tinh_tien(loai: str, n: int = 1):
     _NGAN_SACH[loai] += max(0, int(n or 0))
     tran = TRAN_DOC_NGAY if loai == "doc" else TRAN_GHI_NGAY
@@ -1968,6 +1983,18 @@ def update_job(job_id: str, **patch):
     # (≈20 nhịp tim lỡ) là kết luận chết được, gate thoát nhanh hơn 12 lần.
     _cw("update_job")
     patch = dict(patch); patch["updated_at"] = _now()
+    # CHẾ ĐỘ BÓNG sang D1 (24/8): ghi thêm một bản sang kho nóng, ĐỌC vẫn từ Firestore. Mục đích là
+    # chạy vài ngày rồi ĐỐI CHIẾU số hai bên trước khi dám tin — không cắt mù. D1 hỏng thì hàm này
+    # nuốt lỗi, việc chính không hề hấn.
+    try:
+        import hot_db as _H
+        if _H.bat_ghi():
+            _H.ghi_job(_OWNER_HINT[0], job_id, _JOB_CH.get(job_id, ""),
+                       str(patch.get("type") or ""), str(st or ""), str(patch.get("step") or ""),
+                       patch.get("title"), patch.get("drive_id"),
+                       bool(patch.get("queued")), patch["updated_at"])
+    except Exception:
+        pass
     # đang chạy trên B2 -> vẫn để lại nhịp sống ở B cho dashboard nhìn thấy (xem ghi_nhip_song)
     if _B2["on"]:
         try:

@@ -1174,3 +1174,37 @@ nhưng **sai con số** ở hai chỗ, và cả hai đều nguy:
 
 **Luật:** công cụ sinh code tự động chỉ bảo đảm **đúng cú pháp**, không bảo đảm **đúng ngữ nghĩa**.
 Sổ ghi sai còn tệ hơn không có sổ — vì nó làm bức tường bật nhầm và tắt việc thật.
+
+### 7.at — Chuyển kho NÓNG sang Cloudflare D1 (24/8/2026, anh chốt "làm đi")
+
+**Con số, không nói chung chung:**
+| | ĐỌC/ngày | GHI/ngày | Dung lượng |
+|---|---|---|---|
+| Firestore free | 50.000 | 20.000 | 1 GB |
+| **Cloudflare D1 free** | **5.000.000** | **100.000** | **5 GB** |
+| Hơn | **100×** | **5×** | 5× |
+
+→ **ĐỌC hết lo** (đây là chỗ đang vỡ: B chạm >50.000). **GHI chỉ hơn 5×** — đo thật ~800 ghi/phiên ×
+20 phiên = 16.000/ngày, Firestore 20.000 là sát nút, D1 100.000 là thoải mái **nhưng không vô hạn**.
+
+**Nói rõ cái D1 KHÔNG giải quyết:** nó đếm **SỐ DÒNG ĐỌC**. Truy vấn không trúng index mà quét cả
+bảng vẫn tốn đúng bấy nhiêu dòng — y như Firestore đếm doc. Hết lo là nhờ 100× **cộng với** index
+đúng, chứ không phải cứ đổi kho là xong. Vì thế 3 index đã đánh sẵn theo đúng 3 truy vấn nóng.
+
+**Đã dựng xong:** DB `mm0-hot` (5 bảng) · Worker `/api/hot` · secret `HOT_KEY` · client `hot_db.py`.
+
+**Chống lặp lại sự cố B/B2 — bốn chốt:**
+1. **Một cửa duy nhất**: mọi lời gọi qua Worker với **danh sách lệnh CÓ TÊN**, KHÔNG nhận SQL tự do.
+   Đã thử: gửi `DROP TABLE render_job` → *"lệnh không có trong danh sách cho phép"*.
+2. **Một chủ ghi mỗi bảng**, ghi rõ ngay trong schema.
+3. **Chuyển DẦN**: mặc định chế độ **`shadow`** — ghi cả hai nơi, **ĐỌC vẫn từ Firestore**. Chạy vài
+   ngày, đối chiếu số hai bên rồi mới bật `HOT_MODE=on`. Không bao giờ tự nhảy sang `on`.
+4. **Hỏng thì lùi êm**: D1 lỗi → `hot_db` nuốt lỗi, hụt 20 lần thì **tự tắt cả phiên**, việc chính
+   chạy tiếp bằng Firestore.
+
+Đã thử thật: sai khoá → từ chối · SQL tự do → từ chối · ghi rồi đếm → đúng · **3 máy tranh 2 việc
+trong hàng chờ → A, B, rỗng — không trùng**.
+
+**Bẫy dính ngay lần gọi đầu:** thiếu `User-Agent` thì **Cloudflare chặn ở cổng với mã 1010**, trả
+**403 y hệt sai khoá** nên rất dễ chẩn nhầm. Đúng cái bẫy đã dính với DVIDS sáng nay.
+→ Luật: mọi client HTTP tự viết phải gửi `User-Agent`; và 403 **không** đương nhiên là lỗi xác thực.

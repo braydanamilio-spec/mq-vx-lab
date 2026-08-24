@@ -61,6 +61,7 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}   # D1 kho nóng — chế độ BÓNG (ghi thêm, đọc vẫn Firestore)
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: python render-pipeline/backup_vault.py || true
@@ -74,6 +75,7 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}   # D1 kho nóng — chế độ BÓNG (ghi thêm, đọc vẫn Firestore)
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           PILOT_CHANNEL: ${{ github.event.inputs.pilot_channel }}
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
@@ -132,6 +134,7 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}   # D1 kho nóng — chế độ BÓNG (ghi thêm, đọc vẫn Firestore)
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           PILOT_CHANNEL: ${{ github.event.inputs.pilot_channel }}
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
@@ -226,6 +229,7 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}   # D1 kho nóng — chế độ BÓNG (ghi thêm, đọc vẫn Firestore)
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           PILOT_CHANNEL: ${{ github.event.inputs.pilot_channel }}
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
