@@ -869,6 +869,12 @@ def t_cuu_mo_dau_khong_qua_mat_qc():
     # gốc ra khung 93,3% tối sau lớp phủ của Cinematic (gradient .74/.58/.88 + vignette .55) — tức
     # đo ảnh gốc là đo NHẦM VẬT, mọi kết luận sau đó đều sai.
     assert "_sau_man(" in src, "vẫn đo ảnh GỐC thay vì khung sau lớp phủ"
+    # MÔ HÌNH PHẢI CÓ BIÊN. `_sau_man` là mô hình lớp phủ, không phải bản render thật (thiếu Ken
+    # Burns, objectPosition 32%, bóng chữ hook…). Ca HAULUSA phiên 20:12Z: mô hình bảo "đạt", khung
+    # thật ra 80% tối rồi bị QC loại. Ép chặt hơn ngưỡng QC một khoảng.
+    assert "BIEN = " in src, "thiếu biên an toàn -> mô hình sát ngưỡng là sẽ trượt ở bản render thật"
+    m = re.search(r"BIEN = ([\d.]+)", src)
+    assert m and float(m.group(1)) >= 8, f"biên {m.group(1) if m else '?'} quá mỏng cho một mô hình"
     i = src.index("def sang_hoa_mo_dau")
     than = src[i: i + 4200]
     assert "_sau_man(os.path.join(base, f), man)" in than, "hàm cứu chưa đo qua lớp phủ"

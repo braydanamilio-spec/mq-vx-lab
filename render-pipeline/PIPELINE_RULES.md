@@ -1973,3 +1973,19 @@ lặp lại ở mọi video thì không ai buồn đọc — và nó sống sót
 hạn mức là mất luôn đường resume. `hot_db.ghi_job` chưa chép `script` sang D1. Chép sang thì resume
 chạy được cả khi Firestore cạn — nhưng phải đổi bảng D1 + deploy lại Worker, tức đụng hạ tầng đang
 chạy, nên em dừng ở đây chờ anh.
+
+### 7.cq — Mô hình lớp phủ đo hụt: HAULUSA vẫn bị loại dù đã "cứu" (24/8/2026 tối)
+Phiên 20:12Z chạy bản vá 7.ck/7.cl. Kết quả tốt — `🪟 nới lớp phủ cho 8-13 cảnh` xuất hiện ở MỌI lane
+(xác nhận lớp phủ đang dìm gần như toàn bộ cảnh, không riêng khung đầu). Nhưng HAULUSA vẫn có
+`❌ mở đầu NỀN TRƠN (tối 80.0%)` **mà không có dòng cứu nào** — tức `sang_hoa_mo_dau` chấm "đạt" trong
+khi khung thật 80% tối.
+Hai chỗ sai, đều thuộc loại "tin mô hình quá mức":
+* **Vignette mô phỏng quá nhẹ.** Thật là `inset 0 0 340px 120px rgba(0,0,0,.55)` trên khung rộng 1080:
+  120px lan + 340px nhoè ⇒ vệt tối ăn vào tới ~40% nửa bề ngang, không phải chỉ mép. Bản đầu lấy mốc
+  0.45 nên hụt. Sửa lại mốc 0.22 + đường cong mũ 1.4. Sau khi sửa, một ảnh **0,0% tối** ở dạng gốc đo
+  ra **70-78% tối** sau lớp phủ — khớp hẳn với những con số QC vẫn báo.
+* **Không có biên.** `_sau_man` là MÔ HÌNH, thiếu Ken Burns, `objectPosition: center 32%`, bóng chữ
+  hook. Nay ép chặt hơn ngưỡng QC 13 điểm (`BIEN = 13`).
+Chốt trong `t_cuu_mo_dau_khong_qua_mat_qc` (bắt buộc có `BIEN` ≥ 8).
+**LUẬT: khi thay một phép đo thật bằng một mô hình, phải để BIÊN — và phải có ca thật đối chiếu.
+Mô hình khớp "vừa đủ" nghĩa là nó sẽ trượt ở ca kế tiếp.**

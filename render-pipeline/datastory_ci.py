@@ -2540,7 +2540,11 @@ def _sau_man(path: str, man: float = 1.0):
                 r, g, b = px[x, y]
                 # vignette: đậm dần về mép (xấp xỉ inset shadow 340px/120px)
                 dx = abs(x - W / 2) / (W / 2); dy = abs(y - H / 2) / (H / 2)
-                v = min(1.0, max(0.0, (max(dx, dy) - 0.45) / 0.55)) * 0.55 * man
+                # vignette THẬT: `inset 0 0 340px 120px rgba(0,0,0,.55)` trên khung 1080 rộng —
+                # 120px lan + 340px nhoè, tức vệt tối ăn vào tới ~40% nửa bề ngang, KHÔNG phải chỉ
+                # mép ngoài. Bản đầu lấy mốc 0.45 nên đo hụt: HAULUSA render ra 80% tối mà bản mô
+                # phỏng vẫn cho "đạt" -> không cứu, video bị QC loại.
+                v = min(1.0, max(0.0, (max(dx, dy) - 0.22) / 0.78)) ** 1.4 * 0.55 * man
                 k = 1 - min(0.97, a + v)
                 px[x, y] = (int(r * k + 3 * (1 - k)), int(g * k + 6 * (1 - k)),
                             int(b * k + 16 * (1 - k)))
@@ -2603,6 +2607,11 @@ def sang_hoa_mo_dau(props: dict, dark_ok: bool = False) -> str:
         return ""
     base = os.path.join(PUB, props.get("slug", ""), "clips")
 
+    # BIÊN AN TOÀN: `_sau_man` là MÔ HÌNH của lớp phủ, không phải bản render thật (thiếu Ken Burns,
+    # objectPosition 32%, bóng chữ hook…). Ca HAULUSA phiên 20:12Z chứng minh: mô hình bảo "đạt",
+    # khung thật ra 80% tối rồi bị loại. Mô hình thì phải có biên — ép chặt hơn QC 13 điểm.
+    BIEN = 13.0
+
     def _tron(f, man=1.0):
         """Đo ĐÚNG THỨ QC SẼ ĐO: ảnh SAU khi đã bị lớp phủ của Cinematic dìm xuống.
 
@@ -2613,7 +2622,8 @@ def sang_hoa_mo_dau(props: dict, dark_ok: bool = False) -> str:
         if not f:
             return True, (100.0, 0.0, 0)
         d, sa, c = _sau_man(os.path.join(base, f), man)
-        return ((d >= 88 and c < 450) if dark_ok else (d >= 75 and c < 900)), (d, sa, c)
+        tran = (88.0 if dark_ok else 75.0) - BIEN
+        return ((d >= tran and c < (450 if dark_ok else 900))), (d, sa, c)
 
     f0 = scenes[0].get("clip")
     if not f0:
