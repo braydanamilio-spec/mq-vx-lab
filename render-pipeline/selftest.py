@@ -101,6 +101,26 @@ def t_het_key_thi_doi_key():
     print("  ✅ key cạn quota -> đổi key (không giết luồng)")
 
 
+def t_groq_tpd_la_daily():
+    """24/8: Groq cạn TOKEN/ngày (TPD) trong khi vẫn còn LƯỢT -> phải nhận nhãn 'daily' (phạt 8h),
+    không được nhận 'per minute' (phạt 1.1') — chính lỗi làm POWERPLAY ra 0 video 3 phiên liền."""
+    import content_brain as CB
+
+    def fake(req, timeout=0):
+        body = b'{"error":{"message":"Rate limit reached ... on tokens per day (TPD): Limit 200000"}}'
+        raise urllib.error.HTTPError(req.full_url, 429, "x",
+                                     {"x-ratelimit-remaining-requests": "500"}, io.BytesIO(body))
+
+    urllib.request.urlopen = fake
+    m = CB._genai("gsk_selftest").GenerativeModel("f")
+    try:
+        m.generate_content("hi")
+        raise AssertionError("phải ném RateLimited")
+    except CB.RateLimited as e:
+        assert "daily" in str(e), str(e)[:80]
+    print("  ✅ cạn token/ngày -> nhãn daily (phạt 8h, không dội lại key chết)")
+
+
 def t_groq_model_selfprobe():
     """Groq gỡ model (llama-3.3 đã xảy ra thật) -> shim tự dò model sống từ /models."""
     import content_brain as CB
@@ -331,6 +351,7 @@ def main():
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
     check("groq WAF 1010 -> lỗi tạm per-minute", t_groq_waf_1010)
     check("key cạn quota -> đổi key, không giết luồng", t_het_key_thi_doi_key)
+    check("cạn token/ngày -> nhãn daily", t_groq_tpd_la_daily)
     check("groq model bị gỡ -> tự dò model sống", t_groq_model_selfprobe)
     check("key_order viết: groq -> cf -> gemini", t_key_order)
     check("pool vẽ cf-trước / vision gemini-trước", t_ai_pool_split)

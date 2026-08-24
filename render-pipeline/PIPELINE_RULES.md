@@ -478,3 +478,12 @@ Mọi vòng xoay tài nguyên phải có lưới "lỗi lạ mang dấu hiệu q
 1 vòng HTTP + 1.5s chờ. Nay 3 mức: phút → 1.1' · NGÀY → 8 giờ · mơ hồ → 20'. Áp cho cả 8 hàm viết.
 → **LUẬT**: thời gian phạt phải khớp CHU KỲ HỒI của hạn mức (phút/ngày), phạt sai chu kỳ thì vòng xoay
 biến thành vòng dội.
+
+### BUG 24/8 — PHÂN LOẠI SAI: cạn TOKEN/ngày bị gán nhãn "per minute" (POWERPLAY 0 video 3 phiên liền)
+Groq có 2 loại hạn mức: SỐ LƯỢT (requests) và SỐ TOKEN (TPD). Code phân loại bằng header
+`x-ratelimit-remaining-requests`: token cạn nhưng lượt vẫn còn -> `left>0` -> gán "per minute" ->
+phạt 1.1' -> hết 1.1' cả 18 luồng lại dội đúng những key đã chết, không bao giờ tới CF/Gemini.
+Triệu chứng: lane in `⏳ vòng 1/2/3 hết quota tạm → chờ 40s/80s/120s` rồi `TỔNG 0 video`.
+Fix: đọc THẲNG nội dung lỗi ("tokens per day"/"TPD"/"per day") -> nhãn `daily` -> phạt 8h. Có test.
+→ **LUẬT**: phân loại hạn mức phải dựa trên NỘI DUNG lỗi của nhà cung cấp, không dựa trên một header
+đo đại lượng KHÁC. Sai một chữ ở đây là cả dây chuyền ra 0 video mà log vẫn báo "0 lỗi".

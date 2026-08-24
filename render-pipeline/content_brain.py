@@ -276,7 +276,13 @@ class _GroqShim:
                     left = int(e.headers.get("x-ratelimit-remaining-requests") or 0)
                 except Exception:
                     left = 0
-                kind = "per minute" if left > 0 else "daily"
+                # 24/8 — SỬA PHÂN LOẠI SAI: header `remaining-requests` là hạn mức SỐ LƯỢT, còn TPD là
+                # hạn mức SỐ TOKEN. Cạn token/ngày mà lượt vẫn còn -> left>0 -> dán nhãn "per minute"
+                # -> phạt 1.1' -> cả 18 luồng quay lại dội đúng key đã chết, không bao giờ tới CF/Gemini.
+                # POWERPLAY ra 0 video 3 phiên liền vì đúng chỗ này. Nay đọc THẲNG nội dung lỗi.
+                _d = str(detail).lower()
+                kind = "daily" if ("per day" in _d or "tpd" in _d or "tokens per day" in _d) else \
+                       ("per minute" if left > 0 else "daily")
                 raise RateLimited(f"429 rate limit {kind} (groq): {detail}")
             raise RuntimeError(f"groq HTTP {e.code}: {detail}")
         txt = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
