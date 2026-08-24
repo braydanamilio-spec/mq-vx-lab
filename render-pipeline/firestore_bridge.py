@@ -1497,6 +1497,13 @@ def update_job(job_id: str, **patch):
     # (≈20 nhịp tim lỡ) là kết luận chết được, gate thoát nhanh hơn 12 lần.
     _cw("update_job")
     patch = dict(patch); patch["updated_at"] = _now()
+    # 24/8 — ĐÓNG CỜ `queued` NGAY LÚC XONG. Vì sao: auto_enqueue (publish, 30'/lượt) trước đây phải
+    # quét 40 doc 'done' MỚI NHẤT của TỪNG kênh để tìm video chưa xếp lịch: 55 kênh × 40 × 48 lượt/ngày
+    # ≈ 105.000 lượt đọc project B — MỘT MÌNH nó vượt trần 50K/ngày. Có cờ này thì auto_enqueue truy
+    # thẳng `queued == False` (một truy vấn, chỉ trả về video THẬT SỰ mới) thay vì quét mù.
+    # Chỉ đặt khi job VỪA sang 'done' và patch chưa nói gì về queued -> không bao giờ ghi đè True.
+    if st == "done" and "queued" not in patch:
+        patch["queued"] = False
     _soft(lambda: _db_jobs().collection("render_jobs").document(job_id).set(patch, merge=True), "update_job")
     # NHỊP TIM THẬT: bật/tắt theo trạng thái vừa ghi (xem _beat_loop bên dưới).
     _beat_set(None if st in ("done", "failed", "ratelimited") else job_id)

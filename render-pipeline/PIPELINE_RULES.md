@@ -630,3 +630,39 @@ Thứ tự nguồn clip hiện tại: Pexels → Pixabay → NARA → DVIDS → 
 
 **Luật:** thêm nguồn key mới thì phải làm ĐỦ 3 chỗ — nhận diện khi dán, nhánh kiểm sống/chết,
 và pipeline đọc. Thiếu nhánh kiểm thì bộ kiểm sẽ đánh chết key tốt.
+
+### 7.y — Vỡ trần Firestore: publish chết 11/12 lượt vì đọc lặp (24/8/2026)
+
+**Triệu chứng đo được:** `publish` thoát ngay ở lệnh đọc ĐẦU TIÊN với `429 Quota exceeded`,
+11/12 lượt cron gần nhất → **video render ra nhưng không cái nào được đăng**. Log chỉ nói
+"hết hạn mức", không nói project nào.
+
+**Ba nguồn rò, tính theo số lượt cron thật trong 24h (publish 36 · social 33 · thumbnail 37 ·
+guardian 20 · stats 4 ≈ 130 lượt):**
+
+1. **Project B — auto_enqueue quét mù.** Mỗi lượt quét 40 doc `done` mới nhất của TỪNG kênh:
+   55 kênh × 40 × 48 lượt/ngày ≈ **105.000 lượt đọc** — một mình gấp đôi trần 50K. Mà 39/40 doc
+   quét được đều đã xếp lịch từ lâu.
+   → Vá: `update_job` đóng `queued=False` ngay khi job sang `done`; auto_enqueue truy vấn
+   `status==done AND queued==False` (toàn bằng-nhau ⇒ không cần composite index), trả về đúng
+   video mới. Lối quét cũ giữ làm **quét vét 6h/lần** cho doc tạo trước ngày có cờ.
+   *105.000 → ~2.500 lượt/ngày.*
+
+2. **Project A — đọc lại bảng `connections` hàng trăm lần.** `list_connections` bị gọi 2-3 lần
+   mỗi lượt cron (main.py 451/452, publish_social 55/59/122, storage.py 195), mỗi lần quét lại
+   cả bảng (~55 youtube / ~73 drive); `get_connection` còn gọi RIÊNG cho từng kênh trong vòng lặp
+   55 kênh. ≈ 250-300 lượt đọc A cho MỘT lượt cron.
+   → Vá: đệm theo tiến trình (`_CONN_CACHE`), quét 1 lần/loại; `get_connection` lấy từ đệm đó.
+   Token chỉ đổi khi người dùng bấm kết nối/ngắt nên đệm không sai lệch. *~300 → ~128 lượt/lượt cron.*
+
+3. **Không ai biết cạn ở đâu.** → `chan_doan_429()`: dính 429 thì thăm dò 1 doc ở mỗi project và
+   in rõ A/B/C project nào cạn. 3 lượt đọc thêm, chỉ khi đã hỏng.
+
+**Cơ chế chống tái phát — `src/quota_guard.py`:** sổ đọc/ghi theo NGÀY-GOOGLE (UTC-7, khớp mốc
+reset) cho từng project, cộng bằng `Increment` (1 đọc + 1 ghi/tiến trình = 0,26% trần).
+`du_suc(project, n)` là **PHANH**: việc PHỤ (quét vét, thống kê, dựng lại thumbnail) bị chặn từ
+ngưỡng **75%**, việc THIẾT YẾU (đăng video) chạy tới sát trần.
+
+**Luật:** mọi vòng lặp `for kênh in ...` có truy vấn Firestore bên trong đều là bom hẹn giờ —
+số kênh tăng thì lượt đọc tăng theo cấp số. Thấy khuôn đó thì phải đổi sang **một truy vấn có cờ**,
+và việc nào không phải "đăng video" thì phải hỏi `quota_guard.du_suc()` trước khi chạy.
