@@ -1370,3 +1370,27 @@ Có test `t_gop_ghi_d1` chốt cả ba điều kiện: gộp có ăn · done/fai
 
 **Luật:** khi thêm một lớp trung gian (Worker), trần MỚI của hệ là trần chật nhất trong chuỗi —
 không phải trần của kho dữ liệu phía sau. Đo cả chuỗi trước khi ăn mừng "100× hạn mức".
+
+### 7.bb — Đã fix được bao nhiêu, và cái gì VẪN phải đợi reset (24/8/2026)
+
+**Đo trạng thái thật lúc 15:09Z** (log publish, nhờ `chan_doan_429` mới):
+`⛔ Project A cạn hạn mức — ngừng thử lại 30 phút. Project khác KHÔNG bị ảnh hưởng.` ·
+`⚠️ A cạn — bỏ qua settings/overrides, chạy bằng mặc định.` · `gương connections ở B cũng 429`.
+→ **A và B đều đang cạn.** Hai bản vá đêm nay hoạt động đúng như thiết kế (đệm âm không lây sang
+project khác; thiếu doc cấu hình vẫn chạy tiếp), nhưng **chúng không hoàn lại được hạn mức đã tiêu**.
+
+**Đã thoát khỏi Firestore (chạy được ngay cả khi A/B cạn):**
+đếm video · trạng thái job · sổ ngân sách · hàng chờ kênh *(D1)* · danh sách kho Drive + soi/dọn rác
+*(Worker + KV)*.
+
+**CÒN phụ thuộc — và đây là lý do publish vẫn nằm im:**
+**token YouTube chỉ có ở project A.** Drive đã có bản sao trong KV từ 23/8, **YouTube thì chưa ai làm**
+— nên A cạn là khâu đăng bài chết cứng cho tới lúc reset, dù render vẫn chạy và video vẫn lên kho đều.
+→ Vá: `ytCtx` nay ghi/đọc bản sao KV y như `driveCtx`. **Có hiệu lực từ lần kết nối kế tiếp** (KV được
+nạp khi đọc Firestore THÀNH CÔNG), tức từ sau mốc reset. Hôm nay vẫn phải đợi.
+
+**Trả lời thẳng: CHƯA fix 100%.** Các nguồn lãng phí đã bịt (sẽ thấy hiệu quả trên hạn mức MỚI),
+nhưng hạn mức HÔM NAY đã tiêu rồi — không có cách nào hoàn lại. Publish chạy lại khi A reset.
+
+**Luật:** phân biệt "đã bịt chỗ rò" với "đã đầy lại bình". Bịt rò không hoàn lại phần đã mất; báo cáo
+gộp hai thứ đó làm một là báo cáo sai.
