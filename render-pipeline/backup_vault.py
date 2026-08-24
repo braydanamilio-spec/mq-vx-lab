@@ -128,10 +128,23 @@ def main() -> int:
         return 1
 
     du_lieu = _doc_firestore()
+    _n_key = len(du_lieu.get("gemini_keys", []) or [])
+    _n_kenh = len(du_lieu.get("render_channels", []) or [])
+    if _n_key == 0 and _n_kenh == 0:
+        # 24/8 tối — SUÝT MẤT SẠCH KHO SAO LƯU. Log phiên 21:52Z: `📦 Gói sao lưu: 0 key · 0 kênh`.
+        # Cất gói RỖNG đó lên kho thì nó thành bản MỚI NHẤT, và mấy dòng dưới đây sẽ **bỏ các bản cũ
+        # vào thùng rác** để giữ đúng GIU_LAI bản. Sao lưu chạy mỗi phiên (~30-40'), nên chỉ vài giờ
+        # là mọi bản sao lưu THẬT bị đẩy ra rìa rồi xoá — đúng thứ cái vault này sinh ra để chống.
+        # Nguyên nhân gói rỗng: A và B đều cạn hạn mức nên `_doc_firestore()` đọc được 0 bản ghi.
+        # Đọc không ra dữ liệu KHÔNG PHẢI là "dữ liệu rỗng" (luật 7.bm/7.cg) — càng không phải lý do
+        # để ghi đè bản tốt.
+        print("🛑 KHÔNG CẤT: gói sao lưu rỗng (0 key · 0 kênh) — gần như chắc chắn do Firestore đang "
+              "cạn hạn mức, không phải do kho thật sự trống. Cất gói rỗng sẽ ĐẨY CÁC BẢN TỐT RA "
+              "RÌA rồi xoá. Giữ nguyên bản cũ, thử lại phiên sau.")
+        return 1
     goi = ma_hoa(du_lieu, mk)
     ten = "vault-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M") + ".enc"
-    print(f"📦 Gói sao lưu: {len(du_lieu.get('gemini_keys', []))} key · "
-          f"{len(du_lieu.get('render_channels', []))} kênh · {len(goi)/1024:.1f}KB (đã mã hoá)")
+    print(f"📦 Gói sao lưu: {_n_key} key · {_n_kenh} kênh · {len(goi)/1024:.1f}KB (đã mã hoá)")
 
     import tempfile
     tmp = os.path.join(tempfile.gettempdir(), ten)

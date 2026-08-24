@@ -2015,3 +2015,25 @@ Chốt bằng `t_suc_dang_phan_biet_chua_biet_voi_het_luot` (3 ca: trống / h�
 
 **Việc để lại cho sáng:** bảng `yt_project` trên D1 chưa có dự án nào ⇒ khâu chọn dự án YouTube theo
 hạn mức chưa có dữ liệu để làm việc. Cần anh khai báo (mỗi kênh 1 dự án Google riêng, 6 video/ngày).
+
+### 7.ct — SUÝT MẤT SẠCH KHO SAO LƯU: gói rỗng được cất đè lên bản tốt (24/8/2026 tối) ⚠️
+Vá xong 7.cc + 7.co thì bước sao lưu chạy được — và ngay lượt đầu tiên nó làm đúng thứ nguy hiểm nhất.
+Log phiên 21:52Z:
+```
+📦 Gói sao lưu: 0 key · 0 kênh · 0.3KB (đã mã hoá)
+✅ đã cất ở kho ADISONDURHAM / AHSHABRIAUNA / AIZAMAHIYAH
+```
+Gói **rỗng** đó thành bản MỚI NHẤT; ngay dưới lệnh cất, code giữ `GIU_LAI = 7` bản gần nhất và **bỏ
+phần còn lại vào thùng rác**. Sao lưu chạy mỗi phiên (~30-40 phút) ⇒ **chỉ vài giờ là mọi bản sao lưu
+THẬT bị đẩy ra rìa rồi xoá** — đúng thứ cái vault này sinh ra để chống. Đã cất 1 bản rỗng trước khi vá;
+với GIU_LAI=7 thì chưa mất gì, nhưng đó là may.
+Gói rỗng vì A và B đều cạn hạn mức ⇒ `_doc_firestore()` đọc được 0 bản ghi. **Đọc không ra dữ liệu
+không phải là "dữ liệu rỗng"** (7.bm/7.cg) — càng không phải lý do để ghi đè bản tốt.
+Nay: 0 key **và** 0 kênh ⇒ in `🛑 KHÔNG CẤT` rồi thoát, giữ nguyên bản cũ. Chốt bằng
+`t_khong_cat_goi_sao_luu_rong` (kiểm cả việc chặn nằm TRƯỚC bước đóng gói/cất).
+**LUẬT: bật một tính năng đã chết lâu ngày thì phải soi kỹ LƯỢT CHẠY ĐẦU TIÊN của nó — nó chạy trong
+một thế giới khác với lúc được viết ra.**
+
+**Cũng thấy trong log:** `⚠️ kho ADISONDURHAM hụt: invalid_grant` rồi ngay sau đó `✅ đã cất ở kho
+ADISONDURHAM` — tức đang có HAI bản ghi cùng tên, một cái token chết. Đây là việc chờ anh bấm
+`wipe_queue.yml -f fix_dup=true`.

@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("KHÔNG cất gói sao lưu rỗng đè bản tốt", t_khong_cat_goi_sao_luu_rong)
     check("sức đăng: 'chưa biết' ≠ 'hết lượt'", t_suc_dang_phan_biet_chua_biet_voi_het_luot)
     check("phản áp lực không chạy được thì phải NÓI RA", t_phan_ap_luc_khong_im_lang)
     check("khâu đăng không dội vào chỗ đã biết là chết", t_publish_khong_doi_vao_cho_da_chet)
@@ -1008,6 +1009,25 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_khong_cat_goi_sao_luu_rong():
+    """Gói sao lưu RỖNG không được cất đè lên bản tốt (24/8 tối — suýt mất sạch kho sao lưu).
+    Log phiên 21:52Z: `📦 Gói sao lưu: 0 key · 0 kênh · 0.3KB` rồi `✅ đã cất ở kho` ×3. Gói rỗng đó
+    thành bản MỚI NHẤT, mà code giữ đúng `GIU_LAI=7` bản gần nhất và **bỏ phần còn lại vào thùng
+    rác**. Sao lưu chạy mỗi phiên (~30-40') ⇒ chỉ vài giờ là mọi bản THẬT bị đẩy ra rìa rồi xoá.
+    Gói rỗng vì A và B đều cạn hạn mức — đọc không ra dữ liệu KHÔNG phải là "dữ liệu rỗng"."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "backup_vault.py"), encoding="utf-8").read()
+    i = src.index("du_lieu = _doc_firestore()")
+    j = src.index("upload_file", i)
+    khoi = src[i:j]
+    assert "_n_key == 0 and _n_kenh == 0" in khoi, "chưa chặn gói sao lưu rỗng"
+    assert "KHÔNG CẤT" in khoi and "return 1" in khoi, \
+        "phát hiện gói rỗng mà vẫn đi tiếp tới bước cất -> vẫn đẩy bản tốt ra rìa"
+    # chặn phải nằm TRƯỚC mọi lệnh đụng kho
+    assert khoi.index("_n_key == 0") < khoi.index("ma_hoa("), \
+        "kiểm tra rỗng phải làm trước khi đóng gói/cất"
 
 
 def t_suc_dang_phan_biet_chua_biet_voi_het_luot():
