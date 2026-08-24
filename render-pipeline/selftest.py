@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
     check("phản áp lực không chạy được thì phải NÓI RA", t_phan_ap_luc_khong_im_lang)
     check("khâu đăng không dội vào chỗ đã biết là chết", t_publish_khong_doi_vao_cho_da_chet)
@@ -802,6 +803,62 @@ def t_so_hong_phai_het_len():
     i = r.index("FB.get_script_by_drive(")          # LỜI GỌI THẬT, không phải dòng chú thích
     assert "except FB.DocLoi" in r[i: i + 700], \
         "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
+
+
+def t_cuu_mo_dau_khong_qua_mat_qc():
+    """Cứu khung mở đầu TRƯỚC render, nhưng không được qua mặt thước đo (24/8 tối).
+    `❌ mở đầu NỀN TRƠN` lặp qua nhiều phiên (7 ca ở 16:06Z, 2 ca ở 17:56Z) — mỗi ca mất TRẮNG một
+    lượt viết AI + một lượt render, mà lỗi chỉ nằm ở độ sáng một tấm ảnh.
+    Bẫy bắt được lúc chạy thử: tăng sáng ×2.1 kéo một tấm gần đen xuống "2% tối" và LỌT QC, nhưng
+    thứ ra màn hình là mảng XÁM PHẲNG. Nên chỉ tăng sáng khi đó là ẢNH THẬT chụp tối (bão hoà ≥20;
+    đo thật: nền trơn sat 14,2 · ảnh thật tối sat 31,1)."""
+    import random, hashlib
+    try:
+        from PIL import Image
+    except ImportError:
+        return
+    import datastory_ci as DS
+    base = os.path.join(DS.PUB, "_selftest_mo_dau", "clips")
+    os.makedirs(base, exist_ok=True)
+    try:
+        def _phang(ten):
+            random.seed(7)
+            im = Image.new("RGB", (320, 180), (12, 12, 16)); px = im.load()
+            for _ in range(200):
+                px[random.randrange(320), random.randrange(180)] = (30, 30, 34)
+            im.save(os.path.join(base, ten), quality=92)
+
+        def _sang(ten):
+            random.seed(11)
+            im = Image.new("RGB", (320, 180)); px = im.load()
+            for y in range(180):
+                for x in range(320):
+                    px[x, y] = (random.randrange(120, 240), random.randrange(110, 230),
+                                random.randrange(90, 210))
+            im.save(os.path.join(base, ten), quality=92)
+
+        _phang("phang.jpg"); _sang("sang.jpg")
+        h0 = hashlib.md5(open(os.path.join(base, "phang.jpg"), "rb").read()).hexdigest()
+        pr = {"slug": "_selftest_mo_dau",
+              "scenes": [{"clip": "phang.jpg"}, {"clip": "sang.jpg"}]}
+        assert DS.sang_hoa_mo_dau(pr) == "", "không mượn được ảnh sáng của cảnh khác"
+        assert pr["scenes"][0]["clip"] == "sang.jpg", "mở đầu vẫn là nền phẳng"
+        h1 = hashlib.md5(open(os.path.join(base, "phang.jpg"), "rb").read()).hexdigest()
+        assert h0 == h1, "NỀN PHẲNG bị tăng sáng -> qua mặt QC bằng một mảng xám"
+        _phang("phang.jpg"); _phang("phang2.jpg")
+        r = DS.sang_hoa_mo_dau({"slug": "_selftest_mo_dau",
+                                "scenes": [{"clip": "phang.jpg"}, {"clip": "phang2.jpg"}]})
+        assert r, "toàn nền phẳng mà vẫn cho render"
+        hs = hashlib.md5(open(os.path.join(base, "sang.jpg"), "rb").read()).hexdigest()
+        assert DS.sang_hoa_mo_dau({"slug": "_selftest_mo_dau", "scenes": [{"clip": "sang.jpg"}]}) == ""
+        assert hs == hashlib.md5(open(os.path.join(base, "sang.jpg"), "rb").read()).hexdigest(), \
+            "ảnh đã đạt mà vẫn bị ghi đè"
+    finally:
+        import shutil
+        shutil.rmtree(os.path.join(DS.PUB, "_selftest_mo_dau"), ignore_errors=True)
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "datastory_ci.py"), encoding="utf-8").read()
+    assert src.count("sang_hoa_mo_dau(") >= 4, "chưa gắn đủ 3 đường Cinematic (doc · short · long)"
 
 
 def t_lay_viec_ke_o_dung_duong_vao():

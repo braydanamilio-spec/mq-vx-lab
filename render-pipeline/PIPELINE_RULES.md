@@ -1866,3 +1866,20 @@ Chốt bằng `t_lay_viec_ke_o_dung_duong_vao`.
 **LUẬT: thêm tính năng vào một hàm thì phải kiểm nó có nằm trên ĐƯỜNG CHẠY THẬT không.** Cách kiểm rẻ
 nhất: tìm dòng log đặc trưng của tính năng trong log phiên thật — không thấy dòng nào tức là chưa chạy,
 đừng cho rằng "chắc nó chạy rồi". (Cùng họ 7.br: vá đúng bệnh nhưng sai file.)
+
+### 7.cj — `❌ mở đầu NỀN TRƠN` lặp qua nhiều phiên: chữa SAU render là quá muộn (24/8/2026 tối)
+7 ca ở phiên 16:06Z, 2 ca ở 17:56Z — mỗi ca mất TRẮNG một lượt viết AI + một lượt render (~2-4' CPU),
+mà nguyên nhân chỉ là ĐỘ SÁNG của một tấm ảnh. `opening_is_flat()` soi video ĐÃ DỰNG nên phát hiện
+đúng nhưng luôn muộn. Nay `sang_hoa_mo_dau()` chạy NGAY TRƯỚC lệnh render (cả 3 đường Cinematic:
+`make_doc` · `render_short_from_props` · `make_doc_long`), dùng ĐÚNG thước đo mà QC sẽ dùng, chữa theo
+bậc: ① tăng sáng + tương phản ảnh cảnh 0 → ② mượn ảnh sáng nhất của cảnh khác → ③ trả lý do để dừng
+trước render.
+
+**Bẫy bắt được lúc chạy thử, suýt biến bản vá thành gian lận:** tăng sáng ×2.1 kéo một tấm gần đen
+(#0c0c10) xuống "2% tối" và **LỌT QC**, nhưng thứ ra màn hình là một mảng XÁM PHẲNG — qua mặt thước
+đo chứ không làm video tốt hơn. Thước phân biệt là **ĐỘ BÃO HOÀ** (đo thật ghi ngay trong file này:
+nền trơn sat 14,2 · ảnh thật chụp tối sat 31,1) ⇒ chỉ tăng sáng khi `sat ≥ 20`; dưới ngưỡng là nền
+phẳng, đi thẳng sang bậc ②. Chốt bằng `t_cuu_mo_dau_khong_qua_mat_qc` (có ca kiểm file nền phẳng
+KHÔNG bị ghi đè).
+**LUẬT: khi tự động "chữa" một thứ mà QC đang chấm, phải chứng minh mình chữa CÁI THẬT chứ không chữa
+CON SỐ. Test phải có một ca mà bản vá tham lam sẽ trượt.**

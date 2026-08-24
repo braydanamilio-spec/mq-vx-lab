@@ -2519,6 +2519,81 @@ def prune_ghost_clips(props: dict):
     return props
 
 
+def sang_hoa_mo_dau(props: dict, dark_ok: bool = False) -> str:
+    """CỨU KHUNG MỞ ĐẦU TRƯỚC KHI RENDER, thay vì để QC loại sau khi đã tốn công (24/8/2026 tối).
+
+    `❌ mở đầu NỀN TRƠN (tối 77-88%) — loại` lặp lại qua nhiều phiên: 7 ca ở phiên 16:06Z, 2 ca ở
+    17:56Z. Mỗi ca mất TRẮNG một lượt viết AI + một lượt render (~2-4 phút CPU) — mà lỗi chỉ nằm ở
+    ĐỘ SÁNG của một tấm ảnh. Phát hiện sau khi dựng xong là quá muộn.
+    Ở đây soi ảnh cảnh 0 bằng ĐÚNG thước đo mà QC sẽ dùng (`flat_bg_metrics`), NGAY TRƯỚC lệnh
+    render, rồi chữa theo bậc:
+      1. Ảnh hơi tối  -> tăng sáng + tương phản bằng PIL (ghi đè chính file đó). Đây không phải mẹo
+         qua mặt QC: mở đầu tối thui thì người xem lướt qua thật, làm sáng lên là video TỐT HƠN.
+      2. Vẫn không đạt -> mượn ảnh SÁNG NHẤT của cảnh khác cho cảnh 0 (đổi ảnh, giữ nguyên lời).
+      3. Vẫn không đạt -> trả lý do để người gọi dừng sớm, đỡ tốn lượt render.
+    Trả "" nếu ổn, hoặc chuỗi lý do nếu không cứu được."""
+    scenes = props.get("scenes") or []
+    if not scenes:
+        return ""
+    base = os.path.join(PUB, props.get("slug", ""), "clips")
+
+    def _do(f):
+        return flat_bg_metrics(os.path.join(base, f))
+
+    def _tron(f):
+        if not f:
+            return True, (100.0, 0.0, 0)
+        d, sa, c = _do(f)
+        return ((d >= 88 and c < 450) if dark_ok else (d >= 75 and c < 900)), (d, sa, c)
+
+    f0 = scenes[0].get("clip")
+    if not f0:
+        return "cảnh mở đầu KHÔNG có ảnh"
+    xau, (d, sa, c) = _tron(f0)
+    if not xau:
+        return ""
+    print(f"   🔦 mở đầu hơi trơn trước render (tối {d:.0f}% · {c} màu · sat {sa:.0f}) — thử cứu…")
+    # BẬC 1: tăng sáng — CHỈ khi đây là ẢNH THẬT bị chụp tối, KHÔNG phải nền phẳng.
+    # Chạy thử bắt được bẫy: tăng sáng ×2.1 kéo một tấm gần đen (#0c0c10) xuống "2% tối" và LỌT QC,
+    # nhưng thứ ra màn hình là một mảng XÁM PHẲNG — tức qua mặt thước đo chứ không làm video tốt hơn.
+    # Thước phân biệt là ĐỘ BÃO HOÀ: đo thật ở chính file này ghi nền trơn sat 14,2 · ảnh thật tối
+    # sat 31,1. Lấy 20 làm ranh giới. Dưới ngưỡng thì bỏ qua bậc 1, đi thẳng sang mượn ảnh khác.
+    if sa < 20:
+        print(f"   ⏭ sat {sa:.0f} < 20 -> đây là NỀN PHẲNG chứ không phải ảnh tối; "
+              f"tăng sáng chỉ ra mảng xám, bỏ qua.")
+    else:
+      try:
+          from PIL import Image, ImageEnhance
+          fp = os.path.join(base, f0)
+          for muc in (1.35, 1.7, 2.1):
+              im = Image.open(fp).convert("RGB")
+              im = ImageEnhance.Brightness(im).enhance(muc)
+              im = ImageEnhance.Contrast(im).enhance(1.12)
+              im.save(fp, quality=90)
+              xau, (d, sa, c) = _tron(f0)
+              if not xau:
+                  print(f"   ✅ mở đầu: tăng sáng ×{muc} -> tối {d:.0f}% · {c} màu (đạt)")
+                  return ""
+      except Exception as e:
+          print(f"   ⚠️ tăng sáng hụt ({str(e)[:50]})")
+    # bậc 2: mượn ảnh sáng nhất của cảnh khác
+    ung = []
+    for sc in scenes[1:]:
+        f = sc.get("clip")
+        if not f:
+            continue
+        _x, (dd, _s, cc) = _tron(f)
+        if not _x:
+            ung.append((dd, f))
+    if ung:
+        ung.sort()
+        scenes[0]["clip"] = ung[0][1]
+        scenes[0].pop("clips", None)
+        print(f"   🔁 mở đầu: mượn ảnh sáng nhất của cảnh khác ({ung[0][1]}, tối {ung[0][0]:.0f}%)")
+        return ""
+    return f"mở đầu quá trơn (tối {d:.0f}% · {c} màu) và không cảnh nào có ảnh sáng hơn"
+
+
 _CANARY = {"ok": None}
 
 
@@ -2648,6 +2723,10 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     if not _sok:
         raise Exception("QC cấu trúc KHÔNG ĐẠT: " + "; ".join(_sissues))
     prune_ghost_clips(props)
+    # CỨU KHUNG MỞ ĐẦU TRƯỚC KHI RENDER (24/8 tối) — rẻ hơn nhiều so với để QC loại sau khi dựng.
+    _ly_do = sang_hoa_mo_dau(props, dark_ok=_dark_ok(channel))
+    if _ly_do:
+        raise Exception(f"Mở đầu không cứu được: {_ly_do} — dừng TRƯỚC render (đỡ 2-4' CPU)")
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
@@ -2766,6 +2845,9 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix="", li
     out = os.path.abspath(out); fresh_out(out)      # dọn bản vòng trước, tránh lẫn
     pf = os.path.join(PUB, f"_docshort_{slug(channel)}_{prefix or '0'}.json")
     prune_ghost_clips(props)
+    _ly_do = sang_hoa_mo_dau(props, dark_ok=_dark_ok(channel))   # cứu mở đầu trước render (24/8)
+    if _ly_do:
+        raise Exception(f"Mở đầu không cứu được: {_ly_do} — dừng TRƯỚC render")
     json.dump(props, open(pf, "w"))
     sok, sissues = qc_structure(props)
     for it in sissues:
@@ -2900,6 +2982,9 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
     if mode:
         long_props["mode"] = mode
     prune_ghost_clips(long_props)
+    _ly_do = sang_hoa_mo_dau(long_props, dark_ok=_dark_ok(channel))   # cứu mở đầu trước render (24/8)
+    if _ly_do:
+        raise Exception(f"Mở đầu LONG không cứu được: {_ly_do} — dừng TRƯỚC render")
     pf = os.path.join(PUB, f"_doclong_{slug(channel)}.json"); json.dump(long_props, open(pf, "w"))
     st("rendering", f"Render LONG 16:9 ({len(all_scenes)} cảnh, {len(parts)} phần)")
     print(f"   🎞️ render Cinematic 16:9 ({len(all_scenes)} cảnh / {len(parts)} phần) …")
