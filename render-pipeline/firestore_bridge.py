@@ -1266,8 +1266,12 @@ def delete_jobs_by_drive(owner: str, drive_id: str):
 def get_script_by_drive(owner: str, drive_id: str):
     """Lấy KỊCH BẢN đã lưu của video cũ (theo drive_id) để RENDER LẠI đúng nội dung đó.
     Mỗi video 'done' được đóng kèm script (xem _script_json ở run_render.py) -> bấm 🔄 không cần
-    gọi lại Gemini: vừa KHỎI TỐN QUOTA, vừa ra ĐÚNG video cũ (chỉ khác bản dựng), thay vì viết một
-    kịch bản MỚI hoàn toàn khác như trước đây. Không có/hỏng -> None (tự viết mới như cũ)."""
+    gọi lại Gemini: vừa KHỎI TỐN QUOTA, vừa ra ĐÚNG video cũ (chỉ khác bản dựng).
+
+    24/8 tối — `None` phải chỉ có MỘT nghĩa: "video này không lưu kịch bản" (video đời cũ) ⇒ viết
+    mới là đúng. Nếu lệnh ĐỌC hỏng mà cũng trả `None` thì hệ viết một kịch bản KHÁC HẲN, render ra
+    video khác đề tài, rồi **bỏ bản cũ vào thùng rác** — người dùng bấm "render lại" mà mất luôn
+    video mình có. Nên đọc hỏng thì ném `DocLoi` để tầng trên hoãn yêu cầu sang lượt sau."""
     if not drive_id:
         return None
     try:
@@ -1281,7 +1285,7 @@ def get_script_by_drive(owner: str, drive_id: str):
                 except Exception:
                     return None
     except Exception as e:
-        print(f"   ⚠️ get_script_by_drive lỗi ({e}) — viết mới bình thường")
+        raise DocLoi(f"đọc kịch bản cũ hỏng: {str(e)[:110]}") from e
     return None
 
 
@@ -1358,6 +1362,15 @@ def set_config(owner: str, patch: dict):
 _TOPICS_CACHE = {}   # (owner,channel) -> list; xoá khi save_topics (nguồn đổi duy nhất trong phiên)
 
 
+def _dem_khau_soft(ten: str, duoc: bool) -> None:
+    """Ghi vào máy dò "chết câm" của datastory_ci — im lặng nếu module chưa nạp (công cụ rời)."""
+    try:
+        import datastory_ci as _DS
+        _DS.dem_khau(ten, duoc)
+    except Exception:
+        pass
+
+
 def recent_topics(owner: str, channel: str, n: int = 80) -> list[str]:
     """Chủ đề ĐÃ dùng cho kênh -> đưa cho Gemini để TRÁNH trùng (chống 'reused content').
 
@@ -1371,8 +1384,18 @@ def recent_topics(owner: str, channel: str, n: int = 80) -> list[str]:
     try:
         d = _db_meta().collection("render_topics").document(f"{owner}__{channel}").get()
         out = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
-    except Exception:
-        return []   # đọc lỗi (quota) -> coi như chưa có; KHÔNG đệm để lượt sau thử lại thật
+    except Exception as e:
+        # 24/8 tối — "đọc hỏng thì coi như chưa có" ở ĐÂY là nguy hiểm, khác các sổ khác: danh sách
+        # này là thứ DUY NHẤT ngăn kênh làm lại chủ đề cũ. Trả [] lặng lẽ nghĩa là bảo Gemini
+        # "kênh này chưa làm gì cả" -> nó viết lại đúng đề tài tuần trước, video trùng ý lên kênh,
+        # YouTube coi là reused content. Vẫn phải trả [] (thà làm còn hơn treo kênh), nhưng phải
+        # HÉT LÊN và ghi vào máy dò chết câm — nếu cả phiên không đọc nổi lần nào thì đó là hỏng
+        # cấu hình, không phải chuyện nhỏ.
+        print(f"   🚨 {channel}: KHÔNG đọc được sổ chủ đề đã dùng ({str(e)[:60]}) — "
+              f"lượt này Gemini viết mà KHÔNG biết đề tài cũ, rủi ro TRÙNG Ý.")
+        _dem_khau_soft("sổ chủ đề", False)
+        return []   # KHÔNG đệm để lượt sau thử lại thật
+    _dem_khau_soft("sổ chủ đề", True)
     _TOPICS_CACHE[ck] = out
     return out[-n:]
 
@@ -2141,10 +2164,18 @@ def clear_r2_pending(doc_id: str) -> None:
 # 55 kênh, rẻ hơn nhiều so với cái giá phải trả: video các kênh dùng lại cùng một tấm ảnh.
 
 def read_used_images(owner: str, channel: str) -> list:
+    """Sổ ảnh đã dùng. Đọc hỏng vẫn trả [] (thà làm còn hơn treo kênh) nhưng phải HÉT LÊN: lúc đó
+    bộ chống trùng ảnh coi như tắt, các video dùng lại cùng một tấm — đúng thứ sổ này sinh ra để
+    chặn. Cùng họ với `recent_topics` (24/8 tối)."""
     try:
         d = _db_jobs().collection("img_used").document(f"{owner}__{channel}").get()
-        return ((d.to_dict() or {}).get("ids") or []) if d.exists else []
-    except Exception:
+        ra = ((d.to_dict() or {}).get("ids") or []) if d.exists else []
+        _dem_khau_soft("sổ ảnh đã dùng", True)
+        return ra
+    except Exception as e:
+        print(f"   🚨 {channel}: KHÔNG đọc được sổ ảnh đã dùng ({str(e)[:60]}) — "
+              f"chống trùng ảnh TẮT lượt này.")
+        _dem_khau_soft("sổ ảnh đã dùng", False)
         return []
 
 

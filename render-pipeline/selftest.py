@@ -370,6 +370,7 @@ def main():
     check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
+    check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
     check("mốc reset nghỉ key theo ĐÚNG nhà cung cấp", t_moc_reset_theo_nha_cung_cap)
     check("mọi workflow ghim phiên bản thư viện", t_moi_workflow_deu_ghim_thu_vien)
     check("mốc intro/outro THẬT sang composition (không lệch tiếng)", t_moc_intro_outro_that)
@@ -769,6 +770,29 @@ def t_moi_workflow_deu_ghim_thu_vien():
         for goi in ("google-cloud-firestore", "google-api-python-client", "requests"):
             d = [x for x in r.split("\n") if x.strip().startswith(goi)]
             assert d and "<" in d[0], f"{goi} trong requirements.txt thiếu TRẦN phiên bản"
+
+
+def t_so_hong_phai_het_len():
+    """Ba cuốn sổ mà "đọc hỏng -> trả rỗng" gây hậu quả THẬT, không được im lặng (24/8 tối):
+      • `recent_topics` rỗng = bảo Gemini "kênh chưa làm gì" -> viết lại đề tài cũ -> reused content
+      • `read_used_images` rỗng = tắt chống trùng ảnh -> các video xài chung một tấm
+      • `get_script_by_drive` trả None khi ĐỌC HỎNG = render lại ra video KHÁC ĐỀ TÀI rồi bỏ bản cũ
+        vào thùng rác — bấm 🔄 mà mất luôn video đang có."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "firestore_bridge.py"), encoding="utf-8").read()
+    for ten in ("recent_topics", "read_used_images"):
+        i = src.index(f"def {ten}(")
+        than = src[i: src.index("\ndef ", i + 10)]
+        assert "🚨" in than, f"{ten}: đọc hỏng vẫn im lặng"
+        assert "_dem_khau_soft" in than, f"{ten}: chưa ghi vào máy dò chết câm"
+    i = src.index("def get_script_by_drive(")
+    than = src[i: src.index("\ndef ", i + 10)]
+    assert "raise DocLoi" in than, "đọc kịch bản cũ hỏng vẫn bị nuốt thành None (= 'không có kịch bản')"
+    r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "run_render.py"), encoding="utf-8").read()
+    i = r.index("FB.get_script_by_drive(")          # LỜI GỌI THẬT, không phải dòng chú thích
+    assert "except FB.DocLoi" in r[i: i + 700], \
+        "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
 
 
 def t_moc_reset_theo_nha_cung_cap():

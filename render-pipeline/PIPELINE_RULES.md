@@ -1719,3 +1719,16 @@ treo tới 07:00 UTC hôm sau trong khi nó đã hồi từ nửa đêm: **ném 
 lại, mỗi ngày**. Nay nhận diện Cloudflare (`cloudflare`/`neuron`/`aierror`) → mốc UTC; Google giữ mốc
 Thái Bình Dương; nhà cung cấp chưa có bằng chứng thì **không đoán**, giữ mốc cũ. Chốt bằng
 `t_moc_reset_theo_nha_cung_cap` (kiểm cả khoảng lệch đúng 7 tiếng).
+
+### 7.bx — Quét cả họ "đọc hỏng → khai rỗng": 37 chỗ, 3 chỗ gây hậu quả thật (24/8/2026 tối)
+Sau 7.bm (kênh "đã xoá") em quét AST toàn bộ hai repo: **37 chỗ** `except Exception: return None/[]/{}`.
+Đa số vô hại (việc phụ). Ba chỗ thì không:
+* `recent_topics()` rỗng = nói với Gemini *"kênh này chưa làm gì cả"* ⇒ nó viết lại đúng đề tài tuần
+  trước ⇒ **reused content** trên YouTube. Đây là sổ DUY NHẤT chặn trùng ý.
+* `read_used_images()` rỗng = tắt hẳn chống trùng ảnh ⇒ nhiều video xài chung một tấm.
+* `get_script_by_drive()` trả `None` khi ĐỌC HỎNG ⇒ render lại viết kịch bản MỚI, ra video **khác đề
+  tài**, rồi bỏ bản cũ vào thùng rác. Người dùng bấm 🔄 mà **mất luôn video đang có**.
+Hai cái đầu vẫn trả rỗng (thà làm còn hơn treo kênh) nhưng nay **HÉT LÊN** và ghi vào máy dò chết câm
+(`dem_khau`) — cả phiên không đọc nổi lần nào thì đó là hỏng cấu hình, sẽ hiện 🚨 CHẾT CÂM. Cái thứ ba
+ném `DocLoi`, đường render lại **hoãn yêu cầu sang lượt sau, không đụng bản cũ**.
+Chốt bằng `t_so_hong_phai_het_len`.

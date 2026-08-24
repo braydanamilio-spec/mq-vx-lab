@@ -839,7 +839,14 @@ def process_requests(keys, report):
                 _TK.set_voice(cfg.get("voice"), cfg.get("voice_rate"))
             except Exception:
                 pass
-            old = FB.get_script_by_drive(OWNER, req.get("replace_id"))
+            try:
+                old = FB.get_script_by_drive(OWNER, req.get("replace_id"))
+            except FB.DocLoi as e:
+                # Đọc hỏng ≠ "không có kịch bản". Viết mới ở đây là render một video KHÁC ĐỀ TÀI
+                # rồi bỏ bản cũ vào thùng rác — người dùng bấm 🔄 mà mất luôn video đang có.
+                st("ratelimited", f"⏳ {e} — hoãn, giữ nguyên bản cũ")
+                print(f"   ⏳ {ch}: {e} — để lượt sau (KHÔNG viết mới, KHÔNG đụng bản cũ).")
+                continue
             st("running", ("♻️ Render lại (dùng kịch bản cũ): " if old else "🔄 Render lại: ") + seed[:40])
             out = os.path.join("out", DS.slug(ch) + "_rr.mp4")
             if typ == "long":
