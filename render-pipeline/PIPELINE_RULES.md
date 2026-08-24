@@ -471,3 +471,10 @@ Groq cạn hạn mức NGÀY (TPD 200K/key) và lane POWERPLAY trả 0 video **d
 429/rate limit/quota/resource_exhausted -> cho key nghỉ + đổi key. Có test chặn hồi quy.
 → **LUẬT**: phân loại lỗi phải theo NỘI DUNG lỗi, không theo lớp ngoại lệ mà một shim tình cờ chọn.
 Mọi vòng xoay tài nguyên phải có lưới "lỗi lạ mang dấu hiệu quota = đổi tài nguyên", không được `raise`.
+
+### BUG 24/8 — "xoay vòng mà vẫn dồn vào key đã chết"
+`_cool()` chỉ có 2 mức: nghẽn theo phút (1.1') và mọi thứ khác (20'). Key cạn HẠN MỨC NGÀY (Groq TPD
+200K) cũng chỉ bị phạt 20' -> cứ 20 phút cả 18 luồng lại dội vào đúng những key đã chết, mỗi lượt tốn
+1 vòng HTTP + 1.5s chờ. Nay 3 mức: phút → 1.1' · NGÀY → 8 giờ · mơ hồ → 20'. Áp cho cả 8 hàm viết.
+→ **LUẬT**: thời gian phạt phải khớp CHU KỲ HỒI của hạn mức (phút/ngày), phạt sai chu kỳ thì vòng xoay
+biến thành vòng dội.

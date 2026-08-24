@@ -136,7 +136,12 @@ def write_story(channel: str, keys: list[dict], seed: str,
             return
         if not (on_limit and k.get("id")):
             return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
+        # 24/8 — PHÂN LOẠI 3 MỨC (trước chỉ 2): cạn HẠN MỨC NGÀY thì nghỉ tới hết ngày, đừng gọi lại.
+        # Đêm nay 16 key Groq cạn TPD mà chỉ bị phạt 20' -> cứ 20' cả 18 luồng lại dội vào đúng những
+        # key đã chết, mỗi lượt tốn 1 vòng HTTP + 1.5s chờ. Đó là lý do "xoay vòng mà vẫn dồn 1 chỗ".
+        _het_ngay = any(t in low for t in ("per day", "tokens per day", "tpd", "daily", "hết hạn mức ngày"))
+        mins = (1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low)
+                else 8 * 60 if _het_ngay else AMBIG_COOL_MIN)
         try:
             on_limit(k["id"], mins)
         except TypeError:
@@ -203,7 +208,12 @@ def write_guess(channel: str, keys: list[dict], category: str, n_rounds: int = 3
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
+        # 24/8 — PHÂN LOẠI 3 MỨC (trước chỉ 2): cạn HẠN MỨC NGÀY thì nghỉ tới hết ngày, đừng gọi lại.
+        # Đêm nay 16 key Groq cạn TPD mà chỉ bị phạt 20' -> cứ 20' cả 18 luồng lại dội vào đúng những
+        # key đã chết, mỗi lượt tốn 1 vòng HTTP + 1.5s chờ. Đó là lý do "xoay vòng mà vẫn dồn 1 chỗ".
+        _het_ngay = any(t in low for t in ("per day", "tokens per day", "tpd", "daily", "hết hạn mức ngày"))
+        mins = (1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low)
+                else 8 * 60 if _het_ngay else AMBIG_COOL_MIN)
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -260,7 +270,12 @@ def write_mapped(channel: str, keys: list[dict], niche: str, tier: str = "normal
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
+        # 24/8 — PHÂN LOẠI 3 MỨC (trước chỉ 2): cạn HẠN MỨC NGÀY thì nghỉ tới hết ngày, đừng gọi lại.
+        # Đêm nay 16 key Groq cạn TPD mà chỉ bị phạt 20' -> cứ 20' cả 18 luồng lại dội vào đúng những
+        # key đã chết, mỗi lượt tốn 1 vòng HTTP + 1.5s chờ. Đó là lý do "xoay vòng mà vẫn dồn 1 chỗ".
+        _het_ngay = any(t in low for t in ("per day", "tokens per day", "tpd", "daily", "hết hạn mức ngày"))
+        mins = (1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low)
+                else 8 * 60 if _het_ngay else AMBIG_COOL_MIN)
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -314,7 +329,12 @@ def write_ranked(channel: str, keys: list[dict], niche: str, tier: str = "normal
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
+        # 24/8 — PHÂN LOẠI 3 MỨC (trước chỉ 2): cạn HẠN MỨC NGÀY thì nghỉ tới hết ngày, đừng gọi lại.
+        # Đêm nay 16 key Groq cạn TPD mà chỉ bị phạt 20' -> cứ 20' cả 18 luồng lại dội vào đúng những
+        # key đã chết, mỗi lượt tốn 1 vòng HTTP + 1.5s chờ. Đó là lý do "xoay vòng mà vẫn dồn 1 chỗ".
+        _het_ngay = any(t in low for t in ("per day", "tokens per day", "tpd", "daily", "hết hạn mức ngày"))
+        mins = (1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low)
+                else 8 * 60 if _het_ngay else AMBIG_COOL_MIN)
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -368,7 +388,12 @@ def write_scaled(channel: str, keys: list[dict], niche: str, tier: str = "normal
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
+        # 24/8 — PHÂN LOẠI 3 MỨC (trước chỉ 2): cạn HẠN MỨC NGÀY thì nghỉ tới hết ngày, đừng gọi lại.
+        # Đêm nay 16 key Groq cạn TPD mà chỉ bị phạt 20' -> cứ 20' cả 18 luồng lại dội vào đúng những
+        # key đã chết, mỗi lượt tốn 1 vòng HTTP + 1.5s chờ. Đó là lý do "xoay vòng mà vẫn dồn 1 chỗ".
+        _het_ngay = any(t in low for t in ("per day", "tokens per day", "tpd", "daily", "hết hạn mức ngày"))
+        mins = (1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low)
+                else 8 * 60 if _het_ngay else AMBIG_COOL_MIN)
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -422,7 +447,12 @@ def write_thennow(channel: str, keys: list[dict], niche: str, tier: str = "norma
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
+        # 24/8 — PHÂN LOẠI 3 MỨC (trước chỉ 2): cạn HẠN MỨC NGÀY thì nghỉ tới hết ngày, đừng gọi lại.
+        # Đêm nay 16 key Groq cạn TPD mà chỉ bị phạt 20' -> cứ 20' cả 18 luồng lại dội vào đúng những
+        # key đã chết, mỗi lượt tốn 1 vòng HTTP + 1.5s chờ. Đó là lý do "xoay vòng mà vẫn dồn 1 chỗ".
+        _het_ngay = any(t in low for t in ("per day", "tokens per day", "tpd", "daily", "hết hạn mức ngày"))
+        mins = (1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low)
+                else 8 * 60 if _het_ngay else AMBIG_COOL_MIN)
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -478,7 +508,12 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
+        # 24/8 — PHÂN LOẠI 3 MỨC (trước chỉ 2): cạn HẠN MỨC NGÀY thì nghỉ tới hết ngày, đừng gọi lại.
+        # Đêm nay 16 key Groq cạn TPD mà chỉ bị phạt 20' -> cứ 20' cả 18 luồng lại dội vào đúng những
+        # key đã chết, mỗi lượt tốn 1 vòng HTTP + 1.5s chờ. Đó là lý do "xoay vòng mà vẫn dồn 1 chỗ".
+        _het_ngay = any(t in low for t in ("per day", "tokens per day", "tpd", "daily", "hết hạn mức ngày"))
+        mins = (1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low)
+                else 8 * 60 if _het_ngay else AMBIG_COOL_MIN)
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
@@ -538,7 +573,12 @@ def _write_wave4(fn_name, label, channel, keys, niche, tier, avoid, on_limit, on
             except Exception: pass
             return
         if not on_limit: return
-        mins = 1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low) else AMBIG_COOL_MIN
+        # 24/8 — PHÂN LOẠI 3 MỨC (trước chỉ 2): cạn HẠN MỨC NGÀY thì nghỉ tới hết ngày, đừng gọi lại.
+        # Đêm nay 16 key Groq cạn TPD mà chỉ bị phạt 20' -> cứ 20' cả 18 luồng lại dội vào đúng những
+        # key đã chết, mỗi lượt tốn 1 vòng HTTP + 1.5s chờ. Đó là lý do "xoay vòng mà vẫn dồn 1 chỗ".
+        _het_ngay = any(t in low for t in ("per day", "tokens per day", "tpd", "daily", "hết hạn mức ngày"))
+        mins = (1.1 if ("per minute" in low or "per-minute" in low or "requests per min" in low or "per region" in low)
+                else 8 * 60 if _het_ngay else AMBIG_COOL_MIN)
         try: on_limit(k["id"], mins)
         except TypeError: on_limit(k["id"])
 
