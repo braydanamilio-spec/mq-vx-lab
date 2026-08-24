@@ -1208,3 +1208,11 @@ trong hàng chờ → A, B, rỗng — không trùng**.
 **Bẫy dính ngay lần gọi đầu:** thiếu `User-Agent` thì **Cloudflare chặn ở cổng với mã 1010**, trả
 **403 y hệt sai khoá** nên rất dễ chẩn nhầm. Đúng cái bẫy đã dính với DVIDS sáng nay.
 → Luật: mọi client HTTP tự viết phải gửi `User-Agent`; và 403 **không** đương nhiên là lỗi xác thực.
+
+**Bổ sung 7.at — bản ghi bóng phải ĐỦ TRƯỜNG mới đối chiếu được.** `update_job(job_id, **patch)`
+không nhận `channel` lẫn `type`, nên bản ghi sang D1 có `vtype` rỗng → lệnh `dem_xong` (đếm long/short)
+luôn trả 0 và **việc đối chiếu hai bên thành vô nghĩa** — tức chạy chế độ bóng cả tuần cũng không
+kết luận được gì. Nay `new_job` nhớ hộ cả kênh lẫn loại (`_JOB_CH` + `_JOB_TY`).
+
+**Luật:** chạy song song để đối chiếu thì bản phụ phải ghi ĐỦ trường dùng cho phép so. Bản phụ thiếu
+trường không phải "gần đúng" — nó là **không có dữ liệu**, mà lại trông như đang chạy tốt.

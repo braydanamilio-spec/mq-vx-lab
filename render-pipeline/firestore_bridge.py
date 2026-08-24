@@ -450,6 +450,7 @@ _KEYS_CACHE = {}      # (owner, include_cooling) -> (thời điểm, kết quả
 # trước nó nên ghi nhớ owner ở đây là đủ, khỏi phải đổi chữ ký ở mọi chỗ gọi.
 _OWNER_HINT = [""]
 _JOB_CH: dict = {}          # job_id -> kênh (update_job không nhận channel, new_job nhớ hộ)
+_JOB_TY: dict = {}          # job_id -> long/short (cùng lý do)
 # KHO KEY ẢNH BỀN (24/8) — xem _giu_key_anh().
 _IMG_KEYS: dict = {}
 
@@ -1943,7 +1944,11 @@ def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "") -> s
     db = _db_jobs(); ref = db.collection("render_jobs").document()   # id sinh OFFLINE -> quota chết vẫn có id
     _soft(lambda: ref.set({"owner": owner, "channel": channel, "type": vtype, "pver": pver,   # pver = phiên bản pipeline -> dọn thông minh (chỉ xóa bản CŨ)
              "status": "queued", "step": "bắt đầu", "created_at": _now()}), "new_job")
-    _JOB_CH[ref.id] = channel          # update_job không nhận channel -> nhớ hộ cho nhịp sống
+    # update_job chỉ nhận (job_id, **patch) — KHÔNG có channel lẫn type. Nhớ hộ ở đây để nhịp sống
+    # và bản ghi bóng sang D1 có đủ dữ liệu. Thiếu `type` thì bảng D1 toàn vtype rỗng -> lệnh
+    # `dem_xong` (đếm long/short) luôn ra 0, và cả việc đối chiếu hai bên thành vô nghĩa.
+    _JOB_CH[ref.id] = channel
+    _JOB_TY[ref.id] = vtype
     _OWNER_HINT[0] = _OWNER_HINT[0] or owner
     if _B2["on"]:
         try:
@@ -1990,7 +1995,8 @@ def update_job(job_id: str, **patch):
         import hot_db as _H
         if _H.bat_ghi():
             _H.ghi_job(_OWNER_HINT[0], job_id, _JOB_CH.get(job_id, ""),
-                       str(patch.get("type") or ""), str(st or ""), str(patch.get("step") or ""),
+                       str(patch.get("type") or _JOB_TY.get(job_id, "")), str(st or ""),
+                       str(patch.get("step") or ""),
                        patch.get("title"), patch.get("drive_id"),
                        bool(patch.get("queued")), patch["updated_at"])
     except Exception:
