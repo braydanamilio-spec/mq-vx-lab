@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("cổng kho Drive đóng được THẬT (không tự nuốt lỗi)", t_cong_kho_drive_dong_duoc_that)
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
@@ -877,6 +878,29 @@ def t_cuu_mo_dau_khong_qua_mat_qc():
     # Nới lớp phủ phải áp cho MỌI cảnh, không riêng cảnh mở đầu: QC chỉ soi khung đầu nên chữa mỗi
     # cảnh 0 là hết bị loại, nhưng cả video vẫn xỉn — không ai chặn, và đó mới là thứ người xem thấy.
     assert src.count("can_man_moi_canh(") >= 4, "chưa cân lớp phủ cho mọi cảnh ở đủ 3 đường"
+
+
+def t_cong_kho_drive_dong_duoc_that():
+    """Cổng "không đọc được kho Drive nào -> dừng phiên" phải THẬT SỰ chặn được (24/8 tối).
+    pyflakes bắt: `return out_channels([])` nằm trong khối `try` mà `out_channels` khi đó CHƯA được
+    định nghĩa (nó ở dưới) ⇒ NameError ⇒ rơi vào `except` ngay bên dưới ⇒ in "vẫn chạy (fail-open)"
+    rồi mở 18 luồng. Cổng chưa từng chặn được gì: nó luôn tự ném lỗi rồi tự nuốt."""
+    import ast as _ast
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "run_render.py"), encoding="utf-8").read()
+    t = _ast.parse(src)
+    dn = [n.lineno for n in _ast.walk(t)
+          if isinstance(n, _ast.FunctionDef) and n.name == "out_channels"]
+    assert dn, "không thấy out_channels"
+    goi = [i + 1 for i, l in enumerate(src.split("\n")) if "return out_channels([])" in l]
+    assert goi, "không thấy lối thoát sớm nào"
+    assert min(goi) > dn[0], \
+        f"out_channels định nghĩa ở dòng {dn[0]} nhưng đã bị gọi từ dòng {min(goi)} -> NameError"
+    # quyết định dừng phải nằm NGOÀI khối try, để không bị `except Exception` nuốt
+    i = src.index("_cong_dong = True")
+    j = src.index("if _cong_dong:")
+    assert j > i and "except Exception as e:" in src[i:j], \
+        "quyết định đóng cổng vẫn nằm trong try -> lại bị nuốt"
 
 
 def t_noi_man_khong_dung_toi_anh():

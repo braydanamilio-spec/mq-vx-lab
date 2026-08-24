@@ -1241,27 +1241,8 @@ def plan_mode():
         print(f"   ⏱ [{_T0.time() - _t_plan:6.1f}s] {ten}", flush=True)
 
     _moc("bắt đầu điều phối")
-    # CỔNG KHO DRIVE (chuyển từ --gate xuống đây): không lấy nổi kho nào thì mọi video render ra đều
-    # bị từ chối đẩy -> thoát sớm, khỏi đốt 18 luồng. Lỗi mạng vẫn cho chạy (fail-open) vì storage.py
-    # đã có đệm + B2 + thử lại.
-    try:
-        _src = os.environ.get("AUTOPUBLISHER_SRC")
-        if _src and _src not in sys.path:
-            sys.path.insert(0, _src)
-        import storage as _ST
-        _accs = _ST.pool_accounts()
-        _moc(f"kho Drive sẵn sàng: {len(_accs)} kho")
-        if not _accs:
-            print("🛑 DỪNG PHIÊN: không đọc được kho Drive nào — render ra cũng bị từ chối đẩy.")
-            return out_channels([])
-    except Exception as e:
-        _moc(f"không kiểm được kho Drive ({str(e)[:60]}) — vẫn chạy (fail-open)")
     import json
-    # IN TRƯỚC MỌI LỆNH GHI: dính 429 thì vẫn biết đang nối vào project nào (B thật hay đã lùi về A).
-    try:
-        print(FB.where_am_i())
-    except Exception:
-        pass
+    _cong_dong = False          # cổng kho Drive: True = không kho nào đọc được -> dừng phiên
     from datetime import datetime, timezone, timedelta
     def out_channels(lst, cau_hinh=None):
         """Trả danh sách kênh cho matrix — VÀ kèm luôn CẤU HÌNH của chúng.
@@ -1295,6 +1276,36 @@ def plan_mode():
         except Exception:
             pass
         print(f"PLAN channels={payload}")
+
+    # CỔNG KHO DRIVE (chuyển từ --gate xuống đây): không lấy nổi kho nào thì mọi video render ra đều
+    # bị từ chối đẩy -> thoát sớm, khỏi đốt 18 luồng. Lỗi mạng vẫn cho chạy (fail-open) vì storage.py
+    # đã có đệm + B2 + thử lại.
+    try:
+        _src = os.environ.get("AUTOPUBLISHER_SRC")
+        if _src and _src not in sys.path:
+            sys.path.insert(0, _src)
+        import storage as _ST
+        _accs = _ST.pool_accounts()
+        _moc(f"kho Drive sẵn sàng: {len(_accs)} kho")
+        if not _accs:
+            _cong_dong = True
+    except Exception as e:
+        # 24/8 tối — CỔNG KHO ĐÃ MỞ TOANG SUỐT MÀ KHÔNG AI BIẾT. `return out_channels([])` nằm ngay
+        # trong `try` này, mà `out_channels` khi đó CHƯA được định nghĩa (nó ở dưới, dòng 1266) ->
+        # NameError -> rơi thẳng vào `except` này -> in "vẫn chạy (fail-open)" rồi mở 18 luồng.
+        # Tức cổng chặn "không đọc được kho Drive nào" **chưa từng chặn được gì**: nó luôn tự ném
+        # lỗi rồi tự nuốt. Nay `out_channels` được định nghĩa TRƯỚC cổng, và quyết định dừng được
+        # đưa RA NGOÀI khối try để không bao giờ bị nuốt nữa.
+        _moc(f"không kiểm được kho Drive ({str(e)[:60]}) — vẫn chạy (fail-open)")
+    if _cong_dong:
+        print("🛑 GATE ĐÓNG — DỪNG PHIÊN: không đọc được kho Drive nào "
+              "(render ra cũng bị từ chối đẩy, mở 18 luồng là đốt không).")
+        return out_channels([])
+    # IN TRƯỚC MỌI LỆNH GHI: dính 429 thì vẫn biết đang nối vào project nào (B thật hay đã lùi về A).
+    try:
+        print(FB.where_am_i())
+    except Exception:
+        pass
     if not OWNER:
         out_channels([]); raise SystemExit("❌ Thiếu OWNER_UID.")
     cfg = FB.read_config(OWNER)

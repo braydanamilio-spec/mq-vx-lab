@@ -1929,3 +1929,18 @@ sai — phải đọc từ nơi vẫn đang được cập nhật.**
 — PHẢN ÁP LỰC lần đầu hoạt động sau khi vá `_chu()` (7.ch); `📣 nghỉ tới 06:59Z` + `📣 B đã có cờ nghỉ
 tới 06:59Z (dài hơn) — giữ nguyên` — cờ chung giữ đúng mốc cạn-ngày và không bị ghi đè (7.cd);
 0 `Traceback`, 0 `KHÔNG SAO LƯU` — bước sao lưu kho key đã sống (7.cc).
+
+### 7.cn — CỔNG KHO DRIVE chưa từng chặn được gì: nó tự ném lỗi rồi tự nuốt (24/8/2026 tối)
+Chạy `pyflakes` quét cả hai repo, đúng MỘT phát hiện thật — và là phát hiện đắt:
+`run_render.py: undefined name 'out_channels'`. Dòng `return out_channels([])` của cổng kho nằm trong
+khối `try`, mà `out_channels` khi đó **chưa được định nghĩa** (nó ở phía dưới) ⇒ `NameError` ⇒ rơi
+thẳng vào `except Exception` ngay bên dưới ⇒ in *"không kiểm được kho Drive … vẫn chạy (fail-open)"*
+rồi **mở 18 luồng**. Nghĩa là cái cổng viết ra để chặn "không đọc được kho nào thì đừng render" chưa
+bao giờ chặn được gì; mỗi lần kho Drive hỏng là cả phiên render ra rồi bị từ chối đẩy.
+Vá: `out_channels` (và `import json` nó cần) chuyển lên TRƯỚC cổng; quyết định dừng đưa **ra ngoài
+khối try** (`_cong_dong`) để không bao giờ bị nuốt. Chạy thử với `pool_accounts()` rỗng: in
+`🛑 GATE ĐÓNG — DỪNG PHIÊN` và trả `PLAN channels=[]` đúng như thiết kế.
+Chốt bằng `t_cong_kho_drive_dong_duoc_that` (so vị trí định nghĩa/lời gọi + kiểm quyết định nằm ngoài try).
+**LUẬT: `except Exception` bọc quanh một QUYẾT ĐỊNH (không chỉ quanh I/O) là chỗ ẩn nấp hoàn hảo cho
+lỗi lập trình. Việc đọc thì bọc được; việc QUYẾT ĐỊNH phải nằm ngoài.** Và: cho một linter chạy qua
+repo là 30 giây, rẻ hơn nhiều so với một cổng an toàn chết âm thầm.
