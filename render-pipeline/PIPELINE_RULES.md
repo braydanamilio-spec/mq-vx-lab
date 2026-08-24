@@ -1822,3 +1822,20 @@ hệt**, trong khi B trả 429 (tức đã chạm 50.000). Hai lỗi cộng lạ
 Chốt bằng `t_so_quota_dung_ngay_va_gop_du`; đã thử ngược (lén đổi 1 chỗ về UTC → test bắt đúng).
 **LUẬT: con số dùng để RA QUYẾT ĐỊNH mà đứng im hai phiên liên tiếp thì phải nghi nó hỏng, đừng nghi
 hệ thống đang nhàn.** Và mốc "một ngày" phải khớp với mốc reset của nhà cung cấp, không phải UTC.
+
+### 7.cf — Khâu ĐĂNG dội 112 lượt vào một lệnh đã biết chắc hỏng (24/8/2026 tối, publish 18:25Z)
+Một lượt publish in ĐÚNG **112 dòng** `⚠️ gương connections ở B cũng lỗi: 429`. `_guong_connections()`
+được gọi cho TỪNG kênh; cả A lẫn B đều cạn nên mỗi kênh lại đi hỏi B thêm một lần — 112 lượt đọc hỏng,
+mà **lượt hỏng vẫn bị trừ hạn mức**, cộng mấy vòng `_retry` 1,5s mỗi lượt. Nay có `_GUONG_CHET` theo
+loại: hỏng một lần là ngừng hỏi cho cả lượt chạy.
+**LUẬT: cạn hạn mức là trạng thái của CẢ TIẾN TRÌNH, không phải của từng vòng lặp.** (Cùng họ 7.bz —
+ở đó là chia sẻ giữa 18 lane, ở đây là trong một tiến trình.)
+
+### 7.cg — `⛔ Project A cạn hạn mức` ×114, dòng tổng kết vẫn báo `đọc 0/50.000 (0%)` (24/8/2026 tối)
+`quota_guard.da_dung()` đọc sổ hỏng thì trả 0 — "thà cho chạy còn hơn tự khoá mình". Cho chạy tiếp là
+đúng, nhưng **báo 0% khi đã chạm trần là nói dối người vận hành**, và `du_suc()` còn mở cửa cho mọi
+việc phụ đúng lúc project hết sạch. Đọc sổ hỏng **vì 429** chính là bằng chứng chắc nhất rằng project
+đã cạn ⇒ ghi nhận `r = TRAN_DOC` + cờ `_can`, `bao_cao()` in "CẠN (429 — không đọc nổi sổ)". Lỗi khác
+(mạng) vẫn giữ hành vi cũ. Chốt bằng `t_publish_khong_doi_vao_cho_da_chet`.
+**LUẬT: khi không đo được, đừng báo 0 — hãy báo "không đo được", và nếu lý do KHÔNG đo được chính là
+cái mình đang đo thì đó là câu trả lời.** (Lần thứ tư trong đêm: 7.bm · 7.bs · 7.ce · nay 7.cg.)

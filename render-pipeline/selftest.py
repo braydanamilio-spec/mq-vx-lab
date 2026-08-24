@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("khâu đăng không dội vào chỗ đã biết là chết", t_publish_khong_doi_vao_cho_da_chet)
     check("sổ quota: đúng ngày reset + cộng đủ 2 cuốn", t_so_quota_dung_ngay_va_gop_du)
     check("bước phụ hỏng phải nói rõ, không im", t_buoc_phu_that_bai_khong_duoc_im)
     check("gương thiếu kênh ≠ kênh bị xoá", t_guong_thieu_kenh_khong_phai_bi_xoa)
@@ -799,6 +800,30 @@ def t_so_hong_phai_het_len():
     i = r.index("FB.get_script_by_drive(")          # LỜI GỌI THẬT, không phải dòng chú thích
     assert "except FB.DocLoi" in r[i: i + 700], \
         "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
+
+
+def t_publish_khong_doi_vao_cho_da_chet():
+    """Hai lỗi ở khâu ĐĂNG, đo được trong log lượt 18:25Z (24/8 tối):
+      • `⚠️ gương connections ở B cũng lỗi: 429` in ra **112 lần trong MỘT lượt chạy** — hàm gọi cho
+        từng kênh, cả A lẫn B đều cạn nên mỗi kênh lại đi hỏi B thêm một lần. 112 lượt đọc hỏng, mà
+        lượt hỏng VẪN BỊ TRỪ hạn mức. Cạn hạn mức là trạng thái của cả tiến trình: biết một lần đủ.
+      • `⛔ Project A cạn hạn mức` in 114 lần, mà dòng tổng kết vẫn báo `project A: đọc 0/50,000 (0%)`
+        — đọc sổ hỏng thì coi như 0. Cho chạy tiếp là đúng, nhưng BÁO 0% khi đã chạm trần là nói dối,
+        và `du_suc()` còn mở cửa cho mọi việc phụ đúng lúc project hết sạch."""
+    ap = os.environ.get("AUTOPUBLISHER_SRC") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "MM0-AutoPublisher", "src")
+    f1 = os.path.join(ap, "firestore_state.py")
+    f2 = os.path.join(ap, "quota_guard.py")
+    if not (os.path.exists(f1) and os.path.exists(f2)):
+        return
+    a = io.open(f1, encoding="utf-8").read()
+    assert "_GUONG_CHET" in a and "self._GUONG_CHET.get(kind)" in a, \
+        "gương connections hỏng vẫn bị hỏi lại cho từng kênh"
+    b = io.open(f2, encoding="utf-8").read()
+    assert '"_can"' in b and "TRAN_DOC, \"w\": 0" in b.replace("'", '"'), \
+        "quota_guard vẫn báo 0% khi không đọc nổi sổ vì 429"
+    i = b.index("def bao_cao(")
+    assert "CẠN" in b[i: i + 700], "dòng tổng kết chưa nói thẳng là project đã cạn"
 
 
 def t_so_quota_dung_ngay_va_gop_du():
