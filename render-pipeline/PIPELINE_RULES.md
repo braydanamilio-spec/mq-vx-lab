@@ -666,3 +666,10 @@ ngưỡng **75%**, việc THIẾT YẾU (đăng video) chạy tới sát trần.
 **Luật:** mọi vòng lặp `for kênh in ...` có truy vấn Firestore bên trong đều là bom hẹn giờ —
 số kênh tăng thì lượt đọc tăng theo cấp số. Thấy khuôn đó thì phải đổi sang **một truy vấn có cờ**,
 và việc nào không phải "đăng video" thì phải hỏi `quota_guard.du_suc()` trước khi chạy.
+
+**Bổ sung 7.y — `drive_usage` (guard kho đầy):** quét cả bảng `storage_accounts` (~73 doc trên
+project A) và MỖI luồng render gọi một lần ở đầu `main()` → 18 luồng × 73 ≈ **1.300 lượt đọc A
+mỗi phiên** để trả lời một câu hỏi mà cả 18 luồng nhận CÙNG đáp án. Nay kết quả cất ở
+`render_stats/__drive_usage__` (project B, TTL 30'): plan quét thật (`moi_nhat=True`) và dựng đệm,
+luồng chỉ đọc 1 doc. Quét hỏng thì **không ghi đè đệm bằng số 0** — guard đọc phải số 0 sẽ tưởng
+kho rỗng và render vô tội vạ.

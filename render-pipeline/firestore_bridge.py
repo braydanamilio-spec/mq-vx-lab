@@ -720,8 +720,28 @@ def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
     _soft(lambda: _db().collection("storage_accounts").document(f"{owner}__{name}").set(patch, merge=True), "update_storage_used")
 
 
-def drive_usage(owner: str):
-    """Tổng dung lượng ĐÃ DÙNG / SỨC CHỨA của mọi kho Drive (bytes) -> guard 'kho gần đầy' trước khi render."""
+def drive_usage(owner: str, moi_nhat: bool = False):
+    """Tổng dung lượng ĐÃ DÙNG / SỨC CHỨA của mọi kho Drive (bytes) -> guard 'kho gần đầy' trước khi render.
+
+    24/8 — TIẾT KIỆM QUOTA A: hàm này quét cả bảng `storage_accounts` (~73 doc) và MỖI luồng render
+    gọi một lần ở đầu main() -> 18 luồng × 73 = ~1.300 lượt đọc project A mỗi phiên, chỉ để trả lời
+    một câu hỏi mà cả 18 luồng đều nhận CÙNG một đáp án. Nay: kết quả được cất vào 1 doc tổng ở
+    project B (`render_stats/__drive_usage__`), luồng nào cũng chỉ đọc 1 doc.
+      • doc còn tươi (<30') -> 1 lượt đọc B, 0 lượt đọc A
+      • quá hạn/không có   -> quét thật rồi ghi lại doc (đúng 1 luồng phải trả giá)
+    Số này đổi rất chậm (mỗi video đẩy lên thêm ~10-40MB trên tổng ~1TB) nên 30' là thừa tươi.
+    moi_nhat=True để ép quét thật (plan đầu phiên nên dùng, cho doc luôn đúng)."""
+    import time as _t
+    _ref = _db_jobs().collection("render_stats").document("__drive_usage__")
+    if not moi_nhat:
+        try:
+            _cr("drive_usage_cache", 1)
+            _d = _ref.get(timeout=10)
+            _x = (_d.to_dict() or {}) if _d.exists else {}
+            if _x.get("cap") and (_t.time() - float(_x.get("ts", 0) or 0)) < 1800:
+                return int(_x.get("used", 0)), int(_x.get("cap", 0))
+        except Exception:
+            pass                      # đọc đệm hỏng -> quét thật như cũ, không được chết vì cái đệm
     used = cap = 0
     try:
         for d in _db().collection("storage_accounts").where("owner", "==", owner).stream(timeout=20):
@@ -730,6 +750,11 @@ def drive_usage(owner: str):
             cap += (x.get("cap_gb", 15) or 15) * 1_000_000_000
     except Exception as e:
         print(f"   ⚠️ drive_usage lỗi ({e})")
+        return used, cap              # quét hỏng -> KHÔNG ghi đè đệm bằng số 0 (guard sẽ hiểu nhầm)
+    if cap:
+        _cw("drive_usage_cache")
+        _soft(lambda: _ref.set({"used": int(used), "cap": int(cap), "ts": _t.time(), "at": _now()}),
+              "drive_usage_cache")
     return used, cap
 
 

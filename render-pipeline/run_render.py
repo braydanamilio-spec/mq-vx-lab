@@ -869,6 +869,7 @@ def main():
     RESERVE_SHORT = int(cfg.get("reserve_short", RESERVE_SHORT) or RESERVE_SHORT)
     # ---- GUARD KHO GẦN ĐẦY: render là làm DỰ TRỮ, nhưng kho đầy thì NGỪNG (tránh phình + lỗi ghi khi hết chỗ) ----
     safety_pct = float(cfg.get("drive_safety_pct", DRIVE_SAFETY_PCT) or DRIVE_SAFETY_PCT)
+    # luồng render: ăn đệm (18 luồng cùng đáp án, khỏi 18 lần quét bảng kho ở project A)
     used, cap = FB.drive_usage(OWNER)
     if cap and used / cap >= safety_pct:
         note = (f"⛔ Kho Drive {used/cap*100:.0f}% đầy (ngưỡng an toàn {safety_pct*100:.0f}%) — NGỪNG render mẻ này "
@@ -1321,8 +1322,10 @@ def plan_mode():
       except Exception as e:
         print(f"   ⚠️ Sync dung lượng kho lỗi: {e}")
     # GUARD KHO GẦN ĐẦY (tính tổng cả 33 kho, dùng số VỪA sync).
+    # moi_nhat=True: plan là chỗ DUY NHẤT quét thật bảng kho — nó vừa sync xong nên số mới nhất,
+    # và nó dựng lại đệm cho 18 luồng phía sau dùng chung (khỏi 18 lần quét project A).
     safety_pct = float(cfg.get("drive_safety_pct", DRIVE_SAFETY_PCT) or DRIVE_SAFETY_PCT)
-    used, cap = FB.drive_usage(OWNER)
+    used, cap = FB.drive_usage(OWNER, moi_nhat=True)
     if cap and used / cap >= safety_pct:
         note = (f"⛔ Kho Drive {used/cap*100:.0f}% đầy (ngưỡng {safety_pct*100:.0f}%) — NGỪNG render mẻ này. "
                 f"Thêm tài khoản Drive hoặc upload+dọn bớt rồi chạy lại.")
