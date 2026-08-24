@@ -1675,6 +1675,9 @@ def channel_mode(name):
         FB.xa_ngan_sach_d1()          # cộng vào sổ ngân sách chung trên D1 (không tốn quota Firestore)
         try:
             import hot_db as _H
+            _n = _H.xa_het()          # BẮT BUỘC: thiếu bước này là mất các lượt ghi còn trong đệm
+            if _n:
+                print(f"   💾 xả nốt {_n} bản ghi còn trong đệm sang D1")
             print("   " + _H.bao_cao())
         except Exception:
             pass

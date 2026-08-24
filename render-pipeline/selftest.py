@@ -369,12 +369,46 @@ def main():
     check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
+    check("gộp lệnh ghi D1: done/failed xả NGAY, phần dư không mất", t_gop_ghi_d1)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
             print("   - " + f)
         sys.exit(1)
     print("✅ SELFTEST PASS — code lành, cho phép chạy phiên.")
+
+
+def t_gop_ghi_d1():
+    """Gộp lệnh ghi phải TIẾT KIỆM mà KHÔNG MẤT dữ liệu và KHÔNG làm chậm số quan trọng.
+
+    Ba điều kiện: (a) 25 thao tác giữa chừng chỉ tốn 1-2 lượt gọi; (b) trạng thái CUỐI
+    (done/failed) xả NGAY chứ không nằm đệm — đó là số người ta nhìn để biết có mất video không;
+    (c) `xa_het()` cuối luồng không để sót mục nào."""
+    import hot_db as H
+    goc_goi, goc_bat = H.goi, H.bat_ghi
+    dem = {"n": 0, "mucs": 0}
+
+    def _gia(lenh, tham=None, timeout=12):
+        dem["n"] += 1
+        if lenh == "ghi_job_loat":
+            dem["mucs"] += len(tham.get("jobs") or [])
+        return {"ok": True}
+
+    H.goi, H.bat_ghi = _gia, (lambda: True)
+    try:
+        H._DEM_BUF.clear(); H._BUF_AT[0] = 0
+        for i in range(25):
+            H.ghi_job("O", f"j{i}", "K", "short", "rendering", at="t")
+        assert dem["n"] <= 2, f"25 thao tác mà tốn {dem['n']} lượt gọi — gộp không ăn"
+        assert len(H._DEM_BUF) > 0, "phải còn phần dư nằm đệm"
+        H.ghi_job("O", "jX", "K", "short", "done", drive_id="d", at="t")
+        assert not H._DEM_BUF, "trạng thái CUỐI phải xả ngay, không được nằm đệm"
+        H.ghi_job("O", "jY", "K", "short", "qc", at="t")
+        assert H.xa_het() == 1, "xa_het phải xả nốt phần còn lại"
+        assert not H._DEM_BUF
+    finally:
+        H.goi, H.bat_ghi = goc_goi, goc_bat
+        H._DEM_BUF.clear(); H._BUF_AT[0] = 0
 
 
 def t_id_khong_cam():

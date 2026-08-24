@@ -80,13 +80,60 @@ def goi(lenh: str, tham: dict | None = None, timeout: int = 12) -> dict:
 
 
 # ── các lệnh dùng trong pipeline (tên khớp với danh sách cho phép ở Worker) ──────────────────
+# ── GỘP LỆNH GHI (24/8, anh đề xuất) ────────────────────────────────────────────────────────
+# Có HAI trần khác nhau, phải nhìn cả hai:
+#   • D1     : 100.000 DÒNG ghi/ngày
+#   • Worker : 100.000 LƯỢT GỌI/ngày  <- chật hơn, vì mọi đường vào D1 đều qua đây
+# Gộp KHÔNG làm giảm số DÒNG ghi vào D1 (vẫn ngần ấy dòng) — nó cứu trần WORKER.
+# Đo thật 122 video/phiên × ~4 lượt ghi/job × 20 phiên:
+#   không gộp   9.760 lượt gọi/ngày (9% trần Worker)
+#   gộp 20      488 lượt gọi/ngày   (0,5%)   -> rẻ hơn 20 lần
+# Xả khi ĐỦ 20 mục HOẶC quá 120 giây, cái nào tới trước — dashboard trễ nhiều nhất 2 phút,
+# đủ trực quan mà không phải trả giá mỗi thao tác một vòng mạng 0,22s.
+# TRẠNG THÁI CUỐI (done/failed) XẢ NGAY: đó là số người ta nhìn để biết có mất video không.
+_DEM_BUF: list = []
+_BUF_AT = [0.0]
+BUF_MAX, BUF_GIAY = 20, 120
+
+
+def _xa_buf(ep: bool = False) -> int:
+    import time as _t
+    if not _DEM_BUF:
+        return 0
+    if not ep and len(_DEM_BUF) < BUF_MAX and (_t.time() - _BUF_AT[0]) < BUF_GIAY:
+        return 0
+    lo = _DEM_BUF[:100]
+    del _DEM_BUF[:len(lo)]
+    _BUF_AT[0] = _t.time()
+    owner = lo[0].pop("_owner", "")
+    for x in lo:
+        x.pop("_owner", None)
+    goi("ghi_job_loat", {"owner": owner, "jobs": lo})
+    return len(lo)
+
+
 def ghi_job(owner, jid, channel, vtype, status, step="", title=None, drive_id=None,
             queued=False, at="") -> None:
     if not bat_ghi():
         return
-    goi("ghi_job", {"id": jid, "owner": owner, "channel": channel, "vtype": vtype,
-                    "status": status, "step": step, "title": title, "drive_id": drive_id,
-                    "queued": bool(queued), "at": at})
+    import time as _t
+    if not _BUF_AT[0]:
+        _BUF_AT[0] = _t.time()
+    _DEM_BUF.append({"_owner": owner, "id": jid, "channel": channel, "vtype": vtype,
+                     "status": status, "step": step, "title": title, "drive_id": drive_id,
+                     "queued": bool(queued), "at": at})
+    _xa_buf(ep=status in ("done", "failed"))     # kết quả cuối thì xả ngay, khỏi chờ
+
+
+def xa_het() -> int:
+    """Xả nốt phần còn trong bộ đệm. Gọi cuối luồng — thiếu bước này là MẤT các lượt ghi cuối."""
+    n = 0
+    while _DEM_BUF:
+        m = _xa_buf(ep=True)
+        if not m:
+            break
+        n += m
+    return n
 
 
 _DEM = {"at": 0.0, "map": None}
@@ -169,4 +216,6 @@ def ngan_sach_doc(ngay: str) -> dict:
 
 
 def bao_cao() -> str:
-    return f"🔥 D1 mm0-hot: chế độ {_MODE}" + (f" · {_HONG['n']} lần hụt" if _HONG["n"] else "")
+    return (f"🔥 D1 mm0-hot: chế độ {_MODE}"
+            + (f" · còn {len(_DEM_BUF)} mục chờ xả" if _DEM_BUF else "")
+            + (f" · {_HONG['n']} lần hụt" if _HONG["n"] else ""))

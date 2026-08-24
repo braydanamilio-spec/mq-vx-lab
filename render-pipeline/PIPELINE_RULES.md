@@ -1344,3 +1344,29 @@ và độ sáng chứ **không đo khớp tiếng-hình**.
 **Luật:** khi Python đo một đằng còn composition tính một nẻo, **im lặng là triệu chứng nguy hiểm
 nhất** — video vẫn ra, vẫn đẹp, chỉ là tiếng lệch hình. Mọi thời lượng phải có **một nguồn duy nhất**,
 và bên vẽ phải ĐỌC nó chứ không tự đoán.
+
+### 7.ba — Gộp lệnh ghi D1: cứu trần WORKER, không phải trần D1 (24/8/2026, anh đề xuất)
+
+**Phải nhìn HAI trần, không phải một:**
+| | Trần free/ngày |
+|---|---|
+| D1 — số **DÒNG GHI** | 100.000 |
+| Worker — số **LƯỢT GỌI** | 100.000 ← **chật hơn**, vì mọi đường vào D1 đều qua đây |
+
+**Gộp KHÔNG làm giảm số DÒNG ghi vào D1** (vẫn ngần ấy dòng) — nó cứu **trần Worker**. Đo thật
+122 video/phiên × ~4 lượt ghi/job × 20 phiên:
+
+| Cách | Lượt gọi/ngày | % trần Worker |
+|---|---|---|
+| không gộp | 9.760 | 9% |
+| **gộp 20/lượt** | **488** | **0,5%** — rẻ hơn **20 lần** |
+
+**Quy tắc xả:** đủ **20 mục** HOẶC quá **120 giây**, cái nào tới trước → dashboard trễ nhiều nhất
+2 phút, vẫn trực quan. **Trạng thái CUỐI (`done`/`failed`) xả NGAY**, không nằm đệm — đó là con số
+người ta nhìn để biết có mất video không, trễ nó là mất ý nghĩa.
+`xa_het()` gọi cuối luồng: **thiếu bước này là mất các lượt ghi còn trong đệm**.
+
+Có test `t_gop_ghi_d1` chốt cả ba điều kiện: gộp có ăn · done/failed xả ngay · không sót mục nào.
+
+**Luật:** khi thêm một lớp trung gian (Worker), trần MỚI của hệ là trần chật nhất trong chuỗi —
+không phải trần của kho dữ liệu phía sau. Đo cả chuỗi trước khi ăn mừng "100× hạn mức".
