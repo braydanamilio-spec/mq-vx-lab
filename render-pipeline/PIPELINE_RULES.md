@@ -1522,3 +1522,30 @@ của A ngồi không. Đã thêm `?client=<id|số thứ tự>` để chỉ đ�
 **Luật:** trước khi cảnh báo về chính sách, phải xác minh **cấu trúc tài sản thật của người dùng**.
 Cùng một hành động — "nhiều dự án Cloud" — là lách nếu một tài khoản nhân bản cho chính nó, và là
 bình thường nếu mỗi tài khoản dùng phần của nó. Tôi đã kết luận trước khi hỏi, và làm anh lo vô cớ.
+
+### 7.bh — Rải kho Drive: băm tên kênh CỐ ĐỊNH nên 37/72 kho không ai chạm tới (24/8/2026)
+
+Anh hỏi *"đã rải đều các kho chưa, dồn một kho có bị chặn không"*. Có rải, nhưng rải **lệch**.
+
+**Cách cũ:** `ranked_accounts` sắp kho theo dung lượng trống rồi **xoay danh sách theo băm TÊN KÊNH**.
+Băm cố định ⇒ mỗi kênh **luôn** bắt đầu ở đúng một vị trí, đời đời không đổi.
+
+**Đo bằng số:** 55 kênh chỉ rơi vào **35 vị trí trong 72** → **37 kho không kênh nào chạm tới**.
+Số liệu thật khớp: kho nhiều nhất **119** file · kho ít nhất (khác 0) **18** · chênh **6,6 lần** ·
+**3 kho còn nguyên 0 file** (token vẫn tốt, chỉ là không ai chọn tới).
+
+**Vá:** xoay theo **băm tên kênh CỘNG bộ đếm lượt đẩy**. Vẫn giữ phần băm-theo-kênh (đó là lý do gốc
+của seed: 18 luồng song song không cùng đâm vào một kho tại cùng thời điểm), nhưng mỗi lượt đẩy nhích
+một bước nên cùng một kênh cũng rải ra nhiều kho.
+
+| Mô phỏng 55 kênh × 20 video | Kho được dùng | Nhiều nhất | Ít nhất |
+|---|---|---|---|
+| Cũ | **35/72** | 80 | 20 |
+| Mới | **72/72** | 21 | 11 |
+
+**Về câu "đầy thì bị chặn không":** không. `ranked_accounts` lọc `free >= need_bytes` nên kho đầy bị
+bỏ qua, và `DRIVE_SAFETY_PCT` dừng render khi tổng kho đạt 90%. Hiện mới **57,7/1080 GB = 5%** — còn
+rất xa. Nhưng rải lệch vẫn đáng sửa: nó làm vài kho đầy sớm trong khi 37 kho ngồi không.
+
+**Luật:** băm để "rải đều" chỉ đều khi khoá băm có **nhiều giá trị hơn số chỗ**. Băm một tập cố định
+55 tên vào 72 chỗ thì mãi mãi chỉ chạm được ~35 chỗ — phải trộn thêm thứ THAY ĐỔI theo từng lượt.
