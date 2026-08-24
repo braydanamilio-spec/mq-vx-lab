@@ -495,3 +495,11 @@ hồ Gemini chỉ còn **1 key**. Kết quả: 0 video vì KHÔNG CÒN NHÀ CUNG
 → **LUẬT VẬN HÀNH**: khi cả 3 nhà cung cấp viết đều cạn, ĐỪNG mở phiên mới — mỗi phiên đốt 18 luồng
 GitHub mà chắc chắn ra 0 video. Chờ hạn mức hồi (Groq TPD + CF neuron reset theo ngày) hoặc thêm key.
 Việc cần làm: bổ sung key Gemini (đang 1) — đó là nhà cung cấp DUY NHẤT chưa cạn tối nay.
+
+### BUG 24/8 — CÔNG TẮC "DỪNG" BỊ CHÍNH PLAN XOÁ (dừng không nổi)
+Dashboard bấm Dừng ghi `enabled:false, stop:true`, nhưng `plan_mode` có dòng
+`FB.set_config(OWNER, {"last_safety_stop": None, "stop": None})  # xoá cờ dừng cũ` -> mỗi phiên tự
+xoá cờ rồi vẫn spawn 18 luồng. Đêm 24/8 tắt máy lúc 03:50Z mà phiên 04:24Z vẫn mở đủ 18 lane.
+Cách chặn chắc chắn hiện tại: `gh workflow disable render_cron.yml` (bật lại bằng `enable`).
+→ **LUẬT**: cờ do NGƯỜI đặt (stop/pause) chỉ được xoá bởi hành động NGƯỜI (nút Chạy tiếp), tuyệt đối
+không do tiến trình tự xoá. Cần sửa: plan chỉ xoá `last_safety_stop` (cờ do MÁY đặt), giữ nguyên `stop`.
