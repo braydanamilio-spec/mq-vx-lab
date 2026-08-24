@@ -859,6 +859,20 @@ def t_cuu_mo_dau_khong_qua_mat_qc():
     src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                "datastory_ci.py"), encoding="utf-8").read()
     assert src.count("sang_hoa_mo_dau(") >= 4, "chưa gắn đủ 3 đường Cinematic (doc · short · long)"
+    # PHẢI ĐO SAU LỚP PHỦ, không phải đo ảnh gốc. Bằng chứng đo được: một tấm ảnh 0,0% tối ở dạng
+    # gốc ra khung 93,3% tối sau lớp phủ của Cinematic (gradient .74/.58/.88 + vignette .55) — tức
+    # đo ảnh gốc là đo NHẦM VẬT, mọi kết luận sau đó đều sai.
+    assert "_sau_man(" in src, "vẫn đo ảnh GỐC thay vì khung sau lớp phủ"
+    i = src.index("def sang_hoa_mo_dau")
+    than = src[i: i + 4200]
+    assert "_sau_man(os.path.join(base, f), man)" in than, "hàm cứu chưa đo qua lớp phủ"
+    assert 'scenes[0]["man"]' in than, "chưa gửi độ dày lớp phủ sang composition"
+    eng = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                       "engine-remotion", "src", "Cinematic.tsx")
+    if os.path.exists(eng):
+        t = io.open(eng, encoding="utf-8").read()
+        assert "s.man ?? 1" in t and "0.74 * man" in t, \
+            "Cinematic chưa nhận độ dày lớp phủ -> Python tính xong nhưng không ai dùng"
 
 
 def t_lay_viec_ke_o_dung_duong_vao():

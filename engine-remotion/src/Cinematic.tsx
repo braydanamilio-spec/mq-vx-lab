@@ -8,7 +8,7 @@ import { AbsoluteFill, Audio, Sequence, OffthreadVideo, Img, staticFile, interpo
 //   hud (data-HUD, tuỳ chọn): { kind:"timeline"|"scale"|"counter"|"countdown", value?, from?, to?, unit?, label?, marks?:string[] }
 type HUD = { kind: string; value?: number; from?: number; to?: number; unit?: string; label?: string; marks?: string[] };
 type Sub = { t: string; s: number; d: number };
-type Scene = { type: string; clip?: string; clip2?: string; clips?: string[]; fx?: string; audio: string; dur: number; nar: string; amp?: number[]; hud?: HUD; title?: string; num?: string; subs?: Sub[]; hook?: { stat?: string; label?: string; line?: string } };
+type Scene = { type: string; clip?: string; clip2?: string; clips?: string[]; man?: number; fx?: string; audio: string; dur: number; nar: string; amp?: number[]; hud?: HUD; title?: string; num?: string; subs?: Sub[]; hook?: { stat?: string; label?: string; line?: string } };
 export type CProps = { scenes: Scene[]; slug: string; handle?: string; accent?: string; accent2?: string; ink?: string; music?: string; mode?: "duel" | "file"; host?: string };
 export const calcCinematic = ({ props }: { props: CProps }) => ({ durationInFrames: Math.max(1, props.scenes.reduce((a, s) => a + s.dur, 0)) });
 const ci = (v: number, a: number, b: number, x: number, y: number) => interpolate(v, [a, b], [x, y], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
@@ -186,6 +186,8 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
   const cdur = Math.max(1, segLen);                // độ dài phân đoạn
   const seg = idx + segI;                          // đổi hướng Ken Burns giữa các phân đoạn
   const isImg = !!clip && /\.(jpg|jpeg|png|webp)$/i.test(clip);
+  // Độ dày lớp phủ, do Python đo từ chính tấm ảnh gửi sang (xem sang_hoa_mo_dau). Thiếu -> 1 = y như cũ.
+  const man = Math.max(0.35, Math.min(1, s.man ?? 1));
   const amt = isImg ? 0.13 : 0.16; const base = isImg ? 1.06 : 1.11;
   const zoomIn = seg % 2 === 0;
   const kb = zoomIn ? base + ci(cl, 0, cdur, 0, amt) : base + amt - ci(cl, 0, cdur, 0, amt);
@@ -206,9 +208,14 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
             ? <SafeImg src={staticFile(`${slug}/clips/${clip}`)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 32%" }} />
             : <OffthreadVideo src={staticFile(`${slug}/clips/${clip}`)} muted loop style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
         </div>
-        {/* Lớp phủ ĐỦ TỐI để chữ tiêu đề 120px luôn đọc được trên mọi ảnh (kể cả ảnh sáng/nhiều chi tiết) */}
-        <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(3,6,16,0.74) 0%, rgba(3,6,16,0.58) 42%, rgba(3,6,16,0.88) 100%)" }} />
-        <AbsoluteFill style={{ boxShadow: "inset 0 0 340px 120px rgba(0,0,0,0.55)" }} />
+        {/* Lớp phủ ĐỦ TỐI để chữ tiêu đề 120px luôn đọc được trên mọi ảnh (kể cả ảnh sáng/nhiều chi tiết).
+            24/8 tối — nhưng lớp này phủ CỨNG 58-88% đen lên MỌI ảnh, kể cả ảnh vốn đã tối. Hậu quả đo
+            được: `❌ mở đầu NỀN TRƠN (tối 84,5% · 788 màu)` — 788 màu tức ẢNH THẬT, chỉ là bị chính
+            lớp phủ của mình dìm xuống 84,5% rồi QC loại. Đó cũng là lý do mở đầu trông tẻ nhạt.
+            Nay Python đo độ sáng ảnh rồi gửi `man` (0.45-1.0) cho từng cảnh: ảnh sáng giữ lớp phủ
+            dày như cũ, ảnh vốn tối thì phủ mỏng lại — chữ vẫn đọc được nhờ textShadow sẵn có. */}
+        <AbsoluteFill style={{ background: `linear-gradient(180deg, rgba(3,6,16,${0.74 * man}) 0%, rgba(3,6,16,${0.58 * man}) 42%, rgba(3,6,16,${0.88 * man}) 100%)` }} />
+        <AbsoluteFill style={{ boxShadow: `inset 0 0 340px 120px rgba(0,0,0,${0.55 * man})` }} />
       </>) : <CosmicBg f={f} />}
       {(() => {
         // ĐA DẠNG BỐ CỤC: 4 kiểu mở đầu, chọn theo hash tiêu đề -> mỗi video một kiểu, nhưng ỔN ĐỊNH

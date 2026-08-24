@@ -2519,6 +2519,41 @@ def prune_ghost_clips(props: dict):
     return props
 
 
+def _sau_man(path: str, man: float = 1.0):
+    """Số đo của ảnh SAU khi đắp đúng lớp phủ mà `Cinematic.tsx` dùng (gradient dọc + vignette).
+
+    `man` = hệ số độ dày lớp phủ (1 = như cũ). Trả (%tối, bão hoà, số màu) — cùng đơn vị với
+    `flat_bg_metrics` để so được với ngưỡng QC."""
+    try:
+        from PIL import Image
+        im = Image.open(path).convert("RGB")
+        im.thumbnail((240, 240))
+        W, H = im.size
+        px = im.load()
+        for y in range(H):
+            t = y / max(1, H - 1)
+            # khớp mốc gradient của Cinematic: .74 ở 0% · .58 ở 42% · .88 ở 100%
+            a = (0.74 + (0.58 - 0.74) * (t / 0.42)) if t <= 0.42 else \
+                (0.58 + (0.88 - 0.58) * ((t - 0.42) / 0.58))
+            a *= man
+            for x in range(W):
+                r, g, b = px[x, y]
+                # vignette: đậm dần về mép (xấp xỉ inset shadow 340px/120px)
+                dx = abs(x - W / 2) / (W / 2); dy = abs(y - H / 2) / (H / 2)
+                v = min(1.0, max(0.0, (max(dx, dy) - 0.45) / 0.55)) * 0.55 * man
+                k = 1 - min(0.97, a + v)
+                px[x, y] = (int(r * k + 3 * (1 - k)), int(g * k + 6 * (1 - k)),
+                            int(b * k + 16 * (1 - k)))
+        raw = list(im.getdata()); n = max(1, len(raw))
+        lum = [(r * 299 + g * 587 + b * 114) // 1000 for r, g, b in raw]
+        dark = sum(1 for x in lum if x < 40) / n * 100
+        sat = sum(max(r, g, b) - min(r, g, b) for r, g, b in raw) / n
+        cols = len({(r >> 3, g >> 3, b >> 3) for r, g, b in raw})
+        return dark, sat, cols
+    except Exception:
+        return 0.0, 999.0, 9999      # đo không được -> coi như ĐẠT, không chặn oan
+
+
 def sang_hoa_mo_dau(props: dict, dark_ok: bool = False) -> str:
     """CỨU KHUNG MỞ ĐẦU TRƯỚC KHI RENDER, thay vì để QC loại sau khi đã tốn công (24/8/2026 tối).
 
@@ -2537,13 +2572,16 @@ def sang_hoa_mo_dau(props: dict, dark_ok: bool = False) -> str:
         return ""
     base = os.path.join(PUB, props.get("slug", ""), "clips")
 
-    def _do(f):
-        return flat_bg_metrics(os.path.join(base, f))
+    def _tron(f, man=1.0):
+        """Đo ĐÚNG THỨ QC SẼ ĐO: ảnh SAU khi đã bị lớp phủ của Cinematic dìm xuống.
 
-    def _tron(f):
+        24/8 tối — khe hở của bản vá đầu: nó đo ảnh GỐC, trong khi `Cinematic.tsx` phủ lên mọi ảnh
+        `linear-gradient(rgba(3,6,16, .74/.58/.88))` + vignette `rgba(0,0,0,.55)`. Ảnh gốc sáng
+        đẹp vẫn ra khung 84,5% tối — đúng ca `❌ mở đầu NỀN TRƠN (tối 84,5% · 788 màu)`: 788 màu
+        nghĩa là ảnh THẬT, chỉ bị chính lớp phủ của mình dìm chết. Đo ảnh gốc là đo nhầm vật."""
         if not f:
             return True, (100.0, 0.0, 0)
-        d, sa, c = _do(f)
+        d, sa, c = _sau_man(os.path.join(base, f), man)
         return ((d >= 88 and c < 450) if dark_ok else (d >= 75 and c < 900)), (d, sa, c)
 
     f0 = scenes[0].get("clip")
@@ -2552,6 +2590,14 @@ def sang_hoa_mo_dau(props: dict, dark_ok: bool = False) -> str:
     xau, (d, sa, c) = _tron(f0)
     if not xau:
         return ""
+    # BẬC 0: LÀM MỎNG LỚP PHỦ. Rẻ nhất và đúng bệnh nhất — không đụng tới ảnh, chỉ bớt cái màn đen
+    # mà chính mình đắp lên. Chữ vẫn đọc được nhờ textShadow 0 2px 18px rgba(0,0,0,.95) sẵn có.
+    for _man in (0.75, 0.55, 0.45):
+        _x, (d2, sa2, c2) = _tron(f0, _man)
+        if not _x:
+            scenes[0]["man"] = _man
+            print(f"   🪟 mở đầu: làm mỏng lớp phủ xuống {_man:.2f} -> tối {d2:.0f}% · {c2} màu (đạt)")
+            return ""
     print(f"   🔦 mở đầu hơi trơn trước render (tối {d:.0f}% · {c} màu · sat {sa:.0f}) — thử cứu…")
     # BẬC 1: tăng sáng — CHỈ khi đây là ẢNH THẬT bị chụp tối, KHÔNG phải nền phẳng.
     # Chạy thử bắt được bẫy: tăng sáng ×2.1 kéo một tấm gần đen (#0c0c10) xuống "2% tối" và LỌT QC,
@@ -2582,14 +2628,17 @@ def sang_hoa_mo_dau(props: dict, dark_ok: bool = False) -> str:
         f = sc.get("clip")
         if not f:
             continue
-        _x, (dd, _s, cc) = _tron(f)
-        if not _x:
-            ung.append((dd, f))
+        for _m in (1.0, 0.75, 0.55):
+            _x, (dd, _s, cc) = _tron(f, _m)
+            if not _x:
+                ung.append((dd, f, _m)); break
     if ung:
         ung.sort()
         scenes[0]["clip"] = ung[0][1]
         scenes[0].pop("clips", None)
-        print(f"   🔁 mở đầu: mượn ảnh sáng nhất của cảnh khác ({ung[0][1]}, tối {ung[0][0]:.0f}%)")
+        scenes[0]["man"] = ung[0][2]
+        print(f"   🔁 mở đầu: mượn ảnh sáng nhất của cảnh khác ({ung[0][1]}, tối {ung[0][0]:.0f}%, "
+              f"lớp phủ {ung[0][2]:.2f})")
         return ""
     return f"mở đầu quá trơn (tối {d:.0f}% · {c} màu) và không cảnh nào có ảnh sáng hơn"
 

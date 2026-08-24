@@ -1883,3 +1883,19 @@ phẳng, đi thẳng sang bậc ②. Chốt bằng `t_cuu_mo_dau_khong_qua_mat_q
 KHÔNG bị ghi đè).
 **LUẬT: khi tự động "chữa" một thứ mà QC đang chấm, phải chứng minh mình chữa CÁI THẬT chứ không chữa
 CON SỐ. Test phải có một ca mà bản vá tham lam sẽ trượt.**
+
+### 7.ck — Thủ phạm thật của `mở đầu NỀN TRƠN`: LỚP PHỦ CỦA CHÍNH MÌNH (24/8/2026 tối)
+Bản vá 7.cj đo ảnh GỐC — **đo nhầm vật**. `Cinematic.tsx` phủ lên MỌI ảnh
+`linear-gradient(rgba(3,6,16, .74 → .58 → .88))` cộng vignette `rgba(0,0,0,.55)`. Số đo trên máy:
+một tấm ảnh **0,0% tối** ở dạng gốc ra khung **93,3% tối** sau lớp phủ. Vậy nên mới có ca
+`❌ mở đầu NỀN TRƠN (tối 84,5% · 788 màu)` — **788 màu tức ẢNH THẬT**, chỉ bị chính lớp phủ của mình
+dìm chết. Và đó cũng là lý do mở đầu trông tẻ nhạt: ta tự đắp một màn đen 74-88% lên đúng tấm hook.
+Vá hai đầu:
+* `_sau_man()` mô phỏng đúng lớp phủ trước khi đo ⇒ quyết định dựa trên thứ QC sẽ thấy.
+* Thêm **BẬC 0 — làm mỏng lớp phủ** (`man` 0.75/0.55/0.45, gửi theo từng cảnh sang `Cinematic.tsx`).
+  Rẻ nhất, đúng bệnh nhất, **không đụng tới ảnh**; chữ vẫn đọc được nhờ `textShadow` sẵn có. Chỉ khi
+  bậc 0 không cứu nổi mới tới tăng sáng ảnh (bậc 1) rồi mượn ảnh cảnh khác (bậc 2).
+Chốt bằng `t_cuu_mo_dau_khong_qua_mat_qc` (kiểm cả việc `Cinematic.tsx` THẬT SỰ dùng `man` — Python
+tính xong mà composition không đọc thì vô nghĩa).
+**LUẬT: trước khi chữa "ảnh xấu", phải kiểm xem thứ mình đo có đúng thứ người xem thấy không. Ở đây
+khoảng cách giữa hai thứ đó là 93 điểm phần trăm.**
