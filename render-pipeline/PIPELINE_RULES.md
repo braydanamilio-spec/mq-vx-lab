@@ -930,3 +930,9 @@ phí) và lấy mức LỚN HƠN giữa hai nguồn; mục nào im quá 45' thì
 
 **Luật:** shard dự phòng phải giữ cho hệ **chạy được**, nhưng không được làm hệ **mất tiếng nói**.
 Lật shard mà quên đường báo cáo thì người vận hành mù đúng lúc cần nhìn nhất.
+
+**Bổ sung 7.aj — doc nhịp sống phải được DỌN.** `ghi_nhip_song` ghi mỗi job thành một TRƯỜNG trong
+doc `render_stats/__live__{owner}`, dùng `merge` nên **không bao giờ tự mất đi**: ~120 job/phiên,
+vài ngày là chạm trần **1MB** của Firestore → mọi lượt ghi nhịp sống hỏng, mà dashboard lại phải tải
+về một doc ngày càng nặng. `don_nhip_song()` giữ 2 giờ gần nhất rồi ghi đè, chạy 1 lần/phiên ở plan
+(1 đọc + 1 ghi). **Luật: mọi doc gộp ghi bằng `merge` đều phải có đường dọn, nếu không nó là quả bom hẹn giờ.**

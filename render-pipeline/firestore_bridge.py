@@ -863,6 +863,39 @@ def ghi_nhip_song(job_id: str, channel: str, status: str) -> None:
         {job_id: {"ch": channel or "", "st": status or "", "at": _now()}}, merge=True), "nhip_song")
 
 
+def don_nhip_song(gio: int = 2) -> int:
+    """DỌN doc nhịp sống — chạy 1 lần/phiên ở plan.
+
+    24/8 — lỗi tiềm ẩn của chính `ghi_nhip_song`: mỗi job là một TRƯỜNG trong doc, ~120 job/phiên,
+    ghi merge nên KHÔNG BAO GIỜ tự mất đi. Vài ngày là doc chạm trần 1MB của Firestore -> mọi lượt
+    ghi nhịp sống hỏng, và dashboard phải tải về một doc ngày càng nặng.
+    Giữ lại các mục trong `gio` giờ gần nhất rồi GHI ĐÈ (set không merge) — 1 đọc + 1 ghi mỗi phiên."""
+    own = _OWNER_HINT[0]
+    db = _db_B_that()
+    if not (own and db):
+        return 0
+    try:
+        ref = db.collection("render_stats").document(f"__live__{own}")
+        _cr("don_nhip_song", 1)
+        d = _get_at(ref)
+        if not d.exists:
+            return 0
+        x = d.to_dict() or {}
+        from datetime import timedelta as _td
+        moc = (datetime.now(timezone.utc) - _td(hours=gio)).isoformat()
+        giu = {k: v for k, v in x.items()
+               if isinstance(v, dict) and str(v.get("at", "")) >= moc}
+        if len(giu) == len(x):
+            return 0
+        _cw("don_nhip_song")
+        _soft(lambda: ref.set(giu), "don_nhip_song")
+        print(f"   🧹 dọn nhịp sống: bỏ {len(x) - len(giu)} mục cũ, còn {len(giu)}")
+        return len(x) - len(giu)
+    except Exception as e:
+        print(f"   ⚠️ dọn nhịp sống hụt ({str(e)[:50]})")
+        return 0
+
+
 def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
     """Ghi dung lượng THẬT của 1 kho vào storage_accounts.used (render upload KHÔNG tự cập nhật số này ->
     phải sync để display + guard-kho-đầy chính xác). Doc id khớp Worker: {owner}__{name}."""

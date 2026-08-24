@@ -1290,6 +1290,7 @@ def plan_mode():
     try:
         _moc("gương B→B2")
         FB.mirror_b_to_b2(OWNER)
+        FB.don_nhip_song()      # doc nhịp sống ghi merge nên không tự mất -> dọn 1 lần/phiên
     except Exception:
         pass
     # 23/8 (user: "mọi logic liên quan tới R2 tạm thời bỏ, tránh xung đột lỗi"): đã NGẮT hoàn toàn
