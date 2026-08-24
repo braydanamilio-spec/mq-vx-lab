@@ -1299,3 +1299,27 @@ Lưu ý `__snap__{owner}` / `__cool__{owner}` / `__pushed__{owner}` **HỢP LỆ
 **Luật:** `_soft` (ghi mềm, nuốt lỗi) là con dao hai lưỡi — nó cứu pipeline khỏi chết vì quota, nhưng
 cũng **giấu luôn lỗi cấu hình vĩnh viễn**. Mọi thứ đi qua `_soft` phải có bài kiểm TĨNH, vì nó sẽ
 không bao giờ tự la lên.
+
+### 7.ay — Soi & dọn rác kho khi CẢ A LẪN B đều cạn (24/8/2026)
+
+`find_junk.py` chạy trong CI lấy danh sách kho từ Firestore → **A và B đều 429** → chết ngay bước đầu,
+không quét nổi một file. Nhưng Worker có **bản sao thẻ kết nối trong KV** (dựng 23/8 để chống đúng
+cảnh này), và **KV thì liệt kê được** → có đường đi trọn vẹn **không hỏi Firestore một câu nào**.
+
+→ Thêm `/api/junk-list` (lấy 72 kho từ KV) + `/api/junk-scan` (quét đệ quy 1 kho, phân loại, tuỳ chọn dọn).
+
+**KẾT QUẢ THẬT — 72/72 kho · 3.534 file:**
+| Loại | Số | |
+|---|---|---|
+| 1 · file tạm | **0** | |
+| 2 · trùng tên y hệt | **18** | giữ bản mới nhất |
+| 3 · ảnh/sidecar mồ côi | **4** | |
+| 4 · video hỏng <300KB | **0** | |
+| 5 · video thiếu phần phụ | **2** | **KHÔNG xoá** — chỉ liệt kê |
+
+**Kho sạch hơn tưởng nhiều: rác chỉ 0,6%** (22/3.534), nằm ở 6/72 kho.
+Đã dọn đủ 22 file → **bỏ vào THÙNG RÁC, không xoá vĩnh viễn**. Kiểm lại 3 kho: rác về 0, số file tốt
+không suy suyển. Xoá vĩnh viễn (đổ thùng rác) **cố ý không nằm trong công cụ** — đó là việc của anh.
+
+**Luật:** trước khi kết luận "kho đầy rác", phải ĐẾM. Ở đây nỗi lo là 100% còn thực tế là 0,6% — nếu
+tin cảm giác mà `wipe_queue` cả kho thì mất trắng 3.512 file tốt.
