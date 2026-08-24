@@ -999,8 +999,14 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # và phải có trần thời gian, nếu không lane bị timeout matrix chém giữa chừng
     kh = than["channel_mode"]
     i = kh.index("lay_viec_ke(")
-    assert "budget_s" in kh[max(0, i - 900): i] and "HARD_S" in kh[max(0, i - 900): i], \
-        "vòng lấy việc kế thiếu trần ngân sách giờ -> lane bị timeout chém giữa video"
+    truoc = kh[max(0, i - 1400): i]
+    assert "HARD_S" in truoc, "vòng lấy việc kế thiếu trần giờ -> lane bị timeout chém giữa video"
+    # 24/8 tối — bẫy đã dính một lần: vòng này dùng LẠI ĐÚNG ngưỡng vừa chặn vòng trên
+    # (`min(budget_s, HARD_S)` = ngân sách MỀM), nên luôn break ngay lượt đầu và dòng `♻️ … rảnh`
+    # không bao giờ in ra. Số thật lane PRICEDUSA: tiêu 53', trần cứng 150' -> còn 97', thừa cho
+    # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
+    assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
+        "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
 
 
 def t_phan_ap_luc_khong_im_lang():

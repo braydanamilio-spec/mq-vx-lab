@@ -1989,3 +1989,15 @@ Hai chỗ sai, đều thuộc loại "tin mô hình quá mức":
 Chốt trong `t_cuu_mo_dau_khong_qua_mat_qc` (bắt buộc có `BIEN` ≥ 8).
 **LUẬT: khi thay một phép đo thật bằng một mô hình, phải để BIÊN — và phải có ca thật đối chiếu.
 Mô hình khớp "vừa đủ" nghĩa là nó sẽ trượt ở ca kế tiếp.**
+
+### 7.cr — Bản vá "lấy việc kế" (7.ci) đúng chỗ nhưng VÔ HIỆU: nó dùng lại đúng ngưỡng vừa chặn nó
+Kiểm chứng phiên 20:12Z (đã chạy 7.ci): dòng `♻️ … rảnh -> nhận thêm kênh` **vẫn 0 lần**, lane vẫn kết
+thúc bằng `còn 57' < ước tính 69'/mẻ`. Vì vòng lấy-việc-kế đo bằng `min(budget_s, HARD_S)` — chính là
+ngân sách MỀM 110' vừa chặn vòng trên — nên nó luôn `break` ngay lượt đầu.
+Số thật (PRICEDUSA): lane tiêu **53'**, trần CỨNG là **150'** (timeout matrix 165' − 15' đệm) ⇒ còn
+**97'**, thừa cho một mẻ 69'; lấy thêm một mẻ thì kết thúc ở 122', vẫn dưới trần 28'.
+Ngân sách mềm sinh ra để **một KÊNH đừng ôm máy quá lâu**; phần giờ thừa phải chảy về HÀNG CHỜ chứ
+không bỏ không. Nay vòng lấy việc đo theo `HARD_S`. Chốt bằng `t_lay_viec_ke_o_dung_duong_vao` (cấm
+hẳn chuỗi `min(budget_s, HARD_S)` trong vòng đó); đã thử ngược: quay về ngưỡng mềm là test bắt.
+**LUẬT: vá xong phải KIỂM CHỨNG BẰNG LOG PHIÊN SAU, đừng dừng ở "code đã đúng chỗ".** Đây là lần thứ
+hai trong đêm một bản vá đúng ý tưởng nhưng không chạy (lần trước: 7.br vá nhầm file).

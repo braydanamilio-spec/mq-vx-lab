@@ -1859,7 +1859,14 @@ def channel_mode(name):
         _da_lam = {name}
         _by_name = {}
         while True:
-            _con_s = min(budget_s, HARD_S) - (time.monotonic() - start)
+            # ĐO THEO TRẦN THẬT (HARD_S), KHÔNG theo ngân sách mềm — 24/8 tối, đo được:
+            # lane dừng với `còn 57' < ước tính 69'/mẻ` rồi thoát, dòng `♻️ … rảnh` KHÔNG hề xuất
+            # hiện. Vì vòng này dùng LẠI ĐÚNG cái ngưỡng vừa chặn vòng trên (`min(budget_s, HARD_S)`
+            # = 110'), nên nó luôn break ngay lượt đầu — bản vá 7.ci đúng chỗ nhưng vô hiệu.
+            # Số thật: lane tiêu 53' trong khi trần cứng là 150' (timeout matrix 165' − 15' đệm).
+            # Còn 97' — thừa cho một mẻ 69'. Ngân sách mềm 110' sinh ra để một KÊNH đừng ôm máy quá
+            # lâu; phần giờ thừa thì phải chảy về HÀNG CHỜ, không phải bỏ không.
+            _con_s = HARD_S - (time.monotonic() - start)
             _need = max(last_dur * 1.3, 20 * 60)
             if _con_s < _need:
                 break                     # không đủ giờ cho một mẻ nữa -> nghỉ thật
