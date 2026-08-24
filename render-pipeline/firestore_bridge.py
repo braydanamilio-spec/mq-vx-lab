@@ -1211,6 +1211,25 @@ def mirror_b_to_b2(owner: str) -> int:
             x = d.to_dict() or {}
             _db_jobs().collection("render_jobs").document(d.id).set(x, merge=True)
             d.reference.delete(); drained += 1
+        # 24/8 — LỖ MẤT SỐ ĐẾM: trong phiên khẩn (đang chạy B2), `count_pushed` cộng vào
+        # render_stats/__pushed__ Ở B2. Bản trước chỉ drain render_jobs nên khi B hồi, những lượt
+        # đẩy đó BIẾN MẤT khỏi sổ -> dashboard đếm thiếu, và `count_done` tưởng kênh làm ít hơn
+        # thực tế -> làm DƯ video. Nay cộng dồn số đếm về B rồi xoá doc ở B2 (xoá xong nên không
+        # có đường cộng trùng).
+        try:
+            from google.cloud.firestore_v1 import Increment as _Inc
+            for _sid in (f"__pushed__{owner}", owner):
+                _sd = b2.collection("render_stats").document(_sid).get(timeout=15)
+                if not _sd.exists:
+                    continue
+                _x = _sd.to_dict() or {}
+                _patch = {k: _Inc(v) for k, v in _x.items() if isinstance(v, (int, float))}
+                if _patch:
+                    _db_jobs().collection("render_stats").document(_sid).set(_patch, merge=True)
+                _sd.reference.delete()
+                print(f"   ↩️ rót số đếm {_sid} từ B2 về B ({len(_patch)} mục)")
+        except Exception as e:
+            print(f"   ⚠️ rót số đếm B2->B hụt ({str(e)[:60]})")
         if drained:
             print(f"   🔁 Rót ngược {drained} job từ B2 về B (video phiên khẩn không bị thất lạc).")
         # 0b) rót ngược ngân hàng chủ đề (đề tài viết trong phiên khẩn) — B2 giữ superset nên set thẳng

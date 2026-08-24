@@ -573,3 +573,17 @@ tự xoay vòng, tự tắt key lỗi. Không có key thì hai nguồn này im l
 y như cũ. Đã kiểm: dán key nara giả -> vào hồ với nhãn provider "nara", KHÔNG bị nhận nhầm sang
 Cloudflare (nhánh cf: bắt mọi token lạ nên phải chặn trước nó).
 Coverr: có API nhưng link mp4 ký hạn 15' + đếm hạn mức tải -> ưu tiên thấp, chưa làm.
+
+### RÀ SOÁT 24/8 — LUỒNG B ↔ B2
+Đã kiểm 4 điểm, 3 điểm LÀNH:
+ • `mirror_b_to_b2` có guard `if _B2["on"] ... return 0` -> không bao giờ chép/drain khi ĐANG chạy B2
+   (nếu không, `_db_jobs()` lúc đó trỏ B2 và sẽ tự chép vào chính nó).
+ • Drain ngược render_jobs: `set(merge=True)` rồi mới xoá ở B2 -> mất mạng giữa chừng thì phiên sau
+   drain tiếp, không mất job.
+ • Cầu dao quota: mirror tự bỏ qua khi `_RQ_DEAD` đóng -> không góp phần treo phiên.
+LỖI TÌM ĐƯỢC (đã vá): drain KHÔNG rót `render_stats`. Trong phiên khẩn, `count_pushed` cộng vào
+`render_stats/__pushed__` **ở B2**; B hồi thì số đó biến mất -> dashboard đếm thiếu và `count_done`
+tưởng kênh làm ít hơn thực tế -> **làm DƯ video**. Nay cộng dồn bằng Increment về B rồi xoá doc ở B2.
+CÒN RỦI RO (chưa xử, cần quyết): khi chạy trên B2, `count_done` lấy số từ `render_stats/{owner}` —
+sổ này vừa bị reset 23/8 nên trong phiên khẩn kế tiếp hệ sẽ đếm thấp hơn thực tế. Sổ tự dựng lại sau
+vài phiên; muốn chắc thì nạp lại số đếm từ số job thật một lần.
