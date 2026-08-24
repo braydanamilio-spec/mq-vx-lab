@@ -1554,18 +1554,33 @@ def plan_mode():
     # Cách chữa đúng (và là điều đầu tiên các hệ hàng đợi nghiêm túc làm): CHẶN NGƯỢC nơi sản xuất.
     # Kênh nào đã tồn quá `TON_TRAN` video chưa đăng thì NGƯNG làm thêm cho kênh đó, nhường máy cho
     # kênh đang đói. Hàng đợi không chặn được nơi sản xuất là một LỖI, không phải một tính năng.
-    TON_TRAN = int(os.environ.get("TON_TRAN", "40"))     # ~10 ngày đăng ở nhịp 4 video/kênh/ngày
+    # Đo bằng SỐ NGÀY CÒN BÀI, không phải số video thô (anh chốt 24/8):
+    #   "kênh nào sắp hết video lên lịch thì tự động ưu tiên, và nên chia đều".
+    # Một kênh chạy nhịp 4 video/ngày mà tồn 28 cái = còn 7 NGÀY bài. Kênh nhịp 1 video/ngày mà tồn
+    # 28 cái = còn 28 ngày — cùng con số 28 nhưng mức độ đói khác hẳn. Nên phải quy về NGÀY.
+    NGAY_DEM = float(os.environ.get("NGAY_DEM", "7"))      # đệm mục tiêu: 7 ngày bài (anh muốn dư ra một khúc)
+    NHIP_NGAY = float(os.environ.get("NHIP_NGAY", "4"))    # 1 long + 3 short = 4 video/kênh/ngày
     try:
         import hot_db as _H
         _ton = _H.ton_kho(OWNER)
         if _ton:
-            _no = [c for c in channels if _ton.get(str(c).upper(), 0) >= TON_TRAN]
-            if _no:
-                _suc = _H.suc_dang_ngay()
-                print(f"   🛑 PHẢN ÁP LỰC: {len(_no)} kênh đã tồn ≥{TON_TRAN} video CHƯA ĐĂNG -> ngưng làm thêm "
-                      f"(đăng được hôm nay: {_suc if _suc >= 0 else '?'} video). Nhường máy cho kênh đói.")
-                print("      " + ", ".join(f"{c}={_ton.get(str(c).upper(),0)}" for c in _no[:8]))
-                channels = [c for c in channels if c not in _no] or channels[:1]
+            def _ngay_con(c):
+                return _ton.get(str(c).upper(), 0) / NHIP_NGAY
+            # 1) ƯU TIÊN kênh ĐÓI NHẤT: còn ít ngày bài nhất được làm trước
+            channels = sorted(channels, key=_ngay_con)
+            # 2) NGƯNG kênh đã đủ đệm — nhường máy, không làm thứ phải nằm kho hàng tháng
+            _du = [c for c in channels if _ngay_con(c) >= NGAY_DEM]
+            _doi = [c for c in channels if _ngay_con(c) < NGAY_DEM]
+            _suc = _H.suc_dang_ngay()
+            print(f"   📦 Đệm bài: mục tiêu {NGAY_DEM:.0f} ngày/kênh (nhịp {NHIP_NGAY:.0f} video/ngày) · "
+                  f"đăng được hôm nay: {_suc if _suc >= 0 else '?'}")
+            if _doi:
+                print("      đói nhất: " + ", ".join(
+                    f"{c}={_ngay_con(c):.1f}ngày" for c in _doi[:6]))
+            if _du:
+                print(f"   🛑 PHẢN ÁP LỰC: {len(_du)} kênh đã đủ ≥{NGAY_DEM:.0f} ngày bài -> ngưng làm thêm, "
+                      f"nhường máy cho {len(_doi)} kênh đói.")
+                channels = _doi or channels[:1]
     except Exception as _e:
         print(f"   ⚠️ không đọc được tồn kho ({str(_e)[:50]}) — chạy như cũ")
 

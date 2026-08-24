@@ -1466,3 +1466,33 @@ dựng một đường vòng, phải hỏi ngay *"còn chỗ nào khác đang ch
 
 **Luật:** dữ liệu SỐNG CÒN phải có ít nhất một đường đọc **không nằm cùng nhà cung cấp** với đường
 chính. Ba đường mà cùng là Firestore thì đó là **một** đường, không phải ba.
+
+### 7.bf — Ba mức ưu tiên của bức tường quota, và đệm bài tính theo NGÀY (24/8/2026)
+
+**Lỗi tôi tự gây khi dựng bức tường:** xếp `heal_unpushed` vào nhóm "việc phụ" nên nó bị hoãn từ 70%
+trần. SAI hoàn toàn — đó là hàm **cứu những video đã render xong nhưng chưa đẩy được kho** (đo hôm
+nay: 36 cái). Hoãn nó vì tiếc vài trăm lượt đọc là đánh đổi ngược: mất công render cả tiếng để tiết
+kiệm 0,8% hạn mức.
+→ Ba mức, xếp theo **hậu quả nếu KHÔNG chạy**:
+| Mức | Không chạy thì mất gì | Chạy tới |
+|---|---|---|
+| `thiet_yeu` | video ĐANG làm | luôn luôn |
+| `cuu_du_lieu` | video ĐÃ LÀM XONG | **92%** |
+| còn lại | vài con số thống kê | 70% |
+
+**Đệm bài đo bằng NGÀY, không phải số video thô** (anh chốt: *"kênh nào sắp hết video lên lịch thì
+tự động ưu tiên, và nên chia đều"*). Kênh nhịp 4 video/ngày tồn 28 cái = còn **7 ngày**; kênh nhịp
+1 video/ngày tồn 28 cái = còn **28 ngày** — cùng con số nhưng mức đói khác hẳn.
+→ Sắp kênh theo **số ngày còn bài, ít nhất trước**; kênh đã đủ `NGAY_DEM` (mặc định **7 ngày**, đúng
+kế hoạch dựng đệm một tuần trước khi đăng) thì **ngưng làm thêm**, nhường máy cho kênh đói.
+
+**Đường lấy kho Drive — 6 lớp, kiểm KHÔNG SÓT KHÔNG CHỒNG CHÉO:**
+đệm tiến trình → gói 1-doc ở B/B2 → quét A → gương ở B → gương ở B2 → **🆘 KV của Worker**.
+Mỗi lớp `return` ngay khi có kết quả nên không lớp nào chạy hai lần. Đo thật: gọi 3 lần liên tiếp khi
+Firestore tắt hết → **72 kho mỗi lần · 0 tên trùng · KV chỉ bị gọi 1 lần** (2 lần sau ăn đệm).
+
+**Tăng trần KV bằng cách DỜI KHỎI KV:** KV free chỉ **1.000 lượt ghi/ngày**, không nới được nếu không
+trả tiền. D1 cho **100.000** — gấp **100 lần**, mà đã có sẵn. Nên bộ nhớ đệm thẻ kết nối nay **ghi vào
+D1** (bảng `the_ket_noi`), KV chỉ còn làm lớp đọc thứ hai cho dữ liệu cũ.
+**Luật:** gặp trần chật thì hỏi "có dịch vụ nào khác trong tay làm được việc này với trần rộng hơn
+không" trước khi nghĩ tới việc trả tiền.

@@ -70,6 +70,7 @@ def _get_at(ref, timeout=15):
 TRAN_DOC_NGAY = 50_000
 TRAN_GHI_NGAY = 20_000
 MUC_PHU = 0.70
+MUC_KHAN = 0.92     # việc CỨU DỮ LIỆU được chạy tới mức này, chỉ dừng khi thật sự sát trần
 # nen_doc/nen_ghi = phần CẢ HỆ đã tiêu trước tiến trình này (đọc từ sổ chung).
 # 24/8: bản đầu dùng CHUNG một biến `nen` cho cả đọc lẫn ghi -> báo "GHI 180%" trong khi
 # thực tế chưa ghi gì. Nền đọc và nền ghi là hai con số khác nhau, không được gộp.
@@ -80,12 +81,20 @@ def _thuc_te(loai: str) -> int:
     return int(_NGAN_SACH[f"nen_{loai}"]) + int(_NGAN_SACH[loai])
 
 
-def con_ngan_sach(loai: str = "doc", thiet_yeu: bool = False) -> bool:
-    """Còn được phép làm việc này không? Việc thiết yếu luôn được phép."""
+def con_ngan_sach(loai: str = "doc", thiet_yeu: bool = False, cuu_du_lieu: bool = False) -> bool:
+    """Còn được phép làm việc này không?
+
+    Ba mức, xếp theo hậu quả nếu KHÔNG chạy:
+      • thiet_yeu   : không chạy = mất video đang làm  -> luôn cho chạy
+      • cuu_du_lieu : không chạy = mất video ĐÃ LÀM XONG -> cho tới 92% trần
+      • còn lại     : không chạy = mất vài con số thống kê -> dừng ở 70%
+    24/8 — bản đầu xếp `heal_unpushed` vào nhóm "còn lại". SAI: nó là hàm CỨU những video đã render
+    xong nhưng chưa đẩy được kho (đo thật hôm nay: 36 cái). Hoãn nó vì tiếc vài trăm lượt đọc là
+    đánh đổi sai hoàn toàn — mất công render cả tiếng để tiết kiệm 0,8% hạn mức."""
     if thiet_yeu:
         return True
     tran = TRAN_DOC_NGAY if loai == "doc" else TRAN_GHI_NGAY
-    return _thuc_te(loai) < tran * MUC_PHU
+    return _thuc_te(loai) < tran * (MUC_KHAN if cuu_du_lieu else MUC_PHU)
 
 
 def bao_ngan_sach() -> str:
@@ -1839,7 +1848,7 @@ def heal_unpushed(owner: str, hours: int = 48, cap: int = 120) -> int:
     if _t2.time() < _RQ_DEAD["until"]:
         print("   🩹 heal_unpushed: bỏ qua (cầu dao quota đang đóng)")
         return 0
-    if not con_ngan_sach("doc"):
+    if not con_ngan_sach("doc", cuu_du_lieu=True):
         print("   🧱 heal_unpushed: hoãn — " + bao_ngan_sach())
         return 0
     """TỰ CHỮA video 'mồ côi' (22/8): Firestore A nghẽn 1 nhịp -> enqueue tưởng '0 kho Drive' ->
