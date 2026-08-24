@@ -181,41 +181,9 @@ def nap_so_nghi_chung(force: bool = False):
         pass
 
 
-def _muc_nghi(err) -> int:
-    """PHÂN LOẠI ĐÚNG MỨC NGHỈ theo LOẠI hạn mức — anh chỉ ra 24/8, và đúng là đang gộp làm một.
-
-    Ba loại 429 hoàn toàn khác nhau, chữa ngược nhau:
-      • CHẶN THEO PHÚT/GIÂY (RPM/TPM) — key vẫn tốt, chỉ cần thở 1-2 phút. Cho nghỉ 90' như trước
-        là **ném đi 88 phút hạn mức còn dùng được** của một key hoàn toàn khoẻ. Hồ 153 key mà cứ
-        mỗi cơn RPM lại loại một key suốt 90' thì đến trưa còn vài key là đúng.
-      • CẠN THEO NGÀY (RPD/TPD) — gọi lại trước lúc nhà cung cấp reset là chắc chắn 429, mà lượt
-        hỏng vẫn bị trừ. Phải nghỉ tới **mốc reset thật**, không phải 90'.
-      • KHÔNG RÕ — 20' là mức thoả hiệp: đủ để không dội liên tục, đủ ngắn để không phí key.
-    Mốc reset của Google/Groq free là 00:00 giờ Thái Bình Dương (UTC-7) -> tính đúng số phút còn lại.
-    """
-    import datetime as _d
-    t = str(err or "").lower()
-    if any(x in t for x in ("per minute", "per-minute", "per second", "requests per min",
-                            "rpm", "tpm", "per region", "try again in")):
-        return 2                                  # thở 2 phút rồi vào lại vòng xoay
-    if any(x in t for x in ("per day", "tokens per day", "requests per day", "tpd", "rpd",
-                            "daily", "quota exceeded for quota metric", "free_tier")):
-        # MỖI NHÀ CUNG CẤP RESET Ở MÚI GIỜ KHÁC NHAU (24/8 tối, thấy trong log phiên 16:06Z).
-        # Cloudflare Workers AI ghi rõ trong chính thông báo lỗi: "daily free allocation of 10,000
-        # neurons" — mức đó reset **00:00 UTC**. Nhưng nhánh này cho mọi key nghỉ tới 00:00 giờ
-        # Thái Bình Dương (UTC-7), tức key Cloudflare cạn lúc 16:00 UTC bị treo tới 07:00 UTC hôm
-        # sau, trong khi nó đã hồi từ 00:00 UTC — **ném đi 7 tiếng của một key đã tốt trở lại, mỗi
-        # ngày**. Google thì đúng là mốc Thái Bình Dương nên giữ nguyên.
-        # Không đoán cho nhà cung cấp chưa có bằng chứng: không nhận ra thì vẫn theo mốc cũ.
-        utc = _d.datetime.now(_d.timezone.utc)
-        if any(x in t for x in ("cloudflare", "neuron", "aierror")):
-            mai = (utc + _d.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-            return max(10, min(int((mai - utc).total_seconds() // 60), 24 * 60))
-        gio = utc - _d.timedelta(hours=7)                                  # giờ Thái Bình Dương
-        mai = (gio + _d.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-        return max(10, min(int((mai - gio).total_seconds() // 60), 24 * 60))
-    return 20
-
+from nghi_key import muc_nghi as _muc_nghi          # bảng phạt key: MỘT nguồn duy nhất
+# (bản cũ nằm ngay đây; tách ra `nghi_key.py` vì đường VIẾT trong key_manager có bản khác — con số
+#  cứng 8 tiếng — nên cùng một quyết định lại ra hai kết quả. Xem nghi_key.py.)
 
 def _vis_die(k, phut: int = _VIS_NGHI_PHUT):
     import time as _t

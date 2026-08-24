@@ -1732,3 +1732,16 @@ Hai cái đầu vẫn trả rỗng (thà làm còn hơn treo kênh) nhưng nay *
 (`dem_khau`) — cả phiên không đọc nổi lần nào thì đó là hỏng cấu hình, sẽ hiện 🚨 CHẾT CÂM. Cái thứ ba
 ném `DocLoi`, đường render lại **hoãn yêu cầu sang lượt sau, không đụng bản cũ**.
 Chốt bằng `t_so_hong_phai_het_len`.
+
+### 7.by — Cùng một quyết định có HAI bản, bản kém hơn nằm ở đường quan trọng hơn (24/8/2026 tối)
+Phạt key cạn hạn mức đang được quyết ở hai nơi khác nhau:
+* đường VẼ ẢNH/VISION (`datastory_ci._muc_nghi`) — tính ĐÚNG số phút còn lại tới mốc reset;
+* đường VIẾT (`key_manager`, **8 chỗ**) — con số **cứng 8 tiếng**.
+8 tiếng là số đoán, và sai cả hai chiều: key Google cạn lúc 20:00 UTC (reset 07:00 UTC) hết phạt lúc
+04:00 ⇒ **dội lại 3 tiếng trước khi nó hồi**, mỗi lượt hỏng vẫn bị trừ hạn mức; key Cloudflare cạn lúc
+02:00 UTC (đã reset từ 00:00 UTC) bị **treo oan tới 10:00**. Nay tách `nghi_key.muc_nghi()` làm nguồn
+duy nhất, cả hai đường import chung. Chốt bằng `t_mot_bang_phat_key_duy_nhat` — test so KẾT QUẢ hai
+đường cho cùng 4 loại lỗi, nên bản sao mới lén mọc là fail ngay.
+**LUẬT: một quyết định nghiệp vụ chỉ được có MỘT chỗ quyết. Thấy logic giống nhau ở hai file thì đó
+không phải trùng lặp vô hại — sớm muộn hai bên lệch nhau, và bên lệch sẽ là bên ít ai đọc.**
+(Cùng họ với `ten_chuan.py` tách ra chiều nay vì cùng lý do.)

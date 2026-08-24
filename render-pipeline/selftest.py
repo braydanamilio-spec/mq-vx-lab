@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("một bảng phạt key cho CẢ viết lẫn vẽ ảnh", t_mot_bang_phat_key_duy_nhat)
     check("mốc reset nghỉ key theo ĐÚNG nhà cung cấp", t_moc_reset_theo_nha_cung_cap)
     check("mọi workflow ghim phiên bản thư viện", t_moi_workflow_deu_ghim_thu_vien)
     check("mốc intro/outro THẬT sang composition (không lệch tiếng)", t_moc_intro_outro_that)
@@ -793,6 +794,25 @@ def t_so_hong_phai_het_len():
     i = r.index("FB.get_script_by_drive(")          # LỜI GỌI THẬT, không phải dòng chú thích
     assert "except FB.DocLoi" in r[i: i + 700], \
         "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
+
+
+def t_mot_bang_phat_key_duy_nhat():
+    """Đường VIẾT và đường VẼ ẢNH phải phạt key giống hệt nhau (24/8 tối).
+    Trước đó `key_manager` dùng con số CỨNG 8 tiếng ở 8 chỗ, còn `datastory_ci` tính tới mốc reset
+    thật. 8 tiếng sai cả hai chiều: quá SỚM với Google (dội lại 3h trước khi key hồi, lượt hỏng vẫn
+    bị trừ) và quá MUỘN với Cloudflare (treo oan key đã hồi từ nửa đêm UTC)."""
+    import datastory_ci as DS
+    import nghi_key as N
+    km = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "key_manager.py"), encoding="utf-8").read()
+    assert "8 * 60 if _het_ngay" not in km, "key_manager còn con số phạt CỨNG 8 tiếng"
+    assert km.count("_NGHI.muc_nghi(") >= 8, \
+        f"chỉ {km.count('_NGHI.muc_nghi(')}/8 chỗ trong key_manager dùng bảng phạt chung"
+    for e in ("requests per minute, try again in 8s",
+              "daily free allocation of 10,000 neurons (cloudflare)",
+              "quota exceeded for quota metric: requests per day (free_tier)",
+              "429 lạ hoắc"):
+        assert DS._muc_nghi(e) == N.muc_nghi(e), f"hai đường ra số khác nhau cho: {e[:40]}"
 
 
 def t_moc_reset_theo_nha_cung_cap():
