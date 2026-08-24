@@ -791,3 +791,23 @@ phiên sau A hồi là đầy đủ. 18 luồng phía sau tốn **1 lượt đ�
 
 **Luật:** đường dự phòng KHÔNG được phụ thuộc vào chính thứ nó dự phòng. Gương mà chỉ dựng được khi
 nguồn còn sống thì đúng lúc cần nhất nó sẽ không có.
+
+### 7.ae — Clip thật hỏng CÂM + hồ ảnh Pexels teo còn 1 key (24/8/2026)
+
+**Đo được ở phiên 08:47 (118 video):**
+- **0 dòng `🎬 clip thật`** trong toàn bộ log. Tính năng clip video (6 nguồn, gắn 24/8) **chết 100%**
+  mà nhìn log vẫn tưởng bình thường — vì `fetch_clip()` CHỈ in khi thành công, mọi đường thất bại
+  đều `continue`/`return None` không một chữ nào.
+- `🖼️ Pexels: 1 key` xuất hiện **87 lần** so với `25 key` chỉ **49 lần**. Hồ ảnh teo thì hết lượt
+  Pexels rất nhanh → phải nhờ AI vẽ ảnh bù → đốt quota Gemini/Cloudflare, và `fetch_clip` không còn
+  ứng viên nào để tải.
+- Phạm vi: clip mới chỉ gắn ở nhánh dựng cảnh của `build_doc_props` (format `doc`), chưa phủ các
+  format khác.
+
+**Đã làm:** gắn mắt đo, chưa vá gốc (chưa xác định được ai truyền hồ rỗng xuống — không đoán bừa).
+- `fetch_clip`: thất bại cũng phải in — phân biệt `không nguồn nào trả clip` (kèm số key mỗi hồ:
+  px/pb/nara/dvids) với `N ứng viên nhưng không lấy được: X đã dùng · Y tải hỏng`.
+- `set_pexels_pool`: hồ ≤1 key mà đầu vào KHÔNG có key `px:` nào → cảnh báo kèm số key nhận vào.
+
+**Luật:** thêm tính năng mà không thêm đường log cho ca THẤT BẠI thì tính năng đó có thể chết 100%
+trong nhiều ngày mà không ai biết. Mọi nhánh `return None` im lặng đều là một điểm mù.

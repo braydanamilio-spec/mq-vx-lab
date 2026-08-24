@@ -463,6 +463,16 @@ def set_pexels_pool(keys, channel: str = ""):
     _PX_POOL = [{"k": k, "used": 0, "off": False} for k in raw]
     if _PX_POOL:
         print(f"   🖼️ Pexels: {len(_PX_POOL)} key trong pool (xoay vòng, {_PX_CAP} lượt/key).")
+    # 24/8 — ĐO CHỖ NGHI: log phiên 08:47 in `Pexels: 1 key` 87 lần so với `25 key` chỉ 49 lần,
+    # tức phần lớn thời gian hồ ảnh bị thu về đúng 1 key môi trường. Hồ ảnh nhỏ = hết lượt Pexels
+    # rất nhanh = phải nhờ AI vẽ ảnh = đốt quota Gemini/Cloudflare, và fetch_clip không còn ứng viên
+    # (cả phiên 118 video KHÔNG có nổi một dòng "🎬 clip thật"). Chưa xác định được ai truyền hồ
+    # rỗng xuống, nên in thẳng SỐ ĐẾM ĐẦU VÀO để phiên sau nhìn log là biết, khỏi đoán tiếp.
+    _px_vao = len([1 for k in (keys or []) if str(k.get("key") or "").startswith("px:")])
+    if len(_PX_POOL) <= 1 and _px_vao == 0:
+        print(f"   ⚠️ Hồ ảnh Pexels chỉ còn {len(_PX_POOL)} key: nhận vào {len(keys or [])} key nhưng "
+              f"KHÔNG có key px: nào (hồ truyền xuống là hồ VIẾT đã lọc key ảnh?) — ảnh thật sẽ ít, "
+              f"AI phải vẽ bù và clip thật gần như không lấy được.")
 
 
 # ── NGUỒN VIDEO THẬT (24/8, user chốt: "thêm nguồn video cho sinh động") ────────────────────
@@ -694,8 +704,14 @@ def fetch_clip(query, dest, tall=True, max_mb=14):
              + [c for c in (_nara(query) + _dvids(query)) if c.get("video")]
              + _archive_video(query) + _nasa_video(query))   # 24/8: 2 nguồn KHÔNG cần key
     random.shuffle(cands)
+    # 24/8 — HỎNG CÂM: soi log phiên 08:47 (118 video) thấy ĐÚNG 0 dòng "🎬 clip thật". Hàm này chỉ
+    # in khi THÀNH CÔNG, còn mọi đường thất bại đều `continue`/`return None` không một chữ nào, nên
+    # tính năng chết 100% mà nhìn log vẫn tưởng bình thường. Đếm rõ từng lý do để lần sau nhìn là biết
+    # phải chữa nguồn nào (hết key ảnh? ứng viên trùng hết? tải hỏng?).
+    _trung = _hong = 0
     for c in cands:
         if str(c.get("id")) in _IMG_USED or not c.get("url"):
+            _trung += 1
             continue
         try:
             req = urllib.request.Request(c["url"], headers=UA)
@@ -711,7 +727,13 @@ def fetch_clip(query, dest, tall=True, max_mb=14):
             print(f"   🎬 clip thật: {os.path.basename(dest)} ({len(data)/1e6:.1f}MB · {c.get('dur')}s · {c.get('license')})")
             return dest
         except Exception:
+            _hong += 1
             continue
+    if not cands:
+        print(f"   🎬✗ không nguồn nào trả clip cho «{str(query)[:40]}» "
+              f"(px:{len(_PX_POOL)} pb:{len(_PB_POOL)} nara:{len(_NARA_POOL)} dvids:{len(_DVIDS_POOL)})")
+    else:
+        print(f"   🎬✗ {len(cands)} ứng viên nhưng không lấy được: {_trung} đã dùng · {_hong} tải hỏng")
     return None
 
 
