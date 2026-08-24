@@ -836,3 +836,24 @@ còn ảnh thật, phải nhờ AI vẽ (đốt quota Gemini/Cloudflare) → `fe
 
 **Luật:** dữ liệu KHÔNG BAO GIỜ THAY ĐỔI (key ảnh, key lưu trữ) thì đừng đọc lại nó theo đường có thể
 hỏng. Đọc được một lần là giữ; lượt sau thiếu là bù, không phải là "hết".
+
+### 7.ag — Hai lỗi tiềm ẩn DO CHÍNH BẢN VÁ TỐI NAY sinh ra (24/8/2026)
+
+Rà lại code mình vừa sửa, bắt được hai chỗ hỏng-ngầm — chưa gây hậu quả nhưng chắc chắn sẽ gây:
+
+**1. "Đệm âm" dùng chung một mốc nghỉ cho cả 3 project.**
+`_CAN_QUOTA["den"]` là một biến duy nhất, trong khi `_retry` phục vụ cả A, B lẫn C. A cạn hạn mức
+(chuyện đang xảy ra HẰNG NGÀY) sẽ khoá luôn đường thử-lại của **B và C** suốt 30 phút — mà B/C vẫn
+còn hạn mức và cơn 429 của chúng thường chỉ là burst thoáng qua, thử lại là qua.
+Hậu quả nếu để nguyên: một nhịp nghẽn ở C là **rớt luôn lượt đăng của video đó**, không thử lại.
+→ Vá: sổ nghỉ tách theo project (`_CAN_QUOTA_P`), 9 lượt đọc/ghi trên C đi qua `_retry_C`.
+Đo: A đang nghỉ → A chỉ thử 1 lần; C vẫn thử đủ 5 lần.
+
+**2. Quét vét lần ĐẦU bị phanh quota chặn → video cũ không bao giờ được đăng.**
+Mọi video `done` render trước hôm nay đều không có trường `queued`, chỉ quét vét mới bắt được.
+Nhưng quét vét bị xếp là "việc phụ" nên phanh 75% chặn — mà bị chặn thì mốc `at` không được ghi →
+lượt sau vẫn "chưa từng quét" → lại bị chặn. **Vòng lặp chết: số video cũ đó mất luôn đường lên sóng.**
+→ Vá: lần quét đầu tiên (chưa có mốc `at`) tính là **việc thiết yếu**, không hoãn.
+
+**Luật:** phanh quota chỉ được **hoãn** việc, không được **bỏ rơi** việc. Bất kỳ bước nào mà "bị hoãn"
+đồng nghĩa với "không bao giờ chạy" thì phải xếp vào nhóm thiết yếu.
