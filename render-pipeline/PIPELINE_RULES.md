@@ -1034,3 +1034,22 @@ và lý do phải nói rõ: các format đó ghép **một** track audio với m
 hơn nhiều so với một short bị loại. Cách đúng là làm như đã làm với PULSE: đo trước → cộng vào thời
 lượng → RỒI mới đặt mốc clip. Việc này phải sửa từng builder và cần nhìn video thật để nghiệm thu,
 nên để lại làm ban ngày thay vì vá mù lúc 3h sáng.
+
+### 7.ao — GUESS: mở đầu nhàm, kết thúc MÀN HÌNH ĐEN (24/8/2026, anh chỉ ra)
+
+**Đo trong `GuessShort.tsx`:**
+- **Mở đầu** (1,6s): chỉ có emoji 🤔 + tiêu đề trên nền gradient tối — **không một khung hình thật nào**.
+  Giây đầu là chỗ YouTube tính giữ chân gắt nhất mà lại là chỗ nhàm nhất.
+- **Kết thúc**: `calcGuess` cộng `tail = 1.2s` vào tổng thời lượng nhưng **KHÔNG có Sequence nào vẽ
+  đoạn đó** → hết vòng cuối là còn trơ nền `#0a0c14`. Đúng thứ luật "cấm khung cuối đen" đã cấm, mà
+  lọt vì không ai soi tới giây chót.
+
+**Vá — tận dụng ảnh ĐÃ TẢI, 0 lượt tải/quota thêm:**
+- Mở đầu mượn ảnh **vòng 1** làm nền (mờ 13px, tối 0.42, phóng nhẹ theo spring) → có chuyển động và
+  hình thật ngay giây đầu. Không có ảnh thì vẫn lùi về gradient như cũ.
+- Thêm **thẻ kết** thật: nền là ảnh **vòng cuối**, "HOW MANY DID YOU GET?" + "n/n ? COMMENT BELOW 👇"
+  + "▶ FOLLOW @handle". Đuôi nâng 1,2s → **2,4s** cho kịp đọc và bấm theo dõi.
+- Kiểm cú pháp bằng esbuild cho **cả 51 file .tsx** trước khi push.
+
+**Luật:** thời lượng có cộng thêm đuôi thì phải có **cảnh vẽ cho đuôi đó**. Cộng giây mà không vẽ =
+tặng người xem một màn hình đen đúng lúc họ quyết định có theo dõi hay không.

@@ -14,7 +14,7 @@ type Word = { t: number; d: number; w: string };
 export type Round = { q: string; clue?: string; answer: string; stat?: string; img?: string; dur?: number; revSec?: number };
 export type GuessProps = {
   title?: string; handle?: string; color?: string; accent?: string;
-  rounds: Round[]; roundSec?: number; introSec?: number;
+  rounds: Round[]; roundSec?: number; introSec?: number; outroSec?: number;
   audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
 };
 
@@ -24,7 +24,9 @@ export const calcGuess = ({ props }: any) => {
   const rs: Round[] = props.rounds || [];
   const rsec = props.roundSec || 7;
   const isec = props.introSec ?? 1.6;
-  const tail = props.outroSec ?? 1.2;
+  // 24/8 — đuôi 1.2s trước đây KHÔNG vẽ gì, chỉ còn trơ nền tối (#0a0c14) -> "kết thúc đen".
+  // Nay có thẻ kết thật (ảnh + kêu gọi) nên cho 2.4s để người xem kịp đọc và bấm theo dõi.
+  const tail = props.outroSec ?? 2.4;
   const total = rs.reduce((a, r) => a + rdur(r, rsec), 0);
   return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS, width: 1080, height: 1920 };
 };
@@ -143,6 +145,18 @@ export const GuessShort: React.FC<GuessProps> = (props) => {
       {/* INTRO */}
       <Sequence durationInFrames={introF}>
         <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 40%, ${color}22, #0a0c14 70%)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          {/* 24/8 — MỞ ĐẦU KHÔNG CÒN TRƠ NỀN TỐI: mượn ảnh của vòng 1 (đã tải sẵn cho vòng đó nên
+              KHÔNG tốn thêm lượt tải/quota nào), làm mờ + tối để chữ vẫn nổi, thêm phóng nhẹ cho
+              khung hình có chuyển động ngay giây đầu. Giây đầu là chỗ YouTube tính giữ chân gắt nhất
+              mà lại là chỗ nhàm nhất thì phí. Không có ảnh -> vẫn về nền gradient như cũ. */}
+          {rounds[0]?.img ? (
+            <AbsoluteFill>
+              <SafeImg src={staticFile(rounds[0].img as string)}
+                style={{ width: "100%", height: "100%", objectFit: "cover",
+                         transform: `scale(${1.12 + introP * 0.06})`, filter: "blur(13px) brightness(0.42)" }} />
+              <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 42%, ${color}33, #0a0c14cc 72%)` }} />
+            </AbsoluteFill>
+          ) : null}
           <div style={{ fontSize: 150, transform: `scale(${introP})` }}>🤔</div>
           <div style={{ color: "#fff", fontWeight: 900, fontSize: 86, marginTop: 10, textAlign: "center", padding: "0 50px", transform: `translateY(${(1 - introP) * 40}px)`, opacity: introP, textWrap: "balance" as any }}>{title}</div>
           <div style={{ color: color, fontWeight: 800, fontSize: 40, marginTop: 18, opacity: introP }}>Can you get them all? 👀</div>
@@ -158,12 +172,56 @@ export const GuessShort: React.FC<GuessProps> = (props) => {
           </Sequence>
         );
       })}
+      {/* THẺ KẾT (24/8) — trước đây hết vòng cuối là màn hình trơ nền tối, không lời kêu gọi nào.
+          Dùng lại ảnh vòng CUỐI (đã có sẵn) + câu hỏi chốt để đẩy bình luận, và nhắc theo dõi. */}
+      {(() => {
+        const tongVong = rounds.reduce((a, rr) => a + rdur(rr, roundSec), 0);
+        const ketF = introF + Math.round(tongVong * fps);
+        const tailF = Math.max(1, Math.round((props.outroSec ?? 2.4) * fps));
+        const anhCuoi = [...rounds].reverse().find(rr => rr.img)?.img;
+        return (
+          <Sequence from={ketF} durationInFrames={tailF}>
+            <KetCard img={anhCuoi} color={color} accent={accent} handle={handle} n={rounds.length} />
+          </Sequence>
+        );
+      })()}
       {/* handle góc */}
       <div style={{ position: "absolute", bottom: 54, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 34, textShadow: "0 2px 10px #000" }}>{handle}</div>
       {/* karaoke caption (nếu có subs) */}
       {subs.length ? <KaraokeCaption subs={subs} /> : null}
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
+    </AbsoluteFill>
+  );
+};
+
+// THẺ KẾT: ảnh nền (mượn vòng cuối) + số điểm + kêu gọi. Vào bằng spring, không cắt cứng.
+const KetCard: React.FC<{ img?: string; color: string; accent: string; handle: string; n: number }> =
+  ({ img, color, accent, handle, n }) => {
+  const f = useCurrentFrame(); const { fps } = useVideoConfig();
+  const p = spring({ frame: f, fps, config: { damping: 13, stiffness: 130 } });
+  return (
+    <AbsoluteFill style={{ background: "#0a0c14", alignItems: "center", justifyContent: "center" }}>
+      {img ? (
+        <AbsoluteFill>
+          <SafeImg src={staticFile(img)} style={{ width: "100%", height: "100%", objectFit: "cover",
+            transform: `scale(${1.1 + p * 0.05})`, filter: "blur(15px) brightness(0.38)" }} />
+        </AbsoluteFill>
+      ) : null}
+      <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 45%, ${color}2e, #0a0c14dd 70%)` }} />
+      <div style={{ position: "relative", textAlign: "center", padding: "0 60px",
+                    transform: `translateY(${(1 - p) * 34}px)`, opacity: p }}>
+        <div style={{ fontSize: 120 }}>🏆</div>
+        <div style={{ color: "#fff", fontWeight: 900, fontSize: 92, lineHeight: 1.05,
+                      textShadow: `0 6px 34px #000, 0 0 40px ${accent}66`, fontFamily: "Poppins, Arial" }}>
+          HOW MANY<br />DID YOU GET?
+        </div>
+        <div style={{ display: "inline-block", marginTop: 26, background: color, color: "#0a0c14",
+                      fontWeight: 900, fontSize: 46, padding: "14px 34px", borderRadius: 18,
+                      fontFamily: "Poppins, Arial" }}>{n} / {n} ?  COMMENT BELOW 👇</div>
+        <div style={{ color: "#ffffffdd", fontWeight: 800, fontSize: 40, marginTop: 26,
+                      textShadow: "0 2px 12px #000" }}>▶ FOLLOW {handle}</div>
+      </div>
     </AbsoluteFill>
   );
 };
