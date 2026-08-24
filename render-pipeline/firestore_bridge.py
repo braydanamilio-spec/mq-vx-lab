@@ -1528,6 +1528,17 @@ def count_done(owner: str, channel: str, vtype: str = None) -> int:
     _hc = _HOT_CACHE.get(("cnt", owner, channel, vtype))
     if _hc and (_t.time() - _hc[0]) < 90:
         return _hc[1]
+    # ĐỌC TỪ D1 TRƯỚC (khi HOT_MODE=on): một lệnh GROUP BY lấy số của MỌI kênh, đệm 90s.
+    # Đây là đường thoát khỏi cả mớ B/B2: số đếm không còn phụ thuộc shard nào đang sống.
+    # D1 không trả lời được -> rơi xuống Firestore y như cũ, không mất gì.
+    try:
+        import hot_db as _H
+        _n = _H.dem_xong(owner, channel, vtype)
+        if _n is not None:
+            _HOT_CACHE[("cnt", owner, channel, vtype)] = (_t.time(), _n)
+            return _n
+    except Exception:
+        pass
     _cr("count_done", 1)
     total = 0
     if _B2["on"]:

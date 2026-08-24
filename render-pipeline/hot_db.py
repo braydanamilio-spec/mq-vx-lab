@@ -89,12 +89,41 @@ def ghi_job(owner, jid, channel, vtype, status, step="", title=None, drive_id=No
                     "queued": bool(queued), "at": at})
 
 
-def dem_xong(owner, channel, vtype) -> int | None:
-    """Số video đã xong CÓ FILE của 1 kênh. Trả None khi chưa bật đọc -> caller dùng Firestore."""
+_DEM = {"at": 0.0, "map": None}
+
+
+def nap_dem(owner: str, tuoi: int = 90) -> dict | None:
+    """Lấy số video đã xong của TẤT CẢ kênh trong MỘT lời gọi, đệm 90 giây.
+
+    Vì sao phải gộp: đo thật 24/8 — mỗi lời gọi Worker mất ~0,22s (D1 ở vùng APAC, runner GitHub ở
+    Mỹ). Bước plan cần ~110 số đếm; gọi lẻ là **~33 giây chỉ để đếm**, chậm hơn cả Firestore.
+    Và Worker free chỉ 100.000 lượt/ngày — gọi lẻ thì 30 phiên/ngày là vỡ trần Worker (111%) dù D1
+    mới dùng vài phần trăm. **Trần thật nằm ở Worker, không phải D1.**
+    Một lệnh GROUP BY: đo được 0,20s cho toàn bộ."""
+    import time as _t
     if not bat_doc():
         return None
-    r = goi("dem_xong", {"owner": owner, "channel": channel, "vtype": vtype})
-    return int(r.get("n")) if "n" in r else None
+    if _DEM["map"] is not None and (_t.time() - _DEM["at"]) < tuoi:
+        return _DEM["map"]
+    r = goi("dem_tat_ca", {"owner": owner})
+    if "rows" not in r:
+        return None
+    m = {}
+    for x in (r.get("rows") or []):
+        m[f'{x.get("channel","")}|{x.get("vtype","")}'] = int(x.get("n") or 0)
+    _DEM["at"], _DEM["map"] = _t.time(), m
+    return m
+
+
+def dem_xong(owner, channel, vtype) -> int | None:
+    """Số video đã xong CÓ FILE của 1 kênh. Trả None khi chưa bật đọc -> caller dùng Firestore."""
+    m = nap_dem(owner)
+    if m is None:
+        return None
+    ch = str(channel or "").upper()
+    if vtype:
+        return int(m.get(f"{ch}|{vtype}", m.get(f"{channel}|{vtype}", 0)))
+    return int(sum(v for k, v in m.items() if k.split("|")[0] in (ch, channel)))
 
 
 def key_nghi_ghi(kid: str, loai: str, den_iso: str) -> None:

@@ -61,7 +61,9 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
-          HOT_KEY: ${{ secrets.HOT_KEY }}   # D1 kho nóng — chế độ BÓNG (ghi thêm, đọc vẫn Firestore)
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          HOT_MODE: "on"   # 24/8: đã chép 772 job sang D1 và ĐỐI CHIẾU khớp 644=644 (80 nhóm,
+                           # 0 lệch) -> bật đọc từ D1. Số đếm hết phụ thuộc shard B/B2 nào đang sống.
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: python render-pipeline/backup_vault.py || true
@@ -75,7 +77,9 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
-          HOT_KEY: ${{ secrets.HOT_KEY }}   # D1 kho nóng — chế độ BÓNG (ghi thêm, đọc vẫn Firestore)
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          HOT_MODE: "on"   # 24/8: đã chép 772 job sang D1 và ĐỐI CHIẾU khớp 644=644 (80 nhóm,
+                           # 0 lệch) -> bật đọc từ D1. Số đếm hết phụ thuộc shard B/B2 nào đang sống.
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           PILOT_CHANNEL: ${{ github.event.inputs.pilot_channel }}
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
@@ -134,7 +138,9 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
-          HOT_KEY: ${{ secrets.HOT_KEY }}   # D1 kho nóng — chế độ BÓNG (ghi thêm, đọc vẫn Firestore)
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          HOT_MODE: "on"   # 24/8: đã chép 772 job sang D1 và ĐỐI CHIẾU khớp 644=644 (80 nhóm,
+                           # 0 lệch) -> bật đọc từ D1. Số đếm hết phụ thuộc shard B/B2 nào đang sống.
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           PILOT_CHANNEL: ${{ github.event.inputs.pilot_channel }}
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
@@ -229,7 +235,9 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
-          HOT_KEY: ${{ secrets.HOT_KEY }}   # D1 kho nóng — chế độ BÓNG (ghi thêm, đọc vẫn Firestore)
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          HOT_MODE: "on"   # 24/8: đã chép 772 job sang D1 và ĐỐI CHIẾU khớp 644=644 (80 nhóm,
+                           # 0 lệch) -> bật đọc từ D1. Số đếm hết phụ thuộc shard B/B2 nào đang sống.
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           PILOT_CHANNEL: ${{ github.event.inputs.pilot_channel }}
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}

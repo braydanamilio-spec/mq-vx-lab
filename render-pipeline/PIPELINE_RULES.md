@@ -1216,3 +1216,31 @@ kết luận được gì. Nay `new_job` nhớ hộ cả kênh lẫn loại (`_J
 
 **Luật:** chạy song song để đối chiếu thì bản phụ phải ghi ĐỦ trường dùng cho phép so. Bản phụ thiếu
 trường không phải "gần đúng" — nó là **không có dữ liệu**, mà lại trông như đang chạy tốt.
+
+### 7.au — Chuyển số đếm sang D1 và cắt phụ thuộc B/B2 (24/8/2026)
+
+**Anh chốt: làm dứt điểm, đừng để mai quên.** Đã làm, theo đúng thứ tự an toàn:
+
+1. **Chép trước, bật sau.** Bật đọc từ D1 khi kho còn rỗng thì `count_done` trả 0 cho mọi kênh →
+   hệ tưởng chưa làm gì → **render dư hàng loạt** và vỡ luật 1:3. Nên chép 772 job từ B sang D1 trước.
+2. **Đối chiếu rồi mới tin:** 80 nhóm kênh/loại · Firestore **644** — D1 **644** · **0 nhóm lệch**.
+3. Bật `HOT_MODE=on` ở cả 4 bước workflow.
+
+**Điểm phải thiết kế lại, không chuyển 1-1 được:** đo thật mỗi lời gọi Worker ~**0,22s** (D1 vùng
+APAC, runner ở Mỹ). Plan cần ~110 số đếm ⇒ gọi lẻ là **~33 giây chỉ để đếm, chậm hơn cả Firestore**.
+Và **Worker free chỉ 100.000 lượt/ngày** ⇒ gọi lẻ thì 30 phiên/ngày **vỡ trần Worker (111%)** trong
+khi D1 mới dùng vài phần trăm.
+> **Trần thật nằm ở Worker, không phải D1.** Nên `dem_tat_ca` gộp mọi kênh vào **một** `GROUP BY`
+> (đo 0,20s) + đệm 90s. 110 lời gọi → 1.
+
+**Hai bẫy dính ngay khi làm, ghi lại kẻo quên:**
+- Thiếu `User-Agent` → Cloudflare chặn **mã 1010**, trả **403 y hệt sai khoá**.
+- Thiếu `x-hot-key` trong `Access-Control-Allow-Headers` → preflight chặn, trình duyệt báo
+  **"Failed to fetch"** — trông như mất mạng, không hề giống lỗi quyền.
+> Cả hai đều là **403/lỗi mạng giả dạng**. Luật: gặp 403 đừng vội kết luận sai khoá.
+
+**Đã xoay khoá `HOT_KEY`** sau khi backfill, vì khoá cũ có đi qua trình duyệt. Đã kiểm: khoá mới
+chạy, khoá cũ trả *"sai khoá"*.
+
+**Còn lại để gỡ B2 (chưa làm, có lý do):** đợi 1-2 phiên chạy thật với `HOT_MODE=on` xác nhận số
+đếm đúng, rồi mới xoá gương + rót ngược + B2. Xoá cùng lúc với bật là mất đường lùi.
