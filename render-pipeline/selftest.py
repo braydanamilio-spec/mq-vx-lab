@@ -1057,9 +1057,18 @@ def t_hang_cho_khong_phu_thuoc_firestore():
               if isinstance(n, _ast.FunctionDef) and n.name == "channel_mode")
     than = "\n".join(r.split("\n")[fn.lineno - 1: max(getattr(x, "lineno", 0) for x in _ast.walk(fn))])
     i = than.index("FB.lay_viec_ke(OWNER)")
-    assert "_viec_chia_san(" in than[i: i + 700], "429 ở hàng chờ Firestore mà không có đường thay"
+    assert "_viec_chia_san(" in than[i: i + 900], "429 ở hàng chờ Firestore mà không có đường thay"
     assert "except Exception" in than[max(0, i - 200): i + 300], \
         "lay_viec_ke ném 429 mà không bắt -> vòng lấy việc chết luôn, không kịp dùng đường thay"
+    # MỌI lệnh Firestore trong vòng phải được bọc RIÊNG. Lệnh đầu ném 429 mà không bắt là rơi thẳng
+    # xuống except ngoài cùng, in "lấy việc kế hụt" rồi thoát ⇒ đường chia-sẵn không bao giờ tới
+    # lượt. Đây đúng là bẫy "bản vá không chạy" đã dính hai lần (7.br, 7.cr).
+    j = than.index("while True:", than.index("XONG KÊNH CỦA MÌNH"))
+    vong = than[j: than.index("except Exception as e:", j)]
+    for lenh in ("FB.read_config(OWNER)", "FB.read_channels(OWNER)"):
+        k = vong.index(lenh)
+        assert "try:" in vong[max(0, k - 320): k], \
+            f"{lenh} trong vòng lấy việc chưa được bọc riêng -> 429 là chết cả vòng"
 
 
 def t_khong_ghi_snapshot_rong():

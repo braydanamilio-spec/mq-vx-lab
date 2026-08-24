@@ -1907,8 +1907,16 @@ def channel_mode(name):
             _need = max(last_dur * 1.3, 20 * 60)
             if _con_s < _need:
                 break                     # không đủ giờ cho một mẻ nữa -> nghỉ thật
-            if FB.read_config(OWNER).get("stop"):
-                print("   ⛔ Có lệnh Dừng — không lấy thêm việc."); break
+            # 24/8 tối — SUÝT LẶP LẠI "bản vá không chạy". Ba lệnh Firestore trong vòng này
+            # (`read_config`, `lay_viec_ke`, `read_channels`) đều có thể ném 429 — mà chỉ
+            # `lay_viec_ke` được bọc. Lệnh đầu ném là rơi thẳng xuống `except` ngoài cùng, in
+            # "lấy việc kế hụt" rồi thoát: đường chia-sẵn (không cần Firestore) KHÔNG BAO GIỜ được
+            # dùng tới. Bọc từng lệnh một, và mặc định phải là "chạy tiếp", không phải "chết".
+            try:
+                if FB.read_config(OWNER).get("stop"):
+                    print("   ⛔ Có lệnh Dừng — không lấy thêm việc."); break
+            except Exception:
+                pass          # không đọc nổi cờ Dừng -> coi như không có lệnh dừng, làm tiếp
             _ke = ""
             try:
                 _ke = FB.lay_viec_ke(OWNER)   # giao dịch nguyên tử -> 18 máy không nhận trùng kênh
@@ -1923,7 +1931,12 @@ def channel_mode(name):
                 continue
             _da_lam.add(_ke)
             if not _by_name:              # chỉ đọc danh sách kênh khi THẬT SỰ có việc để lấy
-                _by_name = {c.get("name"): c for c in FB.read_channels(OWNER) if c.get("name")}
+                try:
+                    _by_name = {c.get("name"): c for c in FB.read_channels(OWNER) if c.get("name")}
+                except Exception as _e:
+                    _by_name = {"_": None}    # đánh dấu đã thử, khỏi đọc lại mỗi vòng
+                    print(f"   ⚠️ không đọc được danh sách kênh ({str(_e)[:45]}) — "
+                          f"dùng gói cấu hình plan gửi kèm.")
             _ch2 = _by_name.get(_ke) or FB._cfg_tu_plan().get(str(_ke).upper())
             if not _ch2:
                 print(f"   ⚠️ hàng chờ có {_ke} nhưng không thấy cấu hình — bỏ qua."); continue

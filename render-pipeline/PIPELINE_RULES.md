@@ -2064,3 +2064,17 @@ làm cả**. Giao dịch Firestore vẫn là đường ưu tiên khi nó còn s�
 Chốt bằng `t_hang_cho_khong_phu_thuoc_firestore` (đủ/không trùng · hàng chờ rỗng · thiếu env thì im).
 **LUẬT: cơ chế điều phối không được đặt trong tài nguyên mà nó điều phối việc sử dụng.** Đây là lần
 thứ ba tối nay dùng đúng cách chữa đó: cờ B-cạn → D1 (7.bz), sổ quota → D1 (7.cm), nay hàng chờ → env.
+
+### 7.cw — Đường thay của 7.cv sẽ KHÔNG BAO GIỜ tới lượt: hai lệnh Firestore chưa bọc (24/8/2026 tối)
+Soi lại chính bản vá vừa viết trước khi nó kịp chạy. Vòng lấy-việc-kế có **ba** lệnh Firestore
+(`read_config` kiểm cờ Dừng · `lay_viec_ke` · `read_channels`) nhưng chỉ `lay_viec_ke` được bọc. Mà
+`read_config` đứng TRƯỚC — nó ném 429 là rơi thẳng xuống `except` ngoài cùng, in `lấy việc kế hụt` rồi
+thoát ⇒ **đường chia-sẵn (không cần Firestore) không bao giờ tới lượt**. Đúng bẫy "bản vá không chạy"
+đã dính hai lần trong đêm (7.br vá nhầm file · 7.cr tự chặn bằng ngân sách mềm).
+Nay bọc RIÊNG từng lệnh, và mặc định khi hỏng là **chạy tiếp**, không phải chết: không đọc nổi cờ Dừng
+thì coi như không có lệnh dừng; không đọc nổi danh sách kênh thì dùng gói `CHANNEL_CFGS` plan gửi kèm.
+Chạy thử: mọi lệnh Firestore hỏng, lane vẫn lấy được việc + cấu hình từ env.
+Chốt bằng `t_hang_cho_khong_phu_thuoc_firestore` (kiểm từng lệnh có `try` riêng); thử ngược: gỡ một
+lớp bọc là test bắt.
+**LUẬT: một chuỗi dự phòng chỉ mạnh bằng lệnh YẾU NHẤT đứng TRƯỚC nó. Viết xong đường thay thì phải
+đi ngược lên xem có gì chặn đường tới đó không.**
