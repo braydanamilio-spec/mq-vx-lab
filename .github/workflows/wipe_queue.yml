@@ -10,6 +10,7 @@ on:
     inputs:
       dry_run: { description: "Chạy thử (chỉ đếm, không đụng file)", type: boolean, default: true }
       scope: { description: "store = mọi file dưới MM0-STORE · queue = chỉ _QUEUE", type: choice, options: [store, queue], default: store }
+      rebuild_stats: { description: "Dựng lại SỔ ĐẾM từ số job thật (sửa việc phiên khẩn làm dư video)", type: boolean, default: false }
       fix_dup: { description: "Dọn bản ghi kho TRÙNG TÊN (token chết) — vd ADISONDURHAM", type: boolean, default: false }
       reset_topics: { description: "Xoá LUÔN sổ chủ đề (kênh làm lại đề tài từ đầu) — cần bật cùng reset_ledger", type: boolean, default: false }
       reset_ledger: { description: "Reset luôn SỔ (render_jobs + số đếm) — dashboard hết hiện video cũ", type: boolean, default: false }
@@ -51,7 +52,7 @@ jobs:
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
           python src/wipe_queue.py --scope "${{ github.event.inputs.scope }}" $ARGS
       - name: Checkout render-pipeline
-        if: ${{ github.event.inputs.reset_ledger == 'true' || github.event.inputs.fix_dup == 'true' || github.event.inputs.reset_topics == 'true' }}
+        if: ${{ github.event.inputs.reset_ledger == 'true' || github.event.inputs.fix_dup == 'true' || github.event.inputs.reset_topics == 'true' || github.event.inputs.rebuild_stats == 'true' }}
         uses: actions/checkout@v4
         with: { path: rp }
       - name: Dọn bản ghi kho trùng
@@ -66,6 +67,16 @@ jobs:
           ARGS=""
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
           python rp/render-pipeline/fix_dup_connections.py $ARGS
+      - name: Dựng lại sổ đếm
+        if: ${{ github.event.inputs.rebuild_stats == 'true' }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          RENDER_OWNER: ${{ secrets.OWNER_UID }}
+        run: |
+          ARGS=""
+          [ "${{ github.event.inputs.dry_run }}" != "true" ] && ARGS="--ghi"
+          python rp/render-pipeline/rebuild_stats.py $ARGS
       - name: Reset sổ
         if: ${{ github.event.inputs.reset_ledger == 'true' || github.event.inputs.reset_topics == 'true' }}
         env:
