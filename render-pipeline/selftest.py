@@ -13,6 +13,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -369,6 +370,8 @@ def main():
     check("B2 CHỈ ĐỌC: mọi lệnh ghi đi đường B", t_b2_chi_doc)
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
+    check("mọi short có lưới sàn 21s, kéo dài KHÔNG lệch tiếng", t_short_khong_qua_ngan)
+    check("mọi short có phụ đề karaoke bám giọng", t_short_co_phu_de_karaoke)
     check("đọc HỎNG ≠ kênh bị xoá (không giết lane oan)", t_doc_hong_khac_kenh_bi_xoa)
     check("render lại LONG dùng ĐÚNG engine của kênh", t_render_lai_long_dung_engine)
     check("số video trong kho lấy TỪ DRIVE, không cộng dồn", t_so_kho_lay_tu_drive)
@@ -634,6 +637,69 @@ def t_render_lai_long_dung_engine():
         "phải có đủ 3 đường long (doc · motif · toon) lưu kịch bản đầy đủ"
     assert '"subs"' in r[r.index("def _ks_long"): r.index("def _ks_long") + 1400], \
         "thiếu `subs` thì make_doc_long cắt done_stories về 0 -> resume vô nghĩa"
+
+
+def t_short_co_phu_de_karaoke():
+    """Mọi short phải có phụ đề karaoke (24/8 tối, anh: "short cũng nên có sub karaoke").
+    Soi ra 9 định dạng KHÔNG có phụ đề nào: `subs` có trong khai báo props nhưng không lớp nào vẽ,
+    và mọi builder Python viết `du, _, _ = TK.synth(...)` — vứt mốc từng từ edge-tts đã trả sẵn."""
+    import tts_karaoke as TK
+    assert hasattr(TK, "subs_tu_clips"), "thiếu hàm ghép mốc karaoke cho cả track"
+    TK._NHO.clear()
+    TK._NHO[os.path.abspath("/tmp/a.mp3")] = [{"t": 0.0, "d": 0.5, "w": "Hello"},
+                                              {"t": 0.5, "d": 0.4, "w": "world."}]
+    TK._NHO[os.path.abspath("/tmp/b.mp3")] = [{"t": 0.0, "d": 0.3, "w": "Next"}]
+    ra = TK.subs_tu_clips([("/tmp/a.mp3", 0.0), ("/tmp/nhac.mp3", 1.0), ("/tmp/b.mp3", 2.0)])
+    assert [x["w"] for x in ra] == ["Hello", "world.", "Next"], ra
+    assert ra[-1]["t"] == 2.0, f"mốc phải dời theo chỗ đặt clip, thực tế {ra[-1]['t']}"
+    TK._NHO.clear()
+
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "datastory_ci.py"), encoding="utf-8").read()
+    assert src.count("TK.subs_tu_clips(clips)") >= 9, \
+        f"chỉ {src.count('TK.subs_tu_clips(clips)')}/9 builder short truyền phụ đề sang composition"
+
+    eng = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                       "engine-remotion", "src")
+    if not os.path.isdir(eng):
+        return
+    k = io.open(os.path.join(eng, "Karaoke.tsx"), encoding="utf-8").read()
+    m = re.search(r"const BOTTOM = (\d+)", k)
+    assert m and int(m.group(1)) >= 190, \
+        "băng chữ karaoke phải nằm TRÊN mọi thứ neo đáy của short (chỗ thấp nhất là bottom 150)"
+    for ten in ("PulseShort", "SwarmShort", "RankedShort", "MappedShort", "ScaledShort",
+                "ThenNowShort", "LongshotShort", "ClockworkShort", "GuessShort"):
+        t = io.open(os.path.join(eng, ten + ".tsx"), encoding="utf-8").read()
+        assert "Karaoke" in t, f"{ten} không vẽ phụ đề karaoke"
+
+
+def t_short_khong_qua_ngan():
+    """Mọi format một-track phải có lưới sàn 21s, và kéo dài mục thì mốc tiếng phải dời theo
+    (24/8 tối, anh: "short ko quá ngắn lỗi"). Trước đó chỉ doc + pulse có lưới; log 11:00Z có ca
+    `scaled 19.1s` — vứt cả video vì hụt 0,9 giây."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "datastory_ci.py"), encoding="utf-8").read()
+    assert src.count("keo_du_dai_track(") >= 8, \
+        f"chỉ {src.count('keo_du_dai_track(') - 1}/7 format có lưới sàn dài"
+    assert "total = round(introSec + cum + outroSec" not in src, \
+        "còn chỗ tính tổng thẳng tay -> format đó không có lưới sàn"
+    i = src.index("def keo_du_dai_track"); ns = {}
+    exec(src[i: src.index("\ndef build_doc_props")], ns)
+    f = ns["keo_du_dai_track"]
+    items = [{"dur": 3.5} for _ in range(4)]
+    clips = [("intro", 0.0)] + [(f"it{k}", 0.0) for k in range(4)] + [("outro", 0.0)]
+    tot = f(items, clips, 2.6, 2.5, ten="test")
+    assert tot >= 21.0, f"kéo xong vẫn dưới sàn: {tot}"       # bẫy làm-tròn-xuống: 20,98s
+    assert clips[1][1] == 2.6, "mốc tiếng mục đầu sai"
+    assert abs(clips[-1][1] - (2.6 + sum(x["dur"] for x in items))) < 0.02, \
+        "kéo dur mà không dời mốc tiếng = LỆCH TIẾNG-HÌNH (đúng lỗi PULSE 4,7s)"
+    r = [{"dur": 5.0, "revSec": 2.0} for _ in range(3)]
+    c2 = [("intro", 0.0)] + [x for k in range(3) for x in ((f"c{k}", 0.0), (f"r{k}", 0.0))] + [("outro", 0.0)]
+    f(r, c2, 2.0, 2.0, ten="guess", moi_muc=2, moc_phu="revSec")
+    assert c2[2][1] == round(c2[1][1] + 2.0, 3), "GUESS: đáp án phải lệch đúng revSec so với câu đố"
+    la = [("a", 0.0), ("b", 0.0)]
+    f([{"dur": 3.0}] * 4, la, 1.0, 1.0)
+    assert la == [("a", 0.0), ("b", 0.0)], "hình dạng lạ thì PHẢI để nguyên, không đoán"
 
 
 if __name__ == "__main__":

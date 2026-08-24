@@ -99,6 +99,36 @@ async def _synth_once(text: str, mp3_path: str, voice: str, rate: str):
 
 LEAD = 0.10   # hiện chữ SỚM hơn giọng ~0.1s (mắt đọc trước tai nghe -> cảm giác khớp)
 
+# mp3 đã tổng hợp -> mốc từng từ của nó. Xem subs_tu_clips().
+_NHO: dict[str, list] = {}
+
+
+def subs_tu_clips(clips) -> list[dict]:
+    """Mốc karaoke của CẢ TRACK, ghép từ danh sách `[(đường_dẫn_mp3, giây_bắt_đầu), …]`.
+
+    24/8 tối (anh: "short cũng nên có sub karaoke") — soi ra 9 định dạng short (pulse/swarm/ranked/
+    mapped/scaled/thennow/longshot/clockwork/guess) **không có phụ đề nào cả**: `subs` có trong khai
+    báo props của component nhưng không lớp nào vẽ, còn phía Python thì mọi builder đều viết
+    `du, _, _ = TK.synth(...)` — vứt thẳng mốc từng từ mà edge-tts đã trả sẵn.
+
+    Vì sao gom ở đây chứ không sửa từng builder: mỗi builder đã có sẵn danh sách `clips` đúng cặp
+    (mp3, mốc bắt đầu) để trộn track — chính là thứ cần để dời mốc. Dùng lại nó thì mỗi builder chỉ
+    thêm MỘT dòng, và không thể lệch offset so với tiếng (hai bên đọc chung một nguồn)."""
+    ra = []
+    for c in (clips or []):
+        try:
+            duong, moc = c[0], float(c[1])
+        except Exception:
+            continue
+        for w in _NHO.get(os.path.abspath(str(duong)), []):
+            try:
+                ra.append({"t": round(float(w["t"]) + moc, 3), "d": round(float(w["d"]), 3),
+                           "w": w["w"]})
+            except Exception:
+                pass
+    ra.sort(key=lambda x: x["t"])
+    return ra
+
 def _expand_words(sentences: list[dict], si_offset: int = 0) -> list[dict]:
     """Mỗi câu -> chia thời lượng ra từng TỪ theo độ dài chữ + có nhịp nghỉ ở dấu câu (siết sync)."""
     words = []
@@ -193,6 +223,7 @@ def synth(text: str, mp3_path: str, voice: str = None, rate: str = None):
         except Exception as e:
             last, dur, subs = e, 0.0, []
         if dur > 0.05 or not str(text or "").strip():
+            _NHO[os.path.abspath(mp3_path)] = subs      # để subs_tu_clips() ghép lại sau
             return round(dur, 3), subs, _to_srt(subs)
         print(f"   🔁 TTS trả 0 giây (lần {i + 1}/3) — thử lại: {str(text)[:40]}…")
     raise RuntimeError(f"TTS rỗng sau 3 lần thử ({str(last)[:60] if last else 'không có tiếng'}) — "

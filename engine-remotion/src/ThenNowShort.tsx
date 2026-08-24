@@ -1,4 +1,5 @@
 import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+import { Karaoke } from "./Karaoke";
 import React from "react";
 
 // KÊNH #5 THEN×NOW — split XƯA (trên) / NAY (dưới) + con số biến đổi. Motif riêng (nostalgia + shock).
@@ -82,7 +83,7 @@ const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number }> = ({ p, a
 
 export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
   const { title = "THEN vs NOW", handle = "@thennowusa", color = "#EC4899", accent = "#EC4899",
-    pairs = [], introSec = 1.6, pairSec = 4.5, outroSec = 1.6, audio, music, sfx = true } = props;
+    pairs = [], introSec = 1.6, pairSec = 4.5, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
   const introF = Math.round(introSec * fps);
   const introP = spring({ frame: f, fps, config: { damping: 12, stiffness: 140 } });
@@ -125,6 +126,7 @@ export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
       <div style={{ position: "absolute", bottom: 46, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 30, textShadow: "0 2px 10px #000", zIndex: 6 }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
+      <Karaoke subs={subs} accent={accent} />
     </AbsoluteFill>
   );
 };

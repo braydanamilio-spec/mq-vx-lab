@@ -1632,3 +1632,27 @@ Anh hỏi *"kịch bản có dùng để render lại được ko"* — soi ra b
 Nay cả ba đường đi qua `_ks_long(plan, parts)` lưu đủ `pillar_title · hook · sources · subs · parts`
 (story dict thật). Chỉ long DATARACE (`races`) và mọi SHORT là đã lưu đủ từ trước.
 Chốt bằng `t_render_lai_long_dung_engine`.
+
+### 7.bo — 9/9 định dạng SHORT không có phụ đề, dù mốc karaoke đã có sẵn (24/8/2026 tối, anh yêu cầu)
+`subs` nằm trong khai báo props của mọi component short nhưng **không lớp nào vẽ**, còn phía Python
+thì mọi builder viết `du, _, _ = TK.synth(...)` — vứt thẳng mốc từng từ mà edge-tts đã trả sẵn. Người
+xem tắt tiếng (phần lớn lượt xem đầu trên feed) không đọc được chữ nào. Vá:
+* `tts_karaoke.subs_tu_clips(clips)` — ghép mốc của cả track từ chính danh sách `[(mp3, giây_bắt_đầu)]`
+  mà builder đã dựng để trộn tiếng. **Dùng lại đúng nguồn của tiếng thì không thể lệch offset**, và mỗi
+  builder chỉ thêm MỘT dòng.
+* `engine-remotion/src/Karaoke.tsx` — băng chữ dùng chung, `BOTTOM = 200` (nằm TRÊN mọi thứ neo đáy
+  của 8 short, chỗ thấp nhất chúng dùng là 150) và tối đa 7 từ/cụm ⇒ không bao giờ cao quá 2 dòng.
+  Đặt chỗ CỐ ĐỊNH chứ không tuỳ hứng từng file — đúng bài học "chữ chồng chéo".
+Chốt bằng `t_short_co_phu_de_karaoke`.
+
+### 7.bp — Chỉ 2/9 format có lưới "đủ dài"; 7 format còn lại rơi dưới sàn QC là mất trắng (24/8/2026 tối)
+Độ dài mọi short = TỔNG ĐỘ DÀI GIỌNG ĐỌC. `keo_du_dai()` chỉ dùng được cho doc, PULSE thì tự lo bằng
+đoạn code riêng; bảy motif còn lại không có lưới nào — log 11:00Z có ca `scaled 19.1s`, **vứt cả video
+vì hụt 0,9 giây** (mất một lượt viết AI + một lượt render). Nay tất cả đi qua
+`keo_du_dai_track(items, clips, introSec, outroSec)`. Hai chỗ dễ sai đã chốt bằng test:
+* **Kéo dài `dur` thì phải DỰNG LẠI mốc đặt tiếng.** Quên bước này chính là lỗi PULSE lệch tiếng-hình
+  4,7 giây. Hàm dựng lại toàn bộ `clips` từ độ dài mới, không chỉ sửa `dur`.
+* **Làm tròn phải LÊN.** `dur` lưu 2 số lẻ; làm tròn xuống ra 20,98s — vẫn dưới sàn 21s, vẫn mất video
+  vì 2 phần trăm giây.
+Hình dạng `clips` không khớp (`n*moi_muc + 2`) thì **để nguyên, không đoán** — thà video ngắn còn hơn
+video lệch tiếng. Chốt bằng `t_short_khong_qua_ngan`.

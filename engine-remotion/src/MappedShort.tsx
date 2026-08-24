@@ -1,4 +1,5 @@
 import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate, interpolateColors } from "remotion";
+import { Karaoke } from "./Karaoke";
 import React, { useMemo } from "react";
 import { geoAlbersUsa, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
@@ -28,7 +29,7 @@ const heat = (t: number, accent: string) => interpolateColors(Math.pow(Math.max(
 
 export const MappedShort: React.FC<MappedProps> = (props) => {
   const { title = "BY STATE", unit = "", handle = "@mappedusa", color = "#22D3EE", accent = "#22D3EE",
-    data = [], topN = 3, introSec = 1.8, bloomSec = 2.4, popSec = 1.6, outroSec = 1.6, audio, music } = props;
+    data = [], topN = 3, introSec = 1.8, bloomSec = 2.4, popSec = 1.6, outroSec = 1.6, audio, music , subs = [] } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
   const { geo, pathGen, valById, maxV, ranked } = useMemo(() => {
@@ -123,6 +124,7 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
       <div style={{ position: "absolute", bottom: 54, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 32, textShadow: "0 2px 10px #000" }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
+      <Karaoke subs={subs} accent={accent} />
     </AbsoluteFill>
   );
 };

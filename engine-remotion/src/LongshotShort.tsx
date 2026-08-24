@@ -1,4 +1,5 @@
 import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+import { Karaoke } from "./Karaoke";
 import React from "react";
 
 // KÊNH #6 LONGSHOT — real odds/probability, items HOP UP a vertical log-scale ladder to their real rung.
@@ -55,7 +56,7 @@ const yForLog = (log: number, trackH: number) => trackH - BOTTOM_PAD - log * RUN
 
 export const LongshotShort: React.FC<LongshotProps> = (props) => {
   const { title = "WHAT ARE THE REAL ODDS?", handle = "@longshotusa", color = "#4F46E5", accent = "#4F46E5",
-    items = [], introSec = 1.8, itemSec = 2.7, outroSec = 2.4, audio, music, sfx = true } = props;
+    items = [], introSec = 1.8, itemSec = 2.7, outroSec = 2.4, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
   const introF = Math.round(introSec * fps);
@@ -212,6 +213,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
       <div style={{ position: "absolute", bottom: 50, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 32, textShadow: "0 2px 10px #000", zIndex: 5 }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
+      <Karaoke subs={subs} accent={accent} />
     </AbsoluteFill>
   );
 };

@@ -1,4 +1,5 @@
 import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+import { Karaoke } from "./Karaoke";
 import React from "react";
 
 // KÊNH #6 PULSE — so sánh CƯỜNG ĐỘ giác quan thật (dB/lux/°F/g/...) qua ĐỒNG HỒ ĐO kim analog.
@@ -209,7 +210,7 @@ const GaugeItem: React.FC<{ it: PulseItem; accent: string; unit: string; maxScal
 
 export const PulseShort: React.FC<PulseProps> = (props) => {
   const { title = "HOW INTENSE?", handle = "@pulseusa", color = "#EA580C", accent = "#EA580C",
-    unit, maxScale, items = [], audio, music, sfx = true } = props;
+    unit, maxScale, items = [], audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
 
   const introSec = (props as any).introSec ?? 1.7, itemSec = 2.2;
@@ -267,6 +268,7 @@ export const PulseShort: React.FC<PulseProps> = (props) => {
       </AbsoluteFill>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
+      <Karaoke subs={subs} accent={accent} />
     </AbsoluteFill>
   );
 };

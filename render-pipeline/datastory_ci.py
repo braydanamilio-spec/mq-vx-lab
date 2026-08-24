@@ -1920,7 +1920,7 @@ def build_mapped_props(story, sdir, handle="@mappedusa", music="music/km_ascendi
     clips.append((outro_mp3, popStart + nTop * popSec))
     total = round(popStart + nTop * popSec + outroSec, 2)
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
-    return {"title": (story.get("title") or "BY STATE"), "unit": story.get("unit", ""),
+    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "BY STATE"), "unit": story.get("unit", ""),
             "handle": handle, "color": "#22D3EE", "accent": "#22D3EE", "topN": nTop,
             "introSec": introSec, "bloomSec": bloomSec, "popSec": popSec, "outroSec": outroSec,
             "data": story.get("data") or [], "audio": rel(track), "music": music}
@@ -1992,15 +1992,12 @@ def build_ranked_props(story, sdir, handle="@rankedusa", music="music/km_ascendi
     odur, _, _ = TK.synth(story.get("outro_vo") or "Agree? Comment your S tier.", outro_mp3)
     outroSec = round(odur + 0.4, 2)
     clips.append((outro_mp3, introSec + cum))
-    total = round(introSec + cum + outroSec, 2)
+    total = keo_du_dai_track(items_out, clips, introSec, outroSec, ten="ranked")
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
-    return {"title": (story.get("title") or "TIER LIST"), "subtitle": story.get("subtitle", ""),
+    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "TIER LIST"), "subtitle": story.get("subtitle", ""),
             "handle": handle, "color": "#7C5CFF", "accent": "#7C5CFF", "sfx": True,
             "introSec": introSec, "itemSec": 1.7, "outroSec": outroSec,
-            "items": items_out, "audio": rel(track), "music": music,
-            # 24/8: truyền mốc THẬT sang composition. Thiếu hai dòng này thì PulseShort dùng cứng
-            # 1,7/1,6 -> hình lệch tiếng và video ngắn hơn Python tưởng (xem ghi chú idur() bên TSX).
-            "introSec": introSec, "outroSec": outroSec}
+            "items": items_out, "audio": rel(track), "music": music}
 
 
 def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
@@ -2069,9 +2066,9 @@ def build_scaled_props(story, sdir, handle="@scaledusa", music="music/km_ascendi
     odur, _, _ = TK.synth(story.get("outro_vo") or "Follow for more size shocks.", outro_mp3)
     outroSec = round(odur + 0.4, 2)
     clips.append((outro_mp3, introSec + cum))
-    total = round(introSec + cum + outroSec, 2)
+    total = keo_du_dai_track(items_out, clips, introSec, outroSec, ten="scaled")
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
-    return {"title": (story.get("title") or "SIZE COMPARISON"), "subtitle": story.get("subtitle", ""),
+    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "SIZE COMPARISON"), "subtitle": story.get("subtitle", ""),
             "handle": handle, "color": "#2FA84F", "accent": "#2FA84F", "sfx": True,
             "introSec": introSec, "itemSec": 2.0, "outroSec": outroSec,
             "items": items_out, "audio": rel(track), "music": music}
@@ -2142,9 +2139,9 @@ def build_thennow_props(story, sdir, handle="@thennowusa", music="music/km_ossua
     odur, _, _ = TK.synth(story.get("outro_vo") or "Which change shocked you most?", outro_mp3)
     outroSec = round(odur + 0.4, 2)
     clips.append((outro_mp3, introSec + cum))
-    total = round(introSec + cum + outroSec, 2)
+    total = keo_du_dai_track(pairs_out, clips, introSec, outroSec, ten="thennow")
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
-    return {"title": (story.get("title") or "THEN vs NOW"),
+    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "THEN vs NOW"),
             "handle": handle, "color": "#EC4899", "accent": "#EC4899", "sfx": True,
             "introSec": introSec, "pairSec": 4.5, "outroSec": outroSec,
             "pairs": pairs_out, "audio": rel(track), "music": music}
@@ -2223,6 +2220,49 @@ def keo_du_dai(scenes, fps=30, min_s=21.0, tran_them_s=2.5, ten="clip"):
     print(f"   ⏱ {ten} {tong:.1f}s < {min_s:.0f}s — giữ mỗi cảnh thêm {them:.1f}s -> {moi:.1f}s "
           f"(không đổi nội dung)")
     return moi - tong
+
+
+def keo_du_dai_track(items_out, clips, introSec, outroSec, min_s=21.0, tran_them_s=2.5, ten="clip",
+                     moi_muc=1, moc_phu=""):
+    """ĐỦ DÀI TỐI THIỂU cho các format MỘT-TRACK (intro + n mục + outro) — anh: "short ko quá ngắn lỗi".
+
+    `keo_du_dai()` chỉ dùng được cho format doc (danh sách cảnh). Bảy motif còn lại (swarm/ranked/
+    mapped/scaled/thennow/longshot/clockwork) KHÔNG có lưới nào: độ dài = tổng giọng đọc, kịch bản
+    ngắn là rơi dưới sàn 20s của QC dọc rồi bị vứt cả video — log phiên 11:00Z có ca `scaled 19.1s`,
+    hụt đúng 0,9 giây mà mất trắng một lượt viết AI + một lượt render.
+
+    CHỖ DỄ SAI, phải làm đúng: kéo dài `dur` của mục thì **mốc đặt tiếng cũng phải dời theo**. Quên
+    bước đó chính là lỗi PULSE lệch tiếng-hình 4,7 giây tối nay. Nên hàm này dựng lại toàn bộ mốc
+    trong `clips` từ độ dài mới, thay vì chỉ sửa `dur`.
+
+    Thứ tự `clips` bắt buộc: [intro, (mục 0), …, (mục n-1), outro]. Không khớp thì trả nguyên,
+    không đụng gì (thà video ngắn còn hơn video lệch tiếng).
+
+    `moi_muc=2` + `moc_phu`: mỗi mục có HAI đoạn tiếng (GUESS: câu đố rồi đáp án, đoạn thứ hai đặt
+    lệch vào trong mục `moc_phu` giây). Phần giây thêm rơi vào cuối mục, tức kéo dài quãng đọng lại
+    sau khi lộ đáp án — đúng chỗ người xem cần thời gian để ngấm."""
+    n = len(items_out or [])
+    if not n or len(clips or []) != n * moi_muc + 2:
+        return round(introSec + sum(float(x.get("dur") or 0) for x in (items_out or [])) + outroSec, 2)
+    tong = introSec + sum(float(x.get("dur") or 0) for x in items_out) + outroSec
+    if tong < min_s:
+        # LÀM TRÒN LÊN 2 số lẻ: `dur` lưu 2 số lẻ, làm tròn xuống thì tổng hụt vài phần trăm giây
+        # và rơi lại đúng dưới sàn (chạy thử ra 20,98s < 21s — vứt cả video vì 2 phần trăm giây).
+        import math as _m
+        them = _m.ceil(min((min_s - tong) / n, tran_them_s) * 100) / 100
+        if them > 0.05:
+            for it in items_out:
+                it["dur"] = round(float(it.get("dur") or 0) + them, 2)
+            print(f"   ⏱ {ten} {tong:.1f}s < {min_s:.0f}s — giữ mỗi mục thêm {them:.1f}s "
+                  f"(không đổi nội dung, không kéo giọng)")
+    cum, b = 0.0, 1
+    for it in items_out:
+        clips[b] = (clips[b][0], round(introSec + cum, 3)); b += 1
+        if moi_muc == 2:
+            clips[b] = (clips[b][0], round(introSec + cum + float(it.get(moc_phu) or 0), 3)); b += 1
+        cum += float(it.get("dur") or 0)
+    clips[b] = (clips[b][0], round(introSec + cum, 3))
+    return round(introSec + cum + outroSec, 2)
 
 
 def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE", accent2="#F5B301", handle="@doc",
@@ -2712,9 +2752,9 @@ def build_swarm_props(story, sdir, handle="@swarmusa", accent="#0D9488", music="
     odur, _, _ = TK.synth(story.get("outro_vo") or "Follow for more real numbers.", outro_mp3)
     outroSec = round(odur + 0.4, 2)
     clips.append((outro_mp3, introSec + cum))
-    total = round(introSec + cum + outroSec, 2)
+    total = keo_du_dai_track(items_out, clips, introSec, outroSec, ten="swarm")
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
-    return {"title": (story.get("title") or "HOW MANY FIT?"), "handle": handle, "color": accent, "accent": accent,
+    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "HOW MANY FIT?"), "handle": handle, "color": accent, "accent": accent,
             "sfx": True, "items": items_out, "audio": rel(track), "music": music}
 
 
@@ -2980,9 +3020,9 @@ def build_pulse_props(story, sdir, handle="@pulseusa", accent="#EA580C", music="
                           "disp": it.get("disp"), "extreme": bool(it.get("extreme")), "dur": dur_tho[i]})
         clips.append((paths[i], introSec + cum)); cum += dur_tho[i]
     clips.append((outro_mp3, introSec + cum))
-    total = round(introSec + cum + outroSec, 2)
+    total = keo_du_dai_track(items_out, clips, introSec, outroSec, ten="pulse")
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
-    return {"title": (story.get("title") or "HOW INTENSE?"), "handle": handle, "color": accent, "accent": accent,
+    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "HOW INTENSE?"), "handle": handle, "color": accent, "accent": accent,
             "sfx": True, "unit": story.get("unit") or "", "maxScale": story.get("maxScale") or 100,
             "items": items_out, "audio": rel(track), "music": music}
 
@@ -3056,7 +3096,7 @@ def build_clockwork_props(story, sdir, handle="@clockworkusa", accent="#C2410C",
     clips.append((outro_mp3, introSec + cum + heroSec))
     total = round(introSec + cum + heroSec + outroSec, 2)
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
-    return {"title": (story.get("title") or "TIME, COMPRESSED"), "handle": handle, "color": accent, "accent": accent,
+    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "TIME, COMPRESSED"), "handle": handle, "color": accent, "accent": accent,
             "sfx": True, "scaleLabel": story.get("scaleLabel") or "",
             "waypoints": wps_out, "hero": {"label": hero.get("label"), "atPercent": hero.get("atPercent"),
             "realValue": hero.get("realValue")}, "audio": rel(track), "music": music,
@@ -3130,9 +3170,9 @@ def build_longshot_props(story, sdir, handle="@longshotusa", accent="#4F46E5", m
     odur, _, _ = TK.synth(story.get("outro_vo") or "Follow for more real odds.", outro_mp3)
     outroSec = round(odur + 0.4, 2)
     clips.append((outro_mp3, introSec + cum))
-    total = round(introSec + cum + outroSec, 2)
+    total = keo_du_dai_track(items_out, clips, introSec, outroSec, ten="longshot")
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
-    return {"title": (story.get("title") or "WHAT ARE THE ODDS?"), "handle": handle, "color": accent, "accent": accent,
+    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "WHAT ARE THE ODDS?"), "handle": handle, "color": accent, "accent": accent,
             "sfx": True, "items": items_out, "audio": rel(track), "music": music}
 
 
@@ -3336,10 +3376,11 @@ def build_guess_props(story, sdir, handle="@guessdaily", music="music/km_ascendi
     odur, _, _ = TK.synth(story.get("outro_vo") or "How many did you get?", outro_mp3)
     outroSec = round(odur + 0.4, 2)
     clips.append((outro_mp3, introSec + cum))
-    total = round(introSec + cum + outroSec, 2)
+    total = keo_du_dai_track(rounds_out, clips, introSec, outroSec, ten="guess",
+                             moi_muc=2, moc_phu="revSec")
     track = os.path.join(sdir, "track.mp3")
     _mix_track(clips, total, track)
-    return {"title": (story.get("title_yt") or story.get("title") or "GUESS").upper(),
+    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title_yt") or story.get("title") or "GUESS").upper(),
             "handle": handle, "color": "#F5B301", "accent": "#ff375f",
             "introSec": introSec, "outroSec": outroSec, "sfx": True,
             "rounds": rounds_out, "audio": rel(track), "music": music}
