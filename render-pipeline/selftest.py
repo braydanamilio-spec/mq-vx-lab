@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("hàng chờ có đường KHÔNG cần Firestore", t_hang_cho_khong_phu_thuoc_firestore)
     check("KHÔNG ghi snapshot/gương rỗng đè bản tốt", t_khong_ghi_snapshot_rong)
     check("KHÔNG cất gói sao lưu rỗng đè bản tốt", t_khong_cat_goi_sao_luu_rong)
     check("sức đăng: 'chưa biết' ≠ 'hết lượt'", t_suc_dang_phan_biet_chua_biet_voi_het_luot)
@@ -1010,6 +1011,55 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_hang_cho_khong_phu_thuoc_firestore():
+    """Lấy việc kế phải có đường KHÔNG cần Firestore (24/8 tối).
+    Vá 7.cr làm vòng lấy việc chạy được — nhưng log GRIDIRON phiên 21:52Z:
+    `⚠️ lấy việc kế hụt (429 Quota exceeded.)`. `lay_viec_ke` giành việc bằng giao dịch trên
+    Firestore, tức hàng chờ nằm trong CHÍNH tài nguyên đang cạn ⇒ đúng lúc cần nhất thì không dùng
+    được. Đường thay: plan gửi kèm danh sách dư + thứ tự mẻ, lane cắt phần của mình theo vị trí."""
+    import json as _j
+    import run_render as R
+    cu_q, cu_p = os.environ.get("QUEUE_LIST"), os.environ.get("PLAN_CHANNELS")
+    try:
+        me = [f"K{i}" for i in range(18)]
+        du = [f"Q{i}" for i in range(32)]
+        os.environ["PLAN_CHANNELS"] = _j.dumps(me)
+        os.environ["QUEUE_LIST"] = _j.dumps(du)
+        tat = []
+        for lane in me:
+            da = set()
+            while True:
+                v = R._viec_chia_san(lane, da)
+                if not v:
+                    break
+                da.add(v); tat.append(v)
+        assert len(tat) == len(du), f"chia sót: {len(tat)}/{len(du)}"
+        assert len(tat) == len(set(tat)), "hai lane nhận TRÙNG kênh -> render dư, tốn quota"
+        os.environ["QUEUE_LIST"] = "[]"
+        assert R._viec_chia_san("K0", set()) == "", "hàng chờ rỗng mà vẫn trả việc"
+        os.environ.pop("PLAN_CHANNELS")
+        assert R._viec_chia_san("K0", set()) == "", "thiếu env mà vẫn trả việc (phải im, không đoán)"
+    finally:
+        for k, v in (("QUEUE_LIST", cu_q), ("PLAN_CHANNELS", cu_p)):
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "run_render.py"), encoding="utf-8").read()
+    # Soi trong THÂN `channel_mode` — đó mới là đường matrix chạy (bài học 7.ci); `main()` cũng có
+    # một lời gọi `lay_viec_ke` nhưng không ai đi qua.
+    import ast as _ast
+    t = _ast.parse(r)
+    fn = next(n for n in _ast.walk(t)
+              if isinstance(n, _ast.FunctionDef) and n.name == "channel_mode")
+    than = "\n".join(r.split("\n")[fn.lineno - 1: max(getattr(x, "lineno", 0) for x in _ast.walk(fn))])
+    i = than.index("FB.lay_viec_ke(OWNER)")
+    assert "_viec_chia_san(" in than[i: i + 700], "429 ở hàng chờ Firestore mà không có đường thay"
+    assert "except Exception" in than[max(0, i - 200): i + 300], \
+        "lay_viec_ke ném 429 mà không bắt -> vòng lấy việc chết luôn, không kịp dùng đường thay"
 
 
 def t_khong_ghi_snapshot_rong():

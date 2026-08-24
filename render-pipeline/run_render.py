@@ -1244,6 +1244,8 @@ def plan_mode():
     import json
     _cong_dong = False          # cổng kho Drive: True = không kho nào đọc được -> dừng phiên
     from datetime import datetime, timezone, timedelta
+    _du_hang = []          # phần kênh dư (hàng chờ) — gửi kèm xuống lane
+
     def out_channels(lst, cau_hinh=None):
         """Trả danh sách kênh cho matrix — VÀ kèm luôn CẤU HÌNH của chúng.
 
@@ -1271,6 +1273,13 @@ def plan_mode():
             with open(gh, "a") as f:
                 f.write(f"channels={payload}\n")
                 f.write(f"cfgs={goi}\n")
+                # HÀNG CHỜ gửi thẳng xuống lane (24/8 tối). `lay_viec_ke` giành việc bằng GIAO DỊCH
+                # trên Firestore — mà Firestore chính là thứ đang cạn: log GRIDIRON phiên 21:52Z
+                # `⚠️ lấy việc kế hụt (429 Quota exceeded.)`. Hàng chờ nằm trong tài nguyên đã hết
+                # thì đúng lúc cần nhất nó không dùng được.
+                # Đường không cần Firestore: gửi danh sách dư + thứ tự mẻ xuống, lane tự cắt phần
+                # của mình theo VỊ TRÍ (i, i+N, i+2N…). Không cần điều phối, không thể trùng.
+                f.write(f"queue={json.dumps(_du_hang or [])}\n")
         try:
             FB.flush_rw_ledger(OWNER)   # kể cả plan cũng cộng sổ ngày — mọi ngả thoát đều đi qua đây
         except Exception:
@@ -1723,6 +1732,7 @@ def plan_mode():
         # lấy tiếp (xem lay_viec_ke). 18 slot vẫn là số máy, nhưng số kênh làm được trong một phiên
         # giờ phụ thuộc THỜI GIAN CÒN LẠI chứ không phải số slot.
         _du = channels[MAX_MATRIX:]
+        _du_hang = list(_du)          # gửi kèm xuống lane (xem out_channels)
         FB.dat_hang_cho(OWNER, _du)
         print(f"   ✂️ {len(channels)} kênh còn việc > {MAX_MATRIX} slot -> {MAX_MATRIX} kênh vào mẻ, "
               f"{len(_du)} kênh vào HÀNG CHỜ (luồng nào xong trước tự lấy, không ngồi không).")
@@ -1734,6 +1744,31 @@ def plan_mode():
           + (f" (⏸ {n_paused} pause)" if n_paused else "")
           + (f" (🎯 {n_full} kênh đã đủ chỉ tiêu, bỏ qua)" if n_full else ""))
     out_channels(channels, cau_hinh=_cfg_goi)
+
+
+def _viec_chia_san(ten_lane: str, da_lam: set) -> str:
+    """Lấy việc kế mà KHÔNG cần Firestore (24/8 tối).
+
+    `FB.lay_viec_ke` giành việc bằng giao dịch trên Firestore — đúng thứ đang cạn hạn mức: log
+    GRIDIRON phiên 21:52Z `⚠️ lấy việc kế hụt (429 Quota exceeded.)`. Hàng chờ nằm trong tài nguyên
+    đã hết thì đúng lúc cần nhất nó không dùng được.
+    Đường thay thế: plan gửi kèm danh sách dư (`QUEUE_LIST`) và thứ tự mẻ (`PLAN_CHANNELS`) qua env.
+    Lane tự cắt phần của mình theo VỊ TRÍ trong mẻ: lane thứ i lấy các mục i, i+N, i+2N… Chia tĩnh
+    nên **không cần điều phối và không thể trùng** — đổi lại nếu một lane chết thì phần của nó chờ
+    phiên sau (chấp nhận được: hiện tại phần dư CHẲNG AI làm cả)."""
+    try:
+        ds = json.loads(os.environ.get("QUEUE_LIST") or "[]")
+        me = json.loads(os.environ.get("PLAN_CHANNELS") or "[]")
+        if not ds or not me:
+            return ""
+        i = [str(x).upper() for x in me].index(str(ten_lane).upper())
+        n = max(1, len(me))
+        for k in range(i, len(ds), n):
+            if str(ds[k]).upper() not in {str(x).upper() for x in da_lam}:
+                return str(ds[k])
+    except Exception:
+        pass
+    return ""
 
 
 def channel_mode(name):
@@ -1874,9 +1909,16 @@ def channel_mode(name):
                 break                     # không đủ giờ cho một mẻ nữa -> nghỉ thật
             if FB.read_config(OWNER).get("stop"):
                 print("   ⛔ Có lệnh Dừng — không lấy thêm việc."); break
-            _ke = FB.lay_viec_ke(OWNER)   # giao dịch nguyên tử -> 18 máy không nhận trùng kênh
+            _ke = ""
+            try:
+                _ke = FB.lay_viec_ke(OWNER)   # giao dịch nguyên tử -> 18 máy không nhận trùng kênh
+            except Exception as _e:
+                print(f"   ⚠️ hàng chờ trên Firestore không dùng được ({str(_e)[:50]}) — "
+                      f"chuyển sang phần chia sẵn của lane.")
             if not _ke:
-                break                     # hàng chờ rỗng -> hết việc thật
+                _ke = _viec_chia_san(name, _da_lam)   # đường không cần Firestore, xem hàm
+            if not _ke:
+                break                     # hết việc thật
             if _ke in _da_lam:
                 continue
             _da_lam.add(_ke)

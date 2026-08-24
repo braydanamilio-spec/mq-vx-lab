@@ -2051,3 +2051,16 @@ Chốt bằng `t_khong_ghi_snapshot_rong`; đã thử ngược: gỡ một lớp
 **LUẬT: mọi lệnh GHI ĐÈ một bản sao lưu/gương/snapshot phải hỏi trước "cái tôi sắp ghi có RỖNG
 không?" — vì nguồn của nó là một lượt ĐỌC, và đọc thì hỏng được. Rỗng gần như luôn là triệu chứng,
 không phải sự thật.** Ba chỗ trong một đêm: vault (7.ct) · snapshot key · gói kho.
+
+### 7.cv — Hàng chờ nằm TRONG chính tài nguyên đang cạn (24/8/2026 tối)
+Vá 7.cr làm vòng lấy-việc-kế chạy được thật — và ngay lượt đầu lòi ra tầng dưới: log GRIDIRON phiên
+21:52Z `⚠️ lấy việc kế hụt (429 Quota exceeded.)`. `lay_viec_ke` giành việc bằng **giao dịch trên
+Firestore**, tức hàng chờ sống trong đúng thứ đang hết ⇒ **đúng lúc cần nhất thì không dùng được**.
+Đường thay, không đụng Firestore và không cần deploy gì: plan gửi kèm danh sách dư (`QUEUE_LIST`) và
+thứ tự mẻ (`PLAN_CHANNELS`) qua env; lane thứ *i* tự lấy các mục *i, i+N, i+2N…*. Chia TĨNH nên
+**không cần điều phối và không thể trùng** (chạy thử: 18 lane chia 32 kênh dư → đúng 32, trùng 0).
+Đổi lại: lane chết thì phần của nó chờ phiên sau — chấp nhận được, vì hiện tại phần dư **chẳng ai
+làm cả**. Giao dịch Firestore vẫn là đường ưu tiên khi nó còn sống.
+Chốt bằng `t_hang_cho_khong_phu_thuoc_firestore` (đủ/không trùng · hàng chờ rỗng · thiếu env thì im).
+**LUẬT: cơ chế điều phối không được đặt trong tài nguyên mà nó điều phối việc sử dụng.** Đây là lần
+thứ ba tối nay dùng đúng cách chữa đó: cờ B-cạn → D1 (7.bz), sổ quota → D1 (7.cm), nay hàng chờ → env.
