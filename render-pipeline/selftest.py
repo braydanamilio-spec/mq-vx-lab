@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("tên chuẩn: hai video khác nhau KHÔNG đụng tên", t_ten_chuan_khong_dung_ten_nhau)
     check("đẩy kho xong thì xoá bản trên đĩa", t_day_kho_xong_thi_xoa_ban_tren_dia)
     check("Vision kiểm ảnh chết -> hiện CHẾT CÂM", t_vision_chet_thi_phai_hien_chet_cam)
     check("hàng chờ có đường KHÔNG cần Firestore", t_hang_cho_khong_phu_thuoc_firestore)
@@ -1025,6 +1026,32 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_ten_chuan_khong_dung_ten_nhau():
+    """Hai video KHÁC NHAU không được ra cùng một tên file (24/8 tối — rủi ro do chính bản đổi tên).
+    Tiêu đề bị cắt còn 46 ký tự, nên hai bài chỉ khác nhau ở đuôi vẫn ra cùng tên. Ca thật dựng được:
+      'Which state pays the most for electricity in 2026 really' / '... truly'
+    Trên Drive thành hai file trùng tên trong một thư mục ⇒ `find_junk` loại 2 xoá cái cũ = **mất một
+    video thật**; sidecar/thumbnail cũng lấy tên theo gốc đó nên còn móc chéo sang nhau."""
+    import ten_chuan as T
+    a = T.ten_file("GUESSUSA", {"title": "Which state pays the most for electricity in 2026 really"},
+                   "short", bo="S", ngay="20260824")
+    b = T.ten_file("GUESSUSA", {"title": "Which state pays the most for electricity in 2026 truly"},
+                   "short", bo="S", ngay="20260824")
+    assert a != b, f"hai tiêu đề khác nhau ra CÙNG tên file: {a}"
+    c = T.ten_file("GUESSUSA", {"title": "Short title here"}, "short", bo="S", ngay="20260824")
+    assert c.endswith("Short-title-here"), f"tên đủ ngắn mà vẫn bị gắn băm: {c}"
+    for x in (a, b, c):
+        assert T.da_chuan(x) and len(x) <= T.TRAN, f"tên hỏng quy ước: {x}"
+        assert T.doc_vai(x) == "s", f"đọc nhầm vai trò: {x}"
+    # Lớp chặn thứ hai: find_junk chỉ được coi là bản sao khi CÙNG TÊN **và** CÙNG KÍCH THƯỚC.
+    fj = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "find_junk.py"), encoding="utf-8").read()
+    i = fj.index("loại 2: trùng tên")
+    khoi = fj[i: i + 1800]
+    assert 'f.get("size")' in khoi, \
+        "find_junk vẫn xoá theo TÊN không xét kích thước -> đụng tên là mất video thật"
 
 
 def t_day_kho_xong_thi_xoa_ban_tren_dia():

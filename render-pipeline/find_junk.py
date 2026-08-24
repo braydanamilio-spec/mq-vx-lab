@@ -147,12 +147,28 @@ def main() -> int:
             if TAM.search(f["name"]):
                 _xep(drv, f, "1")
         # loại 2: trùng tên y hệt trong CÙNG thư mục -> giữ bản mới nhất
+        # 24/8 tối — THÊM LỚP CHẶN. Từ khi dùng tên chuẩn, tiêu đề bị cắt còn 46 ký tự nên HAI VIDEO
+        # KHÁC NHAU vẫn có thể ra cùng một tên (đã dựng được ca thật). Lúc đó "trùng tên" không còn
+        # đồng nghĩa với "trùng nội dung", mà loại 2 thì XOÁ — tức xoá mất một video thật.
+        # `ten_chuan.ten_file` đã gắn băm 4 ký tự khi tiêu đề bị cắt để chặn từ gốc; ở đây chặn thêm
+        # một lớp: chỉ coi là bản sao khi CÙNG TÊN **và** CÙNG KÍCH THƯỚC. Hai video khác nội dung
+        # gần như không bao giờ trùng cả hai.
         for (_tm, ten), ds in theo_ten.items():
             if len(ds) < 2:
                 continue
-            ds.sort(key=lambda x: str(x.get("createdTime") or ""), reverse=True)
-            for f in ds[1:]:
-                _xep(drv, f, "2", f"{ten} (bỏ {len(ds)-1} bản cũ)")
+            theo_co = defaultdict(list)
+            for f in ds:
+                theo_co[str(f.get("size") or "?")].append(f)
+            for _co, nhom in theo_co.items():
+                if len(nhom) < 2:
+                    continue
+                nhom.sort(key=lambda x: str(x.get("createdTime") or ""), reverse=True)
+                for f in nhom[1:]:
+                    _xep(drv, f, "2", f"{ten} (bỏ {len(nhom)-1} bản cũ, cùng {_co} byte)")
+            _khac = [k for k in theo_co if len(theo_co[k]) == 1]
+            if len(_khac) > 1:
+                print(f"   ⚠️ {ten}: {len(_khac)} file TRÙNG TÊN nhưng KHÁC kích thước — "
+                      f"KHÔNG xoá (có thể là hai video khác nhau bị đụng tên).")
         # loại 3/4/5
         for (_tm, goc), m in theo_goc.items():
             mp4 = m.get(".mp4")

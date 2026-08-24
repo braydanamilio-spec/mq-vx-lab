@@ -2106,3 +2106,23 @@ Vá: đẩy kho thành công (có `drive_id`) thì xoá bản trên đĩa (video
 đúng ý nghĩa của nó — chỉ còn cái CHƯA đẩy được. Chốt bằng `t_day_kho_xong_thi_xoa_ban_tren_dia`.
 **LUẬT: đổi quy ước đặt tên là đổi một GIẢ ĐỊNH mà nhiều chỗ khác đang dựa vào — phải đi soi mọi nơi
 khớp tên theo mẫu (dọn dẹp, artifact, glob), không chỉ nơi sinh ra tên.**
+
+### 7.cz — Tên chuẩn có thể làm HAI VIDEO KHÁC NHAU đụng tên, và loại 2 sẽ xoá mất một cái (24/8/2026 tối)
+Anh hỏi "đổi tên đã fix triệt để chưa" — soi lại thì còn một lỗ nữa, nặng hơn vụ artifact (7.cy).
+`ten_file` cắt tiêu đề còn 46 ký tự, nên hai bài chỉ khác nhau ở đuôi ra CÙNG một tên. Ca thật dựng
+được trên máy:
+```
+'Which state pays the most for electricity in 2026 really'
+'Which state pays the most for electricity in 2026 truly'
+-> GUESSUSA__20260824__S__Which-state-pays-the-most-for-electricity-in-2   (cả hai)
+```
+Hậu quả dây chuyền: hai file trùng tên trong một thư mục Drive ⇒ `find_junk` **loại 2 xoá cái cũ** =
+mất một video thật; sidecar và thumbnail cũng lấy tên theo gốc đó nên **móc chéo sang nhau**.
+Vá hai lớp:
+* **Gốc:** tiêu đề BỊ CẮT thì gắn thêm 4 ký tự băm của tiêu đề ĐẦY ĐỦ. Tên đủ ngắn thì không gắn gì
+  (giữ tên sạch) — lúc đó trùng tên nghĩa là trùng đúng nội dung.
+* **Lưới:** `find_junk` loại 2 chỉ coi là bản sao khi **cùng tên VÀ cùng kích thước**; trùng tên mà
+  khác cỡ thì in cảnh báo và **không xoá**.
+Chốt bằng `t_ten_chuan_khong_dung_ten_nhau`.
+**LUẬT: bất kỳ phép CẮT NGẮN nào (tên, id, khoá) đều tạo ra khả năng đụng nhau. Cắt thì phải kèm một
+mẩu băm của bản đầy đủ — và chỗ nào XOÁ dựa trên "trùng" thì phải có thêm một dấu hiệu độc lập.**

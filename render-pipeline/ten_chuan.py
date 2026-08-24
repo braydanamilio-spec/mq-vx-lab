@@ -32,7 +32,21 @@ def lat(x: str, n: int = 0) -> str:
 
 def ten_file(channel: str, story: dict, vtype: str, seri: str = "", bo: str = "",
              ngay: str = "") -> str:
-    tieu_de = lat((story or {}).get("title") or (story or {}).get("topic") or vtype, 46)
+    """Xem chú thích đầu file. Tiêu đề bị CẮT còn 46 ký tự nên hai bài khác nhau vẫn có thể ra
+    cùng một tên — 24/8 tối, chạy thử bắt được ca thật:
+        'Which state pays the most for electricity in 2026 really'
+        'Which state pays the most for electricity in 2026 truly'
+    -> cùng ra `GUESSUSA__20260824__S__Which-state-pays-the-most-for-electricity-in-2`.
+    Trên Drive thành hai file TRÙNG TÊN trong một thư mục, và `find_junk` loại 2 sẽ bỏ cái cũ vào
+    thùng rác — **xoá mất một video thật**. Sidecar/thumbnail cũng lấy tên theo gốc này nên còn bị
+    móc chéo sang nhau.
+    Nên: hễ tiêu đề BỊ CẮT thì gắn thêm 4 ký tự băm của tiêu đề ĐẦY ĐỦ. Tên đủ dài thì không gắn gì
+    (giữ tên sạch), vì lúc đó trùng tên nghĩa là trùng đúng nội dung."""
+    _goc = str((story or {}).get("title") or (story or {}).get("topic") or vtype)
+    tieu_de = lat(_goc, 46)
+    if len(lat(_goc)) > 46:
+        import hashlib as _h
+        tieu_de += "-" + _h.sha1(_goc.encode("utf-8")).hexdigest()[:4]
     phan = [lat(channel), ngay or _dt.now(_tz.utc).strftime("%Y%m%d")]
     if seri:
         phan.append(lat(seri, 6).lower())
