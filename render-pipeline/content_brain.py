@@ -96,7 +96,9 @@ SCHEMA_HINT = """Return JSON with EXACTLY these keys:
 Every narration line MUST have a distinct 'visual' (adjacent lines must differ) so the video never looks repetitive."""
 
 
-class RateLimited(Exception):
+class RateLimited(RuntimeError):
+    # 24/8: kế thừa RuntimeError (thay vì Exception) để mọi chỗ `except RuntimeError` CŨ vẫn bắt được
+    # y như trước, đồng thời `except RateLimited` bắt đúng lớp -> đổi key thay vì giết luồng.
     """Key hết quota/bị rate-limit -> tầng trên đổi key khác."""
 
 
@@ -266,7 +268,7 @@ class _GroqShim:
             if e.code == 403 and "1010" in detail:
                 # WAF Cloudflare của Groq chặn chữ ký bot (lẻ tẻ theo IP runner) -> lỗi TẠM per-minute:
                 # key nghỉ 1.1' + thử key kế, KHÔNG đánh trượt video, KHÔNG giết key.
-                raise RuntimeError(f"429 rate limit per minute (groq WAF 1010): {detail[:80]}")
+                raise RateLimited(f"429 rate limit per minute (groq WAF 1010): {detail[:80]}")
             if e.code == 429:
                 # PHÂN LOẠI bằng chính header Groq: còn request trong ngày -> đây là nghẽn THEO PHÚT
                 # (RPM/TPM) -> gắn chữ 'per minute' để _cool cho nghỉ 1.1' thay vì phạt oan 20'.
@@ -275,7 +277,7 @@ class _GroqShim:
                 except Exception:
                     left = 0
                 kind = "per minute" if left > 0 else "daily"
-                raise RuntimeError(f"429 rate limit {kind} (groq): {detail}")
+                raise RateLimited(f"429 rate limit {kind} (groq): {detail}")
             raise RuntimeError(f"groq HTTP {e.code}: {detail}")
         txt = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
         return type("R", (), {"text": txt})()
@@ -384,7 +386,7 @@ class _CfShim:
                 return type("R", (), {"text": txt2})()
             if e.code == 429 or "4006" in detail or "neuron" in low:
                 # 4006 = hết 10K neuron free trong ngày -> để chuỗi chứa '429' cho cool_key/key_order xử như Gemini/Groq
-                raise RuntimeError(f"429 rate limit daily (cloudflare): {detail}")
+                raise RateLimited(f"429 rate limit daily (cloudflare): {detail}")
             raise RuntimeError(f"cloudflare HTTP {e.code}: {detail}")
         txt = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
         if not _CfShim._limits_printed and self._tok:

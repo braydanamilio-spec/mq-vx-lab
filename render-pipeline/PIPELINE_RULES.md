@@ -461,3 +461,13 @@ Fix: thêm sổ đếm TRONG PHIÊN (`_SESSION_MADE`, RAM, không cần Firestor
 Thử thật: 0 long -> ép làm long; 1 long -> cho 3 short; 1 long + 3 short -> lại ép long.
 → **LUẬT**: mọi hạn mức/tỉ lệ phải có đường tính DỰ PHÒNG không phụ thuộc Firestore. Guard chỉ đúng
 khi quota khoẻ là guard hỏng đúng lúc cần nhất.
+
+### BUG 24/8 — KEY CẠN QUOTA GIẾT CẢ LUỒNG (POWERPLAY ra 0 video)
+Shim Groq/CF ném `RuntimeError("429 rate limit …")`, nhưng vòng xoay key chỉ bắt `CB.RateLimited`;
+nhánh `except Exception` không nhận ra đó là lỗi quota nên `raise` -> chết cả kênh. Đêm 23/8: 16 key
+Groq cạn hạn mức NGÀY (TPD 200K/key) và lane POWERPLAY trả 0 video **dù còn 40 key + CF + Gemini chưa
+đụng tới**. Fix 3 lớp: (1) `RateLimited` kế thừa `RuntimeError` (mọi `except RuntimeError` cũ vẫn chạy);
+(2) shim ném `RateLimited` thay vì `RuntimeError`; (3) lưới an toàn ở **6 hàm viết**: lỗi chứa
+429/rate limit/quota/resource_exhausted -> cho key nghỉ + đổi key. Có test chặn hồi quy.
+→ **LUẬT**: phân loại lỗi phải theo NỘI DUNG lỗi, không theo lớp ngoại lệ mà một shim tình cờ chọn.
+Mọi vòng xoay tài nguyên phải có lưới "lỗi lạ mang dấu hiệu quota = đổi tài nguyên", không được `raise`.

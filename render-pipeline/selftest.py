@@ -86,6 +86,21 @@ def t_groq_waf_1010():
         assert "429 rate limit per minute" in str(e), str(e)
 
 
+def t_het_key_thi_doi_key():
+    """24/8: key Groq cạn hạn mức NGÀY phải làm hệ ĐỔI KEY, tuyệt đối không giết cả luồng.
+    Đêm 23/8 lỗi này khiến POWERPLAY ra 0 video dù còn 40 key + CF + Gemini chưa đụng tới."""
+    import content_brain as CB, key_manager as KM
+    def gen_gia(niche, api_key=None, model_name=None, avoid=None):
+        if str(api_key).startswith("gsk_"):
+            raise RuntimeError("429 rate limit daily (groq): tokens per day (TPD): Limit 200000")
+        return {"title": "du phong", "dialog": [{"who": "A", "line": "x"}], "sources": ["a", "b"]}
+    CB.generate_thu_selftest = gen_gia
+    keys = [{"id": "g1", "key": "gsk_1"}, {"id": "g2", "key": "gsk_2"}, {"id": "c1", "key": "cf:acc:tok"}]
+    d = KM._write_wave4("generate_thu_selftest", "THU", "CH", keys, "niche", "normal", None, None, None)
+    assert d.get("title") == "du phong", d
+    print("  ✅ key cạn quota -> đổi key (không giết luồng)")
+
+
 def t_groq_model_selfprobe():
     """Groq gỡ model (llama-3.3 đã xảy ra thật) -> shim tự dò model sống từ /models."""
     import content_brain as CB
@@ -315,6 +330,7 @@ def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
     check("groq WAF 1010 -> lỗi tạm per-minute", t_groq_waf_1010)
+    check("key cạn quota -> đổi key, không giết luồng", t_het_key_thi_doi_key)
     check("groq model bị gỡ -> tự dò model sống", t_groq_model_selfprobe)
     check("key_order viết: groq -> cf -> gemini", t_key_order)
     check("pool vẽ cf-trước / vision gemini-trước", t_ai_pool_split)

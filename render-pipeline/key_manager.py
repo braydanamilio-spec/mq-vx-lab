@@ -158,6 +158,12 @@ def write_story(channel: str, keys: list[dict], seed: str,
                 print(f"   ⚠️ key [{tag}] hết quota → nghỉ + đổi key kế")
                 continue
             except Exception as e:
+                # 24/8 — LƯỚI AN TOÀN: bất kỳ lỗi nào MANG DẤU HIỆU quota/nghẽn đều phải cho key nghỉ
+                # rồi ĐỔI KEY, không được ném lên giết cả luồng. Đêm nay 16 key Groq cạn hạn mức ngày,
+                # shim ném RuntimeError -> nhánh này `raise` -> POWERPLAY ra 0 video dù còn CF + Gemini.
+                _s = str(e).lower()
+                if any(t in _s for t in ("429", "rate limit", "quota", "resource_exhausted", "too many requests")):
+                    _cool(k, e); continue
                 if "404" in str(e) and model != "gemini-2.5-flash":
                     model = "gemini-2.5-flash"
                     print(f"   ↓ model cao không có cho [{tag}] → hạ {model}")
@@ -214,6 +220,12 @@ def write_guess(channel: str, keys: list[dict], category: str, n_rounds: int = 3
             except CB.RateLimited as e:
                 tried.append(tag); _cool(k, e); continue
             except Exception as e:
+                # 24/8 — LƯỚI AN TOÀN (áp cho MỌI hàm viết): lỗi mang dấu hiệu quota/nghẽn thì cho key
+                # nghỉ rồi ĐỔI KEY. Đêm nay 16 key Groq cạn hạn mức ngày, shim ném RuntimeError nên
+                # nhánh này `raise` -> POWERPLAY ra 0 video dù còn 40 key + CF + Gemini chưa đụng tới.
+                _s = str(e).lower()
+                if any(t in _s for t in ("429", "rate limit", "quota", "resource_exhausted", "too many requests")):
+                    _cool(k, e); continue
                 if "404" in str(e) and model != "gemini-2.5-flash":
                     model = "gemini-2.5-flash"
                     try:
@@ -263,6 +275,12 @@ def write_mapped(channel: str, keys: list[dict], niche: str, tier: str = "normal
             except CB.RateLimited as e:
                 _cool(k, e); continue
             except Exception as e:
+                # 24/8 — LƯỚI AN TOÀN (áp cho MỌI hàm viết): lỗi mang dấu hiệu quota/nghẽn thì cho key
+                # nghỉ rồi ĐỔI KEY. Đêm nay 16 key Groq cạn hạn mức ngày, shim ném RuntimeError nên
+                # nhánh này `raise` -> POWERPLAY ra 0 video dù còn 40 key + CF + Gemini chưa đụng tới.
+                _s = str(e).lower()
+                if any(t in _s for t in ("429", "rate limit", "quota", "resource_exhausted", "too many requests")):
+                    _cool(k, e); continue
                 if "404" in str(e) and model != "gemini-2.5-flash":
                     model = "gemini-2.5-flash"
                     try:
@@ -311,6 +329,12 @@ def write_ranked(channel: str, keys: list[dict], niche: str, tier: str = "normal
             except CB.RateLimited as e:
                 _cool(k, e); continue
             except Exception as e:
+                # 24/8 — LƯỚI AN TOÀN (áp cho MỌI hàm viết): lỗi mang dấu hiệu quota/nghẽn thì cho key
+                # nghỉ rồi ĐỔI KEY. Đêm nay 16 key Groq cạn hạn mức ngày, shim ném RuntimeError nên
+                # nhánh này `raise` -> POWERPLAY ra 0 video dù còn 40 key + CF + Gemini chưa đụng tới.
+                _s = str(e).lower()
+                if any(t in _s for t in ("429", "rate limit", "quota", "resource_exhausted", "too many requests")):
+                    _cool(k, e); continue
                 if "404" in str(e) and model != "gemini-2.5-flash":
                     model = "gemini-2.5-flash"
                     try:
@@ -359,6 +383,12 @@ def write_scaled(channel: str, keys: list[dict], niche: str, tier: str = "normal
             except CB.RateLimited as e:
                 _cool(k, e); continue
             except Exception as e:
+                # 24/8 — LƯỚI AN TOÀN (áp cho MỌI hàm viết): lỗi mang dấu hiệu quota/nghẽn thì cho key
+                # nghỉ rồi ĐỔI KEY. Đêm nay 16 key Groq cạn hạn mức ngày, shim ném RuntimeError nên
+                # nhánh này `raise` -> POWERPLAY ra 0 video dù còn 40 key + CF + Gemini chưa đụng tới.
+                _s = str(e).lower()
+                if any(t in _s for t in ("429", "rate limit", "quota", "resource_exhausted", "too many requests")):
+                    _cool(k, e); continue
                 if "404" in str(e) and model != "gemini-2.5-flash":
                     model = "gemini-2.5-flash"
                     try:
@@ -407,6 +437,12 @@ def write_thennow(channel: str, keys: list[dict], niche: str, tier: str = "norma
             except CB.RateLimited as e:
                 _cool(k, e); continue
             except Exception as e:
+                # 24/8 — LƯỚI AN TOÀN (áp cho MỌI hàm viết): lỗi mang dấu hiệu quota/nghẽn thì cho key
+                # nghỉ rồi ĐỔI KEY. Đêm nay 16 key Groq cạn hạn mức ngày, shim ném RuntimeError nên
+                # nhánh này `raise` -> POWERPLAY ra 0 video dù còn 40 key + CF + Gemini chưa đụng tới.
+                _s = str(e).lower()
+                if any(t in _s for t in ("429", "rate limit", "quota", "resource_exhausted", "too many requests")):
+                    _cool(k, e); continue
                 if "404" in str(e) and model != "gemini-2.5-flash":
                     model = "gemini-2.5-flash"
                     try:
@@ -517,6 +553,12 @@ def _write_wave4(fn_name, label, channel, keys, niche, tier, avoid, on_limit, on
             except CB.RateLimited as e:
                 _cool(k, e); continue
             except Exception as e:
+                # 24/8 — LƯỚI AN TOÀN (áp cho MỌI hàm viết): lỗi mang dấu hiệu quota/nghẽn thì cho key
+                # nghỉ rồi ĐỔI KEY. Đêm nay 16 key Groq cạn hạn mức ngày, shim ném RuntimeError nên
+                # nhánh này `raise` -> POWERPLAY ra 0 video dù còn 40 key + CF + Gemini chưa đụng tới.
+                _s = str(e).lower()
+                if any(t in _s for t in ("429", "rate limit", "quota", "resource_exhausted", "too many requests")):
+                    _cool(k, e); continue
                 if "404" in str(e) and model != "gemini-2.5-flash":
                     model = "gemini-2.5-flash"
                     try:
