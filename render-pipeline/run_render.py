@@ -1545,6 +1545,30 @@ def plan_mode():
     else:
         print("🎯 Mọi kênh đã đủ chỉ tiêu — không mở phiên (khỏi đốt runner).")
         return out_channels([])
+    # ══ PHẢN ÁP LỰC: ĐỪNG LÀM THỨ KHÔNG ĐĂNG ĐƯỢC (24/8/2026) ═══════════════════════════════
+    # Đo thật: sản xuất ~976 video/ngày, đăng được 6 (YouTube cho 10.000 đơn vị/ngày mỗi dự án
+    # Google Cloud, một lần đăng tốn 1.600). Tỉ lệ 163:1. Tồn 644 video -> cái xếp cuối phải chờ
+    # 107 NGÀY mới tới lượt, mà nội dung nói số liệu 2026 thì lúc đó đã hỏng: làm ra để mốc.
+    # Kể cả có đủ 37 dự án (222/ngày) thì vẫn dư 754/ngày — thêm dự án chỉ NỚI CỔ CHAI, không sửa
+    # được lệch dòng chảy.
+    # Cách chữa đúng (và là điều đầu tiên các hệ hàng đợi nghiêm túc làm): CHẶN NGƯỢC nơi sản xuất.
+    # Kênh nào đã tồn quá `TON_TRAN` video chưa đăng thì NGƯNG làm thêm cho kênh đó, nhường máy cho
+    # kênh đang đói. Hàng đợi không chặn được nơi sản xuất là một LỖI, không phải một tính năng.
+    TON_TRAN = int(os.environ.get("TON_TRAN", "40"))     # ~10 ngày đăng ở nhịp 4 video/kênh/ngày
+    try:
+        import hot_db as _H
+        _ton = _H.ton_kho(OWNER)
+        if _ton:
+            _no = [c for c in channels if _ton.get(str(c).upper(), 0) >= TON_TRAN]
+            if _no:
+                _suc = _H.suc_dang_ngay()
+                print(f"   🛑 PHẢN ÁP LỰC: {len(_no)} kênh đã tồn ≥{TON_TRAN} video CHƯA ĐĂNG -> ngưng làm thêm "
+                      f"(đăng được hôm nay: {_suc if _suc >= 0 else '?'} video). Nhường máy cho kênh đói.")
+                print("      " + ", ".join(f"{c}={_ton.get(str(c).upper(),0)}" for c in _no[:8]))
+                channels = [c for c in channels if c not in _no] or channels[:1]
+    except Exception as _e:
+        print(f"   ⚠️ không đọc được tồn kho ({str(_e)[:50]}) — chạy như cũ")
+
     # PILOT (23/8 — user: "chưa kiểm tra đẩy lên xong render rồi kịch bản lộn xộn thì sao"): chạy
     # ĐÚNG 1 KÊNH, 1 short để soi trọn chuỗi viết → soi kịch bản → render → thumbnail → đẩy kho,
     # trước khi mở 18 luồng. Bật bằng env PILOT_CHANNEL=<TÊN KÊNH>.

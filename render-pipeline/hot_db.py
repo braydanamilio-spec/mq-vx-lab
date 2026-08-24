@@ -185,6 +185,24 @@ def key_nghi_doc(gio_iso: str) -> list:
     return (goi("key_nghi_doc", {"gio": gio_iso}) or {}).get("rows") or []
 
 
+def ton_kho(owner: str) -> dict:
+    """Tồn kho CHƯA ĐĂNG theo từng kênh. {} nếu chưa bật D1."""
+    if not (bat_ghi() or bat_doc()):
+        return {}
+    r = goi("ton_kho", {"owner": owner})
+    return {str(x.get("channel") or ""): int(x.get("ton") or 0) for x in (r.get("rows") or [])}
+
+
+def suc_dang_ngay() -> int:
+    """Tổng số video CÒN ĐĂNG ĐƯỢC hôm nay, cộng qua mọi dự án YouTube đang bật."""
+    if not (bat_ghi() or bat_doc()):
+        return -1
+    import datetime as _d
+    ngay = (_d.datetime.now(_d.timezone.utc) - _d.timedelta(hours=7)).date().isoformat()
+    r = goi("yt_con_cho", {"ngay": ngay})
+    return int(r.get("con", -1)) if "con" in r else -1
+
+
 def don_job_ma(owner: str, gio: int = 6) -> int:
     """Đổi job "đang chạy" đã im quá `gio` tiếng thành failed. Trả số bản ghi đã đổi.
 

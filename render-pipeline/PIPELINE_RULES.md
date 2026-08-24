@@ -1419,3 +1419,29 @@ vẫn không bị xếp lại nhờ cờ `queued` trên `render_job` — chốt 
 **Luật:** truy vấn nào quét một bảng **chỉ có tăng** thì sớm muộn cũng vỡ — không phải "nếu" mà là
 "khi nào". Mọi `.stream()` không `limit` trên bảng tích luỹ đều là bom hẹn giờ; phải lọc theo trạng
 thái ĐANG hoạt động, không phải theo chủ sở hữu.
+
+### 7.bd — Tài khoản Cloudflare: bốn đồng hồ riêng, cái chật nhất là KV GHI (24/8/2026)
+
+Anh hỏi "ngoài D1 còn xài gì, có bị khấu trừ không". **Không trừ lẫn nhau** — mỗi dịch vụ một đồng hồ
+riêng. Nhưng mỗi cái có trần riêng, và **cái chật nhất không phải D1**:
+
+| Dịch vụ | Trần free/ngày | Đang dùng | % |
+|---|---|---|---|
+| Workers (mm0-connect) | 100.000 lượt gọi | ~500-2.000 | 0,5-2% |
+| D1 đọc | 5.000.000 dòng | ~432.000 | 8,6% |
+| D1 ghi | 100.000 dòng | ~8.000 | 8% |
+| KV đọc | 100.000 lượt | ~2.000 | 2% |
+| **KV GHI** | **1.000 lượt** | ⚠️ | **chật nhất 100 lần** |
+
+**KHÔNG nằm trên tài khoản này:** Workers AI vẽ ảnh FLUX — 52 key `cf:` thuộc **các tài khoản
+Cloudflare khác**, mỗi cái có 10.000 neuron riêng. Việc vẽ ảnh không ăn vào hạn mức Worker/D1.
+
+**Chỗ suýt vỡ:** `driveCtx`/`ytCtx` `put()` KV **mỗi lần** đọc Firestore thành công. Mỗi tấm
+thumbnail trên dashboard là một lượt gọi → tải một trang thư viện 40 ảnh có thể tốn **40 lượt ghi KV**.
+Vài lần mở trang là chạm trần 1.000, rồi bản sao thẻ kết nối **ngừng cập nhật** — đúng lúc cần nhất
+(khi Firestore cạn) thì nó lại là bản cũ.
+→ `kvPutKhacNhau()`: **đọc trước, giống thì thôi ghi**. Đổi 1 lượt ghi (trần 1.000) lấy 1 lượt đọc
+(trần 100.000) — **rẻ hơn 100 lần**. Thẻ kết nối gần như không đổi nên hầu hết lượt sẽ không ghi.
+
+**Luật:** trong một nhà cung cấp có nhiều dịch vụ, phải liệt kê **TỪNG đồng hồ** rồi tìm cái chật nhất.
+Nhìn mỗi con số to nhất (5 triệu dòng D1) rồi yên tâm là cách chắc chắn nhất để vỡ ở chỗ khác.
