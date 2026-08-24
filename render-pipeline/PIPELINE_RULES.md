@@ -1053,3 +1053,47 @@ nên để lại làm ban ngày thay vì vá mù lúc 3h sáng.
 
 **Luật:** thời lượng có cộng thêm đuôi thì phải có **cảnh vẽ cho đuôi đó**. Cộng giây mà không vẽ =
 tặng người xem một màn hình đen đúng lúc họ quyết định có theo dõi hay không.
+
+### 7.ap — "Đếm sai": ba phép đo, và cái sai là con số TÔI từng báo (24/8/2026)
+
+Đo ba đường độc lập:
+| Đường đo | Kết quả |
+|---|---|
+| Sổ đếm lượt đẩy kho `__pushed__.total` | **1.305** |
+| Bản ghi job `status=done` ở B | **644** (tổng job 772) |
+| Dung lượng kho 57,7 GB ÷ ~44MB/video | **~1.343** |
+
+Đường 1 và 3 khớp nhau (lệch 3%). Đường 2 thấp vì sổ job bị reset 23/8 **và** các phiên failover ghi
+job sang B2. Phân rã: `1.305 = 414 (mốc dựng lại 23/8) + 496 (23/8) + 395 (24/8)` — cộng đúng, không
+có dấu hiệu cộng trùng.
+
+**Kết luận: sổ đếm KHÔNG sai. Con số 414 tôi từng báo mới là con số sai** — nó là kết quả của
+`rebuild_stats.py` đếm bản ghi job SAU khi sổ vừa bị reset, tức đếm phần sống sót chứ không phải
+phần có thật trong kho.
+
+**Cái thật sự hỏng là số NHẢY LUNG TUNG:** `count_pushed` ghi qua `_db_jobs()`, mà hàm này khi
+failover trả về **B2** — cả phiên khẩn sổ cộng vào B2 trong khi dashboard đọc B → số **đứng im** suốt
+phiên rồi **nhảy vọt** lúc rót ngược.
+→ Vá: sổ đếm **luôn ghi thẳng vào B** (`_db_B_that()`), vì failover là do cạn hạn mức ĐỌC còn ghi vào
+B vẫn được. Một nguồn duy nhất, số tăng đều theo thời gian thực, và bỏ được đường rót ngược — vốn là
+chỗ dễ cộng trùng nhất vì nó cộng `Increment` từ một bản sao.
+
+**Luật:** ba ô số trên một màn hình mà đo ba thứ khác nhau thì người xem sẽ luôn thấy "sai". Trước
+khi kết luận số hỏng, phải đo ĐỘC LẬP ít nhất hai đường và nói rõ mỗi ô đang đo cái gì.
+
+### 7.aq — Dọn rác mà KHÔNG được xoá nhầm
+
+`wipe_queue.py` xoá SẠCH kho — đúng cho lúc làm lại từ đầu, **sai** cho yêu cầu "giữ video hoàn hảo,
+chỉ dọn rác". Thêm `find_junk.py`: nhận diện rác theo **từng loại có bằng chứng**, mặc định chỉ đếm.
+
+| Loại | Bằng chứng để gọi là rác | Xử lý |
+|---|---|---|
+| 1 | tên chứa `.new.` / `.tmp` / `.part` | bỏ thùng rác |
+| 2 | trùng tên y hệt cùng thư mục | giữ bản mới nhất, bỏ phần còn lại |
+| 3 | `.jpg`/`.json` mà không có `.mp4` cùng gốc | bỏ thùng rác |
+| 4 | `.mp4` < 300KB | bỏ thùng rác |
+| 5 | `.mp4` thiếu CẢ `.json` lẫn `.jpg` | **KHÔNG xoá** — chỉ liệt kê để dựng lại phần phụ |
+
+Ba chốt an toàn: (a) mặc định `--dry-run`; (b) "xoá" = **bỏ vào thùng rác**, còn khôi phục được —
+đổ thùng rác (xoá vĩnh viễn) **cố ý không nằm trong công cụ**; (c) không bao giờ đụng `.mp4` có đủ
+`.json` + `.jpg`. Đọc kho qua gương ở B nên không tốn hạn mức project A.

@@ -271,7 +271,14 @@ def count_pushed(owner: str, drive_id: str = "", channel: str = "", vtype: str =
         patch = {"total": Increment(1), day: Increment(1), "at": _now()}
         if channel:
             patch[f"ch_{str(channel).upper()}"] = Increment(1)
-        _soft(lambda: _db_jobs().collection("render_stats").document(f"__pushed__{owner}")
+        # 24/8 — SỐ TRÊN WEB "NHẢY LUNG TUNG": `_db_jobs()` đang failover thì trả về B2, nên cả
+        # phiên khẩn sổ đếm cộng vào B2 trong khi dashboard đọc B -> số ĐỨNG IM suốt phiên rồi
+        # NHẢY VỌT lúc rót ngược. Người vận hành nhìn vào không hiểu chuyện gì.
+        # Failover là do cạn hạn mức ĐỌC — ghi vào B vẫn được. Nên sổ đếm LUÔN ghi thẳng vào B:
+        # một nguồn duy nhất, số trên web tăng đều theo thời gian thực, và khỏi cần rót ngược
+        # (rót ngược là chỗ dễ cộng trùng nhất vì nó cộng Increment từ một bản sao).
+        _db_dem = _db_B_that() or _db_jobs()
+        _soft(lambda: _db_dem.collection("render_stats").document(f"__pushed__{owner}")
               .set(patch, merge=True), "count_pushed")
     except Exception:
         pass
@@ -1488,6 +1495,8 @@ def mirror_b_to_b2(owner: str) -> int:
         # có đường cộng trùng).
         try:
             from google.cloud.firestore_v1 import Increment as _Inc
+            # `__pushed__` từ 24/8 luôn ghi thẳng vào B (xem count_pushed) nên bình thường KHÔNG
+            # còn ở B2. Vẫn giữ trong danh sách rót ngược để vét nốt phần các phiên CŨ đã kẹt lại.
             for _sid in (f"__pushed__{owner}", owner):
                 _sd = b2.collection("render_stats").document(_sid).get(timeout=15)
                 if not _sd.exists:

@@ -16,6 +16,7 @@ on:
       reset_topics: { description: "Xoá LUÔN sổ chủ đề (kênh làm lại đề tài từ đầu) — cần bật cùng reset_ledger", type: boolean, default: false }
       reset_ledger: { description: "Reset luôn SỔ (render_jobs + số đếm) — dashboard hết hiện video cũ", type: boolean, default: false }
       fix_overlap: { description: "Tìm video bị CHỮ CHỒNG CHÉO (lớp hook đè phụ đề) và xếp hàng render lại", type: boolean, default: false }
+      find_junk: { description: "SOI FILE RÁC trong kho (file tạm, trùng tên, ảnh mồ côi, video hỏng) — giữ nguyên video tốt", type: boolean, default: false }
 
 concurrency: { group: mm0-wipe-queue, cancel-in-progress: false }
 
@@ -55,7 +56,7 @@ jobs:
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
           python src/wipe_queue.py --scope "${{ github.event.inputs.scope }}" $ARGS
       - name: Checkout render-pipeline
-        if: ${{ github.event.inputs.reset_ledger == 'true' || github.event.inputs.fix_dup == 'true' || github.event.inputs.reset_topics == 'true' || github.event.inputs.rebuild_stats == 'true' || github.event.inputs.fix_overlap == 'true' }}
+        if: ${{ github.event.inputs.reset_ledger == 'true' || github.event.inputs.fix_dup == 'true' || github.event.inputs.reset_topics == 'true' || github.event.inputs.rebuild_stats == 'true' || github.event.inputs.fix_overlap == 'true' || github.event.inputs.find_junk == 'true' }}
         uses: actions/checkout@v4
         with: { path: rp }
       - name: Dọn bản ghi kho trùng
@@ -70,6 +71,21 @@ jobs:
           ARGS=""
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="--dry-run"
           python rp/render-pipeline/fix_dup_connections.py $ARGS
+      - name: Soi file rác (giữ nguyên video tốt)
+        if: ${{ github.event.inputs.find_junk == 'true' }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          FIREBASE_PROJECT_ID_B2: mm0-shard-b2
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/src
+          RENDER_OWNER: ${{ secrets.OWNER_UID }}
+        run: |
+          cd rp/render-pipeline
+          ARGS=""
+          [ "${{ github.event.inputs.dry_run }}" != "true" ] && ARGS="--don"
+          python find_junk.py $ARGS
       - name: Tìm video chữ chồng chéo -> xếp hàng render lại
         if: ${{ github.event.inputs.fix_overlap == 'true' }}
         env:
