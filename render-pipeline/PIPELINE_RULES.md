@@ -524,3 +524,14 @@ dữ liệu cũ vẫn trong bộ nhớ trang nên Firestore chỉ gửi phần t
 "193 video trong kho · đang nạp 84" trộn sổ đếm LƯỢT ĐẨY cộng dồn với số bản ghi thật, nên bật/tắt bộ
 lọc là con số nhảy 342 -> 79 -> 65. Nay số chính LUÔN là video đang có, cộng dồn ghi riêng có nhãn:
 "81 video (đã đẩy cộng dồn 268 lượt, gồm cả bản đã thay thế)".
+
+### 24/8 — CỜ DỪNG CỦA NGƯỜI: pipeline không được tự gỡ nữa
+`plan_mode` trước đây xoá cả `last_safety_stop` (máy đặt) LẪN `stop` (người bấm) -> bấm Dừng không
+dừng nổi. Nay chỉ xoá cờ của máy; thêm chốt ở `--gate`: có `stop` là đóng cổng ngay, kể cả khi còn
+`run_now` cũ. Gỡ cờ chỉ bằng nút ▶️ Chạy tiếp / Render ngay.
+
+### 24/8 — THỬ "MỘT TAB LÀM CHỦ" THẤT BẠI, ĐÃ GỠ
+Ý tưởng: nhiều tab dashboard = nhiều bộ listener = nhân số lượt đọc; bầu 1 tab chủ qua localStorage,
+tab phụ không mở listener. Đo thật: tab phụ VẪN 184 lượt đọc -> chặn ở `subscribe()` là chưa đủ vì
+listener còn được mở rải rác (render studio, snapW rời). Đã gỡ, không để code nửa vời.
+→ Muốn làm đúng: bọc TẤT CẢ điểm gọi `onSnapshot` qua một cổng duy nhất rồi mới bầu tab chủ.

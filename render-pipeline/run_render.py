@@ -947,7 +947,12 @@ def gate_mode():
                     recently = elapsed_min < gap_min
                 except Exception: recently = False
             batch_ok = not recently
-            if ((event != "schedule") or run_now or batch_ok) and (enabled or run_now):
+            # 24/8: cờ Dừng do NGƯỜI bấm phải chặn ngay tại cổng. Trước đây chỉ xét enabled/run_now
+            # nên một `run_now` cũ còn sót vẫn mở phiên dù người đã bấm Dừng.
+            _nguoi_dung = bool(cfg.get("stop"))
+            if _nguoi_dung:
+                print("⛔ Người đã bấm DỪNG — cổng đóng (bấm ▶️ Chạy tiếp / Render ngay để mở lại).")
+            elif ((event != "schedule") or run_now or batch_ok) and (enabled or run_now):
                 run = "true"
         except Exception:
             traceback.print_exc()
@@ -1328,7 +1333,10 @@ def plan_mode():
         except Exception:
             pass
         return out_channels([])
-    FB.set_config(OWNER, {"last_safety_stop": None, "stop": None})   # kho ổn + xoá cờ dừng cũ
+    # 24/8 — CHỈ xoá cờ do MÁY tự đặt. Trước đây xoá luôn `stop` (cờ do NGƯỜI bấm Dừng) nên đêm 23/8
+    # bấm Dừng lúc 03:50Z mà phiên 04:24Z vẫn mở đủ 18 luồng — dừng không nổi, phải khoá workflow ở
+    # tầng GitHub. Cờ người đặt chỉ người mới được gỡ (nút ▶️ Chạy tiếp / Render ngay).
+    FB.set_config(OWNER, {"last_safety_stop": None})   # kho ổn -> gỡ cờ dừng AN TOÀN do máy đặt
     try:
         process_requests(keys, {"done": 0, "fails": []})   # 🔄 render lại (thay bản cũ) — 1 lần ở plan
     except Exception:
