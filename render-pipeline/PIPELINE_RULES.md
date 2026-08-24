@@ -1162,3 +1162,15 @@ Tức từ nay **không thể** thêm một lối đọc trốn sổ mà vẫn p
 
 **Luật:** kỷ luật con người không giữ được hạn mức. Chỉ có hai thứ giữ được: **đếm ở tầng thấp nhất**
 (để không ai quên) và **một bài kiểm chặn build** (để không ai thêm lối mới).
+
+**Bổ sung 7.as — chèn sổ TỰ ĐỘNG phải soi lại từng chỗ.** Bản chèn bằng AST gắn đúng vị trí cú pháp
+nhưng **sai con số** ở hai chỗ, và cả hai đều nguy:
+- `_count_jobs` ghi **200** trong khi `count()` là truy vấn **TỔNG HỢP, tốn ~1 lượt** dù bảng bao nhiêu
+  doc. Plan gọi ~110 lần ⇒ **22.000 lượt ma = 44% trần ngay ở bước plan** ⇒ tường bật nhầm, tắt hết
+  việc phụ dù thực tế mới dùng 1%. (Con số 200 chỉ đúng cho **nhánh lùi** đếm thô.)
+- Chèn thêm `_cr` ngay trong chính `_stream_at`, cộng đôi với phần `_tinh()` đã đếm theo số doc thật.
+
+Đo lại sau khi sửa: một phiên plan điển hình = **831 lượt đọc (1% trần)**, việc phụ vẫn chạy.
+
+**Luật:** công cụ sinh code tự động chỉ bảo đảm **đúng cú pháp**, không bảo đảm **đúng ngữ nghĩa**.
+Sổ ghi sai còn tệ hơn không có sổ — vì nó làm bức tường bật nhầm và tắt việc thật.

@@ -26,7 +26,6 @@ _B2 = {"on": False, "client": None, "wclient": None}
 
 
 def _stream_at(q, timeout=20):
-    _cr("_stream_at", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
     """`.stream(timeout=)` nhưng KHÔNG chết vì thư viện.
 
     24/8 — sự cố thật: gương B→B2 hỏng MỌI PHIÊN với
@@ -43,7 +42,6 @@ def _stream_at(q, timeout=20):
         return _tinh(list(q.stream(timeout=timeout)))
     except (AttributeError, TypeError) as e:
         print(f"   ⚠️ stream(timeout) không dùng được ({str(e)[:60]}) — gọi lại không timeout")
-        _cr("_stream_at", 30)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
         return _tinh(list(q.stream()))
 
 
@@ -1405,7 +1403,10 @@ def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
          .where("channel", "==", channel).where("status", "==", "done"))
     if vtype:
         q = q.where("type", "==", vtype)
-    _cr("_count_jobs", 200)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
+    # 24/8 — CHÍNH XÁC THEO ĐƯỜNG ĐI: `count()` là truy vấn TỔNG HỢP, tốn ~1 lượt đọc dù bảng bao
+    # nhiêu doc. Bản chèn tự động ghi 200 ở đây là SAI GẤP 200 LẦN — plan gọi ~110 lần thì thành
+    # 22.000 lượt ma, đủ để kích hoạt tường nhầm và tắt hết việc phụ ngay đầu phiên.
+    _cr("count_done", 1)
     try:
         # _retry: 429 ở đây đa số là BURST THEO PHÚT (plan bắn ~106 lệnh đếm liền tay cho 53 kênh,
         # 10:17Z 22/8), không phải cạn ngày — backoff 1.5-7.5s là qua. Không retry thì count trả 0
@@ -1433,7 +1434,7 @@ def _count_jobs(db, owner: str, channel: str, vtype: str = None) -> int:
                 print("   🔌 CẦU DAO: quota đọc cạn -> ngừng đếm 15', coi mọi kênh = 0 (phiên sau đếm lại)")
             return 0
         try:
-            _cr("_count_jobs", 200)       # sổ ngân sách (bắt buộc, xem t_khong_tron_so)
+            _cr("count_tho", 200)     # nhánh LÙI: đếm thô 200 doc — chỗ này mới thật sự tốn 200
             return sum(1 for _ in q.limit(200).stream(timeout=12))
         except Exception:
             print(f"   ⚠️ đếm {channel}/{vtype} lỗi ({str(e)[:50]}) -> coi như 0, phiên sau đếm lại")
