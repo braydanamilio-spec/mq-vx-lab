@@ -1760,3 +1760,13 @@ học lại bằng cách trả giá.** (D1 là chỗ chia sẻ đúng: rẻ, kh�
 tức sổ đang đếm THIẾU ~80% lượt đọc thật (dashboard/Worker, auto_enqueue bên repo publish, và lượt
 gương B→B2 đều không vào sổ). Bức tường ngân sách vì thế không bao giờ chạm ngưỡng. Chưa vá đêm nay;
 cách chắc chắn nhất là coi chính cú 429 là nguồn sự thật (đã làm ở 7.bz) thay vì tin con số ước lượng.
+
+### 7.ca — Vá "mở đầu tẻ nhạt" suýt tạo lại đúng "chữ trên nền trơn" đang bị cấm (24/8/2026 tối)
+Bản đầu của `Bookend.tsx` phủ thẻ hook lên `rgba(0,0,0,0.82→0.94)` — che kín nội dung bằng một nền
+gần đen. Đó CHÍNH LÀ chữ ký mà `opening_is_flat()` chặn (đo thật: nền trơn = 91,9% tối · 342 màu;
+ngưỡng `dark≥75 & colors<900`), và cũng chính là thứ anh cấm. Đặt thẻ hook lên rồi bịt hết phần hình
+thì mở đầu **tệ hơn lúc chưa có thẻ**. Nay trần cứng `MAN_CHE = 0.5`: gauge/bản đồ/bậc thang bên dưới
+vẫn hiện và vẫn đang chạy, chữ vẫn đọc rõ nhờ đổ bóng. Thẻ KẾT che dày hơn được (0,78) vì QC chỉ soi
+khung MỞ ĐẦU và cuối video mục tiêu là đọc được CTA. Chốt bằng `t_the_mo_dau_khong_thanh_nen_tron`.
+**LUẬT: mỗi lần thêm một lớp phủ toàn màn hình, phải hỏi lại nó có chạm ngưỡng QC nào không —
+QC là luật đã viết ra để chặn chính mình, không phải chỉ để chặn Gemini.**

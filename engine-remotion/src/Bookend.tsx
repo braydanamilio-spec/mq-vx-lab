@@ -12,6 +12,20 @@ import { useCurrentFrame, useVideoConfig, interpolate, spring } from "remotion";
 // Cách làm: một lớp phủ TỰ BIẾT MÌNH Ở ĐÂU (đọc `durationInFrames`), nên mỗi component chỉ thêm một
 // dòng — không phải tính lại mốc, tức không đẻ ra lỗi lệch mốc như đã dính ở PULSE.
 // Màu lấy từ `accent` của chính kênh đó nên mỗi kênh vẫn giữ nhận diện riêng, không bị đồng phục.
+//
+// ⚠️ MÀN CHE PHẢI MỎNG — suýt tự tạo lại đúng lỗi bị cấm. Bản đầu của thẻ mở đầu phủ
+// `rgba(0,0,0,0.82→0.94)`, tức che kín nội dung bên dưới bằng một nền gần đen. Đó CHÍNH LÀ chữ ký
+// "chữ trên nền trơn" mà `opening_is_flat()` chặn (đo thật: nền trơn = 91,9% tối · 342 màu; ngưỡng
+// chặn dark≥75 & colors<900) — và cũng chính là thứ anh cấm: "mở đầu KHÔNG được là chữ trên nền
+// đen". Đặt thẻ hook lên trên rồi bịt hết phần hình thì mở đầu còn tệ hơn lúc chưa có thẻ.
+// Nay màn che tối đa `MAN_CHE` = 0.5: gauge/bản đồ/bậc thang bên dưới **vẫn hiện và vẫn đang chạy**,
+// chữ vẫn đọc rõ nhờ viền đổ bóng. Vừa hook hơn, vừa không dính chữ ký nền trơn.
+
+// Màn che THẺ MỞ ĐẦU: 0.5 là trần cứng. Cao hơn là dính chữ ký "nền trơn" (dark≥75) mà
+// `opening_is_flat()` chặn — xem ghi chú đầu file. Thẻ KẾT thì che dày hơn được: QC chỉ soi khung
+// MỞ ĐẦU, và cuối video mục tiêu là đọc được CTA chứ không phải khoe hình.
+const MAN_CHE = 0.5;
+const MAN_CHE_KET = 0.78;
 
 export const Bookend: React.FC<{
   title?: string; handle?: string; accent?: string; color?: string;
@@ -33,7 +47,7 @@ export const Bookend: React.FC<{
     return (
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
                     justifyContent: "center", padding: "0 70px", zIndex: 40, opacity: ra,
-                    background: `radial-gradient(90% 60% at 50% 45%, ${accent}22 0%, rgba(0,0,0,0.82) 60%, rgba(0,0,0,0.94) 100%)` }}>
+                    background: `radial-gradient(95% 65% at 50% 45%, ${accent}1f 0%, rgba(0,0,0,${MAN_CHE * 0.62}) 55%, rgba(0,0,0,${MAN_CHE}) 100%)` }}>
         <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, bottom: 0, left: `${quet}%`, width: "26%",
                         background: `linear-gradient(100deg, transparent, ${accent}30, transparent)` }} />
@@ -65,7 +79,7 @@ export const Bookend: React.FC<{
     return (
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
                     justifyContent: "center", zIndex: 40, opacity: Math.min(1, l / 5),
-                    background: `radial-gradient(85% 55% at 50% 45%, ${accent}26 0%, rgba(0,0,0,0.86) 62%, rgba(0,0,0,0.96) 100%)` }}>
+                    background: `radial-gradient(85% 55% at 50% 45%, ${accent}26 0%, rgba(0,0,0,${MAN_CHE_KET * 0.85}) 62%, rgba(0,0,0,${MAN_CHE_KET}) 100%)` }}>
         <div style={{ textAlign: "center", transform: `scale(${0.9 + 0.1 * p})`, padding: "0 70px" }}>
           <div style={{ fontSize: 54, fontWeight: 900, color: "#FFFFFF", letterSpacing: -0.5,
                         textShadow: "0 6px 30px rgba(0,0,0,.95)" }}>

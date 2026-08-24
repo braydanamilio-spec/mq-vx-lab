@@ -371,6 +371,7 @@ def main():
     check("không lối đọc nào TRỐN SỔ ngân sách", t_khong_tron_so)
     check("không doc id nào dùng tên BỊ FIRESTORE CẤM", t_id_khong_cam)
     check("sổ đọc hỏng phải HÉT LÊN, không khai rỗng", t_so_hong_phai_het_len)
+    check("thẻ mở đầu KHÔNG thành 'chữ trên nền trơn'", t_the_mo_dau_khong_thanh_nen_tron)
     check("B cạn hạn mức: báo CHUNG, khỏi 18 lane tự khám phá", t_bao_chung_b_can_han_muc)
     check("một bảng phạt key cho CẢ viết lẫn vẽ ảnh", t_mot_bang_phat_key_duy_nhat)
     check("mốc reset nghỉ key theo ĐÚNG nhà cung cấp", t_moc_reset_theo_nha_cung_cap)
@@ -795,6 +796,25 @@ def t_so_hong_phai_het_len():
     i = r.index("FB.get_script_by_drive(")          # LỜI GỌI THẬT, không phải dòng chú thích
     assert "except FB.DocLoi" in r[i: i + 700], \
         "đường render lại chưa hoãn khi không đọc được kịch bản cũ"
+
+
+def t_the_mo_dau_khong_thanh_nen_tron():
+    """Thẻ mở đầu KHÔNG được che kín hình bằng nền gần đen (24/8 tối — suýt tự tạo lại lỗi bị cấm).
+    `opening_is_flat()` chặn chữ ký nền trơn ở `dark>=75 & colors<900` (đo thật: nền trơn 91,9% tối).
+    Bản đầu của Bookend phủ `rgba(0,0,0,0.82→0.94)` — vừa dính đúng chữ ký đó, vừa đúng thứ anh cấm
+    ("mở đầu không được là chữ trên nền đen"). Trần cứng 0,5; thẻ KẾT được che dày hơn vì QC chỉ soi
+    khung MỞ ĐẦU."""
+    eng = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                       "engine-remotion", "src")
+    if not os.path.isdir(eng):
+        return
+    t = io.open(os.path.join(eng, "Bookend.tsx"), encoding="utf-8").read()
+    m = re.search(r"const MAN_CHE = ([\d.]+)", t)
+    assert m and float(m.group(1)) <= 0.5, "màn che thẻ MỞ ĐẦU vượt 0,5 -> dính chữ ký nền trơn"
+    # không được còn hằng số alpha viết thẳng trong phần thẻ mở đầu
+    mo = t[t.index("THẺ MỞ ĐẦU"): t.index("THẺ KẾT")]
+    assert not re.search(r"rgba\(0,\s*0,\s*0,\s*0\.[6-9]", mo), \
+        "thẻ mở đầu còn màn che đặc viết cứng"
 
 
 def t_bao_chung_b_can_han_muc():
