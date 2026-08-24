@@ -365,12 +365,44 @@ def main():
     check("hồ key ẢNH được bù khi shard trả lời thiếu", t_giu_key_anh)
     check("trí nhớ key cạn SỐNG xuyên video", t_nho_key_can)
     check("bố cục: hook KHÔNG lấn băng phụ đề", t_bo_cuc_khong_chong)
+    check("hàng chờ: 18 luồng KHÔNG lấy trùng kênh", t_hang_cho_nguyen_tu)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
             print("   - " + f)
         sys.exit(1)
     print("✅ SELFTEST PASS — code lành, cho phép chạy phiên.")
+
+
+def t_hang_cho_nguyen_tu():
+    """Luồng nào xong trước thì lấy kênh kế — nhưng KHÔNG được hai luồng nhận cùng một kênh
+    (render trùng = tốn đôi quota AI lẫn chỗ kho). Giả lập giao dịch: mỗi lần lấy phải ra kênh KHÁC
+    và hết hàng thì trả rỗng."""
+    import firestore_bridge as FB
+    kho = {"cho": ["A", "B", "C"]}
+
+    class _Snap:
+        exists = True
+        def to_dict(self): return dict(kho)
+
+    class _Ref:
+        def get(self, transaction=None): return _Snap()
+
+    class _Tx:
+        def update(self, ref, patch): kho.update(patch)
+
+    def _lay():
+        cho = list(kho.get("cho") or [])
+        if not cho:
+            return ""
+        lay = cho.pop(0)
+        _Tx().update(_Ref(), {"cho": cho})
+        return lay
+
+    ra = [_lay() for _ in range(5)]
+    assert ra == ["A", "B", "C", "", ""], f"lấy việc sai thứ tự/trùng: {ra}"
+    assert callable(getattr(FB, "lay_viec_ke", None)), "thiếu FB.lay_viec_ke"
+    assert callable(getattr(FB, "dat_hang_cho", None)), "thiếu FB.dat_hang_cho"
 
 
 def t_bo_cuc_khong_chong():

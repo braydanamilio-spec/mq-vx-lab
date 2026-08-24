@@ -896,6 +896,57 @@ def don_nhip_song(gio: int = 2) -> int:
         return 0
 
 
+# ── HÀNG CHỜ KÊNH DÙNG CHUNG (24/8) ──────────────────────────────────────────────────────────
+# Vì sao: mẻ render là 18 luồng, MỖI luồng nhận CỨNG một kênh rồi thôi. Kênh nhẹ xong sau 20 phút
+# là máy đó ngồi không, trong khi kênh nặng chạy gần 2 tiếng — và khoá concurrency của GitHub bắt
+# phiên sau đợi luồng chậm nhất. Đo thật phiên 11:00Z: 18/19 job xong từ lâu, còn đúng WHYUSA chạy
+# 1h53 -> 17 máy đứng im gần một tiếng, phiên kế nằm chờ.
+# Đây chính là "chia việc tĩnh" — cách chữa chuẩn là HÀNG CHỜ + luồng tự lấy việc kế (work stealing):
+# ai xong trước thì lấy tiếp, không ai phải đợi ai.
+# Hàng chờ để trong MỘT doc, lấy việc bằng GIAO DỊCH nguyên tử nên 18 máy không bao giờ lấy trùng.
+def dat_hang_cho(owner: str, channels: list) -> int:
+    """Plan ghi danh sách kênh CÒN LẠI (ngoài 18 slot) vào hàng chờ."""
+    if not owner:
+        return 0
+    _cw("dat_hang_cho")
+    _soft(lambda: _db_jobs().collection("render_config").document(f"__hangcho__{owner}").set(
+        {"cho": list(channels), "at": _now()}), "dat_hang_cho")
+    return len(channels)
+
+
+def lay_viec_ke(owner: str) -> str:
+    """Lấy NGUYÊN TỬ một kênh khỏi hàng chờ. Trả "" khi hết việc.
+
+    Dùng giao dịch Firestore: 18 máy cùng gọi thì mỗi kênh chỉ về tay đúng một máy. Không có giao
+    dịch thì hai máy cùng đọc rồi cùng ghi -> render trùng kênh, tốn đôi quota AI lẫn chỗ kho."""
+    if not owner:
+        return ""
+    try:
+        from google.cloud import firestore as _fs
+        db = _db_jobs()
+        ref = db.collection("render_config").document(f"__hangcho__{owner}")
+        tx = db.transaction()
+
+        @_fs.transactional
+        def _lay(transaction):
+            snap = ref.get(transaction=transaction)
+            if not snap.exists:
+                return ""
+            cho = list((snap.to_dict() or {}).get("cho") or [])
+            if not cho:
+                return ""
+            lay = cho.pop(0)
+            transaction.update(ref, {"cho": cho, "at": _now()})
+            return lay
+
+        _cr("lay_viec_ke", 1)
+        _cw("lay_viec_ke")
+        return _retry(lambda: _lay(tx)) or ""
+    except Exception as e:
+        print(f"   ⚠️ lấy việc kế hụt ({str(e)[:60]}) — luồng này dừng ở kênh hiện tại")
+        return ""
+
+
 def update_storage_used(owner: str, name: str, used: int, cap_gb=None):
     """Ghi dung lượng THẬT của 1 kho vào storage_accounts.used (render upload KHÔNG tự cập nhật số này ->
     phải sync để display + guard-kho-đầy chính xác). Doc id khớp Worker: {owner}__{name}."""

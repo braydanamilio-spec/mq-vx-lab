@@ -915,6 +915,35 @@ def main():
             traceback.print_exc(); report["fails"].append(f"{ch.get('name')}: {str(e)[:120]}")
         if max_run and report["done"] >= max_run:
             print(f"🎯 Đạt {max_run} video/lần chạy — dừng."); break
+
+    # ── XONG VIỆC CỦA MÌNH THÌ LẤY VIỆC KẾ, KHÔNG NGỒI KHÔNG ────────────────────────────────
+    # 24/8 (anh chỉ ra): mỗi luồng nhận CỨNG một kênh rồi thôi. Kênh nhẹ xong sau 20' là máy đó
+    # đứng im, trong khi kênh nặng chạy gần 2 tiếng — mà khoá concurrency của GitHub bắt phiên sau
+    # đợi luồng CHẬM NHẤT. Đo phiên 11:00Z: 18/19 job xong từ lâu, còn đúng WHYUSA chạy 1h53
+    # -> 17 máy ngồi không gần một tiếng, phiên kế nằm chờ. Đó là chia việc TĨNH.
+    # Nay: plan để phần kênh dư vào HÀNG CHỜ; luồng nào xong thì tự lấy kênh kế (work stealing).
+    # Lấy bằng GIAO DỊCH nguyên tử nên 18 máy không bao giờ nhận trùng kênh.
+    _t0 = time.time()
+    _NGAN_SACH = float(os.environ.get("LANE_BUDGET_MIN", "130")) * 60   # chừa biên trước cap 165'
+    _by_name = {c.get("name"): c for c in FB.read_channels(OWNER) if c.get("name")}
+    while time.time() - _t0 < _NGAN_SACH:
+        if FB.read_config(OWNER).get("stop"):
+            print("⛔ Dừng theo yêu cầu — không lấy thêm việc."); break
+        if max_run and report["done"] >= max_run:
+            break
+        _ke = FB.lay_viec_ke(OWNER)
+        if not _ke:
+            break                                   # hàng chờ rỗng -> hết việc thật, nghỉ
+        _ch2 = _by_name.get(_ke)
+        if not _ch2:
+            print(f"   ⚠️ hàng chờ có {_ke} nhưng không thấy cấu hình kênh — bỏ qua"); continue
+        _con = int((_NGAN_SACH - (time.time() - _t0)) // 60)
+        print(f"\n♻️ Luồng rảnh -> nhận thêm kênh {_ke} từ hàng chờ (còn {_con}' ngân sách).")
+        try:
+            run_one(_ch2, keys, report=report)
+        except BaseException as e:
+            traceback.print_exc(); report["fails"].append(f"{_ke}: {str(e)[:120]}")
+
     print(f"✅ Xong: {report['done']} video · {len(report['fails'])} lỗi.")
     # EMAIL CẢNH BÁO — chống spam: CHỈ gửi khi CÓ LỖI, gộp 1 email cho cả lần chạy.
     if report["fails"] or dead_keys:
@@ -1511,8 +1540,16 @@ def plan_mode():
         print(f"🧪 PILOT: chỉ chạy {channels[0]} (1 video) để kiểm trọn chuỗi trước khi mở 18 luồng.")
         return out_channels(channels[:1])
     if len(channels) > MAX_MATRIX:
-        print(f"   ✂️ {len(channels)} kênh còn việc > {MAX_MATRIX} slot -> lấy {MAX_MATRIX} kênh thiếu nhiều nhất, phần còn lại ưu tiên phiên sau.")
+        # Phần dư KHÔNG còn phải "đợi phiên sau" nữa: đưa vào HÀNG CHỜ để luồng nào xong trước thì
+        # lấy tiếp (xem lay_viec_ke). 18 slot vẫn là số máy, nhưng số kênh làm được trong một phiên
+        # giờ phụ thuộc THỜI GIAN CÒN LẠI chứ không phải số slot.
+        _du = channels[MAX_MATRIX:]
+        FB.dat_hang_cho(OWNER, _du)
+        print(f"   ✂️ {len(channels)} kênh còn việc > {MAX_MATRIX} slot -> {MAX_MATRIX} kênh vào mẻ, "
+              f"{len(_du)} kênh vào HÀNG CHỜ (luồng nào xong trước tự lấy, không ngồi không).")
         channels = channels[:MAX_MATRIX]
+    else:
+        FB.dat_hang_cho(OWNER, [])          # không dư -> dọn hàng chờ cũ, tránh luồng lấy việc rác
     print(f"▶ {len(channels)} kênh -> render SONG SONG."
           + (f" (⏸ {n_paused} pause)" if n_paused else "")
           + (f" (🎯 {n_full} kênh đã đủ chỉ tiêu, bỏ qua)" if n_full else ""))

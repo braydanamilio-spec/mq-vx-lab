@@ -987,3 +987,27 @@ Bố cục hook chọn bằng **băm `(stat + line) % 4`** → **đúng 1/4 số
 **Luật:** hai lớp đồ hoạ chồng lên nhau mà toạ độ khai báo rời rạc thì sớm muộn cũng đâm nhau.
 Phải có **hằng số băng dùng chung** + một bài kiểm chốt bằng số. Mắt người soi vài video không thay
 được phép tính — nhất là khi lỗi chỉ xuất hiện ở 1/4 trường hợp.
+
+### 7.am — Chia việc TĨNH: 17 máy ngồi không chờ 1 máy (24/8/2026, anh chỉ ra)
+
+**Đo thật phiên 11:00Z:** 18/19 job xong từ lâu, còn **đúng một** luồng `WHYUSA` chạy **1h53**.
+→ 17 máy đứng im gần một tiếng, mà khoá concurrency của GitHub còn bắt **phiên kế nằm chờ** luồng
+chậm nhất. Kênh dư (`50 kênh còn việc > 18 slot`) thì bị đẩy sang "phiên sau" dù máy đang rảnh.
+
+**Gốc:** mỗi luồng nhận **CỨNG** một kênh rồi thôi — đây là *chia việc tĩnh* (static partitioning),
+mà tải mỗi kênh chênh nhau tới 5-6 lần. Cách chữa chuẩn là **hàng chờ + luồng tự lấy việc kế**
+(work stealing): ai xong trước thì lấy tiếp, không ai đợi ai.
+
+**Vá:**
+- `dat_hang_cho()` — plan để phần kênh dư vào **một doc** hàng chờ (thay vì vứt sang phiên sau).
+- `lay_viec_ke()` — luồng xong việc thì lấy kênh kế bằng **GIAO DỊCH Firestore nguyên tử**. Không có
+  giao dịch thì hai máy cùng đọc rồi cùng ghi → **render trùng kênh**, tốn đôi quota AI lẫn chỗ kho.
+- Ngân sách thời gian `LANE_BUDGET_MIN` (mặc định 130') — chừa biên trước cap 165' để luồng không bị
+  cắt ngang giữa một video.
+- Có test `t_hang_cho_nguyen_tu` trong selftest.
+
+**Hệ quả:** số kênh làm được trong một phiên giờ phụ thuộc **thời gian còn lại**, không còn bị chặn
+cứng ở 18. Máy rảnh biến thành video thay vì thành thời gian chết.
+
+**Luật:** chia việc tĩnh chỉ đúng khi mọi phần việc nặng như nhau. Hễ tải lệch nhau là phải chuyển
+sang hàng chờ — và mọi phép lấy việc dùng chung đều phải NGUYÊN TỬ, nếu không sẽ làm trùng.
