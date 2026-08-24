@@ -487,3 +487,11 @@ Triệu chứng: lane in `⏳ vòng 1/2/3 hết quota tạm → chờ 40s/80s/12
 Fix: đọc THẲNG nội dung lỗi ("tokens per day"/"TPD"/"per day") -> nhãn `daily` -> phạt 8h. Có test.
 → **LUẬT**: phân loại hạn mức phải dựa trên NỘI DUNG lỗi của nhà cung cấp, không dựa trên một header
 đo đại lượng KHÁC. Sai một chữ ở đây là cả dây chuyền ra 0 video mà log vẫn báo "0 lỗi".
+
+### 24/8 03:20Z — CẠN QUOTA VIẾT TRÊN CẢ 3 NHÀ CUNG CẤP (không phải lỗi code)
+Sau khi vá xong chuỗi 3 lỗi phân loại/xoay key, log GRIDIRON cho thấy hệ ĐÃ lùi đúng: Groq `daily` ×3
+-> nhảy sang Cloudflare ×42. Nhưng **42/49 key CF cũng báo hết quota** (10K neuron/ngày/tài khoản) và
+hồ Gemini chỉ còn **1 key**. Kết quả: 0 video vì KHÔNG CÒN NHÀ CUNG CẤP NÀO CÒN ĐẠN, không phải vì bug.
+→ **LUẬT VẬN HÀNH**: khi cả 3 nhà cung cấp viết đều cạn, ĐỪNG mở phiên mới — mỗi phiên đốt 18 luồng
+GitHub mà chắc chắn ra 0 video. Chờ hạn mức hồi (Groq TPD + CF neuron reset theo ngày) hoặc thêm key.
+Việc cần làm: bổ sung key Gemini (đang 1) — đó là nhà cung cấp DUY NHẤT chưa cạn tối nay.
