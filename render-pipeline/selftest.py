@@ -468,6 +468,7 @@ def t_kenh_the_he_2_tro_dung_ham_va_dang():
     import du_lieu_mo as DL
     ks = json.load(io.open(dsp, encoding="utf-8"))
     DANG = {"ranked", "race", "mapped", "scaled", "pulse", "longshot", "cinematic", "thennow"}
+    CHAT = {"A", "B", "C"}      # A = số liệu + đồ hoạ code · B = ảnh AI style riêng · C = lai
     xau = []
     for k in ks:
         if not hasattr(DL, k.get("ham", "")):
@@ -476,6 +477,15 @@ def t_kenh_the_he_2_tro_dung_ham_va_dang():
             xau.append(f"{k.get('ten')}: dạng render lạ '{k.get('dinh_dang')}'")
         if k.get("footage"):
             xau.append(f"{k.get('ten')}: thế hệ 2 KHÔNG dùng footage")
+        if k.get("chat_lieu") not in CHAT:
+            xau.append(f"{k.get('ten')}: chất liệu lạ '{k.get('chat_lieu')}' (phải A/B/C)")
+        # Kênh dùng ảnh AI (B hoặc C) BẮT BUỘC khai style riêng. Không khai thì mọi kênh sẽ dùng
+        # chung một prompt mặc định -> 50 kênh ra 50 bộ ảnh giống hệt nhau, đúng cái "tầm thường"
+        # đang tìm cách thoát khỏi.
+        if k.get("chat_lieu") in ("B", "C") and not str(k.get("style_anh") or "").strip():
+            xau.append(f"{k.get('ten')}: chất liệu {k.get('chat_lieu')} nhưng chưa khai style_anh")
+        if not str(k.get("niche") or "").strip():
+            xau.append(f"{k.get('ten')}: thiếu niche")
     tay = [k.get("handle") for k in ks]
     trung = sorted({h for h in tay if tay.count(h) > 1})
     if trung:

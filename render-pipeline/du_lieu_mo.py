@@ -343,6 +343,248 @@ def tai_tro(ky: int = 2024, bang: str = "", key: str = "DEMO_KEY", n: int = 10) 
     return ra
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# NGUỒN CHO NICHE GIẢI TRÍ / ĐỜI SỐNG (25/8)
+# ------------------------------------------------------------------------------------------
+# Bộ trên phủ mảng chính phủ - tài chính - pháp lý, nhưng niche viral ở Mỹ còn có đồ ăn, phim,
+# game, thể thao, thú cưng… Không có số liệu cho những mảng đó thì kênh lại rơi về "AI bịa", đúng
+# cái đang muốn tránh. Mười hai nguồn dưới đây đều đã gọi thật, đều KHÔNG cần key (trừ USDA dùng
+# key free api.data.gov), và mỗi cái mở ra một mảng niche riêng.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+
+def bai_duoc_doc(nam: int, thang: int, ngay: int, n: int = 12) -> list[dict]:
+    """Bài Wikipedia được đọc nhiều nhất một ngày. Trả [{ten, luot_doc, hang}].
+
+    Đây là "nước Mỹ hôm qua quan tâm cái gì" — đo được, không phải đoán: người nổi tiếng, vụ án,
+    phim mới, thảm hoạ. Một nguồn nuôi được nhiều niche cùng lúc mà không kênh nào đang khai thác."""
+    u = (f"https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/"
+         f"{nam:04d}/{thang:02d}/{ngay:02d}")
+    d = _goi(u)
+    BO = {"Main_Page", "Special:Search", "Wikipedia:Featured_pictures"}
+    ra = []
+    for x in ((((d or {}).get("items") or [{}])[0]).get("articles") or []):
+        ten = str(x.get("article") or "")
+        if ten in BO or ten.startswith(("Special:", "Wikipedia:", "Portal:")):
+            continue
+        ra.append({"ten": ten.replace("_", " "), "luot_doc": int(x.get("views") or 0),
+                   "hang": int(x.get("rank") or 0),
+                   "link": f"https://en.wikipedia.org/wiki/{ten}",
+                   "nguon": "Wikimedia pageviews"})
+    return ra[:n]
+
+
+def luot_doc_bai(ten_bai: str, tu: str, den: str) -> list[dict]:
+    """Đường cong lượt đọc một bài theo ngày (tu/den dạng YYYYMMDD). Trả [{ngay, luot_doc}]."""
+    t = urllib.parse.quote(str(ten_bai).replace(" ", "_"), safe="")
+    u = (f"https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/"
+         f"all-access/user/{t}/daily/{tu}/{den}")
+    d = _goi(u)
+    return [{"ngay": str(x.get("timestamp") or "")[:8], "luot_doc": int(x.get("views") or 0),
+             "ten": ten_bai, "nguon": "Wikimedia pageviews"}
+            for x in ((d or {}).get("items") or [])]
+
+
+def thanh_phan_mon(mon: str, n: int = 6, key: str = "DEMO_KEY") -> list[dict]:
+    """Dinh dưỡng thật của một món (USDA FoodData Central). Trả [{ten, calo, duong, mo, muoi}].
+
+    KEY free ở api.data.gov — cùng key dùng được cho NASA và FEC."""
+    u = ("https://api.nal.usda.gov/fdc/v1/foods/search?" + urllib.parse.urlencode(
+        {"query": mon, "pageSize": max(1, min(25, n)), "api_key": key or "DEMO_KEY"}))
+    d = _goi(u)
+    LAY = {"Energy": "calo", "Sugars, total including NLEA": "duong",
+           "Total lipid (fat)": "mo", "Sodium, Na": "muoi", "Protein": "dam"}
+    ra = []
+    for x in ((d or {}).get("foods") or []):
+        r = {"ten": str(x.get("description") or "")[:70], "hieu": str(x.get("brandOwner") or "")[:40],
+             "nguon": "USDA FoodData Central"}
+        for nu in (x.get("foodNutrients") or []):
+            k = LAY.get(str(nu.get("nutrientName") or ""))
+            if k and k not in r:
+                r[k] = float(nu.get("value") or 0)
+        ra.append(r)
+    return ra
+
+
+def nghien_cuu(tu_khoa: str, n: int = 6) -> list[dict]:
+    """Nghiên cứu y khoa thật (PubMed). Trả [{tieu_de, tap_chi, nam, ma}]."""
+    d = _goi("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?" + urllib.parse.urlencode(
+        {"db": "pubmed", "term": tu_khoa, "retmode": "json", "retmax": max(1, min(20, n)),
+         "sort": "relevance"}))
+    ids = (((d or {}).get("esearchresult") or {}).get("idlist") or [])
+    if not ids:
+        return []
+    s2 = _goi("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?" + urllib.parse.urlencode(
+        {"db": "pubmed", "id": ",".join(ids), "retmode": "json"}))
+    kq = ((s2 or {}).get("result") or {})
+    ra = []
+    for i in ids:
+        x = kq.get(i) or {}
+        if not x:
+            continue
+        ra.append({"tieu_de": str(x.get("title") or "")[:180], "tap_chi": str(x.get("source") or "")[:60],
+                   "nam": str(x.get("pubdate") or "")[:4], "ma": i,
+                   "link": f"https://pubmed.ncbi.nlm.nih.gov/{i}/",
+                   "nguon": "PubMed (U.S. National Library of Medicine)"})
+    return ra
+
+
+def thong_ke_mlb(nam: int = 2025, n: int = 12) -> list[dict]:
+    """Đội bóng chày + thành tích thật (MLB StatsAPI). Trả [{doi, thang, thua, ty_le}]."""
+    d = _goi(f"https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season={nam}")
+    ra = []
+    for kh in ((d or {}).get("records") or []):
+        for t in (kh.get("teamRecords") or []):
+            ra.append({"doi": str((t.get("team") or {}).get("name") or ""),
+                       "thang": int(t.get("wins") or 0), "thua": int(t.get("losses") or 0),
+                       "ty_le": float(t.get("winningPercentage") or 0), "nam": nam,
+                       "nguon": "MLB StatsAPI"})
+    return sorted(ra, key=lambda z: -z["thang"])[:n]
+
+
+def thong_ke_nba(mua: str = "2024-25", chi_tieu: str = "PTS", n: int = 12) -> list[dict]:
+    """Cầu thủ dẫn đầu NBA theo một chỉ tiêu. Trả [{ten, doi, gia_tri}]."""
+    u = ("https://stats.nba.com/stats/leagueleaders?" + urllib.parse.urlencode(
+        {"LeagueID": "00", "PerMode": "PerGame", "Scope": "S", "Season": mua,
+         "SeasonType": "Regular Season", "StatCategory": chi_tieu}))
+    d = _goi(u, tieu_de={"Referer": "https://www.nba.com/", "Origin": "https://www.nba.com"})
+    rs = ((d or {}).get("resultSet") or {})
+    cot = [str(c) for c in (rs.get("headers") or [])]
+    ra = []
+    for h in (rs.get("rowSet") or [])[:n]:
+        r = dict(zip(cot, h))
+        ra.append({"ten": str(r.get("PLAYER") or ""), "doi": str(r.get("TEAM") or ""),
+                   "gia_tri": float(r.get(chi_tieu) or 0), "chi_tieu": chi_tieu, "mua": mua,
+                   "nguon": "NBA Stats"})
+    return ra
+
+
+def game_steam(n: int = 12) -> list[dict]:
+    """Game Steam có người chơi thật 2 tuần qua. Trả [{ten, dang_choi, so_huu}] — cao->thấp.
+
+    Khác hẳn "top game" báo chí: đây là SỐ NGƯỜI THẬT SỰ MỞ GAME, nên lộ ra game nổi tiếng mà
+    không ai chơi, và game im lặng mà đông người."""
+    d = _goi("https://steamspy.com/api.php?request=top100in2weeks")
+    ra = []
+    for _ma, x in (d or {}).items():
+        if not isinstance(x, dict):
+            continue
+        ra.append({"ten": str(x.get("name") or "")[:60],
+                   "dang_choi": int(x.get("ccu") or 0),
+                   "so_huu": str(x.get("owners") or "").replace(" .. ", "–"),
+                   "gia": (int(x.get("price") or 0) / 100.0),
+                   "nguon": "SteamSpy"})
+    return sorted(ra, key=lambda z: -z["dang_choi"])[:n]
+
+
+def muc_tieu_thu(nam: int = 2024, hang: str = "Toyota", n: int = 12) -> list[dict]:
+    """Mức tiêu thụ xăng CHÍNH THỨC do EPA đo. Trả [{xe, thanh_pho, xa_lo, ket_hop}].
+
+    fueleconomy.gov mặc định trả XML và TỪ CHỐI `Accept: text/xml` bằng 406 — phải xin JSON."""
+    def _js(u):
+        return _goi(u, tieu_de={"Accept": "application/json"})
+
+    def _ds(x):
+        """API trả 1 phần tử thì là dict, nhiều phần tử mới là list — phải chuẩn hoá."""
+        v = ((x or {}).get("menuItem")) or []
+        return v if isinstance(v, list) else [v]
+
+    ra = []
+    for m in _ds(_js(f"https://www.fueleconomy.gov/ws/rest/vehicle/menu/model?year={nam}"
+                     f"&make={urllib.parse.quote(hang)}"))[:n]:
+        ten_m = str(m.get("value") or "")
+        op = _ds(_js(f"https://www.fueleconomy.gov/ws/rest/vehicle/menu/options?year={nam}"
+                     f"&make={urllib.parse.quote(hang)}&model={urllib.parse.quote(ten_m)}"))
+        if not op:
+            continue
+        xe = _js(f"https://www.fueleconomy.gov/ws/rest/vehicle/{op[0].get('value')}")
+        if not xe:
+            continue
+        ra.append({"xe": f"{hang} {ten_m}", "nam": nam,
+                   "thanh_pho": float(xe.get("city08") or 0),
+                   "xa_lo": float(xe.get("highway08") or 0),
+                   "ket_hop": float(xe.get("comb08") or 0),
+                   "nhien_lieu": str(xe.get("fuelType") or ""),
+                   "chi_phi_nam": float(xe.get("fuelCost08") or 0),
+                   "nguon": "U.S. EPA fueleconomy.gov"})
+    return sorted(ra, key=lambda z: -z["ket_hop"])[:n]
+
+
+def giong_cho(n: int = 12) -> list[dict]:
+    """Danh sách giống chó + ảnh thật (Dog CEO). Trả [{giong, bien_the, anh}]."""
+    d = _goi("https://dog.ceo/api/breeds/list/all")
+    ra = []
+    for g, bien in sorted(((d or {}).get("message") or {}).items()):
+        a = _goi(f"https://dog.ceo/api/breed/{g}/images/random")
+        ra.append({"giong": g.title(), "bien_the": [str(b).title() for b in (bien or [])],
+                   "anh": str((a or {}).get("message") or ""), "nguon": "Dog CEO API"})
+        if len(ra) >= n:
+            break
+    return ra
+
+
+def phim_truyen(ten: str, n: int = 6) -> list[dict]:
+    """Phim bộ thật (TVmaze). Trả [{ten, nam, dai, trang_thai, diem, the_loai}]."""
+    d = _goi("https://api.tvmaze.com/search/shows?q=" + urllib.parse.quote(ten))
+    ra = []
+    for x in (d or [])[:n]:
+        sh = x.get("show") or {}
+        ra.append({"ten": str(sh.get("name") or ""),
+                   "nam": str(sh.get("premiered") or "")[:4],
+                   "dai": str((sh.get("network") or {}).get("name") or
+                              (sh.get("webChannel") or {}).get("name") or ""),
+                   "trang_thai": str(sh.get("status") or ""),
+                   "diem": float(((sh.get("rating") or {}).get("average")) or 0),
+                   "the_loai": list(sh.get("genres") or []),
+                   "nguon": "TVmaze"})
+    return ra
+
+
+def ho_so_nhac(nghe_si: str, n: int = 8) -> list[dict]:
+    """Hồ sơ nghệ sĩ / bản thu (MusicBrainz). Trả [{ten, loai, nuoc, bat_dau}]."""
+    d = _goi("https://musicbrainz.org/ws/2/artist?" + urllib.parse.urlencode(
+        {"query": nghe_si, "fmt": "json", "limit": max(1, min(25, n))}))
+    ra = []
+    for x in ((d or {}).get("artists") or []):
+        sp = x.get("life-span") or {}
+        ra.append({"ten": str(x.get("name") or ""), "loai": str(x.get("type") or ""),
+                   "nuoc": str(x.get("country") or ""), "bat_dau": str(sp.get("begin") or ""),
+                   "ket_thuc": str(sp.get("end") or ""),
+                   "diem_khop": int(x.get("score") or 0),
+                   "nguon": "MusicBrainz"})
+    return ra
+
+
+def canh_bao(bang: str = "CA", n: int = 10) -> list[dict]:
+    """Cảnh báo thời tiết ĐANG BẬT của Sở Khí tượng Mỹ. Trả [{loai, muc, vung, den_khi}]."""
+    d = _goi(f"https://api.weather.gov/alerts/active?area={urllib.parse.quote(bang)}")
+    ra = []
+    for x in ((d or {}).get("features") or [])[:n]:
+        pr = x.get("properties") or {}
+        ra.append({"loai": str(pr.get("event") or ""), "muc": str(pr.get("severity") or ""),
+                   "gap": str(pr.get("urgency") or ""), "vung": str(pr.get("areaDesc") or "")[:90],
+                   "den_khi": str(pr.get("ends") or pr.get("expires") or "")[:16],
+                   "bang": bang, "nguon": "NOAA / National Weather Service"})
+    return ra
+
+
+def may_bay(lat1: float = 24, lon1: float = -125, lat2: float = 49, lon2: float = -66,
+            n: int = 20) -> list[dict]:
+    """Máy bay đang bay trong khung toạ độ (OpenSky). Trả [{hieu, nuoc, cao_m, toc_do_ms}]."""
+    u = ("https://opensky-network.org/api/states/all?" + urllib.parse.urlencode(
+        {"lamin": lat1, "lomin": lon1, "lamax": lat2, "lomax": lon2}))
+    d = _goi(u)
+    ra = []
+    for st in ((d or {}).get("states") or []):
+        try:
+            ra.append({"hieu": str(st[1] or "").strip(), "nuoc": str(st[2] or ""),
+                       "kinh_do": st[5], "vi_do": st[6],
+                       "cao_m": float(st[7] or 0), "toc_do_ms": float(st[9] or 0),
+                       "nguon": "OpenSky Network"})
+        except Exception:
+            continue
+    return sorted(ra, key=lambda z: -z["cao_m"])[:n]
+
+
 def tu_kiem() -> int:
     """Gọi thật cả bốn nguồn và in ra cái nhận được. Chạy trước khi tin bất cứ điều gì."""
     ok = 0
