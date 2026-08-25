@@ -70,9 +70,33 @@ const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; sub
     );
   }
   return (
-    <div style={{ position: "absolute", left: 0, right: 0, bottom, textAlign: "center", padding: pad, opacity: lineOp,
-                  zIndex: 30, textShadow: "0 2px 18px rgba(0,0,0,.95)" }}>
-      {cur.words.map((x, i) => { const on = i === active; return <span key={i} style={{ fontSize: fs, fontWeight: 900, color: on ? accent : "#EAF8FF", margin: "0 9px", display: "inline-block", transform: on ? "scale(1.09)" : "scale(1)", textShadow: on ? `0 3px 26px rgba(0,0,0,0.9), 0 0 22px ${accent}88` : "0 3px 26px rgba(0,0,0,0.9)" }}>{x}</span>; })}
+    // 25/8 — PHỤ ĐỀ "MỜ TỊT" TRÊN NỀN SÁNG. Soi video thật (BRANDEDUSA, cảnh trời xanh chói): chữ
+    // trắng chỉ có bóng đổ, không có gì bảo đảm tương phản — nền sáng là chữ chìm nghỉm, và từ
+    // đang đọc (màu accent nhạt của kênh) biến mất luôn nên karaoke thành vô nghĩa.
+    // Ba lớp bảo đảm, theo đúng thứ tự phim chuyên nghiệp dùng:
+    //   1. DẢI NỀN mờ phía sau — kéo nền về tối bất kể cảnh là gì
+    //   2. VIỀN CHỮ (stroke) — đọc được cả khi dải nền bị cảnh sáng lấn át
+    //   3. TỪ ĐANG ĐỌC có VIÊN NỀN riêng màu accent + chữ tối => luôn nổi, không phụ thuộc accent
+    //      sáng hay tối (đây là chỗ bản cũ hỏng: accent nhạt + chữ trắng = không thấy gì)
+    <div style={{ position: "absolute", left: 0, right: 0, bottom, textAlign: "center", padding: pad,
+                  opacity: lineOp, zIndex: 30 }}>
+      <div style={{ display: "inline-block", maxWidth: "100%", lineHeight: 1.3,
+                    background: "rgba(8,10,16,0.46)", borderRadius: 20, padding: "8px 20px",
+                    backdropFilter: "blur(3px)" } as React.CSSProperties}>
+        {cur.words.map((x, i) => { const on = i === active; return (
+          <span key={i} style={{
+            fontSize: fs, fontWeight: 900, display: "inline-block",
+            margin: on ? "0 6px" : "0 11px",
+            padding: on ? "0 10px" : 0,
+            borderRadius: on ? 12 : 0,
+            background: on ? accent : "transparent",
+            color: on ? "#12131A" : "#F4FAFF",
+            WebkitTextStroke: on ? "0px" : "7px rgba(8,10,16,0.92)",
+            paintOrder: "stroke fill",
+            transform: on ? "scale(1.07)" : "scale(1)",
+            textShadow: on ? "none" : "0 3px 20px rgba(0,0,0,0.9)",
+          } as React.CSSProperties}>{x}</span>); })}
+      </div>
     </div>
   );
 };

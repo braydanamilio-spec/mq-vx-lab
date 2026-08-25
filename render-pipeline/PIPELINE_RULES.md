@@ -2717,3 +2717,11 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   thì bộ phận phải **BIẾN DẠNG LIÊN TỤC** (xoay khớp / morph), chứ không thể tráo ảnh.
   ⇒ Hướng còn khả thi: nhân vật là **hình vector dựng bằng mã** (SVG/Rive/Lottie) — mỗi khớp nội
   suy được nên mượt tuyệt đối, 0 drift, 0 quota. Đã gỡ toàn bộ code/asset/kênh mascot.
+
+- **Phụ đề phải TỰ BẢO ĐẢM tương phản, đừng trông chờ vào cảnh.** (25/8) Anh mở video thật
+  (BRANDEDUSA, cảnh trời xanh chói) và bác: *"sub karaoke màu mờ tịt, chạy không hợp gì cả"*. Soi ra
+  `Cinematic.Caption` chỉ có bóng đổ, KHÔNG có nền — nền sáng là chữ chìm; tệ hơn, từ đang đọc tô
+  bằng `accent` của kênh, kênh nào accent nhạt thì karaoke **tàng hình** hoàn toàn. Nay ba lớp:
+  (1) dải nền mờ phía sau, (2) viền chữ 7px, (3) **từ đang đọc có VIÊN NỀN màu accent + chữ tối** —
+  nổi bật bất kể accent sáng hay tối, bất kể cảnh sáng hay tối. Đã render ảnh so sánh cũ/mới trên
+  cả hai loại nền trước khi đẩy. Khoảng cách chữ 9px → 11px (bản cũ chữ dính nhau).
