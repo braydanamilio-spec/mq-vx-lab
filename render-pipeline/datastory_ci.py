@@ -71,7 +71,10 @@ def set_ai_pool(keys, channel: str = ""):
         pass
     raw = [k.get("key") for k in (keys or [])
            if k.get("key") and not str(k.get("key")).startswith(("gsk_", "px:", "pb:"))]   # Groq/Pexels không vẽ ảnh
-    # CF (cf:) đứng TRƯỚC cho VẼ ẢNH: FLUX free ~2K ảnh/ngày/tài khoản vs Gemini chỉ ~vài trăm tổng
+    # CF (cf:) đứng TRƯỚC cho VẼ ẢNH. SỐ THẬT (tính từ giá niêm yết, xem content_brain.py:
+    # 10K neuron free/ngày/tài khoản ÷ 58 neuron/ảnh FLUX 1024²/4 bước) = ~174 ảnh/ngày/tài khoản
+    # — con số "~2K ảnh" của trang thứ 3 là SAI, đã lừa được cả người đọc code này ngày 25/8.
+    # 52 tài khoản CF × ~174 ≈ 9.000 ảnh/ngày tổng — vẫn nhiều gấp mấy lần nhu cầu, và vẫn hơn hẳn
     # -> đốt CF trước, Gemini để dành cho vision + khi CF cạn. Mỗi nhóm vẫn xoay theo kênh như cũ.
     cf = [k for k in raw if str(k).startswith("cf:")]
     gm = [k for k in raw if not str(k).startswith("cf:")]
@@ -434,7 +437,8 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
     for _i, _k in enumerate(cands):
       ghi_dung(_k)                     # tính cả lượt hỏng: nhà cung cấp vẫn trừ hạn mức
       if str(_k).startswith("cf:"):
-        # ⛅ Cloudflare FLUX schnell — free ~2K ảnh/ngày/tài khoản, xếp TRƯỚC Gemini trong pool.
+        # ⛅ Cloudflare FLUX schnell — free ~174 ảnh/ngày/tài khoản (10K neuron ÷ 58n/ảnh — số
+        # "2K" cũ là của trang thứ 3, SAI), xếp TRƯỚC Gemini trong pool.
         try:
             if _cf_flux_image(prompt, dest, _k, style):
                 if _i:
