@@ -2863,3 +2863,22 @@ Lần này chốt "bước dùng kho Drive phải có HOT_KEY" đã bắt đúng
 nhưng bản hỏng vẫn được push vì mã thoát bị nuốt.
 - **Luật**: chạy `python3 selftest.py > /tmp/st.txt 2>&1; echo $?` rồi mới commit, hoặc dùng
   `set -o pipefail`. Đừng bao giờ nối `&&` sau một pipeline có `tail`/`head`/`grep`.
+
+### 26/8 — 29 VIDEO MẤT TRẮNG TRONG MỘT PHIÊN VÌ 504 CỦA NHÀ CUNG CẤP
+Phiên 16:20 ngày 25/8: **61 video ra lò · 29 lượt viết CHẾT**, cả 29 cùng một lỗi —
+`504 Deadline Exceeded` / `grpc._channel._InactiveRpcError` khi gọi model. Lane vẫn `success`,
+QC vẫn xanh, không có dấu hiệu nào nổi lên; chỉ lộ khi đếm `TỔNG X video · Y lỗi`.
+
+**Gốc**: khối `except` quanh `generate_content` chỉ phân loại hai thứ — 404 (đổi model) và
+429/403 (đổi key). **504 không khớp nhánh nào** nên rơi thẳng vào `raise` cuối và giết cả lượt
+viết. Mà 504 chỉ là nhà cung cấp đang nghẽn: gọi lại là xong, và **không tốn hạn mức**.
+
+- **Luật**: phân ba loại, đừng gộp hai. `cạn hạn mức / key hỏng` → đổi key. `model bị gỡ` → đổi
+  model. **`nghẽn / timeout` → THỬ LẠI** (`_loi_tam_thoi()` + `_tam_nghi()` giãn dần). Vá cả 15
+  khối gọi model.
+- **Bẫy khi vá hàng loạt**: mỗi hàm đếm vòng bằng tên biến khác nhau (`attempt` ở các hàm sinh nội
+  dung, `_try` ở `plan_pillar`). Chèn máy móc cùng một đoạn vào 15 chỗ là một chỗ nổ `NameError`
+  đúng lúc đang nghẽn — tức đúng lúc cần nó nhất. Phải kiểm từng khối xem biến có thật trong hàm đó.
+- **Bẫy khi viết chốt**: đếm `raise RateLimited` là sai thước đo — một khối có thể có hai raise
+  (429 và 403) mà chỉ cần một nhánh thử lại. Đếm theo KHỐI bắt lỗi quanh `generate_content`.
+- Chốt `t_nghen_nha_cung_cap_phai_thu_lai` kiểm cả ba: phân loại đúng, đủ 15 khối, đúng tên biến.

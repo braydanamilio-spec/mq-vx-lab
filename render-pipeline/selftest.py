@@ -627,11 +627,62 @@ def t_cong_an_toan_noi_dung():
     assert not xau, "cổng an toàn nội dung thủng:\n   " + "\n   ".join(xau)
 
 
+
+def t_nghen_nha_cung_cap_phai_thu_lai():
+    """504/timeout của nhà cung cấp phải THỬ LẠI, không được giết lượt viết.
+
+    Đo thật phiên 16:20 ngày 25/8: 61 video ra lò nhưng **29 lượt viết chết**, cả 29 cùng một lỗi
+    `504 Deadline Exceeded` / `_InactiveRpcError`. Mỗi lượt chết là một video không bao giờ tồn tại.
+    Gốc: khối except quanh `generate_content` chỉ phân loại 404 (đổi model) và 429 (đổi key); 504
+    không khớp nhánh nào nên rơi vào `raise` cuối. Mà 504 chỉ là nghẽn — gọi lại là xong, và không
+    tốn hạn mức.
+
+    Hai vế:
+      • `_loi_tam_thoi` phân biệt đúng nghẽn (thử lại) với cạn hạn mức / sai key (đừng thử lại)
+      • MỌI khối except quanh generate_content đều có nhánh thử lại, và dùng ĐÚNG tên biến đếm
+        vòng của chính hàm đó (`attempt` hay `_try`) — dùng nhầm là NameError nổ đúng lúc nghẽn"""
+    import re
+    CB = _doc("content_brain.py")
+    import content_brain as C
+    tam = ["504 Deadline Exceeded", "_InactiveRpcError of RPC", "503 Service Unavailable",
+           "request timed out", "connection reset by peer"]
+    ben = ["429 quota exceeded", "404 model not found", "invalid api key",
+           "permission denied", "resource_exhausted"]
+    xau = [f"coi '{t}' là bền (phải thử lại)" for t in tam if not C._loi_tam_thoi(t)]
+    xau += [f"coi '{t}' là tạm thời (KHÔNG được thử lại)" for t in ben if C._loi_tam_thoi(t)]
+
+    dong = CB.splitlines()
+    co = [i for i, l in enumerate(dong) if "_loi_tam_thoi(msg)" in l]
+    # Đếm theo KHỐI BẮT LỖI, không theo số `raise RateLimited`: một khối có thể có hai raise
+    # (429 và 403) mà chỉ cần một nhánh thử lại. Đếm nhầm thước đo thì chốt báo động giả mãi.
+    n_khoi = sum(1 for i, l in enumerate(dong)
+                 if l.strip() == "msg = str(e).lower()"
+                 and any("generate_content(" in dong[j] for j in range(max(0, i - 12), i)))
+    if len(co) < n_khoi:
+        xau.append(f"{n_khoi} khối bắt lỗi quanh generate_content nhưng chỉ {len(co)} khối "
+                   f"có nhánh thử lại khi nghẽn")
+    for i in co:
+        bien = "attempt" if "attempt <" in dong[i] else ("_try" if "_try ==" in dong[i] else "")
+        if not bien:
+            xau.append(f"dòng {i+1}: nhánh thử lại không rõ đếm bằng biến nào")
+            continue
+        thay = False
+        for j in range(i, max(0, i - 120), -1):
+            if f"for {bien} in range(" in dong[j]:
+                thay = True
+            if dong[j].startswith("def "):
+                break
+        if not thay:
+            xau.append(f"dòng {i+1}: dùng '{bien}' nhưng hàm này không có vòng lặp đó -> NameError")
+    assert not xau, "xử lý nghẽn nhà cung cấp sai:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
     check("groq WAF 1010 -> lỗi tạm per-minute", t_groq_waf_1010)
     check("key cạn quota -> đổi key, không giết luồng", t_het_key_thi_doi_key)
+    check("nghẽn nhà cung cấp (504) -> thử lại, không giết lượt", t_nghen_nha_cung_cap_phai_thu_lai)
     check("cạn token/ngày -> nhãn daily", t_groq_tpd_la_daily)
     check("groq model bị gỡ -> tự dò model sống", t_groq_model_selfprobe)
     check("key_order viết: groq -> cf -> gemini", t_key_order)

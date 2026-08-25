@@ -96,6 +96,29 @@ SCHEMA_HINT = """Return JSON with EXACTLY these keys:
 Every narration line MUST have a distinct 'visual' (adjacent lines must differ) so the video never looks repetitive."""
 
 
+# 26/8 — LỖI TẠM THỜI CỦA NHÀ CUNG CẤP, khác hẳn "cạn hạn mức".
+# Đo thật phiên 16:20: 61 video ra lò nhưng 29 lượt viết CHẾT, và cả 29 đều là một lỗi:
+# `504 Deadline Exceeded` / `_InactiveRpcError` khi gọi model. Mỗi lượt chết = mất một video.
+# Gốc: khối `except` quanh generate_content chỉ phân loại 404 (đổi model) và 429/quota (đổi key);
+# 504 không khớp nhánh nào nên rơi vào `raise` cuối và giết cả lượt viết — dù chỉ cần gọi lại là
+# xong. Nhà cung cấp nghẽn không phải lỗi của mình và không tốn hạn mức.
+_TAM_THOI_NCC = ("504", "deadline", "unavailable", "inactiverpc", "timed out", "timeout",
+                 "internal error", "500 an internal", "502", "503", "connection reset",
+                 "socket closed", "goaway", "temporarily")
+
+
+def _tam_nghi(lan: int) -> None:
+    """Nghỉ giãn dần trước khi gọi lại. Gọi lại ngay lập tức thì thường lại nghẽn tiếp."""
+    import random as _rd
+    import time as _tg
+    _tg.sleep(min(12.0, (1.8 ** max(0, lan)) + _rd.random()))
+
+
+def _loi_tam_thoi(msg: str) -> bool:
+    m = str(msg or "").lower()
+    return any(t in m for t in _TAM_THOI_NCC)
+
+
 class RateLimited(RuntimeError):
     # 24/8: kế thừa RuntimeError (thay vì Exception) để mọi chỗ `except RuntimeError` CŨ vẫn bắt được
     # y như trước, đồng thời `except RateLimited` bắt đúng lớp -> đổi key thay vì giết luồng.
@@ -641,6 +664,12 @@ def generate(seed: str, vtype: str = "short", api_key: str = None, model_name: s
                     or "suspended" in msg or "has not been used" in msg
                     or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))     # coi như key hỏng -> rotate + cooldown -> health-check sau đánh dấu chết
+            # Nghẽn/timeout phía nhà cung cấp -> gọi lại vòng sau. Không phải lỗi của key,
+            # không tốn hạn mức, và giết lượt viết ở đây là mất trắng một video.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             story = _extract_json(resp.text)
@@ -716,6 +745,12 @@ def plan_pillar(niche: str, n: int = 6, api_key: str = None, model_name: str = N
                 if mn: mname = mn; continue
             if "429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg:
                 raise RateLimited(str(e))
+            # Vòng ở đây đếm bằng `_try` (2 vòng), không phải `attempt` như các hàm sinh nội dung —
+            # dùng nhầm tên biến là NameError nổ đúng lúc nhà cung cấp đang nghẽn, tức đúng lúc
+            # cần nó nhất. Chốt `t_tsx/AST` không soi tới đây nên phải kiểm tay từng khối.
+            if _loi_tam_thoi(msg) and _try == 0:
+                _tam_nghi(_try)
+                continue
             raise
     d = _extract_json(resp.text)
     if multi:
@@ -835,6 +870,12 @@ def generate_guess(category: str, n_rounds: int = 3, api_key: str = None, model_
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -942,6 +983,12 @@ def generate_mapped(niche: str, api_key: str = None, model_name: str = None, avo
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -1042,6 +1089,12 @@ def generate_ranked(niche: str, api_key: str = None, model_name: str = None, avo
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -1146,6 +1199,12 @@ def generate_scaled(niche: str, api_key: str = None, model_name: str = None, avo
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -1239,6 +1298,12 @@ def generate_thennow(niche: str, api_key: str = None, model_name: str = None, av
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -1425,6 +1490,12 @@ def generate_doc(niche: str, style: str = "awe, cinematic", api_key: str = None,
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -1536,6 +1607,12 @@ def generate_swarm(niche: str, api_key: str = None, model_name: str = None, avoi
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -1638,6 +1715,12 @@ def generate_pulse(niche: str, api_key: str = None, model_name: str = None, avoi
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -1740,6 +1823,12 @@ def generate_clockwork(niche: str, api_key: str = None, model_name: str = None, 
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -1840,6 +1929,12 @@ def generate_longshot(niche: str, api_key: str = None, model_name: str = None, a
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -1990,6 +2085,12 @@ def generate_toon(niche: str, api_key: str = None, model_name: str = None, avoid
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -2153,6 +2254,12 @@ def generate_tale(niche: str, api_key: str = None, model_name: str = None, avoid
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
@@ -2200,6 +2307,12 @@ def generate_essay(niche: str, api_key: str = None, model_name: str = None, avoi
                     or "denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
                     or "suspended" in msg or "has not been used" in msg or "not enabled" in msg or "disabled" in msg):
                 raise RateLimited(str(e))
+            # Nghẽn/timeout phía nhà cung cấp -> THỬ LẠI vòng sau, đừng giết cả lượt viết.
+            # Chỉ bỏ cuộc khi đã hết số vòng cho phép.
+            if _loi_tam_thoi(msg) and attempt < MAX_TRIES:
+                _tam_nghi(attempt)
+                feedback = ""
+                continue
             raise
         try:
             d = _extract_json(resp.text)
