@@ -105,8 +105,19 @@ const planeStyle = (xa: number, cam: { dolly: number; panX: number; panY: number
 const Plane: React.FC<{ ch: string; shot: MascotShot; L: { lop: string; xa: number };
                        cam: any; f: number }> = ({ ch, shot, L, cam, f }) => {
   const st = planeStyle(L.xa, cam, f);
+  // TIỀN CẢNH CHỈ ĐƯỢC Ở RÌA KHUNG (25/8 — soi khung thật: thùng rác lớp `near` che mất nguyên
+  // thân gấu mèo, chỉ còn cái đầu). Đây là luật bố cục của phim 2D: tiền cảnh là cành cây góc
+  // trên, bụi cỏ mép dưới, khung cửa hai bên — nó ĐÓNG KHUNG cảnh chứ không đứng chắn diễn viên.
+  // Che vùng giữa bằng mặt nạ: rìa hiện đủ, giữa trong suốt -> vẫn đủ chiều sâu mà không mất diễn.
+  const truoc = L.xa >= DEPTH_NV;
+  const matNa = truoc
+    ? "radial-gradient(ellipse 62% 58% at 50% 46%, transparent 0%, transparent 55%, #000 88%)"
+    : undefined;
   return (
-    <AbsoluteFill style={{ transform: st.transform, filter: st.filter }}>
+    <AbsoluteFill style={{
+      transform: st.transform, filter: st.filter,
+      ...(matNa ? { WebkitMaskImage: matNa, maskImage: matNa } : {}),
+    } as React.CSSProperties}>
       <Img src={stageSrc(ch, shot.stage, L.lop)}
            style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       {/* màn sương của phối cảnh không khí — lớp xa mờ vào nền trời, lớp gần trong veo */}

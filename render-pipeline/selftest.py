@@ -2317,6 +2317,10 @@ def t_mascot_stage_dong_tung_khung():
     assert "L.xa < DEPTH_NV" in src and "L.xa >= DEPTH_NV" in src, \
         "lớp gần không vẽ ĐÈ LÊN nhân vật -> nhân vật dán lên cảnh chứ không ở TRONG cảnh"
     assert "camScale" in src, "nhân vật không chịu phép biến đổi của máy -> lộ là hình dán khi camera đẩy"
+    # 25/8 — soi khung thật: thùng rác lớp `near` che nguyên thân gấu mèo, chỉ còn cái đầu.
+    # Tiền cảnh trong phim 2D ĐÓNG KHUNG cảnh (cành cây, bụi cỏ, khung cửa), không chắn diễn viên.
+    assert "WebkitMaskImage" in src and "radial-gradient(ellipse" in src, \
+        "lớp tiền cảnh không có mặt nạ -> nó sẽ che mất nhân vật"
     assert "talk_open" in src and "talk_closed" in src, "mất cặp nhép mồm"
     assert "spring(" in src, "mất chuyển động đàn hồi (vào cảnh/nảy)"
 

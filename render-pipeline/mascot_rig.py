@@ -211,9 +211,13 @@ def rig_kenh(kenh: str, cast: list, keys: list, lam_lai: bool = False) -> dict:
 # trượt ở tốc độ khác nhau thì não đọc ra chiều sâu — đó là toàn bộ bí quyết "bối cảnh sống"
 # của phim hoạt hình 2D, và nó là hình học thuần tuý: 0 quota, 0 AI, chỉ tốn vài phép nhân/khung.
 # Lớp `sky` phủ kín khung nên KHÔNG tách nền; các lớp còn lại tách để nhìn xuyên qua.
+# 25/8 — soi khung thật: biển hiệu cửa hàng hiện chữ giả "AT D" dù prompt đã cấm text. FLUX coi
+# "no text" là gợi ý yếu khi cảnh vốn CÓ chỗ để chữ (biển hiệu, bảng thông báo). Cách chắc hơn là
+# mô tả thẳng vật thể ở trạng thái KHÔNG CÓ CHỮ ("blank sign", "unmarked") thay vì chỉ cấm chung.
 DUOI_NEN = ("wide establishing shot, no people, no characters, no animals, "
+            "all signs are completely blank and unmarked, empty storefront boards, "
             "flat solid pure green background color #00B140 behind everything, "
-            "no text, no letters, no signs, no watermark, no logo")
+            "no text, no letters, no words, no numbers, no signage, no watermark, no logo")
 
 
 def dung_san_khau(kenh: str, ten: str, lop_list: list, keys: list, lam_lai: bool = False) -> dict:

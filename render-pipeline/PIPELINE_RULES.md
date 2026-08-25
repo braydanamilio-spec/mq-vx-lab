@@ -2679,3 +2679,11 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   18-30 giây theo thiết kế. Nay long = **3 skit, mỗi skit một SÂN KHẤU khác** (vừa đủ dài, vừa đổi
   cảnh nên không chán, 0 lượt vẽ thêm vì sân khấu đã dựng sẵn); skit sau nhận tiêu đề skit trước vào
   danh sách tránh để không lặp ý. Chốt trong `t_mascot_khong_ve_lai_nhan_vat`.
+
+- **Tiền cảnh ĐÓNG KHUNG cảnh, không chắn diễn viên.** (25/8) Soi khung video thật: thùng rác của
+  lớp `near` che nguyên thân gấu mèo, chỉ còn cái đầu — đúng về multiplane nhưng sai về bố cục.
+  Trong phim 2D tiền cảnh là cành cây góc trên, bụi cỏ mép dưới, khung cửa hai bên. Nay lớp
+  `xa >= DEPTH_NV` được che bằng mặt nạ elip: rìa hiện đủ, giữa trong suốt.
+- **Cấm chữ trong ảnh nền phải mô tả VẬT THỂ không có chữ, đừng chỉ cấm chung.** (25/8) Biển hiệu
+  hiện chữ giả "AT D" dù prompt đã có "no text". FLUX coi lệnh cấm là gợi ý yếu khi cảnh vốn có chỗ
+  để chữ. Nay thêm "all signs are completely blank and unmarked, empty storefront boards".
