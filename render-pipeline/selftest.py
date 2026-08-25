@@ -444,6 +444,7 @@ def main():
     check("tách nền rig: ĐO màu viền, không khoá cứng", t_tach_nen_khong_khoa_cung_mau)
     check("brandkit qua QC hình (đo pixel rồi soi Vision)", t_brandkit_co_qc_hinh)
     check("giọng nhân vật có cao độ, hai vai lệch nhau", t_giong_nhan_vat_co_cao_do)
+    check("tts: không hàm nào dùng biến chưa nhận", t_tts_khong_dung_bien_chua_nhan)
     check("kịch bản skit mang đủ 5 luật viral", t_kich_ban_co_luat_viral)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
@@ -2395,6 +2396,49 @@ def t_kich_ban_co_luat_viral():
     for moc in ("ONE REAL FACT", "SPECIFIC BEATS GENERIC", "TWO DISTINCT VOICES",
                 "TURN, DON'T ESCALATE FLAT", "LAST LINE IS THE PRODUCT"):
         assert moc in than, f"TOON_SYS thiếu luật «{moc}»"
+
+
+def t_tts_khong_dung_bien_chua_nhan():
+    """Không hàm nào trong tts_karaoke được dùng biến mà nó KHÔNG nhận / KHÔNG gán.
+
+    25/8 — pilot 12:04Z: thêm `pitch` vào `_run` nhưng thân thật nằm ở `_synth_once`, hàm đó chưa
+    có tham số ⇒ `name 'pitch' is not defined` ở TỪNG câu thoại. Vòng thử-lại nuốt thành "TTS trả
+    0 giây", nên log nói về TTS trong khi lỗi là NameError của mình — mất trọn một lượt pilot.
+    Python không bắt lỗi này lúc nạp module; AST thì bắt được ngay."""
+    import ast
+    src = _doc("tts_karaoke.py")
+    t = ast.parse(src)
+    # biến toàn cục hợp lệ (module-level) — không tính là "chưa nhận"
+    gtoan = {n.id for x in t.body if isinstance(x, (ast.Assign, ast.AnnAssign))
+             for n in ast.walk(x) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)}
+    gtoan |= {n.name for n in ast.walk(t) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    gtoan |= {a.asname or a.name.split(".")[0]
+              for x in ast.walk(t) if isinstance(x, (ast.Import, ast.ImportFrom)) for a in x.names}
+    # CHỈ soi hàm CẤP CAO NHẤT: hàm lồng đọc biến của hàm bao (closure) là hợp lệ — soi riêng
+    # từng hàm lồng sẽ báo oan (đo thật: `flush` đọc `lines` của `_to_srt`).
+    xau = []
+    for fn in [n for n in t.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]:
+        # gom tham số của CHÍNH hàm và của mọi hàm LỒNG bên trong (kể cả lambda) — nếu không thì
+        # biến của hàm lồng bị báo oan là "chưa nhận" (đo thật: 4/5 ca đầu tiên đều là oan)
+        ts = set()
+        for g in ast.walk(fn):
+            if isinstance(g, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+                ts |= {a.arg for a in g.args.args} | {a.arg for a in g.args.kwonlyargs}
+                if g.args.vararg: ts.add(g.args.vararg.arg)
+                if g.args.kwarg: ts.add(g.args.kwarg.arg)
+        gan = {n.id for n in ast.walk(fn) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)}
+        gan |= {c.name or "" for c in ast.walk(fn) if isinstance(c, ast.ExceptHandler)}
+        gan |= {t2.id for c in ast.walk(fn) if isinstance(c, (ast.For, ast.AsyncFor))
+                for t2 in ast.walk(c.target) if isinstance(t2, ast.Name)}
+        gan |= {t2.id for c in ast.walk(fn) if isinstance(c, ast.comprehension)
+                for t2 in ast.walk(c.target) if isinstance(t2, ast.Name)}
+        for n in ast.walk(fn):
+            if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load):
+                if n.id not in ts and n.id not in gan and n.id not in gtoan and not hasattr(__builtins__, n.id):
+                    import builtins
+                    if not hasattr(builtins, n.id):
+                        xau.append(f"{fn.name}:{n.id}")
+    assert not xau, f"hàm dùng biến chưa nhận/chưa gán: {sorted(set(xau))[:5]}"
 
 
 if __name__ == "__main__":

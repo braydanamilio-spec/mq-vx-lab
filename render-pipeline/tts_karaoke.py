@@ -62,7 +62,7 @@ async def _run(text: str, mp3_path: str, voice: str, rate: str, pitch: str = "+0
     last = None
     for att in range(1, TTS_TRIES + 1):
         try:
-            return await _a.wait_for(_synth_once(text, mp3_path, voice, rate), timeout=TTS_TIMEOUT)
+            return await _a.wait_for(_synth_once(text, mp3_path, voice, rate, pitch), timeout=TTS_TIMEOUT)
         except Exception as e:
             last = e
             if att < TTS_TRIES:
@@ -71,7 +71,7 @@ async def _run(text: str, mp3_path: str, voice: str, rate: str, pitch: str = "+0
     raise last
 
 
-async def _synth_once(text: str, mp3_path: str, voice: str, rate: str):
+async def _synth_once(text: str, mp3_path: str, voice: str, rate: str, pitch: str = "+0Hz"):
     import edge_tts
     # 23/8 (user: "sub giật giật, không khớp giọng"): xin MỐC TỪNG TỪ THẬT từ máy đọc.
     # Trước đây edge-tts chỉ trả SentenceBoundary (1 mốc/câu) -> hệ phải CHIA ĐỀU theo số ký tự,

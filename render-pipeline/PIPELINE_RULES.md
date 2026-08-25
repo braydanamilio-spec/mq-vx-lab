@@ -2666,3 +2666,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   `ffmpeg -i video -i tiếng` không có `-map` thì ffmpeg tự "chọn luồng tốt nhất" và vớ đúng track
   câm đó. Nay `-map 0:v:0 -map 1:a:0` + **đo `volumedetect` ngay sau khi ghép** (sai -map là lỗi im
   lặng: file đúng mọi mặt trừ việc không có tiếng). Chốt trong `t_mascot_khong_ve_lai_nhan_vat`.
+
+- **Thêm tham số thì phải lần tới HÀM LÀM VIỆC THẬT, không dừng ở hàm bọc.** (25/8) Pilot 12:04Z:
+  `pitch` được thêm vào `_run` nhưng thân thật nằm ở `_synth_once` — hàm đó chưa có tham số ⇒
+  `name 'pitch' is not defined` ở TỪNG câu thoại. Tệ hơn: vòng thử-lại nuốt thành "TTS trả 0 giây",
+  nên log nói về TTS trong khi lỗi là NameError của mình. Python không bắt lúc nạp module; nay
+  `t_tts_khong_dung_bien_chua_nhan` soi bằng AST (chỉ hàm cấp cao nhất, gom tham số của cả hàm lồng
+  và lambda, hiểu closure/AnnAssign — 4/5 ca đầu là báo oan nên phải siết đúng). Đã thử phá: bắt được.
