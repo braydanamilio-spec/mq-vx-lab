@@ -2989,3 +2989,12 @@ Vá cách BÁO lỗi không vá được việc HẾT tài nguyên. Đừng nh�
 **Điều đêm nay chứng minh cho thế hệ 2**: 22 kênh chất liệu A dựng kịch bản từ dữ liệu mở và
 **không gọi AI một lần nào** — một phiên như 19:59 thì chúng vẫn ra video bình thường. Đó không
 phải lợi ích phụ của thiết kế mới, nó là lợi ích chính.
+
+### 26/8 — cạn tài nguyên vẫn in nguyên stack (nối tiếp bản vá `key_order`)
+Phiên 21:32: `IndexError` về **0** như mong đợi, nhưng chỗ bắt lỗi vẫn in NGUYÊN STACK cho
+`RuntimeError: hết key viết dùng được` — **12 vệt Traceback một phiên** cho đúng một tình huống
+bình thường của hệ chạy trên hạn mức free.
+- **Luật**: stack chỉ có ích khi KHÔNG BIẾT chuyện gì xảy ra. Cạn key / cạn pool ảnh là đã biết rõ
+  và đã có đường xử lý → `print_exc_gon()` in một dòng, cộng vào bộ đếm `bao_da_luong()` để
+  "im lặng" không thành "giấu". Lỗi lạ vẫn in đủ stack (đã thử: 1 dòng vs 3 dòng).
+- Cùng họ với bài học 588 dòng cảnh báo pool và 39 vệt `RateLimited` phiên 02:15.

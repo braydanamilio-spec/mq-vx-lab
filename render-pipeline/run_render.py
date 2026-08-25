@@ -149,6 +149,18 @@ def print_exc_gon() -> None:
         _DA_LUONG["n"] += 1
         print(f"   ⏳ hết hạn mức: {str(e)[:130]} — đổi key rồi làm tiếp")
         return
+    # 26/8 — CẠN TÀI NGUYÊN cũng là chuyện đã lường trước, không phải sập. Sau khi vá
+    # `key_order(...)[0]`, `IndexError` biến mất nhưng chỗ bắt lỗi vẫn in NGUYÊN STACK cho
+    # `RuntimeError: hết key viết dùng được` — 12 vệt Traceback một phiên cho đúng một tình
+    # huống bình thường của hệ chạy trên hạn mức free. Cùng bài học với 588 dòng cảnh báo pool:
+    # stack chỉ có ích khi không biết chuyện gì xảy ra; ở đây biết rõ rồi.
+    _msg = str(e or "")
+    if e is not None and any(t in _msg for t in
+                             ("hết key viết dùng được", "pool vẽ ảnh CẠN SẠCH",
+                              "KHÔNG CÒN KEY NÀO dùng được")):
+        _DA_LUONG["n"] += 1
+        print(f"   ⏳ {_msg[:130]}")
+        return
     traceback.print_exc()
 
 
