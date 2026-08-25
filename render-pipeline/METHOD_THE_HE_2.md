@@ -93,8 +93,9 @@ Quy tắc: mọi hàm trong `du_lieu_mo.py` hỏng thì **trả rỗng, không n
 ## 7. ĐANG CÒN THIẾU
 
 - [x] Dạng `ranked` — 17/17 kênh dựng được story thật, đã render end-to-end
-- [ ] Dạng `race` (8) · `cinematic` (10) · `scaled` (6) · `mapped` (4) · `longshot` (3) · `thennow` (2)
+- [x] Dạng `race` — 7/7 kênh dựng được, đã render end-to-end (STEAM TRUTH chuyển sang `ranked`: SteamSpy không có chuỗi thời gian, không bịa mốc)
+- [ ] Dạng `cinematic` (10) · `scaled` (6) · `mapped` (4) · `longshot` (3) · `thennow` (2)
 - [ ] Ảnh chất liệu B/C: nối FLUX theo `style_anh` từng kênh
-- [ ] Brand-kit 50 kênh
+- [x] Brand-kit 50 kênh — sinh 0 quota, 22 motif theo niche, 7 asset/kênh, banner bó đúng vùng an toàn
 - [ ] Đăng ký kênh vào Firestore + cấp kho Drive
 - [ ] Tắt 55 kênh thế hệ 1 (**chỉ sau khi chúng chạy nốt kho hiện có**)

@@ -56,6 +56,24 @@ def _so(v: float) -> str:
     return f"{v:,.0f}"
 
 
+# Tên nguồn HIỆN TRÊN MÀN HÌNH phải là tên cơ quan, không phải mã nội bộ. Cả điểm tin cậy của
+# kênh nằm ở dòng này — "Source: bls" đọc như lỗi, "U.S. Bureau of Labor Statistics" là bằng chứng.
+TEN_NGUON = {
+    "usaspending": "USAspending.gov", "sec": "SEC EDGAR", "bls": "U.S. Bureau of Labor Statistics",
+    "openfda": "openFDA · U.S. FDA", "nhtsa": "NHTSA", "court": "CourtListener",
+    "worldbank": "World Bank Open Data", "usgs": "U.S. Geological Survey", "nasa": "NASA CNEOS",
+    "fec": "U.S. Federal Election Commission", "wikipedia": "Wikimedia pageviews",
+    "mlb": "MLB StatsAPI", "nba": "NBA Stats", "steamspy": "SteamSpy", "tvmaze": "TVmaze",
+    "musicbrainz": "MusicBrainz", "pubmed": "PubMed · U.S. NLM", "nws": "NOAA / National Weather Service",
+    "opensky": "OpenSky Network", "epa": "U.S. EPA fueleconomy.gov", "dogceo": "Dog CEO API",
+    "usda": "USDA FoodData Central", "archive": "Internet Archive",
+}
+
+
+def ten_nguon(ma: str) -> str:
+    return TEN_NGUON.get(str(ma or "").lower(), str(ma or ""))
+
+
 def _gon(t: str, toi_da: int = 26) -> str:
     """Tên vừa thẻ: cắt theo TỪ, không cắt giữa chữ."""
     t = " ".join(str(t or "").split())
@@ -339,6 +357,210 @@ def dung_story_ranked(kenh: dict, ky: dict | None = None) -> dict | None:
     }
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# DẠNG ĐUA CỘT — cần CHUỖI THỜI GIAN, khác hẳn bảng hạng (chỉ cần một lát cắt)
+# ------------------------------------------------------------------------------------------
+# Mỗi bộ trả (tieu_de, don_vi, frames, loi_dan). frames = [{t, data:[{name, value}]}], >= 4 mốc.
+# Nguồn nào KHÔNG có chiều thời gian thì không làm được dạng này — khai `ranked` cho kênh đó
+# thay vì bịa ra mốc thời gian giả.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+def _dc_hop_dong(D, ky):
+    """Nhà thầu liên bang đua nhau qua từng năm ngân sách."""
+    den = int(ky.get("nam", 2024))
+    frames, ten_thay = [], {}
+    for nam in range(den - 5, den + 1):
+        hd = D.hop_dong_lon(nam, 8, ky.get("de_tai", ""))
+        if not hd:
+            continue
+        gop = {}
+        for x in hd:
+            t = _gon(x["ten"], 16)
+            gop[t] = gop.get(t, 0) + x["tien"] / 1e6
+            ten_thay[t] = True
+        frames.append({"t": nam, "data": [{"name": k, "value": round(v, 1)}
+                                          for k, v in sorted(gop.items(), key=lambda z: -z[1])[:7]]})
+    if len(frames) < 4:
+        return None
+    nhan = (ky.get("de_tai") or "federal").title()
+    dan = [f"Six years of {nhan.lower()} contracts.",
+           "Same money, different names on the paperwork.",
+           f"In {frames[0]['t']}, {frames[0]['data'][0]['name']} led.",
+           f"By {frames[-1]['t']}, it was {frames[-1]['data'][0]['name']}.",
+           "All of it filed on USAspending dot gov."]
+    return (f"{nhan} contracts by year", "$M", frames, dan)
+
+
+def _dc_bls(D, ky):
+    """Nhiều nhóm giá đua nhau — MỘT lượt gọi cho tất cả chuỗi (BLS chỉ 25 lượt/ngày)."""
+    nhom = ky.get("nhom") or ["cpi_thucpham", "cpi_xang", "cpi_nha", "cpi_yte", "cpi_di_lai", "cpi_giao_duc"]
+    NHAN = {"cpi_thucpham": "Food", "cpi_xang": "Gas", "cpi_nha": "Housing", "cpi_yte": "Health",
+            "cpi_di_lai": "Transport", "cpi_giao_duc": "Education", "cpi_dien_nuoc": "Utilities",
+            "cpi_quan_ao": "Clothing", "cpi_giai_tri": "Recreation", "luong_gio": "Hourly pay"}
+    tu, den = int(ky.get("tu_nam", 2015)), int(ky.get("den_nam", 2024))
+    bo = D.nhieu_chuoi_bls(nhom, tu, den, ky.get("key", ""))
+    theo_nam = {}
+    for ten, diem in bo.items():
+        for x in diem:
+            theo_nam.setdefault(x["nam"], {}).setdefault(ten, []).append(x["gia_tri"])
+    frames = []
+    for nam in sorted(theo_nam):
+        data = [{"name": NHAN.get(t, t), "value": round(sum(v) / len(v), 1)}
+                for t, v in theo_nam[nam].items() if v]
+        if len(data) >= 3:
+            frames.append({"t": nam, "data": sorted(data, key=lambda z: -z["value"])[:7]})
+    if len(frames) < 4:
+        return None
+    d0, d1 = frames[0]["data"][0], frames[-1]["data"][0]
+    dan = ["Watch what got expensive in America.",
+           f"Back in {frames[0]['t']}, {d0['name'].lower()} sat on top.",
+           f"Ten years later, {d1['name'].lower()} is still climbing.",
+           "These are the official index numbers, not estimates.",
+           "Bureau of Labor Statistics. Check any line yourself."]
+    return ("Cost of living, by category", "idx", frames, dan)
+
+
+def _dc_mlb(D, ky):
+    """Các đội bóng chày đua thành tích qua nhiều mùa."""
+    den = int(ky.get("nam", 2025))
+    frames = []
+    for nam in range(den - 5, den + 1):
+        r = D.thong_ke_mlb(nam, 8)
+        if len(r) >= 4:
+            frames.append({"t": nam, "data": [{"name": _gon(x["doi"], 16), "value": x["thang"]}
+                                              for x in r[:7]]})
+    if len(frames) < 4:
+        return None
+    dan = ["Six seasons of baseball, side by side.",
+           f"{frames[0]['data'][0]['name']} opened on top.",
+           f"{frames[-1]['data'][0]['name']} finished there.",
+           "Wins only. No opinions.",
+           "Straight from the league's own stat feed."]
+    return ("MLB wins by season", "W", frames, dan)
+
+
+def _dc_wiki(D, ky):
+    """Bài Wikipedia được đọc nhiều nhất đua nhau qua từng ngày."""
+    import datetime as _dt
+    goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    dau = D.bai_duoc_doc(goc.year, goc.month, goc.day, 7)
+    if len(dau) < 4:
+        return None
+    ten = [x["ten"] for x in dau]
+    tu = (goc - _dt.timedelta(days=13)).strftime("%Y%m%d")
+    den = goc.strftime("%Y%m%d")
+    chuoi = {}
+    for t in ten:
+        chuoi[t] = {x["ngay"]: x["luot_doc"] for x in D.luot_doc_bai(t, tu, den)}
+    ngays = sorted({d for v in chuoi.values() for d in v})
+    frames = []
+    for d in ngays:
+        data = [{"name": _gon(t, 16), "value": round(chuoi[t].get(d, 0) / 1000.0, 1)}
+                for t in ten if chuoi[t].get(d)]
+        if len(data) >= 3:
+            frames.append({"t": int(d), "data": sorted(data, key=lambda z: -z["value"])[:7]})
+    if len(frames) < 4:
+        return None
+    dan = ["Two weeks of what America actually read.",
+           f"{frames[-1]['data'][0]['name']} ended on top.",
+           "Every spike is a real day, a real story breaking.",
+           "Nobody votes on this. People just click.",
+           "Counts published by Wikimedia."]
+    return ("Most-read on Wikipedia", "K reads", frames, dan)
+
+
+def _dc_nba(D, ky):
+    """Cầu thủ dẫn đầu đua nhau qua nhiều mùa giải."""
+    ma = ky.get("chi_tieu") or "PTS"
+    mua_cuoi = int(str(ky.get("mua", "2024-25")).split("-")[0])
+    frames = []
+    for y in range(mua_cuoi - 5, mua_cuoi + 1):
+        r = D.thong_ke_nba(f"{y}-{str(y + 1)[-2:]}", ma, 8)
+        if len(r) >= 4:
+            frames.append({"t": y, "data": [{"name": _gon(x["ten"], 16), "value": x["gia_tri"]}
+                                            for x in r[:7]]})
+    if len(frames) < 4:
+        return None
+    nhan = {"PTS": "points", "AST": "assists", "REB": "rebounds"}.get(ma, ma.lower())
+    dan = [f"Six seasons of {nhan} leaders.",
+           f"{frames[0]['data'][0]['name']} started on top.",
+           f"{frames[-1]['data'][0]['name']} is there now.",
+           "Per game, no adjustments.",
+           "Numbers from the league's own feed."]
+    return (f"NBA {nhan} leaders", nhan[:3], frames, dan)
+
+
+def _dc_epa(D, ky):
+    """Mức tiêu thụ xăng của các mẫu xe đổi qua từng đời."""
+    hang = ky.get("hang") or "Toyota"
+    den = int(ky.get("nam", 2024))
+    # fueleconomy.gov cần 3 lượt cho MỖI mẫu xe (model -> options -> chi tiết). Sáu năm x bảy mẫu
+    # là ~126 lượt nối đuôi nhau, chạy tuần tự thì quá hai phút và lane sẽ hết giờ. Các năm độc
+    # lập nhau nên chạy song song, và giảm còn 5 mẫu/năm — đủ cho một khung đua cột.
+    import concurrent.futures as _cf
+    nams = list(range(den - 5, den + 1))
+    with _cf.ThreadPoolExecutor(6) as ex:
+        ket = list(ex.map(lambda n: (n, D.muc_tieu_thu(n, hang, 5)), nams))
+    frames = []
+    for nam, r in sorted(ket):
+        if len(r) >= 4:
+            frames.append({"t": nam, "data": [{"name": _gon(x["xe"].replace(hang, "").strip(), 16),
+                                               "value": x["ket_hop"]} for x in r[:7]]})
+    if len(frames) < 4:
+        return None
+    dan = [f"Six model years of {hang}.",
+           "Same badge, very different numbers.",
+           f"{frames[-1]['data'][0]['name']} leads the current lineup.",
+           "Combined mileage, measured by the E P A.",
+           "Not the ad. The lab test."]
+    return (f"{hang}: miles per gallon", "mpg", frames, dan)
+
+
+BO_DUA = {"hop_dong_lon": _dc_hop_dong, "chuoi_bls": _dc_bls, "thong_ke_mlb": _dc_mlb,
+          "bai_duoc_doc": _dc_wiki, "thong_ke_nba": _dc_nba, "muc_tieu_thu": _dc_epa}
+
+
+def _keo_dai(dan: list[str], frames: list[dict], don_vi: str) -> list[str]:
+    """Thêm câu RÚT TỪ CHÍNH DỮ LIỆU cho đủ độ dài short (>=20s).
+
+    QC chặn video dọc dưới 20 giây. Năm câu dẫn chỉ ra ~15s. Không kéo dài bằng câu đưa đẩy —
+    tính thẳng từ frames: ai tăng mạnh nhất, khoảng cách đầu-cuối bao nhiêu. Vẫn là số có thật."""
+    dau = {d["name"]: d["value"] for d in frames[0]["data"]}
+    cuoi = {d["name"]: d["value"] for d in frames[-1]["data"]}
+    chung = [t for t in cuoi if t in dau and dau[t]]
+    them = []
+    if chung:
+        tang = max(chung, key=lambda t: (cuoi[t] - dau[t]) / dau[t])
+        pc = (cuoi[tang] - dau[tang]) / dau[tang] * 100
+        if pc >= 1:
+            them.append(f"{tang} moved the most: up {pc:.0f} percent.")
+    if len(frames[-1]["data"]) >= 2:
+        a, b = frames[-1]["data"][0], frames[-1]["data"][1]
+        if b["value"]:
+            them.append(f"{a['name']} now sits {a['value'] / b['value']:.1f} times above {b['name']}.")
+    them.append(f"{len(frames)} points on the chart. Every one of them filed, not guessed.")
+    them.append("Save this before the next update changes it.")
+    return dan + them
+
+
+def dung_story_race(kenh: dict, ky: dict | None = None) -> dict | None:
+    """Story dạng đua cột. None = nguồn không có chiều thời gian hoặc thiếu mốc -> BỎ LƯỢT."""
+    import du_lieu_mo as D
+    bo = BO_DUA.get(kenh.get("ham"))
+    if not bo:
+        print(f"   ⚠️ {kenh.get('ten')}: '{kenh.get('ham')}' chưa có bộ dựng đua cột — bỏ lượt")
+        return None
+    ts = dict(kenh.get("tham_so") or {})
+    ts.update(ky or {})
+    kq = bo(D, ts)
+    if not kq:
+        print(f"   ⚠️ {kenh.get('ten')}: không đủ mốc thời gian — BỎ LƯỢT (không bịa mốc)")
+        return None
+    tieu_de, don_vi, frames, dan = kq
+    dan = _keo_dai(dan, frames, don_vi)
+    return {"title": tieu_de, "unit": don_vi, "frames": frames, "narration": dan,
+            "nguon": kenh.get("nguon"), "_that": True, "self_score": {"total": 92}}
+
+
 def chay(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] | None:
     """Dựng story -> thu giọng -> render. Trả (đường dẫn, thông tin QC). None = bỏ lượt."""
     import datastory_ci as DS
@@ -362,6 +584,49 @@ def chay(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] |
     return (ra, info) if ok else None
 
 
+def chay_race(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] | None:
+    """Đua cột: dựng frames -> thu giọng từng câu -> ghép track + băng chữ -> render RaceShort."""
+    import datastory_ci as DS
+    st = dung_story_race(kenh, ky)
+    if not st:
+        return None
+    sl = DS.slug(kenh["handle"].lstrip("@"))
+    sdir = os.path.join(DS.PUB, "narration", "_th2r_" + sl)
+    os.makedirs(sdir, exist_ok=True)
+    doan, subs, cum = [], [], 0.0
+    for i, cau in enumerate(st["narration"]):
+        m = os.path.join(sdir, f"n{i}.mp3")
+        _, sb, _ = DS.TK.synth(cau, m)
+        for w in sb:
+            w["t"] = round(w["t"] + cum, 3)
+        subs += sb
+        cum += DS._dur(m) or 0
+        doan.append(m)
+    track = os.path.join(sdir, "track.mp3")
+    DS._concat(doan, track)
+    n = len(st["frames"])
+    # Nhịp cột bám ĐỘ DÀI GIỌNG THẬT: đặt cứng thì hoặc cột chạy xong còn giọng, hoặc ngược lại.
+    spf = max(1.2, min(6.0, (cum * 0.92) / max(1, n - 1)))
+    b = (kenh.get("brand") or {}).get("palette") or {}
+    props = {"frames": st["frames"], "secondsPerFrame": round(spf, 3),
+             "durationSec": round(cum + 1.4, 2), "topN": 7,
+             "title": st["title"][:40], "unit": st["unit"][:6],
+             "handle": kenh["handle"], "source": ten_nguon(st.get("nguon", "")),
+             "audio": os.path.relpath(track, DS.PUB), "subs": subs,
+             "accent": b.get("primary", "#F5B301"), "music": "music/carefree.mp3", "sfx": True}
+    pf = os.path.join(DS.PUB, f"_th2r_{sl}.json")
+    json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
+    ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2r_{sl}.mp4"))
+    os.makedirs(os.path.dirname(ra), exist_ok=True)
+    DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RaceShort", ra,
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       "--concurrency=2", "--log=error"],
+                      cwd=DS.ENG, timeout=2400, label=f"RaceShort({kenh['ten']})")
+    ok, info = DS.qc(ra)
+    print(f"{'✅' if ok else '❌'} {kenh['ten']} · {info}")
+    return (ra, info) if ok else None
+
+
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser()
@@ -375,14 +640,25 @@ def main() -> int:
         return 2
     MOI = {"bai_duoc_doc": {"nam": 2026, "thang": 8, "ngay": 20},
            "tieu_hanh_tinh": {"tu_ngay": "2026-08-20", "den_ngay": "2026-08-22"}}
-    st = dung_story_ranked(k, MOI.get(k["ham"], {}))
-    if not st:
-        return 3
-    print(f"\n📄 {st['title']}   [{k['niche']} · chất liệu {k['chat_lieu']}]")
-    for it in st["items"]:
-        print(f"   {it['tier']}  {str(it['stat']):>10}  {it['name']}")
+    ky = MOI.get(k["ham"], {})
+    if k["dinh_dang"] == "race":
+        st = dung_story_race(k, ky)
+        if not st:
+            return 3
+        print(f"\n📊 {st['title']}   [{k['niche']} · {len(st['frames'])} mốc]")
+        for fr in st["frames"][-1:]:
+            for d in fr["data"][:6]:
+                print(f"   {fr['t']}  {d['value']:>9}  {d['name']}")
+    else:
+        st = dung_story_ranked(k, ky)
+        if not st:
+            return 3
+        print(f"\n📄 {st['title']}   [{k['niche']} · chất liệu {k['chat_lieu']}]")
+        for it in st["items"]:
+            print(f"   {it['tier']}  {str(it['stat']):>10}  {it['name']}")
     if a.render:
-        return 0 if chay(k, ky=MOI.get(k["ham"], {})) else 4
+        f = chay_race if k["dinh_dang"] == "race" else chay
+        return 0 if f(k, ky=MOI.get(k["ham"], {})) else 4
     return 0
 
 

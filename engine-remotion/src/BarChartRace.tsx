@@ -1,5 +1,6 @@
 import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig, interpolate, Audio, staticFile, Img } from "remotion";
 import React from "react";
+import { Karaoke } from "./Karaoke";
 
 // ==== KIỂU DỮ LIỆU ====
 type Item = { name: string; value: number };
@@ -8,6 +9,9 @@ export type RaceProps = {
   title?: string; subtitle?: string; unit?: string; source?: string; handle?: string; transparent?: boolean;
   frames: Keyframe[]; secondsPerFrame?: number; topN?: number; durationSec?: number;
   colors?: Record<string, string>; icons?: Record<string, string>; logos?: Record<string, string>; images?: Record<string, string>; photos?: Record<string, string>; themePhotos?: Record<string, string>; coldPhoto?: string; music?: string; sfx?: boolean;
+  // 25/8 — hai prop TUỲ CHỌN cho kênh thế hệ 2: đua cột dựng thẳng từ dữ liệu, không footage, nên
+  // cần đường gắn giọng + băng chữ ngay tại đây. Kênh cũ không truyền thì không có gì đổi.
+  audio?: string; subs?: { t: number; d: number; w: string }[]; accent?: string;
 };
 export const calcRace = ({ props }: { props: RaceProps }) => {
   if (props.durationSec) return { durationInFrames: Math.max(1, Math.round(props.durationSec * 30)) }; // LONG: giữ khung kết khi lời bình còn nói
@@ -28,7 +32,7 @@ const fmt = (v: number) => {
 };
 
 export const BarChartRace: React.FC<RaceProps> = (props) => {
-  const { title = "", subtitle = "", unit = "", source = "", handle = "", frames, colors, icons, logos, images, photos, themePhotos, coldPhoto, music, sfx = true } = props;
+  const { title = "", subtitle = "", unit = "", source = "", handle = "", frames, colors, icons, logos, images, photos, themePhotos, coldPhoto, music, sfx = true, audio, subs, accent = "#F5B301" } = props;
   const spf = props.secondsPerFrame ?? 2.2; const topN = props.topN ?? 10;
   const f = useCurrentFrame(); const { width: W, height: H, fps } = useVideoConfig();
   const port = H > W;
@@ -139,6 +143,7 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
       {source ? <div style={{ position: "absolute", bottom: port ? 70 : 40, left: M, fontSize: port ? 30 : 26, color: "#5B7290" }}>Source: {source}</div> : null}
       {handle ? <div style={{ position: "absolute", bottom: port ? 70 : 40, right: M, fontSize: port ? 32 : 28, fontWeight: 800, color: "#7FA8D0" }}>{handle}</div> : null}
       {music ? <Audio src={staticFile(music)} volume={0.12} /> : null}
+      {audio ? <Audio src={staticFile(audio)} /> : null}
       {/* SFX khớp dữ liệu: whoosh+ding mỗi lần soán ngôi, cheer lúc kết */}
       {sfx ? overtakeT.map((t, i) => (
         <React.Fragment key={"sfx" + i}>
@@ -147,6 +152,7 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
         </React.Fragment>
       )) : null}
       {sfx ? <Sequence from={Math.round(finalT * fps)} durationInFrames={60}><Audio src={staticFile("sfx/cheer.mp3")} volume={0.32} /></Sequence> : null}
+          {subs && subs.length ? <Karaoke subs={subs} accent={accent} /> : null}
     </AbsoluteFill>
   );
 };

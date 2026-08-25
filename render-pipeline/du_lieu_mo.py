@@ -150,6 +150,35 @@ def chuoi_bls(ten: str, tu_nam: int, den_nam: int, key: str = "") -> list[dict]:
     return list(reversed(ra))          # cũ -> mới, tiện vẽ biểu đồ
 
 
+def nhieu_chuoi_bls(tens: list[str], tu_nam: int, den_nam: int, key: str = "") -> dict:
+    """NHIỀU chuỗi BLS trong MỘT lượt gọi. Trả {ten: [{nam, thang, gia_tri}]}.
+
+    TIẾT KIỆM QUOTA — lý do tồn tại: BLS không key chỉ cho 25 LƯỢT/NGÀY. Kênh dạng đua cột cần
+    6-8 chuỗi để so nhau, gọi lẻ từng chuỗi là một video đã ăn 8 lượt, ba kênh là hết ngày.
+    API v2 nhận cả danh sách `seriesid` trong một thân yêu cầu -> 8 chuỗi vẫn chỉ tốn 1 lượt."""
+    ma_theo_ten = {t: BLS_CHUOI.get(t, t) for t in tens}
+    body = {"seriesid": list(dict.fromkeys(ma_theo_ten.values()))[:25],
+            "startyear": str(tu_nam), "endyear": str(den_nam)}
+    if key:
+        body["registrationkey"] = key
+    d = _goi("https://api.bls.gov/publicAPI/v2/timeseries/data/", body)
+    theo_ma = {}
+    try:
+        for se in d["Results"]["series"]:
+            diem = []
+            for x in (se.get("data") or []):
+                try:
+                    diem.append({"nam": int(x["year"]), "thang": x.get("periodName", ""),
+                                 "gia_tri": float(x["value"]),
+                                 "nguon": "U.S. Bureau of Labor Statistics"})
+                except Exception:
+                    continue
+            theo_ma[str(se.get("seriesID"))] = list(reversed(diem))
+    except Exception:
+        return {}
+    return {t: theo_ma.get(ma, []) for t, ma in ma_theo_ten.items()}
+
+
 # ── 4. ARCHIVE.ORG — phim tư liệu công cộng ────────────────────────────────────────────────
 def phim_tu_lieu(tu_khoa: str, n: int = 6) -> list[dict]:
     """Phim công cộng khớp từ khoá. Trả [{id, tieu_de, nam, link}] — tải về được, dùng thoải mái."""

@@ -1050,7 +1050,7 @@
   "chat_lieu": "A",
   "nguon": "steamspy",
   "ham": "game_steam",
-  "dinh_dang": "race",
+  "dinh_dang": "ranked",
   "goc_nhin": "Game nào THẬT SỰ có người chơi",
   "style_anh": "",
   "the_he": 2,
@@ -1086,7 +1086,8 @@
     "verified"
    ],
    "style_anh": ""
-  }
+  },
+  "ghi_chu": "SteamSpy không có chuỗi thời gian -> bảng hạng, không bịa mốc"
  },
  {
   "id": 24,
