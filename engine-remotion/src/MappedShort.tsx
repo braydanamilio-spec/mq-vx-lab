@@ -101,7 +101,12 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
       })}
 
       {/* BẢNG XẾP HẠNG ở DƯỚI (vùng trống, chống chồng tuyệt đối) — #3->#1 pop, #1 nổi accent */}
-      <div style={{ position: "absolute", left: 70, right: 70, bottom: 150, display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* 26/8 — băng chữ karaoke neo bottom 200 và cao ~2 dòng; bảng xếp hạng neo bottom 150
+          nên chữ ĐÈ lên thanh #1/#2/#3 (thấy rõ ở khung 16s kênh QUAKE LOG). Có sub thì
+          nhường chỗ, không sub thì giữ nguyên — cùng cách đã vá cho RankedShort. */}
+      <div style={{ position: "absolute", left: 70, right: 70,
+                    bottom: (subs && subs.length) ? 380 : 150,
+                    display: "flex", flexDirection: "column", gap: 16 }}>
         {ranked.map((d, i) => {
           // dùng ranked.length (số mục THỰC SỰ hiển thị) chứ không phải topN prop: nếu data.length < topN
           // (vd chỉ có 1-2 bang), calcMapped() đã tính durationInFrames theo topN đã CLAMP xuống data.length,

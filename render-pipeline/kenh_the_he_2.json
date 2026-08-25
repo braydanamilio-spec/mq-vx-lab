@@ -2185,7 +2185,8 @@
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "do_lon": 6.5,
+   "do_lon": 4.5,
+   "tu_ngay": "2015-01-01",
    "xoay": "nam"
   },
   "brand": {

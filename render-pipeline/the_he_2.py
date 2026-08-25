@@ -1025,23 +1025,34 @@ def _bd_canh_bao(D, ky):
 
 
 def _bd_dong_dat(D, ky):
-    r = D.dong_dat(float(ky.get("do_lon", 6.5)), ky.get("tu_ngay", "2015-01-01"), 40)
+    """Động đất TRONG NƯỚC MỸ, gom theo bang — vì engine vẽ bản đồ các bang Mỹ."""
+    r = D.dong_dat(float(ky.get("do_lon", 4.5)), ky.get("tu_ngay", "2015-01-01"), 200, trong_my=True)
     if len(r) < 4:
         return None
-    gop = {}
+    gop, dem = {}, {}
     for x in r:
-        # "112km SW of Kokopo, Papua New Guinea" -> lấy phần sau dấu phẩy cuối
-        noi = x["noi"].split(",")[-1].strip() or x["noi"]
-        gop[noi] = max(gop.get(noi, 0), x["do_lon"])
-    data = [{"name": k, "value": round(v, 1)} for k, v in sorted(gop.items(), key=lambda z: -z[1])[:10]]
+        # "112km SW of Anchor Point, Alaska" -> phần sau dấu phẩy cuối là bang
+        bang = x["noi"].split(",")[-1].strip()
+        if bang not in BANG.values():
+            continue
+        gop[bang] = max(gop.get(bang, 0), x["do_lon"])
+        dem[bang] = dem.get(bang, 0) + 1
+    if len(gop) < 3:
+        return None
+    data = [{"name": k, "value": round(v, 1), "disp": f"M{v:.1f}"}
+            for k, v in sorted(gop.items(), key=lambda z: -z[1])[:10]]
     manh = r[0]
-    dan = [f"The strongest was magnitude {manh['do_lon']}.",
+    tong = sum(dem.values())
+    dan = [f"The ground moved {tong} times in the United States.",
+           f"The strongest was magnitude {manh['do_lon']}.",
            f"It hit {manh['noi']}.",
-           f"Depth: {manh['sau_km']} kilometers.",
-           f"{len(r)} quakes this size since {ky.get('tu_ngay', '2015')[:4]}.",
-           "Each one recorded by seismometers, not estimates.",
-           "U S G S publishes every single one."]
-    return ("Strongest quakes on record", "mag", data, dan)
+           f"That one was {manh['sau_km']} kilometers down.",
+           f"{data[0]['name']} tops the list, {dem.get(data[0]['name'], 0)} quakes on its own.",
+           f"{len(gop)} states felt something since {ky.get('tu_ngay', '2015')[:4]}.",
+           "Every one of these was recorded by a seismometer, not estimated.",
+           "U S G S publishes the whole catalogue, free.",
+           "If your state is on this map, it has happened before."]
+    return ("Where America shakes", "magnitude", data, dan)
 
 
 def _bd_may_bay(D, ky):
@@ -1103,7 +1114,20 @@ def dung_story_mapped(kenh: dict, ky: dict | None = None) -> dict | None:
         print(f"   ⚠️ {kenh.get('ten')}: thiếu dữ liệu — BỎ LƯỢT")
         return None
     tieu_de, don_vi, data, dan = kq
-    return _cong_an_toan({"title": tieu_de, "unit": don_vi, "data": data, "narration": dan,
+    # MappedShort đọc khoá `state`, không phải `name` — và cần riêng 3 mục đầu để "bung" lần lượt.
+    data = [{"state": d.get("state") or d.get("name"), "value": d["value"],
+             "disp": d.get("disp") or _so(d["value"])} for d in data]
+    top = [{"state": d["state"], "disp": d["disp"],
+            "vo": f"{d['state']}. {d['disp']}."} for d in data[:3]]
+    # build_mapped_props chỉ đọc intro/bloom/outro + 3 mục top — viết 9 câu mà nó dùng 3 thì video
+    # ra 16 giây, dưới mốc 20 giây của QC. Gộp phần còn lại vào ba chặng đó.
+    _c = [c for c in (dan or []) if c]
+    mo = " ".join(_c[:3]) if _c else tieu_de
+    giua = " ".join(_c[3:5]) if len(_c) > 3 else "Watch the map light up."
+    ket = " ".join(_c[5:]) if len(_c) > 5 else (_c[-1] if _c else "")
+    return _cong_an_toan({"title": tieu_de, "unit": don_vi, "data": data, "top": top,
+                          "intro_vo": mo, "bloom_vo": giua, "outro_vo": ket,
+                          "narration": _c,
                           "nguon": kenh.get("nguon"), "_that": True,
                           "self_score": {"total": 92}}, kenh.get("ten", ""))
 
@@ -1365,6 +1389,53 @@ def chay_race(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, di
     return (ra, info) if ok else None
 
 
+# Mỗi dạng: (composition Remotion, hàm dựng props trong datastory_ci)
+DUONG_RA = {
+    "ranked":    ("RankedShort", "build_ranked_props"),
+    "race":      ("RaceShort", None),               # có đường riêng: chay_race
+    "scaled":    ("ScaledShort", "build_scaled_props"),
+    "mapped":    ("MappedShort", "build_mapped_props"),
+    "longshot":  ("LongshotShort", "build_longshot_props"),
+    "thennow":   ("ThenNowShort", "build_thennow_props"),
+    "cinematic": ("CinematicShort", None),          # có đường riêng: build_doc_props (cần ảnh AI)
+}
+DUNG_STORY = {}      # nạp ở cuối file, sau khi mọi hàm đã định nghĩa
+
+
+def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] | None:
+    """Dựng + render cho MỌI dạng. Trả (đường dẫn, QC) hoặc None nếu bỏ lượt."""
+    import datastory_ci as DS
+    dang = kenh.get("dinh_dang")
+    if dang == "race":
+        return chay_race(kenh, ra, ky)
+    comp, ten_props = DUONG_RA.get(dang, (None, None))
+    if not comp or not ten_props:
+        print(f"   ⚠️ {kenh.get('ten')}: dạng '{dang}' chưa có đường render chung")
+        return None
+    st = DUNG_STORY[dang](kenh, ky)
+    if not st:
+        return None
+    sl = DS.slug(kenh["handle"].lstrip("@"))
+    sdir = os.path.join(DS.PUB, "narration", f"_th2_{dang}_" + sl)
+    os.makedirs(sdir, exist_ok=True)
+    props = getattr(DS, ten_props)(st, sdir, handle=kenh["handle"])
+    b = (kenh.get("brand") or {}).get("palette") or {}
+    if b.get("primary"):
+        props["accent"] = b["primary"]
+        props.setdefault("color", b["primary"])
+    pf = os.path.join(DS.PUB, f"_th2_{dang}_{sl}.json")
+    json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
+    ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2_{dang}_{sl}.mp4"))
+    os.makedirs(os.path.dirname(ra), exist_ok=True)
+    DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", comp, ra,
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       "--concurrency=2", "--log=error"],
+                      cwd=DS.ENG, timeout=2400, label=f"{comp}({kenh['ten']})")
+    ok, info = DS.qc(ra)
+    print(f"{'✅' if ok else '❌'} {kenh['ten']} [{dang}] · {info}")
+    return (ra, info) if ok else None
+
+
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser()
@@ -1379,25 +1450,26 @@ def main() -> int:
     MOI = {"bai_duoc_doc": {"nam": 2026, "thang": 8, "ngay": 20},
            "tieu_hanh_tinh": {"tu_ngay": "2026-08-20", "den_ngay": "2026-08-22"}}
     ky = MOI.get(k["ham"], {})
-    if k["dinh_dang"] == "race":
-        st = dung_story_race(k, ky)
-        if not st:
-            return 3
-        print(f"\n📊 {st['title']}   [{k['niche']} · {len(st['frames'])} mốc]")
-        for fr in st["frames"][-1:]:
-            for d in fr["data"][:6]:
-                print(f"   {fr['t']}  {d['value']:>9}  {d['name']}")
-    else:
-        st = dung_story_ranked(k, ky)
-        if not st:
-            return 3
-        print(f"\n📄 {st['title']}   [{k['niche']} · chất liệu {k['chat_lieu']}]")
-        for it in st["items"]:
-            print(f"   {it['tier']}  {str(it['stat']):>10}  {it['name']}")
+    st = DUNG_STORY[k["dinh_dang"]](k, ky)
+    if not st:
+        return 3
+    print(f"\n📄 {st['title']}   [{k['niche']} · {k['dinh_dang']} · chất liệu {k['chat_lieu']}]")
+    if st.get("frames"):
+        for d in st["frames"][-1]["data"][:6]:
+            print(f"   {st['frames'][-1]['t']}  {d['value']:>9}  {d['name']}")
+    for m in (st.get("items") or st.get("data") or st.get("pairs") or st.get("scenes") or [])[:6]:
+        nhan = m.get("name") or m.get("state") or m.get("label") or m.get("nar", "")
+        so = m.get("stat") or m.get("disp") or m.get("oddsDisp") or m.get("nowVal") or ""
+        print(f"   {str(so):>10}  {str(nhan)[:56]}")
     if a.render:
-        f = chay_race if k["dinh_dang"] == "race" else chay
-        return 0 if f(k, ky=MOI.get(k["ham"], {})) else 4
+        return 0 if chay_chung(k, ky=MOI.get(k["ham"], {})) else 4
     return 0
+
+
+DUNG_STORY.update({"ranked": dung_story_ranked, "race": dung_story_race,
+                   "cinematic": dung_story_cinematic, "scaled": dung_story_scaled,
+                   "mapped": dung_story_mapped, "longshot": dung_story_longshot,
+                   "thennow": dung_story_thennow})
 
 
 if __name__ == "__main__":

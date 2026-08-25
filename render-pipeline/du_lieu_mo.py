@@ -500,12 +500,18 @@ def chi_so_the_gioi(ma: str = "NY.GDP.PCAP.CD", nam: int = 2023, n: int = 12) ->
 
 
 # ── 9. USGS — động đất ─────────────────────────────────────────────────────────────────────
-def dong_dat(do_lon: float = 6.0, tu_ngay: str = "2020-01-01", n: int = 10) -> list[dict]:
-    """Trận động đất mạnh nhất trong khoảng. Trả [{noi, do_lon, ngay, sau_km}]."""
-    u = ("https://earthquake.usgs.gov/fdsnws/event/1/query?"
-         + urllib.parse.urlencode({"format": "geojson", "minmagnitude": do_lon,
-                                   "starttime": tu_ngay, "orderby": "magnitude",
-                                   "limit": max(1, min(50, n))}))
+def dong_dat(do_lon: float = 6.0, tu_ngay: str = "2020-01-01", n: int = 10,
+             trong_my: bool = False) -> list[dict]:
+    """Trận động đất mạnh nhất trong khoảng. Trả [{noi, do_lon, ngay, sau_km}].
+
+    `trong_my=True` giới hạn trong khung toạ độ nước Mỹ (gồm Alaska, Hawaii). Cần cho kênh dùng
+    BẢN ĐỒ BANG MỸ: dữ liệu toàn cầu trả về Nga/Chile/Fiji thì bản đồ Mỹ không tô được ô nào."""
+    than = {"format": "geojson", "minmagnitude": do_lon, "starttime": tu_ngay,
+            "orderby": "magnitude", "limit": max(1, min(200, n))}
+    if trong_my:
+        than.update({"minlatitude": 18.0, "maxlatitude": 72.0,
+                     "minlongitude": -180.0, "maxlongitude": -66.0})
+    u = "https://earthquake.usgs.gov/fdsnws/event/1/query?" + urllib.parse.urlencode(than)
     d = _goi(u)
     ra = []
     for x in ((d or {}).get("features") or []):

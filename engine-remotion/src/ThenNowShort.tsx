@@ -63,7 +63,9 @@ const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number }> = ({ p, a
         transform: `translateY(-50%) scale(${0.4 + chg * 0.6})`, opacity: chg }}>
         <div style={{ background: accent, color: "#0a0c14", fontWeight: 900, fontSize: 58, padding: "12px 40px", borderRadius: 40,
           boxShadow: `0 10px 40px ${accent}88`, fontFamily: "'Poppins',Arial", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 48 }}>⬇</span>{p.change || "NOW"}
+          {/* 26/8 — mũi tên phải theo CHIỀU CỦA SỐ, không phải theo chiều bố cục. Bản cũ luôn
+              vẽ ⬇ nên "+242%" hiện kèm mũi tên đi xuống: người xem đọc ra "giảm". */}
+          <span style={{ fontSize: 48 }}>{/^\s*-/.test(String(p.change || "")) ? "⬇" : "⬆"}</span>{p.change || "NOW"}
         </div>
       </div>
 
