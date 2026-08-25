@@ -2377,3 +2377,21 @@ Vá: ① ô đổi tên thành **"Video trong kho"** (đúng thứ nó đo) · �
 (`✓ kho thật` / `~ bản ghi` / `⚠ D1 im — số cộng dồn`) · ③ lỗi D1 ghi `console.warn`, không nuốt.
 **LUẬT: một con số có nhiều nguồn thì PHẢI hiện nguồn. Không dán nhãn thì mỗi lần lệch là một cuộc
 tranh cãi vô ích.**
+
+### 7.dt — Cắt 71% lượt ghi D1 mà không mất một con số nào (25/8/2026, gói FREE mốc NGÀY)
+Anh xác nhận đang dùng **D1 Free** ⇒ mốc **theo ngày**: 5 triệu dòng đọc · **100.000 dòng ghi** · 5 GB.
+Số đo thật kho `mm0-hot` (24h): đọc **665.157 (13,3%)** · ghi **19.073 (19,1%)** · dung lượng 963 kB.
+**Ghi mới là ô chật nhất**, và nó tăng theo SỐ VIDEO chứ không theo số lần mở dashboard — nâng sản
+lượng gấp 3 là chạm ~57%.
+Truy nguồn: mọi bảng khác chỉ 0-2 dòng ⇒ `render_job` chiếm gần như toàn bộ, ~10 lượt ghi/video. Hai
+chỗ thừa:
+1. Mọi cập nhật mang `script` **vượt qua hãm 12 phút** (đúng — kịch bản là thứ quý, mất là trả tiền
+   Gemini lần hai). Nhưng **D1 KHÔNG LƯU `script`** ⇒ với D1 những lượt đó không thêm một chữ nào.
+2. Ghi từng bước `writing → rendering → qc` chỉ để làm mới mốc thời gian.
+D1 thật sự chỉ cần: **trạng thái CUỐI** (để đếm) + **một mốc còn tươi** (ô "Đang chạy" dùng cửa sổ 45
+phút). Nay: bỏ lượt ghi khi bộ trường D1 quan tâm KHÔNG đổi, và hãm bước trung gian 10 phút;
+`done/failed/ratelimited` **luôn ghi ngay, không bao giờ hãm**.
+Đo trên vòng đời một video: **7 lượt → 2 lượt (cắt 71%)** ⇒ ~19,1% xuống ~**5-6%** trần ngày.
+Chốt bằng `t_cat_luot_ghi_d1_thua` (có ca kiểm `done` KHÔNG bị hãm — hãm nhầm là đếm thiếu video).
+**LUẬT: trước khi tối ưu một khoản chi, hãy ĐO xem nó đi đâu. Ở đây 100% nằm ở một bảng, và 71% là
+lượt ghi không mang thông tin mới cho chính kho đó.**

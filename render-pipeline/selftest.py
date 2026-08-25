@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("cắt lượt ghi D1 thừa (giữ hạn mức FREE)", t_cat_luot_ghi_d1_thua)
     check("số kho THẬT ghi vào D1 (chỗ dashboard đọc)", t_so_kho_that_ghi_vao_d1)
     check("plan tự đối chiếu sổ đếm với số thật (1 lần/ngày)", t_doi_chieu_so_kho_chay_trong_plan)
     check("biến môi trường RỖNG không phá giá trị mặc định", t_bien_moi_truong_rong_khong_pha_mac_dinh)
@@ -1037,6 +1038,44 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_cat_luot_ghi_d1_thua():
+    """D1 gói FREE cho 100.000 lượt GHI/ngày; đo thật đang dùng 19.073 (19,1%) và nó tăng theo SỐ
+    VIDEO (25/8, anh dặn tính toán lượng D1 hợp lý).
+    Gốc lãng phí: mọi cập nhật mang `script` đều VƯỢT hãm 12 phút (đúng, kịch bản là thứ quý) —
+    nhưng **D1 không lưu `script`**, nên với D1 những lượt đó không thêm một chữ nào. Cộng thêm việc
+    ghi từng bước writing→rendering→qc chỉ để làm mới mốc thời gian.
+    D1 chỉ cần: trạng thái CUỐI (để đếm) + MỘT mốc còn tươi (ô "Đang chạy" dùng cửa sổ 45 phút)."""
+    import sys as _s, types as _ty, warnings as _w
+    _w.filterwarnings("ignore")
+    that = _s.modules.get("hot_db")
+    gia = _ty.ModuleType("hot_db"); dem = {"n": 0}
+    gia.bat_ghi = lambda: True
+    gia.ghi_job = lambda *a, **k: dem.__setitem__("n", dem["n"] + 1)
+    _s.modules["hot_db"] = gia
+    import firestore_bridge as FB
+    goc_soft = FB._soft
+    try:
+        FB._soft = lambda f, t="": None
+        FB._LAST_JOB_WRITE.clear(); FB._D1_CUOI.clear(); FB._D1_NHIP.clear()
+        for st, step in (("queued", "bắt đầu"), ("writing", "viết"), ("writing", "viết 2"),
+                         ("rendering", "render"), ("rendering", "render 2"),
+                         ("qc", "kiểm"), ("done", "xong")):
+            FB.update_job("JT1", status=st, step=step, script="{...}")
+        assert dem["n"] <= 3, f"vòng đời 1 video vẫn tốn {dem['n']} lượt ghi D1 (mong ≤3)"
+        # done/failed KHÔNG BAO GIỜ được hãm — nếu hãm thì mất bản ghi để đếm
+        FB._D1_CUOI.clear(); FB._D1_NHIP.clear(); dem["n"] = 0
+        FB.update_job("JT2", status="rendering", step="a")
+        FB.update_job("JT2", status="done", step="xong", drive_id="d1")
+        assert dem["n"] == 2, f"done bị hãm oan -> đếm thiếu video: {dem['n']}"
+        FB._D1_CUOI.clear(); FB._D1_NHIP.clear()
+    finally:
+        FB._soft = goc_soft
+        if that is not None:
+            _s.modules["hot_db"] = that
+        else:
+            _s.modules.pop("hot_db", None)
 
 
 def t_so_kho_that_ghi_vao_d1():

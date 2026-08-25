@@ -647,6 +647,13 @@ def _chu(owner: str = "") -> str:
     return owner or _OWNER_HINT[0] or os.environ.get("OWNER_UID", "") or ""
 # JOB ĐANG MỞ của tiến trình này -> đóng nốt lúc thoát. Xem _dong_job_bo_ngo().
 _JOB_MO: set = set()
+# job_id -> bộ trường D1 đã ghi lần cuối. Xem chỗ dùng trong update_job (cắt ghi trùng).
+_D1_CUOI: dict = {}
+_D1_NHIP: dict = {}          # job_id -> mốc ghi D1 gần nhất (hãm bước trung gian)
+
+
+class _BoQuaD1(Exception):
+    """Cố ý bỏ một lượt ghi D1 (hãm nhịp) — không phải lỗi."""
 _JOB_CH: dict = {}          # job_id -> kênh (update_job không nhận channel, new_job nhớ hộ)
 _JOB_TY: dict = {}          # job_id -> long/short (cùng lý do)
 # KHO KEY ẢNH BỀN (24/8) — xem _giu_key_anh().
@@ -2368,12 +2375,36 @@ def update_job(job_id: str, **patch):
     # nuốt lỗi, việc chính không hề hấn.
     try:
         import hot_db as _H
-        if _H.bat_ghi():
+        # 25/8 — CẮT LƯỢT GHI D1 KHÔNG MANG THÔNG TIN MỚI. Đo thật: `render_job` chiếm gần như toàn
+        # bộ 19.073 lượt ghi/ngày (19,1% trần FREE 100K), tức ~10 lượt/video. Lý do: mọi cập nhật
+        # mang `script` đều VƯỢT QUA hãm 12 phút (đúng, vì kịch bản là thứ quý) — nhưng **D1 KHÔNG
+        # LƯU `script`** (xem chữ ký ghi_job), nên với D1 những lượt đó không thêm một chữ nào.
+        # Chỉ ghi D1 khi trường D1 THẬT SỰ quan tâm có đổi: status · step · title · drive_id · queued.
+        _kd = (str(st or ""), str(patch.get("step") or ""), str(patch.get("title") or ""),
+               str(patch.get("drive_id") or ""), bool(patch.get("queued")))
+        _cu = _D1_CUOI.get(job_id)
+        # HÃM RIÊNG CHO D1 Ở BƯỚC TRUNG GIAN. D1 chỉ cần hai thứ: trạng thái CUỐI (để đếm) và MỘT
+        # mốc thời gian còn tươi (để biết job còn sống — ô "Đang chạy" dùng cửa sổ 45 phút). Ghi
+        # từng bước writing→rendering→qc chỉ để làm mới mốc, mà mỗi bước là một lượt ghi. Hãm 10
+        # phút: video 10-15 phút còn ~1 mốc giữa chừng, vẫn thừa tươi cho cửa sổ 45 phút.
+        # done/failed/ratelimited LUÔN ghi ngay, không qua hãm.
+        _tt = _t.time()
+        if st not in ("done", "failed", "ratelimited") and _tt - _D1_NHIP.get(job_id, 0) < 600:
+            raise _BoQuaD1()
+        if _H.bat_ghi() and _kd != _cu:
+            _D1_NHIP[job_id] = _tt
+            _D1_CUOI[job_id] = _kd
+            del_ = len(_D1_CUOI) - 400
+            if del_ > 0:                       # giữ trí nhớ nhỏ, không phình theo số job
+                for _k in list(_D1_CUOI)[:del_]:
+                    _D1_CUOI.pop(_k, None)
             _H.ghi_job(_chu(), job_id, _JOB_CH.get(job_id, ""),
                        str(patch.get("type") or _JOB_TY.get(job_id, "")), str(st or ""),
                        str(patch.get("step") or ""),
                        patch.get("title"), patch.get("drive_id"),
                        bool(patch.get("queued")), patch["updated_at"])
+    except _BoQuaD1:
+        pass                     # cố ý bỏ lượt ghi D1 này (hãm nhịp), không phải lỗi
     except Exception:
         pass
     # đang chạy trên B2 -> vẫn để lại nhịp sống ở B cho dashboard nhìn thấy (xem ghi_nhip_song)
