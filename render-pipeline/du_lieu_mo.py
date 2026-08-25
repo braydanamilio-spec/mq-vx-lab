@@ -183,14 +183,18 @@ def nhieu_chuoi_bls(tens: list[str], tu_nam: int, den_nam: int, key: str = "") -
 def phim_tu_lieu(tu_khoa: str, n: int = 6) -> list[dict]:
     """Phim công cộng khớp từ khoá. Trả [{id, tieu_de, nam, link}] — tải về được, dùng thoải mái."""
     q = f'({tu_khoa}) AND mediatype:movies AND (licenseurl:*publicdomain* OR collection:prelinger)'
+    # Phải xin ĐỦ trường. Bản cũ chỉ xin `identifier` nên `title` luôn rỗng và tiêu đề rơi về mã
+    # lưu trữ ("205471_Home_Movie_010144") — đọc lên nghe như video lỗi.
     url = ("https://archive.org/advancedsearch.php?" + urllib.parse.urlencode(
-        {"q": q, "fl[]": "identifier", "rows": max(1, min(30, n)), "output": "json"}))
+        [("q", q), ("fl[]", "identifier"), ("fl[]", "title"), ("fl[]", "year"),
+         ("fl[]", "description"), ("rows", max(1, min(30, n))), ("output", "json")]))
     d = _goi(url)
     ra = []
     for x in (((d or {}).get("response") or {}).get("docs") or []):
         i = x.get("identifier")
         if i:
-            ra.append({"id": i, "tieu_de": str(x.get("title") or i)[:90],
+            ra.append({"id": i, "tieu_de": " ".join(str(x.get("title") or i).split())[:90],
+                       "mo_ta": " ".join(str(x.get("description") or "").split())[:200],
                        "nam": x.get("year", ""), "link": f"https://archive.org/details/{i}",
                        "nguon": "Internet Archive (public domain)"})
     return ra

@@ -691,8 +691,14 @@ def _pk_tu_lieu(D, ky):
     r = D.phim_tu_lieu(ky.get("tu_khoa", "america 1950"), 20)
     # Archive.org nhiều mục chỉ có MÃ LƯU TRỮ làm tiêu đề ("205471_Home_Movie_010144"). Đọc lên
     # nghe như lỗi. Chỉ nhận tiêu đề người đọc được: ít nhất hai từ chữ cái thật.
-    r = [x for x in r if len(_re.findall(r"[A-Za-z]{3,}", str(x.get("tieu_de") or ""))) >= 2
-         and not _re.match(r"^[\d_]+$", str(x.get("tieu_de") or "").split()[0])]
+    def _doc_duoc(t: str) -> bool:
+        t = str(t or "").strip()
+        # mã lưu trữ nhận ra ở hai dấu: dính gạch dưới, và không có khoảng trắng nào
+        return (" " in t and "_" not in t and "#" not in t
+                and len(_re.findall(r"[A-Za-z]{3,}", t)) >= 2
+                and not _re.search(r"\d{5,}", t))
+
+    r = [x for x in r if _doc_duoc(x.get("tieu_de"))]
     if not r:
         return None
     v = r[0]
