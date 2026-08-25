@@ -2073,6 +2073,53 @@ def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
     return out, story, ok, info
 
 
+def make_receipts(channel, niche, out, keys=None, api_key=None, tier="normal",
+                  accent="#7C5CFF", accent2="#22D3EE",
+                  avoid=None, on_status=None, on_limit=None, on_ok=None, resume_story=None):
+    """KÊNH RECEIPTS A-Z — KHÔNG GỌI AI MỘT LẦN NÀO.
+
+    Khác mọi make_* còn lại: kịch bản không do Gemini viết mà dựng thẳng từ BẢN GHI CHI TIÊU LIÊN
+    BANG (USAspending.gov, không cần key). Hệ quả thực tế:
+      • không tốn một đơn vị quota nào -> chạy được cả khi 3 project Firestore/Gemini cạn sạch
+      • không có đường "bịa": thiếu dữ liệu thì trả None và bỏ lượt, chứ không sinh số giả
+      • đề tài không bao giờ cạn vì dữ liệu tự cập nhật theo năm ngân sách
+    `keys` chỉ dùng cho thumbnail (nếu có); không có key vẫn ra video."""
+    import receipt_pilot as RP
+    st = on_status or (lambda *a, **k: None)
+    out = os.path.abspath(out)
+    if resume_story:
+        story = resume_story; st("writing", "♻️ Dùng lại kịch bản đã lưu")
+    else:
+        st("writing", "Đọc bản ghi chi tiêu liên bang (không dùng AI)")
+        story = RP.chon_de_tai(avoid=avoid, niche=niche)
+        if not story:
+            raise SystemExit("❌ RECEIPTS: không nguồn mở nào trả đủ dữ liệu — bỏ lượt, không bịa")
+    score = (story.get("self_score") or {}).get("total")
+    st("rendering", "Giọng + render bảng", title=story.get("title"), score=score, script=_ckpt_json(story))
+    sdir = os.path.join(PUB, "narration", "_receipts_" + slug(channel)); os.makedirs(sdir, exist_ok=True)
+    props = build_ranked_props(story, sdir, handle=channel_handle(channel))
+    props["accent"] = accent
+    pf = os.path.join(PUB, f"_receipts_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
+    print(f"   🎞️ render RankedShort/receipts ({len(props['items'])} item) …")
+    run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RankedShort", out,
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    "--concurrency=2", "--log=error"], cwd=ENG, label="RankedShort(receipts)")
+    st("qc", "Kiểm tra chất lượng")
+    ok, info = qc(out); info["score"] = score
+    try:
+        _t = (story.get("items") or [{}])[0]
+        _th = doc_thumb(channel, out, big=(story.get("title") or channel),
+                        stat=_t.get("stat", ""), stat_label=_t.get("name", ""),
+                        hook=story.get("title") or channel, accent=accent, accent2=accent2,
+                        comp_id="RankedShort", props_path=pf)
+        if _th:
+            info["thumb"] = _th
+    except Exception as e:
+        print("   ⚠️ thumb skip:", e)
+    print(f"   {'✅' if ok else '❌'} QC receipts {info}")
+    return out, story, ok, info
+
+
 def build_scaled_props(story, sdir, handle="@scaledusa", music="music/km_ascending.mp3"):
     """Dựng props ScaledShort: TTS (intro + mỗi item + outro) -> timing bám giọng + 1 track. Emoji có sẵn từ story."""
     rel = lambda p: os.path.relpath(p, PUB)

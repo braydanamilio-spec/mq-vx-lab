@@ -109,7 +109,8 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
       {/* TIÊU ĐỀ — fixed header, always visible */}
       <div style={{ position: "absolute", top: 74, left: 0, right: 0, textAlign: "center", padding: "0 50px", zIndex: 5 }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 28, letterSpacing: 2, padding: "7px 20px", borderRadius: 12 }}>🎲 LONGSHOT</div>
-        <div style={{ color: "#fff", fontWeight: 900, fontSize: 54, lineHeight: 1.04, marginTop: 14, textShadow: "0 4px 24px #000c", textWrap: "balance" as any, opacity: 0.5 + introP * 0.5 }}>{title}</div>
+        {/* Tiêu đề lúc mở đầu do Bookend vẽ. Header ẩn đi trong quãng đó, nếu không sẽ có hai bản tiêu đề chồng nhau (lỗi 25/8). */}
+        <div style={{ display: f < introF ? "none" : undefined, color: "#fff", fontWeight: 900, fontSize: 54, lineHeight: 1.04, marginTop: 14, textShadow: "0 4px 24px #000c", textWrap: "balance" as any, opacity: 0.5 + introP * 0.5 }}>{title}</div>
       </div>
 
       {/* CAMERA: outer scales (zoom) around the fixed anchor point; inner translates the tall ladder track */}
@@ -191,9 +192,8 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
 
       {/* INTRO overlay */}
       {f < introF ? (
-        <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 44%, ${accent}22, #06050f 70%)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+        <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 44%, ${accent}22, #06050f 70%)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620, zIndex: 10 }}>
           <div style={{ fontSize: 150, transform: `scale(${introP})` }}>🪜</div>
-          <div style={{ color: "#fff", fontWeight: 900, fontSize: 74, marginTop: 8, textAlign: "center", padding: "0 60px", opacity: introP, textWrap: "balance" as any }}>{title}</div>
         </AbsoluteFill>
       ) : null}
 

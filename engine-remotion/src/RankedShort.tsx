@@ -77,7 +77,8 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 90, left: 0, right: 0, textAlign: "center", padding: "0 50px" }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>🏆 RANKED</div>
-        <div style={{ color: "#fff", fontWeight: 900, fontSize: 68, lineHeight: 1.02, marginTop: 18, textShadow: "0 4px 24px #000c", textWrap: "balance" as any, transform: `translateY(${(1 - introP) * 20}px)`, opacity: 0.4 + introP * 0.6 }}>{title}</div>
+        {/* Tiêu đề lúc mở đầu do Bookend vẽ. Header ẩn đi trong quãng đó, nếu không sẽ có hai bản tiêu đề chồng nhau (lỗi 25/8). */}
+        <div style={{ display: f < introF ? "none" : undefined, color: "#fff", fontWeight: 900, fontSize: 68, lineHeight: 1.02, marginTop: 18, textShadow: "0 4px 24px #000c", textWrap: "balance" as any, transform: `translateY(${(1 - introP) * 20}px)`, opacity: 0.4 + introP * 0.6 }}>{title}</div>
         {subtitle ? <div style={{ color: "#a9b0cc", fontWeight: 700, fontSize: 32, marginTop: 8 }}>{subtitle}</div> : null}
       </div>
 
@@ -104,9 +105,8 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
 
       {/* INTRO overlay ngắn */}
       {f < introF ? (
-        <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #7C5CFF22, #07060f 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #7C5CFF22, #07060f 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620 }}>
           <div style={{ fontSize: 150, transform: `scale(${introP})` }}>🏆</div>
-          <div style={{ color: "#fff", fontWeight: 900, fontSize: 80, marginTop: 8, textAlign: "center", padding: "0 60px", opacity: introP, textWrap: "balance" as any }}>{title}</div>
         </AbsoluteFill>
       ) : null}
 

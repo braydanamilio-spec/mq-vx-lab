@@ -24,6 +24,7 @@ giới giữ cho kênh này đáng tin.
 """
 from __future__ import annotations
 
+import datetime as _datetime
 import json
 import os
 import sys
@@ -126,6 +127,27 @@ def dung_story(de_tai: str, nam: int, n: int = 6) -> dict | None:
         "_that": True,      # dấu: mọi con số đến từ bản ghi, không do AI nghĩ ra
         "self_score": {"total": 92},
     }
+
+
+def chon_de_tai(avoid=None, niche: str = "") -> dict | None:
+    """Chọn đề tài CHƯA làm rồi dựng kịch bản. Trả None nếu không nguồn nào đủ dữ liệu.
+
+    Xoay vòng đề tài × năm ngân sách nên kho đề tài không bao giờ cạn, và mỗi năm dữ liệu mới về
+    là cả bộ đề tài cũ lại có số liệu mới. `avoid` là danh sách tiêu đề đã ra lò — khớp thì bỏ qua,
+    đây là chỗ chặn trùng ý mà không cần gọi AI."""
+    da_lam = [str(x).lower() for x in (avoid or [])]
+    nam_nay = _datetime.date.today().year
+    # Kênh nào có niche khớp một đề tài thì ưu tiên đề tài đó, còn lại xoay theo thứ tự cố định.
+    khoa = [k for k in DE_TAI if k in str(niche or "").lower()] + [k for k in DE_TAI]
+    for nam in range(nam_nay - 1, nam_nay - 6, -1):
+        for k in dict.fromkeys(khoa):
+            ten, _ = DE_TAI[k]
+            if any(ten.lower() in x and str(nam) in x for x in da_lam):
+                continue
+            st = dung_story(k, nam)
+            if st:
+                return st
+    return None
 
 
 def chay(de_tai: str, nam: int) -> int:

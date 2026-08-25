@@ -357,6 +357,42 @@ def t_key_pool_sach():
     assert len(order) == 2, order
     print("  ✅ hồ key viết sạch: chỉ còn key AI (loại px:/pb:/r2:)")
 
+
+def t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau():
+    """MỘT tiêu đề lúc mở đầu, không phải ba.
+
+    24/8 thêm <Bookend> vẽ thẻ mở đầu CÓ TIÊU ĐỀ cho mọi short, nhưng không ai gỡ lớp phủ intro
+    cũ của từng component — lớp đó cũng vẽ tiêu đề — và header thì luôn bật. Kết quả anh nhìn
+    thấy 25/8: ba bản tiêu đề chồng lên nhau suốt introSec giây đầu, ở 6/7 component short.
+    Đây là lỗi CHỈ LỘ RA KHI XEM, không có ngoại lệ nào trong log, nên phải chặn bằng mã nguồn:
+      • không component nào được vẽ {title} bên trong lớp phủ `f < introF`
+      • tiêu đề header phải tự ẩn khi thẻ mở đầu còn trên màn hình"""
+    import os, re
+    goc = os.path.dirname(os.path.abspath(__file__))
+    src = os.path.join(goc, "..", "engine-remotion", "src")
+    xau = []
+    for ten in sorted(os.listdir(src)):
+        if not ten.endswith(".tsx"):
+            continue
+        m = io.open(os.path.join(src, ten), encoding="utf-8").read()
+        if "<Bookend" not in m:
+            continue
+        # (a) lớp phủ intro riêng KHÔNG được vẽ lại tiêu đề
+        for kh in re.finditer(r"f < introF \?|\{f < introF", m):
+            # Lùi 30 ký tự để nhìn thấy chữ "display:" đứng TRƯỚC mốc — chính cổng ẩn header cũng
+            # khớp mẫu này, cắt từ đúng mốc thì tưởng nhầm nó là lớp phủ vẽ lại tiêu đề.
+            doan = m[max(0, kh.start() - 30): kh.start() + 1400]
+            if ">{title}</div>" in doan and "display: f < introF" not in doan[:150]:
+                xau.append(f"{ten}: lớp phủ intro vẽ lại {{title}} (Bookend đã vẽ)")
+                break
+        # (b) mọi chỗ component tự vẽ tiêu đề phải có cổng ẩn theo introF
+        tu_ve = m.count(">{title}</div>")
+        co_cong = m.count('display: f < introF ? "none"')
+        if tu_ve > co_cong:
+            xau.append(f"{ten}: {tu_ve} chỗ tự vẽ title nhưng chỉ {co_cong} chỗ có cổng ẩn khi mở đầu")
+    assert not xau, "tiêu đề chồng nhau lúc mở đầu:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -368,6 +404,7 @@ def main():
     check("pool vẽ cf-trước / vision gemini-trước", t_ai_pool_split)
     check("đọc-mềm: quota chết không ném", t_soft_read)
     check("cổng dark_ok theo kênh", t_dark_ok)
+    check("mở đầu chỉ MỘT tiêu đề (Bookend), không chồng ba", t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau)
     check("_extract_json bóc ```json", t_extract_json)
     check("B2 failover: thiếu env từ chối êm", t_b2_failover)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)

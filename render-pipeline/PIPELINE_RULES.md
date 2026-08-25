@@ -2787,3 +2787,15 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   **từ dài nhất** (nhiều từ thì xuống dòng được) + rộng 330 + sàn 26px. Cùng nguyên tắc với tiêu đề Cinematic.
 - **QC báo "quá ngắn 0.0s" cho file render THÀNH CÔNG**: lệnh render chạy `cwd=engine-remotion` nên đường dẫn
   ra tương đối rơi vào `engine-remotion/out`, còn `qc()` tìm ở `render-pipeline/out`. Đường dẫn ra phải TUYỆT ĐỐI.
+
+### BA tiêu đề chồng nhau lúc mở đầu (25/8 — anh phát hiện bằng mắt, log không hề báo)
+`Bookend` (24/8) vẽ thẻ mở đầu CÓ TIÊU ĐỀ cho mọi short, nhưng lớp phủ intro cũ của từng component
+vẫn còn và cũng vẽ tiêu đề, cộng header luôn bật → **3 bản tiêu đề đè nhau suốt introSec giây đầu,
+ở 6/7 component short** (Longshot · Pulse · Scaled · Ranked · Swarm · ThenNow).
+- **Luật**: `Bookend` là NƠI DUY NHẤT vẽ tiêu đề lúc mở đầu. Lớp phủ intro riêng chỉ giữ emoji motif
+  (đẩy `paddingBottom: 620` để không nằm sau chữ); header tự ẩn bằng `display: f < introF ? "none"`.
+- **Chốt**: `t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau` — đã thử làm hỏng lại, chốt bắt đúng.
+- **Bài học rộng hơn**: thêm một lớp dùng chung cho N component thì phải GỠ phần lớp cũ làm trùng ở
+  cả N, không chỉ ở component đang test.
+- Chú thích trong JSX phải bọc `{/* */}`. Để trần `/* ... <Tag> ... */` làm esbuild đọc thành thẻ thật
+  và gãy build toàn bộ engine.

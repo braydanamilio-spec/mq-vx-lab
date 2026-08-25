@@ -157,7 +157,8 @@ export const SwarmShort: React.FC<SwarmProps> = (props) => {
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 90, left: 0, right: 0, textAlign: "center", padding: "0 50px" }}>
         <div style={{ display: "inline-block", background: color, color: "#04120f", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>🐝 SWARM</div>
-        <div style={{ color: "#fff", fontWeight: 900, fontSize: 66, lineHeight: 1.02, marginTop: 18, textShadow: "0 4px 24px #000c", textWrap: "balance" as any }}>{title}</div>
+        {/* Tiêu đề lúc mở đầu do Bookend vẽ. Header ẩn đi trong quãng đó, nếu không sẽ có hai bản tiêu đề chồng nhau (lỗi 25/8). */}
+        <div style={{ display: f < introF ? "none" : undefined, color: "#fff", fontWeight: 900, fontSize: 66, lineHeight: 1.02, marginTop: 18, textShadow: "0 4px 24px #000c", textWrap: "balance" as any }}>{title}</div>
       </div>
 
       {/* SÂN KHẤU HẠT — mỗi item render trong cửa sổ [start, start+dur+DISPERSE] để tan/hội tụ chồng lấp mượt */}
@@ -199,9 +200,8 @@ export const SwarmShort: React.FC<SwarmProps> = (props) => {
 
       {/* INTRO overlay */}
       {f < introF ? (
-        <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #0D948833, #050908 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #0D948833, #050908 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620 }}>
           <div style={{ fontSize: 140, transform: `scale(${introP})` }}>🐝</div>
-          <div style={{ color: "#fff", fontWeight: 900, fontSize: 76, marginTop: 8, textAlign: "center", padding: "0 60px", opacity: introP, textWrap: "balance" as any }}>{title}</div>
         </AbsoluteFill>
       ) : null}
 

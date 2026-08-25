@@ -118,9 +118,8 @@ export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
 
       {/* INTRO */}
       {f < introF ? (
-        <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #EC489922, #08060a 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #EC489922, #08060a 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620 }}>
           <div style={{ fontSize: 140, transform: `scale(${introP})` }}>⏳</div>
-          <div style={{ color: "#fff", fontWeight: 900, fontSize: 82, marginTop: 6, textAlign: "center", padding: "0 60px", opacity: introP, textWrap: "balance" as any }}>{title}</div>
         </AbsoluteFill>
       ) : null}
 

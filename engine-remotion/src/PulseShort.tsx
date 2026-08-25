@@ -239,7 +239,8 @@ export const PulseShort: React.FC<PulseProps> = (props) => {
         {/* TIÊU ĐỀ */}
         <div style={{ position: "absolute", top: 76, left: 0, right: 0, textAlign: "center", padding: "0 50px", zIndex: 3 }}>
           <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 28, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>🎚️ PULSE</div>
-          <div style={{ color: "#fff", fontWeight: 900, fontSize: 62, lineHeight: 1.02, marginTop: 16, textShadow: "0 4px 24px #000c", textWrap: "balance" as any }}>{title}</div>
+          {/* Tiêu đề lúc mở đầu do Bookend vẽ. Header ẩn đi trong quãng đó, nếu không sẽ có hai bản tiêu đề chồng nhau (lỗi 25/8). */}
+        <div style={{ display: f < introF ? "none" : undefined, color: "#fff", fontWeight: 900, fontSize: 62, lineHeight: 1.02, marginTop: 16, textShadow: "0 4px 24px #000c", textWrap: "balance" as any }}>{title}</div>
         </div>
 
         {/* ITEMS — mỗi item 1 Sequence riêng, gauge reset & kim quét lại từ đầu */}
@@ -251,9 +252,8 @@ export const PulseShort: React.FC<PulseProps> = (props) => {
 
         {/* INTRO overlay */}
         {f < introF ? (
-          <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 42%, ${accent}22, #07050a 70%)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 4 }}>
+          <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 42%, ${accent}22, #07050a 70%)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620, zIndex: 4 }}>
             <div style={{ fontSize: 150, transform: `scale(${introP})` }}>🎚️</div>
-            <div style={{ color: "#fff", fontWeight: 900, fontSize: 76, marginTop: 8, textAlign: "center", padding: "0 60px", opacity: introP, textWrap: "balance" as any }}>{title}</div>
           </AbsoluteFill>
         ) : null}
 

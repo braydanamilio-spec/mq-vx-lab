@@ -55,7 +55,8 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 96, left: 0, right: 0, textAlign: "center", padding: "0 50px" }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>📏 SCALED</div>
-        <div style={{ color: "#fff", fontWeight: 900, fontSize: 70, lineHeight: 1.02, marginTop: 18, textShadow: "0 4px 24px #000c", textWrap: "balance" as any }}>{title}</div>
+        {/* Tiêu đề lúc mở đầu do Bookend vẽ. Header ẩn đi trong quãng đó, nếu không sẽ có hai bản tiêu đề chồng nhau (lỗi 25/8). */}
+        <div style={{ display: f < introF ? "none" : undefined, color: "#fff", fontWeight: 900, fontSize: 70, lineHeight: 1.02, marginTop: 18, textShadow: "0 4px 24px #000c", textWrap: "balance" as any }}>{title}</div>
         {subtitle ? <div style={{ color: "#9fc4ac", fontWeight: 700, fontSize: 32, marginTop: 8 }}>{subtitle}</div> : null}
       </div>
 
@@ -85,9 +86,8 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
 
       {/* INTRO overlay */}
       {f < introF ? (
-        <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #2FA84F22, #060b08 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #2FA84F22, #060b08 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620 }}>
           <div style={{ fontSize: 150, transform: `scale(${introP})` }}>📏</div>
-          <div style={{ color: "#fff", fontWeight: 900, fontSize: 78, marginTop: 8, textAlign: "center", padding: "0 60px", opacity: introP, textWrap: "balance" as any }}>{title}</div>
         </AbsoluteFill>
       ) : null}
 
