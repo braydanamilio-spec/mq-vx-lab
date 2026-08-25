@@ -2477,3 +2477,12 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   vào đó thì không ai thấy. `print_exc_gon()` thay cả 25 chỗ; cuối phiên `bao_da_luong()` in tổng
   số lượt để "im lặng" không thành "giấu". Chốt: `t_nen_loi_da_luong_khong_de_quy` — chốt này còn
   bắt cái bẫy tự gây: lệnh thay hàng loạt ăn luôn dòng nằm TRONG hàm mới ⇒ đệ quy vô hạn.
+
+- **Thư viện video lọc theo ngày phải đọc D1, không đọc Firestore.** (25/8) Ảnh chụp: "Tất cả kênh
+  (0)" khi lọc *Hôm nay*, còn *7 ngày* ra 85. Biểu thức lọc không sai — **nguồn** sai:
+  `__rsJobsData` đọc từ Firestore B, mà hôm nay B ăn 429 nên 399 video làm trong ngày không có bản
+  ghi ở B (chúng ở D1 + bản sao B2) ⇒ lọc "hôm nay" trên danh sách chỉ còn video ngày trước = 0,
+  còn "7 ngày" vẫn thấy 85 cái cũ. Nay `/api/hot-jobs` trả danh sách từ D1 và **chính SQL đó lọc
+  ngày**, dùng đúng cột `updated_at` như ô "📅 Hôm nay" ⇒ hai chỗ không thể ra hai số khác nhau.
+  Bản ghi Firestore chỉ còn dùng để bù cột D1 không giữ (ảnh nền, điểm QC, kho chứa). D1 im thì rơi
+  về lọc cũ. Đo sau khi vá: 400 video / 45 kênh cho hôm nay. Đệm 5' mỗi mốc lọc (~6,9% trần D1 free).
