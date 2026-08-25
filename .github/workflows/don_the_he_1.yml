@@ -45,6 +45,10 @@ jobs:
           FIREBASE_PROJECT_ID_B:            ${{ secrets.FIREBASE_PROJECT_ID_B }}
           OWNER_UID:                        ${{ secrets.OWNER_UID }}
           AUTOPUBLISHER_SRC:                ${{ github.workspace }}/_autopublisher/src
+          # storage.py cần HOT_KEY để dùng lớp cứu KV khi Firestore cạn hạn mức —
+          # thiếu là bước dọn kho đứng im đúng lúc quota hết (chốt selftest bắt).
+          HOT_KEY:                          ${{ secrets.HOT_KEY }}
+          HOT_MODE:                         on
         run: |
           ARGS=""
           if [ "${{ github.event.inputs.lam_that }}"    = "1" ]; then ARGS="$ARGS --that"; fi

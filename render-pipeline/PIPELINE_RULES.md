@@ -2855,3 +2855,11 @@ tắt kiếm tiền.
   đọc-nhiều có 0-1 bài thuộc chủ đề quan hệ, và bài khớp là tên ban nhạc. Đổi sang đo lượt đọc
   một DANH SÁCH BÀI CỐ ĐỊNH (`wiki_bai`) — vẫn số thật, đúng chủ đề, và không moi vào nhóm 18+.
 - Chốt `t_cong_an_toan_noi_dung` kiểm cả hai vế: nhận diện đúng, và đủ 7 đường đều gọi cổng.
+
+### 26/8 — `| tail -1` che mất mã thoát của selftest
+Chuỗi `python3 selftest.py 2>&1 | tail -1 && git commit && git push` **luôn push**, kể cả khi
+selftest fail: mã thoát của một pipeline là mã của lệnh CUỐI (`tail`), không phải của `python3`.
+Lần này chốt "bước dùng kho Drive phải có HOT_KEY" đã bắt đúng lỗi thật trong workflow dọn kho,
+nhưng bản hỏng vẫn được push vì mã thoát bị nuốt.
+- **Luật**: chạy `python3 selftest.py > /tmp/st.txt 2>&1; echo $?` rồi mới commit, hoặc dùng
+  `set -o pipefail`. Đừng bao giờ nối `&&` sau một pipeline có `tail`/`head`/`grep`.
