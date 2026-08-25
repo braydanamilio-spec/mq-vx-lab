@@ -46,7 +46,7 @@ TTS_TIMEOUT = 120     # giây cho MỘT lần gọi
 TTS_TRIES = 3         # số lần thử lại khi mạng chập
 
 
-async def _run(text: str, mp3_path: str, voice: str, rate: str):
+async def _run(text: str, mp3_path: str, voice: str, rate: str, pitch: str = "+0Hz"):
     """Ghi mp3 + gom SentenceBoundary — CÓ trần thời gian và thử lại.
 
     edge-tts là dịch vụ MẠNG của Microsoft. Trước đây gọi trần trụi: không timeout, không retry.
@@ -79,9 +79,9 @@ async def _synth_once(text: str, mp3_path: str, voice: str, rate: str):
     # + thời lượng CHÍNH XÁC của từng từ (đo thật: 13 từ, sai số 0). Máy đọc cũ không hỗ trợ thì
     # tự lùi về kiểu cũ (không làm hỏng gì).
     try:
-        comm = edge_tts.Communicate(text, voice, rate=rate, boundary="WordBoundary")
+        comm = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch, boundary="WordBoundary")
     except TypeError:
-        comm = edge_tts.Communicate(text, voice, rate=rate)
+        comm = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
     sentences = []
     with open(mp3_path, "wb") as f:
         async for chunk in comm.stream():
@@ -187,10 +187,10 @@ def _to_srt(subs: list[dict]) -> str:
     return "\n".join(lines)
 
 
-_ACTIVE = {"voice": None, "rate": None}
+_ACTIVE = {"voice": None, "rate": None, "pitch": None}
 
 
-def set_voice(voice: str = None, rate: str = None):
+def set_voice(voice: str = None, rate: str = None, pitch: str = None):
     """Đặt GIỌNG + TỐC ĐỘ cho kênh đang render (gọi 1 lần ở đầu mỗi kênh trong run_render.py).
     Mọi TK.synth() sau đó tự dùng — khỏi phải sửa 20+ điểm gọi rải rác.
 
@@ -200,13 +200,20 @@ def set_voice(voice: str = None, rate: str = None):
     hệ 40 kênh cùng chủ). Mỗi kênh 1 giọng riêng = khác biệt THẬT, 100% free (edge-tts)."""
     _ACTIVE["voice"] = voice or None
     _ACTIVE["rate"] = rate or None
+    _ACTIVE["pitch"] = pitch or None
 
 
-def synth(text: str, mp3_path: str, voice: str = None, rate: str = None):
+def synth(text: str, mp3_path: str, voice: str = None, rate: str = None, pitch: str = None):
     """Trả (duration_giây, subs[Word], srt_text). subs đúng format RaceLong.
     voice/rate=None -> lấy theo kênh đang render (set_voice), không có thì về mặc định."""
     voice = voice or _ACTIVE["voice"] or DEFAULT_VOICE
     rate = rate or _ACTIVE["rate"] or DEFAULT_RATE
+    # CAO ĐỘ — đòn bẩy MẠNH NHẤT để biến giọng phát thanh viên thành giọng NHÂN VẬT (25/8).
+    # edge-tts vẫn nhận `pitch` nhưng suốt từ đầu hệ chưa hề truyền: nên đại bàng khoác lác, gấu
+    # mèo láu cá, bà hàng xóm nhiều chuyện đều nói bằng đúng một chất giọng đọc bản tin. Hạ 15Hz
+    # là nghe bệ vệ/nặng ký, nâng 20-30Hz là nhỏ con/lanh lợi — khán giả phân biệt được nhân vật
+    # NGAY trong 2 giây đầu mà không tốn thêm một đồng nào.
+    pitch = pitch or _ACTIVE.get("pitch") or "+0Hz"
     # 23/8 — GỐC CỦA "VIDEO 13 GIÂY CÂM": edge-tts trục trặc (mạng/chặn tạm) thì `sentences` rỗng,
     # hàm này lặng lẽ trả dur=0.0. Người gọi cộng 0 vào timeline -> ra video ngắn tũn KHÔNG CÓ LỜI,
     # mà QC cũ chỉ hỏi "có luồng audio không" nên vẫn chấm đạt rồi đẩy lên kho. Nay: thử lại, vẫn
@@ -217,7 +224,7 @@ def synth(text: str, mp3_path: str, voice: str = None, rate: str = None):
         if wait:
             _t.sleep(wait)
         try:
-            sentences = asyncio.run(_run(text, mp3_path, voice, rate))
+            sentences = asyncio.run(_run(text, mp3_path, voice, rate, pitch))
             subs = _expand_words(sentences)
             dur = (subs[-1]["t"] + subs[-1]["d"]) if subs else 0.0
         except Exception as e:

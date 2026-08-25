@@ -1880,6 +1880,25 @@ TOON_SYS = (
  "5) HOOK: the title is a VIRAL curiosity hook under 8 words in US shorts style (unexpected conflict, "
  "a challenge, or a relatable pain — e.g. 'The HOA fine', 'Why is gas $9?'); line 1 must hook within 2 "
  "seconds — start mid-conflict, never with greetings.\n"
+ # 25/8 — NÂNG KỊCH BẢN LÊN CHUẨN VIRAL MỸ. Năm luật dưới đây là thứ tách một skit "buồn cười
+ # vừa phải" khỏi một skit người ta GỬI CHO BẠN. Không luật nào tốn thêm quota — chỉ là đòi hỏi
+ # cao hơn ở cùng một lượt gọi.
+ "6) ONE REAL FACT, LOAD-BEARING: the joke must SIT ON a real, checkable American fact, rule or "
+ "number (a real law, a real fee, a real average price, a real agency rule). State it plainly in "
+ "one line. If the fact were removed the joke must collapse — that is the test. Never invent a "
+ "statistic; if unsure of the exact number, use a range people can verify.\n"
+ "7) SPECIFIC BEATS GENERIC: '$4.87 convenience fee' beats 'some fee'. 'Tuesday at the DMV' beats "
+ "'at the DMV'. Every line should contain one concrete noun, number or place a real American "
+ "would recognise from their own week.\n"
+ "8) TWO DISTINCT VOICES: A and B must want OPPOSITE things and never agree. Give each a verbal "
+ "tic that repeats (one over-explains and cites rules; the other cuts in with three-word replies). "
+ "A reader must be able to tell who is speaking with the names removed.\n"
+ "9) TURN, DON'T ESCALATE FLAT: line 4-5 must REVERSE the situation (the one who was right becomes "
+ "wrong, or the rule turns out to protect the other side). The punchline lands on that reversal, "
+ "not on a louder version of line 1.\n"
+ "10) LAST LINE IS THE PRODUCT: the final line must be quotable on its own — under 9 words, no "
+ "explanation after it, and it must reframe everything said before. Nothing follows it: no moral, "
+ "no 'so yeah', no call to action.\n"
  'Return STRICT JSON: {"title": str, "scene_base": str (one sentence, the constant setting), '
  '"frames": [{"prompt": str, "line_idx": int}], "dialog": [{"who": "A"|"B", "line": str}], '
  '"self_score": {"funny": 0-100, "hook": 0-100, "clean": 0-100, "total": 0-100}}'

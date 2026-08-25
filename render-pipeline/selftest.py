@@ -443,6 +443,8 @@ def main():
     check("MascotStage động theo từng khung + parallax", t_mascot_stage_dong_tung_khung)
     check("tách nền rig: ĐO màu viền, không khoá cứng", t_tach_nen_khong_khoa_cung_mau)
     check("brandkit qua QC hình (đo pixel rồi soi Vision)", t_brandkit_co_qc_hinh)
+    check("giọng nhân vật có cao độ, hai vai lệch nhau", t_giong_nhan_vat_co_cao_do)
+    check("kịch bản skit mang đủ 5 luật viral", t_kich_ban_co_luat_viral)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2359,6 +2361,35 @@ def t_brandkit_co_qc_hinh():
     assert than.index("flat_bg_metrics") < than.index("verify_image"), \
         "phải ĐO trước SOI sau — gọi Vision trước là đốt quota cho ảnh hỏng hiển nhiên"
     assert "_hong" in src, "ảnh QC trượt bị xoá -> mất bằng chứng để soi"
+
+
+def t_giong_nhan_vat_co_cao_do():
+    """Giọng nhân vật phải truyền được CAO ĐỘ, và hai vai phải lệch nhau đủ để không lẫn.
+
+    25/8 — `edge_tts.Communicate` vẫn nhận `pitch` nhưng hệ chưa bao giờ truyền: đại bàng khoác
+    lác, gấu mèo láu cá, bà hàng xóm nhiều chuyện đều nói bằng đúng một chất giọng đọc bản tin.
+    Cao độ là đòn bẩy mạnh nhất biến giọng phát thanh viên thành giọng nhân vật, và miễn phí."""
+    import json
+    tk = _doc("tts_karaoke.py")
+    assert "pitch=pitch" in tk, "synth không truyền pitch xuống edge-tts"
+    assert 'Communicate(text, voice, rate=rate, pitch=pitch' in tk, "Communicate thiếu pitch"
+    mb = _doc("mascot_build.py")
+    assert "pitch=cao.get(who)" in mb, "mascot_build không truyền cao độ theo vai"
+    d = json.loads(_doc("mascot_channels.json"))
+    for k, v in d.items():
+        assert "pitch_a" in v and "pitch_b" in v, f"{k}: thiếu cao độ"
+        pa, pb = int(v["pitch_a"].replace("Hz", "")), int(v["pitch_b"].replace("Hz", ""))
+        assert abs(pa - pb) >= 12, f"{k}: hai vai chỉ lệch {abs(pa-pb)}Hz — sẽ nghe như một người"
+
+
+def t_kich_ban_co_luat_viral():
+    """Kịch bản skit phải mang 5 luật nâng chất 25/8 — thiếu là tụt về 'buồn cười vừa phải'."""
+    src = _doc("content_brain.py")
+    i = src.index("TOON_SYS = (")
+    than = src[i:i + 5200]
+    for moc in ("ONE REAL FACT", "SPECIFIC BEATS GENERIC", "TWO DISTINCT VOICES",
+                "TURN, DON'T ESCALATE FLAT", "LAST LINE IS THE PRODUCT"):
+        assert moc in than, f"TOON_SYS thiếu luật «{moc}»"
 
 
 if __name__ == "__main__":

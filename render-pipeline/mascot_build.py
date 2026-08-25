@@ -137,11 +137,17 @@ def dung_video(kenh: str, cfg: dict, story: dict, out: str, dai: bool = False,
              for c in cast}
     nhip = {str(c.get("vai", "A")).upper(): (cfg.get(f"rate_{str(c.get('vai','a')).lower()}") or "+0%")
             for c in cast}
+    # CAO ĐỘ RIÊNG TỪNG VAI — thứ khiến hai nhân vật KHÔNG lẫn vào nhau. Giọng neural mặc định đều
+    # là giọng đọc bản tin; lệch cao độ 20-40Hz giữa hai vai là khán giả phân biệt được ngay giây
+    # đầu, không cần nhìn hình. Miễn phí, không tốn thêm lượt gọi nào.
+    cao = {str(c.get("vai", "A")).upper(): (cfg.get(f"pitch_{str(c.get('vai','a')).lower()}") or "+0Hz")
+           for c in cast}
     clips, subs, moc, t = [], [], [], 0.0
     for i, d in enumerate(story.get("dialog") or []):
         who = (d.get("who") or "A").upper()
         mp3 = os.path.join(pub, f"line{i:02d}.mp3")
-        dur, w, _ = TK.synth(d.get("line", ""), mp3, voice=giong.get(who), rate=nhip.get(who))
+        dur, w, _ = TK.synth(d.get("line", ""), mp3, voice=giong.get(who), rate=nhip.get(who),
+                             pitch=cao.get(who))
         clips.append((mp3, t))
         for x in w:
             subs.append({"t": round(x["t"] + t, 3), "d": x["d"], "w": x["w"]})

@@ -2649,3 +2649,14 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   thoát của lệnh trong ngoặc, `LAM_LAI=false` → `[ ]` trả 1 → `set -e` giết cả script. Tái hiện
   được bằng 4 dòng bash. Luật: trong bước có `set -e`, cờ tuỳ chọn phải viết bằng `if/fi`, không
   viết bằng `$(test && echo)`.
+
+- **Giọng nhân vật cần CAO ĐỘ, không chỉ tốc độ.** (25/8) `edge_tts.Communicate` vẫn nhận `pitch`
+  nhưng hệ chưa bao giờ truyền ⇒ đại bàng khoác lác, gấu mèo láu cá, bà hàng xóm nhiều chuyện đều
+  nói bằng đúng một chất giọng đọc bản tin. Nay `synth(pitch=…)` + mỗi vai một cao độ, **hai vai
+  bắt buộc lệch ≥12Hz** (chốt `t_giong_nhan_vat_co_cao_do`) — khán giả phân biệt nhân vật ngay
+  giây đầu mà không tốn thêm lượt gọi nào. Kèm đổi sang giọng hội thoại (Multilingual/Andrew/Emma)
+  thay vì giọng bản tin.
+- **Kịch bản skit: 5 luật viral USA.** (25/8) một-sự-thật-chịu-lực (bỏ sự thật ra là truyện sập) ·
+  cụ thể thắng chung chung ($4.87 thay vì "phí nào đó") · hai giọng đối lập có tật nói riêng ·
+  **câu 4-5 phải LẬT tình huống** (không leo thang phẳng) · câu cuối trích dẫn được một mình, dưới
+  9 chữ, không giải thích thêm. Chốt `t_kich_ban_co_luat_viral`.
