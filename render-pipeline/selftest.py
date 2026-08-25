@@ -439,10 +439,6 @@ def main():
     check("plan KHÔNG render — yêu cầu render-lại giao lane", t_plan_khong_render)
     check("khối __main__ của run_render nằm CUỐI file", t_khoi_main_cuoi_file)
     check("phiên không giữ khoá quá lâu (phiên sau khỏi bị huỷ)", t_phien_khong_giu_khoa_qua_lau)
-    check("mascot: dùng rig sẵn, KHÔNG vẽ lại nhân vật", t_mascot_khong_ve_lai_nhan_vat)
-    check("MascotStage động theo từng khung + parallax", t_mascot_stage_dong_tung_khung)
-    check("tách nền rig: ĐO màu viền, không khoá cứng", t_tach_nen_khong_khoa_cung_mau)
-    check("brandkit qua QC hình (đo pixel rồi soi Vision)", t_brandkit_co_qc_hinh)
     check("giọng nhân vật có cao độ, hai vai lệch nhau", t_giong_nhan_vat_co_cao_do)
     check("tts: không hàm nào dùng biến chưa nhận", t_tts_khong_dung_bien_chua_nhan)
     check("kịch bản skit mang đủ 5 luật viral", t_kich_ban_co_luat_viral)
@@ -2273,86 +2269,6 @@ def t_khoi_main_cuoi_file():
     assert "channel_mode(" in sau, "khối __main__ mất đường --channel"
 
 
-def t_mascot_khong_ve_lai_nhan_vat():
-    """Engine mascot phải dùng RIG có sẵn — tuyệt đối không gọi FLUX vẽ nhân vật khi dựng video.
-
-    25/8 — đây là toàn bộ lý do concept mascot quay lại được: bản 22/8 vẽ lại nhân vật mỗi cảnh
-    nên nhân vật TRÔI (2 khung liền nhau ra 2 tỉ lệ khác nhau) và tốn 5-8 ảnh/video. Nếu ai đó
-    lỡ tay gọi lại đường vẽ trong `mascot_build`, bệnh cũ tái phát y nguyên."""
-    src = _doc("mascot_build.py")
-    for cam in ("_generate_image_ai", "_cf_flux_image", "fetch_image", "_pexels"):
-        assert cam not in src, f"mascot_build gọi {cam} -> nhân vật sẽ trôi trở lại"
-    assert "da_co_rig" in src and "da_co_san_khau" in src, \
-        "phải CHẶN trước khi dựng nếu rig/sân khấu chưa có, thay vì render ra video thiếu hình"
-    # 25/8 — pilot 11:07Z chết vì props trỏ tới lớp nền KHÔNG CÓ FILE (tách nền hụt).
-    # Khai báo là ý định, thư mục mới là sự thật.
-    assert "def _lop_cua" in src and "os.path.exists(os.path.join(goc" in src, \
-        "không lọc lớp nền theo file THẬT -> Remotion nạp ảnh không tồn tại, chết cả lượt render"
-    # nhép mồm phải đo từ tiếng thật, không phải ngẫu nhiên
-    assert "_rms_12hz" in src and "ffmpeg" in src, "mồm không đo từ audio thật"
-    # 25/8 — video pilot ra đủ hình/độ dài/luồng audio nhưng -91dB: lệnh ghép thiếu `-map` nên
-    # ffmpeg vớ đúng track CÂM mà Remotion xuất kèm. Lỗi im lặng, chỉ QC cuối mới bắt được.
-    assert '"-map", "0:v:0"' in src and '"-map", "1:a:0"' in src, \
-        "lệnh ghép tiếng thiếu -map -> ffmpeg tự chọn nhầm track câm của Remotion"
-    assert "volumedetect" in src, "không đo mức âm ngay sau khi ghép"
-    # 25/8 — long pilot ra 22.2s, QC chặn "quá ngắn <45s": dùng chung bộ viết skit 18-30s cho cả
-    # long. Long phải là TUYỂN TẬP nhiều skit, mỗi skit một sân khấu.
-    assert "stories = story if isinstance(story, list)" in src, \
-        "dung_video không nhận danh sách skit -> long luôn quá ngắn"
-    pl = _doc("mascot_pilot.py")
-    assert "n_skit = 3 if dai else 1" in pl, "pilot không viết nhiều skit cho long"
-    # 25/8 — pilot 3/3 skit hỏng vì truyền thẳng keys[0]: key đầu cạn là chết cả lượt, trong khi
-    # dây chuyền chính vẫn chạy nhờ xoay key. Đường phụ phải dùng lại cơ chế của đường chính.
-    assert "KM.key_order" in pl, "pilot không xoay key -> key đầu cạn là chết cả lượt"
-    # 25/8 — short ra 18.5s, QC chặn "<20s": skit viết 18-30s nên có lượt rơi sát sàn. Chữa bằng
-    # nhịp lặng sau punchline (đúng nghề: câu chốt cần khoảng lặng để khán giả bắt được).
-    assert "HOLD_CUOI" in src and "SAN_SHORT" in src, "không có nhịp giữ cuối -> sẽ trượt sàn QC"
-    assert "không kéo giãn thoại" in src, \
-        "phải nới NHỊP CUỐI, tuyệt đối không kéo giãn lời thoại (kéo lời là hỏng nhịp hài)"
-    assert 'api_key=(keys or [{}])[0]' not in pl.split("def _viet_skit")[-1].split("def pilot")[0], \
-        "vẫn còn chỗ dùng cứng keys[0] trong đường viết skit"
-
-
-def t_mascot_stage_dong_tung_khung():
-    """`MascotStage` phải tính chuyển động THEO KHUNG (useCurrentFrame), không phải ảnh tĩnh đổi nhịp.
-
-    Chốt cả multiplane: mỗi lớp nền phải nhân theo độ sâu `xa` — thiếu phép nhân đó thì các lớp
-    trượt bằng nhau, mất hoàn toàn chiều sâu và lại thành ảnh phẳng zoom như bản cũ."""
-    src = _doc("../engine-remotion/src/MascotStage.tsx")
-    assert "useCurrentFrame" in src, "không đọc khung -> không có chuyển động thật"
-    # ĐỦ 4 DẤU HIỆU CHIỀU SÂU của máy đa tầng — thiếu cái nào cũng tụt về "ảnh nền + hình dán"
-    assert "0.15 + xa * 0.85" in src, "lớp nền không nhân theo độ sâu -> mất thị sai"
-    assert "suong" in src and "saturate(" in src, "mất phối cảnh không khí (dấu hiệu chiều sâu mạnh nhất)"
-    assert "blur(" in src, "mất độ sâu trường ảnh"
-    assert "L.xa < DEPTH_NV" in src and "L.xa >= DEPTH_NV" in src, \
-        "lớp gần không vẽ ĐÈ LÊN nhân vật -> nhân vật dán lên cảnh chứ không ở TRONG cảnh"
-    assert "camScale" in src, "nhân vật không chịu phép biến đổi của máy -> lộ là hình dán khi camera đẩy"
-    # 25/8 — soi khung thật: thùng rác lớp `near` che nguyên thân gấu mèo, chỉ còn cái đầu.
-    # Tiền cảnh trong phim 2D ĐÓNG KHUNG cảnh (cành cây, bụi cỏ, khung cửa), không chắn diễn viên.
-    assert "WebkitMaskImage" in src and "radial-gradient(ellipse" in src, \
-        "lớp tiền cảnh không có mặt nạ -> nó sẽ che mất nhân vật"
-    assert "talk_open" in src and "talk_closed" in src, "mất cặp nhép mồm"
-    assert "spring(" in src, "mất chuyển động đàn hồi (vào cảnh/nảy)"
-
-
-def t_tach_nen_khong_khoa_cung_mau():
-    """Tách nền rig phải ĐO màu từ viền ảnh, không khoá cứng một mã màu.
-
-    25/8 — đo trên ảnh thật của lượt rig 10:51Z: FLUX vẽ nền xanh #38b828, trong khi code khoá
-    cứng #00b140. Khoảng cách 87, ngưỡng cũ 88 ⇒ lọt đúng 1 điểm, nên gần như mọi tư thế đều báo
-    "0% khung là nền khoá" và bị bỏ. Nhà cung cấp không hứa sắc độ nào cả — chỉ hứa "nền phẳng",
-    mà nền phẳng thì luôn CHẠM VIỀN. Đo viền là dấu hiệu không phụ thuộc sắc độ."""
-    src = _doc("mascot_rig.py")
-    assert "def _mau_vien" in src, "không còn hàm đo màu nền từ viền"
-    i = src.index("def _tach_nen")
-    than = src[i:src.index("def _cat_khung")]
-    assert "_mau_vien(" in than, "_tach_nen vẫn khoá cứng màu thay vì đo"
-    assert "dong_nhat < 0.45" in than, "mất chốt 'viền phải đồng nhất' -> sẽ ăn thủng nhân vật"
-    # hỏng thì phải GIỮ ảnh làm bằng chứng, không xoá
-    assert "_hong" in src and "os.remove(dest)" not in src, \
-        "ảnh tách hỏng bị xoá -> lần sau lại phải đoán FLUX vẽ gì"
-
-
 def t_phien_khong_giu_khoa_qua_lau():
     """Ngân sách lane phải NGẮN HƠN timeout workflow, và cả hai phải đủ ngắn để phiên sau không bị huỷ.
 
@@ -2373,39 +2289,16 @@ def t_phien_khong_giu_khoa_qua_lau():
     assert to <= 100, f"timeout {to}' quá dài — phiên sau sẽ bị huỷ trắng như 10:03/10:44 ngày 25/8"
 
 
-def t_brandkit_co_qc_hinh():
-    """Ảnh nhận diện phải qua QC HÌNH trước khi được dùng — đo pixel rồi mới soi Vision.
-
-    25/8 (anh dặn "kiểm visual QC trước sau"): avatar/bìa là thứ khán giả thấy TRƯỚC cả video.
-    Một ảnh nền trơn vì PNG rig nạp hụt mà lọt lên kênh thì hỏng nhận diện ngay từ ấn tượng đầu —
-    và không có gì trong hệ bắt được, vì file vẫn tồn tại và vẫn đủ dung lượng."""
-    src = _doc("mascot_brand.py")
-    assert "def _qc_anh" in src, "brandkit không có QC hình"
-    assert "flat_bg_metrics" in src, "không đo pixel (tầng rẻ) trước khi gọi Vision"
-    i = src.index("def _qc_anh")
-    than = src[i:src.index("def sinh")]
-    assert than.index("flat_bg_metrics") < than.index("verify_image"), \
-        "phải ĐO trước SOI sau — gọi Vision trước là đốt quota cho ảnh hỏng hiển nhiên"
-    assert "_hong" in src, "ảnh QC trượt bị xoá -> mất bằng chứng để soi"
-
-
 def t_giong_nhan_vat_co_cao_do():
     """Giọng nhân vật phải truyền được CAO ĐỘ, và hai vai phải lệch nhau đủ để không lẫn.
 
     25/8 — `edge_tts.Communicate` vẫn nhận `pitch` nhưng hệ chưa bao giờ truyền: đại bàng khoác
     lác, gấu mèo láu cá, bà hàng xóm nhiều chuyện đều nói bằng đúng một chất giọng đọc bản tin.
     Cao độ là đòn bẩy mạnh nhất biến giọng phát thanh viên thành giọng nhân vật, và miễn phí."""
-    import json
     tk = _doc("tts_karaoke.py")
     assert "pitch=pitch" in tk, "synth không truyền pitch xuống edge-tts"
     assert 'Communicate(text, voice, rate=rate, pitch=pitch' in tk, "Communicate thiếu pitch"
-    mb = _doc("mascot_build.py")
-    assert "pitch=cao.get(who)" in mb, "mascot_build không truyền cao độ theo vai"
-    d = json.loads(_doc("mascot_channels.json"))
-    for k, v in d.items():
-        assert "pitch_a" in v and "pitch_b" in v, f"{k}: thiếu cao độ"
-        pa, pb = int(v["pitch_a"].replace("Hz", "")), int(v["pitch_b"].replace("Hz", ""))
-        assert abs(pa - pb) >= 12, f"{k}: hai vai chỉ lệch {abs(pa-pb)}Hz — sẽ nghe như một người"
+    assert "_ACTIVE.get(\"pitch\")" in tk, "set_voice không giữ được cao độ theo kênh"
 
 
 def t_kich_ban_co_luat_viral():

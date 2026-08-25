@@ -2708,3 +2708,12 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   1,5 giây. Chữa: `HOLD_CUOI=1.3s` sau câu chốt (mọi phim hài đều giữ 1-2 giây trên mặt nhân vật —
   cắt ngay khi dứt chữ là giết tiếng cười), hụt tiếp thì **nới nhịp cuối** tối đa 6s. Tuyệt đối
   KHÔNG kéo giãn lời thoại — kéo lời là hỏng nhịp hài. Nhịp giữa câu cũng nới 0,22→0,34s.
+
+- **HƯỚNG MASCOT CUTOUT ĐÃ BỊ LOẠI (25/8) — lý do phải nhớ để không làm lại.** Anh xem clip demo và
+  bác: *"giật giật, không phải phim tôi cần"*. Nguyên nhân kỹ thuật, không phải chỉnh tham số được:
+  cách này diễn bằng **đổi ảnh** giữa các tư thế FLUX vẽ RIÊNG (talk_open ↔ talk_closed ở 12Hz).
+  Hai bản vẽ không trùng khít nhau (tỉ lệ/vị trí lệch vài pixel) nên đổi qua lại ra **nhấp nháy**,
+  không ra "đang nói". Đây là giới hạn cứng của mọi lối "AI vẽ nhiều tư thế rồi swap": muốn mượt
+  thì bộ phận phải **BIẾN DẠNG LIÊN TỤC** (xoay khớp / morph), chứ không thể tráo ảnh.
+  ⇒ Hướng còn khả thi: nhân vật là **hình vector dựng bằng mã** (SVG/Rive/Lottie) — mỗi khớp nội
+  suy được nên mượt tuyệt đối, 0 drift, 0 quota. Đã gỡ toàn bộ code/asset/kênh mascot.
