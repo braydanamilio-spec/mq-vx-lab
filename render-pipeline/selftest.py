@@ -2286,7 +2286,7 @@ def t_mascot_khong_ve_lai_nhan_vat():
         "phải CHẶN trước khi dựng nếu rig/sân khấu chưa có, thay vì render ra video thiếu hình"
     # 25/8 — pilot 11:07Z chết vì props trỏ tới lớp nền KHÔNG CÓ FILE (tách nền hụt).
     # Khai báo là ý định, thư mục mới là sự thật.
-    assert "os.path.exists(os.path.join(_goc_stage" in src, \
+    assert "def _lop_cua" in src and "os.path.exists(os.path.join(goc" in src, \
         "không lọc lớp nền theo file THẬT -> Remotion nạp ảnh không tồn tại, chết cả lượt render"
     # nhép mồm phải đo từ tiếng thật, không phải ngẫu nhiên
     assert "_rms_12hz" in src and "ffmpeg" in src, "mồm không đo từ audio thật"
@@ -2295,6 +2295,12 @@ def t_mascot_khong_ve_lai_nhan_vat():
     assert '"-map", "0:v:0"' in src and '"-map", "1:a:0"' in src, \
         "lệnh ghép tiếng thiếu -map -> ffmpeg tự chọn nhầm track câm của Remotion"
     assert "volumedetect" in src, "không đo mức âm ngay sau khi ghép"
+    # 25/8 — long pilot ra 22.2s, QC chặn "quá ngắn <45s": dùng chung bộ viết skit 18-30s cho cả
+    # long. Long phải là TUYỂN TẬP nhiều skit, mỗi skit một sân khấu.
+    assert "stories = story if isinstance(story, list)" in src, \
+        "dung_video không nhận danh sách skit -> long luôn quá ngắn"
+    pl = _doc("mascot_pilot.py")
+    assert "n_skit = 3 if dai else 1" in pl, "pilot không viết nhiều skit cho long"
 
 
 def t_mascot_stage_dong_tung_khung():

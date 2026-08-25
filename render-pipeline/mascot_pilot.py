@@ -84,9 +84,19 @@ def pilot(kenh: str) -> int:
         job = FB.new_job(owner, kenh, loai, pver="mascot-v1")
         st = lambda s, step, **x: FB.update_job(job, status=s, step=step, **x)
         try:
-            st("writing", "Viết skit 2 vai")
-            story = CB.generate_toon(cfg["niche"], api_key=(keys or [{}])[0].get("key", ""),
-                                     avoid=FB.recent_topics(owner, kenh, 40))
+            # LONG = TUYỂN TẬP 3 SKIT (short = 1). `generate_toon` viết skit 18-30s theo thiết kế;
+            # dùng thẳng cho long thì ra 22s và QC chặn "quá ngắn <45s". Mỗi skit vào một sân khấu
+            # khác nên long vừa đủ dài vừa đổi cảnh — không tốn thêm lượt vẽ nào.
+            n_skit = 3 if dai else 1
+            st("writing", f"Viết {n_skit} skit 2 vai")
+            _tranh = list(FB.recent_topics(owner, kenh, 40) or [])
+            stories = []
+            for _i in range(n_skit):
+                _sk = CB.generate_toon(cfg["niche"], api_key=(keys or [{}])[0].get("key", ""),
+                                       avoid=_tranh)
+                stories.append(_sk)
+                _tranh.append(_sk.get("title", ""))     # skit sau không lặp ý skit trước
+            story = stories if dai else stories[0]
             out = os.path.join("out", f"{DS.slug(kenh)}_{loai}.mp4")
             os.makedirs("out", exist_ok=True)
             ok, info = MB.dung_video(kenh, cfg, story, out, dai=dai, on_status=st)
@@ -96,16 +106,16 @@ def pilot(kenh: str) -> int:
             st("rendering", "Đẩy kho Drive")
             # enqueue_drive nằm ở run_render (dùng chung đường đặt tên chuẩn + sidecar + thumbnail)
             import run_render as RR
-            eq = RR.enqueue_drive(kenh, out, story, loai, bo=("L" if dai else "S1"),
+            eq = RR.enqueue_drive(kenh, out, stories[0], loai, bo=("L" if dai else "S1"),
                                   script=json.dumps(story)[:400_000])
             _eq = eq if isinstance(eq, dict) else {}
             st("done", "Đã đẩy Drive" if _eq.get("id") else "Xong (chưa đẩy Drive)",
-               title=story.get("title", ""), drive_id=_eq.get("id", ""),
+               title=stories[0].get("title", ""), drive_id=_eq.get("id", ""),
                drive_account=_eq.get("account", ""), size_mb=info.get("size_mb", 0),
                score=(story.get("self_score") or {}).get("total"),
                script=json.dumps(story)[:400_000])
-            print(f"   ✅ {loai}: {story.get('title')} · {info.get('dur')}s · "
-                  f"{info.get('size_mb')}MB · {info.get('shots')} cảnh")
+            print(f"   ✅ {loai}: {stories[0].get('title')} · {info.get('dur')}s · "
+                  f"{info.get('size_mb')}MB · {info.get('shots')} cảnh · {info.get('skit')} skit")
             ra.append(loai)
         except Exception as e:
             import traceback; traceback.print_exc()

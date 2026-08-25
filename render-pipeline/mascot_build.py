@@ -95,9 +95,16 @@ def _xep_canh(story: dict, moc: list, tong_frame: int, cast: list, stage_lop: li
     return shots
 
 
-def dung_video(kenh: str, cfg: dict, story: dict, out: str, dai: bool = False,
+def dung_video(kenh: str, cfg: dict, story, out: str, dai: bool = False,
                on_status=None) -> tuple[bool, dict]:
-    """Dựng MỘT video mascot. Trả (ok, info). `story` = kết quả generate_toon (title/dialog/frames)."""
+    """Dựng MỘT video mascot. Trả (ok, info).
+
+    `story` = một skit (dict) HOẶC danh sách skit (list) cho bản dài.
+
+    25/8 — vì sao long phải là TUYỂN TẬP: `generate_toon` viết skit 18-30 giây (đúng thiết kế cho
+    short). Dùng thẳng nó cho long thì ra 22 giây, QC chặn "quá ngắn < 45s" — mất trắng lượt render.
+    Long đúng nghĩa là 3 skit nối nhau, MỖI SKIT MỘT SÂN KHẤU: vừa đủ dài, vừa đổi cảnh nên không
+    chán, và không tốn thêm lượt vẽ nào (sân khấu đã dựng sẵn trong rig)."""
     import datastory_ci as DS
     import mascot_cast as MC
     import mascot_rig as MR
@@ -109,23 +116,25 @@ def dung_video(kenh: str, cfg: dict, story: dict, out: str, dai: bool = False,
         return False, {"loi": f"{kenh}: chưa khai dàn nhân vật (mascot_cast.py)"}
     if not MR.da_co_rig(kenh, cast):
         return False, {"loi": f"{kenh}: rig nhân vật chưa dựng — chạy mascot_rig.py trước"}
-    ten_stage = (MC.ten_san_khau(kenh) or ["stage"])[0]
-    if not MR.da_co_san_khau(kenh, ten_stage):
-        return False, {"loi": f"{kenh}: sân khấu '{ten_stage}' chưa dựng"}
+    stories = story if isinstance(story, list) else [story]
+    stories = [x for x in stories if isinstance(x, dict) and x.get("dialog")]
+    if not stories:
+        return False, {"loi": "không có skit nào"}
+    # mỗi skit một sân khấu (xoay vòng qua các sân khấu đã dựng) -> long đổi cảnh, không chán
+    _sk_co = [t for t in MC.ten_san_khau(kenh) if MR.da_co_san_khau(kenh, t)]
+    if not _sk_co:
+        return False, {"loi": f"{kenh}: chưa sân khấu nào dựng xong"}
+    ten_stage = _sk_co[0]
     # CHỈ DÙNG LỚP CÓ FILE THẬT. 25/8 — pilot 11:07Z chết ở đây: sân khấu khai 4 lớp nhưng `far`
     # tách nền hụt (FLUX vẽ nền có chi tiết) nên không có file, code vẫn bảo Remotion nạp
     # `stages/.../far.png` -> "Error loading image" giết cả lượt render. Khai báo là Ý ĐỊNH,
     # thư mục mới là SỰ THẬT — luôn lọc theo sự thật trước khi đưa vào props.
-    _goc_stage = os.path.join(DS.ENG, "public", "stages", kenh.upper(), ten_stage)
-    stage_lop = [L for L in MC.san_khau_cua(kenh, ten_stage)
-                 if os.path.exists(os.path.join(_goc_stage, f"{L['lop']}.png"))]
-    if len(stage_lop) < 2:
-        return False, {"loi": f"{kenh}/{ten_stage}: chỉ có {len(stage_lop)} lớp nền — hết chiều sâu"}
-    _thieu = [L["lop"] for L in MC.san_khau_cua(kenh, ten_stage)
-              if L not in stage_lop]
-    if _thieu:
-        print(f"   ℹ️ sân khấu {ten_stage}: thiếu lớp {_thieu} (tách nền hụt) — dựng bằng "
-              f"{len(stage_lop)} lớp còn lại, vẫn đủ chiều sâu.")
+    def _lop_cua(ten: str) -> list:
+        goc = os.path.join(DS.ENG, "public", "stages", kenh.upper(), ten)
+        return [L for L in MC.san_khau_cua(kenh, ten)
+                if os.path.exists(os.path.join(goc, f"{L['lop']}.png"))]
+    if len(_lop_cua(ten_stage)) < 2:
+        return False, {"loi": f"{kenh}/{ten_stage}: dưới 2 lớp nền — hết chiều sâu"}
 
     # ── THU TIẾNG: mỗi câu một giọng theo vai, nối lại có nhịp nghỉ ──────────────────────
     st("writing", "Thu tiếng 2 vai")
@@ -142,17 +151,23 @@ def dung_video(kenh: str, cfg: dict, story: dict, out: str, dai: bool = False,
     # đầu, không cần nhìn hình. Miễn phí, không tốn thêm lượt gọi nào.
     cao = {str(c.get("vai", "A")).upper(): (cfg.get(f"pitch_{str(c.get('vai','a')).lower()}") or "+0Hz")
            for c in cast}
-    clips, subs, moc, t = [], [], [], 0.0
-    for i, d in enumerate(story.get("dialog") or []):
-        who = (d.get("who") or "A").upper()
-        mp3 = os.path.join(pub, f"line{i:02d}.mp3")
-        dur, w, _ = TK.synth(d.get("line", ""), mp3, voice=giong.get(who), rate=nhip.get(who),
-                             pitch=cao.get(who))
-        clips.append((mp3, t))
-        for x in w:
-            subs.append({"t": round(x["t"] + t, 3), "d": x["d"], "w": x["w"]})
-        moc.append((t, t + dur))
-        t += dur + NGHI_CAU
+    clips, subs, t = [], [], 0.0
+    moc_theo_skit = []          # mốc thời gian từng câu, tách theo skit
+    NGHI_SKIT = 0.7             # nhịp nghỉ giữa hai skit — khán giả cần một nhịp để "sang chuyện"
+    for si, sk in enumerate(stories):
+        moc = []
+        for i, d in enumerate(sk.get("dialog") or []):
+            who = (d.get("who") or "A").upper()
+            mp3 = os.path.join(pub, f"s{si}_line{i:02d}.mp3")
+            dur, w, _ = TK.synth(d.get("line", ""), mp3, voice=giong.get(who), rate=nhip.get(who),
+                                 pitch=cao.get(who))
+            clips.append((mp3, t))
+            for x in w:
+                subs.append({"t": round(x["t"] + t, 3), "d": x["d"], "w": x["w"]})
+            moc.append((t, t + dur))
+            t += dur + NGHI_CAU
+        moc_theo_skit.append(moc)
+        t += NGHI_SKIT
     if not clips:
         return False, {"loi": "không có câu thoại nào"}
     tong = t
@@ -164,9 +179,17 @@ def dung_video(kenh: str, cfg: dict, story: dict, out: str, dai: bool = False,
     mouth = _rms_12hz(track, tong)
 
     # ── XẾP CẢNH + DỰNG ─────────────────────────────────────────────────────────────────
-    shots = _xep_canh(story, moc, tong_frame, cast, stage_lop, ten_stage)
+    shots = []
+    for si, sk in enumerate(stories):
+        sk_ten = _sk_co[si % len(_sk_co)]          # xoay sân khấu theo skit
+        sk_lop = _lop_cua(sk_ten)
+        if len(sk_lop) < 2:
+            sk_ten, sk_lop = ten_stage, _lop_cua(ten_stage)
+        het_skit = int((moc_theo_skit[si][-1][1] + NGHI_SKIT) * FPS) if moc_theo_skit[si] else tong_frame
+        shots += _xep_canh(sk, moc_theo_skit[si], het_skit, cast, sk_lop, sk_ten)
     if not shots:
         return False, {"loi": "không xếp được cảnh nào"}
+    shots[-1]["dur"] = max(shots[-1]["dur"], tong_frame - shots[-1]["from"])
     # vị trí đứng: 1 nhân vật thì giữa, 2 nhân vật thì hai bên và quay mặt vào nhau
     if len(cast) >= 2:
         dan = [{"id": cast[0]["id"], "x": 30, "scale": 1.0},
@@ -175,7 +198,7 @@ def dung_video(kenh: str, cfg: dict, story: dict, out: str, dai: bool = False,
         dan = [{"id": cast[0]["id"], "x": 50, "scale": 1.05}]
 
     props = {"channel": kenh.upper(), "cast": dan, "shots": shots, "mouth": mouth,
-             "title": story.get("title", ""), "accent": cfg.get("accent", "#F5B301"),
+             "title": stories[0].get("title", ""), "accent": cfg.get("accent", "#F5B301"),
              "subs": subs}
     pf = os.path.join(DS.PUB, f"{sl}_mascot.json")
     json.dump(props, open(pf, "w"), ensure_ascii=False)
@@ -209,5 +232,6 @@ def dung_video(kenh: str, cfg: dict, story: dict, out: str, dai: bool = False,
         pass
     ok, info = DS.qc(out)
     info["shots"] = len(shots)
+    info["skit"] = len(stories)
     info["mouth_mau"] = len(mouth)
     return ok, info

@@ -2673,3 +2673,9 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   nên log nói về TTS trong khi lỗi là NameError của mình. Python không bắt lúc nạp module; nay
   `t_tts_khong_dung_bien_chua_nhan` soi bằng AST (chỉ hàm cấp cao nhất, gom tham số của cả hàm lồng
   và lambda, hiểu closure/AnnAssign — 4/5 ca đầu là báo oan nên phải siết đúng). Đã thử phá: bắt được.
+
+- **Long ≠ short kéo dài — long là TUYỂN TẬP nhiều skit.** (25/8) Pilot: short **ĐẠT** (24,9s, đã đẩy
+  Drive) nhưng long ra 22,2s, QC chặn "quá ngắn <45s" — vì dùng chung `generate_toon` vốn viết skit
+  18-30 giây theo thiết kế. Nay long = **3 skit, mỗi skit một SÂN KHẤU khác** (vừa đủ dài, vừa đổi
+  cảnh nên không chán, 0 lượt vẽ thêm vì sân khấu đã dựng sẵn); skit sau nhận tiêu đề skit trước vào
+  danh sách tránh để không lặp ý. Chốt trong `t_mascot_khong_ve_lai_nhan_vat`.
