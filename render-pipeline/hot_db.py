@@ -400,3 +400,63 @@ def nho_doc(k: str, tuoi: int = 21600):
         return _j.loads(js)
     except Exception:
         return None
+
+
+def kho_can_acc(owner: str) -> dict:
+    """{drive_id: job_id} các bản ghi done thiếu kho chứa (xem worker `kho_can_acc`)."""
+    if not bat_doc():
+        return {}
+    try:
+        r = goi("kho_can_acc", {"owner": owner})
+        return {x["drive_id"]: x["id"] for x in (r.get("rows") or []) if x.get("drive_id")}
+    except Exception:
+        return {}
+
+
+def kho_acc_ghi(owner: str, pairs: list) -> int:
+    """Đổ map file->kho về D1 theo lô 200 (pairs = [{'did':..., 'acc':...}])."""
+    if not bat_ghi() or not pairs:
+        return 0
+    n = 0
+    try:
+        for i in range(0, len(pairs), 200):
+            r = goi("kho_acc_ghi", {"owner": owner, "pairs": pairs[i:i + 200]})
+            n += int(r.get("n") or 0)
+    except Exception:
+        pass
+    return n
+
+
+def job_cuaso(owner: str, tu: str, den: str) -> list:
+    """Video done trong khoảng giờ [tu, den) — dọn bệnh theo lô (xem worker `job_cuaso`)."""
+    if not bat_doc():
+        return []
+    try:
+        return (goi("job_cuaso", {"owner": owner, "tu": tu, "den": den}) or {}).get("rows") or []
+    except Exception:
+        return []
+
+
+def thumb_can(owner: str) -> dict:
+    """{drive_id: job_id} các bản ghi done thiếu thumb_id (xem worker `thumb_can`)."""
+    if not bat_doc():
+        return {}
+    try:
+        r = goi("thumb_can", {"owner": owner})
+        return {x["drive_id"]: x["id"] for x in (r.get("rows") or []) if x.get("drive_id")}
+    except Exception:
+        return {}
+
+
+def thumb_ghi(owner: str, pairs: list) -> int:
+    """Đổ map video->thumbnail về D1 theo lô 200 (pairs = [{'did':..., 'tid':...}])."""
+    if not bat_ghi() or not pairs:
+        return 0
+    n = 0
+    try:
+        for i in range(0, len(pairs), 200):
+            r = goi("thumb_ghi", {"owner": owner, "pairs": pairs[i:i + 200]})
+            n += int(r.get("n") or 0)
+    except Exception:
+        pass
+    return n

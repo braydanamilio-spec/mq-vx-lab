@@ -435,6 +435,7 @@ def main():
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
     check("đồng bộ kho có ngân sách giờ, không đợi đủ hết", t_dong_bo_kho_co_ngan_sach_gio)
     check("kiểm kho hằng ngày: song song + ngân sách 240s", t_kiem_kho_ngay_co_ngan_sach)
+    check("lượt đi bộ nhặt kèm map kho + thumbnail", t_lap_ban_ghi_tu_luot_di_bo)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2210,6 +2211,22 @@ def t_kiem_kho_ngay_co_ngan_sach():
         "with-block đợi đủ 72 kho ở __exit__"
     # dở dang -> hong tăng -> nhánh BỎ lượt ghi phía dưới phải còn nguyên
     assert "BỎ QUA lượt ghi" in than or "kho đọc hụt" in than, "mất nguyên tắc không-ghi-số-thiếu"
+
+
+def t_lap_ban_ghi_tu_luot_di_bo():
+    """Lượt đi bộ 72 kho phải NHẶT KÈM map file->kho và video->thumbnail (0 lượt Drive thêm).
+
+    25/8 — hai bệnh cùng gốc trên thư viện: "🔍 kho chưa rõ" hàng loạt và thumbnail "tối thui"
+    (Drive tự chọn frame-0 đúng lúc màn mở màn còn đen) — đều vì bản ghi thời Firestore-nghẽn
+    thiếu drive_account/thumb_id, trong khi file thật (.mp4 + .jpg cùng tên gốc) vẫn nằm đủ trên
+    Drive. Đi bộ hằng ngày vốn qua từng file: bắt nó nhặt luôn, không tốn thêm lượt Drive nào."""
+    src = _doc("run_render.py")
+    i = src.index("def _kiem_kho_ngay")
+    than = src[i:i + 9000]
+    for moc in ("kho_can_acc", "thumb_can", "kho_acc_ghi", "thumb_ghi", "jpg_co", "mp4_can"):
+        assert moc in than, f"lượt đi bộ thiếu mảnh {moc}"
+    assert than.index("thumb_can") < than.index("ThreadPoolExecutor"), \
+        "danh sách thiếu phải nạp TRƯỚC khi đi bộ (trong luồng con là quá muộn)"
 
 
 if __name__ == "__main__":

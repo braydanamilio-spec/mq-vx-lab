@@ -1956,10 +1956,39 @@ def _kiem_kho_ngay(cfg: dict) -> None:
         _han = _t10.time() + 240
         song = 0
         hong = 0
+        # 25/8 — NHẶT LUÔN MAP FILE->KHO trong cùng lượt đi bộ (0 lượt Drive thêm): bản ghi thời
+        # Firestore-nghẽn thiếu drive_account nên thư viện hiện "kho chưa rõ" hàng loạt. Lượt này
+        # vốn đi qua từng file — thấy file nào nằm trong danh sách đang thiếu thì ghi lại kho.
+        try:
+            import hot_db as _HD
+            _thieu = _HD.kho_can_acc(OWNER)          # {drive_id: job_id} — thiếu KHO CHỨA
+            _tcan = _HD.thumb_can(OWNER)             # {drive_id: job_id} — thiếu THUMBNAIL
+        except Exception:
+            _thieu, _tcan = {}, {}
+        _thay = []                                    # [{'did':..., 'acc':...}]
+        _tthay = []                                   # [{'did':..., 'tid':...}]
         def _dem_kho(acc):
             drv = _ST.account_drive(acc)
-            return sum(1 for f in _KK._quet(drv, acc.get("root"))
-                       if str(f.get("name", "")).lower().endswith(".mp4"))
+            n = 0
+            mp4_can = {}                              # {tên gốc: drive_id} video thiếu thumb ở kho này
+            jpg_co = {}                               # {tên gốc: id .jpg} ảnh thấy trong kho này
+            for f in _KK._quet(drv, acc.get("root")):
+                ten = str(f.get("name", ""))
+                t = ten.lower()
+                if t.endswith(".mp4"):
+                    n += 1
+                    if f.get("id") in _thieu:
+                        _thay.append({"did": f["id"], "acc": acc.get("name") or ""})
+                    if f.get("id") in _tcan:
+                        mp4_can[ten[:-4]] = f["id"]
+                elif t.endswith((".jpg", ".jpeg", ".png")):
+                    jpg_co[ten.rsplit(".", 1)[0]] = f.get("id")
+            # .jpg thumbnail nằm CẠNH video, CÙNG TÊN GỐC (sidecar["thumbnail"] = vbase + ext)
+            for goc, vid in mp4_can.items():
+                tid = jpg_co.get(goc)
+                if tid:
+                    _tthay.append({"did": vid, "tid": tid})
+            return n
         _ex2 = _cf2.ThreadPoolExecutor(max_workers=8)
         _viec = {_ex2.submit(_dem_kho, a2): a2 for a2 in accs}
         try:
@@ -1973,6 +2002,15 @@ def _kiem_kho_ngay(cfg: dict) -> None:
             print(f"   ⏳ Kiểm kho chạm ngân sách 240s — dở dang, BỎ lượt này (phiên sau đi tiếp).")
         finally:
             _ex2.shutdown(wait=False, cancel_futures=True)
+        if _thay or _tthay:
+            try:
+                import hot_db as _HD2
+                _n_acc = _HD2.kho_acc_ghi(OWNER, _thay) if _thay else 0
+                _n_th = _HD2.thumb_ghi(OWNER, _tthay) if _tthay else 0
+                print(f"   🧭 Lấp bản ghi từ lượt đi bộ (0 lượt Drive thêm): "
+                      f"kho chứa {_n_acc}/{len(_thieu)} · thumbnail {_n_th}/{len(_tcan)}.")
+            except Exception:
+                pass
         if hong:
             print(f"   ⏭ Kiểm kho: {hong}/{len(accs)} kho đọc hụt — BỎ QUA lượt ghi (sẽ đếm thiếu).")
             return

@@ -2584,3 +2584,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   ngày chết một buổi". Cùng công thức sửa với sync dung lượng: 8 luồng song song + ngân sách 240s;
   dở dang thì BỎ NGUYÊN LƯỢT (số thiếu độc hơn không có số). Đã cắm thêm `_moc` quanh mọi bước
   plan để lần treo sau tự khai tên. Chốt: `t_kiem_kho_ngay_co_ngan_sach`.
+
+- **"Kho chưa rõ" + thumbnail "tối thui" = CÙNG MỘT GỐC: bản ghi thiếu, file không thiếu.** (25/8)
+  Video làm lúc Firestore nghẽn mất `drive_account` (⇒ 🔍 kho chưa rõ) và `thumb_id` (⇒ thư viện
+  rơi về khung frame-0 do Drive tự chọn — đúng lúc màn mở màn còn đen nên "tối thui", trong khi
+  ảnh `.jpg` hook sáng đẹp vẫn nằm cạnh video, và lúc ĐĂNG YouTube `main.py` tự tìm `.jpg` theo tên
+  từ sidecar nên không ảnh hưởng đăng). Vá: lượt đi bộ 72 kho hằng ngày nhặt kèm map file→kho và
+  video→thumbnail (cùng tên gốc), đổ về D1 — **0 lượt Drive thêm**. Chốt: `t_lap_ban_ghi_tu_luot_di_bo`.
