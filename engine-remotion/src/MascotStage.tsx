@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, useVideoConfig, staticFile, interpolate, spring } from "remotion";
 import { Karaoke } from "./Karaoke";
+import { ToonFX, fxTheoTuThe } from "./ToonFX";
 
 /**
  * SÂN KHẤU HOẠT HÌNH 2D — nhân vật rig + bối cảnh đa tầng, 30fps thật (25/8/2026).
@@ -24,6 +25,9 @@ import { Karaoke } from "./Karaoke";
  *                   ở chữ nhấn, đổi tư thế theo kịch bản.
  *  4. NHÉP MỒM    — đổi qua lại talk_closed/talk_open theo BIÊN ĐỘ TIẾNG THẬT (mảng `mouth`
  *                   do pipeline đo từ file audio), 12 lần/giây — mắt người đọc là "đang nói".
+ *  5. HIỆU ỨNG CARTOON (ToonFX) — mồ hôi/sao choáng/gân giận/dấu hỏi/cú đập punchline. Đây là
+ *                   thứ biến "hai hình biết nhúc nhích" thành PHIM HÀI. Dùng Lottie nếu có file,
+ *                   không thì SVG dựng sẵn (chạy được ngay trên runner sạch).
  *
  * Ai không nói thì `idle`/`smug` + nhún nhẹ — im mà vẫn sống, không đứng chết như ảnh dán.
  */
@@ -208,6 +212,19 @@ export const MascotStage: React.FC<MascotProps> = ({
                  pose={(shot?.pose || {})[c.id.toUpperCase()] || "idle"}
                  f={f} t={t} mo={mo} fps={fps} cam={cam} />
         ))}
+
+        {/* TẦNG 5 — HIỆU ỨNG CARTOON: neo theo đúng nhân vật đang diễn, nằm SAU lớp tiền cảnh
+            (hiệu ứng thuộc về nhân vật, nên vật cản ở tiền cảnh vẫn che được nó — đúng không gian). */}
+        {cast.map((c) => {
+          const noi = (shot?.speaker || "").toUpperCase() === c.id.toUpperCase();
+          const pose = (shot?.pose || {})[c.id.toUpperCase()] || (noi ? "talk" : "idle");
+          const punch = !!shot?.shake && noi && fShot < 18;
+          const kind = fxTheoTuThe(pose, noi, punch);
+          if (kind === "none") return null;
+          return <ToonFX key={`fx-${c.id}`} kind={kind} x={c.x} f={fShot}
+                         size={kind === "impact" ? 26 : 15}
+                         neo={kind === "dust" ? "chan" : "dau"} />;
+        })}
 
         {shot?.layers.filter((L) => L.xa >= DEPTH_NV).map((L) => (
           <Plane key={L.lop} ch={channel} shot={shot} L={L} cam={cam} f={f} />

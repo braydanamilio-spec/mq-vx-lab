@@ -36,6 +36,7 @@ import { BrandLegacy } from "./BrandLegacy";
 import { Cinematic, calcCinematic } from "./Cinematic";
 import { ToonShort, calcToon } from "./ToonShort";
 import { MascotStage } from "./MascotStage";
+import { MascotBrand } from "./MascotBrand";
 import { DocThumb } from "./DocThumb";
 import { BarChartRace, calcRace } from "./BarChartRace";
 import { BrandV2 } from "./BrandV2";
@@ -181,6 +182,18 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="CinematicShort" component={Cinematic} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
     {/* 25/8 — SÂN KHẤU MASCOT: nhân vật rig tách nền + bối cảnh đa tầng, 30fps thật.
         durationInFrames do calculateMetadata suy từ shots (xem MascotStage). */}
+    {/* BỘ NHẬN DIỆN — đúng cỡ chuẩn từng nền tảng. Ảnh bìa YouTube 2560×1440 nhưng vùng an toàn
+        chỉ 1546×423 ở giữa (điện thoại), nên MascotBrand đặt toàn bộ chữ trong ô đó. */}
+    <Composition id="MascotAvatar" component={MascotBrand} durationInFrames={1} fps={30}
+      width={800} height={800} defaultProps={{ channel: "", hero: "", kind: "avatar" }} />
+    <Composition id="MascotBanner" component={MascotBrand} durationInFrames={1} fps={30}
+      width={2560} height={1440} defaultProps={{ channel: "", hero: "", kind: "banner" }} />
+    <Composition id="MascotWatermark" component={MascotBrand} durationInFrames={1} fps={30}
+      width={1024} height={1024} defaultProps={{ channel: "", hero: "", kind: "watermark" }} />
+    <Composition id="MascotThumb" component={MascotBrand} durationInFrames={1} fps={30}
+      width={1280} height={720} defaultProps={{ channel: "", hero: "", kind: "thumb" }} />
+    <Composition id="MascotFbCover" component={MascotBrand} durationInFrames={1} fps={30}
+      width={1640} height={624} defaultProps={{ channel: "", hero: "", kind: "fbcover" }} />
     <Composition id="MascotShort" component={MascotStage} durationInFrames={900} fps={30}
       width={1080} height={1920}
       defaultProps={{ channel: "", cast: [], shots: [], mouth: [], title: "", accent: "#F5B301", subs: [] }}

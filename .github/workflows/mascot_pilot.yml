@@ -12,8 +12,8 @@ on:
         description: "Bước cần chạy"
         type: choice
         required: true
-        default: "rig+pilot"
-        options: ["seed", "rig", "pilot", "rig+pilot", "seed+rig+pilot"]
+        default: "rig+brand+pilot"
+        options: ["seed", "rig", "brand", "pilot", "rig+brand+pilot", "seed+rig+brand+pilot"]
       kenh:
         description: "Kênh (EAGLEBANDIT · HANKYARD · PEARLPORCH · BISONDESK · OWLOFFICE)"
         required: false
@@ -25,6 +25,9 @@ on:
         default: false
 
 concurrency: { group: mm0-mascot-pilot, cancel-in-progress: false }
+
+permissions:
+  contents: write        # để cất rig (ảnh nhân vật/bối cảnh) vào repo — xem bước "Cất rig vào repo"
 
 jobs:
   pilot:
@@ -107,16 +110,44 @@ jobs:
           set -e
           cd render-pipeline
           python selftest.py
+          RIG_ARGS=$([ "$LAM_LAI" = "true" ] && echo --lam-lai)
           case "$BUOC" in
-            seed)            python mascot_pilot.py --seed ;;
-            rig)             python mascot_pilot.py --rig "$KENH" $([ "$LAM_LAI" = "true" ] && echo --lam-lai) ;;
-            pilot)           python mascot_pilot.py --pilot "$KENH" ;;
-            "rig+pilot")     python mascot_pilot.py --rig "$KENH" $([ "$LAM_LAI" = "true" ] && echo --lam-lai)
-                             python mascot_pilot.py --pilot "$KENH" ;;
-            *)               python mascot_pilot.py --seed
-                             python mascot_pilot.py --rig "$KENH" $([ "$LAM_LAI" = "true" ] && echo --lam-lai)
-                             python mascot_pilot.py --pilot "$KENH" ;;
+            seed)   python mascot_pilot.py --seed ;;
+            rig)    python mascot_pilot.py --rig "$KENH" $RIG_ARGS ;;
+            brand)  python mascot_brand.py --kenh "$KENH" ;;
+            pilot)  python mascot_pilot.py --pilot "$KENH" ;;
+            "rig+brand+pilot")
+                    python mascot_pilot.py --rig "$KENH" $RIG_ARGS
+                    python mascot_brand.py --kenh "$KENH"
+                    python mascot_pilot.py --pilot "$KENH" ;;
+            *)      python mascot_pilot.py --seed
+                    python mascot_pilot.py --rig "$KENH" $RIG_ARGS
+                    python mascot_brand.py --kenh "$KENH"
+                    python mascot_pilot.py --pilot "$KENH" ;;
           esac
+      # RIG PHẢI VÀO REPO — 25/8: lượt 11:16Z chết với "rig nhân vật chưa dựng" dù lượt trước vừa
+      # dựng đủ 12/12 tư thế. Lý do: rig nằm trong ổ đĩa của runner, hết job là mất; lượt sau
+      # checkout sạch nên không thấy gì. Rig là TÀI SẢN NHẬN DIỆN của kênh (như logo), vẽ một lần
+      # dùng mãi — chỗ đúng của nó là trong repo, không phải thư mục tạm. Vào repo rồi thì mọi
+      # lane render đều có sẵn, khỏi vẽ lại, khỏi trôi.
+      - name: Cất rig vào repo (vẽ một lần, dùng mãi)
+        if: always()
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git config user.name  "mm0-bot"
+          git config user.email "bot@mm0.local"
+          git add -f engine-remotion/public/mascots engine-remotion/public/stages \
+                     engine-remotion/public/brand 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "ℹ️ rig không đổi — khỏi commit."
+          else
+            N=$(git diff --cached --name-only | wc -l | tr -d ' ')
+            git commit -q -m "Rig + brandkit ${KENH:-mascot}: $N tệp (vẽ một lần, dùng mãi)"
+            git pull --rebase -q origin main || true
+            git push -q origin HEAD:main && echo "✅ đã cất $N tệp rig vào repo"
+          fi
+        env:
+          KENH: ${{ github.event.inputs.kenh }}
       # Rig + video giữ lại để XEM TẬN MẮT trước khi duyệt (Drive có thể chưa kịp/lỗi quota).
       - name: Giữ rig + video pilot để duyệt
         if: always()
@@ -128,4 +159,5 @@ jobs:
           path: |
             engine-remotion/public/mascots/**
             engine-remotion/public/stages/**
+            engine-remotion/public/brand/**
             render-pipeline/out/*.mp4
