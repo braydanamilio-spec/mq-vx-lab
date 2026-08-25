@@ -28,11 +28,27 @@ MỌI HÀM Ở ĐÂY HỎNG THÌ TRẢ RỖNG, KHÔNG NÉM. Dữ liệu là gia 
 from __future__ import annotations
 
 import json
+import os
 import urllib.parse
 import urllib.request
 
 UA = "MM0-Pipeline/1.0 (research; contact via youtube channel)"
 TIMEOUT = 25
+
+
+# ── KEY MIỄN PHÍ, ĐỌC TỪ MÔI TRƯỜNG ────────────────────────────────────────────────────────
+# Hai key này đều free và đều CHỈ nới hạn mức, không mở thêm dữ liệu. Không có key thì mọi hàm
+# vẫn chạy, chỉ là chạm trần sớm:
+#   BLS_KEY       25 lượt/ngày -> 500      (đăng ký: data.bls.gov/registrationEngine)
+#   DATA_GOV_KEY  30 lượt/giờ  -> 1.000    (api.data.gov — MỘT key dùng cho NASA + FEC + USDA)
+# Đọc từ môi trường thay vì truyền tay ở từng chỗ gọi: thêm key sau này chỉ cần đặt biến, không
+# phải sửa một dòng mã nào.
+def key_bls() -> str:
+    return os.environ.get("BLS_KEY", "").strip()
+
+
+def key_data_gov() -> str:
+    return os.environ.get("DATA_GOV_KEY", "").strip() or "DEMO_KEY"
 
 
 def _goi(url: str, data: dict | None = None, tieu_de: dict | None = None):
@@ -132,6 +148,7 @@ BLS_CHUOI = {"cpi": "CUUR0000SA0",            # chỉ số giá tiêu dùng (m�
 def chuoi_bls(ten: str, tu_nam: int, den_nam: int, key: str = "") -> list[dict]:
     """Chuỗi thời gian chính thức từ Cục Thống kê Lao động. Trả [{nam, thang, gia_tri}]."""
     ma = BLS_CHUOI.get(ten, ten)
+    key = key or key_bls()
     body = {"seriesid": [ma], "startyear": str(tu_nam), "endyear": str(den_nam)}
     if key:
         body["registrationkey"] = key
@@ -157,6 +174,7 @@ def nhieu_chuoi_bls(tens: list[str], tu_nam: int, den_nam: int, key: str = "") -
     6-8 chuỗi để so nhau, gọi lẻ từng chuỗi là một video đã ăn 8 lượt, ba kênh là hết ngày.
     API v2 nhận cả danh sách `seriesid` trong một thân yêu cầu -> 8 chuỗi vẫn chỉ tốn 1 lượt."""
     ma_theo_ten = {t: BLS_CHUOI.get(t, t) for t in tens}
+    key = key or key_bls()
     body = {"seriesid": list(dict.fromkeys(ma_theo_ten.values()))[:25],
             "startyear": str(tu_nam), "endyear": str(den_nam)}
     if key:
@@ -346,10 +364,10 @@ def tim_ho_so(tu_khoa: str, tu_ngay: str = "", n: int = 8) -> list[dict]:
 
 
 # ── 12. NASA — tiểu hành tinh bay sát Trái Đất ─────────────────────────────────────────────
-def tieu_hanh_tinh(tu_ngay: str, den_ngay: str = "", key: str = "DEMO_KEY", n: int = 10) -> list[dict]:
+def tieu_hanh_tinh(tu_ngay: str, den_ngay: str = "", key: str = "", n: int = 10) -> list[dict]:
     """Vật thể sát Trái Đất trong khoảng ngày. Trả [{ten, duong_kinh_m, toc_do_kmh, cach_km}]."""
     u = ("https://api.nasa.gov/neo/rest/v1/feed?" + urllib.parse.urlencode(
-        {"start_date": tu_ngay, "end_date": den_ngay or tu_ngay, "api_key": key or "DEMO_KEY"}))
+        {"start_date": tu_ngay, "end_date": den_ngay or tu_ngay, "api_key": key or key_data_gov()}))
     d = _goi(u)
     ra = []
     for _ngay, ds in sorted(((d or {}).get("near_earth_objects") or {}).items()):
@@ -366,12 +384,12 @@ def tieu_hanh_tinh(tu_ngay: str, den_ngay: str = "", key: str = "DEMO_KEY", n: i
 
 
 # ── 13. FEC — tiền vận động tranh cử ───────────────────────────────────────────────────────
-def tai_tro(ky: int = 2024, bang: str = "", key: str = "DEMO_KEY", n: int = 10) -> list[dict]:
+def tai_tro(ky: int = 2024, bang: str = "", key: str = "", n: int = 10) -> list[dict]:
     """Ứng viên gom tiền nhiều nhất một kỳ. Trả [{ten, dang, bang, thu, chi}].
 
     KEY: đăng ký free ở api.data.gov — MỘT key dùng được cho cả FEC lẫn NASA và nhiều API .gov
     khác (1.000 lượt/giờ). DEMO_KEY chỉ 30 lượt/giờ, đủ thử chứ không đủ chạy hằng ngày."""
-    than = {"api_key": key or "DEMO_KEY", "sort": "-receipts", "per_page": str(max(1, min(50, n))),
+    than = {"api_key": key or key_data_gov(), "sort": "-receipts", "per_page": str(max(1, min(50, n))),
             "election_year": str(ky), "sort_hide_null": "true"}
     if bang:
         than["state"] = bang
@@ -427,12 +445,12 @@ def luot_doc_bai(ten_bai: str, tu: str, den: str) -> list[dict]:
             for x in ((d or {}).get("items") or [])]
 
 
-def thanh_phan_mon(mon: str, n: int = 6, key: str = "DEMO_KEY") -> list[dict]:
+def thanh_phan_mon(mon: str, n: int = 6, key: str = "") -> list[dict]:
     """Dinh dưỡng thật của một món (USDA FoodData Central). Trả [{ten, calo, duong, mo, muoi}].
 
     KEY free ở api.data.gov — cùng key dùng được cho NASA và FEC."""
     u = ("https://api.nal.usda.gov/fdc/v1/foods/search?" + urllib.parse.urlencode(
-        {"query": mon, "pageSize": max(1, min(25, n)), "api_key": key or "DEMO_KEY"}))
+        {"query": mon, "pageSize": max(1, min(25, n)), "api_key": key or key_data_gov()}))
     d = _goi(u)
     LAY = {"Energy": "calo", "Sugars, total including NLEA": "duong",
            "Total lipid (fat)": "mo", "Sodium, Na": "muoi", "Protein": "dam"}

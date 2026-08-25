@@ -744,6 +744,104 @@ def dung_story_cinematic(kenh: dict, ky: dict | None = None) -> dict | None:
             "_that": True, "self_score": {"total": 92}}
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# DẠNG SO KÍCH THƯỚC — mọi thứ quy về MỘT thang, để mắt thấy được chênh lệch
+# ------------------------------------------------------------------------------------------
+# Trả (tieu_de, don_vi, [{name, emoji, value, disp}], loi_ket). Giá trị phải CÙNG đơn vị, nếu
+# không thì thanh dài ngắn chẳng nói lên gì.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+def _sk_dinh_duong(D, ky):
+    mon = ky.get("mon") or "pizza"
+    r = [x for x in D.thanh_phan_mon(mon, 30, ky.get("key", "DEMO_KEY")) if x.get("calo")]
+    thay, muc = set(), []
+    for x in sorted(r, key=lambda z: -z["calo"]):
+        ten = " ".join(f"{x.get('hieu') or ''} {x['ten']}".split()).title()
+        if ten.lower() in thay:
+            continue
+        thay.add(ten.lower())
+        muc.append({"name": _gon(ten, 24), "emoji": "🍕", "value": round(x["calo"]),
+                    "disp": f"{x['calo']:.0f} cal"})
+        if len(muc) >= 6:
+            break
+    if len(muc) < 3:
+        return None
+    return (f"{mon.title()}, by calories", "cal", muc,
+            "Per hundred grams, measured by the U S D A.")
+
+
+def _sk_bls(D, ky):
+    """So các nhóm chi phí trên CÙNG một thang chỉ số — một lượt gọi cho tất cả."""
+    nhom = ky.get("nhom") or ["cpi_yte", "cpi_nha", "cpi_giao_duc", "cpi_thucpham", "cpi_di_lai", "cpi_quan_ao"]
+    NHAN = {"cpi_yte": ("Health care", "🏥"), "cpi_nha": ("Housing", "🏠"),
+            "cpi_giao_duc": ("Education", "🎓"), "cpi_thucpham": ("Food", "🛒"),
+            "cpi_di_lai": ("Transport", "🚌"), "cpi_quan_ao": ("Clothing", "👕"),
+            "cpi_xang": ("Gas", "⛽"), "luong_gio": ("Hourly pay", "💵"),
+            "cpi_dien_nuoc": ("Utilities", "💡"), "cpi_giai_tri": ("Fun", "🎟️")}
+    den = int(ky.get("den_nam", 2024))
+    bo = D.nhieu_chuoi_bls(nhom, den - 1, den, ky.get("key", ""))
+    muc = []
+    for t, diem in bo.items():
+        if not diem:
+            continue
+        v = sum(x["gia_tri"] for x in diem[-12:]) / max(1, len(diem[-12:]))
+        ten, em = NHAN.get(t, (t, "📊"))
+        muc.append({"name": ten, "emoji": em, "value": round(v, 1), "disp": f"{v:,.0f}"})
+    if len(muc) < 3:
+        return None
+    muc = sorted(muc, key=lambda z: -z["value"])[:6]
+    # Tiêu đề phải theo NHÃN CỦA KÊNH. Để tiêu đề cứng thì hai kênh cùng nguồn ra y hệt nhau dù
+    # tham số khác — đúng lỗi đã dính một lần với PAYCHECK GAP và HOUSE MATH.
+    return (ky.get("nhan") or f"What costs the most in {den}", "idx", muc,
+            "Same index, same base year. Bureau of Labor Statistics.")
+
+
+def _sk_the_gioi(D, ky):
+    r = D.chi_so_the_gioi(ky.get("ma", "NY.GDP.PCAP.CD"), int(ky.get("nam", 2023)), 6)
+    if len(r) < 3:
+        return None
+    muc = [{"name": _gon(x["nuoc"], 22), "emoji": "🌍", "value": round(x["gia_tri"], 1),
+            "disp": _so(x["gia_tri"])} for x in r]
+    return (f"{ky.get('nhan', 'World ranking')} {ky.get('nam', 2023)}", "", muc,
+            "World Bank open data.")
+
+
+def _sk_hop_dong(D, ky):
+    nam = int(ky.get("nam", 2024))
+    hd = D.hop_dong_lon(nam, 6, ky.get("de_tai", ""))
+    if len(hd) < 3:
+        return None
+    muc = [{"name": _gon(x["ten"], 22), "emoji": "🧾", "value": round(x["tien"] / 1e6, 1),
+            "disp": _tien(x["tien"])} for x in hd]
+    return (f"{(ky.get('de_tai') or 'federal').title()} contracts, {nam}", "$M", muc,
+            "Filed on USAspending dot gov.")
+
+
+BO_SO = {"thanh_phan_mon": _sk_dinh_duong, "chuoi_bls": _sk_bls,
+         "chi_so_the_gioi": _sk_the_gioi, "hop_dong_lon": _sk_hop_dong}
+
+
+def dung_story_scaled(kenh: dict, ky: dict | None = None) -> dict | None:
+    """Story dạng so kích thước. None = thiếu dữ liệu -> BỎ LƯỢT."""
+    import du_lieu_mo as D
+    bo = BO_SO.get(kenh.get("ham"))
+    if not bo:
+        print(f"   ⚠️ {kenh.get('ten')}: '{kenh.get('ham')}' chưa có bộ so kích thước — bỏ lượt")
+        return None
+    ts = dict(kenh.get("tham_so") or {})
+    ts.update(ky or {})
+    kq = bo(D, ts)
+    if not kq:
+        print(f"   ⚠️ {kenh.get('ten')}: thiếu dữ liệu — BỎ LƯỢT")
+        return None
+    tieu_de, don_vi, muc, ket = kq
+    for m in muc:
+        m["vo"] = f"{m['name']}. {m['disp']}."
+    return {"title": tieu_de, "unit": don_vi, "items": muc,
+            "intro_vo": f"{tieu_de}. Same scale, no tricks.",
+            "outro_vo": ket, "nguon": kenh.get("nguon"),
+            "_that": True, "self_score": {"total": 92}}
+
+
 def chay(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] | None:
     """Dựng story -> thu giọng -> render. Trả (đường dẫn, thông tin QC). None = bỏ lượt."""
     import datastory_ci as DS

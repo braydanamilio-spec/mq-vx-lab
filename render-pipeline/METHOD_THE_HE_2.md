@@ -84,6 +84,19 @@ MLB StatsAPI · NBA Stats · SteamSpy · TVmaze · MusicBrainz · PubMed · NWS 
 
 **Key free api.data.gov** (một key dùng chung): NASA · FEC · USDA FoodData
 
+### ⚠️ HAI KEY FREE CẦN ĐĂNG KÝ — đang chặn 12 kênh
+
+| Key | Không có | Có key | Đăng ký |
+|---|---|---|---|
+| `BLS_KEY` | **25 lượt/NGÀY** | 500 | data.bls.gov/registrationEngine |
+| `DATA_GOV_KEY` | 30 lượt/giờ | 1.000 | api.data.gov (một key cho NASA + FEC + USDA) |
+
+Cả hai chỉ NỚI HẠN MỨC, không mở thêm dữ liệu. Mã đã đọc sẵn từ biến môi trường
+(`du_lieu_mo.key_bls()` / `key_data_gov()`) — thêm key là chạy, không phải sửa dòng nào.
+
+Đo thật 25/8: 12 kênh ăn nguồn BLS, mà 25 lượt/ngày là hết sau một buổi kiểm thử.
+Đã gộp nhiều chuỗi vào một lượt (`nhieu_chuoi_bls`) để đỡ, nhưng vẫn cần key.
+
 **Chưa dùng được**: Socrata (CDC · NYC · Chicago) trả 403, cần app token free — chưa xác minh.
 
 Quy tắc: mọi hàm trong `du_lieu_mo.py` hỏng thì **trả rỗng, không ném**. Dữ liệu là gia vị, không được làm gãy dây chuyền.
@@ -94,7 +107,9 @@ Quy tắc: mọi hàm trong `du_lieu_mo.py` hỏng thì **trả rỗng, không n
 
 - [x] Dạng `ranked` — 17/17 kênh dựng được story thật, đã render end-to-end
 - [x] Dạng `race` — 7/7 kênh dựng được, đã render end-to-end (STEAM TRUTH chuyển sang `ranked`: SteamSpy không có chuỗi thời gian, không bịa mốc)
-- [ ] Dạng `cinematic` (10) · `scaled` (6) · `mapped` (4) · `longshot` (3) · `thennow` (2)
+- [x] Dạng `cinematic` — 10/10 kênh dựng được story thật
+- [x] Dạng `scaled` — 6/6 kênh (4 chạy ngay, 2 kênh BLS chờ key)
+- [ ] Dạng `mapped` (4) · `longshot` (3) · `thennow` (2)
 - [ ] Ảnh chất liệu B/C: nối FLUX theo `style_anh` từng kênh
 - [x] Brand-kit 50 kênh — sinh 0 quota, 22 motif theo niche, 7 asset/kênh, banner bó đúng vùng an toàn
 - [ ] Đăng ký kênh vào Firestore + cấp kho Drive

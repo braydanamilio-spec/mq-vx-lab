@@ -250,8 +250,15 @@
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "chuoi": "luong_gio",
-   "nhan": "Average hourly pay"
+   "nhom": [
+    "luong_gio",
+    "cpi_nha",
+    "cpi_thucpham",
+    "cpi_yte",
+    "cpi_di_lai",
+    "cpi_giao_duc"
+   ],
+   "nhan": "Your pay against your bills"
   },
   "brand": {
    "name": "PAYCHECK GAP",
@@ -298,7 +305,10 @@
   "footage": false,
   "tham_so": {
    "chuoi": "cpi_nha",
-   "nhan": "Housing cost"
+   "nhan": "Housing cost",
+   "nhom": [
+    "cpi_nha"
+   ]
   },
   "brand": {
    "name": "RENT REALITY",
@@ -345,7 +355,15 @@
   "footage": false,
   "tham_so": {
    "chuoi": "cpi_thucpham",
-   "nhan": "Food price"
+   "nhan": "Food price",
+   "nhom": [
+    "cpi_thucpham",
+    "cpi_xang",
+    "cpi_nha",
+    "cpi_yte",
+    "cpi_di_lai",
+    "cpi_giao_duc"
+   ]
   },
   "brand": {
    "name": "PRICE OF NOW",
@@ -1860,8 +1878,15 @@
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "chuoi": "cpi_di_lai",
-   "nhan": "Transport cost"
+   "nhom": [
+    "cpi_nha",
+    "cpi_dien_nuoc",
+    "cpi_di_lai",
+    "cpi_thucpham",
+    "cpi_quan_ao",
+    "cpi_giai_tri"
+   ],
+   "nhan": "What a home actually costs"
   },
   "brand": {
    "name": "HOUSE MATH",
