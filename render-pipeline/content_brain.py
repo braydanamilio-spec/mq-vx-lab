@@ -325,23 +325,39 @@ class _CfShim:
         return self
 
     _live_vis = None          # model vision còn sống, dò 1 lần cho cả tiến trình
+    _vis_hong: set = set()    # model vision ĐÃ THỬ VÀ HỎNG -> không chọn lại (xem bên dưới)
 
-    def _resolve_live_vision(self) -> str:
-        """Model VISION còn sống — cùng cách chữa như model text. Xem ghi chú ở _CF_VIS_PREF."""
+    def _models_song(self) -> set:
+        """Tên mọi model Cloudflare đang có (tách riêng để test được, khỏi phải gọi mạng thật)."""
         import urllib.request
-        if _CfShim._live_vis:
-            return _CfShim._live_vis
         req = urllib.request.Request(
             f"https://api.cloudflare.com/client/v4/accounts/{self._acc}/ai/models/search?per_page=100",
             headers=self._hdr())
         with urllib.request.urlopen(req, timeout=20) as r:
-            ids = {m.get("name") for m in ((json.load(r).get("result")) or [])}
+            return {m.get("name") for m in ((json.load(r).get("result")) or [])}
+
+    def _resolve_live_vision(self) -> str:
+        """Model VISION còn dùng được — cùng cách chữa như model text. Xem ghi chú ở _CF_VIS_PREF.
+
+        25/8 — BẢN ĐẦU TỰ CHỌN LẠI CHÍNH MODEL VỪA HỎNG. Log phiên 02:15Z:
+            ⛅ CF vision: '@cf/meta/llama-3.2-11b-vision-instruct' không dùng được
+               -> chuyển sang '@cf/meta/llama-3.2-11b-vision-instruct'
+        Vì model đó là mục ĐẦU danh sách ưu tiên và `/ai/models/search` vẫn báo nó TỒN TẠI. Lỗi
+        thật là **403 Forbidden** — tức chuyện QUYỀN (tài khoản/token không được dùng model này),
+        không phải model bị gỡ. "Có tồn tại" và "được phép dùng" là hai chuyện khác nhau.
+        Nay nhớ model đã hỏng và bỏ qua nó; hết danh sách thì báo rõ để tầng trên quay về Gemini."""
+        if _CfShim._live_vis:
+            return _CfShim._live_vis
+        ids = self._models_song()
         for want in _CF_VIS_PREF:
-            if want in ids:
+            if want in ids and want not in _CfShim._vis_hong:
                 _CfShim._live_vis = want
                 print(f"   ⛅ CF vision: '{CF_VISION_MODEL}' không dùng được -> chuyển sang '{want}'.")
                 return want
-        raise RuntimeError("cloudflare: không còn model VISION nào trong danh sách ưu tiên")
+        raise RuntimeError(
+            "cloudflare: không model VISION nào dùng được (đã thử "
+            + ", ".join(sorted(_CfShim._vis_hong)) + ") — tài khoản có thể chưa được cấp quyền "
+            "Workers AI cho model ảnh. Hãy để Vision chạy bằng key Gemini.")
 
     def _resolve_live_model(self) -> str:
         """CF gỡ model text -> hỏi /ai/models/search rồi chọn theo _CF_PREF (bài học llama-3.3 Groq)."""
@@ -418,7 +434,10 @@ class _CfShim:
             # 25/8 — THÊM 403 CHO ĐƯỜNG VISION. Ca thật FUTUREUSA: `HTTP 403: AiError: Model ...`,
             # mà nhánh tự chữa chỉ nhận 400/404 nên rơi thẳng xuống `raise` -> vision chết cả lane
             # (0/36) trong im lặng.
-            if img is not None and e.code in (400, 403, 404) and "model" in low:
+            if img is not None and e.code in (400, 403, 404):
+                # Ghi nhận model vừa hỏng TRƯỚC khi dò, nếu không hàm dò lại chọn đúng nó.
+                _CfShim._vis_hong.add(body.get("model") or CF_VISION_MODEL)
+                _CfShim._live_vis = None
                 body["model"] = self._resolve_live_vision()
                 req2 = urllib.request.Request(
                     f"https://api.cloudflare.com/client/v4/accounts/{self._acc}/ai/v1/chat/completions",

@@ -1248,6 +1248,27 @@ def t_vision_co_model_du_phong():
     # nhánh tự chữa phải nhận CẢ 403 (ca thật), không chỉ 400/404
     i = src.index("if img is not None and e.code in")
     assert "403" in src[i: i + 120], "403 ở đường vision vẫn rơi thẳng xuống raise"
+    # 25/8 — BẢN ĐẦU TỰ CHỌN LẠI CHÍNH MODEL VỪA HỎNG (log 02:15Z: "…llama-3.2-11b-vision-instruct
+    # không dùng được -> chuyển sang …llama-3.2-11b-vision-instruct"), vì nó là mục đầu danh sách và
+    # `/ai/models/search` vẫn báo TỒN TẠI. Lỗi thật là 403 = chuyện QUYỀN, không phải model bị gỡ.
+    assert "_vis_hong" in src, "không nhớ model vision đã hỏng -> dò lại chọn đúng nó"
+    import content_brain as CB
+    S = CB._CfShim
+    sh = S.__new__(S); sh._acc = "x"; sh._hdr = lambda: {}
+    sh._models_song = lambda: set(CB._CF_VIS_PREF)
+    cu_h, cu_l = set(S._vis_hong), S._live_vis
+    try:
+        S._vis_hong.clear(); S._live_vis = None
+        S._vis_hong.add(CB.CF_VISION_MODEL)
+        assert sh._resolve_live_vision() != CB.CF_VISION_MODEL, "chọn lại đúng model vừa 403"
+        S._vis_hong.update(CB._CF_VIS_PREF); S._live_vis = None
+        try:
+            sh._resolve_live_vision()
+            raise AssertionError("hết model mà vẫn trả về một cái nào đó")
+        except RuntimeError as e:
+            assert "Gemini" in str(e), "hết model CF mà không chỉ đường quay về Gemini"
+    finally:
+        S._vis_hong.clear(); S._vis_hong.update(cu_h); S._live_vis = cu_l
     qv = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "qc_vision.py"), encoding="utf-8").read()
     assert "str(e)[:220]" in qv, "thông báo lỗi vision vẫn cắt quá ngắn để chẩn đoán"

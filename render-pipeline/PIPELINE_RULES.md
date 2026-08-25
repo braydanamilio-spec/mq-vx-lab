@@ -2395,3 +2395,19 @@ phút). Nay: bỏ lượt ghi khi bộ trường D1 quan tâm KHÔNG đổi, và
 Chốt bằng `t_cat_luot_ghi_d1_thua` (có ca kiểm `done` KHÔNG bị hãm — hãm nhầm là đếm thiếu video).
 **LUẬT: trước khi tối ưu một khoản chi, hãy ĐO xem nó đi đâu. Ở đây 100% nằm ở một bảng, và 71% là
 lượt ghi không mang thông tin mới cho chính kho đó.**
+
+### 7.du — Bản vá vision TỰ CHỌN LẠI CHÍNH MODEL VỪA HỎNG (25/8/2026)
+Log phiên 02:15Z (đã chạy bản vá 7.dh):
+```
+⛅ CF vision: '@cf/meta/llama-3.2-11b-vision-instruct' không dùng được
+   -> chuyển sang '@cf/meta/llama-3.2-11b-vision-instruct'
+```
+Vì model đó là **mục đầu** danh sách ưu tiên và `/ai/models/search` vẫn báo nó **TỒN TẠI**. Lỗi thật
+là **403 Forbidden** — chuyện **QUYỀN** (tài khoản chưa được cấp Workers AI cho model ảnh), không phải
+model bị gỡ. **"Có tồn tại" và "được phép dùng" là hai chuyện khác nhau**, mà hàm dò chỉ kiểm cái đầu.
+Kết quả: vision vẫn 0/36 — ảnh vẫn vào video không qua kiểm.
+Vá: nhớ model đã hỏng (`_vis_hong`), lần dò sau **bỏ qua nó**; hết danh sách thì báo rõ *"tài khoản có
+thể chưa được cấp quyền Workers AI cho model ảnh — hãy để Vision chạy bằng key Gemini"*. Tách
+`_models_song()` ra để test được mà không gọi mạng.
+**LUẬT: khi tự chữa bằng cách "chọn cái khác", phải LOẠI TRỪ cái vừa hỏng. Không loại trừ thì vòng
+lặp tự chọn lại chính nó và mọi thứ trông như đã chữa.**
