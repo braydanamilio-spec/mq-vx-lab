@@ -2739,3 +2739,12 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   kênh ⇒ **`at` thành một "kênh" 0 video** nằm cuối ô xổ. Xoá theo tên là đuổi hình bắt bóng —
   trường mới thêm sau lại lọt. Nay giữ khoá nào có giá trị là object mang `l`/`s` (đó mới là bản
   ghi đếm của một kênh). Đo sau vá: 48 khoá, 0 rác.
+
+- **Chữ karaoke đang chạy: dùng BẢNG MÀU đã sàng, KHÔNG dùng accent của kênh.** (25/8) Anh mở video
+  BRANDEDUSA (cảnh biển Coca-Cola đỏ rực): từ đang đọc tô bằng accent navy ⇒ tàng hình. Gốc sai:
+  lấy **màu nhận diện** làm **màu chữ chạy** — accent phục vụ logo/khung, chữ chạy chỉ có một việc
+  là ĐỌC ĐƯỢC. Bản vá 1 của tôi (hộp + viên nền + vành trắng) bị anh bác đúng: nặng nề, xấu hơn.
+  Bản 2 theo cách kênh lớn Mỹ làm: **không hộp, không viên nền** — chữ trắng đậm + viền tối 5px,
+  từ đang đọc đổi màu. Đa dạng giữa kênh bằng bảng 6 màu rực (mỗi kênh một màu cố định theo băm
+  tên); màu tự đặt mà độ sáng < 0.52 thì BỎ, quay về bảng. Chốt `t_chu_chay_luon_doc_duoc` kiểm cả
+  độ sáng từng màu trong bảng. Đã render ảnh so 3 bản trên 3 loại nền trước khi chốt.

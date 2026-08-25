@@ -9,7 +9,7 @@ import { AbsoluteFill, Audio, Sequence, OffthreadVideo, Img, staticFile, interpo
 type HUD = { kind: string; value?: number; from?: number; to?: number; unit?: string; label?: string; marks?: string[] };
 type Sub = { t: string; s: number; d: number };
 type Scene = { type: string; clip?: string; clip2?: string; clips?: string[]; man?: number; fx?: string; audio: string; dur: number; nar: string; amp?: number[]; hud?: HUD; title?: string; num?: string; subs?: Sub[]; hook?: { stat?: string; label?: string; line?: string } };
-export type CProps = { scenes: Scene[]; slug: string; handle?: string; accent?: string; accent2?: string; ink?: string; music?: string; mode?: "duel" | "file"; host?: string };
+export type CProps = { scenes: Scene[]; slug: string; handle?: string; capColor?: string; accent?: string; accent2?: string; ink?: string; music?: string; mode?: "duel" | "file"; host?: string };
 export const calcCinematic = ({ props }: { props: CProps }) => ({ durationInFrames: Math.max(1, props.scenes.reduce((a, s) => a + s.dur, 0)) });
 const ci = (v: number, a: number, b: number, x: number, y: number) => interpolate(v, [a, b], [x, y], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 // 1 ảnh hỏng/thiếu KHÔNG được giết cả video: <Img> mặc định CHỜ VÔ HẠN ảnh không nạp được ->
@@ -37,23 +37,40 @@ const chunkWords = (ws: string[]): string[][] => {
 };
 // Caption karaoke: nếu có subs (mốc CÂU từ edge-tts) -> neo đúng lúc voice nói (khớp tiếng). Không có -> chia đều cả cảnh.
 /**
- * ĐỘ SÁNG CẢM NHẬN của một mã màu (0 tối … 1 sáng). Dùng để chọn màu chữ đè lên nó.
- * 25/8 — vì sao cần: từ đang đọc trước đây tô THẲNG bằng `accent` của kênh. BRANDEDUSA có accent
- * xanh navy đậm, cảnh lại là biển Coca-Cola ĐỎ RỰC ⇒ chữ "moved" gần như tàng hình giữa các từ
- * trắng. Bản vá đầu (viên nền accent + chữ tối) vẫn hỏng với accent tối: tối trên tối.
- * Không thể chọn sẵn một màu chữ cho mọi kênh — phải TÍNH: nền sáng thì chữ tối, nền tối thì chữ
- * sáng. Đây là phép đo, không phải khẩu vị.
+ * MÀU TỪ ĐANG ĐỌC — đa dạng giữa các kênh nhưng LUÔN đọc được (25/8).
+ *
+ * Hai đòi hỏi tưởng chọi nhau, thật ra không:
+ *   • đỡ nhàm: 55 kênh mà chữ chạy đều một màu vàng thì nhìn như cùng một xưởng
+ *   • vẫn chuẩn: màu nào cũng phải nổi trên MỌI cảnh (đỏ rực, trời sáng, đêm tối)
+ * Giải: một BẢNG MÀU đã sàng — tất cả đều rực và sáng, ghép với viền tối là đọc được ở mọi nền.
+ * Kênh tự nhận một màu theo tên (băm), nên MỖI KÊNH MỘT MÀU CỐ ĐỊNH suốt đời, còn giữa các kênh
+ * thì khác nhau. Không có chỗ cho may rủi.
  */
+const BANG_MAU = ["#FFD400", "#00E676", "#FF9100", "#FF4FA3", "#00E5FF", "#B4FF3A"];
+
+/** Độ sáng cảm nhận (0 tối … 1 sáng) — dùng làm CHỐT CHẶN, không cho màu tối làm chữ chạy. */
 const doSang = (hex: string): number => {
   const h = String(hex || "").replace("#", "");
   const v = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
   const r = parseInt(v.slice(0, 2), 16) / 255, g = parseInt(v.slice(2, 4), 16) / 255,
         b = parseInt(v.slice(4, 6), 16) / 255;
-  if ([r, g, b].some((x) => Number.isNaN(x))) return 0.5;
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;      // hệ số cảm nhận của mắt người
+  if ([r, g, b].some((x) => Number.isNaN(x))) return 0;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 
-const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; subs?: Sub[]; mode?: "duel" | "file" }> = ({ nar, l, d, accent, subs, mode }) => {
+/**
+ * Màu chữ chạy của một kênh. `chon` = màu người dùng đặt trên dashboard (không bắt buộc).
+ * Màu tự đặt mà QUÁ TỐI thì BỎ, quay về bảng — đây là chốt giữ "chuẩn": bài học BRANDEDUSA
+ * accent navy làm karaoke tàng hình trên nền đỏ.
+ */
+const mauChu = (slug: string, chon?: string): string => {
+  if (chon && doSang(chon) >= 0.52) return chon;
+  let h = 0;
+  for (const c of String(slug || "x")) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return BANG_MAU[h % BANG_MAU.length];
+};
+
+const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; subs?: Sub[]; mode?: "duel" | "file"; vang?: string }> = ({ nar, l, d, accent, subs, mode }) => {
   const lines: { words: string[]; s: number; e: number }[] = [];
   if (subs && subs.length) {
     for (const sb of subs) {
@@ -87,36 +104,25 @@ const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; sub
     );
   }
   return (
-    // 25/8 — PHỤ ĐỀ "MỜ TỊT" TRÊN NỀN SÁNG. Soi video thật (BRANDEDUSA, cảnh trời xanh chói): chữ
-    // trắng chỉ có bóng đổ, không có gì bảo đảm tương phản — nền sáng là chữ chìm nghỉm, và từ
-    // đang đọc (màu accent nhạt của kênh) biến mất luôn nên karaoke thành vô nghĩa.
-    // Ba lớp bảo đảm, theo đúng thứ tự phim chuyên nghiệp dùng:
-    //   1. DẢI NỀN mờ phía sau — kéo nền về tối bất kể cảnh là gì
-    //   2. VIỀN CHỮ (stroke) — đọc được cả khi dải nền bị cảnh sáng lấn át
-    //   3. TỪ ĐANG ĐỌC có VIÊN NỀN riêng màu accent + chữ tối => luôn nổi, không phụ thuộc accent
-    //      sáng hay tối (đây là chỗ bản cũ hỏng: accent nhạt + chữ trắng = không thấy gì)
+    // PHỤ ĐỀ KIỂU KÊNH LỚN MỸ (25/8, bản 2 — bản 1 của tôi cồng kềnh và anh bác đúng).
+    // Soi cách Hormozi-style / MrBeast / TikTok caption thật sự làm:
+    //   • KHÔNG hộp nền, KHÔNG viên nền quanh chữ — chúng làm khung hình nặng nề
+    //   • chữ trắng đậm + VIỀN TỐI MẢNH: đây là thứ giữ cho chữ đọc được trên mọi cảnh, và là
+    //     điểm chung của gần như mọi kênh short lớn — bỏ hẳn viền thì nền sáng là mất chữ
+    //   • TỪ ĐANG ĐỌC đổi sang MÀU VÀNG CỐ ĐỊNH, không dùng accent của kênh. Đây chính là chỗ
+    //     bản gốc hỏng: BRANDEDUSA accent navy đậm ⇒ từ đang đọc tàng hình trên nền đỏ. Màu nhận
+    //     diện là chuyện của logo/khung, KHÔNG phải của chữ đang chạy — chữ chạy cần ĐỌC ĐƯỢC.
     <div style={{ position: "absolute", left: 0, right: 0, bottom, textAlign: "center", padding: pad,
                   opacity: lineOp, zIndex: 30 }}>
-      <div style={{ display: "inline-block", maxWidth: "100%", lineHeight: 1.3,
-                    background: "rgba(8,10,16,0.46)", borderRadius: 20, padding: "8px 20px",
-                    backdropFilter: "blur(3px)" } as React.CSSProperties}>
-        {cur.words.map((x, i) => { const on = i === active; return (
-          <span key={i} style={{
-            fontSize: fs, fontWeight: 900, display: "inline-block",
-            margin: on ? "0 6px" : "0 11px",
-            padding: on ? "0 10px" : 0,
-            borderRadius: on ? 12 : 0,
-            background: on ? accent : "transparent",
-            // chữ trên viên nền: TÍNH theo độ sáng của accent, không đoán
-            color: on ? (doSang(accent) > 0.55 ? "#12131A" : "#FFFFFF") : "#F4FAFF",
-            // vành sáng quanh viên nền: tách nó khỏi MỌI cảnh (đỏ rực, trời xanh, cảnh tối)
-            boxShadow: on ? "0 0 0 4px rgba(255,255,255,0.92), 0 4px 18px rgba(0,0,0,0.55)" : "none",
-            WebkitTextStroke: on ? "0px" : "7px rgba(8,10,16,0.92)",
-            paintOrder: "stroke fill",
-            transform: on ? "scale(1.07)" : "scale(1)",
-            textShadow: on ? "none" : "0 3px 20px rgba(0,0,0,0.9)",
-          } as React.CSSProperties}>{x}</span>); })}
-      </div>
+      {cur.words.map((x, i) => { const on = i === active; return (
+        <span key={i} style={{
+          fontSize: fs, fontWeight: 900, display: "inline-block", margin: "0 10px",
+          color: on ? (vang || BANG_MAU[0]) : "#FFFFFF",
+          WebkitTextStroke: "5px rgba(10,12,18,0.9)",
+          paintOrder: "stroke fill",
+          transform: on ? "scale(1.06)" : "scale(1)",
+          textShadow: "0 4px 14px rgba(0,0,0,0.55)",
+        } as React.CSSProperties}>{x}</span>); })}
     </div>
   );
 };
@@ -216,7 +222,7 @@ const FxLayer: React.FC<{ kind: string; l: number }> = ({ kind, l }) => {
   );
 };
 
-const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; accent2: string; idx: number; mode?: "duel" | "file" }> = ({ s, l, slug, accent, accent2, idx, mode }) => {
+const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; accent2: string; idx: number; capColor?: string; mode?: "duel" | "file" }> = ({ s, l, slug, accent, accent2, idx, mode }) => {
   const f = useCurrentFrame();
   // CẮT NHANH: cảnh có clip2 -> nửa đầu clip, nửa sau clip2 (đổi hình giữa cảnh, nhịp dồn, hết đứng hình)
   // CẮT NHANH: s.clips = nhiều ảnh cho MỘT cảnh -> chia đều thời lượng, ~2-3s đổi hình một lần.
@@ -374,7 +380,7 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
   );
 };
 
-export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent = "#22D3EE", accent2 = "#F5B301", ink = "#EAF8FF", music, mode, host }) => {
+export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", capColor, accent = "#22D3EE", accent2 = "#F5B301", ink = "#EAF8FF", music, mode, host }) => {
   const f = useCurrentFrame(); const st: number[] = []; scenes.reduce((a, s, i) => (st[i] = a, a + s.dur), 0);
   let idx = 0; for (let k = 0; k < scenes.length; k++) if (f >= st[k]) idx = k; const s = scenes[idx], l = f - st[idx];
   // KHÔNG fade-về-đen giữa cảnh (comp render 1 cảnh/lúc -> fade sẽ chớp ĐEN mỗi chuyển cảnh).
@@ -404,10 +410,10 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", accent 
   }
   return (
     <AbsoluteFill style={{ background: "#02030A", fontFamily: "'Poppins',Arial", opacity: vidFade }}>
-      {inCross && <AbsoluteFill><Scene1 s={scenes[prevIdx]} l={prevL} slug={slug} accent={accent} accent2={accent2} idx={prevIdx} mode={mode} /></AbsoluteFill>}
-      <AbsoluteFill style={{ opacity: curOpacity, transform: curTransform }}><Scene1 s={s} l={l} slug={slug} accent={accent} accent2={accent2} idx={idx} mode={mode} /></AbsoluteFill>
+      {inCross && <AbsoluteFill><Scene1 s={scenes[prevIdx]} l={prevL} slug={slug} accent={accent} accent2={accent2} idx={prevIdx} capColor={capColor} mode={mode} /></AbsoluteFill>}
+      <AbsoluteFill style={{ opacity: curOpacity, transform: curTransform }}><Scene1 s={s} l={l} slug={slug} accent={accent} accent2={accent2} idx={idx} capColor={capColor} mode={mode} /></AbsoluteFill>
       {/* LUÔN hiện caption (kể cả chapter -> voice đọc nar đều có sub); dùng subs (mốc câu) để khớp tiếng */}
-      <Caption nar={s.nar} l={l} d={s.dur} accent={accent} subs={s.subs} mode={mode} />
+      <Caption nar={s.nar} l={l} d={s.dur} accent={accent} subs={s.subs} mode={mode} vang={mauChu(slug, capColor)} />
       {host && (() => {
         // HOST nhất quán (Nano Banana, ảnh tham chiếu giữ nguyên nhân vật) — đứng góc dưới, hơi thở/lắc nhẹ theo spring, xuyên suốt video.
         const { width, height } = useVideoConfig(); const port = height > width;

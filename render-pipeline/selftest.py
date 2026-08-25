@@ -442,6 +442,7 @@ def main():
     check("giọng nhân vật có cao độ, hai vai lệch nhau", t_giong_nhan_vat_co_cao_do)
     check("tts: không hàm nào dùng biến chưa nhận", t_tts_khong_dung_bien_chua_nhan)
     check("kịch bản skit mang đủ 5 luật viral", t_kich_ban_co_luat_viral)
+    check("chữ karaoke luôn đọc được (bảng màu đã sàng)", t_chu_chay_luon_doc_duoc)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2352,6 +2353,29 @@ def t_tts_khong_dung_bien_chua_nhan():
                     if not hasattr(builtins, n.id):
                         xau.append(f"{fn.name}:{n.id}")
     assert not xau, f"hàm dùng biến chưa nhận/chưa gán: {sorted(set(xau))[:5]}"
+
+
+def t_chu_chay_luon_doc_duoc():
+    """Chữ karaoke đang chạy phải LUÔN đọc được, dù kênh chọn màu gì.
+
+    25/8 — anh mở video BRANDEDUSA (cảnh biển Coca-Cola ĐỎ RỰC): từ đang đọc tô bằng `accent` của
+    kênh (navy đậm) nên tàng hình giữa các từ trắng; kênh accent nhạt thì chìm vào nền sáng.
+    Gốc sai lầm: lấy MÀU NHẬN DIỆN làm màu chữ chạy. Accent phục vụ logo/khung; chữ đang chạy chỉ
+    có một việc là ĐỌC ĐƯỢC. Nay dùng bảng màu đã sàng (đều rực + sáng) + viền tối, mỗi kênh một
+    màu cố định theo băm tên; màu tự đặt mà quá tối thì BỎ, quay về bảng."""
+    src = _doc("../engine-remotion/src/Cinematic.tsx")
+    assert "BANG_MAU" in src and "const mauChu" in src, "không có bảng màu chữ chạy"
+    assert "doSang(chon) >= 0.52" in src, "mất chốt chặn màu tối làm chữ chạy"
+    assert "color: on ? (vang" in src, "từ đang đọc vẫn tô bằng accent kênh"
+    # mọi màu trong bảng phải THẬT SỰ sáng — nếu không thì chốt trên vô nghĩa
+    import re
+    bang = re.search(r'const BANG_MAU = \[([^\]]+)\]', src).group(1)
+    for hx in re.findall(r'#([0-9A-Fa-f]{6})', bang):
+        r, g, b = (int(hx[i:i+2], 16) / 255 for i in (0, 2, 4))
+        L = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        assert L >= 0.52, f"màu #{hx} trong bảng chỉ sáng {L:.2f} — sẽ chìm trên nền sáng"
+    # viền tối là thứ giữ chữ đọc được trên nền sáng — không được bỏ
+    assert "WebkitTextStroke" in src, "mất viền chữ -> nền sáng là mất chữ"
 
 
 if __name__ == "__main__":
