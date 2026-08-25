@@ -2301,6 +2301,11 @@ def t_mascot_khong_ve_lai_nhan_vat():
         "dung_video không nhận danh sách skit -> long luôn quá ngắn"
     pl = _doc("mascot_pilot.py")
     assert "n_skit = 3 if dai else 1" in pl, "pilot không viết nhiều skit cho long"
+    # 25/8 — pilot 3/3 skit hỏng vì truyền thẳng keys[0]: key đầu cạn là chết cả lượt, trong khi
+    # dây chuyền chính vẫn chạy nhờ xoay key. Đường phụ phải dùng lại cơ chế của đường chính.
+    assert "KM.key_order" in pl, "pilot không xoay key -> key đầu cạn là chết cả lượt"
+    assert 'api_key=(keys or [{}])[0]' not in pl.split("def _viet_skit")[-1].split("def pilot")[0], \
+        "vẫn còn chỗ dùng cứng keys[0] trong đường viết skit"
 
 
 def t_mascot_stage_dong_tung_khung():

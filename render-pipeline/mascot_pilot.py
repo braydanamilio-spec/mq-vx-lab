@@ -63,6 +63,31 @@ def rig(kenh: str, lam_lai: bool = False) -> int:
     return 0 if (ok_nv and ok_sk) else 2
 
 
+def _viet_skit(niche: str, keys: list, kenh: str, tranh: list, nhan: str):
+    """Viết MỘT skit, XOAY VÒNG QUA CÁC KEY khi gặp cạn hạn mức.
+
+    25/8 — pilot 12:51Z: 3/3 skit hỏng với "You exceeded your current quota". Không phải lỗi
+    kịch bản: pilot truyền thẳng `keys[0]` nên key đầu cạn là chết cả lượt, trong khi dây chuyền
+    chính vẫn chạy ngon vì nó xoay key theo `key_manager.key_order` (ưu tiên key ÍT DÙNG NHẤT).
+    Một đường phụ mà không dùng lại cơ chế của đường chính thì sớm muộn cũng lệch như vậy."""
+    import content_brain as CB
+    import key_manager as KM
+    ho = KM.key_order(kenh, keys) or keys or []
+    for i, k in enumerate(ho[:8]):
+        try:
+            return CB.generate_toon(niche, api_key=k.get("key", ""), avoid=tranh)
+        except Exception as e:
+            _m = str(e)[:70]
+            _can = any(x in _m.lower() for x in ("quota", "429", "rate limit", "exhaust"))
+            if not _can:
+                print(f"   ⚠️ skit {nhan} viết hỏng ({_m}) — bỏ, đi tiếp")
+                return None
+            if i + 1 < len(ho[:8]):
+                print(f"   🔑 skit {nhan}: key thứ {i + 1} cạn hạn mức — xoay sang key kế")
+    print(f"   ⚠️ skit {nhan}: thử {min(8, len(ho))} key đều cạn hạn mức — bỏ, đi tiếp")
+    return None
+
+
 def pilot(kenh: str) -> int:
     import content_brain as CB
     import datastory_ci as DS
@@ -95,11 +120,8 @@ def pilot(kenh: str) -> int:
                 # MỘT SKIT HỎNG KHÔNG ĐƯỢC GIẾT CẢ BẢN DÀI (25/8): pilot 12:39Z skit 1 đạt, skit 2
                 # bị loại rồi cả lượt long chết IM LẶNG — không một dòng nói vì sao. Nay: báo rõ,
                 # bỏ skit hỏng, đi tiếp; cuối cùng có bao nhiêu skit thì dựng bấy nhiêu.
-                try:
-                    _sk = CB.generate_toon(cfg["niche"], api_key=(keys or [{}])[0].get("key", ""),
-                                           avoid=_tranh)
-                except Exception as _e:
-                    print(f"   ⚠️ skit {_i + 1}/{n_skit} viết hỏng ({str(_e)[:70]}) — bỏ, đi tiếp")
+                _sk = _viet_skit(cfg["niche"], keys, kenh, _tranh, f"{_i + 1}/{n_skit}")
+                if not _sk:
                     continue
                 stories.append(_sk)
                 _tranh.append(_sk.get("title", ""))     # skit sau không lặp ý skit trước

@@ -2695,3 +2695,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   ánh xạ theo thứ tự người nói xuất hiện (đúng 2 người mới đổi, nhiều hơn để validator bắt như cũ).
 - **Một skit hỏng không được giết cả bản dài.** (25/8) Cùng ca trên: skit 2 hỏng thì cả lượt long
   chết IM LẶNG, không một dòng nói vì sao. Nay báo rõ, bỏ skit hỏng, dựng bằng số skit còn lại.
+
+- **Đường phụ phải DÙNG LẠI cơ chế xoay key của đường chính.** (25/8) Pilot 12:51Z: 3/3 skit hỏng với
+  "You exceeded your current quota" — không phải lỗi kịch bản mà vì pilot truyền thẳng `keys[0]`,
+  key đầu cạn là chết cả lượt, trong khi dây chuyền chính vẫn chạy ngon nhờ `key_manager.key_order`
+  (ưu tiên key ÍT DÙNG NHẤT). Nay `_viet_skit()` xoay tối đa 8 key, chỉ xoay khi lỗi là **cạn hạn
+  mức** (lỗi khác thì báo và dừng, đừng đốt 8 key vào một bài hỏng). Chốt trong
+  `t_mascot_khong_ve_lai_nhan_vat`.
