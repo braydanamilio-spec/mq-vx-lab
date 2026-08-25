@@ -2517,3 +2517,13 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   từ D1 mà không sửa gốc chỉ là **đổi chỗ sai**. Nay lượt ghi ĐẦU của mỗi job xả sớm, có nhịp 25s
   (bước plan dựng cả trăm job liền tay — xả từng cái là phá gộp lô: 25 thao tác thành 25 lời gọi).
   Chốt: `t_job_dang_chay_len_d1_ngay` (đã thử phá 2 kiểu, đều bắt được).
+
+- **Dashboard: F5 và thao tác key không được đọc lại cả bảng.** (25/8) Ba khoản lãng phí đo được:
+  (a) `getFirestore()` trần chỉ đệm trong BỘ NHỚ TRANG ⇒ mỗi lần F5 nạp lại toàn bộ kênh/key/job
+  (~200-500 lượt; F5 20 lần/ngày = 10.000 lượt ≈ 1/5 trần một project). Nay bật `persistentLocalCache`
+  + `persistentMultipleTabManager` (IndexedDB): F5 dựng lại từ đệm, listener chỉ kéo phần THAY ĐỔI.
+  Trình duyệt chặn IndexedDB thì rơi về `getFirestore` như cũ.
+  (b) Thêm/xoá 1 key gọi `__loadKeys()` = `getDocs` trọn bộ `gemini_keys` (166 lượt đọc cho 1 dòng
+  vừa đổi). Nay `__rsKeyThem`/`__rsKeyBo` sửa tại chỗ rồi vẽ lại: 0 lượt đọc.
+  (c) Đổi tab lọc nhà cung cấp cũng gọi `__loadKeys()` — dữ liệu đã nằm trong bộ nhớ. Nay chỉ vẽ lại.
+  Đã có sẵn từ trước: ẩn tab 45s → ngắt listener, tab phụ → 0 lượt đọc, đệm doc lẻ ở localStorage.
