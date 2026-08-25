@@ -18,7 +18,11 @@
   "long_target": 100,
   "short_target": 300,
   "round_long": 1,
-  "round_short": 3
+  "round_short": 3,
+  "voice": "en-US-ChristopherNeural",
+  "voice_rate": "+0%",
+  "paused": false,
+  "category": "comedy"
  },
  "HANKYARD": {
   "name": "HANKYARD",
@@ -39,7 +43,11 @@
   "long_target": 100,
   "short_target": 300,
   "round_long": 1,
-  "round_short": 3
+  "round_short": 3,
+  "voice": "en-US-RogerNeural",
+  "voice_rate": "+0%",
+  "paused": false,
+  "category": "comedy"
  },
  "PEARLPORCH": {
   "name": "PEARLPORCH",
@@ -60,7 +68,11 @@
   "long_target": 100,
   "short_target": 300,
   "round_long": 1,
-  "round_short": 3
+  "round_short": 3,
+  "voice": "en-US-AriaNeural",
+  "voice_rate": "+0%",
+  "paused": false,
+  "category": "stories"
  },
  "BISONDESK": {
   "name": "BISONDESK",
@@ -81,7 +93,11 @@
   "long_target": 100,
   "short_target": 300,
   "round_long": 1,
-  "round_short": 3
+  "round_short": 3,
+  "voice": "en-US-BrianNeural",
+  "voice_rate": "-4%",
+  "paused": false,
+  "category": "history"
  },
  "OWLOFFICE": {
   "name": "OWLOFFICE",
@@ -102,6 +118,10 @@
   "long_target": 100,
   "short_target": 300,
   "round_long": 1,
-  "round_short": 3
+  "round_short": 3,
+  "voice": "en-US-SteffanNeural",
+  "voice_rate": "+0%",
+  "paused": false,
+  "category": "explainer"
  }
 }

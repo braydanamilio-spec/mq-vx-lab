@@ -442,6 +442,7 @@ def main():
     check("mascot: dùng rig sẵn, KHÔNG vẽ lại nhân vật", t_mascot_khong_ve_lai_nhan_vat)
     check("MascotStage động theo từng khung + parallax", t_mascot_stage_dong_tung_khung)
     check("tách nền rig: ĐO màu viền, không khoá cứng", t_tach_nen_khong_khoa_cung_mau)
+    check("brandkit qua QC hình (đo pixel rồi soi Vision)", t_brandkit_co_qc_hinh)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2342,6 +2343,22 @@ def t_phien_khong_giu_khoa_qua_lau():
     assert soft <= hard, f"ngân sách mềm {soft}' > cứng {hard}'"
     assert hard + 10 <= to, f"lane thoát ở {hard}' mà workflow chém ở {to}' — không đủ chỗ flush"
     assert to <= 100, f"timeout {to}' quá dài — phiên sau sẽ bị huỷ trắng như 10:03/10:44 ngày 25/8"
+
+
+def t_brandkit_co_qc_hinh():
+    """Ảnh nhận diện phải qua QC HÌNH trước khi được dùng — đo pixel rồi mới soi Vision.
+
+    25/8 (anh dặn "kiểm visual QC trước sau"): avatar/bìa là thứ khán giả thấy TRƯỚC cả video.
+    Một ảnh nền trơn vì PNG rig nạp hụt mà lọt lên kênh thì hỏng nhận diện ngay từ ấn tượng đầu —
+    và không có gì trong hệ bắt được, vì file vẫn tồn tại và vẫn đủ dung lượng."""
+    src = _doc("mascot_brand.py")
+    assert "def _qc_anh" in src, "brandkit không có QC hình"
+    assert "flat_bg_metrics" in src, "không đo pixel (tầng rẻ) trước khi gọi Vision"
+    i = src.index("def _qc_anh")
+    than = src[i:src.index("def sinh")]
+    assert than.index("flat_bg_metrics") < than.index("verify_image"), \
+        "phải ĐO trước SOI sau — gọi Vision trước là đốt quota cho ảnh hỏng hiển nhiên"
+    assert "_hong" in src, "ảnh QC trượt bị xoá -> mất bằng chứng để soi"
 
 
 if __name__ == "__main__":

@@ -34,6 +34,39 @@ BO_CO = [
 ]
 
 
+def _qc_anh(dest: str, comp: str, kenh: str, keys: list) -> tuple[bool, str]:
+    """QC HÌNH cho một ảnh nhận diện — ĐO trước, SOI sau (25/8, anh dặn "kiểm visual QC trước sau").
+
+    Hai tầng, rẻ trước đắt sau:
+      1. ĐO BẰNG PIXEL (0 quota): ảnh không được là nền trơn (nhân vật không hiện / lỗi nạp PNG),
+         và phải đủ màu. Đây là bẫy thật đã xảy ra với video: file có, mở ra toàn nền.
+      2. SOI BẰNG VISION (chỉ khi tầng 1 qua): hỏi đúng câu "có đúng nhân vật không, chữ có bị cắt
+         không". Vision hỏng/hết quota trả None -> KHÔNG chặn (fail-open), vì tầng 1 đã gác phần
+         chết người rồi.
+    """
+    import datastory_ci as DS
+    try:
+        dark, sat, cols = DS.flat_bg_metrics(dest)
+    except Exception as e:
+        return True, f"không đo được ({str(e)[:40]}) — cho qua"
+    # avatar/watermark là hình tròn nền đặc nên tối/màu ít là BÌNH THƯỜNG; banner/thumb thì không
+    it_mau = 60 if comp in ("MascotAvatar", "MascotWatermark") else 140
+    if cols < it_mau:
+        return False, f"chỉ {cols} màu — nhân vật nhiều khả năng KHÔNG hiện (nền trơn)"
+    if dark >= 96:
+        return False, f"tối {dark:.0f}% — ảnh gần như đen"
+    try:
+        import qc_vision as QV
+        v = QV.verify_image(dest, f"the {kenh} channel mascot artwork, characters clearly visible, "
+                                  f"no cut-off text, no distorted faces",
+                            api_key=(keys or [{}])[0].get("key", ""))
+        if v is False:
+            return False, "Vision chấm KHÔNG đạt (nhân vật/chữ hỏng)"
+    except Exception:
+        pass
+    return True, f"{cols} màu · tối {dark:.0f}%"
+
+
 def sinh(kenh: str) -> int:
     import datastory_ci as DS
     import mascot_cast as MC
@@ -62,6 +95,12 @@ def sinh(kenh: str) -> int:
     pf = os.path.join(DS.PUB, f"_brand_{kenh}.json")
     json.dump(props, open(pf, "w"), ensure_ascii=False)
 
+    import firestore_bridge as FB
+    keys = []
+    try:
+        keys = FB.read_keys(os.environ.get("OWNER_UID", ""))
+    except Exception:
+        pass
     n = 0
     for comp, ten in BO_CO:
         dest = os.path.join(ra_dir, ten)
@@ -70,11 +109,17 @@ def sinh(kenh: str) -> int:
                 ["npx", "remotion", "still", "src/index.ts", comp, dest,
                  f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader", "--log=error"],
                 cwd=DS.ENG, timeout=600, label=f"brand:{comp}")
-            if os.path.exists(dest) and os.path.getsize(dest) > 3000:
-                print(f"   ✅ {kenh}/{ten}")
+            if not (os.path.exists(dest) and os.path.getsize(dest) > 3000):
+                print(f"   ⚠️ {kenh}/{ten}: file rỗng"); continue
+            ok, vi_sao = _qc_anh(dest, comp, kenh, keys)
+            if ok:
+                print(f"   ✅ {kenh}/{ten} · {vi_sao}")
                 n += 1
             else:
-                print(f"   ⚠️ {kenh}/{ten}: file rỗng")
+                # KHÔNG xoá — giữ để soi tận mắt (luật "hỏng thì giữ bằng chứng")
+                hong = os.path.join(ra_dir, "_hong"); os.makedirs(hong, exist_ok=True)
+                os.replace(dest, os.path.join(hong, ten))
+                print(f"   ❌ {kenh}/{ten}: {vi_sao} — chuyển vào _hong/, KHÔNG dùng")
         except Exception as e:
             print(f"   ⚠️ {kenh}/{comp}: {str(e)[:80]}")
     print(f"{'✅' if n == len(BO_CO) else '⚠️'} {kenh}: {n}/{len(BO_CO)} ảnh nhận diện")
