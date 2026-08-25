@@ -2799,3 +2799,25 @@ vẫn còn và cũng vẽ tiêu đề, cộng header luôn bật → **3 bản t
   cả N, không chỉ ở component đang test.
 - Chú thích trong JSX phải bọc `{/* */}`. Để trần `/* ... <Tag> ... */` làm esbuild đọc thành thẻ thật
   và gãy build toàn bộ engine.
+
+### Phiên 14:06 25/8 — hai lỗi im lặng (không lane nào fail, không ai biết nếu không soi log)
+
+**1. `_extract_json` trả list → giết luồng (5 lần/phiên, toon long)**
+Gemini thỉnh thoảng trả thẳng MẢNG dialog thay vì object. Cả 21 chỗ gọi đều `-> dict` rồi `.get()`
+ngay dòng sau, mà `.get` nằm NGOÀI vùng try bọc `_extract_json` → `AttributeError: 'list' object has
+no attribute 'get'` bay thẳng lên, không rơi vào nhánh "invalid JSON, thử lại".
+- **Sửa tại một chỗ, chữa cả 21**: `_extract_json` luôn trả dict — mảng bọc đúng 1 object thì bóc ra
+  dùng; còn lại ném `ValueError` để vòng lặp gọi lại kèm phản hồi (cơ chế đã có sẵn).
+- Chốt `t_extract_json_luon_tra_dict`.
+
+**2. Chống trùng bị vô hiệu 63 lần/phiên — thiếu ĐÚNG MỘT DÒNG cờ**
+`enqueue.py` (chống trùng + đẩy kho) chạy TRONG render lane, đọc sổ `videos` qua `client_publish()`.
+Hàm đó chỉ trỏ Project C khi `SHARD_PUBLISH=1`, không thì rơi về A. `render_cron.yml` truyền sẵn
+creds + id của C nhưng **thiếu cờ** → A cạn hạn mức → 429 → 63 lần in "không tra được sổ chống trùng
+— vẫn upload". Không Traceback, không lane fail, chỉ có nguy cơ video trùng trong kho.
+- **Luật**: step nào truyền `FIREBASE_PROJECT_ID_C` thì BẮT BUỘC truyền `SHARD_PUBLISH`, trừ script
+  tự dựng client C trực tiếp (migrate_to_shards.py).
+- Chốt `t_workflow_dung_project_C_phai_bat_co` — miễn trừ theo NỘI DUNG script, không theo tên file.
+
+*Không phải lỗi (đã xác minh, đừng vá lại)*: 37 dòng "B cạn hạn mức ngày — KHÔNG rơi về Project A" là
+ĐÚNG thiết kế cách ly 3 project; tầng trên lật gương B2 (19 lần `🔀 FAILOVER` trong cùng phiên).

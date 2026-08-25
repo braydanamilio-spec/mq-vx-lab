@@ -490,13 +490,29 @@ def _genai(api_key=None):
 
 
 def _extract_json(text: str) -> dict:
-    """Model đôi khi bọc ```json ... ``` -> bóc ra."""
+    """Model đôi khi bọc ```json ... ``` -> bóc ra. LUÔN trả dict, không bao giờ trả list.
+
+    25/8 — luồng toon long chết 5 lần trong một phiên vì `AttributeError: 'list' object has no
+    attribute 'get'`. Gemini thỉnh thoảng trả thẳng MẢNG (chỉ danh sách dialog) thay vì object.
+    Cả 21 chỗ gọi đều khai báo `-> dict` rồi `.get(...)` ngay dòng sau, mà cái `.get` đó nằm NGOÀI
+    vùng try bọc _extract_json -> lỗi không rơi vào nhánh "invalid JSON, thử lại" mà bay thẳng lên
+    giết cả luồng. Chặn ngay tại đây thì cả 21 chỗ được chữa một lần:
+      - mảng bọc đúng 1 object -> boc ra dung luon (model chi goi thua, noi dung van du)
+      - con lai               -> nem ValueError de vong lap goi lai kem phan hoi (co che san co)"""
     t = text.strip()
     if t.startswith("```"):
         t = t.split("```", 2)[1]
         if t.lstrip().lower().startswith("json"):
             t = t.lstrip()[4:]
-    return _kill_stale_openers(json.loads(t.strip()))
+    d = json.loads(t.strip())
+    if isinstance(d, list):
+        if len(d) == 1 and isinstance(d[0], dict):
+            d = d[0]
+        else:
+            raise ValueError("JSON tra ve mang %d phan tu, can object" % len(d))
+    if not isinstance(d, dict):
+        raise ValueError("JSON tra ve %s, can object" % type(d).__name__)
+    return _kill_stale_openers(d)
 
 
 # 23/8 — ĐO THẬT trên 6 video mới: 3/6 mở bài bằng đúng một khuôn "Did you know…". Khán giả Mỹ lướt

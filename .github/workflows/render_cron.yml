@@ -103,6 +103,12 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
           FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
           SHARD_META: ${{ vars.SHARD_META }}
+          # 25/8 — THIẾU DÒNG NÀY LÀ HỞ CÁCH LY 3 PROJECT. enqueue.py (chống trùng + đẩy kho)
+          # chạy TRONG render lane và đọc sổ `videos` qua client_publish(); không có cờ thì
+          # client_publish() rơi về Project A. A cạn hạn mức -> 429 -> 63 lần trong MỘT phiên
+          # in "không tra được sổ chống trùng — vẫn upload", tức chống trùng bị vô hiệu.
+          # Creds/ID của C đã truyền sẵn ở đây từ trước, chỉ thiếu đúng cái cờ bật.
+          SHARD_PUBLISH: ${{ vars.SHARD_PUBLISH }}
           SHARD_KEYS: ${{ vars.SHARD_KEYS }}   # =1 khi đã copy gemini_keys sang B (render hết đụng hạn mức Project A của publish)   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
           OWNER_UID: ${{ secrets.OWNER_UID }}
           FORCE: ${{ github.event.inputs.force }}
@@ -160,6 +166,12 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
           FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
           SHARD_META: ${{ vars.SHARD_META }}
+          # 25/8 — THIẾU DÒNG NÀY LÀ HỞ CÁCH LY 3 PROJECT. enqueue.py (chống trùng + đẩy kho)
+          # chạy TRONG render lane và đọc sổ `videos` qua client_publish(); không có cờ thì
+          # client_publish() rơi về Project A. A cạn hạn mức -> 429 -> 63 lần trong MỘT phiên
+          # in "không tra được sổ chống trùng — vẫn upload", tức chống trùng bị vô hiệu.
+          # Creds/ID của C đã truyền sẵn ở đây từ trước, chỉ thiếu đúng cái cờ bật.
+          SHARD_PUBLISH: ${{ vars.SHARD_PUBLISH }}
           SHARD_KEYS: ${{ vars.SHARD_KEYS }}   # =1 khi đã copy gemini_keys sang B (render hết đụng hạn mức Project A của publish)   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
           OWNER_UID: ${{ secrets.OWNER_UID }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
@@ -259,6 +271,12 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
           FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
           SHARD_META: ${{ vars.SHARD_META }}
+          # 25/8 — THIẾU DÒNG NÀY LÀ HỞ CÁCH LY 3 PROJECT. enqueue.py (chống trùng + đẩy kho)
+          # chạy TRONG render lane và đọc sổ `videos` qua client_publish(); không có cờ thì
+          # client_publish() rơi về Project A. A cạn hạn mức -> 429 -> 63 lần trong MỘT phiên
+          # in "không tra được sổ chống trùng — vẫn upload", tức chống trùng bị vô hiệu.
+          # Creds/ID của C đã truyền sẵn ở đây từ trước, chỉ thiếu đúng cái cờ bật.
+          SHARD_PUBLISH: ${{ vars.SHARD_PUBLISH }}
           SHARD_KEYS: ${{ vars.SHARD_KEYS }}   # =1 khi đã copy gemini_keys sang B (render hết đụng hạn mức Project A của publish)   # =1 khi đã migrate config/keys sang B (đọc meta trên B, cách ly A)
           OWNER_UID: ${{ secrets.OWNER_UID }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src

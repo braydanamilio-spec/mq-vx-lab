@@ -393,6 +393,66 @@ def t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau():
     assert not xau, "tiêu đề chồng nhau lúc mở đầu:\n   " + "\n   ".join(xau)
 
 
+
+def t_extract_json_luon_tra_dict():
+    """_extract_json không bao giờ được trả list — 21 chỗ gọi đều `.get()` ngay dòng sau.
+
+    25/8: Gemini trả thẳng MẢNG dialog thay vì object -> `AttributeError: 'list' object has no
+    attribute 'get'` giết 5 lượt toon long trong một phiên. Cái `.get` nằm NGOÀI vùng try bọc
+    _extract_json nên không rơi vào nhánh "invalid JSON, thử lại" mà bay thẳng lên."""
+    import content_brain as CB
+    assert isinstance(CB._extract_json('{"a":1}'), dict)
+    assert isinstance(CB._extract_json('```json\n{"a":1}\n```'), dict)
+    # mảng bọc đúng 1 object: model chỉ gói thừa -> bóc ra dùng, không phí một lượt gọi
+    assert CB._extract_json('[{"a":1}]') == {"a": 1}
+    for xau in ('[{"a":1},{"b":2}]', "[1,2,3]", '"chuoi"', "[]", "123"):
+        try:
+            CB._extract_json(xau)
+        except ValueError:
+            continue
+        except Exception as e:
+            raise AssertionError(f"{xau} phải ném ValueError để vòng lặp thử lại, lại ném {type(e).__name__}")
+        raise AssertionError(f"{xau} lọt qua -> call site sẽ nổ .get() ngoài vùng try")
+
+
+def t_workflow_dung_project_C_phai_bat_co():
+    """Truyền FIREBASE_PROJECT_ID_C mà quên SHARD_PUBLISH = âm thầm đọc/ghi Project A.
+
+    25/8 — `enqueue.py` (chống trùng + đẩy kho) chạy trong render lane, đọc sổ `videos` qua
+    `client_publish()`. Hàm đó chỉ trỏ C khi SHARD_PUBLISH=1, không thì rơi về A. render_cron.yml
+    truyền sẵn creds + id của C nhưng THIẾU đúng cái cờ -> A cạn hạn mức -> 63 lần trong một phiên
+    in "không tra được sổ chống trùng — vẫn upload", tức chống trùng bị vô hiệu mà không ai biết.
+    Đây là kiểu lỗi im lặng: không Traceback, không lane fail, chỉ có nguy cơ video trùng."""
+    import os, re, yaml
+    goc = os.path.dirname(os.path.abspath(__file__))
+    wf = os.path.join(goc, "..", ".github", "workflows")
+    xau = []
+    for ten in sorted(os.listdir(wf)):
+        if not ten.endswith((".yml", ".yaml")):
+            continue
+        d = yaml.safe_load(io.open(os.path.join(wf, ten), encoding="utf-8")) or {}
+        for jn, j in (d.get("jobs") or {}).items():
+            for st in (j.get("steps") or []):
+                e = st.get("env") or {}
+                if "FIREBASE_PROJECT_ID_C" not in e or "SHARD_PUBLISH" in e:
+                    continue
+                # Miễn trừ CÓ CĂN CỨ, không tha theo tên file: script nào TỰ DỰNG client C bằng
+                # biến môi trường C (như migrate_to_shards.py) thì không đi qua client_publish()
+                # nên không phụ thuộc cờ. Không đọc được script -> vẫn bắt lỗi, an toàn trước đã.
+                tu_dung = False
+                for tep in re.findall(r"python3?\s+([\w./-]+\.py)", str(st.get("run") or "")):
+                    d2 = os.path.join(goc, "..", tep)
+                    if not os.path.exists(d2):
+                        continue
+                    m2 = io.open(d2, encoding="utf-8", errors="ignore").read()
+                    if "client_publish" not in m2 and "FIREBASE_PROJECT_ID_C" in m2:
+                        tu_dung = True
+                if not tu_dung:
+                    xau.append(f"{ten}:{jn}/{(st.get('name') or 'step')[:26]}")
+    assert not xau, ("step trỏ Project C nhưng thiếu cờ SHARD_PUBLISH (sẽ âm thầm rơi về A):\n   "
+                     + "\n   ".join(xau))
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -406,6 +466,8 @@ def main():
     check("cổng dark_ok theo kênh", t_dark_ok)
     check("mở đầu chỉ MỘT tiêu đề (Bookend), không chồng ba", t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau)
     check("_extract_json bóc ```json", t_extract_json)
+    check("_extract_json LUÔN trả dict (list -> nổ .get)", t_extract_json_luon_tra_dict)
+    check("step trỏ Project C phải bật SHARD_PUBLISH", t_workflow_dung_project_C_phai_bat_co)
     check("B2 failover: thiếu env từ chối êm", t_b2_failover)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
