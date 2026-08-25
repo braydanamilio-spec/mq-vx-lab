@@ -1076,7 +1076,7 @@ def t_doi_chieu_so_kho_chay_trong_plan():
     assert "def _kiem_kho_ngay(" in r and "_kiem_kho_ngay(cfg)" in r, \
         "plan không tự đối chiếu sổ đếm với số thật trên Drive"
     i = r.index("def _kiem_kho_ngay(")
-    than = r[i: i + 2600]
+    than = r[i: r.index("def _viec_chia_san", i)]      # trọn thân hàm, khỏi đoán độ dài
     assert "kiem_kho_ngay" in than and "return" in than, "thiếu chốt 1-lần/ngày"
     # CHỐT PHẢI Ở CHỖ GHI ĐƯỢC. Chốt chỉ dựa vào `render_config` (Firestore) là hỏng: lượt GHI
     # Firestore đang trả 400, ghi hụt ⇒ chốt không bao giờ đóng ⇒ plan đi 72 kho MỖI lượt
