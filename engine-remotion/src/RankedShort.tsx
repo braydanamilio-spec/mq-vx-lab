@@ -22,6 +22,10 @@ export type RankedProps = {
 const FPS = 30;
 const TIER_COL: Record<string, string> = { S: "#FF3B5C", A: "#FF9F1C", B: "#FFD23F", C: "#3DDC97", D: "#5B8CFF", F: "#8A93A6" };
 const tcol = (t: string) => TIER_COL[t?.toUpperCase()] || "#8A93A6";
+// Co chữ phải tính theo TỪ DÀI NHẤT, không theo cả chuỗi: chuỗi nhiều từ thì xuống dòng được,
+// co theo tổng độ dài làm "Honeywell International" (2 từ ngắn) tụt còn 22px trong khi thẻ bên
+// cạnh vẫn 40px — bảng nhìn loạn cỡ chữ mà chẳng vì lý do gì.
+const _tuDai = (t?: string) => String(t || "").split(/\s+/).reduce((a, w) => Math.max(a, w.length), 1);
 const idur = (it: RankItem, s: number) => (it.dur && it.dur > 0 ? it.dur : s);
 
 export const calcRanked = ({ props }: any) => {
@@ -39,10 +43,13 @@ const Card: React.FC<{ it: RankItem; s: number; accent: string }> = ({ it, s, ac
     {/* Tên hạng mục do Gemini sinh, KHÔNG bị giới hạn độ dài trong schema. Trước đây để nowrap +
         cỡ chữ cố định -> tên dài ("MCDONALD'S QUARTER POUNDER WITH CHEESE") TRÀN HẲN ra ngoài thẻ.
         Nay: cho xuống dòng + tự thu cỡ chữ theo độ dài (giống cách ScaledShort vốn đã làm đúng). */}
+    {/* 25/8 — thẻ rộng 260 + co chữ nhẹ (1.4) khiến một từ đơn dài vẫn không vừa, và
+        overflowWrap ĐƯỢC PHÉP bẻ GIỮA TỪ: "Globalfoundries" ra thành "Globalfound / ries".
+        Nới bề ngang và co mạnh hơn để một từ luôn nằm trọn; chỉ bẻ giữa từ khi hết cách. */}
     <div style={{ color: "#fff", fontWeight: 900,
-      fontSize: Math.max(18, (it.img ? 30 : 40) - Math.max(0, String(it.name || "").length - 14) * 1.4),
+      fontSize: Math.max(26, (it.img ? 30 : 40) - Math.max(0, _tuDai(it.name) - 14) * 2.0),
       lineHeight: 1.05, textAlign: "center", whiteSpace: "normal", overflowWrap: "break-word",
-      maxWidth: it.img ? 150 : 260 }}>{it.name}</div>
+      maxWidth: it.img ? 150 : 330 }}>{it.name}</div>
     {it.stat ? <div style={{ color: accent, fontWeight: 800, fontSize: 24 }}>{it.stat}</div> : null}
   </div>
 );
@@ -58,6 +65,13 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
   const starts: number[] = []; let acc = introF;
   for (const it of items) { starts.push(acc); acc += Math.round(idur(it, itemSec) * fps); }
 
+  // Hàng tier KHÔNG có item nào thì không vẽ: trước đây bảng luôn vẽ đủ S/A/B/C/D nên một danh
+  // sách 6 mục dùng S/A/B/C để lại nguyên hàng D rỗng — mất trắng 1/5 chiều cao màn hình dọc.
+  const hangCoDo = tiers.filter((t) => items.some((it) => (it.tier || "").toUpperCase() === t.toUpperCase()));
+  // Băng chữ karaoke neo ở bottom 200 và cao ~2 dòng; bảng tier neo bottom 130 -> chữ ĐÈ lên hàng
+  // cuối. Có sub thì nhường chỗ, không sub thì dùng lại toàn bộ chiều cao.
+  const dayBang = (subs && subs.length) ? 380 : 130;
+
   return (
     <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #171633 0%, #0d0b1c 55%, #07060f 100%)", fontFamily: "'Poppins',Arial" }}>
       {/* TIÊU ĐỀ */}
@@ -68,8 +82,8 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
       </div>
 
       {/* BẢNG TIER */}
-      <div style={{ position: "absolute", top: 340, bottom: 130, left: 50, right: 50, display: "flex", flexDirection: "column", gap: 16 }}>
-        {tiers.map((t) => {
+      <div style={{ position: "absolute", top: 340, bottom: dayBang, left: 50, right: 50, display: "flex", flexDirection: "column", gap: 16 }}>
+        {hangCoDo.map((t) => {
           const rowItems = items.map((it, gi) => ({ it, gi })).filter((x) => (x.it.tier || "").toUpperCase() === t.toUpperCase());
           return (
             <div key={t} style={{ flex: 1, display: "flex", alignItems: "stretch", gap: 14, minHeight: 0 }}>

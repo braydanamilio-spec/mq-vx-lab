@@ -2019,6 +2019,9 @@ def build_ranked_props(story, sdir, handle="@rankedusa", music="music/km_ascendi
     return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "TIER LIST"), "subtitle": story.get("subtitle", ""),
             "handle": handle, "color": "#7C5CFF", "accent": "#7C5CFF", "sfx": True,
             "introSec": introSec, "itemSec": 1.7, "outroSec": outroSec,
+            # Kịch bản được quyền chỉ định hạng nào có mặt (vd chỉ S/A/B/C); không nói gì thì để mặc
+            # định, và RankedShort tự bỏ hàng rỗng.
+            "tiers": story.get("tiers") or ["S", "A", "B", "C", "D"],
             "items": items_out, "audio": rel(track), "music": music}
 
 

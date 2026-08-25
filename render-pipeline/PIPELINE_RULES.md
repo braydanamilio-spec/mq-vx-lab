@@ -2777,3 +2777,13 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   là tự cắt đường lui duy nhất ⇒ mất trắng cả video. Nay: đánh dấu `_cf_chan_prompt`, **bỏ qua mọi
   key CF còn lại** (cùng prompt thì cùng kết quả, khỏi đốt lượt) nhưng **đi tiếp tới Gemini**.
   Chốt `t_cf_chan_prompt_van_con_duong_gemini`.
+
+### RankedShort — bảng tier (25/8)
+- **Hàng tier rỗng vẫn được vẽ** → danh sách dùng S/A/B/C để lại nguyên hàng D trống, mất 1/5 màn hình dọc.
+  RankedShort nay lọc `hangCoDo` = chỉ hạng có item. `build_ranked_props` cho kịch bản chỉ định `tiers`.
+- **Băng chữ karaoke đè bảng**: Karaoke neo `bottom 200` cao ~2 dòng, bảng neo `bottom 130` → chữ nằm chồng
+  hàng cuối. Có `subs` thì đáy bảng lùi lên 380.
+- **Chữ trong thẻ bẻ giữa từ** ("Globalfound / ries"): thẻ rộng 260 + co chữ theo CẢ CHUỖI. Nay co theo
+  **từ dài nhất** (nhiều từ thì xuống dòng được) + rộng 330 + sàn 26px. Cùng nguyên tắc với tiêu đề Cinematic.
+- **QC báo "quá ngắn 0.0s" cho file render THÀNH CÔNG**: lệnh render chạy `cwd=engine-remotion` nên đường dẫn
+  ra tương đối rơi vào `engine-remotion/out`, còn `qc()` tìm ở `render-pipeline/out`. Đường dẫn ra phải TUYỆT ĐỐI.
