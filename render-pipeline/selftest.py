@@ -2075,7 +2075,12 @@ def t_ho_key_qua_d1_khong_dam_vao_A():
         # môi trường thử không có creds nên `_db()` và `_db_keys()` cùng là None -> hàm thoát sớm
         # ở nhánh "A và B là một shard". Giả lập hai shard KHÁC nhau cho giống lúc chạy thật.
         FB._db = lambda: "A"; FB._db_keys = lambda: "B"
-        ra = FB._merge_a_keys("chu", [{"key": "cf:a:1"}])
+        # NUỐT print của nhánh giả: dòng "🔑 Hồ key: dùng ảnh chụp D1 (1 key)" in ra từ dữ liệu
+        # GIẢ của chốt này từng lọt vào log CI (selftest chạy ngay trước plan) và bị đọc nhầm thành
+        # ảnh chụp thật bị nghèo hoá — mất 10 phút truy một báo động giả lúc 06:00Z ngày 25/8.
+        import contextlib, io as _io
+        with contextlib.redirect_stdout(_io.StringIO()):
+            ra = FB._merge_a_keys("chu", [{"key": "cf:a:1"}])
         assert FB._READS["by"].get("merge_keys_A", 0) == 0, "có ảnh chụp mà vẫn đọc project A"
         assert any(str(r.get("key", "")).startswith("gsk_") for r in ra), \
             "key trong ảnh chụp không được hợp nhất vào hồ"
