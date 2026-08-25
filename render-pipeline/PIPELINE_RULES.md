@@ -2768,3 +2768,12 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   * **Archive.org** — phim tư liệu công cộng
   (Census trả 302 — cần key free, để lại.) Luật kèm theo: **dữ liệu là gia vị, không phải xương
   sống** — mọi hàm hỏng thì trả rỗng, chốt `t_du_lieu_mo_khong_lam_gay_day_chuyen` canh bằng AST.
+
+- **CF chặn prompt ≠ hết đường vẽ — phải nhảy sang Gemini.** (25/8) Bốn kênh toon (BALDBANDIT,
+  TRUETALES, HANKTOWN, DUMBHISTORY) cùng lúc ra `chỉ vẽ được 0/16 khung`. Gốc: khi CF trả về không
+  phải ảnh (bộ lọc prompt của họ chặn — mã 8007 và họ hàng), `_generate_image_ai` **`return False`
+  ngay**. Chú thích cũ lập luận *"đổi key cũng vô ích vì cùng prompt"* — đúng với key CF khác nhưng
+  **sai với Gemini**: nhà cung cấp khác, bộ lọc khác, thường vẽ được đúng prompt đó. Trả False sớm
+  là tự cắt đường lui duy nhất ⇒ mất trắng cả video. Nay: đánh dấu `_cf_chan_prompt`, **bỏ qua mọi
+  key CF còn lại** (cùng prompt thì cùng kết quả, khỏi đốt lượt) nhưng **đi tiếp tới Gemini**.
+  Chốt `t_cf_chan_prompt_van_con_duong_gemini`.

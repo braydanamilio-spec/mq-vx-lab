@@ -445,6 +445,7 @@ def main():
     check("chữ karaoke luôn đọc được (bảng màu đã sàng)", t_chu_chay_luon_doc_duoc)
     check("thẻ tiêu đề tự co, không tràn khung", t_the_tieu_de_khong_tran_khung)
     check("dữ liệu mở hỏng KHÔNG làm gãy dây chuyền", t_du_lieu_mo_khong_lam_gay_day_chuyen)
+    check("CF chặn prompt vẫn còn đường Gemini", t_cf_chan_prompt_van_con_duong_gemini)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2433,6 +2434,26 @@ def t_du_lieu_mo_khong_lam_gay_day_chuyen():
     i = src.index("def _goi(")
     than = src[i:src.index("# ── 1. USASPENDING")]
     assert "return None" in than and "raise" not in than, "_goi vẫn có thể ném lỗi lên trên"
+
+
+def t_cf_chan_prompt_van_con_duong_gemini():
+    """CF chặn prompt thì phải NHẢY SANG GEMINI, không được trả False ngay.
+
+    25/8 — bốn kênh toon cùng lúc ra "chỉ vẽ được 0/16 khung". Gốc: khi CF trả về không phải ảnh
+    (bộ lọc prompt của họ chặn), hàm vẽ `return False` NGAY. Chú thích cũ lập luận "đổi key cũng
+    vô ích vì cùng prompt" — đúng với key CF khác, nhưng SAI với Gemini: nhà cung cấp khác, bộ lọc
+    khác, thường vẽ được đúng prompt đó. Trả False sớm là tự cắt đường lui duy nhất ⇒ mất cả video.
+    Đúng cách: bỏ qua các key CF còn lại (cùng prompt thì cùng kết quả) nhưng ĐI TIẾP tới Gemini."""
+    src = _doc("datastory_ci.py")
+    i = src.index("def _generate_image_ai")
+    than = src[i:i + 4200]
+    assert "_cf_chan_prompt" in than, "CF chặn prompt vẫn giết luôn cả lượt vẽ"
+    # không còn `return False` ngay sau nhánh CF
+    assert "return False               # CF trả về không phải ảnh" not in than, \
+        "vẫn trả False ngay khi CF chặn -> mất đường Gemini"
+    # phải bỏ qua CF còn lại để khỏi đốt lượt vô ích
+    assert 'if _cf_chan_prompt and str(_k).startswith("cf:")' in than, \
+        "không bỏ qua key CF còn lại -> đốt lượt vào cùng một prompt bị chặn"
 
 
 if __name__ == "__main__":

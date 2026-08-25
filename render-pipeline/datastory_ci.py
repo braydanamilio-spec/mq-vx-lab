@@ -434,7 +434,17 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
     if not cands:
         return False
     last_quota = None
+    # 25/8 — 4 KÊNH TOON RA "0/16 KHUNG" CÙNG LÚC. Gốc ở ngay dưới: khi CF trả về KHÔNG PHẢI ẢNH
+    # (bộ lọc prompt của CF chặn — mã 8007 và họ hàng), hàm này `return False` NGAY. Chú thích cũ
+    # lập luận "đổi key cũng vô ích vì cùng prompt" — đúng với CF KHÁC, nhưng SAI với Gemini:
+    # Gemini là nhà cung cấp khác, bộ lọc khác, thường vẽ được đúng prompt đó. Trả False sớm =
+    # tự cắt mất đường lui duy nhất ⇒ cả 16 khung trượt ⇒ mất trắng cả video.
+    # Nay: CF chặn prompt -> BỎ QUA MỌI KEY CF CÒN LẠI (đúng, cùng prompt thì cùng kết quả) nhưng
+    # ĐI TIẾP tới Gemini.
+    _cf_chan_prompt = False
     for _i, _k in enumerate(cands):
+      if _cf_chan_prompt and str(_k).startswith("cf:"):
+        continue                       # CF đã chặn prompt này -> key CF khác cũng vậy, khỏi tốn lượt
       ghi_dung(_k)                     # tính cả lượt hỏng: nhà cung cấp vẫn trừ hạn mức
       if str(_k).startswith("cf:"):
         # ⛅ Cloudflare FLUX schnell — free ~174 ảnh/ngày/tài khoản (10K neuron ÷ 58n/ảnh — số
@@ -444,7 +454,9 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
                 if _i:
                     print(f"   🔑 vẽ ảnh: đã xoay sang key thứ {_i + 1} (⛅ CF FLUX)")
                 return True
-            return False               # CF trả về không phải ảnh -> đổi key cũng vô ích (cùng prompt)
+            _cf_chan_prompt = True     # CF chặn prompt này -> nhảy sang Gemini (bộ lọc khác)
+            print(f"   ⛅→◆ CF không vẽ được '{prompt[:34]}' — chuyển sang Gemini")
+            continue
         except Exception as e:
             if _is_quota_err(e):
                 _ve_die(_k, _muc_nghi(e)); last_quota = e
