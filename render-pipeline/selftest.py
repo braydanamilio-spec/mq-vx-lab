@@ -376,6 +376,8 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("kho token chết được nhớ CHUNG, tự hết hạn", t_kho_token_chet_nho_chung)
+    check("kịch bản đi CÙNG video trên Drive", t_kich_ban_di_cung_video_tren_drive)
     check("job bỏ ngỏ được đóng lúc thoát (hết job ma)", t_job_bo_ngo_duoc_dong_luc_thoat)
     check("tên chuẩn: hai video khác nhau KHÔNG đụng tên", t_ten_chuan_khong_dung_ten_nhau)
     check("đẩy kho xong thì xoá bản trên đĩa", t_day_kho_xong_thi_xoa_ban_tren_dia)
@@ -1027,6 +1029,52 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_kho_token_chet_nho_chung():
+    """Bản ghi kho có token hỏng phải được nhớ CHUNG, không phải mỗi tiến trình tự tông một lần
+    (25/8, anh chỉ ra). Log: `⚠️ kho ADISONDURHAM hụt: invalid_grant` rồi NGAY SAU `✅ đã cất ở kho
+    ADISONDURHAM` — tài khoản VẪN SỐNG, chỉ là có HAI bản ghi cùng tên và một bản mang refresh_token
+    cũ. `_DEAD_ACCS` chỉ nhớ trong MỘT tiến trình ⇒ mỗi lane / mỗi lượt publish lại thử lại bản chết:
+    rác log, chậm, và mỗi lượt hỏng vẫn tính vào hạn mức Google."""
+    ap = os.environ.get("AUTOPUBLISHER_SRC") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "MM0-AutoPublisher", "src")
+    f = os.path.join(ap, "storage.py")
+    if not os.path.exists(f):
+        return
+    src = io.open(f, encoding="utf-8").read()
+    assert "_bao_kho_chet(" in src and "_kho_chet_chung()" in src, \
+        "token hỏng vẫn chỉ nhớ trong một tiến trình"
+    i = src.index("if root in _DEAD_ACCS")
+    assert "_kho_chet_chung()" in src[i: i + 200], "không tra danh sách chung trước khi thử kho"
+    # phải TỰ HẾT HẠN, để anh kết nối lại là kho sống lại mà không phải nhớ xoá cờ
+    j = src.index("def _bao_kho_chet")
+    assert "timedelta(hours=" in src[j: j + 500], "cờ kho chết không tự hết hạn"
+
+
+def t_kich_ban_di_cung_video_tren_drive():
+    """Kịch bản phải đi CÙNG video trên Drive, không chỉ nằm ở Firestore (25/8, anh: "tự làm đi").
+    Trước: kịch bản chỉ có trong `render_jobs` ⇒ Firestore cạn hạn mức là mất đường resume, hệ gọi
+    AI viết lại một bài ĐÃ CÓ (luật 7.cp — dòng `♻️ Dùng lại kịch bản đã lưu` chưa từng xuất hiện).
+    Nay nhét vào sidecar `.json` nằm cạnh video: Drive luôn đọc được (có gương + lớp cứu KV), lại là
+    nơi chính video đang nằm, và KHÔNG tốn thêm một lượt ghi nào."""
+    ap = os.environ.get("AUTOPUBLISHER_SRC") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "MM0-AutoPublisher", "src")
+    f = os.path.join(ap, "enqueue.py")
+    if os.path.exists(f):
+        e = io.open(f, encoding="utf-8").read()
+        assert "script: str | None = None" in e, "enqueue chưa nhận kịch bản"
+        assert 'sidecar["script"]' in e, "kịch bản không được ghi vào sidecar"
+    r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "run_render.py"), encoding="utf-8").read()
+    assert "script=script or _script_json(" in r, "đường đẩy kho chưa gửi kịch bản kèm theo"
+    fb = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "firestore_bridge.py"), encoding="utf-8").read()
+    assert "def _script_tu_drive" in fb, "thiếu đường đọc kịch bản từ Drive"
+    i = fb.index("def get_script_by_drive")
+    than = fb[i: fb.index("def _script_tu_drive")]
+    assert "_script_tu_drive(owner, drive_id)" in than, \
+        "Firestore hỏng mà không thử Drive -> vẫn mất đường resume đúng lúc cần nhất"
 
 
 def t_job_bo_ngo_duoc_dong_luc_thoat():

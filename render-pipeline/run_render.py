@@ -118,7 +118,7 @@ def _desc_src(story) -> str:
 from ten_chuan import lat as _lat, ten_file          # quy ước đặt tên: MỘT nguồn duy nhất
 
 
-def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "") -> bool:
+def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "", script: str = "") -> bool:
     """Đẩy video + sidecar (+ thumbnail) lên Drive _QUEUE qua enqueue.py của AutoPublisher (nếu có).
 
     `seri` = mã cụm (dùng id job của bản LONG) · `bo` = vai trò trong cụm (L, S1, S2...)."""
@@ -166,6 +166,8 @@ def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "") -> b
                           topic=story.get("topic") or story.get("title"),
                           title=story.get("title"), description=desc,
                           hashtags=_ht, tags=story.get("tags"),
+                          script=script or _script_json(
+                              {k: v for k, v in (story or {}).items() if k != "_thumb"}),
                           thumbnail=(story.get("_thumb") if (story.get("_thumb") and os.path.exists(story.get("_thumb"))) else _make_thumb(out)))   # thumb brand (GUESS/MAPPED) nếu có, không thì trích khung
         # SỔ ĐẾM VIDEO ĐÃ LÊN KHO (23/8): 1 chỗ duy nhất mọi đường đẩy đều đi qua -> dashboard đọc
         # 1 doc là ra con số KHỚP với thư viện, hết cảnh "tổng 1755 mà kho 61".

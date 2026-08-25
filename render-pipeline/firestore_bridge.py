@@ -1486,7 +1486,60 @@ def get_script_by_drive(owner: str, drive_id: str):
                 except Exception:
                     return None
     except Exception as e:
+        # Firestore hỏng/cạn -> thử lấy từ SIDECAR TRÊN DRIVE (kịch bản nay đi cùng video, xem
+        # enqueue.py). Chỉ khi cả hai đường đều không ra mới ném DocLoi.
+        ra = _script_tu_drive(owner, drive_id)
+        if ra is not None:
+            print("   📄 lấy kịch bản cũ từ sidecar trên Drive (Firestore không đọc được).")
+            return ra
         raise DocLoi(f"đọc kịch bản cũ hỏng: {str(e)[:110]}") from e
+    return _script_tu_drive(owner, drive_id)      # Firestore không có -> thử Drive (video đời cũ vẫn None)
+
+
+def _script_tu_drive(owner: str, drive_id: str):
+    """Đọc kịch bản từ sidecar `.json` nằm CẠNH video trên Drive (25/8/2026).
+
+    Vì sao cần: kịch bản trước đây chỉ nằm trong `render_jobs` ở Firestore, nên hôm nào Firestore
+    cạn hạn mức là mất luôn đường resume — và hệ phải gọi AI viết lại một bài ĐÃ CÓ (luật 7.cp).
+    Drive thì luôn đọc được (có gương + lớp cứu KV) và chính video đang nằm ở đó.
+    Trả `None` nếu không có (video đời cũ chưa kèm kịch bản) — KHÔNG ném lỗi, để người gọi tự quyết."""
+    try:
+        import json as _j
+        import os as _o
+        import sys as _sys
+        import tempfile as _tf
+        src = _o.environ.get("AUTOPUBLISHER_SRC")
+        if src and src not in _sys.path:
+            _sys.path.insert(0, src)
+        import storage as _ST
+        for acc in (_ST.pool_accounts() or []):
+            try:
+                drv = _ST.account_drive(acc)
+                f = drv.svc.files().get(fileId=drive_id, fields="name,parents",
+                                        supportsAllDrives=True).execute()
+            except Exception:
+                continue                       # video không nằm ở kho này
+            ten = str(f.get("name") or "").rsplit(".", 1)[0] + ".json"
+            cha = (f.get("parents") or [None])[0]
+            if not cha:
+                return None
+            sid = drv.find_file(cha, ten)
+            if not sid:
+                return None
+            tam = _o.path.join(_tf.gettempdir(), f"sc_{drive_id}.json")
+            try:
+                drv.download(sid, tam)
+                with open(tam, encoding="utf-8") as fh:
+                    sc = _j.load(fh)
+                sc_ = sc.get("script")
+                return _j.loads(sc_) if isinstance(sc_, str) and sc_ else None
+            finally:
+                try:
+                    _o.remove(tam)
+                except OSError:
+                    pass
+    except Exception:
+        pass
     return None
 
 

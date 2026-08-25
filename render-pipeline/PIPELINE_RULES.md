@@ -2148,3 +2148,27 @@ tiếng tới 07:00Z ⇒ test đỏ lúc 00:14Z dù code không đổi một dò
 con số mà là **mỗi bên nghỉ tới ĐÚNG mốc reset của mình** — nay test tính thẳng số phút tới mốc rồi so.
 **LUẬT: test không được khẳng định thứ tự của hai đại lượng phụ thuộc thời gian. Hãy khẳng định
 CÔNG THỨC, đừng khẳng định kết quả của một khoảnh khắc.**
+
+### 7.dc — Kịch bản đi CÙNG video trên Drive, không chỉ nằm ở Firestore (25/8/2026, anh: "tự làm đi")
+Vấn đề gốc ở 7.cp: kịch bản chỉ có trong `render_jobs` ⇒ Firestore cạn hạn mức là mất đường resume,
+hệ phải gọi AI **viết lại một bài ĐÃ CÓ**. Phương án D1 cần đổi bảng + deploy lại Worker, mà máy này
+KHÔNG có token Cloudflare nên em không deploy được.
+Đường tốt hơn và **không cần deploy**: nhét kịch bản vào **sidecar `.json` nằm cạnh video trên Drive**.
+Drive luôn đọc được (có gương ở B/B2 + lớp cứu KV), lại chính là nơi video đang nằm, nên kịch bản và
+video **không thể lạc nhau** — và không tốn thêm một lượt ghi nào (sidecar vốn đã được ghi).
+`get_script_by_drive` nay: Firestore trước → hỏng/không có thì đọc sidecar trên Drive → cả hai không
+ra mới ném `DocLoi`. Chốt bằng `t_kich_ban_di_cung_video_tren_drive`.
+**LUẬT: dữ liệu quý phải nằm CÙNG CHỖ với thứ nó mô tả. Tách ra hai hệ thống là có ngày một bên chết
+mà bên kia không biết.**
+
+### 7.dd — Token kho hỏng: mỗi tiến trình tự tông một lần vì trí nhớ không chia sẻ (25/8/2026)
+Anh chỉ ra: `⚠️ kho ADISONDURHAM hụt: invalid_grant` rồi NGAY SAU đó `✅ đã cất ở kho ADISONDURHAM`
+— **tài khoản vẫn sống**, chỉ là đang có HAI bản ghi cùng tên và một bản mang `refresh_token` cũ.
+`_DEAD_ACCS` chỉ nhớ trong MỘT tiến trình, nên mỗi lane / mỗi lượt publish lại thử lại đúng bản chết
+đó: rác log, chậm, và **mỗi lượt hỏng vẫn tính vào hạn mức Google**.
+Nay ghi cờ `kho:<root>` vào **D1** qua đúng lệnh `key_nghi_ghi` đã có (không đổi bảng, không deploy),
+mọi tiến trình tra trước khi thử. Cờ **tự hết hạn sau 12h** nên anh kết nối lại là kho tự sống — không
+phải nhớ đi xoá cờ, và cũng không xoá bản ghi nào (không phá dữ liệu).
+Chốt bằng `t_kho_token_chet_nho_chung`.
+**LUẬT: cái gì đã học được bằng một lần trả giá thì phải chia sẻ cho mọi tiến trình — và phải TỰ HẾT
+HẠN, vì trạng thái hỏng hôm nay có thể được sửa ngày mai.**
