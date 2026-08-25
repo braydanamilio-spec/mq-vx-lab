@@ -1062,6 +1062,15 @@ def t_so_kho_that_ghi_vao_d1():
     i = fb.index("def dat_so_kho_that")
     than = fb[i: i + 1100]
     assert "kho_that_ghi" in than, "ghi số thật mà bỏ qua D1 -> dashboard vẫn đọc số cũ"
+    # NEO + CỘNG TIẾP: lượt đếm 72 kho chỉ 1 lần/ngày, nên Worker phải cộng thêm phần làm được KỂ TỪ
+    # lúc đếm (`nen`), nếu không ô "Tổng" đứng im cả ngày dù video vẫn ra đều.
+    w = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                     "MM0-AutoPublisher", "connect-worker", "src", "worker.js")
+    if os.path.exists(w):
+        js = io.open(w, encoding="utf-8").read()
+        assert "kt.nen" in js and "tong - (kt.nen" in js, \
+            "Worker chưa cộng phần làm thêm kể từ lượt đếm -> ô Tổng đứng im cả ngày"
+        assert "nen INTEGER" in js or "nen=?4" in js, "lệnh ghi neo chưa lưu mốc `nen`"
     assert than.index("kho_that_ghi") < than.index("_db_B_that"), \
         "phải ghi D1 TRƯỚC Firestore (Firestore là thứ hay hỏng, D1 mới là chỗ dashboard đọc)"
 

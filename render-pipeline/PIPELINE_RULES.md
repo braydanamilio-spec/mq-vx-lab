@@ -2339,3 +2339,16 @@ trong tài nguyên đang cạn), Firestore chỉ là bản ghi phụ. Chạy th�
 theo **quét 0 lần**. Chốt bằng `t_doi_chieu_so_kho_chay_trong_plan`.
 **LUẬT: chốt chống-làm-lại phải nằm ở nơi GHI CHẮC CHẮN THÀNH CÔNG. Chốt ghi hụt thì không phải là
 chốt — nó là một vòng lặp vô hạn chạy chậm.**
+
+### 7.dq — Số "Tổng" neo vào sự thật rồi CỘNG TIẾP, khỏi đứng im cả ngày (25/8/2026, anh hỏi nhịp cập nhật)
+Lượt đi đếm 72 kho chỉ chạy **1 lần/ngày**. Nếu ô "Tổng" chỉ hiện con số đó thì suốt ngày nó **đứng
+im** dù video vẫn ra đều — người xem lại tưởng hỏng, đúng cái vòng nghi ngờ đã tốn cả đêm.
+Cách đúng: lưu kèm `nen` = số bản ghi done-có-file trong D1 **ngay lúc đếm**, rồi hiển thị
+```
+tổng = số_thật_từ_Drive + (số_bản_ghi_hiện_tại − nen)
+```
+Phần chênh chính là số video làm THÊM kể từ lượt đếm ⇒ **tươi theo từng video**, mà vẫn **neo vào sự
+thật** mỗi ngày. Quá 26 giờ không có lượt đếm mới thì bỏ neo, quay về đếm bản ghi (thà thiếu còn hơn
+trôi xa sự thật mà không ai biết).
+**LUẬT: một con số vừa cần ĐÚNG vừa cần TƯƠI thì đừng chọn một trong hai — hãy neo vào phép đo đúng
+rồi cộng phần chênh đo được theo thời gian thực.**
