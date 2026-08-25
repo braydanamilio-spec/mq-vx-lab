@@ -2306,3 +2306,25 @@ ghi đè thì sổ càng sai hơn — đúng luật 7.cu).
 Chốt bằng `t_doi_chieu_so_kho_chay_trong_plan`.
 **LUẬT: đặt việc sửa dữ liệu vào tiến trình có QUYỀN GHI đã được chứng minh, đừng đặt vào một workflow
 riêng rồi mới phát hiện nó không ghi nổi.**
+
+### 7.dn — BA CON SỐ, BA SỰ THẬT KHÁC NHAU — và không cái nào đúng (25/8/2026)
+Đo thẳng, không đoán:
+| Nguồn | Số | Bản chất |
+|---|---|---|
+| `__pushed__` (Firestore) | **2.070** | bộ đếm cộng dồn, chỉ tăng: render lại +1, dọn rác vẫn +1 |
+| D1 đếm lại bản ghi | **1.475** | chỉ có job TỪ LÚC bật chế độ D1, thiếu 521 video cũ |
+| **Đi đếm 72 kho Drive** | **1.996** | **sự thật** |
+Dashboard lại lấy số theo thứ tự tệ nhất: hỏi D1 (1.475) rồi **ghi đè bằng `__pushed__` (2.070)** ở
+dòng ngay sau, vô điều kiện — số đúng bị vứt mỗi lần tải trang.
+Vá trọn chuỗi: ① dashboard chỉ dùng `__pushed__` làm **đường lùi** khi D1 im · ② Worker có bảng
+`kho_that` + lệnh `kho_that_ghi`, `apiHotStat` **ưu tiên số Drive** (quá 26h thì mới quay về đếm bản
+ghi) · ③ plan mỗi ngày đi 72 kho rồi ghi số đó vào D1 **trước**, Firestore sau.
+Đã deploy Worker + dashboard. Số hiện tại: `{"tong":1996,"tong_nguon":"drive","homnay":283,"loi":218,"dangchay":12}`.
+**LUẬT: khi ba nguồn cho ba con số, đừng chọn nguồn "tiện nhất" — hãy hỏi cái nào ĐO THỨ THẬT. Ở đây
+chỉ có Drive, vì video nằm ở đó.**
+
+### 7.do — Ô "❌ Lỗi" đếm cả đời nên vô dụng (25/8/2026)
+`apiHotStat` đếm `status='failed'` **không giới hạn thời gian** ⇒ mọi lần QC loại từ trước tới nay đều
+cộng vào (đo: 218) và không bao giờ giảm. Con số chỉ-tăng thì người vận hành hoặc hoảng hoặc bỏ qua
+hẳn — cả hai đều vô dụng. Nay giới hạn **2 ngày**: thứ cần biết là "gần đây có gì hỏng", còn lịch sử
+đã nằm trong bản ghi job. (Cùng họ 7.bj: số cộng dồn không đo được sức khoẻ hiện tại.)

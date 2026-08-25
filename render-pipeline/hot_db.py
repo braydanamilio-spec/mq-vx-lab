@@ -263,6 +263,20 @@ def don_job_ma(owner: str, gio: int = 6) -> int:
     return n
 
 
+def kho_that_ghi(owner: str, tong: int) -> bool:
+    """Ghi SỐ VIDEO THẬT trong kho (plan đếm từ Drive) vào D1 — dashboard đọc số này (25/8/2026).
+
+    Vì sao cần: D1 chỉ có bản ghi job TỪ LÚC bật chế độ D1 (đo: 1.475) trong khi kho Drive có 1.996
+    file thật; còn `__pushed__` bên Firestore là bộ đếm cộng dồn nên còn sai hơn. Chỉ lượt đi đếm
+    72 kho mới là sự thật — cất nó vào chỗ dashboard đọc được mà không cần Firestore."""
+    if not bat_ghi() or tong < 0:
+        return False
+    import datetime as _d
+    r = goi("kho_that_ghi", {"owner": owner, "tong": int(tong),
+                             "luc": _d.datetime.now(_d.timezone.utc).isoformat()})
+    return bool(r.get("ok"))
+
+
 def ngan_sach_cong(ngay: str, doc: int = 0, ghi: int = 0) -> None:
     if not bat_ghi():
         return

@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("số kho THẬT ghi vào D1 (chỗ dashboard đọc)", t_so_kho_that_ghi_vao_d1)
     check("plan tự đối chiếu sổ đếm với số thật (1 lần/ngày)", t_doi_chieu_so_kho_chay_trong_plan)
     check("biến môi trường RỖNG không phá giá trị mặc định", t_bien_moi_truong_rong_khong_pha_mac_dinh)
     check("bước dùng kho Drive có lớp cứu KV (HOT_KEY)", t_buoc_dung_kho_phai_co_lop_cuu_kv)
@@ -1036,6 +1037,33 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_so_kho_that_ghi_vao_d1():
+    """Số kho THẬT phải ghi vào D1 — chỗ dashboard đọc được mà không cần Firestore (25/8).
+    Đo được: D1 đếm lại từ bản ghi ra 1.475 (chỉ có job từ lúc bật chế độ D1), `__pushed__` bên
+    Firestore ra 2.070 (bộ đếm cộng dồn), còn kho Drive có **1.996** file thật. Chỉ lượt đi đếm 72
+    kho mới là sự thật, nên phải cất nó vào nơi dashboard lấy được."""
+    import hot_db as H
+    assert hasattr(H, "kho_that_ghi"), "thiếu đường ghi số kho thật vào D1"
+    goc_goi, goc_g = H.goi, H.bat_ghi
+    da = {}
+    try:
+        H.bat_ghi = lambda: True
+        H.goi = lambda l, t=None, timeout=12: (da.update({"lenh": l, **(t or {})}) or {"ok": True})
+        assert H.kho_that_ghi("uid", 1996) is True
+        assert da["lenh"] == "kho_that_ghi" and da["tong"] == 1996 and da["luc"]
+        da.clear()
+        assert H.kho_that_ghi("uid", -1) is False, "số âm mà vẫn ghi"
+    finally:
+        H.goi, H.bat_ghi = goc_goi, goc_g
+    fb = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "firestore_bridge.py"), encoding="utf-8").read()
+    i = fb.index("def dat_so_kho_that")
+    than = fb[i: i + 1100]
+    assert "kho_that_ghi" in than, "ghi số thật mà bỏ qua D1 -> dashboard vẫn đọc số cũ"
+    assert than.index("kho_that_ghi") < than.index("_db_B_that"), \
+        "phải ghi D1 TRƯỚC Firestore (Firestore là thứ hay hỏng, D1 mới là chỗ dashboard đọc)"
 
 
 def t_doi_chieu_so_kho_chay_trong_plan():

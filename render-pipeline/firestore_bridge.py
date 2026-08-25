@@ -558,6 +558,13 @@ def dat_so_kho_that(owner: str, tong: int) -> None:
     Dùng `set(..., merge=True)` với số nguyên (KHÔNG Increment) để đè hẳn."""
     if tong < 0:
         return
+    # Ghi vào D1 TRƯỚC: đó là chỗ dashboard đọc, và nó không nằm trong tài nguyên hay cạn.
+    try:
+        import hot_db as _H
+        if _H.kho_that_ghi(owner, int(tong)):
+            print(f"   🧮 đã ghi số kho thật ({tong:,}) vào D1 — dashboard đọc thẳng từ đây.")
+    except Exception:
+        pass
     _cw("dat_so_kho_that")
     db = _db_B_that() or _db_jobs()
     _soft(lambda: db.collection("render_stats").document(f"__pushed__{owner}").set(
