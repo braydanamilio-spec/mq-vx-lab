@@ -2279,6 +2279,10 @@ def t_mascot_khong_ve_lai_nhan_vat():
         assert cam not in src, f"mascot_build gọi {cam} -> nhân vật sẽ trôi trở lại"
     assert "da_co_rig" in src and "da_co_san_khau" in src, \
         "phải CHẶN trước khi dựng nếu rig/sân khấu chưa có, thay vì render ra video thiếu hình"
+    # 25/8 — pilot 11:07Z chết vì props trỏ tới lớp nền KHÔNG CÓ FILE (tách nền hụt).
+    # Khai báo là ý định, thư mục mới là sự thật.
+    assert "os.path.exists(os.path.join(_goc_stage" in src, \
+        "không lọc lớp nền theo file THẬT -> Remotion nạp ảnh không tồn tại, chết cả lượt render"
     # nhép mồm phải đo từ tiếng thật, không phải ngẫu nhiên
     assert "_rms_12hz" in src and "ffmpeg" in src, "mồm không đo từ audio thật"
 

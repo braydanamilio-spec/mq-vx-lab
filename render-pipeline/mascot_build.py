@@ -112,7 +112,20 @@ def dung_video(kenh: str, cfg: dict, story: dict, out: str, dai: bool = False,
     ten_stage = (MC.ten_san_khau(kenh) or ["stage"])[0]
     if not MR.da_co_san_khau(kenh, ten_stage):
         return False, {"loi": f"{kenh}: sân khấu '{ten_stage}' chưa dựng"}
-    stage_lop = MC.san_khau_cua(kenh, ten_stage)
+    # CHỈ DÙNG LỚP CÓ FILE THẬT. 25/8 — pilot 11:07Z chết ở đây: sân khấu khai 4 lớp nhưng `far`
+    # tách nền hụt (FLUX vẽ nền có chi tiết) nên không có file, code vẫn bảo Remotion nạp
+    # `stages/.../far.png` -> "Error loading image" giết cả lượt render. Khai báo là Ý ĐỊNH,
+    # thư mục mới là SỰ THẬT — luôn lọc theo sự thật trước khi đưa vào props.
+    _goc_stage = os.path.join(DS.ENG, "public", "stages", kenh.upper(), ten_stage)
+    stage_lop = [L for L in MC.san_khau_cua(kenh, ten_stage)
+                 if os.path.exists(os.path.join(_goc_stage, f"{L['lop']}.png"))]
+    if len(stage_lop) < 2:
+        return False, {"loi": f"{kenh}/{ten_stage}: chỉ có {len(stage_lop)} lớp nền — hết chiều sâu"}
+    _thieu = [L["lop"] for L in MC.san_khau_cua(kenh, ten_stage)
+              if L not in stage_lop]
+    if _thieu:
+        print(f"   ℹ️ sân khấu {ten_stage}: thiếu lớp {_thieu} (tách nền hụt) — dựng bằng "
+              f"{len(stage_lop)} lớp còn lại, vẫn đủ chiều sâu.")
 
     # ── THU TIẾNG: mỗi câu một giọng theo vai, nối lại có nhịp nghỉ ──────────────────────
     st("writing", "Thu tiếng 2 vai")

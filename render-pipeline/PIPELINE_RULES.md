@@ -2629,3 +2629,9 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   lớp lệch nét nhoè nhẹ; (d) **nhân vật NẰM GIỮA các tấm kính** — lớp `near` vẽ ĐÈ LÊN nhân vật, và
   chính nhân vật cũng chịu phép biến đổi của máy (`camScale`), nếu không thì camera đẩy vào mà nhân
   vật đứng nguyên là lộ hình dán. Chốt: `t_mascot_stage_dong_tung_khung` (kiểm cả 4).
+
+- **Khai báo là Ý ĐỊNH, thư mục mới là SỰ THẬT — lọc asset theo file thật trước khi vào props.** (25/8)
+  Pilot 11:07Z chết ở `Error loading image`: sân khấu khai 4 lớp nhưng `far` tách nền hụt nên không
+  có file, code vẫn đưa `stages/.../far.png` vào props ⇒ Remotion nạp ảnh không tồn tại, giết cả lượt
+  render (cả long lẫn short). Nay lọc theo `os.path.exists` + báo rõ lớp nào thiếu, còn ≥2 lớp thì
+  vẫn dựng (chiều sâu vẫn đủ). Tin tốt cùng lượt: bản vá đo-màu-viền cho **12/12 tư thế nhân vật**.
