@@ -2246,3 +2246,15 @@ COSMOS phiên 23:33 — hàm cứu báo *"làm mỏng lớp phủ xuống 0,75 �
 THẬT ra **93,7%**. Với ngưỡng cũ (BIEN=13 ⇒ chấp nhận <75) thì 73% lọt. Với BIEN=20: dark_ok ⇒ ngưỡng
 **<68**, nên 73% **không được chấp nhận**, hàm tiếp tục hạ `man` xuống 0,55 rồi 0,45. Ca SIGNALUSA
 (không dark_ok) ngưỡng còn **<55**, ép mỏng sâu hơn nữa. Tức bản vá 23:34 đánh trúng cả hai ca đang lỗi.
+
+### 7.dj — Tên chuẩn làm BẨN TIÊU ĐỀ YOUTUBE khi video thiếu sidecar (25/8/2026)
+Quét repo ĐĂNG trước giờ project A hồi (~07:00Z) — khâu này sắp chạy lần đầu sau ~18 tiếng nằm im.
+`main.py` dựng metadata bằng `sidecar.get("topic") or M.slug_to_topic(f["name"])`. Từ khi dùng tên
+chuẩn `KENH__YYYYMMDD__seri__S1__tieu-de[-bam]`, nhánh dự phòng đó trả
+`'DEFENSEUSA 20260825 Ab3xk9 S1 Where The Money Goes'` — và **đó là thứ được đem đặt làm TIÊU ĐỀ
+YOUTUBE**: mã kênh, ngày, mã chùm, số thứ tự dán trước tiêu đề thật, hiện ra cho người xem.
+Lỗi do chính bản đổi tên gây ra, và chỉ lộ ở khâu đăng nên render chạy sạch vẫn không thấy.
+Vá: `slug_to_topic` bóc mọi đoạn trước ô vai trò `L`/`S<n>` và bỏ đuôi băm 4 ký tự; tên đời cũ
+(`how-i-went-broke_short.mp4`) vẫn ra đúng như trước. Chốt bằng `t_ten_file_khong_lam_ban_tieu_de`.
+**LUẬT: đổi quy ước đặt tên thì phải soi cả những chỗ ĐỌC NGƯỢC cái tên đó ra thông tin — không chỉ
+chỗ ghép tên.** (7.cy là chỗ dọn dẹp, 7.cz là chỗ so trùng, đây là chỗ suy ngược ra tiêu đề.)

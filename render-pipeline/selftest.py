@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("tên file KHÔNG làm bẩn tiêu đề YouTube", t_ten_file_khong_lam_ban_tieu_de)
     check("dòng QC loại phải ghi TÊN KÊNH", t_dong_loai_qc_phai_ghi_ten_kenh)
     check("vision có model dự phòng + tự dò", t_vision_co_model_du_phong)
     check("kịch bản có bản dự phòng ở kho KHÁC", t_kich_ban_co_ban_du_phong_khac_kho)
@@ -1032,6 +1033,28 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_ten_file_khong_lam_ban_tieu_de():
+    """Video KHÔNG có sidecar thì tiêu đề lấy từ TÊN FILE — mà tên chuẩn có tiền tố máy (25/8).
+    `main.py` dựng metadata bằng `sidecar.get("topic") or M.slug_to_topic(f["name"])`. Từ khi dùng
+    `KENH__YYYYMMDD__seri__S1__tieu-de[-bam]`, hàm đó trả
+    `'DEFENSEUSA 20260825 Ab3xk9 S1 Where The Money Goes'` — và đó là thứ đem đặt LÀM TIÊU ĐỀ
+    YOUTUBE. Rủi ro do chính bản đổi tên gây ra, chỉ lộ khi khâu đăng chạy lại."""
+    ap = os.environ.get("AUTOPUBLISHER_SRC") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "MM0-AutoPublisher", "src")
+    if not os.path.exists(os.path.join(ap, "metadata.py")):
+        return
+    import importlib.util as _iu
+    sp = _iu.spec_from_file_location("_md_test", os.path.join(ap, "metadata.py"))
+    M = _iu.module_from_spec(sp); sp.loader.exec_module(M)
+    for ten, mong in (
+            ("DEFENSEUSA__20260825__ab3xk9__S1__Where-The-Money-Goes.mp4", "Where The Money Goes"),
+            ("GUESSUSA__20260825__S__Which-state-pays-the-most-7302.mp4", "Which State Pays The Most"),
+            ("COSMOS__20260825__L__The-Deepest-Secret.mp4", "The Deepest Secret"),
+            ("how-i-went-broke_short.mp4", "How I Went Broke")):   # tên đời cũ vẫn phải đúng
+        ra = M.slug_to_topic(ten)
+        assert ra == mong, f"tiêu đề suy từ tên file sai: {ra!r} (mong {mong!r})"
 
 
 def t_dong_loai_qc_phai_ghi_ten_kenh():
