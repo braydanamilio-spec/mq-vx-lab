@@ -115,7 +115,72 @@ def _desc_src(story) -> str:
     return desc
 
 
+import hashlib
 from ten_chuan import lat as _lat, ten_file          # quy ước đặt tên: MỘT nguồn duy nhất
+
+
+# KỊCH BẢN CỦA CẢ LANE -> cất thêm 2 KHO KHÁC lúc kết thúc. Xem _luu_kich_ban_du_phong().
+_KB_PHIEN: list = []
+
+
+def _luu_kich_ban_du_phong(channel: str) -> int:
+    """Cất kịch bản của lane này sang 2 KHO DRIVE KHÁC (25/8/2026, anh hỏi: "nhỡ 1 driver có vấn đề").
+
+    Hiện trạng thật trước bản này:
+      • KỊCH BẢN có 2 bản — Firestore `render_jobs.script` và sidecar `.json` cạnh video. Hai hệ
+        độc lập, nhưng bản trên Drive nằm ĐÚNG cái kho chứa video: kho đó chết là mất cả hai thứ
+        cùng lúc, chỉ còn trông vào Firestore — mà Firestore chính là thứ hay cạn hạn mức nhất.
+      • VIDEO chỉ có 1 bản. `storage.backup_account()` (kho lạnh) tồn tại nhưng **không ai gọi** —
+        lại một tính năng chết câm.
+    Không thể nhân đôi mọi video (72 kho × 14GB, nhân đôi là mất một nửa sức chứa). Nhưng kịch bản
+    thì vài KB: cất thêm 2 nơi KHÁC là mất một kho vẫn dựng lại được toàn bộ video của kho đó,
+    **không tốn một lượt gọi AI nào**.
+    Gộp cả lane vào MỘT file (~18 file/phiên) thay vì mỗi video một file (~110).
+    Trả số kho đã cất."""
+    if not _KB_PHIEN:
+        return 0
+    try:
+        import json as _j
+        import tempfile as _tf
+        from datetime import datetime as _d2, timezone as _tz2
+        src = os.environ.get("AUTOPUBLISHER_SRC")
+        if src and src not in sys.path:
+            sys.path.insert(0, src)
+        import storage as _ST
+        accs = _ST.pool_accounts() or []
+        if len(accs) < 2:
+            return 0
+        # Chọn 2 kho theo băm tên kênh -> rải đều, và gần như chắc chắn KHÁC kho đang giữ video
+        # (video được rải theo băm + bộ đếm, xem storage.ranked_accounts).
+        i = int(hashlib.sha1(str(channel).encode()).hexdigest(), 16) % len(accs)
+        chon = [accs[i], accs[(i + len(accs) // 2) % len(accs)]]
+        ten = (f"kb-{_lat(channel)}-"
+               f"{_d2.now(_tz2.utc).strftime('%Y%m%d-%H%M%S')}.json")
+        tam = os.path.join(_tf.gettempdir(), ten)
+        with open(tam, "w", encoding="utf-8") as fh:
+            _j.dump(_KB_PHIEN, fh, ensure_ascii=False)
+        ok = 0
+        for acc in chon:
+            try:
+                drv = _ST.account_drive(acc)
+                store = drv.child_folder(acc["root"], "MM0-STORE")
+                bdir = drv.child_folder(store, "_KICHBAN")
+                drv.upload_file(bdir, tam, ten)
+                ok += 1
+            except Exception as e:
+                print(f"   ⚠️ cất kịch bản dự phòng ở {acc.get('name')} hụt: {str(e)[:50]}")
+        try:
+            os.remove(tam)
+        except OSError:
+            pass
+        if ok:
+            print(f"   🧬 cất kịch bản {len(_KB_PHIEN)} video sang {ok} kho KHÁC "
+                  f"(mất 1 kho vẫn dựng lại được, 0 lượt gọi AI).")
+        _KB_PHIEN.clear()
+        return ok
+    except Exception as e:
+        print(f"   ⚠️ không cất được kịch bản dự phòng ({str(e)[:60]})")
+        return 0
 
 
 def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "", script: str = "") -> bool:
@@ -175,6 +240,10 @@ def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "", scri
             if created and created.get("id"):
                 _ghi_nhan(channel, vtype)          # sổ phiên: giữ luật 1:3 kể cả khi Firestore câm
                 FB.count_pushed(OWNER, created["id"], channel, vtype)
+                _KB_PHIEN.append({"drive_id": created["id"], "channel": channel, "type": vtype,
+                                  "title": (story or {}).get("title", ""),
+                                  "script": script or _script_json(
+                                      {k: v for k, v in (story or {}).items() if k != "_thumb"})})
                 # 24/8 tối — HỒI QUY DO CHÍNH BẢN ĐỔI TÊN: trước đây tên file đầu ra cố định theo
                 # kênh nên `fresh_out()` xoá đúng nó mỗi vòng, thư mục `out/` luôn chỉ có ~1 video.
                 # Từ khi đổi sang tên chuẩn (mỗi video một tên riêng), `fresh_out` không còn khớp
@@ -1976,6 +2045,7 @@ def channel_mode(name):
         print("   " + FB.bao_ngan_sach())
         FB.xa_ngan_sach_d1()          # cộng vào sổ ngân sách chung trên D1 (không tốn quota Firestore)
         try:
+            _luu_kich_ban_du_phong(name)   # kịch bản sang 2 kho KHÁC — mất 1 kho vẫn dựng lại được
             import hot_db as _H
             _n = _H.xa_het()          # BẮT BUỘC: thiếu bước này là mất các lượt ghi còn trong đệm
             if _n:

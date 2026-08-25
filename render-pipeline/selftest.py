@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("kịch bản có bản dự phòng ở kho KHÁC", t_kich_ban_co_ban_du_phong_khac_kho)
     check("kho token chết được nhớ CHUNG, tự hết hạn", t_kho_token_chet_nho_chung)
     check("kịch bản đi CÙNG video trên Drive", t_kich_ban_di_cung_video_tren_drive)
     check("job bỏ ngỏ được đóng lúc thoát (hết job ma)", t_job_bo_ngo_duoc_dong_luc_thoat)
@@ -1031,6 +1032,42 @@ def t_lay_viec_ke_o_dung_duong_vao():
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
 
 
+def t_kich_ban_co_ban_du_phong_khac_kho():
+    """Kịch bản phải có bản ở KHO KHÁC, không chỉ nằm cạnh video (25/8, anh hỏi "nhỡ 1 driver hỏng").
+    Sidecar nằm ĐÚNG cái kho chứa video ⇒ kho đó chết là mất cả video lẫn kịch bản cùng lúc, chỉ còn
+    trông vào Firestore — mà Firestore chính là thứ hay cạn hạn mức nhất. Video thì không nhân đôi
+    được (72 kho × 14GB), nhưng kịch bản chỉ vài KB."""
+    import sys as _s, types as _ty
+    import run_render as R
+    that = _s.modules.get("storage")
+    gia = _ty.ModuleType("storage"); cat = []
+
+    class _D:
+        def __init__(self, n): self.n = n
+        def child_folder(self, a, b, **k): return "F"
+        def upload_file(self, f, p_, n): cat.append((self.n, n))
+
+    gia.pool_accounts = lambda: [{"name": f"KHO{i}", "root": f"r{i}"} for i in range(8)]
+    gia.account_drive = lambda a: _D(a["name"])
+    _s.modules["storage"] = gia
+    cu = list(R._KB_PHIEN)
+    try:
+        R._KB_PHIEN.clear()
+        R._KB_PHIEN.extend([{"drive_id": "d1", "channel": "AAA", "type": "short",
+                             "title": "t", "script": "{}"}] * 3)
+        n = R._luu_kich_ban_du_phong("AAA")
+        assert n == 2, f"phải cất ở 2 kho, thực tế {n}"
+        assert cat[0][0] != cat[1][0], "hai bản rơi vào CÙNG một kho -> mất kho là mất cả hai"
+        assert not R._KB_PHIEN, "cất xong mà không dọn -> phiên sau cất trùng"
+        assert R._luu_kich_ban_du_phong("AAA") == 0, "danh sách rỗng mà vẫn cất -> tốn lượt gọi Drive"
+    finally:
+        R._KB_PHIEN.clear(); R._KB_PHIEN.extend(cu)
+        if that is not None:
+            _s.modules["storage"] = that
+        else:
+            _s.modules.pop("storage", None)
+
+
 def t_kho_token_chet_nho_chung():
     """Bản ghi kho có token hỏng phải được nhớ CHUNG, không phải mỗi tiến trình tự tông một lần
     (25/8, anh chỉ ra). Log: `⚠️ kho ADISONDURHAM hụt: invalid_grant` rồi NGAY SAU `✅ đã cất ở kho
@@ -1145,7 +1182,7 @@ def t_day_kho_xong_thi_xoa_ban_tren_dia():
     src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                "run_render.py"), encoding="utf-8").read()
     i = src.index("FB.count_pushed(OWNER, created[\"id\"]")
-    than = src[i: i + 1200]
+    than = src[i: i + 2600]
     assert "os.remove(_f)" in than, \
         "đẩy kho xong mà không xoá bản trên đĩa -> artifact phình theo số video mỗi lane"
     assert "_thumb.jpg" in than, "xoá video mà bỏ lại thumbnail/ảnh tạm"
@@ -1376,16 +1413,35 @@ def t_so_quota_dung_ngay_va_gop_du():
     assert FB._ngay_quota() == mong, "sổ quota không theo mốc reset Thái Bình Dương"
     src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                "firestore_bridge.py"), encoding="utf-8").read()
-    # Soi PHẦN LỆNH thôi — docstring của `_ngay_quota` có nhắc lại đoạn code cũ để giải thích bệnh.
+    # HAI LOẠI NGÀY, ĐỪNG GỘP (25/8 — chính bản vá 20:21 đã gộp nhầm rồi gây "Hôm nay: 32"):
+    #   • SỔ QUOTA  -> mốc reset của Google = UTC-7  (`_ngay_quota`)
+    #   • BỘ ĐẾM HIỂN THỊ -> phải trùng khoá mà DASHBOARD đọc; dashboard dùng
+    #     `new Date().toISOString().slice(0,10)` tức ngày UTC.
+    # Bên ghi và bên đọc lệch khoá là ô "Hôm nay" đọc nhầm ngăn -> con số vô nghĩa.
     import ast as _ast
-    for _n in _ast.walk(_ast.parse(src)):
+    _t2 = _ast.parse(src)
+    _cho = {}
+    for _f in _ast.walk(_t2):
+        if isinstance(_f, _ast.FunctionDef):
+            _cho[_f.name] = (_f.lineno, max(getattr(x, "lineno", 0) for x in _ast.walk(_f)))
+    for _n in _ast.walk(_t2):
         if isinstance(_n, _ast.Call) and getattr(_n.func, "attr", "") == "strftime" \
                 and any(getattr(a, "value", "") == "%Y%m%d" for a in _n.args):
-            _fn = [f.name for f in _ast.walk(_ast.parse(src))
-                   if isinstance(f, _ast.FunctionDef)
-                   and f.lineno <= _n.lineno <= max(getattr(x, "lineno", 0) for x in _ast.walk(f))]
-            assert "_ngay_quota" in _fn, \
-                f"dòng {_n.lineno}: còn đánh số ngày quota theo UTC -> sổ sang trang lệch 7 tiếng"
+            _ten = [k for k, (a, b) in _cho.items() if a <= _n.lineno <= b]
+            assert "_ngay_quota" in _ten or "count_pushed" in _ten, \
+                f"dòng {_n.lineno}: đánh số ngày theo UTC ngoài hai chỗ được phép"
+    for _q in ("flush_rw_ledger", "read_rw_ledger", "xa_ngan_sach_d1", "nap_nen_ngan_sach"):
+        a, b = _cho[_q]
+        assert "_ngay_quota()" in "\n".join(src.split("\n")[a - 1:b]), \
+            f"{_q} không dùng mốc reset Google -> sổ quota sang trang lệch 7 tiếng"
+    a, b = _cho["count_pushed"]
+    assert 'strftime("%Y%m%d")' in "\n".join(src.split("\n")[a - 1:b]), \
+        "bộ đếm hiển thị phải dùng ngày UTC cho khớp dashboard"
+    dash = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "MM0-AutoPublisher", "dashboard", "index.html")
+    if os.path.exists(dash):
+        assert 'toISOString().slice(0,10).replace(/-/g,"")' in io.open(dash, encoding="utf-8").read(), \
+            "dashboard đổi cách tính khoá ngày -> phải đổi count_pushed cho khớp"
     i = src.index("def read_rw_ledger")
     than = src[i: src.index("\ndef ", i + 10)]
     assert 'collection("quota")' in than, "read_rw_ledger chưa cộng sổ của khâu đăng"

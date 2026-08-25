@@ -497,7 +497,15 @@ def count_pushed(owner: str, drive_id: str = "", channel: str = "", vtype: str =
     del _seen[:-400]
     try:
         from google.cloud.firestore_v1 import Increment
-        day = _ngay_quota()
+        # NGÀY HIỂN THỊ PHẢI KHỚP VỚI DASHBOARD, KHÔNG PHẢI VỚI GOOGLE (25/8/2026 — hồi quy do
+        # chính bản vá tối nay). Lúc 20:21 tôi đổi CẢ SÁU chỗ đánh số ngày sang `_ngay_quota()`
+        # (UTC-7) cho khớp mốc reset hạn mức Google. Đúng cho SỔ QUOTA, nhưng SAI ở đây: ô này là
+        # bộ đếm HIỂN THỊ, mà dashboard đọc bằng
+        #     new Date().toISOString().slice(0,10)   -> ngày UTC
+        # Lúc 00:39Z ngày 25/8, dashboard đọc khoá `20260825` trong khi tiến trình ghi vào
+        # `20260824` ⇒ ô "Hôm nay" hiện 32 thay vì số thật. Bên ghi và bên đọc PHẢI dùng chung một
+        # khoá; đổi một bên là con số vô nghĩa ngay.
+        day = datetime.now(timezone.utc).strftime("%Y%m%d")   # KHỚP dashboard (UTC)
         patch = {"total": Increment(1), day: Increment(1), "at": _now()}
         if channel:
             patch[f"ch_{str(channel).upper()}"] = Increment(1)

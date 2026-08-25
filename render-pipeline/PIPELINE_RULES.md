@@ -2184,3 +2184,27 @@ Thứ tự ưu tiên: bảng có dữ liệu → dùng số thật; bảng trố
 chưa kênh nào từng đăng → vẫn trả -1 (chưa biết), không bịa.
 **LUẬT: khi thiếu một bảng cấu hình, hãy hỏi xem dữ liệu đó có SUY RA ĐƯỢC từ thứ hệ thống đã biết
 không — trước khi bắt người dùng ngồi khai báo tay.**
+
+### 7.df — "Hôm nay: 32" là do CHÍNH bản vá 20:21 làm bên ghi và bên đọc lệch khoá ngày (25/8/2026)
+Anh hỏi số hôm nay đã đúng chưa. Soi ra một hồi quy tôi tự gây tối nay: lúc 20:21 tôi đổi **cả sáu**
+chỗ đánh số ngày sang `_ngay_quota()` (UTC-7) cho khớp mốc reset của Google. Đúng cho **sổ quota**,
+nhưng SAI ở `count_pushed` — ô đó là **bộ đếm HIỂN THỊ**, mà dashboard đọc bằng
+`new Date().toISOString().slice(0,10)` tức **ngày UTC**. Lúc 00:39Z ngày 25/8, dashboard đọc khoá
+`20260825` trong khi tiến trình ghi vào `20260824` ⇒ ô "Hôm nay" hiện 32 thay vì số thật.
+Nay tách bạch: **sổ quota → UTC-7** (mốc Google) · **bộ đếm hiển thị → UTC** (khớp dashboard).
+Chốt bằng `t_so_quota_dung_ngay_va_gop_du`: kiểm từng hàm quota phải dùng `_ngay_quota()`, `count_pushed`
+phải dùng UTC, VÀ kiểm luôn dashboard vẫn tính khoá theo cách cũ (dashboard đổi thì test đỏ).
+**LUẬT: "một ngày" không phải một khái niệm duy nhất trong hệ. Ngày của NHÀ CUNG CẤP (mốc reset hạn
+mức) khác ngày của NGƯỜI XEM BẢNG. Thay khoá ngày ở một bên mà không xem bên kia đọc bằng gì là con
+số sai ngay lập tức — và sai một cách rất khó ngờ vì code hai bên đều "trông đúng".**
+
+### 7.dg — Kịch bản cần bản dự phòng ở KHO KHÁC (25/8/2026, anh hỏi "nhỡ 1 driver hỏng")
+Kiểm thật thì thấy: **kịch bản** có 2 bản (Firestore + sidecar cạnh video) nhưng sidecar nằm ĐÚNG cái
+kho chứa video ⇒ kho đó chết là mất **cả hai** cùng lúc, chỉ còn Firestore — mà Firestore chính là thứ
+hay cạn hạn mức nhất. **Video** thì chỉ có 1 bản; `storage.backup_account()` (kho lạnh) có tồn tại
+nhưng **không ai gọi** — lại một tính năng chết câm.
+Không thể nhân đôi mọi video (72 kho × 14GB, nhân đôi là mất một nửa sức chứa). Nhưng kịch bản chỉ vài
+KB: cuối mỗi lane gom cả lane vào MỘT file rồi cất sang **2 kho khác** (~18 file/phiên thay vì ~110).
+Mất một kho vẫn dựng lại được toàn bộ video của kho đó, **0 lượt gọi AI**.
+Chốt bằng `t_kich_ban_co_ban_du_phong_khac_kho` (2 kho phải KHÁC NHAU · cất xong dọn danh sách · rỗng
+thì không cất).
