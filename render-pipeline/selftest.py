@@ -1277,7 +1277,21 @@ def t_suc_dang_phan_biet_chua_biet_voi_het_luot():
     try:
         H.bat_doc = H.bat_ghi = lambda: True
         H.goi = lambda l, t=None, timeout=12: {"rows": [], "con": 0}
+        cu_ow = os.environ.get("OWNER_UID")
+        os.environ.pop("OWNER_UID", None)
         assert H.suc_dang_ngay() == -1, "bảng dự án trống mà báo 0 = nói 'hết lượt' khi chưa biết gì"
+        # 25/8 — bảng `yt_project` còn trống thì SUY RA từ chính các kênh đã từng đăng (mỗi kênh một
+        # tài khoản Google riêng ⇒ 6 video/ngày), thay vì bắt anh khai báo tay. Worker không có lệnh
+        # thêm dòng vào bảng đó và deploy lại Worker thì máy này không có token Cloudflare.
+        os.environ["OWNER_UID"] = "uid-test"
+        H.goi = lambda l, t=None, timeout=12: (
+            {"rows": [], "con": 0, "da_dung_ngay": 7} if l == "yt_con_cho"
+            else {"rows": [{"channel": f"K{i}"} for i in range(12)]})
+        assert H.suc_dang_ngay() == 12 * 6 - 7, "không suy được sức đăng từ số kênh đã kết nối"
+        if cu_ow is None:
+            os.environ.pop("OWNER_UID", None)
+        else:
+            os.environ["OWNER_UID"] = cu_ow
         H.goi = lambda l, t=None, timeout=12: {"rows": [{"tran_ngay": 6, "da_dung": 6}], "con": 0}
         assert H.suc_dang_ngay() == 0, "có dự án và hết lượt thật thì phải là 0"
         H.goi = lambda l, t=None, timeout=12: {"rows": [{"tran_ngay": 6, "da_dung": 2}], "con": 4}

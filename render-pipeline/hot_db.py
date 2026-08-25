@@ -210,9 +210,39 @@ def suc_dang_ngay() -> int:
     r = goi("yt_con_cho", {"ngay": ngay}) or {}
     if "con" not in r:
         return -1
-    if not (r.get("rows") or []):
-        return -1          # không có dự án nào trong bảng -> KHÔNG BIẾT, không phải "hết lượt"
-    return int(r.get("con", -1))
+    if r.get("rows"):
+        return int(r.get("con", -1))
+    return _suc_suy_ra(ngay)
+
+
+TRAN_MOI_DU_AN = 6          # 10.000 đơn vị/ngày ÷ 1.600 mỗi lần đăng
+
+
+def _suc_suy_ra(ngay: str) -> int:
+    """Suy sức đăng từ CHÍNH CÁC KÊNH ĐÃ KẾT NỐI, khi bảng `yt_project` còn trống (25/8/2026).
+
+    Anh: *"a chỉ lấy api key youtube gắn vào chọn folder channel là chạy thôi"* — tức không muốn phải
+    khai báo dự án bằng tay. Worker hiện KHÔNG có lệnh thêm dòng vào `yt_project`, mà thêm lệnh thì
+    phải deploy lại Worker (máy này không có token Cloudflare).
+    Đường không cần deploy: mỗi kênh YouTube nằm trên một tài khoản Google riêng ⇒ **mỗi kênh có hạn
+    mức riêng 6 video/ngày**. Vậy sức đăng = (số kênh đã từng đăng được) × 6 − (đã đăng hôm nay).
+    Lấy từ `yt_kenh_doi` + `yt_con_cho` — cả hai đều là lệnh CÓ SẴN.
+    Trả -1 nếu chưa có kênh nào từng đăng (chưa có gì để suy)."""
+    try:
+        ow = os.environ.get("OWNER_UID", "")
+        if not ow:
+            return -1
+        rows = (goi("yt_kenh_doi", {"owner": ow}) or {}).get("rows") or []
+        if not rows:
+            return -1
+        n_kenh = len({str(x.get("channel") or "") for x in rows if x.get("channel")})
+        da = int((goi("yt_con_cho", {"ngay": ngay}) or {}).get("da_dung_ngay", 0) or 0)
+        con = max(0, n_kenh * TRAN_MOI_DU_AN - da)
+        print(f"   ℹ️ Sức đăng SUY RA: {n_kenh} kênh × {TRAN_MOI_DU_AN}/ngày = {con} "
+              f"(bảng dự án YouTube còn trống — con số này là ước tính trần trên).")
+        return con
+    except Exception:
+        return -1
 
 
 def don_job_ma(owner: str, gio: int = 6) -> int:

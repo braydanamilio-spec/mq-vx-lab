@@ -2172,3 +2172,15 @@ phải nhớ đi xoá cờ, và cũng không xoá bản ghi nào (không phá d�
 Chốt bằng `t_kho_token_chet_nho_chung`.
 **LUẬT: cái gì đã học được bằng một lần trả giá thì phải chia sẻ cho mọi tiến trình — và phải TỰ HẾT
 HẠN, vì trạng thái hỏng hôm nay có thể được sửa ngày mai.**
+
+### 7.de — Khai báo dự án YouTube: suy ra từ kênh đã kết nối, khỏi bắt người dùng khai tay (25/8/2026)
+Anh: *"a chỉ lấy api key youtube gắn vào chọn folder channel là chạy thôi"*. Bảng `yt_project` trên D1
+còn trống nên `suc_dang_ngay()` trả "chưa biết" (7.cs) — đúng nhưng vô dụng. Worker **không có lệnh
+thêm dòng** vào bảng đó, mà thêm lệnh thì phải deploy lại Worker; máy này không có token Cloudflare.
+Đường không cần deploy: mỗi kênh YouTube nằm trên một tài khoản Google riêng ⇒ **mỗi kênh có hạn mức
+riêng 6 video/ngày**. Vậy sức đăng ≈ (số kênh đã từng đăng được) × 6 − (đã dùng hôm nay), lấy từ
+`yt_kenh_doi` + `yt_con_cho` — **cả hai đều là lệnh CÓ SẴN**.
+Thứ tự ưu tiên: bảng có dữ liệu → dùng số thật; bảng trống → suy ra và **nói rõ là ước tính trần trên**;
+chưa kênh nào từng đăng → vẫn trả -1 (chưa biết), không bịa.
+**LUẬT: khi thiếu một bảng cấu hình, hãy hỏi xem dữ liệu đó có SUY RA ĐƯỢC từ thứ hệ thống đã biết
+không — trước khi bắt người dùng ngồi khai báo tay.**
