@@ -1950,3 +1950,26 @@ def t_sau_man_du_lop():
         assert moc in than, f"_sau_man thiếu mốc lớp phủ {moc}"
     assert "mo *= (1 - min(" in than, "_sau_man phải chồng lớp bằng tích (1-alpha), không cộng dồn"
     assert "co_hook" in than, "_sau_man phải phân biệt cảnh có/không có lớp hook"
+
+
+def t_xoay_key_theo_luot_dung():
+    """Hồ ảnh/Vision phải xoay theo SỐ LƯỢT ĐÃ DÙNG, không phải offset băm-tên-kênh cố định.
+
+    25/8 — anh hỏi "sao CF chỉ 3 lần chạm trần ngày rồi mới đổi key". Vì `_ai_candidates` trả
+    thứ tự CỐ ĐỊNH: một lane render 20 video cùng kênh thì cả 20 lần nạp đúng `cands[0]` cho tới
+    khi key đó ăn 429 hạn-mức-NGÀY (nghỉ tới 00:00 UTC) — đốt cạn từng key một thay vì chia đều."""
+    import datastory_ci as DS
+    DS._AI_POOL["keys"] = ["cf:a:1", "cf:b:2", "cf:c:3"]
+    DS._DUNG.clear(); DS._VE_DEAD.clear()
+    dau = []
+    for _ in range(6):
+        c = DS._ai_candidates("")
+        assert c, "hết key"
+        DS.ghi_dung(c[0]); dau.append(c[0])
+    d = {k: dau.count(k) for k in set(dau)}
+    assert max(d.values()) - min(d.values()) <= 1, f"chia không đều, một key bị nện: {d}"
+    assert len(d) == 3, f"chỉ dùng {len(d)}/3 key: {d}"
+    # vision cũng phải xoay trong từng nhóm
+    DS._DUNG.clear(); DS._DUNG["AIza1"] = 5
+    v = DS._vision_order(["AIza1", "AIza2", "cf:a:1"])
+    assert v[0] == "AIza2", f"vision không ưu tiên key ít dùng: {v}"

@@ -2454,3 +2454,10 @@ Chốt bằng `t_key_chet_han_duoc_nhan_dien` — có cả ca NGƯỢC (429/time
 kẻo mất key oan).
 **LUẬT: cách kiểm key rẻ nhất là GHI LẠI thứ dây chuyền đã học trong lúc làm việc thật — 0 lượt gọi
 thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho thông tin mình đã có.**
+
+- **Hồ key ảnh/Vision phải xoay theo SỐ LƯỢT ĐÃ DÙNG, không phải offset băm-tên-kênh.** (25/8)
+  `_ai_candidates`/`_vision_order` trước trả thứ tự cố định suốt phiên ⇒ một lane render 20 video
+  cùng kênh nện đúng `cands[0]` cả 20 lần, tới khi key ấy ăn 429 **hạn mức NGÀY** (nghỉ tới 00:00
+  UTC) mới bò sang key kế — đốt cạn từng key một trong khi 51 key khác còn nguyên. Nay `_DUNG`
+  đếm trong tiến trình (kể cả lượt hỏng — nhà cung cấp vẫn trừ), key ít dùng nhất lên đầu; băm tên
+  kênh chỉ còn để phá hoà giữa 18 lane. Chốt: `t_xoay_key_theo_luot_dung`.

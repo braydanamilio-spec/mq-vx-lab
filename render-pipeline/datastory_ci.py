@@ -95,13 +95,35 @@ def set_ai_pool(keys, channel: str = ""):
     # xuyên video. Có hạn nghỉ để key dính giới hạn THEO PHÚT vẫn quay lại được (xem _vis_chet).
 
 
+# SỔ LƯỢT DÙNG TRONG PHIÊN (25/8/2026 — anh hỏi "sao CF chỉ 3 lần đã chạm trần ngày rồi mới đổi
+# key, không xoay vòng cho thông minh"). Đúng: trước đây hồ ảnh chỉ xoay bằng BĂM TÊN KÊNH, tức
+# offset CỐ ĐỊNH suốt phiên. Một lane render 20 video của cùng một kênh thì cả 20 lần đều nạp
+# `cands[0]` — cùng một key — cho tới khi nó ăn 429 hạn-mức-NGÀY, mới chịu bò sang key kế. Nghĩa là
+# hệ luôn ĐỐT CẠN TỪNG KEY MỘT thay vì chia đều, và key nào cạn thì cạn nguyên ngày (nghỉ tới
+# 00:00 UTC) trong khi 51 key khác vẫn còn nguyên hạn mức.
+# Cách chữa rẻ nhất mà không thêm một lượt gọi mạng nào: đếm ngay trong tiến trình rồi cho key
+# ÍT DÙNG NHẤT lên đầu — y hệt `key_manager.key_order` vẫn làm cho khâu viết chữ. Băm tên kênh vẫn
+# giữ, nhưng chỉ còn để PHÁ HOÀ (18 lane khởi động cùng lúc thì mỗi lane vào một điểm khác nhau).
+_DUNG: dict[str, int] = {}
+
+
+def ghi_dung(k: str) -> None:
+    """Đánh dấu vừa tiêu một lượt của key này (gọi NGAY TRƯỚC lệnh gọi mạng, kể cả lượt hỏng —
+    lượt hỏng vẫn bị nhà cung cấp trừ vào hạn mức)."""
+    if k:
+        _DUNG[k] = _DUNG.get(k, 0) + 1
+
+
 def _ai_candidates(first=""):
-    """Key để thử vẽ ảnh: key gọi vào trước (giữ hành vi cũ), rồi tới các key còn hạn mức."""
+    """Key để thử vẽ ảnh, XẾP THEO ÍT DÙNG NHẤT trước.
+
+    `first` (key gọi vào) vẫn được giữ ở đầu để không phá hành vi "dùng lại key vừa thành công"
+    của một video, nhưng phần đuôi thì xoay vòng thật sự."""
     out = [k for k in ([first] if first else []) if not _ve_chet(k)]
-    for k in _AI_POOL["keys"]:
-        if not _ve_chet(k) and k not in out:
-            out.append(k)
-    return out
+    con = [k for k in _AI_POOL["keys"] if not _ve_chet(k) and k not in out]
+    # sort ỔN ĐỊNH: hoà số lượt thì giữ nguyên thứ tự pool (đã xoay theo kênh) -> vẫn phá hoà giữa lane
+    con.sort(key=lambda k: _DUNG.get(k, 0))
+    return out + con
 
 
 def _is_quota_err(e) -> bool:
@@ -255,7 +277,11 @@ def _vision_order(cands):
     """VISION: Gemini (AIza) TRƯỚC — giám khảo đã kiểm chứng bằng ô mồi; CF (cf:) làm fallback khi
     Gemini cạn (neuron CF ưu tiên để VẼ ảnh). Groq (gsk_) không vision -> loại."""
     cs = [k for k in cands if k and not str(k).startswith("gsk_")]
-    return [k for k in cs if not str(k).startswith("cf:")] + [k for k in cs if str(k).startswith("cf:")]
+    gg = sorted([k for k in cs if not str(k).startswith("cf:")], key=lambda k: _DUNG.get(k, 0))
+    cf = sorted([k for k in cs if str(k).startswith("cf:")], key=lambda k: _DUNG.get(k, 0))
+    # ÍT DÙNG NHẤT lên đầu TRONG TỪNG NHÓM (thứ tự nhóm Gemini->CF giữ nguyên). Vision Gemini free
+    # chỉ ~20 lượt/key/NGÀY: cứ nện đúng key đầu thì sau 20 ảnh là khâu soi ảnh tắt cả phiên.
+    return gg + cf
 
 def _verify_image_rot(path, subject, first_key="", tries=3):
     """verify_image nhưng ĐỔI KEY khi 429 — chốt 'ảnh phải khớp nội dung 100%'.
@@ -271,7 +297,7 @@ def _verify_image_rot(path, subject, first_key="", tries=3):
         k = None
         for cand in _vision_order(([first_key] if first_key else []) + list(_AI_POOL["keys"])):
             if cand and not _vis_chet(cand) and cand not in seen:
-                k = cand; break
+                k = cand; ghi_dung(k); break
         if not k:
             break
         seen.append(k)
@@ -298,7 +324,7 @@ def _verify_grid_rot(pairs, first_key="", tries=3):
         k = None
         for cand in _vision_order(([first_key] if first_key else []) + list(_AI_POOL["keys"])):
             if cand and not _vis_chet(cand) and cand not in seen:
-                k = cand; break
+                k = cand; ghi_dung(k); break
         if not k:
             break
         seen.append(k)
@@ -406,6 +432,7 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
         return False
     last_quota = None
     for _i, _k in enumerate(cands):
+      ghi_dung(_k)                     # tính cả lượt hỏng: nhà cung cấp vẫn trừ hạn mức
       if str(_k).startswith("cf:"):
         # ⛅ Cloudflare FLUX schnell — free ~2K ảnh/ngày/tài khoản, xếp TRƯỚC Gemini trong pool.
         try:
