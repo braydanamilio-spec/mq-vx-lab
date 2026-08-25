@@ -2564,3 +2564,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   env `CHANNEL_CFGS`, số đếm/hồ key/danh sách job ở **D1**, kịch bản ở Drive sidecar. B2 chỉ còn là
   bến đọc khẩn (dữ liệu cũ dần); bật lại gương để nghiệm thu lần cuối: `B2_GUONG=on`. Kế hoạch: gỡ
   hẳn B2 sau 1-2 ngày D1 chạy sạch.
+
+- **Bước nào đi mạng theo LÔ (73 kho, 55 kênh…) phải có ngân sách thời gian + chạy song song.** (25/8)
+  Plan 07:05Z treo 14,5' ở "đồng bộ dung lượng kho" (73 kho tuần tự, không hạn giờ, rơi đúng chu kỳ
+  20h) rồi bị chém ở timeout 18' — và vì `usage_synced_at` chưa kịp đóng dấu nên plan kế dính y hệt:
+  **vòng lặp chết ăn trọn các phiên**. Nay: 8 luồng song song, ngân sách 150s, hết giờ lấy phần đã
+  xong và VẪN đóng dấu; không dùng `with ThreadPoolExecutor` (shutdown mặc định đợi đủ). Chốt:
+  `t_dong_bo_kho_co_ngan_sach_gio`.

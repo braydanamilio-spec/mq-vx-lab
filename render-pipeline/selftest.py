@@ -433,6 +433,7 @@ def main():
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
+    check("đồng bộ kho có ngân sách giờ, không đợi đủ hết", t_dong_bo_kho_co_ngan_sach_gio)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2174,6 +2175,23 @@ def t_hai_voi_ri_da_ham():
     assert dem["n"] == 1, f"5 lần gọi mà ghi {dem['n']} lượt — hãm không ăn"
     FB.ghi_nhip_song("job-x", "TESTUSA", "done")
     assert dem["n"] == 2, "trạng thái CUỐI bị hãm oan -> dashboard đếm thiếu"
+
+
+def t_dong_bo_kho_co_ngan_sach_gio():
+    """Đồng bộ dung lượng 73 kho phải có NGÂN SÁCH THỜI GIAN và không được đợi-đủ-hết.
+
+    25/8 — plan 07:05Z treo 14,5' trong bước này (73 kho tuần tự, không hạn giờ) rồi bị chém ở
+    timeout 18'; `usage_synced_at` chưa kịp đóng dấu nên plan kế cũng dính — vòng lặp chết ăn
+    trọn các phiên. Ba chốt: chạy song song, có mốc hết giờ, KHÔNG dùng `with` (shutdown chờ)."""
+    src = _doc("run_render.py")
+    i = src.index("Đã đồng bộ dung lượng thật")
+    than = src[max(0, i - 3200):i]
+    assert "ThreadPoolExecutor" in than, "đồng bộ kho vẫn chạy tuần tự"
+    assert "_het = _t9.time() + 150" in than, "mất ngân sách 150s"
+    assert "shutdown(wait=False, cancel_futures=True)" in than, "shutdown chờ đủ hết = treo như cũ"
+    assert "with _cf.ThreadPoolExecutor" not in than, "with-block sẽ đợi đủ 73 kho ở __exit__"
+    sau = src[i - 3200:src.index("GUARD KHO GẦN ĐẦY", i)]   # mốc SAU i — mốc cùng tên đứng trước đã bẫy chốt này 1 lần
+    assert 'FB.set_config(OWNER, {"usage_synced_at"' in sau, "không đóng dấu synced_at nữa"
 
 
 if __name__ == "__main__":

@@ -1605,18 +1605,43 @@ def plan_mode():
         if _src and _src not in sys.path:
             sys.path.insert(0, _src)
         import storage as ST
+        # 25/8 — CHÍNH BƯỚC NÀY LÀM PLAN 07:05Z TREO 14,5 PHÚT RỒI BỊ CHÉM Ở TIMEOUT 18'.
+        # 73 kho × (làm tươi token + about.get) chạy TUẦN TỰ, mỗi kho 2-15s, không có ngân sách
+        # thời gian — rơi đúng chu kỳ 20h sau mốc reset quota là plan chết, phiên mất trắng, và vì
+        # `usage_synced_at` chưa kịp đóng dấu nên PLAN NÀO KẾ TIẾP CŨNG DÍNH Y HỆT (vòng lặp chết).
+        # Chữa hai tầng: (1) 8 luồng song song — I/O mạng là chỗ thread giúp thật; (2) ngân sách
+        # 150 giây, hết giờ thì lấy phần đã xong. LUÔN đóng dấu synced_at kể cả xong một phần:
+        # kho lỡ nhịp sẽ được làm tươi ở chu kỳ 20h sau, còn hơn cả phiên chết.
+        import concurrent.futures as _cf, time as _t9
+        _hang = [a for a in ST.pool_accounts() if not (a.get("owner") and a["owner"] != OWNER)]
+        _het = _t9.time() + 150
         synced = 0
-        for acc in ST.pool_accounts():
-            if acc.get("owner") and acc["owner"] != OWNER:
-                continue
-            try:
-                stt = ST.account_status(acc)
-                FB.update_storage_used(OWNER, acc["name"], stt.get("used", 0), acc.get("cap_gb"))
-                synced += 1
-            except Exception:
-                pass
+        def _mot(acc):
+            stt = ST.account_status(acc)
+            return acc, stt.get("used", 0)
+        # KHÔNG dùng `with`: __exit__ gọi shutdown(wait=True) sẽ ĐỢI đủ 73 kho — đúng cái treo
+        # đang chữa. TimeoutError của as_completed cũng phải nuốt để vẫn đóng dấu synced_at.
+        _ex = _cf.ThreadPoolExecutor(max_workers=8)
+        _cho = {_ex.submit(_mot, a): a for a in _hang}
+        try:
+            for _f in _cf.as_completed(_cho, timeout=max(10, _het - _t9.time())):
+                try:
+                    acc, _used = _f.result()
+                    FB.update_storage_used(OWNER, acc["name"], _used, acc.get("cap_gb"))
+                    synced += 1
+                except Exception:
+                    pass
+                if _t9.time() > _het:
+                    break
+        except _cf.TimeoutError:
+            pass
+        finally:
+            _ex.shutdown(wait=False, cancel_futures=True)
+        if synced < len(_hang):
+            print(f"   ⏳ đồng bộ kho chạm ngân sách 150s — lấy {synced}/{len(_hang)} kho, "
+                  f"phần còn lại chu kỳ 20h sau.")
         FB.set_config(OWNER, {"usage_synced_at": datetime.now(timezone.utc).isoformat()})
-        print(f"   💾 Đã đồng bộ dung lượng thật {synced} kho.")
+        print(f"   💾 Đã đồng bộ dung lượng thật {synced}/{len(_hang)} kho.")
       except Exception as e:
         print(f"   ⚠️ Sync dung lượng kho lỗi: {e}")
     # GUARD KHO GẦN ĐẦY (tính tổng cả 33 kho, dùng số VỪA sync).
