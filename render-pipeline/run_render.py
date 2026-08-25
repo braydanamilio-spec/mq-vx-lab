@@ -637,7 +637,14 @@ def run_one(ch, keys, n_shorts=3, report=None):
         # TEMPLATE "chỉ short": lấy subtopics KHÔNG render long (rẻ, nhanh).
         try:
             import content_brain as CB, key_manager as KM
-            k0 = KM.key_order(channel, keys)[0]
+            # 26/8 — `key_order(...)[0]` KHÔNG có bảo vệ. Phiên 19:59: cả pool key viết cạn sạch,
+            # hàm trả danh sách RỖNG và `[0]` nổ IndexError -> 3 lane ra 0 video, 12 Traceback,
+            # log toàn stack thay vì một dòng nói "hết key". Cạn key là tình huống BÌNH THƯỜNG
+            # của hệ chạy trên hạn mức free, không phải sự cố — phải báo gọn rồi bỏ lượt.
+            _ds = KM.key_order(channel, keys)
+            if not _ds:
+                raise RuntimeError("hết key viết dùng được (cả pool đang nghỉ/cạn) — bỏ lượt")
+            k0 = _ds[0]
             plan = CB.plan_pillar(niche, max(n_shorts, 3), api_key=k0["key"], model_name=KM.model_for(tier),
                                   avoid=FB.recent_topics(OWNER, channel))
             subtopics = (plan.get("subtopics") or [])[:max(n_shorts, 3)]

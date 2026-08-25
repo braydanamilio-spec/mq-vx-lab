@@ -837,11 +837,36 @@ def t_mo_dau_phai_xac_minh_bang_khung_that():
     assert not xau, "mở đầu chưa chốt bằng khung thật:\n   " + "\n   ".join(xau)
 
 
+
+def t_key_order_khong_lay_phan_tu_dau_tran():
+    """Không được viết `key_order(...)[0]` trần — hết key là chuyện BÌNH THƯỜNG.
+
+    26/8 phiên 19:59: cả pool key viết cạn sạch, `key_order()` trả danh sách RỖNG và ba chỗ lấy
+    `[0]` đều nổ `IndexError` — 3 lane ra **0 video**, 12 Traceback, log toàn stack thay vì một
+    dòng nói "hết key". Hệ này sống bằng hạn mức free nên cạn key là trạng thái sẽ gặp hằng ngày,
+    không phải sự cố; gặp nó phải báo gọn rồi bỏ lượt, không phải đổ stack.
+
+    Cùng họ với `_dispatch_short` trả None: một đường đi THƯỜNG XUYÊN bị code coi như không thể
+    xảy ra."""
+    import re
+    xau = []
+    for ten in ("datastory_ci.py", "run_render.py", "key_manager.py"):
+        for i, l in enumerate(_doc(ten).splitlines(), 1):
+            t = l.strip()
+            if t.startswith("#"):
+                continue
+            if re.search(r"key_order\([^)]*\)\s*\[0\]", t):
+                xau.append(f"{ten}:{i}: {t[:70]}")
+    assert not xau, ("lấy phần tử đầu của key_order mà không kiểm rỗng:\n   "
+                     + "\n   ".join(xau))
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
     check("groq WAF 1010 -> lỗi tạm per-minute", t_groq_waf_1010)
     check("key cạn quota -> đổi key, không giết luồng", t_het_key_thi_doi_key)
+    check("hết key -> báo gọn, không IndexError", t_key_order_khong_lay_phan_tu_dau_tran)
     check("nghẽn nhà cung cấp (504) -> thử lại, không giết lượt", t_nghen_nha_cung_cap_phai_thu_lai)
     check("cạn token/ngày -> nhãn daily", t_groq_tpd_la_daily)
     check("groq model bị gỡ -> tự dò model sống", t_groq_model_selfprobe)

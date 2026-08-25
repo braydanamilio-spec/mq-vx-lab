@@ -2966,3 +2966,14 @@ Hai thứ vẫn phải sửa:
   viết hay đến mấy cũng vô ích. Hỏi trước, bỏ lượt sớm, nhường lane cho kênh khác.
 - **Nói một lần, đừng nói 588 lần.** Đúng dòng cảnh báo đó in 588 lần trong một phiên, lấp hết log
   và làm mọi dấu hiệu khác chìm nghỉm. Biết một lần là đủ để sửa.
+
+### 26/8 — HẾT KEY VIẾT làm 3 lane ra 0 video vì `key_order(...)[0]` không có bảo vệ
+Phiên 19:59: cả pool key viết cạn sạch. `KM.key_order()` trả danh sách RỖNG, ba chỗ lấy `[0]` trần
+đều nổ `IndexError` — **3 lane, 0 video, 12 Traceback**, log toàn stack thay vì một dòng nói "hết key".
+
+Hệ này sống bằng hạn mức free nên **cạn key là trạng thái sẽ gặp hằng ngày, không phải sự cố**.
+Gặp nó phải báo gọn rồi bỏ lượt. Cùng họ với lỗi `_dispatch_short` trả `None`: một đường đi
+THƯỜNG XUYÊN bị code coi như không thể xảy ra.
+- Vá cả 3 chỗ (`make_long` · `make_doc_long` · `run_render._long_then_shorts`): kiểm rỗng, ném
+  `RuntimeError("hết key viết dùng được")` để tầng trên bắt và bỏ lượt gọn.
+- Chốt `t_key_order_khong_lay_phan_tu_dau_tran` cấm viết `key_order(...)[0]` trần.
