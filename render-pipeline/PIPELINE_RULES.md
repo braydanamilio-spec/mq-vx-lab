@@ -2932,3 +2932,21 @@ thử đều hỏng y hệt nhau, mỗi lượt vẫn tốn một vòng gọi m�
   ("pool vẽ ảnh CẠN SẠCH") thay vì con số 0/N không nói lên điều gì.
 - Đi kèm bản vá cùng ngày: hai nhánh `return False` im lặng của `_generate_image_ai` nay đều in
   lý do, và dòng ném lỗi kèm số key còn dùng được.
+
+### 26/8 — "khác chuỗi hex" KHÔNG có nghĩa là mắt phân biệt được
+Bộ sinh brand-kit báo "50 màu chính, không trùng" và chốt selftest xanh — nhưng khi xem hai avatar
+cạnh nhau thì ONE HIT và AMERICA LOOKED UP là **cùng một màu hồng**. Đo lại: **73 cặp** kênh cách
+nhau dưới 40/255 trong không gian RGB, nhiều cặp cách **3**.
+Gốc: chốt so bằng `==` trên chuỗi hex. Phép so bằng trả lời câu hỏi "có trùng không", còn câu hỏi
+thật là "có phân biệt được không" — phải đo bằng KHOẢNG CÁCH.
+
+Ba lần thử, hai lần đầu đều hỏng vì ép cấu trúc lên vòng màu rồi mong nó vừa:
+1. đặt tay 24 góc niche + lệch 14°/kênh → 73 cặp < 40
+2. góc vàng cho niche + 3 bậc sáng → còn 15 cặp, **tất cả là hai kênh khác niche**
+3. **bỏ ràng buộc "cùng niche cùng hue"** (họ hàng đã do MOTIF gánh) + chọn 50 màu bằng
+   farthest-point trên lưới HSV → **0 cặp < 40**, cặp gần nhất 49/255
+
+Thêm một bẫy: để lưới trải hết không gian thì farthest-point luôn nhặt GÓC CỰC trước và ra
+`#0FF7F7 · #0CCC0C · #F70FF7` — chói, nhìn như bảng màu máy tính cũ. Thu bão hoà về 0,55-0,82 và
+độ sáng 0,72-0,94 thì vẫn tách rõ mà mắt chịu được.
+- Chốt nay đo khoảng cách RGB mọi cặp, ngưỡng 40.

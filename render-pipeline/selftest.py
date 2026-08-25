@@ -588,6 +588,23 @@ def t_brandkit_the_he_2():
     trung = sorted({m for m in mau if m and mau.count(m) > 1})
     if trung:
         xau.append("màu chính trùng giữa các kênh: " + ", ".join(trung))
+    # "Khác chuỗi hex" KHÔNG có nghĩa là mắt phân biệt được. Đo thật 26/8: 50 màu đều khác nhau
+    # về chuỗi mà có **73 cặp** cách nhau dưới 40/255, nhiều cặp cách 3 — nhìn hai avatar cạnh
+    # nhau thấy y hệt. Phải đo bằng KHOẢNG CÁCH, không bằng phép so bằng.
+    import itertools as _it
+
+    def _rgb(h):
+        return [int(h[i:i + 2], 16) for i in (1, 3, 5)]
+
+    gan = []
+    for (i1, a), (i2, b) in _it.combinations(list(enumerate(mau)), 2):
+        if not a or not b:
+            continue
+        d = sum((x - y) ** 2 for x, y in zip(_rgb(a), _rgb(b))) ** 0.5
+        if d < 40:
+            gan.append(f"{ks[i1].get('ten')} ~ {ks[i2].get('ten')} (cách {d:.0f}/255)")
+    if gan:
+        xau.append(f"{len(gan)} cặp kênh màu quá giống nhau: " + " · ".join(gan[:4]))
     assert not xau, "brand-kit sai:\n   " + "\n   ".join(xau)
 
 

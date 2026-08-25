@@ -23,10 +23,10 @@
    "tagline": "What the label does not say",
    "niche": "Đồ ăn & đồ uống",
    "palette": {
-    "bg": "#0A0E17",
-    "primary": "#FA782D",
-    "secondary": "#EBDA46",
-    "accent": "#3EC5FA",
+    "bg": "#0A1317",
+    "primary": "#B85353",
+    "secondary": "#C28E61",
+    "accent": "#37FAE0",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -72,10 +72,10 @@
    "tagline": "Pulled from shelves this week",
    "niche": "Đồ ăn & đồ uống",
    "palette": {
-    "bg": "#0A0B17",
-    "primary": "#FAA82D",
-    "secondary": "#D5EB46",
-    "accent": "#3E99FA",
+    "bg": "#170F0A",
+    "primary": "#2BF0F0",
+    "secondary": "#50ABFA",
+    "accent": "#FA3751",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -120,10 +120,10 @@
    "tagline": "One meal, real numbers",
    "niche": "Đồ ăn & đồ uống",
    "palette": {
-    "bg": "#0C0A17",
-    "primary": "#FAD82D",
-    "secondary": "#AEEB46",
-    "accent": "#3E6DFA",
+    "bg": "#170A13",
+    "primary": "#27D627",
+    "secondary": "#48E08F",
+    "accent": "#E037FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -167,10 +167,10 @@
    "tagline": "One real study, explained straight",
    "niche": "Sức khoẻ & gym",
    "palette": {
-    "bg": "#170A0C",
-    "primary": "#2DFA93",
-    "secondary": "#46E5EB",
-    "accent": "#FA3EAC",
+    "bg": "#13170A",
+    "primary": "#2727D6",
+    "secondary": "#8F48E0",
+    "accent": "#FAE037",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -214,10 +214,10 @@
    "tagline": "What the FDA pulled and why",
    "niche": "Sức khoẻ & gym",
    "palette": {
-    "bg": "#170B0A",
-    "primary": "#2DFAC3",
-    "secondary": "#46BFEB",
-    "accent": "#FA3E80",
+    "bg": "#0F0A17",
+    "primary": "#F0F02B",
+    "secondary": "#ABFA50",
+    "accent": "#3751FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -268,10 +268,10 @@
    "tagline": "Your raise versus your rent",
    "niche": "Tiền cá nhân",
    "palette": {
-    "bg": "#0B0A17",
-    "primary": "#FAC72D",
-    "secondary": "#BCEB46",
-    "accent": "#3E7DFA",
+    "bg": "#0A170F",
+    "primary": "#F02BF0",
+    "secondary": "#FA50AB",
+    "accent": "#51FA37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -321,10 +321,10 @@
    "tagline": "What a roof costs now",
    "niche": "Tiền cá nhân",
    "palette": {
-    "bg": "#0E0A17",
-    "primary": "#FAF62D",
-    "secondary": "#96EB46",
-    "accent": "#3E51FA",
+    "bg": "#170A15",
+    "primary": "#86F06C",
+    "secondary": "#7DFA9E",
+    "accent": "#B937FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -376,10 +376,10 @@
    "tagline": "What got expensive this year",
    "niche": "Tiền cá nhân",
    "palette": {
-    "bg": "#110A17",
-    "primary": "#CEFA2D",
-    "secondary": "#6FEB46",
-    "accent": "#573EFA",
+    "bg": "#15170A",
+    "primary": "#6C86F0",
+    "secondary": "#9E7DFA",
+    "accent": "#FAB937",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -424,10 +424,10 @@
    "tagline": "Straight from the court file",
    "niche": "Tội phạm có thật",
    "palette": {
-    "bg": "#0A1417",
-    "primary": "#FA2D3E",
-    "secondary": "#EB9046",
-    "accent": "#3EFADB",
+    "bg": "#170B0A",
+    "primary": "#21B892",
+    "secondary": "#3EA5C2",
+    "accent": "#FA3782",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -471,10 +471,10 @@
    "tagline": "The lawsuit they hoped you missed",
    "niche": "Tội phạm có thật",
    "palette": {
-    "bg": "#0A1117",
-    "primary": "#FA4C2D",
-    "secondary": "#EBB746",
-    "accent": "#3EEDFA",
+    "bg": "#0A170B",
+    "primary": "#9221B8",
+    "secondary": "#C23EA5",
+    "accent": "#82FA37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -519,10 +519,10 @@
    "tagline": "The case nobody closed",
    "niche": "Tội phạm có thật",
    "palette": {
-    "bg": "#0A0E17",
-    "primary": "#FA7C2D",
-    "secondary": "#EBDD46",
-    "accent": "#3EC2FA",
+    "bg": "#0A1716",
+    "primary": "#F06CA1",
+    "secondary": "#FA857D",
+    "accent": "#37FA92",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -566,10 +566,10 @@
    "tagline": "Still no answer",
    "niche": "Bí ẩn chưa lời giải",
    "palette": {
-    "bg": "#0B170A",
-    "primary": "#A52DFA",
-    "secondary": "#EB46D7",
-    "accent": "#9CFA3E",
+    "bg": "#100A17",
+    "primary": "#A1B821",
+    "secondary": "#71C23E",
+    "accent": "#3A37FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -613,10 +613,10 @@
    "tagline": "Gone, and never explained",
    "niche": "Bí ẩn chưa lời giải",
    "palette": {
-    "bg": "#0A170C",
-    "primary": "#D42DFA",
-    "secondary": "#EB46B1",
-    "accent": "#70FA3E",
+    "bg": "#0A0C17",
+    "primary": "#F08D2B",
+    "secondary": "#FAF450",
+    "accent": "#37B2FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -659,10 +659,10 @@
    "tagline": "Baseball, by the numbers",
    "niche": "Thể thao",
    "palette": {
-    "bg": "#0A1017",
-    "primary": "#FA602D",
-    "secondary": "#EBC746",
-    "accent": "#3EDBFA",
+    "bg": "#0B170A",
+    "primary": "#BB6CF0",
+    "secondary": "#FA7DF2",
+    "accent": "#9FFA37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -706,10 +706,10 @@
    "tagline": "Who actually leads the league",
    "niche": "Thể thao",
    "palette": {
-    "bg": "#0A0D17",
-    "primary": "#FA902D",
-    "secondary": "#E8EB46",
-    "accent": "#3EAFFA",
+    "bg": "#170A0B",
+    "primary": "#6CF0BB",
+    "secondary": "#7DF2FA",
+    "accent": "#FA379F",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -753,10 +753,10 @@
    "tagline": "Paid like a star, played like what",
    "niche": "Thể thao",
    "palette": {
-    "bg": "#0B0A17",
-    "primary": "#FAC02D",
-    "secondary": "#C2EB46",
-    "accent": "#3E83FA",
+    "bg": "#0A0B17",
+    "primary": "#F0C26C",
+    "secondary": "#EBFA7D",
+    "accent": "#3795FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -801,10 +801,10 @@
    "tagline": "What America read yesterday",
    "niche": "Người nổi tiếng",
    "palette": {
-    "bg": "#0A1713",
-    "primary": "#FA2DB6",
-    "secondary": "#EB465C",
-    "accent": "#3EFA6D",
+    "bg": "#0A1317",
+    "primary": "#F02B2B",
+    "secondary": "#FA9F50",
+    "accent": "#37FAE0",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -849,10 +849,10 @@
    "tagline": "The rise and the drop",
    "niche": "Người nổi tiếng",
    "palette": {
-    "bg": "#0A1716",
-    "primary": "#FA2D86",
-    "secondary": "#EB5746",
-    "accent": "#3EFA99",
+    "bg": "#17160A",
+    "primary": "#3B6DB8",
+    "secondary": "#6059C2",
+    "accent": "#FA9237",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -897,10 +897,10 @@
    "tagline": "Every show has a number",
    "niche": "Phim & truyền hình",
    "palette": {
-    "bg": "#0F170A",
-    "primary": "#712DFA",
-    "secondary": "#D546EB",
-    "accent": "#CBFA3E",
+    "bg": "#0A1714",
+    "primary": "#D62790",
+    "secondary": "#E0485C",
+    "accent": "#37FA6B",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -945,10 +945,10 @@
    "tagline": "Great shows that got cut",
    "niche": "Phim & truyền hình",
    "palette": {
-    "bg": "#0C170A",
-    "primary": "#A12DFA",
-    "secondary": "#EB46DA",
-    "accent": "#9FFA3E",
+    "bg": "#170A14",
+    "primary": "#5DB853",
+    "secondary": "#61C284",
+    "accent": "#CC37FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -993,10 +993,10 @@
    "tagline": "Who really wrote it",
    "niche": "Nhạc",
    "palette": {
-    "bg": "#0A170F",
-    "primary": "#FA2DFA",
-    "secondary": "#EB4693",
-    "accent": "#4EFA3E",
+    "bg": "#17140A",
+    "primary": "#2BA1F0",
+    "secondary": "#5067FA",
+    "accent": "#FA6B37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1041,10 +1041,10 @@
    "tagline": "One song, then silence",
    "niche": "Nhạc",
    "palette": {
-    "bg": "#0A1711",
-    "primary": "#FA2DCA",
-    "secondary": "#EB466D",
-    "accent": "#3EFA5B",
+    "bg": "#170A0F",
+    "primary": "#2BF066",
+    "secondary": "#50FAD2",
+    "accent": "#FA37D9",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1087,10 +1087,10 @@
    "tagline": "Who is actually online",
    "niche": "Game",
    "palette": {
-    "bg": "#17110A",
-    "primary": "#2DD8FA",
-    "secondary": "#4678EB",
-    "accent": "#FA4E3E",
+    "bg": "#170A17",
+    "primary": "#66F02B",
+    "secondary": "#50FA6C",
+    "accent": "#A537FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1134,10 +1134,10 @@
    "tagline": "Bought by millions, empty tonight",
    "niche": "Game",
    "palette": {
-    "bg": "#17140A",
-    "primary": "#2DA8FA",
-    "secondary": "#4651EB",
-    "accent": "#FA7A3E",
+    "bg": "#0F170A",
+    "primary": "#662BF0",
+    "secondary": "#D250FA",
+    "accent": "#D9FA37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1183,10 +1183,10 @@
    "tagline": "What they recalled on your car",
    "niche": "Xe",
    "palette": {
-    "bg": "#17140A",
-    "primary": "#2DA5FA",
-    "secondary": "#464FEB",
-    "accent": "#FA7D3E",
+    "bg": "#17120A",
+    "primary": "#6CC8F0",
+    "secondary": "#7D9AFA",
+    "accent": "#FA5737",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1231,10 +1231,10 @@
    "tagline": "What the EPA actually measured",
    "niche": "Xe",
    "palette": {
-    "bg": "#17170A",
-    "primary": "#2D75FA",
-    "secondary": "#6446EB",
-    "accent": "#FAA93E",
+    "bg": "#0A0B17",
+    "primary": "#B89453",
+    "secondary": "#B6C261",
+    "accent": "#3795FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1277,10 +1277,10 @@
    "tagline": "One breed, one file",
    "niche": "Thú cưng & động vật",
    "palette": {
-    "bg": "#160A17",
-    "primary": "#82FA2D",
-    "secondary": "#46EB5A",
-    "accent": "#9C3EFA",
+    "bg": "#17100A",
+    "primary": "#53A8B8",
+    "secondary": "#6186C2",
+    "accent": "#FA3A37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1325,10 +1325,10 @@
    "tagline": "The wild, counted",
    "niche": "Thú cưng & động vật",
    "palette": {
-    "bg": "#170A15",
-    "primary": "#53FA2D",
-    "secondary": "#46EB80",
-    "accent": "#C83EFA",
+    "bg": "#0A170F",
+    "primary": "#B853B3",
+    "secondary": "#C26190",
+    "accent": "#47FA37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1373,10 +1373,10 @@
    "tagline": "What that trip really costs",
    "niche": "Du lịch",
    "palette": {
-    "bg": "#170D0A",
-    "primary": "#2DFAE9",
-    "secondary": "#46A1EB",
-    "accent": "#FA3E5E",
+    "bg": "#0B170A",
+    "primary": "#AB2BF0",
+    "secondary": "#FA50E6",
+    "accent": "#95FA37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1420,10 +1420,10 @@
    "tagline": "Who is above you right now",
    "niche": "Du lịch",
    "palette": {
-    "bg": "#17100A",
-    "primary": "#2DDBFA",
-    "secondary": "#467AEB",
-    "accent": "#FA4B3E",
+    "bg": "#170A0B",
+    "primary": "#2BF0AB",
+    "secondary": "#50E6FA",
+    "accent": "#FA3795",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1467,10 +1467,10 @@
    "tagline": "What companies admit in writing",
    "niche": "Công nghệ & AI",
    "palette": {
-    "bg": "#16170A",
-    "primary": "#2D60FA",
-    "secondary": "#7546EB",
-    "accent": "#FABB3E",
+    "bg": "#120A17",
+    "primary": "#C8F06C",
+    "secondary": "#9AFA7D",
+    "accent": "#5737FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1513,10 +1513,10 @@
    "tagline": "The cuts they filed quietly",
    "niche": "Công nghệ & AI",
    "palette": {
-    "bg": "#13170A",
-    "primary": "#2D30FA",
-    "secondary": "#9B46EB",
-    "accent": "#FAE73E",
+    "bg": "#16170A",
+    "primary": "#2B5CF0",
+    "secondary": "#7550FA",
+    "accent": "#FAAF37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1560,10 +1560,10 @@
    "tagline": "A real place, a real record",
    "niche": "Kinh dị & rùng rợn",
    "palette": {
-    "bg": "#0A170B",
-    "primary": "#C72DFA",
-    "secondary": "#EB46BC",
-    "accent": "#7DFA3E",
+    "bg": "#0F170A",
+    "primary": "#7153B8",
+    "secondary": "#AB61C2",
+    "accent": "#D9FA37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1607,10 +1607,10 @@
    "tagline": "What happens after midnight",
    "niche": "Kinh dị & rùng rợn",
    "palette": {
-    "bg": "#0A170E",
-    "primary": "#F62DFA",
-    "secondary": "#EB4696",
-    "accent": "#51FA3E",
+    "bg": "#0A1517",
+    "primary": "#F04D65",
+    "secondary": "#FA9E73",
+    "accent": "#37FAC3",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1655,10 +1655,10 @@
    "tagline": "Love, in numbers",
    "niche": "Quan hệ & hẹn hò",
    "palette": {
-    "bg": "#0A1716",
-    "primary": "#FA2D82",
-    "secondary": "#EB5A46",
-    "accent": "#3EFA9C",
+    "bg": "#0A0C17",
+    "primary": "#B87421",
+    "secondary": "#C0C23E",
+    "accent": "#37A9FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1713,10 +1713,10 @@
    "tagline": "What America looks up alone",
    "niche": "Quan hệ & hẹn hò",
    "palette": {
-    "bg": "#0A1517",
-    "primary": "#FA2D53",
-    "secondary": "#EB8046",
-    "accent": "#3EFAC8",
+    "bg": "#120A17",
+    "primary": "#B5F02B",
+    "secondary": "#78FA50",
+    "accent": "#5737FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1762,10 +1762,10 @@
    "tagline": "What that job really pays",
    "niche": "Nghề nghiệp",
    "palette": {
-    "bg": "#17150A",
-    "primary": "#2D93FA",
-    "secondary": "#4C46EB",
-    "accent": "#FA8D3E",
+    "bg": "#0A1017",
+    "primary": "#F0866C",
+    "secondary": "#FAD07D",
+    "accent": "#37EDFA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1809,10 +1809,10 @@
    "tagline": "The jobs going away",
    "niche": "Nghề nghiệp",
    "palette": {
-    "bg": "#16170A",
-    "primary": "#2D64FA",
-    "secondary": "#7246EB",
-    "accent": "#FAB83E",
+    "bg": "#0A1317",
+    "primary": "#B82121",
+    "secondary": "#C27C3E",
+    "accent": "#37FAE0",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1855,10 +1855,10 @@
    "tagline": "Where your money goes further",
    "niche": "Nhà ở",
    "palette": {
-    "bg": "#0A0B17",
-    "primary": "#FAA52D",
-    "secondary": "#D7EB46",
-    "accent": "#3E9CFA",
+    "bg": "#170A0E",
+    "primary": "#21B856",
+    "secondary": "#3EC2AA",
+    "accent": "#FA37D0",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1911,10 +1911,10 @@
    "tagline": "Years of pay for four walls",
    "niche": "Nhà ở",
    "palette": {
-    "bg": "#0C0A17",
-    "primary": "#FAD42D",
-    "secondary": "#B1EB46",
-    "accent": "#3E70FA",
+    "bg": "#0E170A",
+    "primary": "#5621B8",
+    "secondary": "#AA3EC2",
+    "accent": "#D0FA37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -1958,10 +1958,10 @@
    "tagline": "Footage nobody owns",
    "niche": "Lịch sử",
    "palette": {
-    "bg": "#0A0C17",
-    "primary": "#FA932D",
-    "secondary": "#E5EB46",
-    "accent": "#3EACFA",
+    "bg": "#0A1710",
+    "primary": "#F06CDC",
+    "secondary": "#FA7DAD",
+    "accent": "#37FA3A",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -2005,10 +2005,10 @@
    "tagline": "Same street, a century apart",
    "niche": "Lịch sử",
    "palette": {
-    "bg": "#0B0A17",
-    "primary": "#FAC32D",
-    "secondary": "#BFEB46",
-    "accent": "#3E80FA",
+    "bg": "#170A0E",
+    "primary": "#60D68A",
+    "secondary": "#70E0CC",
+    "accent": "#FA37D0",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -2052,10 +2052,10 @@
    "tagline": "What just passed us",
    "niche": "Vũ trụ",
    "palette": {
-    "bg": "#12170A",
-    "primary": "#3E2DFA",
-    "secondary": "#AC46EB",
-    "accent": "#FAFA3E",
+    "bg": "#0D0A17",
+    "primary": "#D6BC27",
+    "secondary": "#B0E048",
+    "accent": "#376EFA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -2100,10 +2100,10 @@
    "tagline": "Who NASA pays",
    "niche": "Vũ trụ",
    "palette": {
-    "bg": "#0F170A",
-    "primary": "#6E2DFA",
-    "secondary": "#D246EB",
-    "accent": "#CEFA3E",
+    "bg": "#0A1715",
+    "primary": "#B82165",
+    "secondary": "#C2403E",
+    "accent": "#37FA88",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -2147,10 +2147,10 @@
    "tagline": "What is warning right now",
    "niche": "Thời tiết & thảm hoạ",
    "palette": {
-    "bg": "#17120A",
-    "primary": "#2DC7FA",
-    "secondary": "#466AEB",
-    "accent": "#FA5E3E",
+    "bg": "#150A17",
+    "primary": "#6CB821",
+    "secondary": "#42C23E",
+    "accent": "#7E37FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -2195,10 +2195,10 @@
    "tagline": "The ground moved here",
    "niche": "Thời tiết & thảm hoạ",
    "palette": {
-    "bg": "#17150A",
-    "primary": "#2D97FA",
-    "secondary": "#4946EB",
-    "accent": "#FA893E",
+    "bg": "#140A17",
+    "primary": "#8FB853",
+    "secondary": "#6EC261",
+    "accent": "#6B37FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -2243,10 +2243,10 @@
    "tagline": "Where the defense money went",
    "niche": "Quân sự",
    "palette": {
-    "bg": "#140A17",
-    "primary": "#A5FA2D",
-    "secondary": "#4FEB46",
-    "accent": "#7D3EFA",
+    "bg": "#0A1710",
+    "primary": "#D627C5",
+    "secondary": "#E0488A",
+    "accent": "#3DFA37",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -2291,10 +2291,10 @@
    "tagline": "What one round costs you",
    "niche": "Quân sự",
    "palette": {
-    "bg": "#170A17",
-    "primary": "#75FA2D",
-    "secondary": "#46EB64",
-    "accent": "#A93EFA",
+    "bg": "#0A1017",
+    "primary": "#F05C2B",
+    "secondary": "#FACA50",
+    "accent": "#37E3FA",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -2338,10 +2338,10 @@
    "tagline": "The ruling that changed your day",
    "niche": "Luật & quyền công dân",
    "palette": {
-    "bg": "#14170A",
-    "primary": "#2D3EFA",
-    "secondary": "#9046EB",
-    "accent": "#FADB3E",
+    "bg": "#170E0A",
+    "primary": "#45D6CF",
+    "secondary": "#67AEE0",
+    "accent": "#FA375B",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
@@ -2386,10 +2386,10 @@
    "tagline": "What that degree is worth",
    "niche": "Giáo dục",
    "palette": {
-    "bg": "#170B0A",
-    "primary": "#2DFAC7",
-    "secondary": "#46BCEB",
-    "accent": "#FA3E7D",
+    "bg": "#17110A",
+    "primary": "#2199B8",
+    "secondary": "#3E6AC2",
+    "accent": "#FA4437",
     "text": "#F2F6FF"
    },
    "font": "Poppins",
