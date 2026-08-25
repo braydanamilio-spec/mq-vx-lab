@@ -2543,3 +2543,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   work-steal, re-render, flush), lần nào cũng 40 lượt đọc cho CÙNG danh sách ⇒ `read_channels=440`
   một phiên. Cấu hình kênh đổi theo thao tác tay, không đổi theo giây; quyết định cần tươi
   (pause/target) vốn đi đường `read_one_channel` (1 lượt). Đệm 10' ⇒ 440 → ~90/phiên.
+
+- **`getDocs` không tự hưởng đệm bền — phải đệm-trước ở tầng gdGate.** (25/8) Sau khi bật IndexedDB,
+  F5 vẫn 538 lượt server: listener đã rẻ nhưng các `getDocs` một-phát (riêng `__loadKeys` = 220
+  lượt/lần mở trang) mặc định luôn hỏi server. Nay `gdGate` trả đệm localStorage khi còn hạn (mặc
+  định 30'), chỗ cần tươi truyền `tuoiGiay=0` (nút Kiểm ngay). Máy đo `snapW` cũng phải bỏ qua
+  snapshot `fromCache` — không thì F5 đo ra 875 "lượt đọc" tự dọa mình. **Đo thật sau vá: F5 = 2
+  lượt đọc server** (trước 559-875), dữ liệu nguyên vẹn 220 key/55 kênh/120 job.
