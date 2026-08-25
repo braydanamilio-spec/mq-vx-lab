@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("biến môi trường RỖNG không phá giá trị mặc định", t_bien_moi_truong_rong_khong_pha_mac_dinh)
     check("bước dùng kho Drive có lớp cứu KV (HOT_KEY)", t_buoc_dung_kho_phai_co_lop_cuu_kv)
     check("tên file KHÔNG làm bẩn tiêu đề YouTube", t_ten_file_khong_lam_ban_tieu_de)
     check("dòng QC loại phải ghi TÊN KÊNH", t_dong_loai_qc_phai_ghi_ten_kenh)
@@ -1034,6 +1035,31 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_bien_moi_truong_rong_khong_pha_mac_dinh():
+    """`os.environ.get("K", "mđ")` trả **rỗng** khi biến ĐƯỢC ĐẶT nhưng RỖNG (25/8 — tôi tự dính).
+    Vừa thêm `HOT_URL: ${{ secrets.HOT_URL }}` vào workflow, mà secret đó KHÔNG tồn tại ⇒ biến thành
+    chuỗi rỗng ⇒ giá trị mặc định trong code bị vô hiệu hoá ⇒ `lớp cứu KV cũng hụt: unknown url
+    type: ''` — đúng lúc Firestore hỏng và lớp cứu là đường sống duy nhất.
+    Dạng an toàn: `os.environ.get("K") or "mđ"`."""
+    import ast as _ast, glob as _g
+    goc = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    xau = []
+    for p in _g.glob(os.path.join(goc, "render-pipeline", "*.py")) + \
+             _g.glob(os.path.join(goc, "MM0-AutoPublisher", "src", "*.py")):
+        try:
+            t = _ast.parse(io.open(p, encoding="utf-8").read())
+        except Exception:
+            continue
+        for n in _ast.walk(t):
+            if isinstance(n, _ast.Call) and getattr(n.func, "attr", "") == "get" \
+                    and getattr(getattr(n.func, "value", None), "attr", "") == "environ" \
+                    and len(n.args) == 2 and isinstance(n.args[1], _ast.Constant) \
+                    and isinstance(n.args[1].value, str) and n.args[1].value.strip():
+                xau.append(f"{os.path.basename(p)}:{n.lineno}")
+    assert not xau, ("dùng `environ.get(K, 'mđ')` — biến rỗng sẽ phá mặc định. Đổi sang "
+                     "`environ.get(K) or 'mđ'`:\n   " + "\n   ".join(xau))
 
 
 def t_buoc_dung_kho_phai_co_lop_cuu_kv():

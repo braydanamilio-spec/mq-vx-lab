@@ -2258,3 +2258,21 @@ Vá: `slug_to_topic` bóc mọi đoạn trước ô vai trò `L`/`S<n>` và bỏ
 (`how-i-went-broke_short.mp4`) vẫn ra đúng như trước. Chốt bằng `t_ten_file_khong_lam_ban_tieu_de`.
 **LUẬT: đổi quy ước đặt tên thì phải soi cả những chỗ ĐỌC NGƯỢC cái tên đó ra thông tin — không chỉ
 chỗ ghép tên.** (7.cy là chỗ dọn dẹp, 7.cz là chỗ so trùng, đây là chỗ suy ngược ra tiêu đề.)
+
+### 7.dk — Biến môi trường RỖNG phá giá trị mặc định — và tôi tự tạo ra nó trong 5 phút (25/8/2026)
+Chạy `kiem_kho` để sửa con số anh nhìn thấy. Lần 1 chết vì bước đó không được truyền `HOT_KEY` ⇒ lớp
+cứu KV (đường sống khi Firestore hỏng) không dùng được — **có đường sống mà không cắm điện**. Thêm
+`HOT_KEY` + `HOT_URL` rồi chạy lần 2, lại chết:
+```
+⚠️ lớp cứu KV cũng hụt: unknown url type: ''
+```
+Vì `HOT_URL: ${{ secrets.HOT_URL }}` trỏ vào một secret **không tồn tại** ⇒ biến được ĐẶT nhưng RỖNG
+⇒ `os.environ.get("HOT_URL", "https://…")` trả `""` (đối số mặc định chỉ dùng khi biến KHÔNG tồn tại)
+⇒ URL rỗng. Tôi tự tay vô hiệu hoá giá trị mặc định, đúng lúc nó là đường sống duy nhất.
+Quét cả hai repo: **21 chỗ** cùng dạng (`GEMINI_MODEL`, `CF_VISION_MODEL`, `LANE_BUDGET_MIN`,
+`POSTING_TEMPLATE`, `FIREBASE_PROJECT_ID_B2`…) — mỗi chỗ là một quả mìn chờ ai đó thêm một dòng env
+trỏ vào secret chưa đặt. Đã đổi hết sang `os.environ.get(K) or "mđ"`.
+Chốt bằng `t_bien_moi_truong_rong_khong_pha_mac_dinh` (quét AST, cấm hẳn dạng cũ).
+**LUẬT: trong CI, "biến không tồn tại" và "biến rỗng" là hai chuyện khác nhau, và cái thứ hai mới hay
+xảy ra — vì workflow luôn ĐẶT biến, chỉ là secret có thể trống. Luôn dùng `or`, đừng dùng đối số mặc
+định của `.get()`.**

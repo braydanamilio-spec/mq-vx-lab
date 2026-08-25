@@ -21,8 +21,8 @@ import json
 import os
 import re
 
-DEFAULT_VOICE = os.environ.get("TTS_VOICE", "en-US-AndrewNeural")   # warm/confident US male
-DEFAULT_RATE = os.environ.get("TTS_RATE", "+6%")                    # nhanh nhẹ cho hợp nhịp viral
+DEFAULT_VOICE = (os.environ.get('TTS_VOICE') or 'en-US-AndrewNeural')   # warm/confident US male
+DEFAULT_RATE = (os.environ.get('TTS_RATE') or '+6%')                    # nhanh nhẹ cho hợp nhịp viral
 
 
 def _sentence_bounds(text: str) -> list[int]:

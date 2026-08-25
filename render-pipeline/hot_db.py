@@ -33,7 +33,7 @@ import os
 import urllib.error
 import urllib.request
 
-_URL = os.environ.get("HOT_URL", "https://mm0-connect.adisondurham-ef1.workers.dev/api/hot")
+_URL = (os.environ.get('HOT_URL') or 'https://mm0-connect.adisondurham-ef1.workers.dev/api/hot')
 _KEY = os.environ.get("HOT_KEY", "")
 _MODE = (os.environ.get("HOT_MODE") or ("shadow" if _KEY else "off")).lower()
 _HONG = {"n": 0}          # đếm số lần gọi hụt -> hỏng nhiều thì tự tắt, không cản việc chính

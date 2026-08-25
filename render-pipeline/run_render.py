@@ -14,7 +14,7 @@ import firestore_bridge as FB
 import datastory_ci as DS
 
 OWNER = os.environ.get("OWNER_UID")
-PVER = os.environ.get("PIPELINE_VERSION", "v3")
+PVER = (os.environ.get('PIPELINE_VERSION') or 'v3')
 # pver theo ENGINE THẬT của video, không phải theo ngày: v3 = chuẩn Cinematic mới (cảnh hook footage,
 # không intro/outro, cắt 2-3s, SFX) — CHỈ engine doc/Cinematic đổi. Data-race/motif/wave4 KHÔNG đổi
 # engine hôm 21/8 -> video mới của chúng vẫn "v2" như video cũ -> "Dọn bản cũ" không bao giờ coi
@@ -1094,7 +1094,7 @@ def main():
     # Lấy bằng GIAO DỊCH nguyên tử nên 18 máy không bao giờ nhận trùng kênh.
     _t0 = time.time()
     _da_lam = {str(c.get("name")) for c in channels}     # kênh luồng này đã làm -> không làm lại
-    _NGAN_SACH = float(os.environ.get("LANE_BUDGET_MIN", "130")) * 60   # chừa biên trước cap 165'
+    _NGAN_SACH = float((os.environ.get('LANE_BUDGET_MIN') or '130')) * 60   # chừa biên trước cap 165'
     _by_name = {c.get("name"): c for c in FB.read_channels(OWNER) if c.get("name")}
     while time.time() - _t0 < _NGAN_SACH:
         if FB.read_config(OWNER).get("stop"):
@@ -1556,7 +1556,7 @@ def plan_mode():
     # 23/8 chiều: sổ đã dọn sạch (0 job) nên tự-chữa KHÔNG còn nguy cơ dựng dậy video cũ; ngược lại
     # rất cần bật, vì hôm nay quota chập chờn -> video render xong mà đẩy hụt phải được đẩy lại,
     # không thì mất trắng như 180 video sáng nay. Tắt lại: HEAL_UNPUSHED=0.
-    if os.environ.get("HEAL_UNPUSHED", "1") != "0":
+    if (os.environ.get('HEAL_UNPUSHED') or '1') != "0":
         try:
             _moc("tự chữa video chưa đẩy")
             FB.heal_unpushed(OWNER)
@@ -1768,8 +1768,8 @@ def plan_mode():
     #   "kênh nào sắp hết video lên lịch thì tự động ưu tiên, và nên chia đều".
     # Một kênh chạy nhịp 4 video/ngày mà tồn 28 cái = còn 7 NGÀY bài. Kênh nhịp 1 video/ngày mà tồn
     # 28 cái = còn 28 ngày — cùng con số 28 nhưng mức độ đói khác hẳn. Nên phải quy về NGÀY.
-    NGAY_DEM = float(os.environ.get("NGAY_DEM", "7"))      # đệm mục tiêu: 7 ngày bài (anh muốn dư ra một khúc)
-    NHIP_NGAY = float(os.environ.get("NHIP_NGAY", "4"))    # 1 long + 3 short = 4 video/kênh/ngày
+    NGAY_DEM = float((os.environ.get('NGAY_DEM') or '7'))      # đệm mục tiêu: 7 ngày bài (anh muốn dư ra một khúc)
+    NHIP_NGAY = float((os.environ.get('NHIP_NGAY') or '4'))    # 1 long + 3 short = 4 video/kênh/ngày
     try:
         import hot_db as _H
         _ton = _H.ton_kho(OWNER)

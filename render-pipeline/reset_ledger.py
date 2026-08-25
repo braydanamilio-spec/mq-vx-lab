@@ -17,7 +17,7 @@ import sys
 
 import firestore_bridge as FB  # noqa: F401  (giữ để dùng chung cấu hình creds)
 
-OWNER = os.environ.get("RENDER_OWNER", "mm0")
+OWNER = (os.environ.get('RENDER_OWNER') or 'mm0')
 
 
 def _clients():

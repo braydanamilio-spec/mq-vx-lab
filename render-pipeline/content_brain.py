@@ -18,7 +18,7 @@ import json
 import os
 import sys
 
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")  # Google đã lên 3.x (2.5 bỏ với key mới). Auto-dò nếu 404.
+MODEL = (os.environ.get('GEMINI_MODEL') or 'gemini-3.5-flash')  # Google đã lên 3.x (2.5 bỏ với key mới). Auto-dò nếu 404.
 _MODEL_CACHE = {}   # key -> {"flash":..., "pro":...}  (dò 1 lần/key)
 
 
@@ -137,7 +137,7 @@ def test_key(api_key: str):
 # EMPIREUSA 22/8). UA rõ danh tính + kiểu trình duyệt là hết bị soi.
 UA = "Mozilla/5.0 (compatible; MM0-render/1.0; +https://mm0-auto-publisher.web.app)"
 
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+GROQ_MODEL = (os.environ.get('GROQ_MODEL') or 'openai/gpt-oss-120b')
 _GROQ_PREF = [GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "groq/compound-mini", "openai/gpt-oss-20b"]
 
 # Cloudflare Workers AI (22/8): key dạng "cf:<account_id>:<api_token>" — 10K neuron free/ngày/tài
@@ -145,8 +145,8 @@ _GROQ_PREF = [GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "groq/compo
 # ≈ ~174 ảnh FLUX 1024²/4 bước (58n/ảnh) HOẶC ~60 bài viết ngắn gpt-oss-120b (~166n/bài). Vai trò: VẼ ẢNH
 # (FLUX schnell, ưu tiên TRƯỚC Gemini) + VISION fallback (sau Gemini) + viết chữ CHÓT BẢNG
 # (sau Groq và Gemini — để dành neuron cho ảnh, thứ chỉ CF và Gemini làm được).
-CF_TEXT_MODEL = os.environ.get("CF_TEXT_MODEL", "@cf/openai/gpt-oss-120b")
-CF_VISION_MODEL = os.environ.get("CF_VISION_MODEL", "@cf/meta/llama-3.2-11b-vision-instruct")
+CF_TEXT_MODEL = (os.environ.get('CF_TEXT_MODEL') or '@cf/openai/gpt-oss-120b')
+CF_VISION_MODEL = (os.environ.get('CF_VISION_MODEL') or '@cf/meta/llama-3.2-11b-vision-instruct')
 # CF cũng gỡ/đổi model như Groq -> danh sách ưu tiên cho tự-dò khi 404/400 model-không-tồn-tại
 # DANH SÁCH DỰ PHÒNG CHO VISION (25/8/2026). Trước đây vision chỉ có ĐÚNG MỘT model viết cứng, nên
 # Cloudflare đổi/gỡ tên model là khâu kiểm ảnh chết 100% — và chết ÂM THẦM, vì `verify_image` trả
