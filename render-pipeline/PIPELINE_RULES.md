@@ -2486,3 +2486,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   ngày**, dùng đúng cột `updated_at` như ô "📅 Hôm nay" ⇒ hai chỗ không thể ra hai số khác nhau.
   Bản ghi Firestore chỉ còn dùng để bù cột D1 không giữ (ảnh nền, điểm QC, kho chứa). D1 im thì rơi
   về lọc cũ. Đo sau khi vá: 400 video / 45 kênh cho hôm nay. Đệm 5' mỗi mốc lọc (~6,9% trần D1 free).
+
+- **Ô xổ phải TỰ CỘNG ĐÚNG: tổng và từng dòng phải cùng một nguồn.** (25/8) Ảnh chụp: "Tất cả kênh
+  (2084)" nhưng từng kênh chỉ 7-15, cộng lại chưa tới 600 — vì tổng đếm ở **kho Drive** còn số mỗi
+  kênh đếm trên `__chStats`/danh sách Firestore ~200 doc đã cắt. Nay cả hai lấy từ một truy vấn
+  `GROUP BY channel` trên D1 (`/api/hot-chan`), cùng mốc ngày. Đo: 50 kênh, cộng lại 1597 = đúng
+  tổng trả về. Chênh với kho Drive (2084 file — 487 cái làm trước khi bật sổ D1) **nói ở tooltip**,
+  không giấu vào con số. Số kho Drive vẫn là ô "✅ Video trong kho", đó là câu hỏi khác.
