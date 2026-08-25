@@ -2461,3 +2461,12 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   UTC) mới bò sang key kế — đốt cạn từng key một trong khi 51 key khác còn nguyên. Nay `_DUNG`
   đếm trong tiến trình (kể cả lượt hỏng — nhà cung cấp vẫn trừ), key ít dùng nhất lên đầu; băm tên
   kênh chỉ còn để phá hoà giữa 18 lane. Chốt: `t_xoay_key_theo_luot_dung`.
+
+- **Ô nào lấy số từ D1 thì phải ĐỌC LẠI biến đó, đừng chỉ gán.** (25/8) `__d1DangChay`/`__d1Loi`
+  được gán từ 24/8 kèm chú thích "Đang chạy và Lỗi cũng lấy từ đây" nhưng **không dòng nào đọc** ⇒
+  hai ô vẫn đếm trên danh sách Firestore 200 doc: hiện "⚙️ 0" trong khi D1 thấy 13 job chạy, và
+  "❌ 21 lỗi MỚI" trỏ mãi về sự cố 19/8. Kèm theo: "lỗi MỚI" phải tính trên TOÀN bảng
+  (`updated_at > MAX(updated_at) của job done-có-file`), không tính theo mốc lấy từ danh sách bị cắt.
+  Worker thêm `loi_moi`; đo sau khi vá: `loi=221` nhưng `loi_moi=0`.
+- **Deploy hosting phải ghi rõ `--project`.** (25/8) alias đang chọn là `c` ⇒ `firebase deploy`
+  trần đẩy vào `mm0-shard-c` chứ không phải `mm0-auto-publisher` như `.firebaserc` mặc định.
