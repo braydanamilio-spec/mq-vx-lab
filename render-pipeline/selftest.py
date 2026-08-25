@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("dòng QC loại phải ghi TÊN KÊNH", t_dong_loai_qc_phai_ghi_ten_kenh)
     check("vision có model dự phòng + tự dò", t_vision_co_model_du_phong)
     check("kịch bản có bản dự phòng ở kho KHÁC", t_kich_ban_co_ban_du_phong_khac_kho)
     check("kho token chết được nhớ CHUNG, tự hết hạn", t_kho_token_chet_nho_chung)
@@ -1031,6 +1032,22 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_dong_loai_qc_phai_ghi_ten_kenh():
+    """Dòng QC loại video phải ghi RÕ KÊNH NÀO (25/8 — chính tôi vừa chẩn đoán nhầm vì thiếu nó).
+    Từ khi lane biết lấy thêm kênh từ hàng chờ (7.ci/7.cr), MỘT lane xử lý NHIỀU kênh. Log
+    `❌ mở đầu NỀN TRƠN (tối 77.3% · 629 màu)` trong lane tên COSMOS hoá ra là của **SIGNALUSA**
+    (lane vừa nhận thêm) — mà COSMOS là kênh `dark_ok` còn SIGNALUSA thì không, tức luật áp lên hai
+    kênh khác hẳn nhau. Không ghi tên kênh là quy sai lỗi, rồi vá sai chỗ."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "datastory_ci.py"), encoding="utf-8").read()
+    # Soi các dòng LỆNH IN thật (bỏ qua chú thích/docstring có nhắc lại nguyên văn thông báo).
+    xau = [l.strip()[:90] for l in src.split("\n")
+           if "print(" in l and "NỀN TRƠN" in l and "[{channel}]" not in l]
+    assert not xau, "dòng loại QC không ghi tên kênh -> quy sai lỗi khi lane ôm nhiều kênh:\n   " \
+                    + "\n   ".join(xau)
+    assert src.count("[{channel}] ") >= 3, "chưa gắn tên kênh cho đủ 3 đường Cinematic"
 
 
 def t_vision_co_model_du_phong():

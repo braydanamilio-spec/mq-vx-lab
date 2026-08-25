@@ -2846,7 +2846,8 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
         _fok, _finfo = opening_is_flat(out, dark_ok=_dark_ok(channel))
         info["opening"] = _finfo
         if not _fok:
-            print(f"   ❌ mở đầu là NỀN TRƠN (tối {_finfo.get('dark')}% · {_finfo.get('colors')} màu) — loại")
+            print(f"   ❌ [{channel}] mở đầu là NỀN TRƠN (tối {_finfo.get('dark')}% · "
+                  f"{_finfo.get('colors')} màu) — loại")
             ok = False
     if ok:
         try:
@@ -2963,7 +2964,7 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix="", li
         fok, finfo = opening_is_flat(out, dark_ok=_dark_ok(channel))
         info["opening"] = finfo
         if not fok:
-            print(f"   ❌ mở đầu NỀN TRƠN (tối {finfo.get('dark')}%) — loại"); ok = False
+            print(f"   ❌ [{channel}] mở đầu NỀN TRƠN (tối {finfo.get('dark')}%) — loại"); ok = False
     if ok:
         if lite:
             # QC-NHẸ cho short phần 2-3: cùng engine + cùng bộ ảnh đã qua verify-grid + cùng layout
@@ -3099,7 +3100,7 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
         fok, finfo = opening_is_flat(out, dark_ok=_dark_ok(channel))
         info["opening"] = finfo
         if not fok:
-            print(f"   ❌ LONG mở đầu NỀN TRƠN (tối {finfo.get('dark')}%) — loại"); ok = False
+            print(f"   ❌ [{channel}] LONG mở đầu NỀN TRƠN (tối {finfo.get('dark')}%) — loại"); ok = False
     if ok:
         try:
             vok, vinfo = _check_visual_rot(out, keys)

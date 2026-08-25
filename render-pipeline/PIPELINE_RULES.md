@@ -2228,3 +2228,21 @@ Chốt bằng `t_vision_co_model_du_phong`.
 **LUẬT: mỗi phụ thuộc ngoài phải có (a) danh sách dự phòng, (b) đường TỰ DÒ khi nhà cung cấp đổi tên,
 (c) một người ĐẾM. Thiếu (c) thì (a) và (b) hỏng lúc nào không ai biết.** Đây là lần đầu cả ba có đủ,
 và nó trả kết quả ngay trong giờ đầu tiên.
+
+### 7.di — Lane ôm nhiều kênh ⇒ dòng log không ghi tên kênh là QUY SAI LỖI (25/8/2026)
+Chính tôi vừa dính. Thấy lane tên **COSMOS** có `❌ mở đầu NỀN TRƠN (tối 77,3% · 629 màu)` nên kết luận
+"COSMOS lỗi" — nhưng COSMOS là kênh `dark_ok` (luật `dark≥88 & cols<450`), 77,3% lẽ ra KHÔNG bị loại.
+Truy tiếp mới ra: lane đó vừa `♻️ nhận thêm kênh SIGNALUSA` từ hàng chờ, và lỗi là **của SIGNALUSA** —
+kênh KHÔNG dark_ok, luật `dark≥75 & cols<900`, nên 77,3% bị loại là đúng.
+Từ khi lane biết lấy thêm việc (7.ci/7.cr), **một lane xử lý nhiều kênh** mà mọi dòng QC vẫn chỉ ghi
+nội dung, không ghi kênh ⇒ đọc log là quy sai lỗi, rồi vá sai chỗ.
+Nay 3 dòng loại QC đều in `[TÊNKÊNH]`. Chốt bằng `t_dong_loai_qc_phai_ghi_ten_kenh` (quét mọi lệnh
+`print` có "NỀN TRƠN" phải kèm `[{channel}]`, bỏ qua chú thích).
+**LUẬT: khi một tiến trình bắt đầu phục vụ NHIỀU đối tượng, mọi dòng log của nó phải mang danh tính
+đối tượng. Đổi mô hình chạy mà không đổi log là biến log thành thứ đánh lừa người đọc.**
+
+**Kiểm chứng bản vá lớp phủ trên số thật (không đợi phiên sau):**
+COSMOS phiên 23:33 — hàm cứu báo *"làm mỏng lớp phủ xuống 0,75 → tối 73% (đạt)"* nhưng khung render
+THẬT ra **93,7%**. Với ngưỡng cũ (BIEN=13 ⇒ chấp nhận <75) thì 73% lọt. Với BIEN=20: dark_ok ⇒ ngưỡng
+**<68**, nên 73% **không được chấp nhận**, hàm tiếp tục hạ `man` xuống 0,55 rồi 0,45. Ca SIGNALUSA
+(không dark_ok) ngưỡng còn **<55**, ép mỏng sâu hơn nữa. Tức bản vá 23:34 đánh trúng cả hai ca đang lỗi.
