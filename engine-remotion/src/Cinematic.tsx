@@ -280,8 +280,21 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
           <div style={{ width: w, height: 8, background: accent, borderRadius: 6, margin: mx, boxShadow: `0 0 24px ${accent}` }} />
         );
         const { width: _vw, height: _vh } = useVideoConfig();   // 23/8: thẻ chữ cần biết khổ dọc/ngang
-        const title = (size: number, align: "center" | "left") => (
-          <div style={{ fontSize: size, fontWeight: 900, color: "#EAF8FF", lineHeight: 1.04, textAlign: align, textShadow: `0 0 40px ${accent}66, 0 4px 24px rgba(0,0,0,.75)` }}>{t}</div>
+        // TỰ CO CHỮ CHO VỪA KHUNG (25/8 — anh gửi ảnh "SEMICONDUCTORS" bị cắt cụt hai bên).
+        // Bản cũ đặt cỡ chữ CỐ ĐỊNH 100-116px bất kể chữ dài bao nhiêu: một từ 14 ký tự ở 116px
+        // chiếm ~1.010px trong khi khung 1080 trừ lề chỉ còn 840px ⇒ tràn ra ngoài, mất cả đầu lẫn
+        // đuôi. Tiêu đề do AI viết nên độ dài KHÔNG đoán trước được — cỡ chữ phải suy từ chữ,
+        // không phải đặt sẵn rồi cầu may.
+        // TỪ DÀI NHẤT quyết định, vì một từ không xuống dòng được (khác cả câu thì ngắt dòng được).
+        const _coVua = (co: number, le: number) => {
+          const tuDaiNhat = t.split(/\s+/).reduce((a2, w2) => Math.max(a2, w2.length), 1);
+          const rong = _vw - le * 2;
+          const HE_SO = 0.62;                       // bề ngang trung bình một ký tự đậm ≈ 0.62 × cỡ chữ
+          const vua = rong / (tuDaiNhat * HE_SO);
+          return Math.max(38, Math.min(co, Math.floor(vua)));   // sàn 38px: nhỏ hơn nữa thì thà cắt
+        };
+        const title = (size: number, align: "center" | "left", le = 120) => (
+          <div style={{ fontSize: _coVua(size, le), fontWeight: 900, color: "#EAF8FF", lineHeight: 1.04, textAlign: align, overflowWrap: "anywhere", textShadow: `0 0 40px ${accent}66, 0 4px 24px rgba(0,0,0,.75)` }}>{t}</div>
         );
         // 23/8 (user gửi ảnh: "chữ sub đè lên thẻ số liệu"): thẻ chữ trước đây trải TOÀN khung
         // (inset 0) nên tâm của nó rơi trúng dải phụ đề. Nay chừa sẵn vùng phụ đề phía dưới:
@@ -296,19 +309,19 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
           return wrap("center", "left", "0 110px", <>
             <div style={{ display: "flex", gap: 28 }}>
               <div style={{ width: 10, alignSelf: "stretch", background: accent, borderRadius: 6, boxShadow: `0 0 24px ${accent}` }} />
-              {title(104, "left")}
+              {title(104, "left", 138)}
             </div></>);
         if (v === 2)  // chữ dồn XUỐNG DƯỚI, gạch trên -> để lộ ảnh nền phía trên
           return wrap("flex-end", "left", "0 110px 190px", <>
             {rule(160, "0 0 34px")}
-            {title(100, "left")}</>);
+            {title(100, "left", 110)}</>);
         if (v === 3)  // chữ dồn LÊN TRÊN, gạch dưới
           return wrap("flex-start", "left", "230px 110px 0", <>
-            {title(100, "left")}
+            {title(100, "left", 110)}
             {rule(160, "34px 0 0")}</>);
         return wrap("center", "center", "0 120px", <>   {/* v===0: kiểu giữa như cũ */}
           {rule(120, "0 auto 40px")}
-          {title(116, "center")}</>);
+          {title(116, "center", 120)}</>);
       })()}
     </AbsoluteFill>);
   }

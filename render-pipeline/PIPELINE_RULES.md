@@ -2748,3 +2748,11 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   từ đang đọc đổi màu. Đa dạng giữa kênh bằng bảng 6 màu rực (mỗi kênh một màu cố định theo băm
   tên); màu tự đặt mà độ sáng < 0.52 thì BỎ, quay về bảng. Chốt `t_chu_chay_luon_doc_duoc` kiểm cả
   độ sáng từng màu trong bảng. Đã render ảnh so 3 bản trên 3 loại nền trước khi chốt.
+
+- **Cỡ chữ phải SUY TỪ CHỮ, đừng đặt sẵn rồi cầu may.** (25/8) Anh gửi ảnh: tiêu đề
+  "SEMICONDUCTORS" bị cắt cụt cả đầu lẫn đuôi. Thẻ tiêu đề đặt cỡ **cố định 100-116px** bất kể độ
+  dài; một từ 14 ký tự ở 116px chiếm ~1.010px trong khi khung 1080 trừ lề chỉ còn 840px. Tiêu đề do
+  AI viết nên độ dài KHÔNG đoán trước được. Nay `_coVua()` tính theo **TỪ DÀI NHẤT** (từ đơn không
+  xuống dòng được), sàn 38px, và mỗi biến thể truyền **lề thật** của nó. Chữ ngắn giữ nguyên cỡ lớn
+  (CHIPS vẫn 116px), chỉ từ dài mới co (SEMICONDUCTORS → 96px). Chốt `t_the_tieu_de_khong_tran_khung`
+  kiểm cả hai đầu: từ dài phải co, **từ ngắn không được co oan**.

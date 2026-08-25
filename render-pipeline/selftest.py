@@ -443,6 +443,7 @@ def main():
     check("tts: không hàm nào dùng biến chưa nhận", t_tts_khong_dung_bien_chua_nhan)
     check("kịch bản skit mang đủ 5 luật viral", t_kich_ban_co_luat_viral)
     check("chữ karaoke luôn đọc được (bảng màu đã sàng)", t_chu_chay_luon_doc_duoc)
+    check("thẻ tiêu đề tự co, không tràn khung", t_the_tieu_de_khong_tran_khung)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2376,6 +2377,31 @@ def t_chu_chay_luon_doc_duoc():
         assert L >= 0.52, f"màu #{hx} trong bảng chỉ sáng {L:.2f} — sẽ chìm trên nền sáng"
     # viền tối là thứ giữ chữ đọc được trên nền sáng — không được bỏ
     assert "WebkitTextStroke" in src, "mất viền chữ -> nền sáng là mất chữ"
+
+
+def t_the_tieu_de_khong_tran_khung():
+    """Thẻ tiêu đề phải TỰ CO cho vừa khung — tiêu đề do AI viết, độ dài không đoán trước được.
+
+    25/8 — anh gửi ảnh: "SEMICONDUCTORS" bị cắt cụt cả đầu lẫn đuôi. Bản cũ đặt cỡ chữ CỐ ĐỊNH
+    100-116px; một từ 14 ký tự ở 116px chiếm ~1.010px trong khi khung 1080 trừ lề chỉ còn 840px.
+    Đặt cỡ sẵn rồi cầu may là sai nguyên tắc: cỡ chữ phải SUY TỪ CHỮ."""
+    src = _doc("../engine-remotion/src/Cinematic.tsx")
+    assert "_coVua" in src, "thẻ tiêu đề không có hàm co chữ"
+    i = src.index("const _coVua")
+    than = src[i:i + 700]
+    assert "tuDaiNhat" in than, "phải tính theo TỪ DÀI NHẤT (từ đơn không xuống dòng được)"
+    assert "Math.max(38" in than, "thiếu sàn cỡ chữ"
+    # mọi lời gọi title() phải truyền lề THẬT, không để mặc định sai
+    import re
+    for m in re.finditer(r"\{title\((\d+), \"(center|left)\"(?:, (\d+))?\)", src):
+        assert m.group(3), f"title({m.group(1)}) không truyền lề -> co chữ tính sai khung"
+
+    # kiểm phép co bằng số, đúng ca đã xảy ra
+    def co_vua(t, co, le, vw=1080):
+        tu = max((len(w) for w in t.split()), default=1)
+        return max(38, min(co, int((vw - le * 2) / (tu * 0.62))))
+    assert co_vua("SEMICONDUCTORS", 116, 120) < 116, "từ dài vẫn không co"
+    assert co_vua("CHIPS", 116, 120) == 116, "từ ngắn bị co oan -> tiêu đề nhỏ đi vô cớ"
 
 
 if __name__ == "__main__":
