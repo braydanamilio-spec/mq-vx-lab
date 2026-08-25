@@ -893,6 +893,22 @@ def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
         if _db() is _db_keys():
             return rows
         if _A_KEYS["rows"] is None:
+            # 25/8 — ĐỌC ẢNH CHỤP TRONG D1 TRƯỚC. Đây là khoản tiêu lớn nhất trên project A:
+            # log thật cho thấy luồng NÀO CŨNG tính `merge_keys_A=70` (nhánh này lẽ ra chỉ chạy khi
+            # hồ key ở B thiếu nhà cung cấp, nhưng B cạn hạn mức GHI nên sync A->B hỏng vĩnh viễn
+            # ⇒ "cửa sổ tạm" thành thường trực). 70 × 18 luồng × ~30 phiên/ngày ≈ 40.000 lượt đọc
+            # trên trần 50.000 của A — tự tay làm A cạn, kéo theo bảng key và danh sách kho Drive
+            # (cũng nằm ở A) cùng chết. Nay luồng đầu tiên đọc A rồi chụp lại; các luồng sau đọc
+            # ảnh chụp, tốn 0 lượt A. Ảnh quá 30' coi như cũ -> đọc A lại (key mới thêm vẫn kịp).
+            try:
+                import hot_db as _H
+                _snap = _H.keys_doc(owner)
+            except Exception:
+                _snap = None
+            if _snap is not None:
+                _A_KEYS["rows"] = _snap
+                print(f"   🔑 Hồ key: dùng ảnh chụp D1 ({len(_snap)} key) — 0 lượt đọc project A.")
+        if _A_KEYS["rows"] is None:
             _cr("merge_keys_A", 70)
             out = []
             for d in _db().collection("gemini_keys").where("owner", "==", owner).stream(timeout=20):
@@ -903,6 +919,12 @@ def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
                                 "last_used": x.get("last_used", ""), "cooling_until": x.get("cooling_until", ""),
                                 "dead_since": x.get("dead_since", ""), "req_today": 0})
             _A_KEYS["rows"] = out
+            try:
+                import hot_db as _H2
+                if _H2.keys_ghi(owner, out):
+                    print(f"   🔑 Đã chụp hồ key ({len(out)} key) vào D1 — 17 luồng kia khỏi đọc A.")
+            except Exception:
+                pass
         have = {r.get("key") for r in rows}
         extra = [r for r in (_A_KEYS["rows"] or []) if r.get("key") not in have]
         if extra:

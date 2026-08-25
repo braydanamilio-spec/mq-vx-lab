@@ -2493,3 +2493,20 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   `GROUP BY channel` trên D1 (`/api/hot-chan`), cùng mốc ngày. Đo: 50 kênh, cộng lại 1597 = đúng
   tổng trả về. Chênh với kho Drive (2084 file — 487 cái làm trước khi bật sổ D1) **nói ở tooltip**,
   không giấu vào con số. Số kho Drive vẫn là ô "✅ Video trong kho", đó là câu hỏi khác.
+
+- **Chốt viết ra phải ĐĂNG KÝ trong `main()` — và phải thử PHÁ để biết nó không đậu giả.** (25/8)
+  `selftest.main()` gọi tay từng `check(...)`; 5 chốt thêm trong đêm không cái nào được đăng ký,
+  lại còn nằm SAU khối `if __name__` nên chưa từng tồn tại lúc `main()` chạy ⇒ suốt đêm báo
+  "SELFTEST PASS" trong khi chúng chưa chạy một lần. Nay `t_moi_chot_deu_duoc_dang_ky` soi chính
+  file selftest (đối chiếu tập `t_*` với tập đã `check`). Thêm luật: mỗi chốt mới phải chạy một
+  lượt **phá bản vá** để xác nhận chốt kêu — chốt `t_moi_lop_toi_deu_noi` bản đầu chỉ khớp độ mờ
+  dạng SỐ nên đổi `${.66 * man}` -> `${.66}` vẫn đậu.
+- **Hồ key đi qua ảnh chụp D1, không đâm vào project A.** (25/8) Sổ đọc thật phiên 02:15: mỗi luồng
+  tính `merge_keys_A=70`, luồng NÀO CŨNG tính (nhánh này lẽ ra chỉ chạy khi hồ key ở B thiếu nhà
+  cung cấp, nhưng B cạn hạn mức GHI nên sync A→B hỏng vĩnh viễn ⇒ "cửa sổ tạm" thành thường trực).
+  70 × 18 luồng × ~30 phiên/ngày ≈ 40.000 lượt trên trần 50.000 của A — chính nó làm A cạn, kéo
+  theo bảng key và danh sách kho Drive (cũng ở A) cùng chết. Nay luồng đầu đọc A rồi chụp vào D1
+  (`keys_ghi`/`keys_doc`, hạn 30'), 17 luồng còn lại đọc ảnh chụp = 0 lượt A.
+- **Chốt phụ thuộc đồng hồ phải đo CÔNG THỨC, không đo số tuyệt đối.** (25/8) `assert con > 120`
+  fail oan trong 2 tiếng trước mốc reset của Google — lúc đó "cạn tới hết ngày" đúng nghĩa chỉ còn
+  97 phút. (Cùng loại với lỗi `cf < gg` lúc nửa đêm UTC.) Lưu ý `nghi_key.muc_nghi()` trả **PHÚT**.

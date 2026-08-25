@@ -305,3 +305,40 @@ def bao_cao() -> str:
     return (f"🔥 D1 mm0-hot: chế độ {_MODE}"
             + (f" · còn {len(_DEM_BUF)} mục chờ xả" if _DEM_BUF else "")
             + (f" · {_HONG['n']} lần hụt" if _HONG["n"] else ""))
+
+
+def keys_ghi(owner: str, rows: list) -> bool:
+    """Chụp hồ key CHỈ-CÓ-Ở-A vào D1 để 17 luồng còn lại khỏi phải đọc A (25/8/2026).
+
+    Xem chú thích `keys_ghi` trong worker.js: `merge_keys_A=70` lượt đọc A MỖI LUỒNG là khoản
+    tiêu lớn nhất trên project A và là lý do A cạn hạn mức mỗi ngày."""
+    if not bat_ghi() or not rows:
+        return False
+    import json as _j
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        r = goi("keys_ghi", {"owner": owner, "js": _j.dumps(rows)[:400_000],
+                             "at": _dt.now(_tz.utc).isoformat()})
+        return bool(r.get("ok"))
+    except Exception:
+        return False
+
+
+def keys_doc(owner: str, tuoi: int = 1800) -> list | None:
+    """Ảnh chụp hồ key từ D1. None = không có / quá cũ -> caller cứ đọc A như cũ."""
+    if not bat_doc():
+        return None
+    import json as _j
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        r = goi("keys_doc", {"owner": owner})
+        js, at = r.get("js") or "", r.get("at") or ""
+        if not js or not at:
+            return None
+        tuoi_that = (_dt.now(_tz.utc) - _dt.fromisoformat(at)).total_seconds()
+        if tuoi_that > tuoi:
+            return None
+        v = _j.loads(js)
+        return v if isinstance(v, list) else None
+    except Exception:
+        return None

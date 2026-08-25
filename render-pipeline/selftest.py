@@ -21,6 +21,16 @@ import urllib.request
 FAILS = []
 
 
+def _doc(duong: str) -> str:
+    """Đọc một file mã nguồn theo đường dẫn TƯƠNG ĐỐI so với chính selftest.py.
+
+    Nhiều chốt soi thẳng mã nguồn (bố cục, lớp phủ, thứ tự đọc key). Trước đây mỗi chốt tự mở file
+    theo thư mục hiện hành -> chạy selftest từ thư mục khác là hỏng. Gom về một chỗ."""
+    import os
+    goc = os.path.dirname(os.path.abspath(__file__))
+    return io.open(os.path.join(goc, duong), encoding="utf-8").read()
+
+
 def check(name, fn):
     try:
         fn()
@@ -415,6 +425,12 @@ def main():
     check("số video trong kho lấy TỪ DRIVE, không cộng dồn", t_so_kho_lay_tu_drive)
     check("FB hết nhịp = HOÃN, không vứt video", t_fb_het_nhip_khong_giet_video)
     check("gộp lệnh ghi D1: done/failed xả NGAY, phần dư không mất", t_gop_ghi_d1)
+    check("mọi lớp tối của Scene1 đều nới theo man", t_moi_lop_toi_deu_noi)
+    check("mô hình đo mô phỏng ĐỦ 5 lớp phủ", t_sau_man_du_lop)
+    check("xoay key ảnh/Vision theo lượt đã dùng", t_xoay_key_theo_luot_dung)
+    check("nén lỗi đã lường trước, không đệ quy", t_nen_loi_da_luong_khong_de_quy)
+    check("hồ key qua ảnh chụp D1, không đâm vào A", t_ho_key_qua_d1_khong_dam_vao_A)
+    check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -1853,7 +1869,15 @@ def t_bao_chung_b_can_han_muc():
         import datetime as _dt
         con = (_dt.datetime.fromisoformat(kho["proj:B"])
                - _dt.datetime.now(_dt.timezone.utc)).total_seconds() / 60
-        assert con > 120, f"cờ chỉ còn {con:.0f} phút — phải là mốc cạn NGÀY, không phải 20'"
+        # ĐO CÔNG THỨC, KHÔNG ĐO SỐ TUYỆT ĐỐI (25/8): chốt cũ đòi cờ còn >120 phút, nên chạy trong
+        # 2 tiếng trước mốc reset của Google (00:00 giờ Thái Bình Dương = 07:00Z) là FAIL oan —
+        # lúc đó "cạn tới hết ngày" ĐÚNG NGHĨA chỉ còn 98 phút. Chốt đúng phải là: cờ trỏ tới đúng
+        # mốc reset kế tiếp, và luôn dài hơn nhánh "không rõ" (20').
+        import nghi_key as _NK
+        # dùng ĐÚNG chuỗi mà bao_b_can_ngay dựng ra (nó tự nối " per day" khi không phải chặn/phút)
+        _mong = _NK.muc_nghi("read_config 429 per day")      # muc_nghi trả PHÚT, không phải giây
+        assert abs(con - _mong) < 3, f"cờ còn {con:.0f}' nhưng mốc cạn ngày là {_mong:.0f}'"
+        assert con > 20, f"cờ {con:.0f}' không dài hơn nhánh 'không rõ' (20')"
         dai = kho["proj:B"]
         FB._DA_BAO_CAN[0] = False
         FB.bao_b_can_ngay("429 requests per minute, try again in 5s")
@@ -1918,29 +1942,54 @@ def t_moc_reset_theo_nha_cung_cap():
     assert cf != gg, "hai nhà cung cấp mà ra cùng một mốc -> lại gộp làm một"
 
 
-if __name__ == "__main__":
-    main()
 
 
 def t_moi_lop_toi_deu_noi():
     """MỌI lớp tối phủ toàn khung trong Scene1 phải nới theo `man`.
 
-    25/8 — cái đã làm "vá mãi không xong": Scene1 vẽ 5 lớp tối chồng nhau nhưng chỉ 2 lớp
-    nhân `man`, nên hạ `man` xuống sàn vẫn còn ~2/3 độ tối -> khung mở đầu render ra 86-93%
-    tối và bị QC loại, trong khi mô hình đo chấm "đạt" nên hàm cứu không hề chạy."""
-    import re
+    25/8 — cái đã làm "vá mãi không xong": Scene1 vẽ 5 lớp tối chồng nhau nhưng chỉ 2 lớp nhân
+    `man`, nên hạ `man` xuống sàn vẫn còn ~2/3 độ tối -> khung mở đầu render ra 86-93% tối và bị QC
+    loại, trong khi mô hình đo chấm "đạt" nên hàm cứu không hề chạy.
+    Chốt soi TỪNG `rgba(...)`: độ mờ phải là 0 (trong suốt, vô hại) hoặc phải có `man` trong biểu
+    thức. Bản chốt đầu chỉ khớp độ mờ dạng SỐ nên đổi `${.66 * man}` thành `${.66}` vẫn đậu — đúng
+    kiểu đậu giả mà chốt sinh ra để chặn."""
     src = _doc("../engine-remotion/src/Cinematic.tsx")
-    i = src.index("const Scene1"); j = src.index("\nconst ", i + 10)
+    i = src.index("const Scene1:")
+    j = min([k for k in (src.find("\nconst ", i + 10), src.find("\nexport const ", i + 10),
+                         src.find("\nfunction ", i + 10), src.find("\nexport function ", i + 10),
+                         len(src)) if k != -1] or [len(src)])
     than = src[i:j]
     xau = []
-    for m in re.finditer(r'(rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*(?:0?\.\d+|[01])\s*\))', than):
-        d = than[max(0, m.start() - 120):m.start()]
-        if "textShadow" in d or "boxShadow: `0" in d:
-            continue                       # bóng chữ, không phải lớp phủ toàn khung
-        xau.append(m.group(1))
+    at = 0
+    while True:
+        k = than.find("rgba(", at)
+        if k < 0:
+            break
+        at = k + 5
+        sau, do_sau = "", 0
+        for ch in than[k + 5:k + 200]:            # bóc tới dấu ) đóng, kể cả ${...} lồng bên trong
+            if ch == "{":
+                do_sau += 1
+            elif ch == "}":
+                do_sau -= 1
+            elif ch == ")" and do_sau == 0:
+                break
+            sau += ch
+        mo = sau.split(",")[-1].strip() if sau.count(",") >= 3 else ""
+        if not mo:
+            continue                              # rgb(...) 3 tham số, không phải lớp phủ
+        try:
+            if float(mo) == 0:
+                continue                          # trong suốt hoàn toàn -> không làm tối gì
+        except ValueError:
+            pass
+        truoc = than[max(0, k - 120):k]
+        if "textShadow" in truoc or "boxShadow: `0" in truoc:
+            continue                              # bóng chữ, không phải lớp phủ toàn khung
+        if "man" not in mo:
+            xau.append(f"rgba({sau})")
     assert not xau, f"lớp tối chưa nới theo man trong Scene1: {xau[:3]}"
     assert than.count("* man") >= 5, f"Scene1 chỉ có {than.count('* man')} chỗ nhân man, cần >=5"
-
 
 def t_sau_man_du_lop():
     """Mô hình đo phải mô phỏng ĐỦ 5 lớp — thiếu lớp nào là chấm "đạt" oan."""
@@ -1992,3 +2041,64 @@ def t_nen_loi_da_luong_khong_de_quy():
         "nhánh lỗi lạ phải còn in đủ stack"
     assert "traceback.print_exc()" not in src.replace(
         "    traceback.print_exc()\n", "", 1), "còn chỗ in stack thô ngoài print_exc_gon"
+
+
+def t_ho_key_qua_d1_khong_dam_vao_A():
+    """Luồng thứ hai trở đi phải đọc ảnh chụp D1, KHÔNG đọc project A.
+
+    25/8 — soi sổ đọc thật của phiên 02:15: mỗi luồng tính `merge_keys_A=70`, luồng NÀO CŨNG tính.
+    70 × 18 luồng × ~30 phiên/ngày ≈ 40.000 lượt đọc trên trần 50.000 của A ⇒ chính nó làm A cạn,
+    kéo theo bảng key và danh sách kho Drive (cũng ở A) cùng chết."""
+    import sys, types
+    src = _doc("firestore_bridge.py")
+    than = src[src.index("def _merge_a_keys"):src.index("def incr_key_requests")]
+    assert "keys_doc" in than, "không đọc ảnh chụp D1 trước khi đọc A"
+    assert "keys_ghi" in than, "đọc A xong mà không chụp lại cho luồng khác"
+    assert than.index("keys_doc") < than.index('_cr("merge_keys_A"'), \
+        "phải thử D1 TRƯỚC khi tính lượt đọc A"
+    # ảnh chụp có sẵn -> tuyệt đối không được chạm vào A
+    gia = types.ModuleType("hot_db")
+    gia.keys_doc = lambda o, tuoi=1800: [{"id": "x", "key": "gsk_test", "req_today": 0}]
+    gia.keys_ghi = lambda o, r: True
+    gia.bat_ghi = lambda: True; gia.bat_doc = lambda: True
+    cu = sys.modules.get("hot_db"); sys.modules["hot_db"] = gia
+    try:
+        import importlib, firestore_bridge as FB
+        importlib.reload(FB)
+        FB._A_KEYS["rows"] = None
+        FB._READS["by"].pop("merge_keys_A", None)
+        import os as _os
+        _os.environ["SHARD_KEYS"] = "1"
+        assert hasattr(FB, "_merge_a_keys"), "đổi tên hàm mà quên sửa chốt -> chốt đậu giả"
+        # môi trường thử không có creds nên `_db()` và `_db_keys()` cùng là None -> hàm thoát sớm
+        # ở nhánh "A và B là một shard". Giả lập hai shard KHÁC nhau cho giống lúc chạy thật.
+        FB._db = lambda: "A"; FB._db_keys = lambda: "B"
+        ra = FB._merge_a_keys("chu", [{"key": "cf:a:1"}])
+        assert FB._READS["by"].get("merge_keys_A", 0) == 0, "có ảnh chụp mà vẫn đọc project A"
+        assert any(str(r.get("key", "")).startswith("gsk_") for r in ra), \
+            "key trong ảnh chụp không được hợp nhất vào hồ"
+    finally:
+        if cu is not None:
+            sys.modules["hot_db"] = cu
+
+
+
+def t_moi_chot_deu_duoc_dang_ky():
+    """Chốt viết ra mà quên gọi trong `main()` thì nó KHÔNG CHẠY — và bảng vẫn in "PASS".
+
+    25/8 — đã xảy ra thật: 5 chốt thêm trong đêm (lớp phủ, mô hình đo, xoay key, nén lỗi, hồ key
+    D1) không cái nào được đăng ký, nên suốt đêm báo "selftest PASS" trong khi chúng chưa hề chạy
+    một lần. Một bộ chốt tự nói dối còn tệ hơn không có chốt. Chốt này soi chính file selftest."""
+    import ast
+    src = _doc("selftest.py")
+    t = ast.parse(src)
+    co = {n.name for n in ast.walk(t) if isinstance(n, ast.FunctionDef) and n.name.startswith("t_")}
+    dk = {n.args[1].id for n in ast.walk(t)
+          if isinstance(n, ast.Call) and getattr(n.func, "id", "") == "check"
+          and len(n.args) > 1 and isinstance(n.args[1], ast.Name)}
+    quen = sorted(co - dk)
+    assert not quen, f"{len(quen)} chốt viết ra nhưng chưa đăng ký trong main(): {quen}"
+
+
+if __name__ == "__main__":
+    main()
