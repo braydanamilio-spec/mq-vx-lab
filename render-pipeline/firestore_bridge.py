@@ -1407,13 +1407,23 @@ def drive_usage(owner: str, moi_nhat: bool = False):
 
 
 def read_channels(owner: str) -> list[dict]:
+    # ĐỆM TIẾN TRÌNH 10' (25/8): sổ đọc phiên 02:15 ghi `read_channels=440` — mỗi lane gọi hàm này
+    # 5 lần (dựng map, chia việc, work-steal, re-render, flush) và lần nào cũng trả 40 lượt đọc
+    # cho CÙNG một danh sách. Cấu hình kênh đổi theo thao tác tay trên dashboard, không đổi theo
+    # giây; các quyết định cần độ tươi cao (pause/target) vốn đã đi đường `read_one_channel` (1 lượt).
+    import time as _t
+    _hc = _HOT_CACHE.get(("chans", owner))
+    if _hc and (_t.time() - _hc[0]) < 600:
+        return _hc[1]
     _cr("read_channels", 40)
     def _do():
         db = _db_meta(); out = []
         for d in db.collection("render_channels").where("owner", "==", owner).stream(timeout=20):
             x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
         return out
-    return _retry(_do)
+    ra = _retry(_do)
+    _HOT_CACHE[("chans", owner)] = (_t.time(), ra)
+    return ra
 
 
 _CFG_PLAN: dict = {}

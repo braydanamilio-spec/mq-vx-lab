@@ -2538,3 +2538,8 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
     18 luồng hỏi lại đúng một câu giống hệt nhau. Nay đi qua bộ nhớ chung D1 (`nho_ghi`/`nho_doc`,
     hạn 6h) — lượt xem chỉ nhích theo ngày.
   Chốt: `t_hai_voi_ri_da_ham` (đã thử phá 3 kiểu, đều bắt được).
+
+- **`read_channels` phải có đệm tiến trình.** (25/8) Mỗi lane gọi 5 lần (dựng map, chia việc,
+  work-steal, re-render, flush), lần nào cũng 40 lượt đọc cho CÙNG danh sách ⇒ `read_channels=440`
+  một phiên. Cấu hình kênh đổi theo thao tác tay, không đổi theo giây; quyết định cần tươi
+  (pause/target) vốn đi đường `read_one_channel` (1 lượt). Đệm 10' ⇒ 440 → ~90/phiên.
