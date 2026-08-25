@@ -61,7 +61,9 @@ def verify_image(path: str, subject: str, api_key: str = None, model_name: str =
         # loại sự cố đã trả giá ở ca "clip 0/118": tính năng chết mà nhìn vẫn như đang chạy.
         # Ghi vào máy dò chết câm -> cả phiên 0/N sẽ hiện 🚨 CHẾT CÂM ở dòng tổng kết.
         _dem_khau("vision ảnh", False)
-        print(f"   ⚠️ verify_image lỗi (bỏ qua kiểm — ẢNH VÀO VIDEO KHÔNG QUA KIỂM): {str(e)[:60]}")
+        # 25/8 — cắt 60 ký tự làm mất luôn chỗ chẩn đoán: log chỉ hiện `AiError: Model A` nên không
+        # biết model nào hỏng. Khâu này mà chết là ảnh vào video không qua kiểm, đáng để in dài hơn.
+        print(f"   ⚠️ verify_image lỗi (bỏ qua kiểm — ẢNH VÀO VIDEO KHÔNG QUA KIỂM): {str(e)[:220]}")
         return None
 
 

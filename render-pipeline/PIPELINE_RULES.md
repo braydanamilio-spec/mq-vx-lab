@@ -2208,3 +2208,23 @@ KB: cuối mỗi lane gom cả lane vào MỘT file rồi cất sang **2 kho kh�
 Mất một kho vẫn dựng lại được toàn bộ video của kho đó, **0 lượt gọi AI**.
 Chốt bằng `t_kich_ban_co_ban_du_phong_khac_kho` (2 kho phải KHÁC NHAU · cất xong dọn danh sách · rỗng
 thì không cất).
+
+### 7.dh — MÁY DÒ CHẾT CÂM BẮT ĐƯỢC CA THẬT ĐẦU TIÊN: vision chết 0/36 (25/8/2026)
+Chưa đầy một giờ sau khi gắn `dem_khau("vision ảnh")` (7.cx), nó bắt ngay:
+```
+📈 tỉ lệ dùng được: checkpoint kịch bản 2/2 · clip 16/16 · sổ chủ đề 6/6 · vision ảnh 0/36
+🚨 CHẾT CÂM: vision ảnh
+   ⚠️ verify_image lỗi: cloudflare HTTP 403: AiError: Model ...
+```
+Tức **36 tấm ảnh của lane FUTUREUSA vào video mà không qua một lượt kiểm khớp nội dung nào** — và
+trước hôm nay chuyện này hoàn toàn vô hình.
+Gốc: đường TEXT đã có `_resolve_live_model()` (dò `/ai/models/search` khi CF gỡ model) từ lâu, nhưng
+đường **VISION viết cứng đúng MỘT tên model** `CF_VISION_MODEL`. CF đổi/gỡ tên là vision chết 100%.
+Thêm nữa, nhánh tự chữa chỉ nhận **400/404**, còn ca thật trả **403** nên rơi thẳng xuống `raise`.
+Vá: `_CF_VIS_PREF` + `_resolve_live_vision()` (dò model CF **thật sự đang có**, danh sách lỗi thời
+cũng không sao) · nhận thêm 403 cho đường vision · nới thông báo lỗi 60→220 ký tự (cắt 60 làm mất
+đúng chỗ chẩn đoán: log chỉ hiện `AiError: Model A`).
+Chốt bằng `t_vision_co_model_du_phong`.
+**LUẬT: mỗi phụ thuộc ngoài phải có (a) danh sách dự phòng, (b) đường TỰ DÒ khi nhà cung cấp đổi tên,
+(c) một người ĐẾM. Thiếu (c) thì (a) và (b) hỏng lúc nào không ai biết.** Đây là lần đầu cả ba có đủ,
+và nó trả kết quả ngay trong giờ đầu tiên.

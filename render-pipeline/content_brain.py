@@ -148,6 +148,15 @@ _GROQ_PREF = [GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "groq/compo
 CF_TEXT_MODEL = os.environ.get("CF_TEXT_MODEL", "@cf/openai/gpt-oss-120b")
 CF_VISION_MODEL = os.environ.get("CF_VISION_MODEL", "@cf/meta/llama-3.2-11b-vision-instruct")
 # CF cũng gỡ/đổi model như Groq -> danh sách ưu tiên cho tự-dò khi 404/400 model-không-tồn-tại
+# DANH SÁCH DỰ PHÒNG CHO VISION (25/8/2026). Trước đây vision chỉ có ĐÚNG MỘT model viết cứng, nên
+# Cloudflare đổi/gỡ tên model là khâu kiểm ảnh chết 100% — và chết ÂM THẦM, vì `verify_image` trả
+# None nghĩa là "bỏ qua kiểm" (ảnh vẫn vào video). Máy dò chết câm bắt được ca thật: `vision ảnh 0/36`
+# ở lane FUTUREUSA, lỗi `cloudflare HTTP 403: AiError: Model ...`.
+# Không đoán tên model: dò /ai/models/search rồi lấy cái ĐẦU TIÊN trong danh sách này mà CF báo còn
+# sống — danh sách có lỗi thời cũng không sao.
+_CF_VIS_PREF = [CF_VISION_MODEL, "@cf/meta/llama-3.2-11b-vision-instruct",
+                "@cf/llava-hf/llava-1.5-7b-hf", "@cf/unum/uform-gen2-qwen-500m"]
+
 _CF_PREF = [CF_TEXT_MODEL, "@cf/openai/gpt-oss-120b", "@cf/openai/gpt-oss-20b",
             "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/qwen/qwen2.5-coder-32b-instruct"]
 
@@ -315,6 +324,25 @@ class _CfShim:
         self._sys = system_instruction     # cùng lớp lỗi TypeError như _GroqShim (xem trên)
         return self
 
+    _live_vis = None          # model vision còn sống, dò 1 lần cho cả tiến trình
+
+    def _resolve_live_vision(self) -> str:
+        """Model VISION còn sống — cùng cách chữa như model text. Xem ghi chú ở _CF_VIS_PREF."""
+        import urllib.request
+        if _CfShim._live_vis:
+            return _CfShim._live_vis
+        req = urllib.request.Request(
+            f"https://api.cloudflare.com/client/v4/accounts/{self._acc}/ai/models/search?per_page=100",
+            headers=self._hdr())
+        with urllib.request.urlopen(req, timeout=20) as r:
+            ids = {m.get("name") for m in ((json.load(r).get("result")) or [])}
+        for want in _CF_VIS_PREF:
+            if want in ids:
+                _CfShim._live_vis = want
+                print(f"   ⛅ CF vision: '{CF_VISION_MODEL}' không dùng được -> chuyển sang '{want}'.")
+                return want
+        raise RuntimeError("cloudflare: không còn model VISION nào trong danh sách ưu tiên")
+
     def _resolve_live_model(self) -> str:
         """CF gỡ model text -> hỏi /ai/models/search rồi chọn theo _CF_PREF (bài học llama-3.3 Groq)."""
         import urllib.request
@@ -365,7 +393,8 @@ class _CfShim:
             content = [{"type": "text", "text": text},
                        {"type": "image_url", "image_url": {"url": "data:" + img.get("mime_type", "image/jpeg")
                         + ";base64," + base64.b64encode(img["data"]).decode()}}]
-            body = {"model": CF_VISION_MODEL, "messages": [{"role": "user", "content": content}],
+            body = {"model": _CfShim._live_vis or CF_VISION_MODEL,
+                    "messages": [{"role": "user", "content": content}],
                     "temperature": 0.0, "max_tokens": 1024}   # vision KHÔNG gửi response_format (model vision hay từ chối) — _extract_json tự bóc
         else:
             msgs = ([{"role": "system", "content": self._sys}] if getattr(self, "_sys", None) else [])
@@ -386,6 +415,18 @@ class _CfShim:
             try: detail = e.read().decode()[:200]
             except Exception: pass
             low = detail.lower()
+            # 25/8 — THÊM 403 CHO ĐƯỜNG VISION. Ca thật FUTUREUSA: `HTTP 403: AiError: Model ...`,
+            # mà nhánh tự chữa chỉ nhận 400/404 nên rơi thẳng xuống `raise` -> vision chết cả lane
+            # (0/36) trong im lặng.
+            if img is not None and e.code in (400, 403, 404) and "model" in low:
+                body["model"] = self._resolve_live_vision()
+                req2 = urllib.request.Request(
+                    f"https://api.cloudflare.com/client/v4/accounts/{self._acc}/ai/v1/chat/completions",
+                    data=json.dumps(body).encode(), headers=self._hdr())
+                with urllib.request.urlopen(req2, timeout=timeout) as r:
+                    out = json.load(r)
+                txt2 = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+                return type("R", (), {"text": txt2})()
             if e.code in (400, 404) and ("no such model" in low or "does not exist" in low or "invalid model" in low or "not found" in low):
                 # CF gỡ model (bài học llama-3.3 bên Groq) -> dò model sống rồi thử lại 1 lần
                 self._model = self._resolve_live_model()

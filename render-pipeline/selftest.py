@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("vision có model dự phòng + tự dò", t_vision_co_model_du_phong)
     check("kịch bản có bản dự phòng ở kho KHÁC", t_kich_ban_co_ban_du_phong_khac_kho)
     check("kho token chết được nhớ CHUNG, tự hết hạn", t_kho_token_chet_nho_chung)
     check("kịch bản đi CÙNG video trên Drive", t_kich_ban_di_cung_video_tren_drive)
@@ -1030,6 +1031,25 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_vision_co_model_du_phong():
+    """Vision phải có danh sách model dự phòng + tự dò khi CF đổi tên model (25/8).
+    Máy dò chết câm bắt được ca thật: lane FUTUREUSA `vision ảnh 0/36`, lỗi
+    `cloudflare HTTP 403: AiError: Model ...`. Đường TEXT đã có `_resolve_live_model` từ lâu, đường
+    VISION thì viết cứng đúng MỘT tên model ⇒ CF gỡ/đổi tên là chết 100%, và chết âm thầm vì
+    `verify_image` trả None = "bỏ qua kiểm" (ảnh vẫn vào video)."""
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "content_brain.py"), encoding="utf-8").read()
+    assert "_CF_VIS_PREF" in src, "vision không có danh sách model dự phòng"
+    assert "def _resolve_live_vision" in src, "vision không tự dò được model còn sống"
+    assert "_CfShim._live_vis or CF_VISION_MODEL" in src, "vẫn dùng cứng model vision viết sẵn"
+    # nhánh tự chữa phải nhận CẢ 403 (ca thật), không chỉ 400/404
+    i = src.index("if img is not None and e.code in")
+    assert "403" in src[i: i + 120], "403 ở đường vision vẫn rơi thẳng xuống raise"
+    qv = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "qc_vision.py"), encoding="utf-8").read()
+    assert "str(e)[:220]" in qv, "thông báo lỗi vision vẫn cắt quá ngắn để chẩn đoán"
 
 
 def t_kich_ban_co_ban_du_phong_khac_kho():
