@@ -434,6 +434,7 @@ def main():
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
     check("đồng bộ kho có ngân sách giờ, không đợi đủ hết", t_dong_bo_kho_co_ngan_sach_gio)
+    check("kiểm kho hằng ngày: song song + ngân sách 240s", t_kiem_kho_ngay_co_ngan_sach)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2192,6 +2193,23 @@ def t_dong_bo_kho_co_ngan_sach_gio():
     assert "with _cf.ThreadPoolExecutor" not in than, "with-block sẽ đợi đủ 73 kho ở __exit__"
     sau = src[i - 3200:src.index("GUARD KHO GẦN ĐẦY", i)]   # mốc SAU i — mốc cùng tên đứng trước đã bẫy chốt này 1 lần
     assert 'FB.set_config(OWNER, {"usage_synced_at"' in sau, "không đóng dấu synced_at nữa"
+
+
+def t_kiem_kho_ngay_co_ngan_sach():
+    """Lượt đi bộ 72 kho hằng ngày phải song song + có ngân sách + dở dang thì BỎ, không ghi số thiếu.
+
+    25/8 — thủ phạm thật của hai plan chết liên tiếp (07:05Z, 07:28Z): 72 kho tuần tự 12-15 phút,
+    đứng ngay trước lệnh xuất matrix ⇒ 18 luồng không bao giờ mở, phiên chết ở timeout 18'."""
+    src = _doc("run_render.py")
+    i = src.index("def _kiem_kho_ngay")
+    than = src[i:i + 6000]
+    assert "ThreadPoolExecutor" in than, "kiểm kho vẫn tuần tự"
+    assert "_han = _t10.time() + 240" in than, "mất ngân sách 240s"
+    assert "shutdown(wait=False, cancel_futures=True)" in than, "shutdown chờ = treo như cũ"
+    assert "with " not in than[than.index("ThreadPoolExecutor"):than.index("shutdown")], \
+        "with-block đợi đủ 72 kho ở __exit__"
+    # dở dang -> hong tăng -> nhánh BỎ lượt ghi phía dưới phải còn nguyên
+    assert "BỎ QUA lượt ghi" in than or "kho đọc hụt" in than, "mất nguyên tắc không-ghi-số-thiếu"
 
 
 if __name__ == "__main__":

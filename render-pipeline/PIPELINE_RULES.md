@@ -2577,3 +2577,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   và "🖼 thiếu thumbnail" oan (file .jpg vẫn nằm trên Drive, chỉ mất bản ghi). Nay: 4 cột mới trong
   `render_job` (ALTER TABLE đã chạy), `ghi_job`/`ghi_job_loat` COALESCE để None không đè giá trị cũ,
   `qc` lấy từ `patch.score`, hot-jobs trả kèm và dashboard ghép vào (Firestore vẫn thắng khi có).
+
+- **Thủ phạm THẬT của hai plan chết liên tiếp (07:05Z + 07:28Z) là `_kiem_kho_ngay`.** (25/8) Lượt
+  đi bộ 72 kho hằng ngày chạy TUẦN TỰ 12-15 phút, đứng ngay TRƯỚC lệnh xuất matrix ⇒ 18 luồng không
+  bao giờ mở, plan chết ở timeout 18', và vì rơi đúng lượt đầu sau mốc reset (chu kỳ 20h) nên "mỗi
+  ngày chết một buổi". Cùng công thức sửa với sync dung lượng: 8 luồng song song + ngân sách 240s;
+  dở dang thì BỎ NGUYÊN LƯỢT (số thiếu độc hơn không có số). Đã cắm thêm `_moc` quanh mọi bước
+  plan để lần treo sau tự khai tên. Chốt: `t_kiem_kho_ngay_co_ngan_sach`.

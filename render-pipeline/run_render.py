@@ -1584,6 +1584,7 @@ def plan_mode():
         try:
             _moc("tự chữa video chưa đẩy")
             FB.heal_unpushed(OWNER)
+            _moc("heal_unpushed xong")
         except Exception:
             pass
     else:
@@ -1637,6 +1638,7 @@ def plan_mode():
             pass
         finally:
             _ex.shutdown(wait=False, cancel_futures=True)
+        _moc(f"đồng bộ dung lượng {synced} kho xong")
         if synced < len(_hang):
             print(f"   ⏳ đồng bộ kho chạm ngân sách 150s — lấy {synced}/{len(_hang)} kho, "
                   f"phần còn lại chu kỳ 20h sau.")
@@ -1644,6 +1646,7 @@ def plan_mode():
         print(f"   💾 Đã đồng bộ dung lượng thật {synced}/{len(_hang)} kho.")
       except Exception as e:
         print(f"   ⚠️ Sync dung lượng kho lỗi: {e}")
+    _moc("trước guard kho gần đầy")
     # GUARD KHO GẦN ĐẦY (tính tổng cả 33 kho, dùng số VỪA sync).
     # moi_nhat=True: plan là chỗ DUY NHẤT quét thật bảng kho — nó vừa sync xong nên số mới nhất,
     # và nó dựng lại đệm cho 18 luồng phía sau dùng chung (khỏi 18 lần quét project A).
@@ -1942,15 +1945,34 @@ def _kiem_kho_ngay(cfg: dict) -> None:
             print(f"   ⏭ Kiểm kho: chỉ đọc được {len(accs)} kho — BỎ QUA (đếm thiếu còn tệ hơn không đếm).")
             return
         import kiem_kho as _KK
+        # 25/8 — CHÍNH BƯỚC NÀY (chứ không riêng sync dung lượng) giết plan 07:05Z và 07:28Z:
+        # 72 kho đi bộ TUẦN TỰ, mỗi kho liệt kê toàn bộ file theo trang, tổng 12-15 phút — mà nó
+        # đứng ngay TRƯỚC lệnh xuất matrix nên 18 luồng không bao giờ được mở, phiên chết ở
+        # timeout 18'. Rơi đúng lượt plan đầu tiên sau mốc reset ngày (chu kỳ 20h) nên "mỗi ngày
+        # chết một buổi". Cùng công thức với sync dung lượng: 8 luồng song song + ngân sách 240s.
+        # DỞ DANG THÌ BỎ NGUYÊN LƯỢT (giữ nguyên tắc của kiem_kho.py: số thiếu độc hơn không có
+        # số — dashboard từng "tụt kho ảo" vì ghi số đếm hụt), phiên sau đi tiếp.
+        import concurrent.futures as _cf2, time as _t10
+        _han = _t10.time() + 240
         song = 0
         hong = 0
-        for acc in accs:
-            try:
-                drv = _ST.account_drive(acc)
-                song += sum(1 for f in _KK._quet(drv, acc.get("root"))
-                            if str(f.get("name", "")).lower().endswith(".mp4"))
-            except Exception:
-                hong += 1
+        def _dem_kho(acc):
+            drv = _ST.account_drive(acc)
+            return sum(1 for f in _KK._quet(drv, acc.get("root"))
+                       if str(f.get("name", "")).lower().endswith(".mp4"))
+        _ex2 = _cf2.ThreadPoolExecutor(max_workers=8)
+        _viec = {_ex2.submit(_dem_kho, a2): a2 for a2 in accs}
+        try:
+            for _f2 in _cf2.as_completed(_viec, timeout=max(15, _han - _t10.time())):
+                try:
+                    song += _f2.result()
+                except Exception:
+                    hong += 1
+        except _cf2.TimeoutError:
+            hong += sum(1 for f2 in _viec if not f2.done())
+            print(f"   ⏳ Kiểm kho chạm ngân sách 240s — dở dang, BỎ lượt này (phiên sau đi tiếp).")
+        finally:
+            _ex2.shutdown(wait=False, cancel_futures=True)
         if hong:
             print(f"   ⏭ Kiểm kho: {hong}/{len(accs)} kho đọc hụt — BỎ QUA lượt ghi (sẽ đếm thiếu).")
             return
