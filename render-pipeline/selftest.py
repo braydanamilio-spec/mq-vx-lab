@@ -440,6 +440,7 @@ def main():
     check("khối __main__ của run_render nằm CUỐI file", t_khoi_main_cuoi_file)
     check("mascot: dùng rig sẵn, KHÔNG vẽ lại nhân vật", t_mascot_khong_ve_lai_nhan_vat)
     check("MascotStage động theo từng khung + parallax", t_mascot_stage_dong_tung_khung)
+    check("tách nền rig: ĐO màu viền, không khoá cứng", t_tach_nen_khong_khoa_cung_mau)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2292,6 +2293,24 @@ def t_mascot_stage_dong_tung_khung():
     assert "cam.dx * L.xa" in src, "lớp nền không nhân theo độ sâu -> mất parallax"
     assert "talk_open" in src and "talk_closed" in src, "mất cặp nhép mồm"
     assert "spring(" in src, "mất chuyển động đàn hồi (vào cảnh/nảy)"
+
+
+def t_tach_nen_khong_khoa_cung_mau():
+    """Tách nền rig phải ĐO màu từ viền ảnh, không khoá cứng một mã màu.
+
+    25/8 — đo trên ảnh thật của lượt rig 10:51Z: FLUX vẽ nền xanh #38b828, trong khi code khoá
+    cứng #00b140. Khoảng cách 87, ngưỡng cũ 88 ⇒ lọt đúng 1 điểm, nên gần như mọi tư thế đều báo
+    "0% khung là nền khoá" và bị bỏ. Nhà cung cấp không hứa sắc độ nào cả — chỉ hứa "nền phẳng",
+    mà nền phẳng thì luôn CHẠM VIỀN. Đo viền là dấu hiệu không phụ thuộc sắc độ."""
+    src = _doc("mascot_rig.py")
+    assert "def _mau_vien" in src, "không còn hàm đo màu nền từ viền"
+    i = src.index("def _tach_nen")
+    than = src[i:src.index("def _cat_khung")]
+    assert "_mau_vien(" in than, "_tach_nen vẫn khoá cứng màu thay vì đo"
+    assert "dong_nhat < 0.45" in than, "mất chốt 'viền phải đồng nhất' -> sẽ ăn thủng nhân vật"
+    # hỏng thì phải GIỮ ảnh làm bằng chứng, không xoá
+    assert "_hong" in src and "os.remove(dest)" not in src, \
+        "ảnh tách hỏng bị xoá -> lần sau lại phải đoán FLUX vẽ gì"
 
 
 if __name__ == "__main__":

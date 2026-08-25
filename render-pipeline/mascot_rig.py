@@ -39,7 +39,8 @@ import sys
 # Màu khoá: xanh chroma phim trường. Chọn màu HIẾM trong tranh hoạt hình Mỹ (da/cờ/gỗ đều xa nó)
 # để không ăn nhầm vào nhân vật.
 KEY_RGB = (0, 177, 64)
-NGUONG = 88            # khoảng cách màu tối đa còn coi là nền (0-441)
+NGUONG = 120           # khoảng cách màu tối đa còn coi là nền (0-441). Rộng tay được vì
+                       # màu khoá nay ĐO TỪ VIỀN ẢNH chứ không đoán trước (xem _mau_vien).
 VIEN_MEM = 2           # px làm mềm mép, tránh răng cưa khi phóng to
 
 # Bộ tư thế tối thiểu cho một nhân vật biết diễn. `talk_open`/`talk_closed` là cặp nhép mồm;
@@ -54,13 +55,40 @@ TU_THE = {
 }
 
 # Câu đuôi ép FLUX vào đúng khuôn rig: một nhân vật, toàn thân, nền phẳng, không chữ.
-DUOI = ("full body, head to toe, centered, facing viewer, single character alone, "
-        "flat solid pure green background color #00B140, no shadow on background, "
+DUOI = ("die-cut sticker of a single character, full body head to toe, centered, facing viewer, "
+        "isolated on a completely plain flat chroma key green screen background, "
+        "nothing else in the image, no scenery, no props, no shadow on the background, "
         "no text, no letters, no signs, no watermark, no logo, no border")
 
 
+def _mau_vien(px, W: int, H: int) -> tuple:
+    """Màu nền THẬT = màu áp đảo ở VIỀN khung. Trả (r,g,b,độ_đồng_nhất 0..1).
+
+    25/8 — vì sao không khoá cứng một màu: lượt rig 10:51Z báo "0% khung là nền khoá" ở gần hết
+    tư thế. FLUX có vẽ nền phẳng thật, nhưng ra sắc xanh KHÁC #00B140 (nó diễn giải "pure green"
+    theo kiểu riêng mỗi lần). Khoá cứng màu là tự trói mình vào một con số mà nhà cung cấp không
+    hứa. Nền thì luôn CHẠM VIỀN khung — đó mới là dấu hiệu không phụ thuộc sắc độ."""
+    mau = {}
+    b_x = max(2, W // 40)
+    b_y = max(2, H // 40)
+    tong = 0
+    for y in range(H):
+        ria_y = y < b_y or y >= H - b_y
+        for x in range(0, W, 2):
+            if not (ria_y or x < b_x or x >= W - b_x):
+                continue
+            r, g, b, _a = px[x, y]
+            k = (r >> 4, g >> 4, b >> 4)         # gom về ô 16 mức -> chịu được nhiễu nén JPEG
+            mau[k] = mau.get(k, 0) + 1
+            tong += 1
+    if not tong:
+        return (0, 0, 0, 0.0)
+    (kr, kg, kb), n = max(mau.items(), key=lambda kv: kv[1])
+    return (kr * 16 + 8, kg * 16 + 8, kb * 16 + 8, n / tong)
+
+
 def _tach_nen(duong: str) -> bool:
-    """Biến nền xanh khoá thành trong suốt, ghi đè chính file (.png). True nếu tách được."""
+    """Biến nền phẳng thành trong suốt, ghi đè chính file (.png). True nếu tách được."""
     try:
         from PIL import Image
     except Exception as e:
@@ -70,7 +98,13 @@ def _tach_nen(duong: str) -> bool:
         im = Image.open(duong).convert("RGBA")
         px = im.load()
         W, H = im.size
-        kr, kg, kb = KEY_RGB
+        kr, kg, kb, dong_nhat = _mau_vien(px, W, H)
+        # Viền phải khá đồng nhất thì mới là "nền phẳng". Loãng hơn 45% nghĩa là FLUX vẽ cả bối
+        # cảnh ra tận mép -> tách sẽ ăn thủng nhân vật, thà bỏ tư thế này còn hơn.
+        if dong_nhat < 0.45:
+            print(f"   ⚠️ viền khung chỉ đồng nhất {dong_nhat*100:.0f}% — FLUX vẽ nền có chi tiết, bỏ tư thế")
+            return False
+        print(f"      · nền đo được #{kr:02x}{kg:02x}{kb:02x} · viền đồng nhất {dong_nhat*100:.0f}%")
         nen = 0
         for y in range(H):
             for x in range(W):
@@ -81,10 +115,10 @@ def _tach_nen(duong: str) -> bool:
                     nen += 1
                 elif d <= NGUONG + 60:            # vành đai: mờ dần cho mép mượt
                     px[x, y] = (r, g, b, int(a * (d - NGUONG) / 60))
-        # Nền phải chiếm phần đáng kể — dưới 12% nghĩa là FLUX không vẽ nền phẳng, rig sẽ hỏng.
+        # Nền phải chiếm phần đáng kể — dưới 12% nghĩa là tách hụt, rig sẽ hỏng.
         ty = nen / max(1, W * H)
         if ty < 0.12:
-            print(f"   ⚠️ chỉ {ty*100:.0f}% khung là nền khoá — FLUX không vẽ nền phẳng, bỏ tư thế này")
+            print(f"   ⚠️ chỉ {ty*100:.0f}% khung tách được (màu viền #{kr:02x}{kg:02x}{kb:02x}) — bỏ tư thế")
             return False
         if VIEN_MEM:
             from PIL import ImageFilter
@@ -139,7 +173,11 @@ def dung_rig(kenh: str, nhan_vat: dict, keys: list, lam_lai: bool = False) -> di
             ra[ten] = dest
             print(f"   ✅ {kenh}/{nhan_vat['id']}/{ten}")
         else:
-            os.remove(dest)
+            # GIỮ BẰNG CHỨNG: lượt 10:51Z xoá sạch ảnh hỏng nên không cách nào biết FLUX đã vẽ
+            # cái gì — phải đoán. Nay ảnh hỏng nằm ở `_hong/` và đi theo artifact để soi tận mắt.
+            hong = os.path.join(os.path.dirname(dest), "_hong")
+            os.makedirs(hong, exist_ok=True)
+            os.replace(dest, os.path.join(hong, f"{ten}.png"))
     return ra
 
 
@@ -195,7 +233,9 @@ def dung_san_khau(kenh: str, ten: str, lop_list: list, keys: list, lam_lai: bool
             ra[ten_lop] = dest
             print(f"   ✅ nền {kenh}/{ten}/{ten_lop}")
         else:
-            os.remove(dest)
+            hong = os.path.join(goc, "_hong")
+            os.makedirs(hong, exist_ok=True)
+            os.replace(dest, os.path.join(hong, f"{ten_lop}.png"))
     return ra
 
 

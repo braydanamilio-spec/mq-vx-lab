@@ -2613,3 +2613,11 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   (23/8) SAU khối chạy ⇒ đường `--channel` của matrix gọi hàm chưa được định nghĩa ⇒ NameError bị
   vòng thử-lại nuốt êm, không bản ghi nào. Toon đi đường main()/render_datastory thì không sao nên
   bug nấp 2 ngày — tới lần ĐẦU toon vào matrix (5 kênh mới mở) mới lộ. Chốt: `t_khoi_main_cuoi_file`.
+
+- **Tách nền rig: ĐO màu từ viền ảnh, đừng khoá cứng mã màu.** (25/8) Lượt rig 10:51Z báo "0% khung
+  là nền khoá" ở gần hết tư thế. Đo trên ảnh thật: FLUX vẽ nền #38b828 trong khi code khoá cứng
+  #00b140 — khoảng cách 87 so với ngưỡng 88, **lọt đúng 1 điểm** nên chỉ 1/11 ảnh sống. Nhà cung cấp
+  không hứa sắc độ, chỉ hứa "nền phẳng" — mà nền phẳng thì luôn CHẠM VIỀN. Nay `_mau_vien()` lấy màu
+  áp đảo ở viền + đòi viền đồng nhất ≥45% (thấp hơn = FLUX vẽ cảnh, tách sẽ ăn thủng nhân vật).
+  Kèm luật chung: **ảnh/lượt hỏng phải GIỮ làm bằng chứng** (`_hong/`), xoá đi là lần sau lại đoán.
+  Chốt: `t_tach_nen_khong_khoa_cung_mau`.
