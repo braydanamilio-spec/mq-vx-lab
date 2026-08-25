@@ -2950,3 +2950,19 @@ Thêm một bẫy: để lưới trải hết không gian thì farthest-point lu
 `#0FF7F7 · #0CCC0C · #F70FF7` — chói, nhìn như bảng màu máy tính cũ. Thu bão hoà về 0,55-0,82 và
 độ sáng 0,72-0,94 thì vẫn tách rõ mà mắt chịu được.
 - Chốt nay đo khoảng cách RGB mọi cặp, ngưỡng 40.
+
+### 26/8 — phiên 18:59: khung thật cứu được video, và lộ nguyên nhân thật của `0/N khung`
+Số đo: **0 video bị loại vì NỀN TRƠN** (phiên trước: 5). Bản vá đo trên khung thật chạy 12 lần,
+trong đó **6 lần mượn ảnh sáng nhất** để cứu — đúng việc nó sinh ra để làm.
+
+Còn lại 5 Traceback, tất cả cùng một loại, và bản vá "nói lý do" đã trả lời dứt điểm:
+`chỉ vẽ được 0/16 khung (pool vẽ còn **0 key** dùng được)`. Đây **không phải lỗi code** mà là cạn
+tài nguyên: cả pool key vẽ ảnh đang nghỉ/hỏng. Trước khi có bản vá thì con số `0/16` không nói
+được gì và đã đoán sai hai lần.
+
+Hai thứ vẫn phải sửa:
+- **Hỏi pool TRƯỚC khi viết kịch bản.** Lúc phát hiện pool cạn thì kịch bản đã viết xong — mỗi ca
+  đốt một lượt Gemini cho một video không thể dựng. Kênh toon bắt buộc có ảnh AI, pool cạn thì
+  viết hay đến mấy cũng vô ích. Hỏi trước, bỏ lượt sớm, nhường lane cho kênh khác.
+- **Nói một lần, đừng nói 588 lần.** Đúng dòng cảnh báo đó in 588 lần trong một phiên, lấp hết log
+  và làm mọi dấu hiệu khác chìm nghỉm. Biết một lần là đủ để sửa.

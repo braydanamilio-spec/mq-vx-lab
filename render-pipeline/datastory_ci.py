@@ -422,6 +422,11 @@ def _salt_prompt(prompt: str) -> str:
     return f"{prompt}, {random.choice(_VARY)}" if prompt else prompt
 
 
+# Cờ "đã báo pool cạn" — khai ngay cạnh nơi dùng. Để tận cuối file thì đọc mã phải nhảy
+# 2.400 dòng mới biết nó là gì, và dễ tưởng là biến chưa gán.
+_CANH_BAO_POOL: dict = {}
+
+
 def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", style=None) -> bool:
     """DỰ PHÒNG khi Openverse KHÔNG có ảnh CC0 khớp: nhờ Gemini VẼ ảnh minh hoạ (Nano Banana).
     Quota TÁCH RIÊNG khỏi quota viết kịch bản (model khác nhau) -> dùng thoải mái, không đụng key đang
@@ -435,7 +440,12 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
         # 26/8 — ĐƯỜNG IM LẶNG. Phiên 17:40 có kênh toon ra "0/16 khung" mà TRONG CẢ LOG KHÔNG
         # MỘT DÒNG nào nói vì sao: 16 lượt vẽ đều rơi vào đúng nhánh này và lặng lẽ trả False.
         # Cùng lớp lỗi với canary nuốt stderr — biết là hỏng, không biết hỏng ở đâu.
-        print("   ⚠️ vẽ ảnh: KHÔNG CÒN KEY NÀO dùng được (cả pool đang nghỉ/hỏng) — bỏ khung này")
+        # Nói MỘT LẦN mỗi tiến trình: phiên 18:59 in đúng dòng này 588 lần, lấp hết log và làm
+        # các dấu hiệu khác chìm nghỉm. Biết một lần là đủ để sửa; 588 lần chỉ là nhiễu.
+        if not _CANH_BAO_POOL.get("da_bao"):
+            _CANH_BAO_POOL["da_bao"] = True
+            print("   ⚠️ vẽ ảnh: KHÔNG CÒN KEY NÀO dùng được (cả pool đang nghỉ/hỏng) — "
+                  "mọi khung sau sẽ bỏ qua, không nhắc lại")
         return False
     last_quota = None
     # 25/8 — 4 KÊNH TOON RA "0/16 KHUNG" CÙNG LÚC. Gốc ở ngay dưới: khi CF trả về KHÔNG PHẢI ẢNH
@@ -3932,6 +3942,13 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
     st = on_status or (lambda *a, **k: None)
     # 23/8: 3 chế độ — skit (đối thoại 2 nhân vật) · story (kể chuyện 1 giọng) · essay (PHÂN TÍCH
     # lật-ngược-niềm-tin 1 giọng + ẩn dụ hình ảnh — format thay thế skit hài sau khi user chấm demo).
+    # 26/8 — HỎI POOL ẢNH TRƯỚC KHI VIẾT. Phiên 18:59: 5 kênh toon đều ra `0/N khung` với
+    # `pool vẽ còn 0 key`, mà lúc đó KỊCH BẢN ĐÃ VIẾT XONG — tức mỗi ca đốt một lượt Gemini rồi
+    # mới phát hiện không có gì để vẽ. Kênh này bắt buộc phải có ảnh AI; pool cạn thì viết hay
+    # đến mấy cũng không thành video. Hỏi trước, bỏ lượt sớm, nhường lane cho kênh khác.
+    if not resume_story and not _ai_candidates((keys[0] or {}).get("key") if keys else None):
+        raise RuntimeError("pool vẽ ảnh CẠN SẠCH — bỏ lượt TRƯỚC khi viết kịch bản "
+                           "(khỏi đốt lượt Gemini cho video không thể dựng)")
     _writer = {"story": KM.write_tale, "essay": KM.write_essay}.get(mode, KM.write_toon)
     story = resume_story or _writer(channel, keys, niche, tier=tier, avoid=avoid, on_limit=on_limit, on_ok=on_ok)
     # 23/8: SOI LẠI 1 LƯỢT trước khi render — cắt câu dài, bỏ ý lặp, ép mỗi khung tả một cảnh KHÁC
