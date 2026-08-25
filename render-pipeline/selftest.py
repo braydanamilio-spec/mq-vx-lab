@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("bước dùng kho Drive có lớp cứu KV (HOT_KEY)", t_buoc_dung_kho_phai_co_lop_cuu_kv)
     check("tên file KHÔNG làm bẩn tiêu đề YouTube", t_ten_file_khong_lam_ban_tieu_de)
     check("dòng QC loại phải ghi TÊN KÊNH", t_dong_loai_qc_phai_ghi_ten_kenh)
     check("vision có model dự phòng + tự dò", t_vision_co_model_du_phong)
@@ -1033,6 +1034,30 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_buoc_dung_kho_phai_co_lop_cuu_kv():
+    """Bước nào dùng `storage.py` thì PHẢI được truyền `HOT_KEY` (25/8 — ca thật vừa xảy ra).
+    Chạy `kiem_kho` lúc A và B đều cạn hạn mức: `❌ không đọc được kho nào — DỪNG`. `storage.py` có
+    lớp cứu cuối đọc danh sách kho từ KV của Worker (KHÔNG đụng Firestore), nhưng lớp đó cần
+    `HOT_KEY` — mà workflow không truyền cho bước ấy. Có đường sống mà không cắm điện."""
+    wf = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                      ".github", "workflows")
+    if not os.path.isdir(wf):
+        return
+    import re as _re
+    ho = []
+    for ten in sorted(os.listdir(wf)):
+        if not ten.endswith((".yml", ".yaml")):
+            continue
+        w = io.open(os.path.join(wf, ten), encoding="utf-8").read()
+        if "\njobs:" not in w:
+            continue
+        for b in _re.split(r"\n      - name: ", w[w.index("\njobs:"):])[1:]:
+            if "AUTOPUBLISHER_SRC:" in b and "HOT_KEY" not in b:
+                ho.append(f"{ten}: {b.split(chr(10))[0][:40]}")
+    assert not ho, ("bước dùng storage.py mà thiếu HOT_KEY -> lớp cứu KV không chạy được khi "
+                    "Firestore cạn:\n   " + "\n   ".join(ho))
 
 
 def t_ten_file_khong_lam_ban_tieu_de():
