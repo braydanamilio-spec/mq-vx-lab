@@ -2821,3 +2821,18 @@ creds + id của C nhưng **thiếu cờ** → A cạn hạn mức → 429 → 6
 
 *Không phải lỗi (đã xác minh, đừng vá lại)*: 37 dòng "B cạn hạn mức ngày — KHÔNG rơi về Project A" là
 ĐÚNG thiết kế cách ly 3 project; tầng trên lật gương B2 (19 lần `🔀 FAILOVER` trong cùng phiên).
+
+### 25/8 — MỘT PROP QUÊN THẢO LÀM MẤT TRẮNG CẢ PHIÊN (51 phút · 18 luồng · 0 video)
+`Caption` trong Cinematic.tsx khai `vang?: string` ở kiểu, thân dùng `vang`, nhưng danh sách thảo prop
+`({ nar, l, d, accent, subs, mode })` thiếu nó → `ReferenceError: vang is not defined` lúc render.
+TypeScript không kêu (chỉ kiểm kiểu), esbuild không kêu (cú pháp hợp lệ) — chỉ nổ lúc chạy.
+Canary bắt đúng (`🐤 CANARY FAIL`) và dừng luồng để giữ quota, **nhưng không nói hỏng vì sao**:
+`capture_output=True` nuốt stderr, `str(e)[:120]` cắt mất đuôi (lý do luôn nằm ở đuôi). Kết quả: một
+phiên trắng mà không có một chữ nào để lần ra nguyên nhân.
+- **Vá 1**: canary in `str(e)[-160:]` + 400 ký tự cuối của stderr thật (`↳ engine nói: …`).
+- **Vá 2**: chốt `t_tsx_prop_khai_roi_phai_thao_ra` — đọc mã .tsx, prop khai trong kiểu mà thân có
+  dùng thì BẮT BUỘC có trong danh sách thảo. Cắt thân tới khai báo cấp cao kế tiếp, không lấy bừa
+  N ký tự (lấy bừa thì liếm sang hàm dưới và báo nhầm).
+- **Luật rộng hơn**: sửa .tsx xong phải chạy `render_canary()` (0 quota, ~60s) TRƯỚC khi push. Render
+  thử một composition KHÁC composition mình vừa sửa thì không chứng minh được gì — bundle chung nên
+  lỗi cú pháp lộ ra, nhưng lỗi LÚC CHẠY chỉ lộ ở đúng composition đó.

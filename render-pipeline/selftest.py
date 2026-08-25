@@ -483,6 +483,46 @@ def t_kenh_the_he_2_tro_dung_ham_va_dang():
     assert not xau, "danh sách kênh thế hệ 2 sai:\n   " + "\n   ".join(xau)
 
 
+
+def t_tsx_prop_khai_roi_phai_thao_ra():
+    """Prop khai trong kiểu mà quên thảo ra khỏi `({...})` = ReferenceError lúc CHẠY.
+
+    25/8 — `Caption` khai `vang?: string` trong kiểu, thân dùng `vang`, nhưng danh sách thảo prop
+    lại thiếu nó. TypeScript không kêu (nó chỉ kiểm kiểu, không kiểm biến tự do trong JSX), esbuild
+    cũng không kêu (cú pháp hợp lệ) — chỉ đến lúc render mới nổ `ReferenceError: vang is not
+    defined`. Giá phải trả: một phiên 51 phút, 18 luồng, 0 video.
+    Đây đúng là lớp lỗi mà chốt AST "biến chưa gán" đang bắt cho Python, nhưng phía .tsx thì
+    không ai canh. Chốt này canh phần đó, bằng đọc mã, 0 giây, 0 quota."""
+    import os, re
+    goc = os.path.dirname(os.path.abspath(__file__))
+    src = os.path.join(goc, "..", "engine-remotion", "src")
+    if not os.path.isdir(src):
+        return
+    # tên thường gặp trong JSX nhưng KHÔNG phải prop -> khỏi báo nhầm
+    MAU = re.compile(r"React\.FC<\{(?P<kieu>[^}]*)\}>\s*=\s*\(\s*\{(?P<thao>[^}]*)\}", re.S)
+    xau = []
+    for ten in sorted(os.listdir(src)):
+        if not ten.endswith(".tsx"):
+            continue
+        m = io.open(os.path.join(src, ten), encoding="utf-8").read()
+        for k in MAU.finditer(m):
+            kieu = {re.sub(r"[?:].*", "", x).strip()
+                    for x in k.group("kieu").split(";") if x.strip()}
+            kieu = {x for x in kieu if re.fullmatch(r"[A-Za-z_]\w*", x or "")}
+            thao = {re.sub(r"[=:].*", "", x).strip()
+                    for x in k.group("thao").split(",") if x.strip()}
+            # Cắt thân ĐÚNG tới khai báo cấp cao kế tiếp. Lấy bừa 4000 ký tự thì liếm sang hàm
+            # bên dưới và báo nhầm (ThemedBase khai thừa `f`, hàm kế dưới có tham số tên `f`).
+            _sau = m[k.end():]
+            _het = re.search(r"\n(?:const|export|function|type|interface)\s", _sau)
+            than = _sau[: _het.start()] if _het else _sau
+            for prop in sorted(kieu - thao):
+                # chỉ báo khi thân THỰC SỰ nhắc tên đó như một biến độc lập
+                if re.search(r"(?<![\w.\"'])" + re.escape(prop) + r"(?![\w:])", than):
+                    xau.append(f"{ten}: prop '{prop}' khai trong kiểu, thân có dùng, nhưng KHÔNG thảo ra")
+    assert not xau, "prop chưa thảo -> ReferenceError lúc render:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -495,6 +535,7 @@ def main():
     check("đọc-mềm: quota chết không ném", t_soft_read)
     check("cổng dark_ok theo kênh", t_dark_ok)
     check("mở đầu chỉ MỘT tiêu đề (Bookend), không chồng ba", t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau)
+    check("tsx: prop khai rồi phải thảo ra (ReferenceError)", t_tsx_prop_khai_roi_phai_thao_ra)
     check("_extract_json bóc ```json", t_extract_json)
     check("_extract_json LUÔN trả dict (list -> nổ .get)", t_extract_json_luon_tra_dict)
     check("step trỏ Project C phải bật SHARD_PUBLISH", t_workflow_dung_project_C_phai_bat_co)

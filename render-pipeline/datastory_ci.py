@@ -2846,7 +2846,18 @@ def render_canary() -> bool:
                        cwd=ENG, capture_output=True, timeout=240, check=True)
         _CANARY["ok"] = os.path.exists(out) and os.path.getsize(out) > 1000
     except Exception as e:
-        print(f"   🐤 CANARY FAIL — engine render hỏng, DỪNG luồng để không đốt quota: {str(e)[:120]}")
+        # 25/8 — canary bắt đúng lỗi (engine hỏng) nhưng KHÔNG NÓI HỎNG VÌ SAO: `capture_output=True`
+        # nuốt stderr, còn `str(e)[:120]` cắt mất đuôi — mà lý do luôn nằm ở ĐUÔI ("returned non-zero
+        # exit status 1" / "timed out after 240 seconds"). Kết quả: một phiên 51 phút, 18 luồng, 0
+        # video, và không có một chữ nào để lần ra nguyên nhân. Nay in cả đuôi lẫn stderr thật.
+        _duoi = str(e)
+        _err = getattr(e, "stderr", b"") or b""
+        if isinstance(_err, bytes):
+            _err = _err.decode("utf-8", "ignore")
+        _err = " ".join(_err.split())[-400:]
+        print(f"   🐤 CANARY FAIL — engine render hỏng, DỪNG luồng để không đốt quota: {_duoi[-160:]}")
+        if _err:
+            print(f"      ↳ engine nói: {_err}")
         _CANARY["ok"] = False
     if _CANARY["ok"]:
         print("   🐤 canary render OK (~0 quota) — engine sống, cho phép tiêu đạn Gemini")

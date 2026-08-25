@@ -72,7 +72,7 @@ const mauChu = (slug: string, chon?: string): string => {
   return BANG_MAU[h % BANG_MAU.length];
 };
 
-const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; subs?: Sub[]; mode?: "duel" | "file"; vang?: string }> = ({ nar, l, d, accent, subs, mode }) => {
+const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; subs?: Sub[]; mode?: "duel" | "file"; vang?: string }> = ({ nar, l, d, accent, subs, mode, vang }) => {
   const lines: { words: string[]; s: number; e: number }[] = [];
   if (subs && subs.length) {
     for (const sb of subs) {
