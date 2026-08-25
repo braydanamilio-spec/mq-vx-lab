@@ -2907,3 +2907,20 @@ không phải ảnh) không in gì, 16 lượt vẽ rơi vào đó và biến m�
 - **Luật**: hàm nào BÁO HỎNG thì phải NÓI HỎNG VÌ SAO. Cùng lớp lỗi với canary nuốt stderr — biết
   là hỏng, không biết hỏng ở đâu, nên không sửa được. Dòng ném lỗi nay kèm số key còn dùng được.
 - Chốt `t_ve_anh_khong_hong_im_lang` — mỗi `return False` phải có lệnh in trong vài dòng ngay trước.
+
+### 26/8 — NỀN TRƠN vẫn lọt vì đo bằng MÔ HÌNH thay vì khung thật
+Phiên 17:40: **5 video bị loại** vì `mở đầu NỀN TRƠN` — tối 80,3 · 81,0 · 82,7 · 89,4 · 92,0 %.
+Bốn trong năm là bản LONG 10 phút, tức mỗi ca mất một lượt viết AI **và** một lượt render dài.
+
+Bộ cứu `sang_hoa_mo_dau` đo ảnh gốc rồi TÍNH XEM lớp phủ sẽ dìm nó xuống bao nhiêu. Mô hình đó đã
+phải cộng biên 13 điểm, rồi 20 điểm — vẫn lọt. **Mô hình không bao giờ đuổi kịp bản render thật**:
+nó thiếu Ken Burns, objectPosition, bóng chữ hook, gradient theo cảnh. Nới biên lần nữa là đoán tiếp.
+
+- **Vá gốc**: `do_khung_mo_dau_that()` render ĐÚNG MỘT KHUNG bằng `remotion still` rồi đo bằng
+  chính `flat_bg_metrics` mà QC dùng. Đo thật **~2 giây**; render cả video LONG rồi vứt thì không.
+  `xac_minh_mo_dau()` chưa đạt thì mượn ảnh sáng nhất trong các cảnh khác rồi đo lại, vẫn không
+  đạt mới dừng — dừng TRƯỚC render.
+- Nối vào **cả ba** đường Cinematic: `make_doc` · short · long. Nhóm doc dính nhiều nhất.
+- `render_canary` miễn trừ: đó là phát súng thử bằng ảnh tự tạo, không phải video sẽ đăng.
+- Đo không được thì trả `None` và **không chặn oan** — thà lọt một ca còn hơn chặn nhầm hàng loạt.
+- Chốt `t_mo_dau_phai_xac_minh_bang_khung_that`.

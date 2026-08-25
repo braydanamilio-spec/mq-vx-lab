@@ -781,6 +781,39 @@ def t_ve_anh_khong_hong_im_lang():
     assert not cam, "vẽ ảnh hỏng im lặng:\n   " + "\n   ".join(cam)
 
 
+
+def t_mo_dau_phai_xac_minh_bang_khung_that():
+    """Cả hai đường Cinematic phải chốt mở đầu bằng KHUNG THẬT trước khi render.
+
+    26/8 — `sang_hoa_mo_dau` đo qua MÔ HÌNH lớp phủ. Mô hình đã phải cộng biên 13 rồi 20 điểm mà
+    phiên 17:40 vẫn để lọt 5 ca: mô hình bảo đạt, khung render thật ra 80,3 · 81,0 · 82,7 · 89,4 ·
+    92,0 % tối và bị QC loại SAU KHI đã dựng xong — 4 trong 5 ca là bản LONG 10 phút.
+    Mô hình không đuổi kịp bản render thật (thiếu Ken Burns, objectPosition, bóng chữ hook…), nên
+    nới biên chỉ là đoán tiếp. Render một khung mất ~2 giây và cho ĐÚNG con số QC sẽ dùng."""
+    src = _doc("datastory_ci.py")
+    xau = []
+    for ham in ("do_khung_mo_dau_that", "xac_minh_mo_dau", "_muon_anh_sang_nhat"):
+        if f"def {ham}(" not in src:
+            xau.append(f"thiếu hàm {ham}()")
+    # mỗi lệnh render Cinematic/CinematicShort phải có xac_minh_mo_dau ở phía trên trong cùng hàm
+    dong = src.splitlines()
+    for i, l in enumerate(dong):
+        if '"npx", "remotion", "render", "src/index.ts", "Cinematic' not in l:
+            continue
+        thay = False
+        for j in range(i, max(0, i - 60), -1):
+            if "xac_minh_mo_dau(" in dong[j]:
+                thay = True
+                break
+            if dong[j].startswith("def "):
+                # canary là PHÁT SÚNG THỬ bằng ảnh tự tạo, không phải video sẽ đăng -> miễn trừ
+                thay = "render_canary" in dong[j]
+                break
+        if not thay:
+            xau.append(f"dòng {i+1}: render Cinematic mà không xác minh mở đầu bằng khung thật")
+    assert not xau, "mở đầu chưa chốt bằng khung thật:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -814,6 +847,7 @@ def main():
     check("cổng kho Drive đóng được THẬT (không tự nuốt lỗi)", t_cong_kho_drive_dong_duoc_that)
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
+    check("mở đầu chốt bằng KHUNG THẬT, không bằng mô hình", t_mo_dau_phai_xac_minh_bang_khung_that)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
     check("key CHẾT HẲN được nhận diện (khỏi dò tốn quota)", t_key_chet_han_duoc_nhan_dien)
     check("cắt lượt ghi D1 thừa (giữ hạn mức FREE)", t_cat_luot_ghi_d1_thua)

@@ -2721,6 +2721,91 @@ def can_man_moi_canh(props: dict, nguong: float = 55.0) -> int:
     return n
 
 
+def do_khung_mo_dau_that(props: dict, comp: str, giay: float = 1.2):
+    """Render ĐÚNG MỘT KHUNG mở đầu rồi đo — thay vì đoán qua mô hình lớp phủ.
+
+    26/8 — VÌ SAO BỎ MÔ HÌNH. `sang_hoa_mo_dau` đo ảnh gốc rồi TÍNH XEM lớp phủ sẽ dìm nó xuống
+    bao nhiêu. Mô hình đó đã phải cộng biên 13 điểm, rồi 20 điểm, mà phiên 17:40 vẫn để lọt 5 ca:
+    mô hình bảo đạt, khung render thật ra 80,3 · 81,0 · 82,7 · 89,4 · 92,0 % tối và bị QC loại
+    SAU KHI đã render xong cả video LONG 10 phút. Mỗi ca mất một lượt viết AI + một lượt render.
+
+    Mô hình không bao giờ đuổi kịp bản render thật, vì nó thiếu Ken Burns, objectPosition, bóng
+    chữ hook, gradient theo cảnh... Nới biên là đoán tiếp. Render một khung tốn vài giây và cho
+    ĐÚNG con số QC sẽ dùng — rẻ hơn nhiều so với render cả video rồi vứt.
+
+    Trả (dark, sat, cols) hoặc None nếu không đo được (không đo được thì ĐỪNG chặn oan)."""
+    import tempfile
+    try:
+        khung = max(0, int(round(giay * 30)))
+        with tempfile.TemporaryDirectory() as tmp:
+            pf = os.path.join(PUB, f"_dokhung_{props.get('slug', 'x')}.json")
+            json.dump(props, open(pf, "w"), ensure_ascii=False)
+            ra = os.path.join(tmp, "k.png")
+            r = subprocess.run(
+                ["npx", "remotion", "still", "src/index.ts", comp, ra,
+                 f"--props=./{os.path.relpath(pf, ENG)}", f"--frame={khung}",
+                 "--gl=swiftshader", "--log=error"],
+                cwd=ENG, capture_output=True, text=True, timeout=420)
+            if r.returncode or not os.path.exists(ra):
+                print(f"   ⚠️ không dựng được khung mở đầu để đo: {(r.stderr or '')[-120:]}")
+                return None
+            return flat_bg_metrics(ra)
+    except Exception as e:
+        print(f"   ⚠️ đo khung mở đầu hỏng: {str(e)[:80]} — bỏ qua, không chặn oan")
+        return None
+
+
+def xac_minh_mo_dau(props: dict, comp: str, dark_ok: bool = False) -> str:
+    """Xác minh mở đầu TRÊN KHUNG THẬT; chưa đạt thì mượn ảnh sáng nhất rồi đo lại.
+
+    Trả "" nếu đạt (hoặc không đo được), hoặc lý do để người gọi dừng TRƯỚC render."""
+    tran_toi = 88.0 if dark_ok else 75.0
+    tran_mau = 450 if dark_ok else 900
+    for lan in range(2):
+        do = do_khung_mo_dau_that(props, comp)
+        if do is None:
+            return ""                      # không đo được -> không chặn oan
+        d, sa, c = do
+        if not (d >= tran_toi and c < tran_mau):
+            if lan:
+                print(f"   ✅ mở đầu cứu được: {d:.1f}% tối · {c} màu (đo trên khung THẬT)")
+            return ""
+        if lan:
+            return (f"khung thật {d:.1f}% tối · {c} màu, đã đổi ảnh sáng nhất vẫn không đạt")
+        print(f"   🌗 mở đầu {d:.1f}% tối · {c} màu trên khung THẬT — đổi sang ảnh sáng nhất")
+        if not _muon_anh_sang_nhat(props):
+            return f"khung thật {d:.1f}% tối · {c} màu, không có ảnh nào sáng hơn để thay"
+    return ""
+
+
+def _muon_anh_sang_nhat(props: dict) -> bool:
+    """Cho cảnh 0 mượn ảnh SÁNG NHẤT trong các cảnh còn lại. True nếu đã đổi được."""
+    scenes = props.get("scenes") or []
+    if len(scenes) < 2:
+        return False
+    base = os.path.join(PUB, props.get("slug", ""), "clips")
+    hien = str(scenes[0].get("clip") or "")
+    tot, diem = None, None
+    for sc in scenes[1:]:
+        ten = str(sc.get("clip") or "")
+        if not ten or ten == hien or ten.endswith(".mp4"):
+            continue
+        f = os.path.join(base, os.path.basename(ten))
+        if not os.path.exists(f):
+            continue
+        d, sa, c = flat_bg_metrics(f)
+        # sáng nhất = ít điểm tối nhất, hoà với số màu để tránh ảnh sáng mà trơn
+        dm = (-d, c)
+        if diem is None or dm > diem:
+            diem, tot = dm, ten
+    if not tot:
+        return False
+    scenes[0]["clip"] = tot
+    scenes[0].pop("clips", None)
+    print(f"   🔁 mở đầu mượn ảnh sáng nhất: {os.path.basename(tot)}")
+    return True
+
+
 def sang_hoa_mo_dau(props: dict, dark_ok: bool = False) -> str:
     """CỨU KHUNG MỞ ĐẦU TRƯỚC KHI RENDER, thay vì để QC loại sau khi đã tốn công (24/8/2026 tối).
 
@@ -2966,6 +3051,11 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     can_man_moi_canh(props)
     if _ly_do:
         raise Exception(f"Mở đầu không cứu được: {_ly_do} — dừng TRƯỚC render (đỡ 2-4' CPU)")
+    # Chốt cuối bằng KHUNG THẬT — xem ghi chú ở make_toon_long. Nhóm doc dính "NỀN TRƠN" nhiều
+    # nhất trong các phiên gần đây, nên đây là chỗ cần nhất chứ không phải chỗ phụ.
+    _that = xac_minh_mo_dau(props, "CinematicShort", dark_ok=_dark_ok(channel))
+    if _that:
+        raise Exception(f"Mở đầu {_that} — dừng TRƯỚC render")
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
@@ -3089,6 +3179,11 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix="", li
     can_man_moi_canh(props)   # cứu mở đầu trước render (24/8)
     if _ly_do:
         raise Exception(f"Mở đầu không cứu được: {_ly_do} — dừng TRƯỚC render")
+    # Chốt cuối bằng khung THẬT — xem ghi chú ở đường LONG. Short cũng dính cùng lỗi
+    # (2/5 ca phiên 17:40 là short), nên áp cả hai chỗ chứ không riêng long.
+    _that = xac_minh_mo_dau(props, "CinematicShort", dark_ok=_dark_ok(channel))
+    if _that:
+        raise Exception(f"Mở đầu {_that} — dừng TRƯỚC render")
     json.dump(props, open(pf, "w"))
     sok, sissues = qc_structure(props)
     for it in sissues:
@@ -3227,6 +3322,12 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
     can_man_moi_canh(long_props)
     if _ly_do:
         raise Exception(f"Mở đầu LONG không cứu được: {_ly_do} — dừng TRƯỚC render")
+    # CHỐT CUỐI BẰNG KHUNG THẬT (26/8). Bộ cứu ở trên đo qua MÔ HÌNH lớp phủ và đã để lọt 5 ca
+    # trong một phiên — mô hình bảo đạt, khung render ra 80-92% tối rồi QC loại sau khi đã dựng
+    # xong cả video 10 phút. Render một khung mất vài giây; render cả video rồi vứt thì không.
+    _that = xac_minh_mo_dau(long_props, "Cinematic", dark_ok=_dark_ok(channel))
+    if _that:
+        raise Exception(f"Mở đầu LONG {_that} — dừng TRƯỚC render")
     pf = os.path.join(PUB, f"_doclong_{slug(channel)}.json"); json.dump(long_props, open(pf, "w"))
     st("rendering", f"Render LONG 16:9 ({len(all_scenes)} cảnh, {len(parts)} phần)")
     print(f"   🎞️ render Cinematic 16:9 ({len(all_scenes)} cảnh / {len(parts)} phần) …")
