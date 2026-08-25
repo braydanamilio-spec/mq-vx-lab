@@ -1905,6 +1905,29 @@ TOON_SYS = (
 )
 
 
+def _chuan_hoa_who(d: dict) -> None:
+    """Đổi `who` về đúng A/B khi model trả TÊN NHÂN VẬT (25/8).
+
+    Pilot long 12:39Z: skit 1 đạt, skit 2 bị loại liên tiếp với `dialog[i].who phải A/B` — model
+    thấy tên nhân vật nằm ngay trong niche ("BALD", "BANDIT") nên dùng luôn tên làm `who`. Về mặt
+    nội dung kịch bản KHÔNG SAI GÌ CẢ; chỉ là nhãn khác quy ước. Loại nguyên bài vì cái nhãn là
+    vứt đi một kịch bản tốt và một lượt gọi AI — trong khi quy về A/B chỉ là ánh xạ theo thứ tự
+    người nói xuất hiện. Hai người nói -> A và B; nhiều hơn hai thì để validator bắt như cũ.
+    """
+    dl = d.get("dialog") or []
+    ten = []
+    for l in dl:
+        w = str(l.get("who") or "").strip()
+        if w and w not in ten:
+            ten.append(w)
+    if len(ten) != 2 or set(ten) <= {"A", "B"}:
+        return
+    bang = {ten[0]: "A", ten[1]: "B"}
+    for l in dl:
+        l["who"] = bang.get(str(l.get("who") or "").strip(), l.get("who"))
+    print(f"   ↔️ quy ước vai: {ten[0]}->A · {ten[1]}->B (model dùng tên nhân vật)")
+
+
 def _validate_toon(d: dict) -> list:
     errs = []
     if not (d.get("title") or "").strip(): errs.append("thiếu title")
@@ -1956,6 +1979,7 @@ def generate_toon(niche: str, api_key: str = None, model_name: str = None, avoid
             d = _extract_json(resp.text)
         except Exception as e:
             feedback = f"invalid JSON ({e})"; continue
+        _chuan_hoa_who(d)      # tên nhân vật -> A/B trước khi chấm (xem hàm)
         errs = _validate_toon(d)
         sc = d.get("self_score") or {}
         score = int(sc.get("total", 0) or 0)

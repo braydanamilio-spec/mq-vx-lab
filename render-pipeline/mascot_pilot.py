@@ -92,10 +92,22 @@ def pilot(kenh: str) -> int:
             _tranh = list(FB.recent_topics(owner, kenh, 40) or [])
             stories = []
             for _i in range(n_skit):
-                _sk = CB.generate_toon(cfg["niche"], api_key=(keys or [{}])[0].get("key", ""),
-                                       avoid=_tranh)
+                # MỘT SKIT HỎNG KHÔNG ĐƯỢC GIẾT CẢ BẢN DÀI (25/8): pilot 12:39Z skit 1 đạt, skit 2
+                # bị loại rồi cả lượt long chết IM LẶNG — không một dòng nói vì sao. Nay: báo rõ,
+                # bỏ skit hỏng, đi tiếp; cuối cùng có bao nhiêu skit thì dựng bấy nhiêu.
+                try:
+                    _sk = CB.generate_toon(cfg["niche"], api_key=(keys or [{}])[0].get("key", ""),
+                                           avoid=_tranh)
+                except Exception as _e:
+                    print(f"   ⚠️ skit {_i + 1}/{n_skit} viết hỏng ({str(_e)[:70]}) — bỏ, đi tiếp")
+                    continue
                 stories.append(_sk)
                 _tranh.append(_sk.get("title", ""))     # skit sau không lặp ý skit trước
+            if not stories:
+                st("failed", "không viết được skit nào")
+                print(f"   ❌ {loai}: không viết được skit nào"); continue
+            if dai and len(stories) < n_skit:
+                print(f"   ℹ️ long dựng bằng {len(stories)}/{n_skit} skit (skit hỏng đã bỏ)")
             story = stories if dai else stories[0]
             out = os.path.join("out", f"{DS.slug(kenh)}_{loai}.mp4")
             os.makedirs("out", exist_ok=True)

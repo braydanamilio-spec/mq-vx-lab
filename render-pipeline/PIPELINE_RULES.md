@@ -2687,3 +2687,11 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
 - **Cấm chữ trong ảnh nền phải mô tả VẬT THỂ không có chữ, đừng chỉ cấm chung.** (25/8) Biển hiệu
   hiện chữ giả "AT D" dù prompt đã có "no text". FLUX coi lệnh cấm là gợi ý yếu khi cảnh vốn có chỗ
   để chữ. Nay thêm "all signs are completely blank and unmarked, empty storefront boards".
+
+- **Model trả TÊN NHÂN VẬT thay vì A/B: quy ước lại, đừng loại bài.** (25/8) Pilot long: skit 1 đạt,
+  skit 2 bị loại liên tiếp với `dialog[i].who phải A/B` — model thấy tên nhân vật nằm ngay trong
+  niche ("BALD", "BANDIT") nên dùng luôn tên làm nhãn vai. **Nội dung kịch bản không sai gì cả**,
+  chỉ khác nhãn; loại nguyên bài là vứt một kịch bản tốt + một lượt gọi AI. Nay `_chuan_hoa_who()`
+  ánh xạ theo thứ tự người nói xuất hiện (đúng 2 người mới đổi, nhiều hơn để validator bắt như cũ).
+- **Một skit hỏng không được giết cả bản dài.** (25/8) Cùng ca trên: skit 2 hỏng thì cả lượt long
+  chết IM LẶNG, không một dòng nói vì sao. Nay báo rõ, bỏ skit hỏng, dựng bằng số skit còn lại.
