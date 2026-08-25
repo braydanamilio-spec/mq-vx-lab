@@ -890,6 +890,23 @@ def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story
     accent/style/mode/host_prompt của kênh. Gộp về 1 hàm để 2 đường đi không bao giờ lệch nhau nữa.
     """
     avoid = avoid or []
+    # ── KÊNH THẾ HỆ 2 (26/8) ────────────────────────────────────────────────────────────────
+    # Nhận ra bằng cờ `the_he == 2` chứ không bằng `format`: dạng render của chúng trùng tên với
+    # dạng cũ (ranked/mapped/scaled…) nhưng NGUỒN NỘI DUNG khác hẳn — dựng thẳng từ dữ liệu mở,
+    # không gọi Gemini viết kịch bản, không dùng footage. Đi nhầm nhánh là ra sai hẳn loại video.
+    if str(ch.get("the_he") or "") == "2":
+        import the_he_2 as TH2
+        k2 = TH2.doc_kenh(ch.get("name") or "")
+        if not k2:
+            print(f"   ⚠️ {ch.get('name')}: có cờ thế hệ 2 nhưng không có trong kenh_the_he_2.json")
+            return None
+        jst("writing", f"Đọc dữ liệu mở ({k2['nguon']})")
+        kq = TH2.chay_chung(k2, ra=out)
+        if not kq:
+            return None
+        _duong, _info = kq
+        return _duong, {"title": k2["ten"], "_that": True}, True, _info
+
     if fmt == "doc":     # Wave 2 tài liệu: truyền style/accent riêng của kênh
         return DS.make_doc(ch.get("name"), cat, out, keys=keys, tier=tier,
                            style=ch.get("style", "awe, cinematic"),

@@ -1402,12 +1402,54 @@ DUONG_RA = {
 DUNG_STORY = {}      # nạp ở cuối file, sau khi mọi hàm đã định nghĩa
 
 
+def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None,
+              keys=None) -> tuple[str, dict] | None:
+    """Dạng phim kể: mỗi cảnh MỘT ảnh AI vẽ theo `style_anh` của kênh.
+
+    Khác 6 dạng kia ở chỗ CẦN KEY vẽ ảnh. `build_doc_props(..., ai_only=True)` đã có sẵn chế độ
+    100% ảnh AI với gu riêng — dùng lại, khỏi viết engine mới.
+    Không có key thì trả None chứ không render ra video toàn khung trắng."""
+    import datastory_ci as DS
+    st = dung_story_cinematic(kenh, ky)
+    if not st:
+        return None
+    keys = keys or []
+    api = (keys[0].get("key") if keys else os.environ.get("GEMINI_API_KEY", "")) or ""
+    if not api:
+        print(f"   ⚠️ {kenh.get('ten')}: dạng phim kể cần key vẽ ảnh — bỏ lượt "
+              f"(6 dạng còn lại không cần)")
+        return None
+    if keys:
+        DS.set_ai_pool(keys, kenh["ten"])
+    b = (kenh.get("brand") or {}).get("palette") or {}
+    props = DS.build_doc_props(st, kenh["ten"], api_key=api,
+                               accent=b.get("primary", "#22D3EE"),
+                               accent2=b.get("accent", "#F5B301"),
+                               handle=kenh["handle"],
+                               ai_style=kenh.get("style_anh") or None, ai_only=True,
+                               prefix="th2_")
+    sl = DS.slug(kenh["handle"].lstrip("@"))
+    pf = os.path.join(DS.PUB, f"_th2_phim_{sl}.json")
+    json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
+    ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2_phim_{sl}.mp4"))
+    os.makedirs(os.path.dirname(ra), exist_ok=True)
+    DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "CinematicShort", ra,
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       "--concurrency=2", "--log=error"],
+                      cwd=DS.ENG, timeout=2400, label=f"CinematicShort({kenh['ten']})")
+    ok, info = DS.qc(ra)
+    print(f"{'✅' if ok else '❌'} {kenh['ten']} [phim kể] · {info}")
+    return (ra, info) if ok else None
+
+
 def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] | None:
     """Dựng + render cho MỌI dạng. Trả (đường dẫn, QC) hoặc None nếu bỏ lượt."""
     import datastory_ci as DS
     dang = kenh.get("dinh_dang")
     if dang == "race":
         return chay_race(kenh, ra, ky)
+    if dang == "cinematic":
+        return chay_phim(kenh, ra, ky)
     comp, ten_props = DUONG_RA.get(dang, (None, None))
     if not comp or not ten_props:
         print(f"   ⚠️ {kenh.get('ten')}: dạng '{dang}' chưa có đường render chung")

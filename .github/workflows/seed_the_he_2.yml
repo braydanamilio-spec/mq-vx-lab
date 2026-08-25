@@ -1,0 +1,39 @@
+name: MM0 — Đăng ký 50 kênh thế hệ 2
+
+# CHẠY TAY. Mặc định chỉ liệt kê (không ghi) và tạo ở trạng thái TẮT.
+# Vì sao mặc định TẮT: bật 50 kênh mới trong khi 55 kênh cũ còn chạy = 105 kênh chen nhau trên
+# 18 lane, không kênh nào ra hồn. Trình tự đúng: tắt kênh cũ trước, rồi bật kênh mới.
+on:
+  workflow_dispatch:
+    inputs:
+      ghi_that:
+        description: "1 = ghi thật vào render_channels; 0 = chỉ liệt kê"
+        default: "0"
+      bat_ngay:
+        description: "1 = bật chạy luôn; 0 = tạo nhưng để TẮT (khuyên dùng)"
+        default: "0"
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Deps
+        run: pip install --quiet -c render-pipeline/constraints.txt google-cloud-firestore google-auth
+      - name: Khoá dịch vụ
+        run: echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+      - name: Tự kiểm trước (chặn bản hỏng)
+        run: python render-pipeline/selftest.py
+      - name: Đăng ký
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.ghi_that }}" = "1" ]; then ARGS="$ARGS --that"; fi
+          if [ "${{ github.event.inputs.bat_ngay }}" = "1" ]; then ARGS="$ARGS --bat"; fi
+          python render-pipeline/seed_the_he_2.py $ARGS
