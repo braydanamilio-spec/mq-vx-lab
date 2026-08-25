@@ -2501,7 +2501,9 @@ def update_job(job_id: str, **patch):
                        str(patch.get("type") or _JOB_TY.get(job_id, "")), str(st or ""),
                        str(patch.get("step") or ""),
                        patch.get("title"), patch.get("drive_id"),
-                       bool(patch.get("queued")), patch["updated_at"])
+                       bool(patch.get("queued")), patch["updated_at"],
+                       drive_account=patch.get("drive_account"), thumb_id=patch.get("thumb_id"),
+                       size_mb=patch.get("size_mb"), qc=patch.get("score"))
     except _BoQuaD1:
         pass                     # cố ý bỏ lượt ghi D1 này (hãm nhịp), không phải lỗi
     except Exception:

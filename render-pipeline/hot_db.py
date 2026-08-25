@@ -117,7 +117,10 @@ _XA_MOI = [0.0]             # mốc lần xả sớm gần nhất — giữ nh�
 
 
 def ghi_job(owner, jid, channel, vtype, status, step="", title=None, drive_id=None,
-            queued=False, at="") -> None:
+            queued=False, at="", drive_account=None, thumb_id=None, size_mb=None, qc=None) -> None:
+    """25/8 — thêm 4 trường phụ (kho chứa, thumbnail, dung lượng, điểm QC): video làm trong lúc
+    Firestore nghẽn trước đây mất sạch các trường này (chỉ Firestore giữ) ⇒ thư viện hiện
+    "kho chưa rõ"/"thiếu thumbnail" oan. COALESCE phía Worker nên None không đè giá trị cũ."""
     if not bat_ghi():
         return
     import time as _t
@@ -125,7 +128,8 @@ def ghi_job(owner, jid, channel, vtype, status, step="", title=None, drive_id=No
         _BUF_AT[0] = _t.time()
     _DEM_BUF.append({"_owner": owner, "id": jid, "channel": channel, "vtype": vtype,
                      "status": status, "step": step, "title": title, "drive_id": drive_id,
-                     "queued": bool(queued), "at": at})
+                     "queued": bool(queued), "at": at, "drive_account": drive_account,
+                     "thumb_id": thumb_id, "size_mb": size_mb, "qc": qc})
     # 25/8 — VÌ SAO Ô "⚙️ ĐANG CHẠY" LUÔN BẰNG 0. Soi D1 lúc 3 luồng đang render thật: bảng chỉ có
     # done/failed/ratelimited, KHÔNG có một dòng `running` nào. Bộ đệm chỉ xả sớm ở trạng thái CUỐI;
     # dòng trung gian nằm chờ trong đệm, tới lúc xả thì thường đã đi cùng lô với dòng `done` của

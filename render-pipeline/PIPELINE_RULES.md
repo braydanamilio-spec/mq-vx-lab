@@ -2571,3 +2571,9 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   **vòng lặp chết ăn trọn các phiên**. Nay: 8 luồng song song, ngân sách 150s, hết giờ lấy phần đã
   xong và VẪN đóng dấu; không dùng `with ThreadPoolExecutor` (shutdown mặc định đợi đủ). Chốt:
   `t_dong_bo_kho_co_ngan_sach_gio`.
+
+- **Bản ghi D1 phải mang đủ CHUẨN UPLOAD: kho chứa + thumb_id + size + QC.** (25/8) Video làm trong
+  lúc Firestore nghẽn chỉ có bản ghi D1, mà D1 thiếu 4 trường này ⇒ thư viện hiện "🔍 kho chưa rõ"
+  và "🖼 thiếu thumbnail" oan (file .jpg vẫn nằm trên Drive, chỉ mất bản ghi). Nay: 4 cột mới trong
+  `render_job` (ALTER TABLE đã chạy), `ghi_job`/`ghi_job_loat` COALESCE để None không đè giá trị cũ,
+  `qc` lấy từ `patch.score`, hot-jobs trả kèm và dashboard ghép vào (Firestore vẫn thắng khi có).
