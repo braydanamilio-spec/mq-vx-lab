@@ -172,7 +172,8 @@ def _bd_steam(D, ky):
         return ("Games millions bought and nobody plays",
                 [{"name": _gon(x["ten"], 26), "stat": _so(x["dang_choi"]),
                   "vo": f"{_gon(x['ten'], 32)}. Only {x['dang_choi']:,} still online."} for x in r],
-                "Owned by millions. Empty tonight.")
+                "Owned by millions. Empty tonight.",
+                "Millions own these games. Top of the board is the emptiest.")
     r = r[:6]
     return ("Games people actually play right now",
             [{"name": _gon(x["ten"], 26), "stat": _so(x["dang_choi"]),
@@ -320,11 +321,15 @@ def dung_story_ranked(kenh: dict, ky: dict | None = None) -> dict | None:
     if not kq:
         print(f"   ⚠️ {kenh.get('ten')}: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)")
         return None
-    tieu_de, muc, ket = kq
+    # Bộ chuyển đổi được phép trả thêm LỜI MỞ riêng. Cần thiết cho các góc NGƯỢC: bảng hạng
+    # mặc định đọc S là "đỉnh", nhưng kênh nghĩa địa game xếp S = vắng nhất — không nói rõ thì
+    # người xem hiểu ngược hẳn ý video.
+    tieu_de, muc, ket = kq[0], kq[1], kq[2]
+    mo = kq[3] if len(kq) > 3 else f"{tieu_de}. Here they are."
     items = [{**m, "tier": TIER[min(i, 5)]} for i, m in enumerate(muc[:6])]
     return {
         "title": tieu_de,
-        "intro_vo": f"{tieu_de}. Here they are.",
+        "intro_vo": mo,
         "outro_vo": ket,
         "items": items,
         "tiers": sorted({it["tier"] for it in items}, key="SABCDF".index),
@@ -334,11 +339,35 @@ def dung_story_ranked(kenh: dict, ky: dict | None = None) -> dict | None:
     }
 
 
+def chay(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] | None:
+    """Dựng story -> thu giọng -> render. Trả (đường dẫn, thông tin QC). None = bỏ lượt."""
+    import datastory_ci as DS
+    st = dung_story_ranked(kenh, ky)
+    if not st:
+        return None
+    sl = DS.slug(kenh["handle"].lstrip("@"))
+    sdir = os.path.join(DS.PUB, "narration", "_th2_" + sl)
+    os.makedirs(sdir, exist_ok=True)
+    props = DS.build_ranked_props(st, sdir, handle=kenh["handle"])
+    pf = os.path.join(DS.PUB, f"_th2_{sl}.json")
+    json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
+    ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2_{sl}.mp4"))
+    os.makedirs(os.path.dirname(ra), exist_ok=True)
+    DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RankedShort", ra,
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       "--concurrency=2", "--log=error"],
+                      cwd=DS.ENG, timeout=2400, label=f"RankedShort({kenh['ten']})")
+    ok, info = DS.qc(ra)
+    print(f"{'✅' if ok else '❌'} {kenh['ten']} · {info}")
+    return (ra, info) if ok else None
+
+
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--kenh", required=True)
     ap.add_argument("--thu", action="store_true", help="chỉ in story, không render")
+    ap.add_argument("--render", action="store_true", help="dựng thành video thật")
     a = ap.parse_args()
     k = doc_kenh(a.kenh)
     if not k:
@@ -352,6 +381,8 @@ def main() -> int:
     print(f"\n📄 {st['title']}   [{k['niche']} · chất liệu {k['chat_lieu']}]")
     for it in st["items"]:
         print(f"   {it['tier']}  {str(it['stat']):>10}  {it['name']}")
+    if a.render:
+        return 0 if chay(k, ky=MOI.get(k["ham"], {})) else 4
     return 0
 
 
