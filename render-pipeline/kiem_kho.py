@@ -162,7 +162,10 @@ def main() -> int:
                 theo_kenh[ten]["l" if x.get("type") == "long" else "s"] += 1
             theo_ngay[song[dv]["created"][:10].replace("-", "")] += 1
     except Exception as e:
-        print(f"❌ đọc render_jobs lỗi: {str(e)[:90]} — chỉ đếm được theo tên file.")
+        # 25/8 — đọc render_jobs chỉ để BIẾT kênh/loại cho đẹp báo cáo. Tên file nay đã theo quy
+        # ước `KENH__ngày__seri__vai__tiêu-đề` nên suy ra được đủ. Hỏng ở đây KHÔNG được coi là
+        # hỏng cả việc: con số quan trọng nhất (bao nhiêu video THẬT) đã đếm xong từ Drive.
+        print(f"⚠️ đọc render_jobs lỗi: {str(e)[:90]} — suy kênh/loại từ TÊN FILE (vẫn đủ dùng).")
 
     mo_coi = [v for k, v in song.items() if k not in da_khop]
     for v in mo_coi:

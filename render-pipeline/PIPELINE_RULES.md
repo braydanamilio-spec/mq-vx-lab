@@ -2276,3 +2276,19 @@ Chốt bằng `t_bien_moi_truong_rong_khong_pha_mac_dinh` (quét AST, cấm hẳ
 **LUẬT: trong CI, "biến không tồn tại" và "biến rỗng" là hai chuyện khác nhau, và cái thứ hai mới hay
 xảy ra — vì workflow luôn ĐẶT biến, chỉ là secret có thể trống. Luôn dùng `or`, đừng dùng đối số mặc
 định của `.get()`.**
+
+### 7.dl — LƯỢT PING "CHO CHẮC" TỰ LOẠI CLIENT TỐT (25/8/2026)
+Ba lượt `kiem_kho` liên tiếp chết vì `400 Invalid database id (default)`. Đoán hai lần đều trượt (đổi
+Python 3.12→3.11, ghim thư viện giống render_cron). Nên in thẳng chẩn đoán thay vì đoán tiếp — và số
+đo trả lời ngay: project id ĐÚNG (A=18 · B=11 · B2=12 ký tự), file creds có thật (2.3KB), thư viện
+đúng bản (firestore 2.29 · api-core 2.35 · grpcio 1.83). **Không phải cạn hạn mức, không phải đợi là hết.**
+Gốc: `firestore_state._sa_client()` sau khi dựng client còn chạy một lượt **ping** `_ping` "để lộ lỗi
+sớm". Lượt ping đó trả 400 rồi hàm kết luận **client hỏng → trả None**. Trong khi
+`firestore_bridge._db_jobs()` dựng client **KHÔNG ping** và đọc/ghi B bình thường suốt đêm ở
+render_cron. Tức chính lượt kiểm "cho chắc" mới là thứ làm hỏng: nó gặp một lỗi mà đường dùng thật
+không gặp, rồi phán quyết thay cho đường dùng thật.
+Vá: ping trả 400 ⇒ **ghi nhận rồi VẪN trả client** cho tầng trên tự thử. Và `kiem_kho` không còn coi
+"đọc render_jobs hỏng" là hỏng cả việc — con số quan trọng nhất (bao nhiêu video THẬT) đã đếm xong từ
+Drive, kênh/loại suy được từ tên chuẩn.
+**LUẬT: một phép kiểm tra sức khoẻ chỉ được phép BÁO CÁO, không được phép PHÁN QUYẾT. Nếu nó nghiêm
+khắc hơn đường dùng thật, nó sẽ giết những thứ đang chạy tốt.**
