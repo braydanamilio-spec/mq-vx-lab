@@ -42,10 +42,14 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Thư viện Python
         run: |
+          # DANH SÁCH PHẢI KHỚP render_cron: thiếu `google-generativeai` thì selftest chặn ngay ở
+          # dòng đầu ("Thiếu thư viện") — đúng cái đã làm hỏng lượt pilot 10:37Z.
           pip install --quiet -c render-pipeline/constraints.txt \
-            google-cloud-firestore google-auth google-api-python-client google-auth-oauthlib \
-            requests edge-tts
+            google-generativeai edge-tts google-cloud-firestore \
+            google-api-python-client google-auth google-auth-oauthlib \
+            pyyaml cryptography requests
           pip install --quiet pillow          # BẮT BUỘC: tách nền chroma + cắt khung rig
+          python -c "import importlib.metadata as m; print('📦 ' + ' · '.join(f'{p}={m.version(p)}' for p in ('google-generativeai','google-cloud-firestore','pillow')))"
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
       - name: Cache node_modules
