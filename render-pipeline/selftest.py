@@ -790,11 +790,17 @@ def t_mo_dau_phai_xac_minh_bang_khung_that():
     92,0 % tối và bị QC loại SAU KHI đã dựng xong — 4 trong 5 ca là bản LONG 10 phút.
     Mô hình không đuổi kịp bản render thật (thiếu Ken Burns, objectPosition, bóng chữ hook…), nên
     nới biên chỉ là đoán tiếp. Render một khung mất ~2 giây và cho ĐÚNG con số QC sẽ dùng."""
-    src = _doc("datastory_ci.py")
     xau = []
+    src = _doc("datastory_ci.py")
     for ham in ("do_khung_mo_dau_that", "xac_minh_mo_dau", "_muon_anh_sang_nhat"):
         if f"def {ham}(" not in src:
             xau.append(f"thiếu hàm {ham}()")
+    # Soi CẢ the_he_2.py: đường phim kể thế hệ 2 cũng render CinematicShort, và kênh vẽ ảnh AI
+    # còn dễ ra khung tối đều màu hơn. Chốt chỉ soi một file là để hở đúng chỗ mới nhất.
+    import os as _os
+    _goc = _os.path.dirname(_os.path.abspath(__file__))
+    if _os.path.exists(_os.path.join(_goc, "the_he_2.py")):
+        src += "\n" + _doc("the_he_2.py")
     # mỗi lệnh render Cinematic/CinematicShort phải có xac_minh_mo_dau ở phía trên trong cùng hàm
     dong = src.splitlines()
     for i, l in enumerate(dong):

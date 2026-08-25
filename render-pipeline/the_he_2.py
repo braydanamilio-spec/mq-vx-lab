@@ -1428,6 +1428,13 @@ def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None,
                                handle=kenh["handle"],
                                ai_style=kenh.get("style_anh") or None, ai_only=True,
                                prefix="th2_")
+    # Cùng lớp chặn "nền trơn" như ba đường Cinematic bên datastory_ci: đo trên KHUNG THẬT,
+    # không đoán qua mô hình lớp phủ. Kênh chất liệu B/C vẽ ảnh bằng AI nên càng dễ ra khung tối
+    # đều màu — đúng thứ QC loại sau khi đã tốn cả lượt vẽ lẫn lượt render.
+    _that = DS.xac_minh_mo_dau(props, "CinematicShort", dark_ok=False)
+    if _that:
+        print(f"   ⚠️ {kenh['ten']}: mở đầu {_that} — bỏ lượt TRƯỚC render")
+        return None
     sl = DS.slug(kenh["handle"].lstrip("@"))
     pf = os.path.join(DS.PUB, f"_th2_phim_{sl}.json")
     json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
