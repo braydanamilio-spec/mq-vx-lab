@@ -1,0 +1,54 @@
+name: MM0 — Dọn 55 kênh thế hệ 1
+
+# CHẠY TAY, MẶC ĐỊNH CHỈ ĐẾM. Ba lớp tách riêng để làm từng bước và dừng được giữa chừng.
+# Kho Drive: chuyển vào THÙNG RÁC (giữ 30 ngày), KHÔNG xoá vĩnh viễn. Đổ thùng rác là việc
+# người chủ tự bấm trong Drive — script này cố ý không có đường làm chuyện đó.
+on:
+  workflow_dispatch:
+    inputs:
+      lam_that:
+        description: "1 = làm thật; 0 = chỉ đếm"
+        default: "0"
+      tat_kenh:
+        description: "1 = tắt 55 kênh cũ (đảo ngược được — làm bước này trước)"
+        default: "0"
+      don_kho:
+        description: "1 = đưa video/thumbnail kênh cũ vào thùng rác Drive"
+        default: "0"
+      don_ban_ghi:
+        description: "1 = xoá bản ghi kênh cũ trong render_channels (làm SAU CÙNG)"
+        default: "0"
+
+jobs:
+  don:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Deps
+        run: pip install --quiet -c render-pipeline/constraints.txt google-cloud-firestore google-auth google-api-python-client google-auth-oauthlib
+      - name: Khoá dịch vụ
+        run: |
+          echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+          echo '${{ secrets.GCP_SA_KEY }}'   > /tmp/sa.json
+      - name: Mã AutoPublisher
+        run: |
+          mkdir -p _autopublisher
+          cp -r MM0-AutoPublisher/src _autopublisher/ 2>/dev/null || true
+      - name: Dọn
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS:   /tmp/sa.json
+          FIREBASE_PROJECT_ID:              ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B:            ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          OWNER_UID:                        ${{ secrets.OWNER_UID }}
+          AUTOPUBLISHER_SRC:                ${{ github.workspace }}/_autopublisher/src
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.lam_that }}"    = "1" ]; then ARGS="$ARGS --that"; fi
+          if [ "${{ github.event.inputs.tat_kenh }}"    = "1" ]; then ARGS="$ARGS --tat"; fi
+          if [ "${{ github.event.inputs.don_kho }}"     = "1" ]; then ARGS="$ARGS --kho"; fi
+          if [ "${{ github.event.inputs.don_ban_ghi }}" = "1" ]; then ARGS="$ARGS --ban-ghi"; fi
+          python render-pipeline/don_the_he_1.py $ARGS
