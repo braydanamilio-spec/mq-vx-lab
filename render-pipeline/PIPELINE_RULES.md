@@ -2600,3 +2600,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   `process_requests(chi_kenh=...)` xử yêu cầu kênh đó trước khi làm video mới (timeout lane 165').
   Bài học: khi một triệu chứng sống sót qua 2 bản vá, nghi phạm thật thường là kẻ ĐỨNG SAU các mốc
   đo — cắm mốc quanh TỪNG bước rồi để log tự khai. Chốt: `t_plan_khong_render`.
+
+- **Tiến trình phải TỰ KHAI ngăn xếp khi kẹt — cấm đoán.** (25/8) 5 lane toon phiên 08:55 đứng im
+  25+ phút không một bản ghi, log GitHub không đọc được khi đang chạy ⇒ chỉ còn nước đoán (và vụ
+  plan đã chứng minh đoán trượt 3 lần liền). Nay `faulthandler.dump_traceback_later(600, repeat)`:
+  mỗi 10' in ngăn xếp mọi thread vào log; `SIGTERM` (bị chém timeout) cũng in trước khi chết.
+  0 chi phí khi không kẹt. Ghi chú cùng phiên: 7 render_request mắc kẹt ở "processing" (3 plan chết
+  đánh dấu rồi bỏ) — cần lối tự hồi processing→pending khi quá 2h không nhúc nhích.

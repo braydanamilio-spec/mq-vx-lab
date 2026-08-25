@@ -9,6 +9,20 @@ Env: OWNER_UID (uid chủ), GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID,
 """
 from __future__ import annotations
 import os, sys, traceback, subprocess, re, random, json, time
+
+# MÁY TỰ KHAI NGĂN XẾP (25/8/2026). Phiên 08:55: 5 lane toon đứng im 25+ phút — không một bản ghi
+# D1/Firestore nào, log GitHub thì không đọc được khi job đang chạy, thành ra chỉ còn cách ĐOÁN
+# xem kẹt ở đâu (và đoán trượt 3 lần liên tiếp ở vụ plan). Từ nay khỏi đoán: cứ mỗi 10 phút,
+# faulthandler in NGĂN XẾP THẬT của mọi thread vào stderr (vào thẳng log GitHub) — tiến trình
+# vẫn chạy tiếp bình thường (exit=False), tốn 0 tài nguyên khi không kẹt. SIGTERM (bị chém
+# timeout) cũng in ngăn xếp trước khi chết — biết chết ở dòng nào.
+import faulthandler as _fh
+import signal as _sg
+_fh.dump_traceback_later(600, repeat=True, exit=False)
+try:
+    _fh.register(_sg.SIGTERM, all_threads=True, chain=True)
+except Exception:
+    pass
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import firestore_bridge as FB
 import datastory_ci as DS
