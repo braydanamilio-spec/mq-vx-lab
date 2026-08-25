@@ -2643,3 +2643,9 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   phải lane đợi nhau (work-stealing vẫn chạy: xong kênh mình là lấy kênh kế từ hàng chờ nguyên tử).
   Nay ngân sách lane 110'/150' → **60'/75'**, timeout workflow 165' → **90'**: cứ ~80 phút một mẻ
   ĐỦ 18 LANE, không phiên nào bị huỷ. Chốt: `t_phien_khong_giu_khoa_qua_lau`.
+
+- **`set -e` + gán biến từ `$( [ test ] && echo … )` = chết câm.** (25/8) Lượt pilot 11:35Z thoát
+  `exit 1` NGAY SAU dòng "SELFTEST PASS", không một dòng lỗi: mã thoát của phép GÁN chính là mã
+  thoát của lệnh trong ngoặc, `LAM_LAI=false` → `[ ]` trả 1 → `set -e` giết cả script. Tái hiện
+  được bằng 4 dòng bash. Luật: trong bước có `set -e`, cờ tuỳ chọn phải viết bằng `if/fi`, không
+  viết bằng `$(test && echo)`.

@@ -110,7 +110,11 @@ jobs:
           set -e
           cd render-pipeline
           python selftest.py
-          RIG_ARGS=$([ "$LAM_LAI" = "true" ] && echo --lam-lai)
+          # BẪY `set -e` (25/8, giết lượt 11:35Z): gán biến từ $( [ test ] && echo ... ) thì mã thoát
+          # của phép GÁN chính là mã thoát của lệnh trong ngoặc. LAM_LAI=false -> test trả 1 ->
+          # `set -e` giết cả script NGAY SAU selftest, không in một dòng lỗi nào. Dùng if/fi.
+          RIG_ARGS=""
+          if [ "$LAM_LAI" = "true" ]; then RIG_ARGS="--lam-lai"; fi
           case "$BUOC" in
             seed)   python mascot_pilot.py --seed ;;
             rig)    python mascot_pilot.py --rig "$KENH" $RIG_ARGS ;;
