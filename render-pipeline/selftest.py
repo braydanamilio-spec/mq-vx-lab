@@ -1649,8 +1649,14 @@ def t_phan_ap_luc_khong_im_lang():
     assert "_H.ghi_job(_chu()" in fb, "bản ghi D1 vẫn dùng _OWNER_HINT trần -> owner có thể rỗng"
     r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              "run_render.py"), encoding="utf-8").read()
-    i = r.index("_ton = _H.ton_kho(OWNER)")
-    assert "if not _ton:" in r[i: i + 900], "tồn kho rỗng vẫn bị bỏ qua im lặng"
+    # 25/8 — thước đo đổi từ "tồn chưa đăng / ngày đệm" sang "độ đầy kho so với đích
+    # 100L/300S mỗi kênh" (anh chốt). Chốt giữ nguyên tinh thần: không có số thì phải NÓI RA.
+    i = r.index("_dem = _H.nap_dem(OWNER)")
+    assert "if _dem is None:" in r[i: i + 900], "số đếm kho rỗng vẫn bị bỏ qua im lặng"
+    assert "PHẢN ÁP LỰC KHÔNG CHẠY" in r[i: i + 900], "không nói ra khi phản áp lực không chạy"
+    # làm đều + luân phiên: sắp theo độ đầy, hoà thì xoay theo ngày
+    assert "round(_do_day(c), 2), _xoay(c)" in r, "mất luân phiên xoay ngày khi hoà độ đầy"
+    assert "TARGET_LONG" in r and "TARGET_SHORT" in r, "mất đích kho 100L/300S"
 
 
 def t_publish_khong_doi_vao_cho_da_chet():

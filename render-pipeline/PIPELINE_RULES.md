@@ -2550,3 +2550,11 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   định 30'), chỗ cần tươi truyền `tuoiGiay=0` (nút Kiểm ngay). Máy đo `snapW` cũng phải bỏ qua
   snapshot `fromCache` — không thì F5 đo ra 875 "lượt đọc" tự dọa mình. **Đo thật sau vá: F5 = 2
   lượt đọc server** (trước 559-875), dữ liệu nguyên vẹn 220 key/55 kênh/120 job.
+
+- **Đích sản xuất = ĐỘ ĐẦY KHO (100 long + 300 short/kênh), không phải "đủ 7 ngày đệm".** (25/8,
+  anh chốt) Phản áp lực đổi thước đo: sắp kênh theo độ đầy kho (vơi nhất trước = làm đều), hoà thì
+  xoay theo băm tên+ngày (không thiên vị bảng chữ cái), chỉ kênh đã ĐẠT CẢ long lẫn short mới
+  nhường máy. Khẩu phần round_long/round_short mỗi phiên giữ nguyên nên không kênh nào "ăn một
+  phát lên đích". Đích riêng từng kênh đọc từ cấu hình `target_long`/`target_short` nếu có.
+  5 kênh toon (HANKTOWN, EXPLAINUSA, TRUETALES, DUMBHISTORY, BALDBANDIT) đã mở pause 25/8 — kho
+  đang 0 video nên sẽ được ưu tiên tự nhiên theo luật vơi-nhất-trước.

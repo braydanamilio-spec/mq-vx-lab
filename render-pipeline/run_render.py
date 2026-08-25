@@ -1792,42 +1792,64 @@ def plan_mode():
     #   "kênh nào sắp hết video lên lịch thì tự động ưu tiên, và nên chia đều".
     # Một kênh chạy nhịp 4 video/ngày mà tồn 28 cái = còn 7 NGÀY bài. Kênh nhịp 1 video/ngày mà tồn
     # 28 cái = còn 28 ngày — cùng con số 28 nhưng mức độ đói khác hẳn. Nên phải quy về NGÀY.
-    NGAY_DEM = float((os.environ.get('NGAY_DEM') or '7'))      # đệm mục tiêu: 7 ngày bài (anh muốn dư ra một khúc)
-    NHIP_NGAY = float((os.environ.get('NHIP_NGAY') or '4'))    # 1 long + 3 short = 4 video/kênh/ngày
+    # 25/8 — ANH CHỐT LẠI ĐÍCH: "đủ 7 ngày đệm ĐÂU PHẢI LÀ DỪNG — target 100 long, 300 short
+    # mỗi channel, cứ làm tối ưu". Vậy phản áp lực đổi thước đo: không đo "còn mấy ngày bài chưa
+    # đăng" nữa mà đo ĐỘ ĐẦY KHO so với ĐÍCH KHO của từng kênh. Ưu tiên vẫn là kênh VƠI NHẤT
+    # trước (chính là "làm đều videos các channel" anh dặn) — chỉ kênh đã đầy CẢ long lẫn short
+    # mới nhường máy. Đích đọc từ cấu hình kênh (target_long/target_short) nếu có, mặc định 100/300.
+    TARGET_LONG = int(os.environ.get('TARGET_LONG') or '100')
+    TARGET_SHORT = int(os.environ.get('TARGET_SHORT') or '300')
     try:
         import hot_db as _H
-        _ton = _H.ton_kho(OWNER)
-        if not _ton:
-            # 24/8 tối — KHỐI NÀY TỪNG BỊ BỎ QUA HOÀN TOÀN MÀ KHÔNG MỘT DÒNG LOG. Log plan phiên
-            # 16:06Z và 17:56Z không có `📦 Đệm bài` lẫn dòng lỗi nào: `ton_kho()` trả {} êm ru nên
-            # `if _ton:` rơi thẳng xuống dưới. Tức tính năng anh yêu cầu ("kênh nào sắp hết bài thì
-            # tự ưu tiên") CHƯA TỪNG CHẠY, mà nhìn log thì tưởng bình thường.
-            # Một tính năng không chạy phải NÓI RA. Im lặng ở đây đắt hơn nhiều so với một dòng log.
-            print(f"   📦 Đệm bài: KHÔNG có số tồn kho từ D1 (chế độ {_H.che_do()}) -> "
-                  f"PHẢN ÁP LỰC KHÔNG CHẠY phiên này, thứ tự kênh giữ như cũ. "
-                  f"Nếu lặp lại: soi bảng render_job trên D1 (owner có đúng không, xem _chu()).")
-        if _ton:
-            def _ngay_con(c):
-                return _ton.get(str(c).upper(), 0) / NHIP_NGAY
-            # 1) ƯU TIÊN kênh ĐÓI NHẤT: còn ít ngày bài nhất được làm trước
-            channels = sorted(channels, key=_ngay_con)
-            # 2) NGƯNG kênh đã đủ đệm — nhường máy, không làm thứ phải nằm kho hàng tháng
-            _du = [c for c in channels if _ngay_con(c) >= NGAY_DEM]
-            _doi = [c for c in channels if _ngay_con(c) < NGAY_DEM]
+        _dem = _H.nap_dem(OWNER)     # {"CHANNEL|vtype": n} — 1 lời gọi cho mọi kênh
+        if _dem is None:
+            print(f"   📦 Độ đầy kho: KHÔNG có số đếm từ D1 (chế độ {_H.che_do()}) -> "
+                  f"PHẢN ÁP LỰC KHÔNG CHẠY phiên này, thứ tự kênh giữ như cũ.")
+        else:
+            try:
+                _cfg_kenh = {str(c.get('name') or '').upper(): c for c in all_ch}
+            except Exception:
+                _cfg_kenh = {}
+            def _muc(c, loai):
+                cf = _cfg_kenh.get(str(c).upper()) or {}
+                if loai == 'long':
+                    return int(cf.get('target_long') or TARGET_LONG)
+                return int(cf.get('target_short') or TARGET_SHORT)
+            def _co(c, loai):
+                return _dem.get(f"{str(c).upper()}|{loai}", 0)
+            def _do_day(c):
+                """0.0 = kho trống, 1.0 = đã đạt đích cả hai loại."""
+                return min(_co(c, 'long') / max(1, _muc(c, 'long')),
+                           _co(c, 'short') / max(1, _muc(c, 'short')))
+            # 1) LÀM ĐỀU + LUÂN PHIÊN (anh dặn 25/8: "không channel nào nhiều quá, không được
+            # chạy 1 phát lên target — luân phiên 55 channel để đều nhau"). Hai tầng bảo đảm:
+            #   • sắp theo độ đầy: kênh vơi nhất lên đầu, nên không kênh nào bị bỏ lại;
+            #   • mỗi kênh mỗi phiên chỉ làm đúng khẩu phần round_long/round_short (đã có sẵn),
+            #     nên cũng không kênh nào ăn một phát lên đích.
+            # Hoà độ đầy thì xoay theo NGÀY (băm tên+ngày) — không thiên vị bảng chữ cái, hôm nay
+            # nhóm này trước thì mai nhóm khác trước.
+            import hashlib as _hh
+            _ngay_xoay = __import__('datetime').date.today().isoformat()
+            def _xoay(c):
+                return _hh.md5(f"{c}|{_ngay_xoay}".encode()).hexdigest()
+            channels = sorted(channels, key=lambda c: (round(_do_day(c), 2), _xoay(c)))
+            _day = [c for c in channels if _co(c, 'long') >= _muc(c, 'long')
+                    and _co(c, 'short') >= _muc(c, 'short')]
+            _voi = [c for c in channels if c not in _day]
             _suc = _H.suc_dang_ngay()
-            print(f"   📦 Đệm bài: mục tiêu {NGAY_DEM:.0f} ngày/kênh (nhịp {NHIP_NGAY:.0f} video/ngày) · "
+            print(f"   📦 Độ đầy kho: đích {TARGET_LONG} long + {TARGET_SHORT} short/kênh · "
+                  f"{len(_day)} kênh đã đầy · {len(_voi)} kênh còn vơi · "
                   + (f"đăng được hôm nay: {_suc}" if _suc >= 0
-                     else "sức đăng hôm nay: CHƯA BIẾT (bảng dự án YouTube trên D1 còn trống — "
-                          "khai báo dự án thì con số này mới có nghĩa)"))
-            if _doi:
-                print("      đói nhất: " + ", ".join(
-                    f"{c}={_ngay_con(c):.1f}ngày" for c in _doi[:6]))
-            if _du:
-                print(f"   🛑 PHẢN ÁP LỰC: {len(_du)} kênh đã đủ ≥{NGAY_DEM:.0f} ngày bài -> ngưng làm thêm, "
-                      f"nhường máy cho {len(_doi)} kênh đói.")
-                channels = _doi or channels[:1]
+                     else "sức đăng hôm nay: CHƯA BIẾT (bảng dự án YouTube trên D1 còn trống)"))
+            if _voi:
+                print("      vơi nhất: " + ", ".join(
+                    f"{c}={_co(c,'long')}L/{_co(c,'short')}S" for c in _voi[:6]))
+            if _day:
+                print(f"   🛑 PHẢN ÁP LỰC: {len(_day)} kênh đã ĐẠT ĐÍCH KHO (không phải mốc 7 ngày) "
+                      f"-> nhường máy cho {len(_voi)} kênh còn vơi.")
+                channels = _voi or channels[:1]
     except Exception as _e:
-        print(f"   ⚠️ không đọc được tồn kho ({str(_e)[:50]}) — chạy như cũ")
+        print(f"   ⚠️ không đọc được độ đầy kho ({str(_e)[:50]}) — chạy như cũ")
 
     # PILOT (23/8 — user: "chưa kiểm tra đẩy lên xong render rồi kịch bản lộn xộn thì sao"): chạy
     # ĐÚNG 1 KÊNH, 1 short để soi trọn chuỗi viết → soi kịch bản → render → thumbnail → đẩy kho,
