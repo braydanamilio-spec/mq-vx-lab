@@ -303,6 +303,19 @@ def top_titles(owner: str, channel: str, n: int = 8) -> list[str]:
     ck = ("tt", owner, channel, n)
     if ck in _HOT_CACHE:
         return _HOT_CACHE[ck]           # gu khán giả không đổi trong 1 luồng -> đọc C đúng 1 lần (đo 22/8: 32 lượt/luồng -> 1)
+    # BỘ NHỚ CHUNG D1 (25/8) — khoản đọc LỚN NHẤT của cả hệ. Sổ đọc phiên 02:15: `top_titles=2.842`
+    # lượt trên project C trong MỘT phiên (48% tổng lượt đọc); ×~30 phiên/ngày ≈ 85.000 trên trần
+    # 50.000 của C. Mà lượt xem YouTube chỉ nhích theo NGÀY: 18 luồng hỏi lại đúng một câu giống
+    # hệt nhau, mỗi luồng trả tiền riêng. Hạn 6 giờ là quá tươi cho việc "học gu khán giả".
+    _kn = f"tt:{owner}:{str(channel).upper()}:{n}"
+    try:
+        import hot_db as _H
+        _cache = _H.nho_doc(_kn, 21600)
+    except Exception:
+        _cache = None
+    if _cache is not None:
+        _HOT_CACHE[ck] = _cache
+        return _cache
     _cr("top_titles", n)   # limit(n) — trước ghi 60 là ĐẾM SAI (máy đo phải đúng trước tiên)
     db = _db_pub()
     if db is None:
@@ -326,6 +339,11 @@ def top_titles(owner: str, channel: str, n: int = 8) -> list[str]:
             if t and v > 0:
                 out.append(f"{t} ({v} views)")
         _HOT_CACHE[("tt", owner, channel, n)] = out
+        try:
+            import hot_db as _H2
+            _H2.nho_ghi(_kn, out)          # 17 luồng kia dùng lại, 0 lượt đọc project C
+        except Exception:
+            pass
         return out
     except Exception as e:
         print(f"   ⚠️ top_titles lỗi ({e}) — bỏ qua feedback, chạy bình thường")
@@ -1219,6 +1237,9 @@ def _db_B_that():
     return _DBJ[0]
 
 
+_NHIP_SONG: dict = {}       # job_id -> mốc lần ghi nhịp sống gần nhất (hãm 10', xem ghi_nhip_song)
+
+
 def ghi_nhip_song(job_id: str, channel: str, status: str) -> None:
     """DASHBOARD MÙ KHI ĐANG FAILOVER (24/8) — sửa chỗ "⚙️ Đang chạy: 0 trong khi 8 luồng đang chạy".
 
@@ -1232,6 +1253,21 @@ def ghi_nhip_song(job_id: str, channel: str, status: str) -> None:
     db = _db_B_that()
     if not (own and db and job_id):
         return
+    # HÃM NHỊP (25/8) — GỐC CỦA CẢ DÂY CHUYỀN CẠN QUOTA. Đo sổ ghi thật phiên 02:15:
+    # `nhip_song=832` lượt ghi MỘT PHIÊN (42% tổng số ghi), vì nó ghi theo MỌI lần `update_job`
+    # mà không hãm gì. 832 × ~30 phiên/ngày ≈ 25.000 ghi/ngày trên trần 20.000 của B
+    # ⇒ B cạn hạn mức GHI ⇒ `sync_keys A->B` hỏng vĩnh viễn ⇒ mỗi luồng phải tự đọc project A
+    # (`merge_keys_A=70`/luồng) ⇒ A cạn nốt. Một cái vòi rỉ kéo sập cả hai project.
+    # Dashboard chỉ cần biết "job này còn sống", cửa sổ của nó là 45 phút — mốc 10 phút là thừa
+    # tươi. Trạng thái CUỐI luôn ghi ngay để số không đếm thiếu.
+    import time as _t2
+    if str(status or "") not in ("done", "failed", "ratelimited"):
+        if _t2.time() - _NHIP_SONG.get(job_id, 0) < 600:
+            return
+    _NHIP_SONG[job_id] = _t2.time()
+    if len(_NHIP_SONG) > 400:
+        for _k in list(_NHIP_SONG)[:len(_NHIP_SONG) - 400]:
+            _NHIP_SONG.pop(_k, None)
     _cw("nhip_song")
     _soft(lambda: db.collection("render_stats").document(f"__live__{own}").set(
         {job_id: {"ch": channel or "", "st": status or "", "at": _now()}}, merge=True), "nhip_song")

@@ -2527,3 +2527,14 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   vừa đổi). Nay `__rsKeyThem`/`__rsKeyBo` sửa tại chỗ rồi vẽ lại: 0 lượt đọc.
   (c) Đổi tab lọc nhà cung cấp cũng gọi `__loadKeys()` — dữ liệu đã nằm trong bộ nhớ. Nay chỉ vẽ lại.
   Đã có sẵn từ trước: ẩn tab 45s → ngắt listener, tab phụ → 0 lượt đọc, đệm doc lẻ ở localStorage.
+
+- **Hai vòi rỉ lớn nhất — đo bằng sổ, không đoán.** (25/8) Cộng dòng `🧮 Firestore` của cả 18 luồng
+  phiên 02:15: **5.885 ĐỌC · 1.957 GHI** một phiên. Trong đó:
+  * `nhip_song=832` (42% số ghi) — ghi theo MỌI lần `update_job`, không hãm. ×~30 phiên/ngày ≈
+    **25.000 ghi/ngày trên trần 20.000 của B** ⇒ B cạn hạn mức GHI ⇒ `sync_keys A→B` hỏng vĩnh viễn
+    ⇒ mỗi luồng tự đọc A (`merge_keys_A=70`) ⇒ **A cạn nốt**. Một vòi rỉ kéo sập hai project.
+    Nay hãm 10'/job (dashboard dùng cửa sổ 45' nên vẫn thừa tươi); trạng thái CUỐI luôn ghi ngay.
+  * `top_titles=2.842` (48% số đọc) trên project C; ×30 phiên ≈ **85.000/ngày trên trần 50.000**.
+    18 luồng hỏi lại đúng một câu giống hệt nhau. Nay đi qua bộ nhớ chung D1 (`nho_ghi`/`nho_doc`,
+    hạn 6h) — lượt xem chỉ nhích theo ngày.
+  Chốt: `t_hai_voi_ri_da_ham` (đã thử phá 3 kiểu, đều bắt được).

@@ -364,3 +364,35 @@ def keys_doc(owner: str, tuoi: int = 1800) -> list | None:
         return v if isinstance(v, list) else None
     except Exception:
         return None
+
+
+def nho_ghi(k: str, v, tuoi_gi: str = "") -> bool:
+    """Cất một kết quả ĐỔI CHẬM vào bộ nhớ chung D1 để 18 luồng khỏi hỏi lại 18 lần."""
+    if not bat_ghi() or not k:
+        return False
+    import json as _j
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        r = goi("nho_ghi", {"k": k, "js": _j.dumps(v)[:200_000],
+                            "at": _dt.now(_tz.utc).isoformat()})
+        return bool(r.get("ok"))
+    except Exception:
+        return False
+
+
+def nho_doc(k: str, tuoi: int = 21600):
+    """Lấy lại thứ đã cất. None = chưa có / quá hạn -> caller cứ đi hỏi nguồn gốc như cũ."""
+    if not bat_doc() or not k:
+        return None
+    import json as _j
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        r = goi("nho_doc", {"k": k})
+        js, at = r.get("js") or "", r.get("at") or ""
+        if not js or not at:
+            return None
+        if (_dt.now(_tz.utc) - _dt.fromisoformat(at)).total_seconds() > tuoi:
+            return None
+        return _j.loads(js)
+    except Exception:
+        return None

@@ -432,6 +432,7 @@ def main():
     check("hồ key qua ảnh chụp D1, không đâm vào A", t_ho_key_qua_d1_khong_dam_vao_A)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
+    check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2125,6 +2126,41 @@ def t_job_dang_chay_len_d1_ngay():
     n0 = len(goi_ra)
     H.ghi_job("chu", "job-1", "TESTUSA", "long", "rendering", at="2026-08-25T05:01:00Z")
     assert len(goi_ra) == n0, "lượt trung gian sau vẫn xả -> đốt lượt gọi Worker vô ích"
+
+
+def t_hai_voi_ri_da_ham():
+    """Hai khoản tiêu lớn nhất đo được ở phiên 02:15 phải có hãm.
+
+    GHI: `nhip_song=832`/phiên (42% tổng ghi) — ghi theo MỌI lần `update_job`, không hãm gì.
+    832 × ~30 phiên ≈ 25.000 ghi/ngày trên trần 20.000 của B ⇒ B cạn hạn mức GHI ⇒ `sync_keys A->B`
+    hỏng vĩnh viễn ⇒ mỗi luồng tự đọc project A (`merge_keys_A=70`) ⇒ A cạn nốt. Một vòi rỉ kéo
+    sập hai project.
+    ĐỌC: `top_titles=2.842`/phiên (48% tổng đọc) trên project C; ×30 phiên ≈ 85.000 trên trần
+    50.000. 18 luồng hỏi lại đúng một câu giống hệt nhau, mỗi luồng trả tiền riêng."""
+    src = _doc("firestore_bridge.py")
+    ns = src[src.index("def ghi_nhip_song"):src.index("def don_nhip_song")]
+    assert "_NHIP_SONG" in ns and "600" in ns, "nhip_song chưa hãm nhịp"
+    assert 'not in ("done", "failed", "ratelimited")' in ns, \
+        "trạng thái CUỐI phải luôn ghi ngay, không được hãm -> đếm thiếu video"
+    tt = src[src.index("def top_titles"):src.index("def _db_meta")]
+    assert "nho_doc" in tt and "nho_ghi" in tt, "top_titles chưa dùng bộ nhớ chung D1"
+    assert tt.index("nho_doc") < tt.index('_cr("top_titles"'), \
+        "phải hỏi bộ nhớ chung TRƯỚC khi tính lượt đọc project C"
+
+    # hãm phải THẬT: gọi 5 lần liên tiếp cho cùng job -> chỉ 1 lượt ghi
+    import sys, types, importlib
+    dem = {"n": 0}
+    import firestore_bridge as FB
+    importlib.reload(FB)
+    FB._OWNER_HINT[0] = "chu"
+    FB._db_B_that = lambda: types.SimpleNamespace(collection=lambda *a, **k: None)
+    FB._soft = lambda fn, tag="": dem.__setitem__("n", dem["n"] + 1)
+    FB._NHIP_SONG.clear()
+    for _ in range(5):
+        FB.ghi_nhip_song("job-x", "TESTUSA", "rendering")
+    assert dem["n"] == 1, f"5 lần gọi mà ghi {dem['n']} lượt — hãm không ăn"
+    FB.ghi_nhip_song("job-x", "TESTUSA", "done")
+    assert dem["n"] == 2, "trạng thái CUỐI bị hãm oan -> dashboard đếm thiếu"
 
 
 if __name__ == "__main__":
