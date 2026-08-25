@@ -25,7 +25,8 @@
   "category": "comedy",
   "pitch_a": "-18Hz",
   "pitch_b": "+26Hz",
-  "voice_pitch": "-18Hz"
+  "voice_pitch": "-18Hz",
+  "tagline": "Two idiots explain America. One is a bird."
  },
  "HANKYARD": {
   "name": "HANKYARD",
@@ -53,7 +54,8 @@
   "category": "comedy",
   "pitch_a": "-10Hz",
   "pitch_b": "+22Hz",
-  "voice_pitch": "-10Hz"
+  "voice_pitch": "-10Hz",
+  "tagline": "Dad logic. Bad tools. Worse ideas."
  },
  "PEARLPORCH": {
   "name": "PEARLPORCH",
@@ -81,7 +83,8 @@
   "category": "stories",
   "pitch_a": "+6Hz",
   "pitch_b": "+18Hz",
-  "voice_pitch": "+6Hz"
+  "voice_pitch": "+6Hz",
+  "tagline": "Everything you believe is slightly wrong."
  },
  "BISONDESK": {
   "name": "BISONDESK",
@@ -109,7 +112,8 @@
   "category": "history",
   "pitch_a": "-24Hz",
   "pitch_b": "+4Hz",
-  "voice_pitch": "-24Hz"
+  "voice_pitch": "-24Hz",
+  "tagline": "Real history. Dumb decisions. Same country."
  },
  "OWLOFFICE": {
   "name": "OWLOFFICE",
@@ -137,6 +141,7 @@
   "category": "explainer",
   "pitch_a": "-6Hz",
   "pitch_b": "+14Hz",
-  "voice_pitch": "-6Hz"
+  "voice_pitch": "-6Hz",
+  "tagline": "Why does America work like this?"
  }
 }

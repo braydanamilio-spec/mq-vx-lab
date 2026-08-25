@@ -85,7 +85,10 @@ def sinh(kenh: str) -> int:
         "hero": cast[0]["id"],
         "hero2": cast[1]["id"] if len(cast) > 1 else "",
         "display": cfg.get("display") or kenh,
-        "tagline": cfg.get("tagline") or (cfg.get("style") or "")[:52],
+        # 25/8 — ảnh bìa thật in ra "street-smar": bản cũ CẮT `style` ở 52 ký tự nên câu đứt giữa
+        # chừng. Tagline là lời hứa của kênh, cắt cụt là mất chuyên nghiệp ngay ấn tượng đầu.
+        # Nay dùng `tagline` viết riêng; không có thì lấy CÂU ĐẦU của style, không cắt giữa từ.
+        "tagline": cfg.get("tagline") or (cfg.get("style") or "").split(",")[0].strip(),
         "handle": "@" + kenh.lower(),
         "accent": cfg.get("accent", "#E4562B"),
         "accent2": cfg.get("accent2", "#2E6FD9"),

@@ -92,7 +92,8 @@ export const MascotBrand: React.FC<MascotBrandProps> = ({
                             letterSpacing: -3, textShadow: "0 6px 0 rgba(0,0,0,.32)" }}>
                 {display.toUpperCase()}
               </div>
-              <div style={{ marginTop: 16, fontSize: 40, fontWeight: 700, color: "#FFF3C4" }}>
+              <div style={{ marginTop: 16, fontSize: 40, fontWeight: 700, color: "#FFF3C4",
+                            lineHeight: 1.22, textWrap: "balance" } as React.CSSProperties}>
                 {tagline}
               </div>
               <div style={{ marginTop: 22, display: "inline-block", background: "#111", color: "#fff",

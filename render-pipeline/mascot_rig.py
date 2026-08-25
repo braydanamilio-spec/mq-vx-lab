@@ -120,6 +120,20 @@ def _tach_nen(duong: str) -> bool:
         if ty < 0.12:
             print(f"   ⚠️ chỉ {ty*100:.0f}% khung tách được (màu viền #{kr:02x}{kg:02x}{kb:02x}) — bỏ tư thế")
             return False
+        # KHỬ TÀN DƯ XANH (despill) — 25/8, soi ảnh bìa thật: dưới chân hai nhân vật còn một "bệ cỏ
+        # xanh". Đó là BÓNG ĐỔ mà FLUX vẽ lên nền xanh: cùng gốc màu nhưng tối hơn nên lệch quá
+        # ngưỡng, thoát khỏi lượt khoá theo màu. Không thể nới ngưỡng (sẽ ăn vào nhân vật), mà phải
+        # đổi dấu hiệu: pixel nào có kênh LỤC ÁP ĐẢO cả đỏ lẫn lam thì chắc chắn là nền/tràn xanh —
+        # nhân vật Mỹ (lông trắng/nâu, mỏ vàng, kính đỏ, lông xám) không có pixel nào như vậy.
+        khu = 0
+        for y in range(H):
+            for x in range(W):
+                r, g, b, a = px[x, y]
+                if a and g > r * 1.22 and g > b * 1.22 and g > 60:
+                    px[x, y] = (r, g, b, 0)
+                    khu += 1
+        if khu:
+            print(f"      · khử thêm {khu * 100 // max(1, W * H)}% tàn dư xanh (bóng đổ trên nền)")
         if VIEN_MEM:
             from PIL import ImageFilter
             alpha = im.split()[3].filter(ImageFilter.GaussianBlur(VIEN_MEM))
