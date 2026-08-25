@@ -2304,6 +2304,11 @@ def t_mascot_khong_ve_lai_nhan_vat():
     # 25/8 — pilot 3/3 skit hỏng vì truyền thẳng keys[0]: key đầu cạn là chết cả lượt, trong khi
     # dây chuyền chính vẫn chạy nhờ xoay key. Đường phụ phải dùng lại cơ chế của đường chính.
     assert "KM.key_order" in pl, "pilot không xoay key -> key đầu cạn là chết cả lượt"
+    # 25/8 — short ra 18.5s, QC chặn "<20s": skit viết 18-30s nên có lượt rơi sát sàn. Chữa bằng
+    # nhịp lặng sau punchline (đúng nghề: câu chốt cần khoảng lặng để khán giả bắt được).
+    assert "HOLD_CUOI" in src and "SAN_SHORT" in src, "không có nhịp giữ cuối -> sẽ trượt sàn QC"
+    assert "không kéo giãn thoại" in src, \
+        "phải nới NHỊP CUỐI, tuyệt đối không kéo giãn lời thoại (kéo lời là hỏng nhịp hài)"
     assert 'api_key=(keys or [{}])[0]' not in pl.split("def _viet_skit")[-1].split("def pilot")[0], \
         "vẫn còn chỗ dùng cứng keys[0] trong đường viết skit"
 

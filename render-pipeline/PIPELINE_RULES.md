@@ -2702,3 +2702,9 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   (ưu tiên key ÍT DÙNG NHẤT). Nay `_viet_skit()` xoay tối đa 8 key, chỉ xoay khi lỗi là **cạn hạn
   mức** (lỗi khác thì báo và dừng, đừng đốt 8 key vào một bài hỏng). Chốt trong
   `t_mascot_khong_ve_lai_nhan_vat`.
+
+- **Giữ nhịp sau punchline — vừa đúng nghề vừa hết trượt sàn QC.** (25/8) Short pilot ra 18,5s, QC
+  chặn "quá ngắn <20s": skit viết 18-30 giây nên có lượt rơi sát sàn, mất trắng lượt render vì thiếu
+  1,5 giây. Chữa: `HOLD_CUOI=1.3s` sau câu chốt (mọi phim hài đều giữ 1-2 giây trên mặt nhân vật —
+  cắt ngay khi dứt chữ là giết tiếng cười), hụt tiếp thì **nới nhịp cuối** tối đa 6s. Tuyệt đối
+  KHÔNG kéo giãn lời thoại — kéo lời là hỏng nhịp hài. Nhịp giữa câu cũng nới 0,22→0,34s.

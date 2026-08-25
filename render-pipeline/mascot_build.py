@@ -25,7 +25,14 @@ import subprocess
 
 FPS = 30
 MOUTH_HZ = 12
-NGHI_CAU = 0.22          # khoảng lặng giữa hai câu thoại (giây) — nhịp hài cần nhịp thở
+NGHI_CAU = 0.34          # khoảng lặng giữa hai câu thoại (giây) — nhịp hài cần nhịp thở
+# GIỮ NHỊP SAU PUNCHLINE (25/8). Hai lý do, cả hai đều đúng:
+#  • NGHỀ: câu chốt cần một khoảng lặng để khán giả kịp "bắt" — cắt ngay khi dứt chữ là giết tiếng
+#    cười. Mọi phim hài đều giữ 1-2 giây trên mặt nhân vật sau câu chốt.
+#  • KỸ THUẬT: skit viết ra 18-30 giây, có lượt rơi xuống 18,5s và QC chặn "quá ngắn <20s" — mất
+#    trắng cả lượt render vì thiếu 1,5 giây. Giữ nhịp vừa hay hơn vừa hết cảnh trượt sàn.
+HOLD_CUOI = 1.3          # giữ khung sau câu chốt (giây)
+SAN_SHORT, SAN_LONG = 21.0, 46.0    # sàn QC là 20/45 — chừa 1 giây biên cho sai số làm tròn
 
 
 def _rms_12hz(mp3: str, tong_giay: float) -> list[float]:
@@ -170,6 +177,16 @@ def dung_video(kenh: str, cfg: dict, story, out: str, dai: bool = False,
         t += NGHI_SKIT
     if not clips:
         return False, {"loi": "không có câu thoại nào"}
+    t += HOLD_CUOI                       # nhịp lặng sau câu chốt
+    # Vẫn hụt sàn thì NỚI THÊM nhịp cuối (không kéo giãn lời thoại — kéo lời là hỏng nhịp hài).
+    _san = SAN_LONG if dai else SAN_SHORT
+    if t < _san:
+        _bu = _san - t
+        if _bu <= 6.0:
+            t = _san
+            print(f"   ⏸ giữ thêm {_bu:.1f}s khung cuối cho đủ sàn {_san:.0f}s (không kéo giãn thoại)")
+        else:
+            print(f"   ⚠️ hụt sàn {_bu:.1f}s — quá nhiều để giữ nhịp, video sẽ bị QC chặn")
     tong = t
     tong_frame = int(tong * FPS) + FPS // 2
 
