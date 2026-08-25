@@ -1849,6 +1849,19 @@ def _kiem_kho_ngay(cfg: dict) -> None:
         ngay = _d3.now(_tz3.utc).strftime("%Y%m%d")
         if str(cfg.get("kiem_kho_ngay") or "") == ngay:
             return                                   # hôm nay đối chiếu rồi
+        # CHỐT PHẢI NẰM Ở CHỖ GHI ĐƯỢC. Chốt trên chỉ đọc `render_config` ở Firestore — mà lượt GHI
+        # vào Firestore đang trả 400 (xem 7.dm). Ghi hụt ⇒ chốt không bao giờ đóng ⇒ plan đi 72 kho
+        # MỖI LƯỢT (~48 lượt/ngày × 72 kho ≈ 3.500 lượt quét) thay vì 1 lần. Đúng thứ anh dặn phải
+        # tránh: tối ưu mà đẻ ra lãng phí lớn hơn.
+        # D1 luôn ghi được và không nằm trong tài nguyên đang cạn -> đặt chốt ở đó, hạn 20 giờ.
+        try:
+            import hot_db as _H
+            _gio = _d3.now(_tz3.utc).isoformat()
+            if any(str(r.get("kid") or "") == "kiem_kho"
+                   for r in (_H.key_nghi_doc(_gio) or [])):
+                return                               # chốt D1 còn hiệu lực -> khỏi đi lại
+        except Exception:
+            pass
         src = os.environ.get("AUTOPUBLISHER_SRC")
         if src and src not in sys.path:
             sys.path.insert(0, src)
@@ -1871,6 +1884,12 @@ def _kiem_kho_ngay(cfg: dict) -> None:
             print(f"   ⏭ Kiểm kho: {hong}/{len(accs)} kho đọc hụt — BỎ QUA lượt ghi (sẽ đếm thiếu).")
             return
         FB.dat_so_kho_that(OWNER, song)
+        try:                                          # đóng chốt ở D1 TRƯỚC (chắc chắn ghi được)
+            import hot_db as _H2
+            _den = (_d3.now(_tz3.utc) + __import__("datetime").timedelta(hours=20)).isoformat()
+            _H2.key_nghi_ghi("kiem_kho", "ngay", _den)
+        except Exception:
+            pass
         FB.set_config(OWNER, {"kiem_kho_ngay": ngay})
         print(f"   🧮 Kiểm kho: {song:,} video THẬT trên {len(accs)} kho -> đã ghi đè sổ đếm "
               f"(bộ đếm cộng dồn không tự đúng lại được).")

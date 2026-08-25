@@ -2328,3 +2328,14 @@ chỉ có Drive, vì video nằm ở đó.**
 cộng vào (đo: 218) và không bao giờ giảm. Con số chỉ-tăng thì người vận hành hoặc hoảng hoặc bỏ qua
 hẳn — cả hai đều vô dụng. Nay giới hạn **2 ngày**: thứ cần biết là "gần đây có gì hỏng", còn lịch sử
 đã nằm trong bản ghi job. (Cùng họ 7.bj: số cộng dồn không đo được sức khoẻ hiện tại.)
+
+### 7.dp — Tối ưu mà đẻ ra lãng phí lớn hơn: chốt 1-lần/ngày đặt ở chỗ GHI HỤT (25/8/2026)
+Vừa thêm `_kiem_kho_ngay()` (đi 72 kho Drive để lấy số thật) vào plan, chốt "hôm nay làm rồi" đặt ở
+`render_config` trên **Firestore** — đúng thứ đang trả 400 khi ghi. Ghi hụt ⇒ chốt **không bao giờ
+đóng** ⇒ plan đi 72 kho **mỗi lượt** thay vì 1 lần/ngày: ~48 lượt/ngày × 72 kho ≈ **3.500 lượt quét**,
+mỗi lượt ~35 giây. Một bản "tối ưu" tự đẻ ra khoản lãng phí lớn hơn thứ nó tiết kiệm.
+Vá: đóng chốt ở **D1 trước** (`key_nghi_ghi("kiem_kho", …)`, hạn 20 giờ — luôn ghi được, không nằm
+trong tài nguyên đang cạn), Firestore chỉ là bản ghi phụ. Chạy thử: chốt đóng rồi thì 5 lượt plan tiếp
+theo **quét 0 lần**. Chốt bằng `t_doi_chieu_so_kho_chay_trong_plan`.
+**LUẬT: chốt chống-làm-lại phải nằm ở nơi GHI CHẮC CHẮN THÀNH CÔNG. Chốt ghi hụt thì không phải là
+chốt — nó là một vòng lặp vô hạn chạy chậm.**

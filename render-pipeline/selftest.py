@@ -1078,6 +1078,13 @@ def t_doi_chieu_so_kho_chay_trong_plan():
     i = r.index("def _kiem_kho_ngay(")
     than = r[i: i + 2600]
     assert "kiem_kho_ngay" in than and "return" in than, "thiếu chốt 1-lần/ngày"
+    # CHỐT PHẢI Ở CHỖ GHI ĐƯỢC. Chốt chỉ dựa vào `render_config` (Firestore) là hỏng: lượt GHI
+    # Firestore đang trả 400, ghi hụt ⇒ chốt không bao giờ đóng ⇒ plan đi 72 kho MỖI lượt
+    # (~48 lượt/ngày × 72 kho ≈ 3.500 lượt quét) thay vì 1 lần — tối ưu mà đẻ ra lãng phí lớn hơn.
+    assert "key_nghi_doc" in than and "key_nghi_ghi" in than, \
+        "chốt 1-lần/ngày chỉ dựa vào Firestore -> ghi hụt là quét lại mỗi lượt plan"
+    assert than.index("key_nghi_ghi") < than.index("FB.set_config"), \
+        "phải đóng chốt ở D1 TRƯỚC Firestore (Firestore mới là thứ hay ghi hụt)"
     assert "len(accs) < 5" in than, "đọc được ít kho mà vẫn ghi đè -> đếm thiếu, sổ càng sai"
     assert "hong" in than, "kho đọc hụt mà vẫn ghi đè -> đếm thiếu"
     fb = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
