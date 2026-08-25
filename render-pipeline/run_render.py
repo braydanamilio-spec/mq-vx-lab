@@ -118,6 +118,30 @@ def _desc_src(story) -> str:
 import hashlib
 from ten_chuan import lat as _lat, ten_file          # quy ước đặt tên: MỘT nguồn duy nhất
 
+# ĐẾM SỐ LƯỢT HẾT HẠN MỨC ĐÃ TỰ XỬ LÝ (25/8/2026).
+_DA_LUONG = {"n": 0}
+
+
+def print_exc_gon() -> None:
+    """Thay `print_exc_gon()`: lỗi ĐÃ LƯỜNG TRƯỚC và ĐÃ CÓ ĐƯỜNG XỬ LÝ thì in một dòng.
+
+    Phiên 02:15 in 39 vệt Traceback 20 dòng, tất cả đều là `RateLimited: 429 rate limit daily
+    (cloudflare)` — key CF cạn hạn mức ngày, hệ đổi key rồi làm tiếp bình thường, không mất video
+    nào. Nhưng log thì trông như 39 lần sập: soi log mất thời gian vô ích, và một crash THẬT nằm
+    lẫn giữa đống đó thì không ai thấy. Lỗi lạ vẫn in đủ stack như cũ — chỉ nén thứ đã biết cách chữa.
+    Cuối phiên `bao_da_luong()` in tổng số lượt, để "im lặng" không thành "giấu"."""
+    e = sys.exc_info()[1]
+    if e is not None and (type(e).__name__ == "RateLimited" or "429 rate limit" in str(e)):
+        _DA_LUONG["n"] += 1
+        print(f"   ⏳ hết hạn mức: {str(e)[:130]} — đổi key rồi làm tiếp")
+        return
+    traceback.print_exc()
+
+
+def bao_da_luong() -> None:
+    if _DA_LUONG["n"]:
+        print(f"   ⏳ TỔNG {_DA_LUONG['n']} lượt hết hạn mức key đã tự đổi key (không mất video nào).")
+
 
 # KỊCH BẢN CỦA CẢ LANE -> cất thêm 2 KHO KHÁC lúc kết thúc. Xem _luu_kich_ban_du_phong().
 _KB_PHIEN: list = []
@@ -500,7 +524,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     # ("Chưa có Gemini key nào"). SystemExit kế thừa BaseException nên "except
                     # Exception" KHÔNG bắt -> nó xuyên lên giết cả kênh giữa chừng, để job ma kẹt ở
                     # "writing"/"qc" mà GitHub vẫn báo success (đúng lỗi đã gặp với enqueue 20/8).
-                    err = e; traceback.print_exc(); print(f"   🔧 {fmt.upper()} {channel}#{i} lỗi lần {att}: {str(e)[:100]}")
+                    err = e; print_exc_gon(); print(f"   🔧 {fmt.upper()} {channel}#{i} lỗi lần {att}: {str(e)[:100]}")
             if resumed:   # dù ok hay lỗi -> đã THỬ dùng checkpoint này rồi, không đưa cho clip kế/phiên sau nữa (tránh lặp vô hạn 1 kịch bản lỗi)
                 FB.clear_resumed(resumed["job_id"]); resumed = None
             if err is not None and _is_ratelimit(err):
@@ -565,7 +589,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                                                             accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"))
                 last_err = None; break
             except (Exception, SystemExit) as e:
-                last_err = e; traceback.print_exc()
+                last_err = e; print_exc_gon()
                 print(f"   🔧 LONG {channel} lỗi lần {attempt} ({nr} race): {str(e)[:120]}")
         if resumed_long:
             FB.clear_resumed(resumed_long["job_id"])
@@ -594,7 +618,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
             else:
                 lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
         except Exception as e:
-            traceback.print_exc(); lst("failed", str(e)[:140]); R["fails"].append(f"{channel} LONG: {str(e)[:100]}")
+            print_exc_gon(); lst("failed", str(e)[:140]); R["fails"].append(f"{channel} LONG: {str(e)[:100]}")
     else:
         # TEMPLATE "chỉ short": lấy subtopics KHÔNG render long (rẻ, nhanh).
         try:
@@ -606,7 +630,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
             if subtopics:
                 FB.save_topics(OWNER, channel, subtopics)
         except Exception as e:
-            traceback.print_exc(); R["fails"].append(f"{channel} PLAN: {str(e)[:100]}")
+            print_exc_gon(); R["fails"].append(f"{channel} PLAN: {str(e)[:100]}")
     # ---- SHORTS (viết LẠI cho 9:16 từ 2-3 chủ đề con) ----
     resumed_short = FB.find_resumable(OWNER, channel, "short")   # CHECKPOINT: phiên trước lỗi/treo nhưng còn kịch bản
     for i, sub in enumerate(subtopics[:n_shorts]):
@@ -626,7 +650,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                                                       accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"))
                 serr = None; break
             except (Exception, SystemExit) as e:
-                serr = e; traceback.print_exc(); print(f"   🔧 SHORT {channel}#{i} lỗi lần {satt}: {str(e)[:100]}")
+                serr = e; print_exc_gon(); print(f"   🔧 SHORT {channel}#{i} lỗi lần {satt}: {str(e)[:100]}")
         if resumed_short:
             FB.clear_resumed(resumed_short["job_id"]); resumed_short = None
         if serr is not None and _is_ratelimit(serr):
@@ -687,7 +711,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
             ai_only=bool(ch.get("ai_only")), music=ch.get("music"), mode=ch.get("mode"),
             host_prompt=ch.get("host_prompt"))
     except (Exception, SystemExit) as e:
-        traceback.print_exc()
+        print_exc_gon()
         if _is_ratelimit(e):
             lst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1
         else:
@@ -733,7 +757,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
             sok, sinfo = DS.render_short_from_props(channel, part["props"], part["story"], sout,
                                                     keys=keys, prefix=f"p{pi}", lite=(pi > 0))
         except (Exception, SystemExit) as e:
-            traceback.print_exc()
+            print_exc_gon()
             sst("failed", f"Short lỗi: {str(e)[:120]}"); R["fails"].append(f"{channel} SHORT {pi}: {str(e)[:100]}")
             continue
         if not sok:
@@ -776,7 +800,7 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R, ra_id=None):
             ai_style=ch.get("ai_style"), ai_only=bool(ch.get("ai_only")),
             music=ch.get("music"), mode=ch.get("mode"), host_prompt=ch.get("host_prompt"))
     except (Exception, SystemExit) as e:
-        traceback.print_exc()
+        print_exc_gon()
         if _is_ratelimit(e):
             lst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1
         else:
@@ -822,7 +846,7 @@ def _motif_shorts(ch, fmt, keys, tier, subs, cool, okcb, R, stopped, avoid, ljob
                                                      resume_story=None, avoid=avoid)
                 err = None; break
             except (Exception, SystemExit) as e:
-                err = e; traceback.print_exc()
+                err = e; print_exc_gon()
                 print(f"   🔧 SHORT {channel}#{i} lỗi lần {att}: {str(e)[:100]}")
         if err is not None and _is_ratelimit(err):
             jst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1; continue
@@ -996,7 +1020,7 @@ def process_requests(keys, report):
             else:
                 st("failed", f"Render lại QC trượt: {info}"); FB.mark_request_done(req["id"], "qc-trượt")
         except (Exception, SystemExit) as e:
-            traceback.print_exc(); st("failed", str(e)[:120]); FB.mark_request_done(req["id"], "lỗi")
+            print_exc_gon(); st("failed", str(e)[:120]); FB.mark_request_done(req["id"], "lỗi")
 
 
 def main():
@@ -1081,7 +1105,7 @@ def main():
         try:
             run_one(ch, keys, report=report)         # 1 kênh lỗi (kể cả SystemExit) KHÔNG được giết cả mẻ
         except BaseException as e:
-            traceback.print_exc(); report["fails"].append(f"{ch.get('name')}: {str(e)[:120]}")
+            print_exc_gon(); report["fails"].append(f"{ch.get('name')}: {str(e)[:120]}")
         if max_run and report["done"] >= max_run:
             print(f"🎯 Đạt {max_run} video/lần chạy — dừng."); break
 
@@ -1119,7 +1143,7 @@ def main():
         try:
             run_one(_ch2, keys, report=report)
         except BaseException as e:
-            traceback.print_exc(); report["fails"].append(f"{_ke}: {str(e)[:120]}")
+            print_exc_gon(); report["fails"].append(f"{_ke}: {str(e)[:120]}")
 
     print(f"✅ Xong: {report['done']} video · {len(report['fails'])} lỗi.")
     # EMAIL CẢNH BÁO — chống spam: CHỈ gửi khi CÓ LỖI, gộp 1 email cho cả lần chạy.
@@ -1182,7 +1206,7 @@ def gate_mode():
             elif ((event != "schedule") or run_now or batch_ok) and (enabled or run_now):
                 run = "true"
         except Exception:
-            traceback.print_exc()
+            print_exc_gon()
     # 23/8 tối: khối kiểm kho Drive ĐÃ CHUYỂN sang plan_mode. Lý do: bước --gate chạy TRƯỚC khi
     # workflow tải mã AutoPublisher về, nên `import storage` luôn ném "No module named 'storage'"
     # -> cổng im lặng fail-open, không kiểm được gì. Ở plan thì mã đã có sẵn.
@@ -1617,7 +1641,7 @@ def plan_mode():
     try:
         process_requests(keys, {"done": 0, "fails": []})   # 🔄 render lại (thay bản cũ) — 1 lần ở plan
     except Exception:
-        traceback.print_exc()
+        print_exc_gon()
     _moc("đọc danh sách kênh")
     all_ch = [c for c in FB.read_channels(OWNER) if c.get("name")]
     try:
@@ -1633,17 +1657,17 @@ def plan_mode():
             if _missing:
                 print(f"   🚨 {len(_missing)} kênh render THIẾU trong channels.yaml (video sẽ bị enqueue từ chối): {_missing}")
     except Exception:
-        traceback.print_exc()
+        print_exc_gon()
     try:
         _pf = policy_lint(all_ch)       # audit chính sách tự động (0 quota)
         policy_autofix(all_ch, _pf)     # thiếu rào chắn -> máy tự nối câu STRICT chuẩn
     except Exception:
-        traceback.print_exc()
+        print_exc_gon()
     try:
         import time as _tt; _tt.sleep(2.5)   # hạ nhiệt sau loạt đọc policy/requests -> sync khỏi dính burst
         FB.sync_keys_from_a(OWNER)      # key mới thêm trên dashboard (ghi vào A) -> render thấy được
     except Exception:
-        traceback.print_exc()
+        print_exc_gon()
     try:
         # TỰ-SEED WAVE 8: workflow seed chạy tay 21/8 dính đúng lúc B cạn quota ghi. Thay vì hẹn
         # người chạy lại, plan tự so wave8_channels.json với danh sách kênh -> thiếu thì ghi (qua
@@ -1686,11 +1710,11 @@ def plan_mode():
             if _sync:
                 print(f"   🔄 Đồng bộ config từ file cho {_sync} kênh (cfg_rev mới) — format/niche/giọng cập nhật ngay phiên này.")
     except Exception:
-        traceback.print_exc()
+        print_exc_gon()
     try:
         sweep_ai_quality(all_ch, cfg)   # xếp render lại các video ra đời khi bước vẽ ảnh AI còn hỏng
     except Exception:
-        traceback.print_exc()
+        print_exc_gon()
     # ƯU TIÊN KÊNH MỚI (22/8, user): kênh priority=1 LUÔN có suất trong matrix (đứng đầu),
     # kênh cũ xoay ngẫu nhiên phần suất còn lại -> dồn lực cho 5 kênh mới mà cũ không chết hẳn.
     _nameless = [c for c in all_ch if not str(c.get("name") or "").strip()]
@@ -2020,7 +2044,7 @@ def channel_mode(name):
         try:
             run_one(chs[0], keys, report=report)
         except BaseException as e:
-            traceback.print_exc()
+            print_exc_gon()
             (report.__setitem__("rl", report.get("rl", 0) + 1) if _is_ratelimit(e) else report["fails"].append(f"{name} vòng {rounds}"))
         last_dur = time.monotonic() - t0
         made = report["done"] - before; rl = report.get("rl", 0) - before_rl
@@ -2104,12 +2128,13 @@ def channel_mode(name):
             try:
                 run_one(_ch2, keys, report=report)
             except BaseException as e:
-                traceback.print_exc(); report["fails"].append(f"{_ke}: {str(e)[:120]}")
+                print_exc_gon(); report["fails"].append(f"{_ke}: {str(e)[:120]}")
             last_dur = time.monotonic() - _t2
     except Exception as e:
         print(f"   ⚠️ lấy việc kế hụt ({str(e)[:60]}) — bỏ qua, không ảnh hưởng phần đã làm.")
 
     print(f"✅ {name}: TỔNG {report['done']} video · {len(report['fails'])} lỗi (qua {rounds} vòng).")
+    bao_da_luong()
     try:
         FB.flush_soft()                    # xả ghi done/topics bị hoãn -> count_done không đếm thiếu
         FB.update_channel_stats(OWNER, name)   # sổ thống kê 1-doc cho dashboard (số thật mọi kênh, 1 ghi)
@@ -2147,7 +2172,7 @@ def channel_mode(name):
         if reqs:
             print(f"   📊 {name}: +{sum(reqs.values())} request lên {len(reqs)} key (1 lượt ghi gộp).")
     except Exception:
-        traceback.print_exc()
+        print_exc_gon()
 
 
 if __name__ == "__main__":
@@ -2182,7 +2207,7 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
             avoid=_avoid_for(channel), on_status=lst, on_limit=cool, on_ok=okcb,
             n_parts=max(1, min(3, n_shorts or 3)), resume=_resume, **_kw)
     except (Exception, SystemExit) as e:
-        traceback.print_exc()
+        print_exc_gon()
         if _is_ratelimit(e):
             lst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1
         else:
@@ -2234,7 +2259,7 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
             sst("rendering", f"Short toon {pi + 1}/{len(parts)} (từ long)")
             sok, sinfo = DS.render_toon_short_props(channel, part["props"], st_, sout, keys=keys, prefix=f"p{pi}")
         except (Exception, SystemExit) as e:
-            traceback.print_exc()
+            print_exc_gon()
             sst("failed", f"Short toon lỗi: {str(e)[:120]}"); R["fails"].append(f"{channel} TOON SHORT {pi}: {str(e)[:100]}")
             continue
         if not sok:

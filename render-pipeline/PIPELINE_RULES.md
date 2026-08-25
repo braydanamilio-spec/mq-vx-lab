@@ -2470,3 +2470,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   Worker thêm `loi_moi`; đo sau khi vá: `loi=221` nhưng `loi_moi=0`.
 - **Deploy hosting phải ghi rõ `--project`.** (25/8) alias đang chọn là `c` ⇒ `firebase deploy`
   trần đẩy vào `mm0-shard-c` chứ không phải `mm0-auto-publisher` như `.firebaserc` mặc định.
+
+- **Lỗi ĐÃ LƯỜNG TRƯỚC và có đường xử lý thì in 1 dòng, đừng in stack.** (25/8) Phiên 02:15 in 39
+  vệt Traceback 20 dòng, tất cả là `RateLimited: 429 rate limit daily (cloudflare)` — hệ đổi key
+  rồi làm tiếp, không mất video nào. Log trông như 39 lần sập ⇒ soi log tốn công, crash THẬT lẫn
+  vào đó thì không ai thấy. `print_exc_gon()` thay cả 25 chỗ; cuối phiên `bao_da_luong()` in tổng
+  số lượt để "im lặng" không thành "giấu". Chốt: `t_nen_loi_da_luong_khong_de_quy` — chốt này còn
+  bắt cái bẫy tự gây: lệnh thay hàng loạt ăn luôn dòng nằm TRONG hàm mới ⇒ đệ quy vô hạn.

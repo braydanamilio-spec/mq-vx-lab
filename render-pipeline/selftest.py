@@ -1973,3 +1973,22 @@ def t_xoay_key_theo_luot_dung():
     DS._DUNG.clear(); DS._DUNG["AIza1"] = 5
     v = DS._vision_order(["AIza1", "AIza2", "cf:a:1"])
     assert v[0] == "AIza2", f"vision không ưu tiên key ít dùng: {v}"
+
+
+def t_nen_loi_da_luong_khong_de_quy():
+    """`print_exc_gon` nén lỗi đã lường trước, và TUYỆT ĐỐI không được tự gọi chính nó.
+
+    25/8 — suýt tự bắn chân: lệnh thay hàng loạt `traceback.print_exc()` -> `print_exc_gon()`
+    ăn luôn dòng nằm TRONG chính hàm mới, biến nhánh "lỗi lạ" thành đệ quy vô hạn. Lỗi thường
+    thì tràn stack ngay giữa phiên, mà selftest cũ không có gì bắt được."""
+    import ast
+    src = _doc("run_render.py")
+    f = [n for n in ast.walk(ast.parse(src))
+         if isinstance(n, ast.FunctionDef) and n.name == "print_exc_gon"][0]
+    assert not [n for n in ast.walk(f) if isinstance(n, ast.Call)
+                and getattr(n.func, "id", "") == "print_exc_gon"], "print_exc_gon tự gọi chính nó"
+    assert [n for n in ast.walk(f) if isinstance(n, ast.Call)
+            and getattr(getattr(n.func, "value", None), "id", "") == "traceback"], \
+        "nhánh lỗi lạ phải còn in đủ stack"
+    assert "traceback.print_exc()" not in src.replace(
+        "    traceback.print_exc()\n", "", 1), "còn chỗ in stack thô ngoài print_exc_gon"
