@@ -11,7 +11,11 @@
   "goc_nhin": "Thành phần thật trong món quen",
   "style_anh": "ảnh sản phẩm sạch, nền giấy gói",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "mon": "cereal",
+   "xoay": "mon"
+  }
  },
  {
   "id": 2,
@@ -25,7 +29,11 @@
   "goc_nhin": "Đồ ăn bị thu hồi tuần này",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "kho": "thuc_pham",
+   "xoay": "nam"
+  }
  },
  {
   "id": 3,
@@ -39,7 +47,11 @@
   "goc_nhin": "Món này bằng mấy bữa cơm",
   "style_anh": "ảnh món ăn chụp trên cao",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "mon": "pizza",
+   "xoay": "mon"
+  }
  },
  {
   "id": 4,
@@ -53,7 +65,11 @@
   "goc_nhin": "Một nghiên cứu thật, giải thích gọn",
   "style_anh": "minh hoạ giải phẫu nét mảnh",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "sleep",
+   "xoay": "tu_khoa"
+  }
  },
  {
   "id": 5,
@@ -67,7 +83,11 @@
   "goc_nhin": "Thuốc bị thu và lý do thật",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "kho": "thuoc",
+   "xoay": "nam"
+  }
  },
  {
   "id": 6,
@@ -81,7 +101,11 @@
   "goc_nhin": "Lương tăng chậm hơn giá bao nhiêu",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "chuoi": "luong_gio",
+   "nhan": "Average hourly pay"
+  }
  },
  {
   "id": 7,
@@ -95,7 +119,11 @@
   "goc_nhin": "Tiền thuê nhà xưa và nay",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "chuoi": "cpi_nha",
+   "nhan": "Housing cost"
+  }
  },
  {
   "id": 8,
@@ -109,7 +137,11 @@
   "goc_nhin": "Món nào tăng giá nhanh nhất",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "chuoi": "cpi_thucpham",
+   "nhan": "Food price"
+  }
  },
  {
   "id": 9,
@@ -123,7 +155,11 @@
   "goc_nhin": "Một vụ án kể từ hồ sơ toà",
   "style_anh": "phác thảo phòng xử, than chì",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "wrongful death",
+   "xoay": "tu_khoa"
+  }
  },
  {
   "id": 10,
@@ -137,7 +173,11 @@
   "goc_nhin": "Công ty bị kiện vì cái gì",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "false advertising",
+   "xoay": "tu_khoa"
+  }
  },
  {
   "id": 11,
@@ -151,7 +191,11 @@
   "goc_nhin": "Vụ cũ chưa khép lại",
   "style_anh": "ảnh tài liệu ố vàng",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "habeas corpus",
+   "xoay": "tu_khoa"
+  }
  },
  {
   "id": 12,
@@ -165,7 +209,11 @@
   "goc_nhin": "Bí ẩn nước Mỹ đang tra lại",
   "style_anh": "tranh khắc gỗ đen trắng",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "loc": "bi_an",
+   "xoay": "ngay"
+  }
  },
  {
   "id": 13,
@@ -179,7 +227,11 @@
   "goc_nhin": "Thứ biến mất không lời giải",
   "style_anh": "ảnh sương mù đơn sắc",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "loc": "mat_tich",
+   "xoay": "ngay"
+  }
  },
  {
   "id": 14,
@@ -193,7 +245,10 @@
   "goc_nhin": "Bóng chày qua con số thật",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "nam": 2025
+  }
  },
  {
   "id": 15,
@@ -207,7 +262,11 @@
   "goc_nhin": "Bóng rổ: ai thật sự dẫn đầu",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "chi_tieu": "PTS",
+   "mua": "2024-25"
+  }
  },
  {
   "id": 16,
@@ -221,7 +280,11 @@
   "goc_nhin": "Lương so với màn trình diễn",
   "style_anh": "chân dung vận động viên phẳng",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "chi_tieu": "AST",
+   "mua": "2024-25"
+  }
  },
  {
   "id": 17,
@@ -235,7 +298,11 @@
   "goc_nhin": "Hôm qua nước Mỹ tra ai nhiều nhất",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "loc": "tat_ca",
+   "xoay": "ngay"
+  }
  },
  {
   "id": 18,
@@ -249,7 +316,11 @@
   "goc_nhin": "Đường cong nổi tiếng của một người",
   "style_anh": "chân dung nét đơn sắc",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "loc": "nguoi",
+   "xoay": "nguoi"
+  }
  },
  {
   "id": 19,
@@ -263,7 +334,12 @@
   "goc_nhin": "Phim bộ qua số tập, mùa, điểm",
   "style_anh": "poster giả lập phong cách in lụa",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "detective",
+   "loc": "moi",
+   "xoay": "tu_khoa"
+  }
  },
  {
   "id": 20,
@@ -277,7 +353,12 @@
   "goc_nhin": "Phim bị cắt giữa chừng",
   "style_anh": "ảnh màn hình tối, chữ neon",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "sci-fi",
+   "loc": "da_huy",
+   "xoay": "tu_khoa"
+  }
  },
  {
   "id": 21,
@@ -291,7 +372,11 @@
   "goc_nhin": "Một bài hát: ai viết, ai hát, khi nào",
   "style_anh": "bìa đĩa vector",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "one hit wonder",
+   "xoay": "nghe_si"
+  }
  },
  {
   "id": 22,
@@ -305,7 +390,12 @@
   "goc_nhin": "Nghệ sĩ một bản hit",
   "style_anh": "ảnh sân khấu hạt phim",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "one hit wonder",
+   "loc": "mot_hit",
+   "xoay": "nghe_si"
+  }
  },
  {
   "id": 23,
@@ -319,7 +409,10 @@
   "goc_nhin": "Game nào THẬT SỰ có người chơi",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "loc": "dong_nhat"
+  }
  },
  {
   "id": 24,
@@ -333,7 +426,10 @@
   "goc_nhin": "Game chết yểu và số người còn lại",
   "style_anh": "pixel art u tối",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "loc": "chet_yeu"
+  }
  },
  {
   "id": 25,
@@ -347,7 +443,13 @@
   "goc_nhin": "Dòng xe bị triệu hồi vì bộ phận gì",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "hang": "ford",
+   "dong": "f-150",
+   "nam": 2020,
+   "xoay": "hang"
+  }
  },
  {
   "id": 26,
@@ -361,7 +463,12 @@
   "goc_nhin": "Xe nào thật sự tiết kiệm xăng",
   "style_anh": "xe cắt lớp isometric",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "hang": "Toyota",
+   "nam": 2024,
+   "xoay": "hang"
+  }
  },
  {
   "id": 27,
@@ -375,7 +482,10 @@
   "goc_nhin": "Hồ sơ từng giống chó",
   "style_anh": "tranh màu nước",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "xoay": "giong"
+  }
  },
  {
   "id": 28,
@@ -389,7 +499,12 @@
   "goc_nhin": "Động vật hoang dã qua con số",
   "style_anh": "tranh khắc tự nhiên học",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "ma": "AG.LND.FRST.ZS",
+   "nhan": "Forest cover",
+   "nam": 2022
+  }
  },
  {
   "id": 29,
@@ -403,7 +518,12 @@
   "goc_nhin": "Đi đâu rẻ, đi đâu đắt",
   "style_anh": "bưu thiếp cũ",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "ma": "NY.GDP.PCAP.CD",
+   "nhan": "Richest countries",
+   "nam": 2023
+  }
  },
  {
   "id": 30,
@@ -417,7 +537,10 @@
   "goc_nhin": "Bầu trời Mỹ ngay lúc này",
   "style_anh": "bản đồ radar phát sáng",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "vung": "usa"
+  }
  },
  {
   "id": 31,
@@ -431,7 +554,10 @@
   "goc_nhin": "Công ty tự khai gì về AI trong hồ sơ",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "artificial intelligence"
+  }
  },
  {
   "id": 32,
@@ -445,7 +571,10 @@
   "goc_nhin": "Hồ sơ SEC nhắc chữ sa thải",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "reduction in force"
+  }
  },
  {
   "id": 33,
@@ -459,7 +588,11 @@
   "goc_nhin": "Nơi có thật, chuyện có thật",
   "style_anh": "ảnh đêm tương phản mạnh",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "loc": "dia_diem",
+   "xoay": "ngay"
+  }
  },
  {
   "id": 34,
@@ -473,7 +606,11 @@
   "goc_nhin": "Chuyện xảy ra ca đêm",
   "style_anh": "tranh sơn dầu tối màu",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "loc": "ca_dem",
+   "xoay": "ngay"
+  }
  },
  {
   "id": 35,
@@ -487,7 +624,12 @@
   "goc_nhin": "Hôn nhân Mỹ qua con số",
   "style_anh": "biểu tượng phẳng ấm màu",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "ma": "SP.DYN.TFRT.IN",
+   "nhan": "Birth rate",
+   "nam": 2022
+  }
  },
  {
   "id": 36,
@@ -501,7 +643,11 @@
   "goc_nhin": "Người ta lén tra điều gì",
   "style_anh": "ảnh màn hình đêm",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "loc": "rieng_tu",
+   "xoay": "ngay"
+  }
  },
  {
   "id": 37,
@@ -515,7 +661,11 @@
   "goc_nhin": "Nghề này thật sự trả bao nhiêu",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "chuoi": "viec_lam",
+   "nhan": "Jobs in America"
+  }
  },
  {
   "id": 38,
@@ -529,7 +679,11 @@
   "goc_nhin": "Nghề đang biến mất",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "chuoi": "that_nghiep",
+   "nhan": "Unemployment"
+  }
  },
  {
   "id": 39,
@@ -543,7 +697,11 @@
   "goc_nhin": "Bang nào đáng chuyển tới",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "chuoi": "cpi_dien_nuoc",
+   "nhan": "Utility cost"
+  }
  },
  {
   "id": 40,
@@ -557,7 +715,11 @@
   "goc_nhin": "Cần bao nhiêu năm lương mua một căn",
   "style_anh": "mặt cắt nhà isometric",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "chuoi": "cpi_di_lai",
+   "nhan": "Transport cost"
+  }
  },
  {
   "id": 41,
@@ -571,7 +733,11 @@
   "goc_nhin": "Phim tư liệu công cộng, kể lại",
   "style_anh": "khung phim xước",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "america 1950",
+   "xoay": "tu_khoa"
+  }
  },
  {
   "id": 42,
@@ -585,7 +751,11 @@
   "goc_nhin": "Cùng một chỗ, cách nhau 100 năm",
   "style_anh": "ảnh ghép hai thời",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "city street",
+   "xoay": "tu_khoa"
+  }
  },
  {
   "id": 43,
@@ -599,7 +769,10 @@
   "goc_nhin": "Thiên thạch sát Trái Đất tháng này",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "xoay": "ngay"
+  }
  },
  {
   "id": 44,
@@ -613,7 +786,12 @@
   "goc_nhin": "NASA trả tiền cho ai",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "de_tai": "space",
+   "nam": 2024,
+   "xoay": "nam"
+  }
  },
  {
   "id": 45,
@@ -627,7 +805,11 @@
   "goc_nhin": "Cảnh báo đang bật ở bang nào",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "bang": "TX",
+   "xoay": "bang"
+  }
  },
  {
   "id": 46,
@@ -641,7 +823,11 @@
   "goc_nhin": "Động đất mạnh nhất và ở đâu",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "do_lon": 6.5,
+   "xoay": "nam"
+  }
  },
  {
   "id": 47,
@@ -655,7 +841,12 @@
   "goc_nhin": "Nhà thầu quốc phòng đua theo năm",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "de_tai": "ammunition",
+   "nam": 2024,
+   "xoay": "nam"
+  }
  },
  {
   "id": 48,
@@ -669,7 +860,12 @@
   "goc_nhin": "Một quả đạn giá bao nhiêu",
   "style_anh": "kỹ thuật hoạ bản vẽ xanh",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "de_tai": "missile",
+   "nam": 2024,
+   "xoay": "nam"
+  }
  },
  {
   "id": 49,
@@ -683,7 +879,11 @@
   "goc_nhin": "Án lệ đổi đời sống thường ngày",
   "style_anh": "tranh minh hoạ phiên toà",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "tu_khoa": "first amendment",
+   "xoay": "tu_khoa"
+  }
  },
  {
   "id": 50,
@@ -697,6 +897,10 @@
   "goc_nhin": "Bằng này đáng bao nhiêu tiền",
   "style_anh": "",
   "the_he": 2,
-  "footage": false
+  "footage": false,
+  "tham_so": {
+   "chuoi": "cpi_giao_duc",
+   "nhan": "Education cost"
+  }
  }
 ]

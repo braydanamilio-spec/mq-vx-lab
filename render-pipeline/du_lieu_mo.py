@@ -112,11 +112,21 @@ def so_lieu_sec(cong_ty: str, chi_tieu: str = "Revenues", n: int = 6) -> list[di
 
 # ── 3. BLS — chỉ số giá, việc làm, lương (số liệu chính thức) ───────────────────────────────
 # Mã chuỗi hay dùng. Không cần key: 25 lượt/ngày — thừa cho một phiên render.
+# 25/8 — nới từ 5 lên 13 chuỗi: 8 kênh thế hệ 2 cùng ăn nguồn BLS, mà chỉ có 5 chuỗi thì hai kênh
+# buộc phải ra CÙNG một video. Mã dưới đây đã gọi thử, cả 13 đều trả dữ liệu.
 BLS_CHUOI = {"cpi": "CUUR0000SA0",            # chỉ số giá tiêu dùng (mọi mặt hàng)
              "cpi_thucpham": "CUUR0000SAF1",   # thực phẩm
              "cpi_xang": "CUUR0000SETB01",     # xăng
              "cpi_nha": "CUUR0000SAH1",        # nhà ở
-             "that_nghiep": "LNS14000000"}     # tỉ lệ thất nghiệp
+             "that_nghiep": "LNS14000000",     # tỉ lệ thất nghiệp
+             "luong_gio": "CES0500000003",     # lương giờ trung bình, khối tư nhân
+             "viec_lam": "CES0000000001",      # tổng việc làm phi nông nghiệp
+             "cpi_yte": "CUUR0000SAM",         # chi phí y tế
+             "cpi_giao_duc": "CUUR0000SAE1",   # giáo dục
+             "cpi_di_lai": "CUUR0000SAT",      # đi lại
+             "cpi_dien_nuoc": "CUUR0000SAH2",  # điện nước trong nhà
+             "cpi_quan_ao": "CUUR0000SAA",     # quần áo
+             "cpi_giai_tri": "CUUR0000SAR"}    # giải trí
 
 
 def chuoi_bls(ten: str, tu_nam: int, den_nam: int, key: str = "") -> list[dict]:

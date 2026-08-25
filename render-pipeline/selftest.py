@@ -490,6 +490,20 @@ def t_kenh_the_he_2_tro_dung_ham_va_dang():
     trung = sorted({h for h in tay if tay.count(h) > 1})
     if trung:
         xau.append("handle trùng: " + ", ".join(trung))
+    # HAI KÊNH CÙNG NGUỒN + CÙNG THAM SỐ = RA CÙNG MỘT VIDEO. Đo thật 25/8: 6 cặp kênh ra y hệt
+    # nhau (PILL FACTS ra tin thu hồi thực phẩm; SALARY TRUTH và DEGREE WORTH cùng ra "Gas price")
+    # vì tham số xoay vòng gắn theo NGUỒN chứ không theo KÊNH. Lỗi này không lộ ra ở log — chỉ lộ
+    # khi xem hai video cạnh nhau, tức là sau khi đã đăng.
+    import collections
+    theo = collections.defaultdict(list)
+    for k in ks:
+        theo[(k.get("ham"), json.dumps(k.get("tham_so") or {}, sort_keys=True))].append(k.get("ten"))
+    for _kh, ten in sorted(theo.items()):
+        if len(ten) > 1:
+            xau.append("ra trùng nội dung: " + " = ".join(ten))
+    for k in ks:
+        if not (k.get("tham_so") or {}):
+            xau.append(f"{k.get('ten')}: chưa có tham_so (sẽ chạy bằng mặc định = dễ trùng kênh khác)")
     assert not xau, "danh sách kênh thế hệ 2 sai:\n   " + "\n   ".join(xau)
 
 
