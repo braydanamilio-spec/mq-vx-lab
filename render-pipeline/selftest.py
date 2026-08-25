@@ -708,6 +708,48 @@ def t_dispatch_luon_tra_bon_gia_tri():
     assert not xau, "_dispatch_short trả sai dạng:\n   " + "\n   ".join(xau)
 
 
+
+def t_the_he_2_tra_ten_dong_deu_co_that():
+    """Mọi tên được tra ĐỘNG trong đường thế hệ 2 phải có thật.
+
+    `chay_chung` lấy bộ dựng props bằng `getattr(DS, ten)` và tên composition bằng chuỗi trong
+    bảng `DUONG_RA`. Sai một chữ thì Python/Remotion chỉ kêu lúc CHẠY — mà lúc chạy là giữa đêm,
+    trong lane, sau khi đã tiêu giọng đọc và thời gian máy. Tra bằng chuỗi thì trình biên dịch
+    không đỡ được, nên phải có chốt đỡ thay."""
+    import os, re, sys
+    goc = os.path.dirname(os.path.abspath(__file__))
+    if not os.path.exists(os.path.join(goc, "the_he_2.py")):
+        return
+    if goc not in sys.path:
+        sys.path.insert(0, goc)
+    import datastory_ci as DS
+    import du_lieu_mo as DL
+    import the_he_2 as TH
+    src = _doc("the_he_2.py")
+    xau = []
+    # 1) mọi DS.xxx / D.xxx viết thẳng trong mã
+    for ten in sorted(set(re.findall(r"\bDS\.([A-Za-z_][A-Za-z_0-9]*)", src))):
+        if not hasattr(DS, ten):
+            xau.append(f"không có datastory_ci.{ten}")
+    for ten in sorted(set(re.findall(r"\bD\.([a-z_][A-Za-z_0-9]*)", src))):
+        if not hasattr(DL, ten):
+            xau.append(f"không có du_lieu_mo.{ten}")
+    # 2) bảng DUONG_RA: composition phải có trong Root.tsx, hàm props phải có trong datastory_ci
+    root = io.open(os.path.join(goc, "..", "engine-remotion", "src", "Root.tsx"),
+                   encoding="utf-8").read()
+    comp = set(re.findall(r'<Composition\s+id="([^"]+)"', root))
+    for dang, cap in (getattr(TH, "DUONG_RA", {}) or {}).items():
+        c, hp = cap
+        if c and c not in comp:
+            xau.append(f"{dang}: composition '{c}' không có trong Root.tsx")
+        if hp and not hasattr(DS, hp):
+            xau.append(f"{dang}: không có datastory_ci.{hp}()")
+    for c in ("RaceShort", "CinematicShort"):
+        if c not in comp:
+            xau.append(f"composition '{c}' (đường riêng) không có trong Root.tsx")
+    assert not xau, "tên tra động không tồn tại:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -803,6 +845,7 @@ def main():
     check("dữ liệu mở hỏng KHÔNG làm gãy dây chuyền", t_du_lieu_mo_khong_lam_gay_day_chuyen)
     check("50 kênh thế hệ 2 trỏ đúng hàm + dạng", t_kenh_the_he_2_tro_dung_ham_va_dang)
     check("_dispatch_short luôn trả đủ 4 giá trị", t_dispatch_luon_tra_bon_gia_tri)
+    check("thế hệ 2: tên tra động đều có thật", t_the_he_2_tra_ten_dong_deu_co_that)
     check("brand-kit: motif có thật, màu không trùng", t_brandkit_the_he_2)
     check("cổng an toàn nội dung phủ cả 7 đường story", t_cong_an_toan_noi_dung)
     check("CF chặn prompt vẫn còn đường Gemini", t_cf_chan_prompt_van_con_duong_gemini)
