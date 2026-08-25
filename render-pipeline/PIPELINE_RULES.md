@@ -2732,3 +2732,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   lời**: bấm "🖼 Tạo lại thumbnail" và "🔄 Render lại" thì không có gì xảy ra, không báo lỗi, người
   dùng tưởng nút hỏng. Nay có `window.__timJob()` tra CẢ hai nguồn, và **không đường nào được thoát
   im lặng** — mọi nhánh đều nói ra chuyện gì đang xảy ra.
+
+- **Lọc dữ liệu theo HÌNH DẠNG, đừng xoá theo TÊN từng trường.** (25/8) Ô xổ báo "57 kênh" trong khi
+  chỉ có 55: sổ `render_stats/{owner}` chứa khoá KÊNH (`{COSMOS:{l,s}, …}`) lẫn trường phụ `at`
+  (dấu thời gian) và `up`. Bản cũ chỉ `delete d.up` rồi lấy nguyên `Object.keys()` làm danh sách
+  kênh ⇒ **`at` thành một "kênh" 0 video** nằm cuối ô xổ. Xoá theo tên là đuổi hình bắt bóng —
+  trường mới thêm sau lại lọt. Nay giữ khoá nào có giá trị là object mang `l`/`s` (đó mới là bản
+  ghi đếm của một kênh). Đo sau vá: 48 khoá, 0 rác.

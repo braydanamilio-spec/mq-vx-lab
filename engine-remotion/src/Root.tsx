@@ -35,6 +35,7 @@ import { BrandBeyond } from "./BrandBeyond";
 import { BrandLegacy } from "./BrandLegacy";
 import { Cinematic, calcCinematic } from "./Cinematic";
 import { ToonShort, calcToon } from "./ToonShort";
+import { ThuSub2 } from "./_ThuSub2";
 import { DocThumb } from "./DocThumb";
 import { BarChartRace, calcRace } from "./BarChartRace";
 import { BrandV2 } from "./BrandV2";
@@ -178,6 +179,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="Cinematic" component={Cinematic} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
     <Composition id="DocThumb" component={DocThumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ big: "TITLE" }} />
     <Composition id="CinematicShort" component={Cinematic} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
+    <Composition id="ThuSub2" component={ThuSub2} durationInFrames={1} fps={30} width={1800} height={1350} />
     <Composition id="ToonShort" component={ToonShort} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ slug: "", title: "", frames: [], lines: [] }} calculateMetadata={calcToon} />
     <Composition id="ToonLong" component={ToonShort} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ slug: "", title: "", frames: [], lines: [] }} calculateMetadata={calcToon} />
     <Composition id="LottieTest" component={LottieTest} durationInFrames={120} fps={30} width={1920} height={1080} />

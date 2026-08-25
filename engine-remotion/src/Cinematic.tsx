@@ -36,6 +36,23 @@ const chunkWords = (ws: string[]): string[][] => {
   return ch;
 };
 // Caption karaoke: nếu có subs (mốc CÂU từ edge-tts) -> neo đúng lúc voice nói (khớp tiếng). Không có -> chia đều cả cảnh.
+/**
+ * ĐỘ SÁNG CẢM NHẬN của một mã màu (0 tối … 1 sáng). Dùng để chọn màu chữ đè lên nó.
+ * 25/8 — vì sao cần: từ đang đọc trước đây tô THẲNG bằng `accent` của kênh. BRANDEDUSA có accent
+ * xanh navy đậm, cảnh lại là biển Coca-Cola ĐỎ RỰC ⇒ chữ "moved" gần như tàng hình giữa các từ
+ * trắng. Bản vá đầu (viên nền accent + chữ tối) vẫn hỏng với accent tối: tối trên tối.
+ * Không thể chọn sẵn một màu chữ cho mọi kênh — phải TÍNH: nền sáng thì chữ tối, nền tối thì chữ
+ * sáng. Đây là phép đo, không phải khẩu vị.
+ */
+const doSang = (hex: string): number => {
+  const h = String(hex || "").replace("#", "");
+  const v = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const r = parseInt(v.slice(0, 2), 16) / 255, g = parseInt(v.slice(2, 4), 16) / 255,
+        b = parseInt(v.slice(4, 6), 16) / 255;
+  if ([r, g, b].some((x) => Number.isNaN(x))) return 0.5;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;      // hệ số cảm nhận của mắt người
+};
+
 const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; subs?: Sub[]; mode?: "duel" | "file" }> = ({ nar, l, d, accent, subs, mode }) => {
   const lines: { words: string[]; s: number; e: number }[] = [];
   if (subs && subs.length) {
@@ -90,7 +107,10 @@ const Caption: React.FC<{ nar: string; l: number; d: number; accent: string; sub
             padding: on ? "0 10px" : 0,
             borderRadius: on ? 12 : 0,
             background: on ? accent : "transparent",
-            color: on ? "#12131A" : "#F4FAFF",
+            // chữ trên viên nền: TÍNH theo độ sáng của accent, không đoán
+            color: on ? (doSang(accent) > 0.55 ? "#12131A" : "#FFFFFF") : "#F4FAFF",
+            // vành sáng quanh viên nền: tách nó khỏi MỌI cảnh (đỏ rực, trời xanh, cảnh tối)
+            boxShadow: on ? "0 0 0 4px rgba(255,255,255,0.92), 0 4px 18px rgba(0,0,0,0.55)" : "none",
             WebkitTextStroke: on ? "0px" : "7px rgba(8,10,16,0.92)",
             paintOrder: "stroke fill",
             transform: on ? "scale(1.07)" : "scale(1)",
