@@ -2607,3 +2607,9 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   mỗi 10' in ngăn xếp mọi thread vào log; `SIGTERM` (bị chém timeout) cũng in trước khi chết.
   0 chi phí khi không kẹt. Ghi chú cùng phiên: 7 render_request mắc kẹt ở "processing" (3 plan chết
   đánh dấu rồi bỏ) — cần lối tự hồi processing→pending khi quá 2h không nhúc nhích.
+
+- **Khối `if __name__` phải là THỨ CUỐI CÙNG của file — mọi hàm nối thêm phải nằm TRƯỚC nó.** (25/8)
+  Hung thủ 5 lane toon câm 40+ phút phiên 08:55: `_toon_long_then_shorts` được nối vào cuối file
+  (23/8) SAU khối chạy ⇒ đường `--channel` của matrix gọi hàm chưa được định nghĩa ⇒ NameError bị
+  vòng thử-lại nuốt êm, không bản ghi nào. Toon đi đường main()/render_datastory thì không sao nên
+  bug nấp 2 ngày — tới lần ĐẦU toon vào matrix (5 kênh mới mở) mới lộ. Chốt: `t_khoi_main_cuoi_file`.

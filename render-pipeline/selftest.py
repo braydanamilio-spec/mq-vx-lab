@@ -437,6 +437,7 @@ def main():
     check("kiểm kho hằng ngày: song song + ngân sách 240s", t_kiem_kho_ngay_co_ngan_sach)
     check("lượt đi bộ nhặt kèm map kho + thumbnail", t_lap_ban_ghi_tu_luot_di_bo)
     check("plan KHÔNG render — yêu cầu render-lại giao lane", t_plan_khong_render)
+    check("khối __main__ của run_render nằm CUỐI file", t_khoi_main_cuoi_file)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2249,6 +2250,19 @@ def t_plan_khong_render():
     assert goi2, "channel_mode không xử yêu cầu render lại -> hàng tồn không ai dọn"
     assert any(k.arg == "chi_kenh" for c in goi2 for k in c.keywords), \
         "lane phải lọc yêu cầu theo kênh mình, không ôm cả hàng"
+
+
+def t_khoi_main_cuoi_file():
+    """Khối `if __name__` của run_render.py phải là THỨ CUỐI CÙNG — không def nào sau nó.
+
+    25/8 — hung thủ của 5 lane toon câm 40+ phút: `_toon_long_then_shorts` được nối vào file SAU
+    khối chạy, nên đường `--channel` gọi hàm chưa tồn tại ⇒ NameError bị vòng thử-lại nuốt êm.
+    Toon đi đường main() thì không sao — bug nấp 2 ngày, tới lần đầu toon vào matrix mới lộ."""
+    src = _doc("run_render.py")
+    i = src.index('if __name__ ==')
+    sau = src[i:]
+    assert "\ndef " not in sau, "còn hàm định nghĩa SAU khối __main__ -> NameError chờ nổ"
+    assert "channel_mode(" in sau, "khối __main__ mất đường --channel"
 
 
 if __name__ == "__main__":

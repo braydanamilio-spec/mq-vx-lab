@@ -2315,16 +2315,6 @@ def channel_mode(name):
         print_exc_gon()
 
 
-if __name__ == "__main__":
-    if "--gate" in sys.argv:
-        gate_mode()
-    elif "--plan" in sys.argv:
-        plan_mode()
-    elif "--channel" in sys.argv:
-        i = sys.argv.index("--channel")
-        channel_mode(sys.argv[i + 1] if i + 1 < len(sys.argv) else "")
-    else:
-        main()   # tuần tự (fallback / chạy tay)
 
 
 def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopped):
@@ -2421,3 +2411,21 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
             preview=(("https://drive.google.com/file/d/%s/preview" % sdid) if sdid else ""))
         R["done"] += 1
     return True
+
+
+# 25/8/2026 — KHỐI CHẠY PHẢI LÀ THỨ CUỐI CÙNG CỦA FILE. Trước đây nó nằm TRƯỚC hàm
+# `_toon_long_then_shorts` (hàm toon được nối vào cuối file ở phiên 23/8): với đường
+# `--channel` của matrix, Python chạy khối này khi hàm kia CHƯA ĐƯỢC ĐỊNH NGHĨA ⇒ NameError,
+# bị vòng thử-lại nuốt êm ⇒ 5 lane toon phiên 08:55 đứng câm 40+ phút không một bản ghi.
+# Toon chạy đường render_datastory/main() thì không sao — nên bug nấp được 2 ngày, tới lần
+# ĐẦU TIÊN toon vào matrix mới lộ. Chốt: t_khoi_main_cuoi_file.
+if __name__ == "__main__":
+    if "--gate" in sys.argv:
+        gate_mode()
+    elif "--plan" in sys.argv:
+        plan_mode()
+    elif "--channel" in sys.argv:
+        i = sys.argv.index("--channel")
+        channel_mode(sys.argv[i + 1] if i + 1 < len(sys.argv) else "")
+    else:
+        main()   # tuần tự (fallback / chạy tay)
