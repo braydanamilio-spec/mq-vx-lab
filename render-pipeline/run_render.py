@@ -1891,6 +1891,13 @@ def _kiem_kho_ngay(cfg: dict) -> None:
         except Exception:
             pass
         FB.set_config(OWNER, {"kiem_kho_ngay": ngay})
+        try:                                          # cùng nhịp 1 lần/ngày: giữ D1 khỏi phình
+            _r = _H2.don_job_cu(OWNER, 14)
+            if _r.get("xoa"):
+                print(f"   🧹 D1: dọn {_r['xoa']:,} bản ghi job cũ hơn {_r.get('giu_ngay')} ngày "
+                      f"(còn {_r.get('con_lai'):,}) — giữ mức đọc D1 phẳng, không phình theo thời gian.")
+        except Exception:
+            pass
         print(f"   🧮 Kiểm kho: {song:,} video THẬT trên {len(accs)} kho -> đã ghi đè sổ đếm "
               f"(bộ đếm cộng dồn không tự đúng lại được).")
     except Exception as e:

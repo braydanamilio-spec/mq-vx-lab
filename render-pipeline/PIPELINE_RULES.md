@@ -2352,3 +2352,28 @@ thật** mỗi ngày. Quá 26 giờ không có lượt đếm mới thì bỏ ne
 trôi xa sự thật mà không ai biết).
 **LUẬT: một con số vừa cần ĐÚNG vừa cần TƯƠI thì đừng chọn một trong hai — hãy neo vào phép đo đúng
 rồi cộng phần chênh đo được theo thời gian thực.**
+
+### 7.dr — D1 sẽ CẠN sau ~30 ngày nếu không dọn (25/8/2026, anh hỏi trước khi nó xảy ra)
+Đo thật bằng `rows_read` mà D1 trả về, không ước:
+| Sau | Dòng `render_job` | rows_read/ngày | % trần 5 triệu |
+|---|---|---|---|
+| hôm nay | 1.558 | 979.200 | 19,6% |
+| +15 ngày | 7.558 | 4,75 triệu | **95%** |
+| +30 ngày | 13.558 | 8,52 triệu | **170% — CẠN** |
+Vì `apiHotStat` chạy 4 lệnh `COUNT` trên `render_job` mỗi lượt, mà bảng **chỉ tăng**. Dashboard đã đệm
+5 phút (288 lượt/ngày/tab) nên nhịp gọi không phải vấn đề — **kích thước bảng mới là vấn đề**.
+Vá: D1 là kho **NÓNG**, không phải kho lưu trữ. Lệnh `don_job_cu` giữ **14 ngày** gần nhất, chạy cùng
+nhịp 1 lần/ngày với lượt kiểm kho ⇒ bảng đứng ở ~5.600 dòng và mức đọc **phẳng mãi mãi**. Lịch sử
+không mất: video ở Drive, kịch bản ở sidecar + 2 kho dự phòng.
+Dọn xong **neo lại `nen`** = số dòng còn lại, nếu không phần chênh của ô "Tổng" hoá âm.
+**LUẬT: bảng nào chỉ-tăng mà lại bị COUNT mỗi lượt đọc thì phải có hạn tuổi. Tính trước ngày nó cạn,
+đừng đợi ngày đó tới.**
+
+### 7.ds — "Báo một đằng hiển thị một nẻo": có hai nguồn số mà không dán nhãn (25/8/2026)
+API trả `{"tong":1996,...}` trong khi dashboard hiện `2178` — vì có **hai nguồn** (D1 đếm thật từ
+Drive · `__pushed__` cộng dồn ở Firestore) và khối D1 `catch(_){}` **nuốt im** mọi lỗi, rơi về nguồn
+sai mà không dấu vết. Người xem không có cách nào biết mình đang nhìn số nào.
+Vá: ① ô đổi tên thành **"Video trong kho"** (đúng thứ nó đo) · ② dán nhãn nguồn ngay cạnh số
+(`✓ kho thật` / `~ bản ghi` / `⚠ D1 im — số cộng dồn`) · ③ lỗi D1 ghi `console.warn`, không nuốt.
+**LUẬT: một con số có nhiều nguồn thì PHẢI hiện nguồn. Không dán nhãn thì mỗi lần lệch là một cuộc
+tranh cãi vô ích.**

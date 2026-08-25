@@ -277,6 +277,18 @@ def kho_that_ghi(owner: str, tong: int) -> bool:
     return bool(r.get("ok"))
 
 
+def don_job_cu(owner: str, ngay: int = 14) -> dict:
+    """Dọn bản ghi job cũ hơn `ngay` ngày để D1 KHÔNG PHÌNH (25/8/2026).
+
+    Đo thật: `apiHotStat` chạy 4 lệnh COUNT trên `render_job` mỗi lượt. Với 1.558 dòng là
+    ~980K rows_read/ngày (19,6% trần 5 triệu). Bảng tăng ~400 dòng/ngày ⇒ **~15 ngày chạm 95%,
+    ~30 ngày VƯỢT TRẦN**. Giữ 14 ngày gần nhất thì bảng đứng ở ~5.600 dòng, mức đọc phẳng mãi mãi.
+    Lịch sử không mất: video ở Drive, kịch bản ở sidecar + 2 kho dự phòng."""
+    if not bat_ghi():
+        return {}
+    return goi("don_job_cu", {"owner": owner, "ngay": int(ngay)}) or {}
+
+
 def ngan_sach_cong(ngay: str, doc: int = 0, ghi: int = 0) -> None:
     if not bat_ghi():
         return
