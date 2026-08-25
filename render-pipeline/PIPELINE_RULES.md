@@ -2725,3 +2725,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   (1) dải nền mờ phía sau, (2) viền chữ 7px, (3) **từ đang đọc có VIÊN NỀN màu accent + chữ tối** —
   nổi bật bất kể accent sáng hay tối, bất kể cảnh sáng hay tối. Đã render ảnh so sánh cũ/mới trên
   cả hai loại nền trước khi đẩy. Khoảng cách chữ 9px → 11px (bản cũ chữ dính nhau).
+
+- **Đổi NGUỒN danh sách thì phải soát mọi nút tra theo nguồn cũ.** (25/8) Sau khi thư viện chuyển
+  sang lấy danh sách từ **D1** (để lọc "Hôm nay" không còn ra 0), phần lớn thẻ là job **chỉ có ở D1**.
+  Ba nút vẫn tra bằng `__rsJobsData` (danh sách Firestore) rồi `if(!j) return;` — **thoát không một
+  lời**: bấm "🖼 Tạo lại thumbnail" và "🔄 Render lại" thì không có gì xảy ra, không báo lỗi, người
+  dùng tưởng nút hỏng. Nay có `window.__timJob()` tra CẢ hai nguồn, và **không đường nào được thoát
+  im lặng** — mọi nhánh đều nói ra chuyện gì đang xảy ra.
