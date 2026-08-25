@@ -438,6 +438,7 @@ def main():
     check("lượt đi bộ nhặt kèm map kho + thumbnail", t_lap_ban_ghi_tu_luot_di_bo)
     check("plan KHÔNG render — yêu cầu render-lại giao lane", t_plan_khong_render)
     check("khối __main__ của run_render nằm CUỐI file", t_khoi_main_cuoi_file)
+    check("phiên không giữ khoá quá lâu (phiên sau khỏi bị huỷ)", t_phien_khong_giu_khoa_qua_lau)
     check("mascot: dùng rig sẵn, KHÔNG vẽ lại nhân vật", t_mascot_khong_ve_lai_nhan_vat)
     check("MascotStage động theo từng khung + parallax", t_mascot_stage_dong_tung_khung)
     check("tách nền rig: ĐO màu viền, không khoá cứng", t_tach_nen_khong_khoa_cung_mau)
@@ -2321,6 +2322,26 @@ def t_tach_nen_khong_khoa_cung_mau():
     # hỏng thì phải GIỮ ảnh làm bằng chứng, không xoá
     assert "_hong" in src and "os.remove(dest)" not in src, \
         "ảnh tách hỏng bị xoá -> lần sau lại phải đoán FLUX vẽ gì"
+
+
+def t_phien_khong_giu_khoa_qua_lau():
+    """Ngân sách lane phải NGẮN HƠN timeout workflow, và cả hai phải đủ ngắn để phiên sau không bị huỷ.
+
+    25/8 — đo trên GitHub: phiên 08:55 giữ khoá `concurrency` 150 phút trong khi số lane rơi
+    18 → 3 → 1. Hai phiên 10:03 và 10:44 bị **huỷ trắng**, không lane nào chạy: 2,5 giờ chỉ có
+    một mẻ rồi thoi thóp, 16 chỗ runner bỏ không."""
+    import re
+    src = _doc("run_render.py")
+    m_soft = re.search(r'batch_budget_min", (\d+)\)', src)
+    m_hard = re.search(r"HARD_S = (\d+) \* 60", src)
+    assert m_soft and m_hard, "không tìm thấy ngân sách lane"
+    soft, hard = int(m_soft.group(1)), int(m_hard.group(1))
+    wf = _doc("../.github/workflows/render_cron.yml")
+    m_to = re.search(r"timeout-minutes: (\d+)", wf[wf.index("render:"):] if "render:" in wf else wf)
+    to = int(m_to.group(1)) if m_to else 0
+    assert soft <= hard, f"ngân sách mềm {soft}' > cứng {hard}'"
+    assert hard + 10 <= to, f"lane thoát ở {hard}' mà workflow chém ở {to}' — không đủ chỗ flush"
+    assert to <= 100, f"timeout {to}' quá dài — phiên sau sẽ bị huỷ trắng như 10:03/10:44 ngày 25/8"
 
 
 if __name__ == "__main__":

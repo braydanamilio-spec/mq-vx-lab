@@ -2635,3 +2635,11 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   có file, code vẫn đưa `stages/.../far.png` vào props ⇒ Remotion nạp ảnh không tồn tại, giết cả lượt
   render (cả long lẫn short). Nay lọc theo `os.path.exists` + báo rõ lớp nào thiếu, còn ≥2 lớp thì
   vẫn dựng (chiều sâu vẫn đủ). Tin tốt cùng lượt: bản vá đo-màu-viền cho **12/12 tư thế nhân vật**.
+
+- **Phiên dài giữ khoá `concurrency` làm HUỶ TRẮNG phiên sau.** (25/8) Đo trên GitHub: phiên 08:55
+  giữ khoá 150 phút trong khi số lane rơi 18 → 3 → 1 (lane xong việc là THOÁT, runner được trả lại,
+  nhưng khoá do lane cuối giữ). **Hai phiên 10:03 và 10:44 bị huỷ trắng** — 2,5 giờ chỉ có một mẻ
+  18 lane rồi thoi thóp, 16 chỗ runner bỏ không. Đó là lý do dashboard hiện "Đang chạy: 1", KHÔNG
+  phải lane đợi nhau (work-stealing vẫn chạy: xong kênh mình là lấy kênh kế từ hàng chờ nguyên tử).
+  Nay ngân sách lane 110'/150' → **60'/75'**, timeout workflow 165' → **90'**: cứ ~80 phút một mẻ
+  ĐỦ 18 LANE, không phiên nào bị huỷ. Chốt: `t_phien_khong_giu_khoa_qua_lau`.

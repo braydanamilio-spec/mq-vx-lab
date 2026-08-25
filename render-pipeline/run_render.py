@@ -2135,8 +2135,15 @@ def channel_mode(name):
     # hậu quả phiên 07:40Z: 16/18 lane bị trần 150' chém giữa chừng vì lane tưởng còn cả tiếng.
     # Ngân sách mềm 110' + cứng 150' (chừa 15' buffer setup/flush/render đang dở) -> lane TỰ thoát
     # sạch sẽ (flush đủ, không job ma, không phí render dở) trước khi workflow kịp chém.
-    budget_s = int(cfg.get("batch_budget_min", 110) or 110) * 60
-    HARD_S = 150 * 60                                               # cứng: timeout matrix 165' - 15' buffer
+    # 25/8 — PHIÊN NGẮN LẠI ĐỂ THÔNG XE. Đo thật: phiên 08:55 giữ khoá `concurrency` suốt 150',
+    # số lane rơi 18 → 3 → 1 (kênh nào xong thì lane THOÁT, runner được trả lại — nhưng khoá vẫn
+    # do lane cuối giữ). Hậu quả đo được: **hai phiên 10:03 và 10:44 bị HUỶ TRẮNG**, không một lane
+    # nào chạy. Tức 2,5 giờ chỉ có một mẻ 18 lane rồi thoi thóp, còn 16 chỗ runner bỏ không.
+    # Rút ngân sách xuống 60'/75' thì cứ ~80 phút có một mẻ ĐỦ 18 LANE mới, đuôi thưa ngắn hơn
+    # hẳn và không phiên nào bị huỷ. Long nặng nhất ~50' vẫn lọt (vòng lặp đã tự kiểm
+    # "còn giờ < ước tính mẻ → dừng" nên không có video nào bị cắt ngang).
+    budget_s = int(cfg.get("batch_budget_min", 60) or 60) * 60
+    HARD_S = 75 * 60                                                # cứng: timeout matrix 90' - 15' buffer
     max_run = int(cfg.get("max_per_run", 0) or 0)                   # 0 = ∞ (vòng lặp tự giới hạn theo target/quota/giờ); >0 = trần cứng/kênh/phiên
     # ROUND CAP (xoay vòng công bằng): mỗi kênh làm TỐI ĐA round_long/round_short video RỒI NHƯỜNG SLOT (không cắt ngang —
     # check SAU khi run_one() hoàn tất trọn video). Mặc định 10 long/30 short -> phiên xong sớm hơn, kênh khác kịp có lượt.
