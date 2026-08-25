@@ -2510,3 +2510,10 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
 - **Chốt phụ thuộc đồng hồ phải đo CÔNG THỨC, không đo số tuyệt đối.** (25/8) `assert con > 120`
   fail oan trong 2 tiếng trước mốc reset của Google — lúc đó "cạn tới hết ngày" đúng nghĩa chỉ còn
   97 phút. (Cùng loại với lỗi `cf < gg` lúc nửa đêm UTC.) Lưu ý `nghi_key.muc_nghi()` trả **PHÚT**.
+
+- **Ô "⚙️ Đang chạy" bằng 0 vì D1 KHÔNG HỀ CÓ dòng job đang chạy.** (25/8) Soi D1 lúc 3 luồng đang
+  render: bảng chỉ có done/failed/ratelimited. Bộ đệm `hot_db` chỉ xả sớm ở trạng thái CUỐI, nên
+  dòng trung gian nằm chờ rồi đi cùng lô với dòng `done` của chính job đó và bị đè. ⇒ Đọc số này
+  từ D1 mà không sửa gốc chỉ là **đổi chỗ sai**. Nay lượt ghi ĐẦU của mỗi job xả sớm, có nhịp 25s
+  (bước plan dựng cả trăm job liền tay — xả từng cái là phá gộp lô: 25 thao tác thành 25 lời gọi).
+  Chốt: `t_job_dang_chay_len_d1_ngay` (đã thử phá 2 kiểu, đều bắt được).

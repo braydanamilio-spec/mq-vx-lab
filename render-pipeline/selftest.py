@@ -431,6 +431,7 @@ def main():
     check("nén lỗi đã lường trước, không đệ quy", t_nen_loi_da_luong_khong_de_quy)
     check("hồ key qua ảnh chụp D1, không đâm vào A", t_ho_key_qua_d1_khong_dam_vao_A)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
+    check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2098,6 +2099,32 @@ def t_moi_chot_deu_duoc_dang_ky():
           and len(n.args) > 1 and isinstance(n.args[1], ast.Name)}
     quen = sorted(co - dk)
     assert not quen, f"{len(quen)} chốt viết ra nhưng chưa đăng ký trong main(): {quen}"
+
+
+def t_job_dang_chay_len_d1_ngay():
+    """Lượt ghi ĐẦU TIÊN của mỗi job phải xả xuống D1 ngay, kể cả trạng thái chưa xong.
+
+    25/8 — soi D1 lúc 3 luồng đang render thật: bảng chỉ có done/failed/ratelimited, KHÔNG một dòng
+    `running` nào ⇒ ô "⚙️ Đang chạy" bằng 0 dù máy đang chạy. Vì bộ đệm chỉ xả sớm ở trạng thái
+    CUỐI: dòng trung gian nằm chờ, tới lúc xả thì đi cùng lô với dòng `done` của chính job đó và bị
+    đè. Đọc số này từ D1 mà không sửa gốc thì chỉ là ĐỔI CHỖ SAI, không hết sai."""
+    import sys, types, importlib
+    goi_ra = []
+    gia = types.ModuleType("hot_db_probe")
+    import hot_db as H
+    importlib.reload(H)
+    H.goi = lambda lenh, tham=None, timeout=12: (goi_ra.append((lenh, tham)) or {"ok": True})
+    H.bat_ghi = lambda: True
+    H._DA_GHI.clear(); H._DEM_BUF.clear(); H._BUF_AT[0] = 0
+    H.ghi_job("chu", "job-1", "TESTUSA", "long", "running", step="viet", at="2026-08-25T05:00:00Z")
+    lo = [t for l, t in goi_ra if l == "ghi_job_loat"]
+    assert lo, "job mới mà không xả xuống D1 -> ô Đang chạy mãi bằng 0"
+    assert any(x.get("status") == "running" for x in lo[0]["jobs"]), \
+        f"lô xả không mang trạng thái running: {lo[0]['jobs']}"
+    # lượt ghi trung gian TIẾP THEO của cùng job thì không được xả nữa (giữ hạn mức)
+    n0 = len(goi_ra)
+    H.ghi_job("chu", "job-1", "TESTUSA", "long", "rendering", at="2026-08-25T05:01:00Z")
+    assert len(goi_ra) == n0, "lượt trung gian sau vẫn xả -> đốt lượt gọi Worker vô ích"
 
 
 if __name__ == "__main__":

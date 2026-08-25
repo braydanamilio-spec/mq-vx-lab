@@ -112,6 +112,10 @@ def _xa_buf(ep: bool = False) -> int:
     return len(lo)
 
 
+_DA_GHI: set = set()        # job đã có ÍT NHẤT một dòng trong D1 (xem ghi_job)
+_XA_MOI = [0.0]             # mốc lần xả sớm gần nhất — giữ nhịp, xem ghi_job
+
+
 def ghi_job(owner, jid, channel, vtype, status, step="", title=None, drive_id=None,
             queued=False, at="") -> None:
     if not bat_ghi():
@@ -122,7 +126,25 @@ def ghi_job(owner, jid, channel, vtype, status, step="", title=None, drive_id=No
     _DEM_BUF.append({"_owner": owner, "id": jid, "channel": channel, "vtype": vtype,
                      "status": status, "step": step, "title": title, "drive_id": drive_id,
                      "queued": bool(queued), "at": at})
-    _xa_buf(ep=status in ("done", "failed"))     # kết quả cuối thì xả ngay, khỏi chờ
+    # 25/8 — VÌ SAO Ô "⚙️ ĐANG CHẠY" LUÔN BẰNG 0. Soi D1 lúc 3 luồng đang render thật: bảng chỉ có
+    # done/failed/ratelimited, KHÔNG có một dòng `running` nào. Bộ đệm chỉ xả sớm ở trạng thái CUỐI;
+    # dòng trung gian nằm chờ trong đệm, tới lúc xả thì thường đã đi cùng lô với dòng `done` của
+    # chính job đó và bị đè. Kết quả: D1 không bao giờ thấy job nào đang chạy — nên đọc "Đang chạy"
+    # từ D1 cũng vẫn ra 0, chỉ là đổi chỗ sai chứ không hết sai.
+    # Xả ngay lượt ghi ĐẦU TIÊN của mỗi job: đúng 1 lời gọi Worker thêm cho mỗi video (~400/ngày
+    # trên trần 100.000 lượt Worker free), đổi lại ô "Đang chạy" nói thật.
+    # Xả sớm CÓ NHỊP: bước plan dựng cả trăm job liền tay, xả từng cái là phá luôn việc gộp lô
+    # (25 thao tác -> 25 lời gọi Worker). Tối đa 1 lượt xả sớm mỗi 25 giây: job đang chạy hiện lên
+    # trong vòng nửa phút, mà lô vẫn gộp được.
+    _moi = jid not in _DA_GHI
+    if _moi:
+        _DA_GHI.add(jid)
+        if len(_DA_GHI) > 2000:
+            _DA_GHI.clear()
+    _som = _moi and (_t.time() - _XA_MOI[0]) >= 25
+    if _som:
+        _XA_MOI[0] = _t.time()
+    _xa_buf(ep=_som or status in ("done", "failed"))
 
 
 def xa_het() -> int:
