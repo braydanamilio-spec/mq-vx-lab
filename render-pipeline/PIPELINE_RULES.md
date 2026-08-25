@@ -2998,3 +2998,12 @@ bình thường của hệ chạy trên hạn mức free.
   và đã có đường xử lý → `print_exc_gon()` in một dòng, cộng vào bộ đếm `bao_da_luong()` để
   "im lặng" không thành "giấu". Lỗi lạ vẫn in đủ stack (đã thử: 1 dòng vs 3 dòng).
 - Cùng họ với bài học 588 dòng cảnh báo pool và 39 vệt `RateLimited` phiên 02:15.
+
+### 26/8 — lane chạy hết ngân sách để ra 1 video khi pool key đã cạn
+Phiên 21:32: **7 lane · 1 video · 65 lỗi**, trong đó 54 lượt "hết key viết". Hết key thì kênh nào
+cũng hỏng y như nhau — bốc thêm kênh từ hàng chờ chỉ tốn **phút máy GitHub** (free có hạn theo
+tháng) mà không đổi kết quả.
+- **Luật**: 3 kênh liên tiếp hỏng vì cạn tài nguyên → dừng lane, trả phút máy lại cho phiên sau.
+  Ba lần đủ để kết luận; đếm lại từ 0 ngay khi có một kênh chạy được, nên không dừng oan.
+- Chỉ tính các lỗi CẠN TÀI NGUYÊN (`hết key viết` · `KHÔNG CÒN KEY NÀO` · `pool vẽ ảnh CẠN SẠCH`),
+  không tính lỗi thường — lỗi thường thì kênh sau vẫn có thể chạy được.

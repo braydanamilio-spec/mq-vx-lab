@@ -2206,6 +2206,7 @@ def channel_mode(name):
         print(f"   🎨 TOON chế độ CHẤT: mẻ tối đa {round_long} long / {round_short} short (ảnh dày + rối giấy).")
     MAX_EMPTY = int(cfg.get("empty_retry", 4) or 4)                 # số vòng LIỀN ra 0 video (do rate-limit) rồi mới chịu ngừng -> quota cạn thật
     start = time.monotonic(); rounds = 0; last_dur = 0; empty_streak = 0
+    _het_key_lien = 0        # số kênh liên tiếp hỏng vì hết key (xem thoát sớm bên dưới)
     while True:
         rounds += 1
         remain = min(budget_s, HARD_S) - (time.monotonic() - start)
@@ -2313,8 +2314,22 @@ def channel_mode(name):
             _t2 = time.monotonic()
             try:
                 run_one(_ch2, keys, report=report)
+                _het_key_lien = 0
             except BaseException as e:
                 print_exc_gon(); report["fails"].append(f"{_ke}: {str(e)[:120]}")
+                # 26/8 — THOÁT SỚM KHI CẢ POOL KEY ĐÃ CẠN. Phiên 21:32: 7 lane chạy hết ngân sách
+                # để ra ĐÚNG 1 video, với 54 lượt "hết key viết". Hết key thì kênh nào cũng hỏng
+                # y như nhau — bốc thêm kênh chỉ tốn phút máy GitHub (free có hạn theo tháng) mà
+                # không đổi kết quả. Ba lần liên tiếp là đủ kết luận, không cần thử hết hàng chờ.
+                if any(t in str(e) for t in ("hết key viết dùng được", "KHÔNG CÒN KEY NÀO",
+                                             "pool vẽ ảnh CẠN SẠCH")):
+                    _het_key_lien += 1
+                    if _het_key_lien >= 3:
+                        print(f"   🛑 {name}: 3 kênh liên tiếp hết key — dừng lane, trả phút máy "
+                              f"lại cho phiên sau (key hồi thì chạy tiếp)")
+                        break
+                else:
+                    _het_key_lien = 0
             last_dur = time.monotonic() - _t2
     except Exception as e:
         print(f"   ⚠️ lấy việc kế hụt ({str(e)[:60]}) — bỏ qua, không ảnh hưởng phần đã làm.")
