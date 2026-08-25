@@ -561,6 +561,183 @@ def dung_story_race(kenh: dict, ky: dict | None = None) -> dict | None:
             "nguon": kenh.get("nguon"), "_that": True, "self_score": {"total": 92}}
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# DẠNG PHIM KỂ — dùng cho niche mà bảng số không kể được (án, bí ẩn, nghiên cứu, tư liệu)
+# ------------------------------------------------------------------------------------------
+# Trả (tieu_de, cau_hook, [{nar, img_query}]). `img_query` là PROMPT VẼ, được ghép thêm `style_anh`
+# của kênh ở dung_story_cinematic — đó là chỗ mỗi kênh giữ một gu hình riêng suốt đời.
+# Lời kể lấy TỪ BẢN GHI: tên vụ, ngày, toà, trích đoạn. AI không tham gia ở đây.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+def _pk_ban_an(D, ky):
+    r = D.ban_an(ky.get("tu_khoa", "wrongful death"), 4)
+    if not r:
+        return None
+    v = r[0]
+    nam = str(v["ngay"])[:4]
+    trich = " ".join(str(v["trich"] or "").split())[:150]
+    canh = [
+        (f"This case is real. {_gon(v['ten_vu'], 60)}.", "empty american courtroom, morning light"),
+        (f"Filed in {nam}.", "stack of legal case files on a desk"),
+        (f"The court: {_gon(v['toa'], 50)}.", "exterior of a US federal courthouse"),
+        (f"From the opinion: {trich}." if trich else "The opinion runs for pages.",
+         "close up of a printed court opinion page"),
+        (f"There are {len(r)} more like it filed under the same words.",
+         "long row of archive shelves with case binders"),
+        ("Every line of this is public record. Anyone can pull it.",
+         "hands opening a public records folder"),
+    ]
+    return (_gon(v["ten_vu"], 46), f"A {nam} case almost nobody read.", canh)
+
+
+def _pk_wiki(D, ky):
+    loc = ky.get("loc") or "" 
+    # Mỗi bộ lọc có (nhận, LOẠI TRỪ). Không có vế loại trừ thì hai kênh lọc chồng nhau sẽ cùng
+    # chọn đúng một bài — đo thật: UNSOLVED LOG và MISSING PIECE cùng ra "Disappearance of Marvin
+    # Clark". Và "city" từng bắt nhầm "Manchester City F.C." vào kênh địa danh, nên bỏ hẳn từ đó.
+    TU = {"bi_an":    (("mystery", "unsolved", "unexplained", "cryptid", "hoax", "conspiracy"),
+                       ("missing", "disappear", "vanish")),
+          "mat_tich": (("missing", "disappear", "vanish", "lost at sea"), ()),
+          # Từ đơn bắt nhầm tên người ("Jessie Cave" là diễn viên, không phải hang). Chỉ nhận CỤM
+          # chỉ địa danh, nơi chữ đứng sau mới xác định đó là một chỗ trên bản đồ.
+          "dia_diem": ((" island", " mountains", " national park", " volcano", " canyon",
+                        " desert", " glacier", "mount ", " peninsula", " archipelago",
+                        " rainforest", " strait"), ("f.c.", "united", "album", "film", "song")),
+          "ca_dem":   (("murder", "killing", "homicide", "night shift", "serial"), ("film", "song"))}
+    cap = TU.get(loc)
+
+    def _loc(ds):
+        if not cap:
+            return ds
+        nhan, tru = cap
+        return [x for x in ds
+                if any(t in x["ten"].lower() for t in nhan)
+                and not any(t in x["ten"].lower() for t in tru)]
+
+    # Một ngày cụ thể có thể không có bài nào thuộc chủ đề kênh (kênh địa danh gặp ngày toàn tin
+    # thể thao). Bỏ lượt là đúng nguyên tắc nhưng kênh sẽ trống liên miên. Lùi dần tối đa 10 ngày:
+    # vẫn là bảng đọc THẬT, chỉ là của một ngày khác — không bịa gì thêm.
+    import datetime as _dt
+    goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    r = []
+    for lui in range(0, 10):
+        d = goc - _dt.timedelta(days=lui)
+        r = _loc(D.bai_duoc_doc(d.year, d.month, d.day, 1000))
+        if r:
+            break
+    if not r:
+        return None
+    v = r[0]
+    canh = [
+        (f"On one single day, {v['luot_doc']:,} people looked up {v['ten']}.",
+         "a lit phone screen alone in a dark room"),
+        (f"It ranked number {v['hang']} across all of Wikipedia that day.",
+         "a wall of glowing screens showing traffic graphs"),
+        ("Nobody organised that. People just wanted to know.",
+         "crowd of people walking, all looking down at phones"),
+        (f"The second most read that day was {r[1]['ten']}." if len(r) > 1
+         else "The rest of the list was ordinary news.",
+         "newspaper front pages spread on a table"),
+        ("Curiosity leaves a trace. This is what it looks like counted.",
+         "a rising line chart drawn on frosted glass"),
+        ("Wikimedia publishes these numbers every single day.",
+         "server room corridor with blue indicator lights"),
+    ]
+    return (_gon(v["ten"], 46), f"{v['luot_doc']:,} people looked this up in one day.", canh)
+
+
+def _pk_nghien_cuu(D, ky):
+    r = D.nghien_cuu(ky.get("tu_khoa", "sleep"), 4)
+    if not r:
+        return None
+    v = r[0]
+    canh = [
+        (f"A real study, published in {v['nam']}.", "a stack of medical journals on a desk"),
+        (f"The title: {_gon(v['tieu_de'], 110)}.", "close up of an academic paper abstract"),
+        (f"It ran in {v['tap_chi']}.", "library shelf of bound medical journals"),
+        ("Not a headline about a study. The study itself.",
+         "researcher reading a paper under a desk lamp"),
+        (f"There are {len(r)} more on the same question, all public.",
+         "search results page on a clean monitor"),
+        (f"Reference number {v['ma']} on PubMed. Go read it.",
+         "hands typing an ID into a search field"),
+    ]
+    return (_gon(v["tieu_de"], 46), f"One real study on {ky.get('tu_khoa', 'this')}.", canh)
+
+
+def _pk_nhac(D, ky):
+    r = D.ho_so_nhac(ky.get("tu_khoa", "one hit wonder"), 4)
+    r = [x for x in r if x.get("bat_dau")]
+    if not r:
+        return None
+    v = r[0]
+    canh = [
+        (f"{v['ten']}. Started {v['bat_dau'][:4]}.", "vintage vinyl record on a turntable"),
+        (f"Type: {v['loai'] or 'artist'}. Country: {v['nuoc'] or 'unlisted'}.",
+         "old passport and tour paperwork on a table"),
+        ((f"The record says it ended in {v['ket_thuc'][:4]}." if v.get("ket_thuc")
+          else "The record has no end date."), "empty concert stage with one spotlight"),
+        ("This is the catalogue entry, not the legend.",
+         "index card drawer in a music archive"),
+        ("MusicBrainz keeps it because somebody had to.",
+         "close up of handwritten liner notes"),
+        ("Every credit here can be checked in a minute.",
+         "screen showing a music database entry"),
+    ]
+    return (_gon(v["ten"], 46), f"{v['ten']}, on paper.", canh)
+
+
+def _pk_tu_lieu(D, ky):
+    import re as _re
+    r = D.phim_tu_lieu(ky.get("tu_khoa", "america 1950"), 20)
+    # Archive.org nhiều mục chỉ có MÃ LƯU TRỮ làm tiêu đề ("205471_Home_Movie_010144"). Đọc lên
+    # nghe như lỗi. Chỉ nhận tiêu đề người đọc được: ít nhất hai từ chữ cái thật.
+    r = [x for x in r if len(_re.findall(r"[A-Za-z]{3,}", str(x.get("tieu_de") or ""))) >= 2
+         and not _re.match(r"^[\d_]+$", str(x.get("tieu_de") or "").split()[0])]
+    if not r:
+        return None
+    v = r[0]
+    canh = [
+        (f"This film belongs to nobody. {_gon(v['tieu_de'], 70)}.",
+         "old film reel in a metal canister"),
+        (f"Year on the record: {v['nam'] or 'unlisted'}.", "faded calendar page from mid century"),
+        ("Public domain means you can use it, sell it, cut it up.",
+         "projector throwing light in a dusty room"),
+        (f"There are {len(r)} more like it under the same search.",
+         "shelves of film canisters in an archive"),
+        ("Nobody is coming to take it down.",
+         "empty archive reading room with warm light"),
+        ("The Internet Archive keeps the copy.",
+         "hard drives stacked in a preservation rack"),
+    ]
+    return (_gon(v["tieu_de"], 46), "A film that belongs to nobody.", canh)
+
+
+BO_PHIM = {"ban_an": _pk_ban_an, "bai_duoc_doc": _pk_wiki, "nghien_cuu": _pk_nghien_cuu,
+           "ho_so_nhac": _pk_nhac, "phim_tu_lieu": _pk_tu_lieu}
+
+
+def dung_story_cinematic(kenh: dict, ky: dict | None = None) -> dict | None:
+    """Story dạng phim kể. Ghép `style_anh` của kênh vào từng prompt vẽ."""
+    import du_lieu_mo as D
+    bo = BO_PHIM.get(kenh.get("ham"))
+    if not bo:
+        print(f"   ⚠️ {kenh.get('ten')}: '{kenh.get('ham')}' chưa có bộ dựng phim kể — bỏ lượt")
+        return None
+    ts = dict(kenh.get("tham_so") or {})
+    ts.update(ky or {})
+    kq = bo(D, ts)
+    if not kq:
+        print(f"   ⚠️ {kenh.get('ten')}: nguồn không trả dữ liệu — BỎ LƯỢT")
+        return None
+    tieu_de, hook, canh = kq
+    gu = str(kenh.get("style_anh") or "").strip()
+    scenes = [{"nar": nar, "img_query": (f"{q}, {gu}" if gu else q)} for nar, q in canh]
+    return {"title": tieu_de, "hook": hook, "topic": kenh.get("niche", ""),
+            "scenes": scenes, "nguon": kenh.get("nguon"),
+            "thumb_hook": hook, "thumb_stat": "", "thumb_label": tieu_de[:30],
+            "_that": True, "self_score": {"total": 92}}
+
+
 def chay(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] | None:
     """Dựng story -> thu giọng -> render. Trả (đường dẫn, thông tin QC). None = bỏ lượt."""
     import datastory_ci as DS
