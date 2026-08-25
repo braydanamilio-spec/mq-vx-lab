@@ -2893,3 +2893,17 @@ Bắt được bằng cách đọc lại hợp đồng của hàm TRƯỚC khi b
   `info["err"]`, không trả `None`.
 - Chốt `t_dispatch_luon_tra_bon_gia_tri` — chỉ soi `return` trả literal, `return DS.make_xxx(...)`
   thì tin theo hợp đồng của hàm được gọi (soi cả hai là báo động giả hàng loạt).
+
+### 26/8 — phiên 17:40: bản vá 504 ăn, lộ tiếp hai lỗi nhỏ hơn
+Số đo: 52 lần gặp 504 nhưng chỉ còn **4 Traceback** (phiên trước: 28). Tỉ lệ lượt hỏng 47% → 30%.
+
+**1. `plan_pillar` là hàm DUY NHẤT trong 15 khối gọi model không bắt 403.** `403 Your project has
+been denied access` giết cả lượt lập dàn bài, trong khi 14 hàm kia gặp đúng lỗi đó thì xoay key và
+chạy tiếp. Key bị chặn là hỏng KEY, không phải hỏng lượt viết. Đã vá — nay 15/15 khối có nhánh 403.
+
+**2. Vẽ ảnh hỏng IM LẶNG.** Kênh toon ra `chỉ vẽ được 0/16 khung` mà trong cả log phiên **không một
+dòng nào** nói vì sao: hai nhánh `return False` của `_generate_image_ai` (pool rỗng · model trả về
+không phải ảnh) không in gì, 16 lượt vẽ rơi vào đó và biến mất không dấu vết.
+- **Luật**: hàm nào BÁO HỎNG thì phải NÓI HỎNG VÌ SAO. Cùng lớp lỗi với canary nuốt stderr — biết
+  là hỏng, không biết hỏng ở đâu, nên không sửa được. Dòng ném lỗi nay kèm số key còn dùng được.
+- Chốt `t_ve_anh_khong_hong_im_lang` — mỗi `return False` phải có lệnh in trong vài dòng ngay trước.

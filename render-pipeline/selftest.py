@@ -750,6 +750,37 @@ def t_the_he_2_tra_ten_dong_deu_co_that():
     assert not xau, "tên tra động không tồn tại:\n   " + "\n   ".join(xau)
 
 
+
+def t_ve_anh_khong_hong_im_lang():
+    """Mọi đường trả False của `_generate_image_ai` phải nói vì sao.
+
+    26/8 — kênh toon ra `chỉ vẽ được 0/16 khung` mà TRONG CẢ LOG PHIÊN không một dòng nào cho biết
+    lý do: hai nhánh trả False (pool rỗng · model trả về không phải ảnh) im lặng tuyệt đối, 16 lượt
+    vẽ rơi vào đó và biến mất không dấu vết. Cùng lớp lỗi với canary nuốt stderr — biết là hỏng,
+    không biết hỏng ở đâu, nên không sửa được.
+
+    Luật: hàm nào BÁO HỎNG thì phải NÓI HỎNG VÌ SAO. Ở đây kiểm bằng mã nguồn: mỗi `return False`
+    trong hàm vẽ phải có một lệnh in trong vài dòng ngay trước nó."""
+    import ast
+    src = _doc("datastory_ci.py")
+    t = ast.parse(src)
+    f = next((n for n in ast.walk(t)
+              if isinstance(n, ast.FunctionDef) and n.name == "_generate_image_ai"), None)
+    assert f is not None, "không tìm thấy _generate_image_ai()"
+    dong = src.splitlines()
+    cam = []
+    for r in ast.walk(f):
+        if not isinstance(r, ast.Return):
+            continue
+        v = r.value
+        if not (isinstance(v, ast.Constant) and v.value is False):
+            continue
+        # có lệnh in nào trong 6 dòng ngay trước không?
+        if not any("print(" in dong[j] for j in range(max(0, r.lineno - 7), r.lineno)):
+            cam.append(f"dòng {r.lineno}: `return False` mà không in lý do")
+    assert not cam, "vẽ ảnh hỏng im lặng:\n   " + "\n   ".join(cam)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -849,6 +880,7 @@ def main():
     check("brand-kit: motif có thật, màu không trùng", t_brandkit_the_he_2)
     check("cổng an toàn nội dung phủ cả 7 đường story", t_cong_an_toan_noi_dung)
     check("CF chặn prompt vẫn còn đường Gemini", t_cf_chan_prompt_van_con_duong_gemini)
+    check("vẽ ảnh hỏng phải nói lý do, không im lặng", t_ve_anh_khong_hong_im_lang)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

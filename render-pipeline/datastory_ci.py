@@ -432,6 +432,10 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
     prompt = _salt_prompt(prompt)     # 23/8: mỗi lần vẽ một góc/ánh sáng khác -> không thể trùng
     cands = _ai_candidates(api_key)
     if not cands:
+        # 26/8 — ĐƯỜNG IM LẶNG. Phiên 17:40 có kênh toon ra "0/16 khung" mà TRONG CẢ LOG KHÔNG
+        # MỘT DÒNG nào nói vì sao: 16 lượt vẽ đều rơi vào đúng nhánh này và lặng lẽ trả False.
+        # Cùng lớp lỗi với canary nuốt stderr — biết là hỏng, không biết hỏng ở đâu.
+        print("   ⚠️ vẽ ảnh: KHÔNG CÒN KEY NÀO dùng được (cả pool đang nghỉ/hỏng) — bỏ khung này")
         return False
     last_quota = None
     # 25/8 — 4 KÊNH TOON RA "0/16 KHUNG" CÙNG LÚC. Gốc ở ngay dưới: khi CF trả về KHÔNG PHẢI ẢNH
@@ -480,6 +484,9 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
             if data:
                 break
         if not data or len(data) < 2000 or not _is_image(data):
+            # Cũng là đường im lặng: model trả về thứ không phải ảnh thì đổi key vô ích, nhưng
+            # phải NÓI ra, nếu không cả 16 khung hỏng mà không để lại dấu vết nào.
+            print(f"   ⚠️ vẽ ảnh '{prompt[:34]}': model trả về không phải ảnh — bỏ khung này")
             return False          # model trả về rỗng/không phải ảnh -> đổi key cũng vô ích
         open(dest, "wb").write(data)
         if _i:
@@ -3945,7 +3952,9 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
         elif k2 > 0:
             fx["img"] = fr[k2 - 1]["img"]
     if okn < max(3, int(len(fr) * 0.6)):
-        raise RuntimeError(f"chỉ vẽ được {okn}/{len(fr)} khung")
+        _pool = len(_ai_candidates((keys[0] or {}).get("key") if keys else None))
+        raise RuntimeError(f"chỉ vẽ được {okn}/{len(fr)} khung "
+                           f"(pool vẽ còn {_pool} key dùng được — xem các dòng ⚠️ phía trên)")
     # CHUẨN HÌNH ≥95 (user 22/8): Vision chấm cả lưới 1 lệnh — khung nào sai (dị dạng/không đúng
     # 2 nhân vật/chữ vô nghĩa) thì vẽ lại 1 lần; vẫn sai -> dùng khung liền trước (an toàn hơn ảnh hỏng).
     try:

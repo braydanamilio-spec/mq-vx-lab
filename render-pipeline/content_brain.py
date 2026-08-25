@@ -745,6 +745,14 @@ def plan_pillar(niche: str, n: int = 6, api_key: str = None, model_name: str = N
                 if mn: mname = mn; continue
             if "429" in msg or "quota" in msg or "resource_exhausted" in msg or "rate limit" in msg:
                 raise RateLimited(str(e))
+            # 26/8 — 14/15 khối gọi model có nhánh 403, RIÊNG hàm này thiếu. Đo thật phiên 17:40:
+            # `403 Your project has been denied access` giết cả lượt lập dàn bài, trong khi 14 hàm
+            # kia gặp đúng lỗi đó thì đổi sang key khác và chạy tiếp. Key bị chặn là hỏng KEY,
+            # không phải hỏng lượt viết.
+            if ("denied" in msg or "permission" in msg or "forbidden" in msg or "403" in msg
+                    or "suspended" in msg or "has not been used" in msg
+                    or "not enabled" in msg or "disabled" in msg):
+                raise RateLimited(str(e))     # tầng trên xoay key
             # Vòng ở đây đếm bằng `_try` (2 vòng), không phải `attempt` như các hàm sinh nội dung —
             # dùng nhầm tên biến là NameError nổ đúng lúc nhà cung cấp đang nghẽn, tức đúng lúc
             # cần nó nhất. Chốt `t_tsx/AST` không soi tới đây nên phải kiểm tay từng khối.
