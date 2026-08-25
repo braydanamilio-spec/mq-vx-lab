@@ -2558,3 +2558,9 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   phát lên đích". Đích riêng từng kênh đọc từ cấu hình `target_long`/`target_short` nếu có.
   5 kênh toon (HANKTOWN, EXPLAINUSA, TRUETALES, DUMBHISTORY, BALDBANDIT) đã mở pause 25/8 — kho
   đang 0 video nên sẽ được ưu tiên tự nhiên theo luật vơi-nhất-trước.
+
+- **Gương B→B2 TẮT mặc định (25/8).** Mỗi phiên nó quét 7 collection ĐỌC TỪ B để chép — vài nghìn
+  lượt đọc B/ngày — trong khi mọi dữ liệu failover đã có đường rẻ và luôn tươi: cấu hình kênh theo
+  env `CHANNEL_CFGS`, số đếm/hồ key/danh sách job ở **D1**, kịch bản ở Drive sidecar. B2 chỉ còn là
+  bến đọc khẩn (dữ liệu cũ dần); bật lại gương để nghiệm thu lần cuối: `B2_GUONG=on`. Kế hoạch: gỡ
+  hẳn B2 sau 1-2 ngày D1 chạy sạch.

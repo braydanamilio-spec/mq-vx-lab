@@ -2028,6 +2028,16 @@ def mirror_b_to_b2(owner: str) -> int:
     1 lần/phiên khi B khỏe; so giá trị, chỉ ghi doc đổi (B2 quota riêng, gần như không tốn của B)."""
     if _B2["on"] or not _b2_available():
         return 0
+    # 25/8 — TẮT GƯƠNG MẶC ĐỊNH (anh hỏi "còn dùng B2 không"). Gương mỗi phiên quét 7 collection
+    # ĐỌC TỪ B để chép — vài nghìn lượt đọc B mỗi ngày — trong khi mọi thứ failover cần đã có
+    # đường rẻ hơn và LUÔN TƯƠI: cấu hình kênh đi kèm env CHANNEL_CFGS của plan, số đếm/hồ key/
+    # danh sách job nằm ở D1 (quota riêng, 5M đọc/ngày), kịch bản có sidecar trên Drive. B2 giờ
+    # chỉ còn là bến ĐỌC khẩn cấp với dữ liệu cũ dần — các đường trên thay nó tốt hơn. Muốn bật
+    # lại gương (ví dụ để nghiệm thu B2 lần cuối trước khi gỡ hẳn): đặt env B2_GUONG=on.
+    if (os.environ.get("B2_GUONG") or "off") != "on":
+        print("   🪞 Gương B→B2: TẮT (failover nay đi bằng D1 + env plan + Drive sidecar — "
+              "khỏi tốn lượt đọc B mỗi phiên). Bật lại: B2_GUONG=on.")
+        return 0
     try:
         from google.cloud import firestore as _fs
         from google.oauth2 import service_account as _sa
