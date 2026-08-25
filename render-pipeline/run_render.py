@@ -1826,10 +1826,56 @@ def plan_mode():
     else:
         FB.dat_hang_cho(OWNER, [])          # không dư -> dọn hàng chờ cũ, tránh luồng lấy việc rác
     _cfg_goi = all_ch          # cấu hình plan ĐÃ đọc được -> gửi kèm cho lane (xem out_channels)
+    _kiem_kho_ngay(cfg)        # đối chiếu sổ đếm với SỐ THẬT trên Drive, 1 lần/ngày (xem hàm)
     print(f"▶ {len(channels)} kênh -> render SONG SONG."
           + (f" (⏸ {n_paused} pause)" if n_paused else "")
           + (f" (🎯 {n_full} kênh đã đủ chỉ tiêu, bỏ qua)" if n_full else ""))
     out_channels(channels, cau_hinh=_cfg_goi)
+
+
+def _kiem_kho_ngay(cfg: dict) -> None:
+    """ĐỐI CHIẾU SỔ ĐẾM VỚI SỐ THẬT TRÊN DRIVE — 1 lần/ngày, chạy NGAY TRONG PLAN (25/8/2026).
+
+    Vì sao ở đây chứ không phải workflow riêng: `wipe_queue` chạy `kiem_kho.py` đếm được số thật
+    (1.996 video) nhưng **ghi sổ luôn trả `400 Invalid database id`**, trong khi plan của render_cron
+    ghi Firestore bình thường suốt đêm. Đặt việc đối chiếu vào nơi lệnh ghi CHẮC CHẮN chạy được thì
+    con số tự đúng mỗi ngày, không cần ai bấm nút.
+    Bộ đếm `__pushed__` chỉ cộng (render lại +1, dọn rác vẫn +1) nên KHÔNG BAO GIỜ tự đúng lại được;
+    chỉ có đếm lại từ Drive mới kéo nó về sự thật.
+    Rẻ: đi 72 kho mất ~35 giây, mỗi ngày một lần. Đọc kho qua `pool_accounts` (có gương + lớp cứu KV)
+    nên không tốn hạn mức Firestore."""
+    try:
+        from datetime import datetime as _d3, timezone as _tz3
+        ngay = _d3.now(_tz3.utc).strftime("%Y%m%d")
+        if str(cfg.get("kiem_kho_ngay") or "") == ngay:
+            return                                   # hôm nay đối chiếu rồi
+        src = os.environ.get("AUTOPUBLISHER_SRC")
+        if src and src not in sys.path:
+            sys.path.insert(0, src)
+        import storage as _ST
+        accs = _ST.pool_accounts() or []
+        if len(accs) < 5:
+            print(f"   ⏭ Kiểm kho: chỉ đọc được {len(accs)} kho — BỎ QUA (đếm thiếu còn tệ hơn không đếm).")
+            return
+        import kiem_kho as _KK
+        song = 0
+        hong = 0
+        for acc in accs:
+            try:
+                drv = _ST.account_drive(acc)
+                song += sum(1 for f in _KK._quet(drv, acc.get("root"))
+                            if str(f.get("name", "")).lower().endswith(".mp4"))
+            except Exception:
+                hong += 1
+        if hong:
+            print(f"   ⏭ Kiểm kho: {hong}/{len(accs)} kho đọc hụt — BỎ QUA lượt ghi (sẽ đếm thiếu).")
+            return
+        FB.dat_so_kho_that(OWNER, song)
+        FB.set_config(OWNER, {"kiem_kho_ngay": ngay})
+        print(f"   🧮 Kiểm kho: {song:,} video THẬT trên {len(accs)} kho -> đã ghi đè sổ đếm "
+              f"(bộ đếm cộng dồn không tự đúng lại được).")
+    except Exception as e:
+        print(f"   ⚠️ Kiểm kho hụt ({str(e)[:70]}) — bỏ qua, không ảnh hưởng phiên.")
 
 
 def _viec_chia_san(ten_lane: str, da_lam: set) -> str:

@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("plan tự đối chiếu sổ đếm với số thật (1 lần/ngày)", t_doi_chieu_so_kho_chay_trong_plan)
     check("biến môi trường RỖNG không phá giá trị mặc định", t_bien_moi_truong_rong_khong_pha_mac_dinh)
     check("bước dùng kho Drive có lớp cứu KV (HOT_KEY)", t_buoc_dung_kho_phai_co_lop_cuu_kv)
     check("tên file KHÔNG làm bẩn tiêu đề YouTube", t_ten_file_khong_lam_ban_tieu_de)
@@ -1035,6 +1036,32 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_doi_chieu_so_kho_chay_trong_plan():
+    """Việc đối chiếu sổ đếm phải nằm ở nơi lệnh GHI chắc chắn chạy được (25/8).
+    `wipe_queue` chạy `kiem_kho.py` đếm được số thật (1.996 video) nhưng **ghi sổ luôn trả
+    `400 Invalid database id`**, trong khi plan của render_cron ghi Firestore bình thường suốt đêm.
+    Đặt việc đối chiếu vào plan thì con số tự đúng mỗi ngày, không cần ai bấm nút."""
+    r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "run_render.py"), encoding="utf-8").read()
+    assert "def _kiem_kho_ngay(" in r and "_kiem_kho_ngay(cfg)" in r, \
+        "plan không tự đối chiếu sổ đếm với số thật trên Drive"
+    i = r.index("def _kiem_kho_ngay(")
+    than = r[i: i + 2600]
+    assert "kiem_kho_ngay" in than and "return" in than, "thiếu chốt 1-lần/ngày"
+    assert "len(accs) < 5" in than, "đọc được ít kho mà vẫn ghi đè -> đếm thiếu, sổ càng sai"
+    assert "hong" in than, "kho đọc hụt mà vẫn ghi đè -> đếm thiếu"
+    fb = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "firestore_bridge.py"), encoding="utf-8").read()
+    # Soi PHẦN LỆNH thôi — docstring có nhắc chữ Increment để giải thích cái bệnh (bẫy đã dính ở
+    # `t_so_kho_lay_tu_drive`, đừng dính lại).
+    import ast as _ast
+    for _n in _ast.walk(_ast.parse(fb)):
+        if isinstance(_n, _ast.FunctionDef) and _n.name == "dat_so_kho_that":
+            for _x in _ast.walk(_n):
+                assert not (isinstance(_x, _ast.Name) and _x.id == "Increment"), \
+                    "ghi đè sổ mà vẫn dùng Increment -> lại cộng dồn"
 
 
 def t_bien_moi_truong_rong_khong_pha_mac_dinh():

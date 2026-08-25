@@ -2292,3 +2292,17 @@ Vá: ping trả 400 ⇒ **ghi nhận rồi VẪN trả client** cho tầng trên
 Drive, kênh/loại suy được từ tên chuẩn.
 **LUẬT: một phép kiểm tra sức khoẻ chỉ được phép BÁO CÁO, không được phép PHÁN QUYẾT. Nếu nó nghiêm
 khắc hơn đường dùng thật, nó sẽ giết những thứ đang chạy tốt.**
+
+### 7.dm — Đặt việc SỬA SỐ vào nơi lệnh GHI chắc chắn chạy được (25/8/2026)
+`wipe_queue` chạy `kiem_kho.py` **đếm được** số thật (1.996 video, qua lớp cứu KV, 72/72 kho) nhưng
+lệnh **ghi sổ luôn trả `400 Invalid database id`** — trong khi plan của `render_cron` ghi Firestore
+bình thường suốt đêm với ĐÚNG những secret đó. Sửa được số mà không ghi được thì vô nghĩa.
+Nên chuyển việc đối chiếu vào **plan**: `_kiem_kho_ngay()` chạy **1 lần/ngày**, đi 72 kho (~35 giây,
+không tốn hạn mức Firestore vì đọc qua gương + KV), rồi `dat_so_kho_that()` **ghi đè** `total` bằng số
+nguyên (KHÔNG `Increment`). Bộ đếm cộng dồn không bao giờ tự đúng lại được — chỉ đếm lại từ Drive mới
+kéo nó về sự thật.
+Hai chốt an toàn: đọc được **<5 kho** hoặc **có kho nào đọc hụt** ⇒ **bỏ qua lượt ghi** (đếm thiếu mà
+ghi đè thì sổ càng sai hơn — đúng luật 7.cu).
+Chốt bằng `t_doi_chieu_so_kho_chay_trong_plan`.
+**LUẬT: đặt việc sửa dữ liệu vào tiến trình có QUYỀN GHI đã được chứng minh, đừng đặt vào một workflow
+riêng rồi mới phát hiện nó không ghi nổi.**

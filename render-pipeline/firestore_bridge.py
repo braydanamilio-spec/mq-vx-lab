@@ -550,6 +550,20 @@ import atexit as _atexit
 _atexit.register(_dong_job_bo_ngo)
 
 
+def dat_so_kho_that(owner: str, tong: int) -> None:
+    """GHI ĐÈ sổ đếm bằng SỐ THẬT đếm từ Drive (25/8/2026).
+
+    `__pushed__.total` là bộ đếm `Increment`, chỉ có chiều lên: render lại +1, dọn rác vẫn +1, xoá
+    tay vẫn +1 ⇒ **không bao giờ tự đúng lại được**. Chỉ đếm lại từ Drive mới kéo nó về sự thật.
+    Dùng `set(..., merge=True)` với số nguyên (KHÔNG Increment) để đè hẳn."""
+    if tong < 0:
+        return
+    _cw("dat_so_kho_that")
+    db = _db_B_that() or _db_jobs()
+    _soft(lambda: db.collection("render_stats").document(f"__pushed__{owner}").set(
+        {"total": int(tong), "kho_at": _now()}, merge=True), "dat_so_kho_that")
+
+
 def quota_pulse(owner: str):
     """1 nhịp/tiến trình: đọc sổ quota ngày (1 lượt), in trạng thái, ≥90% trần thì gương tươi + LẬT
     B2 CHỦ ĐỘNG (23/8, user đề xuất — lật lúc B còn sống = dữ liệu khớp 100%, khỏi chờ chết mới lật).
