@@ -453,6 +453,36 @@ def t_workflow_dung_project_C_phai_bat_co():
                      + "\n   ".join(xau))
 
 
+
+def t_kenh_the_he_2_tro_dung_ham_va_dang():
+    """50 kênh thế hệ 2 phải trỏ hàm dữ liệu CÓ THẬT và dạng render CÓ THẬT.
+
+    Kênh thế hệ 2 bỏ hẳn footage: nội dung sinh từ `du_lieu_mo.*` rồi vẽ bằng composition. Một
+    kênh trỏ nhầm tên hàm sẽ không lộ ra cho tới khi lane của nó chạy giữa đêm rồi chết. Kiểm ở
+    đây thì sai tên là chặn ngay từ selftest, không tốn một lượt render nào."""
+    import os, json
+    goc = os.path.dirname(os.path.abspath(__file__))
+    dsp = os.path.join(goc, "kenh_the_he_2.json")
+    if not os.path.exists(dsp):
+        return                                   # chưa bật thế hệ 2 -> không bắt lỗi
+    import du_lieu_mo as DL
+    ks = json.load(io.open(dsp, encoding="utf-8"))
+    DANG = {"ranked", "race", "mapped", "scaled", "pulse", "longshot", "cinematic", "thennow"}
+    xau = []
+    for k in ks:
+        if not hasattr(DL, k.get("ham", "")):
+            xau.append(f"{k.get('ten')}: không có du_lieu_mo.{k.get('ham')}()")
+        if k.get("dinh_dang") not in DANG:
+            xau.append(f"{k.get('ten')}: dạng render lạ '{k.get('dinh_dang')}'")
+        if k.get("footage"):
+            xau.append(f"{k.get('ten')}: thế hệ 2 KHÔNG dùng footage")
+    tay = [k.get("handle") for k in ks]
+    trung = sorted({h for h in tay if tay.count(h) > 1})
+    if trung:
+        xau.append("handle trùng: " + ", ".join(trung))
+    assert not xau, "danh sách kênh thế hệ 2 sai:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -544,6 +574,7 @@ def main():
     check("chữ karaoke luôn đọc được (bảng màu đã sàng)", t_chu_chay_luon_doc_duoc)
     check("thẻ tiêu đề tự co, không tràn khung", t_the_tieu_de_khong_tran_khung)
     check("dữ liệu mở hỏng KHÔNG làm gãy dây chuyền", t_du_lieu_mo_khong_lam_gay_day_chuyen)
+    check("50 kênh thế hệ 2 trỏ đúng hàm + dạng", t_kenh_the_he_2_tro_dung_ham_va_dang)
     check("CF chặn prompt vẫn còn đường Gemini", t_cf_chan_prompt_van_con_duong_gemini)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
