@@ -2126,3 +2126,25 @@ Vá hai lớp:
 Chốt bằng `t_ten_chuan_khong_dung_ten_nhau`.
 **LUẬT: bất kỳ phép CẮT NGẮN nào (tên, id, khoá) đều tạo ra khả năng đụng nhau. Cắt thì phải kèm một
 mẩu băm của bản đầy đủ — và chỗ nào XOÁ dựa trên "trùng" thì phải có thêm một dấu hiệu độc lập.**
+
+### 7.da — "21 lỗi MỚI" là JOB BỎ NGỎ cộng dồn nhiều ngày, không phải lỗi của phiên đang chạy (25/8/2026)
+Anh chỉ ra dashboard: `⚠️ 21 lỗi MỚI · gần nhất STATEWARS — ⏱ Quá 6h — tiến trình đã dừng (job ma)`.
+Soi ra: mỗi video mở một bản ghi job (`new_job`) rồi mới đóng bằng `update_job(done/failed)`. Lane
+thoát GIỮA CHỪNG — `SystemExit`, trần giờ 150', matrix timeout 165', runner hết bộ nhớ — thì bản ghi
+đó **nằm mở vĩnh viễn**; 6 tiếng sau `health_guardian` thấy im tiếng nên dán `failed`. Không có lối
+nào đóng chúng lúc thoát ⇒ con số **cộng dồn qua nhiều ngày**, nhìn như "lỗi mới" trong khi phiên
+đang chạy sạch (kiểm 14 phiên gần nhất: phiên nào CHẠY cũng `success` 100-137'; các phiên `cancelled`
+đều bị huỷ lúc còn PENDING 21-41', chưa render gì nên không mất việc).
+Vá: `firestore_bridge` theo dõi `_JOB_MO` (job đã mở, chưa có kết cục) và đóng nốt lúc thoát qua
+`atexit`, ghi rõ lý do. Tập rỗng thì 0 lượt ghi; có bỏ ngỏ mới ghi, trần 20 cái.
+Chốt bằng `t_job_bo_ngo_duoc_dong_luc_thoat`.
+**LUẬT: mở một bản ghi trạng thái thì phải có đường ĐÓNG nó ở MỌI lối thoát, kể cả lối thoát bất
+thường. Không thì "số lỗi" trên bảng điều khiển đo tuổi thọ của rác, không đo sức khoẻ hệ thống.**
+
+### 7.db — Test khẳng định thứ tự PHỤ THUỘC GIỜ, tự sai khi đồng hồ đi qua nửa đêm (25/8/2026)
+`t_moc_reset_theo_nha_cung_cap` khẳng định *"Cloudflare luôn hồi sớm hơn Google"*. Chỉ đúng trong
+khung 07:00→24:00Z. Qua 00:00Z, Cloudflare vừa reset nên mốc kế tiếp xa 24h, còn Google chỉ còn vài
+tiếng tới 07:00Z ⇒ test đỏ lúc 00:14Z dù code không đổi một dòng. Điều BẤT BIẾN không phải thứ tự hai
+con số mà là **mỗi bên nghỉ tới ĐÚNG mốc reset của mình** — nay test tính thẳng số phút tới mốc rồi so.
+**LUẬT: test không được khẳng định thứ tự của hai đại lượng phụ thuộc thời gian. Hãy khẳng định
+CÔNG THỨC, đừng khẳng định kết quả của một khoảnh khắc.**

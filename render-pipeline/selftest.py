@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("job bỏ ngỏ được đóng lúc thoát (hết job ma)", t_job_bo_ngo_duoc_dong_luc_thoat)
     check("tên chuẩn: hai video khác nhau KHÔNG đụng tên", t_ten_chuan_khong_dung_ten_nhau)
     check("đẩy kho xong thì xoá bản trên đĩa", t_day_kho_xong_thi_xoa_ban_tren_dia)
     check("Vision kiểm ảnh chết -> hiện CHẾT CÂM", t_vision_chet_thi_phai_hien_chet_cam)
@@ -1028,6 +1029,38 @@ def t_lay_viec_ke_o_dung_duong_vao():
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
 
 
+def t_job_bo_ngo_duoc_dong_luc_thoat():
+    """Job mở ra mà tiến trình thoát giữa chừng phải được ĐÓNG NGAY (25/8, anh: "21 lỗi MỚI").
+    Mỗi video mở một bản ghi job rồi mới đóng bằng `update_job(done/failed)`. Lane thoát giữa chừng
+    (SystemExit, trần giờ 150', matrix timeout 165', hết bộ nhớ) ⇒ bản ghi nằm mở vĩnh viễn; 6h sau
+    `health_guardian` dán nhãn `failed` và dashboard hiện `⏱ Quá 6h — job ma`. Con số đó CỘNG DỒN
+    qua nhiều ngày, nên nhìn như "lỗi mới" trong khi phiên đang chạy sạch."""
+    import firestore_bridge as FB
+    assert hasattr(FB, "_dong_job_bo_ngo"), "không có lối đóng job bỏ ngỏ lúc thoát"
+    cu = set(FB._JOB_MO)
+    goc_up = FB.update_job
+    da_dong = []
+    try:
+        FB._JOB_MO.clear()
+        FB._JOB_MO.update({"j1", "j2"})
+        FB.update_job = lambda jid, st=None, **k: da_dong.append((jid, st))
+        FB._dong_job_bo_ngo()
+        assert sorted(x[0] for x in da_dong) == ["j1", "j2"], f"đóng thiếu: {da_dong}"
+        assert all(x[1] == "failed" for x in da_dong), "đóng mà không ghi trạng thái kết thúc"
+        assert not FB._JOB_MO, "đóng xong mà vẫn còn trong danh sách bỏ ngỏ"
+        da_dong.clear()
+        FB._dong_job_bo_ngo()
+        assert not da_dong, "tập rỗng mà vẫn ghi -> tốn lượt ghi vô ích mỗi lần thoát"
+    finally:
+        FB.update_job = goc_up
+        FB._JOB_MO.clear(); FB._JOB_MO.update(cu)
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "firestore_bridge.py"), encoding="utf-8").read()
+    assert "_JOB_MO.add(ref.id)" in src, "new_job không ghi nhận job vừa mở"
+    assert '_JOB_MO.discard(job_id)' in src, "job có kết cục rồi mà không gỡ khỏi danh sách bỏ ngỏ"
+    assert "_atexit.register(_dong_job_bo_ngo)" in src, "chưa gắn vào lúc thoát"
+
+
 def t_ten_chuan_khong_dung_ten_nhau():
     """Hai video KHÁC NHAU không được ra cùng một tên file (24/8 tối — rủi ro do chính bản đổi tên).
     Tiêu đề bị cắt còn 46 ký tự, nên hai bài chỉ khác nhau ở đuôi vẫn ra cùng tên. Ca thật dựng được:
@@ -1487,9 +1520,21 @@ def t_moc_reset_theo_nha_cung_cap():
                       "allocation of 10,000 neurons")
     gg = DS._muc_nghi("429 Quota exceeded for quota metric: requests per day (free_tier)")
     assert DS._muc_nghi("429 requests per minute exceeded, try again in 8s") == 2
-    assert cf > 0 and gg > 0
-    assert cf < gg, f"Cloudflare phải hồi SỚM hơn Google (UTC vs Thái Bình Dương): {cf} vs {gg}"
-    assert gg - cf in range(410, 430), f"lệch hai mốc phải đúng 7 tiếng, thực tế {gg - cf} phút"
+    # 25/8 00:14Z — BẢN TEST ĐẦU SAI, và chính nó tự lộ ra khi đồng hồ đi qua 00:00Z: nó khẳng định
+    # "Cloudflare luôn hồi sớm hơn Google". Chỉ đúng trong khung 07:00→24:00Z. Sau nửa đêm UTC,
+    # Cloudflare vừa reset nên mốc kế tiếp xa tận 24h, còn Google thì chỉ còn vài tiếng là tới 07:00Z.
+    # Điều BẤT BIẾN không phải thứ tự hai con số, mà là: mỗi bên nghỉ tới ĐÚNG mốc reset của mình.
+    import datetime as _d
+    _utc = _d.datetime.now(_d.timezone.utc)
+
+    def _toi_moc(goc):
+        mai = (goc + _d.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        return int((mai - goc).total_seconds() // 60)
+
+    assert abs(cf - _toi_moc(_utc)) <= 2, f"Cloudflare không nghỉ tới mốc 00:00 UTC: {cf}"
+    assert abs(gg - _toi_moc(_utc - _d.timedelta(hours=7))) <= 2, \
+        f"Google không nghỉ tới mốc 00:00 giờ Thái Bình Dương: {gg}"
+    assert cf != gg, "hai nhà cung cấp mà ra cùng một mốc -> lại gộp làm một"
 
 
 if __name__ == "__main__":

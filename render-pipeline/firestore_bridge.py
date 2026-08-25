@@ -514,6 +514,34 @@ def count_pushed(owner: str, drive_id: str = "", channel: str = "", vtype: str =
         pass
 
 
+def _dong_job_bo_ngo():
+    """ĐÓNG NỐT JOB CÒN DỞ LÚC TIẾN TRÌNH THOÁT (24/8/2026 tối, anh chỉ ra: "21 lỗi MỚI").
+
+    Mỗi video mở một bản ghi job (`new_job`) rồi mới đóng bằng `update_job(done/failed)`. Nếu lane
+    thoát GIỮA CHỪNG — `SystemExit` từ nhánh không đọc được kênh, trần giờ 150', matrix timeout
+    165', runner hết bộ nhớ — thì bản ghi đó **nằm mở vĩnh viễn**. Sáu tiếng sau `health_guardian`
+    thấy nó im tiếng nên dán nhãn `failed`, và dashboard hiện đúng cái mà anh thấy:
+    `⏱ Quá 6h — tiến trình đã dừng (job ma)`. Số đó **cộng dồn qua nhiều ngày**, không phải lỗi mới
+    phát sinh trong phiên.
+    Ở đây đóng lại NGAY lúc thoát, ghi đúng lý do. Bình thường không tốn lượt ghi nào (tập rỗng);
+    chỉ khi thật sự có job bỏ ngỏ mới ghi, mỗi cái 1 lượt."""
+    if not _JOB_MO:
+        return
+    ds = list(_JOB_MO)[:20]          # trần 20: thoát bất thường thì đừng nhân thêm một cơn bão ghi
+    print(f"   🧹 đóng nốt {len(ds)} job còn dở lúc thoát (khỏi thành 'job ma' sau 6h).")
+    for jid in ds:
+        try:
+            update_job(jid, "failed", step="tiến trình thoát khi job còn dở — đã đóng ngay, "
+                                          "KHÔNG để thành job ma")
+        except Exception:
+            pass
+    _JOB_MO.clear()
+
+
+import atexit as _atexit
+_atexit.register(_dong_job_bo_ngo)
+
+
 def quota_pulse(owner: str):
     """1 nhịp/tiến trình: đọc sổ quota ngày (1 lượt), in trạng thái, ≥90% trần thì gương tươi + LẬT
     B2 CHỦ ĐỘNG (23/8, user đề xuất — lật lúc B còn sống = dữ liệu khớp 100%, khỏi chờ chết mới lật).
@@ -588,6 +616,8 @@ def _chu(owner: str = "") -> str:
     `OWNER_UID` là biến môi trường mọi tiến trình đều có -> lấy làm chốt cuối, khỏi phụ thuộc thứ tự
     gọi hàm."""
     return owner or _OWNER_HINT[0] or os.environ.get("OWNER_UID", "") or ""
+# JOB ĐANG MỞ của tiến trình này -> đóng nốt lúc thoát. Xem _dong_job_bo_ngo().
+_JOB_MO: set = set()
 _JOB_CH: dict = {}          # job_id -> kênh (update_job không nhận channel, new_job nhớ hộ)
 _JOB_TY: dict = {}          # job_id -> long/short (cùng lý do)
 # KHO KEY ẢNH BỀN (24/8) — xem _giu_key_anh().
@@ -2207,6 +2237,7 @@ def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "", cha:
     # update_job chỉ nhận (job_id, **patch) — KHÔNG có channel lẫn type. Nhớ hộ ở đây để nhịp sống
     # và bản ghi bóng sang D1 có đủ dữ liệu. Thiếu `type` thì bảng D1 toàn vtype rỗng -> lệnh
     # `dem_xong` (đếm long/short) luôn ra 0, và cả việc đối chiếu hai bên thành vô nghĩa.
+    _JOB_MO.add(ref.id)
     _JOB_CH[ref.id] = channel
     _JOB_TY[ref.id] = vtype
     _OWNER_HINT[0] = _OWNER_HINT[0] or owner
@@ -2248,6 +2279,8 @@ def update_job(job_id: str, **patch):
     # (≈20 nhịp tim lỡ) là kết luận chết được, gate thoát nhanh hơn 12 lần.
     _cw("update_job")
     patch = dict(patch); patch["updated_at"] = _now()
+    if st in ("done", "failed", "ratelimited"):
+        _JOB_MO.discard(job_id)          # đã có kết cục -> không còn là job bỏ ngỏ
     # CHẾ ĐỘ BÓNG sang D1 (24/8): ghi thêm một bản sang kho nóng, ĐỌC vẫn từ Firestore. Mục đích là
     # chạy vài ngày rồi ĐỐI CHIẾU số hai bên trước khi dám tin — không cắt mù. D1 hỏng thì hàm này
     # nuốt lỗi, việc chính không hề hấn.
