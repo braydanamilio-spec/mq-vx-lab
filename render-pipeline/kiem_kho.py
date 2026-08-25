@@ -85,6 +85,35 @@ def main() -> int:
     import storage as ST
     import firestore_bridge as FB
 
+    # 25/8 — BIẾN BÍ ẨN THÀNH DỮ LIỆU. Ba lượt chạy liên tiếp đều dính
+    # `400 Invalid database id %28default%29` khi đọc/ghi Firestore, trong khi render_cron dùng ĐÚNG
+    # những secret đó lại chạy bình thường. Đoán hai lần (đổi Python, ghim thư viện) đều trượt.
+    # Nên in thẳng: client đang nối vào project NÀO, biến môi trường có RỖNG không, thư viện bản nào.
+    # Lần chạy sau là có câu trả lời thay vì lại đoán.
+    try:
+        print("   🔎 " + FB.where_am_i())
+    except Exception as e:
+        print(f"   🔎 where_am_i lỗi: {str(e)[:80]}")
+    for k in ("FIREBASE_PROJECT_ID", "FIREBASE_PROJECT_ID_B", "FIREBASE_PROJECT_ID_B2",
+              "GOOGLE_APPLICATION_CREDENTIALS", "GOOGLE_APPLICATION_CREDENTIALS_B"):
+        v = os.environ.get(k)
+        if v is None:
+            trang_thai = "KHÔNG ĐẶT"
+        elif not v.strip():
+            trang_thai = "⚠️ RỖNG (secret chưa có?)"
+        elif k.startswith("GOOGLE_"):
+            trang_thai = f"{v} ({'có file' if os.path.exists(v) else '⚠️ KHÔNG có file'}, "
+            trang_thai += f"{os.path.getsize(v) if os.path.exists(v) else 0}B)"
+        else:
+            trang_thai = f"dài {len(v)} ký tự"
+        print(f"      {k:<34} {trang_thai}")
+    try:
+        import importlib.metadata as _m
+        print("      thư viện: " + " · ".join(
+            f"{x}={_m.version(x)}" for x in ("google-cloud-firestore", "google-api-core", "grpcio")))
+    except Exception:
+        pass
+
     accs = ST.pool_accounts()
     if not accs:
         print("❌ không đọc được kho nào — DỪNG (không dám kết luận 'kho rỗng' rồi ghi đè sổ về 0).")
