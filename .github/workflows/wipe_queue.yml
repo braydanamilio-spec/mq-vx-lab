@@ -28,14 +28,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
+      - name: Checkout render-pipeline (lấy bảng ghim thư viện)
+        uses: actions/checkout@v4
+        with: { path: _rp_pin }
+      - name: Bảng ghim thư viện (đúng bộ render_cron đang dùng)
+        run: cp _rp_pin/render-pipeline/constraints.txt rp_constraints.txt || true
       - name: Checkout AutoPublisher (private)
         uses: actions/checkout@v4
         with:
           repository: ${{ secrets.AUTOPUBLISHER_REPO }}
           token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12", cache: "pip" }
-      - run: pip install -r requirements.txt
+        # 25/8 — ĐỒNG BỘ MÔI TRƯỜNG VỚI render_cron. Workflow này chạy Python 3.12 + bộ thư viện
+        # riêng, và Firestore trả `400 Invalid database id %28default%29` cho MỌI truy vấn — trong
+        # khi render_cron (3.11 + constraints.txt) chạy bình thường với ĐÚNG những secret đó.
+        # Lỗi ở tầng thư viện/môi trường chứ không phải hạn mức: `kiem_kho` đếm được 1.957 video
+        # thật từ Drive nhưng KHÔNG ghi nổi sổ. Dùng lại đúng bộ đã kiểm chứng thay vì đoán.
+        with: { python-version: "3.11", cache: "pip" }
+      - run: pip install -r requirements.txt -c rp_constraints.txt || pip install -r requirements.txt
       - name: Ghi service account key (A + B + C)
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
