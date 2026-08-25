@@ -40,8 +40,9 @@ const chia = (subs: Word[]): Cum[] => {
   return ra;
 };
 
-export const Karaoke: React.FC<{ subs?: Word[]; accent?: string; bottom?: number }> = ({
-  subs = [], accent = "#F5B301", bottom = BOTTOM,
+export const Karaoke: React.FC<{ subs?: Word[]; accent?: string; bottom?: number;
+                                 kieu?: "doc" | "toon" }> = ({
+  subs = [], accent = "#F5B301", bottom = BOTTOM, kieu = "doc",
 }) => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -56,12 +57,29 @@ export const Karaoke: React.FC<{ subs?: Word[]; accent?: string; bottom?: number
     if (cuoi && now - cuoi.e <= 0.4) cum = cuoi;
   }
   if (!cum) return null;
+  // KIỂU CHỮ THEO THỂ LOẠI (25/8). Khung đen bo góc là ngôn ngữ của phim tài liệu — dán nó lên
+  // phim hoạt hình là lạc tông ngay. Phim hài Mỹ dùng chữ VIỀN DÀY không nền, chữ đang đọc thì
+  // NẢY lên và đổi màu: đọc rõ trên mọi nền mà vẫn giữ chất truyện tranh.
+  const toon = kieu === "toon";
   return (
     <div style={{ position: "absolute", left: 0, right: 0, bottom, padding: "0 64px", textAlign: "center" }}>
-      <div style={{ display: "inline-block", maxWidth: "100%", background: "rgba(0,0,0,0.62)",
-                    borderRadius: 18, padding: "10px 22px", lineHeight: 1.32 }}>
+      <div style={{ display: "inline-block", maxWidth: "100%",
+                    background: toon ? "transparent" : "rgba(0,0,0,0.62)",
+                    borderRadius: 18, padding: toon ? "6px 10px" : "10px 22px", lineHeight: 1.32 }}>
         {cum.tu.map((w, i) => {
           const on = now >= w.t - 0.05 && now < w.t + w.d + 0.05;
+          if (toon) {
+            return (
+              <span key={i} style={{
+                fontSize: on ? 56 : 50, fontWeight: 900, margin: "0 8px",
+                display: "inline-block", color: on ? accent : "#FFFFFF",
+                WebkitTextStroke: "9px #14161C", paintOrder: "stroke fill",
+                letterSpacing: -1,
+                transform: on ? "translateY(-6px) rotate(-1.5deg)" : "none",
+                filter: on ? `drop-shadow(0 0 16px ${accent}88)` : "drop-shadow(0 4px 0 rgba(0,0,0,.4))",
+              } as React.CSSProperties}>{w.w}</span>
+            );
+          }
           return (
             <span key={i} style={{ fontSize: 44, fontWeight: 900, margin: "0 7px",
                                    display: "inline-block", color: on ? accent : "#F2F7FF",

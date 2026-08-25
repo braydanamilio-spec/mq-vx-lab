@@ -245,7 +245,8 @@ export const MascotStage: React.FC<MascotProps> = ({
         }}>{title}</div>
       ) : null}
 
-      <Karaoke subs={subs} accent={accent} />
+      {/* phụ đề kiểu truyện tranh: viền dày, không khung đen — hợp phim hoạt hình */}
+      <Karaoke subs={subs} accent={accent} kieu="toon" />
     </AbsoluteFill>
   );
 };
