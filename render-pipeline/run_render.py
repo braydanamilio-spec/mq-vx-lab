@@ -897,13 +897,16 @@ def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story
     if str(ch.get("the_he") or "") == "2":
         import the_he_2 as TH2
         k2 = TH2.doc_kenh(ch.get("name") or "")
+        # BA nơi gọi hàm này đều mở gói ĐÚNG BỐN giá trị (`_, story, ok, info`). Trả `None` là
+        # `TypeError: cannot unpack non-sequence NoneType` — và với thế hệ 2 thì "bỏ lượt" không
+        # phải trường hợp hiếm, nó là HÀNH VI THIẾT KẾ mỗi khi nguồn thiếu dữ liệu. Luôn trả bốn.
         if not k2:
             print(f"   ⚠️ {ch.get('name')}: có cờ thế hệ 2 nhưng không có trong kenh_the_he_2.json")
-            return None
+            return out, {"title": ch.get("name")}, False, {"err": "không có trong danh sách thế hệ 2"}
         jst("writing", f"Đọc dữ liệu mở ({k2['nguon']})")
         kq = TH2.chay_chung(k2, ra=out)
         if not kq:
-            return None
+            return out, {"title": k2["ten"]}, False, {"err": "nguồn thiếu dữ liệu -> bỏ lượt"}
         _duong, _info = kq
         return _duong, {"title": k2["ten"], "_that": True}, True, _info
 

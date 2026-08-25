@@ -677,6 +677,37 @@ def t_nghen_nha_cung_cap_phai_thu_lai():
     assert not xau, "xử lý nghẽn nhà cung cấp sai:\n   " + "\n   ".join(xau)
 
 
+
+def t_dispatch_luon_tra_bon_gia_tri():
+    """Mọi đường thoát của `_dispatch_short` phải trả đủ bốn giá trị.
+
+    Ba nơi gọi đều mở gói `_, story, ok, info = _dispatch_short(...)`. Trả `None` là
+    `TypeError: cannot unpack non-sequence NoneType` — nổ giữa lane, không phải lúc test.
+    Với kênh thế hệ 2 thì "bỏ lượt" KHÔNG phải trường hợp hiếm: đó là hành vi thiết kế mỗi khi
+    nguồn mở thiếu dữ liệu. Nên đường thoát đó là đường hay đi nhất, không phải đường phụ.
+    Chốt chỉ soi các `return` trả THẲNG một literal (tuple/None/hằng); `return DS.make_xxx(...)`
+    thì tin theo hợp đồng của hàm được gọi."""
+    import ast
+    t = ast.parse(_doc("run_render.py"))
+    f = next((n for n in ast.walk(t)
+              if isinstance(n, ast.FunctionDef) and n.name == "_dispatch_short"), None)
+    assert f is not None, "không tìm thấy _dispatch_short()"
+    xau = []
+    for r in ast.walk(f):
+        if not isinstance(r, ast.Return):
+            continue
+        v = r.value
+        if isinstance(v, ast.Call):
+            continue                       # uỷ quyền cho hàm khác -> theo hợp đồng của hàm đó
+        if v is None or (isinstance(v, ast.Constant) and v.value is None):
+            xau.append(f"dòng {r.lineno}: return None -> nơi gọi sẽ TypeError")
+        elif isinstance(v, ast.Tuple) and len(v.elts) != 4:
+            xau.append(f"dòng {r.lineno}: return {len(v.elts)} giá trị, cần 4")
+        elif not isinstance(v, (ast.Tuple, ast.Call)):
+            xau.append(f"dòng {r.lineno}: return không phải bộ 4 giá trị")
+    assert not xau, "_dispatch_short trả sai dạng:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -771,6 +802,7 @@ def main():
     check("thẻ tiêu đề tự co, không tràn khung", t_the_tieu_de_khong_tran_khung)
     check("dữ liệu mở hỏng KHÔNG làm gãy dây chuyền", t_du_lieu_mo_khong_lam_gay_day_chuyen)
     check("50 kênh thế hệ 2 trỏ đúng hàm + dạng", t_kenh_the_he_2_tro_dung_ham_va_dang)
+    check("_dispatch_short luôn trả đủ 4 giá trị", t_dispatch_luon_tra_bon_gia_tri)
     check("brand-kit: motif có thật, màu không trùng", t_brandkit_the_he_2)
     check("cổng an toàn nội dung phủ cả 7 đường story", t_cong_an_toan_noi_dung)
     check("CF chặn prompt vẫn còn đường Gemini", t_cf_chan_prompt_van_con_duong_gemini)

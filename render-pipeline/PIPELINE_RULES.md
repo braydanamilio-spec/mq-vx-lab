@@ -2882,3 +2882,14 @@ viết. Mà 504 chỉ là nhà cung cấp đang nghẽn: gọi lại là xong, v
 - **Bẫy khi viết chốt**: đếm `raise RateLimited` là sai thước đo — một khối có thể có hai raise
   (429 và 403) mà chỉ cần một nhánh thử lại. Đếm theo KHỐI bắt lỗi quanh `generate_content`.
 - Chốt `t_nghen_nha_cung_cap_phai_thu_lai` kiểm cả ba: phân loại đúng, đủ 15 khối, đúng tên biến.
+
+### 26/8 — nhánh thế hệ 2 trong `_dispatch_short` trả `None` = TypeError giữa lane
+Ba nơi gọi `_dispatch_short` đều mở gói `_, story, ok, info = ...`. Nhánh mới cho kênh thế hệ 2
+trả `None` khi bỏ lượt → `TypeError: cannot unpack non-sequence NoneType`.
+Điểm chí mạng: với thế hệ 2, **"bỏ lượt" là hành vi thiết kế** (nguồn mở thiếu dữ liệu thì thà bỏ
+còn hơn bịa), tức đó là đường đi THƯỜNG XUYÊN chứ không phải nhánh hiếm — bật 50 kênh là nổ ngay.
+Bắt được bằng cách đọc lại hợp đồng của hàm TRƯỚC khi bật, không phải sau khi mất một phiên.
+- **Luật**: mọi đường thoát của `_dispatch_short` trả đủ bốn giá trị; bỏ lượt thì `ok=False` kèm
+  `info["err"]`, không trả `None`.
+- Chốt `t_dispatch_luon_tra_bon_gia_tri` — chỉ soi `return` trả literal, `return DS.make_xxx(...)`
+  thì tin theo hợp đồng của hàm được gọi (soi cả hai là báo động giả hàng loạt).
