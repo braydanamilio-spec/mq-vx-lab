@@ -2977,3 +2977,15 @@ THƯỜNG XUYÊN bị code coi như không thể xảy ra.
 - Vá cả 3 chỗ (`make_long` · `make_doc_long` · `run_render._long_then_shorts`): kiểm rỗng, ném
   `RuntimeError("hết key viết dùng được")` để tầng trên bắt và bỏ lượt gọn.
 - Chốt `t_key_order_khong_lay_phan_tu_dau_tran` cấm viết `key_order(...)[0]` trần.
+
+### 26/8 phiên 19:59 — PHIÊN GẦN NHƯ TRẮNG vì cạn key viết (số đo)
+`12 lane · 2 video · 96 lỗi · 55 IndexError`. Toàn bộ 55 lỗi từ đúng 2 chỗ `key_order(...)[0]`
+(`make_doc_long` 41 · `make_long` 14) — nhóm video LONG chết sạch.
+
+Pool key viết tụt theo giờ: **68 → 43 dùng được / 199** (154 đang nghỉ).
+Bản vá cùng ngày biến 55 lần nổ thành 55 lần "bỏ lượt gọn" — **nhưng không tạo thêm video nào**.
+Vá cách BÁO lỗi không vá được việc HẾT tài nguyên. Đừng nhầm hai thứ đó.
+
+**Điều đêm nay chứng minh cho thế hệ 2**: 22 kênh chất liệu A dựng kịch bản từ dữ liệu mở và
+**không gọi AI một lần nào** — một phiên như 19:59 thì chúng vẫn ra video bình thường. Đó không
+phải lợi ích phụ của thiết kế mới, nó là lợi ích chính.
