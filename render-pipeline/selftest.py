@@ -436,6 +436,7 @@ def main():
     check("đồng bộ kho có ngân sách giờ, không đợi đủ hết", t_dong_bo_kho_co_ngan_sach_gio)
     check("kiểm kho hằng ngày: song song + ngân sách 240s", t_kiem_kho_ngay_co_ngan_sach)
     check("lượt đi bộ nhặt kèm map kho + thumbnail", t_lap_ban_ghi_tu_luot_di_bo)
+    check("plan KHÔNG render — yêu cầu render-lại giao lane", t_plan_khong_render)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2227,6 +2228,27 @@ def t_lap_ban_ghi_tu_luot_di_bo():
         assert moc in than, f"lượt đi bộ thiếu mảnh {moc}"
     assert than.index("thumb_can") < than.index("ThreadPoolExecutor"), \
         "danh sách thiếu phải nạp TRƯỚC khi đi bộ (trong luồng con là quá muộn)"
+
+
+def t_plan_khong_render():
+    """Plan là NGƯỜI ĐIỀU PHỐI — tuyệt đối không render. (25/8, hung thủ cuối của 3 plan chết 18')
+
+    `process_requests` render + đẩy kho nhiều phút mỗi yêu cầu; hàng tồn 25 yêu cầu ⇒ plan chết
+    trước khi mở matrix, mọi phiên chỉ còn luồng sót. Nay plan chỉ đếm hàng; lane nhận kênh nào
+    xử yêu cầu của kênh đó (chi_kenh=...)."""
+    import ast
+    src = _doc("run_render.py")
+    t = ast.parse(src)
+    plan = [n for n in ast.walk(t) if isinstance(n, ast.FunctionDef) and n.name == "plan_mode"][0]
+    goi = [n for n in ast.walk(plan) if isinstance(n, ast.Call)
+           and getattr(n.func, "id", "") == "process_requests"]
+    assert not goi, "plan_mode vẫn gọi process_requests -> plan lại chết ở timeout 18'"
+    lane = [n for n in ast.walk(t) if isinstance(n, ast.FunctionDef) and n.name == "channel_mode"][0]
+    goi2 = [n for n in ast.walk(lane) if isinstance(n, ast.Call)
+            and getattr(n.func, "id", "") == "process_requests"]
+    assert goi2, "channel_mode không xử yêu cầu render lại -> hàng tồn không ai dọn"
+    assert any(k.arg == "chi_kenh" for c in goi2 for k in c.keywords), \
+        "lane phải lọc yêu cầu theo kênh mình, không ôm cả hàng"
 
 
 if __name__ == "__main__":

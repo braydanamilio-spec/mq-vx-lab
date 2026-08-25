@@ -921,7 +921,7 @@ def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story
                          accent=ch.get("accent", "#22D3EE"), accent2=ch.get("accent2", "#F5B301"))
 
 
-def process_requests(keys, report):
+def process_requests(keys, report, chi_kenh=None):
     """YÊU CẦU RENDER LẠI (nút 🔄): render lại đúng chủ đề -> đẩy Drive -> BỎ bản cũ (thay thế).
 
     DÙNG LẠI KỊCH BẢN ĐÃ LƯU của chính video cũ (get_script_by_drive) -> KHỎI gọi Gemini: đúng
@@ -933,6 +933,8 @@ def process_requests(keys, report):
     chans = {(c.get("name") or "").upper(): c for c in FB.read_channels(OWNER)}
     for req in FB.read_render_requests(OWNER):
         ch = req.get("channel"); typ = req.get("type", "short"); seed = req.get("seed", "")
+        if chi_kenh and str(ch or "").upper() != str(chi_kenh).upper():
+            continue                     # lane chỉ xử yêu cầu của kênh mình (plan không render, 25/8)
         if not (ch and seed):
             FB.mark_request_done(req["id"], "thiếu thông tin"); continue
         FB.mark_request_status(req["id"], "processing")   # KHÓA hủy: đã bắt đầu render lại
@@ -1666,8 +1668,16 @@ def plan_mode():
     # bấm Dừng lúc 03:50Z mà phiên 04:24Z vẫn mở đủ 18 luồng — dừng không nổi, phải khoá workflow ở
     # tầng GitHub. Cờ người đặt chỉ người mới được gỡ (nút ▶️ Chạy tiếp / Render ngay).
     FB.set_config(OWNER, {"last_safety_stop": None})   # kho ổn -> gỡ cờ dừng AN TOÀN do máy đặt
+    # 25/8 — HUNG THỦ CUỐI của chuỗi plan chết 18': `process_requests` RENDER video ngay trong
+    # plan — mỗi yêu cầu là một lượt render + đẩy kho nhiều phút, mà hàng đang có ~25 yêu cầu
+    # (lô render-lại 24/8) ⇒ plan nào cũng chết trước khi kịp mở matrix; kiểm-kho/sync/guard chỉ
+    # là kẻ tình nghi đứng gần hiện trường. Plan là NGƯỜI ĐIỀU PHỐI, không phải thợ render:
+    # chỉ đếm hàng rồi giao cho lane (timeout 165') — lane nhận kênh nào thì render lại video của
+    # kênh đó trước khi làm video mới (process_requests(chi_kenh=...) ở channel_mode).
     try:
-        process_requests(keys, {"done": 0, "fails": []})   # 🔄 render lại (thay bản cũ) — 1 lần ở plan
+        _n_req = len(FB.read_render_requests(OWNER))
+        if _n_req:
+            print(f"   🔄 {_n_req} yêu cầu render lại đang chờ — giao cho lane xử (plan không render).")
     except Exception:
         print_exc_gon()
     _moc("đọc danh sách kênh")
@@ -2090,6 +2100,15 @@ def channel_mode(name):
         print(f"⚠️ Kênh {name} không còn (đã xóa) — bỏ."); return
     if one.get("paused"):
         print(f"⏸ {name}: đang PAUSE — bỏ qua (bấm ▶ Chạy để tiếp)."); return
+    # 25/8 — LANE xử yêu cầu render-lại CỦA KÊNH MÌNH trước khi làm video mới (plan không render
+    # nữa, xem chú thích ở plan_mode: 25 yêu cầu tồn đọng từng giết 3 plan liên tiếp ở timeout 18').
+    try:
+        _rep_rq = {"done": 0, "fails": []}
+        process_requests(keys, _rep_rq, chi_kenh=name)
+        if _rep_rq["done"]:
+            print(f"   🔄 {name}: đã render lại {_rep_rq['done']} video theo yêu cầu.")
+    except Exception:
+        print_exc_gon()
     chs = [one]
     # STAGGER theo kênh (0-18s): 10 luồng KHÔNG gọi Gemini/Drive cùng 1 khoảnh khắc -> đỡ bị coi là burst/lạm dụng.
     import time

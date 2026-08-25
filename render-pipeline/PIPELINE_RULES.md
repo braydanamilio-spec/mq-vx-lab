@@ -2591,3 +2591,12 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   ảnh `.jpg` hook sáng đẹp vẫn nằm cạnh video, và lúc ĐĂNG YouTube `main.py` tự tìm `.jpg` theo tên
   từ sidecar nên không ảnh hưởng đăng). Vá: lượt đi bộ 72 kho hằng ngày nhặt kèm map file→kho và
   video→thumbnail (cùng tên gốc), đổ về D1 — **0 lượt Drive thêm**. Chốt: `t_lap_ban_ghi_tu_luot_di_bo`.
+
+- **PLAN LÀ NGƯỜI ĐIỀU PHỐI — TUYỆT ĐỐI KHÔNG RENDER.** (25/8) Hung thủ CUỐI của 3 plan chết liên
+  tiếp ở timeout 18' (07:05 · 07:28 · 08:07): `process_requests` render + đẩy kho nhiều phút MỖI
+  yêu cầu, ngay trong plan, mà hàng tồn ~25 yêu cầu render-lại từ 24/8 ⇒ plan chết trước khi mở
+  matrix, phiên nào cũng chỉ còn luồng sót — "video không tăng, 1 luồng thay vì 18". Kiểm-kho/sync
+  chỉ là kẻ tình nghi đứng gần (vẫn đáng vá, đã vá). Nay plan chỉ ĐẾM hàng; lane nhận kênh nào thì
+  `process_requests(chi_kenh=...)` xử yêu cầu kênh đó trước khi làm video mới (timeout lane 165').
+  Bài học: khi một triệu chứng sống sót qua 2 bản vá, nghi phạm thật thường là kẻ ĐỨNG SAU các mốc
+  đo — cắm mốc quanh TỪNG bước rồi để log tự khai. Chốt: `t_plan_khong_render`.
