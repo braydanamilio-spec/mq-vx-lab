@@ -2836,3 +2836,22 @@ phiên trắng mà không có một chữ nào để lần ra nguyên nhân.
 - **Luật rộng hơn**: sửa .tsx xong phải chạy `render_canary()` (0 quota, ~60s) TRƯỚC khi push. Render
   thử một composition KHÁC composition mình vừa sửa thì không chứng minh được gì — bundle chung nên
   lỗi cú pháp lộ ra, nhưng lỗi LÚC CHẠY chỉ lộ ở đúng composition đó.
+
+### 26/8 — QC KỸ THUẬT ĐẠT MÀ VIDEO VẪN LÀM MẤT KÊNH (cổng an toàn nội dung)
+Kênh WHAT THEY SEARCH lọc "chủ đề thầm kín" từ bảng đọc-nhiều THẬT của Wikipedia. Video ra lò
+đủ 30s, có tiếng, đúng khung 1080×1920 — **đạt mọi mốc QC** — nhưng bảng gồm `Pornhub`, `Sex`,
+và `Teenage Sex and Death at…`. Cụm cuối (vị thành niên + tình dục) đủ để bị gỡ kênh, không chỉ
+tắt kiếm tiền.
+
+- **QC kỹ thuật không bắt được loại lỗi này.** Đủ giây, có tiếng, đúng khung nói lên đúng ba điều đó.
+- **Nguồn không sai** — bảng xếp hạng của thế giới thật thì có ngày sẽ có mục như vậy. Bất kỳ kênh
+  nào lọc theo chủ đề đều có ngày vớ phải. Nên cổng phải nằm ở chỗ MỌI story đi qua, không giao
+  cho từng kênh tự lo.
+- **Vá**: `the_he_2.an_toan()` + `_cong_an_toan()` gắn vào cả 7 đường dựng story. Cắt mục bẩn;
+  cắt xong không đủ số mục tối thiểu thì bỏ cả lượt. Thà mất một video còn hơn mất một kênh.
+- **Chặn theo CỤM cho từ ghép, theo TỪ RIÊNG cho từ đơn**: chặn chuỗi con thì "Sussex", "Essex",
+  "Middlesex" bị xoá nhầm hàng loạt.
+- **Góc kênh phải an toàn TỪ GỐC, không dựa vào cổng cắt sau**: đo thật 4 ngày liên tiếp, bảng
+  đọc-nhiều có 0-1 bài thuộc chủ đề quan hệ, và bài khớp là tên ban nhạc. Đổi sang đo lượt đọc
+  một DANH SÁCH BÀI CỐ ĐỊNH (`wiki_bai`) — vẫn số thật, đúng chủ đề, và không moi vào nhóm 18+.
+- Chốt `t_cong_an_toan_noi_dung` kiểm cả hai vế: nhận diện đúng, và đủ 7 đường đều gọi cổng.

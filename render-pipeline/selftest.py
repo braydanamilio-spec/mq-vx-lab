@@ -470,9 +470,15 @@ def t_kenh_the_he_2_tro_dung_ham_va_dang():
     DANG = {"ranked", "race", "mapped", "scaled", "pulse", "longshot", "cinematic", "thennow"}
     CHAT = {"A", "B", "C"}      # A = số liệu + đồ hoạ code · B = ảnh AI style riêng · C = lai
     xau = []
+    # `ham` được phép là hàm nguồn trong du_lieu_mo, HOẶC một bộ chuyển đổi nội bộ của the_he_2
+    # (vd "wiki_bai" — hỏi ngược lại cùng một nguồn, không phải nguồn mới).
+    import the_he_2 as TH
+    noi_bo = set()
+    for bang in ("BO_CHUYEN", "BO_DUA", "BO_PHIM", "BO_SO", "BO_BAN_DO", "BO_THANG", "BO_XUA_NAY"):
+        noi_bo |= set(getattr(TH, bang, {}) or {})
     for k in ks:
-        if not hasattr(DL, k.get("ham", "")):
-            xau.append(f"{k.get('ten')}: không có du_lieu_mo.{k.get('ham')}()")
+        if not hasattr(DL, k.get("ham", "")) and k.get("ham") not in noi_bo:
+            xau.append(f"{k.get('ten')}: '{k.get('ham')}' không có ở du_lieu_mo lẫn bộ chuyển đổi")
         if k.get("dinh_dang") not in DANG:
             xau.append(f"{k.get('ten')}: dạng render lạ '{k.get('dinh_dang')}'")
         if k.get("footage"):
@@ -585,6 +591,42 @@ def t_brandkit_the_he_2():
     assert not xau, "brand-kit sai:\n   " + "\n   ".join(xau)
 
 
+
+def t_cong_an_toan_noi_dung():
+    """Mọi đường dựng story thế hệ 2 phải đi qua cổng an toàn nội dung.
+
+    26/8 — suýt trả giá đắt: kênh "chủ đề thầm kín" lọc từ bảng đọc-nhiều THẬT của Wikipedia và
+    ra bảng gồm "Pornhub", "Sex", "Teenage Sex and Death at…". Video đạt hết mọi mốc QC kỹ thuật
+    (đủ giây, có tiếng, đúng khung) — nhưng đăng lên là mất kênh, riêng cụm cuối đủ để bị gỡ.
+    QC kỹ thuật không thể bắt loại lỗi này, nên phải có cổng riêng và phải chốt rằng nó còn nguyên.
+
+    Hai vế cùng phải đúng:
+      • cổng nhận diện đúng (chặn cái cần chặn, KHÔNG chặn nhầm "Sussex", "Essex", "Middlesex")
+      • cả 7 đường dựng story đều gọi cổng — thiếu một đường là thủng."""
+    import os
+    goc = os.path.dirname(os.path.abspath(__file__))
+    if not os.path.exists(os.path.join(goc, "the_he_2.py")):
+        return
+    import the_he_2 as TH
+    CAN_CHAN = ["Pornhub", "Sex", "Teenage Sex and Death at a Beach", "sexual assault case",
+                "OnlyFans", "Sexual Politics (book)", "child sex ring", "underage marriage"]
+    CAN_GIU = ["Meghan, Duchess of Sussex", "Essex County", "Middlesex Hospital",
+               "Raytheon Company", "Boeing 737 MAX", "Marriage", "Divorce"]
+    xau = [f"lọt: {t!r}" for t in CAN_CHAN if TH.an_toan(t)]
+    xau += [f"chặn nhầm: {t!r}" for t in CAN_GIU if not TH.an_toan(t)]
+    ma = io.open(os.path.join(goc, "the_he_2.py"), encoding="utf-8").read()
+    for ham in ("dung_story_ranked", "dung_story_race", "dung_story_cinematic", "dung_story_scaled",
+                "dung_story_mapped", "dung_story_longshot", "dung_story_thennow"):
+        i = ma.find(f"def {ham}(")
+        if i < 0:
+            xau.append(f"thiếu hẳn {ham}()")
+            continue
+        j = ma.find("\ndef ", i + 10)
+        if "_cong_an_toan(" not in ma[i:(j if j > 0 else len(ma))]:
+            xau.append(f"{ham}() KHÔNG đi qua cổng an toàn")
+    assert not xau, "cổng an toàn nội dung thủng:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -679,6 +721,7 @@ def main():
     check("dữ liệu mở hỏng KHÔNG làm gãy dây chuyền", t_du_lieu_mo_khong_lam_gay_day_chuyen)
     check("50 kênh thế hệ 2 trỏ đúng hàm + dạng", t_kenh_the_he_2_tro_dung_ham_va_dang)
     check("brand-kit: motif có thật, màu không trùng", t_brandkit_the_he_2)
+    check("cổng an toàn nội dung phủ cả 7 đường story", t_cong_an_toan_noi_dung)
     check("CF chặn prompt vẫn còn đường Gemini", t_cf_chan_prompt_van_con_duong_gemini)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")

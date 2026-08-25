@@ -1686,15 +1686,26 @@
   "handle": "@whattheysearch",
   "chat_lieu": "C",
   "nguon": "wikipedia",
-  "ham": "bai_duoc_doc",
+  "ham": "wiki_bai",
   "dinh_dang": "ranked",
   "goc_nhin": "Người ta lén tra điều gì",
   "style_anh": "ảnh màn hình đêm",
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "loc": "rieng_tu",
-   "xoay": "ngay"
+   "nhan": "What America looks up about love",
+   "bai": [
+    "Divorce",
+    "Infidelity",
+    "Prenuptial_agreement",
+    "Child_custody",
+    "Long-distance_relationship",
+    "Dating",
+    "Marriage",
+    "Alimony",
+    "Breakup",
+    "Soulmate"
+   ]
   },
   "brand": {
    "name": "WHAT THEY SEARCH",
@@ -1725,7 +1736,8 @@
     "verified"
    ],
    "style_anh": "ảnh màn hình đêm"
-  }
+  },
+  "ghi_chu": "bảng đọc-nhiều không có chủ đề quan hệ (đo 4 ngày: 0-1 bài) -> đo lượt đọc danh sách bài cố định"
  },
  {
   "id": 37,

@@ -74,6 +74,88 @@ def ten_nguon(ma: str) -> str:
     return TEN_NGUON.get(str(ma or "").lower(), str(ma or ""))
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# CỔNG AN TOÀN NỘI DUNG — chạy trên MỌI kênh, MỌI dạng, không có ngoại lệ
+# ------------------------------------------------------------------------------------------
+# 26/8 — bài học suýt trả giá đắt: kênh WHAT THEY SEARCH lọc "chủ đề thầm kín" từ bảng đọc nhiều
+# của Wikipedia, và ra một bảng gồm "Pornhub", "Sex", và "Teenage Sex and Death at…". Video kỹ
+# thuật đạt hết mọi mốc QC — nhưng đăng lên là mất kênh, riêng cụm cuối (vị thành niên + tình
+# dục) đủ để bị gỡ thẳng chứ không chỉ tắt kiếm tiền.
+#
+# Vì sao lỗi này KHÔNG thể để cho từng kênh tự lo: nguồn dữ liệu là bảng xếp hạng THẬT của thế
+# giới thật, nên bất kỳ kênh nào lọc theo chủ đề cũng có ngày vớ phải mục như vậy. Cổng phải
+# nằm ở chỗ mọi story đi qua.
+_CAM = (
+    # khiêu dâm / mại dâm
+    "porn", "pornhub", "onlyfans", "xvideos", "xhamster", "nude", "naked", "nsfw", "hentai",
+    "escort", "brothel", "prostitut", "strip club", "sex work", "sex tape", "erotic", "orgasm",
+    "masturbat", "fetish", "bdsm", "incest", "playboy", "penthouse magazine",
+    # trẻ vị thành niên — tuyệt đối không đứng cùng nội dung tình dục
+    "child sex", "teenage sex", "teen sex", "underage", "child abuse", "csam", "grooming",
+    "child porn", "minor sex", "statutory rape", "pedophil",
+    # tấn công tình dục
+    "rape", "sexual assault", "molest",
+    # tự hại
+    "suicide method", "how to kill", "self harm",
+    # cực đoan
+    "isis", "al-qaeda", "terror attack manual", "bomb making", "mass shooting livestream",
+)
+# Từ đứng riêng: chỉ chặn khi là TỪ ĐỘC LẬP, không chặn khi nằm trong từ khác
+# ("Sussex" chứa "sex", "Essex" cũng vậy — chặn theo chuỗi con là xoá nhầm hàng loạt mục sạch).
+_CAM_TU = ("sex", "sexual", "sexuality", "porn", "rape", "nude", "xxx", "erotica")
+
+
+def an_toan(chu: str) -> bool:
+    """True = dùng được. Lọc theo CỤM cho từ ghép, theo TỪ RIÊNG cho từ đơn."""
+    import re as _re
+    t = " ".join(str(chu or "").lower().split())
+    if not t:
+        return False
+    if any(c in t for c in _CAM):
+        return False
+    return not any(_re.search(r"(?<![a-z])" + c + r"(?![a-z])", t) for c in _CAM_TU)
+
+
+def loc_an_toan(ds: list, khoa=("name", "ten", "label", "tieu_de", "vo", "nar", "title")) -> list:
+    """Bỏ mọi mục có chữ không an toàn ở bất kỳ trường chữ nào."""
+    ra = []
+    for x in ds or []:
+        if isinstance(x, dict):
+            if all(an_toan(str(x.get(k))) for k in khoa if x.get(k)):
+                ra.append(x)
+        elif an_toan(str(x)):
+            ra.append(x)
+    return ra
+
+
+def _cong_an_toan(st: dict | None, ten_kenh: str = "") -> dict | None:
+    """Cổng cuối: story nào còn chữ cấm thì cắt mục đó; cắt xong không đủ thì BỎ CẢ LƯỢT.
+
+    Thà mất một video còn hơn mất một kênh."""
+    if not st:
+        return None
+    if not an_toan(st.get("title", "")):
+        print(f"   🛡️ {ten_kenh}: tiêu đề không an toàn — BỎ LƯỢT")
+        return None
+    for khoa, toi_thieu in (("items", 3), ("data", 3), ("pairs", 3), ("scenes", 3)):
+        if khoa in st:
+            truoc = len(st[khoa] or [])
+            st[khoa] = loc_an_toan(st[khoa])
+            if truoc != len(st[khoa]):
+                print(f"   🛡️ {ten_kenh}: cắt {truoc - len(st[khoa])} mục không an toàn")
+            if len(st[khoa]) < toi_thieu:
+                print(f"   🛡️ {ten_kenh}: còn {len(st[khoa])} mục sau khi lọc — BỎ LƯỢT")
+                return None
+    for khoa in ("intro_vo", "outro_vo", "hook"):
+        if st.get(khoa) and not an_toan(st[khoa]):
+            st[khoa] = ""
+    if st.get("narration"):
+        st["narration"] = loc_an_toan(st["narration"])
+        if len(st["narration"]) < 3:
+            return None
+    return st
+
+
 def _gon(t: str, toi_da: int = 26) -> str:
     """Tên vừa thẻ: cắt theo TỪ, không cắt giữa chữ."""
     t = " ".join(str(t or "").split())
@@ -129,25 +211,36 @@ def _bd_ban_an(D, ky):
 
 
 # Bài mang tính riêng tư / tò mò thầm kín — dùng để tách kênh WHAT THEY SEARCH khỏi bảng chung.
-_RIENG_TU = ("sex", "divorce", "affair", "dating", "marriage", "porn", "relationship",
-             "breakup", "infidelity", "love", "wife", "husband", "girlfriend", "boyfriend",
-             "wedding", "kiss", "nude", "body", "adult", "romance", "couple", "married",
-             "onlyfans", "playboy", "virgin", "pregnan", "abortion", "gender", "sexual")
+# 26/8 — bản đầu gồm cả "porn", "nude", "onlyfans"… nên bảng ra toàn nội dung người lớn: đúng
+# thứ làm mất kênh. Danh sách nay chỉ giữ chủ đề QUAN HỆ đời thường — vẫn là thứ người ta tra
+# lặng lẽ, nhưng đăng được. Cổng `an_toan()` vẫn chặn lần hai phía sau.
+_RIENG_TU = ("divorce", "dating", "marriage", "relationship", "breakup", "wedding",
+             "engagement", "wife", "husband", "girlfriend", "boyfriend", "couple",
+             "married", "romance", "prenup", "custody", "in-law", "long distance")
 
 
 def _bd_wiki_top(D, ky):
     # Bảng đọc nhiều trả tới 1000 bài/ngày. Lọc theo chủ đề thì phải quét CẢ bảng, quét
     # 60 dòng đầu là gần như luôn rỗng -> kênh bỏ lượt oan mỗi ngày.
-    r = D.bai_duoc_doc(int(ky["nam"]), int(ky["thang"]), int(ky["ngay"]), 1000)
+    # Và một ngày cụ thể có thể không có đủ bài thuộc chủ đề kênh -> lùi dần tối đa 10 ngày,
+    # vẫn là bảng THẬT, chỉ của ngày khác (giống cách bộ phim kể đang làm).
+    import datetime as _dt
+    goc = _dt.date(int(ky["nam"]), int(ky["thang"]), int(ky["ngay"]))
     if ky.get("loc") == "rieng_tu":
-        r = [x for x in r if any(t in x["ten"].lower() for t in _RIENG_TU)][:6]
+        r = []
+        for lui in range(0, 10):
+            d = goc - _dt.timedelta(days=lui)
+            r = [x for x in D.bai_duoc_doc(d.year, d.month, d.day, 1000)
+                 if any(t in x["ten"].lower() for t in _RIENG_TU)][:6]
+            if len(r) >= 3:
+                break
         if len(r) < 3:
             return None
         return ("What America quietly looked up",
                 [{"name": _gon(x["ten"], 28), "stat": _so(x["luot_doc"]),
                   "vo": f"{_gon(x['ten'], 34)}. {x['luot_doc']:,} searches."} for x in r],
                 "Nobody admits to this one.")
-    r = r[:6]
+    r = D.bai_duoc_doc(goc.year, goc.month, goc.day, 1000)[:6]
     if len(r) < 3:
         return None
     return (f"What America read on {ky['thang']}/{ky['ngay']}",
@@ -325,7 +418,41 @@ def _bd_dinh_duong(D, ky):
             "U S D A measured every one of these.")
 
 
+def _bd_wiki_bai(D, ky):
+    """Đo lượt đọc một DANH SÁCH BÀI CỐ ĐỊNH — dùng khi chủ đề kênh không tự lên bảng xếp hạng.
+
+    26/8 — kênh quan hệ ban đầu lọc chủ đề từ bảng đọc-nhiều: đo thật 4 ngày liên tiếp, mỗi ngày
+    991 bài mà khớp 0-1 bài, và bài khớp lại là tên ban nhạc ("My Chemical Romance"). Nguồn không
+    sai, chỉ là hỏi sai câu. Hỏi ngược lại: những bài NÀY được đọc bao nhiêu? — vẫn số thật, và
+    lần này đúng chủ đề kênh."""
+    import datetime as _dt
+    import concurrent.futures as _cf
+    bai = ky.get("bai") or []
+    if not bai:
+        return None
+    den = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    tu = (den - _dt.timedelta(days=29)).strftime("%Y%m%d")
+    with _cf.ThreadPoolExecutor(6) as ex:
+        ket = list(ex.map(lambda t: (t, D.luot_doc_bai(t, tu, den.strftime("%Y%m%d"))), bai))
+    muc = []
+    for ten, diem in ket:
+        if not diem:
+            continue
+        tong = sum(x["luot_doc"] for x in diem)
+        muc.append({"name": _gon(ten.replace("_", " "), 24), "stat": _so(tong),
+                    "_v": tong,
+                    "vo": f"{ten.replace('_', ' ')}. {tong:,} reads in thirty days."})
+    if len(muc) < 3:
+        return None
+    muc = sorted(muc, key=lambda z: -z["_v"])[:6]
+    for m in muc:
+        m.pop("_v", None)
+    return (ky.get("nhan") or "What America looks up",
+            muc, "Thirty days of quiet curiosity, counted by Wikimedia.")
+
+
 BO_CHUYEN = {
+    "wiki_bai": _bd_wiki_bai,
     "hop_dong_lon": _bd_hop_dong, "thu_hoi_fda": _bd_thu_hoi, "ban_an": _bd_ban_an,
     "bai_duoc_doc": _bd_wiki_top, "thong_ke_nba": _bd_nba, "game_steam": _bd_steam,
     "trieu_hoi_xe": _bd_trieu_hoi, "chi_so_the_gioi": _bd_the_gioi, "tim_ho_so": _bd_ho_so_sec,
@@ -358,7 +485,7 @@ def dung_story_ranked(kenh: dict, ky: dict | None = None) -> dict | None:
     tieu_de, muc, ket = kq[0], kq[1], kq[2]
     mo = kq[3] if len(kq) > 3 else f"{tieu_de}. Here they are."
     items = [{**m, "tier": TIER[min(i, 5)]} for i, m in enumerate(muc[:6])]
-    return {
+    return _cong_an_toan({
         "title": tieu_de,
         "intro_vo": mo,
         "outro_vo": ket,
@@ -367,7 +494,7 @@ def dung_story_ranked(kenh: dict, ky: dict | None = None) -> dict | None:
         "nguon": kenh.get("nguon"),
         "_that": True,
         "self_score": {"total": 92},
-    }
+    }, kenh.get("ten", ""))
 
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
@@ -570,8 +697,9 @@ def dung_story_race(kenh: dict, ky: dict | None = None) -> dict | None:
         return None
     tieu_de, don_vi, frames, dan = kq
     dan = _keo_dai(dan, frames, don_vi)
-    return {"title": tieu_de, "unit": don_vi, "frames": frames, "narration": dan,
-            "nguon": kenh.get("nguon"), "_that": True, "self_score": {"total": 92}}
+    return _cong_an_toan({"title": tieu_de, "unit": don_vi, "frames": frames, "narration": dan,
+                          "nguon": kenh.get("nguon"), "_that": True,
+                          "self_score": {"total": 92}}, kenh.get("ten", ""))
 
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
@@ -751,10 +879,10 @@ def dung_story_cinematic(kenh: dict, ky: dict | None = None) -> dict | None:
     tieu_de, hook, canh = kq
     gu = str(kenh.get("style_anh") or "").strip()
     scenes = [{"nar": nar, "img_query": (f"{q}, {gu}" if gu else q)} for nar, q in canh]
-    return {"title": tieu_de, "hook": hook, "topic": kenh.get("niche", ""),
-            "scenes": scenes, "nguon": kenh.get("nguon"),
-            "thumb_hook": hook, "thumb_stat": "", "thumb_label": tieu_de[:30],
-            "_that": True, "self_score": {"total": 92}}
+    return _cong_an_toan({"title": tieu_de, "hook": hook, "topic": kenh.get("niche", ""),
+                          "scenes": scenes, "nguon": kenh.get("nguon"),
+                          "thumb_hook": hook, "thumb_stat": "", "thumb_label": tieu_de[:30],
+                          "_that": True, "self_score": {"total": 92}}, kenh.get("ten", ""))
 
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
@@ -849,10 +977,10 @@ def dung_story_scaled(kenh: dict, ky: dict | None = None) -> dict | None:
     tieu_de, don_vi, muc, ket = kq
     for m in muc:
         m["vo"] = f"{m['name']}. {m['disp']}."
-    return {"title": tieu_de, "unit": don_vi, "items": muc,
-            "intro_vo": f"{tieu_de}. Same scale, no tricks.",
-            "outro_vo": ket, "nguon": kenh.get("nguon"),
-            "_that": True, "self_score": {"total": 92}}
+    return _cong_an_toan({"title": tieu_de, "unit": don_vi, "items": muc,
+                          "intro_vo": f"{tieu_de}. Same scale, no tricks.",
+                          "outro_vo": ket, "nguon": kenh.get("nguon"),
+                          "_that": True, "self_score": {"total": 92}}, kenh.get("ten", ""))
 
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
@@ -975,8 +1103,9 @@ def dung_story_mapped(kenh: dict, ky: dict | None = None) -> dict | None:
         print(f"   ⚠️ {kenh.get('ten')}: thiếu dữ liệu — BỎ LƯỢT")
         return None
     tieu_de, don_vi, data, dan = kq
-    return {"title": tieu_de, "unit": don_vi, "data": data, "narration": dan,
-            "nguon": kenh.get("nguon"), "_that": True, "self_score": {"total": 92}}
+    return _cong_an_toan({"title": tieu_de, "unit": don_vi, "data": data, "narration": dan,
+                          "nguon": kenh.get("nguon"), "_that": True,
+                          "self_score": {"total": 92}}, kenh.get("ten", ""))
 
 
 def _bt_luot_doc(D, ky):
@@ -1070,9 +1199,10 @@ def dung_story_longshot(kenh: dict, ky: dict | None = None) -> dict | None:
     if not kq:
         return None
     tieu_de, muc, dan = kq
-    return {"title": tieu_de, "items": muc,
-            "intro_vo": dan[0], "outro_vo": dan[-1] if len(dan) > 1 else "",
-            "nguon": kenh.get("nguon"), "_that": True, "self_score": {"total": 92}}
+    return _cong_an_toan({"title": tieu_de, "items": muc,
+                          "intro_vo": dan[0], "outro_vo": dan[-1] if len(dan) > 1 else "",
+                          "nguon": kenh.get("nguon"), "_that": True,
+                          "self_score": {"total": 92}}, kenh.get("ten", ""))
 
 
 def _xn_bls(D, ky):
@@ -1164,8 +1294,9 @@ def dung_story_thennow(kenh: dict, ky: dict | None = None) -> dict | None:
     if not kq:
         return None
     tieu_de, cap, dan = kq
-    return {"title": tieu_de, "pairs": cap, "intro_vo": dan[0], "outro_vo": dan[-1],
-            "nguon": kenh.get("nguon"), "_that": True, "self_score": {"total": 92}}
+    return _cong_an_toan({"title": tieu_de, "pairs": cap, "intro_vo": dan[0], "outro_vo": dan[-1],
+                          "nguon": kenh.get("nguon"), "_that": True,
+                          "self_score": {"total": 92}}, kenh.get("ten", ""))
 
 
 def chay(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] | None:
