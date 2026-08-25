@@ -444,6 +444,7 @@ def main():
     check("kịch bản skit mang đủ 5 luật viral", t_kich_ban_co_luat_viral)
     check("chữ karaoke luôn đọc được (bảng màu đã sàng)", t_chu_chay_luon_doc_duoc)
     check("thẻ tiêu đề tự co, không tràn khung", t_the_tieu_de_khong_tran_khung)
+    check("dữ liệu mở hỏng KHÔNG làm gãy dây chuyền", t_du_lieu_mo_khong_lam_gay_day_chuyen)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2402,6 +2403,31 @@ def t_the_tieu_de_khong_tran_khung():
         return max(38, min(co, int((vw - le * 2) / (tu * 0.62))))
     assert co_vua("SEMICONDUCTORS", 116, 120) < 116, "từ dài vẫn không co"
     assert co_vua("CHIPS", 116, 120) == 116, "từ ngắn bị co oan -> tiêu đề nhỏ đi vô cớ"
+
+
+def t_du_lieu_mo_khong_lam_gay_day_chuyen():
+    """Mọi hàm lấy dữ liệu mở phải trả RỖNG khi hỏng, tuyệt đối không ném lên dây chuyền.
+
+    25/8 — hào cạnh tranh mới: bản ghi chính phủ Mỹ thật hiện trên màn hình (USASpending, SEC,
+    BLS, Archive.org — cả bốn đã gọi thật, không cần key). Nhưng đây là API NGOÀI: chúng sập,
+    đổi định dạng, giới hạn lượt. Một nguồn hỏng mà giết cả lượt render thì hào thành gánh nặng.
+    Nguyên tắc: dữ liệu là GIA VỊ, không phải xương sống."""
+    import ast
+    src = _doc("du_lieu_mo.py")
+    t = ast.parse(src)
+    ten_ham = {"hop_dong_lon", "so_lieu_sec", "chuoi_bls", "phim_tu_lieu", "_goi"}
+    thay = set()
+    for fn in [n for n in t.body if isinstance(n, ast.FunctionDef)]:
+        if fn.name not in ten_ham:
+            continue
+        thay.add(fn.name)
+        co_try = any(isinstance(n, ast.Try) for n in ast.walk(fn))
+        assert co_try, f"{fn.name} không bọc try -> API ngoài hỏng là giết lượt render"
+    assert thay == ten_ham, f"thiếu hàm: {sorted(ten_ham - thay)}"
+    # `_goi` phải nuốt lỗi và trả None, không re-raise
+    i = src.index("def _goi(")
+    than = src[i:src.index("# ── 1. USASPENDING")]
+    assert "return None" in than and "raise" not in than, "_goi vẫn có thể ném lỗi lên trên"
 
 
 if __name__ == "__main__":

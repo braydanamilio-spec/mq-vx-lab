@@ -2756,3 +2756,15 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   xuống dòng được), sàn 38px, và mỗi biến thể truyền **lề thật** của nó. Chữ ngắn giữ nguyên cỡ lớn
   (CHIPS vẫn 116px), chỉ từ dài mới co (SEMICONDUCTORS → 96px). Chốt `t_the_tieu_de_khong_tran_khung`
   kiểm cả hai đầu: từ dài phải co, **từ ngắn không được co oan**.
+
+- **HÀO CẠNH TRANH: bản ghi chính phủ Mỹ THẬT trên màn hình.** (25/8, anh nhận xét 55 kênh "quá tầm
+  thường") Đúng: 55 kênh dùng chung công thức của hàng vạn kênh faceless — footage Pexels + chữ động
+  + giọng AI. Ai cũng lấy được cùng bộ footage nên không có gì để thuật toán ưu ái. Thứ **không copy
+  được** không phải footage đẹp hơn, mà là bản ghi gốc hiện trên màn hình. `du_lieu_mo.py` nối 4
+  nguồn, **đã gọi thật trước khi viết code**, không cần một key nào:
+  * **USASpending** — mọi đồng tiền liên bang (thử: Humana $51.269.205.263 từ Bộ Quốc phòng)
+  * **SEC EDGAR** — số liệu trong hồ sơ công ty đại chúng (thử: doanh thu Apple 11 kỳ)
+  * **BLS** — CPI/xăng/nhà/thất nghiệp chính thức (25 lượt/ngày không key)
+  * **Archive.org** — phim tư liệu công cộng
+  (Census trả 302 — cần key free, để lại.) Luật kèm theo: **dữ liệu là gia vị, không phải xương
+  sống** — mọi hàm hỏng thì trả rỗng, chốt `t_du_lieu_mo_khong_lam_gay_day_chuyen` canh bằng AST.
