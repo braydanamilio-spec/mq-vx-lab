@@ -54,3 +54,5 @@ render-pipeline/README.md
 !engine-remotion/public/geo/countries-110m.json
 !engine-remotion/public/geo/states-10m.json
 render-pipeline/out_thumbcheck/
+
+render-pipeline/out/

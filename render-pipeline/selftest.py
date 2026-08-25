@@ -547,6 +547,44 @@ def t_tsx_prop_khai_roi_phai_thao_ra():
     assert not xau, "prop chưa thảo -> ReferenceError lúc render:\n   " + "\n   ".join(xau)
 
 
+
+def t_brandkit_the_he_2():
+    """Brand-kit 50 kênh: có đủ, motif CÓ THẬT trong BrandV2, và không kênh nào trùng màu chính.
+
+    Nhận diện là thứ phải ổn định suốt đời kênh, nên nó được sinh bằng quy tắc chứ không gọi AI.
+    Ba thứ sai được mà không ai thấy cho tới lúc nhìn 50 avatar cạnh nhau:
+      • motif viết sai tên -> BrandV2 rơi về `default` -> hàng chục kênh cùng một biểu tượng cột
+      • hai kênh trùng màu chính -> nhìn như cùng một kênh
+      • thiếu tagline -> banner trống một dòng"""
+    import os, re, json as _js
+    goc = os.path.dirname(os.path.abspath(__file__))
+    dsp = os.path.join(goc, "kenh_the_he_2.json")
+    if not os.path.exists(dsp):
+        return
+    ks = _js.load(io.open(dsp, encoding="utf-8"))
+    if not any(k.get("brand") for k in ks):
+        return                                    # chưa sinh brand -> chưa kiểm
+    tsx = io.open(os.path.join(goc, "..", "engine-remotion", "src", "BrandV2.tsx"),
+                  encoding="utf-8").read()
+    co = set(re.findall(r'case "([a-z_]+)":', tsx)) | {"bars"}
+    xau, mau = [], []
+    for k in ks:
+        b = k.get("brand") or {}
+        if not b:
+            xau.append(f"{k.get('ten')}: chưa có brand")
+            continue
+        if b.get("motif") not in co:
+            xau.append(f"{k.get('ten')}: motif '{b.get('motif')}' không có trong BrandV2 "
+                       f"-> sẽ rơi về biểu tượng mặc định")
+        if not str(b.get("tagline") or "").strip():
+            xau.append(f"{k.get('ten')}: thiếu tagline")
+        mau.append((b.get("palette") or {}).get("primary"))
+    trung = sorted({m for m in mau if m and mau.count(m) > 1})
+    if trung:
+        xau.append("màu chính trùng giữa các kênh: " + ", ".join(trung))
+    assert not xau, "brand-kit sai:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -640,6 +678,7 @@ def main():
     check("thẻ tiêu đề tự co, không tràn khung", t_the_tieu_de_khong_tran_khung)
     check("dữ liệu mở hỏng KHÔNG làm gãy dây chuyền", t_du_lieu_mo_khong_lam_gay_day_chuyen)
     check("50 kênh thế hệ 2 trỏ đúng hàm + dạng", t_kenh_the_he_2_tro_dung_ham_va_dang)
+    check("brand-kit: motif có thật, màu không trùng", t_brandkit_the_he_2)
     check("CF chặn prompt vẫn còn đường Gemini", t_cf_chan_prompt_van_con_duong_gemini)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")

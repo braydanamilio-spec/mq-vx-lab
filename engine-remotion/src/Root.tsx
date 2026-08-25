@@ -49,9 +49,30 @@ import { ConceptDemo } from "./Concepts";
 import { LottiePrev } from "./LottiePrev";
 
 // 🎬 ENGINE MM0 — chỉ giữ composition ACTIVE (long/short data-driven + brand). Sạch, gọn.
+// Cỡ chuẩn từng nền tảng — xem BRAND_KIT.md mục 2. Thêm nền tảng = thêm một dòng ở đây.
+const CO_BRAND: Record<string, [number, number]> = {
+  banner: [2560, 1440],      // YouTube cover
+  avatar: [800, 800],        // YouTube avatar
+  watermark: [150, 150],     // watermark video, nền trong suốt
+  fb_cover: [1640, 624],     // Facebook cover
+  fb_avatar: [500, 500],     // Facebook avatar
+  ig_avatar: [640, 640],     // Instagram avatar
+  ig_story: [1080, 1920],    // Instagram highlight cover
+};
+const calcBrandKit2 = ({ props }: any) => {
+  const [w, h] = CO_BRAND[String(props?.kind || "banner")] || CO_BRAND.banner;
+  return { width: w, height: h, durationInFrames: 1, fps: 30 };
+};
+
 export const RemotionRoot: React.FC = () => (
   <>
     {/* LONG 16:9 & SHORT 9:16 — data-driven, đọc props.json (persona/giọng/palette theo kênh) */}
+    {/* 25/8 — MỘT composition cho CẢ 7 asset brand-kit thế hệ 2. Trước đây mỗi cỡ phải khai một
+        Composition riêng (banner/avatar/watermark…), thêm nền tảng là thêm 3 dòng; `remotion still`
+        lại không cho ghi đè kích thước từ dòng lệnh. Đọc cỡ từ props qua calculateMetadata thì
+        thêm cỡ mới chỉ là thêm một dòng trong bảng CO_BRAND. */}
+    <Composition id="BrandKit2" component={BrandV2} durationInFrames={1} fps={30}
+      width={2560} height={1440} defaultProps={{ kind: "banner" }} calculateMetadata={calcBrandKit2} />
     <Composition id="BrandV2Banner" component={BrandV2} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
     <Composition id="BrandV2Avatar" component={BrandV2} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
     <Composition id="RaceBanner" component={BrandRace} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
