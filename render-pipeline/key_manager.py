@@ -39,6 +39,16 @@ def flush_requests() -> dict:
 # 20' là mức cân: pool hồi lại NGAY TRONG phiên (phiên dài 40-60'), còn nếu key cạn hạn mức NGÀY
 # thật thì nó 429 lại và nghỉ tiếp — chỉ tốn 1 lệnh gọi phí mỗi 20', rẻ hơn nhiều so với đứng hình.
 AMBIG_COOL_MIN = 20
+# CHỮ KÝ KEY CHẾT VĨNH VIỄN (25/8/2026 — anh hỏi "sao dashboard không báo Gemini die").
+# Log thật: `API key not valid. Please pass a valid API key. [reason: "API_KEY_INVALID"]` — KHÔNG
+# khớp chữ nào trong danh sách cũ ("not enabled" ≠ "not valid") ⇒ key bị xử như chỉ-nghẽn-tạm, cứ
+# thử lại mãi, và bảng key trên dashboard vẫn báo xanh.
+# Đây cũng là câu trả lời cho "kiểm key mà KHÔNG tốn quota": đừng đi dò 166 key: chỉ cần GHI LẠI
+# thứ dây chuyền ĐÃ HỌC ĐƯỢC trong lúc làm việc thật — 0 lượt gọi thêm.
+CHET_HAN = ("denied", "suspended", "contact support", "has not been used", "not been used",
+            "not enabled", "disabled", "forbidden", "permission_denied", "consumer",
+            "api_key_invalid", "api key not valid", "invalid api key", "api key expired",
+            "unregistered", "key not found", "revoked")
 import nghi_key as _NGHI          # bảng phạt key dùng chung với đường vẽ ảnh (xem nghi_key.py)
 
 
@@ -129,7 +139,7 @@ def write_story(channel: str, keys: list[dict], seed: str,
         if not k.get("id"):
             return
         low = str(exc).lower()
-        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+        if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")
             except Exception:
@@ -206,7 +216,7 @@ def write_guess(channel: str, keys: list[dict], category: str, n_rounds: int = 3
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
-        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+        if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
             except Exception: pass
@@ -271,7 +281,7 @@ def write_mapped(channel: str, keys: list[dict], niche: str, tier: str = "normal
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
-        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+        if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
             except Exception: pass
@@ -333,7 +343,7 @@ def write_ranked(channel: str, keys: list[dict], niche: str, tier: str = "normal
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
-        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+        if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
             except Exception: pass
@@ -395,7 +405,7 @@ def write_scaled(channel: str, keys: list[dict], niche: str, tier: str = "normal
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
-        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+        if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
             except Exception: pass
@@ -457,7 +467,7 @@ def write_thennow(channel: str, keys: list[dict], niche: str, tier: str = "norma
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
-        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+        if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
             except Exception: pass
@@ -521,7 +531,7 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
-        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+        if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
             except Exception: pass
@@ -589,7 +599,7 @@ def _write_wave4(fn_name, label, channel, keys, niche, tier, avoid, on_limit, on
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
-        if any(s in low for s in ("denied", "suspended", "contact support", "has not been used", "not been used", "not enabled", "disabled", "forbidden", "permission_denied", "consumer")):
+        if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")
             except Exception: pass

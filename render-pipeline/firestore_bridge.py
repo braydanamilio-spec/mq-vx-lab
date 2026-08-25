@@ -988,6 +988,25 @@ _COOLED = {}   # key_id -> mốc (epoch) hết nghỉ ĐÃ GHI, để khỏi ghi
 _KEY_DATE_OK = {}   # key_id -> ngày đã xác nhận req_date (bỏ lượt đọc lặp ở incr_key_requests)
 
 
+def _ghi_snap(db_b, owner: str, snap_rows: list, vi_sao: str = "") -> None:
+    """Ghi ẢNH CHỤP key 1-doc. RỖNG thì KHÔNG ghi (rỗng là triệu chứng đọc hụt — luật 7.cu)."""
+    if not snap_rows:
+        print("   🛑 KHÔNG ghi snapshot key: danh sách rỗng — giữ nguyên bản cũ.")
+        return
+    _cw("keys_snapshot")
+    _soft(lambda: db_b.collection("gemini_keys").document(f"__snap__{owner}").set(
+        {"keys": snap_rows, "n": len(snap_rows), "updated_at": _now()}), "keys_snapshot")
+    _loai = {}
+    for r in snap_rows:
+        k = str(r.get("key") or "")
+        _loai[("groq" if k.startswith("gsk_") else "cf" if k.startswith("cf:")
+               else "gemini" if k.startswith("AIza") else "khác")] = \
+            _loai.get(("groq" if k.startswith("gsk_") else "cf" if k.startswith("cf:")
+                       else "gemini" if k.startswith("AIza") else "khác"), 0) + 1
+    print(f"   📸 Ảnh key ({vi_sao}): {len(snap_rows)} key · "
+          + " · ".join(f"{k}={v}" for k, v in sorted(_loai.items())))
+
+
 def sync_keys_from_a(owner: str) -> int:
     """ĐỒNG BỘ KEY MỚI A -> B, tự động mỗi phiên (gọi 1 lần trong plan).
 
@@ -1018,6 +1037,14 @@ def sync_keys_from_a(owner: str) -> int:
             if x.get("key"):
                 have.add(x["key"])
                 snap_rows.append({**x, "id": d.id})
+        # 25/8 — 51 KEY GROQ VÔ HÌNH VỚI PIPELINE. Log: `sync_keys A->B lỗi (bỏ qua): 429`.
+        # Hồ key mà lane dùng đọc từ ẢNH CHỤP `__snap__` ở B. Ảnh đó chỉ được dựng lại ở CUỐI hàm
+        # này — mà lượt quét A ngay dưới ném 429 nên nhảy thẳng xuống `except`, ảnh giữ nguyên bản
+        # cũ (chưa có Groq). Dashboard đọc thẳng A nên vẫn thấy đủ 51 key ⇒ nhìn thì tưởng ổn.
+        # Hậu quả: 51 key Groq × 1.000 gọi/ngày = 51.000 lượt free NẰM KHÔNG, còn Gemini thì bị nện.
+        # `snap_rows` ở trên ĐÃ có đủ key của B rồi — nên dựng ảnh NGAY tại đây, trước khi đụng A.
+        # Có thêm key mới từ A thì lát nữa ghi đè lần hai, không mất gì.
+        _ghi_snap(db_b, owner, snap_rows, "từ B (chưa đụng A)")
         _cr("sync_keys_A", 70)
         added = 0; na = 0
         for d in db_a.collection("gemini_keys").where("owner", "==", owner).stream(timeout=20):
@@ -1039,13 +1066,7 @@ def sync_keys_from_a(owner: str) -> int:
         # cả dây chuyền tưởng mình KHÔNG CÓ KEY AI NÀO. Danh sách rỗng ở đây gần như luôn là triệu
         # chứng (owner lệch, shard trỏ nhầm, đọc trả 0 dòng) chứ không phải sự thật "người dùng đã
         # xoá hết key".
-        if not snap_rows:
-            print("   🛑 KHÔNG ghi snapshot key: danh sách rỗng — giữ nguyên bản cũ "
-                  "(rỗng ở đây là triệu chứng đọc hụt, không phải 'hết key').")
-        else:
-            _cw("keys_snapshot")
-            _soft(lambda: db_b.collection("gemini_keys").document(f"__snap__{owner}").set(
-                {"keys": snap_rows, "n": len(snap_rows), "updated_at": _now()}), "keys_snapshot")
+        _ghi_snap(db_b, owner, snap_rows, "sau khi hợp nhất A")
         # RESET sổ đếm gộp __req__ khi sang ngày-google mới (Increment cộng dồn mù, không tự reset)
         try:
             import datetime as _ddt

@@ -2428,3 +2428,29 @@ mm0-auto-publisher`, kiểm chứng lại bằng chính lệnh đo trên: `__d1O
 (nhãn đổi, biến mới). "Deploy complete" chỉ chứng minh có thứ gì đó lên mạng, không chứng minh nó lên
 đúng chỗ.** Và khi người dùng mô tả thứ họ thấy mà nó KHÔNG khớp code hiện tại, hãy nghi đường phân
 phối trước khi nghi logic.
+
+### 7.dw — 51 key Groq VÔ HÌNH với dây chuyền vì ảnh chụp key không được dựng lại (25/8/2026)
+Anh hỏi "bữa kêu ưu tiên Groq mà sao không dùng". Kiểm: `key_order()` **đúng** — Groq → CF → Gemini,
+có `t_key_order` chốt. Nhưng log 4 lane **không có một chữ `gsk_`/`groq` nào**, trong khi dashboard
+báo 51 key Groq.
+Gốc: lane đọc hồ key từ **ảnh chụp `__snap__` ở B**; ảnh đó chỉ được dựng lại ở CUỐI `sync_keys_from_a`
+— mà lượt quét A ném `429 Quota exceeded` nên nhảy thẳng xuống `except`, ảnh **giữ nguyên bản cũ chưa
+có Groq**. Dashboard thì đọc thẳng A nên vẫn thấy đủ 51 key ⇒ **nhìn hai nơi thấy hai sự thật**.
+Giá phải trả: 51 key × 1.000 gọi/ngày = **51.000 lượt free nằm không**, còn Gemini bị nện tới cạn.
+Vá: `snap_rows` vốn ĐÃ có đủ key của B trước khi đụng A ⇒ **dựng ảnh ngay tại đó**, có thêm key từ A
+thì ghi đè lần hai. Và in rõ thành phần ảnh (`gemini=… groq=… cf=…`) để lần sau thiếu là thấy ngay.
+**LUẬT: cái gì được dựng ở CUỐI một hàm hay ném lỗi thì coi như không bao giờ được dựng. Dựng phần
+chắc chắn có trước, phần bổ sung sau.**
+
+### 7.dx — Key chết hẳn không được nhận ra vì thiếu đúng chữ ký của nó (25/8/2026)
+Anh hỏi "sao dashboard không báo Gemini die". Log thật:
+`API key not valid. Please pass a valid API key. [reason: "API_KEY_INVALID"]`
+Danh sách chữ ký "key chết vĩnh viễn" có `denied · suspended · not enabled · forbidden…` nhưng **không
+có `not valid`/`API_KEY_INVALID`** ⇒ key bị xử như chỉ-nghẽn-tạm: cứ thử lại mãi mỗi phiên, và bảng
+key vẫn báo xanh. Danh sách đó lại chép tay ở **8 chỗ** trong `key_manager`.
+Vá: gộp thành **một hằng số `CHET_HAN`** dùng chung cho cả 8 nhánh, bổ sung `api_key_invalid`,
+`api key not valid`, `invalid api key`, `api key expired`, `unregistered`, `key not found`, `revoked`.
+Chốt bằng `t_key_chet_han_duoc_nhan_dien` — có cả ca NGƯỢC (429/timeout **không** được coi là chết,
+kẻo mất key oan).
+**LUẬT: cách kiểm key rẻ nhất là GHI LẠI thứ dây chuyền đã học trong lúc làm việc thật — 0 lượt gọi
+thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho thông tin mình đã có.**

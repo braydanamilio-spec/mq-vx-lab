@@ -376,6 +376,7 @@ def main():
     check("nới lớp phủ KHÔNG đụng tới file ảnh gốc", t_noi_man_khong_dung_toi_anh)
     check("cứu mở đầu trước render, KHÔNG qua mặt QC", t_cuu_mo_dau_khong_qua_mat_qc)
     check("lấy việc kế nằm đúng đường vào matrix chạy", t_lay_viec_ke_o_dung_duong_vao)
+    check("key CHẾT HẲN được nhận diện (khỏi dò tốn quota)", t_key_chet_han_duoc_nhan_dien)
     check("cắt lượt ghi D1 thừa (giữ hạn mức FREE)", t_cat_luot_ghi_d1_thua)
     check("số kho THẬT ghi vào D1 (chỗ dashboard đọc)", t_so_kho_that_ghi_vao_d1)
     check("plan tự đối chiếu sổ đếm với số thật (1 lần/ngày)", t_doi_chieu_so_kho_chay_trong_plan)
@@ -1038,6 +1039,26 @@ def t_lay_viec_ke_o_dung_duong_vao():
     # một mẻ 69'. Ngân sách mềm để một KÊNH đừng ôm máy; giờ thừa phải chảy về hàng chờ.
     assert "min(budget_s, HARD_S) - (time.monotonic() - start)" not in truoc, \
         "vòng lấy việc kế đo theo ngân sách MỀM -> tự chặn chính mình, không bao giờ lấy được việc"
+
+
+def t_key_chet_han_duoc_nhan_dien():
+    """Key CHẾT HẲN phải bị loại khỏi vòng + báo lên dashboard, KHÔNG tốn lượt dò nào (25/8).
+    Log thật: `API key not valid. Please pass a valid API key. [reason: "API_KEY_INVALID"]` — không
+    khớp chữ nào trong danh sách cũ ("not enabled" ≠ "not valid") ⇒ key bị xử như chỉ-nghẽn-tạm, cứ
+    thử lại mãi, và bảng key vẫn báo xanh (anh hỏi: "sao không báo Gemini die").
+    Cách kiểm key rẻ nhất là GHI LẠI thứ dây chuyền đã học trong lúc làm việc thật — 0 lượt gọi thêm."""
+    import key_manager as KM
+    assert hasattr(KM, "CHET_HAN"), "chữ ký key chết còn nằm rải rác, không gộp một chỗ"
+    chet = lambda e: any(x in e.lower() for x in KM.CHET_HAN)
+    for e in ('API key not valid. Please pass a valid API key. [reason: "API_KEY_INVALID"]',
+              "403 permission denied", "API key expired. Please renew", "account suspended"):
+        assert chet(e), f"không nhận ra key CHẾT: {e[:50]}"
+    for e in ("429 rate limit per minute", "429 quota exceeded per day",
+              "500 internal error", "timeout"):
+        assert not chet(e), f"nhầm key còn sống thành CHẾT (mất key oan): {e[:40]}"
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "key_manager.py"), encoding="utf-8").read()
+    assert src.count("CHET_HAN") >= 8, "vẫn còn nhánh dùng danh sách chữ ký riêng"
 
 
 def t_cat_luot_ghi_d1_thua():
