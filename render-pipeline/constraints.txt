@@ -10,7 +10,7 @@
 #
 # Nguyên tắc chọn số: sàn = phiên bản đã chạy qua toàn bộ selftest tại máy phát triển;
 # trần = chặn nhảy MAJOR (thay đổi phá vỡ). Patch trong khoảng vẫn được cập nhật để nhận vá bảo mật.
-google-cloud-firestore>=2.27,<3
-google-api-core>=2.30,<3
+google-cloud-firestore>=2.27,<2.29
+google-api-core>=2.30,<2.35
 grpcio>=1.70,<2
 protobuf>=5,<7
