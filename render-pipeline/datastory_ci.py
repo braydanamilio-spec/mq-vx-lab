@@ -2588,8 +2588,16 @@ def _sau_man(path: str, man: float = 1.0, co_hook: bool = True):
                 dx = abs(x - W / 2) / (W / 2); dy = abs(y - H / 2) / (H / 2)
                 v1 = _vig(dx, dy, 0.22, 0.55)                              # inset 340px 120px
                 v2 = _vig(dx, dy, 0.26, 0.45)                              # inset 380px 110px
+                # LỚP THỨ SÁU (25/8 — ca UNSEENUSA 0 video/4 NỀN TRƠN dù đã mô phỏng đủ 5 lớp):
+                # `ThemedBase` bọc NGOÀI Scene1 còn một vignette `inset 340px 100px rgba(0,0,0,.5)`
+                # KHÔNG nhân man (nó không biết cảnh nào đang chiếu). Thiếu nó, mô hình lạc quan
+                # ~25 điểm với kênh ảnh tối: hàm cứu im lặng cho qua, render xong QC loại — mất
+                # trắng 4 lượt viết AI + 4 lượt render một phiên. Lớp này là HẰNG SỐ trong mô hình
+                # (đúng như trên khung thật), nên ảnh quá tối sẽ bị chặn từ TRƯỚC render và leo
+                # thang đúng bậc: tăng sáng -> mượn ảnh sáng nhất -> bỏ sớm.
+                v0 = _vig(dx, dy, 0.24, 0.50)
                 # chồng lớp = 1 - tích các (1-alpha), không phải cộng dồn
-                mo = 1.0
+                mo = 1.0 - min(0.99, v0)
                 for al in (a1, a2, a3, v1, v2):
                     mo *= (1 - min(0.99, al * man))
                 k = max(0.03, mo)

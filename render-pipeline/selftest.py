@@ -2003,8 +2003,10 @@ def t_sau_man_du_lop():
     """Mô hình đo phải mô phỏng ĐỦ 5 lớp — thiếu lớp nào là chấm "đạt" oan."""
     src = _doc("datastory_ci.py")
     i = src.index("def _sau_man("); than = src[i:src.index("\ndef ", i + 10)]
-    for moc in (".74", ".66", ".58", "0.55", "0.45"):
+    for moc in (".74", ".66", ".58", "0.55", "0.45", "0.50"):
         assert moc in than, f"_sau_man thiếu mốc lớp phủ {moc}"
+    assert "1.0 - min(0.99, v0)" in than, \
+        "_sau_man thiếu vignette HẰNG SỐ của ThemedBase (lớp thứ 6, ca UNSEENUSA 25/8)"
     assert "mo *= (1 - min(" in than, "_sau_man phải chồng lớp bằng tích (1-alpha), không cộng dồn"
     assert "co_hook" in than, "_sau_man phải phân biệt cảnh có/không có lớp hook"
 
