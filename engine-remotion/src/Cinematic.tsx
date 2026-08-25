@@ -46,7 +46,9 @@ const chunkWords = (ws: string[]): string[][] => {
  * Kênh tự nhận một màu theo tên (băm), nên MỖI KÊNH MỘT MÀU CỐ ĐỊNH suốt đời, còn giữa các kênh
  * thì khác nhau. Không có chỗ cho may rủi.
  */
-const BANG_MAU = ["#FFD400", "#00E676", "#FF9100", "#FF4FA3", "#00E5FF", "#B4FF3A"];
+// Cả sáu đều đo được độ sáng >= 0.52 (chốt `t_chu_chay_luon_doc_duoc` kiểm lại mỗi lần chạy).
+// Hồng #FF4FA3 từng nằm đây và bị chính chốt đó loại: chỉ 0.48 — chìm trên nền sáng.
+const BANG_MAU = ["#FFD400", "#00E676", "#FF9100", "#FF79C6", "#00E5FF", "#B4FF3A"];
 
 /** Độ sáng cảm nhận (0 tối … 1 sáng) — dùng làm CHỐT CHẶN, không cho màu tối làm chữ chạy. */
 const doSang = (hex: string): number => {
