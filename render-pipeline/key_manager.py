@@ -120,6 +120,34 @@ def model_for(tier: str) -> str:
     return "gemini-3.1-pro-preview" if tier == "flagship" else "gemini-3.5-flash"
 
 
+def vi_sao_het_key(keys: list[dict]) -> str:
+    """Nói RÕ pool còn gì khi `key_order` trả rỗng — để biết cần thêm key LOẠI NÀO.
+
+    26/8 — phiên 21:32 in 178 lượt "hết key viết (cả pool đang nghỉ/cạn)" trong khi bảng tổng vẫn
+    báo "43 dùng được / 199". Hai con số mâu thuẫn nhau vì chúng đếm hai thứ khác nhau: bảng tổng
+    đếm MỌI key (gồm key ảnh px:/pb: và key kho r2:), còn `key_order` chỉ nhận key VIẾT. Không có
+    dòng này thì nhìn log không thể biết nên đi xin thêm key Groq, key Gemini, hay chẳng cần key
+    nào cả."""
+    import time as _t
+    tong = len(keys or [])
+    anh = sum(1 for k in (keys or []) if str(k.get("key", "")).startswith(("px:", "pb:")))
+    kho = sum(1 for k in (keys or []) if str(k.get("key", "")).startswith("r2:"))
+    viet = [k for k in (keys or []) if not str(k.get("key", "")).startswith(("px:", "pb:", "r2:"))]
+    groq = sum(1 for k in viet if str(k.get("key", "")).startswith("gsk_"))
+    cf = sum(1 for k in viet if str(k.get("key", "")).startswith("cf:"))
+    gem = len(viet) - groq - cf
+    nghi = 0
+    try:
+        import firestore_bridge as _FB
+        _now = _t.time()
+        _c = {k for k, v in getattr(_FB, "_COOLED", {}).items() if v > _now}
+        nghi = sum(1 for k in viet if k.get("id") in _c)
+    except Exception:
+        pass
+    return (f"pool {tong} key: {len(viet)} viết (groq {groq} · cf {cf} · gemini {gem}; "
+            f"{nghi} đang nghỉ) · {anh} ảnh · {kho} kho")
+
+
 def write_story(channel: str, keys: list[dict], seed: str,
                 vtype: str = "short", tier: str = "normal", on_limit=None, on_ok=None) -> dict:
     """Viết 1 data-story cho kênh: bám key sticky, đổi key khi limit, hạ model nếu cần.

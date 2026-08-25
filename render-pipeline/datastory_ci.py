@@ -3281,7 +3281,8 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
         # của hệ chạy trên hạn mức free, không phải sự cố — phải báo gọn rồi bỏ lượt.
         _ds = KM.key_order(channel, keys)
         if not _ds:
-            raise RuntimeError("hết key viết dùng được (cả pool đang nghỉ/cạn) — bỏ lượt")
+            raise RuntimeError("hết key viết dùng được — bỏ lượt · "
+                               + KM.vi_sao_het_key(keys))
         k0 = _ds[0]
         try:
             plan = CB.plan_pillar(niche, n_parts, api_key=k0["key"], model_name=KM.model_for(tier), avoid=avoid)
@@ -3694,7 +3695,8 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
         # của hệ chạy trên hạn mức free, không phải sự cố — phải báo gọn rồi bỏ lượt.
         _ds = KM.key_order(channel, keys)
         if not _ds:
-            raise RuntimeError("hết key viết dùng được (cả pool đang nghỉ/cạn) — bỏ lượt")
+            raise RuntimeError("hết key viết dùng được — bỏ lượt · "
+                               + KM.vi_sao_het_key(keys))
         k0 = _ds[0]
         try:
             plan = CB.plan_pillar(niche, n_races, api_key=k0["key"], model_name=KM.model_for(tier), avoid=avoid)

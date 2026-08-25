@@ -3007,3 +3007,15 @@ tháng) mà không đổi kết quả.
   Ba lần đủ để kết luận; đếm lại từ 0 ngay khi có một kênh chạy được, nên không dừng oan.
 - Chỉ tính các lỗi CẠN TÀI NGUYÊN (`hết key viết` · `KHÔNG CÒN KEY NÀO` · `pool vẽ ảnh CẠN SẠCH`),
   không tính lỗi thường — lỗi thường thì kênh sau vẫn có thể chạy được.
+
+### 26/8 — "43 key dùng được" và "178 lượt hết key" cùng lúc: hai con số đếm hai thứ khác nhau
+Phiên 21:32 in **178 lượt** `hết key viết (cả pool đang nghỉ/cạn)` trong khi bảng tổng vẫn báo
+`Pool key: 43 dùng được / 199`. Không mâu thuẫn — bảng tổng đếm MỌI key (gồm key ảnh `px:`/`pb:`
+và key kho `r2:`), còn `key_order` chỉ nhận key VIẾT rồi lọc tiếp theo sổ nghỉ.
+Hệ quả: nhìn log **không thể biết nên đi xin thêm key loại nào** — Groq, Gemini, hay chẳng cần key.
+- Vá: `KM.vi_sao_het_key(keys)` in rõ `pool N key: X viết (groq · cf · gemini; Y đang nghỉ) ·
+  Z ảnh · W kho`, gắn vào cả 3 chỗ ném lỗi hết key.
+- **Đã kiểm `KM` có trong tầm nhìn ở cả 3 chỗ** trước khi push — đây đúng là lớp lỗi `vang`
+  (dùng tên chưa có trong scope), và nó chỉ nổ đúng lúc hệ đang cạn key, tức lúc cần nhất.
+- `key_order` KHÔNG có lỗi "18 lane nện chung một key": nó đã xoay theo `hash(channel)` + counter.
+  Đã kiểm trước khi nghi oan.

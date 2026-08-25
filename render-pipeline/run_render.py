@@ -655,7 +655,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
             # của hệ chạy trên hạn mức free, không phải sự cố — phải báo gọn rồi bỏ lượt.
             _ds = KM.key_order(channel, keys)
             if not _ds:
-                raise RuntimeError("hết key viết dùng được (cả pool đang nghỉ/cạn) — bỏ lượt")
+                raise RuntimeError("hết key viết dùng được — bỏ lượt · "
+                                   + KM.vi_sao_het_key(keys))
             k0 = _ds[0]
             plan = CB.plan_pillar(niche, max(n_shorts, 3), api_key=k0["key"], model_name=KM.model_for(tier),
                                   avoid=FB.recent_topics(OWNER, channel))
