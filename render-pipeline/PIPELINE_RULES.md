@@ -2660,3 +2660,9 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   cụ thể thắng chung chung ($4.87 thay vì "phí nào đó") · hai giọng đối lập có tật nói riêng ·
   **câu 4-5 phải LẬT tình huống** (không leo thang phẳng) · câu cuối trích dẫn được một mình, dưới
   9 chữ, không giải thích thêm. Chốt `t_kich_ban_co_luat_viral`.
+
+- **Ghép tiếng vào video PHẢI có `-map`.** (25/8) Video mascot đầu tiên render ra đủ hình, đủ độ dài,
+  **có luồng audio** — nhưng `-91dB`, tức câm. Gốc: Remotion xuất video kèm một track âm CÂM; lệnh
+  `ffmpeg -i video -i tiếng` không có `-map` thì ffmpeg tự "chọn luồng tốt nhất" và vớ đúng track
+  câm đó. Nay `-map 0:v:0 -map 1:a:0` + **đo `volumedetect` ngay sau khi ghép** (sai -map là lỗi im
+  lặng: file đúng mọi mặt trừ việc không có tiếng). Chốt trong `t_mascot_khong_ve_lai_nhan_vat`.

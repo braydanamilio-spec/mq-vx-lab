@@ -2289,6 +2289,11 @@ def t_mascot_khong_ve_lai_nhan_vat():
         "không lọc lớp nền theo file THẬT -> Remotion nạp ảnh không tồn tại, chết cả lượt render"
     # nhép mồm phải đo từ tiếng thật, không phải ngẫu nhiên
     assert "_rms_12hz" in src and "ffmpeg" in src, "mồm không đo từ audio thật"
+    # 25/8 — video pilot ra đủ hình/độ dài/luồng audio nhưng -91dB: lệnh ghép thiếu `-map` nên
+    # ffmpeg vớ đúng track CÂM mà Remotion xuất kèm. Lỗi im lặng, chỉ QC cuối mới bắt được.
+    assert '"-map", "0:v:0"' in src and '"-map", "1:a:0"' in src, \
+        "lệnh ghép tiếng thiếu -map -> ffmpeg tự chọn nhầm track câm của Remotion"
+    assert "volumedetect" in src, "không đo mức âm ngay sau khi ghép"
 
 
 def t_mascot_stage_dong_tung_khung():

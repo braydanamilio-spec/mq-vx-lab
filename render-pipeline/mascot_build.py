@@ -187,9 +187,26 @@ def dung_video(kenh: str, cfg: dict, story: dict, out: str, dai: bool = False,
                        f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
                        "--concurrency=2", "--log=error"],
                       cwd=DS.ENG, timeout=3600, label=f"{comp}({kenh})")
-    # ghép tiếng vào hình
-    subprocess.run(["ffmpeg", "-y", "-i", v, "-i", track, "-c:v", "copy", "-c:a", "aac",
+    # GHÉP TIẾNG — PHẢI CHỈ ĐỊNH LUỒNG. 25/8: bản đầu không có `-map`, mà Remotion xuất video KÈM
+    # một track âm CÂM; ffmpeg khi không được chỉ định thì tự "chọn luồng tốt nhất" và vớ đúng
+    # track câm đó -> video ra đủ hình, đủ độ dài, có luồng audio, nhưng -91dB. QC bắt được
+    # ("CÂM (mức âm -91.0dB)") nhưng mất trắng cả lượt render. Chỉ định rõ: hình lấy từ input 0,
+    # tiếng lấy từ input 1.
+    subprocess.run(["ffmpeg", "-y", "-i", v, "-i", track,
+                    "-map", "0:v:0", "-map", "1:a:0",
+                    "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
                     "-shortest", out], capture_output=True, timeout=900, check=True)
+    # KIỂM NGAY TẠI CHỖ: đo mức âm của file vừa ghép. Sai `-map` là lỗi im lặng — file vẫn đúng
+    # mọi mặt trừ việc không có tiếng — nên phải đo, đừng tin là đã ghép đúng.
+    try:
+        _o = subprocess.run(["ffmpeg", "-i", out, "-af", "volumedetect", "-f", "null", "-"],
+                            capture_output=True, timeout=300).stderr.decode("utf-8", "ignore")
+        import re as _re
+        _m = _re.search(r"mean_volume:\s*(-?[\d.]+) dB", _o)
+        if _m and float(_m.group(1)) < -60:
+            return False, {"loi": f"ghép tiếng hỏng: mức âm {_m.group(1)}dB (câm)"}
+    except Exception:
+        pass
     ok, info = DS.qc(out)
     info["shots"] = len(shots)
     info["mouth_mau"] = len(mouth)
