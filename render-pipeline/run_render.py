@@ -1582,8 +1582,17 @@ def plan_mode():
         _all = FB.read_keys(OWNER, include_cooling=True)
         _dead = sum(1 for k in _all if k.get("alive") is False)
         _cool_n = len(_all) - _dead - len(keys)
+        # 26/8 — DÒNG NÀY TỪNG GÂY HIỂU NHẦM SUỐT MỘT ĐÊM. Nó báo "43 dùng được" trong khi các
+        # lane in 196 lượt "hết key viết", và đã mất nhiều lượt soi log mới ra: cả 43 key ấy đều
+        # là key ẢNH (px:/pb:), số key VIẾT dùng được là 0. Một con số gộp hai loại tài nguyên
+        # khác nhau thì không trả lời được câu hỏi thật — "còn viết được không". Tách ra.
+        _viet = [k for k in keys if not str(k.get("key", "")).startswith(("px:", "pb:", "r2:"))]
+        _anh = [k for k in keys if str(k.get("key", "")).startswith(("px:", "pb:"))]
         print(f"🔑 Pool key: {len(keys)} dùng được / {len(_all)} tổng "
               f"({_cool_n} đang nghỉ · {_dead} hỏng vĩnh viễn)")
+        print(f"   ├─ VIẾT kịch bản : {len(_viet)} key" +
+              ("  ⛔ KHÔNG CÒN KEY VIẾT — phiên này sẽ gần như trắng" if not _viet else ""))
+        print(f"   └─ vẽ ảnh        : {len(_anh)} key")
         if len(keys) <= 5 and len(_all) > 10:
             print(f"   ⚠️ Chỉ {len(keys)}/{len(_all)} key khả dụng — phần lớn đang NGHỈ, không phải hết quota vĩnh viễn.")
     except Exception:

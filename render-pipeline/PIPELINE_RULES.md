@@ -3019,3 +3019,15 @@ Hệ quả: nhìn log **không thể biết nên đi xin thêm key loại nào**
   (dùng tên chưa có trong scope), và nó chỉ nổ đúng lúc hệ đang cạn key, tức lúc cần nhất.
 - `key_order` KHÔNG có lỗi "18 lane nện chung một key": nó đã xoay theo `hash(channel)` + counter.
   Đã kiểm trước khi nghi oan.
+
+### 26/8 — TRẢ LỜI DỨT ĐIỂM: pool "43 key dùng được" là 43 key ẢNH, 0 key VIẾT
+Chẩn đoán `vi_sao_het_key` vừa thêm cho ngay câu trả lời ở phiên 22:52:
+`pool 43 key: **0 viết** (groq 0 · cf 0 · gemini 0) · **43 ảnh** · 0 kho`
+
+Nghĩa là suốt tối nay dòng `🔑 Pool key: 43 dùng được / 199` **đã nói dối bằng cách gộp**: nó cộng
+key ảnh vào cùng một con số với key viết, nên nhìn vào tưởng còn tài nguyên trong khi khâu viết đã
+về 0. Đã mất nhiều lượt soi log vì tin con số đó.
+- **Luật**: một con số gộp hai loại tài nguyên khác nhau thì không trả lời được câu hỏi thật.
+  Dòng tổng nay tách `VIẾT kịch bản` / `vẽ ảnh`, và kêu thẳng `⛔ KHÔNG CÒN KEY VIẾT — phiên này
+  sẽ gần như trắng` ngay ở plan, thay vì để 18 lane tự khám phá bằng 196 lượt lỗi.
+- **Việc cần làm là thêm key VIẾT** (Groq / Gemini / Cloudflare). Thêm key ảnh không giúp gì.
