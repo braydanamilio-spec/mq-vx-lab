@@ -4038,6 +4038,14 @@ def _toon_build(channel, keys, niche, tier, avoid, on_limit, on_ok, pub, prefix=
     if dense:
         fr = dense
     print(f"   🎞️ Mật độ ảnh: {len(fr)} khung / {end_f / FPS:.0f}s (~{end_f / FPS / max(1, len(fr)):.1f}s/khung)")
+    # 26/8 — DỪNG SỚM KHI POOL VẼ ĐÃ CẠN. `chỉ vẽ được 0/N khung` lặp 4-5 lần mỗi phiên qua nhiều
+    # phiên liền. Khi cả pool ảnh đang nghỉ/hỏng thì 15 lượt thử đều hỏng y như nhau — mỗi lượt vẫn
+    # tốn một vòng gọi mạng và vài giây. Hỏi pool MỘT LẦN trước, rẻ hơn hỏi 15 lần để nhận cùng
+    # câu trả lời, và thông báo nói đúng nguyên nhân thay vì chỉ nói "0/N".
+    _pool0 = _ai_candidates((keys[0] or {}).get("key") if keys else None)
+    if not _pool0:
+        raise RuntimeError("pool vẽ ảnh CẠN SẠCH (không key nào dùng được) — dừng trước khi thử "
+                           f"{len(fr)} khung")
     okn = 0
     for k2, fx in enumerate(fr):
         dest = os.path.join(pub, fx["img"])

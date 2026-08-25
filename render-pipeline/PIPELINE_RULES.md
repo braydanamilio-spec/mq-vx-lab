@@ -2924,3 +2924,11 @@ nó thiếu Ken Burns, objectPosition, bóng chữ hook, gradient theo cảnh. N
 - `render_canary` miễn trừ: đó là phát súng thử bằng ảnh tự tạo, không phải video sẽ đăng.
 - Đo không được thì trả `None` và **không chặn oan** — thà lọt một ca còn hơn chặn nhầm hàng loạt.
 - Chốt `t_mo_dau_phai_xac_minh_bang_khung_that`.
+
+### 26/8 — `chỉ vẽ được 0/N khung`: hỏi pool một lần thay vì 15 lần
+Lỗi này lặp 4-5 lần mỗi phiên qua nhiều phiên liền. Khi cả pool vẽ ảnh đang nghỉ/hỏng thì 15 lượt
+thử đều hỏng y hệt nhau, mỗi lượt vẫn tốn một vòng gọi mạng và vài giây — rồi mới báo "0/N".
+- Hỏi `_ai_candidates()` MỘT LẦN trước vòng vẽ; rỗng thì dừng ngay với đúng nguyên nhân
+  ("pool vẽ ảnh CẠN SẠCH") thay vì con số 0/N không nói lên điều gì.
+- Đi kèm bản vá cùng ngày: hai nhánh `return False` im lặng của `_generate_image_ai` nay đều in
+  lý do, và dòng ném lỗi kèm số key còn dùng được.
