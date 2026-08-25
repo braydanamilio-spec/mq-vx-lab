@@ -50,6 +50,7 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           OWNER_UID: ${{ secrets.OWNER_UID }}
         run: |
@@ -134,6 +135,7 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           OWNER_UID: ${{ secrets.OWNER_UID }}   # để đọc key Gemini (Vision kiểm ảnh có KHỚP chủ đề không)
         run: |

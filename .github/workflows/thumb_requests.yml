@@ -72,6 +72,7 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
           SHARD_META: ${{ vars.SHARD_META }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           OWNER_UID: ${{ secrets.OWNER_UID }}
         run: |
