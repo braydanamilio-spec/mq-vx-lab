@@ -13,7 +13,8 @@
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "mon": "cereal",
+   "mon": "breakfast-cereals",
+   "nhan": "Breakfast cereal",
    "xoay": "mon"
   },
   "brand": {
@@ -109,7 +110,8 @@
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "mon": "pizza",
+   "mon": "pizzas",
+   "nhan": "Frozen pizza",
    "xoay": "mon"
   },
   "brand": {
@@ -296,18 +298,21 @@
   "ten": "RENT REALITY",
   "handle": "@rentrealityusa",
   "chat_lieu": "A",
-  "nguon": "bls",
-  "ham": "chuoi_bls",
+  "nguon": "zillow",
+  "ham": "gia_nha_zillow",
   "dinh_dang": "thennow",
   "goc_nhin": "Tiền thuê nhà xưa và nay",
   "style_anh": "",
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "chuoi": "cpi_nha",
-   "nhan": "Housing cost",
-   "nhom": [
-    "cpi_nha"
+   "bangs": [
+    "California",
+    "Texas",
+    "Florida",
+    "New York",
+    "Ohio",
+    "Idaho"
    ]
   },
   "brand": {
@@ -1822,16 +1827,15 @@
   "ten": "WHERE TO MOVE",
   "handle": "@wheretomoveusa",
   "chat_lieu": "A",
-  "nguon": "bls",
-  "ham": "chuoi_bls",
+  "nguon": "zillow",
+  "ham": "gia_nha_zillow",
   "dinh_dang": "mapped",
   "goc_nhin": "Bang nào đáng chuyển tới",
   "style_anh": "",
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "chuoi": "cpi_dien_nuoc",
-   "nhan": "Utility cost"
+   "muc": "State"
   },
   "brand": {
    "name": "WHERE TO MOVE",
@@ -1862,7 +1866,8 @@
     "verified"
    ],
    "style_anh": ""
-  }
+  },
+  "ghi_chu": "BLS chỉ chia theo VÙNG, không theo bang -> Zillow mới vẽ được bản đồ"
  },
  {
   "id": 40,

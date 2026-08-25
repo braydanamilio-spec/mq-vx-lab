@@ -51,21 +51,40 @@ def key_data_gov() -> str:
     return os.environ.get("DATA_GOV_KEY", "").strip() or "DEMO_KEY"
 
 
-def _goi(url: str, data: dict | None = None, tieu_de: dict | None = None):
-    """Gọi một API mở. Trả dict/list, hỏng thì None — KHÔNG BAO GIỜ ném lên dây chuyền."""
-    try:
-        h = {"User-Agent": UA, "Accept": "application/json"}
-        h.update(tieu_de or {})
-        body = None
-        if data is not None:
-            body = json.dumps(data).encode()
-            h["Content-Type"] = "application/json"
-        req = urllib.request.Request(url, data=body, headers=h)
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-            return json.loads(r.read().decode("utf-8", "ignore"))
-    except Exception as e:
-        print(f"   ⚠️ dữ liệu mở hỏng ({url.split('/')[2]}): {str(e)[:70]}")
-        return None
+# Lỗi TẠM THỜI: máy chủ đang quá tải hoặc chặn nhịp. Thử lại là qua. Khác hẳn 401/403/404 —
+# những cái đó thử lại bao nhiêu lần cũng vậy, chỉ tốn thời gian của lane.
+_TAM_THOI = ("503", "502", "504", "429", "timed out", "timeout", "reset by peer",
+             "temporarily", "connection", "ssl")
+
+
+def _goi(url: str, data: dict | None = None, tieu_de: dict | None = None, lan: int = 3):
+    """Gọi một API mở. Trả dict/list, hỏng thì None — KHÔNG BAO GIỜ ném lên dây chuyền.
+
+    25/8 — thêm THỬ LẠI CÓ GIÃN ở tầng chung. Khi 18 lane cùng gọi một nguồn, nguồn đó trả 503
+    ngắt quãng và kênh rớt ngẫu nhiên mỗi phiên một cái khác (đo thật khi chạy 8 luồng song song:
+    lần thì kênh đồ ăn rớt, lần thì kênh toà án). Vá ở đây thì mọi nguồn được hưởng, khỏi phải
+    nhớ vá từng hàm."""
+    import random as _rd
+    import time as _tg
+    h = {"User-Agent": UA, "Accept": "application/json"}
+    h.update(tieu_de or {})
+    body = None
+    if data is not None:
+        body = json.dumps(data).encode()
+        h["Content-Type"] = "application/json"
+    cuoi = ""
+    for i in range(max(1, lan)):
+        try:
+            req = urllib.request.Request(url, data=body, headers=h)
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                return json.loads(r.read().decode("utf-8", "ignore"))
+        except Exception as e:
+            cuoi = str(e)
+            if not any(t in cuoi.lower() for t in _TAM_THOI) or i == lan - 1:
+                break
+            _tg.sleep((1.6 ** i) + _rd.random())
+    print(f"   ⚠️ dữ liệu mở hỏng ({url.split('/')[2]}): {cuoi[:70]}")
+    return None
 
 
 # ── 1. USASPENDING — mọi đồng tiền liên bang chi ra ─────────────────────────────────────────
@@ -195,6 +214,188 @@ def nhieu_chuoi_bls(tens: list[str], tu_nam: int, den_nam: int, key: str = "") -
     except Exception:
         return {}
     return {t: theo_ma.get(ma, []) for t, ma in ma_theo_ten.items()}
+
+
+# ── 3b. BLS QUA FILE TĨNH — CÙNG DỮ LIỆU, KHÔNG DÍNH HẠN MỨC 25 LƯỢT/NGÀY ───────────────────
+# API BLS không key chỉ cho 25 lượt/NGÀY: 12 kênh ăn nguồn này thì hết veo sau một buổi. Nhưng
+# BLS còn công bố CHÍNH DỮ LIỆU ẤY dạng file text ở download.bls.gov — không qua API, không đếm
+# lượt, không cần key. Tải một lần rồi giữ trong bộ nhớ tiến trình: cả phiên render dùng chung.
+_BLS_TEP: dict = {}
+BLS_KHO = {"cu": "cu/cu.data.0.Current",       # chỉ số giá tiêu dùng — 7.936 chuỗi, 49MB,
+                                               # tải một lần/tiến trình. Bản AllItems chỉ có
+                                               # đúng "mọi mặt hàng" (101 chuỗi) -> thiếu hẳn
+                                               # nhóm nhà ở/thực phẩm/xăng mà kênh cần.
+           "ce": "ce/ce.data.0.AllCESSeries",  # việc làm & lương
+           "ln": "ln/ln.data.1.AllData"}       # thất nghiệp (Current Population Survey)
+
+
+def _bls_tai(kho: str) -> dict:
+    """Tải một kho BLS dạng file, trả {series_id: [{nam, thang, gia_tri}]}. Hỏng thì trả rỗng."""
+    if kho in _BLS_TEP:
+        return _BLS_TEP[kho]
+    duong = BLS_KHO.get(kho, kho)
+    try:
+        # download.bls.gov trả 403 với User-Agent chung chung. Chính sách của BLS: UA phải kèm
+        # ĐỊA CHỈ LIÊN HỆ để họ báo được khi mình tải quá tay. Không phải chống bot.
+        req = urllib.request.Request(
+            f"https://download.bls.gov/pub/time.series/{duong}",
+            headers={"User-Agent": "MM0-Pipeline/1.0 (adisondurham@gmail.com)",
+                     "Accept": "text/plain,*/*"})
+        with urllib.request.urlopen(req, timeout=180) as r:
+            raw = r.read().decode("utf-8", "ignore")
+    except Exception as e:
+        print(f"   ⚠️ BLS file '{kho}' hỏng: {str(e)[:60]}")
+        _BLS_TEP[kho] = {}
+        return {}
+    ra: dict = {}
+    for dong in raw.split("\n")[1:]:
+        c = dong.split("\t")
+        if len(c) < 4:
+            continue
+        ma, nam, ky, gt = c[0].strip(), c[1].strip(), c[2].strip(), c[3].strip()
+        if not ky.startswith("M") or ky == "M13":      # M13 = trung bình năm, bỏ để khỏi đếm hai lần
+            continue
+        try:
+            ra.setdefault(ma, []).append({"nam": int(nam), "thang": f"M{ky[1:]}",
+                                          "gia_tri": float(gt),
+                                          "nguon": "U.S. Bureau of Labor Statistics"})
+        except Exception:
+            continue
+    _BLS_TEP[kho] = ra
+    print(f"   📚 BLS '{kho}': {len(ra):,} chuỗi (file tĩnh, không tốn lượt API)")
+    return ra
+
+
+def chuoi_bls_tep(ten: str, tu_nam: int = 0, den_nam: int = 0) -> list[dict]:
+    """Một chuỗi BLS lấy TỪ FILE. Dùng thay `chuoi_bls` khi không có key."""
+    ma = BLS_CHUOI.get(ten, ten)
+    kho = "ce" if ma.startswith("CE") else ("ln" if ma.startswith("LN") else "cu")
+    bang = _bls_tai(kho)
+    # cu.data dùng cả bản đã hiệu chỉnh mùa (CUSR) lẫn chưa (CUUR) — nhận cái nào có
+    diem = bang.get(ma) or bang.get(ma.replace("CUUR", "CUSR")) or bang.get(ma.replace("CUSR", "CUUR")) or []
+    if tu_nam:
+        diem = [x for x in diem if x["nam"] >= tu_nam]
+    if den_nam:
+        diem = [x for x in diem if x["nam"] <= den_nam]
+    return sorted(diem, key=lambda z: (z["nam"], z["thang"]))
+
+
+def nhieu_chuoi_bls_tep(tens: list[str], tu_nam: int = 0, den_nam: int = 0) -> dict:
+    """Nhiều chuỗi từ file — không tốn một lượt API nào dù xin bao nhiêu chuỗi."""
+    return {t: chuoi_bls_tep(t, tu_nam, den_nam) for t in tens}
+
+
+# ── 3c. IMF: ĐÃ THỬ, BỊ CHẶN — đừng thử lại ────────────────────────────────────────────────
+# datamapper API trả 403 với mọi User-Agent (kể cả giả trình duyệt). Phần so sánh quốc tế đã có
+# World Bank (`chi_so_the_gioi`, 29.544 chỉ số, không key), nên không mất gì. Ghi lại để lần sau
+# không mất công dò lại.
+
+def lay_bls(tens: list[str], tu_nam: int, den_nam: int) -> dict:
+    """ĐƯỜNG CHÍNH để lấy dữ liệu BLS. Ưu tiên FILE TĨNH, API chỉ là đường lùi.
+
+    Vì sao đảo thứ tự so với lẽ thường (API trước, file sau): API không key chỉ 25 lượt/NGÀY, mà
+    12 kênh cùng ăn nguồn này. File tĩnh là CÙNG một dữ liệu, do chính BLS công bố, không đếm
+    lượt, không cần key. Nặng hơn (49MB lần đầu) nhưng chỉ tải một lần cho cả tiến trình."""
+    ra = nhieu_chuoi_bls_tep(tens, tu_nam, den_nam)
+    thieu = [t for t in tens if not ra.get(t)]
+    if thieu:
+        # File không có chuỗi đó (mã lạ, hoặc kho chưa tải được) -> mới đụng tới hạn mức API
+        bu = nhieu_chuoi_bls(thieu, tu_nam, den_nam)
+        for t, v in bu.items():
+            if v:
+                ra[t] = v
+    return ra
+
+
+# ── 3d. ZILLOW — giá nhà THẬT theo bang, 2000 -> nay, file tĩnh không key ───────────────────
+# Nhóm kênh nhà ở không dùng được BLS theo BANG (BLS chỉ chia theo VÙNG). Zillow công bố chỉ số
+# giá nhà từng bang từng tháng dạng CSV mở — đúng thứ cần, và cũng không đếm lượt.
+_ZL: dict = {}
+
+
+def gia_nha_zillow(muc: str = "State") -> list[dict]:
+    """Chỉ số giá nhà theo bang. Trả [{ten, thang: {YYYY-MM-DD: giá}}] — giữ nguyên cả chuỗi."""
+    if muc in _ZL:
+        return _ZL[muc]
+    u = (f"https://files.zillowstatic.com/research/public_csvs/zhvi/"
+         f"{muc}_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv")
+    try:
+        req = urllib.request.Request(u, headers={"User-Agent": "MM0-Pipeline/1.0 (adisondurham@gmail.com)"})
+        with urllib.request.urlopen(req, timeout=120) as r:
+            raw = r.read().decode("utf-8", "ignore")
+    except Exception as e:
+        print(f"   ⚠️ Zillow hỏng: {str(e)[:60]}")
+        _ZL[muc] = []
+        return []
+    import csv as _csv
+    import io as _io
+    doc = list(_csv.reader(_io.StringIO(raw)))
+    if len(doc) < 2:
+        _ZL[muc] = []
+        return []
+    dau = doc[0]
+    i_ten = dau.index("RegionName")
+    ngays = [(i, c) for i, c in enumerate(dau) if len(c) == 10 and c[4] == "-"]
+    ra = []
+    for d in doc[1:]:
+        if len(d) <= i_ten or not d[i_ten]:
+            continue
+        gia = {}
+        for i, c in ngays:
+            if i < len(d) and d[i]:
+                try:
+                    gia[c] = float(d[i])
+                except Exception:
+                    pass
+        if gia:
+            ra.append({"ten": d[i_ten], "gia": gia, "nguon": "Zillow Home Value Index"})
+    _ZL[muc] = ra
+    print(f"   🏠 Zillow {muc}: {len(ra)} vùng, {len(ngays)} tháng (file tĩnh, không key)")
+    return ra
+
+
+# ── 3e. OPEN FOOD FACTS — dinh dưỡng sản phẩm THẬT, không key, không hạn mức ────────────────
+# USDA FoodData chỉ cho 30 lượt/GIỜ với DEMO_KEY: hai kênh đồ ăn là hết. Open Food Facts mở hoàn
+# toàn, có nhãn hàng Mỹ thật (Dave's Killer Bread, Kirkland...) và cho lọc theo quốc gia.
+# Lưu ý: chỉ endpoint `cgi/search.pl` dùng được — `api/v2/search` trả 503 dai dẳng.
+def thanh_phan_off(mon: str, n: int = 8, nuoc: str = "united-states") -> list[dict]:
+    """Dinh dưỡng sản phẩm thật. Trả [{ten, hieu, calo, duong, mo, muoi}] — sắp theo calo giảm."""
+    # Lọc theo PHÂN LOẠI, không theo từ khoá: `search_terms="cereal"` xếp theo độ phổ biến nên trả
+    # về cả khoai tây chiên, bảng ra lệch hẳn chủ đề. `mon` ở đây là mã category của Open Food
+    # Facts (breakfast-cereals · pizzas · chips · candies …).
+    q = {"action": "process", "json": "1", "page_size": str(max(1, min(50, n * 3))),
+         "sort_by": "unique_scans_n",
+         "tagtype_0": "countries", "tag_contains_0": "contains", "tag_0": nuoc,
+         "tagtype_1": "categories", "tag_contains_1": "contains", "tag_1": mon}
+    u = "https://world.openfoodfacts.org/cgi/search.pl?" + urllib.parse.urlencode(q)
+    # 503 không phải hỏng hẳn mà là "đang quá tải" — 18 lane gọi cùng lúc là dính ngay. Thử lại
+    # NGAY LẬP TỨC thì cũng 503; phải giãn dần. Đo thật: chạy 8 luồng song song, không giãn thì
+    # một kênh rớt, có giãn thì đủ cả.
+    import random as _rd
+    import time as _tg
+    d = None
+    for _lan in range(4):
+        d = _goi(u)
+        if d:
+            break
+        _tg.sleep((1.5 ** _lan) + _rd.random())
+    ra = []
+    for x in ((d or {}).get("products") or []):
+        nu = x.get("nutriments") or {}
+        calo = nu.get("energy-kcal_100g")
+        ten = " ".join(str(x.get("product_name") or "").split())
+        if not calo or not ten:
+            continue
+        try:
+            ra.append({"ten": ten[:60], "hieu": " ".join(str(x.get("brands") or "").split())[:34],
+                       "calo": round(float(calo)),          # nguồn hay trả 116.666666666667
+                       "duong": round(float(nu.get("sugars_100g") or 0), 1),
+                       "mo": round(float(nu.get("fat_100g") or 0), 1),
+                       "muoi": round(float(nu.get("salt_100g") or 0), 2),
+                       "nguon": "Open Food Facts"})
+        except Exception:
+            continue
+    return sorted(ra, key=lambda z: -z["calo"])[:n]
 
 
 # ── 4. ARCHIVE.ORG — phim tư liệu công cộng ────────────────────────────────────────────────

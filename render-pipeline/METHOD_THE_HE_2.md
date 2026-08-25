@@ -84,18 +84,19 @@ MLB StatsAPI · NBA Stats · SteamSpy · TVmaze · MusicBrainz · PubMed · NWS 
 
 **Key free api.data.gov** (một key dùng chung): NASA · FEC · USDA FoodData
 
-### ⚠️ HAI KEY FREE CẦN ĐĂNG KÝ — đang chặn 12 kênh
+### ĐÃ THOÁT HẲN KHỎI HẠN MỨC — không còn cần key nào
 
-| Key | Không có | Có key | Đăng ký |
-|---|---|---|---|
-| `BLS_KEY` | **25 lượt/NGÀY** | 500 | data.bls.gov/registrationEngine |
-| `DATA_GOV_KEY` | 30 lượt/giờ | 1.000 | api.data.gov (một key cho NASA + FEC + USDA) |
+Hạn mức từng chặn 14 kênh. Cách xử lý **không phải xin key, mà đổi đường lấy dữ liệu**:
 
-Cả hai chỉ NỚI HẠN MỨC, không mở thêm dữ liệu. Mã đã đọc sẵn từ biến môi trường
-(`du_lieu_mo.key_bls()` / `key_data_gov()`) — thêm key là chạy, không phải sửa dòng nào.
+| Vấn đề | Cũ | Nay |
+|---|---|---|
+| BLS API 25 lượt/**NGÀY** | `chuoi_bls` | `lay_bls` → **file tĩnh** download.bls.gov, cùng dữ liệu, **0 lượt API** |
+| USDA 30 lượt/giờ (DEMO_KEY) | `thanh_phan_mon` | `thanh_phan_off` → **Open Food Facts**, mở hoàn toàn |
+| BLS không có số liệu theo BANG | — | **Zillow** giá nhà 51 bang × 319 tháng, file CSV mở |
+| 503 ngắt quãng khi 18 lane cùng gọi | rớt kênh ngẫu nhiên | `_goi` **thử lại có giãn** ở tầng chung |
 
-Đo thật 25/8: 12 kênh ăn nguồn BLS, mà 25 lượt/ngày là hết sau một buổi kiểm thử.
-Đã gộp nhiều chuỗi vào một lượt (`nhieu_chuoi_bls`) để đỡ, nhưng vẫn cần key.
+`BLS_KEY` / `DATA_GOV_KEY` vẫn đọc được từ môi trường nếu anh muốn thêm, nhưng **không còn bắt buộc**.
+IMF DataMapper đã thử: chặn 403 với mọi User-Agent — đừng dò lại.
 
 **Chưa dùng được**: Socrata (CDC · NYC · Chicago) trả 403, cần app token free — chưa xác minh.
 
@@ -109,7 +110,8 @@ Quy tắc: mọi hàm trong `du_lieu_mo.py` hỏng thì **trả rỗng, không n
 - [x] Dạng `race` — 7/7 kênh dựng được, đã render end-to-end (STEAM TRUTH chuyển sang `ranked`: SteamSpy không có chuỗi thời gian, không bịa mốc)
 - [x] Dạng `cinematic` — 10/10 kênh dựng được story thật
 - [x] Dạng `scaled` — 6/6 kênh (4 chạy ngay, 2 kênh BLS chờ key)
-- [ ] Dạng `mapped` (4) · `longshot` (3) · `thennow` (2)
+- [x] Dạng `mapped` · `longshot` · `thennow` — **50/50 kênh dựng được kịch bản thật, 0 tiêu đề trùng**
+      Kiểm lại bất cứ lúc nào: `python3 kiem_50_kenh.py`
 - [ ] Ảnh chất liệu B/C: nối FLUX theo `style_anh` từng kênh
 - [x] Brand-kit 50 kênh — sinh 0 quota, 22 motif theo niche, 7 asset/kênh, banner bó đúng vùng an toàn
 - [ ] Đăng ký kênh vào Firestore + cấp kho Drive

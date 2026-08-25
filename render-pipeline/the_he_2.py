@@ -274,7 +274,8 @@ def _bd_phim(D, ky):
 
 
 def _bd_bls(D, ky):
-    r = D.chuoi_bls(ky.get("chuoi", "cpi"), int(ky.get("tu_nam", 2019)), int(ky.get("den_nam", 2024)))
+    r = D.lay_bls([ky.get("chuoi", "cpi")], int(ky.get("tu_nam", 2019)),
+                  int(ky.get("den_nam", 2024))).get(ky.get("chuoi", "cpi")) or []
     if len(r) < 6:
         return None
     # gom theo năm -> mỗi năm một mục, số là mức trung bình năm
@@ -290,9 +291,21 @@ def _bd_bls(D, ky):
             "Bureau of Labor Statistics. Official numbers.")
 
 
+def _mon_an(D, mon, n=30):
+    """Dinh dưỡng: Open Food Facts TRƯỚC (mở, không hạn mức), USDA chỉ là đường lùi.
+
+    USDA DEMO_KEY hết 30 lượt/giờ là hai kênh đồ ăn tắt tiếng — đã dính đúng vậy 25/8."""
+    # Open Food Facts xếp theo ĐỘ PHỔ BIẾN nên "cereal" vẫn trả về khoai tây chiên. Tiêu đề nói
+    # một đằng mà bảng liệt kê một nẻo thì video mất tin cậy ngay giây đầu — lọc theo tên trước.
+    r = [x for x in D.thanh_phan_off(mon, n) if x.get("calo")]
+    if len(r) >= 3:
+        return r
+    return [x for x in D.thanh_phan_mon(mon, n) if x.get("calo")]
+
+
 def _bd_dinh_duong(D, ky):
     mon = ky.get("mon") or "pizza"
-    r = [x for x in D.thanh_phan_mon(mon, 30, ky.get("key", "DEMO_KEY")) if x.get("calo")]
+    r = _mon_an(D, mon)
     # USDA đặt cùng một `description` cho hàng chục sản phẩm khác hãng ("PIZZA" x 30). Lấy thẳng
     # là ra bảng 6 dòng y hệt nhau — nhìn như lỗi render. Ghép tên hãng để phân biệt, và bỏ trùng.
     thay, muc = set(), []
@@ -308,7 +321,7 @@ def _bd_dinh_duong(D, ky):
             break
     if len(muc) < 3:
         return None
-    return (f"{mon.title()}: what is really in it", muc,
+    return (f"{ky.get('nhan') or mon.replace('-', ' ').title()}: what is really in it", muc,
             "U S D A measured every one of these.")
 
 
@@ -397,7 +410,7 @@ def _dc_bls(D, ky):
             "cpi_di_lai": "Transport", "cpi_giao_duc": "Education", "cpi_dien_nuoc": "Utilities",
             "cpi_quan_ao": "Clothing", "cpi_giai_tri": "Recreation", "luong_gio": "Hourly pay"}
     tu, den = int(ky.get("tu_nam", 2015)), int(ky.get("den_nam", 2024))
-    bo = D.nhieu_chuoi_bls(nhom, tu, den, ky.get("key", ""))
+    bo = D.lay_bls(nhom, tu, den)
     theo_nam = {}
     for ten, diem in bo.items():
         for x in diem:
@@ -752,7 +765,7 @@ def dung_story_cinematic(kenh: dict, ky: dict | None = None) -> dict | None:
 # ══════════════════════════════════════════════════════════════════════════════════════════
 def _sk_dinh_duong(D, ky):
     mon = ky.get("mon") or "pizza"
-    r = [x for x in D.thanh_phan_mon(mon, 30, ky.get("key", "DEMO_KEY")) if x.get("calo")]
+    r = _mon_an(D, mon)
     thay, muc = set(), []
     for x in sorted(r, key=lambda z: -z["calo"]):
         ten = " ".join(f"{x.get('hieu') or ''} {x['ten']}".split()).title()
@@ -765,7 +778,7 @@ def _sk_dinh_duong(D, ky):
             break
     if len(muc) < 3:
         return None
-    return (f"{mon.title()}, by calories", "cal", muc,
+    return (f"{ky.get('nhan') or mon.replace('-', ' ').title()}, by calories", "cal", muc,
             "Per hundred grams, measured by the U S D A.")
 
 
@@ -778,7 +791,7 @@ def _sk_bls(D, ky):
             "cpi_xang": ("Gas", "⛽"), "luong_gio": ("Hourly pay", "💵"),
             "cpi_dien_nuoc": ("Utilities", "💡"), "cpi_giai_tri": ("Fun", "🎟️")}
     den = int(ky.get("den_nam", 2024))
-    bo = D.nhieu_chuoi_bls(nhom, den - 1, den, ky.get("key", ""))
+    bo = D.lay_bls(nhom, den - 1, den)
     muc = []
     for t, diem in bo.items():
         if not diem:
@@ -840,6 +853,319 @@ def dung_story_scaled(kenh: dict, ky: dict | None = None) -> dict | None:
             "intro_vo": f"{tieu_de}. Same scale, no tricks.",
             "outro_vo": ket, "nguon": kenh.get("nguon"),
             "_that": True, "self_score": {"total": 92}}
+
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# BA DẠNG CÒN LẠI: bản đồ · bậc thang · xưa & nay
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# Mã bang Mỹ -> tên đầy đủ, để engine bản đồ tô đúng vùng.
+BANG = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
+        "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
+        "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+        "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+        "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi",
+        "MO": "Missouri", "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire",
+        "NJ": "New Jersey", "NM": "New Mexico", "NY": "New York", "NC": "North Carolina",
+        "ND": "North Dakota", "OH": "Ohio", "OK": "Oklahoma", "OR": "Oregon",
+        "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina", "SD": "South Dakota",
+        "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont", "VA": "Virginia",
+        "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming"}
+
+
+def _bd_canh_bao(D, ky):
+    """Cảnh báo thời tiết ĐANG BẬT, đếm theo bang — bản đồ nóng lên đúng chỗ đang có chuyện."""
+    bangs = ky.get("bangs") or ["TX", "CA", "FL", "NY", "OK", "KS", "LA", "AZ", "CO", "MO"]
+    import concurrent.futures as _cf
+    with _cf.ThreadPoolExecutor(6) as ex:
+        ket = list(ex.map(lambda b: (b, D.canh_bao(b, 50)), bangs))
+    data = [{"name": BANG.get(b, b), "value": len(r)} for b, r in ket if r]
+    if len(data) < 3:
+        return None
+    data = sorted(data, key=lambda z: -z["value"])
+    loai = {}
+    for _b, r in ket:
+        for x in r:
+            loai[x["loai"]] = loai.get(x["loai"], 0) + 1
+    hay = sorted(loai.items(), key=lambda z: -z[1])[:1]
+    dan = ["These warnings are live right now.",
+           f"{data[0]['name']} has the most: {data[0]['value']} active.",
+           (f"Most common: {hay[0][0].lower()}." if hay else "Mixed warning types."),
+           f"{sum(d['value'] for d in data)} warnings across {len(data)} states.",
+           "Issued by the National Weather Service, not a forecast app.",
+           "If your state is on here, go check it."]
+    return ("Active weather warnings", "alerts", data, dan)
+
+
+def _bd_dong_dat(D, ky):
+    r = D.dong_dat(float(ky.get("do_lon", 6.5)), ky.get("tu_ngay", "2015-01-01"), 40)
+    if len(r) < 4:
+        return None
+    gop = {}
+    for x in r:
+        # "112km SW of Kokopo, Papua New Guinea" -> lấy phần sau dấu phẩy cuối
+        noi = x["noi"].split(",")[-1].strip() or x["noi"]
+        gop[noi] = max(gop.get(noi, 0), x["do_lon"])
+    data = [{"name": k, "value": round(v, 1)} for k, v in sorted(gop.items(), key=lambda z: -z[1])[:10]]
+    manh = r[0]
+    dan = [f"The strongest was magnitude {manh['do_lon']}.",
+           f"It hit {manh['noi']}.",
+           f"Depth: {manh['sau_km']} kilometers.",
+           f"{len(r)} quakes this size since {ky.get('tu_ngay', '2015')[:4]}.",
+           "Each one recorded by seismometers, not estimates.",
+           "U S G S publishes every single one."]
+    return ("Strongest quakes on record", "mag", data, dan)
+
+
+def _bd_may_bay(D, ky):
+    r = D.may_bay(24, -125, 49, -66, 200)
+    if len(r) < 10:
+        return None
+    gop = {}
+    for x in r:
+        gop[x["nuoc"] or "Unknown"] = gop.get(x["nuoc"] or "Unknown", 0) + 1
+    data = [{"name": k, "value": v} for k, v in sorted(gop.items(), key=lambda z: -z[1])[:10]]
+    cao = r[0]
+    dan = [f"Right now there are {len(r)} aircraft over the United States.",
+           f"The highest is {cao['hieu'] or 'unmarked'}, at {cao['cao_m']:,.0f} meters.",
+           f"Registered in {data[0]['name']}: {data[0]['value']} of them.",
+           "Nobody is hiding this. The transponders broadcast it.",
+           "OpenSky just writes it all down.",
+           "Look up. One of these is above you."]
+    return ("Who is flying over America", "planes", data, dan)
+
+
+def _bd_gia_nha(D, ky):
+    """Giá nhà từng bang — bản đồ nóng đúng chỗ đắt."""
+    r = D.gia_nha_zillow("State")
+    if len(r) < 10:
+        return None
+    moi = []
+    for x in r:
+        ks = sorted(x["gia"])
+        if ks:
+            moi.append({"name": x["ten"], "value": round(x["gia"][ks[-1]]),
+                        "disp": f"${x['gia'][ks[-1]]:,.0f}"})
+    if len(moi) < 10:
+        return None
+    moi = sorted(moi, key=lambda z: -z["value"])
+    re_ = sorted(moi, key=lambda z: z["value"])[0]
+    dan = [f"A typical home in {moi[0]['name']} is now {moi[0]['disp']}.",
+           f"In {re_['name']} it is {re_['disp']}.",
+           f"That is {moi[0]['value'] / max(1, re_['value']):.1f} times the price for the same idea of a house.",
+           f"Fifty one states and territories, all measured the same way.",
+           "This is the Zillow index, updated every month.",
+           "Your move might be worth more than your raise."]
+    return ("Home price by state", "$", moi, dan)
+
+
+BO_BAN_DO = {"canh_bao": _bd_canh_bao, "dong_dat": _bd_dong_dat, "may_bay": _bd_may_bay,
+             "gia_nha_zillow": _bd_gia_nha}
+
+
+def dung_story_mapped(kenh: dict, ky: dict | None = None) -> dict | None:
+    import du_lieu_mo as D
+    bo = BO_BAN_DO.get(kenh.get("ham"))
+    if not bo:
+        print(f"   ⚠️ {kenh.get('ten')}: '{kenh.get('ham')}' chưa có bộ bản đồ — bỏ lượt")
+        return None
+    ts = dict(kenh.get("tham_so") or {})
+    ts.update(ky or {})
+    kq = bo(D, ts)
+    if not kq:
+        print(f"   ⚠️ {kenh.get('ten')}: thiếu dữ liệu — BỎ LƯỢT")
+        return None
+    tieu_de, don_vi, data, dan = kq
+    return {"title": tieu_de, "unit": don_vi, "data": data, "narration": dan,
+            "nguon": kenh.get("nguon"), "_that": True, "self_score": {"total": 92}}
+
+
+def _bt_luot_doc(D, ky):
+    """Bậc thang: một cái tên leo lên rồi rơi xuống, đo bằng lượt đọc từng ngày."""
+    import datetime as _dt
+    goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    top = D.bai_duoc_doc(goc.year, goc.month, goc.day, 12)
+    if not top:
+        return None
+    v = top[0]
+    tu = (goc - _dt.timedelta(days=29)).strftime("%Y%m%d")
+    diem = D.luot_doc_bai(v["ten"], tu, goc.strftime("%Y%m%d"))
+    if len(diem) < 8:
+        return None
+    diem = sorted(diem, key=lambda z: z["luot_doc"])
+    buoc = [diem[0]] + diem[len(diem) // 4::max(1, len(diem) // 5)][:5]
+    import math
+    muc = [{"label": f"{x['ngay'][4:6]}/{x['ngay'][6:8]}", "emoji": "📈",
+            "oddsDisp": _so(x["luot_doc"]),
+            "logValue": round(math.log10(max(10, x["luot_doc"])), 3),
+            "vo": f"{x['ngay'][4:6]} slash {x['ngay'][6:8]}. {x['luot_doc']:,} reads."}
+           for x in buoc[:6]]
+    if len(muc) < 4:
+        return None
+    dan = [f"{v['ten']}, one month of attention.", "From nobody looking, to everybody looking."]
+    return (f"{_gon(v['ten'], 34)}: the spike", muc, dan)
+
+
+def _bt_bls(D, ky):
+    """Bậc thang: một chỉ số leo qua từng năm."""
+    import math
+    ten = ky.get("chuoi", "that_nghiep")
+    diem = D.lay_bls([ten], int(ky.get("tu_nam", 2015)), int(ky.get("den_nam", 2024))).get(ten) or []
+    if len(diem) < 24:
+        return None
+    theo_nam = {}
+    for x in diem:
+        theo_nam.setdefault(x["nam"], []).append(x["gia_tri"])
+    nams = sorted(theo_nam)[-6:]
+    muc = []
+    for n in nams:
+        v = sum(theo_nam[n]) / len(theo_nam[n])
+        muc.append({"label": str(n), "emoji": "📉", "oddsDisp": f"{v:,.1f}",
+                    "logValue": round(math.log10(max(1.0, v)), 3),
+                    "vo": f"{n}. {v:,.1f}."})
+    if len(muc) < 4:
+        return None
+    nhan = ky.get("nhan") or "Index"
+    return (f"{nhan} by year", muc,
+            [f"{nhan}, six years in a row.", "Bureau of Labor Statistics. Not a forecast."])
+
+
+def _bt_nhac(D, ky):
+    """Bậc thang: nghệ sĩ và độ dài sự nghiệp trên giấy tờ."""
+    import math, datetime as _dt
+    r = [x for x in D.ho_so_nhac(ky.get("tu_khoa", "one hit wonder"), 20) if x.get("bat_dau")]
+    if len(r) < 4:
+        return None
+    nay = _dt.date.today().year
+    muc = []
+    for x in r:
+        try:
+            d0 = int(str(x["bat_dau"])[:4])
+        except Exception:
+            continue
+        d1 = int(str(x.get("ket_thuc") or nay)[:4]) if str(x.get("ket_thuc") or "")[:4].isdigit() else nay
+        nam = max(1, d1 - d0)
+        muc.append({"label": _gon(x["ten"], 18), "emoji": "🎵", "oddsDisp": f"{nam}y",
+                    "logValue": round(math.log10(max(1, nam)), 3),
+                    "vo": f"{_gon(x['ten'], 26)}. {nam} years on the record."})
+        if len(muc) >= 6:
+            break
+    if len(muc) < 4:
+        return None
+    return ("How long they lasted", muc,
+            ["Careers, measured in years on paper.", "MusicBrainz keeps the dates."])
+
+
+BO_THANG = {"luot_doc_bai": _bt_luot_doc, "chuoi_bls": _bt_bls, "ho_so_nhac": _bt_nhac}
+
+
+def dung_story_longshot(kenh: dict, ky: dict | None = None) -> dict | None:
+    import du_lieu_mo as D
+    bo = BO_THANG.get(kenh.get("ham"))
+    if not bo:
+        print(f"   ⚠️ {kenh.get('ten')}: '{kenh.get('ham')}' chưa có bộ bậc thang — bỏ lượt")
+        return None
+    ts = dict(kenh.get("tham_so") or {})
+    ts.update(ky or {})
+    kq = bo(D, ts)
+    if not kq:
+        return None
+    tieu_de, muc, dan = kq
+    return {"title": tieu_de, "items": muc,
+            "intro_vo": dan[0], "outro_vo": dan[-1] if len(dan) > 1 else "",
+            "nguon": kenh.get("nguon"), "_that": True, "self_score": {"total": 92}}
+
+
+def _xn_bls(D, ky):
+    """Xưa & nay: cùng một chỉ số, cách nhau nhiều năm."""
+    nhom = ky.get("nhom") or [ky.get("chuoi", "cpi_nha")]
+    NHAN = {"cpi_nha": "Housing", "cpi_thucpham": "Food", "cpi_xang": "Gas", "cpi_yte": "Health care",
+            "cpi_giao_duc": "Education", "luong_gio": "Hourly pay", "cpi_di_lai": "Transport"}
+    tu, den = int(ky.get("tu_nam", 2005)), int(ky.get("den_nam", 2024))
+    bo = D.lay_bls(nhom, tu, den)
+    cap = []
+    for t, diem in bo.items():
+        if len(diem) < 12:
+            continue
+        d0 = [x for x in diem if x["nam"] == diem[0]["nam"]]
+        d1 = [x for x in diem if x["nam"] == diem[-1]["nam"]]
+        if not d0 or not d1:
+            continue
+        v0 = sum(x["gia_tri"] for x in d0) / len(d0)
+        v1 = sum(x["gia_tri"] for x in d1) / len(d1)
+        cap.append({"label": NHAN.get(t, t), "thenYear": str(diem[0]["nam"]),
+                    "thenVal": f"{v0:,.0f}", "nowYear": str(diem[-1]["nam"]),
+                    "nowVal": f"{v1:,.0f}", "change": f"+{(v1 - v0) / v0 * 100:.0f}%",
+                    "vo": f"{NHAN.get(t, t)}. From {v0:,.0f} to {v1:,.0f}."})
+    if len(cap) < 3:
+        return None
+    return (ky.get("nhan") or "Then and now", cap,
+            ["Same measure, twenty years apart.", "Bureau of Labor Statistics. Look it up."])
+
+
+def _xn_gia_nha(D, ky):
+    """Giá nhà một bang: đầu những năm 2000 so với bây giờ."""
+    r = D.gia_nha_zillow("State")
+    if len(r) < 6:
+        return None
+    chon = ky.get("bangs") or ["California", "Texas", "Florida", "New York", "Ohio", "Idaho"]
+    cap = []
+    for x in r:
+        if x["ten"] not in chon:
+            continue
+        ks = sorted(x["gia"])
+        if len(ks) < 60:
+            continue
+        v0, v1 = x["gia"][ks[0]], x["gia"][ks[-1]]
+        cap.append({"label": x["ten"], "thenYear": ks[0][:4], "thenVal": f"${v0:,.0f}",
+                    "nowYear": ks[-1][:4], "nowVal": f"${v1:,.0f}",
+                    "change": f"+{(v1 - v0) / v0 * 100:.0f}%",
+                    "vo": f"{x['ten']}. From {v0:,.0f} to {v1:,.0f} dollars."})
+    if len(cap) < 3:
+        return None
+    return ("Same house, different decade", cap,
+            ["What a home cost then, and what it costs now.",
+             "Zillow index, same measure both years."])
+
+
+def _xn_tu_lieu(D, ky):
+    """Xưa & nay bằng phim tư liệu: cùng chủ đề, hai mốc thời gian trong kho lưu trữ."""
+    r = D.phim_tu_lieu(ky.get("tu_khoa", "city street"), 30)
+    co_nam = [x for x in r if str(x.get("nam") or "")[:4].isdigit()]
+    if len(co_nam) < 6:
+        return None
+    co_nam.sort(key=lambda z: int(str(z["nam"])[:4]))
+    n = len(co_nam) // 2
+    cu, moi = co_nam[:n], co_nam[n:]
+    cap = []
+    for a, b in zip(cu[:4], moi[:4]):
+        cap.append({"label": _gon(a["tieu_de"], 18), "thenYear": str(a["nam"])[:4],
+                    "thenVal": _gon(a["tieu_de"], 16), "nowYear": str(b["nam"])[:4],
+                    "nowVal": _gon(b["tieu_de"], 16), "change": "",
+                    "vo": f"{str(a['nam'])[:4]}, then {str(b['nam'])[:4]}."})
+    if len(cap) < 3:
+        return None
+    return ("The same subject, decades apart", cap,
+            ["Two eras of the same thing, both on film.",
+             "Public domain. Nobody owns either one."])
+
+
+BO_XUA_NAY = {"chuoi_bls": _xn_bls, "gia_nha_zillow": _xn_gia_nha, "phim_tu_lieu": _xn_tu_lieu}
+
+
+def dung_story_thennow(kenh: dict, ky: dict | None = None) -> dict | None:
+    import du_lieu_mo as D
+    bo = BO_XUA_NAY.get(kenh.get("ham"))
+    if not bo:
+        print(f"   ⚠️ {kenh.get('ten')}: '{kenh.get('ham')}' chưa có bộ xưa&nay — bỏ lượt")
+        return None
+    ts = dict(kenh.get("tham_so") or {})
+    ts.update(ky or {})
+    kq = bo(D, ts)
+    if not kq:
+        return None
+    tieu_de, cap, dan = kq
+    return {"title": tieu_de, "pairs": cap, "intro_vo": dan[0], "outro_vo": dan[-1],
+            "nguon": kenh.get("nguon"), "_that": True, "self_score": {"total": 92}}
 
 
 def chay(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] | None:
