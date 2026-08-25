@@ -2411,3 +2411,20 @@ thể chưa được cấp quyền Workers AI cho model ảnh — hãy để Vis
 `_models_song()` ra để test được mà không gọi mạng.
 **LUẬT: khi tự chữa bằng cách "chọn cái khác", phải LOẠI TRỪ cái vừa hỏng. Không loại trừ thì vòng
 lặp tự chọn lại chính nó và mọi thứ trông như đã chữa.**
+
+### 7.dv — DEPLOY NHẦM SITE SUỐT: sửa đúng nhưng đẩy vào trang không ai xem (25/8/2026)
+Anh báo vẫn thấy `✅ Tổng cộng dồn: 2209` — trong khi em đã đổi nhãn đó thành `Video trong kho` và
+deploy "thành công" **ba lần**. Manh mối chính là cái nhãn: **chữ cũ nghĩa là trang cũ**, không phải
+đệm trình duyệt.
+Truy ra: `firebase deploy` lấy project đang chọn của CLI (`mm0-shard-c`), trong khi `.firebaserc` ghi
+`"default": "mm0-auto-publisher"` — và **trang anh mở là bản default**. Đo thẳng ba site:
+```
+mm0-auto-publisher.web.app  __d1OK=0  nhãn="Tổng cộng dồn"   <- anh đang xem
+mm0-shard-c.web.app         __d1OK=8  nhãn="Video trong kho" <- em deploy vào đây
+```
+Ba lượt vá dashboard đêm nay đều **đúng code, sai đích**. Đã deploy lại với `--project
+mm0-auto-publisher`, kiểm chứng lại bằng chính lệnh đo trên: `__d1OK=8 · nhãn="Video trong kho"`.
+**LUẬT: deploy xong phải FETCH LẠI URL NGƯỜI DÙNG THẬT SỰ MỞ và tìm một dấu vết CHỈ CÓ Ở BẢN MỚI
+(nhãn đổi, biến mới). "Deploy complete" chỉ chứng minh có thứ gì đó lên mạng, không chứng minh nó lên
+đúng chỗ.** Và khi người dùng mô tả thứ họ thấy mà nó KHÔNG khớp code hiện tại, hãy nghi đường phân
+phối trước khi nghi logic.
