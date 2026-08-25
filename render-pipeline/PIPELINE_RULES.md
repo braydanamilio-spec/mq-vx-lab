@@ -2621,3 +2621,11 @@ thêm. Đi dò 166 key chỉ để biết cái nào chết là trả tiền cho 
   áp đảo ở viền + đòi viền đồng nhất ≥45% (thấp hơn = FLUX vẽ cảnh, tách sẽ ăn thủng nhân vật).
   Kèm luật chung: **ảnh/lượt hỏng phải GIỮ làm bằng chứng** (`_hong/`), xoá đi là lần sau lại đoán.
   Chốt: `t_tach_nen_khong_khoa_cung_mau`.
+
+- **Multiplane phải đủ 4 DẤU HIỆU CHIỀU SÂU, không chỉ thị sai.** (25/8) Bản đầu chỉ cho lớp gần
+  trượt nhanh hơn lớp xa — vẫn trông "ảnh nền + hình dán". Máy đa tầng Disney (1937) có bốn:
+  (a) thị sai theo độ sâu; (b) **phối cảnh không khí** — lớp xa bạc màu + phủ sương, mắt đọc chiều
+  sâu bằng dấu hiệu này mạnh hơn cả thị sai; (c) độ sâu trường ảnh — lấy nét ở mặt phẳng nhân vật,
+  lớp lệch nét nhoè nhẹ; (d) **nhân vật NẰM GIỮA các tấm kính** — lớp `near` vẽ ĐÈ LÊN nhân vật, và
+  chính nhân vật cũng chịu phép biến đổi của máy (`camScale`), nếu không thì camera đẩy vào mà nhân
+  vật đứng nguyên là lộ hình dán. Chốt: `t_mascot_stage_dong_tung_khung` (kiểm cả 4).

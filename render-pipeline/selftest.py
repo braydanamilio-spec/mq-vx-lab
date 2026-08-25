@@ -2290,7 +2290,13 @@ def t_mascot_stage_dong_tung_khung():
     trượt bằng nhau, mất hoàn toàn chiều sâu và lại thành ảnh phẳng zoom như bản cũ."""
     src = _doc("../engine-remotion/src/MascotStage.tsx")
     assert "useCurrentFrame" in src, "không đọc khung -> không có chuyển động thật"
-    assert "cam.dx * L.xa" in src, "lớp nền không nhân theo độ sâu -> mất parallax"
+    # ĐỦ 4 DẤU HIỆU CHIỀU SÂU của máy đa tầng — thiếu cái nào cũng tụt về "ảnh nền + hình dán"
+    assert "0.15 + xa * 0.85" in src, "lớp nền không nhân theo độ sâu -> mất thị sai"
+    assert "suong" in src and "saturate(" in src, "mất phối cảnh không khí (dấu hiệu chiều sâu mạnh nhất)"
+    assert "blur(" in src, "mất độ sâu trường ảnh"
+    assert "L.xa < DEPTH_NV" in src and "L.xa >= DEPTH_NV" in src, \
+        "lớp gần không vẽ ĐÈ LÊN nhân vật -> nhân vật dán lên cảnh chứ không ở TRONG cảnh"
+    assert "camScale" in src, "nhân vật không chịu phép biến đổi của máy -> lộ là hình dán khi camera đẩy"
     assert "talk_open" in src and "talk_closed" in src, "mất cặp nhép mồm"
     assert "spring(" in src, "mất chuyển động đàn hồi (vào cảnh/nảy)"
 
