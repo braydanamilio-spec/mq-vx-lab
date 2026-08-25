@@ -308,7 +308,7 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
         const padV = v === 2 ? `0 100px ${CAP_TOP}px` : v === 3 ? "260px 100px 0" : `0 100px ${CAP_TOP}px`;
         return (<AbsoluteFill style={{ pointerEvents: "none" }}>
           {/* phủ tối vừa đủ: chữ hook luôn đọc được mà vẫn thấy rõ ảnh nền */}
-          <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(3,6,16,.66) 0%, rgba(3,6,16,.34) 45%, rgba(3,6,16,.82) 100%)" }} />
+          <AbsoluteFill style={{ background: `linear-gradient(180deg, rgba(3,6,16,${.66 * man}) 0%, rgba(3,6,16,${.34 * man}) 45%, rgba(3,6,16,${.82 * man}) 100%)` }} />
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", padding: padV, opacity: ein2, transform: `translateY(${(1 - ein2) * 26}px)`, ...pos }}>
             {hk.stat ? <div style={{ fontSize: 210, fontWeight: 900, color: accent2, lineHeight: .94, letterSpacing: -4, textShadow: `0 0 60px ${accent2}55, 0 6px 30px rgba(0,0,0,.8)` }}>{hk.stat}</div> : null}
             {hk.label ? <div style={{ fontSize: 46, fontWeight: 800, color: "#EAF8FF", letterSpacing: 2, marginTop: 6, textShadow: "0 3px 18px rgba(0,0,0,.85)" }}>{hk.label.toUpperCase()}</div> : null}
@@ -318,8 +318,8 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
         </AbsoluteFill>);
       })()}
       {/* grade nhẹ ở đáy cho caption (KHÔNG làm tối toàn khung — nền chủ đề đã lo phần không-đen) */}
-      <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(4,10,26,0.0) 0%, rgba(2,3,10,0.04) 46%, rgba(2,3,10,0.58) 100%)" }} />
-      <AbsoluteFill style={{ boxShadow: "inset 0 0 380px 110px rgba(0,0,0,0.45)" }} />
+      <AbsoluteFill style={{ background: `linear-gradient(180deg, rgba(4,10,26,0.0) 0%, rgba(2,3,10,${0.04 * man}) 46%, rgba(2,3,10,${0.58 * man}) 100%)` }} />
+      <AbsoluteFill style={{ boxShadow: `inset 0 0 380px 110px rgba(0,0,0,${0.45 * man})` }} />
       {s.fx && <FxLayer kind={s.fx} l={l} />}
       {s.hud && <HudView hud={s.hud} l={l} d={s.dur} accent={accent} accent2={accent2} />}
       {mode === "file" && l < 18 && (

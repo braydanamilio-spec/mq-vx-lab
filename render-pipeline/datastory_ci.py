@@ -2519,11 +2519,32 @@ def prune_ghost_clips(props: dict):
     return props
 
 
-def _sau_man(path: str, man: float = 1.0):
-    """Số đo của ảnh SAU khi đắp đúng lớp phủ mà `Cinematic.tsx` dùng (gradient dọc + vignette).
+def _grad(t: float, moc) -> float:
+    """Alpha của một gradient dọc tại vị trí t (0=đỉnh,1=đáy) từ các mốc [(vt, alpha), ...]."""
+    for k in range(len(moc) - 1):
+        t0, a0 = moc[k]; t1, a1 = moc[k + 1]
+        if t <= t1:
+            return a0 + (a1 - a0) * ((t - t0) / max(1e-9, t1 - t0))
+    return moc[-1][1]
 
-    `man` = hệ số độ dày lớp phủ (1 = như cũ). Trả (%tối, bão hoà, số màu) — cùng đơn vị với
-    `flat_bg_metrics` để so được với ngưỡng QC."""
+
+def _vig(dx: float, dy: float, lan: float, dam: float) -> float:
+    """Alpha của một `inset box-shadow` vignette tại điểm cách tâm (dx,dy) đã chuẩn hoá."""
+    return min(1.0, max(0.0, (max(dx, dy) - lan) / (1 - lan))) ** 1.4 * dam
+
+
+def _sau_man(path: str, man: float = 1.0, co_hook: bool = True):
+    """Số đo của ảnh SAU khi đắp ĐỦ MỌI lớp tối mà `Cinematic.tsx` vẽ chồng lên.
+
+    25/8 — GỐC CỦA VIỆC "VÁ MÃI KHÔNG XONG". Bản trước chỉ mô phỏng 1 gradient + 1 vignette
+    (của `Scene1`), trong khi khung mở đầu thật bị đắp NĂM lớp: `Scene1` (gradient + vignette),
+    lớp HOOK (gradient riêng .66/.34/.82 + vignette 0.45) và lớp grade đáy cho phụ đề. Thiếu
+    hơn nửa số lớp nên mô hình luôn chấm "đạt" (70-74%) còn khung render ra 86-93% -> QC loại,
+    mà hàm cứu thì không hề chạy vì nó tưởng ảnh không sao. Nới `man` cũng vô ích vì các lớp
+    kia không nới theo. Nay: Cinematic nới CẢ NĂM lớp theo `man`, và hàm này mô phỏng đủ cả năm.
+
+    `man` = hệ số độ dày lớp phủ (1 = như cũ). `co_hook` = cảnh này có lớp hook không (chỉ cảnh
+    mở đầu mới có). Trả (%tối, bão hoà, số màu) — cùng đơn vị với `flat_bg_metrics`."""
     try:
         from PIL import Image
         im = Image.open(path).convert("RGB")
@@ -2532,20 +2553,19 @@ def _sau_man(path: str, man: float = 1.0):
         px = im.load()
         for y in range(H):
             t = y / max(1, H - 1)
-            # khớp mốc gradient của Cinematic: .74 ở 0% · .58 ở 42% · .88 ở 100%
-            a = (0.74 + (0.58 - 0.74) * (t / 0.42)) if t <= 0.42 else \
-                (0.58 + (0.88 - 0.58) * ((t - 0.42) / 0.58))
-            a *= man
+            a1 = _grad(t, ((0.0, .74), (0.42, .58), (1.0, .88)))          # Scene1
+            a2 = _grad(t, ((0.0, .66), (0.45, .34), (1.0, .82))) if co_hook else 0.0
+            a3 = _grad(t, ((0.0, .00), (0.46, .04), (1.0, .58)))          # grade đáy cho caption
             for x in range(W):
                 r, g, b = px[x, y]
-                # vignette: đậm dần về mép (xấp xỉ inset shadow 340px/120px)
                 dx = abs(x - W / 2) / (W / 2); dy = abs(y - H / 2) / (H / 2)
-                # vignette THẬT: `inset 0 0 340px 120px rgba(0,0,0,.55)` trên khung 1080 rộng —
-                # 120px lan + 340px nhoè, tức vệt tối ăn vào tới ~40% nửa bề ngang, KHÔNG phải chỉ
-                # mép ngoài. Bản đầu lấy mốc 0.45 nên đo hụt: HAULUSA render ra 80% tối mà bản mô
-                # phỏng vẫn cho "đạt" -> không cứu, video bị QC loại.
-                v = min(1.0, max(0.0, (max(dx, dy) - 0.22) / 0.78)) ** 1.4 * 0.55 * man
-                k = 1 - min(0.97, a + v)
+                v1 = _vig(dx, dy, 0.22, 0.55)                              # inset 340px 120px
+                v2 = _vig(dx, dy, 0.26, 0.45)                              # inset 380px 110px
+                # chồng lớp = 1 - tích các (1-alpha), không phải cộng dồn
+                mo = 1.0
+                for al in (a1, a2, a3, v1, v2):
+                    mo *= (1 - min(0.99, al * man))
+                k = max(0.03, mo)
                 px[x, y] = (int(r * k + 3 * (1 - k)), int(g * k + 6 * (1 - k)),
                             int(b * k + 16 * (1 - k)))
         raw = list(im.getdata()); n = max(1, len(raw))
@@ -2572,23 +2592,24 @@ def can_man_moi_canh(props: dict, nguong: float = 55.0) -> int:
     Trả số cảnh đã nới. Rẻ: ~40ms/cảnh, so với 2-4 phút render là không đáng kể."""
     base = os.path.join(PUB, props.get("slug", ""), "clips")
     n = 0
-    for sc in (props.get("scenes") or []):
+    for i, sc in enumerate(props.get("scenes") or []):
         f = sc.get("clip")
         if not f or sc.get("man"):          # cảnh 0 đã được cân riêng thì thôi
             continue
-        d, _sa, _c = _sau_man(os.path.join(base, f), 1.0)
+        hk = (i == 0)                       # chỉ cảnh mở đầu bị lớp hook đắp thêm
+        d, _sa, _c = _sau_man(os.path.join(base, f), 1.0, hk)
         if d < nguong:
             continue
-        for m in (0.75, 0.55, 0.45):
-            d2, _s2, _c2 = _sau_man(os.path.join(base, f), m)
+        for m in (0.75, 0.55, 0.45, 0.35):
+            d2, _s2, _c2 = _sau_man(os.path.join(base, f), m, hk)
             if d2 < nguong:
                 sc["man"] = m; n += 1
                 break
         else:
-            sc["man"] = 0.45; n += 1        # tối quá thì nới hết cỡ, còn hơn để đen kịt
+            sc["man"] = 0.35; n += 1        # tối quá thì nới hết cỡ, còn hơn để đen kịt
     if n:
         print(f"   🪟 nới lớp phủ cho {n}/{len(props.get('scenes') or [])} cảnh "
-              f"(ảnh càng tối nới càng nhiều; sàn 0.45 để phụ đề còn nền).")
+              f"(ảnh càng tối nới càng nhiều; sàn 0.35 để phụ đề còn nền).")
     return n
 
 

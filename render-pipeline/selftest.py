@@ -1004,7 +1004,7 @@ def t_noi_man_khong_dung_toi_anh():
         # ĐƠN ĐIỆU CHẶT giữa hai đầu: ảnh sáng nhất PHẢI giữ lớp phủ dày hơn ảnh tối nhất. Thiếu vế
         # này thì một bản hỏng "hạ hết về sàn 0.45" vẫn lọt (0.45 ≥ 0.45 ≥ 0.45 là đúng đơn điệu).
         assert m[0] > m[2], f"ảnh sáng nhất và tối nhất nhận CÙNG lớp phủ -> không phân biệt gì: {m}"
-        assert min(m) >= 0.45, f"nới quá sàn 0.45 -> phụ đề mất nền: {m}"
+        assert min(m) >= 0.35, f"nới quá sàn 0.35 (sàn của Cinematic) -> phụ đề mất nền: {m}"
         assert m[2] < 1.0, "ảnh tối nhất mà không được nới chút nào"
     finally:
         import shutil
@@ -1920,3 +1920,33 @@ def t_moc_reset_theo_nha_cung_cap():
 
 if __name__ == "__main__":
     main()
+
+
+def t_moi_lop_toi_deu_noi():
+    """MỌI lớp tối phủ toàn khung trong Scene1 phải nới theo `man`.
+
+    25/8 — cái đã làm "vá mãi không xong": Scene1 vẽ 5 lớp tối chồng nhau nhưng chỉ 2 lớp
+    nhân `man`, nên hạ `man` xuống sàn vẫn còn ~2/3 độ tối -> khung mở đầu render ra 86-93%
+    tối và bị QC loại, trong khi mô hình đo chấm "đạt" nên hàm cứu không hề chạy."""
+    import re
+    src = _doc("../engine-remotion/src/Cinematic.tsx")
+    i = src.index("const Scene1"); j = src.index("\nconst ", i + 10)
+    than = src[i:j]
+    xau = []
+    for m in re.finditer(r'(rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*(?:0?\.\d+|[01])\s*\))', than):
+        d = than[max(0, m.start() - 120):m.start()]
+        if "textShadow" in d or "boxShadow: `0" in d:
+            continue                       # bóng chữ, không phải lớp phủ toàn khung
+        xau.append(m.group(1))
+    assert not xau, f"lớp tối chưa nới theo man trong Scene1: {xau[:3]}"
+    assert than.count("* man") >= 5, f"Scene1 chỉ có {than.count('* man')} chỗ nhân man, cần >=5"
+
+
+def t_sau_man_du_lop():
+    """Mô hình đo phải mô phỏng ĐỦ 5 lớp — thiếu lớp nào là chấm "đạt" oan."""
+    src = _doc("datastory_ci.py")
+    i = src.index("def _sau_man("); than = src[i:src.index("\ndef ", i + 10)]
+    for moc in (".74", ".66", ".58", "0.55", "0.45"):
+        assert moc in than, f"_sau_man thiếu mốc lớp phủ {moc}"
+    assert "mo *= (1 - min(" in than, "_sau_man phải chồng lớp bằng tích (1-alpha), không cộng dồn"
+    assert "co_hook" in than, "_sau_man phải phân biệt cảnh có/không có lớp hook"
