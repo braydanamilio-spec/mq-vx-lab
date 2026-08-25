@@ -35,6 +35,7 @@ import { BrandBeyond } from "./BrandBeyond";
 import { BrandLegacy } from "./BrandLegacy";
 import { Cinematic, calcCinematic } from "./Cinematic";
 import { ToonShort, calcToon } from "./ToonShort";
+import { MascotStage } from "./MascotStage";
 import { DocThumb } from "./DocThumb";
 import { BarChartRace, calcRace } from "./BarChartRace";
 import { BrandV2 } from "./BrandV2";
@@ -178,6 +179,24 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="Cinematic" component={Cinematic} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
     <Composition id="DocThumb" component={DocThumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ big: "TITLE" }} />
     <Composition id="CinematicShort" component={Cinematic} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
+    {/* 25/8 — SÂN KHẤU MASCOT: nhân vật rig tách nền + bối cảnh đa tầng, 30fps thật.
+        durationInFrames do calculateMetadata suy từ shots (xem MascotStage). */}
+    <Composition id="MascotShort" component={MascotStage} durationInFrames={900} fps={30}
+      width={1080} height={1920}
+      defaultProps={{ channel: "", cast: [], shots: [], mouth: [], title: "", accent: "#F5B301", subs: [] }}
+      calculateMetadata={({ props }: any) => {
+        const ss = props?.shots || [];
+        const het = ss.length ? Math.max(...ss.map((s: any) => (s.from || 0) + (s.dur || 0))) : 900;
+        return { durationInFrames: Math.max(30, Math.round(het)) };
+      }} />
+    <Composition id="MascotLong" component={MascotStage} durationInFrames={900} fps={30}
+      width={1920} height={1080}
+      defaultProps={{ channel: "", cast: [], shots: [], mouth: [], title: "", accent: "#F5B301", subs: [] }}
+      calculateMetadata={({ props }: any) => {
+        const ss = props?.shots || [];
+        const het = ss.length ? Math.max(...ss.map((s: any) => (s.from || 0) + (s.dur || 0))) : 900;
+        return { durationInFrames: Math.max(30, Math.round(het)) };
+      }} />
     <Composition id="ToonShort" component={ToonShort} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ slug: "", title: "", frames: [], lines: [] }} calculateMetadata={calcToon} />
     <Composition id="ToonLong" component={ToonShort} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ slug: "", title: "", frames: [], lines: [] }} calculateMetadata={calcToon} />
     <Composition id="LottieTest" component={LottieTest} durationInFrames={120} fps={30} width={1920} height={1080} />

@@ -438,6 +438,8 @@ def main():
     check("lượt đi bộ nhặt kèm map kho + thumbnail", t_lap_ban_ghi_tu_luot_di_bo)
     check("plan KHÔNG render — yêu cầu render-lại giao lane", t_plan_khong_render)
     check("khối __main__ của run_render nằm CUỐI file", t_khoi_main_cuoi_file)
+    check("mascot: dùng rig sẵn, KHÔNG vẽ lại nhân vật", t_mascot_khong_ve_lai_nhan_vat)
+    check("MascotStage động theo từng khung + parallax", t_mascot_stage_dong_tung_khung)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
@@ -2263,6 +2265,33 @@ def t_khoi_main_cuoi_file():
     sau = src[i:]
     assert "\ndef " not in sau, "còn hàm định nghĩa SAU khối __main__ -> NameError chờ nổ"
     assert "channel_mode(" in sau, "khối __main__ mất đường --channel"
+
+
+def t_mascot_khong_ve_lai_nhan_vat():
+    """Engine mascot phải dùng RIG có sẵn — tuyệt đối không gọi FLUX vẽ nhân vật khi dựng video.
+
+    25/8 — đây là toàn bộ lý do concept mascot quay lại được: bản 22/8 vẽ lại nhân vật mỗi cảnh
+    nên nhân vật TRÔI (2 khung liền nhau ra 2 tỉ lệ khác nhau) và tốn 5-8 ảnh/video. Nếu ai đó
+    lỡ tay gọi lại đường vẽ trong `mascot_build`, bệnh cũ tái phát y nguyên."""
+    src = _doc("mascot_build.py")
+    for cam in ("_generate_image_ai", "_cf_flux_image", "fetch_image", "_pexels"):
+        assert cam not in src, f"mascot_build gọi {cam} -> nhân vật sẽ trôi trở lại"
+    assert "da_co_rig" in src and "da_co_san_khau" in src, \
+        "phải CHẶN trước khi dựng nếu rig/sân khấu chưa có, thay vì render ra video thiếu hình"
+    # nhép mồm phải đo từ tiếng thật, không phải ngẫu nhiên
+    assert "_rms_12hz" in src and "ffmpeg" in src, "mồm không đo từ audio thật"
+
+
+def t_mascot_stage_dong_tung_khung():
+    """`MascotStage` phải tính chuyển động THEO KHUNG (useCurrentFrame), không phải ảnh tĩnh đổi nhịp.
+
+    Chốt cả multiplane: mỗi lớp nền phải nhân theo độ sâu `xa` — thiếu phép nhân đó thì các lớp
+    trượt bằng nhau, mất hoàn toàn chiều sâu và lại thành ảnh phẳng zoom như bản cũ."""
+    src = _doc("../engine-remotion/src/MascotStage.tsx")
+    assert "useCurrentFrame" in src, "không đọc khung -> không có chuyển động thật"
+    assert "cam.dx * L.xa" in src, "lớp nền không nhân theo độ sâu -> mất parallax"
+    assert "talk_open" in src and "talk_closed" in src, "mất cặp nhép mồm"
+    assert "spring(" in src, "mất chuyển động đàn hồi (vào cảnh/nảy)"
 
 
 if __name__ == "__main__":
