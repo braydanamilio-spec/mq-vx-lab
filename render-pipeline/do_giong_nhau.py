@@ -18,12 +18,13 @@ CÁCH CHẤM
 Điểm 0..100 = "hai kênh này giống nhau bao nhiêu phần trăm dưới mắt và tai khán giả". Trọng số theo
 thứ tự thứ mà người xem nhận ra TRƯỚC:
 
-    45  cùng định dạng dựng hình  (thứ đập vào mắt trong 1 giây đầu)
-    18  cùng giọng đọc            (nhận ra trong 2 giây đầu, kể cả khi không nhìn)
-    12  cùng mô-típ brand kit
-    10  màu chủ đạo gần nhau
-     8  cùng chữ ký chuyển cảnh
+    42  cùng định dạng dựng hình      (thứ đập vào mắt trong 1 giây đầu)
+    17  cùng giọng đọc                (nhận ra trong 2 giây đầu, kể cả khi không nhìn)
+    11  cùng mô-típ brand kit
+     9  màu chủ đạo gần nhau
+     7  cùng chữ ký chuyển cảnh
      7  cùng phông chữ
+     7  cùng template thumbnail       (thứ khán giả thấy TRƯỚC cả video)
 
 Ngưỡng: **70**. Trên ngưỡng nghĩa là hai kênh đủ giống để một người lướt qua tưởng là cùng một kênh.
 
@@ -41,7 +42,10 @@ import sys
 GOC = os.path.dirname(os.path.abspath(__file__))
 NGUONG = 70.0
 
-TRONG_SO = {"dinh_dang": 45.0, "giong": 18.0, "motif": 12.0, "mau": 10.0, "chuyen": 8.0, "font": 7.0}
+# 26/8 — tách "mau" (màu) và "tmpl" (template thumbnail) thành hai chiều riêng. Thumbnail là thứ
+# khán giả thấy TRƯỚC cả video, nên hai kênh cùng bố cục bìa là giống nhau ở chỗ đắt nhất.
+TRONG_SO = {"dinh_dang": 42.0, "giong": 17.0, "motif": 11.0, "mau": 9.0,
+            "chuyen": 7.0, "font": 7.0, "tmpl": 7.0}
 
 
 def _rgb(h: str) -> tuple:
@@ -88,13 +92,14 @@ def _dac_diem(k: dict, giong: dict | None = None) -> dict:
         "font": b.get("font"),
         "mau": _rgb((b.get("palette") or {}).get("primary")),
         "chuyen": chu_ky_chuyen(k.get("handle") or ""),
+        "tmpl": b.get("mau"),
         "giong": (g.get("voice"), g.get("voice_rate"), g.get("voice_pitch")),
     }
 
 
 def cham(a: dict, b: dict) -> float:
     s = 0.0
-    for k in ("dinh_dang", "motif", "font", "chuyen"):
+    for k in ("dinh_dang", "motif", "font", "chuyen", "tmpl"):
         if a[k] is not None and a[k] == b[k]:
             s += TRONG_SO[k]
     if a["giong"] == b["giong"] and a["giong"][0] is not None:

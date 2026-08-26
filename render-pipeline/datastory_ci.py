@@ -1737,7 +1737,7 @@ def hook_bg(channel, out_video, subject, keys=None, api_key=None):
 def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
               accent="#22D3EE", accent2="#F5B301", bg_rel="", bg_blur=0,
               api_key_for_thumb=None, comp_id="", props_path="", hook_frame=0,
-              bg_provider=None):
+              bg_provider=None, mau="", font=""):
     """Dựng thumbnail chuẩn nhà (DocThumb) — DÙNG CHUNG cho MỌI engine.
 
     Trước đây mỗi nhóm kênh một kiểu thumbnail riêng: 21 kênh doc + 10 kênh gốc dùng DocThumb (số
@@ -1780,7 +1780,12 @@ def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
     try:
         tprops = {"bg": bg_rel, "big": big, "kicker": channel, "accent": accent, "accent2": accent2,
                   "stat": str(stat or "").strip(), "statLabel": str(stat_label or "").strip(),
-                  "hook": str(hook or "").strip(), "bgBlur": bg_blur}
+                  "hook": str(hook or "").strip(), "bgBlur": bg_blur,
+                  # 26/8 — TEMPLATE + PHÔNG riêng của kênh. Thiếu hai khoá này thì `brand.mau`/
+                  # `brand.font` chỉ nằm chơi trong JSON: DocThumb rơi về bố cục `trai` + Poppins,
+                  # và 50 kênh lại chung một khuôn thumbnail. Đúng bẫy `voice_tone` (ghi mà không
+                  # ai đọc) — nên chỗ nào gán thì chỗ đó phải có đường chảy tới lúc render.
+                  "mau": str(mau or "trai"), "font": str(font or "")}
         tf = os.path.join(PUB, f"_dthumb_{slug(channel)}.json")
         json.dump(tprops, open(tf, "w"))
         subprocess.run(["npx", "remotion", "still", "src/index.ts", "DocThumb", thumb,

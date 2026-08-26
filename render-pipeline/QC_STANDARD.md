@@ -154,7 +154,21 @@ chủ đề đã sát ranh giới quảng cáo. Cách an toàn đang dùng: **lu
   khung render thật: khung không có nhịp **giống hệt từng byte** so với trước khi sửa ⇒ không đụng
   gì ngoài đúng lúc chuyển cảnh.
   **Còn lại**: 6 dạng gen-2 kia vẫn dùng âm rời rạc cũ — chuyển dần, mỗi lần một dạng + canary.
-- **thumbnail đa dạng template** — hiện 1 khuôn (`doc_thumb`). **Chưa có** nhiều template. → còn lại.
+- ~~**thumbnail đa dạng template**~~ → **ĐÃ LÀM (26/8)**: `DocThumb` có **5 bố cục** — `trai`
+  (bản cũ, mặc định) · `phai` · `duoi` · `giua` · `khoi`. Khác nhau ở BỐ CỤC thật (chỗ đứng khối
+  chữ, hướng ảnh, hướng đổ bóng, hình khối trang trí), không phải chỉ đổi màu.
+  `trai` đã đối chiếu **giống hệt từng byte** bản cũ ⇒ không kênh nào đang chạy bị đổi.
+
+  Hai lỗi bắt được khi làm, đều trước khi seed:
+  1. **Gen-2 KHÔNG làm thumbnail.** Cả `chay_chung`/`chay_race`/`chay_phim` render xong là
+     `return` — 50 kênh mới sẽ đăng không có ảnh bìa. Đã thêm `lam_thumb()` cho cả ba đường.
+  2. **`fitSize` dùng một hằng bề rộng cho 24 phông.** `CHAR_W = 0.62` vốn hiệu chỉnh riêng cho
+     Poppins. Đo thật bằng composition `DoChu`: Bebas **0,355** ↔ Archivo **0,717** — chênh hơn
+     HAI LẦN; ngay Poppins cũng là 0,646. Phông hẹp ⇒ chữ tự thu nhỏ phí nửa khung; phông rộng ⇒
+     tràn khung. Nay có bảng `RONG_KY_TU` đo thật 24 phông + bề rộng ô chữ tính theo template.
+     Đo pixel 5 template: lề nhỏ nhất **63px**, không cái nào chạm mép.
+
+  Chốt: `t_gen2_phai_lam_thumbnail` · `t_fitsize_phai_theo_phong_va_khung` (đã thử phá).
 - ~~**không lặp một mô-típ giữa các kênh**~~ → **ĐÃ CÓ CHỐT (26/8)**: `do_giong_nhau.py` chấm 0..100
   cho MỌI cặp trong 1.225 cặp, ngưỡng 70 = "đủ giống để người lướt qua tưởng cùng một kênh".
   Trọng số theo thứ khán giả nhận ra trước: định dạng 45 · giọng 18 · mô-típ 12 · màu 10 ·

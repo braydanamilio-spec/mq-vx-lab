@@ -1343,6 +1343,8 @@ def chay(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] |
                       cwd=DS.ENG, timeout=2400, label=f"RankedShort({kenh['ten']})")
     ok, info = DS.qc(ra)
     print(f"{'✅' if ok else '❌'} {kenh['ten']} · {info}")
+    if ok:
+        lam_thumb(kenh, st, ra)
     return (ra, info) if ok else None
 
 
@@ -1386,6 +1388,8 @@ def chay_race(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, di
                       cwd=DS.ENG, timeout=2400, label=f"RaceShort({kenh['ten']})")
     ok, info = DS.qc(ra)
     print(f"{'✅' if ok else '❌'} {kenh['ten']} · {info}")
+    if ok:
+        lam_thumb(kenh, st, ra)
     return (ra, info) if ok else None
 
 
@@ -1446,6 +1450,8 @@ def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None,
                       cwd=DS.ENG, timeout=2400, label=f"CinematicShort({kenh['ten']})")
     ok, info = DS.qc(ra)
     print(f"{'✅' if ok else '❌'} {kenh['ten']} [phim kể] · {info}")
+    if ok:
+        lam_thumb(kenh, st, ra, "CinematicShort", pf)
     return (ra, info) if ok else None
 
 
@@ -1488,7 +1494,37 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, d
                       cwd=DS.ENG, timeout=2400, label=f"{comp}({kenh['ten']})")
     ok, info = DS.qc(ra)
     print(f"{'✅' if ok else '❌'} {kenh['ten']} [{dang}] · {info}")
+    if ok:
+        lam_thumb(kenh, st, ra, comp, pf)
     return (ra, info) if ok else None
+
+
+def lam_thumb(kenh: dict, st: dict, ra: str, comp: str = "", pf: str = "") -> str:
+    """Ảnh bìa cho video thế hệ 2.
+
+    26/8 — TRƯỚC KHI CÓ HÀM NÀY, NHÁNH THẾ HỆ 2 KHÔNG LÀM THUMBNAIL. `chay_chung` render xong là
+    `return` thẳng, còn `run_render` cũng `return` ngay sau khi gọi nó — nên cả 50 kênh mới sẽ
+    xuất bản mà không có ảnh bìa nào. Bắt được lúc rà đường đi của `mau`/`font`, trước khi seed.
+
+    Số liệu lấy từ CHÍNH story vừa dựng (mục #1), không nhờ AI nghĩ thêm: thumbnail phải nói đúng
+    thứ video nói, nếu không là câu view sai sự thật."""
+    b = kenh.get("brand") or {}
+    pal = b.get("palette") or {}
+    items = st.get("items") or []
+    dau = items[0] if items else {}
+    try:
+        return DS.doc_thumb(
+            kenh.get("ten") or "", ra,
+            big=st.get("title") or kenh.get("ten") or "",
+            stat=str(dau.get("stat") or st.get("thumb_stat") or "").strip(),
+            stat_label=str(dau.get("name") or st.get("thumb_label") or "").strip(),
+            hook=str(st.get("thumb_hook") or st.get("hook") or "").strip(),
+            accent=pal.get("primary", "#22D3EE"), accent2=pal.get("accent", "#F5B301"),
+            comp_id=comp, props_path=pf,
+            mau=b.get("mau", "trai"), font=b.get("font", "")) or ""
+    except Exception as e:
+        print(f"   ⚠️ thumbnail {kenh.get('ten')} lỗi: {str(e)[:70]}")
+        return ""
 
 
 def main() -> int:

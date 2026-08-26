@@ -5,6 +5,8 @@ import { AbsoluteFill, Img, staticFile } from "remotion";
 // TRƯỚC ĐÂY: cắt đại 1 khung hình từ video -> mờ nhạt, không chữ, CTR thấp.
 // GIỜ: ảnh thật của video + GRADE MÀU THEO BRAND (duotone) + nêm chéo + chữ hook viền dày phát sáng
 // -> nhìn ra ngay là ảnh THIẾT KẾ, không phải ảnh chụp màn hình. Đọc rõ ở cỡ nhỏ trên feed.
+import { phong, rongKyTu } from "./Phong";
+
 export type DocThumbProps = {
   bg?: string;        // ảnh GỐC SẠCH của chính video (public/<slug>/clips/sN.jpg) — mỗi video một ảnh khác
   big: string;        // tiêu đề (dùng khi KHÔNG có số liệu)
@@ -13,6 +15,8 @@ export type DocThumbProps = {
   statLabel?: string; // số đó là gì: "OF US TAP WATER"
   hook?: string;      // CÂU HỎI MỞ gây tò mò, KHÔNG trả lời: "IS YOURS ON THE LIST?"
   accent?: string;
+  mau?: string;       // TEMPLATE bố cục: trai (mặc định) · phai · duoi · giua · khoi
+  font?: string;      // phông riêng của kênh (xem Phong.tsx)
   accent2?: string;
   bgBlur?: number;    // làm mờ nền (px). Dùng khi nền lấy từ KHUNG VIDEO — xem ghi chú ở phần render.
 };
@@ -22,10 +26,9 @@ export type DocThumbProps = {
 // ~0.58em/ký tự. Trước đây để 0.5 -> fitSize tưởng chữ hẹp hơn thực ~16% -> tiêu đề/nhãn/hook đều
 // tính ra cỡ chữ QUÁ TO -> tràn quá lề phải và lòi ra ngoài nền pill (thấy rõ khi test chữ dài).
 // Để 0.62 (dư an toàn trên mức đo 0.58) vì còn letterSpacing cộng thêm.
-const CHAR_W = 0.62;
-const fitSize = (lines: string[], maxW: number, base: number) => {
+const fitSize = (lines: string[], maxW: number, base: number, cw = 0.62 * 1.06) => {
   const longest = lines.reduce((a, l) => Math.max(a, l.length), 1);
-  const est = longest * base * CHAR_W;
+  const est = longest * base * cw;
   return est > maxW ? Math.floor((base * maxW) / est) : base;
 };
 
@@ -54,8 +57,27 @@ const wrapAll = (words: string[], maxLines: number, startPer = 13): string[] => 
 
 export const DocThumb: React.FC<DocThumbProps> = ({
   bg, big, kicker = "", stat = "", statLabel = "", hook = "",
-  accent = "#22D3EE", accent2 = "#F5B301", bgBlur = 0,
+  accent = "#22D3EE", accent2 = "#F5B301", bgBlur = 0, mau = "trai", font = "",
 }) => {
+  // ── 5 TEMPLATE BỐ CỤC (26/8/2026) ──────────────────────────────────────────────────────────
+  // Trước: MỘT khuôn duy nhất cho mọi kênh. Thumbnail là thứ quyết định người ta có bấm hay không,
+  // mà 50 kênh cùng chủ dùng chung một bố cục thì nhìn lướt qua là biết cùng một lò — vừa nhàm,
+  // vừa đúng dấu hiệu "sản xuất hàng loạt".
+  // `trai` GIỮ NGUYÊN 100% bản cũ (mặc định) — đã đối chiếu từng byte, không kênh nào đang chạy
+  // bị đổi. Bốn cái còn lại đổi thật sự BỐ CỤC (chỗ đứng của chữ, hướng ảnh, hình khối trang trí),
+  // không phải chỉ đổi màu — đổi màu thì vẫn là một khuôn.
+  const M = String(mau || "trai").toLowerCase();
+  const CW = rongKyTu(font);
+  const L = {
+    trai:  { chu: { left: 62, right: 300, bottom: 58 }, anhX: "6%",   scrim: 112, nem: true,  giua: false },
+    phai:  { chu: { left: 300, right: 62, bottom: 58 }, anhX: "-6%",  scrim: 248, nem: true,  giua: false },
+    duoi:  { chu: { left: 62, right: 62, bottom: 52 },  anhX: "0%",   scrim: 180, nem: false, giua: false },
+    giua:  { chu: { left: 80, right: 80, bottom: 96 },  anhX: "0%",   scrim: 180, nem: false, giua: true },
+    khoi:  { chu: { left: 62, right: 340, bottom: 62 }, anhX: "8%",   scrim: 96,  nem: false, giua: false },
+  }[M] || { chu: { left: 62, right: 300, bottom: 58 }, anhX: "6%", scrim: 112, nem: true, giua: false };
+  // BỀ RỘNG THẬT CỦA Ô CHỮ theo template. Trước đây `fitSize` nhận số 880/850 viết cứng — đúng cho
+  // đúng một bố cục. Template `duoi` rộng 1156px, `khoi` hẹp hơn: dùng số cũ là tính sai cả hai.
+  const RONG = 1280 - L.chu.left - L.chu.right;
   // CÔNG THỨC CTR: SỐ LIỆU GÂY SỐC + CÂU HỎI MỞ (không trả lời) > tiêu đề dài.
   // Có stat -> bố cục "số to + nhãn + câu hỏi". Không có stat -> lùi về bố cục tiêu đề (bên dưới).
   const useStat = !!String(stat).trim();
@@ -66,14 +88,14 @@ export const DocThumb: React.FC<DocThumbProps> = ({
   const words = bigSafe.toUpperCase().trim().split(/\s+/).filter(Boolean);
   const lines = words.length ? wrapAll(words, 4, 13) : [];
   // Vùng chữ thật = 1280 - left(62) - right(300) = 918px. Trước đây fit theo 1080 -> chữ TRÀN sát mép phải.
-  const fs = fitSize(lines, 900, 138);
+  const fs = fitSize(lines, RONG + 20, 138, CW);
   // HOOK: trước đây cỡ chữ CỐ ĐỊNH 44 + nowrap -> câu hỏi dài TRÀN HẲN RA NGOÀI KHUNG, bị cắt cụt
   // ("...WANTS TO TA"). Giờ auto-fit; ngắn thì 1 dòng chữ to, quá dài thì xuống dòng thay vì tràn.
-  const hookFit = fitSize([String(hook)], 820, 44);
+  const hookFit = fitSize([String(hook)], RONG - 60, 44, CW);
   const hookWrap = hookFit < 32;
 
   return (
-    <AbsoluteFill style={{ background: "#07080f", fontFamily: "'Poppins',Arial", overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: "#07080f", fontFamily: phong(font), overflow: "hidden" }}>
       {/* 1. ẢNH THẬT của video — hơi phóng to + lệch phải để chừa chỗ chữ bên trái */}
       {bg ? (
         // bgBlur > 0: nền lấy từ KHUNG VIDEO. Khung video của kênh dữ liệu vốn ĐÃ ĐẦY CHỮ (nhãn biểu
@@ -82,7 +104,7 @@ export const DocThumb: React.FC<DocThumbProps> = ({
         // footage THẬT của chính video vẫn giữ -> vừa khớp nội dung, vừa không chồng chữ.
         <Img src={staticFile(bg)} style={{
           width: "100%", height: "100%", objectFit: "cover",
-          transform: `scale(${bgBlur ? 1.22 : 1.12}) translateX(6%)`,
+          transform: `scale(${bgBlur ? 1.22 : 1.12}) translateX(${L.anhX})`,
           filter: `contrast(1.15) saturate(1.25) brightness(${bgBlur ? 0.82 : 0.92})`
                   + (bgBlur ? ` blur(${bgBlur}px)` : ""),
         }} />
@@ -105,15 +127,34 @@ export const DocThumb: React.FC<DocThumbProps> = ({
       {/* duotone NHẸ tay (0.26): đủ để mỗi kênh 1 sắc riêng, KHÔNG nuốt mất chi tiết/màu ảnh gốc */}
       <AbsoluteFill style={{ background: accent, mixBlendMode: "color", opacity: 0.26 }} />
       {/* tối bên TRÁI vừa đủ đọc chữ, nhả nhanh sang phải để ảnh còn "thở" (trước F2/D9 quá nặng, che hết ảnh) */}
-      <AbsoluteFill style={{ background: `linear-gradient(112deg, #05060cE8 0%, #05060cA8 30%, transparent 56%)` }} />
+      <AbsoluteFill style={{ background: `linear-gradient(${L.scrim}deg, #05060cE8 0%, #05060cA8 30%, transparent 56%)` }} />
       <AbsoluteFill style={{ background: `radial-gradient(46% 62% at 22% 62%, ${accent2}2E, transparent 70%)` }} />
 
-      {/* 3. NÊM CHÉO phát sáng — mảng hình học tạo chiều sâu, cắt qua khung */}
-      <div style={{
+      {/* 3. HÌNH KHỐI TRANG TRÍ — mỗi template một kiểu, đây là chỗ tạo khác biệt rõ nhất */}
+      {M === "khoi" ? (
+        <div style={{
+          position: "absolute", left: 0, bottom: 0, width: 900, height: 300,
+          background: `linear-gradient(100deg, #05060cF2 62%, transparent)`,
+          borderTop: `8px solid ${accent}`,
+        }} />
+      ) : M === "duoi" ? (
+        <div style={{
+          position: "absolute", left: 0, right: 0, bottom: 0, height: 336,
+          background: "linear-gradient(180deg, transparent, #05060cF0 42%)",
+          borderTop: `6px solid ${accent}`,
+        }} />
+      ) : M === "giua" ? (
+        <div style={{
+          position: "absolute", left: "50%", top: "50%", width: 980, height: 980,
+          transform: "translate(-50%,-50%)", borderRadius: "50%",
+          border: `10px solid ${accent}55`, boxShadow: `0 0 90px ${accent}44 inset`,
+        }} />
+      ) : null}
+      {L.nem ? <div style={{
         position: "absolute", left: -90, bottom: -140, width: 640, height: 640,
         background: `linear-gradient(140deg, ${accent}, ${accent2})`, opacity: 0.20,
         transform: "rotate(24deg)", borderRadius: 40, filter: "blur(2px)",
-      }} />
+      }} /> : null}
       {/* viền sáng mảnh chạy chéo -> nét "cinematic", tách nền khỏi chữ */}
       <div style={{
         position: "absolute", left: -40, bottom: 236, width: 1500, height: 4,
@@ -126,7 +167,8 @@ export const DocThumb: React.FC<DocThumbProps> = ({
 
       {/* 5. KICKER: tên kênh, có chấm sáng nhịp */}
       {kicker ? (
-        <div style={{ position: "absolute", top: 50, left: 62, display: "flex", alignItems: "center", gap: 15 }}>
+        <div style={{ position: "absolute", top: 50, left: L.giua ? 0 : 62, right: L.giua ? 0 : undefined,
+                      display: "flex", alignItems: "center", justifyContent: L.giua ? "center" : "flex-start", gap: 15 }}>
           <div style={{ width: 15, height: 48, background: accent, borderRadius: 4, boxShadow: `0 0 26px ${accent}` }} />
           <div style={{
             fontSize: 37, fontWeight: 900, letterSpacing: 4, color: "#EAF6FF",
@@ -137,10 +179,10 @@ export const DocThumb: React.FC<DocThumbProps> = ({
 
       {/* 6. NỘI DUNG — viền đen dày + glow accent -> nổi bật trên MỌI nền, kể cả ảnh sáng */}
       {useStat ? (
-        <div style={{ position: "absolute", left: 62, right: 300, bottom: 58 }}>
+        <div style={{ position: "absolute", ...L.chu, textAlign: L.giua ? "center" : "left" }}>
           {/* SỐ LIỆU: to nhất khung, auto-fit theo độ dài để không bao giờ tràn */}
           <div style={{
-            fontSize: fitSize([String(stat)], 880, 300), fontWeight: 900, lineHeight: 0.92,
+            fontSize: fitSize([String(stat)], RONG, 300, CW), fontWeight: 900, lineHeight: 0.92,
             color: accent2, whiteSpace: "nowrap",
             WebkitTextStroke: "11px #05060c", paintOrder: "stroke fill",
             textShadow: `0 0 60px ${accent2}CC, 0 10px 34px rgba(0,0,0,0.95)`,
@@ -149,7 +191,7 @@ export const DocThumb: React.FC<DocThumbProps> = ({
             <div style={{
               // auto-fit như hook: nhãn dài ("IN UNPAID MEDICAL BILLS EVERY SINGLE YEAR") từng sát mép
               // 850 (không phải 918) vì letterSpacing 2px/ký tự còn cộng thêm bề rộng
-              marginTop: 6, fontSize: fitSize([String(statLabel)], 850, 46), fontWeight: 800,
+              marginTop: 6, fontSize: fitSize([String(statLabel)], RONG - 30, 46, CW), fontWeight: 800,
               letterSpacing: 2, color: "#EAF6FF",
               whiteSpace: "nowrap", WebkitTextStroke: "6px #05060c", paintOrder: "stroke fill",
               textShadow: "0 6px 22px rgba(0,0,0,0.95)",
@@ -174,7 +216,7 @@ export const DocThumb: React.FC<DocThumbProps> = ({
           ) : null}
         </div>
       ) : (
-        <div style={{ position: "absolute", left: 62, right: 300, bottom: 64 }}>
+        <div style={{ position: "absolute", ...L.chu, textAlign: L.giua ? "center" : "left" }}>
           {lines.map((ln, i) => {
             const last = i === lines.length - 1;
             return (

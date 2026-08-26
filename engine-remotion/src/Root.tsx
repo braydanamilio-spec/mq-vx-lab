@@ -36,6 +36,7 @@ import { BrandLegacy } from "./BrandLegacy";
 import { Cinematic, calcCinematic } from "./Cinematic";
 import { ToonShort, calcToon } from "./ToonShort";
 import { DocThumb } from "./DocThumb";
+import { DoChu } from "./DoChu";
 import { BarChartRace, calcRace } from "./BarChartRace";
 import { BrandV2 } from "./BrandV2";
 import { WorldMapRace } from "./WorldMapRace";
@@ -197,6 +198,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="BrandLegacyBanner" component={BrandLegacy} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
     <Composition id="BrandLegacyWatermark" component={BrandLegacy} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
     <Composition id="Cinematic" component={Cinematic} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
+    <Composition id="DoChu" component={DoChu} durationInFrames={1} fps={30} width={2400} height={300} defaultProps={{ text: "ABCDEFGHIJ", font: "poppins" }} />
     <Composition id="DocThumb" component={DocThumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ big: "TITLE" }} />
     <Composition id="CinematicShort" component={Cinematic} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
     <Composition id="ToonShort" component={ToonShort} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ slug: "", title: "", frames: [], lines: [] }} calculateMetadata={calcToon} />

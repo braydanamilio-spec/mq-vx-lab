@@ -1233,6 +1233,63 @@ def t_phong_khai_roi_phai_thao_ra():
     assert not xau, "; ".join(xau)
 
 
+
+def t_gen2_phai_lam_thumbnail():
+    """Cả ba đường render của thế hệ 2 phải làm ảnh bìa.
+
+    26/8 — bắt được TRƯỚC KHI SEED: nhánh `the_he == 2` trong `run_render` gọi `chay_chung` rồi
+    `return` ngay, mà `chay_chung`/`chay_race`/`chay_phim` đều kết thúc bằng `return (ra, info)`
+    — **không đường nào làm thumbnail**. 50 kênh mới sẽ xuất bản không có ảnh bìa, trong khi
+    thumbnail là thứ quyết định người ta có bấm hay không.
+
+    Lộ ra khi truy đường đi của `brand.mau`/`brand.font`: gán trong JSON mà không có ai đọc thì
+    y hệt bẫy `voice_tone`. Luật rút ra: gán một thuộc tính ở đâu thì phải đi hết đường của nó
+    tới lúc render, không dừng ở chỗ ghi."""
+    import ast as _ast
+    src = _doc("the_he_2.py")
+    cay = _ast.parse(src)
+    thieu = []
+    for ten in ("chay_chung", "chay_race", "chay_phim"):
+        fn = next((n for n in _ast.walk(cay) if isinstance(n, _ast.FunctionDef) and n.name == ten), None)
+        if not fn:
+            thieu.append(f"{ten}: mất hàm"); continue
+        if "lam_thumb" not in _ast.dump(fn):
+            thieu.append(f"{ten}: render xong mà không làm thumbnail")
+    assert not thieu, "; ".join(thieu)
+    # và thumbnail phải nhận template + phông riêng của kênh, nếu không 50 kênh chung một bìa
+    ds = _doc("datastory_ci.py")
+    assert '"mau": str(mau or "trai")' in ds and '"font": str(font or "")' in ds, \
+        "doc_thumb không truyền mau/font xuống DocThumb — template riêng của kênh vô tác dụng"
+
+
+def t_fitsize_phai_theo_phong_va_khung():
+    """`fitSize` không được dùng một hằng bề rộng cho 24 phông.
+
+    26/8 — `CHAR_W = 0.62` hiệu chỉnh riêng cho Poppins (chú thích cũ nói rõ). Đo thật bằng
+    composition `DoChu`: Bebas **0,355** ↔ Archivo **0,717** — chênh hơn HAI LẦN. Phông hẹp bị
+    tính rộng hơn thực nên chữ tự thu nhỏ, phí nửa khung; phông rộng bị tính hẹp hơn thực nên
+    CHỮ TRÀN KHUNG. Ngay Poppins cũng đo ra 0,646 chứ không phải 0,62 — luôn hụt 4%.
+
+    Kèm theo: bề rộng ô chữ phải tính từ template (`RONG`), không viết cứng 880/850/900/820 —
+    những số đó đúng cho đúng một bố cục."""
+    import re as _re
+    dt = _doc("../engine-remotion/src/DocThumb.tsx")
+    assert "const CHAR_W" not in dt, "vẫn còn hằng CHAR_W dùng chung cho mọi phông"
+    assert "rongKyTu(font)" in dt, "DocThumb không lấy bề rộng ký tự theo phông"
+    # SOI THEO DÒNG, không khớp chuỗi cân ngoặc: `fitSize([String(stat)], ...)` có ngoặc lồng nên
+    # mọi regex không cân ngoặc đều cắt nhầm giữa chừng rồi báo oan (đã dính đúng lỗi này 26/8).
+    xau = [l.strip()[:70] for l in dt.splitlines()
+           if "fitSize(" in l and "const fitSize" not in l and "RONG" not in l
+           and not l.strip().startswith("//")]      # bỏ chú thích: nhắc tên hàm không phải là gọi nó
+    assert not xau, f"fitSize còn dùng bề rộng viết cứng: {xau}"
+    ph = _doc("../engine-remotion/src/Phong.tsx")
+    import json as _json
+    ten_phong = set(_re.findall(r"^\s{2}(\w+):\s*_n\(", ph, _re.M))
+    do_duoc = set(_re.findall(r"^\s{2}(\w+):\s*[0-9.]+,", ph, _re.M))
+    thieu = ten_phong - do_duoc
+    assert not thieu, f"phông chưa ĐO bề rộng (sẽ đoán sai -> tràn hoặc phí chỗ): {sorted(thieu)}"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1347,6 +1404,8 @@ def main():
     check("50 kênh không được giống nhau (≥70 điểm)", t_50_kenh_khong_duoc_giong_nhau)
     check("băm Python khớp băm TypeScript", t_bam_python_khop_typescript)
     check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)
+    check("gen-2: cả 3 đường phải làm thumbnail", t_gen2_phai_lam_thumbnail)
+    check("fitSize theo phông + theo template", t_fitsize_phai_theo_phong_va_khung)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
