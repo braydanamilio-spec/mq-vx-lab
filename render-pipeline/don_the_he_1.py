@@ -296,6 +296,28 @@ def main() -> int:
         except Exception as e:
             print(f"  ⚠️ không dọn được D1: {str(e)[:80]} — Kho tổng video sẽ còn video cũ khi lọc ngày")
 
+        # KHO THỨ BA. Anh gửi ảnh: "Tất cả kênh (0)" — kho video đã sạch — mà ô xổ VẪN liệt kê 49
+        # kênh cũ kèm số đếm riêng (THENNOWUSA 15, UNDERUSA 36…). Vì `rsGalInto` dựng danh sách kênh
+        # bằng cách GỘP BA nguồn:
+        #     all.map(j => j.channel)      -> render_jobs (đã dọn)
+        #     rsD1Chans(dv)                -> D1 render_job (đã dọn)
+        #     window.__chStats             -> render_stats/{owner}  <- CÒN NGUYÊN
+        # `render_stats/{owner}` là MỘT doc, khoá là tên kênh, mỗi khoá giữ {l, s}. Gộp ba nguồn thì
+        # chỉ cần một nguồn còn sót là kênh cũ vẫn hiện — và đây là lần thứ hai trong ngày em báo
+        # "đã dọn xong" khi chưa xong, vì đếm thiếu nơi lưu.
+        try:
+            ref = db.collection("render_stats").document(owner)
+            d = (ref.get().to_dict() or {}) if that or True else {}
+            bo = [k for k, v in d.items()
+                  if isinstance(v, dict) and ("l" in v or "s" in v) and k.upper() in ten_cu]
+            print(f"  🔎 render_stats: {len(bo)} khoá kênh cũ / {len(d)} khoá")
+            if that and bo:
+                from google.cloud import firestore as _fs
+                ref.update({k: _fs.DELETE_FIELD for k in bo})
+            print(f"  🧹 render_stats: {'đã xoá' if that else '(sẽ xoá)'} {len(bo)} khoá kênh cũ")
+        except Exception as e:
+            print(f"  ⚠️ không dọn được render_stats: {str(e)[:80]} — ô xổ sẽ còn tên kênh cũ")
+
     if lam_bg:
         n = 0
         for c in cu:
