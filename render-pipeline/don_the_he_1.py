@@ -281,17 +281,30 @@ def main() -> int:
         xoa, giu, theo_kenh = 0, 0, {}
         lo = []
         for _ten, _c in _ds:
+            # 26/8 — BỌC LỖI THEO TỪNG PROJECT. Bản đầu chỉ bọc lúc MỞ client, không bọc lúc QUÉT.
+            # Chạy thật: project A trả `RESOURCE_EXHAUSTED` (cạn hạn mức đọc ngày) ngay giữa vòng
+            # lặp ⇒ ném lên trên ⇒ giết cả lượt dọn, kéo theo bước `render_stats` phía sau không
+            # bao giờ chạy. Một project cạn quota KHÔNG được phép làm hỏng việc dọn ở project khác —
+            # đó đúng là lý do hệ chia ba project ngay từ đầu.
             _x = _g = 0
-            for d in _c.collection("render_jobs").where("owner", "==", owner).stream():
-                j = d.to_dict() or {}
-                ch = str(j.get("channel") or "").upper()
-                if ch in ten_cu:
-                    _x += 1
-                    theo_kenh[ch] = theo_kenh.get(ch, 0) + 1
-                    lo.append(d.reference)
-                else:
-                    _g += 1
-            print(f"      project {_ten}: khớp {_x} · giữ {_g}")
+            try:
+                for d in _c.collection("render_jobs").where("owner", "==", owner).stream():
+                    j = d.to_dict() or {}
+                    ch = str(j.get("channel") or "").upper()
+                    if ch in ten_cu:
+                        _x += 1
+                        theo_kenh[ch] = theo_kenh.get(ch, 0) + 1
+                        lo.append(d.reference)
+                    else:
+                        _g += 1
+                print(f"      project {_ten}: khớp {_x} · giữ {_g}")
+            except Exception as _e:
+                _msg = str(_e)[:90]
+                _can = "RESOURCE_EXHAUSTED" in str(_e) or "Quota exceeded" in str(_e)
+                print(f"      project {_ten}: {'CẠN HẠN MỨC' if _can else 'lỗi'} — bỏ qua project này "
+                      f"({_msg})")
+                print(f"         ⚠️ job kênh cũ ở {_ten} CHƯA được dọn. Chạy lại sau khi hạn mức hồi "
+                      f"(00:00 giờ Thái Bình Dương = 07:00Z).")
             xoa += _x; giu += _g
         print(f"  📊 TỔNG khớp {xoa} job của kênh cũ · giữ nguyên {giu} job (kênh mới/khác)")
         for k, n in sorted(theo_kenh.items(), key=lambda x: -x[1])[:8]:
