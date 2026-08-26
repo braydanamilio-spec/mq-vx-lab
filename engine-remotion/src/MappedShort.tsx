@@ -28,7 +28,7 @@ export const calcMapped = ({ props }: any) => {
   const p = props || {};
   const topN = Math.min(p.topN || 3, (p.data || []).length);
   const isec = p.introSec ?? 1.8, bloom = p.bloomSec ?? 2.4, pop = p.popSec ?? 1.6, tail = p.outroSec ?? 1.6;
-  return { durationInFrames: Math.round((isec + bloom + topN * pop + tail) * FPS), fps: FPS, width: 1080, height: 1920 };
+  return { durationInFrames: Math.round((isec + bloom + topN * pop + tail) * FPS), fps: FPS };
 };
 
 // màu nhiệt: lạnh (#16223e) -> nóng (accent) theo giá trị chuẩn hoá (gamma nhấn tương phản)

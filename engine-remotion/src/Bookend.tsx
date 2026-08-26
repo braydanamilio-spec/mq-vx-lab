@@ -41,7 +41,13 @@ export const Bookend: React.FC<{
   // mất chính nội dung vừa kể, và là thứ ai cũng làm — không giúp kênh khác biệt. Khung kết nay
   // giữ nguyên nội dung cuối cùng của video. Kênh nào muốn thì truyền `cta` tường minh.
   const f = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width: _W, height: _H } = useVideoConfig();
+  // 26/8 — thẻ mở đầu/kết thúc đo theo khung DỌC cao 1920. Trên long 16:9 (cao 1080) thì số dẫn
+  // 210px + nhãn 40 + dòng hook 34 + tiêu đề chồng lên nhau cao hơn cả khung ⇒ tràn, đúng thứ anh
+  // dặn "tránh tràn che khuất chữ". Khổ ngang co chữ lại và nới lề ngang (thừa bề ngang, thiếu
+  // bề cao — ngược hẳn khổ dọc).
+  const _ngang = _W > _H;
+  const co = (n: number) => (_ngang ? Math.round(n * 0.66) : n);
   const c2 = color || accent;
   const iF = Math.round((introSec || 0) * fps);
   const oF = Math.round((outroSec || 0) * fps);
@@ -54,7 +60,7 @@ export const Bookend: React.FC<{
     const quet = interpolate(f, [0, iF], [-40, 140], { extrapolateRight: "clamp" });
     return (
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
-                    justifyContent: "center", padding: "0 70px", zIndex: 40, opacity: ra,
+                    justifyContent: "center", padding: _ngang ? "0 150px" : "0 70px", zIndex: 40, opacity: ra,
                     background: `radial-gradient(95% 65% at 50% 45%, ${accent}1f 0%, rgba(0,0,0,${MAN_CHE * 0.62}) 55%, rgba(0,0,0,${MAN_CHE}) 100%)` }}>
         <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, bottom: 0, left: `${quet}%`, width: "26%",
@@ -68,14 +74,14 @@ export const Bookend: React.FC<{
           // Tiêu đề lùi xuống nhỏ, handle bỏ hẳn khỏi mở đầu — nó đã nằm sẵn ở đáy mọi khung.
           <div style={{ textAlign: "center", width: "100%" }}>
             <div style={{
-              fontSize: Math.max(96, Math.min(210, Math.round(1180 / Math.max(3, hookStat.length)))),
+              fontSize: co(Math.max(96, Math.min(210, Math.round(1180 / Math.max(3, hookStat.length))))),
               lineHeight: 0.94, fontWeight: 900, color: c2, whiteSpace: "nowrap",
               letterSpacing: -2, transform: `scale(${0.55 + 0.45 * p})`,
               textShadow: `0 0 60px ${accent}88, 0 10px 40px rgba(0,0,0,.95)`,
             }}>{hookStat}</div>
             {hookLabel ? (
               <div style={{
-                marginTop: 14, fontSize: 40, fontWeight: 800, letterSpacing: 2, color: "#EAF6FF",
+                marginTop: 14, fontSize: co(40), fontWeight: 800, letterSpacing: 2, color: "#EAF6FF",
                 opacity: interpolate(f, [Math.round(fps * 0.35), Math.round(fps * 0.7)], [0, 1],
                                      { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
                 textShadow: "0 4px 20px rgba(0,0,0,.95)",
@@ -83,16 +89,16 @@ export const Bookend: React.FC<{
             ) : null}
             {hookLine ? (
               <div style={{
-                marginTop: 34, display: "inline-block", padding: "12px 30px", borderRadius: 14,
+                marginTop: co(34), display: "inline-block", padding: "12px 30px", borderRadius: 14,
                 background: `linear-gradient(90deg, ${accent}, ${c2})`, color: "#080a12",
-                fontWeight: 900, fontSize: 38, letterSpacing: 0.5,
+                fontWeight: 900, fontSize: co(38), letterSpacing: 0.5,
                 opacity: interpolate(f, [Math.round(fps * 0.85), Math.round(fps * 1.25)], [0, 1],
                                      { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
                 transform: `translateY(${interpolate(f, [Math.round(fps * 0.85), Math.round(fps * 1.25)], [18, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })}px)`,
               }}>{hookLine.toUpperCase()}</div>
             ) : null}
             <div style={{
-              marginTop: 30, fontSize: 34, fontWeight: 700, color: "#ffffffb0", padding: "0 40px",
+              marginTop: co(30), fontSize: co(34), fontWeight: 700, color: "#ffffffb0", padding: "0 40px",
               opacity: interpolate(f, [Math.round(fps * 1.3), Math.round(fps * 1.7)], [0, 1],
                                    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
             }}>{title}</div>
@@ -100,11 +106,11 @@ export const Bookend: React.FC<{
         ) : (
         <div style={{ textAlign: "center", transform: `scale(${0.86 + 0.14 * p})` }}>
           <div style={{ display: "inline-block", background: c2, color: "#080a12", fontWeight: 900,
-                        fontSize: 30, letterSpacing: 3, padding: "9px 26px", borderRadius: 999,
-                        marginBottom: 34 }}>
+                        fontSize: co(30), letterSpacing: 3, padding: "9px 26px", borderRadius: 999,
+                        marginBottom: co(34) }}>
             {handle || "MM0"}
           </div>
-          <div style={{ fontSize: 88, lineHeight: 1.06, fontWeight: 900, color: "#FFFFFF",
+          <div style={{ fontSize: co(88), lineHeight: 1.06, fontWeight: 900, color: "#FFFFFF",
                         textShadow: `0 6px 40px rgba(0,0,0,.95), 0 0 46px ${accent}55`,
                         letterSpacing: -1.5 }}>
             {title}

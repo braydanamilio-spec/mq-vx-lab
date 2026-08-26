@@ -26,7 +26,7 @@ export const calcLongshot = ({ props }: any) => {
   const its: LongshotItem[] = props.items || [];
   const isec = props.introSec ?? 1.8, isc = props.itemSec ?? 2.7, tail = props.outroSec ?? 2.4;
   const total = its.reduce((a, it) => a + idur(it, isc), 0);
-  return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS, width: 1080, height: 1920 };
+  return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS };
 };
 
 // ---- ladder geometry (log scale: 1 log10 unit == RUNG_GAP px, so rarity gaps grow "further apart" up the tower) ----

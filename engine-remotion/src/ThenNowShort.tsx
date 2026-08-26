@@ -34,7 +34,7 @@ export const calcThenNow = ({ props }: any) => {
   const ps: TNPair[] = props.pairs || [];
   const isec = props.introSec ?? 1.6, psc = props.pairSec ?? 4.5, tail = props.outroSec ?? 1.6;
   const total = ps.reduce((a, p) => a + pdur(p, psc), 0);
-  return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS, width: 1080, height: 1920 };
+  return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS };
 };
 
 // 1 cặp: XƯA trượt từ trên, NAY trượt từ dưới, chip biến đổi bung giữa

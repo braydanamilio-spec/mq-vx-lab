@@ -3682,3 +3682,41 @@ cũng vô ích — phải dựng lại bố cục.
 
 **LUẬT:** nghiệm thu "long" phải đo **cả kích thước lẫn độ dài**, không chỉ đếm số video. Một video
 dọc dưới 3 phút không phải long dù sổ sách ghi `type: "long"`.
+
+### 7.eq — LONG 16:9 THẬT: TÁCH HẲN ĐƯỜNG RENDER LONG KHỎI ĐƯỜNG SHORT (26/8/2026)
+
+Anh chốt hướng sau khi thấy số đo ở 7.ep, ghi nguyên văn để không hiểu sai lần nữa:
+
+> long 16:9 chuẩn, short cắt ý là lấy **kịch bản** thôi còn phải viết và design render làm lại cho
+> chuẩn 9:16 hook đẹp — không phải cắt ra là xong.
+
+Nên long và short **dùng chung STORY + tiếng nói, nhưng hai đường render tách hẳn**:
+
+  • short → `chay_chung` → composition `*Short` (9:16, Bookend hook 0-3s) — giữ nguyên, không đụng;
+  • long  → `Gen2Long` (1920×1080) ghép nhiều chương, mỗi chương giữ tiếng nói của chính nó.
+
+Bốn thứ phải làm cùng lúc, thiếu một cái là hỏng:
+
+1. **Bỏ ép kích thước trong `calc*`.** Cả 5 hàm `calcRanked/Scaled/Mapped/Longshot/ThenNow` trả
+   `width: 1080, height: 1920`, mà `calculateMetadata` THẮNG `<Composition>` — nên thêm khai báo
+   ngang cũng vô ích. Root.tsx vốn đã khai `1080×1920` cho các `*Short` nên bỏ đi là an toàn.
+2. **Bố cục theo khổ, không phải kéo giãn.** `Khung.dungKhung()` giữ NGUYÊN từng con số của bản dọc
+   và cho khổ ngang bộ số riêng (ngang thừa bề ngang, thiếu bề cao — ngược hẳn dọc). Theo đúng
+   tiền lệ `RaceLong.TitleScreen` vốn đã tự đổi theo `port`.
+3. **Phụ đề + Bookend cũng phải theo khổ.** `Karaoke.BOTTOM = 200` hợp khung cao 1920; trên khung
+   cao 1080 nó ngồi giữa màn hình, đè thẳng vào bảng. Số dẫn Bookend tới 210px + nhãn + dòng hook
+   trên khung 1080 thì cao hơn cả khung ⇒ tràn.
+4. **Tách `dung_props` khỏi `chay_chung`.** Long cần props của NHIỀU chương hơn số short (long 3
+   chương chỉ ~2 phút). Dính liền thì muốn có props của một chương là buộc phải render nguyên một
+   short cho nó.
+
+**BẪY ĐÃ VẤP NGAY KHI TÁCH:** tệp props và thư mục tiếng nói đặt tên theo KÊNH (`_th2_{dang}_{slug}`),
+không theo chương. Hợp lý khi dựng xong render ngay rồi vứt — nhưng long cần props mọi chương CÙNG
+LÚC, nên chương 2 ghi đè chương 1 và long sẽ ghép 6 bản sao của chương cuối, mỗi bản mang tiếng nói
+của chương khác. Video vẫn ra, vẫn dài, vẫn qua QC — chỉ nội dung sai. Vá bằng tham số `ky_hieu`.
+
+**LUẬT:** đường dẫn tệp trung gian đặt tên theo phạm vi TÁI SỬ DỤNG, không theo phạm vi tạo ra nó.
+Hễ nới vòng đời của một tệp tạm (dựng xong dùng ngay → dựng xong giữ lại) thì phải soi lại tên nó.
+
+**CÒN THIẾU:** `race` (7 kênh) và `cinematic` (10 kênh) chưa nối vào `Gen2Long`; chúng đã có
+composition ngang sẵn (`Race`, `Cinematic`) nên là việc đấu dây, không phải dựng bố cục mới.

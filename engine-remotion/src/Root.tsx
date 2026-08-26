@@ -22,7 +22,8 @@ import { BrandClockwork } from "./BrandClockwork";
 import { LongshotShort, calcLongshot } from "./LongshotShort";  // kênh #10 LONGSHOT (xác suất thật)
 import { BrandLongshot } from "./BrandLongshot";
 import { BrandScaled } from "./BrandScaled";             // brand kênh #4 SCALED
-import { ThenNowShort, calcThenNow } from "./ThenNowShort"; // kênh #5 THEN×NOW (xưa/nay)
+import { ThenNowShort, calcThenNow } from "./ThenNowShort";
+import { Gen2Long, calcGen2Long } from "./Gen2Long";   // LONG 16:9 ghép chương cho 5 dạng gen-2 // kênh #5 THEN×NOW (xưa/nay)
 import { BrandThenNow } from "./BrandThenNow";           // brand kênh #5 THEN×NOW
 import { BrandDoc } from "./BrandDoc";                   // brand PARAMETRIC Wave 2 (Cosmos/Deep/Why/Empire/Unsolved)
 import { BrandBroke } from "./BrandBroke";
@@ -121,6 +122,12 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="BrandMappedWatermark" component={BrandMapped} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
     <Composition id="MappedThumb" component={BrandMapped} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
     {/* KÊNH #3 RANKED — tier list */}
+    {/* 26/8 — LONG KHỔ NGANG. Trước đây "long" của gen-2 là bản nối các short DỌC (đo thật:
+        1080×1920, 1'44") nên YouTube xếp vào Shorts ⇒ bộ 1 long + 3 short thực chất là 4 short.
+        Composition này là long thật: 1920×1080, ghép nhiều chương, mỗi chương giữ tiếng nói riêng. */}
+    <Composition id="Gen2Long" component={Gen2Long} durationInFrames={600} fps={30}
+                 width={1920} height={1080} calculateMetadata={calcGen2Long}
+                 defaultProps={{ chuong: [] }} />
     <Composition id="RankedShort" component={RankedShort} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcRanked}
       defaultProps={{ title: "FAST FOOD, RANKED", subtitle: "by US sales", color: "#7C5CFF", accent: "#7C5CFF", handle: "@rankedusa", tiers: ["S", "A", "B", "C", "D"], items: [
         { name: "McDonald's", tier: "S", stat: "$53B" }, { name: "Starbucks", tier: "S", stat: "$31B" },

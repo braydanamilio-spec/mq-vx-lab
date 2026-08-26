@@ -4,6 +4,7 @@ import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
 import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
+import { dungKhung } from "./Khung";
 import React from "react";
 
 // KÊNH #3 RANKED — tier list S/A/B/C/D, thẻ lật vào hạng lần lượt. Motif khác hẳn map/bar/guess.
@@ -38,7 +39,7 @@ export const calcRanked = ({ props }: any) => {
   const its: RankItem[] = props.items || [];
   const isec = props.introSec ?? 1.8, isc = props.itemSec ?? 1.7, tail = props.outroSec ?? 1.6;
   const total = its.reduce((a, it) => a + idur(it, isc), 0);
-  return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS, width: 1080, height: 1920 };
+  return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS };
 };
 
 const Card: React.FC<{ it: RankItem; s: number; accent: string }> = ({ it, s, accent }) => (
@@ -64,6 +65,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
   const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "TIER LIST", subtitle = "", handle = "@rankedusa", color = "#7C5CFF", accent = "#7C5CFF",
     tiers = ["S", "A", "B", "C", "D"], items = [], introSec = 1.8, itemSec = 1.7, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
+  const K = dungKhung();          // bố cục theo KHỔ — dọc giữ y số cũ, ngang là bộ số riêng
   const introF = Math.round(introSec * fps);
   const introP = spring({ frame: f, fps, config: { damping: 12, stiffness: 140 } });
 
@@ -76,7 +78,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
   const hangCoDo = tiers.filter((t) => items.some((it) => (it.tier || "").toUpperCase() === t.toUpperCase()));
   // Băng chữ karaoke neo ở bottom 200 và cao ~2 dòng; bảng tier neo bottom 130 -> chữ ĐÈ lên hàng
   // cuối. Có sub thì nhường chỗ, không sub thì dùng lại toàn bộ chiều cao.
-  const dayBang = (subs && subs.length) ? 380 : 130;
+  const dayBang = (subs && subs.length) ? K.thanDayCoSub : K.thanDayKhongSub;
 
   return (
       // 26/8 — NỀN SÁNG LÊN. Đo 5 video thật: sáng trung bình chỉ **25-40/255**, trong khi
@@ -85,20 +87,20 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
       // riêng của từng dạng (tông là thứ phân biệt kênh, không được gộp về một màu).
     <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font) }}>
       {/* TIÊU ĐỀ */}
-      <div style={{ position: "absolute", top: 90, left: 0, right: 0, textAlign: "center", padding: "0 50px" }}>
-        <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>🏆 RANKED</div>
+      <div style={{ position: "absolute", top: K.tieuDeTop, left: 0, right: 0, textAlign: "center", padding: `0 ${K.padX}px` }}>
+        <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: K.nhanCo, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>🏆 RANKED</div>
         {/* Tiêu đề lúc mở đầu do Bookend vẽ. Header ẩn đi trong quãng đó, nếu không sẽ có hai bản tiêu đề chồng nhau (lỗi 25/8). */}
-        <div style={{ display: f < introF ? "none" : undefined, color: "#fff", fontWeight: 900, fontSize: 68, lineHeight: 1.02, marginTop: 18, textShadow: "0 4px 24px #000c", textWrap: "balance" as any, transform: `translateY(${(1 - introP) * 20}px)`, opacity: 0.4 + introP * 0.6 }}>{title}</div>
-        {subtitle ? <div style={{ color: "#a9b0cc", fontWeight: 700, fontSize: 32, marginTop: 8 }}>{subtitle}</div> : null}
+        <div style={{ display: f < introF ? "none" : undefined, color: "#fff", fontWeight: 900, fontSize: K.tieuDeCo, lineHeight: 1.02, marginTop: K.doc ? 18 : 10, textShadow: "0 4px 24px #000c", textWrap: "balance" as any, transform: `translateY(${(1 - introP) * 20}px)`, opacity: 0.4 + introP * 0.6 }}>{title}</div>
+        {subtitle ? <div style={{ color: "#a9b0cc", fontWeight: 700, fontSize: K.doc ? 32 : 26, marginTop: 8 }}>{subtitle}</div> : null}
       </div>
 
       {/* BẢNG TIER */}
-      <div style={{ position: "absolute", top: 340, bottom: dayBang, left: 50, right: 50, display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ position: "absolute", top: K.thanTop, bottom: dayBang, left: K.padX, right: K.padX, display: "flex", flexDirection: "column", gap: K.doc ? 16 : 12 }}>
         {hangCoDo.map((t) => {
           const rowItems = items.map((it, gi) => ({ it, gi })).filter((x) => (x.it.tier || "").toUpperCase() === t.toUpperCase());
           return (
             <div key={t} style={{ flex: 1, display: "flex", alignItems: "stretch", gap: 14, minHeight: 0 }}>
-              <div style={{ width: 130, borderRadius: 16, background: tcol(t), color: "#0a0c14", fontWeight: 900, fontSize: 84,
+              <div style={{ width: K.doc ? 130 : 108, borderRadius: 16, background: tcol(t), color: "#0a0c14", fontWeight: 900, fontSize: K.doc ? 84 : 62,
                 display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 6px 20px ${tcol(t)}55` }}>{t.toUpperCase()}</div>
               <div style={{ flex: 1, borderRadius: 16, background: "#ffffff08", border: "1.5px solid #ffffff12", display: "flex", alignItems: "center",
                 gap: 14, padding: "0 18px", flexWrap: "wrap", overflow: "hidden" }}>
@@ -115,8 +117,8 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
 
       {/* INTRO overlay ngắn */}
       {f < introF ? (
-        <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #7C5CFF22, #07060f 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620 }}>
-          <div style={{ fontSize: 150, transform: `scale(${introP})` }}>🏆</div>
+        <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #7C5CFF22, #07060f 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: K.doc ? 620 : 150 }}>
+          <div style={{ fontSize: K.doc ? 150 : 110, transform: `scale(${introP})` }}>🏆</div>
         </AbsoluteFill>
       ) : null}
 
@@ -132,7 +134,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
                     }))} />
       ) : null}
 
-      <div style={{ position: "absolute", bottom: 50, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 32, textShadow: "0 2px 10px #000" }}>{handle}</div>
+      <div style={{ position: "absolute", bottom: K.handleDay, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: K.doc ? 32 : 24, textShadow: "0 2px 10px #000" }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />

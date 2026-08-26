@@ -15,7 +15,11 @@ import { useCurrentFrame, useVideoConfig } from "remotion";
 
 export type Word = { t: number; d: number; w: string };
 
-const BOTTOM = 200;          // đáy băng chữ — TRÊN mọi thứ neo đáy của các short (≤150)
+const BOTTOM = 200;          // đáy băng chữ khổ DỌC — TRÊN mọi thứ neo đáy của các short (≤150)
+// 26/8 — khổ NGANG (long 16:9) chỉ cao 1080 so với 1920: giữ nguyên `bottom 200` là băng chữ ngồi
+// giữa màn hình, đè thẳng vào bảng/biểu đồ. Và cỡ chữ 56 trên khung cao 1080 chiếm gần 1/8 chiều
+// cao. Nên khổ ngang có bộ số riêng, y như bố cục — không phải bản dọc kéo giãn.
+const BOTTOM_NGANG = 88;
 const TOI_DA_TU = 7;         // mỗi cụm tối đa 7 từ (2 dòng ở cỡ chữ 44)
 const NGHI = 0.35;           // khoảng lặng ≥ mức này là sang cụm mới
 
@@ -45,7 +49,10 @@ export const Karaoke: React.FC<{ subs?: Word[]; accent?: string; bottom?: number
   subs = [], accent = "#F5B301", bottom = BOTTOM, kieu = "doc",
 }) => {
   const f = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width: _W, height: _H } = useVideoConfig();
+  const ngang = _W > _H;
+  const day = bottom !== BOTTOM ? bottom : (ngang ? BOTTOM_NGANG : BOTTOM);
+  const co = (n: number) => (ngang ? Math.round(n * 0.72) : n);
   const now = f / fps;
   const cums = React.useMemo(() => chia(subs || []), [subs]);
   if (!cums.length) return null;
@@ -62,7 +69,7 @@ export const Karaoke: React.FC<{ subs?: Word[]; accent?: string; bottom?: number
   // NẢY lên và đổi màu: đọc rõ trên mọi nền mà vẫn giữ chất truyện tranh.
   const toon = kieu === "toon";
   return (
-    <div style={{ position: "absolute", left: 0, right: 0, bottom, padding: "0 64px", textAlign: "center" }}>
+    <div style={{ position: "absolute", left: 0, right: 0, bottom: day, padding: ngang ? "0 140px" : "0 64px", textAlign: "center" }}>
       <div style={{ display: "inline-block", maxWidth: "100%",
                     background: toon ? "transparent" : "rgba(0,0,0,0.62)",
                     borderRadius: 18, padding: toon ? "6px 10px" : "10px 22px", lineHeight: 1.32 }}>
@@ -71,7 +78,7 @@ export const Karaoke: React.FC<{ subs?: Word[]; accent?: string; bottom?: number
           if (toon) {
             return (
               <span key={i} style={{
-                fontSize: on ? 56 : 50, fontWeight: 900, margin: "0 8px",
+                fontSize: on ? co(56) : co(50), fontWeight: 900, margin: "0 8px",
                 display: "inline-block", color: on ? accent : "#FFFFFF",
                 WebkitTextStroke: "9px #14161C", paintOrder: "stroke fill",
                 letterSpacing: -1,
@@ -81,7 +88,7 @@ export const Karaoke: React.FC<{ subs?: Word[]; accent?: string; bottom?: number
             );
           }
           return (
-            <span key={i} style={{ fontSize: 44, fontWeight: 900, margin: "0 7px",
+            <span key={i} style={{ fontSize: co(44), fontWeight: 900, margin: "0 7px",
                                    display: "inline-block", color: on ? accent : "#F2F7FF",
                                    transform: on ? "scale(1.07)" : "scale(1)",
                                    textShadow: on ? `0 3px 18px rgba(0,0,0,.95), 0 0 18px ${accent}77`

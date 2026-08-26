@@ -25,7 +25,7 @@ export const calcScaled = ({ props }: any) => {
   const its: ScaleItem[] = props.items || [];
   const isec = props.introSec ?? 1.8, isc = props.itemSec ?? 2.0, tail = props.outroSec ?? 1.6;
   const total = its.reduce((a, it) => a + idur(it, isc), 0);
-  return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS, width: 1080, height: 1920 };
+  return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS };
 };
 
 export const ScaledShort: React.FC<ScaledProps> = (props) => {

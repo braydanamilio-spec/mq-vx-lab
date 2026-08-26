@@ -1343,7 +1343,10 @@ def t_phong_phai_chay_het_duong_toi_luc_render():
     th = _doc("the_he_2.py")
     ds = _doc("datastory_ci.py")
     xau = []
-    for f in ("chay_chung", "chay_race", "chay_phim"):
+    # 26/8 — `chay_chung` đã tách phần dựng props sang `dung_props` (long 16:9 cần props của nhiều
+    # chương hơn số short). Chốt phải đi theo mã, không neo vào tên hàm cũ: neo sai thì hoặc đỏ oan
+    # như lần này, hoặc tệ hơn — xanh trong khi đường dẫn thật đã đứt.
+    for f in ("dung_props", "chay_race", "chay_phim"):
         m = _re.search(r"def " + f + r"\(.*?(?=\ndef )", th, _re.S)
         assert m, f"mất hàm {f}"
         if "font" not in m.group(0):

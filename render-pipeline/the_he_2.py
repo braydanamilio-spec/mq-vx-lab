@@ -1523,30 +1523,24 @@ def _tieu_de_da_lam(tieu_de: str, avoid) -> bool:
     return bool(t) and any(g(a) == t for a in (avoid or []))
 
 
-def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
-               avoid: list | None = None, st_san: dict | None = None) -> tuple[str, dict] | None:
-    """Dựng + render cho MỌI dạng. Trả (đường dẫn, QC) hoặc None nếu bỏ lượt.
+def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = ""):
+    """Dựng props + ghi tệp props, KHÔNG render. Trả (props, đường_tệp_props, slug).
 
-    `avoid` = tiêu đề các video kênh này ĐÃ làm. Thiếu nó thì kênh lặp lại đúng một câu chuyện
-    mãi mãi — xem khối XOAY VÒNG ĐỀ TÀI ở trên."""
+    26/8 — tách ra khỏi `chay_chung` vì LONG khổ ngang cần props của NHIỀU chương hơn số short:
+    long ghép `so_chuong` chương, còn short chỉ dựng `so_short` cái. Trước đây hai việc dính liền
+    nên muốn có props của một chương là buộc phải render nguyên một short cho nó — vừa phí, vừa ép
+    số chương của long bằng đúng số short (long 3 chương ≈ 2 phút).
+
+    Anh nói rõ: short KHÔNG phải cắt từ long ra, mà viết + dựng lại riêng cho 9:16 có hook. Nên
+    long và short dùng CHUNG kịch bản (story + tiếng nói) nhưng đi hai đường render khác nhau."""
     import datastory_ci as DS
-    dang = kenh.get("dinh_dang")
-    if dang == "race":
-        return chay_race(kenh, ra, ky)
-    if dang == "cinematic":
-        return chay_phim(kenh, ra, ky)
-    comp, ten_props = DUONG_RA.get(dang, (None, None))
-    if not comp or not ten_props:
-        print(f"   ⚠️ {kenh.get('ten')}: dạng '{dang}' chưa có đường render chung")
-        return None
-    # `st_san` = chương ĐÃ CHỌN sẵn (dùng khi dựng BỘ). 26/8 — bản đầu của `chay_bo` chọn chương
-    # rồi vẫn gọi `chay_chung` để nó TỰ CHỌN LẠI: hai bên chọn độc lập nên video render ra không
-    # phải chương đã ghi sổ, và `avoid` lệch một nhịp khiến chương 2 trùng chương 1 rồi cả bộ
-    # dừng ở 1 chương. Đo thật: long 38,3s = đúng một short, không phải ba.
-    st = st_san or _dung_story_xoay(dang, kenh, ky, avoid)
-    if not st:
-        return None
-    sl = DS.slug(kenh["handle"].lstrip("@"))
+    # 26/8 — `ky_hieu` là thứ BẮT BUỘC khi long ghép nhiều chương. Cả thư mục tiếng nói lẫn tệp
+    # props trước đây đặt tên theo KÊNH (`_th2_{dang}_{slug}`), không theo chương — hợp lý khi mỗi
+    # chương dựng xong render ngay rồi vứt. Nhưng long cần props của MỌI chương cùng lúc: giữ tên
+    # cũ thì chương 2 ghi đè chương 1, và long sẽ ghép 6 bản sao của chương cuối, mỗi bản mang
+    # tiếng nói của chương khác. Đây đúng dạng lỗi không có gì đỏ để thấy — video vẫn ra, vẫn dài,
+    # chỉ là nội dung sai.
+    sl = DS.slug(kenh["handle"].lstrip("@")) + (f"_{ky_hieu}" if ky_hieu else "")
     sdir = os.path.join(DS.PUB, "narration", f"_th2_{dang}_" + sl)
     os.makedirs(sdir, exist_ok=True)
     props = getattr(DS, ten_props)(st, sdir, handle=kenh["handle"])
@@ -1579,6 +1573,37 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
         props["hookLine"] = _cau_hoi_mo(kenh, st)
     pf = os.path.join(DS.PUB, f"_th2_{dang}_{sl}.json")
     json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
+    return props, pf, sl
+
+
+def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
+               avoid: list | None = None, st_san: dict | None = None,
+               ky_hieu: str = "") -> tuple[str, dict] | None:
+    """Dựng + render cho MỌI dạng. Trả (đường dẫn, QC) hoặc None nếu bỏ lượt.
+
+    `avoid` = tiêu đề các video kênh này ĐÃ làm. Thiếu nó thì kênh lặp lại đúng một câu chuyện
+    mãi mãi — xem khối XOAY VÒNG ĐỀ TÀI ở trên."""
+    import datastory_ci as DS
+    dang = kenh.get("dinh_dang")
+    if dang == "race":
+        return chay_race(kenh, ra, ky)
+    if dang == "cinematic":
+        return chay_phim(kenh, ra, ky)
+    comp, ten_props = DUONG_RA.get(dang, (None, None))
+    if not comp or not ten_props:
+        print(f"   ⚠️ {kenh.get('ten')}: dạng '{dang}' chưa có đường render chung")
+        return None
+    # `st_san` = chương ĐÃ CHỌN sẵn (dùng khi dựng BỘ). 26/8 — bản đầu của `chay_bo` chọn chương
+    # rồi vẫn gọi `chay_chung` để nó TỰ CHỌN LẠI: hai bên chọn độc lập nên video render ra không
+    # phải chương đã ghi sổ, và `avoid` lệch một nhịp khiến chương 2 trùng chương 1 rồi cả bộ
+    # dừng ở 1 chương. Đo thật: long 38,3s = đúng một short, không phải ba.
+    st = st_san or _dung_story_xoay(dang, kenh, ky, avoid)
+    if not st:
+        return None
+    _dp = dung_props(kenh, st, dang, ten_props, ky_hieu)
+    if not _dp:
+        return None
+    props, pf, sl = _dp
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2_{dang}_{sl}.mp4"))
     os.makedirs(os.path.dirname(ra), exist_ok=True)
     DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", comp, ra,
@@ -1589,6 +1614,10 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     print(f"{'✅' if ok else '❌'} {kenh['ten']} [{dang}] · {info}")
     if ok:
         lam_thumb(kenh, st, ra, comp, pf)
+    # Gửi kèm props để `chay_bo` ghép long mà KHÔNG phải dựng lại (dựng lại = gọi TTS lần nữa,
+    # ra tệp tiếng khác, long lệch tiếng khỏi short cùng chương).
+    if isinstance(info, dict):
+        info["_props_obj"] = props
     return (ra, info) if ok else None
 
 
@@ -1788,51 +1817,80 @@ def lam_thumb(kenh: dict, st: dict, ra: str, comp: str = "", pf: str = "") -> st
 
 
 def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
-            so_short: int = 3) -> tuple[str, list] | None:
-    """MỘT BỘ = 1 LONG + `so_short` SHORT, short là CÁC CHƯƠNG CỦA CHÍNH LONG ĐÓ.
+            so_short: int = 3, so_chuong: int = 6) -> tuple[str, list] | None:
+    """MỘT BỘ = 1 LONG khổ 16:9 + `so_short` SHORT khổ 9:16, CÙNG mạch nội dung.
 
-    26/8 — anh nêu yêu cầu này nhiều lần, và mỗi lần em lại đi làm việc khác. Ghi rõ ở đây để
-    không phải nói lại:
-      • tỉ lệ 1 long : 3 short;
-      • 3 short **cắt từ long ra**, dựng lại theo khổ dọc cho hợp nền tảng — không phải 3 video
-        rời rạc về 3 chủ đề khác nhau;
-      • đánh số để khâu đăng đăng từ nhỏ tới lớn, và short LUÔN đi kèm long của nó.
+    26/8 — bản trước làm ngược và em phải viết lại: nó render từng chương bằng composition DỌC rồi
+    `ffmpeg -c copy` nối lại, gọi bản nối đó là "long". Đo thật ra `1080×1920, 1'44"` — YouTube xếp
+    video dọc ≤3 phút vào Shorts, nên bộ "1 long + 3 short" thực chất là BỐN SHORT, trong khi sổ
+    sách vẫn ghi `type: "long"` và luật 1:3 vẫn đếm đủ.
 
-    Cách làm: xoay kho đề tài lấy `so_short` chương KHÁC NHAU nhưng CÙNG một mạch (cùng kênh, cùng
-    nguồn) -> render mỗi chương thành một short hoàn chỉnh -> **nối các chương lại thành long**.
-    Nối chứ không render riêng bản dài: như vậy short đúng nghĩa là một đoạn của long, khớp 100%,
-    và không tốn thêm một lượt gọi AI nào.
+    Anh chốt lại yêu cầu, ghi nguyên văn để không hiểu sai lần nữa:
+      • long **16:9 chuẩn**;
+      • "short cắt từ long" nghĩa là **lấy kịch bản thôi** — short phải được viết và dựng lại cho
+        9:16 có hook riêng, không phải cắt một đoạn của long ra là xong.
+
+    Nên hai đường render tách hẳn, chỉ dùng chung STORY + tiếng nói:
+      • short: `chay_chung` -> composition `*Short` (9:16, có Bookend hook 0-3s) — như cũ;
+      • long : `Gen2Long` (1920×1080) ghép `so_chuong` chương, mỗi chương giữ tiếng nói của nó.
+
+    `so_chuong` > `so_short` có chủ đích: long 3 chương chỉ ~2 phút. Chương nào không làm short thì
+    chỉ dựng props (không render 9:16) — trước đây không tách được vì props và render dính liền.
 
     Trả `(đường_long, [(đường_short, story), ...])`, hoặc None nếu không đủ dữ liệu."""
     import datastory_ci as DS
     ten = kenh.get("ten", "?")
     dang = kenh.get("dinh_dang")
+    comp, ten_props = DUONG_RA.get(dang, (None, None))
+    if not comp or not ten_props:
+        print(f"   ⚠️ {ten}: dạng '{dang}' chưa có đường dựng bộ")
+        return None
     da = list(avoid or [])
-    chuong = []
-    for i in range(max(1, so_short)):
+    chuong, shorts = [], []
+    for i in range(max(1, so_chuong)):
         st = _dung_story_xoay(dang, kenh, None, da)
         if not st:
             break
         da.append(st.get("title") or "")
-        sl = DS.slug(kenh["handle"].lstrip("@")) + f"_c{i + 1}"
-        ra_s = os.path.abspath(os.path.join(GOC, "out", f"th2bo_{sl}.mp4"))
-        kq = chay_chung(kenh, ra=ra_s, st_san=st)
-        if not kq:
-            print(f"   ⚠️ {ten}: chương {i + 1} không dựng được — bỏ chương này")
-            continue
-        chuong.append((kq[0], st))
+        kh = f"c{i + 1}"
+        if i < so_short:
+            ra_s = os.path.abspath(os.path.join(
+                GOC, "out", f"th2bo_{DS.slug(kenh['handle'].lstrip('@'))}_{kh}.mp4"))
+            kq = chay_chung(kenh, ra=ra_s, st_san=st, ky_hieu=kh)
+            if not kq:
+                print(f"   ⚠️ {ten}: chương {i + 1} không dựng được — bỏ chương này")
+                continue
+            shorts.append((kq[0], st))
+            pr = (kq[1] or {}).get("_props_obj")
+        else:
+            _dp = dung_props(kenh, st, dang, ten_props, kh)
+            pr = _dp[0] if _dp else None
+        if pr:
+            chuong.append({"dang": dang, "props": pr})
     if not chuong:
         print(f"   ⚠️ {ten}: không dựng được chương nào — BỎ LƯỢT")
         return None
-    if len(chuong) < so_short:
-        print(f"   ⚠️ {ten}: chỉ dựng được {len(chuong)}/{so_short} chương "
-              f"(kho đề tài cạn hoặc nguồn thiếu) — vẫn ra bộ, long ngắn hơn.")
+    if len(shorts) < so_short:
+        print(f"   ⚠️ {ten}: chỉ ra {len(shorts)}/{so_short} short (kho đề tài cạn hoặc nguồn thiếu).")
+    br = kenh.get("brand") or {}
+    pal = br.get("palette") or {}
+    goi = {"chuong": chuong, "handle": kenh["handle"], "font": br.get("font", ""),
+           "accent": pal.get("primary", "#7C5CFF")}
+    pf = os.path.join(DS.PUB, f"_th2long_{DS.slug(kenh['handle'].lstrip('@'))}.json")
+    json.dump(goi, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
     ra_long = os.path.abspath(ra_long or os.path.join(
         GOC, "out", f"th2long_{DS.slug(kenh['handle'].lstrip('@'))}.mp4"))
-    if not _noi_video([c[0] for c in chuong], ra_long):
+    os.makedirs(os.path.dirname(ra_long), exist_ok=True)
+    DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "Gen2Long", ra_long,
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       "--concurrency=2", "--log=error"],
+                      cwd=DS.ENG, timeout=5400, label=f"Gen2Long({ten})")
+    ok, info = DS.qc(ra_long)
+    print(f"{'✅' if ok else '❌'} {ten} LONG 16:9 · {info}")
+    if not ok:
         return None
-    print(f"   🎬 {ten}: BỘ = 1 long ({len(chuong)} chương) + {len(chuong)} short")
-    return ra_long, chuong
+    print(f"   🎬 {ten}: BỘ = 1 long 16:9 ({len(chuong)} chương) + {len(shorts)} short 9:16")
+    return ra_long, shorts
 
 
 def _noi_video(cac_tep: list, ra: str) -> bool:
