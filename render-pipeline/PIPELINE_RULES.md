@@ -3965,3 +3965,42 @@ chính là chỗ lỗi này trốn suốt ba lượt.
 
 **LUẬT 3:** trước khi viết công cụ dọn, mở mã MÀN HÌNH ra đếm xem nó hợp nhất bao nhiêu nguồn. Công
 cụ dọn phải phủ đúng tập mà màn hình hiển thị, không phủ theo trí nhớ của người viết.
+
+### 7.ez — SỔ NGÂN SÁCH GỘP 3 PROJECT, TRẦN LẠI LÀ CỦA 1 PROJECT (26/8/2026 — GHI NHẬN, CHƯA VÁ)
+
+Anh hỏi "quota và D1 phối hợp ổn chứ, logic đúng với nhau chứ". Soi tới lược đồ bảng thì KHÔNG khớp.
+
+Lược đồ sổ trên D1 (worker `ngan_sach_cong`):
+
+    INSERT INTO ngan_sach (ngay, doc, ghi) ... ON CONFLICT(ngay) DO UPDATE SET doc=doc+?2, ghi=ghi+?3
+
+Khoá chính là **`ngay`** — không có cột project. Trong khi `TRAN_DOC_NGAY = 50_000` là hạn mức của
+**MỘT** project (Firestore free tier tính riêng từng project, và hệ này chạy ba: A, B, C).
+
+Hệ quả: A tiêu 25K + B tiêu 25K ⇒ sổ ghi 50K ⇒ `phan_tram_da_dung()` trả 100% ⇒ van hãm toàn hệ,
+trong khi mỗi project mới dùng một nửa.
+
+**Không nguy hiểm, nhưng đắt.** Tổng luôn ≥ mức của project cao nhất, nên phanh không bao giờ để
+vượt trần thật — nó chỉ nghiêng về phía an toàn. Cái mất là **năng lực**: có ba project mà chỉ dùng
+được sức của một.
+
+**VÌ SAO CHƯA VÁ TỐI NAY.** Biến đếm là `_NGAN_SACH["doc"]` do `_tinh_tien()` cộng, mà hàm đó KHÔNG
+biết thao tác vừa rồi chạm project nào — mỗi loại dữ liệu đi qua một client riêng (`_db`,
+`_db_meta`, `_db_jobs`, `_db_pub`, `_db_keys`). Tách theo project phải sửa xuyên suốt: lược đồ D1 +
+biến đếm + mọi chỗ ghi nhận. Đó là sửa vào ĐÚNG CÁI PHANH, ngay trước lúc bật render. Phanh hỏng
+thì lặp lại sự cố 23/8 (cạn quota, cả hệ đứng) — đắt hơn nhiều so với việc tạm chạy dưới sức.
+
+**Thứ tự đúng:** bật thí điểm → chạy trót lọt một phiên → rồi mới tách sổ theo project, có chốt
+riêng, đo lại bằng một phiên thật.
+
+**LUẬT:** đơn vị của SỐ ĐO phải trùng đơn vị của NGƯỠNG. Sổ gộp nhiều project mà ngưỡng là của một
+project thì con số vẫn "đúng" về mặt số học và vẫn sai về mặt quyết định.
+
+### 7.fa — CHIA NHIỀU PROJECT ĐỂ CÁCH LY, NHƯNG VÒNG LẶP KHÔNG BỌC LỖI RIÊNG (26/8/2026)
+
+Thêm bước quét `render_jobs` trên cả hai project. Chạy thật: project A trả `RESOURCE_EXHAUSTED` ngay
+giữa vòng lặp ⇒ ném lên trên ⇒ **giết cả lượt dọn**, kéo theo bước `render_stats` phía sau không bao
+giờ chạy. Bản đầu chỉ bọc lỗi lúc MỞ client, không bọc lúc QUÉT.
+
+**LUẬT:** chia hệ ra nhiều project để cách ly sự cố thì mọi vòng lặp đi qua nhiều project phải bọc
+lỗi RIÊNG từng project — không thì cách ly chỉ tồn tại trên sơ đồ, còn thực tế vẫn là một điểm chết.
