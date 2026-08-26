@@ -118,3 +118,41 @@ chủ đề đã sát ranh giới quảng cáo. Cách an toàn đang dùng: **lu
    vùng title card. >40% khung hỏng = video bị loại từ pipeline (đã enforce trong _toon_build).
 4. Long: mỗi skit có title card riêng, chuyển skit có nghỉ ~1s; tổng 3 skit.
 5. Số đo chuẩn: short 18-35s · long 60-110s · **score kịch bản ≥95** · khung vẽ qua Vision-grid (dị dạng/chữ vô nghĩa = vẽ lại) · phụ đề KARAOKE từng chữ sáng theo giọng đọc.
+
+---
+
+## §7 — CHUẨN CHẤT LƯỢNG VIDEO (26/8, theo yêu cầu của anh)
+
+> Anh nêu 11 điều. Bảng dưới ghi rõ điều nào **đã có chốt tự kiểm**, điều nào **chỉ mắt người thấy**.
+> Ghi lẫn lộn hai loại là tự lừa mình: máy không kiểm được "đẹp", và người không ngồi đếm được 50 video.
+
+### A. Đã có chốt TỰ ĐỘNG (máy chặn được, không cần ai nhớ)
+
+| yêu cầu | chốt / cơ chế | ngưỡng |
+|---|---|---|
+| không lỗi khung đen ở mở đầu | `xac_minh_mo_dau()` render 1 khung THẬT rồi đo | tối < 75% (kênh dark_ok < 88%) |
+| mở đầu không "chữ trên nền trơn" | `opening_is_flat()` sau render + cứu trước render | dark ≥75 & màu <900 → loại |
+| không chồng chéo chữ | `t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau` | 1 tiêu đề lúc mở đầu |
+| băng chữ không đè nội dung | đáy bảng lùi khi có `subs` (Ranked · Mapped) | 380px |
+| chữ không tràn khung | `t_the_tieu_de_khong_tran_khung` · co theo TỪ DÀI NHẤT | — |
+| voice khớp sub | subs sinh TỪ chính file giọng (`subs_tu_clips`) | cùng nguồn ⇒ không lệch |
+| video không câm | `qc()` đo `volumedetect` | mean_db > -60 |
+| đủ độ dài | `qc()` | short ≥20s · long ≥45s |
+| nội dung không trùng lặp | `too_similar()` + `avoid` + `t_kenh_the_he_2...` | trùng ý → viết lại 1 lần |
+| ảnh không lặp trong 1 video | sổ `_IMG_USED` xuyên luồng & xuyên phiên | 8/8 ảnh khác nhau |
+| an toàn kiếm tiền | `money_safe()` + `an_toan()` (cổng nội dung) | chặn 18+, vị thành niên |
+| thumbnail có thật | `doc_thumb()` + `thumb_can/thumb_ghi` | mỗi video 1 ảnh |
+
+### B. CHƯA có chốt — phải xem bằng mắt (ghi ra để không ngộ nhận là đã xong)
+
+- **"đẹp, cuốn hút, chuẩn phong cách USA"** — không đo được bằng số. Cách duy nhất: xem mẫu.
+- **hiệu ứng chuyển cảnh / âm thanh chuyển cảnh** — hiện chỉ có `pop/ding/whoosh/cheer` ở vài
+  composition. **Chưa có** hệ chuyển cảnh thống nhất. → việc cần làm, chưa làm.
+- **thumbnail đa dạng template** — hiện 1 khuôn (`doc_thumb`). **Chưa có** nhiều template.
+- **không lặp một mô-típ giữa các kênh** — thế hệ 2 đã tách 8 dạng hình × 22 motif brand-kit,
+  nhưng chưa có chốt đo "độ giống nhau giữa hai kênh bất kỳ".
+
+### C. Luật khi thêm chuẩn mới
+1. Chuẩn nào **đo được** thì phải thành CHỐT, không để ở dạng lời dặn — lời dặn sẽ bị quên.
+2. Chuẩn nào **không đo được** thì ghi vào mục B, kèm cách kiểm bằng mắt. Không giả vờ đã có.
+3. Mỗi chốt mới phải **thử làm hỏng lại** để chắc nó bắt được (xem `KIEM_CHUNG.md`).
