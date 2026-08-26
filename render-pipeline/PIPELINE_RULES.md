@@ -3168,3 +3168,22 @@ Hai lỗi tiềm ẩn tìm được trong cùng đợt rà soát:
 - `fix_queue_thumbnails.yml` khai `CREDENTIALS_B: /tmp/sa_b.json` mà **không có bước tạo tệp** →
   âm thầm rơi về project A đang cạn. Chốt `t_env_tro_file_thi_phai_tao_file`.
 - `seed_the_he_2.yml` thiếu `HOT_KEY`.
+
+### 26/8 — DASHBOARD TRỐNG TRƠN: đệm cất lại chính kết quả RỖNG
+Anh báo mất hết key API, rồi mất cả kho Drive. **Dữ liệu còn nguyên** — pool vẫn `199/199` ở hai
+phiên gần nhất, và toàn bộ pipeline không có một dòng nào xoá key. Lỗi nằm ở dashboard.
+
+Ba lỗi trong `gdGate`/`gdocGate` (đều thuộc đoạn đệm-trước thêm ngày 25/8):
+1. **Đệm cất lại kết quả rỗng.** Truy vấn trả 0 dòng (do project cạn hạn mức) → lưu `[]` vào
+   localStorage → 30 phút sau vẫn trả `[]`. **F5 bao nhiêu lần cũng trống**, vì trang đọc lại
+   đúng cái rỗng nó vừa cất. Thêm key mới cũng không thấy.
+2. **Tab phụ chưa có đệm thì trả rỗng** thay vì đọc thật → mở tab thứ hai là thấy trang trắng.
+3. **Im lặng.** Rỗng-vì-lỗi và rỗng-vì-không-có-gì hiện ra y hệt nhau, nên người dùng chỉ có thể
+   kết luận là mất dữ liệu.
+
+Vá: không bao giờ đệm kết quả rỗng (và xoá đệm cũ nếu gặp rỗng) · tab phụ thiếu đệm thì đọc thật ·
+đánh dấu khoá "từng có dữ liệu", nếu lần sau rỗng thì **hiện dải đỏ nói rõ DỮ LIỆU KHÔNG MẤT**.
+
+**Luật**: rỗng là một KẾT QUẢ ĐÁNG NGỜ, không phải một sự thật. Không đệm nó, không im lặng với nó.
+Cùng họ với ba lỗi "hỏng trong im lặng" tối nay — nhưng lỗi này đắt hơn vì nó làm người dùng
+hoảng, không chỉ làm em chẩn đoán sai.
