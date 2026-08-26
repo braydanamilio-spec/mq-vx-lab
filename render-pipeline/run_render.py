@@ -587,6 +587,25 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     # dung khác hẳn — đi nhầm nhánh là gọi Gemini viết kịch bản, sai hẳn mô hình.
                     if _gen2_bo(ch, keys, cool, okcb, R, _stopped, n):
                         return
+                    # 27/8 — KÊNH KHÔNG CÓ TRỤC XOAY THÌ ĐỪNG RƠI XUỐNG ĐƯỜNG DỰ PHÒNG.
+                    # Đo thật lane SKYRIGHTNOW: 18 video trùng đúng một tiêu đề. Chuỗi nhân quả:
+                    #   không có trục xoay -> chỉ dựng được 1 chương
+                    #   -> long 30,8s, mà QC đòi long khổ ngang >= 45s -> LOẠI
+                    #   -> "bộ gen-2 không đạt" -> rơi xuống làm SHORT RỜI
+                    #   -> đường đó đặt tên video bằng TÊN KÊNH ('SKY RIGHT NOW') -> 18 cái trùng.
+                    # Lặp 6 lượt trong một phiên vì mỗi lượt đều hỏng ở đúng chỗ đó.
+                    # Kênh có trục xoay mà bộ hỏng thì đường dự phòng vẫn hợp lý (mỗi lượt một đề
+                    # tài khác). Kênh KHÔNG có trục thì mọi lượt cho ra cùng một thứ — nhường slot
+                    # cho kênh khác là đúng hơn hẳn việc đẻ thêm bản sao.
+                    try:
+                        import the_he_2 as _T2
+                        _k2 = _T2.doc_kenh(channel or "")
+                        if _k2 and not (_k2.get("tham_so") or {}).get("xoay"):
+                            print(f"   🛰 {channel}: nguồn sống KHÔNG có trục xoay — bộ hỏng thì mọi "
+                                  f"lượt sau cũng ra cùng một thứ. Nhường slot, phiên sau dữ liệu mới.")
+                            return
+                    except Exception:
+                        pass
                     print(f"   ↩️ {channel}: bộ gen-2 không đạt — làm short rời phiên này.")
                 elif fmt == "doc":
                     # Kênh doc: short DÙNG LẠI luôn props từng phần của long -> khớp 100%, 0 thêm Gemini.
