@@ -1429,6 +1429,11 @@ def chay_race(kenh: dict, ra: str = "", ky: dict | None = None,
     ok, info = DS.qc(ra)
     print(f"{'✅' if ok else '❌'} {kenh['ten']} · {info}")
     if ok:
+        _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""))
+        if isinstance(info, dict):
+            info.update(_htin)
+        if not _hok:
+            return None
         lam_thumb(kenh, st, ra)
     if isinstance(info, dict):
         info["_props_obj"] = props
@@ -1507,6 +1512,11 @@ def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None, keys: list | Non
     ok, info = DS.qc(ra)
     print(f"{'✅' if ok else '❌'} {kenh['ten']} [phim kể] · {info}")
     if ok:
+        _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""))
+        if isinstance(info, dict):
+            info.update(_htin)
+        if not _hok:
+            return None
         lam_thumb(kenh, st, ra, "CinematicShort", pf)
     if isinstance(info, dict):
         info["_props_obj"] = props
@@ -1712,6 +1722,32 @@ def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = "
     return props, pf, sl
 
 
+def qc_hook_sau_render(duong: str, ten_kenh: str = "") -> tuple:
+    """QC THỊ GIÁC SAU RENDER, chấm riêng khung hook. Trả (cho_qua, thông_tin).
+
+    26/8 — vì sao cần dù đã có QC kỹ thuật và QC-trước-render. Đo trên một video thật hôm nay:
+      • QC kỹ thuật (độ dài · có tiếng · khung hình · mức âm) — CHO QUA cả 4 lỗi thị giác;
+      • QC-trước-render (đo % điểm tối) — CHO QUA 4/6 lỗi, nó chỉ bắt được khung gần đen;
+      • bốn lỗi còn lại chỉ MẮT thấy: emoji đè lên số dẫn, số dẫn cùng màu nền, nút câu hỏi chữ
+        tối trên nền tối, vạch trục xuyên qua chữ.
+    Khi 50 kênh chạy tự động thì không ai ngồi nhìn từng video, nên phần "chỉ mắt thấy" phải có
+    máy nhìn hộ.
+
+    FAIL-OPEN: không có khoá, Vision lỗi, hết hạn mức — đều CHO QUA. Một cổng QC tự chặn dây
+    chuyền khi chính nó hỏng thì tệ hơn là không có cổng."""
+    try:
+        import qc_vision as QV
+        ok, tin = QV.check_hook(duong)
+    except Exception as e:
+        return True, {"note": f"hook-qc-skip: {str(e)[:60]}"}
+    if not ok:
+        print(f"   🖼️ {ten_kenh}: HOOK trượt QC thị giác — {tin.get('hook_score')}đ · "
+              f"{'; '.join(tin.get('issues') or [])[:110]}")
+    elif tin.get("hook_score"):
+        print(f"   🖼️ {ten_kenh}: hook {tin['hook_score']}đ")
+    return ok, tin
+
+
 def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
                avoid: list | None = None, st_san: dict | None = None,
                ky_hieu: str = "") -> tuple[str, dict] | None:
@@ -1752,6 +1788,11 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     ok, info = DS.qc(ra)
     print(f"{'✅' if ok else '❌'} {kenh['ten']} [{dang}] · {info}")
     if ok:
+        _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""))
+        if isinstance(info, dict):
+            info.update(_htin)
+        if not _hok:
+            return None                  # hook hỏng = video hỏng, đừng đẩy lên kho
         lam_thumb(kenh, st, ra, comp, pf)
     # Gửi kèm props để `chay_bo` ghép long mà KHÔNG phải dựng lại (dựng lại = gọi TTS lần nữa,
     # ra tệp tiếng khác, long lệch tiếng khỏi short cùng chương).
@@ -2167,6 +2208,9 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
     ok, info = DS.qc(ra_long)
     print(f"{'✅' if ok else '❌'} {ten} LONG 16:9 ({len(chuong)} chương) · {info}")
     if not ok:
+        return None
+    # Long cũng phải qua cổng hook: khung mở đầu của long là thứ quyết định lượt xem trên trang chủ.
+    if not qc_hook_sau_render(ra_long, ten)[0]:
         return None
 
     # ── SHORT 9:16, mỗi cái gộp 2-3 chương ──────────────────────────────────────────────────

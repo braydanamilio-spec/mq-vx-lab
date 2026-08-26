@@ -133,7 +133,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
           nên nó nằm TRÊN khối hook của Bookend. Khung ngang chỉ cao 1080, không còn chỗ để đẩy —
           đo thật khung giây thứ 1 của long: emoji 🏆 nằm ĐÈ giữa số dẫn, đọc ra "Cl.I" lẫn hình
           cái cúp. Bookend đã vẽ trọn thẻ mở đầu rồi, nên ở khổ ngang lớp này là thừa. */}
-      {f < introF && K.doc ? (
+      {f < introF && K.doc && !hookStat ? (
         <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #7C5CFF22, #07060f 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: K.doc ? 620 : 150 }}>
           <div style={{ fontSize: K.doc ? 150 : 110, transform: `scale(${introP})` }}>🏆</div>
         </AbsoluteFill>

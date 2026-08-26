@@ -72,10 +72,19 @@ export const Bookend: React.FC<{
           // tâm handle; thứ giữ được người xem là MỘT CON SỐ khó tin + MỘT CÂU HỎI chưa trả lời.
           // Ba nhịp trong 3 giây: số đập vào (0-0,4s) -> nhãn của số (0,4s) -> câu hỏi (0,9s).
           // Tiêu đề lùi xuống nhỏ, handle bỏ hẳn khỏi mở đầu — nó đã nằm sẵn ở đáy mọi khung.
-          <div style={{ textAlign: "center", width: "100%" }}>
+          // 26/8 — HAI LỖI THẤY BẰNG MẮT trên khung thật của FAME CURVE, mà phép đo độ tối cho QUA:
+          //  ① SỐ DẪN CÙNG MÀU VỚI NỀN. `color: c2` = `color || accent`, mà `dung_props` gán
+          //     `color = palette.primary` VÀ `bg = palette.primary` — nên số dẫn xanh nằm trên nền
+          //     xanh cùng hệ, gần như không tách ra. Nay để TRẮNG, giữ quầng sáng màu kênh làm
+          //     nhận diện: trắng tương phản với mọi nền tối, không phụ thuộc bảng màu từng kênh.
+          //  ② CẤU TRÚC NỀN XUYÊN QUA. Vạch trục thang ("1 in 10", "1 in 1,000") chạy ngang qua
+          //     số dẫn và nút câu hỏi. Thêm một tấm nền mờ sau khối hook để cắt nhiễu.
+          <div style={{ textAlign: "center", width: "100%", position: "relative",
+                        padding: "26px 18px", borderRadius: 26,
+                        background: "radial-gradient(70% 60% at 50% 46%, rgba(6,6,14,.72) 0%, rgba(6,6,14,.34) 62%, transparent 100%)" }}>
             <div style={{
               fontSize: co(Math.max(96, Math.min(210, Math.round(1180 / Math.max(3, hookStat.length))))),
-              lineHeight: 0.94, fontWeight: 900, color: c2, whiteSpace: "nowrap",
+              lineHeight: 0.94, fontWeight: 900, color: "#FFFFFF", whiteSpace: "nowrap",
               letterSpacing: -2, transform: `scale(${0.55 + 0.45 * p})`,
               textShadow: `0 0 60px ${accent}88, 0 10px 40px rgba(0,0,0,.95)`,
             }}>{hookStat}</div>
@@ -90,7 +99,15 @@ export const Bookend: React.FC<{
             {hookLine ? (
               <div style={{
                 marginTop: co(34), display: "inline-block", padding: "12px 30px", borderRadius: 14,
-                background: `linear-gradient(90deg, ${accent}, ${c2})`, color: "#080a12",
+                // 26/8 — CÙNG GỐC VỚI LỖI SỐ DẪN. Nền nút là `linear-gradient(accent, c2)` mà
+                // `dung_props` gán `accent` VÀ `color` cùng bằng `palette.primary` ⇒ gradient ra một
+                // màu tối, trên đó lại đặt chữ `#080a12` gần đen. Xem khung thật: dòng câu hỏi gần
+                // như không đọc được — mà đây là nhịp thứ ba của hook, nhịp giữ người xem ở lại.
+                // Nay nền TRẮNG ĐẶC + chữ tối: tương phản không phụ thuộc bảng màu kênh nào cả,
+                // và tạo bậc thị giác với số dẫn trắng phía trên (số = trắng trên nền tối, câu hỏi
+                // = tối trên nền trắng).
+                background: "#F2F6FF", color: "#0A0C16",
+                boxShadow: `0 6px 26px rgba(0,0,0,.45), 0 0 0 2px ${accent}66`,
                 fontWeight: 900, fontSize: co(38), letterSpacing: 0.5,
                 opacity: interpolate(f, [Math.round(fps * 0.85), Math.round(fps * 1.25)], [0, 1],
                                      { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),

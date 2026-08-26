@@ -175,7 +175,10 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
                     dù ở mốc nào cũng đọc được (khác thiết kế cũ: label giữa cột, đúng chỗ token hạ cánh -> luôn đè). */}
                 <div style={{ position: "absolute", top: -13, left: -70, whiteSpace: "nowrap", textAlign: "right", width: 130,
                   color: reached ? "#fff" : "#ffffff55", fontWeight: 800, fontSize: 22, letterSpacing: 0.5, textShadow: "0 2px 8px #000a",
-                  opacity: bidong ? 0 : 1 }}>{n === 0 ? "EVERYDAY" : fmtRung(n)}</div>
+                  // 26/8 — ẨN TRONG QUÃNG MỞ ĐẦU. Xem khung thật: "1 in 10" chạy ngang sau nút câu
+                  // hỏi, "1 in 100," bị badge cắt cụt. Quãng hook là lúc khối hook làm chủ màn hình;
+                  // nhãn trục thuộc về phần thân, hiện sớm chỉ tạo nhiễu chứ không cho thêm thông tin.
+                  opacity: (bidong || f < introF) ? 0 : 1 }}>{n === 0 ? "EVERYDAY" : fmtRung(n)}</div>
               </div>
             );
           })}
@@ -236,7 +239,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
       })() : null}
 
       {/* INTRO overlay */}
-      {f < introF ? (
+      {f < introF && !hookStat ? (
         // 26/8 — LỚP PHỦ MỞ ĐẦU TỪNG LÀ MÀN ĐEN. Nền cũ tiến về `#06050f` (gần đen tuyền) và phủ
         // KÍN khung ở `zIndex: 10`, trên đó chỉ có một emoji. Đo trên khung THẬT: **75,6% điểm tối ·
         // 332 màu** — QC trước render chặn đúng, và chặn đúng lý do: người xem mở video ra thấy màn

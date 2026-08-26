@@ -2001,6 +2001,7 @@ def main():
     check("biến thể bố cục: cùng dạng KHÔNG được trùng", t_bien_bo_cuc_khong_trung)
     check("scope Drive theo TỪNG app, không đổi đồng loạt", t_scope_drive_theo_app)
     check("radar: ứng viên rỗng KHÔNG được lọt cửa nhu cầu", t_radar_khong_lot_rong)
+    check("QC thị giác phải soi KHUNG HOOK, chấm riêng", t_qc_hook_rieng)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4286,6 +4287,37 @@ def t_radar_khong_lot_rong():
     # là bất khả xâm phạm.
     assert 'đã có kho viết tay' in src, "radar không chặn ghi đè kho viết tay"
     assert 'if isinstance(cu, list) and len(cu) >= 2:' in src, "thiếu chốt bỏ qua kênh đã có kho"
+
+
+
+
+def t_qc_hook_rieng():
+    """Khung hook phải được QC thị giác RIÊNG, không gộp điểm với phần thân.
+
+    26/8 — đo trên một video thật: QC kỹ thuật (độ dài · tiếng · khung hình · mức âm) cho qua CẢ
+    BỐN lỗi thị giác; QC-trước-render (đo % điểm tối) cho qua 4/6. Bốn lỗi còn lại chỉ MẮT thấy:
+    emoji đè lên số dẫn, số dẫn cùng màu nền, nút câu hỏi chữ tối trên nền tối, vạch trục xuyên
+    qua chữ. Khi 50 kênh chạy tự động thì không ai nhìn từng video.
+
+    `check_visual` có sẵn nhưng KHÔNG dùng được cho việc này, và đó mới là điểm cần chốt:
+      • `_stills` lấy khung ở 40% và 70% thời lượng — cố ý tránh intro, tức tránh đúng chỗ hỏng;
+      • nó lấy điểm CAO NHẤT giữa các khung. Đúng cho thân (một khung chuyển cảnh xấu không nên
+        giết cả video), SAI cho hook — hook hỏng là video hỏng, mà max-pooling sẽ để nó lọt nhờ
+        một khung giữa video sạch sẽ.
+    Nên phải có hàm riêng, lấy khung TRONG quãng hook và chấm độc lập."""
+    qv = _doc("qc_vision.py")
+    assert "def check_hook(" in qv, "không có cổng QC riêng cho khung hook"
+    i = qv.index("def check_hook(")
+    than = qv[i:i + 3000]
+    assert "giay: float = 1.2" in than, "check_hook không lấy khung TRONG quãng hook"
+    assert "max(" not in than.split("return")[0], "check_hook vẫn gộp điểm nhiều khung"
+    for tu in ("COVERED", "LOW CONTRAST", "RUN THROUGH"):
+        assert tu in than, f"prompt hook thiếu kiểu hỏng `{tu}` — đã thấy bằng mắt hôm nay"
+    th = _doc("the_he_2.py")
+    assert th.count("qc_hook_sau_render") >= 5, \
+        "chưa nối QC hook cho đủ mọi đường render (chay_chung/race/phim/long)"
+    assert 'return True, {"note": f"hook-qc-skip' in th, \
+        "QC hook không fail-open -> Vision hỏng là chặn cả dây chuyền"
 
 
 if __name__ == "__main__":

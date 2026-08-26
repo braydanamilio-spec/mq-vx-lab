@@ -215,6 +215,58 @@ def check_visual(mp4: str, api_key: str = None, model_name: str = None, min_scor
     return best >= min_score, {"score": round(best), "avg": round(sum(scores) / len(scores)), "frames": len(scores), "issues": issues[:4]}
 
 
+def check_hook(mp4: str, api_key: str = None, model_name: str = None, min_score: int = 55,
+               giay: float = 1.2):
+    """QC riêng cho KHUNG HOOK (0-3 giây). Trả (ok, info). Fail-OPEN khi Vision lỗi.
+
+    26/8 — VÌ SAO KHÔNG DÙNG `check_visual` CHO VIỆC NÀY. Hai thiết kế của nó đúng cho phần thân
+    nhưng sai hẳn cho hook:
+      • `_stills` lấy khung ở **40% và 70%** thời lượng — cố ý tránh intro. Mà 4/6 lỗi tìm được
+        hôm nay đều nằm ở quãng hook: emoji đè lên số dẫn, số dẫn cùng màu nền, nút câu hỏi chữ
+        tối trên nền tối, vạch trục xuyên qua chữ.
+      • nó lấy **điểm CAO NHẤT** giữa các khung, với lý do "một khung chuyển cảnh xấu không nên
+        giết cả video". Đúng cho thân, SAI cho hook: hook hỏng thì video hỏng, vì đó là khung
+        quyết định người xem ở lại hay lướt. Max-pooling sẽ để một hook hỏng lọt qua nhờ một
+        khung giữa video sạch sẽ.
+
+    Nên chấm hook ĐỘC LẬP, và hỏi đúng những kiểu hỏng đã thấy bằng mắt chứ không hỏi chung chung."""
+    import subprocess as _sp, os as _o
+    out = f"{mp4}.hook.jpg"
+    try:
+        _sp.run(["ffmpeg", "-y", "-ss", str(giay), "-i", mp4, "-frames:v", "1",
+                 "-vf", "scale=720:-1", out], capture_output=True, timeout=120)
+        if not _o.path.exists(out):
+            return True, {"note": "no-hook-still-skip"}
+        genai = CB._genai(api_key)
+        akey = api_key or _o.environ.get("GEMINI_API_KEY", "")
+        mn = model_name or CB._pick_model(genai, "flash", akey) or "gemini-3.5-flash"
+        model = genai.GenerativeModel(mn)
+        prompt = (
+            "This is the OPENING frame (first ~2 seconds) of a short vertical video. It should show "
+            "ONE big headline number, a short label, and one short question line. Rate 0-100 how well "
+            "a scrolling viewer could read it INSTANTLY. "
+            "LIST in issues any of: (a) the big number is PARTLY COVERED by an emoji, icon or graphic; "
+            "(b) any text has LOW CONTRAST against what is behind it (dark text on dark, or text the "
+            "same colour family as the background); (c) background lines, axis labels or chart elements "
+            "RUN THROUGH the text; (d) text CUT OFF at the edges; (e) frame mostly black or empty. "
+            "Clean, high-contrast, instantly readable = 80+. Only score <50 if genuinely hard to read. "
+            'Return STRICT JSON only: {"score": 0-100, "issues": [str]}')
+        img = {"mime_type": "image/jpeg", "data": open(out, "rb").read()}
+        resp = model.generate_content([prompt, img],
+                                      generation_config={"response_mime_type": "application/json",
+                                                         "temperature": 0.1},
+                                      request_options={"timeout": 30})
+        r = CB._extract_json(resp.text) or {}
+        sc = float(r.get("score", 0) or 0)
+    except Exception as e:
+        _report_quota(e)
+        return True, {"note": f"hook-vision-skip: {str(e)[:70]}"}
+    finally:
+        try: _o.remove(out)
+        except Exception: pass
+    return sc >= min_score, {"hook_score": round(sc), "issues": (r.get("issues") or [])[:4]}
+
+
 def check_thumb(jpg: str, title: str = "", api_key: str = None, model_name: str = None,
                 min_score: int = 60):
     """QC VISUAL RIÊNG CHO THUMBNAIL (ảnh tĩnh 1280x720) — trước đây CHỈ video được soi, thumbnail

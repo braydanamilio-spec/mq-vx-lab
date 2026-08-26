@@ -112,7 +112,7 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
       })}
 
       {/* INTRO overlay */}
-      {f < introF ? (
+      {f < introF && !hookStat ? (
         <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #2FA84F22, #060b08 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620 }}>
           <div style={{ fontSize: 150, transform: `scale(${introP})` }}>📏</div>
         </AbsoluteFill>

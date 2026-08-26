@@ -135,7 +135,7 @@ export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
       ) : null}
 
       {/* INTRO */}
-      {f < introF ? (
+      {f < introF && !hookStat ? (
         <AbsoluteFill style={{ background: "radial-gradient(circle at 50% 42%, #EC489922, #08060a 70%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620 }}>
           <div style={{ fontSize: 140, transform: `scale(${introP})` }}>⏳</div>
         </AbsoluteFill>
