@@ -1111,6 +1111,51 @@ def t_duong_lui_khong_duoc_khuech_dai_loi():
         "nhánh lỗi của dong_goi_keys_a không phân biệt 429 với lỗi thường"
 
 
+
+def t_seed_khong_bi_spread_de_len_khoa_co_y():
+    """Trong seed 50 kênh gen-2, `**dich` không được đè khoá mà seed CỐ Ý quyết.
+
+    26/8 — bắt trước khi chạy, nên chưa mất gì. `doc` viết:
+
+        doc = {..., "type":"short", "make_long":False, "long_target":0, "n_shorts":3,
+               **dich, "format":..., ...}
+
+    mà `TARGET` (nguồn của `dich`) lại chứa đúng `long_target`, `n_shorts`, `make_long`. Python lấy
+    giá trị SAU, nên `**dich` âm thầm đè cả ba: 50 kênh thiết kế là SHORT sẽ nhận chỉ tiêu long của
+    kênh mẫu. Không lỗi, không log — vài tiếng sau mới lộ ra bằng một loạt video sai định dạng, và
+    lúc đó phải sửa 50 bản ghi.
+
+    Kiểm hai điều, bằng AST chứ không khớp chuỗi:
+      ① `TARGET` không giao với nhóm khoá cố ý.
+      ② Trong `doc`, mọi khoá cố ý phải đứng SAU dấu `**`."""
+    import ast as _ast
+    src = _doc("seed_the_he_2.py")
+    cay = _ast.parse(src)
+    CO_Y = {"type", "make_long", "long_target", "n_shorts", "format", "the_he", "paused"}
+
+    tgt = next((n for n in _ast.walk(cay) if isinstance(n, _ast.Assign)
+                and any(getattr(t, "id", "") == "TARGET" for t in n.targets)), None)
+    assert tgt, "mất biến TARGET trong seed_the_he_2.py"
+    ten_tgt = {e.value for e in tgt.value.elts if isinstance(e, _ast.Constant)}
+    chung = CO_Y & ten_tgt
+    assert not chung, (f"TARGET thừa hưởng {sorted(chung)} — nhưng seed cố ý tự quyết mấy khoá này; "
+                       "**dich sẽ đè lên chúng")
+
+    for d in _ast.walk(cay):
+        if not isinstance(d, _ast.Dict):
+            continue
+        khoa = [(i, k.value) for i, k in enumerate(d.keys)
+                if isinstance(k, _ast.Constant) and isinstance(k.value, str)]
+        if not any(k in CO_Y for _, k in khoa):
+            continue
+        sao = [i for i, k in enumerate(d.keys) if k is None]      # vị trí của **spread
+        if not sao:
+            continue
+        som = [k for i, k in khoa if k in CO_Y and i < max(sao)]
+        assert not som, (f"khoá cố ý {sorted(set(som))} đặt TRƯỚC ** trong dict -> bị spread đè. "
+                         "Đưa xuống SAU **, thứ tự này là điều kiện đúng chứ không phải thẩm mỹ")
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1221,6 +1266,7 @@ def main():
     check("không đệm kết quả RỖNG (bẫy làm dashboard trắng)", t_khong_dem_ket_qua_rong)
     check("phanh mù thì giả định CẠN, không giả định đầy", t_phanh_do_khong_duoc_phai_gia_dinh_can)
     check("đường lùi không khuếch đại lỗi (1 lượt 429 -> 18)", t_duong_lui_khong_duoc_khuech_dai_loi)
+    check("seed 50 kênh: **spread không đè khoá cố ý", t_seed_khong_bi_spread_de_len_khoa_co_y)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

@@ -21,7 +21,13 @@ import sys
 
 GOC = os.path.dirname(os.path.abspath(__file__))
 DS = os.path.join(GOC, "kenh_the_he_2.json")
-TARGET = ["short_target", "long_target", "n_shorts", "make_long", "tier", "cap_gb"]
+# Khoá THỪA HƯỞNG từ một kênh mẫu đang chạy (hạn mức kho, bậc chất lượng...).
+# 26/8 — BẢN ĐẦU CÓ CẢ "long_target", "n_shorts", "make_long" TRONG DANH SÁCH NÀY, mà ba khoá đó
+# lại được đặt TƯỜNG MINH ngay phía trên `**dich` trong `doc`. Python lấy giá trị SAU, nên `**dich`
+# âm thầm đè cả ba: 50 kênh gen-2 (thiết kế là SHORT, 3 clip, không làm long) sẽ ra đời với chỉ tiêu
+# long của kênh cũ. Không lỗi, không log — chỉ vài tiếng sau ra một loạt video sai định dạng.
+# Nay: khoá nào seed cố ý quyết thì KHÔNG thừa hưởng, và phần cố ý được đặt SAU `**dich`.
+TARGET = ["short_target", "tier", "cap_gb"]
 
 
 def _db():
@@ -66,9 +72,12 @@ def main() -> int:
             print(f"  ⏭  {ten:18} đã có -> bỏ qua"); bo += 1; continue
         b = k.get("brand") or {}
         pal = b.get("palette") or {}
-        doc = {"owner": owner, "name": ten, "the_he": 2, "paused": not bat,
+        doc = {"owner": owner, "name": ten,
+               **dich,          # thừa hưởng trước...
+               # ...rồi phần CỐ Ý của gen-2 ghi đè lên. Thứ tự này là điều kiện đúng, không phải
+               # thẩm mỹ: đảo lại là 50 kênh nhận nhầm chỉ tiêu long của kênh mẫu.
+               "the_he": 2, "paused": not bat,
                "type": "short", "make_long": False, "long_target": 0, "n_shorts": 3,
-               **dich,
                "format": k["dinh_dang"], "accent": pal.get("primary", "#22D3EE"),
                "accent2": pal.get("accent", "#F5B301"),
                "handle": k["handle"], "niche": k["goc_nhin"], "brand": b}

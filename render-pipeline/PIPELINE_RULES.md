@@ -3250,3 +3250,27 @@ key B, không hợp nhất A. Đúng cơ chế "báo chung" đã làm cho projec
 lên N lần, là tệ hơn không có đường lùi. Trạng thái "nguồn X đã cạn" là sự thật CHUNG của phiên —
 biết rồi thì **báo xuống**, đừng để 18 lane mỗi đứa tự đâm vào tường một lần mới tin.
 Chốt: `t_duong_lui_khong_duoc_khuech_dai_loi` (đã thử phá).
+
+
+### 7.ea — `**spread` ĐÈ LÊN KHOÁ ĐẶT TRƯỚC NÓ (26/8/2026, bắt TRƯỚC khi chạy)
+
+Soi trước bản seed 50 kênh gen-2 vì nó chỉ có **một** lần bấm lúc 07:00Z. `doc` viết:
+
+```python
+doc = {..., "type":"short", "make_long":False, "long_target":0, "n_shorts":3,
+       **dich, "format":..., ...}
+TARGET = ["short_target", "long_target", "n_shorts", "make_long", "tier", "cap_gb"]
+```
+
+`dich` lấy từ `TARGET`, mà `TARGET` chứa đúng ba khoá vừa đặt tường minh ở trên. Python lấy giá trị
+SAU ⇒ `**dich` âm thầm đè cả ba. 50 kênh thiết kế là SHORT (3 clip, không long) sẽ ra đời mang chỉ
+tiêu long của kênh mẫu. Không lỗi, không log — vài tiếng sau mới lộ bằng một loạt video sai định
+dạng, và lúc đó phải sửa tay 50 bản ghi.
+
+Vá: bỏ `long_target`/`n_shorts`/`make_long` khỏi `TARGET` (seed tự quyết), và đưa TOÀN BỘ phần cố ý
+xuống **sau** `**dich`. Chốt `t_seed_khong_bi_spread_de_len_khoa_co_y` — chốt này còn bắt thêm
+`the_he`/`paused` cũng đứng trước `**` (hôm nay chưa bị đè, nhưng cùng bẫy) ⇒ đã dời nốt.
+
+**Luật**: trong một dict có `**`, thứ tự là ĐIỀU KIỆN ĐÚNG, không phải thẩm mỹ. Khoá mà mã cố ý
+quyết phải đứng **sau** mọi `**`; khoá thừa hưởng đứng trước. Và một danh sách "khoá thừa hưởng"
+không bao giờ được giao với nhóm khoá mã tự quyết.
