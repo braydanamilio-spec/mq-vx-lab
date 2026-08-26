@@ -4219,8 +4219,16 @@ def t_scope_drive_theo_app():
     src = _doc(p)
     assert "DRIVE_SCOPES_FILE" in src, "không có scope riêng cho app mới"
     assert '"https://www.googleapis.com/auth/drive",' in src,         "app gốc mất scope drive FULL -> 88 kho đang chạy sẽ invalid_scope khi refresh"
-    assert "client.goc ? DRIVE_SCOPES : DRIVE_SCOPES_FILE" in src,         "scope không phụ thuộc app -> hoặc chặn app mới, hoặc giết kho cũ"
-    assert 'kind === "drive" && client.goc' in src,         "vẫn gửi người dùng vào app gốc đã đầy user-cap"
+    assert 'client.kieu === "full" ? DRIVE_SCOPES : DRIVE_SCOPES_FILE' in src, \
+        "scope không phụ thuộc app -> hoặc chặn app mới, hoặc giết kho cũ"
+    # 26/8 — anh nhận xét đúng: "tưởng nó phải tự điều hướng chứ". Bản đầu viết CỨNG "app đầu tiên
+    # đã đầy" thành một cờ trong mã; thêm app thứ ba là phải sửa tay, và app thứ hai đầy thì không
+    # ai biết. Nay hệ ĐẾM số kho từng app đang giữ (đọc KV, 0 lượt Firestore) rồi tự loại app
+    # chạm trần, hết sạch thì in ra bảng số chứ không để người dùng nhìn màn hình trống của Google.
+    assert "demKhoTheoApp" in src and "appConCho" in src, \
+        "chọn app bằng cờ viết cứng thay vì đo -> thêm app mới phải sửa tay"
+    assert "Hết chỗ nối kho" in src, \
+        "hết app còn chỗ mà không báo gì -> người dùng chỉ thấy màn hình trống của Google"
 
 
 if __name__ == "__main__":
