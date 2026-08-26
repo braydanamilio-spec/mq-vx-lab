@@ -154,9 +154,21 @@ chủ đề đã sát ranh giới quảng cáo. Cách an toàn đang dùng: **lu
   khung render thật: khung không có nhịp **giống hệt từng byte** so với trước khi sửa ⇒ không đụng
   gì ngoài đúng lúc chuyển cảnh.
   **Còn lại**: 6 dạng gen-2 kia vẫn dùng âm rời rạc cũ — chuyển dần, mỗi lần một dạng + canary.
-- **thumbnail đa dạng template** — hiện 1 khuôn (`doc_thumb`). **Chưa có** nhiều template.
-- **không lặp một mô-típ giữa các kênh** — thế hệ 2 đã tách 8 dạng hình × 22 motif brand-kit,
-  nhưng chưa có chốt đo "độ giống nhau giữa hai kênh bất kỳ".
+- **thumbnail đa dạng template** — hiện 1 khuôn (`doc_thumb`). **Chưa có** nhiều template. → còn lại.
+- ~~**không lặp một mô-típ giữa các kênh**~~ → **ĐÃ CÓ CHỐT (26/8)**: `do_giong_nhau.py` chấm 0..100
+  cho MỌI cặp trong 1.225 cặp, ngưỡng 70 = "đủ giống để người lướt qua tưởng cùng một kênh".
+  Trọng số theo thứ khán giả nhận ra trước: định dạng 45 · giọng 18 · mô-típ 12 · màu 10 ·
+  chuyển cảnh 8 · phông 7.
+
+  | | trước | sau |
+  |---|---|---|
+  | cặp ≥70 điểm | **241** | **0** |
+  | cặp giống nhất | **97,9** (ALERT NOW ~ QUAKE LOG) | **68,9** |
+  | trung bình | 38,8 | 18,2 |
+
+  Ba chiều từng phẳng lì, nay đã tách: `voice` (chưa kênh nào có → **50 chữ ký giọng khác nhau**,
+  0 trùng), `font` (1 → **24 phông**, 0 trùng trong cùng định dạng), mô-típ brand (0 trùng trong
+  cùng định dạng). Chốt `t_50_kenh_khong_duoc_giong_nhau` chặn ngay ở selftest.
 
 ### C. Luật khi thêm chuẩn mới
 1. Chuẩn nào **đo được** thì phải thành CHỐT, không để ở dạng lời dặn — lời dặn sẽ bị quên.

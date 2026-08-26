@@ -1148,12 +1148,89 @@ def t_seed_khong_bi_spread_de_len_khoa_co_y():
                 if isinstance(k, _ast.Constant) and isinstance(k.value, str)]
         if not any(k in CO_Y for _, k in khoa):
             continue
-        sao = [i for i, k in enumerate(d.keys) if k is None]      # vị trí của **spread
+        # CHỈ soi `**ten_bien` — túi mà nội dung do dữ liệu quyết, không đọc được từ mã.
+        # `**ham(...)` thì khác: khoá của nó cố định trong thân hàm, kiểm được, và ở seed nó là
+        # chữ ký giọng (voice/voice_rate/voice_pitch) — rời hẳn nhóm khoá cố ý. Gộp hai loại làm
+        # một là chốt kêu oan, mà chốt kêu oan thì lần sau người ta tắt nó đi.
+        sao = [i for i, k in enumerate(d.keys)
+               if k is None and isinstance(d.values[i], _ast.Name)]
         if not sao:
             continue
         som = [k for i, k in khoa if k in CO_Y and i < max(sao)]
         assert not som, (f"khoá cố ý {sorted(set(som))} đặt TRƯỚC ** trong dict -> bị spread đè. "
                          "Đưa xuống SAU **, thứ tự này là điều kiện đúng chứ không phải thẩm mỹ")
+
+
+
+def t_50_kenh_khong_duoc_giong_nhau():
+    """50 kênh gen-2 phải KHÁC NHAU, đo bằng số chứ không bằng lời hứa.
+
+    26/8 — đo lần đầu: **241 cặp ≥70 điểm, cặp tệ nhất 97,9** (ALERT NOW ~ QUAKE LOG gần như một
+    kênh). Ba chiều phẳng lì: `font` 1 giá trị cho cả 50, `voice_tone` 1 giá trị, và chưa kênh nào
+    có trường `voice` nên tất cả sẽ đọc bằng cùng một giọng mặc định.
+
+    Đây không phải chuyện thẩm mỹ. Chú thích trong `tts_karaoke.set_voice` đã ghi rõ: nhiều kênh
+    cùng chủ mà nghe/nhìn như nhau chính là thứ chính sách "inauthentic, mass-produced content" của
+    YouTube nhắm tới — rủi ro bật kiếm tiền lớn hơn mọi lỗi kỹ thuật cộng lại.
+
+    Sau khi vá (50 chữ ký giọng riêng · 24 phông · mô-típ không trùng trong cùng định dạng):
+    **0 cặp vượt ngưỡng**, cao nhất 68,9, trung bình 38,8 -> 18,2."""
+    import do_giong_nhau as DG
+    ps = DG.do()
+    vuot = [p for p in ps if p[0] >= DG.NGUONG]
+    assert not vuot, ("có %d cặp kênh giống nhau ≥%.0f điểm: " % (len(vuot), DG.NGUONG)
+                      + " · ".join(f"{s} ({x}~{y})" for s, x, y in vuot[:4]))
+
+
+def t_bam_python_khop_typescript():
+    """Hàm băm bên Python phải cho ĐÚNG kết quả như bên TypeScript.
+
+    `do_giong_nhau.py` chấm điểm "hai kênh có cùng chữ ký chuyển cảnh không" bằng bản băm Python,
+    còn thứ thật sự chạy lúc render là bản trong `Chuyen.tsx`. Hai bên lệch nhau một bước trộn bit
+    là bảng điểm nói về một hệ KHÁC với hệ đang render — một phép đo nói dối, tệ hơn không đo."""
+    import re as _re
+    # BỎ CHÚ THÍCH TRƯỚC KHI SOI. Thử phá 26/8: biến `h ^= h >>> 15;` thành `// h ^= h >>> 15;`
+    # thì chốt vẫn xanh — vì chuỗi vẫn nằm đó, chỉ là đã chết. Một chốt đọc cả chú thích là chốt
+    # tin vào lời kể chứ không tin vào mã đang chạy.
+    src = _re.sub(r"//[^\n]*", "", _doc("../engine-remotion/src/Chuyen.tsx"))
+    for buoc in ("h ^= h >>> 15", "Math.imul(h, 2246822519)", "h ^= h >>> 13", "16777619", "2166136261"):
+        assert buoc in src, f"Chuyen.tsx thiếu bước băm '{buoc}' — bản Python sẽ lệch"
+    import do_giong_nhau as DG
+    # đối chiếu bằng chính công thức TS, tính lại trong Python theo đúng thứ tự
+    def ts(sx):
+        h = 2166136261
+        for c in sx:
+            h = ((h ^ ord(c)) * 16777619) & 0xFFFFFFFF
+        h ^= h >> 15
+        h = (h * 2246822519) & 0xFFFFFFFF
+        h ^= h >> 13
+        return h & 0xFFFFFFFF
+    for t in ("@mappedusa", "@quakelogusa", "@paycheckgap", "", "x"):
+        assert DG._bam(t) == ts(t), f"băm lệch ở '{t}': {DG._bam(t)} != {ts(t)}"
+
+
+def t_phong_khai_roi_phai_thao_ra():
+    """Composition khai prop `font` thì PHẢI thao nó ra khỏi props.
+
+    Đúng lớp lỗi `vang is not defined` (25/8, mất trọn một phiên 18 lane / 0 video): khai trong
+    type mà quên destructure -> `ReferenceError` ngay khung đầu. Canary 26/8 bắt lại đúng lỗi này
+    ở `ThenNowShort`: `phong(font)` nằm trong `TNPairView`, một component KHÁC, không hề nhận
+    `font` — nên khai đúng ở component cha vẫn hỏng."""
+    import re as _re
+    xau = []
+    for ten in ("RankedShort", "ScaledShort", "MappedShort", "LongshotShort", "ThenNowShort"):
+        src = _doc(f"../engine-remotion/src/{ten}.tsx")
+        if "phong(font)" not in src:
+            xau.append(f"{ten}: không dùng phong(font) — phông riêng của kênh vô tác dụng")
+            continue
+        for m in _re.finditer(r"(?:const|export const)\s+(\w+)[^=]*=\s*\(?\{([^}]*)\}", src):
+            pass
+        # mọi component có phong(font) phải có `font` trong danh sách thao ra của CHÍNH nó
+        for kh in _re.finditer(r"=\s*\(\{([^}]*)\}[^)]*\)\s*=>\s*\{", src):
+            pass
+        if not _re.search(r"\bfont\s*=\s*\"\"", src):
+            xau.append(f"{ten}: có phong(font) nhưng không chỗ nào thao `font` ra")
+    assert not xau, "; ".join(xau)
 
 
 def main():
@@ -1267,6 +1344,9 @@ def main():
     check("phanh mù thì giả định CẠN, không giả định đầy", t_phanh_do_khong_duoc_phai_gia_dinh_can)
     check("đường lùi không khuếch đại lỗi (1 lượt 429 -> 18)", t_duong_lui_khong_duoc_khuech_dai_loi)
     check("seed 50 kênh: **spread không đè khoá cố ý", t_seed_khong_bi_spread_de_len_khoa_co_y)
+    check("50 kênh không được giống nhau (≥70 điểm)", t_50_kenh_khong_duoc_giong_nhau)
+    check("băm Python khớp băm TypeScript", t_bam_python_khop_typescript)
+    check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

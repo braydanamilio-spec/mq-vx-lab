@@ -1,2413 +1,2413 @@
 [
- {
-  "id": 1,
-  "niche": "Đồ ăn & đồ uống",
-  "ten": "WHAT IS IN IT",
-  "handle": "@whatisinitusa",
-  "chat_lieu": "C",
-  "nguon": "usda",
-  "ham": "thanh_phan_mon",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Thành phần thật trong món quen",
-  "style_anh": "ảnh sản phẩm sạch, nền giấy gói",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "mon": "breakfast-cereals",
-   "nhan": "Breakfast cereal",
-   "xoay": "mon"
+  {
+    "id": 1,
+    "niche": "Đồ ăn & đồ uống",
+    "ten": "WHAT IS IN IT",
+    "handle": "@whatisinitusa",
+    "chat_lieu": "C",
+    "nguon": "usda",
+    "ham": "thanh_phan_mon",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Thành phần thật trong món quen",
+    "style_anh": "ảnh sản phẩm sạch, nền giấy gói",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "mon": "breakfast-cereals",
+      "nhan": "Breakfast cereal",
+      "xoay": "mon"
+    },
+    "brand": {
+      "name": "WHAT IS IN IT",
+      "handle": "@whatisinitusa",
+      "tagline": "What the label does not say",
+      "niche": "Đồ ăn & đồ uống",
+      "palette": {
+        "bg": "#0A1317",
+        "primary": "#B85353",
+        "secondary": "#C28E61",
+        "accent": "#37FAE0",
+        "text": "#F2F6FF"
+      },
+      "font": "alfa",
+      "motif": "house",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What the label does not say. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What the label does not say. Real records, real numbers.",
+        "instagram": "What the label does not say"
+      },
+      "keywords": [
+        "what",
+        "is",
+        "in",
+        "it",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "ảnh sản phẩm sạch, nền giấy gói"
+    }
   },
-  "brand": {
-   "name": "WHAT IS IN IT",
-   "handle": "@whatisinitusa",
-   "tagline": "What the label does not say",
-   "niche": "Đồ ăn & đồ uống",
-   "palette": {
-    "bg": "#0A1317",
-    "primary": "#B85353",
-    "secondary": "#C28E61",
-    "accent": "#37FAE0",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "plate",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What the label does not say. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What the label does not say. Real records, real numbers.",
-    "instagram": "What the label does not say"
-   },
-   "keywords": [
-    "what",
-    "is",
-    "in",
-    "it",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "ảnh sản phẩm sạch, nền giấy gói"
+  {
+    "id": 2,
+    "niche": "Đồ ăn & đồ uống",
+    "ten": "RECALL PLATE",
+    "handle": "@recallplate",
+    "chat_lieu": "A",
+    "nguon": "openfda",
+    "ham": "thu_hoi_fda",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Đồ ăn bị thu hồi tuần này",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "kho": "thuc_pham",
+      "xoay": "nam"
+    },
+    "brand": {
+      "name": "RECALL PLATE",
+      "handle": "@recallplate",
+      "tagline": "Pulled from shelves this week",
+      "niche": "Đồ ăn & đồ uống",
+      "palette": {
+        "bg": "#170F0A",
+        "primary": "#2BF0F0",
+        "secondary": "#50ABFA",
+        "accent": "#FA3751",
+        "text": "#F2F6FF"
+      },
+      "font": "outfit",
+      "motif": "plate",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Pulled from shelves this week. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Pulled from shelves this week. Real records, real numbers.",
+        "instagram": "Pulled from shelves this week"
+      },
+      "keywords": [
+        "recall",
+        "plate",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 3,
+    "niche": "Đồ ăn & đồ uống",
+    "ten": "CALORIE SHOCK",
+    "handle": "@calorieshockusa",
+    "chat_lieu": "C",
+    "nguon": "usda",
+    "ham": "thanh_phan_mon",
+    "dinh_dang": "scaled",
+    "goc_nhin": "Món này bằng mấy bữa cơm",
+    "style_anh": "ảnh món ăn chụp trên cao",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "mon": "pizzas",
+      "nhan": "Frozen pizza",
+      "xoay": "mon"
+    },
+    "brand": {
+      "name": "CALORIE SHOCK",
+      "handle": "@calorieshockusa",
+      "tagline": "One meal, real numbers",
+      "niche": "Đồ ăn & đồ uống",
+      "palette": {
+        "bg": "#170A13",
+        "primary": "#27D627",
+        "secondary": "#48E08F",
+        "accent": "#E037FA",
+        "text": "#F2F6FF"
+      },
+      "font": "archivo",
+      "motif": "plate",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "One meal, real numbers. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "One meal, real numbers. Real records, real numbers.",
+        "instagram": "One meal, real numbers"
+      },
+      "keywords": [
+        "calorie",
+        "shock",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "ảnh món ăn chụp trên cao"
+    }
+  },
+  {
+    "id": 4,
+    "niche": "Sức khoẻ & gym",
+    "ten": "ONE STUDY",
+    "handle": "@onestudyusa",
+    "chat_lieu": "C",
+    "nguon": "pubmed",
+    "ham": "nghien_cuu",
+    "dinh_dang": "cinematic",
+    "goc_nhin": "Một nghiên cứu thật, giải thích gọn",
+    "style_anh": "minh hoạ giải phẫu nét mảnh",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "sleep",
+      "xoay": "tu_khoa"
+    },
+    "brand": {
+      "name": "ONE STUDY",
+      "handle": "@onestudyusa",
+      "tagline": "One real study, explained straight",
+      "niche": "Sức khoẻ & gym",
+      "palette": {
+        "bg": "#13170A",
+        "primary": "#2727D6",
+        "secondary": "#8F48E0",
+        "accent": "#FAE037",
+        "text": "#F2F6FF"
+      },
+      "font": "barlow",
+      "motif": "flask",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "One real study, explained straight. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "One real study, explained straight. Real records, real numbers.",
+        "instagram": "One real study, explained straight"
+      },
+      "keywords": [
+        "one",
+        "study",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "minh hoạ giải phẫu nét mảnh"
+    }
+  },
+  {
+    "id": 5,
+    "niche": "Sức khoẻ & gym",
+    "ten": "PILL FACTS",
+    "handle": "@pillfactsusa",
+    "chat_lieu": "A",
+    "nguon": "openfda",
+    "ham": "thu_hoi_fda",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Thuốc bị thu và lý do thật",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "kho": "thuoc",
+      "xoay": "nam"
+    },
+    "brand": {
+      "name": "PILL FACTS",
+      "handle": "@pillfactsusa",
+      "tagline": "What the FDA pulled and why",
+      "niche": "Sức khoẻ & gym",
+      "palette": {
+        "bg": "#0F0A17",
+        "primary": "#F0F02B",
+        "secondary": "#ABFA50",
+        "accent": "#3751FA",
+        "text": "#F2F6FF"
+      },
+      "font": "kanit",
+      "motif": "flask",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What the FDA pulled and why. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What the FDA pulled and why. Real records, real numbers.",
+        "instagram": "What the FDA pulled and why"
+      },
+      "keywords": [
+        "pill",
+        "facts",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 6,
+    "niche": "Tiền cá nhân",
+    "ten": "PAYCHECK GAP",
+    "handle": "@paycheckgap",
+    "chat_lieu": "A",
+    "nguon": "bls",
+    "ham": "chuoi_bls",
+    "dinh_dang": "scaled",
+    "goc_nhin": "Lương tăng chậm hơn giá bao nhiêu",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "nhom": [
+        "luong_gio",
+        "cpi_nha",
+        "cpi_thucpham",
+        "cpi_yte",
+        "cpi_di_lai",
+        "cpi_giao_duc"
+      ],
+      "nhan": "Your pay against your bills"
+    },
+    "brand": {
+      "name": "PAYCHECK GAP",
+      "handle": "@paycheckgap",
+      "tagline": "Your raise versus your rent",
+      "niche": "Tiền cá nhân",
+      "palette": {
+        "bg": "#0A170F",
+        "primary": "#F02BF0",
+        "secondary": "#FA50AB",
+        "accent": "#51FA37",
+        "text": "#F2F6FF"
+      },
+      "font": "montserrat",
+      "motif": "coins",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Your raise versus your rent. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Your raise versus your rent. Real records, real numbers.",
+        "instagram": "Your raise versus your rent"
+      },
+      "keywords": [
+        "paycheck",
+        "gap",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 7,
+    "niche": "Tiền cá nhân",
+    "ten": "RENT REALITY",
+    "handle": "@rentrealityusa",
+    "chat_lieu": "A",
+    "nguon": "zillow",
+    "ham": "gia_nha_zillow",
+    "dinh_dang": "thennow",
+    "goc_nhin": "Tiền thuê nhà xưa và nay",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "bangs": [
+        "California",
+        "Texas",
+        "Florida",
+        "New York",
+        "Ohio",
+        "Idaho"
+      ]
+    },
+    "brand": {
+      "name": "RENT REALITY",
+      "handle": "@rentrealityusa",
+      "tagline": "What a roof costs now",
+      "niche": "Tiền cá nhân",
+      "palette": {
+        "bg": "#170A15",
+        "primary": "#86F06C",
+        "secondary": "#7DFA9E",
+        "accent": "#B937FA",
+        "text": "#F2F6FF"
+      },
+      "font": "playfair",
+      "motif": "coins",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What a roof costs now. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What a roof costs now. Real records, real numbers.",
+        "instagram": "What a roof costs now"
+      },
+      "keywords": [
+        "rent",
+        "reality",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 8,
+    "niche": "Tiền cá nhân",
+    "ten": "PRICE OF NOW",
+    "handle": "@priceofnow",
+    "chat_lieu": "A",
+    "nguon": "bls",
+    "ham": "chuoi_bls",
+    "dinh_dang": "race",
+    "goc_nhin": "Món nào tăng giá nhanh nhất",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "chuoi": "cpi_thucpham",
+      "nhan": "Food price",
+      "nhom": [
+        "cpi_thucpham",
+        "cpi_xang",
+        "cpi_nha",
+        "cpi_yte",
+        "cpi_di_lai",
+        "cpi_giao_duc"
+      ]
+    },
+    "brand": {
+      "name": "PRICE OF NOW",
+      "handle": "@priceofnow",
+      "tagline": "What got expensive this year",
+      "niche": "Tiền cá nhân",
+      "palette": {
+        "bg": "#15170A",
+        "primary": "#6C86F0",
+        "secondary": "#9E7DFA",
+        "accent": "#FAB937",
+        "text": "#F2F6FF"
+      },
+      "font": "khand",
+      "motif": "coins",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What got expensive this year. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What got expensive this year. Real records, real numbers.",
+        "instagram": "What got expensive this year"
+      },
+      "keywords": [
+        "price",
+        "of",
+        "now",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 9,
+    "niche": "Tội phạm có thật",
+    "ten": "COURT RECORD",
+    "handle": "@courtrecordusa",
+    "chat_lieu": "C",
+    "nguon": "court",
+    "ham": "ban_an",
+    "dinh_dang": "cinematic",
+    "goc_nhin": "Một vụ án kể từ hồ sơ toà",
+    "style_anh": "phác thảo phòng xử, than chì",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "wrongful death",
+      "xoay": "tu_khoa"
+    },
+    "brand": {
+      "name": "COURT RECORD",
+      "handle": "@courtrecordusa",
+      "tagline": "Straight from the court file",
+      "niche": "Tội phạm có thật",
+      "palette": {
+        "bg": "#170B0A",
+        "primary": "#21B892",
+        "secondary": "#3EA5C2",
+        "accent": "#FA3782",
+        "text": "#F2F6FF"
+      },
+      "font": "rubik",
+      "motif": "cap",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Straight from the court file. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Straight from the court file. Real records, real numbers.",
+        "instagram": "Straight from the court file"
+      },
+      "keywords": [
+        "court",
+        "record",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "phác thảo phòng xử, than chì"
+    }
+  },
+  {
+    "id": 10,
+    "niche": "Tội phạm có thật",
+    "ten": "SUED FOR THIS",
+    "handle": "@suedforthis",
+    "chat_lieu": "A",
+    "nguon": "court",
+    "ham": "ban_an",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Công ty bị kiện vì cái gì",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "false advertising",
+      "xoay": "tu_khoa"
+    },
+    "brand": {
+      "name": "SUED FOR THIS",
+      "handle": "@suedforthis",
+      "tagline": "The lawsuit they hoped you missed",
+      "niche": "Tội phạm có thật",
+      "palette": {
+        "bg": "#0A170B",
+        "primary": "#9221B8",
+        "secondary": "#C23EA5",
+        "accent": "#82FA37",
+        "text": "#F2F6FF"
+      },
+      "font": "khand",
+      "motif": "scale",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "The lawsuit they hoped you missed. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "The lawsuit they hoped you missed. Real records, real numbers.",
+        "instagram": "The lawsuit they hoped you missed"
+      },
+      "keywords": [
+        "sued",
+        "for",
+        "this",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 11,
+    "niche": "Tội phạm có thật",
+    "ten": "COLD FILE",
+    "handle": "@coldfileusa",
+    "chat_lieu": "C",
+    "nguon": "court",
+    "ham": "ban_an",
+    "dinh_dang": "cinematic",
+    "goc_nhin": "Vụ cũ chưa khép lại",
+    "style_anh": "ảnh tài liệu ố vàng",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "habeas corpus",
+      "xoay": "tu_khoa"
+    },
+    "brand": {
+      "name": "COLD FILE",
+      "handle": "@coldfileusa",
+      "tagline": "The case nobody closed",
+      "niche": "Tội phạm có thật",
+      "palette": {
+        "bg": "#0A1716",
+        "primary": "#F06CA1",
+        "secondary": "#FA857D",
+        "accent": "#37FA92",
+        "text": "#F2F6FF"
+      },
+      "font": "montserrat",
+      "motif": "scale",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "The case nobody closed. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "The case nobody closed. Real records, real numbers.",
+        "instagram": "The case nobody closed"
+      },
+      "keywords": [
+        "cold",
+        "file",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "ảnh tài liệu ố vàng"
+    }
+  },
+  {
+    "id": 12,
+    "niche": "Bí ẩn chưa lời giải",
+    "ten": "UNSOLVED LOG",
+    "handle": "@unsolvedlog",
+    "chat_lieu": "B",
+    "nguon": "wikipedia",
+    "ham": "bai_duoc_doc",
+    "dinh_dang": "cinematic",
+    "goc_nhin": "Bí ẩn nước Mỹ đang tra lại",
+    "style_anh": "tranh khắc gỗ đen trắng",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "loc": "bi_an",
+      "xoay": "ngay"
+    },
+    "brand": {
+      "name": "UNSOLVED LOG",
+      "handle": "@unsolvedlog",
+      "tagline": "Still no answer",
+      "niche": "Bí ẩn chưa lời giải",
+      "palette": {
+        "bg": "#100A17",
+        "primary": "#A1B821",
+        "secondary": "#71C23E",
+        "accent": "#3A37FA",
+        "text": "#F2F6FF"
+      },
+      "font": "lexend",
+      "motif": "coins",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Still no answer. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Still no answer. Real records, real numbers.",
+        "instagram": "Still no answer"
+      },
+      "keywords": [
+        "unsolved",
+        "log",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "tranh khắc gỗ đen trắng"
+    }
+  },
+  {
+    "id": 13,
+    "niche": "Bí ẩn chưa lời giải",
+    "ten": "MISSING PIECE",
+    "handle": "@missingpieceusa",
+    "chat_lieu": "B",
+    "nguon": "wikipedia",
+    "ham": "bai_duoc_doc",
+    "dinh_dang": "cinematic",
+    "goc_nhin": "Thứ biến mất không lời giải",
+    "style_anh": "ảnh sương mù đơn sắc",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "loc": "mat_tich",
+      "xoay": "ngay"
+    },
+    "brand": {
+      "name": "MISSING PIECE",
+      "handle": "@missingpieceusa",
+      "tagline": "Gone, and never explained",
+      "niche": "Bí ẩn chưa lời giải",
+      "palette": {
+        "bg": "#0A0C17",
+        "primary": "#F08D2B",
+        "secondary": "#FAF450",
+        "accent": "#37B2FA",
+        "text": "#F2F6FF"
+      },
+      "font": "space",
+      "motif": "lens",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Gone, and never explained. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Gone, and never explained. Real records, real numbers.",
+        "instagram": "Gone, and never explained"
+      },
+      "keywords": [
+        "missing",
+        "piece",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "ảnh sương mù đơn sắc"
+    }
+  },
+  {
+    "id": 14,
+    "niche": "Thể thao",
+    "ten": "DIAMOND NUMBERS",
+    "handle": "@diamondnumbers",
+    "chat_lieu": "A",
+    "nguon": "mlb",
+    "ham": "thong_ke_mlb",
+    "dinh_dang": "race",
+    "goc_nhin": "Bóng chày qua con số thật",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "nam": 2025
+    },
+    "brand": {
+      "name": "DIAMOND NUMBERS",
+      "handle": "@diamondnumbers",
+      "tagline": "Baseball, by the numbers",
+      "niche": "Thể thao",
+      "palette": {
+        "bg": "#0B170A",
+        "primary": "#BB6CF0",
+        "secondary": "#FA7DF2",
+        "accent": "#9FFA37",
+        "text": "#F2F6FF"
+      },
+      "font": "oswald",
+      "motif": "cap",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Baseball, by the numbers. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Baseball, by the numbers. Real records, real numbers.",
+        "instagram": "Baseball, by the numbers"
+      },
+      "keywords": [
+        "diamond",
+        "numbers",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 15,
+    "niche": "Thể thao",
+    "ten": "COURT KINGS",
+    "handle": "@courtkingsusa",
+    "chat_lieu": "A",
+    "nguon": "nba",
+    "ham": "thong_ke_nba",
+    "dinh_dang": "race",
+    "goc_nhin": "Bóng rổ: ai thật sự dẫn đầu",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "chi_tieu": "PTS",
+      "mua": "2024-25"
+    },
+    "brand": {
+      "name": "COURT KINGS",
+      "handle": "@courtkingsusa",
+      "tagline": "Who actually leads the league",
+      "niche": "Thể thao",
+      "palette": {
+        "bg": "#170A0B",
+        "primary": "#6CF0BB",
+        "secondary": "#7DF2FA",
+        "accent": "#FA379F",
+        "text": "#F2F6FF"
+      },
+      "font": "teko",
+      "motif": "field",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Who actually leads the league. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Who actually leads the league. Real records, real numbers.",
+        "instagram": "Who actually leads the league"
+      },
+      "keywords": [
+        "court",
+        "kings",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 16,
+    "niche": "Thể thao",
+    "ten": "PAID VS PLAYED",
+    "handle": "@paidvsplayed",
+    "chat_lieu": "C",
+    "nguon": "nba",
+    "ham": "thong_ke_nba",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Lương so với màn trình diễn",
+    "style_anh": "chân dung vận động viên phẳng",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "chi_tieu": "AST",
+      "mua": "2024-25"
+    },
+    "brand": {
+      "name": "PAID VS PLAYED",
+      "handle": "@paidvsplayed",
+      "tagline": "Paid like a star, played like what",
+      "niche": "Thể thao",
+      "palette": {
+        "bg": "#0A0B17",
+        "primary": "#F0C26C",
+        "secondary": "#EBFA7D",
+        "accent": "#3795FA",
+        "text": "#F2F6FF"
+      },
+      "font": "chivo",
+      "motif": "field",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Paid like a star, played like what. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Paid like a star, played like what. Real records, real numbers.",
+        "instagram": "Paid like a star, played like what"
+      },
+      "keywords": [
+        "paid",
+        "vs",
+        "played",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "chân dung vận động viên phẳng"
+    }
+  },
+  {
+    "id": 17,
+    "niche": "Người nổi tiếng",
+    "ten": "AMERICA LOOKED UP",
+    "handle": "@americalookedup",
+    "chat_lieu": "A",
+    "nguon": "wikipedia",
+    "ham": "bai_duoc_doc",
+    "dinh_dang": "race",
+    "goc_nhin": "Hôm qua nước Mỹ tra ai nhiều nhất",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "loc": "tat_ca",
+      "xoay": "ngay"
+    },
+    "brand": {
+      "name": "AMERICA LOOKED UP",
+      "handle": "@americalookedup",
+      "tagline": "What America read yesterday",
+      "niche": "Người nổi tiếng",
+      "palette": {
+        "bg": "#0A1317",
+        "primary": "#F02B2B",
+        "secondary": "#FA9F50",
+        "accent": "#37FAE0",
+        "text": "#F2F6FF"
+      },
+      "font": "bebas",
+      "motif": "pulse",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What America read yesterday. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What America read yesterday. Real records, real numbers.",
+        "instagram": "What America read yesterday"
+      },
+      "keywords": [
+        "america",
+        "looked",
+        "up",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 18,
+    "niche": "Người nổi tiếng",
+    "ten": "FAME CURVE",
+    "handle": "@famecurveusa",
+    "chat_lieu": "C",
+    "nguon": "wikipedia",
+    "ham": "luot_doc_bai",
+    "dinh_dang": "longshot",
+    "goc_nhin": "Đường cong nổi tiếng của một người",
+    "style_anh": "chân dung nét đơn sắc",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "loc": "nguoi",
+      "xoay": "nguoi"
+    },
+    "brand": {
+      "name": "FAME CURVE",
+      "handle": "@famecurveusa",
+      "tagline": "The rise and the drop",
+      "niche": "Người nổi tiếng",
+      "palette": {
+        "bg": "#17160A",
+        "primary": "#3B6DB8",
+        "secondary": "#6059C2",
+        "accent": "#FA9237",
+        "text": "#F2F6FF"
+      },
+      "font": "anton",
+      "motif": "pulse",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "The rise and the drop. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "The rise and the drop. Real records, real numbers.",
+        "instagram": "The rise and the drop"
+      },
+      "keywords": [
+        "fame",
+        "curve",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "chân dung nét đơn sắc"
+    }
+  },
+  {
+    "id": 19,
+    "niche": "Phim & truyền hình",
+    "ten": "SHOW NUMBERS",
+    "handle": "@shownumbersusa",
+    "chat_lieu": "C",
+    "nguon": "tvmaze",
+    "ham": "phim_truyen",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Phim bộ qua số tập, mùa, điểm",
+    "style_anh": "poster giả lập phong cách in lụa",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "detective",
+      "loc": "moi",
+      "xoay": "tu_khoa"
+    },
+    "brand": {
+      "name": "SHOW NUMBERS",
+      "handle": "@shownumbersusa",
+      "tagline": "Every show has a number",
+      "niche": "Phim & truyền hình",
+      "palette": {
+        "bg": "#0A1714",
+        "primary": "#D62790",
+        "secondary": "#E0485C",
+        "accent": "#37FA6B",
+        "text": "#F2F6FF"
+      },
+      "font": "manrope",
+      "motif": "ghost",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Every show has a number. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Every show has a number. Real records, real numbers.",
+        "instagram": "Every show has a number"
+      },
+      "keywords": [
+        "show",
+        "numbers",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "poster giả lập phong cách in lụa"
+    }
+  },
+  {
+    "id": 20,
+    "niche": "Phim & truyền hình",
+    "ten": "GONE TOO SOON",
+    "handle": "@gonetoosoonusa",
+    "chat_lieu": "C",
+    "nguon": "tvmaze",
+    "ham": "phim_truyen",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Phim bị cắt giữa chừng",
+    "style_anh": "ảnh màn hình tối, chữ neon",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "sci-fi",
+      "loc": "da_huy",
+      "xoay": "tu_khoa"
+    },
+    "brand": {
+      "name": "GONE TOO SOON",
+      "handle": "@gonetoosoonusa",
+      "tagline": "Great shows that got cut",
+      "niche": "Phim & truyền hình",
+      "palette": {
+        "bg": "#170A14",
+        "primary": "#5DB853",
+        "secondary": "#61C284",
+        "accent": "#CC37FA",
+        "text": "#F2F6FF"
+      },
+      "font": "montserrat",
+      "motif": "film",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Great shows that got cut. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Great shows that got cut. Real records, real numbers.",
+        "instagram": "Great shows that got cut"
+      },
+      "keywords": [
+        "gone",
+        "too",
+        "soon",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "ảnh màn hình tối, chữ neon"
+    }
+  },
+  {
+    "id": 21,
+    "niche": "Nhạc",
+    "ten": "SONG FILE",
+    "handle": "@songfileusa",
+    "chat_lieu": "C",
+    "nguon": "musicbrainz",
+    "ham": "ho_so_nhac",
+    "dinh_dang": "cinematic",
+    "goc_nhin": "Một bài hát: ai viết, ai hát, khi nào",
+    "style_anh": "bìa đĩa vector",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "one hit wonder",
+      "xoay": "nghe_si"
+    },
+    "brand": {
+      "name": "SONG FILE",
+      "handle": "@songfileusa",
+      "tagline": "Who really wrote it",
+      "niche": "Nhạc",
+      "palette": {
+        "bg": "#17140A",
+        "primary": "#2BA1F0",
+        "secondary": "#5067FA",
+        "accent": "#FA6B37",
+        "text": "#F2F6FF"
+      },
+      "font": "arvo",
+      "motif": "note",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Who really wrote it. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Who really wrote it. Real records, real numbers.",
+        "instagram": "Who really wrote it"
+      },
+      "keywords": [
+        "song",
+        "file",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "bìa đĩa vector"
+    }
+  },
+  {
+    "id": 22,
+    "niche": "Nhạc",
+    "ten": "ONE HIT",
+    "handle": "@onehitusa",
+    "chat_lieu": "C",
+    "nguon": "musicbrainz",
+    "ham": "ho_so_nhac",
+    "dinh_dang": "longshot",
+    "goc_nhin": "Nghệ sĩ một bản hit",
+    "style_anh": "ảnh sân khấu hạt phim",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "one hit wonder",
+      "loc": "mot_hit",
+      "xoay": "nghe_si"
+    },
+    "brand": {
+      "name": "ONE HIT",
+      "handle": "@onehitusa",
+      "tagline": "One song, then silence",
+      "niche": "Nhạc",
+      "palette": {
+        "bg": "#170A0F",
+        "primary": "#2BF066",
+        "secondary": "#50FAD2",
+        "accent": "#FA37D9",
+        "text": "#F2F6FF"
+      },
+      "font": "teko",
+      "motif": "note",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "One song, then silence. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "One song, then silence. Real records, real numbers.",
+        "instagram": "One song, then silence"
+      },
+      "keywords": [
+        "one",
+        "hit",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "ảnh sân khấu hạt phim"
+    }
+  },
+  {
+    "id": 23,
+    "niche": "Game",
+    "ten": "STEAM TRUTH",
+    "handle": "@steamtruthusa",
+    "chat_lieu": "A",
+    "nguon": "steamspy",
+    "ham": "game_steam",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Game nào THẬT SỰ có người chơi",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "loc": "dong_nhat"
+    },
+    "brand": {
+      "name": "STEAM TRUTH",
+      "handle": "@steamtruthusa",
+      "tagline": "Who is actually online",
+      "niche": "Game",
+      "palette": {
+        "bg": "#170A17",
+        "primary": "#66F02B",
+        "secondary": "#50FA6C",
+        "accent": "#A537FA",
+        "text": "#F2F6FF"
+      },
+      "font": "saira",
+      "motif": "heart",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Who is actually online. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Who is actually online. Real records, real numbers.",
+        "instagram": "Who is actually online"
+      },
+      "keywords": [
+        "steam",
+        "truth",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    },
+    "ghi_chu": "SteamSpy không có chuỗi thời gian -> bảng hạng, không bịa mốc"
+  },
+  {
+    "id": 24,
+    "niche": "Game",
+    "ten": "GAME GRAVEYARD",
+    "handle": "@gamegraveyard",
+    "chat_lieu": "C",
+    "nguon": "steamspy",
+    "ham": "game_steam",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Game chết yểu và số người còn lại",
+    "style_anh": "pixel art u tối",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "loc": "chet_yeu"
+    },
+    "brand": {
+      "name": "GAME GRAVEYARD",
+      "handle": "@gamegraveyard",
+      "tagline": "Bought by millions, empty tonight",
+      "niche": "Game",
+      "palette": {
+        "bg": "#0F170A",
+        "primary": "#662BF0",
+        "secondary": "#D250FA",
+        "accent": "#D9FA37",
+        "text": "#F2F6FF"
+      },
+      "font": "fjalla",
+      "motif": "gamepad",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Bought by millions, empty tonight. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Bought by millions, empty tonight. Real records, real numbers.",
+        "instagram": "Bought by millions, empty tonight"
+      },
+      "keywords": [
+        "game",
+        "graveyard",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "pixel art u tối"
+    }
+  },
+  {
+    "id": 25,
+    "niche": "Xe",
+    "ten": "CAR RECALL",
+    "handle": "@carrecallusa",
+    "chat_lieu": "A",
+    "nguon": "nhtsa",
+    "ham": "trieu_hoi_xe",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Dòng xe bị triệu hồi vì bộ phận gì",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "hang": "ford",
+      "dong": "f-150",
+      "nam": 2020,
+      "xoay": "hang"
+    },
+    "brand": {
+      "name": "CAR RECALL",
+      "handle": "@carrecallusa",
+      "tagline": "What they recalled on your car",
+      "niche": "Xe",
+      "palette": {
+        "bg": "#17120A",
+        "primary": "#6CC8F0",
+        "secondary": "#7D9AFA",
+        "accent": "#FA5737",
+        "text": "#F2F6FF"
+      },
+      "font": "archivo",
+      "motif": "road",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What they recalled on your car. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What they recalled on your car. Real records, real numbers.",
+        "instagram": "What they recalled on your car"
+      },
+      "keywords": [
+        "car",
+        "recall",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 26,
+    "niche": "Xe",
+    "ten": "MPG TRUTH",
+    "handle": "@mpgtruthusa",
+    "chat_lieu": "C",
+    "nguon": "epa",
+    "ham": "muc_tieu_thu",
+    "dinh_dang": "race",
+    "goc_nhin": "Xe nào thật sự tiết kiệm xăng",
+    "style_anh": "xe cắt lớp isometric",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "hang": "Toyota",
+      "nam": 2024,
+      "xoay": "hang"
+    },
+    "brand": {
+      "name": "MPG TRUTH",
+      "handle": "@mpgtruthusa",
+      "tagline": "What the EPA actually measured",
+      "niche": "Xe",
+      "palette": {
+        "bg": "#0A0B17",
+        "primary": "#B89453",
+        "secondary": "#B6C261",
+        "accent": "#3795FA",
+        "text": "#F2F6FF"
+      },
+      "font": "fjalla",
+      "motif": "road",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What the EPA actually measured. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What the EPA actually measured. Real records, real numbers.",
+        "instagram": "What the EPA actually measured"
+      },
+      "keywords": [
+        "mpg",
+        "truth",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "xe cắt lớp isometric"
+    }
+  },
+  {
+    "id": 27,
+    "niche": "Thú cưng & động vật",
+    "ten": "BREED FILE",
+    "handle": "@breedfileusa",
+    "chat_lieu": "B",
+    "nguon": "dogceo",
+    "ham": "giong_cho",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Hồ sơ từng giống chó",
+    "style_anh": "tranh màu nước",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "xoay": "giong"
+    },
+    "brand": {
+      "name": "BREED FILE",
+      "handle": "@breedfileusa",
+      "tagline": "One breed, one file",
+      "niche": "Thú cưng & động vật",
+      "palette": {
+        "bg": "#17100A",
+        "primary": "#53A8B8",
+        "secondary": "#6186C2",
+        "accent": "#FA3A37",
+        "text": "#F2F6FF"
+      },
+      "font": "anton",
+      "motif": "paw",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "One breed, one file. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "One breed, one file. Real records, real numbers.",
+        "instagram": "One breed, one file"
+      },
+      "keywords": [
+        "breed",
+        "file",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "tranh màu nước"
+    }
+  },
+  {
+    "id": 28,
+    "niche": "Thú cưng & động vật",
+    "ten": "WILD NUMBERS",
+    "handle": "@wildnumbersusa",
+    "chat_lieu": "C",
+    "nguon": "worldbank",
+    "ham": "chi_so_the_gioi",
+    "dinh_dang": "scaled",
+    "goc_nhin": "Động vật hoang dã qua con số",
+    "style_anh": "tranh khắc tự nhiên học",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "ma": "AG.LND.FRST.ZS",
+      "nhan": "Forest cover",
+      "nam": 2022
+    },
+    "brand": {
+      "name": "WILD NUMBERS",
+      "handle": "@wildnumbersusa",
+      "tagline": "The wild, counted",
+      "niche": "Thú cưng & động vật",
+      "palette": {
+        "bg": "#0A170F",
+        "primary": "#B853B3",
+        "secondary": "#C26190",
+        "accent": "#47FA37",
+        "text": "#F2F6FF"
+      },
+      "font": "outfit",
+      "motif": "paw",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "The wild, counted. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "The wild, counted. Real records, real numbers.",
+        "instagram": "The wild, counted"
+      },
+      "keywords": [
+        "wild",
+        "numbers",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "tranh khắc tự nhiên học"
+    }
+  },
+  {
+    "id": 29,
+    "niche": "Du lịch",
+    "ten": "COST TO GO",
+    "handle": "@costtogousa",
+    "chat_lieu": "C",
+    "nguon": "worldbank",
+    "ham": "chi_so_the_gioi",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Đi đâu rẻ, đi đâu đắt",
+    "style_anh": "bưu thiếp cũ",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "ma": "NY.GDP.PCAP.CD",
+      "nhan": "Richest countries",
+      "nam": 2023
+    },
+    "brand": {
+      "name": "COST TO GO",
+      "handle": "@costtogousa",
+      "tagline": "What that trip really costs",
+      "niche": "Du lịch",
+      "palette": {
+        "bg": "#0B170A",
+        "primary": "#AB2BF0",
+        "secondary": "#FA50E6",
+        "accent": "#95FA37",
+        "text": "#F2F6FF"
+      },
+      "font": "staatliches",
+      "motif": "map",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What that trip really costs. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What that trip really costs. Real records, real numbers.",
+        "instagram": "What that trip really costs"
+      },
+      "keywords": [
+        "cost",
+        "to",
+        "go",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "bưu thiếp cũ"
+    }
+  },
+  {
+    "id": 30,
+    "niche": "Du lịch",
+    "ten": "SKY RIGHT NOW",
+    "handle": "@skyrightnow",
+    "chat_lieu": "C",
+    "nguon": "opensky",
+    "ham": "may_bay",
+    "dinh_dang": "mapped",
+    "goc_nhin": "Bầu trời Mỹ ngay lúc này",
+    "style_anh": "bản đồ radar phát sáng",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "vung": "usa"
+    },
+    "brand": {
+      "name": "SKY RIGHT NOW",
+      "handle": "@skyrightnow",
+      "tagline": "Who is above you right now",
+      "niche": "Du lịch",
+      "palette": {
+        "bg": "#170A0B",
+        "primary": "#2BF0AB",
+        "secondary": "#50E6FA",
+        "accent": "#FA3795",
+        "text": "#F2F6FF"
+      },
+      "font": "chivo",
+      "motif": "map",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Who is above you right now. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Who is above you right now. Real records, real numbers.",
+        "instagram": "Who is above you right now"
+      },
+      "keywords": [
+        "sky",
+        "right",
+        "now",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "bản đồ radar phát sáng"
+    }
+  },
+  {
+    "id": 31,
+    "niche": "Công nghệ & AI",
+    "ten": "FILINGS SAY",
+    "handle": "@filingssay",
+    "chat_lieu": "A",
+    "nguon": "sec",
+    "ham": "tim_ho_so",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Công ty tự khai gì về AI trong hồ sơ",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "artificial intelligence"
+    },
+    "brand": {
+      "name": "FILINGS SAY",
+      "handle": "@filingssay",
+      "tagline": "What companies admit in writing",
+      "niche": "Công nghệ & AI",
+      "palette": {
+        "bg": "#120A17",
+        "primary": "#C8F06C",
+        "secondary": "#9AFA7D",
+        "accent": "#5737FA",
+        "text": "#F2F6FF"
+      },
+      "font": "oswald",
+      "motif": "chip",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What companies admit in writing. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What companies admit in writing. Real records, real numbers.",
+        "instagram": "What companies admit in writing"
+      },
+      "keywords": [
+        "filings",
+        "say",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 32,
+    "niche": "Công nghệ & AI",
+    "ten": "QUIET LAYOFFS",
+    "handle": "@quietlayoffs",
+    "chat_lieu": "A",
+    "nguon": "sec",
+    "ham": "tim_ho_so",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Hồ sơ SEC nhắc chữ sa thải",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "reduction in force"
+    },
+    "brand": {
+      "name": "QUIET LAYOFFS",
+      "handle": "@quietlayoffs",
+      "tagline": "The cuts they filed quietly",
+      "niche": "Công nghệ & AI",
+      "palette": {
+        "bg": "#16170A",
+        "primary": "#2B5CF0",
+        "secondary": "#7550FA",
+        "accent": "#FAAF37",
+        "text": "#F2F6FF"
+      },
+      "font": "sora",
+      "motif": "coins",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "The cuts they filed quietly. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "The cuts they filed quietly. Real records, real numbers.",
+        "instagram": "The cuts they filed quietly"
+      },
+      "keywords": [
+        "quiet",
+        "layoffs",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 33,
+    "niche": "Kinh dị & rùng rợn",
+    "ten": "REAL PLACE",
+    "handle": "@realplaceusa",
+    "chat_lieu": "B",
+    "nguon": "wikipedia",
+    "ham": "bai_duoc_doc",
+    "dinh_dang": "cinematic",
+    "goc_nhin": "Nơi có thật, chuyện có thật",
+    "style_anh": "ảnh đêm tương phản mạnh",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "loc": "dia_diem",
+      "xoay": "ngay"
+    },
+    "brand": {
+      "name": "REAL PLACE",
+      "handle": "@realplaceusa",
+      "tagline": "A real place, a real record",
+      "niche": "Kinh dị & rùng rợn",
+      "palette": {
+        "bg": "#0F170A",
+        "primary": "#7153B8",
+        "secondary": "#AB61C2",
+        "accent": "#D9FA37",
+        "text": "#F2F6FF"
+      },
+      "font": "bitter",
+      "motif": "chip",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "A real place, a real record. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "A real place, a real record. Real records, real numbers.",
+        "instagram": "A real place, a real record"
+      },
+      "keywords": [
+        "real",
+        "place",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "ảnh đêm tương phản mạnh"
+    }
+  },
+  {
+    "id": 34,
+    "niche": "Kinh dị & rùng rợn",
+    "ten": "NIGHT SHIFT",
+    "handle": "@nightshiftusa",
+    "chat_lieu": "B",
+    "nguon": "wikipedia",
+    "ham": "bai_duoc_doc",
+    "dinh_dang": "cinematic",
+    "goc_nhin": "Chuyện xảy ra ca đêm",
+    "style_anh": "tranh sơn dầu tối màu",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "loc": "ca_dem",
+      "xoay": "ngay"
+    },
+    "brand": {
+      "name": "NIGHT SHIFT",
+      "handle": "@nightshiftusa",
+      "tagline": "What happens after midnight",
+      "niche": "Kinh dị & rùng rợn",
+      "palette": {
+        "bg": "#0A1517",
+        "primary": "#F04D65",
+        "secondary": "#FA9E73",
+        "accent": "#37FAC3",
+        "text": "#F2F6FF"
+      },
+      "font": "chivo",
+      "motif": "ghost",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What happens after midnight. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What happens after midnight. Real records, real numbers.",
+        "instagram": "What happens after midnight"
+      },
+      "keywords": [
+        "night",
+        "shift",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "tranh sơn dầu tối màu"
+    }
+  },
+  {
+    "id": 35,
+    "niche": "Quan hệ & hẹn hò",
+    "ten": "MARRIAGE MATH",
+    "handle": "@marriagemath",
+    "chat_lieu": "C",
+    "nguon": "worldbank",
+    "ham": "chi_so_the_gioi",
+    "dinh_dang": "scaled",
+    "goc_nhin": "Hôn nhân Mỹ qua con số",
+    "style_anh": "biểu tượng phẳng ấm màu",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "ma": "SP.DYN.TFRT.IN",
+      "nhan": "Birth rate",
+      "nam": 2022
+    },
+    "brand": {
+      "name": "MARRIAGE MATH",
+      "handle": "@marriagemath",
+      "tagline": "Love, in numbers",
+      "niche": "Quan hệ & hẹn hò",
+      "palette": {
+        "bg": "#0A0C17",
+        "primary": "#B87421",
+        "secondary": "#C0C23E",
+        "accent": "#37A9FA",
+        "text": "#F2F6FF"
+      },
+      "font": "chivo",
+      "motif": "heart",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Love, in numbers. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Love, in numbers. Real records, real numbers.",
+        "instagram": "Love, in numbers"
+      },
+      "keywords": [
+        "marriage",
+        "math",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "biểu tượng phẳng ấm màu"
+    }
+  },
+  {
+    "id": 36,
+    "niche": "Quan hệ & hẹn hò",
+    "ten": "WHAT THEY SEARCH",
+    "handle": "@whattheysearch",
+    "chat_lieu": "C",
+    "nguon": "wikipedia",
+    "ham": "wiki_bai",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Người ta lén tra điều gì",
+    "style_anh": "ảnh màn hình đêm",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "nhan": "What America looks up about love",
+      "bai": [
+        "Divorce",
+        "Infidelity",
+        "Prenuptial_agreement",
+        "Child_custody",
+        "Long-distance_relationship",
+        "Dating",
+        "Marriage",
+        "Alimony",
+        "Breakup",
+        "Soulmate"
+      ]
+    },
+    "brand": {
+      "name": "WHAT THEY SEARCH",
+      "handle": "@whattheysearch",
+      "tagline": "What America looks up alone",
+      "niche": "Quan hệ & hẹn hò",
+      "palette": {
+        "bg": "#120A17",
+        "primary": "#B5F02B",
+        "secondary": "#78FA50",
+        "accent": "#5737FA",
+        "text": "#F2F6FF"
+      },
+      "font": "bitter",
+      "motif": "lens",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What America looks up alone. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What America looks up alone. Real records, real numbers.",
+        "instagram": "What America looks up alone"
+      },
+      "keywords": [
+        "what",
+        "they",
+        "search",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "ảnh màn hình đêm"
+    },
+    "ghi_chu": "bảng đọc-nhiều không có chủ đề quan hệ (đo 4 ngày: 0-1 bài) -> đo lượt đọc danh sách bài cố định"
+  },
+  {
+    "id": 37,
+    "niche": "Nghề nghiệp",
+    "ten": "SALARY TRUTH",
+    "handle": "@salarytruthusa",
+    "chat_lieu": "A",
+    "nguon": "bls",
+    "ham": "chuoi_bls",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Nghề này thật sự trả bao nhiêu",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "chuoi": "viec_lam",
+      "nhan": "Jobs in America"
+    },
+    "brand": {
+      "name": "SALARY TRUTH",
+      "handle": "@salarytruthusa",
+      "tagline": "What that job really pays",
+      "niche": "Nghề nghiệp",
+      "palette": {
+        "bg": "#0A1017",
+        "primary": "#F0866C",
+        "secondary": "#FAD07D",
+        "accent": "#37EDFA",
+        "text": "#F2F6FF"
+      },
+      "font": "lexend",
+      "motif": "receipt",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What that job really pays. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What that job really pays. Real records, real numbers.",
+        "instagram": "What that job really pays"
+      },
+      "keywords": [
+        "salary",
+        "truth",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 38,
+    "niche": "Nghề nghiệp",
+    "ten": "JOB DYING",
+    "handle": "@jobdyingusa",
+    "chat_lieu": "A",
+    "nguon": "bls",
+    "ham": "chuoi_bls",
+    "dinh_dang": "longshot",
+    "goc_nhin": "Nghề đang biến mất",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "chuoi": "that_nghiep",
+      "nhan": "Unemployment"
+    },
+    "brand": {
+      "name": "JOB DYING",
+      "handle": "@jobdyingusa",
+      "tagline": "The jobs going away",
+      "niche": "Nghề nghiệp",
+      "palette": {
+        "bg": "#0A1317",
+        "primary": "#B82121",
+        "secondary": "#C27C3E",
+        "accent": "#37FAE0",
+        "text": "#F2F6FF"
+      },
+      "font": "bebas",
+      "motif": "receipt",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "The jobs going away. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "The jobs going away. Real records, real numbers.",
+        "instagram": "The jobs going away"
+      },
+      "keywords": [
+        "job",
+        "dying",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 39,
+    "niche": "Nhà ở",
+    "ten": "WHERE TO MOVE",
+    "handle": "@wheretomoveusa",
+    "chat_lieu": "A",
+    "nguon": "zillow",
+    "ham": "gia_nha_zillow",
+    "dinh_dang": "mapped",
+    "goc_nhin": "Bang nào đáng chuyển tới",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "muc": "State"
+    },
+    "brand": {
+      "name": "WHERE TO MOVE",
+      "handle": "@wheretomoveusa",
+      "tagline": "Where your money goes further",
+      "niche": "Nhà ở",
+      "palette": {
+        "bg": "#170A0E",
+        "primary": "#21B856",
+        "secondary": "#3EC2AA",
+        "accent": "#FA37D0",
+        "text": "#F2F6FF"
+      },
+      "font": "space",
+      "motif": "house",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Where your money goes further. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Where your money goes further. Real records, real numbers.",
+        "instagram": "Where your money goes further"
+      },
+      "keywords": [
+        "where",
+        "to",
+        "move",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    },
+    "ghi_chu": "BLS chỉ chia theo VÙNG, không theo bang -> Zillow mới vẽ được bản đồ"
+  },
+  {
+    "id": 40,
+    "niche": "Nhà ở",
+    "ten": "HOUSE MATH",
+    "handle": "@housemathusa",
+    "chat_lieu": "C",
+    "nguon": "bls",
+    "ham": "chuoi_bls",
+    "dinh_dang": "scaled",
+    "goc_nhin": "Cần bao nhiêu năm lương mua một căn",
+    "style_anh": "mặt cắt nhà isometric",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "nhom": [
+        "cpi_nha",
+        "cpi_dien_nuoc",
+        "cpi_di_lai",
+        "cpi_thucpham",
+        "cpi_quan_ao",
+        "cpi_giai_tri"
+      ],
+      "nhan": "What a home actually costs"
+    },
+    "brand": {
+      "name": "HOUSE MATH",
+      "handle": "@housemathusa",
+      "tagline": "Years of pay for four walls",
+      "niche": "Nhà ở",
+      "palette": {
+        "bg": "#0E170A",
+        "primary": "#5621B8",
+        "secondary": "#AA3EC2",
+        "accent": "#D0FA37",
+        "text": "#F2F6FF"
+      },
+      "font": "space",
+      "motif": "house",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Years of pay for four walls. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Years of pay for four walls. Real records, real numbers.",
+        "instagram": "Years of pay for four walls"
+      },
+      "keywords": [
+        "house",
+        "math",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "mặt cắt nhà isometric"
+    }
+  },
+  {
+    "id": 41,
+    "niche": "Lịch sử",
+    "ten": "ARCHIVE REEL",
+    "handle": "@archivereelusa",
+    "chat_lieu": "C",
+    "nguon": "archive",
+    "ham": "phim_tu_lieu",
+    "dinh_dang": "cinematic",
+    "goc_nhin": "Phim tư liệu công cộng, kể lại",
+    "style_anh": "khung phim xước",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "america 1950",
+      "xoay": "tu_khoa"
+    },
+    "brand": {
+      "name": "ARCHIVE REEL",
+      "handle": "@archivereelusa",
+      "tagline": "Footage nobody owns",
+      "niche": "Lịch sử",
+      "palette": {
+        "bg": "#0A1710",
+        "primary": "#F06CDC",
+        "secondary": "#FA7DAD",
+        "accent": "#37FA3A",
+        "text": "#F2F6FF"
+      },
+      "font": "playfair",
+      "motif": "film",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Footage nobody owns. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Footage nobody owns. Real records, real numbers.",
+        "instagram": "Footage nobody owns"
+      },
+      "keywords": [
+        "archive",
+        "reel",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "khung phim xước"
+    }
+  },
+  {
+    "id": 42,
+    "niche": "Lịch sử",
+    "ten": "THEN AND NOW",
+    "handle": "@thenandnowusa",
+    "chat_lieu": "C",
+    "nguon": "archive",
+    "ham": "phim_tu_lieu",
+    "dinh_dang": "thennow",
+    "goc_nhin": "Cùng một chỗ, cách nhau 100 năm",
+    "style_anh": "ảnh ghép hai thời",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "city street",
+      "xoay": "tu_khoa"
+    },
+    "brand": {
+      "name": "THEN AND NOW",
+      "handle": "@thenandnowusa",
+      "tagline": "Same street, a century apart",
+      "niche": "Lịch sử",
+      "palette": {
+        "bg": "#170A0E",
+        "primary": "#60D68A",
+        "secondary": "#70E0CC",
+        "accent": "#FA37D0",
+        "text": "#F2F6FF"
+      },
+      "font": "arvo",
+      "motif": "film",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Same street, a century apart. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Same street, a century apart. Real records, real numbers.",
+        "instagram": "Same street, a century apart"
+      },
+      "keywords": [
+        "then",
+        "and",
+        "now",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "ảnh ghép hai thời"
+    }
+  },
+  {
+    "id": 43,
+    "niche": "Vũ trụ",
+    "ten": "NEAR EARTH",
+    "handle": "@nearearthusa",
+    "chat_lieu": "A",
+    "nguon": "nasa",
+    "ham": "tieu_hanh_tinh",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Thiên thạch sát Trái Đất tháng này",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "xoay": "ngay"
+    },
+    "brand": {
+      "name": "NEAR EARTH",
+      "handle": "@nearearthusa",
+      "tagline": "What just passed us",
+      "niche": "Vũ trụ",
+      "palette": {
+        "bg": "#0D0A17",
+        "primary": "#D6BC27",
+        "secondary": "#B0E048",
+        "accent": "#376EFA",
+        "text": "#F2F6FF"
+      },
+      "font": "rubik",
+      "motif": "rocket",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What just passed us. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What just passed us. Real records, real numbers.",
+        "instagram": "What just passed us"
+      },
+      "keywords": [
+        "near",
+        "earth",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 44,
+    "niche": "Vũ trụ",
+    "ten": "SPACE INVOICE",
+    "handle": "@spaceinvoice",
+    "chat_lieu": "A",
+    "nguon": "usaspending",
+    "ham": "hop_dong_lon",
+    "dinh_dang": "race",
+    "goc_nhin": "NASA trả tiền cho ai",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "de_tai": "space",
+      "nam": 2024,
+      "xoay": "nam"
+    },
+    "brand": {
+      "name": "SPACE INVOICE",
+      "handle": "@spaceinvoice",
+      "tagline": "Who NASA pays",
+      "niche": "Vũ trụ",
+      "palette": {
+        "bg": "#0A1715",
+        "primary": "#B82165",
+        "secondary": "#C2403E",
+        "accent": "#37FA88",
+        "text": "#F2F6FF"
+      },
+      "font": "saira",
+      "motif": "rocket",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Who NASA pays. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Who NASA pays. Real records, real numbers.",
+        "instagram": "Who NASA pays"
+      },
+      "keywords": [
+        "space",
+        "invoice",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 45,
+    "niche": "Thời tiết & thảm hoạ",
+    "ten": "ALERT NOW",
+    "handle": "@alertnowusa",
+    "chat_lieu": "A",
+    "nguon": "nws",
+    "ham": "canh_bao",
+    "dinh_dang": "mapped",
+    "goc_nhin": "Cảnh báo đang bật ở bang nào",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "bang": "TX",
+      "xoay": "bang"
+    },
+    "brand": {
+      "name": "ALERT NOW",
+      "handle": "@alertnowusa",
+      "tagline": "What is warning right now",
+      "niche": "Thời tiết & thảm hoạ",
+      "palette": {
+        "bg": "#150A17",
+        "primary": "#6CB821",
+        "secondary": "#42C23E",
+        "accent": "#7E37FA",
+        "text": "#F2F6FF"
+      },
+      "font": "oswald",
+      "motif": "storm",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What is warning right now. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What is warning right now. Real records, real numbers.",
+        "instagram": "What is warning right now"
+      },
+      "keywords": [
+        "alert",
+        "now",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 46,
+    "niche": "Thời tiết & thảm hoạ",
+    "ten": "QUAKE LOG",
+    "handle": "@quakelogusa",
+    "chat_lieu": "A",
+    "nguon": "usgs",
+    "ham": "dong_dat",
+    "dinh_dang": "mapped",
+    "goc_nhin": "Động đất mạnh nhất và ở đâu",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "do_lon": 4.5,
+      "tu_ngay": "2015-01-01",
+      "xoay": "nam"
+    },
+    "brand": {
+      "name": "QUAKE LOG",
+      "handle": "@quakelogusa",
+      "tagline": "The ground moved here",
+      "niche": "Thời tiết & thảm hoạ",
+      "palette": {
+        "bg": "#140A17",
+        "primary": "#8FB853",
+        "secondary": "#6EC261",
+        "accent": "#6B37FA",
+        "text": "#F2F6FF"
+      },
+      "font": "barlow",
+      "motif": "cap",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "The ground moved here. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "The ground moved here. Real records, real numbers.",
+        "instagram": "The ground moved here"
+      },
+      "keywords": [
+        "quake",
+        "log",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 47,
+    "niche": "Quân sự",
+    "ten": "PENTAGON LEDGER",
+    "handle": "@pentagonledger",
+    "chat_lieu": "A",
+    "nguon": "usaspending",
+    "ham": "hop_dong_lon",
+    "dinh_dang": "race",
+    "goc_nhin": "Nhà thầu quốc phòng đua theo năm",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "de_tai": "ammunition",
+      "nam": 2024,
+      "xoay": "nam"
+    },
+    "brand": {
+      "name": "PENTAGON LEDGER",
+      "handle": "@pentagonledger",
+      "tagline": "Where the defense money went",
+      "niche": "Quân sự",
+      "palette": {
+        "bg": "#0A1710",
+        "primary": "#D627C5",
+        "secondary": "#E0488A",
+        "accent": "#3DFA37",
+        "text": "#F2F6FF"
+      },
+      "font": "barlow",
+      "motif": "shield",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "Where the defense money went. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "Where the defense money went. Real records, real numbers.",
+        "instagram": "Where the defense money went"
+      },
+      "keywords": [
+        "pentagon",
+        "ledger",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
+  },
+  {
+    "id": 48,
+    "niche": "Quân sự",
+    "ten": "WEAPON PRICE",
+    "handle": "@weaponpriceusa",
+    "chat_lieu": "C",
+    "nguon": "usaspending",
+    "ham": "hop_dong_lon",
+    "dinh_dang": "scaled",
+    "goc_nhin": "Một quả đạn giá bao nhiêu",
+    "style_anh": "kỹ thuật hoạ bản vẽ xanh",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "de_tai": "missile",
+      "nam": 2024,
+      "xoay": "nam"
+    },
+    "brand": {
+      "name": "WEAPON PRICE",
+      "handle": "@weaponpriceusa",
+      "tagline": "What one round costs you",
+      "niche": "Quân sự",
+      "palette": {
+        "bg": "#0A1017",
+        "primary": "#F05C2B",
+        "secondary": "#FACA50",
+        "accent": "#37E3FA",
+        "text": "#F2F6FF"
+      },
+      "font": "teko",
+      "motif": "shield",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What one round costs you. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What one round costs you. Real records, real numbers.",
+        "instagram": "What one round costs you"
+      },
+      "keywords": [
+        "weapon",
+        "price",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "kỹ thuật hoạ bản vẽ xanh"
+    }
+  },
+  {
+    "id": 49,
+    "niche": "Luật & quyền công dân",
+    "ten": "YOUR RIGHTS CASE",
+    "handle": "@yourrightscase",
+    "chat_lieu": "C",
+    "nguon": "court",
+    "ham": "ban_an",
+    "dinh_dang": "cinematic",
+    "goc_nhin": "Án lệ đổi đời sống thường ngày",
+    "style_anh": "tranh minh hoạ phiên toà",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "tu_khoa": "first amendment",
+      "xoay": "tu_khoa"
+    },
+    "brand": {
+      "name": "YOUR RIGHTS CASE",
+      "handle": "@yourrightscase",
+      "tagline": "The ruling that changed your day",
+      "niche": "Luật & quyền công dân",
+      "palette": {
+        "bg": "#170E0A",
+        "primary": "#45D6CF",
+        "secondary": "#67AEE0",
+        "accent": "#FA375B",
+        "text": "#F2F6FF"
+      },
+      "font": "sora",
+      "motif": "field",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "The ruling that changed your day. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "The ruling that changed your day. Real records, real numbers.",
+        "instagram": "The ruling that changed your day"
+      },
+      "keywords": [
+        "your",
+        "rights",
+        "case",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": "tranh minh hoạ phiên toà"
+    }
+  },
+  {
+    "id": 50,
+    "niche": "Giáo dục",
+    "ten": "DEGREE WORTH",
+    "handle": "@degreeworthusa",
+    "chat_lieu": "A",
+    "nguon": "bls",
+    "ham": "chuoi_bls",
+    "dinh_dang": "ranked",
+    "goc_nhin": "Bằng này đáng bao nhiêu tiền",
+    "style_anh": "",
+    "the_he": 2,
+    "footage": false,
+    "tham_so": {
+      "chuoi": "cpi_giao_duc",
+      "nhan": "Education cost"
+    },
+    "brand": {
+      "name": "DEGREE WORTH",
+      "handle": "@degreeworthusa",
+      "tagline": "What that degree is worth",
+      "niche": "Giáo dục",
+      "palette": {
+        "bg": "#17110A",
+        "primary": "#2199B8",
+        "secondary": "#3E6AC2",
+        "accent": "#FA4437",
+        "text": "#F2F6FF"
+      },
+      "font": "bebas",
+      "motif": "cap",
+      "voice_tone": "calm, factual, a little blunt",
+      "description": {
+        "youtube": "What that degree is worth. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
+        "facebook": "What that degree is worth. Real records, real numbers.",
+        "instagram": "What that degree is worth"
+      },
+      "keywords": [
+        "degree",
+        "worth",
+        "usa",
+        "real data",
+        "verified"
+      ],
+      "style_anh": ""
+    }
   }
- },
- {
-  "id": 2,
-  "niche": "Đồ ăn & đồ uống",
-  "ten": "RECALL PLATE",
-  "handle": "@recallplate",
-  "chat_lieu": "A",
-  "nguon": "openfda",
-  "ham": "thu_hoi_fda",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Đồ ăn bị thu hồi tuần này",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "kho": "thuc_pham",
-   "xoay": "nam"
-  },
-  "brand": {
-   "name": "RECALL PLATE",
-   "handle": "@recallplate",
-   "tagline": "Pulled from shelves this week",
-   "niche": "Đồ ăn & đồ uống",
-   "palette": {
-    "bg": "#170F0A",
-    "primary": "#2BF0F0",
-    "secondary": "#50ABFA",
-    "accent": "#FA3751",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "plate",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Pulled from shelves this week. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Pulled from shelves this week. Real records, real numbers.",
-    "instagram": "Pulled from shelves this week"
-   },
-   "keywords": [
-    "recall",
-    "plate",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 3,
-  "niche": "Đồ ăn & đồ uống",
-  "ten": "CALORIE SHOCK",
-  "handle": "@calorieshockusa",
-  "chat_lieu": "C",
-  "nguon": "usda",
-  "ham": "thanh_phan_mon",
-  "dinh_dang": "scaled",
-  "goc_nhin": "Món này bằng mấy bữa cơm",
-  "style_anh": "ảnh món ăn chụp trên cao",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "mon": "pizzas",
-   "nhan": "Frozen pizza",
-   "xoay": "mon"
-  },
-  "brand": {
-   "name": "CALORIE SHOCK",
-   "handle": "@calorieshockusa",
-   "tagline": "One meal, real numbers",
-   "niche": "Đồ ăn & đồ uống",
-   "palette": {
-    "bg": "#170A13",
-    "primary": "#27D627",
-    "secondary": "#48E08F",
-    "accent": "#E037FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "plate",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "One meal, real numbers. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "One meal, real numbers. Real records, real numbers.",
-    "instagram": "One meal, real numbers"
-   },
-   "keywords": [
-    "calorie",
-    "shock",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "ảnh món ăn chụp trên cao"
-  }
- },
- {
-  "id": 4,
-  "niche": "Sức khoẻ & gym",
-  "ten": "ONE STUDY",
-  "handle": "@onestudyusa",
-  "chat_lieu": "C",
-  "nguon": "pubmed",
-  "ham": "nghien_cuu",
-  "dinh_dang": "cinematic",
-  "goc_nhin": "Một nghiên cứu thật, giải thích gọn",
-  "style_anh": "minh hoạ giải phẫu nét mảnh",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "sleep",
-   "xoay": "tu_khoa"
-  },
-  "brand": {
-   "name": "ONE STUDY",
-   "handle": "@onestudyusa",
-   "tagline": "One real study, explained straight",
-   "niche": "Sức khoẻ & gym",
-   "palette": {
-    "bg": "#13170A",
-    "primary": "#2727D6",
-    "secondary": "#8F48E0",
-    "accent": "#FAE037",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "flask",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "One real study, explained straight. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "One real study, explained straight. Real records, real numbers.",
-    "instagram": "One real study, explained straight"
-   },
-   "keywords": [
-    "one",
-    "study",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "minh hoạ giải phẫu nét mảnh"
-  }
- },
- {
-  "id": 5,
-  "niche": "Sức khoẻ & gym",
-  "ten": "PILL FACTS",
-  "handle": "@pillfactsusa",
-  "chat_lieu": "A",
-  "nguon": "openfda",
-  "ham": "thu_hoi_fda",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Thuốc bị thu và lý do thật",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "kho": "thuoc",
-   "xoay": "nam"
-  },
-  "brand": {
-   "name": "PILL FACTS",
-   "handle": "@pillfactsusa",
-   "tagline": "What the FDA pulled and why",
-   "niche": "Sức khoẻ & gym",
-   "palette": {
-    "bg": "#0F0A17",
-    "primary": "#F0F02B",
-    "secondary": "#ABFA50",
-    "accent": "#3751FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "flask",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What the FDA pulled and why. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What the FDA pulled and why. Real records, real numbers.",
-    "instagram": "What the FDA pulled and why"
-   },
-   "keywords": [
-    "pill",
-    "facts",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 6,
-  "niche": "Tiền cá nhân",
-  "ten": "PAYCHECK GAP",
-  "handle": "@paycheckgap",
-  "chat_lieu": "A",
-  "nguon": "bls",
-  "ham": "chuoi_bls",
-  "dinh_dang": "scaled",
-  "goc_nhin": "Lương tăng chậm hơn giá bao nhiêu",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "nhom": [
-    "luong_gio",
-    "cpi_nha",
-    "cpi_thucpham",
-    "cpi_yte",
-    "cpi_di_lai",
-    "cpi_giao_duc"
-   ],
-   "nhan": "Your pay against your bills"
-  },
-  "brand": {
-   "name": "PAYCHECK GAP",
-   "handle": "@paycheckgap",
-   "tagline": "Your raise versus your rent",
-   "niche": "Tiền cá nhân",
-   "palette": {
-    "bg": "#0A170F",
-    "primary": "#F02BF0",
-    "secondary": "#FA50AB",
-    "accent": "#51FA37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "coins",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Your raise versus your rent. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Your raise versus your rent. Real records, real numbers.",
-    "instagram": "Your raise versus your rent"
-   },
-   "keywords": [
-    "paycheck",
-    "gap",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 7,
-  "niche": "Tiền cá nhân",
-  "ten": "RENT REALITY",
-  "handle": "@rentrealityusa",
-  "chat_lieu": "A",
-  "nguon": "zillow",
-  "ham": "gia_nha_zillow",
-  "dinh_dang": "thennow",
-  "goc_nhin": "Tiền thuê nhà xưa và nay",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "bangs": [
-    "California",
-    "Texas",
-    "Florida",
-    "New York",
-    "Ohio",
-    "Idaho"
-   ]
-  },
-  "brand": {
-   "name": "RENT REALITY",
-   "handle": "@rentrealityusa",
-   "tagline": "What a roof costs now",
-   "niche": "Tiền cá nhân",
-   "palette": {
-    "bg": "#170A15",
-    "primary": "#86F06C",
-    "secondary": "#7DFA9E",
-    "accent": "#B937FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "coins",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What a roof costs now. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What a roof costs now. Real records, real numbers.",
-    "instagram": "What a roof costs now"
-   },
-   "keywords": [
-    "rent",
-    "reality",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 8,
-  "niche": "Tiền cá nhân",
-  "ten": "PRICE OF NOW",
-  "handle": "@priceofnow",
-  "chat_lieu": "A",
-  "nguon": "bls",
-  "ham": "chuoi_bls",
-  "dinh_dang": "race",
-  "goc_nhin": "Món nào tăng giá nhanh nhất",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "chuoi": "cpi_thucpham",
-   "nhan": "Food price",
-   "nhom": [
-    "cpi_thucpham",
-    "cpi_xang",
-    "cpi_nha",
-    "cpi_yte",
-    "cpi_di_lai",
-    "cpi_giao_duc"
-   ]
-  },
-  "brand": {
-   "name": "PRICE OF NOW",
-   "handle": "@priceofnow",
-   "tagline": "What got expensive this year",
-   "niche": "Tiền cá nhân",
-   "palette": {
-    "bg": "#15170A",
-    "primary": "#6C86F0",
-    "secondary": "#9E7DFA",
-    "accent": "#FAB937",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "coins",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What got expensive this year. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What got expensive this year. Real records, real numbers.",
-    "instagram": "What got expensive this year"
-   },
-   "keywords": [
-    "price",
-    "of",
-    "now",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 9,
-  "niche": "Tội phạm có thật",
-  "ten": "COURT RECORD",
-  "handle": "@courtrecordusa",
-  "chat_lieu": "C",
-  "nguon": "court",
-  "ham": "ban_an",
-  "dinh_dang": "cinematic",
-  "goc_nhin": "Một vụ án kể từ hồ sơ toà",
-  "style_anh": "phác thảo phòng xử, than chì",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "wrongful death",
-   "xoay": "tu_khoa"
-  },
-  "brand": {
-   "name": "COURT RECORD",
-   "handle": "@courtrecordusa",
-   "tagline": "Straight from the court file",
-   "niche": "Tội phạm có thật",
-   "palette": {
-    "bg": "#170B0A",
-    "primary": "#21B892",
-    "secondary": "#3EA5C2",
-    "accent": "#FA3782",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "scale",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Straight from the court file. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Straight from the court file. Real records, real numbers.",
-    "instagram": "Straight from the court file"
-   },
-   "keywords": [
-    "court",
-    "record",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "phác thảo phòng xử, than chì"
-  }
- },
- {
-  "id": 10,
-  "niche": "Tội phạm có thật",
-  "ten": "SUED FOR THIS",
-  "handle": "@suedforthis",
-  "chat_lieu": "A",
-  "nguon": "court",
-  "ham": "ban_an",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Công ty bị kiện vì cái gì",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "false advertising",
-   "xoay": "tu_khoa"
-  },
-  "brand": {
-   "name": "SUED FOR THIS",
-   "handle": "@suedforthis",
-   "tagline": "The lawsuit they hoped you missed",
-   "niche": "Tội phạm có thật",
-   "palette": {
-    "bg": "#0A170B",
-    "primary": "#9221B8",
-    "secondary": "#C23EA5",
-    "accent": "#82FA37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "scale",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "The lawsuit they hoped you missed. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "The lawsuit they hoped you missed. Real records, real numbers.",
-    "instagram": "The lawsuit they hoped you missed"
-   },
-   "keywords": [
-    "sued",
-    "for",
-    "this",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 11,
-  "niche": "Tội phạm có thật",
-  "ten": "COLD FILE",
-  "handle": "@coldfileusa",
-  "chat_lieu": "C",
-  "nguon": "court",
-  "ham": "ban_an",
-  "dinh_dang": "cinematic",
-  "goc_nhin": "Vụ cũ chưa khép lại",
-  "style_anh": "ảnh tài liệu ố vàng",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "habeas corpus",
-   "xoay": "tu_khoa"
-  },
-  "brand": {
-   "name": "COLD FILE",
-   "handle": "@coldfileusa",
-   "tagline": "The case nobody closed",
-   "niche": "Tội phạm có thật",
-   "palette": {
-    "bg": "#0A1716",
-    "primary": "#F06CA1",
-    "secondary": "#FA857D",
-    "accent": "#37FA92",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "scale",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "The case nobody closed. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "The case nobody closed. Real records, real numbers.",
-    "instagram": "The case nobody closed"
-   },
-   "keywords": [
-    "cold",
-    "file",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "ảnh tài liệu ố vàng"
-  }
- },
- {
-  "id": 12,
-  "niche": "Bí ẩn chưa lời giải",
-  "ten": "UNSOLVED LOG",
-  "handle": "@unsolvedlog",
-  "chat_lieu": "B",
-  "nguon": "wikipedia",
-  "ham": "bai_duoc_doc",
-  "dinh_dang": "cinematic",
-  "goc_nhin": "Bí ẩn nước Mỹ đang tra lại",
-  "style_anh": "tranh khắc gỗ đen trắng",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "loc": "bi_an",
-   "xoay": "ngay"
-  },
-  "brand": {
-   "name": "UNSOLVED LOG",
-   "handle": "@unsolvedlog",
-   "tagline": "Still no answer",
-   "niche": "Bí ẩn chưa lời giải",
-   "palette": {
-    "bg": "#100A17",
-    "primary": "#A1B821",
-    "secondary": "#71C23E",
-    "accent": "#3A37FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "lens",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Still no answer. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Still no answer. Real records, real numbers.",
-    "instagram": "Still no answer"
-   },
-   "keywords": [
-    "unsolved",
-    "log",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "tranh khắc gỗ đen trắng"
-  }
- },
- {
-  "id": 13,
-  "niche": "Bí ẩn chưa lời giải",
-  "ten": "MISSING PIECE",
-  "handle": "@missingpieceusa",
-  "chat_lieu": "B",
-  "nguon": "wikipedia",
-  "ham": "bai_duoc_doc",
-  "dinh_dang": "cinematic",
-  "goc_nhin": "Thứ biến mất không lời giải",
-  "style_anh": "ảnh sương mù đơn sắc",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "loc": "mat_tich",
-   "xoay": "ngay"
-  },
-  "brand": {
-   "name": "MISSING PIECE",
-   "handle": "@missingpieceusa",
-   "tagline": "Gone, and never explained",
-   "niche": "Bí ẩn chưa lời giải",
-   "palette": {
-    "bg": "#0A0C17",
-    "primary": "#F08D2B",
-    "secondary": "#FAF450",
-    "accent": "#37B2FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "lens",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Gone, and never explained. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Gone, and never explained. Real records, real numbers.",
-    "instagram": "Gone, and never explained"
-   },
-   "keywords": [
-    "missing",
-    "piece",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "ảnh sương mù đơn sắc"
-  }
- },
- {
-  "id": 14,
-  "niche": "Thể thao",
-  "ten": "DIAMOND NUMBERS",
-  "handle": "@diamondnumbers",
-  "chat_lieu": "A",
-  "nguon": "mlb",
-  "ham": "thong_ke_mlb",
-  "dinh_dang": "race",
-  "goc_nhin": "Bóng chày qua con số thật",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "nam": 2025
-  },
-  "brand": {
-   "name": "DIAMOND NUMBERS",
-   "handle": "@diamondnumbers",
-   "tagline": "Baseball, by the numbers",
-   "niche": "Thể thao",
-   "palette": {
-    "bg": "#0B170A",
-    "primary": "#BB6CF0",
-    "secondary": "#FA7DF2",
-    "accent": "#9FFA37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "field",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Baseball, by the numbers. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Baseball, by the numbers. Real records, real numbers.",
-    "instagram": "Baseball, by the numbers"
-   },
-   "keywords": [
-    "diamond",
-    "numbers",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 15,
-  "niche": "Thể thao",
-  "ten": "COURT KINGS",
-  "handle": "@courtkingsusa",
-  "chat_lieu": "A",
-  "nguon": "nba",
-  "ham": "thong_ke_nba",
-  "dinh_dang": "race",
-  "goc_nhin": "Bóng rổ: ai thật sự dẫn đầu",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "chi_tieu": "PTS",
-   "mua": "2024-25"
-  },
-  "brand": {
-   "name": "COURT KINGS",
-   "handle": "@courtkingsusa",
-   "tagline": "Who actually leads the league",
-   "niche": "Thể thao",
-   "palette": {
-    "bg": "#170A0B",
-    "primary": "#6CF0BB",
-    "secondary": "#7DF2FA",
-    "accent": "#FA379F",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "field",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Who actually leads the league. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Who actually leads the league. Real records, real numbers.",
-    "instagram": "Who actually leads the league"
-   },
-   "keywords": [
-    "court",
-    "kings",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 16,
-  "niche": "Thể thao",
-  "ten": "PAID VS PLAYED",
-  "handle": "@paidvsplayed",
-  "chat_lieu": "C",
-  "nguon": "nba",
-  "ham": "thong_ke_nba",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Lương so với màn trình diễn",
-  "style_anh": "chân dung vận động viên phẳng",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "chi_tieu": "AST",
-   "mua": "2024-25"
-  },
-  "brand": {
-   "name": "PAID VS PLAYED",
-   "handle": "@paidvsplayed",
-   "tagline": "Paid like a star, played like what",
-   "niche": "Thể thao",
-   "palette": {
-    "bg": "#0A0B17",
-    "primary": "#F0C26C",
-    "secondary": "#EBFA7D",
-    "accent": "#3795FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "field",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Paid like a star, played like what. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Paid like a star, played like what. Real records, real numbers.",
-    "instagram": "Paid like a star, played like what"
-   },
-   "keywords": [
-    "paid",
-    "vs",
-    "played",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "chân dung vận động viên phẳng"
-  }
- },
- {
-  "id": 17,
-  "niche": "Người nổi tiếng",
-  "ten": "AMERICA LOOKED UP",
-  "handle": "@americalookedup",
-  "chat_lieu": "A",
-  "nguon": "wikipedia",
-  "ham": "bai_duoc_doc",
-  "dinh_dang": "race",
-  "goc_nhin": "Hôm qua nước Mỹ tra ai nhiều nhất",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "loc": "tat_ca",
-   "xoay": "ngay"
-  },
-  "brand": {
-   "name": "AMERICA LOOKED UP",
-   "handle": "@americalookedup",
-   "tagline": "What America read yesterday",
-   "niche": "Người nổi tiếng",
-   "palette": {
-    "bg": "#0A1317",
-    "primary": "#F02B2B",
-    "secondary": "#FA9F50",
-    "accent": "#37FAE0",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "pulse",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What America read yesterday. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What America read yesterday. Real records, real numbers.",
-    "instagram": "What America read yesterday"
-   },
-   "keywords": [
-    "america",
-    "looked",
-    "up",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 18,
-  "niche": "Người nổi tiếng",
-  "ten": "FAME CURVE",
-  "handle": "@famecurveusa",
-  "chat_lieu": "C",
-  "nguon": "wikipedia",
-  "ham": "luot_doc_bai",
-  "dinh_dang": "longshot",
-  "goc_nhin": "Đường cong nổi tiếng của một người",
-  "style_anh": "chân dung nét đơn sắc",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "loc": "nguoi",
-   "xoay": "nguoi"
-  },
-  "brand": {
-   "name": "FAME CURVE",
-   "handle": "@famecurveusa",
-   "tagline": "The rise and the drop",
-   "niche": "Người nổi tiếng",
-   "palette": {
-    "bg": "#17160A",
-    "primary": "#3B6DB8",
-    "secondary": "#6059C2",
-    "accent": "#FA9237",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "pulse",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "The rise and the drop. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "The rise and the drop. Real records, real numbers.",
-    "instagram": "The rise and the drop"
-   },
-   "keywords": [
-    "fame",
-    "curve",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "chân dung nét đơn sắc"
-  }
- },
- {
-  "id": 19,
-  "niche": "Phim & truyền hình",
-  "ten": "SHOW NUMBERS",
-  "handle": "@shownumbersusa",
-  "chat_lieu": "C",
-  "nguon": "tvmaze",
-  "ham": "phim_truyen",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Phim bộ qua số tập, mùa, điểm",
-  "style_anh": "poster giả lập phong cách in lụa",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "detective",
-   "loc": "moi",
-   "xoay": "tu_khoa"
-  },
-  "brand": {
-   "name": "SHOW NUMBERS",
-   "handle": "@shownumbersusa",
-   "tagline": "Every show has a number",
-   "niche": "Phim & truyền hình",
-   "palette": {
-    "bg": "#0A1714",
-    "primary": "#D62790",
-    "secondary": "#E0485C",
-    "accent": "#37FA6B",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "film",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Every show has a number. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Every show has a number. Real records, real numbers.",
-    "instagram": "Every show has a number"
-   },
-   "keywords": [
-    "show",
-    "numbers",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "poster giả lập phong cách in lụa"
-  }
- },
- {
-  "id": 20,
-  "niche": "Phim & truyền hình",
-  "ten": "GONE TOO SOON",
-  "handle": "@gonetoosoonusa",
-  "chat_lieu": "C",
-  "nguon": "tvmaze",
-  "ham": "phim_truyen",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Phim bị cắt giữa chừng",
-  "style_anh": "ảnh màn hình tối, chữ neon",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "sci-fi",
-   "loc": "da_huy",
-   "xoay": "tu_khoa"
-  },
-  "brand": {
-   "name": "GONE TOO SOON",
-   "handle": "@gonetoosoonusa",
-   "tagline": "Great shows that got cut",
-   "niche": "Phim & truyền hình",
-   "palette": {
-    "bg": "#170A14",
-    "primary": "#5DB853",
-    "secondary": "#61C284",
-    "accent": "#CC37FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "film",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Great shows that got cut. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Great shows that got cut. Real records, real numbers.",
-    "instagram": "Great shows that got cut"
-   },
-   "keywords": [
-    "gone",
-    "too",
-    "soon",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "ảnh màn hình tối, chữ neon"
-  }
- },
- {
-  "id": 21,
-  "niche": "Nhạc",
-  "ten": "SONG FILE",
-  "handle": "@songfileusa",
-  "chat_lieu": "C",
-  "nguon": "musicbrainz",
-  "ham": "ho_so_nhac",
-  "dinh_dang": "cinematic",
-  "goc_nhin": "Một bài hát: ai viết, ai hát, khi nào",
-  "style_anh": "bìa đĩa vector",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "one hit wonder",
-   "xoay": "nghe_si"
-  },
-  "brand": {
-   "name": "SONG FILE",
-   "handle": "@songfileusa",
-   "tagline": "Who really wrote it",
-   "niche": "Nhạc",
-   "palette": {
-    "bg": "#17140A",
-    "primary": "#2BA1F0",
-    "secondary": "#5067FA",
-    "accent": "#FA6B37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "note",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Who really wrote it. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Who really wrote it. Real records, real numbers.",
-    "instagram": "Who really wrote it"
-   },
-   "keywords": [
-    "song",
-    "file",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "bìa đĩa vector"
-  }
- },
- {
-  "id": 22,
-  "niche": "Nhạc",
-  "ten": "ONE HIT",
-  "handle": "@onehitusa",
-  "chat_lieu": "C",
-  "nguon": "musicbrainz",
-  "ham": "ho_so_nhac",
-  "dinh_dang": "longshot",
-  "goc_nhin": "Nghệ sĩ một bản hit",
-  "style_anh": "ảnh sân khấu hạt phim",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "one hit wonder",
-   "loc": "mot_hit",
-   "xoay": "nghe_si"
-  },
-  "brand": {
-   "name": "ONE HIT",
-   "handle": "@onehitusa",
-   "tagline": "One song, then silence",
-   "niche": "Nhạc",
-   "palette": {
-    "bg": "#170A0F",
-    "primary": "#2BF066",
-    "secondary": "#50FAD2",
-    "accent": "#FA37D9",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "note",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "One song, then silence. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "One song, then silence. Real records, real numbers.",
-    "instagram": "One song, then silence"
-   },
-   "keywords": [
-    "one",
-    "hit",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "ảnh sân khấu hạt phim"
-  }
- },
- {
-  "id": 23,
-  "niche": "Game",
-  "ten": "STEAM TRUTH",
-  "handle": "@steamtruthusa",
-  "chat_lieu": "A",
-  "nguon": "steamspy",
-  "ham": "game_steam",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Game nào THẬT SỰ có người chơi",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "loc": "dong_nhat"
-  },
-  "brand": {
-   "name": "STEAM TRUTH",
-   "handle": "@steamtruthusa",
-   "tagline": "Who is actually online",
-   "niche": "Game",
-   "palette": {
-    "bg": "#170A17",
-    "primary": "#66F02B",
-    "secondary": "#50FA6C",
-    "accent": "#A537FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "gamepad",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Who is actually online. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Who is actually online. Real records, real numbers.",
-    "instagram": "Who is actually online"
-   },
-   "keywords": [
-    "steam",
-    "truth",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  },
-  "ghi_chu": "SteamSpy không có chuỗi thời gian -> bảng hạng, không bịa mốc"
- },
- {
-  "id": 24,
-  "niche": "Game",
-  "ten": "GAME GRAVEYARD",
-  "handle": "@gamegraveyard",
-  "chat_lieu": "C",
-  "nguon": "steamspy",
-  "ham": "game_steam",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Game chết yểu và số người còn lại",
-  "style_anh": "pixel art u tối",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "loc": "chet_yeu"
-  },
-  "brand": {
-   "name": "GAME GRAVEYARD",
-   "handle": "@gamegraveyard",
-   "tagline": "Bought by millions, empty tonight",
-   "niche": "Game",
-   "palette": {
-    "bg": "#0F170A",
-    "primary": "#662BF0",
-    "secondary": "#D250FA",
-    "accent": "#D9FA37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "gamepad",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Bought by millions, empty tonight. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Bought by millions, empty tonight. Real records, real numbers.",
-    "instagram": "Bought by millions, empty tonight"
-   },
-   "keywords": [
-    "game",
-    "graveyard",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "pixel art u tối"
-  }
- },
- {
-  "id": 25,
-  "niche": "Xe",
-  "ten": "CAR RECALL",
-  "handle": "@carrecallusa",
-  "chat_lieu": "A",
-  "nguon": "nhtsa",
-  "ham": "trieu_hoi_xe",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Dòng xe bị triệu hồi vì bộ phận gì",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "hang": "ford",
-   "dong": "f-150",
-   "nam": 2020,
-   "xoay": "hang"
-  },
-  "brand": {
-   "name": "CAR RECALL",
-   "handle": "@carrecallusa",
-   "tagline": "What they recalled on your car",
-   "niche": "Xe",
-   "palette": {
-    "bg": "#17120A",
-    "primary": "#6CC8F0",
-    "secondary": "#7D9AFA",
-    "accent": "#FA5737",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "road",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What they recalled on your car. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What they recalled on your car. Real records, real numbers.",
-    "instagram": "What they recalled on your car"
-   },
-   "keywords": [
-    "car",
-    "recall",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 26,
-  "niche": "Xe",
-  "ten": "MPG TRUTH",
-  "handle": "@mpgtruthusa",
-  "chat_lieu": "C",
-  "nguon": "epa",
-  "ham": "muc_tieu_thu",
-  "dinh_dang": "race",
-  "goc_nhin": "Xe nào thật sự tiết kiệm xăng",
-  "style_anh": "xe cắt lớp isometric",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "hang": "Toyota",
-   "nam": 2024,
-   "xoay": "hang"
-  },
-  "brand": {
-   "name": "MPG TRUTH",
-   "handle": "@mpgtruthusa",
-   "tagline": "What the EPA actually measured",
-   "niche": "Xe",
-   "palette": {
-    "bg": "#0A0B17",
-    "primary": "#B89453",
-    "secondary": "#B6C261",
-    "accent": "#3795FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "road",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What the EPA actually measured. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What the EPA actually measured. Real records, real numbers.",
-    "instagram": "What the EPA actually measured"
-   },
-   "keywords": [
-    "mpg",
-    "truth",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "xe cắt lớp isometric"
-  }
- },
- {
-  "id": 27,
-  "niche": "Thú cưng & động vật",
-  "ten": "BREED FILE",
-  "handle": "@breedfileusa",
-  "chat_lieu": "B",
-  "nguon": "dogceo",
-  "ham": "giong_cho",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Hồ sơ từng giống chó",
-  "style_anh": "tranh màu nước",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "xoay": "giong"
-  },
-  "brand": {
-   "name": "BREED FILE",
-   "handle": "@breedfileusa",
-   "tagline": "One breed, one file",
-   "niche": "Thú cưng & động vật",
-   "palette": {
-    "bg": "#17100A",
-    "primary": "#53A8B8",
-    "secondary": "#6186C2",
-    "accent": "#FA3A37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "paw",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "One breed, one file. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "One breed, one file. Real records, real numbers.",
-    "instagram": "One breed, one file"
-   },
-   "keywords": [
-    "breed",
-    "file",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "tranh màu nước"
-  }
- },
- {
-  "id": 28,
-  "niche": "Thú cưng & động vật",
-  "ten": "WILD NUMBERS",
-  "handle": "@wildnumbersusa",
-  "chat_lieu": "C",
-  "nguon": "worldbank",
-  "ham": "chi_so_the_gioi",
-  "dinh_dang": "scaled",
-  "goc_nhin": "Động vật hoang dã qua con số",
-  "style_anh": "tranh khắc tự nhiên học",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "ma": "AG.LND.FRST.ZS",
-   "nhan": "Forest cover",
-   "nam": 2022
-  },
-  "brand": {
-   "name": "WILD NUMBERS",
-   "handle": "@wildnumbersusa",
-   "tagline": "The wild, counted",
-   "niche": "Thú cưng & động vật",
-   "palette": {
-    "bg": "#0A170F",
-    "primary": "#B853B3",
-    "secondary": "#C26190",
-    "accent": "#47FA37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "paw",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "The wild, counted. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "The wild, counted. Real records, real numbers.",
-    "instagram": "The wild, counted"
-   },
-   "keywords": [
-    "wild",
-    "numbers",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "tranh khắc tự nhiên học"
-  }
- },
- {
-  "id": 29,
-  "niche": "Du lịch",
-  "ten": "COST TO GO",
-  "handle": "@costtogousa",
-  "chat_lieu": "C",
-  "nguon": "worldbank",
-  "ham": "chi_so_the_gioi",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Đi đâu rẻ, đi đâu đắt",
-  "style_anh": "bưu thiếp cũ",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "ma": "NY.GDP.PCAP.CD",
-   "nhan": "Richest countries",
-   "nam": 2023
-  },
-  "brand": {
-   "name": "COST TO GO",
-   "handle": "@costtogousa",
-   "tagline": "What that trip really costs",
-   "niche": "Du lịch",
-   "palette": {
-    "bg": "#0B170A",
-    "primary": "#AB2BF0",
-    "secondary": "#FA50E6",
-    "accent": "#95FA37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "map",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What that trip really costs. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What that trip really costs. Real records, real numbers.",
-    "instagram": "What that trip really costs"
-   },
-   "keywords": [
-    "cost",
-    "to",
-    "go",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "bưu thiếp cũ"
-  }
- },
- {
-  "id": 30,
-  "niche": "Du lịch",
-  "ten": "SKY RIGHT NOW",
-  "handle": "@skyrightnow",
-  "chat_lieu": "C",
-  "nguon": "opensky",
-  "ham": "may_bay",
-  "dinh_dang": "mapped",
-  "goc_nhin": "Bầu trời Mỹ ngay lúc này",
-  "style_anh": "bản đồ radar phát sáng",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "vung": "usa"
-  },
-  "brand": {
-   "name": "SKY RIGHT NOW",
-   "handle": "@skyrightnow",
-   "tagline": "Who is above you right now",
-   "niche": "Du lịch",
-   "palette": {
-    "bg": "#170A0B",
-    "primary": "#2BF0AB",
-    "secondary": "#50E6FA",
-    "accent": "#FA3795",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "map",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Who is above you right now. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Who is above you right now. Real records, real numbers.",
-    "instagram": "Who is above you right now"
-   },
-   "keywords": [
-    "sky",
-    "right",
-    "now",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "bản đồ radar phát sáng"
-  }
- },
- {
-  "id": 31,
-  "niche": "Công nghệ & AI",
-  "ten": "FILINGS SAY",
-  "handle": "@filingssay",
-  "chat_lieu": "A",
-  "nguon": "sec",
-  "ham": "tim_ho_so",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Công ty tự khai gì về AI trong hồ sơ",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "artificial intelligence"
-  },
-  "brand": {
-   "name": "FILINGS SAY",
-   "handle": "@filingssay",
-   "tagline": "What companies admit in writing",
-   "niche": "Công nghệ & AI",
-   "palette": {
-    "bg": "#120A17",
-    "primary": "#C8F06C",
-    "secondary": "#9AFA7D",
-    "accent": "#5737FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "chip",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What companies admit in writing. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What companies admit in writing. Real records, real numbers.",
-    "instagram": "What companies admit in writing"
-   },
-   "keywords": [
-    "filings",
-    "say",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 32,
-  "niche": "Công nghệ & AI",
-  "ten": "QUIET LAYOFFS",
-  "handle": "@quietlayoffs",
-  "chat_lieu": "A",
-  "nguon": "sec",
-  "ham": "tim_ho_so",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Hồ sơ SEC nhắc chữ sa thải",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "reduction in force"
-  },
-  "brand": {
-   "name": "QUIET LAYOFFS",
-   "handle": "@quietlayoffs",
-   "tagline": "The cuts they filed quietly",
-   "niche": "Công nghệ & AI",
-   "palette": {
-    "bg": "#16170A",
-    "primary": "#2B5CF0",
-    "secondary": "#7550FA",
-    "accent": "#FAAF37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "chip",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "The cuts they filed quietly. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "The cuts they filed quietly. Real records, real numbers.",
-    "instagram": "The cuts they filed quietly"
-   },
-   "keywords": [
-    "quiet",
-    "layoffs",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 33,
-  "niche": "Kinh dị & rùng rợn",
-  "ten": "REAL PLACE",
-  "handle": "@realplaceusa",
-  "chat_lieu": "B",
-  "nguon": "wikipedia",
-  "ham": "bai_duoc_doc",
-  "dinh_dang": "cinematic",
-  "goc_nhin": "Nơi có thật, chuyện có thật",
-  "style_anh": "ảnh đêm tương phản mạnh",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "loc": "dia_diem",
-   "xoay": "ngay"
-  },
-  "brand": {
-   "name": "REAL PLACE",
-   "handle": "@realplaceusa",
-   "tagline": "A real place, a real record",
-   "niche": "Kinh dị & rùng rợn",
-   "palette": {
-    "bg": "#0F170A",
-    "primary": "#7153B8",
-    "secondary": "#AB61C2",
-    "accent": "#D9FA37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "ghost",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "A real place, a real record. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "A real place, a real record. Real records, real numbers.",
-    "instagram": "A real place, a real record"
-   },
-   "keywords": [
-    "real",
-    "place",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "ảnh đêm tương phản mạnh"
-  }
- },
- {
-  "id": 34,
-  "niche": "Kinh dị & rùng rợn",
-  "ten": "NIGHT SHIFT",
-  "handle": "@nightshiftusa",
-  "chat_lieu": "B",
-  "nguon": "wikipedia",
-  "ham": "bai_duoc_doc",
-  "dinh_dang": "cinematic",
-  "goc_nhin": "Chuyện xảy ra ca đêm",
-  "style_anh": "tranh sơn dầu tối màu",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "loc": "ca_dem",
-   "xoay": "ngay"
-  },
-  "brand": {
-   "name": "NIGHT SHIFT",
-   "handle": "@nightshiftusa",
-   "tagline": "What happens after midnight",
-   "niche": "Kinh dị & rùng rợn",
-   "palette": {
-    "bg": "#0A1517",
-    "primary": "#F04D65",
-    "secondary": "#FA9E73",
-    "accent": "#37FAC3",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "ghost",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What happens after midnight. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What happens after midnight. Real records, real numbers.",
-    "instagram": "What happens after midnight"
-   },
-   "keywords": [
-    "night",
-    "shift",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "tranh sơn dầu tối màu"
-  }
- },
- {
-  "id": 35,
-  "niche": "Quan hệ & hẹn hò",
-  "ten": "MARRIAGE MATH",
-  "handle": "@marriagemath",
-  "chat_lieu": "C",
-  "nguon": "worldbank",
-  "ham": "chi_so_the_gioi",
-  "dinh_dang": "scaled",
-  "goc_nhin": "Hôn nhân Mỹ qua con số",
-  "style_anh": "biểu tượng phẳng ấm màu",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "ma": "SP.DYN.TFRT.IN",
-   "nhan": "Birth rate",
-   "nam": 2022
-  },
-  "brand": {
-   "name": "MARRIAGE MATH",
-   "handle": "@marriagemath",
-   "tagline": "Love, in numbers",
-   "niche": "Quan hệ & hẹn hò",
-   "palette": {
-    "bg": "#0A0C17",
-    "primary": "#B87421",
-    "secondary": "#C0C23E",
-    "accent": "#37A9FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "heart",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Love, in numbers. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Love, in numbers. Real records, real numbers.",
-    "instagram": "Love, in numbers"
-   },
-   "keywords": [
-    "marriage",
-    "math",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "biểu tượng phẳng ấm màu"
-  }
- },
- {
-  "id": 36,
-  "niche": "Quan hệ & hẹn hò",
-  "ten": "WHAT THEY SEARCH",
-  "handle": "@whattheysearch",
-  "chat_lieu": "C",
-  "nguon": "wikipedia",
-  "ham": "wiki_bai",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Người ta lén tra điều gì",
-  "style_anh": "ảnh màn hình đêm",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "nhan": "What America looks up about love",
-   "bai": [
-    "Divorce",
-    "Infidelity",
-    "Prenuptial_agreement",
-    "Child_custody",
-    "Long-distance_relationship",
-    "Dating",
-    "Marriage",
-    "Alimony",
-    "Breakup",
-    "Soulmate"
-   ]
-  },
-  "brand": {
-   "name": "WHAT THEY SEARCH",
-   "handle": "@whattheysearch",
-   "tagline": "What America looks up alone",
-   "niche": "Quan hệ & hẹn hò",
-   "palette": {
-    "bg": "#120A17",
-    "primary": "#B5F02B",
-    "secondary": "#78FA50",
-    "accent": "#5737FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "heart",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What America looks up alone. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What America looks up alone. Real records, real numbers.",
-    "instagram": "What America looks up alone"
-   },
-   "keywords": [
-    "what",
-    "they",
-    "search",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "ảnh màn hình đêm"
-  },
-  "ghi_chu": "bảng đọc-nhiều không có chủ đề quan hệ (đo 4 ngày: 0-1 bài) -> đo lượt đọc danh sách bài cố định"
- },
- {
-  "id": 37,
-  "niche": "Nghề nghiệp",
-  "ten": "SALARY TRUTH",
-  "handle": "@salarytruthusa",
-  "chat_lieu": "A",
-  "nguon": "bls",
-  "ham": "chuoi_bls",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Nghề này thật sự trả bao nhiêu",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "chuoi": "viec_lam",
-   "nhan": "Jobs in America"
-  },
-  "brand": {
-   "name": "SALARY TRUTH",
-   "handle": "@salarytruthusa",
-   "tagline": "What that job really pays",
-   "niche": "Nghề nghiệp",
-   "palette": {
-    "bg": "#0A1017",
-    "primary": "#F0866C",
-    "secondary": "#FAD07D",
-    "accent": "#37EDFA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "receipt",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What that job really pays. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What that job really pays. Real records, real numbers.",
-    "instagram": "What that job really pays"
-   },
-   "keywords": [
-    "salary",
-    "truth",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 38,
-  "niche": "Nghề nghiệp",
-  "ten": "JOB DYING",
-  "handle": "@jobdyingusa",
-  "chat_lieu": "A",
-  "nguon": "bls",
-  "ham": "chuoi_bls",
-  "dinh_dang": "longshot",
-  "goc_nhin": "Nghề đang biến mất",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "chuoi": "that_nghiep",
-   "nhan": "Unemployment"
-  },
-  "brand": {
-   "name": "JOB DYING",
-   "handle": "@jobdyingusa",
-   "tagline": "The jobs going away",
-   "niche": "Nghề nghiệp",
-   "palette": {
-    "bg": "#0A1317",
-    "primary": "#B82121",
-    "secondary": "#C27C3E",
-    "accent": "#37FAE0",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "receipt",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "The jobs going away. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "The jobs going away. Real records, real numbers.",
-    "instagram": "The jobs going away"
-   },
-   "keywords": [
-    "job",
-    "dying",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 39,
-  "niche": "Nhà ở",
-  "ten": "WHERE TO MOVE",
-  "handle": "@wheretomoveusa",
-  "chat_lieu": "A",
-  "nguon": "zillow",
-  "ham": "gia_nha_zillow",
-  "dinh_dang": "mapped",
-  "goc_nhin": "Bang nào đáng chuyển tới",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "muc": "State"
-  },
-  "brand": {
-   "name": "WHERE TO MOVE",
-   "handle": "@wheretomoveusa",
-   "tagline": "Where your money goes further",
-   "niche": "Nhà ở",
-   "palette": {
-    "bg": "#170A0E",
-    "primary": "#21B856",
-    "secondary": "#3EC2AA",
-    "accent": "#FA37D0",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "house",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Where your money goes further. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Where your money goes further. Real records, real numbers.",
-    "instagram": "Where your money goes further"
-   },
-   "keywords": [
-    "where",
-    "to",
-    "move",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  },
-  "ghi_chu": "BLS chỉ chia theo VÙNG, không theo bang -> Zillow mới vẽ được bản đồ"
- },
- {
-  "id": 40,
-  "niche": "Nhà ở",
-  "ten": "HOUSE MATH",
-  "handle": "@housemathusa",
-  "chat_lieu": "C",
-  "nguon": "bls",
-  "ham": "chuoi_bls",
-  "dinh_dang": "scaled",
-  "goc_nhin": "Cần bao nhiêu năm lương mua một căn",
-  "style_anh": "mặt cắt nhà isometric",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "nhom": [
-    "cpi_nha",
-    "cpi_dien_nuoc",
-    "cpi_di_lai",
-    "cpi_thucpham",
-    "cpi_quan_ao",
-    "cpi_giai_tri"
-   ],
-   "nhan": "What a home actually costs"
-  },
-  "brand": {
-   "name": "HOUSE MATH",
-   "handle": "@housemathusa",
-   "tagline": "Years of pay for four walls",
-   "niche": "Nhà ở",
-   "palette": {
-    "bg": "#0E170A",
-    "primary": "#5621B8",
-    "secondary": "#AA3EC2",
-    "accent": "#D0FA37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "house",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Years of pay for four walls. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Years of pay for four walls. Real records, real numbers.",
-    "instagram": "Years of pay for four walls"
-   },
-   "keywords": [
-    "house",
-    "math",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "mặt cắt nhà isometric"
-  }
- },
- {
-  "id": 41,
-  "niche": "Lịch sử",
-  "ten": "ARCHIVE REEL",
-  "handle": "@archivereelusa",
-  "chat_lieu": "C",
-  "nguon": "archive",
-  "ham": "phim_tu_lieu",
-  "dinh_dang": "cinematic",
-  "goc_nhin": "Phim tư liệu công cộng, kể lại",
-  "style_anh": "khung phim xước",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "america 1950",
-   "xoay": "tu_khoa"
-  },
-  "brand": {
-   "name": "ARCHIVE REEL",
-   "handle": "@archivereelusa",
-   "tagline": "Footage nobody owns",
-   "niche": "Lịch sử",
-   "palette": {
-    "bg": "#0A1710",
-    "primary": "#F06CDC",
-    "secondary": "#FA7DAD",
-    "accent": "#37FA3A",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "film",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Footage nobody owns. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Footage nobody owns. Real records, real numbers.",
-    "instagram": "Footage nobody owns"
-   },
-   "keywords": [
-    "archive",
-    "reel",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "khung phim xước"
-  }
- },
- {
-  "id": 42,
-  "niche": "Lịch sử",
-  "ten": "THEN AND NOW",
-  "handle": "@thenandnowusa",
-  "chat_lieu": "C",
-  "nguon": "archive",
-  "ham": "phim_tu_lieu",
-  "dinh_dang": "thennow",
-  "goc_nhin": "Cùng một chỗ, cách nhau 100 năm",
-  "style_anh": "ảnh ghép hai thời",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "city street",
-   "xoay": "tu_khoa"
-  },
-  "brand": {
-   "name": "THEN AND NOW",
-   "handle": "@thenandnowusa",
-   "tagline": "Same street, a century apart",
-   "niche": "Lịch sử",
-   "palette": {
-    "bg": "#170A0E",
-    "primary": "#60D68A",
-    "secondary": "#70E0CC",
-    "accent": "#FA37D0",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "film",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Same street, a century apart. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Same street, a century apart. Real records, real numbers.",
-    "instagram": "Same street, a century apart"
-   },
-   "keywords": [
-    "then",
-    "and",
-    "now",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "ảnh ghép hai thời"
-  }
- },
- {
-  "id": 43,
-  "niche": "Vũ trụ",
-  "ten": "NEAR EARTH",
-  "handle": "@nearearthusa",
-  "chat_lieu": "A",
-  "nguon": "nasa",
-  "ham": "tieu_hanh_tinh",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Thiên thạch sát Trái Đất tháng này",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "xoay": "ngay"
-  },
-  "brand": {
-   "name": "NEAR EARTH",
-   "handle": "@nearearthusa",
-   "tagline": "What just passed us",
-   "niche": "Vũ trụ",
-   "palette": {
-    "bg": "#0D0A17",
-    "primary": "#D6BC27",
-    "secondary": "#B0E048",
-    "accent": "#376EFA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "rocket",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What just passed us. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What just passed us. Real records, real numbers.",
-    "instagram": "What just passed us"
-   },
-   "keywords": [
-    "near",
-    "earth",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 44,
-  "niche": "Vũ trụ",
-  "ten": "SPACE INVOICE",
-  "handle": "@spaceinvoice",
-  "chat_lieu": "A",
-  "nguon": "usaspending",
-  "ham": "hop_dong_lon",
-  "dinh_dang": "race",
-  "goc_nhin": "NASA trả tiền cho ai",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "de_tai": "space",
-   "nam": 2024,
-   "xoay": "nam"
-  },
-  "brand": {
-   "name": "SPACE INVOICE",
-   "handle": "@spaceinvoice",
-   "tagline": "Who NASA pays",
-   "niche": "Vũ trụ",
-   "palette": {
-    "bg": "#0A1715",
-    "primary": "#B82165",
-    "secondary": "#C2403E",
-    "accent": "#37FA88",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "rocket",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Who NASA pays. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Who NASA pays. Real records, real numbers.",
-    "instagram": "Who NASA pays"
-   },
-   "keywords": [
-    "space",
-    "invoice",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 45,
-  "niche": "Thời tiết & thảm hoạ",
-  "ten": "ALERT NOW",
-  "handle": "@alertnowusa",
-  "chat_lieu": "A",
-  "nguon": "nws",
-  "ham": "canh_bao",
-  "dinh_dang": "mapped",
-  "goc_nhin": "Cảnh báo đang bật ở bang nào",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "bang": "TX",
-   "xoay": "bang"
-  },
-  "brand": {
-   "name": "ALERT NOW",
-   "handle": "@alertnowusa",
-   "tagline": "What is warning right now",
-   "niche": "Thời tiết & thảm hoạ",
-   "palette": {
-    "bg": "#150A17",
-    "primary": "#6CB821",
-    "secondary": "#42C23E",
-    "accent": "#7E37FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "storm",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What is warning right now. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What is warning right now. Real records, real numbers.",
-    "instagram": "What is warning right now"
-   },
-   "keywords": [
-    "alert",
-    "now",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 46,
-  "niche": "Thời tiết & thảm hoạ",
-  "ten": "QUAKE LOG",
-  "handle": "@quakelogusa",
-  "chat_lieu": "A",
-  "nguon": "usgs",
-  "ham": "dong_dat",
-  "dinh_dang": "mapped",
-  "goc_nhin": "Động đất mạnh nhất và ở đâu",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "do_lon": 4.5,
-   "tu_ngay": "2015-01-01",
-   "xoay": "nam"
-  },
-  "brand": {
-   "name": "QUAKE LOG",
-   "handle": "@quakelogusa",
-   "tagline": "The ground moved here",
-   "niche": "Thời tiết & thảm hoạ",
-   "palette": {
-    "bg": "#140A17",
-    "primary": "#8FB853",
-    "secondary": "#6EC261",
-    "accent": "#6B37FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "storm",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "The ground moved here. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "The ground moved here. Real records, real numbers.",
-    "instagram": "The ground moved here"
-   },
-   "keywords": [
-    "quake",
-    "log",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 47,
-  "niche": "Quân sự",
-  "ten": "PENTAGON LEDGER",
-  "handle": "@pentagonledger",
-  "chat_lieu": "A",
-  "nguon": "usaspending",
-  "ham": "hop_dong_lon",
-  "dinh_dang": "race",
-  "goc_nhin": "Nhà thầu quốc phòng đua theo năm",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "de_tai": "ammunition",
-   "nam": 2024,
-   "xoay": "nam"
-  },
-  "brand": {
-   "name": "PENTAGON LEDGER",
-   "handle": "@pentagonledger",
-   "tagline": "Where the defense money went",
-   "niche": "Quân sự",
-   "palette": {
-    "bg": "#0A1710",
-    "primary": "#D627C5",
-    "secondary": "#E0488A",
-    "accent": "#3DFA37",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "shield",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "Where the defense money went. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "Where the defense money went. Real records, real numbers.",
-    "instagram": "Where the defense money went"
-   },
-   "keywords": [
-    "pentagon",
-    "ledger",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- },
- {
-  "id": 48,
-  "niche": "Quân sự",
-  "ten": "WEAPON PRICE",
-  "handle": "@weaponpriceusa",
-  "chat_lieu": "C",
-  "nguon": "usaspending",
-  "ham": "hop_dong_lon",
-  "dinh_dang": "scaled",
-  "goc_nhin": "Một quả đạn giá bao nhiêu",
-  "style_anh": "kỹ thuật hoạ bản vẽ xanh",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "de_tai": "missile",
-   "nam": 2024,
-   "xoay": "nam"
-  },
-  "brand": {
-   "name": "WEAPON PRICE",
-   "handle": "@weaponpriceusa",
-   "tagline": "What one round costs you",
-   "niche": "Quân sự",
-   "palette": {
-    "bg": "#0A1017",
-    "primary": "#F05C2B",
-    "secondary": "#FACA50",
-    "accent": "#37E3FA",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "shield",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What one round costs you. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What one round costs you. Real records, real numbers.",
-    "instagram": "What one round costs you"
-   },
-   "keywords": [
-    "weapon",
-    "price",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "kỹ thuật hoạ bản vẽ xanh"
-  }
- },
- {
-  "id": 49,
-  "niche": "Luật & quyền công dân",
-  "ten": "YOUR RIGHTS CASE",
-  "handle": "@yourrightscase",
-  "chat_lieu": "C",
-  "nguon": "court",
-  "ham": "ban_an",
-  "dinh_dang": "cinematic",
-  "goc_nhin": "Án lệ đổi đời sống thường ngày",
-  "style_anh": "tranh minh hoạ phiên toà",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "tu_khoa": "first amendment",
-   "xoay": "tu_khoa"
-  },
-  "brand": {
-   "name": "YOUR RIGHTS CASE",
-   "handle": "@yourrightscase",
-   "tagline": "The ruling that changed your day",
-   "niche": "Luật & quyền công dân",
-   "palette": {
-    "bg": "#170E0A",
-    "primary": "#45D6CF",
-    "secondary": "#67AEE0",
-    "accent": "#FA375B",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "scale",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "The ruling that changed your day. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "The ruling that changed your day. Real records, real numbers.",
-    "instagram": "The ruling that changed your day"
-   },
-   "keywords": [
-    "your",
-    "rights",
-    "case",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": "tranh minh hoạ phiên toà"
-  }
- },
- {
-  "id": 50,
-  "niche": "Giáo dục",
-  "ten": "DEGREE WORTH",
-  "handle": "@degreeworthusa",
-  "chat_lieu": "A",
-  "nguon": "bls",
-  "ham": "chuoi_bls",
-  "dinh_dang": "ranked",
-  "goc_nhin": "Bằng này đáng bao nhiêu tiền",
-  "style_anh": "",
-  "the_he": 2,
-  "footage": false,
-  "tham_so": {
-   "chuoi": "cpi_giao_duc",
-   "nhan": "Education cost"
-  },
-  "brand": {
-   "name": "DEGREE WORTH",
-   "handle": "@degreeworthusa",
-   "tagline": "What that degree is worth",
-   "niche": "Giáo dục",
-   "palette": {
-    "bg": "#17110A",
-    "primary": "#2199B8",
-    "secondary": "#3E6AC2",
-    "accent": "#FA4437",
-    "text": "#F2F6FF"
-   },
-   "font": "Poppins",
-   "motif": "cap",
-   "voice_tone": "calm, factual, a little blunt",
-   "description": {
-    "youtube": "What that degree is worth. Every number in this channel comes from a public record you can look up yourself — no stock footage, no made-up statistics. Source shown on screen. New episode regularly.",
-    "facebook": "What that degree is worth. Real records, real numbers.",
-    "instagram": "What that degree is worth"
-   },
-   "keywords": [
-    "degree",
-    "worth",
-    "usa",
-    "real data",
-    "verified"
-   ],
-   "style_anh": ""
-  }
- }
 ]

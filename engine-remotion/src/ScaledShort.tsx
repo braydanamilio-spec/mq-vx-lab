@@ -1,6 +1,7 @@
 import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
+import { phong } from "./Phong";
 import React from "react";
 
 // KÊNH #4 SCALED — so sánh KÍCH THƯỚC vật lý thật, vẽ ĐÚNG TỈ LỆ cạnh nhau. Motif riêng.
@@ -9,6 +10,7 @@ export type ScaleItem = { name: string; emoji?: string; value: number; disp?: st
 export type ScaledProps = {
   title?: string; subtitle?: string; handle?: string; color?: string; accent?: string;
   items: ScaleItem[]; introSec?: number; itemSec?: number; outroSec?: number;
+  font?: string;
   audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
 };
 
@@ -23,7 +25,7 @@ export const calcScaled = ({ props }: any) => {
 };
 
 export const ScaledShort: React.FC<ScaledProps> = (props) => {
-  const { title = "SIZE COMPARISON", subtitle = "", handle = "@scaledusa", color = "#2FA84F", accent = "#2FA84F",
+  const { font = "", title = "SIZE COMPARISON", subtitle = "", handle = "@scaledusa", color = "#2FA84F", accent = "#2FA84F",
     items = [], introSec = 1.8, itemSec = 2.0, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
@@ -51,7 +53,7 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
   const introP = spring({ frame: f, fps, config: { damping: 12, stiffness: 140 } });
 
   return (
-    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #10251a 0%, #0a1510 55%, #060b08 100%)", fontFamily: "'Poppins',Arial" }}>
+    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #10251a 0%, #0a1510 55%, #060b08 100%)", fontFamily: phong(font) }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 96, left: 0, right: 0, textAlign: "center", padding: "0 50px" }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>📏 SCALED</div>

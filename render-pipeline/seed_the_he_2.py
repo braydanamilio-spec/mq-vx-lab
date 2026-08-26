@@ -30,6 +30,32 @@ DS = os.path.join(GOC, "kenh_the_he_2.json")
 TARGET = ["short_target", "tier", "cap_gb"]
 
 
+# ── CHỮ KÝ GIỌNG RIÊNG TỪNG KÊNH (26/8/2026) ──────────────────────────────────────────────────
+# Đo trước khi seed: 50 kênh gen-2 KHÔNG có trường `voice`, mà `run_one` gọi
+# `set_voice(ch.get("voice"), ...)` -> None -> rơi về `DEFAULT_VOICE`. Tức cả 50 kênh sẽ đọc bằng
+# ĐÚNG MỘT giọng. Chính chú thích trong `tts_karaoke.set_voice` đã cảnh báo chuyện này cho đời 1:
+# "40 kênh chung 1 giọng + 21 kênh chung 1 engine -> đúng thứ chính sách inauthentic/mass-produced
+# của YouTube nhắm tới". Để nguyên là lặp lại y nguyên cái bẫy đó ở quy mô 50.
+#
+# 12 giọng en-US khác NGƯỜI (bỏ bản Multilingual vì trùng nhân vật, bỏ Ana vì giọng trẻ em không
+# hợp các chủ đề toà án/quốc phòng/tài chính), nhân với tốc độ và cao độ -> 108 chữ ký. 50 kênh
+# lấy 50 chữ ký khác nhau, không cặp nào trùng.
+GIONG = ["en-US-AndrewNeural", "en-US-BrianNeural", "en-US-ChristopherNeural", "en-US-EricNeural",
+         "en-US-GuyNeural", "en-US-RogerNeural", "en-US-SteffanNeural",
+         "en-US-AriaNeural", "en-US-AvaNeural", "en-US-EmmaNeural", "en-US-JennyNeural",
+         "en-US-MichelleNeural"]
+TOC = ["+0%", "+7%", "+13%"]        # kể nhanh/chậm đổi hẳn cảm giác kênh
+CAO = ["+0Hz", "-12Hz", "+10Hz"]    # cao độ: đòn bẩy mạnh nhất để tách chất giọng
+
+
+def chu_ky_giong(i: int) -> dict:
+    """Chữ ký giọng thứ `i`. Xếp sao cho hai kênh LIỀN NHAU luôn khác GIỌNG (không chỉ khác tốc độ)
+    — người xem lướt hai kênh cạnh nhau phải nghe ra ngay là hai kênh khác nhau."""
+    g = GIONG[i % len(GIONG)]
+    k = i // len(GIONG)
+    return {"voice": g, "voice_rate": TOC[k % len(TOC)], "voice_pitch": CAO[(k // len(TOC)) % len(CAO)]}
+
+
 def _db():
     """Client Firestore CÓ ĐƯỜNG LẬT B2 — dùng chung với dây chuyền chính.
 
@@ -64,6 +90,9 @@ def main() -> int:
     if not owner:
         sys.exit("❌ Không có owner. Đặt OWNER_UID.")
     co = {(t.get("name") or "") for t in mau}
+    # Chỉ số theo TÊN ĐÃ SẮP, không theo thứ tự trong file: thêm kênh mới vào JSON sau này cũng
+    # không làm xáo giọng của các kênh đã chạy (kênh đổi giọng giữa chừng là hỏng nhận diện).
+    thu_tu = {t: i for i, t in enumerate(sorted(k["ten"].replace(" ", "") for k in ks))}
     dich = {k: mau[0].get(k) for k in TARGET if mau[0].get(k) is not None}
     tao = bo = 0
     for k in ks:
@@ -80,9 +109,12 @@ def main() -> int:
                "type": "short", "make_long": False, "long_target": 0, "n_shorts": 3,
                "format": k["dinh_dang"], "accent": pal.get("primary", "#22D3EE"),
                "accent2": pal.get("accent", "#F5B301"),
-               "handle": k["handle"], "niche": k["goc_nhin"], "brand": b}
+               "handle": k["handle"], "niche": k["goc_nhin"], "brand": b,
+               **chu_ky_giong(thu_tu[ten])}
         db.collection("render_channels").document(f"{owner}__{ten}").set(doc, merge=True)
-        print(f"  ➕ {ten:18} [{k['dinh_dang']}] {'BẬT' if bat else 'tắt'}")
+        _g = chu_ky_giong(thu_tu[ten])
+        print(f"  ➕ {ten:18} [{k['dinh_dang']}] {'BẬT' if bat else 'tắt'} "
+              f"· {_g['voice'].replace('en-US-', '').replace('Neural', '')} {_g['voice_rate']} {_g['voice_pitch']}")
         tao += 1
     print(f"\n✅ tạo {tao} kênh, bỏ qua {bo}. Trạng thái: {'ĐANG CHẠY' if bat else 'TẮT — bật ở dashboard'}")
     return 0

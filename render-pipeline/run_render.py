@@ -508,7 +508,11 @@ def run_one(ch, keys, n_shorts=3, report=None):
     # Đặt 1 lần ở đây -> mọi TK.synth() trong cả phiên của kênh này tự dùng đúng giọng.
     try:
         import tts_karaoke as _TK
-        _TK.set_voice(ch.get("voice"), ch.get("voice_rate"))
+        # 26/8 — CAO ĐỘ BỊ BỎ RƠI SUỐT. `set_voice` nhận 3 tham số (giọng · tốc · CAO ĐỘ) và
+        # chú thích của nó nói rõ cao độ là "đòn bẩy MẠNH NHẤT" để tách chất giọng, nhưng cả hai
+        # điểm gọi đều chỉ truyền 2. Trường `voice_pitch` của kênh vì thế chưa từng có tác dụng —
+        # cùng họ với `voice_tone` (ghi vào brand kit, không hàm nào đọc).
+        _TK.set_voice(ch.get("voice"), ch.get("voice_rate"), ch.get("voice_pitch"))
     except Exception:
         pass
 
@@ -1041,7 +1045,7 @@ def process_requests(keys, report, chi_kenh=None):
             # mặc định, khác hẳn các video còn lại của kênh.
             try:
                 import tts_karaoke as _TK
-                _TK.set_voice(cfg.get("voice"), cfg.get("voice_rate"))
+                _TK.set_voice(cfg.get("voice"), cfg.get("voice_rate"), cfg.get("voice_pitch"))
             except Exception:
                 pass
             try:

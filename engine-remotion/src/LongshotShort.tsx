@@ -1,6 +1,7 @@
 import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
+import { phong } from "./Phong";
 import React from "react";
 
 // KÊNH #6 LONGSHOT — real odds/probability, items HOP UP a vertical log-scale ladder to their real rung.
@@ -10,6 +11,7 @@ export type LongshotItem = { label: string; emoji?: string; oddsDisp: string; lo
 export type LongshotProps = {
   title?: string; handle?: string; color?: string; accent?: string;
   items: LongshotItem[]; introSec?: number; itemSec?: number; outroSec?: number;
+  font?: string;
   audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
 };
 
@@ -56,7 +58,7 @@ const climbPos = (f: number, climbStart: number, climbDur: number, hops: number,
 const yForLog = (log: number, trackH: number) => trackH - BOTTOM_PAD - log * RUNG_GAP;
 
 export const LongshotShort: React.FC<LongshotProps> = (props) => {
-  const { title = "WHAT ARE THE REAL ODDS?", handle = "@longshotusa", color = "#4F46E5", accent = "#4F46E5",
+  const { font = "", title = "WHAT ARE THE REAL ODDS?", handle = "@longshotusa", color = "#4F46E5", accent = "#4F46E5",
     items = [], introSec = 1.8, itemSec = 2.7, outroSec = 2.4, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
@@ -105,7 +107,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
   const camY = ANCHOR_Y - activeY;
 
   return (
-    <AbsoluteFill style={{ background: `radial-gradient(120% 90% at 50% 10%, #17163a 0%, #0d0b22 55%, #06050f 100%)`, fontFamily: "'Poppins',Arial", overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: `radial-gradient(120% 90% at 50% 10%, #17163a 0%, #0d0b22 55%, #06050f 100%)`, fontFamily: phong(font), overflow: "hidden" }}>
       {/* TIÊU ĐỀ — fixed header, always visible */}
       <div style={{ position: "absolute", top: 74, left: 0, right: 0, textAlign: "center", padding: "0 50px", zIndex: 5 }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 28, letterSpacing: 2, padding: "7px 20px", borderRadius: 12 }}>🎲 LONGSHOT</div>

@@ -1468,10 +1468,16 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, d
     sdir = os.path.join(DS.PUB, "narration", f"_th2_{dang}_" + sl)
     os.makedirs(sdir, exist_ok=True)
     props = getattr(DS, ten_props)(st, sdir, handle=kenh["handle"])
-    b = (kenh.get("brand") or {}).get("palette") or {}
+    br = kenh.get("brand") or {}
+    b = br.get("palette") or {}
     if b.get("primary"):
         props["accent"] = b["primary"]
         props.setdefault("color", b["primary"])
+    # PHÔNG RIÊNG TỪNG KÊNH (26/8). Không có dòng này thì `brand.font` chỉ là chữ nằm trong JSON:
+    # engine mặc định Poppins, và 50 kênh lại dùng chung một khuôn chữ — đúng cái bẫy `voice_tone`
+    # (ghi vào brand kit từ đầu mà không hàm nào đọc, nên suốt thời gian qua vô tác dụng).
+    if br.get("font"):
+        props["font"] = br["font"]
     pf = os.path.join(DS.PUB, f"_th2_{dang}_{sl}.json")
     json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2_{dang}_{sl}.mp4"))

@@ -1,6 +1,7 @@
 import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
+import { phong } from "./Phong";
 import React from "react";
 
 // KÊNH #3 RANKED — tier list S/A/B/C/D, thẻ lật vào hạng lần lượt. Motif khác hẳn map/bar/guess.
@@ -16,6 +17,7 @@ export type RankItem = { name: string; tier: string; img?: string; stat?: string
 export type RankedProps = {
   title?: string; subtitle?: string; handle?: string; color?: string; accent?: string;
   tiers?: string[]; items: RankItem[]; introSec?: number; itemSec?: number; outroSec?: number;
+  font?: string;
   audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
 };
 
@@ -55,7 +57,7 @@ const Card: React.FC<{ it: RankItem; s: number; accent: string }> = ({ it, s, ac
 );
 
 export const RankedShort: React.FC<RankedProps> = (props) => {
-  const { title = "TIER LIST", subtitle = "", handle = "@rankedusa", color = "#7C5CFF", accent = "#7C5CFF",
+  const { font = "", title = "TIER LIST", subtitle = "", handle = "@rankedusa", color = "#7C5CFF", accent = "#7C5CFF",
     tiers = ["S", "A", "B", "C", "D"], items = [], introSec = 1.8, itemSec = 1.7, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
   const introF = Math.round(introSec * fps);
@@ -73,7 +75,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
   const dayBang = (subs && subs.length) ? 380 : 130;
 
   return (
-    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #171633 0%, #0d0b1c 55%, #07060f 100%)", fontFamily: "'Poppins',Arial" }}>
+    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #171633 0%, #0d0b1c 55%, #07060f 100%)", fontFamily: phong(font) }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 90, left: 0, right: 0, textAlign: "center", padding: "0 50px" }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>🏆 RANKED</div>
