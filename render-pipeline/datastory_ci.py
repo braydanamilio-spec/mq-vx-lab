@@ -2379,7 +2379,7 @@ def keo_du_dai_track(items_out, clips, introSec, outroSec, min_s=21.0, tran_them
 
 
 def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE", accent2="#F5B301", handle="@doc",
-                    ai_style=None, ai_only=False, music=None, mode=None, host_prompt=None, prefix=""):
+                    ai_style=None, ai_only=False, music=None, mode=None, host_prompt=None, prefix="", font=""):
     """Dựng props Cinematic (Wave 2): CHỈ các cảnh có ảnh (fetch + Vision verify khớp) — KHÔNG intro/outro.
     Asset: PUB/<slug>/*.mp3 (giọng) + PUB/<slug>/clips/*.jpg (ảnh). dur tính bằng FRAME (30fps).
     ai_style/ai_only: kênh speculative (không có ảnh thật để so) -> gu vẽ riêng + bỏ qua Openverse hẳn.
@@ -2514,6 +2514,8 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
     # long/short từ `prefix` (đoán sai là bỏ sót hoặc kéo nhầm).
     keo_du_dai(scenes_out, fps=FPS, ten="doc")
     props = {"scenes": scenes_out, "slug": slug_, "handle": handle, "accent": accent, "accent2": accent2}
+    if font:
+        props["font"] = font      # phông riêng của kênh; thiếu dòng này thì Cinematic về Poppins
     if music:
         props["music"] = music
     if mode:

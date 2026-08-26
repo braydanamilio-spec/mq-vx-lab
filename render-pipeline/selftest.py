@@ -1324,6 +1324,42 @@ def t_canary_khong_duoc_render_vao_composition_rong():
     assert not xau, "; ".join(xau)
 
 
+
+def t_phong_phai_chay_het_duong_toi_luc_render():
+    """Phông riêng của kênh phải đi HẾT đường: JSON -> props -> composition, đủ cả 7 dạng.
+
+    26/8 — đây là lớp lỗi lặp lại ba lần trong một đêm, nên chốt nó lại:
+      • `voice_tone` ghi vào brand kit từ đầu — KHÔNG hàm nào đọc.
+      • `voice_pitch` có chỗ nhận — nhưng cả hai điểm gọi `set_voice` chỉ truyền 2/3 tham số.
+      • `brand.font`/`brand.mau` gán cho 50 kênh — `chay_race`/`chay_phim` không truyền xuống,
+        `BarChartRace`/`Cinematic` cũng chưa nhận. Ba dạng cứ dùng Poppins bất kể JSON ghi gì.
+
+    Mỗi lần đều "đã gán rồi" mà thực tế không đổi gì. Kiểm từng khúc riêng lẻ không bắt được —
+    phải kiểm CẢ ĐƯỜNG.
+
+    **Luật**: gán một thuộc tính ở đâu thì phải đi theo nó tới tận chỗ dùng. Dừng ở chỗ ghi là
+    trang trí, không phải tính năng."""
+    import re as _re
+    th = _doc("the_he_2.py")
+    ds = _doc("datastory_ci.py")
+    xau = []
+    for f in ("chay_chung", "chay_race", "chay_phim"):
+        m = _re.search(r"def " + f + r"\(.*?(?=\ndef )", th, _re.S)
+        assert m, f"mất hàm {f}"
+        if "font" not in m.group(0):
+            xau.append(f"{f}: không truyền font xuống props")
+    if 'props["font"] = font' not in ds:
+        xau.append("build_doc_props: nhận font nhưng không ghi vào props")
+    for c in ("RankedShort", "ScaledShort", "MappedShort", "LongshotShort",
+              "ThenNowShort", "BarChartRace", "Cinematic"):
+        src = _doc(f"../engine-remotion/src/{c}.tsx")
+        if "font?: string" not in src:
+            xau.append(f"{c}: không khai prop font")
+        elif "phong(font)" not in src:
+            xau.append(f"{c}: khai font nhưng không dùng -> vẫn Poppins")
+    assert not xau, "; ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1441,6 +1477,7 @@ def main():
     check("gen-2: cả 3 đường phải làm thumbnail", t_gen2_phai_lam_thumbnail)
     check("fitSize theo phông + theo template", t_fitsize_phai_theo_phong_va_khung)
     check("canary không được render vào composition rỗng", t_canary_khong_duoc_render_vao_composition_rong)
+    check("phông chảy hết đường JSON->props->composition", t_phong_phai_chay_het_duong_toi_luc_render)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

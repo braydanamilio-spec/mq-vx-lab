@@ -3301,3 +3301,25 @@ Ngay khi cho dữ liệu mẫu thật vào, canary lộ **hai lỗi chồng ch�
 liệu mẫu đủ để canary đi qua chính phần mà nó sinh ra để vẽ. Và khi tính vị trí trên màn hình, phải
 đi qua **mọi** phép biến hình của cha, không chỉ phép gần nhất.
 Chốt: `t_canary_khong_duoc_render_vao_composition_rong` (đã thử phá).
+
+### 7.ec — "ĐÃ GÁN RỒI" KHÔNG CÓ NGHĨA LÀ CÓ TÁC DỤNG (26/8/2026)
+
+Ba lần trong một đêm, cùng một hình dạng:
+
+| thuộc tính | gán ở đâu | vì sao vô tác dụng |
+|---|---|---|
+| `voice_tone` | brand kit, cả 50 kênh | **không hàm nào đọc** |
+| `voice_pitch` | cấu hình kênh | `set_voice` nhận 3 tham số, hai điểm gọi chỉ truyền 2 |
+| `brand.font` | 50 kênh, 24 phông | `chay_race`/`chay_phim` không truyền; `BarChartRace`/`Cinematic` không nhận |
+
+Mỗi lần đều có cảm giác "đã làm xong" vì dữ liệu đã có mặt. Nhưng dữ liệu nằm im không phải là
+tính năng. Với `font`, hậu quả cụ thể: 7 kênh dạng đua + 10 kênh dạng phim kể — **17/50 kênh** —
+vẫn dùng chung Poppins bất kể JSON ghi phông gì.
+
+Kiểm từng khúc riêng lẻ KHÔNG bắt được (mỗi khúc đều "đúng" theo cách của nó). Phải kiểm **cả
+đường**: JSON → props → composition, cho đủ mọi dạng.
+
+**Luật**: gán một thuộc tính ở đâu thì đi theo nó tới tận chỗ dùng, rồi mới nói là xong. Dừng ở
+chỗ ghi là trang trí, không phải tính năng.
+Chốt: `t_phong_phai_chay_het_duong_toi_luc_render` (đã thử phá — bỏ `phong(font)` ở một
+composition là selftest đỏ).

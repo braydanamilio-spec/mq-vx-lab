@@ -1377,7 +1377,10 @@ def chay_race(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, di
              "title": st["title"][:40], "unit": st["unit"][:6],
              "handle": kenh["handle"], "source": ten_nguon(st.get("nguon", "")),
              "audio": os.path.relpath(track, DS.PUB), "subs": subs,
-             "accent": b.get("primary", "#F5B301"), "music": "music/carefree.mp3", "sfx": True}
+             "accent": b.get("primary", "#F5B301"), "music": "music/carefree.mp3", "sfx": True,
+             # 26/8 — phông riêng của kênh. Thiếu khoá này thì RaceShort rơi về Poppins và 7 kênh
+             # dạng đua lại chung một khuôn chữ, dù JSON đã gán phông khác nhau cho từng kênh.
+             "font": (kenh.get("brand") or {}).get("font", "")}
     pf = os.path.join(DS.PUB, f"_th2r_{sl}.json")
     json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2r_{sl}.mp4"))
@@ -1429,6 +1432,7 @@ def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None,
     props = DS.build_doc_props(st, kenh["ten"], api_key=api,
                                accent=b.get("primary", "#22D3EE"),
                                accent2=b.get("accent", "#F5B301"),
+                               font=(kenh.get("brand") or {}).get("font", ""),
                                handle=kenh["handle"],
                                ai_style=kenh.get("style_anh") or None, ai_only=True,
                                prefix="th2_")

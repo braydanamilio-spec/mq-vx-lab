@@ -1,4 +1,5 @@
 import React from "react";
+import { phong } from "./Phong";
 import { AbsoluteFill, Audio, Sequence, OffthreadVideo, Img, staticFile, interpolate, useCurrentFrame, useVideoConfig, spring } from "remotion";
 
 // 🌌 CINEMATIC comp (BEYOND) — nền stock 4K (hoặc cosmic fallback) + Ken Burns + DATA-HUD chồng lên + color grade + kinetic caption.
@@ -9,7 +10,7 @@ import { AbsoluteFill, Audio, Sequence, OffthreadVideo, Img, staticFile, interpo
 type HUD = { kind: string; value?: number; from?: number; to?: number; unit?: string; label?: string; marks?: string[] };
 type Sub = { t: string; s: number; d: number };
 type Scene = { type: string; clip?: string; clip2?: string; clips?: string[]; man?: number; fx?: string; audio: string; dur: number; nar: string; amp?: number[]; hud?: HUD; title?: string; num?: string; subs?: Sub[]; hook?: { stat?: string; label?: string; line?: string } };
-export type CProps = { scenes: Scene[]; slug: string; handle?: string; capColor?: string; accent?: string; accent2?: string; ink?: string; music?: string; mode?: "duel" | "file"; host?: string };
+export type CProps = { scenes: Scene[]; slug: string; handle?: string; capColor?: string; accent?: string; accent2?: string; ink?: string; music?: string; mode?: "duel" | "file"; host?: string; font?: string };
 export const calcCinematic = ({ props }: { props: CProps }) => ({ durationInFrames: Math.max(1, props.scenes.reduce((a, s) => a + s.dur, 0)) });
 const ci = (v: number, a: number, b: number, x: number, y: number) => interpolate(v, [a, b], [x, y], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 // 1 ảnh hỏng/thiếu KHÔNG được giết cả video: <Img> mặc định CHỜ VÔ HẠN ảnh không nạp được ->
@@ -395,7 +396,7 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
   );
 };
 
-export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", capColor, accent = "#22D3EE", accent2 = "#F5B301", ink = "#EAF8FF", music, mode, host }) => {
+export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", capColor, accent = "#22D3EE", accent2 = "#F5B301", ink = "#EAF8FF", music, mode, host, font = "" }) => {
   const f = useCurrentFrame(); const st: number[] = []; scenes.reduce((a, s, i) => (st[i] = a, a + s.dur), 0);
   let idx = 0; for (let k = 0; k < scenes.length; k++) if (f >= st[k]) idx = k; const s = scenes[idx], l = f - st[idx];
   // KHÔNG fade-về-đen giữa cảnh (comp render 1 cảnh/lúc -> fade sẽ chớp ĐEN mỗi chuyển cảnh).
@@ -424,7 +425,7 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", capColo
     // tt===0: dissolve thuần (scale push-in)
   }
   return (
-    <AbsoluteFill style={{ background: "#02030A", fontFamily: "'Poppins',Arial", opacity: vidFade }}>
+    <AbsoluteFill style={{ background: "#02030A", fontFamily: phong(font), opacity: vidFade }}>
       {inCross && <AbsoluteFill><Scene1 s={scenes[prevIdx]} l={prevL} slug={slug} accent={accent} accent2={accent2} idx={prevIdx} capColor={capColor} mode={mode} /></AbsoluteFill>}
       <AbsoluteFill style={{ opacity: curOpacity, transform: curTransform }}><Scene1 s={s} l={l} slug={slug} accent={accent} accent2={accent2} idx={idx} capColor={capColor} mode={mode} /></AbsoluteFill>
       {/* LUÔN hiện caption (kể cả chapter -> voice đọc nar đều có sub); dùng subs (mốc câu) để khớp tiếng */}

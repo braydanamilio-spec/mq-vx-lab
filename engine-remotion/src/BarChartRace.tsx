@@ -1,4 +1,5 @@
 import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig, interpolate, Audio, staticFile, Img } from "remotion";
+import { phong } from "./Phong";
 import React from "react";
 import { Karaoke } from "./Karaoke";
 
@@ -6,7 +7,7 @@ import { Karaoke } from "./Karaoke";
 type Item = { name: string; value: number };
 type Keyframe = { t: number; data: Item[] };
 export type RaceProps = {
-  title?: string; subtitle?: string; unit?: string; source?: string; handle?: string; transparent?: boolean;
+  title?: string; subtitle?: string; unit?: string; source?: string; handle?: string; font?: string; transparent?: boolean;
   frames: Keyframe[]; secondsPerFrame?: number; topN?: number; durationSec?: number;
   colors?: Record<string, string>; icons?: Record<string, string>; logos?: Record<string, string>; images?: Record<string, string>; photos?: Record<string, string>; themePhotos?: Record<string, string>; coldPhoto?: string; music?: string; sfx?: boolean;
   // 25/8 — hai prop TUỲ CHỌN cho kênh thế hệ 2: đua cột dựng thẳng từ dữ liệu, không footage, nên
@@ -32,7 +33,7 @@ const fmt = (v: number) => {
 };
 
 export const BarChartRace: React.FC<RaceProps> = (props) => {
-  const { title = "", subtitle = "", unit = "", source = "", handle = "", frames, colors, icons, logos, images, photos, themePhotos, coldPhoto, music, sfx = true, audio, subs, accent = "#F5B301" } = props;
+  const { title = "", subtitle = "", unit = "", source = "", handle = "", frames, colors, icons, logos, images, photos, themePhotos, coldPhoto, music, sfx = true, audio, subs, accent = "#F5B301", font = "" } = props;
   const spf = props.secondsPerFrame ?? 2.2; const topN = props.topN ?? 10;
   const f = useCurrentFrame(); const { width: W, height: H, fps } = useVideoConfig();
   const port = H > W;
@@ -75,7 +76,7 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
   const intro = interpolate(f, [0, 12], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <AbsoluteFill style={{ background: props.transparent ? "transparent" : "linear-gradient(160deg,#0b1020 0%,#070a14 100%)", fontFamily: "'Poppins',Arial", opacity: intro }}>
+    <AbsoluteFill style={{ background: props.transparent ? "transparent" : "linear-gradient(160deg,#0b1020 0%,#070a14 100%)", fontFamily: phong(font), opacity: intro }}>
       {/* tiêu đề */}
       <div style={{ position: "absolute", top: port ? 96 : 60, left: M, right: M }}>
         <div style={{ fontSize: port ? 62 : 66, fontWeight: 900, color: "#EAF2FF", letterSpacing: -1, lineHeight: 1.04 }}>{title}</div>
