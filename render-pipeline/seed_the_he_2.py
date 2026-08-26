@@ -83,7 +83,23 @@ def main() -> int:
     # `--capnhat` ghi lại ĐÚNG các trường sinh ra từ bảng, KHÔNG đụng `paused` (trạng thái bật/tắt
     # là quyết định của người, không phải của bảng).
     capnhat = "--capnhat" in sys.argv
+    # 26/8 — CHỌN LẺ KÊNH. Trước đây chỉ có `--bat` bật SẠCH 50 kênh, không có đường bật vài cái.
+    # Mà quy trình đúng là bật thí điểm mỗi dạng một kênh, soi trọn một phiên, trót lọt mới mở rộng —
+    # bật cả 50 rồi mới soi là làm ngược, hỏng thì hỏng đồng loạt và không biết dạng nào gây ra.
+    chi = ""
+    if "--chi" in sys.argv:
+        _i = sys.argv.index("--chi") + 1
+        chi = sys.argv[_i] if _i < len(sys.argv) else ""
+    loc = {t.strip().upper() for t in chi.split(",") if t.strip()}
     ks = json.load(io.open(DS, encoding="utf-8"))
+    if loc:
+        _truoc = len(ks)
+        ks = [k for k in ks if str(k.get("ten", "")).upper() in loc]
+        _thieu = loc - {str(k.get("ten", "")).upper() for k in ks}
+        print(f"🎯 CHỌN LẺ: {len(ks)}/{_truoc} kênh" +
+              (f" · ⚠️ không tìm thấy: {', '.join(sorted(_thieu))}" if _thieu else ""))
+        if not ks:
+            sys.exit("❌ --chi không khớp kênh nào — dừng, không ghi gì.")
     if not that:
         print(f"🔍 DRY-RUN — sẽ đăng ký {len(ks)} kênh, trạng thái "
               f"{'BẬT' if bat else 'TẮT (chờ bật tay)'}\n")
