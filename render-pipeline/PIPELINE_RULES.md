@@ -3503,3 +3503,28 @@ Sau vá, đo lại 5/5: `567 cal` · `2,631 $M` · `704 cal` · `155` · `$481,8
 **Luật**: khi nhiều dạng dữ liệu cùng đi vào một khâu chung, khâu đó phải biết ĐỌC ĐỦ MỌI DẠNG —
 hoặc kêu lên khi gặp dạng lạ. Lặng lẽ lùi về bản dự phòng là cách hỏng khó thấy nhất: sản phẩm vẫn
 ra, chỉ là ra bản kém.
+
+### 7.ek — ĐA LUỒNG VỚI CLIENT GOOGLE API = HỎNG BỘ NHỚ, KHÔNG PHẢI NGOẠI LỆ (26/8/2026)
+
+Bản dọn 9.037 tệp chạy tuần tự mất 45'21" — đúng bằng `timeout-minutes: 45` nên bị giết giữa chừng.
+Em vá bằng `ThreadPoolExecutor(8)` cho nhanh. Kết quả:
+
+```
+free(): corrupted unsorted chunks
+Aborted (core dumped)          exit code 134
+```
+
+`google-api-python-client` dùng một `httplib2.Http` **không an toàn đa luồng**. Chia sẻ một `svc`
+giữa 8 luồng làm hỏng bộ nhớ **ở tầng C** — không phải ngoại lệ Python, nên `try/except` bao quanh
+cũng không đỡ được, và tiến trình chết ngay không kịp ghi gì.
+
+Vá đúng: **quay lại tuần tự**, giữ phần in tiến độ, và nới `timeout-minutes` 45 → 330. Việc chỉ tốn
+~45 phút trong khi trần là 330 — không có lý do gì đánh đổi rủi ro lấy tốc độ mình không cần.
+(Muốn nhanh thật thì mỗi luồng một `svc` riêng, hoặc dùng batch request của Drive.)
+
+**Luật**: trước khi chạy song song một client mạng, hỏi nó có an toàn đa luồng không. Và khi đã nới
+được trần thời gian thì đừng tối ưu tốc độ nữa — chỗ đó không còn là nút thắt.
+
+Chốt `t_viec_dai_phai_in_tien_do_va_du_gio` nay kiểm NGƯỢC LẠI: cấm `ThreadPoolExecutor` trong bản
+dọn. Bản đầu của chính chốt này đòi PHẢI đa luồng — một chốt sai hướng còn nguy hơn không có chốt,
+vì nó ép người sau đi vào đúng cái bẫy.

@@ -199,19 +199,24 @@ def main() -> int:
                 # (chạy 45'21" rồi `The operation was canceled`), dọn dở dang mà log KHÔNG cho biết
                 # đã tới đâu. Một việc dài mà không in tiến độ thì lúc nó chết chẳng ai biết mất gì.
                 # Thùng rác nên chạy lại là tiếp tục phần còn lại, không hỏng gì.
-                import concurrent.futures as _cf
-                xong = [0]
-                def _bo(fid):
+                # 26/8 — TUẦN TỰ, CÓ CHỦ Ý. Bản trước em cho 8 luồng cùng gọi `dr.trash()` để chạy
+                # cho nhanh, và nó **làm hỏng bộ nhớ**: `free(): corrupted unsorted chunks` →
+                # `Aborted (core dumped)`, exit 134. Client google-api-python-client dùng chung một
+                # `httplib2.Http` KHÔNG an toàn đa luồng — chia sẻ giữa các luồng là hỏng ở tầng C,
+                # không phải ngoại lệ Python nên `try/except` cũng không đỡ được.
+                # Muốn nhanh thì phải mỗi luồng một `svc` riêng, hoặc dùng batch request. Nhưng
+                # trần thời gian nay đã 330 phút trong khi việc chỉ tốn ~45 phút — không có lý do
+                # gì đánh đổi rủi ro lấy tốc độ mình không cần.
+                xong = 0
+                for fid in can_xoa:
                     try:
                         dr.trash(fid)
                     except Exception as e:
                         print(f"      ⚠️ bỏ sót 1 tệp: {str(e)[:50]}")
-                    xong[0] += 1
-                    if xong[0] % 200 == 0:
-                        print(f"      … {xong[0]}/{len(can_xoa)} tệp của kho "
+                    xong += 1
+                    if xong % 200 == 0:
+                        print(f"      … {xong}/{len(can_xoa)} tệp của kho "
                               f"'{acc.get('name', '?')}'", flush=True)
-                with _cf.ThreadPoolExecutor(max_workers=8) as ex:
-                    list(ex.map(_bo, can_xoa))
                 print(f"      ✅ kho '{acc.get('name', '?')}': {len(can_xoa)} tệp vào thùng rác",
                       flush=True)
         print(f"\n  🗑  {'đã đưa vào thùng rác' if that else '(sẽ đưa vào thùng rác)'} {tong} tệp "

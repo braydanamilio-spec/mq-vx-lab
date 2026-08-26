@@ -1794,7 +1794,11 @@ def t_viec_dai_phai_in_tien_do_va_du_gio():
     Vá: xoá song song 8 luồng, in tiến độ mỗi 200 tệp, nới trần lên 330 phút. Thùng rác nên chạy
     lại là tiếp tục phần còn lại, không hỏng gì."""
     src = _doc("don_the_he_1.py")
-    assert "ThreadPoolExecutor" in src, "vẫn xoá tuần tự -> chạm trần thời gian"
+    # 26/8 — chốt cũ đòi PHẢI đa luồng. Sai: client Google API không an toàn đa luồng, 8 luồng
+    # dùng chung `svc` làm hỏng bộ nhớ (`free(): corrupted unsorted chunks`, core dumped, exit 134).
+    # Điều thật sự cần là ĐỦ GIỜ + IN TIẾN ĐỘ, không phải chạy song song.
+    assert "ThreadPoolExecutor" not in src, \
+        "xoá đa luồng với client Google API dùng chung -> hỏng bộ nhớ, core dumped"
     assert "% 200 == 0" in src, "không in tiến độ -> bị giết giữa chừng thì không biết đã tới đâu"
     y = _doc("../.github/workflows/don_the_he_1.yml")
     import re as _re
