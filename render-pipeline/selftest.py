@@ -1434,7 +1434,17 @@ def t_50_kenh_dong_bo_du_ba_noi():
       • `RS_PRESETS`  -> dropdown chọn kênh khi render
       • `RS_BRANDS`   -> brand kit: avatar/cover/mô tả/hashtag
       • `brands.json` -> khâu đăng YouTube/FB/IG đọc handle · tagline · hashtag · category"""
-    import json as _json
+    import json as _json, os as _os
+    goc = _os.path.dirname(_os.path.abspath(__file__))
+    dash = _os.path.join(goc, "..", "MM0-AutoPublisher", "dashboard", "index.html")
+    if not _os.path.exists(dash):
+        # 26/8 — chốt này soi repo THỨ HAI. Workflow `seed_the_he_2` chỉ checkout repo render nên
+        # file không có ⇒ chốt ném FileNotFoundError và **chặn cả lần seed** (fail lần 4).
+        # Chốt liên-repo chỉ chạy được ở nơi có cả hai repo (máy anh, và `render_cron` — nơi có
+        # bước sao chép `_autopublisher`). Nơi khác thì BỎ QUA, nhưng nói rõ là đã bỏ qua —
+        # im lặng bỏ qua chính là cái bẫy "phép thử chạy trên đầu vào rỗng".
+        print("      ⏭  bỏ qua: không có repo MM0-AutoPublisher ở đây (chốt liên-repo)")
+        return
     ks = _json.loads(_doc("kenh_the_he_2.json"))
     ten = [k["ten"].replace(" ", "").upper() for k in ks]
     d = _doc("../MM0-AutoPublisher/dashboard/index.html")
