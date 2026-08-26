@@ -824,6 +824,19 @@ def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
     channel = ch.get("name")
     import the_he_2 as TH2
     k2 = TH2.doc_kenh(channel or "")
+    # 27/8 — NGUỒN SỐNG CHỈ LÀM MỘT BỘ MỖI PHIÊN.
+    # Đo thật: lane SKYRIGHTNOW ra 18 video trùng đúng một tiêu đề. Kênh này lấy dữ liệu OpenSky
+    # "ngay lúc này" và KHÔNG có trục xoay (`xoay: None`), nên mọi lượt trong cùng phiên hỏi lại
+    # cùng một nguồn. Gọi thẳng nguồn hai lượt cách nhau 3 giây: **giống hệt nhau ở mọi trường**
+    # (200 máy bay · cao nhất 22.738m · 190 chiếc Mỹ · 7 nước) — nguồn không làm mới nhanh như chữ
+    # "right now" gợi ý.
+    # Nên đổi tiêu đề kiểu gì cũng vẫn là video trùng NỘI DUNG. Thứ đúng là làm một bộ rồi nhường
+    # slot cho kênh khác; phiên sau (cách hàng giờ) mới có dữ liệu thật sự mới.
+    if k2 and not (k2.get("tham_so") or {}).get("xoay"):
+        if _SESSION_TOPICS.get(str(channel)):
+            print(f"   🛰 {channel}: nguồn sống, đã làm 1 bộ trong phiên này — nhường slot "
+                  f"(dữ liệu chưa kịp đổi, làm thêm là ra video trùng).")
+            return False
     if not k2:
         print(f"   ⚠️ {channel}: có cờ thế hệ 2 nhưng không có trong kenh_the_he_2.json")
         return False

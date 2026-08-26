@@ -1105,7 +1105,14 @@ def _bd_may_bay(D, ky):
            "Nobody is hiding this. The transponders broadcast it.",
            "OpenSky just writes it all down.",
            "Look up. One of these is above you."]
-    return ("Who is flying over America", "planes", data, dan)
+    # 27/8 — TIÊU ĐỀ PHẢI MANG CON SỐ SỐNG. Bản cũ trả tên CỐ ĐỊNH "Who is flying over America"
+    # cho mọi lượt. Dữ liệu thì khác nhau thật (máy bay đang bay), nhưng tên thì không — đo phiên
+    # thật: lane SKYRIGHTNOW ra **18 video trùng đúng một tiêu đề**.
+    # Kênh này là kênh DUY NHẤT có `xoay: None` (nguồn sống, không xoay trục), nên nó cũng không
+    # được `_gan_truc_vao_tieu_de` gắn hậu tố phân biệt như 49 kênh kia — luật 7.en bỏ sót đúng
+    # trường hợp này. Với nguồn sống thì thứ phân biệt không phải giá trị trục mà là CON SỐ ĐO ĐƯỢC
+    # ngay lúc đó; nó vừa làm tên khác nhau, vừa là một hook thật.
+    return (f"{len(r)} planes are over America right now", "planes", data, dan)
 
 
 def _bd_gia_nha(D, ky):
