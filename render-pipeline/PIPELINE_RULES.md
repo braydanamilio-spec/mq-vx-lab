@@ -3871,3 +3871,31 @@ phạm — công cụ tự động chỉ được LẤP CHỖ RỖNG, không đ�
 
 **LUẬT 2:** trước khi báo một defect tìm bằng grep, mở hàm đó ra đọc. `ky.get("x")` và
 `ky.get("x", "mặc định")` là cùng một hành vi, khác một dấu phẩy.
+
+### 7.ew — "HAI KÊNH NGUỒN HỎNG" HOÁ RA MỘT, VÀ HỎNG KHÔNG NẰM Ở NGUỒN (26/8/2026)
+
+Em báo anh: `RENT REALITY` và `ALERT NOW` nguồn trả 0/50 bang, phải sửa trước khi bật render.
+Đo lại bằng đúng đường pipeline đi thì **cả hai kết luận đều sai một phần**:
+
+    gia_nha_zillow("State")  -> 51 vùng      ✅ nguồn sống
+    canh_bao("CA")           -> 10 bản ghi   ✅ nguồn sống
+    RENT REALITY  xoay thật  -> 3/3 ra story ✅ KHÔNG hỏng — em báo oan
+    ALERT NOW     xoay thật  -> 0/5 ra story ❌ hỏng thật
+
+Con số "0/50 bang" là do **radar** nhét sai kiểu dữ liệu: trục `bangs` của hai kênh này nhận MỘT
+DANH SÁCH 6 bang mỗi lượt (`kho_bangs` là list của list), còn radar sinh tên bang LẺ rồi truyền
+vào. Số đo gián tiếp qua một công cụ đang có lỗi thì không dùng để kết luận về công cụ khác được.
+
+Gốc của `ALERT NOW`: `_bd_canh_bao` đọc `ky.get("bangs")` rồi gọi thẳng API NWS — mà NWS chỉ nhận
+**mã 2 chữ** (`TX`), trong khi kho xoay chứa **tên đầy đủ** (`Texas`), vì trục `bangs` dùng chung
+với các kênh khác vốn cần tên để hiển thị. Không bang nào khớp ⇒ dưới 3 mục ⇒ `None` ⇒ kênh ra 0
+video, log ghi "nguồn thiếu dữ liệu" nên nhìn như nguồn chết. Vá: chuẩn hoá cả mã lẫn tên về mã.
+Đo lại: **0/5 → 3/5** (hai nhóm còn lại đang thật sự không có cảnh báo nào — nguồn sống thì bình
+thường, khâu xoay tự nhảy nhóm khác).
+
+**LUẫT:** một trục dùng chung cho nhiều kênh thì mỗi hàm dựng phải TỰ chuẩn hoá giá trị về khuôn
+nó cần. Trục chỉ hứa "đây là bang", không hứa "đây là mã bang".
+
+**LUẬT 2:** đây là lần thứ NĂM trong ngày em kết luận sai từ số đo gián tiếp (grep sai khoá ×3,
+radar sai kiểu ×1, bộ kiểm cú pháp bắt nhầm vùng ×1). Trước khi báo một thành phần hỏng, chạy nó
+bằng ĐÚNG đường mà pipeline đi — đừng suy từ log của công cụ khác.

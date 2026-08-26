@@ -1011,7 +1011,16 @@ BANG = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA"
 
 def _bd_canh_bao(D, ky):
     """Cảnh báo thời tiết ĐANG BẬT, đếm theo bang — bản đồ nóng lên đúng chỗ đang có chuyện."""
-    bangs = ky.get("bangs") or ["TX", "CA", "FL", "NY", "OK", "KS", "LA", "AZ", "CO", "MO"]
+    # 26/8 — CHUẨN HOÁ VỀ MÃ 2 CHỮ. API của NWS chỉ nhận mã (`TX`), còn kho xoay của kênh
+    # `ALERT NOW` chứa TÊN ĐẦY ĐỦ (`Texas`, `Oklahoma`…) vì trục `bangs` dùng chung với các kênh
+    # khác vốn cần tên để hiển thị. Không bang nào khớp ⇒ `data` dưới 3 mục ⇒ trả None ⇒ kênh ra
+    # 0 video, mà log chỉ ghi "nguồn thiếu dữ liệu" nên nhìn như nguồn chết chứ không như lệch
+    # khuôn dữ liệu. (Em đã báo nhầm đúng chuyện này: gọi thẳng `D.canh_bao("CA")` thì nguồn trả
+    # 10 bản ghi bình thường — hỏng nằm ở đây, không nằm ở nguồn.)
+    _ma = {v.lower(): k for k, v in BANG.items()}
+    bangs = [str(b).strip() for b in (ky.get("bangs") or [])] or \
+            ["TX", "CA", "FL", "NY", "OK", "KS", "LA", "AZ", "CO", "MO"]
+    bangs = [b if len(b) == 2 else _ma.get(b.lower(), b) for b in bangs]
     import concurrent.futures as _cf
     with _cf.ThreadPoolExecutor(6) as ex:
         ket = list(ex.map(lambda b: (b, D.canh_bao(b, 50)), bangs))
