@@ -431,6 +431,43 @@ def _avoid_for(channel: str) -> list:
     return out[-120:]
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# ĐỒNG HỒ TỪNG BƯỚC TRONG LANE (26/8/2026)
+# ------------------------------------------------------------------------------------------
+# Anh giao "tối ưu toàn bộ hệ thống". Bước đầu là ĐO — và hoá ra 50 phút bên trong mỗi lane là
+# HỘP ĐEN: chỉ `plan` có mốc `⏱`, lane thì không. Thử tách bước bằng dấu thời gian của log cũng
+# không được vì các dòng không theo khuôn cố định.
+# Không đo được thì mọi "tối ưu" đều là đoán — đúng cái đã sai mấy lần đêm nay. Đồng hồ này rẻ
+# (một phép trừ mỗi bước) và trả lời câu quan trọng nhất: trong 50 phút ấy thời gian đi đâu —
+# viết kịch bản, vẽ ảnh, render, hay đẩy kho?
+_DH: dict = {"moc": None, "tong": {}}
+
+
+def dh_bat_dau(ten: str) -> None:
+    import time as _t
+    dh_ket_thuc()
+    _DH["moc"] = (_t.monotonic(), ten)
+
+
+def dh_ket_thuc() -> None:
+    import time as _t
+    if not _DH["moc"]:
+        return
+    t0, ten = _DH["moc"]
+    _DH["tong"][ten] = _DH["tong"].get(ten, 0.0) + (_t.monotonic() - t0)
+    _DH["moc"] = None
+
+
+def dh_bao(nhan: str = "") -> str:
+    dh_ket_thuc()
+    t = sum(_DH["tong"].values())
+    if t < 1:
+        return ""
+    phan = " · ".join(f"{k}={v/60:.0f}' ({v*100/t:.0f}%)"
+                      for k, v in sorted(_DH["tong"].items(), key=lambda z: -z[1])[:6])
+    return f"⏱ Thời gian lane{(' ' + nhan) if nhan else ''}: tổng {t/60:.0f}' — {phan}"
+
+
 def run_one(ch, keys, n_shorts=3, report=None):
     """1 kênh theo TEMPLATE của kênh: make_long (1 long pillar) + n_shorts SHORT dọc.
     Đọc ch['make_long'] (mặc định True) và ch['n_shorts'] (mặc định 3) do dashboard đặt."""
@@ -542,6 +579,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
             for att in (1, 2):
                 try:
                     if att > 1: jst("running", f"🔧 Tự thử lại {fmt}…"); resume_story = None   # thử lại lần 2 -> KHÔNG dùng lại kịch bản resume (lỗi có thể do chính nó)
+                    dh_bat_dau("video ngắn")
                     _, story, ok, info = _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb,
                                                          resume_story=resume_story, avoid=(avoid + made_here))
                     err = None; break
@@ -609,6 +647,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     rck = resumed_long["story"]   # chỉ dùng lần 1; lần 2 (thử nhẹ hơn) viết mới bình thường
                 elif attempt > 1:
                     lst("running", f"🔧 Tự thử lại nhẹ hơn ({nr} race)…")
+                dh_bat_dau("video dài")
                 _, plan, subtopics, ok, info, stories = DS.make_long(channel, niche, lout, keys=keys, tier=tier,
                                                             on_status=lst, on_limit=cool, avoid=avoid, n_races=nr, on_ok=okcb,
                                                             resume_checkpoint=rck,
@@ -2411,6 +2450,9 @@ def channel_mode(name):
         print(f"   ⚠️ lấy việc kế hụt ({str(e)[:60]}) — bỏ qua, không ảnh hưởng phần đã làm.")
 
     print(f"✅ {name}: TỔNG {report['done']} video · {len(report['fails'])} lỗi (qua {rounds} vòng).")
+    _dh = dh_bao(name)
+    if _dh:
+        print("   " + _dh)      # 26/8 — mỗi lane tự nói thời gian đi đâu, khỏi phải đoán
     bao_da_luong()
     try:
         FB.flush_soft()                    # xả ghi done/topics bị hoãn -> count_done không đếm thiếu

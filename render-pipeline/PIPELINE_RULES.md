@@ -3146,3 +3146,25 @@ lại một chữ. Đây chính là lý do cả đêm không hiểu vì sao dòn
 **Luật**: hàm nào BÁO HỎNG thì phải NÓI HỎNG VÌ SAO. Ba lần tối nay cùng một lớp lỗi này
 (canary nuốt stderr · vẽ ảnh im lặng · đường ghi D1 im lặng) — nó tốn nhiều thời gian hơn bất kỳ
 lỗi logic nào, vì nó làm mọi phán đoán sau đó đi sai hướng.
+
+### 26/8 — RÀ SOÁT TOÀN HỆ: đo được đến đâu, tối ưu được đến đó
+Anh giao "tối ưu toàn bộ hệ thống". Bước đầu là đo, và đo cho ra ba kết luận trái với dự đoán:
+
+| nghi ngờ | đo thật | kết luận |
+|---|---|---|
+| lane kẹt xếp hàng GitHub | 18 lane khởi động lệch **3 phút** | không phải |
+| cài đặt/bundle tốn nhiều | **0,8 phút = 2%** thời gian lane | cache đã tốt, không cắt được |
+| chốt selftest có cái chạy suông | **104/104 đều chạy**, đều có assert | sạch |
+
+**Nút thắt thật lại là: KHÔNG ĐO ĐƯỢC.** 50 phút bên trong mỗi lane là hộp đen — chỉ `plan` có mốc
+`⏱`, lane thì không. Thử tách bước bằng dấu thời gian của log cũng thất bại vì các dòng không theo
+khuôn cố định.
+- Vá: đồng hồ `dh_bat_dau/dh_ket_thuc/dh_bao` gắn vào lane, in một dòng cuối phiên
+  (`⏱ Thời gian lane X: tổng 50' — render=42' (84%) · viết=6' (12%) …`).
+- **Luật**: trước khi tối ưu một khâu, phải có con số của khâu đó. Không có số thì việc "tối ưu"
+  chỉ là đổi chỗ vấn đề — đã sai đúng kiểu ấy vài lần đêm nay.
+
+Hai lỗi tiềm ẩn tìm được trong cùng đợt rà soát:
+- `fix_queue_thumbnails.yml` khai `CREDENTIALS_B: /tmp/sa_b.json` mà **không có bước tạo tệp** →
+  âm thầm rơi về project A đang cạn. Chốt `t_env_tro_file_thi_phai_tao_file`.
+- `seed_the_he_2.yml` thiếu `HOT_KEY`.
