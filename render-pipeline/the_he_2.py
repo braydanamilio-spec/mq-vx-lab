@@ -1608,11 +1608,14 @@ def _gan_truc_vao_tieu_de(tieu_de: str, truc: str, val) -> str:
     if not t or not truc or val in (None, ""):
         return t
     v = str(val)
-    if truc == "ngay":
+    # So bằng ĐUÔI tên trục: đo thật 50 kênh thấy trục năm/ngày xuất hiện dưới nhiều tên
+    # (`nam`, `tu_nam`, `ngay`, `tu_ngay`). Khớp cứng "nam"/"ngay" thì 4 kênh ra tiêu đề kiểu
+    # "… — 2024" thay vì "… (2024)" — vẫn phân biệt được nhưng đọc như lỗi máy.
+    if truc.endswith("ngay"):
         return t if f"{v} day" in t.lower() else f"{t} — last {v} days"
     if v.lower() in t.lower():
         return t
-    return f"{t} ({v})" if truc == "nam" else f"{t} — {v}"
+    return f"{t} ({v})" if truc.endswith("nam") else f"{t} — {v}"
 
 
 def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None) -> dict | None:

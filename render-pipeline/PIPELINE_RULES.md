@@ -3653,3 +3653,32 @@ danh sách: không tính là kho, không tốn một lượt gọi Drive nào, i
 **LUẬT:** `if x.get("field")` không phải là kiểm tra tính hợp lệ. `"undefined"`, `"null"`, `"None"`
 đều truthy — đây là ba chuỗi mà JavaScript ở tầng Worker sinh ra khi giá trị thiếu. Trường nào đi từ
 JS sang Python phải lọc theo danh sách rác, không theo truthy. Chốt: `t_root_rac_loai_tu_goc`.
+
+### 7.ep — 26/50 KÊNH DÍNH BỆNH TIÊU ĐỀ-KHÔNG-ĐỔI, VÀ "LONG" KHÔNG PHẢI LONG (26/8/2026)
+
+Quét thật 50 kênh (gọi hàm dựng story, xoay 3 giá trị trục, so tiêu đề):
+
+    DÍNH (tiêu đề không đổi khi xoay): 26 · OK: 17 · không xoay: 1 · nguồn hỏng lúc đo: 6
+
+Tức **quá nửa kênh mới** sẽ đăng đúng một video rồi câm. Trục xuất hiện dưới 10 tên khác nhau
+(`nam`, `tu_nam`, `ngay`, `tu_ngay`, `mon`, `mua`, `loc`, `giong`, `bangs`, `tu_khoa`) nên khớp
+cứng `truc == "nam"` là hụt 4 kênh — phải so bằng ĐUÔI tên trục.
+
+Render lại sau khi vá, đo thật:
+
+    🎬 BỘ = 1 long (3 chương) + 3 short
+    LONG 104,0s · S1 44,0 · S2 37,4 · S3 22,6 · tổng short = long, lệch 0
+
+Đúng 3 short. Nhưng đo tiếp kích thước thì lòi ra chuyện lớn hơn:
+
+    th2long_recallplate.mp4: 1080×1920, 103,98s
+
+**"Long" là video DỌC dài 1 phút 44.** YouTube xếp video dọc ≤3 phút vào Shorts ⇒ bộ này thực chất
+là **4 short, không có long nào**. Luật 1:3 vẫn đếm đủ trong sổ, khâu đăng vẫn xếp số đúng thứ tự —
+mọi con số đều xanh, mà sản phẩm sai. Gốc: `chay_bo` render các chương bằng `chay_chung` (chỉ có
+composition `*Short` khổ dọc) rồi **nối lại** gọi là long; 5/7 dạng gen-2 không có bản khổ ngang, và
+`calculateMetadata` của chúng ép cứng `width: 1080, height: 1920` nên thêm `<Composition>` ngang
+cũng vô ích — phải dựng lại bố cục.
+
+**LUẬT:** nghiệm thu "long" phải đo **cả kích thước lẫn độ dài**, không chỉ đếm số video. Một video
+dọc dưới 3 phút không phải long dù sổ sách ghi `type: "long"`.

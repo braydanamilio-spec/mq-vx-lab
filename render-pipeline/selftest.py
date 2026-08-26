@@ -1958,6 +1958,7 @@ def main():
     check("hồ key qua ảnh chụp D1, không đâm vào A", t_ho_key_qua_d1_khong_dam_vao_A)
     check("xoay trục phải ĐỔI tiêu đề, không thì kênh câm sau 1 video", t_xoay_truc_doi_tieu_de)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
+    check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4075,6 +4076,38 @@ def t_root_rac_loai_tu_goc():
     assert S._root_xai_duoc({"root": "1AbC_thuMucThat", "channel": "X"}), "root thật bị loại oan"
     src = _doc(os.path.join(d, "storage.py"))
     assert 'if c.get("refresh_token") and c.get("root")' not in src,         "còn chỗ dựng danh sách kho chỉ kiểm root truthy -> 'undefined' lọt qua"
+
+
+
+
+def t_do_dam_phong_co_that():
+    """Xin độ đậm mà phông không có ⇒ `loadFont` ném lỗi ⇒ rơi về nạp phông TRẦN.
+
+    26/8 — khối `_CHON` trong Phong.tsx được viết ra để cắt lượt tải phông, và nó KHÔNG chạy: xin
+    cứng `["700","800","900"]` cho cả 24 phông, trong khi Oswald chỉ có tới 700 và Anton chỉ có
+    400. Ném lỗi -> `catch` -> `f()` trần -> nạp mọi độ đậm × mọi bộ ký tự, đúng thứ định tránh,
+    mà log im vì ngoại lệ đã bị nuốt. Đo thật sau khi "tối ưu": 29 lượt cho Oswald, 40 cho Manrope.
+
+    Chốt này KHÔNG đọc chú thích mà hỏi thẳng `getInfo()` của từng phông — dữ liệu cục bộ, không
+    cần mạng — rồi đòi danh sách xin phải là tập con KHÁC RỖNG của danh sách có."""
+    import json as _j, subprocess as _sp, os as _o, re as _r
+    goc = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "..", "engine-remotion")
+    src = _doc(_o.path.join(goc, "src", "Phong.tsx"))
+    assert "_do_dam" in src and "getInfo" in src,         "Phong.tsx vẫn xin độ đậm cứng, không hỏi phông có gì"
+    assert 'weights: ["700", "800", "900"]' not in src, "còn danh sách độ đậm cứng"
+    ten = sorted(set(_r.findall(r'@remotion/google-fonts/(\w+)"', src)))
+    assert len(ten) >= 20, f"chỉ thấy {len(ten)} phông trong Phong.tsx"
+    js = ("(async()=>{const MUON=['700','800','900'];const xau=[];"
+          "for (const n of %s){const m=await import('@remotion/google-fonts/'+n);"
+          "const co=Object.keys((m.getInfo().fonts||{}).normal||{});"
+          "const giao=MUON.filter(w=>co.includes(w));"
+          "const xin=giao.length?giao:[co.sort((a,b)=>Number(b)-Number(a))[0]];"
+          "if(!xin.length||xin.some(w=>!co.includes(w)))xau.push(n+':'+xin+'/'+co);}"
+          "console.log(JSON.stringify(xau));})()" % _j.dumps(ten))
+    r = _sp.run(["node", "-e", js], cwd=goc, capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, f"không chạy được kiểm phông: {r.stderr[-200:]}"
+    xau = _j.loads(r.stdout.strip().splitlines()[-1])
+    assert not xau, f"xin độ đậm phông KHÔNG CÓ -> sẽ nạp phông trần: {xau}"
 
 
 if __name__ == "__main__":
