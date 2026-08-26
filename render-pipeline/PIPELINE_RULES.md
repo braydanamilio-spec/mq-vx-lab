@@ -3899,3 +3899,38 @@ nó cần. Trục chỉ hứa "đây là bang", không hứa "đây là mã bang
 **LUẬT 2:** đây là lần thứ NĂM trong ngày em kết luận sai từ số đo gián tiếp (grep sai khoá ×3,
 radar sai kiểu ×1, bộ kiểm cú pháp bắt nhầm vùng ×1). Trước khi báo một thành phần hỏng, chạy nó
 bằng ĐÚNG đường mà pipeline đi — đừng suy từ log của công cụ khác.
+
+### 7.ex — THANG ĐO NHU CẦU HỎNG LẦN THỨ HAI, CÙNG MỘT BỆNH KHÁC DẠNG (26/8/2026)
+
+Đo nhu cầu cho 50 kênh, kết quả ra `cầu YẾU: 0/50` — nghe như tin tốt. Nhìn vào gợi ý THẬT nó trả về
+thì lộ ngay là phép đo hỏng:
+
+    MPG TRUTH     -> "mpg phùng khánh linh"        (ca sĩ Việt)
+    RECALL PLATE  -> "paper plate recall dog training"
+    FILINGS SAY   -> "feeling shayari"              (khớp nhầm chính tả)
+    ARCHIVE REEL  -> "archive reel ko unarchive kaise kare"   (tiếng Hindi, về Instagram)
+
+Vì phép đo hỏi **TÊN THƯƠNG HIỆU** — thứ mình tự đặt, chưa ai từng gõ — thay vì hỏi CHỦ ĐỀ. Điểm
+10/10 chỉ là YouTube trả gợi ý cho một từ phổ thông (`one`, `court`, `game`, `what`).
+
+Và nó lộ ra lỗi thật trong radar: `goc_kenh()` lấy **từ đầu tiên của tên kênh** ⇒ đo được **23/50
+kênh nhận góc vô nghĩa**. Với 23 kênh đó, cửa "có người tìm" cho điểm cao cho MỌI ứng viên — mất
+sạch khả năng phân biệt, đúng bệnh chuỗi rỗng đã vá buổi sáng, chỉ đổi dạng.
+
+Vá: góc lấy từ **tiêu đề story THẬT** (thứ dữ liệu sinh ra, là ngôn ngữ khán giả dùng), lọc hư từ,
+chọn từ dài nhất — danh từ chủ đề trong tiêu đề ngắn hầu như luôn là từ dài nhất:
+
+    "Food recalls you probably missed"     -> recalls
+    "What is really in breakfast cereal"   -> breakfast
+    "Salaries that fell behind inflation"  -> inflation
+
+Nghiệm thu bằng ĐÚNG phép thử của luật 7.et — cho hai ba mẫu khác nhau, đòi ra điểm khác nhau:
+
+    peanut butter 5.00 · breakfast cereal 3.00 · iced tea 0.00     ✅ phân biệt được
+
+**LUẬT:** thang đo nào cho MỌI đầu vào cùng một điểm cao là thang hỏng, và nó luôn trông như tin
+tốt. Bệnh này đã tái phát HAI lần trong một ngày ở hai chỗ khác nhau — mỗi lần thêm một thang đo
+mới thì phải chạy ngay phép thử "hai mẫu, hai điểm".
+
+**LUẬT 2:** đừng hỏi thị trường về TÊN mình tự đặt. Tên thương hiệu chưa ai gõ; chỉ có chủ đề mới
+có nhu cầu để đo.

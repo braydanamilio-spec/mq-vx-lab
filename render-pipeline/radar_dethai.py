@@ -219,6 +219,35 @@ def goi_y_yt(q: str) -> list:
     return ra
 
 
+_PHO_THONG = {"one", "what", "then", "near", "your", "gone", "real", "show", "cost", "where",
+              "paid", "wild", "quiet", "house", "song", "night", "game", "car", "court", "sky",
+              "missing", "archive", "degree", "space", "job", "fame", "price", "diamond", "steam"}
+
+
+def goc_tu_tieu_de(tieu_de: str) -> str:
+    """Rút GÓC từ tiêu đề story THẬT — thứ kênh sản xuất, không phải tên thương hiệu.
+
+    26/8 — `goc_kenh()` lấy từ đầu tiên của TÊN KÊNH, và đo ra **23/50 kênh nhận góc vô nghĩa**:
+    `what`, `one`, `court`, `paid`, `show`, `gone`, `song`… Hỏi YouTube về một từ phổ thông thì bao
+    giờ cũng đủ 10 gợi ý, nên cửa "có người tìm" mất sạch khả năng phân biệt với 23 kênh đó — nó
+    cho điểm cao cho mọi thứ, y như bệnh chuỗi rỗng đã vá lúc sáng, chỉ đổi dạng.
+
+    Tên thương hiệu là thứ EM tự đặt, chưa ai từng gõ. Còn tiêu đề story do chính dữ liệu sinh ra
+    (`Food recalls you probably missed`) mới là ngôn ngữ mà khán giả dùng."""
+    # Bỏ thêm HƯ TỪ: `really`, `probably`, `nobody`… là trạng từ/đại từ, không phải chủ đề. Đo thật:
+    # "What is really in breakfast cereal" trả về `really` — đúng luật cũ mà sai việc.
+    _HU = {"really", "probably", "actually", "almost", "nobody", "everyone", "every", "these",
+           "those", "about", "after", "before", "since", "still", "never", "always", "other",
+           "another", "which", "there", "their", "would", "could", "should", "than", "that",
+           "this", "with", "from", "into", "over", "under", "most", "more", "less", "much"}
+    tu = [w for w in _BO.sub(" ", str(tieu_de or "").lower()).split()
+          if len(w) > 3 and w not in _RAC and w not in _PHO_THONG and w not in _HU]
+    if not tu:
+        return ""
+    # Danh từ chủ đề thường là từ DÀI NHẤT trong tiêu đề ngắn — chọn nó thay vì từ đầu tiên.
+    return max(tu, key=len)
+
+
 def goc_kenh(kenh: dict) -> str:
     """GÓC của kênh, dạng một từ để ghép vào truy vấn gợi ý.
 
@@ -267,7 +296,8 @@ def diem_nhu_cau(cum: str, niche_tu: set, goc: str = "") -> tuple:
     return 1.0 + len(dung) * 0.2 + len(hop) * 0.3, hop[:8]
 
 
-def kiem_chung(kenh: dict, truc: str, uv: list, can: int, tran_thu: int = 40) -> list:
+def kiem_chung(kenh: dict, truc: str, uv: list, can: int, tran_thu: int = 40,
+               mau: list | None = None) -> list:
     """Dựng thử story cho từng ứng viên, CHỈ giữ cái ra được dữ liệu. Xếp theo số lớn nhất.
 
     Đây là điểm khác căn bản so với bản radar đầu: kho đề tài không phải danh sách chữ, mà là danh
@@ -281,6 +311,7 @@ def kiem_chung(kenh: dict, truc: str, uv: list, can: int, tran_thu: int = 40) ->
         return []
     ts = dict(kenh.get("tham_so") or {})
     ra = []
+    mau = mau if mau is not None else [""]
     for v in uv[:tran_thu]:
         if len(ra) >= can:
             break
@@ -291,6 +322,8 @@ def kiem_chung(kenh: dict, truc: str, uv: list, can: int, tran_thu: int = 40) ->
             continue
         if st and (st.get("items") or st.get("data") or st.get("pairs") or st.get("frames")):
             ra.append((v, _do_lon(st)))
+            if not mau[0]:
+                mau[0] = str(st.get("title") or "")
     ra.sort(key=lambda x: -x[1])
     return [v for v, _ in ra]
 
@@ -365,11 +398,13 @@ def main() -> int:
         if not uv:
             trong += 1
             continue
-        kho = kiem_chung(k, truc, uv, TRAN_KHO * 2)
+        _mau = [""]
+        kho = kiem_chung(k, truc, uv, TRAN_KHO * 2, mau=_mau)
         # HAI CỬA, PHẢI QUA CẢ HAI. `kiem_chung` chứng minh đề tài CÓ SỐ để dựng; vòng dưới chứng
         # minh CÓ NGƯỜI TÌM. Qua cửa một mà trượt cửa hai là video đúng nhưng không ai xem — đúng
         # thứ anh cảnh báo: "cứ có nội dung là làm thành video thì không đánh trúng khán giả".
-        goc = goc_kenh(k)
+        # GÓC lấy từ TIÊU ĐỀ STORY THẬT trước; không có thì mới lùi về tên kênh.
+        goc = goc_tu_tieu_de(_mau[0]) or goc_kenh(k)
         nt = _tu(k.get("niche", "")) | _tu(k.get("goc_nhin", ""))
         cham, cum_tim = [], []
         for v in kho:
