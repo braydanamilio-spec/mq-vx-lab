@@ -98,9 +98,30 @@ def con_ngan_sach(loai: str = "doc", thiet_yeu: bool = False, cuu_du_lieu: bool 
 
 
 def bao_ngan_sach() -> str:
+    """Sổ ngân sách — của LANE NÀY và của TOÀN HỆ, nói rõ cái nào là cái nào.
+
+    26/8 — DÒNG NÀY TỪNG TẠO ẢO GIÁC AN TOÀN SUỐT NHIỀU NGÀY. Nó lấy lượt của MỘT lane chia cho
+    trần CẢ NGÀY CỦA TOÀN HỆ, nên lane nào cũng in "0%" hay "1%" trong khi project B cạn sạch.
+    Đo lại log đêm 25/8: mỗi lane 148-503 lượt đọc, tất cả đều hiện "0%" — nhân 18 lane × ~30
+    phiên/ngày là vượt xa trần 50.000, cộng thêm publish/thumbnail/health-guardian/dashboard.
+    Sai không nằm ở phép chia mà ở chỗ ĐEM HAI ĐƠN VỊ KHÁC NHAU so với nhau."""
     d, g = _thuc_te("doc"), _thuc_te("ghi")
-    return (f"🧱 Ngân sách hôm nay: ĐỌC {d:,}/{TRAN_DOC_NGAY:,} ({d*100//TRAN_DOC_NGAY}%) · "
-            f"GHI {g:,}/{TRAN_GHI_NGAY:,} ({g*100//TRAN_GHI_NGAY}%)")
+    tong = ""
+    try:
+        import hot_db as _H
+        t = _H.ngan_sach_doc(_ngay_quota()) if hasattr(_H, "ngan_sach_doc") else None
+        if t:
+            td, tg = int(t.get("doc") or 0), int(t.get("ghi") or 0)
+            canh = ""
+            if td >= TRAN_DOC_NGAY * 0.8 or tg >= TRAN_GHI_NGAY * 0.8:
+                canh = "  ⛔ SẮP CẠN — hệ nên giảm tải"
+            tong = (f"\n   🌐 TOÀN HỆ hôm nay: ĐỌC {td:,}/{TRAN_DOC_NGAY:,} "
+                    f"({td*100//TRAN_DOC_NGAY}%) · GHI {tg:,}/{TRAN_GHI_NGAY:,} "
+                    f"({tg*100//TRAN_GHI_NGAY}%){canh}")
+    except Exception:
+        pass
+    return (f"🧱 Lane này: ĐỌC {d:,} · GHI {g:,}  (trần CHUNG cả ngày: "
+            f"{TRAN_DOC_NGAY:,} đọc · {TRAN_GHI_NGAY:,} ghi){tong}")
 
 
 def xa_ngan_sach_d1() -> None:
@@ -911,6 +932,10 @@ def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
         if _db() is _db_keys():
             return rows
         if _A_KEYS["rows"] is None:
+            _goi = keys_a_tu_plan()      # plan đã đọc hộ -> 0 lượt đọc A ở lane
+            if _goi is not None:
+                _A_KEYS["rows"] = _goi
+        if _A_KEYS["rows"] is None:
             # 25/8 — ĐỌC ẢNH CHỤP TRONG D1 TRƯỚC. Đây là khoản tiêu lớn nhất trên project A:
             # log thật cho thấy luồng NÀO CŨNG tính `merge_keys_A=70` (nhánh này lẽ ra chỉ chạy khi
             # hồ key ở B thiếu nhà cung cấp, nhưng B cạn hạn mức GHI nên sync A->B hỏng vĩnh viễn
@@ -1427,6 +1452,60 @@ def read_channels(owner: str) -> list[dict]:
 
 
 _CFG_PLAN: dict = {}
+
+
+_KEYS_PLAN: dict = {}
+
+
+def keys_a_tu_plan() -> list | None:
+    """Hồ key A do PLAN gửi kèm (env KEYS_A). None = plan không gửi -> caller tự đọc A.
+
+    26/8 — KHOẢN TIÊU LỚN NHẤT TRÊN PROJECT A, và nó gần như VÔ ÍCH. Đo đêm 25/8 trên 4 phiên:
+    `merge_keys_A` chiếm **29% toàn bộ lượt đọc** (2.170/7.388), trong khi dòng "Hợp nhất N key
+    CHỈ CÓ Ở A" in ra **0 lần** — nghĩa là đọc xong không tìm thấy key mới nào, lần nào cũng vậy.
+    Vòng lặp không tự tắt được vì điều kiện thoát là "B đã đủ cả groq lẫn cf", mà B thì cạn hạn
+    mức GHI nên sync A→B hỏng thường trực ⇒ "cửa sổ tạm" biến thành vĩnh viễn.
+    70 lượt × 18 lane × ~30 phiên/ngày ≈ 37.800 lượt đọc A mỗi ngày, trên trần 50.000.
+
+    Bản vá cũ chụp ảnh vào D1 nhưng đo lại thì dòng "Đã chụp hồ key" cũng in 0 lần — tức nó chưa
+    từng chạy. Nên lần này KHÔNG dựa vào D1: dùng đúng đường mà `CHANNEL_CFGS` đã chứng minh chạy
+    được — plan đọc MỘT LẦN rồi phát xuống 18 lane qua biến môi trường. 1.260 lượt còn 70."""
+    if _KEYS_PLAN:
+        return _KEYS_PLAN.get("rows")
+    goi = os.environ.get("KEYS_A") or ""
+    if not goi:
+        _KEYS_PLAN["rows"] = None
+        return None
+    try:
+        import base64 as _b64, gzip as _gz
+        _KEYS_PLAN["rows"] = json.loads(_gz.decompress(_b64.b64decode(goi)).decode())
+        print(f"   🔑 Hồ key A: dùng gói plan gửi kèm ({len(_KEYS_PLAN['rows'])} key) — 0 lượt đọc A.")
+    except Exception as e:
+        print(f"   ⚠️ không giải được gói hồ key từ plan ({str(e)[:50]}) — đọc A như cũ")
+        _KEYS_PLAN["rows"] = None
+    return _KEYS_PLAN.get("rows")
+
+
+def dong_goi_keys_a(owner: str) -> str:
+    """PLAN gọi: đọc A đúng một lần rồi nén lại để phát cho 18 lane."""
+    try:
+        out = []
+        _cr("merge_keys_A", 70)      # ghi sổ TRƯỚC khi đọc: đọc hỏng giữa chừng vẫn đã tốn lượt
+        for d in _db().collection("gemini_keys").where("owner", "==", owner).stream(timeout=25):
+            x = d.to_dict() or {}
+            if x.get("key"):
+                out.append({"id": d.id, "key": x["key"], "email": x.get("email", ""),
+                            "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
+                            "last_used": x.get("last_used", ""),
+                            "cooling_until": x.get("cooling_until", ""),
+                            "dead_since": x.get("dead_since", ""), "req_today": 0})
+        import base64 as _b64, gzip as _gz
+        goi = _b64.b64encode(_gz.compress(json.dumps(out, ensure_ascii=False).encode())).decode()
+        print(f"   🔑 Plan chụp hồ key A: {len(out)} key ({len(goi)//1024}KB) — 18 lane khỏi đọc A.")
+        return goi
+    except Exception as e:
+        print(f"   ⚠️ plan không đọc được hồ key A ({str(e)[:60]}) — lane tự đọc như cũ")
+        return ""
 
 
 def _cfg_tu_plan() -> dict:

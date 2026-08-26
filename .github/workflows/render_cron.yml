@@ -35,6 +35,7 @@ jobs:
       # Hàng chờ (phần kênh dư) gửi thẳng xuống lane — hàng chờ trên Firestore không dùng được khi
       # Firestore cạn hạn mức, xem _viec_chia_san() trong run_render.py.
       queue: ${{ steps.plan.outputs.queue }}
+      keys_a: ${{ steps.plan.outputs.keys_a }}
     steps:
       - uses: actions/checkout@v4
       # 24/8 tối — job này TRỎ `AUTOPUBLISHER_SRC` vào `_autopublisher/src` nhưng lại KHÔNG checkout
@@ -287,6 +288,8 @@ jobs:
           PIPELINE_VERSION: "v3"   # v3 = chuẩn 21/8: cảnh hook footage thật, KHÔNG intro/outro, cắt 2-3s, SFX, thumbnail khung hook. Bump theo luật 4c: video v2 (chuẩn cũ) giờ phân biệt được với v3 -> "Dọn bản cũ" trên dashboard xoá đúng đám cũ, không đụng bản mới.
           CHANNEL_CFGS: ${{ needs.plan.outputs.cfgs }}
           QUEUE_LIST: ${{ needs.plan.outputs.queue }}
+          # hồ key A do plan đọc hộ — lane khỏi đụng project A (xem dong_goi_keys_a)
+          KEYS_A: ${{ needs.plan.outputs.keys_a }}
           PLAN_CHANNELS: ${{ needs.plan.outputs.channels }}
         run: python render-pipeline/run_render.py --channel "${{ matrix.channel }}"
       - name: Backup video (nếu chưa đẩy Drive được)

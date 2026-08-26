@@ -3042,3 +3042,33 @@ mà bản vá lẽ ra phải tạo. **Vá xong phải đo xem nó có chạy kh�
 - Sửa: đếm trên `report["fails"]` — nơi lỗi thật sự đọng lại — và reset khi `report["done"]` tăng.
 - Đã mô phỏng ba kịch bản trước khi push: hết key từ đầu → dừng ở kênh 3 (trước là 10) · 2 hết key
   rồi 1 ra video → không dừng oan · lỗi lạ liên tục → không nhầm thành cạn key.
+
+## 26/8 — VÌ SAO FIRESTORE CẠN DÙ SỔ BÁO "0%": HAI LỖI ĐO LƯỜNG
+
+Anh hỏi đúng câu quyết định: *"qua nói chỉ dùng mấy chục % mà sao để cạn"*. Đo lại thì cả hai con
+số em từng dựa vào đều **sai đơn vị so sánh** — không phải sai phép tính.
+
+### Lỗi 1 — sổ ngân sách lấy số MỘT LANE chia cho trần TOÀN HỆ
+`🧱 Ngân sách hôm nay: ĐỌC 503/50,000 (1%)` in ở **mỗi lane**. Tử số là một lane, mẫu số là cả
+ngày của cả hệ. Đo log đêm 25/8: mỗi lane 148-503 lượt, **lane nào cũng hiện "0%"** trong khi B
+cạn sạch. 18 lane × ~30 phiên/ngày, cộng publish + thumbnail + health-guardian + dashboard.
+→ Sổ nay in `Lane này: …` và `🌐 TOÀN HỆ hôm nay: …` kèm cảnh báo `⛔ SẮP CẠN` ở mốc 80%.
+
+### Lỗi 2 — 29% lượt đọc là VÔ ÍCH, và vòng lặp không tự tắt được
+`merge_keys_A` = **2.170/7.388 lượt (29%)**, trong khi dòng `Hợp nhất N key CHỈ CÓ Ở A` in ra
+**0 lần** — 18 lane đọc project A để rồi không tìm thấy key mới nào, lần nào cũng thế.
+Điều kiện thoát là *"B đã đủ groq lẫn cf"*, mà B cạn hạn mức GHI nên sync A→B hỏng thường trực
+⇒ "cửa sổ tạm" thành vĩnh viễn. 70 × 18 lane × ~30 phiên ≈ **37.800 lượt/ngày trên trần 50.000**.
+
+Bản vá TRƯỚC chụp ảnh vào D1 — nhưng đo lại, dòng `Đã chụp hồ key` cũng in **0 lần**: nó chưa từng
+chạy. **Thêm D1 không giải quyết gì** nếu không ai kiểm nó có chạy không.
+→ Bản này đi đường đã CHỨNG MINH chạy được (`CHANNEL_CFGS`): plan đọc A một lần rồi phát xuống 18
+lane qua biến môi trường. **1.260 lượt còn 70.** 199 key nén còn 1KB.
+
+### Luật rút ra (áp cho mọi số đo về sau)
+1. **Tử số và mẫu số phải cùng phạm vi.** Một lane chia cho trần cả hệ là vô nghĩa.
+2. **Tối ưu nào cũng phải đo xem nó có CHẠY không.** Ba lần tối nay em vá thứ chưa từng chạy:
+   ảnh chụp key vào D1, thoát sớm khi cạn key, và chính chốt kiểm này. Cách phát hiện luôn giống
+   nhau: đếm chính con số mà bản vá lẽ ra phải tạo ra.
+3. **Đo rồi phải DÙNG số đo để phanh**, không chỉ ghi sổ.
+- Chốt `t_ho_key_A_doc_mot_lan_o_plan` · `t_so_ngan_sach_khong_gay_ao_giac`.

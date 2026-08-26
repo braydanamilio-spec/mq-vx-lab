@@ -861,6 +861,73 @@ def t_key_order_khong_lay_phan_tu_dau_tran():
                      + "\n   ".join(xau))
 
 
+
+def t_ho_key_A_doc_mot_lan_o_plan():
+    """Lane KHÔNG được tự đọc project A khi plan đã gửi hồ key kèm.
+
+    26/8 — đo 4 phiên đêm 25/8: `merge_keys_A` chiếm **29% toàn bộ lượt đọc** (2.170/7.388),
+    trong khi dòng "Hợp nhất N key CHỈ CÓ Ở A" in ra **0 lần** — 18 lane đọc project A để rồi
+    không tìm thấy key mới nào, lần nào cũng vậy. Vòng lặp không tự tắt vì điều kiện thoát là
+    "B đã đủ groq lẫn cf", mà B cạn hạn mức GHI nên sync A→B hỏng thường trực.
+    70 lượt × 18 lane × ~30 phiên ≈ 37.800 lượt/ngày trên trần 50.000 — tự tay làm A cạn.
+
+    Bản vá TRƯỚC chụp ảnh vào D1, nhưng đo lại thì "Đã chụp hồ key" cũng in 0 lần: nó chưa từng
+    chạy. Nên bản này đi đường `CHANNEL_CFGS` đã chứng minh chạy được — plan đọc một lần, phát
+    xuống qua biến môi trường."""
+    src = _doc("firestore_bridge.py")
+    xau = []
+    for ham in ("keys_a_tu_plan", "dong_goi_keys_a"):
+        if f"def {ham}(" not in src:
+            xau.append(f"thiếu {ham}()")
+    # _merge_a_keys phải hỏi gói của plan TRƯỚC khi đọc A
+    i = src.find("def _merge_a_keys(")
+    j = src.find("\ndef ", i + 10)
+    than = src[i:j if j > 0 else len(src)]
+    k_goi = than.find("keys_a_tu_plan()")
+    k_doc = than.find('collection("gemini_keys")')
+    if k_goi < 0:
+        xau.append("_merge_a_keys không hỏi gói plan -> lane vẫn đọc A")
+    elif 0 <= k_doc < k_goi:
+        xau.append("_merge_a_keys đọc A TRƯỚC khi hỏi gói plan -> vô hiệu")
+    # plan phải xuất, workflow phải truyền
+    if "dong_goi_keys_a(" not in _doc("run_render.py"):
+        xau.append("plan không gọi dong_goi_keys_a()")
+    import os
+    wf = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+                      ".github", "workflows", "render_cron.yml")
+    y = io.open(wf, encoding="utf-8").read()
+    if "keys_a: ${{ steps.plan.outputs.keys_a }}" not in y:
+        xau.append("workflow không khai output keys_a")
+    if "KEYS_A: ${{ needs.plan.outputs.keys_a }}" not in y:
+        xau.append("workflow không truyền KEYS_A xuống lane")
+    assert not xau, "hồ key A vẫn đọc ở lane:\n   " + "\n   ".join(xau)
+
+
+def t_so_ngan_sach_khong_gay_ao_giac():
+    """Sổ ngân sách không được lấy số CỦA MỘT LANE chia cho trần CỦA TOÀN HỆ.
+
+    26/8 — dòng `🧱 Ngân sách hôm nay: ĐỌC 503/50,000 (1%)` in ở MỖI lane, nên lane nào cũng thấy
+    "0-1%" trong khi project B cạn sạch. Sai không nằm ở phép chia mà ở chỗ đem hai đơn vị khác
+    nhau so với nhau: tử số là một lane, mẫu số là cả ngày của cả hệ. Ảo giác an toàn đó đã che
+    nguyên nhân thật suốt nhiều ngày."""
+    src = _doc("firestore_bridge.py")
+    i = src.find("def bao_ngan_sach(")
+    j = src.find("\ndef ", i + 10)
+    than = src[i:j if j > 0 else len(src)]
+    xau = []
+    if "TOÀN HỆ" not in than:
+        xau.append("không báo số toàn hệ")
+    if "Lane này" not in than:
+        xau.append("không nói rõ con số kia là của riêng lane")
+    # Cấm đúng khuôn cũ: lượt LANE chia thẳng cho trần NGÀY. Phải khớp theo BIÊN TỪ —
+    # `td*100//TRAN_DOC_NGAY` (số toàn hệ, hợp lệ) chứa chuỗi con `d*100//TRAN_DOC_NGAY`,
+    # kiểm bằng `in` là báo động giả ngay chính bản vá vừa viết.
+    import re as _re
+    if _re.search(r"(?<![A-Za-z_])d\s*\*\s*100\s*//\s*TRAN_DOC_NGAY", than):
+        xau.append("vẫn lấy lượt LANE chia trần NGÀY -> ảo giác an toàn")
+    assert not xau, "sổ ngân sách gây hiểu nhầm:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -873,6 +940,8 @@ def main():
     check("key_order viết: groq -> cf -> gemini", t_key_order)
     check("pool vẽ cf-trước / vision gemini-trước", t_ai_pool_split)
     check("đọc-mềm: quota chết không ném", t_soft_read)
+    check("hồ key A: plan đọc 1 lần, lane không đụng A", t_ho_key_A_doc_mot_lan_o_plan)
+    check("sổ ngân sách không gây ảo giác an toàn", t_so_ngan_sach_khong_gay_ao_giac)
     check("cổng dark_ok theo kênh", t_dark_ok)
     check("mở đầu chỉ MỘT tiêu đề (Bookend), không chồng ba", t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau)
     check("tsx: prop khai rồi phải thảo ra (ReferenceError)", t_tsx_prop_khai_roi_phai_thao_ra)

@@ -1446,6 +1446,10 @@ def plan_mode():
                 # Đường không cần Firestore: gửi danh sách dư + thứ tự mẻ xuống, lane tự cắt phần
                 # của mình theo VỊ TRÍ (i, i+N, i+2N…). Không cần điều phối, không thể trùng.
                 f.write(f"queue={json.dumps(_du_hang or [])}\n")
+                # HỒ KEY A gửi kèm (26/8). Đo thật: `merge_keys_A` = 29% toàn bộ lượt đọc, mà
+                # dòng "Hợp nhất N key CHỈ CÓ Ở A" in ra 0 lần — 18 lane đọc project A để rồi
+                # không tìm thấy gì mới. Plan đọc một lần, phát xuống: 1.260 lượt còn 70.
+                f.write(f"keys_a={FB.dong_goi_keys_a(OWNER)}\n")
         try:
             FB.flush_rw_ledger(OWNER)   # kể cả plan cũng cộng sổ ngày — mọi ngả thoát đều đi qua đây
         except Exception:
