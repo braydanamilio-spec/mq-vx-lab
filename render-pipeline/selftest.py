@@ -1652,6 +1652,34 @@ def t_gen2_phai_ra_bo_1long_3short():
         "không đánh số vai trò (L/S1/S2) khi đẩy kho -> nhìn tên file không biết short thuộc long nào"
 
 
+
+def t_bo_khong_duoc_chon_story_hai_lan():
+    """`chay_bo` chọn chương xong thì `chay_chung` phải DÙNG chương đó, không chọn lại.
+
+    26/8 — render thử bộ đầu tiên: long dài **38,3s**, đúng bằng MỘT short. Bộ đáng lẽ 3 chương.
+    Gốc: `chay_bo` gọi `_dung_story_xoay` chọn chương, rồi lại gọi `chay_chung` — mà `chay_chung`
+    cũng tự gọi `_dung_story_xoay` lần nữa. Hai bên chọn ĐỘC LẬP:
+      • video render ra không phải chương đã ghi vào sổ (tiêu đề/thumbnail nói một đằng, hình một nẻo);
+      • `avoid` lệch một nhịp nên chương 2 chọn trúng lại chương 1, rồi cả bộ dừng.
+
+    **Luật**: một quyết định chỉ được lấy ở MỘT nơi. Chọn rồi thì truyền xuống, đừng để tầng dưới
+    chọn lại — nó sẽ chọn khác, và không có gì báo lỗi."""
+    import ast as _ast
+    src = _doc("the_he_2.py")
+    cay = _ast.parse(src)
+    fn = next((n for n in _ast.walk(cay) if isinstance(n, _ast.FunctionDef) and n.name == "chay_bo"), None)
+    assert fn, "mất hàm chay_bo"
+    goi = [n for n in _ast.walk(fn) if isinstance(n, _ast.Call)
+           and getattr(n.func, "id", "") == "chay_chung"]
+    assert goi, "chay_bo không gọi chay_chung"
+    for g in goi:
+        assert any(k.arg == "st_san" for k in g.keywords), \
+            "chay_bo gọi chay_chung mà KHÔNG truyền st_san -> tầng dưới chọn lại chương khác"
+    cc = next((n for n in _ast.walk(cay) if isinstance(n, _ast.FunctionDef) and n.name == "chay_chung"), None)
+    assert cc and any(a.arg == "st_san" for a in cc.args.args), \
+        "chay_chung không nhận st_san"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1776,6 +1804,7 @@ def main():
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
     check("gen-2 ra BỘ 1 long + 3 short (có cha/thứ tự)", t_gen2_phai_ra_bo_1long_3short)
+    check("bộ không được chọn story hai lần", t_bo_khong_duoc_chon_story_hai_lan)
     check("55 kênh cũ phải có bản chụp tên", t_ten_kenh_cu_phai_co_ban_chup)
     check("workflow quản trị trỏ đúng project (SHARD_META)", t_cong_cu_quan_tri_phai_tro_dung_project)
     check("workflow chạy selftest phải đủ thư viện", t_workflow_chay_selftest_phai_du_thu_vien)

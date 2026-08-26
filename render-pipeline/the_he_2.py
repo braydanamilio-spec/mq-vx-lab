@@ -1524,7 +1524,7 @@ def _tieu_de_da_lam(tieu_de: str, avoid) -> bool:
 
 
 def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
-               avoid: list | None = None) -> tuple[str, dict] | None:
+               avoid: list | None = None, st_san: dict | None = None) -> tuple[str, dict] | None:
     """Dựng + render cho MỌI dạng. Trả (đường dẫn, QC) hoặc None nếu bỏ lượt.
 
     `avoid` = tiêu đề các video kênh này ĐÃ làm. Thiếu nó thì kênh lặp lại đúng một câu chuyện
@@ -1539,7 +1539,11 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     if not comp or not ten_props:
         print(f"   ⚠️ {kenh.get('ten')}: dạng '{dang}' chưa có đường render chung")
         return None
-    st = _dung_story_xoay(dang, kenh, ky, avoid)
+    # `st_san` = chương ĐÃ CHỌN sẵn (dùng khi dựng BỘ). 26/8 — bản đầu của `chay_bo` chọn chương
+    # rồi vẫn gọi `chay_chung` để nó TỰ CHỌN LẠI: hai bên chọn độc lập nên video render ra không
+    # phải chương đã ghi sổ, và `avoid` lệch một nhịp khiến chương 2 trùng chương 1 rồi cả bộ
+    # dừng ở 1 chương. Đo thật: long 38,3s = đúng một short, không phải ba.
+    st = st_san or _dung_story_xoay(dang, kenh, ky, avoid)
     if not st:
         return None
     sl = DS.slug(kenh["handle"].lstrip("@"))
@@ -1601,9 +1605,11 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
     if truc and kho:
         thu += [{**(ky or {}), truc: v} for v in kho]
     da_thay = None
+    hong = 0            # số lần NGUỒN không trả dữ liệu (khác hẳn "đề tài đã làm rồi")
     for i, t in enumerate(thu):
         st = dung(kenh, t)
         if not st:
+            hong += 1
             continue
         da_thay = da_thay or st
         if not _tieu_de_da_lam(st.get("title"), avoid):
@@ -1611,9 +1617,20 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
                 print(f"   ♻️ {kenh.get('ten')}: đề tài gốc đã làm rồi — xoay `{truc}` sang "
                       f"`{t.get(truc)}` ({i}/{len(thu) - 1})")
             return st
-    if da_thay:
+    # 26/8 — PHÂN BIỆT HAI NGUYÊN NHÂN. Bản đầu in "hết kho, đề tài nào cũng đã làm rồi" cho MỌI
+    # trường hợp không ra story. Nhưng có hai chuyện hoàn toàn khác nhau:
+    #   • kho đề tài cạn thật  -> chờ kênh đăng bớt, hoặc nới kho;
+    #   • NGUỒN đang chết      -> chẳng liên quan gì tới kho, lát nữa thử lại là được.
+    # Đo thật: Open Food Facts trả 503 bốn lần liên tiếp, mà log vẫn báo "hết kho" ⇒ em đi truy
+    # nhầm sang cơ chế xoay vòng mất một lượt. Thông báo sai nguyên nhân đắt ngang một lỗi thật.
+    if hong >= max(2, len(thu) - 1):
+        print(f"   ⚠️ {kenh.get('ten')}: NGUỒN không trả dữ liệu ({hong}/{len(thu)} lượt hỏng) — "
+              f"BỎ LƯỢT. Không phải cạn kho đề tài; thử lại phiên sau.")
+    elif da_thay:
         print(f"   ⚠️ {kenh.get('ten')}: hết kho `{truc or 'không có trục'}` mà đề tài nào cũng "
               f"đã làm rồi — BỎ LƯỢT, không đăng trùng.")
+    else:
+        print(f"   ⚠️ {kenh.get('ten')}: không dựng được story nào ({hong} lượt nguồn hỏng) — BỎ LƯỢT.")
     return None
 
 
@@ -1770,7 +1787,7 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
         da.append(st.get("title") or "")
         sl = DS.slug(kenh["handle"].lstrip("@")) + f"_c{i + 1}"
         ra_s = os.path.abspath(os.path.join(GOC, "out", f"th2bo_{sl}.mp4"))
-        kq = chay_chung(kenh, ra=ra_s, avoid=da[:-1])
+        kq = chay_chung(kenh, ra=ra_s, st_san=st)
         if not kq:
             print(f"   ⚠️ {ten}: chương {i + 1} không dựng được — bỏ chương này")
             continue
