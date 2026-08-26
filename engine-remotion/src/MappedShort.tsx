@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoCon
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import React, { useMemo } from "react";
 import { geoAlbersUsa, geoPath } from "d3-geo";
@@ -14,6 +15,8 @@ export type MapDatum = { state: string; value: number; disp?: string };  // disp
 export type MappedProps = {
   title?: string; unit?: string; handle?: string; color?: string; accent?: string;
   data: MapDatum[]; topN?: number; introSec?: number; bloomSec?: number; popSec?: number; outroSec?: number;
+  hookStat?: string; hookLabel?: string; hookLine?: string;
+  bg?: string; bg2?: string;
   font?: string;
   audio?: string; music?: string; subs?: Word[];
 };
@@ -32,7 +35,7 @@ export const calcMapped = ({ props }: any) => {
 const heat = (t: number, accent: string) => interpolateColors(Math.pow(Math.max(0, Math.min(1, t)), 0.7), [0, 1], ["#16223e", accent]);
 
 export const MappedShort: React.FC<MappedProps> = (props) => {
-  const { font = "", title = "BY STATE", unit = "", handle = "@mappedusa", color = "#22D3EE", accent = "#22D3EE",
+  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "BY STATE", unit = "", handle = "@mappedusa", color = "#22D3EE", accent = "#22D3EE",
     data = [], topN = 3, introSec = 1.8, bloomSec = 2.4, popSec = 1.6, outroSec = 1.6, audio, music , subs = [] } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
@@ -72,7 +75,11 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
   }, [introF, popStart, popSec, fps, ranked.length]);
 
   return (
-    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 12%, #0f1730 0%, #0a1020 55%, #070a14 100%)", fontFamily: phong(font) }}>
+      // 26/8 — NỀN SÁNG LÊN. Đo 5 video thật: sáng trung bình chỉ **25-40/255**, trong khi
+      // short trên feed thường 60-100 — nhìn tối om, và khung cuối tụt xuống 15 nên trông
+      // như video kết thúc bằng màn hình đen. Nâng cả ba chặng gradient, GIỮ NGUYÊN tông màu
+      // riêng của từng dạng (tông là thứ phân biệt kênh, không được gộp về một màu).
+    <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font) }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 96, left: 0, right: 0, textAlign: "center", padding: "0 60px" }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>🗺️ MAPPED · USA</div>
@@ -148,7 +155,7 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <ChuyenCanh nhip={nhip} accent={accent} khoa={handle} />
       <Karaoke subs={subs} accent={accent} />
-      <Bookend title={title} handle={handle} accent={accent} color={color}
+      <Bookend hookStat={hookStat} hookLabel={hookLabel} hookLine={hookLine} title={title} handle={handle} accent={accent} color={color}
                introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );

@@ -77,7 +77,7 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
   const intro = interpolate(f, [0, 12], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <AbsoluteFill style={{ background: props.transparent ? "transparent" : "linear-gradient(160deg,#0b1020 0%,#070a14 100%)", fontFamily: phong(font), opacity: intro }}>
+    <AbsoluteFill style={{ background: props.transparent ? "transparent" : "linear-gradient(160deg,#22305a 0%,#131c38 55%,#0d1428 100%)"  /* 26/8: sáng lên, xem 7.ek */, fontFamily: phong(font), opacity: intro }}>
       {/* tiêu đề */}
       <div style={{ position: "absolute", top: port ? 96 : 60, left: M, right: M }}>
         <div style={{ fontSize: port ? 62 : 66, fontWeight: 900, color: "#EAF2FF", letterSpacing: -1, lineHeight: 1.04 }}>{title}</div>

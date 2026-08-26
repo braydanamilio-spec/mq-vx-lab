@@ -1553,6 +1553,14 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     # (ghi vào brand kit từ đầu mà không hàm nào đọc, nên suốt thời gian qua vô tác dụng).
     if br.get("font"):
         props["font"] = br["font"]
+    # NỀN RIÊNG TỪNG KÊNH (26/8). Nền chiếm gần hết khung hình; để nó viết cứng trong composition
+    # nghĩa là 18 kênh dạng `ranked` dùng CHUNG một nền — khán giả nhìn là thấy cùng một lò, dù
+    # accent đã riêng. `palette.bg/primary/secondary` có sẵn 38/50/50 giá trị khác nhau mà chưa
+    # ai đọc — đây là lần thứ NĂM cùng bệnh "khai ra rồi để đó".
+    if b.get("primary"):
+        props["bg"] = b["primary"]
+    if b.get("secondary"):
+        props["bg2"] = b["secondary"]
     pf = os.path.join(DS.PUB, f"_th2_{dang}_{sl}.json")
     json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2_{dang}_{sl}.mp4"))

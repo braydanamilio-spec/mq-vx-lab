@@ -44,16 +44,22 @@ GIONG = ["en-US-AndrewNeural", "en-US-BrianNeural", "en-US-ChristopherNeural", "
          "en-US-GuyNeural", "en-US-RogerNeural", "en-US-SteffanNeural",
          "en-US-AriaNeural", "en-US-AvaNeural", "en-US-EmmaNeural", "en-US-JennyNeural",
          "en-US-MichelleNeural"]
-TOC = ["+0%", "+7%", "+13%"]        # kể nhanh/chậm đổi hẳn cảm giác kênh
-CAO = ["+0Hz", "-12Hz", "+10Hz"]    # cao độ: đòn bẩy mạnh nhất để tách chất giọng
+# 26/8 — NỚI RỘNG THÊM. Anh: "khán giả xem không được biết 50 kênh cùng một người làm".
+# 12 giọng cho 50 kênh nghĩa là ~4 kênh chung một NGƯỜI đọc; chỉ khác tốc/cao độ ở 3 mức thì hai
+# kênh chung giọng vẫn nghe ra là một. Nới lên 5 mức mỗi chiều (12x5x5 = 300 chữ ký) và xếp sao
+# cho các kênh chung giọng rơi vào tốc + cao độ CÁCH XA nhau nhất.
+TOC = ["+0%", "+8%", "-6%", "+15%", "+4%"]          # kể nhanh/chậm đổi hẳn cảm giác kênh
+CAO = ["+0Hz", "-14Hz", "+12Hz", "-7Hz", "+20Hz"]   # cao độ: đòn bẩy mạnh nhất để tách chất giọng
 
 
 def chu_ky_giong(i: int) -> dict:
     """Chữ ký giọng thứ `i`. Xếp sao cho hai kênh LIỀN NHAU luôn khác GIỌNG (không chỉ khác tốc độ)
     — người xem lướt hai kênh cạnh nhau phải nghe ra ngay là hai kênh khác nhau."""
     g = GIONG[i % len(GIONG)]
-    k = i // len(GIONG)
-    return {"voice": g, "voice_rate": TOC[k % len(TOC)], "voice_pitch": CAO[(k // len(TOC)) % len(CAO)]}
+    k = i // len(GIONG)                       # lần thứ mấy giọng này được dùng lại
+    # Bước 2 và 3 là số NGUYÊN TỐ CÙNG NHAU với 5, nên mỗi lần dùng lại một giọng thì cả tốc lẫn
+    # cao độ đều nhảy sang mức xa, không chỉ nhích một nấc.
+    return {"voice": g, "voice_rate": TOC[(k * 2) % len(TOC)], "voice_pitch": CAO[(k * 3) % len(CAO)]}
 
 
 def _db():

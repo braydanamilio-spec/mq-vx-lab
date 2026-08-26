@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoCon
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import React from "react";
 
@@ -12,6 +13,8 @@ export type LongshotItem = { label: string; emoji?: string; oddsDisp: string; lo
 export type LongshotProps = {
   title?: string; handle?: string; color?: string; accent?: string;
   items: LongshotItem[]; introSec?: number; itemSec?: number; outroSec?: number;
+  hookStat?: string; hookLabel?: string; hookLine?: string;
+  bg?: string; bg2?: string;
   font?: string;
   audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
 };
@@ -28,7 +31,10 @@ export const calcLongshot = ({ props }: any) => {
 
 // ---- ladder geometry (log scale: 1 log10 unit == RUNG_GAP px, so rarity gaps grow "further apart" up the tower) ----
 const RUNG_GAP = 232;
-const BOTTOM_PAD = 470;
+// 26/8 — chừa chỗ cho băng phụ đề. Karaoke neo `bottom 200` và cao ~2 dòng (mép trên ~1608);
+// nấc thấp nhất của thang cùng nhãn của nó rơi đúng vào dải đó ⇒ chữ đè chữ.
+// Có sub thì đẩy đáy thang lên, thang ngắn lại một chút nhưng không ai phải đọc chữ chồng chữ.
+const BOTTOM_PAD_GOC = 470;
 const TOP_PAD = 520;
 const ANCHOR_Y = 1920 * 0.66;
 const RAIL_L = 1080 / 2 - 96, RAIL_R = 1080 / 2 + 96, CENTER = 1080 / 2;
@@ -56,10 +62,12 @@ const climbPos = (f: number, climbStart: number, climbDur: number, hops: number,
   return { y, hopT: sp, arc, done: false, justLanded: false, hopLocal, perHop };
 };
 
-const yForLog = (log: number, trackH: number) => trackH - BOTTOM_PAD - log * RUNG_GAP;
+// `pad` truyền vào chứ không đọc hằng mô-đun: đáy thang đổi theo việc có phụ đề hay không, mà
+// hàm này lại nằm ngoài component. Đọc hằng ở đây là ReferenceError (đã dính đúng lỗi đó).
+const yForLog = (log: number, trackH: number, pad: number = BOTTOM_PAD_GOC) => trackH - pad - log * RUNG_GAP;
 
 export const LongshotShort: React.FC<LongshotProps> = (props) => {
-  const { font = "", title = "WHAT ARE THE REAL ODDS?", handle = "@longshotusa", color = "#4F46E5", accent = "#4F46E5",
+  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "WHAT ARE THE REAL ODDS?", handle = "@longshotusa", color = "#4F46E5", accent = "#4F46E5",
     items = [], introSec = 1.8, itemSec = 2.7, outroSec = 2.4, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
@@ -70,6 +78,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
 
   const maxLogAll = Math.max(1, ...items.map((d) => d.logValue));
   const maxN = Math.ceil(maxLogAll) + 1;
+  const BOTTOM_PAD = BOTTOM_PAD_GOC + ((subs && subs.length) ? 150 : 0);
   const trackH = BOTTOM_PAD + maxN * RUNG_GAP + TOP_PAD;
 
   // which item is currently active (climbing or holding), and its live Y
@@ -86,11 +95,11 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
     const slotFrames = Math.round(idur(items[i], itemSec) * fps);
     const climbDur = Math.max(18, Math.round(slotFrames * climbFrac));
     const prevLog = i === 0 ? 0 : items[i - 1].logValue;
-    const fromY = yForLog(prevLog, trackH), toY = yForLog(items[i].logValue, trackH);
+    const fromY = yForLog(prevLog, trackH), toY = yForLog(items[i].logValue, trackH, BOTTOM_PAD);
     const c = climbPos(f, starts[i], climbDur, climbHops, fromY, toY, fps);
     perItemClimb.push({ y: c.y, arc: c.arc, done: c.done, justLanded: c.justLanded });
   }
-  if (activeIdx >= 0) { activeY = perItemClimb[activeIdx].y; activeLog = interpolate(activeY, [yForLog(maxLogAll, trackH), yForLog(0, trackH)], [maxLogAll, 0]); }
+  if (activeIdx >= 0) { activeY = perItemClimb[activeIdx].y; activeLog = interpolate(activeY, [yForLog(maxLogAll, trackH), yForLog(0, trackH, BOTTOM_PAD)], [maxLogAll, 0]); }
 
   const isLast = activeIdx === items.length - 1 && activeIdx >= 0;
   const lastDone = isLast && perItemClimb[activeIdx].done;
@@ -118,7 +127,11 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
     .filter((y): y is number => y !== null);
 
   return (
-    <AbsoluteFill style={{ background: `radial-gradient(120% 90% at 50% 10%, #17163a 0%, #0d0b22 55%, #06050f 100%)`, fontFamily: phong(font), overflow: "hidden" }}>
+      // 26/8 — NỀN SÁNG LÊN. Đo 5 video thật: sáng trung bình chỉ **25-40/255**, trong khi
+      // short trên feed thường 60-100 — nhìn tối om, và khung cuối tụt xuống 15 nên trông
+      // như video kết thúc bằng màn hình đen. Nâng cả ba chặng gradient, GIỮ NGUYÊN tông màu
+      // riêng của từng dạng (tông là thứ phân biệt kênh, không được gộp về một màu).
+    <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font), overflow: "hidden" }}>
       {/* TIÊU ĐỀ — fixed header, always visible */}
       <div style={{ position: "absolute", top: 74, left: 0, right: 0, textAlign: "center", padding: "0 50px", zIndex: 5 }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 28, letterSpacing: 2, padding: "7px 20px", borderRadius: 12 }}>🎲 LONGSHOT</div>
@@ -135,7 +148,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
 
           {/* rungs — evenly spaced in LOG space (so real rarity gaps compound going up) */}
           {Array.from({ length: maxN + 1 }, (_, n) => n).map((n) => {
-            const ry = yForLog(n, trackH);
+            const ry = yForLog(n, trackH, BOTTOM_PAD);
             // 26/8 — CHỒNG CHỮ Ở ĐÁY KHUNG. Thang nằm trong lớp bị dịch `camY`, nên chỗ đứng THẬT
             // của một nấc trên màn hình là `camY + ry`, không phải `ry`. Nấc thấp nhất rơi đúng
             // vào dải đáy nơi đặt @handle -> nhãn "1 in 10" in đè lên tên kênh (thấy rõ ở canary
@@ -244,7 +257,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
-      <Bookend title={title} handle={handle} accent={accent} color={color}
+      <Bookend hookStat={hookStat} hookLabel={hookLabel} hookLine={hookLine} title={title} handle={handle} accent={accent} color={color}
                introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );

@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVid
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import React from "react";
 
@@ -19,6 +20,8 @@ export type TNPair = { label: string; thenYear: string; thenVal: string; nowYear
 export type ThenNowProps = {
   title?: string; handle?: string; color?: string; accent?: string;
   pairs: TNPair[]; introSec?: number; pairSec?: number; outroSec?: number;
+  hookStat?: string; hookLabel?: string; hookLine?: string;
+  bg?: string; bg2?: string;
   font?: string;
   audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
 };
@@ -35,7 +38,7 @@ export const calcThenNow = ({ props }: any) => {
 };
 
 // 1 cặp: XƯA trượt từ trên, NAY trượt từ dưới, chip biến đổi bung giữa
-const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number; font?: string }> = ({ p, accent, sec, font = "" }) => {
+const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number; font?: string; cosub?: boolean }> = ({ p, accent, sec, font = "", cosub = false }) => {
   const f = useCurrentFrame(); const dur = sec * FPS;
   const thenIn = spring({ frame: f, fps: FPS, config: { damping: 14, stiffness: 120 } });
   const nowIn = spring({ frame: f - 10, fps: FPS, config: { damping: 14, stiffness: 120 } });
@@ -43,7 +46,11 @@ const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number; font?: stri
   const chg = spring({ frame: f - chgAt, fps: FPS, config: { damping: 9, stiffness: 180 } });
   const zoomT = interpolate(f, [0, dur], [1.06, 1.14]);
   const zoomN = interpolate(f, [0, dur], [1.14, 1.06]);
-  const HALF = 810;   // (1920 - 140 top - 160 bottom)/2 ~ vùng mỗi panel
+  // 26/8 — CHỪA CHỖ CHO BĂNG PHỤ ĐỀ. Hai thẻ cao 810 bắt đầu ở top 150 ⇒ thẻ dưới kết thúc ở
+  // y≈1790, trong khi băng chữ karaoke neo `bottom 200` có mép trên ≈1608 ⇒ phụ đề nằm ĐÈ vào
+  // trong thẻ "NOW" (thấy rõ ở RENT REALITY: dòng "From 127,046 to 481,825 dollars" nằm trong thẻ).
+  // Có sub thì thu mỗi thẻ lại để đáy thẻ dưới dừng trên băng chữ.
+  const HALF = cosub ? 705 : 810;   // (1920 - 140 top - 160 bottom)/2 ~ vùng mỗi panel
   return (
     // 23/8 (user: "khung đen kết thúc cuối video"): gốc AbsoluteFill này TRƯỚC ĐÂY KHÔNG CÓ NỀN.
     // Hai panel bên trong chạy theo animation, hết nội dung (hoặc lúc video còn dài hơn phần hình)
@@ -88,7 +95,7 @@ const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number; font?: stri
 };
 
 export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
-  const { font = "", title = "THEN vs NOW", handle = "@thennowusa", color = "#EC4899", accent = "#EC4899",
+  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "THEN vs NOW", handle = "@thennowusa", color = "#EC4899", accent = "#EC4899",
     pairs = [], introSec = 1.6, pairSec = 4.5, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
   const introF = Math.round(introSec * fps);
@@ -97,7 +104,11 @@ export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
   for (const p of pairs) { starts.push(acc); acc += Math.round(pdur(p, pairSec) * fps); }
 
   return (
-    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #1b0f1a 0%, #100a11 55%, #08060a 100%)", fontFamily: phong(font) }}>
+      // 26/8 — NỀN SÁNG LÊN. Đo 5 video thật: sáng trung bình chỉ **25-40/255**, trong khi
+      // short trên feed thường 60-100 — nhìn tối om, và khung cuối tụt xuống 15 nên trông
+      // như video kết thúc bằng màn hình đen. Nâng cả ba chặng gradient, GIỮ NGUYÊN tông màu
+      // riêng của từng dạng (tông là thứ phân biệt kênh, không được gộp về một màu).
+    <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font) }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 40, left: 0, right: 0, textAlign: "center", zIndex: 6 }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>⏳ THEN × NOW</div>
@@ -106,7 +117,7 @@ export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
       {/* CÁC CẶP */}
       {pairs.map((p, i) => (
         <Sequence key={i} from={starts[i]} durationInFrames={Math.round(pdur(p, pairSec) * fps)}>
-          <TNPairView font={font} p={p} accent={accent} sec={pdur(p, pairSec)} />
+          <TNPairView cosub={!!(subs && subs.length)} font={font} p={p} accent={accent} sec={pdur(p, pairSec)} />
         </Sequence>
       ))}
 
@@ -130,7 +141,7 @@ export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
-      <Bookend title={title} handle={handle} accent={accent} color={color}
+      <Bookend hookStat={hookStat} hookLabel={hookLabel} hookLine={hookLine} title={title} handle={handle} accent={accent} color={color}
                introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );

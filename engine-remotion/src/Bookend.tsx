@@ -24,14 +24,22 @@ import { useCurrentFrame, useVideoConfig, interpolate, spring } from "remotion";
 // Màn che THẺ MỞ ĐẦU: 0.5 là trần cứng. Cao hơn là dính chữ ký "nền trơn" (dark≥75) mà
 // `opening_is_flat()` chặn — xem ghi chú đầu file. Thẻ KẾT thì che dày hơn được: QC chỉ soi khung
 // MỞ ĐẦU, và cuối video mục tiêu là đọc được CTA chứ không phải khoe hình.
-const MAN_CHE = 0.5;
-const MAN_CHE_KET = 0.78;
+// 26/8 — HẠ MÀN CHE. Đo 5 video thật: sáng trung bình 25-40/255, khung cuối tụt xuống 15 nên
+// trông như video kết bằng màn hình đen. Màn che 0.5 ở mở đầu và 0.78 ở khung kết là hai chỗ
+// tối nhất. Hạ xuống: mở đầu còn thấy rõ nội dung đang chạy bên dưới, khung kết KHÔNG tối đi
+// mà giữ nguyên hình cuối cùng — anh yêu cầu "kết thúc video không bằng khung đen".
+const MAN_CHE = 0.16;   // đo lại: 0.28 -> khung hook 38/255, vẫn tối; 0.16 -> ~58
+const MAN_CHE_KET = 0.34;
 
 export const Bookend: React.FC<{
   title?: string; handle?: string; accent?: string; color?: string;
   introSec?: number; outroSec?: number; cta?: string;
+  hookStat?: string; hookLabel?: string; hookLine?: string;
 }> = ({ title = "", handle = "", accent = "#F5B301", color, introSec = 0, outroSec = 0,
-        cta = "FOLLOW FOR MORE" }) => {
+        cta = "", hookStat = "", hookLabel = "", hookLine = "" }) => {
+  // 26/8 — BỎ MẶC ĐỊNH "FOLLOW FOR MORE" (anh yêu cầu). Thẻ kêu gọi chiếm trọn khung cuối, che
+  // mất chính nội dung vừa kể, và là thứ ai cũng làm — không giúp kênh khác biệt. Khung kết nay
+  // giữ nguyên nội dung cuối cùng của video. Kênh nào muốn thì truyền `cta` tường minh.
   const f = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const c2 = color || accent;
@@ -52,6 +60,44 @@ export const Bookend: React.FC<{
           <div style={{ position: "absolute", top: 0, bottom: 0, left: `${quet}%`, width: "26%",
                         background: `linear-gradient(100deg, transparent, ${accent}30, transparent)` }} />
         </div>
+        {hookStat ? (
+          // ── HOOK 0-3 GIÂY ───────────────────────────────────────────────────────────────
+          // 26/8 — bản cũ đưa @handle lên TRƯỚC TIÊN rồi mới tới tiêu đề. Giây 0 không ai quan
+          // tâm handle; thứ giữ được người xem là MỘT CON SỐ khó tin + MỘT CÂU HỎI chưa trả lời.
+          // Ba nhịp trong 3 giây: số đập vào (0-0,4s) -> nhãn của số (0,4s) -> câu hỏi (0,9s).
+          // Tiêu đề lùi xuống nhỏ, handle bỏ hẳn khỏi mở đầu — nó đã nằm sẵn ở đáy mọi khung.
+          <div style={{ textAlign: "center", width: "100%" }}>
+            <div style={{
+              fontSize: Math.max(96, Math.min(210, Math.round(1180 / Math.max(3, hookStat.length)))),
+              lineHeight: 0.94, fontWeight: 900, color: c2, whiteSpace: "nowrap",
+              letterSpacing: -2, transform: `scale(${0.55 + 0.45 * p})`,
+              textShadow: `0 0 60px ${accent}88, 0 10px 40px rgba(0,0,0,.95)`,
+            }}>{hookStat}</div>
+            {hookLabel ? (
+              <div style={{
+                marginTop: 14, fontSize: 40, fontWeight: 800, letterSpacing: 2, color: "#EAF6FF",
+                opacity: interpolate(f, [Math.round(fps * 0.35), Math.round(fps * 0.7)], [0, 1],
+                                     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+                textShadow: "0 4px 20px rgba(0,0,0,.95)",
+              }}>{hookLabel.toUpperCase()}</div>
+            ) : null}
+            {hookLine ? (
+              <div style={{
+                marginTop: 34, display: "inline-block", padding: "12px 30px", borderRadius: 14,
+                background: `linear-gradient(90deg, ${accent}, ${c2})`, color: "#080a12",
+                fontWeight: 900, fontSize: 38, letterSpacing: 0.5,
+                opacity: interpolate(f, [Math.round(fps * 0.85), Math.round(fps * 1.25)], [0, 1],
+                                     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+                transform: `translateY(${interpolate(f, [Math.round(fps * 0.85), Math.round(fps * 1.25)], [18, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })}px)`,
+              }}>{hookLine.toUpperCase()}</div>
+            ) : null}
+            <div style={{
+              marginTop: 30, fontSize: 34, fontWeight: 700, color: "#ffffffb0", padding: "0 40px",
+              opacity: interpolate(f, [Math.round(fps * 1.3), Math.round(fps * 1.7)], [0, 1],
+                                   { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+            }}>{title}</div>
+          </div>
+        ) : (
         <div style={{ textAlign: "center", transform: `scale(${0.86 + 0.14 * p})` }}>
           <div style={{ display: "inline-block", background: c2, color: "#080a12", fontWeight: 900,
                         fontSize: 30, letterSpacing: 3, padding: "9px 26px", borderRadius: 999,
@@ -66,6 +112,7 @@ export const Bookend: React.FC<{
           <div style={{ margin: "36px auto 0", width: interpolate(p, [0, 1], [40, 260]),
                         height: 9, borderRadius: 999, background: accent }} />
         </div>
+        )}
       </div>
     );
   }

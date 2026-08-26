@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoCon
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import React from "react";
 
@@ -11,6 +12,8 @@ export type ScaleItem = { name: string; emoji?: string; value: number; disp?: st
 export type ScaledProps = {
   title?: string; subtitle?: string; handle?: string; color?: string; accent?: string;
   items: ScaleItem[]; introSec?: number; itemSec?: number; outroSec?: number;
+  hookStat?: string; hookLabel?: string; hookLine?: string;
+  bg?: string; bg2?: string;
   font?: string;
   audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
 };
@@ -26,12 +29,18 @@ export const calcScaled = ({ props }: any) => {
 };
 
 export const ScaledShort: React.FC<ScaledProps> = (props) => {
-  const { font = "", title = "SIZE COMPARISON", subtitle = "", handle = "@scaledusa", color = "#2FA84F", accent = "#2FA84F",
+  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "SIZE COMPARISON", subtitle = "", handle = "@scaledusa", color = "#2FA84F", accent = "#2FA84F",
     items = [], introSec = 1.8, itemSec = 2.0, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
   // LAYOUT tính sẵn: cao emoji ∝ giá trị thật; cột ≥ LABEL_MIN (nhãn luôn đủ chỗ) — chỉ co PHẦN kích thước khi tràn.
-  const GROUND = H - 430, TOPLIMIT = 470, PAD = 30, USABLE = W - 100, LABEL_MIN = 178;
+  // 26/8 — NHƯỜNG CHỖ CHO BĂNG PHỤ ĐỀ. Đo trên khung thật: nhãn các mục bắt đầu ở GROUND
+  // (H-430 = 1490) và dài 2-3 dòng nên chạm tới ~1640, trong khi băng chữ karaoke nằm ở
+  // bottom 200 tức mép trên ~1608 ⇒ chữ đè chữ, cả hai đều không đọc được (thấy rõ ở
+  // CALORIE SHOCK: sub "Sabatasso'S Pepperoni" đè lên đúng cụm nhãn).
+  // Có sub thì hạ trần: nhãn kết thúc trên băng chữ, không tràn vào.
+  const COSUB = !!(subs && subs.length);
+  const GROUND = H - (COSUB ? 560 : 430), TOPLIMIT = 470, PAD = 30, USABLE = W - 100, LABEL_MIN = 178;
   const maxH = Math.min(GROUND - TOPLIMIT, 600), floor = 46;   // cạp cao emoji lớn nhất -> hệ số co không giết cột nhãn
   const maxV = Math.max(1, ...items.map((d) => d.value));
   let hs = items.map((d) => floor + (d.value / maxV) * (maxH - floor));
@@ -54,7 +63,11 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
   const introP = spring({ frame: f, fps, config: { damping: 12, stiffness: 140 } });
 
   return (
-    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #10251a 0%, #0a1510 55%, #060b08 100%)", fontFamily: phong(font) }}>
+      // 26/8 — NỀN SÁNG LÊN. Đo 5 video thật: sáng trung bình chỉ **25-40/255**, trong khi
+      // short trên feed thường 60-100 — nhìn tối om, và khung cuối tụt xuống 15 nên trông
+      // như video kết thúc bằng màn hình đen. Nâng cả ba chặng gradient, GIỮ NGUYÊN tông màu
+      // riêng của từng dạng (tông là thứ phân biệt kênh, không được gộp về một màu).
+    <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font) }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 96, left: 0, right: 0, textAlign: "center", padding: "0 50px" }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>📏 SCALED</div>
@@ -79,7 +92,14 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
               filter: biggest ? `drop-shadow(0 0 24px ${accent})` : "drop-shadow(0 6px 14px #0008)" }}>{it.emoji || "❓"}</div>
             {/* nhãn dưới nền — bó trong bề rộng cột, tự xuống dòng -> không chồng */}
             <div style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", opacity: s, width: cols[i] - 12 }}>
-              <div style={{ color: "#fff", fontWeight: 900, fontSize: 32, lineHeight: 1.05, overflowWrap: "break-word", whiteSpace: "normal" }}>{it.name}</div>
+              {/* TỐI ĐA 2 DÒNG. Trước đây để xuống dòng tự do: tên dài ("Vicolo Roasted Mushroom
+                  Pizza") thành 3-4 dòng, đâm thẳng vào nhãn cột bên cạnh và vào băng phụ đề.
+                  Cỡ chữ co theo bề rộng cột thật, không để một cỡ cứng cho mọi số lượng mục. */}
+              <div style={{ color: "#fff", fontWeight: 900, lineHeight: 1.05,
+                fontSize: Math.max(19, Math.min(32, Math.round((cols[i] - 12) / 5.6))),
+                overflowWrap: "break-word", whiteSpace: "normal",
+                display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                overflow: "hidden" } as React.CSSProperties}>{it.name}</div>
               <div style={{ display: "inline-block", marginTop: 6, background: biggest ? accent : "#132a1e", color: biggest ? "#0a0c14" : "#eafff2",
                 border: `1.5px solid ${accent}`, fontWeight: 900, fontSize: 28, padding: "4px 14px", borderRadius: 12, whiteSpace: "nowrap" }}>{it.disp || it.value.toLocaleString()}</div>
             </div>
@@ -104,7 +124,7 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
-      <Bookend title={title} handle={handle} accent={accent} color={color}
+      <Bookend hookStat={hookStat} hookLabel={hookLabel} hookLine={hookLine} title={title} handle={handle} accent={accent} color={color}
                introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );

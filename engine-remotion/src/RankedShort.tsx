@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVid
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import React from "react";
 
@@ -18,6 +19,8 @@ export type RankItem = { name: string; tier: string; img?: string; stat?: string
 export type RankedProps = {
   title?: string; subtitle?: string; handle?: string; color?: string; accent?: string;
   tiers?: string[]; items: RankItem[]; introSec?: number; itemSec?: number; outroSec?: number;
+  hookStat?: string; hookLabel?: string; hookLine?: string;
+  bg?: string; bg2?: string;
   font?: string;
   audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
 };
@@ -58,7 +61,7 @@ const Card: React.FC<{ it: RankItem; s: number; accent: string }> = ({ it, s, ac
 );
 
 export const RankedShort: React.FC<RankedProps> = (props) => {
-  const { font = "", title = "TIER LIST", subtitle = "", handle = "@rankedusa", color = "#7C5CFF", accent = "#7C5CFF",
+  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "TIER LIST", subtitle = "", handle = "@rankedusa", color = "#7C5CFF", accent = "#7C5CFF",
     tiers = ["S", "A", "B", "C", "D"], items = [], introSec = 1.8, itemSec = 1.7, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
   const introF = Math.round(introSec * fps);
@@ -76,7 +79,11 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
   const dayBang = (subs && subs.length) ? 380 : 130;
 
   return (
-    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #171633 0%, #0d0b1c 55%, #07060f 100%)", fontFamily: phong(font) }}>
+      // 26/8 — NỀN SÁNG LÊN. Đo 5 video thật: sáng trung bình chỉ **25-40/255**, trong khi
+      // short trên feed thường 60-100 — nhìn tối om, và khung cuối tụt xuống 15 nên trông
+      // như video kết thúc bằng màn hình đen. Nâng cả ba chặng gradient, GIỮ NGUYÊN tông màu
+      // riêng của từng dạng (tông là thứ phân biệt kênh, không được gộp về một màu).
+    <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font) }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 90, left: 0, right: 0, textAlign: "center", padding: "0 50px" }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>🏆 RANKED</div>
@@ -129,7 +136,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
-      <Bookend title={title} handle={handle} accent={accent} color={color}
+      <Bookend hookStat={hookStat} hookLabel={hookLabel} hookLine={hookLine} title={title} handle={handle} accent={accent} color={color}
                introSec={introSec} outroSec={outroSec} />
     </AbsoluteFill>
   );
