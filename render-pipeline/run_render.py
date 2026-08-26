@@ -2138,6 +2138,32 @@ def plan_mode():
     if _nameless:
         print(f"   🧹 Bỏ qua {len(_nameless)} doc kênh KHÔNG TÊN (rác seed cũ) — không cấp slot render.")
         all_ch = [c for c in all_ch if str(c.get("name") or "").strip()]
+    # 27/8 — LOẠI KÊNH THẾ HỆ 1 NGAY Ở KHÂU CHỌN, KHÔNG ĐỢI DỌN ĐƯỢC BẢN GHI.
+    # Đêm nay dọn bản ghi kênh cũ tới bốn lượt vẫn còn sót: lượt cuối chết vì
+    # `❌ không đọc được danh sách kênh (kể cả gương B2): 429 Quota exceeded` — công cụ quản trị
+    # cần Firestore, mà Firestore đang cạn, nên đúng lúc cần dọn nhất thì không dọn được.
+    # Trong khi đó phiên render vẫn chạy (nó dùng gói plan + D1, 0 lượt đọc) và cấp 18 lane cho
+    # kênh cũ, mỗi lane ra 0 video — phí trọn một phiên.
+    # Chốt ở đây KHÔNG cần Firestore, không tốn lượt nào: tên nằm trong bản chụp thế hệ 1 mà không
+    # có trong bảng thế hệ 2 thì không được cấp slot, bất kể bản ghi còn hay đã xoá.
+    _nghi_t1 = set()
+    try:
+        import json as _j2
+        _g = os.path.dirname(os.path.abspath(__file__))
+        _nghi_t1 = {str(t).upper() for t in
+                    (_j2.load(open(os.path.join(_g, "kenh_the_he_1.json"))).get("ten") or [])}
+        _k2 = _j2.load(open(os.path.join(_g, "kenh_the_he_2.json")))
+        _k2 = _k2 if isinstance(_k2, list) else list(_k2.values())
+        _nghi_t1 -= {str(x.get("ten", "")).replace(" ", "").upper() for x in _k2}
+    except Exception as _e:
+        print(f"   ⚠️ không đọc được bản chụp kênh thế hệ 1 ({str(_e)[:50]}) — bỏ qua chốt loại")
+    def _con_dung(c):
+        return str(c.get("name", "")).upper() not in _nghi_t1
+    _bo_t1 = [c["name"] for c in all_ch if not _con_dung(c)]
+    if _bo_t1:
+        print(f"   🪦 LOẠI {len(_bo_t1)} kênh thế hệ 1 khỏi phiên (bản ghi chưa dọn được vì quota): "
+              f"{', '.join(sorted(_bo_t1)[:8])}" + ("…" if len(_bo_t1) > 8 else ""))
+    all_ch = [c for c in all_ch if _con_dung(c)]
     _pri = [c["name"] for c in all_ch if not c.get("paused") and int(c.get("priority") or 0) >= 1]
     channels = [c["name"] for c in all_ch if not c.get("paused") and int(c.get("priority") or 0) < 1]
     # XÁO THỨ TỰ mỗi phiên: Firestore trả channels theo ID tài liệu (~alphabet cố định) -> KHÔNG xáo thì cùng nhóm
