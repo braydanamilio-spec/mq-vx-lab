@@ -912,10 +912,11 @@ def t_ho_key_A_doc_mot_lan_o_plan():
 def t_so_ngan_sach_khong_gay_ao_giac():
     """Sổ ngân sách không được lấy số CỦA MỘT LANE chia cho trần CỦA TOÀN HỆ.
 
-    26/8 — dòng `🧱 Ngân sách hôm nay: ĐỌC 503/50,000 (1%)` in ở MỖI lane, nên lane nào cũng thấy
-    "0-1%" trong khi project B cạn sạch. Sai không nằm ở phép chia mà ở chỗ đem hai đơn vị khác
-    nhau so với nhau: tử số là một lane, mẫu số là cả ngày của cả hệ. Ảo giác an toàn đó đã che
-    nguyên nhân thật suốt nhiều ngày."""
+    26/8 — con số ấy VỐN đã là tổng toàn hệ (`nen_doc` + phần tiến trình này); em từng kết luận
+    nhầm là "số một lane chia trần cả hệ" và đã sửa lại. Sai thật nằm ở chỗ ĐỌC: lấy dòng đầu
+    phiên (ĐỌC 145 = 0%) rồi kết luận cả ngày, trong khi dòng cuối ngày là 43.265 = 86%.
+    Chốt này giữ lại để dòng log nói RÕ đâu là lane, đâu là toàn hệ, và kêu lên ở mốc 80% —
+    một chỉ số tích luỹ mà không nói mốc thời gian thì rất dễ bị trích sai."""
     src = _doc("firestore_bridge.py")
     i = src.find("def bao_ngan_sach(")
     j = src.find("\ndef ", i + 10)

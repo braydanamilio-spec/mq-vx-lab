@@ -48,3 +48,49 @@ def muc_nghi(err) -> int:
         mai = (goc + _d.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         return max(10, min(int((mai - goc).total_seconds() // 60), 24 * 60))
     return MO_HO_PHUT
+
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# SỔ NGHẼN THEO NHÀ CUNG CẤP (26/8/2026)
+# ------------------------------------------------------------------------------------------
+# Anh hỏi: "không còn cách nào fix à?" — đúng, chỉ nuốt log thì không phải sửa.
+# Lỗi `HTTP 500 Internal Server Error` / `AiError` là hỏng phía NHÀ CUNG CẤP, mình không sửa
+# được ở nguồn. Nhưng SỐ LẦN GẶP thì giảm được: hiện thứ tự nhà cố định (Groq → CF → Gemini),
+# nên khi Groq đang trục trặc, mọi lượt vẫn đâm vào Groq, thử lại cũng Groq, và nghẽn tiếp.
+#
+# Sổ này ghi nhận nghẽn theo NHÀ. Nhà nào nghẽn dồn dập trong ít phút gần đây thì bị đẩy xuống
+# cuối thứ tự — hệ tự né sang nhà đang khoẻ, thay vì kiên trì đâm vào cửa đang đóng.
+# Tự quên sau CUA_SO_GIAY, nên nhà hồi lại là được dùng lại ngay, không phạt oan.
+CUA_SO_GIAY = 300          # chỉ tính nghẽn trong 5 phút gần đây
+NGUONG_NE = 3              # 3 lần trong cửa sổ -> né nhà đó
+
+_NGHEN: dict = {}
+
+
+def nha_cua(api_key: str) -> str:
+    k = str(api_key or "")
+    if k.startswith("gsk_"):
+        return "groq"
+    if k.startswith("cf:"):
+        return "cf"
+    return "gemini"
+
+
+def ghi_nghen(api_key: str) -> None:
+    """Gọi khi một lượt hỏng vì NGHẼN (không phải cạn hạn mức, không phải key hỏng)."""
+    import time as _t
+    nha = nha_cua(api_key)
+    _NGHEN.setdefault(nha, []).append(_t.time())
+
+
+def nha_dang_nghen() -> set:
+    """Nhà nào nên né lúc này."""
+    import time as _t
+    nay = _t.time()
+    ra = set()
+    for nha, moc in list(_NGHEN.items()):
+        con = [x for x in moc if nay - x <= CUA_SO_GIAY]
+        _NGHEN[nha] = con
+        if len(con) >= NGUONG_NE:
+            ra.add(nha)
+    return ra

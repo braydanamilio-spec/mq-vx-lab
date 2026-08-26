@@ -3048,11 +3048,22 @@ mà bản vá lẽ ra phải tạo. **Vá xong phải đo xem nó có chạy kh�
 Anh hỏi đúng câu quyết định: *"qua nói chỉ dùng mấy chục % mà sao để cạn"*. Đo lại thì cả hai con
 số em từng dựa vào đều **sai đơn vị so sánh** — không phải sai phép tính.
 
-### Lỗi 1 — sổ ngân sách lấy số MỘT LANE chia cho trần TOÀN HỆ
-`🧱 Ngân sách hôm nay: ĐỌC 503/50,000 (1%)` in ở **mỗi lane**. Tử số là một lane, mẫu số là cả
-ngày của cả hệ. Đo log đêm 25/8: mỗi lane 148-503 lượt, **lane nào cũng hiện "0%"** trong khi B
-cạn sạch. 18 lane × ~30 phiên/ngày, cộng publish + thumbnail + health-guardian + dashboard.
-→ Sổ nay in `Lane này: …` và `🌐 TOÀN HỆ hôm nay: …` kèm cảnh báo `⛔ SẮP CẠN` ở mốc 80%.
+### Lỗi 1 — ~~sổ ngân sách sai đơn vị~~ → **KHÔNG PHẢI. Em đọc sai, đã sửa lại 26/8**
+Kết luận ban đầu của em: "sổ lấy số một lane chia cho trần toàn hệ". **SAI.**
+`_thuc_te()` = `nen_doc` (phần CẢ HỆ đã tiêu, đọc từ sổ chung) **+** phần tiến trình này — nó
+**đã là tổng toàn hệ** từ đầu. Sổ không hề nói dối.
+
+Sai thật nằm ở chỗ em đọc: lấy dòng **ĐẦU PHIÊN** rồi kết luận cả ngày.
+Số thật đêm 25/8, cùng một sổ đó:
+- đầu phiên: ĐỌC 145 (**0%**) · GHI 29 (0%)
+- cuối ngày: ĐỌC **43.265 (86%)** · GHI **13.446 (67%)**
+
+Cạn là **đúng với tải thật**, không phải lỗi đo lường. Bản vá vẫn giữ (tách rõ `Lane này` /
+`🌐 TOÀN HỆ` + cảnh báo ở mốc 80%) vì nó làm dòng log khó đọc nhầm hơn — nhưng **lý do phải ghi
+cho đúng**, kẻo người sau đi sửa thứ không hỏng.
+
+**Bài học thật**: một chỉ số TÍCH LUỸ thì chỉ có giá trị ở lần đọc CUỐI. Trích dòng đầu phiên để
+kết luận cả ngày là tự lừa mình — và em đã làm đúng thế suốt một ngày.
 
 ### Lỗi 2 — 29% lượt đọc là VÔ ÍCH, và vòng lặp không tự tắt được
 `merge_keys_A` = **2.170/7.388 lượt (29%)**, trong khi dòng `Hợp nhất N key CHỈ CÓ Ở A` in ra
@@ -3066,7 +3077,8 @@ chạy. **Thêm D1 không giải quyết gì** nếu không ai kiểm nó có ch
 lane qua biến môi trường. **1.260 lượt còn 70.** 199 key nén còn 1KB.
 
 ### Luật rút ra (áp cho mọi số đo về sau)
-1. **Tử số và mẫu số phải cùng phạm vi.** Một lane chia cho trần cả hệ là vô nghĩa.
+1. **Chỉ số tích luỹ chỉ đọc được ở lần CUỐI.** Trích dòng đầu phiên rồi kết luận cả ngày là tự
+   lừa mình. Trước khi nói "an toàn", phải hỏi: con số này là ảnh chụp lúc nào?
 2. **Tối ưu nào cũng phải đo xem nó có CHẠY không.** Ba lần tối nay em vá thứ chưa từng chạy:
    ảnh chụp key vào D1, thoát sớm khi cạn key, và chính chốt kiểm này. Cách phát hiện luôn giống
    nhau: đếm chính con số mà bản vá lẽ ra phải tạo ra.
