@@ -3455,3 +3455,22 @@ ngầm rồi rơi về Arial — đúng cái mà cả hệ phông sinh ra để 
 **Luật**: chốt chứng minh mã ĐÚNG HÌNH DẠNG. Chỉ chạy thật mới chứng minh mã CHẠY ĐƯỢC. Trước khi
 bật một dây chuyền mới, render lấy MỘT sản phẩm đầu-cuối rồi **mở ra xem tận mắt** — rẻ hơn nhiều
 so với một phiên 18 lane.
+
+### 7.ei — SELFTEST TỰ ĐỎ MỖI NGÀY 20 PHÚT, VÀ SELFTEST ĐỎ THÌ CHẶN PHIÊN (26/8/2026)
+
+Bắt được lúc 06:40Z, đúng 19 phút trước mốc reset hạn mức Google (00:00 Thái Bình Dương = 07:00Z).
+
+`t_bao_chung_b_can_han_muc` đòi cờ nghỉ "cạn ngày" luôn `> 20 phút`. Nhưng gần mốc reset thì
+"nghỉ tới hết ngày" **đúng nghĩa** chỉ còn 19 phút — nghỉ quá mốc reset chẳng để làm gì. Nên chốt
+đỏ, mà `run_render` lại **CHẶN PHIÊN** khi selftest đỏ ⇒ **mọi phiên khởi động trong khung
+06:40–07:00Z đều mất trắng**, mỗi ngày.
+
+Đây là lần thứ HAI cùng một cái bẫy trong chính chốt này: bản trước đòi `> 120 phút` và đã phải
+sửa vì FAIL oan trong 2 tiếng trước reset. Sửa lần đó bỏ con số 120 nhưng **để lại cái sàn 20**.
+
+Vá: chỉ đòi cờ dài hơn nhánh "không rõ" **khi mốc reset còn xa hơn 20 phút**. Phép kiểm công thức
+(`|còn − mốc| < 3'`) vẫn giữ — nó mới là thứ chứng minh cờ trỏ đúng chỗ.
+
+**Luật**: chốt không được đo **số tuyệt đối của một đại lượng phụ thuộc giờ trong ngày**. Đo công
+thức, hoặc so với chính đại lượng kia — nếu không, chốt sẽ đỏ theo đồng hồ chứ không theo lỗi. Và
+vì selftest có quyền chặn phiên, một chốt đỏ oan đắt ngang một lỗi thật.

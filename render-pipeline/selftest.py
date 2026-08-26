@@ -3157,7 +3157,15 @@ def t_bao_chung_b_can_han_muc():
         # dùng ĐÚNG chuỗi mà bao_b_can_ngay dựng ra (nó tự nối " per day" khi không phải chặn/phút)
         _mong = _NK.muc_nghi("read_config 429 per day")      # muc_nghi trả PHÚT, không phải giây
         assert abs(con - _mong) < 3, f"cờ còn {con:.0f}' nhưng mốc cạn ngày là {_mong:.0f}'"
-        assert con > 20, f"cờ {con:.0f}' không dài hơn nhánh 'không rõ' (20')"
+        # 26/8 — SÀN 20' NÀY LÀM SELFTEST ĐỎ MỖI NGÀY TRONG 20 PHÚT CUỐI TRƯỚC RESET, và
+        # `run_render` CHẶN PHIÊN khi selftest đỏ ⇒ mất trắng mọi phiên khởi động trong khung
+        # 06:40-07:00Z. Bắt được đúng lúc 06:40Z hôm nay, khi mốc cạn-ngày chỉ còn 19'.
+        # Cùng bệnh với chốt cũ đòi ">120 phút" mà người trước đã phải sửa: **đo số tuyệt đối của
+        # một thứ phụ thuộc giờ trong ngày**. Gần mốc reset thì cờ ngắn là ĐÚNG — nghỉ quá mốc
+        # reset chẳng để làm gì. Chỉ đòi cờ dài hơn nhánh "không rõ" KHI mốc reset còn xa hơn thế.
+        _KHONG_RO = 20
+        if _mong > _KHONG_RO:
+            assert con > _KHONG_RO, f"cờ {con:.0f}' không dài hơn nhánh 'không rõ' ({_KHONG_RO}')"
         dai = kho["proj:B"]
         FB._DA_BAO_CAN[0] = False
         FB.bao_b_can_ngay("429 requests per minute, try again in 5s")
