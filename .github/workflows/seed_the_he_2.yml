@@ -12,6 +12,9 @@ on:
       bat_ngay:
         description: "1 = bật chạy luôn; 0 = tạo nhưng để TẮT (khuyên dùng)"
         default: "0"
+      cap_nhat:
+        description: "1 = làm mới giọng/phông/nền cho kênh ĐÃ CÓ (không đụng bật/tắt)"
+        default: "0"
 
 jobs:
   seed:
@@ -59,4 +62,5 @@ jobs:
           ARGS=""
           if [ "${{ github.event.inputs.ghi_that }}" = "1" ]; then ARGS="$ARGS --that"; fi
           if [ "${{ github.event.inputs.bat_ngay }}" = "1" ]; then ARGS="$ARGS --bat"; fi
+          if [ "${{ github.event.inputs.cap_nhat }}" = "1" ]; then ARGS="$ARGS --capnhat"; fi
           python render-pipeline/seed_the_he_2.py $ARGS

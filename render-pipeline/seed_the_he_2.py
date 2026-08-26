@@ -77,6 +77,12 @@ def _db():
 def main() -> int:
     that = "--that" in sys.argv
     bat = "--bat" in sys.argv
+    # 26/8 — CHẾ ĐỘ CẬP NHẬT. Seed bỏ qua kênh đã có (đúng, để chạy lại không đè mất chỉnh tay).
+    # Nhưng khi bảng giọng/phông/nền được nới thêm SAU lúc seed, 50 kênh vẫn giữ chữ ký cũ mà
+    # không có đường nào sửa — đúng ca vừa gặp: seed chạy trước commit nới bảng giọng.
+    # `--capnhat` ghi lại ĐÚNG các trường sinh ra từ bảng, KHÔNG đụng `paused` (trạng thái bật/tắt
+    # là quyết định của người, không phải của bảng).
+    capnhat = "--capnhat" in sys.argv
     ks = json.load(io.open(DS, encoding="utf-8"))
     if not that:
         print(f"🔍 DRY-RUN — sẽ đăng ký {len(ks)} kênh, trạng thái "
@@ -103,7 +109,7 @@ def main() -> int:
     tao = bo = 0
     for k in ks:
         ten = k["ten"].replace(" ", "")
-        if ten in co:
+        if ten in co and not capnhat:
             print(f"  ⏭  {ten:18} đã có -> bỏ qua"); bo += 1; continue
         b = k.get("brand") or {}
         pal = b.get("palette") or {}
@@ -117,9 +123,15 @@ def main() -> int:
                "accent2": pal.get("accent", "#F5B301"),
                "handle": k["handle"], "niche": k["goc_nhin"], "brand": b,
                **chu_ky_giong(thu_tu[ten])}
+        if ten in co and capnhat:
+            # chỉ các trường DO BẢNG SINH RA; giữ nguyên paused và mọi chỉnh tay khác
+            doc = {k: v for k, v in doc.items()
+                   if k in ("voice", "voice_rate", "voice_pitch", "accent", "accent2",
+                            "format", "handle", "niche", "brand", "the_he")}
         db.collection("render_channels").document(f"{owner}__{ten}").set(doc, merge=True)
         _g = chu_ky_giong(thu_tu[ten])
-        print(f"  ➕ {ten:18} [{k['dinh_dang']}] {'BẬT' if bat else 'tắt'} "
+        print(f"  {'🔄' if (ten in co) else '➕'} {ten:18} [{k['dinh_dang']}] "
+              f"{'(giữ nguyên bật/tắt)' if ten in co else ('BẬT' if bat else 'tắt')} "
               f"· {_g['voice'].replace('en-US-', '').replace('Neural', '')} {_g['voice_rate']} {_g['voice_pitch']}")
         tao += 1
     print(f"\n✅ tạo {tao} kênh, bỏ qua {bo}. Trạng thái: {'ĐANG CHẠY' if bat else 'TẮT — bật ở dashboard'}")
