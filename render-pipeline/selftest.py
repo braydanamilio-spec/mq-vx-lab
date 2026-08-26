@@ -1754,6 +1754,31 @@ def t_workflow_dung_autopublisher_phai_checkout_that():
     assert not xau, "; ".join(xau)
 
 
+
+def t_don_kho_khong_duoc_dung_kich_ban():
+    """Bản dọn phải BỎ QUA thư mục chứa kịch bản/sao lưu/brand kit.
+
+    26/8 — chạy khô đếm **9.037 tệp** sẽ vào thùng rác (3011 .mp4 · 3013 .jpg · 3013 .json).
+    Nhưng `CHANNEL_METHODS` có luật bất di bất dịch: *"Dọn/xóa CHỈ đụng VIDEO. KHÔNG bao giờ xóa:
+    method, repo, brand kit, config kênh, KỊCH BẢN/TOPIC ĐÃ LƯU."*
+
+    Kịch bản nằm trên Drive trong `_KICHBAN`, và tên tệp kịch bản cũng mở đầu bằng tên kênh — tức
+    bộ lọc theo tên quét trúng chúng. Mất kịch bản là mất thứ không dựng lại được bằng tiền: phải
+    gọi AI viết lại từ đầu, mà kho key thì có hạn.
+
+    Tỉ lệ 1:1:1 gợi ý `.json` là sidecar chứ không phải kịch bản — nhưng "gợi ý" không đủ để xoá
+    chín nghìn tệp. Chặn cứng ở tầng duyệt cây thư mục."""
+    src = _doc("don_the_he_1.py")
+    assert "CAM_DUNG" in src, "bản dọn không có danh sách thư mục cấm đụng"
+    for c in ("_KICHBAN", "_BACKUP"):
+        assert c in src, f"thiếu `{c}` trong danh sách cấm đụng"
+    import ast as _ast
+    fn = next((n for n in _ast.walk(_ast.parse(src))
+               if isinstance(n, _ast.FunctionDef) and n.name == "_di_het_kho"), None)
+    assert fn and "CAM_DUNG" in _ast.dump(fn), \
+        "hàm duyệt cây không kiểm CAM_DUNG -> vẫn chui vào thư mục kịch bản"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1873,6 +1898,7 @@ def main():
     check("canary không được render vào composition rỗng", t_canary_khong_duoc_render_vao_composition_rong)
     check("phông chảy hết đường JSON->props->composition", t_phong_phai_chay_het_duong_toi_luc_render)
     check("dọn kho: đi hết cây + mọi loại tệp", t_don_kho_phai_di_het_cay_va_moi_loai_tep)
+    check("dọn kho KHÔNG được đụng kịch bản", t_don_kho_khong_duoc_dung_kich_ban)
     check("mức âm chuyển cảnh quyết ở MỘT chỗ", t_muc_am_quyet_o_mot_cho)
     check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)

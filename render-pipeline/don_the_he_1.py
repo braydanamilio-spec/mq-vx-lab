@@ -51,6 +51,16 @@ def _duoi(ten: str) -> str:
     return ("." + t[-1].lower()) if len(t) == 2 and len(t[-1]) <= 5 else "(không đuôi)"
 
 
+# THƯ MỤC KHÔNG BAO GIỜ ĐƯỢC ĐỤNG TỚI (26/8).
+# `CHANNEL_METHODS` có luật bất di bất dịch: "Dọn/xóa CHỈ đụng VIDEO. KHÔNG bao giờ xóa: method,
+# repo, brand kit, config kênh, KỊCH BẢN/TOPIC ĐÃ LƯU." Kịch bản nằm trên Drive trong `_KICHBAN`,
+# và tên tệp kịch bản cũng bắt đầu bằng tên kênh — tức bộ lọc theo tên sẽ quét trúng chúng.
+# Mất kịch bản là mất thứ KHÔNG dựng lại được bằng tiền: phải gọi AI viết lại từ đầu.
+# Chạy khô lần này đếm 3011 .mp4 · 3013 .jpg · 3013 .json — cân bằng 1:1:1 nên nhiều khả năng
+# .json là sidecar chứ không phải kịch bản; nhưng "nhiều khả năng" không đủ để xoá 9.037 tệp.
+CAM_DUNG = ("_KICHBAN", "_BACKUP", "_SCRIPT", "brand", "config")
+
+
 def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6) -> list:
     """Đi HẾT cây thư mục, trả về MỌI tệp (không lọc theo loại).
 
@@ -87,6 +97,10 @@ def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6) -> list:
         tiep = muc.get("nextPageToken")
     for f in ds:
         if "folder" in str(f.get("mimeType") or ""):
+            ten_tm = str(f.get("name") or "")
+            if any(c.lower() in ten_tm.lower() for c in CAM_DUNG):
+                print(f"      🛡️ bỏ qua thư mục cấm đụng: {ten_tm}")
+                continue
             if sau < tran:
                 ra += _di_het_kho(dr, f["id"], sau + 1, tran)
         else:
