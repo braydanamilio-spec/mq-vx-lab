@@ -1424,6 +1424,33 @@ def plan_mode():
         Cách chắc nhất: plan đã đọc đủ 50 kênh khi nó còn đọc được, vậy thì **đưa thẳng cấu hình
         xuống cho lane**, khỏi bắt lane đi đọc lại từ một nguồn có thể đã cũ. Nén + base64 cho gọn
         (50 kênh ≈ 20KB, dư sức trong hạn mức output của GitHub Actions)."""
+        # ── PHANH THEO HẠN MỨC CÒN LẠI (26/8) ──────────────────────────────────────────
+        # Đo thật phiên 00:01 hôm nay: 18 lane ra 101 video (kỷ lục) — nhưng sổ quota đọc chạm
+        # **50.153/50.000 = 100%** ngay trong 2 giờ đầu ngày. Tải thật vượt trần free, không
+        # phải lỗi đo.
+        #
+        # Phanh KHÔNG phải cắt tính năng — anh nói đúng, cắt `top_titles`/`read_channels` là bỏ
+        # feedback học gu khán giả và cấu hình kênh, tức đổi chất lượng lấy hạn mức. Ở đây chỉ
+        # giảm SỐ LANE của phiên: mọi kênh vẫn tới lượt, chỉ chậm hơn, không kênh nào mất gì.
+        # Hạn mức Firestore reset theo ngày, nên chạy chậm nửa ngày còn hơn đứng hẳn nửa ngày.
+        try:
+            _pd = FB.phan_tram_da_dung("doc")
+            _pg = FB.phan_tram_da_dung("ghi")
+            _muc = max(_pd, _pg)
+            _tran_lane = None
+            if _muc >= 95:
+                _tran_lane = 3
+            elif _muc >= 85:
+                _tran_lane = 6
+            elif _muc >= 70:
+                _tran_lane = 10
+            if _tran_lane and len(lst) > _tran_lane:
+                print(f"   🛑 PHANH: quota đã dùng {_muc}% (đọc {_pd}% · ghi {_pg}%) — "
+                      f"phiên này chạy {_tran_lane}/{len(lst)} lane, phần còn lại để phiên sau.")
+                lst = lst[:_tran_lane]
+        except Exception as _e:
+            print(f"   ⚠️ không đọc được mức quota để phanh ({str(_e)[:50]}) — chạy đủ lane")
+
         payload = json.dumps(lst)
         goi = ""
         try:

@@ -3094,3 +3094,18 @@ Còn đúng 2 Traceback, cả hai là nghẽn nhà cung cấp lọt qua `_loi_ta
 - **Luật**: danh sách chuỗi con LUÔN thiếu. Bổ sung theo lỗi ĐO ĐƯỢC trên phiên thật, đừng ngồi
   đoán thêm; và mỗi ca mới phải được thêm vào chốt `t_nghen_nha_cung_cap_phai_thu_lai` kèm ngày
   phiên gặp, để lần sau biết ca đó từ đâu ra.
+
+### 26/8 — PHANH THEO HẠN MỨC: hệ có sổ đo mà không ai hỏi nó trước khi mở 18 lane
+Phiên 00:01 hôm nay: **18 lane · 101 video · 0 lỗi** (kỷ lục sản lượng) — nhưng sổ quota đọc chạm
+**50.153/50.000 = 100%** ngay trong **2 giờ đầu ngày**. Tải thật vượt trần free, không phải lỗi đo.
+
+Nghịch lý: hệ đã có sổ tích luỹ toàn hệ, có cả `con_ngan_sach()` chặn từng lệnh lẻ — nhưng
+**không có ai hỏi mức quota trước khi mở lane**, nên vẫn mở đủ 18 rồi đâm thẳng vào trần.
+
+- **Phanh ≠ cắt.** Đã cân nhắc cắt `top_titles` / `read_channels` / `find_resumable` (89% lượt đọc)
+  và **bác bỏ**: đó là feedback học gu khán giả, cấu hình kênh, và nối tiếp job dở — cắt là đổi
+  CHẤT LƯỢNG lấy hạn mức. Phanh chỉ giảm SỐ LANE: mọi kênh vẫn tới lượt, chỉ chậm hơn. Hạn mức
+  reset theo ngày, nên chạy chậm nửa ngày còn hơn đứng hẳn nửa ngày.
+- Bậc phanh (đo ở plan, trước khi chốt danh sách lane): `<70%` đủ 18 lane · `70%` → 10 · `85%` → 6
+  · `95%` → 3.
+- Chốt `t_plan_phai_phanh_theo_han_muc` — kiểm cả việc phanh phải nằm TRƯỚC lúc chốt danh sách.

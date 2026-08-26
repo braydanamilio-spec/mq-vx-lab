@@ -935,6 +935,37 @@ def t_so_ngan_sach_khong_gay_ao_giac():
     assert not xau, "sổ ngân sách gây hiểu nhầm:\n   " + "\n   ".join(xau)
 
 
+
+def t_plan_phai_phanh_theo_han_muc():
+    """Plan phải HỎI hạn mức còn lại trước khi mở 18 lane.
+
+    26/8 — phiên 00:01 ra 101 video (kỷ lục) nhưng sổ quota đọc chạm **50.153/50.000 = 100%**
+    ngay trong 2 giờ đầu ngày. Hệ có sổ đo đầy đủ, có cả `con_ngan_sach()` cho từng lệnh lẻ,
+    nhưng **không ai hỏi nó trước khi mở lane** — nên vẫn mở đủ 18 lane rồi đâm thẳng vào trần.
+
+    Phanh KHÔNG phải cắt tính năng: mọi kênh vẫn tới lượt, chỉ chậm hơn. Hạn mức reset theo ngày,
+    nên chạy chậm nửa ngày còn hơn đứng hẳn nửa ngày. Cắt `top_titles`/`read_channels` mới là
+    đổi chất lượng lấy hạn mức — đã cân nhắc và bác bỏ."""
+    src = _doc("run_render.py")
+    xau = []
+    if "phan_tram_da_dung(" not in src:
+        xau.append("plan không hỏi mức quota trước khi chia lane")
+    if "🛑 PHANH" not in src:
+        xau.append("không có nhánh giảm số lane khi quota cao")
+    # phải phanh TRƯỚC khi chốt danh sách kênh gửi xuống matrix
+    i, j = src.find("phan_tram_da_dung("), src.find("payload = json.dumps(lst)")
+    if i < 0 or j < 0 or i > j:
+        xau.append("phanh đặt SAU khi đã chốt danh sách lane -> vô tác dụng")
+    import firestore_bridge as FB
+    if not hasattr(FB, "phan_tram_da_dung"):
+        xau.append("thiếu firestore_bridge.phan_tram_da_dung()")
+    else:
+        v = FB.phan_tram_da_dung("doc")
+        if not isinstance(v, int) or not (0 <= v <= 100):
+            xau.append(f"phan_tram_da_dung trả {v!r}, cần số nguyên 0-100")
+    assert not xau, "phanh theo hạn mức chưa đúng:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -949,6 +980,7 @@ def main():
     check("đọc-mềm: quota chết không ném", t_soft_read)
     check("hồ key A: plan đọc 1 lần, lane không đụng A", t_ho_key_A_doc_mot_lan_o_plan)
     check("sổ ngân sách không gây ảo giác an toàn", t_so_ngan_sach_khong_gay_ao_giac)
+    check("plan phanh số lane theo hạn mức còn lại", t_plan_phai_phanh_theo_han_muc)
     check("cổng dark_ok theo kênh", t_dark_ok)
     check("mở đầu chỉ MỘT tiêu đề (Bookend), không chồng ba", t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau)
     check("tsx: prop khai rồi phải thảo ra (ReferenceError)", t_tsx_prop_khai_roi_phai_thao_ra)

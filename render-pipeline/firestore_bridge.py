@@ -81,6 +81,15 @@ def _thuc_te(loai: str) -> int:
     return int(_NGAN_SACH[f"nen_{loai}"]) + int(_NGAN_SACH[loai])
 
 
+def phan_tram_da_dung(loai: str = "doc") -> int:
+    """% hạn mức NGÀY đã tiêu, tính trên sổ TÍCH LUỸ TOÀN HỆ (không phải của riêng tiến trình).
+
+    26/8 — dùng cho phanh ở plan. Con số này là thứ duy nhất trả lời được câu "còn chạy nổi
+    bao nhiêu lane nữa"; trước đây có sổ mà không ai hỏi nó trước khi mở 18 lane."""
+    tran = TRAN_DOC_NGAY if loai == "doc" else TRAN_GHI_NGAY
+    return min(100, int(_thuc_te(loai) * 100 // max(1, tran)))
+
+
 def con_ngan_sach(loai: str = "doc", thiet_yeu: bool = False, cuu_du_lieu: bool = False) -> bool:
     """Còn được phép làm việc này không?
 
