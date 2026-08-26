@@ -1552,6 +1552,35 @@ def _tieu_de_da_lam(tieu_de: str, avoid) -> bool:
     return bool(t) and any(g(a) == t for a in (avoid or []))
 
 
+_BIEN_MAP: dict = {}
+
+
+def bien_cua(kenh: dict) -> int:
+    """Chỉ số BIẾN THỂ BỐ CỤC của một kênh — thứ tự của nó trong nhóm CÙNG `dinh_dang`.
+
+    26/8 — anh chỉ ra: 50 kênh mà chỉ có 7 `dinh_dang`, riêng `ranked` dùng lại 18 lần. Màu chính
+    50/50 khác nhau, giọng 50/50 khác nhau, nhưng khán giả nhận ra "cùng một lò" qua BỐ CỤC chứ
+    không qua mã màu — nên 18 kênh vẫn nhìn như một.
+
+    Không viết 18 bố cục. `Bien.tsx` tách bố cục thành ba công tắc độc lập (vị trí nhãn × kiểu thẻ
+    × hoạ tiết nền) = 27 tổ hợp; hàm này chỉ việc phát cho mỗi kênh một số khác nhau trong nhóm.
+    Đánh theo THỨ TỰ trong `kenh_the_he_2.json` nên cố định: bố cục của một kênh không được đổi
+    giữa các video, vì nhận diện kênh phải ổn định — đó là toàn bộ mục đích."""
+    global _BIEN_MAP
+    if not _BIEN_MAP:
+        try:
+            ds = json.load(io.open(os.path.join(GOC, "kenh_the_he_2.json"), encoding="utf-8"))
+            ds = ds if isinstance(ds, list) else list(ds.values())
+            dem: dict = {}
+            for k in ds:
+                d = str(k.get("dinh_dang") or "")
+                _BIEN_MAP[str(k.get("handle") or "")] = dem.get(d, 0)
+                dem[d] = dem.get(d, 0) + 1
+        except Exception:
+            _BIEN_MAP = {"_": 0}
+    return int(_BIEN_MAP.get(str(kenh.get("handle") or ""), 0))
+
+
 def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = ""):
     """Dựng props + ghi tệp props, KHÔNG render. Trả (props, đường_tệp_props, slug).
 
@@ -1583,6 +1612,10 @@ def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = "
     # (ghi vào brand kit từ đầu mà không hàm nào đọc, nên suốt thời gian qua vô tác dụng).
     if br.get("font"):
         props["font"] = br["font"]
+    # BIẾN THỂ BỐ CỤC. Thiếu dòng này thì `Bien.tsx` chỉ là mã chết và 18 kênh `ranked` vẫn chung
+    # một khuôn — đúng cái bẫy "khai ra rồi không ai gửi" đã vấp với `voice_tone`, `brand.font`,
+    # `palette.bg` và `tham_so.xoay`. Lần này chốt luôn: t_bien_bo_cuc_khong_trung.
+    props["bien"] = bien_cua(kenh)
     # NỀN RIÊNG TỪNG KÊNH (26/8). Nền chiếm gần hết khung hình; để nó viết cứng trong composition
     # nghĩa là 18 kênh dạng `ranked` dùng CHUNG một nền — khán giả nhìn là thấy cùng một lò, dù
     # accent đã riêng. `palette.bg/primary/secondary` có sẵn 38/50/50 giá trị khác nhau mà chưa

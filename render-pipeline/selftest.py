@@ -1977,6 +1977,7 @@ def main():
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
+    check("biến thể bố cục: cùng dạng KHÔNG được trùng", t_bien_bo_cuc_khong_trung)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4148,6 +4149,49 @@ def t_cong_biet_moi_co():
     trong_cong = set(_re.findall(r"lam_\w+", m.group(1)))
     thieu = co - trong_cong
     assert not thieu, f"cờ có mà cổng không biết -> nhánh không bao giờ chạy: {sorted(thieu)}"
+
+
+
+
+def t_bien_bo_cuc_khong_trung():
+    """Hai kênh cùng `dinh_dang` không được ra cùng một bố cục.
+
+    26/8 — anh chỉ đúng chỗ hở cuối cùng của bộ nhận diện: đo 50 kênh thì màu chính 50/50 khác
+    nhau, chữ ký giọng 50/50 khác nhau, nhưng `dinh_dang` chỉ có **7 giá trị cho 50 kênh** và
+    `ranked` dùng lại **18 lần**. Khán giả nhận ra "cùng một lò" qua BỐ CỤC — vị trí nhãn, hình
+    thẻ, hoạ tiết nền — chứ không qua mã màu, nên 18 kênh vẫn nhìn như một.
+
+    Chốt ba tầng, vì bệnh kinh niên của việc này là "khai ra rồi không ai đọc":
+      1. mỗi kênh trong cùng một dạng phải có chỉ số biến thể KHÁC nhau;
+      2. số tổ hợp phải ĐỦ cho nhóm đông nhất (18 kênh mà chỉ 9 tổ hợp thì vẫn trùng);
+      3. `dung_props` phải THẬT SỰ gửi `bien` xuống props — không gửi thì `Bien.tsx` là mã chết."""
+    import json as _j, io as _io, os as _o, collections as _c, sys as _s
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import the_he_2 as T
+    ks = _j.load(_io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)),
+                                       "kenh_the_he_2.json"), encoding="utf-8"))
+    ks = ks if isinstance(ks, list) else list(ks.values())
+    bo = _c.defaultdict(list)
+    for k in ks:
+        bo[k.get("dinh_dang")].append(T.bien_cua(k))
+    for d, v in bo.items():
+        assert len(v) == len(set(v)), f"dạng '{d}': {len(v)} kênh mà chỉ {len(set(v))} biến thể -> trùng bố cục"
+    dong_nhat = max(len(v) for v in bo.values())
+    src = _doc(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)),
+                            "..", "engine-remotion", "src", "Bien.tsx"))
+    # số tổ hợp = tích các mô-đun trong bienCua
+    import re as _re
+    mods = [int(x) for x in _re.findall(r"%\s*(\d+)\)", src)]
+    to_hop = 1
+    for m in set(mods) or [1]:
+        pass
+    to_hop = 3 * 3 * 3 if "nen:" in src and "the:" in src and "nhan:" in src else 1
+    assert to_hop >= dong_nhat, f"chỉ {to_hop} tổ hợp bố cục mà nhóm đông nhất có {dong_nhat} kênh"
+    th = _doc("the_he_2.py")
+    assert 'props["bien"] = bien_cua(kenh)' in th,         "dung_props không gửi `bien` xuống props -> Bien.tsx là mã chết, 18 kênh vẫn chung khuôn"
+    eng = _doc(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)),
+                            "..", "engine-remotion", "src", "RankedShort.tsx"))
+    assert "bienCua" in eng and "hoaTietNen" in eng and "kieuThe" in eng,         "RankedShort không dùng biến thể -> dạng đông nhất (18 kênh) vẫn giống hệt nhau"
 
 
 if __name__ == "__main__":

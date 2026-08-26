@@ -307,6 +307,17 @@ def kho_that_ghi(owner: str, tong: int) -> bool:
     return bool(r.get("ok"))
 
 
+def don_job_kenh(owner: str, kenh: list) -> dict:
+    """Xoá mọi job của các KÊNH nêu tên khỏi D1.
+
+    26/8 — dọn 55 kênh thế hệ 1 mà chỉ xoá ở Firestore là dọn nửa vời: gallery đọc D1 khi có lọc
+    ngày, nên video cũ biến mất ở "Mọi lúc" rồi hiện nguyên vẹn khi bấm "Hôm nay". Hai kho song
+    song thì lệnh dọn phải đụng cả hai."""
+    if not (bat_ghi() and kenh):
+        return {}
+    return goi("don_job_kenh", {"owner": owner, "kenh": list(kenh)}) or {}
+
+
 def don_job_cu(owner: str, ngay: int = 14) -> dict:
     """Dọn bản ghi job cũ hơn `ngay` ngày để D1 KHÔNG PHÌNH (25/8/2026).
 

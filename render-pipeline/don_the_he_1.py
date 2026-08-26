@@ -281,7 +281,20 @@ def main() -> int:
                 if n >= 400 or i == len(lo):
                     b.commit(); b = db.batch(); n = 0
                     print(f"      … đã xoá {i}/{len(lo)}", flush=True)
-        print(f"  🧹 {'đã xoá' if that else '(sẽ xoá)'} {xoa} job của 55 kênh cũ khỏi Kho tổng video")
+        print(f"  🧹 {'đã xoá' if that else '(sẽ xoá)'} {xoa} job Firestore của 55 kênh cũ")
+        # D1 LÀ KHO THỨ HAI, KHÔNG PHẢI BẢN SAO CHO VUI. Dashboard đọc D1 khi có lọc ngày, nên bỏ
+        # bước này thì video cũ biến mất ở "Mọi lúc" rồi hiện lại y nguyên khi bấm "Hôm nay" —
+        # nhìn như đã dọn xong mà chưa xong, tệ hơn là không dọn.
+        try:
+            import hot_db as H
+            if that:
+                r = H.don_job_kenh(owner, sorted(ten_cu))
+                print(f"  🧹 D1: đã xoá {r.get('xoa', 0)} job · còn lại {r.get('con_lai', '?')} "
+                      f"bản ghi done-có-file")
+            else:
+                print(f"  🧹 D1: (sẽ xoá job của {len(ten_cu)} kênh cũ)")
+        except Exception as e:
+            print(f"  ⚠️ không dọn được D1: {str(e)[:80]} — Kho tổng video sẽ còn video cũ khi lọc ngày")
 
     if lam_bg:
         n = 0

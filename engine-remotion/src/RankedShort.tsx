@@ -5,6 +5,7 @@ import { phong } from "./Phong";
 import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import { dungKhung } from "./Khung";
+import { bienCua, hoaTietNen, kieuThe } from "./Bien";
 import React from "react";
 
 // KÊNH #3 RANKED — tier list S/A/B/C/D, thẻ lật vào hạng lần lượt. Motif khác hẳn map/bar/guess.
@@ -42,9 +43,9 @@ export const calcRanked = ({ props }: any) => {
   return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS };
 };
 
-const Card: React.FC<{ it: RankItem; s: number; accent: string }> = ({ it, s, accent }) => (
+const Card: React.FC<{ it: RankItem; s: number; accent: string; the: any }> = ({ it, s, accent, the }) => (
   <div style={{ transform: `scale(${0.5 + s * 0.5}) perspective(600px) rotateY(${(1 - s) * 80}deg)`, opacity: s,
-    background: "#0e1326", border: `2px solid ${accent}66`, borderRadius: 16, padding: it.img ? 8 : "14px 20px",
+    ...the, padding: it.img ? 8 : "14px 20px",
     display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: it.img ? 150 : 0, boxShadow: "0 8px 22px #0007" }}>
     {it.img ? <SafeImg src={staticFile(it.img)} style={{ width: 150, height: 104, objectFit: "cover", borderRadius: 10 }} /> : null}
     {/* Tên hạng mục do Gemini sinh, KHÔNG bị giới hạn độ dài trong schema. Trước đây để nowrap +
@@ -66,6 +67,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
     tiers = ["S", "A", "B", "C", "D"], items = [], introSec = 1.8, itemSec = 1.7, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
   const K = dungKhung();          // bố cục theo KHỔ — dọc giữ y số cũ, ngang là bộ số riêng
+  const B = bienCua((props as any).bien);   // biến thể bố cục RIÊNG của kênh (18 kênh cùng dạng)
   const introF = Math.round(introSec * fps);
   const introP = spring({ frame: f, fps, config: { damping: 12, stiffness: 140 } });
 
@@ -85,7 +87,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
       // short trên feed thường 60-100 — nhìn tối om, và khung cuối tụt xuống 15 nên trông
       // như video kết thúc bằng màn hình đen. Nâng cả ba chặng gradient, GIỮ NGUYÊN tông màu
       // riêng của từng dạng (tông là thứ phân biệt kênh, không được gộp về một màu).
-    <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font) }}>
+    <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font), ...hoaTietNen(B, accent) }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: K.tieuDeTop, left: 0, right: 0, textAlign: "center", padding: `0 ${K.padX}px` }}>
         <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: K.nhanCo, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>🏆 RANKED</div>
@@ -99,15 +101,26 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
         {hangCoDo.map((t) => {
           const rowItems = items.map((it, gi) => ({ it, gi })).filter((x) => (x.it.tier || "").toUpperCase() === t.toUpperCase());
           return (
-            <div key={t} style={{ flex: 1, display: "flex", alignItems: "stretch", gap: 14, minHeight: 0 }}>
-              <div style={{ width: K.doc ? 130 : 108, borderRadius: 16, background: tcol(t), color: "#0a0c14", fontWeight: 900, fontSize: K.doc ? 84 : 62,
-                display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 6px 20px ${tcol(t)}55` }}>{t.toUpperCase()}</div>
+            <div key={t} style={{ flex: 1, display: "flex", minHeight: 0,
+              // biến thể `nhan`: 0 = nhãn cột TRÁI (cũ) · 1 = cột PHẢI · 2 = hàng TRÊN
+              flexDirection: B.nhan === 2 ? "column" : "row",
+              alignItems: B.nhan === 2 ? "stretch" : "stretch",
+              gap: B.nhan === 2 ? 6 : 14 }}>
+              <div style={{
+                ...(B.nhan === 2
+                    ? { width: "100%", height: K.doc ? 54 : 40, borderRadius: 10, letterSpacing: 4 }
+                    : { width: K.doc ? 130 : 108, borderRadius: 16 }),
+                order: B.nhan === 1 ? 2 : 0,
+                background: tcol(t), color: "#0a0c14", fontWeight: 900,
+                fontSize: B.nhan === 2 ? (K.doc ? 34 : 26) : (K.doc ? 84 : 62),
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: `0 6px 20px ${tcol(t)}55` }}>{t.toUpperCase()}</div>
               <div style={{ flex: 1, borderRadius: 16, background: "#ffffff08", border: "1.5px solid #ffffff12", display: "flex", alignItems: "center",
                 gap: 14, padding: "0 18px", flexWrap: "wrap", overflow: "hidden" }}>
                 {rowItems.map(({ it, gi }) => {
                   const s = spring({ frame: f - starts[gi], fps, config: { damping: 12, stiffness: 170 } });
                   if (f < starts[gi]) return null;
-                  return <Card key={gi} it={it} s={s} accent={accent} />;
+                  return <Card key={gi} it={it} s={s} accent={accent} the={kieuThe(B, accent)} />;
                 })}
               </div>
             </div>
