@@ -3197,3 +3197,34 @@ hoảng, không chỉ làm em chẩn đoán sai.
 Ba chỗ khác trong cùng danh sách quét là **báo động giả**: gán `None` để đánh dấu "plan không
 gửi", và gán từng phần tử cấu hình — không phải đệm kết quả truy vấn. Không vá.
 Chốt bằng `t_khong_dem_ket_qua_rong` (đã thử phá: bỏ `if out` là selftest đỏ ngay).
+
+
+### 7.dy — PHANH HẠN MỨC TỰ NHẢ RA ĐÚNG LÚC CẦN BÓP (26/8/2026)
+
+Đêm 25/8 em dựng cái phanh: quota ≥70% thì plan chỉ mở 10 lane, ≥85% mở 6, ≥95% mở 3. Selftest
+xanh, mã đúng. Đo trên phiên thật 01:54Z:
+
+```
+02:01:07  ⚠️ không đọc được sổ ngân sách (429 Quota exceeded.)
+          → plan mở đủ 18 lane, `🛑 PHANH` in 0 lần
+03:09:10  🌐 TOÀN HỆ hôm nay: ĐỌC 56.051/50.000 (112%) ⛔ SẮP CẠN
+```
+
+**Đồng hồ xăng nằm trong bình xăng.** Sổ ngân sách cất ở chính project B mà nó đo. B cạn ⇒ đọc sổ
+trả 429 ⇒ `nen_doc` giữ nguyên 0 ⇒ `phan_tram_da_dung()` trả **0%** ⇒ phanh kết luận "còn rộng
+chán". Càng cạn thì phanh càng nhả — thiết bị an toàn chạy ngược.
+
+Vá `nap_nen_ngan_sach()`:
+1. **Hỏi D1 trước** (`ngan_sach_doc`) — miễn phí, luôn tươi, nằm NGOÀI thứ đang cạn. Firestore chỉ
+   là đường lùi; lấy số LỚN HƠN giữa hai cuốn vì mỗi cuốn chỉ thấy một phần lưu lượng.
+2. **Đo không được thì giả định CẠN.** 429 = bằng chứng trực tiếp đã chạm trần ⇒ nền = 100%. Lỗi
+   khác ⇒ nền = 85%. In `🛡️ KHÔNG đo được sổ ngân sách`.
+
+**Luật**: một thiết bị an toàn không đọc nổi số liệu phải nghiêng về phía an toàn, và **không bao
+giờ được đo bằng chính tài nguyên nó bảo vệ**. Cùng họ với 7.dx và với lỗi đệm-rỗng: mọi lối
+"không biết" phải chảy về phía thận trọng, không về phía im lặng cho qua.
+Chốt: `t_phanh_do_khong_duoc_phai_gia_dinh_can` (đã thử phá — bỏ gán nền là selftest đỏ).
+
+**Còn treo, đo được trên cùng phiên 01:54Z**: `Hồ key A: dùng gói plan` = **0 lần** trong khi
+`merge_keys_A` = 18 ⇒ bản vá "plan đọc hồ key A một lần, phát cho 18 lane" CHƯA TỪNG CHẠY. Lane
+vẫn tự đọc project A. Đúng cái mà `KIEM_CHUNG.md` sinh ra để bắt.

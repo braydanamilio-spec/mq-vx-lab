@@ -158,16 +158,56 @@ def _tinh_tien(loai: str, n: int = 1):
 
 
 def nap_nen_ngan_sach(owner: str) -> None:
-    """Đọc số ĐÃ TIÊU HÔM NAY của cả hệ (1 lượt đọc). Gọi 1 lần đầu tiến trình."""
+    """Đọc số ĐÃ TIÊU HÔM NAY của cả hệ. Gọi 1 lần đầu tiến trình. **Nuôi cái phanh ở plan.**
+
+    26/8 — BẢN CŨ LÀ MỘT CÁI PHANH TỰ NHẢ RA ĐÚNG LÚC CẦN BÓP. Đo phiên 01:54Z:
+
+        02:01:07  ⚠️ không đọc được sổ ngân sách (429 Quota exceeded.)
+        (plan mở đủ 18 lane, `🛑 PHANH` in 0 lần)
+        03:09:10  🌐 TOÀN HỆ hôm nay: ĐỌC 56.051/50.000 (112%) ⛔ SẮP CẠN
+
+    Đồng hồ xăng nằm TRONG bình xăng: sổ ngân sách cất ở chính project B mà nó đo. B cạn ⇒ đọc sổ
+    trả 429 ⇒ `nen_doc` giữ nguyên 0 ⇒ `phan_tram_da_dung()` trả **0%** ⇒ phanh kết luận "còn rộng
+    chán" và mở cả 18 lane, đúng vào phiên mà bình đã cạn 112%. Càng cạn thì phanh càng nhả.
+
+    Hai điều sửa, cả hai đều là NGUYÊN TẮC chứ không phải mẹo:
+      ① **Đo từ nơi không nằm trong thứ đang cạn.** D1 miễn phí, luôn tươi, và `xa_ngan_sach_d1()`
+         vẫn cộng vào đó suốt kể cả khi Firestore chết. Hỏi D1 TRƯỚC, Firestore chỉ là đường lùi.
+         Lấy số LỚN HƠN giữa hai cuốn: mỗi cuốn chỉ thấy một phần lưu lượng, thà quá tay còn hơn
+         thiếu — thiếu là mở thừa lane, quá tay chỉ là chạy chậm nửa ngày.
+      ② **Đo không được thì giả định CẠN, không giả định đầy.** Một thiết bị an toàn không đọc nổi
+         số liệu phải nghiêng về phía an toàn. Riêng lỗi 429 thì không phải phỏng đoán — nó là
+         *bằng chứng trực tiếp* rằng hạn mức đã chạm trần."""
+    ngay = _ngay_quota()
+    r = w = -1
+    try:                                     # ① D1 trước — ngoài bình xăng, không mất lượt Firestore
+        import hot_db as _H
+        x = _H.ngan_sach_doc(ngay) or {}
+        r, w = int(x.get("doc", -1)), int(x.get("ghi", -1))
+    except Exception:
+        pass
     try:
-        ngay = _ngay_quota()
         d = _db_ghi().collection("render_stats").document(f"__rw__{owner}").get(timeout=10)
         x = ((d.to_dict() or {}).get(ngay) or {}) if d.exists else {}
-        _NGAN_SACH["nen_doc"] = float(x.get("r", 0) or 0)
-        _NGAN_SACH["nen_ghi"] = float(x.get("w", 0) or 0)
-        print("   " + bao_ngan_sach())
+        r = max(r, int(float(x.get("r", 0) or 0)))
+        w = max(w, int(float(x.get("w", 0) or 0)))
     except Exception as e:
-        print(f"   ⚠️ không đọc được sổ ngân sách ({str(e)[:50]}) — chạy với số của riêng tiến trình")
+        loi = str(e)[:60]
+        if r < 0 and w < 0:
+            # ② KHÔNG đọc được từ đâu cả. 429 = đã chạm trần, cứ tin nó. Lỗi khác thì vẫn phải
+            #    nghiêng về an toàn, nhưng nhẹ tay hơn (85% -> phanh còn 6 lane, không phải 3).
+            chac = "429" in loi or "Quota exceeded" in loi or "RESOURCE_EXHAUSTED" in loi
+            ti = 1.0 if chac else 0.85
+            _NGAN_SACH["nen_doc"] = TRAN_DOC_NGAY * ti
+            _NGAN_SACH["nen_ghi"] = TRAN_GHI_NGAY * ti
+            print(f"   🛡️ KHÔNG đo được sổ ngân sách ({loi}) — "
+                  + ("429 nghĩa là ĐÃ chạm trần" if chac else "coi như đã tiêu 85%")
+                  + ", phanh sẽ siết. Đo không được thì giả định CẠN, không giả định đầy.")
+            return
+        print(f"   ⚠️ sổ Firestore lỗi ({loi}) — dùng số D1 (đọc {max(r,0):,} · ghi {max(w,0):,})")
+    _NGAN_SACH["nen_doc"] = float(max(r, 0))
+    _NGAN_SACH["nen_ghi"] = float(max(w, 0))
+    print("   " + bao_ngan_sach())
 
 
 def _b2_available() -> bool:

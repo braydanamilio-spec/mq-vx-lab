@@ -1053,6 +1053,39 @@ def t_khong_dem_ket_qua_rong():
     assert not xau, "cất kết quả rỗng vào bộ đệm:\n   " + "\n   ".join(xau)
 
 
+
+def t_phanh_do_khong_duoc_phai_gia_dinh_can():
+    """Cái phanh hạn mức không được NHẢ RA khi nó mù.
+
+    26/8 — phiên 01:54Z là bằng chứng đắt: `⚠️ không đọc được sổ ngân sách (429)` lúc 02:01, plan
+    mở đủ 18 lane, `🛑 PHANH` in **0 lần**, tới 03:09 sổ đọc **56.051/50.000 = 112%**. Sổ ngân sách
+    cất trong chính project B mà nó đo, nên B cạn ⇒ đọc sổ 429 ⇒ nền = 0 ⇒ phanh thấy "0% đã dùng".
+
+    Hai điều kiện phải giữ, kiểm bằng chính mã nguồn:
+      ① `nap_nen_ngan_sach` phải hỏi **D1** (`ngan_sach_doc`) — nguồn nằm NGOÀI thứ đang cạn.
+      ② Nhánh "không đọc được" phải **gán nền khác 0** (giả định cạn). Gán 0 hoặc bỏ trống =
+         phanh tự nhả, đúng cái lỗi này."""
+    import ast as _ast
+    cay = _ast.parse(_doc("firestore_bridge.py"))
+    fn = next((n for n in _ast.walk(cay)
+               if isinstance(n, _ast.FunctionDef) and n.name == "nap_nen_ngan_sach"), None)
+    assert fn, "mất hàm nap_nen_ngan_sach"
+    than = _ast.dump(fn)
+    assert "ngan_sach_doc" in than, \
+        "nap_nen_ngan_sach không hỏi D1 — đồng hồ xăng lại nằm trong bình xăng"
+    # Trong MỌI handler except, phải có gán cho nen_doc/nen_ghi bằng giá trị khác literal 0
+    cuu = [h for h in _ast.walk(fn) if isinstance(h, _ast.ExceptHandler)]
+    assert cuu, "nap_nen_ngan_sach không còn nhánh bắt lỗi"
+    an_toan = False
+    for h in cuu:
+        for nd in _ast.walk(h):
+            if isinstance(nd, _ast.Subscript) and isinstance(nd.value, _ast.Name) \
+                    and nd.value.id == "_NGAN_SACH" and isinstance(nd.ctx, _ast.Store):
+                an_toan = True
+    assert an_toan, ("nhánh 'không đọc được sổ' không gán nền ngân sách -> nền giữ 0 -> "
+                     "phanh coi như còn 100% hạn mức đúng lúc đã cạn")
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1161,6 +1194,7 @@ def main():
     check("vẽ ảnh hỏng phải nói lý do, không im lặng", t_ve_anh_khong_hong_im_lang)
     check("đường ghi D1 hỏng phải nói, không im lặng", t_duong_ghi_d1_khong_hong_im_lang)
     check("không đệm kết quả RỖNG (bẫy làm dashboard trắng)", t_khong_dem_ket_qua_rong)
+    check("phanh mù thì giả định CẠN, không giả định đầy", t_phanh_do_khong_duoc_phai_gia_dinh_can)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
