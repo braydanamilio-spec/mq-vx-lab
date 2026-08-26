@@ -1405,6 +1405,10 @@ def chay_race(kenh: dict, ra: str = "", ky: dict | None = None,
     if not _dp:
         return None
     props, st, sl = _dp
+    _ly_do = DS.xac_minh_mo_dau(props, "RaceShort")
+    if _ly_do:
+        print(f"   ⚠️ {kenh.get('ten')}: mở đầu {_ly_do} — BỎ LƯỢT TRƯỚC render")
+        return None
     pf = os.path.join(DS.PUB, f"_th2r_{sl}.json")
     json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2r_{sl}.mp4"))
@@ -1681,6 +1685,19 @@ def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = "
         props["hookStat"] = _d["stat"]
         props["hookLabel"] = _d.get("name", "")
         props["hookLine"] = _cau_hoi_mo(kenh, st)
+    # 26/8 — QC VISUAL TRƯỚC RENDER, CHO MỌI DẠNG. `xac_minh_mo_dau` vốn TỔNG QUÁT (nhận tên
+    # composition bất kỳ) nhưng suốt thời gian qua chỉ được gọi cho `CinematicShort` — tức 40/50
+    # kênh render thẳng, hỏng rồi mới biết, mà một lượt render là vài phút CPU.
+    # Đo thật trước khi nối, để khỏi chặn oan: khung mở đầu RankedShort = 57,0% điểm tối · 966 màu;
+    # ngưỡng chặn là ≥75% tối VÀ <900 màu ⇒ còn dư 18 điểm an toàn, chỉ khung THẬT SỰ đen và trơn
+    # mới bị loại. Dạng dữ liệu không có `scenes` nên không có đường cứu bằng ảnh sáng hơn — bị
+    # chặn là bỏ lượt, đúng ý: thà mất một đề tài còn hơn mất một lượt render.
+    comp0 = (DUONG_RA.get(dang) or ("", ""))[0]
+    if comp0:
+        _ly_do = DS.xac_minh_mo_dau(props, comp0)
+        if _ly_do:
+            print(f"   ⚠️ {kenh.get('ten')}: mở đầu {_ly_do} — BỎ LƯỢT TRƯỚC render")
+            return None
     pf = os.path.join(DS.PUB, f"_th2_{dang}_{sl}.json")
     json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
     return props, pf, sl
@@ -1758,6 +1775,71 @@ def _gan_truc_vao_tieu_de(tieu_de: str, truc: str, val) -> str:
     if v.lower() in t.lower():
         return t
     return f"{t} ({v})" if truc.endswith("nam") else f"{t} — {v}"
+
+
+def _van_tay_du_lieu(st: dict) -> frozenset:
+    """Dấu vân tay theo DỮ LIỆU, không theo tiêu đề.
+
+    26/8 — `quality_gate.too_similar` (dùng cho gen-1) so bằng tiêu đề, và đo thật thì nó GIẾT 5/6
+    chương của một bộ: sáu tiêu đề chỉ khác nhau con số năm, mà dấu vân tay bỏ chữ số ⇒ trùng 1.00.
+    Nối thẳng vào là phá đúng cơ chế xoay vòng.
+
+    Với gen-2 thì tiêu đề GIỐNG NHAU là ĐÚNG THIẾT KẾ — một khuôn, nhiều lát dữ liệu. Thứ phải khác
+    nhau là DỮ LIỆU. Nên vân tay lấy từ tên các mục, và trùng nghĩa là "cùng một bảng số", không
+    phải "cùng một cách đặt tên"."""
+    ten = []
+    for khoa in ("items", "data", "pairs"):
+        for x in (st.get(khoa) or [])[:12]:
+            if isinstance(x, dict):
+                v = x.get("name") or x.get("label") or x.get("state") or x.get("ten") or ""
+                if v:
+                    ten.append(str(v).strip().lower())
+    for fr in (st.get("frames") or [])[:3]:
+        for x in (fr.get("data") or [])[:8]:
+            if isinstance(x, dict) and x.get("name"):
+                ten.append(str(x["name"]).strip().lower())
+    return frozenset(ten)
+
+
+def _trung_du_lieu(st: dict, da: list, tran: float = 0.8) -> float:
+    """Mức trùng cao nhất giữa dữ liệu của `st` và các chương đã nhận. 0 = mới hoàn toàn."""
+    a = _van_tay_du_lieu(st)
+    if len(a) < 3:
+        return 0.0                      # quá ít mục để kết luận -> không chặn oan
+    cao = 0.0
+    for b in da:
+        if not b:
+            continue
+        chung = len(a & b)
+        cao = max(cao, chung / max(1, len(a | b)))
+    return round(cao, 2)
+
+
+def cong_chat_luong(st: dict, kenh: dict) -> list:
+    """CỔNG CHẤT LƯỢNG KỊCH BẢN cho gen-2. Trả list lỗi (rỗng = đạt).
+
+    KHÔNG dùng `quality_gate.money_safe` nguyên bản: nó đòi `sources >= 2`, chuẩn hợp lý cho bài do
+    AI viết (cần đối chứng), nhưng gen-2 dựng từ MỘT nguồn gốc có thẩm quyền — openFDA chính là cơ
+    quan công bố, không phải nguồn thứ cấp. Đo thật: yêu cầu đó loại 100% story gen-2.
+
+    Giữ lại hai phép kiểm thật sự có ý nghĩa (có số, không có câu chữ rủi ro chính sách) và thêm ba
+    phép hợp với gen-2."""
+    import quality_gate as Q
+    loi = []
+    chu = " ".join(str(v) for v in st.values() if isinstance(v, str))
+    if not st.get("nguon"):
+        loi.append("không ghi nguồn dữ liệu")
+    if not any(c.isdigit() for c in chu):
+        loi.append("không có con số nào — video dữ liệu mà không có số thì không có gì để xem")
+    import re as _r
+    xau = _r.findall(r"\b(guaranteed returns?|get rich|cure[sd]? cancer|miracle cure|buy now|"
+                     r"click here|100% profit|risk[- ]free money)\b", chu, _r.I)
+    if xau:
+        loi.append("câu chữ rủi ro chính sách: " + ", ".join(sorted(set(x.lower() for x in xau))[:3]))
+    n = sum(len(st.get(k) or []) for k in ("items", "data", "pairs", "frames"))
+    if n < 3:
+        loi.append(f"chỉ {n} mục dữ liệu — quá mỏng để dựng")
+    return loi
 
 
 def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None) -> dict | None:
