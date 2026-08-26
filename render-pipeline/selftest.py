@@ -4270,6 +4270,13 @@ def t_radar_khong_lot_rong():
     # đo bằng chính hàm, KHÔNG gọi mạng: chuỗi rỗng phải ra 0 trước khi kịp gọi
     assert R.diem_nhu_cau("", set(), "steam")[0] == 0.0, "ứng viên rỗng vẫn có điểm"
     assert R.diem_nhu_cau("  ", set(), "breed")[0] == 0.0, "ứng viên toàn khoảng trắng vẫn có điểm"
+    # 26/8 — radar suýt PHÁ chính thứ nó sinh ra để chống. Đo trên STEAM TRUTH: kho viết tay là
+    # CHẾ ĐỘ LỌC (`dong_nhat`/`chet_yeu`), radar sinh TÊN GAME — cùng tên trục `loc`, khác hẳn
+    # ngữ nghĩa. Ghi đè xong thì hàm dựng không khớp nhánh nào, rơi mặc định, mọi lượt xoay ra một
+    # kết quả. Tên trục KHÔNG mang đủ ngữ nghĩa để radar suy ra miền giá trị, nên kho do người đặt
+    # là bất khả xâm phạm.
+    assert 'đã có kho viết tay' in src, "radar không chặn ghi đè kho viết tay"
+    assert 'if isinstance(cu, list) and len(cu) >= 2:' in src, "thiếu chốt bỏ qua kênh đã có kho"
 
 
 if __name__ == "__main__":

@@ -351,6 +351,16 @@ def main() -> int:
         truc = str((k.get("tham_so") or {}).get("xoay") or "")
         if truc not in TRUC_TU_KHOA:
             continue
+        # 26/8 — RADAR CHỈ ĐƯỢC LẤP KHO RỖNG, CẤM GHI ĐÈ KHO VIẾT TAY.
+        # Đo thật trên STEAM TRUTH: kho viết tay là `['dong_nhat','tang_manh','dinh_cao','ban_chay']`
+        # — tức CHẾ ĐỘ LỌC — trong khi radar sinh ra tên game (`PUBG: BATTLEGROUNDS`…). Cùng tên
+        # trục `loc` nhưng KHÁC HẲN ngữ nghĩa. Ghi đè xong thì `_bd_steam` nhận `loc="PUBG…"`, không
+        # khớp nhánh nào, rơi về mặc định ⇒ mọi lượt xoay ra một kết quả ⇒ kênh chết đúng kiểu radar
+        # sinh ra để chống. Kho do người đặt luôn mang ngữ nghĩa mà radar không đọc được từ tên trục.
+        cu = (k.get("tham_so") or {}).get(f"kho_{truc}")
+        if isinstance(cu, list) and len(cu) >= 2:
+            print(f"      {k['ten']:18s} [{truc}] đã có kho viết tay {len(cu)} giá trị — BỎ QUA, không ghi đè")
+            continue
         uv = ung_vien(truc, k, tin)
         if not uv:
             trong += 1

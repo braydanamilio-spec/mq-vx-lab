@@ -3846,3 +3846,28 @@ nguy hiểm hơn không khai, vì nó qua được mọi phép kiểm sự tồn
 
 **LUẬT 2:** tên khoá đi giữa hai bảng (kho ↔ cấu hình kênh) phải chuẩn hoá ở MỘT chỗ. Ba lần vấp
 trong một ngày là đủ để ngừng sửa từng ca.
+
+### 7.ev — RADAR SUÝT PHÁ ĐÚNG THỨ NÓ SINH RA ĐỂ CHỐNG (26/8/2026)
+
+Anh dặn "đừng rối chồng chéo các channel". Đo 50 kênh tìm cặp chồng chéo thật (cùng nguồn + cùng
+dạng + cùng trục): ra **6 cặp**. Soi tiếp xem cái gì phân biệt chúng.
+
+**Suýt báo nhầm.** Phép dò đầu tiên tìm `ky.get("tu_khoa")` và kết luận `_pk_ban_an`, `_bd_ho_so_sec`
+KHÔNG đọc trục ⇒ 4 kênh sẽ ra nội dung giống hệt. Đọc tận mã thì mã viết
+`ky.get("tu_khoa", "wrongful death")` — có tham số mặc định nên biểu thức dò trượt. **Cả 6 cặp đều
+phân biệt thật.** Bài học: dò bằng chuỗi khớp cứng thì phải xác nhận bằng mắt trước khi kết luận —
+báo nhầm một defect làm mất niềm tin vào mọi số đo khác.
+
+**Nhưng lúc soi thì lòi ra một lỗi thật, do chính radar gây ra.** STEAM TRUTH có kho VIẾT TAY:
+
+    tham_so.kho_loc = ['dong_nhat', 'tang_manh', 'dinh_cao', 'ban_chay']    <- CHẾ ĐỘ LỌC
+
+Radar sinh ứng viên cho trục `loc` bằng tên game (`PUBG: BATTLEGROUNDS`, `Apex Legends`). Cùng tên
+trục `loc`, **khác hẳn ngữ nghĩa**. Ghi đè xong thì `_bd_steam` nhận `loc="PUBG…"`, không khớp nhánh
+nào, rơi về mặc định ⇒ mọi lượt xoay ra một kết quả ⇒ kênh chết đúng kiểu radar sinh ra để chống.
+
+**LUẬT:** tên trục KHÔNG mang đủ ngữ nghĩa để suy ra miền giá trị. Kho do người đặt là bất khả xâm
+phạm — công cụ tự động chỉ được LẤP CHỖ RỖNG, không được ghi đè. Chốt: `t_radar_khong_lot_rong`.
+
+**LUẬT 2:** trước khi báo một defect tìm bằng grep, mở hàm đó ra đọc. `ky.get("x")` và
+`ky.get("x", "mặc định")` là cùng một hành vi, khác một dấu phẩy.
