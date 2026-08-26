@@ -257,19 +257,43 @@ def main() -> int:
             print(f"  🛡  {len(chong)} tên có ở CẢ hai danh sách — bỏ qua để khỏi xoá nhầm: "
                   f"{', '.join(sorted(chong))}")
             ten_cu -= ten_moi
-        print(f"\n  🔎 quét render_jobs của {len(ten_cu)} kênh cũ…")
+        # 26/8 — QUÉT CẢ HAI PROJECT, KHÔNG CHỈ B.
+        # Anh chỉ ra dashboard vẫn hiện job kênh cũ sau khi em báo "đã dọn sạch". Đo ra: Firestore B
+        # trả về 0 job kênh cũ (sạch thật), nhưng dashboard hiện 40 — vì `__rsJobsData` của nó là
+        # HỢP NHẤT ba nguồn: `__jA` (render_jobs project A), `__jB` (project B), `__jX` (đệm trong
+        # trang). Bản dọn dùng `_db_meta()` = CHỈ project B, nên A chưa bao giờ bị đụng tới.
+        # Đây là lần thứ ba trong ngày em đếm thiếu nơi lưu: tưởng một (B) -> thêm D1 -> thêm
+        # render_stats -> nay thêm A. Nên từ đây in số RIÊNG TỪNG PROJECT, không gộp thành một con
+        # số duy nhất — một con số gộp là chỗ để lỗi này trốn.
+        import firestore_bridge as _FB2
+        _ds, _thay = [], set()
+        for _ten, _lay in (("B (meta)", _FB2._db_meta), ("A (gốc)", _FB2._db)):
+            try:
+                _c = _lay()
+                _pid = str(getattr(_c, "project", _ten))
+                if _pid in _thay:
+                    continue
+                _thay.add(_pid)
+                _ds.append((_ten, _c))
+            except Exception as _e:
+                print(f"  ⚠️ không mở được project {_ten}: {str(_e)[:70]}")
+        print(f"\n  🔎 quét render_jobs của {len(ten_cu)} kênh cũ trên {len(_ds)} project…")
         xoa, giu, theo_kenh = 0, 0, {}
         lo = []
-        for d in db.collection("render_jobs").where("owner", "==", owner).stream():
-            j = d.to_dict() or {}
-            ch = str(j.get("channel") or "").upper()
-            if ch in ten_cu:
-                xoa += 1
-                theo_kenh[ch] = theo_kenh.get(ch, 0) + 1
-                lo.append(d.reference)
-            else:
-                giu += 1
-        print(f"  📊 khớp {xoa} job của kênh cũ · giữ nguyên {giu} job (kênh mới/khác)")
+        for _ten, _c in _ds:
+            _x = _g = 0
+            for d in _c.collection("render_jobs").where("owner", "==", owner).stream():
+                j = d.to_dict() or {}
+                ch = str(j.get("channel") or "").upper()
+                if ch in ten_cu:
+                    _x += 1
+                    theo_kenh[ch] = theo_kenh.get(ch, 0) + 1
+                    lo.append(d.reference)
+                else:
+                    _g += 1
+            print(f"      project {_ten}: khớp {_x} · giữ {_g}")
+            xoa += _x; giu += _g
+        print(f"  📊 TỔNG khớp {xoa} job của kênh cũ · giữ nguyên {giu} job (kênh mới/khác)")
         for k, n in sorted(theo_kenh.items(), key=lambda x: -x[1])[:8]:
             print(f"      {k}: {n}")
         if that and lo:

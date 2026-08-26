@@ -3934,3 +3934,34 @@ mới thì phải chạy ngay phép thử "hai mẫu, hai điểm".
 
 **LUẬT 2:** đừng hỏi thị trường về TÊN mình tự đặt. Tên thương hiệu chưa ai gõ; chỉ có chủ đề mới
 có nhu cầu để đo.
+
+### 7.ey — "ĐÃ DỌN SẠCH" LẦN THỨ BA VẪN CHƯA SẠCH: BỐN NƠI LƯU, KHÔNG PHẢI MỘT (26/8/2026)
+
+Anh gửi ảnh dashboard còn báo lỗi kênh cũ sau khi em báo đã dọn xong. Đo hai đầu thì chúng nói
+NGƯỢC NHAU, và đó mới là manh mối:
+
+    workflow dọn (Firestore B)   -> "khớp 0 job của kênh cũ"        (sạch)
+    dashboard `__rsJobsData`     -> 95 job, trong đó 40 là kênh cũ  (bẩn)
+
+Cả hai đều đúng, vì chúng đọc CHỖ KHÁC NHAU. `__rsJobsData` là hợp nhất **ba** nguồn:
+
+    __jA  ->  render_jobs của project A
+    __jB  ->  render_jobs của project B
+    __jX  ->  bộ đệm trong trang
+
+Bản dọn dùng `_db_meta()` — với `SHARD_META=1` thì đó là **project B**. Project **A chưa bao giờ
+bị đụng tới**.
+
+Đếm lại số nơi lưu job qua cả ngày hôm nay: tưởng MỘT (Firestore B) → hoá ra thêm **D1** → thêm
+**render_stats** → nay thêm **Firestore A**. Bốn nơi, và mỗi lần em đều báo "xong" sau khi dọn được
+một nơi nữa.
+
+**LUẬT:** khi hai phép đo nói ngược nhau, đừng chọn cái nào đúng — hỏi CHÚNG ĐANG ĐỌC GÌ. Mâu thuẫn
+giữa hai số đo hầu như luôn có nghĩa là chúng nhìn hai tập dữ liệu khác nhau, không phải một trong
+hai hỏng.
+
+**LUẬT 2:** in số RIÊNG TỪNG NƠI LƯU, không gộp thành một con số tổng. Một con số duy nhất trong log
+chính là chỗ lỗi này trốn suốt ba lượt.
+
+**LUẬT 3:** trước khi viết công cụ dọn, mở mã MÀN HÌNH ra đếm xem nó hợp nhất bao nhiêu nguồn. Công
+cụ dọn phải phủ đúng tập mà màn hình hiển thị, không phủ theo trí nhớ của người viết.
