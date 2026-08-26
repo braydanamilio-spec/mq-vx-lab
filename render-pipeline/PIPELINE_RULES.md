@@ -3429,3 +3429,29 @@ Steam tự đổi theo tuần) và SKY RIGHT NOW (nguồn SỐNG: máy bay đang
 **Luật**: thêm một trường cấu hình thì phải viết luôn chỗ ĐỌC nó trong cùng một lần sửa. Trường
 nằm im còn tệ hơn không có — nó tạo cảm giác đã làm xong.
 Chốt: `t_moi_kenh_gen2_phai_xoay_duoc_de_tai`.
+
+### 7.eh — RENDER THẬT MỘT VIDEO TẠI MÁY: BẮT 3 LỖI MÀ 126 CHỐT ĐỀU CHO QUA (26/8/2026)
+
+Trước giờ seed, render đúng một video gen-2 tại máy (WHATISINIT, ranked). Video ra ổn — 38,3s ·
+1080×1920 · 4,5MB · mean −23,2 dB. Nhưng đi kèm ba lỗi mà selftest không thể thấy:
+
+**① `lam_thumb` thiếu `import datastory_ci as DS` ⇒ mọi video gen-2 KHÔNG có ảnh bìa.**
+`chay_chung` có `import ... as DS` nhưng đó là tên CỤC BỘ của hàm đó; `lam_thumb` là hàm riêng nên
+`DS` không tồn tại. `except` của chính em nuốt `NameError` thành một dòng cảnh báo.
+Chốt `t_gen2_phai_lam_thumbnail` không bắt được vì nó kiểm **hình dạng mã** (có gọi `lam_thumb`, có
+truyền `mau`/`font`) — lỗi này chỉ hiện lúc CHẠY.
+
+**② Ảnh bìa gen-2 lấy nhầm khung mở đầu.** Lấy khung mở đầu làm ảnh bìa chỉ đúng cho engine doc,
+nơi mở đầu vốn đã có SỐ TO + ẢNH THẬT. Mở đầu ranked/scaled/mapped chỉ là `Bookend` = tiêu đề trên
+nền tối ⇒ ảnh bìa nhạt, không số liệu, không câu hỏi mở, còn cụt mấy thẻ hạng ở rìa khi lồng vào
+1280×720 — và 5 template `DocThumb` vừa dựng thì không được dùng lần nào.
+Vá: `uu_tien_khung=False` cho gen-2. Kết quả đo lại: kicker + **`567 cal`** + tên sản phẩm.
+
+**③ 24 phông nạp MỌI độ đậm ⇒ hơn một nghìn lượt tải mạng mỗi lần render.**
+Log thật: `Made 90 network requests to load fonts for Bitter`. Chậm, và trong CI mạng kém là hỏng
+ngầm rồi rơi về Arial — đúng cái mà cả hệ phông sinh ra để tránh. Vá: chỉ nạp `700/800/900` + bộ
+`latin`.
+
+**Luật**: chốt chứng minh mã ĐÚNG HÌNH DẠNG. Chỉ chạy thật mới chứng minh mã CHẠY ĐƯỢC. Trước khi
+bật một dây chuyền mới, render lấy MỘT sản phẩm đầu-cuối rồi **mở ra xem tận mắt** — rẻ hơn nhiều
+so với một phiên 18 lane.

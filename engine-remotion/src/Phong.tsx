@@ -40,11 +40,19 @@ type Nap = () => { fontFamily: string };
 
 // Nạp ngay khi mô-đun được import: Remotion cần phông sẵn sàng TRƯỚC khung đầu tiên, nạp trễ
 // trong lúc render là ra một vài khung chữ Arial rồi mới đổi — lỗi nhấp nháy rất khó truy.
+// CHỈ NẠP ĐỘ ĐẬM THẬT SỰ DÙNG. 26/8 — render thử một video tại máy thì log đầy:
+//   "Made 90 network requests to load fonts for Bitter"
+// Gọi `loadFont()` trần nạp MỌI độ đậm × MỌI bộ ký tự của mọi phông; 24 phông thành hơn một nghìn
+// lượt tải cho mỗi khung render. Chậm, và trong CI mạng kém là hỏng ngầm rồi rơi về Arial.
+// Toàn hệ chỉ dùng 700/800/900 (chữ tiêu đề đậm) và bộ latin.
+const _CHON = { weights: ["700", "800", "900"], subsets: ["latin"],
+                ignoreTooManyRequestsWarning: true } as any;
+
 const _n = (f: Nap, w: string[]): string => {
   try {
-    return f().fontFamily;
+    return (f as any)("normal", _CHON).fontFamily;
   } catch {
-    return "Poppins";
+    try { return f().fontFamily; } catch { return "Poppins"; }
   }
 };
 

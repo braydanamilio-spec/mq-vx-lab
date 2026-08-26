@@ -1734,10 +1734,14 @@ def hook_bg(channel, out_video, subject, keys=None, api_key=None):
     return "", False
 
 
+class _BoQuaKhungMoDau(Exception):
+    """Không phải lỗi — dấu hiệu 'kênh này không lấy khung mở đầu làm ảnh bìa'."""
+
+
 def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
               accent="#22D3EE", accent2="#F5B301", bg_rel="", bg_blur=0,
               api_key_for_thumb=None, comp_id="", props_path="", hook_frame=0,
-              bg_provider=None, mau="", font=""):
+              bg_provider=None, mau="", font="", uu_tien_khung=True):
     """Dựng thumbnail chuẩn nhà (DocThumb) — DÙNG CHUNG cho MỌI engine.
 
     Trước đây mỗi nhóm kênh một kiểu thumbnail riêng: 21 kênh doc + 10 kênh gốc dùng DocThumb (số
@@ -1757,6 +1761,14 @@ def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
                 _hf = hook_frame_of(json.load(open(props_path)))
             except Exception:
                 _hf = 90
+        # 26/8 — `uu_tien_khung=False` cho THẾ HỆ 2. Lấy khung mở đầu làm ảnh bìa chỉ đúng với
+        # engine doc, nơi mở đầu vốn đã có SỐ TO + ẢNH THẬT. Mở đầu của ranked/scaled/mapped… chỉ
+        # là `Bookend` = tiêu đề trên nền tối, nên khung đó thành một ảnh bìa nhạt: không số liệu,
+        # không câu hỏi mở, lại còn cụt mấy thẻ hạng ở rìa khi lồng vào 1280x720.
+        # Render thật WHAT IS IN IT rồi soi tận mắt mới thấy. Cho gen-2 đi thẳng xuống DocThumb —
+        # nơi có 5 template bố cục + phông riêng + công thức "số sốc + câu hỏi không trả lời".
+        if not uu_tien_khung:
+            raise _BoQuaKhungMoDau()
         if comp_id and props_path and still_hook_thumb(comp_id, props_path, thumb, frame=_hf,
                                                        api_key=_k, title=big):
             print("   ✅ thumbnail = KHUNG HOOK MỞ ĐẦU (render nét từ composition)")
@@ -1765,6 +1777,8 @@ def doc_thumb(channel, out, big, stat="", stat_label="", hook="",
         if _k and opening_thumb(out, thumb, api_key=_k, title=big):
             print("   ✅ thumbnail = khung hook mở đầu (cắt từ video)")
             return thumb
+    except _BoQuaKhungMoDau:
+        pass                      # cố ý: thế hệ 2 dựng ảnh bìa riêng, không lấy khung mở đầu
     except Exception as e:
         print("   ⚠️ khung mở đầu bỏ qua:", str(e)[:70])
     # Tới đây = khung hook trượt QC -> BÂY GIỜ mới đi kiếm ảnh nền (trước đây kiếm sẵn từ đầu ->

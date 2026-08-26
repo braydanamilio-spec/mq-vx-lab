@@ -1606,6 +1606,14 @@ def lam_thumb(kenh: dict, st: dict, ra: str, comp: str = "", pf: str = "") -> st
 
     Số liệu lấy từ CHÍNH story vừa dựng (mục #1), không nhờ AI nghĩ thêm: thumbnail phải nói đúng
     thứ video nói, nếu không là câu view sai sự thật."""
+    # 26/8 — THIẾU DÒNG NÀY LÀ MỌI VIDEO GEN-2 KHÔNG CÓ ẢNH BÌA. `chay_chung` có
+    # `import datastory_ci as DS` nhưng đó là tên CỤC BỘ trong hàm đó, không phải của mô-đun;
+    # `lam_thumb` là hàm riêng nên `DS` không tồn tại ⇒ `NameError`, và except ngay dưới nuốt nó
+    # thành một dòng cảnh báo. Render thật tại máy mới lộ ra: video ra đúng 38,3s -23,2 dB,
+    # chỉ có mỗi dòng `⚠️ thumbnail ... lỗi: name 'DS' is not defined`.
+    # Chốt `t_gen2_phai_lam_thumbnail` KHÔNG bắt được: nó kiểm hình dạng mã (có gọi lam_thumb,
+    # có truyền mau/font), mà lỗi này chỉ hiện lúc CHẠY.
+    import datastory_ci as DS
     b = kenh.get("brand") or {}
     pal = b.get("palette") or {}
     items = st.get("items") or []
@@ -1618,7 +1626,7 @@ def lam_thumb(kenh: dict, st: dict, ra: str, comp: str = "", pf: str = "") -> st
             stat_label=str(dau.get("name") or st.get("thumb_label") or "").strip(),
             hook=str(st.get("thumb_hook") or st.get("hook") or "").strip(),
             accent=pal.get("primary", "#22D3EE"), accent2=pal.get("accent", "#F5B301"),
-            comp_id=comp, props_path=pf,
+            comp_id=comp, props_path=pf, uu_tien_khung=False,
             mau=b.get("mau", "trai"), font=b.get("font", "")) or ""
     except Exception as e:
         print(f"   ⚠️ thumbnail {kenh.get('ten')} lỗi: {str(e)[:70]}")
