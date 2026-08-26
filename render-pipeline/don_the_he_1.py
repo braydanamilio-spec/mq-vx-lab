@@ -27,13 +27,15 @@ GOC = os.path.dirname(os.path.abspath(__file__))
 
 
 def _db():
-    from google.cloud import firestore
-    from google.oauth2 import service_account
-    key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B") or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-    prj = os.environ.get("FIREBASE_PROJECT_ID_B") or os.environ.get("FIREBASE_PROJECT_ID")
-    if not key or not os.path.exists(key):
-        sys.exit("❌ Thiếu khoá dịch vụ — chạy trên CI.")
-    return firestore.Client(project=prj, credentials=service_account.Credentials.from_service_account_file(key))
+    """Client Firestore CÓ ĐƯỜNG LẬT B2 — dùng chung với dây chuyền chính.
+
+    26/8 — bản đầu tự dựng client trỏ thẳng project B và chết ngay lần chạy đầu:
+    `RESOURCE_EXHAUSTED: Quota exceeded.` vì B đang cạn hạn mức ngày (cờ nghỉ tới 06:59Z).
+    Nghịch lý: đúng lúc hệ cạn quota là lúc cần thao tác quản trị nhất (tắt kênh, dọn kho), mà
+    công cụ quản trị lại là thứ chết đầu tiên. `firestore_bridge._db_meta()` đã có sẵn failover
+    sang gương B2 — dùng lại, đừng dựng client riêng."""
+    import firestore_bridge as _FB
+    return _FB._db_meta()
 
 
 def _kenh_moi() -> set:

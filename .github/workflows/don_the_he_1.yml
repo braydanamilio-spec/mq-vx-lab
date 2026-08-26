@@ -43,6 +43,9 @@ jobs:
           FIREBASE_PROJECT_ID:              ${{ secrets.FIREBASE_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B:            ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          # Gương B2: đúng lúc B cạn hạn mức là lúc cần thao tác quản trị nhất,
+          # nên công cụ quản trị phải lật được sang gương như dây chuyền chính.
+          FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           OWNER_UID:                        ${{ secrets.OWNER_UID }}
           AUTOPUBLISHER_SRC:                ${{ github.workspace }}/_autopublisher/src
           # storage.py cần HOT_KEY để dùng lớp cứu KV khi Firestore cạn hạn mức —

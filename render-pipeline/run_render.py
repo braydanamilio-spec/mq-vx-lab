@@ -1590,9 +1590,28 @@ def plan_mode():
         _anh = [k for k in keys if str(k.get("key", "")).startswith(("px:", "pb:"))]
         print(f"🔑 Pool key: {len(keys)} dùng được / {len(_all)} tổng "
               f"({_cool_n} đang nghỉ · {_dead} hỏng vĩnh viễn)")
-        print(f"   ├─ VIẾT kịch bản : {len(_viet)} key" +
+        # 26/8 — anh hỏi đúng câu quan trọng: "199 key mà sao hết key được?".
+        # Số KEY không phải thứ quyết định, HẠN MỨC MỖI KEY mới là. Gemini free cho 20 lượt/ngày
+        # một key; Groq cho ~1.000 lượt nhưng chặn theo TOKEN/ngày (TPD) — đo tối nay: 15 lượt
+        # chạm TPD, tức Groq cạn vì token chứ không vì số lượt. Nhìn con số gộp "199 key" thì
+        # tưởng dư dả, trong khi trần thật có thể chỉ vài trăm lượt viết mỗi ngày.
+        # In cấu trúc pool để biết nên thêm key LOẠI NÀO, thay vì thêm bừa.
+        def _loai(ks):
+            g = sum(1 for k in ks if str(k.get("key", "")).startswith("gsk_"))
+            c = sum(1 for k in ks if str(k.get("key", "")).startswith("cf:"))
+            return g, c, len(ks) - g - c
+
+        _vt_all = [k for k in _all if not str(k.get("key", "")).startswith(("px:", "pb:", "r2:"))]
+        _g0, _c0, _m0 = _loai(_vt_all)
+        _g1, _c1, _m1 = _loai(_viet)
+        print(f"   ├─ VIẾT kịch bản : {len(_viet)}/{len(_vt_all)} key dùng được"
+              f"  (groq {_g1}/{_g0} · cf {_c1}/{_c0} · gemini {_m1}/{_m0})" +
               ("  ⛔ KHÔNG CÒN KEY VIẾT — phiên này sẽ gần như trắng" if not _viet else ""))
-        print(f"   └─ vẽ ảnh        : {len(_anh)} key")
+        print(f"   └─ vẽ ảnh        : {len(_anh)} key dùng được")
+        # Trần lượt viết/ngày ước theo hạn mức free công bố của từng nhà: gemini 20, groq/cf lớn
+        # hơn nhiều nhưng chặn theo token. Con số này để SO SÁNH với nhu cầu, không phải cam kết.
+        print(f"   ℹ️ trần thô mỗi ngày ≈ gemini {_m0}×20 = {_m0 * 20} lượt viết"
+              f" + groq/cf {_g0 + _c0} key (chặn theo token/ngày)")
         if len(keys) <= 5 and len(_all) > 10:
             print(f"   ⚠️ Chỉ {len(keys)}/{len(_all)} key khả dụng — phần lớn đang NGHỈ, không phải hết quota vĩnh viễn.")
     except Exception:
