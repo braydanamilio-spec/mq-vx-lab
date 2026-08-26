@@ -237,7 +237,14 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
 
       {/* INTRO overlay */}
       {f < introF ? (
-        <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 44%, ${accent}22, #06050f 70%)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620, zIndex: 10 }}>
+        // 26/8 — LỚP PHỦ MỞ ĐẦU TỪNG LÀ MÀN ĐEN. Nền cũ tiến về `#06050f` (gần đen tuyền) và phủ
+        // KÍN khung ở `zIndex: 10`, trên đó chỉ có một emoji. Đo trên khung THẬT: **75,6% điểm tối ·
+        // 332 màu** — QC trước render chặn đúng, và chặn đúng lý do: người xem mở video ra thấy màn
+        // hình gần như đen trong 1,8 giây đầu, đúng quãng quyết định họ có ở lại không.
+        // Gán `bg/bg2` cho props chỉ kéo được 82,3% -> 75,6%, vẫn dính ngưỡng, vì thủ phạm là lớp
+        // phủ này chứ không phải nền kênh. Nay để nó MỜ: thang leo phía sau hiện xuyên qua, vừa
+        // sáng lên vừa tăng số màu, mà vẫn còn vệt tối để chữ hook nổi.
+        <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 44%, ${accent}33 0%, ${(bg || accent)}55 45%, #0b0a1acc 78%)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 620, zIndex: 10 }}>
           <div style={{ fontSize: 150, transform: `scale(${introP})` }}>🪜</div>
         </AbsoluteFill>
       ) : null}
