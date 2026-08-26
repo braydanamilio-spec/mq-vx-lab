@@ -999,6 +999,30 @@ def t_duong_ghi_d1_khong_hong_im_lang():
     assert not xau, "đường ghi D1 hỏng im lặng:\n   " + "\n   ".join(xau)
 
 
+
+def t_env_tro_file_thi_phai_tao_file():
+    """Biến môi trường trỏ tới một tệp khoá thì workflow PHẢI có bước tạo tệp đó.
+
+    26/8 — `fix_queue_thumbnails.yml` khai `GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json`
+    nhưng KHÔNG có bước nào ghi tệp đó. Hậu quả không phải lỗi ồn ào mà là **âm thầm rơi về
+    project A** — nơi đang cạn hạn mức. Nhìn workflow thì tưởng đã trỏ đúng B.
+
+    Cùng họ với lỗi thiếu cờ `SHARD_PUBLISH`: cấu hình TRÔNG như đã đúng, hành vi thì ngược lại,
+    và không có dòng log nào kêu lên."""
+    import os, re, glob
+    goc = os.path.dirname(os.path.abspath(__file__))
+    xau = []
+    for w in sorted(glob.glob(os.path.join(goc, "..", ".github", "workflows", "*.yml"))):
+        s2 = io.open(w, encoding="utf-8").read()
+        ten = os.path.basename(w)
+        for m in re.finditer(r"^\s*[A-Z_]*CREDENTIALS[A-Z_]*:\s*(/tmp/[\w.]+)\s*$", s2, re.M):
+            tep = m.group(1)
+            # phải có ít nhất một lệnh ghi ra đúng tệp đó
+            if not re.search(r">\s*" + re.escape(tep) + r"\b", s2):
+                xau.append(f"{ten}: env trỏ {tep} nhưng không có bước tạo tệp -> âm thầm rơi về project khác")
+    assert not xau, "khoá dịch vụ trỏ vào tệp không được tạo:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1020,6 +1044,7 @@ def main():
     check("_extract_json bóc ```json", t_extract_json)
     check("_extract_json LUÔN trả dict (list -> nổ .get)", t_extract_json_luon_tra_dict)
     check("step trỏ Project C phải bật SHARD_PUBLISH", t_workflow_dung_project_C_phai_bat_co)
+    check("env trỏ tệp khoá thì phải có bước tạo tệp", t_env_tro_file_thi_phai_tao_file)
     check("B2 failover: thiếu env từ chối êm", t_b2_failover)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)

@@ -35,6 +35,8 @@ jobs:
           # nên công cụ quản trị phải lật được sang gương như dây chuyền chính.
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          HOT_MODE: on
         run: |
           ARGS=""
           if [ "${{ github.event.inputs.ghi_that }}" = "1" ]; then ARGS="$ARGS --that"; fi

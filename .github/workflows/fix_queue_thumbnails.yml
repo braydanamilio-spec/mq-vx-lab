@@ -50,11 +50,18 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          # 26/8 — workflow này dùng firestore_bridge nhưng thiếu creds B: khi chạy nó sẽ
+          # rơi về project A (nơi đang cạn hạn mức), tức hỏng đúng lúc cần dùng nhất.
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          SHARD_META: ${{ vars.SHARD_META }}
+          SHARD_KEYS: ${{ vars.SHARD_KEYS }}
           HOT_KEY: ${{ secrets.HOT_KEY }}
           AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
           OWNER_UID: ${{ secrets.OWNER_UID }}
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+          echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json   # khai env trỏ file này rồi thì phải TẠO nó
           python - <<'PY'
           import os, sys, subprocess
           sys.path.insert(0, "render-pipeline")
@@ -130,7 +137,7 @@ jobs:
         working-directory: engine-remotion
         run: npx remotion browser ensure
       - name: Service account file (A đọc pool Drive qua Firestore connections)
-        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json && echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
       - name: Chạy fix_queue_thumbnails cho kênh ${{ matrix.channel }}
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
