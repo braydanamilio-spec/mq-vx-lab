@@ -34,6 +34,11 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          # 26/8 — sổ đo lượt Firestore của publish/thumbnail/health-guardian xả về D1 qua
+          # HOT_KEY. Thiếu biến này thì sổ vẫn đếm nhưng không ai đọc được — mà 100 lượt
+          # chạy/ngày của nhóm này chính là ~52% trần Firestore chưa từng được nhìn.
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          HOT_MODE: on
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
           FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
