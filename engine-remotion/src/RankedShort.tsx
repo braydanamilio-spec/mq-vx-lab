@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVid
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { ChuyenCanh } from "./Chuyen";
 import React from "react";
 
 // KÊNH #3 RANKED — tier list S/A/B/C/D, thẻ lật vào hạng lần lượt. Motif khác hẳn map/bar/guess.
@@ -112,13 +113,17 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
         </AbsoluteFill>
       ) : null}
 
-      {/* SFX: mỗi thẻ 1 tiếng "pop"; item vào tier S -> ding */}
-      {sfx ? items.map((it, gi) => (
-        <React.Fragment key={"sfx" + gi}>
-          <Sequence from={starts[gi]} durationInFrames={8}><Audio src={staticFile("sfx/pop.mp3")} volume={0.5} /></Sequence>
-          {(it.tier || "").toUpperCase() === "S" ? <Sequence from={starts[gi]} durationInFrames={30}><Audio src={staticFile("sfx/ding.mp3")} volume={0.4} /></Sequence> : null}
-        </React.Fragment>
-      )) : null}
+      {/* CHUYỂN CẢNH — mỗi thẻ vào là MỘT nhịp: cùng lúc một tiếng và một chuyển động hình.
+          26/8 — thay cho hai dòng sfx viết cứng `volume={0.5}` / `volume={0.4}` ở đây. Mức âm nay
+          do `Chuyen.MUC_AM` quyết một chỗ cho toàn hệ; tiếng thì đổi theo chữ ký của KÊNH nên 18
+          kênh dùng chung dạng `ranked` không còn nghe giống hệt nhau. Thẻ vào hạng S = nhịp mạnh. */}
+      {sfx ? (
+        <ChuyenCanh accent={accent} khoa={handle}
+                    nhip={items.map((it, gi) => ({
+                      at: starts[gi],
+                      manh: (it.tier || "").toUpperCase() === "S" ? 1 : 0.6,
+                    }))} />
+      ) : null}
 
       <div style={{ position: "absolute", bottom: 50, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 32, textShadow: "0 2px 10px #000" }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}

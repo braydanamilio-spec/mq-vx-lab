@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoCon
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { ChuyenCanh } from "./Chuyen";
 import React from "react";
 
 // KÊNH #6 LONGSHOT — real odds/probability, items HOP UP a vertical log-scale ladder to their real rung.
@@ -225,18 +226,19 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
       ) : null}
 
       {/* SFX: hop-land per item, bigger impact + ding on the final item */}
-      {sfx ? items.map((it, i) => {
-        const slotFrames = Math.round(idur(it, itemSec) * fps);
-        const climbDur = Math.max(18, Math.round(slotFrames * climbFrac));
-        const isFinal = i === items.length - 1;
-        return (
-          <React.Fragment key={"sfx" + i}>
-            <Sequence from={starts[i] + climbDur - 4} durationInFrames={12}><Audio src={staticFile(isFinal ? "sfx/impact.mp3" : "sfx/pop.mp3")} volume={isFinal ? 0.7 : 0.45} /></Sequence>
-            {isFinal ? <Sequence from={starts[i] + climbDur + 2} durationInFrames={30}><Audio src={staticFile("sfx/ding.mp3")} volume={0.45} /></Sequence> : null}
-            <Sequence from={starts[i]} durationInFrames={8}><Audio src={staticFile("sfx/whoosh.mp3")} volume={0.22} /></Sequence>
-          </React.Fragment>
-        );
-      }) : null}
+      {/* CHUYỂN CẢNH: bắt đầu leo = nhịp nhẹ, chạm nấc = nhịp chính, mục cuối = nhịp mạnh nhất.
+          26/8 — thay ba dòng sfx viết cứng (0.22 / 0.45 / 0.7). Ba mức đó chênh nhau hơn ba lần,
+          nên riêng trong một video đã nghe lồi lõm; giữa các kênh còn lệch hơn nữa. */}
+      {sfx ? (
+        <ChuyenCanh accent={accent} khoa={handle}
+                    nhip={items.flatMap((it, i) => {
+                      const climbDur = Math.max(18, Math.round(Math.round(idur(it, itemSec) * fps) * climbFrac));
+                      return [
+                        { at: starts[i], manh: 0.35 },
+                        { at: starts[i] + climbDur - 4, manh: i === items.length - 1 ? 1 : 0.65 },
+                      ];
+                    })} />
+      ) : null}
 
       <div style={{ position: "absolute", bottom: 50, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 32, textShadow: "0 2px 10px #000", zIndex: 5 }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}

@@ -153,7 +153,15 @@ chủ đề đã sát ranh giới quảng cáo. Cách an toàn đang dùng: **lu
   **11/12/12/15** (lệch 4). Đã nối vào `MappedShort` (dạng trước đây IM HOÀN TOÀN) và kiểm bằng
   khung render thật: khung không có nhịp **giống hệt từng byte** so với trước khi sửa ⇒ không đụng
   gì ngoài đúng lúc chuyển cảnh.
-  **Còn lại**: 6 dạng gen-2 kia vẫn dùng âm rời rạc cũ — chuyển dần, mỗi lần một dạng + canary.
+  **Đã nối đủ 7/7 (26/8)**: `Ranked` · `Scaled` · `Mapped` · `Longshot` · `ThenNow` · `Race` ·
+  `Cinematic`. Mức âm viết cứng trước đây — 0.22 · 0.32 · 0.34 · 0.4 · 0.45 · 0.5 · 0.55 · 0.6 ·
+  0.7 (chênh hơn **ba lần** ngay trong một video) — nay do `Chuyen.MUC_AM` quyết ở một chỗ.
+
+  Một ngoại lệ **cố ý giữ lại**: `Cinematic` tự đổi `playbackRate` theo thứ tự cắt, nên cùng một
+  file whoosh nghe thành nhiều tiếng khác nhau — mẹo đó bản chung KHÔNG có, thay bằng bản chung là
+  đổi xuống. Ở đó `ChuyenCanh` chạy chế độ **câm** (`im`) để chỉ bù phần hình còn thiếu.
+  Các engine đời 1 (Clockwork/Pulse/Guess/RaceLong/Toon/Swarm) không đụng — 55 kênh đó sắp nghỉ.
+  Chốt: `t_muc_am_quyet_o_mot_cho`.
 - ~~**thumbnail đa dạng template**~~ → **ĐÃ LÀM (26/8)**: `DocThumb` có **5 bố cục** — `trai`
   (bản cũ, mặc định) · `phai` · `duoi` · `giua` · `khoi`. Khác nhau ở BỐ CỤC thật (chỗ đứng khối
   chữ, hướng ảnh, hướng đổ bóng, hình khối trang trí), không phải chỉ đổi màu.

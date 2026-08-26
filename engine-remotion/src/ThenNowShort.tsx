@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVid
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { ChuyenCanh } from "./Chuyen";
 import React from "react";
 
 // KÊNH #5 THEN×NOW — split XƯA (trên) / NAY (dưới) + con số biến đổi. Motif riêng (nostalgia + shock).
@@ -109,16 +110,14 @@ export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
         </Sequence>
       ))}
 
-      {/* SFX: mỗi cặp — whoosh khi panel vào + impact khi chip biến đổi bung */}
-      {sfx ? pairs.map((p, i) => {
-        const cAt = starts[i] + Math.round(pdur(p, pairSec) * fps * 0.42);
-        return (
-          <React.Fragment key={"sfx" + i}>
-            <Sequence from={starts[i]} durationInFrames={14}><Audio src={staticFile("sfx/whoosh.mp3")} volume={0.4} /></Sequence>
-            <Sequence from={cAt} durationInFrames={40}><Audio src={staticFile("sfx/impact.mp3")} volume={0.6} /></Sequence>
-          </React.Fragment>
-        );
-      }) : null}
+      {/* CHUYỂN CẢNH: panel vào = nhịp thường, chip biến đổi bung = nhịp mạnh. */}
+      {sfx ? (
+        <ChuyenCanh accent={accent} khoa={handle}
+                    nhip={pairs.flatMap((p, i) => [
+                      { at: starts[i], manh: 0.55 },
+                      { at: starts[i] + Math.round(pdur(p, pairSec) * fps * 0.42), manh: 1 },
+                    ])} />
+      ) : null}
 
       {/* INTRO */}
       {f < introF ? (

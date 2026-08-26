@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoCon
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { ChuyenCanh } from "./Chuyen";
 import React from "react";
 
 // KÊNH #4 SCALED — so sánh KÍCH THƯỚC vật lý thật, vẽ ĐÚNG TỈ LỆ cạnh nhau. Motif riêng.
@@ -93,13 +94,11 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
         </AbsoluteFill>
       ) : null}
 
-      {/* SFX */}
-      {sfx ? items.map((it, i) => (
-        <React.Fragment key={"sfx" + i}>
-          <Sequence from={starts[i]} durationInFrames={10}><Audio src={staticFile("sfx/whoosh.mp3")} volume={0.4} /></Sequence>
-          {it.value === maxV ? <Sequence from={starts[i] + 4} durationInFrames={40}><Audio src={staticFile("sfx/impact.mp3")} volume={0.6} /></Sequence> : null}
-        </React.Fragment>
-      )) : null}
+      {/* CHUYỂN CẢNH — mục lớn nhất là nhịp mạnh. Mức âm do Chuyen.MUC_AM quyết, không viết cứng. */}
+      {sfx ? (
+        <ChuyenCanh accent={accent} khoa={handle}
+                    nhip={items.map((it, i) => ({ at: starts[i], manh: it.value === maxV ? 1 : 0.6 }))} />
+      ) : null}
 
       <div style={{ position: "absolute", bottom: 50, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 32, textShadow: "0 2px 10px #000" }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}

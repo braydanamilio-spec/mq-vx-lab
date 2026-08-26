@@ -1,5 +1,6 @@
 import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig, interpolate, Audio, staticFile, Img } from "remotion";
 import { phong } from "./Phong";
+import { ChuyenCanh, MUC_AM } from "./Chuyen";
 import React from "react";
 import { Karaoke } from "./Karaoke";
 
@@ -145,14 +146,15 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
       {handle ? <div style={{ position: "absolute", bottom: port ? 70 : 40, right: M, fontSize: port ? 32 : 28, fontWeight: 800, color: "#7FA8D0" }}>{handle}</div> : null}
       {music ? <Audio src={staticFile(music)} volume={0.12} /> : null}
       {audio ? <Audio src={staticFile(audio)} /> : null}
-      {/* SFX khớp dữ liệu: whoosh+ding mỗi lần soán ngôi, cheer lúc kết */}
-      {sfx ? overtakeT.map((t, i) => (
-        <React.Fragment key={"sfx" + i}>
-          <Sequence from={Math.max(0, Math.round((t - 0.12) * fps))} durationInFrames={18}><Audio src={staticFile("sfx/whoosh.mp3")} volume={0.5} /></Sequence>
-          <Sequence from={Math.round(t * fps)} durationInFrames={18}><Audio src={staticFile("sfx/ding.mp3")} volume={0.55} /></Sequence>
-        </React.Fragment>
-      )) : null}
-      {sfx ? <Sequence from={Math.round(finalT * fps)} durationInFrames={60}><Audio src={staticFile("sfx/cheer.mp3")} volume={0.32} /></Sequence> : null}
+      {/* CHUYỂN CẢNH khớp DỮ LIỆU: mỗi lần soán ngôi là một nhịp. Đây là chỗ dạng đua ăn đứt các
+          dạng khác — tiếng không rơi theo nhịp đếm mà rơi đúng lúc thứ hạng thật sự đổi.
+          26/8 — thay hai dòng viết cứng 0.5/0.55; mức âm nay do Chuyen.MUC_AM quyết chung. */}
+      {sfx ? (
+        <ChuyenCanh accent={accent} khoa={handle}
+                    nhip={overtakeT.map((t) => ({ at: Math.round(t * fps), manh: 0.75 }))} />
+      ) : null}
+      {/* Tiếng reo lúc kết giữ riêng: nó không phải chuyển cảnh mà là dấu chấm hết của cả video. */}
+      {sfx ? <Sequence from={Math.round(finalT * fps)} durationInFrames={60}><Audio src={staticFile("sfx/cheer.mp3")} volume={MUC_AM.cheer} /></Sequence> : null}
           {subs && subs.length ? <Karaoke subs={subs} accent={accent} /> : null}
     </AbsoluteFill>
   );

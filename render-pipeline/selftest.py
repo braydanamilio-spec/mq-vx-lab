@@ -1390,6 +1390,37 @@ def t_don_kho_phai_di_het_cay_va_moi_loai_tep():
     assert "ĐẾM RA 0 TỆP" in src, "đếm ra 0 tệp mà không cảnh báo -> lỗi lọc trông như thành công"
 
 
+
+def t_muc_am_quyet_o_mot_cho():
+    """7 dạng thế hệ 2 không được tự viết cứng mức âm hiệu.
+
+    26/8 — trước khi gộp: `RankedShort` 0.5/0.4 · `ScaledShort` 0.4/0.6 · `LongshotShort`
+    0.22/0.45/0.7 · `ThenNowShort` 0.4/0.6 · `BarChartRace` 0.5/0.55/0.32. Riêng trong một video
+    đã chênh hơn ba lần (0.22 -> 0.7), giữa các kênh còn lệch hơn. Muốn chỉnh phải sửa 12 file.
+
+    Nay mức âm do `Chuyen.MUC_AM` quyết một chỗ. Ngoại lệ CÓ CHỦ Ý và được giữ lại:
+      • `Cinematic` tự đổi `playbackRate` theo thứ tự cắt — cùng một file whoosh thành nhiều tiếng
+        khác nhau. Đó là thứ bản chung KHÔNG có; thay nó bằng bản chung là đổi xuống. Ở đó
+        `ChuyenCanh` chạy chế độ CÂM (`im`) để chỉ bù phần hình.
+      • Tiếng reo kết video (`cheer`) không phải chuyển cảnh — nhưng vẫn phải lấy mức từ `MUC_AM`.
+    Các engine đời 1 (Clockwork/Pulse/Guess/RaceLong/Toon/Swarm) không tính: 55 kênh đó sắp nghỉ."""
+    import re as _re
+    xau = []
+    for c in ("RankedShort", "ScaledShort", "MappedShort", "LongshotShort", "ThenNowShort"):
+        src = _doc(f"../engine-remotion/src/{c}.tsx")
+        if "sfx/" in src:
+            xau.append(f"{c}: còn tự phát sfx thay vì dùng ChuyenCanh")
+        if "ChuyenCanh" not in src:
+            xau.append(f"{c}: không dùng ChuyenCanh -> không có chuyển cảnh thống nhất")
+    for c in ("BarChartRace", "Cinematic"):
+        src = _doc(f"../engine-remotion/src/{c}.tsx")
+        if "ChuyenCanh" not in src:
+            xau.append(f"{c}: không dùng ChuyenCanh")
+        for m in _re.finditer(r"sfx/(\w+)\.mp3[^/]{0,120}?volume=\{([0-9.]+)\}", src):
+            xau.append(f"{c}: còn mức âm viết cứng {m.group(2)} cho {m.group(1)}")
+    assert not xau, "; ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1509,6 +1540,7 @@ def main():
     check("canary không được render vào composition rỗng", t_canary_khong_duoc_render_vao_composition_rong)
     check("phông chảy hết đường JSON->props->composition", t_phong_phai_chay_het_duong_toi_luc_render)
     check("dọn kho: đi hết cây + mọi loại tệp", t_don_kho_phai_di_het_cay_va_moi_loai_tep)
+    check("mức âm chuyển cảnh quyết ở MỘT chỗ", t_muc_am_quyet_o_mot_cho)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

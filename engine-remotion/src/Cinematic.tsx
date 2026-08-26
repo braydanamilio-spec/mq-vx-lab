@@ -1,5 +1,6 @@
 import React from "react";
 import { phong } from "./Phong";
+import { ChuyenCanh, MUC_AM } from "./Chuyen";
 import { AbsoluteFill, Audio, Sequence, OffthreadVideo, Img, staticFile, interpolate, useCurrentFrame, useVideoConfig, spring } from "remotion";
 
 // 🌌 CINEMATIC comp (BEYOND) — nền stock 4K (hoặc cosmic fallback) + Ken Burns + DATA-HUD chồng lên + color grade + kinetic caption.
@@ -460,7 +461,7 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", capColo
         });
         return (<>
           {/* CÚ MỞ MÀN: whoosh mạnh hơn ngay giây đầu, giống cold-open của RaceLong -> vào là có lực */}
-          <Sequence from={2} durationInFrames={18}><Audio src={staticFile("sfx/whoosh.mp3")} volume={0.55} /></Sequence>
+          <Sequence from={2} durationInFrames={18}><Audio src={staticFile("sfx/whoosh.mp3")} volume={MUC_AM.whoosh * 1.3} /></Sequence>
           {/* 23/8 (user: "chỉ có 1 âm thanh chuyển cảnh, nhàm chán lặp đi lặp lại"): XOAY VÒNG 4 mẫu
               trong kho sfx và đổi cả CAO ĐỘ lẫn ÂM LƯỢNG theo thứ tự cắt. Cùng một file whoosh phát ở
               tốc độ 0.88 và 1.16 nghe như hai tiếng khác nhau — không tốn thêm file, không tốn quota,
@@ -469,12 +470,22 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", capColo
             const bank = ["sfx/whoosh.mp3", "sfx/pop.mp3", "sfx/whoosh.mp3", "sfx/impact.mp3"];
             const src = bank[q % bank.length];
             const rate = [1.0, 1.16, 0.88, 0.95][q % 4];
-            const vol = src === "sfx/impact.mp3" ? 0.34 : 0.4 - (q % 3) * 0.05;
+            // Mức GỐC lấy từ MUC_AM (một chỗ quyết cho cả hệ), phần biến thiên theo thứ tự cắt
+            // giữ nguyên — đó mới là cái làm tai không thấy lặp.
+            const goc = src === "sfx/impact.mp3" ? MUC_AM.impact : MUC_AM.whoosh;
+            const vol = goc * (1 - (q % 3) * 0.13);
             return (
             <Sequence key={`sfx${q}`} from={at} durationInFrames={12}>
               <Audio src={staticFile(src)} volume={vol} playbackRate={rate} />
             </Sequence>);
           })}
+          {/* 26/8 — GIỮ NGUYÊN phần TIẾNG ở trên, chỉ bù phần HÌNH.
+              Chỗ này đã làm tốt hơn bản chung `ChuyenCanh`: nó đổi `playbackRate` theo thứ tự cắt
+              nên cùng một file whoosh nghe thành nhiều tiếng khác nhau — bản chung không có mẹo đó.
+              Thay nó bằng bản chung là ĐỔI XUỐNG. Thứ thiếu là chuyển động hình đi kèm tiếng, nên
+              gọi `ChuyenCanh` ở chế độ CÂM (`im`) để không phát tiếng lần hai. */}
+          <ChuyenCanh im accent={accent} khoa={handle}
+                      nhip={cuts.map((at, q) => ({ at, manh: q % 4 === 3 ? 0.9 : 0.55 }))} />
         </>);
       })()}
       {/* NHẠC NỀN (mới) — cực nhẹ (0.12 đỉnh) để KHÔNG đè lời thoại, fade-in/out mượt đầu-cuối, loop suốt video. */}
