@@ -50,12 +50,18 @@ def main() -> int:
     lam_tat = "--tat" in sys.argv
     lam_kho = "--kho" in sys.argv
     lam_bg = "--ban-ghi" in sys.argv
+    import firestore_bridge as FB
     db = _db()
     owner = os.environ.get("OWNER_UID") or ""
-    q = db.collection("render_channels")
-    if owner:
-        q = q.where("owner", "==", owner)
-    tat_ca = [{**(d.to_dict() or {}), "_id": d.id} for d in q.stream()]
+    # ĐỌC qua đường có failover B2. Stream thẳng thì B cạn hạn mức là chết ngay (đo thật 26/8:
+    # `429 Quota exceeded` ngay lần chạy đầu). B2 là gương CHỈ ĐỌC — đủ cho bước kiểm kê; bước
+    # ghi bên dưới vẫn phải vào B vì hạn mức đọc và ghi của Firestore tách riêng.
+    try:
+        tat_ca = [{**c, "_id": c.get("id") or f"{owner}__{c.get('name')}"}
+                  for c in FB.read_channels(owner)]
+    except Exception as e:
+        print(f"❌ không đọc được danh sách kênh (kể cả gương B2): {str(e)[:90]}")
+        return 2
     moi = _kenh_moi()
     cu = [c for c in tat_ca if str(c.get("the_he") or "") != "2" and (c.get("name") or "") not in moi]
     m2 = [c for c in tat_ca if str(c.get("the_he") or "") == "2"]
