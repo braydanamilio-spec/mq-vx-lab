@@ -1086,6 +1086,31 @@ def t_phanh_do_khong_duoc_phai_gia_dinh_can():
                      "phanh coi như còn 100% hạn mức đúng lúc đã cạn")
 
 
+
+def t_duong_lui_khong_duoc_khuech_dai_loi():
+    """Đường lùi không được nhân bản chính cái lỗi nó tránh.
+
+    26/8, phiên 01:54Z: `⚠️ plan không đọc được hồ key A (429 Quota exceeded.) — lane tự đọc như
+    cũ`. Bản vá "plan đọc A một lần cho 18 lane" CÓ chạy, nhưng gặp 429 thì trả `""` ⇒ 18 lane
+    mỗi đứa tự đọc A ⇒ **1 lượt hỏng thành 18 lượt hỏng**, nhè đúng project vừa báo là đã cạn.
+
+    "A cạn" là sự thật CHUNG của phiên. Đã biết thì phải báo xuống lane (tín hiệu `CAN`), không
+    để mỗi lane tự đâm vào tường một lần mới tin — đúng cách đã làm cho project B từ 24/8."""
+    src = _doc("firestore_bridge.py")
+    assert 'return "CAN"' in src, \
+        "dong_goi_keys_a không phát tín hiệu CAN khi A trả 429 — 18 lane sẽ tự đâm vào A"
+    assert 'goi == "CAN"' in src, "keys_a_tu_plan không hiểu tín hiệu CAN từ plan"
+    assert '_KEYS_PLAN.get("can")' in src, \
+        "có tín hiệu CAN nhưng không chỗ nào dùng nó để chặn đường đọc A sống"
+    import ast as _ast
+    fn = next((n for n in _ast.walk(_ast.parse(src))
+               if isinstance(n, _ast.FunctionDef) and n.name == "dong_goi_keys_a"), None)
+    assert fn, "mất hàm dong_goi_keys_a"
+    h = [x for x in _ast.walk(fn) if isinstance(x, _ast.ExceptHandler)]
+    assert h and any("429" in _ast.dump(x) for x in h), \
+        "nhánh lỗi của dong_goi_keys_a không phân biệt 429 với lỗi thường"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1195,6 +1220,7 @@ def main():
     check("đường ghi D1 hỏng phải nói, không im lặng", t_duong_ghi_d1_khong_hong_im_lang)
     check("không đệm kết quả RỖNG (bẫy làm dashboard trắng)", t_khong_dem_ket_qua_rong)
     check("phanh mù thì giả định CẠN, không giả định đầy", t_phanh_do_khong_duoc_phai_gia_dinh_can)
+    check("đường lùi không khuếch đại lỗi (1 lượt 429 -> 18)", t_duong_lui_khong_duoc_khuech_dai_loi)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

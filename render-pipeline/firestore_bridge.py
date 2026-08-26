@@ -1003,6 +1003,11 @@ def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
             if _snap is not None:
                 _A_KEYS["rows"] = _snap
                 print(f"   🔑 Hồ key: dùng ảnh chụp D1 ({len(_snap)} key) — 0 lượt đọc project A.")
+        if _A_KEYS["rows"] is None and _KEYS_PLAN.get("can"):
+            # Plan đã xác nhận A cạn và D1 cũng không có ảnh chụp. Đọc A lúc này chắc chắn hỏng —
+            # chạy tiếp với hồ key của B còn hơn tốn thêm một lượt 429 rồi vẫn tay trắng.
+            print("   ⚠️ A cạn hạn mức + D1 chưa có ảnh chụp — chạy với hồ key B, không hợp nhất A.")
+            return rows
         if _A_KEYS["rows"] is None:
             _cr("merge_keys_A", 70)
             out = []
@@ -1534,6 +1539,13 @@ def keys_a_tu_plan() -> list | None:
     if not goi:
         _KEYS_PLAN["rows"] = None
         return None
+    if goi == "CAN":
+        # Plan đã tông vào 429 ở A. Lane không lặp lại việc đó: vẫn được dùng ảnh chụp D1 (miễn
+        # phí), nhưng đường đọc A SỐNG bị khoá cho tới hết tiến trình.
+        _KEYS_PLAN["rows"] = None
+        _KEYS_PLAN["can"] = True
+        print("   🛡️ Plan báo: project A CẠN HẠN MỨC — lane không đọc A, chỉ dùng ảnh chụp D1.")
+        return None
     try:
         import base64 as _b64, gzip as _gz
         _KEYS_PLAN["rows"] = json.loads(_gz.decompress(_b64.b64decode(goi)).decode())
@@ -1562,7 +1574,17 @@ def dong_goi_keys_a(owner: str) -> str:
         print(f"   🔑 Plan chụp hồ key A: {len(out)} key ({len(goi)//1024}KB) — 18 lane khỏi đọc A.")
         return goi
     except Exception as e:
-        print(f"   ⚠️ plan không đọc được hồ key A ({str(e)[:60]}) — lane tự đọc như cũ")
+        loi = str(e)[:60]
+        # 26/8 — ĐƯỜNG LÙI NÀY TỪNG KHUẾCH ĐẠI ĐÚNG CÁI NÓ SINH RA ĐỂ TRÁNH. Phiên 01:54Z:
+        # `⚠️ plan không đọc được hồ key A (429 Quota exceeded.)` — trả "" ⇒ 18 lane mỗi đứa tự đi
+        # đọc A, tức 1 lượt hỏng nhân thành 18 lượt hỏng + mấy vòng thử lại, nhè đúng project vừa
+        # tuyên bố là đã cạn. Trạng thái "A cạn" là sự thật CHUNG của phiên; đã biết thì phải NÓI
+        # cho lane, không để mỗi đứa tự đâm vào tường một lần mới tin.
+        if "429" in loi or "Quota exceeded" in loi or "RESOURCE_EXHAUSTED" in loi:
+            print(f"   🛡️ plan: project A CẠN HẠN MỨC ({loi}) — báo chung cho 18 lane, "
+                  f"lane dùng ảnh chụp D1 và KHÔNG đọc A (khỏi 18 lượt hỏng).")
+            return "CAN"
+        print(f"   ⚠️ plan không đọc được hồ key A ({loi}) — lane tự đọc như cũ")
         return ""
 
 

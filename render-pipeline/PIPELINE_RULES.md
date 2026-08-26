@@ -3225,6 +3225,28 @@ giờ được đo bằng chính tài nguyên nó bảo vệ**. Cùng họ với
 "không biết" phải chảy về phía thận trọng, không về phía im lặng cho qua.
 Chốt: `t_phanh_do_khong_duoc_phai_gia_dinh_can` (đã thử phá — bỏ gán nền là selftest đỏ).
 
-**Còn treo, đo được trên cùng phiên 01:54Z**: `Hồ key A: dùng gói plan` = **0 lần** trong khi
-`merge_keys_A` = 18 ⇒ bản vá "plan đọc hồ key A một lần, phát cho 18 lane" CHƯA TỪNG CHẠY. Lane
-vẫn tự đọc project A. Đúng cái mà `KIEM_CHUNG.md` sinh ra để bắt.
+**Đã truy tiếp**: `Hồ key A: dùng gói plan` = 0 lần / `merge_keys_A` = 18 — nhưng KHÔNG phải vì
+bản vá không chạy (xem 7.dz).
+
+
+### 7.dz — ĐƯỜNG LÙI KHUẾCH ĐẠI ĐÚNG CÁI LỖI NÓ SINH RA ĐỂ TRÁNH (26/8/2026)
+
+`KIEM_CHUNG.md` bắt được: `Hồ key A: dùng gói plan` in **0 lần** trong khi `merge_keys_A` = **18**.
+Thoạt trông giống lỗi "vá mà chưa từng chạy". Truy log plan thì không phải:
+
+```
+02:01:58  ⚠️ plan không đọc được hồ key A (429 Quota exceeded.) — lane tự đọc như cũ
+```
+
+Bản vá CÓ chạy. Nó gặp 429 ở project A rồi **lùi về đúng hành vi mà nó sinh ra để loại bỏ**: trả
+`""` ⇒ 18 lane mỗi đứa tự đọc A ⇒ **một lượt hỏng nhân thành 18 lượt hỏng** cộng các vòng thử lại,
+nhè đúng project vừa tuyên bố đã cạn. Đường lùi càng chạy thì tình hình càng xấu.
+
+Vá: `dong_goi_keys_a` phân biệt 429 với lỗi thường và phát tín hiệu **`CAN`**; lane nhận `CAN` thì
+vẫn dùng ảnh chụp D1 (miễn phí) nhưng **khoá đường đọc A sống**; không có ảnh chụp thì chạy với hồ
+key B, không hợp nhất A. Đúng cơ chế "báo chung" đã làm cho project B từ 24/8.
+
+**Luật**: trước khi viết một đường lùi, hỏi *"lùi về đâu"*. Lùi về **chính hành vi đã hỏng**, nhân
+lên N lần, là tệ hơn không có đường lùi. Trạng thái "nguồn X đã cạn" là sự thật CHUNG của phiên —
+biết rồi thì **báo xuống**, đừng để 18 lane mỗi đứa tự đâm vào tường một lần mới tin.
+Chốt: `t_duong_lui_khong_duoc_khuech_dai_loi` (đã thử phá).
