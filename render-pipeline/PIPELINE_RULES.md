@@ -3396,3 +3396,36 @@ dạng tên (bỏ cách · có cách · handle · handle bỏ @).
 **Luật**: chỗ nào một bên GHI theo khuôn này mà bên kia ĐỌC theo khuôn khác, phải có phép thử chạy
 thật với đúng chuỗi bên ghi sẽ tạo ra — đọc mã rồi suy luận là không đủ.
 Chốt: `t_tra_kenh_gen2_phai_khop_ten_seed_luu` — gọi `doc_kenh()` THẬT, đã thử phá.
+
+### 7.eg — 50 KÊNH SẼ LÀM ĐÚNG MỘT VIDEO RỒI LẶP MÃI (26/8/2026, bắt trước khi seed)
+
+Lỗi lớn nhất về NỘI DUNG, và nó vô hình vì không có gì báo lỗi cả.
+
+Cả 50 kênh đều có `tham_so.xoay` ghi rõ trục xoay đề tài — `"mon"` / `"nam"` / `"tu_khoa"`… —
+nhưng **không dòng mã nào đọc trường đó**. `chay_chung` truyền `ky=None`, tham số lấy nguyên từ
+`tham_so` cố định. Nghĩa là mỗi kênh dựng ĐÚNG MỘT câu chuyện (cùng loại ngũ cốc, cùng từ khoá,
+cùng năm) rồi lặp lại ở mọi phiên. 50 kênh × một video lặp = kênh chết ngay, và YouTube tính là
+nội dung trùng lặp — hỏng luôn đường kiếm tiền.
+
+Đây là lần thứ **tư** trong một đêm gặp đúng hình dạng này: `voice_tone` · `voice_pitch` ·
+`brand.font` · `tham_so.xoay`. Khai một trường rồi không ai đọc.
+
+Vá ba lớp, thiếu lớp nào cũng vô dụng:
+1. `KHO_XOAY` + `_dung_story_xoay()` — duyệt kho đề tài, bỏ qua giá trị nào cho ra tiêu đề đã có
+   trong `avoid`, in `♻️` khi phải xoay.
+2. `run_render` truyền `avoid` xuống nhánh gen-2 (nó vốn đã tính sẵn cho mọi dạng, chỉ nhánh này
+   chưa dùng) — thiếu bước này thì cơ chế xoay không có gì để so.
+3. Kho đề tài riêng từng kênh.
+
+Chốt bắt thêm **6 kênh khai trục mà bộ chuyển đổi KHÔNG đọc** (FAME CURVE khai `nguoi` trong khi
+`_bt_luot_doc` đọc `nam/ngay/thang`; ALERT NOW khai `bang` còn hàm đọc `bangs`…). Gán trục bừa thì
+vô dụng y hệt không gán — nên chốt kiểm **cả hai vế**: có trục, VÀ trục đó nằm trong `ky.get()` của
+đúng hàm dựng kênh ấy dùng.
+
+Kết quả: kho đề tài trung bình **6,5/kênh**, tối đa 13 — **375 video khác nhau** trước khi bất kỳ
+kênh nào phải lặp. Ba kênh còn kho nhỏ: STEAM TRUTH / GAME GRAVEYARD (4 bộ lọc, nhưng bảng game
+Steam tự đổi theo tuần) và SKY RIGHT NOW (nguồn SỐNG: máy bay đang bay, đổi từng phút).
+
+**Luật**: thêm một trường cấu hình thì phải viết luôn chỗ ĐỌC nó trong cùng một lần sửa. Trường
+nằm im còn tệ hơn không có — nó tạo cảm giác đã làm xong.
+Chốt: `t_moi_kenh_gen2_phai_xoay_duoc_de_tai`.

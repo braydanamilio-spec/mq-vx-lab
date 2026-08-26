@@ -162,7 +162,19 @@
     "footage": false,
     "tham_so": {
       "tu_khoa": "sleep",
-      "xoay": "tu_khoa"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "sleep",
+        "caffeine",
+        "exercise",
+        "obesity",
+        "depression",
+        "memory",
+        "vitamin d",
+        "screen time",
+        "loneliness",
+        "intermittent fasting"
+      ]
     },
     "brand": {
       "name": "ONE STUDY",
@@ -493,7 +505,16 @@
     "footage": false,
     "tham_so": {
       "tu_khoa": "wrongful death",
-      "xoay": "tu_khoa"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "wrongful death",
+        "medical malpractice",
+        "product liability",
+        "wrongful termination",
+        "class action",
+        "negligence",
+        "punitive damages"
+      ]
     },
     "brand": {
       "name": "COURT RECORD",
@@ -541,7 +562,16 @@
     "footage": false,
     "tham_so": {
       "tu_khoa": "false advertising",
-      "xoay": "tu_khoa"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "false advertising",
+        "deceptive marketing",
+        "unfair competition",
+        "breach of warranty",
+        "consumer fraud",
+        "price fixing",
+        "data breach"
+      ]
     },
     "brand": {
       "name": "SUED FOR THIS",
@@ -590,7 +620,15 @@
     "footage": false,
     "tham_so": {
       "tu_khoa": "habeas corpus",
-      "xoay": "tu_khoa"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "habeas corpus",
+        "actual innocence",
+        "newly discovered evidence",
+        "ineffective assistance",
+        "exculpatory evidence",
+        "DNA testing"
+      ]
     },
     "brand": {
       "name": "COLD FILE",
@@ -1007,7 +1045,17 @@
     "tham_so": {
       "tu_khoa": "detective",
       "loc": "moi",
-      "xoay": "tu_khoa"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "detective",
+        "medical drama",
+        "courtroom",
+        "spy",
+        "heist",
+        "survival",
+        "small town mystery",
+        "time travel"
+      ]
     },
     "brand": {
       "name": "SHOW NUMBERS",
@@ -1056,7 +1104,16 @@
     "tham_so": {
       "tu_khoa": "sci-fi",
       "loc": "da_huy",
-      "xoay": "tu_khoa"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "sci-fi",
+        "supernatural",
+        "teen drama",
+        "workplace comedy",
+        "space opera",
+        "superhero",
+        "period drama"
+      ]
     },
     "brand": {
       "name": "GONE TOO SOON",
@@ -1222,7 +1279,8 @@
       "kho_loc": [
         "dong_nhat",
         "tang_manh",
-        "dinh_cao"
+        "dinh_cao",
+        "ban_chay"
       ]
     },
     "brand": {
@@ -1276,7 +1334,8 @@
       "kho_loc": [
         "chet_yeu",
         "tut_manh",
-        "vang_nhat"
+        "vang_nhat",
+        "bo_hoang"
       ]
     },
     "brand": {
@@ -1327,7 +1386,17 @@
       "hang": "ford",
       "dong": "f-150",
       "nam": 2020,
-      "xoay": "hang"
+      "xoay": "hang",
+      "kho_hang": [
+        "ford",
+        "toyota",
+        "honda",
+        "chevrolet",
+        "nissan",
+        "jeep",
+        "hyundai",
+        "tesla"
+      ]
     },
     "brand": {
       "name": "CAR RECALL",
@@ -1376,7 +1445,17 @@
     "tham_so": {
       "hang": "Toyota",
       "nam": 2024,
-      "xoay": "hang"
+      "xoay": "hang",
+      "kho_hang": [
+        "Toyota",
+        "Ford",
+        "Honda",
+        "Chevrolet",
+        "Hyundai",
+        "Subaru",
+        "Kia",
+        "BMW"
+      ]
     },
     "brand": {
       "name": "MPG TRUTH",
@@ -1423,7 +1502,17 @@
     "the_he": 2,
     "footage": false,
     "tham_so": {
-      "xoay": "giong"
+      "xoay": "giong",
+      "kho_giong": [
+        "retriever",
+        "shepherd",
+        "bulldog",
+        "poodle",
+        "terrier",
+        "hound",
+        "spaniel",
+        "mastiff"
+      ]
     },
     "brand": {
       "name": "BREED FILE",
@@ -2218,7 +2307,17 @@
     "footage": false,
     "tham_so": {
       "tu_khoa": "america 1950",
-      "xoay": "tu_khoa"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "america 1950",
+        "america 1940",
+        "america 1960",
+        "factory work",
+        "school 1950",
+        "train travel",
+        "farm life",
+        "city life 1930"
+      ]
     },
     "brand": {
       "name": "ARCHIVE REEL",
@@ -2266,7 +2365,17 @@
     "footage": false,
     "tham_so": {
       "tu_khoa": "city street",
-      "xoay": "tu_khoa"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "city street",
+        "harbor",
+        "main street",
+        "railway station",
+        "town square",
+        "bridge",
+        "waterfront",
+        "market"
+      ]
     },
     "brand": {
       "name": "THEN AND NOW",
@@ -2664,7 +2773,16 @@
     "footage": false,
     "tham_so": {
       "tu_khoa": "first amendment",
-      "xoay": "tu_khoa"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "first amendment",
+        "fourth amendment",
+        "due process",
+        "equal protection",
+        "right to counsel",
+        "search and seizure",
+        "free speech"
+      ]
     },
     "brand": {
       "name": "YOUR RIGHTS CASE",
