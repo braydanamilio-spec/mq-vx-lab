@@ -184,6 +184,7 @@ def main() -> int:
             goc = acc.get("root_id") or acc.get("root")
             if not goc:
                 continue
+            can_xoa = []
             for f in _di_het_kho(dr, goc, ten_kho=str(acc.get('name') or '?')):
                 ten = str(f.get("name") or "")
                 # CHỈ đụng tệp có tên kênh cũ ở đầu — không quét mù cả kho
@@ -191,8 +192,28 @@ def main() -> int:
                     continue
                 tong += 1
                 _loai[_duoi(ten)] = _loai.get(_duoi(ten), 0) + 1
-                if that:
-                    dr.trash(f["id"])
+                can_xoa.append(f["id"])
+            if that and can_xoa:
+                # 26/8 — XOÁ SONG SONG + IN TIẾN ĐỘ. Bản đầu gọi `dr.trash()` tuần tự: 9.037 tệp
+                # × ~0,3s/lượt ≈ 45 phút, đúng bằng `timeout-minutes` ⇒ job bị giết giữa chừng
+                # (chạy 45'21" rồi `The operation was canceled`), dọn dở dang mà log KHÔNG cho biết
+                # đã tới đâu. Một việc dài mà không in tiến độ thì lúc nó chết chẳng ai biết mất gì.
+                # Thùng rác nên chạy lại là tiếp tục phần còn lại, không hỏng gì.
+                import concurrent.futures as _cf
+                xong = [0]
+                def _bo(fid):
+                    try:
+                        dr.trash(fid)
+                    except Exception as e:
+                        print(f"      ⚠️ bỏ sót 1 tệp: {str(e)[:50]}")
+                    xong[0] += 1
+                    if xong[0] % 200 == 0:
+                        print(f"      … {xong[0]}/{len(can_xoa)} tệp của kho "
+                              f"'{acc.get('name', '?')}'", flush=True)
+                with _cf.ThreadPoolExecutor(max_workers=8) as ex:
+                    list(ex.map(_bo, can_xoa))
+                print(f"      ✅ kho '{acc.get('name', '?')}': {len(can_xoa)} tệp vào thùng rác",
+                      flush=True)
         print(f"\n  🗑  {'đã đưa vào thùng rác' if that else '(sẽ đưa vào thùng rác)'} {tong} tệp "
               f"— Drive giữ 30 ngày, khôi phục được")
         if _loai:

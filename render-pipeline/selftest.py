@@ -1779,6 +1779,30 @@ def t_don_kho_khong_duoc_dung_kich_ban():
         "hàm duyệt cây không kiểm CAM_DUNG -> vẫn chui vào thư mục kịch bản"
 
 
+
+def t_viec_dai_phai_in_tien_do_va_du_gio():
+    """Việc dọn hàng nghìn tệp phải in tiến độ và có đủ thời gian chạy.
+
+    26/8 — bản dọn thật chạy **45 phút 21 giây** rồi `The operation was canceled`: đúng bằng
+    `timeout-minutes: 45`. 9.037 tệp gọi `trash()` tuần tự, mỗi lượt ~0,3s.
+
+    Hai cái sai, và cái thứ hai đắt hơn:
+      ① trần thời gian đặt sát mức cần — chỉ cần kho phình thêm chút là chết;
+      ② **không in tiến độ**, nên lúc bị giết không ai biết đã dọn tới đâu, còn lại bao nhiêu.
+         Một việc dài mà im lặng thì khi nó chết chỉ còn cách đoán.
+
+    Vá: xoá song song 8 luồng, in tiến độ mỗi 200 tệp, nới trần lên 330 phút. Thùng rác nên chạy
+    lại là tiếp tục phần còn lại, không hỏng gì."""
+    src = _doc("don_the_he_1.py")
+    assert "ThreadPoolExecutor" in src, "vẫn xoá tuần tự -> chạm trần thời gian"
+    assert "% 200 == 0" in src, "không in tiến độ -> bị giết giữa chừng thì không biết đã tới đâu"
+    y = _doc("../.github/workflows/don_the_he_1.yml")
+    import re as _re
+    m = _re.search(r"timeout-minutes:\s*(\d+)", y)
+    assert m and int(m.group(1)) >= 180, \
+        f"timeout-minutes={m.group(1) if m else '?'} — quá sát, việc dọn từng chết vì đúng lý do này"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1899,6 +1923,7 @@ def main():
     check("phông chảy hết đường JSON->props->composition", t_phong_phai_chay_het_duong_toi_luc_render)
     check("dọn kho: đi hết cây + mọi loại tệp", t_don_kho_phai_di_het_cay_va_moi_loai_tep)
     check("dọn kho KHÔNG được đụng kịch bản", t_don_kho_khong_duoc_dung_kich_ban)
+    check("việc dài phải in tiến độ + đủ giờ", t_viec_dai_phai_in_tien_do_va_du_gio)
     check("mức âm chuyển cảnh quyết ở MỘT chỗ", t_muc_am_quyet_o_mot_cho)
     check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)

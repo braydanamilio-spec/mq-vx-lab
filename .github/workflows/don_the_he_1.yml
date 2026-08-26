@@ -22,7 +22,9 @@ on:
 jobs:
   don:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # 26/8 — 45 phút KHÔNG ĐỦ: 9.037 tệp xoá tuần tự mất đúng 45'21" rồi bị giết giữa chừng.
+    # Nay xoá song song 8 luồng nên nhanh hơn nhiều, nhưng vẫn nới trần phòng kho phình thêm.
+    timeout-minutes: 330
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
