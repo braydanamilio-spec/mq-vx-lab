@@ -3579,3 +3579,26 @@ gần cạn thì dừng hẳn. Mô phỏng cả ngày:
 `SESSION_GAP_MIN = 180` nay chỉ còn là **đường lùi** khi không đọc được sổ hạn mức.
 Chốt: `t_van_phien_phai_theo_ngan_sach` — đòi van phải đọc `phan_tram_da_dung` + `_gio_toi_reset`,
 và đường lùi vẫn phải nằm dưới trần.
+
+### 7.em — CẮT 720 LƯỢT ĐỌC/PHIÊN, VÀ CÁI BẪY MỚI ĐI KÈM (26/8/2026)
+
+`read_channels` tốn **40 lượt × 18 lane = 720 lượt mỗi phiên** cho CÙNG một danh sách. Nó có đệm
+10 phút, nhưng đệm chỉ sống **trong một tiến trình** — mà mỗi lane là một tiến trình riêng, nên
+đệm đó chưa từng cứu được lượt nào giữa các lane.
+
+Plan vốn đã đọc trọn danh sách rồi nén xuống `CHANNEL_CFGS` (đường này chạy từ 25/8, `read_one_channel`
+vẫn dùng khi gương thiếu kênh) — chỉ là `read_channels` không đọc gói ấy. Nay đọc: **720 → 0**.
+Độ tươi không đổi: cấu hình kênh do người bấm trên dashboard, mà plan vừa đọc đầu phiên; thứ cần
+tươi từng giây (pause/target) vẫn đi đường `read_one_channel` riêng.
+
+**Bẫy mới đi kèm, kín hơn nhiều:** nếu ai đó thêm `CHANNEL_CFGS` vào env của job `plan` (chép nhầm
+khối env từ job `render` là đủ), plan sẽ đọc lại **gói của phiên trước** thay vì đọc Firestore ⇒
+- cấu hình kênh **đóng băng vĩnh viễn** — pause/đổi target trên dashboard mất tác dụng;
+- kênh mới thêm không bao giờ xuất hiện;
+- **không có lỗi nào cả**, vì gói cũ vẫn giải nén bình thường.
+
+Hệ vẫn chạy, vẫn ra video, chỉ là chạy theo một bản cấu hình chết — kiểu hỏng tệ nhất.
+
+**Luật**: nơi TẠO ra một bản chụp không bao giờ được ĐỌC bản chụp đó. Khi thêm một lớp đệm chuyền
+từ tầng trên xuống tầng dưới, chốt luôn cả hai chiều: tầng dưới phải nhận, tầng trên phải không.
+Chốt: `t_plan_khong_duoc_doc_goi_cua_chinh_no` (đã thử phá).

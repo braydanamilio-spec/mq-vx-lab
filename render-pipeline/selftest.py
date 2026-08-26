@@ -1842,6 +1842,36 @@ def t_van_phien_phai_theo_ngan_sach():
         f"lượt = {24*60/max(1,gap)*MOI_PHIEN:,.0f}, vượt trần {TRAN:,} — cần ≥ {can:.0f}'")
 
 
+
+def t_plan_khong_duoc_doc_goi_cua_chinh_no():
+    """Job `plan` KHÔNG được nhận `CHANNEL_CFGS`/`KEYS_A` — nó là nơi TẠO RA hai gói đó.
+
+    26/8 — sau khi cho `read_channels` ưu tiên gói plan gửi kèm, xuất hiện một bẫy mới rất kín:
+    nếu ai đó thêm `CHANNEL_CFGS` vào env của job `plan` (chép nhầm khối env từ job `render` là
+    đủ), thì plan sẽ đọc lại **gói của phiên trước** thay vì đọc Firestore. Hậu quả:
+      • cấu hình kênh ĐÓNG BĂNG vĩnh viễn — bấm pause/đổi target trên dashboard không còn tác dụng;
+      • kênh mới thêm không bao giờ xuất hiện;
+      • và không có lỗi nào cả, vì gói cũ vẫn giải nén được bình thường.
+
+    Đây là kiểu hỏng tệ nhất: hệ vẫn chạy, vẫn ra video, chỉ là chạy theo một bản cấu hình chết."""
+    import yaml as _y, io as _io, os as _os
+    p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..",
+                      ".github", "workflows", "render_cron.yml")
+    d = _y.safe_load(_io.open(p, encoding="utf-8"))
+    xau = []
+    for ten, job in (d.get("jobs") or {}).items():
+        for st in job.get("steps", []):
+            env = st.get("env") or {}
+            for k in ("CHANNEL_CFGS", "KEYS_A"):
+                if k in env and ten != "render":
+                    xau.append(f"job `{ten}` nhận {k} — nó phải TẠO gói, không phải đọc gói")
+    assert not xau, "; ".join(xau)
+    # và job render thì PHẢI có, nếu không lane quay lại đọc Firestore (720 lượt/phiên)
+    r = (d.get("jobs") or {}).get("render") or {}
+    co = any("CHANNEL_CFGS" in (st.get("env") or {}) for st in r.get("steps", []))
+    assert co, "job render KHÔNG nhận CHANNEL_CFGS -> mỗi lane đọc lại Firestore, 720 lượt/phiên"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1964,6 +1994,7 @@ def main():
     check("dọn kho KHÔNG được đụng kịch bản", t_don_kho_khong_duoc_dung_kich_ban)
     check("việc dài phải in tiến độ + đủ giờ", t_viec_dai_phai_in_tien_do_va_du_gio)
     check("van phiên tính ngược từ trần hạn mức", t_van_phien_phai_theo_ngan_sach)
+    check("plan không được đọc gói của chính nó", t_plan_khong_duoc_doc_goi_cua_chinh_no)
     check("mức âm chuyển cảnh quyết ở MỘT chỗ", t_muc_am_quyet_o_mot_cho)
     check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
