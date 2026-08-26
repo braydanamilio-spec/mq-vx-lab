@@ -1593,6 +1593,28 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
 
 
 
+def _gan_truc_vao_tieu_de(tieu_de: str, truc: str, val) -> str:
+    """Nhét GIÁ TRỊ TRỤC XOAY vào tiêu đề, nếu nó chưa có mặt ở đó.
+
+    26/8 — đo thật trên RECALL PLATE (openFDA): xoay `nam` 2025→2020 cho ra SÁU bộ dữ liệu khác
+    nhau nhưng `title` y hệt `"Food recalls you probably missed"` cả sáu lần. Khâu chống trùng so
+    bằng tiêu đề nên coi cả sáu là "đã làm rồi" ⇒ bộ 1 long + 3 short co lại còn 1 chương, và
+    nguy hơn: kênh đăng đúng MỘT video rồi câm vĩnh viễn, log chỉ ghi "hết kho đề tài" nên nhìn
+    như kho cạn chứ không như lỗi.
+
+    Xoay trục mà tiêu đề không đổi thì bản thân nó cũng đã sai với người xem: hai video khác năm
+    mà cùng một tên là trùng lặp trên trang kênh. Nên chữa ở tiêu đề là chữa cả hai chuyện."""
+    t = str(tieu_de or "").strip()
+    if not t or not truc or val in (None, ""):
+        return t
+    v = str(val)
+    if truc == "ngay":
+        return t if f"{v} day" in t.lower() else f"{t} — last {v} days"
+    if v.lower() in t.lower():
+        return t
+    return f"{t} ({v})" if truc == "nam" else f"{t} — {v}"
+
+
 def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None) -> dict | None:
     """Dựng story, XOAY qua kho đề tài cho tới khi ra một chuyện CHƯA LÀM.
 
@@ -1601,9 +1623,11 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
     if not dung:
         return None
     truc, kho = _kho_xoay_cua(kenh)
-    thu = [dict(ky or {})]                       # lượt 0: đúng tham số gốc
-    if truc and kho:
-        thu += [{**(ky or {}), truc: v} for v in kho]
+    # 26/8 — BỎ "lượt 0 trần" khi kênh có kho xoay. Trước đây lượt 0 chạy tham số gốc (không nêu
+    # rõ giá trị trục) nên tiêu đề của nó KHÔNG mang trục, còn các lượt sau thì có. Hai dạng tiêu
+    # đề cho cùng một bộ dữ liệu ⇒ chống trùng so không khớp ⇒ đăng lại đúng nội dung đã đăng.
+    # Kho xoay đã chứa sẵn giá trị mặc định của kênh nên bỏ lượt 0 không mất đề tài nào.
+    thu = [{**(ky or {}), truc: v} for v in kho] if (truc and kho) else [dict(ky or {})]
     da_thay = None
     hong = 0            # số lần NGUỒN không trả dữ liệu (khác hẳn "đề tài đã làm rồi")
     for i, t in enumerate(thu):
@@ -1611,6 +1635,8 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
         if not st:
             hong += 1
             continue
+        if truc:
+            st["title"] = _gan_truc_vao_tieu_de(st.get("title"), truc, t.get(truc))
         da_thay = da_thay or st
         if not _tieu_de_da_lam(st.get("title"), avoid):
             if i:

@@ -3602,3 +3602,54 @@ Hệ vẫn chạy, vẫn ra video, chỉ là chạy theo một bản cấu hình
 **Luật**: nơi TẠO ra một bản chụp không bao giờ được ĐỌC bản chụp đó. Khi thêm một lớp đệm chuyền
 từ tầng trên xuống tầng dưới, chốt luôn cả hai chiều: tầng dưới phải nhận, tầng trên phải không.
 Chốt: `t_plan_khong_duoc_doc_goi_cua_chinh_no` (đã thử phá).
+
+### 7.en — XOAY TRỤC ĐỀ TÀI MÀ TIÊU ĐỀ KHÔNG ĐỔI ⇒ KÊNH CÂM SAU ĐÚNG 1 VIDEO (26/8/2026)
+
+Render thật một BỘ tại máy (RECALL PLATE, nguồn openFDA) để nghiệm thu yêu cầu "1 long : 3 short".
+Kết quả đo: **long 31,1s = đúng một short**, log ghi `hết kho 'nam' mà đề tài nào cũng đã làm rồi`.
+
+Kho `nam` có **6 đề tài**, thừa cho 3 chương. Sai không nằm ở kho:
+
+    2025 -> 'Food recalls you probably missed'
+    2024 -> 'Food recalls you probably missed'
+    2023 -> 'Food recalls you probably missed'
+
+Xoay trục cho ra **sáu bộ dữ liệu khác nhau nhưng một tiêu đề duy nhất**. `_tieu_de_da_lam` so bằng
+tiêu đề nên coi cả sáu là đã làm ⇒ bộ co còn 1 chương. Và hậu quả lớn hơn bộ: ở chế độ video đơn,
+kênh đăng video đầu xong thì MỌI lượt xoay về sau đều đụng tiêu đề đó ⇒ **BỎ LƯỢT vĩnh viễn**. 50
+kênh mới bật lên sẽ ra 50 video rồi đứng, mà log đọc như "kho đề tài cạn" — nghĩa là báo sai nguyên
+nhân, đắt gấp đôi một lỗi thường.
+
+Chữa ở tiêu đề chứ không ở khâu so trùng, vì tiêu đề trùng **tự nó đã sai với người xem**: hai video
+khác năm mà cùng một tên là trùng lặp trên trang kênh. `_gan_truc_vao_tieu_de` nhét giá trị trục vào
+tiêu đề (`(2023)` cho `nam`, `— last 90 days` cho `ngay`) khi nó chưa có mặt ở đó.
+
+Kèm theo phải **bỏ "lượt 0 trần"**: lượt 0 chạy tham số gốc mà không nêu giá trị trục, nên tiêu đề nó
+khác dạng với các lượt sau — hai dạng tiêu đề cho cùng một bộ dữ liệu là đăng trùng. Kho xoay đã chứa
+sẵn giá trị mặc định nên bỏ lượt 0 không mất đề tài nào.
+
+**LUẬT:** trục xoay nào cũng phải hiện ra ở tiêu đề. Xoay tham số mà khoá chống-trùng không đổi theo
+thì cơ chế xoay vòng là đồ trang trí. Chốt: `t_xoay_truc_doi_tieu_de`.
+
+**LUẬT 2:** nghiệm thu tính năng bằng **render thật một bộ**, không bằng chốt tĩnh. 128 chốt xanh
+trong khi tính năng chính chỉ ra 1/3 sản lượng.
+
+### 7.eo — "ĐÃ XỬ LÝ KHO HỎNG" NHƯNG NÓ NGỦ 12H RỒI BÁO LẠI, MÃI MÃI (26/8/2026)
+
+Anh nhắc nhiều lần: ADISONDURHAM báo hỏng, em bảo đã xử lý, rồi nó vẫn báo. Hai chỗ sai:
+
+1. `_bao_kho_chet` cho kho chết **ngủ 12 tiếng rồi tự thử lại**. Đúng cho token hết hạn — anh kết nối
+   lại là nó sống, không phải nhớ đi xoá cờ.
+2. Nhưng bản ghi này mang `root: "undefined"`. Chuỗi `"undefined"` là **truthy**, lọt sạch mọi bộ lọc
+   `if c.get("root")` ở cả 4 chỗ dựng danh sách kho. Thư mục đó không tồn tại và sẽ không bao giờ
+   tồn tại; kết nối lại chỉ tạo bản ghi MỚI, bản hỏng nằm nguyên đó.
+
+Cộng lại: cứ 12 tiếng thử một lần, hỏng một lần, ghi log một lần — vô hạn. Nó còn được **đếm là kho
+còn chỗ** trong lúc chờ, nên dashboard báo 88 kho trong khi chỉ 87 dùng được.
+
+Hỏng **cấu trúc** không được xếp chung với hỏng **tạm thời**. `_root_xai_duoc` loại thẳng ở khâu đọc
+danh sách: không tính là kho, không tốn một lượt gọi Drive nào, in đúng một lần kèm cách sửa.
+
+**LUẬT:** `if x.get("field")` không phải là kiểm tra tính hợp lệ. `"undefined"`, `"null"`, `"None"`
+đều truthy — đây là ba chuỗi mà JavaScript ở tầng Worker sinh ra khi giá trị thiếu. Trường nào đi từ
+JS sang Python phải lọc theo danh sách rác, không theo truthy. Chốt: `t_root_rac_loai_tu_goc`.

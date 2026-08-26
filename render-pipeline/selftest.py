@@ -1956,6 +1956,8 @@ def main():
     check("xoay key ảnh/Vision theo lượt đã dùng", t_xoay_key_theo_luot_dung)
     check("nén lỗi đã lường trước, không đệ quy", t_nen_loi_da_luong_khong_de_quy)
     check("hồ key qua ảnh chụp D1, không đâm vào A", t_ho_key_qua_d1_khong_dam_vao_A)
+    check("xoay trục phải ĐỔI tiêu đề, không thì kênh câm sau 1 video", t_xoay_truc_doi_tieu_de)
+    check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4022,6 +4024,57 @@ def t_cf_chan_prompt_van_con_duong_gemini():
     # phải bỏ qua CF còn lại để khỏi đốt lượt vô ích
     assert 'if _cf_chan_prompt and str(_k).startswith("cf:")' in than, \
         "không bỏ qua key CF còn lại -> đốt lượt vào cùng một prompt bị chặn"
+
+
+
+
+def t_xoay_truc_doi_tieu_de():
+    """Xoay trục đề tài mà TIÊU ĐỀ không đổi thì chống-trùng giết sạch lượt xoay.
+
+    26/8 — đo thật RECALL PLATE (openFDA): `nam` 2025→2020 ra sáu bộ dữ liệu khác nhau, `title`
+    giống hệt cả sáu. `_tieu_de_da_lam` so bằng tiêu đề ⇒ coi cả sáu là đã làm ⇒ bộ 1 long + 3
+    short co còn 1 chương (đo: long 31,1s = đúng một short), và kênh đăng MỘT video rồi câm hẳn.
+    Log lại ghi "hết kho đề tài" nên nhìn như kho cạn, không như lỗi — đắt gấp đôi.
+
+    Hai điều kiện phải cùng đúng:
+      • có hàm gắn giá trị trục vào tiêu đề, và `_dung_story_xoay` GỌI nó trước khi so trùng;
+      • KHÔNG còn "lượt 0 trần" khi kênh có kho xoay — lượt 0 không nêu giá trị trục nên tiêu đề
+        nó khác dạng với các lượt sau, hai dạng cho cùng một bộ dữ liệu là đăng trùng."""
+    import the_he_2 as T
+    src = _doc("the_he_2.py")
+    assert "_gan_truc_vao_tieu_de" in src, "không có hàm gắn trục vào tiêu đề"
+    i = src.index("def _dung_story_xoay")
+    than = src[i:i + 2600]
+    assert "_gan_truc_vao_tieu_de" in than, "_dung_story_xoay không gắn trục vào tiêu đề"
+    assert than.index("_gan_truc_vao_tieu_de") < than.index("_tieu_de_da_lam"),         "gắn trục SAU khi so trùng thì vô nghĩa"
+    assert "thu = [dict(ky or {})]" not in than, "vẫn còn lượt 0 trần -> hai dạng tiêu đề"
+    # ĐO THẬT: cùng tiêu đề gốc, ba giá trị trục phải ra ba tiêu đề khác nhau
+    goc = "Food recalls you probably missed"
+    ra = [T._gan_truc_vao_tieu_de(goc, "nam", n) for n in (2025, 2024, 2023)]
+    assert len(set(ra)) == 3, f"xoay `nam` vẫn ra tiêu đề trùng: {ra}"
+    rn = [T._gan_truc_vao_tieu_de(goc, "ngay", d) for d in (7, 30, 90)]
+    assert len(set(rn)) == 3, f"xoay `ngay` vẫn ra tiêu đề trùng: {rn}"
+    # đã có sẵn giá trị trong tiêu đề thì KHÔNG nhét thêm lần nữa
+    assert T._gan_truc_vao_tieu_de("Recalls in 2024", "nam", 2024) == "Recalls in 2024",         "nhét trùng giá trị đã có sẵn trong tiêu đề"
+
+
+def t_root_rac_loai_tu_goc():
+    """Bản ghi kho có `root` rác phải bị loại NGAY khâu đọc danh sách.
+
+    26/8 — anh nhắc nhiều lần: ADISONDURHAM báo hỏng, em bảo đã xử lý, nó vẫn báo. Gốc: cờ kho
+    chết chỉ NGỦ 12 TIẾNG rồi tự thử lại (đúng cho token hết hạn, vì kết nối lại là sống). Nhưng
+    bản ghi này mang `root: "undefined"` — chuỗi truthy nên lọt hết `if c.get("root")`, mà thư mục
+    đó không tồn tại và sẽ không bao giờ tồn tại. Hỏng CẤU TRÚC không được xếp chung với hỏng TẠM
+    THỜI: cứ 12 tiếng thử lại một lần là lặp vô hạn, lại còn được đếm là kho còn chỗ."""
+    import importlib, sys, os
+    d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "MM0-AutoPublisher", "src")
+    sys.path.insert(0, os.path.abspath(d))
+    S = importlib.import_module("storage")
+    for xau in ("undefined", "null", "None", "", "  ", "0"):
+        assert not S._root_xai_duoc({"root": xau, "channel": "X"}), f"root={xau!r} vẫn lọt"
+    assert S._root_xai_duoc({"root": "1AbC_thuMucThat", "channel": "X"}), "root thật bị loại oan"
+    src = _doc(os.path.join(d, "storage.py"))
+    assert 'if c.get("refresh_token") and c.get("root")' not in src,         "còn chỗ dựng danh sách kho chỉ kiểm root truthy -> 'undefined' lọt qua"
 
 
 if __name__ == "__main__":
