@@ -116,6 +116,7 @@ def main() -> int:
     lam_tat = "--tat" in sys.argv
     lam_kho = "--kho" in sys.argv
     lam_bg = "--ban-ghi" in sys.argv
+    lam_job = "--job" in sys.argv
     import firestore_bridge as FB
     db = _db()
     owner = os.environ.get("OWNER_UID") or ""
@@ -226,6 +227,56 @@ def main() -> int:
         elif not that:
             print("      ⚠️ ĐẾM RA 0 TỆP. Kiểm lại trước khi chạy thật — 0 gần như luôn là lỗi lọc, "
                   "không phải kho trống.")
+
+    if lam_job:
+        # 26/8 — anh chỉ ra: dashboard vẫn liệt kê 2.486 video của 55 kênh cũ trong "Kho tổng video".
+        # Đúng, vì gallery đọc `render_jobs` (Project B) chứ không đọc `render_channels`. Bản dọn
+        # trước xoá bản ghi KÊNH và tệp trên Drive, nên các job này giờ trỏ vào tệp đã nằm trong
+        # thùng rác — vừa rác mắt, vừa làm mọi con số tồn kho sai.
+        #
+        # Lấy tên kênh cũ từ BẢN CHỤP, không từ `render_channels`: bản ghi đã xoá rồi nên suy từ
+        # đó ra sẽ được đúng số không (cùng cái bẫy thứ tự đã vấp ở bước dọn kho).
+        ten_cu = {str(c.get("name") or "").upper() for c in cu if c.get("name")}
+        try:
+            _snap = json.load(io.open(os.path.join(GOC, "kenh_the_he_1.json"), encoding="utf-8"))
+            ten_cu |= {str(t).upper() for t in (_snap.get("ten") or [])}
+        except Exception as e:
+            print(f"  ⚠️ không đọc được bản chụp tên kênh cũ: {str(e)[:60]}")
+        ten_cu.discard("")
+        ten_moi = {str(t).upper() for t in _kenh_moi()}
+        # CHẶN CỨNG: tên nào vừa ở danh sách cũ vừa ở danh sách 50 kênh mới thì BỎ QUA. Trùng tên
+        # là chuyện có thật (bản chụp lấy từ lịch sử), và xoá nhầm job của kênh mới là mất video
+        # thật chứ không phải rác.
+        chong = ten_cu & ten_moi
+        if chong:
+            print(f"  🛡  {len(chong)} tên có ở CẢ hai danh sách — bỏ qua để khỏi xoá nhầm: "
+                  f"{', '.join(sorted(chong))}")
+            ten_cu -= ten_moi
+        print(f"\n  🔎 quét render_jobs của {len(ten_cu)} kênh cũ…")
+        xoa, giu, theo_kenh = 0, 0, {}
+        lo = []
+        for d in db.collection("render_jobs").where("owner", "==", owner).stream():
+            j = d.to_dict() or {}
+            ch = str(j.get("channel") or "").upper()
+            if ch in ten_cu:
+                xoa += 1
+                theo_kenh[ch] = theo_kenh.get(ch, 0) + 1
+                lo.append(d.reference)
+            else:
+                giu += 1
+        print(f"  📊 khớp {xoa} job của kênh cũ · giữ nguyên {giu} job (kênh mới/khác)")
+        for k, n in sorted(theo_kenh.items(), key=lambda x: -x[1])[:8]:
+            print(f"      {k}: {n}")
+        if that and lo:
+            # Xoá theo lô 400 (trần Firestore là 500 thao tác/lô) — 2.486 job thành ~7 lượt ghi lô
+            # thay vì 2.486 lượt gọi lẻ.
+            b = db.batch(); n = 0
+            for i, ref in enumerate(lo, 1):
+                b.delete(ref); n += 1
+                if n >= 400 or i == len(lo):
+                    b.commit(); b = db.batch(); n = 0
+                    print(f"      … đã xoá {i}/{len(lo)}", flush=True)
+        print(f"  🧹 {'đã xoá' if that else '(sẽ xoá)'} {xoa} job của 55 kênh cũ khỏi Kho tổng video")
 
     if lam_bg:
         n = 0

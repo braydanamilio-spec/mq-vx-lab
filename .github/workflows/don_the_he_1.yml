@@ -18,6 +18,9 @@ on:
       don_ban_ghi:
         description: "1 = xoá bản ghi kênh cũ trong render_channels (làm SAU CÙNG)"
         default: "0"
+      don_job:
+        description: "1 = xoá job kênh cũ khỏi render_jobs (Kho tổng video trên dashboard)"
+        default: "0"
 
 jobs:
   don:
@@ -81,4 +84,5 @@ jobs:
           if [ "${{ github.event.inputs.tat_kenh }}"    = "1" ]; then ARGS="$ARGS --tat"; fi
           if [ "${{ github.event.inputs.don_kho }}"     = "1" ]; then ARGS="$ARGS --kho"; fi
           if [ "${{ github.event.inputs.don_ban_ghi }}" = "1" ]; then ARGS="$ARGS --ban-ghi"; fi
+          if [ "${{ github.event.inputs.don_job }}"     = "1" ]; then ARGS="$ARGS --job"; fi
           python render-pipeline/don_the_he_1.py $ARGS
