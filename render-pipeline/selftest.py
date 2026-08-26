@@ -4113,6 +4113,15 @@ def t_root_rac_loai_tu_goc():
     THỜI: cứ 12 tiếng thử lại một lần là lặp vô hạn, lại còn được đếm là kho còn chỗ."""
     import importlib, sys, os
     d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "MM0-AutoPublisher", "src")
+    # 26/8 — CHỐT LIÊN-REPO PHẢI TỰ BỎ QUA KHI THIẾU REPO KIA. Chốt này chạy được ở máy anh (có cả
+    # hai repo) nhưng ĐỎ trong workflow `seed_the_he_2` — workflow đó không checkout
+    # MM0-AutoPublisher. Mà selftest đỏ thì CHẶN CẢ PHIÊN, nên một chốt viết ẩu làm đứng cả dây
+    # chuyền seed. Repo vốn đã có khuôn đúng cho việc này (xem `t_50_kenh_dong_bo_du_3_noi`): thiếu
+    # thì bỏ qua, NHƯNG PHẢI NÓI RÕ là đã bỏ qua — im lặng bỏ qua chính là bẫy "phép thử chạy trên
+    # đầu vào rỗng".
+    if not os.path.exists(os.path.join(d, "storage.py")):
+        print("      ⏭  bỏ qua: không có repo MM0-AutoPublisher ở đây (chốt liên-repo)")
+        return
     sys.path.insert(0, os.path.abspath(d))
     S = importlib.import_module("storage")
     for xau in ("undefined", "null", "None", "", "  ", "0"):
@@ -4136,6 +4145,11 @@ def t_do_dam_phong_co_that():
     cần mạng — rồi đòi danh sách xin phải là tập con KHÁC RỖNG của danh sách có."""
     import json as _j, subprocess as _sp, os as _o, re as _r
     goc = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "..", "engine-remotion")
+    # Cùng lý do như trên: chốt này gọi `node` để hỏi metadata phông, cần `node_modules`. Workflow
+    # nào không cài (seed, dọn kho…) thì bỏ qua có báo, thay vì đỏ và chặn cả phiên.
+    if not _o.path.isdir(_o.path.join(goc, "node_modules", "@remotion")):
+        print("      ⏭  bỏ qua: chưa cài node_modules của engine-remotion (chốt cần node)")
+        return
     src = _doc(_o.path.join(goc, "src", "Phong.tsx"))
     assert "_do_dam" in src and "getInfo" in src,         "Phong.tsx vẫn xin độ đậm cứng, không hỏi phông có gì"
     assert 'weights: ["700", "800", "900"]' not in src, "còn danh sách độ đậm cứng"
