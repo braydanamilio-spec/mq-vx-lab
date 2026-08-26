@@ -1521,7 +1521,9 @@ def t_moi_kenh_gen2_phai_xoay_duoc_de_tai():
     Chốt kiểm HAI điều, vì gán trục bừa cũng vô dụng y như không gán:
       ① mọi kênh có trục xoay (trừ kênh dùng nguồn SỐNG, tự đổi theo thời gian thật);
       ② trục đó có mặt trong `ky.get("<trục>")` của chính bộ chuyển đổi kênh ấy dùng."""
-    import json as _json, re as _re
+    import json as _json, re as _re, sys as _sys, os as _os
+    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    import the_he_2 as _T2
     src = _doc("the_he_2.py")
     ks = _json.loads(_doc("kenh_the_he_2.json"))
     # bản đồ ham -> hàm dựng, gom từ MỌI bảng bộ chuyển đổi
@@ -1539,6 +1541,16 @@ def t_moi_kenh_gen2_phai_xoay_duoc_de_tai():
             continue
         if not truc:
             xau.append(f"{k['ten']}: không có trục xoay -> lặp đúng một đề tài mãi")
+            continue
+        # 26/8 — CHỐT NÀY TỪNG XANH TRONG KHI 33/50 KÊNH CÂM. Nó kiểm "có khai trục" và "trục có
+        # được đọc", nhưng KHÔNG kiểm kho có giá trị nào không. Đo thật: `tu_khoa` 13 kênh,
+        # `tu_nam` 6, `bangs` 3, `mua`/`loc`/`hang` mỗi thứ 2… đều `kho KHÔNG CÓ giá trị`, vì
+        # `KHO_XOAY` chỉ khai `mon`/`nam`/`ngay`/`bang`. Kho rỗng thì `_dung_story_xoay` chỉ còn
+        # đúng MỘT lượt thử ⇒ xong video đầu là mọi lượt sau BỎ LƯỢT.
+        # Khai một trục rồi không cho nó giá trị nào thì y hệt không khai — mà lại nhìn như đã khai.
+        _kho = _T2._kho_xoay_cua(k)[1]
+        if len(_kho) < 2:
+            xau.append(f"{k['ten']}: trục `{truc}` có kho {len(_kho)} giá trị -> không xoay được")
             continue
         fn = mp.get(ham)
         b = _re.search(r"def " + str(fn) + r"\(.*?(?=\ndef )", src, _re.S) if fn else None

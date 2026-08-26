@@ -1518,17 +1518,65 @@ def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None, keys: list | Non
 _NAM_NAY = _datetime.date.today().year
 
 # Kho cho từng trục. Giá trị phải là thứ NGUỒN THẬT chấp nhận — đây không phải chỗ bịa cho có.
+_BANG_50 = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
+            "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+            "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
+            "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada",
+            "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina",
+            "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island",
+            "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia",
+            "Washington", "West Virginia", "Wisconsin", "Wyoming"]
+
+# 26/8 — KHO NÀY TỪNG PHỦ ĐÚNG 17/50 KÊNH. Đo thật:
+#     tu_khoa 13 kênh · tu_nam 6 · bangs 3 · mua 2 · loc 2 · hang 2 · thang/giong/tu_ngay/den_ngay 4
+#     -> tất cả đều `kho KHÔNG CÓ giá trị`
+# Kênh không có kho thì `_dung_story_xoay` chỉ còn ĐÚNG MỘT lượt thử; làm xong video đầu là tiêu đề
+# vào `avoid` và mọi lượt sau BỎ LƯỢT — tức 33/50 kênh câm vĩnh viễn sau một video. Chốt selftest
+# lúc đó vẫn xanh vì nó chỉ kiểm "có khai trục xoay" và "trục có được đọc", KHÔNG kiểm kho rỗng.
+#
+# Và một lỗi lệch tên kinh điển: kho khai `"bang"`, kênh dùng trục `"bangs"` — lệch một chữ `s`,
+# 3 kênh mất sạch kho, không có gì báo. Cùng họ với `doc_kenh` (33/50 tra không ra) và với việc
+# radar đọc khoá `name` trong khi nguồn trả `giong`/`ten`.
 KHO_XOAY: dict[str, list] = {
     # Nhóm hàng của Open Food Facts (đã kiểm bằng gọi thật, xem du_lieu_mo.thanh_phan_off)
     "mon": ["breakfast-cereals", "pizzas", "sodas", "chocolates", "crisps", "biscuits",
-            "energy-drinks", "ice-creams", "breads", "cheeses", "yogurts", "sauces"],
-    # Năm ngân sách/thống kê: lùi dần, mỗi năm là một bộ số khác hẳn
-    "nam": [_NAM_NAY - 1, _NAM_NAY - 2, _NAM_NAY - 3, _NAM_NAY - 4, _NAM_NAY - 5, _NAM_NAY - 6],
-    # Cửa sổ ngày (số ngày lùi về trước) cho nguồn theo thời gian: thu hồi, thiên thạch, hồ sơ
-    "ngay": [7, 14, 30, 60, 90, 180],
-    "bang": ["California", "Texas", "Florida", "New York", "Pennsylvania", "Illinois",
-             "Ohio", "Georgia", "North Carolina", "Michigan", "Arizona", "Washington"],
+            "energy-drinks", "ice-creams", "breads", "cheeses", "yogurts", "sauces",
+            "peanut-butters", "cereals", "frozen-foods", "snacks", "juices", "coffees",
+            "chips", "candies", "meats", "fishes"],
+    # Năm: nới từ 6 lên 16. Sáu năm × 6 chương = đúng MỘT bộ rồi cạn — nguyên nhân trực tiếp khiến
+    # 10 kênh trục `nam` chỉ làm được một bộ. Các nguồn (openFDA, USAspending, BLS) đều có dữ liệu
+    # sâu hơn 6 năm rất nhiều; radar `kiem_chung` sẽ loại năm nào thật sự không có số.
+    "nam": [_NAM_NAY - i for i in range(1, 17)],
+    "tu_nam": [_NAM_NAY - i for i in range(1, 17)],
+    # Cửa sổ ngày lùi về trước
+    "ngay": [7, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365, 545, 730],
+    "tu_ngay": [7, 14, 30, 60, 90, 180, 365, 730],
+    "den_ngay": [0, 7, 14, 30, 60, 90],
+    "thang": list(range(1, 13)),
+    # Mùa giải thể thao
+    "mua": [f"{n}-{str(n + 1)[-2:]}" for n in range(2010, _NAM_NAY)],
+    # Hãng xe (NHTSA)
+    "hang": ["Toyota", "Honda", "Ford", "Chevrolet", "Nissan", "Jeep", "Hyundai", "Kia", "Subaru",
+             "BMW", "Mercedes-Benz", "Volkswagen", "Tesla", "Ram", "GMC", "Dodge", "Mazda",
+             "Lexus", "Audi", "Volvo"],
+    "bang": list(_BANG_50),
+    "bangs": list(_BANG_50),
 }
+
+
+def _chuan_truc(truc: str) -> str:
+    """Chuẩn hoá tên trục trước khi tra kho — chịu được số nhiều/số ít và dấu gạch.
+
+    26/8 — kho khai `"bang"`, ba kênh khai trục `"bangs"`. Lệch một chữ `s` mà mất sạch kho, và
+    không có gì báo vì `dict.get` trả None rất lịch sự. Đây là lần thứ ba trong ngày cùng một lớp
+    lỗi "hai bên dùng khuôn tên khác nhau", nên chặn ở đây một lần cho xong."""
+    t = str(truc or "").strip().lower().replace("-", "_")
+    if t in KHO_XOAY:
+        return t
+    for bien in (t.rstrip("s"), t + "s"):
+        if bien in KHO_XOAY:
+            return bien
+    return t
 
 
 def _kho_xoay_cua(kenh: dict) -> tuple[str, list]:
@@ -1541,7 +1589,7 @@ def _kho_xoay_cua(kenh: dict) -> tuple[str, list]:
     rieng = ts.get("kho_" + truc)
     if isinstance(rieng, list) and rieng:
         return truc, list(rieng)
-    return truc, list(KHO_XOAY.get(truc) or [])
+    return truc, list(KHO_XOAY.get(_chuan_truc(truc)) or [])
 
 
 def _tieu_de_da_lam(tieu_de: str, avoid) -> bool:

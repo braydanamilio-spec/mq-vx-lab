@@ -3814,3 +3814,35 @@ cho mọi nguồn — danh sách rỗng không ném lỗi, nó chỉ lặng lẽ
 **KHÔNG LÀM:** không tải video, không lấy phụ đề, không viết lại kịch bản người khác. Sự thật và
 công thức không ai sở hữu; lời kể thì có. 50 kênh cùng chạy quy trình chép lời là đúng dấu hiệu
 "reused content" YouTube dùng để đánh trượt duyệt kiếm tiền — mất cả hệ, không phải mất một video.
+
+### 7.eu — 33/50 KÊNH SẼ CÂM SAU MỘT VIDEO, VÀ CHỐT BÁO XANH (26/8/2026)
+
+Anh hỏi "50 kênh đảm bảo không trùng lặp, không nhàm chán chưa". Đo thay vì trả lời:
+
+    tu_khoa 13 kênh · tu_nam 6 · bangs 3 · mua 2 · loc 2 · hang 2 · thang/giong/tu_ngay/den_ngay 4
+        -> TẤT CẢ đều `kho KHÔNG CÓ giá trị`
+    nam 10 kênh · kho 6 giá trị      ngay 5 kênh · kho 6      (một bộ ăn đúng 6 chương)
+
+`KHO_XOAY` chỉ khai bốn trục `mon/nam/ngay/bang`, trong khi 50 kênh dùng **14 tên trục**. Kho rỗng
+thì `_dung_story_xoay` chỉ còn ĐÚNG MỘT lượt thử ⇒ xong video đầu là tiêu đề vào `avoid`, mọi lượt
+sau BỎ LƯỢT ⇒ **33/50 kênh câm vĩnh viễn sau một video**. 15 kênh còn lại đủ đúng một bộ.
+
+Kèm một lỗi lệch tên kinh điển: kho khai `"bang"`, ba kênh khai trục `"bangs"` — lệch một chữ `s`,
+mất sạch kho, không có gì báo vì `dict.get` trả `None` rất lịch sự. Đây là lần thứ BA trong ngày
+cùng lớp lỗi "hai bên dùng khuôn tên khác nhau" (trước đó: `doc_kenh` 33/50 tra không ra; radar đọc
+khoá `name` trong khi nguồn trả `giong`/`ten`).
+
+**Nhưng phần đắt nhất là chốt selftest báo XANH suốt thời gian đó.** `t_moi_kenh_gen2_phai_xoay_duoc_de_tai`
+kiểm hai điều — có khai trục xoay, và trục đó có được bộ chuyển đổi đọc — mà **không kiểm kho có
+giá trị nào không**. Khai một trục rồi không cho nó giá trị nào thì y hệt không khai, chỉ khác là
+nhìn như đã khai.
+
+Vá: nới kho (`nam` 6→16, `ngay` 6→13, `mon` 12→22) + thêm 9 trục còn thiếu + `_chuan_truc()` chịu
+được số nhiều/số ít. Đo lại: **17/50 → 49/50** kênh xoay được; kênh còn lại (`SKY RIGHT NOW`) dùng
+nguồn SỐNG `may_bay`, vốn đã được miễn trừ đúng lý do.
+
+**LUẬT:** chốt nào kiểm "có khai X" thì phải kiểm luôn "X có dùng được không". Khai rỗng là dạng
+nguy hiểm hơn không khai, vì nó qua được mọi phép kiểm sự tồn tại.
+
+**LUẬT 2:** tên khoá đi giữa hai bảng (kho ↔ cấu hình kênh) phải chuẩn hoá ở MỘT chỗ. Ba lần vấp
+trong một ngày là đủ để ngừng sửa từng ca.
