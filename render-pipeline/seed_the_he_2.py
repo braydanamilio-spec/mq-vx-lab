@@ -18,6 +18,7 @@ import io
 import json
 import os
 import sys
+import firestore_bridge as FB
 
 GOC = os.path.dirname(os.path.abspath(__file__))
 DS = os.path.join(GOC, "kenh_the_he_2.json")
@@ -126,6 +127,18 @@ def main() -> int:
     for k in ks:
         ten = k["ten"].replace(" ", "")
         if ten in co and not capnhat:
+            # 27/8 — `--bat` PHẢI BẬT ĐƯỢC CẢ KÊNH ĐÃ CÓ. Trước đây nhánh này `continue` thẳng, nên
+            # `paused` chỉ được đặt LÚC TẠO. Hệ quả đo thật: 50 kênh gen-2 tạo lần đầu với
+            # `paused: True`, mọi lượt seed sau đều "đã có -> bỏ qua", và KHÔNG có đường nào lật cờ.
+            # Plan vì thế không thấy kênh nào chạy được và in "🎯 Mọi kênh đã đủ chỉ tiêu — không mở
+            # phiên" suốt cả ngày. Chú thích cũ nói đúng rằng bật/tắt là quyết định của NGƯỜI —
+            # nhưng `--bat` CHÍNH LÀ người ra quyết định đó, nên nó phải có hiệu lực.
+            if bat:
+                if that:
+                    FB._soft(lambda _t=ten: db.collection("render_channels")
+                             .document(f"{owner}__{_t}").set({"paused": False}, merge=True),
+                             "bat_kenh_da_co")
+                print(f"  ▶️  {ten:18} đã có -> BẬT (paused=False)"); bo += 1; continue
             print(f"  ⏭  {ten:18} đã có -> bỏ qua"); bo += 1; continue
         b = k.get("brand") or {}
         pal = b.get("palette") or {}
