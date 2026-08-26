@@ -1290,6 +1290,40 @@ def t_fitsize_phai_theo_phong_va_khung():
     assert not thieu, f"phông chưa ĐO bề rộng (sẽ đoán sai -> tràn hoặc phí chỗ): {sorted(thieu)}"
 
 
+
+def t_canary_khong_duoc_render_vao_composition_rong():
+    """Mọi composition thế hệ 2 phải có defaultProps ĐỦ NỘI DUNG.
+
+    26/8 — `LongshotShort` không hề có `defaultProps`. `items` undefined ⇒ thang rỗng ⇒
+    `calcLongshot` ra đúng 126 khung (chỉ intro + outro). Canary in "✅ LongshotShort" nhưng nó
+    render một video TRỐNG, không chạm một dòng nào của phần nội dung. `RaceShort` chỉ có 1 cột,
+    `CinematicShort` có `scenes: []` (dài đúng 1 khung) — cùng bệnh.
+
+    Nghĩa là suốt thời gian qua canary bảo vệ được 4/7 dạng, còn 3 dạng thì nó gật đầu cho qua bất
+    kỳ lỗi bố cục nào. Ngay khi có dữ liệu mẫu thật, canary lộ ngay hai lỗi CHỒNG CHỮ trong
+    `LongshotShort` mà trước đó không ai thấy.
+
+    **Luật**: một phép thử chạy trên đầu vào rỗng không phải phép thử. Composition nào cũng phải
+    có dữ liệu mẫu đủ để đi qua chính phần mà nó sinh ra để vẽ."""
+    import re as _re
+    src = _doc("../engine-remotion/src/Root.tsx")
+    TOI_THIEU = 3
+    xau = []
+    for c in ("RankedShort", "ScaledShort", "MappedShort", "LongshotShort",
+              "ThenNowShort", "RaceShort", "CinematicShort"):
+        m = _re.search(r'<Composition id="' + c + r'"(?:.|\n)*?/>', src)
+        if not m:
+            xau.append(f"{c}: không thấy trong Root.tsx"); continue
+        blk = m.group(0)
+        if "defaultProps" not in blk:
+            xau.append(f"{c}: KHÔNG có defaultProps -> canary render video rỗng"); continue
+        # đếm số phần tử mẫu: mỗi mục là một `{ ... }` bên trong một mảng
+        n = len(_re.findall(r"\{\s*(?:name|label|state|type|t)\s*:", blk))
+        if n < TOI_THIEU:
+            xau.append(f"{c}: chỉ {n} mục mẫu (<{TOI_THIEU}) -> canary gần như không chạm nội dung")
+    assert not xau, "; ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1406,6 +1440,7 @@ def main():
     check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)
     check("gen-2: cả 3 đường phải làm thumbnail", t_gen2_phai_lam_thumbnail)
     check("fitSize theo phông + theo template", t_fitsize_phai_theo_phong_va_khung)
+    check("canary không được render vào composition rỗng", t_canary_khong_duoc_render_vao_composition_rong)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

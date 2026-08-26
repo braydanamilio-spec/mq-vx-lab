@@ -3274,3 +3274,30 @@ xuống **sau** `**dich`. Chốt `t_seed_khong_bi_spread_de_len_khoa_co_y` — c
 **Luật**: trong một dict có `**`, thứ tự là ĐIỀU KIỆN ĐÚNG, không phải thẩm mỹ. Khoá mà mã cố ý
 quyết phải đứng **sau** mọi `**`; khoá thừa hưởng đứng trước. Và một danh sách "khoá thừa hưởng"
 không bao giờ được giao với nhóm khoá mã tự quyết.
+
+### 7.eb — CANARY GẬT ĐẦU CHO 3/7 DẠNG VÌ NÓ RENDER VÀO COMPOSITION RỖNG (26/8/2026)
+
+Xem tận mắt 7 dạng thế hệ 2 (yêu cầu "visual QC" của anh) thì lộ ra: `LongshotShort` **không hề có
+`defaultProps`**. `items` undefined ⇒ thang rỗng ⇒ `calcLongshot` ra đúng 126 khung, chỉ intro +
+outro. Canary vẫn in `✅ LongshotShort` — nhưng nó render một video TRỐNG, không chạm một dòng nào
+của phần nội dung. `RaceShort` chỉ 1 cột, `CinematicShort` có `scenes: []` (dài 1 khung): cùng bệnh.
+
+Tức là canary — thứ được dựng sau sự cố `vang is not defined` để không mất phiên nữa — thật ra chỉ
+bảo vệ **4/7** dạng. Ba dạng còn lại nó gật đầu cho qua bất kỳ lỗi bố cục nào.
+
+Ngay khi cho dữ liệu mẫu thật vào, canary lộ **hai lỗi chồng chữ** trong `LongshotShort` mà trước
+đó không ai thấy:
+1. Nhãn thang `1 in 10` in đè lên `@handle` ở đáy khung.
+   Bản vá đầu của em tính vị trí thật là `camY + ry` rồi kết luận "an toàn" — **sai**, vì còn một
+   lớp `scale(zoom)` (1,26–1,46) quanh tâm `ANCHOR_Y` nữa. Nấc ở 1737 thật ra rơi xuống 1859.
+   Render lại thấy vẫn chồng y nguyên: dấu hiệu TÍNH SAI, không phải vá sai chỗ.
+   Đúng: `yMan = ANCHOR_Y + (camY + ry - ANCHOR_Y) * zoom`.
+2. Nhãn mục nhánh trái đè nhãn thang. Chú thích ngay tại chỗ khẳng định *"branches left/right so it
+   never collides with the rung badges"* — đo lại thì sai: nhãn thang trải tới `RAIL_L+34`, nhãn mục
+   kết thúc ở `RAIL_L-40`, chồng nhau đoạn `[RAIL_L-96, RAIL_L-40]`. Xử lý: tranh chỗ thì **bỏ nhãn
+   thang, giữ nhãn mục** — nhãn mục mang con số CHÍNH XÁC, nhãn thang chỉ là mốc tròn.
+
+**Luật**: một phép thử chạy trên đầu vào rỗng **không phải phép thử**. Mọi composition phải có dữ
+liệu mẫu đủ để canary đi qua chính phần mà nó sinh ra để vẽ. Và khi tính vị trí trên màn hình, phải
+đi qua **mọi** phép biến hình của cha, không chỉ phép gần nhất.
+Chốt: `t_canary_khong_duoc_render_vao_composition_rong` (đã thử phá).

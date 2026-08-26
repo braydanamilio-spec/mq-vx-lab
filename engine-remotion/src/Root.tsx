@@ -83,7 +83,11 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="RaceLongV" component={RaceLong} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ races: [] }} calculateMetadata={calcMulti} />
     <Composition id="Race" component={BarChartRace} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ frames: [{ t: 2000, data: [{ name: "A", value: 1 }] }] }} calculateMetadata={calcRace} />
     <Composition id="WorldRace" component={WorldMapRace} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ frames: [{ t: 2000, data: [{ name: "China", value: 1 }] }] }} calculateMetadata={calcRace} />
-    <Composition id="RaceShort" component={BarChartRace} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ frames: [{ t: 2000, data: [{ name: "A", value: 1 }] }] }} calculateMetadata={calcRace} />
+    <Composition id="RaceShort" component={BarChartRace} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ title: "BIGGEST US COMPANIES", handle: "@datarace", accent: "#22D3EE", frames: [
+      { t: 2000, data: [{ name: "GE", value: 601 }, { name: "Exxon", value: 302 }, { name: "Walmart", value: 210 }, { name: "Intel", value: 275 }, { name: "Pfizer", value: 265 }] },
+      { t: 2012, data: [{ name: "Apple", value: 626 }, { name: "Exxon", value: 400 }, { name: "Walmart", value: 240 }, { name: "GE", value: 220 }, { name: "Microsoft", value: 224 }] },
+      { t: 2024, data: [{ name: "Apple", value: 3400 }, { name: "Microsoft", value: 3100 }, { name: "Nvidia", value: 2900 }, { name: "Amazon", value: 1900 }, { name: "Alphabet", value: 2100 }] },
+    ] }} calculateMetadata={calcRace} />
     <Composition id="LongBroke" component={LongBroke} durationInFrames={5425} fps={30} width={1920} height={1080} defaultProps={{ scenes: [], slug: "broke_long" }} calculateMetadata={calcLong} />
     <Composition id="ShortGen" component={ShortGen} durationInFrames={600} fps={30} width={1080} height={1920} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcShortGen} />
     <Composition id="GuessShort" component={GuessShort} durationInFrames={660} fps={30} width={1080} height={1920} calculateMetadata={calcGuess}
@@ -200,7 +204,13 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="Cinematic" component={Cinematic} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
     <Composition id="DoChu" component={DoChu} durationInFrames={1} fps={30} width={2400} height={300} defaultProps={{ text: "ABCDEFGHIJ", font: "poppins" }} />
     <Composition id="DocThumb" component={DocThumb} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ big: "TITLE" }} />
-    <Composition id="CinematicShort" component={Cinematic} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ scenes: [], slug: "" }} calculateMetadata={calcCinematic} />
+    <Composition id="CinematicShort" component={Cinematic} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ slug: "demo", handle: "@coldfileusa", accent: "#A855F7", accent2: "#FDE047", capColor: "#FDE047", scenes: [
+      { type: "scene", clip: "img/_fallback.jpg", audio: "", dur: 90, nar: "In 1974, a bank vault in Ohio was sealed by mistake.",
+        subs: [{ t: "In 1974 a bank vault", s: 0, d: 2.4 }, { t: "was sealed by mistake", s: 2.4, d: 2 }],
+        hook: { stat: "51 YEARS", label: "SEALED SHUT", line: "NOBODY OPENED IT" } },
+      { type: "scene", clip: "img/_fallback.jpg", audio: "", dur: 90, nar: "Nobody opened it for fifty one years.",
+        subs: [{ t: "Nobody opened it", s: 0, d: 2 }, { t: "for fifty one years", s: 2, d: 2.4 }] },
+    ] }} calculateMetadata={calcCinematic} />
     <Composition id="ToonShort" component={ToonShort} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ slug: "", title: "", frames: [], lines: [] }} calculateMetadata={calcToon} />
     <Composition id="ToonLong" component={ToonShort} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ slug: "", title: "", frames: [], lines: [] }} calculateMetadata={calcToon} />
     <Composition id="LottieTest" component={LottieTest} durationInFrames={120} fps={30} width={1920} height={1080} />
@@ -228,7 +238,17 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="BrandClockworkBanner" component={BrandClockwork} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
     <Composition id="BrandClockworkWatermark" component={BrandClockwork} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />
     <Composition id="ClockworkThumb" component={BrandClockwork} durationInFrames={1} fps={30} width={1280} height={720} defaultProps={{ kind: "thumb" }} />
-    <Composition id="LongshotShort" component={LongshotShort} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcLongshot} />
+    <Composition id="LongshotShort" component={LongshotShort} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcLongshot}
+      /* 26/8 — TRƯỚC ĐÂY KHÔNG CÓ defaultProps: `items` undefined -> ladder rỗng -> calcLongshot
+         ra đúng 126 khung (chỉ intro + outro). Canary "OK LongshotShort" vì thế chứng minh SỐ KHÔNG:
+         nó render một video trống, không chạm một dòng nào của phần nội dung. Mẫu dưới đây đủ mục
+         để canary đi thật qua ladder, nhãn và phần chồng chữ. */
+      defaultProps={{ title: "WHAT ARE THE REAL ODDS?", handle: "@longshotusa", color: "#4F46E5", accent: "#4F46E5", items: [
+        { label: "Struck by lightning", oddsDisp: "1 in 15,300", logValue: 4.18 },
+        { label: "Born with 11 fingers", oddsDisp: "1 in 500", logValue: 2.7 },
+        { label: "Hole in one", oddsDisp: "1 in 12,500", logValue: 4.1 },
+        { label: "Winning Powerball", oddsDisp: "1 in 292,000,000", logValue: 8.47 },
+      ] }} />
     <Composition id="BrandLongshotAvatar" component={BrandLongshot} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
     <Composition id="BrandLongshotBanner" component={BrandLongshot} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
     <Composition id="BrandLongshotWatermark" component={BrandLongshot} durationInFrames={1} fps={30} width={150} height={150} defaultProps={{ kind: "watermark" }} />

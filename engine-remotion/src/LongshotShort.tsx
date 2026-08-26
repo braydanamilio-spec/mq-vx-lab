@@ -106,6 +106,16 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
 
   const camY = ANCHOR_Y - activeY;
 
+  // Y CỦA CÁC NHÃN MỤC ĐANG HIỆN Ở NHÁNH TRÁI. Chú thích cũ ngay dưới đây khẳng định nhãn mục
+  // "branches left/right so it never collides with the rung badges" — đo lại thì SAI: nhãn thang
+  // trải tới RAIL_L+34, còn nhãn mục nhánh trái kết thúc ở RAIL_L-40, hai vùng chồng nhau
+  // [RAIL_L-96, RAIL_L-40]. Thấy rõ ở canary: "1 in 15,300" đè lên "1 in 10,000".
+  // Cách xử lý: khi hai thứ tranh chỗ thì BỎ nhãn thang, giữ nhãn mục — nhãn mục nói con số CHÍNH
+  // XÁC của mục đó, còn nhãn thang chỉ là mốc tròn; giữ cái kém thông tin hơn là chọn sai.
+  const yNhanTrai = items
+    .map((it, i) => (i % 2 === 0 && f >= starts[i] ? perItemClimb[i].y : null))
+    .filter((y): y is number => y !== null);
+
   return (
     <AbsoluteFill style={{ background: `radial-gradient(120% 90% at 50% 10%, #17163a 0%, #0d0b22 55%, #06050f 100%)`, fontFamily: phong(font), overflow: "hidden" }}>
       {/* TIÊU ĐỀ — fixed header, always visible */}
@@ -125,6 +135,20 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
           {/* rungs — evenly spaced in LOG space (so real rarity gaps compound going up) */}
           {Array.from({ length: maxN + 1 }, (_, n) => n).map((n) => {
             const ry = yForLog(n, trackH);
+            // 26/8 — CHỒNG CHỮ Ở ĐÁY KHUNG. Thang nằm trong lớp bị dịch `camY`, nên chỗ đứng THẬT
+            // của một nấc trên màn hình là `camY + ry`, không phải `ry`. Nấc thấp nhất rơi đúng
+            // vào dải đáy nơi đặt @handle -> nhãn "1 in 10" in đè lên tên kênh (thấy rõ ở canary
+            // sau khi có defaultProps thật). Nấc trôi ra ngoài khung thì không vẽ: nó không mang
+            // thông tin gì, chỉ kịp đâm vào chữ khác.
+            // Vị trí THẬT trên khung phải đi qua CẢ HAI phép biến hình, không chỉ một:
+            //   translateY(camY)  rồi  scale(zoom) quanh tâm 50% ANCHOR_Y.
+            // Bản vá đầu của em chỉ cộng `camY` rồi kết luận nấc nằm an toàn — nhưng zoom 1.26-1.46
+            // đẩy mọi thứ DƯỚI tâm xuống thấp thêm, nên nấc "an toàn" ở 1737 thật ra rơi xuống 1859,
+            // đúng chỗ @handle. Render lại thấy vẫn chồng y nguyên: dấu hiệu tính sai chứ không phải
+            // vá sai chỗ.
+            const yMan = ANCHOR_Y + (camY + ry - ANCHOR_Y) * zoom;
+            if (yMan > H - 118 || yMan < 92) return null;
+            const bidong = yNhanTrai.some((y) => Math.abs(y - ry) < 46);
             const reached = activeLog >= n - 0.15;
             return (
               <div key={n} style={{ position: "absolute", top: ry - 3, left: RAIL_L - 26, width: RAIL_R - RAIL_L + 52, height: 6,
@@ -132,7 +156,8 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
                 {/* nhãn mốc dời hẳn ra MÉP TRÁI ngoài vùng token leo (CENTER±arc) -> KHÔNG BAO GIỜ bị token to đè lên,
                     dù ở mốc nào cũng đọc được (khác thiết kế cũ: label giữa cột, đúng chỗ token hạ cánh -> luôn đè). */}
                 <div style={{ position: "absolute", top: -13, left: -70, whiteSpace: "nowrap", textAlign: "right", width: 130,
-                  color: reached ? "#fff" : "#ffffff55", fontWeight: 800, fontSize: 22, letterSpacing: 0.5, textShadow: "0 2px 8px #000a" }}>{n === 0 ? "EVERYDAY" : fmtRung(n)}</div>
+                  color: reached ? "#fff" : "#ffffff55", fontWeight: 800, fontSize: 22, letterSpacing: 0.5, textShadow: "0 2px 8px #000a",
+                  opacity: bidong ? 0 : 1 }}>{n === 0 ? "EVERYDAY" : fmtRung(n)}</div>
               </div>
             );
           })}
