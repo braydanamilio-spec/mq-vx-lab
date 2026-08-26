@@ -28,7 +28,12 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - name: Deps
-        run: pip install --quiet -c render-pipeline/constraints.txt google-cloud-firestore google-auth google-api-python-client google-auth-oauthlib
+          # 26/8 — DANH SÁCH NÀY PHẢI ĐỦ NHƯ `render_cron`, vì bước sau chạy `selftest.py`
+          # và selftest có chốt đọc file YAML của workflow. Thiếu `pyyaml` là selftest
+          # KHÔNG chạy nổi rồi thoát mã 1 ⇒ chặn luôn cả việc chính, dù việc chính không
+          # cần thư viện đó. Lần seed 07:01Z hôm nay chết đúng kiểu này: `❌ step trỏ
+          # Project C phải bật SHARD_PUBLISH: No module named 'yaml'`.
+        run: pip install --quiet -c render-pipeline/constraints.txt google-cloud-firestore google-auth google-api-python-client google-auth-oauthlib pyyaml google-generativeai edge-tts cryptography
       - name: Khoá dịch vụ
         run: |
           echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json

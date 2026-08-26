@@ -1580,6 +1580,33 @@ def t_cong_cu_quan_tri_phai_tro_dung_project():
                 f"{f}.yml thiếu {c} -> đọc/ghi nhầm project A thay vì B"
 
 
+
+def t_workflow_chay_selftest_phai_du_thu_vien():
+    """Workflow nào chạy `selftest.py` thì phải cài ĐỦ thư viện selftest cần.
+
+    26/8, seed 07:01Z chết đúng kiểu này:
+        ❌ step trỏ Project C phải bật SHARD_PUBLISH: No module named 'yaml'
+        ##[error]Process completed with exit code 1
+    `seed_the_he_2.yml` chỉ cài `google-cloud-firestore google-auth`, nhưng bước sau lại chạy
+    selftest — mà selftest có chốt ĐỌC FILE YAML của chính các workflow. Thiếu `pyyaml` ⇒ selftest
+    thoát mã 1 ⇒ **chặn luôn việc chính**, dù việc chính không cần thư viện đó.
+
+    Mất trọn lần bấm đầu tiên của cửa sổ hạn mức. (May là selftest gác TRƯỚC nên chưa ghi gì —
+    không có trạng thái dở dang.)
+
+    **Luật**: bước gác (`selftest`) và bước làm việc chạy trong CÙNG môi trường. Cài thư viện cho
+    riêng việc chính là để cái gác chết trước, rồi nó kéo việc chính chết theo."""
+    import re as _re
+    can = ("pyyaml",)
+    for f in ("seed_the_he_2", "don_the_he_1"):
+        y = _doc(f"../.github/workflows/{f}.yml")
+        if "selftest.py" not in y:
+            continue
+        pip = " ".join(l for l in y.splitlines() if "pip install" in l)
+        for c in can:
+            assert c in pip, f"{f}.yml chạy selftest nhưng không cài `{c}` -> selftest chết, chặn cả việc chính"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1705,6 +1732,7 @@ def main():
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
     check("55 kênh cũ phải có bản chụp tên", t_ten_kenh_cu_phai_co_ban_chup)
     check("workflow quản trị trỏ đúng project (SHARD_META)", t_cong_cu_quan_tri_phai_tro_dung_project)
+    check("workflow chạy selftest phải đủ thư viện", t_workflow_chay_selftest_phai_du_thu_vien)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
