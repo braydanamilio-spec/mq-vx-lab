@@ -3352,3 +3352,29 @@ Vá: `_di_het_kho()` đi hết cây (giới hạn sâu 6, có phân trang), lấ
 lỗi lọc chứ không phải kho trống. Cùng họ với luật "rỗng là một KẾT QUẢ ĐÁNG NGỜ".
 Chốt: `t_don_kho_phai_di_het_cay_va_moi_loai_tep`, viết bằng AST — bản đầu khớp chuỗi nên đọc luôn
 tên hàm nằm trong docstring giải thích vì sao đã bỏ nó, tự báo oan trên mã đã đúng.
+
+### 7.ee — LÀM XONG PHẦN KHÓ, KẸT Ở PHẦN DỄ: 50 KÊNH THIẾU SẠCH 3 BƯỚC ĐỒNG BỘ (26/8/2026)
+
+Anh hỏi "brandkit / method / repo / pipeline đủ cho 50 kênh mới chưa". Đối chiếu với checklist bắt
+buộc trong `CHANNEL_METHODS §THÊM 1 KÊNH MỚI` thì **thiếu sạch**:
+
+| bước | 55 kênh cũ | 50 kênh mới |
+|---|---|---|
+| `RS_PRESETS` — dropdown chọn kênh khi render | 55 | **0/50** |
+| `RS_BRANDS` — brand kit avatar/cover/mô tả/tag | có | **0/50** |
+| `config/brands.json` — khâu ĐĂNG đọc handle/tagline/hashtag | 55 | **0/50** |
+
+Tức là đã xong hết phần khó — engine 7 dạng, 50 chữ ký giọng, 24 phông, 5 template thumbnail, hệ
+chuyển cảnh — mà kênh mới **không hiện trên dashboard** và **khâu đăng không biết handle của chúng**.
+Ba nơi là ba việc khác nhau; thiếu nơi nào hỏng việc nấy, không cái nào thay cái nào được.
+
+Hashtag phải sửa **hai lần** mới đúng:
+1. Nhặt chữ từ `goc_nhin` — trường đó viết TIẾNG VIỆT ⇒ ra `#trong` `#quen`.
+2. Nhặt chữ từ `tagline` tiếng Anh ⇒ ra `#yourself` `#week` `#where`: đúng tiếng Anh nhưng **không
+   ai gõ mấy chữ đó vào ô tìm kiếm**.
+3. Đúng: gán theo **nhóm chủ đề** (24 nhóm) — `#foodfacts #nutrition #foodsafety` + 1 tag nhận
+   diện kênh.
+
+**Luật**: "đã xây xong pipeline" phải kiểm bằng checklist đồng bộ, không bằng cảm giác. Phần khó
+xong không kéo theo phần dễ xong — và phần dễ thiếu thì phần khó thành vô dụng.
+Chốt: `t_50_kenh_dong_bo_du_ba_noi` (đã thử phá cả hai vế: xoá 1 kênh, và đặt hashtag tiếng Việt).

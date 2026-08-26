@@ -1421,6 +1421,45 @@ def t_muc_am_quyet_o_mot_cho():
     assert not xau, "; ".join(xau)
 
 
+
+def t_50_kenh_dong_bo_du_ba_noi():
+    """50 kênh gen-2 phải có mặt ĐỦ ở ba nơi, theo `CHANNEL_METHODS §THÊM 1 KÊNH MỚI`.
+
+    26/8 — kiểm lại thì thiếu SẠCH: `RS_PRESETS` 0/50, `RS_BRANDS` 0/50, `brands.json` 0/50, trong
+    khi 55 kênh cũ đủ cả. Nghĩa là đã làm xong hết phần khó (engine · giọng riêng · phông riêng ·
+    template thumbnail · chuyển cảnh) mà kênh mới vẫn **không hiện trên dashboard** và khâu ĐĂNG
+    **không biết handle/hashtag** của chúng.
+
+    Ba nơi, ba việc khác nhau — thiếu nơi nào hỏng việc nấy:
+      • `RS_PRESETS`  -> dropdown chọn kênh khi render
+      • `RS_BRANDS`   -> brand kit: avatar/cover/mô tả/hashtag
+      • `brands.json` -> khâu đăng YouTube/FB/IG đọc handle · tagline · hashtag · category"""
+    import json as _json
+    ks = _json.loads(_doc("kenh_the_he_2.json"))
+    ten = [k["ten"].replace(" ", "").upper() for k in ks]
+    d = _doc("../MM0-AutoPublisher/dashboard/index.html")
+    bj = _json.loads(_doc("../MM0-AutoPublisher/config/brands.json"))
+    thieu = []
+    for t in ten:
+        if f'name:"{t}"' not in d:
+            thieu.append(f"{t}: thiếu RS_PRESETS")
+        elif f"\n      {t}:{{" not in d:
+            thieu.append(f"{t}: thiếu RS_BRANDS")
+        elif t not in bj:
+            thieu.append(f"{t}: thiếu brands.json -> khâu đăng không biết handle/hashtag")
+    assert not thieu, f"{len(thieu)} kênh chưa đồng bộ: " + "; ".join(thieu[:4])
+    # hashtag phải là TIẾNG ANH — kênh cho khán giả Mỹ. Bản đầu nhặt chữ từ `goc_nhin` (tiếng Việt)
+    # nên ra `#trong` `#quen`; bản hai nhặt từ tagline nên ra `#yourself` `#week` — đúng tiếng Anh
+    # nhưng không ai tìm bằng mấy chữ đó. Nay gán theo NHÓM CHỦ ĐỀ.
+    xau = [t for t in ten
+           if any(not _re_ascii(h) for h in (bj.get(t, {}).get("hashtags") or []))]
+    assert not xau, f"hashtag không phải chữ Latin thường (tiếng Việt?): {xau[:4]}"
+
+
+def _re_ascii(h) -> bool:
+    return all(ord(c) < 128 for c in str(h))
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1541,6 +1580,7 @@ def main():
     check("phông chảy hết đường JSON->props->composition", t_phong_phai_chay_het_duong_toi_luc_render)
     check("dọn kho: đi hết cây + mọi loại tệp", t_don_kho_phai_di_het_cay_va_moi_loai_tep)
     check("mức âm chuyển cảnh quyết ở MỘT chỗ", t_muc_am_quyet_o_mot_cho)
+    check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
