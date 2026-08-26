@@ -1503,6 +1503,21 @@ def read_channels(owner: str) -> list[dict]:
     _hc = _HOT_CACHE.get(("chans", owner))
     if _hc and (_t.time() - _hc[0]) < 600:
         return _hc[1]
+    # 26/8 — DÙNG GÓI PLAN GỬI KÈM, KHÔNG ĐỌC LẠI FIRESTORE.
+    # Đệm 10' ở trên chỉ có tác dụng TRONG MỘT TIẾN TRÌNH, mà mỗi lane là một tiến trình riêng ⇒
+    # 18 lane vẫn tốn 18 × 40 = **720 lượt đọc mỗi phiên** cho cùng một danh sách.
+    # Plan đã đọc trọn danh sách kênh rồi nén xuống `CHANNEL_CFGS` (đường này đã chạy từ 25/8,
+    # `read_one_channel` vẫn dùng khi gương thiếu kênh). Lấy từ đó: 720 lượt còn 0.
+    # Độ tươi không đổi: cấu hình kênh do người bấm trên dashboard, mà plan vừa đọc đầu phiên;
+    # thứ cần tươi từng giây (pause/target) vốn đi đường `read_one_channel` riêng.
+    _goi = _cfg_tu_plan()
+    if _goi and len(_goi) > 1:
+        ra_goi = [dict(v, id=f"{owner}__{k}") for k, v in _goi.items()
+                  if isinstance(v, dict) and v.get("name")]
+        if ra_goi:
+            print(f"   📦 Cấu hình kênh: dùng gói plan gửi kèm ({len(ra_goi)} kênh) — 0 lượt đọc.")
+            _HOT_CACHE[("chans", owner)] = (_t.time(), ra_goi)
+            return ra_goi
     _cr("read_channels", 40)
     def _do():
         db = _db_meta(); out = []

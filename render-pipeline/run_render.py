@@ -59,7 +59,10 @@ def _pv(fmt: str, cinematic: bool = False) -> str:
 #
 # 8 phiên × 18 lane × ~3 video = ~430 video/ngày — thừa sức cho 50 kênh, mà KHÔNG bao giờ chạm trần.
 # Muốn nhanh hơn thì phải giảm lượt đọc mỗi phiên trước, rồi mới hạ con số này.
-SESSION_GAP_MIN = 180
+SESSION_GAP_MIN = 180        # chỉ là ĐƯỜNG LÙI khi không đọc được sổ hạn mức
+CHI_PHI_PHIEN_DOC = 4219     # lượt đọc Firestore một phiên 18 lane tiêu — ĐO THẬT, không đoán:
+                             # hiệu hai lần chốt sổ liên tiếp 56.051 -> 60.270 (25-26/8).
+                             # Đo lại con số này khi đổi số lane hoặc khi cắt bớt lượt đọc.
 RESERVE_LONG = 10
 RESERVE_SHORT = 30
 DRIVE_SAFETY_PCT = 0.90   # kho ≥90% đầy -> ngừng render mẻ này (tránh phình + lỗi ghi khi hết chỗ)
@@ -1537,6 +1540,20 @@ def sweep_ai_quality(all_ch, cfg):
         print("   ✅ Đã xử lý xong toàn bộ video tồn chưa đạt chuẩn.")
 
 
+
+def _gio_toi_reset() -> float:
+    """Số giờ từ bây giờ tới mốc reset hạn mức Google (00:00 giờ Thái Bình Dương = 07:00Z).
+
+    `datetime` trong file này được nhập TRONG TỪNG HÀM, không ở tầm mô-đun — nhập lại ở đây,
+    nếu không hàm chết `NameError` ngay lượt đầu và van hạn mức rơi về giãn cách cứng."""
+    from datetime import datetime, timezone, timedelta
+    now = datetime.now(timezone.utc)
+    moc = now.replace(hour=7, minute=0, second=0, microsecond=0)
+    if moc <= now:
+        moc += timedelta(days=1)
+    return max(0.1, (moc - now).total_seconds() / 3600.0)
+
+
 def plan_mode():
     """ĐIỀU PHỐI (matrix 18 luồng): gating + health-check + re-render — CHẠY 1 LẦN — rồi xuất danh sách kênh
     cho các job render song song. Các job render KHÔNG lặp health-check/re-render (đỡ tốn API)."""
@@ -1667,8 +1684,33 @@ def plan_mode():
             elapsed_min = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60
             recently = elapsed_min < gap_min
         except Exception: recently = False
+    # ── VAN THEO HẠN MỨC CÒN LẠI, KHÔNG THEO ĐỒNG HỒ (26/8, anh chỉ ra) ──────────────────────
+    # Anh nói đúng: độ dài phiên phụ thuộc độ dài video. Phiên xong sớm mà bắt chờ đủ 180 phút là
+    # máy nằm không; phiên chạy lâu thì 180 phút vẫn có thể tràn. Đồng hồ là biến điều khiển SAI.
+    # Biến đúng là **hạn mức còn lại của ngày**: rải phần còn lại đều cho số giờ còn lại.
+    #     phiên còn cho phép = (còn lại − dự trữ 25%) ÷ chi phí một phiên (đo thật: 4.219 lượt)
+    #     khoảng cách cần    = số giờ tới lúc reset ÷ số phiên còn cho phép
+    # Hệ quả: đầu ngày hạn mức đầy -> khoảng cách ngắn, phiên nối nhau liên tục; càng tiêu nhiều
+    # thì khoảng cách TỰ giãn ra; gần cạn thì dừng hẳn. Không bao giờ chạm trần, cũng không nằm
+    # không khi còn dư. Vẫn giữ sàn 20' để một phiên hỏng ngay lập tức không quay vòng đốt quota.
+    _gap_thuc = gap_min
+    try:
+        _da = FB.phan_tram_da_dung("doc")                  # % trần ngày đã tiêu (đọc D1 trước)
+        _con = max(0.0, (100 - _da - 25) / 100.0) * 50000  # để dành 25% cho đăng/thống kê/dashboard
+        _gio_con = _gio_toi_reset()
+        _phien = _con / CHI_PHI_PHIEN_DOC
+        if _phien < 1:
+            print(f"⏭ Hạn mức đọc đã dùng {_da}% — không đủ cho một phiên nữa hôm nay, nghỉ.")
+            return out_channels([])
+        _gap_thuc = max(20, min(240, int(_gio_con * 60 / _phien)))
+        print(f"   ⏱️ Van phiên: đã dùng {_da}% · còn ~{_con:,.0f} lượt · {_gio_con:.1f}h tới reset "
+              f"⇒ còn {_phien:.1f} phiên ⇒ giãn cách {_gap_thuc}' (không phải {gap_min}' cứng).")
+        if last:
+            recently = ((datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60) < _gap_thuc
+    except Exception as e:
+        print(f"   ⚠️ không tính được van theo hạn mức ({str(e)[:50]}) — dùng giãn cách cứng {gap_min}'.")
     if event == "schedule" and not run_now and recently:
-        print("⏭ Nhịp kiểm — phiên gần đây còn trong hạn nghỉ, bỏ qua (free)."); return out_channels([])
+        print(f"⏭ Nhịp kiểm — phiên gần đây còn trong giãn cách {_gap_thuc}', bỏ qua (free)."); return out_channels([])
     FB.set_config(OWNER, {"last_session_at": datetime.now(timezone.utc).isoformat()})   # đánh dấu phiên bắt đầu -> chống trùng
     if run_now:
         FB.set_config(OWNER, {"run_now": None, "run_now_done_at": datetime.now(timezone.utc).isoformat()})

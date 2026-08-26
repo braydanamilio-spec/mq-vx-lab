@@ -3557,4 +3557,25 @@ Tính ngược từ trần thay vì đoán:
 **Luật**: van điều tiết phải tính NGƯỢC TỪ TRẦN, không đặt theo mong muốn chạy nhanh. Muốn dày
 phiên hơn thì phải **giảm lượt đọc mỗi phiên trước**, rồi mới hạ con số này. Đặt van rộng rồi trông
 chờ cái phanh đỡ là sai thứ tự — phanh chỉ cứu lúc đã gần cạn, còn van quyết định có cạn hay không.
-Chốt: `t_van_phien_phai_theo_ngan_sach` (tự tính lại từ trần, không khớp số cứng).
+**Sửa lần hai — anh chỉ ra đúng chỗ em nghĩ chưa tới:** đặt van bằng ĐỒNG HỒ vẫn là biến điều
+khiển sai. Độ dài phiên phụ thuộc độ dài video: phiên xong sớm mà bắt chờ đủ 180 phút là máy nằm
+không, còn phiên chạy lâu thì 180 phút vẫn có thể tràn.
+
+Van đúng chạy theo **hạn mức còn lại**, rải đều cho số giờ còn lại của ngày:
+```
+phiên còn cho phép = (còn lại − dự trữ 25%) ÷ chi phí một phiên (4.219 lượt, đo thật)
+giãn cách cần      = số giờ tới lúc reset ÷ số phiên còn cho phép     (sàn 20' · trần 240')
+```
+Đầu ngày hạn mức đầy ⇒ giãn cách ngắn, phiên nối nhau; càng tiêu nhiều thì giãn cách **tự giãn ra**;
+gần cạn thì dừng hẳn. Mô phỏng cả ngày:
+
+| độ dài phiên | phiên/ngày | lượt đọc | |
+|---|---|---|---|
+| 30' | 8 | 33.752 (68% trần) | ✅ |
+| 60' | 8 | 33.752 (68%) | ✅ |
+| 110' | 8 | 33.752 (68%) | ✅ |
+| **van cũ 12'** | 24 | **101.256 (203%)** | ❌ tràn |
+
+`SESSION_GAP_MIN = 180` nay chỉ còn là **đường lùi** khi không đọc được sổ hạn mức.
+Chốt: `t_van_phien_phai_theo_ngan_sach` — đòi van phải đọc `phan_tram_da_dung` + `_gio_toi_reset`,
+và đường lùi vẫn phải nằm dưới trần.

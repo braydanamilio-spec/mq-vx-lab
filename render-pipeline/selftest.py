@@ -1825,15 +1825,21 @@ def t_van_phien_phai_theo_ngan_sach():
     phiên hơn thì phải giảm lượt đọc mỗi phiên TRƯỚC, rồi mới hạ con số này."""
     import re as _re
     src = _doc("run_render.py")
+    # 26/8, anh chỉ ra: đặt van bằng ĐỒNG HỒ là sai biến điều khiển — độ dài phiên phụ thuộc độ
+    # dài video, phiên xong sớm mà bắt chờ đủ giờ là máy nằm không. Van phải theo HẠN MỨC CÒN LẠI:
+    # rải phần còn lại đều cho số giờ còn lại của ngày. Mô phỏng: phiên 30'/60'/110' đều ra đúng
+    # 8 phiên/ngày, 68% trần — nhanh thì nghỉ ít, chậm thì nghỉ nhiều, không bao giờ tràn.
+    assert "phan_tram_da_dung" in src and "_gio_toi_reset" in src, \
+        "van phiên vẫn đặt theo đồng hồ, chưa tính theo hạn mức còn lại"
+    assert "CHI_PHI_PHIEN_DOC" in src, "không khai chi phí đọc mỗi phiên -> không tính được van"
     m = _re.search(r"^SESSION_GAP_MIN\s*=\s*(\d+)", src, _re.M)
-    assert m, "mất hằng SESSION_GAP_MIN"
+    assert m, "mất hằng SESSION_GAP_MIN (đường lùi khi không đọc được sổ)"
     gap = int(m.group(1))
     TRAN, DE_DANH, MOI_PHIEN = 50000, 0.30, 4219
-    toi_da = (TRAN * (1 - DE_DANH)) / MOI_PHIEN          # phiên/ngày an toàn
-    can = 24 * 60 / toi_da
+    can = 24 * 60 / ((TRAN * (1 - DE_DANH)) / MOI_PHIEN)
     assert gap >= can * 0.9, (
-        f"SESSION_GAP_MIN={gap}' cho phép {24*60/max(1,gap):.0f} phiên/ngày × {MOI_PHIEN} lượt đọc "
-        f"= {24*60/max(1,gap)*MOI_PHIEN:,.0f} lượt, vượt trần {TRAN:,} — cần ≥ {can:.0f}'")
+        f"đường lùi SESSION_GAP_MIN={gap}' cho phép {24*60/max(1,gap):.0f} phiên/ngày × {MOI_PHIEN} "
+        f"lượt = {24*60/max(1,gap)*MOI_PHIEN:,.0f}, vượt trần {TRAN:,} — cần ≥ {can:.0f}'")
 
 
 def main():
