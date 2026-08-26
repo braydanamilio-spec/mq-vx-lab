@@ -133,6 +133,27 @@ def bao_ngan_sach() -> str:
             f"{TRAN_DOC_NGAY:,} đọc · {TRAN_GHI_NGAY:,} ghi){tong}")
 
 
+def _proj_hien_tai() -> str:
+    """Nhãn project mà TIẾN TRÌNH NÀY chủ yếu đụng vào — suy từ cờ SHARD_* có sẵn trong môi trường.
+
+    26/8 — anh yêu cầu "đừng để cạn quota làm dừng bất cứ gì". Gốc của việc dừng oan: sổ ngân sách
+    trên D1 khoá theo NGÀY, gộp lượt đọc của cả ba project, rồi đem so với `TRAN_DOC_NGAY = 50.000`
+    — mà 50K là hạn mức của MỘT project. Nên A tiêu 25K + B tiêu 25K là van đã hãm toàn hệ, dù mỗi
+    bên mới dùng nửa phần của mình. Có ba project mà chỉ xài được sức của một.
+
+    Không sửa bộ đếm (`_tinh_tien` không biết mình chạm project nào, mỗi loại dữ liệu đi qua một
+    client riêng — sửa xuyên suốt là đụng vào đúng cái phanh). Thay vào đó dùng thứ đã có sẵn: mỗi
+    TIẾN TRÌNH được cấu hình để chạy chủ yếu trên MỘT project, và cấu hình đó nằm ngay trong cờ
+    `SHARD_*`. Nhãn theo tiến trình là đủ chính xác để quyết định, mà không phải động vào chỗ nguy
+    hiểm."""
+    import os as _o
+    if _o.environ.get("SHARD_META") == "1":
+        return "B"
+    if _o.environ.get("SHARD_PUBLISH") == "1":
+        return "C"
+    return "A"
+
+
 def xa_ngan_sach_d1() -> None:
     """Cộng số đọc/ghi của tiến trình này vào sổ ngân sách CHUNG trên D1 (1 lệnh, cuối luồng).
 
@@ -143,6 +164,10 @@ def xa_ngan_sach_d1() -> None:
         if not _H.bat_ghi():
             return
         ngay = _ngay_quota()
+        # Ghi HAI dòng: dòng riêng project (để quyết định) và dòng tổng cũ (để mọi chỗ đang đọc
+        # số tổng không bị hụt). Khoá sổ vốn là chuỗi nên không cần đổi lược đồ D1, không cần
+        # deploy worker — chỉ thêm hậu tố `:B`. Hai lượt ghi D1 thay vì một: D1 miễn phí.
+        _H.ngan_sach_cong(f"{ngay}:{_proj_hien_tai()}", _NGAN_SACH["doc"], _NGAN_SACH["ghi"])
         _H.ngan_sach_cong(ngay, _NGAN_SACH["doc"], _NGAN_SACH["ghi"])
     except Exception:
         pass
@@ -182,8 +207,19 @@ def nap_nen_ngan_sach(owner: str) -> None:
     r = w = -1
     try:                                     # ① D1 trước — ngoài bình xăng, không mất lượt Firestore
         import hot_db as _H
-        x = _H.ngan_sach_doc(ngay) or {}
-        r, w = int(x.get("doc", -1)), int(x.get("ghi", -1))
+        _pj = _proj_hien_tai()
+        xr = _H.ngan_sach_doc(f"{ngay}:{_pj}") or {}
+        _rr, _ww = int(xr.get("doc", 0)), int(xr.get("ghi", 0))
+        if _rr > 0 or _ww > 0:
+            # Có số RIÊNG của project này -> dùng nó. Đây là con số đúng đơn vị với ngưỡng 50K.
+            r, w = _rr, _ww
+            print(f"   📒 ngân sách project {_pj}: đọc {r:,} · ghi {w:,} (số riêng, không gộp)")
+        else:
+            # Chưa có số riêng (ngày đầu áp dụng, hoặc tiến trình chưa xả lần nào) -> lùi về số
+            # GỘP cũ. Gộp thì luôn ≥ mức thật của project này, nên lùi về đây là nghiêng về phía
+            # an toàn, đúng hành vi trước khi vá — không bao giờ tệ hơn.
+            x = _H.ngan_sach_doc(ngay) or {}
+            r, w = int(x.get("doc", -1)), int(x.get("ghi", -1))
     except Exception:
         pass
     try:

@@ -2002,6 +2002,7 @@ def main():
     check("scope Drive theo TỪNG app, không đổi đồng loạt", t_scope_drive_theo_app)
     check("radar: ứng viên rỗng KHÔNG được lọt cửa nhu cầu", t_radar_khong_lot_rong)
     check("QC thị giác phải soi KHUNG HOOK, chấm riêng", t_qc_hook_rieng)
+    check("sổ ngân sách tách theo project, đúng đơn vị với ngưỡng", t_ngan_sach_theo_project)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4318,6 +4319,52 @@ def t_qc_hook_rieng():
         "chưa nối QC hook cho đủ mọi đường render (chay_chung/race/phim/long)"
     assert 'return True, {"note": f"hook-qc-skip' in th, \
         "QC hook không fail-open -> Vision hỏng là chặn cả dây chuyền"
+
+
+
+
+def t_ngan_sach_theo_project():
+    """Sổ ngân sách phải đo THEO PROJECT, vì ngưỡng 50K là của MỘT project.
+
+    26/8 — anh yêu cầu "đừng để cạn quota làm dừng bất cứ gì". Gốc của việc dừng oan nằm ở đơn vị:
+    sổ trên D1 khoá theo NGÀY, gộp lượt đọc của cả ba project, rồi so với `TRAN_DOC_NGAY = 50.000`
+    — hạn mức của MỘT project. Nên A tiêu 25K + B tiêu 25K là van hãm toàn hệ, dù mỗi bên mới dùng
+    nửa phần mình. Có ba project mà chỉ xài được sức của một.
+
+    Chốt giữ ba điều, thiếu một là quay lại hãm oan hoặc tệ hơn — chạy quá trần thật:
+      ① có nhãn project suy từ cờ SHARD_* (không sửa `_tinh_tien`, vì hàm đó không biết mình chạm
+         project nào và sửa xuyên suốt là đụng vào đúng cái phanh);
+      ② xả sổ ghi CẢ dòng riêng project LẪN dòng tổng cũ, để chỗ nào đang đọc số tổng không hụt;
+      ③ đọc thì ưu tiên dòng riêng, CHƯA CÓ thì lùi về dòng gộp — gộp luôn ≥ mức thật của project
+         này nên lùi về đó là nghiêng an toàn, không bao giờ tệ hơn trước khi vá."""
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import firestore_bridge as FB
+    src = _doc("firestore_bridge.py")
+    assert "def _proj_hien_tai" in src, "không có nhãn project"
+    # ① nhãn đúng theo cờ
+    _cu = {k: _o.environ.get(k) for k in ("SHARD_META", "SHARD_PUBLISH")}
+    try:
+        for cо, mong in ((("SHARD_META", "1"),), "B"), ((("SHARD_PUBLISH", "1"),), "C"), ((), "A"):
+            for k in ("SHARD_META", "SHARD_PUBLISH"):
+                _o.environ.pop(k, None)
+            for k, v in cо:
+                _o.environ[k] = v
+            assert FB._proj_hien_tai() == mong, f"cờ {dict(cо)} phải ra project {mong}"
+    finally:
+        for k, v in _cu.items():
+            if v is None:
+                _o.environ.pop(k, None)
+            else:
+                _o.environ[k] = v
+    # ② xả sổ ghi hai dòng
+    xa = src[src.index("def xa_ngan_sach_d1"): src.index("def xa_ngan_sach_d1") + 1400]
+    assert xa.count("ngan_sach_cong(") == 2, "xả sổ không ghi cả dòng riêng lẫn dòng tổng"
+    assert '_proj_hien_tai()' in xa, "dòng riêng không mang nhãn project"
+    # ③ đọc ưu tiên riêng, có đường lùi
+    nap = src[src.index("def nap_nen_ngan_sach"): src.index("def nap_nen_ngan_sach") + 3000]
+    assert "_rr > 0 or _ww > 0" in nap, "không ưu tiên số riêng project"
+    assert nap.count("ngan_sach_doc(") == 2, "thiếu đường lùi về sổ gộp khi chưa có số riêng"
 
 
 if __name__ == "__main__":
