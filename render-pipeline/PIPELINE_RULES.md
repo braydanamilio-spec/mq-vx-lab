@@ -3109,3 +3109,19 @@ Nghịch lý: hệ đã có sổ tích luỹ toàn hệ, có cả `con_ngan_sach
 - Bậc phanh (đo ở plan, trước khi chốt danh sách lane): `<70%` đủ 18 lane · `70%` → 10 · `85%` → 6
   · `95%` → 3.
 - Chốt `t_plan_phai_phanh_theo_han_muc` — kiểm cả việc phanh phải nằm TRƯỚC lúc chốt danh sách.
+
+### 26/8 — GỘP (không cắt): lane hỏi gói của plan trước, Firestore chỉ là đường lùi
+`read_channels` tốn **5.460 lượt/ngày** trong khi plan ĐÃ gửi sẵn `CHANNEL_CFGS`. Lane đọc
+Firestore trước rồi mới fallback về gói plan — nhưng gói plan chính là dữ liệu plan vừa đọc ở đầu
+phiên, **mới hơn hoặc bằng** thứ lane sắp đọc. Đọc lại chỉ để nhận cùng câu trả lời.
+- Đảo thứ tự: hỏi gói plan trước; thiếu kênh nào mới đụng Firestore.
+- **Đây là GỘP, không phải CẮT**: cấu hình vẫn đủ, không tính năng nào mất.
+
+Tổng hai bản gộp hôm nay (hồ key A + cấu hình kênh): **giảm ~12.500 lượt đọc/ngày = 25% trần**,
+không đổi một tính năng nào.
+
+Còn lại chưa xử lý, ghi để không quên:
+- `top_titles` 5.733/ngày — đã có memo D1 6h và **đang chạy đúng** (≈15 lần/phiên cho 55 kênh,
+  không phải 18 lane hỏi trùng). Muốn giảm nữa phải hy sinh độ tươi của feedback → chưa làm.
+- `find_resumable` 3.770/ngày — dữ liệu job nằm ở D1 rồi nhưng **kịch bản thì chưa**; cần thêm
+  route ở Worker và deploy. Việc lớn hơn, làm sau khi có số đo đủ.

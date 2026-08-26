@@ -2359,14 +2359,21 @@ def channel_mode(name):
             if _ke in _da_lam:
                 continue
             _da_lam.add(_ke)
-            if not _by_name:              # chỉ đọc danh sách kênh khi THẬT SỰ có việc để lấy
-                try:
-                    _by_name = {c.get("name"): c for c in FB.read_channels(OWNER) if c.get("name")}
-                except Exception as _e:
-                    _by_name = {"_": None}    # đánh dấu đã thử, khỏi đọc lại mỗi vòng
-                    print(f"   ⚠️ không đọc được danh sách kênh ({str(_e)[:45]}) — "
-                          f"dùng gói cấu hình plan gửi kèm.")
-            _ch2 = _by_name.get(_ke) or FB._cfg_tu_plan().get(str(_ke).upper())
+            # 26/8 — ĐẢO THỨ TỰ: hỏi GÓI CỦA PLAN trước, Firestore chỉ là đường lùi.
+            # Trước đây lane đọc `read_channels` rồi mới fallback về gói plan — nhưng gói plan
+            # CHÍNH LÀ dữ liệu plan vừa đọc ở đầu phiên, mới hơn hoặc bằng thứ lane sắp đọc.
+            # Đọc lại chỉ để nhận cùng câu trả lời: 5.460 lượt Firestore mỗi ngày, đổi lấy 0.
+            # Đây là GỘP (bỏ lượt hỏi trùng), không phải CẮT (bỏ tính năng) — cấu hình vẫn đủ.
+            _ch2 = FB._cfg_tu_plan().get(str(_ke).upper())
+            if not _ch2:
+                if not _by_name:          # gói plan thiếu kênh này -> mới đụng Firestore
+                    try:
+                        _by_name = {c.get("name"): c for c in FB.read_channels(OWNER) if c.get("name")}
+                    except Exception as _e:
+                        _by_name = {"_": None}
+                        print(f"   ⚠️ không đọc được danh sách kênh ({str(_e)[:45]}) — "
+                              f"dùng gói cấu hình plan gửi kèm.")
+                _ch2 = _by_name.get(_ke)
             if not _ch2:
                 print(f"   ⚠️ hàng chờ có {_ke} nhưng không thấy cấu hình — bỏ qua."); continue
             print(f"\n♻️ {name} rảnh -> nhận thêm kênh {_ke} từ hàng chờ "
