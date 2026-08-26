@@ -3528,3 +3528,33 @@ Vá đúng: **quay lại tuần tự**, giữ phần in tiến độ, và nới 
 Chốt `t_viec_dai_phai_in_tien_do_va_du_gio` nay kiểm NGƯỢC LẠI: cấm `ThreadPoolExecutor` trong bản
 dọn. Bản đầu của chính chốt này đòi PHẢI đa luồng — một chốt sai hướng còn nguy hơn không có chốt,
 vì nó ép người sau đi vào đúng cái bẫy.
+
+### 7.el — VAN ĐIỀU TIẾT PHIÊN ĐẶT THEO SỐT RUỘT, KHÔNG THEO TRẦN (26/8/2026)
+
+Anh hỏi "hạn mức Firebase ổn chứ, đừng để cạn mà dừng dự án". Đếm lại thì **không ổn**, và gốc nằm
+ở một hằng số:
+
+```python
+SESSION_GAP_MIN = 12      # phiên mới mở chỉ 12 PHÚT sau phiên trước
+```
+
+Cron thức mỗi 10 phút, van chỉ chặn 12 phút ⇒ phiên mở **nối đuôi liên tục**. Đo thật:
+
+| đo | giá trị |
+|---|---|
+| phiên render trong 24h qua | **33** (một phiên mỗi ~44 phút) |
+| lượt đọc mỗi phiên | **4.219** (hiệu hai lần chốt sổ: 56.051 → 60.270) |
+| suy ra | 33 × 4.219 ≈ **139.000** lượt trên trần **50.000** |
+| hậu quả đã xảy ra | sổ chạm **120%** lúc 03:09Z ⇒ không đọc được cấu hình kênh, không liệt kê được kho, "Không kho nào đủ chỗ" trên mọi lane |
+
+Tính ngược từ trần thay vì đoán:
+```
+  50.000 lượt/ngày − 30% (đăng · thống kê · health · dashboard) = 35.000 cho render
+  35.000 ÷ 4.219 lượt/phiên ≈ 8 phiên/ngày  →  24h ÷ 8 = 180 phút
+```
+8 phiên × 18 lane × ~3 video ≈ **430 video/ngày** — thừa cho 50 kênh, mà không bao giờ chạm trần.
+
+**Luật**: van điều tiết phải tính NGƯỢC TỪ TRẦN, không đặt theo mong muốn chạy nhanh. Muốn dày
+phiên hơn thì phải **giảm lượt đọc mỗi phiên trước**, rồi mới hạ con số này. Đặt van rộng rồi trông
+chờ cái phanh đỡ là sai thứ tự — phanh chỉ cứu lúc đã gần cạn, còn van quyết định có cạn hay không.
+Chốt: `t_van_phien_phai_theo_ngan_sach` (tự tính lại từ trần, không khớp số cứng).

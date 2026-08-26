@@ -1807,6 +1807,35 @@ def t_viec_dai_phai_in_tien_do_va_du_gio():
         f"timeout-minutes={m.group(1) if m else '?'} — quá sát, việc dọn từng chết vì đúng lý do này"
 
 
+
+def t_van_phien_phai_theo_ngan_sach():
+    """Khoảng cách giữa hai phiên render phải đủ để KHÔNG cạn hạn mức đọc trong ngày.
+
+    26/8 — đây là gốc của việc dây chuyền đứng, tìm ra bằng cách đếm chứ không đoán:
+      • cron thức mỗi 10 phút, `SESSION_GAP_MIN` chỉ **12 phút** ⇒ phiên mở nối đuôi;
+      • đo thật: **33 phiên trong 24h**, một phiên mỗi ~44 phút;
+      • một phiên tiêu **4.219 lượt đọc** (hiệu hai lần chốt sổ: 56.051 → 60.270);
+      • 33 × 4.219 ≈ 139.000 trên trần 50.000 ⇒ sổ chạm **120%** lúc 03:09Z, rồi mọi thứ gãy theo:
+        không đọc được cấu hình kênh, không liệt kê được kho, "Không kho nào đủ chỗ" mọi lane.
+
+    Tính ngược từ trần: (50.000 − 30% dành cho đăng/thống kê/health/dashboard) ÷ 4.219 ≈ 8 phiên/
+    ngày ⇒ **180 phút/phiên**. Vẫn ra ~430 video/ngày với 18 lane — thừa cho 50 kênh.
+
+    **Luật**: van điều tiết phải tính NGƯỢC TỪ TRẦN, không đặt theo mong muốn chạy nhanh. Muốn dày
+    phiên hơn thì phải giảm lượt đọc mỗi phiên TRƯỚC, rồi mới hạ con số này."""
+    import re as _re
+    src = _doc("run_render.py")
+    m = _re.search(r"^SESSION_GAP_MIN\s*=\s*(\d+)", src, _re.M)
+    assert m, "mất hằng SESSION_GAP_MIN"
+    gap = int(m.group(1))
+    TRAN, DE_DANH, MOI_PHIEN = 50000, 0.30, 4219
+    toi_da = (TRAN * (1 - DE_DANH)) / MOI_PHIEN          # phiên/ngày an toàn
+    can = 24 * 60 / toi_da
+    assert gap >= can * 0.9, (
+        f"SESSION_GAP_MIN={gap}' cho phép {24*60/max(1,gap):.0f} phiên/ngày × {MOI_PHIEN} lượt đọc "
+        f"= {24*60/max(1,gap)*MOI_PHIEN:,.0f} lượt, vượt trần {TRAN:,} — cần ≥ {can:.0f}'")
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1928,6 +1957,7 @@ def main():
     check("dọn kho: đi hết cây + mọi loại tệp", t_don_kho_phai_di_het_cay_va_moi_loai_tep)
     check("dọn kho KHÔNG được đụng kịch bản", t_don_kho_khong_duoc_dung_kich_ban)
     check("việc dài phải in tiến độ + đủ giờ", t_viec_dai_phai_in_tien_do_va_du_gio)
+    check("van phiên tính ngược từ trần hạn mức", t_van_phien_phai_theo_ngan_sach)
     check("mức âm chuyển cảnh quyết ở MỘT chỗ", t_muc_am_quyet_o_mot_cho)
     check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)

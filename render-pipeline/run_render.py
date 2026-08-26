@@ -44,7 +44,22 @@ def _pv(fmt: str, cinematic: bool = False) -> str:
 # NGHỈ GIỮA 2 PHIÊN: trước để 30' -> máy đứng không suốt nửa tiếng sau mỗi phiên dù đã xong việc.
 # GitHub concurrency (group mm0-render-cron, cancel-in-progress:false) ĐÃ bảo đảm không bao giờ có
 # 2 phiên render chạy đè — lượt mới xếp hàng chờ lượt cũ xong. Nên chỉ cần sàn nghỉ này là đủ.
-SESSION_GAP_MIN = 12
+# ── VAN ĐIỀU TIẾT PHIÊN — ĐẶT THEO NGÂN SÁCH, KHÔNG THEO SỐT RUỘT (26/8/2026) ─────────────
+# Trước: 12 phút. Cron thức mỗi 10' nên phiên mở NỐI ĐUÔI liên tục — đo thật hôm qua **33 phiên
+# trong 24h**, tức một phiên mỗi ~44 phút. Mà một phiên tiêu **4.219 lượt đọc** (đo bằng hiệu hai
+# lần chốt sổ: 56.051 -> 60.270). 33 × 4.219 ≈ 139.000 lượt trên trần 50.000 ⇒ sổ chạm 120% từ
+# 03:09Z và mọi thứ sau đó gãy: kênh không đọc được cấu hình, kho Drive không liệt kê được,
+# "Không kho nào đủ chỗ" trên mọi lane.
+#
+# Tính ngược từ trần thay vì đoán:
+#     50.000 lượt đọc/ngày
+#   − 30% để dành cho khâu đăng · thống kê · health guardian · dashboard
+#   = 35.000 cho render  ÷  4.219 lượt/phiên  ≈  8 phiên/ngày
+#     24 giờ ÷ 8 phiên = 180 phút giữa hai phiên
+#
+# 8 phiên × 18 lane × ~3 video = ~430 video/ngày — thừa sức cho 50 kênh, mà KHÔNG bao giờ chạm trần.
+# Muốn nhanh hơn thì phải giảm lượt đọc mỗi phiên trước, rồi mới hạ con số này.
+SESSION_GAP_MIN = 180
 RESERVE_LONG = 10
 RESERVE_SHORT = 30
 DRIVE_SAFETY_PCT = 0.90   # kho ≥90% đầy -> ngừng render mẻ này (tránh phình + lỗi ghi khi hết chỗ)
