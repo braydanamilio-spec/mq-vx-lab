@@ -966,6 +966,39 @@ def t_plan_phai_phanh_theo_han_muc():
     assert not xau, "phanh theo hạn mức chưa đúng:\n   " + "\n   ".join(xau)
 
 
+
+def t_duong_ghi_d1_khong_hong_im_lang():
+    """Đường ghi D1 hỏng thì phải NÓI, dù chỉ một lần.
+
+    26/8 — cả một đêm không hiểu vì sao dòng "Đã chụp hồ key" in 0 lần: `keys_ghi`/`nho_ghi` trả
+    False mà không để lại một chữ nào. Hệ quả: một tối ưu quan trọng (chụp hồ key vào D1 để 17
+    lane khỏi đọc project A) đã CHẾT ÂM THẦM, và em đi vá nhầm chỗ khác.
+
+    Cùng lớp với canary nuốt stderr và `_generate_image_ai` trả False im lặng. Quy tắc chung:
+    **hàm nào báo hỏng thì phải nói hỏng vì sao** — nhưng nói MỘT LẦN mỗi lý do, để không thành
+    588 dòng nhiễu như bài học cảnh báo pool."""
+    import ast
+    src = _doc("hot_db.py")
+    t = ast.parse(src)
+    d = src.splitlines()
+    xau = []
+    for fn in [n for n in ast.walk(t) if isinstance(n, ast.FunctionDef)]:
+        if not fn.name.endswith("_ghi") and fn.name not in ("keys_ghi", "nho_ghi"):
+            continue
+        for r in ast.walk(fn):
+            if not isinstance(r, ast.Return):
+                continue
+            v = r.value
+            if not (isinstance(v, ast.Constant) and v.value is False):
+                continue
+            gan = "\n".join(d[max(0, r.lineno - 8):r.lineno])
+            if "_keu_mot_lan(" not in gan and "print(" not in gan:
+                xau.append(f"{fn.name}() dòng {r.lineno}: trả False mà im lặng")
+    if "_keu_mot_lan" not in src:
+        xau.append("thiếu cơ chế nói-một-lần (_keu_mot_lan)")
+    assert not xau, "đường ghi D1 hỏng im lặng:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1071,6 +1104,7 @@ def main():
     check("cổng an toàn nội dung phủ cả 7 đường story", t_cong_an_toan_noi_dung)
     check("CF chặn prompt vẫn còn đường Gemini", t_cf_chan_prompt_van_con_duong_gemini)
     check("vẽ ảnh hỏng phải nói lý do, không im lặng", t_ve_anh_khong_hong_im_lang)
+    check("đường ghi D1 hỏng phải nói, không im lặng", t_duong_ghi_d1_khong_hong_im_lang)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

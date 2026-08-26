@@ -3125,3 +3125,24 @@ Còn lại chưa xử lý, ghi để không quên:
   không phải 18 lane hỏi trùng). Muốn giảm nữa phải hy sinh độ tươi của feedback → chưa làm.
 - `find_resumable` 3.770/ngày — dữ liệu job nằm ở D1 rồi nhưng **kịch bản thì chưa**; cần thêm
   route ở Worker và deploy. Việc lớn hơn, làm sau khi có số đo đủ.
+
+### 26/8 — quét lỗi TIỀM ẨN theo đúng các lớp đã vấp tối nay
+Thay vì chờ lỗi xảy ra, quét mã tìm những chỗ CÙNG LỚP với lỗi đã gặp. Kết quả:
+
+| lớp lỗi | quét thấy | kết luận |
+|---|---|---|
+| `[0]` trên kết quả có thể rỗng | 5 chỗ | 4 là `os.path.splitext` (luôn an toàn), 1 là `photo_score` (luôn trả bộ) — **sạch** |
+| trả `None` nơi caller mở gói | 40 hàm `_bd_*`/`_dc_*` | **thiết kế cố ý**, caller đã kiểm `if not kq` — báo động giả |
+| tối ưu chỉ có đường đọc, thiếu đường ghi | 0 | 5 cặp memo D1 đều đủ hai chiều |
+| **hàm báo hỏng mà im lặng** | **3 chỗ** | **LỖI THẬT — đã vá** |
+
+**Ba chỗ hỏng trong im lặng**: `keys_ghi` · `nho_ghi` · `kho_that_ghi` đều trả `False` mà không để
+lại một chữ. Đây chính là lý do cả đêm không hiểu vì sao dòng "Đã chụp hồ key" in 0 lần — một tối
+ưu quan trọng **chết âm thầm**, và em đi vá nhầm chỗ khác mất nhiều lượt.
+- Vá: `_keu_mot_lan()` — nói rõ lý do (D1 tắt / danh sách rỗng / bị từ chối / lỗi mạng), **một lần
+  mỗi lý do mỗi tiến trình** để không thành 588 dòng nhiễu.
+- Chốt `t_duong_ghi_d1_khong_hong_im_lang` — chốt này tự tìm ra `kho_that_ghi` mà em chưa thấy.
+
+**Luật**: hàm nào BÁO HỎNG thì phải NÓI HỎNG VÌ SAO. Ba lần tối nay cùng một lớp lỗi này
+(canary nuốt stderr · vẽ ảnh im lặng · đường ghi D1 im lặng) — nó tốn nhiều thời gian hơn bất kỳ
+lỗi logic nào, vì nó làm mọi phán đoán sau đó đi sai hướng.

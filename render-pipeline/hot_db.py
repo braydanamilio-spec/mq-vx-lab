@@ -296,10 +296,14 @@ def kho_that_ghi(owner: str, tong: int) -> bool:
     file thật; còn `__pushed__` bên Firestore là bộ đếm cộng dồn nên còn sai hơn. Chỉ lượt đi đếm
     72 kho mới là sự thật — cất nó vào chỗ dashboard đọc được mà không cần Firestore."""
     if not bat_ghi() or tong < 0:
+        _keu_mot_lan("kho_that_tat",
+                     f"kho_that_ghi bỏ qua: D1 tắt hoặc tổng không hợp lệ ({tong})")
         return False
     import datetime as _d
     r = goi("kho_that_ghi", {"owner": owner, "tong": int(tong),
                              "luc": _d.datetime.now(_d.timezone.utc).isoformat()})
+    if not r.get("ok"):
+        _keu_mot_lan("kho_that_tuchoi", f"kho_that_ghi bị từ chối: {str(r)[:80]}")
     return bool(r.get("ok"))
 
 
@@ -333,20 +337,41 @@ def bao_cao() -> str:
             + (f" · {_HONG['n']} lần hụt" if _HONG["n"] else ""))
 
 
+# 26/8 — CÁC ĐƯỜNG GHI D1 TỪNG HỎNG TRONG IM LẶNG. Cả đêm qua em không hiểu vì sao dòng
+# "Đã chụp hồ key" in 0 lần, vì `keys_ghi`/`nho_ghi` trả False mà không để lại một chữ nào.
+# Đúng lớp lỗi với canary nuốt stderr và vẽ ảnh hỏng im lặng: BIẾT là hỏng, KHÔNG biết hỏng ở đâu.
+# Nói MỘT LẦN mỗi lý do mỗi tiến trình — đủ để lần ra, không thành 588 dòng nhiễu.
+_DA_KEU: set = set()
+
+
+def _keu_mot_lan(ma: str, msg: str) -> None:
+    if ma in _DA_KEU:
+        return
+    _DA_KEU.add(ma)
+    print(f"   ⚠️ D1 {msg}")
+
+
 def keys_ghi(owner: str, rows: list) -> bool:
     """Chụp hồ key CHỈ-CÓ-Ở-A vào D1 để 17 luồng còn lại khỏi phải đọc A (25/8/2026).
 
     Xem chú thích `keys_ghi` trong worker.js: `merge_keys_A=70` lượt đọc A MỖI LUỒNG là khoản
     tiêu lớn nhất trên project A và là lý do A cạn hạn mức mỗi ngày."""
-    if not bat_ghi() or not rows:
+    if not bat_ghi():
+        _keu_mot_lan("keys_ghi_tat", "keys_ghi bỏ qua: D1 đang TẮT (thiếu HOT_KEY hoặc HOT_MODE)")
+        return False
+    if not rows:
+        _keu_mot_lan("keys_ghi_rong", "keys_ghi bỏ qua: danh sách key RỖNG — không có gì để chụp")
         return False
     import json as _j
     from datetime import datetime as _dt, timezone as _tz
     try:
         r = goi("keys_ghi", {"owner": owner, "js": _j.dumps(rows)[:400_000],
                              "at": _dt.now(_tz.utc).isoformat()})
+        if not r.get("ok"):
+            _keu_mot_lan("keys_ghi_tuchoi", f"keys_ghi bị từ chối: {str(r)[:80]}")
         return bool(r.get("ok"))
-    except Exception:
+    except Exception as e:
+        _keu_mot_lan("keys_ghi_loi", f"keys_ghi lỗi: {str(e)[:80]}")
         return False
 
 
@@ -373,14 +398,18 @@ def keys_doc(owner: str, tuoi: int = 1800) -> list | None:
 def nho_ghi(k: str, v, tuoi_gi: str = "") -> bool:
     """Cất một kết quả ĐỔI CHẬM vào bộ nhớ chung D1 để 18 luồng khỏi hỏi lại 18 lần."""
     if not bat_ghi() or not k:
+        _keu_mot_lan("nho_ghi_tat", "nho_ghi bỏ qua: D1 đang TẮT (thiếu HOT_KEY hoặc HOT_MODE)")
         return False
     import json as _j
     from datetime import datetime as _dt, timezone as _tz
     try:
         r = goi("nho_ghi", {"k": k, "js": _j.dumps(v)[:200_000],
                             "at": _dt.now(_tz.utc).isoformat()})
+        if not r.get("ok"):
+            _keu_mot_lan("nho_ghi_tuchoi", f"nho_ghi bị từ chối: {str(r)[:80]}")
         return bool(r.get("ok"))
-    except Exception:
+    except Exception as e:
+        _keu_mot_lan("nho_ghi_loi", f"nho_ghi lỗi: {str(e)[:80]}")
         return False
 
 
