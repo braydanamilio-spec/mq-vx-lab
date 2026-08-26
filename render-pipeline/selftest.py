@@ -1360,6 +1360,36 @@ def t_phong_phai_chay_het_duong_toi_luc_render():
     assert not xau, "; ".join(xau)
 
 
+
+def t_don_kho_phai_di_het_cay_va_moi_loai_tep():
+    """Bản dọn 55 kênh cũ phải đi HẾT cây thư mục và đụng MỌI loại tệp.
+
+    26/8 — bắt trước khi chạy thật. Bản đầu dùng `dr._list_videos(goc)`, mà hàm đó:
+      • chỉ hỏi `'<goc>' in parents` -> CHỈ ngay tại thư mục gốc, không vào thư mục con;
+      • còn lọc `mimeType in VIDEO_MIME` -> thumbnail (.jpg) và sidecar (.json) không bao giờ bị
+        đụng, dù mô tả của script ghi rõ là "video + thumbnail + sidecar".
+
+    Đo trên kho thật PAIZLYNOLUWADARA: tại gốc **0 mp4, 0 jpg**; toàn bộ nằm trong `_QUEUE/` và
+    `MM0-STORE/`: **85 mp4 · 85 jpg · 90 tệp khác**. Nghĩa là script sẽ in "đã đưa vào thùng rác
+    0 tệp" — trông y hệt thành công, trong khi chưa dọn gì.
+
+    **Luật**: một thao tác dọn đếm ra 0 phải KÊU LÊN, không được coi là xong. 0 gần như luôn là
+    lỗi lọc chứ không phải kho trống — cùng họ với luật "rỗng là kết quả đáng ngờ"."""
+    # Dùng AST: bản đầu của chốt này khớp chuỗi nên đọc luôn cả tên hàm nằm trong DOCSTRING giải
+    # thích vì sao đã bỏ nó — tự báo oan ngay trên mã đã đúng. Chốt kêu oan thì lần sau bị tắt.
+    import ast as _ast
+    src = _doc("don_the_he_1.py")
+    cay = _ast.parse(src)
+    goi_ham = {n.func.attr for n in _ast.walk(cay)
+               if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)}
+    ten_ham = {n.func.id for n in _ast.walk(cay)
+               if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Name)}
+    assert "_list_videos" not in goi_ham, \
+        "vẫn gọi _list_videos: chỉ quét thư mục gốc và chỉ lấy video -> dọn hụt thumbnail + tệp con"
+    assert "_di_het_kho" in ten_ham, "không gọi hàm đi hết cây thư mục"
+    assert "ĐẾM RA 0 TỆP" in src, "đếm ra 0 tệp mà không cảnh báo -> lỗi lọc trông như thành công"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1478,6 +1508,7 @@ def main():
     check("fitSize theo phông + theo template", t_fitsize_phai_theo_phong_va_khung)
     check("canary không được render vào composition rỗng", t_canary_khong_duoc_render_vao_composition_rong)
     check("phông chảy hết đường JSON->props->composition", t_phong_phai_chay_het_duong_toi_luc_render)
+    check("dọn kho: đi hết cây + mọi loại tệp", t_don_kho_phai_di_het_cay_va_moi_loai_tep)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

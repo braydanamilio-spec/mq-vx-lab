@@ -45,6 +45,55 @@ def _kenh_moi() -> set:
     return {k["ten"].replace(" ", "") for k in json.load(io.open(p, encoding="utf-8"))}
 
 
+
+def _duoi(ten: str) -> str:
+    t = str(ten or "").rsplit(".", 1)
+    return ("." + t[-1].lower()) if len(t) == 2 and len(t[-1]) <= 5 else "(không đuôi)"
+
+
+def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6) -> list:
+    """Đi HẾT cây thư mục, trả về MỌI tệp (không lọc theo loại).
+
+    26/8 — BẢN ĐẦU DÙNG `dr._list_videos(goc)` VÀ SẼ DỌN ĐÚNG SỐ KHÔNG. Hai lý do, đo trên kho
+    thật PAIZLYNOLUWADARA:
+      • `_list_videos` chỉ hỏi `'<goc>' in parents` — tức CHỈ ngay tại thư mục gốc, không đi vào
+        thư mục con. Mà tại gốc có **0 mp4, 0 jpg**; toàn bộ nằm trong `_QUEUE/` và `MM0-STORE/`:
+        **85 mp4 · 85 jpg · 90 tệp khác**.
+      • `_list_videos` còn lọc `mimeType in VIDEO_MIME`, nên thumbnail (.jpg) và sidecar (.json)
+        không bao giờ bị đụng tới — dù chú thích của chính hàm `main` ghi là "video + thumbnail
+        + sidecar".
+    Kết quả sẽ là dòng "đã đưa vào thùng rác 0 tệp" — trông y hệt thành công.
+    """
+    ra = []
+    try:
+        muc = dr.svc.files().list(
+            q=f"'{goc}' in parents and trashed = false",
+            fields="nextPageToken, files(id,name,mimeType)",
+            pageSize=200).execute()
+    except Exception as e:
+        print(f"      ⚠️ không đọc được thư mục {goc[:12]}…: {str(e)[:50]}")
+        return ra
+    tiep = muc.get("nextPageToken")
+    ds = list(muc.get("files", []))
+    while tiep:
+        try:
+            muc = dr.svc.files().list(
+                q=f"'{goc}' in parents and trashed = false",
+                fields="nextPageToken, files(id,name,mimeType)",
+                pageSize=200, pageToken=tiep).execute()
+        except Exception:
+            break
+        ds += list(muc.get("files", []))
+        tiep = muc.get("nextPageToken")
+    for f in ds:
+        if "folder" in str(f.get("mimeType") or ""):
+            if sau < tran:
+                ra += _di_het_kho(dr, f["id"], sau + 1, tran)
+        else:
+            ra.append(f)
+    return ra
+
+
 def main() -> int:
     that = "--that" in sys.argv
     lam_tat = "--tat" in sys.argv
@@ -96,6 +145,7 @@ def main() -> int:
             return 2
         ten_cu = {(c.get("name") or "").upper() for c in cu}
         tong = 0
+        _loai: dict = {}
         for acc in ST.pool_accounts():
             try:
                 dr = ST.account_drive(acc)
@@ -105,16 +155,22 @@ def main() -> int:
             goc = acc.get("root_id") or acc.get("root")
             if not goc:
                 continue
-            for f in (dr._list_videos(goc) or []):
+            for f in _di_het_kho(dr, goc):
                 ten = str(f.get("name") or "")
                 # CHỈ đụng tệp có tên kênh cũ ở đầu — không quét mù cả kho
                 if not any(ten.upper().startswith(t) for t in ten_cu):
                     continue
                 tong += 1
+                _loai[_duoi(ten)] = _loai.get(_duoi(ten), 0) + 1
                 if that:
                     dr.trash(f["id"])
         print(f"\n  🗑  {'đã đưa vào thùng rác' if that else '(sẽ đưa vào thùng rác)'} {tong} tệp "
               f"— Drive giữ 30 ngày, khôi phục được")
+        if _loai:
+            print("      " + " · ".join(f"{k}: {v}" for k, v in sorted(_loai.items(), key=lambda x: -x[1])))
+        elif not that:
+            print("      ⚠️ ĐẾM RA 0 TỆP. Kiểm lại trước khi chạy thật — 0 gần như luôn là lỗi lọc, "
+                  "không phải kho trống.")
 
     if lam_bg:
         n = 0

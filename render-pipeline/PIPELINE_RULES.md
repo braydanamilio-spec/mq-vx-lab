@@ -3323,3 +3323,32 @@ Kiểm từng khúc riêng lẻ KHÔNG bắt được (mỗi khúc đều "đún
 chỗ ghi là trang trí, không phải tính năng.
 Chốt: `t_phong_phai_chay_het_duong_toi_luc_render` (đã thử phá — bỏ `phong(font)` ở một
 composition là selftest đỏ).
+
+### 7.ed — BẢN DỌN 55 KÊNH CŨ SẼ DỌN ĐÚNG SỐ KHÔNG (26/8/2026, bắt trước khi chạy)
+
+Anh hỏi "đã lên kế hoạch dọn sạch videos + thumbnail + fileupload chưa". Workflow `don_the_he_1.yml`
+có sẵn, nhưng đo lại thì nó sẽ chạy xong mà **không dọn gì**.
+
+`don_the_he_1.py` dùng `dr._list_videos(goc)`, mà hàm đó:
+- chỉ hỏi `'<goc>' in parents` ⇒ **CHỈ ngay tại thư mục gốc**, không vào thư mục con;
+- còn lọc `mimeType in VIDEO_MIME` ⇒ **thumbnail (.jpg) và sidecar (.json) không bao giờ bị đụng**,
+  dù mô tả của chính script ghi là "video + thumbnail + sidecar".
+
+Đo trên kho thật `PAIZLYNOLUWADARA` (qua Worker API, chỉ đọc):
+
+| | ngay tại gốc | trong thư mục con |
+|---|---|---|
+| .mp4 | **0** | **85** |
+| .jpg | **0** | **85** |
+| tệp khác | 0 | **90** |
+
+Toàn bộ nằm trong `_QUEUE/` và `MM0-STORE/`. Script sẽ in `🗑 đã đưa vào thùng rác 0 tệp` — trông
+y hệt thành công. Ba lần fail trước đó (429) đã che mất lỗi này: nó chưa từng chạy tới bước đếm.
+
+Vá: `_di_het_kho()` đi hết cây (giới hạn sâu 6, có phân trang), lấy MỌI loại tệp, in thống kê theo
+đuôi tệp, và **kêu lên khi đếm ra 0**.
+
+**Luật**: một thao tác dọn/quét đếm ra 0 phải KÊU LÊN, không được coi là xong — 0 gần như luôn là
+lỗi lọc chứ không phải kho trống. Cùng họ với luật "rỗng là một KẾT QUẢ ĐÁNG NGỜ".
+Chốt: `t_don_kho_phai_di_het_cay_va_moi_loai_tep`, viết bằng AST — bản đầu khớp chuỗi nên đọc luôn
+tên hàm nằm trong docstring giải thích vì sao đã bỏ nó, tự báo oan trên mã đã đúng.
