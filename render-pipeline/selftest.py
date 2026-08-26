@@ -1979,6 +1979,7 @@ def main():
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
     check("biến thể bố cục: cùng dạng KHÔNG được trùng", t_bien_bo_cuc_khong_trung)
     check("scope Drive theo TỪNG app, không đổi đồng loạt", t_scope_drive_theo_app)
+    check("radar: ứng viên rỗng KHÔNG được lọt cửa nhu cầu", t_radar_khong_lot_rong)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4229,6 +4230,34 @@ def t_scope_drive_theo_app():
         "chọn app bằng cờ viết cứng thay vì đo -> thêm app mới phải sửa tay"
     assert "Hết chỗ nối kho" in src, \
         "hết app còn chỗ mà không báo gì -> người dùng chỉ thấy màn hình trống của Google"
+
+
+
+
+def t_radar_khong_lot_rong():
+    """Ứng viên rỗng phải bị loại, và điểm nhu cầu phải bám CHÍNH ứng viên.
+
+    26/8 — chạy radar thật: 3 kênh (`STEAM TRUTH`, `GAME GRAVEYARD`, `BREED FILE`) nhận đúng 24 đề
+    tài RỖNG, mà vẫn qua cả hai cửa kiểm. Hai lỗi chồng nhau:
+      • đọc sai khoá nguồn — `giong_cho` trả khoá `giong`, `game_steam` trả `ten`, em đọc `name`;
+      • cửa nhu cầu ghép `f"{ứng_viên} {góc}"` rồi đếm gợi ý. Ứng viên rỗng làm truy vấn co lại
+        còn đúng từ GÓC (`steam`, `breed`), mà từ góc thì bao giờ cũng có gợi ý ⇒ rỗng được chấm
+        điểm cao.
+
+    Lỗi thứ hai mới là lỗi thật: nó khiến MỌI ứng viên của một kênh được chấm bởi cùng một nhúm
+    gợi ý về từ góc, tức thang đo nhu cầu mất tác dụng phân biệt — thứ duy nhất nó sinh ra để làm.
+    Nay đòi gợi ý phải nhắc tới chính ứng viên."""
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import radar_dethai as R
+    src = _doc("radar_dethai.py")
+    assert "_lay_ten" in src, "vẫn đoán một khoá tên cho mọi nguồn"
+    assert 'if len(cum) < 2:' in src, "cửa nhu cầu không chặn ứng viên rỗng"
+    assert "tu_cum" in src and "dung = [x for x in g if (_tu(x) & tu_cum)]" in src, \
+        "điểm nhu cầu không đòi gợi ý nhắc tới chính ứng viên -> từ góc tự trả lời thay"
+    # đo bằng chính hàm, KHÔNG gọi mạng: chuỗi rỗng phải ra 0 trước khi kịp gọi
+    assert R.diem_nhu_cau("", set(), "steam")[0] == 0.0, "ứng viên rỗng vẫn có điểm"
+    assert R.diem_nhu_cau("  ", set(), "breed")[0] == 0.0, "ứng viên toàn khoảng trắng vẫn có điểm"
 
 
 if __name__ == "__main__":

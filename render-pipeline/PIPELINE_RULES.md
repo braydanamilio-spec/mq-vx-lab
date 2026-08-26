@@ -3764,3 +3764,53 @@ Không viết 18 bố cục. Tách bố cục thành ba công tắc ĐỘC LẬP
 kênh phải ổn định. Đo lại: cả 7 dạng đều không trùng biến thể.
 
 **LUẬT:** đếm "khác nhau" phải đếm cả BỐ CỤC, không chỉ màu/phông/giọng. Chốt: `t_bien_bo_cuc_khong_trung`.
+
+### 7.et — RADAR ĐỀ TÀI: HAI CỬA, VÀ CẢ HAI ĐỀU TỪNG BỊ LỌT (26/8/2026)
+
+Nút thắt sản lượng lớn nhất còn lại không phải tốc độ render mà là KHO ĐỀ TÀI: `KHO_XOAY` chỉ có
+**6-12 giá trị mỗi trục**, mà một bộ ăn 6 chương — kênh trục `nam` làm đúng một bộ là cạn.
+
+`trend_scout.py` đã có và làm đúng cách an toàn (chỉ đọc tiêu đề công khai), nhưng kết quả chỉ chảy
+vào nhánh viết bằng Gemini (`run_render.py:503`). 50 kênh gen-2 dựng từ dữ liệu mở nên không đi qua
+đó — xu hướng có mà kênh mới không dùng được.
+
+**Cửa 1 — CÓ DỮ LIỆU.** Bản radar đầu lấy ứng viên từ Google Trends + Wikipedia top. Anh nói ngay
+"tiêu đề quá chung chung, không sâu", và kết quả chạy thật tự tố cáo: `File:WhatsApp.svg`,
+`Don't Say Good Luck`. Từ khoá xu hướng KHÔNG có số đi kèm, mà engine gen-2 dựng video TỪ SỐ. Đổi
+sang lấy ứng viên từ chính miền dữ liệu của 30+ nguồn đã nối (50 bang, giống chó, game Steam, nhóm
+món), rồi **dựng thử story** — không ra dữ liệu thì loại.
+
+**Cửa 2 — CÓ NGƯỜI TÌM.** Anh chỉ tiếp: "phải phân tích keyword, thị hiếu người dùng chứ không
+phải cứ có nội dung là làm". Đúng — qua cửa 1 mà trượt cửa 2 là video đúng số nhưng không ai xem.
+Nguồn: **gợi ý tìm kiếm của chính YouTube** (`suggestqueries.google.com?ds=yt`) — câu người ta gõ
+thật, free, không khoá. Đúng hơn Google Trends vì Trends đo cả web, lệch hẳn hành vi xem video.
+
+Hỏi DANH TỪ TRẦN là vô dụng — đo thật:
+
+    breakfast cereal   10 gợi ý     salad dressing   10      granola   10      (phẳng lì)
+
+Ghép GÓC của kênh vào mới ra tín hiệu:
+
+    peanut butter recall  8      salad dressing recall  4
+    breakfast cereal recall 0    iced tea recall        0
+
+Người ta tìm "thu hồi bơ đậu phộng", không ai tìm "thu hồi ngũ cốc ăn sáng".
+
+**HAI LỖI ĐÃ LỌT CẢ HAI CỬA, và lỗi thứ hai mới đáng sợ:**
+
+1. Đọc sai khoá nguồn: `giong_cho` trả khoá `giong`, `game_steam` trả `ten`, code đọc `name` ⇒ 24
+   ứng viên RỖNG cho 3 kênh.
+2. Ứng viên rỗng làm truy vấn `f"{cum} {goc}"` co lại còn đúng từ GÓC (`steam`, `breed`), mà từ góc
+   thì bao giờ cũng có gợi ý ⇒ **rỗng được chấm điểm cao**. Nguy hơn lỗi 1 rất nhiều: nó khiến MỌI
+   ứng viên của một kênh được chấm bởi cùng một nhúm gợi ý về từ góc, tức thang đo nhu cầu mất
+   đúng cái tác dụng phân biệt mà nó sinh ra để làm — mà nhìn log thì vẫn thấy điểm số đẹp.
+
+**LUẬT:** thang đo nào cũng phải kiểm bằng HAI mẫu khác nhau, xem nó có ra HAI điểm khác nhau
+không. Thang cho mọi thứ cùng một điểm là thang hỏng, và nó không tự báo. Chốt: `t_radar_khong_lot_rong`.
+
+**LUẬT 2:** rút một trường từ bản ghi của nguồn lạ thì thử nhiều khoá, đừng đoán một khoá rồi dùng
+cho mọi nguồn — danh sách rỗng không ném lỗi, nó chỉ lặng lẽ rỗng.
+
+**KHÔNG LÀM:** không tải video, không lấy phụ đề, không viết lại kịch bản người khác. Sự thật và
+công thức không ai sở hữu; lời kể thì có. 50 kênh cùng chạy quy trình chép lời là đúng dấu hiệu
+"reused content" YouTube dùng để đánh trượt duyệt kiếm tiền — mất cả hệ, không phải mất một video.
