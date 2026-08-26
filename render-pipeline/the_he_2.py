@@ -22,6 +22,7 @@ Thiếu dữ liệu thì trả None và bỏ lượt — thà mất một video 
 """
 from __future__ import annotations
 
+import datetime as _datetime
 import io
 import json
 import os
@@ -1467,8 +1468,64 @@ def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None,
     return (ra, info) if ok else None
 
 
-def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] | None:
-    """Dựng + render cho MỌI dạng. Trả (đường dẫn, QC) hoặc None nếu bỏ lượt."""
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# XOAY VÒNG ĐỀ TÀI (26/8/2026) — THỨ QUYẾT ĐỊNH KÊNH SỐNG HAY CHẾT
+#
+# Cả 50 kênh đều có trường `tham_so.xoay` ghi rõ trục xoay ("mon" / "nam" / "tu_khoa" / …), nhưng
+# rà lại thì **KHÔNG DÒNG MÃ NÀO ĐỌC NÓ**. Tham số lấy nguyên từ `tham_so` cố định, `ky` thì luôn
+# None. Nghĩa là mỗi kênh làm ĐÚNG MỘT câu chuyện rồi lặp lại mãi: cùng loại ngũ cốc, cùng từ khoá,
+# cùng năm. 50 kênh × một video lặp = kênh chết ngay, và YouTube tính là nội dung trùng lặp.
+# Cùng họ với `voice_tone` và `brand.font`: khai ra rồi để đó.
+#
+# Cơ chế: mỗi trục có một KHO giá trị. Mỗi lượt duyệt kho theo thứ tự, dựng thử story, và BỎ QUA
+# giá trị nào cho ra tiêu đề đã có trong `avoid` (danh sách video kênh đã làm — `run_render` vốn
+# tính sẵn cho các kênh đời 1 qua `_avoid_for`). Hết kho mà vẫn trùng thì mới bỏ lượt.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+
+_NAM_NAY = _datetime.date.today().year
+
+# Kho cho từng trục. Giá trị phải là thứ NGUỒN THẬT chấp nhận — đây không phải chỗ bịa cho có.
+KHO_XOAY: dict[str, list] = {
+    # Nhóm hàng của Open Food Facts (đã kiểm bằng gọi thật, xem du_lieu_mo.thanh_phan_off)
+    "mon": ["breakfast-cereals", "pizzas", "sodas", "chocolates", "crisps", "biscuits",
+            "energy-drinks", "ice-creams", "breads", "cheeses", "yogurts", "sauces"],
+    # Năm ngân sách/thống kê: lùi dần, mỗi năm là một bộ số khác hẳn
+    "nam": [_NAM_NAY - 1, _NAM_NAY - 2, _NAM_NAY - 3, _NAM_NAY - 4, _NAM_NAY - 5, _NAM_NAY - 6],
+    # Cửa sổ ngày (số ngày lùi về trước) cho nguồn theo thời gian: thu hồi, thiên thạch, hồ sơ
+    "ngay": [7, 14, 30, 60, 90, 180],
+    "bang": ["California", "Texas", "Florida", "New York", "Pennsylvania", "Illinois",
+             "Ohio", "Georgia", "North Carolina", "Michigan", "Arizona", "Washington"],
+}
+
+
+def _kho_xoay_cua(kenh: dict) -> tuple[str, list]:
+    """(tên trục, kho giá trị) cho một kênh. Kho rỗng = kênh này không xoay được."""
+    ts = kenh.get("tham_so") or {}
+    truc = str(ts.get("xoay") or "").strip()
+    if not truc:
+        return "", []
+    # Kênh tự mang kho riêng thì ưu tiên — chính xác hơn kho chung.
+    rieng = ts.get("kho_" + truc)
+    if isinstance(rieng, list) and rieng:
+        return truc, list(rieng)
+    return truc, list(KHO_XOAY.get(truc) or [])
+
+
+def _tieu_de_da_lam(tieu_de: str, avoid) -> bool:
+    """Tiêu đề này đã ra lò chưa. So sau khi bỏ dấu câu để "X in 2024" và "X In 2024." là một."""
+    import re as _r
+    g = lambda x: _r.sub(r"[^a-z0-9 ]", "", str(x or "").lower()).strip()
+    t = g(tieu_de)
+    return bool(t) and any(g(a) == t for a in (avoid or []))
+
+
+def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
+               avoid: list | None = None) -> tuple[str, dict] | None:
+    """Dựng + render cho MỌI dạng. Trả (đường dẫn, QC) hoặc None nếu bỏ lượt.
+
+    `avoid` = tiêu đề các video kênh này ĐÃ làm. Thiếu nó thì kênh lặp lại đúng một câu chuyện
+    mãi mãi — xem khối XOAY VÒNG ĐỀ TÀI ở trên."""
     import datastory_ci as DS
     dang = kenh.get("dinh_dang")
     if dang == "race":
@@ -1479,7 +1536,7 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, d
     if not comp or not ten_props:
         print(f"   ⚠️ {kenh.get('ten')}: dạng '{dang}' chưa có đường render chung")
         return None
-    st = DUNG_STORY[dang](kenh, ky)
+    st = _dung_story_xoay(dang, kenh, ky, avoid)
     if not st:
         return None
     sl = DS.slug(kenh["handle"].lstrip("@"))
@@ -1509,6 +1566,35 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, d
     if ok:
         lam_thumb(kenh, st, ra, comp, pf)
     return (ra, info) if ok else None
+
+
+
+def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None) -> dict | None:
+    """Dựng story, XOAY qua kho đề tài cho tới khi ra một chuyện CHƯA LÀM.
+
+    Trục xoay đầu tiên thử luôn tham số gốc của kênh (giữ đúng ý thiết kế), rồi mới đi kho."""
+    dung = DUNG_STORY.get(dang)
+    if not dung:
+        return None
+    truc, kho = _kho_xoay_cua(kenh)
+    thu = [dict(ky or {})]                       # lượt 0: đúng tham số gốc
+    if truc and kho:
+        thu += [{**(ky or {}), truc: v} for v in kho]
+    da_thay = None
+    for i, t in enumerate(thu):
+        st = dung(kenh, t)
+        if not st:
+            continue
+        da_thay = da_thay or st
+        if not _tieu_de_da_lam(st.get("title"), avoid):
+            if i:
+                print(f"   ♻️ {kenh.get('ten')}: đề tài gốc đã làm rồi — xoay `{truc}` sang "
+                      f"`{t.get(truc)}` ({i}/{len(thu) - 1})")
+            return st
+    if da_thay:
+        print(f"   ⚠️ {kenh.get('ten')}: hết kho `{truc or 'không có trục'}` mà đề tài nào cũng "
+              f"đã làm rồi — BỎ LƯỢT, không đăng trùng.")
+    return None
 
 
 def lam_thumb(kenh: dict, st: dict, ra: str, comp: str = "", pf: str = "") -> str:

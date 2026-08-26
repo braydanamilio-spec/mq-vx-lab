@@ -265,7 +265,16 @@
         "cpi_di_lai",
         "cpi_giao_duc"
       ],
-      "nhan": "Your pay against your bills"
+      "nhan": "Your pay against your bills",
+      "xoay": "tu_nam",
+      "kho_tu_nam": [
+        2015,
+        2010,
+        2018,
+        2005,
+        2012,
+        2000
+      ]
     },
     "brand": {
       "name": "PAYCHECK GAP",
@@ -319,6 +328,57 @@
         "New York",
         "Ohio",
         "Idaho"
+      ],
+      "xoay": "bangs",
+      "kho_bangs": [
+        [
+          "California",
+          "Texas",
+          "Florida",
+          "New York",
+          "Pennsylvania",
+          "Illinois"
+        ],
+        [
+          "New York",
+          "Pennsylvania",
+          "Illinois",
+          "Ohio",
+          "Georgia",
+          "North Carolina"
+        ],
+        [
+          "Ohio",
+          "Georgia",
+          "North Carolina",
+          "Michigan",
+          "Arizona",
+          "Washington"
+        ],
+        [
+          "Michigan",
+          "Arizona",
+          "Washington",
+          "Massachusetts",
+          "Tennessee",
+          "Colorado"
+        ],
+        [
+          "Massachusetts",
+          "Tennessee",
+          "Colorado",
+          "Oregon",
+          "Nevada",
+          "Utah"
+        ],
+        [
+          "California",
+          "Texas",
+          "Florida",
+          "New York",
+          "Pennsylvania",
+          "Illinois"
+        ]
       ]
     },
     "brand": {
@@ -375,6 +435,15 @@
         "cpi_yte",
         "cpi_di_lai",
         "cpi_giao_duc"
+      ],
+      "xoay": "tu_nam",
+      "kho_tu_nam": [
+        2015,
+        2010,
+        2018,
+        2005,
+        2012,
+        2000
       ]
     },
     "brand": {
@@ -664,7 +733,8 @@
     "the_he": 2,
     "footage": false,
     "tham_so": {
-      "nam": 2025
+      "nam": 2025,
+      "xoay": "nam"
     },
     "brand": {
       "name": "DIAMOND NUMBERS",
@@ -712,7 +782,15 @@
     "footage": false,
     "tham_so": {
       "chi_tieu": "PTS",
-      "mua": "2024-25"
+      "mua": "2024-25",
+      "xoay": "mua",
+      "kho_mua": [
+        "2024-25",
+        "2023-24",
+        "2022-23",
+        "2021-22",
+        "2020-21"
+      ]
     },
     "brand": {
       "name": "COURT KINGS",
@@ -760,7 +838,15 @@
     "footage": false,
     "tham_so": {
       "chi_tieu": "AST",
-      "mua": "2024-25"
+      "mua": "2024-25",
+      "xoay": "mua",
+      "kho_mua": [
+        "2024-25",
+        "2023-24",
+        "2022-23",
+        "2021-22",
+        "2020-21"
+      ]
     },
     "brand": {
       "name": "PAID VS PLAYED",
@@ -858,7 +944,21 @@
     "footage": false,
     "tham_so": {
       "loc": "nguoi",
-      "xoay": "nguoi"
+      "xoay": "thang",
+      "kho_thang": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
     },
     "brand": {
       "name": "FAME CURVE",
@@ -1005,7 +1105,15 @@
     "footage": false,
     "tham_so": {
       "tu_khoa": "one hit wonder",
-      "xoay": "nghe_si"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "Billboard Hot 100",
+        "Grammy Award",
+        "one-hit wonder",
+        "Rock and Roll Hall of Fame",
+        "platinum certification",
+        "music streaming"
+      ]
     },
     "brand": {
       "name": "SONG FILE",
@@ -1054,7 +1162,15 @@
     "tham_so": {
       "tu_khoa": "one hit wonder",
       "loc": "mot_hit",
-      "xoay": "nghe_si"
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "one-hit wonder",
+        "novelty song",
+        "viral song",
+        "summer hit",
+        "debut single",
+        "comeback single"
+      ]
     },
     "brand": {
       "name": "ONE HIT",
@@ -1101,7 +1217,13 @@
     "the_he": 2,
     "footage": false,
     "tham_so": {
-      "loc": "dong_nhat"
+      "loc": "dong_nhat",
+      "xoay": "loc",
+      "kho_loc": [
+        "dong_nhat",
+        "tang_manh",
+        "dinh_cao"
+      ]
     },
     "brand": {
       "name": "STEAM TRUTH",
@@ -1149,7 +1271,13 @@
     "the_he": 2,
     "footage": false,
     "tham_so": {
-      "loc": "chet_yeu"
+      "loc": "chet_yeu",
+      "xoay": "loc",
+      "kho_loc": [
+        "chet_yeu",
+        "tut_manh",
+        "vang_nhat"
+      ]
     },
     "brand": {
       "name": "GAME GRAVEYARD",
@@ -1344,7 +1472,8 @@
     "tham_so": {
       "ma": "AG.LND.FRST.ZS",
       "nhan": "Forest cover",
-      "nam": 2022
+      "nam": 2022,
+      "xoay": "nam"
     },
     "brand": {
       "name": "WILD NUMBERS",
@@ -1393,7 +1522,8 @@
     "tham_so": {
       "ma": "NY.GDP.PCAP.CD",
       "nhan": "Richest countries",
-      "nam": 2023
+      "nam": 2023,
+      "xoay": "nam"
     },
     "brand": {
       "name": "COST TO GO",
@@ -1489,7 +1619,16 @@
     "the_he": 2,
     "footage": false,
     "tham_so": {
-      "tu_khoa": "artificial intelligence"
+      "tu_khoa": "artificial intelligence",
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "artificial intelligence",
+        "layoffs",
+        "cybersecurity breach",
+        "supply chain",
+        "climate risk",
+        "share buyback"
+      ]
     },
     "brand": {
       "name": "FILINGS SAY",
@@ -1536,7 +1675,16 @@
     "the_he": 2,
     "footage": false,
     "tham_so": {
-      "tu_khoa": "reduction in force"
+      "tu_khoa": "reduction in force",
+      "xoay": "tu_khoa",
+      "kho_tu_khoa": [
+        "reduction in force",
+        "restructuring",
+        "workforce reduction",
+        "plant closure",
+        "severance",
+        "headcount"
+      ]
     },
     "brand": {
       "name": "QUIET LAYOFFS",
@@ -1681,7 +1829,8 @@
     "tham_so": {
       "ma": "SP.DYN.TFRT.IN",
       "nhan": "Birth rate",
-      "nam": 2022
+      "nam": 2022,
+      "xoay": "nam"
     },
     "brand": {
       "name": "MARRIAGE MATH",
@@ -1740,7 +1889,8 @@
         "Alimony",
         "Breakup",
         "Soulmate"
-      ]
+      ],
+      "xoay": "nam"
     },
     "brand": {
       "name": "WHAT THEY SEARCH",
@@ -1790,7 +1940,16 @@
     "footage": false,
     "tham_so": {
       "chuoi": "viec_lam",
-      "nhan": "Jobs in America"
+      "nhan": "Jobs in America",
+      "xoay": "tu_nam",
+      "kho_tu_nam": [
+        2015,
+        2010,
+        2018,
+        2005,
+        2012,
+        2000
+      ]
     },
     "brand": {
       "name": "SALARY TRUTH",
@@ -1838,7 +1997,16 @@
     "footage": false,
     "tham_so": {
       "chuoi": "that_nghiep",
-      "nhan": "Unemployment"
+      "nhan": "Unemployment",
+      "xoay": "tu_nam",
+      "kho_tu_nam": [
+        2015,
+        2010,
+        2018,
+        2005,
+        2012,
+        2000
+      ]
     },
     "brand": {
       "name": "JOB DYING",
@@ -1885,7 +2053,58 @@
     "the_he": 2,
     "footage": false,
     "tham_so": {
-      "muc": "State"
+      "muc": "State",
+      "xoay": "bangs",
+      "kho_bangs": [
+        [
+          "Florida",
+          "New York",
+          "Pennsylvania",
+          "Illinois",
+          "Ohio",
+          "Georgia"
+        ],
+        [
+          "Illinois",
+          "Ohio",
+          "Georgia",
+          "North Carolina",
+          "Michigan",
+          "Arizona"
+        ],
+        [
+          "North Carolina",
+          "Michigan",
+          "Arizona",
+          "Washington",
+          "Massachusetts",
+          "Tennessee"
+        ],
+        [
+          "Washington",
+          "Massachusetts",
+          "Tennessee",
+          "Colorado",
+          "Oregon",
+          "Nevada"
+        ],
+        [
+          "Colorado",
+          "Oregon",
+          "Nevada",
+          "Utah",
+          "Idaho",
+          "Montana"
+        ],
+        [
+          "California",
+          "Texas",
+          "Florida",
+          "New York",
+          "Pennsylvania",
+          "Illinois"
+        ]
+      ]
     },
     "brand": {
       "name": "WHERE TO MOVE",
@@ -1942,7 +2161,16 @@
         "cpi_quan_ao",
         "cpi_giai_tri"
       ],
-      "nhan": "What a home actually costs"
+      "nhan": "What a home actually costs",
+      "xoay": "tu_nam",
+      "kho_tu_nam": [
+        2015,
+        2010,
+        2018,
+        2005,
+        2012,
+        2000
+      ]
     },
     "brand": {
       "name": "HOUSE MATH",
@@ -2086,7 +2314,15 @@
     "the_he": 2,
     "footage": false,
     "tham_so": {
-      "xoay": "ngay"
+      "xoay": "den_ngay",
+      "kho_den_ngay": [
+        "2026-08-26",
+        "2026-08-12",
+        "2026-07-27",
+        "2026-06-27",
+        "2026-04-28",
+        "2025-12-29"
+      ]
     },
     "brand": {
       "name": "NEAR EARTH",
@@ -2183,7 +2419,49 @@
     "footage": false,
     "tham_so": {
       "bang": "TX",
-      "xoay": "bang"
+      "xoay": "bangs",
+      "kho_bangs": [
+        [
+          "Texas",
+          "Oklahoma",
+          "Kansas",
+          "Nebraska",
+          "Iowa",
+          "Missouri"
+        ],
+        [
+          "California",
+          "Oregon",
+          "Washington",
+          "Nevada",
+          "Arizona",
+          "Idaho"
+        ],
+        [
+          "Florida",
+          "Georgia",
+          "Alabama",
+          "Louisiana",
+          "Mississippi",
+          "South Carolina"
+        ],
+        [
+          "New York",
+          "Pennsylvania",
+          "Ohio",
+          "Michigan",
+          "Illinois",
+          "Indiana"
+        ],
+        [
+          "Colorado",
+          "Utah",
+          "Montana",
+          "Wyoming",
+          "New Mexico",
+          "North Dakota"
+        ]
+      ]
     },
     "brand": {
       "name": "ALERT NOW",
@@ -2232,7 +2510,15 @@
     "tham_so": {
       "do_lon": 4.5,
       "tu_ngay": "2015-01-01",
-      "xoay": "nam"
+      "xoay": "tu_ngay",
+      "kho_tu_ngay": [
+        "2026-07-27",
+        "2026-05-28",
+        "2026-02-27",
+        "2025-08-26",
+        "2024-08-26",
+        "2022-08-27"
+      ]
     },
     "brand": {
       "name": "QUAKE LOG",
@@ -2427,7 +2713,16 @@
     "footage": false,
     "tham_so": {
       "chuoi": "cpi_giao_duc",
-      "nhan": "Education cost"
+      "nhan": "Education cost",
+      "xoay": "tu_nam",
+      "kho_tu_nam": [
+        2015,
+        2010,
+        2018,
+        2005,
+        2012,
+        2000
+      ]
     },
     "brand": {
       "name": "DEGREE WORTH",

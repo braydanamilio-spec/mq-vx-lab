@@ -967,7 +967,10 @@ def _dispatch_short(ch, fmt, cat, out, keys, tier, jst, cool, okcb, resume_story
             print(f"   ⚠️ {ch.get('name')}: có cờ thế hệ 2 nhưng không có trong kenh_the_he_2.json")
             return out, {"title": ch.get("name")}, False, {"err": "không có trong danh sách thế hệ 2"}
         jst("writing", f"Đọc dữ liệu mở ({k2['nguon']})")
-        kq = TH2.chay_chung(k2, ra=out)
+        # 26/8 — TRUYỀN `avoid`. Thiếu nó thì cơ chế xoay vòng đề tài không có gì để so, kênh làm
+        # đúng MỘT câu chuyện rồi lặp lại mãi (xem khối XOAY VÒNG ĐỀ TÀI trong the_he_2.py).
+        # `avoid` ở đây đã được tính sẵn ở đầu hàm cho mọi dạng — chỉ là nhánh thế hệ 2 chưa dùng.
+        kq = TH2.chay_chung(k2, ra=out, avoid=avoid)
         if not kq:
             return out, {"title": k2["ten"]}, False, {"err": "nguồn thiếu dữ liệu -> bỏ lượt"}
         _duong, _info = kq

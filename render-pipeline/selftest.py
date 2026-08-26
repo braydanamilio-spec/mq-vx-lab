@@ -1485,6 +1485,51 @@ def t_tra_kenh_gen2_phai_khop_ten_seed_luu():
                        f"lượt, 0 video: {thieu[:5]}")
 
 
+
+def t_moi_kenh_gen2_phai_xoay_duoc_de_tai():
+    """Mỗi kênh gen-2 phải xoay được đề tài, và trục xoay phải là thứ bộ chuyển đổi THẬT SỰ đọc.
+
+    26/8 — lỗi lớn nhất về nội dung, bắt trước khi seed. Cả 50 kênh đều có `tham_so.xoay` ghi rõ
+    trục ("mon"/"nam"/"tu_khoa"…), nhưng **không dòng mã nào đọc nó**: `chay_chung` truyền `ky=None`
+    và tham số lấy nguyên từ `tham_so` cố định. Nghĩa là mỗi kênh làm ĐÚNG MỘT câu chuyện rồi lặp
+    lại mãi — 50 kênh × một video lặp, và YouTube tính là nội dung trùng lặp.
+    Cùng họ với `voice_tone` / `brand.font` / `voice_pitch`: khai ra rồi để đó.
+
+    Chốt kiểm HAI điều, vì gán trục bừa cũng vô dụng y như không gán:
+      ① mọi kênh có trục xoay (trừ kênh dùng nguồn SỐNG, tự đổi theo thời gian thật);
+      ② trục đó có mặt trong `ky.get("<trục>")` của chính bộ chuyển đổi kênh ấy dùng."""
+    import json as _json, re as _re
+    src = _doc("the_he_2.py")
+    ks = _json.loads(_doc("kenh_the_he_2.json"))
+    # bản đồ ham -> hàm dựng, gom từ MỌI bảng bộ chuyển đổi
+    mp = {}
+    for bang in ("BO_CHUYEN", "BO_DUA", "BO_PHIM", "BO_SO", "BO_BAN_DO", "BO_THANG", "BO_XUA_NAY"):
+        m = _re.search(bang + r"\s*=\s*\{(.*?)\n\}", src, _re.S)
+        if m:
+            mp.update(dict(_re.findall(r'"(\w+)":\s*(_\w+)', m.group(1))))
+    SONG = {"may_bay"}      # nguồn SỐNG: số liệu đổi từng phút, mỗi lượt đã là một chuyện khác
+    xau = []
+    for k in ks:
+        ham = k.get("ham")
+        truc = str((k.get("tham_so") or {}).get("xoay") or "")
+        if ham in SONG:
+            continue
+        if not truc:
+            xau.append(f"{k['ten']}: không có trục xoay -> lặp đúng một đề tài mãi")
+            continue
+        fn = mp.get(ham)
+        b = _re.search(r"def " + str(fn) + r"\(.*?(?=\ndef )", src, _re.S) if fn else None
+        doc = set(_re.findall(r'ky\.get\("(\w+)"', b.group(0))) if b else set()
+        if doc and truc not in doc:
+            xau.append(f"{k['ten']}: trục `{truc}` mà {fn} không đọc (nó đọc {sorted(doc)})")
+    assert not xau, f"{len(xau)} kênh: " + "; ".join(xau[:4])
+    # và cơ chế phải được NỐI: run_render truyền avoid, chay_chung dùng nó
+    rr = _doc("run_render.py")
+    assert "chay_chung(k2, ra=out, avoid=avoid)" in rr, \
+        "run_render không truyền avoid -> không có gì để so, cơ chế xoay nằm im"
+    assert "_dung_story_xoay(" in src, "chay_chung không đi qua hàm xoay đề tài"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1607,6 +1652,7 @@ def main():
     check("mức âm chuyển cảnh quyết ở MỘT chỗ", t_muc_am_quyet_o_mot_cho)
     check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
+    check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
