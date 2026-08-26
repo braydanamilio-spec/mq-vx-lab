@@ -1789,7 +1789,11 @@ def _so_noi_bat(st: dict) -> dict:
             v = str(_g(m, "stat", "disp", "oddsDisp"))
             if any(c.isdigit() for c in v):
                 return {"stat": v, "name": str(_g(m, "name", "label", "state"))}
-        return {"stat": str(len(it)), "name": str(st.get("unit") or _g(it[0], "name", "label", "state"))}
+        # Nhãn phải nói đúng thứ đang được ĐẾM. Đo khung hook thật: số dẫn ra `6` (số mục) mà nhãn
+        # lại là `WEGMANS FOOD MARKETS, INC.` — người xem đọc thành "6 Wegmans", vô nghĩa. Có
+        # `unit` thì dùng, không có thì để TRỐNG và nhường câu hỏi mở phía dưới làm nhiệm vụ —
+        # số trần kèm câu hỏi vẫn là một hook đúng, còn số kèm nhãn sai thì không.
+        return {"stat": str(len(it)), "name": str(st.get("unit") or "")}
     fr = st.get("frames") or []
     if fr:
         d = (fr[-1].get("data") or [{}])[0]

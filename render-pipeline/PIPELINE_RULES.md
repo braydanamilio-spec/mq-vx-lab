@@ -3720,3 +3720,47 @@ Hễ nới vòng đời của một tệp tạm (dựng xong dùng ngay → dự
 
 **CÒN THIẾU:** `race` (7 kênh) và `cinematic` (10 kênh) chưa nối vào `Gen2Long`; chúng đã có
 composition ngang sẵn (`Race`, `Cinematic`) nên là việc đấu dây, không phải dựng bố cục mới.
+
+### 7.er — DỌN MỘT KHO TRONG HAI: SỐ CŨ VẪN HIỆN, MÀ NHÌN NHƯ ĐÃ XONG (26/8/2026)
+
+Xoá xong **1.696** job của 55 kênh cũ trong Firestore B, anh tải dashboard: **vẫn 2.486**.
+
+Gallery đọc HAI nguồn, không phải một:
+
+    rsGalInto:  if (dv && window.__d1OK) d1rows = await rsD1Jobs(dv)   // có lọc ngày -> D1
+                else  all = window.__rsJobsData                        // "Mọi lúc"    -> Firestore
+
+Đo thật khi thêm lệnh dọn D1: **D1 giữ 4.304 bản ghi** của kênh cũ — gấp 2,5 lần Firestore, vì
+pipeline ghi thẳng vào D1 mỗi lượt còn Firestore có lúc nghẽn thì bỏ. Dọn một nơi thì video cũ biến
+mất ở "Mọi lúc" rồi **hiện lại nguyên vẹn khi bấm "Hôm nay"** — tệ hơn không dọn, vì lần đầu nhìn
+tưởng xong rồi.
+
+Vá: lệnh worker `don_job_kenh` (xoá theo tên kênh, chia lô 100 tham số cho vừa giới hạn D1) +
+`hot_db.don_job_kenh` + gọi ngay trong `--job`, ngay sau bước Firestore.
+
+**LUẬT:** hệ có hai kho dữ liệu song song thì MỌI lệnh dọn phải đụng cả hai, và phải in số của cả
+hai. Một con số duy nhất trong log là chỗ để lỗi này trốn.
+
+**LUẬT 2:** trước khi kết luận "đã dọn xong", tìm xem MÀN HÌNH đọc từ đâu — không phải chỗ mình
+vừa xoá. Lần này màn hình đọc từ chỗ khác, và em đã báo xong khi chưa xong.
+
+### 7.es — 18 KÊNH CHUNG MỘT BỐ CỤC: KHÁC MÀU KHÔNG ĐỦ ĐỂ KHÁC KÊNH (26/8/2026)
+
+Đo 50 kênh mới: màu chính **50/50** khác nhau, chữ ký giọng **50/50** khác nhau, phông 23 giá trị.
+Nhưng `dinh_dang` chỉ có **7 giá trị cho 50 kênh**, riêng `ranked` dùng lại **18 lần**, `cinematic`
+10 lần. Anh cấm rõ: "ko lặp lại 1 motip, ko lặp lại 1 template".
+
+Khán giả nhận ra "cùng một lò" qua **bố cục** — nhãn nằm đâu, thẻ hình gì, nền có hoạ tiết gì —
+chứ không qua mã màu. Nên 18 kênh đó vẫn nhìn như một, dù bảng thống kê toàn 50/50.
+
+Không viết 18 bố cục. Tách bố cục thành ba công tắc ĐỘC LẬP:
+
+    nhan: nhãn cột trái | cột phải | hàng trên      (3)
+    the : thẻ đặc | thẻ viền rỗng | thẻ vạch màu    (3)
+    nen : trơn | sọc chéo | lưới chấm               (3)   -> 27 tổ hợp
+
+`bien_cua()` phát cho mỗi kênh thứ tự của nó TRONG NHÓM cùng `dinh_dang`, đọc từ
+`kenh_the_he_2.json` nên cố định — bố cục một kênh không được đổi giữa các video, vì nhận diện
+kênh phải ổn định. Đo lại: cả 7 dạng đều không trùng biến thể.
+
+**LUẬT:** đếm "khác nhau" phải đếm cả BỐ CỤC, không chỉ màu/phông/giọng. Chốt: `t_bien_bo_cuc_khong_trung`.
