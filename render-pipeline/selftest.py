@@ -1679,6 +1679,15 @@ def t_gen2_phai_ra_bo_1long_3short():
         "short gen-2 không ghi cha/thu_tu -> khâu đăng đăng nhảy cóc, mất mạch kênh"
     assert 'bo=f"S{i + 1}"' in than and 'bo="L"' in than, \
         "không đánh số vai trò (L/S1/S2) khi đẩy kho -> nhìn tên file không biết short thuộc long nào"
+    # 26/8 — TIÊU ĐỀ LONG PHẢI PHỦ CẢ BỘ. `_gen2_bo` vốn lấy `chuong[0][1]`, tức story của SHORT
+    # ĐẦU TIÊN. Từ lúc short gộp 2 chương, short đầu chỉ phủ 2/6 chương ⇒ long trải `2020-2025` lại
+    # mang tên `(2024-2025)`. Người xem bấm vào vì tên đó sẽ thấy nội dung khác — đúng thứ phá
+    # "liền mạch". Lỗi này do CHÍNH bản refactor gộp chương gây ra, nên chốt lại để khỏi tái diễn.
+    assert "st_long" in than, "tiêu đề long vẫn lấy từ short đầu -> nói sai phạm vi cả bộ"
+    import the_he_2 as _T3
+    _sts = [{"title": f"X ({n})", "items": [{"name": "a"}]} for n in range(2020, 2026)]
+    _tt = _T3._gop_story(_sts, "nam", tran=6).get("title", "")
+    assert "2020" in _tt and "2025" in _tt, f"tiêu đề gộp không phủ hết phạm vi: {_tt!r}"
 
 
 

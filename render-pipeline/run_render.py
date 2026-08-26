@@ -824,12 +824,14 @@ def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
     if not kq:
         lst("failed", "nguồn thiếu dữ liệu -> bỏ lượt")
         return False
-    long_path, chuong = kq
+    # 26/8 — nhận thêm story GỘP CẢ BỘ. Trước đây tiêu đề long lấy `chuong[0][1]` = story của short
+    # đầu; từ lúc short gộp 2 chương thì short đầu chỉ phủ 1/3 long ⇒ tên long nói sai phạm vi.
+    long_path, chuong, st_long = kq
     ok, info = DS.qc(long_path)
     if not ok:
         lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
         return False
-    _t0 = chuong[0][1]
+    _t0 = st_long or (chuong[0][1] if chuong else {})
     # `seri=ljob` + `bo="L"` -> tên file trên Drive mang mã cụm và vai trò, nên nhìn tên là biết
     # short nào thuộc long nào (xem `doi_ten_kho.py`: bo = "L" | "S1" | "S2"…).
     eq = enqueue_drive(channel, long_path,

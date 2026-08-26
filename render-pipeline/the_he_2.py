@@ -2093,9 +2093,15 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
     if not shorts:
         print(f"   ⚠️ {ten}: có long nhưng KHÔNG ra short nào")
         return None
+    # 26/8 — TIÊU ĐỀ LONG PHẢI PHỦ CẢ BỘ. `_gen2_bo` vốn lấy `chuong[0][1]` làm tiêu đề long, tức
+    # story của SHORT ĐẦU TIÊN. Từ lúc short gộp 2 chương, short đầu chỉ phủ chương 1-2 — nên long
+    # trải 6 chương `2020-2025` lại mang tên `(2024-2025)`. Sai một phần ba sự thật, và người xem
+    # bấm vào vì tên đó sẽ thấy nội dung khác. Gộp TOÀN BỘ chương để lấy đúng phạm vi.
+    st_long = _gop_story(kho_st, truc, tran=6)
     print(f"   🎬 {ten}: BỘ = 1 long 16:9 ({len(chuong)} chương) + {len(shorts)} short 9:16 "
           f"(mỗi short gộp ~{max(1, len(chuong) // max(1, len(shorts)))} chương)")
-    return ra_long, shorts
+    print(f"      long: {st_long.get('title')}")
+    return ra_long, shorts, st_long
 
 
 def _noi_video(cac_tep: list, ra: str) -> bool:
