@@ -57,11 +57,11 @@ const NenDang: React.FC<{ dang: string; a: string; b: string; W: number; H: numb
     return (
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute", inset: 0 }}>
         {Array.from({ length: hang }).map((_, i) => (
-          <g key={i} opacity={0.16 + i * 0.045}>
-            <rect x={0} y={(H / hang) * i + 8} width={W * (0.30 + k(i) * 0.6)} height={H / hang - 16}
+          <g key={i} opacity={0.26 + i * 0.06}>
+            <rect x={0} y={(H / hang) * i + 8} width={W * (0.55 + k(i) * 0.43)} height={H / hang - 16}
                   rx={H / hang / 5} fill={i % 2 ? b : a} />
-            <rect x={W * (0.30 + k(i) * 0.6) + 18} y={(H / hang) * i + 8}
-                  width={W * 0.06} height={H / hang - 16} rx={12} fill={a} opacity={0.5} />
+            <rect x={W * (0.55 + k(i) * 0.43) + 18} y={(H / hang) * i + 8}
+                  width={W * 0.05} height={H / hang - 16} rx={12} fill={a} opacity={0.6} />
           </g>
         ))}
       </svg>
@@ -210,11 +210,16 @@ export const BrandV3: React.FC<BrandV3Props> = (props) => {
       </AbsoluteFill>
       {/* làm tối vùng giữa để chữ luôn đọc được, bất kể nền dạng nào */}
       <AbsoluteFill style={{
-        background: `radial-gradient(58% 46% at 50% 50%, ${nen}f2 0%, ${nen}d0 58%, ${nen}22 100%)` }} />
+        background: `radial-gradient(52% 44% at 50% 50%, ${nen}fa 0%, ${nen}e6 55%, ${nen}33 100%)` }} />
       <div style={{ position: "absolute", left: (W - AN_W * sx) / 2, top: (H - AN_H * sx) / 2,
                     width: AN_W * sx, height: AN_H * sx, display: "flex", flexDirection: "column",
-                    alignItems: B.nhan === 1 ? "flex-end" : B.nhan === 2 ? "flex-start" : "center",
-                    justifyContent: "center", textAlign: B.nhan === 0 ? "center" : "left" }}>
+                    // 27/8 — CHỮ LUÔN CĂN GIỮA. Bản đầu để biến thể `nhan` đẩy khối chữ sang mép
+                    // trái/phải vùng an toàn. Nhìn khung thật thì lệch hẳn một bên, mất cân với nền,
+                    // và nguy hơn: YouTube cắt rất mạnh trên điện thoại — chỉ vùng giữa 1546×423 là
+                    // CHẮC CHẮN hiện, đẩy chữ ra mép là tự chuốc rủi ro bị cắt mất.
+                    // Biến thể phải đổi PHONG CÁCH (màu, hoạ tiết, vị trí nhãn nhỏ), không được đổi
+                    // thứ quyết định chữ có đọc được hay không.
+                    alignItems: "center", justifyContent: "center", textAlign: "center" }}>
         <div style={{ display: "inline-block", background: a, color: "#0A0C16", fontWeight: 900,
                       fontSize: 30 * sx, letterSpacing: 3 * sx, padding: `${8 * sx}px ${20 * sx}px`,
                       borderRadius: 999, marginBottom: 18 * sx }}>
