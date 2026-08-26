@@ -1597,6 +1597,94 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
     return None
 
 
+
+def _so_noi_bat(st: dict) -> dict:
+    """Rút SỐ LIỆU NỔI BẬT + nhãn của nó, ĐÚNG THEO TỪNG DẠNG STORY.
+
+    26/8 — render thử 5 video rồi xem 5 ảnh bìa cạnh nhau: chỉ **1/5** có số (`567 cal`), bốn cái
+    còn lại rơi về bố cục tiêu đề (`AMMUNITION CONTRACTS BY YEAR`) — mô tả đúng nhưng không có số,
+    không có câu hỏi mở, tức không phải thứ khiến người ta bấm.
+
+    Gốc: bản đầu chỉ đọc `st["items"][0]["stat"]`, mà mỗi dạng để dữ liệu ở khoá KHÁC:
+        ranked/scaled/longshot -> items[].stat | disp | oddsDisp
+        race                   -> frames[-1].data[0].value
+        mapped                 -> data[].disp | value
+        thennow                -> pairs[].nowVal
+        cinematic              -> hook.stat
+    Không khớp khoá thì `stat` rỗng ⇒ `DocThumb` tự lùi về bố cục tiêu đề. Cùng lớp lỗi "hai bên
+    dùng khuôn khác nhau" đã gặp ở `doc_kenh` (33/50 tra không ra)."""
+    def _g(d, *ks):
+        for k in ks:
+            v = (d or {}).get(k)
+            if v not in (None, "", 0):
+                return v
+        return ""
+    it = st.get("items") or []
+    if it:
+        return {"stat": str(_g(it[0], "stat", "disp", "oddsDisp")),
+                "name": str(_g(it[0], "name", "label", "state"))}
+    fr = st.get("frames") or []
+    if fr:
+        d = (fr[-1].get("data") or [{}])[0]
+        v = d.get("value")
+        so = f"{v:,.0f}" if isinstance(v, (int, float)) else str(v or "")
+        don = str(st.get("unit") or "")
+        return {"stat": (so + (" " + don if don and len(don) <= 6 else "")).strip(),
+                "name": str(d.get("name") or "")}
+    da = st.get("data") or []
+    if da:
+        return {"stat": str(_g(da[0], "disp", "value")), "name": str(_g(da[0], "state", "name"))}
+    pa = st.get("pairs") or []
+    if pa:
+        return {"stat": str(_g(pa[-1], "nowVal", "nowDisp")),
+                "name": str(_g(pa[-1], "label", "name", "nowYear"))}
+    h = st.get("hook") or {}
+    if h:
+        return {"stat": str(h.get("stat") or ""), "name": str(h.get("label") or "")}
+    return {}
+
+
+
+# Câu hỏi mở theo NHÓM NICHE — không trả lời trong ảnh, để người xem phải bấm vào.
+# 26/8 — trước đây `hook` gần như luôn rỗng vì chỉ có dạng phim kể mới đặt `thumb_hook`,
+# nên 4/5 ảnh bìa không có câu hỏi nào. Câu hỏi phải hợp CHỦ ĐỀ, không phải một câu chung chung
+# dán cho cả 50 kênh — dán chung thì lại thành "nhìn là biết cùng một lò".
+_HOI = {
+    "Đồ ăn & đồ uống":      "IS YOURS ON THE LIST?",
+    "Tiền cá nhân":         "HOW FAR BEHIND ARE YOU?",
+    "Tội phạm có thật":     "WHY DID NOBODY ASK?",
+    "Thể thao":             "GUESS WHO IS #1?",
+    "Sức khoẻ & gym":       "DOES THIS APPLY TO YOU?",
+    "Bí ẩn chưa lời giải":  "WHERE DID THEY GO?",
+    "Người nổi tiếng":      "WHAT HAPPENED NEXT?",
+    "Phim & truyền hình":   "DID YOURS SURVIVE?",
+    "Nhạc":                 "REMEMBER THIS ONE?",
+    "Game":                 "IS YOUR GAME HERE?",
+    "Xe":                   "IS YOUR CAR ON IT?",
+    "Thú cưng & động vật":  "IS THIS YOUR BREED?",
+    "Du lịch":              "WOULD YOU GO?",
+    "Công nghệ & AI":       "WHO IS REALLY WINNING?",
+    "Kinh dị & rùng rợn":   "WOULD YOU STAY?",
+    "Quan hệ & hẹn hò":     "SOUND FAMILIAR?",
+    "Nghề nghiệp":          "IS YOUR JOB SAFE?",
+    "Nhà ở":                "CAN YOU STILL AFFORD IT?",
+    "Lịch sử":              "WHY WAS THIS FORGOTTEN?",
+    "Vũ trụ":               "HOW CLOSE DID IT GET?",
+    "Thời tiết & thảm hoạ": "IS YOUR STATE ON IT?",
+    "Quân sự":              "WHERE DID IT GO?",
+    "Luật & quyền công dân": "DO YOU KNOW YOUR RIGHTS?",
+    "Giáo dục":             "WAS IT WORTH IT?",
+}
+
+
+def _cau_hoi_mo(kenh: dict, st: dict) -> str:
+    """Câu hỏi mở cho ảnh bìa. Story tự đặt thì tôn trọng; không thì lấy theo nhóm chủ đề."""
+    rieng = str(st.get("thumb_hook") or st.get("hook") or "").strip()
+    if rieng and not isinstance(st.get("hook"), dict):
+        return rieng
+    return _HOI.get(str(kenh.get("niche") or ""), "HOW BAD IS IT?")
+
+
 def lam_thumb(kenh: dict, st: dict, ra: str, comp: str = "", pf: str = "") -> str:
     """Ảnh bìa cho video thế hệ 2.
 
@@ -1616,15 +1704,14 @@ def lam_thumb(kenh: dict, st: dict, ra: str, comp: str = "", pf: str = "") -> st
     import datastory_ci as DS
     b = kenh.get("brand") or {}
     pal = b.get("palette") or {}
-    items = st.get("items") or []
-    dau = items[0] if items else {}
+    dau = _so_noi_bat(st)
     try:
         return DS.doc_thumb(
             kenh.get("ten") or "", ra,
             big=st.get("title") or kenh.get("ten") or "",
             stat=str(dau.get("stat") or st.get("thumb_stat") or "").strip(),
             stat_label=str(dau.get("name") or st.get("thumb_label") or "").strip(),
-            hook=str(st.get("thumb_hook") or st.get("hook") or "").strip(),
+            hook=_cau_hoi_mo(kenh, st),
             accent=pal.get("primary", "#22D3EE"), accent2=pal.get("accent", "#F5B301"),
             comp_id=comp, props_path=pf, uu_tien_khung=False,
             mau=b.get("mau", "trai"), font=b.get("font", "")) or ""

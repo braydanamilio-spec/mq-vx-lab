@@ -3474,3 +3474,32 @@ Vá: chỉ đòi cờ dài hơn nhánh "không rõ" **khi mốc reset còn xa h�
 **Luật**: chốt không được đo **số tuyệt đối của một đại lượng phụ thuộc giờ trong ngày**. Đo công
 thức, hoặc so với chính đại lượng kia — nếu không, chốt sẽ đỏ theo đồng hồ chứ không theo lỗi. Và
 vì selftest có quyền chặn phiên, một chốt đỏ oan đắt ngang một lỗi thật.
+
+### 7.ej — 4/5 ẢNH BÌA KHÔNG CÓ SỐ, VÌ MỖI DẠNG STORY ĐỂ DỮ LIỆU Ở KHOÁ KHÁC (26/8/2026)
+
+Render 5 video thật rồi xem 5 ảnh bìa cạnh nhau: chỉ **1/5** có số (`567 cal`). Bốn cái còn lại
+rơi về bố cục tiêu đề — `AMMUNITION CONTRACTS BY YEAR`, `SAME HOUSE, DIFFERENT DECADE` — mô tả
+đúng nhưng **không số, không câu hỏi**, tức không phải thứ khiến người ta bấm vào.
+
+`lam_thumb` chỉ đọc `st["items"][0]["stat"]`, mà mỗi dạng để dữ liệu ở khoá KHÁC:
+
+| dạng | khoá thật |
+|---|---|
+| ranked · scaled · longshot | `items[].stat` / `disp` / `oddsDisp` |
+| race | `frames[-1].data[0].value` |
+| mapped | `data[].disp` / `value` |
+| thennow | `pairs[].nowVal` |
+| cinematic | `hook.stat` |
+
+Không khớp khoá ⇒ `stat` rỗng ⇒ `DocThumb` **tự lùi** về bố cục tiêu đề, im lặng. Cùng lớp lỗi
+"hai bên dùng khuôn khác nhau" đã gặp ở `doc_kenh` (33/50 tra không ra).
+
+Đồng thời `hook` gần như luôn rỗng vì chỉ dạng phim kể mới đặt `thumb_hook`. Thêm `_cau_hoi_mo()`
+gán theo **24 nhóm chủ đề** — dán một câu chung cho cả 50 kênh thì lại thành "nhìn là biết cùng
+một lò".
+
+Sau vá, đo lại 5/5: `567 cal` · `2,631 $M` · `704 cal` · `155` · `$481,825`, kèm nhãn và câu hỏi.
+
+**Luật**: khi nhiều dạng dữ liệu cùng đi vào một khâu chung, khâu đó phải biết ĐỌC ĐỦ MỌI DẠNG —
+hoặc kêu lên khi gặp dạng lạ. Lặng lẽ lùi về bản dự phòng là cách hỏng khó thấy nhất: sản phẩm vẫn
+ra, chỉ là ra bản kém.
