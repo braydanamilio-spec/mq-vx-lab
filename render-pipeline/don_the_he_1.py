@@ -144,6 +144,18 @@ def main() -> int:
             print(f"  ❌ không nạp được storage: {str(e)[:60]}")
             return 2
         ten_cu = {(c.get("name") or "").upper() for c in cu}
+        # 26/8 — ĐƯỜNG LÙI KHI BẢN GHI ĐÃ BỊ XOÁ. Danh sách kênh cũ vốn suy ra từ chính
+        # `render_channels`; xoá bản ghi trước rồi mới dọn kho thì `cu` rỗng ⇒ không tìm được tệp
+        # nào ⇒ video/thumbnail cũ nằm lại vĩnh viễn, chiếm chỗ của 50 kênh mới. Nay tên đã được
+        # chụp sẵn ra `kenh_the_he_1.json`, nên hai bước không còn phụ thuộc thứ tự.
+        try:
+            _snap = json.load(io.open(os.path.join(GOC, "kenh_the_he_1.json"), encoding="utf-8"))
+            _them = {str(t).upper() for t in (_snap.get("ten") or [])} - ten_cu
+            if _them:
+                print(f"  📄 thêm {len(_them)} tên kênh cũ từ bản chụp (bản ghi đã xoá)")
+                ten_cu |= _them
+        except Exception as e:
+            print(f"  ⚠️ không đọc được bản chụp tên kênh cũ: {str(e)[:60]}")
         tong = 0
         _loai: dict = {}
         for acc in ST.pool_accounts():

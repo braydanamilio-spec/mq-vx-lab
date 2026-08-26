@@ -1530,6 +1530,30 @@ def t_moi_kenh_gen2_phai_xoay_duoc_de_tai():
     assert "_dung_story_xoay(" in src, "chay_chung không đi qua hàm xoay đề tài"
 
 
+
+def t_ten_kenh_cu_phai_co_ban_chup():
+    """Danh sách 55 kênh cũ phải được chụp ra FILE, không chỉ nằm trong Firestore.
+
+    26/8 — anh muốn xoá 55 bản ghi kênh cũ cho gọn. Nhưng `don_the_he_1.py` tìm video/thumbnail
+    trên Drive bằng ĐÚNG tên các kênh đó, mà tên lại suy ra từ chính `render_channels`. Xoá bản
+    ghi trước ⇒ `cu` rỗng ⇒ không tìm được tệp nào ⇒ video/thumbnail cũ nằm lại vĩnh viễn, chiếm
+    chỗ của 50 kênh mới, và không còn cách nào biết tệp nào của ai.
+
+    Chụp tên ra `kenh_the_he_1.json` thì hai bước không còn phụ thuộc thứ tự — xoá trước hay dọn
+    trước đều được.
+
+    **Luật**: trước khi xoá một nguồn dữ liệu, hỏi "còn ai đang ĐỌC nó không". Ở đây bản ghi kênh
+    vừa là thứ cần xoá, vừa là đầu vào của việc dọn."""
+    import json as _json
+    d = _json.loads(_doc("kenh_the_he_1.json"))
+    ten = d.get("ten") or []
+    assert len(ten) >= 55, f"bản chụp chỉ có {len(ten)} tên, cần đủ 55 kênh cũ"
+    assert len(set(ten)) == len(ten), "bản chụp có tên trùng"
+    src = _doc("don_the_he_1.py")
+    assert "kenh_the_he_1.json" in src, \
+        "don_the_he_1 không đọc bản chụp -> xoá bản ghi trước là mất đường tìm tệp"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1653,6 +1677,7 @@ def main():
     check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
+    check("55 kênh cũ phải có bản chụp tên", t_ten_kenh_cu_phai_co_ban_chup)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
