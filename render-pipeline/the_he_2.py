@@ -333,7 +333,24 @@ def _bd_ho_so_sec(D, ky):
 
 
 def _bd_thien_thach(D, ky):
-    r = D.tieu_hanh_tinh(ky["tu_ngay"], ky.get("den_ngay", ""), ky.get("key", "DEMO_KEY"), 6)
+    # 27/8 — `ky["tu_ngay"]` NGOẶC CỨNG giữa một hàng toàn `.get()` có mặc định. Kênh NEAR EARTH
+    # xoay trục `den_ngay` (`kho_den_ngay` là danh sách NGÀY KẾT THÚC), còn `tu_ngay` KHÔNG BAO GIỜ
+    # có trong `tham_so` — nên mọi lượt đều `KeyError: 'tu_ngay'`. Đo thật: lane NEAREARTH ném 7
+    # traceback, ra 0 video, hai phiên liền.
+    # API NEO của NASA giới hạn khoảng truy vấn 7 ngày, nên suy `tu_ngay` = `den_ngay` lùi 7 ngày
+    # là vừa đúng ràng buộc của nguồn vừa đúng ý kênh (mỗi giá trị trục = một tuần khác nhau).
+    from datetime import date as _d, timedelta as _td
+    den = str(ky.get("den_ngay") or "").strip()
+    tu = str(ky.get("tu_ngay") or "").strip()
+    if not tu:
+        try:
+            tu = (_d.fromisoformat(den) - _td(days=7)).isoformat() if den else ""
+        except ValueError:
+            tu = ""
+    if not tu:
+        tu = (_d.today() - _td(days=7)).isoformat()
+        den = den or _d.today().isoformat()
+    r = D.tieu_hanh_tinh(tu, den or tu, ky.get("key", "DEMO_KEY"), 6)
     if len(r) < 3:
         return None
     return ("Rocks that just passed Earth",
