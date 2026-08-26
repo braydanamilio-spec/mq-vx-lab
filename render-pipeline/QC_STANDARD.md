@@ -146,8 +146,14 @@ chủ đề đã sát ranh giới quảng cáo. Cách an toàn đang dùng: **lu
 ### B. CHƯA có chốt — phải xem bằng mắt (ghi ra để không ngộ nhận là đã xong)
 
 - **"đẹp, cuốn hút, chuẩn phong cách USA"** — không đo được bằng số. Cách duy nhất: xem mẫu.
-- **hiệu ứng chuyển cảnh / âm thanh chuyển cảnh** — hiện chỉ có `pop/ding/whoosh/cheer` ở vài
-  composition. **Chưa có** hệ chuyển cảnh thống nhất. → việc cần làm, chưa làm.
+- ~~**hiệu ứng chuyển cảnh / âm thanh chuyển cảnh**~~ → **ĐÃ LÀM (26/8)**: `engine-remotion/src/Chuyen.tsx`.
+  Một nhịp phát ĐỒNG THỜI một tiếng và một chuyển động hình; mức âm quyết ở đúng một chỗ (`MUC_AM`)
+  thay cho 8 con số viết tay rải rác 12 file. 4 motif (`quet/dap/no/chuong`) gán cố định theo tên
+  kênh ⇒ cùng kênh luôn cùng tính cách, kênh khác nhau thì khác. Đo trên 50 handle gen-2:
+  **11/12/12/15** (lệch 4). Đã nối vào `MappedShort` (dạng trước đây IM HOÀN TOÀN) và kiểm bằng
+  khung render thật: khung không có nhịp **giống hệt từng byte** so với trước khi sửa ⇒ không đụng
+  gì ngoài đúng lúc chuyển cảnh.
+  **Còn lại**: 6 dạng gen-2 kia vẫn dùng âm rời rạc cũ — chuyển dần, mỗi lần một dạng + canary.
 - **thumbnail đa dạng template** — hiện 1 khuôn (`doc_thumb`). **Chưa có** nhiều template.
 - **không lặp một mô-típ giữa các kênh** — thế hệ 2 đã tách 8 dạng hình × 22 motif brand-kit,
   nhưng chưa có chốt đo "độ giống nhau giữa hai kênh bất kỳ".

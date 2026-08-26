@@ -1,6 +1,7 @@
 import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate, interpolateColors } from "remotion";
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
+import { ChuyenCanh } from "./Chuyen";
 import React, { useMemo } from "react";
 import { geoAlbersUsa, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
@@ -55,6 +56,18 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
     for (const ft of geo.features) byName[norm(ft.properties.name)] = ft;
     return ranked.map((d) => { const ft = byName[norm(d.state)]; return ft ? pathGen.centroid(ft) : [W / 2, H / 2]; });
   }, [geo, ranked, pathGen, W, H]);
+
+  // NHỊP CHUYỂN CẢNH — lấy đúng các mốc pop đã có sẵn ở dưới, không bịa mốc mới: hình và tiếng
+  // phải rơi vào CÙNG khoảnh khắc mà bảng xếp hạng đổi, nếu lệch thì xem còn rối hơn là im.
+  // `manh`: #1 = 1 (tiếng nặng nhất), các hạng dưới nhẹ dần -> tai nghe ra thứ bậc.
+  const nhip = React.useMemo(() => {
+    const ra = [{ at: introF, manh: 0.55 }];   // bản đồ bắt đầu "nóng lên"
+    for (let i = 0; i < ranked.length; i++) {
+      const order = ranked.length - 1 - i;
+      ra.push({ at: popStart + order * Math.round(popSec * fps), manh: i === 0 ? 1 : 0.6 });
+    }
+    return ra;
+  }, [introF, popStart, popSec, fps, ranked.length]);
 
   return (
     <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 12%, #0f1730 0%, #0a1020 55%, #070a14 100%)", fontFamily: "'Poppins',Arial" }}>
@@ -131,6 +144,7 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
       <div style={{ position: "absolute", bottom: 54, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 32, textShadow: "0 2px 10px #000" }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
+      <ChuyenCanh nhip={nhip} accent={accent} khoa={handle} />
       <Karaoke subs={subs} accent={accent} />
       <Bookend title={title} handle={handle} accent={accent} color={color}
                introSec={introSec} outroSec={outroSec} />
