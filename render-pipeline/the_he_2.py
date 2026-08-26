@@ -1738,7 +1738,11 @@ def qc_hook_sau_render(duong: str, ten_kenh: str = "") -> tuple:
     try:
         import qc_vision as QV
         ok, tin = QV.check_hook(duong)
-    except Exception as e:
+    except BaseException as e:
+        # Lưới thứ hai, cùng lý do như trong `check_hook`: `SystemExit` không phải `Exception`.
+        # Hai lưới vì cổng QC tuyệt đối không được phép giết dây chuyền — thà bỏ qua kiểm.
+        if isinstance(e, KeyboardInterrupt):
+            raise
         return True, {"note": f"hook-qc-skip: {str(e)[:60]}"}
     if not ok:
         print(f"   🖼️ {ten_kenh}: HOOK trượt QC thị giác — {tin.get('hook_score')}đ · "

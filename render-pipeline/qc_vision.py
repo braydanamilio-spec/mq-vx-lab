@@ -258,8 +258,19 @@ def check_hook(mp4: str, api_key: str = None, model_name: str = None, min_score:
                                       request_options={"timeout": 30})
         r = CB._extract_json(resp.text) or {}
         sc = float(r.get("score", 0) or 0)
-    except Exception as e:
-        _report_quota(e)
+    except BaseException as e:
+        # 27/8 — PHẢI BẮT `BaseException`, KHÔNG PHẢI `Exception`.
+        # `CB._genai()` ném **SystemExit** khi thiếu khoá, mà `SystemExit` kế thừa `BaseException`
+        # chứ không kế thừa `Exception` — nên lưới `except Exception` KHÔNG bắt được. Đo thật ở
+        # phiên đầu: 12/18 lane chết vì đúng chỗ này, ra 0 video, mà lane vẫn báo `success`.
+        # Cổng này được thiết kế FAIL-OPEN có chủ đích (ghi rõ ở docstring) — bắt sai một lớp kế
+        # thừa là biến nó thành thứ CHẶN dây chuyền, đúng cái nó sinh ra để tránh.
+        if isinstance(e, KeyboardInterrupt):
+            raise
+        try:
+            _report_quota(e)
+        except BaseException:
+            pass
         return True, {"note": f"hook-vision-skip: {str(e)[:70]}"}
     finally:
         try: _o.remove(out)

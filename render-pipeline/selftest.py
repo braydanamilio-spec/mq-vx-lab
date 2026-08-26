@@ -2004,6 +2004,7 @@ def main():
     check("QC thị giác phải soi KHUNG HOOK, chấm riêng", t_qc_hook_rieng)
     check("sổ ngân sách tách theo project, đúng đơn vị với ngưỡng", t_ngan_sach_theo_project)
     check("tự-seed KHÔNG hồi sinh kênh đã nghỉ", t_tu_seed_khong_hoi_sinh)
+    check("cổng fail-open phải bắt BaseException (SystemExit)", t_fail_open_bat_baseexception)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4406,6 +4407,42 @@ def t_tu_seed_khong_hoi_sinh():
     nghi = {str(t).upper() for t in _j.load(open(_o.path.join(g, "kenh_the_he_1.json")))["ten"]}
     con = [k for k in w if str(k).upper() not in nghi]
     assert len(con) < len(w), "bản chụp kênh nghỉ không khớp tên nào trong wave8 -> chốt vô tác dụng"
+
+
+
+
+def t_fail_open_bat_baseexception():
+    """Cổng đã tuyên bố FAIL-OPEN thì phải bắt `BaseException`, không phải `Exception`.
+
+    27/8 — phiên render đầu tiên chạy đúng 18 lane kênh gen-2 và ra **0 video**. 12/18 lane chết ở
+    cùng một chỗ: `qc_hook_sau_render -> check_hook -> CB._genai()` ném **SystemExit** khi thiếu
+    khoá, mà `SystemExit` kế thừa `BaseException` chứ không kế thừa `Exception` — nên lưới
+    `except Exception` không bắt được, nó bay thẳng lên và giết cả bộ.
+
+    Chỗ đau: docstring của cổng ghi rõ "FAIL-OPEN: không khoá / Vision lỗi / hết hạn mức đều CHO
+    QUA — một cổng QC tự chặn dây chuyền khi chính nó hỏng thì tệ hơn là không có cổng". Ý định
+    đúng, sai đúng MỘT LỚP KẾ THỪA, và thành thứ chặn 12 lane.
+
+    Chốt đòi cả hai lưới (trong `qc_vision` và trong `the_he_2`) bắt `BaseException`, và đo THẬT
+    bằng cách gọi khi không có khoá."""
+    import os as _o, sys as _s
+    for f, ten in (("qc_vision.py", "check_hook"), ("the_he_2.py", "qc_hook_sau_render")):
+        src = _doc(f)
+        i = src.index(f"def {ten}(")
+        than = src[i:i + 4000]
+        assert "except BaseException" in than, \
+            f"{ten} vẫn bắt Exception -> SystemExit lọt qua, cổng fail-open thành cổng chặn"
+        assert "KeyboardInterrupt" in than, \
+            f"{ten} bắt BaseException mà nuốt luôn KeyboardInterrupt -> không dừng tay được"
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    _cu = _o.environ.pop("GEMINI_API_KEY", None)
+    try:
+        import the_he_2 as T
+        ok, _ = T.qc_hook_sau_render("/khong/ton/tai.mp4", "THU")
+        assert ok is True, "không có khoá mà cổng vẫn chặn -> dây chuyền đứng"
+    finally:
+        if _cu is not None:
+            _o.environ["GEMINI_API_KEY"] = _cu
 
 
 if __name__ == "__main__":
