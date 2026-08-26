@@ -1978,6 +1978,7 @@ def main():
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
     check("biến thể bố cục: cùng dạng KHÔNG được trùng", t_bien_bo_cuc_khong_trung)
+    check("scope Drive theo TỪNG app, không đổi đồng loạt", t_scope_drive_theo_app)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4192,6 +4193,34 @@ def t_bien_bo_cuc_khong_trung():
     eng = _doc(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)),
                             "..", "engine-remotion", "src", "RankedShort.tsx"))
     assert "bienCua" in eng and "hoaTietNen" in eng and "kieuThe" in eng,         "RankedShort không dùng biến thể -> dạng đông nhất (18 kênh) vẫn giống hệt nhau"
+
+
+
+
+def t_scope_drive_theo_app():
+    """Đổi scope Drive ĐỒNG LOẠT là giết mọi kho đang chạy — đã xảy ra thật ngày 23/8.
+
+    Bối cảnh 26/8: anh bấm nối kho mới thì Google trả "This app is blocked". Đo trên Console:
+      • app gốc: In production · **100/100 user cap** (Google gắn nhãn `Danger`) — ĐÃ ĐẦY;
+      • app mới: In production · 0/100 · khai `.../auth/drive` = **restricted scope**, mà app
+        production chưa được duyệt thì Google CHẶN THẲNG loại scope này (không có nút bỏ qua).
+
+    `drive.file` là non-sensitive: không cần duyệt, không ăn user-cap, token không hết hạn 7 ngày.
+    Nhưng đổi cả hệ sang nó thì 88 kho đang chạy — vốn có refresh_token cấp theo scope `drive` —
+    trả `invalid_scope` ở MỌI lần refresh và chết cùng lúc. Đó đúng là lần rollback 23/8.
+
+    Nên scope phải phụ thuộc APP: app gốc giữ `drive` FULL, app mới xin `drive.file`. Chốt này giữ
+    đúng ba điều đó, vì mất một điều là mất cả kho:"""
+    import os as _o
+    p = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)),
+                     "..", "MM0-AutoPublisher", "connect-worker", "src", "worker.js")
+    if not _o.path.exists(p):
+        return                      # repo AutoPublisher không được checkout cùng -> bỏ qua
+    src = _doc(p)
+    assert "DRIVE_SCOPES_FILE" in src, "không có scope riêng cho app mới"
+    assert '"https://www.googleapis.com/auth/drive",' in src,         "app gốc mất scope drive FULL -> 88 kho đang chạy sẽ invalid_scope khi refresh"
+    assert "client.goc ? DRIVE_SCOPES : DRIVE_SCOPES_FILE" in src,         "scope không phụ thuộc app -> hoặc chặn app mới, hoặc giết kho cũ"
+    assert 'kind === "drive" && client.goc' in src,         "vẫn gửi người dùng vào app gốc đã đầy user-cap"
 
 
 if __name__ == "__main__":
