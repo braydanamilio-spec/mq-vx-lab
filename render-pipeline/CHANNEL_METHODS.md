@@ -300,3 +300,84 @@ Khác skit: MỘT narrator (giọng A duy nhất), 7-11 câu ≤16 từ, twist/p
 beat; TRUETALES = chuyện hư cấu-mà-đời (không giả làm tin thật), DUMBHISTORY/EXPLAINUSA = 100% sự thật
 kiểm chứng được (khóa trong TALE_SYS). Cấu hình: toon_mode:"story" trong wave8_channels.json.
 ƯU TIÊN SUẤT: 5 kênh mới priority=1 -> luôn chiếm 5 slot đầu matrix; 13 slot còn lại kênh cũ xoay.
+
+---
+
+## 🧬 THẾ HỆ 2 — 50 KÊNH DỮ LIỆU MỞ (26/8/2026)
+
+> 55 kênh thế hệ 1 đã dọn (video vào thùng rác Drive, bản ghi xoá ở cả 3 nơi lưu). Toàn bộ sản
+> xuất nay chạy trên 50 kênh thế hệ 2. Mục này là sổ tay của chúng — trước ngày 26/8 file này
+> **không có một dòng nào** về gen-2, tức bước 9 của chính checklist bên trên chưa làm.
+
+### Khác gen-1 ở chỗ nào
+Gen-1 gọi Gemini viết kịch bản. **Gen-2 không gọi AI để viết** — nó dựng video từ **dữ liệu mở**
+(30+ nguồn trong `du_lieu_mo.py`: USDA, openFDA, BLS, Census, SEC, NHTSA, Zillow, Steam…). Hệ quả:
+không tốn quota chữ, số liệu kiểm chứng được, và nội dung không đụng bản quyền của ai.
+
+### Tệp cầm trịch
+| tệp | việc |
+|---|---|
+| `kenh_the_he_2.json` | BẢNG GỐC 50 kênh (ten/handle/niche/nguon/ham/dinh_dang/tham_so/brand) |
+| `the_he_2.py` | dựng story + render (`chay_bo`, `chay_chung`, `dung_props`, `_dung_story_xoay`) |
+| `seed_the_he_2.py` | đẩy bảng gốc vào Firestore `render_channels` (`--capnhat` để cập nhật) |
+| `brandkit_the_he_2.py` | sinh bộ nhận diện BẰNG QUY TẮC (0 quota) — màu/phông/tagline/motif |
+| `radar_dethai.py` | lấp kho đề tài (xem dưới) |
+| `run_render.py:_gen2_bo` | nhánh dispatch cho kênh có `the_he == "2"` |
+
+### Một BỘ = 1 long 16:9 + 3 short 9:16
+Anh chốt yêu cầu này nhiều lần, ghi nguyên văn để không làm sai lần nữa:
+
+> long 16:9 chuẩn; "short cắt từ long" nghĩa là lấy **kịch bản** thôi — short vẫn phải viết và
+> dựng lại cho 9:16, hook riêng. Không phải cắt ra là xong.
+> 1 long ra khoảng 3 short, và có thể **gộp 2-3 chương thành 1 short** cho thành clip hoàn hảo.
+
+Luồng thật (`chay_bo`):
+1. xoay trục lấy `so_chuong` (mặc định 6) chương KHÁC NHAU, cùng kênh cùng nguồn → dựng props từng
+   chương (`_props_chuong`, mỗi chương một `ky_hieu` riêng để không ghi đè nhau);
+2. **LONG** = composition `Gen2Long` (1920×1080) ghép cả 6 chương, mỗi chương giữ tiếng nói của nó;
+3. **SHORT** = chia 6 chương thành 3 nhóm liền kề, mỗi nhóm `_gop_story` thành MỘT story rồi render
+   qua `*Short` (1080×1920, có Bookend hook 0-3s) — kịch bản riêng, tiếng riêng, hook riêng;
+4. tiêu đề long lấy từ story **gộp cả bộ** (không lấy từ short đầu — xem 7.ep/7.eq trong
+   `PIPELINE_RULES.md`).
+
+Đánh số cho khâu đăng: long `seri=ljob, bo="L"`; short `cha=ljob, thu_tu=i+1, bo=f"S{i}"` → đăng
+long trước rồi short 1,2,3 của đúng long đó, không nhảy cóc.
+
+### Xoay đề tài (chống lặp)
+`tham_so.xoay` = tên trục. Kho giá trị lấy theo thứ tự ưu tiên:
+1. `tham_so["kho_<trục>"]` — kho VIẾT TAY của kênh. **Bất khả xâm phạm**, công cụ tự động không
+   được ghi đè (nó mang ngữ nghĩa mà tên trục không nói ra — vd `loc` của STEAM TRUTH là CHẾ ĐỘ
+   LỌC chứ không phải tên game).
+2. `KHO_XOAY[<trục>]` — kho chung, `_chuan_truc()` chịu được số nhiều/số ít (`bang` ↔ `bangs`).
+
+Giá trị trục **phải hiện ra ở tiêu đề** (`_gan_truc_vao_tieu_de`). Xoay mà tiêu đề không đổi thì
+khoá chống-trùng giết sạch lượt xoay ⇒ kênh đăng 1 video rồi câm.
+
+### Radar đề tài — HAI CỬA, phải qua cả hai
+`radar_dethai.py`, 100% free, không khoá, không tải video:
+- **cửa 1 — CÓ DỮ LIỆU**: ứng viên lấy từ chính miền dữ liệu của nguồn (50 bang, giống chó, game
+  Steam, nhóm món), rồi **dựng thử story** — không ra số thì loại.
+- **cửa 2 — CÓ NGƯỜI TÌM**: gợi ý tìm kiếm của chính YouTube, hỏi kèm **góc của kênh** (hỏi danh
+  từ trần thì cái nào cũng 10 gợi ý, vô dụng). Cụm tìm kiếm thật lưu vào `tham_so.cum_tim` để đặt
+  tiêu đề/hook bằng đúng chữ khán giả gõ.
+
+Qua cửa 1 mà trượt cửa 2 = video đúng số nhưng không ai xem. Ngược lại = tiêu đề hay mà không có
+gì để dựng.
+
+### ⚠️ ĐỒNG BỘ 3 NƠI — KHOÁ TRA LÀ `ten.replace(" ","").upper()`
+Mỗi kênh gen-2 phải có mặt ở CẢ BA, tra bằng ĐÚNG khoá này (KHÔNG phải `handle`):
+1. `dashboard/index.html` → `RS_PRESETS` (`name:"<KHOÁ>"`)
+2. `dashboard/index.html` → `RS_BRANDS` (`\n      <KHOÁ>:{{`)
+3. `config/brands.json` → khoá `<KHOÁ>` (display/handle/accent/tagline/category/hashtags)
+
+Chốt `t_50_kenh_dong_bo_du_3_noi` giữ việc này. **Tra bằng `handle` sẽ ra kết quả sai** — 26/8 đã
+đo nhầm "33/50 thiếu" chỉ vì dùng `handle` (có đuôi `USA`) thay vì khoá trên.
+
+### Thêm một kênh gen-2 mới
+1. thêm dòng vào `kenh_the_he_2.json` (đủ: ten/handle/niche/goc_nhin/nguon/ham/dinh_dang/tham_so)
+2. `python brandkit_the_he_2.py --sinh` → sinh brand theo quy tắc
+3. thêm vào 3 nơi đồng bộ ở trên (đúng khoá) + `firebase deploy --only hosting`
+4. `python seed_the_he_2.py --capnhat` → đẩy vào Firestore
+5. `python radar_dethai.py --dry-run` → xem kênh mới có ra đề tài không
+6. `python selftest.py` → phải XANH trước khi bật
+7. render thử một bộ tại máy, xem tận mắt long + 3 short
