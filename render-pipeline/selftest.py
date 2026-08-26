@@ -1460,6 +1460,31 @@ def _re_ascii(h) -> bool:
     return all(ord(c) < 128 for c in str(h))
 
 
+
+def t_tra_kenh_gen2_phai_khop_ten_seed_luu():
+    """Tên kênh mà `seed` LƯU phải tra ra được bằng `doc_kenh` — cả 50, không sót cái nào.
+
+    26/8, bắt trước khi seed. `seed_the_he_2` lưu `name = ten.replace(" ", "")` nên Firestore có
+    `WHATISINIT`, còn `doc_kenh` so với `ten` = "WHAT IS IN IT" (có dấu cách) và với `handle` =
+    "whatisinitusa" (có đuôi usa). Không vế nào khớp.
+
+    Đo trên đúng 50 kênh: **33/50 tra không ra**. `run_render` sẽ in "có cờ thế hệ 2 nhưng không có
+    trong kenh_the_he_2.json" rồi bỏ lượt ⇒ **33 lane ra 0 video suốt cả đêm**, mà log thì sạch, chỉ
+    có một dòng cảnh báo hiền lành. Đúng loại tổn thất của sự cố `vang is not defined` (25/8).
+
+    Chốt này chạy phép tra THẬT với đúng chuỗi mà seed sẽ ghi, không đọc mã suy luận."""
+    import json as _json, importlib as _il, sys as _sys, os as _os
+    goc = _os.path.dirname(_os.path.abspath(__file__))
+    if goc not in _sys.path:
+        _sys.path.insert(0, goc)
+    T = _il.import_module("the_he_2")
+    _il.reload(T)
+    ks = _json.loads(_doc("kenh_the_he_2.json"))
+    thieu = [k["ten"].replace(" ", "") for k in ks if T.doc_kenh(k["ten"].replace(" ", "")) is None]
+    assert not thieu, (f"{len(thieu)}/{len(ks)} kênh tra KHÔNG RA bằng đúng tên seed lưu -> lane bỏ "
+                       f"lượt, 0 video: {thieu[:5]}")
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1581,6 +1606,7 @@ def main():
     check("dọn kho: đi hết cây + mọi loại tệp", t_don_kho_phai_di_het_cay_va_moi_loai_tep)
     check("mức âm chuyển cảnh quyết ở MỘT chỗ", t_muc_am_quyet_o_mot_cho)
     check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
+    check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

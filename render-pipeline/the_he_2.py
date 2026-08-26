@@ -35,9 +35,17 @@ def doc_kenh(ten: str | None = None) -> list[dict] | dict | None:
     ks = json.load(io.open(DS_KENH, encoding="utf-8"))
     if ten is None:
         return ks
-    t = str(ten).replace("_", " ").strip().upper()
+    # 26/8 — SO SÁNH SAU KHI BỎ HẾT DẤU CÁCH Ở CẢ HAI VẾ.
+    # `seed_the_he_2` lưu `name = ten.replace(" ", "")` -> Firestore có "WHATISINIT", còn ở đây so
+    # với `ten` = "WHAT IS IN IT" (có dấu cách) và với `handle` = "whatisinitusa" (có đuôi usa).
+    # Không vế nào khớp. Đo trên đúng 50 kênh: **33/50 tra không ra** -> `run_render` in "có cờ thế
+    # hệ 2 nhưng không có trong kenh_the_he_2.json" rồi bỏ lượt => 33 lane ra 0 video cả đêm.
+    # Bắt được lúc rà trước khi seed, chưa mất phiên nào.
+    def _gon(x: str) -> str:
+        return "".join(str(x or "").split()).replace("_", "").lstrip("@").upper()
+    t = _gon(ten)
     for k in ks:
-        if str(k["ten"]).upper() == t or str(k["handle"]).lstrip("@").upper() == t.replace(" ", ""):
+        if _gon(k["ten"]) == t or _gon(str(k["handle"]).lstrip("@")) == t:
             return k
     return None
 

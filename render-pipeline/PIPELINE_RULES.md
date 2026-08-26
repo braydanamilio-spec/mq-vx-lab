@@ -3378,3 +3378,21 @@ Hashtag phải sửa **hai lần** mới đúng:
 **Luật**: "đã xây xong pipeline" phải kiểm bằng checklist đồng bộ, không bằng cảm giác. Phần khó
 xong không kéo theo phần dễ xong — và phần dễ thiếu thì phần khó thành vô dụng.
 Chốt: `t_50_kenh_dong_bo_du_ba_noi` (đã thử phá cả hai vế: xoá 1 kênh, và đặt hashtag tiếng Việt).
+
+### 7.ef — 33/50 KÊNH MỚI SẼ TRA KHÔNG RA, LOG VẪN SẠCH (26/8/2026, bắt trước khi seed)
+
+`seed_the_he_2` lưu `name = ten.replace(" ", "")` ⇒ Firestore có `WHATISINIT`. Nhưng `doc_kenh` so:
+- với `ten` = `"WHAT IS IN IT"` — có dấu cách ⇒ không khớp;
+- với `handle` = `"whatisinitusa"` — có đuôi `usa` ⇒ cũng không khớp.
+
+Đo trên đúng 50 kênh: **33/50 tra không ra**. `run_render` khi đó in đúng một dòng hiền lành —
+`⚠️ có cờ thế hệ 2 nhưng không có trong kenh_the_he_2.json` — rồi bỏ lượt. Kết quả: **33 lane chạy
+cả đêm ra 0 video**, không Traceback, không lỗi, log sạch bong. Đúng loại tổn thất của sự cố
+`vang is not defined` (25/8: 18 lane / 51 phút / 0 video).
+
+Vá: so sánh sau khi bỏ hết dấu cách, `_`, và `@` ở **cả hai vế**. Sau vá tra được 50/50 bằng cả bốn
+dạng tên (bỏ cách · có cách · handle · handle bỏ @).
+
+**Luật**: chỗ nào một bên GHI theo khuôn này mà bên kia ĐỌC theo khuôn khác, phải có phép thử chạy
+thật với đúng chuỗi bên ghi sẽ tạo ra — đọc mã rồi suy luận là không đủ.
+Chốt: `t_tra_kenh_gen2_phai_khop_ten_seed_luu` — gọi `doc_kenh()` THẬT, đã thử phá.
