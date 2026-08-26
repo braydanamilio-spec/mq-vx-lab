@@ -542,6 +542,14 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     if _toon_long_then_shorts(ch, keys, tier, niche, n, cool, okcb, R, _stopped):
                         return
                     print(f"   ↩️ {channel}: long toon không đạt — làm short rời phiên này.")
+                elif str(ch.get("the_he") or "") == "2":
+                    # THẾ HỆ 2: bộ = 1 long + 3 short, short là CÁC CHƯƠNG CỦA CHÍNH LONG ĐÓ
+                    # (xem `the_he_2.chay_bo`). Phải đứng TRƯỚC nhánh `fmt == "doc"` và trước nhánh
+                    # motif, vì gen-2 dùng lại đúng tên định dạng (ranked/scaled/…) nhưng nguồn nội
+                    # dung khác hẳn — đi nhầm nhánh là gọi Gemini viết kịch bản, sai hẳn mô hình.
+                    if _gen2_bo(ch, keys, cool, okcb, R, _stopped, n):
+                        return
+                    print(f"   ↩️ {channel}: bộ gen-2 không đạt — làm short rời phiên này.")
                 elif fmt == "doc":
                     # Kênh doc: short DÙNG LẠI luôn props từng phần của long -> khớp 100%, 0 thêm Gemini.
                     if _doc_long_then_shorts(ch, keys, tier, niche, n, cool, okcb, R, _stopped):
@@ -764,6 +772,80 @@ def _trash_old(account_name, file_id):
     except Exception as e:
         print("   ⚠️ bỏ bản cũ lỗi:", str(e)[:90])
     return False
+
+
+
+def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
+    """THẾ HỆ 2 — dựng MỘT BỘ: 1 long + n short, short là các chương của chính long đó.
+
+    26/8 — luật anh nêu nhiều lần: tỉ lệ 1 long : 3 short · 3 short CẮT TỪ LONG · đánh số để khâu
+    đăng đăng từ nhỏ tới lớn · short luôn đi kèm long, không nhảy cóc.
+    Hai trường quyết định điều đó là `cha` (id job của long) và `thu_tu` (short thứ mấy) — khâu
+    đăng đã đọc sẵn hai trường này (`auto_enqueue._theo_cha`), nên chỉ cần ghi cho đúng.
+    Trả True nếu ra được long."""
+    channel = ch.get("name")
+    import the_he_2 as TH2
+    k2 = TH2.doc_kenh(channel or "")
+    if not k2:
+        print(f"   ⚠️ {channel}: có cờ thế hệ 2 nhưng không có trong kenh_the_he_2.json")
+        return False
+    ljob = FB.new_job(OWNER, channel, "long", pver=_pv(ch.get("format") or "th2"))
+    lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
+    lst("writing", "Đọc dữ liệu mở — dựng bộ 1 long + %d short" % n_shorts)
+    try:
+        kq = TH2.chay_bo(k2, avoid=_avoid_for(channel), so_short=max(1, n_shorts))
+    except (Exception, SystemExit) as e:
+        print_exc_gon()
+        lst("failed", f"bộ gen-2 lỗi: {str(e)[:110]}")
+        R["fails"].append(f"{channel} BỘ: {str(e)[:100]}")
+        return False
+    if not kq:
+        lst("failed", "nguồn thiếu dữ liệu -> bỏ lượt")
+        return False
+    long_path, chuong = kq
+    ok, info = DS.qc(long_path)
+    if not ok:
+        lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
+        return False
+    _t0 = chuong[0][1]
+    # `seri=ljob` + `bo="L"` -> tên file trên Drive mang mã cụm và vai trò, nên nhìn tên là biết
+    # short nào thuộc long nào (xem `doi_ten_kho.py`: bo = "L" | "S1" | "S2"…).
+    eq = enqueue_drive(channel, long_path,
+                       {"topic": _t0.get("title"), "title": _t0.get("title"),
+                        "description": _t0.get("intro_vo", ""), "sources": [_t0.get("nguon", "")],
+                        "_thumb": (info or {}).get("thumb")}, "long", seri=ljob, bo="L")
+    did = (eq or {}).get("id")
+    lst("done", "Long đã đẩy Drive" if did else "Long xong (chưa đẩy Drive)",
+        title=(_t0.get("title") or channel), dur=(info or {}).get("dur", 0),
+        size_mb=(info or {}).get("size_mb", 0), res=(info or {}).get("res", ""),
+        drive_id=did or "", drive_account=(eq or {}).get("account", ""),
+        thumb_id=(eq or {}).get("thumb_id", ""))
+    R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
+
+    for i, (sp, st) in enumerate(chuong):
+        if stopped():
+            print(f"   ⛔ {channel}: dừng — bỏ {len(chuong) - i} short còn lại."); break
+        # `cha=ljob` + `thu_tu=i+1`: khâu đăng xếp long trước, rồi short 1,2,3 của ĐÚNG long đó.
+        sjob = FB.new_job(OWNER, channel, "short", pver=_pv(ch.get("format") or "th2"),
+                          cha=ljob, thu_tu=i + 1)
+        sst = lambda s_, step, **x: FB.update_job(sjob, status=s_, step=step, **x)
+        sok, sinfo = DS.qc(sp)
+        if not sok:
+            sst("failed", f"QC short {i + 1} trượt: {sinfo}")
+            R["fails"].append(f"{channel} S{i + 1}: QC trượt {sinfo}"); continue
+        seq = enqueue_drive(channel, sp,
+                            {"topic": st.get("title"), "title": st.get("title"),
+                             "description": st.get("intro_vo", ""), "sources": [st.get("nguon", "")],
+                             "_thumb": (sinfo or {}).get("thumb")}, "short",
+                            seri=ljob, bo=f"S{i + 1}")
+        sdid = (seq or {}).get("id")
+        sst("done", "Short đã đẩy Drive" if sdid else "Short xong (chưa đẩy Drive)",
+            title=(st.get("title") or channel), dur=(sinfo or {}).get("dur", 0),
+            size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""),
+            drive_id=sdid or "", drive_account=(seq or {}).get("account", ""),
+            thumb_id=(seq or {}).get("thumb_id", ""))
+        R["done"] += 1
+    return True
 
 
 def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopped):

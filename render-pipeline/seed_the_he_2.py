@@ -118,7 +118,12 @@ def main() -> int:
                # ...rồi phần CỐ Ý của gen-2 ghi đè lên. Thứ tự này là điều kiện đúng, không phải
                # thẩm mỹ: đảo lại là 50 kênh nhận nhầm chỉ tiêu long của kênh mẫu.
                "the_he": 2, "paused": not bat,
-               "type": "short", "make_long": False, "long_target": 0, "n_shorts": 3,
+               # 26/8 — TỈ LỆ 1 LONG : 3 SHORT (luật anh nêu nhiều lần).
+               # Bản đầu đặt `make_long: False · long_target: 0` = short-only, ngược hẳn yêu cầu:
+               # `run_one` thấy long_target 0 nên không bao giờ vào nhánh long, và 3 short ra đời
+               # RỜI RẠC — không short nào có `cha`, khâu đăng không biết chúng thuộc bài nào.
+               # Nay bật long: mỗi bộ = 1 long (nối từ 3 chương) + 3 short là chính 3 chương đó.
+               "type": "short", "make_long": True, "long_target": 40, "n_shorts": 3,
                "format": k["dinh_dang"], "accent": pal.get("primary", "#22D3EE"),
                "accent2": pal.get("accent", "#F5B301"),
                "handle": k["handle"], "niche": k["goc_nhin"], "brand": b,

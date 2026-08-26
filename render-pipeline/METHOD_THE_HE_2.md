@@ -116,3 +116,44 @@ Quy tắc: mọi hàm trong `du_lieu_mo.py` hỏng thì **trả rỗng, không n
 - [x] Brand-kit 50 kênh — sinh 0 quota, 22 motif theo niche, 7 asset/kênh, banner bó đúng vùng an toàn
 - [ ] Đăng ký kênh vào Firestore + cấp kho Drive
 - [ ] Tắt 55 kênh thế hệ 1 (**chỉ sau khi chúng chạy nốt kho hiện có**)
+
+## TỈ LỆ 1 LONG : 3 SHORT — LUẬT CỐ ĐỊNH (26/8/2026)
+
+> Anh nêu luật này nhiều lần mà mỗi lần lại chưa vào việc. Ghi ở đây để không phải nêu lần nữa,
+> và đã chốt bằng `t_gen2_phai_ra_bo_1long_3short`.
+
+**Một BỘ = 1 long + 3 short, và 3 short là CHÍNH CÁC CHƯƠNG của long đó** — không phải 3 video
+rời rạc về 3 chủ đề khác nhau.
+
+Cách dựng (`the_he_2.chay_bo`):
+1. Xoay kho đề tài lấy 3 chương KHÁC NHAU nhưng cùng một mạch (cùng kênh, cùng nguồn).
+2. Render mỗi chương thành một short hoàn chỉnh (khổ dọc, có hook riêng).
+3. **Nối 3 chương thành long** bằng `ffmpeg -c copy` — không mã hoá lại, nên khung hình của short
+   và của long giống nhau **từng pixel**: short đúng nghĩa là một đoạn cắt ra từ long.
+   Và không tốn thêm một lượt gọi AI nào.
+
+**Đánh số để khâu đăng đăng đúng thứ tự:**
+
+| trường | ghi ở đâu | khâu đăng dùng làm gì |
+|---|---|---|
+| `cha` | job của short = id job của LONG | gom short về đúng long của nó |
+| `thu_tu` | 1 · 2 · 3 | xếp short trong một bộ từ nhỏ tới lớn |
+| `seri` | mã cụm = id job long | tên file trên Drive mang mã cụm |
+| `bo` | `L` · `S1` · `S2` · `S3` | nhìn tên file là biết vai trò |
+
+`auto_enqueue.py` vốn đã đọc đúng hai trường đầu:
+```python
+for L in _long:
+    xep.append(L)                                   # long trước
+    con = sorted(_theo_cha.pop(L.id, []),           # rồi short CỦA CHÍNH NÓ
+                 key=lambda x: int(...get("thu_tu")))
+when = next_slot(ch, vtype, khong_som_hon=gio_long.get(_cha, ""))   # short không đăng trước long
+```
+⇒ **không đăng nhảy cóc, không mất mạch kênh.**
+
+**Ba chỗ dễ làm hỏng luật này** (chốt kiểm cả ba):
+1. `seed` đặt `make_long: False` / `long_target: 0` → `run_one` không vào nhánh long, ra short rời.
+   (Đã dính đúng lỗi này: 50 kênh seed lần đầu là short-only.)
+2. Nhánh gen-2 đặt SAU nhánh `fmt == "doc"` → gen-2 rơi vào đường gọi Gemini viết kịch bản, sai
+   hẳn mô hình dựng-từ-dữ-liệu.
+3. Short không ghi `cha`/`thu_tu` → khâu đăng coi chúng là 4 bản ghi rời rạc.

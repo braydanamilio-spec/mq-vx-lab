@@ -1617,6 +1617,41 @@ def t_workflow_chay_selftest_phai_du_thu_vien():
             assert c in pip, f"{f}.yml chạy selftest nhưng không cài `{c}` -> selftest chết, chặn cả việc chính"
 
 
+
+def t_gen2_phai_ra_bo_1long_3short():
+    """Thế hệ 2 phải ra BỘ: 1 long + 3 short, short là chương của chính long đó.
+
+    26/8 — anh nêu luật này nhiều lần mà mỗi lần lại chưa vào. Ghi thành chốt để không phải nêu
+    lần nữa. Ba điều kiện, thiếu cái nào cũng hỏng theo kiểu khác nhau:
+
+      ① seed đặt `make_long: True` và `long_target > 0`.
+         Sai -> `run_one` không bao giờ vào nhánh long, 50 kênh chỉ ra short rời rạc.
+      ② có nhánh gen-2 trong `run_one`, và nó đứng TRƯỚC nhánh `fmt == "doc"`.
+         Sai thứ tự -> gen-2 rơi vào nhánh doc rồi gọi Gemini viết kịch bản: sai hẳn mô hình
+         (gen-2 dựng từ dữ liệu mở, không nhờ AI nghĩ nội dung).
+      ③ short ghi `cha` (id job của long) và `thu_tu`.
+         Thiếu -> khâu đăng (`auto_enqueue._theo_cha`) không biết short nào thuộc long nào, đăng
+         nhảy cóc, người xem bấm short thấy hay mà tìm bản dài thì không có."""
+    seed = _doc("seed_the_he_2.py")
+    assert '"make_long": True' in seed, "seed vẫn đặt make_long=False -> gen-2 short-only, sai tỉ lệ 1:3"
+    import re as _re
+    m = _re.search(r'"long_target":\s*(\d+)', seed)
+    assert m and int(m.group(1)) > 0, "seed đặt long_target=0 -> không bao giờ vào nhánh long"
+
+    rr = _doc("run_render.py")
+    assert "_gen2_bo(" in rr, "run_render không có nhánh dựng bộ cho thế hệ 2"
+    i2 = rr.find('str(ch.get("the_he") or "") == "2"')
+    idoc = rr.find('elif fmt == "doc":')
+    assert i2 > 0 and idoc > 0 and i2 < idoc, \
+        "nhánh gen-2 phải đứng TRƯỚC nhánh doc, nếu không gen-2 rơi vào đường gọi Gemini"
+    j = rr.find("def _gen2_bo(")
+    than = rr[j: j + 3600]
+    assert "cha=ljob" in than and "thu_tu=i + 1" in than, \
+        "short gen-2 không ghi cha/thu_tu -> khâu đăng đăng nhảy cóc, mất mạch kênh"
+    assert 'bo=f"S{i + 1}"' in than and 'bo="L"' in than, \
+        "không đánh số vai trò (L/S1/S2) khi đẩy kho -> nhìn tên file không biết short thuộc long nào"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1740,6 +1775,7 @@ def main():
     check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
+    check("gen-2 ra BỘ 1 long + 3 short (có cha/thứ tự)", t_gen2_phai_ra_bo_1long_3short)
     check("55 kênh cũ phải có bản chụp tên", t_ten_kenh_cu_phai_co_ban_chup)
     check("workflow quản trị trỏ đúng project (SHARD_META)", t_cong_cu_quan_tri_phai_tro_dung_project)
     check("workflow chạy selftest phải đủ thư viện", t_workflow_chay_selftest_phai_du_thu_vien)

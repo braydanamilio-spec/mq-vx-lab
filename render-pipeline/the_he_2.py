@@ -1389,7 +1389,10 @@ def chay_race(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, di
              "accent": b.get("primary", "#F5B301"), "music": "music/carefree.mp3", "sfx": True,
              # 26/8 — phông riêng của kênh. Thiếu khoá này thì RaceShort rơi về Poppins và 7 kênh
              # dạng đua lại chung một khuôn chữ, dù JSON đã gán phông khác nhau cho từng kênh.
-             "font": (kenh.get("brand") or {}).get("font", "")}
+             "font": (kenh.get("brand") or {}).get("font", ""),
+             **({"hookStat": _so_noi_bat(st)["stat"],
+                 "hookLabel": _so_noi_bat(st).get("name", ""),
+                 "hookLine": _cau_hoi_mo(kenh, st)} if _so_noi_bat(st).get("stat") else {})}
     pf = os.path.join(DS.PUB, f"_th2r_{sl}.json")
     json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2r_{sl}.mp4"))
@@ -1561,6 +1564,15 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
         props["bg"] = b["primary"]
     if b.get("secondary"):
         props["bg2"] = b["secondary"]
+    # HOOK 0-3 GIÂY. `Bookend` nhận `hookStat/hookLabel/hookLine` nhưng nếu Python không gửi thì
+    # nó lặng lẽ dùng bản mở đầu cũ (handle + tiêu đề) — đúng bẫy "khai ra rồi không ai gửi" đã
+    # gặp 5 lần đêm nay, lần này ở chính mã em vừa viết. Dùng lại đúng số liệu của thumbnail để
+    # bìa và 3 giây đầu nói CÙNG một con số — người bấm vào vì con số nào thì thấy ngay con số đó.
+    _d = _so_noi_bat(st)
+    if _d.get("stat"):
+        props["hookStat"] = _d["stat"]
+        props["hookLabel"] = _d.get("name", "")
+        props["hookLine"] = _cau_hoi_mo(kenh, st)
     pf = os.path.join(DS.PUB, f"_th2_{dang}_{sl}.json")
     json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2_{dang}_{sl}.mp4"))
@@ -1726,6 +1738,82 @@ def lam_thumb(kenh: dict, st: dict, ra: str, comp: str = "", pf: str = "") -> st
     except Exception as e:
         print(f"   ⚠️ thumbnail {kenh.get('ten')} lỗi: {str(e)[:70]}")
         return ""
+
+
+
+def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
+            so_short: int = 3) -> tuple[str, list] | None:
+    """MỘT BỘ = 1 LONG + `so_short` SHORT, short là CÁC CHƯƠNG CỦA CHÍNH LONG ĐÓ.
+
+    26/8 — anh nêu yêu cầu này nhiều lần, và mỗi lần em lại đi làm việc khác. Ghi rõ ở đây để
+    không phải nói lại:
+      • tỉ lệ 1 long : 3 short;
+      • 3 short **cắt từ long ra**, dựng lại theo khổ dọc cho hợp nền tảng — không phải 3 video
+        rời rạc về 3 chủ đề khác nhau;
+      • đánh số để khâu đăng đăng từ nhỏ tới lớn, và short LUÔN đi kèm long của nó.
+
+    Cách làm: xoay kho đề tài lấy `so_short` chương KHÁC NHAU nhưng CÙNG một mạch (cùng kênh, cùng
+    nguồn) -> render mỗi chương thành một short hoàn chỉnh -> **nối các chương lại thành long**.
+    Nối chứ không render riêng bản dài: như vậy short đúng nghĩa là một đoạn của long, khớp 100%,
+    và không tốn thêm một lượt gọi AI nào.
+
+    Trả `(đường_long, [(đường_short, story), ...])`, hoặc None nếu không đủ dữ liệu."""
+    import datastory_ci as DS
+    ten = kenh.get("ten", "?")
+    dang = kenh.get("dinh_dang")
+    da = list(avoid or [])
+    chuong = []
+    for i in range(max(1, so_short)):
+        st = _dung_story_xoay(dang, kenh, None, da)
+        if not st:
+            break
+        da.append(st.get("title") or "")
+        sl = DS.slug(kenh["handle"].lstrip("@")) + f"_c{i + 1}"
+        ra_s = os.path.abspath(os.path.join(GOC, "out", f"th2bo_{sl}.mp4"))
+        kq = chay_chung(kenh, ra=ra_s, avoid=da[:-1])
+        if not kq:
+            print(f"   ⚠️ {ten}: chương {i + 1} không dựng được — bỏ chương này")
+            continue
+        chuong.append((kq[0], st))
+    if not chuong:
+        print(f"   ⚠️ {ten}: không dựng được chương nào — BỎ LƯỢT")
+        return None
+    if len(chuong) < so_short:
+        print(f"   ⚠️ {ten}: chỉ dựng được {len(chuong)}/{so_short} chương "
+              f"(kho đề tài cạn hoặc nguồn thiếu) — vẫn ra bộ, long ngắn hơn.")
+    ra_long = os.path.abspath(ra_long or os.path.join(
+        GOC, "out", f"th2long_{DS.slug(kenh['handle'].lstrip('@'))}.mp4"))
+    if not _noi_video([c[0] for c in chuong], ra_long):
+        return None
+    print(f"   🎬 {ten}: BỘ = 1 long ({len(chuong)} chương) + {len(chuong)} short")
+    return ra_long, chuong
+
+
+def _noi_video(cac_tep: list, ra: str) -> bool:
+    """Nối các chương thành long. Dùng `-c copy` để KHÔNG mã hoá lại — nhanh, và quan trọng hơn:
+    khung hình của short và của long GIỐNG NHAU TỪNG PIXEL, đúng nghĩa 'short cắt từ long'."""
+    import subprocess, tempfile
+    if not cac_tep:
+        return False
+    os.makedirs(os.path.dirname(ra), exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as fh:
+        for t in cac_tep:
+            fh.write("file '" + os.path.abspath(t).replace("'", "'\\''") + "'\n")
+        ds = fh.name
+    try:
+        r = subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", ds,
+                            "-c", "copy", ra], capture_output=True, timeout=600)
+        if r.returncode != 0 or not os.path.exists(ra):
+            # `-c copy` kén: các chương phải cùng bộ mã hoá. Chúng đều ra từ cùng một lệnh render
+            # nên bình thường là khớp; lệch thì mã hoá lại, chậm hơn nhưng không mất bộ.
+            print("   ⚠️ nối nhanh hỏng — mã hoá lại")
+            r = subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", ds,
+                                "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+                                "-c:a", "aac", ra], capture_output=True, timeout=1800)
+        return os.path.exists(ra) and os.path.getsize(ra) > 0
+    finally:
+        try: os.unlink(ds)
+        except Exception: pass
 
 
 def main() -> int:

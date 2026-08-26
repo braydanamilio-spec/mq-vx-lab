@@ -1,5 +1,6 @@
 import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig, interpolate, Audio, staticFile, Img } from "remotion";
 import { phong } from "./Phong";
+import { Bookend } from "./Bookend";
 import { ChuyenCanh, MUC_AM } from "./Chuyen";
 import React from "react";
 import { Karaoke } from "./Karaoke";
@@ -9,6 +10,7 @@ type Item = { name: string; value: number };
 type Keyframe = { t: number; data: Item[] };
 export type RaceProps = {
   title?: string; subtitle?: string; unit?: string; source?: string; handle?: string; font?: string; transparent?: boolean;
+  hookStat?: string; hookLabel?: string; hookLine?: string; introSec?: number;
   frames: Keyframe[]; secondsPerFrame?: number; topN?: number; durationSec?: number;
   colors?: Record<string, string>; icons?: Record<string, string>; logos?: Record<string, string>; images?: Record<string, string>; photos?: Record<string, string>; themePhotos?: Record<string, string>; coldPhoto?: string; music?: string; sfx?: boolean;
   // 25/8 — hai prop TUỲ CHỌN cho kênh thế hệ 2: đua cột dựng thẳng từ dữ liệu, không footage, nên
@@ -34,7 +36,7 @@ const fmt = (v: number) => {
 };
 
 export const BarChartRace: React.FC<RaceProps> = (props) => {
-  const { title = "", subtitle = "", unit = "", source = "", handle = "", frames, colors, icons, logos, images, photos, themePhotos, coldPhoto, music, sfx = true, audio, subs, accent = "#F5B301", font = "" } = props;
+  const { title = "", subtitle = "", unit = "", source = "", handle = "", frames, colors, icons, logos, images, photos, themePhotos, coldPhoto, music, sfx = true, audio, subs, accent = "#F5B301", font = "", hookStat = "", hookLabel = "", hookLine = "", introSec = 2.6 } = props;
   const spf = props.secondsPerFrame ?? 2.2; const topN = props.topN ?? 10;
   const f = useCurrentFrame(); const { width: W, height: H, fps } = useVideoConfig();
   const port = H > W;
@@ -75,11 +77,16 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
   const heroW = hero ? 380 : 0;
   const chartW = W - (M + labelW) - M - (port ? 300 : 230) - heroW; // chừa chỗ số cuối thanh + hero (RỘNG hơn để nhãn "215K USD" không tràn mép)
   const intro = interpolate(f, [0, 12], [0, 1], { extrapolateRight: "clamp" });
+  const introF = Math.round((introSec || 0) * fps);   // khung cuối của thẻ mở đầu Bookend
 
   return (
     <AbsoluteFill style={{ background: props.transparent ? "transparent" : "linear-gradient(160deg,#22305a 0%,#131c38 55%,#0d1428 100%)"  /* 26/8: sáng lên, xem 7.ek */, fontFamily: phong(font), opacity: intro }}>
-      {/* tiêu đề */}
-      <div style={{ position: "absolute", top: port ? 96 : 60, left: M, right: M }}>
+      {/* tiêu đề — ẨN trong lúc Bookend đang vẽ thẻ mở đầu.
+          26/8 — chốt `t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau` bắt đúng ca này ngay khi em
+          thêm Bookend vào đây: hai tiêu đề cùng hiện trong 2,6 giây đầu = chữ chồng chữ, đúng
+          thứ anh vừa phàn nàn. Cổng này là cách 6 dạng kia đã làm, nay áp cho dạng đua. */}
+      <div style={{ display: f < introF ? "none" : undefined,
+                    position: "absolute", top: port ? 96 : 60, left: M, right: M }}>
         <div style={{ fontSize: port ? 62 : 66, fontWeight: 900, color: "#EAF2FF", letterSpacing: -1, lineHeight: 1.04 }}>{title}</div>
         {subtitle ? <div style={{ fontSize: port ? 36 : 34, fontWeight: 700, color: "#7FA8D0", marginTop: 10 }}>{subtitle}</div> : null}
       </div>
@@ -156,6 +163,11 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
       {/* Tiếng reo lúc kết giữ riêng: nó không phải chuyển cảnh mà là dấu chấm hết của cả video. */}
       {sfx ? <Sequence from={Math.round(finalT * fps)} durationInFrames={60}><Audio src={staticFile("sfx/cheer.mp3")} volume={MUC_AM.cheer} /></Sequence> : null}
           {subs && subs.length ? <Karaoke subs={subs} accent={accent} /> : null}
+      {/* HOOK 0-3 GIÂY (26/8). Dạng đua trước đây mở bằng tiêu đề + cột chạy — đúng nội dung
+          nhưng giây đầu chưa có gì níu mắt. Dùng chung `Bookend` với 6 dạng kia để cả 7 dạng có
+          cùng NHỊP mở đầu (số sốc -> nhãn -> câu hỏi), còn hình thì vẫn mỗi dạng một kiểu. */}
+      {hookStat ? <Bookend title={title} handle={handle} accent={accent} introSec={introSec}
+                           hookStat={hookStat} hookLabel={hookLabel} hookLine={hookLine} /> : null}
     </AbsoluteFill>
   );
 };
