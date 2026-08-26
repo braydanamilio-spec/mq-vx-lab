@@ -2322,24 +2322,33 @@ def channel_mode(name):
             print(f"\n♻️ {name} rảnh -> nhận thêm kênh {_ke} từ hàng chờ "
                   f"(còn {_con_s / 60:.0f}' ngân sách).")
             _t2 = time.monotonic()
+            # 26/8 — THOÁT SỚM KHI CẢ POOL KEY ĐÃ CẠN. Phiên 21:32: 7 lane chạy hết ngân sách để
+            # ra ĐÚNG 1 video, với 54 lượt "hết key viết". Hết key thì kênh nào cũng hỏng y như
+            # nhau — bốc thêm kênh chỉ tốn phút máy GitHub (free có hạn theo tháng).
+            #
+            # ⚠️ BẢN VÁ ĐẦU ĐẶT SAI CHỖ, ĐO MỚI BIẾT. Nó bắt ở `except BaseException` quanh
+            # `run_one` — nhưng `run_one` có 11 khối except và TỰ ghi lỗi vào `report["fails"]`,
+            # gần như không bao giờ ném lên. Phiên 22:52 có 80 lượt "hết key" mà dòng thoát sớm
+            # in ra ĐÚNG 0 LẦN. Nay đếm trên `report["fails"]` — nơi lỗi thật sự đọng lại.
+            _truoc = len(report.get("fails") or [])
+            _xong = int(report.get("done") or 0)
             try:
                 run_one(_ch2, keys, report=report)
-                _het_key_lien = 0
             except BaseException as e:
                 print_exc_gon(); report["fails"].append(f"{_ke}: {str(e)[:120]}")
-                # 26/8 — THOÁT SỚM KHI CẢ POOL KEY ĐÃ CẠN. Phiên 21:32: 7 lane chạy hết ngân sách
-                # để ra ĐÚNG 1 video, với 54 lượt "hết key viết". Hết key thì kênh nào cũng hỏng
-                # y như nhau — bốc thêm kênh chỉ tốn phút máy GitHub (free có hạn theo tháng) mà
-                # không đổi kết quả. Ba lần liên tiếp là đủ kết luận, không cần thử hết hàng chờ.
-                if any(t in str(e) for t in ("hết key viết dùng được", "KHÔNG CÒN KEY NÀO",
-                                             "pool vẽ ảnh CẠN SẠCH")):
-                    _het_key_lien += 1
-                    if _het_key_lien >= 3:
-                        print(f"   🛑 {name}: 3 kênh liên tiếp hết key — dừng lane, trả phút máy "
-                              f"lại cho phiên sau (key hồi thì chạy tiếp)")
-                        break
-                else:
-                    _het_key_lien = 0
+            _moi = (report.get("fails") or [])[_truoc:]
+            if int(report.get("done") or 0) > _xong:
+                _het_key_lien = 0                       # có video ra -> pool còn sống
+            elif _moi and all(any(t in str(x) for t in
+                                  ("hết key viết", "KHÔNG CÒN KEY NÀO", "pool vẽ ảnh CẠN SẠCH"))
+                              for x in _moi):
+                _het_key_lien += 1
+                if _het_key_lien >= 3:
+                    print(f"   🛑 {name}: 3 kênh liên tiếp hết key — dừng lane, trả phút máy lại "
+                          f"cho phiên sau (key hồi thì chạy tiếp)")
+                    break
+            else:
+                _het_key_lien = 0
             last_dur = time.monotonic() - _t2
     except Exception as e:
         print(f"   ⚠️ lấy việc kế hụt ({str(e)[:60]}) — bỏ qua, không ảnh hưởng phần đã làm.")

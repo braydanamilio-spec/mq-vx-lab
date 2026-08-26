@@ -3031,3 +3031,14 @@ về 0. Đã mất nhiều lượt soi log vì tin con số đó.
   Dòng tổng nay tách `VIẾT kịch bản` / `vẽ ảnh`, và kêu thẳng `⛔ KHÔNG CÒN KEY VIẾT — phiên này
   sẽ gần như trắng` ngay ở plan, thay vì để 18 lane tự khám phá bằng 196 lượt lỗi.
 - **Việc cần làm là thêm key VIẾT** (Groq / Gemini / Cloudflare). Thêm key ảnh không giúp gì.
+
+### 26/8 — BẢN VÁ THOÁT SỚM ĐẶT SAI CHỖ, KHÔNG BAO GIỜ CHẠY (đo mới biết)
+Bản vá "3 kênh liên tiếp hết key thì dừng lane" bắt ở `except BaseException` quanh `run_one`.
+Nhưng `run_one` có **11 khối except** và TỰ ghi lỗi vào `report["fails"]` — nó gần như không bao
+giờ ném lên. Phiên 22:52: **80 lượt "hết key" mà dòng thoát sớm in ra ĐÚNG 0 LẦN**.
+
+Không có gì báo động cả: selftest xanh, log sạch, không Traceback. Chỉ lộ ra khi đếm chính con số
+mà bản vá lẽ ra phải tạo. **Vá xong phải đo xem nó có chạy không, đừng tin là nó chạy.**
+- Sửa: đếm trên `report["fails"]` — nơi lỗi thật sự đọng lại — và reset khi `report["done"]` tăng.
+- Đã mô phỏng ba kịch bản trước khi push: hết key từ đầu → dừng ở kênh 3 (trước là 10) · 2 hết key
+  rồi 1 ra video → không dừng oan · lỗi lạ liên tục → không nhầm thành cạn key.
