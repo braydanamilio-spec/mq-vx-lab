@@ -430,10 +430,30 @@ NICHE_CLUSTERS = [
 ]
 
 
+# 27/8 — SỔ CHỦ ĐỀ ĐÃ LÀM TRONG CHÍNH PHIÊN NÀY.
+# Đo phiên đầu chạy được: 232 video ra lò nhưng CARRECALL 18 video chỉ 1 tiêu đề, và một loạt kênh
+# 20 video chỉ 3-4 tiêu đề. Một bộ = 1 long + 3 short = 4 video từ MỘT câu chuyện, nên 20 video mà
+# 3 tiêu đề nghĩa là các bộ trong cùng phiên chọn lại đúng chuyện vừa làm.
+# Gốc: `_avoid_for` lấy chủ đề đã làm từ Firestore (`recent_topics`), mà Firestore luôn TRỄ hơn
+# phiên đang chạy — bộ thứ hai không thể biết bộ thứ nhất vừa làm gì. Sổ RAM này lấp đúng khoảng
+# trễ đó; không tốn lượt đọc nào.
+_SESSION_TOPICS: dict = {}
+
+
+def _nho_chu_de(channel: str, *tieu_de) -> None:
+    """Ghi chủ đề vừa làm vào sổ phiên, để lượt sau của CHÍNH phiên này không chọn lại."""
+    lo = _SESSION_TOPICS.setdefault(str(channel), [])
+    for t in tieu_de:
+        t = str(t or "").strip()
+        if t and t not in lo:
+            lo.append(t)
+
+
 def _avoid_for(channel: str) -> list:
     """Danh sách chủ đề cần tránh = của kênh (60) + của các kênh CÙNG CỤM (20/kênh, ≤3 kênh).
     Cap ~120 mục để không phình prompt (tốn token đầu vào)."""
-    out = FB.recent_topics(OWNER, channel, n=60)
+    # Sổ phiên đứng TRƯỚC: nó tươi nhất, và là thứ Firestore chưa kịp biết.
+    out = list(_SESSION_TOPICS.get(str(channel), [])) + FB.recent_topics(OWNER, channel, n=60)
     for cl in NICHE_CLUSTERS:
         if channel in cl:
             sibs = sorted(x for x in cl if x != channel)[:3]
@@ -827,6 +847,10 @@ def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
     # 26/8 — nhận thêm story GỘP CẢ BỘ. Trước đây tiêu đề long lấy `chuong[0][1]` = story của short
     # đầu; từ lúc short gộp 2 chương thì short đầu chỉ phủ 1/3 long ⇒ tên long nói sai phạm vi.
     long_path, chuong, st_long = kq
+    # Ghi NGAY tiêu đề long + mọi short vào sổ phiên, trước cả khi đẩy Drive: lượt sau của phiên
+    # này phải tránh chúng, không đợi Firestore cập nhật.
+    _nho_chu_de(channel, (st_long or {}).get("title"),
+                *[(s_ or {}).get("title") for _p, s_ in (chuong or [])])
     ok, info = DS.qc(long_path)
     if not ok:
         lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")

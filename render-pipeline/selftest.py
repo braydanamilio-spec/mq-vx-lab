@@ -2005,6 +2005,7 @@ def main():
     check("sổ ngân sách tách theo project, đúng đơn vị với ngưỡng", t_ngan_sach_theo_project)
     check("tự-seed KHÔNG hồi sinh kênh đã nghỉ", t_tu_seed_khong_hoi_sinh)
     check("cổng fail-open phải bắt BaseException (SystemExit)", t_fail_open_bat_baseexception)
+    check("chủ đề đã làm TRONG PHIÊN phải vào danh sách tránh", t_so_chu_de_trong_phien)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4443,6 +4444,37 @@ def t_fail_open_bat_baseexception():
     finally:
         if _cu is not None:
             _o.environ["GEMINI_API_KEY"] = _cu
+
+
+
+
+def t_so_chu_de_trong_phien():
+    """Chủ đề vừa làm trong CHÍNH phiên này phải được tránh ở lượt sau.
+
+    27/8 — phiên đầu chạy thật ra 232 video, nhưng đo tiêu đề thì lộ trùng lặp nặng:
+        CARRECALL   18 video -> 1 tiêu đề
+        WILDNUMBERS 20 video -> 3 tiêu đề        (PAIDVSPLAYED, GONETOOSOON y hệt)
+    Một bộ = 1 long + 3 short = 4 video từ MỘT câu chuyện, nên 20 video / 3 tiêu đề nghĩa là các
+    bộ trong cùng phiên chọn lại đúng chuyện vừa làm.
+
+    Gốc: `_avoid_for` lấy chủ đề đã làm từ Firestore (`recent_topics`), mà Firestore TRỄ hơn phiên
+    đang chạy — bộ thứ hai không có cách nào biết bộ thứ nhất vừa làm gì. Danh sách tránh đọc từ
+    nơi cập nhật chậm hơn tốc độ sinh ra thứ cần tránh thì nó không tránh được gì."""
+    src = _doc("run_render.py")
+    assert "_SESSION_TOPICS" in src, "không có sổ chủ đề trong phiên"
+    i = src.index("def _avoid_for")
+    than = src[i:i + 900]
+    assert "_SESSION_TOPICS.get" in than, "_avoid_for không đọc sổ phiên -> vẫn chỉ dựa vào Firestore"
+    j = src.index("def _gen2_bo")
+    tb = src[j:j + 4000]
+    assert "_nho_chu_de(" in tb, "_gen2_bo không ghi sổ sau mỗi bộ"
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import run_render as R
+    R._SESSION_TOPICS.pop("__thu__", None)
+    R._nho_chu_de("__thu__", "A", "B")
+    R._nho_chu_de("__thu__", "B", "C")
+    assert R._SESSION_TOPICS["__thu__"] == ["A", "B", "C"], "sổ phiên không khử trùng"
 
 
 if __name__ == "__main__":
