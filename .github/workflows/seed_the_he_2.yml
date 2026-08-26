@@ -35,6 +35,15 @@ jobs:
           # nên công cụ quản trị phải lật được sang gương như dây chuyền chính.
           FIREBASE_PROJECT_ID_B2: mm0-shard-b2
           OWNER_UID: ${{ secrets.OWNER_UID }}
+          # 26/8 — THIẾU CỜ NÀY LÀ CÔNG CỤ QUẢN TRỊ GHI SAI PROJECT.
+          # `firestore_bridge._db_meta()` chỉ trỏ vào project B khi `SHARD_META=1`; không có cờ thì
+          # nó về project A. `render_cron` có truyền cờ (vars.SHARD_META = 1), workflow này thì
+          # không ⇒ seed ghi 50 kênh vào A trong khi dây chuyền đọc `render_channels` ở B ⇒ 50 kênh
+          # VÔ HÌNH, mà vẫn tốn trọn cửa sổ hạn mức. Cùng lỗi ở `don_the_he_1`: nó đọc danh sách
+          # kênh cũ ở A (rỗng) rồi báo "dọn 0 tệp" như thể thành công.
+          SHARD_META: ${{ vars.SHARD_META }}
+          SHARD_KEYS: ${{ vars.SHARD_KEYS }}
+          SHARD_PUBLISH: ${{ vars.SHARD_PUBLISH }}
           HOT_KEY: ${{ secrets.HOT_KEY }}
           HOT_MODE: on
         run: |

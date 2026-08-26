@@ -52,6 +52,12 @@ jobs:
           # thiếu là bước dọn kho đứng im đúng lúc quota hết (chốt selftest bắt).
           HOT_KEY:                          ${{ secrets.HOT_KEY }}
           HOT_MODE:                         on
+          # 26/8 — THIẾU CỜ NÀY LÀ ĐỌC SAI PROJECT. `_db_meta()` chỉ trỏ vào B khi SHARD_META=1;
+          # không có cờ thì về A, nơi `render_channels` rỗng ⇒ bản dọn không thấy kênh cũ nào và
+          # báo "dọn 0 tệp" như thể thành công. Cùng lỗi vừa vá ở `seed_the_he_2`.
+          SHARD_META:                       ${{ vars.SHARD_META }}
+          SHARD_KEYS:                       ${{ vars.SHARD_KEYS }}
+          SHARD_PUBLISH:                    ${{ vars.SHARD_PUBLISH }}
         run: |
           ARGS=""
           if [ "${{ github.event.inputs.lam_that }}"    = "1" ]; then ARGS="$ARGS --that"; fi

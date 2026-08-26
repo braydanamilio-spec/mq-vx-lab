@@ -1554,6 +1554,32 @@ def t_ten_kenh_cu_phai_co_ban_chup():
         "don_the_he_1 không đọc bản chụp -> xoá bản ghi trước là mất đường tìm tệp"
 
 
+
+def t_cong_cu_quan_tri_phai_tro_dung_project():
+    """Workflow quản trị phải truyền `SHARD_META` như dây chuyền chính.
+
+    26/8, bắt 20 phút trước giờ seed. `firestore_bridge._db_meta()` chỉ trỏ vào project B khi
+    `SHARD_META=1`; không có cờ thì nó về **project A**. `render_cron` có truyền
+    (`vars.SHARD_META` = 1, đã kiểm bằng `gh variable list`), còn `seed_the_he_2.yml` và
+    `don_the_he_1.yml` **không có dòng nào**.
+
+    Hậu quả nếu để nguyên:
+      • seed ghi 50 kênh vào A trong khi dây chuyền đọc `render_channels` ở B ⇒ **50 kênh vô hình**,
+        mà vẫn tốn trọn cửa sổ hạn mức phải chờ tới hôm sau;
+      • bản dọn đọc danh sách kênh cũ ở A (rỗng) ⇒ báo "dọn 0 tệp" như thể thành công — đúng lỗi
+        "đếm ra 0 mà tưởng xong" đã ghi ở 7.ed.
+
+    **Luật**: công cụ quản trị phải chạy trong CÙNG cấu hình với dây chuyền nó quản trị. Lệch một
+    biến môi trường là nó thao tác lên một hệ khác, và không có gì báo lỗi cả."""
+    can = ("SHARD_META", "SHARD_KEYS")
+    for f in ("seed_the_he_2", "don_the_he_1"):
+        y = _doc(f"../.github/workflows/{f}.yml")
+        for c in can:
+            assert f"{c}: ${{{{ vars.{c} }}}}" in y.replace(" ", "") or \
+                   f"{c}:${{{{vars.{c}}}}}" in y.replace(" ", ""), \
+                f"{f}.yml thiếu {c} -> đọc/ghi nhầm project A thay vì B"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1678,6 +1704,7 @@ def main():
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
     check("55 kênh cũ phải có bản chụp tên", t_ten_kenh_cu_phai_co_ban_chup)
+    check("workflow quản trị trỏ đúng project (SHARD_META)", t_cong_cu_quan_tri_phai_tro_dung_project)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
