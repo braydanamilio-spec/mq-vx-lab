@@ -1680,6 +1680,80 @@ def t_bo_khong_duoc_chon_story_hai_lan():
         "chay_chung không nhận st_san"
 
 
+
+def t_capnhat_phai_day_du_truong_co_y():
+    """`--capnhat` phải cập nhật ĐỦ mọi trường mà seed đặt tường minh.
+
+    26/8 — soi dashboard: 50 kênh gen-2 vẫn `make_long: false · long_target: 0` dù seed đã sửa sang
+    1 long : 3 short và `--capnhat` đã chạy **thành công**. Vì danh sách trắng của chế độ cập nhật
+    bỏ sót đúng bốn trường quyết định hành vi: `type` · `make_long` · `long_target` · `n_shorts`.
+
+    Selftest cũ không bắt được: `t_gen2_phai_ra_bo_1long_3short` đọc FILE seed và thấy đúng, trong
+    khi thứ quyết định hành vi là BẢN GHI trong Firestore — và đường duy nhất để sửa bản ghi đã
+    khoá mất bốn trường đó.
+
+    **Luật**: danh sách "trường do bảng sinh ra" phải khớp đúng những gì `doc` đặt tường minh.
+    Thiếu một trường = trường đó vĩnh viễn không cập nhật được, mà không có gì báo lỗi."""
+    import ast as _ast
+    src = _doc("seed_the_he_2.py")
+    cay = _ast.parse(src)
+    fn = next((n for n in _ast.walk(cay) if isinstance(n, _ast.FunctionDef) and n.name == "main"), None)
+    assert fn, "mất hàm main trong seed"
+    # khoá đặt tường minh trong `doc` (bỏ khoá thừa hưởng qua **dich)
+    doc = next((d for d in _ast.walk(fn) if isinstance(d, _ast.Dict)
+                and any(isinstance(k, _ast.Constant) and k.value == "the_he" for k in d.keys if k)), None)
+    assert doc, "không tìm thấy dict doc"
+    co_y = {k.value for k in doc.keys if isinstance(k, _ast.Constant) and isinstance(k.value, str)}
+    #  CỐ Ý loại khỏi chế độ cập nhật: bật/tắt là quyết định của người dùng, không phải
+    # của bảng — ghi đè nó khi cập nhật giọng/phông là tự tay bật lại 50 kênh đang tắt.
+    co_y -= {"owner", "name", "paused"}
+    # danh sách trắng của chế độ cập nhật
+    tra = None
+    for cmp_ in _ast.walk(fn):
+        if isinstance(cmp_, _ast.Compare) and isinstance(cmp_.ops[0], _ast.In) \
+           and isinstance(cmp_.comparators[0], _ast.Tuple):
+            tra = {e.value for e in cmp_.comparators[0].elts if isinstance(e, _ast.Constant)}
+            break
+    assert tra, "không tìm thấy danh sách trắng của --capnhat"
+    thieu = co_y - tra
+    assert not thieu, (f"--capnhat bỏ sót {sorted(thieu)} -> mấy trường này KHÔNG BAO GIỜ cập nhật "
+                       "được xuống Firestore dù seed đã sửa")
+
+
+
+def t_workflow_dung_autopublisher_phai_checkout_that():
+    """Workflow nào trỏ `AUTOPUBLISHER_SRC` thì phải CHECKOUT repo đó, không được `cp` từ chỗ trống.
+
+    26/8 — `don_the_he_1.yml` làm `cp -r MM0-AutoPublisher/src _autopublisher/ || true`. Nhưng
+    `MM0-AutoPublisher` là repo RIÊNG, không nằm trong checkout của repo render ⇒ `cp` trượt,
+    `|| true` nuốt lỗi, rồi script chết `No module named 'storage'`: **bản dọn chưa từng chạy được
+    lần nào**, mà log workflow thì trông như bình thường cho tới dòng cuối.
+
+    Đây là lần thứ HAI đúng cái bẫy này — 24/8 `render_cron` cũng trỏ `AUTOPUBLISHER_SRC` mà quên
+    checkout, làm `backup_vault` chết mọi phiên trong im lặng (kho key coi như không được sao lưu
+    suốt thời gian đó)."""
+    import re as _re, os as _os
+    goc = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", ".github", "workflows")
+    xau = []
+    for f in sorted(_os.listdir(goc)):
+        if not f.endswith(".yml"):
+            continue
+        tho = _doc(f"../.github/workflows/{f}")
+        # BỎ CHÚ THÍCH trước khi soi: chú thích giải thích vì sao đã bỏ `cp` cũng chứa chữ `cp`,
+        # đọc cả chú thích là tự báo oan trên mã đã đúng (đã dính đúng lỗi này).
+        y = "\n".join(l for l in tho.splitlines() if not l.strip().startswith("#"))
+        if "AUTOPUBLISHER_SRC" not in y:
+            continue
+        # Repo được checkout ở ĐÂU không quan trọng — `wipe_queue` checkout vào thư mục gốc và
+        # trỏ `AUTOPUBLISHER_SRC: ${{ github.workspace }}/src`, hoàn toàn hợp lệ. Điều bắt buộc
+        # là CÓ một bước checkout đúng repo đó.
+        if "AUTOPUBLISHER_REPO" not in y:
+            xau.append(f"{f}: trỏ AUTOPUBLISHER_SRC nhưng không checkout repo -> ModuleNotFoundError")
+        if _re.search(r"cp -r MM0-AutoPublisher/src", y):
+            xau.append(f"{f}: còn `cp` từ thư mục không tồn tại (repo riêng)")
+    assert not xau, "; ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1805,6 +1879,8 @@ def main():
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
     check("gen-2 ra BỘ 1 long + 3 short (có cha/thứ tự)", t_gen2_phai_ra_bo_1long_3short)
     check("bộ không được chọn story hai lần", t_bo_khong_duoc_chon_story_hai_lan)
+    check("--capnhat phải đẩy đủ trường cố ý", t_capnhat_phai_day_du_truong_co_y)
+    check("workflow dùng AutoPublisher phải checkout thật", t_workflow_dung_autopublisher_phai_checkout_that)
     check("55 kênh cũ phải có bản chụp tên", t_ten_kenh_cu_phai_co_ban_chup)
     check("workflow quản trị trỏ đúng project (SHARD_META)", t_cong_cu_quan_tri_phai_tro_dung_project)
     check("workflow chạy selftest phải đủ thư viện", t_workflow_chay_selftest_phai_du_thu_vien)

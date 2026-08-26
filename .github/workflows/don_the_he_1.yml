@@ -42,10 +42,16 @@ jobs:
         run: |
           echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
           echo '${{ secrets.GCP_SA_KEY }}'   > /tmp/sa.json
-      - name: Mã AutoPublisher
-        run: |
-          mkdir -p _autopublisher
-          cp -r MM0-AutoPublisher/src _autopublisher/ 2>/dev/null || true
+      # 26/8 — BƯỚC NÀY TỪNG HỎNG TRONG IM LẶNG. Nó `cp -r MM0-AutoPublisher/src` nhưng đó là
+      # repo RIÊNG, không có trong checkout của repo render ⇒ `cp` trượt, `|| true` nuốt lỗi, rồi
+      # `don_the_he_1.py` chết `No module named 'storage'` — tức bản dọn KHÔNG BAO GIỜ chạy được.
+      # Đúng cái bẫy đã ghi cho `render_cron` ngày 24/8 (`backup_vault` chết mọi phiên vì y hệt).
+      # Nay checkout repo thật, như `render_cron` vẫn làm.
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
       - name: Dọn
         env:
           GOOGLE_APPLICATION_CREDENTIALS:   /tmp/sa.json

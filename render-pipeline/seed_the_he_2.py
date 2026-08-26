@@ -130,9 +130,18 @@ def main() -> int:
                **chu_ky_giong(thu_tu[ten])}
         if ten in co and capnhat:
             # chỉ các trường DO BẢNG SINH RA; giữ nguyên paused và mọi chỉnh tay khác
+            # 26/8 — DANH SÁCH NÀY TỪNG THIẾU ĐÚNG THỨ QUAN TRỌNG NHẤT. Bản đầu bỏ sót
+            # `make_long`/`long_target`/`n_shorts`/`type`, nên sau khi seed sửa cấu hình sang
+            # 1 long : 3 short thì `--capnhat` vẫn **không đẩy được thay đổi đó xuống Firestore**:
+            # 50 kênh nằm im ở `make_long: false, long_target: 0` = short-only.
+            # Soi trên dashboard mới thấy — selftest không bắt được vì nó chỉ đọc FILE seed, còn
+            # thứ quyết định hành vi là BẢN GHI trong Firestore.
+            # Nguyên tắc: danh sách "trường do bảng sinh ra" phải khớp ĐÚNG những gì `doc` đặt
+            # tường minh; thiếu một cái là cái đó vĩnh viễn không cập nhật được.
             doc = {k: v for k, v in doc.items()
                    if k in ("voice", "voice_rate", "voice_pitch", "accent", "accent2",
-                            "format", "handle", "niche", "brand", "the_he")}
+                            "format", "handle", "niche", "brand", "the_he",
+                            "type", "make_long", "long_target", "n_shorts")}
         db.collection("render_channels").document(f"{owner}__{ten}").set(doc, merge=True)
         _g = chu_ky_giong(thu_tu[ten])
         print(f"  {'🔄' if (ten in co) else '➕'} {ten:18} [{k['dinh_dang']}] "
