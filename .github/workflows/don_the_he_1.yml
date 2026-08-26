@@ -34,8 +34,10 @@ jobs:
           # cần thư viện đó. Lần seed 07:01Z hôm nay chết đúng kiểu này: `❌ step trỏ
           # Project C phải bật SHARD_PUBLISH: No module named 'yaml'`.
           # 07:10Z — lần vá đầu nới danh sách quá tay (thêm cả generativeai/edge-tts/
-          # oauthlib) và pip chết vì `resolution-too-deep`. Chỉ thêm ĐÚNG thứ thiếu.
-        run: pip install --quiet -c render-pipeline/constraints.txt google-cloud-firestore google-auth google-api-python-client google-auth-oauthlib pyyaml
+          # oauthlib) và pip chết vì `resolution-too-deep`; lần sau cắt còn pyyaml thì
+          # lại thiếu `google-generativeai`. Kết luận: DÙNG ĐÚNG BỘ CỦA `render_cron`,
+          # bộ đó ngày nào cũng chạy nên chắc chắn pip giải được. Đừng tự chế bộ khác.
+        run: pip install --quiet -c render-pipeline/constraints.txt google-generativeai edge-tts google-cloud-firestore google-api-python-client google-auth pyyaml cryptography google-auth-oauthlib
       - name: Khoá dịch vụ
         run: |
           echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
