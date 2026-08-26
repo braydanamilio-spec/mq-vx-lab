@@ -102,9 +102,16 @@ Every narration line MUST have a distinct 'visual' (adjacent lines must differ) 
 # Gốc: khối `except` quanh generate_content chỉ phân loại 404 (đổi model) và 429/quota (đổi key);
 # 504 không khớp nhánh nào nên rơi vào `raise` cuối và giết cả lượt viết — dù chỉ cần gọi lại là
 # xong. Nhà cung cấp nghẽn không phải lỗi của mình và không tốn hạn mức.
+# 26/8 — hai loại lọt qua bộ lọc này ở phiên 00:01, mỗi cái mất một video:
+#   `HTTP Error 500: Internal Server Error` — không khớp "internal error" vì có chữ "Server" chen
+#       giữa. Khớp chuỗi con thì phải liệt kê ĐÚNG dạng nhà cung cấp thật sự trả về.
+#   `AiError: Unknown internal error` (Cloudflare) — khớp, nhưng ném từ shim CF nên đi đường khác.
+# Bài học: danh sách chuỗi con luôn thiếu; bổ sung theo lỗi ĐO ĐƯỢC, đừng ngồi đoán thêm.
 _TAM_THOI_NCC = ("504", "deadline", "unavailable", "inactiverpc", "timed out", "timeout",
-                 "internal error", "500 an internal", "502", "503", "connection reset",
-                 "socket closed", "goaway", "temporarily")
+                 "internal error", "internal server error", "500 an internal",
+                 "http error 500", "http 500", "502", "503", "connection reset",
+                 "socket closed", "goaway", "temporarily", "aierror", "bad gateway",
+                 "service unavailable", "overloaded", "try again")
 
 
 def _tam_nghi(lan: int) -> None:

@@ -661,8 +661,14 @@ def t_nghen_nha_cung_cap_phai_thu_lai():
     import re
     CB = _doc("content_brain.py")
     import content_brain as C
+    # Mỗi ca dưới đây là một lỗi ĐO ĐƯỢC trên phiên thật, không phải giả định. Thêm ca mới vào
+    # đây mỗi lần thấy một loại nghẽn lọt lưới — danh sách chuỗi con luôn thiếu, chỉ có log mới
+    # nói được nhà cung cấp thực sự trả về chữ gì.
     tam = ["504 Deadline Exceeded", "_InactiveRpcError of RPC", "503 Service Unavailable",
-           "request timed out", "connection reset by peer"]
+           "request timed out", "connection reset by peer",
+           "HTTP Error 500: Internal Server Error",          # phiên 00:01 26/8
+           'cloudflare HTTP 500: {"errors":[{"message":"AiError: Unknown internal error"}]}',
+           "502 Bad Gateway", "model is overloaded"]
     ben = ["429 quota exceeded", "404 model not found", "invalid api key",
            "permission denied", "resource_exhausted"]
     xau = [f"coi '{t}' là bền (phải thử lại)" for t in tam if not C._loi_tam_thoi(t)]

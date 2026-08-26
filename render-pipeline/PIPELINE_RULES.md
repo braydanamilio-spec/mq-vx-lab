@@ -3072,3 +3072,13 @@ lane qua biến môi trường. **1.260 lượt còn 70.** 199 key nén còn 1KB
    nhau: đếm chính con số mà bản vá lẽ ra phải tạo ra.
 3. **Đo rồi phải DÙNG số đo để phanh**, không chỉ ghi sổ.
 - Chốt `t_ho_key_A_doc_mot_lan_o_plan` · `t_so_ngan_sach_khong_gay_ao_giac`.
+
+### 26/8 phiên 00:01 — key hồi, sản lượng hồi; hai loại nghẽn còn lọt lưới
+Số đo: **10 lane · 40 video · 0 lỗi** (bốn phiên trước: 1-10 video TOÀN phiên, 130 lỗi).
+Còn đúng 2 Traceback, cả hai là nghẽn nhà cung cấp lọt qua `_loi_tam_thoi`:
+- `HTTP Error 500: Internal Server Error` — danh sách chỉ có `"internal error"`, mà chuỗi thật có
+  chữ **Server** chen giữa nên không khớp.
+- `AiError: Unknown internal error` (Cloudflare) — ném từ shim CF.
+- **Luật**: danh sách chuỗi con LUÔN thiếu. Bổ sung theo lỗi ĐO ĐƯỢC trên phiên thật, đừng ngồi
+  đoán thêm; và mỗi ca mới phải được thêm vào chốt `t_nghen_nha_cung_cap_phai_thu_lai` kèm ngày
+  phiên gặp, để lần sau biết ca đó từ đâu ra.
