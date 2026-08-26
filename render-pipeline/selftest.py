@@ -2003,6 +2003,7 @@ def main():
     check("radar: ứng viên rỗng KHÔNG được lọt cửa nhu cầu", t_radar_khong_lot_rong)
     check("QC thị giác phải soi KHUNG HOOK, chấm riêng", t_qc_hook_rieng)
     check("sổ ngân sách tách theo project, đúng đơn vị với ngưỡng", t_ngan_sach_theo_project)
+    check("tự-seed KHÔNG hồi sinh kênh đã nghỉ", t_tu_seed_khong_hoi_sinh)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4379,6 +4380,32 @@ def t_ngan_sach_theo_project():
     nap = src[src.index("def nap_nen_ngan_sach"): src.index("def nap_nen_ngan_sach") + 3000]
     assert "_rr > 0 or _ww > 0" in nap, "không ưu tiên số riêng project"
     assert nap.count("ngan_sach_doc(") == 2, "thiếu đường lùi về sổ gộp khi chưa có số riêng"
+
+
+
+
+def t_tu_seed_khong_hoi_sinh():
+    """Tự-seed không được dựng lại kênh đã nghỉ.
+
+    27/8 — dọn 55 kênh thế hệ 1 tới BỐN lần vẫn thấy chúng quay lại. Gốc: `run_render` mỗi phiên tự
+    so `wave8_channels.json` với `render_channels`, thiếu thì GHI LẠI. File đó chứa 15 kênh thế hệ
+    1, nên dọn xong là phiên sau hồi sinh 15 cái. Đo thật đêm đó: 5 lane chạy BALDBANDIT/UNDERUSA/
+    MADEUSA/FAKEUSA/FIRSTUSA — toàn kênh đã xoá — trong khi 50 kênh mới nằm chờ.
+
+    Dọn bao nhiêu lần cũng vô nghĩa nếu có thứ tự dựng lại. Không xoá file cấu hình (quy tắc: dọn
+    chỉ đụng video); chặn ở chỗ hồi sinh."""
+    src = _doc("run_render.py")
+    i = src.index("TỰ-SEED WAVE 8")
+    than = src[i:i + 2600]
+    assert "kenh_the_he_1.json" in than, "tự-seed không đọc bản chụp kênh đã nghỉ"
+    assert "_nghi" in than and "not in _nghi" in than, "tự-seed vẫn hồi sinh kênh đã nghỉ"
+    # đo thật trên dữ liệu hiện có
+    import json as _j, os as _o
+    g = _o.path.dirname(_o.path.abspath(__file__))
+    w = _j.load(open(_o.path.join(g, "wave8_channels.json")))
+    nghi = {str(t).upper() for t in _j.load(open(_o.path.join(g, "kenh_the_he_1.json")))["ten"]}
+    con = [k for k in w if str(k).upper() not in nghi]
+    assert len(con) < len(w), "bản chụp kênh nghỉ không khớp tên nào trong wave8 -> chốt vô tác dụng"
 
 
 if __name__ == "__main__":

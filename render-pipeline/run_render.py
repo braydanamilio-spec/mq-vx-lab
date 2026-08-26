@@ -2018,7 +2018,26 @@ def plan_mode():
         _w8p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wave8_channels.json")
         if os.path.exists(_w8p):
             _have = {c.get("name") for c in all_ch}
-            _miss = {k: v for k, v in _j.load(open(_w8p)).items() if k not in _have}
+            # 27/8 — KHÔNG HỒI SINH KÊNH ĐÃ NGHỈ. Tự-seed sinh ra để cứu lượt seed hỏng vì cạn
+            # quota, nhưng nó so với `wave8_channels.json` một cách mù quáng: 55 kênh thế hệ 1 vừa
+            # được dọn xong thì phiên sau nó ghi lại 15 cái. Đo thật đêm nay: 5 lane chạy
+            # BALDBANDIT / UNDERUSA / MADEUSA / FAKEUSA / FIRSTUSA — toàn kênh đã xoá — trong khi
+            # 50 kênh mới nằm chờ. Dọn bao nhiêu lần cũng vô nghĩa nếu có thứ tự dựng lại.
+            # Không xoá `wave8_channels.json` (quy tắc: dọn chỉ đụng video, không đụng cấu hình);
+            # chỉ chặn hồi sinh những tên nằm trong bản chụp kênh THẾ HỆ 1.
+            _nghi = set()
+            try:
+                _snap = _j.load(open(os.path.join(os.path.dirname(_w8p), "kenh_the_he_1.json")))
+                _nghi = {str(t).upper() for t in (_snap.get("ten") or [])}
+            except Exception:
+                pass
+            _miss = {k: v for k, v in _j.load(open(_w8p)).items()
+                     if k not in _have and str(k).upper() not in _nghi}
+            if _nghi:
+                _bo = [k for k in _j.load(open(_w8p)) if str(k).upper() in _nghi]
+                if _bo:
+                    print(f"   🪦 Tự-seed BỎ QUA {len(_bo)} kênh đã nghỉ (thế hệ 1): {', '.join(sorted(_bo)[:6])}"
+                          + ("…" if len(_bo) > 6 else ""))
             if _miss:
                 _db = FB._db_meta()
                 for _nm, _cfg in _miss.items():

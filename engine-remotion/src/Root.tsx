@@ -23,7 +23,8 @@ import { LongshotShort, calcLongshot } from "./LongshotShort";  // kênh #10 LON
 import { BrandLongshot } from "./BrandLongshot";
 import { BrandScaled } from "./BrandScaled";             // brand kênh #4 SCALED
 import { ThenNowShort, calcThenNow } from "./ThenNowShort";
-import { Gen2Long, calcGen2Long } from "./Gen2Long";   // LONG 16:9 ghép chương cho 5 dạng gen-2 // kênh #5 THEN×NOW (xưa/nay)
+import { Gen2Long, calcGen2Long } from "./Gen2Long";
+import { BrandV3 } from "./BrandV3";   // bộ nhận diện v3: nền phản chiếu đúng dạng kênh   // LONG 16:9 ghép chương cho 5 dạng gen-2 // kênh #5 THEN×NOW (xưa/nay)
 import { BrandThenNow } from "./BrandThenNow";           // brand kênh #5 THEN×NOW
 import { BrandDoc } from "./BrandDoc";                   // brand PARAMETRIC Wave 2 (Cosmos/Deep/Why/Empire/Unsolved)
 import { BrandBroke } from "./BrandBroke";
@@ -125,6 +126,16 @@ export const RemotionRoot: React.FC = () => (
     {/* 26/8 — LONG KHỔ NGANG. Trước đây "long" của gen-2 là bản nối các short DỌC (đo thật:
         1080×1920, 1'44") nên YouTube xếp vào Shorts ⇒ bộ 1 long + 3 short thực chất là 4 short.
         Composition này là long thật: 1920×1080, ghép nhiều chương, mỗi chương giữ tiếng nói riêng. */}
+    {/* 26/8 — BỘ NHẬN DIỆN V3. Bản V2 để 90% khung banner trống, dùng CHUNG một khuôn cho 50 kênh,
+        và avatar là chữ hai dòng — mà YouTube cắt avatar TRÒN, hiển thị 48px trên điện thoại.
+        Kích thước theo chuẩn YouTube: banner 2560×1440 (an toàn 1546×423), avatar 800×800 (cắt
+        tròn), watermark 150×150 nền trong. */}
+    <Composition id="BrandV3Banner" component={BrandV3} durationInFrames={1} fps={30}
+                 width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="BrandV3Avatar" component={BrandV3} durationInFrames={1} fps={30}
+                 width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="BrandV3Watermark" component={BrandV3} durationInFrames={1} fps={30}
+                 width={150} height={150} defaultProps={{ kind: "watermark" }} />
     <Composition id="Gen2Long" component={Gen2Long} durationInFrames={600} fps={30}
                  width={1920} height={1080} calculateMetadata={calcGen2Long}
                  defaultProps={{ chuong: [] }} />
