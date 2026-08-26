@@ -8,6 +8,7 @@ Ba lớp dọn, tách riêng để làm từng bước và dừng được giữ
     --tat        tắt 55 kênh cũ (paused=True). ĐẢO NGƯỢC ĐƯỢC, làm trước tiên.
     --kho        chuyển video + thumbnail + sidecar của kênh cũ vào THÙNG RÁC Drive (giữ 30 ngày)
     --ban-ghi    xoá bản ghi Firestore của kênh cũ (render_channels + hàng chờ)
+    --job        xoá job của kênh cũ trong render_jobs (thứ dashboard hiện ở "Kho tổng video")
 
 Vì sao thùng rác chứ không xoá thẳng: dọn nhầm một điều kiện lọc là mất hàng nghìn video không
 có đường lùi. Thùng rác cho 30 ngày để phát hiện. Việc đổ thùng rác để người chủ tự bấm.
@@ -138,8 +139,12 @@ def main() -> int:
     print(f"  kênh THẾ HỆ 1 (sẽ dọn)          : {len(cu)}")
     print(f"  kênh THẾ HỆ 2 (giữ)             : {len(m2)}")
     print(f"  đang bật trong nhóm cũ          : {sum(1 for c in cu if not c.get('paused'))}")
-    if not (lam_tat or lam_kho or lam_bg):
-        print("\n  (chỉ đếm. Thêm --tat / --kho / --ban-ghi và --that để làm thật)")
+    # 26/8 — CỔNG NÀY PHẢI BIẾT MỌI CỜ. Thêm `--job` mà quên cập nhật cổng: workflow chạy đúng
+    # `--job`, log không có lỗi nào, mà khối dọn job không bao giờ chạy tới — hàm thoát ở đây rồi.
+    # Đúng dạng "thêm nhánh mới nhưng cổng cũ không biết đến nó", cùng họ với `tham_so.xoay` khai
+    # ra mà không ai đọc. Chốt: t_cong_biet_moi_co.
+    if not (lam_tat or lam_kho or lam_bg or lam_job):
+        print("\n  (chỉ đếm. Thêm --tat / --kho / --ban-ghi / --job và --that để làm thật)")
         return 0
 
     if lam_tat:

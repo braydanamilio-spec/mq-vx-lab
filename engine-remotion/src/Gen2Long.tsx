@@ -5,6 +5,8 @@ import { ScaledShort, calcScaled } from "./ScaledShort";
 import { MappedShort, calcMapped } from "./MappedShort";
 import { LongshotShort, calcLongshot } from "./LongshotShort";
 import { ThenNowShort, calcThenNow } from "./ThenNowShort";
+import { BarChartRace, calcRace } from "./BarChartRace";
+import { Cinematic, calcCinematic } from "./Cinematic";
 import { phong } from "./Phong";
 
 // LONG KHỔ NGANG CHO 5 DẠNG GEN-2 (26/8/2026)
@@ -36,6 +38,11 @@ const BO: Record<string, { comp: React.FC<any>; calc: (a: any) => { durationInFr
   mapped:   { comp: MappedShort as any,    calc: calcMapped },
   longshot: { comp: LongshotShort as any,  calc: calcLongshot },
   thennow:  { comp: ThenNowShort as any,   calc: calcThenNow },
+  // `race` và `cinematic` KHÔNG cần bố cục ngang mới: `BarChartRace` và `Cinematic` vốn đã được
+  // dùng ở CẢ hai khổ trong Root.tsx (`Race` 1920×1080 và `RaceShort` 1080×1920 cùng một
+  // component), tức chúng tự co theo khung từ trước. Ở đây chỉ là đấu dây.
+  race:      { comp: BarChartRace as any,  calc: calcRace },
+  cinematic: { comp: Cinematic as any,     calc: calcCinematic },
 };
 
 const daiChuong = (c: ChuongLong): number => {

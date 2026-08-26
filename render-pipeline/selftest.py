@@ -831,7 +831,11 @@ def t_mo_dau_phai_xac_minh_bang_khung_that():
             continue
         thay = False
         for j in range(i, max(0, i - 60), -1):
-            if "xac_minh_mo_dau(" in dong[j]:
+            # 26/8 — chấp nhận CẢ lời gọi gián tiếp. `chay_phim` đã tách phần dựng props sang
+            # `dung_props_phim`, và chính chỗ đó xác minh mở đầu; neo cứng vào một tên hàm thì
+            # refactor nào cũng làm chốt đỏ oan, mà đỏ oan lâu ngày là người ta tắt chốt đi.
+            # Bù lại phải chứng minh hàm gián tiếp ĐÚNG LÀ có xác minh — kiểm ngay dưới đây.
+            if "xac_minh_mo_dau(" in dong[j] or "dung_props_phim(" in dong[j]:
                 thay = True
                 break
             if dong[j].startswith("def "):
@@ -840,6 +844,12 @@ def t_mo_dau_phai_xac_minh_bang_khung_that():
                 break
         if not thay:
             xau.append(f"dòng {i+1}: render Cinematic mà không xác minh mở đầu bằng khung thật")
+    # đường gián tiếp chỉ được chấp nhận nếu nó THẬT SỰ xác minh
+    import re as _re2
+    _m = _re2.search(r"def dung_props_phim\(.*?(?=\ndef )", src, _re2.S)
+    if _m:
+        assert "xac_minh_mo_dau(" in _m.group(0), \
+            "dung_props_phim không xác minh mở đầu -> đường gián tiếp thành lỗ hổng"
     assert not xau, "mở đầu chưa chốt bằng khung thật:\n   " + "\n   ".join(xau)
 
 
@@ -1346,7 +1356,7 @@ def t_phong_phai_chay_het_duong_toi_luc_render():
     # 26/8 — `chay_chung` đã tách phần dựng props sang `dung_props` (long 16:9 cần props của nhiều
     # chương hơn số short). Chốt phải đi theo mã, không neo vào tên hàm cũ: neo sai thì hoặc đỏ oan
     # như lần này, hoặc tệ hơn — xanh trong khi đường dẫn thật đã đứt.
-    for f in ("dung_props", "chay_race", "chay_phim"):
+    for f in ("dung_props", "dung_props_race", "dung_props_phim"):
         m = _re.search(r"def " + f + r"\(.*?(?=\ndef )", th, _re.S)
         assert m, f"mất hàm {f}"
         if "font" not in m.group(0):
@@ -1647,8 +1657,12 @@ def t_gen2_phai_ra_bo_1long_3short():
     idoc = rr.find('elif fmt == "doc":')
     assert i2 > 0 and idoc > 0 and i2 < idoc, \
         "nhánh gen-2 phải đứng TRƯỚC nhánh doc, nếu không gen-2 rơi vào đường gọi Gemini"
-    j = rr.find("def _gen2_bo(")
-    than = rr[j: j + 3600]
+    # 26/8 — ĐỌC ĐÚNG THÂN HÀM, KHÔNG CẮT THEO SỐ KÝ TỰ. Bản cũ lấy `rr[j : j+3600]`; thêm vài
+    # dòng chú thích là `bo=f"S{i+1}"` rơi ra ngoài cửa sổ và chốt đỏ oan trong khi mã vẫn đúng.
+    # Chốt đỏ oan nguy hơn chốt thiếu: nó dạy người ta bỏ qua màu đỏ.
+    _mg = _re.search(r"def _gen2_bo\(.*?(?=\ndef )", rr, _re.S)
+    assert _mg, "mất hàm _gen2_bo"
+    than = _mg.group(0)
     assert "cha=ljob" in than and "thu_tu=i + 1" in than, \
         "short gen-2 không ghi cha/thu_tu -> khâu đăng đăng nhảy cóc, mất mạch kênh"
     assert 'bo=f"S{i + 1}"' in than and 'bo="L"' in than, \
@@ -1962,6 +1976,7 @@ def main():
     check("xoay trục phải ĐỔI tiêu đề, không thì kênh câm sau 1 video", t_xoay_truc_doi_tieu_de)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
+    check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
     check("MỌI chốt t_* đều được đăng ký chạy", t_moi_chot_deu_duoc_dang_ky)
     check("job ĐANG CHẠY có mặt trong D1 ngay lượt ghi đầu", t_job_dang_chay_len_d1_ngay)
     check("hai vòi rỉ lớn nhất đã có hãm (nhịp sống · top_titles)", t_hai_voi_ri_da_ham)
@@ -4111,6 +4126,28 @@ def t_do_dam_phong_co_that():
     assert r.returncode == 0, f"không chạy được kiểm phông: {r.stderr[-200:]}"
     xau = _j.loads(r.stdout.strip().splitlines()[-1])
     assert not xau, f"xin độ đậm phông KHÔNG CÓ -> sẽ nạp phông trần: {xau}"
+
+
+
+
+def t_cong_biet_moi_co():
+    """Thêm một cờ CLI mới thì CỔNG "chỉ đếm" phải biết nó.
+
+    26/8 — thêm `--job` cho `don_the_he_1.py`, workflow truyền đúng cờ, log sạch trơn, mà khối dọn
+    job KHÔNG BAO GIỜ chạy: cổng `if not (lam_tat or lam_kho or lam_bg): return 0` đứng trước nó và
+    không biết cờ mới. Không có gì đỏ để thấy — chỉ có việc không xảy ra.
+
+    Chốt bằng cách so HAI TẬP: mọi biến `lam_*` đọc từ `sys.argv`, và mọi biến xuất hiện trong biểu
+    thức cổng. Thiếu cái nào là đỏ."""
+    import re as _re
+    src = _doc("don_the_he_1.py")
+    co = set(_re.findall(r"(lam_\w+)\s*=\s*\"--[\w-]+\" in sys\.argv", src))
+    assert len(co) >= 4, f"không dò ra cờ CLI ({co})"
+    m = _re.search(r"if not \(([^)]+)\):", src)
+    assert m, "không tìm thấy cổng chỉ-đếm"
+    trong_cong = set(_re.findall(r"lam_\w+", m.group(1)))
+    thieu = co - trong_cong
+    assert not thieu, f"cờ có mà cổng không biết -> nhánh không bao giờ chạy: {sorted(thieu)}"
 
 
 if __name__ == "__main__":

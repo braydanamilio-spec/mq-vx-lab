@@ -794,7 +794,7 @@ def _trash_old(account_name, file_id):
 
 
 def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
-    """THẾ HỆ 2 — dựng MỘT BỘ: 1 long + n short, short là các chương của chính long đó.
+    """THẾ HỆ 2 — dựng MỘT BỘ: 1 long 16:9 + n short 9:16, mỗi short gộp 2-3 chương của long.
 
     26/8 — luật anh nêu nhiều lần: tỉ lệ 1 long : 3 short · 3 short CẮT TỪ LONG · đánh số để khâu
     đăng đăng từ nhỏ tới lớn · short luôn đi kèm long, không nhảy cóc.
@@ -811,7 +811,11 @@ def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
     lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
     lst("writing", "Đọc dữ liệu mở — dựng bộ 1 long + %d short" % n_shorts)
     try:
-        kq = TH2.chay_bo(k2, avoid=_avoid_for(channel), so_short=max(1, n_shorts))
+        # 26/8 — `so_chuong` gấp đôi `so_short`: long ghép đủ 6 chương (≈3'20" khổ 16:9), còn mỗi
+        # short GỘP 2 chương thành một clip riêng. `keys` bắt buộc phải truyền — dạng `cinematic`
+        # (10 kênh) vẽ ảnh bằng AI, thiếu key là bỏ lượt im lặng.
+        kq = TH2.chay_bo(k2, avoid=_avoid_for(channel), so_short=max(1, n_shorts),
+                         so_chuong=max(2, n_shorts * 2), keys=keys)
     except (Exception, SystemExit) as e:
         print_exc_gon()
         lst("failed", f"bộ gen-2 lỗi: {str(e)[:110]}")
