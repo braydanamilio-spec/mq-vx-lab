@@ -3187,3 +3187,13 @@ Vá: không bao giờ đệm kết quả rỗng (và xoá đệm cũ nếu gặp
 **Luật**: rỗng là một KẾT QUẢ ĐÁNG NGỜ, không phải một sự thật. Không đệm nó, không im lặng với nó.
 Cùng họ với ba lỗi "hỏng trong im lặng" tối nay — nhưng lỗi này đắt hơn vì nó làm người dùng
 hoảng, không chỉ làm em chẩn đoán sai.
+
+**Cùng cái bẫy đó nằm sẵn trong dây chuyền (quét 26/8, vá luôn):**
+- `firestore_bridge.py` — đọc **hồ key A** ra rỗng (project cạn) thì nhớ luôn cái rỗng ⇒ khoá
+  đường hợp nhất key cho **cả tiến trình**, đúng lúc đang thiếu key nhất.
+- `firestore_bridge.py` — `top_titles` cất danh sách rỗng vào D1 **6 tiếng** ⇒ kênh vừa đăng
+  video xong vẫn bị coi như chưa có gì suốt 6 tiếng, chặn trùng ý mất hiệu lực.
+
+Ba chỗ khác trong cùng danh sách quét là **báo động giả**: gán `None` để đánh dấu "plan không
+gửi", và gán từng phần tử cấu hình — không phải đệm kết quả truy vấn. Không vá.
+Chốt bằng `t_khong_dem_ket_qua_rong` (đã thử phá: bỏ `if out` là selftest đỏ ngay).

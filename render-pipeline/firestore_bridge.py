@@ -371,7 +371,10 @@ def top_titles(owner: str, channel: str, n: int = 8) -> list[str]:
         _HOT_CACHE[("tt", owner, channel, n)] = out
         try:
             import hot_db as _H2
-            _H2.nho_ghi(_kn, out)          # 17 luồng kia dùng lại, 0 lượt đọc project C
+            # Chỉ cất khi CÓ dữ liệu. Cất một danh sách rỗng vào bộ nhớ chung 6 TIẾNG nghĩa là:
+            # kênh vừa đăng video xong vẫn bị coi như chưa có gì suốt 6 tiếng sau đó.
+            if out:
+                _H2.nho_ghi(_kn, out)      # 17 luồng kia dùng lại, 0 lượt đọc project C
         except Exception:
             pass
         return out
@@ -970,10 +973,16 @@ def _merge_a_keys(owner: str, rows: list[dict]) -> list[dict]:
                                 "last_checked": x.get("last_checked", ""), "alive": x.get("alive"),
                                 "last_used": x.get("last_used", ""), "cooling_until": x.get("cooling_until", ""),
                                 "dead_since": x.get("dead_since", ""), "req_today": 0})
-            _A_KEYS["rows"] = out
+            # 26/8 — RỖNG THÌ ĐỪNG NHỚ. Cùng nguyên tắc vừa làm dashboard trắng trơn: đọc ra 0
+            # dòng gần như luôn là dấu hiệu lỗi (project cạn, mạng hỏng), không phải "A không có
+            # key nào". Nhớ cái rỗng đó là khoá luôn đường hợp nhất key cho cả tiến trình.
+            if out:
+                _A_KEYS["rows"] = out
+            else:
+                print("   ⚠️ đọc hồ key A ra RỖNG — không nhớ kết quả này, lượt sau thử lại")
             try:
                 import hot_db as _H2
-                if _H2.keys_ghi(owner, out):
+                if out and _H2.keys_ghi(owner, out):
                     print(f"   🔑 Đã chụp hồ key ({len(out)} key) vào D1 — 17 luồng kia khỏi đọc A.")
             except Exception:
                 pass

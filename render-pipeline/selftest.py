@@ -1023,6 +1023,36 @@ def t_env_tro_file_thi_phai_tao_file():
     assert not xau, "khoá dịch vụ trỏ vào tệp không được tạo:\n   " + "\n   ".join(xau)
 
 
+
+def t_khong_dem_ket_qua_rong():
+    """Không được cất KẾT QUẢ RỖNG vào bộ nhớ dùng chung.
+
+    26/8 — lỗi này vừa làm anh tưởng mất sạch key API và kho Drive. Dashboard đọc Firestore ra 0
+    dòng (do project cạn hạn mức), cất `[]` vào localStorage 30 phút, rồi F5 bao nhiêu lần cũng
+    đọc lại đúng cái rỗng đó. Dữ liệu còn nguyên 199/199 key, nhưng màn hình trắng trơn.
+
+    Cùng cái bẫy nằm sẵn trong pipeline ở hai chỗ:
+      • `_A_KEYS["rows"] = out` — nhớ hồ key rỗng ⇒ khoá đường hợp nhất key cả tiến trình
+      • `nho_ghi(_kn, out)` của top_titles — cất rỗng vào D1 **6 tiếng** ⇒ kênh vừa đăng video
+        vẫn bị coi như chưa có gì suốt 6 tiếng
+
+    Nguyên tắc: **rỗng là một kết quả ĐÁNG NGỜ, không phải một sự thật.** Nguồn hỏng, quota cạn,
+    mạng rớt đều ra rỗng. Cất nó lại là nhân bản lỗi ra suốt thời gian sống của bộ đệm."""
+    src = _doc("firestore_bridge.py")
+    d = src.splitlines()
+    xau = []
+    for i, l in enumerate(d, 1):
+        t = l.strip()
+        if t.startswith("#"):
+            continue
+        for mau in ('_A_KEYS["rows"] = out', "_H2.nho_ghi(_kn, out)"):
+            if t.startswith(mau):
+                gan = " ".join(d[max(0, i - 5):i - 1])
+                if "if out" not in gan:
+                    xau.append(f"dòng {i}: `{t[:52]}` không kiểm rỗng trước khi cất")
+    assert not xau, "cất kết quả rỗng vào bộ đệm:\n   " + "\n   ".join(xau)
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -1130,6 +1160,7 @@ def main():
     check("CF chặn prompt vẫn còn đường Gemini", t_cf_chan_prompt_van_con_duong_gemini)
     check("vẽ ảnh hỏng phải nói lý do, không im lặng", t_ve_anh_khong_hong_im_lang)
     check("đường ghi D1 hỏng phải nói, không im lặng", t_duong_ghi_d1_khong_hong_im_lang)
+    check("không đệm kết quả RỖNG (bẫy làm dashboard trắng)", t_khong_dem_ket_qua_rong)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:
