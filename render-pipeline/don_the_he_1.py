@@ -61,7 +61,7 @@ def _duoi(ten: str) -> str:
 CAM_DUNG = ("_KICHBAN", "_BACKUP", "_SCRIPT", "brand", "config")
 
 
-def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6) -> list:
+def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6, ten_kho: str = "?") -> list:
     """Đi HẾT cây thư mục, trả về MỌI tệp (không lọc theo loại).
 
     26/8 — BẢN ĐẦU DÙNG `dr._list_videos(goc)` VÀ SẼ DỌN ĐÚNG SỐ KHÔNG. Hai lý do, đo trên kho
@@ -81,7 +81,10 @@ def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6) -> list:
             fields="nextPageToken, files(id,name,mimeType)",
             pageSize=200).execute()
     except Exception as e:
-        print(f"      ⚠️ không đọc được thư mục {goc[:12]}…: {str(e)[:50]}")
+        # 26/8 — nêu TÊN KHO, không chỉ id. Log cũ in `thư mục undefined…: invalid_grant` mà
+        # không nói kho nào ⇒ không biết đi sửa cái gì. Một cảnh báo không chỉ ra được thủ phạm
+        # thì cũng gần như không có cảnh báo.
+        print(f"      ⚠️ kho '{ten_kho}': không đọc được thư mục {str(goc)[:12]}… — {str(e)[:60]}")
         return ra
     tiep = muc.get("nextPageToken")
     ds = list(muc.get("files", []))
@@ -102,7 +105,7 @@ def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6) -> list:
                 print(f"      🛡️ bỏ qua thư mục cấm đụng: {ten_tm}")
                 continue
             if sau < tran:
-                ra += _di_het_kho(dr, f["id"], sau + 1, tran)
+                ra += _di_het_kho(dr, f["id"], sau + 1, tran, ten_kho)
         else:
             ra.append(f)
     return ra
@@ -181,7 +184,7 @@ def main() -> int:
             goc = acc.get("root_id") or acc.get("root")
             if not goc:
                 continue
-            for f in _di_het_kho(dr, goc):
+            for f in _di_het_kho(dr, goc, ten_kho=str(acc.get('name') or '?')):
                 ten = str(f.get("name") or "")
                 # CHỈ đụng tệp có tên kênh cũ ở đầu — không quét mù cả kho
                 if not any(ten.upper().startswith(t) for t in ten_cu):
