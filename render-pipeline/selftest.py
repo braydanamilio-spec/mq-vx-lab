@@ -4985,49 +4985,42 @@ def t_key_ve_anh_chet_phai_doi_key():
 
 
 def t_18_lane_khong_don_mot_key_anh():
-    """18 LANE PHẢI VÀO HỒ KEY Ở 18 ĐIỂM KHÁC NHAU.
+    """18 LANE PHẢI VÀO HỒ KEY ẢNH Ở 18 ĐIỂM KHÁC NHAU — đo qua ĐƯỜNG THẬT.
 
-    27/8 — anh hỏi thẳng: "18 luồng thì nên dùng 18 key khác nhau chứ, tránh gọi liên tục limit".
-    Đo thật thì đúng là đang KHÔNG như vậy — nhưng chỉ ở đường VẼ ẢNH:
-      • khâu VIẾT (`key_manager.key_order`) xoay theo `md5(tên kênh)` -> 18 lane vào 18 điểm ✔
-      • khâu VẼ ẢNH sắp thuần theo `(là-Gemini, số-lượt-đã-dùng)`. `_DUNG` là sổ đếm TRONG TIẾN
-        TRÌNH nên lúc lane khởi động thì RỖNG -> mọi key CF hoà nhau ở 0 -> `sort` ổn định giữ
-        nguyên thứ tự hồ -> **cả 18 lane cùng bốc key CF đầu tiên**. Mười tám yêu cầu đồng thời
-        nện đúng một key ngay giây đầu phiên -> chạm giới hạn theo phút -> 429 -> key bị đánh dấu
-        nghỉ, trong khi 86 key còn lại chưa được chạm tới lượt nào.
+    27/8 — anh hỏi "18 luồng thì nên dùng 18 key khác nhau chứ, tránh gọi liên tục limit".
+    Câu trả lời đo được: hệ ĐANG làm đúng thế. `set_ai_pool` xoay hồ theo `md5(tên kênh)` trước
+    khi `_ai_candidates` sắp, và `sort` của Python ổn định nên thứ tự đã xoay được giữ nguyên qua
+    các mục hoà điểm.
 
-    Đáng nói: chú thích trong mã KHẲNG ĐỊNH "băm tên kênh vẫn giữ để phá hoà" — nhưng phần băm đó
-    đã mất trong một lần sửa trước. Chú thích nói dối còn nguy hơn không có chú thích, vì nó khiến
-    người đọc bỏ qua đúng chỗ đang hỏng.
+    Chốt này ra đời từ một lần em kết luận SAI. Em nhìn `con.sort(key=(là-Gemini, _DUNG))`, thấy
+    `_DUNG` rỗng lúc lane khởi động, kết luận "18 lane cùng bốc key đầu", rồi mô phỏng bằng cách
+    GÁN THẲNG `_AI_POOL["keys"]` — bỏ qua đúng cái cửa mà thực tế luôn đi qua. Mô phỏng cho ra
+    "18 lane -> 1 key", và bằng chứng tự tay dựng lên thì thuyết phục hơn hẳn.
 
-    Chốt này đo HÀNH VI (bao nhiêu key khác nhau), không đo chữ trong mã — vì lần trước chính chữ
-    trong mã là thứ đánh lừa."""
-    import sys as _s, os as _o, importlib
+    Nên chốt phải đi qua `set_ai_pool` như đời thật. Nó vừa canh cơ chế xoay khỏi bị gỡ mất, vừa
+    là bản ghi để lần sau không ai (kể cả em) "sửa" lại một chỗ vốn không hỏng."""
+    import sys as _s, os as _o, io as _io, contextlib as _ct
     _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
     import datastory_ci as D
-    ho = ["cf:acc%d:tok" % i for i in range(87)] + ["AIza%02d" % i for i in range(60)]
+    keys = [{"id": "k%d" % i, "key": "cf:acc%d:tok" % i} for i in range(87)] + \
+           [{"id": "g%d" % i, "key": "AIza%02d" % i} for i in range(60)]
     lanes = ["COLDFILE", "GAMEGRAVEYARD", "YOURRIGHTSCASE", "STEAMTRUTH", "PAIDVSPLAYED",
              "WHATISINIT", "COSTTOGO", "SUEDFORTHIS", "GONETOOSOON", "AMERICALOOKEDUP",
              "ONESTUDY", "COURTKINGS", "COURTRECORD", "SPACEINVOICE", "THENANDNOW",
              "MISSINGPIECE", "CARRECALL", "RECALLPLATE"]
-    cu_argv = list(_s.argv)
     dau = []
-    try:
-        for L in lanes:
-            _s.argv = ["run_render.py", "--channel", L]
-            D._MOC_LANE = None                      # ép tính lại hạt giống như một tiến trình mới
-            D._DUNG.clear()
-            con = sorted(ho, key=lambda k: (0 if k.startswith("cf:") else 1,
-                                            D._DUNG.get(k, 0), D._hat_lane(k)))
-            dau.append(con[0])
-    finally:
-        _s.argv = cu_argv
-        D._MOC_LANE = None
+    for L in lanes:
+        D._DUNG.clear()
+        with _ct.redirect_stdout(_io.StringIO()):
+            D.set_ai_pool(keys, L)                 # ĐÚNG cửa thật — đây là chỗ bài kiểm cũ bỏ qua
+            k0 = D._ai_candidates("")[0]
+        dau.append(k0)
     rieng = len(set(dau))
-    assert rieng >= 15, (f"18 lane chỉ vào {rieng} key khác nhau (đòi >=15) — "
-                         f"key bị dồn: {max(dau, key=dau.count)!r} x{dau.count(max(dau, key=dau.count))}")
-    # Và phải là key CF (rẻ, riêng cho vẽ ảnh), không được đụng Gemini khi CF còn chỗ.
-    assert all(k.startswith("cf:") for k in dau), "có lane chạm Gemini trong khi CF còn nguyên hạn mức"
+    don = max(dau, key=dau.count)
+    assert rieng >= 15, (f"18 lane chỉ vào {rieng} điểm khác nhau (đòi >=15) — "
+                         f"dồn vào {don!r} x{dau.count(don)}")
+    assert all(str(k).startswith("cf:") for k in dau), \
+        "có lane chạm Gemini trong khi CF còn nguyên hạn mức (Gemini dùng chung với khâu viết)"
 
 
 if __name__ == "__main__":

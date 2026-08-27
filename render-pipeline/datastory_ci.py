@@ -136,48 +136,22 @@ def _ai_candidates(first=""):
     # Nên tiêu Gemini khi CF còn chỗ là vừa phí hồ free, vừa bóp cổ khâu viết.
     # Xếp theo (là-Gemini, số-lượt): quét sạch 87 key CF rồi mới chạm Gemini; trong mỗi nhóm vẫn
     # giữ nguyên luật ít-dùng-nhất-trước để không key nào bị đốt cạn.
-    # 27/8 — PHÁ HOÀ GIỮA 18 LANE. Chú thích ở `_DUNG` phía trên nói "băm tên kênh vẫn giữ, chỉ
-    # còn để phá hoà" — nhưng mã KHÔNG CÒN băm gì cả, phần đó đã mất trong một lần sửa trước.
+    # 27/8 — ĐÃ ĐỦ, ĐỪNG THÊM HẠT GIỐNG NÀO NỮA. (ghi lại vì em suýt làm hỏng chỗ này)
     #
-    # Đo thật (mô phỏng hồ 87 CF + 60 Gemini): lúc lane khởi động, `_DUNG` là sổ đếm TRONG TIẾN
-    # TRÌNH nên RỖNG -> mọi key CF hoà nhau ở 0 -> `sort` ổn định giữ nguyên thứ tự hồ ->
-    # **cả 18 lane cùng bốc `cf:acc0:tok`**. Mười tám yêu cầu đồng thời nện đúng một key ngay giây
-    # đầu phiên: chạm giới hạn theo phút, ăn 429, rồi key đó bị đánh dấu nghỉ — trong khi 86 key
-    # còn lại chưa được chạm tới lượt nào.
+    # Nhìn đoạn sort này rất dễ kết luận "18 lane khởi động cùng lúc, `_DUNG` rỗng nên mọi key CF
+    # hoà nhau ở 0, `sort` giữ nguyên thứ tự hồ => cả 18 lane cùng bốc key đầu". Em đã kết luận
+    # đúng như vậy, và còn "chứng minh" bằng một mô phỏng gán thẳng `_AI_POOL["keys"]`.
+    # Mô phỏng đó SAI vì nó bỏ qua đúng cái cửa mà thực tế luôn đi qua: `set_ai_pool` ĐÃ xoay hồ
+    # theo `md5(tên kênh)` trước khi tới đây. Đo lại bằng đường thật: **18/18 lane vào 18 điểm
+    # khác nhau**. `sort` của Python ổn định, nên thứ tự đã xoay được giữ nguyên qua các mục hoà.
     #
-    # `_DUNG` chỉ chia đều được BÊN TRONG một lane; nó không thể biết 17 lane kia đang làm gì.
-    # Thứ chia đều GIỮA các lane phải là một hạt giống khác nhau theo lane — và nó có sẵn, không
-    # tốn một lượt gọi nào: tên kênh mà lane này đang dựng.
-    con.sort(key=lambda k: (0 if str(k).startswith("cf:") else 1, _DUNG.get(k, 0), _hat_lane(k)))
+    # Bài học đắt hơn cái lỗi: một phép đo bỏ qua một bước của đường thật sẽ tạo ra bằng chứng
+    # cho một lỗi không tồn tại — và bằng chứng tự tay dựng lên thì thuyết phục hơn hẳn.
+    # Trước khi vá bất cứ chỗ nào ở đây, hãy đo qua `set_ai_pool` chứ đừng gán hồ thẳng tay.
+    def _uu_tien(k: str):
+        return (0 if str(k).startswith("cf:") else 1, _DUNG.get(k, 0))
+    con.sort(key=_uu_tien)
     return out + con
-
-
-# Hạt giống RIÊNG TỪNG LANE, tính một lần cho cả tiến trình.
-# Ưu tiên tên kênh (ổn định, tái lập được — chạy lại cùng một kênh cho cùng thứ tự); không có thì
-# lùi về mã tiến trình, vẫn bảo đảm hai lane khác nhau vào hồ ở hai điểm khác nhau.
-def _moc_lane() -> str:
-    import os as _o
-    return (_o.environ.get("MM0_LANE") or _o.environ.get("PILOT_CHANNEL")
-            or " ".join(_sys_argv_kenh()) or str(_o.getpid()))
-
-
-def _sys_argv_kenh() -> list:
-    """Tên kênh lấy từ chính dòng lệnh `run_render.py --channel X` — không cần thêm biến môi
-    trường nào, và luôn có mặt vì mỗi lane chạy đúng một lệnh như thế."""
-    import sys as _s
-    a = list(_s.argv)
-    return [a[i + 1] for i, x in enumerate(a) if x == "--channel" and i + 1 < len(a)]
-
-
-_MOC_LANE = None
-
-
-def _hat_lane(k: str) -> str:
-    global _MOC_LANE
-    if _MOC_LANE is None:
-        _MOC_LANE = _moc_lane()
-    import hashlib as _h
-    return _h.md5((str(k) + "|" + _MOC_LANE).encode("utf-8")).hexdigest()
 
 
 def _is_quota_err(e) -> bool:
@@ -331,10 +305,8 @@ def _vision_order(cands):
     """VISION: Gemini (AIza) TRƯỚC — giám khảo đã kiểm chứng bằng ô mồi; CF (cf:) làm fallback khi
     Gemini cạn (neuron CF ưu tiên để VẼ ảnh). Groq (gsk_) không vision -> loại."""
     cs = [k for k in cands if k and not str(k).startswith("gsk_")]
-    # Cùng bệnh hoà-điểm như `_ai_candidates`: đầu phiên `_DUNG` rỗng nên 18 lane cùng chọn key
-    # đầu danh sách. Thêm hạt giống theo lane để mỗi lane vào một điểm khác.
-    gg = sorted([k for k in cs if not str(k).startswith("cf:")], key=lambda k: (_DUNG.get(k, 0), _hat_lane(k)))
-    cf = sorted([k for k in cs if str(k).startswith("cf:")], key=lambda k: (_DUNG.get(k, 0), _hat_lane(k)))
+    gg = sorted([k for k in cs if not str(k).startswith("cf:")], key=lambda k: _DUNG.get(k, 0))
+    cf = sorted([k for k in cs if str(k).startswith("cf:")], key=lambda k: _DUNG.get(k, 0))
     # ÍT DÙNG NHẤT lên đầu TRONG TỪNG NHÓM (thứ tự nhóm Gemini->CF giữ nguyên). Vision Gemini free
     # chỉ ~20 lượt/key/NGÀY: cứ nện đúng key đầu thì sau 20 ảnh là khâu soi ảnh tắt cả phiên.
     return gg + cf
