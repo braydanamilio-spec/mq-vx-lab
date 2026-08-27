@@ -197,26 +197,153 @@ def _bd_hop_dong(D, ky):
             "Every number is on USAspending dot gov.")
 
 
+def _so_tu_chuoi(s: str) -> float:
+    """Moi con so dau tien trong mot chuoi tu do ("approximately 12,480 cases" -> 12480).
+
+    Truong `product_quantity` cua openFDA la van ban nguoi viet tay, muon kieu gi cung co:
+    "1,234 cases", "approximately 500 lbs", "24 units/case; 120 cases". Lay so DAU TIEN va bo
+    dau phay — du de xep hang, va khong bao gio bia them thu gi khong co trong nguon."""
+    import re as _re
+    m = _re.search(r"[\d][\d,\.]*", str(s or ""))
+    if not m:
+        return 0.0
+    try:
+        return float(m.group(0).replace(",", "").rstrip("."))
+    except ValueError:
+        return 0.0
+
+
+def _gon_so(v: float) -> str:
+    if v >= 1_000_000:
+        return f"{v / 1_000_000:.1f}M".replace(".0M", "M")
+    if v >= 1_000:
+        return f"{v / 1_000:.1f}K".replace(".0K", "K")
+    return f"{int(v):,}"
+
+
 def _bd_thu_hoi(D, ky):
+    """Thu hoi FDA -> bang xep hang.
+
+    27/8 — XEM TAN MAT KHUNG HINH THAT (RECALL PLATE, frame 20/90/300) thi ba loi long ra, va
+    khong loi nao la chuyen tham my:
+      1. `stat` lay `classification` cua FDA ("Class I" -> "Cl.I"). Do la HANG PHAN LOAI, khong
+         phai dai luong. Ket qua: CA SAU MUC cung mot gia tri -> bang "xep hang" khong xep gi ca,
+         va so dan giua khung hook la chu "Cl.I" — nguoi xem khong hieu gi.
+      2. `Renaissance Food Group` xuat hien BA LAN trong sau muc. Mot cong ty bi thu hoi nhieu lot
+         thi nguon tra nhieu dong, nhung tren bang thi doc thanh "ba cong ty khac nhau trung ten".
+      3. Bac S/A/B/C gan THEO VI TRI trong danh sach, ma nguon sap "moi nhat truoc" -> bac dang ma
+         hoa DO GAN DAY chu khong phai do nang. Nguoi xem doc S la "dinh bang", hieu sai hoan toan.
+
+    Sua: dai luong that la `product_quantity` (so luong bi thu hoi) — von da co san trong nguon ma
+    khong ai dung. Gop cac lot cua cung mot cong ty, sap theo so luong giam dan, roi moi gan bac —
+    luc do S moi that su la "nhieu nhat".
+    Nguon khong du so luong thi KHONG bia: quay ve xep theo do nang cua FDA (Class I > II > III) va
+    ghi ro "Class I" bang chu, khong nguy trang thanh con so."""
     kho = ky.get("kho", "thuc_pham")
-    r = D.thu_hoi_fda(kho, 6, nam=int(ky.get("nam", 0)) or 0)
+    r = D.thu_hoi_fda(kho, 24, nam=int(ky.get("nam", 0)) or 0)   # lay rong hon vi con gop trung ten
     if len(r) < 3:
         return None
     nhan = {"thuc_pham": "Food", "thuoc": "Drug", "thiet_bi": "Device"}.get(kho, "Product")
-    return (f"{nhan} recalls you probably missed",
-            [{"name": _gon(x["cong_ty"]), "stat": (x["muc_do"] or "").replace("Class ", "Cl."),
-              "vo": f"{_gon(x['cong_ty'], 34)}. {x['ly_do'][:90]}"} for x in r],
-            "All of this is filed with the F D A.")
+
+    gop: dict = {}
+    for x in r:
+        ten = str(x.get("cong_ty") or "").strip()
+        if not ten:
+            continue
+        g = gop.setdefault(ten, {"cong_ty": ten, "sl": 0.0, "lot": 0, "ly_do": "", "muc_do": ""})
+        g["sl"] += _so_tu_chuoi(x.get("so_luong"))
+        g["lot"] += 1
+        if not g["ly_do"]:
+            g["ly_do"] = str(x.get("ly_do") or "")
+        if not g["muc_do"]:
+            g["muc_do"] = str(x.get("muc_do") or "")
+    ds = list(gop.values())
+    if len(ds) < 3:
+        return None
+
+    co_so = [g for g in ds if g["sl"] > 0]
+    if len(co_so) >= 3:
+        co_so.sort(key=lambda g: -g["sl"])
+        muc = [{"name": _gon(g["cong_ty"]), "stat": _gon_so(g["sl"]),
+                "vo": (f"{_gon(g['cong_ty'], 34)} pulled {_gon_so(g['sl'])}"
+                       + (f" across {g['lot']} separate recalls" if g["lot"] > 1 else "")
+                       + f". {g['ly_do'][:80]}")} for g in co_so[:6]]
+        don_vi = "units"
+    else:
+        nang = {"Class I": 0, "Class II": 1, "Class III": 2}
+        ds.sort(key=lambda g: (nang.get(g["muc_do"], 9), -g["lot"]))
+        muc = [{"name": _gon(g["cong_ty"]), "stat": g["muc_do"] or "Class ?",
+                "vo": (f"{_gon(g['cong_ty'], 34)}, {g['muc_do'] or 'a recall'}"
+                       + (f", {g['lot']} times" if g["lot"] > 1 else "")
+                       + f". {g['ly_do'][:80]}")} for g in ds[:6]]
+        don_vi = "severity"
+    return (f"{nhan} recalls you probably missed", muc,
+            "All of this is filed with the F D A.",
+            f"{nhan} recalls, ranked by how much got pulled off the shelf." if don_vi == "units"
+            else f"{nhan} recalls, ranked by how serious the F D A called them.")
+
+
+def _ten_toa(t: str) -> str:
+    """Ten toa rut gon ma VAN DUNG NGHIA.
+
+    27/8 — `_gon(toa, 30)` cat cung 30 ky tu nen tren khung hien "Court of Appeals for the" va
+    "Supreme Court of The Virgin": cat giua cum, nguoi xem doc khong ra toa nao. Ten toa My co
+    cau truc co dinh, phan PHAN BIET nam o duoi ("...for the Ninth Circuit"), nen cat dau la cat
+    dung thu can giu. Rut theo cau truc thay vi theo do dai."""
+    import re as _re
+    t = _re.sub(r"\s+", " ", str(t or "")).strip()
+    if not t:
+        return ""
+    m = _re.search(r"for the (\w+) Circuit", t, _re.I)
+    if m:
+        return f"{m.group(1).title()} Circuit"
+    m = _re.match(r"(?:Supreme Court|Court of Appeals?|District Court)\s+(?:of|for)\s+(?:the\s+)?(.+)", t, _re.I)
+    if m:
+        duoi = m.group(1).strip()
+        loai = "Supreme" if t.lower().startswith("supreme") else "Appeals"
+        return f"{duoi[:22]} {loai}" if len(duoi) <= 22 else f"{duoi[:22].rstrip()} {loai}"
+    m = _re.match(r"(.+?)\s+(?:Supreme Court|Court of Appeals?)", t, _re.I)
+    if m:
+        return m.group(1).strip()[:26]
+    return t[:26]
 
 
 def _bd_ban_an(D, ky):
-    r = D.ban_an(ky.get("tu_khoa", "consumer fraud"), 6)
-    if len(r) < 3:
+    """Vu kien -> bang xep hang theo TOA nao xu nhieu nhat.
+
+    27/8 — bai soi 19 bo du lieu: bang cu cho `stat` = NAM NOP DON, va vi nguon sap "moi nhat
+    truoc" nen ca sau muc deu ra "2026". Mot bang xep hang ma sau dong cung mot gia tri thi no
+    khong xep hang gi ca — nguoi xem nhin 30 giay va khong biet duoc gi.
+    Nguon CourtListener khong co truong nao la "do lon" cua mot vu kien. Nhung no co TOA. Lay
+    rong ra roi DEM SO VU THEO TOA thi ra mot dai luong that: toa nao nghe loai kien nay nhieu
+    nhat. Vua co so that, vua la mot cau chuyen dang xem hon danh sach ten vu roi rac."""
+    tk = ky.get("tu_khoa", "consumer fraud")
+    r = D.ban_an(tk, 120)               # rong hon: 60 dong trai deu ra 2-2-2-1-1-1, gan nhu phang
+    if len(r) < 12:
         return None
-    return (f"Sued over {ky.get('tu_khoa', 'this')}",
-            [{"name": _gon(x["ten_vu"], 30), "stat": str(x["ngay"])[:4],
-              "vo": f"{_gon(x['ten_vu'], 40)}, filed {str(x['ngay'])[:4]}."} for x in r],
-            "Court records are public. Look them up.")
+    dem: dict = {}
+    for x in r:
+        toa = _ten_toa(str(x.get("toa") or ""))
+        if not toa:
+            continue
+        g = dem.setdefault(toa, {"toa": toa, "n": 0, "vu": ""})
+        g["n"] += 1
+        if not g["vu"]:
+            g["vu"] = str(x.get("ten_vu") or "")
+    ds = sorted(dem.values(), key=lambda g: -g["n"])
+    # Doi PHAN BO THAT, khong chi doi "co so". 2-2-2-1-1-1 ve mat ky thuat la mot bang xep hang,
+    # nhung nhin tren man hinh thi sau cot cao bang nhau — nguoi xem khong thay thu hang nao ca.
+    # Dinh bang phai it nhat gap doi day bang, va phai co it nhat 3 muc khac gia tri.
+    if len(ds) < 4 or ds[0]["n"] < 3 or ds[0]["n"] < 2 * ds[min(5, len(ds) - 1)]["n"]:
+        print(f"   ⚠️ bản án '{tk}': không toà nào nổi trội (đỉnh {ds[0]['n'] if ds else 0}) — "
+              f"BỎ LƯỢT thay vì dựng bảng sáu cột bằng nhau")
+        return None
+    return (f"Where people sue over {tk}",
+            [{"name": g["toa"], "stat": f"{g['n']} cases",
+              "vo": f"{g['toa']}: {g['n']} of them. Such as {_gon(g['vu'], 40)}."}
+             for g in ds[:6]],
+            "Court records are public. Look them up.",
+            f"Courts that hear the most {tk} cases, counted from public dockets.")
 
 
 # Bài mang tính riêng tư / tò mò thầm kín — dùng để tách kênh WHAT THEY SEARCH khỏi bảng chung.
@@ -323,13 +450,36 @@ def _bd_the_gioi(D, ky):
 
 
 def _bd_ho_so_sec(D, ky):
-    r = D.tim_ho_so(ky.get("tu_khoa", "layoff"), n=6)
-    if len(r) < 3:
+    """Ho so SEC -> bang xep hang theo cong ty nao NHAC nhieu nhat.
+
+    27/8 — bang cu cho `stat` = MAU DON ("8-K"), tuc sau dong cung mot chu, va con mot cap ten
+    trung. `_gon(x, 26)` lai cat giua ngoac: "Western Union CO (WU) (CIK" — nhin nhu du lieu hong.
+    Dai luong that o day la SO LAN mot cong ty nhac cum tu do trong ho so cua chinh ho: cong ty
+    viet "layoff" trong nam ho so khac han cong ty viet mot lan."""
+    tk = ky.get("tu_khoa", "layoff")
+    r = D.tim_ho_so(tk, n=60)
+    if len(r) < 6:
         return None
-    return (f'Companies that wrote "{ky.get("tu_khoa", "")}" in their filings',
-            [{"name": _gon(x["cong_ty"], 26), "stat": x["mau_don"],
-              "vo": f"{_gon(x['cong_ty'], 32)}, in their {x['mau_don']}."} for x in r],
-            "They filed it themselves. It is public.")
+    import re as _re
+    dem: dict = {}
+    for x in r:
+        ten = str(x.get("cong_ty") or "")
+        ten = _re.sub(r"\s*\((?:CIK)?[^)]*\)?\s*$", "", ten).strip(" ,(")   # bo duoi "(WU) (CIK…"
+        if not ten:
+            continue
+        g = dem.setdefault(ten.upper(), {"ten": ten, "n": 0, "mau": set()})
+        g["n"] += 1
+        g["mau"].add(str(x.get("mau_don") or ""))
+    ds = sorted(dem.values(), key=lambda g: -g["n"])
+    if len(ds) < 3 or ds[0]["n"] < 2:
+        return None
+    return (f'Who keeps writing "{tk}" to the S E C',
+            [{"name": _gon(g["ten"], 26), "stat": f"{g['n']}x",
+              "vo": (f"{_gon(g['ten'], 32)} put it in writing {g['n']} times"
+                     + (f", across their {', '.join(sorted(m for m in g['mau'] if m))}" if g["mau"] else "")
+                     + ".")} for g in ds[:6]],
+            "They filed it themselves. It is public.",
+            f'Companies ranked by how many times they wrote "{tk}" in their own S E C filings.')
 
 
 def _bd_thien_thach(D, ky):
@@ -361,13 +511,48 @@ def _bd_thien_thach(D, ky):
 
 
 def _bd_giong_cho(D, ky):
-    r = D.giong_cho(6)
-    if len(r) < 3:
+    """Giong cho -> xep theo LUOT NGUOI TRA WIKIPEDIA 30 ngay qua.
+
+    27/8 — bang cu cho `stat` = so bien the cua giong, ma phan lon giong khong co bien the nao:
+    bon trong sau dong hien dau gach "—", hai dong con lai "1 types". Do khong phai bang xep hang,
+    do la mot danh sach ten cho.
+    Nguon Dog CEO khong co bat ky con so nao — nen phai lay dai luong tu cho khac. Luot doc
+    Wikipedia la thu do dung CAI MA NGUOI TA THAT SU QUAN TAM, mien phi, khong can key, va hop
+    voi kenh hon han: "giong cho duoc tra nhieu nhat thang nay" la mot video co ly do de xem,
+    con "danh sach sau giong cho" thi khong."""
+    import datetime as _dt
+    r = D.giong_cho(24)
+    if len(r) < 6:
         return None
-    return ("Dog breeds, one file each",
-            [{"name": x["giong"], "stat": f"{len(x['bien_the'])} types" if x["bien_the"] else "—",
-              "vo": f"{x['giong']}.", "img_url": x.get("anh")} for x in r],
-            "Which one is yours?")
+    den = _dt.date.today() - _dt.timedelta(days=2)      # Wikimedia tre ~1 ngay
+    tu = den - _dt.timedelta(days=30)
+    fmt = "%Y%m%d"
+    ds = []
+    for x in r:
+        ten = str(x.get("giong") or "").strip()
+        if not ten:
+            continue
+        for bai in (f"{ten} (dog)", ten):               # thu ban co ngoac truoc: it lech nghia hon
+            try:
+                lo = D.luot_doc_bai(bai, tu.strftime(fmt), den.strftime(fmt))
+            except Exception:
+                lo = []
+            tong = sum(int(d.get("luot_doc") or 0) for d in (lo or []))
+            if tong > 0:
+                ds.append({"giong": ten, "luot": tong, "anh": x.get("anh")})
+                break
+        if len(ds) >= 12:
+            break
+    ds.sort(key=lambda g: -g["luot"])
+    if len(ds) < 3:
+        print("   ⚠️ giống chó: không lấy được lượt đọc Wikipedia — BỎ LƯỢT (không bịa số)")
+        return None
+    return ("Dog breeds America looks up most",
+            [{"name": g["giong"], "stat": _gon_so(float(g["luot"])),
+              "vo": f"{g['giong']}: {_gon_so(float(g['luot']))} lookups in thirty days.",
+              "img_url": g.get("anh")} for g in ds[:6]],
+            "Every number is Wikipedia's own public traffic log.",
+            "Dog breeds ranked by how many people quietly looked them up this month.")
 
 
 def _bd_phim(D, ky):
@@ -510,7 +695,30 @@ def dung_story_ranked(kenh: dict, ky: dict | None = None) -> dict | None:
     # người xem hiểu ngược hẳn ý video.
     tieu_de, muc, ket = kq[0], kq[1], kq[2]
     mo = kq[3] if len(kq) > 3 else f"{tieu_de}. Here they are."
-    items = [{**m, "tier": TIER[min(i, 5)]} for i, m in enumerate(muc[:6])]
+    muc = muc[:6]
+    # ── CỔNG "BẢNG XẾP HẠNG PHẢI THẬT SỰ XẾP HẠNG" (27/8) ────────────────────────────────────
+    # Soi 19 bộ chuyển dữ liệu thì BỐN bộ cho ra bảng mà mọi dòng CÙNG MỘT GIÁ TRỊ:
+    #   thu_hoi   -> "Cl.I" ×6   (hạng phân loại FDA, không phải đại lượng)
+    #   ban_an    -> "2026" ×6   (năm nộp đơn)
+    #   ho_so_sec -> "8-K"  ×6   (mẫu đơn)
+    #   giong_cho -> "—"    ×4   (giống không có biến thể)
+    # Đây KHÔNG phải chuyện thẩm mỹ. Bảng xếp hạng mà sáu dòng bằng nhau thì người xem nhìn hết
+    # 40 giây và không biết thêm được gì — đúng cảm giác "nhàm chán, rẻ tiền" mà anh nói.
+    # Đã vá cả bốn, nhưng vá tay thì nguồn thứ 20 lại tái phạm. Chặn ngay tại cổng: bảng nào
+    # không mang ít nhất 3 giá trị khác nhau thì BỎ LƯỢT, không dựng. Thà kênh ra ít video hơn
+    # còn hơn ra video không nói gì.
+    _sts = [str(m.get("stat", "")).strip() for m in muc]
+    _kh = len({x for x in _sts if x})
+    if len(muc) >= 3 and _kh < min(3, len(muc)):
+        print(f"   🚫 {kenh.get('ten')}: bảng xếp hạng chỉ có {_kh} giá trị khác nhau trên "
+              f"{len(muc)} mục ({_sts[:3]}) — KHÔNG xếp hạng được gì. BỎ LƯỢT.")
+        return None
+    _so = sum(1 for x in _sts if any(c.isdigit() for c in x))
+    if len(muc) >= 3 and _so < len(muc) - 1:
+        print(f"   🚫 {kenh.get('ten')}: {len(muc) - _so}/{len(muc)} mục KHÔNG có con số nào "
+              f"({_sts[:3]}) — bảng không đo được gì. BỎ LƯỢT.")
+        return None
+    items = [{**m, "tier": TIER[min(i, 5)]} for i, m in enumerate(muc)]
     return _cong_an_toan({
         "title": tieu_de,
         "intro_vo": mo,
