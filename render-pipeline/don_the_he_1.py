@@ -155,6 +155,35 @@ def main() -> int:
         print(f"❌ không đọc được danh sách kênh (kể cả gương B2): {str(e)[:90]}")
         return 2
     moi = _kenh_moi()
+    # 27/8 — LỌC THEO KÊNH: dọn ĐÚNG cái hỏng, không nuke cả mẻ.
+    #
+    # Hôm nay dính đúng tình huống cần nó: bản vá "số hiện ra mất độ lớn" chỉ ảnh hưởng 3/50 kênh
+    # (AMERICA LOOKED UP mất chữ `K`; PENTAGON LEDGER và SPACE INVOICE in `2,540 $M` thay vì
+    # `$2,540M`). Không có bộ lọc thì lựa chọn duy nhất là `--gen2` = dọn video của CẢ 50 kênh —
+    # ném đi hàng chục video hoàn toàn tốt để sửa ba cái. Dọn thừa cũng là mất mát, chỉ là loại
+    # mất mát không ai ghi sổ.
+    _chi = {t.strip().upper().replace(" ", "") for t in
+            (os.environ.get("CHI_KENH") or "").replace(";", ",").split(",") if t.strip()}
+    if _chi and not gen2:
+        # 27/8 — CHẶN CỨNG. Ở nhánh KHÔNG gen2, `moi` là danh sách kênh được MIỄN dọn (dòng
+        # `... not in moi` ngay dưới). Lọc nó xuống 3 tên thì 47 kênh thế hệ 2 còn lại rơi vào diện
+        # "kênh cũ" và bị dọn sạch — đúng thảm hoạ mà bộ lọc này sinh ra để tránh. Cùng một biến,
+        # hai nhánh, hai nghĩa ngược nhau: ở gen2 nó là ĐÍCH NHẮM, ở đây nó là DANH SÁCH MIỄN.
+        print("🛑 TỪ CHỐI: `CHI_KENH` chỉ dùng được cùng `--gen2`.")
+        print("   Không có `--gen2` thì danh sách này mang nghĩa NGƯỢC LẠI (kênh được miễn dọn),")
+        print("   và lọc nó sẽ khiến 47 kênh thế hệ 2 còn lại bị dọn nhầm.")
+        return 2
+    if _chi:
+        _la = {str(t).upper().replace(" ", "") for t in moi}
+        _sai = _chi - _la
+        if _sai:
+            # Gõ sai tên mà im lặng bỏ qua thì lệnh chạy "thành công" và không dọn gì — người dùng
+            # tưởng đã dọn. Chặn thẳng, và in ra danh sách đúng để sửa được ngay.
+            print(f"🛑 TỪ CHỐI: không có kênh {sorted(_sai)} trong 50 kênh thế hệ 2.")
+            print(f"   Tên hợp lệ: {', '.join(sorted(_la))}")
+            return 2
+        moi = [t for t in moi if str(t).upper().replace(" ", "") in _chi]
+        print(f"🎯 CHỈ DỌN {len(moi)} kênh được chỉ định: {', '.join(sorted(moi))}")
     if gen2:
         # Đích nhắm = 50 kênh gen-2, lấy TỪ REPO chứ không từ Firestore: repo là nơi định nghĩa
         # kênh nào tồn tại, và nó đọc được cả khi Firestore cạn hạn mức.
