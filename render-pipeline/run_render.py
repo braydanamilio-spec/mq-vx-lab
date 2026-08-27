@@ -600,9 +600,29 @@ def run_one(ch, keys, n_shorts=3, report=None):
                     try:
                         import the_he_2 as _T2
                         _k2 = _T2.doc_kenh(channel or "")
-                        if _k2 and not (_k2.get("tham_so") or {}).get("xoay"):
-                            print(f"   🛰 {channel}: nguồn sống KHÔNG có trục xoay — bộ hỏng thì mọi "
-                                  f"lượt sau cũng ra cùng một thứ. Nhường slot, phiên sau dữ liệu mới.")
+                        # 27/8 — KÊNH GEN-2 KHÔNG BAO GIỜ ĐƯỢC RƠI XUỐNG ĐƯỜNG CŨ.
+                        #
+                        # Anh chỉ đúng chỗ: "kêu không làm kiểu footage free mà tự generate ảnh với
+                        # tạo chart animation, sao ARCHIVEREEL vẫn dạng cũ". Truy ra bằng mã, không
+                        # phải đoán: `dung_props_race`/`dung_props` của gen-2 KHÔNG hề trả `shots`
+                        # hay `bg` ảnh — chúng chỉ có dữ liệu + màu thương hiệu. Nên MỌI clip có ảnh
+                        # nền chụp sẵn đều KHÔNG do đường gen-2 làm; nó rơi xuống đây, và đường cũ
+                        # (`datastory_ci`) đi lấy ảnh Pexels/Wikimedia rồi ghép làm nền.
+                        #
+                        # Bản vá trước chỉ chặn kênh KHÔNG có trục xoay (1/50 kênh). 49 kênh còn lại
+                        # vẫn rơi xuống — nên cứ mỗi lần bộ gen-2 hỏng là ra một video sai hẳn phong
+                        # cách, mà nhìn dashboard thì vẫn là "video của kênh đó", không ai biết.
+                        #
+                        # Đổi luật: gen-2 hỏng thì NHƯỜNG SLOT, không đẻ bản thay thế. Ít video hơn
+                        # nhưng không có video sai nhận diện — và quan trọng hơn: lỗi gen-2 trở nên
+                        # NHÌN THẤY ĐƯỢC (kênh ra 0 video) thay vì bị đường cũ che đi.
+                        if _k2:
+                            _ly = ("nguồn sống KHÔNG có trục xoay — mọi lượt sau cũng ra cùng một thứ"
+                                   if not (_k2.get("tham_so") or {}).get("xoay")
+                                   else "bộ gen-2 không đạt")
+                            print(f"   🛰 {channel}: {_ly}. NHƯỜNG SLOT — kênh thế hệ 2 không dùng "
+                                  f"đường cũ (đường đó ghép ảnh chụp sẵn, sai hẳn phong cách "
+                                  f"'100% đồ hoạ tự sinh').")
                             return
                     except Exception:
                         pass
