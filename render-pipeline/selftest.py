@@ -2188,6 +2188,7 @@ def main():
     check("tiêu đề không lộ mã nội bộ (quét 50 kênh)", t_tieu_de_khong_lo_ma_noi_bo)
     check("tiêu đề dẫn bằng chủ thể, không phải khuôn + ngày", t_tieu_de_phai_noi_ve_noi_dung)
     check("key vẽ ảnh chết hẳn -> đổi key, không bỏ khung", t_key_ve_anh_chet_phai_doi_key)
+    check("18 lane vào 18 điểm khác nhau trong hồ key ảnh", t_18_lane_khong_don_mot_key_anh)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -4981,6 +4982,52 @@ def t_key_ve_anh_chet_phai_doi_key():
     sau = kho[j:]
     assert "continue" in sau, "nhận ra key chết nhưng không `continue` sang key kế -> vẫn bỏ khung ảnh"
     assert "if _chet:" in sau, "nhánh key chết bị vô hiệu -> key hỏng vẫn nằm đầu hồ"
+
+
+def t_18_lane_khong_don_mot_key_anh():
+    """18 LANE PHẢI VÀO HỒ KEY Ở 18 ĐIỂM KHÁC NHAU.
+
+    27/8 — anh hỏi thẳng: "18 luồng thì nên dùng 18 key khác nhau chứ, tránh gọi liên tục limit".
+    Đo thật thì đúng là đang KHÔNG như vậy — nhưng chỉ ở đường VẼ ẢNH:
+      • khâu VIẾT (`key_manager.key_order`) xoay theo `md5(tên kênh)` -> 18 lane vào 18 điểm ✔
+      • khâu VẼ ẢNH sắp thuần theo `(là-Gemini, số-lượt-đã-dùng)`. `_DUNG` là sổ đếm TRONG TIẾN
+        TRÌNH nên lúc lane khởi động thì RỖNG -> mọi key CF hoà nhau ở 0 -> `sort` ổn định giữ
+        nguyên thứ tự hồ -> **cả 18 lane cùng bốc key CF đầu tiên**. Mười tám yêu cầu đồng thời
+        nện đúng một key ngay giây đầu phiên -> chạm giới hạn theo phút -> 429 -> key bị đánh dấu
+        nghỉ, trong khi 86 key còn lại chưa được chạm tới lượt nào.
+
+    Đáng nói: chú thích trong mã KHẲNG ĐỊNH "băm tên kênh vẫn giữ để phá hoà" — nhưng phần băm đó
+    đã mất trong một lần sửa trước. Chú thích nói dối còn nguy hơn không có chú thích, vì nó khiến
+    người đọc bỏ qua đúng chỗ đang hỏng.
+
+    Chốt này đo HÀNH VI (bao nhiêu key khác nhau), không đo chữ trong mã — vì lần trước chính chữ
+    trong mã là thứ đánh lừa."""
+    import sys as _s, os as _o, importlib
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import datastory_ci as D
+    ho = ["cf:acc%d:tok" % i for i in range(87)] + ["AIza%02d" % i for i in range(60)]
+    lanes = ["COLDFILE", "GAMEGRAVEYARD", "YOURRIGHTSCASE", "STEAMTRUTH", "PAIDVSPLAYED",
+             "WHATISINIT", "COSTTOGO", "SUEDFORTHIS", "GONETOOSOON", "AMERICALOOKEDUP",
+             "ONESTUDY", "COURTKINGS", "COURTRECORD", "SPACEINVOICE", "THENANDNOW",
+             "MISSINGPIECE", "CARRECALL", "RECALLPLATE"]
+    cu_argv = list(_s.argv)
+    dau = []
+    try:
+        for L in lanes:
+            _s.argv = ["run_render.py", "--channel", L]
+            D._MOC_LANE = None                      # ép tính lại hạt giống như một tiến trình mới
+            D._DUNG.clear()
+            con = sorted(ho, key=lambda k: (0 if k.startswith("cf:") else 1,
+                                            D._DUNG.get(k, 0), D._hat_lane(k)))
+            dau.append(con[0])
+    finally:
+        _s.argv = cu_argv
+        D._MOC_LANE = None
+    rieng = len(set(dau))
+    assert rieng >= 15, (f"18 lane chỉ vào {rieng} key khác nhau (đòi >=15) — "
+                         f"key bị dồn: {max(dau, key=dau.count)!r} x{dau.count(max(dau, key=dau.count))}")
+    # Và phải là key CF (rẻ, riêng cho vẽ ảnh), không được đụng Gemini khi CF còn chỗ.
+    assert all(k.startswith("cf:") for k in dau), "có lane chạm Gemini trong khi CF còn nguyên hạn mức"
 
 
 if __name__ == "__main__":
