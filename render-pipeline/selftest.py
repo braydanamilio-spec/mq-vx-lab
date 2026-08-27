@@ -2189,6 +2189,7 @@ def main():
     check("tiêu đề dẫn bằng chủ thể, không phải khuôn + ngày", t_tieu_de_phai_noi_ve_noi_dung)
     check("key vẽ ảnh chết hẳn -> đổi key, không bỏ khung", t_key_ve_anh_chet_phai_doi_key)
     check("18 lane vào 18 điểm khác nhau trong hồ key ảnh", t_18_lane_khong_don_mot_key_anh)
+    check("mọi loại key báo trạng thái + lời đúng loại", t_moi_loai_key_deu_bao_trang_thai)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5021,6 +5022,56 @@ def t_18_lane_khong_don_mot_key_anh():
                          f"dồn vào {don!r} x{dau.count(don)}")
     assert all(str(k).startswith("cf:") for k in dau), \
         "có lane chạm Gemini trong khi CF còn nguyên hạn mức (Gemini dùng chung với khâu viết)"
+
+
+def t_moi_loai_key_deu_bao_trang_thai():
+    """MỌI LOẠI KEY PHẢI BÁO TRẠNG THÁI TỪ LÚC CHẠY THẬT, KÈM LỜI ĐÚNG LOẠI.
+
+    27/8 — anh chỉ ra bảng key hiện "⚪ Chưa kiểm (232/288)" và "🔴 Chết — tất cả (0)", trong khi
+    log phiên hôm nay có key ảnh chết thật (`API key not valid`) và plan báo "29 hỏng vĩnh viễn".
+
+    Gốc: `mark_key_alive` được gọi từ ĐÚNG MỘT CHỖ — `run_render.py`, chỉ đường VIẾT CHỮ. Đường
+    vẽ ảnh / soi ảnh / tải ảnh thật không ghi gì. Mà CF 94 + Pexels 25 + Pixabay 18 + NARA 2 +
+    DVIDS 2 = 141 key KHÔNG BAO GIỜ đi qua đường viết -> vĩnh viễn "chưa kiểm", và cái chết của
+    chúng không có đường nào chảy về bảng. Một bảng trạng thái không bao giờ đổi thì tệ hơn không
+    có bảng: nó nói "mọi thứ ổn" bằng đúng giọng như khi mọi thứ ổn thật.
+
+    Ba điều chốt này giữ:
+      • tra được key ĐÃ CẮT TIỀN TỐ (hồ ảnh lưu key trần) — trượt cái này là 45 key ảnh vẫn kẹt;
+      • lời báo mang ĐÚNG tên nhà cung cấp + hạn mức của riêng nó (Pexels 20K/tháng khác Gemini
+        20/ngày khác CF ~174 ảnh/ngày) — nói chung chung thì nhìn bảng không biết phải làm gì;
+      • các khâu thật PHẢI GỌI nó — viết hàm mà quên nối vào thì bảng vẫn trống y như cũ."""
+    import sys as _s, os as _o, io as _io, contextlib as _ct
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import datastory_ci as D, firestore_bridge as FB
+    goc = FB.mark_key_alive
+    ghi = []
+    try:
+        FB.mark_key_alive = lambda _id, song, ly="", used=False, kind="": ghi.append((_id, song, ly, kind))
+        keys = [{"id": "id-cf", "key": "cf:acc1:tok"}, {"id": "id-gm", "key": "AIzaXXXX"},
+                {"id": "id-px", "key": "px:PEXKEY123"}, {"id": "id-pb", "key": "pb:PIXKEY456"},
+                {"id": "id-na", "key": "nara:NARAKEY"}, {"id": "id-dv", "key": "dvids:DVKEY"}]
+        with _ct.redirect_stdout(_io.StringIO()):
+            D.nho_id_key(keys)
+        D.bao_key("PEXKEY123", True, "tải clip thật")          # chuỗi TRẦN — đã cắt "px:"
+        D.bao_key("cf:acc1:tok", True, "vẽ ảnh")
+        D.bao_key("PIXKEY456", False, "tải ảnh thật", "429")
+        D.bao_key("NARAKEY", False, "tải tư liệu", "API key not valid", chet_han=True)
+    finally:
+        FB.mark_key_alive = goc
+    assert len(ghi) == 4, f"mất bản ghi: chỉ ghi được {len(ghi)}/4 (khả năng tra key trần trượt)"
+    b = {x[0]: x for x in ghi}
+    assert "Pexels" in b["id-px"][2], f"key trần không tra ra đúng nhà: {b['id-px'][2]!r}"
+    assert "Cloudflare" in b["id-cf"][2], "sai tên nhà cung cấp cho key CF"
+    assert "5.000" in b["id-pb"][2], "lý do hỏng không kèm hạn mức RIÊNG của Pixabay"
+    assert b["id-na"][3] == "permanent", "key sai hẳn mà không đánh dấu chết vĩnh viễn"
+
+    src = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "datastory_ci.py"),
+                  encoding="utf-8").read()
+    for khau in ('bao_key(_k, True, "vẽ ảnh")', 'bao_key(k, True, "soi ảnh")',
+                 'bao_key(_slot["k"], True, "tải clip thật")'):
+        assert khau in src, f"khâu thật chưa gọi sổ trạng thái: {khau}"
+    assert "nho_id_key(keys)" in src, "set_ai_pool không nạp ánh xạ key->id -> mọi báo cáo rơi im lặng"
 
 
 if __name__ == "__main__":

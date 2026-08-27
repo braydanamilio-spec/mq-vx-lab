@@ -52,6 +52,91 @@ DEFAULT_AI_STYLE = "realistic, editorial-style photo illustration"
 # hỏng cho việc VIẾT CHỮ (hai model, hai hạn mức khác nhau).
 _AI_POOL = {"keys": [], "dead": set()}
 
+# ── SỔ TRẠNG THÁI KEY: GHI TỪ CHÍNH LÚC CHẠY THẬT (27/8/2026) ────────────────────────────────
+#
+# Anh chỉ ra: bảng key hiện "⚪ Chưa kiểm (232/288)" và "🔴 Chết — tất cả (0)", trong khi log
+# phiên hôm nay có key ảnh chết thật (`API key not valid`) và plan báo "29 hỏng vĩnh viễn".
+#
+# Gốc: `mark_key_alive` được gọi từ ĐÚNG MỘT CHỖ — `run_render.py:619`, chỉ đường VIẾT CHỮ.
+# Đường vẽ ảnh, vision và ảnh thật không ghi gì. Mà CF 94 + Pexels 25 + Pixabay 18 + NARA 2 +
+# DVIDS 2 = 141 key KHÔNG BAO GIỜ đi qua đường viết -> chúng vĩnh viễn "chưa kiểm", và cái chết
+# của chúng không có đường nào chảy về bảng.
+#
+# Cách chữa KHÔNG tốn một lượt gọi nào — đúng nguyên tắc đã ghi sẵn ở `key_manager.CHET_HAN`:
+# đừng đi dò 288 key, chỉ cần GHI LẠI thứ đã học được trong lúc làm việc thật.
+# Ba tín hiệu, và tín hiệu thứ hai là thứ hay bị bỏ sót:
+#   • gọi THÀNH CÔNG            -> key sống, chắc chắn;
+#   • gọi bị TỪ CHỐI vì HẠN MỨC -> key VẪN SỐNG (nhà cung cấp phải nhận ra key hợp lệ mới biết
+#                                  mà tính hạn mức). Đây là bằng chứng "còn sống" rẻ nhất, và
+#                                  trước nay bị vứt đi hết;
+#   • chữ ký CHẾT HẲN           -> key sai/bị thu hồi -> đánh dấu chết vĩnh viễn.
+_AI_ID: dict[str, str] = {}        # chuỗi key -> id bản ghi trong Firestore
+_AI_NHA: dict[str, str] = {}       # chuỗi key -> tiền tố nhà cung cấp (px:, pb:, nara:…)
+
+
+def nho_id_key(keys) -> None:
+    """Nhớ ánh xạ chuỗi-key -> id. Mọi hồ đều nạp từ cùng một danh sách `keys` (list dict có
+    `id` + `key`), nên gọi một lần ở `set_ai_pool` là phủ hết mọi loại.
+
+    Nhớ CẢ dạng đã cắt tiền tố: các hồ ảnh lưu key trần (`set_pexels_pool` làm `key[3:]`), nên
+    tra bằng chuỗi trần phải ra đúng bản ghi — nếu không thì Pexels/Pixabay/NARA/DVIDS vẫn nằm
+    nguyên trong ô "chưa kiểm", đúng thứ cần chữa."""
+    for k in (keys or []):
+        if not (isinstance(k, dict) and k.get("key") and k.get("id")):
+            continue
+        kk, _id = str(k["key"]), str(k["id"])
+        _AI_ID[kk] = _id
+        for tien in _LOAI_KEY:
+            if kk.startswith(tien):
+                tran = kk[len(tien):]
+                if tran:
+                    _AI_ID[tran] = _id
+                    _AI_NHA[tran] = tien      # giữ lại nhà cung cấp: chuỗi trần không còn dấu hiệu
+                break
+
+
+# Lời giải thích RIÊNG TỪNG NHÀ CUNG CẤP. Cùng chữ "hết hạn mức" nhưng ý nghĩa và cách xử khác
+# hẳn nhau, mà bảng key trước đây nói chung chung nên nhìn vào không biết phải làm gì:
+_LOAI_KEY = {
+    "cf:":   ("Cloudflare", "~174 ảnh FLUX/ngày mỗi tài khoản — hết thì mai lại đầy"),
+    "gsk_":  ("Groq", "~1.000 lượt/ngày mỗi key, reset 07:00Z (14:00 giờ VN)"),
+    "px:":   ("Pexels", "20.000 lượt/tháng · 200 lượt/giờ mỗi key"),
+    "pb:":   ("Pixabay", "5.000 lượt/GIỜ mỗi key"),
+    "nara:": ("NARA", "1.000 lượt/GIỜ — tư liệu lưu trữ quốc gia Mỹ"),
+    "dvids:": ("DVIDS", "tư liệu quân đội Mỹ, hạn mức theo App Account"),
+}
+
+
+def _loai_key(k: str) -> tuple:
+    tien = _AI_NHA.get(str(k))                # chuỗi trần -> tra bảng đã nhớ lúc nạp
+    if tien and tien in _LOAI_KEY:
+        return _LOAI_KEY[tien]
+    for tien, v in _LOAI_KEY.items():
+        if str(k).startswith(tien):
+            return v
+    return ("Gemini", "20 lượt/ngày mỗi key ở bậc free — và là thứ DUY NHẤT dùng được cho Vision")
+
+
+def bao_key(k: str, song: bool, viec: str, loi: str = "", chet_han: bool = False) -> None:
+    """Ghi trạng thái một key vào bảng, kèm lời giải thích ĐÚNG LOẠI của nó.
+
+    `viec` = khâu vừa dùng key ("vẽ ảnh" / "soi ảnh" / "tải ảnh thật") — để nhìn bảng là biết key
+    này hỏng ở việc gì, thay vì một chữ "dead" trống rỗng."""
+    _id = _AI_ID.get(str(k))
+    if not _id:
+        return
+    nha, han = _loai_key(k)
+    try:
+        import firestore_bridge as _FB
+        if song:
+            _FB.mark_key_alive(_id, True, f"{nha}: {viec} chạy được", used=True)
+        else:
+            _FB.mark_key_alive(_id, False,
+                               f"{nha}: {viec} — {loi[:110]}" + ("" if chet_han else f" · hạn mức: {han}"),
+                               kind="permanent" if chet_han else "")
+    except Exception:
+        pass                    # sổ trạng thái hỏng KHÔNG được làm hỏng việc render
+
 
 def set_ai_pool(keys, channel: str = ""):
     """Nạp danh sách key cho việc vẽ ảnh. Gọi 1 lần ở đầu mỗi make_* (nơi đã có sẵn 'keys').
@@ -59,6 +144,7 @@ def set_ai_pool(keys, channel: str = ""):
     XOAY THEO KÊNH (cùng chiêu ranked_accounts bên kho Drive): không xoay thì cả 18 luồng song
     song đều bắt đầu vẽ/kiểm từ CÙNG key đầu danh sách -> hạn mức ảnh/Vision của vài key đầu cháy
     trước trong khi key cuối ngồi không — pool 56 key mà hiệu dụng chỉ còn vài key."""
+    nho_id_key(keys)                    # 27/8: ánh xạ key->id cho MỌI loại, để báo trạng thái được
     set_pexels_pool(keys, channel)      # 23/8: nạp luôn pool key Pexels từ cùng danh sách key
     set_pixabay_pool(keys, channel)     # 23/8: và pool Pixabay (nguồn ảnh thứ 5)
     set_gov_pools(keys, channel)        # 24/8: NARA + DVIDS (tư liệu Mỹ, có key mới bật)
@@ -339,8 +425,22 @@ def _verify_image_rot(path, subject, first_key="", tries=3):
         finally:
             qc_vision.on_quota = prev
         if not hit["quota"]:
+            # `r is None` = Vision lỗi vì lý do KHÁC hạn mức (mạng, ảnh hỏng, chặn nội dung) —
+            # không kết luận được gì về key nên không ghi sổ. Chỉ ghi khi thật sự có câu trả lời.
+            if r is not None:
+                bao_key(k, True, "soi ảnh")
             return r                       # đã kiểm được (True/False) hoặc lỗi khác -> trả luôn
         _vis_die(k, _muc_nghi(hit.get("err")))   # nghỉ ĐÚNG mức: RPM 2' · cạn ngày tới mốc reset
+        # Cạn hạn mức Vision = key hợp lệ (xem chú thích ở `bao_key`). Với Gemini đây gần như là
+        # cách DUY NHẤT nó được xác nhận còn sống, vì hạn mức free chỉ 20 lượt/ngày nên phần lớn
+        # lượt gọi rơi vào đúng nhánh này.
+        _low = str(hit.get("err") or "").lower()
+        try:
+            import key_manager as _KM
+            _chet = any(x in _low for x in _KM.CHET_HAN)
+        except Exception:
+            _chet = "api key not valid" in _low
+        bao_key(k, not _chet, "soi ảnh", str(hit.get("err") or ""), chet_han=_chet)
     return None                            # thật sự không kiểm được -> caller fail-open như cũ
 
 
@@ -524,12 +624,17 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
             print(f"   ⚠️ vẽ ảnh '{prompt[:34]}': model trả về không phải ảnh — bỏ khung này")
             return False          # model trả về rỗng/không phải ảnh -> đổi key cũng vô ích
         open(dest, "wb").write(data)
+        bao_key(_k, True, "vẽ ảnh")
         if _i:
             print(f"   🔑 vẽ ảnh: đã xoay sang key thứ {_i + 1} (key trước hết hạn mức ảnh)")
         return True
       except Exception as e:
         if _is_quota_err(e):
             _ve_die(_k, _muc_nghi(e))     # nghỉ ĐÚNG mức: chặn theo phút 2' · cạn ngày tới mốc reset
+            # Cạn hạn mức là BẰNG CHỨNG KEY CÒN SỐNG: nhà cung cấp phải nhận ra key hợp lệ mới
+            # biết mà tính hạn mức. Đây là tín hiệu "còn sống" rẻ nhất và trước nay bị vứt hết —
+            # chính nó là thứ kéo hàng trăm key ra khỏi ô "chưa kiểm" mà không tốn lượt gọi nào.
+            bao_key(_k, True, "vẽ ảnh (cạn hạn mức nhưng key hợp lệ)")
             last_quota = e
             continue
         # 27/8 — KEY CHẾT HẲN THÌ ĐỔI KEY, KHÔNG PHẢI BỎ KHUNG ẢNH.
@@ -552,6 +657,7 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
             _chet = "api key not valid" in _low or "api_key_invalid" in _low
         if _chet:
             _ve_die(_k, 60 * 24 * 7)      # chết hẳn -> nghỉ 1 tuần, coi như rút khỏi hồ vẽ ảnh
+            bao_key(_k, False, "vẽ ảnh", str(e), chet_han=True)
             print(f"   ⛔ key vẽ ảnh ••••{str(_k)[-4:]} CHẾT HẲN ({str(e)[-90:].strip()}) — đổi key")
             continue
         # lỗi KHÁC (chặn nội dung, prompt hỏng, mạng) -> đổi key cũng thế, dừng luôn cho đỡ tốn
@@ -742,6 +848,7 @@ def _pexels_video(query, n=8, tall=True):
         with urllib.request.urlopen(req, timeout=20) as r:
             j = json.loads(r.read().decode("utf-8", "ignore"))
         _slot["used"] += 1
+        bao_key(_slot["k"], True, "tải clip thật")
         out = []
         for v in (j.get("videos") or []):
             if not (3 <= float(v.get("duration") or 0) <= 30):
