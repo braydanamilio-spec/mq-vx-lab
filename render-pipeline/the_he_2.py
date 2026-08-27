@@ -2230,6 +2230,67 @@ def cong_chat_luong(st: dict, kenh: dict) -> list:
     return loi
 
 
+_NHU_CAU_DEM: dict = {}      # (kênh, trục) -> thứ tự đã xếp; đo một lần rồi dùng lại cả phiên
+
+
+def _xep_theo_nhu_cau(kenh: dict, truc: str, kho: list) -> list:
+    """Xếp kho đề tài theo NHU CẦU THẬT của người xem, cao nhất lên trước.
+
+    27/8 — anh hỏi đúng chỗ đau: "kịch bản dựa trên phân tích trending hay chỉ làm theo dữ liệu
+    kho sẵn, có khi nào làm ra mà chủ đề không còn ai quan tâm?"
+    Đo thì đúng là vế sau: `radar_dethai.py` đã viết xong từ hôm trước nhưng KHÔNG MỘT CHỖ NÀO
+    trong đường chạy gọi nó — chỉ selftest import. Kho đề tài được duyệt theo THỨ TỰ KHAI TRONG
+    JSON, tức thứ tự em gõ tay, hoàn toàn không liên quan tới việc có ai tìm hay không.
+    Hậu quả cụ thể: kênh CAR RECALL luôn bắt đầu bằng `ford` vì `ford` đứng đầu danh sách, chứ
+    không phải vì tháng này người ta đang tra về Ford.
+
+    Tín hiệu dùng: GỢI Ý TÌM KIẾM CỦA YOUTUBE (`radar_dethai.diem_nhu_cau`). Đây là thứ tốt nhất
+    lấy được miễn phí và không cần khoá — nó nói thẳng người ta đang gõ gì vào ô tìm kiếm. Và nó
+    hỏi theo GÓC của kênh chứ không hỏi danh từ trần: đo thật cho thấy "peanut butter recall" ra
+    8 gợi ý còn "breakfast cereal recall" ra 0 — tức người ta tìm thu hồi bơ đậu phộng, không ai
+    tìm thu hồi ngũ cốc ăn sáng. Hỏi trần thì cả hai đều ra 10 gợi ý, phẳng lì, vô dụng.
+
+    FAIL-OPEN tuyệt đối: radar hỏng, mạng chặn, hết giờ — trả nguyên thứ tự cũ. Đây là lớp làm
+    CHO TỐT HƠN, không được phép trở thành chỗ chết mới.
+    """
+    try:
+        kh = (str(kenh.get("ten", "")), str(truc))
+        if kh in _NHU_CAU_DEM:
+            return _NHU_CAU_DEM[kh]
+        import radar_dethai as R
+        goc = R.goc_kenh(kenh) or ""
+        niche_tu = R._tu(kenh.get("niche", "")) | R._tu(kenh.get("goc_nhin", ""))
+        cham = []
+        for i, v in enumerate(kho):
+            cum = ", ".join(str(x) for x in v) if isinstance(v, (list, tuple)) else str(v)
+            # Kho đề tài lưu dạng SLUG cho khớp API nguồn (`breakfast-cereals`, `cpi_nha`). Hỏi
+            # gợi ý bằng slug thì không bao giờ ra kết quả — không ai gõ dấu gạch vào ô tìm kiếm.
+            # Đo được: 22 đề tài của WHAT IS IN IT đều ra điểm 0 cho tới khi bỏ dấu gạch.
+            cum = cum.replace("-", " ").replace("_", " ").strip()
+            # Trục là NĂM/NGÀY thì gợi ý tìm kiếm không nói được gì (không ai gõ "2019" vào ô
+            # tìm kiếm để tìm chủ đề) -> giữ nguyên thứ tự, khỏi tốn lượt gọi mạng.
+            if cum.strip().isdigit() or "-" in cum[:5]:
+                return kho
+            try:
+                d, _ = R.diem_nhu_cau(cum, niche_tu, goc)
+            except Exception:
+                d = 0.0
+            cham.append((-float(d or 0), i, v))
+        cham.sort()
+        ra = [v for _, _, v in cham]
+        top = cham[0]
+        if -top[0] > 0:
+            print(f"   🎯 {kenh.get('ten')}: xếp {len(ra)} đề tài theo NHU CẦU THẬT "
+                  f"(đầu bảng `{ra[0]}`, điểm {-top[0]:.1f}) — không phải theo thứ tự khai.")
+        _NHU_CAU_DEM[kh] = ra
+        return ra
+    except BaseException as e:
+        if isinstance(e, KeyboardInterrupt):
+            raise
+        print(f"   ⚠️ không đo được nhu cầu ({str(e)[:60]}) — giữ thứ tự kho như cũ")
+        return kho
+
+
 def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None) -> dict | None:
     """Dựng story, XOAY qua kho đề tài cho tới khi ra một chuyện CHƯA LÀM.
 
@@ -2242,6 +2303,8 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
     # rõ giá trị trục) nên tiêu đề của nó KHÔNG mang trục, còn các lượt sau thì có. Hai dạng tiêu
     # đề cho cùng một bộ dữ liệu ⇒ chống trùng so không khớp ⇒ đăng lại đúng nội dung đã đăng.
     # Kho xoay đã chứa sẵn giá trị mặc định của kênh nên bỏ lượt 0 không mất đề tài nào.
+    if truc and kho:
+        kho = _xep_theo_nhu_cau(kenh, truc, kho)
     thu = [{**(ky or {}), truc: v} for v in kho] if (truc and kho) else [dict(ky or {})]
     da_thay = None
     hong = 0            # số lần NGUỒN không trả dữ liệu (khác hẳn "đề tài đã làm rồi")
