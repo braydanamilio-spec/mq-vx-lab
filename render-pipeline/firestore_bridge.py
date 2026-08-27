@@ -1560,9 +1560,48 @@ def read_channels(owner: str) -> list[dict]:
         for d in db.collection("render_channels").where("owner", "==", owner).stream(timeout=20):
             x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
         return out
-    ra = _retry(_do)
+    try:
+        ra = _retry(_do)
+    except BaseException as e:
+        # 27/8 — TẦNG THỨ TƯ: BẢNG KÊNH TRONG REPO.
+        # Ba tầng cũ (đệm RAM -> gói plan -> Firestore) đều đứng khi Firestore cạn hạn mức, và
+        # cả hệ ngồi chờ tới 07:00Z. Nhưng DANH SÁCH KÊNH LÀ THỨ TĨNH — nó nằm ngay trong repo
+        # (`kenh_the_he_2.json`), không có lý do gì phải hỏi Firestore mới biết có những kênh nào.
+        # Thứ Firestore giữ là TRẠNG THÁI (bật/tắt, chỉ tiêu), không phải danh sách.
+        # Nên khi không đọc được: dựng lại danh sách từ repo, coi là ĐANG BẬT, và nói thật to rằng
+        # đang chạy bằng ảnh chụp — người đọc log phải biết con số bật/tắt lúc này không phải mới.
+        ra = _chans_tu_repo(owner)
+        if not ra:
+            raise
+        print(f"   🗂️ Firestore không đọc được ({str(e)[:50]}) — dùng BẢNG KÊNH TRONG REPO "
+              f"({len(ra)} kênh, 0 lượt đọc). Trạng thái bật/tắt lấy mặc định ĐANG BẬT.")
     _HOT_CACHE[("chans", owner)] = (_t.time(), ra)
     return ra
+
+
+def _chans_tu_repo(owner: str) -> list:
+    """Dựng danh sách kênh từ `kenh_the_he_2.json` — đường sống khi Firestore cạn hạn mức.
+
+    Chỉ mang những trường mà khâu điều phối thật sự cần. Không bịa số liệu: đếm video đã làm vẫn
+    do D1 lo, chỗ này chỉ trả lời câu 'có những kênh nào và cấu hình ra sao'."""
+    import json as _j, os as _o
+    try:
+        f = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "kenh_the_he_2.json")
+        ks = _j.load(open(f, encoding="utf-8"))
+        ks = ks if isinstance(ks, list) else list(ks.values())
+    except Exception:
+        return []
+    out = []
+    for k in ks:
+        ten = str(k.get("ten", "")).replace(" ", "").upper()
+        if not ten:
+            continue
+        out.append({"id": f"{owner}__{ten}", "owner": owner, "name": ten, "the_he": 2,
+                    "paused": False, "priority": 0, "format": k.get("dinh_dang"),
+                    "type": "short", "make_long": True, "long_target": 40, "n_shorts": 3,
+                    "tham_so": k.get("tham_so") or {}, "brand": k.get("brand") or {},
+                    "niche": k.get("goc_nhin") or k.get("niche", ""), "_tu_repo": True})
+    return out
 
 
 _CFG_PLAN: dict = {}
