@@ -391,6 +391,29 @@ def main() -> int:
             print(f"      ✅ tổng đã xoá ~{_da}/{_tong} bản ghi")
         print(f"  🧹 {'đã xoá' if that else '(sẽ xoá)'} {xoa} job Firestore của "
               f"{len(ten_cu)} kênh {'THẾ HỆ 2' if gen2 else 'thế hệ 1'}")
+        # ── ĐỐI CHIẾU SAU KHI XOÁ (27/8) ─────────────────────────────────────────────────────
+        # Vừa dính đúng bài học này: lệnh dọn ĐẾM ĐƯỢC 365 job rồi in "đã xoá 365", trong khi
+        # lệnh xoá ném vì dùng client sai project — rác vẫn nằm nguyên mà log vẫn đẹp.
+        # In con số mình ĐỊNH làm thì rẻ; đọc lại xem thực tế còn bao nhiêu mới là bằng chứng.
+        # Đọc lại tốn thêm ít lượt, nhưng rẻ hơn nhiều so với tin vào một con số không đúng rồi
+        # phát hiện sau vài ngày.
+        if that and lo:
+            _con = 0
+            for _ten2, _cap in _lo_theo_proj.items():
+                if not _cap:
+                    continue
+                _cli = _cap[0][0]
+                try:
+                    for _c2, _ref in _cap[:60]:          # lấy mẫu 60 bản/project, đủ để biết thật giả
+                        if _ref.get().exists:
+                            _con += 1
+                except Exception as _e3:
+                    print(f"      ⚠️ không đối chiếu được {_ten2}: {str(_e3)[:60]}")
+            if _con:
+                print(f"  🚨 ĐỐI CHIẾU: còn {_con} bản ghi TRONG MẪU vẫn tồn tại — lệnh xoá KHÔNG "
+                      f"ăn. Đừng tin con số phía trên.")
+            else:
+                print("  ✅ đối chiếu: mẫu kiểm tra đã sạch — lệnh xoá ăn thật.")
         # D1 LÀ KHO THỨ HAI, KHÔNG PHẢI BẢN SAO CHO VUI. Dashboard đọc D1 khi có lọc ngày, nên bỏ
         # bước này thì video cũ biến mất ở "Mọi lúc" rồi hiện lại y nguyên khi bấm "Hôm nay" —
         # nhìn như đã dọn xong mà chưa xong, tệ hơn là không dọn.
