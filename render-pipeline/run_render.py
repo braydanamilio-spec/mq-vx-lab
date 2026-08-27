@@ -1414,6 +1414,10 @@ def main():
             print(f"⚠️ trend_scout lỗi (bỏ qua, không ảnh hưởng render): {e}")
     # NHỊP 30': chỉ chạy khi có lệnh "Render ngay" (run_now) HOẶC đúng giờ mẻ đêm (18h UTC).
     from datetime import datetime, timezone, timedelta
+    # 27/8 — `repository_dispatch` (nhịp do Cloudflare bắn) phải được coi NGANG `schedule`.
+    # Van giãn cách phiên chỉ kiểm khi sự kiện là `schedule`; đổi nhịp sang Cloudflare mà quên
+    # chỗ này thì mỗi lượt cron của Cloudflare đều mở phiên mới, van thành vô dụng và quota bị
+    # đốt nhanh gấp nhiều lần. Chỉ `workflow_dispatch` (người bấm tay) mới được vượt van.
     event = os.environ.get("GITHUB_EVENT_NAME", "")
     run_now = bool(cfg.get("run_now"))
     # 20/8: cron khai báo mỗi 10' nhưng GitHub Actions THỰC TẾ hay trễ 30-50' (nghẽn nền tảng, quan sát
@@ -1422,7 +1426,7 @@ def main():
     # vẫn an toàn không lấn giờ mẻ kế (batch_hours cách nhau ít nhất 4h).
     is_nightly = (datetime.now(timezone.utc).hour in (cfg.get("batch_hours") or [0, 4, 8, 12, 16, 20])
                   and datetime.now(timezone.utc).minute < 55)
-    if event == "schedule" and not run_now and not is_nightly:
+    if event in ("schedule", "repository_dispatch") and not run_now and not is_nightly:
         print("⏭ Nhịp kiểm 30' — không có lệnh Render ngay, bỏ qua (free)."); return
     if run_now:
         FB.set_config(OWNER, {"run_now": None, "run_now_done_at": datetime.now(timezone.utc).isoformat()})
@@ -1903,7 +1907,7 @@ def plan_mode():
             recently = ((datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() / 60) < _gap_thuc
     except Exception as e:
         print(f"   ⚠️ không tính được van theo hạn mức ({str(e)[:50]}) — dùng giãn cách cứng {gap_min}'.")
-    if event == "schedule" and not run_now and recently:
+    if event in ("schedule", "repository_dispatch") and not run_now and recently:
         print(f"⏭ Nhịp kiểm — phiên gần đây còn trong giãn cách {_gap_thuc}', bỏ qua (free)."); return out_channels([])
     FB.set_config(OWNER, {"last_session_at": datetime.now(timezone.utc).isoformat()})   # đánh dấu phiên bắt đầu -> chống trùng
     if run_now:

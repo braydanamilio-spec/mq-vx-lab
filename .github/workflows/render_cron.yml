@@ -6,6 +6,15 @@ name: MM0 Render Factory (18 luồng song song)
 # Secrets: GCP_SA_KEY, FIREBASE_PROJECT_ID, OWNER_UID, AUTOPUBLISHER_REPO, AUTOPUBLISHER_TOKEN, GEMINI_SYSTEM_PROMPT
 
 on:
+  # 27/8 — NHỊP DO CLOUDFLARE GIỮ.
+  # Đo thật: cron dưới đây khai 10 phút một lượt (144 lượt/ngày) nhưng GitHub chỉ bắn 04:59 ·
+  # 23:38 · 20:17 · 18:20 — tức 4-6 lượt/ngày. GitHub hạ ưu tiên cron tần suất cao trên repo
+  # free/public. Phút chạy KHÔNG phải vấn đề (repo public -> billable = 0 phút), nên thứ bóp
+  # sản lượng là NHỊP.
+  # Cron Trigger của Cloudflare bắn đúng giờ; nó gọi `repository_dispatch` với event này.
+  # Giữ luôn cron gốc của GitHub làm lưới đỡ: Cloudflare chết thì vẫn còn 4-6 lượt/ngày.
+  repository_dispatch:
+    types: [mm0-render]
   workflow_dispatch:
     inputs:
       force: { description: "FORCE=1 chạy dù pipeline đang tắt", default: "1" }
