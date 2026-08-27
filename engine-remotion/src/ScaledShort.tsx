@@ -1,4 +1,4 @@
-import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
@@ -6,6 +6,16 @@ import { SoChay, SO_DEU, DongNguon } from "./So";
 import { bienCua, hoaTietNen } from "./Bien";
 import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
+
+/** Ảnh KHÔNG được phép giết cả bản render.
+ *  Hình do AI vẽ có thể hụt (CF chặn prompt, hết hạn mức, tệp ghi dở). `<Img>` của Remotion mà
+ *  tải hụt là ném lỗi và mất trắng video — trong khi thứ mất đi chỉ là một cái chóp trang trí.
+ *  Hụt thì ẩn đi, cột số liệu vẫn nguyên vẹn. */
+const AnhAnToan: React.FC<{ src: string; style?: React.CSSProperties }> = ({ src, style }) => {
+  const [hong, setHong] = React.useState(false);
+  if (hong) return null;
+  return <Img src={src} style={style} onError={() => setHong(true)} />;
+};
 import React from "react";
 
 // KÊNH #4 SCALED — so sánh KÍCH THƯỚC vật lý thật, vẽ ĐÚNG TỈ LỆ cạnh nhau. Motif riêng.
@@ -120,8 +130,19 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
                   textShadow: biggest ? "none" : "0 2px 10px #000a" }}>{it.disp}</div>
               ) : null}
             </div>
-            {/* CHÓP: emoji nhỏ đậu trên đỉnh cột — giữ chất chủ đề, không còn gánh việc mang số liệu */}
-            {it.emoji ? (
+            {/* CHÓP TRÊN ĐỈNH CỘT — ưu tiên HÌNH THẬT do Cloudflare FLUX vẽ theo gu riêng của kênh
+                (xem `the_he_2._ve_vat`). Emoji chỉ còn là đường lui khi vẽ hụt: nó hiện khác nhau
+                tuỳ nền tảng và nhìn rẻ, nên không nên là lựa chọn đầu. */}
+            {it.img ? (
+              <div style={{ position: "absolute", left: "50%", bottom: h * s + 10, transform: "translateX(-50%)",
+                opacity: s, width: Math.min(wCot[i] + 26, 150), height: Math.min(wCot[i] + 26, 150),
+                borderRadius: 18, overflow: "hidden",
+                border: `3px solid ${biggest ? accent : accent + "88"}`,
+                boxShadow: biggest ? `0 0 26px ${accent}88` : "0 6px 16px #0009" }}>
+                <AnhAnToan src={staticFile(it.img)}
+                           style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+            ) : it.emoji ? (
               <div style={{ position: "absolute", left: "50%", bottom: h * s + 8, transform: "translateX(-50%)",
                 fontSize: 52, opacity: s, lineHeight: 1,
                 filter: biggest ? `drop-shadow(0 0 18px ${accent})` : "drop-shadow(0 4px 10px #0008)" }}>{it.emoji}</div>

@@ -2023,7 +2023,55 @@ def bien_cua(kenh: dict) -> int:
     return int(_BIEN_MAP.get(str(kenh.get("handle") or ""), 0))
 
 
-def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = ""):
+def _ve_vat(kenh: dict, props: dict, keys: list | None, ky_hieu: str = "") -> int:
+    """Vẽ HÌNH THẬT cho từng vật trong dạng `scaled` — thay emoji.
+
+    27/8 — anh nói thẳng: emoji làm đồ hoạ dữ liệu là "rẻ tiền". Đúng, và còn hai lý do kỹ thuật
+    nữa: emoji hiện khác nhau tuỳ nền tảng, và nó gần vuông nên từng ép chiều cao cột phải bằng
+    bề ngang (xem `hs` trong ScaledShort) — chính chỗ từng xoá sạch tỉ lệ.
+    Anh có 87 key Cloudflare = ~15.100 ảnh FLUX miễn phí mỗi ngày. Một video dạng này cần 6 ảnh.
+    Kho đó đang bỏ không trong khi mình vẽ bằng emoji.
+
+    Gọi qua `DS.fetch_image(ai_only=True)`: bỏ hẳn kho ảnh chụp sẵn, đi thẳng vào vẽ — CF FLUX
+    trước, Gemini sau (xem `_ai_candidates`). Vẽ theo `style_anh` riêng của kênh nên 6 kênh dạng
+    `scaled` không ra cùng một gu.
+    FAIL-OPEN: vẽ hụt thì giữ nguyên emoji, video vẫn ra. Đây là lớp làm ĐẸP HƠN, không được
+    thành chỗ chết mới."""
+    import datastory_ci as DS
+    items = props.get("items") or []
+    if not items:
+        return 0
+    if keys:
+        try:
+            DS.set_ai_pool(keys, kenh.get("ten", ""))
+        except Exception:
+            pass
+    style = (kenh.get("brand") or {}).get("style_anh") or kenh.get("style_anh") or ""
+    sl = DS.slug(kenh["handle"].lstrip("@")) + (f"_{ky_hieu}" if ky_hieu else "")
+    thu = os.path.join(DS.PUB, "img", "th2v_" + sl)
+    os.makedirs(thu, exist_ok=True)
+    n = 0
+    for i, it in enumerate(items[:6]):
+        ten = str(it.get("name") or "").strip()
+        if not ten:
+            continue
+        dest = os.path.join(thu, f"{i}.jpg")
+        try:
+            if os.path.exists(dest) or DS.fetch_image(ten, dest, ai_only=True, ai_style=style,
+                                                      ai_prompt=f"{ten}, {style}" if style else ten):
+                it["img"] = os.path.relpath(dest, DS.PUB)
+                n += 1
+        except BaseException as e:
+            if isinstance(e, KeyboardInterrupt):
+                raise
+            print(f"      ⚠️ không vẽ được `{ten[:24]}` ({str(e)[:40]}) — giữ emoji")
+    if n:
+        print(f"   🎨 {kenh.get('ten')}: vẽ {n}/{len(items[:6])} hình thật (Cloudflare FLUX), thay emoji")
+    return n
+
+
+def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = "",
+               keys: list | None = None):
     """Dựng props + ghi tệp props, KHÔNG render. Trả (props, đường_tệp_props, slug).
 
     26/8 — tách ra khỏi `chay_chung` vì LONG khổ ngang cần props của NHIỀU chương hơn số short:
@@ -2058,6 +2106,8 @@ def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = "
     # một khuôn — đúng cái bẫy "khai ra rồi không ai gửi" đã vấp với `voice_tone`, `brand.font`,
     # `palette.bg` và `tham_so.xoay`. Lần này chốt luôn: t_bien_bo_cuc_khong_trung.
     props["bien"] = bien_cua(kenh)
+    if dang == "scaled":
+        _ve_vat(kenh, props, keys, ky_hieu)
     # 27/8 — DÒNG NGUỒN cho MỌI dạng, không chỉ dạng đua.
     # Soi 6 dạng: 4 dạng không in một chữ nào về nguồn dữ liệu. Mất hai thứ cùng lúc — lòng tin
     # của người xem ("số này ở đâu ra?"), và bằng chứng trước chính sách "nội dung sản xuất hàng
@@ -2157,7 +2207,7 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     st = st_san or _dung_story_xoay(dang, kenh, ky, avoid)
     if not st:
         return None
-    _dp = dung_props(kenh, st, dang, ten_props, ky_hieu)
+    _dp = dung_props(kenh, st, dang, ten_props, ky_hieu, keys)
     if not _dp:
         return None
     props, pf, sl = _dp
@@ -2643,7 +2693,7 @@ def _props_chuong(kenh: dict, st: dict, dang: str, kh: str, keys: list | None):
         comp, ten_props = DUONG_RA.get(dang, (None, None))
         if not ten_props:
             return None
-        r = dung_props(kenh, st, dang, ten_props, kh)
+        r = dung_props(kenh, st, dang, ten_props, kh, keys)
     return r[0] if r else None
 
 
