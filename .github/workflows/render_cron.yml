@@ -210,7 +210,15 @@ jobs:
     # -> dây chuyền đứng. Số liệu thật 20/8: kênh chậm nhất chạy XONG mất 27' (VAULTUSA), phần lớn
     # 6-11'. Đặt 120' = gấp ~4 lần ca xấu nhất (đủ rộng cho kênh long nặng) mà nếu treo thì thiệt
     # hại chỉ 2 tiếng thay vì gần 6 tiếng. Hôm nay 2 job treo từ 13:08 đã nuốt trọn 3 phiên kế.
-    timeout-minutes: 90    # 25/8: rút 165' -> 90' (lane tự thoát ở 75'). Phiên dài giữ khoá
+    # 27/8 — GitHub bóp nhịp cron còn 4-6 lượt/ngày (đo: 04:59 · 23:38 · 20:17 · 18:20), mà mỗi
+    # lượt cũ chỉ chạy ~70' trong khi trần job của GitHub là 6 TIẾNG. Tức đang dùng ~1/5 quỹ.
+    # Kéo lên 180' (lane tự thoát ở 150') thì một lượt cron làm bằng hơn hai lượt cũ, KHÔNG cần
+    # token hay dịch vụ ngoài nào.
+    # Không kéo thẳng lên 360': ngày 25/8 một phiên giữ khoá 150' trong khi lane rơi 18 -> 3 -> 1
+    # và hai phiên sau bị huỷ trắng. Phiên dài chỉ tốt khi lane không rơi — nay có hàng chờ giữ
+    # lane bận (38 lượt "lấy việc kế" ở phiên 04:59Z), nhưng đó là bằng chứng cho 150', chưa phải
+    # cho 330'. Đo lại rồi mới nới tiếp.
+    timeout-minutes: 180   # cũ: 90 (lane tự thoát ở 150'). Phiên dài giữ khoá
                            # concurrency quá lâu: đo 25/8 hai phiên 10:03 và 10:44 bị HUỶ TRẮNG
                            # vì phiên 08:55 còn 1 lane thoi thóp. 21/8: 1 luồng THẬT = viết 3 kịch bản (+429 chờ) + long 16:9 + 3 short + QC — 120' cắt ngang giữa việc; 150' đủ ca thật, treo vẫn bị chặn bởi watchdog 360s/lệnh
     steps:

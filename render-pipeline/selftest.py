@@ -4087,7 +4087,16 @@ def t_phien_khong_giu_khoa_qua_lau():
     to = int(m_to.group(1)) if m_to else 0
     assert soft <= hard, f"ngân sách mềm {soft}' > cứng {hard}'"
     assert hard + 10 <= to, f"lane thoát ở {hard}' mà workflow chém ở {to}' — không đủ chỗ flush"
-    assert to <= 100, f"timeout {to}' quá dài — phiên sau sẽ bị huỷ trắng như 10:03/10:44 ngày 25/8"
+    # 27/8 — NỚI TRẦN TỪ 100' LÊN 190', KÈM ĐIỀU KIỆN.
+    # Trần cũ sinh ra sau sự cố 25/8: phiên giữ khoá 150' trong khi SỐ LANE RƠI 18 -> 3 -> 1, hai
+    # phiên sau bị huỷ trắng. Nhưng thứ gây hại là LANE RƠI, không phải thời lượng: phiên dài mà
+    # lane vẫn bận thì nó thay thế được mấy phiên ngắn, còn tốt hơn (khỏi trả giá khởi động lại).
+    # Nay có HÀNG CHỜ — lane xong sớm tự lấy kênh tiếp (đo phiên 04:59Z: 38 lượt "lấy việc kế").
+    # Nên nới trần, nhưng BUỘC hàng chờ phải còn tồn tại: mất nó thì phiên dài quay lại đúng bệnh
+    # cũ, và chốt này phải đỏ trước khi điều đó xảy ra.
+    assert "lay_viec_ke" in src or "dat_hang_cho" in src, \
+        "không còn hàng chờ — phiên dài sẽ để lane rơi như 25/8, hạ timeout về <= 100'"
+    assert to <= 190, f"timeout {to}' quá dài — chưa có bằng chứng lane giữ được bận lâu thế"
 
 
 def t_giong_nhan_vat_co_cao_do():

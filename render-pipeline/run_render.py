@@ -2670,8 +2670,24 @@ def channel_mode(name):
     # Rút ngân sách xuống 60'/75' thì cứ ~80 phút có một mẻ ĐỦ 18 LANE mới, đuôi thưa ngắn hơn
     # hẳn và không phiên nào bị huỷ. Long nặng nhất ~50' vẫn lọt (vòng lặp đã tự kiểm
     # "còn giờ < ước tính mẻ → dừng" nên không có video nào bị cắt ngang).
-    budget_s = int(cfg.get("batch_budget_min", 60) or 60) * 60
-    HARD_S = 75 * 60                                                # cứng: timeout matrix 90' - 15' buffer
+    # 27/8 — DÙNG HẾT QUỸ THỜI GIAN GITHUB CHO, THAY VÌ 1/5.
+    #
+    # Giới hạn job của GitHub là 6 TIẾNG. Lane đang tự dừng ở 75' (timeout matrix 90'), nên mỗi
+    # lượt cron chỉ khai thác ~1/5 quỹ được cấp. Đo thật: hai phiên gần nhất chạy 62' và 70'.
+    # Mà nhịp cron thì GitHub bóp còn 4-6 lượt/ngày (đo: 04:59 · 23:38 · 20:17 · 18:20). Hai
+    # chuyện đó cộng lại thành ~5 giờ chạy/ngày trên một hạ tầng cho phép ~24.
+    # KHÔNG kéo thẳng lên 5,5 tiếng, dù GitHub cho phép. Ngày 25/8 đã có bài học: một phiên giữ
+    # khoá `concurrency` 150 phút trong khi SỐ LANE RƠI 18 -> 3 -> 1, hai phiên sau bị huỷ trắng
+    # — 2,5 giờ chỉ ra một mẻ, 16 chỗ runner bỏ không. Phiên dài chỉ tốt khi lane KHÔNG rơi.
+    # Nay điều đó đã khác: có hàng chờ, lane xong sớm tự lấy kênh tiếp (đo phiên 04:59Z: 38 lượt
+    # "lấy việc kế"). Nhưng đó là bằng chứng cho 150', chưa phải cho 330' — nên đi từng bước và
+    # đo lại, thay vì tin vào lý thuyết.
+    # 150' ≈ gấp đôi mức cũ (đo thật hai phiên gần nhất: 62' và 70').
+    #
+    # Vòng lặp vốn đã tự kiểm "còn giờ < ước tính một mẻ -> dừng" nên kéo trần KHÔNG làm video
+    # nào bị cắt ngang: nó chỉ cho phép chạy thêm mẻ khi còn đủ giờ cho trọn mẻ đó.
+    budget_s = int(cfg.get("batch_budget_min", 150) or 150) * 60
+    HARD_S = 150 * 60                                               # lane tự thoát 150'; workflow chém 180
     max_run = int(cfg.get("max_per_run", 0) or 0)                   # 0 = ∞ (vòng lặp tự giới hạn theo target/quota/giờ); >0 = trần cứng/kênh/phiên
     # ROUND CAP (xoay vòng công bằng): mỗi kênh làm TỐI ĐA round_long/round_short video RỒI NHƯỜNG SLOT (không cắt ngang —
     # check SAU khi run_one() hoàn tất trọn video). Mặc định 10 long/30 short -> phiên xong sớm hơn, kênh khác kịp có lượt.
