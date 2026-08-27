@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoCon
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { SoChay, SO_DEU, DongNguon } from "./So";
 import { bienCua, hoaTietNen } from "./Bien";
 import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
@@ -172,7 +173,10 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
               boxShadow: lead ? `0 10px 34px ${accent}66` : "0 6px 18px #0006" }}>
               <div style={{ fontWeight: 900, fontSize: lead ? 46 : 38, color: lead ? "#0a0c14" : accent, minWidth: 62 }}>#{i + 1}</div>
               <div style={{ flex: 1, fontWeight: 900, fontSize: lead ? 46 : 38, color: lead ? "#0a0c14" : "#fff", letterSpacing: -0.5 }}>{d.state.toUpperCase()}</div>
-              <div style={{ fontWeight: 900, fontSize: lead ? 46 : 40, color: lead ? "#0a0c14" : "#fff", fontVariantNumeric: "tabular-nums" }}>{d.disp || d.value.toLocaleString()}</div>
+              <div style={{ fontWeight: 900, fontSize: lead ? 46 : 40, color: lead ? "#0a0c14" : "#fff", fontVariantNumeric: "tabular-nums" }}>
+                {/* 27/8 — số trong THÂN video cũng phải chạy, không chỉ số dẫn ở hook. Cùng lý do: con số đang lớn dần giữ mắt, con số hiện sẵn thì không. */}
+                <SoChay s={String(d.disp || d.value.toLocaleString())} tuFrame={popStart} giay={0.8} />
+              </div>
             </div>
           );
         })}

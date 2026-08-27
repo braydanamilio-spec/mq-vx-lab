@@ -127,7 +127,10 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
                 <div style={{ position: "absolute", left: "50%", top: 12, transform: `translateX(-50%) scaleY(${1 / Math.max(0.01, s)})`,
                   color: biggest ? "#08111e" : "#fff", fontWeight: 900,
                   fontSize: Math.max(20, Math.min(34, wCot[i] / 3.4)), whiteSpace: "nowrap",
-                  textShadow: biggest ? "none" : "0 2px 10px #000a" }}>{it.disp}</div>
+                  textShadow: biggest ? "none" : "0 2px 10px #000a" }}>
+                  {/* 27/8 — số trong THÂN video cũng phải chạy, không chỉ số dẫn ở hook. Cùng lý do: con số đang lớn dần giữ mắt, con số hiện sẵn thì không. */}
+                  <SoChay s={String(it.disp || "")} tuFrame={starts[i]} giay={0.85} />
+                </div>
               ) : null}
             </div>
             {/* CHÓP TRÊN ĐỈNH CỘT — ưu tiên HÌNH THẬT do Cloudflare FLUX vẽ theo gu riêng của kênh

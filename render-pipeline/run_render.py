@@ -2854,6 +2854,29 @@ def channel_mode(name):
         FB.flush_rw_ledger(OWNER)          # cộng vào sổ tổng NGÀY (1 ghi) -> plan rung chuông 60%/85% sớm
     except Exception:
         pass
+    # ── TỔNG KẾT LANE (27/8) ────────────────────────────────────────────────────────────────
+    # Trước đây lane kết thúc IM LẶNG. GitHub chấm `success` cho mọi lane thoát mã 0, kể cả lane
+    # ra 0 video — nên nhìn bảng Actions thì 18 lane xanh hết, mà thực tế có kênh không đẻ được
+    # gì và không ai biết kênh nào. Trạng thái xanh mà không đúng sự thật còn tệ hơn trạng thái
+    # đỏ: nó làm người ta thôi đi tìm.
+    # KHÔNG cho lane thoát mã khác 0: ra 0 video là chuyện HỢP LỆ (kênh đã đủ chỉ tiêu, hoặc
+    # nguồn hôm nay không có dữ liệu). Thứ cần là NHÌN THẤY ĐƯỢC, không phải báo động giả.
+    try:
+        _sl = int(report.get("done", 0))
+        _sf = len(report.get("fails") or [])
+        _dg = "✅" if _sl else ("⚠️" if _sf else "➖")
+        print(f"{_dg} LANE {name}: video={_sl} · lỗi={_sf}"
+              + (f" · {report['fails'][0][:70]}" if _sf else ""))
+        # Ghi lên trang tổng kết của GitHub: mở một lượt chạy là thấy ngay kênh nào câm, khỏi
+        # phải mở từng lane rồi lần trong log.
+        _gs = os.environ.get("GITHUB_STEP_SUMMARY")
+        if _gs:
+            with open(_gs, "a", encoding="utf-8") as _f:
+                _f.write(f"| {name} | {_sl} | {_sf} | "
+                         f"{(report.get('fails') or ['—'])[0][:80].replace('|', '/')} |\n")
+    except Exception:
+        pass
+
     # GHI số request/key hôm nay -> theo dõi quota còn free + chia đều lần sau.
     try:
         import key_manager as KM

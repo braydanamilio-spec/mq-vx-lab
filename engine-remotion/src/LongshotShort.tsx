@@ -231,7 +231,10 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
                   <div style={{ position: "absolute", top: c.y, left: side < 0 ? RAIL_L - 40 : RAIL_R + 40, transform: `translate(${side < 0 ? "-100%" : "0"}, -50%) scale(${Math.max(0, Math.min(1, labelP))})`,
                     opacity: Math.max(0, Math.min(1, labelP)), textAlign: side < 0 ? "right" as const : "left" as const, maxWidth: 300, zIndex: 3 }}>
                     <div style={{ color: "#fff", fontWeight: 800, fontSize: 30, lineHeight: 1.08, textShadow: "0 2px 10px #000c" }}>{it.label}</div>
-                    <div style={{ display: "inline-block", marginTop: 6, background: accent, color: "#fff", fontWeight: 900, fontSize: 26, padding: "5px 14px", borderRadius: 10, letterSpacing: 0.3 }}>{it.oddsDisp}</div>
+                    <div style={{ display: "inline-block", marginTop: 6, background: accent, color: "#fff", fontWeight: 900, fontSize: 26, padding: "5px 14px", borderRadius: 10, letterSpacing: 0.3 }}>
+                    {/* 27/8 — số trong THÂN video cũng phải chạy, không chỉ số dẫn ở hook. Cùng lý do: con số đang lớn dần giữ mắt, con số hiện sẵn thì không. */}
+                    <SoChay s={String(it.oddsDisp || "")} tuFrame={starts[i]} giay={0.8} />
+                  </div>
                   </div>
                 ) : null}
               </React.Fragment>

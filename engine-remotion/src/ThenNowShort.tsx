@@ -66,7 +66,10 @@ const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number; font?: stri
         <div style={{ position: "absolute", top: 26, left: 30, background: SEPIA, color: "#1a1206", fontWeight: 900, fontSize: 40, padding: "8px 22px", borderRadius: 12, fontFamily: phong(font), zIndex: 2 }}>{p.thenYear}</div>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 30px", fontFamily: phong(font) }}>
           <div style={{ color: "#e8d3a0", fontWeight: 800, fontSize: 42, letterSpacing: 1, textTransform: "uppercase", textAlign: "center" }}>{p.label}</div>
-          <div style={{ color: "#fff", fontWeight: 900, fontSize: 150, lineHeight: 1, marginTop: 6, textShadow: `0 4px 30px #000` }}>{p.thenVal}</div>
+          <div style={{ color: "#fff", fontWeight: 900, fontSize: 150, lineHeight: 1, marginTop: 6, textShadow: `0 4px 30px #000` }}>
+            {/* 27/8 — số trong thân cũng chạy. Ở dạng XƯA×NAY nó còn quan trọng hơn: hai con số cùng lớn dần cạnh nhau làm người xem THẤY được khoảng cách giữa chúng, chứ không phải đọc rồi tự trừ. */}
+            <SoChay s={String(p.thenVal || "")} tuFrame={0} giay={1.0} />
+          </div>
         </div>
       </div>
 
@@ -89,7 +92,10 @@ const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number; font?: stri
         <div style={{ position: "absolute", top: 26, right: 30, background: accent, color: "#0a0c14", fontWeight: 900, fontSize: 40, padding: "8px 22px", borderRadius: 12, fontFamily: phong(font), zIndex: 2 }}>{p.nowYear}</div>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 30px", fontFamily: phong(font) }}>
           <div style={{ color: "#f6b7d8", fontWeight: 800, fontSize: 42, letterSpacing: 1, textTransform: "uppercase", textAlign: "center" }}>{p.label}</div>
-          <div style={{ color: "#fff", fontWeight: 900, fontSize: 150, lineHeight: 1, marginTop: 6, textShadow: `0 4px 30px #000, 0 0 40px ${accent}66` }}>{p.nowVal}</div>
+          <div style={{ color: "#fff", fontWeight: 900, fontSize: 150, lineHeight: 1, marginTop: 6, textShadow: `0 4px 30px #000, 0 0 40px ${accent}66` }}>
+            {/* 27/8 — số trong thân cũng chạy. Ở dạng XƯA×NAY nó còn quan trọng hơn: hai con số cùng lớn dần cạnh nhau làm người xem THẤY được khoảng cách giữa chúng, chứ không phải đọc rồi tự trừ. */}
+            <SoChay s={String(p.nowVal || "")} tuFrame={0} giay={1.0} />
+          </div>
         </div>
       </div>
     </AbsoluteFill>
