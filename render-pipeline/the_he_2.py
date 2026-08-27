@@ -350,7 +350,11 @@ def _bd_ban_an(D, ky):
     # Doi PHAN BO THAT, khong chi doi "co so". 2-2-2-1-1-1 ve mat ky thuat la mot bang xep hang,
     # nhung nhin tren man hinh thi sau cot cao bang nhau — nguoi xem khong thay thu hang nao ca.
     # Dinh bang phai it nhat gap doi day bang, va phai co it nhat 3 muc khac gia tri.
-    if len(ds) < 4 or ds[0]["n"] < 3 or ds[0]["n"] < 2 * ds[min(5, len(ds) - 1)]["n"]:
+    # Doi dinh bang >= 3 va bang co it nhat 3 MUC KHAC GIA TRI. Ban dau con doi dinh >= 2x day
+    # bang, nhung do la doi hoi sai: mot bang 5-4-3-2-2-1 la mot bang xep hang tot, ma 5 < 2x2
+    # nen bi loai — kenh SUED FOR THIS ra 0 video vi dung dieu kien nay. Thu can la NHIN RA
+    # THU HANG, khong phai mot khoang cach cu the.
+    if len(ds) < 4 or ds[0]["n"] < 3 or len({g["n"] for g in ds[:6]}) < 3:
         print(f"   ⚠️ bản án '{tk}': không toà nào nổi trội (đỉnh {ds[0]['n'] if ds else 0}) — "
               f"BỎ LƯỢT thay vì dựng bảng sáu cột bằng nhau")
         return None
@@ -445,14 +449,51 @@ def _bd_steam(D, ky):
 
 
 def _bd_trieu_hoi(D, ky):
-    r = D.trieu_hoi_xe(ky.get("hang", "ford"), ky.get("dong", ""), int(ky.get("nam", 2022)))
-    if len(r) < 3:
+    """Trieu hoi xe -> dem so vu theo NHOM BO PHAN.
+
+    27/8 — kenh CAR RECALL ra 0 video. API NHTSA van chay tot (11 ban ghi), nhung truong
+    `so_xe` (so xe bi anh huong) RONG O CA 11 BAN GHI — endpoint nay khong tra con so do.
+    Ban cu lay thang `so_xe` lam `stat`, khong co thi ghi "—": ca sau dong deu la dau gach,
+    va cong "bang phai that su xep hang" chan lai. Chan la dung: sau dau gach thi bang khong
+    noi len dieu gi.
+    Dai luong CO THAT trong du lieu nay la SO VU theo tung he thong tren xe. "He thong dien:
+    5 lan bi trieu hoi trong mot doi xe" la mot con so that, va la mot cau chuyen dang xem hon
+    han mot danh sach ten bo phan.
+    `bo_phan` cua NHTSA co dang "ELECTRICAL SYSTEM:12V BATTERY:CABLE" — lay phan TRUOC dau hai
+    cham dau tien lam nhom, dung muc do nguoi xem hieu duoc."""
+    # MOT DOI XE LA QUA MONG. Do that Ford F-150 2020: 11 ban ghi, gom lai chi ra 2x/2x/2x/1x/1x
+    # — hai gia tri khac nhau, cong "bang phai that su xep hang" chan lai (dung).
+    # Nhung cau hoi cua kenh khong phai "doi 2020 co gi" ma "dong xe nay hay hong cho nao" — va
+    # cau do phai hoi NHIEU DOI moi tra loi duoc. Gom 5 doi lien nhau: du day de thay he thong
+    # nao lap lai, va van la mot cau chuyen chat che ve DUNG mot dong xe.
+    nam0 = int(ky.get("nam", 2022))
+    r = []
+    for dn in range(nam0 - 4, nam0 + 1):
+        try:
+            r += D.trieu_hoi_xe(ky.get("hang", "ford"), ky.get("dong", ""), dn) or []
+        except Exception:
+            continue
+    if len(r) < 6:
         return None
-    ten = f"{ky.get('hang', '').title()} {ky.get('dong', '')}".strip()
-    return (f"{ten} {ky.get('nam', '')}: what got recalled",
-            [{"name": _gon(x["bo_phan"], 26), "stat": (x["so_xe"] or "—"),
-              "vo": f"{_gon(x['bo_phan'], 30)}. {x['hau_qua'][:90]}"} for x in r[:6]],
-            "Every recall is on the N H T S A site.")
+    dem: dict = {}
+    for x in r:
+        bp = str(x.get("bo_phan") or "").split(":")[0].strip().title()
+        if not bp:
+            continue
+        g = dem.setdefault(bp, {"ten": bp, "n": 0, "hq": ""})
+        g["n"] += 1
+        if not g["hq"]:
+            g["hq"] = str(x.get("hau_qua") or "")
+    ds = sorted(dem.values(), key=lambda g: -g["n"])
+    if len(ds) < 3:
+        return None
+    ten = f"{ky.get('hang', '').title()} {str(ky.get('dong', '')).upper()}".strip()
+    return (f"{ten}: what keeps breaking ({nam0 - 4}-{nam0})",
+            [{"name": _gon(g["ten"], 26), "stat": f"{g['n']}x",
+              "vo": f"{_gon(g['ten'], 30)}, {g['n']} separate recalls. {g['hq'][:80]}"}
+             for g in ds[:6]],
+            "Every recall is on the N H T S A site.",
+            f"{ten}, five model years: which systems got recalled most.")
 
 
 def _bd_the_gioi(D, ky):
