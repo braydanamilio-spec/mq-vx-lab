@@ -74,7 +74,11 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
       ...hoaTietNen(bienCua((props as any).bien), accent) }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 96, left: 0, right: 0, textAlign: "center", padding: "0 50px" }}>
-        <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>📏 SCALED</div>
+        {/* 27/8 — BỎ PILL IN TÊN ĐỊNH DẠNG NỘI BỘ (SCALED).
+            Người xem không biết chữ đó nghĩa là gì, nhưng nó GOM mọi kênh dùng dạng này thành
+            một cụm nhìn thấy được — đúng dấu vân tay "cùng một chủ" mà bộ nhận diện V4 vừa đi
+            xoá khỏi ảnh đại diện và ảnh bìa. Để lại trên video thì công kia thành vô nghĩa.
+            Và nó chiếm mất dải trên cùng, chỗ đáng ra để tiêu đề thở. */}
         {/* Tiêu đề lúc mở đầu do Bookend vẽ. Header ẩn đi trong quãng đó, nếu không sẽ có hai bản tiêu đề chồng nhau (lỗi 25/8). */}
         <div style={{ display: f < introF ? "none" : undefined, color: "#fff", fontWeight: 900, fontSize: 70, lineHeight: 1.02, marginTop: 18, textShadow: "0 4px 24px #000c", textWrap: "balance" as any }}>{title}</div>
         {subtitle ? <div style={{ color: "#9fc4ac", fontWeight: 700, fontSize: 32, marginTop: 8 }}>{subtitle}</div> : null}

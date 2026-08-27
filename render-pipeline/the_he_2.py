@@ -2052,11 +2052,33 @@ def _gan_truc_vao_tieu_de(tieu_de: str, truc: str, val) -> str:
     t = str(tieu_de or "").strip()
     if not t or not truc or val in (None, ""):
         return t
-    v = str(val)
+    # 27/8 — GIÁ TRỊ TRỤC CÓ THỂ LÀ MỘT DANH SÁCH.
+    # Xem khung thật kênh WHERE TO MOVE: trên màn hình in nguyên văn
+    #     Home price by state — ['Florida', 'New York', 'Pennsylvania', 'Illinois', 'Ohio', 'Georgia']
+    # Đây là lỗi của hàm này: trục `bangs` mang một list, `str(val)` cho ra `repr` của Python và
+    # nó đi thẳng lên tiêu đề video. Người xem nhìn thấy dấu ngoặc vuông và dấu nháy — trông như
+    # phần mềm hỏng, và nó phá luôn tiêu đề của cả kênh.
+    # Danh sách thì gọi tên hai phần tử đầu rồi đếm phần còn lại: vừa đọc được, vừa vẫn phân biệt
+    # được các lượt xoay khác nhau (điều mà hàm này sinh ra để làm).
+    if isinstance(val, (list, tuple, set)):
+        xs = [str(x).strip() for x in val if str(x).strip()]
+        if not xs:
+            return t
+        v = xs[0] if len(xs) == 1 else (f"{xs[0]} vs {xs[1]}" if len(xs) == 2
+                                        else f"{xs[0]}, {xs[1]} and {len(xs) - 2} more")
+    else:
+        v = str(val)
     # So bằng ĐUÔI tên trục: đo thật 50 kênh thấy trục năm/ngày xuất hiện dưới nhiều tên
     # (`nam`, `tu_nam`, `ngay`, `tu_ngay`). Khớp cứng "nam"/"ngay" thì 4 kênh ra tiêu đề kiểu
     # "… — 2024" thay vì "… (2024)" — vẫn phân biệt được nhưng đọc như lỗi máy.
     if truc.endswith("ngay"):
+        # 27/8 — trục đuôi "ngay" mang HAI loại giá trị khác hẳn nhau, mà bản cũ gộp làm một:
+        #   • SỐ ngày  (`ngay = 7`)          -> "… — last 7 days"        ✔
+        #   • MỘT NGÀY (`den_ngay` = ISO)    -> "… — last 2026-08-20 days"  ✘ vô nghĩa
+        # Kênh NEAR EARTH xoay đúng trục `den_ngay`, nên mọi tiêu đề của nó đều dính câu đó.
+        import re as _re
+        if _re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
+            return t if v in t else f"{t} — week ending {v}"
         return t if f"{v} day" in t.lower() else f"{t} — last {v} days"
     if v.lower() in t.lower():
         return t

@@ -138,7 +138,11 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
       ...hoaTietNen(bienCua((props as any).bien), accent) }}>
       {/* TIÊU ĐỀ — fixed header, always visible */}
       <div style={{ position: "absolute", top: 74, left: 0, right: 0, textAlign: "center", padding: "0 50px", zIndex: 5 }}>
-        <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 28, letterSpacing: 2, padding: "7px 20px", borderRadius: 12 }}>🎲 LONGSHOT</div>
+        {/* 27/8 — BỎ PILL IN TÊN ĐỊNH DẠNG NỘI BỘ (LONGSHOT).
+            Người xem không biết chữ đó nghĩa là gì, nhưng nó GOM mọi kênh dùng dạng này thành
+            một cụm nhìn thấy được — đúng dấu vân tay "cùng một chủ" mà bộ nhận diện V4 vừa đi
+            xoá khỏi ảnh đại diện và ảnh bìa. Để lại trên video thì công kia thành vô nghĩa.
+            Và nó chiếm mất dải trên cùng, chỗ đáng ra để tiêu đề thở. */}
         {/* Tiêu đề lúc mở đầu do Bookend vẽ. Header ẩn đi trong quãng đó, nếu không sẽ có hai bản tiêu đề chồng nhau (lỗi 25/8). */}
         <div style={{ display: f < introF ? "none" : undefined, color: "#fff", fontWeight: 900, fontSize: 54, lineHeight: 1.04, marginTop: 14, textShadow: "0 4px 24px #000c", textWrap: "balance" as any, opacity: 0.5 + introP * 0.5 }}>{title}</div>
       </div>

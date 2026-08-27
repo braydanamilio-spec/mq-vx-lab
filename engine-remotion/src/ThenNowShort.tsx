@@ -115,7 +115,11 @@ export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
       ...hoaTietNen(bienCua((props as any).bien), accent) }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 40, left: 0, right: 0, textAlign: "center", zIndex: 6 }}>
-        <div style={{ display: "inline-block", background: color, color: "#0a0c14", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>⏳ THEN × NOW</div>
+        {/* 27/8 — BỎ PILL IN TÊN ĐỊNH DẠNG NỘI BỘ (THEN × NOW).
+            Người xem không biết chữ đó nghĩa là gì, nhưng nó GOM mọi kênh dùng dạng này thành
+            một cụm nhìn thấy được — đúng dấu vân tay "cùng một chủ" mà bộ nhận diện V4 vừa đi
+            xoá khỏi ảnh đại diện và ảnh bìa. Để lại trên video thì công kia thành vô nghĩa.
+            Và nó chiếm mất dải trên cùng, chỗ đáng ra để tiêu đề thở. */}
       </div>
 
       {/* CÁC CẶP */}
