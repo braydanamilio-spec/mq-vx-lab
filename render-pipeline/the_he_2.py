@@ -137,12 +137,51 @@ def loc_an_toan(ds: list, khoa=("name", "ten", "label", "tieu_de", "vo", "nar", 
     return ra
 
 
+def _cau_neo(items: list) -> str:
+    """Câu NEO SO SÁNH — cho con số một thước đo, thay vì để nó lơ lửng.
+
+    27/8 — hai việc cùng lúc:
+      • CHẤT LƯỢNG. "154K" tự nó không nói gì: người xem không biết nhiều hay ít. Kênh dữ liệu
+        hạng nhất luôn neo con số vào một thứ khác — "gấp 3 lần hạng kế", "nhiều hơn cả năm
+        hạng dưới cộng lại". Đây là thứ rẻ nhất mà nâng cảm giác nhiều nhất.
+      • ĐỘ DÀI. Anh chốt long nên 5-10 phút. Đo được một chương ≈ 46,5 giây nên 6 chương ra
+        4'39" — hụt sàn. Thêm chương thì ăn thêm đề tài (kho trung bình chỉ 9,8/kênh), còn thêm
+        câu neo thì dài ra mà KHÔNG tốn đề tài nào. Chọn cách thứ hai.
+
+    Chỉ neo khi CÓ CHÊNH LỆCH THẬT (đỉnh ≥ 1,5 lần hạng kế). Bảng san bằng mà vẫn nói "gấp
+    nhiều lần" là nói sai — thà im."""
+    xs = []
+    for m in (items or []):
+        if not isinstance(m, dict):
+            continue
+        v = _so_tu_chuoi(str(m.get("stat") or m.get("disp") or m.get("oddsDisp") or ""))
+        if v > 0:
+            xs.append((v, str(m.get("name") or m.get("label") or "")))
+    if len(xs) < 3:
+        return ""
+    dinh, ten = xs[0]
+    ke = xs[1][0]
+    day = sum(v for v, _ in xs[1:])
+    if ke <= 0 or dinh < ke * 1.5:
+        return ""
+    lan = dinh / ke
+    if dinh > day:
+        return (f"{ten} alone is bigger than every other one on this list combined.")
+    return (f"{ten} is {lan:.1f} times the next one down."
+            if lan < 10 else
+            f"{ten} is more than {int(lan)} times the next one down.")
+
+
 def _cong_an_toan(st: dict | None, ten_kenh: str = "") -> dict | None:
     """Cổng cuối: story nào còn chữ cấm thì cắt mục đó; cắt xong không đủ thì BỎ CẢ LƯỢT.
 
     Thà mất một video còn hơn mất một kênh."""
     if not st:
         return None
+    # Neo TRƯỚC cổng an toàn để câu neo cũng bị soi chữ cấm như mọi câu khác.
+    _neo = _cau_neo(st.get("items") or [])
+    if _neo and _neo not in str(st.get("outro_vo") or ""):
+        st["outro_vo"] = (str(st.get("outro_vo") or "").rstrip() + " " + _neo).strip()
     if not an_toan(st.get("title", "")):
         print(f"   🛡️ {ten_kenh}: tiêu đề không an toàn — BỎ LƯỢT")
         return None

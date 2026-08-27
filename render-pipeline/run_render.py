@@ -944,11 +944,30 @@ def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
                                  FB.update_job(ljob, status=st, step=step, **x))[-1]
     lst("writing", "Đọc dữ liệu mở — dựng bộ 1 long + %d short" % n_shorts)
     try:
-        # 26/8 — `so_chuong` gấp đôi `so_short`: long ghép đủ 6 chương (≈3'20" khổ 16:9), còn mỗi
-        # short GỘP 2 chương thành một clip riêng. `keys` bắt buộc phải truyền — dạng `cinematic`
-        # (10 kênh) vẽ ảnh bằng AI, thiếu key là bỏ lượt im lặng.
+        # 26/8 — `so_chuong` gấp đôi `so_short`: long ghép các chương, còn mỗi short GỘP 2 chương
+        # thành một clip riêng. `keys` bắt buộc phải truyền — dạng `cinematic` (10 kênh) vẽ ảnh
+        # bằng AI, thiếu key là bỏ lượt im lặng.
+        #
+        # 27/8 — SỐ CHƯƠNG TỰ CO THEO KHO ĐỀ TÀI CỦA TỪNG KÊNH.
+        # Anh chốt: long nên 5-10 phút, 10 càng tốt. Đo thật một chương ≈ 46,5 giây (long 4
+        # chương = 186s), nên 6 chương ra 4'39" — hụt chuẩn; 8 chương ra 6'12"; 10 chương 7'45".
+        # Nhưng MỖI CHƯƠNG ĂN MỘT ĐỀ TÀI, mà kho trung bình 9,8 đề tài/kênh. Đặt cứng 10 chương
+        # là một video nuốt gần trọn kho, kênh câm ngay bộ sau — đúng bệnh đã phải đi chữa cả
+        # sáng nay. Nên lấy theo kho THẬT của kênh: kênh dày thì long dài, kênh mỏng thì ngắn
+        # hơn nhưng vẫn ra video, không kênh nào bị bỏ lại.
+        #   kho >= 20 -> 10 chương (~7'45")   ·   kho >= 16 -> 8 chương (~6'12")
+        #   kho >= 12 -> 7 chương (~5'25")    ·   còn lại   -> 6 chương (~4'39")
+        _kho_n = 0
+        try:
+            _tr, _kho = TH2._kho_xoay_cua(k2)
+            _kho_n = len(_kho or [])
+        except Exception:
+            pass
+        _sc = 10 if _kho_n >= 20 else 8 if _kho_n >= 16 else 7 if _kho_n >= 12 else 6
+        _sc = max(_sc, n_shorts * 2)          # vẫn phải đủ chương để chia cho từng short
+        print(f"   📏 {channel}: kho {_kho_n} đề tài -> long {_sc} chương (~{_sc * 46.5 / 60:.1f} phút)")
         kq = TH2.chay_bo(k2, avoid=_avoid_for(channel), so_short=max(1, n_shorts),
-                         so_chuong=max(2, n_shorts * 2), keys=keys)
+                         so_chuong=_sc, keys=keys)
     except (Exception, SystemExit) as e:
         print_exc_gon()
         lst("failed", f"bộ gen-2 lỗi: {str(e)[:110]}")
