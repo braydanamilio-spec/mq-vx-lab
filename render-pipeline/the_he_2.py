@@ -213,6 +213,22 @@ def _so_tu_chuoi(s: str) -> float:
         return 0.0
 
 
+def _ten_cty(t: str) -> str:
+    """Ten cong ty doc duoc: bo duoi phap ly va menh de "dba".
+
+    27/8 — xem khung that RECALL PLATE: mot the ghi "Silvestri Sweets Inc dba" — cat dung giua
+    menh de, "dba" (doing business as) dung tro tren the nhu mot manh vun. Nguon openFDA ghi ten
+    day du kieu "SILVESTRI SWEETS INC DBA HAMMOND'S CANDIES", ma cat cung 26 ky tu thi roi ngay
+    giua. Cat theo CAU TRUC thay vi theo do dai: bo phan sau "dba" (ten thuong mai thi dai hon
+    ma khong them thong tin), bo duoi Inc/LLC/Corp, roi moi cat neu van con dai."""
+    import re as _re
+    t = _re.sub(r"\s+", " ", str(t or "")).strip(" ,.")
+    t = _re.split(r"\s+d[/.]?b[/.]?a\s+", t, flags=_re.I)[0]
+    t = _re.sub(r"[,\s]+(inc|llc|l\.l\.c|corp|corporation|co|ltd|limited|plc|lp|llp|"
+                r"company|holdings?|group)\.?$", "", t, flags=_re.I).strip(" ,.")
+    return t or str(t)
+
+
 def _gon_so(v: float) -> str:
     if v >= 1_000_000:
         return f"{v / 1_000_000:.1f}M".replace(".0M", "M")
@@ -264,7 +280,7 @@ def _bd_thu_hoi(D, ky):
     co_so = [g for g in ds if g["sl"] > 0]
     if len(co_so) >= 3:
         co_so.sort(key=lambda g: -g["sl"])
-        muc = [{"name": _gon(g["cong_ty"]), "stat": _gon_so(g["sl"]),
+        muc = [{"name": _gon(_ten_cty(g["cong_ty"])), "stat": _gon_so(g["sl"]),
                 "vo": (f"{_gon(g['cong_ty'], 34)} pulled {_gon_so(g['sl'])}"
                        + (f" across {g['lot']} separate recalls" if g["lot"] > 1 else "")
                        + f". {g['ly_do'][:80]}")} for g in co_so[:6]]
@@ -272,7 +288,7 @@ def _bd_thu_hoi(D, ky):
     else:
         nang = {"Class I": 0, "Class II": 1, "Class III": 2}
         ds.sort(key=lambda g: (nang.get(g["muc_do"], 9), -g["lot"]))
-        muc = [{"name": _gon(g["cong_ty"]), "stat": g["muc_do"] or "Class ?",
+        muc = [{"name": _gon(_ten_cty(g["cong_ty"])), "stat": g["muc_do"] or "Class ?",
                 "vo": (f"{_gon(g['cong_ty'], 34)}, {g['muc_do'] or 'a recall'}"
                        + (f", {g['lot']} times" if g["lot"] > 1 else "")
                        + f". {g['ly_do'][:80]}")} for g in ds[:6]]
