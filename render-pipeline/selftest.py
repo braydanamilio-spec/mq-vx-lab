@@ -2190,6 +2190,7 @@ def main():
     check("key vẽ ảnh chết hẳn -> đổi key, không bỏ khung", t_key_ve_anh_chet_phai_doi_key)
     check("18 lane vào 18 điểm khác nhau trong hồ key ảnh", t_18_lane_khong_don_mot_key_anh)
     check("mọi loại key báo trạng thái + lời đúng loại", t_moi_loai_key_deu_bao_trang_thai)
+    check("làm mới token không ép scope (invalid_scope)", t_khong_ep_scope_khi_lam_moi_token)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5072,6 +5073,43 @@ def t_moi_loai_key_deu_bao_trang_thai():
                  'bao_key(_slot["k"], True, "tải clip thật")'):
         assert khau in src, f"khâu thật chưa gọi sổ trạng thái: {khau}"
     assert "nho_id_key(keys)" in src, "set_ai_pool không nạp ánh xạ key->id -> mọi báo cáo rơi im lặng"
+
+
+def t_khong_ep_scope_khi_lam_moi_token():
+    """LÀM MỚI TOKEN THÌ ĐỪNG GỬI KÈM SCOPE.
+
+    27/8 — lượt dọn kho lôi ra 4 kho trả `invalid_scope: Bad Request`:
+    JASONKJLAGONIMV599, ELOYNHCRISSONHLH384, ROBBYSLARTISVOF459, MAXWELLLJFANT…
+    Toàn bộ là kho nối bằng app MỚI — app đó xin `drive.file` (vì Google xếp `auth/drive` là quyền
+    HẠN CHẾ: chưa duyệt thì chặn thẳng, và có trần 100 tài khoản trọn đời). Nhưng
+    `drive_client._oauth_service` viết cứng `scopes=["…/auth/drive"]` lúc đổi refresh_token, nên
+    Google từ chối ngay: hai scope không khớp.
+
+    Nghĩa là MỌI kho nối bằng app mới đều KHÔNG DÙNG ĐƯỢC — trong khi bề ngoài chúng hiện đủ trong
+    danh sách, có dung lượng, trông y như kho tốt. `_free_cached` bắt `invalid_scope` rồi lặng lẽ
+    bỏ kho khỏi hồ, nên nhìn từ ngoài chỉ thấy "kho không được chọn", không thấy lỗi nào.
+
+    Khi ĐÃ có refresh_token thì scope do CHÍNH lần cấp quyền quyết định — gửi kèm `scope` chỉ có
+    thể làm hỏng, không thể làm tốt hơn. Chốt này canh cả Drive lẫn YouTube: kênh YouTube hôm nay
+    đều cùng scope nên chưa nổ, nhưng đó đúng là tình trạng của Drive hôm qua."""
+    import os as _o
+    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    for tep, ham in (("MM0-AutoPublisher/src/drive_client.py", "_oauth_service"),
+                     ("MM0-AutoPublisher/src/youtube_uploader.py", "_client")):
+        src = io.open(_o.path.join(G, tep), encoding="utf-8").read()
+        i = src.index("def " + ham)
+        # Biên hàm = chỗ bắt đầu KHỐI KẾ ở cột 0 — có thể là `def` HOẶC `class`. Bản đầu chỉ tìm
+        # `\ndef ` nên với `drive_client._oauth_service` (theo sau là `class Drive:`) nó ném
+        # ValueError và chốt đỏ vì lỗi của chính nó, không phải vì mã hỏng.
+        ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+        than = src[i: min(ket) if ket else len(src)]
+        # SOI MÃ, ĐỪNG SOI CHÚ THÍCH. Bản đầu bắt trúng chính dòng chú thích giải thích bản vá
+        # (nó có chứa chuỗi `scopes=SCOPES`) -> chốt đỏ oan trong khi mã hoàn toàn đúng.
+        # Một chốt đỏ oan cũng đắt ngang chốt không đỏ: nó chặn phiên, và lần sau người ta sẽ tắt nó.
+        ma = "\n".join(d.split("#")[0] for d in than.splitlines())
+        assert "scopes=SCOPES" not in ma, \
+            f"{tep}:{ham} còn ép scope lúc làm mới token -> token cấp scope khác sẽ invalid_scope"
+        assert "scopes=None" in ma, f"{tep}:{ham} phải truyền scopes=None khi đã có refresh_token"
 
 
 if __name__ == "__main__":
