@@ -124,8 +124,21 @@ def _ai_candidates(first=""):
     của một video, nhưng phần đuôi thì xoay vòng thật sự."""
     out = [k for k in ([first] if first else []) if not _ve_chet(k)]
     con = [k for k in _AI_POOL["keys"] if not _ve_chet(k) and k not in out]
-    # sort ỔN ĐỊNH: hoà số lượt thì giữ nguyên thứ tự pool (đã xoay theo kênh) -> vẫn phá hoà giữa lane
-    con.sort(key=lambda k: _DUNG.get(k, 0))
+    # 27/8 — CẠN CF TRƯỚC RỒI MỚI ĐỘNG TỚI GEMINI.
+    #
+    # Mô phỏng 600 lượt vẽ với hồ thật của anh (87 key CF + 60 Gemini): xoay trải rất đều — mọi
+    # key đều được dùng 4-5 lượt, không key nào bị đốt cạn. Nhưng **Gemini ăn 240/600 lượt** trong
+    # khi CF vẫn còn thừa mênh mông.
+    # Vì sắp thuần theo "ít dùng nhất": CF vừa nhích lên 1 lượt là Gemini (0 lượt) leo lên đầu.
+    # Hai hồ này KHÔNG ngang giá:
+    #   • CF FLUX  — 87 key × ~174 ảnh = ~15.100 ảnh/ngày, và CHỈ dùng để vẽ ảnh
+    #   • Gemini   — hồ dùng CHUNG với khâu VIẾT KỊCH BẢN, tức mỗi lượt vẽ là một lượt viết bị mất
+    # Nên tiêu Gemini khi CF còn chỗ là vừa phí hồ free, vừa bóp cổ khâu viết.
+    # Xếp theo (là-Gemini, số-lượt): quét sạch 87 key CF rồi mới chạm Gemini; trong mỗi nhóm vẫn
+    # giữ nguyên luật ít-dùng-nhất-trước để không key nào bị đốt cạn.
+    def _uu_tien(k: str):
+        return (0 if str(k).startswith("cf:") else 1, _DUNG.get(k, 0))
+    con.sort(key=_uu_tien)
     return out + con
 
 
