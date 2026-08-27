@@ -2186,6 +2186,7 @@ def main():
     check("số hiện ra không mất độ lớn; hook nêu đúng kẻ dẫn đầu", t_so_hien_thi_khong_mat_do_lon)
     check("chống trùng kho: đánh cờ 1 nơi, mọi nơi đọc phải tôn trọng", t_chong_trung_kho_drive)
     check("tiêu đề không lộ mã nội bộ (quét 50 kênh)", t_tieu_de_khong_lo_ma_noi_bo)
+    check("tiêu đề dẫn bằng chủ thể, không phải khuôn + ngày", t_tieu_de_phai_noi_ve_noi_dung)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -4906,6 +4907,45 @@ def t_tieu_de_khong_lo_ma_noi_bo():
             if any(ord(c) > 127 and c not in "—–" for c in duoi):
                 xau.append(f"{k['ten']}: {v!r} -> {ra!r} (còn ký tự không phải ASCII)")
     assert not xau, "mã nội bộ lọt lên tiêu đề:\n     " + "\n     ".join(xau[:8])
+
+
+def t_tieu_de_phai_noi_ve_noi_dung():
+    """TIÊU ĐỀ PHẢI DẪN BẰNG CHỦ THỂ, KHÔNG PHẢI KHUÔN CỐ ĐỊNH + NGÀY.
+
+    27/8 — 11 video của AMERICA LOOKED UP trong một phiên chỉ khác nhau con số ngày
+    ("Most-read on Wikipedia — Aug 24, 2026" ... "— Dec 30, 2025"). Đó là khuôn "nội dung lặp lại,
+    sản xuất hàng loạt" YouTube hạn chế phân phối, và với người xem thì không tiêu đề nào nói được
+    bên trong có gì.
+    Chốt này giữ hai điều, vì mất một trong hai là hỏng:
+      • tiêu đề PHẢI mang tên chủ thể đứng đầu bảng -> hai lát dữ liệu khác nhau ra hai tiêu đề
+        khác nhau MỘT CÁCH TỰ NHIÊN, không nhờ dán hậu tố;
+      • hàm phải được GỌI trong vòng xoay đề tài -> viết hàm mà không nối vào thì mọi thứ trên đây
+        chỉ đúng trong bài kiểm, còn video thật vẫn ra tiêu đề cũ."""
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import the_he_2 as T
+
+    a = T._tieu_de_tu_du_lieu(
+        {"frames": [{"t": 1, "data": [{"name": "Spider-Man", "value": 986.0}]}],
+         "unit": "K reads", "title": "Most-read on Wikipedia"}, {"ten": "AMERICA LOOKED UP"})
+    b = T._tieu_de_tu_du_lieu(
+        {"frames": [{"t": 1, "data": [{"name": "Joshua Kushner", "value": 525.0}]}],
+         "unit": "K reads", "title": "Most-read on Wikipedia"}, {"ten": "AMERICA LOOKED UP"})
+    assert "Spider-Man" in a and "Joshua Kushner" in b, f"tiêu đề không mang chủ thể: {a!r} / {b!r}"
+    assert a != b, "hai lát dữ liệu khác nhau vẫn ra cùng một tiêu đề"
+    assert "986K" in a, f"mất con số dẫn (và mất luôn chữ K): {a!r}"
+    # Chủ thể mang mã nội bộ thì THÀ rơi về khuôn cũ, đừng đẩy mã lên tiêu đề.
+    assert T._tieu_de_tu_du_lieu({"items": [{"name": "tut_manh", "stat": "9"}], "title": "X"},
+                                 {"ten": "K"}) == "", "chủ thể có gạch dưới vẫn lọt lên tiêu đề"
+
+    src = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "the_he_2.py"),
+                  encoding="utf-8").read()
+    i = src.index("def _story_xoay") if "def _story_xoay" in src else src.index("_gan_truc_vao_tieu_de(st.get")
+    than = src[max(0, i - 3000): i + 3000]
+    assert "_tieu_de_tu_du_lieu(st, kenh)" in than, \
+        "hàm dựng tiêu đề theo dữ liệu KHÔNG được gọi trong vòng xoay đề tài -> video thật vẫn tiêu đề cũ"
+    assert "_tieu_de_da_lam(_td" in than, \
+        "tiêu đề theo dữ liệu không qua bộ chống trùng -> có thể đăng lại đúng nội dung đã đăng"
 
 
 if __name__ == "__main__":

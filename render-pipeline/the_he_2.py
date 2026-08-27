@@ -2481,6 +2481,54 @@ def _gan_truc_vao_tieu_de(tieu_de: str, truc: str, val) -> str:
     return f"{t} ({v})" if truc.endswith("nam") else f"{t} — {v}"
 
 
+def _tieu_de_tu_du_lieu(st: dict, kenh: dict) -> str:
+    """Dựng tiêu đề TỪ CHÍNH CHỦ THỂ ĐỨNG ĐẦU BẢNG, thay cho khuôn cố định + ngày.
+
+    27/8 — đọc 11 tiêu đề thật của AMERICA LOOKED UP trong một phiên:
+        Most-read on Wikipedia — Aug 24, 2026
+        Most-read on Wikipedia — Aug 19, 2026
+        Most-read on Wikipedia — Aug 12, 2026
+        Most-read on Wikipedia — Dec 30, 2025
+    Mười một video chỉ khác nhau con số ngày. Hai cái hỏng cùng lúc:
+      • với NGƯỜI XEM: trang kênh trông như một cỗ máy nhả hàng loạt, và không tiêu đề nào nói cho
+        họ biết bên trong có gì đáng xem — cái duy nhất phân biệt lại là thứ họ không quan tâm;
+      • với YOUTUBE: đây đúng khuôn "nội dung lặp lại, sản xuất hàng loạt" bị hạn chế phân phối.
+
+    Gốc: khuôn tiêu đề mô tả CÁCH LÀM ("most-read on Wikipedia") chứ không mô tả NỘI DUNG. Mà nội
+    dung thì mỗi lượt một khác — chỉ là không ai đưa nó lên tiêu đề.
+
+    Nên lấy chính thứ đứng đầu bảng làm chủ ngữ. Mười một lượt là mười một cái tên khác nhau, nên
+    hết trùng MỘT CÁCH TỰ NHIÊN — không phải nhờ dán thêm hậu tố cho khác đi. Và người xem đọc
+    tiêu đề là biết ngay bên trong nói về ai.
+
+    Khuôn CỐ ĐỊNH THEO KÊNH (băm từ tên kênh) chứ không đổi theo từng video: một kênh nên có một
+    giọng nhất quán. Đổi khuôn mỗi video chỉ là biến hoá bề mặt, mà lại làm kênh trông thiếu chủ đích.
+
+    Trả "" khi không dựng được — lúc đó đường lui (khuôn + ngày) vẫn còn nguyên."""
+    d = _so_noi_bat(st or {})
+    ten = " ".join(str(d.get("name") or "").split())
+    so = " ".join(str(d.get("stat") or "").split())
+    khung = " ".join(str((st or {}).get("title") or "").split())
+    if len(ten) < 2 or not khung:
+        return ""
+    # Chủ thể cũng phải là chữ cho người đọc — cùng luật với `_gan_truc_vao_tieu_de`. Tên lấy từ
+    # nguồn nên gần như luôn sạch, nhưng "gần như" không phải là một bảo đảm.
+    if "_" in ten or any(ord(c) > 127 for c in ten):
+        return ""
+    # Tên đã nằm sẵn trong khung thì ghép vào chỉ tổ lặp chữ ("Spider-Man — Spider-Man: the spike").
+    if ten.lower() in khung.lower():
+        return ""
+    import hashlib as _h
+    kieu = int(_h.md5(str(kenh.get("ten") or "").encode()).hexdigest(), 16) % 2
+    if so:
+        t = f"{ten}: {so} — {khung}" if kieu == 0 else f"{khung} — {ten}, {so}"
+    else:
+        t = f"{ten} — {khung}"
+    # YouTube cắt tiêu đề quanh mốc 60-70 ký tự trong kết quả tìm; 95 là trần an toàn để phần
+    # QUAN TRỌNG NHẤT (chủ thể + số, đứng đầu) không bao giờ bị cắt mất.
+    return t[:95].rstrip(" —-,:")
+
+
 def _van_tay_du_lieu(st: dict) -> frozenset:
     """Dấu vân tay theo DỮ LIỆU, không theo tiêu đề.
 
@@ -2631,6 +2679,13 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
             continue
         if truc:
             st["title"] = _gan_truc_vao_tieu_de(st.get("title"), truc, t.get(truc))
+        # Ưu tiên tiêu đề dựng từ dữ liệu (xem `_tieu_de_tu_du_lieu`), nhưng CHỈ KHI nó chắc chắn
+        # chưa từng dùng. Thứ tự này quan trọng: khuôn-cộng-ngày ở trên vẫn là đường lui bảo đảm
+        # phân biệt được mọi lượt xoay, nên nếu tiêu đề theo dữ liệu trùng (hai ngày cùng một chủ
+        # thể đứng đầu — chuyện có thật với bảng đọc nhiều Wikipedia) thì rơi về nó, không kẹt.
+        _td = _tieu_de_tu_du_lieu(st, kenh)
+        if _td and not _tieu_de_da_lam(_td, avoid):
+            st["title"] = _td
         da_thay = da_thay or st
         if not _tieu_de_da_lam(st.get("title"), avoid):
             if i:
