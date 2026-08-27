@@ -2582,7 +2582,15 @@ def _tieu_de_tu_du_lieu(st: dict, kenh: dict) -> str:
     giọng nhất quán. Đổi khuôn mỗi video chỉ là biến hoá bề mặt, mà lại làm kênh trông thiếu chủ đích.
 
     Trả "" khi không dựng được — lúc đó đường lui (khuôn + ngày) vẫn còn nguyên."""
-    d = _so_noi_bat(st or {})
+    # Lớp lưới thứ hai: đây là hàm LÀM ĐẸP TIÊU ĐỀ. Nó không được phép giết một video đã dựng
+    # xong vì một hình dạng dữ liệu lạ. Hỏng thì trả "" và rơi về khuôn cũ — mất một tiêu đề hay,
+    # giữ được cả bộ video.
+    try:
+        d = _so_noi_bat(st or {})
+    except Exception as e:
+        print(f"   ⚠️ {kenh.get('ten', '?')}: không dựng được tiêu đề theo dữ liệu ({str(e)[:60]}) "
+              f"— dùng khuôn cũ")
+        return ""
     ten = " ".join(str(d.get("name") or "").split())
     so = " ".join(str(d.get("stat") or "").split())
     khung = " ".join(str((st or {}).get("title") or "").split())
@@ -2843,6 +2851,8 @@ def _so_noi_bat(st: dict) -> dict:
     Không khớp khoá thì `stat` rỗng ⇒ `DocThumb` tự lùi về bố cục tiêu đề. Cùng lớp lỗi "hai bên
     dùng khuôn khác nhau" đã gặp ở `doc_kenh` (33/50 tra không ra)."""
     def _g(d, *ks):
+        if not isinstance(d, dict):
+            return ""                       # mục có thể là chuỗi/số — xem chú thích ở nhánh `hook`
         for k in ks:
             v = (d or {}).get(k)
             if v not in (None, "", 0):
@@ -2865,7 +2875,11 @@ def _so_noi_bat(st: dict) -> dict:
         return {"stat": str(len(it)), "name": str(st.get("unit") or "")}
     fr = st.get("frames") or []
     if fr:
-        d = (fr[-1].get("data") or [{}])[0]
+        _cuoi = fr[-1] if isinstance(fr[-1], dict) else {}
+        _ds = [x for x in (_cuoi.get("data") or []) if isinstance(x, dict)]
+        if not _ds:
+            return {}                       # khung rỗng / mục không phải dict -> không có số dẫn
+        d = _ds[0]
         v = d.get("value")
         so = f"{v:,.0f}" if isinstance(v, (int, float)) else str(v or "")
         don = str(st.get("unit") or "")
@@ -2887,7 +2901,16 @@ def _so_noi_bat(st: dict) -> dict:
         return {"stat": str(_g(pa[-1], "nowVal", "nowDisp")),
                 "name": str(_g(pa[-1], "label", "name", "nowYear"))}
     h = st.get("hook") or {}
-    if h:
+    # 27/8 — HOOK CÓ THỂ LÀ CHUỖI, KHÔNG PHẢI LÚC NÀO CŨNG LÀ DICT.
+    # Kênh dạng phim đặt `hook` là một câu văn. Mã cũ gọi thẳng `h.get(...)` -> AttributeError:
+    # 'str' object has no attribute 'get' -> giết cả bộ.
+    # Trước chiều nay lỗi này nấp được vì `_so_noi_bat` chỉ chạy ở đường ẢNH BÌA; từ lúc tôi nối
+    # nó vào khâu đặt tiêu đề thì nó chạy cho MỌI story, và lôi ngay dạng dữ liệu nó chưa gặp.
+    # Bài học: nối một hàm cũ vào đường chạy mới nghĩa là cho nó ăn tập dữ liệu MỚI — phải soi lại
+    # mọi giả định về hình dạng dữ liệu, không phải chỉ soi hàm gọi.
+    if isinstance(h, str):
+        return {"stat": "", "name": h.strip()}
+    if isinstance(h, dict) and h:
         return {"stat": str(h.get("stat") or ""), "name": str(h.get("label") or "")}
     return {}
 

@@ -2194,6 +2194,7 @@ def main():
     check("bỏ việc không được im lặng (mọi failed đều có log)", t_bo_viec_khong_duoc_im_lang)
     check("mọi đường dựng đều nhận hồ key", t_moi_duong_dung_deu_nhan_ho_key)
     check("tài sản kênh dùng phải có trong git (không chỉ ở máy)", t_tai_san_kenh_dung_phai_co_trong_git)
+    check("đặt tiêu đề chịu được mọi hình dạng story", t_dat_tieu_de_chiu_duoc_moi_hinh_dang)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5249,6 +5250,50 @@ def t_tai_san_kenh_dung_phai_co_trong_git():
         f"{len(thieu)} bản nhạc được {sum(len(v) for v in thieu.values())} kênh dùng nhưng KHÔNG "
         f"có trong git -> CI se 404 va lenh render hong: " +
         ", ".join(f"{t}({len(v)} kênh)" for t, v in list(thieu.items())[:5]))
+
+
+def t_dat_tieu_de_chiu_duoc_moi_hinh_dang():
+    """HÀM ĐẶT TIÊU ĐỀ PHẢI CHỊU ĐƯỢC MỌI HÌNH DẠNG STORY, VÀ KHÔNG BAO GIỜ GIẾT RENDER.
+
+    27/8 — chính tôi gây ra lỗi này chiều nay. `_so_noi_bat` vốn chỉ chạy ở đường ẢNH BÌA; khi tôi
+    nối nó vào khâu đặt tiêu đề, nó bắt đầu chạy cho MỌI story — và kênh dạng phim đặt `hook` là
+    một CÂU VĂN chứ không phải dict:
+        AttributeError: 'str' object has no attribute 'get'
+    -> "bộ gen-2 lỗi" -> mất cả long lẫn short của kênh đó.
+
+    Bài học đắt: nối một hàm cũ vào đường chạy mới nghĩa là cho nó ăn TẬP DỮ LIỆU MỚI. Phải soi
+    lại mọi giả định về hình dạng dữ liệu, chứ không phải chỉ soi chỗ gọi.
+
+    Hai điều chốt giữ:
+      • `_so_noi_bat` chịu được hook chuỗi, mục chuỗi/số, khoá thiếu — không ném;
+      • `_tieu_de_tu_du_lieu` LÀ HÀM LÀM ĐẸP, hỏng thì trả "" chứ tuyệt đối không được ném ra
+        ngoài: mất một tiêu đề hay còn hơn mất một video 7 phút đã dựng xong."""
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import the_he_2 as T
+    ch = {"ten": "THU"}
+    la = [
+        {"hook": "What America forgot"},                       # hook là CÂU VĂN (kênh phim)
+        {"hook": 123},
+        {"items": ["abc", "def"]},                             # mục là chuỗi
+        {"items": [None, 5]},
+        {"data": ["x"]},
+        {"pairs": ["y"]},
+        {"frames": [{"t": 1, "data": ["z"]}]},
+        {"frames": [{"t": 1}]},                                # khung thiếu `data`
+        {},
+        {"title": "chỉ có tiêu đề"},
+    ]
+    for st in la:
+        try:
+            T._so_noi_bat(st)
+        except Exception as e:
+            raise AssertionError(f"_so_noi_bat ném với {st!r}: {type(e).__name__}: {e}")
+        try:
+            r = T._tieu_de_tu_du_lieu(st, ch)
+        except Exception as e:
+            raise AssertionError(f"_tieu_de_tu_du_lieu ném với {st!r}: {type(e).__name__}: {e}")
+        assert isinstance(r, str), f"phải trả chuỗi, nhận {type(r).__name__} với {st!r}"
 
 
 if __name__ == "__main__":
