@@ -2184,6 +2184,7 @@ def main():
     check("env trỏ tệp khoá thì phải có bước tạo tệp", t_env_tro_file_thi_phai_tao_file)
     check("B2 failover: thiếu env từ chối êm", t_b2_failover)
     check("số hiện ra không mất độ lớn; hook nêu đúng kẻ dẫn đầu", t_so_hien_thi_khong_mat_do_lon)
+    check("chống trùng kho: đánh cờ 1 nơi, mọi nơi đọc phải tôn trọng", t_chong_trung_kho_drive)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -4817,6 +4818,46 @@ def t_so_hien_thi_khong_mat_do_lon():
         f["data"] = sorted(f["data"], key=lambda z: -(z.get("value") or 0))
     d = T._so_noi_bat({"frames": fr, "unit": "K reads"})
     assert d["stat"] == "986K" and d["name"] == "A", f"hook nêu nhầm: {d}"
+
+
+def t_chong_trung_kho_drive():
+    """CHỐNG TRÙNG KHO: đánh dấu ở MỘT nơi thì MỌI nơi đọc phải tôn trọng.
+
+    27/8 — anh yêu cầu: cùng một Gmail, nối lại 2-3 lần thì chỉ cập nhật token, không được đẻ kho
+    thứ hai, không đếm nhầm, không loạn.
+    Cơ chế: `connect-worker` nhận dạng theo ba tầng (gid -> email -> root), giữ bản CŨ NHẤT làm
+    chuẩn, và rút bản trùng khỏi hồ bằng cờ `pool:false` — cố ý KHÔNG XOÁ, vì video cũ ghi
+    `drive_account` theo nhãn đó, xoá là mất đường tra.
+    Nhưng đánh cờ chỉ có tác dụng nếu BÊN ĐỌC tôn trọng nó. Sót một chỗ đọc là bản trùng vẫn được
+    tính vào tổng dung lượng (phồng gấp đôi chỗ thật) và vẫn được chọn để đẩy (tông vào
+    refresh_token đã chết). Lúc đó cơ chế coi như không có, mà nhìn mã thì tưởng có — loại nguy
+    hiểm hơn hẳn so với không làm gì.
+    Chốt này soi ĐỦ BA phía: worker đánh cờ, Python lọc, dashboard lọc."""
+    import os as _o
+    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+
+    w = io.open(_o.path.join(G, "MM0-AutoPublisher/connect-worker/src/worker.js"), encoding="utf-8").read()
+    assert "async function timKhoTrung" in w, "worker thiếu bộ nhận dạng kho trùng"
+    for tang in ("c.gid === dau.gid", "c.email.toLowerCase() === dau.email.toLowerCase()", "c.root === dau.root"):
+        assert tang in w, f"timKhoTrung thiếu tầng nhận dạng: {tang}"
+    assert "pool: false" in w and "trung_voi" in w, "worker không rút bản trùng khỏi hồ"
+    assert "gid = String(ui.id" in w, "worker không bắt `gid` -> mất tầng nhận dạng bền nhất"
+    # Truy vấn phải một-trường: nhiều trường thì phụ thuộc chỉ mục, thiếu chỉ mục là lặng lẽ trả
+    # rỗng rồi đẻ kho trùng — đúng thứ nó sinh ra để chặn.
+    _i = w.index("async function timKhoTrung"); _j = w.index("\nasync function", _i + 10)
+    assert "compositeFilter" not in w[_i:_j], "timKhoTrung dùng truy vấn nhiều trường -> phụ thuộc chỉ mục"
+
+    st = io.open(_o.path.join(G, "MM0-AutoPublisher/src/storage.py"), encoding="utf-8").read()
+    assert "def _trong_ho" in st, "storage.py thiếu bộ lọc hồ"
+    assert st.count("_trong_ho(c)") >= 4, \
+        f"storage.py mới lọc {st.count('_trong_ho(c)')}/4 đường đọc hồ -> bản trùng vẫn lọt vào"
+
+    db = io.open(_o.path.join(G, "MM0-AutoPublisher/dashboard/index.html"), encoding="utf-8").read()
+    assert db.count("pool!==false") >= 2, \
+        f"dashboard mới lọc {db.count('pool!==false')}/2 chỗ (danh sách + bộ đếm) -> vẫn đếm nhầm"
+    assert "s.size} tài khoản" not in db, "bộ đếm còn dùng s.size (đếm cả bản trùng)"
+    # Sức chứa phải tính bằng ĐÚNG `cap_gb` bộ đẩy dùng (14), không phải 15.
+    assert "(a.cap_gb||15)" not in db, "dashboard còn tính sức chứa 15GB/kho trong khi bộ đẩy dùng 14"
 
 
 if __name__ == "__main__":
