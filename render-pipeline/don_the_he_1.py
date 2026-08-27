@@ -126,6 +126,7 @@ def main() -> int:
     # Sổ chủ đề (`render_topics`) KHÔNG bị đụng — đúng luật CHANNEL_METHODS, và còn có lợi: làm
     # lại mà vẫn nhớ đề tài cũ thì loạt mới ra đề tài KHÁC, không lặp lại đúng những video vừa xoá.
     gen2 = "--gen2" in sys.argv
+    tha = "--tha-de-tai" in sys.argv
     that = "--that" in sys.argv
     if gen2 and "--ban-ghi" in sys.argv:
         # KHOÁ CỨNG. `--ban-ghi` xoá BẢN GHI KÊNH khỏi Firestore. Với thế hệ 1 thì đúng (những
@@ -174,7 +175,16 @@ def main() -> int:
     # `--job`, log không có lỗi nào, mà khối dọn job không bao giờ chạy tới — hàm thoát ở đây rồi.
     # Đúng dạng "thêm nhánh mới nhưng cổng cũ không biết đến nó", cùng họ với `tham_so.xoay` khai
     # ra mà không ai đọc. Chốt: t_cong_biet_moi_co.
-    if not (lam_tat or lam_kho or lam_bg or lam_job):
+    if gen2 and tha:
+        # Dọn video ĐỂ LÀM LẠI thì sổ đề tài phải được thả, nếu không hệ sẽ né đúng những đề tài
+        # vừa xoá và đi làm cái khác — "dọn để làm lại" thành "dọn rồi làm cái khác".
+        n = 0
+        for c in cu:
+            if that and FB.tha_de_tai(owner, c["name"]):
+                n += 1
+        print(f"  🔓 {'đã thả' if that else '(sẽ thả)'} sổ đề tài của {n if that else len(cu)} kênh "
+              f"— những đề tài đó được LÀM LẠI. Kịch bản trên Drive (_KICHBAN) giữ nguyên.")
+    if not (lam_tat or lam_kho or lam_bg or lam_job or tha):
         print("\n  (chỉ đếm. Thêm --tat / --kho / --ban-ghi / --job và --that để làm thật)")
         return 0
 

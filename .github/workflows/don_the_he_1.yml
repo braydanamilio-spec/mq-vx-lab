@@ -21,6 +21,9 @@ on:
       don_job:
         description: "1 = xoá job kênh cũ khỏi render_jobs (Kho tổng video trên dashboard)"
         default: "0"
+      tha_de_tai:
+        description: "1 = THẢ sổ đề tài của các kênh được dọn, để chúng được LÀM LẠI (chỉ dùng cùng gen2). Kịch bản trên Drive giữ nguyên."
+        default: "0"
       gen2:
         description: "1 = ĐỔI ĐÍCH sang 50 kênh THẾ HỆ 2 (dọn video làm lại từ đầu). Giữ nguyên kịch bản, brand kit, cấu hình kênh, sổ chủ đề. KHÔNG dùng chung với don_ban_ghi."
         default: "0"
@@ -89,4 +92,5 @@ jobs:
           if [ "${{ github.event.inputs.don_ban_ghi }}" = "1" ]; then ARGS="$ARGS --ban-ghi"; fi
           if [ "${{ github.event.inputs.don_job }}"     = "1" ]; then ARGS="$ARGS --job"; fi
           if [ "${{ github.event.inputs.gen2 }}"        = "1" ]; then ARGS="$ARGS --gen2"; fi
+          if [ "${{ github.event.inputs.tha_de_tai }}"  = "1" ]; then ARGS="$ARGS --tha-de-tai"; fi
           python render-pipeline/don_the_he_1.py $ARGS

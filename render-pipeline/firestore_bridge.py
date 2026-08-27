@@ -991,6 +991,35 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     return res
 
 
+def tha_de_tai(owner: str, channel: str) -> bool:
+    """XOÁ sổ đề tài của một kênh — để những đề tài đó được LÀM LẠI.
+
+    27/8 — dùng đúng một trường hợp: khi đã DỌN video của kênh đi để làm lại vì chất lượng.
+    Lúc đó sổ đề tài đang nói một điều KHÔNG CÒN ĐÚNG ("đã làm rồi"), và nếu giữ nguyên thì hệ
+    sẽ né đúng những đề tài vừa bị xoá, đi làm đề tài khác — tức là "dọn để làm lại" biến thành
+    "dọn rồi làm cái khác". Sổ này là chỉ mục CHỐNG TRÙNG cho video ĐANG TỒN TẠI; video không
+    còn thì mục lục cũng phải theo.
+    Cố ý KHÔNG đụng `_KICHBAN` trên Drive: kịch bản là thứ tốn tiền AI viết ra, và luật
+    CHANNEL_METHODS cấm xoá. Ở đây chỉ xoá CHỈ MỤC, không xoá nội dung."""
+    ch = str(channel).replace(" ", "").upper()
+    _TOPICS_CACHE.pop((owner, ch), None)
+    try:
+        _cw("tha_de_tai")
+        _soft(lambda: _db_meta().collection("render_topics").document(f"{owner}__{ch}").set(
+            {"owner": owner, "channel": ch, "topics": []}, merge=True), "tha_de_tai")
+        try:
+            import hot_db as _H
+            _H.nho_ghi(f"topics:{owner}:{ch}", [], "topics")
+        except Exception:
+            pass
+        return True
+    except BaseException as e:
+        if isinstance(e, KeyboardInterrupt):
+            raise
+        print(f"   ⚠️ không thả được sổ đề tài {ch}: {str(e)[:60]}")
+        return False
+
+
 def _keys_tu_d1(owner: str) -> list:
     """Hồ key từ ảnh chụp D1 — đường lui CUỐI khi Firestore cạn sạch.
 
