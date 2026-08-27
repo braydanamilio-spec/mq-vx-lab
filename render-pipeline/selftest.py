@@ -1200,6 +1200,37 @@ def t_dien_tap_can_quota():
         raise AssertionError("cạn quota là hệ đứng ở %d chỗ: %s" % (len(chet), " · ".join(chet[:4])))
 
 
+def t_khong_ten_chua_dinh_nghia():
+    """Quét `undefined name` trên các tệp lõi — bắt NameError TRƯỚC khi nó nấp trong nhánh hiếm.
+
+    27/8 — lane STEAMTRUTH chết với `NameError: name 'keys' is not defined`. Nguyên nhân: em thêm
+    tham số `keys` cho `dung_props` và sửa hai chỗ gọi, nhưng `chay_chung` cũng gọi nó mà bản thân
+    `chay_chung` không có `keys` trong tham số. Cú pháp hợp lệ, `ast.parse` xanh, selftest xanh —
+    và nó chỉ nổ khi luồng đi đúng vào nhánh đó, tức trên CI, sau khi đã tiêu một lane.
+    Đây là loại lỗi đắt nhất trong Python: không phải lỗi cú pháp nên mọi phép kiểm cú pháp đều
+    bỏ qua, mà lại là lỗi CHẮC CHẮN NỔ khi chạy tới.
+    `pyflakes` bắt được nó trong một giây, không cần chạy gì cả. Thiếu thư viện thì bỏ qua có
+    thông báo — chốt này là lớp làm tốt hơn, không được thành chỗ chặn mới."""
+    import subprocess as _sp
+    import sys as _sy
+    _goc = os.path.dirname(os.path.abspath(__file__))
+    try:
+        r = _sp.run([_sy.executable, "-m", "pyflakes",
+                     os.path.join(_goc, "the_he_2.py"), os.path.join(_goc, "run_render.py"),
+                     os.path.join(_goc, "firestore_bridge.py"), os.path.join(_goc, "hot_db.py"),
+                     os.path.join(_goc, "y_tuong.py"), os.path.join(_goc, "radar_dethai.py")],
+                    capture_output=True, text=True, timeout=120)
+    except FileNotFoundError:
+        print("      ⏭ bỏ qua: chưa cài pyflakes (`pip install pyflakes`)")
+        return
+    xau = [d for d in (r.stdout or "").splitlines() if "undefined name" in d]
+    if not xau and "No module named" in (r.stderr or ""):
+        print("      ⏭ bỏ qua: chưa cài pyflakes (`pip install pyflakes`)")
+        return
+    assert not xau, ("có %d tên chưa định nghĩa — sẽ nổ NameError khi chạy tới:\n   %s"
+                     % (len(xau), "\n   ".join(d.strip()[-110:] for d in xau[:6])))
+
+
 def t_moi_kenh_gen2_vao_duoc_nhanh():
     """Đường chạy phải quyết định bằng THẾ HỆ, không bằng định dạng.
 
@@ -2259,6 +2290,7 @@ def main():
     check("kênh cùng niche không được trùng kho đề tài", t_kenh_anh_em_khong_trung_kho)
     check("50 kênh không được dùng chung một bản nhạc", t_nhac_nen_khong_dung_chung)
     check("MỌI kênh gen-2 phải vào được nhánh gen-2", t_moi_kenh_gen2_vao_duoc_nhanh)
+    check("không tên nào chưa định nghĩa (NameError nấp ở nhánh hiếm)", t_khong_ten_chua_dinh_nghia)
     check("50 kênh không được giống nhau (≥70 điểm)", t_50_kenh_khong_duoc_giong_nhau)
     check("băm Python khớp băm TypeScript", t_bam_python_khop_typescript)
     check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)

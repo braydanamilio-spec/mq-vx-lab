@@ -2296,7 +2296,7 @@ def qc_hook_sau_render(duong: str, ten_kenh: str = "") -> tuple:
 
 def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
                avoid: list | None = None, st_san: dict | None = None,
-               ky_hieu: str = "") -> tuple[str, dict] | None:
+               ky_hieu: str = "", keys: list | None = None) -> tuple[str, dict] | None:
     """Dựng + render cho MỌI dạng. Trả (đường dẫn, QC) hoặc None nếu bỏ lượt.
 
     `avoid` = tiêu đề các video kênh này ĐÃ làm. Thiếu nó thì kênh lặp lại đúng một câu chuyện
@@ -2885,7 +2885,7 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
         if not st_g:
             continue
         ra_s = os.path.abspath(os.path.join(GOC, "out", f"th2bo_{slk}_s{gi}.mp4"))
-        kq = chay_chung(kenh, ra=ra_s, st_san=st_g, ky_hieu=f"s{gi}")
+        kq = chay_chung(kenh, ra=ra_s, st_san=st_g, ky_hieu=f"s{gi}", keys=keys)
         if not kq:
             print(f"   ⚠️ {ten}: short {gi} (gộp {len(nhom)} chương) không dựng được")
             continue

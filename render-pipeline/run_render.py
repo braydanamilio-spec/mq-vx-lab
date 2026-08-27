@@ -1831,7 +1831,15 @@ def plan_mode():
         try:
             if cau_hinh:
                 import base64 as _b64, gzip as _gz
-                _bo = {str(c.get("name") or ""): c for c in cau_hinh if c.get("name") in set(lst)}
+                # 27/8 — GÓI CẤU HÌNH PHẢI GỒM CẢ HÀNG CHỜ, không chỉ 18 kênh vào mẻ.
+                # Đo log phiên: "⚠️ hàng chờ có PENTAGONLEDGER nhưng không thấy cấu hình — bỏ qua"
+                # (và RENTREALITY). Lane xong sớm lấy việc kế từ hàng chờ, nhưng gói cấu hình chỉ
+                # đóng cho `lst` = 18 kênh của mẻ, nên 32 kênh trong hàng chờ KHÔNG có cấu hình.
+                # Lane lấy được tên rồi bỏ ngay — hàng chờ sinh ra để lane khỏi ngồi không, mà lại
+                # thành lane chạy không tải. Đóng gói cả hàng chờ: thêm ~20KB, đổi lấy việc lane
+                # thật sự làm được.
+                _can = set(lst) | set(_du_hang or [])
+                _bo = {str(c.get("name") or ""): c for c in cau_hinh if c.get("name") in _can}
                 goi = _b64.b64encode(_gz.compress(
                     json.dumps(_bo, ensure_ascii=False, default=str).encode())).decode()
         except Exception as e:
