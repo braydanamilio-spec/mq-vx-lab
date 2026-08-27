@@ -520,6 +520,28 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
             _ve_die(_k, _muc_nghi(e))     # nghỉ ĐÚNG mức: chặn theo phút 2' · cạn ngày tới mốc reset
             last_quota = e
             continue
+        # 27/8 — KEY CHẾT HẲN THÌ ĐỔI KEY, KHÔNG PHẢI BỎ KHUNG ẢNH.
+        #
+        # Đọc log thật lane AMERICALOOKEDUP phiên 12:14: 16 lượt
+        #     `Nano Banana '…' lỗi: 400 INVALID_ARGUMENT … 'API key not valid'`
+        # Nhánh này xếp nó vào "lỗi KHÁC -> đổi key cũng thế" — kết luận đó SAI với đúng loại lỗi
+        # này: "API key not valid" là hỏng của CHÍNH CÁI KEY, key khác dùng được bình thường.
+        # Hậu quả không phải là tốn lượt gọi, mà nặng hơn nhiều: key chết nằm đầu hồ, mỗi khung
+        # ảnh thử nó trước, hỏng, rồi `return False` — nên CẢ PHIÊN mất sạch ảnh AI, im lặng, chỉ
+        # để lại một dòng cảnh báo trông như lỗi vặt về prompt.
+        # `key_manager.CHET_HAN` ĐÃ có sẵn chữ ký này từ 25/8 — chỉ là đường vẽ ảnh không hỏi tới
+        # nó, mà tự phân loại lấy. Cùng một câu hỏi ("key này còn sống không") mà hai chỗ trả lời
+        # bằng hai bộ luật khác nhau thì kiểu gì cũng có một chỗ sai.
+        _low = str(e).lower()
+        try:
+            import key_manager as _KM
+            _chet = any(x in _low for x in _KM.CHET_HAN)
+        except Exception:
+            _chet = "api key not valid" in _low or "api_key_invalid" in _low
+        if _chet:
+            _ve_die(_k, 60 * 24 * 7)      # chết hẳn -> nghỉ 1 tuần, coi như rút khỏi hồ vẽ ảnh
+            print(f"   ⛔ key vẽ ảnh ••••{str(_k)[-4:]} CHẾT HẲN ({str(e)[-90:].strip()}) — đổi key")
+            continue
         # lỗi KHÁC (chặn nội dung, prompt hỏng, mạng) -> đổi key cũng thế, dừng luôn cho đỡ tốn
         print(f"   ⚠️ Nano Banana '{prompt[:30]}' lỗi: {str(e)[:100]}")
         return False

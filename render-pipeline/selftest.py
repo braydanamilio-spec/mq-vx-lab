@@ -2187,6 +2187,7 @@ def main():
     check("chống trùng kho: đánh cờ 1 nơi, mọi nơi đọc phải tôn trọng", t_chong_trung_kho_drive)
     check("tiêu đề không lộ mã nội bộ (quét 50 kênh)", t_tieu_de_khong_lo_ma_noi_bo)
     check("tiêu đề dẫn bằng chủ thể, không phải khuôn + ngày", t_tieu_de_phai_noi_ve_noi_dung)
+    check("key vẽ ảnh chết hẳn -> đổi key, không bỏ khung", t_key_ve_anh_chet_phai_doi_key)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -4946,6 +4947,40 @@ def t_tieu_de_phai_noi_ve_noi_dung():
         "hàm dựng tiêu đề theo dữ liệu KHÔNG được gọi trong vòng xoay đề tài -> video thật vẫn tiêu đề cũ"
     assert "_tieu_de_da_lam(_td" in than, \
         "tiêu đề theo dữ liệu không qua bộ chống trùng -> có thể đăng lại đúng nội dung đã đăng"
+
+
+def t_key_ve_anh_chet_phai_doi_key():
+    """KEY VẼ ẢNH CHẾT HẲN -> ĐỔI KEY, KHÔNG PHẢI BỎ KHUNG ẢNH.
+
+    27/8 — log thật lane AMERICALOOKEDUP phiên 12:14 có 16 lượt
+        `Nano Banana '…' lỗi: 400 INVALID_ARGUMENT … 'API key not valid'`
+    Đường vẽ ảnh xếp nó vào "lỗi KHÁC -> đổi key cũng thế" rồi `return False`. Kết luận đó sai với
+    đúng loại lỗi này: "API key not valid" là hỏng của CHÍNH CÁI KEY.
+    Thiệt hại không phải mấy lượt gọi phí, mà là: key chết nằm đầu hồ -> mỗi khung ảnh thử nó
+    trước -> hỏng -> bỏ khung -> CẢ PHIÊN mất sạch ảnh AI, im lặng, chỉ để lại một dòng trông như
+    lỗi vặt về prompt. Kênh 'không dùng ảnh AI' và kênh 'ảnh AI hỏng hết' nhìn từ video là một.
+
+    `key_manager.CHET_HAN` đã có chữ ký này từ 25/8 — đường vẽ ảnh chỉ là không hỏi tới nó mà tự
+    phân loại lấy. Chốt này ép hai chỗ dùng CHUNG một bộ luật: cùng một câu hỏi mà hai nơi trả lời
+    bằng hai bộ luật khác nhau thì kiểu gì cũng có một nơi sai."""
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import key_manager as KM
+    for chu in ("api key not valid", "api_key_invalid"):
+        assert chu in KM.CHET_HAN, f"chữ ký key chết thiếu {chu!r}"
+    src = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "datastory_ci.py"),
+                  encoding="utf-8").read()
+    i = src.index("Nano Banana '{prompt[:30]}' lỗi")
+    kho = src[max(0, i - 1800): i]
+    assert "KM.CHET_HAN" in kho or "_KM.CHET_HAN" in kho, \
+        "đường vẽ ảnh không dùng chung bộ luật key chết của key_manager"
+    # Phải so với chính nhánh key-chết. Bản đầu so `continue` với `_is_quota_err` — đúng một cách
+    # VÔ NGHĨA, vì nhánh quota ngay trên cũng có `continue`. Chốt đó không đỏ khi em cố tình vô
+    # hiệu nhánh key-chết, tức là nó đo nhầm thứ.
+    j = kho.index("CHET_HAN")
+    sau = kho[j:]
+    assert "continue" in sau, "nhận ra key chết nhưng không `continue` sang key kế -> vẫn bỏ khung ảnh"
+    assert "if _chet:" in sau, "nhánh key chết bị vô hiệu -> key hỏng vẫn nằm đầu hồ"
 
 
 if __name__ == "__main__":
