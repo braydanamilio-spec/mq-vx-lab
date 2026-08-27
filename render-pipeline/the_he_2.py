@@ -1806,7 +1806,12 @@ def dung_props_race(kenh: dict, ky: dict | None = None, st_san: dict | None = No
              "title": st["title"][:40], "unit": st["unit"][:6],
              "handle": kenh["handle"], "source": ten_nguon(st.get("nguon", "")),
              "audio": os.path.relpath(track, DS.PUB), "subs": subs,
-             "accent": b.get("primary", "#F5B301"), "music": "music/carefree.mp3", "sfx": True,
+             "accent": b.get("primary", "#F5B301"),
+             # 27/8 — nhạc nền RIÊNG của kênh. Trước đây viết cứng `carefree.mp3` nên 50 kênh
+             # dùng chung đúng một bản, dù kho có 14 bản dùng được. Đó là dấu vân tay "cùng một
+             # chủ" phiên bản âm thanh — khó thấy hơn dấu trên hình vì người ta không "nhìn"
+             # nhạc, nhưng nghe hai kênh mà cùng một vòng nhạc thì nhận ra ngay.
+             "music": (kenh.get("brand") or {}).get("nhac") or "music/carefree.mp3", "sfx": True,
              # 26/8 — phông riêng của kênh. Thiếu khoá này thì RaceShort rơi về Poppins và 7 kênh
              # dạng đua lại chung một khuôn chữ, dù JSON đã gán phông khác nhau cho từng kênh.
              "font": (kenh.get("brand") or {}).get("font", ""),
@@ -2156,6 +2161,11 @@ def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = "
     # lợi thế đang bị bỏ không. Chỉ cần truyền xuống; `DongNguon` lo phần hiển thị kín đáo.
     if st.get("nguon") and not props.get("source"):
         props["source"] = ten_nguon(st.get("nguon", ""))
+    # NHẠC NỀN RIÊNG cho MỌI dạng (27/8). `datastory_ci` đặt mặc định một bản chung; ghi đè ở đây
+    # để mỗi kênh một vòng nhạc. Xem `brandkit_the_he_2.chia_hinh`: 14 bản chia đều 50 kênh.
+    _nhac = (kenh.get("brand") or {}).get("nhac")
+    if _nhac:
+        props["music"] = _nhac
     # NỀN RIÊNG TỪNG KÊNH (26/8). Nền chiếm gần hết khung hình; để nó viết cứng trong composition
     # nghĩa là 18 kênh dạng `ranked` dùng CHUNG một nền — khán giả nhìn là thấy cùng một lò, dù
     # accent đã riêng. `palette.bg/primary/secondary` có sẵn 38/50/50 giá trị khác nhau mà chưa

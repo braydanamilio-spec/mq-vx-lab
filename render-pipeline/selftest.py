@@ -1200,6 +1200,31 @@ def t_dien_tap_can_quota():
         raise AssertionError("cạn quota là hệ đứng ở %d chỗ: %s" % (len(chet), " · ".join(chet[:4])))
 
 
+def t_nhac_nen_khong_dung_chung():
+    """Nhạc nền phải chia ra, không được viết cứng một bản cho cả 50 kênh.
+
+    27/8 — kho có 18 tệp nhạc, mà `the_he_2` viết cứng `music/carefree.mp3`: 50 kênh dùng chung
+    ĐÚNG MỘT bản. Đây là dấu vân tay "cùng một chủ" phiên bản âm thanh — cùng loại với cái pill
+    in tên định dạng đã gỡ khỏi hình, chỉ khó thấy hơn vì người ta không "nhìn" nhạc. Nhưng nghe
+    hai kênh khác nhau mà cùng một vòng nhạc thì nhận ra ngay, và đó đúng là thứ chính sách
+    "nội dung sản xuất hàng loạt" của YouTube nhắm tới.
+    Chốt hai vế: JSON phải có `brand.nhac` cho mọi kênh, và mã KHÔNG được viết cứng một đường
+    dẫn nhạc làm giá trị chính (chỉ được dùng làm giá trị lùi khi thiếu)."""
+    import json as _j
+    import collections as _c
+    ks = _j.loads(_doc("kenh_the_he_2.json"))
+    thieu = [k["ten"] for k in ks if not (k.get("brand") or {}).get("nhac")]
+    assert not thieu, "thiếu `brand.nhac`: %s" % ", ".join(thieu[:5])
+    dem = _c.Counter((k.get("brand") or {}).get("nhac") for k in ks)
+    assert len(dem) >= 6, ("chỉ %d bản nhạc cho %d kênh — nghe ra ngay là cùng một chủ"
+                           % (len(dem), len(ks)))
+    src = _doc("the_he_2.py")
+    for d in src.split("\n"):
+        if '"music":' in d and "music/" in d and not d.strip().startswith("#"):
+            assert "brand" in d or "nhac" in d, \
+                "viết cứng nhạc nền, không đọc `brand.nhac`: %s" % d.strip()[:90]
+
+
 def t_kenh_anh_em_khong_trung_kho():
     """Hai kênh CÙNG NICHE + CÙNG nguồn + CÙNG dạng + CÙNG trục thì kho đề tài phải rời nhau.
 
@@ -2200,6 +2225,7 @@ def main():
     check("không được vẽ HAI lớp phụ đề chồng nhau", t_khong_phu_de_chong)
     check("sổ đề tài chỉ ghi khi video RA LÒ THẬT", t_so_de_tai_chi_ghi_khi_ra_lo)
     check("kênh cùng niche không được trùng kho đề tài", t_kenh_anh_em_khong_trung_kho)
+    check("50 kênh không được dùng chung một bản nhạc", t_nhac_nen_khong_dung_chung)
     check("50 kênh không được giống nhau (≥70 điểm)", t_50_kenh_khong_duoc_giong_nhau)
     check("băm Python khớp băm TypeScript", t_bam_python_khop_typescript)
     check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)

@@ -225,6 +225,19 @@ def chia_hinh(ks: list) -> None:
       nen  = i % 3                       → 17/17/16
     Thứ tự `i` lấy theo TÊN ĐÃ SẮP XẾP, không theo thứ tự trong tệp: chèn thêm kênh vào giữa tệp
     thì thứ tự tệp đổi hết, còn tên đã sắp thì chỉ kênh mới chen vào."""
+    # 27/8 — NHẠC NỀN CŨNG PHẢI KHÁC NHAU.
+    # Kho có 18 tệp nhạc, mà pipeline viết cứng `music/carefree.mp3` cho MỌI kênh: 50 kênh dùng
+    # chung đúng một bản nhạc. Đây là dấu vân tay "cùng một chủ" phiên bản âm thanh — cùng loại
+    # với cái pill in tên định dạng đã gỡ khỏi hình, chỉ khó thấy hơn vì người ta không "nhìn"
+    # nhạc. Người xem hai kênh khác nhau mà nghe đúng một vòng nhạc thì nhận ra ngay.
+    # Loại các tệp `sfx_*` (hiệu ứng, không phải nhạc nền) rồi chia đều 14 bản còn lại.
+    import os as _o
+    _md = _o.path.join(GOC, "..", "engine-remotion", "public", "music")
+    NHAC = sorted(f for f in (_o.listdir(_md) if _o.path.isdir(_md) else [])
+                  if f.endswith(".mp3") and not f.startswith("sfx_"))
+    for j, k in enumerate([x for x in ks if (x.get("brand") or {}).get("hinh")]):
+        if NHAC and not (k.get("brand") or {}).get("nhac"):
+            k["brand"]["nhac"] = "music/" + NHAC[j % len(NHAC)]
     cu = [k for k in ks if (k.get("brand") or {}).get("hinh")]
     moi = sorted([k for k in ks if not (k.get("brand") or {}).get("hinh")],
                  key=lambda k: str(k["ten"]))
@@ -232,6 +245,8 @@ def chia_hinh(ks: list) -> None:
     for j, k in enumerate(moi):
         i = d + j
         k["brand"]["hinh"] = {"nen": i % 3, "av": i % 8, "bang": (i * 3 + i // 8) % 8}
+        if NHAC and not k["brand"].get("nhac"):
+            k["brand"]["nhac"] = "music/" + NHAC[i % len(NHAC)]
 
 
 def main() -> int:
@@ -249,7 +264,7 @@ def main() -> int:
     # xoá `mau`, đổi 11 `motif` — và selftest lập tức đỏ 4 cặp kênh giống nhau ≥70 điểm.
     # Bộ sinh này chỉ nên CẤP giá trị ban đầu. Cái gì đã được chỉnh sau đó thì nó không có quyền
     # lấy lại: nhận diện là tài sản, không phải kết quả tạm của một hàm.
-    GIU = ("font", "motif", "mau", "voice", "voice_tone", "hinh")
+    GIU = ("font", "motif", "mau", "voice", "voice_tone", "hinh", "nhac")
     for idx, k in enumerate(ks):
         i = dem.get(k["niche"], 0)
         dem[k["niche"]] = i + 1
