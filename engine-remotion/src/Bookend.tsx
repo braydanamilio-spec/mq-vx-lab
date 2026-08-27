@@ -1,4 +1,5 @@
 import React from "react";
+import { SoChay } from "./So";
 import { useCurrentFrame, useVideoConfig, interpolate, spring } from "remotion";
 
 // THẺ MỞ ĐẦU + THẺ KẾT DÙNG CHUNG CHO SHORT (24/8/2026 tối — anh: "mở đầu videos và kết thúc chưa
@@ -87,7 +88,15 @@ export const Bookend: React.FC<{
               lineHeight: 0.94, fontWeight: 900, color: "#FFFFFF", whiteSpace: "nowrap",
               letterSpacing: -2, transform: `scale(${0.55 + 0.45 * p})`,
               textShadow: `0 0 60px ${accent}88, 0 10px 40px rgba(0,0,0,.95)`,
-            }}>{hookStat}</div>
+            }}>
+              {/* 27/8 — SỐ DẪN Ở HOOK PHẢI CHẠY LÊN.
+                  Đây là con số to nhất, ở giây đầu tiên, và là thứ quyết định người ta lướt qua
+                  hay dừng lại. Hiện sẵn giá trị cuối là vứt bỏ đúng cái sức giữ mắt của nó: người
+                  xem không rời mắt khi thấy một con số còn đang lớn dần, vì não muốn biết nó dừng
+                  ở đâu.
+                  Sửa ở `Bookend` là ăn cả SÁU dạng cùng lúc — nó là khối mở đầu dùng chung. */}
+              <SoChay s={hookStat} tuFrame={0} giay={1.05} />
+            </div>
             {hookLabel ? (
               <div style={{
                 marginTop: 14, fontSize: co(40), fontWeight: 800, letterSpacing: 2, color: "#EAF6FF",
