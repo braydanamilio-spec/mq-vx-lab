@@ -283,13 +283,21 @@ def main() -> int:
         # Lấy tên kênh cũ từ BẢN CHỤP, không từ `render_channels`: bản ghi đã xoá rồi nên suy từ
         # đó ra sẽ được đúng số không (cùng cái bẫy thứ tự đã vấp ở bước dọn kho).
         ten_cu = {str(c.get("name") or "").upper() for c in cu if c.get("name")}
-        try:
-            _snap = json.load(io.open(os.path.join(GOC, "kenh_the_he_1.json"), encoding="utf-8"))
-            ten_cu |= {str(t).upper() for t in (_snap.get("ten") or [])}
-        except Exception as e:
-            print(f"  ⚠️ không đọc được bản chụp tên kênh cũ: {str(e)[:60]}")
+        # 27/8 — HAI BƯỚC DƯỚI ĐÂY CHỈ ĐÚNG CHO CHẾ ĐỘ GEN-1, VÀ LÀM HỎNG HẲN CHẾ ĐỘ GEN-2.
+        # Bản chạy khô lôi ra: ở `--gen2`, đích nhắm CHÍNH LÀ 50 kênh mới. Nhưng bước này (a) nhập
+        # thêm 55 tên thế hệ 1 từ bản chụp, rồi (b) chốt cứng "tên nào có ở CẢ hai danh sách thì
+        # bỏ qua" — mà cả 50 tên gen-2 đều nằm ở cả hai ⇒ bị loại sạch, và lệnh đi xoá nhầm job
+        # của 55 kênh cũ. Kết quả: video gen-2 vẫn nằm nguyên trong thư viện, mà log vẫn báo
+        # "đã xoá 365 job".
+        # Chốt (b) sinh ra để chống xoá nhầm KHI dọn kênh cũ; ở chế độ gen-2 nó chống nhầm mục tiêu.
+        if not gen2:
+            try:
+                _snap = json.load(io.open(os.path.join(GOC, "kenh_the_he_1.json"), encoding="utf-8"))
+                ten_cu |= {str(t).upper() for t in (_snap.get("ten") or [])}
+            except Exception as e:
+                print(f"  ⚠️ không đọc được bản chụp tên kênh cũ: {str(e)[:60]}")
         ten_cu.discard("")
-        ten_moi = {str(t).upper() for t in _kenh_moi()}
+        ten_moi = set() if gen2 else {str(t).upper() for t in _kenh_moi()}
         # CHẶN CỨNG: tên nào vừa ở danh sách cũ vừa ở danh sách 50 kênh mới thì BỎ QUA. Trùng tên
         # là chuyện có thật (bản chụp lấy từ lịch sử), và xoá nhầm job của kênh mới là mất video
         # thật chứ không phải rác.
@@ -359,7 +367,8 @@ def main() -> int:
                 if n >= 400 or i == len(lo):
                     b.commit(); b = db.batch(); n = 0
                     print(f"      … đã xoá {i}/{len(lo)}", flush=True)
-        print(f"  🧹 {'đã xoá' if that else '(sẽ xoá)'} {xoa} job Firestore của 55 kênh cũ")
+        print(f"  🧹 {'đã xoá' if that else '(sẽ xoá)'} {xoa} job Firestore của "
+              f"{len(ten_cu)} kênh {'THẾ HỆ 2' if gen2 else 'thế hệ 1'}")
         # D1 LÀ KHO THỨ HAI, KHÔNG PHẢI BẢN SAO CHO VUI. Dashboard đọc D1 khi có lọc ngày, nên bỏ
         # bước này thì video cũ biến mất ở "Mọi lúc" rồi hiện lại y nguyên khi bấm "Hôm nay" —
         # nhìn như đã dọn xong mà chưa xong, tệ hơn là không dọn.
