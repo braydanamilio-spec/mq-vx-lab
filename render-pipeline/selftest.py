@@ -2191,6 +2191,7 @@ def main():
     check("18 lane vào 18 điểm khác nhau trong hồ key ảnh", t_18_lane_khong_don_mot_key_anh)
     check("mọi loại key báo trạng thái + lời đúng loại", t_moi_loai_key_deu_bao_trang_thai)
     check("làm mới token không ép scope (invalid_scope)", t_khong_ep_scope_khi_lam_moi_token)
+    check("bỏ việc không được im lặng (mọi failed đều có log)", t_bo_viec_khong_duoc_im_lang)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5110,6 +5111,46 @@ def t_khong_ep_scope_khi_lam_moi_token():
         assert "scopes=SCOPES" not in ma, \
             f"{tep}:{ham} còn ép scope lúc làm mới token -> token cấp scope khác sẽ invalid_scope"
         assert "scopes=None" in ma, f"{tep}:{ham} phải truyền scopes=None khi đã có refresh_token"
+
+
+def t_bo_viec_khong_duoc_im_lang():
+    """MỌI LẦN BỎ VIỆC PHẢI ĐỂ LẠI MỘT DÒNG TRONG LOG.
+
+    27/8 — CAR RECALL dựng xong một long 7 chương (418,9 giây), QC ĐẠT, đã chuẩn hoá âm lượng về
+    -14 LUFS — rồi cả bộ bị vứt và lane nhường slot sang kênh khác. Giữa dòng `🔊 âm lượng` và
+    dòng `bộ gen-2 không đạt` KHÔNG CÓ MỘT DÒNG NÀO.
+    Em soi hết mọi nhánh bỏ cuộc trong `chay_bo` — hook trượt, short không dựng được, không ra
+    short nào — nhánh nào cũng có `print`, và log không có dòng nào trong số đó. Nghĩa là công đã
+    HOÀN THÀNH bị vứt qua một đường không để lại dấu vết, và từ ngoài không có cách nào biết
+    đường đó là đường nào. Em đã phải bỏ cuộc truy nguyên nhân — đúng cái giá của việc bỏ việc
+    trong im lặng.
+
+    Gốc: `lst` là lambda chỉ ghi Firestore, KHÔNG in. Mười hai chỗ gọi `lst("failed", …)` vì thế
+    đều câm. Bản ghi job trên dashboard có lý do, nhưng LOG thì không — mà log mới là thứ dùng để
+    truy khi 18 lane chạy song song.
+
+    Chốt canh ở NGUỒN (`_lst_noi` bọc mọi `lst`) chứ không đếm `print` ở 12 chỗ gọi: chỗ gọi thứ
+    13 thêm sau này phải tự động có tiếng."""
+    import sys as _s, os as _o, io as _io, contextlib as _ct
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import run_render as R
+    goi = []
+    boc = R._lst_noi("THUKENH", lambda st, step, **x: goi.append((st, step)))
+    buf = _io.StringIO()
+    with _ct.redirect_stdout(buf):
+        boc("failed", "QC long trượt: dur=12.3")
+        boc("done", "Long đã đẩy Drive")
+    ra = buf.getvalue()
+    assert "THUKENH" in ra and "QC long trượt" in ra, \
+        f"đánh dấu 'failed' mà không in ra log: {ra!r}"
+    assert "Long đã đẩy Drive" not in ra, "trạng thái BÌNH THƯỜNG cũng in -> log ngập, mất tác dụng"
+    assert len(goi) == 2, "bộ bọc nuốt mất lệnh ghi Firestore"
+
+    src = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "run_render.py"),
+                  encoding="utf-8").read()
+    n_dn = src.count("lst = lambda ")
+    n_boc = src.count("lst = _lst_noi(channel, lst)")
+    assert n_boc >= n_dn, f"{n_dn} chỗ định nghĩa `lst` nhưng chỉ {n_boc} chỗ được bọc -> còn nhánh câm"
 
 
 if __name__ == "__main__":

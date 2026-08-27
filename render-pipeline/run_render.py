@@ -378,6 +378,27 @@ def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "", scri
         print("   ⚠️ enqueue lỗi (giữ artifact):", e); return None
 
 
+def _lst_noi(channel, lst):
+    """Bọc `lst` để MỌI lần đánh dấu 'failed' đều IN RA LOG, không chỉ ghi Firestore.
+
+    27/8 — CAR RECALL dựng xong một long 7 chương (418,9 giây), QC ĐẠT, đã chuẩn hoá âm lượng
+    -14 LUFS — rồi cả bộ bị vứt và lane nhường slot. Giữa dòng `🔊 âm lượng` và dòng `bộ gen-2
+    không đạt` KHÔNG CÓ MỘT DÒNG NÀO. Em soi hết mọi nhánh bỏ cuộc trong `chay_bo` (hook trượt,
+    short không dựng được, không ra short nào) — nhánh nào cũng có `print`, và log không có dòng
+    nào trong số đó. Tức là công đã hoàn thành bị vứt qua một đường KHÔNG ĐỂ LẠI DẤU VẾT, và từ
+    ngoài không có cách nào biết đường đó là đường nào.
+    Gốc: `lst` là lambda chỉ ghi Firestore + gọi `_bo_chu_de`, KHÔNG in. Mười hai chỗ gọi
+    `lst("failed", …)` vì thế đều câm. Bản ghi job trên dashboard có lý do, nhưng người đọc log
+    thì không — mà log mới là thứ dùng để truy khi 18 lane chạy song song.
+    Bọc tại nguồn thay vì rải `print` ra 12 chỗ: chỗ gọi thứ 13 thêm sau này tự động có tiếng.
+    """
+    def _bao(st, step, **x):
+        if st == "failed":
+            print(f"   ❌ {channel}: BỎ — {str(step)[:150]}", flush=True)
+        return lst(st, step, **x)
+    return _bao
+
+
 SHORT_PER_LONG = 3        # RULE CỨNG: 1 long kèm đúng 3 short
 
 # Sổ ĐẾM TRONG PHIÊN (RAM) — dùng khi Firestore không đọc được. Không có nó thì luật 1:3 chỉ đúng
@@ -825,6 +846,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
         ljob = FB.new_job(OWNER, channel, "long", pver=CLASSIC_PVER)
         lst = lambda s, step, **x: (_bo_chu_de(channel, str(step)) if s == "failed" else None,
                                    FB.update_job(ljob, status=s, step=step, **x))[-1]
+        lst = _lst_noi(channel, lst)   # 27/8: mọi lần 'failed' phải có tiếng trong log
         plan = ok = info = None; last_err = None
         resumed_long = FB.find_resumable(OWNER, channel, "long")   # CHECKPOINT: phiên trước lỗi/treo nhưng còn kịch bản
         for attempt, nr in enumerate([4, 2], start=1):
@@ -982,6 +1004,7 @@ def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
     ljob = FB.new_job(OWNER, channel, "long", pver=_pv(ch.get("format") or "th2"))
     lst = lambda st, step, **x: (_bo_chu_de(channel, str(step)) if st == "failed" else None,
                                  FB.update_job(ljob, status=st, step=step, **x))[-1]
+    lst = _lst_noi(channel, lst)   # 27/8: mọi lần 'failed' phải có tiếng trong log
     lst("writing", "Đọc dữ liệu mở — dựng bộ 1 long + %d short" % n_shorts)
     try:
         # 26/8 — `so_chuong` gấp đôi `so_short`: long ghép các chương, còn mỗi short GỘP 2 chương
@@ -1088,6 +1111,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
     ljob = FB.new_job(OWNER, channel, "long", pver=_pv("doc"))
     lst = lambda st, step, **x: (_bo_chu_de(channel, str(step)) if st == "failed" else None,
                                  FB.update_job(ljob, status=st, step=step, **x))[-1]
+    lst = _lst_noi(channel, lst)   # 27/8: mọi lần 'failed' phải có tiếng trong log
     # RESUME: checkpoint từng-phần của phiên trước chết giữa chừng -> khỏi trả Gemini lần 2
     _rck = FB.find_resumable(OWNER, channel, "long")
     _resume = _rck["story"] if (_rck and isinstance(_rck.get("story"), dict) and _rck["story"].get("parts")) else None
@@ -1182,6 +1206,7 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R, ra_id=None):
         ra_id.append(ljob)
     lst = lambda st, step, **x: (_bo_chu_de(channel, str(step)) if st == "failed" else None,
                                  FB.update_job(ljob, status=st, step=step, **x))[-1]
+    lst = _lst_noi(channel, lst)   # 27/8: mọi lần 'failed' phải có tiếng trong log
     try:
         lout = os.path.join("out", DS.slug(channel) + "_motiflong.mp4")
         lo, plan, subs, ok, info, _parts = DS.make_doc_long(
@@ -2980,6 +3005,7 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
     ljob = FB.new_job(OWNER, channel, "long", pver=_pv("toon"))
     lst = lambda st, step, **x: (_bo_chu_de(channel, str(step)) if st == "failed" else None,
                                  FB.update_job(ljob, status=st, step=step, **x))[-1]
+    lst = _lst_noi(channel, lst)   # 27/8: mọi lần 'failed' phải có tiếng trong log
     _rck = FB.find_resumable(OWNER, channel, "long")
     _resume = _rck["story"] if (_rck and isinstance(_rck.get("story"), dict) and _rck["story"].get("parts")) else None
     _kw = dict(toon_style=ch.get("toon_style", ""),
