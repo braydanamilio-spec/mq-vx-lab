@@ -1075,6 +1075,32 @@ def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
         thumb_id=(eq or {}).get("thumb_id", ""))
     R["done"] += 1; R["done_long"] = R.get("done_long", 0) + 1
 
+    # 27/8 — MỖI SHORT PHẢI CÓ TÊN RIÊNG, DẪN BẰNG CHỦ THỂ CỦA CHÍNH NÓ.
+    #
+    # Đo trên 186 video của phiên 12:14: chỉ **94 tiêu đề khác nhau** — tức một nửa số video trùng
+    # tên với video khác. Nặng nhất là SPACE INVOICE: `Space contracts by year (2018-2025)` xuất
+    # hiện **7 lần** trên cùng một kênh.
+    # Gốc: short lấy thẳng `st["title"]`, mà mọi chương đều sinh từ CÙNG một lượt xoay nên mang
+    # chung một nhan đề. Đúng về kỹ thuật (short là các chương của long) nhưng sai hoàn toàn với
+    # người xem và với YouTube: bảy video cùng tên trên một trang kênh đọc ra là máy nhả hàng loạt.
+    # Mỗi short vốn phủ những chương KHÁC NHAU, tức có chủ thể đứng đầu khác nhau — thứ phân biệt
+    # đã có sẵn trong dữ liệu, chỉ là không ai đưa nó lên tên.
+    _da_dat = {str((_t0 or {}).get("title") or "").strip().lower()}
+
+    def _ten_short(st_, thu):
+        try:
+            import the_he_2 as _T2
+            t = _T2._tieu_de_tu_du_lieu(st_, ch) or ""
+        except Exception:
+            t = ""
+        t = (t or str(st_.get("title") or "")).strip()
+        if t.lower() in _da_dat:
+            # Hết cách phân biệt bằng NỘI DUNG thì mới đánh số — và đánh số vẫn hơn trùng hệt,
+            # vì người xem ít nhất biết đây là phần khác chứ không phải bản sao.
+            t = f"{t} — part {thu}"
+        _da_dat.add(t.lower())
+        return t
+
     for i, (sp, st) in enumerate(chuong):
         if stopped():
             print(f"   ⛔ {channel}: dừng — bỏ {len(chuong) - i} short còn lại."); break
@@ -1086,14 +1112,15 @@ def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
         if not sok:
             sst("failed", f"QC short {i + 1} trượt: {sinfo}")
             R["fails"].append(f"{channel} S{i + 1}: QC trượt {sinfo}"); continue
+        _ts = _ten_short(st, i + 1)
         seq = enqueue_drive(channel, sp,
-                            {"topic": st.get("title"), "title": st.get("title"),
+                            {"topic": _ts, "title": _ts,
                              "description": st.get("intro_vo", ""), "sources": [st.get("nguon", "")],
                              "_thumb": (sinfo or {}).get("thumb")}, "short",
                             seri=ljob, bo=f"S{i + 1}")
         sdid = (seq or {}).get("id")
         sst("done", "Short đã đẩy Drive" if sdid else "Short xong (chưa đẩy Drive)",
-            title=(st.get("title") or channel), dur=(sinfo or {}).get("dur", 0),
+            title=(_ts or channel), dur=(sinfo or {}).get("dur", 0),
             size_mb=(sinfo or {}).get("size_mb", 0), res=(sinfo or {}).get("res", ""),
             drive_id=sdid or "", drive_account=(seq or {}).get("account", ""),
             thumb_id=(seq or {}).get("thumb_id", ""))
