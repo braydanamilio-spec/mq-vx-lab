@@ -65,7 +65,18 @@ const climbPos = (f: number, climbStart: number, climbDur: number, hops: number,
 
 // `pad` truyền vào chứ không đọc hằng mô-đun: đáy thang đổi theo việc có phụ đề hay không, mà
 // hàm này lại nằm ngoài component. Đọc hằng ở đây là ReferenceError (đã dính đúng lỗi đó).
-const yForLog = (log: number, trackH: number, pad: number = BOTTOM_PAD_GOC) => trackH - pad - log * RUNG_GAP;
+// 27/8 — BƯỚC THANG PHẢI VỪA DỮ LIỆU, GIỐNG MỘT TRỤC BIỂU ĐỒ ĐÚNG NGHĨA.
+// `RUNG_GAP` cố định 232px/bậc log hợp với dữ liệu trải nhiều bậc (trúng số: 1 trên 300 triệu).
+// Nhưng kênh JOB DYING nạp thất nghiệp theo năm: quy ra tỉ lệ thì cả sáu năm nằm trong khoảng
+// log 1,09-1,44 — tức 0,35 bậc = 81px. Sáu mốc chen nhau trong 81px thì nhìn ra một cụm số
+// lộn xộn quanh một vòng tròn, đúng như khung thật cho thấy.
+// Trục nào cũng phải co giãn theo dải dữ liệu của nó. Bước thang tính từ mốc cao nhất để dải
+// thật trải hết chiều cao dùng được, và vẫn kẹp hai đầu để dữ liệu trải rộng không bị kéo dãn
+// quá đà.
+const buocThang = (maxLog: number, usable: number) =>
+  Math.max(150, Math.min(560, usable / Math.max(1.15, maxLog + 0.45)));
+const yForLog = (log: number, trackH: number, pad: number = BOTTOM_PAD_GOC, gap: number = RUNG_GAP) =>
+  trackH - pad - log * gap;
 
 export const LongshotShort: React.FC<LongshotProps> = (props) => {
   const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "WHAT ARE THE REAL ODDS?", handle = "@longshotusa", color = "#4F46E5", accent = "#4F46E5",
@@ -80,7 +91,10 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
   const maxLogAll = Math.max(1, ...items.map((d) => d.logValue));
   const maxN = Math.ceil(maxLogAll) + 1;
   const BOTTOM_PAD = BOTTOM_PAD_GOC + ((subs && subs.length) ? 150 : 0);
-  const trackH = BOTTOM_PAD + maxN * RUNG_GAP + TOP_PAD;
+  // Chiều cao dùng được của cột thang trong khung 1920 (trừ hai đầu chừa chữ), rồi từ đó suy ra
+  // bước thang vừa với dải dữ liệu THẬT của video này.
+  const GAP = buocThang(maxLogAll, Math.max(320, 1920 - BOTTOM_PAD - TOP_PAD));
+  const trackH = BOTTOM_PAD + maxN * GAP + TOP_PAD;
 
   // which item is currently active (climbing or holding), and its live Y
   let activeIdx = -1;
@@ -96,11 +110,11 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
     const slotFrames = Math.round(idur(items[i], itemSec) * fps);
     const climbDur = Math.max(18, Math.round(slotFrames * climbFrac));
     const prevLog = i === 0 ? 0 : items[i - 1].logValue;
-    const fromY = yForLog(prevLog, trackH), toY = yForLog(items[i].logValue, trackH, BOTTOM_PAD);
+    const fromY = yForLog(prevLog, trackH, BOTTOM_PAD, GAP), toY = yForLog(items[i].logValue, trackH, BOTTOM_PAD, GAP);
     const c = climbPos(f, starts[i], climbDur, climbHops, fromY, toY, fps);
     perItemClimb.push({ y: c.y, arc: c.arc, done: c.done, justLanded: c.justLanded });
   }
-  if (activeIdx >= 0) { activeY = perItemClimb[activeIdx].y; activeLog = interpolate(activeY, [yForLog(maxLogAll, trackH), yForLog(0, trackH, BOTTOM_PAD)], [maxLogAll, 0]); }
+  if (activeIdx >= 0) { activeY = perItemClimb[activeIdx].y; activeLog = interpolate(activeY, [yForLog(maxLogAll, trackH, BOTTOM_PAD, GAP), yForLog(0, trackH, BOTTOM_PAD, GAP)], [maxLogAll, 0]); }
 
   const isLast = activeIdx === items.length - 1 && activeIdx >= 0;
   const lastDone = isLast && perItemClimb[activeIdx].done;
@@ -156,7 +170,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
 
           {/* rungs — evenly spaced in LOG space (so real rarity gaps compound going up) */}
           {Array.from({ length: maxN + 1 }, (_, n) => n).map((n) => {
-            const ry = yForLog(n, trackH, BOTTOM_PAD);
+            const ry = yForLog(n, trackH, BOTTOM_PAD, GAP);
             // 26/8 — CHỒNG CHỮ Ở ĐÁY KHUNG. Thang nằm trong lớp bị dịch `camY`, nên chỗ đứng THẬT
             // của một nấc trên màn hình là `camY + ry`, không phải `ry`. Nấc thấp nhất rơi đúng
             // vào dải đáy nơi đặt @handle -> nhãn "1 in 10" in đè lên tên kênh (thấy rõ ở canary

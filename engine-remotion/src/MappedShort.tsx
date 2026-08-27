@@ -32,22 +32,36 @@ export const calcMapped = ({ props }: any) => {
   return { durationInFrames: Math.round((isec + bloom + topN * pop + tail) * FPS), fps: FPS };
 };
 
-// màu nhiệt: lạnh (#16223e) -> nóng (accent) theo giá trị chuẩn hoá (gamma nhấn tương phản)
-const heat = (t: number, accent: string) => interpolateColors(Math.pow(Math.max(0, Math.min(1, t)), 0.7), [0, 1], ["#16223e", accent]);
+// 27/8 — MÀU LẠNH CŨ (#16223e) GẦN NHƯ TRÙNG MÀU NỀN, nên bang giá trị thấp biến mất khỏi bản đồ:
+// người xem thấy một mảng đen, tưởng chỗ đó không có dữ liệu. Đầu lạnh phải TÁCH KHỎI NỀN — nó
+// vẫn là một giá trị có thật, chỉ là nhỏ.
+const heat = (t: number, accent: string) => interpolateColors(Math.max(0, Math.min(1, t)), [0, 1], ["#2B3C63", accent]);
 
 export const MappedShort: React.FC<MappedProps> = (props) => {
   const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "BY STATE", unit = "", handle = "@mappedusa", color = "#22D3EE", accent = "#22D3EE",
     data = [], topN = 3, introSec = 1.8, bloomSec = 2.4, popSec = 1.6, outroSec = 1.6, audio, music , subs = [] } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
-  const { geo, pathGen, valById, maxV, ranked } = useMemo(() => {
+  const { geo, pathGen, valById, maxV, ranked, hang } = useMemo(() => {
     const g: any = feature(states as any, (states as any).objects.states);
     const proj = geoAlbersUsa().fitExtent([[60, 360], [W - 60, H - 620]], g);
     const m: Record<string, number> = {};
     for (const d of data) m[norm(d.state)] = d.value;
+    // ── THANG MÀU THEO THỨ HẠNG, KHÔNG THEO GIÁ TRỊ/LỚN NHẤT (27/8) ────────────────────────
+    // Xem khung thật kênh WHERE TO MOVE: bản đồ là một bóng đen phẳng, không đọc ra bang nào
+    // hơn bang nào — trong khi dữ liệu 51 bang đều đủ và tên đều khớp geo.
+    // Nguyên nhân là phép chuẩn hoá: `t = v / maxV`. Giá nhà Hawaii 833K, còn phần lớn bang
+    // 250-350K -> gần như mọi bang rơi vào t≈0,3-0,4, tức CÙNG MỘT MÀU. Một giá trị ngoại lai
+    // ở đầu trên đã nuốt trọn dải màu, 45 bang còn lại chen nhau trong 1/10 dải.
+    // Đây là lý do bản đồ dữ liệu nghiêm túc dùng thang THEO THỨ HẠNG: xếp 51 bang rồi trải đều
+    // vị trí của chúng lên dải màu. Bang thứ 1 đậm nhất, thứ 51 nhạt nhất, và MỌI bước ở giữa
+    // đều nhìn thấy được — kể cả khi các con số sát nhau.
+    const sap = [...data].filter((d) => typeof d.value === "number").sort((a, b) => a.value - b.value);
+    const hang: Record<string, number> = {};
+    sap.forEach((d, i) => { hang[norm(d.state)] = sap.length > 1 ? i / (sap.length - 1) : 1; });
     const mx = Math.max(1, ...data.map((d) => d.value));
     const rk = [...data].sort((a, b) => b.value - a.value).slice(0, topN);
-    return { geo: g, pathGen: geoPath(proj), valById: m, maxV: mx, ranked: rk, proj };
+    return { geo: g, pathGen: geoPath(proj), valById: m, maxV: mx, ranked: rk, proj, hang };
   }, [W, H, data, topN]);
 
   const introF = Math.round(introSec * fps);
@@ -93,7 +107,13 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
             Và nó chiếm mất dải trên cùng, chỗ đáng ra để tiêu đề thở. */}
         {/* Tiêu đề lúc mở đầu do Bookend vẽ. Header ẩn đi trong quãng đó, nếu không sẽ có hai bản tiêu đề chồng nhau (lỗi 25/8). */}
         <div style={{ display: f < introF ? "none" : undefined, color: "#fff", fontWeight: 900, fontSize: 74, lineHeight: 1.02, marginTop: 20, textShadow: "0 4px 24px #000c", textWrap: "balance" as any }}>{title}</div>
-        {unit ? <div style={{ color: "#93a4c4", fontWeight: 700, fontSize: 34, marginTop: 8 }}>{unit}</div> : null}
+        {/* 27/8 — `unit` cho dạng bản đồ thường là KÝ HIỆU chứ không phải cụm từ ("$", "%").
+            In riêng nó một dòng thì trên khung hiện đúng một chữ "$" lơ lửng giữa trời — nhìn như
+            phần tử bị sót lại chứ không như thiết kế. Ký hiệu đơn lẻ đã nằm sẵn trong con số phía
+            dưới ($833,877), nên ở đây chỉ hiện khi nó là một cụm từ thật sự nói thêm điều gì. */}
+        {unit && unit.trim().length > 2
+          ? <div style={{ color: "#93a4c4", fontWeight: 700, fontSize: 34, marginTop: 8 }}>{unit}</div>
+          : null}
       </div>
 
       {/* BẢN ĐỒ */}
@@ -103,7 +123,7 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
         </defs>
         {geo.features.map((ft: any, i: number) => {
           const v = valById[norm(ft.properties.name)];
-          const t = v == null ? 0 : (v / maxV) * bloom;
+          const t = v == null ? 0 : (hang[norm(ft.properties.name)] ?? 0) * bloom;
           const isTop = ranked.some((r) => norm(r.state) === norm(ft.properties.name));
           const topActive = isTop && f >= popStart;
           return <path key={i} d={pathGen(ft) || ""} fill={v == null ? "#0e1832" : heat(t, accent)}

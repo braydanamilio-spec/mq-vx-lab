@@ -53,7 +53,15 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
     else { const k2 = (USABLE - fixed) / (totalW - fixed); cols = cols.map((c) => LABEL_MIN + (c - LABEL_MIN) * k2); }
     totalW = cols.reduce((a, b) => a + b, 0);
   }
-  hs = hs.map((h, i) => Math.max(floor, Math.min(h, cols[i] - 20)));    // emoji vừa trong cột của nó
+  // 27/8 — DÒNG NÀY LÀ THỨ XOÁ SẠCH TỈ LỆ.
+  // Emoji gần vuông nên `fontSize = h` cũng là bề ngang; kẹp `min(h, cols[i]-20)` để nó vừa cột
+  // đồng nghĩa với việc CHIỀU CAO BỊ BỀ NGANG QUYẾT ĐỊNH. Đo trên khung thật CALORIE SHOCK:
+  // 704 cal và 375 cal ra hai miếng pizza gần bằng nhau — dạng tên là "SCALED" mà không scale gì.
+  // Nay vẽ CỘT TỈ LỆ: chiều cao chỉ bị giới hạn bởi chiều cao khung, còn bề ngang là chuyện
+  // riêng của cột. Emoji tụt xuống làm CHÓP nhỏ trên đầu cột — vẫn giữ được chất chủ đề của
+  // kênh, nhưng thứ mang dữ liệu là hình khối vẽ ra, không phải một ký tự phông chữ.
+  hs = hs.map((h) => Math.max(floor, Math.min(h, maxH)));
+  const wCot = cols.map((c) => Math.max(52, Math.min(c - 46, 132)));
   const startX = (W - totalW) / 2;
   const xs: number[] = []; let cur = startX;
   for (const c of cols) { xs.push(cur + c / 2); cur += c; }                 // tâm mỗi cột
@@ -94,10 +102,29 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
         const h = hs[i]; const biggest = it.value === maxV;
         return (
           <div key={i} style={{ position: "absolute", left: xs[i], top: GROUND, transform: "translateX(-50%)", textAlign: "center" }}>
-            {/* emoji cao = h, mọc từ nền lên */}
-            <div style={{ position: "absolute", left: "50%", bottom: 0, transform: `translateX(-50%) scaleY(${s}) `, transformOrigin: "bottom",
-              fontSize: h, lineHeight: 0.9, height: h, display: "flex", alignItems: "flex-end", justifyContent: "center",
-              filter: biggest ? `drop-shadow(0 0 24px ${accent})` : "drop-shadow(0 6px 14px #0008)" }}>{it.emoji || "❓"}</div>
+            {/* CỘT TỈ LỆ mọc từ nền lên — chiều cao ∝ giá trị thật, không bị bề ngang kẹp */}
+            <div style={{ position: "absolute", left: "50%", bottom: 0,
+              transform: `translateX(-50%) scaleY(${s})`, transformOrigin: "bottom",
+              width: wCot[i], height: h, borderRadius: "14px 14px 6px 6px",
+              background: biggest
+                ? `linear-gradient(180deg, ${accent} 0%, ${accent}c4 55%, ${accent}5c 100%)`
+                : `linear-gradient(180deg, ${accent}9e 0%, ${accent}66 55%, ${accent}2e 100%)`,
+              border: `2px solid ${accent}${biggest ? "" : "77"}`,
+              boxShadow: biggest ? `0 0 34px ${accent}77` : "0 6px 16px #0007" }}>
+              {/* GIÁ TRỊ nằm trên chính cột của nó — người xem không phải đưa mắt đi tìm */}
+              {it.disp ? (
+                <div style={{ position: "absolute", left: "50%", top: 12, transform: `translateX(-50%) scaleY(${1 / Math.max(0.01, s)})`,
+                  color: biggest ? "#08111e" : "#fff", fontWeight: 900,
+                  fontSize: Math.max(20, Math.min(34, wCot[i] / 3.4)), whiteSpace: "nowrap",
+                  textShadow: biggest ? "none" : "0 2px 10px #000a" }}>{it.disp}</div>
+              ) : null}
+            </div>
+            {/* CHÓP: emoji nhỏ đậu trên đỉnh cột — giữ chất chủ đề, không còn gánh việc mang số liệu */}
+            {it.emoji ? (
+              <div style={{ position: "absolute", left: "50%", bottom: h * s + 8, transform: "translateX(-50%)",
+                fontSize: 52, opacity: s, lineHeight: 1,
+                filter: biggest ? `drop-shadow(0 0 18px ${accent})` : "drop-shadow(0 4px 10px #0008)" }}>{it.emoji}</div>
+            ) : null}
             {/* nhãn dưới nền — bó trong bề rộng cột, tự xuống dòng -> không chồng */}
             <div style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", opacity: s, width: cols[i] - 12 }}>
               {/* TỐI ĐA 2 DÒNG. Trước đây để xuống dòng tự do: tên dài ("Vicolo Roasted Mushroom
@@ -108,8 +135,13 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
                 overflowWrap: "break-word", whiteSpace: "normal",
                 display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
                 overflow: "hidden" } as React.CSSProperties}>{it.name}</div>
-              <div style={{ display: "inline-block", marginTop: 6, background: biggest ? accent : "#132a1e", color: biggest ? "#0a0c14" : "#eafff2",
-                border: `1.5px solid ${accent}`, fontWeight: 900, fontSize: 28, padding: "4px 14px", borderRadius: 12, whiteSpace: "nowrap" }}>{it.disp || it.value.toLocaleString()}</div>
+              {/* 27/8 — GIÁ TRỊ ĐÃ NẰM TRÊN CHÍNH CỘT. In lại ở đây thì mỗi mục hiện "704 cal"
+                  hai lần cách nhau vài chục pixel — mắt phải xử lý hai lần cùng một thông tin,
+                  và khung vốn đã chật lại chật thêm. Chỉ giữ khi cột quá thấp để chứa chữ. */}
+              {h < 92 ? (
+                <div style={{ display: "inline-block", marginTop: 6, background: biggest ? accent : "#132a1e", color: biggest ? "#0a0c14" : "#eafff2",
+                  border: `1.5px solid ${accent}`, fontWeight: 900, fontSize: 26, padding: "4px 14px", borderRadius: 12, whiteSpace: "nowrap" }}>{it.disp || it.value.toLocaleString()}</div>
+              ) : null}
             </div>
           </div>
         );

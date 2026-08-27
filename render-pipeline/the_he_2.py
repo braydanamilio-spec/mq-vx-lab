@@ -1419,17 +1419,33 @@ def _bt_bls(D, ky):
     for x in diem:
         theo_nam.setdefault(x["nam"], []).append(x["gia_tri"])
     nams = sorted(theo_nam)[-6:]
+    # 27/8 — DẠNG LONGSHOT LÀ THANG LOG CỦA TỈ LỆ CƯỢC ("1 trên N"), có bậc EVERYDAY / 1 trên 10 /
+    # 1 trên 100… Nhét thẳng phần trăm vào đó là sai đơn vị: xem khung thật kênh JOB DYING thì
+    # 5,4 · 3,7 · 8,1 · 3,6 đều rơi vào log10 ≈ 0,56-0,91, tức CÙNG MỘT BẬC — sáu con số chen nhau
+    # quanh một vòng tròn nhỏ, không đọc ra thứ tự lẫn ý nghĩa.
+    # Phần trăm CHUYỂN ĐƯỢC sang đúng ngôn ngữ của dạng này: 5,4% nghĩa là 1 trong 18 người. Vừa
+    # đúng đơn vị mà bậc thang đang đo, vừa là cách nói mạnh hơn hẳn với người xem — "1 trong 12
+    # người Mỹ đi làm" đọng lại lâu hơn "8,1 phần trăm".
+    la_pt = "%" in str(ky.get("don_vi", "")) or ten in ("that_nghiep",) or bool(ky.get("phan_tram"))
     muc = []
     for n in nams:
         v = sum(theo_nam[n]) / len(theo_nam[n])
-        muc.append({"label": str(n), "emoji": "📉", "oddsDisp": f"{v:,.1f}",
-                    "logValue": round(math.log10(max(1.0, v)), 3),
-                    "vo": f"{n}. {v:,.1f}."})
+        if la_pt and v > 0:
+            cu = max(1.0, 100.0 / v)                    # 5,4% -> 1 trên 18,5
+            muc.append({"label": str(n), "emoji": "📉", "oddsDisp": f"1 in {cu:,.0f}",
+                        "logValue": round(math.log10(cu), 3),
+                        "vo": f"{n}. One in {cu:,.0f}."})
+        else:
+            muc.append({"label": str(n), "emoji": "📉", "oddsDisp": f"{v:,.1f}",
+                        "logValue": round(math.log10(max(1.0, v)), 3),
+                        "vo": f"{n}. {v:,.1f}."})
     if len(muc) < 4:
         return None
     nhan = ky.get("nhan") or "Index"
     return (f"{nhan} by year", muc,
-            [f"{nhan}, six years in a row.", "Bureau of Labor Statistics. Not a forecast."])
+            [f"{nhan}, six years in a row." if not la_pt
+             else f"{nhan}: how many people it actually was, year by year.",
+             "Bureau of Labor Statistics. Not a forecast."])
 
 
 def _bt_nhac(D, ky):
