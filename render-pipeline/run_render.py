@@ -620,7 +620,24 @@ def run_one(ch, keys, n_shorts=3, report=None):
         return
     # ── FORMAT ĐẶC BIỆT (short-only, motif riêng): GUESS / MAPPED ── route sang make_guess/make_mapped.
     fmt = (ch.get("format") or "").lower()
-    if fmt in ("guess", "mapped", "ranked", "scaled", "thennow", "doc", "swarm", "pulse", "clockwork", "longshot", "toon"):
+    # 27/8 — DANH SÁCH NÀY LÀ CHỖ 17/50 KÊNH RƠI KHỎI PIPELINE GEN-2.
+    #
+    # Nhánh dưới là nơi DUY NHẤT gọi `_gen2_bo`. Nó gác bằng một danh sách ĐỊNH DẠNG viết tay,
+    # và danh sách đó THIẾU `race` (7 kênh) lẫn `cinematic` (10 kênh). Nghĩa là 17 kênh thế hệ 2
+    # CHƯA BAO GIỜ chạy pipeline gen-2 — chúng rơi thẳng xuống đường cũ (`datastory_ci`), đường
+    # đi lấy ảnh Pexels làm nền và gọi Gemini viết kịch bản.
+    # Bằng chứng khớp hoàn toàn: kênh AMERICA LOOKED UP có nguồn `bai_duoc_doc` (bảng Wikipedia
+    # đọc nhiều nhất) nhưng video lại nói về TỈ LỆ KIỂM TOÁN THUẾ IRS, và tiêu đề là văn AI viết
+    # ("Why Restaurants Get More IRS Audits Than Wall Street") chứ không sinh từ dữ liệu. Nền là
+    # ảnh chụp sẵn hai người ngồi máy tính.
+    # Cổng chặn "gen-2 không rơi xuống đường cũ" em thêm sáng nay nằm BÊN TRONG nhánh này, nên
+    # nó không bao giờ được chạy cho 17 kênh đó — chặn một cánh cửa mà chúng không đi qua.
+    #
+    # Gốc sai là DÙNG ĐỊNH DẠNG ĐỂ QUYẾT ĐỊNH ĐƯỜNG CHẠY. Thứ quyết định phải là THẾ HỆ: kênh
+    # thế hệ 2 thì đi đường gen-2, bất kể nó trình bày dưới dạng nào. Thêm hai tên vào danh sách
+    # chỉ chữa hôm nay; hỏi `the_he` mới chữa cả mai — dạng mới thêm sau này tự động đi đúng.
+    _g2 = str(ch.get("the_he") or "") == "2"
+    if _g2 or fmt in ("guess", "mapped", "ranked", "scaled", "thennow", "doc", "swarm", "pulse", "clockwork", "longshot", "toon"):
         short_target = _muc_tieu(ch, channel, "short")
         need = max(0, short_target - FB.count_done(OWNER, channel, "short"))
         n = min(int(ch.get("n_shorts", n_shorts) or 3) or 3, need)

@@ -1200,6 +1200,38 @@ def t_dien_tap_can_quota():
         raise AssertionError("cạn quota là hệ đứng ở %d chỗ: %s" % (len(chet), " · ".join(chet[:4])))
 
 
+def t_moi_kenh_gen2_vao_duoc_nhanh():
+    """Đường chạy phải quyết định bằng THẾ HỆ, không bằng định dạng.
+
+    27/8 — lỗi đắt nhất tìm được cả ngày. Nhánh gọi `_gen2_bo` gác bằng một danh sách ĐỊNH DẠNG
+    viết tay, và danh sách đó thiếu `race` (7 kênh) lẫn `cinematic` (10 kênh):
+    **17/50 kênh thế hệ 2 CHƯA BAO GIỜ chạy pipeline gen-2** — chúng rơi thẳng xuống đường cũ,
+    đường đi lấy ảnh Pexels làm nền và gọi Gemini viết kịch bản.
+    Khớp hoàn toàn với thứ anh nhìn thấy: kênh AMERICA LOOKED UP có nguồn `bai_duoc_doc` (bảng
+    Wikipedia đọc nhiều nhất) nhưng video nói về tỉ lệ kiểm toán thuế IRS, tiêu đề là văn AI
+    viết, nền là ảnh chụp sẵn.
+    Và cổng chặn "gen-2 không rơi xuống đường cũ" nằm BÊN TRONG nhánh đó — nên nó không bao giờ
+    chạy cho 17 kênh kia. Chặn một cánh cửa mà chúng không đi qua.
+
+    Chốt hai vế, vì sửa một vế thôi thì hỏng lại theo cách khác:
+      1. mã phải hỏi `the_he` để vào nhánh (không chỉ dựa vào danh sách định dạng)
+      2. và mọi định dạng đang dùng trong JSON đều phải được nhánh đó nhận"""
+    import json as _j
+    src = _doc("run_render.py")
+    i = src.index("_gen2_bo(")
+    j = src.rfind("fmt in (", 0, i)
+    assert j > 0, "không tìm thấy cổng định dạng trước _gen2_bo"
+    khoi = src[max(0, j - 400):j + 300]
+    assert 'the_he' in khoi, \
+        "cổng vào nhánh gen-2 KHÔNG hỏi `the_he` — dạng mới thêm sau sẽ lại rơi xuống đường cũ"
+    ds = _j.loads(_doc("kenh_the_he_2.json"))
+    danh = src[j:src.index(")", j)]
+    thieu = sorted({k["dinh_dang"] for k in ds if k.get("dinh_dang") and k["dinh_dang"] not in danh})
+    # thiếu trong danh sách thì PHẢI được `the_he` gánh — đã assert ở trên; báo cho biết là đủ
+    if thieu:
+        print("      ℹ️ dạng không có trong danh sách (đi bằng `the_he`): %s" % ", ".join(thieu))
+
+
 def t_nhac_nen_khong_dung_chung():
     """Nhạc nền phải chia ra, không được viết cứng một bản cho cả 50 kênh.
 
@@ -2226,6 +2258,7 @@ def main():
     check("sổ đề tài chỉ ghi khi video RA LÒ THẬT", t_so_de_tai_chi_ghi_khi_ra_lo)
     check("kênh cùng niche không được trùng kho đề tài", t_kenh_anh_em_khong_trung_kho)
     check("50 kênh không được dùng chung một bản nhạc", t_nhac_nen_khong_dung_chung)
+    check("MỌI kênh gen-2 phải vào được nhánh gen-2", t_moi_kenh_gen2_vao_duoc_nhanh)
     check("50 kênh không được giống nhau (≥70 điểm)", t_50_kenh_khong_duoc_giong_nhau)
     check("băm Python khớp băm TypeScript", t_bam_python_khop_typescript)
     check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)
