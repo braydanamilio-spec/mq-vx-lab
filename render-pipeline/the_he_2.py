@@ -381,7 +381,19 @@ def _bd_wiki_top(D, ky):
     # Và một ngày cụ thể có thể không có đủ bài thuộc chủ đề kênh -> lùi dần tối đa 10 ngày,
     # vẫn là bảng THẬT, chỉ của ngày khác (giống cách bộ phim kể đang làm).
     import datetime as _dt
-    goc = _dt.date(int(ky["nam"]), int(ky["thang"]), int(ky["ngay"]))
+    # 27/8 — LỆCH NGỮ NGHĨA GIỮA TRỤC XOAY VÀ HÀM ĐỌC.
+    # Hàm này hiểu `ngay` là NGÀY TRONG THÁNG, còn `KHO_XOAY["ngay"]` là SỐ NGÀY LÙI LẠI
+    # ([7, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365, 545, 730]). Nên xoay tới 45 là dựng
+    # `date(năm, tháng, 45)` -> ValueError, và mọi giá trị > 31 đều chết.
+    # Đo thật: 3 kênh dùng nguồn này (AMERICA LOOKED UP, UNSOLVED LOG, REAL PLACE) chỉ có
+    # 3/13 đề tài chạy được — đúng bằng số giá trị <= 31 trong kho.
+    # Trục ĐÚNG cho một bảng "đọc nhiều nhất ngày X" là SỐ NGÀY LÙI, không phải ngày trong
+    # tháng: nó luôn hợp lệ, luôn trỏ tới một ngày có thật, và tự trôi theo thời gian nên
+    # kho không bao giờ cũ đi.
+    if ky.get("lui") is not None:
+        goc = _dt.date.today() - _dt.timedelta(days=int(ky["lui"]))
+    else:
+        goc = _dt.date(int(ky["nam"]), int(ky["thang"]), int(ky["ngay"]))
     if ky.get("loc") == "rieng_tu":
         r = []
         for lui in range(0, 10):
@@ -881,7 +893,15 @@ def _dc_mlb(D, ky):
 def _dc_wiki(D, ky):
     """Bài Wikipedia được đọc nhiều nhất đua nhau qua từng ngày."""
     import datetime as _dt
-    goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    # 27/8 — TRỤC `lui` (số ngày lùi) phải được HIỂU Ở MỌI BỘ DỰNG đọc bảng Wikipedia, không
+    # chỉ ở `_bd_wiki_top`. Selftest bắt được: 3 kênh đi qua bộ dựng khác (`_pk_wiki` cho dạng
+    # phim, `_dc_wiki` cho dạng đua) vốn không đọc `lui` -> chúng lặng lẽ dùng NGÀY MẶC ĐỊNH cho
+    # cả 13 giá trị xoay. Bài kiểm tay của em bị lừa: thấy 13/13 "chạy được" mà thực chất là 13
+    # lần cùng một ngày, tức 13 video trùng nhau — đúng lỗi SKY RIGHT NOW cũ.
+    if ky.get("lui") is not None:
+        goc = _dt.date.today() - _dt.timedelta(days=int(ky["lui"]))
+    else:
+        goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
     dau = D.bai_duoc_doc(goc.year, goc.month, goc.day, 7)
     if len(dau) < 4:
         return None
@@ -1058,7 +1078,15 @@ def _pk_wiki(D, ky):
     # thể thao). Bỏ lượt là đúng nguyên tắc nhưng kênh sẽ trống liên miên. Lùi dần tối đa 10 ngày:
     # vẫn là bảng đọc THẬT, chỉ là của một ngày khác — không bịa gì thêm.
     import datetime as _dt
-    goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    # 27/8 — TRỤC `lui` (số ngày lùi) phải được HIỂU Ở MỌI BỘ DỰNG đọc bảng Wikipedia, không
+    # chỉ ở `_bd_wiki_top`. Selftest bắt được: 3 kênh đi qua bộ dựng khác (`_pk_wiki` cho dạng
+    # phim, `_dc_wiki` cho dạng đua) vốn không đọc `lui` -> chúng lặng lẽ dùng NGÀY MẶC ĐỊNH cho
+    # cả 13 giá trị xoay. Bài kiểm tay của em bị lừa: thấy 13/13 "chạy được" mà thực chất là 13
+    # lần cùng một ngày, tức 13 video trùng nhau — đúng lỗi SKY RIGHT NOW cũ.
+    if ky.get("lui") is not None:
+        goc = _dt.date.today() - _dt.timedelta(days=int(ky["lui"]))
+    else:
+        goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
     r = []
     for lui in range(0, 10):
         d = goc - _dt.timedelta(days=lui)
@@ -1364,8 +1392,30 @@ def _bd_dong_dat(D, ky):
     return ("Where America shakes", "magnitude", data, dan)
 
 
+# Khung toạ độ từng vùng của Mỹ — để kênh SKY RIGHT NOW có thứ mà xoay.
+# 27/8 — đo thật: kênh này ra 18 video mà chỉ MỘT tiêu đề, vì `_bd_may_bay` hỏi ĐÚNG MỘT khung
+# toạ độ cứng (cả nước Mỹ) nên lượt nào cũng là cùng một câu hỏi. Dữ liệu có đổi theo giờ thật,
+# nhưng "bao nhiêu máy bay đang trên nước Mỹ" thì lần nào cũng là một câu chuyện.
+# Hỏi theo VÙNG thì mỗi lượt là một câu trả lời khác hẳn, và câu hỏi cũng cụ thể hơn hẳn với
+# người xem: "ngay lúc này có bao nhiêu máy bay trên bầu trời Texas".
+VUNG_MY = {
+    "the whole country": (24, -125, 49, -66),
+    "California":        (32.5, -124.5, 42, -114),
+    "Texas":             (25.8, -106.7, 36.5, -93.5),
+    "Florida":           (24.4, -87.7, 31.1, -79.9),
+    "New York":          (40.4, -79.8, 45.1, -71.8),
+    "the Midwest":       (36.9, -97.5, 49.4, -80.5),
+    "the Pacific Northwest": (41.9, -124.8, 49.1, -116.9),
+    "the Northeast":     (38.8, -80.6, 47.5, -66.9),
+    "the Deep South":    (29.0, -94.1, 36.6, -81.0),
+    "the Mountain West": (31.3, -117.2, 49.0, -102.0),
+}
+
+
 def _bd_may_bay(D, ky):
-    r = D.may_bay(24, -125, 49, -66, 200)
+    _v = str(ky.get("vung") or "the whole country")
+    _b = VUNG_MY.get(_v) or VUNG_MY["the whole country"]
+    r = D.may_bay(_b[0], _b[1], _b[2], _b[3], 200)
     if len(r) < 10:
         return None
     gop = {}
@@ -1373,7 +1423,7 @@ def _bd_may_bay(D, ky):
         gop[x["nuoc"] or "Unknown"] = gop.get(x["nuoc"] or "Unknown", 0) + 1
     data = [{"name": k, "value": v} for k, v in sorted(gop.items(), key=lambda z: -z[1])[:10]]
     cao = r[0]
-    dan = [f"Right now there are {len(r)} aircraft over the United States.",
+    dan = [f"Right now there are {len(r)} aircraft over {_v}.",
            f"The highest is {cao['hieu'] or 'unmarked'}, at {cao['cao_m']:,.0f} meters.",
            f"Registered in {data[0]['name']}: {data[0]['value']} of them.",
            "Nobody is hiding this. The transponders broadcast it.",
@@ -1386,7 +1436,7 @@ def _bd_may_bay(D, ky):
     # được `_gan_truc_vao_tieu_de` gắn hậu tố phân biệt như 49 kênh kia — luật 7.en bỏ sót đúng
     # trường hợp này. Với nguồn sống thì thứ phân biệt không phải giá trị trục mà là CON SỐ ĐO ĐƯỢC
     # ngay lúc đó; nó vừa làm tên khác nhau, vừa là một hook thật.
-    return (f"{len(r)} planes are over America right now", "planes", data, dan)
+    return (f"{len(r)} planes are over {_v} right now", "planes", data, dan)
 
 
 def _bd_gia_nha(D, ky):
@@ -1451,7 +1501,14 @@ def dung_story_mapped(kenh: dict, ky: dict | None = None) -> dict | None:
 def _bt_luot_doc(D, ky):
     """Bậc thang: một cái tên leo lên rồi rơi xuống, đo bằng lượt đọc từng ngày."""
     import datetime as _dt
-    goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    # 27/8 — cùng lệch ngữ nghĩa với `_bd_wiki_top`: kênh FAME CURVE xoay trục `thang` với kho
+    # [1..12], nhưng ở đây `thang` ghép vào một NGÀY CỤ THỂ (`nam`/`thang`/`ngay`). Tháng nào
+    # nằm ở tương lai so với hôm nay thì Wikipedia chưa có bảng -> hỏng. Đo được: 2/12 chạy.
+    # Trục đúng là SỐ NGÀY LÙI: luôn trỏ tới một ngày có thật, và tự trôi theo thời gian.
+    if ky.get("lui") is not None:
+        goc = _dt.date.today() - _dt.timedelta(days=int(ky["lui"]))
+    else:
+        goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
     top = D.bai_duoc_doc(goc.year, goc.month, goc.day, 12)
     if not top:
         return None
@@ -2160,6 +2217,18 @@ def _gan_truc_vao_tieu_de(tieu_de: str, truc: str, val) -> str:
     # So bằng ĐUÔI tên trục: đo thật 50 kênh thấy trục năm/ngày xuất hiện dưới nhiều tên
     # (`nam`, `tu_nam`, `ngay`, `tu_ngay`). Khớp cứng "nam"/"ngay" thì 4 kênh ra tiêu đề kiểu
     # "… — 2024" thay vì "… (2024)" — vẫn phân biệt được nhưng đọc như lỗi máy.
+    if truc == "lui":
+        # 27/8 — trục `lui` là SỐ NGÀY LÙI. Ghép trần vào tiêu đề thì ra "— 3", "— 30": vô nghĩa
+        # với người xem, và tệ hơn là KHÔNG PHÂN BIỆT ĐƯỢC nếu nguồn trả cùng một nhan đề chung
+        # (đo thật: AMERICA LOOKED UP ra "Most-read on Wikipedia" cho cả ngày lùi 3 lẫn lùi 30).
+        # Đổi thành NGÀY THẬT: vừa đọc được, vừa là khoá chống trùng đúng nghĩa.
+        import datetime as _dt2
+        try:
+            _n = _dt2.date.today() - _dt2.timedelta(days=int(val))
+            _nh = _n.strftime("%b %-d, %Y")
+        except Exception:
+            return t
+        return t if _nh in t else f"{t} — {_nh}"
     if truc.endswith("ngay"):
         # 27/8 — trục đuôi "ngay" mang HAI loại giá trị khác hẳn nhau, mà bản cũ gộp làm một:
         #   • SỐ ngày  (`ngay = 7`)          -> "… — last 7 days"        ✔

@@ -742,7 +742,23 @@
   "footage": false,
   "tham_so": {
    "loc": "bi_an",
-   "xoay": "ngay"
+   "xoay": "lui",
+   "kho_lui": [
+    3,
+    8,
+    15,
+    22,
+    30,
+    45,
+    60,
+    90,
+    120,
+    180,
+    240,
+    300,
+    365
+   ],
+   "lui": 3
   },
   "brand": {
    "name": "UNSOLVED LOG",
@@ -1029,7 +1045,23 @@
   "footage": false,
   "tham_so": {
    "loc": "tat_ca",
-   "xoay": "ngay"
+   "xoay": "lui",
+   "kho_lui": [
+    3,
+    8,
+    15,
+    22,
+    30,
+    45,
+    60,
+    90,
+    120,
+    180,
+    240,
+    300,
+    365
+   ],
+   "lui": 3
   },
   "brand": {
    "name": "AMERICA LOOKED UP",
@@ -1084,21 +1116,18 @@
   "footage": false,
   "tham_so": {
    "loc": "nguoi",
-   "xoay": "thang",
-   "kho_thang": [
-    1,
-    2,
+   "xoay": "lui",
+   "kho_lui": [
     3,
-    4,
-    5,
-    6,
-    7,
     8,
-    9,
-    10,
-    11,
-    12
-   ]
+    15,
+    22,
+    30,
+    45,
+    60,
+    90
+   ],
+   "lui": 3
   },
   "brand": {
    "name": "FAME CURVE",
@@ -1838,7 +1867,20 @@
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "vung": "usa"
+   "vung": "the whole country",
+   "xoay": "vung",
+   "kho_vung": [
+    "the whole country",
+    "California",
+    "Texas",
+    "Florida",
+    "New York",
+    "the Midwest",
+    "the Pacific Northwest",
+    "the Northeast",
+    "the Deep South",
+    "the Mountain West"
+   ]
   },
   "brand": {
    "name": "SKY RIGHT NOW",
@@ -2017,7 +2059,23 @@
   "footage": false,
   "tham_so": {
    "loc": "dia_diem",
-   "xoay": "ngay"
+   "xoay": "lui",
+   "kho_lui": [
+    3,
+    8,
+    15,
+    22,
+    30,
+    45,
+    60,
+    90,
+    120,
+    180,
+    240,
+    300,
+    365
+   ],
+   "lui": 3
   },
   "brand": {
    "name": "REAL PLACE",
