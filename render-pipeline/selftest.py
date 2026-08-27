@@ -1200,6 +1200,49 @@ def t_dien_tap_can_quota():
         raise AssertionError("cạn quota là hệ đứng ở %d chỗ: %s" % (len(chet), " · ".join(chet[:4])))
 
 
+def t_kenh_anh_em_khong_trung_kho():
+    """Hai kênh CÙNG NICHE + CÙNG nguồn + CÙNG dạng + CÙNG trục thì kho đề tài phải rời nhau.
+
+    27/8 — 22/24 niche có hơn một kênh, và 4 cặp dùng y hệt một đường ống:
+        COURT RECORD ~ COLD FILE · SHOW NUMBERS ~ GONE TOO SOON
+        STEAM TRUTH ~ GAME GRAVEYARD · FILINGS SAY ~ QUIET LAYOFFS
+    Hiện kho của chúng không trùng mục nào. Nhưng đó là MAY, không phải luật được giữ: chỉ cần
+    một lần thêm đề tài (tay hoặc do `y_tuong` đề xuất) là hai kênh cùng chủ ra hai video cùng
+    đề tài — thứ người xem nhận ra ngay, và đúng thứ chính sách 'nội dung sản xuất hàng loạt'
+    của YouTube nhắm tới.
+    Chốt ở đây để cái may đó thành luật."""
+    import itertools
+    import json as _j
+    ks = _j.loads(_doc("kenh_the_he_2.json"))
+
+    def _kho(k):
+        ts = k.get("tham_so") or {}
+        tr = ts.get("xoay")
+        v = ts.get("kho_%s" % tr) or []
+        if isinstance(v, str):
+            try:
+                v = _j.loads(v.replace("'", '"'))
+            except Exception:
+                v = []
+        return tr, {str(x).strip().lower() for x in v}
+
+    xau = []
+    for a, b in itertools.combinations(ks, 2):
+        if (a.get("brand") or {}).get("niche") != (b.get("brand") or {}).get("niche"):
+            continue
+        if a.get("ham") != b.get("ham") or a.get("dinh_dang") != b.get("dinh_dang"):
+            continue
+        tra, ka = _kho(a)
+        trb, kb = _kho(b)
+        if tra != trb or not ka or not kb:
+            continue
+        chung = ka & kb
+        if chung:
+            xau.append("%s ~ %s: %d đề tài trùng (%s)"
+                       % (a["ten"], b["ten"], len(chung), ", ".join(sorted(chung)[:3])))
+    assert not xau, "kênh cùng niche trùng kho đề tài:\n   " + "\n   ".join(xau[:5])
+
+
 def t_so_de_tai_chi_ghi_khi_ra_lo():
     """`FB.save_topics` chỉ được gọi từ MỘT chỗ: hàm chốt sổ, chạy sau khi đẩy Drive xong.
 
@@ -2156,6 +2199,7 @@ def main():
     check("cạn quota Firestore: CẢ PHIÊN vẫn phải xếp đủ 18 lane", t_dien_tap_ca_phien)
     check("không được vẽ HAI lớp phụ đề chồng nhau", t_khong_phu_de_chong)
     check("sổ đề tài chỉ ghi khi video RA LÒ THẬT", t_so_de_tai_chi_ghi_khi_ra_lo)
+    check("kênh cùng niche không được trùng kho đề tài", t_kenh_anh_em_khong_trung_kho)
     check("50 kênh không được giống nhau (≥70 điểm)", t_50_kenh_khong_duoc_giong_nhau)
     check("băm Python khớp băm TypeScript", t_bam_python_khop_typescript)
     check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)

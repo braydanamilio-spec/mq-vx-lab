@@ -161,14 +161,31 @@ def de_xuat(kenh: dict, tat_ca: list, keys: list, owner: str, n: int = 8) -> lis
         return []
     dl = da_lam_that(owner, kenh.get("ten", ""))
     ae = []
+    cam = set()      # giá trị trục đã thuộc về kênh ANH EM — không được đề xuất lại
     for k in kenh_anh_em(kenh, tat_ca):
         ae += da_lam_that(owner, k.get("ten", ""), 12)
+        # 27/8 — TRÁNH CẢ KHO ĐỀ TÀI CỦA KÊNH ANH EM, không chỉ video đã đăng.
+        # Đo 50 kênh: 4 cặp dùng CÙNG nguồn + CÙNG dạng + CÙNG trục (COURT RECORD ~ COLD FILE,
+        # SHOW NUMBERS ~ GONE TOO SOON, STEAM TRUTH ~ GAME GRAVEYARD, FILINGS SAY ~ QUIET
+        # LAYOFFS). Hiện kho của chúng không trùng mục nào — nhưng đó là may, không phải luật:
+        # bản `de_xuat` cũ chỉ tránh những gì kênh anh em ĐÃ ĐĂNG, nên nó hoàn toàn có thể đề
+        # xuất đúng một giá trị đang nằm chờ trong kho của kênh kia. Tới lúc cả hai cùng làm thì
+        # ra hai video cùng đề tài trên hai kênh cùng chủ — thứ người xem nhận ra ngay.
+        try:
+            import the_he_2 as _T
+            _tr2, _kho2 = _T._kho_xoay_cua(k)
+            if _tr2 == truc:
+                cam |= {str(x).strip().lower() for x in (_kho2 or [])}
+        except Exception:
+            pass
     tho = _boc_json(hoi_ai(nhac_de_xuat(kenh, truc, kho, dl, ae, n * 2), keys))
     if not tho:
         print(f"   ⚠️ {kenh.get('ten')}: AI không trả về đề xuất nào")
         return []
-    co = {str(x).strip().lower() for x in kho}
+    co = {str(x).strip().lower() for x in kho} | cam
     ung = [x for x in tho if x.lower() not in co][:n * 2]
+    if cam:
+        print(f"      ⛔ tránh thêm {len(cam)} đề tài đang thuộc kênh anh em cùng niche")
     ok = []
     for x in ung:
         if xac_minh(kenh, truc, x):
