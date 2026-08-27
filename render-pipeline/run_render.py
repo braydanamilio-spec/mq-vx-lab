@@ -949,23 +949,33 @@ def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
         # bằng AI, thiếu key là bỏ lượt im lặng.
         #
         # 27/8 — SỐ CHƯƠNG TỰ CO THEO KHO ĐỀ TÀI CỦA TỪNG KÊNH.
-        # Anh chốt: long nên 5-10 phút, 10 càng tốt. Đo thật một chương ≈ 46,5 giây (long 4
-        # chương = 186s), nên 6 chương ra 4'39" — hụt chuẩn; 8 chương ra 6'12"; 10 chương 7'45".
-        # Nhưng MỖI CHƯƠNG ĂN MỘT ĐỀ TÀI, mà kho trung bình 9,8 đề tài/kênh. Đặt cứng 10 chương
-        # là một video nuốt gần trọn kho, kênh câm ngay bộ sau — đúng bệnh đã phải đi chữa cả
-        # sáng nay. Nên lấy theo kho THẬT của kênh: kênh dày thì long dài, kênh mỏng thì ngắn
-        # hơn nhưng vẫn ra video, không kênh nào bị bỏ lại.
-        #   kho >= 20 -> 10 chương (~7'45")   ·   kho >= 16 -> 8 chương (~6'12")
-        #   kho >= 12 -> 7 chương (~5'25")    ·   còn lại   -> 6 chương (~4'39")
+        # Anh chốt: long nên 5-10 phút, 10 càng tốt.
+        #
+        # ĐO THẬT (không tính nhẩm): dựng một bộ RECALL PLATE 6 chương -> long **297 giây =
+        # 4'57"**, tức **49,5 giây/chương**. Con số này lớn hơn ước tính đầu (46,5) vì câu neo
+        # so sánh cộng thêm ~3 giây mỗi chương.
+        # Và nó lộ ra một chuyện: 6 chương ra 4'57" — HỤT SÀN 5 PHÚT ĐÚNG BA GIÂY. Ước tính cũ
+        # bảo 4'39" nên em tưởng còn xa sàn; thực tế chỉ thiếu 3 giây. Đây đúng là loại sai số
+        # mà chỉ render thật mới thấy.
+        # => SÀN LÀ 7 CHƯƠNG, không phải 6. Thêm đúng một đề tài mỗi bộ để mọi kênh đều vượt
+        # sàn, thay vì để 33 kênh nằm hụt 3 giây.
+        #
+        # Vẫn phải co theo kho: MỖI CHƯƠNG ĂN MỘT ĐỀ TÀI, kho trung bình 9,8 đề tài/kênh. Đặt
+        # cứng 12 chương là một video nuốt trọn kho, kênh câm ngay bộ sau.
+        #   kho >= 22 -> 12 chương (~9'54")   ·   kho >= 18 -> 10 chương (~8'15")
+        #   kho >= 14 ->  8 chương (~6'36")   ·   còn lại   ->  7 chương (~5'46")
+        _GIAY_CHUONG = 49.5                   # đo thật 27/8: 297s / 6 chương
         _kho_n = 0
         try:
             _tr, _kho = TH2._kho_xoay_cua(k2)
             _kho_n = len(_kho or [])
         except Exception:
             pass
-        _sc = 10 if _kho_n >= 20 else 8 if _kho_n >= 16 else 7 if _kho_n >= 12 else 6
+        _sc = 12 if _kho_n >= 22 else 10 if _kho_n >= 18 else 8 if _kho_n >= 14 else 7
         _sc = max(_sc, n_shorts * 2)          # vẫn phải đủ chương để chia cho từng short
-        print(f"   📏 {channel}: kho {_kho_n} đề tài -> long {_sc} chương (~{_sc * 46.5 / 60:.1f} phút)")
+        _ph = _sc * _GIAY_CHUONG
+        print(f"   📏 {channel}: kho {_kho_n} đề tài -> long {_sc} chương "
+              f"(~{int(_ph // 60)}'{int(_ph % 60):02d}\")")
         kq = TH2.chay_bo(k2, avoid=_avoid_for(channel), so_short=max(1, n_shorts),
                          so_chuong=_sc, keys=keys)
     except (Exception, SystemExit) as e:
