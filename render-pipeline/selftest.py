@@ -2195,6 +2195,7 @@ def main():
     check("mọi đường dựng đều nhận hồ key", t_moi_duong_dung_deu_nhan_ho_key)
     check("tài sản kênh dùng phải có trong git (không chỉ ở máy)", t_tai_san_kenh_dung_phai_co_trong_git)
     check("đặt tiêu đề chịu được mọi hình dạng story", t_dat_tieu_de_chiu_duoc_moi_hinh_dang)
+    check("sổ tránh-trùng và phép so cắt cùng độ dài", t_so_trung_tieu_de_phai_cung_do_dai)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5294,6 +5295,44 @@ def t_dat_tieu_de_chiu_duoc_moi_hinh_dang():
         except Exception as e:
             raise AssertionError(f"_tieu_de_tu_du_lieu ném với {st!r}: {type(e).__name__}: {e}")
         assert isinstance(r, str), f"phải trả chuỗi, nhận {type(r).__name__} với {st!r}"
+
+
+def t_so_trung_tieu_de_phai_cung_do_dai():
+    """SỔ TRÁNH-TRÙNG VÀ PHÉP SO PHẢI CẮT CHUỖI CÙNG MỘT ĐỘ DÀI.
+
+    27/8 — chính bản vá tiêu đề của tôi tự phá chính nó. `run_render._avoid_for` cắt mọi mục
+    xuống 60 ký tự cho prompt khỏi phình. Trước đây tiêu đề là khuôn ngắn (41 ký tự) nên cắt
+    không đụng gì. Từ khi tiêu đề dẫn bằng chủ thể, nó dài 61 ký tự:
+        "Shelley Fabares: 466K — Most-read on Wikipedia — Aug 24, 2026"
+    Sổ giữ bản ĐÃ CẮT, `_tieu_de_da_lam` so bản ĐẦY ĐỦ -> không bao giờ khớp -> hệ tin là chưa
+    từng làm. Đo thật trên phiên 15:30: **9 long y hệt nhau** ở AMERICALOOKEDUP, 6 ở GAME
+    GRAVEYARD — đúng thứ bản vá sinh ra để diệt.
+
+    Bài học: đổi HÌNH DẠNG một giá trị thì phải soi mọi nơi so sánh giá trị đó. Cắt chuỗi là một
+    phép so ẩn — nó không trông giống phép so, nên không ai nghĩ tới nó khi làm giá trị dài ra.
+
+    Chốt buộc HAI CON SỐ PHẢI BẰNG NHAU, không chỉ kiểm hành vi ở một ví dụ: sửa một bên mà quên
+    bên kia thì lỗi quay lại y nguyên."""
+    import sys as _s, os as _o, re as _re
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import the_he_2 as T
+    G = _o.path.dirname(_o.path.abspath(__file__))
+    rr = io.open(_o.path.join(G, "run_render.py"), encoding="utf-8").read()
+    i = rr.index("def _avoid_for")
+    than = rr[i: rr.index("\ndef ", i + 5)]
+    m = _re.search(r"str\(t\)\[:(\d+)\]", than)
+    assert m, "không tìm thấy chỗ cắt chuỗi trong `_avoid_for` — chốt đo nhầm chỗ"
+    assert int(m.group(1)) == T._DAI_SO, (
+        f"`_avoid_for` cắt {m.group(1)} ký tự nhưng `_tieu_de_da_lam` cắt {T._DAI_SO} — "
+        f"hai bên so hai độ dài khác nhau thì tiêu đề dài KHÔNG BAO GIỜ khớp, và hệ đẻ trùng")
+
+    # Hành vi: tiêu đề dài hơn mốc cắt vẫn phải nhận ra là ĐÃ LÀM.
+    day = "Shelley Fabares: 466K — Most-read on Wikipedia — Aug 24, 2026"
+    assert len(day) > T._DAI_SO, "ví dụ phải dài hơn mốc cắt mới kiểm được điều cần kiểm"
+    assert T._tieu_de_da_lam(day, [day[:T._DAI_SO]]), "tiêu đề dài không khớp với bản đã cắt trong sổ"
+    # ...nhưng hai tiêu đề THẬT SỰ khác nhau vẫn phải phân biệt được.
+    assert not T._tieu_de_da_lam("Joshua Kushner: 525K — Most-read on Wikipedia — Aug 12, 2026",
+                                 [day[:T._DAI_SO]]), "cắt quá tay -> hai đề tài khác bị coi là một"
 
 
 if __name__ == "__main__":

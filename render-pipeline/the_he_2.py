@@ -2076,10 +2076,27 @@ def _kho_xoay_cua(kenh: dict) -> tuple[str, list]:
     return truc, list(KHO_XOAY.get(_chuan_truc(truc)) or [])
 
 
+# `run_render._avoid_for` CẮT mọi mục trong sổ tránh-trùng xuống 60 ký tự (để prompt khỏi phình).
+# Nên phép so ở đây cũng PHẢI cắt bên kia đúng bấy nhiêu — nếu không, hai bên so hai độ dài khác
+# nhau và không bao giờ khớp.
+_DAI_SO = 60
+
+
 def _tieu_de_da_lam(tieu_de: str, avoid) -> bool:
-    """Tiêu đề này đã ra lò chưa. So sau khi bỏ dấu câu để "X in 2024" và "X In 2024." là một."""
+    """Tiêu đề này đã ra lò chưa. So sau khi bỏ dấu câu để "X in 2024" và "X In 2024." là một.
+
+    27/8 — SO PHẢI CÙNG ĐỘ DÀI, và đây là chỗ bản vá tiêu đề của tôi tự phá chính nó.
+    `_avoid_for` cắt mọi mục xuống 60 ký tự. Trước đây tiêu đề là khuôn ngắn ("Most-read on
+    Wikipedia — Aug 24, 2026" = 41 ký tự) nên cắt không đụng gì và phép so vẫn đúng.
+    Từ khi tiêu đề dẫn bằng chủ thể, nó dài ra:
+        "Shelley Fabares: 466K — Most-read on Wikipedia — Aug 24, 2026"  (61 ký tự)
+    Sổ giữ bản ĐÃ CẮT, hàm này so bản ĐẦY ĐỦ -> không bao giờ khớp -> hệ tin là chưa từng làm ->
+    đo thật: **9 long y hệt nhau** trên AMERICALOOKEDUP, 6 trên GAME GRAVEYARD, trong MỘT phiên.
+    Đúng thứ bản vá sinh ra để diệt, và nó tự tạo ra vì làm tiêu đề dài hơn.
+    Bài học: đổi HÌNH DẠNG một giá trị thì phải soi mọi nơi so sánh giá trị đó — cắt chuỗi là một
+    phép so ẩn."""
     import re as _r
-    g = lambda x: _r.sub(r"[^a-z0-9 ]", "", str(x or "").lower()).strip()
+    g = lambda x: _r.sub(r"[^a-z0-9 ]", "", str(x or "")[:_DAI_SO].lower()).strip()
     t = g(tieu_de)
     return bool(t) and any(g(a) == t for a in (avoid or []))
 
