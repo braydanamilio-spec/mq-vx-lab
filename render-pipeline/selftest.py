@@ -1200,6 +1200,45 @@ def t_dien_tap_can_quota():
         raise AssertionError("cạn quota là hệ đứng ở %d chỗ: %s" % (len(chet), " · ".join(chet[:4])))
 
 
+def t_khong_phu_de_chong():
+    """Không component nào được vừa tự vẽ phụ đề, vừa trải props sang con CŨNG vẽ phụ đề.
+
+    27/8 — anh chụp ảnh AMERICALOOKEDUP: trên khung có HAI băng chữ cùng một câu, khác cỡ, khác vị
+    trí, khác cách ngắt cụm (5 chữ vs 8 chữ) — một cái nền đen bo góc, một cái chữ trắng trần nằm
+    lệch xuống. Không phải video cũ chưa dọn: `RaceLong` trải `{...r}` (có `r.subs`) xuống
+    `BarChartRace`, mà BarChartRace tự vẽ `<Karaoke subs>` bên trong; rồi RaceLong lại vẽ tiếp
+    `<KaraokeCaption>` của nó. Hai bộ vẽ phụ đề chạy cùng lúc trên cùng một câu.
+
+    Đây là lỗi mà `{...props}` rất dễ đẻ ra: trải cả gói thì tiện, nhưng nó chuyển luôn những
+    trường mà con KHÔNG nên nhận. Chốt này soi đúng cái hình dạng đó."""
+    import re as _re
+    import glob as _g
+    goc = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "engine-remotion", "src")
+    if not os.path.isdir(goc):
+        print("      ⏭ bỏ qua: không thấy engine-remotion/src")
+        return
+    ve = set()                       # component TỰ vẽ phụ đề
+    src = {}
+    for f in _g.glob(os.path.join(goc, "*.tsx")):
+        t = io.open(f, encoding="utf-8").read()
+        src[os.path.basename(f)[:-4]] = t
+        if _re.search(r"<Karaoke[A-Za-z]*\s", t):
+            ve.add(os.path.basename(f)[:-4])
+    xau = []
+    for ten, t in src.items():
+        if ten not in ve:
+            continue                 # cha không vẽ phụ đề -> con vẽ là đúng, không phải chồng
+        t2 = _re.sub(r"\{/\*[\s\S]*?\*/\}", "", t)      # bỏ chú thích JSX kẻo bắt nhầm ví dụ
+        for con in ve:
+            if con == ten:
+                continue
+            for m in _re.finditer(r"<" + con + r"\s+([^>]*?)/?>", t2):
+                thuoc = m.group(1)
+                if "{..." in thuoc and "subs=" not in thuoc:
+                    xau.append(f"{ten}.tsx trải props xuống <{con}> mà không cắt `subs`")
+    assert not xau, ("phụ đề sẽ bị vẽ hai lớp chồng nhau:\n   " + "\n   ".join(sorted(set(xau))[:6]))
+
+
 def t_dien_tap_ca_phien():
     """Chạy nguyên `plan_mode()` với Firestore chết sạch — phải xếp đủ 18 lane, không phải 0.
 
@@ -2090,6 +2129,7 @@ def main():
     check("seed 50 kênh: **spread không đè khoá cố ý", t_seed_khong_bi_spread_de_len_khoa_co_y)
     check("cạn quota Firestore: đường chạy chính KHÔNG được đứng", t_dien_tap_can_quota)
     check("cạn quota Firestore: CẢ PHIÊN vẫn phải xếp đủ 18 lane", t_dien_tap_ca_phien)
+    check("không được vẽ HAI lớp phụ đề chồng nhau", t_khong_phu_de_chong)
     check("50 kênh không được giống nhau (≥70 điểm)", t_50_kenh_khong_duoc_giong_nhau)
     check("băm Python khớp băm TypeScript", t_bam_python_khop_typescript)
     check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)

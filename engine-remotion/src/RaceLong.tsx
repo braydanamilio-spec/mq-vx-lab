@@ -220,9 +220,19 @@ export const RaceLong: React.FC<MultiProps> = ({ races = [], intro, outro, cold,
           {r.narration ? <Audio src={staticFile(r.narration)} volume={1} /> : null}
           <Sequence durationInFrames={16}><Audio src={staticFile("sfx/whoosh.mp3")} volume={0.5} /></Sequence>
           <DynamicBg subs={r.subs} shots={r.shots} fallback={r.bg} />
+          {/* 27/8 — PHỤ ĐỀ CHỒNG PHỤ ĐỀ (anh chụp ảnh AMERICALOOKEDUP): trên khung hình có HAI
+              băng chữ cùng một câu, khác cỡ, khác vị trí, khác cách ngắt cụm — một cái có nền đen
+              bo góc, một cái chữ trắng trần nằm lệch xuống dưới.
+              Nguyên nhân ở đúng hai dòng này: `{...r}` trải CẢ `r.subs` xuống BarChartRace, mà
+              BarChartRace tự vẽ `<Karaoke subs={subs}/>` bên trong nó; rồi ngay dòng sau RaceLong
+              lại vẽ thêm `<KaraokeCaption>` của riêng mình. Hai bộ vẽ khác nhau, ngắt cụm khác
+              nhau (5 chữ vs 8 chữ), nên không chồng khít mà thành bóng ma.
+              Sửa: RaceLong LÀM CHỦ lớp phụ đề — biểu đồ chỉ vẽ biểu đồ. Cắt `subs` khỏi props
+              truyền xuống thay vì gỡ Karaoke trong BarChartRace, vì BarChartRace còn được dùng
+              độc lập ở chỗ khác và ở đó nó VẪN PHẢI tự vẽ phụ đề. */}
           {r.chart === "map"
-            ? <WorldMapRace {...r} music={undefined} handle={r.handle || handle} transparent={true} />
-            : <BarChartRace {...r} music={undefined} handle={r.handle || handle} transparent={true} />}
+            ? <WorldMapRace {...r} subs={undefined} music={undefined} handle={r.handle || handle} transparent={true} />
+            : <BarChartRace {...r} subs={undefined} music={undefined} handle={r.handle || handle} transparent={true} />}
           <KaraokeCaption subs={r.subs} />
         </Sequence>
       ))}
