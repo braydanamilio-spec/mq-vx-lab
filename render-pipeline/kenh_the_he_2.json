@@ -1530,17 +1530,21 @@
    "hang": "ford",
    "dong": "f-150",
    "nam": 2020,
-   "xoay": "hang",
-   "kho_hang": [
-    "ford",
-    "toyota",
-    "honda",
-    "chevrolet",
-    "nissan",
-    "jeep",
-    "hyundai",
-    "tesla"
-   ]
+   "xoay": "xe",
+   "kho_xe": [
+    "ford f-150",
+    "toyota camry",
+    "honda civic",
+    "toyota rav4",
+    "honda cr-v",
+    "nissan altima",
+    "jeep wrangler",
+    "ram 1500",
+    "ford explorer",
+    "tesla model 3",
+    "subaru outback"
+   ],
+   "xe": "ford f-150"
   },
   "brand": {
    "name": "CAR RECALL",

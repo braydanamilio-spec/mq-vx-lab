@@ -466,6 +466,15 @@ def _bd_trieu_hoi(D, ky):
     # Nhung cau hoi cua kenh khong phai "doi 2020 co gi" ma "dong xe nay hay hong cho nao" — va
     # cau do phai hoi NHIEU DOI moi tra loi duoc. Gom 5 doi lien nhau: du day de thay he thong
     # nao lap lai, va van la mot cau chuyen chat che ve DUNG mot dong xe.
+    # 27/8 — TRỤC XOAY PHẢI LÀ CẶP (HÃNG, DÒNG), KHÔNG PHẢI HÃNG.
+    # Đo thật: kênh CAR RECALL xoay `hang` qua 8 hãng nhưng giữ nguyên `dong = "f-150"`. API
+    # NHTSA hỏi theo ĐÚNG một dòng xe, nên `toyota + f-150` không có gì cả — 7/8 giá trị xoay
+    # ra rỗng. Kênh thực tế chỉ làm được ĐÚNG MỘT video (ford f-150) rồi câm.
+    # Bỏ `dong` đi cũng không xong: API bắt buộc phải có dòng. Nên trục là một CẶP, viết liền
+    # trong một chuỗi ("toyota camry") rồi tách ra ở đây.
+    if ky.get("xe"):
+        _p = str(ky["xe"]).strip().split(" ", 1)
+        ky = {**ky, "hang": _p[0], "dong": (_p[1] if len(_p) > 1 else "")}
     nam0 = int(ky.get("nam", 2022))
     r = []
     for dn in range(nam0 - 4, nam0 + 1):
