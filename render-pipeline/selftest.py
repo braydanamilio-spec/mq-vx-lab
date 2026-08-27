@@ -2193,6 +2193,7 @@ def main():
     check("làm mới token không ép scope (invalid_scope)", t_khong_ep_scope_khi_lam_moi_token)
     check("bỏ việc không được im lặng (mọi failed đều có log)", t_bo_viec_khong_duoc_im_lang)
     check("mọi đường dựng đều nhận hồ key", t_moi_duong_dung_deu_nhan_ho_key)
+    check("tài sản kênh dùng phải có trong git (không chỉ ở máy)", t_tai_san_kenh_dung_phai_co_trong_git)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5206,6 +5207,48 @@ def t_moi_duong_dung_deu_nhan_ho_key():
     thieu = [h for h, tham in goi if "keys" not in tham]
     assert not thieu, (f"{len(thieu)} đường dựng KHÔNG nhận hồ key: {thieu} — "
                        f"chúng sẽ lùi về biến môi trường và bỏ lượt mọi lần")
+
+
+def t_tai_san_kenh_dung_phai_co_trong_git():
+    """MỌI TÀI SẢN KÊNH KHAI BÁO PHẢI NẰM TRONG GIT — không chỉ nằm trên máy làm việc.
+
+    27/8 — đây là thứ giết nhiều video nhất phiên 15:30, và nó không sai một dòng mã nào:
+        Error while downloading .../music/km_long_note_four.mp3: 404
+        -> `npx remotion render` thoát khác 0 -> "bộ gen-2 lỗi" -> mất cả long lẫn 3 short.
+    `.gitignore` chặn `engine-remotion/public/**`, nên chỉ 6/18 bản nhạc từng được thêm ép vào
+    git. Máy làm việc có đủ 18 nên chạy thử ở nhà lúc nào cũng đẹp; CI chỉ có 6 nên **29/50 kênh**
+    được gán một bản không tồn tại và hỏng ngay từ lệnh render.
+
+    Đây là lớp lỗi "chạy được ở máy tôi" — thứ mà mọi bài kiểm chạy TRÊN MÁY ĐÓ đều không thấy.
+    Nên chốt này không hỏi "tệp có tồn tại không" (ở máy thì luôn có), mà hỏi **git có mang nó
+    theo không** — đúng câu hỏi mà CI sẽ hỏi."""
+    import os as _o, json as _j, subprocess as _sp
+    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    try:
+        r = _sp.run(["git", "ls-files", "engine-remotion/public/music/"],
+                    cwd=G, capture_output=True, text=True, timeout=30)
+        trong_git = {_o.path.basename(x) for x in r.stdout.split() if x.strip()}
+    except Exception as e:
+        print(f"      ⏭️ bỏ qua: không chạy được git ({str(e)[:40]})")
+        return
+    if not trong_git:
+        print("      ⏭️ bỏ qua: không đọc được danh sách tệp từ git")
+        return
+    ks = _j.load(io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)),
+                                      "kenh_the_he_2.json"), encoding="utf-8"))
+    ks = ks if isinstance(ks, list) else list(ks.values())
+    thieu = {}
+    for k in ks:
+        n = str((k.get("brand") or {}).get("nhac") or "")
+        if not n:
+            continue
+        ten = _o.path.basename(n)
+        if ten not in trong_git:
+            thieu.setdefault(ten, []).append(k["ten"])
+    assert not thieu, (
+        f"{len(thieu)} bản nhạc được {sum(len(v) for v in thieu.values())} kênh dùng nhưng KHÔNG "
+        f"có trong git -> CI se 404 va lenh render hong: " +
+        ", ".join(f"{t}({len(v)} kênh)" for t, v in list(thieu.items())[:5]))
 
 
 if __name__ == "__main__":

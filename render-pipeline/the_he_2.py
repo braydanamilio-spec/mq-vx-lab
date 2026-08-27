@@ -2207,7 +2207,7 @@ def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = "
         props["source"] = ten_nguon(st.get("nguon", ""))
     # NHẠC NỀN RIÊNG cho MỌI dạng (27/8). `datastory_ci` đặt mặc định một bản chung; ghi đè ở đây
     # để mỗi kênh một vòng nhạc. Xem `brandkit_the_he_2.chia_hinh`: 14 bản chia đều 50 kênh.
-    _nhac = (kenh.get("brand") or {}).get("nhac")
+    _nhac = _nhac_co_that((kenh.get("brand") or {}).get("nhac"), kenh.get("ten", ""))
     if _nhac:
         props["music"] = _nhac
     # NỀN RIÊNG TỪNG KÊNH (26/8). Nền chiếm gần hết khung hình; để nó viết cứng trong composition
@@ -2426,6 +2426,45 @@ _NHAN_TRUC = {
     "vang_nhat": "Emptiest servers",
     "bo_hoang":  "Abandoned",
 }
+
+
+_NHAC_CO = None
+
+
+def _nhac_co_that(duong: str, ten_kenh: str = "") -> str:
+    """Chỉ trả bản nhạc CÓ THẬT trong gói render; thiếu thì lùi về bản có, không để render chết.
+
+    27/8 — đây là thứ giết nhiều video nhất trong phiên 15:30, và nó không hề trông giống lỗi:
+        Error while downloading .../music/km_long_note_four.mp3: 404
+        -> `npx remotion render` thoát khác 0 -> "bộ gen-2 lỗi" -> mất cả long lẫn 3 short.
+    Nguyên nhân: `.gitignore` chặn `engine-remotion/public/**`, nên chỉ 6/18 bản nhạc từng được
+    thêm ép vào git. Máy làm việc có đủ 18 -> chạy thử ở nhà thì đẹp; CI chỉ có 6 -> **29/50 kênh**
+    được gán một bản không tồn tại và hỏng ngay từ lệnh render.
+    Đây là lớp lỗi "chạy được ở máy tôi": không sai một dòng mã nào, sai ở chỗ TÀI SẢN không đi
+    cùng mã.
+    Một bản nhạc thiếu không đáng để mất một video 7 phút đã dựng xong. Lùi về bản có thật —
+    chọn theo băm tên kênh nên vẫn rải đều, và kênh nào cũng có nhạc.
+    """
+    import os as _o
+    global _NHAC_CO
+    kho = _o.path.join(GOC, "..", "engine-remotion", "public", "music")
+    if _NHAC_CO is None:
+        try:
+            _NHAC_CO = sorted(f for f in _o.listdir(kho) if f.endswith(".mp3") and not f.startswith("sfx_"))
+        except Exception:
+            _NHAC_CO = []
+    if not duong:
+        return ""
+    ten = _o.path.basename(str(duong))
+    if _o.path.exists(_o.path.join(kho, ten)):
+        return duong
+    if not _NHAC_CO:
+        print(f"   ⚠️ {ten_kenh}: kho nhạc rỗng — bỏ nhạc nền (video vẫn ra, chỉ không có nhạc)")
+        return ""
+    import hashlib as _h
+    thay = _NHAC_CO[int(_h.md5(str(ten_kenh).encode()).hexdigest(), 16) % len(_NHAC_CO)]
+    print(f"   🎵 {ten_kenh}: thiếu `{ten}` trong gói render — dùng `{thay}` thay thế")
+    return "music/" + thay
 
 
 def _gan_truc_vao_tieu_de(tieu_de: str, truc: str, val) -> str:
