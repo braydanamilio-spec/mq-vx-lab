@@ -137,11 +137,64 @@ def chay(kieu: str) -> int:
     return len(chet), chet
 
 
+def chay_plan() -> int:
+    """DIỄN TẬP CẢ PHIÊN: chạy nguyên `plan_mode()` với Firestore chết, đòi nó vẫn xếp đủ lane.
+
+    27/8 — vì sao bài này KHÔNG thay thế được bằng bài đo từng hàm, và ngược lại:
+    bài từng hàm chấm `read_keys` ✅ (nó trả `[]`, không ném). Nhưng chạy cả phiên thì
+    `PLAN channels=[]` — vì run_render đọc `[]` rồi kết luận "Không đọc được key -> bỏ mẻ".
+    KHÔNG HÀM NÀO NÉM, CẢ PHIÊN VẪN ĐỨNG. Chạy cả phiên còn lôi ra thêm 3 điểm nữa mà bài
+    từng hàm không thấy: `mark_key_alive` đọc ngoài lớp bọc mềm; `drive_usage` trả `None`
+    trong khi người gọi mở gói `used, cap = ...` (đổi một cái chết lấy cái chết khác); và
+    cái phanh tự cắt 18 lane xuống 3 đúng lúc quota đã chết — lúc cắt chẳng tiết kiệm gì.
+    """
+    import importlib
+    import io as _io
+    import contextlib as _ct
+    for m in ("firestore_bridge", "run_render"):
+        sys.modules.pop(m, None)
+    FB = importlib.import_module("firestore_bridge")
+    _cam_firestore("nem", FB)
+    os.environ.setdefault("OWNER_UID", "THU")
+    os.environ.setdefault("FORCE", "1")
+    os.environ.setdefault("GEMINI_API_KEYS", "AIza" + "D" * 32)   # tầng đáy: key từ biến môi trường
+    sys.argv = ["run_render.py", "--plan"]
+    RR = importlib.import_module("run_render")
+    buf = _io.StringIO()
+    try:
+        with _ct.redirect_stdout(buf):
+            RR.plan_mode()
+    except SystemExit:
+        pass
+    except BaseException as e:
+        print(buf.getvalue()[-1200:])
+        print(f"  ❌ CẢ PHIÊN CHẾT: {type(e).__name__}: {str(e)[:120]}")
+        return 1
+    ra = buf.getvalue()
+    dong = [d for d in ra.splitlines() if d.startswith("PLAN channels=")]
+    if not dong:
+        print(ra[-800:]); print("  ❌ plan không xuất được danh sách kênh")
+        return 1
+    import json as _j
+    ds = _j.loads(dong[-1].split("=", 1)[1])
+    print("\n" + "═" * 78)
+    print("  KỊCH BẢN: CẢ PHIÊN với Firestore chết sạch")
+    print("═" * 78)
+    for d in ra.splitlines():
+        if any(x in d for x in ("🔓", "🗂️", "🔑", "🧩", "▶")):
+            print("  " + d.strip())
+    print(f"  {'✅' if len(ds) >= 18 else '❌'} plan xếp {len(ds)} lane (đòi ≥18)")
+    return 0 if len(ds) >= 18 else 1
+
+
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--kb", default="", help="nem | rong (mặc định: cả hai)")
+    ap.add_argument("--plan", action="store_true", help="diễn tập CẢ PHIÊN thay vì từng hàm")
     a = ap.parse_args()
+    if a.plan:
+        return chay_plan()
     kbs = [a.kb] if a.kb else ["nem", "rong"]
     tong = []
     for kb in kbs:

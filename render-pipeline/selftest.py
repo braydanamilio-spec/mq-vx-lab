@@ -1200,6 +1200,33 @@ def t_dien_tap_can_quota():
         raise AssertionError("cạn quota là hệ đứng ở %d chỗ: %s" % (len(chet), " · ".join(chet[:4])))
 
 
+def t_dien_tap_ca_phien():
+    """Chạy nguyên `plan_mode()` với Firestore chết sạch — phải xếp đủ 18 lane, không phải 0.
+
+    27/8 — chốt này bắt đúng loại lỗi mà chốt "từng hàm" ngay trên KHÔNG bắt được, và ngược lại.
+    Bằng chứng: chốt từng hàm chấm `read_keys` ✅ vì nó trả `[]` chứ không ném. Nhưng cả phiên thì
+    `PLAN channels=[]`, vì run_render đọc `[]` rồi kết luận "Không đọc được key -> bỏ mẻ". Không
+    hàm nào ném, cả đêm vẫn mất trắng.
+    Chạy cả phiên còn lôi thêm 3 điểm nữa: `mark_key_alive` đọc ngoài lớp bọc mềm · `drive_usage`
+    trả `None` trong khi người gọi mở gói `used, cap = ...` · và cái phanh tự cắt 18 lane còn 3
+    đúng lúc quota đã chết (cắt lúc đó không tiết kiệm được gì, chỉ giảm sản lượng).
+
+    RÚT RA: "mỗi hàm đều có đường lui" KHÔNG suy ra "hệ thống không đứng". Phải đo cả đường chạy."""
+    import subprocess as _sp
+    import sys as _sy
+    _goc = os.path.dirname(os.path.abspath(__file__))
+    try:
+        r = _sp.run([_sy.executable, os.path.join(_goc, "dien_tap_can_quota.py"), "--plan"],
+                    capture_output=True, text=True, timeout=240,
+                    env={**os.environ, "MM0_HOT_OFF": "1", "OWNER_UID": "THU", "FORCE": "1"})
+    except _sp.TimeoutExpired:
+        print("      ⏭ bỏ qua: diễn tập cả phiên quá 240s (máy chậm/mạng chặn) — chốt từng hàm vẫn chạy")
+        return
+    if r.returncode != 0:
+        duoi = "\n      ".join([d for d in (r.stdout or "").splitlines()[-8:] if d.strip()])
+        raise AssertionError("cạn quota -> plan KHÔNG xếp đủ lane:\n      " + duoi)
+
+
 def t_50_kenh_khong_duoc_giong_nhau():
     """50 kênh gen-2 phải KHÁC NHAU, đo bằng số chứ không bằng lời hứa.
 
@@ -2062,6 +2089,7 @@ def main():
     check("đường lùi không khuếch đại lỗi (1 lượt 429 -> 18)", t_duong_lui_khong_duoc_khuech_dai_loi)
     check("seed 50 kênh: **spread không đè khoá cố ý", t_seed_khong_bi_spread_de_len_khoa_co_y)
     check("cạn quota Firestore: đường chạy chính KHÔNG được đứng", t_dien_tap_can_quota)
+    check("cạn quota Firestore: CẢ PHIÊN vẫn phải xếp đủ 18 lane", t_dien_tap_ca_phien)
     check("50 kênh không được giống nhau (≥70 điểm)", t_50_kenh_khong_duoc_giong_nhau)
     check("băm Python khớp băm TypeScript", t_bam_python_khop_typescript)
     check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)

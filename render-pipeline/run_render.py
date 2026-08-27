@@ -1616,6 +1616,10 @@ def _gio_toi_reset() -> float:
     return max(0.1, (moc - now).total_seconds() / 3600.0)
 
 
+class _BoPhanh(Exception):
+    """Thoát khỏi khối phanh mà không bị nhánh `except Exception` bên dưới hiểu nhầm là lỗi đo."""
+
+
 def plan_mode():
     """ĐIỀU PHỐI (matrix 18 luồng): gating + health-check + re-render — CHẠY 1 LẦN — rồi xuất danh sách kênh
     cho các job render song song. Các job render KHÔNG lặp health-check/re-render (đỡ tốn API)."""
@@ -1660,6 +1664,20 @@ def plan_mode():
             _pg = FB.phan_tram_da_dung("ghi")
             _muc = max(_pd, _pg)
             _tran_lane = None
+            # 27/8 — PHANH PHẢI TẮT KHI QUOTA ĐÃ CHẾT HẲN.
+            # Phanh sinh ra để KHÔNG CHẠM trần: chạy chậm lại thì hạn mức đủ dùng cả ngày. Nhưng
+            # khi đã chạm trần rồi thì cắt lane không tiết kiệm được gì nữa — lượt đọc có tốn đâu
+            # mà tiết kiệm, nó đang bị từ chối. Lúc đó phanh chỉ còn một tác dụng: giảm sản lượng
+            # từ 18 lane xuống 3.
+            # Đo được ở bài chạy `--plan` với Firestore chết: plan tìm đủ 50 kênh, xếp 18 lane, rồi
+            # tự cắt còn 3 — đúng cái cảnh "hệ thống bị quota làm cho ì" mà anh bảo phải hết.
+            # Giờ 18 lane đều có đường lui (repo cho kênh, D1/env cho key), nên cạn quota là lúc
+            # phải chạy ĐỦ lane, không phải ít hơn.
+            _chet_han = bool(FB._RQ_DEAD.get("until", 0) > _T0.time()) or _muc >= 98
+            if _chet_han:
+                print(f"   🔓 Quota đã cạn ({_muc}%) — KHÔNG phanh: cắt lane lúc này không tiết "
+                      f"kiệm được gì, chỉ giảm sản lượng. 18 lane chạy bằng đường lui repo/D1.")
+                raise _BoPhanh()
             if _muc >= 95:
                 _tran_lane = 3
             elif _muc >= 85:
@@ -1670,6 +1688,8 @@ def plan_mode():
                 print(f"   🛑 PHANH: quota đã dùng {_muc}% (đọc {_pd}% · ghi {_pg}%) — "
                       f"phiên này chạy {_tran_lane}/{len(lst)} lane, phần còn lại để phiên sau.")
                 lst = lst[:_tran_lane]
+        except _BoPhanh:
+            pass
         except Exception as _e:
             print(f"   ⚠️ không đọc được mức quota để phanh ({str(_e)[:50]}) — chạy đủ lane")
 

@@ -984,10 +984,82 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
             if not _RQ_DEAD["warned"]:
                 _RQ_DEAD["warned"] = True
                 print("🩹 Firestore HẾT HẠN MỨC ĐỌC (read_keys) -> dùng bản đệm cũ 15', luồng chạy tiếp.")
-            return hit[1] if hit else []
+            return hit[1] if hit else (_keys_tu_d1(owner) or _keys_tu_env())
         raise
     _KEYS_CACHE[ck] = (__import__('time').time(), res)
+    _chup_keys_sang_d1(owner, res)
     return res
+
+
+def _keys_tu_d1(owner: str) -> list:
+    """Hồ key từ ảnh chụp D1 — đường lui CUỐI khi Firestore cạn sạch.
+
+    27/8 — vì sao đây là điểm chết QUAN TRỌNG NHẤT, và vì sao chỉ chạy `--plan` thật mới thấy:
+    diễn tập từng hàm báo `read_keys` ✅ (nó trả `[]`, không ném). Nhưng chạy nguyên `plan_mode()`
+    với Firestore chết thì ra `PLAN channels=[]` — vì run_render đọc `[]` rồi kết luận
+    "Không đọc được key — Bỏ mẻ, nhịp cron sau tự thử". Không hàm nào ném, cả phiên vẫn đứng.
+    Bài học: đo từng hàm KHÔNG thay được đo cả đường chạy. Một hàm "không ném" vẫn có thể là
+    nguyên nhân dừng, nếu thứ nó trả về bị người gọi hiểu là "hết sạch".
+
+    D1 vốn đã giữ ảnh chụp hồ key, nhưng chỉ `merge_keys_A` dùng — `read_keys` thì không, nên
+    tài nguyên có sẵn nằm đó không ai gọi.
+
+    TTL 24h chứ không phải 30' như đường dùng-hàng-ngày: KEY KHÔNG HẾT HẠN VÌ ẢNH CHỤP CŨ. Thứ
+    cũ đi là trạng thái nghỉ/cooling, mà cái đó mỗi lane tự phát hiện lại khi gọi. Thà cầm hồ key
+    cũ 20 tiếng còn hơn đứng cả phiên."""
+    try:
+        import hot_db as _H
+        ra = _H.keys_doc(owner, 86400)
+        if ra:
+            _keu_mot_lan("k_d1", f"   🗂️ Firestore không cho đọc hồ key — dùng ẢNH CHỤP D1 "
+                                 f"({len(ra)} key, 0 lượt đọc Firestore). Phiên chạy bình thường.")
+            return ra
+        _keu_mot_lan("k_d1x", "   🚨 Firestore không cho đọc hồ key VÀ D1 cũng không có ảnh chụp "
+                              "— đây là lần đầu, phiên sau sẽ có (mỗi lần đọc được đều chụp lại).")
+    except Exception as e:
+        _keu_mot_lan("k_d1e", f"   ⚠️ đọc ảnh chụp key ở D1 lỗi: {str(e)[:70]}")
+    return []
+
+
+def _keys_tu_env() -> list:
+    """TẦNG ĐÁY TUYỆT ĐỐI: key lấy thẳng từ biến môi trường (GitHub secret).
+
+    27/8 — D1 chỉ cứu được khi ĐÃ có ảnh chụp; lần cạn quota ĐẦU TIÊN sau khi đổi hồ key thì D1
+    rỗng và phiên vẫn đứng. Biến môi trường thì không phụ thuộc thứ gì đang sống: nó nằm sẵn
+    trong runner từ giây đầu. Đây là sàn cuối để câu "hệ thống không được dừng" thành đúng trong
+    MỌI trường hợp, kể cả cạn cả Firestore lẫn D1.
+
+    Không có secret thì trả rỗng — không ép ai phải khai. Có thì hệ miễn nhiễm hoàn toàn:
+        gh secret set GEMINI_API_KEYS --body "key1,key2,key3"
+
+    Cố ý KHÔNG in giá trị key ra log, chỉ in số lượng."""
+    import os as _o
+    tho = (_o.environ.get("GEMINI_API_KEYS") or _o.environ.get("GEMINI_API_KEY") or "").strip()
+    if not tho:
+        return []
+    ra = []
+    for i, k in enumerate(x.strip() for x in tho.replace("\n", ",").split(",")):
+        if len(k) > 20:
+            ra.append({"id": f"env-{i}", "key": k, "req_today": 0, "status": "active",
+                       "nguon": "env"})
+    if ra:
+        _keu_mot_lan("k_env", f"   🔑 Không nguồn nào đọc được hồ key — dùng {len(ra)} key từ "
+                              f"biến môi trường (GitHub secret). Phiên chạy bình thường.")
+    return ra
+
+
+def _chup_keys_sang_d1(owner: str, res: list) -> None:
+    """Đọc được hồ key thì CHỤP LẠI sang D1 ngay — để lần cạn quota sau có cái mà dùng.
+
+    Đường lui chỉ có giá trị nếu kho dự phòng được nạp lúc còn khoẻ. Trước đây chỉ `merge_keys_A`
+    chụp, mà nhánh đó không phải lúc nào cũng chạy."""
+    if not res:
+        return
+    try:
+        import hot_db as _H
+        _H.keys_ghi(owner, res)
+    except Exception:
+        pass
 
 
 _A_KEYS = {"rows": None}   # đọc bảng key ở A TỐI ĐA 1 LẦN mỗi tiến trình (A cũng Spark free!)
@@ -1142,8 +1214,24 @@ def mark_key_alive(key_id: str, alive: bool, reason: str = "", used: bool = Fals
     if alive:
         patch["dead_since"] = None                     # sống lại -> xoá mốc chết
     else:
-        cur = _db_keys().collection("gemini_keys").document(key_id).get()
-        if not (cur.exists and (cur.to_dict() or {}).get("dead_since")):
+        # 27/8 — lệnh ĐỌC này nằm ngoài `_soft` (lớp bọc chỉ ôm lệnh GHI ở dòng dưới), nên cạn quota
+        # là nó ném thẳng ra và giết `plan_mode` ngay giữa khâu khám key. Đây là điểm chết thứ hai
+        # tìm được bằng cách chạy NGUYÊN `--plan` với Firestore chết — cùng một họ với `new_job`,
+        # `save_topics`, `drive_usage`: người viết bọc lệnh ghi rồi yên tâm, quên rằng lấy kết nối
+        # và đọc trước đó cũng đi qua Firestore.
+        # Không đọc được thì cứ stamp mốc chết: chệch nhiều nhất là ghi đè `dead_since` cũ bằng
+        # mốc mới — sai lệch vài giờ trên một trường chỉ dùng để hiển thị. Đổi lấy việc phiên
+        # không đứng thì quá rẻ.
+        try:
+            cur = _db_keys().collection("gemini_keys").document(key_id).get()
+            da_chet = bool(cur.exists and (cur.to_dict() or {}).get("dead_since"))
+        except BaseException as e:
+            if isinstance(e, KeyboardInterrupt):
+                raise
+            _keu_mot_lan("mka", f"   ⚠️ không đọc được mốc chết của key ({str(e)[:50]}) — "
+                                f"stamp mốc mới, khám key chạy tiếp.")
+            da_chet = False
+        if not da_chet:
             patch["dead_since"] = _now()               # stamp mốc chết LẦN ĐẦU (giữ nguyên nếu đã chết từ trước)
     _soft(lambda: _db_keys().collection("gemini_keys").document(key_id).set(patch, merge=True), "mark_key_alive")
 
@@ -1513,7 +1601,11 @@ def drive_usage(owner: str, moi_nhat: bool = False):
             raise
         _keu_mot_lan("du", f"   ⚠️ không đo được dung lượng kho ({str(e)[:60]}) — render tiếp, "
                            f"khâu đẩy Drive sẽ tự báo nếu hết chỗ.")
-        return None
+        # PHẢI trả đúng hình dạng (đã dùng, sức chứa) — người gọi mở gói bằng `used, cap = ...`,
+        # trả `None` là đổi một cái chết (429) lấy một cái chết khác (TypeError). Chạy `--plan`
+        # thật mới lộ ra; diễn tập từng hàm chấm ✅ vì nó không mở gói.
+        # `cap = 0` mang đúng nghĩa "không đo được": guard `if cap and ...` bỏ qua -> render tiếp.
+        return (0, 0)
     if not moi_nhat:
         try:
             _cr("drive_usage_cache", 1)
