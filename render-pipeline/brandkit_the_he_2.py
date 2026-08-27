@@ -179,6 +179,32 @@ def sinh(k: dict, thu_tu: int, hsv: tuple) -> dict:
     }
 
 
+def chia_hinh(ks: list) -> None:
+    """Chốt BỘ MẶT của từng kênh vào `brand.hinh` — chia đều, cố định, lưu lại (27/8).
+
+    Bản đầu để `NhanV4.tsx` tự bốc bố cục từ băm tên kênh. Đo trên đúng 50 tên thật thì băm rải
+    lệch 10/3 (một kiểu 10 kênh dùng, một kiểu chỉ 3) — và tệ hơn: băm là thứ TÍNH LẠI, nên chỉ
+    cần đổi tên một kênh là kênh đó đổi mặt, mà đổi nhận diện là mất người theo dõi.
+    Nhận diện phải được LƯU như mọi tài sản thương hiệu khác. Chia một lần rồi ghi vào JSON:
+    kênh đã có `hinh` thì giữ nguyên vĩnh viễn, chỉ kênh mới mới được cấp.
+
+    Chia đều: 3 chất nền × 8 bố cục avatar × 8 bố cục cover.
+      av   = i % 8                      → mỗi kiểu 6-7 kênh
+      bang = (i * 3 + i // 8) % 8        → gcd(3,8)=1 nên chạy hết 8 kiểu; cộng thêm i//8 để
+                                           `bang` KHÔNG dính chặt vào `av` (nếu chỉ 3i%8 thì mọi
+                                           kênh cùng `av` sẽ cùng `bang` — lại thành cụm)
+      nen  = i % 3                       → 17/17/16
+    Thứ tự `i` lấy theo TÊN ĐÃ SẮP XẾP, không theo thứ tự trong tệp: chèn thêm kênh vào giữa tệp
+    thì thứ tự tệp đổi hết, còn tên đã sắp thì chỉ kênh mới chen vào."""
+    cu = [k for k in ks if (k.get("brand") or {}).get("hinh")]
+    moi = sorted([k for k in ks if not (k.get("brand") or {}).get("hinh")],
+                 key=lambda k: str(k["ten"]))
+    d = len(cu)
+    for j, k in enumerate(moi):
+        i = d + j
+        k["brand"]["hinh"] = {"nen": i % 3, "av": i % 8, "bang": (i * 3 + i // 8) % 8}
+
+
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser()
@@ -188,10 +214,25 @@ def main() -> int:
     ks = json.load(io.open(DS, encoding="utf-8"))
     mau = chon_mau(len(ks))
     dem = {}
+    # 27/8 — GIỮ LẠI những trường đã tinh chỉnh TAY sau lần sinh đầu.
+    # Đo được: chạy `--sinh` lần hai ghi đè `font` của cả 50 kênh về "Poppins" (đúng hồi quy mà
+    # chú thích trong `Phong.tsx` đã ghi: "50 kênh khác nhau thực ra dùng chung một khuôn chữ"),
+    # xoá `mau`, đổi 11 `motif` — và selftest lập tức đỏ 4 cặp kênh giống nhau ≥70 điểm.
+    # Bộ sinh này chỉ nên CẤP giá trị ban đầu. Cái gì đã được chỉnh sau đó thì nó không có quyền
+    # lấy lại: nhận diện là tài sản, không phải kết quả tạm của một hàm.
+    GIU = ("font", "motif", "mau", "voice", "voice_tone", "hinh")
     for idx, k in enumerate(ks):
         i = dem.get(k["niche"], 0)
         dem[k["niche"]] = i + 1
-        k["brand"] = sinh(k, i, mau[idx])
+        cu = k.get("brand") or {}
+        moi = sinh(k, i, mau[idx])
+        for f in GIU:
+            if cu.get(f) is not None:
+                moi[f] = cu[f]
+        for f in cu:                       # trường do bước khác thêm vào — không được đánh rơi
+            if f not in moi:
+                moi[f] = cu[f]
+        k["brand"] = moi
     thieu = [k["ten"] for k in ks if not k["brand"]["tagline"]]
     if thieu:
         print("❌ thiếu tagline:", thieu)
@@ -205,6 +246,7 @@ def main() -> int:
         k = next((x for x in ks if x["ten"].upper() == a.xem.upper()), None)
         print(json.dumps(k["brand"] if k else {}, ensure_ascii=False, indent=1))
         return 0
+    chia_hinh(ks)
     if a.sinh:
         io.open(DS, "w", encoding="utf-8").write(json.dumps(ks, ensure_ascii=False, indent=1))
         print(f"✅ sinh brand cho {len(ks)} kênh · {len(set(mau))} màu chính, không trùng")

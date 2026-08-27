@@ -1575,8 +1575,41 @@ def read_channels(owner: str) -> list[dict]:
             raise
         print(f"   🗂️ Firestore không đọc được ({str(e)[:50]}) — dùng BẢNG KÊNH TRONG REPO "
               f"({len(ra)} kênh, 0 lượt đọc). Trạng thái bật/tắt lấy mặc định ĐANG BẬT.")
+    ra = _bu_tu_repo(owner, ra)
     _HOT_CACHE[("chans", owner)] = (_t.time(), ra)
     return ra
+
+
+def _bu_tu_repo(owner: str, ra: list) -> list:
+    """BÙ những kênh có trong repo mà bản đọc được lại thiếu.
+
+    27/8 — vì sao cần, đo được: phiên #33028251503 đọc "thành công" nhưng trả về ĐÚNG 55 bản ghi
+    thế hệ 1 và KHÔNG có kênh gen-2 nào (project B cạn hạn mức, lật sang gương B2 — mà gương giữ
+    ảnh chụp cũ từ trước đợt seed 50 kênh). Lọc gen-1 xong còn 0 kênh -> `PLAN channels=[]`,
+    phiên mở 0 lane. Bản vá trước chỉ cứu khi Firestore NÉM LỖI, nên nằm im.
+
+    Bài học: "đọc không ném lỗi" KHÔNG có nghĩa là "đọc đủ". Đường lui phải bám vào thứ ĐO ĐƯỢC
+    (thiếu bao nhiêu kênh so với repo), không bám vào việc có ngoại lệ hay không.
+
+    Phân vai rõ ràng, đây mới là thứ đúng về lâu dài:
+        REPO      = danh sách kênh nào TỒN TẠI + công thức làm (dinh_dang, tham_so)  → tĩnh
+        FIRESTORE = TRẠNG THÁI của chúng (bật/tắt, ưu tiên, đã làm bao nhiêu)        → động
+    Nên luôn HỢP hai nguồn: kênh nào Firestore có thì giữ nguyên trạng thái của nó, kênh nào thiếu
+    thì lấy từ repo. Bỏ hẳn kênh khỏi hệ = xoá khỏi `kenh_the_he_2.json`, không phải xoá bản ghi.
+    """
+    try:
+        co = {str(x.get("name") or "").replace(" ", "").upper() for x in (ra or [])}
+        repo = _chans_tu_repo(owner)
+        thieu = [x for x in repo if x["name"] not in co]
+        if not thieu:
+            return ra
+        print(f"   🧩 Bù {len(thieu)}/{len(repo)} kênh gen-2 THIẾU trong bản đọc được "
+              f"(nguồn: repo, 0 lượt đọc): {', '.join(x['name'] for x in thieu[:5])}"
+              f"{'…' if len(thieu) > 5 else ''}")
+        return list(ra or []) + thieu
+    except Exception as e:
+        print(f"   ⚠️ bù kênh từ repo lỗi (bỏ qua): {str(e)[:80]}")
+        return ra
 
 
 def _chans_tu_repo(owner: str) -> list:

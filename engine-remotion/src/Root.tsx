@@ -24,6 +24,7 @@ import { BrandLongshot } from "./BrandLongshot";
 import { BrandScaled } from "./BrandScaled";             // brand kênh #4 SCALED
 import { ThenNowShort, calcThenNow } from "./ThenNowShort";
 import { Gen2Long, calcGen2Long } from "./Gen2Long";
+import { NhanV4 } from "./NhanV4";   // nhận diện v4: 8 nguyên mẫu × 3 chất nền, hết một khuôn
 import { BrandV3 } from "./BrandV3";   // bộ nhận diện v3: nền phản chiếu đúng dạng kênh   // LONG 16:9 ghép chương cho 5 dạng gen-2 // kênh #5 THEN×NOW (xưa/nay)
 import { BrandThenNow } from "./BrandThenNow";           // brand kênh #5 THEN×NOW
 import { BrandDoc } from "./BrandDoc";                   // brand PARAMETRIC Wave 2 (Cosmos/Deep/Why/Empire/Unsolved)
@@ -61,6 +62,8 @@ const CO_BRAND: Record<string, [number, number]> = {
   fb_avatar: [500, 500],     // Facebook avatar
   ig_avatar: [640, 640],     // Instagram avatar
   ig_story: [1080, 1920],    // Instagram highlight cover
+  ig_post: [1080, 1080],     // Instagram bài vuông
+  x_header: [1500, 500],     // X/Twitter header
 };
 const calcBrandKit2 = ({ props }: any) => {
   const [w, h] = CO_BRAND[String(props?.kind || "banner")] || CO_BRAND.banner;
@@ -74,6 +77,9 @@ export const RemotionRoot: React.FC = () => (
         Composition riêng (banner/avatar/watermark…), thêm nền tảng là thêm 3 dòng; `remotion still`
         lại không cho ghi đè kích thước từ dòng lệnh. Đọc cỡ từ props qua calculateMetadata thì
         thêm cỡ mới chỉ là thêm một dòng trong bảng CO_BRAND. */}
+    {/* 27/8 — NHẬN DIỆN V4. Một composition cho cả 9 cỡ; cỡ đọc từ props qua calculateMetadata. */}
+    <Composition id="NhanKit" component={NhanV4} durationInFrames={1} fps={30}
+      width={2560} height={1440} defaultProps={{ kind: "banner" }} calculateMetadata={calcBrandKit2} />
     <Composition id="BrandKit2" component={BrandV2} durationInFrames={1} fps={30}
       width={2560} height={1440} defaultProps={{ kind: "banner" }} calculateMetadata={calcBrandKit2} />
     <Composition id="BrandV2Banner" component={BrandV2} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />

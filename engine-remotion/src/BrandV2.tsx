@@ -6,7 +6,7 @@ type P = { kind?: "banner" | "avatar" | "watermark"; name?: string; tagline?: st
   handle?: string; accent?: string; motif?: string; layout?: "left" | "center" };
 
 // ICON theo motif (SVG đơn giản, sắc, tô theo accent)
-const Icon: React.FC<{ m: string; c: string; s: number }> = ({ m, c, s }) => {
+export const Icon: React.FC<{ m: string; c: string; s: number }> = ({ m, c, s }) => {
   const p = { stroke: c, strokeWidth: 7, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   const fill = { fill: c };
   const svg = (children: React.ReactNode) => <svg width={s} height={s} viewBox="0 0 100 100">{children}</svg>;
