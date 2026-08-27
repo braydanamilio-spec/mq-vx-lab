@@ -14,12 +14,13 @@ engine-remotion/public/**
 !engine-remotion/public/img/
 !engine-remotion/public/img/_fallback.jpg
 !engine-remotion/public/music/
-!engine-remotion/public/music/carefree.mp3
-!engine-remotion/public/music/broke_pad.mp3
-!engine-remotion/public/music/mind_pad32.mp3
-!engine-remotion/public/music/mindloop_pad.mp3
-!engine-remotion/public/music/km_ascending.mp3
-!engine-remotion/public/music/km_ossuary_air.mp3
+# 27/8 — TRƯỚC ĐÂY LIỆT KÊ TỪNG TỆP MỘT, và đó là gốc của một sự cố mất gần hết video:
+# chỉ 6/18 bản nhạc từng được liệt kê, nên CI thiếu 12 bản; 29/50 kênh được gán một bản không
+# có -> `remotion render` 404 -> hỏng cả bộ. Máy làm việc có đủ 18 nên chạy thử ở nhà luôn đẹp.
+# Thêm nhạc mới mà quên thêm một dòng ngoại lệ = lặp lại đúng sự cố đó, im lặng.
+# Nay cho cả thư mục đi theo git. Nhạc nền đã nén 112kbps mono (~32MB tổng) — chi phí checkout
+# không đáng kể so với việc mất một phiên render.
+!engine-remotion/public/music/*.mp3
 !engine-remotion/public/sfx/
 !engine-remotion/public/sfx/whoosh.mp3
 !engine-remotion/public/sfx/ding.mp3
