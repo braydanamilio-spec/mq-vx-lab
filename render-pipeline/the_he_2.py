@@ -1847,7 +1847,8 @@ def dung_props_race(kenh: dict, ky: dict | None = None, st_san: dict | None = No
 
 
 def chay_race(kenh: dict, ra: str = "", ky: dict | None = None,
-              st_san: dict | None = None, ky_hieu: str = "") -> tuple[str, dict] | None:
+              st_san: dict | None = None, ky_hieu: str = "",
+              keys: list | None = None) -> tuple[str, dict] | None:
     """Đua cột: dựng props -> render RaceShort (9:16). Long 16:9 đi qua `Gen2Long`."""
     import datastory_ci as DS
     _dp = dung_props_race(kenh, ky, st_san, ky_hieu)
@@ -1870,7 +1871,7 @@ def chay_race(kenh: dict, ra: str = "", ky: dict | None = None,
     print(f"{'✅' if ok else '❌'} {kenh['ten']} · {info}")
     if ok:
         chuan_am(ra)          # đưa về -14 LUFS trước mọi khâu sau (xem `chuan_am`)
-        _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""))
+        _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""), keys)
         if isinstance(info, dict):
             info.update(_htin)
         if not _hok:
@@ -1954,7 +1955,7 @@ def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None, keys: list | Non
     print(f"{'✅' if ok else '❌'} {kenh['ten']} [phim kể] · {info}")
     if ok:
         chuan_am(ra)          # đưa về -14 LUFS trước mọi khâu sau (xem `chuan_am`)
-        _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""))
+        _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""), keys)
         if isinstance(info, dict):
             info.update(_htin)
         if not _hok:
@@ -2289,7 +2290,7 @@ def chuan_am(duong: str, dich_lufs: float = -14.0) -> bool:
         return False
 
 
-def qc_hook_sau_render(duong: str, ten_kenh: str = "") -> tuple:
+def qc_hook_sau_render(duong: str, ten_kenh: str = "", keys: list | None = None) -> tuple:
     """QC THỊ GIÁC SAU RENDER, chấm riêng khung hook. Trả (cho_qua, thông_tin).
 
     26/8 — vì sao cần dù đã có QC kỹ thuật và QC-trước-render. Đo trên một video thật hôm nay:
@@ -2302,14 +2303,33 @@ def qc_hook_sau_render(duong: str, ten_kenh: str = "") -> tuple:
 
     FAIL-OPEN: không có khoá, Vision lỗi, hết hạn mức — đều CHO QUA. Một cổng QC tự chặn dây
     chuyền khi chính nó hỏng thì tệ hơn là không có cổng."""
+    # 27/8 — CỔNG NÀY CHƯA BAO GIỜ CHẠY, VÀ KHÔNG AI BIẾT.
+    #
+    # Soi cả 186 video của phiên 12:14: KHÔNG có một dòng `🖼️ … hook …đ` nào. Nghĩa là cổng chấm
+    # khung mở đầu — thứ được viết ra để bắt bốn lỗi "chỉ mắt thấy" (emoji đè số, số trùng màu
+    # nền, chữ tối trên nền tối, vạch trục xuyên chữ) — fail-open suốt, cho qua tất.
+    # Gốc: `check_hook` lấy khoá từ biến môi trường `GEMINI_API_KEY`, mà lane render lấy key từ
+    # HỒ chứ không đặt biến đó. Không khoá -> ném -> lưới fail-open nuốt -> trả True, KHÔNG in gì.
+    # Một cổng chất lượng tắt trong im lặng còn tệ hơn không có cổng: hệ báo "đã kiểm" ở mọi video,
+    # và mình tin vào một lớp bảo vệ không tồn tại.
+    _k = ""
+    try:
+        import datastory_ci as _DS
+        _k = _DS._vision_key(keys) if keys else ""
+    except Exception:
+        _k = ""
     try:
         import qc_vision as QV
-        ok, tin = QV.check_hook(duong)
+        ok, tin = QV.check_hook(duong, api_key=_k or None)
     except BaseException as e:
         # Lưới thứ hai, cùng lý do như trong `check_hook`: `SystemExit` không phải `Exception`.
         # Hai lưới vì cổng QC tuyệt đối không được phép giết dây chuyền — thà bỏ qua kiểm.
         if isinstance(e, KeyboardInterrupt):
             raise
+        # NÓI RA khi bỏ qua. Vẫn fail-open (cổng QC không được giết dây chuyền), nhưng im lặng thì
+        # không phân biệt được "đã kiểm, đạt" với "không kiểm được" — mà hai thứ đó khác hẳn nhau.
+        print(f"   ⏭️ {ten_kenh}: KHÔNG chấm được hook ({str(e)[:70]}) — cho qua, "
+              f"video này CHƯA được soi khung mở đầu")
         return True, {"note": f"hook-qc-skip: {str(e)[:60]}"}
     if not ok:
         print(f"   🖼️ {ten_kenh}: HOOK trượt QC thị giác — {tin.get('hook_score')}đ · "
@@ -2332,7 +2352,7 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     # đường riêng này lại TỰ CHỌN LẠI chuyện khác, và mọi chương ghi đè nhau vì cùng slug —
     # đúng hai cái bẫy đã vá cho 5 dạng kia, chỉ khác chỗ.
     if dang == "race":
-        return chay_race(kenh, ra, ky, st_san=st_san, ky_hieu=ky_hieu)
+        return chay_race(kenh, ra, ky, st_san=st_san, ky_hieu=ky_hieu, keys=keys)
     if dang == "cinematic":
         return chay_phim(kenh, ra, ky, st_san=st_san, ky_hieu=ky_hieu)
     comp, ten_props = DUONG_RA.get(dang, (None, None))
@@ -2360,7 +2380,7 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     print(f"{'✅' if ok else '❌'} {kenh['ten']} [{dang}] · {info}")
     if ok:
         chuan_am(ra)          # đưa về -14 LUFS trước mọi khâu sau (xem `chuan_am`)
-        _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""))
+        _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""), keys)
         if isinstance(info, dict):
             info.update(_htin)
         if not _hok:
@@ -2597,6 +2617,18 @@ def cong_chat_luong(st: dict, kenh: dict) -> list:
 _NHU_CAU_DEM: dict = {}      # (kênh, trục) -> thứ tự đã xếp; đo một lần rồi dùng lại cả phiên
 
 
+def _goc_doc(v) -> str:
+    """Giá trị trục ở dạng ĐỌC ĐƯỢC cho log — danh sách thì gọi tên, không in `repr` Python.
+
+    27/8 — log thật in ra `đầu bảng ['Texas', 'Oklahoma', 'Kansas', ...]`. Dấu ngoặc vuông và dấu
+    nháy là cú pháp của Python, không phải thứ để người đọc log nhìn; và nó khiến em tưởng chính
+    truy vấn cũng dùng chuỗi đó (không phải). Log nói sai làm mất thời gian đúng bằng lỗi thật."""
+    if isinstance(v, (list, tuple)):
+        xs = [str(x) for x in v if str(x).strip()]
+        return xs[0] + (f" +{len(xs) - 1}" if len(xs) > 1 else "") if xs else ""
+    return str(v)
+
+
 def _xep_theo_nhu_cau(kenh: dict, truc: str, kho: list) -> list:
     """Xếp kho đề tài theo NHU CẦU THẬT của người xem, cao nhất lên trước.
 
@@ -2626,7 +2658,15 @@ def _xep_theo_nhu_cau(kenh: dict, truc: str, kho: list) -> list:
         niche_tu = R._tu(kenh.get("niche", "")) | R._tu(kenh.get("goc_nhin", ""))
         cham = []
         for i, v in enumerate(kho):
-            cum = ", ".join(str(x) for x in v) if isinstance(v, (list, tuple)) else str(v)
+            # 27/8 — TRỤC DANH SÁCH: HỎI PHẦN TỬ ĐẦU, ĐỪNG HỎI CẢ CHUỖI GHÉP.
+            # Bản cũ ghép cả danh sách thành một câu rồi đem đi hỏi gợi ý tìm kiếm:
+            #     "Texas, Oklahoma, Kansas, Nebraska, Iowa, Missouri"
+            # Không một người dùng nào gõ câu đó vào ô tìm kiếm, nên YouTube trả về gần như không
+            # gì — điểm nhận được là NHIỄU, mà nhiễu thì còn tệ hơn không đo: nó xếp lại thứ tự
+            # kho bằng một con số vô nghĩa và trông y như đã đo thật.
+            # Phần tử đầu là thứ đại diện được và CÓ người tìm ("Texas") -> điểm nói đúng nhu cầu
+            # của cụm đó. Đo bằng một tín hiệu thật còn hơn đo bằng sáu tín hiệu trộn thành vô nghĩa.
+            cum = str(v[0]) if (isinstance(v, (list, tuple)) and v) else str(v)
             # Kho đề tài lưu dạng SLUG cho khớp API nguồn (`breakfast-cereals`, `cpi_nha`). Hỏi
             # gợi ý bằng slug thì không bao giờ ra kết quả — không ai gõ dấu gạch vào ô tìm kiếm.
             # Đo được: 22 đề tài của WHAT IS IN IT đều ra điểm 0 cho tới khi bỏ dấu gạch.
@@ -2645,7 +2685,7 @@ def _xep_theo_nhu_cau(kenh: dict, truc: str, kho: list) -> list:
         top = cham[0]
         if -top[0] > 0:
             print(f"   🎯 {kenh.get('ten')}: xếp {len(ra)} đề tài theo NHU CẦU THẬT "
-                  f"(đầu bảng `{ra[0]}`, điểm {-top[0]:.1f}) — không phải theo thứ tự khai.")
+                  f"(đầu bảng `{_goc_doc(ra[0])}`, điểm {-top[0]:.1f}) — không phải theo thứ tự khai.")
         _NHU_CAU_DEM[kh] = ra
         return ra
     except BaseException as e:
@@ -3031,7 +3071,7 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
         return None
     # Long cũng phải qua cổng hook: khung mở đầu của long là thứ quyết định lượt xem trên trang chủ.
     chuan_am(ra_long)
-    if not qc_hook_sau_render(ra_long, ten)[0]:
+    if not qc_hook_sau_render(ra_long, ten, keys)[0]:
         return None
 
     # ── SHORT 9:16, mỗi cái gộp 2-3 chương ──────────────────────────────────────────────────
