@@ -4827,6 +4827,25 @@ def t_so_hien_thi_khong_mat_do_lon():
     assert d["stat"] == "986K" and d["name"] == "A", f"hook nêu nhầm: {d}"
 
 
+def _co_autopublisher() -> str:
+    """Đường dẫn repo AutoPublisher, hoặc "" nếu nó không được checkout.
+
+    27/8 — HAI CHỐT EM THÊM HÔM NAY ĐÃ CHẶN CẢ PHIÊN 15:00. Chúng đọc thẳng
+    `MM0-AutoPublisher/...`, nhưng bước selftest trên CI chỉ checkout repo render, nên
+    `FileNotFoundError` -> selftest đỏ -> `plan` hỏng -> 18 luồng không bao giờ được sinh.
+    Một chốt kiểm chặn dây chuyền vì GIẢ ĐỊNH MÔI TRƯỜNG CỦA CHÍNH NÓ thì tệ hơn hẳn không có
+    chốt: nó không bắt được lỗi nào, mà lại làm mất nguyên một phiên sản xuất.
+    Đây là lần thứ tư em mắc đúng lỗi này (khớp tên hàm cũ · cửa sổ 4000 ký tự · giá trị thời
+    gian tuyệt đối · và lần này). Nên viết ra đây cho rõ: chốt phải TỰ KIỂM ĐIỀU KIỆN CHẠY trước,
+    và thiếu điều kiện thì BỎ QUA có thông báo, không được đỏ.
+    Vẫn có giá trị: ở máy làm việc (nơi cả hai repo cùng nằm) chốt chạy đủ, và đó là nơi bản vá
+    được viết ra."""
+    import os as _o
+    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    d = _o.path.join(G, "MM0-AutoPublisher")
+    return d if _o.path.isdir(d) else ""
+
+
 def t_chong_trung_kho_drive():
     """CHỐNG TRÙNG KHO: đánh dấu ở MỘT nơi thì MỌI nơi đọc phải tôn trọng.
 
@@ -4841,7 +4860,11 @@ def t_chong_trung_kho_drive():
     hiểm hơn hẳn so với không làm gì.
     Chốt này soi ĐỦ BA phía: worker đánh cờ, Python lọc, dashboard lọc."""
     import os as _o
-    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    G = _co_autopublisher()
+    if not G:
+        print("      ⏭️ bỏ qua: repo MM0-AutoPublisher không có ở đây (CI chỉ checkout repo render)")
+        return
+    G = _o.path.dirname(G)
 
     w = io.open(_o.path.join(G, "MM0-AutoPublisher/connect-worker/src/worker.js"), encoding="utf-8").read()
     assert "async function timKhoTrung" in w, "worker thiếu bộ nhận dạng kho trùng"
@@ -5094,7 +5117,11 @@ def t_khong_ep_scope_khi_lam_moi_token():
     thể làm hỏng, không thể làm tốt hơn. Chốt này canh cả Drive lẫn YouTube: kênh YouTube hôm nay
     đều cùng scope nên chưa nổ, nhưng đó đúng là tình trạng của Drive hôm qua."""
     import os as _o
-    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    G = _co_autopublisher()
+    if not G:
+        print("      ⏭️ bỏ qua: repo MM0-AutoPublisher không có ở đây (CI chỉ checkout repo render)")
+        return
+    G = _o.path.dirname(G)
     for tep, ham in (("MM0-AutoPublisher/src/drive_client.py", "_oauth_service"),
                      ("MM0-AutoPublisher/src/youtube_uploader.py", "_client")):
         src = io.open(_o.path.join(G, tep), encoding="utf-8").read()
