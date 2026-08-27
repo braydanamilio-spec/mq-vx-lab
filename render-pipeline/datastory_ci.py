@@ -1903,7 +1903,7 @@ def make_video(channel, seed, vtype, out, api_key=None, tier="normal", keys=None
     pf = os.path.join(PUB, f"_ci_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render {comp} …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", comp, out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label=comp)
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
@@ -2008,7 +2008,7 @@ def make_mapped(channel, niche, out, keys=None, api_key=None, tier="normal",
     pf = os.path.join(PUB, f"_mapped_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render MappedShort ({len(props['data'])} bang) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "MappedShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="MappedShort")
     story["_credits"] = take_credits()   # 23/8: ghi công đúng ảnh đã dùng
     st("qc", "Kiểm tra chất lượng")
@@ -2084,7 +2084,7 @@ def make_ranked(channel, niche, out, keys=None, api_key=None, tier="normal",
     pf = os.path.join(PUB, f"_ranked_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render RankedShort ({len(props['items'])} item) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RankedShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="RankedShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
@@ -2138,7 +2138,7 @@ def make_receipts(channel, niche, out, keys=None, api_key=None, tier="normal",
     pf = os.path.join(PUB, f"_receipts_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render RankedShort/receipts ({len(props['items'])} item) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RankedShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="RankedShort(receipts)")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
@@ -2205,7 +2205,7 @@ def make_scaled(channel, niche, out, keys=None, api_key=None, tier="normal",
     pf = os.path.join(PUB, f"_scaled_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render ScaledShort ({len(props['items'])} vật) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "ScaledShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="ScaledShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
@@ -2278,7 +2278,7 @@ def make_thennow(channel, niche, out, keys=None, api_key=None, tier="normal",
     pf = os.path.join(PUB, f"_thennow_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render ThenNowShort ({len(props['pairs'])} cặp) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "ThenNowShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="ThenNowShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
@@ -2965,7 +2965,7 @@ def render_canary() -> bool:
         out = os.path.join(d, "c.mp4")
         subprocess.run(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
                         f"--props=./{os.path.relpath(pf, ENG)}", "--frames=0-11",
-                        "--gl=swiftshader", "--concurrency=1", "--log=error"],
+                        "--gl=swiftshader", "--jpeg-quality=100", "--crf=15", "--concurrency=1", "--log=error"],
                        cwd=ENG, capture_output=True, timeout=240, check=True)
         _CANARY["ok"] = os.path.exists(out) and os.path.getsize(out) > 1000
     except Exception as e:
@@ -3090,7 +3090,7 @@ def make_doc(channel, niche, out, keys=None, api_key=None, tier="normal", style=
     pf = os.path.join(PUB, f"_doc_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="CinematicShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
@@ -3223,7 +3223,7 @@ def render_short_from_props(channel, props, story, out, keys=None, prefix="", li
         return False, {"note": "QC cấu trúc: " + "; ".join(sissues)}
     print(f"   🎞️ render CinematicShort ({len(props['scenes'])} cảnh) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "CinematicShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="CinematicShort(part)")
     ok, info = qc(out)
     if ok:
@@ -3371,7 +3371,7 @@ def make_doc_long(channel, niche, out, keys=None, api_key=None, tier="normal", s
     st("rendering", f"Render LONG 16:9 ({len(all_scenes)} cảnh, {len(parts)} phần)")
     print(f"   🎞️ render Cinematic 16:9 ({len(all_scenes)} cảnh / {len(parts)} phần) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "Cinematic", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, timeout=3600, label="Cinematic(long)")   # long 10'+ cần 30-50' render trên 2 core — trần riêng 60'
 
     st("qc", "Kiểm tra chất lượng")
@@ -3427,7 +3427,7 @@ def make_swarm(channel, niche, out, keys=None, api_key=None, tier="normal",
     pf = os.path.join(PUB, f"_swarm_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render SwarmShort ({len(props['items'])} mục) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "SwarmShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="SwarmShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
@@ -3516,7 +3516,7 @@ def make_pulse(channel, niche, out, keys=None, api_key=None, tier="normal",
     pf = os.path.join(PUB, f"_pulse_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render PulseShort ({len(props['items'])} mục) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "PulseShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="PulseShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
@@ -3595,7 +3595,7 @@ def make_clockwork(channel, niche, out, keys=None, api_key=None, tier="normal",
     pf = os.path.join(PUB, f"_clockwork_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render ClockworkShort ({len(props['waypoints'])} mốc) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "ClockworkShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="ClockworkShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
@@ -3666,7 +3666,7 @@ def make_longshot(channel, niche, out, keys=None, api_key=None, tier="normal",
     pf = os.path.join(PUB, f"_longshot_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render LongshotShort ({len(props['items'])} mục) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "LongshotShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="LongshotShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out); info["score"] = score
@@ -3744,7 +3744,7 @@ def make_long(channel, niche, out, keys=None, api_key=None, tier="normal",
     pf = os.path.join(PUB, f"_long_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render RaceLong ({len(stories)} race) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RaceLong", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="RaceLong")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
@@ -3885,7 +3885,7 @@ def make_guess(channel, category, out, keys=None, api_key=None, tier="normal", n
     pf = os.path.join(PUB, f"_guess_{slug(channel)}.json"); json.dump(props, open(pf, "w"))
     print(f"   🎞️ render GuessShort ({len(props['rounds'])} vòng) …")
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", "GuessShort", out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG, label="GuessShort")
     st("qc", "Kiểm tra chất lượng")
     ok, info = qc(out)
@@ -4258,7 +4258,7 @@ def _toon_render(props, out, comp, label):
     pf = os.path.join(PUB, f"_toon_{props['slug']}_{comp}.json")
     json.dump(props, open(pf, "w"), ensure_ascii=False)
     run_render_cmd(["npx", "remotion", "render", "src/index.ts", comp, out,
-                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
+                    f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                     "--concurrency=2", "--log=error"], cwd=ENG,
                    timeout=(3600 if comp == "ToonLong" else RENDER_TIMEOUT), label=label)
     return pf

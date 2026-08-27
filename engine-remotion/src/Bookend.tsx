@@ -122,11 +122,9 @@ export const Bookend: React.FC<{
           </div>
         ) : (
         <div style={{ textAlign: "center", transform: `scale(${0.86 + 0.14 * p})` }}>
-          <div style={{ display: "inline-block", background: c2, color: "#080a12", fontWeight: 900,
-                        fontSize: co(30), letterSpacing: 3, padding: "9px 26px", borderRadius: 999,
-                        marginBottom: co(34) }}>
-            {handle || "MM0"}
-          </div>
+          {/* Nhãn @handle thứ hai, ở đầu khối — cùng lý do như trên: dấu kênh đã có sẵn ở đáy
+              mọi khung, in thêm một viên thuốc màu đặc ngay trên tiêu đề chỉ đẩy tiêu đề xuống
+              và cướp mất sự chú ý của giây đầu. */}
           <div style={{ fontSize: co(88), lineHeight: 1.06, fontWeight: 900, color: "#FFFFFF",
                         textShadow: `0 6px 40px rgba(0,0,0,.95), 0 0 46px ${accent}55`,
                         letterSpacing: -1.5 }}>
@@ -155,12 +153,15 @@ export const Bookend: React.FC<{
                         textShadow: "0 6px 30px rgba(0,0,0,.95)" }}>
             {cta}
           </div>
-          <div style={{ display: "inline-block", marginTop: 30, background: c2, color: "#080a12",
-                        fontWeight: 900, fontSize: 46, letterSpacing: 1.5, padding: "16px 44px",
-                        borderRadius: 999, transform: `scale(${nhip})`,
-                        boxShadow: `0 0 44px ${accent}66` }}>
-            {handle || "MM0"}
-          </div>
+          {/* 27/8 — BỎ NHÃN @handle KHỔ LỚN Ở PHẦN KẾT.
+              Anh gửi khung PAYCHECK GAP: viên thuốc xanh lá to đùng nằm chình ình GIỮA màn hình,
+              đè lên nhãn "Housing"/"Transport", đè lên cả tiêu đề — người xem mất đúng đoạn dữ
+              liệu mà cả video dựng lên để nói.
+              Nó cũng không mang lại gì: YouTube đã hiện tên kênh ngay dưới video, và mọi khung
+              đều đã có dấu kênh nhỏ ở đáy. Lặp lại lần thứ ba, phóng to, đặt giữa màn hình thì
+              chỉ còn là vật cản.
+              Giữ lại nhịp co giãn cho câu CTA phía trên — phần kết vẫn có điểm nhấn, chỉ là điểm
+              nhấn đó nói điều gì đó thay vì lặp tên kênh. */}
           {title ? (
             <div style={{ marginTop: 34, fontSize: 30, fontWeight: 700, color: "#C9D6E6",
                           opacity: 0.9 }}>

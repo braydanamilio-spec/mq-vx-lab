@@ -146,13 +146,42 @@ def _hex(h: float, s: float, v: float) -> str:
 
 
 def bang_mau(hsv: tuple, thu_tu: int = 0) -> dict:
-    """Bảng màu một kênh từ một điểm HSV đã chọn."""
+    """Bảng màu một kênh — HỆ TƯƠNG ĐỒNG, tương phản bằng ĐỘ SÁNG (27/8).
+
+    VÌ SAO PHẢI VIẾT LẠI
+    --------------------
+    Anh gửi khung PAYCHECK GAP: nền tím-đỏ loang lổ, nhìn "nhức mắt". Đo thì ra lỗi hệ thống,
+    dính CẢ 50 KÊNH — và nằm gọn trong ba dòng của bảng cũ:
+        bg        = góc + 200°   (màu bù)
+        secondary = góc + 28°    (màu gốc)
+    Hai đầu của dải chuyển nền cách nhau ~170° trên vòng màu. Một dải màu bắc qua nửa vòng thì
+    NHẤT ĐỊNH đi xuyên vùng xám-nâu-bùn ở giữa — không có cách phối nào cứu được, vì đó là toán
+    học của phép nội suy màu, không phải chuyện gu.
+    Đo lại trên cả 50 kênh: **50/50 kênh** đều lệch >90°, phần lớn ~170°.
+
+    Và bảng cũ THIẾU HẲN `bg2`. Engine viết `nenKenh(bg || accent, bg2 || color)` — không có
+    `bg2` thì nó lấy `color`, tức MÀU CHÍNH rực nhất, làm đầu kia của dải nền. Nền đáng lẽ phải
+    lùi lại làm nền thì thành một mảng màu rực chiếm nửa khung.
+
+    HỆ MỚI
+    ------
+    Giữ mọi thứ trong MỘT HỌ MÀU (tương đồng, lệch nhau ≤ 40°), và tạo tương phản bằng ĐỘ SÁNG
+    chứ không bằng sắc độ. Đây là cách các bộ đồ hoạ dữ liệu nghiêm túc vẫn làm: nền tối gần như
+    trung tính nhưng vẫn ngả về màu của kênh, con số sáng rực cùng họ — nổi bật mà không cãi nhau.
+    50 kênh vẫn phân biệt được vì mỗi kênh một GÓC MÀU riêng (bảng góc đã chọn bằng thuật toán
+    điểm-xa-nhất, không đổi).
+    """
     goc, sat, val = hsv
     return {
-        "bg":        _hex(goc + 200, 0.55, 0.09),      # nền tối, ngả về màu bù
+        # Nền: rất tối, bão hoà thấp, nhưng NGẢ VỀ MÀU CỦA CHÍNH KÊNH — không phải màu bù.
+        "bg":        _hex(goc,       0.42, 0.075),
+        # Đầu kia của dải nền: cùng họ, chỉ nhích 16° và sáng hơn chút -> dải mượt, không qua bùn.
+        "bg2":       _hex(goc + 16,  0.44, 0.145),
         "primary":   _hex(goc,       sat, val),
-        "secondary": _hex(goc + 28,  max(0.5, sat - 0.14), min(0.99, val + 0.04)),
-        "accent":    _hex(goc + 172, 0.78, 0.98),      # màu đối, dùng cho con số
+        "secondary": _hex(goc + 34,  max(0.5, sat - 0.12), min(0.99, val + 0.03)),
+        # Nhấn: CÙNG HỌ, tương phản bằng độ sáng. Bảng cũ để +172° nên con số và nền cãi nhau
+        # trên mọi khung. Ở đây accent gần như là bản chói nhất của chính màu kênh.
+        "accent":    _hex(goc + 12,  0.86, 0.97),
         "text":      "#F2F6FF",
     }
 

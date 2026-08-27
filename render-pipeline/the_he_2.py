@@ -1604,7 +1604,7 @@ def chay(kenh: dict, ra: str = "", ky: dict | None = None) -> tuple[str, dict] |
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2_{sl}.mp4"))
     os.makedirs(os.path.dirname(ra), exist_ok=True)
     DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RankedShort", ra,
-                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                        "--concurrency=2", "--log=error"],
                       cwd=DS.ENG, timeout=2400, label=f"RankedShort({kenh['ten']})")
     ok, info = DS.qc(ra)
@@ -1671,7 +1671,7 @@ def chay_race(kenh: dict, ra: str = "", ky: dict | None = None,
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2r_{sl}.mp4"))
     os.makedirs(os.path.dirname(ra), exist_ok=True)
     DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RaceShort", ra,
-                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                        "--concurrency=2", "--log=error"],
                       cwd=DS.ENG, timeout=2400, label=f"RaceShort({kenh['ten']})")
     ok, info = DS.qc(ra)
@@ -1754,7 +1754,7 @@ def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None, keys: list | Non
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2_phim_{sl}.mp4"))
     os.makedirs(os.path.dirname(ra), exist_ok=True)
     DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "CinematicShort", ra,
-                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                        "--concurrency=2", "--log=error"],
                       cwd=DS.ENG, timeout=2400, label=f"CinematicShort({kenh['ten']})")
     ok, info = DS.qc(ra)
@@ -2034,7 +2034,7 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     ra = os.path.abspath(ra or os.path.join(GOC, "out", f"th2_{dang}_{sl}.mp4"))
     os.makedirs(os.path.dirname(ra), exist_ok=True)
     DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", comp, ra,
-                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                        "--concurrency=2", "--log=error"],
                       cwd=DS.ENG, timeout=2400, label=f"{comp}({kenh['ten']})")
     ok, info = DS.qc(ra)
@@ -2374,11 +2374,31 @@ def _gop_story(sts: list, truc: str = "", tran: int = 6) -> dict:
             continue
         # trần theo khoá: `data` của `mapped` là 51 bang (bản đồ vẽ hết), không được cắt còn 6
         t = 51 if khoa == "data" else tran
-        ra, i = [], 0
+        # 27/8 — XEN KẼ MÀ KHÔNG LỌC TRÙNG THÌ RA HAI THẺ GIỐNG HỆT NHAU CẠNH NHAU.
+        # Anh gửi khung PAYCHECK GAP (2000-2012): "Health care 564" hiện hai lần, "Housing 401"
+        # hiện hai lần. Dữ liệu gốc của từng chương KHÔNG trùng (đo rồi: 6 mục khác nhau) — trùng
+        # đẻ ra ở đúng vòng lặp này. Kênh xoay trục `tu_nam`, mà bộ chỉ số BLS (nhà ở, y tế, thực
+        # phẩm…) thì năm nào cũng gồm ĐÚNG những hạng mục đó. Xen kẽ chương 2000 với chương 2012
+        # là ghép hai danh sách có chung tên hạng mục -> mỗi tên xuất hiện hai lần.
+        # Người xem thấy hai thẻ y hệt nhau nằm cạnh nhau: đọc ra như video lỗi, và một nửa chỗ
+        # trên khung bị phí cho thông tin đã nói rồi.
+        # Lọc theo KHOÁ NHẬN DẠNG của từng mục (tên/nhãn/bang), giữ bản gặp trước — tức bản của
+        # chương sớm hơn, đúng thứ tự xen kẽ vốn có.
+        def _khoa(x):
+            if not isinstance(x, dict):
+                return str(x)
+            for k in ("name", "label", "state", "ten", "giong"):
+                if x.get(k):
+                    return str(x[k]).strip().lower()
+            return str(sorted(x.items()))[:80]
+        ra, i, da = [], 0, set()
         while len(ra) < t and any(i < len(c) for c in cac):
             for c in cac:
                 if i < len(c) and len(ra) < t:
-                    ra.append(c[i])
+                    kx = _khoa(c[i])
+                    if kx not in da:
+                        da.add(kx)
+                        ra.append(c[i])
             i += 1
         goc[khoa] = ra
     # phạm vi trục: rút các giá trị đã nhét vào tiêu đề từng chương rồi ghép đầu-cuối
@@ -2476,7 +2496,7 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
     ra_long = os.path.abspath(ra_long or os.path.join(GOC, "out", f"th2long_{slk}.mp4"))
     os.makedirs(os.path.dirname(ra_long), exist_ok=True)
     DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "Gen2Long", ra_long,
-                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                        "--concurrency=2", "--log=error"],
                       cwd=DS.ENG, timeout=5400, label=f"Gen2Long({ten})")
     ok, info = DS.qc(ra_long)

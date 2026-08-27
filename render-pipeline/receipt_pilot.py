@@ -171,7 +171,7 @@ def chay(de_tai: str, nam: int) -> int:
     os.makedirs(os.path.dirname(out), exist_ok=True)
     print("🎬 render RankedShort…")
     DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "RankedShort", out,
-                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
                        "--concurrency=2", "--log=error"],
                       cwd=DS.ENG, timeout=2400, label="RankedShort(receipts)")
     ok, info = DS.qc(out)

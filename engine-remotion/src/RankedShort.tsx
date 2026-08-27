@@ -228,7 +228,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
                     }))} />
       ) : null}
 
-      <div style={{ position: "absolute", bottom: K.handleDay, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: K.doc ? 32 : 24, textShadow: "0 2px 10px #000" }}>{handle}</div>
+      <div style={{ position: "absolute", bottom: K.handleDay, left: 0, right: 0, textAlign: "center", color: "#ffffff5c", fontWeight: 700, fontSize: K.doc ? 24 : 19, textShadow: "0 1px 6px #0009" }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />
