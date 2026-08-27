@@ -113,7 +113,30 @@ def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6, ten_kho: str = "?") -
 
 
 def main() -> int:
+    # 27/8 — CHẾ ĐỘ `--gen2`: dọn VIDEO của 50 kênh THẾ HỆ 2 để làm lại từ đầu.
+    #
+    # Anh yêu cầu "dọn sạch toàn bộ nội dung các channel và cải tổ cho đẹp". Viết công cụ mới thì
+    # phải viết lại từ đầu mọi lớp an toàn mà tệp này đã có và đã trả giá để có:
+    #   • CHỈ đưa vào THÙNG RÁC (`dr.trash`), không xoá hẳn -> còn khôi phục được
+    #   • chừa `_KICHBAN`/`_BACKUP`/`brand`/`config` -> không mất kịch bản, không mất nhận diện
+    #   • lọc theo TIỀN TỐ TÊN KÊNH, không quét mù cả kho
+    #   • xoá tuần tự có in tiến độ, tránh bị giết giữa chừng mà không biết đã dọn tới đâu
+    # Nên chỉ đổi ĐÍCH NHẮM, giữ nguyên toàn bộ phần còn lại.
+    #
+    # Sổ chủ đề (`render_topics`) KHÔNG bị đụng — đúng luật CHANNEL_METHODS, và còn có lợi: làm
+    # lại mà vẫn nhớ đề tài cũ thì loạt mới ra đề tài KHÁC, không lặp lại đúng những video vừa xoá.
+    gen2 = "--gen2" in sys.argv
     that = "--that" in sys.argv
+    if gen2 and "--ban-ghi" in sys.argv:
+        # KHOÁ CỨNG. `--ban-ghi` xoá BẢN GHI KÊNH khỏi Firestore. Với thế hệ 1 thì đúng (những
+        # kênh đó đã nghỉ hẳn). Với thế hệ 2 thì đó là xoá cấu hình của 50 kênh đang sống —
+        # mất chỉ tiêu, mất trạng thái bật/tắt, mất mọi thứ trừ thứ repo giữ hộ.
+        # Anh dặn "đừng xoá nhầm những gì quan trọng". Hai cờ này không bao giờ được đi cùng nhau,
+        # nên chặn ở đây thay vì trông vào việc gõ lệnh đúng.
+        print("🛑 TỪ CHỐI: `--gen2` không được đi cùng `--ban-ghi`.")
+        print("   `--ban-ghi` xoá BẢN GHI KÊNH — với gen-2 nghĩa là xoá cấu hình 50 kênh đang chạy.")
+        print("   Dọn video thì dùng: --gen2 --kho --job --that")
+        return 2
     lam_tat = "--tat" in sys.argv
     lam_kho = "--kho" in sys.argv
     lam_bg = "--ban-ghi" in sys.argv
@@ -131,8 +154,16 @@ def main() -> int:
         print(f"❌ không đọc được danh sách kênh (kể cả gương B2): {str(e)[:90]}")
         return 2
     moi = _kenh_moi()
-    cu = [c for c in tat_ca if str(c.get("the_he") or "") != "2" and (c.get("name") or "") not in moi]
-    m2 = [c for c in tat_ca if str(c.get("the_he") or "") == "2"]
+    if gen2:
+        # Đích nhắm = 50 kênh gen-2, lấy TỪ REPO chứ không từ Firestore: repo là nơi định nghĩa
+        # kênh nào tồn tại, và nó đọc được cả khi Firestore cạn hạn mức.
+        cu = [{"name": t, "the_he": 2} for t in sorted(moi)]
+        m2 = []
+        print(f"🧹 CHẾ ĐỘ GEN-2: dọn video của {len(cu)} kênh thế hệ 2 (làm lại từ đầu).")
+        print("   Giữ nguyên: kịch bản (_KICHBAN), brand kit, cấu hình kênh, sổ chủ đề.")
+    else:
+        cu = [c for c in tat_ca if str(c.get("the_he") or "") != "2" and (c.get("name") or "") not in moi]
+        m2 = [c for c in tat_ca if str(c.get("the_he") or "") == "2"]
 
     print(f"\n{'='*70}\nKIỂM KÊ\n{'='*70}")
     print(f"  tổng kênh trong render_channels : {len(tat_ca)}")
