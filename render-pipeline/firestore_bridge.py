@@ -1503,7 +1503,17 @@ def drive_usage(owner: str, moi_nhat: bool = False):
     Số này đổi rất chậm (mỗi video đẩy lên thêm ~10-40MB trên tổng ~1TB) nên 30' là thừa tươi.
     moi_nhat=True để ép quét thật (plan đầu phiên nên dùng, cho doc luôn đúng)."""
     import time as _t
-    _ref = _db_jobs().collection("render_stats").document("drive_usage_cache")
+    # 27/8 — `_db_jobs()` nằm ngoài lớp bọc mềm -> 429 ném thẳng ra, giết luồng ngay dòng đầu
+    # main(). Nhưng câu hỏi hàm này trả lời chỉ là "kho sắp đầy chưa"; không biết thì cứ render,
+    # khâu đẩy Drive tự báo hết chỗ. Không biết KHÔNG được phép thành lý do dừng.
+    try:
+        _ref = _db_jobs().collection("render_stats").document("drive_usage_cache")
+    except BaseException as e:
+        if isinstance(e, KeyboardInterrupt):
+            raise
+        _keu_mot_lan("du", f"   ⚠️ không đo được dung lượng kho ({str(e)[:60]}) — render tiếp, "
+                           f"khâu đẩy Drive sẽ tự báo nếu hết chỗ.")
+        return None
     if not moi_nhat:
         try:
             _cr("drive_usage_cache", 1)
@@ -1756,6 +1766,16 @@ def read_one_channel(owner: str, name: str) -> dict | None:
     try:
         ra = _retry(_do)
     except Exception as e:
+        # 27/8 — ném DocLoi là ĐÚNG so với bản cũ (bản cũ nuốt lỗi rồi bịa ra "kênh không tồn tại",
+        # giết oan cả lane). Nhưng ném vẫn là DỪNG. Mà repo BIẾT chắc kênh này có tồn tại hay không
+        # và cấu hình của nó ra sao — đó là dữ liệu TĨNH. Nên: đọc hỏng thì lấy bản repo.
+        # `None` vẫn giữ đúng một nghĩa duy nhất: đã đọc được, và kênh THẬT SỰ không còn.
+        for x in _chans_tu_repo(owner):
+            if x["name"] == str(name).replace(" ", "").upper():
+                _keu_mot_lan(f"roc:{name}",
+                             f"   🗂️ đọc kênh {name} hỏng ({str(e)[:50]}) — dùng cấu hình repo "
+                             f"(tĩnh: dạng + tham số), coi như ĐANG BẬT.")
+                return x
         raise DocLoi(f"đọc kênh {name} hỏng: {str(e)[:120]}") from e
     if ra is None:
         # KHÔNG THẤY ≠ ĐÃ XOÁ khi đang đọc GƯƠNG. Phiên 16:06Z: HAULUSA và FAKEUSA mất trắng cả
@@ -1767,6 +1787,17 @@ def read_one_channel(owner: str, name: str) -> dict | None:
         if goi:
             print(f"   📦 {name}: gương thiếu kênh này — dùng cấu hình plan gửi kèm (KHÔNG phải bị xoá).")
             return goi
+        # 27/8 — TẦNG CUỐI: repo. Gói plan chỉ có khi plan đọc được lúc đầu phiên; nếu chính plan
+        # cũng phải chạy bằng đường lui thì gói có thể rỗng, và lane lại rơi về "kênh đã xoá" —
+        # đúng cái chết cũ, chỉ muộn hơn một nhịp.
+        # Repo là nơi ĐỊNH NGHĨA kênh nào tồn tại. Bỏ một kênh khỏi hệ = xoá khỏi
+        # `kenh_the_he_2.json`, không phải xoá bản ghi Firestore. Nên repo còn tên tức là kênh còn.
+        for x in _chans_tu_repo(owner):
+            if x["name"] == str(name).replace(" ", "").upper():
+                _keu_mot_lan(f"roc2:{name}",
+                             f"   🗂️ {name}: không nguồn nào đọc được kênh này — repo vẫn định nghĩa "
+                             f"nó, dùng cấu hình repo (KHÔNG phải bị xoá).")
+                return x
     return ra
 
 
@@ -1803,11 +1834,21 @@ def read_config(owner: str) -> dict:
 
 def read_render_requests(owner: str) -> list[dict]:
     """Yêu cầu RENDER LẠI (từ nút 🔄 trên dashboard) đang chờ xử lý."""
-    _cr("read_render_requests", 5)
-    db = _db_meta(); out = []
-    # limit 40: hàng đợi yêu cầu render lại hiếm khi dài; chặn để lỡ sai điều kiện cũng không quét cả bảng.
-    for d in db.collection("render_requests").where("owner", "==", owner).where("status", "==", "pending").limit(40).stream(timeout=20):
-        x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
+    # 27/8 — diễn tập cạn quota: `_db_meta()` NẰM NGOÀI mọi lớp bọc mềm, nên 429 ném thẳng ra và
+    # giết cả phiên. Mà đây chỉ là hàng đợi "render lại" bấm tay từ dashboard — thứ CÓ THÌ TỐT,
+    # không có thì phiên vẫn phải chạy đủ. Đọc hỏng = coi như không có yêu cầu nào đang chờ.
+    out = []
+    try:
+        db = _db_meta()
+        _cr("read_render_requests", 5)   # sổ phải nằm SÁT lệnh đọc (xem selftest.t_khong_tron_so)
+        # limit 40: hàng đợi hiếm khi dài; chặn để lỡ sai điều kiện cũng không quét cả bảng.
+        for d in db.collection("render_requests").where("owner", "==", owner).where("status", "==", "pending").limit(40).stream(timeout=20):
+            x = d.to_dict() or {}; x["id"] = d.id; out.append(x)
+    except BaseException as e:
+        if isinstance(e, KeyboardInterrupt):
+            raise
+        _keu_mot_lan("rrq", f"   ⚠️ không đọc được hàng đợi render-lại ({str(e)[:60]}) — "
+                            f"phiên chạy tiếp với 0 yêu cầu tay; yêu cầu vẫn còn, phiên sau nhặt.")
     return out
 
 
@@ -2020,6 +2061,21 @@ def set_config(owner: str, patch: dict):
     _soft(lambda: _db_meta().collection("render_config").document(owner).set(patch, merge=True), "set_config")
 
 
+_DA_KEU: set = set()
+
+
+def _keu_mot_lan(ma: str, msg: str) -> None:
+    """In một cảnh báo ĐÚNG MỘT LẦN cho mỗi mã, trong suốt vòng đời tiến trình.
+
+    27/8 — mấy đường lui mềm vừa thêm nằm trong vòng lặp chạy hàng trăm lượt mỗi phiên; in mỗi
+    lượt thì log ngập, mà log ngập là log không ai đọc — đúng cách để một sự cố THẬT trôi qua
+    không ai thấy. (`hot_db` có hàm cùng tên; không import chéo để hai tệp độc lập nhau.)"""
+    if ma in _DA_KEU:
+        return
+    _DA_KEU.add(ma)
+    print(msg, flush=True)
+
+
 _TOPICS_CACHE = {}   # (owner,channel) -> list; xoá khi save_topics (nguồn đổi duy nhất trong phiên)
 
 
@@ -2045,6 +2101,17 @@ def recent_topics(owner: str, channel: str, n: int = 80) -> list[str]:
     try:
         d = _db_meta().collection("render_topics").document(f"{owner}__{channel}").get()
         out = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
+        if not out:
+            # 27/8 — Firestore trả RỖNG không chứng minh là kênh chưa có đề tài nào: có thể sổ đang
+            # nằm ở D1 vì lượt ghi trước bị 429 (xem save_topics). Rỗng thật thì D1 cũng rỗng, mất
+            # thêm đúng một lượt hỏi kho nóng — rẻ hơn nhiều so với viết trùng cả một video.
+            try:
+                import hot_db as _H
+                out = _H.nho_doc(f"topics:{owner}:{channel}", 86400) or []
+                if out:
+                    print(f"   🗂️ sổ chủ đề {channel}: Firestore rỗng -> lấy {len(out)} đề tài từ D1.")
+            except Exception:
+                pass
     except Exception as e:
         # 24/8 tối — "đọc hỏng thì coi như chưa có" ở ĐÂY là nguy hiểm, khác các sổ khác: danh sách
         # này là thứ DUY NHẤT ngăn kênh làm lại chủ đề cũ. Trả [] lặng lẽ nghĩa là bảo Gemini
@@ -2063,11 +2130,35 @@ def recent_topics(owner: str, channel: str, n: int = 80) -> list[str]:
 
 def save_topics(owner: str, channel: str, topics: list[str]):
     """Lưu chủ đề vừa dùng (cap 300 gần nhất)."""
-    _TOPICS_CACHE.pop((owner, channel), None)   # nguồn vừa đổi -> lượt đọc sau lấy bản mới
-    ref = _db_meta().collection("render_topics").document(f"{owner}__{channel}")
-    d = ref.get()
-    cur = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
-    cur = (cur + [t for t in topics if t])[-300:]
+    moi = [t for t in topics if t]
+    ck = (owner, channel)
+    try:
+        ref = _db_meta().collection("render_topics").document(f"{owner}__{channel}")
+        d = ref.get()
+        cur = (((d.to_dict() or {}).get("topics") or [])) if d.exists else []
+    except BaseException as e:
+        if isinstance(e, KeyboardInterrupt):
+            raise
+        # 27/8 — ĐÂY LÀ CÁI ĐẮT NHẤT TRONG NĂM ĐIỂM CHẾT. Chú thích ngay dưới đã tự nói: sổ chủ đề
+        # là dữ liệu DUY NHẤT mà trễ một phiên gây hậu quả THẬT — viết trùng đề tài, video bỏ đi.
+        # Vậy mà cả `_db_meta()` lẫn `ref.get()` đều nằm ngoài lớp bọc mềm, 429 là ném thẳng.
+        # Không được phép vừa mất sổ vừa dừng phiên. Hai đường giữ sổ, không cần Firestore:
+        #   • ĐỆM TIẾN TRÌNH — cộng dồn vào `_TOPICS_CACHE` thay vì xoá nó. `recent_topics` đọc
+        #     đệm trước, nên chống trùng TRONG phiên (nơi đẻ ra trùng nhiều nhất) vẫn nguyên vẹn.
+        #   • D1 — sổ đi thẳng sang kho nóng, phiên sau và 17 lane còn lại vẫn đọc được.
+        cur = list(_TOPICS_CACHE.get(ck) or [])
+        _TOPICS_CACHE[ck] = (cur + moi)[-300:]
+        try:
+            import hot_db as _H
+            _H.nho_ghi(f"topics:{owner}:{channel}", _TOPICS_CACHE[ck], "topics")
+        except Exception:
+            pass
+        _keu_mot_lan(f"st:{channel}",
+                     f"   🩹 sổ chủ đề {channel}: Firestore không ghi được ({str(e)[:50]}) — "
+                     f"giữ ở đệm phiên + D1 ({len(_TOPICS_CACHE[ck])} đề tài), CHỐNG TRÙNG VẪN CHẠY.")
+        return
+    _TOPICS_CACHE.pop(ck, None)                 # nguồn vừa đổi -> lượt đọc sau lấy bản mới
+    cur = (cur + moi)[-300:]
     _cw("save_topics")
     _soft(lambda: ref.set({"owner": owner, "channel": channel, "topics": cur}, merge=True), "save_topics")
     # GHI SONG SONG SANG B2 (23/8, user: "phải khớp, không được trùng phải render lại") — ngân hàng
@@ -2700,7 +2791,29 @@ def new_job(owner: str, channel: str, vtype: str = "short", pver: str = "", cha:
     rạc: hôm nay có thể đăng long của chủ đề A kèm 3 short của chủ đề B, C, D. Người xem bấm vào
     short thấy hay, tìm bản dài thì không có — mất trọn ý đồ 'short kéo người về long'."""
     _cw("new_job")
-    db = _db_jobs(); ref = db.collection("render_jobs").document()   # id sinh OFFLINE -> quota chết vẫn có id
+    # 27/8 — chú thích cũ hứa "id sinh OFFLINE -> quota chết vẫn có id", nhưng `_db_jobs()` đứng
+    # NGOÀI `_soft`: 429 ném ngay ở dòng lấy kết nối, chưa kịp sinh id nào. Diễn tập bắt được.
+    # Job id chỉ cần DUY NHẤT, không cần Firestore cấp. Cạn quota thì tự cấp id cục bộ: video vẫn
+    # render, vẫn đẩy Drive, vẫn có bóng trong D1; bản ghi Firestore để phiên sau đối chiếu bù.
+    ref = None
+    try:
+        ref = _db_jobs().collection("render_jobs").document()
+    except BaseException as e:
+        if isinstance(e, KeyboardInterrupt):
+            raise
+        _keu_mot_lan("nj", f"   🩹 không mở được bản ghi job trên Firestore ({str(e)[:50]}) — "
+                           f"dùng id cục bộ, sản xuất chạy tiếp (D1 vẫn ghi đủ).")
+    if ref is None:
+        import uuid as _uu
+
+        class _RefCuc:
+            """Id cục bộ: đủ để mọi khâu sau (D1, nhịp sống, update_job) bám vào."""
+            def __init__(self):
+                self.id = "loc-" + _uu.uuid4().hex[:18]
+
+            def set(self, *a, **k):
+                return None
+        ref = _RefCuc()
     _soft(lambda: ref.set({"owner": owner, "channel": channel, "type": vtype, "pver": pver,   # pver = phiên bản pipeline -> dọn thông minh (chỉ xóa bản CŨ)
              "cha": cha or "", "thu_tu": int(thu_tu or 0),
              "status": "queued", "step": "bắt đầu", "created_at": _now()}), "new_job")

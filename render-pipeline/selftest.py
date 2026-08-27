@@ -1172,6 +1172,34 @@ def t_seed_khong_bi_spread_de_len_khoa_co_y():
 
 
 
+def t_dien_tap_can_quota():
+    """Ép Firestore chết sạch rồi gọi thật 13 hàm trong đường chạy chính — không hàm nào được ném.
+
+    27/8 — vì sao chốt này đáng giá hơn mọi lần đọc mã bằng mắt: nó tìm ra 5 điểm chết mà đọc mã
+    không thấy, và cả 5 CÙNG MỘT GỐC — lời gọi lấy kết nối (`_db_meta()`, `_db_jobs()`) nằm NGOÀI
+    lớp bọc mềm `_soft`. Nhìn vào `new_job` thì thấy `_soft(...)` bao quanh lệnh ghi và yên tâm;
+    chú thích của nó còn ghi hẳn "id sinh OFFLINE -> quota chết vẫn có id". Thực tế 429 ném ngay ở
+    dòng lấy kết nối, chưa tới `_soft`, chưa sinh id nào. Chú thích nói một đằng, mã chạy một nẻo.
+
+    Hai kịch bản, vì hai kiểu chết khác nhau:
+      • NÉM 429 — Firestore trả lỗi thẳng.
+      • TRẢ VỀ RỖNG — truy vấn chạy bình thường nhưng KHÔNG RA BẢN GHI NÀO. Đây mới là kiểu độc:
+        không có ngoại lệ nào để bắt, và nó đã xảy ra thật (phiên #33028251503 đọc "thành công"
+        đúng 55 bản ghi cũ, 0 kênh gen-2 -> plan mở 0 lane suốt đêm).
+
+    Thêm hàm mới đụng Firestore thì thêm một dòng vào `dien_tap_can_quota._bai` — chốt này sẽ bắt
+    hộ, thay vì phát hiện sau khi đã mất một đêm render."""
+    import subprocess as _sp
+    import sys as _sy
+    _goc = os.path.dirname(os.path.abspath(__file__))
+    r = _sp.run([_sy.executable, os.path.join(_goc, "dien_tap_can_quota.py")],
+                capture_output=True, text=True, timeout=180,
+                env={**os.environ, "MM0_HOT_OFF": "1"})
+    if r.returncode != 0:
+        chet = [d.strip() for d in (r.stdout or "").splitlines() if d.strip().startswith("[")]
+        raise AssertionError("cạn quota là hệ đứng ở %d chỗ: %s" % (len(chet), " · ".join(chet[:4])))
+
+
 def t_50_kenh_khong_duoc_giong_nhau():
     """50 kênh gen-2 phải KHÁC NHAU, đo bằng số chứ không bằng lời hứa.
 
@@ -2033,6 +2061,7 @@ def main():
     check("phanh mù thì giả định CẠN, không giả định đầy", t_phanh_do_khong_duoc_phai_gia_dinh_can)
     check("đường lùi không khuếch đại lỗi (1 lượt 429 -> 18)", t_duong_lui_khong_duoc_khuech_dai_loi)
     check("seed 50 kênh: **spread không đè khoá cố ý", t_seed_khong_bi_spread_de_len_khoa_co_y)
+    check("cạn quota Firestore: đường chạy chính KHÔNG được đứng", t_dien_tap_can_quota)
     check("50 kênh không được giống nhau (≥70 điểm)", t_50_kenh_khong_duoc_giong_nhau)
     check("băm Python khớp băm TypeScript", t_bam_python_khop_typescript)
     check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)
