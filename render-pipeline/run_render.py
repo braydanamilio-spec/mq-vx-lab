@@ -348,8 +348,31 @@ def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "", scri
         # job kẹt mãi ở trạng thái "qc" vì không kịp ghi done/failed, mà GitHub vẫn báo success nên
         # không ai thấy. Ngày 20/8: 27/40 kênh thiếu trong channels.yaml -> mất TOÀN BỘ video của
         # chúng suốt nhiều tuần. Bắt riêng ở đây để một kênh lỗi cấu hình không kéo sập cả phiên.
+        # 27/8 — LỜI KHUYÊN PHẢI KHỚP LÝ DO, KHÔNG PHẢI MỘT CÂU DÁN CHUNG.
+        #
+        # `enqueue.py` ném `SystemExit` vì BỐN chuyện khác hẳn nhau (dòng 54/133/139/159), mà chỗ
+        # này chỉ in đúng một câu "thêm kênh vào channels.yaml". Ba trong bốn lý do chẳng dính gì
+        # tới channels.yaml — chúng đều là chuyện của HỒ KHO.
+        # Nguy hiểm ở chỗ nó SAI CÙNG LÚC VỚI QUY MÔ LỚN: hồ kho chết (token hỏng hết / đầy / đọc
+        # ra rỗng) thì CẢ 50 kênh cùng ném, cùng in câu đó. Người đọc log thấy 50 dòng bảo sửa
+        # cấu hình kênh sẽ đi sửa cấu hình kênh — trong khi việc cần làm là nối lại kho hoặc dọn
+        # chỗ. Một lời khuyên sai, nhân với 50, là mất cả buổi đi nhầm hướng.
+        _m = str(e)
+        if "channels.yaml" in _m:
+            _khuyen = f"thêm '{channel}' vào MM0-AutoPublisher/config/channels.yaml rồi render lại."
+        elif "đủ chỗ" in _m:
+            _khuyen = ("HỒ KHO ĐẦY — không phải lỗi kênh. Dọn bớt video cũ (workflow 'Dọn'), "
+                       "hoặc nối thêm tài khoản Drive ở dashboard → Storage → Connect.")
+        elif "Chưa kết nối" in _m:
+            _khuyen = ("KHÔNG ĐỌC RA KHO NÀO — không phải lỗi kênh. Có thể do chưa nối kho, hoặc "
+                       "Firestore trả rỗng lúc đọc danh sách. Xem dòng '🧟'/'⛔' phía trên để biết "
+                       "kho nào bị loại.")
+        else:
+            _khuyen = ("MỌI KHO ĐỀU ĐẨY HỎNG — không phải lỗi kênh. Xem lý do thật ở dòng "
+                       "'⚠️ Upload vào kho:… lỗi' ngay phía trên; thường là token hỏng "
+                       "(invalid_grant → nối lại kho) hoặc hạn mức Drive.")
         print(f"   ❌ enqueue TỪ CHỐI kênh {channel}: {e}")
-        print(f"      -> thêm '{channel}' vào MM0-AutoPublisher/config/channels.yaml rồi render lại.")
+        print(f"      -> {_khuyen}")
         return None
     except Exception as e:
         print("   ⚠️ enqueue lỗi (giữ artifact):", e); return None
