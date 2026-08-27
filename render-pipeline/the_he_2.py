@@ -1908,14 +1908,32 @@ def dung_props_phim(kenh: dict, ky: dict | None = None, keys: list | None = None
     st = st_san or dung_story_cinematic(kenh, ky)
     if not st:
         return None
+    # 27/8 — ĐÂY LÀ CHỖ 10 KÊNH PHIM RA 0 VIDEO SUỐT PHIÊN 12:14.
+    #
+    # `chay_chung` gọi hàm này mà KHÔNG truyền `keys` (thiếu đúng một tham số), nên `keys` luôn
+    # rỗng, `api` lùi về biến môi trường `GEMINI_API_KEY` — biến đó không được đặt trong lane vì
+    # lane lấy key từ HỒ. Kết quả: `api` rỗng -> bỏ lượt, 30 lần trong một phiên, và CẢ NHÓM
+    # cinematic (10/50 kênh = 20% hệ) không ra nổi một video nào.
+    # Chiều nay tôi đã đổ cho con key chết. Key chết là thật, nhưng nó chỉ là lớp thứ hai — lớp
+    # thứ nhất là dòng gọi thiếu tham số, và nếu không sửa thì vá key chết cũng vô ích.
+    #
+    # Đồng thời: lấy `keys[0]` là sai về nguyên tắc. Một key duy nhất cho cả lượt vẽ nghĩa là key
+    # đó cạn hoặc chết thì cả video hỏng, trong khi hồ có hàng trăm key. `_vision_key` chọn key
+    # còn sống theo đúng thứ tự ưu tiên đã có, và `set_ai_pool` bên dưới lo phần xoay vòng.
     keys = keys or []
-    api = (keys[0].get("key") if keys else os.environ.get("GEMINI_API_KEY", "")) or ""
-    if not api:
-        print(f"   ⚠️ {kenh.get('ten')}: dạng phim kể cần key vẽ ảnh — bỏ lượt "
-              f"(6 dạng còn lại không cần)")
-        return None
     if keys:
         DS.set_ai_pool(keys, kenh["ten"])
+    api = ""
+    if keys:
+        try:
+            api = DS._vision_key(keys) or ""
+        except Exception:
+            api = (keys[0].get("key") or "") if keys else ""
+    api = api or os.environ.get("GEMINI_API_KEY", "") or ""
+    if not api:
+        print(f"   ⚠️ {kenh.get('ten')}: dạng phim kể cần key vẽ ảnh — bỏ lượt "
+              f"(nhận {len(keys)} key, không key nào dùng được cho vẽ/soi ảnh)")
+        return None
     b = (kenh.get("brand") or {}).get("palette") or {}
     props = DS.build_doc_props(st, kenh["ten"], api_key=api,
                                accent=b.get("primary", "#22D3EE"),
@@ -2354,7 +2372,7 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     if dang == "race":
         return chay_race(kenh, ra, ky, st_san=st_san, ky_hieu=ky_hieu, keys=keys)
     if dang == "cinematic":
-        return chay_phim(kenh, ra, ky, st_san=st_san, ky_hieu=ky_hieu)
+        return chay_phim(kenh, ra, ky, keys=keys, st_san=st_san, ky_hieu=ky_hieu)
     comp, ten_props = DUONG_RA.get(dang, (None, None))
     if not comp or not ten_props:
         print(f"   ⚠️ {kenh.get('ten')}: dạng '{dang}' chưa có đường render chung")

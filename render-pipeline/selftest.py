@@ -2192,6 +2192,7 @@ def main():
     check("mọi loại key báo trạng thái + lời đúng loại", t_moi_loai_key_deu_bao_trang_thai)
     check("làm mới token không ép scope (invalid_scope)", t_khong_ep_scope_khi_lam_moi_token)
     check("bỏ việc không được im lặng (mọi failed đều có log)", t_bo_viec_khong_duoc_im_lang)
+    check("mọi đường dựng đều nhận hồ key", t_moi_duong_dung_deu_nhan_ho_key)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5178,6 +5179,33 @@ def t_bo_viec_khong_duoc_im_lang():
     n_dn = src.count("lst = lambda ")
     n_boc = src.count("lst = _lst_noi(channel, lst)")
     assert n_boc >= n_dn, f"{n_dn} chỗ định nghĩa `lst` nhưng chỉ {n_boc} chỗ được bọc -> còn nhánh câm"
+
+
+def t_moi_duong_dung_deu_nhan_ho_key():
+    """MỌI ĐƯỜNG DỰNG PHẢI ĐƯỢC TRUYỀN HỒ KEY — thiếu một tham số là mất cả một nhóm kênh.
+
+    27/8 — 10 kênh cinematic (20% toàn hệ) ra 0 video suốt phiên 12:14. Gốc không phải nguồn dữ
+    liệu, không phải QC, mà là MỘT DÒNG GỌI THIẾU THAM SỐ:
+        return chay_phim(kenh, ra, ky, st_san=st_san, ky_hieu=ky_hieu)    # thiếu keys=keys
+    `keys` luôn rỗng -> `api` lùi về biến môi trường `GEMINI_API_KEY` (không đặt trong lane vì
+    lane lấy key từ HỒ) -> `api` rỗng -> "cần key vẽ ảnh — bỏ lượt", 30 lần một phiên.
+
+    Vì sao lỗi này sống lâu: thông báo nói "cần key vẽ ảnh", đọc lên tưởng THIẾU KEY (chuyện của
+    hạn mức, của nhà cung cấp) chứ không ai nghĩ tới việc hồ key đầy ắp mà không được TRUYỀN VÀO.
+    Tôi cũng đã đổ cho con key chết trước khi tìm ra dòng này.
+
+    Chốt soi ở tầng gọi: mọi lời gọi `chay_*` bên trong `chay_chung` đều phải mang `keys`."""
+    import os as _o, re as _re
+    src = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "the_he_2.py"),
+                  encoding="utf-8").read()
+    i = src.index("def chay_chung")
+    ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(ket) if ket else len(src)]
+    goi = _re.findall(r"return (chay_\w+)\(([^" + chr(10) + r"]*)\)", than)
+    assert goi, "không tìm thấy lời gọi `chay_*` nào trong `chay_chung` — chốt đo nhầm chỗ"
+    thieu = [h for h, tham in goi if "keys" not in tham]
+    assert not thieu, (f"{len(thieu)} đường dựng KHÔNG nhận hồ key: {thieu} — "
+                       f"chúng sẽ lùi về biến môi trường và bỏ lượt mọi lần")
 
 
 if __name__ == "__main__":
