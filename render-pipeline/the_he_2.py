@@ -1800,6 +1800,7 @@ def chay_race(kenh: dict, ra: str = "", ky: dict | None = None,
     ok, info = DS.qc(ra)
     print(f"{'✅' if ok else '❌'} {kenh['ten']} · {info}")
     if ok:
+        chuan_am(ra)          # đưa về -14 LUFS trước mọi khâu sau (xem `chuan_am`)
         _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""))
         if isinstance(info, dict):
             info.update(_htin)
@@ -1883,6 +1884,7 @@ def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None, keys: list | Non
     ok, info = DS.qc(ra)
     print(f"{'✅' if ok else '❌'} {kenh['ten']} [phim kể] · {info}")
     if ok:
+        chuan_am(ra)          # đưa về -14 LUFS trước mọi khâu sau (xem `chuan_am`)
         _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""))
         if isinstance(info, dict):
             info.update(_htin)
@@ -2150,6 +2152,69 @@ def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = "
     return props, pf, sl
 
 
+def chuan_am(duong: str, dich_lufs: float = -14.0) -> bool:
+    """Đưa âm lượng video về chuẩn phát của YouTube (-14 LUFS).
+
+    27/8 — ĐO ĐƯỢC, và đây là lỗi im lặng nhất trong cả hệ: video ra lò ở **-20,5 LUFS**.
+    YouTube chuẩn hoá mọi video về -14 LUFS, nhưng nó CHỈ HẠ CHỨ KHÔNG NÂNG. Nghĩa là bản của
+    mình phát ra nhỏ hơn hẳn 6,5 LU so với mọi video nằm cạnh nó trong bảng đề xuất — người xem
+    phải vặn to, hoặc lướt qua. Không có cảnh báo nào, không có lỗi nào; chỉ là thua.
+
+    Dùng KHUẾCH ĐẠI TĨNH + GIỚI HẠN ĐỈNH, cố ý không dùng `loudnorm` một lượt:
+      • dải động đo được đã hẹp sẵn (LRA 2,2 LU); `loudnorm` còn nén động nữa thì giọng bẹp hẳn,
+        mất hết nhấn nhá — đổi một lỗi lấy một lỗi khác.
+      • khuếch đại tĩnh giữ nguyên tương quan giọng/nhạc/hiệu ứng đã dựng trong Remotion.
+      • `alimiter` chỉ chặn đỉnh vượt ngưỡng, không đụng phần còn lại.
+
+    Video KHÔNG có tiếng, hoặc ffmpeg hụt -> trả False và GIỮ NGUYÊN bản gốc. Âm lượng chưa
+    chuẩn thì vẫn là một video xem được; hỏng tệp thì mất trắng."""
+    import subprocess as _sp
+    import re as _re
+    if not duong or not os.path.exists(duong):
+        return False
+    try:
+        r = _sp.run(["ffmpeg", "-hide_banner", "-nostats", "-i", duong,
+                     "-af", "ebur128", "-f", "null", "-"],
+                    capture_output=True, text=True, timeout=300)
+        # PHẢI lấy chỉ số TỔNG KẾT, không lấy `I:` đầu tiên gặp được.
+        # `ebur128` in một dòng `I:` cho MỖI KHUNG trong lúc chạy; khung đầu là im lặng nên nó ra
+        # -70 LUFS. Bản đầu của hàm này dùng `search` -> vớ đúng con số đó -> tính ra phải bù
+        # +56 dB và suýt cho nổ toàn bộ âm thanh. Chỉ số thật nằm trong khối "Summary" ở CUỐI.
+        _tom = (r.stderr or "").rsplit("Summary:", 1)
+        _vung = _tom[-1] if len(_tom) > 1 else (r.stderr or "")
+        m = _re.search(r"I:\s*(-?[\d.]+)\s*LUFS", _vung)
+        if not m:
+            _tat = _re.findall(r"I:\s*(-?[\d.]+)\s*LUFS", r.stderr or "")
+            if not _tat:
+                return False
+            m = None
+            cu = float(_tat[-1])
+        else:
+            cu = float(m.group(1))
+        if cu <= -60:                     # không có tiếng -> đừng khuếch đại nhiễu nền lên
+            return False
+        bu = dich_lufs - cu
+        if abs(bu) < 0.7:                 # đã sát chuẩn, đụng vào chỉ tốn một lượt nén lại
+            return True
+        tam = duong + ".am.mp4"
+        r2 = _sp.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", duong,
+                      "-af", f"volume={bu:.2f}dB,alimiter=limit=0.97",
+                      "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", tam],
+                     capture_output=True, text=True, timeout=900)
+        if r2.returncode or not os.path.exists(tam) or os.path.getsize(tam) < 10000:
+            if os.path.exists(tam):
+                os.remove(tam)
+            return False
+        os.replace(tam, duong)
+        print(f"   🔊 âm lượng: {cu:.1f} -> {dich_lufs:.0f} LUFS (bù {bu:+.1f} dB) — chuẩn phát YouTube")
+        return True
+    except BaseException as e:
+        if isinstance(e, KeyboardInterrupt):
+            raise
+        print(f"   ⚠️ không chuẩn được âm lượng ({str(e)[:50]}) — giữ nguyên bản gốc")
+        return False
+
+
 def qc_hook_sau_render(duong: str, ten_kenh: str = "") -> tuple:
     """QC THỊ GIÁC SAU RENDER, chấm riêng khung hook. Trả (cho_qua, thông_tin).
 
@@ -2220,6 +2285,7 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     ok, info = DS.qc(ra)
     print(f"{'✅' if ok else '❌'} {kenh['ten']} [{dang}] · {info}")
     if ok:
+        chuan_am(ra)          # đưa về -14 LUFS trước mọi khâu sau (xem `chuan_am`)
         _hok, _htin = qc_hook_sau_render(ra, kenh.get("ten", ""))
         if isinstance(info, dict):
             info.update(_htin)
@@ -2759,6 +2825,7 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
     if not ok:
         return None
     # Long cũng phải qua cổng hook: khung mở đầu của long là thứ quyết định lượt xem trên trang chủ.
+    chuan_am(ra_long)
     if not qc_hook_sau_render(ra_long, ten)[0]:
         return None
 
