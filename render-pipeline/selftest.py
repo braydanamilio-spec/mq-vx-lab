@@ -3672,9 +3672,21 @@ def t_moc_reset_theo_nha_cung_cap():
         mai = (goc + _d.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         return int((mai - goc).total_seconds() // 60)
 
-    assert abs(cf - _toi_moc(_utc)) <= 2, f"Cloudflare không nghỉ tới mốc 00:00 UTC: {cf}"
-    assert abs(gg - _toi_moc(_utc - _d.timedelta(hours=7))) <= 2, \
-        f"Google không nghỉ tới mốc 00:00 giờ Thái Bình Dương: {gg}"
+    # 27/8 06:55Z — LẦN THỨ BA CÙNG MỘT LỚP LỖI TRONG CHÍNH TỆP NÀY: đo SỐ TUYỆT ĐỐI của một
+    # thứ phụ thuộc giờ trong ngày. Hai chú thích ngay phía trên đã ghi lại hai lần trước
+    # (chốt đòi ">120 phút", rồi chốt đòi "sàn 20'"), mà chốt này vẫn mắc lại.
+    # Cảnh bắt được: 06:55Z = 23:55 giờ Thái Bình Dương, còn ĐÚNG 4 phút tới mốc reset. Nhưng
+    # `muc_nghi` có SÀN 10 PHÚT (`max(10, …)`) — cố ý, để key không quay vòng liên tục khi mốc
+    # reset chỉ còn vài giây. Chốt đòi khớp ±2 với con số chính xác nên đỏ.
+    # Hậu quả THẬT: `run_render` chặn phiên khi selftest đỏ ⇒ mất trắng mọi phiên khởi động
+    # trong ~10 phút cuối trước MỖI mốc reset, mỗi ngày hai lần (00:00Z và 07:00Z).
+    # Điều bất biến phải đo là: nghỉ tới đúng mốc reset của mình, NHƯNG KHÔNG DƯỚI SÀN.
+    _SAN = 10                                   # phải khớp `max(10, …)` trong nghi_key.muc_nghi
+    _cf_mong = max(_SAN, _toi_moc(_utc))
+    _gg_mong = max(_SAN, _toi_moc(_utc - _d.timedelta(hours=7)))
+    assert abs(cf - _cf_mong) <= 2, f"Cloudflare không nghỉ tới mốc 00:00 UTC: {cf} (mong {_cf_mong})"
+    assert abs(gg - _gg_mong) <= 2, \
+        f"Google không nghỉ tới mốc 00:00 giờ Thái Bình Dương: {gg} (mong {_gg_mong})"
     assert cf != gg, "hai nhà cung cấp mà ra cùng một mốc -> lại gộp làm một"
 
 
