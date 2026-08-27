@@ -326,6 +326,7 @@ def main() -> int:
                 _ds.append((_ten, _c))
             except Exception as _e:
                 print(f"  ⚠️ không mở được project {_ten}: {str(_e)[:70]}")
+        _lo_theo_proj: dict = {}      # project -> [(client, ref)] — xem khối xoá bên dưới
         print(f"\n  🔎 quét render_jobs của {len(ten_cu)} kênh cũ trên {len(_ds)} project…")
         xoa, giu, theo_kenh = 0, 0, {}
         lo = []
@@ -344,6 +345,7 @@ def main() -> int:
                         _x += 1
                         theo_kenh[ch] = theo_kenh.get(ch, 0) + 1
                         lo.append(d.reference)
+                        _lo_theo_proj.setdefault(_ten, []).append((_c, d.reference))
                     else:
                         _g += 1
                 print(f"      project {_ten}: khớp {_x} · giữ {_g}")
@@ -361,12 +363,32 @@ def main() -> int:
         if that and lo:
             # Xoá theo lô 400 (trần Firestore là 500 thao tác/lô) — 2.486 job thành ~7 lượt ghi lô
             # thay vì 2.486 lượt gọi lẻ.
-            b = db.batch(); n = 0
-            for i, ref in enumerate(lo, 1):
-                b.delete(ref); n += 1
-                if n >= 400 or i == len(lo):
-                    b.commit(); b = db.batch(); n = 0
-                    print(f"      … đã xoá {i}/{len(lo)}", flush=True)
+            #
+            # 27/8 — LÔ PHẢI DỰNG TỪ ĐÚNG CLIENT ĐÃ ĐỌC RA REF ĐÓ.
+            # Bản cũ gom ref của MỌI project vào một danh sách `lo` rồi xoá bằng đúng một client
+            # `db`. Firestore từ chối thẳng:
+            #     "The request was for database 'projects/A/...' but was attempting to access
+            #      database 'projects/B/...'"
+            # Nên lệnh dọn ĐẾM ĐƯỢC (365 job) nhưng XOÁ HỎNG — chạy khô thì xanh, chạy thật thì
+            # ném, và rác vẫn nằm nguyên. Đúng loại lỗi chỉ lộ ra ở đường ghi.
+            # Nay gom ref theo TỪNG project và commit bằng chính client của project đó.
+            _tong = sum(len(v) for v in _lo_theo_proj.values())
+            _da = 0
+            for _ten2, _cap in _lo_theo_proj.items():
+                if not _cap:
+                    continue
+                _cli = _cap[0][0]
+                b = _cli.batch(); n = 0
+                try:
+                    for i, (_c2, ref) in enumerate(_cap, 1):
+                        b.delete(ref); n += 1
+                        if n >= 400 or i == len(_cap):
+                            b.commit(); b = _cli.batch(); n = 0
+                            _da += min(400, i)
+                            print(f"      … {_ten2}: đã xoá {i}/{len(_cap)}", flush=True)
+                except Exception as _e2:
+                    print(f"      ⚠️ {_ten2}: xoá hụt ({str(_e2)[:70]}) — project khác vẫn dọn tiếp")
+            print(f"      ✅ tổng đã xoá ~{_da}/{_tong} bản ghi")
         print(f"  🧹 {'đã xoá' if that else '(sẽ xoá)'} {xoa} job Firestore của "
               f"{len(ten_cu)} kênh {'THẾ HỆ 2' if gen2 else 'thế hệ 1'}")
         # D1 LÀ KHO THỨ HAI, KHÔNG PHẢI BẢN SAO CHO VUI. Dashboard đọc D1 khi có lọc ngày, nên bỏ
