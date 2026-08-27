@@ -4601,8 +4601,18 @@ def t_so_chu_de_trong_phien():
     than = src[i:i + 900]
     assert "_SESSION_TOPICS.get" in than, "_avoid_for không đọc sổ phiên -> vẫn chỉ dựa vào Firestore"
     j = src.index("def _gen2_bo")
-    tb = src[j:j + 4000]
-    assert "_nho_chu_de(" in tb, "_gen2_bo không ghi sổ sau mỗi bộ"
+    # 27/8 — cửa sổ CỨNG 4000 ký tự là một chốt giòn: thêm một khối chú thích trong hàm là lệnh
+    # cần soi bị đẩy ra ngoài cửa sổ và chốt đỏ oan (vừa dính đúng vậy khi thêm phần tính số
+    # chương). Soi HẾT THÂN HÀM — biên là chỗ bắt đầu hàm kế ở cột 0.
+    _k = src.find("\ndef ", j + 5)
+    tb = src[j: _k if _k > 0 else len(src)]
+    # 27/8 — chốt này đòi đúng tên `_nho_chu_de`. Sổ chủ đề nay có HAI TẦNG: `_hen_chu_de` xếp
+    # vào hàng chờ (và tự ghi sổ phiên bên trong nó), rồi `_chot_chu_de` mới đẩy sang sổ bền khi
+    # video đã ra lò thật. Bất biến cần giữ vẫn là "bộ vừa làm phải vào sổ phiên ngay", chỉ là
+    # nay đi qua lớp bọc. Nhận cả hai tên, và soi thêm rằng lớp bọc thật sự ghi sổ phiên.
+    assert ("_nho_chu_de(" in tb or "_hen_chu_de(" in tb), "_gen2_bo không ghi sổ sau mỗi bộ"
+    k = src.index("def _hen_chu_de")
+    assert "_nho_chu_de(" in src[k:k + 700], "_hen_chu_de không ghi sổ phiên -> chống trùng trong phiên hỏng"
     import sys as _s, os as _o
     _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
     import run_render as R
