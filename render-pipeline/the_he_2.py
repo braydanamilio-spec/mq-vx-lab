@@ -214,7 +214,16 @@ def _gon(t: str, toi_da: int = 26) -> str:
         if len(" ".join(tu + [w])) > toi_da:
             break
         tu.append(w)
-    return " ".join(tu) or t[:toi_da]
+    # 27/8 — ĐỪNG ĐỂ CHỮ TREO LƠ LỬNG SAU KHI CẮT.
+    # Đọc khung thật của AMERICA LOOKED UP: nhãn ra "SPIDER-MAN:" (treo dấu hai chấm của
+    # "Spider-Man: Brand New Day") và "SOLAR ECLIPSE OF" (treo chữ "of"). Cả hai đều đọc như lỗi
+    # phần mềm chứ không như một nhãn được chọn — mà đây là chữ nằm ngay cạnh con số, tức là chỗ
+    # người xem nhìn nhiều nhất. Bỏ nốt từ nối cuối rồi gỡ dấu câu thừa: "Spider-Man" và
+    # "Solar eclipse" vẫn nói đủ ý, mà trông như có người đặt.
+    NOI = {"of", "and", "or", "the", "a", "an", "in", "on", "for", "to", "at", "by", "vs", "with"}
+    while len(tu) > 1 and tu[-1].lower().strip(",;:-") in NOI:
+        tu.pop()
+    return (" ".join(tu).rstrip(" ,;:-–—") or t[:toi_da].rstrip(" ,;:-–—"))
 
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
@@ -1055,6 +1064,22 @@ def dung_story_race(kenh: dict, ky: dict | None = None) -> dict | None:
         print(f"   ⚠️ {kenh.get('ten')}: không đủ mốc thời gian — BỎ LƯỢT (không bịa mốc)")
         return None
     tieu_de, don_vi, frames, dan = kq
+    # 27/8 — SẮP MỌI KHUNG TẠI ĐÂY, KHÔNG TIN NGUỒN ĐÃ SẮP SẴN.
+    #
+    # Xem tận mắt khung hình thật của AMERICA LOOKED UP mới lòi ra: `BarChartRace.tsx` TỰ SẮP lúc
+    # vẽ (dòng 51 và 59) — đúng vì `data` vào tay nó không có thứ tự bảo đảm. Nhưng phía Python thì
+    # BA chỗ lại coi `data[0]` là kẻ dẫn đầu:
+    #     `_so_noi_bat`  -> số dẫn của hook 0-3 giây
+    #     `_keo_dai`     -> câu ĐỌC THÀNH TIẾNG "X now sits N times above Y"
+    #     `_dc_nba`/`_dc_epa` -> câu "… started on top" / "… leads the current lineup"
+    # Trong 6 bộ dựng đua chỉ `_dc_wiki` tự sắp; năm cái còn lại trông chờ NGUỒN trả về đúng thứ
+    # tự — một giả định không ai bảo đảm và không ai kiểm. Hôm nào nguồn đổi thứ tự trả về là hook
+    # nêu nhầm người, và lời đọc nêu nhầm tỉ lệ ("gấp 0.4 lần") — sai dữ liệu, không phải sai
+    # thẩm mỹ, mà lại là loại sai không có gì báo động.
+    # Vá từng chỗ thì lần sau thêm bộ dựng thứ bảy là lại sót. Sắp ở đây — đúng một cửa mà mọi
+    # dạng đua đều phải qua — thì `data[0]` mang đúng nghĩa mà mọi người gọi vốn đã tưởng nó mang.
+    for _fr in frames:
+        _fr["data"] = sorted(_fr.get("data") or [], key=lambda z: -(z.get("value") or 0))
     dan = _keo_dai(dan, frames, don_vi)
     return _cong_an_toan({"title": tieu_de, "unit": don_vi, "frames": frames, "narration": dan,
                           "nguon": kenh.get("nguon"), "_that": True,
@@ -2582,6 +2607,26 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
 
 
 
+def _dinh_don_vi(so: str, don: str) -> str:
+    """Dán đơn vị vào số sao cho ĐỘ LỚN không bao giờ mất (xem chú thích trong `_so_noi_bat`).
+
+        525 + "K reads" -> "525K"      (giữ K, bỏ chữ mô tả)
+        525 + "$M"      -> "$525M"     (tiền tệ đứng trước, độ lớn đứng sau)
+        29  + "mpg"     -> "29 mpg"    (đơn vị ngắn thì để nguyên)
+    """
+    don = str(don or "").strip()
+    if not don:
+        return so
+    if don.startswith("$"):
+        return "$" + so + don[1:].strip()          # "$M" -> $525M ; "$" -> $525
+    dau = don.split()[0]
+    if dau in ("K", "M", "B", "T"):
+        return so + dau                            # "K reads" -> 525K
+    if len(don) <= 6:
+        return f"{so} {don}"
+    return so
+
+
 def _so_noi_bat(st: dict) -> dict:
     """Rút SỐ LIỆU NỔI BẬT + nhãn của nó, ĐÚNG THEO TỪNG DẠNG STORY.
 
@@ -2624,8 +2669,16 @@ def _so_noi_bat(st: dict) -> dict:
         v = d.get("value")
         so = f"{v:,.0f}" if isinstance(v, (int, float)) else str(v or "")
         don = str(st.get("unit") or "")
-        return {"stat": (so + (" " + don if don and len(don) <= 6 else "")).strip(),
-                "name": str(d.get("name") or "")}
+        # 27/8 — ĐƠN VỊ DÀI THÌ RÚT GỌN, KHÔNG PHẢI VỨT ĐI.
+        #
+        # Luật cũ `len(don) <= 6` im lặng ném cả đơn vị. Xem khung hook thật của AMERICA LOOKED UP:
+        # dạng này đo bằng NGHÌN lượt (`luot_doc / 1000`) với `unit = "K reads"` — dài 7 ký tự, nên
+        # rơi đúng vào nhánh vứt. Hook in trần **525** trong khi ý nghĩa là **525K lượt đọc**, còn
+        # thanh ngay phía sau ghi "22.8K READ". Người xem đọc hai con số cùng khung, không thể hiểu
+        # nổi, và kết luận hợp lý nhất của họ là hệ bịa số — mất niềm tin vì một luật cắt chuỗi.
+        # Chữ chỉ ĐỘ LỚN (K/M/B) là phần KHÔNG ĐƯỢC PHÉP mất: thiếu nó thì con số sai đi một nghìn
+        # lần. Phần chữ mô tả phía sau ("reads") thì mất được — thanh bên dưới đã nói rồi.
+        return {"stat": _dinh_don_vi(so, don), "name": str(d.get("name") or "")}
     da = st.get("data") or []
     if da:
         return {"stat": str(_g(da[0], "disp", "value")), "name": str(_g(da[0], "state", "name"))}

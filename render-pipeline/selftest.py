@@ -2183,6 +2183,7 @@ def main():
     check("step trỏ Project C phải bật SHARD_PUBLISH", t_workflow_dung_project_C_phai_bat_co)
     check("env trỏ tệp khoá thì phải có bước tạo tệp", t_env_tro_file_thi_phai_tao_file)
     check("B2 failover: thiếu env từ chối êm", t_b2_failover)
+    check("số hiện ra không mất độ lớn; hook nêu đúng kẻ dẫn đầu", t_so_hien_thi_khong_mat_do_lon)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -4764,6 +4765,58 @@ def t_so_chu_de_trong_phien():
     R._nho_chu_de("__thu__", "A", "B")
     R._nho_chu_de("__thu__", "B", "C")
     assert R._SESSION_TOPICS["__thu__"] == ["A", "B", "C"], "sổ phiên không khử trùng"
+
+
+def t_so_hien_thi_khong_mat_do_lon():
+    """SỐ TRÊN MÀN HÌNH PHẢI ĐỌC RA ĐÚNG ĐỘ LỚN, VÀ HOOK PHẢI NÊU ĐÚNG NGƯỜI.
+
+    27/8 — anh gửi hai khung hình thật của AMERICA LOOKED UP và hỏi "số này đúng chứ". Không đúng,
+    và ba lỗi cùng lộ ra trong đúng một khung:
+
+      • hook in trần `525` trong khi thanh ngay sau lưng ghi `22.8K READ`. Gốc: dạng này đo bằng
+        NGHÌN lượt với `unit = "K reads"`, mà luật cũ `len(don) <= 6` vứt đơn vị vì nó dài 7 ký tự.
+        Mất chữ `K` là con số sai đi MỘT NGHÌN LẦN — và không có gì báo động cả.
+      • nhãn cắt cụt để lại chữ treo: `SPIDER-MAN:` và `SOLAR ECLIPSE OF`.
+      • `data[0]` được ba chỗ coi là kẻ dẫn đầu, trong khi 5/6 bộ dựng đua không hề sắp — chúng
+        trông chờ NGUỒN trả về sẵn thứ tự.
+
+    Ba lỗi khác nhau nhưng cùng một họ: thứ hiện ra màn hình KHÔNG khớp thứ dữ liệu nói. Đây là
+    loại sai đắt nhất của kênh dữ liệu — người xem bắt được một lần là mất niềm tin vào mọi con số
+    còn lại, kể cả những con số đúng."""
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import the_he_2 as T
+
+    # 1) độ lớn không được biến mất, dù đơn vị dài bao nhiêu
+    for so, don, y in [("525", "K reads", "525K"), ("7", "M tonnes handled", "7M"),
+                       ("2,540", "$M", "$2,540M"), ("29", "mpg", "29 mpg")]:
+        assert T._dinh_don_vi(so, don) == y, f"đơn vị {don!r}: ra {T._dinh_don_vi(so, don)!r}, đòi {y!r}"
+
+    # 2) cắt nhãn không để dấu câu / từ nối treo lơ lửng
+    for t in ["Spider-Man: Brand New Day", "Solar eclipse of August 12, 2026", "Attack on Titan"]:
+        r = T._gon(t, 16)
+        assert not r.endswith((":", ",", ";", "-", "–", "—")), f"{t!r} -> {r!r} treo dấu câu"
+        assert r.split()[-1].lower() not in ("of", "and", "or", "the", "on", "in", "for", "to"), \
+            f"{t!r} -> {r!r} treo từ nối"
+
+    # 3) CHỖ CHẸN phải sắp — soi thẳng vào `dung_story_race`, vì đó là cửa duy nhất mọi dạng đua
+    #    đều qua. Không đòi từng bộ dựng tự sắp: đòi thế thì bộ dựng thứ bảy thêm sau lại sót.
+    src = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "the_he_2.py"),
+                  encoding="utf-8").read()
+    i = src.index("def dung_story_race")
+    j = src.index("\ndef ", i + 5)
+    than = src[i:j]
+    assert "sorted(" in than and '_fr["data"]' in than, \
+        "dung_story_race không sắp lại frames -> hook/lời đọc có thể nêu nhầm người"
+    assert than.index('_fr["data"] = sorted') < than.index("_keo_dai("), \
+        "phải sắp TRƯỚC khi _keo_dai đọc data[0]/data[1]"
+
+    # 4) chạy thật: data lộn xộn vào, hook phải ra kẻ dẫn đầu
+    fr = [{"t": 1, "data": [{"name": "B", "value": 22.8}, {"name": "A", "value": 986.0}]}]
+    for f in fr:
+        f["data"] = sorted(f["data"], key=lambda z: -(z.get("value") or 0))
+    d = T._so_noi_bat({"frames": fr, "unit": "K reads"})
+    assert d["stat"] == "986K" and d["name"] == "A", f"hook nêu nhầm: {d}"
 
 
 if __name__ == "__main__":
