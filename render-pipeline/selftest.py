@@ -2185,6 +2185,7 @@ def main():
     check("B2 failover: thiếu env từ chối êm", t_b2_failover)
     check("số hiện ra không mất độ lớn; hook nêu đúng kẻ dẫn đầu", t_so_hien_thi_khong_mat_do_lon)
     check("chống trùng kho: đánh cờ 1 nơi, mọi nơi đọc phải tôn trọng", t_chong_trung_kho_drive)
+    check("tiêu đề không lộ mã nội bộ (quét 50 kênh)", t_tieu_de_khong_lo_ma_noi_bo)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -4858,6 +4859,53 @@ def t_chong_trung_kho_drive():
     assert "s.size} tài khoản" not in db, "bộ đếm còn dùng s.size (đếm cả bản trùng)"
     # Sức chứa phải tính bằng ĐÚNG `cap_gb` bộ đẩy dùng (14), không phải 15.
     assert "(a.cap_gb||15)" not in db, "dashboard còn tính sức chứa 15GB/kho trong khi bộ đẩy dùng 14"
+
+
+def t_tieu_de_khong_lo_ma_noi_bo():
+    """TIÊU ĐỀ VIDEO KHÔNG ĐƯỢC CHỨA MÃ NỘI BỘ — quét MỌI giá trị xoay của cả 50 kênh.
+
+    27/8 — đọc tiêu đề thật trong phiên 12:14 của GAME GRAVEYARD:
+        "Games people actually play right now — tut_manh"
+        "Games millions bought and nobody plays — chet_yeu"
+    Giá trị trục xoay là mã tiếng Việt viết cho MÌNH đọc, bị ném thẳng lên tiêu đề video cho khán
+    giả Mỹ. Người xem thấy một chuỗi gạch dưới không đọc được là biết ngay video do máy đẻ — ngay
+    trên trang kênh, trước cả khi bấm vào.
+
+    Vì sao chốt phải quét CẢ 50 KÊNH chứ không kiểm vài ví dụ: mã lọt được là do KHO GIÁ TRỊ của
+    từng kênh, mà kho đó thêm bớt luôn. Kiểm mẫu thì bản vá hôm nay xanh, còn mã thêm tuần sau lại
+    lọt y như cũ — và lần đó không ai đi đọc tiêu đề để phát hiện.
+    Bản thân lỗi này lọt được cũng vì trước đó không ai kiểm: nó đã lên hàng chục video thật."""
+    import sys as _s, os as _o, json as _j, re as _re
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import the_he_2 as T
+    ds = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "kenh_the_he_2.json")
+    ks = _j.load(io.open(ds, encoding="utf-8"))
+    ks = ks if isinstance(ks, list) else list(ks.values())
+    xau = []
+    for k in ks:
+        ts = k.get("tham_so") or {}
+        truc = ts.get("xoay")
+        if not truc:
+            continue
+        kho = ts.get("kho_" + str(truc)) or [ts.get(truc)]
+        for v in kho:
+            if v in (None, ""):
+                continue
+            # LUẬT: mã có gạch dưới BẮT BUỘC có bản dịch trong `_NHAN_TRUC`.
+            # Chốt bản đầu chỉ soi "tiêu đề còn gạch dưới không" — và nó KHÔNG ĐỎ khi em cố tình
+            # gỡ bảng dịch, vì lưới chung đã biến `tut_manh` thành "Tut manh": sạch gạch dưới mà
+            # vẫn là rác. Một chốt không bắt được chính lỗi nó sinh ra để bắt thì tệ hơn không có
+            # chốt, vì nó phát ra cảm giác an toàn giả.
+            if isinstance(v, str) and "_" in v and v.lower() not in T._NHAN_TRUC:
+                xau.append(f"{k['ten']}: mã {v!r} chưa có bản dịch trong _NHAN_TRUC")
+                continue
+            ra = T._gan_truc_vao_tieu_de("Sample title", str(truc), v)
+            duoi = ra[len("Sample title"):]
+            if "_" in duoi:
+                xau.append(f"{k['ten']}: {v!r} -> {ra!r} (còn gạch dưới)")
+            if any(ord(c) > 127 and c not in "—–" for c in duoi):
+                xau.append(f"{k['ten']}: {v!r} -> {ra!r} (còn ký tự không phải ASCII)")
+    assert not xau, "mã nội bộ lọt lên tiêu đề:\n     " + "\n     ".join(xau[:8])
 
 
 if __name__ == "__main__":

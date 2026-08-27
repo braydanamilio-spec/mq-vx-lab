@@ -2374,6 +2374,22 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
 
 
 
+# Mã trục xoay -> chữ cho NGƯỜI XEM. Chỉ liệt kê mã không phải tiếng Anh; mã vốn đã là tiếng Anh
+# (retriever, caffeine, harbor…) tự đi qua lưới viết hoa bên dưới.
+# Nhãn phải nói ĐÚNG lát dữ liệu, không phải dịch từ điển: "chet_yeu" của GAME GRAVEYARD là game
+# ra mắt rồi chết ngay, nên "Dead on arrival" đúng hơn "Died young".
+_NHAN_TRUC = {
+    "ban_chay":  "Best sellers",
+    "dinh_cao":  "Peak players",
+    "dong_nhat":  "Most played",
+    "tang_manh": "Biggest gainers",
+    "chet_yeu":  "Dead on arrival",
+    "tut_manh":  "Biggest drops",
+    "vang_nhat": "Emptiest servers",
+    "bo_hoang":  "Abandoned",
+}
+
+
 def _gan_truc_vao_tieu_de(tieu_de: str, truc: str, val) -> str:
     """Nhét GIÁ TRỊ TRỤC XOAY vào tiêu đề, nếu nó chưa có mặt ở đó.
 
@@ -2428,8 +2444,40 @@ def _gan_truc_vao_tieu_de(tieu_de: str, truc: str, val) -> str:
         if _re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
             return t if v in t else f"{t} — week ending {v}"
         return t if f"{v} day" in t.lower() else f"{t} — last {v} days"
+    # 27/8 — MÃ NỘI BỘ KHÔNG BAO GIỜ ĐƯỢC LÊN TIÊU ĐỀ.
+    #
+    # Đọc tiêu đề thật của GAME GRAVEYARD trong phiên 12:14:
+    #     "Games people actually play right now — tut_manh"
+    #     "Games millions bought and nobody plays — chet_yeu"
+    # `tut_manh` / `chet_yeu` là giá trị trục xoay — mã tiếng Việt viết cho MÌNH đọc, không phải
+    # cho khán giả Mỹ. Nhánh cuối `f"{t} — {v}"` ném thẳng nó lên tiêu đề video.
+    # Người xem Mỹ nhìn thấy một chuỗi gạch dưới không đọc được là biết ngay video do máy đẻ ra —
+    # và đó là ấn tượng đầu tiên, ngay trên trang kênh, trước cả khi họ bấm vào.
+    # Cùng họ với lỗi `— ['Florida', 'New York', ...]` vá hôm qua: cả hai đều là DỮ LIỆU NỘI BỘ
+    # rò ra mặt tiền, chỉ khác kiểu.
+    #
+    # Chữa hai tầng, vì hai tầng chặn hai chuyện khác nhau:
+    #   1. bảng dịch cho các mã đang dùng -> tiêu đề vừa đọc được vừa NÓI ĐÚNG lát dữ liệu;
+    #   2. lưới chung cho mã thêm sau -> gạch dưới thành khoảng trắng, viết hoa; còn dấu tiếng
+    #      Việt thì THÀ BỎ HẲN còn hơn để lọt, vì một tiêu đề kém phân biệt vẫn hơn một tiêu đề
+    #      lộ ruột gan hệ thống.
+    # LUẬT: giá trị CÓ GẠCH DƯỚI là mã nội bộ (`tut_manh`, `chet_yeu`) — chưa có bản dịch thì
+    # KHÔNG được lên tiêu đề. Bỏ gạch dưới rồi thả lên ("Tut manh") không cứu được gì: với người
+    # xem Mỹ nó vẫn là rác, chỉ là rác không còn dấu hiệu để chốt kiểm bắt. Thà tiêu đề kém phân
+    # biệt còn hơn tiêu đề lộ ruột gan hệ thống.
+    # Giá trị MỘT TỪ (retriever, caffeine, harbor) vốn đã là tiếng Anh -> đi thẳng, chỉ hoa chữ đầu.
+    _tho = v
+    v = _NHAN_TRUC.get(v.lower(), v)
+    if v is _tho and "_" in _tho:
+        return t
     if v.lower() in t.lower():
         return t
+    if any(ord(c) > 127 for c in v):
+        return t                                   # thà không phân biệt còn hơn lộ mã
+    # Chỉ hoa CHỮ ĐẦU. Hoa từng từ thì ra "Dead On Arrival" / "Florida, New York And 1 More" —
+    # tiếng Anh không viết hoa giới từ và liên từ giữa câu, và sai chỗ đó đọc ra ngay là máy làm.
+    v = " ".join(v.replace("_", " ").split())
+    v = (v[:1].upper() + v[1:]) if v else v
     return f"{t} ({v})" if truc.endswith("nam") else f"{t} — {v}"
 
 
