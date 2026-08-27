@@ -329,6 +329,17 @@ def enqueue_drive(channel, out, story, vtype, seri: str = "", bo: str = "", scri
                         pass
         except Exception:
             pass
+        # 27/8 — ĐÂY LÀ BẰNG CHỨNG DUY NHẤT ĐÁNG TIN RẰNG VIDEO ĐÃ RA LÒ.
+        # Đẩy Drive xong nghĩa là: đã render, đã qua QC, đã có tệp thật nằm trong kho. Mọi mốc
+        # sớm hơn đều có thể hỏng về sau. Nên chốt sổ đề tài ở ĐÚNG đây, thay vì rải lệnh ghi sổ
+        # ở 6 chỗ trước QC như bản cũ (video trượt QC vẫn bị ghi là "đã làm").
+        # Móc một chỗ thay vì sửa 8 điểm đẩy + 12 nhánh trượt: ít chỗ sai hơn hẳn, và điểm đẩy
+        # mới thêm sau này tự động được chốt đúng.
+        if created:
+            try:
+                _chot_chu_de(channel)
+            except Exception:
+                pass
         return created or None                     # trả cả {id, account} -> lưu vào job để XEM/stream trên web
     except SystemExit as e:
         # enqueue.py dùng raise SystemExit khi kênh THIẾU trong channels.yaml. SystemExit kế thừa
@@ -447,6 +458,54 @@ def _nho_chu_de(channel: str, *tieu_de) -> None:
         t = str(t or "").strip()
         if t and t not in lo:
             lo.append(t)
+
+
+# ── SỔ ĐỀ TÀI: HAI TẦNG, VÀ CHỈ TẦNG BỀN MỚI ĐƯỢC COI LÀ "ĐÃ LÀM" (27/8) ───────────────────
+# Anh nêu đúng yêu cầu: "nó phải biết được số video/kịch bản THỰC TẾ đã làm, không tính các
+# clip không đạt hay đã xoá".
+# Đo thì hiện tại KHÔNG như vậy. `FB.save_topics` được gọi ở 6 chỗ, và ít nhất 3 chỗ nằm TRƯỚC
+# lệnh kiểm QC — ví dụ dòng 988 ghi sổ rồi dòng 989 mới `if not ok: return False`. Nghĩa là một
+# video trượt QC vẫn được ghi vào sổ là "đã làm". Sổ cứ thế đầy dần những đề tài CHƯA TỪNG
+# THÀNH VIDEO, và kênh tự từ chối làm lại chúng — càng chạy càng cạn đề tài mà kho vẫn còn.
+#
+# Hai tầng, hai nhiệm vụ khác nhau:
+#   • SỔ PHIÊN (`_SESSION_TOPICS`, trong RAM) — ghi NGAY, để lượt sau của chính phiên này không
+#     chọn lại. Không bền, và không cần bền.
+#   • SỔ BỀN (Firestore/D1) — chỉ ghi khi video ĐÃ QUA QC VÀ ĐÃ ĐẨY DRIVE THÀNH CÔNG. Đây mới là
+#     câu trả lời cho "đã làm bao nhiêu".
+_CHO_GHI: dict = {}     # kênh -> đề tài đang chờ xác nhận thành video
+
+
+def _hen_chu_de(channel: str, tieu_de) -> None:
+    """Xếp hàng chờ: đề tài đã viết nhưng CHƯA biết có ra video không."""
+    lo = _CHO_GHI.setdefault(str(channel), [])
+    for t in (tieu_de if isinstance(tieu_de, (list, tuple)) else [tieu_de]):
+        t = str(t or "").strip()
+        if t and t not in lo:
+            lo.append(t)
+    _nho_chu_de(channel, *(tieu_de if isinstance(tieu_de, (list, tuple)) else [tieu_de]))
+
+
+def _chot_chu_de(channel: str) -> int:
+    """Video đã ra lò THẬT -> chuyển hàng chờ sang sổ bền. Gọi SAU khi đẩy Drive thành công."""
+    lo = _CHO_GHI.pop(str(channel), [])
+    if not lo:
+        return 0
+    try:
+        FB.save_topics(OWNER, channel, lo)
+    except Exception as e:
+        print(f"   ⚠️ không chốt được sổ đề tài {channel} ({str(e)[:50]}) — sổ phiên vẫn giữ")
+    return len(lo)
+
+
+def _bo_chu_de(channel: str, ly_do: str = "") -> int:
+    """Video KHÔNG ra lò (trượt QC / đẩy hụt) -> VỨT hàng chờ, không ghi sổ bền.
+    Đề tài đó phải được phép làm lại ở phiên sau: nó chưa từng thành video."""
+    lo = _CHO_GHI.pop(str(channel), [])
+    if lo:
+        print(f"   ↩️ {channel}: KHÔNG ghi sổ {len(lo)} đề tài — video không ra lò"
+              + (f" ({ly_do[:50]})" if ly_do else "") + ". Phiên sau được làm lại.")
+    return len(lo)
 
 
 def _avoid_for(channel: str) -> list:
@@ -700,7 +759,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
             else:
                 jst("failed", f"QC {fmt} trượt: {info}"); R["fails"].append(f"{channel} {fmt} {i}: QC trượt")
         if made_here:
-            try: FB.save_topics(OWNER, channel, [str(x) for x in made_here if x])
+            try: _hen_chu_de(channel, [str(x) for x in made_here if x])
             except Exception: pass
         print(f"   ✅ {channel}: xong {fmt} ({R['done']} clip)"); return
 
@@ -724,7 +783,8 @@ def run_one(ch, keys, n_shorts=3, report=None):
     if do_long:
         # ---- LONG ---- SELF-HEAL: render lỗi -> tự thử lại NHẸ hơn (4 race -> 2).
         ljob = FB.new_job(OWNER, channel, "long", pver=CLASSIC_PVER)
-        lst = lambda s, step, **x: FB.update_job(ljob, status=s, step=step, **x)
+        lst = lambda s, step, **x: (_bo_chu_de(channel, str(step)) if s == "failed" else None,
+                                   FB.update_job(ljob, status=s, step=step, **x))[-1]
         plan = ok = info = None; last_err = None
         resumed_long = FB.find_resumable(OWNER, channel, "long")   # CHECKPOINT: phiên trước lỗi/treo nhưng còn kịch bản
         for attempt, nr in enumerate([4, 2], start=1):
@@ -749,7 +809,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
             FB.clear_resumed(resumed_long["job_id"])
         try:
             if subtopics:
-                FB.save_topics(OWNER, channel, subtopics)     # ghi vào ngân hàng chủ đề
+                _hen_chu_de(channel, subtopics)     # HÀNG CHỜ — chỉ vào sổ bền khi video ra lò thật
             if last_err is not None and _is_ratelimit(last_err):
                 lst("ratelimited", "⏳ hết quota tạm — thử lại sau"); R["rl"] = R.get("rl", 0) + 1   # KHÔNG tính Lỗi
             elif last_err is not None:
@@ -790,7 +850,7 @@ def run_one(ch, keys, n_shorts=3, report=None):
                                   avoid=FB.recent_topics(OWNER, channel))
             subtopics = (plan.get("subtopics") or [])[:max(n_shorts, 3)]
             if subtopics:
-                FB.save_topics(OWNER, channel, subtopics)
+                _hen_chu_de(channel, subtopics)
         except Exception as e:
             print_exc_gon(); R["fails"].append(f"{channel} PLAN: {str(e)[:100]}")
     # ---- SHORTS (viết LẠI cho 9:16 từ 2-3 chủ đề con) ----
@@ -880,7 +940,8 @@ def _gen2_bo(ch, keys, cool, okcb, R, stopped, n_shorts=3):
         print(f"   ⚠️ {channel}: có cờ thế hệ 2 nhưng không có trong kenh_the_he_2.json")
         return False
     ljob = FB.new_job(OWNER, channel, "long", pver=_pv(ch.get("format") or "th2"))
-    lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
+    lst = lambda st, step, **x: (_bo_chu_de(channel, str(step)) if st == "failed" else None,
+                                 FB.update_job(ljob, status=st, step=step, **x))[-1]
     lst("writing", "Đọc dữ liệu mở — dựng bộ 1 long + %d short" % n_shorts)
     try:
         # 26/8 — `so_chuong` gấp đôi `so_short`: long ghép đủ 6 chương (≈3'20" khổ 16:9), còn mỗi
@@ -956,7 +1017,8 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
     nguyên giọng + ảnh của phần tương ứng). Trả True nếu đã ra được long."""
     channel = ch.get("name")
     ljob = FB.new_job(OWNER, channel, "long", pver=_pv("doc"))
-    lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
+    lst = lambda st, step, **x: (_bo_chu_de(channel, str(step)) if st == "failed" else None,
+                                 FB.update_job(ljob, status=st, step=step, **x))[-1]
     # RESUME: checkpoint từng-phần của phiên trước chết giữa chừng -> khỏi trả Gemini lần 2
     _rck = FB.find_resumable(OWNER, channel, "long")
     _resume = _rck["story"] if (_rck and isinstance(_rck.get("story"), dict) and _rck["story"].get("parts")) else None
@@ -985,7 +1047,7 @@ def _doc_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stoppe
     except Exception:
         pass
     if subs:
-        FB.save_topics(OWNER, channel, subs)
+        _hen_chu_de(channel, subs)
     if not ok:
         lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
         return False
@@ -1049,7 +1111,8 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R, ra_id=None):
     ljob = FB.new_job(OWNER, channel, "long", pver=_pv("", cinematic=True))
     if ra_id is not None:
         ra_id.append(ljob)
-    lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
+    lst = lambda st, step, **x: (_bo_chu_de(channel, str(step)) if st == "failed" else None,
+                                 FB.update_job(ljob, status=st, step=step, **x))[-1]
     try:
         lout = os.path.join("out", DS.slug(channel) + "_motiflong.mp4")
         lo, plan, subs, ok, info, _parts = DS.make_doc_long(
@@ -1066,7 +1129,7 @@ def _motif_long(ch, keys, tier, niche, n_parts, cool, okcb, R, ra_id=None):
             lst("failed", f"LONG motif lỗi: {str(e)[:120]}"); R["fails"].append(f"{channel} LONG: {str(e)[:100]}")
         return []
     if subs:
-        FB.save_topics(OWNER, channel, subs)
+        _hen_chu_de(channel, subs)
     if not ok:
         lst("failed", f"QC long trượt: {info}"); R["fails"].append(f"{channel} LONG: QC trượt {info}")
         return []
@@ -2794,7 +2857,8 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
     nguyên audio + ảnh — 0 gọi thêm AI). Đúng luật 1:3, chi phí = đúng 3 skit."""
     channel = ch.get("name")
     ljob = FB.new_job(OWNER, channel, "long", pver=_pv("toon"))
-    lst = lambda st, step, **x: FB.update_job(ljob, status=st, step=step, **x)
+    lst = lambda st, step, **x: (_bo_chu_de(channel, str(step)) if st == "failed" else None,
+                                 FB.update_job(ljob, status=st, step=step, **x))[-1]
     _rck = FB.find_resumable(OWNER, channel, "long")
     _resume = _rck["story"] if (_rck and isinstance(_rck.get("story"), dict) and _rck["story"].get("parts")) else None
     _kw = dict(toon_style=ch.get("toon_style", ""),
@@ -2822,7 +2886,7 @@ def _toon_long_then_shorts(ch, keys, tier, niche, n_shorts, cool, okcb, R, stopp
     except Exception:
         pass
     if subs:
-        FB.save_topics(OWNER, channel, subs)
+        _hen_chu_de(channel, subs)
     if not ok:
         lst("failed", f"QC long toon trượt: {info}"); R["fails"].append(f"{channel} LONG toon: QC trượt")
         return False

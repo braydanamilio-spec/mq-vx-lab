@@ -1200,6 +1200,31 @@ def t_dien_tap_can_quota():
         raise AssertionError("cạn quota là hệ đứng ở %d chỗ: %s" % (len(chet), " · ".join(chet[:4])))
 
 
+def t_so_de_tai_chi_ghi_khi_ra_lo():
+    """`FB.save_topics` chỉ được gọi từ MỘT chỗ: hàm chốt sổ, chạy sau khi đẩy Drive xong.
+
+    27/8 — anh nêu yêu cầu: "nó phải biết số video/kịch bản THỰC TẾ đã làm, không tính clip
+    không đạt hay đã xoá". Đo thì hiện tại ngược lại: `save_topics` được gọi ở 6 chỗ, và ít nhất
+    3 chỗ nằm TRƯỚC lệnh kiểm QC (dòng 988 ghi sổ, dòng 989 mới `if not ok: return False`).
+    Video trượt QC vẫn bị ghi là "đã làm" ⇒ sổ đầy dần những đề tài CHƯA TỪNG THÀNH VIDEO, và
+    kênh tự từ chối làm lại chúng — càng chạy càng cạn đề tài trong khi kho vẫn còn nguyên.
+
+    Bất biến cần giữ: sổ BỀN chỉ được ghi tại một điểm duy nhất, và điểm đó phải là sau bằng
+    chứng "đã có tệp thật trong kho" (đẩy Drive trả về id). Thêm một lệnh ghi sổ ở chỗ khác là
+    mở lại đúng lỗ hổng này, nên chặn ở đây thay vì trông vào trí nhớ."""
+    src = _doc("run_render.py")
+    goi = [d for d in src.split("\n") if "FB.save_topics(" in d and not d.strip().startswith("#")]
+    assert len(goi) == 1, ("save_topics phải gọi ĐÚNG 1 chỗ (trong _chot_chu_de), đang có %d:\n   %s"
+                           % (len(goi), "\n   ".join(x.strip()[:90] for x in goi[:5])))
+    i = src.index("def _chot_chu_de(")
+    j = src.index("\ndef ", i + 5)
+    assert "FB.save_topics(" in src[i:j], "lệnh ghi sổ bền không nằm trong _chot_chu_de"
+    # và _chot_chu_de phải được gọi từ enqueue_drive (bằng chứng video ra lò), không phải chỗ khác
+    k = src.index("def enqueue_drive(")
+    l = src.index("\ndef ", k + 5)
+    assert "_chot_chu_de(" in src[k:l], "chốt sổ không nằm trong enqueue_drive — sẽ ghi sổ quá sớm"
+
+
 def t_khong_phu_de_chong():
     """Không component nào được vừa tự vẽ phụ đề, vừa trải props sang con CŨNG vẽ phụ đề.
 
@@ -2130,6 +2155,7 @@ def main():
     check("cạn quota Firestore: đường chạy chính KHÔNG được đứng", t_dien_tap_can_quota)
     check("cạn quota Firestore: CẢ PHIÊN vẫn phải xếp đủ 18 lane", t_dien_tap_ca_phien)
     check("không được vẽ HAI lớp phụ đề chồng nhau", t_khong_phu_de_chong)
+    check("sổ đề tài chỉ ghi khi video RA LÒ THẬT", t_so_de_tai_chi_ghi_khi_ra_lo)
     check("50 kênh không được giống nhau (≥70 điểm)", t_50_kenh_khong_duoc_giong_nhau)
     check("băm Python khớp băm TypeScript", t_bam_python_khop_typescript)
     check("prop font khai rồi phải thao ra", t_phong_khai_roi_phai_thao_ra)
