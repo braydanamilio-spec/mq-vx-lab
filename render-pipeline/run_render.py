@@ -2036,6 +2036,7 @@ def plan_mode():
     try:
         import hot_db as _H
         _H.don_job_ma(OWNER)      # job ma nói dối "đang chạy" -> dọn đầu mỗi phiên, khỏi phải nhớ
+
     except Exception:
         pass
     _moc("quota_pulse")

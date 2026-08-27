@@ -318,6 +318,17 @@ def don_job_kenh(owner: str, kenh: list) -> dict:
     return goi("don_job_kenh", {"owner": owner, "kenh": list(kenh)}) or {}
 
 
+# 27/8 — KHÔNG có hàm dọn `hang_cho`, và đó là KẾT LUẬN chứ không phải thiếu sót.
+# Soi 11 bảng D1 thì tưởng `hang_cho` phình vô hạn (mỗi phiên ~32 dòng, không ai xoá). Kiểm kỹ
+# thì KHÔNG chỗ nào trong pipeline gọi `cho_dat`/`cho_lay` — hàng chờ thật nằm ở Firestore
+# (`render_config/__hangcho__`), còn bảng D1 này là mã chết, chưa bao giờ có dòng nào.
+# Mười bảng còn lại đều tự chặn bằng `ON CONFLICT DO UPDATE`, nên số dòng bằng số THỰC THỂ
+# (~147 key, ~88 kho, 1 dòng/ngày cho sổ quota) chứ không theo thời gian.
+# => Chỉ `render_job` cần dọn, và nó ĐÃ được dọn (`don_job_cu`, 14 ngày, 1 lần/ngày).
+# Viết một hàm dọn cho bảng không ai dùng là thêm mã chết, và tệ hơn: lệnh `phien<>?` sẽ xoá
+# nhầm hàng chờ của chính phiên đang chạy nếu sau này có ai nối `cho_dat` lại với mã phiên khác.
+
+
 def don_job_cu(owner: str, ngay: int = 14) -> dict:
     """Dọn bản ghi job cũ hơn `ngay` ngày để D1 KHÔNG PHÌNH (25/8/2026).
 
