@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoCon
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { SoChay, SO_DEU, DongNguon } from "./So";
 import { bienCua, hoaTietNen } from "./Bien";
 import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
@@ -11,7 +12,7 @@ import React from "react";
 type Word = { t: number; d: number; w: string };
 export type ScaleItem = { name: string; emoji?: string; value: number; disp?: string; dur?: number };
 export type ScaledProps = {
-  title?: string; subtitle?: string; handle?: string; color?: string; accent?: string;
+  title?: string; subtitle?: string; handle?: string; source?: string; color?: string; accent?: string;
   items: ScaleItem[]; introSec?: number; itemSec?: number; outroSec?: number;
   hookStat?: string; hookLabel?: string; hookLine?: string;
   bg?: string; bg2?: string;
@@ -30,7 +31,7 @@ export const calcScaled = ({ props }: any) => {
 };
 
 export const ScaledShort: React.FC<ScaledProps> = (props) => {
-  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "SIZE COMPARISON", subtitle = "", handle = "@scaledusa", color = "#2FA84F", accent = "#2FA84F",
+  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "SIZE COMPARISON", subtitle = "", source = "", handle = "@scaledusa", color = "#2FA84F", accent = "#2FA84F",
     items = [], introSec = 1.8, itemSec = 2.0, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
@@ -166,6 +167,7 @@ export const ScaledShort: React.FC<ScaledProps> = (props) => {
       <Karaoke subs={subs} accent={accent} />
       <Bookend hookStat={hookStat} hookLabel={hookLabel} hookLine={hookLine} title={title} handle={handle} accent={accent} color={color}
                introSec={introSec} outroSec={outroSec} />
+          <DongNguon nguon={source} />
     </AbsoluteFill>
   );
 };

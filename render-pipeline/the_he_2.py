@@ -1951,6 +1951,13 @@ def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = "
     # một khuôn — đúng cái bẫy "khai ra rồi không ai gửi" đã vấp với `voice_tone`, `brand.font`,
     # `palette.bg` và `tham_so.xoay`. Lần này chốt luôn: t_bien_bo_cuc_khong_trung.
     props["bien"] = bien_cua(kenh)
+    # 27/8 — DÒNG NGUỒN cho MỌI dạng, không chỉ dạng đua.
+    # Soi 6 dạng: 4 dạng không in một chữ nào về nguồn dữ liệu. Mất hai thứ cùng lúc — lòng tin
+    # của người xem ("số này ở đâu ra?"), và bằng chứng trước chính sách "nội dung sản xuất hàng
+    # loạt" của YouTube. Trong khi dữ liệu của mình VỐN là dữ liệu công khai tra được, tức là một
+    # lợi thế đang bị bỏ không. Chỉ cần truyền xuống; `DongNguon` lo phần hiển thị kín đáo.
+    if st.get("nguon") and not props.get("source"):
+        props["source"] = ten_nguon(st.get("nguon", ""))
     # NỀN RIÊNG TỪNG KÊNH (26/8). Nền chiếm gần hết khung hình; để nó viết cứng trong composition
     # nghĩa là 18 kênh dạng `ranked` dùng CHUNG một nền — khán giả nhìn là thấy cùng một lò, dù
     # accent đã riêng. `palette.bg/primary/secondary` có sẵn 38/50/50 giá trị khác nhau mà chưa

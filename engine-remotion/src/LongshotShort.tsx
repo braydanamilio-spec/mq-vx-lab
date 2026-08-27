@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, useVideoCon
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { SoChay, SO_DEU, DongNguon } from "./So";
 import { bienCua, hoaTietNen } from "./Bien";
 import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
@@ -12,7 +13,7 @@ import React from "react";
 type Word = { t: number; d: number; w: string };
 export type LongshotItem = { label: string; emoji?: string; oddsDisp: string; logValue: number; vo?: string; dur?: number };
 export type LongshotProps = {
-  title?: string; handle?: string; color?: string; accent?: string;
+  title?: string; handle?: string; source?: string; color?: string; accent?: string;
   items: LongshotItem[]; introSec?: number; itemSec?: number; outroSec?: number;
   hookStat?: string; hookLabel?: string; hookLine?: string;
   bg?: string; bg2?: string;
@@ -79,7 +80,7 @@ const yForLog = (log: number, trackH: number, pad: number = BOTTOM_PAD_GOC, gap:
   trackH - pad - log * gap;
 
 export const LongshotShort: React.FC<LongshotProps> = (props) => {
-  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "WHAT ARE THE REAL ODDS?", handle = "@longshotusa", color = "#4F46E5", accent = "#4F46E5",
+  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "WHAT ARE THE REAL ODDS?", source = "", handle = "@longshotusa", color = "#4F46E5", accent = "#4F46E5",
     items = [], introSec = 1.8, itemSec = 2.7, outroSec = 2.4, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
@@ -291,6 +292,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
       <Karaoke subs={subs} accent={accent} />
       <Bookend hookStat={hookStat} hookLabel={hookLabel} hookLine={hookLine} title={title} handle={handle} accent={accent} color={color}
                introSec={introSec} outroSec={outroSec} />
+          <DongNguon nguon={source} />
     </AbsoluteFill>
   );
 };

@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVid
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { SoChay, SO_DEU, DongNguon } from "./So";
 import { bienCua, hoaTietNen } from "./Bien";
 import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
@@ -19,7 +20,7 @@ type Word = { t: number; d: number; w: string };
 export type TNPair = { label: string; thenYear: string; thenVal: string; nowYear: string; nowVal: string;
   change?: string; thenImg?: string; nowImg?: string; dur?: number };
 export type ThenNowProps = {
-  title?: string; handle?: string; color?: string; accent?: string;
+  title?: string; handle?: string; source?: string; color?: string; accent?: string;
   pairs: TNPair[]; introSec?: number; pairSec?: number; outroSec?: number;
   hookStat?: string; hookLabel?: string; hookLine?: string;
   bg?: string; bg2?: string;
@@ -96,7 +97,7 @@ const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number; font?: stri
 };
 
 export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
-  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "THEN vs NOW", handle = "@thennowusa", color = "#EC4899", accent = "#EC4899",
+  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "THEN vs NOW", source = "", handle = "@thennowusa", color = "#EC4899", accent = "#EC4899",
     pairs = [], introSec = 1.6, pairSec = 4.5, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
   const introF = Math.round(introSec * fps);
@@ -151,6 +152,7 @@ export const ThenNowShort: React.FC<ThenNowProps> = (props) => {
       <Karaoke subs={subs} accent={accent} />
       <Bookend hookStat={hookStat} hookLabel={hookLabel} hookLine={hookLine} title={title} handle={handle} accent={accent} color={color}
                introSec={introSec} outroSec={outroSec} />
+          <DongNguon nguon={source} />
     </AbsoluteFill>
   );
 };

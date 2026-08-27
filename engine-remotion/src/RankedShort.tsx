@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, Audio, Img, staticFile, useCurrentFrame, useVid
 import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
+import { SoChay, SO_DEU, DongNguon } from "./So";
 import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import { dungKhung } from "./Khung";
@@ -19,7 +20,7 @@ const SafeImg: React.FC<any> = ({ src, ...rest }) => {
 type Word = { t: number; d: number; w: string };
 export type RankItem = { name: string; tier: string; img?: string; stat?: string; dur?: number };
 export type RankedProps = {
-  title?: string; subtitle?: string; handle?: string; color?: string; accent?: string;
+  title?: string; subtitle?: string; handle?: string; source?: string; color?: string; accent?: string;
   tiers?: string[]; items: RankItem[]; introSec?: number; itemSec?: number; outroSec?: number;
   hookStat?: string; hookLabel?: string; hookLine?: string;
   bg?: string; bg2?: string;
@@ -72,7 +73,7 @@ export const calcRanked = ({ props }: any) => {
   return { durationInFrames: Math.round((isec + total + tail) * FPS), fps: FPS };
 };
 
-const Card: React.FC<{ it: RankItem; s: number; accent: string; the: any }> = ({ it, s, accent, the }) => (
+const Card: React.FC<{ it: RankItem; s: number; accent: string; the: any; tuF?: number }> = ({ it, s, accent, the, tuF = 0 }) => (
   <div style={{ transform: `scale(${0.5 + s * 0.5}) perspective(600px) rotateY(${(1 - s) * 80}deg)`, opacity: s,
     ...the, padding: it.img ? 8 : "14px 20px",
     display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: it.img ? 150 : 0, boxShadow: "0 8px 22px #0007" }}>
@@ -91,15 +92,16 @@ const Card: React.FC<{ it: RankItem; s: number; accent: string; the: any }> = ({
         các mục với nhau lại được in bé nhất thẻ. Người lướt short đọc con số trước, tên sau —
         đảo đúng thứ tự đó thì bảng tự nó có nhịp, không cần thêm hiệu ứng nào. */}
     {it.stat ? (
-      <div style={{ color: accent, fontWeight: 900, fontSize: it.img ? 34 : 52, lineHeight: 1,
-                    letterSpacing: -1, marginTop: 2,
-                    textShadow: `0 2px 14px ${accent}55` }}>{it.stat}</div>
+      <SoChay s={it.stat} tuFrame={tuF} giay={0.95}
+              style={{ color: accent, fontWeight: 900, fontSize: it.img ? 34 : 52, lineHeight: 1,
+                       letterSpacing: -1, marginTop: 2, display: "inline-block",
+                       textShadow: `0 2px 14px ${accent}55` }} />
     ) : null}
   </div>
 );
 
 export const RankedShort: React.FC<RankedProps> = (props) => {
-  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "TIER LIST", subtitle = "", handle = "@rankedusa", color = "#7C5CFF", accent = "#7C5CFF",
+  const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "TIER LIST", subtitle = "", source = "", handle = "@rankedusa", color = "#7C5CFF", accent = "#7C5CFF",
     tiers = ["S", "A", "B", "C", "D"], items = [], introSec = 1.8, itemSec = 1.7, outroSec = 1.6, audio, music, sfx = true , subs = [] } = props;
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
   const K = dungKhung();          // bố cục theo KHỔ — dọc giữ y số cũ, ngang là bộ số riêng
@@ -197,7 +199,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
                 {rowItems.map(({ it, gi }) => {
                   const s = spring({ frame: f - starts[gi], fps, config: { damping: 12, stiffness: 170 } });
                   if (f < starts[gi]) return null;
-                  return <Card key={gi} it={it} s={s} accent={accent} the={kieuThe(B, accent)} />;
+                  return <Card key={gi} it={it} s={s} accent={accent} the={kieuThe(B, accent)} tuF={starts[gi]} />;
                 })}
               </div>
             </div>
@@ -234,6 +236,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
       <Karaoke subs={subs} accent={accent} />
       <Bookend hookStat={hookStat} hookLabel={hookLabel} hookLine={hookLine} title={title} handle={handle} accent={accent} color={color}
                introSec={introSec} outroSec={outroSec} />
+          <DongNguon nguon={source} />
     </AbsoluteFill>
   );
 };
