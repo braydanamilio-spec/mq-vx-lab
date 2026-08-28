@@ -2054,6 +2054,52 @@ def don_videos_theo_kenh(owner: str, kenh: list, that: bool = False) -> int:
     return n
 
 
+def don_videos_khong_con_job(owner: str, that: bool = False) -> tuple:
+    """Xoá bản ghi `videos` KHÔNG CÒN job tương ứng. Trả (số xoá, tổng videos, tổng drive_id sống).
+
+    28/8 — cách duy nhất đúng để tìm bản ghi ma, sau khi hai cách kia đều trượt:
+      • dọn theo TÊN KÊNH  -> trượt: kênh cũ đã bị xoá khỏi `render_channels`, không còn tên;
+      • dọn theo MỒ CÔI     -> trượt: 0 kết quả, vì mọi bản ghi đều thuộc 50 kênh đang sống;
+      • dọn theo KÊNH ĐÃ DỌN -> NGUY HIỂM: 429 job khớp, nhưng phần lớn là hàng MỚI render sau
+        khi dọn. Xoá là mất video tốt.
+    Thứ phân biệt thật không phải kênh mà là FILE. Lệnh dọn xoá `render_jobs` CÙNG LÚC với việc
+    đưa file vào thùng rác, nên: bản ghi `videos` mà không còn job nào mang `drive_id` đó nghĩa là
+    file của nó đã bị dọn. Đó là suy ra từ TRẠNG THÁI THẬT, không phải đoán theo tên hay theo ngày.
+
+    Đọc `render_jobs` một lượt để lấy tập `drive_id` còn sống, rồi đối chiếu — hai lượt quét, không
+    phải 1218 lượt hỏi Drive."""
+    song = set()
+    try:
+        for d in _stream_at(_db_jobs().collection("render_jobs").where("owner", "==", owner), 120):
+            v = (d.to_dict() or {}).get("drive_id")
+            if v:
+                song.add(str(v))
+    except Exception as e:
+        print(f"   ⚠️ không đọc được render_jobs ({str(e)[:70]}) — TỪ CHỐI dọn")
+        return 0, 0, 0
+    if not song:
+        print("   🛑 không có drive_id nào trong render_jobs — TỪ CHỐI dọn "
+              "(đọc hụt thì mọi bản ghi đều trông như ma)")
+        return 0, 0, 0
+    lo, tong = [], 0
+    try:
+        db = _db_pub()
+        for d in _stream_at(db.collection("videos").where("owner", "==", owner), 120):
+            tong += 1
+            if str(d.id) not in song and str((d.to_dict() or {}).get("drive_id") or d.id) not in song:
+                lo.append(d.reference)
+        if that and lo:
+            for i in range(0, len(lo), 400):
+                b = db.batch()
+                for r in lo[i:i + 400]:
+                    b.delete(r)
+                b.commit()
+    except Exception as e:
+        print(f"   ⚠️ dọn videos-không-job lỗi: {str(e)[:90]}")
+        return 0, tong, len(song)
+    return len(lo), tong, len(song)
+
+
 def don_videos_mo_coi(owner: str, kenh_song: list, that: bool = False) -> tuple:
     """Xoá bản ghi `videos` của những kênh KHÔNG CÒN TỒN TẠI. Trả (số xoá, bảng đếm theo kênh).
 

@@ -453,6 +453,11 @@ def main() -> int:
                 # dashboard vẫn hiện 1218, vì thư viện đọc `videos` chứ không đọc `render_jobs`.
                 # Bản ghi của kênh KHÔNG CÒN TỒN TẠI — không tra được bằng tên, phải hỏi ngược
                 # "kênh này còn sống không". Đây là chỗ ~1218 bản ghi ma nằm.
+                # Bản ghi `videos` không còn job mang `drive_id` đó = file đã vào thùng rác.
+                # Suy từ TRẠNG THÁI THẬT, không đoán theo tên kênh hay theo ngày.
+                _kj, _tv, _ts = FB.don_videos_khong_con_job(owner, that)
+                print(f"  👻 videos không còn job: {'đã xoá' if that else '(sẽ xoá)'} {_kj}/{_tv} "
+                      f"bản ghi · {_ts} drive_id còn sống trong render_jobs")
                 _mc, _bang = FB.don_videos_mo_coi(owner, list(_kenh_moi()), that)
                 if _mc:
                     print(f"  👻 videos mồ côi (kênh không còn tồn tại): "
