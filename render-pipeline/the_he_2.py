@@ -3211,6 +3211,21 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
            "accent": pal.get("primary", "#7C5CFF")}
     pf = os.path.join(DS.PUB, f"_th2long_{slk}.json")
     json.dump(goi, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
+    # ── KIỂM TRÙNG TRƯỚC KHI RENDER (28/8) ────────────────────────────────────────────────
+    #
+    # Anh chỉ ra: "sao không check đạt chuẩn rồi mới làm, chứ làm xong rồi dọn thì tốn công".
+    # Đúng. Bản vá đầu của tôi kiểm SAU `_gop_story` — mà chỗ đó nằm sau khi long VÀ tất cả short
+    # đã render xong. Bắt được trùng ở đó thì vẫn đốt trọn công rồi mới vứt: mỗi bộ là một lượt
+    # render long 5-7 phút cộng 3 short, cộng giọng đọc, cộng ảnh.
+    #
+    # Tiêu đề cuối cùng do `_gop_story` quyết, mà `_gop_story` chỉ cần `kho_st` — thứ đã có SẴN ở
+    # đây, trước khi render một khung hình nào. Nên kiểm được ngay bây giờ.
+    # Nguyên tắc: kiểm ở chỗ SỚM NHẤT mà câu trả lời đã xác định, không phải ở chỗ tiện viết.
+    _tl_truoc = str((_gop_story(kho_st, truc, tran=6) or {}).get("title") or "")
+    if _tl_truoc and _tieu_de_da_lam(_tl_truoc, avoid):
+        print(f"   ♻️ {ten}: bộ này sẽ ra tiêu đề ĐÃ LÀM RỒI ({_tl_truoc[:54]}) — "
+              f"BỎ TRƯỚC KHI RENDER, không đốt công")
+        return None
     ra_long = os.path.abspath(ra_long or os.path.join(GOC, "out", f"th2long_{slk}.mp4"))
     os.makedirs(os.path.dirname(ra_long), exist_ok=True)
     DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "Gen2Long", ra_long,
@@ -3258,6 +3273,9 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
     #
     # Bài học: chống trùng phải kiểm ĐÚNG CHUỖI SẼ ĐI RA, ở CHỖ CUỐI CÙNG nó được quyết định.
     # Kiểm sớm rồi để khâu sau đổi đi thì lớp bảo vệ chỉ còn là hình thức.
+    # Lưới THỨ HAI. Lưới thứ nhất nằm trước khi render (xem `_tl_truoc`) và bắt gần hết. Giữ lưới
+    # này cho trường hợp `_gop_story` ra kết quả khác sau khi vài chương bị loại giữa chừng —
+    # hiếm, nhưng khi xảy ra thì thà vứt một bộ còn hơn đăng trùng.
     _tl = str((st_long or {}).get("title") or "")
     if _tl and _tieu_de_da_lam(_tl, avoid):
         # Đã làm rồi. Phân biệt bằng thứ CÓ THẬT trong dữ liệu — kẻ dẫn đầu — chứ không đánh số.

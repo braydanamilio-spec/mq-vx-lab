@@ -5719,7 +5719,14 @@ def t_chong_trung_kiem_dung_chuoi_di_ra():
     import os as _o
     R = _o.path.dirname(_o.path.abspath(__file__))
     src = io.open(_o.path.join(R, "the_he_2.py"), encoding="utf-8").read()
-    i = src.index("st_long = _gop_story(")
+    # Lưới thứ nhất phải nằm TRƯỚC lệnh render — bắt trùng sau khi render xong là vẫn đốt trọn
+    # công rồi mới vứt (một long 5-7 phút + 3 short + giọng đọc + ảnh).
+    i0 = src.index("def chay_bo")
+    ir = src.index('"npx", "remotion", "render"', i0)
+    assert "_tieu_de_da_lam(" in src[i0:ir], (
+        "kiểm trùng nằm SAU lệnh render -> vẫn đốt trọn công rồi mới vứt. Phải kiểm ở chỗ SỚM "
+        "NHẤT mà câu trả lời đã xác định (`_gop_story` chỉ cần `kho_st`, có sẵn trước khi render)")
+    i = src.index("st_long = _gop_story(", ir)
     j = src.index("return ra_long, shorts, st_long", i)
     sau = src[i:j]
     assert "_tieu_de_da_lam(" in sau, (
