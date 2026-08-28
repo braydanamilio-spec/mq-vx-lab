@@ -448,25 +448,30 @@ def main() -> int:
         # nhìn như đã dọn xong mà chưa xong, tệ hơn là không dọn.
         try:
             import hot_db as H
-            if that:
-                # 28/8 — DỌN NỐT `videos`. Thiếu bước này là dọn nửa vời: D1 báo "còn 81" mà
-                # dashboard vẫn hiện 1218, vì thư viện đọc `videos` chứ không đọc `render_jobs`.
-                # Bản ghi của kênh KHÔNG CÒN TỒN TẠI — không tra được bằng tên, phải hỏi ngược
-                # "kênh này còn sống không". Đây là chỗ ~1218 bản ghi ma nằm.
-                # Bản ghi `videos` không còn job mang `drive_id` đó = file đã vào thùng rác.
-                # Suy từ TRẠNG THÁI THẬT, không đoán theo tên kênh hay theo ngày.
-                _kj, _tv, _ts = FB.don_videos_khong_con_job(owner, that)
-                print(f"  👻 videos không còn job: {'đã xoá' if that else '(sẽ xoá)'} {_kj}/{_tv} "
-                      f"bản ghi · {_ts} drive_id còn sống trong render_jobs")
-                _mc, _bang = FB.don_videos_mo_coi(owner, list(_kenh_moi()), that)
-                if _mc:
-                    print(f"  👻 videos mồ côi (kênh không còn tồn tại): "
-                          f"{'đã xoá' if that else '(sẽ xoá)'} {_mc} bản ghi")
-                    for k, n in sorted(_bang.items(), key=lambda x: -x[1])[:8]:
-                        print(f"        {k}: {n}")
+            # 28/8 — DỌN NỐT `videos`. Thiếu bước này là dọn nửa vời: D1 báo "còn 81" mà dashboard
+            # vẫn hiện 1218, vì thư viện đọc `videos` chứ không đọc `render_jobs`.
+            #
+            # ĐẶT NGOÀI `if that` — ĐÂY LÀ BƯỚC ĐẾM, và bước đếm phải chạy ở CHẾ ĐỘ ĐẾM.
+            # Bản đầu tôi để trong `if that`: chạy khô ra 0 dòng, nên không có cách nào biết sẽ xoá
+            # bao nhiêu TRƯỚC KHI xoá. Một lệnh xoá mà không xem trước được thì chỉ còn cách nhắm
+            # mắt bấm — đúng thứ luật "chạy khô trước" sinh ra để tránh.
+            #
+            # Bản ghi `videos` không còn job mang `drive_id` đó = file đã vào thùng rác. Suy từ
+            # TRẠNG THÁI THẬT, không đoán theo tên kênh hay theo ngày.
+            _kj, _tv, _ts = FB.don_videos_khong_con_job(owner, that)
+            print(f"  👻 videos không còn job: {'đã xoá' if that else '(sẽ xoá)'} {_kj}/{_tv} "
+                  f"bản ghi · {_ts} drive_id còn sống trong render_jobs")
+            _mc, _bang = FB.don_videos_mo_coi(owner, list(_kenh_moi()), that)
+            if _mc:
+                print(f"  👻 videos mồ côi (kênh không còn tồn tại): "
+                      f"{'đã xoá' if that else '(sẽ xoá)'} {_mc} bản ghi")
+                for k, n in sorted(_bang.items(), key=lambda x: -x[1])[:8]:
+                    print(f"        {k}: {n}")
+            if ten_cu:
                 _nv = FB.don_videos_theo_kenh(owner, sorted(ten_cu), that)
                 print(f"  🧹 videos: {'đã xoá' if that else '(sẽ xoá)'} {_nv} bản ghi thư viện "
-                      f"của {len(ten_cu)} kênh — đây là thứ dashboard đếm")
+                      f"của {len(ten_cu)} kênh")
+            if that:
                 r = H.don_job_kenh(owner, sorted(ten_cu))
                 print(f"  🧹 D1: đã xoá {r.get('xoa', 0)} job · còn lại {r.get('con_lai', '?')} "
                       f"bản ghi done-có-file")
