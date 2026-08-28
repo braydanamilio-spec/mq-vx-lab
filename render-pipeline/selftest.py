@@ -2203,6 +2203,7 @@ def main():
     check("thang phải nói đúng loại dữ liệu (không '1 in N' cho lượt đọc)", t_thang_phai_noi_dung_loai_du_lieu)
     check("workflow không dùng `secrets` trong `if`", t_workflow_khong_dung_secrets_trong_if)
     check("dọn mồ côi từ chối khi danh sách kênh rỗng", t_don_mo_coi_khong_duoc_xoa_sach_khi_doc_hut)
+    check("bảng xếp hạng phải nói đang xếp theo gì", t_bang_xep_hang_phai_noi_dang_xep_theo_gi)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5630,6 +5631,34 @@ def t_don_mo_coi_khong_duoc_xoa_sach_khi_doc_hut():
         assert n == 0, "xoá nhầm bản ghi của kênh ĐANG SỐNG (so tên phải bỏ dấu cách + hoa/thường)"
     finally:
         FB._db_pub, FB._stream_at = cu_db, cu_st
+
+
+def t_bang_xep_hang_phai_noi_dang_xep_theo_gi():
+    """BẢNG XẾP HẠNG PHẢI NÓI ĐANG XẾP THEO GÌ.
+
+    28/8 — soi khung thật kênh FILINGS SAY (dạng `ranked`, 18/50 kênh dùng): thẻ ghi "7x", "5x",
+    "4x" — đúng dữ liệu, nhưng người xem KHÔNG CÓ CÁCH NÀO biết 7x là gì. 7 lần nộp hồ sơ? 7 tỉ?
+    gấp 7? Bảng xếp hạng mà không nói xếp theo gì thì chỉ là mấy con số đặt cạnh nhau.
+    Cùng họ với lỗi thang "1 in 10,000" ở FAME CURVE: dữ liệu đúng, NHÃN không nói được nó là gì.
+
+    Chốt đòi MỌI bộ chuyển đổi mà kênh `ranked` đang dùng đều phải có phụ đề. Bộ thêm sau mà quên
+    khai thì đỏ ở đây, chứ không lặng lẽ ra video thiếu phụ đề — thứ chỉ phát hiện được bằng cách
+    ngồi xem từng video."""
+    import sys as _s, os as _o, json as _j
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import the_he_2 as T
+    R = _o.path.dirname(_o.path.abspath(__file__))
+    ks = _j.load(io.open(_o.path.join(R, "kenh_the_he_2.json"), encoding="utf-8"))
+    ks = ks if isinstance(ks, list) else list(ks.values())
+    thieu = sorted({str(k.get("ham")) for k in ks
+                    if k.get("dinh_dang") == "ranked" and str(k.get("ham")) not in T.PHU_DE_THEO_BO})
+    assert not thieu, (f"{len(thieu)} bộ chuyển đổi của kênh `ranked` chưa khai phụ đề "
+                       f"-> video ra không nói đang xếp theo gì: {thieu}")
+    # Và phụ đề phải chảy được tới story, không chết ở giữa đường.
+    src = io.open(_o.path.join(R, "the_he_2.py"), encoding="utf-8").read()
+    assert '"subtitle": _phu' in src, "story `ranked` không mang `subtitle` -> props không có gì để truyền"
+    ds = io.open(_o.path.join(R, "datastory_ci.py"), encoding="utf-8").read()
+    assert '"subtitle": story.get("subtitle"' in ds, "props không đọc `subtitle` từ story"
 
 
 if __name__ == "__main__":

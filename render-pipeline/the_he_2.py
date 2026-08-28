@@ -788,6 +788,31 @@ def _bd_wiki_bai(D, ky):
             muc, "Thirty days of quiet curiosity, counted by Wikimedia.")
 
 
+# 28/8 — PHỤ ĐỀ NÓI RÕ CON SỐ NGHĨA LÀ GÌ.
+# Soi khung thật kênh FILINGS SAY (dạng `ranked`, 18/50 kênh dùng): thẻ ghi "7x", "5x", "4x" —
+# đúng dữ liệu, nhưng người xem KHÔNG CÓ CÁCH NÀO biết 7x là gì. 7 lần nộp hồ sơ? 7 tỉ? gấp 7?
+# Bảng xếp hạng mà không nói đang xếp theo gì thì chỉ là mấy con số xếp cạnh nhau.
+# Cùng họ với lỗi thang "1 in 10,000" ở FAME CURVE: dữ liệu đúng, NHÃN không nói được nó là gì.
+# Ghi một chỗ theo BỘ CHUYỂN ĐỔI (mỗi bộ biết mình đếm gì) thay vì sửa 15 bộ — thêm bộ thứ 16
+# quên khai thì rơi về rỗng, mất phụ đề chứ không hiện phụ đề SAI.
+PHU_DE_THEO_BO = {
+    "tim_ho_so":      "by filings that mention it",
+    "thu_hoi_fda":    "by recalls filed",
+    "ban_an":         "by cases on the docket",
+    "trieu_hoi_xe":   "by vehicles recalled",
+    "hop_dong_lon":   "by contract dollars awarded",
+    "bai_duoc_doc":   "by Wikipedia reads",
+    "wiki_bai":       "by Wikipedia reads",
+    "thong_ke_nba":   "per game, no adjustments",
+    "game_steam":     "by players online",
+    "chi_so_the_gioi": "by the World Bank's own figure",
+    "tieu_hanh_tinh": "by miss distance from Earth",
+    "giong_cho":      "by how often people look it up",
+    "phim_truyen":    "by episodes that aired",
+    "chuoi_bls":      "by the Bureau of Labor Statistics index",
+    "thanh_phan_mon": "per serving, as labeled",
+}
+
 BO_CHUYEN = {
     "wiki_bai": _bd_wiki_bai,
     "hop_dong_lon": _bd_hop_dong, "thu_hoi_fda": _bd_thu_hoi, "ban_an": _bd_ban_an,
@@ -821,6 +846,7 @@ def dung_story_ranked(kenh: dict, ky: dict | None = None) -> dict | None:
     # người xem hiểu ngược hẳn ý video.
     tieu_de, muc, ket = kq[0], kq[1], kq[2]
     mo = kq[3] if len(kq) > 3 else f"{tieu_de}. Here they are."
+    _phu = PHU_DE_THEO_BO.get(str(kenh.get("ham") or ""), "")
     muc = muc[:6]
     # ── CỔNG "BẢNG XẾP HẠNG PHẢI THẬT SỰ XẾP HẠNG" (27/8) ────────────────────────────────────
     # Soi 19 bộ chuyển dữ liệu thì BỐN bộ cho ra bảng mà mọi dòng CÙNG MỘT GIÁ TRỊ:
@@ -847,6 +873,7 @@ def dung_story_ranked(kenh: dict, ky: dict | None = None) -> dict | None:
     items = [{**m, "tier": TIER[min(i, 5)]} for i, m in enumerate(muc)]
     return _cong_an_toan({
         "title": tieu_de,
+        "subtitle": _phu,          # xem `PHU_DE_THEO_BO`: nói rõ con số đang xếp theo gì
         "intro_vo": mo,
         "outro_vo": ket,
         "items": items,
