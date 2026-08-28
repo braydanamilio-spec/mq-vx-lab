@@ -449,6 +449,11 @@ def main() -> int:
         try:
             import hot_db as H
             if that:
+                # 28/8 — DỌN NỐT `videos`. Thiếu bước này là dọn nửa vời: D1 báo "còn 81" mà
+                # dashboard vẫn hiện 1218, vì thư viện đọc `videos` chứ không đọc `render_jobs`.
+                _nv = FB.don_videos_theo_kenh(owner, sorted(ten_cu), that)
+                print(f"  🧹 videos: {'đã xoá' if that else '(sẽ xoá)'} {_nv} bản ghi thư viện "
+                      f"của {len(ten_cu)} kênh — đây là thứ dashboard đếm")
                 r = H.don_job_kenh(owner, sorted(ten_cu))
                 print(f"  🧹 D1: đã xoá {r.get('xoa', 0)} job · còn lại {r.get('con_lai', '?')} "
                       f"bản ghi done-có-file")

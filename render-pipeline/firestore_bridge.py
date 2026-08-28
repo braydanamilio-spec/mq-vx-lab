@@ -2019,6 +2019,41 @@ def mark_job_requeued(job_id: str, req_id: str = ""):
         pass
 
 
+def don_videos_theo_kenh(owner: str, kenh: list, that: bool = False) -> int:
+    """Xoá bản ghi trong collection `videos` của các kênh nêu tên. Trả SỐ ĐÃ (hoặc SẼ) xoá.
+
+    28/8 — ĐÂY LÀ GỐC CỦA CON SỐ 1218 ANH THẤY TRÊN DASHBOARD.
+    Lệnh dọn `don_the_he_1.py` xoá `render_jobs`, `render_channels`, sổ D1, và đưa file Drive vào
+    thùng rác — nhưng KHÔNG đụng `videos`. Mà thư viện trên dashboard đọc CHÍNH `videos`.
+    Kết quả: dọn xong, D1 báo "còn lại 81 bản ghi", còn màn hình vẫn hiện 1218 video — toàn bản
+    ghi trỏ vào file đã nằm trong thùng rác.
+    Không phải màn hình nói dối: nó đọc đúng thứ nó được bảo đọc. Lỗi là lệnh dọn dọn thiếu một
+    kho, và đó là loại thiếu sót không bao giờ tự lộ ra — vì mỗi bên đều tự nhất quán.
+
+    `videos` nằm ở project PUBLISH (C) khi bật SHARD_PUBLISH, khác chỗ `render_jobs`. Dọn mà tra
+    nhầm project thì lại "thành công" mà không xoá gì — đúng bẫy đã dính ở khâu xoá job."""
+    if not kenh:
+        return 0
+    _kh = {str(x).upper() for x in kenh}
+    n = 0
+    try:
+        db = _db_pub()
+        # Dùng `_stream_at` — nó TỰ tính tiền theo số doc thật, nên không có lối đọc nào trốn sổ
+        # ngân sách (chốt `t_khong_tron_so` canh đúng điều này, và nó vừa bắt tôi ở bản đầu).
+        lo = [d.reference for d in _stream_at(db.collection("videos").where("owner", "==", owner), 60)
+              if str((d.to_dict() or {}).get("channel") or "").upper() in _kh]
+        n = len(lo)
+        if that and lo:
+            for i in range(0, len(lo), 400):
+                b = db.batch()
+                for r in lo[i:i + 400]:
+                    b.delete(r)
+                b.commit()
+    except Exception as e:
+        print(f"   ⚠️ dọn `videos` lỗi: {str(e)[:90]}")
+    return n
+
+
 def delete_jobs_by_drive(owner: str, drive_id: str):
     """Xóa bản ghi job cũ theo drive_id (sau khi render lại đã thay thế + bỏ file cũ)."""
     if not drive_id:
