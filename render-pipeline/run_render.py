@@ -2557,6 +2557,22 @@ def plan_mode():
             _diem = {k: (v or {}).get("diem", 0) for k, v in (_bang.get("kenh") or {}).items()}
             _bq = {k for k, v in (_bang.get("kenh") or {}).items() if (v or {}).get("bo_qua")}
             _ng = int(_bang.get("nguong") or 90)
+            # HẠN DÙNG 7 NGÀY. Bảng điểm là một BẢN CHỤP: nó đúng vào lúc chấm. Nguồn đổi dữ liệu,
+            # kho đề tài xoay hết vòng, mã dựng story được vá — chỉ vài ngày là thứ tự nó đề xuất
+            # không còn ứng với thực tế. Một bản chụp cũ mà cứ được tin thì nó lặng lẽ đẩy nhầm
+            # kênh xuống cuối hàng ngày này qua ngày khác, và không có dòng log nào để lần ra.
+            # Quá hạn thì bỏ qua hẳn và NÓI RÕ — thà xếp như cũ còn hơn xếp theo một bảng đã sai.
+            try:
+                import datetime as _dt2
+                _tuoi = (_dt2.datetime.now(_dt2.timezone.utc)
+                         - _dt2.datetime.strptime(str(_bang.get("luc")), "%Y-%m-%dT%H:%M:%SZ")
+                         .replace(tzinfo=_dt2.timezone.utc)).days
+            except Exception:
+                _tuoi = 999
+            if _tuoi > 7:
+                print(f"   ⏳ Bảng chất lượng kênh đã {_tuoi} ngày tuổi — BỎ QUA, xếp như cũ. "
+                      f"Chạy lại `python cham_kenh.py` để làm mới.")
+                _diem = {}
             if _diem:
                 # Kênh CHƯA ĐO ĐƯỢC (nguồn chập lúc chấm) xếp ngang kênh đạt, không bị đẩy xuống
                 # cuối: chúng chưa bị chứng minh là hỏng, mà nguồn chập là chuyện của lúc chấm.
