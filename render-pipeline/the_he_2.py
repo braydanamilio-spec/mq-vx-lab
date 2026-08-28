@@ -953,6 +953,36 @@ def _bd_bls(D, ky):
             "Bureau of Labor Statistics. Official numbers.")
 
 
+def _ten_mon(x: dict, dai: int = 24) -> str:
+    """Ghép hãng + tên sản phẩm thành một cái tên NGƯỜI ĐỌC ĐƯỢC.
+
+    29/8 — khung thật CALORIE SHOCK: cột đầu bảng đề **"Nutella, Nutella"**. Bới dữ liệu thô thì
+    Open Food Facts trả:
+        hieu = "Nutella, Nutella biscuits"
+        ten  = "Biscuits NUTELLA Biscuits Noisettes et Cacao x22 - 304g"
+    Trường `brands` là một DANH SÁCH cách nhau bằng dấu phẩy, và nó hay lặp chính nó. Ghép thẳng
+    rồi cắt 24 ký tự thì ra đúng "Nutella, Nutella" — nhìn như lỗi hiển thị.
+    Còn tên sản phẩm thì mang cả khối lượng và quy cách ("x22 - 304g"), nhiều khi bằng tiếng Pháp
+    hoặc tiếng Đức — đó là dữ liệu kho hàng, không phải tên để đọc trên màn hình.
+
+    Ba việc, không đoán gì thêm: lấy HÃNG ĐẦU TIÊN, cắt phần quy cách khỏi tên, và bỏ hãng đi nếu
+    tên đã nhắc tới nó rồi."""
+    import re as _re
+    hieu = " ".join(str(x.get("hieu") or "").split(",")[0].split())
+    ten = " ".join(str(x.get("ten") or "").split())
+    # Bỏ đuôi quy cách: "x22 - 304g" · "500 g" · "(2 x 125ml)" · "- 6 pack"
+    ten = _re.sub(r"[\s,–-]*\(?\s*(?:x\s*\d+|\d+\s*(?:x|×)\s*\d+)?\s*"
+                  r"\d*[.,]?\d*\s*(?:g|kg|ml|l|oz|lb|ct|pack|pk)\b\.?\)?\s*$",
+                  "", ten, flags=_re.I).strip(" ,-–")
+    ten = _re.sub(r"\s*[-–]\s*$", "", ten).strip()
+    if not ten:
+        ten, hieu = hieu, ""
+    # Hãng đã nằm trong tên (dù khác kiểu chữ) thì không ghép thêm.
+    if hieu and hieu.lower() not in ten.lower():
+        ten = f"{hieu} {ten}"
+    return _gon(ten.title(), dai)
+
+
 def _tu_khoa_mon(mon: str) -> list:
     """Mã phân loại Open Food Facts -> các từ khoá phải thấy trong tên sản phẩm.
 
@@ -1014,13 +1044,13 @@ def _bd_dinh_duong(D, ky):
     # là ra bảng 6 dòng y hệt nhau — nhìn như lỗi render. Ghép tên hãng để phân biệt, và bỏ trùng.
     thay, muc = set(), []
     for x in sorted(r, key=lambda z: -z["calo"]):
-        ten = " ".join(f"{x.get('hieu') or ''} {x['ten']}".split()).title()
+        ten = _ten_mon(x, 26)
         khoa = ten.lower()
-        if khoa in thay:
+        if not ten or khoa in thay:
             continue
         thay.add(khoa)
-        muc.append({"name": _gon(ten, 26), "stat": f"{x['calo']:.0f} cal",
-                    "vo": f"{_gon(ten, 34)}. {x['calo']:.0f} calories per hundred grams."})
+        muc.append({"name": ten, "stat": f"{x['calo']:.0f} cal",
+                    "vo": f"{ten}. {x['calo']:.0f} calories per hundred grams."})
         if len(muc) >= 6:
             break
     if len(muc) < 3:
@@ -1622,11 +1652,11 @@ def _sk_dinh_duong(D, ky):
     r = _mon_an(D, mon)
     thay, sach = set(), []
     for x in sorted(r, key=lambda z: -z["calo"]):
-        ten = " ".join(f"{x.get('hieu') or ''} {x['ten']}".split()).title()
-        if ten.lower() in thay:
+        ten = _ten_mon(x, 24)
+        if not ten or ten.lower() in thay:
             continue
         thay.add(ten.lower())
-        sach.append({"name": _gon(ten, 24), "emoji": "🍕", "value": round(x["calo"]),
+        sach.append({"name": ten, "emoji": "🍕", "value": round(x["calo"]),
                      "disp": f"{x['calo']:.0f} cal"})
     if len(sach) < 3:
         return None
