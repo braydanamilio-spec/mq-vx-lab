@@ -1,5 +1,5 @@
 {
- "luc": "2026-08-28T17:20:14Z",
+ "luc": "2026-08-28T17:50:17Z",
  "nguong": 90,
  "canh_bao_motip": [],
  "kenh": {
@@ -22,7 +22,7 @@
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [],
-   "tieu_de": "new world next week - feb10 — America 1950"
+   "tieu_de": "Midwest Holiday (Part I) — America 1950"
   },
   "BREEDFILE": {
    "diem": 100,
@@ -71,7 +71,7 @@
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [],
-   "tieu_de": "Parada Calderon v. Blanche — Wrongful death"
+   "tieu_de": "Cook v. Noel — Wrongful death"
   },
   "DEGREEWORTH": {
    "diem": 100,
@@ -143,6 +143,13 @@
    "loi": [],
    "tieu_de": "Disappearance of Marvin Clark"
   },
+  "MPGTRUTH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "race",
+   "loi": [],
+   "tieu_de": "Toyota: miles per gallon — bZ4X, 119 mpg"
+  },
   "NEAREARTH": {
    "diem": 100,
    "bo_qua": false,
@@ -156,6 +163,13 @@
    "dang": "cinematic",
    "loi": [],
    "tieu_de": "Killing of the Clancy children"
+  },
+  "ONEHIT": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "longshot",
+   "loi": [],
+   "tieu_de": "One Hit Wonder: 5y — How long they lasted"
   },
   "PAIDVSPLAYED": {
    "diem": 100,
@@ -246,7 +260,14 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "517 planes are over America right now — The whole country"
+   "tieu_de": "509 planes are over America right now — The whole country"
+  },
+  "SONGFILE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "One Hit Wonder"
   },
   "SPACEINVOICE": {
    "diem": 100,
@@ -268,6 +289,13 @@
    "dang": "ranked",
    "loi": [],
    "tieu_de": "Ninth Circuit: 4 cases — Where people sue over false advertising"
+  },
+  "THENANDNOW": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "thennow",
+   "loi": [],
+   "tieu_de": "The same subject, decades apart — U.S. NAVY PLANES, Schenectady City"
   },
   "UNSOLVEDLOG": {
    "diem": 100,
@@ -318,43 +346,7 @@
    "loi": [],
    "tieu_de": "Order on Motion - Aldin Associates Ltd. — First amendment"
   },
-  "THENANDNOW": {
-   "diem": 80,
-   "bo_qua": false,
-   "dang": "thennow",
-   "loi": [
-    "thennow: tiêu đề 'the same subject, decades apart — harlem is heaven, ' không nhắc gì tới chủ đề 'city street' -> người xem bấm vào vì tưởng một đằng, thấy một nẻo"
-   ],
-   "tieu_de": "The same subject, decades apart — Harlem Is Heaven, Sesame Street"
-  },
-  "MPGTRUTH": {
-   "diem": 0,
-   "bo_qua": true,
-   "dang": "race",
-   "loi": [
-    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
-   ],
-   "tieu_de": ""
-  },
-  "ONEHIT": {
-   "diem": 0,
-   "bo_qua": true,
-   "dang": "longshot",
-   "loi": [
-    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
-   ],
-   "tieu_de": ""
-  },
   "ONESTUDY": {
-   "diem": 0,
-   "bo_qua": true,
-   "dang": "cinematic",
-   "loi": [
-    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
-   ],
-   "tieu_de": ""
-  },
-  "SONGFILE": {
    "diem": 0,
    "bo_qua": true,
    "dang": "cinematic",
