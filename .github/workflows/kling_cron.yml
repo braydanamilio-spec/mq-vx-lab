@@ -1,0 +1,86 @@
+name: MM0 Kling A-Z (ý tưởng -> video -> kho -> đăng)
+
+# 28/8 — CHẠY TỰ ĐỘNG CHỈ KHI ĐÃ CÓ KEY KLING.
+# Chưa có key thì lệnh chỉ đẻ ra bảng chụp cho người dán tay — chạy tự động mỗi ngày sẽ chất
+# đống việc tay mà không ai làm, và vẫn tốn lượt gọi model để viết. Nên nhịp hẹn giờ được GÁC
+# bằng chính sự tồn tại của secret: ngày anh dán key vào là nó tự bắt đầu, không phải sửa gì.
+# Muốn chạy tay lúc chưa có key thì bấm "Run workflow" — vẫn ra bảng chụp bình thường.
+on:
+  schedule:
+    - cron: "20 */6 * * *"        # 4 lượt/ngày; trần chi tiêu nằm ở KLING_TRAN_NGAY
+  workflow_dispatch:
+    inputs:
+      so:
+        description: "số video lượt này"
+        default: "1"
+      y_tuong:
+        description: "ép một ý tưởng cụ thể (bỏ trống = bốc từ kho mồi)"
+        default: ""
+
+concurrency: { group: mm0-kling, cancel-in-progress: false }
+
+jobs:
+  kling:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    # Nhịp hẹn giờ đòi có key; bấm tay thì luôn cho chạy.
+    if: ${{ github.event_name == 'workflow_dispatch' || secrets.KLING_ACCESS_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lấy AutoPublisher (để đẩy kho đúng đường ray 50 kênh kia)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.GH_PAT }}
+          path: _autopublisher
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -q -r render-pipeline/requirements.txt
+      - name: ffmpeg (cần drawtext để có chữ trên video)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          ffmpeg -hide_banner -filters | grep -q " drawtext " \
+            && echo "✅ ffmpeg có drawtext — video sẽ có chữ" \
+            || echo "⚠️ ffmpeg KHÔNG có drawtext — video vẫn ra nhưng mất chữ"
+      - name: Tạo tệp khoá Firestore
+        env:
+          SA_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+          SA_JSON_B: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_B }}
+          SA_JSON_C: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_C }}
+        run: |
+          [ -n "$SA_JSON" ]   && printf '%s' "$SA_JSON"   > /tmp/sa.json   || true
+          [ -n "$SA_JSON_B" ] && printf '%s' "$SA_JSON_B" > /tmp/sa_b.json || true
+          [ -n "$SA_JSON_C" ] && printf '%s' "$SA_JSON_C" > /tmp/sa_c.json || true
+      - name: KLING A-Z
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          FIREBASE_PROJECT_ID_C: ${{ secrets.FIREBASE_PROJECT_ID_C }}
+          SHARD_META: ${{ vars.SHARD_META }}
+          SHARD_PUBLISH: ${{ vars.SHARD_PUBLISH }}
+          SHARD_KEYS: ${{ vars.SHARD_KEYS }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          # Lớp cứu KV khi Firestore cạn — bước này dùng storage.py để đẩy Drive, thiếu là lớp
+          # cứu không chạy được đúng lúc cần nhất. (Chốt selftest bắt được điều này.)
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+          KLING_ACCESS_KEY: ${{ secrets.KLING_ACCESS_KEY }}
+          KLING_SECRET_KEY: ${{ secrets.KLING_SECRET_KEY }}
+          KLING_TRAN_NGAY: ${{ vars.KLING_TRAN_NGAY }}
+          KLING_KENH: KLINGCOMEDY
+        run: |
+          python render-pipeline/kling_auto.py \
+            --so "${{ github.event.inputs.so || '1' }}" \
+            ${{ github.event.inputs.y_tuong && format('--y-tuong "{0}"', github.event.inputs.y_tuong) || '' }}
+      - name: Giữ bảng chụp để anh dán tay (khi chưa có key)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kling-bang-chup
+          path: render-pipeline/out/kling/*/BANG_CHUP.md
+          if-no-files-found: ignore
+          retention-days: 14

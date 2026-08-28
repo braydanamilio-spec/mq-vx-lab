@@ -2199,6 +2199,7 @@ def main():
     check("bộ chấm Kling chặn đúng điểm yếu của Kling", t_kling_chan_dung_diem_yeu)
     check("Kling thiếu cảnh phải chặn trước khi ghép", t_kling_thieu_canh_phai_chan_truoc_khi_ghep)
     check("kling_shots: chỗ ghi và chỗ đọc cùng project", t_kling_shots_ghi_doc_cung_mot_project)
+    check("Kling A-Z dừng đúng chỗ khi chưa có key + kênh đã khai", t_kling_az_dung_dung_cho_khi_chua_co_key)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5462,6 +5463,62 @@ def t_kling_shots_ghi_doc_cung_mot_project():
     assert ben_ghi == ben_doc_B, (
         f"lệch project: Python ghi vào {'B' if ben_ghi else 'A'} nhưng dashboard đọc "
         f"{'B' if ben_doc_B else 'A'} -> danh sách rỗng mà không báo lỗi gì")
+
+
+def t_kling_az_dung_dung_cho_khi_chua_co_key():
+    """ĐƯỜNG A-Z PHẢI DỪNG ĐÚNG CHỖ KHI CHƯA CÓ KEY, VÀ KÊNH PHẢI ĐƯỢC KHAI.
+
+    28/8 — hai bất biến, mỗi cái chặn một kiểu hỏng đã từng xảy ra thật:
+
+    1) CHƯA CÓ KEY -> làm tới bảng chụp rồi DỪNG có tiếng, không được ném lỗi.
+       Nếu nó ném thì workflow đỏ, và người đọc log sẽ tưởng hệ hỏng trong khi chỉ là chưa mua
+       key. Một trạng thái BÌNH THƯỜNG mà báo như lỗi thì lần sau không ai tin log nữa.
+
+    2) KÊNH PHẢI CÓ TRONG channels.yaml.
+       `enqueue.py` `raise SystemExit` khi kênh thiếu ở đó — và ngày 20/8 đúng lỗi này làm 27/40
+       kênh mất video suốt nhiều tuần: video dựng xong, QC đạt, rồi bị vứt ở bước cuối vì thiếu
+       một dòng cấu hình. Kênh Kling phải không lặp lại chuyện đó."""
+    import sys as _s, os as _o, io as _io, contextlib as _ct, tempfile as _tf, json as _j
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import kling_auto as A, kling_studio as KS, kling_api as KA
+
+    # (1) không key -> trả "cho_clip", KHÔNG ném, và có để lại bảng chụp cho người dùng
+    cu_sinh, cu_env = KS.sinh, {k: _o.environ.pop(k, None) for k in
+                                ("KLING_ACCESS_KEY", "KLING_SECRET_KEY")}
+    cu_kho = A.KHO
+    try:
+        KS.sinh = lambda yt, **k: {
+            "title": "T", "logline": "x", "hook_line": "H",
+            "scenes": [{"n": i, "beat": "hook", "sec": 4, "caption": "",
+                        "prompt": "Static eye-level shot of a garage at dawn"} for i in (1, 2, 3)]}
+        with _tf.TemporaryDirectory() as d:
+            A.KHO = d
+            with _ct.redirect_stdout(_io.StringIO()) as buf:
+                r = A.mot_video("thu", "", [])
+            assert r == "cho_clip", f"chưa có key mà trả {r!r} — phải là 'cho_clip'"
+            assert not KA.co_api(), "co_api() báo có key trong khi biến đã bị gỡ"
+            tm = _o.path.join(d, "t")
+            assert _o.path.exists(_o.path.join(tm, "BANG_CHUP.md")), \
+                "không để lại BANG_CHUP.md -> người dùng không có gì để dán vào Kling"
+            assert "KLING_ACCESS_KEY" in buf.getvalue(), \
+                "dừng mà không nói vì sao -> người đọc log tưởng hỏng"
+    finally:
+        KS.sinh, A.KHO = cu_sinh, cu_kho
+        for k, v in cu_env.items():
+            if v is not None:
+                _o.environ[k] = v
+
+    # (2) kênh phải được khai, nếu không enqueue.py sẽ vứt video đã dựng xong
+    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    cfg = _o.path.join(G, "MM0-AutoPublisher", "config", "channels.yaml")
+    if not _o.path.exists(cfg):
+        print("      ⏭️ bỏ qua phần channels.yaml: không có repo MM0-AutoPublisher ở đây")
+        return
+    txt = _io.open(cfg, encoding="utf-8").read()
+    ma = _o.environ.get("KLING_KENH") or "KLINGCOMEDY"
+    assert f"  {ma}:" in txt, (
+        f"kênh {ma} CHƯA khai trong channels.yaml -> enqueue.py sẽ SystemExit và video dựng xong "
+        f"bị vứt (đúng lỗi 20/8 làm 27/40 kênh mất video nhiều tuần)")
 
 
 if __name__ == "__main__":
