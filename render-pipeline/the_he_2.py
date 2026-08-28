@@ -62,6 +62,15 @@ def _so(v: float) -> str:
     for chia, don in ((1e9, "B"), (1e6, "M"), (1e3, "K")):
         if abs(v) >= chia:
             return f"{v / chia:,.1f}{don}"
+    # 28/8 — GIỮ MỘT CHỮ SỐ LẺ VỚI GIÁ TRỊ NHỎ.
+    # Kênh MARRIAGE MATH ra sáu cột đề đúng một con số: 6, 6, 6, 6, 6, 6 — vì tỉ suất sinh của
+    # sáu nước là 6.3 / 6.2 / 6.1 / 6.1 / 6.0 / 5.7 và `{:,.0f}` làm tròn hết về 6. Cột thì cao
+    # thấp khác nhau mà nhãn thì giống nhau, nên người xem đọc ra "bảng này lỗi".
+    # Làm tròn về hàng đơn vị chỉ vô hại khi con số đủ lớn để một đơn vị không đáng kể; dưới 100
+    # thì phần lẻ CHÍNH LÀ thứ phân biệt. Số nguyên vẫn in ra nguyên (6.0 -> "6"), nên không có
+    # chỗ nào đang đúng bị đổi.
+    if abs(v) < 100 and abs(v - round(v)) >= 0.05:
+        return f"{v:,.1f}"
     return f"{v:,.0f}"
 
 
@@ -1410,9 +1419,21 @@ def _sk_bls(D, ky):
 
 
 def _sk_the_gioi(D, ky):
-    r = D.chi_so_the_gioi(ky.get("ma", "NY.GDP.PCAP.CD"), int(ky.get("nam", 2023)), 6)
+    """So chỉ số quốc gia — LẤY TRẢI ĐỀU CẢ BẢNG, không lấy 6 nước đứng đầu.
+
+    28/8 — cùng một gốc với lỗi bảng calo: sáu nước đứng đầu một bảng thế giới bao giờ cũng sát
+    trần nhau. Đo thật: WILD NUMBERS ra 94.5 / 92.1 / 91.2 / 90.4 / 90.1 / 87.1 (chênh 8%), và
+    MARRIAGE MATH ra 6.3 / 6.2 / 6.1 / 6.1 / 6.0 / 5.7 (chênh 10%). Sáu cột cao gần bằng nhau
+    trong một video mang tên SCALED — người xem không rút ra được gì họ chưa biết.
+    Trải đều từ nước cao nhất xuống nước thấp nhất thì vẫn đúng bấy nhiêu dữ liệu, cùng một nguồn,
+    mà độ che phủ rừng đi từ 94% xuống dưới 1%. ĐÓ mới là thứ đáng làm thành một video so kích cỡ.
+    Nước #1 luôn giữ (nó là hook); năm mục còn lại chia đều vị trí trên bảng đã sắp."""
+    r = D.chi_so_the_gioi(ky.get("ma", "NY.GDP.PCAP.CD"), int(ky.get("nam", 2023)), 200)
     if len(r) < 3:
         return None
+    if len(r) > 6:
+        vt = sorted({0} | {round(i * (len(r) - 1) / 5) for i in range(1, 6)})
+        r = [r[i] for i in vt]
     muc = [{"name": _gon(x["nuoc"], 22), "emoji": "🌍", "value": round(x["gia_tri"], 1),
             "disp": _so(x["gia_tri"])} for x in r]
     return (f"{ky.get('nhan', 'World ranking')} {ky.get('nam', 2023)}", "", muc,
@@ -2743,6 +2764,18 @@ def _tieu_de_tu_du_lieu(st: dict, kenh: dict) -> str:
     # nguồn nên gần như luôn sạch, nhưng "gần như" không phải là một bảo đảm.
     if "_" in ten or any(ord(c) > 127 for c in ten):
         return ""
+    # 28/8 — CHỦ THỂ PHẢI LÀ MỘT CÁI TÊN, KHÔNG PHẢI MỘT CÂU.
+    # `_so_noi_bat` lấy `hook` khi story không có bảng mục (đúng với dạng cinematic), mà `hook` là
+    # một câu dẫn. Kết quả đo thật trên ba kênh hồ sơ toà:
+    #     "A 2026 case almost nobody read. — Ex Parte Randy Louis Dupree v. the State"
+    #     "A 2026 case almost nobody read. — United States v. William Boylston"
+    #     "A 2026 case almost nobody read. — Order on Motion - Aldin Associates Ltd."
+    # Ba kênh KHÁC NHAU mở đầu bằng ĐÚNG một câu. Hàm này sinh ra để diệt tiêu đề hàng loạt, mà
+    # đang tự dựng thêm một khuôn hàng loạt mới — và nó còn đẩy cái tên thật (thứ duy nhất phân
+    # biệt) ra sau, đúng chỗ YouTube cắt.
+    # Tên riêng thì ngắn, không có dấu chấm cuối, không mở đầu bằng mạo từ.
+    if ten.endswith(".") or len(ten.split()) > 5 or ten.split()[0].lower() in ("a", "an", "the"):
+        return ""
     # Tên đã nằm sẵn trong khung thì ghép vào chỉ tổ lặp chữ ("Spider-Man — Spider-Man: the spike").
     if ten.lower() in khung.lower():
         return ""
@@ -2914,6 +2947,57 @@ def _xep_theo_nhu_cau(kenh: dict, truc: str, kho: list) -> list:
         return kho
 
 
+def hoan_tieu_de(st: dict, kenh: dict, truc: str, t: dict, avoid) -> dict:
+    """Hoàn thiện tiêu đề của một story: gắn giá trị trục, rồi ưu tiên tiêu đề dựng từ dữ liệu.
+
+    28/8 — TÁCH RA THÀNH HÀM VÌ BỘ CHẤM ĐO NHẦM TẦNG.
+    `cham_kenh.py` gọi thẳng `DUNG_STORY[dang](kenh, t)` để so tiêu đề giữa hai giá trị trục, và
+    kết luận 23 kênh "tiêu đề không đổi khi xoay trục". Sai: đường chạy thật còn đi qua hai lớp
+    sửa tiêu đề NỮA, cả hai nằm trong `_dung_story_xoay`. Bộ chấm đo một đường mà máy đi một đường
+    khác — đúng họ lỗi đã gây ra mọi hỏng hóc tuần này (chống trùng so chuỗi A, video mang chuỗi B).
+    Nay chỉ còn MỘT bản mã dựng tiêu đề, và cả hai bên đều gọi nó. Muốn đo lệch cũng không lệch được.
+
+    28/8 — GIỮ TIÊU ĐỀ GỐC TRƯỚC KHI GẮN TRỤC.
+    Đo trên 600 video, kênh DIAMOND NUMBERS ra:
+        "Dodgers: 98 W — MLB wins by season (2025) — Brewers, 97 W (2025)"
+    MỘT tiêu đề gọi tên HAI đội khác nhau. Vì `_tieu_de_tu_du_lieu` đọc `st["title"]` SAU khi
+    `_gan_truc_vao_tieu_de` đã nhét một chủ thể vào đuôi, rồi nó nhét chủ thể của mình vào đầu —
+    hai lớp chồng lên nhau, và người xem đọc ra hai kẻ dẫn đầu mâu thuẫn.
+    """
+    _goc = str(st.get("title") or "")
+    if truc:
+        st["title"] = _gan_truc_vao_tieu_de(st.get("title"), truc, t.get(truc))
+    # Ưu tiên tiêu đề dựng từ dữ liệu (xem `_tieu_de_tu_du_lieu`), nhưng CHỈ KHI nó chắc chắn chưa
+    # từng dùng. Thứ tự này quan trọng: khuôn-cộng-trục ở trên vẫn là đường lui bảo đảm phân biệt
+    # được mọi lượt xoay, nên nếu tiêu đề theo dữ liệu trùng (hai ngày cùng một chủ thể đứng đầu —
+    # chuyện có thật với bảng đọc nhiều Wikipedia) thì rơi về nó, không kẹt.
+    # Dựng từ KHUNG GỐC, không dựng chồng lên bản đã bị gắn thêm.
+    _td = _tieu_de_tu_du_lieu({**st, "title": _goc}, kenh)
+    if _td and not _tieu_de_da_lam(_td, avoid):
+        # 28/8 — PHẢI GẮN LẠI GIÁ TRỊ TRỤC VÀO BẢN DỰNG-TỪ-DỮ-LIỆU.
+        # Đo bằng cách dựng story hai lượt với hai giá trị trục khác nhau: 11 kênh ra ĐÚNG MỘT
+        # tiêu đề cho cả hai lượt. Ví dụ DEGREE WORTH, trục `tu_nam` đổi 2015 <-> mặc định:
+        #     "2024: 299.7 — Education cost by year"     (cả hai lượt)
+        # Vì `_td` dựng từ KHUNG GỐC (`_goc`) — đúng, để khỏi chồng hai chủ thể — nhưng rồi nó
+        # thay thẳng `st["title"]`, ném luôn hậu tố trục mà dòng trên vừa gắn. Mà hậu tố trục
+        # CHÍNH LÀ thứ phân biệt các lượt xoay khi chủ thể đứng đầu bảng không đổi (năm nào thì
+        # 2024 cũng là năm học đắt nhất).
+        # NHƯNG CHỈ GẮN LẠI VỚI TRỤC THỜI GIAN. Bản đầu gắn lại cho mọi trục và lập tức tái phạm
+        # đúng lỗi hai-chủ-thể vừa vá, đo thật ở RENT REALITY:
+        #     "Same house, different decade — Idaho, $481,825 — California, Texas and 4 more"
+        # Hai đuôi: một chủ thể do dữ liệu chọn, một danh sách phạm vi truy vấn.
+        # Lý do phải gắn lại chỉ đúng với trục thời gian: đổi cửa sổ thời gian mà CHỦ THỂ ĐỨNG ĐẦU
+        # thường vẫn thế (năm nào 2024 cũng là năm học đắt nhất), nên không có mốc thời gian thì
+        # hai lượt trùng tên. Trục nội dung (`mon`, `giong`, `bangs`) thì đổi trục là đổi hẳn dữ
+        # liệu, chủ thể tự khác đi — gắn thêm chỉ là bồi một đuôi thừa.
+        _truc_tg = bool(truc) and (truc.endswith(("nam", "ngay")) or truc in ("lui", "mua"))
+        st["title"] = _gan_truc_vao_tieu_de(_td, truc, t.get(truc)) if _truc_tg else _td
+    # Ghi lại GIÁ TRỊ TRỤC vào story để bài nghiệm thu so được "tiêu đề có khớp nội dung không".
+    if truc:
+        st["_truc_gia_tri"] = t.get(truc)
+    return st
+
+
 def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None) -> dict | None:
     """Dựng story, XOAY qua kho đề tài cho tới khi ra một chuyện CHƯA LÀM.
 
@@ -2952,28 +3036,7 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
         if not st:
             hong += 1
             continue
-        # 28/8 — GIỮ TIÊU ĐỀ GỐC TRƯỚC KHI GẮN TRỤC.
-        # Đo trên 600 video hôm nay, kênh DIAMOND NUMBERS ra:
-        #     "Dodgers: 98 W — MLB wins by season (2025) — Brewers, 97 W (2025)"
-        # MỘT tiêu đề gọi tên HAI đội khác nhau. Vì `_tieu_de_tu_du_lieu` đọc `st["title"]` SAU
-        # khi `_gan_truc_vao_tieu_de` đã nhét một chủ thể vào đuôi, rồi nó nhét chủ thể của mình
-        # vào đầu — hai lớp chồng lên nhau, và người xem đọc ra hai kẻ dẫn đầu mâu thuẫn.
-        # Lỗi của chính bản vá tiêu đề tôi làm hôm qua: tôi nối nó vào SAU một hàm cũng sửa tiêu đề
-        # mà không hỏi hàm đó đã sửa gì.
-        _goc = str(st.get("title") or "")
-        if truc:
-            st["title"] = _gan_truc_vao_tieu_de(st.get("title"), truc, t.get(truc))
-        # Ưu tiên tiêu đề dựng từ dữ liệu (xem `_tieu_de_tu_du_lieu`), nhưng CHỈ KHI nó chắc chắn
-        # chưa từng dùng. Thứ tự này quan trọng: khuôn-cộng-ngày ở trên vẫn là đường lui bảo đảm
-        # phân biệt được mọi lượt xoay, nên nếu tiêu đề theo dữ liệu trùng (hai ngày cùng một chủ
-        # thể đứng đầu — chuyện có thật với bảng đọc nhiều Wikipedia) thì rơi về nó, không kẹt.
-        # Dựng từ KHUNG GỐC, không dựng chồng lên bản đã bị gắn thêm.
-        _td = _tieu_de_tu_du_lieu({**st, "title": _goc}, kenh)
-        if _td and not _tieu_de_da_lam(_td, avoid):
-            st["title"] = _td
-        # Ghi lại GIÁ TRỊ TRỤC vào story để bài nghiệm thu so được "tiêu đề có khớp nội dung không".
-        if truc:
-            st["_truc_gia_tri"] = t.get(truc)
+        st = hoan_tieu_de(st, kenh, truc, t, avoid)
         da_thay = da_thay or st
         if not _tieu_de_da_lam(st.get("title"), avoid):
             if i:

@@ -2539,6 +2539,46 @@ def plan_mode():
         channels = [c for c in channels if str(c).upper() == _pilot] or [_pilot]
         print(f"🧪 PILOT: chỉ chạy {channels[0]} (1 video) để kiểm trọn chuỗi trước khi mở 18 luồng.")
         return out_channels(channels[:1])
+    # ── CỔNG CHẤT LƯỢNG: KÊNH ĐẠT ĐI TRƯỚC (28/8) ──────────────────────────────────────────
+    # Đo phiên 28/8: 600 video ra lò, 334 trùng tiêu đề. Hơn nửa công suất máy đi vào thứ phải
+    # xoá — mà mỗi lượt hỏng đã tiêu một suất TTS, một suất vẽ ảnh, vài phút CPU và một chỗ trên
+    # kho. `cham_kenh.py` chấm cả 50 kênh ở tầng story (không tốn hạn mức Firestore, không tốn
+    # khoá AI, không tốn phút render) và ghi ra `chat_luong_kenh.json`.
+    # Ở đây chỉ làm một việc: XẾP kênh đạt lên trước. KHÔNG loại kênh nào — kênh hỏng vẫn được
+    # chạy nếu còn slot, vì một bảng điểm cũ mà loại thẳng kênh thì nó tự thành sự cố im lặng,
+    # đúng loại hỏng tệ nhất trong hệ này.
+    # Bảng điểm thiếu / cũ / hỏng thì bỏ qua hoàn toàn: một cổng chất lượng tự nó làm đứng phiên
+    # còn tệ hơn thứ nó định ngăn.
+    try:
+        _cl = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_luong_kenh.json")
+        if os.path.exists(_cl):
+            import io as _io2
+            _bang = json.load(_io2.open(_cl, encoding="utf-8"))
+            _diem = {k: (v or {}).get("diem", 0) for k, v in (_bang.get("kenh") or {}).items()}
+            _bq = {k for k, v in (_bang.get("kenh") or {}).items() if (v or {}).get("bo_qua")}
+            _ng = int(_bang.get("nguong") or 90)
+            if _diem:
+                # Kênh CHƯA ĐO ĐƯỢC (nguồn chập lúc chấm) xếp ngang kênh đạt, không bị đẩy xuống
+                # cuối: chúng chưa bị chứng minh là hỏng, mà nguồn chập là chuyện của lúc chấm.
+                def _hang(c):
+                    ku = str(c).upper()
+                    if ku in _bq or ku not in _diem:
+                        return 0
+                    return 0 if _diem[ku] >= _ng else 1
+                _truoc = list(channels)
+                channels = sorted(channels, key=lambda c: (_hang(c), _truoc.index(c)))
+                _hong = [c for c in channels if _hang(c) == 1]
+                print(f"   🎓 Cổng chất lượng (ngưỡng {_ng}/100, chấm lúc {_bang.get('luc', '?')}): "
+                      f"{len(channels) - len(_hong)} kênh đạt đi trước"
+                      + (f" · {len(_hong)} kênh còn lỗi xếp sau: "
+                         + ", ".join(f"{c}={_diem.get(str(c).upper(), '?')}" for c in _hong[:6])
+                         if _hong else ""))
+                for c in _hong[:4]:
+                    for x in ((_bang.get("kenh") or {}).get(str(c).upper()) or {}).get("loi", [])[:1]:
+                        print(f"      └ {c}: {str(x)[:96]}")
+    except Exception as _e:
+        print(f"   ⚠️ không đọc được bảng chất lượng kênh ({str(_e)[:60]}) — xếp như cũ")
+
     if len(channels) > MAX_MATRIX:
         # Phần dư KHÔNG còn phải "đợi phiên sau" nữa: đưa vào HÀNG CHỜ để luồng nào xong trước thì
         # lấy tiếp (xem lay_viec_ke). 18 slot vẫn là số máy, nhưng số kênh làm được trong một phiên

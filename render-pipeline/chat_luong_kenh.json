@@ -1,0 +1,375 @@
+{
+ "luc": "2026-08-28T14:59:27Z",
+ "nguong": 90,
+ "canh_bao_motip": [],
+ "kenh": {
+  "AMERICALOOKEDUP": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "race",
+   "loi": [],
+   "tieu_de": "Dolly Parton: 5,545K — Most-read on Wikipedia — Aug 25, 2026"
+  },
+  "ARCHIVEREEL": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "Midwest Holiday (Part I) — America 1950"
+  },
+  "CALORIESHOCK": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "scaled",
+   "loi": [],
+   "tieu_de": "Ristorante Pizza Rucola: 704 cal — Frozen pizza, by calories"
+  },
+  "CARRECALL": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Ford F-150: what keeps breaking (2016-2020)"
+  },
+  "COLDFILE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "Ex Parte Randy Louis Dupree v. the State — Habeas corpus"
+  },
+  "COSTTOGO": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Richest countries 2023"
+  },
+  "COURTKINGS": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "race",
+   "loi": [],
+   "tieu_de": "Shai: 33 poi — NBA points leaders — 2024-25"
+  },
+  "COURTRECORD": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "United States v. William Boylston — Wrongful death"
+  },
+  "DEGREEWORTH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "2024: 299.7 — Education cost by year"
+  },
+  "DIAMONDNUMBERS": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "race",
+   "loi": [],
+   "tieu_de": "MLB wins by season — Brewers, 97 W (2025)"
+  },
+  "FAMECURVE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "longshot",
+   "loi": [],
+   "tieu_de": "Aug 4: 5.1K — Dolly Parton: the spike — Aug 25, 2026"
+  },
+  "FILINGSSAY": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Who keeps writing \"artificial intelligence\" to the S E C"
+  },
+  "GAMEGRAVEYARD": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Battlefield V: 6.3K — Games millions bought and nobody plays"
+  },
+  "HOUSEMATH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "scaled",
+   "loi": [],
+   "tieu_de": "What a home actually costs — Housing, 401"
+  },
+  "JOBDYING": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "longshot",
+   "loi": [],
+   "tieu_de": "2019: 1 in 27 — Unemployment by year"
+  },
+  "MARRIAGEMATH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "scaled",
+   "loi": [],
+   "tieu_de": "Birth rate 2022"
+  },
+  "MISSINGPIECE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "Disappearance of Marvin Clark"
+  },
+  "MPGTRUTH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "race",
+   "loi": [],
+   "tieu_de": "Toyota: miles per gallon — bZ4X, 119 mpg"
+  },
+  "NIGHTSHIFT": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "Killing of the Clancy children"
+  },
+  "ONEHIT": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "longshot",
+   "loi": [],
+   "tieu_de": "One Hit Wonder: 5y — How long they lasted"
+  },
+  "PAIDVSPLAYED": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "NBA assists leaders, 2024-25"
+  },
+  "PAYCHECKGAP": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "scaled",
+   "loi": [],
+   "tieu_de": "Health care: 564 — Your pay against your bills"
+  },
+  "PENTAGONLEDGER": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "race",
+   "loi": [],
+   "tieu_de": "Raytheon Company: $2,631M — Ammunition contracts by year (2024)"
+  },
+  "PILLFACTS": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Apollo Care: 162.1K — Drug recalls you probably missed"
+  },
+  "PRICEOFNOW": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "race",
+   "loi": [],
+   "tieu_de": "Health: 564 idx — Cost of living, by category"
+  },
+  "QUAKELOG": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "mapped",
+   "loi": [],
+   "tieu_de": "Where America shakes — Alaska, M7.9 — week ending 2015-01-01"
+  },
+  "QUIETLAYOFFS": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "MAGELLAN MIDSTREAM: 4x — Who keeps writing \"reduction in force\" to the S E C"
+  },
+  "REALPLACE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "Mount Bonaparte Lookout — Aug 25, 2026"
+  },
+  "RECALLPLATE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "MIDWEST POULTRY SERVC C/O: 3.2M — Food recalls you probably missed"
+  },
+  "RENTREALITY": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "thennow",
+   "loi": [],
+   "tieu_de": "Same house, different decade — Idaho, $481,825"
+  },
+  "SALARYTRUTH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "2024: 157,693.8 — Jobs in America by year"
+  },
+  "SHOWNUMBERS": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Shows: \"detective\" — True Detective, 8.1"
+  },
+  "SKYRIGHTNOW": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "mapped",
+   "loi": [],
+   "tieu_de": "508 planes are over America right now — The whole country"
+  },
+  "SPACEINVOICE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "race",
+   "loi": [],
+   "tieu_de": "Space contracts by year — Lockheed Martin, $36,239M (2024)"
+  },
+  "SUEDFORTHIS": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Ninth Circuit: 4 cases — Where people sue over false advertising"
+  },
+  "THENANDNOW": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "thennow",
+   "loi": [],
+   "tieu_de": "The same subject, decades apart — U.S. NAVY PLANES, Schenectady City"
+  },
+  "WEAPONPRICE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "scaled",
+   "loi": [],
+   "tieu_de": "Missile contracts, 2024"
+  },
+  "WHATISINIT": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Morning Summit Lightly: 509 cal — Breakfast cereal: what is really in it"
+  },
+  "WHATTHEYSEARCH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "What America looks up about love — Marriage, 36.0K"
+  },
+  "WILDNUMBERS": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "scaled",
+   "loi": [],
+   "tieu_de": "Forest cover 2022"
+  },
+  "YOURRIGHTSCASE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "Order on Motion - Aldin Associates Ltd. — First amendment"
+  },
+  "ALERTNOW": {
+   "diem": 70,
+   "bo_qua": false,
+   "dang": "mapped",
+   "loi": [
+    "CẢ KHO trục `bangs` (5 giá trị) chỉ đẻ ra đúng một tiêu đề — kênh này ra video thứ 2 là trùng, không có đường xoay nào cứu được"
+   ],
+   "tieu_de": "California: 28 — Active weather warnings"
+  },
+  "BREEDFILE": {
+   "diem": 70,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [
+    "CẢ KHO trục `giong` (8 giá trị) chỉ đẻ ra đúng một tiêu đề — kênh này ra video thứ 2 là trùng, không có đường xoay nào cứu được"
+   ],
+   "tieu_de": "Borzoi: 25.7K — Dog breeds America looks up most"
+  },
+  "GONETOOSOON": {
+   "diem": 70,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [
+    "CẢ KHO trục `tu_khoa` (7 giá trị) chỉ đẻ ra đúng một tiêu đề — kênh này ra video thứ 2 là trùng, không có đường xoay nào cứu được"
+   ],
+   "tieu_de": "Sci-Fi Harry: 2000 — Great \"sci-fi\" shows that got cut"
+  },
+  "STEAMTRUTH": {
+   "diem": 70,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [
+    "CẢ KHO trục `loc` (4 giá trị) chỉ đẻ ra đúng một tiêu đề — kênh này ra video thứ 2 là trùng, không có đường xoay nào cứu được"
+   ],
+   "tieu_de": "Games people actually play right now — Counter-Strike: Global, 1.0M"
+  },
+  "UNSOLVEDLOG": {
+   "diem": 70,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [
+    "CẢ KHO trục `lui` (13 giá trị) chỉ đẻ ra đúng một tiêu đề — kênh này ra video thứ 2 là trùng, không có đường xoay nào cứu được"
+   ],
+   "tieu_de": "Great Moon Hoax — Aug 25, 2026"
+  },
+  "WHERETOMOVE": {
+   "diem": 70,
+   "bo_qua": false,
+   "dang": "mapped",
+   "loi": [
+    "CẢ KHO trục `bangs` (6 giá trị) chỉ đẻ ra đúng một tiêu đề — kênh này ra video thứ 2 là trùng, không có đường xoay nào cứu được"
+   ],
+   "tieu_de": "Hawaii: $833,877 — Home price by state"
+  },
+  "NEAREARTH": {
+   "diem": 0,
+   "bo_qua": true,
+   "dang": "ranked",
+   "loi": [
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+   ],
+   "tieu_de": ""
+  },
+  "ONESTUDY": {
+   "diem": 0,
+   "bo_qua": true,
+   "dang": "cinematic",
+   "loi": [
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+   ],
+   "tieu_de": ""
+  },
+  "SONGFILE": {
+   "diem": 0,
+   "bo_qua": true,
+   "dang": "cinematic",
+   "loi": [
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+   ],
+   "tieu_de": ""
+  }
+ }
+}

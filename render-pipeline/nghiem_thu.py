@@ -105,13 +105,35 @@ def cham_story(dang: str, st: dict) -> list:
     # Nguyên nhân: nhãn tĩnh trong cấu hình kênh không xoay theo trục. Đây là loại sai tệ nhất:
     # không phải xấu, không phải thiếu, mà là NÓI SAI — người xem bấm vào vì tưởng một đằng rồi
     # thấy một nẻo. Bắt bằng cách so danh từ chính của tiêu đề với tên các mục.
-    if st.get("_truc_gia_tri"):
-        gt = str(st["_truc_gia_tri"]).replace("-", " ").lower()
+    # 28/8 — CHỈ SO KHI GIÁ TRỊ TRỤC LÀ NHÃN NỘI DUNG.
+    # Nhiều kênh xoay theo NGÀY hoặc NĂM (`tu_ngay`, `nam`, `lui`, `den_ngay`). So tiêu đề
+    # "Where America shakes — Alaska, M7.9" với giá trị trục "2015-01-01" rồi kết luận "NÓI SAI
+    # nội dung" là vô nghĩa: một cái là chủ đề, một cái là mốc thời gian, chúng vốn không phải
+    # cùng loại chữ. Phép kiểm này sinh ra để bắt ca "tiêu đề ghi Breakfast cereal mà mục là KEM",
+    # tức là khi trục mang MỘT NHÃN CHỦ ĐỀ. Trục thời gian thì không có gì để đối chiếu.
+    # Trục kiểu DANH SÁCH (`bangs` = ['California','Texas',...]) không có "một chủ đề" để đối
+    # chiếu: nó là phạm vi truy vấn, không phải nhan đề. So tiêu đề với chuỗi repr của cả danh
+    # sách thì lượt nào cũng đỏ, mà đỏ vô nghĩa còn nguy hơn không kiểm — nó dạy người đọc bỏ qua.
+    _gtr = st.get("_truc_gia_tri")
+    _gt0 = "" if isinstance(_gtr, (list, tuple, dict)) else str(_gtr or "")
+    _la_thoi_gian = bool(re.fullmatch(r"[\d\s./-]+", _gt0.strip())) if _gt0 else False
+    if _gt0 and not _la_thoi_gian:
+        gt = _gt0.replace("-", " ").lower()
         t0 = str(st.get("title") or "").lower()
         # Lấy chữ đầu tiêu đề (trước dấu hai chấm) — đó là thứ tiêu đề tự nhận là đang nói về.
-        dau = t0.split(":")[0].strip()
-        if dau and gt and gt.split()[0][:5] not in dau and dau.split()[0][:5] not in gt:
-            e.append(f"{dang}: tiêu đề nói về {dau!r} nhưng dữ liệu là {gt!r} -> NÓI SAI nội dung")
+        # 28/8 — HỎI "GIÁ TRỊ TRỤC CÓ MẶT TRONG TIÊU ĐỀ KHÔNG", đừng cắt tiêu đề ra rồi so.
+        # Phép kiểm này sinh ra để bắt đúng một ca: khung ghi "Breakfast cereal: what is really in
+        # it" trong khi các mục là KEM. Hai bản trước đều cắt tiêu đề để tìm "phần khung" — cắt
+        # trước dấu hai chấm, rồi cắt sau dấu gạch dài — và cả hai đều báo đỏ oan, vì tiêu đề có
+        # HAI khuôn ngược nhau ("CHỦ THỂ: số — khung" và "khung — CHỦ THỂ, số", bốc theo băm tên
+        # kênh) nên không có một vị trí cố định nào là "phần khung".
+        # Điều thật sự cần biết đơn giản hơn nhiều: chủ đề đang nói tới có được nhắc ở đâu đó
+        # trong tiêu đề không. Có thì tiêu đề khớp nội dung; không thì nó đang nói về chuyện khác.
+        # Bỏ qua giá trị trục có gạch dưới (`chet_yeu`, `dong_nhat`) — đó là mã lọc nội bộ, vốn
+        # KHÔNG được phép lên tiêu đề, nên vắng mặt là đúng chứ không phải sai.
+        if "_" not in _gt0 and gt and gt.split()[0][:5] not in t0:
+            e.append(f"{dang}: tiêu đề {t0[:52]!r} không nhắc gì tới chủ đề {gt!r} "
+                     f"-> người xem bấm vào vì tưởng một đằng, thấy một nẻo")
     if dang in ("ranked", "scaled", "longshot"):
         muc = [m for m in (st.get("items") or []) if isinstance(m, dict)]
         gt = {str(m.get("stat") or m.get("disp") or m.get("oddsDisp") or "") for m in muc}

@@ -4425,13 +4425,23 @@ def t_xoay_truc_doi_tieu_de():
     import the_he_2 as T
     src = _doc("the_he_2.py")
     assert "_gan_truc_vao_tieu_de" in src, "không có hàm gắn trục vào tiêu đề"
-    i = src.index("def _dung_story_xoay")
     # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
     # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
-    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
-    than = src[i: min(_ket) if _ket else len(src)]
-    assert "_gan_truc_vao_tieu_de" in than, "_dung_story_xoay không gắn trục vào tiêu đề"
-    assert than.index("_gan_truc_vao_tieu_de") < than.index("_tieu_de_da_lam"),         "gắn trục SAU khi so trùng thì vô nghĩa"
+    def _than(ten):
+        j = src.index("def " + ten)
+        k = [x for x in (src.find("\ndef ", j + 5), src.find("\nclass ", j + 5)) if x > 0]
+        return src[j: min(k) if k else len(src)]
+
+    # 28/8 — MÃ DỰNG TIÊU ĐỀ ĐÃ TÁCH SANG `hoan_tieu_de`, để bộ chấm `cham_kenh.py` gọi được
+    # ĐÚNG mã mà máy chạy (bản đầu của nó gọi thẳng `DUNG_STORY`, bỏ mất hai lớp sửa tiêu đề, và
+    # kết luận sai rằng 23 kênh có tiêu đề cố định). Chốt đi theo chỗ mã đã dời: đòi phép gắn trục
+    # nằm trong `hoan_tieu_de`, và `_dung_story_xoay` phải GỌI `hoan_tieu_de` TRƯỚC khi so trùng —
+    # so trùng trên một tiêu đề chưa hoàn thì so nhầm chuỗi, đúng họ lỗi nó sinh ra để chặn.
+    hoan = _than("hoan_tieu_de")
+    assert "_gan_truc_vao_tieu_de" in hoan, "hoan_tieu_de không gắn trục vào tiêu đề"
+    than = _than("_dung_story_xoay")
+    assert "hoan_tieu_de" in than, "_dung_story_xoay không gọi hoan_tieu_de"
+    assert than.index("hoan_tieu_de") < than.index("_tieu_de_da_lam"), "hoàn tiêu đề SAU khi so trùng thì vô nghĩa"
     assert "thu = [dict(ky or {})]" not in than, "vẫn còn lượt 0 trần -> hai dạng tiêu đề"
     # ĐO THẬT: cùng tiêu đề gốc, ba giá trị trục phải ra ba tiêu đề khác nhau
     goc = "Food recalls you probably missed"
@@ -4439,6 +4449,24 @@ def t_xoay_truc_doi_tieu_de():
     assert len(set(ra)) == 3, f"xoay `nam` vẫn ra tiêu đề trùng: {ra}"
     rn = [T._gan_truc_vao_tieu_de(goc, "ngay", d) for d in (7, 30, 90)]
     assert len(set(rn)) == 3, f"xoay `ngay` vẫn ra tiêu đề trùng: {rn}"
+    # ĐO HÀNH VI CỦA `hoan_tieu_de`, KHÔNG CHỈ ĐỌC MÃ NÓ.
+    # Bài kiểm-cái-kiểm: bỏ dòng gắn trục thứ nhất trong `hoan_tieu_de` thì mọi phép soi-chuỗi ở
+    # trên VẪN XANH, vì tên hàm còn xuất hiện ở nhánh dưới. Một chốt không đỏ được là một chốt
+    # không tồn tại. Gọi thật với ba giá trị trục và đòi ba tiêu đề khác nhau thì bỏ ở đâu cũng đỏ.
+    # HAI KIỂU STORY, vì tiêu đề đi ra bằng HAI NHÁNH khác nhau và mỗi nhánh phải tự đứng được:
+    #   • story KHÔNG có bảng mục -> `_tieu_de_tu_du_lieu` trả rỗng, chỉ còn nhánh gắn trục;
+    #   • story CÓ bảng mục       -> bản dựng-từ-dữ-liệu thắng, và nó phải được gắn lại mốc thời
+    #     gian, nếu không thì chủ thể đứng đầu không đổi là hai lượt trùng tên.
+    # Thử một kiểu thôi thì nhánh kia bị nhánh này che, và chốt xanh trong khi mã đã thủng.
+    for _nhan, _gia in (
+        ("không có bảng mục", {"title": "Food recalls you probably missed", "nguon": "openfda"}),
+        ("có bảng mục", {"title": "Food recalls you probably missed", "nguon": "openfda",
+                          "items": [{"name": "Same Brand", "stat": "1"}]}),
+    ):
+        _rh = {T.hoan_tieu_de(dict(_gia), {"ten": "X"}, "nam", {"nam": n}, [])["title"]
+               for n in (2025, 2024, 2023)}
+        assert len(_rh) == 3, f"hoan_tieu_de ({_nhan}): ba giá trị trục ra {len(_rh)} tiêu đề: {_rh}"
+
     # đã có sẵn giá trị trong tiêu đề thì KHÔNG nhét thêm lần nữa
     assert T._gan_truc_vao_tieu_de("Recalls in 2024", "nam", 2024) == "Recalls in 2024",         "nhét trùng giá trị đã có sẵn trong tiêu đề"
 

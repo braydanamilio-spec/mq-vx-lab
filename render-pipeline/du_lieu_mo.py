@@ -481,6 +481,15 @@ def ban_an(tu_khoa: str, n: int = 6) -> list[dict]:
 
 
 # ── 8. WORLD BANK — so sánh Mỹ với phần còn lại của thế giới ────────────────────────────────
+# Mã của các dòng GỘP trong World Bank (vùng, nhóm thu nhập, nhóm nhân khẩu) — không phải quốc gia.
+_GOP_WB = {
+    "AFE", "AFW", "ARB", "CSS", "CEB", "EAR", "EAS", "EAP", "TEA", "EMU", "ECS", "ECA", "TEC",
+    "EUU", "FCS", "HPC", "HIC", "IBD", "IBT", "IDB", "IDX", "IDA", "LTE", "LCN", "LAC", "TLA",
+    "LDC", "LMY", "LIC", "LMC", "MEA", "MNA", "TMN", "MIC", "NAC", "INX", "OED", "OSS", "PSS",
+    "PST", "PRE", "SST", "SAS", "TSA", "SSF", "SSA", "TSS", "UMC", "WLD",
+}
+
+
 def chi_so_the_gioi(ma: str = "NY.GDP.PCAP.CD", nam: int = 2023, n: int = 12) -> list[dict]:
     """Xếp hạng quốc gia theo một chỉ số. Trả [{nuoc, gia_tri}] cao->thấp."""
     u = (f"https://api.worldbank.org/v2/country/all/indicator/{ma}?"
@@ -491,8 +500,12 @@ def chi_so_the_gioi(ma: str = "NY.GDP.PCAP.CD", nam: int = 2023, n: int = 12) ->
     ra = []
     for x in (d[1] or []):
         v, c = x.get("value"), (x.get("country") or {}).get("value")
-        # bỏ dòng gộp vùng ("World", "Euro area"…) — chỉ giữ QUỐC GIA có mã 3 ký tự thật
-        if v is None or not c or len(str(x.get("countryiso3code") or "")) != 3:
+        ma3 = str(x.get("countryiso3code") or "")
+        # 28/8 — LỌC MÃ 3 KÝ TỰ LÀ CHƯA ĐỦ. Dòng gộp của World Bank cũng mang mã 3 ký tự: "PST"
+        # = Post-demographic dividend, "EMU" = Euro area, "LMY" = Low & middle income. Đo thật:
+        # bảng độ che phủ rừng lọt "Post-demographic" vào giữa Georgia và Nigeria — người xem đọc
+        # ra một cái tên không phải quốc gia nằm trong bảng xếp hạng quốc gia, và cả bảng mất tin.
+        if v is None or not c or len(ma3) != 3 or ma3 in _GOP_WB:
             continue
         ra.append({"nuoc": c, "gia_tri": float(v), "nam": nam,
                    "nguon": "World Bank Open Data"})
