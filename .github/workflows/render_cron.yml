@@ -71,6 +71,23 @@ jobs:
       # spawn, không đốt gì. Sinh ra từ 3 sự cố 22/8 (system_instruction giết 18/18 luồng...).
       - name: SELFTEST (chặn bản hỏng trước khi spawn 18 luồng)
         run: python render-pipeline/selftest.py
+      # 28/8 — NGHIỆM THU TRÊN SẢN PHẨM, sau selftest.
+      # `selftest` soi HÌNH DẠNG MÃ và đã có 60+ chốt — nhưng KHÔNG chốt nào bắt được 6 lỗi lớn
+      # đêm 27-28/8, vì chúng nằm ở ĐƯỜNG NỐI giữa các tầng, và chỉ lộ ra trong THỨ ĐI RA.
+      # Bài này dựng story thật cho 7 dạng, soi tiêu đề + props, và RENDER THẬT một dạng (xoay
+      # vòng theo giờ) rồi đo tệp. Đỏ thì chặn phiên — sinh 18 luồng vào bản hỏng là đốt hàng giờ
+      # để ra rác, đúng thứ vừa xảy ra hôm nay (334/600 video trùng).
+      - name: NGHIỆM THU (chấm sản phẩm, chặn phiên nếu trượt)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          SHARD_META: ${{ vars.SHARD_META }}
+          SHARD_KEYS: ${{ vars.SHARD_KEYS }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+        run: python render-pipeline/nghiem_thu.py --khong-render
       - name: Service account file
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json

@@ -2206,6 +2206,7 @@ def main():
     check("bảng xếp hạng phải nói đang xếp theo gì", t_bang_xep_hang_phai_noi_dang_xep_theo_gi)
     check("mọi dạng short đều ghi nguồn (vẽ, không chỉ nhập)", t_moi_dang_short_deu_ghi_nguon)
     check("chống trùng kiểm đúng chuỗi sẽ đi ra", t_chong_trung_kiem_dung_chuoi_di_ra)
+    check("bài nghiệm thu bắt được đúng lỗi đã lọt", t_nghiem_thu_bat_duoc_loi_that)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5733,6 +5734,47 @@ def t_chong_trung_kiem_dung_chuoi_di_ra():
         "sau `_gop_story` (nơi tiêu đề long ĐƯỢC VIẾT LẠI) không kiểm trùng -> hai bộ phủ cùng "
         "dải dữ liệu sẽ ra tiêu đề y hệt và cùng được đăng")
     assert "return None" in sau, "trùng mà không bỏ bộ -> vẫn đăng trùng"
+
+
+def t_nghiem_thu_bat_duoc_loi_that():
+    """BÀI NGHIỆM THU PHẢI BẮT ĐƯỢC ĐÚNG NHỮNG LỖI ĐÃ LỌT.
+
+    28/8 — sau 60+ chốt kiểm, đêm 27-28/8 vẫn lọt 6 lỗi lớn, và KHÔNG chốt nào bắt được cái nào.
+    Vì mọi chốt đều soi HÌNH DẠNG MÃ, còn lỗi nằm ở ĐƯỜNG NỐI giữa các tầng — chỉ lộ ra trong
+    THỨ ĐI RA.
+    `nghiem_thu.py` sinh ra để chấm sản phẩm. Nhưng một bài chấm chỉ đáng tin khi nó bắt được
+    ĐÚNG những lỗi đã từng lọt — nếu không thì nó lại là một lớp bảo vệ hình thức nữa.
+    Chốt này nạp lại đúng 7 lỗi thật, và kèm 4 tiêu đề TỐT để bảo đảm nó không báo oan: một bài
+    chấm hay báo oan sẽ bị tắt đi, và lúc đó nó vô dụng y như không có."""
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import nghiem_thu as N
+    that = [
+        ("mã nội bộ", N.cham_tieu_de("Games people actually play right now — tut_manh")),
+        ("repr Python", N.cham_tieu_de("Home price by state — ['Florida', 'New York']")),
+        ("hai chủ thể", N.cham_tieu_de("Dodgers: 98 W — MLB wins by season (2025) — Brewers, 97 W")),
+        ("thiếu nguồn", N.cham_props("mapped", {"items": []})),
+        ("thang sai loại", N.cham_props("longshot", {"source": "x", "items": [{"oddsDisp": "63.4K reads"}]})),
+        ("ranked thiếu phụ đề", N.cham_props("ranked", {"source": "x"})),
+        ("không ra tệp", N.do_tep("/tmp/khong-bao-gio-co-tep-nay.mp4", False)),
+    ]
+    sot = [t for t, e in that if not e]
+    assert not sot, f"bài nghiệm thu BỎ SÓT {len(sot)}/7 lỗi thật đã từng lọt: {sot}"
+
+    tot = ["MLB wins by season — Dodgers, 98 W",
+           'Who keeps writing "climate risk" to the S E C',
+           "Spider-Man: 986K — Most-read on Wikipedia",
+           "Hawaii: $833,877 — Home price by state"]
+    oan = [t for t in tot if N.cham_tieu_de(t)]
+    assert not oan, ("báo oan với tiêu đề TỐT -> bài chấm sẽ bị tắt đi và thành vô dụng: "
+                     + "; ".join(f"{t} -> {N.cham_tieu_de(t)}" for t in oan[:2]))
+
+    # Và nó phải được GẮN VÀO CỔNG, không chỉ tồn tại.
+    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    wf = _o.path.join(G, ".github", "workflows", "render_cron.yml")
+    if _o.path.exists(wf):
+        assert "nghiem_thu.py" in io.open(wf, encoding="utf-8").read(), \
+            "bài nghiệm thu không được gọi trong workflow -> viết ra rồi để đấy"
 
 
 if __name__ == "__main__":
