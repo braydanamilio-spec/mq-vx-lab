@@ -71,8 +71,37 @@ async def _run(text: str, mp3_path: str, voice: str, rate: str, pitch: str = "+0
     raise last
 
 
+# ── LÀM SẠCH CHỮ TRƯỚC KHI ĐỌC (28/8/2026) ────────────────────────────────────────────────
+# Anh gửi khung kênh FAME CURVE: băng phụ đề dưới đáy ghi **"07 slash 03"**. Máy đọc gặp dấu "/"
+# trong nhãn ngày "07/03" và đọc đúng cái nó thấy — chữ "slash". Nghe ra ngay là máy làm.
+#
+# Vá ở đây chứ không vá ở từng bộ dựng: dấu "/" có thể lọt vào lời đọc từ BẤT CỨ nguồn nào (mã
+# chứng khoán, tỉ số, cỡ giấy, đường dẫn), và đã có tiền lệ — mỗi lần vá một chỗ thì lần sau nó
+# ra ở chỗ khác. Đây là cửa DUY NHẤT mọi câu đều đi qua trước khi thành tiếng.
+# Chỉ đụng phần ĐỌC; chữ hiện trên màn hình giữ nguyên "07/03" vì ở đó dấu gạch chéo đọc được bằng mắt.
+_DOC_THAY = [
+    ("/", " "),          # 07/03 -> "07 03" (máy đọc tự ghép thành ngày tháng)
+    ("&", " and "),
+    ("%", " percent"),
+    ("+", " plus "),
+    ("@", " at "),
+    ("#", " number "),
+    ("~", " about "),
+    ("–", ", "), ("—", ", "),   # gạch dài: máy đọc nuốt luôn, thành hai câu dính nhau
+]
+
+
+def lam_sach_loi_doc(text: str) -> str:
+    """Đổi ký hiệu thành chữ đọc được. KHÔNG đổi chữ hiển thị, chỉ đổi thứ đưa cho máy đọc."""
+    t = str(text or "")
+    for a, b in _DOC_THAY:
+        t = t.replace(a, b)
+    return " ".join(t.split())
+
+
 async def _synth_once(text: str, mp3_path: str, voice: str, rate: str, pitch: str = "+0Hz"):
     import edge_tts
+    text = lam_sach_loi_doc(text)
     # 23/8 (user: "sub giật giật, không khớp giọng"): xin MỐC TỪNG TỪ THẬT từ máy đọc.
     # Trước đây edge-tts chỉ trả SentenceBoundary (1 mốc/câu) -> hệ phải CHIA ĐỀU theo số ký tự,
     # nên từ dài/ngắn lệch nhịp và phụ đề nhảy giật. Bật boundary="WordBoundary" là có thời điểm

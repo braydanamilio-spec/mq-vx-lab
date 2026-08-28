@@ -36,20 +36,39 @@ const _hsl = (r: number, g: number, b: number): [number, number, number] => {
   return [h, s, l];
 };
 
-/** Ba chặng gradient cho một kênh: giữ SẮC của kênh, đặt ĐỘ SÁNG ở mức đọc được.
- *  `lech` xoay nhẹ sắc giữa hai đầu gradient -> nền có chiều sâu, không phẳng như một mảng màu. */
+/** Ba chặng gradient cho một kênh: giữ SẮC của kênh, nhưng nền là NỀN — không phải mảng màu.
+ *
+ * 28/8 — ANH XEM 6 VIDEO: "nền neon có vẻ ko hợp lắm, nó làm mờ chữ loá". Đúng, và đây là hậu quả
+ * trực tiếp của bản vá 26/8 ngay phía trên.
+ *
+ * Hôm đó phép đo là ĐỘ SÁNG TRUNG BÌNH của khung: 25-40/255, kết luận "tối om", nên nâng độ sáng
+ * nền lên 36/26/18% và giữ bão hoà 24-46%. Con số sáng lên thật. Nhưng độ sáng trung bình là phép
+ * đo SAI cho việc này: nó không phân biệt "nền tối, chữ và cột sáng" (đúng cách video dữ liệu
+ * hạng nhất trông) với "nền sáng đều một màu" (cách nhìn rẻ tiền). Ta tối ưu đúng con số ấy và
+ * nhận về đúng thứ nó đo — một mảng màu bão hoà chiếm gần hết khung.
+ *
+ * Với kênh accent neon (#2BF0AB, #23F74D, #27D627) thì mảng ấy là xanh lá 36% sáng, và chữ trắng
+ * đặt lên trên tụt tương phản còn khoảng 5:1 — đọc được nhưng loá, đúng chữ anh dùng.
+ *
+ * Phép đo đúng là TƯƠNG PHẢN giữa chữ và nền ngay dưới nó, không phải độ sáng trung bình. Nền
+ * tối và nhạt màu cho tương phản ~17:1 với chữ trắng; còn cảm giác "video sáng, có sức sống" thì
+ * lấy từ NỘI DUNG — cột màu, thẻ số, quầng accent — chứ không lấy từ nền. Đó cũng là cách mọi
+ * kênh dữ liệu tử tế làm.
+ *
+ * Nên: bão hoà 8-15% (trước 24-46%), độ sáng 15/10/7% (trước 36/26/18%). Sắc của kênh vẫn còn —
+ * đủ để 50 kênh không giống nhau — nhưng nó là một tông nền, không còn là một mảng màu.
+ * `lech` xoay nhẹ sắc giữa hai đầu gradient -> nền có chiều sâu, không phẳng như một mảng màu. */
 export const nenKenh = (chinh?: string, phu?: string, lech = 18): string => {
   const [h1, s1] = _hsl(..._n(chinh || "#3a4a7a"));
   const [h2] = _hsl(..._n(phu || chinh || "#3a4a7a"));
   const bh = Math.round(h2 || h1);
-  // Bão hoà vừa phải: quá đậm thì chữ trắng chói mắt, quá nhạt thì lại về xám như nhau cả loạt.
-  const sat = Math.round(Math.max(24, Math.min(46, (s1 || 0.4) * 100 * 0.62)));
-  // Độ sáng đo bằng khung render thật, không đoán: mức 27/18/12% cho ra khung trung bình 34/255 —
-  // vẫn tối. 36/26/18% đưa khung lên khoảng 60, đúng dải short trên feed (60-100).
-  return `radial-gradient(122% 96% at 50% 8%,`
-    + ` hsl(${Math.round(h1)} ${sat}% 36%) 0%,`
-    + ` hsl(${(bh + lech) % 360} ${sat}% 26%) 52%,`
-    + ` hsl(${(bh + lech * 2) % 360} ${Math.round(sat * 0.9)}% 18%) 100%)`;
+  // Bão hoà thấp: đủ để nhận ra sắc riêng của kênh, không đủ để thành một mảng màu tranh chỗ
+  // với dữ liệu. Sàn 8 để nền không rơi về xám hệt nhau cả 50 kênh.
+  const sat = Math.round(Math.max(8, Math.min(15, (s1 || 0.4) * 100 * 0.22)));
+  return `radial-gradient(126% 100% at 50% 6%,`
+    + ` hsl(${Math.round(h1)} ${sat}% 15%) 0%,`
+    + ` hsl(${(bh + lech) % 360} ${sat}% 10%) 54%,`
+    + ` hsl(${(bh + lech * 2) % 360} ${Math.round(sat * 0.85)}% 7%) 100%)`;
 };
 
 /** Vệt sáng phụ đặt lệch tâm — cho mỗi kênh một "hướng sáng" khác nhau, tránh cảm giác cùng khuôn. */

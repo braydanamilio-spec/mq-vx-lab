@@ -2269,6 +2269,7 @@ def main():
     check("nén lỗi đã lường trước, không đệ quy", t_nen_loi_da_luong_khong_de_quy)
     check("hồ key qua ảnh chụp D1, không đâm vào A", t_ho_key_qua_d1_khong_dam_vao_A)
     check("xoay trục phải ĐỔI tiêu đề, không thì kênh câm sau 1 video", t_xoay_truc_doi_tieu_de)
+    check("mọi nguồn phải có TÊN CƠ QUAN, không in mã lên video", t_moi_nguon_co_ten_that)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
@@ -4407,6 +4408,33 @@ def t_cf_chan_prompt_van_con_duong_gemini():
     assert 'if _cf_chan_prompt and str(_k).startswith("cf:")' in than, \
         "không bỏ qua key CF còn lại -> đốt lượt vào cùng một prompt bị chặn"
 
+
+
+
+
+def t_moi_nguon_co_ten_that():
+    """Mọi `nguon` của 50 kênh phải có tên cơ quan thật trong TEN_NGUON.
+
+    28/8 — soi khung thật kênh WHERE TO MOVE: dòng dưới đáy in "Source: zillow". Chữ thường,
+    không viết hoa, đọc như một biến bị lộ chứ không như một nguồn dữ liệu. Cả điểm tin cậy của
+    kênh nằm ở dòng đó — nó là bằng chứng "số này tra được", và cũng là thứ đứng ra trước chính
+    sách nội dung sản xuất hàng loạt của YouTube.
+    `ten_nguon()` TRẢ NGUYÊN MÃ khi thiếu bản dịch, nên lỗi này không kêu một tiếng nào trong log:
+    chỉ thấy được bằng mắt, trên khung, sau khi đã render xong. Đúng họ với `DongNguon` được nhập
+    mà không được vẽ, và với `bien_cua` khai ra mà không ai gửi.
+    Thêm kênh mới mà quên dịch nguồn thì chốt này đỏ ngay ở `--plan`, trước khi tốn phút render."""
+    import json as _json
+    import the_he_2 as T
+    ks = _json.loads(_doc("kenh_the_he_2.json"))
+    ks = ks if isinstance(ks, list) else list(ks.values())
+    thieu = sorted({str(k.get("nguon")) for k in ks
+                    if str(k.get("nguon") or "") and str(k["nguon"]).lower() not in T.TEN_NGUON})
+    assert not thieu, ("nguồn chưa có tên cơ quan (sẽ in NGUYÊN MÃ lên video): "
+                       + ", ".join(thieu))
+    # Và bản dịch phải TRÔNG như tên cơ quan chứ không như mã: đủ dài, có chữ hoa.
+    xau = [f"{k}->{v}" for k, v in T.TEN_NGUON.items()
+           if len(str(v)) < 4 or str(v) == str(v).lower()]
+    assert not xau, "tên nguồn vẫn giống mã nội bộ: " + ", ".join(xau[:5])
 
 
 

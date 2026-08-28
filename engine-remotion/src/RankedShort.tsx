@@ -5,7 +5,7 @@ import { phong } from "./Phong";
 import { SoChay, SO_DEU, DongNguon } from "./So";
 import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
-import { dungKhung } from "./Khung";
+import { dungKhung, dayTieuDe } from "./Khung";
 import { bienCua, hoaTietNen, kieuThe } from "./Bien";
 import React from "react";
 
@@ -119,6 +119,8 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
   // Băng chữ karaoke neo ở bottom 200 và cao ~2 dòng; bảng tier neo bottom 130 -> chữ ĐÈ lên hàng
   // cuối. Có sub thì nhường chỗ, không sub thì dùng lại toàn bộ chiều cao.
   const dayBang = (subs && subs.length) ? K.thanDayCoSub : K.thanDayKhongSub;
+  // Thân bảng lùi xuống dưới khối tiêu đề THẬT, không dùng mốc cứng — xem `dayTieuDe`.
+  const thanTop = Math.max(K.thanTop, dayTieuDe(title, K, !!subtitle));
 
   return (
       // 26/8 — NỀN SÁNG LÊN. Đo 5 video thật: sáng trung bình chỉ **25-40/255**, trong khi
@@ -139,7 +141,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
       </div>
 
       {/* BẢNG TIER */}
-      <div style={{ position: "absolute", top: K.thanTop, bottom: dayBang, left: K.padX, right: K.padX, display: "flex", flexDirection: "column", gap: K.doc ? 16 : 12 }}>
+      <div style={{ position: "absolute", top: thanTop, bottom: dayBang, left: K.padX, right: K.padX, display: "flex", flexDirection: "column", gap: K.doc ? 16 : 12 }}>
         {hangCoDo.map((t) => {
           const rowItems = items.map((it, gi) => ({ it, gi })).filter((x) => (x.it.tier || "").toUpperCase() === t.toUpperCase());
           // 27/8 — HÀNG CHƯA CÓ MỤC THÌ CHƯA HIỆN.

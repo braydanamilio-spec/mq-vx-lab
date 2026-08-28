@@ -79,7 +79,12 @@ def _so(v: float) -> str:
 TEN_NGUON = {
     "usaspending": "USAspending.gov", "sec": "SEC EDGAR", "bls": "U.S. Bureau of Labor Statistics",
     "openfda": "openFDA · U.S. FDA", "nhtsa": "NHTSA", "court": "CourtListener",
-    "worldbank": "World Bank Open Data", "usgs": "U.S. Geological Survey", "nasa": "NASA CNEOS",
+    "worldbank": "World Bank Open Data",
+    # 28/8 — thiếu dòng này nên hai kênh nhà đất in ra "Source: zillow" trên màn hình: chữ thường,
+    # không viết hoa, đọc như một biến bị lộ chứ không như một nguồn. `ten_nguon` trả nguyên mã khi
+    # không có bản dịch, nên lỗi kiểu này không kêu một tiếng nào — thấy được bằng mắt trên khung,
+    # không thấy được trong log. Đã thêm chốt `t_moi_nguon_co_ten_that` để không tái phát.
+    "zillow": "Zillow Home Value Index", "usgs": "U.S. Geological Survey", "nasa": "NASA CNEOS",
     "fec": "U.S. Federal Election Commission", "wikipedia": "Wikimedia pageviews",
     "mlb": "MLB StatsAPI", "nba": "NBA Stats", "steamspy": "SteamSpy", "tvmaze": "TVmaze",
     "musicbrainz": "MusicBrainz", "pubmed": "PubMed · U.S. NLM", "nws": "NOAA / National Weather Service",
@@ -2993,6 +2998,27 @@ def _tieu_de_tu_du_lieu(st: dict, kenh: dict) -> str:
     # biệt) ra sau, đúng chỗ YouTube cắt.
     # Tên riêng thì ngắn, không có dấu chấm cuối, không mở đầu bằng mạo từ.
     if ten.endswith(".") or len(ten.split()) > 5 or ten.split()[0].lower() in ("a", "an", "the"):
+        return ""
+    # 28/8 — CHỦ THỂ KHÔNG ĐƯỢC LÀ MỘT CÁI MỐC THỜI GIAN.
+    # Anh gửi khung FAME CURVE:
+    #     "07/08: 25.7K — Spider-Man: Brand New Day: the spike — Aug 6, 2026"
+    # Ba mảnh, mở đầu bằng "07/08" — đó là NHÃN TRỤC NGANG của biểu đồ, không phải chủ thể. Dạng
+    # `longshot` để nhãn ở khoá `label`, mà với kênh này `label` là ngày; `_so_noi_bat` đọc đúng
+    # khoá ấy và trả về một cái ngày làm "tên".
+    # Hậu quả nặng gấp đôi bình thường: tên thật (Spider-Man) bị đẩy xuống giữa, đúng chỗ YouTube
+    # cắt, nên trên trang tìm kiếm người xem chỉ đọc được "07/08: 25.7K".
+    # Ngày tháng thì không bao giờ là chủ ngữ của một câu tiêu đề.
+    # NGOẠI LỆ: một NĂM đứng riêng vẫn là chủ thể hợp lệ. "2024: 299.7 — Education cost by year"
+    # đọc trôi và nói đúng thứ nó nói; cái hỏng là mốc NGÀY ("07/08", "Aug 6"), vì ngày là toạ độ
+    # trên trục chứ không phải nhân vật của câu chuyện.
+    import re as _re
+    _t = ten.strip()
+    _la_nam = bool(_re.fullmatch(r"(?:19|20)\d{2}", _t))
+    if not _la_nam and (
+            _re.fullmatch(r"[\d\s/.,:-]+", _t)
+            or _re.match(r"^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\.?\s+\d",
+                         _t, _re.I)
+            or len([c for c in _t if c.isalpha()]) < 3):
         return ""
     # Tên đã nằm sẵn trong khung thì ghép vào chỉ tổ lặp chữ ("Spider-Man — Spider-Man: the spike").
     if ten.lower() in khung.lower():

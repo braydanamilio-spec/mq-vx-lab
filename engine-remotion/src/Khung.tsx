@@ -37,3 +37,28 @@ export const dungKhung = (): Khung => {
     : { doc, W, H, padX: 64, tieuDeTop: 44, tieuDeCo: 56, nhanCo: 26,
         thanTop: 190, thanDayCoSub: 170, thanDayKhongSub: 70, cot: false, handleDay: 28 };
 };
+
+/** Số dòng mà tiêu đề THẬT SỰ chiếm, ước theo bề ngang khung và cỡ chữ.
+ *
+ * 28/8 — soi khung thật kênh STEAM TRUTH: tiêu đề "Free games beating the ones people paid for —
+ * Counter-Strike: Global, 1.0M" dài 3 dòng, đè xuống phụ đề "by players online", và phụ đề rơi
+ * hẳn vào trong ô tier S. Vì `thanTop` là SỐ CỨNG 340, đo cho một tiêu đề hai dòng.
+ * Tiêu đề gen-2 nay dài hơn hẳn hồi đặt con số đó: từ khi `_tieu_de_tu_du_lieu` chèn chủ thể +
+ * con số lên trước khuôn, ba dòng là chuyện thường. Một hằng số đo cho hình dạng dữ liệu CŨ sẽ
+ * âm thầm sai với mọi dữ liệu mới — và chỉ thấy được bằng mắt, sau khi đã render.
+ *
+ * Không đo được chữ trong Remotion mà không dựng thêm một lượt, nên ước: bề ngang khả dụng chia
+ * cho bề ngang trung bình một ký tự (~0,52 lần cỡ chữ với phông đậm hẹp của bộ này). Ước thừa
+ * một dòng chỉ tốn khoảng trắng; ước thiếu là chữ đè chữ — nên làm tròn LÊN. */
+export const soDongTieuDe = (title: string, K: Khung): number => {
+  const rong = Math.max(120, K.W - 2 * K.padX);
+  const moiDong = Math.max(8, Math.floor(rong / (K.tieuDeCo * 0.52)));
+  return Math.max(1, Math.min(4, Math.ceil((String(title || "").length || 1) / moiDong)));
+};
+
+/** Mốc y mà phần thân được phép bắt đầu, để không bao giờ chạm khối tiêu đề. */
+export const dayTieuDe = (title: string, K: Khung, coSub: boolean): number =>
+  K.tieuDeTop + (K.doc ? 18 : 10)
+  + soDongTieuDe(title, K) * K.tieuDeCo * 1.02
+  + (coSub ? (K.doc ? 32 : 26) + 8 : 0)
+  + (K.doc ? 26 : 18);

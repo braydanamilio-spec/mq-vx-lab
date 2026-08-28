@@ -7,6 +7,7 @@ import { bienCua, hoaTietNen } from "./Bien";
 import { nenKenh } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import React, { useMemo } from "react";
+import { dungKhung, dayTieuDe } from "./Khung";
 import { geoAlbersUsa, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import states from "../public/geo/states-10m.json";
@@ -43,9 +44,14 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
     data = [], topN = 3, introSec = 1.8, bloomSec = 2.4, popSec = 1.6, outroSec = 1.6, audio, music , subs = [] , source = "" } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
+  // Bản đồ bắt đầu DƯỚI khối tiêu đề thật, không dùng mốc cứng 360. Tiêu đề gen-2 nay hay dài
+  // ba dòng (chủ thể + số + khuôn), và một mốc cứng đo cho tiêu đề hai dòng thì âm thầm để chữ
+  // đè lên bang phía bắc — xem `dayTieuDe` trong Khung.tsx.
+  const K = dungKhung();
+  const banDoTop = Math.max(360, dayTieuDe(title, K, !!(unit && unit.trim().length > 2)));
   const { geo, pathGen, valById, maxV, ranked, hang, khungBanDo } = useMemo(() => {
     const g: any = feature(states as any, (states as any).objects.states);
-    const proj = geoAlbersUsa().fitExtent([[60, 360], [W - 60, H - 620]], g);
+    const proj = geoAlbersUsa().fitExtent([[60, banDoTop], [W - 60, H - 620]], g);
     const m: Record<string, number> = {};
     for (const d of data) m[norm(d.state)] = d.value;
     // ── THANG MÀU THEO THỨ HẠNG, KHÔNG THEO GIÁ TRỊ/LỚN NHẤT (27/8) ────────────────────────
@@ -65,7 +71,7 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
     const pg = geoPath(proj);
     return { geo: g, pathGen: pg, valById: m, maxV: mx, ranked: rk, proj, hang,
              khungBanDo: pg.bounds(g) };
-  }, [W, H, data, topN]);
+  }, [W, H, data, topN, banDoTop]);
 
   const introF = Math.round(introSec * fps);
   const bloomF = Math.round(bloomSec * fps);
