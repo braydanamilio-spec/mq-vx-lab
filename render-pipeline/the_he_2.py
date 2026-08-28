@@ -721,16 +721,58 @@ def _bd_bls(D, ky):
             "Bureau of Labor Statistics. Official numbers.")
 
 
+def _tu_khoa_mon(mon: str) -> list:
+    """Mã phân loại Open Food Facts -> các từ khoá phải thấy trong tên sản phẩm.
+
+    "pizzas" -> ["pizza"] · "breakfast-cereals" -> ["breakfast", "cereal"] · "candies" -> ["candy"]
+    Bỏ từ quá ngắn hoặc quá chung ("food", "snack") vì chúng khớp mọi thứ, tức là không lọc gì cả."""
+    CHUNG = {"food", "foods", "product", "products", "meal", "meals", "snack", "snacks", "and"}
+    ra = []
+    for t in str(mon or "").lower().replace("_", "-").split("-"):
+        if len(t) < 4 or t in CHUNG:
+            continue
+        # Số nhiều tiếng Anh không theo MỘT luật: candies->candy nhưng cookies->cookie; cheeses->
+        # cheese nhưng fishes->fish. Đoán đúng một dạng là chắc chắn trượt một nửa số nhóm hàng —
+        # bản đầu cho ra "cooky", không khớp sản phẩm nào tên Cookie, tức là lọc sạch cả bảng.
+        # Nên sinh MỌI dạng có lý rồi khớp-nếu-trúng-một. Đây là lọc thô để loại bánh quy khỏi
+        # bảng pizza, không phải phân tích hình thái — thừa một biến thể rẻ hơn hụt một biến thể.
+        bien = {t}
+        if t.endswith("ies"):
+            bien |= {t[:-3] + "y", t[:-1]}
+        if t.endswith("es") and len(t) > 5:
+            bien.add(t[:-2])
+        if t.endswith("s"):
+            bien.add(t[:-1])
+        ra += sorted(bien)
+    return ra
+
+
 def _mon_an(D, mon, n=30):
     """Dinh dưỡng: Open Food Facts TRƯỚC (mở, không hạn mức), USDA chỉ là đường lùi.
 
-    USDA DEMO_KEY hết 30 lượt/giờ là hai kênh đồ ăn tắt tiếng — đã dính đúng vậy 25/8."""
-    # Open Food Facts xếp theo ĐỘ PHỔ BIẾN nên "cereal" vẫn trả về khoai tây chiên. Tiêu đề nói
-    # một đằng mà bảng liệt kê một nẻo thì video mất tin cậy ngay giây đầu — lọc theo tên trước.
-    r = [x for x in D.thanh_phan_off(mon, n) if x.get("calo")]
+    USDA DEMO_KEY hết 30 lượt/giờ là hai kênh đồ ăn tắt tiếng — đã dính đúng vậy 25/8.
+
+    28/8 — LỌC THEO TÊN, GIỜ MỚI LÀM THẬT. Chú thích cũ ở đây đã viết "lọc theo tên trước", nhưng
+    đọc lại thì mã KHÔNG hề lọc, chỉ kiểm `calo` có giá trị. Ý định nằm trong chú thích còn lưới
+    thì chưa bao giờ được dựng, nên không ai thấy nó thủng.
+    Hậu quả có thật, xem khung của CALORIE SHOCK: tiêu đề "Frozen pizza, by calories" mà ba mục là
+    Pauz Pauz, St Michel Palmier, Walker Shortbread - bánh quy, kèm biểu tượng pizza. Nó đến từ
+    đường lùi USDA: `foods/search?query=pizzas` là tìm toàn văn, và nó trả về bất cứ thứ gì.
+    Người xem không cần biết vì sao; họ chỉ thấy kênh này bịa số. Thà BỎ LƯỢT còn hơn."""
+    tk = _tu_khoa_mon(mon)
+
+    def _hop(x):
+        if not x.get("calo"):
+            return False
+        if not tk:
+            return True                             # không rút được từ khoá -> không lọc oan
+        chu = (str(x.get("hieu") or "") + " " + str(x.get("ten") or "")).lower()
+        return any(t in chu for t in tk)
+
+    r = [x for x in D.thanh_phan_off(mon, n) if _hop(x)]
     if len(r) >= 3:
         return r
-    return [x for x in D.thanh_phan_mon(mon, n) if x.get("calo")]
+    return [x for x in D.thanh_phan_mon(mon, n) if _hop(x)]
 
 
 def _bd_dinh_duong(D, ky):
@@ -1311,20 +1353,32 @@ def dung_story_cinematic(kenh: dict, ky: dict | None = None) -> dict | None:
 # không thì thanh dài ngắn chẳng nói lên gì.
 # ══════════════════════════════════════════════════════════════════════════════════════════
 def _sk_dinh_duong(D, ky):
+    """So calo — LẤY TRẢI ĐỀU CẢ DẢI, không lấy 6 mục cao nhất.
+
+    28/8 — xem khung thật CALORIE SHOCK: sáu cột cao gần bằng nhau, 599/534/529/526/525/517.
+    Không sai số nào, nhưng một video tên là SCALED mà sáu cột nhìn như một thì chẳng nói được gì:
+    người xem không rút ra được điều gì họ chưa biết. Gốc là phép chọn — sắp giảm dần rồi cắt 6 mục
+    đầu thì bao giờ cũng ra sáu giá trị sát nhau, vì đó là sáu giá trị sát trần.
+    Lấy trải đều từ cao nhất xuống thấp nhất thì cùng bấy nhiêu dữ liệu thật, cùng một nguồn, mà
+    cột cao nhất gấp đôi ba cột thấp nhất — CÓ chuyện để kể. Mục #1 luôn giữ (nó là hook), phần
+    còn lại chia đều khoảng cách trên danh sách đã sắp."""
     mon = ky.get("mon") or "pizza"
     r = _mon_an(D, mon)
-    thay, muc = set(), []
+    thay, sach = set(), []
     for x in sorted(r, key=lambda z: -z["calo"]):
         ten = " ".join(f"{x.get('hieu') or ''} {x['ten']}".split()).title()
         if ten.lower() in thay:
             continue
         thay.add(ten.lower())
-        muc.append({"name": _gon(ten, 24), "emoji": "🍕", "value": round(x["calo"]),
-                    "disp": f"{x['calo']:.0f} cal"})
-        if len(muc) >= 6:
-            break
-    if len(muc) < 3:
+        sach.append({"name": _gon(ten, 24), "emoji": "🍕", "value": round(x["calo"]),
+                     "disp": f"{x['calo']:.0f} cal"})
+    if len(sach) < 3:
         return None
+    if len(sach) <= 6:
+        muc = sach
+    else:
+        vt = sorted({0} | {round(i * (len(sach) - 1) / 5) for i in range(1, 6)})
+        muc = [sach[i] for i in vt]
     return (f"{ky.get('nhan') or mon.replace('-', ' ').title()}, by calories", "cal", muc,
             "Per hundred grams, measured by the U S D A.")
 
@@ -1504,30 +1558,57 @@ VUNG_MY = {
 
 
 def _bd_may_bay(D, ky):
+    """Máy bay đang bay, gom theo BANG — bản đồ nhiệt của bầu trời Mỹ ngay lúc này.
+
+    28/8 — bản cũ gom theo NƯỚC ĐĂNG KÝ ("United States: 192", "Canada: 5") rồi đưa thẳng vào
+    `MappedShort`, mà composition đó khớp `d.state` với TÊN BANG. Không tên nào khớp, nên 51 bang
+    đều rỗng và bản đồ ra một mảng navy phẳng — dạng "bản đồ" mà không map được gì. Xem `bang_my.py`.
+
+    Khung hỏi được NỚI RỘNG 5 độ quanh vùng đang xoay. Hỏi khít khung California thì chỉ California
+    có số, bản đồ còn đúng một mảng sáng lẻ loi, không so được với gì. Nới ra thì các bang lân cận
+    cũng có số: California vẫn đậm nhất, nhưng giờ người xem THẤY nó đậm hơn bao nhiêu — đó mới là
+    thứ một bản đồ nhiệt phải nói."""
+    from bang_my import VANH, bang_cua
     _v = str(ky.get("vung") or "the whole country")
     _b = VUNG_MY.get(_v) or VUNG_MY["the whole country"]
-    r = D.may_bay(_b[0], _b[1], _b[2], _b[3], 200)
+    if _v == "the whole country":
+        _v = "America"                              # "over the whole country" đọc như văn nói vụng
+    # Nới CHỈ khi vùng là một bang đơn lẻ. Vùng nhiều bang (the Midwest, the Northeast) vốn đã
+    # có sẵn nền so sánh trong chính khung của nó; nới thêm thì kéo bang ngoài vùng vào bảng và
+    # lời dẫn đi nói "North Carolina has the busiest sky" trong một video tên là "the Midwest" —
+    # đúng loại lỗi mất mạch lạc mà con số sống vừa được sửa xong.
+    _NOI = 5.0 if _v in VANH else 0.0
+    r = D.may_bay(max(21.0, _b[0] - _NOI), max(-171.0, _b[1] - _NOI),
+                  min(50.0, _b[2] + _NOI), min(-65.0, _b[3] + _NOI), 600)
     if len(r) < 10:
         return None
     gop = {}
     for x in r:
-        gop[x["nuoc"] or "Unknown"] = gop.get(x["nuoc"] or "Unknown", 0) + 1
-    data = [{"name": k, "value": v} for k, v in sorted(gop.items(), key=lambda z: -z[1])[:10]]
+        b = bang_cua(x.get("kinh_do"), x.get("vi_do"))
+        if b:                                       # None = đang trên biển, không thuộc bang nào
+            gop[b] = gop.get(b, 0) + 1
+    if len(gop) < 4:
+        return None                                 # quá ít bang -> bản đồ không có gì để đọc
+    data = [{"name": k, "value": v, "disp": f"{v} planes"}
+            for k, v in sorted(gop.items(), key=lambda z: -z[1])[:12]]
+
+    # Con số lên tiêu đề phải là con số của CHÍNH VÙNG ĐANG NÓI, không phải của cả khung đã nới.
+    tam = gop.get(_v, 0) if _v in VANH else sum(gop.values())
+    if tam < 5:
+        tam, _v = sum(gop.values()), "America"      # vùng quá vắng -> lùi về cả nước, nói thật thế
     cao = r[0]
-    dan = [f"Right now there are {len(r)} aircraft over {_v}.",
+    dan = [f"Right now there are {tam} aircraft over {_v}.",
+           f"{data[0]['name']} has the busiest sky: {data[0]['value']} planes overhead.",
            f"The highest is {cao['hieu'] or 'unmarked'}, at {cao['cao_m']:,.0f} meters.",
-           f"Registered in {data[0]['name']}: {data[0]['value']} of them.",
+           f"{len(gop)} states have something in the air this second.",
            "Nobody is hiding this. The transponders broadcast it.",
            "OpenSky just writes it all down.",
            "Look up. One of these is above you."]
-    # 27/8 — TIÊU ĐỀ PHẢI MANG CON SỐ SỐNG. Bản cũ trả tên CỐ ĐỊNH "Who is flying over America"
-    # cho mọi lượt. Dữ liệu thì khác nhau thật (máy bay đang bay), nhưng tên thì không — đo phiên
-    # thật: lane SKYRIGHTNOW ra **18 video trùng đúng một tiêu đề**.
-    # Kênh này là kênh DUY NHẤT có `xoay: None` (nguồn sống, không xoay trục), nên nó cũng không
-    # được `_gan_truc_vao_tieu_de` gắn hậu tố phân biệt như 49 kênh kia — luật 7.en bỏ sót đúng
-    # trường hợp này. Với nguồn sống thì thứ phân biệt không phải giá trị trục mà là CON SỐ ĐO ĐƯỢC
-    # ngay lúc đó; nó vừa làm tên khác nhau, vừa là một hook thật.
-    return (f"{len(r)} planes are over {_v} right now", "planes", data, dan)
+    # TIÊU ĐỀ MANG CON SỐ SỐNG. Kênh này là kênh DUY NHẤT có `xoay: None` (nguồn sống, không xoay
+    # trục), nên nó cũng không được `_gan_truc_vao_tieu_de` gắn hậu tố phân biệt như 49 kênh kia —
+    # luật 7.en bỏ sót đúng trường hợp này. Với nguồn sống thì thứ phân biệt là CON SỐ ĐO ĐƯỢC ngay
+    # lúc đó; nó vừa làm tên khác nhau, vừa là một hook thật.
+    return (f"{tam} planes are over {_v} right now", "planes overhead", data, dan)
 
 
 def _bd_gia_nha(D, ky):
@@ -2665,10 +2746,21 @@ def _tieu_de_tu_du_lieu(st: dict, kenh: dict) -> str:
     # Tên đã nằm sẵn trong khung thì ghép vào chỉ tổ lặp chữ ("Spider-Man — Spider-Man: the spike").
     if ten.lower() in khung.lower():
         return ""
+    # 28/8 — KHUNG ĐÃ CÓ SỐ THÌ KHÔNG ĐƯỢC GẮN SỐ THỨ HAI.
+    # Khung thật của SKY RIGHT NOW là "200 planes are over California right now" (nguồn sống nên
+    # con số nằm sẵn trong tên). Ghép tiếp chủ thể + số ra:
+    #     "United States: 192 — 200 planes are over California right now"
+    # Hai con số khác nhau đứng cạnh nhau trong một tiêu đề, không con nào giải thích con nào —
+    # người xem đọc xong không biết 192 là gì, 200 là gì, và tưởng mình đọc nhầm. Đây là lỗi NẶNG
+    # hơn tiêu đề trùng: trùng thì nhàm, còn cái này thì SAI.
+    # Khung có số nghĩa là nó ĐÃ tự phân biệt và đã có hook — không cần bồi thêm.
+    _khung_co_so = any(c.isdigit() for c in khung)
     import hashlib as _h
     kieu = int(_h.md5(str(kenh.get("ten") or "").encode()).hexdigest(), 16) % 2
-    if so:
+    if so and not _khung_co_so:
         t = f"{ten}: {so} — {khung}" if kieu == 0 else f"{khung} — {ten}, {so}"
+    elif _khung_co_so:
+        return ""                                  # khung tự đứng được, giữ nguyên
     else:
         t = f"{ten} — {khung}"
     # YouTube cắt tiêu đề quanh mốc 60-70 ký tự trong kết quả tìm; 95 là trần an toàn để phần

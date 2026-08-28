@@ -43,7 +43,7 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
     data = [], topN = 3, introSec = 1.8, bloomSec = 2.4, popSec = 1.6, outroSec = 1.6, audio, music , subs = [] , source = "" } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
-  const { geo, pathGen, valById, maxV, ranked, hang } = useMemo(() => {
+  const { geo, pathGen, valById, maxV, ranked, hang, khungBanDo } = useMemo(() => {
     const g: any = feature(states as any, (states as any).objects.states);
     const proj = geoAlbersUsa().fitExtent([[60, 360], [W - 60, H - 620]], g);
     const m: Record<string, number> = {};
@@ -62,7 +62,9 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
     sap.forEach((d, i) => { hang[norm(d.state)] = sap.length > 1 ? i / (sap.length - 1) : 1; });
     const mx = Math.max(1, ...data.map((d) => d.value));
     const rk = [...data].sort((a, b) => b.value - a.value).slice(0, topN);
-    return { geo: g, pathGen: geoPath(proj), valById: m, maxV: mx, ranked: rk, proj, hang };
+    const pg = geoPath(proj);
+    return { geo: g, pathGen: pg, valById: m, maxV: mx, ranked: rk, proj, hang,
+             khungBanDo: pg.bounds(g) };
   }, [W, H, data, topN]);
 
   const introF = Math.round(introSec * fps);
@@ -132,6 +134,39 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
             style={topActive ? { filter: "url(#mglow)" } : undefined} />;
         })}
       </svg>
+
+      {/* CHÚ GIẢI THANG MÀU — 28/8.
+          Hai thứ hỏng cùng một chỗ. ① Bản đồ tô 9 bang theo thứ hạng, 42 bang còn lại để màu
+          "không có dữ liệu" (#0e1832) — mà màu đó nằm sát đầu lạnh của thang (#2B3C63), nên người
+          xem đọc cả miền Đông nước Mỹ là "ít nhất" chứ không phải "ngoài phạm vi câu hỏi". Sai
+          nghĩa, và sai về phía nguy hiểm: nó biến một câu đúng thành một khẳng định bịa.
+          ② Màu đậm nhạt không kèm mốc thì không đọc ra LƯỢNG: người xem thấy California sáng hơn
+          Montana nhưng không biết hơn gấp đôi hay gấp tám.
+          Dải chú giải trả lời cả hai, và nó nằm đúng vào khoảng trống giữa bản đồ và bảng xếp hạng
+          — chỗ trước nay bỏ không vì AlbersUsa rộng hơn cao nên luôn thừa bề cao. */}
+      {(() => {
+        const dsp = (d: any) => (d && (d.disp || String(d.value))) || "";
+        const sap = [...data].filter((d) => typeof d.value === "number").sort((a, b) => a.value - b.value);
+        if (sap.length < 3) return null;
+        const y = Math.min(H - 620, (khungBanDo?.[1]?.[1] ?? 1100) + 30);
+        return (
+          <div style={{ position: "absolute", left: 0, right: 0, top: y, display: "flex",
+                        justifyContent: "center", alignItems: "center", gap: 26, opacity: bloom }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ ...SO_DEU, color: "#93a4c4", fontWeight: 800, fontSize: 24 }}>{dsp(sap[0])}</div>
+              <div style={{ width: 240, height: 14, borderRadius: 7,
+                            background: `linear-gradient(90deg, ${heat(0, accent)}, ${heat(1, accent)})`,
+                            boxShadow: "inset 0 0 0 1px #ffffff1f" }} />
+              <div style={{ ...SO_DEU, color: "#fff", fontWeight: 900, fontSize: 24 }}>{dsp(sap[sap.length - 1])}</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <div style={{ width: 22, height: 14, borderRadius: 4, background: "#0e1832",
+                            boxShadow: "inset 0 0 0 1px #ffffff1f" }} />
+              <div style={{ color: "#7c8db0", fontWeight: 700, fontSize: 21 }}>none</div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* PIN SỐ nhỏ trên map (không hộp chữ -> không chồng/tràn dù bang nhỏ sát nhau) */}
       {ranked.map((d, i) => {

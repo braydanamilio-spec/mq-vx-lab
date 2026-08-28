@@ -148,35 +148,29 @@ export const Bookend: React.FC<{
   }
 
   // ── THẺ KẾT ───────────────────────────────────────────────────────────────────────────────
+  // 28/8 — THẺ KẾT IN LẠI TIÊU ĐỀ, ĐÈ LÊN CHÍNH NỘI DUNG.
+  // Xem khung 28,5s của SKY RIGHT NOW: "159 planes are over California right now" hiện Ở GIỮA
+  // BẢN ĐỒ, trong khi ĐÚNG CÂU ẤY đang nằm trên đầu khung — header của mọi dạng short in tiêu đề
+  // suốt cả video. Nên phần kết cho ra hai bản tiêu đề chồng nhau, bản dưới đè lên California và
+  // Arizona đúng lúc người xem đang nhìn hai bang đó.
+  // Đây là lỗi 25/8 lặp lại ở đầu kia của video: hồi đó thẻ MỞ ĐẦU chồng tiêu đề, đã vá bằng cách
+  // ẩn header trong quãng intro. Quãng outro thì không ai vá, vì không ai soi khung cuối.
+  // Và khi `cta` rỗng — mặc định của cả 50 kênh, vì `cta` mặc định đã bị bỏ hôm 26/8 — thì thẻ kết
+  // KHÔNG CÒN NỘI DUNG NÀO của riêng nó: chỉ còn một tấm màn tối phủ lên hình cuối cùng cộng một
+  // tiêu đề trùng. Không vẽ gì là đúng hơn vẽ cái đó.
   const batDau = durationInFrames - oF;
-  if (oF > 6 && f >= batDau) {
+  if (oF > 6 && f >= batDau && cta) {
     const l = f - batDau;
     const p = spring({ frame: l, fps, config: { damping: 14, stiffness: 130 } });
-    const nhip = 1 + 0.045 * Math.sin(l / 4.5);          // nút "theo dõi" đập nhẹ, kéo mắt xuống
     return (
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
                     justifyContent: "center", zIndex: 40, opacity: Math.min(1, l / 5),
                     background: `radial-gradient(85% 55% at 50% 45%, ${accent}26 0%, rgba(0,0,0,${MAN_CHE_KET * 0.85}) 62%, rgba(0,0,0,${MAN_CHE_KET}) 100%)` }}>
         <div style={{ textAlign: "center", transform: `scale(${0.9 + 0.1 * p})`, padding: "0 70px" }}>
-          <div style={{ fontSize: 54, fontWeight: 900, color: "#FFFFFF", letterSpacing: -0.5,
+          <div style={{ fontSize: co(54), fontWeight: 900, color: "#FFFFFF", letterSpacing: -0.5,
                         textShadow: "0 6px 30px rgba(0,0,0,.95)" }}>
             {cta}
           </div>
-          {/* 27/8 — BỎ NHÃN @handle KHỔ LỚN Ở PHẦN KẾT.
-              Anh gửi khung PAYCHECK GAP: viên thuốc xanh lá to đùng nằm chình ình GIỮA màn hình,
-              đè lên nhãn "Housing"/"Transport", đè lên cả tiêu đề — người xem mất đúng đoạn dữ
-              liệu mà cả video dựng lên để nói.
-              Nó cũng không mang lại gì: YouTube đã hiện tên kênh ngay dưới video, và mọi khung
-              đều đã có dấu kênh nhỏ ở đáy. Lặp lại lần thứ ba, phóng to, đặt giữa màn hình thì
-              chỉ còn là vật cản.
-              Giữ lại nhịp co giãn cho câu CTA phía trên — phần kết vẫn có điểm nhấn, chỉ là điểm
-              nhấn đó nói điều gì đó thay vì lặp tên kênh. */}
-          {title ? (
-            <div style={{ marginTop: 34, fontSize: 30, fontWeight: 700, color: "#C9D6E6",
-                          opacity: 0.9 }}>
-              {title}
-            </div>
-          ) : null}
         </div>
       </div>
     );
