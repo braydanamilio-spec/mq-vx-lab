@@ -5445,7 +5445,12 @@ def t_kling_shots_ghi_doc_cung_mot_project():
     fb = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "firestore_bridge.py"),
                  encoding="utf-8").read()
     i = fb.index("def save_kling_shots")
-    than = fb[i: i + 900]
+    # Cắt theo BIÊN HÀM, không theo số ký tự. Bản đầu lấy 900 ký tự cố định — cửa sổ tràn sang
+    # `read_kling_shots` (hàm đó cũng có `_db_meta()`), nên chốt vẫn xanh khi tôi cố tình đổi
+    # chỗ ghi sang project A. Đúng lớp lỗi "cửa sổ cố định" tôi đã mắc trước đây: chốt đo nhầm
+    # vùng thì nó chỉ đo được chính nó.
+    j = fb.index("\ndef ", i + 5)
+    than = fb[i:j]
     ben_ghi = "_db_meta()" in than
     d = _o.path.join(G, "MM0-AutoPublisher", "dashboard", "index.html")
     if not _o.path.exists(d):
