@@ -23,26 +23,50 @@ jobs:
   kling:
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    # Nhịp hẹn giờ đòi có key; bấm tay thì luôn cho chạy.
-    if: ${{ github.event_name == 'workflow_dispatch' || secrets.KLING_ACCESS_KEY != '' }}
     steps:
+      # 28/8 — GÁC BẰNG BƯỚC, KHÔNG BẰNG `if` CẤP JOB.
+      # Bản đầu viết `if: secrets.KLING_ACCESS_KEY != ''` — GitHub TỪ CHỐI nạp workflow, vì
+      # `secrets` không có trong ngữ cảnh `if` ở cấp job (chỉ có github/needs/vars/inputs).
+      # Hậu quả: workflow đỏ ngay từ lúc đẩy mã, ba lần liên tiếp, và log KHÔNG có lỗi nào để đọc
+      # — chỉ một dòng "likely failed because of a workflow file issue". Loại lỗi tốn thời gian
+      # vì nó không chỉ được chỗ sai.
+      # Trong BƯỚC thì `secrets` dùng được bình thường. Đặt cổng ở đây, xuất ra một biến để các
+      # bước sau tự quyết.
+      - name: Có key Kling chưa?
+        id: cong
+        env: { K: "${{ secrets.KLING_ACCESS_KEY }}" }
+        run: |
+          if [ -n "$K" ]; then echo "chay=1" >> $GITHUB_OUTPUT; echo "✅ có key — chạy A-Z";
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "chay=1" >> $GITHUB_OUTPUT; echo "▶️ bấm tay — chạy tới bảng chụp";
+          else
+            echo "chay=0" >> $GITHUB_OUTPUT
+            echo "⏭️ chưa có KLING_ACCESS_KEY và đây là nhịp hẹn giờ -> bỏ lượt."
+            echo "   (chạy tự động lúc chưa có key chỉ chất đống việc tay và tốn lượt gọi model)"
+          fi
       - uses: actions/checkout@v4
+        if: steps.cong.outputs.chay == '1'
       - name: Lấy AutoPublisher (để đẩy kho đúng đường ray 50 kênh kia)
+        if: steps.cong.outputs.chay == '1'
         uses: actions/checkout@v4
         with:
           repository: ${{ secrets.AUTOPUBLISHER_REPO }}
           token: ${{ secrets.GH_PAT }}
           path: _autopublisher
       - uses: actions/setup-python@v5
+        if: steps.cong.outputs.chay == '1'
         with: { python-version: "3.11" }
       - run: pip install -q -r render-pipeline/requirements.txt
+        if: steps.cong.outputs.chay == '1'
       - name: ffmpeg (cần drawtext để có chữ trên video)
+        if: steps.cong.outputs.chay == '1'
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
           ffmpeg -hide_banner -filters | grep -q " drawtext " \
             && echo "✅ ffmpeg có drawtext — video sẽ có chữ" \
             || echo "⚠️ ffmpeg KHÔNG có drawtext — video vẫn ra nhưng mất chữ"
       - name: Tạo tệp khoá Firestore
+        if: steps.cong.outputs.chay == '1'
         env:
           SA_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
           SA_JSON_B: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_B }}
@@ -52,6 +76,7 @@ jobs:
           [ -n "$SA_JSON_B" ] && printf '%s' "$SA_JSON_B" > /tmp/sa_b.json || true
           [ -n "$SA_JSON_C" ] && printf '%s' "$SA_JSON_C" > /tmp/sa_c.json || true
       - name: KLING A-Z
+        if: steps.cong.outputs.chay == '1'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json

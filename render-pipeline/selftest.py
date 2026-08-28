@@ -2201,6 +2201,7 @@ def main():
     check("kling_shots: chỗ ghi và chỗ đọc cùng project", t_kling_shots_ghi_doc_cung_mot_project)
     check("Kling A-Z dừng đúng chỗ khi chưa có key + kênh đã khai", t_kling_az_dung_dung_cho_khi_chua_co_key)
     check("thang phải nói đúng loại dữ liệu (không '1 in N' cho lượt đọc)", t_thang_phai_noi_dung_loai_du_lieu)
+    check("workflow không dùng `secrets` trong `if`", t_workflow_khong_dung_secrets_trong_if)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5552,6 +5553,35 @@ def t_thang_phai_noi_dung_loai_du_lieu():
     # trong khi mã hoàn toàn đúng. Đây là lần thứ hai hôm nay tôi mắc đúng lỗi này.
     ma_th = "\n".join(d.split("#")[0] for d in th.splitlines())
     assert " slash " not in ma_th, "lời đọc còn phát âm 'slash' — không người Mỹ nào đọc ngày kiểu đó"
+
+
+def t_workflow_khong_dung_secrets_trong_if():
+    """`secrets` KHÔNG DÙNG ĐƯỢC TRONG `if` — GitHub từ chối nạp cả workflow.
+
+    28/8 — tôi viết `if: secrets.KLING_ACCESS_KEY != ''` ở cấp job. GitHub từ chối nạp workflow,
+    và nó đỏ NGAY TỪ LÚC ĐẨY MÃ, ba lần liên tiếp. Log không có lỗi nào để đọc — chỉ một dòng
+    "This run likely failed because of a workflow file issue".
+    Đó là loại lỗi đắt hơn lỗi thường: nó không chỉ được chỗ sai, và nó làm hỏng workflow TRƯỚC
+    KHI chạy bất cứ bước nào, nên mọi bài kiểm bên trong đều vô dụng.
+    Ngữ cảnh `if` chỉ có: github · needs · vars · inputs · env · always()/success()/failure().
+    `secrets` chỉ dùng được TRONG bước (env/run).
+    Chốt quét MỌI workflow, vì lỗi này không phụ thuộc tệp nào."""
+    import os as _o, re as _re
+    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    d = _o.path.join(G, ".github", "workflows")
+    if not _o.path.isdir(d):
+        print("      ⏭️ bỏ qua: không có .github/workflows ở đây")
+        return
+    xau = []
+    for f in sorted(_o.listdir(d)):
+        if not f.endswith((".yml", ".yaml")):
+            continue
+        for i, dong in enumerate(io.open(_o.path.join(d, f), encoding="utf-8").read().splitlines(), 1):
+            t = dong.split("#")[0]
+            if _re.search(r"^\s*if\s*:", t) and "secrets." in t:
+                xau.append(f"{f}:{i}")
+    assert not xau, ("dùng `secrets` trong `if` -> GitHub TỪ CHỐI nạp workflow, đỏ ngay từ lúc "
+                     "đẩy mã và không để lại log nào để đọc: " + ", ".join(xau))
 
 
 if __name__ == "__main__":
