@@ -123,7 +123,38 @@ async def _synth_once(text: str, mp3_path: str, voice: str, rate: str, pitch: st
                     "d": chunk["duration"] / 1e7,
                     "w": chunk["text"],
                 })
-    return sentences
+    return _gan_dau_cau(sentences, text)
+
+
+def _gan_dau_cau(moc: list, goc: str) -> list:
+    """Gắn lại dấu chấm/hỏi/than vào cuối từ, lấy từ CHÍNH văn bản đã gửi đi đọc.
+
+    29/8 — băng phụ đề ghép hai câu dính nhau: **"314,682 playing right now Apex Legends"**.
+    Luật ngắt cụm trong `Karaoke.tsx` có kiểm dấu câu (`/[.!?]$/`), nhưng máy đọc trả về mốc TỪNG
+    TỪ đã bóc sạch dấu — nên "now" không bao giờ khớp và luật KHÔNG BAO GIỜ CHẠY. Cụm chỉ còn bị
+    cắt theo số từ, và nó cắt ngang qua ranh giới câu.
+    Đây lại đúng họ lỗi của tuần: một luật NHÌN THÌ CÓ, mà dữ liệu tới nơi thì đã mất thứ nó cần.
+    Văn bản gốc vẫn nằm trong tay ở đây, nên dán lại dấu là việc của chỗ này chứ không phải việc
+    của bên vẽ.
+    Không tìm thấy từ trong văn bản (máy đọc gộp/tách khác đi) thì bỏ qua từ đó — thà thiếu một
+    dấu còn hơn dịch con trỏ sai rồi gắn nhầm dấu cho cả phần còn lại."""
+    t = str(goc or "")
+    vt = 0
+    for m in moc:
+        w = str(m.get("w") or "")
+        if not w:
+            continue
+        i = t.find(w, vt)
+        if i < 0:
+            continue
+        vt = i + len(w)
+        j = vt
+        while j < len(t) and t[j] in " \t":
+            j += 1
+        if j < len(t) and t[j] in ".!?":
+            m["w"] = w + t[j]
+            vt = j + 1
+    return moc
 
 
 LEAD = 0.10   # hiện chữ SỚM hơn giọng ~0.1s (mắt đọc trước tai nghe -> cảm giác khớp)

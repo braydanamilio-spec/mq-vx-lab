@@ -2982,7 +2982,11 @@ def _gan_truc_vao_tieu_de(tieu_de: str, truc: str, val) -> str:
     v = _NHAN_TRUC.get(v.lower(), v)
     if v is _tho and "_" in _tho:
         return t
-    if v.lower() in t.lower():
+    # So sau khi CHUẨN HOÁ gạch nối/gạch dưới: giá trị trục là slug của nguồn ("ice-creams"),
+    # còn tiêu đề viết chữ người đọc ("Ice Creams"). So thô thì hai bên không khớp và hậu tố bị
+    # dán thêm — ra "Ice Creams: what is really in it — Ice-creams", lặp đúng một chữ hai lần.
+    _sosanh = lambda x: " ".join(str(x).lower().replace("-", " ").replace("_", " ").split())
+    if _sosanh(v) in _sosanh(t):
         return t
     if any(ord(c) > 127 for c in v):
         return t                                   # thà không phân biệt còn hơn lộ mã
@@ -3318,7 +3322,17 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
     def _mot(v):
         t = {**(ky or {}), truc: v}
         if "nhan" in t and str(v) != str(_goc_truc):
-            t.pop("nhan")
+            # 29/8 — ĐẶT None, KHÔNG XOÁ KHOÁ. Bản vá 28/8 dùng `t.pop("nhan")` và nó KHÔNG chạy:
+            # mọi `dung_story_*` đều mở đầu bằng
+            #     ts = dict(kenh.get("tham_so") or {});  ts.update(ky or {})
+            # tức dựng lại tham số TỪ CẤU HÌNH KÊNH rồi mới chồng `ky` lên. Khoá đã xoá thì không
+            # có gì để chồng, nên `nhan` tĩnh trong cấu hình sống lại nguyên vẹn ở tầng dưới.
+            # Đo thật trên khung vừa render: tiêu đề ra "Breakfast cereal: what is really in it —
+            # Ice-creams" — khung nói ngũ cốc, dữ liệu là KEM, đúng cái lỗi bản vá kia sinh ra để
+            # diệt. Tôi đã tưởng nó xong suốt một ngày.
+            # `None` thì `update` GHI ĐÈ được, và mọi bộ dựng đều viết `ky.get("nhan") or <mặc
+            # định>` nên None rơi đúng vào đường lui.
+            t["nhan"] = None
         return t
     thu = [_mot(v) for v in kho] if (truc and kho) else [dict(ky or {})]
     da_thay = None

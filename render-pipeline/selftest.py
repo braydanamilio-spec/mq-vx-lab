@@ -2271,6 +2271,7 @@ def main():
     check("xoay trục phải ĐỔI tiêu đề, không thì kênh câm sau 1 video", t_xoay_truc_doi_tieu_de)
     check("mọi nguồn phải có TÊN CƠ QUAN, không in mã lên video", t_moi_nguon_co_ten_that)
     check("cổng an toàn đi hết MỌI kho mục (kể cả frames)", t_cong_an_toan_di_het_moi_kho_muc)
+    check("xoay trục thì nhãn tĩnh phải BIẾN MẤT tới tận bộ dựng", t_nhan_tinh_bi_bo_khi_xoay_truc)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
@@ -4440,6 +4441,63 @@ def t_cong_an_toan_di_het_moi_kho_muc():
     ra = T._cong_an_toan(fr, "CHOT")
     con = [m.get("name") for f2 in ((ra or {}).get("frames") or []) for m in (f2.get("data") or [])]
     assert ra is None or ".XXX" not in con, f"cổng bỏ sót mục bẩn trong `frames`: {set(con)}"
+
+
+
+
+def t_nhan_tinh_bi_bo_khi_xoay_truc():
+    """Xoay trục thì NHÃN TĨNH của kênh phải biến mất, kể cả sau khi bộ dựng gộp lại tham số.
+
+    28/8 vá lần một bằng `ky.pop("nhan")` trong `_dung_story_xoay` — và nó KHÔNG chạy. Mọi
+    `dung_story_*` đều mở đầu bằng `ts = dict(kenh["tham_so"]); ts.update(ky)`, tức dựng lại tham
+    số TỪ CẤU HÌNH KÊNH rồi mới chồng `ky` lên: khoá đã xoá thì không có gì để chồng, nên nhãn
+    tĩnh sống lại nguyên vẹn ở tầng dưới. Một ngày sau mới lộ, trên khung đã render:
+        "Breakfast cereal: what is really in it — Ice-creams"
+    khung nói ngũ cốc, dữ liệu là KEM. Đây là loại sai tệ nhất: không xấu, không thiếu, mà NÓI SAI.
+
+    Chốt chạy THẬT qua `_dung_story_xoay` với một bộ dựng giả chỉ việc trả lại `ky` nó nhận được —
+    không cần mạng, không cần nguồn, và đo đúng thứ đã hỏng: giá trị tới TAY BỘ DỰNG là gì."""
+    import the_he_2 as T
+    nhan_ky = {}
+
+    def _gia(kenh, ky):
+        # mô phỏng đúng dòng đầu của mọi `dung_story_*` thật
+        ts = dict(kenh.get("tham_so") or {})
+        ts.update(ky or {})
+        nhan_ky["thay"] = ts.get("nhan")
+        nhan_ky["mon"] = ts.get("mon")
+        # ÉP XOAY bằng cách từ chối giá trị gốc. Bản trước ép bằng danh sách `avoid`, và nó không
+        # ép được: tiêu đề còn đi qua `hoan_tieu_de` (gắn trục + dựng lại từ dữ liệu) nên chuỗi
+        # cuối không còn khớp mục trong `avoid`. Bộ dựng trả None thì lượt đó bị bỏ chắc chắn,
+        # không phụ thuộc bất cứ tầng nào phía sau.
+        if ts.get("mon") == "breakfast-cereals":
+            return None
+        return {"title": f"{ts.get('nhan') or str(ts.get('mon') or '').title()}: what is in it",
+                "items": [{"name": f"m{i}", "stat": str(9 - i)} for i in range(4)],
+                "nguon": "off", "subtitle": "by calories", "narration": ["a", "b", "c", "d"]}
+
+    # Kho xoay RIÊNG của kênh giả + tắt phép xếp-theo-nhu-cầu: thứ tự kho thật do radar quyết nên
+    # nó đổi theo ngày, và một chốt phụ thuộc thứ tự ấy sẽ đỏ/xanh ngẫu nhiên — đã dính đúng vậy ở
+    # bản đầu. Chốt phải tất định, nếu không thì không ai tin nó nữa.
+    kenh = {"ten": "CHOT", "dinh_dang": "ranked", "nguon": "off",
+            "tham_so": {"mon": "breakfast-cereals", "nhan": "Breakfast cereal", "xoay": "mon",
+                        "kho_mon": ["breakfast-cereals", "chips"]}}
+    cu = T.DUNG_STORY.get("ranked")
+    xep_cu = T._xep_theo_nhu_cau
+    try:
+        T.DUNG_STORY["ranked"] = _gia
+        T._xep_theo_nhu_cau = lambda kenh, truc, kho: list(kho)     # giữ nguyên thứ tự khai
+        st = T._dung_story_xoay("ranked", kenh, dict(kenh["tham_so"]), [])
+    finally:
+        T._xep_theo_nhu_cau = xep_cu
+        if cu:
+            T.DUNG_STORY["ranked"] = cu
+    assert st, "không dựng được story nào"
+    assert str(nhan_ky.get("mon")) != "breakfast-cereals", \
+        "trục không xoay được — chốt không đo được gì"
+    assert not nhan_ky.get("nhan") if False else not nhan_ky.get("thay"), (
+        f"nhãn tĩnh {nhan_ky.get('thay')!r} SỐNG LẠI ở tầng bộ dựng sau khi trục đã xoay sang "
+        f"{nhan_ky.get('mon')!r} — tiêu đề sẽ nói sai nội dung")
 
 
 

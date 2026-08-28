@@ -334,8 +334,16 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
         const p = spring({ frame: lastLocal - climbDur, fps, config: { damping: 13, stiffness: 110 } });
         const pulse = 1 + Math.sin((f / fps) * 6) * 0.02;
         return (
-          <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: 210, zIndex: 6, pointerEvents: "none" }}>
-            <div style={{ opacity: Math.min(1, p), transform: `translateY(${(1 - Math.min(1, p)) * 40}px) scale(${pulse})`, textAlign: "center", padding: "0 60px" }}>
+          // 29/8 — KHỐI TỔNG KẾT DỜI LÊN NỬA TRÊN.
+          // Khung thật: "11.5K" cỡ chữ 100 neo ở đáy (paddingBottom 210) đè thẳng lên nhãn
+          // "AUG 16" và viên số của nó — hai khối chữ chồng nhau ngay ở giây quyết định, lúc
+          // người xem đang đọc con số cuối.
+          // Đáy là vùng ĐÔNG nhất của dạng này: nhãn mục hai bên, viên số, băng phụ đề, dòng
+          // nguồn và tên kênh đều ở đó. Nửa trên thì trống — thang log bao giờ cũng để trống phần
+          // trên vì mục cao nhất mới chạm tới đó. Dời lên là hết đè, và lấp luôn chỗ chết.
+          <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 250, zIndex: 6, pointerEvents: "none" }}>
+            <div style={{ opacity: Math.min(1, p), transform: `translateY(${(1 - Math.min(1, p)) * -40}px) scale(${pulse})`, textAlign: "center", padding: "18px 40px", borderRadius: 22,
+                          background: "radial-gradient(70% 120% at 50% 50%, rgba(8,10,20,.72) 0%, rgba(8,10,20,.28) 70%, transparent 100%)" }}>
               <div style={{ color: "#ffffffcc", fontWeight: 800, fontSize: 30, letterSpacing: 2, marginBottom: 6, textTransform: "uppercase" as const }}>{last.label}</div>
               <div style={{ fontFamily: "Anton, 'Poppins'", color: "#fff", fontWeight: 400, fontSize: 100, lineHeight: 0.98, letterSpacing: 1, textShadow: `0 0 50px ${accent}, 0 8px 30px #000c` }}>{last.oddsDisp.toUpperCase()}</div>
             </div>
