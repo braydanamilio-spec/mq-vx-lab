@@ -2197,6 +2197,7 @@ def main():
     check("đặt tiêu đề chịu được mọi hình dạng story", t_dat_tieu_de_chiu_duoc_moi_hinh_dang)
     check("sổ tránh-trùng và phép so cắt cùng độ dài", t_so_trung_tieu_de_phai_cung_do_dai)
     check("bộ chấm Kling chặn đúng điểm yếu của Kling", t_kling_chan_dung_diem_yeu)
+    check("Kling thiếu cảnh phải chặn trước khi ghép", t_kling_thieu_canh_phai_chan_truoc_khi_ghep)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5384,6 +5385,47 @@ def t_kling_chan_dung_diem_yeu():
     r = K._validate({"hook_line": "HE MOWS AT 6AM", "title": "t", "scenes": sach})
     xau = [x for x in r if any(k in x for k in ("ghim góc máy", "chữ đọc được", "mặt cận cảnh", "3-6 giây"))]
     assert not xau, f"prompt sạch mà vẫn bị bắt lỗi: {xau}"
+
+
+def t_kling_thieu_canh_phai_chan_truoc_khi_ghep():
+    """THIẾU MỘT CẢNH THÌ PHẢI CHẶN, KHÔNG ĐƯỢC GHÉP RỒI ĐĂNG.
+
+    28/8 — đây là luật quan trọng nhất của lò Kling. Thiếu một cảnh giữa chừng thì gag GÃY, nhưng
+    video vẫn ra, vẫn đủ độ dài, vẫn qua QC kỹ thuật, vẫn đẩy kho, vẫn đăng. Hỏng kiểu đó không có
+    gì báo động — người xem thấy một video vô nghĩa còn hệ báo "thành công".
+    Nên phải chặn TRƯỚC khi ghép, và nói rõ thiếu cảnh nào để anh biết dán tiếp cái gì.
+
+    Chốt cũng canh việc "đã đẩy thì thôi": mốc `.da_day` là thứ duy nhất ngăn một thư mục bị đẩy
+    kho hai lần khi chạy lại — mất nó là đăng trùng."""
+    import sys as _s, os as _o, json as _j, tempfile as _t
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import kling_lo as KL
+    with _t.TemporaryDirectory() as d:
+        _o.makedirs(_o.path.join(d, "clips"))
+        io.open(_o.path.join(d, "shots.json"), "w", encoding="utf-8").write(_j.dumps(
+            {"title": "t", "hook_line": "H",
+             "scenes": [{"n": i, "beat": "hook", "sec": 4, "prompt": "x"} for i in (1, 2, 3)]}))
+        # chưa có clip nào
+        du, tep, thieu = KL.kiem_du(d)
+        assert not du and len(thieu) == 3, f"thư mục rỗng mà báo đủ: {du} {thieu}"
+        # có 2/3 -> VẪN PHẢI chặn, và nói đúng cảnh còn thiếu
+        for n in (1, 3):
+            io.open(_o.path.join(d, "clips", f"scene-{n:02d}.mp4"), "wb").write(b"0" * 20000)
+        du, tep, thieu = KL.kiem_du(d)
+        assert not du, "thiếu cảnh 2 mà vẫn báo đủ -> sẽ ghép ra video gãy gag rồi đăng"
+        assert thieu == ["scene-02"], f"báo sai cảnh thiếu: {thieu}"
+        # tệp quá nhỏ = tải hụt -> phải coi như chưa có
+        io.open(_o.path.join(d, "clips", "scene-02.mp4"), "wb").write(b"0" * 100)
+        du, _, thieu = KL.kiem_du(d)
+        assert not du and thieu == ["scene-02"], "tệp tải hụt (quá nhỏ) vẫn bị tính là có"
+        # đủ cả 3 -> mới cho qua
+        io.open(_o.path.join(d, "clips", "scene-02.mp4"), "wb").write(b"0" * 20000)
+        du, tep, thieu = KL.kiem_du(d)
+        assert du and len(tep) == 3, f"đủ 3 clip mà vẫn chặn: {thieu}"
+    # mốc chống đẩy trùng phải tồn tại trong mã
+    src = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "kling_lo.py"),
+                  encoding="utf-8").read()
+    assert ".da_day" in src and "continue" in src, "mất mốc chống đẩy kho hai lần -> đăng trùng"
 
 
 if __name__ == "__main__":
