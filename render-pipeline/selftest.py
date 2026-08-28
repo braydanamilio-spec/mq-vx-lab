@@ -2270,6 +2270,7 @@ def main():
     check("hồ key qua ảnh chụp D1, không đâm vào A", t_ho_key_qua_d1_khong_dam_vao_A)
     check("xoay trục phải ĐỔI tiêu đề, không thì kênh câm sau 1 video", t_xoay_truc_doi_tieu_de)
     check("mọi nguồn phải có TÊN CƠ QUAN, không in mã lên video", t_moi_nguon_co_ten_that)
+    check("cổng an toàn đi hết MỌI kho mục (kể cả frames)", t_cong_an_toan_di_het_moi_kho_muc)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
@@ -4409,6 +4410,36 @@ def t_cf_chan_prompt_van_con_duong_gemini():
         "không bỏ qua key CF còn lại -> đốt lượt vào cùng một prompt bị chặn"
 
 
+
+
+
+
+def t_cong_an_toan_di_het_moi_kho_muc():
+    """Cổng an toàn nội dung phải soi MỌI chỗ story cất mục, kể cả `frames` của dạng đua.
+
+    28/8 — anh gửi khung AMERICA LOOKED UP: một dòng trong bảng ghi ".XXX". `an_toan(".xxx")` vốn
+    trả False, danh sách chặn đã có sẵn — cổng KHÔNG hỏng, nó chỉ chưa bao giờ được dẫn tới đó:
+    vòng lọc đi qua items/data/pairs/scenes, còn dạng `race` để mọi mục trong `frames[i].data`.
+    Đây là kiểu hỏng đắt nhất của hệ này: một cổng NHÌN THÌ CÓ, chạy thì không chạm dữ liệu thật
+    (cùng họ với `DongNguon` được nhập mà không được vẽ). Với cổng an toàn thì cái giá không phải
+    một video xấu mà là cả một kênh.
+    Chốt gọi THẬT với dữ liệu bẩn ở TỪNG kho mục, chứ không đọc mã — đọc mã chính là cách lỗi này
+    lọt qua suốt thời gian dài."""
+    import the_he_2 as T
+    NEN = {"title": "Most-read on Wikipedia", "nguon": "wikipedia",
+           "narration": ["a", "b", "c", "d"]}
+    BAN = {"name": ".XXX", "value": 3, "stat": "3"}
+    SACH = [{"name": f"Item {i}", "value": 9 - i, "stat": str(9 - i)} for i in range(6)]
+    for kho in ("items", "data", "pairs"):
+        st = {**NEN, kho: [dict(BAN)] + [dict(x) for x in SACH]}
+        ra = T._cong_an_toan(st, "CHOT")
+        con = [m.get("name") for m in ((ra or {}).get(kho) or [])]
+        assert ra is None or ".XXX" not in con, f"cổng bỏ sót mục bẩn ở `{kho}`: {con}"
+    fr = {**NEN, "frames": [{"t": f"Aug {i}", "data": [dict(BAN)] + [dict(x) for x in SACH[:4]]}
+                            for i in range(13, 19)]}
+    ra = T._cong_an_toan(fr, "CHOT")
+    con = [m.get("name") for f2 in ((ra or {}).get("frames") or []) for m in (f2.get("data") or [])]
+    assert ra is None or ".XXX" not in con, f"cổng bỏ sót mục bẩn trong `frames`: {set(con)}"
 
 
 

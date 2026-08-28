@@ -60,8 +60,17 @@ export const Bookend: React.FC<{
     // vệt sáng quét ngang — chuyển động ngay từ khung hình đầu, không để màn hình đứng yên
     const quet = interpolate(f, [0, iF], [-40, 140], { extrapolateRight: "clamp" });
     return (
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
-                    justifyContent: "center", padding: _ngang ? "0 150px" : "0 70px", zIndex: 40, opacity: ra,
+      // 28/8 — THẺ HOOK ĐẶT Ở PHẦN TRÊN, KHÔNG ĐẶT GIỮA KHUNG.
+      // Anh gửi khung MPG TRUTH: khối "19 mpg / BRONCO 4WD / IS YOUR CAR ON IT?" nằm chình ình
+      // GIỮA màn hình, đè lên đúng ba hàng cột đang chạy — người xem mất chính đoạn dữ liệu mà
+      // cả video dựng lên để nói, suốt 13 giây đầu (quãng hook dài theo lời đọc).
+      // Chủ ý của thẻ hook là "nội dung vẫn chạy bên dưới, không phải chữ trên nền đen" (xem màn
+      // che 0,16 ở trên) — nhưng đặt giữa khung thì nó phá đúng cái nó định giữ.
+      // Phần trên là chỗ mắt tìm tới trước, và ở mọi dạng thì vùng đó thoáng nhất: bảng, bản đồ
+      // và thang đều bắt đầu từ khoảng 1/3 khung trở xuống.
+      <div style={{ position: "absolute", inset: 0, display: "flex",
+                    alignItems: _ngang ? "center" : "flex-start",
+                    justifyContent: "center", padding: _ngang ? "0 150px" : "210px 70px 0", zIndex: 40, opacity: ra,
                     background: `radial-gradient(95% 65% at 50% 45%, ${accent}1f 0%, rgba(0,0,0,${MAN_CHE * 0.62}) 55%, rgba(0,0,0,${MAN_CHE}) 100%)` }}>
         <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, bottom: 0, left: `${quet}%`, width: "26%",

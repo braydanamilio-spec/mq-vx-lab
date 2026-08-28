@@ -134,6 +134,21 @@ def cham_story(dang: str, st: dict) -> list:
         if "_" not in _gt0 and gt and gt.split()[0][:5] not in t0:
             e.append(f"{dang}: tiêu đề {t0[:52]!r} không nhắc gì tới chủ đề {gt!r} "
                      f"-> người xem bấm vào vì tưởng một đằng, thấy một nẻo")
+    # 28/8 — CHỮ CỤT GIỮA TỪ.
+    # Props thật của COURT KINGS: `hookStat = "33 poi"` — số dẫn to nhất khung hình, ba giây đầu,
+    # ghi một chữ không có trong tiếng Anh. Vì đơn vị lấy bằng `nhan[:3]` và "points"[:3] = "poi".
+    # Cách bắt mà không cần từ điển: một đơn vị BỊ CẮT bao giờ cũng là TIỀN TỐ của từ đầy đủ, và
+    # từ đầy đủ gần như luôn xuất hiện trong lời dẫn của chính story đó ("Six seasons of points
+    # leaders"). Đơn vị đúng thì hoặc là ký hiệu ($, %), hoặc là một từ đứng trọn vẹn.
+    _don = str(st.get("unit") or "").strip()
+    if len(_don) >= 3 and _don.isalpha():
+        _loi = " ".join(str(x) for x in (st.get("narration") or [])) + " " + str(st.get("outro_vo") or "")
+        for _w in re.findall(r"[A-Za-z]{4,}", _loi):
+            if _w.lower() != _don.lower() and _w.lower().startswith(_don.lower()):
+                e.append(f"{dang}: đơn vị {_don!r} là chữ CỤT của {_w!r} — nó sẽ hiện nguyên "
+                         f"như thế cạnh số dẫn ở ba giây đầu")
+                break
+
     if dang in ("ranked", "scaled", "longshot"):
         muc = [m for m in (st.get("items") or []) if isinstance(m, dict)]
         gt = {str(m.get("stat") or m.get("disp") or m.get("oddsDisp") or "") for m in muc}

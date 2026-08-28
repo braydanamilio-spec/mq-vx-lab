@@ -208,6 +208,30 @@ def _cong_an_toan(st: dict | None, ten_kenh: str = "") -> dict | None:
             if len(st[khoa]) < toi_thieu:
                 print(f"   🛡️ {ten_kenh}: còn {len(st[khoa])} mục sau khi lọc — BỎ LƯỢT")
                 return None
+    # 28/8 — CỔNG PHẢI ĐI QUA CẢ `frames`, CHỖ DẠNG ĐUA CẤT MỤC.
+    # Anh gửi khung AMERICA LOOKED UP: một dòng trong bảng ghi **".XXX"**. `an_toan(".xxx")` vốn
+    # trả False — danh sách chặn đã có từ "xxx" và luật ranh-giới-từ khớp đúng. Cổng KHÔNG hỏng;
+    # nó chỉ chưa bao giờ được dẫn tới đó: vòng lọc ở trên đi qua items/data/pairs/scenes, mà
+    # dạng `race` để mọi mục trong `frames[i].data`.
+    # Đây là kiểu hỏng đắt nhất trong cả hệ: một cổng NHÌN THÌ CÓ, chạy thì không chạm tới dữ
+    # liệu thật. Cùng họ với `DongNguon` được nhập mà không được vẽ, và `bien_cua` khai mà không
+    # ai gửi. Với cổng an toàn nội dung thì cái giá không phải một video xấu, mà là cả một kênh.
+    if st.get("frames"):
+        _bo = 0
+        _fr = []
+        for fr in (st["frames"] or []):
+            if not isinstance(fr, dict):
+                continue
+            _d = loc_an_toan(fr.get("data") or [])
+            _bo += len(fr.get("data") or []) - len(_d)
+            if len(_d) >= 3:
+                _fr.append({**fr, "data": _d})
+        if _bo:
+            print(f"   🛡️ {ten_kenh}: cắt {_bo} ô không an toàn trong các khung đua")
+        if len(_fr) < 4:
+            print(f"   🛡️ {ten_kenh}: còn {len(_fr)} khung sau khi lọc — BỎ LƯỢT")
+            return None
+        st["frames"] = _fr
     for khoa in ("intro_vo", "outro_vo", "hook"):
         if st.get(khoa) and not an_toan(st[khoa]):
             st[khoa] = ""
@@ -1227,6 +1251,17 @@ def _dc_wiki(D, ky):
         goc = _dt.date.today() - _dt.timedelta(days=int(ky["lui"]))
     else:
         goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    _TH_G = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    def _ngay_goc(d):
+        """20260813 -> "Aug 13". Hỏng thì trả nguyên chuỗi, không ném."""
+        t = str(d)
+        try:
+            return f"{_TH_G[int(t[4:6])]} {int(t[6:8])}"
+        except Exception:
+            return t
+
     dau = D.bai_duoc_doc(goc.year, goc.month, goc.day, 7)
     if len(dau) < 4:
         return None
@@ -1242,7 +1277,14 @@ def _dc_wiki(D, ky):
         data = [{"name": _gon(t, 16), "value": round(chuoi[t].get(d, 0) / 1000.0, 1)}
                 for t in ten if chuoi[t].get(d)]
         if len(data) >= 3:
-            frames.append({"t": int(d), "data": sorted(data, key=lambda z: -z["value"])[:7]})
+            # 28/8 — ĐỒNG HỒ CỦA BIỂU ĐỒ ĐUA IN NGUYÊN MÃ NGÀY.
+            # Anh gửi khung AMERICA LOOKED UP: góc phải trên hiện **"20260741"** cỡ chữ lớn nhất
+            # khung hình. Đó là khoá ngày `YYYYMMDD` của Wikimedia, đưa thẳng vào chỗ đáng ra để
+            # in NĂM. Với người xem thì đó là một dãy số vô nghĩa chiếm chỗ đẹp nhất màn hình —
+            # và là dấu hiệu rõ nhất rằng video do máy nhả ra không ai xem lại.
+            # Các bộ dựng đua khác truyền `nam` (một số nguyên bốn chữ số) nên đồng hồ đọc đúng;
+            # riêng đường này đếm theo NGÀY nên phải tự đổi sang chữ người đọc được.
+            frames.append({"t": _ngay_goc(d), "data": sorted(data, key=lambda z: -z["value"])[:7]})
     if len(frames) < 4:
         return None
     dan = ["Two weeks of what America actually read.",
@@ -1266,12 +1308,18 @@ def _dc_nba(D, ky):
     if len(frames) < 4:
         return None
     nhan = {"PTS": "points", "AST": "assists", "REB": "rebounds"}.get(ma, ma.lower())
+    # 28/8 — ĐƠN VỊ PHẢI LÀ MỘT TỪ VIẾT TẮT CÓ THẬT, KHÔNG PHẢI BA KÝ TỰ ĐẦU.
+    # Xem props thật của COURT KINGS: `hookStat = "33 poi"`. Số dẫn to nhất khung hình, 0-3 giây
+    # đầu, ghi một chữ không tồn tại trong tiếng Anh — vì đơn vị lấy bằng `nhan[:3]`, và
+    # "points"[:3] ra "poi". Cắt chuỗi theo SỐ KÝ TỰ để lấy chữ viết tắt là đoán, và đoán sai ở
+    # đúng chỗ đắt nhất. Bóng rổ vốn đã có sẵn ba chữ viết tắt ai cũng đọc được.
+    vtat = {"points": "pts", "assists": "ast", "rebounds": "reb"}.get(nhan, ma.lower())
     dan = [f"Six seasons of {nhan} leaders.",
            f"{frames[0]['data'][0]['name']} started on top.",
            f"{frames[-1]['data'][0]['name']} is there now.",
            "Per game, no adjustments.",
            "Numbers from the league's own feed."]
-    return (f"NBA {nhan} leaders", nhan[:3], frames, dan)
+    return (f"NBA {nhan} leaders", vtat, frames, dan)
 
 
 def _dc_epa(D, ky):
