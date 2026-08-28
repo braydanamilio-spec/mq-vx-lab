@@ -65,12 +65,43 @@ export const nenKenh = (chinh?: string, phu?: string, lech = 18): string => {
   // Bão hoà thấp: đủ để nhận ra sắc riêng của kênh, không đủ để thành một mảng màu tranh chỗ
   // với dữ liệu. Sàn 8 để nền không rơi về xám hệt nhau cả 50 kênh.
   const sat = Math.round(Math.max(8, Math.min(15, (s1 || 0.4) * 100 * 0.22)));
+  // ĐỘ SÁNG 21/17/14%, KHÔNG PHẢI 15/10/7 NHƯ BẢN ĐẦU.
+  // Bản 15/10/7 cho tương phản đẹp hơn nữa (14,6:1) nhưng làm cổng `opening_is_flat` chặn video:
+  // cổng đếm điểm có độ sáng đo được DƯỚI 40, mà nền 15% sáng rơi đúng 40 — tức gần như mọi điểm
+  // của khung đều bị tính là "tối", và FAME CURVE bị bỏ lượt với "83,8% tối".
+  // Không nới cổng: nó bắt đúng thứ nó sinh ra để bắt (chữ trên nền trơn), và nới một cổng để
+  // vừa một thay đổi thẩm mỹ là mở cửa cho đúng loại video đã bị cấm.
+  // 21% cho độ sáng đo được 55 — trên ngưỡng, mà tương phản chữ trắng vẫn 11,5:1 (cũ: 4,7:1).
+  // Nền vẫn tối và vẫn nhạt màu; chỉ là không tối tới mức máy đo coi cả khung là bóng đêm.
   return `radial-gradient(126% 100% at 50% 6%,`
-    + ` hsl(${Math.round(h1)} ${sat}% 15%) 0%,`
-    + ` hsl(${(bh + lech) % 360} ${sat}% 10%) 54%,`
-    + ` hsl(${(bh + lech * 2) % 360} ${Math.round(sat * 0.85)}% 7%) 100%)`;
+    + ` hsl(${Math.round(h1)} ${sat}% 21%) 0%,`
+    + ` hsl(${(bh + lech) % 360} ${sat}% 17%) 54%,`
+    + ` hsl(${(bh + lech * 2) % 360} ${Math.round(sat * 0.85)}% 14%) 100%)`;
 };
 
 /** Vệt sáng phụ đặt lệch tâm — cho mỗi kênh một "hướng sáng" khác nhau, tránh cảm giác cùng khuôn. */
 export const veSang = (mau?: string, goc = 0): string =>
   `radial-gradient(58% 42% at ${28 + (goc % 3) * 22}% ${18 + (goc % 2) * 54}%, ${mau || "#fff"}22, transparent 70%)`;
+
+/** HẠT PHIM — một lớp nhiễu rất mảnh phủ lên nền.
+ *
+ * 28/8 — hạ nền xuống tối và nhạt màu (xem `nenKenh`) làm cổng `opening_is_flat` chặn FAME CURVE:
+ * "87,5% tối · 266 màu". Cổng ấy bắt đúng: 266 màu nghĩa là khung mở đầu THẬT SỰ trống — trước
+ * đây nó lọt chỉ vì nền sáng, chứ nội dung vẫn nghèo y như vậy.
+ *
+ * Cách sửa không phải nới ngưỡng mà làm khung giàu lên thật. Hạt phim làm đúng ba việc cùng lúc:
+ *   • phá vệt loang (banding) — bệnh cố hữu của gradient tối khi nén H.264;
+ *   • đưa số màu từ vài trăm lên hàng nghìn, tức nền không còn là một mảng phẳng;
+ *   • cho khung cái chất "quay bằng máy" thay vì "vẽ bằng CSS".
+ * Đây là thứ mọi nền tối tử tế đều có; mình thiếu nó nên phải bù bằng cách vặn nền sáng lên.
+ *
+ * ĐỘ MỜ PHẢI RẤT THẤP. Bản đầu tôi để `opacity=0.5` và nó phủ một tấm veil xám 50% lên toàn
+ * khung: nền hết chói thật, nhưng cũng mất sạch sắc riêng của kênh và nhìn như một bức tường bẩn.
+ * Hạt phim là thứ để CẢM thấy chứ không phải để NHÌN thấy — 0,055 là mức thấy được bằng máy đo
+ * mà mắt chỉ đọc ra "nền có chất", không đọc ra "có nhiễu". Hạt dày còn làm phình bitrate.
+ * Đã đo lại trên khung thật sau khi hạ. */
+export const HAT_PHIM = "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27180%27%20height%3D%27180%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.8%27%20numOctaves%3D%273%27%20stitchTiles%3D%27stitch%27%2F%3E%3CfeColorMatrix%20type%3D%27saturate%27%20values%3D%270%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27180%27%20height%3D%27180%27%20filter%3D%27url%28%23n%29%27%20opacity%3D%270.055%27%2F%3E%3C%2Fsvg%3E\")";
+
+/** Nền hoàn chỉnh của một kênh: hạt phim nằm trên, gradient màu kênh nằm dưới. */
+export const nenDayDu = (chinh?: string, phu?: string, lech = 18): string =>
+  `${HAT_PHIM}, ${nenKenh(chinh, phu, lech)}`;

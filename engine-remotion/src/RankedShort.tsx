@@ -3,7 +3,7 @@ import { Karaoke } from "./Karaoke";
 import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
 import { SoChay, SO_DEU, DongNguon } from "./So";
-import { nenKenh } from "./Nen";
+import { nenDayDu } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import { dungKhung, dayTieuDe } from "./Khung";
 import { bienCua, hoaTietNen, kieuThe } from "./Bien";
@@ -127,7 +127,7 @@ export const RankedShort: React.FC<RankedProps> = (props) => {
       // short trên feed thường 60-100 — nhìn tối om, và khung cuối tụt xuống 15 nên trông
       // như video kết thúc bằng màn hình đen. Nâng cả ba chặng gradient, GIỮ NGUYÊN tông màu
       // riêng của từng dạng (tông là thứ phân biệt kênh, không được gộp về một màu).
-    <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font), ...hoaTietNen(B, accent) }}>
+    <AbsoluteFill style={{ background: nenDayDu(bg || accent, bg2 || color), fontFamily: phong(font), ...hoaTietNen(B, accent) }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: K.tieuDeTop, left: 0, right: 0, textAlign: "center", padding: `0 ${K.padX}px` }}>
         {/* 27/8 — BỎ PILL "🏆 RANKED".

@@ -4,7 +4,7 @@ import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
 import { SoChay, SO_DEU, DongNguon } from "./So";
 import { bienCua, hoaTietNen } from "./Bien";
-import { nenKenh } from "./Nen";
+import { nenDayDu } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import React, { useMemo } from "react";
 import { dungKhung, dayTieuDe } from "./Khung";
@@ -103,7 +103,7 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
       // short trên feed thường 60-100 — nhìn tối om, và khung cuối tụt xuống 15 nên trông
       // như video kết thúc bằng màn hình đen. Nâng cả ba chặng gradient, GIỮ NGUYÊN tông màu
       // riêng của từng dạng (tông là thứ phân biệt kênh, không được gộp về một màu).
-    <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font),
+    <AbsoluteFill style={{ background: nenDayDu(bg || accent, bg2 || color), fontFamily: phong(font),
       // 26/8 — hoạ tiết nền RIÊNG theo kênh: 7 dạng cho 50 kênh nên nhiều kênh dùng chung
       // một bố cục; màu khác nhau không cứu được, người xem nhận ra qua bố cục và nền.
       ...hoaTietNen(bienCua((props as any).bien), accent) }}>

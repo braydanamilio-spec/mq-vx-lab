@@ -4,7 +4,7 @@ import { Bookend } from "./Bookend";
 import { phong } from "./Phong";
 import { SoChay, SO_DEU, DongNguon } from "./So";
 import { bienCua, hoaTietNen } from "./Bien";
-import { nenKenh } from "./Nen";
+import { nenDayDu } from "./Nen";
 import { ChuyenCanh } from "./Chuyen";
 import React from "react";
 
@@ -100,13 +100,33 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
   for (const it of items) { starts.push(acc); acc += Math.round(idur(it, itemSec) * fps); }
   const introP = spring({ frame: f, fps, config: { damping: 12, stiffness: 140 } });
 
+  // 28/8 — THANG PHẢI VỪA DỮ LIỆU, KHÔNG PHẢI LÚC NÀO CŨNG BẮT ĐẦU TỪ 1.
+  // Khung thật FAME CURVE: sáu mốc đọc nằm trong khoảng 5,1K-8,3K, mà thang chạy từ "1" lên tới
+  // "1M" — hai phần ba khung trên là khoảng trống, và cả sáu mục chen nhau trong một dải hẹp ở
+  // dưới đáy. Người xem không đọc ra chênh lệch giữa chúng, mà chỗ trống thì chiếm mất màn hình.
+  // Nguyên nhân: gốc thang ghim cứng ở 0 (tức "1"), và `maxN` còn cộng thêm MỘT bậc thừa nữa.
+  // Nay gốc thang tụt xuống ngay dưới mục nhỏ nhất, trần lên ngay trên mục lớn nhất — vẫn là
+  // thang log thật, vẫn ghi mốc thật, chỉ là nhìn vào đúng chỗ có dữ liệu.
   const maxLogAll = Math.max(1, ...items.map((d) => d.logValue));
-  const maxN = Math.ceil(maxLogAll) + 1;
+  const minLogAll = Math.min(...items.map((d) => d.logValue), maxLogAll);
+  // BƯỚC THANG PHẢI HỢP VỚI DẢI DỮ LIỆU.
+  // Thang này sinh ra cho kiểu "1 phần triệu" — dải trải nhiều bậc mười, nên mỗi nấc một bậc là
+  // đúng. Nhưng với dữ liệu ĐẾM (lượt đọc theo ngày) thì cả sáu mục nằm gọn trong 0,2 bậc: dù có
+  // cắt trần xuống sát dữ liệu, sáu mục vẫn chen nhau trong một dải hẹp và nửa khung vẫn trống,
+  // vì bước nấc lớn hơn cả dải dữ liệu.
+  // Dải hẹp thì nấc phải nhỏ lại: 5,6K · 7,5K · 10K thay vì 1K · 10K · 100K. Vẫn là thang log
+  // thật, vẫn là mốc thật — chỉ là nhìn ở đúng độ phóng mà dữ liệu cần.
+  const daiLog = maxLogAll - minLogAll;
+  const buocN = daiLog >= 1.2 ? 1 : daiLog >= 0.5 ? 0.25 : 0.1;
+  // Chừa một nấc dưới mục thấp nhất để cột không mọc từ sát mép; không xuống dưới 0.
+  const gocN = Math.max(0, Math.floor(minLogAll / buocN) * buocN - buocN);
+  // Ít nhất bốn nấc để thang còn ra hình một cái thang.
+  const maxN = Math.max(gocN + 4 * buocN, Math.ceil(maxLogAll / buocN) * buocN);
   const BOTTOM_PAD = BOTTOM_PAD_GOC + ((subs && subs.length) ? 150 : 0);
   // Chiều cao dùng được của cột thang trong khung 1920 (trừ hai đầu chừa chữ), rồi từ đó suy ra
   // bước thang vừa với dải dữ liệu THẬT của video này.
-  const GAP = buocThang(maxLogAll, Math.max(320, 1920 - BOTTOM_PAD - TOP_PAD));
-  const trackH = BOTTOM_PAD + maxN * GAP + TOP_PAD;
+  const GAP = buocThang((maxN - gocN) / buocN, Math.max(320, 1920 - BOTTOM_PAD - TOP_PAD)) / buocN;
+  const trackH = BOTTOM_PAD + (maxN - gocN) * GAP + TOP_PAD;
 
   // which item is currently active (climbing or holding), and its live Y
   let activeIdx = -1;
@@ -121,8 +141,8 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
   for (let i = 0; i < items.length; i++) {
     const slotFrames = Math.round(idur(items[i], itemSec) * fps);
     const climbDur = Math.max(18, Math.round(slotFrames * climbFrac));
-    const prevLog = i === 0 ? 0 : items[i - 1].logValue;
-    const fromY = yForLog(prevLog, trackH, BOTTOM_PAD, GAP), toY = yForLog(items[i].logValue, trackH, BOTTOM_PAD, GAP);
+    const prevLog = i === 0 ? gocN : items[i - 1].logValue;   // mục đầu mọc từ GỐC THANG, không từ 1
+    const fromY = yForLog(prevLog - gocN, trackH, BOTTOM_PAD, GAP), toY = yForLog(items[i].logValue - gocN, trackH, BOTTOM_PAD, GAP);
     const c = climbPos(f, starts[i], climbDur, climbHops, fromY, toY, fps);
     perItemClimb.push({ y: c.y, arc: c.arc, done: c.done, justLanded: c.justLanded });
   }
@@ -144,7 +164,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
       if (nhanY[nay] - nhanY[tr] < CACH_NHAN) nhanY[nay] = nhanY[tr] + CACH_NHAN;
     }
   }
-  if (activeIdx >= 0) { activeY = perItemClimb[activeIdx].y; activeLog = interpolate(activeY, [yForLog(maxLogAll, trackH, BOTTOM_PAD, GAP), yForLog(0, trackH, BOTTOM_PAD, GAP)], [maxLogAll, 0]); }
+  if (activeIdx >= 0) { activeY = perItemClimb[activeIdx].y; activeLog = interpolate(activeY, [yForLog(maxLogAll - gocN, trackH, BOTTOM_PAD, GAP), yForLog(0, trackH, BOTTOM_PAD, GAP)], [maxLogAll, gocN]); }
 
   const isLast = activeIdx === items.length - 1 && activeIdx >= 0;
   const lastDone = isLast && perItemClimb[activeIdx].done;
@@ -167,8 +187,15 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
   // [RAIL_L-96, RAIL_L-40]. Thấy rõ ở canary: "1 in 15,300" đè lên "1 in 10,000".
   // Cách xử lý: khi hai thứ tranh chỗ thì BỎ nhãn thang, giữ nhãn mục — nhãn mục nói con số CHÍNH
   // XÁC của mục đó, còn nhãn thang chỉ là mốc tròn; giữ cái kém thông tin hơn là chọn sai.
+  // 28/8 — PHÉP NÉ NÀY TÍNH SAI CHỖ. Nó đọc `perItemClimb[i].y` — vị trí THÔ của nhãn, trước khi
+  // vòng chống chồng ở trên đẩy các nhãn sát nhau ra xa (`nhanY`). Nên nó né một chỗ mà nhãn
+  // không còn đứng ở đó nữa. Thấy rõ trên khung anh gửi: "Aug 4" nằm đè lên "10K reads".
+  // Và ngưỡng 46 cũng nhỏ hơn thực tế: một nhãn mục cao `CACH_NHAN`=96 (tên + viên số), tức nửa
+  // trên/dưới đã là 48, cộng nửa chiều cao chữ của nhãn thang nữa mới đủ khoảng hở.
+  // Nhãn mục hai bên đều tranh chỗ với nhãn thang (nhãn thang trải từ mép trái sang tận RAIL_L+34),
+  // nên xét cả hai phía chứ không chỉ phía trái.
   const yNhanTrai = items
-    .map((it, i) => (i % 2 === 0 && f >= starts[i] ? perItemClimb[i].y : null))
+    .map((it, i) => (f >= starts[i] ? nhanY[i] : null))
     .filter((y): y is number => y !== null);
 
   return (
@@ -176,7 +203,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
       // short trên feed thường 60-100 — nhìn tối om, và khung cuối tụt xuống 15 nên trông
       // như video kết thúc bằng màn hình đen. Nâng cả ba chặng gradient, GIỮ NGUYÊN tông màu
       // riêng của từng dạng (tông là thứ phân biệt kênh, không được gộp về một màu).
-    <AbsoluteFill style={{ background: nenKenh(bg || accent, bg2 || color), fontFamily: phong(font), overflow: "hidden",
+    <AbsoluteFill style={{ background: nenDayDu(bg || accent, bg2 || color), fontFamily: phong(font), overflow: "hidden",
       // 26/8 — hoạ tiết nền RIÊNG theo kênh: 7 dạng cho 50 kênh nên nhiều kênh dùng chung
       // một bố cục; màu khác nhau không cứu được, người xem nhận ra qua bố cục và nền.
       ...hoaTietNen(bienCua((props as any).bien), accent) }}>
@@ -199,8 +226,8 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
           <div style={{ position: "absolute", left: RAIL_R - 6, top: 0, width: 6, height: trackH, background: `linear-gradient(180deg, ${accent}00, ${accent}99 12%, ${accent}66 100%)`, borderRadius: 4 }} />
 
           {/* rungs — evenly spaced in LOG space (so real rarity gaps compound going up) */}
-          {Array.from({ length: maxN + 1 }, (_, n) => n).map((n) => {
-            const ry = yForLog(n, trackH, BOTTOM_PAD, GAP);
+          {Array.from({ length: Math.round((maxN - gocN) / buocN) + 1 }, (_, k) => +(gocN + k * buocN).toFixed(4)).map((n) => {
+            const ry = yForLog(n - gocN, trackH, BOTTOM_PAD, GAP);
             // 26/8 — CHỒNG CHỮ Ở ĐÁY KHUNG. Thang nằm trong lớp bị dịch `camY`, nên chỗ đứng THẬT
             // của một nấc trên màn hình là `camY + ry`, không phải `ry`. Nấc thấp nhất rơi đúng
             // vào dải đáy nơi đặt @handle -> nhãn "1 in 10" in đè lên tên kênh (thấy rõ ở canary
@@ -214,7 +241,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
             // vá sai chỗ.
             const yMan = ANCHOR_Y + (camY + ry - ANCHOR_Y) * zoom;
             if (yMan > H - 118 || yMan < 92) return null;
-            const bidong = yNhanTrai.some((y) => Math.abs(y - ry) < 46);
+            const bidong = yNhanTrai.some((y) => Math.abs(y - ry) < 58);
             const reached = activeLog >= n - 0.15;
             return (
               <div key={n} style={{ position: "absolute", top: ry - 3, left: RAIL_L - 26, width: RAIL_R - RAIL_L + 52, height: 6,
@@ -226,7 +253,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
                   // 26/8 — ẨN TRONG QUÃNG MỞ ĐẦU. Xem khung thật: "1 in 10" chạy ngang sau nút câu
                   // hỏi, "1 in 100," bị badge cắt cụt. Quãng hook là lúc khối hook làm chủ màn hình;
                   // nhãn trục thuộc về phần thân, hiện sớm chỉ tạo nhiễu chứ không cho thêm thông tin.
-                  opacity: (bidong || f < introF) ? 0 : 1 }}>{n === 0 ? (rungKieu === "dem" ? fmtRung(0, rungKieu, rungDonVi) : "EVERYDAY") : fmtRung(n, rungKieu, rungDonVi)}</div>
+                  opacity: (bidong || f < introF) ? 0 : 1 }}>{(n === 0 && buocN === 1 && rungKieu !== "dem") ? "EVERYDAY" : fmtRung(n, rungKieu, rungDonVi)}</div>
               </div>
             );
           })}
