@@ -2205,6 +2205,7 @@ def main():
     check("dọn mồ côi từ chối khi danh sách kênh rỗng", t_don_mo_coi_khong_duoc_xoa_sach_khi_doc_hut)
     check("bảng xếp hạng phải nói đang xếp theo gì", t_bang_xep_hang_phai_noi_dang_xep_theo_gi)
     check("mọi dạng short đều ghi nguồn (vẽ, không chỉ nhập)", t_moi_dang_short_deu_ghi_nguon)
+    check("chống trùng kiểm đúng chuỗi sẽ đi ra", t_chong_trung_kiem_dung_chuoi_di_ra)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5700,6 +5701,31 @@ def t_moi_dang_short_deu_ghi_nguon():
                  encoding="utf-8").read()
     assert 'props["source"] = ten_nguon(' in th, \
         "mất chỗ gán `source` chung -> MỌI dạng đều không ghi nguồn"
+
+
+def t_chong_trung_kiem_dung_chuoi_di_ra():
+    """CHỐNG TRÙNG PHẢI KIỂM ĐÚNG CHUỖI SẼ ĐI RA, Ở CHỖ CUỐI CÙNG NÓ ĐƯỢC QUYẾT ĐỊNH.
+
+    28/8 — gốc của 334/600 video hỏng trong ngày. `_gop_story` VIẾT LẠI tiêu đề của long sau khi
+    gộp chương:
+        goc["title"] = f"{tg} ({min(vals)}-{max(vals)})"
+    Nghĩa là tiêu đề CUỐI CÙNG khác hẳn tiêu đề mà `_story_xoay` đã đem đi kiểm trùng. Bộ chống
+    trùng kiểm một chuỗi, video mang một chuỗi khác — kiểm xong vô nghĩa. Hai bộ phủ cùng một dải
+    năm ra tiêu đề y hệt và không có gì chặn.
+    Đo được: DIAMOND NUMBERS 32 video, một tiêu đề lặp 9 lần, TRONG CÙNG MỘT LANE.
+
+    Kiểm sớm rồi để khâu sau đổi đi thì lớp bảo vệ chỉ còn là hình thức — và hình thức thì tệ hơn
+    không có, vì mình tin vào nó."""
+    import os as _o
+    R = _o.path.dirname(_o.path.abspath(__file__))
+    src = io.open(_o.path.join(R, "the_he_2.py"), encoding="utf-8").read()
+    i = src.index("st_long = _gop_story(")
+    j = src.index("return ra_long, shorts, st_long", i)
+    sau = src[i:j]
+    assert "_tieu_de_da_lam(" in sau, (
+        "sau `_gop_story` (nơi tiêu đề long ĐƯỢC VIẾT LẠI) không kiểm trùng -> hai bộ phủ cùng "
+        "dải dữ liệu sẽ ra tiêu đề y hệt và cùng được đăng")
+    assert "return None" in sau, "trùng mà không bỏ bộ -> vẫn đăng trùng"
 
 
 if __name__ == "__main__":

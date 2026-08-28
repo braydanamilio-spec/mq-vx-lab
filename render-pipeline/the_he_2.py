@@ -3246,6 +3246,27 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
     # trải 6 chương `2020-2025` lại mang tên `(2024-2025)`. Sai một phần ba sự thật, và người xem
     # bấm vào vì tên đó sẽ thấy nội dung khác. Gộp TOÀN BỘ chương để lấy đúng phạm vi.
     st_long = _gop_story(kho_st, truc, tran=6)
+    # ── CHỐNG TRÙNG PHẢI KIỂM ĐÚNG CHUỖI SẼ ĐI RA (28/8) ──────────────────────────────────
+    #
+    # ĐÂY LÀ GỐC CỦA 334/600 VIDEO HỎNG HÔM NAY.
+    # `_gop_story` VIẾT LẠI tiêu đề của long sau khi gộp chương:
+    #     goc["title"] = f"{tg} ({min(vals)}-{max(vals)})"   -> "MLB wins by season (2022-2025)"
+    # Nghĩa là tiêu đề CUỐI CÙNG khác hẳn tiêu đề mà `_story_xoay` đã đem đi kiểm trùng. Bộ chống
+    # trùng kiểm một chuỗi, video mang một chuỗi khác — kiểm xong vô nghĩa. Hai bộ khác nhau phủ
+    # cùng một dải năm sẽ ra tiêu đề y hệt, và không có gì chặn.
+    # Đo được: DIAMOND NUMBERS 32 video, một tiêu đề lặp 9 lần, TRONG CÙNG MỘT LANE.
+    #
+    # Bài học: chống trùng phải kiểm ĐÚNG CHUỖI SẼ ĐI RA, ở CHỖ CUỐI CÙNG nó được quyết định.
+    # Kiểm sớm rồi để khâu sau đổi đi thì lớp bảo vệ chỉ còn là hình thức.
+    _tl = str((st_long or {}).get("title") or "")
+    if _tl and _tieu_de_da_lam(_tl, avoid):
+        # Đã làm rồi. Phân biệt bằng thứ CÓ THẬT trong dữ liệu — kẻ dẫn đầu — chứ không đánh số.
+        _them = _tieu_de_tu_du_lieu(st_long, kenh)
+        st_long["title"] = _them if (_them and not _tieu_de_da_lam(_them, avoid)) else ""
+        if not st_long["title"]:
+            print(f"   ♻️ {ten}: long trùng đề tài đã làm ({_tl[:52]}) — BỎ BỘ, không đăng trùng")
+            return None
+        print(f"   ♻️ {ten}: long trùng sau khi gộp — đổi tiêu đề thành {st_long['title'][:56]!r}")
     print(f"   🎬 {ten}: BỘ = 1 long 16:9 ({len(chuong)} chương) + {len(shorts)} short 9:16 "
           f"(mỗi short gộp ~{max(1, len(chuong) // max(1, len(shorts)))} chương)")
     print(f"      long: {st_long.get('title')}")
