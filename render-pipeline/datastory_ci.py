@@ -3793,7 +3793,11 @@ def build_longshot_props(story, sdir, handle="@longshotusa", accent="#4F46E5", m
     clips.append((outro_mp3, introSec + cum))
     total = keo_du_dai_track(items_out, clips, introSec, outroSec, ten="longshot")
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
-    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "WHAT ARE THE ODDS?"), "handle": handle, "color": accent, "accent": accent,
+    return {
+        # 28/8 — chuyển tiếp KIỂU THANG. Không có thì mặc định "odds" như cũ, nên 2 kênh longshot
+        # kia không đổi gì; riêng nguồn ĐẾM (lượt đọc) sẽ ghi "10K reads" thay vì "1 in 10,000".
+        "rungKieu": story.get("rung_kieu") or "odds",
+        "rungDonVi": story.get("rung_don_vi") or "","subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "WHAT ARE THE ODDS?"), "handle": handle, "color": accent, "accent": accent,
             "sfx": True, "items": items_out, "audio": rel(track), "music": music,
             "introSec": introSec, "outroSec": outroSec}
 

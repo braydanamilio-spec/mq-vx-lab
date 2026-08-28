@@ -18,7 +18,7 @@ export type LongshotProps = {
   hookStat?: string; hookLabel?: string; hookLine?: string;
   bg?: string; bg2?: string;
   font?: string;
-  audio?: string; music?: string; subs?: Word[]; sfx?: boolean;
+  audio?: string; music?: string; rungKieu?: string; rungDonVi?: string; subs?: Word[]; sfx?: boolean;
 };
 
 const FPS = 30;
@@ -41,8 +41,19 @@ const TOP_PAD = 520;
 const ANCHOR_Y = 1920 * 0.66;
 const RAIL_L = 1080 / 2 - 96, RAIL_R = 1080 / 2 + 96, CENTER = 1080 / 2;
 
-const fmtRung = (n: number) => {
+// 28/8 — NHÃN THANG PHẢI NÓI ĐÚNG LOẠI DỮ LIỆU ĐANG VẼ.
+// Ảnh thật kênh FAME CURVE: cột ghi "1 in 10,000" ngay cạnh con số "63.4K" — mà đây là LƯỢT ĐỌC
+// Wikipedia, không phải xác suất. Khuôn này vốn là thang xác suất ("1 phần triệu"); đổ dữ liệu
+// ĐẾM vào thì mọi nhãn thang đều vô nghĩa, và người xem không có cách nào hiểu.
+// Nguồn nào đếm thì khai `rungKieu:"dem"` + đơn vị; thang tự đổi cách ghi. Nguồn xác suất không
+// khai gì -> giữ nguyên "1 in N" như cũ, 2 kênh longshot kia không đổi một pixel.
+const _gonSo = (v: number) => v >= 1e9 ? Math.round(v / 1e9) + "B"
+  : v >= 1e6 ? Math.round(v / 1e6) + "M"
+  : v >= 1e3 ? Math.round(v / 1e3) + "K" : String(Math.round(v));
+
+const fmtRung = (n: number, kieu = "odds", donVi = "") => {
   const v = Math.pow(10, n);
+  if (kieu === "dem") return _gonSo(v) + (donVi ? " " + donVi : "");
   if (v < 1e6) return "1 in " + v.toLocaleString();
   if (v < 1e9) return "1 in " + Math.round(v / 1e6) + "M";
   return "1 in " + Math.round(v / 1e9) + "B";
@@ -81,7 +92,7 @@ const yForLog = (log: number, trackH: number, pad: number = BOTTOM_PAD_GOC, gap:
 
 export const LongshotShort: React.FC<LongshotProps> = (props) => {
   const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "WHAT ARE THE REAL ODDS?", source = "", handle = "@longshotusa", color = "#4F46E5", accent = "#4F46E5",
-    items = [], introSec = 1.8, itemSec = 2.7, outroSec = 2.4, audio, music, sfx = true , subs = [] } = props;
+    items = [], introSec = 1.8, itemSec = 2.7, outroSec = 2.4, audio, music, sfx = true , subs = [], rungKieu = "odds", rungDonVi = "" } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
   const introF = Math.round(introSec * fps);
@@ -114,6 +125,24 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
     const fromY = yForLog(prevLog, trackH, BOTTOM_PAD, GAP), toY = yForLog(items[i].logValue, trackH, BOTTOM_PAD, GAP);
     const c = climbPos(f, starts[i], climbDur, climbHops, fromY, toY, fps);
     perItemClimb.push({ y: c.y, arc: c.arc, done: c.done, justLanded: c.justLanded });
+  }
+  // ── GIÃN NHÃN THEO CHIỀU DỌC (28/8) ────────────────────────────────────────────────────
+  // Ảnh thật kênh FAME CURVE: "63.4K" in ĐÈ lên "32.6K", và còn một nhãn thứ ba nấp bên dưới.
+  // Gốc: nhãn neo đúng vào `c.y` của mục, mà thang là LOGARIT — hai ngày có lượt đọc gần nhau
+  // (63K và 33K chỉ cách nhau 0,28 đơn vị log) rơi xuống gần như cùng một điểm.
+  // Chia trái/phải theo chỉ số chẵn/lẻ KHÔNG cứu được: mục 0 và mục 2 đều là chẵn nên cùng bên.
+  // Nên phải giãn THẬT: xếp các nhãn cùng bên theo y, cái nào sát nhau quá thì đẩy xuống cho đủ
+  // khoảng cách. Nhãn lệch vài chục pixel so với mốc vẫn đọc được và vẫn hiểu là của mục nào;
+  // hai nhãn chồng lên nhau thì không đọc được cái nào.
+  const CACH_NHAN = 96;                       // cao thật của một nhãn: tên + viên số
+  const nhanY: number[] = perItemClimb.map((c) => c.y);
+  for (const ben of [0, 1]) {
+    const idx = perItemClimb.map((_, i) => i).filter((i) => i % 2 === ben)
+      .sort((a, b) => nhanY[a] - nhanY[b]);
+    for (let k = 1; k < idx.length; k++) {
+      const tr = idx[k - 1], nay = idx[k];
+      if (nhanY[nay] - nhanY[tr] < CACH_NHAN) nhanY[nay] = nhanY[tr] + CACH_NHAN;
+    }
   }
   if (activeIdx >= 0) { activeY = perItemClimb[activeIdx].y; activeLog = interpolate(activeY, [yForLog(maxLogAll, trackH, BOTTOM_PAD, GAP), yForLog(0, trackH, BOTTOM_PAD, GAP)], [maxLogAll, 0]); }
 
@@ -197,7 +226,7 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
                   // 26/8 — ẨN TRONG QUÃNG MỞ ĐẦU. Xem khung thật: "1 in 10" chạy ngang sau nút câu
                   // hỏi, "1 in 100," bị badge cắt cụt. Quãng hook là lúc khối hook làm chủ màn hình;
                   // nhãn trục thuộc về phần thân, hiện sớm chỉ tạo nhiễu chứ không cho thêm thông tin.
-                  opacity: (bidong || f < introF) ? 0 : 1 }}>{n === 0 ? "EVERYDAY" : fmtRung(n)}</div>
+                  opacity: (bidong || f < introF) ? 0 : 1 }}>{n === 0 ? (rungKieu === "dem" ? fmtRung(0, rungKieu, rungDonVi) : "EVERYDAY") : fmtRung(n, rungKieu, rungDonVi)}</div>
               </div>
             );
           })}
@@ -214,12 +243,26 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
             return (
               <React.Fragment key={i}>
                 {/* token on the pole */}
-                <div style={{ position: "absolute", top: c.y, left: CENTER + c.arc, transform: `translate(-50%,-50%) scale(${landScale})`,
-                  width: isFinal && c.done ? 148 : 108, height: isFinal && c.done ? 148 : 108, borderRadius: "50%",
+                {/* 28/8 — mục ĐÃ QUA thì nhỏ lại và mờ đi. Ảnh thật cho thấy hai biểu tượng 📈
+                    chồng nhau thành một cục không đọc được; chúng cùng nằm trên trục nên khi hai
+                    mốc gần nhau là dính. Mục đang leo mới là thứ người xem cần nhìn — mục cũ chỉ
+                    cần còn dấu vết đường đi. */}
+                {/* 28/8 — MỤC ĐÃ QUA THU THÀNH CHẤM, KHÔNG PHẢI VÒNG NHỎ LẠI.
+                    Thử trước đó: đẩy vòng sang ngang cho khỏi dính nhau -> vòng lao thẳng vào làn
+                    của nhãn, XẤU HƠN bản gốc. Sai hướng: cả nhãn lẫn vòng đều tranh cùng một dải
+                    ngang, nên dời ngang chỉ đổi chỗ va chạm chứ không bớt va chạm.
+                    Đúng hướng là BỚT THỨ TRANH CHỖ: chỉ mục đang leo mới cần là vòng lớn có biểu
+                    tượng; mục đã qua chỉ cần một chấm để thấy đường đi. Chấm 26px thì hai mốc sát
+                    nhau vẫn nằm cạnh nhau được, không thành cục. */}
+                <div style={{ position: "absolute", top: c.y, left: CENTER + c.arc,
+                  transform: `translate(-50%,-50%) scale(${landScale})`,
+                  opacity: i < activeIdx ? 0.5 : 1,
+                  width: i < activeIdx ? 26 : (isFinal && c.done ? 148 : 108),
+                  height: i < activeIdx ? 26 : (isFinal && c.done ? 148 : 108), borderRadius: "50%",
                   background: `radial-gradient(circle at 35% 30%, #ffffff22, ${accent}33 60%, #00000000)`, border: `3px solid ${accent}`,
                   display: "flex", alignItems: "center", justifyContent: "center", fontSize: isFinal && c.done ? 74 : 54,
                   boxShadow: landedGlow ? `0 0 60px ${accent}, 0 0 120px ${accent}88` : `0 6px 18px #0009`, zIndex: 3 }}>
-                  {it.emoji || "🎯"}
+                  {i < activeIdx ? null : (it.emoji || "🎯")}
                 </div>
                 {/* dust-puff impact ring on landing */}
                 {c.justLanded ? (
@@ -227,8 +270,21 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
                     borderRadius: "50%", border: `3px solid ${accent}`, opacity: 0.7, zIndex: 2 }} />
                 ) : null}
                 {/* label + real odds, branches left/right so it never collides with the rung badges */}
-                {c.done || f - starts[i] > Math.round(Math.round(idur(it, itemSec) * fps) * climbFrac) - 4 ? (
-                  <div style={{ position: "absolute", top: c.y, left: side < 0 ? RAIL_L - 40 : RAIL_R + 40, transform: `translate(${side < 0 ? "-100%" : "0"}, -50%) scale(${Math.max(0, Math.min(1, labelP))})`,
+                {/* 28/8 — CẮT NHÃN RƠI VÀO DẢI ĐÁY, y như đã làm cho nấc thang.
+                    Ảnh thật kênh FAME CURVE: số "32,621 reads" in ĐÈ lên "Source: Wikimedia
+                    pageviews" và @famecurveusa. Nấc thang đã có luật cắt này từ 26/8, nhưng nhãn
+                    và số của MỤC thì chưa — cùng một lỗi, hai loại phần tử, chỉ vá một.
+                    Bài học: vá một lỗi chồng chữ thì phải quét MỌI phần tử trôi qua vùng đó, chứ
+                    không chỉ cái mình đang nhìn.
+                    Dải đáy rộng hơn của nấc (150 vs 118) vì nhãn cao hai dòng: tên + viên số.
+                    Mục trôi khỏi khung thì bỏ vẽ — nó đã có phần thời gian của nó rồi, hiện tiếp
+                    chỉ kịp đâm vào chữ khác. */}
+                {(() => {
+                  const yThat = ANCHOR_Y + (camY + nhanY[i] - ANCHOR_Y) * zoom;
+                  return yThat > H - 150 || yThat < 80;
+                })() ? null :
+                c.done || f - starts[i] > Math.round(Math.round(idur(it, itemSec) * fps) * climbFrac) - 4 ? (
+                  <div style={{ position: "absolute", top: nhanY[i], left: side < 0 ? RAIL_L - 40 : RAIL_R + 40, transform: `translate(${side < 0 ? "-100%" : "0"}, -50%) scale(${Math.max(0, Math.min(1, labelP))})`,
                     opacity: Math.max(0, Math.min(1, labelP)), textAlign: side < 0 ? "right" as const : "left" as const, maxWidth: 300, zIndex: 3 }}>
                     <div style={{ color: "#fff", fontWeight: 800, fontSize: 30, lineHeight: 1.08, textShadow: "0 2px 10px #000c" }}>{it.label}</div>
                     <div style={{ display: "inline-block", marginTop: 6, background: accent, color: "#fff", fontWeight: 900, fontSize: 26, padding: "5px 14px", borderRadius: 10, letterSpacing: 0.3 }}>

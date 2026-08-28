@@ -1584,15 +1584,30 @@ def _bt_luot_doc(D, ky):
     diem = sorted(diem, key=lambda z: z["luot_doc"])
     buoc = [diem[0]] + diem[len(diem) // 4::max(1, len(diem) // 5)][:5]
     import math
-    muc = [{"label": f"{x['ngay'][4:6]}/{x['ngay'][6:8]}", "emoji": "📈",
+    # 28/8 — BA THỨ SAI CÙNG LÚC Ở ĐÂY, thấy trên khung hình thật kênh FAME CURVE:
+    #   • lời đọc ra "07 slash 03" — không người Mỹ nào đọc ngày kiểu đó;
+    #   • nhãn "07/23" trên màn hình cũng vậy;
+    #   • và nặng nhất: thang bên cạnh ghi "1 in 10,000" trong khi con số là LƯỢT ĐỌC.
+    #     Khuôn `longshot` vốn là thang XÁC SUẤT ("1 phần triệu"); đổ dữ liệu ĐẾM vào đó thì mọi
+    #     nhãn thang đều vô nghĩa — người xem đọc "63.4K" cạnh "1 in 10,000" và không hiểu gì.
+    # Nên nguồn phải KHAI RÕ nó đếm cái gì; phần vẽ đọc khai báo đó mà đặt nhãn thang cho đúng.
+    _TH = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    def _ngay_dep(ng):
+        try:
+            return f"{_TH[int(ng[4:6])]} {int(ng[6:8])}"
+        except Exception:
+            return str(ng)
+    muc = [{"label": _ngay_dep(x["ngay"]), "emoji": "📈",
             "oddsDisp": _so(x["luot_doc"]),
             "logValue": round(math.log10(max(10, x["luot_doc"])), 3),
-            "vo": f"{x['ngay'][4:6]} slash {x['ngay'][6:8]}. {x['luot_doc']:,} reads."}
+            "vo": f"{_ngay_dep(x['ngay'])}. {x['luot_doc']:,} reads."}
            for x in buoc[:6]]
     if len(muc) < 4:
         return None
     dan = [f"{v['ten']}, one month of attention.", "From nobody looking, to everybody looking."]
-    return (f"{_gon(v['ten'], 34)}: the spike", muc, dan)
+    # `rung_kieu` đi kèm story -> props -> composition: thang ghi "10K reads" thay vì "1 in 10,000".
+    return (f"{_gon(v['ten'], 34)}: the spike", muc, dan, {"rung_kieu": "dem", "rung_don_vi": "reads"})
 
 
 def _bt_bls(D, ky):
@@ -1675,8 +1690,11 @@ def dung_story_longshot(kenh: dict, ky: dict | None = None) -> dict | None:
     kq = bo(D, ts)
     if not kq:
         return None
-    tieu_de, muc, dan = kq
-    return _cong_an_toan({"title": tieu_de, "items": muc,
+    # 28/8 — bộ dựng CÓ THỂ trả thêm gói cấu hình thang (4 phần tử). Nhận cả hai dạng để không
+    # phải sửa 6 bộ dựng còn lại — cái nào chưa cần thì vẫn trả 3 phần tử như cũ.
+    tieu_de, muc, dan = kq[0], kq[1], kq[2]
+    _them = kq[3] if len(kq) > 3 and isinstance(kq[3], dict) else {}
+    return _cong_an_toan({"title": tieu_de, "items": muc, **_them,
                           "intro_vo": dan[0], "outro_vo": dan[-1] if len(dan) > 1 else "",
                           "nguon": kenh.get("nguon"), "_that": True,
                           "self_score": {"total": 92}}, kenh.get("ten", ""))

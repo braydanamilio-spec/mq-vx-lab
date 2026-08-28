@@ -2200,6 +2200,7 @@ def main():
     check("Kling thiếu cảnh phải chặn trước khi ghép", t_kling_thieu_canh_phai_chan_truoc_khi_ghep)
     check("kling_shots: chỗ ghi và chỗ đọc cùng project", t_kling_shots_ghi_doc_cung_mot_project)
     check("Kling A-Z dừng đúng chỗ khi chưa có key + kênh đã khai", t_kling_az_dung_dung_cho_khi_chua_co_key)
+    check("thang phải nói đúng loại dữ liệu (không '1 in N' cho lượt đọc)", t_thang_phai_noi_dung_loai_du_lieu)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5519,6 +5520,35 @@ def t_kling_az_dung_dung_cho_khi_chua_co_key():
     assert f"  {ma}:" in txt, (
         f"kênh {ma} CHƯA khai trong channels.yaml -> enqueue.py sẽ SystemExit và video dựng xong "
         f"bị vứt (đúng lỗi 20/8 làm 27/40 kênh mất video nhiều tuần)")
+
+
+def t_thang_phai_noi_dung_loai_du_lieu():
+    """NHÃN THANG PHẢI KHỚP LOẠI DỮ LIỆU ĐANG VẼ.
+
+    28/8 — ảnh khung hình thật kênh FAME CURVE: cột ghi "1 in 10,000" ngay cạnh con số "63.4K",
+    mà đây là LƯỢT ĐỌC Wikipedia chứ không phải xác suất. Khuôn `longshot` vốn là thang xác suất
+    ("1 phần triệu"); đổ dữ liệu ĐẾM vào thì mọi nhãn thang đều vô nghĩa.
+    Đây là loại sai tệ hơn cả chữ chồng chữ: chữ chồng thì người xem biết là lỗi, còn nhãn sai
+    thì họ TIN — và tin sai về con số là thứ giết niềm tin vào cả kênh dữ liệu.
+
+    Chốt buộc: nguồn nào đếm thì phải khai `rung_kieu`, và chuỗi khai đó phải chảy hết đường
+    story -> props -> composition. Đứt ở bất kỳ khâu nào là nhãn lại sai mà không ai thấy."""
+    import os as _o
+    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    R = _o.path.dirname(_o.path.abspath(__file__))
+    th = io.open(_o.path.join(R, "the_he_2.py"), encoding="utf-8").read()
+    assert '"rung_kieu": "dem"' in th, "nguồn lượt-đọc không khai `rung_kieu` -> thang vẫn ghi '1 in N'"
+    ds = io.open(_o.path.join(R, "datastory_ci.py"), encoding="utf-8").read()
+    assert '"rungKieu"' in ds, "props không chuyển tiếp `rungKieu` -> khai báo chết ở giữa đường"
+    tsx = _o.path.join(G, "engine-remotion", "src", "LongshotShort.tsx")
+    if not _o.path.exists(tsx):
+        print("      ⏭️ bỏ qua phần TSX: không có engine-remotion ở đây")
+        return
+    t = io.open(tsx, encoding="utf-8").read()
+    assert "rungKieu" in t, "composition không nhận `rungKieu`"
+    assert 'kieu === "dem"' in t, "composition nhận prop nhưng không dùng -> nhãn vẫn là xác suất"
+    # Và lời đọc không được phát âm dấu gạch chéo.
+    assert " slash " not in th, "lời đọc còn phát âm 'slash' — không người Mỹ nào đọc ngày kiểu đó"
 
 
 if __name__ == "__main__":
