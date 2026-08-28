@@ -28,6 +28,8 @@ MỌI HÀM Ở ĐÂY HỎNG THÌ TRẢ RỖNG, KHÔNG NÉM. Dữ liệu là gia 
 from __future__ import annotations
 
 import json
+import threading
+import time
 import os
 import urllib.parse
 import urllib.request
@@ -57,6 +59,45 @@ _TAM_THOI = ("503", "502", "504", "429", "timed out", "timeout", "reset by peer"
              "temporarily", "connection", "ssl")
 
 
+# ── NHỊP GỌI TỐI THIỂU THEO TỪNG NGUỒN (28/8/2026) ─────────────────────────────────────────
+# Ba nguồn có trần nhịp CÔNG BỐ RÕ, và cả ba đã cắn mình trong ngày:
+#   • musicbrainz.org  — 1 lượt/giây. Gọi dày hơn thì trả 503, và `_goi` hiểu 503 là "nguồn hỏng"
+#     nên kênh ONE HIT ra 0 video. Đo tay đúng URL ấy với nhịp giãn: 200 OK, dữ liệu đầy đủ.
+#     Tức nguồn không hỏng bao giờ — mình tự làm nó từ chối mình.
+#   • eutils.ncbi.nlm.nih.gov — 3 lượt/giây. Vượt thì NCBI CHẶN CẢ ĐỊA CHỈ MẠNG nhiều giờ, và
+#     trả về một trang HTML "Access Denied" với mã 200. `json.loads` vấp trang đó rồi báo
+#     "Expecting value: line 1 column 1" — đọc log thì tưởng mã phân tích hỏng, chứ không ai đoán
+#     ra là mình bị cấm cửa. Đã dính thật hôm nay khi đo thử.
+#   • wikimedia.org — không công bố số, nhưng 429 ngay khi gọi vài chục lượt liền.
+#
+# Hãm ở TẦNG CHUNG chứ không ở từng hàm: hàm mới thêm sau này được hưởng mà không phải nhớ, và
+# đây đúng là chỗ duy nhất mọi lượt gọi đều đi qua.
+_NHIP_NGUON = {
+    "musicbrainz.org": 1.1,
+    "eutils.ncbi.nlm.nih.gov": 0.4,
+    "wikimedia.org": 0.25,
+    "dog.ceo": 0.15,
+}
+_NHIP_LAN_CUOI: dict = {}
+_NHIP_KHOA = threading.Lock()
+
+
+def _cho_den_luot(host: str) -> None:
+    """Chờ đủ nhịp tối thiểu của nguồn này trước khi gọi tiếp."""
+    cho = 0.0
+    for k, giay in _NHIP_NGUON.items():
+        if not host.endswith(k):
+            continue
+        with _NHIP_KHOA:
+            con = giay - (time.monotonic() - _NHIP_LAN_CUOI.get(k, 0.0))
+            if con > 0:
+                cho = con
+            _NHIP_LAN_CUOI[k] = time.monotonic() + max(0.0, cho)
+        break
+    if cho > 0:
+        time.sleep(cho)
+
+
 def _goi(url: str, data: dict | None = None, tieu_de: dict | None = None, lan: int = 3):
     """Gọi một API mở. Trả dict/list, hỏng thì None — KHÔNG BAO GIỜ ném lên dây chuyền.
 
@@ -72,18 +113,28 @@ def _goi(url: str, data: dict | None = None, tieu_de: dict | None = None, lan: i
     if data is not None:
         body = json.dumps(data).encode()
         h["Content-Type"] = "application/json"
+    host = url.split("/")[2] if "//" in url else ""
     cuoi = ""
     for i in range(max(1, lan)):
         try:
+            _cho_den_luot(host)
             req = urllib.request.Request(url, data=body, headers=h)
             with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-                return json.loads(r.read().decode("utf-8", "ignore"))
+                tho = r.read().decode("utf-8", "ignore")
+            if tho.lstrip()[:1] not in ("{", "["):
+                # Trang HTML trả về với mã 200 = nguồn đang TỪ CHỐI, không phải dữ liệu lạ.
+                # Nói thẳng ra thay vì để `json.loads` ném một lỗi cú pháp khó hiểu.
+                cuoi = ("nguồn trả về trang HTML thay vì JSON — nhiều khả năng đang CHẶN nhịp gọi"
+                        if "blocked" in tho[:900].lower() or "denied" in tho[:900].lower()
+                        else "nguồn trả về không phải JSON")
+                break
+            return json.loads(tho)
         except Exception as e:
             cuoi = str(e)
             if not any(t in cuoi.lower() for t in _TAM_THOI) or i == lan - 1:
                 break
             _tg.sleep((1.6 ** i) + _rd.random())
-    print(f"   ⚠️ dữ liệu mở hỏng ({url.split('/')[2]}): {cuoi[:70]}")
+    print(f"   ⚠️ dữ liệu mở hỏng ({host}): {cuoi[:80]}")
     return None
 
 
@@ -688,14 +739,19 @@ def thanh_phan_mon(mon: str, n: int = 6, key: str = "") -> list[dict]:
 
 def nghien_cuu(tu_khoa: str, n: int = 6) -> list[dict]:
     """Nghiên cứu y khoa thật (PubMed). Trả [{tieu_de, tap_chi, nam, ma}]."""
+    # 28/8 — `tool` là thứ NCBI YÊU CẦU trong hướng dẫn E-utilities: nó cho họ biết lượt gọi này
+    # của ai để hãm đúng chỗ thay vì chặn cả địa chỉ mạng. Đã dính chặn thật hôm nay (trang
+    # "Access Denied" trả về kèm mã 200, xem `_goi`), nên đây không phải phép lịch sự suông.
+    # KHÔNG gửi kèm `email`: NCBI có nhận, nhưng đó là thư riêng của chủ kênh và việc đưa nó cho
+    # một dịch vụ bên ngoài là quyết định của người chủ, không phải của mã.
     d = _goi("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?" + urllib.parse.urlencode(
         {"db": "pubmed", "term": tu_khoa, "retmode": "json", "retmax": max(1, min(20, n)),
-         "sort": "relevance"}))
+         "sort": "relevance", "tool": "MM0-DataVideo"}))
     ids = (((d or {}).get("esearchresult") or {}).get("idlist") or [])
     if not ids:
         return []
     s2 = _goi("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?" + urllib.parse.urlencode(
-        {"db": "pubmed", "id": ",".join(ids), "retmode": "json"}))
+        {"db": "pubmed", "id": ",".join(ids), "retmode": "json", "tool": "MM0-DataVideo"}))
     kq = ((s2 or {}).get("result") or {})
     ra = []
     for i in ids:

@@ -1457,13 +1457,13 @@
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "loc": "dong_nhat",
+   "loc": "mien_phi",
    "xoay": "loc",
    "kho_loc": [
-    "dong_nhat",
-    "tang_manh",
-    "dinh_cao",
-    "ban_chay"
+    "mien_phi",
+    "tra_tien",
+    "dat_tien",
+    "re_tien"
    ]
   },
   "brand": {
@@ -1717,16 +1717,16 @@
   "the_he": 2,
   "footage": false,
   "tham_so": {
-   "xoay": "giong",
-   "kho_giong": [
-    "retriever",
-    "shepherd",
-    "bulldog",
-    "poodle",
-    "terrier",
-    "hound",
-    "spaniel",
-    "mastiff"
+   "lui": 30,
+   "xoay": "lui",
+   "kho_lui": [
+    7,
+    14,
+    30,
+    60,
+    90,
+    180,
+    365
    ]
   },
   "brand": {

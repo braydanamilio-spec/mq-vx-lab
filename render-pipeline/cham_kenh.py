@@ -127,6 +127,7 @@ def cham_mot(k: dict) -> dict:
         goc = (k.get("tham_so") or {}).get(truc)
         thu = [kho[0], kho[len(kho) // 2], kho[-1]]
         thay = {tieu.strip().lower()}
+        dung_duoc = 1                  # số lượt DỰNG ĐƯỢC story (mẫu None không tính là bằng chứng)
         for v in thu:
             if str(v) == str(goc):
                 continue
@@ -135,12 +136,22 @@ def cham_mot(k: dict) -> dict:
             try:
                 st2 = T.DUNG_STORY[dang](k, ts2)
                 if st2:
+                    dung_duoc += 1
                     thay.add(str(T.hoan_tieu_de(st2, k, truc, ts2, [])
                                  .get("title") or "").strip().lower())
             except Exception:
                 pass
         ra["tieu_de_thu"] = sorted(x for x in thay if x)
-        if len(ra["tieu_de_thu"]) < 2:
+        # 28/8 — MẪU TRẢ `None` KHÔNG PHẢI BẰNG CHỨNG TRÙNG.
+        # Đo thật: ALERT NOW, GONE TOO SOON và UNSOLVED LOG bị chấm trượt vì hai trong ba lượt thử
+        # rơi vào lúc nguồn chập (NWS/TVmaze/Wikimedia trả rỗng hoặc 429). Còn đúng một tiêu đề
+        # trong tay, bài đo kết luận "cả kho chỉ ra một tiêu đề" — trong khi nó chưa đo được gì cả.
+        # Kiểm lại tay: cả ba đều xoay ra tiêu đề khác nhau bình thường.
+        # Một phép đo không phân biệt được "giống nhau" với "chưa đo được" thì nó không đo cái nó
+        # tưởng nó đo — và ở đây cái giá là đẩy nhầm kênh lành xuống cuối hàng render.
+        if dung_duoc < 2:
+            ra["chua_do_xoay"] = True
+        elif len(ra["tieu_de_thu"]) < 2:
             loi.append(f"CẢ KHO trục `{truc}` ({len(kho)} giá trị) chỉ đẻ ra đúng một tiêu đề "
                        f"— kênh này ra video thứ 2 là trùng, không có đường xoay nào cứu được")
             diem -= 30

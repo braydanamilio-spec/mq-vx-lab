@@ -489,31 +489,84 @@ def _bd_nba(D, ky):
             "Numbers straight from the league.")
 
 
+def _so_huu(x) -> int:
+    """Cận dưới của khoảng người sở hữu SteamSpy ("1,000,000–2,000,000" -> 1000000)."""
+    v = str(x.get("so_huu") or "").replace(",", "").replace("..", "–")
+    try:
+        return int((v.split("–")[0] or "0").strip() or 0)
+    except Exception:
+        return 0
+
+
 def _bd_steam(D, ky):
-    r = D.game_steam(60)
+    """Game Steam — bốn góc nhìn trên CÙNG một bảng dữ liệu.
+
+    28/8 — TRỤC XOAY `loc` TRƯỚC NAY CHỈ CÓ MỘT NHÁNH THẬT. Hàm này nhận `loc` nhưng chỉ xử lý
+    `chet_yeu`; kênh STEAM TRUTH lại xoay qua bốn giá trị khác (`dong_nhat`, `tang_manh`,
+    `dinh_cao`, `ban_chay`) và KHÔNG giá trị nào có nhánh — cả bốn rơi xuống cùng một đường mặc
+    định, ra cùng một bảng, cùng một tiêu đề. Chống trùng coi cả bốn là đã làm ⇒ kênh câm sau một
+    video, log ghi "hết kho đề tài".
+
+    Và hai trong bốn giá trị ấy KHÔNG THỂ làm được: SteamSpy trả về tên, số người đang chơi, khoảng
+    người sở hữu và giá — không có chuỗi thời gian, nên `tang_manh` (tăng mạnh nhất) và `dinh_cao`
+    (đỉnh trong ngày) không có gì để tính. Viết nhánh cho chúng là mời một con số bịa vào bảng.
+    Nên đổi kho trục sang bốn góc mà dữ liệu ĐỠ ĐƯỢC, mỗi góc một câu chuyện khác hẳn:
+      dong_nhat  — đông người chơi nhất ngay lúc này
+      ban_chay   — nhiều người sở hữu nhất
+      mien_phi   — game miễn phí đang đông hơn game trả tiền
+      dat_tien   — game đắt nhất mà vẫn có người chơi
+      chet_yeu   — bán được hàng triệu bản mà không ai còn mở (góc ngược, kênh khác dùng)
+    """
+    r = D.game_steam(100)
     if len(r) < 6:
         return None
-    if ky.get("loc") == "chet_yeu":
+    loc = str(ky.get("loc") or "dong_nhat")
+
+    def _bang(ds, nhan_so=None):
+        return [{"name": _gon(x["ten"], 26), "stat": (nhan_so(x) if nhan_so else _so(x["dang_choi"])),
+                 "vo": f"{_gon(x['ten'], 32)}. {x['dang_choi']:,} playing right now."} for x in ds]
+
+    if loc == "chet_yeu":
         # Góc NGƯỢC LẠI: game bán được nhiều mà gần như không ai còn mở. Cùng một nguồn, hai kênh,
         # hai câu chuyện khác hẳn — đây là cách để hai kênh không giẫm chân nhau.
-        def _chu(x):
-            v = str(x.get("so_huu") or "").replace(",", "")
-            try:
-                return int(v.split("–")[0] or 0)
-            except Exception:
-                return 0
-        r = sorted([x for x in r if _chu(x) > 500000], key=lambda z: z["dang_choi"])[:6]
-        if len(r) < 3:
+        ds = sorted([x for x in r if _so_huu(x) > 500000], key=lambda z: z["dang_choi"])[:6]
+        if len(ds) < 3:
             return None
         return ("Games millions bought and nobody plays",
                 [{"name": _gon(x["ten"], 26), "stat": _so(x["dang_choi"]),
-                  "vo": f"{_gon(x['ten'], 32)}. Only {x['dang_choi']:,} still online."} for x in r],
+                  "vo": f"{_gon(x['ten'], 32)}. Only {x['dang_choi']:,} still online."} for x in ds],
                 "Owned by millions. Empty tonight.",
                 "Millions own these games. Top of the board is the emptiest.")
-    r = r[:6]
-    return ("Games people actually play right now",
-            [{"name": _gon(x["ten"], 26), "stat": _so(x["dang_choi"]),
-              "vo": f"{_gon(x['ten'], 32)}. {x['dang_choi']:,} playing right now."} for x in r],
+
+    # BỐN LÁT: LỌC theo giá, nhưng luôn XẾP theo số người đang chơi.
+    #
+    # 28/8 — bản đầu của tôi xếp theo giá và theo số người sở hữu, và cả hai chết ngay lượt đo:
+    # SteamSpy trả người sở hữu theo KHOẢNG THÔ ("100.000.000 – 200.000.000") nên sáu game đầu
+    # bảng đều hiện "100.0M", còn giá thì sáu game đắt nhất đều đúng $59.99. Sáu dòng một con số
+    # thì không phải bảng xếp hạng — cổng chất lượng chặn cả hai, đúng.
+    # Số người ĐANG CHƠI thì mỗi game một khác, nên nó là đại lượng xếp hạng duy nhất mà nguồn
+    # này đỡ nổi. Giá chỉ dùng để CẮT LÁT — và bốn lát ra bốn bảng khác hẳn nhau, vì game miễn phí
+    # và game 60 đô gần như không bao giờ chung một bảng.
+    _gia = lambda x: float(x.get("gia") or 0)
+    LAT = {
+        "mien_phi": (lambda x: _gia(x) <= 0, "Free games beating the ones people paid for",
+                     "Nobody paid a cent for any of these."),
+        "tra_tien": (lambda x: _gia(x) > 0, "Paid games people still open every night",
+                     "Every one of these cost money. People still play them."),
+        "dat_tien": (lambda x: _gia(x) >= 40, "Sixty-dollar games that kept their players",
+                     "Full price, and the servers are still busy."),
+        "re_tien": (lambda x: 0 < _gia(x) <= 10, "Cheap games pulling the biggest crowds",
+                    "Ten dollars or less. Look at the numbers."),
+    }
+    if loc in LAT:
+        _hop, _ten, _ket = LAT[loc]
+        ds = sorted([x for x in r if _hop(x)], key=lambda z: -z["dang_choi"])[:6]
+        if len(ds) < 3:
+            return None
+        return (_ten, _bang(ds), _ket)
+
+    ds = sorted(r, key=lambda z: -z["dang_choi"])[:6]
+    return ("Games people actually play right now", _bang(ds),
             "Not sales. People actually online.")
 
 
@@ -645,6 +698,42 @@ def _bd_thien_thach(D, ky):
             "N A S A tracks every one of them.")
 
 
+def _ten_giong_phang(D) -> list:
+    """Mọi giống chó của Dog CEO dưới dạng tên phẳng: [(cách viết A, cách viết B)]. MỘT lượt gọi.
+
+    KHÔNG dùng `D.giong_cho()` ở đây: hàm đó gọi thêm một lượt HTTP MỖI GIỐNG để lấy ảnh ngẫu
+    nhiên. Với 165 giống thì đó là 165 lượt tuần tự — đo thật: quá 10 phút, chưa xong. Ảnh chỉ cần
+    cho 6 con vào chung kết, nên lấy sau; danh sách tên thì một lượt là đủ.
+
+    Dog CEO cất giống hai tầng ({'retriever': ['golden', ...]}) và KHÔNG nhất quán về thứ tự chữ:
+    'retriever'/'golden' đọc là "golden retriever", nhưng 'australian'/'shepherd' đọc là
+    "australian shepherd" — nhóm đứng trước. Nên trả cả hai thứ tự và để người gọi thử Wikipedia
+    bằng cả hai; cãi nhau với quy ước của nguồn thì không bao giờ thắng, thử hai lần thì luôn đúng."""
+    d = D._goi("https://dog.ceo/api/breeds/list/all")
+    ra = []
+    for g, bien in sorted(((d or {}).get("message") or {}).items()):
+        g = str(g).strip().lower()
+        bs = [str(b).strip().lower() for b in (bien or []) if str(b).strip()]
+        if bs:
+            ra += [(f"{b} {g}", f"{g} {b}") for b in bs]
+        else:
+            ra.append((g, g))
+    return ra
+
+
+def _anh_giong(D, ten: str) -> str:
+    """Ảnh thật của một giống — chỉ gọi cho các mục ĐÃ vào bảng, không gọi cho cả 165 giống."""
+    try:
+        p = [x for x in str(ten).lower().split() if x]
+        for duong in ("/".join(reversed(p)), "/".join(p)):
+            a = D._goi(f"https://dog.ceo/api/breed/{duong}/images/random")
+            if (a or {}).get("status") == "success":
+                return str(a.get("message") or "")
+    except Exception:
+        pass
+    return ""
+
+
 def _bd_giong_cho(D, ky):
     """Giong cho -> xep theo LUOT NGUOI TRA WIKIPEDIA 30 ngay qua.
 
@@ -654,40 +743,145 @@ def _bd_giong_cho(D, ky):
     Nguon Dog CEO khong co bat ky con so nao — nen phai lay dai luong tu cho khac. Luot doc
     Wikipedia la thu do dung CAI MA NGUOI TA THAT SU QUAN TAM, mien phi, khong can key, va hop
     voi kenh hon han: "giong cho duoc tra nhieu nhat thang nay" la mot video co ly do de xem,
-    con "danh sach sau giong cho" thi khong."""
+    con "danh sach sau giong cho" thi khong.
+
+    28/8 — TRỤC XOAY `giong` TRƯỚC NAY LÀ MÃ CHẾT.
+    Cấu hình kênh BREED FILE khai `"xoay": "giong"` với kho 8 nhóm, nhưng hàm này chưa từng đọc
+    `ky`. Nó luôn lấy `giong_cho(24)` — tức 24 giống ĐẦU BẢNG CHỮ CÁI, lượt nào cũng đúng bấy
+    nhiêu con — nên tám giá trị trục cho ra đúng MỘT bảng và đúng MỘT tiêu đề ("Borzoi: 25.7K").
+    Chống trùng coi cả tám là đã làm ⇒ kênh đăng một video rồi câm hẳn, mà log chỉ ghi "hết kho
+    đề tài" nên nhìn như kho cạn chứ không như mã chết.
+    Nay `giong` chọn NHÓM giống (retriever · terrier · hound · spaniel …) và xếp hạng trong nhóm
+    đó. Mỗi nhóm là một bảng khác hẳn, một tiêu đề khác hẳn, và câu hỏi cũng cụ thể hơn với người
+    xem: "giống retriever nào người Mỹ tra nhiều nhất" đáng xem hơn "giống chó nào".
+    """
     import datetime as _dt
-    r = D.giong_cho(24)
-    if len(r) < 6:
-        return None
+    nhom = str(ky.get("giong") or "").strip().lower()
     den = _dt.date.today() - _dt.timedelta(days=2)      # Wikimedia tre ~1 ngay
     tu = den - _dt.timedelta(days=30)
     fmt = "%Y%m%d"
-    ds = []
-    for x in r:
-        ten = str(x.get("giong") or "").strip()
-        if not ten:
-            continue
-        for bai in (f"{ten} (dog)", ten):               # thu ban co ngoac truoc: it lech nghia hon
-            try:
-                lo = D.luot_doc_bai(bai, tu.strftime(fmt), den.strftime(fmt))
-            except Exception:
-                lo = []
-            tong = sum(int(d.get("luot_doc") or 0) for d in (lo or []))
+
+    def _luot(*ten_thu):
+        """Lượt đọc 30 ngày, thử mấy cách viết tên — trả (tổng, tên đã dùng).
+
+        28/8 — HAI ĐIỀU PHẢI ĐÚNG Ở ĐÂY, cả hai đều đã sai một lần:
+
+        ① TÊN BÀI WIKIPEDIA PHÂN BIỆT HOA THƯỜNG. `luot_doc_bai` chỉ đổi khoảng trắng thành gạch
+           dưới rồi ghép thẳng vào đường dẫn, nên "golden retriever" là 404 còn "Golden_Retriever"
+           mới ra số. Bản đầu của tôi truyền tên chữ thường từ Dog CEO và nhận **404 cho toàn bộ
+           16 giống** — kết luận sai thành "nhóm này không có dữ liệu".
+
+        ② 429 KHÔNG PHẢI LÀ SỐ 0. Wikimedia chặn khi gọi dày, và `luot_doc_bai` trả `[]` cho cả
+           hai trường hợp. Coi `[]` là "không ai đọc giống này" thì một cú chặn nhất thời lặng lẽ
+           đá một giống ra khỏi bảng xếp hạng — bảng vẫn hiện ra bình thường, chỉ là sai. Nên giãn
+           nhịp gọi và thử lại một lần trước khi kết luận là không có.
+        """
+        import time as _tg
+        for bai in ten_thu:
+            if not bai:
+                continue
+            dang = str(bai).title()
+            for lan in range(2):
+                try:
+                    lo = D.luot_doc_bai(dang, tu.strftime(fmt), den.strftime(fmt))
+                except Exception:
+                    lo = []
+                tong = sum(int(d.get("luot_doc") or 0) for d in (lo or []))
+                if tong > 0:
+                    return tong, dang
+                # Giãn nhịp ĐỦ để không tự đâm vào 429, nhưng không hơn: hàm này gọi vài chục
+                # lượt cho một video, nghỉ 1 giây mỗi lượt hụt là quá 3 phút — đo thật lần đầu
+                # chạy quá 10 phút chưa xong. 0,3s là mức Wikimedia chịu được ở một luồng.
+                _tg.sleep(0.3 if lan == 0 else 0.1)
+        return 0, ""
+
+    if nhom:
+        ung = [x for x in _ten_giong_phang(D) if nhom in x[0] or nhom in x[1]]
+        # Trần 14 ứng viên: nhóm `terrier` có 26 giống, mỗi giống thử tới 4 cách viết tên trên
+        # Wikimedia = hơn 100 lượt gọi tuần tự cho MỘT video. Mười bốn con là quá đủ để chọn ra
+        # sáu đứng đầu, mà vẫn nằm trong ngân sách thời gian của một lane.
+        ung = ung[:12]
+        if len(ung) < 4:
+            # Nhóm quá nhỏ (shepherd chỉ 2, bulldog 3) thì KHÔNG dựng bảng 6 dòng từ 2 con rồi
+            # gọi đó là xếp hạng. Trả None để lượt xoay đi tiếp sang nhóm khác — đúng cơ chế sẵn có.
+            print(f"   ⚠️ giống chó: nhóm '{nhom}' chỉ có {len(ung)} giống — BỎ LƯỢT, xoay nhóm khác")
+            return None
+        ds = []
+        for a, b in ung:
+            tong, ten = _luot(a, b)
             if tong > 0:
-                ds.append({"giong": ten, "luot": tong, "anh": x.get("anh")})
+                ds.append({"giong": ten.title(), "luot": tong})
+            if len(ds) >= 12:
                 break
-        if len(ds) >= 12:
-            break
+        ds.sort(key=lambda g: -g["luot"])
+        # BỎ DÒNG "KHỚP NHẦM BÀI". Tên của Dog CEO không phải tên bài Wikipedia: 'japanese spaniel'
+        # thực ra là bài "Japanese Chin", nên tra thẳng ra một bài trùng tên nhưng khác nghĩa và
+        # trả về 17 lượt. Đứng cạnh Cocker Spaniel 26.300 thì cột của nó mỏng bằng sợi chỉ — bảng
+        # nhìn như lỗi render, mà thật ra là số đúng của một con chó khác.
+        #
+        # (Đã thử tra tên chuẩn bằng tìm kiếm Wikipedia và BỎ: nó trả 'golden retriever' ->
+        #  "Labrador Retriever", 'japanese spaniel' -> "Tibetan spaniel". Gán số thật cho SAI con
+        #  chó còn tệ hơn hẳn không tìm thấy bài — không tìm thấy thì mình biết mà bỏ, còn gán sai
+        #  thì video vẫn ra và không ai phát hiện.)
+        # Dưới 2% mức đầu bảng thì gần như chắc là khớp nhầm, không phải "ít người tra".
+        if ds:
+            _san = ds[0]["luot"] * 0.02
+            ds = [g for g in ds if g["luot"] >= _san]
+        if len(ds) < 4:
+            print(f"   ⚠️ giống chó: nhóm '{nhom}' chỉ khớp được {len(ds)} bài Wikipedia — "
+                  f"BỎ LƯỢT, xoay nhóm khác (không bịa số, không đoán tên)")
+            return None
+        top = ds[:6]
+        for g in top:                       # ảnh chỉ lấy cho 6 mục thật sự lên hình
+            g["anh"] = _anh_giong(D, g["giong"])
+        return (f"{nhom.title()} breeds America looks up most",
+                [{"name": g["giong"], "stat": _gon_so(float(g["luot"])),
+                  "vo": f"{g['giong']}: {_gon_so(float(g['luot']))} lookups in thirty days.",
+                  "img_url": g.get("anh")} for g in top],
+                "Every number is Wikipedia's own public traffic log.",
+                f"{nhom.title()} breeds, ranked by how many people quietly looked them up this month.")
+
+    # ĐƯỜNG CHÍNH: xếp hạng TOÀN BỘ giống cấp một, xoay theo CỬA SỔ THỜI GIAN.
+    #
+    # 28/8 — vì sao không xoay theo nhóm giống (bản thử trước đó). Tên phụ của Dog CEO gần như
+    # không bao giờ trùng tên bài Wikipedia: 'chesapeake retriever' thật ra là "Chesapeake Bay
+    # Retriever", 'curly retriever' là "Curly-coated Retriever". Đo cả 8 nhóm trong cấu hình thì
+    # chỉ `terrier` và `hound` gom đủ 4 bài khớp — hai đề tài cho cả một kênh là vẫn câm.
+    # Còn tên CẤP MỘT thì sạch (Beagle, Borzoi, Dalmatian…) và đã chứng minh chạy từ trước.
+    # Nên giữ tên cấp một, và lấy cái ĐỔI ĐƯỢC từ chỗ khác: cửa sổ đo. "Giống chó người Mỹ tra
+    # nhiều nhất TUẦN QUA" và "… NĂM QUA" là hai bảng khác nhau, hai câu chuyện khác nhau, và
+    # đều là số thật của Wikipedia.
+    ngay = int(ky.get("lui") or 30)
+    den = _dt.date.today() - _dt.timedelta(days=2)
+    tu = den - _dt.timedelta(days=max(3, ngay))
+    d = D._goi("https://dog.ceo/api/breeds/list/all")
+    # Trần 50 giống: Dog CEO có ~98 tên cấp một, và mỗi tên tốn tới hai lượt gọi Wikimedia. Năm
+    # mươi con là thừa sức chọn ra sáu đứng đầu, mà giữ được cả hàm trong khoảng một phút — phần
+    # đuôi bảng chữ cái toàn giống hiếm, gần như không bao giờ lọt top 6.
+    # Bảng cố định không làm video trùng nhau: thứ xoay ở kênh này là CỬA SỔ THỜI GIAN.
+    ten_cap1 = sorted(str(g).strip() for g in ((d or {}).get("message") or {}))[:50]
+    if len(ten_cap1) < 20:
+        return None
+    ds = []
+    for g in ten_cap1:
+        tong, ten = _luot(g)
+        if tong > 0:
+            ds.append({"giong": ten, "luot": tong})
     ds.sort(key=lambda g: -g["luot"])
-    if len(ds) < 3:
+    if len(ds) < 4:
         print("   ⚠️ giống chó: không lấy được lượt đọc Wikipedia — BỎ LƯỢT (không bịa số)")
         return None
-    return ("Dog breeds America looks up most",
+    top = ds[:6]
+    for g in top:                        # ảnh chỉ lấy cho 6 mục thật sự lên hình
+        g["anh"] = _anh_giong(D, g["giong"])
+    _ky = ("the past week" if ngay <= 9 else "the past month" if ngay <= 45
+           else "the past year" if ngay >= 300 else f"the past {ngay} days")
+    return (f"Dog breeds America looked up most in {_ky}",
             [{"name": g["giong"], "stat": _gon_so(float(g["luot"])),
-              "vo": f"{g['giong']}: {_gon_so(float(g['luot']))} lookups in thirty days.",
-              "img_url": g.get("anh")} for g in ds[:6]],
+              "vo": f"{g['giong']}: {_gon_so(float(g['luot']))} lookups in {_ky}.",
+              "img_url": g.get("anh")} for g in top],
             "Every number is Wikipedia's own public traffic log.",
-            "Dog breeds ranked by how many people quietly looked them up this month.")
+            f"Dog breeds ranked by how many people quietly looked them up in {_ky}.")
 
 
 def _bd_phim(D, ky):
@@ -1633,7 +1827,17 @@ def _bd_may_bay(D, ky):
 
 
 def _bd_gia_nha(D, ky):
-    """Giá nhà từng bang — bản đồ nóng đúng chỗ đắt."""
+    """Giá nhà từng bang — bản đồ nóng đúng chỗ đắt.
+
+    28/8 — TRỤC XOAY `bangs` TRƯỚC NAY LÀ MÃ CHẾT. Kênh WHERE TO MOVE khai `"xoay": "bangs"` với
+    kho 6 nhóm bang, nhưng hàm này chưa từng đọc `ky`: nó luôn hỏi cả 51 bang và luôn trả về
+    Hawaii đứng đầu. Sáu giá trị trục ⇒ đúng MỘT tiêu đề ("Hawaii: $833,877 — Home price by
+    state") ⇒ chống trùng coi cả sáu là đã làm ⇒ kênh đăng một video rồi câm hẳn.
+
+    Nay nhóm bang được chọn quyết định bảng: mỗi nhóm là một cuộc so khác, một bang dẫn đầu khác,
+    một tiêu đề khác. Bản đồ tô đúng nhóm đó, các bang ngoài nhóm để màu "không có dữ liệu" — chú
+    giải thang màu đã ghi rõ ô "none", nên người xem đọc ra "ngoài phạm vi câu hỏi" chứ không đọc
+    nhầm thành "rẻ nhất"."""
     r = D.gia_nha_zillow("State")
     if len(r) < 10:
         return None
@@ -1643,14 +1847,20 @@ def _bd_gia_nha(D, ky):
         if ks:
             moi.append({"name": x["ten"], "value": round(x["gia"][ks[-1]]),
                         "disp": f"${x['gia'][ks[-1]]:,.0f}"})
-    if len(moi) < 10:
+    chon = [str(b).strip().lower() for b in (ky.get("bangs") or []) if str(b).strip()]
+    if chon:
+        loc = [m for m in moi if str(m["name"]).strip().lower() in chon]
+        # Dưới 4 bang khớp thì bản đồ không còn gì để so — lùi về cả nước thay vì ra một video
+        # chỉ có hai ô sáng.
+        moi = loc if len(loc) >= 4 else moi
+    if len(moi) < 4:
         return None
     moi = sorted(moi, key=lambda z: -z["value"])
-    re_ = sorted(moi, key=lambda z: z["value"])[0]
+    re_ = moi[-1]
     dan = [f"A typical home in {moi[0]['name']} is now {moi[0]['disp']}.",
            f"In {re_['name']} it is {re_['disp']}.",
            f"That is {moi[0]['value'] / max(1, re_['value']):.1f} times the price for the same idea of a house.",
-           f"Fifty one states and territories, all measured the same way.",
+           f"{len(moi)} states, all measured the same way.",
            "This is the Zillow index, updated every month.",
            "Your move might be worth more than your raise."]
     return ("Home price by state", "$", moi, dan)
@@ -2581,6 +2791,14 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
 # Nhãn phải nói ĐÚNG lát dữ liệu, không phải dịch từ điển: "chet_yeu" của GAME GRAVEYARD là game
 # ra mắt rồi chết ngay, nên "Dead on arrival" đúng hơn "Died young".
 _NHAN_TRUC = {
+    # 28/8 — bốn mã lọc mới của STEAM TRUTH. Bản dịch cố ý CHỌN CHỮ ĐÃ CÓ SẴN trong tiêu đề của
+    # chính lát đó ("Free games beating…", "Cheap games pulling…"). `_gan_truc_vao_tieu_de` bỏ qua
+    # khi giá trị đã nằm trong tiêu đề, nên không lát nào bị bồi thêm một cái đuôi thừa — mà chốt
+    # kiểm vẫn có bản dịch để đối chiếu, và mã nội bộ vẫn không có đường nào lọt lên màn hình.
+    "mien_phi":  "Free",
+    "tra_tien":  "Paid",
+    "dat_tien":  "Sixty-dollar",
+    "re_tien":   "Cheap",
     "ban_chay":  "Best sellers",
     "dinh_cao":  "Peak players",
     "dong_nhat":  "Most played",
