@@ -4983,7 +4983,10 @@ def t_tieu_de_phai_noi_ve_noi_dung():
                   encoding="utf-8").read()
     i = src.index("def _story_xoay") if "def _story_xoay" in src else src.index("_gan_truc_vao_tieu_de(st.get")
     than = src[max(0, i - 3000): i + 3000]
-    assert "_tieu_de_tu_du_lieu(st, kenh)" in than, \
+    # 28/8 — chốt soi CHUỖI GỌI CHÍNH XÁC nên nó đỏ oan khi tôi đổi tham số thành
+    # `{**st, "title": _goc}` (sửa lỗi tiêu đề gọi tên hai đội). Soi TÊN HÀM thôi: điều cần bảo
+    # đảm là nó ĐƯỢC GỌI, không phải nó được gọi với đúng chữ nào.
+    assert "_tieu_de_tu_du_lieu(" in than, \
         "hàm dựng tiêu đề theo dữ liệu KHÔNG được gọi trong vòng xoay đề tài -> video thật vẫn tiêu đề cũ"
     assert "_tieu_de_da_lam(_td" in than, \
         "tiêu đề theo dữ liệu không qua bộ chống trùng -> có thể đăng lại đúng nội dung đã đăng"

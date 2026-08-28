@@ -2844,13 +2844,23 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
         if not st:
             hong += 1
             continue
+        # 28/8 — GIỮ TIÊU ĐỀ GỐC TRƯỚC KHI GẮN TRỤC.
+        # Đo trên 600 video hôm nay, kênh DIAMOND NUMBERS ra:
+        #     "Dodgers: 98 W — MLB wins by season (2025) — Brewers, 97 W (2025)"
+        # MỘT tiêu đề gọi tên HAI đội khác nhau. Vì `_tieu_de_tu_du_lieu` đọc `st["title"]` SAU
+        # khi `_gan_truc_vao_tieu_de` đã nhét một chủ thể vào đuôi, rồi nó nhét chủ thể của mình
+        # vào đầu — hai lớp chồng lên nhau, và người xem đọc ra hai kẻ dẫn đầu mâu thuẫn.
+        # Lỗi của chính bản vá tiêu đề tôi làm hôm qua: tôi nối nó vào SAU một hàm cũng sửa tiêu đề
+        # mà không hỏi hàm đó đã sửa gì.
+        _goc = str(st.get("title") or "")
         if truc:
             st["title"] = _gan_truc_vao_tieu_de(st.get("title"), truc, t.get(truc))
         # Ưu tiên tiêu đề dựng từ dữ liệu (xem `_tieu_de_tu_du_lieu`), nhưng CHỈ KHI nó chắc chắn
         # chưa từng dùng. Thứ tự này quan trọng: khuôn-cộng-ngày ở trên vẫn là đường lui bảo đảm
         # phân biệt được mọi lượt xoay, nên nếu tiêu đề theo dữ liệu trùng (hai ngày cùng một chủ
         # thể đứng đầu — chuyện có thật với bảng đọc nhiều Wikipedia) thì rơi về nó, không kẹt.
-        _td = _tieu_de_tu_du_lieu(st, kenh)
+        # Dựng từ KHUNG GỐC, không dựng chồng lên bản đã bị gắn thêm.
+        _td = _tieu_de_tu_du_lieu({**st, "title": _goc}, kenh)
         if _td and not _tieu_de_da_lam(_td, avoid):
             st["title"] = _td
         da_thay = da_thay or st
