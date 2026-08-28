@@ -2574,7 +2574,10 @@ def t_doc_hong_khac_kenh_bi_xoa():
                                "firestore_bridge.py"), encoding="utf-8").read()
     assert hasattr(FB, "DocLoi"), "thiếu loại lỗi riêng cho 'đọc hỏng'"
     i = src.index("def read_one_channel")
-    than = src[i:i + 2200]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert "_stream_at" in than, "read_one_channel vẫn gọi .stream() trực tiếp — dính lại lỗi thư viện"
     assert "raise DocLoi" in than, "đọc hỏng vẫn bị nuốt thành None (= 'kênh đã bị xoá')"
     r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -2819,7 +2822,10 @@ def t_cuu_mo_dau_khong_qua_mat_qc():
     m = re.search(r"BIEN = ([\d.]+)", src)
     assert m and float(m.group(1)) >= 8, f"biên {m.group(1) if m else '?'} quá mỏng cho một mô hình"
     i = src.index("def sang_hoa_mo_dau")
-    than = src[i: i + 4200]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert "_sau_man(os.path.join(base, f), man)" in than, "hàm cứu chưa đo qua lớp phủ"
     assert 'scenes[0]["man"]' in than, "chưa gửi độ dày lớp phủ sang composition"
     eng = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -2847,7 +2853,10 @@ def t_duong_du_phong_b2_khong_bi_bo_qua_im():
         return
     src = io.open(f, encoding="utf-8").read()
     i = src.index("def _b2_client")
-    than = src[i: i + 900]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert '"mm0-shard-b2"' in than, \
         "_b2_client thiếu mặc định project B2 -> im lặng bỏ qua đường dự phòng khi thiếu env"
     assert "⚠️" in than, "_b2_client bỏ qua B2 mà không in lý do"
@@ -3368,7 +3377,11 @@ def t_day_kho_xong_thi_xoa_ban_tren_dia():
     src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                "run_render.py"), encoding="utf-8").read()
     i = src.index("FB.count_pushed(OWNER, created[\"id\"]")
-    than = src[i: i + 2600]
+    # 28/8 — CẮT THEO BIÊN HÀM, KHÔNG THEO SỐ KÝ TỰ. Cửa sổ cố định 2600 vỡ khi thân hàm dài
+    # ra (nay 4942): `.index()` ném "substring not found" và chốt đỏ vì lỗi CỦA CHÍNH NÓ.
+    # Lần thứ ba lớp lỗi này xuất hiện trong ngày — sửa hẳn, đừng nới số.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert "os.remove(_f)" in than, \
         "đẩy kho xong mà không xoá bản trên đĩa -> artifact phình theo số video mỗi lane"
     assert "_thumb.jpg" in than, "xoá video mà bỏ lại thumbnail/ảnh tạm"
@@ -3725,7 +3738,10 @@ def t_guong_thieu_kenh_khong_phai_bi_xoa():
     src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                "firestore_bridge.py"), encoding="utf-8").read()
     i = src.index("def read_one_channel")
-    than = src[i: i + 3000]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert "_cfg_tu_plan()" in than, "read_one_channel chưa dùng cấu hình plan gửi kèm"
     r = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              "run_render.py"), encoding="utf-8").read()
@@ -4125,7 +4141,10 @@ def t_kiem_kho_ngay_co_ngan_sach():
     đứng ngay trước lệnh xuất matrix ⇒ 18 luồng không bao giờ mở, phiên chết ở timeout 18'."""
     src = _doc("run_render.py")
     i = src.index("def _kiem_kho_ngay")
-    than = src[i:i + 6000]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert "ThreadPoolExecutor" in than, "kiểm kho vẫn tuần tự"
     assert "_han = _t10.time() + 240" in than, "mất ngân sách 240s"
     assert "shutdown(wait=False, cancel_futures=True)" in than, "shutdown chờ = treo như cũ"
@@ -4144,7 +4163,10 @@ def t_lap_ban_ghi_tu_luot_di_bo():
     Drive. Đi bộ hằng ngày vốn qua từng file: bắt nó nhặt luôn, không tốn thêm lượt Drive nào."""
     src = _doc("run_render.py")
     i = src.index("def _kiem_kho_ngay")
-    than = src[i:i + 9000]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     for moc in ("kho_can_acc", "thumb_can", "kho_acc_ghi", "thumb_ghi", "jpg_co", "mp4_can"):
         assert moc in than, f"lượt đi bộ thiếu mảnh {moc}"
     assert than.index("thumb_can") < than.index("ThreadPoolExecutor"), \
@@ -4230,7 +4252,10 @@ def t_kich_ban_co_luat_viral():
     """Kịch bản skit phải mang 5 luật nâng chất 25/8 — thiếu là tụt về 'buồn cười vừa phải'."""
     src = _doc("content_brain.py")
     i = src.index("TOON_SYS = (")
-    than = src[i:i + 5200]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     for moc in ("ONE REAL FACT", "SPECIFIC BEATS GENERIC", "TWO DISTINCT VOICES",
                 "TURN, DON'T ESCALATE FLAT", "LAST LINE IS THE PRODUCT"):
         assert moc in than, f"TOON_SYS thiếu luật «{moc}»"
@@ -4311,7 +4336,10 @@ def t_the_tieu_de_khong_tran_khung():
     src = _doc("../engine-remotion/src/Cinematic.tsx")
     assert "_coVua" in src, "thẻ tiêu đề không có hàm co chữ"
     i = src.index("const _coVua")
-    than = src[i:i + 700]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert "tuDaiNhat" in than, "phải tính theo TỪ DÀI NHẤT (từ đơn không xuống dòng được)"
     assert "Math.max(38" in than, "thiếu sàn cỡ chữ"
     # mọi lời gọi title() phải truyền lề THẬT, không để mặc định sai
@@ -4367,7 +4395,10 @@ def t_cf_chan_prompt_van_con_duong_gemini():
     Đúng cách: bỏ qua các key CF còn lại (cùng prompt thì cùng kết quả) nhưng ĐI TIẾP tới Gemini."""
     src = _doc("datastory_ci.py")
     i = src.index("def _generate_image_ai")
-    than = src[i:i + 4200]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert "_cf_chan_prompt" in than, "CF chặn prompt vẫn giết luôn cả lượt vẽ"
     # không còn `return False` ngay sau nhánh CF
     assert "return False               # CF trả về không phải ảnh" not in than, \
@@ -4395,7 +4426,10 @@ def t_xoay_truc_doi_tieu_de():
     src = _doc("the_he_2.py")
     assert "_gan_truc_vao_tieu_de" in src, "không có hàm gắn trục vào tiêu đề"
     i = src.index("def _dung_story_xoay")
-    than = src[i:i + 2600]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert "_gan_truc_vao_tieu_de" in than, "_dung_story_xoay không gắn trục vào tiêu đề"
     assert than.index("_gan_truc_vao_tieu_de") < than.index("_tieu_de_da_lam"),         "gắn trục SAU khi so trùng thì vô nghĩa"
     assert "thu = [dict(ky or {})]" not in than, "vẫn còn lượt 0 trần -> hai dạng tiêu đề"
@@ -4701,7 +4735,10 @@ def t_tu_seed_khong_hoi_sinh():
     chỉ đụng video); chặn ở chỗ hồi sinh."""
     src = _doc("run_render.py")
     i = src.index("TỰ-SEED WAVE 8")
-    than = src[i:i + 2600]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert "kenh_the_he_1.json" in than, "tự-seed không đọc bản chụp kênh đã nghỉ"
     assert "_nghi" in than and "not in _nghi" in than, "tự-seed vẫn hồi sinh kênh đã nghỉ"
     # đo thật trên dữ liệu hiện có
@@ -4733,7 +4770,10 @@ def t_fail_open_bat_baseexception():
     for f, ten in (("qc_vision.py", "check_hook"), ("the_he_2.py", "qc_hook_sau_render")):
         src = _doc(f)
         i = src.index(f"def {ten}(")
-        than = src[i:i + 4000]
+        # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+        # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+        _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+        than = src[i: min(_ket) if _ket else len(src)]
         assert "except BaseException" in than, \
             f"{ten} vẫn bắt Exception -> SystemExit lọt qua, cổng fail-open thành cổng chặn"
         assert "KeyboardInterrupt" in than, \
@@ -4766,7 +4806,10 @@ def t_so_chu_de_trong_phien():
     src = _doc("run_render.py")
     assert "_SESSION_TOPICS" in src, "không có sổ chủ đề trong phiên"
     i = src.index("def _avoid_for")
-    than = src[i:i + 900]
+    # 28/8 — cắt theo BIÊN HÀM, không theo số ký tự: cửa sổ cố định vỡ khi thân hàm
+    # dài ra, và chốt đỏ vì lỗi CỦA CHÍNH NÓ chứ không phải vì mã hỏng.
+    _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
+    than = src[i: min(_ket) if _ket else len(src)]
     assert "_SESSION_TOPICS.get" in than, "_avoid_for không đọc sổ phiên -> vẫn chỉ dựa vào Firestore"
     j = src.index("def _gen2_bo")
     # 27/8 — cửa sổ CỨNG 4000 ký tự là một chốt giòn: thêm một khối chú thích trong hàm là lệnh
