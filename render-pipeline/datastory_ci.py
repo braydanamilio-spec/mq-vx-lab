@@ -2132,7 +2132,11 @@ def build_mapped_props(story, sdir, handle="@mappedusa", music="music/km_ascendi
     clips.append((outro_mp3, popStart + nTop * popSec))
     total = round(popStart + nTop * popSec + outroSec, 2)
     track = os.path.join(sdir, "track.mp3"); _mix_track(clips, total, track)
-    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "BY STATE"), "unit": story.get("unit", ""),
+    # `source` KHÔNG đặt ở đây: `the_he_2` gán một chỗ chung cho mọi dạng sau khi bộ dựng trả về
+    # (`if st.get("nguon") and not props.get("source")`). Đặt thêm ở đây là hai nguồn sự thật cho
+    # cùng một giá trị — thứ sinh ra lệch về sau.
+    return {"subs": TK.subs_tu_clips(clips), "title": (story.get("title") or "BY STATE"),
+            "unit": story.get("unit", ""),
             "handle": handle, "color": "#22D3EE", "accent": "#22D3EE", "topN": nTop,
             "introSec": introSec, "bloomSec": bloomSec, "popSec": popSec, "outroSec": outroSec,
             "data": story.get("data") or [], "audio": rel(track), "music": music}

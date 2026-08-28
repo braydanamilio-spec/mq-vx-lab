@@ -15,7 +15,7 @@ import states from "../public/geo/states-10m.json";
 type Word = { t: number; d: number; w: string };
 export type MapDatum = { state: string; value: number; disp?: string };  // disp = chuỗi hiển thị (vd "$74,580")
 export type MappedProps = {
-  title?: string; unit?: string; handle?: string; color?: string; accent?: string;
+  title?: string; unit?: string; handle?: string; source?: string; color?: string; accent?: string;
   data: MapDatum[]; topN?: number; introSec?: number; bloomSec?: number; popSec?: number; outroSec?: number;
   hookStat?: string; hookLabel?: string; hookLine?: string;
   bg?: string; bg2?: string;
@@ -40,7 +40,7 @@ const heat = (t: number, accent: string) => interpolateColors(Math.max(0, Math.m
 
 export const MappedShort: React.FC<MappedProps> = (props) => {
   const { font = "", hookStat = "", hookLabel = "", hookLine = "", bg = "", bg2 = "", title = "BY STATE", unit = "", handle = "@mappedusa", color = "#22D3EE", accent = "#22D3EE",
-    data = [], topN = 3, introSec = 1.8, bloomSec = 2.4, popSec = 1.6, outroSec = 1.6, audio, music , subs = [] } = props;
+    data = [], topN = 3, introSec = 1.8, bloomSec = 2.4, popSec = 1.6, outroSec = 1.6, audio, music , subs = [] , source = "" } = props;
   const f = useCurrentFrame(); const { fps, width: W, height: H } = useVideoConfig();
 
   const { geo, pathGen, valById, maxV, ranked, hang } = useMemo(() => {
@@ -182,6 +182,12 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
         })}
       </div>
 
+      {/* 28/8 — DÒNG NGUỒN. `DongNguon` được NHẬP ở đầu tệp mà chưa bao giờ được VẼ, nên 4 kênh
+          dạng bản đồ ra video không ghi nguồn, trong khi 5 dạng kia đều có. Người xem không có
+          cách nào kiểm con số, và mình mất luôn bằng chứng "dữ liệu công khai tra được" trước
+          chính sách nội dung hàng loạt của YouTube.
+          Đặt trên @handle 42px để hai dòng không chạm nhau. */}
+      <DongNguon nguon={source} day={96} />
       <div style={{ position: "absolute", bottom: 54, left: 0, right: 0, textAlign: "center", color: "#ffffff5c", fontWeight: 700, fontSize: 24, textShadow: "0 1px 6px #0009" }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}

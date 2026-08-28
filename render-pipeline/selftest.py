@@ -2204,6 +2204,7 @@ def main():
     check("workflow không dùng `secrets` trong `if`", t_workflow_khong_dung_secrets_trong_if)
     check("dọn mồ côi từ chối khi danh sách kênh rỗng", t_don_mo_coi_khong_duoc_xoa_sach_khi_doc_hut)
     check("bảng xếp hạng phải nói đang xếp theo gì", t_bang_xep_hang_phai_noi_dang_xep_theo_gi)
+    check("mọi dạng short đều ghi nguồn (vẽ, không chỉ nhập)", t_moi_dang_short_deu_ghi_nguon)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5659,6 +5660,43 @@ def t_bang_xep_hang_phai_noi_dang_xep_theo_gi():
     assert '"subtitle": _phu' in src, "story `ranked` không mang `subtitle` -> props không có gì để truyền"
     ds = io.open(_o.path.join(R, "datastory_ci.py"), encoding="utf-8").read()
     assert '"subtitle": story.get("subtitle"' in ds, "props không đọc `subtitle` từ story"
+
+
+def t_moi_dang_short_deu_ghi_nguon():
+    """MỌI DẠNG SHORT PHẢI THẬT SỰ VẼ DÒNG NGUỒN, KHÔNG CHỈ NHẬP NÓ.
+
+    28/8 — `MappedShort` NHẬP `DongNguon` ở đầu tệp mà chưa bao giờ VẼ, và props cũng không truyền
+    `source` xuống. Nên 4 kênh dạng bản đồ ra video KHÔNG GHI NGUỒN suốt, trong khi 5 dạng kia đều
+    có. Mất hai thứ cùng lúc: người xem không có cách nào kiểm con số, và mình mất luôn bằng chứng
+    "dữ liệu công khai tra được" trước chính sách nội dung hàng loạt của YouTube.
+
+    Nhập-mà-không-dùng là loại sót không bao giờ tự lộ: mã biên dịch sạch, không cảnh báo, video
+    vẫn ra — chỉ thiếu một dòng chữ mà không ai đếm. Cùng lớp với việc vá chồng chữ ở `longshot`:
+    sửa một phần tử, quên phần tử cùng loại ở chỗ khác.
+
+    Chốt soi CẢ HAI PHÍA: composition phải vẽ, và props phải truyền — đứt bên nào cũng là mất
+    dòng nguồn mà không có dấu hiệu gì."""
+    import os as _o, re as _re
+    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    src = _o.path.join(G, "engine-remotion", "src")
+    if not _o.path.isdir(src):
+        print("      ⏭️ bỏ qua: không có engine-remotion ở đây")
+        return
+    xau = []
+    for f in ("RankedShort", "ScaledShort", "MappedShort", "ThenNowShort", "LongshotShort"):
+        t = io.open(_o.path.join(src, f + ".tsx"), encoding="utf-8").read()
+        if "DongNguon" in t and "<DongNguon" not in t:
+            xau.append(f"{f}: nhập `DongNguon` mà KHÔNG vẽ")
+    assert not xau, "dạng short thiếu dòng nguồn: " + "; ".join(xau)
+
+    # `source` được gán ở MỘT CHỖ CHUNG trong `the_he_2` cho mọi dạng, KHÔNG phải trong từng bộ
+    # dựng props. Bản đầu của chốt này soi nhầm chỗ: nó đòi 5 bộ dựng đều truyền `source`, và báo
+    # "18 kênh thiếu nguồn" — sai, vì chúng nhận qua đường chung. Chốt đo nhầm chỗ thì báo động
+    # giả, mà báo động giả cũng đắt ngang bỏ sót: lần sau người ta tắt nó đi.
+    th = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "the_he_2.py"),
+                 encoding="utf-8").read()
+    assert 'props["source"] = ten_nguon(' in th, \
+        "mất chỗ gán `source` chung -> MỌI dạng đều không ghi nguồn"
 
 
 if __name__ == "__main__":
