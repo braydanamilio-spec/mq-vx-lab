@@ -355,6 +355,7 @@ def main() -> int:
                 _ds.append((_ten, _c))
             except Exception as _e:
                 print(f"  ⚠️ không mở được project {_ten}: {str(_e)[:70]}")
+        _id_song: set = set()     # drive_id còn sống trên MỌI project — xem bước dọn `videos`
         _lo_theo_proj: dict = {}      # project -> [(client, ref)] — xem khối xoá bên dưới
         print(f"\n  🔎 quét render_jobs của {len(ten_cu)} kênh cũ trên {len(_ds)} project…")
         xoa, giu, theo_kenh = 0, 0, {}
@@ -370,6 +371,11 @@ def main() -> int:
                 for d in _c.collection("render_jobs").where("owner", "==", owner).stream():
                     j = d.to_dict() or {}
                     ch = str(j.get("channel") or "").upper()
+                    # 28/8 — gom LUÔN drive_id của MỌI job ở đây. Lượt quét này đã mở cả ba
+                    # project rồi; thu thập tại chỗ thì bước dọn `videos` có đúng phạm vi mà không
+                    # tốn thêm một lượt đọc nào.
+                    if j.get("drive_id"):
+                        _id_song.add(str(j["drive_id"]))
                     if ch in ten_cu:
                         _x += 1
                         theo_kenh[ch] = theo_kenh.get(ch, 0) + 1
@@ -458,7 +464,7 @@ def main() -> int:
             #
             # Bản ghi `videos` không còn job mang `drive_id` đó = file đã vào thùng rác. Suy từ
             # TRẠNG THÁI THẬT, không đoán theo tên kênh hay theo ngày.
-            _kj, _tv, _ts = FB.don_videos_khong_con_job(owner, that)
+            _kj, _tv, _ts = FB.don_videos_khong_con_job(owner, _id_song, that)
             print(f"  👻 videos không còn job: {'đã xoá' if that else '(sẽ xoá)'} {_kj}/{_tv} "
                   f"bản ghi · {_ts} drive_id còn sống trong render_jobs")
             _mc, _bang = FB.don_videos_mo_coi(owner, list(_kenh_moi()), that)

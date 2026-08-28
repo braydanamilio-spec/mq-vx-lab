@@ -2054,7 +2054,7 @@ def don_videos_theo_kenh(owner: str, kenh: list, that: bool = False) -> int:
     return n
 
 
-def don_videos_khong_con_job(owner: str, that: bool = False) -> tuple:
+def don_videos_khong_con_job(owner: str, drive_ids_song, that: bool = False) -> tuple:
     """Xoá bản ghi `videos` KHÔNG CÒN job tương ứng. Trả (số xoá, tổng videos, tổng drive_id sống).
 
     28/8 — cách duy nhất đúng để tìm bản ghi ma, sau khi hai cách kia đều trượt:
@@ -2068,17 +2068,15 @@ def don_videos_khong_con_job(owner: str, that: bool = False) -> tuple:
 
     Đọc `render_jobs` một lượt để lấy tập `drive_id` còn sống, rồi đối chiếu — hai lượt quét, không
     phải 1218 lượt hỏi Drive."""
-    song = set()
-    try:
-        for d in _stream_at(_db_jobs().collection("render_jobs").where("owner", "==", owner), 120):
-            v = (d.to_dict() or {}).get("drive_id")
-            if v:
-                song.add(str(v))
-    except Exception as e:
-        print(f"   ⚠️ không đọc được render_jobs ({str(e)[:70]}) — TỪ CHỐI dọn")
-        return 0, 0, 0
+    # 28/8 — NHẬN SẴN tập drive_id, KHÔNG TỰ ĐỌC.
+    # Bản đầu tự đọc `_db_jobs()` — MỘT shard. Nhưng job nằm rải BA project (lượt quét của lệnh
+    # dọn đã mở cả ba và đếm được 1545). Đọc một shard ra 0 drive_id, hàm từ chối dọn, và nhìn
+    # log thì tưởng "không có gì để dọn" — trong khi thật ra là ĐO SAI PHẠM VI.
+    # Người gọi đã quét cả ba project rồi; bắt nó truyền xuống thì vừa đúng vừa không tốn thêm
+    # một lượt đọc nào.
+    song = {str(x) for x in (drive_ids_song or []) if x}
     if not song:
-        print("   🛑 không có drive_id nào trong render_jobs — TỪ CHỐI dọn "
+        print("   🛑 không nhận được drive_id nào từ lượt quét — TỪ CHỐI dọn "
               "(đọc hụt thì mọi bản ghi đều trông như ma)")
         return 0, 0, 0
     lo, tong = [], 0
