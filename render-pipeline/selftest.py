@@ -2198,6 +2198,7 @@ def main():
     check("sổ tránh-trùng và phép so cắt cùng độ dài", t_so_trung_tieu_de_phai_cung_do_dai)
     check("bộ chấm Kling chặn đúng điểm yếu của Kling", t_kling_chan_dung_diem_yeu)
     check("Kling thiếu cảnh phải chặn trước khi ghép", t_kling_thieu_canh_phai_chan_truoc_khi_ghep)
+    check("kling_shots: chỗ ghi và chỗ đọc cùng project", t_kling_shots_ghi_doc_cung_mot_project)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5426,6 +5427,36 @@ def t_kling_thieu_canh_phai_chan_truoc_khi_ghep():
     src = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "kling_lo.py"),
                   encoding="utf-8").read()
     assert ".da_day" in src and "continue" in src, "mất mốc chống đẩy kho hai lần -> đăng trùng"
+
+
+def t_kling_shots_ghi_doc_cung_mot_project():
+    """CHỖ GHI VÀ CHỖ ĐỌC PHẢI TRỎ CÙNG MỘT PROJECT.
+
+    28/8 — suýt dính: `firestore_bridge.save_kling_shots` ghi vào `_db_meta()` (project B, để
+    không ăn hạn mức project A nơi 18 lane render đang tranh nhau), nhưng dashboard định tuyến
+    collection bằng danh sách `META_B` — thiếu tên trong đó là nó đọc project A và **không thấy
+    gì**, trong khi dữ liệu nằm nguyên bên B.
+    Hỏng kiểu này im lặng tuyệt đối: không lỗi, không cảnh báo, chỉ là danh sách rỗng — và người
+    dùng kết luận "tính năng không chạy".
+    Cùng họ với lỗi đã gặp hôm nay (bên ghi và bên đọc dùng hai bộ luật khác nhau): chốt phải soi
+    CẢ HAI PHÍA, không phải chỉ phía mình vừa sửa."""
+    import os as _o
+    G = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    fb = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "firestore_bridge.py"),
+                 encoding="utf-8").read()
+    i = fb.index("def save_kling_shots")
+    than = fb[i: i + 900]
+    ben_ghi = "_db_meta()" in than
+    d = _o.path.join(G, "MM0-AutoPublisher", "dashboard", "index.html")
+    if not _o.path.exists(d):
+        print("      ⏭️ bỏ qua: không có repo MM0-AutoPublisher ở đây")
+        return
+    db = io.open(d, encoding="utf-8").read()
+    j = db.index("const META_B = new Set(")
+    ben_doc_B = '"kling_shots"' in db[j: db.index(")", j)]
+    assert ben_ghi == ben_doc_B, (
+        f"lệch project: Python ghi vào {'B' if ben_ghi else 'A'} nhưng dashboard đọc "
+        f"{'B' if ben_doc_B else 'A'} -> danh sách rỗng mà không báo lỗi gì")
 
 
 if __name__ == "__main__":

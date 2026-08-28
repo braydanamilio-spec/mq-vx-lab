@@ -2320,6 +2320,27 @@ def save_trend_scout(owner: str, channel: str, trends: list[str]):
         print(f"   ⚠️ save_trend_scout {channel} lỗi: {e}")
 
 
+def save_kling_shots(owner: str, ma: str, d: dict):
+    """Lưu MỘT bảng chụp Kling để dashboard hiện ra cho người dán vào Kling.
+
+    28/8 — cố ý dùng `_db_meta` (project B) như `trend_scout`: đây là dữ liệu ĐỌC NHIỀU GHI ÍT của
+    dashboard, không được ăn vào hạn mức của project A — nơi 18 lane render đang tranh nhau."""
+    _soft(lambda: _db_meta().collection("kling_shots").document(f"{owner}__{ma}").set(
+        {"owner": owner, "ma": ma, "title": d.get("title", ""), "logline": d.get("logline", ""),
+         "hook_line": d.get("hook_line", ""), "scenes": (d.get("scenes") or [])[:10],
+         "trang_thai": d.get("trang_thai") or "cho_clip", "updated_at": _now()},
+        merge=True), "save_kling_shots")
+
+
+def read_kling_shots(owner: str) -> list:
+    def _f():
+        ra = [x.to_dict() for x in _db_meta().collection("kling_shots")
+              .where("owner", "==", owner).limit(60).stream(timeout=20)]
+        _cr("kling_shots", max(1, len(ra)))   # tính tiền theo SỐ DOC THẬT, đúng luật máy đo
+        return ra
+    return _soft(_f, "read_kling_shots") or []
+
+
 def _shard_on() -> bool:
     """Có bật shard render_jobs sang Project B không (creds B đầy đủ)."""
     k = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B")

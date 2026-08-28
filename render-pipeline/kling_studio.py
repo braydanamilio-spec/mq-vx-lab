@@ -222,6 +222,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Sinh bảng chụp Kling cho phim ngắn hài")
     ap.add_argument("y_tuong", nargs="+", help="ý tưởng, ví dụ: 'chó đi làm ca đêm ở cửa hàng tiện lợi'")
     ap.add_argument("--ra", default="", help="thư mục ghi kết quả (mặc định: out/kling/<slug>)")
+    ap.add_argument("--len-web", action="store_true",
+                    help="lưu bảng chụp lên Firestore để hiện trên dashboard")
     a = ap.parse_args()
     yt = " ".join(a.y_tuong)
     d = sinh(yt)
@@ -231,6 +233,14 @@ def main() -> int:
     io.open(os.path.join(ra, "shots.json"), "w", encoding="utf-8").write(
         json.dumps(d, ensure_ascii=False, indent=2))
     io.open(os.path.join(ra, "BANG_CHUP.md"), "w", encoding="utf-8").write(bang_chup(d))
+    if a.len_web:
+        # Đưa lên dashboard để anh mở trên điện thoại cũng dán được — không phải mò vào máy.
+        try:
+            import firestore_bridge as FB
+            FB.save_kling_shots(os.environ.get("OWNER_UID") or "THU", slug, d)
+            print("   🌐 đã lên dashboard (Kling Studio)")
+        except Exception as e:
+            print(f"   ⚠️ không lên được dashboard ({str(e)[:60]}) — bảng chụp vẫn có ở máy")
     print(f"\n📁 {ra}")
     print("   BANG_CHUP.md — mở cái này, dán từng prompt vào Kling")
     print("   shots.json   — hệ đọc để ghép video sau khi anh thả clip vào")
