@@ -2196,6 +2196,7 @@ def main():
     check("tài sản kênh dùng phải có trong git (không chỉ ở máy)", t_tai_san_kenh_dung_phai_co_trong_git)
     check("đặt tiêu đề chịu được mọi hình dạng story", t_dat_tieu_de_chiu_duoc_moi_hinh_dang)
     check("sổ tránh-trùng và phép so cắt cùng độ dài", t_so_trung_tieu_de_phai_cung_do_dai)
+    check("bộ chấm Kling chặn đúng điểm yếu của Kling", t_kling_chan_dung_diem_yeu)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5333,6 +5334,56 @@ def t_so_trung_tieu_de_phai_cung_do_dai():
     # ...nhưng hai tiêu đề THẬT SỰ khác nhau vẫn phải phân biệt được.
     assert not T._tieu_de_da_lam("Joshua Kushner: 525K — Most-read on Wikipedia — Aug 12, 2026",
                                  [day[:T._DAI_SO]]), "cắt quá tay -> hai đề tài khác bị coi là một"
+
+
+def t_kling_chan_dung_diem_yeu():
+    """BỘ CHẤM KLING PHẢI CHẶN ĐÚNG NHỮNG THỨ KLING LÀM HỎNG.
+
+    28/8 — anh có tài khoản WEB Kling trả phí (không có API), ngồi tạo tay rất mất thời gian. Hệ
+    không tự động hoá trình duyệt (đường dễ mất tài khoản nhất), mà làm phần MÁY LÀM ĐƯỢC: nghĩ
+    phân cảnh, viết prompt, và ghép lại.
+
+    Giá trị thật nằm ở bộ CHẤM, không phải bộ sinh. Lần thử 09/08 đã trả giá để biết Kling hỏng ở
+    đâu: xin "Pompeii năm 79, góc nhìn đứng dưới đất" thì ra làng Ý hiện đại chụp từ drone. Hai
+    thứ trôi mạnh nhất là GÓC MÁY và THỜI ĐẠI; hai thứ Kling vẽ hỏng chắc chắn là CHỮ và MẶT
+    NGƯỜI CẬN CẢNH.
+    Nếu bộ chấm không bắt được đúng bốn thứ đó thì nó chỉ là bộ sinh chữ, và anh vẫn mất thời gian
+    y như cũ — chỉ khác là mất sau khi đã tốn credit Kling."""
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import kling_studio as K
+
+    def loi(canh):
+        return " | ".join(K._validate({"hook_line": "H", "title": "t", "scenes": canh}))
+
+    # 1. thiếu ghim góc máy -> phải bắt (đây là lỗi trôi drone đã gặp thật)
+    r = loi([{"n": 1, "beat": "hook", "sec": 4, "prompt": "A dog stands behind the counter of a store at night with neon light everywhere"},
+             {"n": 2, "beat": "payoff", "sec": 4, "prompt": "Static wide shot of the street outside, fog drifting under a lamp"}])
+    assert "ghim góc máy" in r, f"không bắt được prompt thiếu góc máy: {r}"
+
+    # 2. chữ đọc được -> phải bắt
+    r = loi([{"n": 1, "beat": "hook", "sec": 4, "prompt": "Static wide shot of a parking lot: a neon sign with text reading OPEN flickering"},
+             {"n": 2, "beat": "payoff", "sec": 4, "prompt": "Static wide shot of the street outside, fog drifting under a lamp"}])
+    assert "chữ đọc được" in r, f"không bắt được chữ trong prompt: {r}"
+
+    # 3. mặt cận cảnh -> phải bắt
+    r = loi([{"n": 1, "beat": "hook", "sec": 4, "prompt": "Static eye-level shot: a close-up of his face showing confusion under fluorescent light"},
+             {"n": 2, "beat": "payoff", "sec": 4, "prompt": "Static wide shot of the street outside, fog drifting under a lamp"}])
+    assert "mặt cận cảnh" in r, f"không bắt được mặt cận cảnh: {r}"
+
+    # 4. quá dài -> phải bắt (Kling tính tiền theo giây, và anh chốt 3-6s/cảnh)
+    r = loi([{"n": 1, "beat": "hook", "sec": 12, "prompt": "Static eye-level shot of a quiet suburban garage at dawn, dust in the light"},
+             {"n": 2, "beat": "payoff", "sec": 4, "prompt": "Static wide shot of the street outside, fog drifting under a lamp"}])
+    assert "3-6 giây" in r, f"không bắt được cảnh quá dài: {r}"
+
+    # 5. prompt SẠCH thì phải qua được phần của nó (không đòi qua hết, vì còn luật số cảnh)
+    sach = [{"n": i, "beat": b, "sec": 4,
+             "prompt": "Static eye-level shot inside a suburban American garage: a golden retriever "
+                       "slowly pushes a lawnmower across the concrete, morning light through dust"}
+            for i, b in enumerate(["hook", "setup", "turn", "escalate", "escalate", "payoff"], 1)]
+    r = K._validate({"hook_line": "HE MOWS AT 6AM", "title": "t", "scenes": sach})
+    xau = [x for x in r if any(k in x for k in ("ghim góc máy", "chữ đọc được", "mặt cận cảnh", "3-6 giây"))]
+    assert not xau, f"prompt sạch mà vẫn bị bắt lỗi: {xau}"
 
 
 if __name__ == "__main__":
