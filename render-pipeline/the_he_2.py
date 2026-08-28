@@ -2836,7 +2836,23 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
     # Kho xoay đã chứa sẵn giá trị mặc định của kênh nên bỏ lượt 0 không mất đề tài nào.
     if truc and kho:
         kho = _xep_theo_nhu_cau(kenh, truc, kho)
-    thu = [{**(ky or {}), truc: v} for v in kho] if (truc and kho) else [dict(ky or {})]
+    # 28/8 — XOAY TRỤC THÌ PHẢI BỎ NHÃN TĨNH GẮN VỚI TRỤC ĐÓ.
+    #
+    # Soi clip thật kênh WHAT IS IN IT: tiêu đề ghi "Breakfast cereal: what is really in it" mà
+    # các mục bên trong là KEM (Amul Fruit 'N' Nut, Häagen-Dazs Vanilla). Vì cấu hình kênh có
+    #     {"mon": "breakfast-cereals", "nhan": "Breakfast cereal", "xoay": "mon"}
+    # `mon` xoay sang `ice-creams` nhưng `nhan` ĐỨNG YÊN — nên tiêu đề nói dối nội dung.
+    # Đây là loại sai tệ nhất trong cả hệ: không phải xấu, không phải thiếu, mà là NÓI SAI. Người
+    # xem bấm vào vì tưởng một đằng rồi thấy một nẻo, và họ không quay lại.
+    # 12/50 kênh có nhãn tĩnh kèm trục xoay, tức 12 kênh cùng dính.
+    # Nhãn tĩnh chỉ đúng cho giá trị GỐC; xoay đi thì để bộ dựng tự đặt tên theo giá trị mới.
+    _goc_truc = (ky or {}).get(truc) if truc else None
+    def _mot(v):
+        t = {**(ky or {}), truc: v}
+        if "nhan" in t and str(v) != str(_goc_truc):
+            t.pop("nhan")
+        return t
+    thu = [_mot(v) for v in kho] if (truc and kho) else [dict(ky or {})]
     da_thay = None
     hong = 0            # số lần NGUỒN không trả dữ liệu (khác hẳn "đề tài đã làm rồi")
     for i, t in enumerate(thu):
@@ -2863,6 +2879,9 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
         _td = _tieu_de_tu_du_lieu({**st, "title": _goc}, kenh)
         if _td and not _tieu_de_da_lam(_td, avoid):
             st["title"] = _td
+        # Ghi lại GIÁ TRỊ TRỤC vào story để bài nghiệm thu so được "tiêu đề có khớp nội dung không".
+        if truc:
+            st["_truc_gia_tri"] = t.get(truc)
         da_thay = da_thay or st
         if not _tieu_de_da_lam(st.get("title"), avoid):
             if i:

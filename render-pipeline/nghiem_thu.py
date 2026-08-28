@@ -80,6 +80,47 @@ def cham_tieu_de(t: str) -> list:
     return e
 
 
+def cham_story(dang: str, st: dict) -> list:
+    """Soi STORY — chỗ props lấy dữ liệu ra. Chạy được mà KHÔNG cần render.
+
+    28/8 — lỗ trong chính bài này: chế độ `--khong-render` (đúng chế độ gắn vào workflow) chỉ soi
+    TIÊU ĐỀ, không soi props. Mà props là chỗ chứa dòng nguồn, phụ đề, kiểu thang — tức ba trong
+    sáu lỗi lớn đêm qua. Cổng chặn phiên mà bỏ qua đúng ba lỗi đó thì gần như vô dụng.
+    Dựng props thật thì phải tổng hợp giọng đọc (tốn tiền, tốn phút). Nhưng props chỉ ĐỌC LẠI từ
+    story — nên soi story là soi đúng nguồn của chúng, mà không tốn gì."""
+    e = []
+    if not str(st.get("nguon") or "").strip():
+        e.append(f"{dang}: story thiếu `nguon` -> props không có gì để ghi, video mất dòng nguồn")
+    if dang == "ranked" and not str(st.get("subtitle") or "").strip():
+        e.append("ranked: story thiếu `subtitle` -> người xem không biết đang xếp theo gì")
+    if dang == "longshot":
+        muc = st.get("items") or []
+        co_dem = any(re.search(r"\d[\d,.]*\s*[KMB]?\s*(read|view|play|user)",
+                               str(m.get("oddsDisp") or ""), re.I)
+                     for m in muc if isinstance(m, dict))
+        if co_dem and str(st.get("rung_kieu") or "") != "dem":
+            e.append("longshot: dữ liệu là ĐẾM nhưng story không khai `rung_kieu` "
+                     "-> thang vẫn ghi '1 in N', vô nghĩa với con số")
+    # TIÊU ĐỀ PHẢI KHỚP NỘI DUNG — lỗi thật 28/8: tiêu đề "Breakfast cereal" mà các mục là KEM.
+    # Nguyên nhân: nhãn tĩnh trong cấu hình kênh không xoay theo trục. Đây là loại sai tệ nhất:
+    # không phải xấu, không phải thiếu, mà là NÓI SAI — người xem bấm vào vì tưởng một đằng rồi
+    # thấy một nẻo. Bắt bằng cách so danh từ chính của tiêu đề với tên các mục.
+    if st.get("_truc_gia_tri"):
+        gt = str(st["_truc_gia_tri"]).replace("-", " ").lower()
+        t0 = str(st.get("title") or "").lower()
+        # Lấy chữ đầu tiêu đề (trước dấu hai chấm) — đó là thứ tiêu đề tự nhận là đang nói về.
+        dau = t0.split(":")[0].strip()
+        if dau and gt and gt.split()[0][:5] not in dau and dau.split()[0][:5] not in gt:
+            e.append(f"{dang}: tiêu đề nói về {dau!r} nhưng dữ liệu là {gt!r} -> NÓI SAI nội dung")
+    if dang in ("ranked", "scaled", "longshot"):
+        muc = [m for m in (st.get("items") or []) if isinstance(m, dict)]
+        gt = {str(m.get("stat") or m.get("disp") or m.get("oddsDisp") or "") for m in muc}
+        if len(muc) >= 3 and len(gt) < 3:
+            e.append(f"{dang}: {len(muc)} mục mà chỉ {len(gt)} giá trị khác nhau "
+                     f"-> bảng không thật sự xếp hạng")
+    return e
+
+
 def cham_props(dang: str, props: dict) -> list:
     """Soi props sẽ truyền xuống composition — chỗ các tầng hay bất đồng nhất."""
     e = []
@@ -144,7 +185,7 @@ def mot_dang(dang: str, render: bool) -> tuple:
         # lượng. Báo nhưng không đánh trượt: đánh trượt thì một nguồn chập là chặn cả phiên.
         return [], f"({dang}: nguồn không trả dữ liệu — bỏ qua lượt nghiệm thu)"
     tieu = str(st.get("title") or "")
-    loi = [f"{dang}: {x}" for x in cham_tieu_de(tieu)]
+    loi = [f"{dang}: {x}" for x in cham_tieu_de(tieu)] + cham_story(dang, st)
     if not render:
         return loi, tieu
     try:
