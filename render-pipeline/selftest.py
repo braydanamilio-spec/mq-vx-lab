@@ -5547,8 +5547,11 @@ def t_thang_phai_noi_dung_loai_du_lieu():
     t = io.open(tsx, encoding="utf-8").read()
     assert "rungKieu" in t, "composition không nhận `rungKieu`"
     assert 'kieu === "dem"' in t, "composition nhận prop nhưng không dùng -> nhãn vẫn là xác suất"
-    # Và lời đọc không được phát âm dấu gạch chéo.
-    assert " slash " not in th, "lời đọc còn phát âm 'slash' — không người Mỹ nào đọc ngày kiểu đó"
+    # Và lời đọc không được phát âm dấu gạch chéo. SOI MÃ, KHÔNG SOI CHÚ THÍCH — bản đầu bắt
+    # trúng chính dòng chú thích giải thích bản vá (nó trích lại chuỗi "07 slash 03"), đỏ oan
+    # trong khi mã hoàn toàn đúng. Đây là lần thứ hai hôm nay tôi mắc đúng lỗi này.
+    ma_th = "\n".join(d.split("#")[0] for d in th.splitlines())
+    assert " slash " not in ma_th, "lời đọc còn phát âm 'slash' — không người Mỹ nào đọc ngày kiểu đó"
 
 
 if __name__ == "__main__":
