@@ -50,3 +50,36 @@ jobs:
           [ "${{ github.event.inputs.dry_run }}" = "true" ] && ARGS="$ARGS --dry-run"
           [ "${{ github.event.inputs.now }}" = "true" ] && ARGS="$ARGS --now"
           python src/cleanup.py $ARGS
+
+  # ── DỌN VIDEO TRÙNG TIÊU ĐỀ (28/8) ─────────────────────────────────────────────────────────
+  # Đo phiên 28/8: 600 video, 334 trùng tiêu đề. Gốc đã vá (`hoan_tieu_de` vứt hậu tố trục), nhưng
+  # video ĐÃ RENDER thì bản vá không đụng tới — chúng vẫn nằm trong hàng đăng.
+  # Việc gấp không phải xoá tệp mà là CHẶN chúng khỏi được đăng: một bản trùng trong kho tốn vài
+  # chục MB, một bản trùng LÊN KÊNH thì kéo tụt phân phối của cả những video tốt cùng kênh.
+  # Đi cùng cron 03:00 UTC sẵn có — không thêm một lượt chạy nào, không cần bấm tay.
+  # Job RIÊNG vì nó dùng mã trong repo này, còn job `cleanup` ở trên checkout repo AutoPublisher.
+  trung-tieu-de:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      # Cài y hệt job `plan` của render_cron: cùng bản ghim trong constraints.txt. Repo này KHÔNG
+      # có requirements.txt — bản đầu của tôi viết `pip install -r render-pipeline/requirements.txt`
+      # cho một tệp không tồn tại, và job sẽ đỏ ngay bước cài mà log chỉ nói "No such file".
+      - name: Python deps
+        run: pip install --quiet -c render-pipeline/constraints.txt google-cloud-firestore google-auth
+      - name: Ghi service account key (B)
+        run: echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+      - name: Đánh dấu bản trùng
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          SHARD_META: ${{ vars.SHARD_META }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          HOT_MODE: on
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+        run: python render-pipeline/don_trung_tieu_de.py --that
