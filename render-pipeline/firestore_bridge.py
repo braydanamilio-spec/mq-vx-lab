@@ -2054,6 +2054,44 @@ def don_videos_theo_kenh(owner: str, kenh: list, that: bool = False) -> int:
     return n
 
 
+def don_videos_mo_coi(owner: str, kenh_song: list, that: bool = False) -> tuple:
+    """Xoá bản ghi `videos` của những kênh KHÔNG CÒN TỒN TẠI. Trả (số xoá, bảng đếm theo kênh).
+
+    28/8 — vì sao cần luật này chứ không phải "dọn theo tên kênh".
+    Đo thật: lệnh dọn theo tên báo `kênh THẾ HỆ 1 (sẽ dọn): 0` — vì 55 kênh cũ đã bị xoá khỏi
+    `render_channels` từ trước. Nhưng bản ghi `videos` CỦA CHÚNG thì vẫn còn ~1218 cái, và
+    dashboard đếm chính chỗ đó. Kênh đã biến mất thì không còn cái tên nào để mà tra.
+    Nên đảo câu hỏi: thay vì "xoá của kênh nào", hỏi "kênh này còn sống không". Bản ghi trỏ về
+    một kênh không tồn tại thì chắc chắn là rác — không có đường nào nó còn hữu ích.
+
+    AN TOÀN: chỉ xoá khi `kenh_song` KHÔNG rỗng. Danh sách rỗng (đọc hụt, quota chết) mà cứ chạy
+    thì mọi bản ghi đều "mồ côi" và xoá sạch cả thư viện — đúng loại tai nạn mà một lần đọc hụt
+    có thể gây ra."""
+    if not kenh_song:
+        print("   🛑 danh sách kênh sống RỖNG — từ chối dọn (đọc hụt thì mọi thứ trông như mồ côi)")
+        return 0, {}
+    song = {str(x).upper().replace(" ", "") for x in kenh_song}
+    from collections import Counter
+    dem = Counter()
+    lo = []
+    try:
+        db = _db_pub()
+        for d in _stream_at(db.collection("videos").where("owner", "==", owner), 90):
+            ch = str((d.to_dict() or {}).get("channel") or "").upper().replace(" ", "")
+            if ch and ch not in song:
+                lo.append(d.reference)
+                dem[ch] += 1
+        if that and lo:
+            for i in range(0, len(lo), 400):
+                b = db.batch()
+                for r in lo[i:i + 400]:
+                    b.delete(r)
+                b.commit()
+    except Exception as e:
+        print(f"   ⚠️ dọn videos mồ côi lỗi: {str(e)[:90]}")
+    return len(lo), dict(dem)
+
+
 def delete_jobs_by_drive(owner: str, drive_id: str):
     """Xóa bản ghi job cũ theo drive_id (sau khi render lại đã thay thế + bỏ file cũ)."""
     if not drive_id:

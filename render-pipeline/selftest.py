@@ -2202,6 +2202,7 @@ def main():
     check("Kling A-Z dừng đúng chỗ khi chưa có key + kênh đã khai", t_kling_az_dung_dung_cho_khi_chua_co_key)
     check("thang phải nói đúng loại dữ liệu (không '1 in N' cho lượt đọc)", t_thang_phai_noi_dung_loai_du_lieu)
     check("workflow không dùng `secrets` trong `if`", t_workflow_khong_dung_secrets_trong_if)
+    check("dọn mồ côi từ chối khi danh sách kênh rỗng", t_don_mo_coi_khong_duoc_xoa_sach_khi_doc_hut)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -5582,6 +5583,53 @@ def t_workflow_khong_dung_secrets_trong_if():
                 xau.append(f"{f}:{i}")
     assert not xau, ("dùng `secrets` trong `if` -> GitHub TỪ CHỐI nạp workflow, đỏ ngay từ lúc "
                      "đẩy mã và không để lại log nào để đọc: " + ", ".join(xau))
+
+
+def t_don_mo_coi_khong_duoc_xoa_sach_khi_doc_hut():
+    """DỌN MỒ CÔI PHẢI TỪ CHỐI KHI DANH SÁCH KÊNH SỐNG RỖNG.
+
+    28/8 — luật "bản ghi của kênh không còn tồn tại thì xoá" là cách duy nhất tìm ra ~1218 bản
+    ghi ma (kênh đã bị xoá nên không còn tên nào để tra). Nhưng chính luật đó mang một tai nạn
+    dựng sẵn: nếu lần đọc danh sách kênh HỤT — quota chết, mạng chập — thì danh sách rỗng, MỌI
+    bản ghi đều trông như mồ côi, và cả thư viện bị xoá sạch trong một lượt.
+    Một lần đọc hụt không được phép trở thành lệnh xoá toàn bộ. Đây là điểm khác nhau giữa một
+    lệnh dọn và một tai nạn.
+
+    Chốt kiểm ĐÚNG hành vi đó, không kiểm chữ trong mã — vì cái cần bảo đảm là nó KHÔNG XOÁ."""
+    import sys as _s, os as _o, io as _io, contextlib as _ct
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import firestore_bridge as FB
+    goi = {"n": 0}
+    class _Ref:
+        def delete(self): goi["n"] += 1
+    class _Batch:
+        def delete(self, r): goi["n"] += 1
+        def commit(self): pass
+    class _Doc:
+        reference = _Ref()
+        def to_dict(self): return {"channel": "KENHBATKY"}
+    class _DB:
+        def collection(self, *a): return self
+        def where(self, *a, **k): return self
+        def batch(self): return _Batch()
+    cu_db, cu_st = FB._db_pub, FB._stream_at
+    try:
+        FB._db_pub = lambda: _DB()
+        FB._stream_at = lambda q, t=20: [_Doc()]
+        with _ct.redirect_stdout(_io.StringIO()) as buf:
+            n, _ = FB.don_videos_mo_coi("THU", [], that=True)      # danh sách RỖNG
+        assert n == 0 and goi["n"] == 0, \
+            f"danh sách kênh rỗng mà vẫn xoá {goi['n']} bản ghi — một lần đọc hụt là mất cả thư viện"
+        assert "RỖNG" in buf.getvalue(), "từ chối mà không nói vì sao"
+        # có danh sách thật -> mới được xoá, và chỉ xoá cái KHÔNG thuộc danh sách
+        with _ct.redirect_stdout(_io.StringIO()):
+            n, _ = FB.don_videos_mo_coi("THU", ["WHATISINIT"], that=True)
+        assert n == 1, f"kênh không còn tồn tại mà không dọn: {n}"
+        with _ct.redirect_stdout(_io.StringIO()):
+            n, _ = FB.don_videos_mo_coi("THU", ["KENH BAT KY"], that=True)
+        assert n == 0, "xoá nhầm bản ghi của kênh ĐANG SỐNG (so tên phải bỏ dấu cách + hoa/thường)"
+    finally:
+        FB._db_pub, FB._stream_at = cu_db, cu_st
 
 
 if __name__ == "__main__":
