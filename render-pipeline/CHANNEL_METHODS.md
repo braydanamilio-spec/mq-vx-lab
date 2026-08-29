@@ -381,3 +381,35 @@ Chốt `t_50_kenh_dong_bo_du_3_noi` giữ việc này. **Tra bằng `handle` s�
 5. `python radar_dethai.py --dry-run` → xem kênh mới có ra đề tài không
 6. `python selftest.py` → phải XANH trước khi bật
 7. render thử một bộ tại máy, xem tận mắt long + 3 short
+
+## 🎭 10 KÊNH HÀI THẾ HỆ 4 — `kich_hai.py` + `src/v4/` (30/8/2026)
+
+**Xưởng riêng: `.github/workflows/render_hai.yml`, CỐ Ý chưa có cron.**
+Tách khỏi `render_cron.yml` của 50 kênh vì ba lý do — không được đụng 50 kênh đang chạy tốt · bộ
+hài không cần Firestore/nguồn dữ liệu mở/khoá vẽ ảnh nên nhồi chung là bắt nó chờ những bước nó
+không dùng · và chưa được anh duyệt hình ảnh.
+
+| Kênh | Handle | Cặp nhân vật | Kiểu hài | 4 bối cảnh |
+|---|---|---|---|---|
+| RENT PANIC | @rentpanicusa | người thuê ↔ chủ nhà tươi cười | tăng giá nói bằng giọng vui | căn hộ · sảnh · phòng giặt · hành lang |
+| GYM LIES | @gymliesusa | người mới tập ↔ HLV quá nhiệt | quyết tâm gặp thực tế | sàn tạ · góc duỗi cơ · phòng thay đồ · phòng spin |
+| AIRPORT HELL | @airporthellusa | khách bay ↔ nhân viên quầy | hoãn chuyến giọng đều đều | quầy · cổng ra · băng chuyền · hành lang |
+| CAR GUY | @carguyusa | chủ xe ↔ thợ máy | báo giá leo thang | ga-ra · lối lái xe · tiệm lốp · phòng trưng bày |
+| OFFICE SMALL TALK | @officesmalltalkusa | nhân viên ↔ sếp vui tính | họp lẽ ra là một email | phòng họp · bếp · sàn mở · hành lang |
+| DIET WARS | @dietwarsusa | người ăn kiêng ↔ bạn ăn tất | mỗi tuần một chế độ | bếp · quán ăn · chợ · sân sau |
+| TECH SUPPORT | @techsupportusa | người dùng ↔ tổng đài viên | "thử tắt bật lại chưa" | phòng khách · trung tâm gọi · bàn làm việc · tiệm sửa |
+| PARENT MODE | @parentmodeusa | bố ↔ con tuổi teen | hai thế hệ một cái điện thoại | phòng khách · lối lái xe · phòng teen · cổng trường |
+| NEIGHBOR WATCH | @neighborwatchusa | hàng xóm tò mò ↔ người mới đến | hàng rào là ranh giới ngoại giao | sân sau · hiên · phố · lối chung |
+| DATING APP | @datingappusa | người dùng ↔ bạn cùng phòng | hồ sơ hẹn hò và sự thật | phòng khách · quán cà phê · phố đêm · sân thượng |
+
+**Method:** mỗi kênh **một cặp nhân vật · một bộ 4 nền · một bảng màu · hai giọng · một bản nhạc**
+— không trục nào bị hai kênh dùng chung (`cham_v4.py` chốt).
+**Luật cứng:** một tập = một địa điểm · lượt thoại ≤ 14 từ · hai người nói xen kẽ · cú chốt ở
+cuối · 3 cỡ máy trong một tập · áo hai người lệch màu ≥ 120 và tương phản ≥ 1,9.
+**Không tốn hạn mức vẽ:** 40 nền cache vĩnh viễn trong `public/v4nen`; thumbnail trích từ chính
+video ở nhịp đuôi.
+
+### CÒN THIẾU trước khi bật cron
+1. Đăng ký 10 kênh vào dashboard + đường đăng bài (theo checklist đầu tệp này).
+2. Nối `enqueue_drive` để video vào kho _QUEUE.
+3. Mô tả/thẻ YouTube-Facebook-Instagram cho từng kênh.
