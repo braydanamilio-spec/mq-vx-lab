@@ -117,3 +117,13 @@ jobs:
           if [ "${{ github.event.inputs.don_kho_cu }}"  = "1" ]; then ARGS="$ARGS --kho-cu --truoc ${{ github.event.inputs.truoc }}"; fi
           export CHI_KENH="${{ github.event.inputs.chi_kenh }}"
           python render-pipeline/don_the_he_1.py $ARGS
+          # 29/8 — ĐẾM LẠI KHO NGAY SAU KHI DỌN.
+          # Anh: "e kêu 45p dọn sạch kho... mà sao vẫn còn". Kho ĐÃ sạch — 7.800 tệp vào thùng
+          # rác, lượt chạy báo success. Nhưng ô "Video trong kho" đọc bảng `kho_that`, thứ chỉ
+          # được đếm lại MỘT LẦN MỖI NGÀY và còn bị một cờ nghỉ 20 giờ khoá lại. Nên sau khi dọn
+          # xong, con số trên bảng vẫn là ảnh chụp CŨ — nhìn y như chưa dọn gì.
+          # Dọn xong mà không đếm lại thì với người vận hành, việc dọn ấy chưa từng xảy ra.
+          if [ "${{ github.event.inputs.lam_that }}" = "1" ]; then
+            echo "── đếm lại kho sau khi dọn ──"
+            RENDER_OWNER="$OWNER_UID" python render-pipeline/kiem_kho.py --ghi || true
+          fi

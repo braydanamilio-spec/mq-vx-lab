@@ -112,7 +112,7 @@ def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6, ten_kho: str = "?") -
     return ra
 
 
-def kho_theo_moc(moc: str, that: bool) -> int:
+def kho_theo_moc(moc: str, that: bool, chi_kenh: str = "") -> int:
     """Đưa VIDEO dựng trước `moc` vào thùng rác Drive — mọi kênh, không phân biệt thế hệ.
 
     29/8 — VÌ SAO CẦN MỘT ĐƯỜNG RIÊNG. Lượt đánh dấu đã gạt 3.899 bản ra khỏi hàng đăng, nhưng
@@ -153,6 +153,12 @@ def kho_theo_moc(moc: str, that: bool) -> int:
         print(f"  ❌ mốc không đọc được: {moc!r}")
         return 2
     DUOI_XOA = (".mp4", ".jpg", ".jpeg", ".png", ".webp")
+    # 29/8 — LỌC THEO KÊNH khi cần dọn riêng vài kênh với mốc muộn hơn.
+    # Ba kênh REAL PLACE / NIGHT SHIFT / MISSING PIECE đổi hẳn cách kể lúc 12:00Z, muộn hơn mốc
+    # chung 10:30Z. Nâng mốc CHUNG lên 12:00Z sẽ xoá oan video đúng chuẩn của 47 kênh còn lại
+    # làm trong khoảng ấy. Tên tệp bắt đầu bằng tên kênh viết liền nên lọc được chính xác.
+    _kk = lambda t: str(t or "").replace(" ", "").upper()
+    _chi = {_kk(x) for x in (chi_kenh or "").split(",") if x.strip()}
     tong = giu = 0
     for acc in ST.pool_accounts():
         try:
@@ -169,6 +175,8 @@ def kho_theo_moc(moc: str, that: bool) -> int:
             if not ten.lower().endswith(DUOI_XOA):
                 giu += 1                     # sidecar kịch bản và mọi thứ khác: GIỮ
                 continue
+            if _chi and not any(_kk(ten).startswith(c) for c in _chi):
+                continue                     # có lọc kênh mà tệp không thuộc kênh nào -> để yên
             tf = _luc(f.get("createdTime"))
             if tf is None or tf >= m:
                 continue                     # không rõ ngày, hoặc dựng SAU mốc -> để yên
@@ -225,7 +233,11 @@ def main() -> int:
         for i, a in enumerate(sys.argv):
             if a == "--truoc" and i + 1 < len(sys.argv):
                 _m = sys.argv[i + 1]
-        return kho_theo_moc(_m, "--that" in sys.argv)
+        _ck = os.environ.get("CHI_KENH", "")
+        for i, a in enumerate(sys.argv):
+            if a == "--chi-kenh" and i + 1 < len(sys.argv):
+                _ck = sys.argv[i + 1]
+        return kho_theo_moc(_m, "--that" in sys.argv, _ck)
     lam_tat = "--tat" in sys.argv
     lam_kho = "--kho" in sys.argv
     lam_bg = "--ban-ghi" in sys.argv
