@@ -50,7 +50,21 @@ SAN_AN_TOAN = 30
 #
 # KHÔNG XOÁ TỆP. Chỉ đổi trạng thái để chúng ra khỏi hàng đăng — kho Drive giữ nguyên, và muốn
 # phục hồi thì chỉ là một lượt ghi ngược lại. Xoá tệp là việc một chiều; ở đây không cần một chiều.
-MOC_ENGINE = "2026-08-28T17:44:00Z"
+# 29/8 10:30Z — NÂNG MỐC CHO CẢ 50 KÊNH. Trước đó mốc chung đứng ở 28/8 17:44Z và tôi cố ý
+# KHÔNG nâng nó, chỉ đặt mốc riêng cho 15 kênh đổi nội dung — vì nâng mốc chung sẽ gạt oan hàng
+# nghìn video đúng chuẩn của những kênh không dính lỗi nào.
+# Lý lẽ ấy hết đúng sau loạt vá hôm nay, vì bốn bản vá này chạm MỌI kênh:
+#   • bỏ dấu @handle in đè trên khung (22 chỗ, mọi composition video);
+#   • nâng 13 nền cứng quá tối — đo được: sáng trung bình 44 -> 82, điểm gần đen 65% -> 1,5%;
+#   • hook: mọi lối ra đều đi qua bộ cắt câu, và kênh không có số thì mở bằng câu hỏi;
+#   • bỏ chữ bịa trong ảnh AI (thêm 3 nhóm danh từ đo từ khung thật).
+# Nên mọi video dựng trước 10:30Z hôm nay đều mang ít nhất một trong bốn. Không phải "có thể
+# mang" — engine lúc ấy KHÔNG THỂ dựng khác đi.
+#
+# CÁI GIÁ, nói thẳng: kho đang có ~3.900 video và gần hết sẽ ra khỏi hàng đăng cùng lúc. Xưởng
+# render ra ~700 video/ngày nên hàng đăng đầy lại trong khoảng một ngày. Và đây là phép đảo ngược
+# được bằng đúng một lượt ghi — tệp trên Drive không bị đụng.
+MOC_ENGINE = "2026-08-29T10:30:00Z"
 
 # ── MỐC RIÊNG TỪNG KÊNH (29/8/2026) ────────────────────────────────────────────────────────
 # 12 kênh vừa được sửa vì NHÃN THƯƠNG HIỆU HỨA MỘT ĐẰNG, NỘI DUNG MỘT NẺO — thứ nặng hơn xấu:
