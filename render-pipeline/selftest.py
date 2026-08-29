@@ -2274,6 +2274,7 @@ def main():
     check("xoay trục thì nhãn tĩnh phải BIẾN MẤT tới tận bộ dựng", t_nhan_tinh_bi_bo_khi_xoay_truc)
     check("gu vẽ gán TAY từng kênh, tiếng Anh, cấm ảnh chụp", t_gu_ve_khop_tung_kenh)
     check("nhãn None không được lọt lên tiêu đề", t_nhan_none_khong_lot_len_tieu_de)
+    check("ai_only thì KHÔNG lấy clip kho (không footage)", t_ai_only_khong_lay_clip_kho)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
@@ -4578,6 +4579,29 @@ def t_nhan_none_khong_lot_len_tieu_de():
                      + " · ".join(xau[:4]))
     # Và phải CÓ chỗ đọc bằng `or` — nếu không thì chốt trên xanh chỉ vì không ai đọc `nhan` nữa.
     assert "'nhan') or" in src or '"nhan") or' in src, "không thấy chỗ nào đọc `nhan` bằng `or`"
+
+
+
+
+def t_ai_only_khong_lay_clip_kho():
+    """Kênh khai `ai_only` thì KHÔNG được lấy clip video từ kho ảnh/video có sẵn.
+
+    29/8 — anh soi khung COURT RECORD: "vẫn ảnh thật, ko phải chart vector". Không phải gu vẽ
+    hỏng: props ghi `clip: th2_s0.mp4` — cảnh đó là VIDEO KHO TỪ PEXELS, đi bằng một đường hoàn
+    toàn khác đường vẽ ảnh.
+    `ai_only=True` nghĩa là "kênh này tự vẽ mọi thứ, không dùng kho", nhưng nó mới chỉ chặn nhánh
+    ẢNH (Openverse); nhánh CLIP chạy song song và chưa ai hỏi nó. Mỗi video cinematic có 1/3 số
+    cảnh là footage tải về, trong khi cả hệ được xây quanh lời hứa "không dùng footage".
+    Cùng họ với `style_anh` viết tiếng Việt và `DongNguon` được nhập mà không được vẽ: một cờ khai
+    ra ở tầng này, tầng kia không đọc."""
+    src = _doc("datastory_ci.py")
+    i = src.index("fetch_clip(img_query")
+    # Lấy dòng ĐIỀU KIỆN ngay trước lời gọi — chỗ quyết định có tải clip hay không.
+    dau = src.rfind("if ", max(0, i - 700), i)
+    dieu_kien = src[dau:i]
+    assert "ai_only" in dieu_kien, \
+        ("đường lấy clip kho KHÔNG hỏi `ai_only` -> kênh cam kết tự vẽ vẫn nhận footage tải về: "
+         + " ".join(dieu_kien.split())[:110])
 
 
 

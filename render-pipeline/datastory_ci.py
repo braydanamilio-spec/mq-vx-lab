@@ -2659,7 +2659,17 @@ def build_doc_props(story, channel, imgsrc=None, api_key=None, accent="#22D3EE",
             # (Pexels/Pixabay video, dùng chung key ảnh). Hỏng/không có -> lùi về ảnh tĩnh như cũ,
             # nên không có đường nào làm video xấu đi. Xen kẽ thay vì toàn video: tải nhẹ hơn,
             # render nhanh hơn, và nhịp hình đa dạng hơn là chuỗi clip liên tục.
-            if os.environ.get("CLIPS_OFF") != "1" and (i == 0 or i % 3 == 0):
+            # 29/8 — `ai_only` THÌ KHÔNG LẤY CLIP KHO, KHÔNG CÓ NGOẠI LỆ.
+            # Anh soi khung COURT RECORD: "vẫn ảnh thật, ko phải chart vector". Đúng — và không
+            # phải do gu vẽ hỏng: props ghi `clip: th2_s0.mp4`, tức cảnh đó là VIDEO KHO TỪ PEXELS,
+            # đi bằng một đường hoàn toàn khác đường vẽ ảnh.
+            # `ai_only=True` nghĩa là "kênh này tự vẽ mọi thứ, không dùng kho" — nhưng nó mới chỉ
+            # chặn được nhánh ẢNH (Openverse), còn nhánh CLIP thì chạy song song và không ai hỏi
+            # nó. Suốt thời gian qua mỗi video cinematic có 1/3 số cảnh là footage tải về, trong
+            # khi cả hệ được xây quanh lời hứa "không dùng footage".
+            # Cùng họ với `style_anh` tiếng Việt và `DongNguon` được nhập mà không được vẽ: một cờ
+            # khai ra ở tầng này, tầng kia không đọc.
+            if (not ai_only) and os.environ.get("CLIPS_OFF") != "1" and (i == 0 or i % 3 == 0):
                 _cp = fetch_clip(img_query, os.path.join(cdir, f"{prefix}s{i}.mp4"), tall=True)
                 if _cp:
                     sc["clip"] = f"{prefix}s{i}.mp4"
