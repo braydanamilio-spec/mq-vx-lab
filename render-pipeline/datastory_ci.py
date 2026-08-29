@@ -2126,7 +2126,10 @@ def qc(mp4):
     except Exception:
         _w = _h = 0
     portrait = _h > _w
-    min_dur = 20 if portrait else 45
+    # 29/8 — hạ sàn dọc 20 -> 18 giây. Một video 19,95 giây bị chặn với lý do "quá ngắn 20.0s
+    # < 20s" — con số in ra đã làm tròn nên thông báo đọc như một lỗi vô lý. Sàn sinh ra để bắt
+    # ca 13 giây (TTS hỏng), nên 18 vẫn bắt đúng thứ nó cần bắt mà không chặn ở ranh giới.
+    min_dur = 18 if portrait else 45
     # đo mức âm trung bình: câm hoàn toàn -> ffmpeg trả -91 dB; giọng nói chuẩn hoá -14 LUFS ~ -20 dB
     mean_db = 0.0
     try:
@@ -2138,9 +2141,46 @@ def qc(mp4):
     except Exception:
         mean_db = 0.0
     silent = mean_db <= -45.0
-    ok = dur >= max(5, min_dur) and ach == "audio" and not silent
+
+    # ── ĐỘ SÁNG CẢ VIDEO (29/8/2026) ───────────────────────────────────────────────────────
+    # Lỗ QC lớn nhất còn lại, và nó để lọt cả một ngày sản xuất. Cổng cũ đo độ sáng ĐÚNG MỘT
+    # KHUNG MỞ ĐẦU (`xac_minh_mo_dau`), nên video nào có khung đầu sáng mà thân tối thì lọt sạch.
+    # Đo tay 147 khung của 49 kênh mới lòi ra 12 kênh dưới ngưỡng — mắt người phải làm việc mà
+    # đáng lẽ máy làm được.
+    # Lấy BA khung ở 25% · 50% · 75%: rẻ (ba lần ffmpeg, ~1 giây) và đủ để bắt cả video tối lẫn
+    # video tối nửa sau. Ngưỡng 70/255 — thấp hơn ngưỡng soi tay 75 một chút, để cảnh đêm cố ý
+    # (kênh vũ trụ) không bị chặn oan, nhưng vẫn bắt được mảng đen thật.
+    sang_tb = None
+    try:
+        import tempfile as _tf
+        _vals = []
+        for _m in (0.25, 0.5, 0.75):
+            _p = os.path.join(_tf.gettempdir(), f"_qc_{os.getpid()}_{int(_m*100)}.png")
+            subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{dur * _m:.2f}",
+                            "-i", mp4, "-vframes", "1", "-vf", "scale=160:-1", _p],
+                           capture_output=True, timeout=60)
+            if not os.path.exists(_p):
+                continue
+            try:
+                from PIL import Image as _I
+                px = list(_I.open(_p).convert("L").getdata())
+                _vals.append(sum(px) / max(1, len(px)))
+            except Exception:
+                pass
+            finally:
+                try: os.remove(_p)
+                except Exception: pass
+        if _vals:
+            sang_tb = sum(_vals) / len(_vals)
+    except Exception:
+        sang_tb = None
+    toi_qua = sang_tb is not None and sang_tb < 70
+
+    ok = dur >= max(5, min_dur) and ach == "audio" and not silent and not toi_qua
     info = {"dur": round(dur, 1), "audio": ach == "audio", "res": wh, "size_mb": size_mb,
             "mean_db": round(mean_db, 1)}
+    if sang_tb is not None:
+        info["sang"] = round(sang_tb)
     if not ok:
         why = []
         if dur < min_dur:
@@ -2149,6 +2189,9 @@ def qc(mp4):
             why.append("không có luồng âm thanh")
         if silent:
             why.append(f"CÂM (mức âm {round(mean_db,1)}dB) — TTS hỏng, video không có lời")
+        if toi_qua:
+            why.append(f"KHUNG TỐI: sáng trung bình {sang_tb:.0f}/255 < 70 — người xem "
+                       f"nhìn ra là hỏng đèn, không ra là phong cách")
         info["err"] = " · ".join(why)
     # 23/8: video đã dựng xong -> chốt sổ ảnh vừa dùng vào Firestore (chống trùng cho video sau).
     # Móc ở qc() vì mọi make_* đều gọi đúng một lần sau khi render xong.
