@@ -4295,3 +4295,21 @@ chính sách của YouTube nhắm tới.
 **Bài học:** khi dựng một hiệu ứng dựa trên SỰ VẮNG MẶT của một thứ (im lặng, khoảng trống, dừng
 hình), phải kiểm tra rằng thứ ấy CÓ MẶT ở những lúc khác. Một hiệu ứng "vắng mặt" trên nền vốn
 đã trống thì bằng không.
+
+### 7ah. HOẠT HÌNH VẼ CỬ CHỈ TO HƠN ĐỜI THẬT — 30/8/2026
+
+Đo trên khung thật: cử chỉ **có chạy** (kiểm tra được bằng cách in giá trị `cuChi` từng lượt),
+nhưng hai người vẫn đọc ra là *"cùng đứng buông tay"*. Góc lệch khỏi tư thế nghỉ chỉ chừng hai
+ba chục độ — quá nhỏ để mắt bắt ở cỡ khung dọc trên điện thoại.
+
+**Hoạt hình không vẽ cử chỉ như đời thật; nó vẽ TO HƠN đời thật**, vì khán giả đọc dáng người
+trong một phần mười giây chứ không ngắm. Nới biên độ mọi cử chỉ (dang tay 124° → 142°, đếm 64°
+→ 88°, chống cằm −100° → −122°).
+
+Thêm **tay đánh nhịp theo lời**: người nói thật không giữ nguyên một tư thế suốt câu, tay nhấn
+theo trọng âm. Độ mở miệng (`noi.h`) là thứ gần nhất với trọng âm mà mình có sẵn — miệng mở to
+là đang nhấn. Nhân 7 độ: đủ thấy mà chưa thành múa.
+
+**Bài học đo lường:** "tính năng có chạy" và "khán giả thấy được" là hai câu hỏi khác nhau.
+Kiểm tra bằng cách in giá trị chỉ trả lời câu thứ nhất; câu thứ hai chỉ trả lời được bằng cách
+**nhìn khung ở đúng cỡ mà khán giả sẽ nhìn**.

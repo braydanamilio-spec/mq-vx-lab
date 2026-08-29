@@ -406,7 +406,12 @@ export const KichHai: React.FC<PropsHai> = ({
       </AbsoluteFill>
 
       {voMp3 ? <Audio src={staticFile(voMp3)} /> : null}
-      {nhac ? <Audio src={staticFile(nhac)} volume={0.07} loop /> : null}
+      {/* 30/8 — MỨC 0,07 LÀ PHÍ CÔNG. Đo trên khung thật ở nhịp đuôi (chỗ không còn giọng nói):
+          mean −46 dB, đỉnh −32,7 dB. Trên loa điện thoại thì đó gần như im lặng — tức là có
+          nhạc trong tệp nhưng khán giả không nghe thấy, và mọi lý do thêm nhạc đều mất.
+          0,18 cho đỉnh khoảng −25 dB: nghe rõ là có nền, mà vẫn thấp hơn hẳn giọng nói (đỉnh
+          −8,3 dB) nên không đè lời thoại. */}
+      {nhac ? <Audio src={staticFile(nhac)} volume={0.18} loop /> : null}
       {luot.filter((x) => x.sfx).map((x, k) => (
         <Sequence key={k} from={Math.round(x.s * fps)} durationInFrames={Math.round(1.4 * fps)}>
           <Audio src={staticFile(x.sfx as string)} volume={0.3} />

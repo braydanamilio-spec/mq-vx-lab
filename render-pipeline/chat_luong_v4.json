@@ -7,21 +7,21 @@
    "loi": [],
    "giay": 21.3,
    "luot": 6,
-   "sang": 172
+   "sang": 171
   },
   "GYM LIES": {
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 22.8,
+   "giay": 22.9,
    "luot": 6,
-   "sang": 156
+   "sang": 146
   },
   "AIRPORT HELL": {
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 20.6,
+   "giay": 20.7,
    "luot": 6,
    "sang": 166
   },
@@ -36,12 +36,14 @@
    "sang": 109
   },
   "OFFICE SMALL TALK": {
-   "diem": 100,
+   "diem": 95,
    "bo_qua": false,
-   "loi": [],
-   "giay": 23.3,
+   "loi": [
+    "8% điểm gần như đen (ngưỡng 8%)"
+   ],
+   "giay": 23.4,
    "luot": 6,
-   "sang": 171
+   "sang": 170
   },
   "DIET WARS": {
    "diem": 100,
@@ -65,7 +67,7 @@
    "loi": [],
    "giay": 18.8,
    "luot": 6,
-   "sang": 149
+   "sang": 148
   },
   "NEIGHBOR WATCH": {
    "diem": 100,
@@ -73,13 +75,13 @@
    "loi": [],
    "giay": 23.4,
    "luot": 6,
-   "sang": 162
+   "sang": 158
   },
   "DATING APP": {
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 20.9,
+   "giay": 21.0,
    "luot": 6,
    "sang": 143
   }
