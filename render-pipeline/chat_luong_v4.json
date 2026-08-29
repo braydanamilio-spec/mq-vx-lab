@@ -2,104 +2,84 @@
  "nguong": 90,
  "kenh": {
   "RENT PANIC": {
-   "diem": 90,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "tiếng lệch hình: lượt 'My rent went up four hundr' mở lệch 0.00s, đóng lệch 0.88s"
-   ],
-   "giay": 21.3,
+   "loi": [],
+   "giay": 18.3,
    "luot": 6,
-   "sang": 171
+   "sang": 170
   },
   "GYM LIES": {
-   "diem": 90,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "tiếng lệch hình: lượt 'I have been coming here fo' mở lệch 0.00s, đóng lệch 0.43s"
-   ],
-   "giay": 22.9,
+   "loi": [],
+   "giay": 18.9,
    "luot": 6,
    "sang": 146
   },
   "AIRPORT HELL": {
-   "diem": 90,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "tiếng lệch hình: lượt 'The board says my flight l' mở lệch 0.00s, đóng lệch 0.89s"
-   ],
-   "giay": 20.7,
+   "loi": [],
+   "giay": 18.3,
    "luot": 6,
-   "sang": 166
+   "sang": 173
   },
   "CAR GUY": {
-   "diem": 90,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "tiếng lệch hình: lượt 'You said the whole thing w' mở lệch 0.00s, đóng lệch 1.04s"
-   ],
-   "giay": 20.9,
+   "loi": [],
+   "giay": 17.9,
    "luot": 6,
-   "sang": 117
+   "sang": 120
   },
   "OFFICE SMALL TALK": {
-   "diem": 90,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "tiếng lệch hình: lượt 'This meeting has been goin' mở lệch 0.00s, đóng lệch 0.98s"
-   ],
-   "giay": 23.4,
+   "loi": [],
+   "giay": 18.3,
    "luot": 6,
    "sang": 170
   },
   "DIET WARS": {
-   "diem": 90,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "tiếng lệch hình: lượt 'I am starting a new diet o' mở lệch 0.00s, đóng lệch 0.95s"
-   ],
-   "giay": 21.3,
+   "loi": [],
+   "giay": 18.2,
    "luot": 6,
-   "sang": 180
+   "sang": 171
   },
   "TECH SUPPORT": {
-   "diem": 90,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "tiếng lệch hình: lượt 'My screen has been black f' mở lệch 0.00s, đóng lệch 0.89s"
-   ],
-   "giay": 20.4,
+   "loi": [],
+   "giay": 18.3,
    "luot": 6,
-   "sang": 157
+   "sang": 162
   },
   "PARENT MODE": {
-   "diem": 90,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "tiếng lệch hình: lượt 'You have been on that phon' mở lệch 0.00s, đóng lệch 1.05s"
-   ],
-   "giay": 18.8,
+   "loi": [],
+   "giay": 16.7,
    "luot": 6,
-   "sang": 149
+   "sang": 150
   },
   "NEIGHBOR WATCH": {
-   "diem": 90,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "tiếng lệch hình: lượt 'You have been watching me ' mở lệch 0.00s, đóng lệch 1.05s"
-   ],
-   "giay": 23.4,
+   "loi": [],
+   "giay": 18.3,
    "luot": 6,
-   "sang": 159
+   "sang": 156
   },
   "DATING APP": {
-   "diem": 90,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "tiếng lệch hình: lượt 'My profile says I love hik' mở lệch 0.00s, đóng lệch 0.47s"
-   ],
-   "giay": 21.0,
+   "loi": [],
+   "giay": 18.3,
    "luot": 6,
-   "sang": 143
+   "sang": 140
   }
  }
 }

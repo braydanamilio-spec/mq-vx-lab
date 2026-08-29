@@ -141,6 +141,11 @@ def cham_mot(k: dict) -> dict:
     d = json.load(io.open(pj, encoding="utf-8"))
     luot, tu = d.get("luot") or [], d.get("tu") or []
     loi, diem = [], 100
+    # Thời lượng tính NGAY ĐẦU: nhiều phép đo bên dưới cần nó, và bản trước tính ở giữa hàm nên
+    # phép đo khung-đen chèn vào phía trên đọc phải một biến chưa có. Cùng họ lỗi "dùng biến
+    # trước khi khai báo" đã dính hai lần bên TypeScript đêm nay (luật 7ae) — ở Python thì nó nổ
+    # ngay nên rẻ hơn, nhưng gốc thì y hệt: thứ tự KỂ không phải thứ tự TÍNH.
+    dur = _dai(pv) or 0
 
     # ── 25đ NHỊP HÀI ───────────────────────────────────────────────────────────────────
     qua_dai = [l for l in luot if len(str(l.get("nar") or "").split()) > 14]
@@ -198,6 +203,11 @@ def cham_mot(k: dict) -> dict:
     # Phép đo: mốc mở lượt phải bằng thời điểm TỪ ĐẦU TIÊN của lượt ấy, mốc đóng phải bám từ
     # cuối. Lệch quá 0,25 giây là mắt bắt được.
     for l in luot:
+        # BỎ QUA LƯỢT CHỐT. Mốc đóng của nó CỐ Ý dài ra để làm nhịp đuôi (quãng người nghe phản
+        # ứng sau câu chốt) — đo nó bằng thước "tiếng phải khớp hình" là bắt nhầm một thiết kế.
+        # Đây đúng là bẫy của mọi cổng kiểm: một ngoại lệ có chủ ý trông y hệt một lỗi.
+        if l.get("chot"):
+            continue
         ws = [w for w in tu if l["s"] - 0.02 <= w["t"] < l["e"] - 0.02]
         if not ws:
             continue
@@ -241,7 +251,6 @@ def cham_mot(k: dict) -> dict:
         break
 
     # ── 10đ ĐỘ DÀI + LOGIC BỐI CẢNH ────────────────────────────────────────────────────
-    dur = _dai(pv) or 0
     if not (15 <= dur <= 60):
         diem -= 5
         loi.append(f"dài {dur:.0f}s — ngoài khoảng short 15–60s")
