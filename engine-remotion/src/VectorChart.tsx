@@ -94,8 +94,13 @@ export const VectorChart: React.FC<RankedProps> = (props) => {
   // bảng 4-6 mục chỉ lấp một phần ba khung, hai phần ba dưới bỏ trắng.
   const khe = 22;
   const caoCot = Math.max(64, Math.floor((caoKhung - (nCot - 1) * khe) / nCot));
-  const traiCot = 250;
-  const rongToiDa = W - traiCot - 90;
+  // Cột nhãn rộng theo TÊN DÀI NHẤT, không ghim cứng: bản đầu để 250px và "Grand Theft Auto V
+  // Legacy" vỡ thành bốn dòng chữ li ti trong một ô hẹp — đọc không ra, mà lại chiếm chỗ.
+  // Trần 380px để cột số liệu không bị bóp; dài hơn nữa thì cắt bằng dấu ba chấm, vì một cái tên
+  // dài quá KHÔNG đáng để nuốt mất phần biểu đồ.
+  const tenDai = Math.max(6, ...items.map((it) => String(it.name || "").length));
+  const traiCot = Math.max(230, Math.min(380, 118 + tenDai * 9));
+  const rongToiDa = W - traiCot - 210;   // chừa sẵn chỗ cho con số đứng sau đầu cột
 
   return (
     <AbsoluteFill style={{
@@ -136,7 +141,11 @@ export const VectorChart: React.FC<RankedProps> = (props) => {
               position: "absolute", left: 104, top: y, width: traiCot - 124, height: caoCot,
               display: "flex", alignItems: "center", justifyContent: "flex-end",
               color: MUC, fontWeight: 800, fontSize: dang ? 27 : 24, textAlign: "right",
-              lineHeight: 1.1, opacity: dang ? 1 : 0.6, paddingRight: 4,
+              lineHeight: 1.14, opacity: dang ? 1 : 0.62, paddingRight: 4,
+              // Tối đa hai dòng rồi cắt: ba dòng trở lên là chữ nhỏ tới mức không đọc được trên
+              // điện thoại, mà tên mục vốn chỉ cần đủ nhận ra.
+              display: "-webkit-box" as any, WebkitLineClamp: 2 as any,
+              WebkitBoxOrient: "vertical" as any, overflow: "hidden",
             }}>{it.name}</div>
 
             {/* KHỐI CỘT — viền dày là thứ làm nó ra "đồ hoạ" chứ không ra "biểu đồ bảng tính" */}
@@ -172,7 +181,11 @@ export const VectorChart: React.FC<RankedProps> = (props) => {
         <span>{handle}</span>
       </div>
 
-      {subs && subs.length ? <Karaoke subs={subs} accent={accent} /> : null}
+      {/* Băng phụ đề: NỀN CỦA NÓ TỐI, dù nền trang là giấy sáng.
+          Bản trước tôi đưa màu MỰC (gần đen) vào đây để hợp tông giấy — và chữ đang đọc thành đen
+          trên đen, mất hẳn. Sửa một chỗ chói bằng cách tạo một chỗ tàng hình thì không phải sửa.
+          Màu vàng hổ phách thuộc đúng bảng giấy này mà vẫn nổi trên nền tối của băng chữ. */}
+      {subs && subs.length ? <Karaoke subs={subs} accent="#F2A626" /> : null}
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
     </AbsoluteFill>
