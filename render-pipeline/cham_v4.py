@@ -101,6 +101,34 @@ def hai_ao_co_khac_nhau(k: dict) -> str:
     return ""
 
 
+def _sang_nen(luot):
+    """(sáng trung bình, tỉ lệ điểm gần-đen) của TẤM NỀN mà tập này dùng.
+
+    Đo trên tệp nền chứ không trên khung đã render: ở đó không có một nét vẽ nhân vật nào làm
+    nhiễu, nên con số trả lời đúng câu hỏi "bối cảnh có tối không" thay vì "có bao nhiêu mực đen
+    trên màn hình".
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        return (None, None)
+    ns = {l.get("nen") for l in luot if l.get("nen")}
+    if not ns:
+        return (None, None)
+    PUB = os.path.join(GOC, "..", "engine-remotion", "public")
+    ss = tt = 0.0
+    n = 0
+    for x in ns:
+        f = os.path.join(PUB, x)
+        if not os.path.exists(f):
+            continue
+        px = list(Image.open(f).convert("L").resize((160, 160)).getdata())
+        ss += sum(px) / len(px)
+        tt += sum(1 for v in px if v < 40) / len(px)
+        n += 1
+    return (ss / n, tt / n) if n else (None, None)
+
+
 def cham_mot(k: dict) -> dict:
     import kich_hai as H
 
@@ -199,16 +227,30 @@ def cham_mot(k: dict) -> dict:
         loi.append(_ao)
 
     # ── 15đ ĐỘ SÁNG ────────────────────────────────────────────────────────────────────
+    # 30/8 — ĐỔI PHÉP ĐO, KHÔNG NỚI NGƯỠNG.
+    # Bản cũ đếm "tỉ lệ điểm gần như đen" trên CẢ KHUNG, ngưỡng 8%. Với bộ hài thì phép ấy đo sai
+    # thứ, và số đo chứng minh: khung OFFICE SMALL TALK có 12,8% điểm đen, trong khi chính tấm
+    # NỀN của nó chỉ có 0,1% và sáng 212/255. Tức là gần như toàn bộ điểm đen đến từ NHÂN VẬT —
+    # nét bao dày, tóc, quần, giày. Đó là ĐẶC TRƯNG TẠO HÌNH của phong cách hoạt hình nét dày,
+    # không phải khung tối.
+    # Nới ngưỡng cho qua thì là sửa thước để lấy điểm. Đường đúng là đo ĐÚNG THỨ MÌNH MUỐN BIẾT:
+    #   · khung có đủ sáng để xem trên điện thoại không  -> sáng trung bình của khung (chặt hơn: 100)
+    #   · nền có phải một cái hang tối không             -> đo TRÊN CHÍNH TẤM NỀN, nơi không có
+    #     một nét vẽ nhân vật nào để làm nhiễu số đo.
     s, t = _sang(pv, dur or 18)
     if s is None:
         loi.append("(không đo được độ sáng)")
-    else:
-        if s < 75:
-            diem -= 10
-            loi.append(f"khung tối: sáng trung bình {s:.0f}/255 (ngưỡng 75)")
-        if t > 0.08:
+    elif s < 100:
+        diem -= 10
+        loi.append(f"khung tối: sáng trung bình {s:.0f}/255 (ngưỡng 100)")
+    sn, tn = _sang_nen(luot)
+    if sn is not None:
+        if tn > 0.06:
             diem -= 5
-            loi.append(f"{t*100:.0f}% điểm gần như đen (ngưỡng 8%)")
+            loi.append(f"nền tối: {tn*100:.0f}% điểm gần như đen (ngưỡng 6%)")
+        elif sn < 110:
+            diem -= 5
+            loi.append(f"nền xám xịt: sáng trung bình {sn:.0f}/255 (ngưỡng 110)")
 
     return {"diem": max(0, diem), "bo_qua": False, "loi": loi,
             "giay": round(dur, 1), "luot": len(luot), "sang": round(s or 0)}

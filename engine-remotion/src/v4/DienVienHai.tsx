@@ -208,6 +208,22 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const V = kieu.net || "#20222B";
   const da = kieu.da, ao = kieu.ao, quan = kieu.quan;
 
+  // 30/8 — TAY TRƯỚC PHẢI SÁNG HƠN THÂN.
+  // Cánh tay bên phải vẽ SAU thân nên nó nằm đè lên ngực. Cùng một màu áo thì hai khối hoà vào
+  // nhau và chỉ còn cái viền — khung đo được cho ra một dải màu cắt chéo người, đọc ra là tay
+  // gãy chứ không phải tay khoanh trước ngực.
+  // Hoạt hình tách lớp bằng SẮC ĐỘ, không bằng viền: thứ ở gần ống kính sáng hơn thứ ở xa, vì
+  // ánh sáng tới nó trước. Chỉ cần chênh chừng một phần mười là mắt tách được ngay, mà vẫn đọc
+  // ra là cùng một cái áo.
+  const _sang = (h: string, k: number) => {
+    const c = (h || "#888888").replace("#", "");
+    if (c.length !== 6) return h;
+    const v = [0, 2, 4].map((i) => Math.min(255, Math.round(parseInt(c.slice(i, i + 2), 16) * k)));
+    return "#" + v.map((x) => x.toString(16).padStart(2, "0")).join("");
+  };
+  const aoTruoc = _sang(ao, 1.13);
+  const aoSau = _sang(ao, 0.9);
+
   /** Chi thể: một nét bao dày rồi một nét màu mỏng hơn đè lên — ra hình con nhộng có viền. */
   const chi = (d: string, mau: string, day: number, key: string) => (
     <g key={key}>
@@ -290,7 +306,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
       {giay(chanP, 1, "gP")}
 
       {/* TAY SAU (bên trái) — vẽ trước thân, nên nó nằm sau lưng: ra chiều sâu mà không cần đổ bóng */}
-      {chi(`M ${vaiT[0]} ${vaiT[1]} Q ${khuyuT[0]} ${khuyuT[1]} ${tayT[0]} ${tayT[1]}`, ao, 23 * ngang, "tT")}
+      {chi(`M ${vaiT[0]} ${vaiT[1]} Q ${khuyuT[0]} ${khuyuT[1]} ${tayT[0]} ${tayT[1]}`, aoSau, 23 * ngang, "tT")}
       {ban(tayT, gocVT + gocKT, "bT")}
 
       {/* THÂN — hình hạt đậu, KHÔNG phải hình chữ nhật. Vai tròn và eo hơi thóp là thứ làm
@@ -320,7 +336,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
       ) : null}
 
       {/* TAY TRƯỚC (bên phải) — vẽ sau thân nên nằm trước ngực */}
-      {chi(`M ${vaiP[0]} ${vaiP[1]} Q ${khuyuP[0]} ${khuyuP[1]} ${tayP[0]} ${tayP[1]}`, ao, 23 * ngang, "tP")}
+      {chi(`M ${vaiP[0]} ${vaiP[1]} Q ${khuyuP[0]} ${khuyuP[1]} ${tayP[0]} ${tayP[1]}`, aoTruoc, 23 * ngang, "tP")}
       {ban(tayP, gocVP + gocKP, "bP")}
 
       {/* CỔ — bản đầu vẽ quá ngắn nên đầu dính thẳng vào vai, đọc ra là một khối. Cổ phải

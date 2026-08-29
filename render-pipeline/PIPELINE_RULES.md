@@ -4313,3 +4313,33 @@ là đang nhấn. Nhân 7 độ: đủ thấy mà chưa thành múa.
 **Bài học đo lường:** "tính năng có chạy" và "khán giả thấy được" là hai câu hỏi khác nhau.
 Kiểm tra bằng cách in giá trị chỉ trả lời câu thứ nhất; câu thứ hai chỉ trả lời được bằng cách
 **nhìn khung ở đúng cỡ mà khán giả sẽ nhìn**.
+
+### 7ai. KHI PHÉP ĐO BẮT NHẦM, ĐỔI PHÉP ĐO — ĐỪNG NỚI NGƯỠNG — 30/8/2026
+
+Hai kênh bộ hài liên tục mất 5 điểm vì *"tỉ lệ điểm gần như đen vượt 8%"*. Cám dỗ là nới ngưỡng
+lên 14% cho qua. **Đó là sửa thước để lấy điểm.**
+
+Đo trước đã. Số nói rõ:
+
+| | khung đã render | chính tấm NỀN của nó |
+|---|---|---|
+| OFFICE SMALL TALK | 12,8% điểm đen · sáng 162 | **0,1%** điểm đen · sáng **212** |
+| CAR GUY | 10,7% điểm đen · sáng 121 | 2,9% điểm đen · sáng 135 |
+
+Nền OFFICE gần như không có điểm đen nào và sáng 212/255 — **gần như toàn bộ 12,8% ấy đến từ
+NHÂN VẬT**: nét bao dày, tóc, quần, giày. Đó là **đặc trưng tạo hình** của phong cách hoạt hình
+nét dày (xem 7y mục 2), không phải khung tối.
+
+Phép đếm điểm-đen được viết cho bộ thế hệ 3 (nét mảnh, một người trong khung). Áp nguyên si sang
+bộ nét dày hai người là đo sai thứ. Đường đúng: **đo đúng thứ mình muốn biết**, tách làm hai câu
+hỏi riêng —
+* *khung có đủ sáng để xem trên điện thoại không?* → sáng trung bình của khung, ngưỡng siết từ
+  75 lên **100**;
+* *bối cảnh có phải một cái hang tối không?* → đo **trên chính tệp nền**, nơi không có một nét vẽ
+  nhân vật nào làm nhiễu. Ngưỡng: đen ≤ 6% · sáng ≥ 110.
+
+Kết quả: 10/10 kênh đạt 100, và thước **nghiêm hơn trước** ở trục độ sáng khung (100 > 75).
+
+**Quy tắc:** trước khi nới một ngưỡng, phải trả lời được *"con số này đang đo cái gì, và nó có
+đo đúng thứ tôi quan tâm không?"* Nếu phép đo bắt nhầm một thuộc tính hợp lệ, hãy tách phép đo
+ra chứ đừng hạ chuẩn.

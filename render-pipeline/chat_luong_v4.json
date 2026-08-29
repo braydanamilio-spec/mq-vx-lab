@@ -26,21 +26,17 @@
    "sang": 166
   },
   "CAR GUY": {
-   "diem": 95,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "11% điểm gần như đen (ngưỡng 8%)"
-   ],
+   "loi": [],
    "giay": 20.9,
    "luot": 6,
-   "sang": 109
+   "sang": 117
   },
   "OFFICE SMALL TALK": {
-   "diem": 95,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "8% điểm gần như đen (ngưỡng 8%)"
-   ],
+   "loi": [],
    "giay": 23.4,
    "luot": 6,
    "sang": 170
@@ -67,7 +63,7 @@
    "loi": [],
    "giay": 18.8,
    "luot": 6,
-   "sang": 148
+   "sang": 149
   },
   "NEIGHBOR WATCH": {
    "diem": 100,
@@ -75,7 +71,7 @@
    "loi": [],
    "giay": 23.4,
    "luot": 6,
-   "sang": 158
+   "sang": 159
   },
   "DATING APP": {
    "diem": 100,

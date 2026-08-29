@@ -872,11 +872,23 @@ def lam_thumb(video: str, hook: str, ten_kenh: str, mau: str, dest: str) -> bool
         d.text((x, y), ln, font=ft, fill="#FFFFFF", stroke_width=max(6, cs // 9), stroke_fill="#12131A")
         y += cao
 
-    # Tên kênh ở đáy, nhỏ, mang màu kênh — để người xem nhận ra kênh trong danh sách đề xuất.
-    ft2 = phong(int(W * 0.045))
+    # DẢI NHẬN DIỆN KÊNH Ở ĐÁY.
+    # Bản đầu chỉ viết tên kênh bằng chữ nhỏ mang màu kênh, đặt lên giữa áo nhân vật — chữ chìm
+    # hẳn, không đọc được ở cỡ thumbnail trong danh sách đề xuất. Mà chỗ đó mới là việc của nó:
+    # người xem phải nhận ra "à, kênh này" trước khi kịp đọc câu hook.
+    # Nên nó thành một DẢI có nền màu kênh, chữ tương phản chọn theo độ sáng của chính màu ấy
+    # (nền sáng thì chữ đen, nền tối thì chữ trắng) — cùng phép tính tương phản đã dùng cho áo.
+    ft2 = phong(int(W * 0.058))
     w2 = d.textlength(ten_kenh, font=ft2)
-    d.text(((W - w2) / 2, int(H * 0.9)), ten_kenh, font=ft2, fill=mau,
-           stroke_width=5, stroke_fill="#12131A")
+    ch = int(W * 0.082)
+    cy = int(H * 0.935)
+    d.rectangle([(W - w2) / 2 - int(W * 0.045), cy - int(ch * 0.28),
+                 (W + w2) / 2 + int(W * 0.045), cy + int(ch * 0.98)],
+                fill=mau, outline="#12131A", width=6)
+    _c = str(mau or "#CCCCCC").lstrip("#")
+    _r, _g, _b = (int(_c[i:i + 2], 16) for i in (0, 2, 4)) if len(_c) == 6 else (200, 200, 200)
+    chu = "#12131A" if (0.299 * _r + 0.587 * _g + 0.114 * _b) > 150 else "#FFFFFF"
+    d.text(((W - w2) / 2, cy), ten_kenh, font=ft2, fill=chu)
 
     im.save(dest, quality=92)
     try:
