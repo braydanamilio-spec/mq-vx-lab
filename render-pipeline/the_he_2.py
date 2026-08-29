@@ -660,8 +660,13 @@ def _bd_steam(D, ky):
             ds = ds[:6]
         return (ten,
                 [{"name": _gon(x["ten"], 26), "stat": _so(round(ti)) + " : 1",
-                  "vo": (f"{_gon(x['ten'], 32)}. {sh:,} own it. "
-                         f"{x['dang_choi']:,} online tonight.")} for ti, sh, x in ds],
+                  # 29/8 — ĐỌC TỈ LỆ, ĐỪNG ĐỌC SỐ SỞ HỮU THÔ. SteamSpy trả người sở hữu theo
+                  # KHOẢNG, nên bốn trong sáu mục cùng đọc "10,000,000 own it" — bốn câu y hệt
+                  # nhau trong một video, đúng dấu hiệu "máy nhả" mà cổng nghiệm thu bắt.
+                  # Tỉ lệ thì mỗi mục một khác (đã chốt 6/6 giá trị phân biệt) VÀ chính nó là
+                  # đại lượng cột đang vẽ — lời đọc khớp hẳn với con số trên khung.
+                  "vo": (f"{_gon(x['ten'], 32)}. {_so(round(ti))} owners for every one player "
+                         f"online tonight.")} for ti, sh, x in ds],
                 ket,
                 {"phu": "by owners for every player online tonight"})
 
@@ -2573,11 +2578,31 @@ def _xn_tu_lieu(D, ky):
         cap.append({"label": _gon(a["tieu_de"], 18), "thenYear": str(a["nam"])[:4],
                     "thenVal": _gon(a["tieu_de"], 16), "nowYear": str(b["nam"])[:4],
                     "nowVal": _gon(b["tieu_de"], 16), "change": "",
-                    "vo": f"{str(a['nam'])[:4]}, then {str(b['nam'])[:4]}."})
+                    # 29/8 — LỜI ĐỌC PHẢI NHẮC TÊN PHIM, đừng chỉ đọc hai con số năm. Bốn cặp
+                    # rút từ cùng một kho thường trùng năm ("1943, then 1951." xuất hiện hai
+                    # lần), và hai câu y hệt trong một video là dấu "máy nhả". Tên phim thì
+                    # không bao giờ trùng, mà lại là thứ người xem cần để tin đây là tư liệu
+                    # có thật chứ không phải hai tấm ảnh bất kỳ.
+                    "vo": (f"{_gon(a['tieu_de'], 30)}, {str(a['nam'])[:4]}. "
+                           f"Then {_gon(b['tieu_de'], 30)}, {str(b['nam'])[:4]}.")})
     if len(cap) < 3:
         return None
-    return ("The same subject, decades apart", cap,
-            ["Two eras of the same thing, both on film.",
+    # 29/8 — TIÊU ĐỀ NÊU CHỦ ĐỀ, VÀ LỜI HỨA HẠ XUỐNG ĐÚNG THỨ NGUỒN CHỨNG MINH ĐƯỢC.
+    #
+    # Bản cũ luôn là "The same subject, decades apart" cho cả tám chủ đề — tám video một tiêu đề.
+    # Sửa xong tiêu đề thì lộ ra lỗi nặng hơn: từ khoá "bridge" trả về phim tàu ngầm và "Radar Men
+    # From the Moon". Kho lưu trữ khớp từ khoá với mô tả và thẻ, không khớp với NỘI DUNG khung
+    # hình, nên hai phim ghép cạnh nhau thường CHẲNG CÙNG CHỦ ĐỀ GÌ CẢ.
+    # Đo thử lọc chặt (đòi từ khoá nằm trong tên phim): "bridge" còn 1 phim, "main street" còn 0
+    # trên 21. Không đủ dựng, tức đường ấy đóng.
+    # Vậy còn lại một lựa chọn trung thực: nói đúng thứ đang có. Đây là hai cuốn phim mà kho lưu
+    # trữ công xếp cùng một mục, cách nhau mấy chục năm. Câu ấy KIỂM CHỨNG ĐƯỢC, còn "cùng một
+    # chủ đề" thì không — và hứa thứ mình không chứng minh được là cách mất người xem nhanh nhất.
+    _cd = " ".join(str(ky.get("tu_khoa") or "").split()).strip()
+    _td = (f"{_cd[:1].upper()}{_cd[1:]} in the archive, decades apart" if _cd
+           else "Two films from the archive, decades apart")
+    return (_td, cap,
+            [f"Two films the public archive files under {_cd or 'one word'}, decades apart.",
              "Public domain. Nobody owns either one."])
 
 

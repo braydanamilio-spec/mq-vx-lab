@@ -1,5 +1,5 @@
 {
- "luc": "2026-08-29T10:18:21Z",
+ "luc": "2026-08-29T10:34:18Z",
  "nguong": 90,
  "canh_bao_motip": [],
  "kenh": {
@@ -9,6 +9,20 @@
    "dang": "mapped",
    "loi": [],
    "tieu_de": "California: 12 — Active weather warnings"
+  },
+  "AMERICALOOKEDUP": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "race",
+   "loi": [],
+   "tieu_de": "Dolly Parton: 3,814K — Most-read on Wikipedia — Aug 26, 2026"
+  },
+  "ARCHIVEREEL": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "FDR to Operation Gladio — America 1950"
   },
   "BREEDFILE": {
    "diem": 100,
@@ -23,6 +37,13 @@
    "dang": "scaled",
    "loi": [],
    "tieu_de": "Ristorante Pizza Rucola: 704 cal — Frozen pizza, by calories"
+  },
+  "CARRECALL": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Ford F-150: what keeps breaking (2016-2020)"
   },
   "COLDFILE": {
    "diem": 100,
@@ -73,12 +94,12 @@
    "loi": [],
    "tieu_de": "Dolly Parton: the spike — Aug 26, 2026"
   },
-  "GAMEGRAVEYARD": {
+  "FILINGSSAY": {
    "diem": 100,
    "bo_qua": false,
    "dang": "ranked",
    "loi": [],
-   "tieu_de": "Grand Theft Auto IV: 20.0M : 1 — Games millions bought and nobody plays"
+   "tieu_de": "Who keeps writing \"artificial intelligence\" to the S E C"
   },
   "GONETOOSOON": {
    "diem": 100,
@@ -100,13 +121,6 @@
    "dang": "longshot",
    "loi": [],
    "tieu_de": "Jobs never got back, counted from 2001"
-  },
-  "MARRIAGEMATH": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "scaled",
-   "loi": [],
-   "tieu_de": "Births per woman 2022"
   },
   "MISSINGPIECE": {
    "diem": 100,
@@ -178,12 +192,26 @@
    "loi": [],
    "tieu_de": "Where America shakes — Alaska, M7.9 — week ending 2015-01-01"
   },
+  "QUIETLAYOFFS": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "MAGELLAN MIDSTREAM: 4x — Who keeps writing \"reduction in force\" to the S E C"
+  },
   "REALPLACE": {
    "diem": 100,
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [],
    "tieu_de": "Neatsville, Kentucky — Aug 20, 2026"
+  },
+  "RECALLPLATE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "MIDWEST POULTRY SERVC C/O: 3.2M — Food recalls you probably missed"
   },
   "RENTREALITY": {
    "diem": 100,
@@ -211,7 +239,14 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "487 planes are over America right now — The whole country"
+   "tieu_de": "493 planes are over America right now — The whole country"
+  },
+  "SONGFILE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "The Supremes — Motown"
   },
   "SPACEINVOICE": {
    "diem": 100,
@@ -276,84 +311,39 @@
    "loi": [],
    "tieu_de": "Order on Motion - Aldin Associates Ltd. — First amendment"
   },
-  "ARCHIVEREEL": {
-   "diem": 88,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [
-    "kịch bản: câu mở đầu không có SỐ cũng không có CÂU HỎI ('A film that belongs to nobody.') — người xem chưa có lý do nào để ở lại"
-   ],
-   "tieu_de": "new world next week - feb10 — America 1950"
-  },
-  "CARRECALL": {
+  "GAMEGRAVEYARD": {
    "diem": 88,
    "bo_qua": false,
    "dang": "ranked",
    "loi": [
-    "kịch bản: 1 câu dài quá 20 từ (dài nhất 23) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
+    "kịch bản: 4 câu lặp lại y hệt — lộ ra là máy nhả"
    ],
-   "tieu_de": "Ford F-150: what keeps breaking (2016-2020)"
+   "tieu_de": "Grand Theft Auto IV: 20.0M : 1 — Games millions bought and nobody plays"
   },
-  "FILINGSSAY": {
+  "MARRIAGEMATH": {
    "diem": 88,
    "bo_qua": false,
-   "dang": "ranked",
+   "dang": "scaled",
    "loi": [
-    "kịch bản: 1 câu dài quá 20 từ (dài nhất 23) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
+    "kịch bản: 2 câu lặp lại y hệt — lộ ra là máy nhả"
    ],
-   "tieu_de": "Who keeps writing \"artificial intelligence\" to the S E C"
-  },
-  "NEAREARTH": {
-   "diem": 88,
-   "bo_qua": false,
-   "dang": "ranked",
-   "loi": [
-    "kịch bản: 1 câu dài quá 20 từ (dài nhất 23) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
-   ],
-   "tieu_de": "Rocks that just passed Earth"
-  },
-  "QUIETLAYOFFS": {
-   "diem": 88,
-   "bo_qua": false,
-   "dang": "ranked",
-   "loi": [
-    "kịch bản: 1 câu dài quá 20 từ (dài nhất 21) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
-   ],
-   "tieu_de": "MAGELLAN MIDSTREAM: 4x — Who keeps writing \"reduction in force\" to the S E C"
-  },
-  "RECALLPLATE": {
-   "diem": 88,
-   "bo_qua": false,
-   "dang": "ranked",
-   "loi": [
-    "kịch bản: 1 câu dài quá 20 từ (dài nhất 21) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
-   ],
-   "tieu_de": "MIDWEST POULTRY SERVC C/O: 3.2M — Food recalls you probably missed"
-  },
-  "SONGFILE": {
-   "diem": 88,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [
-    "kịch bản: câu mở đầu không có SỐ cũng không có CÂU HỎI ('The Supremes, on paper.') — người xem chưa có lý do nào để ở lại"
-   ],
-   "tieu_de": "The Supremes — Motown"
+   "tieu_de": "Births per woman 2022"
   },
   "THENANDNOW": {
-   "diem": 88,
+   "diem": 80,
    "bo_qua": false,
    "dang": "thennow",
    "loi": [
-    "kịch bản: câu mở đầu không có SỐ cũng không có CÂU HỎI ('Two eras of the same thing, both on film.') — người xem chưa có lý do nào để ở lại"
+    "thennow: tiêu đề 'the same subject, decades apart — harlem is heaven, ' không nhắc gì tới chủ đề 'city street' -> người xem bấm vào vì tưởng một đằng, thấy một nẻo"
    ],
-   "tieu_de": "The same subject, decades apart — City street"
+   "tieu_de": "The same subject, decades apart — Harlem Is Heaven, SBO Feature"
   },
-  "AMERICALOOKEDUP": {
+  "NEAREARTH": {
    "diem": 0,
-   "bo_qua": false,
-   "dang": "race",
+   "bo_qua": true,
+   "dang": "ranked",
    "loi": [
-    "dựng story ném UnboundLocalError: local variable '_ngay_goc' referenced before assignment"
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
    ],
    "tieu_de": ""
   },
