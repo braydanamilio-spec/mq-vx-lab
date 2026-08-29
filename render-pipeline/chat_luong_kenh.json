@@ -1,5 +1,5 @@
 {
- "luc": "2026-08-28T17:50:17Z",
+ "luc": "2026-08-29T03:29:06Z",
  "nguong": 90,
  "canh_bao_motip": [],
  "kenh": {
@@ -8,7 +8,7 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "California: 28 — Active weather warnings"
+   "tieu_de": "California: 15 — Active weather warnings"
   },
   "AMERICALOOKEDUP": {
    "diem": 100,
@@ -16,13 +16,6 @@
    "dang": "race",
    "loi": [],
    "tieu_de": "Dolly Parton: 3,814K — Most-read on Wikipedia — Aug 26, 2026"
-  },
-  "ARCHIVEREEL": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [],
-   "tieu_de": "Midwest Holiday (Part I) — America 1950"
   },
   "BREEDFILE": {
    "diem": 100,
@@ -45,13 +38,6 @@
    "loi": [],
    "tieu_de": "Ford F-150: what keeps breaking (2016-2020)"
   },
-  "COLDFILE": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [],
-   "tieu_de": "Lett v. U.S. Department of Justice — Habeas corpus"
-  },
   "COSTTOGO": {
    "diem": 100,
    "bo_qua": false,
@@ -65,13 +51,6 @@
    "dang": "race",
    "loi": [],
    "tieu_de": "Shai: 33 pts — NBA points leaders — 2024-25"
-  },
-  "COURTRECORD": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [],
-   "tieu_de": "Cook v. Noel — Wrongful death"
   },
   "DEGREEWORTH": {
    "diem": 100,
@@ -136,33 +115,12 @@
    "loi": [],
    "tieu_de": "Birth rate 2022"
   },
-  "MISSINGPIECE": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [],
-   "tieu_de": "Disappearance of Marvin Clark"
-  },
   "MPGTRUTH": {
    "diem": 100,
    "bo_qua": false,
    "dang": "race",
    "loi": [],
    "tieu_de": "Toyota: miles per gallon — bZ4X, 119 mpg"
-  },
-  "NEAREARTH": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "ranked",
-   "loi": [],
-   "tieu_de": "Rocks that just passed Earth"
-  },
-  "NIGHTSHIFT": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [],
-   "tieu_de": "Killing of the Clancy children"
   },
   "ONEHIT": {
    "diem": 100,
@@ -220,13 +178,6 @@
    "loi": [],
    "tieu_de": "MAGELLAN MIDSTREAM: 4x — Who keeps writing \"reduction in force\" to the S E C"
   },
-  "REALPLACE": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [],
-   "tieu_de": "Muppet Treasure Island — Aug 26, 2026"
-  },
   "RECALLPLATE": {
    "diem": 100,
    "bo_qua": false,
@@ -260,14 +211,7 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "509 planes are over America right now — The whole country"
-  },
-  "SONGFILE": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [],
-   "tieu_de": "One Hit Wonder"
+   "tieu_de": "497 planes are over America right now — The whole country"
   },
   "SPACEINVOICE": {
    "diem": 100,
@@ -295,14 +239,7 @@
    "bo_qua": false,
    "dang": "thennow",
    "loi": [],
-   "tieu_de": "The same subject, decades apart — U.S. NAVY PLANES, Schenectady City"
-  },
-  "UNSOLVEDLOG": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [],
-   "tieu_de": "Great Moon Hoax — Aug 26, 2026"
+   "tieu_de": "The same subject, decades apart — City street"
   },
   "WEAPONPRICE": {
    "diem": 100,
@@ -318,13 +255,6 @@
    "loi": [],
    "tieu_de": "Morning Summit Lightly: 509 cal — Breakfast cereal: what is really in it"
   },
-  "WHATTHEYSEARCH": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "ranked",
-   "loi": [],
-   "tieu_de": "What America looks up about love — Marriage, 36.0K"
-  },
   "WHERETOMOVE": {
    "diem": 100,
    "bo_qua": false,
@@ -339,17 +269,109 @@
    "loi": [],
    "tieu_de": "Forest cover 2022"
   },
-  "YOURRIGHTSCASE": {
-   "diem": 100,
+  "ARCHIVEREEL": {
+   "diem": 94,
    "bo_qua": false,
    "dang": "cinematic",
-   "loi": [],
+   "loi": [
+    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+   ],
+   "tieu_de": "Freedom and Power (Part II) — America 1950"
+  },
+  "COLDFILE": {
+   "diem": 94,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [
+    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+   ],
+   "tieu_de": "In re Pride — Habeas corpus"
+  },
+  "COURTRECORD": {
+   "diem": 94,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [
+    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+   ],
+   "tieu_de": "Iwasa v. Nago — Wrongful death"
+  },
+  "MISSINGPIECE": {
+   "diem": 94,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [
+    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+   ],
+   "tieu_de": "Disappearance of Marvin Clark"
+  },
+  "NIGHTSHIFT": {
+   "diem": 94,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [
+    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+   ],
+   "tieu_de": "Killing of the Clancy children"
+  },
+  "REALPLACE": {
+   "diem": 94,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [
+    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+   ],
+   "tieu_de": "Muppet Treasure Island — Aug 26, 2026"
+  },
+  "SONGFILE": {
+   "diem": 94,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [
+    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+   ],
+   "tieu_de": "One Hit Wonder"
+  },
+  "UNSOLVEDLOG": {
+   "diem": 94,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [
+    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+   ],
+   "tieu_de": "Great Moon Hoax — Aug 26, 2026"
+  },
+  "YOURRIGHTSCASE": {
+   "diem": 94,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [
+    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+   ],
    "tieu_de": "Order on Motion - Aldin Associates Ltd. — First amendment"
+  },
+  "NEAREARTH": {
+   "diem": 0,
+   "bo_qua": true,
+   "dang": "ranked",
+   "loi": [
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+   ],
+   "tieu_de": ""
   },
   "ONESTUDY": {
    "diem": 0,
    "bo_qua": true,
    "dang": "cinematic",
+   "loi": [
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+   ],
+   "tieu_de": ""
+  },
+  "WHATTHEYSEARCH": {
+   "diem": 0,
+   "bo_qua": true,
+   "dang": "ranked",
    "loi": [
     "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
    ],

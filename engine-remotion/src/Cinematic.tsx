@@ -289,11 +289,21 @@ const Scene1: React.FC<{ s: Scene; l: number; slug: string; accent: string; acce
         // không phải đặt sẵn rồi cầu may.
         // TỪ DÀI NHẤT quyết định, vì một từ không xuống dòng được (khác cả câu thì ngắt dòng được).
         const _coVua = (co: number, le: number) => {
-          const tuDaiNhat = t.split(/\s+/).reduce((a2, w2) => Math.max(a2, w2.length), 1);
+          const tu = t.split(/\s+/).filter(Boolean);
+          const tuDaiNhat = tu.reduce((a2, w2) => Math.max(a2, w2.length), 1);
           const rong = _vw - le * 2;
           const HE_SO = 0.62;                       // bề ngang trung bình một ký tự đậm ≈ 0.62 × cỡ chữ
-          const vua = rong / (tuDaiNhat * HE_SO);
-          return Math.max(38, Math.min(co, Math.floor(vua)));   // sàn 38px: nhỏ hơn nữa thì thà cắt
+          // 29/8 — SÀN 38px LÀ MỘT CÁI BẪY. Chú thích cũ viết "nhỏ hơn nữa thì thà cắt", nhưng
+          // CẮT CHỮ THÌ CHỮ KHÔNG CÒN ĐỌC ĐƯỢC — mà cả thẻ này sinh ra chỉ để người xem đọc.
+          // Khung anh gửi (COURT RECORD): "UNITED STATES V. WIL" và "A 2026 CASE ALMOST NOB" cụt
+          // ngang ở cùng một mốc. Tên vụ án do nguồn toà đặt nên có thể dài tuỳ ý, và hễ vượt sàn
+          // là cắt. Chữ nhỏ mà đọc được vẫn hơn chữ to mà mất nửa.
+          // Thêm phép đo THEO CẢ CÂU: từ dài nhất chỉ quyết định lúc một từ không xuống dòng được;
+          // câu dài thì tổng bề ngang mới là thứ quyết định cần bao nhiêu dòng.
+          const vuaTu = rong / (tuDaiNhat * HE_SO);
+          const soDong = Math.max(1, Math.min(4, tu.length > 6 ? 3 : 2));
+          const vuaCau = (rong * soDong) / (Math.max(1, t.length) * HE_SO);
+          return Math.max(26, Math.min(co, Math.floor(Math.min(vuaTu, vuaCau))));
         };
         const title = (size: number, align: "center" | "left", le = 120) => (
           <div style={{ fontSize: _coVua(size, le), fontWeight: 900, color: "#EAF8FF", lineHeight: 1.04, textAlign: align, overflowWrap: "anywhere", textShadow: `0 0 40px ${accent}66, 0 4px 24px rgba(0,0,0,.75)` }}>{t}</div>

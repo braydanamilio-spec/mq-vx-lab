@@ -46,6 +46,33 @@ def _kenhs() -> list:
     return ks if isinstance(ks, list) else list(ks.values())
 
 
+# ── LỖI BỐ CỤC ĐÃ XÁC NHẬN BẰNG MẮT, CHƯA SỬA XONG (29/8/2026) ─────────────────────────────
+# Bộ chấm này soi STORY và PROPS — tức DỮ LIỆU. Nó KHÔNG thấy được quan hệ giữa hai khối trên
+# cùng một mặt phẳng, nên nó chấm 50/50 đạt trong khi khung render thật còn lỗi nhìn thấy ngay.
+# Để bảng điểm nói dối như thế thì cổng chất lượng thành vô nghĩa: nó cho qua đúng những kênh
+# mình BIẾT là chưa đạt.
+#
+# Nên ghi thẳng vào đây những lỗi đã soi tận mắt trên khung đã render, kèm mức trừ. Mỗi dòng phải
+# XOÁ ĐI khi sửa xong — để lại một dòng đã hết đúng thì nó âm thầm giam một dạng ngoài mẻ render.
+# Đây là chỗ tạm, không phải thiết kế: chỗ đúng là engine tự khai toạ độ từng khối ra tệp để đo.
+LOI_BO_CUC = {
+    # 29/8 — CHỈ GHI THỨ ĐÃ NHÌN TẬN MẮT.
+    # Bản đầu của mục này ghi cinematic "dùng footage kho, trái tiêu chuẩn". SAI: `dung_props_phim`
+    # gọi `build_doc_props(..., ai_only=True)`, và `ai_only` BỎ HẲN nhánh Openverse — mọi ảnh đều
+    # do AI vẽ. Ảnh toà nhà Quốc hội trong khung anh gửi là ảnh AI vẽ trông như ảnh chụp, không
+    # phải footage tải về. Suýt giam 10 kênh ngoài mẻ render vì một lý do tôi không kiểm.
+    # Còn lại đúng một lỗi đã thấy rõ trên khung: hai dòng chữ cùng bị cắt ngang ở một mốc ngang
+    # ("UNITED STATES V. WIL" · "A 2026 CASE ALMOST NOB") — chữ bị cắt là chữ không đọc được.
+    # 29/8 — TRỪ NHẸ, KHÔNG GIAM KÊNH. Bằng chứng là MỘT khung do bản production CŨ dựng, và máy
+    # anh KHÔNG render được dạng này để kiểm lại (nó cần key vẽ ảnh, hồ key chỉ có trên CI). Đã hạ
+    # sàn cỡ chữ trong `Cinematic.tsx` để chữ luôn co vừa thay vì bị cắt — nhưng chưa nhìn tận mắt
+    # kết quả, nên ghi lại mối ngờ mà không chặn 10 kênh dựa trên thứ chưa kiểm được.
+    # Xoá dòng này khi đã soi được một khung cinematic dựng bằng bản mới.
+    "cinematic": (6, "chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; "
+                     "chưa soi lại được vì máy không có key vẽ ảnh)"),
+}
+
+
 def _gia_tri(st: dict) -> list:
     """Mọi con số hiển thị của story, bất kể dạng nào cất chúng ở khoá gì."""
     ra = []
@@ -185,6 +212,11 @@ def cham_mot(k: dict) -> dict:
     if isinstance(dan, list) and 0 < len(dan) < 4:
         loi.append(f"chỉ {len(dan)} câu dẫn — video sẽ hụt hơi")
         diem -= 10
+
+    tru, vi_sao = LOI_BO_CUC.get(dang, (0, ""))
+    if tru:
+        loi.append(f"lỗi bố cục chưa sửa: {vi_sao}")
+        diem -= tru
 
     ra["diem"] = max(0, diem)
     ra["loi"] = loi

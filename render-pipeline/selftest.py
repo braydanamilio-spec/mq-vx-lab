@@ -4344,7 +4344,27 @@ def t_the_tieu_de_khong_tran_khung():
     _ket = [x for x in (src.find("\ndef ", i + 5), src.find("\nclass ", i + 5)) if x > 0]
     than = src[i: min(_ket) if _ket else len(src)]
     assert "tuDaiNhat" in than, "phải tính theo TỪ DÀI NHẤT (từ đơn không xuống dòng được)"
-    assert "Math.max(38" in than, "thiếu sàn cỡ chữ"
+    # 29/8 — KIỂM KHOẢNG, KHÔNG GHIM LITERAL. Bản cũ đòi đúng chuỗi "Math.max(38" và nó vỡ ngay
+    # lần đầu con số ấy đổi (38 -> 26, vì sàn 38 làm tên vụ án dài bị CẮT — xem `_coVua`). Đây là
+    # lần thứ năm trong tuần một chốt đỏ vì literal đổi chứ không vì mã hỏng; chốt kiểu đó dạy
+    # người đọc bỏ qua nó.
+    # Thứ thật sự phải đúng: CÓ một cái sàn, và sàn nằm trong khoảng đọc được (20-40px trên khung
+    # cao 1920). Thấp hơn 20 là chữ li ti trên điện thoại; cao hơn 40 thì chữ dài lại bị cắt.
+    import re as _re_s
+    # Bắt ĐÚNG cái sàn của giá trị TRẢ VỀ (`Math.max(<sàn>, Math.min(co, …))`), không bắt bừa
+    # `Math.max` đầu tiên gặp — thân hàm còn `Math.max(1, Math.min(4, …))` để đếm số dòng, và bản
+    # đầu của chốt vớ phải nó rồi báo "sàn 1px".
+    _san = _re_s.search(r"Math\.max\((\d+),\s*Math\.min\(co", than)
+    assert _san, "thiếu sàn cỡ chữ"
+    _v = int(_san.group(1))
+    assert 20 <= _v <= 40, f"sàn cỡ chữ {_v}px nằm ngoài khoảng đọc được 20-40"
+    # Và phải đo CẢ CÂU, không chỉ từ dài nhất: câu dài thì tổng bề ngang mới quyết định số dòng.
+    # Đòi phép đo cả câu vừa ĐƯỢC TÍNH vừa ĐƯỢC DÙNG. Bản đầu viết `"vuaCau" in than or
+    # "t.length" in than` và ca thử "bỏ đo cả câu" vẫn XANH: đổi tên biến là mệnh đề `or` cứu,
+    # còn `t.length` thì vẫn nằm đâu đó trong thân hàm. Một phép kiểm có đường lui rộng như thế
+    # thì không kiểm gì cả.
+    assert than.count("vuaCau") >= 2, \
+        "chỉ đo từ dài nhất -> câu dài vẫn tràn (khung COURT RECORD: 'A 2026 CASE ALMOST NOB')"
     # mọi lời gọi title() phải truyền lề THẬT, không để mặc định sai
     import re
     for m in re.finditer(r"\{title\((\d+), \"(center|left)\"(?:, (\d+))?\)", src):
