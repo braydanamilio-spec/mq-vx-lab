@@ -55,6 +55,7 @@ export type Canh = {
   soLon?: string;            // con số to hiện lên giữa cảnh
   nhanSo?: string;
   cot?: { nhan: string; gt: number; hien: string }[];   // biểu đồ cột làm đạo cụ
+  noiBat?: number;           // cột nào được tô sáng — đổi theo câu đang nói
   sfx?: string;              // tệp tiếng động trong public/
 };
 
@@ -131,22 +132,31 @@ const SoTo: React.FC<{ so: string; nhan?: string; p: number; mau: Paltte }> = ({
 };
 
 /** Biểu đồ cột làm ĐẠO CỤ trong cảnh — mọc lên từ đáy, so được bằng mắt. */
-const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte }> = ({ cot, p, mau }) => {
+const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat?: number }> = ({ cot, p, mau, noiBat = 0 }) => {
   const dinh = Math.max(1, ...cot.map((c) => c.gt));
   return (
     // 29/8 — BỐN CỘT, VÀ TÍNH CHỖ THAY VÌ BỐC. Khung demo: sáu cột chạy quá mép phải khung, còn
     // nhãn dưới chân cột thì dính vào nhau ("InformationFinanceProfession"). Vùng còn trống bên
     // phải nhân vật rộng khoảng 520 đơn vị; chia cho sáu cột thì mỗi cột 86 đơn vị, mà nhãn ngắn
     // nhất cũng cần ~110 để đọc được. Bốn cột thì vừa, và bốn dòng cũng đủ để so cao thấp.
-    <g transform="translate(-30 150)">
+    // 29/8 — CỘT ĐẦU TIÊN PHẢI BẮT ĐẦU SAU NGƯỜI. Khung thật: bốn cột mọc chồng lên cánh tay và
+    // thân nhân vật. Con rối cao 1.75 lần nên rộng ~320 đơn vị quanh tâm; đặt tâm ở -340 thì nó
+    // chiếm tới -180, còn cột bắt đầu từ -30 — chồng nhau 150 đơn vị.
+    // (Chú thích phải là `//` chứ không phải `{/* */}`: chỗ này nằm ngay trong `return (`, mà
+    //  một khối chú thích JSX ở đó là một CON thứ hai bên cạnh thẻ <g> — React chỉ nhận một.)
+    <g transform="translate(30 150)">
       {cot.slice(0, 4).map((c, i) => {
         const moc = muot(kep((p - i * 0.07) / 0.3));
         const h = (c.gt / dinh) * 330 * moc;
         return (
-          <g key={i} transform={`translate(${i * 128} 0)`}>
-            <rect x={0} y={-h} width={96} height={h} rx={8}
-                  fill={i === 0 ? mau.nhan : "#F2C230"} stroke={mau.muc} strokeWidth={5} />
-            <text x={48} y={-h - 18} textAnchor="middle" fontSize={32} fontWeight={900}
+          <g key={i} transform={`translate(${i * 112} 0)`}>
+            {/* CỘT ĐANG NÓI TỚI được tô sáng và nhô lên một chút — mắt người xem đi theo lời
+                đọc mà không cần một mũi tên nào. */}
+            <rect x={0} y={-h - (i === noiBat ? 10 : 0)} width={84} height={h + (i === noiBat ? 10 : 0)}
+                  rx={8} fill={i === noiBat ? mau.nhan : "#F2C230"}
+                  stroke={mau.muc} strokeWidth={i === noiBat ? 7 : 5} />
+            <text x={42} y={-h - 26 - (i === noiBat ? 10 : 0)} textAnchor="middle"
+                  fontSize={i === noiBat ? 36 : 30} fontWeight={900}
                   fill={mau.muc} opacity={moc}>{c.hien}</text>
             {/* Nhãn chân cột XUỐNG HAI DÒNG. Cột rộng 96 đơn vị mà nhãn 12 ký tự ở cỡ 21 cần
                 ~130 — nên bốn nhãn dính vào nhau thành một vệt chữ ("MIDWEST POU Bazzini LLC
@@ -159,7 +169,7 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
                 else if (d2.join(" ").length + w.length <= 10) d2.push(w);
               }
               return [d1.join(" "), d2.join(" ")].filter(Boolean).map((d, j) => (
-                <text key={j} x={48} y={30 + j * 22} textAnchor="middle" fontSize={19}
+                <text key={j} x={42} y={30 + j * 22} textAnchor="middle" fontSize={18}
                       fontWeight={700} fill={mau.muc} opacity={0.8 * moc}>{d}</text>
               ));
             })()}
@@ -247,7 +257,7 @@ export const KichV2: React.FC<PropsKich> = ({
         <g transform={`translate(${-cam.x + rung} ${-cam.y}) scale(${cam.z})`}
            style={{ transformOrigin: "0px 0px" }}>
           <BoiCanh ten={C.boi || "san_sau"} mau={mau} t={giay} />
-          {C.cot ? <CotDaoCu cot={C.cot} p={p} mau={mau} /> : null}
+          {C.cot ? <CotDaoCu cot={C.cot} p={p} mau={mau} noiBat={C.noiBat ?? 0} /> : null}
           <DienVien
             kieu={nv}
             camXuc={C.camXuc || "trung_tinh"}
@@ -261,7 +271,7 @@ export const KichV2: React.FC<PropsKich> = ({
             // vị, nên tỉ lệ 1.12 cho ra một người cao 470/1500 — lọt thỏm, đúng như khung render
             // thử. Muốn nhân vật chiếm khoảng 3/5 chiều cao (tỉ lệ quen thuộc của phim hoạt hình
             // kể chuyện) thì cần ~2.1 cho khung dọc và ~1.6 cho khung ngang.
-            x={C.cot ? -250 : 0}
+            x={C.cot ? -340 : 0}
             y={236}
             // 29/8 lần hai — lần trước tôi tăng cỡ nhân vật 1.12->2.1 NHƯNG cùng lúc hạ zoom
             // máy quay 1.5->1.0. Tích hai số không đổi (1.68), nên khung render ra y hệt và tôi

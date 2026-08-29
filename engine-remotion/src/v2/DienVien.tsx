@@ -177,23 +177,68 @@ export type TenDang = "dung" | "ngoi" | "di" | "chay" | "nhay";
 // viết thêm một thành phần React. Đây là chỗ 50 kênh không giẫm chân nhau về mặt hình.
 // ══════════════════════════════════════════════════════════════════════════════════════════
 export type Kieu = {
-  da: string; toc: string; kieuToc: "bui" | "ngan" | "roi" | "hoi" | "trocs";
+  da: string; toc: string;
+  kieuToc: "bui" | "ngan" | "roi" | "hoi" | "trocs" | "duoi_ngua" | "xoan" | "bob" | "re_ngoi";
   ao: string; aoTrong: string; quan: string; net: string;
-  kinh?: boolean; rau?: "" | "ria" | "quai"; caVat?: string;
-  mu?: "" | "luoi_trai" | "cao_bo" | "y_ta";
+  kinh?: boolean; rau?: "" | "ria" | "quai" | "de"; caVat?: string;
+  mu?: "" | "luoi_trai" | "cao_bo" | "y_ta" | "len";
   aoKhoac?: string;                 // vạt áo có chuyển động trễ (blouse, áo choàng)
+  // 29/8 — PHỤ KIỆN THEO NGHỀ. Anh: "10 channel thì phong cách nhân vật 10 channel phù hợp 10
+  // phong cách style khác nhau… ko chung chung 1 template". Ba kiểu gốc dùng cho mười kênh thì
+  // nhìn ra ngay là một khuôn tô lại màu. Thứ tách một nhân vật khỏi nhân vật khác trong phim
+  // hoạt hình không phải màu áo — mà là NGHỀ của nó hiện lên người: áo blouse, áo choàng toà,
+  // ống nghe, thẻ đeo cổ. Người xem đọc ra nghề trước khi nghe câu đầu tiên.
+  phuKien?: "" | "ao_blouse" | "ao_choang" | "ong_nghe" | "the_deo" | "no_buom" | "khan_quang";
   cao?: number;                     // 0.92 = thấp đậm, 1.06 = cao gầy
   beNgang?: number;                 // 0.9 = mảnh, 1.15 = đậm người
+  matTo?: number;                   // 1.0 chuẩn; >1 mắt to hơn (trẻ hơn, ngơ ngác hơn)
+  cam?: number;                     // độ bạnh của hàm: 0 = tròn, 1 = vuông vức
 };
 
+// MƯỜI NHÂN VẬT, MỖI KÊNH MỘT NGƯỜI. Khác nhau ở SÁU trục cùng lúc — dáng người, kiểu tóc,
+// râu, kính, phụ kiện nghề, bảng màu — nên không hai người nào đọc ra là cùng một hình tô lại.
 export const KIEU_MAU: Record<string, Kieu> = {
-  // Ba kiểu gốc — các kênh dẫn xuất từ đây rồi đổi màu, xem `kich_v2.py`.
-  nam_dam: { da: "#F2C08A", toc: "#4A3220", kieuToc: "ngan", ao: "#C0392B", aoTrong: "#FFFFFF",
-             quan: "#2C6E8F", net: "#241A12", rau: "ria", mu: "luoi_trai", cao: 0.96, beNgang: 1.16 },
-  nu_kinh: { da: "#F6CBA0", toc: "#5A3A24", kieuToc: "bui", ao: "#D6353B", aoTrong: "#F6E5D8",
-             quan: "#8E2C31", net: "#2A1C14", kinh: true, aoKhoac: "#D6353B", cao: 1.02, beNgang: 0.94 },
-  nam_gay: { da: "#EFC49A", toc: "#6B4426", kieuToc: "roi", ao: "#F2C230", aoTrong: "#F2C230",
-             quan: "#3E7CA6", net: "#26190F", cao: 1.06, beNgang: 0.88 },
+  // 1. BANK RUN — nữ giao dịch viên, gọn gàng, thẻ đeo cổ
+  bank: { da: "#F6CBA0", toc: "#4A3626", kieuToc: "bui", ao: "#1D7A5F", aoTrong: "#FFFFFF",
+          quan: "#1B4B3A", net: "#20180F", kinh: true, phuKien: "the_deo", caVat: "#0E5C46",
+          cao: 1.02, beNgang: 0.94, matTo: 1.0, cam: 0.25 },
+  // 2. FINE PRINT — luật sư trẻ, tóc rẽ ngôi, nơ bướm, cao gầy
+  luat_tre: { da: "#EFC49A", toc: "#2E2018", kieuToc: "re_ngoi", ao: "#2B4C7E", aoTrong: "#FFFFFF",
+              quan: "#1B2E4B", net: "#191F2B", phuKien: "no_buom", cao: 1.08, beNgang: 0.86,
+              matTo: 1.05, cam: 0.5 },
+  // 3. WHO OWNS IT — ông chú sân sau, ria rậm, mũ lưỡi trai, đậm người
+  hang_xom: { da: "#F2C08A", toc: "#5A3A1E", kieuToc: "ngan", ao: "#C0392B", aoTrong: "#FFFFFF",
+              quan: "#2C6E8F", net: "#241A12", rau: "ria", mu: "luoi_trai",
+              cao: 0.95, beNgang: 1.2, matTo: 0.95, cam: 0.7 },
+  // 4. KNOW YOUR RIGHT — nữ cựu công tố, tóc bob, áo choàng sẫm
+  cong_to: { da: "#E8B489", toc: "#241A14", kieuToc: "bob", ao: "#3B2E5A", aoTrong: "#F2EDE4",
+             quan: "#241C38", net: "#1B1526", phuKien: "ao_choang", aoKhoac: "#3B2E5A",
+             cao: 1.03, beNgang: 0.96, matTo: 1.0, cam: 0.35 },
+  // 5. SUED IN AMERICA — thẩm phán về hưu, hói, râu quai nón, bệ vệ
+  tham_phan: { da: "#E5B085", toc: "#8A8A86", kieuToc: "trocs", ao: "#2C2438", aoTrong: "#FFFFFF",
+               quan: "#221C2E", net: "#1A1522", rau: "quai", caVat: "#8A2F3C",
+               phuKien: "ao_choang", aoKhoac: "#2C2438", cao: 0.98, beNgang: 1.22,
+               matTo: 0.92, cam: 0.8 },
+  // 6. SKY TONIGHT — cô gái trẻ, đuôi ngựa, khăn quàng, áo khoác dạ
+  sao_dem: { da: "#F4C6A0", toc: "#3A2A44", kieuToc: "duoi_ngua", ao: "#2E4E86", aoTrong: "#DCE6F5",
+             quan: "#22355C", net: "#161B2E", phuKien: "khan_quang", aoKhoac: "#2E4E86",
+             cao: 1.0, beNgang: 0.9, matTo: 1.12, cam: 0.15 },
+  // 7. ONE EXPERIMENT — nhà khoa học tóc xoăn rối, áo blouse trắng
+  khoa_hoc: { da: "#E9B98A", toc: "#3E2A1C", kieuToc: "xoan", ao: "#F2A33C", aoTrong: "#FFFFFF",
+              quan: "#4C74AE", net: "#1E1A14", kinh: true, phuKien: "ao_blouse",
+              cao: 1.04, beNgang: 0.95, matTo: 1.08, cam: 0.3 },
+  // 8. DEEP FIELD — người kể lớn tuổi, tóc bạc rẽ, râu dê, trầm
+  vu_tru_gia: { da: "#DFAF84", toc: "#B9B6AE", kieuToc: "hoi", ao: "#33305C", aoTrong: "#C9CBE0",
+                quan: "#232244", net: "#12112A", rau: "de", cao: 1.0, beNgang: 1.02,
+                matTo: 0.96, cam: 0.55 },
+  // 9. WHAT THE CHART SAYS — y tá, áo scrubs xanh, ống nghe, mũ y tá
+  y_ta: { da: "#F3C49C", toc: "#2E2018", kieuToc: "bui", ao: "#4E9C93", aoTrong: "#DFF1EE",
+          quan: "#2F6E68", net: "#17322F", phuKien: "ong_nghe", mu: "y_ta",
+          cao: 1.0, beNgang: 0.98, matTo: 1.05, cam: 0.3 },
+  // 10. PRICE OF CARE — nhân viên viện phí, tóc ngắn, kính, cà vạt, dáng vuông
+  vien_phi: { da: "#EDBE93", toc: "#4A3220", kieuToc: "ngan", ao: "#B8474F", aoTrong: "#FFFFFF",
+              quan: "#3A3F52", net: "#20222E", kinh: true, caVat: "#7A2E38", phuKien: "the_deo",
+              cao: 0.99, beNgang: 1.1, matTo: 0.98, cam: 0.65 },
 };
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -282,7 +327,8 @@ export const DienVien: React.FC<PropsDien> = ({
   // ── MẶT ────────────────────────────────────────────────────────────────────────────────
   const matY = dauC[1] - dauR * 0.06;
   const matX = dauR * 0.34;
-  const matR = dauR * 0.235;
+  const _cam = kep(kieu.cam ?? 0.35, 0, 1);
+  const matR = dauR * 0.235 * (kieu.matTo ?? 1);
   const nhinX = kep(nhin[0], -1, 1) * matR * 0.42;
   const nhinY = kep(nhin[1], -1, 1) * matR * 0.34;
   const mo = kep(1 - E.mi - chop * 1.35, 0, 1);          // độ mở mắt 0..1
@@ -335,6 +381,56 @@ export const DienVien: React.FC<PropsDien> = ({
                 transform={`rotate(${treo(0, t, 0.2, 3.1)} ${vaiT[0]} ${vaiT[1]})`} />
         ) : null}
 
+        {/* ── PHỤ KIỆN NGHỀ ──────────────────────────────────────────────────────
+            Vẽ SAU thân và TRƯỚC tay: nó nằm đè lên áo nhưng bị bàn tay che khi tay đưa ngang
+            ngực — đúng thứ tự lớp của đời thật. Đây là thứ cho người xem đọc ra NGHỀ của nhân
+            vật trước khi nghe câu đầu tiên. */}
+        {kieu.phuKien === "ao_blouse" || kieu.phuKien === "ao_choang" ? (
+          <g transform={`rotate(${treo(0, t, 0.19, 2.6)} ${vai[0]} ${vai[1]})`}>
+            {[-1, 1].map((sd) => (
+              <path key={sd}
+                    d={`M ${vai[0] + sd * (rongVai - 6)} ${vai[1] + 4}
+                        Q ${vai[0] + sd * (rongVai + 14)} ${hong[1] - 60} ${vai[0] + sd * (rongVai + 4)} ${hong[1] + 26}
+                        l ${-sd * 26} 0
+                        Q ${vai[0] + sd * 18} ${hong[1] - 40} ${vai[0] + sd * 14} ${vai[1] + 24} Z`}
+                    fill={kieu.phuKien === "ao_blouse" ? "#FFFFFF" : (kieu.aoKhoac || kieu.ao)}
+                    stroke={net} strokeWidth={NET} strokeLinejoin="round" />
+            ))}
+          </g>
+        ) : null}
+        {kieu.phuKien === "ong_nghe" ? (
+          <g stroke={net} strokeWidth={NET * 1.5} fill="none" strokeLinecap="round">
+            <path d={`M ${vai[0] - 22} ${vai[1] + 14}
+                      Q ${vai[0] - 30} ${vai[1] + 74} ${vai[0] + 4} ${vai[1] + 92}
+                      Q ${vai[0] + 38} ${vai[1] + 74} ${vai[0] + 26} ${vai[1] + 14}`} />
+            <circle cx={vai[0] + 4} cy={vai[1] + 100} r={13} fill="#C9CDD4" stroke={net} strokeWidth={NET} />
+          </g>
+        ) : null}
+        {kieu.phuKien === "the_deo" ? (
+          <g transform={`rotate(${treo(0, t, 0.17, 3.2)} ${vai[0]} ${vai[1] + 8})`}>
+            <path d={`M ${vai[0] - 20} ${vai[1] + 6} L ${vai[0] + 2} ${vai[1] + 72}
+                      L ${vai[0] + 22} ${vai[1] + 6}`} stroke={net} strokeWidth={NET * 1.2} fill="none" />
+            <rect x={vai[0] - 14} y={vai[1] + 70} width={32} height={42} rx={5}
+                  fill="#F2F4F7" stroke={net} strokeWidth={NET} />
+            <rect x={vai[0] - 8} y={vai[1] + 78} width={20} height={7} rx={3} fill={kieu.ao} />
+          </g>
+        ) : null}
+        {kieu.phuKien === "no_buom" ? (
+          <g transform={`translate(${vai[0]} ${vai[1] + 18})`}>
+            <path d={`M -26 -12 L -6 0 L -26 12 Z`} fill={kieu.caVat || "#8A2F3C"} stroke={net} strokeWidth={NET} />
+            <path d={`M 26 -12 L 6 0 L 26 12 Z`} fill={kieu.caVat || "#8A2F3C"} stroke={net} strokeWidth={NET} />
+            <circle cx={0} cy={0} r={7} fill={kieu.caVat || "#8A2F3C"} stroke={net} strokeWidth={NET} />
+          </g>
+        ) : null}
+        {kieu.phuKien === "khan_quang" ? (
+          <g transform={`rotate(${treo(0, t, 0.2, 4)} ${vai[0]} ${vai[1]})`}>
+            <path d={`M ${vai[0] - 40} ${vai[1] - 2} q 40 26 80 0 q 4 22 -6 30 q -36 16 -70 0 q -8 -10 -4 -30 Z`}
+                  fill={kieu.aoKhoac || "#B8474F"} stroke={net} strokeWidth={NET} />
+            <path d={`M ${vai[0] + 26} ${vai[1] + 26} q 16 34 4 68 l -22 -6 q 10 -30 0 -58 Z`}
+                  fill={kieu.aoKhoac || "#B8474F"} stroke={net} strokeWidth={NET} />
+          </g>
+        ) : null}
+
         {/* ── TAY ────────────────────────────────────────────────────────────── */}
         {([[vaiT, khuyuT, tayT], [vaiP, khuyuP, tayP]] as [number[], number[], number[]][]).map((v, i) => (
           <g key={i}>
@@ -347,7 +443,19 @@ export const DienVien: React.FC<PropsDien> = ({
         {/* ── ĐẦU ────────────────────────────────────────────────────────────── */}
         <g transform={`rotate(${nghiengDau} ${dauC[0]} ${dauC[1] + dauR * 0.8})`}>
           <path d={`M ${co[0] - 15} ${co[1] + 4} l 30 0 l 0 -22 l -30 0 Z`} fill={kieu.da} stroke={net} strokeWidth={NET} />
-          <ellipse cx={dauC[0]} cy={dauC[1]} rx={dauR * 0.86} ry={dauR} fill={kieu.da} stroke={net} strokeWidth={NET} />
+          {/* 29/8 — HÀM BẠNH THEO NHÂN VẬT. Mười khuôn mặt bầu dục y hệt nhau thì đổi màu áo
+              bao nhiêu cũng vẫn đọc ra là một người. Trong phim hoạt hình Mỹ, thứ phân biệt nhân
+              vật mạnh nhất là ĐƯỜNG HÀM: tròn = trẻ/hiền, vuông = già/cứng. `cam` 0 tới 1 kéo
+              cằm từ bầu dục sang bạnh, và một đường cong nối lên gò má giữ cho nó vẫn mềm. */}
+          <path d={`M ${dauC[0] - dauR * 0.86} ${dauC[1] - dauR * 0.1}
+                    Q ${dauC[0] - dauR * 0.86} ${dauC[1] - dauR} ${dauC[0]} ${dauC[1] - dauR}
+                    Q ${dauC[0] + dauR * 0.86} ${dauC[1] - dauR} ${dauC[0] + dauR * 0.86} ${dauC[1] - dauR * 0.1}
+                    L ${dauC[0] + dauR * (0.7 + 0.16 * (1 - _cam))} ${dauC[1] + dauR * (0.62 + 0.1 * _cam)}
+                    Q ${dauC[0] + dauR * 0.4 * (1 - _cam * 0.5)} ${dauC[1] + dauR * (1 - _cam * 0.14)}
+                      ${dauC[0]} ${dauC[1] + dauR * (1 - _cam * 0.16)}
+                    Q ${dauC[0] - dauR * 0.4 * (1 - _cam * 0.5)} ${dauC[1] + dauR * (1 - _cam * 0.14)}
+                      ${dauC[0] - dauR * (0.7 + 0.16 * (1 - _cam))} ${dauC[1] + dauR * (0.62 + 0.1 * _cam)} Z`}
+                fill={kieu.da} stroke={net} strokeWidth={NET} strokeLinejoin="round" />
 
           {/* tai */}
           <ellipse cx={dauC[0] - dauR * 0.86} cy={dauC[1] + 4} rx={9} ry={13} fill={kieu.da} stroke={net} strokeWidth={NET} />
@@ -370,6 +478,43 @@ export const DienVien: React.FC<PropsDien> = ({
                         q ${dauR * 0.12} ${-dauR * 0.5} ${dauR * 0.36} ${-dauR * 0.2}
                         q ${dauR * 0.2} ${-dauR * 0.42} ${dauR * 0.44} ${-dauR * 0.02}
                         q ${dauR * 0.3} ${dauR * 0.1} ${dauR * 0.28} ${dauR * 0.72} Z`}
+                    fill={kieu.toc} stroke={net} strokeWidth={NET} />
+            ) : kieu.kieuToc === "duoi_ngua" ? (
+              <>
+                <path d={`M ${dauC[0] - dauR * 0.9} ${dauC[1] - dauR * 0.18}
+                          Q ${dauC[0]} ${dauC[1] - dauR * 1.44} ${dauC[0] + dauR * 0.9} ${dauC[1] - dauR * 0.18}
+                          Q ${dauC[0]} ${dauC[1] - dauR * 0.66} ${dauC[0] - dauR * 0.9} ${dauC[1] - dauR * 0.18} Z`}
+                      fill={kieu.toc} stroke={net} strokeWidth={NET} />
+                {/* đuôi tóc — đi trễ nhiều nhất trong mọi bộ phận, nên biên độ lớn hơn */}
+                <path d={`M ${dauC[0] + dauR * 0.82} ${dauC[1] - dauR * 0.2}
+                          q ${dauR * 0.6} ${dauR * 0.3} ${dauR * 0.34} ${dauR * 1.16}
+                          q ${-dauR * 0.3} ${dauR * 0.1} ${-dauR * 0.42} ${-dauR * 0.16}
+                          q ${dauR * 0.16} ${-dauR * 0.5} ${-dauR * 0.2} ${-dauR * 0.82} Z`}
+                      fill={kieu.toc} stroke={net} strokeWidth={NET}
+                      transform={`rotate(${treo(0, t, 0.22, 4.6)} ${dauC[0] + dauR * 0.8} ${dauC[1] - dauR * 0.2})`} />
+              </>
+            ) : kieu.kieuToc === "xoan" ? (
+              <g fill={kieu.toc} stroke={net} strokeWidth={NET}>
+                {[[-0.72, -0.5, 0.42], [-0.3, -0.86, 0.46], [0.22, -0.9, 0.44],
+                  [0.68, -0.52, 0.4], [-0.02, -0.62, 0.4]].map((c, i) => (
+                  <circle key={i} cx={dauC[0] + dauR * c[0]} cy={dauC[1] + dauR * c[1]} r={dauR * c[2]} />
+                ))}
+              </g>
+            ) : kieu.kieuToc === "bob" ? (
+              <path d={`M ${dauC[0] - dauR * 0.96} ${dauC[1] + dauR * 0.34}
+                        L ${dauC[0] - dauR * 0.96} ${dauC[1] - dauR * 0.24}
+                        Q ${dauC[0]} ${dauC[1] - dauR * 1.42} ${dauC[0] + dauR * 0.96} ${dauC[1] - dauR * 0.24}
+                        L ${dauC[0] + dauR * 0.96} ${dauC[1] + dauR * 0.34}
+                        L ${dauC[0] + dauR * 0.66} ${dauC[1] + dauR * 0.34}
+                        Q ${dauC[0] + dauR * 0.72} ${dauC[1] - dauR * 0.5} ${dauC[0]} ${dauC[1] - dauR * 0.56}
+                        Q ${dauC[0] - dauR * 0.72} ${dauC[1] - dauR * 0.5} ${dauC[0] - dauR * 0.66} ${dauC[1] + dauR * 0.34} Z`}
+                    fill={kieu.toc} stroke={net} strokeWidth={NET} />
+            ) : kieu.kieuToc === "re_ngoi" ? (
+              <path d={`M ${dauC[0] - dauR * 0.9} ${dauC[1] - dauR * 0.14}
+                        Q ${dauC[0] - dauR * 0.5} ${dauC[1] - dauR * 1.3} ${dauC[0] + dauR * 0.16} ${dauC[1] - dauR * 1.06}
+                        Q ${dauC[0] + dauR * 0.8} ${dauC[1] - dauR * 0.9} ${dauC[0] + dauR * 0.9} ${dauC[1] - dauR * 0.1}
+                        Q ${dauC[0] + dauR * 0.5} ${dauC[1] - dauR * 0.62} ${dauC[0] - dauR * 0.06} ${dauC[1] - dauR * 0.72}
+                        Q ${dauC[0] - dauR * 0.5} ${dauC[1] - dauR * 0.78} ${dauC[0] - dauR * 0.9} ${dauC[1] - dauR * 0.14} Z`}
                     fill={kieu.toc} stroke={net} strokeWidth={NET} />
             ) : kieu.kieuToc === "trocs" ? null : (
               <path d={`M ${dauC[0] - dauR * 0.9} ${dauC[1] - dauR * 0.12}
@@ -442,7 +587,19 @@ export const DienVien: React.FC<PropsDien> = ({
           ) : null}
 
           {/* RÂU */}
-          {kieu.rau === "ria" ? (
+          {kieu.rau === "de" ? (
+            <path d={`M ${dauC[0] - 16} ${dauC[1] + dauR * 0.52}
+                      q 16 -8 32 0 q -2 ${dauR * 0.36} -16 ${dauR * 0.4}
+                      q -14 ${-dauR * 0.04} -16 ${-dauR * 0.4} Z`}
+                  fill={kieu.toc} stroke={net} strokeWidth={NET * 0.8} />
+          ) : kieu.rau === "quai" ? (
+            <path d={`M ${dauC[0] - dauR * 0.84} ${dauC[1] + dauR * 0.06}
+                      q ${dauR * 0.1} ${dauR * 0.8} ${dauR * 0.84} ${dauR * 0.86}
+                      q ${dauR * 0.74} ${-dauR * 0.06} ${dauR * 0.84} ${-dauR * 0.86}
+                      q ${-dauR * 0.3} ${dauR * 0.34} ${-dauR * 0.84} ${dauR * 0.36}
+                      q ${-dauR * 0.54} ${-dauR * 0.02} ${-dauR * 0.84} ${-dauR * 0.36} Z`}
+                  fill={kieu.toc} stroke={net} strokeWidth={NET * 0.8} />
+          ) : kieu.rau === "ria" ? (
             <path d={`M ${dauC[0] - 30} ${dauC[1] + dauR * 0.34}
                       q 30 ${-14} 60 0 q ${-16} 16 ${-30} 16 q ${-14} 0 ${-30} ${-16} Z`}
                   fill={kieu.toc} stroke={net} strokeWidth={NET * 0.8} />

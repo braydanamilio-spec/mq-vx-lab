@@ -36,38 +36,43 @@ sys.path.insert(0, GOC)
 # ══════════════════════════════════════════════════════════════════════════════════════════
 KENH = [
     {"ten": "BANK RUN", "handle": "@bankrunusa", "nhan": "Is your bank actually healthy?",
-     "kieu": "nu_kinh", "boi": "quay", "mau": "ngan_hang", "nguon": "fdic",
+     "kieu": "bank", "boi": "quay", "mau": "ngan_hang", "nguon": "fdic",
      "hoi": "How many banks does America still have?"},
     {"ten": "FINE PRINT", "handle": "@fineprintusa", "nhan": "The clause they hope you skip",
-     "kieu": "nam_gay", "boi": "van_phong", "mau": "van_phong", "nguon": "dieu_khoan",
+     "kieu": "luat_tre", "boi": "van_phong", "mau": "van_phong", "nguon": "dieu_khoan",
      "hoi": "What do Americans complain about most?"},
     {"ten": "WHO OWNS IT", "handle": "@whoownsitusa", "nhan": "Who really owns the brand",
-     "kieu": "nam_dam", "boi": "san_sau", "mau": "san_sau", "nguon": "sec",
+     # 29/8 — anh chỉ vào khung: "đừng có mà đưa kiểu bối cảnh hàng rào ko liên quan vào videos".
+     # Đúng. Bối cảnh phải trả lời cùng câu hỏi kênh đặt ra; hàng rào sân sau không dính gì tới
+     # "ai sở hữu thương hiệu anh dùng hằng ngày". Kệ siêu thị chính là chỗ người xem gặp những
+     # thương hiệu ấy mỗi tuần. Tôi lấy hàng rào từ ảnh tham chiếu mà quên xét nội dung — cùng
+     # loại lỗi với mấy kênh nét chì vẽ sương mù cho một bảng số.
+     "kieu": "hang_xom", "boi": "ke_sieu_thi", "mau": "ke_sieu_thi", "nguon": "sec",
      "hoi": "Who owns the company behind your groceries?"},
     {"ten": "KNOW YOUR RIGHT", "handle": "@knowyourrightusa", "nhan": "What you are allowed to do",
-     "kieu": "nu_kinh", "boi": "toa_an", "mau": "luat", "nguon": "toa_quyen",
+     "kieu": "cong_to", "boi": "toa_an", "mau": "luat", "nguon": "toa_quyen",
      "hoi": "What rights get argued in court this month?"},
     {"ten": "SUED IN AMERICA", "handle": "@suedinamericausa", "nhan": "What Americans sue over",
-     "kieu": "nam_dam", "boi": "toa_an", "mau": "luat", "nguon": "toa_kien",
+     "kieu": "tham_phan", "boi": "thu_phong", "mau": "thu_phong", "nguon": "toa_kien",
      "hoi": "What do Americans actually sue each other over?"},
     {"ten": "SKY TONIGHT", "handle": "@skytonightusa", "nhan": "What is above you right now",
-     "kieu": "nu_kinh", "boi": "vu_tru", "mau": "vu_tru", "nguon": "nasa",
+     "kieu": "sao_dem", "boi": "san_thuong", "mau": "san_thuong", "nguon": "nasa",
      "hoi": "What just passed the Earth?"},
     {"ten": "ONE EXPERIMENT", "handle": "@oneexperimentusa", "nhan": "One study, explained straight",
-     "kieu": "nam_gay", "boi": "lab", "mau": "phong_lab", "nguon": "epmc",
+     "kieu": "khoa_hoc", "boi": "lab", "mau": "phong_lab", "nguon": "epmc",
      "hoi": "What does the research actually say?"},
     {"ten": "DEEP FIELD", "handle": "@deepfieldusa", "nhan": "The farthest thing we have seen",
-     "kieu": "nam_gay", "boi": "vu_tru", "mau": "vu_tru", "nguon": "nasa",
+     "kieu": "vu_tru_gia", "boi": "vu_tru", "mau": "vu_tru", "nguon": "nasa",
      "hoi": "How far away is the farthest rock we track?"},
     {"ten": "WHAT THE CHART SAYS", "handle": "@whatthechartusa", "nhan": "What your chart does not say out loud",
-     "kieu": "nu_kinh", "boi": "phong_kham", "mau": "phong_kham", "nguon": "fda",
+     "kieu": "y_ta", "boi": "phong_kham", "mau": "phong_kham", "nguon": "fda",
      "hoi": "What got pulled off the shelf this month?"},
     # 29/8 — ĐỔI NGUỒN. Hai kênh y tế cùng khai `fda` nên ra GẦN NHƯ CÙNG MỘT VIDEO: cùng bảng
     # thu hồi, cùng con số 2,9M, cùng bối cảnh phòng khám. Đó đúng là khuôn "nội dung lặp lại"
     # mà chính sách YouTube nhắm vào — và tôi vừa tự tạo ra nó trong bộ kênh mới.
     # Chỉ số giá y tế của BLS mới là thứ trả lời được câu hỏi của kênh này.
     {"ten": "PRICE OF CARE", "handle": "@priceofcareusa", "nhan": "What care costs now",
-     "kieu": "nam_dam", "boi": "phong_kham", "mau": "phong_kham", "nguon": "gia_yte",
+     "kieu": "vien_phi", "boi": "quay_vien_phi", "mau": "quay_vien_phi", "nguon": "gia_yte",
      "hoi": "How much has medical care gone up?"},
 ]
 
@@ -228,6 +233,20 @@ def lay_so_lieu(nguon: str, D):
 #   • phần giải thích ở cỡ TRUNG với cử chỉ tay — tay dẫn mắt người xem tới biểu đồ;
 #   • câu chốt ở cỡ CẬN, cảm xúc TỰ TIN — người xem nhớ khuôn mặt lúc kết.
 # ══════════════════════════════════════════════════════════════════════════════════════════
+def _nhan_gon(t: str, tran: int = 18) -> str:
+    """Nhãn dưới con số lớn — CẮT THEO TỪ. Cắt cứng cho ra "MIDWEST POULTRY SE", "COURT OF
+    APPEALS F", "ARTIFICIAL INTELLI": chữ đứt ngang ngay dưới con số to nhất khung."""
+    t = " ".join(str(t or "").split())
+    if len(t) <= tran:
+        return t
+    r: list = []
+    for w in t.split(" "):
+        if len(" ".join(r + [w])) > tran:
+            break
+        r.append(w)
+    return (" ".join(r) or t[:tran]).rstrip(" ,;:-")
+
+
 def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
     tieu_de, ds, nguon = so_lieu
     dan = ds[:6]
@@ -240,25 +259,34 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
         (f"Every number here comes from {nguon.split(',')[0]}.", "tu_tin", "mo_tay", "can", [0, 0]),
         ("You can look it up yourself in a minute.", "vui", "nghi", "trung", [0, 0]),
     ]
+    # 29/8 — MỖI CÂU MỘT LỚP HÌNH RIÊNG. Anh: "mỗi lần nhân vật nói gì thì cần có bối cảnh phù
+    # hợp và chart + số liệu animation chạy động".
+    # Bản trước chỉ cảnh 2 có số và cảnh 3 có biểu đồ; bốn cảnh còn lại nhân vật nói vào khoảng
+    # không. Với một video 20 giây thì đó là hơn nửa thời lượng không có gì để nhìn — và người
+    # xem lướt đúng vào những giây ấy.
+    # Nay từng câu có một lớp hình đi kèm, và lớp ấy PHẢI khớp thứ đang nói:
+    #   câu hỏi     -> khung rộng, CHƯA hiện số (chưa nói số thì đừng hiện số)
+    #   con số lớn  -> số ĐẾM LÊN, cận mặt để thấy phản ứng
+    #   so sánh     -> bốn cột MỌC LÊN
+    #   hạng nhì    -> giữ cột, đổi cột tô sáng sang cột thứ hai, số đổi theo
+    #   nguồn       -> giữ cột để mắt còn chỗ bám trong lúc nghe xuất xứ
+    #   chốt        -> cận mặt, bỏ hết lớp số: câu cuối là khuôn mặt
+    _cot = [{"nhan": a, "gt": float(b), "hien": h} for a, b, h in dan]
     canh, t = [], 0.0
     for i, (nar, cx, cc, co, nhin) in enumerate(cau):
         c = {"s": round(t, 2), "e": round(t + giay_moi_cau, 2), "nar": nar,
              "camXuc": cx, "cuChi": cc, "co": co, "nhin": nhin, "boi": k["boi"]}
         if i == 1:
-            c["soLon"] = top_hien
-            # CẮT THEO TỪ. Cắt cứng 18 ký tự cho ra "MIDWEST POULTRY SE", "COURT OF APPEALS F",
-            # "ARTIFICIAL INTELLI" — chữ đứt ngang, ngay dưới con số lớn nhất khung.
-            _t = " ".join(str(top_ten).split())
-            if len(_t) > 18:
-                _w, _r = _t.split(" "), []
-                for _x in _w:
-                    if len(" ".join(_r + [_x])) > 18:
-                        break
-                    _r.append(_x)
-                _t = " ".join(_r) or _t[:18]
-            c["nhanSo"] = _t.rstrip(" ,;:-")
-        if i == 2:
-            c["cot"] = [{"nhan": a, "gt": float(b), "hien": h} for a, b, h in dan]
+            c["soLon"], c["nhanSo"] = top_hien, _nhan_gon(top_ten)
+        elif i == 2:
+            c["cot"] = _cot
+        elif i == 3:
+            c["cot"] = _cot
+            c["noiBat"] = 1
+            if len(dan) > 1:
+                c["soLon"], c["nhanSo"] = dan[1][2], _nhan_gon(dan[1][0])
+        elif i == 4:
+            c["cot"] = _cot
         canh.append(c)
         t += giay_moi_cau
     return canh, " ".join(x[0] for x in cau)
@@ -298,10 +326,24 @@ def main() -> int:
         # miễn phí, không key. GIỌNG CÓ CẢM XÚC: cao độ và tốc độ đổi theo nhân vật, đây chính là
         # mục "🗣️ Voice có cảm xúc" anh dặn. Hạ cao độ nghe bệ vệ, nâng lên nghe lanh lợi.
         import tts_karaoke as TTS
+        # MƯỜI NHÂN VẬT, MƯỜI CHẤT GIỌNG. Cao độ là đòn bẩy mạnh nhất: hạ 15Hz nghe bệ vệ,
+        # nâng 20Hz nghe lanh lợi. Ba giọng dùng chung cho mười kênh thì tai người nghe ra ngay
+        # là cùng một người đọc — y như mười khuôn mặt giống nhau, chỉ khác là ở phần nghe.
         _GIONG = {
-            "nu_kinh": ("en-US-JennyNeural", "+6%", "+12Hz"),
-            "nam_dam": ("en-US-GuyNeural", "-2%", "-14Hz"),
-            "nam_gay": ("en-US-EricNeural", "+9%", "+8Hz"),
+            "bank":       ("en-US-JennyNeural",  "+5%", "+10Hz"),
+            "luat_tre":   ("en-US-EricNeural",  "+10%", "+14Hz"),
+            "hang_xom":   ("en-US-GuyNeural",    "-3%", "-16Hz"),
+            "cong_to":    ("en-US-AriaNeural",   "+2%",  "-4Hz"),
+            # 29/8 — `en-US-DavisNeural` KHÔNG TỒN TẠI. Tôi bốc tên giọng ra từ trí nhớ thay
+            # vì hỏi `edge_tts.list_voices()`, và hai kênh dùng nó chết sạch với "No audio was
+            # received" sau ba lần thử. Danh sách thật có 17 giọng en-US; nam trầm dùng được là
+            # Christopher và Roger.
+            "tham_phan":  ("en-US-ChristopherNeural", "-6%", "-20Hz"),
+            "sao_dem":    ("en-US-AnaNeural",    "+7%", "+18Hz"),
+            "khoa_hoc":   ("en-US-EricNeural",  "+12%",  "+6Hz"),
+            "vu_tru_gia": ("en-US-RogerNeural",   "-8%", "-12Hz"),
+            "y_ta":       ("en-US-MichelleNeural", "+4%", "+8Hz"),
+            "vien_phi":   ("en-US-GuyNeural",    "+1%",  "-6Hz"),
         }
         v, rate, pitch = _GIONG.get(k["kieu"], ("en-US-GuyNeural", "+0%", "+0Hz"))
         rel = f"v3_{sl_ten}.mp3"

@@ -25,6 +25,11 @@ export type Paltte = {
 };
 
 export const BANG_MAU: Record<string, Paltte> = {
+  // Ba bảng màu bổ sung, đi cùng ba bối cảnh mới.
+  ke_sieu_thi: { troi: ["#F7F2E4", "#E4DCC4"], dat: "#C8BFA4", vach: "#9A8E70", nhan: "#C0392B", muc: "#241E14" },
+  thu_phong: { troi: ["#F3E3C6", "#DCC49A"], dat: "#B99763", vach: "#8A6A3C", nhan: "#8A2F3C", muc: "#2A1E12" },
+  san_thuong: { troi: ["#3A3468", "#1A1740"], dat: "#2C2652", vach: "#7E74C4", nhan: "#F2C230", muc: "#0D0B22" },
+  quay_vien_phi: { troi: ["#EAF6F4", "#CBE8E3"], dat: "#A9D4CD", vach: "#4E9C93", nhan: "#B8474F", muc: "#17322F" },
   ngan_hang: { troi: ["#FFF3D6", "#FFE0A8"], dat: "#E9C888", vach: "#B98A3C", nhan: "#1D7A5F", muc: "#241A12" },
   luat: { troi: ["#EDE7FF", "#D6CBFA"], dat: "#C3B4EE", vach: "#6E5AB8", nhan: "#8A2F3C", muc: "#1E1830" },
   san_sau: { troi: ["#FFF6D9", "#FFE7A6"], dat: "#F2C230", vach: "#FFFFFF", nhan: "#C0392B", muc: "#241A12" },
@@ -225,7 +230,159 @@ const VanPhong: React.FC<P> = ({ mau, t }) => (
   </g>
 );
 
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// BA BỐI CẢNH BỔ SUNG — cho đủ mười, mỗi kênh một thế giới
+// ------------------------------------------------------------------------------------------
+// Anh: "cả template videos bối cảnh cũng thế e nha nên đa dạng phù hợp". Bảy bối cảnh cho mười
+// kênh nghĩa là ba cặp kênh dùng chung một cái nền — và nền là thứ người xem nhận ra trước cả
+// nhân vật, nên dùng chung nền là hai kênh trông như một ngay từ giây đầu.
+// ══════════════════════════════════════════════════════════════════════════════════════════
+
+/** THƯ PHÒNG LUẬT — tủ sách gáy dày, đèn bàn, không một chữ nào trên gáy sách. */
+const ThuPhong: React.FC<P> = ({ mau, t }) => (
+  <g>
+    <Troi mau={mau} t={t} id="g_tp" />
+    <Dat mau={mau} t={t} />
+    <rect x={-700} y={-320} width={1400} height={560} fill="#6B4A2E" opacity={0.9} />
+    {[0, 1, 2].map((h) => (
+      <g key={h}>
+        <rect x={-660} y={-300 + h * 168} width={1320} height={150} fill="#4A3220" stroke={mau.muc} strokeWidth={5} />
+        {Array.from({ length: 26 }).map((_, i) => {
+          const w = 34 + ((i * 37) % 22);
+          const c = ["#8A2F3C", "#2C4A6E", "#3E6B4A", "#6E4A8A", "#8A6A2F"][(i + h) % 5];
+          return <rect key={i} x={-648 + i * 50} y={-292 + h * 168 + ((i * 13) % 10)}
+                       width={w} height={134 - ((i * 13) % 10)} fill={c}
+                       stroke={mau.muc} strokeWidth={3.4} />;
+        })}
+      </g>
+    ))}
+    <ellipse cx={0} cy={-40} rx={520} ry={300} fill="#FFE9B8"
+             opacity={0.18 + Math.sin(t * 0.8) * 0.03} />
+  </g>
+);
+
+/** SÂN THƯỢNG ĐÊM — lan can, đường chân trời thành phố, kính thiên văn. */
+const SanThuong: React.FC<P> = ({ mau, t }) => (
+  <g>
+    <Troi mau={mau} t={t} id="g_st" />
+    {Array.from({ length: 60 }).map((_, i) => {
+      const x = ((i * 811) % 1360) - 680;
+      const y = ((i * 457) % 520) - 640;
+      return <circle key={i} cx={x} cy={y} r={1.5 + (i % 3) * 0.8} fill="#FFFFFF"
+                     opacity={0.3 + Math.abs(Math.sin(t * (0.6 + (i % 4) * 0.2) + i)) * 0.6} />;
+    })}
+    {/* đường chân trời thành phố — khối nhà, cửa sổ sáng nhấp nháy chậm */}
+    {[-620, -430, -250, -60, 140, 330, 520].map((x, i) => {
+      const h = 150 + ((i * 71) % 190);
+      return (
+        <g key={i}>
+          <rect x={x} y={230 - h} width={150} height={h} fill={mau.dat} stroke={mau.muc} strokeWidth={5} />
+          {Array.from({ length: 6 }).map((_, k) => (
+            <rect key={k} x={x + 18 + (k % 3) * 44} y={244 - h + Math.floor(k / 3) * 52}
+                  width={26} height={32} fill="#F2C230"
+                  opacity={0.25 + Math.abs(Math.sin(t * 0.5 + i * 2 + k)) * 0.55} />
+          ))}
+        </g>
+      );
+    })}
+    <rect x={-700} y={230} width={1400} height={520} fill={mau.dat} />
+    {/* lan can */}
+    <rect x={-700} y={196} width={1400} height={12} fill={mau.vach} stroke={mau.muc} strokeWidth={4} />
+    {Array.from({ length: 20 }).map((_, i) => (
+      <rect key={i} x={-680 + i * 71} y={206} width={9} height={44} fill={mau.vach}
+            stroke={mau.muc} strokeWidth={3} />
+    ))}
+  </g>
+);
+
+/** QUẦY VIỆN PHÍ — ô kính, bảng số thứ tự (chỉ ô sáng, KHÔNG chữ), ghế chờ. */
+const QuayVienPhi: React.FC<P> = ({ mau, t }) => (
+  <g>
+    <Troi mau={mau} t={t} id="g_vp2" />
+    <rect x={-700} y={-300} width={1400} height={540} fill="#FFFFFF" opacity={0.28} />
+    <Dat mau={mau} t={t} />
+    {/* ô kính giao dịch */}
+    <rect x={-560} y={-250} width={1120} height={330} rx={14}
+          fill="#D8ECEA" stroke={mau.vach} strokeWidth={8} opacity={0.75} />
+    <path d={`M -180 -250 L -180 80 M 180 -250 L 180 80`} stroke={mau.vach} strokeWidth={8} />
+    {/* bảng số thứ tự — bốn ô sáng, đổi luân phiên, cố ý không có chữ số bịa */}
+    {[0, 1, 2, 3].map((i) => (
+      <rect key={i} x={-330 + i * 172} y={-320} width={140} height={54} rx={9}
+            fill={Math.floor(t * 0.6) % 4 === i ? mau.nhan : mau.vach}
+            stroke={mau.muc} strokeWidth={5} opacity={0.92} />
+    ))}
+    {/* mặt quầy ngang hông */}
+    <rect x={-700} y={196} width={1400} height={90} fill={mau.vach} stroke={mau.muc} strokeWidth={6} />
+    <rect x={-700} y={196} width={1400} height={16} fill="#FFFFFF" opacity={0.4} />
+  </g>
+);
+
+/** KỆ SIÊU THỊ — hàng hoá xếp lớp, nhãn giá là ô trống (KHÔNG chữ bịa).
+ *
+ * 29/8 — anh chỉ vào khung WHO OWNS IT: "đừng có mà đưa kiểu bối cảnh hàng rào ko liên quan vào
+ * videos như này nha". Đúng. Kênh ấy hỏi "ai thật sự sở hữu thương hiệu anh dùng hằng ngày" và
+ * trả lời bằng hồ sơ SEC — một cái hàng rào sân sau chẳng dính gì tới câu hỏi lẫn câu trả lời.
+ * Tôi lấy hàng rào từ ảnh tham chiếu anh gửi mà không xét xem nó có ăn nhập với NỘI DUNG kênh
+ * không; đó là lỗi cùng loại với mấy kênh nét chì vẽ sương mù cho một bảng số.
+ * Kệ siêu thị thì chính là chỗ người xem gặp những thương hiệu ấy mỗi tuần.
+ */
+const KeSieuThi: React.FC<P> = ({ mau, t }) => (
+  <g>
+    <Troi mau={mau} t={t} id="g_kst" />
+    <Dat mau={mau} t={t} />
+    <rect x={-700} y={-330} width={1400} height={570} fill="#FFFFFF" opacity={0.3} />
+    {[0, 1, 2].map((h) => {
+      const y = -300 + h * 180;
+      return (
+        <g key={h}>
+          {/* mặt kệ */}
+          <rect x={-680} y={y + 128} width={1360} height={20} fill={mau.vach}
+                stroke={mau.muc} strokeWidth={5} />
+          {/* hàng hoá: hộp, chai, lon — hình khối thuần, không nhãn chữ */}
+          {Array.from({ length: 11 }).map((_, i) => {
+            const x = -660 + i * 122;
+            const loai = (i + h) % 3;
+            const c = ["#C0392B", "#1D7A5F", "#2E4E86", "#F2A33C", "#8A2F3C"][(i * 3 + h) % 5];
+            if (loai === 0) {
+              return <rect key={i} x={x} y={y + 40} width={84} height={88} rx={6}
+                           fill={c} stroke={mau.muc} strokeWidth={4.5} />;
+            }
+            if (loai === 1) {
+              return (
+                <g key={i}>
+                  <rect x={x + 18} y={y + 18} width={26} height={30} rx={5}
+                        fill={c} stroke={mau.muc} strokeWidth={4} />
+                  <path d={`M ${x + 6} ${y + 128} l 0 -52 q 0 -22 24 -28 l 8 0 q 24 6 24 28 l 0 52 Z`}
+                        fill={c} stroke={mau.muc} strokeWidth={4.5} strokeLinejoin="round" />
+                </g>
+              );
+            }
+            return (
+              <g key={i}>
+                <rect x={x + 8} y={y + 56} width={70} height={72} rx={9}
+                      fill={c} stroke={mau.muc} strokeWidth={4.5} />
+                <ellipse cx={x + 43} cy={y + 56} rx={35} ry={9}
+                         fill="#E8E4DA" stroke={mau.muc} strokeWidth={4} />
+              </g>
+            );
+          })}
+          {/* nhãn giá: ô trắng trống, CỐ Ý không có số — số thật do lớp dữ liệu vẽ đè lên */}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <rect key={i} x={-640 + i * 232} y={y + 132} width={62} height={22} rx={4}
+                  fill="#FFFFFF" stroke={mau.muc} strokeWidth={3.5} />
+          ))}
+        </g>
+      );
+    })}
+    {/* ánh đèn trần quét chậm — cho khung có nhịp sống thay vì đứng chết */}
+    <ellipse cx={Math.sin(t * 0.35) * 260} cy={-220} rx={420} ry={150}
+             fill="#FFFFFF" opacity={0.14} />
+  </g>
+);
+
 export const BOI_CANH = {
+  ke_sieu_thi: KeSieuThi,
+  thu_phong: ThuPhong, san_thuong: SanThuong, quay_vien_phi: QuayVienPhi,
   san_sau: SanSau, quay: Quay, toa_an: ToaAn, lab: Lab, vu_tru: VuTru,
   phong_kham: PhongKham, van_phong: VanPhong,
 } as const;
