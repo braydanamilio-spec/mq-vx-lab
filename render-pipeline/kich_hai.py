@@ -70,7 +70,12 @@ KENH = [
      "mau": "#F6EDDC", "de": "diet",
      "nen": ["american home kitchen counter with a fruit bowl, bright morning light",
              "fast food restaurant booth seating, warm interior, nobody in frame",
-             "grocery store produce aisle, colourful, no shoppers"]},
+             # 30/8 — bản cũ ("grocery store produce aisle") ra một bức tường cửa hàng có LOGO
+             # NIKE. Với kênh bật kiếm tiền thì một nhãn hiệu thật trong khung là rủi ro pháp lý,
+             # không phải lỗi thẩm mỹ. Và không xin được: `_CAM_CHU` đã ghi "no logos" mà máy vẫn
+             # vẽ. Cách chắc chắn là BỎ HẲN CHỖ LOGO CÓ THỂ BÁM — không có tường cửa hàng thì
+             # không có biển hiệu, cùng nguyên tắc `_bo_mat_chu` đã kiểm chứng.
+             "wooden crates of fruit and vegetables seen close up, market stall, no walls in view"]},
     {"ten": "TECH SUPPORT", "handle": "@techsupportusa", "a": "luat_tre", "b": "khoa_hoc",
      "mau": "#E9E6F4", "de": "tech",
      "nen": ["american living room with a sofa and a coffee table, evening lamp light",
@@ -93,7 +98,10 @@ KENH = [
      # ngủ không cần cho chuyện hẹn hò: chỗ hai người bạn cùng phòng cãi nhau là PHÒNG KHÁCH.
      "nen": ["small apartment living room with a couch and a coffee table, warm evening lamp",
              "coffee shop interior with small tables, window light, nobody in frame",
-             "city sidewalk at night with shop lights out of focus"]},
+             # Bản cũ ("city sidewalk … shop lights") ra một dãy mặt tiền đầy biển hiệu chữ bịa.
+             # Mặt tiền cửa hàng LÀ mặt phẳng hướng vào ống kính — thứ `_bo_mat_chu` sinh ra để
+             # tránh. Đổi sang khung không có mặt tiền nào.
+             "quiet residential street at night, parked cars under street lamps, trees, no shops"]},
 ]
 
 # ══════════════════════════════════════════════════════════════════════════════════════════

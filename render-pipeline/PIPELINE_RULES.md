@@ -4081,3 +4081,24 @@ Bốn lỗi chỉ lộ ra khi **dán 29 nền cạnh nhau mà soi**, không lỗ
 
 **Bài học chung:** một quy tắc đúng ở phạm vi hẹp (trong một cảnh) có thể sai ở phạm vi rộng
 (giữa mười kênh). Sau mỗi bản vá, soi lại ở CẢ HAI phạm vi.
+
+### 7w. NỀN AI KHÔNG ĐƯỢC CHỨA NHÃN HIỆU THẬT — 30/8/2026
+
+Soi 29 nền bộ hài bắt được **logo NIKE** trên tường một nền tạp hoá, và hai biển hiệu chữ bịa
+("Rous", "Tiober") trong nền quán ăn nhanh.
+
+Logo thật trong khung của một kênh **bật kiếm tiền** là rủi ro pháp lý, không phải lỗi thẩm mỹ —
+nặng hơn hẳn lỗi chính tả trên biển hiệu. Và `_CAM_CHU` đã ghi sẵn `"no logos"` mà máy vẫn vẽ:
+xin máy đừng vẽ thì không ăn thua, đúng như `_bo_mat_chu` đã kết luận sau ba vòng thử.
+
+**Quy tắc: câu vẽ không được gọi tên một KHÔNG GIAN THƯƠNG MẠI CÓ TƯỜNG.**
+
+| Câu vẽ hỏng | Vì sao | Thay bằng |
+|---|---|---|
+| `grocery store produce aisle` | tường cửa hàng = chỗ dán logo | `wooden crates of fruit and vegetables seen close up, no walls in view` |
+| `fast food restaurant booth seating` | nội thất quán ăn nhanh LÀ tường biển hiệu | `red vinyl diner booth seats and a table seen close up, no walls` |
+| `city sidewalk with shop lights` | mặt tiền cửa hàng = mặt phẳng hướng ống kính | `quiet residential street at night, parked cars under street lamps, no shops` |
+
+Vẫn đọc ra đúng bối cảnh, mà không còn mặt phẳng nào để máy điền chữ hay logo vào.
+**Cách kiểm:** dán toàn bộ nền đã cache thành lưới, cắt lấy **nửa trên** (biển hiệu và logo gần
+như luôn nằm ở nửa trên khung) rồi soi một lượt — xem `out/_soi/nen_soi.png`.
