@@ -54,13 +54,13 @@ import { CAM_XUC, CU_CHI, Kieu, TenCamXuc, TenCuChi, Tu, visemeTai } from "../v2
 // mặt người đối diện thì vừa thô vừa che mất mặt người ấy.
 const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; khuyuP: number }> = {
   nghi:       { vaiT: 100, khuyuT: -8,  vaiP: 80,  khuyuP: 8 },
-  chi:        { vaiT: 100, khuyuT: -6,  vaiP: -68, khuyuP: -14 },   // chỉ LÊN, không chỉ ngang
-  mo_tay:     { vaiT: 124, khuyuT: -52, vaiP: 56,  khuyuP: 52 },
-  dem:        { vaiT: 108, khuyuT: -64, vaiP: 72,  khuyuP: 64 },
-  suy_nghi:   { vaiT: 100, khuyuT: -6,  vaiP: 74,  khuyuP: -100 },
-  nhun_vai:   { vaiT: 132, khuyuT: -60, vaiP: 48,  khuyuP: 60 },
-  gio_len:    { vaiT: 100, khuyuT: -6,  vaiP: -78, khuyuP: -10 },
-  khoanh_tay: { vaiT: 116, khuyuT: -76, vaiP: 64,  khuyuP: 76 },
+  chi:        { vaiT: 104, khuyuT: -10, vaiP: -86, khuyuP: -18 },   // chỉ LÊN, không chỉ ngang
+  mo_tay:     { vaiT: 142, khuyuT: -74, vaiP: 38,  khuyuP: 74 },    // dang rộng hai tay
+  dem:        { vaiT: 118, khuyuT: -88, vaiP: 62,  khuyuP: 88 },    // hai tay trước ngực
+  suy_nghi:   { vaiT: 100, khuyuT: -6,  vaiP: 78,  khuyuP: -122 },  // tay chống cằm
+  nhun_vai:   { vaiT: 148, khuyuT: -80, vaiP: 32,  khuyuP: 80 },
+  gio_len:    { vaiT: 100, khuyuT: -6,  vaiP: -96, khuyuP: -12 },
+  khoanh_tay: { vaiT: 122, khuyuT: -96, vaiP: 58,  khuyuP: 96 },
 };
 
 const kep = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -180,13 +180,17 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // giữa nhanh, rồi dừng chậm. Tay người thật không quay đều tốc độ.
   const muot = (v: number) => v * v * (3 - 2 * v);
   const mo = muot(kep(t / 0.45));
+  // TAY ĐÁNH NHỊP THEO LỜI. Người nói thật không giữ nguyên một tư thế suốt câu — tay nhấn theo
+  // trọng âm. `noi.h` (độ mở miệng) là thứ gần nhất với trọng âm mà mình có sẵn mốc: miệng mở to
+  // là đang nhấn. Nhân 7 độ — đủ thấy mà chưa thành múa.
   // Khi ĐI, tay vung NGƯỢC PHA với chân cùng bên — đó là cách người thật giữ thăng bằng, và
   // là chi tiết làm dáng đi đọc ra là đi chứ không phải trượt ngang.
   const vungT = buoc > 0 ? Math.sin(t * 7.4 + Math.PI) * buoc * 26 : 0;
   const vungP = buoc > 0 ? Math.sin(t * 7.4) * buoc * 26 : 0;
-  const gocVT = trn(100, G.vaiT, mo) + Math.sin(t * 1.7) * 2.2 + vungT;
+  const nhipTay = noi.h * 7;
+  const gocVT = trn(100, G.vaiT, mo) + Math.sin(t * 1.7) * 2.2 + vungT - nhipTay;
   const gocKT = trn(-8, G.khuyuT, mo);
-  const gocVP = trn(80, G.vaiP, mo) + Math.sin(t * 1.7 + 1) * 2.2 + vungP;
+  const gocVP = trn(80, G.vaiP, mo) + Math.sin(t * 1.7 + 1) * 2.2 + vungP + nhipTay;
   const gocKP = trn(8, G.khuyuP, mo);
 
   const khuyuT = P(vaiT[0], vaiT[1], dtay, gocVT);

@@ -1,0 +1,106 @@
+name: MM0 Kịch Hài V4 (10 kênh, chạy tay)
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# XƯỞNG RIÊNG CHO BỘ HÀI THẾ HỆ 4 — CỐ Ý KHÔNG CÓ CRON
+#
+# 30/8/2026 — Bộ này tách hẳn khỏi `render_cron.yml` (50 kênh dữ liệu) vì ba lý do:
+#
+#   1. **KHÔNG ĐƯỢC ĐỤNG 50 KÊNH ĐANG CHẠY TỐT.** Anh dặn rõ. Thêm một nhánh vào workflow chung
+#      là thêm một chỗ có thể làm hỏng cả mười tám luồng đang khoẻ.
+#   2. **KHÁC HẲN VỀ TÀI NGUYÊN.** Bộ hài không gọi Firestore để chọn đề tài, không gọi nguồn dữ
+#      liệu mở, và nền đã cache sẵn nên hầu như không cần khoá vẽ ảnh. Nó chỉ cần ffmpeg +
+#      edge-tts + Remotion. Nhồi nó vào workflow chung là bắt nó chờ những bước nó không dùng.
+#   3. **CHƯA ĐƯỢC ANH DUYỆT HÌNH ẢNH.** Bật cron trước khi anh xem là tự ý cho phát hàng loạt.
+#
+# Nên tệp này CHỈ có `workflow_dispatch`. Khi anh duyệt, thêm khối `schedule` là chạy được ngay.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+
+on:
+  workflow_dispatch:
+    inputs:
+      vong:
+        description: "Vòng kịch bản (0-3): mỗi vòng một chuyện + một bối cảnh khác"
+        default: "0"
+      kenh:
+        description: "Chỉ dựng vài kênh, cách nhau bằng dấu phẩy (bỏ trống = cả 10)"
+        default: ""
+
+concurrency: { group: mm0-hai, cancel-in-progress: false }
+
+jobs:
+  dung:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Cache node_modules
+        id: cache-node
+        uses: actions/cache@v4
+        with:
+          path: engine-remotion/node_modules
+          key: node-modules-${{ hashFiles('engine-remotion/package-lock.json') }}
+      - name: Cache Chrome Remotion
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.remotion
+            ~/.cache/remotion
+          key: remotion-chrome-${{ hashFiles('engine-remotion/package-lock.json') }}
+
+      - name: Thư viện hệ thống
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
+            libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg libasound2
+
+      # `pillow` ở LỆNH RIÊNG — gộp chung làm pip nổ "resolution-too-deep" (sự cố 20/8).
+      # Bộ hài cần PIL cho hai việc: kéo sáng nền và làm thumbnail.
+      - name: Python deps
+        run: |
+          pip install --quiet -c render-pipeline/constraints.txt edge-tts pyyaml
+          pip install --quiet pillow
+
+      - name: npm ci (chỉ khi cache MISS)
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        working-directory: engine-remotion
+        run: npm ci
+      - name: Ensure Chrome
+        working-directory: engine-remotion
+        run: npx remotion browser ensure
+
+      # CHỐT AN TOÀN — cùng cổng mà 50 kênh đang dùng. Một tệp .tsx hỏng là CẢ nhà máy đứng, và
+      # bộ hài dùng chung gói Remotion với chúng.
+      - name: Selftest
+        run: python render-pipeline/selftest.py
+
+      # Nền đã cache trong repo (`engine-remotion/public/v4nen`) nên bước này gần như không tốn
+      # lượt vẽ nào; nó chỉ vẽ bù những tệp còn thiếu.
+      - name: Dựng 10 video hài
+        env:
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+        run: |
+          cd render-pipeline
+          if [ -n "${{ inputs.kenh }}" ]; then
+            python kich_hai.py --kenh "${{ inputs.kenh }}" --vong "${{ inputs.vong }}"
+          else
+            python kich_hai.py --demo --vong "${{ inputs.vong }}"
+          fi
+
+      - name: Chấm chất lượng (ngưỡng 90)
+        run: cd render-pipeline && python cham_v4.py
+
+      - name: Gói kết quả
+        uses: actions/upload-artifact@v4
+        with:
+          name: kich-hai-vong-${{ inputs.vong }}
+          path: |
+            render-pipeline/out/v4_*.mp4
+            render-pipeline/out/v4_*.jpg
+          retention-days: 14

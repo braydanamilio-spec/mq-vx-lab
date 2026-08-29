@@ -50,7 +50,10 @@ KENH = [
     {"ten": "GYM LIES", "handle": "@gymliesusa", "a": "khoa_hoc", "b": "hang_xom",
      "mau": "#E3EEF6", "de": "gym",
      "nen": ["american gym floor with weight racks along the back wall, cool blue light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
-             "gym smoothie bar counter along the back wall, bright morning light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             # Bản cũ ("smoothie bar counter") ra một biển quầy ghi "Smotte" — quầy hàng LÀ một mặt
+             # biển hiệu, và máy vẽ thấy mặt phẳng là điền chữ. Góc duỗi cơ vẫn là phòng gym mà
+             # không còn mặt nào để dán chữ.
+             "gym stretching corner with foam rollers and yoga mats on the floor, plain painted wall behind, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
              "locker room with a bench and lockers along the back wall, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
              "empty spin studio with bikes pushed to the back wall, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
     {"ten": "AIRPORT HELL", "handle": "@airporthellusa", "a": "luat_tre", "b": "y_ta",
