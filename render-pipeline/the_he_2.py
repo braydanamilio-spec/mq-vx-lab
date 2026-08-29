@@ -1624,7 +1624,9 @@ def dung_story_cinematic(kenh: dict, ky: dict | None = None) -> dict | None:
         print(f"   ⚠️ {kenh.get('ten')}: nguồn không trả dữ liệu — BỎ LƯỢT")
         return None
     tieu_de, hook, canh = kq
-    gu = str(kenh.get("style_anh") or "").strip()
+    # Gu vẽ phải là TIẾNG ANH — máy vẽ ảnh không đọc tiếng Việt và sẽ lặng lẽ rơi về mặc định
+    # của nó (ảnh chụp người thật). Xem `gu_ve`.
+    gu = gu_ve(kenh)
     scenes = [{"nar": nar, "img_query": (f"{q}, {gu}" if gu else q)} for nar, q in canh]
     return _cong_an_toan({"title": tieu_de, "hook": hook, "topic": kenh.get("niche", ""),
                           "scenes": scenes, "nguon": kenh.get("nguon"),
@@ -2335,6 +2337,145 @@ DUONG_RA = {
 DUNG_STORY = {}      # nạp ở cuối file, sau khi mọi hàm đã định nghĩa
 
 
+# ── GU VẼ: TIẾNG VIỆT TRONG CẤU HÌNH, TIẾNG ANH KHI GỬI ĐI VẼ (29/8/2026) ──────────────────
+# Anh: "sao lại render ảnh kiểu người thật này, ko hợp — a muốn ảnh mà AI vẽ tốt: vũ trụ, khoa
+# học, viễn tưởng…". Đúng cả về thẩm mỹ lẫn kỹ thuật, và gốc của nó là một lỗi cụ thể:
+#
+#   `_cf_flux_image` ghép prompt là  f"A {style} of: {prompt}"
+#   mà `style` lấy thẳng từ `kenh["style_anh"]` — VIẾT BẰNG TIẾNG VIỆT.
+#
+# Nên prompt thật gửi lên FLUX là "A phác thảo phòng xử, than chì of: a stack of court files".
+# Máy vẽ không đọc được phần tiếng Việt, bỏ qua nó, và rơi về mặc định của nó: ẢNH CHỤP NGƯỜI
+# THẬT. Suốt thời gian qua mười kênh đều khai gu riêng (than chì · khắc gỗ · vector · sơn dầu) và
+# KHÔNG kênh nào nhận được gu của mình — lại đúng họ lỗi "khai ra rồi không ai đọc" của
+# `voice_tone`, `brand.font`, `palette.bg`, `tham_so.xoay`.
+#
+# Và ảnh người thật là thứ máy vẽ dở nhất: tay thừa ngón, mặt méo, chữ sai chính tả ("PUBLIC
+# RECCORDS"). Còn nét vẽ, khắc gỗ, vector, vũ trụ, ảnh vĩ mô thì nó làm rất tốt — vì ở đó không có
+# một "bản gốc đúng" nào để mắt người đem ra so.
+GU_VE_EN = {
+    "minh hoạ giải phẫu nét mảnh":
+        "clean line-art anatomical illustration, thin ink strokes on warm paper, "
+        "medical textbook plate, muted ochre accents",
+    "phác thảo phòng xử, than chì":
+        "graphite courtroom reportage sketch, loose charcoal linework on toned paper, "
+        "smudged shading, no colour except a single warm accent",
+    "ảnh tài liệu ố yellow": "",
+    "ảnh tài liệu ố vàng":
+        "macro photograph of an aged archival document, yellowed paper fibres, "
+        "typewriter era, raking light, shallow depth of field, objects only",
+    "tranh khắc gỗ đen trắng":
+        "black and white woodcut engraving, bold carved lines, cross-hatching, "
+        "vintage broadsheet illustration",
+    "ảnh sương mù đơn sắc":
+        "monochrome fog landscape, heavy atmosphere, long lens, desaturated, "
+        "empty scene, architectural silhouettes",
+    "bìa đĩa vector":
+        "flat vector album-cover artwork, bold geometric shapes, limited palette, "
+        "screenprint texture, mid-century poster feel",
+    "ảnh đêm tương phản mạnh":
+        "high contrast night scene, deep shadows with hard rim light, wet asphalt, "
+        "empty architecture, cinematic anamorphic flare",
+    "tranh sơn dầu tối màu":
+        "dark oil painting, thick impasto brushwork, chiaroscuro lighting, "
+        "moody interior, old-master palette",
+    "khung phim xước":
+        "scratched 16mm film frame, heavy grain, halation and dust, "
+        "faded archival footage still, warm bleach-bypass grade",
+    "tranh minh hoạ phiên toà":
+        "editorial ink illustration, fine cross-hatching, civic architecture, "
+        "restrained two-colour palette, broadsheet op-ed style",
+    "ảnh món ăn chụp trên cao":
+        "overhead food photograph, single dish centred on a plain surface, "
+        "soft diffused light, styled flat lay",
+    # 18 gu còn lại. Dịch HẾT, không để kênh nào rơi về mặc định của máy vẽ — mặc định đó là
+    # ảnh chụp người thật, đúng thứ anh bác.
+    "ảnh sản phẩm sạch, nền giấy gói":
+        "clean product still life on kraft paper, single object, soft box lighting, "
+        "packaging-design look",
+    "chân dung vận động viên phẳng":
+        "flat vector sports portrait, bold shapes and hard edges, two-tone palette, "
+        "silkscreen poster",
+    "chân dung nét đơn sắc":
+        "monochrome line portrait, single continuous ink stroke, minimal, high contrast",
+    "poster giả lập phong cách in lụa":
+        "silkscreen propaganda-style poster, three flat inks, halftone dots, bold composition",
+    "ảnh màn hình tối, chữ neon":
+        "dark terminal screen glow, neon monospaced glyph shapes, scanlines, close macro, "
+        "abstract interface",
+    "ảnh sân khấu hạt phim":
+        "empty stage under a single spotlight, heavy film grain, deep blacks, "
+        "smoke in the beam, no performers",
+    "pixel art u tối":
+        "dark pixel art scene, limited 16-colour palette, chunky pixels, dithering, "
+        "retro game still",
+    "xe cắt lớp isometric":
+        "isometric technical cutaway of a vehicle, exploded mechanical parts, "
+        "blueprint-style line rendering",
+    "tranh màu nước":
+        "loose watercolour painting, wet-on-wet bleeds, soft edges, generous white paper",
+    "tranh khắc tự nhiên học":
+        "vintage natural-history engraving, fine stipple and hatching, "
+        "scientific plate on cream paper",
+    "bưu thiếp cũ":
+        "faded vintage postcard, muted printed colours, halftone texture, deckled border",
+    "bản đồ radar phát sáng":
+        "glowing radar sweep display, phosphor green traces on dark grid, "
+        "atmospheric scanlines, abstract data map",
+    "biểu tượng phẳng ấm màu":
+        "flat icon-style illustration, warm limited palette, rounded geometry, "
+        "generous negative space",
+    "ảnh màn hình đêm":
+        "night-time screen glow in a dark room, cool blue light on surfaces, "
+        "objects only, shallow focus",
+    "mặt cắt nhà isometric":
+        "isometric architectural cutaway of a house, clean line rendering, "
+        "muted pastel fills, doll-house view",
+    "ảnh ghép hai thời":
+        "split-frame diptych of the same place in two eras, left aged and sepia, "
+        "right clean and modern, architectural subject",
+    "kỹ thuật hoạ bản vẽ xanh":
+        "technical blueprint drawing, white lines on deep cyan, dimension lines and callouts, "
+        "drafting-table look",
+}
+
+# Dán vào MỌI prompt vẽ. Hai câu, hai lý do khác nhau:
+#   • cấm mặt/tay người thật — đó là chỗ máy vẽ hỏng rõ nhất và mắt người bắt được ngay;
+#   • đẩy về phía tranh/đồ hoạ — đúng hướng anh chọn, và cũng là phía máy vẽ mạnh.
+GU_CAM = ("no photorealistic human faces, no hands in frame, no crowds of people, "
+          "illustrative rather than photographic")
+
+# NÉT CHÌ CHO NHÓM NHÂN VẬT (anh chọn 29/8: "người nổi tiếng, vĩ nhân, người thành công, công ty
+# đế chế gia tộc lớn — vẽ kiểu nét chì sẽ hợp hơn, khác lạ hơn footage free").
+# Vì sao đúng cả về kỹ thuật: chân dung ẢNH CHỤP là chỗ máy vẽ hỏng rõ nhất — mắt người có sẵn
+# một bản gốc để so, nên lệch một chút là thấy ngay "giả". Chân dung NÉT CHÌ thì không có bản gốc
+# nào để so: người xem đọc nó như một bức vẽ, và máy vẽ nét chì rất tốt.
+# Và nó giải luôn bài toán nhận diện: mọi kênh khác đang xài footage kho giống nhau; một kênh
+# toàn tranh chì thì nhìn phát ra ngay là của mình.
+GU_NET_CHI = ("detailed graphite pencil portrait drawing, fine hatching and soft shading on "
+              "textured paper, high contrast, single subject, editorial illustration, "
+              "no colour except a faint warm wash")
+
+# Chủ đề nào thì dùng nét chì: nhận theo NICHE của kênh, không phải theo tên — tên kênh đổi được,
+# niche thì là phân loại cố định.
+NICHE_NET_CHI = ("người nổi tiếng", "vĩ nhân", "doanh nhân", "kinh doanh", "công ty",
+                 "lịch sử", "tiểu sử", "thành công", "gia tộc")
+
+
+def gu_ve(kenh: dict) -> str:
+    """Gu vẽ TIẾNG ANH cho một kênh — thứ thật sự gửi lên máy vẽ ảnh.
+
+    Không dịch được thì trả về chuỗi cấm; thà để máy vẽ tự chọn bố cục còn hơn nhét cho nó một
+    câu tiếng Việt mà nó chắc chắn bỏ qua (và bỏ qua thì nó vẽ ảnh người thật, xem trên)."""
+    tho = str((kenh.get("brand") or {}).get("style_anh") or kenh.get("style_anh") or "").strip()
+    niche = str(kenh.get("niche") or "").lower()
+    if any(t in niche for t in NICHE_NET_CHI):
+        # Nhóm nhân vật/công ty: nét chì thắng mọi gu khác, kể cả gu đã khai trong cấu hình.
+        return f"{GU_NET_CHI}, {GU_CAM}"
+    en = GU_VE_EN.get(tho.lower()) or GU_VE_EN.get(tho) or ""
+    return f"{en}, {GU_CAM}" if en else GU_CAM
+
+
 def dung_props_phim(kenh: dict, ky: dict | None = None, keys: list | None = None,
                     st_san: dict | None = None, ky_hieu: str = ""):
     """Dựng props phim kể + kiểm mở đầu, KHÔNG render. Trả (props, story, slug) hoặc None.
@@ -2380,7 +2521,7 @@ def dung_props_phim(kenh: dict, ky: dict | None = None, keys: list | None = None
                                accent2=b.get("accent", "#F5B301"),
                                font=(kenh.get("brand") or {}).get("font", ""),
                                handle=kenh["handle"],
-                               ai_style=kenh.get("style_anh") or None, ai_only=True,
+                               ai_style=gu_ve(kenh), ai_only=True,
                                prefix="th2_")
     # Cùng lớp chặn "nền trơn" như ba đường Cinematic bên datastory_ci: đo trên KHUNG THẬT,
     # không đoán qua mô hình lớp phủ. Kênh chất liệu B/C vẽ ảnh bằng AI nên càng dễ ra khung tối
@@ -2624,7 +2765,7 @@ def _ve_vat(kenh: dict, props: dict, keys: list | None, ky_hieu: str = "") -> in
             DS.set_ai_pool(keys, kenh.get("ten", ""))
         except Exception:
             pass
-    style = (kenh.get("brand") or {}).get("style_anh") or kenh.get("style_anh") or ""
+    style = gu_ve(kenh)          # TIẾNG ANH, xem `gu_ve` — trước đây gửi thẳng chuỗi tiếng Việt
     sl = DS.slug(kenh["handle"].lstrip("@")) + (f"_{ky_hieu}" if ky_hieu else "")
     thu = os.path.join(DS.PUB, "img", "th2v_" + sl)
     os.makedirs(thu, exist_ok=True)
