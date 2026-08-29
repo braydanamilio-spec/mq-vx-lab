@@ -698,6 +698,90 @@ def _hai_bong(k: dict) -> tuple:
     return dict(a), dict(b)
 
 
+def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
+    """Đọc TỪNG LƯỢT bằng giọng riêng rồi ghép thành một tệp. Trả (tổng giây, mốc từ, mốc lượt).
+
+    ── VÌ SAO PHẢI TÁCH TỪNG LƯỢT (30/8/2026) ──────────────────────────────────────────
+    Bản trước đọc CẢ ĐOẠN bằng đúng một giọng — giọng của nhân vật A. Nên trong một bộ phim
+    HAI NGƯỜI ĐỐI THOẠI, tai người xem nghe ra đúng MỘT người tự nói với mình suốt hai mươi
+    giây. Đó là lỗi nặng nhất còn lại của bộ này, và nó giết thẳng cái làm nên tiếng cười: hài
+    hai người sống bằng KHOẢNG CÁCH giữa hai giọng — một bên tin điều hợp lý, một bên nói ra
+    điều có thật, và tai phải nghe ra ngay hai chất người khác nhau.
+
+    Ghi chú cũ ngại việc này vì "cộng dồn mốc thời gian sai một nhịp là khẩu hình lệch cả nửa
+    video". Nỗi lo đúng, cách tránh cũng đơn giản: **đừng tin số thời lượng do bộ đọc trả về** —
+    giải mã từng đoạn ra WAV rồi ĐO độ dài thật của tệp WAV. WAV không nén nên độ dài là số mẫu
+    chia tần số lấy mẫu, chính xác tuyệt đối; còn mp3 thì bộ mã hoá chèn thêm mẫu đệm ở đầu mỗi
+    tệp và chính chỗ đệm ấy mới là nguồn của trôi nhịp.
+
+    Và tách từng lượt còn XOÁ LUÔN một bài toán khác: ranh giới lượt thoại không phải suy ra
+    bằng cách đếm từ nữa (xem luật 7t mục 3-4) — mỗi lượt LÀ một đoạn tiếng riêng, nên mốc đầu
+    và mốc cuối của nó là số đo, không phải phép suy.
+
+    Khoảng lặng chèn giữa các lượt: 0,16 giây cho nhịp thoại thường, 0,55 giây trước CÚ CHỐT.
+    Khoảng lặng trước cú chốt là thứ làm cú chốt nổ — trong hài, tiếng cười rơi vào chỗ trống.
+    """
+    import tempfile
+    import tts_karaoke as TTS
+
+    tam = tempfile.mkdtemp(prefix="v4giong_")
+    wavs, moc, tu = [], [], []
+    tong = 0.0
+
+    def _lang(giay: float):
+        nonlocal tong
+        w = os.path.join(tam, f"s{len(wavs)}.wav")
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                        "-i", "anullsrc=r=24000:cl=mono", "-t", f"{giay:.3f}", w],
+                       capture_output=True, timeout=120)
+        if os.path.exists(w):
+            wavs.append(w)
+            tong += _giay_wav(w)
+
+    for i, (chu, ai, _cx) in enumerate(cau):
+        if i:
+            _lang(0.55 if i == len(cau) - 1 else 0.16)
+        v, rate, pitch = ga if ai == 0 else gb
+        m = os.path.join(tam, f"{i}.mp3")
+        d, subs, _ = TTS.synth(chu, m, voice=v, rate=rate, pitch=pitch)
+        if not subs:
+            raise RuntimeError(f"lượt {i} không có mốc từ")
+        w = os.path.join(tam, f"{i}.wav")
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", m, "-ar", "24000", "-ac", "1", w],
+                       capture_output=True, timeout=300)
+        dw = _giay_wav(w)
+        if not dw:
+            raise RuntimeError(f"lượt {i} giải mã hỏng")
+        moc.append((round(tong, 3), round(tong + dw, 3)))
+        for x in subs:
+            tu.append({"t": round(tong + float(x.get("t", 0)), 3),
+                       "d": round(float(x.get("d", 0)), 3),
+                       "w": str(x.get("w", "")), "si": i})
+        wavs.append(w)
+        tong += dw
+
+    lst = os.path.join(tam, "ds.txt")
+    io.open(lst, "w", encoding="utf-8").write(
+        "\n".join("file '" + w.replace("'", "'\\''") + "'" for w in wavs))
+    r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                        "-i", lst, "-ar", "24000", "-ac", "1", "-b:a", "96k", mp3_dest],
+                       capture_output=True, text=True, timeout=600)
+    if r.returncode or not os.path.exists(mp3_dest):
+        raise RuntimeError((r.stderr or "ghép tiếng hỏng")[-160:])
+    return round(tong, 3), tu, moc
+
+
+def _giay_wav(w: str) -> float:
+    """Độ dài THẬT của một tệp WAV, đọc từ ffprobe. Dùng WAV chứ không dùng mp3 vì mp3 có mẫu
+    đệm ở đầu mỗi tệp, và chính chỗ đệm ấy làm mốc thời gian trôi khi ghép nhiều đoạn."""
+    try:
+        return float(subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", w],
+            capture_output=True, text=True, timeout=60).stdout.strip() or 0)
+    except Exception:
+        return 0.0
+
+
 def dung_luot(k: dict, nen: list, vong: int = 0) -> tuple:
     """Trả (danh sách lượt thoại, lời đọc ghép). Kịch bản bốc theo `vong` để mỗi tập một chuyện.
 
@@ -740,7 +824,7 @@ def dung_luot(k: dict, nen: list, vong: int = 0) -> tuple:
             l["sfx"] = SFX[i]
         luot.append(l)
         loi.append(chu)
-    return luot, " ".join(loi)
+    return luot, " ".join(loi), cau
 
 
 def main() -> int:
@@ -779,7 +863,7 @@ def main() -> int:
         nen = ve_nen(k, DS, keys)
         if a.nen:
             continue
-        luot, loi = dung_luot(k, nen, a.vong)
+        luot, loi, kb_cau = dung_luot(k, nen, a.vong)
 
         # GIỌNG: hai nhân vật, hai chất giọng. Đây là thứ làm đối thoại nghe ra là hai người.
         GIONG = {"nam_gay": ("en-US-EricNeural", "+12%", "+14Hz"),
@@ -796,47 +880,35 @@ def main() -> int:
         # mốc tính từ 0 của CHÍNH tệp đó — cộng dồn sai một nhịp là khẩu hình lệch cả nửa video.
         # Đọc cả đoạn bằng giọng nhân vật A, rồi ĐỔI CAO ĐỘ theo lượt là việc của bản sau; ở bản
         # này ưu tiên KHỚP TUYỆT ĐỐI giữa tiếng và hình.
-        v, rate, pitch = GIONG.get(k["a"], ("en-US-GuyNeural", "+4%", "+0Hz"))
+        ga = GIONG.get(k["a"], ("en-US-GuyNeural", "+4%", "+0Hz"))
+        gb = GIONG.get(k["b"], ("en-US-JennyNeural", "+2%", "+6Hz"))
+        # HAI GIỌNG PHẢI KHÁC NHAU THẬT. Vài kênh bốc trúng hai kiểu nhân vật dùng chung một
+        # giọng nền; khi ấy đẩy giọng người thứ hai lệch hẳn cao độ và nhịp, vì hai người nói
+        # giống nhau thì cả bộ phim đọc ra là một người tự nói với mình.
+        if ga[0] == gb[0]:
+            gb = (gb[0], "-8%", "-18Hz")
         rel = f"v4_{_ten_tep(k)}.mp3"
         mp3 = os.path.join(PUB, rel)
         try:
-            dur, subs, _ = TTS.synth(loi, mp3, voice=v, rate=rate, pitch=pitch)
+            dur, tu, moc = doc_hai_giong(kb_cau, ga, gb, mp3)
         except Exception as e:
-            print(f"   ❌ giọng đọc hỏng: {str(e)[:70]}")
+            print(f"   ❌ giọng đọc hỏng: {str(e)[:90]}")
             continue
-        tu = [{"t": float(x.get("t", 0)), "d": float(x.get("d", 0)), "w": str(x.get("w", "")),
-               "si": int(x.get("si", 0))} for x in (subs or [])]
         if not tu:
             print("   ❌ không có mốc từ — BỎ")
             continue
 
-        # 30/8 — RANH GIỚI LƯỢT BÁM SỐ TỪ, KHÔNG BÁM CHỈ SỐ CÂU.
-        # Cách cũ (dùng `si`) giả định bộ tách câu của mình và bộ tách câu bên trong edge-tts cắt
-        # giống nhau. Chúng KHÔNG giống nhau: đo được lượt kết thúc giữa chừng nên phụ đề rớt đuôi
-        # ("…just moved in. That") và câu sau bị gán nhầm cho người kia — trong hài hai người thì
-        # gán nhầm người nói là hỏng cả trò đùa.
-        # Số TỪ thì không có chỗ để hai bên hiểu khác nhau: edge-tts trả mốc theo đúng thứ tự từ
-        # của văn bản mình đưa vào, nên đếm từ là phép ghép chắc chắn.
-        _sotu = lambda t: len([x for x in str(t or "").split() if x.strip()])
-        vt = 0
+        # 30/8 — MỐC LƯỢT LÀ SỐ ĐO, KHÔNG CÒN LÀ PHÉP SUY.
+        # Trước đây phải ghép mốc bằng cách đếm từ (luật 7t mục 3-4) vì cả đoạn chỉ có MỘT tệp
+        # tiếng. Nay mỗi lượt là một đoạn tiếng riêng nên `doc_hai_giong` trả thẳng mốc đầu/cuối
+        # của từng lượt — đo được, không đoán. Cả một họ lỗi (rớt đuôi câu, gán nhầm người nói)
+        # biến mất theo.
         for i2, l in enumerate(luot):
-            n = _sotu(l["nar"])
-            ws = tu[vt:vt + n]
-            vt += n
-            if ws:
-                l["s"] = round(ws[0]["t"], 2)
-                sau = tu[vt] if vt < len(tu) else None
-                l["e"] = round(sau["t"] if sau else max(x["t"] + x["d"] for x in ws) + 0.4, 2)
-            else:
-                l["s"] = luot[i2 - 1]["e"] if i2 else 0.0
-                l["e"] = l["s"] + 1.0
+            l["s"], l["e"] = moc[i2]
         if luot:
-            # 30/8 — NHỊP ĐUÔI SAU CÚ CHỐT.
-            # Bốn kênh đo được 14,0–15,0 giây, hụt sàn 15s của short. Nhưng cách vá đúng không
-            # phải là kéo dài lời thoại — mà là trả lại NHỊP ĐUÔI mà YTUONG_V4 §4.5 đã ghi từ
-            # đầu rồi tôi quên dựng: sau câu chốt là một quãng ngắn không ai nói gì, chỉ còn nét
-            # mặt người nghe. Trong hài, tiếng cười rơi vào đúng quãng ấy; cắt phim ngay ở từ
-            # cuối là cắt mất chỗ khán giả cười. Nên quãng này vừa chữa độ dài vừa chữa nhịp.
+            # NHỊP ĐUÔI SAU CÚ CHỐT — sau câu chốt là một quãng không ai nói gì, chỉ còn nét mặt
+            # người nghe. Trong hài, tiếng cười rơi vào đúng quãng ấy; cắt phim ngay ở từ cuối là
+            # cắt mất chỗ khán giả cười.
             luot[-1]["e"] = round(max(luot[-1]["e"], dur) + 2.2, 2)
 
         # 30/8 — ÉP HAI NGƯỜI KHÁC BÓNG DÁNG.

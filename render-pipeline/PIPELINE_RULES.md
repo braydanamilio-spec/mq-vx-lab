@@ -4183,3 +4183,28 @@ biệt** — tức là tôi đã viết một phép đo **chấm điểm cao cho
 ngược: nhiều hơn một nền trong một tập là HỎNG (−10), và thiếu đủ ba cỡ máy cũng là hỏng (−5).
 Bài học: khi sửa một luật thiết kế, **phải sửa cả cây thước** — không thì thước sẽ kéo hệ thống
 quay lại lỗi cũ.
+
+### 7ac. PHIM HAI NGƯỜI PHẢI CÓ HAI GIỌNG — 30/8/2026
+
+Lỗi nặng nhất còn sót của bộ hài, và nó nằm ngay trong một chú thích tôi tự viết ngày 29/8:
+
+> *"MỘT TỆP TIẾNG CHO CẢ ĐOẠN, KHÔNG GHÉP HAI GIỌNG… ở bản này ưu tiên KHỚP TUYỆT ĐỐI giữa
+> tiếng và hình."*
+
+Nghĩa là suốt hai mươi giây của một bộ phim **hai người đối thoại**, tai người xem nghe đúng
+**một người tự nói với mình**. Hài hai người sống bằng KHOẢNG CÁCH giữa hai giọng — một bên tin
+điều hợp lý, một bên nói ra điều có thật. Mất khoảng cách ấy thì mất chỗ gây cười, và không một
+bản vá hình ảnh nào cứu được.
+
+**Nỗi lo cũ đúng, cách tránh thì đơn giản: ĐỪNG TIN SỐ THỜI LƯỢNG DO BỘ ĐỌC TRẢ VỀ.**
+Giải mã từng đoạn ra **WAV** rồi đo độ dài thật của tệp WAV. WAV không nén nên độ dài là số mẫu
+chia tần số lấy mẫu — chính xác tuyệt đối. Còn mp3 thì bộ mã hoá chèn mẫu đệm ở đầu MỖI tệp, và
+chính chỗ đệm ấy là nguồn của trôi nhịp khi ghép nhiều đoạn.
+
+**Và việc tách từng lượt XOÁ LUÔN một họ lỗi khác.** Ranh giới lượt thoại không còn phải suy ra
+bằng cách đếm từ (luật 7t mục 3–4): mỗi lượt LÀ một đoạn tiếng riêng nên mốc đầu/cuối là **số
+đo**, không phải phép suy. Rớt đuôi câu, gán nhầm người nói — cả hai biến mất theo.
+
+**Bài học chung:** một chú thích ghi *"để bản sau làm"* là một món nợ, và món nợ này nằm đúng
+trên trục giá trị của sản phẩm. Khi hoãn một việc, phải hỏi: *thứ mình đang hoãn có phải là
+chính cái làm nên sản phẩm không?* Nếu có thì đừng hoãn.
