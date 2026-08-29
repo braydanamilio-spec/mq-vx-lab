@@ -2276,6 +2276,7 @@ def main():
     check("nhãn None không được lọt lên tiêu đề", t_nhan_none_khong_lot_len_tieu_de)
     check("ai_only thì KHÔNG lấy clip kho (không footage)", t_ai_only_khong_lay_clip_kho)
     check("18 kênh ranked KHÔNG dùng chung một khuôn", t_bo_cuc_ranked_khong_dung_chung_mot_khuon)
+    check("prompt vẽ không gọi tên mặt phẳng chứa chữ", t_prompt_ve_khong_goi_ten_mat_chu)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
@@ -4637,6 +4638,46 @@ def t_bo_cuc_ranked_khong_dung_chung_mot_khuon():
     root = _doc("../engine-remotion/src/Root.tsx")
     for c in set(dem):
         assert f'id="{c}"' in root, f"bố cục {c} chưa đăng ký trong Root.tsx"
+
+
+
+
+def t_prompt_ve_khong_goi_ten_mat_chu():
+    """Không prompt vẽ nào được gọi tên một thứ CÓ MẶT PHẲNG CHỨA CHỮ hướng vào ống kính.
+
+    29/8 — anh: "ko nên có chữ ở ảnh AI generate", và chữ bịa trên kênh hồ sơ công CHÍNH LÀ nội
+    dung sai sự thật. Đã thử bốn vòng ra lệnh cho máy vẽ (cấm ở đuôi prompt · cấm ở đầu prompt ·
+    "mọi mặt giấy đều trống" · "vẽ chữ thành nét nguệch ngoạc") và khung lần lượt ra
+    "PUBLIC RECCORDS" · "Publlic Records" · "COURTE OPITION" · "ourt Opitric".
+    Kết luận đo được: mô hình khuếch tán KHÔNG có khái niệm "đừng vẽ", chỉ có "vẽ cái gì". Hễ
+    prompt gọi tên một tờ giấy thì nó dựng một mặt phẳng, và mặt phẳng nào cũng bị điền chữ.
+
+    Nên chặn ở PROMPT, không chặn ở lệnh. Danh từ nguy hiểm chỉ được phép xuất hiện kèm một từ
+    khoá đổi góc nhìn (edge-on / from behind / closed / face-down …) — lúc đó mặt chữ không còn
+    hướng vào ống kính nữa."""
+    import re as _re_p
+    src = _doc("the_he_2.py")
+    i = src.index("def _pk_ban_an")
+    j = src.find("\nBO_PHIM", i)
+    than = src[i: j if j > 0 else len(src)]
+    NGUY = ("document", "file", "folder", "record", "paper", "page", "newspaper", "headline",
+            "signage", "label", "book", "report", "form", "screen", "monitor", "poster",
+            "banner", "notice", "ledger", "envelope", "receipt", "ticket", "calendar")
+    # Cận cảnh CỰC SÁT cũng an toàn: khung chỉ còn một mảnh bề mặt, không đủ chỗ cho một từ
+    # trọn vẹn. "record grooves in extreme close-up" là rãnh đĩa, không phải nhãn đĩa.
+    # Ngoại lệ này có lý do vật lý, không phải để cho một prompt cụ thể lọt qua.
+    AN_TOAN = ("edge-on", "from behind", "from the ends", "closed", "face-down", "stacked",
+               "spines", "tabs", "rolled", "seen from", "extreme close-up")
+    xau = []
+    for m in _re_p.finditer(r'"([a-z][^"]{12,110})"', than):
+        q = m.group(1)
+        if not any(f" {c}" in f" {q}" or q.startswith(c) for c in NGUY):
+            continue
+        if any(a in q for a in AN_TOAN):
+            continue
+        xau.append(q)
+    assert not xau, ("prompt vẽ gọi tên thứ có mặt chữ mà KHÔNG đổi góc nhìn -> máy vẽ sẽ bịa chữ: "
+                     + " · ".join(x[:52] for x in xau[:4]))
 
 
 

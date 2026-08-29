@@ -1527,9 +1527,9 @@ def _pk_wiki(D, ky):
     v = r[0]
     canh = [
         (f"On one single day, {v['luot_doc']:,} people looked up {v['ten']}.",
-         "a lit phone screen alone in a dark room"),
+         "a phone lying face-down on a dark table, one hard light source, long shadow"),
         (f"It ranked number {v['hang']} across all of Wikipedia that day.",
-         "a wall of glowing screens showing traffic graphs"),
+         "a wall of monitors seen from BEHIND, cable bundles and glow spilling round the edges"),
         ("Nobody organised that. People just wanted to know.",
          "crowd of people walking, all looking down at phones"),
         (f"The second most read that day was {r[1]['ten']}." if len(r) > 1
@@ -1553,9 +1553,9 @@ def _pk_nghien_cuu(D, ky):
         (f"The title: {_gon(v['tieu_de'], 110)}.", "a microscope eyepiece and slide tray on a lab bench, shallow focus"),
         (f"It ran in {v['tap_chi']}.", "library shelf of bound medical journals"),
         ("Not a headline about a study. The study itself.",
-         "researcher reading a paper under a desk lamp"),
+         "a microscope and specimen jars under a desk lamp cone, night lab"),
         (f"There are {len(r)} more on the same question, all public.",
-         "search results page on a clean monitor"),
+         "a monitor seen from behind, cool blue glow washing across an empty desk"),
         (f"Reference number {v['ma']} on PubMed. Go read it.",
          "a mechanical keyboard lit from one side, keys out of focus"),
     ]
@@ -1569,9 +1569,9 @@ def _pk_nhac(D, ky):
         return None
     v = r[0]
     canh = [
-        (f"{v['ten']}. Started {v['bat_dau'][:4]}.", "vintage vinyl record on a turntable"),
+        (f"{v['ten']}. Started {v['bat_dau'][:4]}.", "turntable tonearm and needle in extreme close-up, record grooves catching the light"),
         (f"Type: {v['loai'] or 'artist'}. Country: {v['nuoc'] or 'unlisted'}.",
-         "old passport and tour paperwork on a table"),
+         "a worn leather suitcase with buckled straps, closed, travel stickers scraped off"),
         ((f"The record says it ended in {v['ket_thuc'][:4]}." if v.get("ket_thuc")
           else "The record has no end date."), "empty concert stage with one spotlight"),
         ("This is the catalogue entry, not the legend.",
@@ -1603,7 +1603,7 @@ def _pk_tu_lieu(D, ky):
     canh = [
         (f"This film belongs to nobody. {_gon(v['tieu_de'], 70)}.",
          "old film reel in a metal canister"),
-        (f"Year on the record: {v['nam'] or 'unlisted'}.", "faded calendar page from mid century"),
+        (f"Year on the record: {v['nam'] or 'unlisted'}.", "a mid-century wall clock with chipped paint, raking afternoon light"),
         ("Public domain means you can use it, sell it, cut it up.",
          "projector throwing light in a dusty room"),
         (f"There are {len(r)} more like it under the same search.",
