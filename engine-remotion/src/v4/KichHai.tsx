@@ -158,8 +158,24 @@ export const KichHai: React.FC<PropsHai> = ({
   const A: Kieu = { ...(KIEU_MAU[kieuA as string] || KIEU_MAU.hang_xom), ...kieuTuyA };
   const B: Kieu = { ...(KIEU_MAU[kieuB as string] || KIEU_MAU.bank), ...kieuTuyB };
 
+  // 30/8 — KHE LẶNG GIỮA HAI LƯỢT PHẢI GIỮ NGUYÊN LƯỢT VỪA KẾT THÚC.
+  // `doc_hai_giong` chèn 0,16 giây im lặng giữa các lượt (và 0,55 giây trước cú chốt) để nhịp
+  // thoại tự nhiên. Nhưng cách tìm lượt cũ trả -1 ở đúng những khe ấy, rồi rơi vào nhánh dự
+  // phòng `luot.length - 1` — tức NHẢY THẲNG SANG LƯỢT CUỐI. Đo được trên khung thật ở giây
+  // 5,85: phim đang ở trung cảnh bỗng giật sang cỡ cận của cú chốt rồi nhảy về. Sáu khe lặng
+  // là sáu cú giật hình, và người xem đọc ra là lỗi dựng chứ không phải nhịp.
+  //
+  // Lỗi này SINH RA TỪ chính bản vá thêm khoảng lặng — trước đó các lượt sát nhau nên không có
+  // khe nào để rơi vào. Đúng họ lỗi "vá một chỗ, mở ra một chỗ khác": mỗi khi đổi cấu trúc thời
+  // gian, phải rà lại mọi chỗ TRA CỨU theo thời gian.
   let i = luot.findIndex((x) => giay >= x.s && giay < x.e);
-  if (i < 0) i = giay < (luot[0]?.s ?? 0) ? 0 : luot.length - 1;
+  if (i < 0) {
+    // trong khe: lấy lượt cuối cùng đã BẮT ĐẦU trước thời điểm này
+    for (let j = luot.length - 1; j >= 0; j--) {
+      if (giay >= luot[j].s) { i = j; break; }
+    }
+    if (i < 0) i = 0;                       // trước cả lượt đầu tiên
+  }
   const L = luot[i] || ({ s: 0, e: 4, ai: 0, nar: "" } as Luot);
   const p = kep((giay - L.s) / Math.max(0.001, L.e - L.s));
 
@@ -199,10 +215,16 @@ export const KichHai: React.FC<PropsHai> = ({
   // Đích đứng của mỗi lượt: người nói tiến lại gần khoảng 26 đơn vị, người nghe lùi nhẹ.
   // Cộng thêm một chút lệch theo chỉ số lượt để hai người không đứng đúng chỗ cũ mỗi lần.
   const _iL = Math.max(0, i);
-  const dichA = -232 + (noiA_ ? 30 : -14) + ((_iL % 3) - 1) * 16;
-  const dichB = 232 + (noiA_ ? 14 : -30) + (((_iL + 1) % 3) - 1) * 16;
-  const _truocA = -232 + (i > 0 && luot[i - 1].ai === 0 ? 30 : -14) + (((_iL + 2) % 3) - 1) * 16;
-  const _truocB = 232 + (i > 0 && luot[i - 1].ai === 0 ? 14 : -30) + ((_iL % 3) - 1) * 16;
+  // 30/8 — KHOẢNG CÁCH CƠ SỞ 232 → 292: LỖI VẬT LÝ.
+  // Đo trên khung thật: khi người nói dùng cử chỉ CHỈ TAY, bàn tay vươn xuyên qua VAI người kia.
+  // Cánh tay duỗi hết dài chừng 216 điểm màn hình, mà khoảng trống giữa hai thân chỉ còn 304 —
+  // trừ đi phần hai người nghiêng vào nhau và phần người nói tiến lên 30, khoảng trống thật
+  // xuống dưới 200. Hai hình vẽ lồng vào nhau là lỗi mắt bắt được ngay, và nó phá cả cảm giác
+  // "hai người đang đứng trong một không gian có thật".
+  const dichA = -292 + (noiA_ ? 30 : -14) + ((_iL % 3) - 1) * 16;
+  const dichB = 292 + (noiA_ ? 14 : -30) + (((_iL + 1) % 3) - 1) * 16;
+  const _truocA = -292 + (i > 0 && luot[i - 1].ai === 0 ? 30 : -14) + (((_iL + 2) % 3) - 1) * 16;
+  const _truocB = 292 + (i > 0 && luot[i - 1].ai === 0 ? 14 : -30) + ((_iL % 3) - 1) * 16;
   const tDi = muot(kep((giay - L.s) / 0.6));
   // Ở cỡ cận, hai người phải giãn ĐỦ XA để người không nói ra HẲN ngoài khung. Đo được ở hệ
   // số 1,5: mép phải của người kia còn nằm trong khung 18 điểm, ra một mảnh người lơ lửng ở

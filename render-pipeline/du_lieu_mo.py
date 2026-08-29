@@ -591,7 +591,7 @@ def tieu_hanh_tinh_jpl(lui: int = 3, toi: int = 7) -> list[dict]:
         "date-min": (h0 - _dt.timedelta(days=max(0, lui))).isoformat(),
         "date-max": (h0 + _dt.timedelta(days=max(1, toi))).isoformat(),
         "dist-max": "0.05", "diameter": "true", "sort": "dist"}))
-    d = _goi(u) or {}
+    d = _goi_toa(u) or {}
     fs = list(d.get("fields") or [])
     ra = []
     for hang in (d.get("data") or []):
@@ -654,14 +654,30 @@ def ngan_hang_theo_bang(n: int = 1000) -> dict:
 # là đang dùng số cũ, không im lặng.
 _SO_NHO = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".dem_nho.json")
 _HAN_NHO = 7 * 86400
+# 30/8 — KHOÁ TOÀ ĐƯỢC NHỚ LÂU HƠN HẲN. Tổng số bản án khớp một cụm từ là con số gần như TĨNH:
+# nó nhích vài chục mỗi ngày trên nền hàng trăm nghìn, tức là dưới một phần vạn. Nhớ ba mươi ngày
+# thì con số vẫn đúng tới chữ số có nghĩa thứ ba, mà số lượt gõ vào một nguồn chặn nhịp rất chặt
+# giảm đi bốn lần. Đây là chỗ đánh đổi có lợi rõ ràng, không phải mẹo.
+_HAN_TOA = 30 * 86400
 
 
-def _nho_doc(khoa: str):
+def _nho_doc(khoa: str, qua_han: bool = False):
+    """Đọc số đã nhớ. `qua_han=True` thì chấp nhận cả bản ghi đã hết hạn.
+
+    30/8 — DÙNG SỐ CŨ CÒN HƠN KHÔNG CÓ SỐ. CourtListener chặn theo IP hàng giờ, và ba kênh luật
+    thì mỗi video cần sáu, bảy lượt gọi. Khi nguồn đóng cửa, cách cũ là BỎ LƯỢT — kênh câm cả
+    ngày. Nhưng tổng số bản án khớp một cụm từ là con số gần như TĨNH: nó nhích vài chục mỗi
+    ngày trên nền hàng trăm nghìn. Một giá trị bốn mươi ngày tuổi vẫn đúng tới chữ số có nghĩa
+    thứ ba — chính xác hơn nhiều so với việc không phát video nào.
+    Đây là lối "dùng bản cũ khi nguồn lỗi", và nó chỉ đúng cho đại lượng biến đổi chậm; KHÔNG
+    được áp cho bảng đọc-nhiều-hôm-nay hay giá cả, những thứ mà số cũ là số SAI.
+    """
     try:
         import json as _j, time as _t
         d = _j.load(io.open(_SO_NHO, encoding="utf-8")) if os.path.exists(_SO_NHO) else {}
         x = d.get(khoa)
-        if x and (_t.time() - float(x.get("luc", 0))) < _HAN_NHO:
+        han = _HAN_TOA if str(khoa or "").startswith("toa:") else _HAN_NHO
+        if x and (qua_han or (_t.time() - float(x.get("luc", 0))) < han):
             return int(x.get("n") or 0)
     except Exception:
         pass
@@ -703,7 +719,7 @@ def dem_ban_an(tu_khoa: str) -> int:
         return _cu
     u = ("https://www.courtlistener.com/api/rest/v4/search/?"
          + urllib.parse.urlencode({"q": tu_khoa, "type": "o", "order_by": "dateFiled desc"}))
-    d = _goi(u) or {}
+    d = _goi_toa(u) or {}
     try:
         n = int(d.get("count") or 0)
     except Exception:
@@ -711,7 +727,52 @@ def dem_ban_an(tu_khoa: str) -> int:
     if n:                      # chỉ nhớ khi CÓ số; nhớ số 0 là biến một lượt chập thành cả phiên hỏng
         _NHO_DEM[k] = n
         _nho_ghi("toa:" + k, n)
-    return n
+        return n
+    # Nguồn đóng cửa: lấy lại bản đã nhớ dù đã quá hạn, còn hơn để kênh câm cả ngày.
+    cu = _nho_doc("toa:" + k, qua_han=True)
+    if cu:
+        print(f"   ↩️ toà chặn nhịp — dùng lại số đã nhớ cho {k!r}")
+        _NHO_DEM[k] = cu
+    return cu or 0
+
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# NHỊP GỌI RIÊNG CHO COURTLISTENER
+# ------------------------------------------------------------------------------------------
+# 30/8 — Đo được: nguồn này trả 429 ngay từ lượt gọi THỨ HAI khi gọi liên tiếp, và ba kênh luật
+# thì mỗi video cần sáu tới bảy lượt. Kết quả là ba kênh bỏ lượt gần như mọi hôm — hỏng lặng lẽ,
+# vì "bỏ lượt" là hành vi ĐÚNG của dây chuyền nên không ai báo động.
+#
+# CourtListener chặn theo NHỊP chứ không theo tổng: giãn các lượt ra thì qua. Nên có một cái van
+# riêng cho đúng máy chủ này — 4,5 giây giữa hai lượt. Sáu lượt mất chừng 27 giây, chấp nhận được
+# cho một video, và đổi lại kênh chạy được thay vì câm.
+#
+# Van này KHÔNG đặt ở `_goi` chung: các nguồn khác (Wikipedia, World Bank, NASA) rộng rãi hơn
+# nhiều, bắt chúng chờ 4,5 giây mỗi lượt là làm chậm cả bốn mươi bảy kênh còn lại để chiều ba kênh.
+_LUC_TOA = [0.0]
+_DA_CHAN = [False]      # nguồn đã đóng cửa trong phiên này thì thôi gõ nữa
+_GIAN_TOA = 4.5
+
+
+def _goi_toa(url: str):
+    """Gọi CourtListener, tự giữ nhịp tối thiểu giữa hai lượt."""
+    import time as _tg
+    cho = _GIAN_TOA - (_tg.time() - _LUC_TOA[0])
+    if cho > 0:
+        _tg.sleep(cho)
+    _LUC_TOA[0] = _tg.time()
+    d = _goi(url)
+    if d is None and not _DA_CHAN[0]:
+        # Lượt đầu bị chặn: nghỉ hẳn 40 giây rồi thử lại MỘT lần. Nếu vẫn chặn thì đánh dấu cả
+        # phiên là "nguồn đóng cửa" và thôi thử — gõ tiếp chỉ kéo dài thời gian bị chặn, mà mọi
+        # lượt sau đã có đường lui là số đã nhớ.
+        _tg.sleep(40)
+        _LUC_TOA[0] = _tg.time()
+        d = _goi(url)
+        if d is None:
+            _DA_CHAN[0] = True
+            print("   ⛔ CourtListener đóng cửa phiên này — chuyển sang dùng số đã nhớ")
+    return d
 
 
 def dem_ban_an_theo_moc(tu_khoa: str, tu_nam: int = 0, den_nam: int = 0) -> int:
@@ -743,7 +804,7 @@ def dem_ban_an_theo_moc(tu_khoa: str, tu_nam: int = 0, den_nam: int = 0) -> int:
         ts["filed_after"] = f"01/01/{int(tu_nam)}"
     if den_nam:
         ts["filed_before"] = f"12/31/{int(den_nam)}"
-    d = _goi("https://www.courtlistener.com/api/rest/v4/search/?" + urllib.parse.urlencode(ts)) or {}
+    d = _goi_toa("https://www.courtlistener.com/api/rest/v4/search/?" + urllib.parse.urlencode(ts)) or {}
     try:
         n = int(d.get("count") or 0)
     except Exception:
@@ -751,14 +812,18 @@ def dem_ban_an_theo_moc(tu_khoa: str, tu_nam: int = 0, den_nam: int = 0) -> int:
     if n:      # chỉ nhớ khi CÓ số — nhớ số 0 là biến một lượt chập thành cả phiên hỏng
         _NHO_DEM[kho] = n
         _nho_ghi("toa:" + kho, n)
-    return n
+        return n
+    cu = _nho_doc("toa:" + kho, qua_han=True)
+    if cu:
+        _NHO_DEM[kho] = cu
+    return cu or 0
 
 
 def ban_an(tu_khoa: str, n: int = 6) -> list[dict]:
     """Bản án công khai khớp từ khoá. Trả [{ten_vu, toa, ngay, trich, link}]."""
     u = ("https://www.courtlistener.com/api/rest/v4/search/?"
          + urllib.parse.urlencode({"q": tu_khoa, "type": "o", "order_by": "dateFiled desc"}))
-    d = _goi(u)
+    d = _goi_toa(u)
     ra = []
     for x in ((d or {}).get("results") or [])[:n]:
         ra.append({"ten_vu": str(x.get("caseName") or "")[:90],

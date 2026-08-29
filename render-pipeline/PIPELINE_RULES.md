@@ -4250,3 +4250,29 @@ chỉ lộ ra ở tầng render, tức sau khi đã tiêu một lượt máy.
 vẽ), trong khi thứ tự TÍNH TOÁN lại ngược (nhịp bước phải có trước khung xương vì khung xương
 cộng nhịp bước vào toạ độ). Mỗi lần chèn một khối tính mới, phải hỏi: *khối này đọc biến của ai,
 và biến ấy đã có chưa?*
+
+### 7af. BỐN LỖI VẬT LÝ CỦA CẢNH HAI NGƯỜI — 30/8/2026
+
+Anh: *"ko có lỗi vật lý hay lỗi tỉ lệ và các lỗi tiềm ẩn"*. Bốn cái tìm được, và cái thứ tư là
+loại nguy hiểm nhất — **do chính một bản vá trước đó đẻ ra**.
+
+1. **Tay xuyên qua vai người kia.** Cử chỉ CHỈ TAY của bảng dùng chung đưa cánh tay đi NGANG;
+   trong cảnh hai người đứng cạnh nhau thì bàn tay hạ đúng xuống vai người bên cạnh.
+   → Bộ hài có **bảng cử chỉ riêng** (`CU_CHI_HAI`), nguyên tắc: *mọi cử chỉ hướng LÊN hoặc VÀO
+   TRONG, không hướng NGANG*. Không sửa bảng gốc — bảng ấy đang chạy cho mười kênh dữ liệu, ở
+   đó chỉ có MỘT người trong khung nên chỉ ngang là đúng và đẹp. **Cùng một cử chỉ, hai bối
+   cảnh, hai giá trị đúng khác nhau.**
+2. **Khoảng cách hai người quá gần** (232 → 292). Cánh tay duỗi hết dài hơn khoảng trống còn lại
+   sau khi trừ phần hai người ngả vào nhau và phần người nói tiến lên.
+3. **Quần quá tối** kéo tỉ lệ điểm-gần-đen vượt ngưỡng — phép đo vốn để bắt NỀN tối lại bắt
+   nhầm quần nhân vật. Nâng mọi màu quần lên sàn độ sáng 74.
+4. **Khe lặng giữa hai lượt làm phim giật sang cỡ cận.** `doc_hai_giong` chèn 0,16 giây im lặng
+   giữa các lượt cho nhịp thoại tự nhiên. Nhưng phép tìm lượt theo thời gian trả −1 ở đúng những
+   khe ấy rồi rơi vào nhánh dự phòng `luot.length - 1` — **nhảy thẳng sang lượt cuối**. Sáu khe
+   lặng là sáu cú giật hình.
+   → Trong khe thì giữ **lượt cuối cùng đã BẮT ĐẦU** trước thời điểm ấy.
+
+**Bài học của cái thứ tư:** lỗi này *sinh ra từ chính bản vá thêm khoảng lặng* — trước đó các
+lượt sát nhau nên không có khe nào để rơi vào. Mỗi khi đổi **cấu trúc thời gian**, phải rà lại
+**mọi chỗ tra cứu theo thời gian**: nhánh dự phòng viết cho một thế giới không có khe hở sẽ im
+lặng làm sai trong một thế giới có khe hở.

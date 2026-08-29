@@ -37,6 +37,32 @@ import { CAM_XUC, CU_CHI, Kieu, TenCamXuc, TenCuChi, Tu, visemeTai } from "../v2
  * chuyển động thứ cấp) — những nguyên tắc ấy là kiến thức chung của ngành, không của ai cả.
  */
 
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// BẢNG CỬ CHỈ RIÊNG CHO CẢNH HAI NGƯỜI ĐỨNG CẠNH NHAU
+// ------------------------------------------------------------------------------------------
+// 30/8 — Đo trên khung thật: cử chỉ CHỈ TAY của bảng dùng chung (`v2/DienVien.CU_CHI`) đưa cánh
+// tay đi NGANG, và trong cảnh hai người đứng cạnh nhau thì bàn tay hạ đúng xuống vai người kia —
+// hai hình vẽ lồng vào nhau, lỗi vật lý mắt bắt được ngay.
+//
+// Không sửa bảng gốc, vì bảng ấy đang chạy cho mười kênh dữ liệu thế hệ 3 — ở đó chỉ có MỘT
+// người trong khung nên chỉ ngang là đúng và đẹp. Cùng một cử chỉ, hai bối cảnh, hai giá trị
+// đúng khác nhau: đó chính là lý do bộ hài cần bảng riêng.
+//
+// Nguyên tắc của bảng này: **mọi cử chỉ đều hướng LÊN hoặc VÀO TRONG, không hướng NGANG.**
+// Cánh tay duỗi ngang hết cỡ dài hơn khoảng trống giữa hai người, nên chỉ cần một cử chỉ ngang
+// là chạm. Chỉ lên trời còn đúng ngôn ngữ hài hơn: nó là điệu bộ "tuyên bố", còn chỉ ngang vào
+// mặt người đối diện thì vừa thô vừa che mất mặt người ấy.
+const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; khuyuP: number }> = {
+  nghi:       { vaiT: 100, khuyuT: -8,  vaiP: 80,  khuyuP: 8 },
+  chi:        { vaiT: 100, khuyuT: -6,  vaiP: -68, khuyuP: -14 },   // chỉ LÊN, không chỉ ngang
+  mo_tay:     { vaiT: 124, khuyuT: -52, vaiP: 56,  khuyuP: 52 },
+  dem:        { vaiT: 108, khuyuT: -64, vaiP: 72,  khuyuP: 64 },
+  suy_nghi:   { vaiT: 100, khuyuT: -6,  vaiP: 74,  khuyuP: -100 },
+  nhun_vai:   { vaiT: 132, khuyuT: -60, vaiP: 48,  khuyuP: 60 },
+  gio_len:    { vaiT: 100, khuyuT: -6,  vaiP: -78, khuyuP: -10 },
+  khoanh_tay: { vaiT: 116, khuyuT: -76, vaiP: 64,  khuyuP: 76 },
+};
+
 const kep = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const trn = (a: number, b: number, t: number) => a + (b - a) * kep(t);
 const D = (deg: number) => (deg * Math.PI) / 180;
@@ -78,7 +104,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
   x = 0, y = 0, scale = 1, lat = false,
 }) => {
   const E = CAM_XUC[camXuc] || CAM_XUC.trung_tinh;
-  const G = CU_CHI[cuChi] || CU_CHI.nghi;
+  const G = CU_CHI_HAI[cuChi as string] || CU_CHI[cuChi] || CU_CHI.nghi;
   const cao = kieu.cao ?? 1;
   const ngang = kieu.beNgang ?? 1;
   const matTo = kieu.matTo ?? 1;
