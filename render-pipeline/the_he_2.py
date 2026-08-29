@@ -316,9 +316,14 @@ def _ten_cty(t: str) -> str:
 
 
 def _gon_so(v: float) -> str:
+    """Rút gọn số cho vừa màn hình — nhưng KHÔNG rút gọn thứ vốn đã ngắn.
+
+    29/8 — khung thật RECALL PLATE hiện "0.1K" cho số 100. Rút gọn kiểu đó vừa dài hơn bản gốc
+    (bốn ký tự thay vì ba) vừa mất chính xác vừa đọc ra như một lỗi. Ngưỡng phải là "khi nào rút
+    gọn LÀM NGẮN ĐI", không phải một con số bốc sẵn."""
     if v >= 1_000_000:
         return f"{v / 1_000_000:.1f}M".replace(".0M", "M")
-    if v >= 1_000:
+    if v >= 10_000:
         return f"{v / 1_000:.1f}K".replace(".0K", "K")
     return f"{int(v):,}"
 
@@ -445,7 +450,9 @@ def _bd_ban_an(D, ky):
               f"BỎ LƯỢT thay vì dựng bảng sáu cột bằng nhau")
         return None
     return (f"Where people sue over {tk}",
-            [{"name": g["toa"], "stat": f"{g['n']} cases",
+            # 29/8 — khung thật SUED FOR THIS ghi "1 cases". Một lỗi ngữ pháp cấp tiểu học nằm
+            # ở chữ TO NHẤT khung hình, trên một kênh về pháp luật — người xem đọc ra là máy nhả.
+            [{"name": g["toa"], "stat": f"{g['n']} case" + ("" if g["n"] == 1 else "s"),
               "vo": f"{g['toa']}: {g['n']} of them. Such as {_gon(g['vu'], 40)}."}
              for g in ds[:6]],
             "Court records are public. Look them up.",
@@ -959,7 +966,11 @@ def _bd_phim(D, ky):
             return None
         return (f'Great "{tk}" shows that got cut',
                 [{"name": _gon(x["ten"], 24), "stat": (f"{x['diem']:.1f}" if x["diem"] else x["nam"]),
-                  "vo": f"{_gon(x['ten'], 30)}, rated {x['diem']}, {str(x['trang_thai']).lower()}."}
+                  # Điểm 0 nghĩa là NGUỒN KHÔNG CÓ ĐIỂM, không phải "khán giả chấm 0" — nói
+                  # "rated 0.0" là bịa một dữ kiện. Thiếu thì nói năm, thứ luôn có thật.
+                  "vo": (f"{_gon(x['ten'], 30)}, rated {x['diem']}, {str(x['trang_thai']).lower()}."
+                         if x.get("diem") else
+                         f"{_gon(x['ten'], 30)}, {x['nam']}, {str(x['trang_thai']).lower()}.")}
                  for x in r],
                 "Good shows die young.")
     r = sorted(r, key=lambda z: -(z.get("diem") or 0))[:6]
@@ -967,7 +978,8 @@ def _bd_phim(D, ky):
         return None
     return (f'Shows: "{tk}"',
             [{"name": _gon(x["ten"], 24), "stat": (f"{x['diem']:.1f}" if x["diem"] else x["nam"]),
-              "vo": f"{_gon(x['ten'], 30)}, {x['nam']}, rated {x['diem']}."} for x in r],
+              "vo": (f"{_gon(x['ten'], 30)}, {x['nam']}, rated {x['diem']}."
+                     if x.get("diem") else f"{_gon(x['ten'], 30)}, {x['nam']}.")} for x in r],
             "Ratings from public listings.")
 
 
@@ -2205,8 +2217,14 @@ def _bt_nhac(D, ky):
             break
     if len(muc) < 4:
         return None
+    # 29/8 — KHAI RÕ THANG ĐANG ĐO GÌ. Khung thật ONE HIT: các mục ghi "14y", "79y" (số NĂM) mà
+    # thang bên cạnh ghi "1 in 100", "1 in 56,234" — thang XÁC SUẤT áp lên dữ liệu ĐẾM. Người xem
+    # đọc "79y" cạnh "1 in 56,234" và không hiểu gì, vì hai con số không cùng một loại đại lượng.
+    # Đúng lỗi đã vá cho FAME CURVE (khai `rung_kieu: dem`), nhưng kênh này chưa khai nên vẫn rơi
+    # về mặc định "odds" của composition — lại là một cờ khai ở tầng này, tầng kia không nhận.
     return ("How long they lasted", muc,
-            ["Careers, measured in years on paper.", "MusicBrainz keeps the dates."])
+            ["Careers, measured in years on paper.", "MusicBrainz keeps the dates."],
+            {"rung_kieu": "dem", "rung_don_vi": "years"})
 
 
 BO_THANG = {"luot_doc_bai": _bt_luot_doc, "chuoi_bls": _bt_bls, "ho_so_nhac": _bt_nhac}
