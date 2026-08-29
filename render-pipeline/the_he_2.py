@@ -2452,14 +2452,112 @@ GU_CAM = ("no photorealistic human faces, no hands in frame, no crowds of people
 # nào để so: người xem đọc nó như một bức vẽ, và máy vẽ nét chì rất tốt.
 # Và nó giải luôn bài toán nhận diện: mọi kênh khác đang xài footage kho giống nhau; một kênh
 # toàn tranh chì thì nhìn phát ra ngay là của mình.
-GU_NET_CHI = ("detailed graphite pencil portrait drawing, fine hatching and soft shading on "
-              "textured paper, high contrast, single subject, editorial illustration, "
-              "no colour except a faint warm wash")
+# BA GU VẼ ANH CHỌN (29/8): NÉT CHÌ NGHỆ THUẬT · CHIBI · VINTAGE.
+# Bản trước đã bỏ được ảnh người thật, nhưng anh xem lại vẫn nói "hơi giống thật" — đúng: cụm
+# "detailed / high contrast / portrait drawing" kéo máy vẽ về phía RENDER CHI TIẾT, tức vẫn là
+# một bức ảnh chỉ khoác lớp chì. Muốn ra tranh thì phải nói bằng ngôn ngữ của tranh: nét tay, giấy
+# phác, tỉ lệ cách điệu, mực in lệch màu — và phải NÓI THẲNG "không phải ảnh chụp", vì đó là thứ
+# mô hình mặc định trả về khi không bị cấm.
+#
+# Ba gu chứ không một: mười kênh dùng chung một nét vẽ thì lại thành "cùng một lò" — đúng thứ vừa
+# tốn công xoá khỏi ảnh đại diện và bố cục. Chia theo NICHE, thứ cố định của kênh.
+# BA GU VẼ ANH CHỌN (29/8): NÉT CHÌ NGHỆ THUẬT · CHIBI · VINTAGE — neo vào ĐÚNG BA TRƯỜNG PHÁI
+# NGƯỜI MỸ NHẬN RA NGAY, vì khán giả đích là Mỹ.
+#
+# Bản trước đã bỏ được ảnh người thật, nhưng anh xem lại vẫn nói "hơi giống thật" — đúng: cụm
+# "detailed / high contrast / portrait drawing" kéo máy vẽ về phía RENDER CHI TIẾT, tức vẫn là một
+# bức ảnh chỉ khoác lớp chì. Muốn ra tranh thì phải nói bằng ngôn ngữ của tranh (nét tay, giấy
+# phác, mực in lệch màu) và phải NÓI THẲNG "không phải ảnh chụp" — đó là thứ mô hình mặc định trả
+# về khi không bị cấm.
+#
+# Và gọi tên trường phái CÓ THẬT thay vì tả suông: mô hình được huấn luyện trên chú thích của
+# hàng triệu bức tranh, nên "New Yorker style editorial illustration" dẫn nó tới đúng chỗ, còn
+# "vẽ đẹp nghệ thuật" thì không dẫn tới đâu cả.
+#
+# Ba gu chứ không một: mười kênh dùng chung một nét vẽ thì lại thành "cùng một lò" — đúng thứ vừa
+# tốn công xoá khỏi ảnh đại diện và bố cục. Chia theo NICHE, thứ cố định của kênh.
 
-# Chủ đề nào thì dùng nét chì: nhận theo NICHE của kênh, không phải theo tên — tên kênh đổi được,
-# niche thì là phân loại cố định.
+# Ký hoạ biên tập Mỹ: gu của phác thảo phiên toà trên bản tin và tranh minh hoạ The New Yorker.
+GU_NET_CHI = (
+    "New Yorker style editorial pencil illustration, expressive loose graphite strokes, visible "
+    "construction lines and eraser smudges on rough sketchbook paper, stylised proportions, "
+    "generous white space, unfinished edges, American courtroom-sketch tradition — "
+    "NOT a photograph, not photorealistic, not 3d render")
+
+# Hoạt hình Mỹ hiện đại: đường viền dày, màu phẳng — gu của Cartoon Network / explainer trên YouTube.
+GU_CHIBI = (
+    "cute chibi cartoon illustration in modern American animation style, oversized head and tiny "
+    "body, thick clean outlines, flat cel shading, bold saturated palette, playful sticker art, "
+    "Cartoon Network energy — NOT a photograph, not photorealistic, not 3d render")
+
+# Quảng cáo Mỹ giữa thế kỷ: áp phích WPA, bìa Saturday Evening Post, in lụa lệch màu.
+GU_VINTAGE = (
+    "mid-century American advertising lithograph, 1950s Saturday Evening Post and WPA poster "
+    "style, aged paper with foxing, slightly misregistered ink layers, limited three-colour "
+    "palette, halftone dot texture — NOT a photograph, not photorealistic, not 3d render")
+
+# Vũ trụ / khoa học / viễn tưởng: đây là chỗ máy vẽ MẠNH NHẤT — không có bản gốc nào để mắt người
+# đem ra so, nên nó tha hồ đẹp mà không sợ "trông giả". Ngược hẳn với chân dung ảnh chụp.
+# Gọi tên đúng trường phái người Mỹ biết: bìa tiểu thuyết viễn tưởng thập niên 70-80, tranh vũ trụ
+# kiểu Bonestell, ảnh giả lập của NASA.
+GU_VU_TRU = (
+    "retro sci-fi book cover art, 1970s space illustration in the tradition of Chesley Bonestell "
+    "and NASA concept paintings, luminous nebula gradients, vast scale with a tiny silhouette for "
+    "reference, airbrushed glow, deep starfield — NOT a photograph, not photorealistic")
+
+# Bản vẽ khoa học: giải phẫu, địa chấn, khí tượng — thứ cần trông CHÍNH XÁC chứ không cần đẹp
+# kiểu tranh. Gu bản khắc giáo khoa Mỹ: nét mảnh, chú thích gọn, giấy kem.
+GU_KHOA_HOC = (
+    "vintage scientific plate illustration, fine engraved linework and stipple shading, "
+    "cream textured paper, restrained ochre and slate accents, museum specimen board, "
+    "American textbook diagram tradition — NOT a photograph, not photorealistic")
+
+# ── GÁN GU THEO TỪNG KÊNH (29/8) ───────────────────────────────────────────────────────────
+# Anh: "ko kiểu râu ông nọ cắm cằm bà kia". Đúng, và bản gán theo NICHE làm đúng chuyện đó:
+#   QUIET LAYOFFS (sa thải, đọc hồ sơ SEC)  -> tranh vũ trụ, vì niche ghi "Công nghệ & AI"
+#   FILINGS SAY   (hồ sơ SEC)               -> tranh vũ trụ, cùng lý do
+#   PILL FACTS    (thu hồi thuốc)           -> chibi dễ thương, vì niche ghi "Sức khoẻ & gym"
+#   COST TO GO    (nước giàu nhất)          -> tranh vũ trụ, vì niche ghi "Du lịch"
+# Niche là nhãn PHÂN LOẠI KHO, không phải mô tả nội dung: "Du lịch" gom cả giá vé lẫn máy bay đang
+# bay, "Sức khoẻ" gom cả nghiên cứu y khoa lẫn thuốc bị thu hồi. Suy gu từ nhãn kho là suy từ một
+# thứ không mang thông tin cần.
+# Nên gán TỪNG KÊNH. Năm mươi dòng là đọc được, và mỗi dòng nói rõ kênh đó KỂ chuyện gì.
+GU_THEO_KENH = {
+    # Ký hoạ biên tập — người, tiền, tội phạm, luật, nghề: chuyện nghiêm túc về con người.
+    "AMERICA LOOKED UP": "chi", "FAME CURVE": "chi", "COLD FILE": "chi", "COURT RECORD": "chi",
+    "SUED FOR THIS": "chi", "YOUR RIGHTS CASE": "chi", "MISSING PIECE": "chi",
+    "UNSOLVED LOG": "chi", "NIGHT SHIFT": "chi", "REAL PLACE": "chi", "PAYCHECK GAP": "chi",
+    "PRICE OF NOW": "chi", "RENT REALITY": "chi", "HOUSE MATH": "chi", "WHERE TO MOVE": "chi",
+    "JOB DYING": "chi", "SALARY TRUTH": "chi", "QUIET LAYOFFS": "chi", "DEGREE WORTH": "chi",
+    "FILINGS SAY": "chi", "COST TO GO": "chi", "PILL FACTS": "chi", "MARRIAGE MATH": "chi",
+    # Áp phích Mỹ giữa thế kỷ — lịch sử, nhạc, phim, xe, quân sự, hàng không, thể thao.
+    "ARCHIVE REEL": "vin", "THEN AND NOW": "vin", "ONE HIT": "vin", "SONG FILE": "vin",
+    "GONE TOO SOON": "vin", "SHOW NUMBERS": "vin", "CAR RECALL": "vin", "MPG TRUTH": "vin",
+    "PENTAGON LEDGER": "vin", "WEAPON PRICE": "vin", "SKY RIGHT NOW": "vin",
+    "COURT KINGS": "vin", "DIAMOND NUMBERS": "vin", "PAID VS PLAYED": "vin",
+    # Hoạt hình — đồ ăn, thú cưng, game, chuyện nhẹ.
+    "BREED FILE": "chibi", "WILD NUMBERS": "chibi", "CALORIE SHOCK": "chibi",
+    "RECALL PLATE": "chibi", "WHAT IS IN IT": "chibi", "GAME GRAVEYARD": "chibi",
+    "STEAM TRUTH": "chibi", "WHAT THEY SEARCH": "chibi",
+    # Vũ trụ — chỗ máy vẽ mạnh nhất, để dành cho kênh thật sự nói về vũ trụ.
+    "NEAR EARTH": "vutru", "SPACE INVOICE": "vutru",
+    # Bản vẽ khoa học — địa chấn, khí tượng, y khoa.
+    "QUAKE LOG": "khoahoc", "ALERT NOW": "khoahoc", "ONE STUDY": "khoahoc",
+}
+_GU_MA = {"chi": None, "vin": None, "chibi": None, "vutru": None, "khoahoc": None}
+
+# Đường lui theo NICHE cho kênh THÊM SAU mà chưa kịp gán tay.
+
+# Mọi niche của 50 kênh đều phải rơi vào một nhóm: kênh không thuộc nhóm nào sẽ nhận gu cũ (tả một
+# bức ẢNH) và lại ra ảnh giống thật — đúng thứ đang đi sửa.
 NICHE_NET_CHI = ("người nổi tiếng", "vĩ nhân", "doanh nhân", "kinh doanh", "công ty",
-                 "lịch sử", "tiểu sử", "thành công", "gia tộc")
+                 "tiểu sử", "thành công", "gia tộc", "tội phạm", "luật", "bí ẩn",
+                 "kinh dị", "rùng rợn", "tiền", "tài chính")
+NICHE_VINTAGE = ("lịch sử", "nhạc", "phim", "văn hoá", "quân sự", "nhà ở", "xe")
+NICHE_VU_TRU = ("vũ trụ", "không gian", "thiên văn", "khoa học", "công nghệ", "viễn tưởng",
+                "thời tiết", "địa chất", "du lịch")
+NICHE_CHIBI = ("thú cưng", "động vật", "đồ ăn", "đồ uống", "quan hệ", "hẹn hò", "game",
+               "thể thao", "sức khoẻ", "gym", "giáo dục")
 
 
 def gu_ve(kenh: dict) -> str:
@@ -2469,11 +2567,21 @@ def gu_ve(kenh: dict) -> str:
     câu tiếng Việt mà nó chắc chắn bỏ qua (và bỏ qua thì nó vẽ ảnh người thật, xem trên)."""
     tho = str((kenh.get("brand") or {}).get("style_anh") or kenh.get("style_anh") or "").strip()
     niche = str(kenh.get("niche") or "").lower()
-    if any(t in niche for t in NICHE_NET_CHI):
-        # Nhóm nhân vật/công ty: nét chì thắng mọi gu khác, kể cả gu đã khai trong cấu hình.
-        return f"{GU_NET_CHI}, {GU_CAM}"
+    # Ba gu cách điệu ĐÈ LÊN gu khai trong cấu hình. Gu cũ tả một bức ẢNH ("ảnh tài liệu ố vàng",
+    # "ảnh đêm tương phản mạnh") nên dù dịch sang tiếng Anh vẫn kéo máy vẽ về phía ảnh chụp.
+    # BẢNG GÁN TAY ĐỨNG TRƯỚC MỌI SUY LUẬN — xem `GU_THEO_KENH`.
+    _bang = {"chi": GU_NET_CHI, "vin": GU_VINTAGE, "chibi": GU_CHIBI,
+             "vutru": GU_VU_TRU, "khoahoc": GU_KHOA_HOC}
+    _ma = GU_THEO_KENH.get(str(kenh.get("ten") or "").strip().upper())
+    if _ma and _ma in _bang:
+        return f"{_bang[_ma]}, {GU_CAM}"
+    # Đường lui theo niche cho kênh thêm sau mà chưa kịp gán tay.
+    for nhom, gu in ((NICHE_VU_TRU, GU_VU_TRU), (NICHE_NET_CHI, GU_NET_CHI),
+                     (NICHE_VINTAGE, GU_VINTAGE), (NICHE_CHIBI, GU_CHIBI)):
+        if any(t in niche for t in nhom):
+            return f"{gu}, {GU_CAM}"
     en = GU_VE_EN.get(tho.lower()) or GU_VE_EN.get(tho) or ""
-    return f"{en}, {GU_CAM}" if en else GU_CAM
+    return f"{en}, {GU_CAM}" if en else f"{GU_NET_CHI}, {GU_CAM}"
 
 
 def dung_props_phim(kenh: dict, ky: dict | None = None, keys: list | None = None,

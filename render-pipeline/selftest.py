@@ -2272,6 +2272,7 @@ def main():
     check("mọi nguồn phải có TÊN CƠ QUAN, không in mã lên video", t_moi_nguon_co_ten_that)
     check("cổng an toàn đi hết MỌI kho mục (kể cả frames)", t_cong_an_toan_di_het_moi_kho_muc)
     check("xoay trục thì nhãn tĩnh phải BIẾN MẤT tới tận bộ dựng", t_nhan_tinh_bi_bo_khi_xoay_truc)
+    check("gu vẽ gán TAY từng kênh, tiếng Anh, cấm ảnh chụp", t_gu_ve_khop_tung_kenh)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
@@ -4518,6 +4519,44 @@ def t_nhan_tinh_bi_bo_khi_xoay_truc():
     assert not nhan_ky.get("nhan") if False else not nhan_ky.get("thay"), (
         f"nhãn tĩnh {nhan_ky.get('thay')!r} SỐNG LẠI ở tầng bộ dựng sau khi trục đã xoay sang "
         f"{nhan_ky.get('mon')!r} — tiêu đề sẽ nói sai nội dung")
+
+
+
+
+def t_gu_ve_khop_tung_kenh():
+    """Mỗi kênh phải có gu vẽ TIẾNG ANH gán TAY, khớp nội dung kênh đó.
+
+    29/8 — hai lỗi liên tiếp ở chỗ này, ghi lại cả hai:
+    ① Gu khai bằng TIẾNG VIỆT rồi ghép thẳng vào prompt (`f"A {style} of: …"`). Máy vẽ không đọc
+       được, bỏ qua, rơi về mặc định của nó là ẢNH CHỤP NGƯỜI THẬT — thứ nó vẽ dở nhất (tay thừa
+       ngón, chữ sai chính tả) và cũng là thứ anh bác. 28 kênh khai gu riêng, không kênh nào nhận.
+    ② Vá xong thì gán gu THEO NICHE, và niche là nhãn PHÂN LOẠI KHO chứ không mô tả nội dung:
+       QUIET LAYOFFS (sa thải) ra tranh vũ trụ vì niche ghi "Công nghệ & AI"; PILL FACTS (thu hồi
+       thuốc) ra chibi dễ thương vì niche ghi "Sức khoẻ & gym". Anh gọi đúng tên: "râu ông nọ cắm
+       cằm bà kia".
+    Nên chốt đòi ba điều: gán đủ TAY cho mọi kênh, gu ra là tiếng Anh, và có câu cấm ảnh chụp."""
+    import io as _io2
+    import json as _json
+    import the_he_2 as T
+    ks = _json.loads(_doc("kenh_the_he_2.json"))
+    ks = ks if isinstance(ks, list) else list(ks.values())
+    ten = {str(k.get("ten") or "").strip().upper() for k in ks}
+    thieu = sorted(ten - set(T.GU_THEO_KENH))
+    assert not thieu, ("kênh chưa gán gu vẽ tay (sẽ rơi về suy theo niche -> gán sai chủ đề): "
+                       + ", ".join(thieu))
+    thua = sorted(set(T.GU_THEO_KENH) - ten)
+    assert not thua, "bảng gu còn tên kênh không tồn tại: " + ", ".join(thua)
+    for k in ks:
+        g = T.gu_ve(k)
+        # Cấm DẤU TIẾNG VIỆT, không cấm mọi ký tự ngoài ASCII: bản đầu của phép kiểm này đỏ vì
+        # dấu gạch dài "—" trong chính chuỗi gu — một ký tự máy vẽ đọc bình thường. Chốt phải bắt
+        # đúng thứ nó sinh ra để bắt (chuỗi tiếng Việt lọt vào prompt), không bắt vạ.
+        _viet = "ăâđêôơưàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ"
+        _co = [c for c in g.lower() if c in _viet]
+        assert not _co, \
+            f"{k['ten']}: gu vẽ còn chữ tiếng Việt ({''.join(sorted(set(_co)))}) -> máy vẽ bỏ qua"
+        assert "not photorealistic" in g or "NOT a photograph" in g, \
+            f"{k['ten']}: gu vẽ thiếu lệnh cấm ảnh chụp -> máy vẽ rơi về ảnh người thật"
 
 
 
