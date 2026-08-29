@@ -1729,13 +1729,47 @@ def _sk_the_gioi(D, ky):
             "World Bank open data.")
 
 
+def _ten_hang(ten: str, dai: int = 22) -> str:
+    """Tên nhà thầu đã CHUẨN HOÁ để gộp — bỏ đuôi pháp nhân và mạo từ.
+
+    29/8 — sau khi gộp theo tên, bảng vẫn ra "Lockheed Martin" và "Lockheed Martin Corp" thành
+    HAI dòng: cùng một hãng, hai cách nguồn ghi. USAspending chép nguyên tên pháp nhân trên hợp
+    đồng, mà cùng một tập đoàn ký bằng nhiều pháp nhân con.
+    Bỏ đuôi (Corp · Inc · LLC · Company · Ltd) và mạo từ đầu thì hai bản viết về một mối. Đây là
+    chuẩn hoá TỐI THIỂU, cố ý không đi xa hơn: gộp "Boeing" với "Boeing Defence" nghe hợp lý
+    nhưng là suy đoán, và suy đoán trên số liệu công là chỗ không được phép đoán."""
+    import re as _re
+    t = " ".join(str(ten or "").split())
+    t = _re.sub(r"^(the)\s+", "", t, flags=_re.I)
+    t = _re.sub(r"[,\s]+(corp(oration)?|inc|llc|l\.?l\.?c|co|company|ltd|limited|plc|"
+                r"holdings?|group|systems?)\.?$", "", t, flags=_re.I)
+    t = _re.sub(r"[,\s]+(corp(oration)?|inc|llc|co|company|ltd)\.?$", "", t, flags=_re.I)
+    return _gon(t.strip(" ,.-") or str(ten or ""), dai)
+
+
 def _sk_hop_dong(D, ky):
+    """Hợp đồng liên bang lớn nhất — GỘP THEO NHÀ THẦU, không liệt từng hợp đồng.
+
+    29/8 — khung thật WEAPON PRICE: bảng sáu dòng mà "The Boeing Company" xuất hiện hai lần,
+    "Lockheed Martin" hai lần, "Northrop Grumman" hai lần. Vì nguồn trả về TỪNG HỢP ĐỒNG, còn
+    bảng thì đọc như một bảng xếp hạng NHÀ THẦU — người xem thấy một cái tên lặp ba dòng và kết
+    luận bảng bị lỗi, chứ không nghĩ "à, đây là ba hợp đồng khác nhau".
+    Và nó sai cả về nghĩa: hai dòng Boeing 22,4B và 10,5B khiến Boeing trông NHỎ HƠN thực tế so
+    với một nhà thầu chỉ có một hợp đồng lớn. Gộp lại thì thứ hạng mới đúng là thứ hạng.
+    """
     nam = int(ky.get("nam", 2024))
-    hd = D.hop_dong_lon(nam, 6, ky.get("de_tai", ""))
+    hd = D.hop_dong_lon(nam, 30, ky.get("de_tai", ""))
     if len(hd) < 3:
         return None
-    muc = [{"name": _gon(x["ten"], 22), "emoji": "🧾", "value": round(x["tien"] / 1e6, 1),
-            "disp": _tien(x["tien"])} for x in hd]
+    gop: dict = {}
+    for x in hd:
+        t = _ten_hang(x["ten"])
+        gop[t] = gop.get(t, 0.0) + float(x["tien"] or 0)
+    xep = sorted(gop.items(), key=lambda z: -z[1])[:6]
+    if len(xep) < 3:
+        return None
+    muc = [{"name": t, "emoji": "🧾", "value": round(v / 1e6, 1), "disp": _tien(v)}
+           for t, v in xep]
     return (f"{(ky.get('de_tai') or 'federal').title()} contracts, {nam}", "$M", muc,
             "Filed on USAspending dot gov.")
 
@@ -2370,14 +2404,23 @@ BO_CUC_KENH = {
     # Đồ hoạ vector nền giấy: kênh tiền, lương, giá, hồ sơ doanh nghiệp — số liệu khô cần đọc rõ.
     "SALARYTRUTH": "VectorChart", "DEGREEWORTH": "VectorChart", "COSTTOGO": "VectorChart",
     "FILINGSSAY": "VectorChart", "QUIETLAYOFFS": "VectorChart", "WHATISINIT": "VectorChart",
+    # 29/8 — SÁU KÊNH `scaled` CHUYỂN HẲN SANG VECTOR, BỎ ẢNH AI.
+    # Chúng vốn vẽ một ảnh AI cho MỖI mục (`_ve_vat`) để làm chóp trên đầu cột. Ba lý do bỏ:
+    #   • chữ bịa — ảnh nào có mặt phẳng là có chữ giả, và đó là nội dung sai sự thật;
+    #   • hạn mức — mỗi video tốn 6 lượt vẽ, mà hôm nay 169 key Gemini đã cạn sạch;
+    #   • chúng CÓ SỐ LIỆU THẬT, nên cột tỉ lệ nói được nhiều hơn hẳn một cái ảnh minh hoạ.
+    # Ảnh AI giữ lại cho dạng phim kể, nơi cần không khí chứ không cần đo đạc.
+    "CALORIESHOCK": "VectorChart", "HOUSEMATH": "VectorChart", "PAYCHECKGAP": "VectorChart",
+    "WEAPONPRICE": "VectorChart", "WILDNUMBERS": "VectorChart", "MARRIAGEMATH": "VectorChart",
 }
 
 
 def bo_cuc_cua(kenh: dict, dang: str) -> str:
     """Composition thật sự dùng cho kênh này. Không khai riêng thì dùng mặc định của dạng."""
-    if dang != "ranked":
+    if dang not in ("ranked", "scaled"):
         return (DUONG_RA.get(dang) or ("", ""))[0]
-    return BO_CUC_KENH.get(str(kenh.get("ten") or "").replace(" ", "").upper(), "RankedShort")
+    mac = "RankedShort" if dang == "ranked" else "ScaledShort"
+    return BO_CUC_KENH.get(str(kenh.get("ten") or "").replace(" ", "").upper(), mac)
 
 
 DUNG_STORY = {}      # nạp ở cuối file, sau khi mọi hàm đã định nghĩa
@@ -3000,7 +3043,9 @@ def dung_props(kenh: dict, st: dict, dang: str, ten_props: str, ky_hieu: str = "
     # một khuôn — đúng cái bẫy "khai ra rồi không ai gửi" đã vấp với `voice_tone`, `brand.font`,
     # `palette.bg` và `tham_so.xoay`. Lần này chốt luôn: t_bien_bo_cuc_khong_trung.
     props["bien"] = bien_cua(kenh)
-    if dang == "scaled":
+    # Chỉ vẽ ảnh vật thể khi bố cục THẬT SỰ hiển thị ảnh. Bố cục vector không có chỗ cho ảnh,
+    # nên vẽ là ném thẳng 6 lượt hạn mức vào thùng rác — và mỗi lượt vẽ là một cơ hội bịa chữ.
+    if dang == "scaled" and bo_cuc_cua(kenh, dang) == "ScaledShort":
         _ve_vat(kenh, props, keys, ky_hieu)
     # 27/8 — DÒNG NGUỒN cho MỌI dạng, không chỉ dạng đua.
     # Soi 6 dạng: 4 dạng không in một chữ nào về nguồn dữ liệu. Mất hai thứ cùng lúc — lòng tin

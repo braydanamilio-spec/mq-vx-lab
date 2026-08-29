@@ -4625,6 +4625,12 @@ def t_bo_cuc_ranked_khong_dung_chung_mot_khuon():
     ks = ks if isinstance(ks, list) else list(ks.values())
     r = [k for k in ks if k.get("dinh_dang") == "ranked"]
     assert r, "không còn kênh ranked nào — chốt này hết nghĩa, xoá đi"
+    # 29/8 — kênh `scaled` cũng phải gán tay: chúng đã chuyển sang bố cục vector và bỏ ảnh AI,
+    # nên kênh nào rơi ra ngoài bảng sẽ lặng lẽ quay về ScaledShort và vẽ lại 6 ảnh mỗi video.
+    sc = [k for k in ks if k.get("dinh_dang") == "scaled"]
+    thieu_sc = [k["ten"] for k in sc
+                if str(k["ten"]).replace(" ", "").upper() not in T.BO_CUC_KENH]
+    assert not thieu_sc, "kênh scaled chưa gán bố cục: " + ", ".join(thieu_sc)
     thieu = [k["ten"] for k in r
              if str(k["ten"]).replace(" ", "").upper() not in T.BO_CUC_KENH]
     assert not thieu, "kênh ranked chưa gán bố cục (sẽ rơi về bảng tier chung): " + ", ".join(thieu)

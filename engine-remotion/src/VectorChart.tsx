@@ -52,6 +52,19 @@ export const calcVectorChart = ({ props }: any) => {
  * biểu đồ vẽ ngược hẳn thứ hạng. Một biểu đồ vẽ sai thứ hạng thì tệ hơn không có biểu đồ: nó nói
  * dối một cách tự tin.
  * Cùng họ lỗi với `_dinh_don_vi` (525 + "K reads" phải ra "525K", không phải "525"). */
+/** Chuỗi hiển thị của một mục — `ranked` để ở `stat`, `scaled` để ở `disp`. */
+const _hien = (it: any) => String(it?.stat ?? it?.disp ?? "");
+
+/** Độ lớn để vẽ cột. Ưu tiên `value` SỐ THẬT nếu nguồn có, chỉ bóc chuỗi khi không có.
+ *  Bóc chuỗi bao giờ cũng là phương án hai: "$22.4B" làm tròn mất chữ số, còn `value` = 22442.3
+ *  là con số nguyên vẹn nguồn đưa ra. Vẽ cột theo số làm tròn thì hai mục sát nhau ra cùng
+ *  chiều dài, đúng lỗi "sáu cột cao bằng nhau" đã gặp ở dạng scaled. */
+const _lon = (it: any) => {
+  const v = typeof it?.value === "number" ? it.value : parseFloat(String(it?.value ?? ""));
+  if (isFinite(v) && v !== 0) return Math.abs(v);
+  return _so(_hien(it));
+};
+
 const _so = (x: any) => {
   const t = String(x ?? "");
   const m = t.match(/[\d][\d,.]*/);
@@ -82,7 +95,7 @@ export const VectorChart: React.FC<RankedProps> = (props) => {
   let idx = -1;
   for (let i = 0; i < items.length; i++) if (f >= starts[i]) idx = i;
 
-  const max = Math.max(1, ...items.map((it) => _so(it.stat)));
+  const max = Math.max(1, ...items.map((it) => _lon(it)));
   const dayKhung = (subs && subs.length) ? 430 : 250;   // chừa chỗ băng phụ đề, không để chữ đè chữ
   const topKhung = 330;
   const caoKhung = H - topKhung - dayKhung;
@@ -129,7 +142,7 @@ export const VectorChart: React.FC<RankedProps> = (props) => {
       {items.map((it, i) => {
         if (f < starts[i]) return null;
         const p = spring({ frame: f - starts[i], fps, config: { damping: 16, stiffness: 110 } });
-        const ti = Math.max(0.03, _so(it.stat) / max);
+        const ti = Math.max(0.03, _lon(it) / max);
         const rong = rongToiDa * ti * p;
         const y = topKhung + i * (caoCot + khe);
         const mau = NHAN_MAU[i % NHAN_MAU.length];
@@ -166,7 +179,7 @@ export const VectorChart: React.FC<RankedProps> = (props) => {
               // ở cỡ chữ thẻ tiêu đề cinematic.
               left: (() => {
                 const co = dang ? 46 : 30;
-                const rongSo = String(it.stat || "").length * co * 0.58 + 24;
+                const rongSo = _hien(it).length * co * 0.58 + 24;
                 const ngoai = traiCot + Math.max(10, rong) + 18;
                 return (ngoai + rongSo > W - 40)
                   ? Math.max(traiCot + 14, traiCot + Math.max(10, rong) - rongSo)
@@ -176,7 +189,7 @@ export const VectorChart: React.FC<RankedProps> = (props) => {
               color: MUC, fontWeight: 900, fontSize: dang ? 46 : 30, ...SO_DEU,
               opacity: Math.min(1, p * 1.6),
             }}>
-              {dang ? <SoChay s={String(it.stat || "")} tuFrame={starts[i]} giay={0.8} /> : String(it.stat || "")}
+              {dang ? <SoChay s={_hien(it)} tuFrame={starts[i]} giay={0.8} /> : _hien(it)}
             </div>
           </div>
         );
