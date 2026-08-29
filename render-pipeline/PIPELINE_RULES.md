@@ -4102,3 +4102,59 @@ xin máy đừng vẽ thì không ăn thua, đúng như `_bo_mat_chu` đã kết
 Vẫn đọc ra đúng bối cảnh, mà không còn mặt phẳng nào để máy điền chữ hay logo vào.
 **Cách kiểm:** dán toàn bộ nền đã cache thành lưới, cắt lấy **nửa trên** (biển hiệu và logo gần
 như luôn nằm ở nửa trên khung) rồi soi một lượt — xem `out/_soi/nen_soi.png`.
+
+### 7x. CHỮA LỖI THẨM MỸ BẰNG CÁCH ĐẺ RA LỖI LOGIC — 30/8/2026
+
+Sáng 30/8 tôi chữa "nền lặp lại nhàm chán" bằng cách cho nền **đổi theo nhịp kịch**. Anh bắt
+ngay: *"bối cảnh phải liên quan lời nói hành động, ko phải đang ở trong nhà nhảy qua ra ngoài
+đường được, ko logic"*.
+
+Anh đúng, và đây là một họ lỗi đáng ghi riêng: **tôi đã đổi một lỗi thẩm mỹ lấy một lỗi logic,
+mà lỗi logic nặng hơn.** Khán giả tha thứ cho một khung hơi nhàm; họ không tha thứ cho hai người
+đang cãi nhau trong bếp bỗng đứng giữa đường.
+
+**Luật cho mọi bộ có thoại: MỘT CUỘC HỘI THOẠI = MỘT ĐỊA ĐIỂM.**
+Đa dạng phải đến từ chỗ khác, và có sẵn hai chỗ:
+* **Trong một tập** — đổi CỠ MÁY (toàn → trung → cận) và cho nhân vật XÊ DỊCH chỗ đứng.
+  Cú chốt luôn đóng cận nhất, vì cú chốt nằm ở nét mặt chứ không ở lời.
+* **Giữa các tập** — mỗi kịch bản gắn cứng với một địa điểm riêng (trường `boi`). Bốn tập của
+  một kênh diễn ra ở bốn nơi, nên không tập nào trông giống tập nào mà vẫn không tập nào phi lý.
+
+### 7y. NĂM LỖI "HÌNH MÁY" CỦA NHÂN VẬT VECTOR
+
+Anh: *"nhân vật… ko khô cứng như hiện tại"*. Năm nguyên nhân, xếp theo mức tác động:
+
+1. **Tỉ lệ người thật.** Đầu 1/6 thân. Hoạt hình Mỹ để 1/3,5–1/4 — đầu to thì mắt to, mà mắt
+   mới là chỗ khán giả đọc cảm xúc. Đây là thay đổi có tác dụng lớn nhất.
+2. **Chi thể là que, khớp là bi trôi.** Bàn tay hình tròn rời khỏi cánh tay. Sửa: nét dày bo
+   tròn đầu (thành hình con nhộng liền mạch) + **găng bốn ngón**.
+3. **Không có nén–giãn.** Mỗi nhịp thở và mỗi lần nhấn giọng, thân phải lùn xuống rồi bật lên
+   — và phình ngang khi lùn để GIỮ NGUYÊN THỂ TÍCH, không thì đọc ra là bị kéo méo.
+4. **Mọi chuyển động đi theo đường thẳng, cùng nhịp.** Cử chỉ phải đi theo cung có gia tốc, và
+   các chu kỳ (thở · đảo người · dồn trọng tâm · chớp mắt) phải LỆCH TẦN SỐ nhau — trùng nhịp
+   là dấu hiệu rõ nhất của hình dựng máy.
+5. **Đứng chôn chân.** Người nói phải xê dịch: bước lại gần khi gặng hỏi, lùi ra khi bị dồn.
+   Có bước chân thật (hai chân lệch pha nửa chu kỳ, tay vung ngược pha chân).
+
+**Ranh giới bản quyền:** mượn được là NGUYÊN TẮC dựng hình (tỉ lệ đầu–thân, nét bao dày, găng
+bốn ngón, nén–giãn, chuyển động thứ cấp) — kiến thức chung của ngành từ thập niên 1930.
+KHÔNG mượn dấu hiệu nhận dạng của phim cụ thể: da vàng, răng vẩu, mắt lồi tròng hạt đậu.
+
+### 7z. HAI NGƯỜI NÓI THÌ ĐỪNG PHÓNG TO NGƯỜI NÓI
+
+Anh: *"khi lời thoại tới nhân vật nào… tự nhiên nhân vật cao lên nhân vật kia nhỏ lại rất thiếu
+thẩm mỹ"*. Không chỉ xấu — **sai vật lý**: hai người đứng cùng một mặt sàn thì không ai to lên
+nhỏ lại giữa câu, nên mắt đọc ra là người kia lùi ra xa, tức cả không gian nói dối.
+
+Bốn dấu hiệu thay thế, đều là thứ diễn viên thật làm: khẩu hình động · thân ngả về phía người
+kia · mắt nhìn thẳng sang · **phụ đề mang màu áo của người đang nói**.
+
+### 7aa. "ĐỨNG TRÊN BẾP" LÀ LỖI CỦA ẢNH NỀN, KHÔNG PHẢI CỦA NHÂN VẬT
+
+Câu vẽ `kitchen counter with a fruit bowl` chụp NGANG TẦM MẶT BÀN, nên trong khung **không có
+sàn nào cả** — đặt nhân vật ở đâu cũng thành đứng trên mặt bếp. Hai lớp chữa:
+1. **Ở câu vẽ:** mọi nền phải kèm `wide shot, camera at standing eye level, floor clearly
+   visible across the lower third, open space in the centre of the frame`.
+2. **Ở lớp dựng:** thêm một DẢI SÀN mờ ở đáy khung lấy màu từ bảng màu kênh, có đường chân
+   tường và bóng đổ. Ảnh AI lượt nào cũng có thể trả về khung không thấy sàn, nên phải có lớp
+   bảo hiểm KHÔNG phụ thuộc vào ảnh.

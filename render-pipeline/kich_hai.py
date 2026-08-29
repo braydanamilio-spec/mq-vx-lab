@@ -43,69 +43,67 @@ sys.path.insert(0, GOC)
 KENH = [
     {"ten": "RENT PANIC", "handle": "@rentpanicusa", "a": "nam_gay", "b": "bank",
      "mau": "#F3E3C6", "de": "rent",
-     "nen": ["empty american apartment living room, bare walls, afternoon light, no furniture",
-             "apartment building lobby with mailboxes seen from the side, warm lamps",
-             "suburban apartment parking lot at golden hour, no cars in focus"]},
+     "nen": ["empty american apartment living room, bare walls, afternoon light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "apartment building lobby with mailboxes along one wall, warm lamps, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "shared laundry room with washing machines along the back wall, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "apartment hallway with numbered doors receding, ceiling lights, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
     {"ten": "GYM LIES", "handle": "@gymliesusa", "a": "khoa_hoc", "b": "hang_xom",
      "mau": "#E3EEF6", "de": "gym",
-     "nen": ["american gym interior with racks of weights, cool blue light, nobody in frame",
-             "gym smoothie bar counter with blenders, bright morning light",
-             "locker room bench and lockers, soft light, empty"]},
+     "nen": ["american gym floor with weight racks along the back wall, cool blue light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "gym smoothie bar counter along the back wall, bright morning light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "locker room with a bench and lockers along the back wall, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "empty spin studio with bikes pushed to the back wall, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
     {"ten": "AIRPORT HELL", "handle": "@airporthellusa", "a": "luat_tre", "b": "y_ta",
      "mau": "#E8EDF4", "de": "airport",
-     "nen": ["airport check-in hall with empty queue barriers, wide windows, overcast light",
-             "airport departure gate seating area, planes outside the glass, dusk",
-             "baggage claim carousel, empty, fluorescent light"]},
+     "nen": ["airport check-in hall with queue barriers, tall windows, overcast light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "airport departure gate lounge, planes outside the glass, dusk, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "baggage claim hall with a carousel along the back, fluorescent light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "airport moving walkway corridor with tall windows, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
     {"ten": "CAR GUY", "handle": "@carguyusa", "a": "hang_xom", "b": "vien_phi",
      "mau": "#EEE6D8", "de": "car",
-     "nen": ["auto repair garage bay with tool chests, one car lift, warm work light",
-             "american suburban driveway with an open hood seen from the side, morning",
-             "tyre shop wall of stacked tyres, no signage"]},
+     "nen": ["auto repair garage bay with tool chests along the back wall, warm work light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "american suburban driveway beside a parked car, morning, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "tyre shop floor with stacked tyres along the back wall, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "empty car dealership showroom floor, glass front, daylight, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
     {"ten": "OFFICE SMALL TALK", "handle": "@officesmalltalkusa", "a": "vien_phi", "b": "cong_to",
      "mau": "#EDF1F6", "de": "office",
-     "nen": ["small office meeting room with a long table and chairs, glass wall, daylight",
-             "office kitchenette with a coffee machine and mugs, warm light",
-             "open plan office desks seen from a corner, empty, late afternoon"]},
+     "nen": ["office meeting room with a long table pushed to the back, glass wall, daylight, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "office kitchenette with a counter along the back wall, warm light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "open plan office floor with desks along the back, late afternoon, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "office corridor with a printer against the wall, ceiling lights, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
     {"ten": "DIET WARS", "handle": "@dietwarsusa", "a": "bank", "b": "hang_xom",
      "mau": "#F6EDDC", "de": "diet",
-     "nen": ["american home kitchen counter with a fruit bowl, bright morning light",
-             # 30/8 - ban cu (fast food restaurant booth seating) ra hai bien hieu chu bia.
-             # Noi that quan an nhanh LA mot buc tuong bien hieu; xin may ve dung viet thi vo
-             # ich (xem `_bo_mat_chu`). Ghe ngoi va mat ban nhin gan van doc ra ngay la quan an
-             # nhanh ma khong con mang tuong nao de dan chu.
-             "red vinyl diner booth seats and a table seen close up, warm interior, no walls",
-             # 30/8 — bản cũ ("grocery store produce aisle") ra một bức tường cửa hàng có LOGO
-             # NIKE. Với kênh bật kiếm tiền thì một nhãn hiệu thật trong khung là rủi ro pháp lý,
-             # không phải lỗi thẩm mỹ. Và không xin được: `_CAM_CHU` đã ghi "no logos" mà máy vẫn
-             # vẽ. Cách chắc chắn là BỎ HẲN CHỖ LOGO CÓ THỂ BÁM — không có tường cửa hàng thì
-             # không có biển hiệu, cùng nguyên tắc `_bo_mat_chu` đã kiểm chứng.
-             "wooden crates of fruit and vegetables seen close up, market stall, no walls in view"]},
+     "nen": ["american home kitchen with counters along the back wall, bright morning light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "diner interior with red booths along the back wall, warm light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "farmers market stall with crates of fruit along the back, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "backyard patio with a grill against the fence, afternoon, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
     {"ten": "TECH SUPPORT", "handle": "@techsupportusa", "a": "luat_tre", "b": "khoa_hoc",
      "mau": "#E9E6F4", "de": "tech",
-     "nen": ["american living room with a sofa and a coffee table, evening lamp light",
-             "call centre cubicle row seen from the aisle, cool light, empty chairs",
-             "home desk corner with a chair, curtains, soft daylight"]},
+     "nen": ["american living room with a sofa against the back wall, evening lamp light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "call centre floor with cubicles along the back, cool light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "home office corner with a desk against the wall, soft daylight, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "electronics repair shop counter along the back wall, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
     {"ten": "PARENT MODE", "handle": "@parentmodeusa", "a": "hang_xom", "b": "sao_dem",
      "mau": "#F4E9DC", "de": "parent",
-     "nen": ["american family living room with a worn couch, afternoon light through blinds",
-             "car interior front seats seen from the dashboard, suburban street outside",
-             "teenager bedroom with posters on the wall, string lights, evening"]},
+     "nen": ["american family living room with a worn couch against the wall, afternoon light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "suburban driveway beside a parked family car, morning, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "teenager bedroom with posters on the back wall, string lights, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "school pickup zone with a low wall and trees, afternoon, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
     {"ten": "NEIGHBOR WATCH", "handle": "@neighborwatchusa", "a": "hang_xom", "b": "cong_to",
      "mau": "#F7EFD8", "de": "neighbor",
-     "nen": ["american suburban backyard with a white picket fence, bright afternoon",
-             "front porch of a suburban house with a rocking chair, warm light",
-             "quiet suburban street with mailboxes, morning haze"]},
+     "nen": ["american suburban backyard with a white picket fence across the back, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "front porch of a suburban house, railing along the back, warm light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "quiet suburban street with mailboxes along the kerb, morning haze, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "shared driveway between two suburban houses, afternoon, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
     {"ten": "DATING APP", "handle": "@datingappusa", "a": "sao_dem", "b": "luat_tre",
      "mau": "#F4E6EE", "de": "dating",
      # 30/8 — ĐỔI CÂU VẼ: bản cũ ("bedroom … unmade bed") bị chính bộ lọc của Cloudflare chặn là
      # NSFW, và hôm ấy Gemini vừa cạn nên không có chỗ lui — kênh mất hẳn một nền. Bối cảnh phòng
      # ngủ không cần cho chuyện hẹn hò: chỗ hai người bạn cùng phòng cãi nhau là PHÒNG KHÁCH.
-     "nen": ["small apartment living room with a couch and a coffee table, warm evening lamp",
-             "coffee shop interior with small tables, window light, nobody in frame",
-             # Bản cũ ("city sidewalk … shop lights") ra một dãy mặt tiền đầy biển hiệu chữ bịa.
-             # Mặt tiền cửa hàng LÀ mặt phẳng hướng vào ống kính — thứ `_bo_mat_chu` sinh ra để
-             # tránh. Đổi sang khung không có mặt tiền nào.
-             "quiet residential street at night, parked cars under street lamps, trees, no shops"]},
+     "nen": ["small apartment living room with a couch against the back wall, evening lamp, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "coffee shop interior with a counter along the back wall, window light, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "quiet residential street at night, parked cars under street lamps, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle",
+             "rooftop terrace with a low wall and city skyline behind, dusk, wide shot, camera at standing eye level, floor clearly visible across the lower third, open space in the centre of the frame, no furniture blocking the middle"]},
 ]
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
@@ -117,146 +115,373 @@ KENH = [
 # ══════════════════════════════════════════════════════════════════════════════════════════
 KHO = {
  "rent": [
-   [("So the rent is going up a little?", 0, "nghi_ngo"),
-    ("Just a small adjustment. Four hundred dollars.", 1, "vui"),
-    ("Four hundred? For what exactly?", 0, "bat_ngo"),
-    ("Market rate. Also the laundry room is closed now.", 1, "tu_tin"),
-    ("The laundry room I paid for?", 0, "tuc"),
-    ("That was last year's laundry room.", 1, "vui")],
-   [("My lease says the rent is fixed.", 0, "tu_tin"),
-    ("It says fixed for twelve months. Month thirteen is different.", 1, "vui"),
-    ("It has been eleven months.", 0, "nghi_ngo"),
-    ("Then you have thirty wonderful days left.", 1, "vui"),
-    ("What happens on day thirty one?", 0, "so"),
-    ("We celebrate. With a new number.", 1, "vui")],
+   {"boi": 0, "loi": [
+     ("My rent went up four hundred dollars.", 0, "bat_ngo"),
+     ("Yes. We repainted the hallway.", 1, "vui"),
+     ("I do not live in the hallway.", 0, "tuc"),
+     ("You walk through it. That is a premium.", 1, "tu_tin"),
+     ("What if I take the stairs?", 0, "nghi_ngo"),
+     ("Then we will need to talk about the stairs.", 1, "vui")
+   ]},
+   {"boi": 1, "loi": [
+     ("There are six packages missing from the lobby.", 0, "tuc"),
+     ("The lobby is not a secure area.", 1, "trung_tinh"),
+     ("It has a lock and a camera.", 0, "nghi_ngo"),
+     ("The camera is decorative.", 1, "vui"),
+     ("Decorative.", 0, "bat_ngo"),
+     ("It deters honest people. Those are the ones who matter.", 1, "tu_tin")
+   ]},
+   {"boi": 2, "loi": [
+     ("The laundry room has been closed for nine weeks.", 0, "tuc"),
+     ("We are waiting on a part.", 1, "trung_tinh"),
+     ("For nine weeks?", 0, "bat_ngo"),
+     ("It is a very specific part.", 1, "vui"),
+     ("Which part?", 0, "nghi_ngo"),
+     ("The one that makes it a laundry room.", 1, "vui")
+   ]},
+   {"boi": 3, "loi": [
+     ("Someone is living in the hallway.", 0, "so"),
+     ("That is our new resident engagement program.", 1, "vui"),
+     ("He has a couch out there.", 0, "bat_ngo"),
+     ("He pays for the couch. Separately.", 1, "tu_tin"),
+     ("You are charging him rent for a hallway.", 0, "tuc"),
+     ("He is charging me. He got here first.", 1, "vui")
+   ]},
  ],
  "gym": [
-   [("I want to get in shape before summer.", 0, "tu_tin"),
-    ("Great. Summer was four months ago.", 1, "vui"),
-    ("Then I will start with next summer.", 0, "nghi_ngo"),
-    ("Perfect. That gives us eight months of talking about it.", 1, "vui"),
-    ("I am paying you to talk about it?", 0, "bat_ngo"),
-    ("You are paying me to watch you not do it.", 1, "vui")],
-   [("How long until I see results?", 0, "nghi_ngo"),
-    ("Depends. Are you eating the smoothie or the fries?", 1, "tu_tin"),
-    ("The smoothie. Mostly. With fries.", 0, "buon"),
-    ("Then you will see results mostly.", 1, "vui"),
-    ("That is not encouraging.", 0, "tuc"),
-    ("Neither are the fries.", 1, "vui")],
+   {"boi": 0, "loi": [
+     ("I have been coming here for five months.", 0, "tu_tin"),
+     ("Four of those you sat in the car.", 1, "vui"),
+     ("The car is in the parking lot. That counts.", 0, "nghi_ngo"),
+     ("Then you have the strongest parking lot in town.", 1, "vui"),
+     ("So nothing has changed at all.", 0, "buon"),
+     ("Your car has lost weight. Very little gas.", 1, "vui")
+   ]},
+   {"boi": 1, "loi": [
+     ("This smoothie costs fourteen dollars.", 0, "bat_ngo"),
+     ("It has activated almonds.", 1, "tu_tin"),
+     ("What were the almonds doing before?", 0, "nghi_ngo"),
+     ("Sleeping. We woke them up.", 1, "vui"),
+     ("You woke up almonds for fourteen dollars.", 0, "tuc"),
+     ("Twelve. Two dollars is for the waking.", 1, "vui")
+   ]},
+   {"boi": 2, "loi": [
+     ("Somebody put my gym bag in the trash.", 0, "tuc"),
+     ("How long had it been in the locker?", 1, "trung_tinh"),
+     ("Since March.", 0, "buon"),
+     ("Then it was not a bag anymore.", 1, "vui"),
+     ("It was a bag. It had my shoes in it.", 0, "nghi_ngo"),
+     ("It had a civilization in it.", 1, "vui")
+   ]},
+   {"boi": 3, "loi": [
+     ("Nobody is in this spin class but me.", 0, "nghi_ngo"),
+     ("That is because it is Tuesday at six.", 1, "trung_tinh"),
+     ("You said Tuesday at six was peak hour.", 0, "tuc"),
+     ("Peak for you. You are the peak.", 1, "vui"),
+     ("So I am the entire class.", 0, "buon"),
+     ("And the top of the leaderboard. Congratulations.", 1, "vui")
+   ]},
  ],
  "airport": [
-   [("Is the flight still on time?", 0, "nghi_ngo"),
-    ("It is on time. It is just not here.", 1, "trung_tinh"),
-    ("What does that mean?", 0, "bat_ngo"),
-    ("The plane is on time somewhere else.", 1, "trung_tinh"),
-    ("So when do we board?", 0, "so"),
-    ("When the plane finishes being on time there.", 1, "trung_tinh")],
-   [("My connection is in forty minutes.", 0, "so"),
-    ("Then you have forty minutes of hope left.", 1, "trung_tinh"),
-    ("Can you rebook me?", 0, "nghi_ngo"),
-    ("I can. The next seat is Thursday.", 1, "trung_tinh"),
-    ("Today is Monday.", 0, "tuc"),
-    ("Yes. That is why the seat is available.", 1, "trung_tinh")],
+   {"boi": 0, "loi": [
+     ("The board says my flight left twenty minutes ago.", 0, "so"),
+     ("It did. Without you.", 1, "trung_tinh"),
+     ("I have been standing at this counter for an hour.", 0, "tuc"),
+     ("Then you were very close to it.", 1, "vui"),
+     ("Can you put me on the next one?", 0, "nghi_ngo"),
+     ("I can put you on a list about the next one.", 1, "tu_tin")
+   ]},
+   {"boi": 1, "loi": [
+     ("They just changed our gate for the fourth time.", 0, "tuc"),
+     ("Third. One of those was a drill.", 1, "trung_tinh"),
+     ("A gate change drill.", 0, "bat_ngo"),
+     ("We practice. That is why we are so good at it.", 1, "vui"),
+     ("Good at moving people for no reason.", 0, "tuc"),
+     ("There is always a reason. It is just not yours.", 1, "vui")
+   ]},
+   {"boi": 2, "loi": [
+     ("My bag came out wet.", 0, "bat_ngo"),
+     ("Was it raining where you left from?", 1, "trung_tinh"),
+     ("It was raining inside the plane?", 0, "nghi_ngo"),
+     ("Planes are complicated.", 1, "vui"),
+     ("What is in this bag is a laptop.", 0, "so"),
+     ("Was. Was a laptop.", 1, "vui")
+   ]},
+   {"boi": 3, "loi": [
+     ("This walkway has been broken since I landed.", 0, "tuc"),
+     ("It is not broken. It is a floor now.", 1, "tu_tin"),
+     ("It is a floor that used to move.", 0, "nghi_ngo"),
+     ("Most floors used to be something.", 1, "vui"),
+     ("That is not a real sentence.", 0, "bat_ngo"),
+     ("Neither is your connection time.", 1, "vui")
+   ]},
  ],
  "car": [
-   [("Just an oil change today, right?", 0, "tu_tin"),
-    ("Started as one. Then I opened the hood.", 1, "nghi_ngo"),
-    ("What did you find?", 0, "so"),
-    ("Everything behind the thing you asked about.", 1, "trung_tinh"),
-    ("Give me a number.", 0, "tuc"),
-    ("Sit down first. Then a number.", 1, "vui")],
-   [("The noise only happens on Tuesdays.", 0, "nghi_ngo"),
-    ("Then bring it in on a Tuesday.", 1, "trung_tinh"),
-    ("It stopped when I drove here.", 0, "buon"),
-    ("Cars do that. They behave in front of me.", 1, "vui"),
-    ("So what do I do?", 0, "so"),
-    ("Drive home. It will start again in your driveway.", 1, "vui")],
+   {"boi": 0, "loi": [
+     ("You said the whole thing would be two hundred.", 0, "nghi_ngo"),
+     ("That was before I opened it.", 1, "trung_tinh"),
+     ("What is it now?", 0, "so"),
+     ("Two hundred. Per hour. Since I opened it.", 1, "vui"),
+     ("Then close it.", 0, "tuc"),
+     ("Closing is also labor.", 1, "vui")
+   ]},
+   {"boi": 1, "loi": [
+     ("There is a bird living in my engine.", 0, "bat_ngo"),
+     ("Yes. She has been there since spring.", 1, "trung_tinh"),
+     ("You saw her and said nothing?", 0, "tuc"),
+     ("She was not causing trouble. You were.", 1, "vui"),
+     ("So what do we do now?", 0, "nghi_ngo"),
+     ("We wait. Two more weeks and the eggs drive off.", 1, "vui")
+   ]},
+   {"boi": 2, "loi": [
+     ("You charged me for four new tyres.", 0, "tuc"),
+     ("Correct. Four is how many the car has.", 1, "tu_tin"),
+     ("I only asked for the front two.", 0, "nghi_ngo"),
+     ("The back two felt left out.", 1, "vui"),
+     ("Tyres do not have feelings.", 0, "bat_ngo"),
+     ("Then why did two of them cost extra?", 1, "vui")
+   ]},
+   {"boi": 3, "loi": [
+     ("This car has eleven miles on it.", 0, "nghi_ngo"),
+     ("Someone had to drive it here.", 1, "trung_tinh"),
+     ("From where? The factory is eleven miles away?", 0, "bat_ngo"),
+     ("No. He took the long way around the lot.", 1, "vui"),
+     ("Eleven miles around a parking lot.", 0, "tuc"),
+     ("He was thinking about his life.", 1, "vui")
+   ]},
  ],
  "office": [
-   [("Quick question about the report.", 0, "trung_tinh"),
-    ("Let us put it on the calendar.", 1, "vui"),
-    ("It is a yes or no question.", 0, "nghi_ngo"),
-    ("Then it is a short meeting.", 1, "vui"),
-    ("Can I just say it now?", 0, "tuc"),
-    ("You can say it now, and again at two.", 1, "vui")],
-   [("This meeting could have been an email.", 0, "tuc"),
-    ("I agree. Let us discuss that.", 1, "vui"),
-    ("For how long?", 0, "so"),
-    ("I blocked an hour to be safe.", 1, "tu_tin"),
-    ("An hour to agree it should be an email?", 0, "bat_ngo"),
-    ("Now it is going to be two emails.", 1, "vui")],
+   {"boi": 0, "loi": [
+     ("This meeting has been going for fifty minutes.", 0, "buon"),
+     ("And we have covered a lot.", 1, "vui"),
+     ("We have covered the agenda for the next meeting.", 0, "tuc"),
+     ("That is the hardest part.", 1, "tu_tin"),
+     ("This could have been an email.", 0, "nghi_ngo"),
+     ("It was. Nobody read it. So here we are.", 1, "vui")
+   ]},
+   {"boi": 1, "loi": [
+     ("Someone drank my coffee out of the pot.", 0, "tuc"),
+     ("The pot is communal.", 1, "trung_tinh"),
+     ("I bought the beans.", 0, "nghi_ngo"),
+     ("Then the beans were communal too.", 1, "vui"),
+     ("Nothing here is mine.", 0, "buon"),
+     ("Your desk is yours. Until Friday.", 1, "vui")
+   ]},
+   {"boi": 2, "loi": [
+     ("Why is my desk in the hallway?", 0, "bat_ngo"),
+     ("We are opening up the floor plan.", 1, "vui"),
+     ("The hallway is not the floor plan.", 0, "tuc"),
+     ("It is now. We call it the corridor of ideas.", 1, "tu_tin"),
+     ("There is a printer on my keyboard.", 0, "nghi_ngo"),
+     ("Then you are the printer team. Congratulations.", 1, "vui")
+   ]},
+   {"boi": 3, "loi": [
+     ("The printer says it needs yellow.", 0, "nghi_ngo"),
+     ("Yes. For a black and white document.", 1, "trung_tinh"),
+     ("Why does it need yellow for that?", 0, "bat_ngo"),
+     ("It does not. It just wants yellow.", 1, "vui"),
+     ("So we buy it yellow.", 0, "buon"),
+     ("We buy it yellow. And it prints in November.", 1, "vui")
+   ]},
  ],
  "diet": [
-   [("I am starting a new diet on Monday.", 0, "tu_tin"),
-    ("What happened to the last one?", 1, "nghi_ngo"),
-    ("It ended on a Wednesday.", 0, "buon"),
-    ("That is two whole days of discipline.", 1, "vui"),
-    ("It was a strong two days.", 0, "tu_tin"),
-    ("They always are. Right before pizza.", 1, "vui")],
-   [("This one cuts out sugar completely.", 0, "tu_tin"),
-    ("Including the coffee thing you drink?", 1, "nghi_ngo"),
-    ("That is not sugar. That is breakfast.", 0, "tu_tin"),
-    ("It has more sugar than a birthday cake.", 1, "vui"),
-    ("Then it is a very small cake.", 0, "buon"),
-    ("You drink two of them.", 1, "vui")],
+   {"boi": 0, "loi": [
+     ("I am starting a new diet on Monday.", 0, "tu_tin"),
+     ("That is what you said about the last Monday.", 1, "vui"),
+     ("This one is different. No sugar at all.", 0, "tu_tin"),
+     ("There is a birthday cake in your fridge.", 1, "nghi_ngo"),
+     ("That is for the birthday.", 0, "buon"),
+     ("Whose?", 1, "vui")
+   ]},
+   {"boi": 1, "loi": [
+     ("I only ate one fry off your plate.", 0, "tu_tin"),
+     ("You ate the plate around the fry.", 1, "vui"),
+     ("That is an exaggeration.", 0, "nghi_ngo"),
+     ("The waiter asked if I wanted another one. For me.", 1, "vui"),
+     ("Fine. I had a few.", 0, "buon"),
+     ("You had a portion with a name and a table.", 1, "vui")
+   ]},
+   {"boi": 2, "loi": [
+     ("Everything at this market is organic.", 0, "tu_tin"),
+     ("So is a potato in a normal store.", 1, "trung_tinh"),
+     ("This one has a sticker.", 0, "nghi_ngo"),
+     ("The sticker costs four dollars.", 1, "vui"),
+     ("It is worth it for the peace of mind.", 0, "tu_tin"),
+     ("You are buying a sticker and a small potato.", 1, "vui")
+   ]},
+   {"boi": 3, "loi": [
+     ("I am doing the meat only diet now.", 0, "tu_tin"),
+     ("You cried at a hamburger commercial last week.", 1, "nghi_ngo"),
+     ("That was about the family in it.", 0, "buon"),
+     ("The family was eating hamburgers.", 1, "vui"),
+     ("It is a lifestyle, not a phase.", 0, "tuc"),
+     ("Every phase is a lifestyle for eight days.", 1, "vui")
+   ]},
  ],
  "tech": [
-   [("The screen is completely frozen.", 0, "so"),
-    ("Have you tried turning it off and on again?", 1, "trung_tinh"),
-    ("Yes. Four times.", 0, "tuc"),
-    ("Let us try a fifth for the record.", 1, "trung_tinh"),
-    ("Why would the fifth work?", 0, "bat_ngo"),
-    ("It will not. But now it is in the notes.", 1, "vui")],
-   [("It worked yesterday and now it does not.", 0, "buon"),
-    ("Did anything change?", 1, "nghi_ngo"),
-    ("No. Nothing at all.", 0, "tu_tin"),
-    ("So the computer changed its own mind.", 1, "vui"),
-    ("Okay. I updated one thing.", 0, "so"),
-    ("There it is. The one thing.", 1, "vui")],
+   {"boi": 0, "loi": [
+     ("My screen has been black for three hours.", 0, "buon"),
+     ("Have you tried turning it off and on again?", 1, "trung_tinh"),
+     ("It is already off. That is the problem.", 0, "tuc"),
+     ("Then turn it on and off again.", 1, "tu_tin"),
+     ("That is the same two things.", 0, "nghi_ngo"),
+     ("In a different order. That is the fix.", 1, "vui")
+   ]},
+   {"boi": 1, "loi": [
+     ("I have been on hold for forty minutes.", 0, "tuc"),
+     ("Your call is very important to us.", 1, "vui"),
+     ("Then why am I still on hold?", 0, "nghi_ngo"),
+     ("Because it is important. We are savoring it.", 1, "vui"),
+     ("Can I speak to a person?", 0, "buon"),
+     ("You are. That is the sad part.", 1, "vui")
+   ]},
+   {"boi": 2, "loi": [
+     ("The update deleted all of my files.", 0, "so"),
+     ("Did you back them up?", 1, "trung_tinh"),
+     ("The backup was a file.", 0, "buon"),
+     ("Then it worked exactly as designed.", 1, "tu_tin"),
+     ("What was the update even for?", 0, "tuc"),
+     ("Improved file management.", 1, "vui")
+   ]},
+   {"boi": 3, "loi": [
+     ("You quoted me ninety dollars to fix the screen.", 0, "nghi_ngo"),
+     ("That was the diagnostic.", 1, "trung_tinh"),
+     ("The diagnostic was you looking at it.", 0, "tuc"),
+     ("With trained eyes.", 1, "tu_tin"),
+     ("What did the trained eyes find?", 0, "nghi_ngo"),
+     ("That the screen is broken. Ninety dollars.", 1, "vui")
+   ]},
  ],
  "parent": [
-   [("Can you put the phone down for dinner?", 0, "trung_tinh"),
-    ("I am putting it down. Just after this.", 1, "vui"),
-    ("After what exactly?", 0, "nghi_ngo"),
-    ("After the part that is almost over.", 1, "vui"),
-    ("That was the answer twenty minutes ago.", 0, "tuc"),
-    ("And look. It is still almost over.", 1, "vui")],
-   [("How was school today?", 0, "trung_tinh"),
-    ("Fine.", 1, "trung_tinh"),
-    ("Anything happen?", 0, "nghi_ngo"),
-    ("No.", 1, "trung_tinh"),
-    ("Seven hours and nothing happened?", 0, "bat_ngo"),
-    ("Correct. It was a very efficient day.", 1, "vui")],
+   {"boi": 0, "loi": [
+     ("You have been on that phone for six hours.", 0, "tuc"),
+     ("I was doing homework on it.", 1, "trung_tinh"),
+     ("What subject has that much scrolling?", 0, "nghi_ngo"),
+     ("Research.", 1, "tu_tin"),
+     ("Research on what?", 0, "nghi_ngo"),
+     ("On whether I should do the homework.", 1, "vui")
+   ]},
+   {"boi": 1, "loi": [
+     ("You have had your license for one week.", 0, "so"),
+     ("And zero accidents. That is a perfect record.", 1, "tu_tin"),
+     ("You have driven twice.", 0, "nghi_ngo"),
+     ("Two for two. Nobody is doing better.", 1, "vui"),
+     ("The mirror is pointed at your face.", 0, "tuc"),
+     ("That is the most important thing behind me.", 1, "vui")
+   ]},
+   {"boi": 2, "loi": [
+     ("There are nine cups in this room.", 0, "bat_ngo"),
+     ("Eleven. Two are under the bed.", 1, "trung_tinh"),
+     ("Why do you know that and not bring them down?", 0, "tuc"),
+     ("Knowing and carrying are different jobs.", 1, "tu_tin"),
+     ("Who does the carrying job?", 0, "nghi_ngo"),
+     ("Historically? You.", 1, "vui")
+   ]},
+   {"boi": 3, "loi": [
+     ("I have been parked here for thirty minutes.", 0, "tuc"),
+     ("I did not see you.", 1, "trung_tinh"),
+     ("I am in a bright orange car.", 0, "nghi_ngo"),
+     ("I was not looking for a car. I was looking for a ride.", 1, "vui"),
+     ("Those are the same thing.", 0, "bat_ngo"),
+     ("Not if I pretend I do not know you.", 1, "vui")
+   ]},
  ],
  "neighbor": [
-   [("You are the one who just moved in.", 0, "nghi_ngo"),
-    ("That is right. Three weeks ago.", 1, "vui"),
-    ("I noticed the truck. And the boxes.", 0, "tu_tin"),
-    ("You noticed a lot for three weeks.", 1, "bat_ngo"),
-    ("I keep an eye on the street.", 0, "tu_tin"),
-    ("Do you ever keep it on your own yard?", 1, "vui")],
-   [("Your grass is getting a little tall.", 0, "nghi_ngo"),
-    ("It is. I am letting it express itself.", 1, "vui"),
-    ("There are rules about that here.", 0, "tu_tin"),
-    ("Are there rules about watching me mow?", 1, "vui"),
-    ("I am not watching. I am gardening.", 0, "so"),
-    ("You have been gardening the same rose for an hour.", 1, "vui")],
+   {"boi": 0, "loi": [
+     ("You have been watching me unload boxes for an hour.", 0, "nghi_ngo"),
+     ("Forty minutes. I took a break.", 1, "vui"),
+     ("Do you want to help?", 0, "trung_tinh"),
+     ("No. I want to know what is in the long one.", 1, "tu_tin"),
+     ("It is a mirror.", 0, "buon"),
+     ("That is what the last one said too.", 1, "vui")
+   ]},
+   {"boi": 1, "loi": [
+     ("Your sprinkler hits my porch every morning.", 0, "tuc"),
+     ("It hits a lot of things. It is a strong one.", 1, "tu_tin"),
+     ("Can you turn it two inches to the left?", 0, "nghi_ngo"),
+     ("Then it would hit the Hendersons.", 1, "trung_tinh"),
+     ("So the Hendersons and I are the only options.", 0, "bat_ngo"),
+     ("They complain less. So it is you.", 1, "vui")
+   ]},
+   {"boi": 2, "loi": [
+     ("You put a camera facing my mailbox.", 0, "tuc"),
+     ("It faces the street. Your mailbox is on the street.", 1, "tu_tin"),
+     ("It is zoomed in on the mailbox.", 0, "nghi_ngo"),
+     ("The street is boring at that distance.", 1, "vui"),
+     ("Take it down.", 0, "tuc"),
+     ("I cannot. It is watching itself now.", 1, "vui")
+   ]},
+   {"boi": 3, "loi": [
+     ("Your car is parked across both driveways.", 0, "tuc"),
+     ("I know. That is the only way it fits.", 1, "trung_tinh"),
+     ("Then it does not fit.", 0, "nghi_ngo"),
+     ("It fits. Just not for you.", 1, "vui"),
+     ("I cannot get out.", 0, "so"),
+     ("Then you are not going anywhere. Neither am I. Neighbors.", 1, "vui")
+   ]},
  ],
  "dating": [
-   [("My profile says I love hiking.", 0, "tu_tin"),
-    ("When did you last go hiking?", 1, "nghi_ngo"),
-    ("Two thousand nineteen.", 0, "buon"),
-    ("So the profile is a historical document.", 1, "vui"),
-    ("It is aspirational.", 0, "tu_tin"),
-    ("So is my resume. We should date each other.", 1, "vui")],
-   [("She asked what I do on weekends.", 0, "so"),
-    ("What did you say?", 1, "nghi_ngo"),
-    ("Rock climbing and pottery.", 0, "tu_tin"),
-    ("You watch television and order noodles.", 1, "bat_ngo"),
-    ("Both of those take hands.", 0, "tu_tin"),
-    ("That is the weakest argument I have ever heard.", 1, "vui")],
+   {"boi": 0, "loi": [
+     ("My profile says I love hiking.", 0, "tu_tin"),
+     ("You have been hiking once. In two thousand nineteen.", 1, "nghi_ngo"),
+     ("It made a big impression.", 0, "trung_tinh"),
+     ("You called it a walk with a hill problem.", 1, "vui"),
+     ("That is still hiking.", 0, "tuc"),
+     ("Then I am a sailor. I once stood on a boat.", 1, "vui")
+   ]},
+   {"boi": 1, "loi": [
+     ("She asked what I do for fun.", 0, "so"),
+     ("What did you say?", 1, "nghi_ngo"),
+     ("I said I enjoy experiences.", 0, "buon"),
+     ("That is what a hostage says.", 1, "vui"),
+     ("It was true though.", 0, "trung_tinh"),
+     ("So is breathing. Do not lead with it.", 1, "vui")
+   ]},
+   {"boi": 2, "loi": [
+     ("He was forty minutes late to the coffee.", 0, "tuc"),
+     ("Did he say why?", 1, "nghi_ngo"),
+     ("He said time is a construct.", 0, "buon"),
+     ("So is the bill. Did he pay it?", 1, "vui"),
+     ("He said he would send it to me.", 0, "tuc"),
+     ("Then the bill is a construct. He is not.", 1, "vui")
+   ]},
+   {"boi": 3, "loi": [
+     ("I matched with someone who lives four floors up.", 0, "bat_ngo"),
+     ("In this building?", 1, "nghi_ngo"),
+     ("Yes. We have been chatting all week.", 0, "vui"),
+     ("You could take the stairs.", 1, "trung_tinh"),
+     ("That feels too fast.", 0, "so"),
+     ("You have been dating an elevator ride.", 1, "vui")
+   ]},
  ],
 }
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# CỬ CHỈ SUY TỪ CHÍNH CÂU THOẠI, KHÔNG XOAY VÒNG THEO CHỈ SỐ
+# ------------------------------------------------------------------------------------------
+# Bản cũ gán cử chỉ bằng `CU_CHI[i % 6]` — tức là câu nào ở vị trí 2 cũng chỉ tay, bất kể câu ấy
+# nói gì. Kết quả là nhân vật chỉ tay khi đang đầu hàng và nhún vai khi đang gặng hỏi: tay nói
+# một đằng, miệng nói một nẻo. Trong hoạt hình, tay là NỬA CỦA CÂU THOẠI — sai tay thì câu chết.
+#
+# Nay suy từ chính chữ: câu hỏi thì ngửa tay ra, con số thì đếm, phủ định thì khoanh tay, câu
+# chốt thì mở rộng hai tay. Chỉ là mấy phép thử chuỗi, không cần mô hình nào — và nó đúng hơn
+# hẳn phép chia lấy dư.
+_HOI = ("what", "why", "how", "who", "when", "which", "can ", "do ", "did ", "is ", "are ")
+_PHU = ("not", "no ", "never", "nothing", "cannot", "do not", "does not", "was not")
+
+def cu_chi_cua(chu: str, i: int, cuoi: bool) -> str:
+    t = " " + str(chu or "").lower().strip()
+    if cuoi:
+        return "mo_tay"                       # cú chốt: mở rộng tay, "đấy, xong"
+    if "?" in t:
+        return "chi" if t.strip().startswith(("what", "why", "who")) else "mo_tay"
+    if any(c.isdigit() for c in t) or any(w in t for w in (" one", " two", " four", " nine", " forty", " hundred")):
+        return "dem"                          # có con số thì đếm ngón tay
+    if any(w in t for w in _PHU):
+        return "khoanh_tay"                   # phủ định: khép người lại
+    if t.strip().startswith(("i think", "maybe", "then ", "so ")):
+        return "suy_nghi"
+    return ["nhun_vai", "mo_tay", "chi", "dem"][i % 4]
 
 CU_CHI = ["mo_tay", "chi", "nhun_vai", "dem", "suy_nghi", "khoanh_tay"]
 SFX = {1: "sfx/pop.mp3", 3: "sfx/whoosh.mp3", 5: "sfx/ding.mp3"}
@@ -474,26 +699,42 @@ def _hai_bong(k: dict) -> tuple:
 
 
 def dung_luot(k: dict, nen: list, vong: int = 0) -> tuple:
-    """Trả (danh sách lượt thoại, lời đọc ghép). Kịch bản bốc theo `vong` để mỗi tập một chuyện."""
+    """Trả (danh sách lượt thoại, lời đọc ghép). Kịch bản bốc theo `vong` để mỗi tập một chuyện.
+
+    ── MỘT TẬP = MỘT ĐỊA ĐIỂM (30/8/2026) ──────────────────────────────────────────────
+    Anh: *"bối cảnh phải liên quan lời nói hành động, ko phải đang ở trong nhà nhảy qua ra
+    ngoài đường được, ko logic"*. Đây là lỗi nặng nhất của bản trước và tôi đã tự tạo ra nó:
+    để tránh "nền lặp lại nhàm chán", tôi cho nền đổi theo nhịp kịch — nhưng hai người đang
+    nói với nhau thì KHÔNG dịch chuyển tức thời sang chỗ khác giữa câu. Chữa một lỗi thẩm mỹ
+    bằng cách đẻ ra một lỗi logic là đổi chác lỗ.
+
+    Đường đúng: **nền đứng yên suốt tập**, và sự đa dạng đến từ hai chỗ khác:
+      · TRONG một tập — đổi CỠ MÁY (toàn · trung · cận) và nhân vật XÊ DỊCH chỗ đứng;
+      · GIỮA các tập — mỗi kịch bản gắn cứng với một địa điểm riêng (`boi`), nên bốn tập của
+        một kênh diễn ra ở bốn nơi khác nhau và không tập nào trông giống tập nào.
+    Kịch bản và địa điểm vì thế đi liền một cặp: chuyện phòng giặt xảy ra ở phòng giặt,
+    chuyện lốp xe xảy ra ở tiệm lốp. Không còn chỗ nào để nhảy địa điểm.
+    """
     kho = KHO[k["de"]]
     kb = kho[vong % len(kho)]
+    cau = kb["loi"]
+    # Nền của CẢ TẬP — chọn một lần, dùng cho mọi lượt.
+    nen1 = nen[kb["boi"] % len(nen)] if nen else ""
     luot, loi = [], []
-    for i, (chu, ai, cx) in enumerate(kb):
-        cuoi = i == len(kb) - 1
+    n = len(cau)
+    for i, (chu, ai, cx) in enumerate(cau):
+        cuoi = i == n - 1
         l = {"s": 0.0, "e": 0.0, "ai": ai, "nar": chu,
              "camXuc": cx,
              # CẢM XÚC NGƯỜI NGHE — nửa còn lại của trò đùa. Trong hài thoại, mặt người nghe
              # thường buồn cười hơn câu của người nói.
              "camXucKia": ["nghi_ngo", "bat_ngo", "trung_tinh", "tuc", "buon", "vui"][i % 6],
-             "cuChi": CU_CHI[i % len(CU_CHI)],
-             "co": "can" if (cuoi or i == 1) else ("rong" if i == 0 else "trung"),
-             # 30/8 — NỀN ĐỔI THEO NHỊP, KHÔNG XOAY VÒNG TỪNG CÂU.
-             # `i % 3` trên sáu lượt cho ra 1·2·3·1·2·3: khung 2 và khung 4 giống hệt nhau, đúng
-             # cảnh vừa đo. Và đổi nền mỗi câu còn sai về kể chuyện — hai người đang nói với nhau
-             # thì không dịch chuyển tức thời sang chỗ khác sau mỗi lượt. Chia theo NHỊP (mở · va ·
-             # chốt) thì ba nền phủ hết sáu lượt, không lặp cái nào, và mỗi lần đổi nền trùng đúng
-             # chỗ câu chuyện sang đoạn mới.
-             "nen": nen[min(i * len(nen) // max(1, len(kb)), len(nen) - 1)] if nen else "",
+             "cuChi": cu_chi_cua(chu, i, cuoi),
+             # CỠ MÁY LÀ CHỖ TẠO NHỊP, thay cho việc đổi nền. Mở bằng toàn cảnh cho người xem
+             # đọc ra đang ở đâu, siết dần vào khi câu chuyện leo thang, và cú chốt đóng cận
+             # nhất — vì cú chốt nằm ở NÉT MẶT, không ở lời.
+             "co": "rong" if i == 0 else ("can" if (cuoi or i == n - 2) else "trung"),
+             "nen": nen1,
              "chot": cuoi}
         if SFX.get(i):
             l["sfx"] = SFX[i]

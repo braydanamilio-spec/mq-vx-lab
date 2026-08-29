@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { DienVien, CAM_XUC, KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVien";
+import { CAM_XUC, KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVien";
+import { DienVienHai } from "./DienVienHai";
 
 /**
  * KỊCH HÀI V4 — hai nhân vật đối thoại, nền là ẢNH AI (29/8/2026).
@@ -73,8 +74,9 @@ const BongThoai: React.FC<{ chu: string; x: number; y: number; trai: boolean; p:
 };
 
 /** Phụ đề karaoke — hai dòng, tô từ đang đọc. Dùng lại đúng luật của thế hệ 3. */
-const PhuDe: React.FC<{ tu: Tu[]; giay: number; nhan: string; day: number; s0: number; e0: number }>
-    = ({ tu: tuAll, giay, nhan, day, s0, e0 }) => {
+const PhuDe: React.FC<{ tu: Tu[]; giay: number; nhan: string; day: number; s0: number; e0: number;
+                        vien: string; ben: number }>
+    = ({ tu: tuAll, giay, nhan, day, s0, e0, vien, ben }) => {
   // 30/8 — CỬA SỔ CHỮ PHẢI DỪNG Ở RANH GIỚI LƯỢT THOẠI.
   // Trước đây cửa sổ sáu-từ trượt trên TOÀN BỘ lời thoại, nên nó nhảy qua chỗ đổi người nói và
   // ghép lời hai người thành một câu: đo được "just moved in. That is right." — nửa đầu của
@@ -112,8 +114,16 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; nhan: string; day: number; s0: n
   const _dai = Math.max(doan.slice(0, nua).reduce((a, w) => a + w.w.length + 1, 0),
                         doan.slice(nua).reduce((a, w) => a + w.w.length + 1, 0));
   const cs = Math.max(30, Math.min(46, Math.floor(920 / Math.max(1, _dai * 0.55))));
+  const _rongThe = Math.min(940, _dai * cs * 0.55 + 62);
   return (
     <g transform={`translate(0 ${day})`}>
+      {/* Thẻ nền sau chữ: chữ trắng viền đen trên ảnh nền vẫn khó đọc khi nền lắm chi tiết
+          (bếp, ga-ra). Một thẻ mờ có viền màu người nói vừa chữa được chuyện đọc, vừa là chỗ
+          mang màu để phân biệt hai người. */}
+      <rect x={-_rongThe / 2} y={-40} width={_rongThe} height={nua < doan.length ? 118 : 62}
+            rx={22} fill="#101218" fillOpacity={0.5} stroke={vien} strokeWidth={5} />
+      <circle cx={(ben * _rongThe) / 2} cy={nua < doan.length ? 19 : -9} r={11} fill={vien}
+              stroke="#101218" strokeWidth={4} />
       {[doan.slice(0, nua), doan.slice(nua)].map((d, j) => (
         <text key={j} x={0} y={j * (cs + 10)} textAnchor="middle" fontSize={cs} fontWeight={900}
               stroke="#12131A" strokeWidth={10} paintOrder="stroke" fill="#FFFFFF">
@@ -154,8 +164,17 @@ export const KichHai: React.FC<PropsHai> = ({
   // dùng khung sáng — những thứ ấy đọc ra là đồ hoạ, không đọc ra là diễn xuất.
   const noiA_ = L.ai === 0;
   const tA = muot(kep((giay - L.s) / 0.25));
-  const coA = noiA_ ? trn(1.0, 1.06, tA) : trn(1.06, 0.98, tA);
-  const coB = noiA_ ? trn(1.06, 0.98, tA) : trn(1.0, 1.06, tA);
+  // 30/8 — BỎ HẲN PHÉP PHÓNG TO NGƯỜI NÓI.
+  // Anh: "khi lời thoại tới nhân vật nào đang bị kiểu tự nhiên nhân vật cao lên nhân vật kia
+  // nhỏ lại rất thiếu thẩm mỹ". Đúng, và nó còn SAI VỀ VẬT LÝ: hai người đứng cùng một mặt sàn
+  // thì không ai to lên nhỏ lại giữa câu — mắt đọc ra là người kia lùi ra xa, tức là cả không
+  // gian nói dối. Cỡ người từ nay CỐ ĐỊNH.
+  // Ai đang nói thì đọc ra bằng bốn dấu hiệu KHÔNG đụng tới cỡ người, và cả bốn đều là thứ
+  // diễn viên thật làm: khẩu hình động, thân nghiêng về phía người kia, mắt nhìn thẳng sang,
+  // và phụ đề đổi sang MÀU CỦA NGƯỜI ẤY.
+  const coA = 1, coB = 1;
+  const nghiengA = noiA_ ? trn(0, 3.2, tA) : trn(3.2, 0, tA);
+  const nghiengB = noiA_ ? trn(-3.2, 0, tA) : trn(0, -3.2, tA);
 
   // KHOẢNG LẶNG TRƯỚC CÚ CHỐT — nửa giây nhân vật không nói gì, máy quay nhích vào.
   // Đây là thứ làm cú chốt nổ. Bỏ nó đi thì câu chốt trôi qua như mọi câu khác.
@@ -167,6 +186,32 @@ export const KichHai: React.FC<PropsHai> = ({
   // hai người chiếm chưa tới 40% chiều cao, mặt nhỏ đến mức không thấy khẩu hình lẫn nét mặt —
   // mà nét mặt mới là chỗ hài nằm. Điện thoại xem ở khoảng cách bằng đúng khung, nên short phải
   // đóng cận hơn hẳn video ngang.
+  // Đích đứng của mỗi lượt: người nói tiến lại gần khoảng 26 đơn vị, người nghe lùi nhẹ.
+  // Cộng thêm một chút lệch theo chỉ số lượt để hai người không đứng đúng chỗ cũ mỗi lần.
+  const _iL = Math.max(0, i);
+  const dichA = -232 + (noiA_ ? 30 : -14) + ((_iL % 3) - 1) * 16;
+  const dichB = 232 + (noiA_ ? 14 : -30) + (((_iL + 1) % 3) - 1) * 16;
+  const _truocA = -232 + (i > 0 && luot[i - 1].ai === 0 ? 30 : -14) + (((_iL + 2) % 3) - 1) * 16;
+  const _truocB = 232 + (i > 0 && luot[i - 1].ai === 0 ? 14 : -30) + ((_iL % 3) - 1) * 16;
+  const tDi = muot(kep((giay - L.s) / 0.6));
+  const xA = trn(_truocA, dichA, tDi);
+  const xB = trn(_truocB, dichB, tDi);
+  // `buoc` > 0 khi đang di chuyển: bật dáng đi (chân bước so le, tay vung ngược pha).
+  const dangDi = Math.abs(dichA - _truocA) > 6 && tDi > 0.02 && tDi < 0.98;
+  const buocA = dangDi ? Math.sin(tDi * Math.PI) : 0;
+  const buocB = Math.abs(dichB - _truocB) > 6 && tDi > 0.02 && tDi < 0.98 ? Math.sin(tDi * Math.PI) : 0;
+
+  // CỬ CHỈ NGƯỜI NGHE PHẢI THEO CẢM XÚC CỦA CHÍNH NÓ.
+  // Bản cũ ghim cứng "khoanh_tay" cho người nghe suốt cả phim: một người khoanh tay hai mươi
+  // giây trong khi mặt đổi từ ngạc nhiên sang bực sang buồn — tay và mặt kể hai chuyện khác
+  // nhau. Trong hài thoại thì phản ứng của người NGHE thường buồn cười hơn câu của người nói,
+  // nên đây không phải chi tiết phụ.
+  const NGHE: Record<string, TenCuChi> = {
+    bat_ngo: "mo_tay", so: "mo_tay", nghi_ngo: "suy_nghi", tuc: "khoanh_tay",
+    buon: "nghi", vui: "nhun_vai", tu_tin: "khoanh_tay", trung_tinh: "nghi",
+  };
+  const cuChiNghe = NGHE[(L.camXucKia || "trung_tinh") as string] || "nghi";
+
   const KH = doc
     ? { rong: { y: -110, z: 1.18 }, trung: { y: -190, z: 1.36 }, can: { y: -330, z: 1.72 } }
     : { rong: { y: -40, z: 0.86 }, trung: { y: -120, z: 1.0 }, can: { y: -250, z: 1.28 } };
@@ -205,20 +250,49 @@ export const KichHai: React.FC<PropsHai> = ({
           hạng, và thứ tự viết trong JSX mới là thứ tự vẽ. */}
       <AbsoluteFill>
       <svg viewBox={vb} width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+        {/* ══ MẶT SÀN ══════════════════════════════════════════════════════════════════
+            Anh: "lỗi nhân vật đứng trên bếp". Gốc của nó nằm ở ẢNH NỀN, không ở nhân vật: ảnh
+            "kitchen counter with a fruit bowl" chụp NGANG TẦM MẶT BÀN nên trong khung KHÔNG CÓ
+            sàn nào cả. Nhân vật đặt ở đâu cũng sẽ đứng trên một mặt bàn.
+            Đã sửa câu vẽ cho các nền mới, nhưng ảnh AI thì lượt nào cũng có thể trả về một
+            khung không thấy sàn — nên phải có một lớp bảo hiểm KHÔNG phụ thuộc vào ảnh.
+            Dải sàn này là lớp ấy: một mặt phẳng mờ ở đáy khung, lấy màu từ chính bảng màu kênh,
+            có đường chân tường và bóng đổ. Nhân vật đứng lên ĐƯỜNG NÀY, nên dù ảnh nền phía
+            trên là gì thì vật lý vẫn đúng: có sàn, có bóng, có chỗ chân chạm. */}
+        <defs>
+          <linearGradient id="san" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={mucNen} stopOpacity={0.0} />
+            <stop offset="26%" stopColor={mucNen} stopOpacity={0.62} />
+            <stop offset="100%" stopColor={mucNen} stopOpacity={0.9} />
+          </linearGradient>
+        </defs>
         <g transform={`translate(${rung} ${-K.y}) scale(${zoom})`} style={{ transformOrigin: "0px 0px" }}>
+          <rect x={-1600} y={244 - 34} width={3200} height={1400} fill="url(#san)" />
+          <line x1={-1600} y1={244 - 34} x2={1600} y2={244 - 34}
+                stroke="#00000022" strokeWidth={3} />
           {/* 30/8 — KHOẢNG CÁCH HAI NGƯỜI CHIA CHO ĐỘ PHÓNG.
               Toàn cảnh được phóng `zoom`; nếu giữ nguyên x thì ở cỡ CẬN (zoom 1,72) hai người
               bị đẩy ra 1,72 lần và mép khung xén mất nửa người — đo được đúng cảnh ấy. Chia x
               cho zoom thì khoảng cách trên MÀN HÌNH giữ nguyên trong khi người vẫn to lên, tức
               là máy quay tiến lại gần chứ không phải kéo hai người ra xa nhau. */}
-          <DienVien kieu={A} camXuc={(noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
-                    cuChi={noiA_ ? (L.cuChi || "nghi") : "khoanh_tay"} dang="dung"
-                    nhin={noiA_ ? [0.18, 0] : [0.42, -0.06]} noi={noiA} t={giay}
-                    x={-232 / zoom} y={244} scale={1.16 * coA} />
-          <DienVien kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
-                    cuChi={!noiA_ ? (L.cuChi || "nghi") : "khoanh_tay"} dang="dung"
-                    nhin={!noiA_ ? [-0.18, 0] : [-0.42, -0.06]} noi={noiB} t={giay + 1.7}
-                    x={232 / zoom} y={244} scale={1.16 * coB} lat />
+          {/* ĐI LẠI TRONG CẢNH — anh: "nhân vật có thể chuyển động đi hay tay chân cử chỉ
+              thật hơn kiểu animation được ko".
+              Hai người đứng chôn chân suốt hai mươi giây là thứ đọc ra ngay là hình dựng máy;
+              trong hoạt hình, người nói bao giờ cũng XÊ DỊCH — bước lại gần khi gặng hỏi, lùi
+              ra khi bị dồn. Nên mỗi lượt thoại có một đích đứng riêng (`diA`/`diB`) và nhân vật
+              ĐI tới đó trong 0,6 giây đầu lượt, có bước chân hẳn hoi (`buoc` > 0 bật dáng đi).
+              Khoảng cách hai người vì thế thay đổi theo nội dung: dồn nhau thì gần lại, đầu
+              hàng thì giãn ra. */}
+          <DienVienHai kieu={A} camXuc={(noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
+                    cuChi={noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
+                    nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
+                    nhan={noiA_ ? noiA.h : 0} nghieng={nghiengA} buoc={buocA}
+                    x={xA / zoom} y={244} scale={1.16 * coA} />
+          <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
+                    cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
+                    nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
+                    nhan={!noiA_ ? noiB.h : 0} nghieng={nghiengB} buoc={buocB}
+                    x={xB / zoom} y={244} scale={1.16 * coB} lat />
         </g>
 
         {tieuDe && giay < 2.6 ? (
@@ -228,7 +302,13 @@ export const KichHai: React.FC<PropsHai> = ({
             {tieuDe.slice(0, 40)}
           </text>
         ) : null}
-        <PhuDe tu={tu} giay={giay} nhan="#F2C230" day={doc ? 592 : 420} s0={L.s} e0={L.e} />
+        {/* 30/8 — PHỤ ĐỀ MANG MÀU CỦA NGƯỜI ĐANG NÓI.
+            Anh: "2 nhân vật nói thì nên có 2 lời thoại 2 nhân vật có sự khác biệt". Trong hài
+            hai người, nửa trò đùa nằm ở chỗ AI nói câu nào — mà phụ đề trắng trơn thì hai lượt
+            liền nhau đọc ra như một người tự nói. Viền thẻ và chữ được tô lấy đúng màu áo của
+            người ấy, nên mắt gán câu về đúng người trước cả khi nghe hết câu. */}
+        <PhuDe tu={tu} giay={giay} nhan="#FFE27A" day={doc ? 596 : 424} s0={L.s} e0={L.e}
+               vien={noiA_ ? A.ao : B.ao} ben={noiA_ ? -1 : 1} />
       </svg>
       </AbsoluteFill>
 
