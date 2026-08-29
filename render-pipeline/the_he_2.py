@@ -568,7 +568,19 @@ def _loc_wiki(D, ds: list, loc: str) -> list:
     if loc == "dia_diem":
         dau = ds[:100]
         co = D.noi_co_that([x["ten"] for x in dau])
-        return [x for x in dau if x["ten"] in co and not x["ten"][:4].isdigit()]
+        # 29/8 — TOẠ ĐỘ LÀ ĐIỀU KIỆN CẦN, KHÔNG PHẢI ĐIỀU KIỆN ĐỦ.
+        # Khung thật: "Pan Am Flight 103" và "Trabzonspor" lọt vào bảng "những nơi người Mỹ tra
+        # nhiều nhất". Cả hai ĐỀU có toạ độ trên Wikipedia — một là hiện trường tai nạn ở
+        # Lockerbie, một là câu lạc bộ bóng đá (toạ độ sân vận động). Đúng dữ liệu, sai chủ đề:
+        # người xem không đọc "Trabzonspor" là một địa danh.
+        # Nên lọc thêm bằng TÊN: đội bóng, chuyến bay, hãng hàng không, đơn vị quân đội — những
+        # nhóm mang toạ độ mà bản chất không phải một chỗ để đến.
+        _KHONG_PHAI_NOI = ("f.c.", " fc", "fc ", "spor", "united f", "flight ", "airlines",
+                           "air lines", "regiment", "battalion", "squadron", " s.k.", " a.c.",
+                           "football club", "stadium disaster")
+        return [x for x in dau
+                if x["ten"] in co and not x["ten"][:4].isdigit()
+                and not any(k in x["ten"].lower() for k in _KHONG_PHAI_NOI)]
     cap = TU.get(loc)
     if not cap:
         return list(ds)

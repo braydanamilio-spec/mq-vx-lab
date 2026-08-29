@@ -1,14 +1,18 @@
 {
- "luc": "2026-08-29T11:14:04Z",
+ "luc": "2026-08-29T12:09:43Z",
  "nguong": 90,
- "canh_bao_motip": [],
+ "canh_bao_motip": [
+  "trùng motif 'chip' trong dạng ranked: FILINGS SAY, REAL PLACE",
+  "trùng motif 'ghost' trong dạng ranked: NIGHT SHIFT, SHOW NUMBERS",
+  "trùng motif 'lens' trong dạng ranked: WHAT THEY SEARCH, MISSING PIECE"
+ ],
  "kenh": {
   "ALERTNOW": {
    "diem": 100,
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "California: 12 — Active weather warnings"
+   "tieu_de": "California: 13 — Active weather warnings"
   },
   "AMERICALOOKEDUP": {
    "diem": 100,
@@ -22,7 +26,7 @@
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [],
-   "tieu_de": "Midwest Holiday (Part I) — America 1950"
+   "tieu_de": "new world next week - feb10 — America 1950"
   },
   "BREEDFILE": {
    "diem": 100,
@@ -136,13 +140,6 @@
    "loi": [],
    "tieu_de": "Births per woman 2022"
   },
-  "MISSINGPIECE": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [],
-   "tieu_de": "Disappearance of Marvin Clark — Aug 23, 2026"
-  },
   "MPGTRUTH": {
    "diem": 100,
    "bo_qua": false,
@@ -153,9 +150,9 @@
   "NIGHTSHIFT": {
    "diem": 100,
    "bo_qua": false,
-   "dang": "cinematic",
+   "dang": "ranked",
    "loi": [],
-   "tieu_de": "Anthony Robinson (serial killer) — Aug 17, 2026"
+   "tieu_de": "Cases America read about — Anthony Robinson, 32.0K — Aug 17, 2026"
   },
   "ONEHIT": {
    "diem": 100,
@@ -223,9 +220,9 @@
   "REALPLACE": {
    "diem": 100,
    "bo_qua": false,
-   "dang": "cinematic",
+   "dang": "ranked",
    "loi": [],
-   "tieu_de": "Neatsville, Kentucky — Aug 20, 2026"
+   "tieu_de": "Neatsville, Kentucky: 84.1K — Places America looked up — Aug 20, 2026"
   },
   "RECALLPLATE": {
    "diem": 100,
@@ -260,7 +257,7 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "500 planes are over America right now — The whole country"
+   "tieu_de": "520 planes are over America right now — The whole country"
   },
   "SONGFILE": {
    "diem": 100,
@@ -295,7 +292,7 @@
    "bo_qua": false,
    "dang": "thennow",
    "loi": [],
-   "tieu_de": "City street in the archive, decades apart — U.S. NAVY PLANES, Schenectady City"
+   "tieu_de": "City street in the archive, decades apart"
   },
   "UNSOLVEDLOG": {
    "diem": 100,
@@ -345,6 +342,15 @@
    "dang": "cinematic",
    "loi": [],
    "tieu_de": "Order on Motion - Aldin Associates Ltd. — First amendment"
+  },
+  "MISSINGPIECE": {
+   "diem": 0,
+   "bo_qua": true,
+   "dang": "ranked",
+   "loi": [
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+   ],
+   "tieu_de": ""
   },
   "NEAREARTH": {
    "diem": 0,

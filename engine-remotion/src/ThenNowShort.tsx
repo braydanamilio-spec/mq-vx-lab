@@ -57,12 +57,17 @@ const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number; font?: stri
     // 23/8 (user: "khung đen kết thúc cuối video"): gốc AbsoluteFill này TRƯỚC ĐÂY KHÔNG CÓ NỀN.
     // Hai panel bên trong chạy theo animation, hết nội dung (hoặc lúc video còn dài hơn phần hình)
     // là lộ nền trong suốt -> Remotion xuất ra ĐEN. Nay luôn có nền thương hiệu phía dưới cùng.
-    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 12%, #6f5025 0%, #55401e 55%, #3c2d1e 100%)" }}>
+    // 29/8 — Đo 3 khung thật RENT REALITY sau lượt nâng nền trước: sáng 61/255, còn 31,9%
+    // điểm gần như đen, vẫn dưới ngưỡng 75. Nền chung chỉ lộ ra quanh viền; chỗ tối thật là
+    // HAI TẤM PANEL và BỘ LỌC ẢNH bên trong chúng.
+    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 12%, #a8793a 0%, #86642f 55%, #63492f 100%)" }}>
       {/* PANEL XƯA (trên) */}
       <div style={{ position: "absolute", top: 150, left: 40, right: 40, height: HALF, borderRadius: 26, overflow: "hidden",
         transform: `translateY(${(1 - thenIn) * -60}px)`, opacity: thenIn, border: `3px solid ${SEPIA}` }}>
-        {p.thenImg ? <SafeImg src={staticFile(p.thenImg)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoomT})`, filter: "sepia(0.75) contrast(1.05) brightness(0.72)" }} /> : null}
-        <AbsoluteFill style={{ background: p.thenImg ? "linear-gradient(180deg,#1a120655,#0d0a0477)" : "linear-gradient(160deg,#775d2d,#57411a)" }} />
+        {p.thenImg ? <SafeImg src={staticFile(p.thenImg)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoomT})`, // brightness 0.72 tức DÌM ảnh xuống 72% — cộng thêm lớp phủ đen bên dưới nữa thì tấm
+          // ảnh gần như biến mất. Giữ chất sepia hoài niệm, bỏ phần dìm.
+          filter: "sepia(0.7) contrast(1.04) brightness(1.02)" }} /> : null}
+        <AbsoluteFill style={{ background: p.thenImg ? "linear-gradient(180deg,#4a341533,#33250f4d)" : "linear-gradient(160deg,#775d2d,#57411a)" }} />
         <div style={{ position: "absolute", top: 26, left: 30, background: SEPIA, color: "#1a1206", fontWeight: 900, fontSize: 40, padding: "8px 22px", borderRadius: 12, fontFamily: phong(font), zIndex: 2 }}>{p.thenYear}</div>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 30px", fontFamily: phong(font) }}>
           <div style={{ color: "#e8d3a0", fontWeight: 800, fontSize: 42, letterSpacing: 1, textTransform: "uppercase", textAlign: "center" }}>{p.label}</div>
@@ -87,8 +92,9 @@ const TNPairView: React.FC<{ p: TNPair; accent: string; sec: number; font?: stri
       {/* PANEL NAY (dưới) */}
       <div style={{ position: "absolute", top: 150 + HALF + 20, left: 40, right: 40, height: HALF, borderRadius: 26, overflow: "hidden",
         transform: `translateY(${(1 - nowIn) * 60}px)`, opacity: nowIn, border: `3px solid ${accent}` }}>
-        {p.nowImg ? <SafeImg src={staticFile(p.nowImg)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoomN})`, filter: "saturate(1.15) brightness(0.82)" }} /> : null}
-        <AbsoluteFill style={{ background: p.nowImg ? "linear-gradient(0deg,#0a0c1455,#0a0c1477)" : `linear-gradient(200deg,#1a0f18,#0a0c14)` }} />
+        {p.nowImg ? <SafeImg src={staticFile(p.nowImg)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoomN})`, filter: "saturate(1.15) brightness(1.05)" }} /> : null}
+        <AbsoluteFill style={{ // Panel NAY cũ là #0a0c14 — gần như đen tuyệt đối, chính nó kéo cả khung xuống.
+          background: p.nowImg ? "linear-gradient(0deg,#25293a33,#1c20304d)" : `linear-gradient(200deg,#4a3448,#2c3244)` }} />
         <div style={{ position: "absolute", top: 26, right: 30, background: accent, color: "#0a0c14", fontWeight: 900, fontSize: 40, padding: "8px 22px", borderRadius: 12, fontFamily: phong(font), zIndex: 2 }}>{p.nowYear}</div>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 30px", fontFamily: phong(font) }}>
           <div style={{ color: "#f6b7d8", fontWeight: 800, fontSize: 42, letterSpacing: 1, textTransform: "uppercase", textAlign: "center" }}>{p.label}</div>

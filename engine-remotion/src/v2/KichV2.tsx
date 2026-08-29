@@ -99,9 +99,32 @@ const SoTo: React.FC<{ so: string; nhan?: string; p: number; mau: Paltte }> = ({
       <text x={0} y={0} textAnchor="middle" fontSize={124} fontWeight={900}
             fill={mau.nhan} stroke={mau.muc} strokeWidth={9} paintOrder="stroke"
             style={{ fontVariantNumeric: "tabular-nums" }}>{hien}</text>
+      {/* 29/8 — CẮT THEO TỪ, KHÔNG CẮT GIỮA CHỮ. Khung demo: "MIDWEST POULTRY SE",
+          "COURT OF APPEALS F", "ARTIFICIAL INTELLI" — cả ba đều đứt ngang một chữ và đọc ra như
+          lỗi phần mềm. Nhãn nằm ngay dưới con số lớn nhất khung, tức chỗ mắt dừng lâu nhất.
+          CHÚ THÍCH PHẢI NẰM NGOÀI biểu thức ba ngôi. Đặt một khối chú thích JSX ngay sau dấu
+          hỏi của toán tử ba ngôi là cú pháp SAI: dấu ngoặc nhọn ở vị trí đó mở một object
+          literal chứ không mở một chú thích.
+          Và lần vá đầu tôi còn viết nguyên cái cú pháp hỏng ấy VÀO TRONG chú thích này — chuỗi
+          đóng khối nằm giữa câu văn nên chú thích tự kết thúc sớm, đẻ ra một lỗi thứ hai ngay
+          trong lời giải thích về lỗi thứ nhất.
+          Đáng ghi vì bán kính sát thương: Remotion gói MỌI composition vào MỘT bundle, nên một
+          tệp thế hệ 3 hỏng cú pháp làm CẢ 50 KÊNH thế hệ 2 không render được. */}
       {nhan ? (
         <text x={0} y={62} textAnchor="middle" fontSize={38} fontWeight={800}
-              fill={mau.muc} opacity={0.86} letterSpacing={1.5}>{nhan.toUpperCase()}</text>
+              fill={mau.muc} opacity={0.86} letterSpacing={1.5}>
+          {(() => {
+            const t = String(nhan).toUpperCase().trim();
+            if (t.length <= 20) return t;
+            const tu = t.split(" ");
+            const ra: string[] = [];
+            for (const w of tu) {
+              if ([...ra, w].join(" ").length > 20) break;
+              ra.push(w);
+            }
+            return (ra.join(" ") || t.slice(0, 20)).replace(/[ ,;:-]+$/, "");
+          })()}
+        </text>
       ) : null}
     </g>
   );
@@ -111,18 +134,35 @@ const SoTo: React.FC<{ so: string; nhan?: string; p: number; mau: Paltte }> = ({
 const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte }> = ({ cot, p, mau }) => {
   const dinh = Math.max(1, ...cot.map((c) => c.gt));
   return (
-    <g transform="translate(150 120)">
-      {cot.map((c, i) => {
-        const moc = muot(kep((p - i * 0.06) / 0.3));
-        const h = (c.gt / dinh) * 300 * moc;
+    // 29/8 — BỐN CỘT, VÀ TÍNH CHỖ THAY VÌ BỐC. Khung demo: sáu cột chạy quá mép phải khung, còn
+    // nhãn dưới chân cột thì dính vào nhau ("InformationFinanceProfession"). Vùng còn trống bên
+    // phải nhân vật rộng khoảng 520 đơn vị; chia cho sáu cột thì mỗi cột 86 đơn vị, mà nhãn ngắn
+    // nhất cũng cần ~110 để đọc được. Bốn cột thì vừa, và bốn dòng cũng đủ để so cao thấp.
+    <g transform="translate(-30 150)">
+      {cot.slice(0, 4).map((c, i) => {
+        const moc = muot(kep((p - i * 0.07) / 0.3));
+        const h = (c.gt / dinh) * 330 * moc;
         return (
-          <g key={i} transform={`translate(${i * 104} 0)`}>
-            <rect x={0} y={-h} width={78} height={h} rx={7}
+          <g key={i} transform={`translate(${i * 128} 0)`}>
+            <rect x={0} y={-h} width={96} height={h} rx={8}
                   fill={i === 0 ? mau.nhan : "#F2C230"} stroke={mau.muc} strokeWidth={5} />
-            <text x={39} y={-h - 16} textAnchor="middle" fontSize={30} fontWeight={900}
+            <text x={48} y={-h - 18} textAnchor="middle" fontSize={32} fontWeight={900}
                   fill={mau.muc} opacity={moc}>{c.hien}</text>
-            <text x={39} y={28} textAnchor="middle" fontSize={22} fontWeight={700}
-                  fill={mau.muc} opacity={0.75 * moc}>{c.nhan.slice(0, 11)}</text>
+            {/* Nhãn chân cột XUỐNG HAI DÒNG. Cột rộng 96 đơn vị mà nhãn 12 ký tự ở cỡ 21 cần
+                ~130 — nên bốn nhãn dính vào nhau thành một vệt chữ ("MIDWEST POU Bazzini LLC
+                CHEER PAC..."). Cắt theo TỪ rồi xếp hai dòng thì vừa khung mà vẫn đọc được. */}
+            {(() => {
+              const tu = String(c.nhan).split(" ").filter(Boolean);
+              const d1: string[] = [], d2: string[] = [];
+              for (const w of tu) {
+                if (d1.join(" ").length + w.length <= 10) d1.push(w);
+                else if (d2.join(" ").length + w.length <= 10) d2.push(w);
+              }
+              return [d1.join(" "), d2.join(" ")].filter(Boolean).map((d, j) => (
+                <text key={j} x={48} y={30 + j * 22} textAnchor="middle" fontSize={19}
+                      fontWeight={700} fill={mau.muc} opacity={0.8 * moc}>{d}</text>
+              ));
+            })()}
           </g>
         );
       })}
@@ -135,16 +175,23 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number }> = ({
   const k = tu.findIndex((w) => giay >= w.t && giay < w.t + w.d);
   if (k < 0 && !tu.some((w) => Math.abs(w.t - giay) < 1.2)) return null;
   const tam = k >= 0 ? k : tu.findIndex((w) => w.t > giay);
-  const dau = Math.max(0, (tam < 0 ? tu.length : tam) - 4);
-  const doan = tu.slice(dau, dau + 9);
+  const dau = Math.max(0, (tam < 0 ? tu.length : tam) - 2);
+  // 29/8 — SÁU TỪ, XUỐNG HAI DÒNG. Bản đầu đổ chín từ lên MỘT dòng và nó chạy tràn cả hai mép
+  // khung. SVG `<text>` KHÔNG tự xuống dòng — không có thuộc tính nào bảo nó làm thế — nên phải
+  // tự cắt dòng. Sáu từ là vừa đủ để mắt bắt kịp ở tốc độ đọc 2,5 từ/giây mà không phải liếc.
+  const doan = tu.slice(dau, dau + 6);
+  const nua = Math.ceil(doan.length / 2);
+  const dong = [doan.slice(0, nua), doan.slice(nua)];
   return (
     <g transform={`translate(0 ${day})`}>
-      <text x={0} y={0} textAnchor="middle" fontSize={46} fontWeight={900}
-            stroke={mau.muc} strokeWidth={9} paintOrder="stroke" fill="#FFFFFF">
-        {doan.map((w, i) => (
-          <tspan key={i} fill={k >= 0 && tu[k] === w ? mau.nhan : "#FFFFFF"}>{w.w} </tspan>
-        ))}
-      </text>
+      {dong.map((d, j) => (
+        <text key={j} x={0} y={j * 56} textAnchor="middle" fontSize={44} fontWeight={900}
+              stroke={mau.muc} strokeWidth={9} paintOrder="stroke" fill="#FFFFFF">
+          {d.map((w, i) => (
+            <tspan key={i} fill={k >= 0 && tu[k] === w ? mau.nhan : "#FFFFFF"}>{w.w} </tspan>
+          ))}
+        </text>
+      ))}
     </g>
   );
 };
@@ -184,7 +231,15 @@ export const KichV2: React.FC<PropsKich> = ({
   const noi = visemeTai(tu, giay, CAM_XUC[C.camXuc || "trung_tinh"].ha);
   const nhin = C.nhin || [0, 0];
 
-  const vb = doc ? "-500 -700 1000 1500" : "-820 -560 1640 1120";
+  // 29/8 — VIEWBOX PHẢI CÙNG TỈ LỆ VỚI KHUNG XUẤT.
+  // Khung demo: tiêu đề và phụ đề đều bị cắt cụt hai mép ("...your bank actually healthy",
+  // "...he clause they hope you ski"). Không phải chữ dài quá — mà `preserveAspectRatio="slice"`
+  // PHÓNG ĐỂ LẤP ĐẦY rồi cắt phần thừa. Khung dọc 1080×1920 có tỉ lệ 0,5625 còn viewBox
+  // 1000×1500 có tỉ lệ 0,667, nên nó cắt mất hai bên — đúng chỗ chữ nằm.
+  // Cho viewBox đúng tỉ lệ khung thì không còn gì để cắt: dọc 1000×1778, ngang 1640×922.
+  const _cao = Math.round(1000 * (height / width));
+  const vb = doc ? `-500 ${-Math.round(_cao * 0.47)} 1000 ${_cao}`
+                 : `-820 ${-Math.round(1640 * (height / width) * 0.5)} 1640 ${Math.round(1640 * (height / width))}`;
 
   return (
     <AbsoluteFill style={{ background: mau.troi[1], fontFamily: font || "Poppins, Arial, sans-serif" }}>
@@ -236,7 +291,7 @@ export const KichV2: React.FC<PropsKich> = ({
         ) : null}
         <PhuDe tu={tu} giay={giay} mau={mau} day={doc ? 610 : 430} />
         {nguon ? (
-          <text x={0} y={doc ? 700 : 500} textAnchor="middle" fontSize={22} fontWeight={700}
+          <text x={0} y={doc ? 790 : 500} textAnchor="middle" fontSize={22} fontWeight={700}
                 fill={mau.muc} opacity={0.45}>Source: {nguon}</text>
         ) : null}
       </svg>

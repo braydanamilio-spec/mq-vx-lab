@@ -1734,6 +1734,37 @@ def _re_ascii(h) -> bool:
 
 
 
+def t_tsx_dich_duoc():
+    """MỌI tệp .tsx trong engine phải dịch được. Một tệp hỏng cú pháp là CẢ NHÀ MÁY đứng.
+
+    29/8 — đo được, không phải lo xa. Tôi thêm một chú thích đặt sai chỗ trong `src/v2/KichV2.tsx`
+    (tệp của bộ kênh MỚI, chẳng liên quan gì tới 50 kênh cũ), và lượt render kế tiếp cho ra:
+        ❌ BREED FILE      RankedShort   CalledProcessError
+        ❌ WHAT THEY SEARCH RankedShort  CalledProcessError
+        ❌ WHERE TO MOVE   MappedShort   CalledProcessError
+        ❌ SPACE INVOICE   RaceShort     CalledProcessError
+    Bốn kênh khác nhau, bốn composition khác nhau, không kênh nào dùng tệp tôi vừa sửa. Vì
+    Remotion GÓI MỌI COMPOSITION VÀO MỘT BUNDLE — một tệp không dịch được thì không composition
+    nào dựng được. Bán kính sát thương của một dấu ngoặc đặt sai là toàn bộ 50 kênh.
+    Không có chốt này thì lỗi ấy chỉ lộ ra khi 18 luồng đã chạy và cả phiên đã mất.
+
+    Dùng `esbuild` có sẵn trong node_modules: nó là đúng bộ dịch mà Remotion dùng, nên thứ nó
+    chấp nhận cũng là thứ bundle chấp nhận. Chạy hết 69 tệp mất chưa tới một giây."""
+    import glob as _g
+    import os as _os
+    import subprocess as _sp
+    eng = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "engine-remotion")
+    eb = _os.path.join(eng, "node_modules", ".bin", "esbuild")
+    if not _os.path.exists(eb):
+        return                      # máy chưa cài phụ thuộc -> bỏ qua, không báo đỏ oan
+    fs = sorted(_g.glob(_os.path.join(eng, "src", "**", "*.tsx"), recursive=True))
+    assert len(fs) > 20, f"chỉ thấy {len(fs)} tệp .tsx — nhiều khả năng sai đường dẫn"
+    r = _sp.run([eb, "--outdir=" + _os.path.join(_os.sep, "tmp", "_selftest_tsx")] + fs,
+                capture_output=True, text=True, timeout=180)
+    loi = [l.strip() for l in (r.stderr or "").split("\n") if "ERROR" in l]
+    assert r.returncode == 0, f"{len(loi)} tệp .tsx KHÔNG dịch được: " + " | ".join(loi[:3])
+
+
 def t_moc_don_rieng_khop_ten_kenh():
     """`MOC_THEO_KENH` phải viết tên theo ĐÚNG khuôn khoá của sổ job, nếu không nó dọn 0 video.
 
@@ -2382,6 +2413,7 @@ def main():
     check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
     check("bảng mốc dọn riêng phải khớp tên kênh thật", t_moc_don_rieng_khop_ten_kenh)
+    check("mọi tệp .tsx phải dịch được (1 tệp hỏng = CẢ 50 kênh đứng)", t_tsx_dich_duoc)
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
     check("gen-2 ra BỘ 1 long + 3 short (có cha/thứ tự)", t_gen2_phai_ra_bo_1long_3short)
     check("bộ không được chọn story hai lần", t_bo_khong_duoc_chon_story_hai_lan)

@@ -75,10 +75,24 @@ MOC_ENGINE = "2026-08-29T10:30:00Z"
 # không dính lỗi nào trong số đó — nâng mốc chung là gạt hàng nghìn video ĐÚNG CHUẨN ra khỏi hàng
 # đăng để dọn cho 12 kênh. Cái giá sai lệch hẳn về một phía.
 # Mốc riêng thì mỗi kênh bị loại đúng vì lỗi CỦA CHÍNH NÓ.
+# 29/8 12:00Z — BA KÊNH ĐỔI HẲN CÁCH KỂ, mốc riêng muộn hơn cả mốc chung.
+# REAL PLACE · NIGHT SHIFT · MISSING PIECE chuyển từ dạng phim kể (ảnh AI vẽ sương mù, cửa hé,
+# khúc sông — không liên quan nội dung) sang dạng BIỂU ĐỒ. Video của ba kênh này dựng trong
+# khoảng 10:30Z–12:00Z lọt qua mốc chung nhưng vẫn mang ảnh cũ, nên phải có mốc riêng muộn hơn.
 MOC_THEO_KENH = {ten: "2026-08-29T08:53:00Z" for ten in (
     "ONE HIT", "SONG FILE", "REAL PLACE", "UNSOLVED LOG", "SALARY TRUTH", "JOB DYING",
     "GAME GRAVEYARD", "DEGREE WORTH", "HOUSE MATH", "PAID VS PLAYED", "WEAPON PRICE",
     "YOUR RIGHTS CASE", "COLD FILE", "MARRIAGE MATH", "NIGHT SHIFT")}
+# 29/8 12:00Z — BA KÊNH ĐỔI HẲN CÁCH KỂ, mốc riêng muộn hơn cả mốc chung.
+# REAL PLACE · NIGHT SHIFT · MISSING PIECE chuyển từ dạng phim kể (ảnh AI vẽ sương mù, cửa hé,
+# khúc sông — không liên quan nội dung) sang dạng BIỂU ĐỒ. Video của ba kênh này dựng trong
+# khoảng 10:30Z-12:00Z lọt qua mốc chung nhưng vẫn mang ảnh cũ, nên phải có mốc riêng muộn hơn.
+#
+# GHI ĐÈ SAU, KHÔNG GHI TRƯỚC. Bản đầu tôi đặt ba mốc 12:00Z rồi mới `.update()` bộ 08:53Z lên —
+# mà REAL PLACE nằm trong CẢ HAI danh sách, nên nó bị kéo ngược về mốc sớm và ba kênh chỉ còn
+# hai kênh được bảo vệ. Gộp hai bảng thì thứ tự quyết định kết quả, và tôi đã gộp ngược.
+MOC_THEO_KENH.update({ten: "2026-08-29T12:00:00Z" for ten in (
+    "REAL PLACE", "NIGHT SHIFT", "MISSING PIECE")})
 
 
 def _chuan(t: str) -> str:
