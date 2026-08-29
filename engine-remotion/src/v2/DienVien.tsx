@@ -149,17 +149,23 @@ export const visemeTai = (tu: Tu[], giay: number, haSan: number): Viseme => {
 export type TenCuChi =
   | "nghi" | "chi" | "mo_tay" | "dem" | "suy_nghi" | "nhun_vai" | "gio_len" | "khoanh_tay";
 
+// 29/8 — GÓC TUYỆT ĐỐI TRONG HỆ SVG, KHÔNG CỘNG THÊM 90 Ở CHỖ DÙNG.
+// Khung render đầu tiên cho ra một nhân vật duỗi thẳng hai tay ngang vai như bù nhìn. Vì bảng
+// này ghi góc "so với thân" rồi chỗ dùng lại cộng thêm 90 — hai quy ước chồng lên nhau, và
+// "nghỉ" (78) hoá ra 168 độ, tức chỉ thẳng sang trái.
+// Nay chỉ còn MỘT quy ước, ghi ngay đây: 90 = thẳng xuống đất · 0 = ngang sang phải ·
+// 180 = ngang sang trái · số ÂM = chếch lên. Đọc bảng là hình dung ra tư thế.
 export const CU_CHI: Record<TenCuChi, {
   vaiT: number; khuyuT: number; vaiP: number; khuyuP: number; banT?: number; banP?: number;
 }> = {
-  nghi: { vaiT: 78, khuyuT: 12, vaiP: 102, khuyuP: -12 },
-  chi: { vaiT: 78, khuyuT: 10, vaiP: 28, khuyuP: 8, banP: -14 },           // trỏ sang phải
-  mo_tay: { vaiT: 46, khuyuT: 44, vaiP: 134, khuyuP: -44 },                // ngửa hai bàn tay
-  dem: { vaiT: 70, khuyuT: 62, vaiP: 118, khuyuP: -70 },                   // đếm trên ngón
-  suy_nghi: { vaiT: 80, khuyuT: 6, vaiP: 92, khuyuP: -104, banP: -30 },    // tay chống cằm
-  nhun_vai: { vaiT: 36, khuyuT: 56, vaiP: 144, khuyuP: -56 },
-  gio_len: { vaiT: 80, khuyuT: 8, vaiP: 66, khuyuP: -96 },                 // giơ tay lên
-  khoanh_tay: { vaiT: 62, khuyuT: 72, vaiP: 118, khuyuP: -72 },
+  nghi: { vaiT: 100, khuyuT: -8, vaiP: 80, khuyuP: 8 },                    // buông xuôi, hơi hở nách
+  chi: { vaiT: 100, khuyuT: -4, vaiP: -22, khuyuP: 14 },                   // tay phải trỏ chếch LÊN
+  mo_tay: { vaiT: 128, khuyuT: -46, vaiP: 52, khuyuP: 46 },                // ngửa hai bàn tay ra
+  dem: { vaiT: 112, khuyuT: -58, vaiP: 68, khuyuP: 58 },                   // hai tay lên trước ngực
+  suy_nghi: { vaiT: 100, khuyuT: -6, vaiP: 74, khuyuP: -96 },              // tay phải chống cằm
+  nhun_vai: { vaiT: 138, khuyuT: -54, vaiP: 42, khuyuP: 54 },
+  gio_len: { vaiT: 100, khuyuT: -6, vaiP: -52, khuyuP: -18 },              // giơ tay phải lên cao
+  khoanh_tay: { vaiT: 116, khuyuT: -72, vaiP: 64, khuyuP: 72 },            // khoanh trước ngực
 };
 
 export type TenDang = "dung" | "ngoi" | "di" | "chay" | "nhay";
@@ -251,10 +257,10 @@ export const DienVien: React.FC<PropsDien> = ({
 
   // Lò xo đưa tay tới đích cử chỉ: không nhảy cóc, có một nhịp nhún nhẹ khi tới nơi.
   const nhun = (g: number) => g + Math.sin(t * 2.3) * 2.4;
-  const khuyuT = P(vaiT[0], vaiT[1], daiTren, nhun(G.vaiT) + 90);
-  const tayT = P(khuyuT[0], khuyuT[1], daiDuoi, nhun(G.vaiT) + 90 + G.khuyuT);
-  const khuyuP = P(vaiP[0], vaiP[1], daiTren, nhun(G.vaiP) + 90);
-  const tayP = P(khuyuP[0], khuyuP[1], daiDuoi, nhun(G.vaiP) + 90 + G.khuyuP);
+  const khuyuT = P(vaiT[0], vaiT[1], daiTren, nhun(G.vaiT));
+  const tayT = P(khuyuT[0], khuyuT[1], daiDuoi, nhun(G.vaiT) + G.khuyuT);
+  const khuyuP = P(vaiP[0], vaiP[1], daiTren, nhun(G.vaiP));
+  const tayP = P(khuyuP[0], khuyuP[1], daiDuoi, nhun(G.vaiP) + G.khuyuP);
 
   // ── CHÂN: đứng / ngồi / bước ───────────────────────────────────────────────────────────
   const buoc = dang === "di" ? Math.sin(t * 5.4) : dang === "chay" ? Math.sin(t * 9.2) : 0;
@@ -286,11 +292,17 @@ export const DienVien: React.FC<PropsDien> = ({
   const mH = dauR * (0.02 + Math.max(noi.h, E.ha * 0.5) * 0.26);
   const cong = E.khoe * dauR * 0.1;                       // khoé miệng nhếch/mếu
 
-  const nhomKieu = { transform: `translate(${x} ${y}) scale(${(lat ? -scale : scale)} ${scale})` };
+  // 29/8 — DÙNG THUỘC TÍNH `transform` CỦA SVG, KHÔNG DÙNG `style`.
+  // Ba lần liền tôi đổi hệ số cỡ (1.12 -> 2.1 -> 3.0) mà khung render ra GIỐNG HỆT NHAU, và tôi
+  // suýt đi đổ lỗi cho máy quay. Gốc là chỗ này: đặt qua `style` thì trình duyệt đọc chuỗi ấy
+  // bằng luật CSS, mà CSS đòi đơn vị và dấu phẩy — `translate(0 236) scale(3 3)` là cú pháp SVG,
+  // CSS không phân tích được nên VỨT CẢ CHUỖI. Không lỗi, không cảnh báo, chỉ là không có gì xảy
+  // ra. Thuộc tính `transform` của SVG thì nhận đúng cú pháp này.
+  const bien = `translate(${x} ${y}) scale(${(lat ? -scale : scale)} ${scale})`;
   const vien = { stroke: net, strokeWidth: NET, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
 
   return (
-    <g style={nhomKieu as any}>
+    <g transform={bien}>
       <g transform={`translate(0 ${nhayY})`}>
         {/* ── CHÂN ───────────────────────────────────────────────────────────── */}
         {([[goiT, chanT], [goiP, chanP]] as [number[], number[]][]).map((v, i) => (

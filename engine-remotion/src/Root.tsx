@@ -35,6 +35,7 @@ import { Brand } from "./Brand";
 import { BrandRanked } from "./BrandRanked";
 import { StickDemo } from "./StickAnim";
 import { StickStory, calcStory } from "./StickStory";
+import { KichV2, calcKich } from "./v2/KichV2";
 import { SayThisMG, calcMG } from "./SayThisMG";
 import { BrandBeyond } from "./BrandBeyond";
 import { BrandLegacy } from "./BrandLegacy";
@@ -247,6 +248,11 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="ToonLong" component={ToonShort} durationInFrames={300} fps={30} width={1920} height={1080} defaultProps={{ slug: "", title: "", frames: [], lines: [] }} calculateMetadata={calcToon} />
     <Composition id="LottieTest" component={LottieTest} durationInFrames={120} fps={30} width={1920} height={1080} />
     <Composition id="StickDemo" component={StickDemo} durationInFrames={230} fps={30} width={1080} height={1920} />
+    {/* THẾ HỆ 3 — phim hoạt hình có nhân vật, dựng hoàn toàn bằng vector, KHÔNG tốn lượt vẽ AI. */}
+    <Composition id="KichV2" component={KichV2 as any} durationInFrames={600} fps={30}
+                 width={1080} height={1920} calculateMetadata={calcKich as any} />
+    <Composition id="KichV2Wide" component={KichV2 as any} durationInFrames={600} fps={30}
+                 width={1920} height={1080} calculateMetadata={calcKich as any} />
     <Composition id="StickStory" component={StickStory} durationInFrames={880} fps={30} width={1080} height={1920} calculateMetadata={calcStory} />
     <Composition id="SayThisMG" component={SayThisMG} durationInFrames={900} fps={30} width={1080} height={1920} defaultProps={{ scenes: [] }} calculateMetadata={calcMG} />
     <Composition id="SayThisMGWide" component={SayThisMG} durationInFrames={900} fps={30} width={1920} height={1080} defaultProps={{ scenes: [] }} calculateMetadata={calcMG} />
