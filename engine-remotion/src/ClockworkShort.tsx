@@ -214,7 +214,6 @@ export const ClockworkShort: React.FC<ClockworkProps> = (props) => {
       ) : null}
 
       <KaraokeCaption subs={subs} />
-      <div style={{ position: "absolute", bottom: 50, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 32, textShadow: "0 2px 10px #000" }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
     </AbsoluteFill>

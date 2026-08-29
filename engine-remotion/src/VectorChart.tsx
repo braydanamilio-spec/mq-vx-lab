@@ -200,7 +200,6 @@ export const VectorChart: React.FC<RankedProps> = (props) => {
                     display: "flex", justifyContent: "space-between",
                     color: MUC, opacity: 0.44, fontWeight: 700, fontSize: 21 }}>
         <span>{source ? `Source: ${source}` : ""}</span>
-        <span>{handle}</span>
       </div>
 
       {/* Băng phụ đề: NỀN CỦA NÓ TỐI, dù nền trang là giấy sáng.

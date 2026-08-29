@@ -159,7 +159,6 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
       ) : null}
       {/* chân: nguồn + handle */}
       {source ? <div style={{ position: "absolute", bottom: port ? 70 : 40, left: M, fontSize: port ? 30 : 26, color: "#5B7290" }}>Source: {source}</div> : null}
-      {handle ? <div style={{ position: "absolute", bottom: port ? 70 : 40, right: M, fontSize: port ? 32 : 28, fontWeight: 800, color: "#7FA8D0" }}>{handle}</div> : null}
       {music ? <Audio src={staticFile(music)} volume={0.12} /> : null}
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {/* CHUYỂN CẢNH khớp DỮ LIỆU: mỗi lần soán ngôi là một nhịp. Đây là chỗ dạng đua ăn đứt các

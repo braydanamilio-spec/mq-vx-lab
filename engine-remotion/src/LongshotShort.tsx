@@ -380,7 +380,6 @@ export const LongshotShort: React.FC<LongshotProps> = (props) => {
                     })} />
       ) : null}
 
-      <div style={{ position: "absolute", bottom: 44, left: 0, right: 0, textAlign: "center", color: "#ffffff5c", fontWeight: 700, fontSize: 24, letterSpacing: 0.5, textShadow: "0 1px 6px #0009" }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <Karaoke subs={subs} accent={accent} />

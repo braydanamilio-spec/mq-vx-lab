@@ -1805,6 +1805,19 @@ def t_moi_kenh_gen2_phai_xoay_duoc_de_tai():
         fn = mp.get(ham)
         b = _re.search(r"def " + str(fn) + r"\(.*?(?=\ndef )", src, _re.S) if fn else None
         doc = set(_re.findall(r'ky\.get\("(\w+)"', b.group(0))) if b else set()
+        # 29/8 — ĐI THEO MỘT TẦNG GIÁN TIẾP. Năm bộ dựng cùng dựng ngày gốc từ `ky`, và cả năm
+        # từng ném `ValueError: day is out of range for month` khi kho xoay đưa vào số ngày lùi
+        # (45, 60, … 730) mà chúng lại hiểu là ngày trong tháng — lỗi ấy GIẾT CẢ LUỒNG, không
+        # phải bỏ một đề tài. Gom về một hàm chung `_ngay_goc(ky)` là đúng, nhưng làm thế thì
+        # `ky.get("lui")` không còn nằm trong thân bộ dựng nữa và chốt này báo đỏ oan.
+        # Nên: hàm nào được gọi với chính `ky` thì đọc luôn thân nó. Không nới lỏng chốt — vẫn
+        # đòi trục PHẢI được đọc thật, chỉ là nhìn được qua một lần gọi hàm.
+        if b:
+            for _h in set(_re.findall(r"(_\w+)\(ky\)", b.group(0))):
+                _hb = _re.search(r"def " + _h + r"\(.*?(?=\ndef )", src, _re.S)
+                if _hb:
+                    doc |= set(_re.findall(r'ky\.get\("(\w+)"', _hb.group(0)))
+                    doc |= set(_re.findall(r'ky\["(\w+)"\]', _hb.group(0)))
         if doc and truc not in doc:
             xau.append(f"{k['ten']}: trục `{truc}` mà {fn} không đọc (nó đọc {sorted(doc)})")
     assert not xau, f"{len(xau)} kênh: " + "; ".join(xau[:4])

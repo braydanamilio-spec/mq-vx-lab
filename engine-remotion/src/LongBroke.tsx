@@ -126,7 +126,6 @@ export const LongBroke: React.FC<LProps> = ({ scenes, slug, persona = BROKE_PERS
       {s.type !== "chapter" && s.type !== "payoff" && <Karaoke nar={s.nar} l={l} d={s.dur} />}
       {s.source && <div style={{ position: "absolute", right: 28, bottom: 18, fontSize: 22, color: "#6b6457" }}>Source: {s.source} (approx.)</div>}
       {(s.type === "pct" || s.type === "crowd" || s.type === "houses" || s.type === "stat") && <div style={{ position: "absolute", right: 28, bottom: 18, fontSize: 22, color: "#6b6457" }}>Source: Harvard JCHS / U.S. Census / NLIHC (approx.)</div>}
-      <div style={{ position: "absolute", top: 30, right: 40, fontSize: 26, color: "#6b6457", fontWeight: 700 }}>{handle}</div>
       {/* nhạc nền fade in/out: video ngắn (TOTAL<=90 frame, vd bản QC render ít cảnh) làm TOTAL-50 < 40
           -> mốc [0,40,TOTAL-50,TOTAL] không tăng dần -> Remotion interpolate() throw NGAY TRONG callback volume (crash cả render).
           Tách thành 2 khoảng riêng (fade-in / fade-out) rồi lấy min, giống pattern an toàn trong Cinematic.tsx. */}

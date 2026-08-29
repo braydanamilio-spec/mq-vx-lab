@@ -52,6 +52,20 @@ SAN_AN_TOAN = 30
 # phục hồi thì chỉ là một lượt ghi ngược lại. Xoá tệp là việc một chiều; ở đây không cần một chiều.
 MOC_ENGINE = "2026-08-28T17:44:00Z"
 
+# ── MỐC RIÊNG TỪNG KÊNH (29/8/2026) ────────────────────────────────────────────────────────
+# 12 kênh vừa được sửa vì NHÃN THƯƠNG HIỆU HỨA MỘT ĐẰNG, NỘI DUNG MỘT NẺO — thứ nặng hơn xấu:
+# REAL PLACE ("nơi có thật") ra phim "Muppet Treasure Island"; ONE HIT ra các ban tên "Viral";
+# SALARY TRUTH ("nghề này trả bao nhiêu") vẽ tổng số việc làm. Bản vá nằm ở commit fd167c0.
+#
+# VÌ SAO KHÔNG NÂNG THẲNG `MOC_ENGINE` LÊN 29/8. Mốc chung áp cho CẢ 50 kênh, mà 38 kênh còn lại
+# không dính lỗi nào trong số đó — nâng mốc chung là gạt hàng nghìn video ĐÚNG CHUẨN ra khỏi hàng
+# đăng để dọn cho 12 kênh. Cái giá sai lệch hẳn về một phía.
+# Mốc riêng thì mỗi kênh bị loại đúng vì lỗi CỦA CHÍNH NÓ.
+MOC_THEO_KENH = {ten: "2026-08-29T08:53:00Z" for ten in (
+    "ONE HIT", "SONG FILE", "REAL PLACE", "UNSOLVED LOG", "SALARY TRUTH", "JOB DYING",
+    "GAME GRAVEYARD", "DEGREE WORTH", "HOUSE MATH", "PAID VS PLAYED", "WEAPON PRICE",
+    "YOUR RIGHTS CASE", "COLD FILE", "MARRIAGE MATH", "NIGHT SHIFT")}
+
 
 def _chuan(t: str) -> str:
     """Chuẩn hoá tiêu đề để so: bỏ dấu câu và khoảng trắng thừa, hạ chữ thường.
@@ -132,16 +146,24 @@ def main() -> int:
         return d if d.tzinfo else d.replace(tzinfo=_dt.timezone.utc)
 
     moc = _luc(a.moc_engine)
+    moc_kenh = {k.upper(): _luc(v) for k, v in MOC_THEO_KENH.items()}
     cu_engine = []
     khong_ro = 0
+    rieng = defaultdict(int)
     for (ch, _t), ds in nhom.items():
+        # Kênh có mốc riêng thì DÙNG MỐC RIÊNG, không phải mốc muộn hơn trong hai cái: mốc riêng
+        # bao giờ cũng muộn hơn mốc chung (nó vá thêm lỗi trên nền bản vá chung), nên lấy nó là
+        # đã bao trọn cả hai đời lỗi.
+        m = moc_kenh.get(ch) or moc
         for u, jid, _dr, ten in ds:
             t = _luc(u)
             if t is None:
                 khong_ro += 1        # không đọc được mốc -> KHÔNG đụng, thà bỏ sót còn hơn quét oan
                 continue
-            if moc and t < moc:
+            if m and t < m:
                 cu_engine.append((jid, ch, ten))
+                if ch in moc_kenh:
+                    rieng[ch] += 1
 
     thua = []
     theo_kenh = defaultdict(int)
@@ -160,6 +182,11 @@ def main() -> int:
     for jid, ch, ten in thua[:8]:
         print(f"     └ {ch}: {ten[:60]}")
 
+    if rieng:
+        print(f"\n  🏷️ {sum(rieng.values())} video thuộc {len(rieng)} kênh có MỐC RIÊNG "
+              f"(nhãn hứa sai nội dung, vá ở fd167c0):")
+        for ch, n in sorted(rieng.items(), key=lambda z: -z[1]):
+            print(f"     {ch:22} {n:>4} bản")
     print(f"\n  🎬 {len(cu_engine)} video dựng bằng ENGINE CŨ (trước {a.moc_engine}) — "
           f"nền neon, chưa có các bản vá nội dung. Đưa ra khỏi hàng đăng."
           + (f"  ({khong_ro} bản không đọc được mốc thời gian — KHÔNG đụng)" if khong_ro else ""))

@@ -54,7 +54,6 @@ export const Thumb: React.FC<ThumbProps> = ({
       </div>
       {/* badge số sốc */}
       {badge ? <div style={{ position: "absolute", top: 40, left: 70, background: badgeBg, color: "#fff", fontSize: 50, fontWeight: 900, padding: "8px 22px", borderRadius: 14, border: "6px solid #161616", transform: "rotate(-6deg)", WebkitTextStroke: "1px #161616" as any }}>{badge}</div> : null}
-      {handle ? <div style={{ position: "absolute", bottom: 22, left: 40, color: INK, fontSize: 30, fontWeight: 800, opacity: 0.6 }}>{handle}</div> : null}
     </AbsoluteFill>
   );
 };

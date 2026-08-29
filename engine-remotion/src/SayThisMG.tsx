@@ -312,7 +312,6 @@ export const SayThisMG: React.FC<MGProps> = ({ scenes = [], voMp3 = "stickdemo/v
     <AbsoluteFill style={{ background: "#06080c" }}>
       {sc.bg ? <PhotoBg src={sc.bg} src2={sc.bg2} lp={lp} pos={scIdx} /> : <MGBg t={t} accent={sc.kind === "wrong" ? red : accent} tone={tone} pos={scIdx} />}
       <div style={{ position: "absolute", inset: 0, opacity: trans, transform: `translate(${tx}px,${ty}px) scale(${scl})`, filter: sc.bg ? "drop-shadow(0 3px 16px rgba(0,0,0,0.85))" : "none" }}><Scene /></div>
-      <div style={{ position: "absolute", top: 70, left: 60, fontFamily: F, fontWeight: 800, fontSize: 38, color: "#8a94a3" }}>{handle}</div>
       <div style={{ position: "absolute", top: 0, left: 0, height: 8, width: `${clamp(frame / Math.max(1, durationInFrames)) * 100}%`, background: `linear-gradient(90deg,${accent},${accent}88)`, boxShadow: `0 0 12px ${accent}aa` }} />
       {vo?.words && <Cap words={vo.words} t={t} accent={accent} />}
       {voMp3 && <Audio src={staticFile(voMp3)} />}

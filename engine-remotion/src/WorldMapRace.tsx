@@ -104,7 +104,6 @@ export const WorldMapRace: React.FC<RaceProps> = (props) => {
       </div>
 
       {source ? <div style={{ position: "absolute", bottom: 36, left: 60, fontSize: 26, color: "#5B7290" }}>Source: {source}</div> : null}
-      {handle ? <div style={{ position: "absolute", bottom: 36, right: 60, fontSize: 28, fontWeight: 800, color: "#7FA8D0" }}>{handle}</div> : null}
       {music ? <Audio src={staticFile(music)} volume={0.12} /> : null}
     </AbsoluteFill>
   );

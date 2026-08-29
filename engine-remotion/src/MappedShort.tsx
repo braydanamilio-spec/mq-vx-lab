@@ -229,7 +229,6 @@ export const MappedShort: React.FC<MappedProps> = (props) => {
           chính sách nội dung hàng loạt của YouTube.
           Đặt trên @handle 42px để hai dòng không chạm nhau. */}
       <DongNguon nguon={source} day={96} />
-      <div style={{ position: "absolute", bottom: 54, left: 0, right: 0, textAlign: "center", color: "#ffffff5c", fontWeight: 700, fontSize: 24, textShadow: "0 1px 6px #0009" }}>{handle}</div>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {music ? <Audio src={staticFile(music)} volume={0.14} /> : null}
       <ChuyenCanh nhip={nhip} accent={accent} khoa={handle} />

@@ -486,6 +486,33 @@ _RIENG_TU = ("divorce", "dating", "marriage", "relationship", "breakup", "weddin
              "married", "romance", "prenup", "custody", "in-law", "long distance")
 
 
+def _ngay_goc(ky) -> "object":
+    """Ngày gốc cho các bảng "đọc nhiều nhất ngày X" — chịu được mọi kiểu giá trị trục xoay.
+
+    29/8 — VÌ SAO PHẢI GOM VỀ MỘT CHỖ. Bản vá 27/8 nhận ra `KHO_XOAY["ngay"]` chứa SỐ NGÀY LÙI
+    ([7, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365, 545, 730]) trong khi bộ dựng hiểu `ngay` là
+    NGÀY TRONG THÁNG — nên xoay tới 45 là dựng `date(2026, 8, 45)` và ném ValueError. Bản vá ấy
+    chỉ sửa MỘT trong năm chỗ dựng ngày, và thêm một trục mới (`lui`) cho vài kênh.
+    Bốn chỗ còn lại vẫn nguyên. Đo trên nhật ký phiên 05:00 hôm nay:
+        ❌ NIGHTSHIFT: BỎ — bộ gen-2 lỗi: day is out of range for month
+    Không phải bỏ một đề tài — nó ném ra ngoài và GIẾT CẢ LUỒNG, mất hết phần việc còn lại của
+    luồng đó, rồi bản ghi job nằm mở thành "job ma" sau 6 tiếng.
+    Nên: một hàm, mọi chỗ gọi, và nó KHÔNG ĐƯỢC ném. Thứ tự hiểu giá trị:
+      `lui` có mặt          -> số ngày lùi (trục đúng, kênh mới dùng cái này);
+      `ngay` hợp lệ trong tháng -> ngày trong tháng (giữ đúng ý cấu hình tay cũ);
+      `ngay` không hợp lệ   -> hiểu là SỐ NGÀY LÙI, vì đó chính là thứ kho xoay đang đưa vào.
+    """
+    import datetime as _dt
+    if ky.get("lui") is not None:
+        return _dt.date.today() - _dt.timedelta(days=abs(int(ky["lui"])))
+    nam, thang = int(ky.get("nam", 2026)), int(ky.get("thang", 8))
+    ngay = int(ky.get("ngay", 20))
+    try:
+        return _dt.date(nam, thang, ngay)
+    except ValueError:
+        return _dt.date.today() - _dt.timedelta(days=abs(ngay))
+
+
 def _bd_wiki_top(D, ky):
     # Bảng đọc nhiều trả tới 1000 bài/ngày. Lọc theo chủ đề thì phải quét CẢ bảng, quét
     # 60 dòng đầu là gần như luôn rỗng -> kênh bỏ lượt oan mỗi ngày.
@@ -501,10 +528,7 @@ def _bd_wiki_top(D, ky):
     # Trục ĐÚNG cho một bảng "đọc nhiều nhất ngày X" là SỐ NGÀY LÙI, không phải ngày trong
     # tháng: nó luôn hợp lệ, luôn trỏ tới một ngày có thật, và tự trôi theo thời gian nên
     # kho không bao giờ cũ đi.
-    if ky.get("lui") is not None:
-        goc = _dt.date.today() - _dt.timedelta(days=int(ky["lui"]))
-    else:
-        goc = _dt.date(int(ky["nam"]), int(ky["thang"]), int(ky["ngay"]))
+    goc = _ngay_goc(ky)
     if ky.get("loc") == "rieng_tu":
         r = []
         for lui in range(0, 10):
@@ -1188,7 +1212,7 @@ def _bd_wiki_bai(D, ky):
     bai = ky.get("bai") or []
     if not bai:
         return None
-    den = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    den = _ngay_goc(ky)
     tu = (den - _dt.timedelta(days=29)).strftime("%Y%m%d")
     with _cf.ThreadPoolExecutor(6) as ex:
         ket = list(ex.map(lambda t: (t, D.luot_doc_bai(t, tu, den.strftime("%Y%m%d"))), bai))
@@ -1410,10 +1434,7 @@ def _dc_wiki(D, ky):
     # phim, `_dc_wiki` cho dạng đua) vốn không đọc `lui` -> chúng lặng lẽ dùng NGÀY MẶC ĐỊNH cho
     # cả 13 giá trị xoay. Bài kiểm tay của em bị lừa: thấy 13/13 "chạy được" mà thực chất là 13
     # lần cùng một ngày, tức 13 video trùng nhau — đúng lỗi SKY RIGHT NOW cũ.
-    if ky.get("lui") is not None:
-        goc = _dt.date.today() - _dt.timedelta(days=int(ky["lui"]))
-    else:
-        goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    goc = _ngay_goc(ky)
     _TH_G = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -1658,10 +1679,7 @@ def _pk_wiki(D, ky):
     # phim, `_dc_wiki` cho dạng đua) vốn không đọc `lui` -> chúng lặng lẽ dùng NGÀY MẶC ĐỊNH cho
     # cả 13 giá trị xoay. Bài kiểm tay của em bị lừa: thấy 13/13 "chạy được" mà thực chất là 13
     # lần cùng một ngày, tức 13 video trùng nhau — đúng lỗi SKY RIGHT NOW cũ.
-    if ky.get("lui") is not None:
-        goc = _dt.date.today() - _dt.timedelta(days=int(ky["lui"]))
-    else:
-        goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    goc = _ngay_goc(ky)
     r = []
     for lui in range(0, 10):
         d = goc - _dt.timedelta(days=lui)
@@ -1671,21 +1689,80 @@ def _pk_wiki(D, ky):
     if not r:
         return None
     v = r[0]
-    canh = [
-        (f"On one single day, {v['luot_doc']:,} people looked up {v['ten']}.",
-         "a phone lying face-down on a dark table, one hard light source, long shadow"),
-        (f"It ranked number {v['hang']} across all of Wikipedia that day.",
-         "a wall of monitors seen from BEHIND, cable bundles and glow spilling round the edges"),
-        ("Nobody organised that. People just wanted to know.",
-         "crowd of people walking, all looking down at phones"),
-        (f"The second most read that day was {r[1]['ten']}." if len(r) > 1
-         else "The rest of the list was ordinary news.",
-         "rolled newspapers stacked and bound with twine, seen from the ends"),
+    hai = r[1]["ten"] if len(r) > 1 else ""
+    # ── MỖI KÊNH MỘT BỘ CẢNH RIÊNG (29/8/2026) ─────────────────────────────────────────────
+    # Soi bảng khung: UNSOLVED LOG và NIGHT SHIFT ra BA ẢNH GIỐNG HỆT NHAU — cùng cái điện thoại
+    # úp trên bàn, cùng đám đông cúi mặt vào máy, cùng đường cong đi lên. Vì bộ dựng này chỉ có
+    # MỘT danh sách sáu cảnh dùng chung cho mọi kênh Wikipedia, mà lời đọc cũng chung nốt.
+    # Hai kênh khác tên, khác nhãn, mà video giống nhau từng khung — đây đúng là khuôn "nội dung
+    # lặp lại, sản xuất hàng loạt" mà chính sách kiếm tiền của YouTube nhắm vào, và nó phạt CẢ
+    # kênh chứ không riêng video.
+    # Trục `loc` vốn đã tách các kênh này về mặt DỮ LIỆU; giờ tách nốt về mặt KỂ CHUYỆN: mỗi kênh
+    # một giọng, một thế giới hình ảnh. Cùng con số, khác hẳn video.
+    # Chủ thể chọn theo luật đã đo: không mặt phẳng nào để máy vẽ điền chữ vào.
+    _chung = [
         ("Curiosity leaves a trace. This is what it looks like counted.",
          "a single rising line traced through condensation on cold glass, no axes or ticks"),
         ("Wikimedia publishes these numbers every single day.",
-         "server room corridor with blue indicator lights"),
+         "a cold blue corridor of tall dark cabinets, indicator lights receding"),
     ]
+    BO = {
+        "bi_an": [
+            (f"{v['luot_doc']:,} people went looking for an answer to this in one day.",
+             "fog lying low over a empty country road at dusk, headlights absent"),
+            (f"It was the number {v['hang']} thing read on Wikipedia that day.",
+             "a single porch light burning on a dark house, trees closing in"),
+            ("Nobody told them to. The question just never closed.",
+             "a door standing ajar in a dark hallway, nothing visible beyond it"),
+            ((f"The second most read that day was {hai}." if hai
+              else "Everything else on the list had an ending."),
+             "a chain-link fence at the edge of woods, dusk light behind it"),
+        ],
+        "dia_diem": [
+            (f"{v['luot_doc']:,} people looked up this one place in a single day.",
+             "aerial view of a river bending through open country, no roads"),
+            (f"It outranked every other article that day — number {v['hang']}.",
+             "a mountain ridge line at first light, mist in the valley below"),
+            ("It is a real place. You can stand on it.",
+             "a dirt track disappearing over a low hill, wide open sky"),
+            ((f"The second most read that day was {hai}." if hai
+              else "The rest of the list was ordinary news."),
+             "a coastline seen from high above, surf line and headland"),
+        ],
+        "ca_dem": [
+            (f"While most of the country slept, {v['luot_doc']:,} people read this.",
+             "an empty city street under sodium streetlights, wet asphalt, nobody in frame"),
+            (f"It finished the day at number {v['hang']} on Wikipedia.",
+             "a lit window high in a dark apartment block, everything else unlit"),
+            ("Nobody assigned it. People just could not put it down.",
+             "an empty diner booth lit from above, coffee cup left behind"),
+            ((f"The second most read that day was {hai}." if hai
+              else "Everything else that night was quiet."),
+             "a parked patrol car silhouette under one streetlight, seen from behind"),
+        ],
+        "mat_tich": [
+            (f"{v['luot_doc']:,} people opened this file in one day.",
+             "an empty chair beside a window, late afternoon light across the floor"),
+            (f"It was the number {v['hang']} article on Wikipedia that day.",
+             "a coat left hanging on a hook in an empty hallway"),
+            ("The record stops. The reading does not.",
+             "a set of footprints in wet sand ending before the water"),
+            ((f"The second most read that day was {hai}." if hai
+              else "The rest of the list had endings."),
+             "an open field at dusk with a single fence post, nothing beyond"),
+        ],
+    }
+    canh = BO.get(loc, [
+        (f"On one single day, {v['luot_doc']:,} people looked up {v['ten']}.",
+         "a single upward curve drawn in chalk on a dark surface, nothing else in frame"),
+        (f"It ranked number {v['hang']} across all of Wikipedia that day.",
+         "a wall of dark cabinets seen from BEHIND, cable bundles and glow round the edges"),
+        ("Nobody organised that. People just wanted to know.",
+         "many footprints crossing wet pavement, seen from directly above"),
+        ((f"The second most read that day was {hai}." if hai
+          else "The rest of the list was ordinary news."),
+         "two stacked shapes of different height casting long shadows"),
+    ]) + _chung
     return (_gon(v["ten"], 46), f"{v['luot_doc']:,} people looked this up in one day.", canh)
 
 
@@ -2209,10 +2286,7 @@ def _bt_luot_doc(D, ky):
     # [1..12], nhưng ở đây `thang` ghép vào một NGÀY CỤ THỂ (`nam`/`thang`/`ngay`). Tháng nào
     # nằm ở tương lai so với hôm nay thì Wikipedia chưa có bảng -> hỏng. Đo được: 2/12 chạy.
     # Trục đúng là SỐ NGÀY LÙI: luôn trỏ tới một ngày có thật, và tự trôi theo thời gian.
-    if ky.get("lui") is not None:
-        goc = _dt.date.today() - _dt.timedelta(days=int(ky["lui"]))
-    else:
-        goc = _dt.date(int(ky.get("nam", 2026)), int(ky.get("thang", 8)), int(ky.get("ngay", 20)))
+    goc = _ngay_goc(ky)
     top = D.bai_duoc_doc(goc.year, goc.month, goc.day, 12)
     if not top:
         return None
@@ -2276,7 +2350,10 @@ def _bt_bls(D, ky):
                 "logValue": round(math.log10(max(1.0, mat * 1000)), 3),
                 "vo": f"{ten}. {_gon_so(mat * 1000)} jobs short of its {nam_dinh} peak."}
                for mat, ten, nam_dinh in ds]
-        return (f"Jobs never replaced since {tu}", muc,
+        # Tiêu đề KHÔNG được nói "since 2001": mỗi ngành có đỉnh riêng — khung thật ghi "121K jobs
+        # short of its 2025 peak" ngay dưới dòng "since 2001". Hai năm khác nhau trong một khung
+        # thì người xem không biết tin cái nào, và một trong hai đang sai.
+        return (f"Jobs never got back, counted from {tu}", muc,
                 ["Every one of these industries has fewer people than it used to.",
                  "Bureau of Labor Statistics, monthly payrolls."],
                 {"rung_kieu": "dem", "rung_don_vi": "jobs"})

@@ -272,7 +272,6 @@ export const StickStory: React.FC<StoryProps> = ({ theme = "broke", scenes, voMp
                 <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
                   <div style={{ opacity: rv, transform: `scale(${pulse})`, width: wide ? 128 : 150, height: wide ? 128 : 150, borderRadius: "50%", background: `linear-gradient(145deg, ${T.accent}, ${T.accent}bb)`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Poppins, sans-serif", fontWeight: 900, fontSize: wide ? 72 : 86, color: "#fff", marginBottom: wide ? 36 : 46, boxShadow: `0 0 60px ${T.accent}66, 0 16px 40px #0009` }}>＋</div>
                   <div style={{ opacity: rv, transform: `translateY(${(1 - rv) * 24}px)`, fontFamily: "Poppins, sans-serif", fontWeight: 900, fontSize: wide ? 112 : 128, color: "#fff", letterSpacing: -3, textShadow: "0 8px 34px #000a", lineHeight: 1 }}>FOLLOW</div>
-                  <div style={{ opacity: rv, marginTop: wide ? 18 : 24, fontFamily: "Poppins, sans-serif", fontWeight: 800, fontSize: wide ? 56 : 66, color: T.accent, letterSpacing: -1, textShadow: `0 0 26px ${T.accent}55` }}>{handle}</div>
                   <div style={{ opacity: clamp((rv - 0.3) * 3), marginTop: wide ? 30 : 40, fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: wide ? 34 : 42, color: "#9fb0c4", letterSpacing: 2 }}>FOR MORE LIKE THIS</div>
                 </AbsoluteFill>
               </>);
@@ -321,7 +320,6 @@ export const StickStory: React.FC<StoryProps> = ({ theme = "broke", scenes, voMp
 
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", boxShadow: "inset 0 0 220px rgba(0,0,0,0.30)" }} />
       {vo && <Karaoke words={vo.words} time={time} accent={T.accent} bottom={kBottom} />}
-      <div style={{ position: "absolute", top: 60, left: 60, fontFamily: "Poppins, sans-serif", fontWeight: 900, fontSize: 34, color: dark ? "#fff" : "#0b1220", opacity: .5 }}>{handle}</div>
       <Audio src={staticFile(voMp3)} />
     </AbsoluteFill>
   );

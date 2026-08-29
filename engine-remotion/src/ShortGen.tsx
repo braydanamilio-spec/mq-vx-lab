@@ -49,7 +49,6 @@ export const ShortGen: React.FC<SProps> = ({ scenes, slug, persona = {}, handle 
       <Karaoke nar={s.nar} l={l} d={s.dur} top={s.type === "talk" ? 760 : 250} />
       {s.type === "num" && s.label && <div style={{ position: "absolute", top: 958, width: "100%", textAlign: "center", fontSize: 50, fontWeight: 800, color: INK }}>{s.label}</div>}
       {/* VÙNG AN TOÀN mobile (chuẩn short chuyên nghiệp): handle đưa xuống dưới top-UI; BỎ source trên màn hình (nguồn đã ở description/meta) tránh bị UI che + đè host */}
-      <div style={{ position: "absolute", top: 150, width: "100%", textAlign: "center", color: "#6b6457", fontSize: 34, fontWeight: 800 }}>{handle}</div>
       {scenes.map((sc, j) => <Sequence key={j} from={st[j]} durationInFrames={sc.dur}><Audio src={staticFile(`${slug}/${sc.audio}`)} /></Sequence>)}
     </AbsoluteFill>
   );

@@ -453,7 +453,6 @@ export const Cinematic: React.FC<CProps> = ({ scenes, slug, handle = "", capColo
         );
       })()}
       {/* (bỏ film grain feTurbulence — vẽ lại mỗi frame quá nặng, làm render chậm 3-4x; không đáng) */}
-      {handle && <div style={{ position: "absolute", top: 40, right: 48, color: "#ffffffbb", fontSize: 30, fontWeight: 800 }}>{handle}</div>}
       {scenes.map((sc, j) => <Sequence key={j} from={st[j]} durationInFrames={sc.dur}><Audio src={staticFile(`${slug}/${sc.audio}`)} /></Sequence>)}
       {/* TIẾNG CHUYỂN CẢNH: whoosh ngắn 0.42s ở MỌI điểm cắt — cả chuyển cảnh lẫn đổi ảnh trong cảnh.
           Dùng CHUNG kho sfx với BarChartRace/RaceLong/SwarmShort (9 engine khác) -> nghe đồng bộ cả

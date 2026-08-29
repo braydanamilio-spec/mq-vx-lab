@@ -85,7 +85,6 @@ export const LongV2: React.FC<V2Props> = ({ scenes, slug, persona = {}, bg = "#F
           {!hideHost && <Host s={s} l={l} persona={persona} mode={hasVisual ? "corner" : "center"} point={hasVisual && (vk === "icons" || vk === "compare" || vk === "bignum" || vk === "hero" || vk === "flow")} />}
         </>}
 
-      {handle && <div style={{ position: "absolute", top: 30, right: 40, color: dark ? "#ffffffcc" : "#6b6457", fontSize: 30, fontWeight: 800 }}>{handle}</div>}
       {!isChapter && <Karaoke nar={s.nar} l={l} d={s.dur} />}
 
       {scenes.map((sc, j) => <Sequence key={j} from={st[j]} durationInFrames={sc.dur}><Audio src={staticFile(`${slug}/${sc.audio}`)} /></Sequence>)}

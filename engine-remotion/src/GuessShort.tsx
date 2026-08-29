@@ -186,7 +186,6 @@ export const GuessShort: React.FC<GuessProps> = (props) => {
         );
       })()}
       {/* handle góc */}
-      <div style={{ position: "absolute", bottom: 54, left: 0, right: 0, textAlign: "center", color: "#ffffffcc", fontWeight: 800, fontSize: 34, textShadow: "0 2px 10px #000" }}>{handle}</div>
       {/* karaoke caption (nếu có subs) */}
       {subs.length ? <KaraokeCaption subs={subs} /> : null}
       {audio ? <Audio src={staticFile(audio)} /> : null}
@@ -219,8 +218,6 @@ const KetCard: React.FC<{ img?: string; color: string; accent: string; handle: s
         <div style={{ display: "inline-block", marginTop: 26, background: color, color: "#0a0c14",
                       fontWeight: 900, fontSize: 46, padding: "14px 34px", borderRadius: 18,
                       fontFamily: "Poppins, Arial" }}>{n} / {n} ?  COMMENT BELOW 👇</div>
-        <div style={{ color: "#ffffffdd", fontWeight: 800, fontSize: 40, marginTop: 26,
-                      textShadow: "0 2px 12px #000" }}>▶ FOLLOW {handle}</div>
       </div>
     </AbsoluteFill>
   );

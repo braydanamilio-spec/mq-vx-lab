@@ -188,10 +188,6 @@ export const RankedEditorial: React.FC<RankedProps> = (props) => {
       </div>
 
       <DongNguon nguon={source} day={96} />
-      <div style={{
-        position: "absolute", bottom: 46, left: 0, right: 0, textAlign: "center",
-        color: "#ffffff44", fontWeight: 700, fontSize: 22, letterSpacing: 1,
-      }}>{handle}</div>
 
       {subs && subs.length ? <Karaoke subs={subs} accent={accent} /> : null}
       {audio ? <Audio src={staticFile(audio)} /> : null}
