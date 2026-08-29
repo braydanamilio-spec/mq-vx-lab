@@ -2442,8 +2442,17 @@ GU_VE_EN = {
 # Dán vào MỌI prompt vẽ. Hai câu, hai lý do khác nhau:
 #   • cấm mặt/tay người thật — đó là chỗ máy vẽ hỏng rõ nhất và mắt người bắt được ngay;
 #   • đẩy về phía tranh/đồ hoạ — đúng hướng anh chọn, và cũng là phía máy vẽ mạnh.
+# 29/8 — CẤM SUÔNG KHÔNG ĂN, PHẢI CHO NÓ VẼ THỨ KHÁC.
+# Sau hai vòng siết lệnh cấm ("no text" ở đuôi, rồi ở đầu prompt), khung vẫn ra "Publlic Records"
+# (ba chữ L) và một tờ lịch đề "Fetemisary". Mô hình khuếch tán xử lý phủ định rất kém: bảo nó
+# "đừng vẽ chữ" thì từ "chữ" vẫn kích hoạt đúng vùng đặc trưng đó.
+# Cách ăn hơn hẳn là RA LỆNH KHẲNG ĐỊNH — mô tả mặt phẳng TRỐNG như một chi tiết muốn có. Nó
+# không phải kìm mình lại nữa, nó có sẵn thứ để vẽ vào chỗ đó.
+# Và chữ bịa đắt nhất đúng ở kênh hồ sơ/lưu trữ, nơi cả uy tín nằm ở chỗ "giấy tờ có thật".
 GU_CAM = ("no photorealistic human faces, no hands in frame, no crowds of people, "
-          "illustrative rather than photographic")
+          "illustrative rather than photographic, "
+          "all paper and signage completely blank and unlabeled, smooth empty surfaces, "
+          "wordless")
 
 # NÉT CHÌ CHO NHÓM NHÂN VẬT (anh chọn 29/8: "người nổi tiếng, vĩ nhân, người thành công, công ty
 # đế chế gia tộc lớn — vẽ kiểu nét chì sẽ hợp hơn, khác lạ hơn footage free").
