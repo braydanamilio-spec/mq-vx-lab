@@ -1203,9 +1203,15 @@ def _dc_hop_dong(D, ky):
         hd = D.hop_dong_lon(nam, 8, ky.get("de_tai", ""))
         if not hd:
             continue
+        # 29/8 — GỘP THEO TÊN ĐÃ CHUẨN HOÁ, giống `_sk_hop_dong`. Khung thật SPACE INVOICE:
+        # "Lockheed Martin 26K" và "Lockheed 9.5K" thành HAI hàng đua nhau — cùng một tập đoàn,
+        # hai pháp nhân con. PENTAGON LEDGER cũng vậy với "Bae Systems" / "Bae Systems Land".
+        # Trong biểu đồ ĐUA thì lỗi này nặng hơn ở bảng tĩnh: hai hàng của cùng một hãng vượt qua
+        # nhau suốt video, và người xem đọc ra một cuộc đua không có thật.
+        # Tôi đã vá dạng `scaled` sáng nay rồi quên dạng đua — cùng một lỗi, hai bộ dựng.
         gop = {}
         for x in hd:
-            t = _gon(x["ten"], 16)
+            t = _ten_hang(x["ten"], 16)
             gop[t] = gop.get(t, 0) + x["tien"] / 1e6
             ten_thay[t] = True
         frames.append({"t": nam, "data": [{"name": k, "value": round(v, 1)}

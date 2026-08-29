@@ -2277,6 +2277,7 @@ def main():
     check("ai_only thì KHÔNG lấy clip kho (không footage)", t_ai_only_khong_lay_clip_kho)
     check("18 kênh ranked KHÔNG dùng chung một khuôn", t_bo_cuc_ranked_khong_dung_chung_mot_khuon)
     check("prompt vẽ không gọi tên mặt phẳng chứa chữ", t_prompt_ve_khong_goi_ten_mat_chu)
+    check("đồng hồ đua hiện được mốc chữ, không ra NaN", t_dong_ho_dua_chiu_moc_chu)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
@@ -4690,6 +4691,25 @@ def t_prompt_ve_khong_goi_ten_mat_chu():
         xau.append(q)
     assert not xau, ("prompt vẽ gọi tên thứ có mặt chữ mà KHÔNG đổi góc nhìn -> máy vẽ sẽ bịa chữ: "
                      + " · ".join(x[:52] for x in xau[:4]))
+
+
+
+
+def t_dong_ho_dua_chiu_moc_chu():
+    """Đồng hồ của biểu đồ đua phải hiện được mốc KHÔNG PHẢI SỐ.
+
+    29/8 — bản vá sáng nay đổi mốc của kênh đếm-theo-ngày từ mã thô "20260813" sang chữ "Aug 13"
+    (mã thô từng hiện nguyên "20260741" cỡ chữ lớn nhất khung hình). Nhưng `BarChartRace` nội suy
+    `a.t` như một con số, nên chuỗi chữ ra NaN — và đồng hồ hiện **"NaN"** ở cả ba khung của
+    AMERICA LOOKED UP. Sửa một chỗ rồi làm hỏng chỗ khác vì hai bên hiểu khác nhau về KIỂU của
+    cùng một trường; đúng họ lỗi đã đuổi theo suốt tuần.
+    Chốt đòi chỗ nội suy phải nhận ra kiểu trước khi tính."""
+    src = _doc("../engine-remotion/src/BarChartRace.tsx")
+    i = src.index("const year =")
+    khoi = src[max(0, i - 400): i + 320]
+    assert "isFinite" in khoi or "Number.isFinite" in khoi, \
+        "đồng hồ đua nội suy `t` mà không kiểm kiểu -> mốc chữ sẽ ra NaN"
+    assert "String(a.t)" in khoi, "không có nhánh hiện mốc CHỮ nguyên văn"
 
 
 

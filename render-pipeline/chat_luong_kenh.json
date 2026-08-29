@@ -1,5 +1,5 @@
 {
- "luc": "2026-08-29T05:27:11Z",
+ "luc": "2026-08-29T06:48:08Z",
  "nguong": 90,
  "canh_bao_motip": [],
  "kenh": {
@@ -136,13 +136,6 @@
    "loi": [],
    "tieu_de": "Killing of the Clancy children"
   },
-  "ONEHIT": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "longshot",
-   "loi": [],
-   "tieu_de": "One Hit Wonder: 5y — How long they lasted"
-  },
   "PAIDVSPLAYED": {
    "diem": 100,
    "bo_qua": false,
@@ -218,7 +211,7 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "519 planes are over America right now — The whole country"
+   "tieu_de": "497 planes are over America right now — The whole country"
   },
   "SPACEINVOICE": {
    "diem": 100,
@@ -297,7 +290,7 @@
    "loi": [
     "kịch bản: câu mở đầu không có SỐ cũng không có CÂU HỎI ('A film that belongs to nobody.') — người xem chưa có lý do nào để ở lại"
    ],
-   "tieu_de": "new world next week - feb10 — America 1950"
+   "tieu_de": "Midwest Holiday (Part I) — America 1950"
   },
   "CARRECALL": {
    "diem": 88,
@@ -357,6 +350,15 @@
    "diem": 0,
    "bo_qua": true,
    "dang": "ranked",
+   "loi": [
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+   ],
+   "tieu_de": ""
+  },
+  "ONEHIT": {
+   "diem": 0,
+   "bo_qua": true,
+   "dang": "longshot",
    "loi": [
     "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
    ],

@@ -53,7 +53,16 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
   const maxV = Math.max(1, shown[0]?.value ?? 1);
   const maxNameLen = Math.max(1, ...shown.map((d) => d.name.length));           // co chữ nhãn nếu tên dài -> không cắt mép
   const lblFs = (port ? 34 : 32) - (maxNameLen > 15 ? 10 : maxNameLen > 12 ? 5 : 0);
-  const year = Math.round(a.t + (b.t - a.t) * fr);
+  // 29/8 — ĐỒNG HỒ PHẢI CHỊU ĐƯỢC MỐC KHÔNG PHẢI SỐ.
+  // Bản vá hôm nay đổi mốc của kênh đếm-theo-ngày từ mã thô "20260813" sang chữ "Aug 13" (mã thô
+  // từng hiện nguyên "20260741" cỡ chữ lớn nhất khung). Nhưng chỗ này nội suy `a.t` như một con
+  // số, nên chuỗi chữ ra NaN — và đồng hồ hiện "NaN" ở cả ba khung của AMERICA LOOKED UP.
+  // Sửa một chỗ rồi làm hỏng chỗ khác vì hai bên hiểu khác nhau về kiểu của cùng một trường:
+  // đúng họ lỗi đã đuổi theo suốt tuần. Nay chỗ này tự nhận ra kiểu và xử lý cả hai.
+  const _soA = Number(a.t), _soB = Number(b.t);
+  const year = (isFinite(_soA) && isFinite(_soB) && String(a.t).trim() !== "")
+    ? Math.round(_soA + (_soB - _soA) * fr)     // mốc SỐ (năm, mùa) -> nội suy mượt như cũ
+    : String(a.t);                              // mốc CHỮ (ngày) -> hiện nguyên, không nội suy
 
   // ── SOÁN NGÔI: tìm các mốc đổi #1 để bật callout "🏆 X overtakes" (kịch tính, chống nhàm)
   const leaderAt = (kf: Keyframe) => kf.data.slice().sort((x, y) => y.value - x.value)[0]?.name;
