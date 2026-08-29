@@ -5,7 +5,14 @@ name: MM0 Storage Cleanup (public runner)
 
 on:
   schedule:
-    - cron: "0 3 * * *"        # 03:00 UTC mỗi ngày
+    - cron: "0 3 * * *"        # 03:00 UTC mỗi ngày — DỌN KHO (_POSTED) theo policy
+    # 29/8 — thêm nhịp 2 giờ CHỈ CHO việc đánh dấu video dưới chuẩn.
+    # Anh: "gì mà mai mới chạy". Đúng: kho đang có 3.582 video dựng bằng engine cũ (nền neon,
+    # chữ bịa, tiêu đề nói sai nội dung) và chúng vẫn được đăng đều trong lúc chờ tới 03:00Z.
+    # Mỗi giờ chờ là thêm một loạt video dưới chuẩn lên kênh.
+    # Việc đánh dấu chỉ ĐỌC job rồi ghi hai trường, không đụng Drive, nên chạy dày được. Còn việc
+    # dọn kho _POSTED thì vẫn giữ MỘT lần/ngày: nó xoá tệp thật, không có lý do gì phải chạy dày.
+    - cron: "20 */2 * * *"
   workflow_dispatch:
     inputs:
       dry_run: { description: "Chạy thử (không xoá)", type: boolean, default: false }
@@ -15,6 +22,9 @@ concurrency: { group: mm0-cleanup, cancel-in-progress: false }
 
 jobs:
   cleanup:
+    # CHỈ chạy ở nhịp 03:00 và khi bấm tay: đây là việc XOÁ TỆP THẬT trên Drive, chạy hai giờ một
+    # lần là vừa tốn hạn mức Drive vừa không được lợi gì (video mới đăng cần thời gian đủ tuổi).
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 3 * * *'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
