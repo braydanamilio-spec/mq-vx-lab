@@ -168,6 +168,37 @@ TU_DEM = ("basically", "actually", "literally", "obviously", "of course", "as yo
           "it turns out that", "the fact that", "in order to", "at the end of the day")
 
 
+# Chữ viết tắt kết thúc bằng dấu chấm mà KHÔNG kết thúc câu. Thiếu danh sách này thì phép tách
+# câu cắt ngay sau tên riêng, và những mảnh còn lại rất dễ trùng nhau.
+# 29/8 — đo trên khung thật: ONE HIT có hai ban cùng tồn tại 7 năm, lời đọc là
+#     "Mr. Mister. 7 years on the record."   /   "The Cars. 7 years on the record."
+# Tách ở mọi dấu chấm thì cả hai đẻ ra đúng mảnh "7 years on the record." ⇒ báo "câu lặp y hệt".
+# Câu không lặp; phép tách đang cắt sai chỗ. Cùng họ với lỗi "Somalia, Fed. Rep.." của MARRIAGE
+# MATH: một dấu chấm trong DỮ LIỆU làm hỏng cây thước đo CÂU.
+VIET_TAT = ("mr", "mrs", "ms", "dr", "prof", "st", "mt", "jr", "sr", "inc", "ltd", "co", "corp",
+            "vs", "etc", "no", "vol", "fig", "approx", "dept", "univ", "rep", "fed", "dem", "gov")
+
+
+def tach_cau(t: str) -> list:
+    """Tách một chuỗi thành các CÂU, không cắt sau chữ viết tắt.
+
+    Dùng chung cho cả cổng nghiệm thu lẫn bộ cắt câu dài — hai bên đo khác đơn vị thì bên này
+    sửa xong bên kia vẫn báo trượt."""
+    import re as _re
+    manh = [x for x in _re.split(r"(?<=[.!?])\s+", str(t or "")) if x.strip()]
+    ra = []
+    for m in manh:
+        tu_cuoi = _re.sub(r"[^A-Za-z]", "", m.split()[-1] if m.split() else "").lower()
+        # nối vào mảnh trước nếu mảnh trước kết thúc bằng viết tắt
+        if ra:
+            truoc = ra[-1].split()[-1] if ra[-1].split() else ""
+            if _re.sub(r"[^A-Za-z]", "", truoc).lower() in VIET_TAT and truoc.endswith("."):
+                ra[-1] = ra[-1] + " " + m
+                continue
+        ra.append(m.strip())
+    return [x for x in ra if x]
+
+
 def cham_kich_ban(st: dict) -> list:
     """Chấm LỜI ĐỌC — thứ quyết định người xem ở lại hay lướt qua, và trước nay không ai chấm.
 
@@ -207,9 +238,7 @@ def cham_kich_ban(st: dict) -> list:
     # khi nhận ra bộ cắt vốn chạy đúng — nó cắt ra hai câu rồi ghép lại bằng dấu cách, đúng như
     # phải thế, còn chỗ sai nằm ở cây thước.
     # Chính lời ghi chú của cổng cũng nói "8 giây cho MỘT CÂU" — vậy đơn vị đo phải là câu.
-    import re as _re0
-    _tach = lambda t: [x.strip() for x in _re0.split(r"(?<=[.!?])\s+", t) if x.strip()]
-    dan = [c for d in dan for c in _tach(d)]
+    dan = [c for d in dan for c in tach_cau(d)]
     if len(dan) < 3:
         return ["kịch bản dưới 3 câu — không đủ để dựng một video"]
 

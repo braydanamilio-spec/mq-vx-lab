@@ -1,5 +1,5 @@
 {
- "luc": "2026-08-29T10:46:39Z",
+ "luc": "2026-08-29T11:14:04Z",
  "nguong": 90,
  "canh_bao_motip": [],
  "kenh": {
@@ -22,7 +22,7 @@
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [],
-   "tieu_de": "FDR to Operation Gladio — America 1950"
+   "tieu_de": "Midwest Holiday (Part I) — America 1950"
   },
   "BREEDFILE": {
    "diem": 100,
@@ -150,13 +150,6 @@
    "loi": [],
    "tieu_de": "Toyota: miles per gallon — bZ4X, 119 mpg"
   },
-  "NEAREARTH": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "ranked",
-   "loi": [],
-   "tieu_de": "Rocks that just passed Earth"
-  },
   "NIGHTSHIFT": {
    "diem": 100,
    "bo_qua": false,
@@ -170,6 +163,13 @@
    "dang": "longshot",
    "loi": [],
    "tieu_de": "Daryl Hall: 57y — How long the new wave acts lasted"
+  },
+  "ONESTUDY": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "The Pittsburgh Sleep Quality Index"
   },
   "PAIDVSPLAYED": {
    "diem": 100,
@@ -260,7 +260,7 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "498 planes are over America right now — The whole country"
+   "tieu_de": "500 planes are over America right now — The whole country"
   },
   "SONGFILE": {
    "diem": 100,
@@ -295,7 +295,7 @@
    "bo_qua": false,
    "dang": "thennow",
    "loi": [],
-   "tieu_de": "City street in the archive, decades apart — Harlem Is Heaven, SBO Feature"
+   "tieu_de": "City street in the archive, decades apart — U.S. NAVY PLANES, Schenectady City"
   },
   "UNSOLVEDLOG": {
    "diem": 100,
@@ -323,7 +323,7 @@
    "bo_qua": false,
    "dang": "ranked",
    "loi": [],
-   "tieu_de": "What America looks up about love — Infidelity, 19.1K"
+   "tieu_de": "What America looks up about love — Marriage, 36.0K"
   },
   "WHERETOMOVE": {
    "diem": 100,
@@ -346,10 +346,10 @@
    "loi": [],
    "tieu_de": "Order on Motion - Aldin Associates Ltd. — First amendment"
   },
-  "ONESTUDY": {
+  "NEAREARTH": {
    "diem": 0,
    "bo_qua": true,
-   "dang": "cinematic",
+   "dang": "ranked",
    "loi": [
     "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
    ],

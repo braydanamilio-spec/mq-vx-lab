@@ -2492,7 +2492,11 @@ def _bt_nhac(D, ky):
         nam = max(1, d1 - d0)
         muc.append({"label": _gon(x["ten"], 18), "emoji": "🎵", "oddsDisp": f"{nam}y",
                     "logValue": round(math.log10(max(1, nam)), 3),
-                    "vo": f"{_gon(x['ten'], 26)}. {nam} years on the record."})
+                    # MỘT CÂU, không phải hai. Bản cũ là "Mr. Mister. 7 years on the record." —
+                    # tách câu thì mảnh sau ("7 years on the record.") giống hệt mảnh của mọi ban
+                    # khác cùng tồn tại 7 năm. Tên và con số nằm CÙNG một câu thì không mảnh nào
+                    # có thể trùng, vì tên là thứ duy nhất trong bảng.
+                    "vo": f"{_gon(x['ten'], 26)} lasted {nam} years on the record."})
         if len(muc) >= 6:
             break
     if len(muc) < 4:
@@ -2606,8 +2610,10 @@ def _xn_tu_lieu(D, ky):
                     # lần), và hai câu y hệt trong một video là dấu "máy nhả". Tên phim thì
                     # không bao giờ trùng, mà lại là thứ người xem cần để tin đây là tư liệu
                     # có thật chứ không phải hai tấm ảnh bất kỳ.
-                    "vo": (f"{_gon(a['tieu_de'], 30)}, {str(a['nam'])[:4]}. "
-                           f"Then {_gon(b['tieu_de'], 30)}, {str(b['nam'])[:4]}.")})
+                    # Một câu, cùng lý do như ONE HIT: tách ra thì vế sau ("Then <phim>, <năm>.")
+                    # trùng ngay khi hai cặp rút trúng cùng một phim ở vế sau.
+                    "vo": (f"{_gon(a['tieu_de'], 30)} in {str(a['nam'])[:4]}, "
+                           f"then {_gon(b['tieu_de'], 30)} in {str(b['nam'])[:4]}.")})
     if len(cap) < 3:
         return None
     # 29/8 — TIÊU ĐỀ NÊU CHỦ ĐỀ, VÀ LỜI HỨA HẠ XUỐNG ĐÚNG THỨ NGUỒN CHỨNG MINH ĐƯỢC.
