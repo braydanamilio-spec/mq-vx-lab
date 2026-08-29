@@ -386,7 +386,86 @@ const KeSieuThi: React.FC<P> = ({ mau, t }) => (
   </g>
 );
 
+/** BÀN LÀM VIỆC nhìn gần — chồng hồ sơ đóng, đèn bàn, cốc. KHÔNG mặt giấy nào hướng ra. */
+const BanLamViec: React.FC<P> = ({ mau, t }) => (
+  <g>
+    <Troi mau={mau} t={t} id="g_blv" />
+    <rect x={-700} y={-120} width={1400} height={360} fill={mau.vach} opacity={0.32} />
+    <Dat mau={mau} t={t} />
+    {/* mặt bàn */}
+    <rect x={-700} y={120} width={1400} height={40} fill="#8A6A44" stroke={mau.muc} strokeWidth={6} />
+    {/* chồng hồ sơ nhìn TỪ CẠNH — không có mặt phẳng nào để máy vẽ điền chữ (luật `_bo_mat_chu`) */}
+    {[[-430, 5], [-250, 8], [300, 6]].map(([x, n], i) => (
+      <g key={i}>
+        {Array.from({ length: n }).map((_, k) => (
+          <rect key={k} x={x} y={112 - k * 13} width={150} height={12} rx={3}
+                fill={k % 2 ? "#F2EDE0" : "#E4DCC8"} stroke={mau.muc} strokeWidth={3.4} />
+        ))}
+      </g>
+    ))}
+    {/* đèn bàn: chụp đèn + vệt sáng đổ xuống mặt bàn */}
+    <path d="M 120 120 l 0 -150 l 60 0 l 0 150 Z" fill={mau.vach} stroke={mau.muc} strokeWidth={5} />
+    <path d="M 60 -150 l 180 0 l 40 70 l -260 0 Z" fill={mau.nhan} stroke={mau.muc} strokeWidth={6} strokeLinejoin="round" />
+    <path d="M 20 -80 L 280 -80 L 360 118 L -60 118 Z" fill="#FFF3C4"
+          opacity={0.2 + Math.sin(t * 0.9) * 0.03} />
+    <ellipse cx={-60} cy={104} rx={44} ry={16} fill="#D9E2EA" stroke={mau.muc} strokeWidth={4} />
+  </g>
+);
+
+/** PHÒNG XỬ NHÌN TỪ TRONG — bục thẩm phán, quốc kỳ, ghế hội đồng. Không chữ. */
+const PhongXu: React.FC<P> = ({ mau, t }) => (
+  <g>
+    <Troi mau={mau} t={t} id="g_px" />
+    <rect x={-700} y={-330} width={1400} height={570} fill="#6B5A3E" opacity={0.28} />
+    <Dat mau={mau} t={t} />
+    {/* tường ốp gỗ */}
+    {Array.from({ length: 12 }).map((_, i) => (
+      <rect key={i} x={-680 + i * 118} y={-300} width={104} height={430}
+            fill="#7A6242" stroke={mau.muc} strokeWidth={4} opacity={0.6} />
+    ))}
+    {/* bục thẩm phán */}
+    <rect x={-330} y={-40} width={660} height={200} rx={10}
+          fill="#5C4630" stroke={mau.muc} strokeWidth={7} />
+    <rect x={-360} y={-58} width={720} height={26} rx={8}
+          fill="#7A5C3C" stroke={mau.muc} strokeWidth={6} />
+    {/* quốc kỳ: sọc + ô sao, KHÔNG vẽ chữ */}
+    <g transform="translate(430 -290)">
+      <rect x={0} y={0} width={170} height={110} fill="#F4F1EA" stroke={mau.muc} strokeWidth={5} />
+      {[0, 2, 4, 6].map((k) => (
+        <rect key={k} x={0} y={k * 14} width={170} height={14} fill="#B0303A" />
+      ))}
+      <rect x={0} y={0} width={78} height={56} fill="#2C4A8A" />
+      {Array.from({ length: 6 }).map((_, k) => (
+        <circle key={k} cx={12 + (k % 3) * 26} cy={16 + Math.floor(k / 3) * 24} r={4} fill="#FFFFFF" />
+      ))}
+    </g>
+    <rect x={-700} y={150} width={1400} height={22} fill={mau.vach} stroke={mau.muc} strokeWidth={5} />
+  </g>
+);
+
+/** TINH VÂN — không hành tinh, chỉ vệt khí và sao dày. Khác hẳn cảnh `vu_tru`. */
+const TinhVan: React.FC<P> = ({ mau, t }) => (
+  <g>
+    <Troi mau={mau} t={t} id="g_tv" />
+    {[[-260, -300, 380, 180, "#8A5AC8"], [180, -170, 300, 140, "#4A7ED0"],
+      [-60, -420, 260, 120, "#C86AA8"]].map(([x, y, rx, ry, c], i) => (
+      <ellipse key={i} cx={x as number} cy={y as number} rx={rx as number} ry={ry as number}
+               fill={c as string} opacity={0.22 + Math.sin(t * 0.4 + i) * 0.05}
+               transform={`rotate(${-20 + i * 26} ${x} ${y})`} />
+    ))}
+    {Array.from({ length: 130 }).map((_, i) => {
+      const x = ((i * 733) % 1380) - 690;
+      const y = ((i * 419) % 760) - 700;
+      return <circle key={i} cx={x} cy={y} r={1.2 + (i % 5) * 0.7} fill="#FFFFFF"
+                     opacity={0.3 + Math.abs(Math.sin(t * (0.5 + (i % 6) * 0.19) + i)) * 0.7} />;
+    })}
+    <path d={`M -700 250 L -320 150 L 40 230 L 400 120 L 700 210 L 700 760 L -700 760 Z`}
+          fill={mau.dat} stroke={mau.muc} strokeWidth={6} />
+  </g>
+);
+
 export const BOI_CANH = {
+  ban_lam_viec: BanLamViec, phong_xu: PhongXu, tinh_van: TinhVan,
   ke_sieu_thi: KeSieuThi,
   thu_phong: ThuPhong, san_thuong: SanThuong, quay_vien_phi: QuayVienPhi,
   san_sau: SanSau, quay: Quay, toa_an: ToaAn, lab: Lab, vu_tru: VuTru,

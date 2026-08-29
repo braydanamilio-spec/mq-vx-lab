@@ -621,18 +621,13 @@ export const DienVien: React.FC<PropsDien> = ({
           <path d={`M ${dauC[0] - 5} ${dauC[1] + dauR * 0.2} q 6 9 12 0`}
                 stroke={net} strokeWidth={NET * 0.95} fill="none" strokeLinecap="round" />
 
-          {/* MIỆNG — bề ngang/cao lấy từ khẩu hình, khoé lấy từ cảm xúc */}
-          <path d={`M ${mieng.x - mW} ${mieng.y - cong}
-                    Q ${mieng.x} ${mieng.y + mH * 1.5 + cong * 0.6} ${mieng.x + mW} ${mieng.y - cong}
-                    Q ${mieng.x} ${mieng.y - mH * 0.4 + cong * 0.6} ${mieng.x - mW} ${mieng.y - cong} Z`}
-                fill={mH > dauR * 0.05 ? "#8C2F2F" : net} stroke={net} strokeWidth={NET * 0.95}
-                strokeLinejoin="round" />
-          {mH > dauR * 0.12 ? (
-            <path d={`M ${mieng.x - mW * 0.72} ${mieng.y - cong * 0.6}
-                      q ${mW * 0.72} ${mH * 0.42} ${mW * 1.44} 0 Z`} fill="#FFFFFF" opacity={0.92} />
-          ) : null}
-
-          {/* RÂU */}
+          {/* 29/8 — RÂU VẼ TRƯỚC MIỆNG, KHÔNG VẼ SAU.
+              Anh cắt khung thẩm phán: cả vùng miệng bị một mảng xám bịt kín. Không phải hình
+              râu vẽ sai — mà là THỨ TỰ LỚP sai. Râu đang vẽ SAU miệng nên nó nằm đè lên trên,
+              và một bộ râu che mất miệng thì nhân vật vừa xấu vừa mất hẳn khẩu hình — tức mất
+              luôn thứ công phu nhất của cả cỗ máy này.
+              Trong đời thật râu mọc quanh miệng chứ không phủ lên miệng. Đổi thứ tự là xong,
+              không cần vẽ lại một nét nào. */}
           {kieu.rau === "de" ? (
             <path d={`M ${dauC[0] - 16} ${dauC[1] + dauR * 0.52}
                       q 16 -8 32 0 q -2 ${dauR * 0.36} -16 ${dauR * 0.4}
@@ -659,6 +654,19 @@ export const DienVien: React.FC<PropsDien> = ({
                   fill={kieu.toc} stroke={net} strokeWidth={NET * 0.8} />
           ) : null}
 
+
+          {/* MIỆNG — bề ngang/cao lấy từ khẩu hình, khoé lấy từ cảm xúc */}
+          <path d={`M ${mieng.x - mW} ${mieng.y - cong}
+                    Q ${mieng.x} ${mieng.y + mH * 1.5 + cong * 0.6} ${mieng.x + mW} ${mieng.y - cong}
+                    Q ${mieng.x} ${mieng.y - mH * 0.4 + cong * 0.6} ${mieng.x - mW} ${mieng.y - cong} Z`}
+                fill={mH > dauR * 0.05 ? "#8C2F2F" : net} stroke={net} strokeWidth={NET * 0.95}
+                strokeLinejoin="round" />
+          {mH > dauR * 0.12 ? (
+            <path d={`M ${mieng.x - mW * 0.72} ${mieng.y - cong * 0.6}
+                      q ${mW * 0.72} ${mH * 0.42} ${mW * 1.44} 0 Z`} fill="#FFFFFF" opacity={0.92} />
+          ) : null}
+
+          {/* RÂU */}
           {/* má hồng — chi tiết nhỏ mà tách hẳn khỏi cảm giác "hình cắt dán" */}
           {[-1, 1].map((s) => (
             <ellipse key={s} cx={dauC[0] + s * dauR * 0.58} cy={dauC[1] + dauR * 0.3}

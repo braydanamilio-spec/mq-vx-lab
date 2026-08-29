@@ -187,7 +187,7 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
     <g transform="translate(30 150)">
       {/* TẤM NỀN — giấy kem mờ, viền dày, bo góc. Đây là thứ tách biểu đồ khỏi bối cảnh. */}
       <rect x={nenX} y={nenY} width={nenW} height={nenH} rx={18}
-            fill="#FBF6EA" opacity={0.94} stroke={mau.muc} strokeWidth={6} />
+            fill="#FBF6EA" stroke={mau.muc} strokeWidth={6} />
       {/* đường chân cột, để cột có chỗ đứng thay vì lơ lửng */}
       <line x1={nenX + 12} y1={2} x2={nenX + nenW - 12} y2={2}
             stroke={mau.muc} strokeWidth={5} opacity={0.55} />
@@ -322,7 +322,7 @@ export const KichV2: React.FC<PropsKich> = ({
             // vị, nên tỉ lệ 1.12 cho ra một người cao 470/1500 — lọt thỏm, đúng như khung render
             // thử. Muốn nhân vật chiếm khoảng 3/5 chiều cao (tỉ lệ quen thuộc của phim hoạt hình
             // kể chuyện) thì cần ~2.1 cho khung dọc và ~1.6 cho khung ngang.
-            x={C.cot ? -340 : 0}
+            x={C.cot ? -368 : 0}
             y={236}
             // 29/8 lần hai — lần trước tôi tăng cỡ nhân vật 1.12->2.1 NHƯNG cùng lúc hạ zoom
             // máy quay 1.5->1.0. Tích hai số không đổi (1.68), nên khung render ra y hệt và tôi
@@ -342,8 +342,16 @@ export const KichV2: React.FC<PropsKich> = ({
             ngoài khung. Cùng đúng cái lỗi đã sửa cho con số lớn hôm qua mà tôi không nghĩ tới
             biểu đồ: cả hai đều là LỚP THÔNG TIN, không phải vật trong cảnh, nên phải đứng yên
             một chỗ bất kể máy quay đi đâu. */}
+        {/* Vị trí biểu đồ chỉnh bằng PHÉP ĐO trên khung đã render, không bằng phép tính: chuỗi
+            biến đổi lồng ba tầng (nhóm bọc → nhóm trong → viewBox) làm tôi tính lệch ba lần.
+
+            VÀ CHÚ THÍCH PHẢI Ở ĐÂY, TRƯỚC dấu `{`. Đây là lần THỨ BA trong ngày tôi đặt một khối
+            chú thích JSX ngay sau dấu hỏi của toán tử ba ngôi, và cả ba lần esbuild đều ném
+            "Expected ) but found transform" — vì ở vị trí đó nó là CON THỨ HAI bên cạnh thẻ <g>,
+            mà một nhánh ba ngôi chỉ nhận một biểu thức. Hai lần trước tôi đã ghi lại bài học rồi
+            vẫn tái phạm, nên lần này ghi ngay tại chỗ dễ sai nhất. */}
         {C.cot ? (
-          <g transform={`translate(${doc ? -230 : -120} ${doc ? 210 : 120}) scale(${doc ? 0.9 : 0.82})`}>
+          <g transform={`translate(${doc ? -128 : -60} ${doc ? 196 : 112}) scale(${doc ? 0.9 : 0.8})`}>
             <CotDaoCu cot={C.cot} p={p} mau={mau} noiBat={C.noiBat ?? 0} />
           </g>
         ) : null}

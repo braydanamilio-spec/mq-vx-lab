@@ -36,10 +36,10 @@ sys.path.insert(0, GOC)
 # ══════════════════════════════════════════════════════════════════════════════════════════
 KENH = [
     {"ten": "BANK RUN", "handle": "@bankrunusa", "nhan": "Is your bank actually healthy?",
-     "kieu": "bank", "boi": "quay", "mau": "ngan_hang", "nguon": "fdic",
+     "kieu": "bank", "boi": ["quay", "ban_lam_viec", "van_phong"], "mau": "ngan_hang", "nguon": "fdic",
      "hoi": "How many banks does America still have?"},
     {"ten": "FINE PRINT", "handle": "@fineprintusa", "nhan": "The clause they hope you skip",
-     "kieu": "luat_tre", "boi": "van_phong", "mau": "van_phong", "nguon": "dieu_khoan",
+     "kieu": "luat_tre", "boi": ["van_phong", "ban_lam_viec", "phong_xu"], "mau": "van_phong", "nguon": "dieu_khoan",
      "hoi": "What do Americans complain about most?"},
     {"ten": "WHO OWNS IT", "handle": "@whoownsitusa", "nhan": "Who really owns the brand",
      # 29/8 — anh chỉ vào khung: "đừng có mà đưa kiểu bối cảnh hàng rào ko liên quan vào videos".
@@ -47,32 +47,32 @@ KENH = [
      # "ai sở hữu thương hiệu anh dùng hằng ngày". Kệ siêu thị chính là chỗ người xem gặp những
      # thương hiệu ấy mỗi tuần. Tôi lấy hàng rào từ ảnh tham chiếu mà quên xét nội dung — cùng
      # loại lỗi với mấy kênh nét chì vẽ sương mù cho một bảng số.
-     "kieu": "hang_xom", "boi": "ke_sieu_thi", "mau": "ke_sieu_thi", "nguon": "sec",
+     "kieu": "hang_xom", "boi": ["ke_sieu_thi", "san_sau", "ban_lam_viec"], "mau": "ke_sieu_thi", "nguon": "sec",
      "hoi": "Who owns the company behind your groceries?"},
     {"ten": "KNOW YOUR RIGHT", "handle": "@knowyourrightusa", "nhan": "What you are allowed to do",
-     "kieu": "cong_to", "boi": "toa_an", "mau": "luat", "nguon": "toa_quyen",
+     "kieu": "cong_to", "boi": ["toa_an", "phong_xu", "thu_phong"], "mau": "luat", "nguon": "toa_quyen",
      "hoi": "What rights get argued in court this month?"},
     {"ten": "SUED IN AMERICA", "handle": "@suedinamericausa", "nhan": "What Americans sue over",
-     "kieu": "tham_phan", "boi": "thu_phong", "mau": "thu_phong", "nguon": "toa_kien",
+     "kieu": "tham_phan", "boi": ["thu_phong", "phong_xu", "toa_an"], "mau": "thu_phong", "nguon": "toa_kien",
      "hoi": "What do Americans actually sue each other over?"},
     {"ten": "SKY TONIGHT", "handle": "@skytonightusa", "nhan": "What is above you right now",
-     "kieu": "sao_dem", "boi": "san_thuong", "mau": "san_thuong", "nguon": "nasa_gan",
+     "kieu": "sao_dem", "boi": ["san_thuong", "tinh_van", "vu_tru"], "mau": "san_thuong", "nguon": "nasa_gan",
      "hoi": "What just passed the Earth?"},
     {"ten": "ONE EXPERIMENT", "handle": "@oneexperimentusa", "nhan": "One study, explained straight",
-     "kieu": "khoa_hoc", "boi": "lab", "mau": "phong_lab", "nguon": "epmc",
+     "kieu": "khoa_hoc", "boi": ["lab", "ban_lam_viec", "phong_kham"], "mau": "phong_lab", "nguon": "epmc",
      "hoi": "What does the research actually say?"},
     {"ten": "DEEP FIELD", "handle": "@deepfieldusa", "nhan": "The farthest thing we have seen",
-     "kieu": "vu_tru_gia", "boi": "vu_tru", "mau": "vu_tru", "nguon": "nasa_to",
+     "kieu": "vu_tru_gia", "boi": ["vu_tru", "tinh_van", "san_thuong"], "mau": "vu_tru", "nguon": "nasa_to",
      "hoi": "How far away is the farthest rock we track?"},
     {"ten": "WHAT THE CHART SAYS", "handle": "@whatthechartusa", "nhan": "What your chart does not say out loud",
-     "kieu": "y_ta", "boi": "phong_kham", "mau": "phong_kham", "nguon": "fda",
+     "kieu": "y_ta", "boi": ["phong_kham", "quay_vien_phi", "lab"], "mau": "phong_kham", "nguon": "fda",
      "hoi": "What got pulled off the shelf this month?"},
     # 29/8 — ĐỔI NGUỒN. Hai kênh y tế cùng khai `fda` nên ra GẦN NHƯ CÙNG MỘT VIDEO: cùng bảng
     # thu hồi, cùng con số 2,9M, cùng bối cảnh phòng khám. Đó đúng là khuôn "nội dung lặp lại"
     # mà chính sách YouTube nhắm vào — và tôi vừa tự tạo ra nó trong bộ kênh mới.
     # Chỉ số giá y tế của BLS mới là thứ trả lời được câu hỏi của kênh này.
     {"ten": "PRICE OF CARE", "handle": "@priceofcareusa", "nhan": "What care costs now",
-     "kieu": "vien_phi", "boi": "quay_vien_phi", "mau": "quay_vien_phi", "nguon": "gia_yte",
+     "kieu": "vien_phi", "boi": ["quay_vien_phi", "phong_kham", "van_phong"], "mau": "quay_vien_phi", "nguon": "gia_yte",
      "hoi": "How much has medical care gone up?"},
 ]
 
@@ -321,11 +321,17 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
     cau = [
         (_mo, "bat_ngo", "chi", "can", [0.2, -0.12]),
         (k["hoi"], "nghi_ngo", "mo_tay", "trung", [0, 0]),
+        # 29/8 — CẢNH CÓ BIỂU ĐỒ THÌ TAY PHẢI Ở TRONG NGƯỜI. Khung thật: cử chỉ "chỉ" duỗi tay
+        # sang phải và cắt ngang tấm biểu đồ, nhìn ra là hai lớp chồng nhau chứ không ra là người
+        # đang chỉ vào bảng. Nhân vật đứng bên trái, bảng bên phải — khoảng giữa quá hẹp để một
+        # cánh tay duỗi hết cỡ nằm gọn.
+        # Ba cảnh có bảng dùng cử chỉ khép: đếm trên ngón, khoanh tay, ngửa lòng bàn tay. Mắt
+        # người xem đã có con số dẫn đường rồi, không cần một ngón tay chỉ nữa.
         (f"{tieu_de}. The gap is bigger than it looks.", "tu_tin", "dem", "trung", [-0.28, 0.1]),
         (f"{dan[1][0]} comes second at {dan[1][2]}. Then it drops fast.",
-         "trung_tinh", "chi", "trung", [0.3, 0]),
+         "trung_tinh", "khoanh_tay", "trung", [0.3, 0]),
         (f"This is straight from {nguon.split(',')[0]}, not from me.",
-         "tu_tin", "mo_tay", "can", [0, 0]),
+         "tu_tin", "dem", "trung", [0.1, 0]),
         (_chot, "vui", "nghi", "trung", [0, 0]),
     ]
     # 29/8 — MỖI CÂU MỘT LỚP HÌNH RIÊNG. Anh: "mỗi lần nhân vật nói gì thì cần có bối cảnh phù
@@ -343,9 +349,23 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
     _cot = [{"nhan": a, "gt": float(b), "hien": h} for a, b, h in dan]
     canh, t = [], 0.0
     for i, (nar, cx, cc, co, nhin) in enumerate(cau):
+        # ── BỐI CẢNH ĐỔI TRONG CÙNG MỘT VIDEO (29/8) ────────────────────────────────────
+        # Anh: "10 channel mới phải đa dạng bối cảnh trong 1 videos sao cho phù hợp".
+        # Trước đó cả sáu cảnh dùng đúng một nền, nên video 20 giây chỉ có một khung hình duy
+        # nhất đứng yên phía sau — máy quay đổi cỡ nhưng thế giới không đổi, và mắt chán ngay từ
+        # giây thứ tám.
+        # Mỗi kênh nay có BỘ BA bối cảnh cùng một thế giới nghề nghiệp (ngân hàng: quầy → bàn
+        # làm việc → văn phòng), xoay vòng theo cảnh. Không kênh nào trùng bộ ba với kênh khác.
+        # KHÔNG tốn thêm một lượt hạn mức nào: bối cảnh là vector dựng bằng mã.
+        _bo = k["boi"] if isinstance(k["boi"], list) else [k["boi"]]
         c = {"s": round(t, 2), "e": round(t + giay_moi_cau, 2), "nar": nar,
-             "camXuc": cx, "cuChi": cc, "co": co, "nhin": nhin, "boi": k["boi"]}
-        if i == 1:
+             "camXuc": cx, "cuChi": cc, "co": co, "nhin": nhin,
+             "boi": _bo[i % len(_bo)]}
+        # 29/8 — LỚP HÌNH PHẢI KHỚP CÂU ĐANG NÓI. Khi đảo thứ tự lời thoại (đưa con số lên câu
+        # đầu để hook mạnh hơn) tôi quên đảo bảng gán lớp hình theo — nên con số lớn hiện ở cảnh
+        # CÂU HỎI, còn cảnh đọc con số thì trống. Người xem nghe "109, đó là Illinois" mà màn
+        # hình chưa có gì, rồi con số mới bật ra lúc đang hỏi một câu khác.
+        if i == 0:
             c["soLon"], c["nhanSo"] = top_hien, _nhan_gon(top_ten)
         elif i == 2:
             c["cot"] = _cot
@@ -356,6 +376,23 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
                 c["soLon"], c["nhanSo"] = dan[1][2], _nhan_gon(dan[1][0])
         elif i == 4:
             c["cot"] = _cot
+        # ── TIẾNG ĐỘNG THEO HÀNH ĐỘNG (29/8) ────────────────────────────────────────────
+        # Anh: "âm thanh hiệu ứng chuyển cảnh phù hợp hay e nha". Trước đó không cảnh nào khai
+        # `sfx` nên cỗ máy có sẵn đường phát tiếng mà chưa từng phát một tiếng nào.
+        # Gắn theo Ý NGHĨA của cảnh, không rải đều cho có:
+        #   cảnh số lớn rơi xuống -> tiếng va (impact), đúng lúc con số bật ra
+        #   cảnh biểu đồ mọc      -> tiếng lướt (whoosh), đi cùng cột đang lên
+        #   cảnh đổi cột tô sáng  -> tiếng tách (pop), báo mắt nhìn sang cột khác
+        #   cảnh chốt             -> tiếng ding nhẹ
+        # Bốn tiếng cho sáu cảnh: hai cảnh còn lại để yên. Cảnh nào cũng có tiếng thì tai mệt và
+        # tiếng mất hết sức nhấn — im lặng cũng là một phần của nhịp.
+        # Đường dẫn phải kể cả thư mục `sfx/` — khai thiếu thì Remotion tải 404 và CẢ LƯỢT
+        # RENDER chết, chứ không phải chỉ mất tiếng. Một tệp phụ trợ thiếu mà giết cả video là
+        # cái giá quá đắt, nên tên tệp phải đúng ngay từ đầu.
+        c["sfx"] = {0: "sfx/impact.mp3", 2: "sfx/whoosh.mp3",
+                    3: "sfx/pop.mp3", 5: "sfx/ding.mp3"}.get(i, "")
+        if not c["sfx"]:
+            c.pop("sfx")
         canh.append(c)
         t += giay_moi_cau
     return canh, " ".join(x[0] for x in cau)
@@ -433,17 +470,53 @@ def main() -> int:
             print(f"   ❌ giọng đọc hỏng: {str(e)[:70]}")
             continue
         # `subs` là [{w, t, d, si}] — đúng khuôn `Tu` mà `visemeTai` cần, không phải đổi gì.
-        tu = [{"t": float(x.get("t", 0)), "d": float(x.get("d", 0)), "w": str(x.get("w", ""))}
-              for x in (subs or [])]
+        tu = [{"t": float(x.get("t", 0)), "d": float(x.get("d", 0)), "w": str(x.get("w", "")),
+               "si": int(x.get("si", 0))} for x in (subs or [])]
         if not tu:
             print("   ❌ giọng đọc không trả mốc từ nào — BỎ (khỏi ra video câm)")
             continue
-        # CẢNH PHẢI KHỚP GIỌNG THẬT, không phải 3,4 giây bốc sẵn: chia đều thời lượng đọc thật
-        # cho sáu cảnh. Lệch một chút thì khẩu hình chạy trước/sau lời — thứ mắt bắt ngay.
-        moi_canh = max(1.6, dur / max(1, len(canh)))
+        # ── RANH GIỚI CẢNH LẤY TỪ CHỈ SỐ CÂU, KHÔNG CHIA ĐỀU (29/8) ─────────────────────
+        # Anh: "voice với sub chạy khớp trùng nhau 100%".
+        # Phụ đề vốn đã khớp tuyệt đối — nó đọc thẳng mốc từng từ của edge-tts. Thứ LỆCH là
+        # RANH GIỚI CẢNH: tôi chia đều thời lượng cho sáu cảnh, trong khi sáu câu dài ngắn khác
+        # nhau. Đo trên BANK RUN: chia đều ra 3,7 giây mỗi cảnh, còn câu thật dài từ 2,1 tới 5,4
+        # giây — nên máy quay cắt cảnh, biểu đồ mọc và cảm xúc đổi đều rơi vào GIỮA một câu.
+        # Người xem thấy nhân vật đang nói dở thì cảnh nhảy; đó là thứ đọc ra ngay là "làm ẩu"
+        # dù không ai chỉ được tên lỗi.
+        # `subs` có sẵn `si` = câu thứ mấy, do chính edge-tts đánh dấu. Cảnh thứ i chạy từ từ
+        # ĐẦU TIÊN của câu i tới ngay trước từ đầu tiên của câu i+1. Khớp tuyệt đối, không phải
+        # xấp xỉ, và không tốn thêm một phép đo nào.
+        # MỘT LỜI THOẠI CÓ THỂ GỒM NHIỀU CÂU. edge-tts đánh `si` theo CÂU, còn cảnh của mình
+        # là theo LỜI THOẠI: "109. That is Illinois, and most people have no idea." là một lời
+        # thoại nhưng hai câu. Đo trên BANK RUN: 6 cảnh mà có 9 câu — ánh xạ thẳng cảnh i ↔ câu i
+        # thì ba cảnh cuối không có câu nào và cả video lệch hẳn.
+        # Nên đếm số câu trong TỪNG lời thoại rồi cộng dồn để ra dải câu của mỗi cảnh.
+        import re as _re3
+        _dem_cau = lambda t: max(1, len([x for x in _re3.split(r"(?<=[.!?])\s+", str(t or "")) if x.strip()]))
+        _dai = []
+        _bd = 0
+        for c2 in canh:
+            _n = _dem_cau(c2["nar"])
+            _dai.append((_bd, _bd + _n - 1))
+            _bd += _n
+        _mocs = {}
+        for w in tu:
+            _mocs.setdefault(w["si"], []).append(w)
         for i2, c2 in enumerate(canh):
-            c2["s"] = round(i2 * moi_canh, 2)
-            c2["e"] = round((i2 + 1) * moi_canh, 2)
+            _a, _b = _dai[i2]
+            ws = [w for si in range(_a, _b + 1) for w in (_mocs.get(si) or [])]
+            if ws:
+                c2["s"] = round(min(x["t"] for x in ws), 2)
+                _sau = _mocs.get(_b + 1) or []
+                c2["e"] = round(min(x["t"] for x in _sau) if _sau
+                                else max(x["t"] + x["d"] for x in ws) + 0.35, 2)
+            else:
+                # câu không có từ nào (TTS nuốt) -> nối tiếp cảnh trước, đừng để lỗ thời gian
+                c2["s"] = canh[i2 - 1]["e"] if i2 else 0.0
+                c2["e"] = c2["s"] + 1.2
+        # cảnh cuối kéo tới hết tiếng, khỏi cụt đuôi
+        if canh:
+            canh[-1]["e"] = round(max(canh[-1]["e"], dur), 2)
         props = {
             "canh": canh, "tu": tu, "voMp3": rel,
             "kieuGoc": k["kieu"], "bangMau": k["mau"],

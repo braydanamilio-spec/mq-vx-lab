@@ -145,7 +145,11 @@ def main() -> int:
     for truc in ("kieu", "boi", "mau", "nguon"):
         d: dict = {}
         for x in K.KENH:
-            d.setdefault(x[truc], []).append(x["ten"])
+            # `boi` nay là một DANH SÁCH (bộ ba bối cảnh) — so nguyên bộ, không so từng cái.
+            # Hai kênh dùng chung một bối cảnh phụ là chấp nhận được; dùng chung cả BỘ thì mới
+            # là hai kênh trông như một.
+            v = tuple(x[truc]) if isinstance(x[truc], list) else x[truc]
+            d.setdefault(v, []).append(x["ten"])
         lap = {v: t for v, t in d.items() if len(t) > 1}
         if lap:
             trung[truc] = lap
