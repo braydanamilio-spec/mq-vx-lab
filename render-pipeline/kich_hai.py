@@ -790,6 +790,99 @@ def _giay_wav(w: str) -> float:
         return 0.0
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# THUMBNAIL — TRÍCH TỪ CHÍNH VIDEO, KHÔNG VẼ MỚI
+# ------------------------------------------------------------------------------------------
+# 30/8 — Cả bộ hài lẫn bộ dữ liệu đang xuất video mà KHÔNG có thumbnail, trong khi đường đăng bài
+# cần nó. Vẽ thumbnail bằng AI thì tốn hạn mức, mà hạn mức là thứ đã đo được là cạn sạch vào
+# những ngày bận nhất.
+#
+# Không cần vẽ mới: khung ĐẸP NHẤT của một video hài đã nằm sẵn trong chính video đó — khung cận
+# cảnh lúc cú chốt, khi khuôn mặt chiếm gần bốn phần mười màn hình và nét mặt đang ở đỉnh. Trích
+# đúng khung ấy rồi đặt câu hook lên trên là ra một thumbnail nói đúng nội dung, tốn 0 hạn mức và
+# 0 giây chờ mạng.
+#
+# Chữ đặt Ở NỬA TRÊN, vì nửa dưới là chỗ mặt nhân vật. Và có nền tối mờ sau chữ: chữ trắng viền
+# đen trên khung sáng vẫn khó đọc ở cỡ thumbnail trong danh sách đề xuất.
+def lam_thumb(video: str, hook: str, ten_kenh: str, mau: str, dest: str) -> bool:
+    """Trích khung cận cảnh của video rồi đặt chữ hook lên. Trả True nếu xong."""
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        return False
+    try:
+        dur = float(subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", video],
+            capture_output=True, text=True, timeout=60).stdout.strip() or 0)
+    except Exception:
+        return False
+    if not dur:
+        return False
+    tam = dest + ".raw.png"
+    # LẤY KHUNG Ở NHỊP ĐUÔI, không lấy ở giữa lượt chốt.
+    # Thử lần đầu lấy ở 0,80 của phim: khung ấy CÓ SẴN phụ đề của video, và tên kênh mình đặt
+    # thêm ở đáy đè chồng lên đúng thẻ phụ đề — hai lớp chữ chồng nhau, không đọc được lớp nào.
+    # Nhịp đuôi (2,2 giây sau câu chốt) không còn phụ đề nào, mà cỡ máy vẫn là cỡ CẬN và nét mặt
+    # người nghe đang ở đỉnh phản ứng — đúng khung đẹp nhất của cả video.
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{max(0.5, dur - 1.2):.2f}", "-i", video,
+                    "-vframes", "1", tam], capture_output=True, timeout=120)
+    if not os.path.exists(tam):
+        return False
+    im = Image.open(tam).convert("RGB")
+    W, H = im.size
+    d = ImageDraw.Draw(im, "RGBA")
+
+    def phong(cs):
+        for f in ("/System/Library/Fonts/Supplemental/Impact.ttf",
+                  "/System/Library/Fonts/Supplemental/Arial Bold.ttf"):
+            if os.path.exists(f):
+                try:
+                    return ImageFont.truetype(f, cs)
+                except Exception:
+                    pass
+        return ImageFont.load_default()
+
+    # Xuống dòng theo BỀ RỘNG THẬT, không theo số ký tự — hai chuỗi cùng số ký tự có thể rộng
+    # khác nhau tới 40%, và chữ tràn mép là lỗi đã gặp nhiều lần ở bộ 50 kênh.
+    cs = int(W * 0.093)
+    ft = phong(cs)
+    rong = int(W * 0.86)
+    tu, dong, hien = str(hook or "").split(), [], ""
+    for w in tu:
+        thu = (hien + " " + w).strip()
+        if d.textlength(thu, font=ft) <= rong:
+            hien = thu
+        else:
+            if hien:
+                dong.append(hien)
+            hien = w
+    if hien:
+        dong.append(hien)
+    dong = dong[:3]
+
+    y = int(H * 0.10)
+    cao = int(cs * 1.18)
+    d.rectangle([0, y - int(cs * 0.5), W, y + cao * len(dong) + int(cs * 0.3)], fill=(12, 14, 20, 165))
+    for ln in dong:
+        w = d.textlength(ln, font=ft)
+        x = (W - w) / 2
+        d.text((x, y), ln, font=ft, fill="#FFFFFF", stroke_width=max(6, cs // 9), stroke_fill="#12131A")
+        y += cao
+
+    # Tên kênh ở đáy, nhỏ, mang màu kênh — để người xem nhận ra kênh trong danh sách đề xuất.
+    ft2 = phong(int(W * 0.045))
+    w2 = d.textlength(ten_kenh, font=ft2)
+    d.text(((W - w2) / 2, int(H * 0.9)), ten_kenh, font=ft2, fill=mau,
+           stroke_width=5, stroke_fill="#12131A")
+
+    im.save(dest, quality=92)
+    try:
+        os.remove(tam)
+    except Exception:
+        pass
+    return True
+
+
 def dung_luot(k: dict, nen: list, vong: int = 0) -> tuple:
     """Trả (danh sách lượt thoại, lời đọc ghép). Kịch bản bốc theo `vong` để mỗi tập một chuyện.
 
@@ -842,6 +935,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--nen", action="store_true", help="chỉ vẽ + cache nền, không render")
+    # Thumbnail trích từ video ĐÃ CÓ, nên tách được thành một lượt riêng: đổi cách làm thumbnail
+    # thì không phải dựng lại mười video (mỗi lượt dựng mất chừng mười lăm phút).
+    ap.add_argument("--thumb", action="store_true", help="chỉ làm thumbnail từ video đã dựng")
     ap.add_argument("--kenh", default="")
     ap.add_argument("--vong", type=int, default=0)
     a = ap.parse_args()
@@ -865,6 +961,23 @@ def main() -> int:
             DS.set_ai_pool(keys, "V4")
     except Exception:
         pass
+
+    if a.thumb:
+        n = 0
+        for k in chon:
+            mp4 = os.path.join(GOC, "out", f"v4_{_ten_tep(k)}.mp4")
+            if not os.path.exists(mp4):
+                print(f"   ⏭ {k['ten']}: chưa có video")
+                continue
+            hook = KHO[k["de"]][a.vong % len(KHO[k["de"]])]["loi"][0][0]
+            th = os.path.join(GOC, "out", f"v4_{_ten_tep(k)}.jpg")
+            if lam_thumb(mp4, hook, k["ten"], k["mau"], th):
+                print(f"   🖼  {k['ten']}: {os.path.basename(th)}")
+                n += 1
+            else:
+                print(f"   ❌ {k['ten']}: không làm được")
+        print(f"\n✅ {n}/{len(chon)} thumbnail")
+        return 0
 
     ra = []
     for k in chon:
@@ -953,6 +1066,11 @@ def main() -> int:
         if r.returncode or not os.path.exists(out):
             print(f"   ❌ render hỏng: {(r.stderr or r.stdout or '')[-190:]}")
             continue
+        th = os.path.join(GOC, "out", f"v4_{_ten_tep(k)}.jpg")
+        if lam_thumb(out, kb_cau[0][0] if kb_cau else ten, ten, k["mau"], th):
+            print(f"   🖼  thumbnail: {os.path.basename(th)}")
+        else:
+            print("   ⚠️ không làm được thumbnail")
         print(f"   ✅ {ten}: {out}  ({os.path.getsize(out)/1e6:.1f} MB · {dur:.0f}s)")
         ra.append(out)
 
