@@ -1536,7 +1536,7 @@ def _pk_wiki(D, ky):
          else "The rest of the list was ordinary news.",
          "rolled newspapers stacked and bound with twine, seen from the ends"),
         ("Curiosity leaves a trace. This is what it looks like counted.",
-         "a rising line chart drawn on frosted glass"),
+         "a single rising line traced through condensation on cold glass, no axes or ticks"),
         ("Wikimedia publishes these numbers every single day.",
          "server room corridor with blue indicator lights"),
     ]
@@ -1573,9 +1573,9 @@ def _pk_nhac(D, ky):
         (f"Type: {v['loai'] or 'artist'}. Country: {v['nuoc'] or 'unlisted'}.",
          "a worn leather suitcase with buckled straps, closed, travel stickers scraped off"),
         ((f"The record says it ended in {v['ket_thuc'][:4]}." if v.get("ket_thuc")
-          else "The record has no end date."), "empty concert stage with one spotlight"),
+          else "The record has no end date."), "empty concert stage under one hard spotlight, smoke in the beam, cables coiled"),
         ("This is the catalogue entry, not the legend.",
-         "index card drawer in a music archive"),
+         "a wooden card-index drawer pulled open, card edges seen from above, no faces visible"),
         ("MusicBrainz keeps it because somebody had to.",
          "a vinyl record sleeve seen edge-on, records fanned in a crate"),
         ("Every credit here can be checked in a minute.",

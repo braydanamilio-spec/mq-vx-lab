@@ -4660,9 +4660,15 @@ def t_prompt_ve_khong_goi_ten_mat_chu():
     i = src.index("def _pk_ban_an")
     j = src.find("\nBO_PHIM", i)
     than = src[i: j if j > 0 else len(src)]
+    # 29/8 — MỞ RỘNG sau khi soi khung SONG FILE: hai prompt lọt lưới và ra chữ giả đầy khung
+    # ("FIDELY CARES" lặp kín một tủ phiếu, chữ neon "uwh" cỡ lớn). Chúng lọt vì danh từ của chúng
+    # ("index card", "marquee") không có trong danh sách. Danh sách này phải rộng hơn trực giác:
+    # bất cứ thứ gì con người VIẾT LÊN đều là một mặt chữ tiềm năng.
     NGUY = ("document", "file", "folder", "record", "paper", "page", "newspaper", "headline",
-            "signage", "label", "book", "report", "form", "screen", "monitor", "poster",
-            "banner", "notice", "ledger", "envelope", "receipt", "ticket", "calendar")
+            "signage", "sign", "label", "book", "report", "form", "screen", "monitor", "poster",
+            "banner", "notice", "ledger", "envelope", "receipt", "ticket", "calendar",
+            "card", "cards", "catalogue", "catalog", "index", "marquee", "neon", "billboard",
+            "plaque", "certificate", "chart", "diagram", "tag", "sticker", "logo", "brand")
     # Cận cảnh CỰC SÁT cũng an toàn: khung chỉ còn một mảnh bề mặt, không đủ chỗ cho một từ
     # trọn vẹn. "record grooves in extreme close-up" là rãnh đĩa, không phải nhãn đĩa.
     # Ngoại lệ này có lý do vật lý, không phải để cho một prompt cụ thể lọt qua.
