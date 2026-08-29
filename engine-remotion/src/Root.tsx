@@ -10,7 +10,9 @@ import { GuessShort, calcGuess } from "./GuessShort";   // kênh #1 GUESS (đố
 import { BrandGuess } from "./BrandGuess";              // brand kênh #1 GUESS
 import { MappedShort, calcMapped } from "./MappedShort"; // kênh #2 MAPPED (choropleth US)
 import { BrandMapped } from "./BrandMapped";             // brand kênh #2 MAPPED
-import { RankedShort, calcRanked } from "./RankedShort";  // kênh #3 RANKED (tier list)
+import { RankedShort, calcRanked } from "./RankedShort";
+import { RankedEditorial, calcRankedEditorial } from "./RankedEditorial";
+import { VectorChart, calcVectorChart } from "./VectorChart";                 // đồ hoạ vector phẳng, nền giấy   // bản BIÊN TẬP của cùng dạng ranked  // kênh #3 RANKED (tier list)
 import { BrandRanked2 } from "./BrandRanked2";            // brand kênh #3 RANKED
 import { ScaledShort, calcScaled } from "./ScaledShort";  // kênh #4 SCALED (so sánh kích thước)
 import { SwarmShort, calcSwarm } from "./SwarmShort";  // kênh #7 SWARM (mật độ đám đông, hạt bay lấp đầy)
@@ -153,6 +155,12 @@ export const RemotionRoot: React.FC = () => (
         { name: "Subway", tier: "C", stat: "$10B" }, { name: "Domino's", tier: "C", stat: "$9B" },
         { name: "Arby's", tier: "D", stat: "$5B" },
       ] }} />
+    <Composition id="RankedEditorial" component={RankedEditorial} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcRankedEditorial}
+      defaultProps={{ title: "Games people actually play right now", subtitle: "by players online", handle: "@mm0", accent: "#7C5CFF", color: "#7C5CFF", source: "SteamSpy",
+        items: [{ name: "Counter-Strike: Global", tier: "S", stat: "1.0M" }, { name: "PUBG: BATTLEGROUNDS", tier: "A", stat: "314.7K" }, { name: "Rust", tier: "A", stat: "143.9K" }, { name: "Apex Legends", tier: "B", stat: "124.3K" }] }} />
+    <Composition id="VectorChart" component={VectorChart} durationInFrames={360} fps={30} width={1080} height={1920} calculateMetadata={calcVectorChart}
+      defaultProps={{ title: "Games people actually play right now", subtitle: "by players online", handle: "@mm0", accent: "#E8632A", source: "SteamSpy",
+        items: [{ name: "Counter-Strike", tier: "S", stat: "1.0M" }, { name: "PUBG", tier: "A", stat: "314.7K" }, { name: "Rust", tier: "A", stat: "143.9K" }, { name: "Apex Legends", tier: "B", stat: "124.3K" }] }} />
     {/* BRAND kênh #3 RANKED */}
     <Composition id="BrandRanked2Avatar" component={BrandRanked2} durationInFrames={1} fps={30} width={800} height={800} defaultProps={{ kind: "avatar" }} />
     <Composition id="BrandRanked2Banner" component={BrandRanked2} durationInFrames={1} fps={30} width={2560} height={1440} defaultProps={{ kind: "banner" }} />
