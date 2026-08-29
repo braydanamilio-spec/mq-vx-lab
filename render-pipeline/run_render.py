@@ -2584,11 +2584,25 @@ def plan_mode():
                 _truoc = list(channels)
                 channels = sorted(channels, key=lambda c: (_hang(c), _truoc.index(c)))
                 _hong = [c for c in channels if _hang(c) == 1]
-                print(f"   🎓 Cổng chất lượng (ngưỡng {_ng}/100, chấm lúc {_bang.get('luc', '?')}): "
-                      f"{len(channels) - len(_hong)} kênh đạt đi trước"
-                      + (f" · {len(_hong)} kênh còn lỗi xếp sau: "
-                         + ", ".join(f"{c}={_diem.get(str(c).upper(), '?')}" for c in _hong[:6])
-                         if _hong else ""))
+                _dat = [c for c in channels if _hang(c) == 0]
+                # 29/8 — LOẠI HẲN, KHÔNG CHỈ XẾP SAU (anh: "dừng cái sai, fix lên 90 thì phải vào
+                # render"). Bản đầu chỉ đẩy kênh hỏng xuống cuối hàng, nên khi slot còn dư thì
+                # chúng VẪN chạy và vẫn nhả ra video dưới chuẩn — tức cổng không chặn gì cả.
+                # Nay kênh dưới ngưỡng nằm ngoài mẻ cho tới khi được chấm lại và đạt.
+                #
+                # SÀN AN TOÀN: chỉ loại khi còn ít nhất 6 kênh đạt. Một bảng điểm cũ hoặc một đợt
+                # nguồn chập hàng loạt có thể đánh trượt gần hết 50 kênh, và lúc đó "loại kênh
+                # hỏng" biến thành "dừng cả nhà máy" — đúng loại sự cố im lặng tệ nhất.
+                if _hong and len(_dat) >= 6:
+                    channels = _dat
+                    print(f"   🎓 Cổng chất lượng (ngưỡng {_ng}/100, chấm lúc {_bang.get('luc', '?')}): "
+                          f"{len(_dat)} kênh đạt vào mẻ · LOẠI {len(_hong)} kênh dưới chuẩn: "
+                          + ", ".join(f"{c}={_diem.get(str(c).upper(), '?')}" for c in _hong[:6]))
+                elif _hong:
+                    print(f"   ⚠️ Cổng chất lượng: chỉ {len(_dat)} kênh đạt (<6) — KHÔNG loại ai, "
+                          f"chạy đủ để nhà máy không đứng. Chấm lại bằng `python3 cham_kenh.py`.")
+                else:
+                    print(f"   🎓 Cổng chất lượng (ngưỡng {_ng}/100): cả {len(_dat)} kênh đều đạt.")
                 for c in _hong[:4]:
                     for x in ((_bang.get("kenh") or {}).get(str(c).upper()) or {}).get("loi", [])[:1]:
                         print(f"      └ {c}: {str(x)[:96]}")
