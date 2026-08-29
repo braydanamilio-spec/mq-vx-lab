@@ -133,7 +133,9 @@ def main() -> int:
         if not a.kr:
             print(f"▶ render {ten} [{k['dinh_dang']}] …", flush=True)
             try:
-                r = T.chay_chung(k, ky=dict(k.get("tham_so") or {}))
+                # Dạng `cinematic` cần key vẽ ảnh; trên máy thì lấy từ `.keys.local` (xem
+                # `the_he_2.keys_cuc_bo`). Không có thì `chay_chung` tự bỏ lượt như cũ.
+                r = T.chay_chung(k, ky=dict(k.get("tham_so") or {}), keys=T.keys_cuc_bo() or None)
             except Exception as ex:
                 print(f"   ❌ render ném {type(ex).__name__}: {str(ex)[:80]}")
                 continue

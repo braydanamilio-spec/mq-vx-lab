@@ -2393,6 +2393,37 @@ def dung_props_phim(kenh: dict, ky: dict | None = None, keys: list | None = None
     return props, st, sl
 
 
+def keys_cuc_bo() -> list:
+    """Hồ key cho lúc chạy TAY TRÊN MÁY — đọc từ `.keys.local` (đã cho vào .gitignore).
+
+    29/8 — vì sao cần. Dạng `cinematic` (10/50 kênh) bắt buộc phải có key vẽ ảnh, nên trên máy
+    không key thì nó bỏ lượt và KHÔNG cách nào soi được khung của nó bằng mắt — trong khi soi bằng
+    mắt là thứ duy nhất bắt được lỗi bố cục (bộ đo pixel đã chứng minh vô dụng). Kết quả: 10 kênh
+    sửa mù, vá xong không biết đúng hay sai.
+    Trên CI thì key tới từ hồ Firestore; ở máy thì không có creds. Nên mở một lối riêng chỉ dùng
+    khi chạy tay, và nó phải KHÔNG BAO GIỜ lọt vào git.
+
+    Định dạng: mỗi dòng một key, bỏ qua dòng trống và dòng bắt đầu bằng `#`.
+        AIza...                (Gemini)
+        cf:<account_id>:<token>  (Cloudflare Workers AI — FLUX vẽ ảnh)
+    Không có tệp thì trả rỗng và mọi thứ chạy y như trước."""
+    ra = []
+    for nguon in (os.path.join(GOC, ".keys.local"),
+                  os.environ.get("MM0_KEYS_FILE") or ""):
+        if not (nguon and os.path.exists(nguon)):
+            continue
+        for d in io.open(nguon, encoding="utf-8").read().splitlines():
+            d = d.strip()
+            if d and not d.startswith("#"):
+                ra.append({"id": f"local{len(ra)}", "key": d})
+        break
+    tho = (os.environ.get("GEMINI_API_KEYS") or os.environ.get("GEMINI_API_KEY") or "").strip()
+    for k in tho.split(","):
+        if len(k.strip()) > 20:
+            ra.append({"id": f"env{len(ra)}", "key": k.strip()})
+    return ra
+
+
 def chay_phim(kenh: dict, ra: str = "", ky: dict | None = None, keys: list | None = None,
               st_san: dict | None = None, ky_hieu: str = "") -> tuple[str, dict] | None:
     """Phim kể (ảnh AI): dựng props -> render CinematicShort (9:16)."""
@@ -3854,7 +3885,7 @@ def main() -> int:
         so = m.get("stat") or m.get("disp") or m.get("oddsDisp") or m.get("nowVal") or ""
         print(f"   {str(so):>10}  {str(nhan)[:56]}")
     if a.render:
-        return 0 if chay_chung(k, ky=MOI.get(k["ham"], {})) else 4
+        return 0 if chay_chung(k, ky=MOI.get(k["ham"], {}), keys=keys_cuc_bo() or None) else 4
     return 0
 
 
