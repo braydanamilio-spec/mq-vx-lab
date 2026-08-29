@@ -275,7 +275,13 @@ export const DienVien: React.FC<PropsDien> = ({
   const cao = kieu.cao ?? 1;
   const ngang = kieu.beNgang ?? 1;
   const net = kieu.net;
-  const NET = Math.max(2.6, 4.2 * scale) / scale;      // nét viền dày đều như ảnh tham chiếu
+  // 29/8 — NÉT KHÔNG ĐƯỢC DÀY ĐỀU. Anh: "nhân vật xấu chưa có style phong cách, chưa chuẩn usa".
+  // Thứ tách một hình vẽ nghiệp dư khỏi một nhân vật hoạt hình chuyên nghiệp, trước cả tạo hình,
+  // là ĐỘ DÀY NÉT BIẾN THIÊN: đường bao ngoài dày, chi tiết bên trong mảnh hơn hẳn. Phim hoạt
+  // hình Mỹ nào cũng làm thế — nó tạo chiều sâu mà không cần đổ bóng, và làm nhân vật bật ra
+  // khỏi nền. Vẽ mọi thứ bằng MỘT độ dày thì hình đọc ra là hình cắt giấy.
+  const NET = Math.max(2.6, 4.2 * scale) / scale;      // nét CHI TIẾT (bên trong hình)
+  const NGOAI = NET * 1.75;                            // nét ĐƯỜNG BAO (ngoài cùng)
 
   // ── NHỊP SỐNG: thở, đảo người, chớp mắt ────────────────────────────────────────────────
   const tho = Math.sin(t * 1.9) * 0.9;                  // vai nhô lên xuống
@@ -351,20 +357,31 @@ export const DienVien: React.FC<PropsDien> = ({
     <g transform={bien}>
       <g transform={`translate(0 ${nhayY})`}>
         {/* ── CHÂN ───────────────────────────────────────────────────────────── */}
+        {/* BÓNG ĐỔ DƯỚI CHÂN — thiếu bóng thì nhân vật trông như dán lơ lửng trước nền chứ
+            không như đứng trên mặt đất. Một hình bầu dục mờ là đủ, mắt tự hiểu phần còn lại. */}
+        <ellipse cx={0} cy={6} rx={92 * ngang} ry={15} fill={net} opacity={0.16} />
         {([[goiT, chanT], [goiP, chanP]] as [number[], number[]][]).map((v, i) => (
           <g key={i}>
-            <path d={`M ${hong[0] + (i ? 15 : -15)} ${hong[1]} L ${v[0][0]} ${v[0][1]} L ${v[1][0]} ${v[1][1]}`}
-                  {...vien} strokeWidth={NET * 5.4} stroke={kieu.quan} />
-            <path d={`M ${hong[0] + (i ? 15 : -15)} ${hong[1]} L ${v[0][0]} ${v[0][1]} L ${v[1][0]} ${v[1][1]}`}
-                  {...vien} strokeWidth={NET * 6.4} stroke={net} opacity={0.001} />
-            <ellipse cx={v[1][0] + (i ? 9 : -9)} cy={v[1][1] + 5} rx={20} ry={9} fill={net} />
+            {/* ỐNG QUẦN CÓ DÁNG: rộng ở đùi, thu ở gối. Vẽ bằng đường bao thay vì một nét thẳng
+                dày — nét thẳng cho ra hai cái que, mà que thì không có dáng người. */}
+            <path d={`M ${hong[0] + (i ? 4 : -34)} ${hong[1] - 6}
+                      L ${v[0][0] - 15} ${v[0][1]} L ${v[1][0] - 14} ${v[1][1]}
+                      L ${v[1][0] + 14} ${v[1][1]} L ${v[0][0] + 15} ${v[0][1]}
+                      L ${hong[0] + (i ? 34 : -4)} ${hong[1] - 6} Z`}
+                  fill={kieu.quan} stroke={net} strokeWidth={NGOAI} strokeLinejoin="round" />
+            {/* GIÀY: mũi hếch, gót vuông. Hình bầu dục đọc ra là một cục, không ra giày. */}
+            <path d={`M ${v[1][0] - 15} ${v[1][1] - 2}
+                      L ${v[1][0] - 16} ${v[1][1] + 12}
+                      Q ${v[1][0] - 12} ${v[1][1] + 18} ${v[1][0] + (i ? 30 : -30)} ${v[1][1] + 17}
+                      Q ${v[1][0] + (i ? 38 : -38)} ${v[1][1] + 10} ${v[1][0] + (i ? 26 : -26)} ${v[1][1] - 2} Z`}
+                  fill={net} stroke={net} strokeWidth={NGOAI} strokeLinejoin="round" />
           </g>
         ))}
 
         {/* ── THÂN ───────────────────────────────────────────────────────────── */}
         <path d={`M ${vaiT[0]} ${vaiT[1]} Q ${vai[0]} ${vai[1] - 12} ${vaiP[0]} ${vaiP[1]}
                   L ${hong[0] + 40 * ngang} ${hong[1]} Q ${hong[0]} ${hong[1] + 12} ${hong[0] - 40 * ngang} ${hong[1]} Z`}
-              fill={kieu.ao} stroke={net} strokeWidth={NET} strokeLinejoin="round" />
+              fill={kieu.ao} stroke={net} strokeWidth={NGOAI} strokeLinejoin="round" />
         {/* cổ áo + áo trong */}
         <path d={`M ${vai[0] - 20} ${vai[1] - 4} L ${vai[0]} ${vai[1] + 30} L ${vai[0] + 20} ${vai[1] - 4} Z`}
               fill={kieu.aoTrong} stroke={net} strokeWidth={NET * 0.8} />
@@ -479,7 +496,7 @@ export const DienVien: React.FC<PropsDien> = ({
                       ${dauC[0]} ${dauC[1] + dauR * (1 - _cam * 0.16)}
                     Q ${dauC[0] - dauR * 0.4 * (1 - _cam * 0.5)} ${dauC[1] + dauR * (1 - _cam * 0.14)}
                       ${dauC[0] - dauR * (0.7 + 0.16 * (1 - _cam))} ${dauC[1] + dauR * (0.62 + 0.1 * _cam)} Z`}
-                fill={kieu.da} stroke={net} strokeWidth={NET} strokeLinejoin="round" />
+                fill={kieu.da} stroke={net} strokeWidth={NGOAI} strokeLinejoin="round" />
 
           {/* tai */}
           <ellipse cx={dauC[0] - dauR * 0.86} cy={dauC[1] + 4} rx={9} ry={13} fill={kieu.da} stroke={net} strokeWidth={NET} />
@@ -581,6 +598,11 @@ export const DienVien: React.FC<PropsDien> = ({
                           r={matR * 0.5} fill="#2B2118" />
                   <circle cx={dauC[0] + s * matX + nhinX + matR * 0.17}
                           cy={matY + nhinY - matR * 0.19} r={matR * 0.15} fill="#FFFFFF" />
+                  {/* MÍ TRÊN — nét cong đè lên mép trên tròng. Thiếu nó thì mắt là hai cái đĩa
+                      dán lên mặt; có nó thì mắt nằm TRONG hốc mắt. */}
+                  <path d={`M ${dauC[0] + s * matX - matR} ${matY - matR * (0.1 + mo * 0.5)}
+                            q ${matR} ${-matR * 0.62} ${matR * 2} 0`}
+                        stroke={net} strokeWidth={NET * 1.1} fill="none" strokeLinecap="round" />
                 </>
               ) : null}
             </g>

@@ -156,7 +156,16 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
   /** Cắt chuỗi cho vừa `px` điểm ở cỡ chữ `cs`, cắt theo TỪ, tối đa 2 dòng. */
   const chiaDong = (t: string, px: number, cs: number): string[] => {
     const rong = (x: string) => x.length * cs * 0.55;
-    const tu = String(t || "").split(" ").filter(Boolean);
+    // MỘT TỪ DÀI HƠN CẢ CỘT thì xuống dòng không cứu được — phải cắt chính từ đó.
+    // Cây thước bắt ba ca thật: "Non-Compete Agreement" (109 điểm), "Wrongful Termination"
+    // (109), "Artificial Intelligenc" (119), trong khi cột chỉ rộng 100. Xuống dòng chỉ đẩy
+    // từ ấy sang dòng dưới rồi nó vẫn tràn y nguyên.
+    const catTu = (w: string) => {
+      if (rong(w) <= px) return w;
+      const n = Math.max(3, Math.floor(px / (cs * 0.55)) - 1);
+      return w.slice(0, n) + "…";
+    };
+    const tu = String(t || "").split(" ").filter(Boolean).map(catTu);
     const d: string[] = ["", ""];
     let k = 0;
     for (const w of tu) {
@@ -165,7 +174,7 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
       if (k === 0) { k = 1; d[1] = w; continue; }
       break;
     }
-    if (!d[0]) d[0] = String(t || "").slice(0, Math.max(3, Math.floor(px / (cs * 0.55))));
+    if (!d[0]) d[0] = catTu(String(t || ""));
     return d.filter(Boolean);
   };
 
@@ -258,6 +267,16 @@ export const KichV2: React.FC<PropsKich> = ({
   // rung máy rất nhẹ — thiếu nó thì khung đứng chết như ảnh chụp
   const rung = Math.sin(giay * 1.3) * 3.2;
 
+  // Nền tối hay sáng — suy từ chính bảng màu, không khai tay ở mười chỗ.
+  const _lum = (hx: string) => {
+    const h = hx.replace("#", "");
+    const r = parseInt(h.slice(0, 2), 16) / 255, g = parseInt(h.slice(2, 4), 16) / 255,
+          b = parseInt(h.slice(4, 6), 16) / 255;
+    const f = (c: number) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  };
+  const _nenToi = _lum(mau.troi[1]) < 0.16;
+
   const noi = visemeTai(tu, giay, CAM_XUC[C.camXuc || "trung_tinh"].ha);
   const nhin = C.nhin || [0, 0];
 
@@ -320,9 +339,16 @@ export const KichV2: React.FC<PropsKich> = ({
           </text>
         ) : null}
         <PhuDe tu={tu} giay={giay} mau={mau} day={doc ? 610 : 430} />
+        {/* 29/8 — DÒNG NGUỒN PHẢI ĐỔI MÀU THEO NỀN. Trên hai kênh vũ trụ (nền tím than) dòng
+            "Source: NASA/JPL…" vẽ bằng màu mực sẫm nên chìm hẳn, gần như không nhìn thấy.
+            Uy tín của cả bộ kênh nằm ở chỗ số liệu tra được — mà dòng chỉ ra nơi tra thì lại là
+            thứ duy nhất người xem không đọc nổi.
+            Chọn màu theo ĐỘ SÁNG của nền: nền tối thì chữ sáng, nền sáng thì chữ mực. */}
         {nguon ? (
           <text x={0} y={doc ? 790 : 500} textAnchor="middle" fontSize={22} fontWeight={700}
-                fill={mau.muc} opacity={0.45}>Source: {nguon}</text>
+                fill={_nenToi ? "#FFFFFF" : mau.muc} opacity={_nenToi ? 0.72 : 0.5}>
+            Source: {nguon}
+          </text>
         ) : null}
       </svg>
 

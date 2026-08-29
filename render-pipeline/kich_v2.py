@@ -56,13 +56,13 @@ KENH = [
      "kieu": "tham_phan", "boi": "thu_phong", "mau": "thu_phong", "nguon": "toa_kien",
      "hoi": "What do Americans actually sue each other over?"},
     {"ten": "SKY TONIGHT", "handle": "@skytonightusa", "nhan": "What is above you right now",
-     "kieu": "sao_dem", "boi": "san_thuong", "mau": "san_thuong", "nguon": "nasa",
+     "kieu": "sao_dem", "boi": "san_thuong", "mau": "san_thuong", "nguon": "nasa_gan",
      "hoi": "What just passed the Earth?"},
     {"ten": "ONE EXPERIMENT", "handle": "@oneexperimentusa", "nhan": "One study, explained straight",
      "kieu": "khoa_hoc", "boi": "lab", "mau": "phong_lab", "nguon": "epmc",
      "hoi": "What does the research actually say?"},
     {"ten": "DEEP FIELD", "handle": "@deepfieldusa", "nhan": "The farthest thing we have seen",
-     "kieu": "vu_tru_gia", "boi": "vu_tru", "mau": "vu_tru", "nguon": "nasa",
+     "kieu": "vu_tru_gia", "boi": "vu_tru", "mau": "vu_tru", "nguon": "nasa_to",
      "hoi": "How far away is the farthest rock we track?"},
     {"ten": "WHAT THE CHART SAYS", "handle": "@whatthechartusa", "nhan": "What your chart does not say out loud",
      "kieu": "y_ta", "boi": "phong_kham", "mau": "phong_kham", "nguon": "fda",
@@ -92,6 +92,21 @@ def _so(v: float) -> str:
     return f"{v:,.0f}"
 
 
+def _trai_deu(ds: list, n: int = 6) -> list:
+    """Lấy `n` mục TRẢI ĐỀU cả dải thay vì `n` mục đầu bảng.
+
+    29/8 — cây thước bắt hai kênh có dải quá hẹp: BANK RUN 1,5 lần và SKY TONIGHT 1,9 lần giữa
+    cột cao nhất và thấp nhất. Không phải dữ liệu sai — bốn mục ĐẦU của bất kỳ bảng xếp hạng nào
+    cũng sát nhau, đó là bản chất của đầu bảng.
+    Giữ mục #1 làm hook rồi chia đều vị trí các mục còn lại trên danh sách đã sắp: vẫn đúng bấy
+    nhiêu dữ liệu, cùng một nguồn, mà cột cao nhất gấp nhiều lần cột thấp nhất.
+    Cùng phép đã dùng cho bảng calo và bảng game ở 50 kênh thế hệ 2."""
+    if len(ds) <= n:
+        return ds
+    vt = sorted({0} | {round(i * (len(ds) - 1) / (n - 1)) for i in range(1, n)})
+    return [ds[i] for i in vt]
+
+
 def lay_so_lieu(nguon: str, D):
     if nguon == "fda":
         # `thu_hoi_fda` đòi tham số KHO trước tiên; gọi thiếu thì rơi vào endpoint sai và nhận
@@ -113,57 +128,71 @@ def lay_so_lieu(nguon: str, D):
         return ("Recalls filed this month", [(k, v, _so(v)) for k, v in ds],
                 "openFDA, U.S. Food and Drug Administration")
     if nguon == "sec":
-        # MỘT từ khoá chỉ ra 8 bản ghi thuộc 2 công ty — không đủ dựng bảng sáu dòng. Hỏi nhiều
-        # cụm mà doanh nghiệp Mỹ hay phải khai, rồi gom lại: mỗi cụm vài công ty, cộng lại thành
-        # một bảng có dải thật. Vẫn là hồ sơ công khai, chỉ là hỏi rộng hơn.
+        # 29/8 — ĐẾM THEO THƯƠNG HIỆU, KHÔNG ĐẾM THEO CÔNG TY.
+        # Cây thước bắt: gom hồ sơ theo tên công ty cho ra 7x · 7x · 4x · 4x — hai giá trị trên
+        # bốn cột, bảng phẳng. Vì một cụm từ chỉ trả về vài chục bản ghi nên đếm được rất ít.
+        # Câu hỏi của kênh là "ai sở hữu thương hiệu anh dùng hằng ngày", nên đại lượng đúng là
+        # SỐ HỒ SƠ NHẮC TỚI CHÍNH THƯƠNG HIỆU ẤY — thứ đo được bằng `hits.total.value`, và có
+        # dải thật: Gatorade 3.318, Doritos 955, Cheerios 356, Tide 16.
         gom = {}
-        for tk in ("artificial intelligence", "supply chain disruption", "cybersecurity incident",
-                   "material weakness", "going concern", "workforce reduction"):
-            for x in (D.tim_ho_so(tk, 20) or []):
-                t = str(x.get("cong_ty") or "").split("(")[0].strip()[:24]
-                if t:
-                    gom[t] = gom.get(t, 0) + 1
+        for th in ("Gatorade", "Doritos", "Cheerios", "Nature Valley", "Pringles", "Tide detergent"):
+            n = D.dem_ho_so_sec(th)
+            if n:
+                gom[th] = n
         ds = sorted(gom.items(), key=lambda z: -z[1])[:6]
-        if len(ds) < 3:
+        if len(ds) < 4 or len({v for _, v in ds}) < 3:
             return None
-        return ("Companies writing it into their filings",
-                [(k, v, f"{int(v)}x") for k, v in ds], "SEC EDGAR full-text search")
-    # 29/8 — HAI KÊNH TOÀ ÁN, HAI CÂU HỎI KHÁC NHAU.
-    # Bản đầu cả hai cùng khai `toa` nên ra ĐÚNG MỘT video: cùng bảng "5 · Court of Appeals",
-    # cùng bối cảnh toà án, cùng con số. Và tệ hơn: gom theo TÊN TOÀ thì bốn cột đều là
-    # "Court of Appeals for the..." — bốn nhãn gần giống hệt nhau, biểu đồ không nói lên gì.
-    # Đây là lần thứ hai tôi tự tạo ra nội dung trùng trong chính bộ kênh mới (lần trước là hai
-    # kênh y tế cùng nguồn FDA). Cùng một cái bẫy: khai `nguon` giống nhau là xong.
-    # Nay mỗi kênh gom theo một TRỤC khác: một bên đếm theo QUYỀN được viện dẫn, một bên đếm
-    # theo LOẠI TRANH CHẤP. Cùng nguồn CourtListener, hai bảng không thể giống nhau.
+        return ("Household brands, by SEC filings that name them",
+                [(k, float(v), _so(v)) for k, v in ds], "SEC EDGAR full-text search")
+
     if nguon in ("toa_quyen", "toa_kien"):
         _KHO = {
             "toa_quyen": ["first amendment", "fourth amendment", "due process",
                           "equal protection", "right to counsel", "free speech"],
             "toa_kien": ["false advertising", "breach of contract", "defamation",
                          "wrongful termination", "product liability", "unfair competition"],
+            # nhãn hiện trên cột — ngắn hơn cụm dùng để tra
+            "_nhan_kien": ["False ads", "Contract", "Defamation", "Firing", "Product", "Unfair"],
+            "_nhan_quyen": ["First Am.", "Fourth Am.", "Due process", "Equal prot.",
+                            "Counsel", "Free speech"],
         }[nguon]
         # ĐẾM TỔNG, KHÔNG ĐẾM ĐỘ DÀI TRANG. `ban_an` trả tối đa 20 bản ghi/lượt nên sáu cụm từ
         # khác hẳn nhau đều ra đúng 20 — bảng phẳng lì, không nói lên gì. `dem_ban_an` đọc trường
         # `count` trong chính câu trả lời ấy: dải thật từ vài nghìn tới hơn một triệu.
+        _NHAN = {"toa_quyen": ["First Am.", "Fourth Am.", "Due process", "Equal prot.",
+                               "Counsel", "Free speech"],
+                 "toa_kien": ["False ads", "Contract", "Defamation", "Firing", "Product", "Unfair"]}[nguon]
         gom = {}
-        for tk in _KHO:
+        for tk, nh in zip(_KHO, _NHAN):
             n = D.dem_ban_an(tk)
             if n:
-                gom[tk.title()] = n
+                gom[nh] = n
         ds = sorted(gom.items(), key=lambda z: -z[1])[:6]
         if len(ds) < 3 or len({v for _, v in ds}) < 3:
             return None
         return (("Rights argued in court" if nguon == "toa_quyen" else "What Americans sue over"),
                 [(k, v, _so(v)) for k, v in ds], "CourtListener")
-    if nguon == "nasa":
-        r = D.tieu_hanh_tinh(7) or []
-        ds = sorted(r, key=lambda z: float(z.get("khoang_cach_km") or 9e12))[:6]
-        if len(ds) < 3:
+    # 29/8 — HAI KÊNH VŨ TRỤ, HAI ĐẠI LƯỢNG. Cả hai cùng khai `nasa` nên cây thước bắt trùng
+    # nguồn — và đúng: cùng bảng, cùng thứ tự, hai video một nội dung. Cùng một danh sách vật
+    # thể ấy trả lời được hai câu hỏi khác hẳn: "cái nào sượt gần nhất" và "cái nào to nhất".
+    # Khoảng cách và đường kính không tương quan với nhau, nên hai bảng không thể giống nhau.
+    if nguon in ("nasa_gan", "nasa_to"):
+        # Nguồn JPL, không cần khoá — `api.nasa.gov` dùng khoá DEMO nên 429 suốt (xem
+        # `du_lieu_mo.tieu_hanh_tinh_jpl`).
+        r = D.tieu_hanh_tinh_jpl(3, 7) or []
+        r = [x for x in r if float(x.get("cach_km") or 0) > 0 and float(x.get("duong_kinh_m") or 0) > 0]
+        if len(r) < 4:
             return None
-        return ("Rocks that just passed Earth",
-                [(str(x.get("ten") or "")[:22], float(x.get("khoang_cach_km") or 0),
-                  _so(float(x.get("khoang_cach_km") or 0)) + " km") for x in ds],
+        if nguon == "nasa_gan":
+            ds = _trai_deu(sorted(r, key=lambda z: float(z["cach_km"])), 6)
+            return ("How close they came, this week",
+                    [(str(x["ten"])[:20], float(x["cach_km"]), _so(float(x["cach_km"])) + " km")
+                     for x in ds],
+                    "NASA Center for Near-Earth Object Studies")
+        ds = sorted(r, key=lambda z: -float(z["duong_kinh_m"]))[:6]
+        return ("The biggest rocks we are tracking",
+                [(str(x["ten"])[:20], float(x["duong_kinh_m"]),
+                  f"{float(x['duong_kinh_m']):,.0f} m") for x in ds],
                 "NASA Center for Near-Earth Object Studies")
     if nguon == "epmc":
         r = D.nghien_cuu("sleep", 6) or []
@@ -174,20 +203,32 @@ def lay_so_lieu(nguon: str, D):
                f"{max(1, nam_nay - int(str(x.get('nam') or nam_nay)[:4] or nam_nay))}y") for x in r[:6]]
         return ("How old the evidence actually is", ds, "Europe PMC")
     if nguon == "gia_yte":
-        r = D.lay_bls(["cpi_yte"], 2015, 2026).get("cpi_yte") or []
-        theo_nam: dict = {}
-        for x in r:
-            theo_nam.setdefault(int(x["nam"]), []).append(float(x["gia_tri"]))
-        nam = sorted(theo_nam)[-6:]
-        if len(nam) < 3:
+        # SO Y TẾ VỚI CÁC NHÓM CHI KHÁC, không vẽ chỉ số y tế theo năm.
+        # Cây thước bắt: chỉ số theo năm cho cột cao nhất chỉ gấp 1,1 lần cột thấp nhất (525 tới
+        # 564) — mắt không thấy chênh lệch nào, và một biểu đồ mà bốn cột cao bằng nhau thì
+        # không nói lên điều gì. Giá y tế tăng bao nhiêu chỉ có nghĩa khi đặt CẠNH thứ khác:
+        # cùng một mốc gốc, y tế đi lên tới đâu so với thực phẩm, nhà ở, đi lại, quần áo.
+        MA = {"Medical care": "cpi_yte", "Housing": "cpi_nha", "Food": "cpi_thucpham",
+              "Transport": "cpi_di_lai", "Clothing": "cpi_quan_ao", "Recreation": "cpi_giai_tri"}
+        d = D.lay_bls(list(MA.values()), 2000, 2026)
+        ds = []
+        for ten, ma in MA.items():
+            r = d.get(ma) or []
+            if len(r) < 24:
+                continue
+            dau = sum(x["gia_tri"] for x in r[:12]) / 12
+            nay = sum(x["gia_tri"] for x in r[-12:]) / 12
+            if dau > 0:
+                ds.append((ten, round(nay / dau * 100), f"{nay / dau * 100:,.0f}"))
+        if len(ds) < 4:
             return None
-        return ("Medical care price index, by year",
-                [(str(n), sum(theo_nam[n]) / len(theo_nam[n]),
-                  f"{sum(theo_nam[n]) / len(theo_nam[n]):,.0f}") for n in nam],
+        ds.sort(key=lambda z: -z[1])
+        return ("Prices since 2000, same starting line",
+                [(a, float(b), c) for a, b, c in ds[:6]],
                 "U.S. Bureau of Labor Statistics")
     if nguon == "fdic":
         gom = D.ngan_hang_theo_bang(1000)
-        ds = sorted(gom.items(), key=lambda z: -z[1])[:6]
+        ds = _trai_deu(sorted(gom.items(), key=lambda z: -z[1]), 6)
         if len(ds) < 3 or len({v for _, v in ds}) < 3:
             return None
         return ("Banks still operating, by state",
@@ -197,11 +238,18 @@ def lay_so_lieu(nguon: str, D):
         # nhất. Cùng nguồn CourtListener với hai kênh luật, nhưng bộ từ khoá không giao nhau
         # nên ba bảng không thể giống nhau — cùng cách 50 kênh cũ chia nhau một nguồn.
         gom = {}
-        for tk in ("arbitration clause", "class action waiver", "non-compete agreement",
-                   "liquidated damages", "indemnification clause", "automatic renewal"):
+        # Nhãn RÚT GỌN ngay tại nguồn. Cột rộng 100 điểm; "Non-Compete Agreement" và "Wrongful
+        # Termination" đều vượt. Cắt ở tầng vẽ thì ra dấu ba chấm, mà một nhãn cụt đọc kém hơn
+        # hẳn một nhãn viết tắt do người chọn.
+        for tk, nhan in (("arbitration clause", "Arbitration"),
+                         ("class action waiver", "Class waiver"),
+                         ("non-compete agreement", "Non-compete"),
+                         ("liquidated damages", "Damages"),
+                         ("indemnification clause", "Indemnity"),
+                         ("automatic renewal", "Auto-renewal")):
             n = D.dem_ban_an(tk)
             if n:
-                gom[tk.title()] = n
+                gom[nhan] = n
         ds = sorted(gom.items(), key=lambda z: -z[1])[:6]
         if len(ds) < 3 or len({v for _, v in ds}) < 3:
             return None

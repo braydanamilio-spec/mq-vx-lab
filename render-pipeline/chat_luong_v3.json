@@ -1,0 +1,89 @@
+{
+ "nguong": 90,
+ "kenh": {
+  "BANK RUN": {
+   "diem": 87,
+   "bo_qua": false,
+   "loi": [
+    "cột cao nhất chỉ gấp 1.5 lần cột thấp nhất — mắt không thấy chênh lệch",
+    "9% điểm gần như đen (ngưỡng 8%)"
+   ],
+   "tieu_de": "Banks still operating, by state",
+   "so_muc": 6
+  },
+  "FINE PRINT": {
+   "diem": 95,
+   "bo_qua": false,
+   "loi": [
+    "nhãn cột 'Non-compete' có từ dài 109 điểm > 100 — sẽ tràn khỏi cột"
+   ],
+   "tieu_de": "The clauses that end up in court",
+   "so_muc": 4
+  },
+  "WHO OWNS IT": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "tieu_de": "Household brands, by SEC filings that name them",
+   "so_muc": 6
+  },
+  "KNOW YOUR RIGHT": {
+   "diem": 0,
+   "bo_qua": true,
+   "loi": [
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+   ]
+  },
+  "SUED IN AMERICA": {
+   "diem": 0,
+   "bo_qua": true,
+   "loi": [
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+   ]
+  },
+  "SKY TONIGHT": {
+   "diem": 77,
+   "bo_qua": false,
+   "loi": [
+    "cột cao nhất chỉ gấp 1.9 lần cột thấp nhất — mắt không thấy chênh lệch",
+    "khung tối: sáng trung bình 70/255 (ngưỡng 75)",
+    "17% điểm gần như đen (ngưỡng 8%)"
+   ],
+   "tieu_de": "How close they came, this week",
+   "so_muc": 6
+  },
+  "ONE EXPERIMENT": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "tieu_de": "How old the evidence actually is",
+   "so_muc": 6
+  },
+  "DEEP FIELD": {
+   "diem": 85,
+   "bo_qua": false,
+   "loi": [
+    "khung tối: sáng trung bình 61/255 (ngưỡng 75)",
+    "63% điểm gần như đen (ngưỡng 8%)"
+   ],
+   "tieu_de": "The biggest rocks we are tracking",
+   "so_muc": 6
+  },
+  "WHAT THE CHART SAYS": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "tieu_de": "Recalls filed this month",
+   "so_muc": 6
+  },
+  "PRICE OF CARE": {
+   "diem": 92,
+   "bo_qua": false,
+   "loi": [
+    "cột cao nhất chỉ gấp 1.2 lần cột thấp nhất — mắt không thấy chênh lệch"
+   ],
+   "tieu_de": "Prices since 2000, same starting line",
+   "so_muc": 6
+  }
+ }
+}

@@ -546,6 +546,75 @@ def trieu_hoi_xe(hang: str, dong: str = "", nam: int = 2022) -> list[dict]:
 
 
 # ── 7. COURTLISTENER — bản án, vụ kiện ─────────────────────────────────────────────────────
+def dem_ho_so_sec(cum: str) -> int:
+    """TỔNG SỐ hồ sơ SEC nhắc tới một cụm từ. Trả 0 nếu hỏng.
+
+    29/8 — cùng bài học với `dem_ban_an`: đếm ĐỘ DÀI TRANG trả về là đo cái trần của API chứ
+    không đo thực tế. Trường `hits.total.value` là con số thật.
+    LƯU Ý CÓ THẬT: SEC chặn trần ở 10.000 — cụm phổ biến ("supply chain", "artificial
+    intelligence") đều trả đúng 10000, tức đã CHẠM TRẦN chứ không phải bằng nhau. Nên chỉ dùng
+    hàm này với những cụm đủ hẹp để nằm dưới trần; đo thử: Gatorade 3.318, Doritos 955,
+    Cheerios 356, Tide 16 — dải rộng gấp hơn hai trăm lần, thừa để dựng một bảng đọc được."""
+    d = _goi("https://efts.sec.gov/LATEST/search-index?" + urllib.parse.urlencode({"q": f'"{cum}"'}))
+    try:
+        return int((((d or {}).get("hits") or {}).get("total") or {}).get("value") or 0)
+    except Exception:
+        return 0
+
+
+def tieu_hanh_tinh_jpl(lui: int = 3, toi: int = 7) -> list[dict]:
+    """Vật thể sượt qua Trái Đất — nguồn JPL, KHÔNG CẦN KHOÁ. [{ten, cach_km, duong_kinh_m}].
+
+    29/8 — VÌ SAO ĐỔI NGUỒN. `tieu_hanh_tinh` gọi `api.nasa.gov`, và cổng ấy dùng khoá DEMO khi
+    không khai khoá riêng: 30 lượt/giờ cho TOÀN BỘ địa chỉ mạng. Đo suốt buổi hôm nay thì lượt
+    nào cũng 429, nên hai kênh vũ trụ không ra được video nào.
+    JPL SSD/CNEOS mở cùng dữ liệu ấy qua `ssd-api.jpl.nasa.gov/cad.api`, không khoá, không hạn
+    mức gắt. Gọi thử: 14 vật thể trong mười ngày tới, đủ dựng bảng sáu cột.
+
+    ĐƯỜNG KÍNH SUY TỪ ĐỘ SÁNG TUYỆT ĐỐI. Trường `diameter` chỉ có ở vài vật thể đã được đo kỹ;
+    còn `h` (độ sáng tuyệt đối) thì vật thể nào cũng có. Công thức chuẩn của giới thiên văn:
+        D(km) = 1329 / sqrt(suất phản xạ) × 10^(−H/5)
+    Suất phản xạ lấy 0,14 — giá trị trung bình của tiểu hành tinh gần Trái Đất mà JPL vẫn dùng
+    khi chưa đo được. Đây là ƯỚC LƯỢNG và tôi nói rõ nó là ước lượng, nhưng nó là ước lượng
+    CHÍNH NGÀNH ẤY dùng, không phải con số tôi bịa ra cho đủ cột.
+    """
+    import datetime as _dt
+    h0 = _dt.date.today()
+    u = ("https://ssd-api.jpl.nasa.gov/cad.api?" + urllib.parse.urlencode({
+        "date-min": (h0 - _dt.timedelta(days=max(0, lui))).isoformat(),
+        "date-max": (h0 + _dt.timedelta(days=max(1, toi))).isoformat(),
+        "dist-max": "0.05", "diameter": "true", "sort": "dist"}))
+    d = _goi(u) or {}
+    fs = list(d.get("fields") or [])
+    ra = []
+    for hang in (d.get("data") or []):
+        z = dict(zip(fs, hang))
+        try:
+            au = float(z.get("dist") or 0)
+        except Exception:
+            continue
+        if au <= 0:
+            continue
+        dk = 0.0
+        try:
+            dk = float(z.get("diameter") or 0) * 1000.0        # JPL trả km
+        except Exception:
+            dk = 0.0
+        if dk <= 0:
+            try:
+                H = float(z.get("h") or 0)
+                if H:
+                    dk = (1329.0 / (0.14 ** 0.5)) * (10 ** (-H / 5.0)) * 1000.0
+            except Exception:
+                dk = 0.0
+        ra.append({"ten": str(z.get("des") or "").strip(),
+                   "cach_km": au * 149_597_870.7,
+                   "duong_kinh_m": round(dk),
+                   "ngay": str(z.get("cd") or "")[:11],
+                   "nguon": "NASA/JPL Center for Near-Earth Object Studies"})
+    return ra
+
+
 def ngan_hang_theo_bang(n: int = 1000) -> dict:
     """{tên bang: số ngân hàng ĐANG HOẠT ĐỘNG}. Nguồn FDIC BankFind, mở, không cần khoá.
 
@@ -564,6 +633,9 @@ def ngan_hang_theo_bang(n: int = 1000) -> dict:
     return gom
 
 
+_NHO_DEM: dict = {}          # cụm từ -> tổng số bản án, nhớ trong một tiến trình
+
+
 def dem_ban_an(tu_khoa: str) -> int:
     """TỔNG SỐ bản án khớp một cụm từ. Trả 0 nếu hỏng.
 
@@ -572,13 +644,24 @@ def dem_ban_an(tu_khoa: str) -> int:
     lì. CourtListener có sẵn trường `count` trong cùng câu trả lời ấy — 1.579.237 bản án nhắc
     tới Tu chính án thứ nhất — và đó vừa là con số có dải thật, vừa là câu chuyện mạnh hơn hẳn.
     Không tốn thêm lượt gọi nào: cùng một truy vấn, chỉ là đọc thêm một trường."""
+    # NHỚ TRONG TIẾN TRÌNH. Ba kênh luật cùng hỏi sáu cụm từ mỗi kênh = 18 lượt gọi liên tiếp,
+    # và CourtListener chặn nhịp: đo thật ở lượt render demo, hai trong ba kênh bỏ lượt vì
+    # "nguồn không trả đủ dữ liệu". Tổng số bản án khớp một cụm từ là con số gần như TĨNH —
+    # nó nhích vài chục mỗi ngày trên nền hàng trăm nghìn — nên nhớ lại trong một phiên là
+    # đúng, không phải mẹo. Cùng cách đã chữa cho bảng đọc nhiều của Wikipedia.
+    k = str(tu_khoa or "").strip().lower()
+    if k in _NHO_DEM:
+        return _NHO_DEM[k]
     u = ("https://www.courtlistener.com/api/rest/v4/search/?"
          + urllib.parse.urlencode({"q": tu_khoa, "type": "o", "order_by": "dateFiled desc"}))
     d = _goi(u) or {}
     try:
-        return int(d.get("count") or 0)
+        n = int(d.get("count") or 0)
     except Exception:
-        return 0
+        n = 0
+    if n:                      # chỉ nhớ khi CÓ số; nhớ số 0 là biến một lượt chập thành cả phiên hỏng
+        _NHO_DEM[k] = n
+    return n
 
 
 def ban_an(tu_khoa: str, n: int = 6) -> list[dict]:

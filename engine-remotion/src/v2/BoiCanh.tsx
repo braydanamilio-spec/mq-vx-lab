@@ -28,14 +28,17 @@ export const BANG_MAU: Record<string, Paltte> = {
   // Ba bảng màu bổ sung, đi cùng ba bối cảnh mới.
   ke_sieu_thi: { troi: ["#F7F2E4", "#E4DCC4"], dat: "#C8BFA4", vach: "#9A8E70", nhan: "#C0392B", muc: "#241E14" },
   thu_phong: { troi: ["#F3E3C6", "#DCC49A"], dat: "#B99763", vach: "#8A6A3C", nhan: "#8A2F3C", muc: "#2A1E12" },
-  san_thuong: { troi: ["#3A3468", "#1A1740"], dat: "#2C2652", vach: "#7E74C4", nhan: "#F2C230", muc: "#0D0B22" },
+  // 29/8 — nâng hai bảng màu đêm. Đo khung thật: SKY TONIGHT 70/255 và DEEP FIELD 61/255, đều
+  // dưới ngưỡng 75. Cảnh đêm thì phải tối, nhưng "tối" trong phim hoạt hình là XANH TÍM SÁNG,
+  // không phải đen — nếu không thì khung đọc ra là hỏng đèn chứ không ra là ban đêm.
+  san_thuong: { troi: ["#5B54A0", "#332C6E"], dat: "#4A4288", vach: "#A79CE4", nhan: "#F2C230", muc: "#171338" },
   quay_vien_phi: { troi: ["#EAF6F4", "#CBE8E3"], dat: "#A9D4CD", vach: "#4E9C93", nhan: "#B8474F", muc: "#17322F" },
   ngan_hang: { troi: ["#FFF3D6", "#FFE0A8"], dat: "#E9C888", vach: "#B98A3C", nhan: "#1D7A5F", muc: "#241A12" },
   luat: { troi: ["#EDE7FF", "#D6CBFA"], dat: "#C3B4EE", vach: "#6E5AB8", nhan: "#8A2F3C", muc: "#1E1830" },
   san_sau: { troi: ["#FFF6D9", "#FFE7A6"], dat: "#F2C230", vach: "#FFFFFF", nhan: "#C0392B", muc: "#241A12" },
   phong_kham: { troi: ["#E6F7F5", "#C6EAE6"], dat: "#AEDBD6", vach: "#4E9C93", nhan: "#D6353B", muc: "#17322F" },
   phong_lab: { troi: ["#E9F1FF", "#CBDDF9"], dat: "#B4CBEC", vach: "#4C74AE", nhan: "#F2A33C", muc: "#16233A" },
-  vu_tru: { troi: ["#2A2350", "#120E2C"], dat: "#241D46", vach: "#5B4EA0", nhan: "#F2C230", muc: "#0A0818" },
+  vu_tru: { troi: ["#4A4088", "#2A2358"], dat: "#3D3470", vach: "#8B7ED0", nhan: "#F2C230", muc: "#14102E" },
   van_phong: { troi: ["#F0F4F8", "#D8E2EC"], dat: "#C3D0DC", vach: "#7A8DA0", nhan: "#1D63C7", muc: "#1B2430" },
 };
 
@@ -96,8 +99,11 @@ const Quay: React.FC<P> = ({ mau, t }) => (
     <rect x={-700} y={-260} width={1400} height={500} fill={mau.troi[1]} />
     <Dat mau={mau} t={t} />
     {/* bảng điện tử: chỉ là các thanh sáng, cố ý KHÔNG vẽ chữ */}
+    {/* 29/8 — BẢNG ĐIỆN TỬ KHÔNG ĐƯỢC LÀ MỘT MẢNG ĐEN. Đo khung BANK RUN: 9% số điểm gần như
+        đen, vượt ngưỡng 8%, và gần hết phần ấy là cái bảng này. Bảng tỉ giá thật cũng có nền
+        sẫm nhưng là XANH ĐEN chứ không phải đen tuyệt đối. */}
     <rect x={-430} y={-250} width={860} height={250} rx={16}
-          fill={mau.muc} stroke={mau.vach} strokeWidth={7} />
+          fill="#2A3340" stroke={mau.vach} strokeWidth={7} />
     {Array.from({ length: 5 }).map((_, i) => (
       <g key={i}>
         <rect x={-390} y={-222 + i * 46} width={330} height={16} rx={8}
