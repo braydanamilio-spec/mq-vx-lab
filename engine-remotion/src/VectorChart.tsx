@@ -160,9 +160,18 @@ export const VectorChart: React.FC<RankedProps> = (props) => {
                 ngoài và con số bị mép phải khung cắt mất ("314." thay vì "314.7K"). */}
             <div style={{
               position: "absolute",
-              left: (traiCot + Math.max(10, rong) + 18 + (dang ? 150 : 110) > W - 40)
-                ? traiCot + Math.max(10, rong) - (dang ? 168 : 124)
-                : traiCot + Math.max(10, rong) + 18,
+              // Bề rộng con số ước TỪ ĐỘ DÀI CHUỖI, không dùng hằng số: bản đầu để 150/110px và
+              // "157,693.8" (9 ký tự, cỡ 46) chiếm ~250px nên vẫn bị mép phải cắt cụt. Một hằng
+              // số đo cho chuỗi ngắn thì âm thầm sai với mọi chuỗi dài hơn — cùng cái bẫy đã gặp
+              // ở cỡ chữ thẻ tiêu đề cinematic.
+              left: (() => {
+                const co = dang ? 46 : 30;
+                const rongSo = String(it.stat || "").length * co * 0.58 + 24;
+                const ngoai = traiCot + Math.max(10, rong) + 18;
+                return (ngoai + rongSo > W - 40)
+                  ? Math.max(traiCot + 14, traiCot + Math.max(10, rong) - rongSo)
+                  : ngoai;
+              })(),
               top: y, height: caoCot, display: "flex", alignItems: "center",
               color: MUC, fontWeight: 900, fontSize: dang ? 46 : 30, ...SO_DEU,
               opacity: Math.min(1, p * 1.6),
