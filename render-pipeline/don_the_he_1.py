@@ -130,6 +130,13 @@ def kho_theo_moc(moc: str, that: bool) -> int:
       • thư mục trong `CAM_DUNG` (_KICHBAN, _BACKUP, brand, config) — bộ nhận diện và cấu hình.
     Chỉ `.mp4` và `.jpg` đi vào thùng rác. Thumbnail đi theo video vì nó vô nghĩa khi video đã đi.
     """
+    # Thư viện `storage` nằm ở REPO KHÁC (MM0-AutoPublisher), workflow checkout nó ra rồi trỏ
+    # `AUTOPUBLISHER_SRC` vào. Nhánh dọn cũ nạp đường dẫn ngay trước khi dùng; nhánh này chạy
+    # sớm hơn trong `main()` nên phải tự nạp, nếu không thì `ModuleNotFoundError: storage` —
+    # đúng lỗi đã làm hỏng lượt chạy đầu.
+    src = os.environ.get("AUTOPUBLISHER_SRC")
+    if src and src not in sys.path:
+        sys.path.insert(0, src)
     import storage as ST
     import datetime as _dt
 
