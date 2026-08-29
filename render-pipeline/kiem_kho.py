@@ -209,6 +209,18 @@ def main() -> int:
             n += 1
         except Exception:
             pass
+    # 29/8 — PHẢI GHI CẢ D1, KHÔNG CHỈ FIRESTORE.
+    # Anh ba lần chỉ ra ô "Video trong kho" vẫn hiện 3.901 sau khi đã xoá 7.800 tệp. Lượt đếm
+    # chạy đúng và in ra "Sổ = 297 video THẬT", nhưng nó ghi con số ấy vào `render_stats` bên
+    # FIRESTORE — trong khi dashboard đọc bảng `kho_that` bên D1. Hai kho song song, ghi một
+    # nơi, đọc nơi kia, và không một dòng lỗi nào.
+    # Đây đúng cái bẫy đã làm hỏng lượt dọn hôm nay (đánh dấu Firestore trong khi thân kho nằm ở
+    # D1). Cùng một bài học, lần thứ hai trong ngày: khi có HAI kho dữ liệu song song thì mọi
+    # lệnh GHI phải đụng cả hai, không thì con số trên bảng đo một thứ khác với sự thật.
+    try:
+        FB.dat_so_kho_that(a.owner, int(tong))
+    except Exception as e:
+        print(f"   ⚠️ không ghi được số kho thật vào D1: {str(e)[:70]}")
     print(f"\n✅ Sổ = {tong:,} video THẬT trong kho (trước ghi: {so_cu:,}). "
           f"Đã dọn {n} bản ghi job trỏ vào file không còn tồn tại.")
     return 0

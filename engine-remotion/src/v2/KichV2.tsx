@@ -133,46 +133,66 @@ const SoTo: React.FC<{ so: string; nhan?: string; p: number; mau: Paltte }> = ({
 
 /** Biểu đồ cột làm ĐẠO CỤ trong cảnh — mọc lên từ đáy, so được bằng mắt. */
 const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat?: number }> = ({ cot, p, mau, noiBat = 0 }) => {
-  const dinh = Math.max(1, ...cot.map((c) => c.gt));
+  // ══════════════════════════════════════════════════════════════════════════════════════
+  // BIỂU ĐỒ PHẢI CÓ TẤM NỀN RIÊNG
+  // --------------------------------------------------------------------------------------
+  // 29/8 — anh cắt năm chỗ trong khung và ba trong số đó là cùng một bệnh: chữ của biểu đồ
+  // nằm THẲNG TRÊN bối cảnh. Trên kệ sách thư phòng, nhãn "Breach Of Contract" đè lên gáy sách
+  // nhiều màu; trên kệ siêu thị, "EQUIFAX INC" đè lên hộp hàng. Chữ đen trên nền lộn xộn thì
+  // không đọc được, và người xem đọc ra là LỖI chứ không đọc ra là dữ liệu.
+  // Cách chữa đúng không phải đổi màu chữ mà là DỰNG MỘT TẤM NỀN: mọi biểu đồ trong đời thật
+  // đều nằm trên một mặt phẳng của riêng nó — tờ giấy, tấm bảng, màn hình. Thiếu tấm nền ấy thì
+  // biểu đồ trông như bị dán đè lên cảnh.
+  //
+  // NHÃN CHÂN CỘT CŨNG PHẢI VỪA CHỖ. Bản cũ cắt 10 ký tự rồi xếp hai dòng, nhưng bề rộng chữ
+  // không tính bằng số ký tự: "MIDWEST C/O" và "Bazzini LLC" cùng 11 ký tự mà rộng khác nhau
+  // hẳn, nên bốn nhãn dính thành một vệt. Nay tính theo BỀ RỘNG THẬT (ước lượng 0,55 lần cỡ
+  // chữ mỗi ký tự) và cắt cho vừa đúng bề ngang một cột.
+  const N = Math.min(4, cot.length);
+  const BUOC = 112, RONG = 84, CAO = 300;
+  const dinh = Math.max(1, ...cot.slice(0, N).map((c) => c.gt));
+  const nenX = -26, nenY = -CAO - 96, nenW = BUOC * N + 40, nenH = CAO + 176;
+
+  /** Cắt chuỗi cho vừa `px` điểm ở cỡ chữ `cs`, cắt theo TỪ, tối đa 2 dòng. */
+  const chiaDong = (t: string, px: number, cs: number): string[] => {
+    const rong = (x: string) => x.length * cs * 0.55;
+    const tu = String(t || "").split(" ").filter(Boolean);
+    const d: string[] = ["", ""];
+    let k = 0;
+    for (const w of tu) {
+      const thu = d[k] ? d[k] + " " + w : w;
+      if (rong(thu) <= px) { d[k] = thu; continue; }
+      if (k === 0) { k = 1; d[1] = w; continue; }
+      break;
+    }
+    if (!d[0]) d[0] = String(t || "").slice(0, Math.max(3, Math.floor(px / (cs * 0.55))));
+    return d.filter(Boolean);
+  };
+
   return (
-    // 29/8 — BỐN CỘT, VÀ TÍNH CHỖ THAY VÌ BỐC. Khung demo: sáu cột chạy quá mép phải khung, còn
-    // nhãn dưới chân cột thì dính vào nhau ("InformationFinanceProfession"). Vùng còn trống bên
-    // phải nhân vật rộng khoảng 520 đơn vị; chia cho sáu cột thì mỗi cột 86 đơn vị, mà nhãn ngắn
-    // nhất cũng cần ~110 để đọc được. Bốn cột thì vừa, và bốn dòng cũng đủ để so cao thấp.
-    // 29/8 — CỘT ĐẦU TIÊN PHẢI BẮT ĐẦU SAU NGƯỜI. Khung thật: bốn cột mọc chồng lên cánh tay và
-    // thân nhân vật. Con rối cao 1.75 lần nên rộng ~320 đơn vị quanh tâm; đặt tâm ở -340 thì nó
-    // chiếm tới -180, còn cột bắt đầu từ -30 — chồng nhau 150 đơn vị.
-    // (Chú thích phải là `//` chứ không phải `{/* */}`: chỗ này nằm ngay trong `return (`, mà
-    //  một khối chú thích JSX ở đó là một CON thứ hai bên cạnh thẻ <g> — React chỉ nhận một.)
     <g transform="translate(30 150)">
-      {cot.slice(0, 4).map((c, i) => {
+      {/* TẤM NỀN — giấy kem mờ, viền dày, bo góc. Đây là thứ tách biểu đồ khỏi bối cảnh. */}
+      <rect x={nenX} y={nenY} width={nenW} height={nenH} rx={18}
+            fill="#FBF6EA" opacity={0.94} stroke={mau.muc} strokeWidth={6} />
+      {/* đường chân cột, để cột có chỗ đứng thay vì lơ lửng */}
+      <line x1={nenX + 12} y1={2} x2={nenX + nenW - 12} y2={2}
+            stroke={mau.muc} strokeWidth={5} opacity={0.55} />
+      {cot.slice(0, N).map((c, i) => {
         const moc = muot(kep((p - i * 0.07) / 0.3));
-        const h = (c.gt / dinh) * 330 * moc;
+        const h = (c.gt / dinh) * CAO * moc;
+        const sang = i === noiBat;
         return (
-          <g key={i} transform={`translate(${i * 112} 0)`}>
-            {/* CỘT ĐANG NÓI TỚI được tô sáng và nhô lên một chút — mắt người xem đi theo lời
-                đọc mà không cần một mũi tên nào. */}
-            <rect x={0} y={-h - (i === noiBat ? 10 : 0)} width={84} height={h + (i === noiBat ? 10 : 0)}
-                  rx={8} fill={i === noiBat ? mau.nhan : "#F2C230"}
-                  stroke={mau.muc} strokeWidth={i === noiBat ? 7 : 5} />
-            <text x={42} y={-h - 26 - (i === noiBat ? 10 : 0)} textAnchor="middle"
-                  fontSize={i === noiBat ? 36 : 30} fontWeight={900}
+          <g key={i} transform={`translate(${i * BUOC} 0)`}>
+            <rect x={0} y={-h - (sang ? 10 : 0)} width={RONG} height={h + (sang ? 10 : 0)}
+                  rx={8} fill={sang ? mau.nhan : "#F2C230"}
+                  stroke={mau.muc} strokeWidth={sang ? 7 : 5} />
+            <text x={RONG / 2} y={-h - 24 - (sang ? 10 : 0)} textAnchor="middle"
+                  fontSize={sang ? 34 : 28} fontWeight={900}
                   fill={mau.muc} opacity={moc}>{c.hien}</text>
-            {/* Nhãn chân cột XUỐNG HAI DÒNG. Cột rộng 96 đơn vị mà nhãn 12 ký tự ở cỡ 21 cần
-                ~130 — nên bốn nhãn dính vào nhau thành một vệt chữ ("MIDWEST POU Bazzini LLC
-                CHEER PAC..."). Cắt theo TỪ rồi xếp hai dòng thì vừa khung mà vẫn đọc được. */}
-            {(() => {
-              const tu = String(c.nhan).split(" ").filter(Boolean);
-              const d1: string[] = [], d2: string[] = [];
-              for (const w of tu) {
-                if (d1.join(" ").length + w.length <= 10) d1.push(w);
-                else if (d2.join(" ").length + w.length <= 10) d2.push(w);
-              }
-              return [d1.join(" "), d2.join(" ")].filter(Boolean).map((d, j) => (
-                <text key={j} x={42} y={30 + j * 22} textAnchor="middle" fontSize={18}
-                      fontWeight={700} fill={mau.muc} opacity={0.8 * moc}>{d}</text>
-              ));
-            })()}
+            {chiaDong(c.nhan, BUOC - 12, 18).map((d, j) => (
+              <text key={j} x={RONG / 2} y={30 + j * 21} textAnchor="middle" fontSize={18}
+                    fontWeight={700} fill={mau.muc} opacity={0.85 * moc}>{d}</text>
+            ))}
           </g>
         );
       })}

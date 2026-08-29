@@ -387,14 +387,31 @@ export const DienVien: React.FC<PropsDien> = ({
             vật trước khi nghe câu đầu tiên. */}
         {kieu.phuKien === "ao_blouse" || kieu.phuKien === "ao_choang" ? (
           <g transform={`rotate(${treo(0, t, 0.19, 2.6)} ${vai[0]} ${vai[1]})`}>
+            {/* 29/8 — VẠT ÁO PHẢI BÁM THEO DÁNG THÂN. Anh cắt khung nhà khoa học: hai tấm
+                trắng dựng đứng hai bên, không ăn nhập gì với người bên trong, đọc ra như hai
+                mảnh giấy dán lên. Vì bản cũ dựng vạt áo từ toạ độ VAI và HÔNG rời nhau, không
+                theo đường bao của thân.
+                Nay vạt đi đúng đường bao ấy: hẹp ở vai, phình ở hông, có ve áo gập ra ngoài —
+                ba nét làm nên một cái áo khoác thay vì một tấm bảng. */}
             {[-1, 1].map((sd) => (
               <path key={sd}
-                    d={`M ${vai[0] + sd * (rongVai - 6)} ${vai[1] + 4}
-                        Q ${vai[0] + sd * (rongVai + 14)} ${hong[1] - 60} ${vai[0] + sd * (rongVai + 4)} ${hong[1] + 26}
-                        l ${-sd * 26} 0
-                        Q ${vai[0] + sd * 18} ${hong[1] - 40} ${vai[0] + sd * 14} ${vai[1] + 24} Z`}
+                    d={`M ${vai[0] + sd * (rongVai * 0.86)} ${vai[1] + 2}
+                        Q ${vai[0] + sd * (rongVai + 10)} ${vai[1] + 70}
+                          ${vai[0] + sd * (rongVai * 0.92 + 12)} ${hong[1] + 34}
+                        L ${vai[0] + sd * (rongVai * 0.3)} ${hong[1] + 34}
+                        Q ${vai[0] + sd * (rongVai * 0.34)} ${vai[1] + 96}
+                          ${vai[0] + sd * 16} ${vai[1] + 26} Z`}
                     fill={kieu.phuKien === "ao_blouse" ? "#FFFFFF" : (kieu.aoKhoac || kieu.ao)}
                     stroke={net} strokeWidth={NET} strokeLinejoin="round" />
+            ))}
+            {/* ve áo — nếp gập nhỏ ở ngực, thứ khiến mắt đọc ra "áo khoác" ngay lập tức */}
+            {[-1, 1].map((sd) => (
+              <path key={"ve" + sd}
+                    d={`M ${vai[0] + sd * 16} ${vai[1] + 26}
+                        L ${vai[0] + sd * (rongVai * 0.78)} ${vai[1] + 4}
+                        L ${vai[0] + sd * (rongVai * 0.5)} ${vai[1] + 62} Z`}
+                    fill={kieu.phuKien === "ao_blouse" ? "#EDEAE2" : (kieu.aoTrong || "#EDEAE2")}
+                    stroke={net} strokeWidth={NET * 0.85} strokeLinejoin="round" />
             ))}
           </g>
         ) : null}
@@ -436,7 +453,14 @@ export const DienVien: React.FC<PropsDien> = ({
           <g key={i}>
             <path d={`M ${v[0][0]} ${v[0][1]} L ${v[1][0]} ${v[1][1]} L ${v[2][0]} ${v[2][1]}`}
                   {...vien} strokeWidth={NET * 4.4} stroke={kieu.ao} />
-            <circle cx={v[2][0]} cy={v[2][1]} r={13} fill={kieu.da} stroke={net} strokeWidth={NET} />
+            {/* KHỚP VAI: một chỏm tròn cùng màu áo, che chỗ tay cắm vào thân. Thiếu nó thì cánh
+                tay đọc ra là một cái ống gắn rời — đúng thứ anh chỉ trong khung cắt. */}
+            <circle cx={v[0][0]} cy={v[0][1]} r={NET * 2.4} fill={kieu.ao}
+                    stroke={net} strokeWidth={NET} />
+            {/* BÀN TAY hình găng, hơi bầu về phía trước, KHÔNG phải một quả bóng. */}
+            <ellipse cx={v[2][0]} cy={v[2][1]} rx={15} ry={12.5} fill={kieu.da}
+                     stroke={net} strokeWidth={NET}
+                     transform={`rotate(${Math.atan2(v[2][1] - v[1][1], v[2][0] - v[1][0]) * 57.3} ${v[2][0]} ${v[2][1]})`} />
           </g>
         ))}
 
@@ -593,12 +617,20 @@ export const DienVien: React.FC<PropsDien> = ({
                       q -14 ${-dauR * 0.04} -16 ${-dauR * 0.4} Z`}
                   fill={kieu.toc} stroke={net} strokeWidth={NET * 0.8} />
           ) : kieu.rau === "quai" ? (
-            <path d={`M ${dauC[0] - dauR * 0.84} ${dauC[1] + dauR * 0.06}
-                      q ${dauR * 0.1} ${dauR * 0.8} ${dauR * 0.84} ${dauR * 0.86}
-                      q ${dauR * 0.74} ${-dauR * 0.06} ${dauR * 0.84} ${-dauR * 0.86}
-                      q ${-dauR * 0.3} ${dauR * 0.34} ${-dauR * 0.84} ${dauR * 0.36}
-                      q ${-dauR * 0.54} ${-dauR * 0.02} ${-dauR * 0.84} ${-dauR * 0.36} Z`}
-                  fill={kieu.toc} stroke={net} strokeWidth={NET * 0.8} />
+            // 29/8 — RÂU QUAI NÓN LÀ MỘT CÁI VIỀN, KHÔNG PHẢI MỘT MẢNG ĐẶC.
+            // Anh cắt khung thẩm phán: cả nửa dưới khuôn mặt là một khối xám bịt kín, miệng
+            // biến mất, đọc ra như lỗi hiển thị chứ không ra một bộ râu. Bản cũ vẽ một mảng
+            // liền từ má trái sang má phải rồi phủ luôn xuống cằm.
+            // Râu thật ôm THEO ĐƯỜNG HÀM và chừa hẳn vùng miệng: một dải cong bám mép mặt,
+            // dày ở quai hàm, mỏng dần lên má. Vẽ bằng hai đường cong đồng tâm rồi tô phần
+            // giữa — nên nó luôn là một cái viền, không bao giờ thành mảng đặc.
+            <path d={`M ${dauC[0] - dauR * 0.84} ${dauC[1] - dauR * 0.02}
+                      Q ${dauC[0] - dauR * 0.8} ${dauC[1] + dauR * 0.86} ${dauC[0]} ${dauC[1] + dauR * 0.94}
+                      Q ${dauC[0] + dauR * 0.8} ${dauC[1] + dauR * 0.86} ${dauC[0] + dauR * 0.84} ${dauC[1] - dauR * 0.02}
+                      L ${dauC[0] + dauR * 0.6} ${dauC[1] + dauR * 0.04}
+                      Q ${dauC[0] + dauR * 0.56} ${dauC[1] + dauR * 0.62} ${dauC[0]} ${dauC[1] + dauR * 0.68}
+                      Q ${dauC[0] - dauR * 0.56} ${dauC[1] + dauR * 0.62} ${dauC[0] - dauR * 0.6} ${dauC[1] + dauR * 0.04} Z`}
+                  fill={kieu.toc} stroke={net} strokeWidth={NET * 0.8} strokeLinejoin="round" />
           ) : kieu.rau === "ria" ? (
             <path d={`M ${dauC[0] - 30} ${dauC[1] + dauR * 0.34}
                       q 30 ${-14} 60 0 q ${-16} 16 ${-30} 16 q ${-14} 0 ${-30} ${-16} Z`}
