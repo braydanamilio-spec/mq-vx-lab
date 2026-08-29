@@ -562,17 +562,67 @@ def _bd_steam(D, ky):
         return [{"name": _gon(x["ten"], 26), "stat": (nhan_so(x) if nhan_so else _so(x["dang_choi"])),
                  "vo": f"{_gon(x['ten'], 32)}. {x['dang_choi']:,} playing right now."} for x in ds]
 
-    if loc == "chet_yeu":
-        # Góc NGƯỢC LẠI: game bán được nhiều mà gần như không ai còn mở. Cùng một nguồn, hai kênh,
-        # hai câu chuyện khác hẳn — đây là cách để hai kênh không giẫm chân nhau.
-        ds = sorted([x for x in r if _so_huu(x) > 500000], key=lambda z: z["dang_choi"])[:6]
+    _gia = lambda x: float(x.get("gia") or 0)      # khai TRƯỚC nơi dùng; khối lát giá dùng lại
+
+    # ── NHÓM "MUA RỒI BỎ" ─────────────────────────────────────────────────────────────────
+    # 29/8 — bản trước vẽ cột theo SỐ NGƯỜI ĐANG CHƠI, và khung thật ra một bảng toàn số 0:
+    # 0 · 0 · 0 · 1 · 2 · 3. Cột vô hình, không có gì để so, "Only 0 still online" đọc như lỗi.
+    # Đúng về dữ liệu nhưng vô dụng về hình: đại lượng nào cũng phải có DẢI để mắt đọc được.
+    # Đảo lại: vẽ cột theo SỐ NGƯỜI SỞ HỮU (triệu người, dải rộng thật), còn con số 0-người-chơi
+    # đưa vào LỜI ĐỌC. Câu chuyện mạnh hơn hẳn: cột càng dài thì việc không ai mở càng chua.
+    def _bo_hoang(hop, ten, ket):
+        """Đại lượng đo là NGƯỜI SỞ HỮU TRÊN MỘT NGƯỜI ĐANG CHƠI.
+
+        Hai đại lượng hiển nhiên hơn đều hỏng, đã đo cả hai:
+          • số người ĐANG CHƠI  -> bảng ra 0 · 0 · 0 · 1 · 2 · 3, cột vô hình;
+          • số người SỞ HỮU     -> SteamSpy trả khoảng thô nên sáu game đầu bảng đều "20.0M".
+        Tỉ lệ thì có dải rộng thật (vài nghìn tới vài triệu) VÀ chính nó là câu chuyện: "cứ 6,7
+        triệu người mua thì đúng một người đang mở game tối nay"."""
+        ds = []
+        for x in r:
+            if not hop(x):
+                continue
+            sh = _so_huu(x)
+            if sh <= 0:
+                continue
+            ds.append((sh / max(1, x["dang_choi"]), sh, x))
+        ds = sorted(ds, key=lambda z: -z[0])
         if len(ds) < 3:
             return None
-        return ("Games millions bought and nobody plays",
-                [{"name": _gon(x["ten"], 26), "stat": _so(x["dang_choi"]),
-                  "vo": f"{_gon(x['ten'], 32)}. Only {x['dang_choi']:,} still online."} for x in ds],
-                "Owned by millions. Empty tonight.",
-                "Millions own these games. Top of the board is the emptiest.")
+        # LẤY TRẢI ĐỀU CẢ DẢI, không cắt sáu mục đầu. Sáu mục đầu của một bảng xếp hạng bao giờ
+        # cũng sát nhau — đo thật ở đây: bốn dòng liền cùng "10.0M : 1" vì chúng đều là game 0-1
+        # người chơi, nên tỉ lệ chỉ còn phụ thuộc khoảng sở hữu vốn đã thô.
+        # Cùng phép đã dùng cho bảng calo và bảng chỉ số thế giới: giữ mục #1 làm hook, năm mục
+        # còn lại chia đều vị trí trên danh sách đã sắp -> cột cao nhất gấp nhiều lần cột thấp nhất.
+        if len(ds) > 6:
+            vt = sorted({0} | {round(i * (len(ds) - 1) / 5) for i in range(1, 6)})
+            ds = [ds[i] for i in vt]
+        else:
+            ds = ds[:6]
+        return (ten,
+                [{"name": _gon(x["ten"], 26), "stat": _so(round(ti)) + " : 1",
+                  "vo": (f"{_gon(x['ten'], 32)}. {sh:,} own it. "
+                         f"{x['dang_choi']:,} online tonight.")} for ti, sh, x in ds],
+                ket)
+
+    if loc == "chet_yeu":
+        # Góc NGƯỢC LẠI của STEAM TRUTH: game bán được nhiều mà gần như không ai còn mở. Cùng một
+        # nguồn, hai kênh, hai câu chuyện khác hẳn — đây là cách hai kênh không giẫm chân nhau.
+        return _bo_hoang(lambda x: _so_huu(x) > 500000 and x["dang_choi"] < 2000,
+                         "Games millions bought and nobody plays",
+                         "Millions own these. Look at tonight.")
+    if loc == "vang_nhat":
+        return _bo_hoang(lambda x: _gia(x) > 0 and x["dang_choi"] < 5000,
+                         "Paid games with the emptiest servers",
+                         "People paid. Nobody logged in.")
+    if loc == "bo_hoang":
+        return _bo_hoang(lambda x: _so_huu(x) > 2000000 and x["dang_choi"] < 20000,
+                         "The biggest games nobody opens",
+                         "Two million owners. Look at tonight.")
+    if loc == "dat_bo":
+        return _bo_hoang(lambda x: _gia(x) >= 40 and x["dang_choi"] < 10000,
+                         "Sixty-dollar games sitting empty",
+                         "Full price, empty servers.")
 
     # BỐN LÁT: LỌC theo giá, nhưng luôn XẾP theo số người đang chơi.
     #
@@ -583,7 +633,6 @@ def _bd_steam(D, ky):
     # Số người ĐANG CHƠI thì mỗi game một khác, nên nó là đại lượng xếp hạng duy nhất mà nguồn
     # này đỡ nổi. Giá chỉ dùng để CẮT LÁT — và bốn lát ra bốn bảng khác hẳn nhau, vì game miễn phí
     # và game 60 đô gần như không bao giờ chung một bảng.
-    _gia = lambda x: float(x.get("gia") or 0)
     LAT = {
         "mien_phi": (lambda x: _gia(x) <= 0, "Free games beating the ones people paid for",
                      "Nobody paid a cent for any of these."),
@@ -608,27 +657,6 @@ def _bd_steam(D, ky):
     # MẶC ĐỊNH — và nhánh mặc định chính là câu chuyện của kênh bên cạnh.
     # Đây là lỗi trùng nội dung giữa hai kênh, thứ chính sách "sản xuất hàng loạt" của YouTube
     # nhắm thẳng vào — nặng hơn hẳn một lỗi hiển thị.
-    BO_HOANG = {
-        "vang_nhat": (lambda x: _gia(x) > 0 and _so_huu(x) > 200000,
-                      "Paid games with the emptiest servers",
-                      "People bought them. Nobody logged in."),
-        "bo_hoang":  (lambda x: _so_huu(x) > 2000000,
-                      "The biggest games nobody opens",
-                      "Two million owners. Look at tonight."),
-        "dat_bo":    (lambda x: _gia(x) >= 40 and _so_huu(x) > 500000,
-                      "Sixty-dollar games sitting empty",
-                      "Full price, empty servers."),
-    }
-    if loc in BO_HOANG:
-        _hop, _ten, _ket = BO_HOANG[loc]
-        ds = sorted([x for x in r if _hop(x)], key=lambda z: z["dang_choi"])[:6]
-        if len(ds) < 3:
-            return None
-        return (_ten,
-                [{"name": _gon(x["ten"], 26), "stat": _so(x["dang_choi"]),
-                  "vo": f"{_gon(x['ten'], 32)}. Only {x['dang_choi']:,} still online."} for x in ds],
-                _ket)
-
     # KHÔNG có nhánh nào khớp -> BỎ LƯỢT, tuyệt đối không rơi về mặc định.
     # Rơi về mặc định nghĩa là kênh này nhả ra video của kênh khác, và không một dòng log nào báo.
     # Thà mất một lượt còn hơn hai kênh cùng đăng một video.
