@@ -749,11 +749,28 @@ def tai_tro(ky: int = 2024, bang: str = "", key: str = "", n: int = 10) -> list[
 # key free api.data.gov), và mỗi cái mở ra một mảng niche riêng.
 # ══════════════════════════════════════════════════════════════════════════════════════════
 
+_NHO_NGAY: dict = {}          # (năm, tháng, ngày) -> bảng đọc nhiều, nhớ trong một tiến trình
+
+
 def bai_duoc_doc(nam: int, thang: int, ngay: int, n: int = 12) -> list[dict]:
     """Bài Wikipedia được đọc nhiều nhất một ngày. Trả [{ten, luot_doc, hang}].
 
     Đây là "nước Mỹ hôm qua quan tâm cái gì" — đo được, không phải đoán: người nổi tiếng, vụ án,
-    phim mới, thảm hoạ. Một nguồn nuôi được nhiều niche cùng lúc mà không kênh nào đang khai thác."""
+    phim mới, thảm hoạ. Một nguồn nuôi được nhiều niche cùng lúc mà không kênh nào đang khai thác.
+
+    29/8 — NHỚ BẢNG TỪNG NGÀY TRONG MỘT TIẾN TRÌNH. Đo trên nhật ký phiên render thật:
+        448 lượt  HTTP 429: Too Many Requests (wikimedia.org)
+         76 lượt  HTTP 404
+    Wikipedia chặn nhịp gọi, và hậu quả lan ra: UNSOLVED LOG bỏ 28 lượt, các kênh cùng nguồn
+    cũng rớt theo. Chính tôi làm nặng thêm trong hôm nay — thêm phép thử toạ độ và nới cửa sổ
+    quét lên 14 ngày, mỗi thứ nhân số lượt gọi lên vài lần.
+    Nhưng phần lớn số lượt ấy là HỎI LẠI ĐÚNG THỨ VỪA HỎI: bốn kênh Wikipedia cùng lùi qua cùng
+    một dải ngày, mỗi kênh lại hỏi lại bảng của từng ngày. Bảng đọc nhiều của một ngày đã qua là
+    dữ liệu TĨNH — nó không đổi nữa — nên nhớ lại là đúng, không phải mẹo.
+    Bảng đầy đủ (1.000 bài) nặng ~120KB; nhớ 20 ngày là ~2,4MB, không đáng kể."""
+    _k = (int(nam), int(thang), int(ngay))
+    if _k in _NHO_NGAY:
+        return list(_NHO_NGAY[_k])[:max(1, n)]
     u = (f"https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/"
          f"{nam:04d}/{thang:02d}/{ngay:02d}")
     d = _goi(u)
@@ -767,6 +784,12 @@ def bai_duoc_doc(nam: int, thang: int, ngay: int, n: int = 12) -> list[dict]:
                    "hang": int(x.get("rank") or 0),
                    "link": f"https://en.wikipedia.org/wiki/{ten}",
                    "nguon": "Wikimedia pageviews"})
+    # Chỉ ghi nhớ khi thật sự có dữ liệu: nhớ một bảng RỖNG do nguồn chập là biến một sự cố
+    # tạm thời thành một sự cố kéo dài hết cả tiến trình.
+    if ra:
+        _NHO_NGAY[_k] = list(ra)
+        if len(_NHO_NGAY) > 40:
+            _NHO_NGAY.pop(next(iter(_NHO_NGAY)))
     return ra[:n]
 
 
