@@ -10,24 +10,20 @@
    "sang": 134
   },
   "GYM LIES": {
-   "diem": 95,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "dài 15s — ngoài khoảng short 15–60s"
-   ],
-   "giay": 15.0,
+   "loi": [],
+   "giay": 17.2,
    "luot": 6,
-   "sang": 146
+   "sang": 147
   },
   "AIRPORT HELL": {
-   "diem": 95,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "dài 15s — ngoài khoảng short 15–60s"
-   ],
-   "giay": 14.7,
+   "loi": [],
+   "giay": 16.9,
    "luot": 6,
-   "sang": 152
+   "sang": 153
   },
   "CAR GUY": {
    "diem": 100,
@@ -38,12 +34,10 @@
    "sang": 143
   },
   "OFFICE SMALL TALK": {
-   "diem": 95,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "dài 14s — ngoài khoảng short 15–60s"
-   ],
-   "giay": 14.0,
+   "loi": [],
+   "giay": 16.1,
    "luot": 6,
    "sang": 155
   },
@@ -80,12 +74,10 @@
    "sang": 151
   },
   "DATING APP": {
-   "diem": 95,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "dài 14s — ngoài khoảng short 15–60s"
-   ],
-   "giay": 14.1,
+   "loi": [],
+   "giay": 16.3,
    "luot": 6,
    "sang": 124
   }

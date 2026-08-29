@@ -280,7 +280,11 @@ def _keo_sang(tep: str, san_den: float = 0.05, san_sang: int = 96) -> None:
         if den <= san_den and tb >= san_sang:
             break
         g += 0.18
-        thu = im.point([min(255, int(255 * ((x / 255.0) ** (1.0 / g)))) for x in range(256)] * 3)
+        # TRẦN 250, KHÔNG PHẢI 255. Gamma kéo vùng tối lên nhưng cũng đẩy vùng đã sáng chạm
+        # trần, và một mảng 255 phẳng lì ở góc chính là thứ `_nen_hong` coi là ảnh đóng khung —
+        # tức là phép nâng sáng tự tạo ra lỗi cho phép kiểm bắt. Đo được ở carguy_2: góc trần
+        # phòng thành (248 · lệch chuẩn 0,3) sau khi nâng.
+        thu = im.point([min(250, int(255 * ((x / 255.0) ** (1.0 / g)))) for x in range(256)] * 3)
         px = list(thu.convert("L").resize((160, 160)).getdata())
         den = sum(1 for v in px if v < 40) / len(px)
         tb = sum(px) / len(px)
@@ -301,8 +305,12 @@ def ve_nen(k: dict, DS, keys) -> list:
         rel = os.path.join("v4nen", f"{_ten_tep(k)}_{i}.jpg")
         dest = os.path.join(PUB, rel)
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
-            ra.append(rel)
-            continue
+            _xau = _nen_hong(dest)
+            if not _xau:
+                ra.append(rel)
+                continue
+            print(f"      ♻️ nền {i} bỏ và vẽ lại: {_xau}")
+            os.remove(dest)
         gu = ("flat 2D cartoon background in the style of classic American animated sitcoms, "
               "bold clean outlines, simple flat colours, no people, no text, no signage, "
               "wide establishing shot, slightly stylised perspective")
@@ -321,12 +329,29 @@ def ve_nen(k: dict, DS, keys) -> list:
         ok = None
         for _lan in range(3):
             try:
-                ok = DS._generate_image_ai(f"{prompt}, {gu}", dest, None, style=gu)
+                # 30/8 — DÙNG LẠI BỘ CHỐNG-BỊA-CHỮ CỦA `datastory_ci`, ĐỪNG TỰ VIẾT LẠI.
+                # Khung DIET WARS đo được một biển hiệu ghi "FATET" — máy vẽ thấy "fast food
+                # restaurant" là dựng ngay một mặt biển hướng vào ống kính rồi điền chữ bịa vào.
+                # Câu "no text" trong `gu` KHÔNG cứu được: mô hình khuếch tán không có khái niệm
+                # "đừng", chỉ có "vẽ cái gì" — chú thích ở `_bo_mat_chu` đã ghi rõ sau ba vòng thử.
+                # Cách đã kiểm chứng là BỎ HẲN CHỖ CHỮ CÓ THỂ XUẤT HIỆN (nhìn từ cạnh, quay lưng),
+                # và nó nằm sẵn trong `_salt_prompt`. Bộ này tự viết prompt riêng nên vòng ngoài
+                # bỏ sót nó — đúng họ lỗi "đã chữa một lần rồi để lối khác chạy qua".
+                try:
+                    import datastory_ci as _DC
+                    _p = _DC._salt_prompt(f"{prompt}, {gu}")
+                except Exception:
+                    _p = f"{prompt}, {gu}"
+                ok = DS._generate_image_ai(_p, dest, None, style=gu)
             except Exception as e:
                 print(f"      ⚠️ nền {i} lượt {_lan+1}: {str(e)[:56]}")
                 ok = None
             if ok and os.path.exists(dest) and os.path.getsize(dest) > 20000:
-                break
+                _xau = _nen_hong(dest)
+                if not _xau:
+                    break
+                print(f"      ♻️ nền {i} lượt {_lan+1} không dùng được: {_xau}")
+                os.remove(dest)
             ok = None
         if ok:
             # NÂNG SÁNG THEO SỐ ĐO, KHÔNG NÂNG MÙ.
@@ -344,6 +369,96 @@ def ve_nen(k: dict, DS, keys) -> list:
             print(f"      ⚠️ nền {i}: không vẽ được — cảnh này dùng màu nền trơn")
             ra.append("")
     return ra
+
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# BÓNG DÁNG HAI NHÂN VẬT — MỖI KÊNH MỘT CẶP KHÁC
+# ------------------------------------------------------------------------------------------
+# 30/8 — Bản trước dùng ĐÚNG MỘT cặp ghi đè cho cả mười kênh (thấp-đậm-đeo-kính ↔ cao-gầy).
+# Nó chữa được lỗi "hai người trong một cảnh giống nhau", nhưng đẻ ra lỗi to hơn: mười kênh
+# giờ có mười cặp GIỐNG HỆT NHAU. Xem mười khung cạnh nhau thì đọc ra ngay là một khuôn tô
+# lại — đúng thứ anh dặn tránh ("10 channel thì phong cách nhân vật… ko chung chung 1 template").
+#
+# Nên bảng này giữ nguyên nguyên tắc (trong MỘT cảnh, hai bóng phải tương phản) nhưng cho mỗi
+# kênh một KIỂU tương phản riêng: chỗ thì chênh chiều cao, chỗ chênh bề ngang, chỗ chênh tuổi
+# (mắt to / hàm bạnh), chỗ đảo vai — người đeo kính là người bên phải chứ không phải bên trái.
+# Cặp nào cũng tương phản mạnh, nhưng không cặp nào lặp lại cặp khác.
+_BONG = {
+    # rent: chủ nhà cao lớn tươi cười ↔ người thuê nhỏ bé
+    "rent":     ({"cao": .92, "beNgang": 1.06, "kinh": True,  "rau": "",     "matTo": 1.14, "cam": .1},
+                 {"cao": 1.14, "beNgang": .94, "kinh": False, "rau": "de",   "matTo": .92,  "cam": .9}),
+    # gym: học viên mềm oặt ↔ huấn luyện viên vai u thịt bắp
+    "gym":      ({"cao": .96, "beNgang": 1.28, "kinh": True,  "rau": "",     "matTo": 1.0,  "cam": .2},
+                 {"cao": 1.06, "beNgang": 1.02, "kinh": False, "rau": "quai", "matTo": .9,  "cam": 1.0}),
+    # airport: khách bay bơ phờ ↔ nhân viên quầy thẳng đơ
+    "airport":  ({"cao": 1.02, "beNgang": .88, "kinh": False, "rau": "ria",  "matTo": 1.08, "cam": .35},
+                 {"cao": .94,  "beNgang": 1.14, "kinh": True, "rau": "",     "matTo": .9,   "cam": .75}),
+    # car: chủ xe gọn gàng ↔ thợ máy đô con
+    "car":      ({"cao": 1.10, "beNgang": .90, "kinh": True,  "rau": "",     "matTo": 1.05, "cam": .25},
+                 {"cao": .90,  "beNgang": 1.30, "kinh": False, "rau": "quai", "matTo": .88, "cam": .95}),
+    # office: nhân viên trẻ ↔ sếp đứng tuổi
+    "office":   ({"cao": 1.04, "beNgang": .92, "kinh": False, "rau": "",     "matTo": 1.20, "cam": .05},
+                 {"cao": .96,  "beNgang": 1.18, "kinh": True,  "rau": "de",  "matTo": .86,  "cam": .85}),
+    # diet: người ăn kiêng gầy khô ↔ bạn thân ăn tất
+    "diet":     ({"cao": 1.08, "beNgang": .82, "kinh": False, "rau": "",     "matTo": 1.10, "cam": .15},
+                 {"cao": .94,  "beNgang": 1.34, "kinh": True,  "rau": "ria", "matTo": .94,  "cam": .7}),
+    # tech: người dùng luống tuổi ↔ tổng đài viên trẻ măng
+    "tech":     ({"cao": .93,  "beNgang": 1.20, "kinh": True,  "rau": "quai", "matTo": .88, "cam": .9},
+                 {"cao": 1.10, "beNgang": .88,  "kinh": False, "rau": "",    "matTo": 1.22, "cam": .05}),
+    # parent: bố to bè ↔ con tuổi teen cao lêu nghêu
+    "parent":   ({"cao": .95,  "beNgang": 1.26, "kinh": True,  "rau": "de",  "matTo": .9,   "cam": .95},
+                 {"cao": 1.16, "beNgang": .80,  "kinh": False, "rau": "",    "matTo": 1.26, "cam": .0}),
+    # neighbor: hàng xóm lùn tròn ↔ người mới dọn đến cao gầy
+    "neighbor": ({"cao": .90,  "beNgang": 1.22, "kinh": True,  "rau": "ria", "matTo": .94,  "cam": .85},
+                 {"cao": 1.12, "beNgang": .86,  "kinh": False, "rau": "",    "matTo": 1.16, "cam": .10}),
+    # dating: người dùng chỉn chu ↔ bạn cùng phòng luộm thuộm
+    "dating":   ({"cao": 1.06, "beNgang": .94,  "kinh": False, "rau": "",    "matTo": 1.18, "cam": .2},
+                 {"cao": .98,  "beNgang": 1.16, "kinh": True,  "rau": "quai", "matTo": .96, "cam": .6}),
+}
+
+
+def _nen_hong(tep: str) -> str:
+    """Nền này có dùng được không. Trả lý do hỏng, hoặc "" nếu lành.
+
+    30/8 — Soi mắt 29 nền thì bắt được hai tấm hỏng mà `_keo_sang` không thấy: một tấm bị máy vẽ
+    đóng khung ô-van, bốn góc TRẮNG TINH (ảnh nền có góc trắng thì trên video thành bốn mảng
+    trắng chói ở mép), và một tấm còn chữ bịa trên biển hiệu. Soi mắt không phải cách chạy được
+    hằng đêm, nên phép đo phải nằm ở đây.
+
+    Chỉ đo thứ ĐO ĐƯỢC CHẮC CHẮN: bốn góc gần trắng. Chữ bịa thì không đo được nếu không có bộ
+    nhận chữ, nên nó được chặn ở đầu vào (`_salt_prompt` bỏ hẳn mặt phẳng hướng vào ống kính)
+    chứ không chặn ở đây — chặn nhầm một nền lành còn tốn hơn để lọt một biển hiệu mờ.
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        return ""
+    im = Image.open(tep).convert("L")
+    w, h = im.size
+    o = max(6, min(w, h) // 24)
+    goc = [im.crop((0, 0, o, o)), im.crop((w - o, 0, w, o)),
+           im.crop((0, h - o, o, h)), im.crop((w - o, h - o, w, h))]
+    # Dấu hiệu của khung ô-van là góc TRẮNG VÀ PHẲNG: nền giấy máy vẽ chừa lại không có sắc độ
+    # nào cả. Phải đo cả độ lệch chuẩn, không chỉ độ sáng — một góc trời sáng cũng đạt 248 nhưng
+    # nó có chuyển sắc (lệch chuẩn hàng chục), còn giấy chừa thì lệch chuẩn dưới 3.
+    # Ngưỡng là HAI góc, không phải một: ảnh đóng khung bao giờ cũng trắng nhiều góc, còn một
+    # góc cháy sáng đơn lẻ là chuyện thường của ảnh lành (đo được ở carguy_2 — một góc trần).
+    trang = 0
+    for g in goc:
+        px = list(g.getdata())
+        tb = sum(px) / len(px)
+        lech = (sum((x - tb) ** 2 for x in px) / len(px)) ** 0.5
+        if tb >= 248 and lech < 3:
+            trang += 1
+    if trang >= 2:
+        return "góc trắng phẳng — máy vẽ đóng khung ô-van, mép video sẽ loé trắng"
+    return ""
+
+
+def _hai_bong(k: dict) -> tuple:
+    """(ghi đè cho người A, ghi đè cho người B) của một kênh."""
+    a, b = _BONG.get(k["de"], _BONG["neighbor"])
+    return dict(a), dict(b)
 
 
 def dung_luot(k: dict, nen: list, vong: int = 0) -> tuple:
@@ -476,8 +591,7 @@ def main() -> int:
         # khung đo được hai nhân vật đọc ra như anh em sinh đôi đổi màu áo. Trong phim hoạt hình
         # Mỹ, hai người trong một cảnh luôn tương phản ở BÓNG — một cao gầy một thấp đậm — vì
         # người xem nhận ra ai đang nói qua hình dáng trước cả khi nhìn mặt.
-        tuyA = {"cao": 0.90, "beNgang": 1.22, "kinh": True, "rau": "ria", "matTo": 0.94, "cam": 0.85}
-        tuyB = {"cao": 1.12, "beNgang": 0.86, "kinh": False, "rau": "", "matTo": 1.16, "cam": 0.10}
+        tuyA, tuyB = _hai_bong(k)
         props = {"luot": luot, "tu": tu, "voMp3": rel,
                  "kieuA": k["a"], "kieuB": k["b"], "kieuTuyA": tuyA, "kieuTuyB": tuyB,
                  "tieuDe": ten, "mucNen": k["mau"]}

@@ -4060,3 +4060,24 @@ biểu đồ giống hệt, chỉ khác chữ trên nhãn:
    mù đầu tiên chỉ dời chỗ đụng sang cặp khác (73,4 với PAID VS PLAYED).
    Và mô-típ phải nằm trong danh sách `BrandV2.Icon` thật sự vẽ được — đặt tên lạ ("gavel") thì
    `switch` rơi nhánh mặc định và kênh mất luôn biểu tượng.
+
+### 7v. BỐN LỖI NỀN AI CỦA BỘ HÀI — 30/8/2026
+
+Bốn lỗi chỉ lộ ra khi **dán 29 nền cạnh nhau mà soi**, không lỗi nào làm render fail:
+
+1. **Máy vẽ bịa chữ lên biển hiệu** ("FATET" trong nền DIET WARS). Gốc: `ve_nen` tự viết prompt
+   nên KHÔNG đi qua `datastory_ci._salt_prompt` — bộ chống-bịa-chữ đã kiểm chứng của vòng ngoài.
+   Câu "no text" trong prompt không cứu được: mô hình khuếch tán không có khái niệm "đừng".
+   → Mọi đường vẽ ảnh phải đi qua `_salt_prompt`. Đây là họ lỗi *"đã chữa một lần rồi để lối
+   khác chạy qua"* — chữa ở một nhánh không chữa cho nhánh mới viết.
+2. **Máy vẽ đóng khung ô-van, góc trắng tinh** (datingapp_2). Trên video thành bốn mảng trắng
+   loé ở mép. → `_nen_hong` đo góc: trắng ≥248 **và** lệch chuẩn <3 (giấy chừa thì phẳng lì,
+   trời sáng thì có chuyển sắc), ngưỡng **hai** góc — một góc cháy sáng đơn lẻ là ảnh lành.
+3. **Phép nâng sáng tự tạo ra lỗi cho phép kiểm bắt.** Gamma đẩy vùng đã sáng chạm 255, ra đúng
+   mảng trắng phẳng mà `_nen_hong` coi là ảnh đóng khung. → trần 250, không phải 255.
+4. **Mười kênh dùng chung MỘT cặp bóng dáng.** Bản vá "hai người phải tương phản" đúng trong một
+   cảnh nhưng làm mười kênh có mười cặp giống hệt nhau. → `_BONG`: mỗi kênh một KIỂU tương phản
+   riêng (chênh cao / chênh ngang / chênh tuổi / đảo vai người đeo kính).
+
+**Bài học chung:** một quy tắc đúng ở phạm vi hẹp (trong một cảnh) có thể sai ở phạm vi rộng
+(giữa mười kênh). Sau mỗi bản vá, soi lại ở CẢ HAI phạm vi.
