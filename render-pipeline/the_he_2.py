@@ -261,7 +261,25 @@ def _gon(t: str, toi_da: int = 26) -> str:
     NOI = {"of", "and", "or", "the", "a", "an", "in", "on", "for", "to", "at", "by", "vs", "with"}
     while len(tu) > 1 and tu[-1].lower().strip(",;:-") in NOI:
         tu.pop()
-    return (" ".join(tu).rstrip(" ,;:-–—") or t[:toi_da].rstrip(" ,;:-–—"))
+    # 29/8 — CẮT ĐÔI MỘT CẶP TÊN CÒN ĐỌC SAI HƠN LÀ CẮT CỤT.
+    # Khung thật ONE HIT: "Daryl Hall & John Oates" bị gọt còn "Daryl Hall & John" — nghe như tên
+    # một người thứ hai khác hẳn, tức nhãn ĐỔI NGƯỜI chứ không chỉ mất chữ. Dấu nối báo rằng vế
+    # sau là một cái tên trọn vẹn; giữ nửa vế sau là bịa ra một cái tên chưa từng có.
+    # Lùi về trước dấu nối: "Daryl Hall" — ngắn hơn nhưng vẫn là đúng người.
+    NOI_TEN = {"&", "+", "and", "feat.", "feat", "featuring", "with", "vs", "vs."}
+    ca = t.split()
+    if len(tu) < len(ca):                       # có cắt thật, nên vế sau chắc chắn dở dang
+        for i in range(len(tu) - 1, -1, -1):
+            if i > 0 and tu[i].lower().strip(",;:") in NOI_TEN:
+                tu = tu[:i]
+                break
+            # Dấu hai chấm cũng là một mối nối: vế sau nó là phụ đề, và một phụ đề bị cắt dở
+            # ("Spider-Man: Brand" của "Spider-Man: Brand New Day") đọc còn khó hiểu hơn là
+            # không có phụ đề. Giữ vế chính, bỏ hẳn vế sau.
+            if i < len(tu) - 1 and tu[i].endswith(":"):
+                tu = tu[:i + 1]
+                break
+    return (" ".join(tu).rstrip(" ,;:-–—&+") or t[:toi_da].rstrip(" ,;:-–—&+"))
 
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
@@ -603,7 +621,8 @@ def _bd_steam(D, ky):
                 [{"name": _gon(x["ten"], 26), "stat": _so(round(ti)) + " : 1",
                   "vo": (f"{_gon(x['ten'], 32)}. {sh:,} own it. "
                          f"{x['dang_choi']:,} online tonight.")} for ti, sh, x in ds],
-                ket)
+                ket,
+                {"phu": "by owners for every player online tonight"})
 
     if loc == "chet_yeu":
         # Góc NGƯỢC LẠI của STEAM TRUTH: game bán được nhiều mà gần như không ai còn mở. Cùng một
@@ -1012,6 +1031,28 @@ def _bd_phim(D, ky):
 
 
 def _bd_bls(D, ky):
+    if ky.get("nganh") == "luong":
+        # SALARY TRUTH: BẢNG LƯƠNG GIỜ THEO NGÀNH của một năm. Đây là câu trả lời cho đúng câu
+        # nhãn kênh hỏi ("nghề này trả bao nhiêu"), và mỗi năm một bảng khác nên trục xoay `nam`
+        # cho ra sáu video không trùng nhau mà không phải bịa thêm góc nhìn nào.
+        # Trục xoay là `tu_nam`, KHÔNG phải `nam`: mọi bộ dựng BLS khác đều đọc `tu_nam`, và một
+        # kênh chạy cả bộ 1 long + 3 short nên có thể rơi qua bộ dựng khác. Khai một trục chỉ
+        # riêng mình hiểu thì các định dạng còn lại của chính kênh này xoay không nổi — selftest
+        # bắt đúng chỗ đó.
+        nam = int(ky.get("nam") or ky.get("tu_nam") or 2024)
+        d = D.bls_theo_nganh("luong", nam, nam)
+        ds = []
+        for ten, r in d.items():
+            if r:
+                ds.append((sum(x["gia_tri"] for x in r) / len(r), ten))
+        if len(ds) < 4:
+            return None
+        ds = sorted(ds, reverse=True)[:6]
+        return (f"What each industry paid an hour in {nam}",
+                [{"name": ten, "stat": f"${v:,.2f}",
+                  "vo": f"{ten}. {v:,.2f} dollars an hour."} for v, ten in ds],
+                f"Average hourly pay, private sector, {nam}.",
+                {"phu": "by average hourly pay", "mo": f"This is what an hour of work paid in {nam}."})
     r = D.lay_bls([ky.get("chuoi", "cpi")], int(ky.get("tu_nam", 2019)),
                   int(ky.get("den_nam", 2024))).get(ky.get("chuoi", "cpi")) or []
     if len(r) < 6:
@@ -1225,8 +1266,17 @@ def dung_story_ranked(kenh: dict, ky: dict | None = None) -> dict | None:
     # mặc định đọc S là "đỉnh", nhưng kênh nghĩa địa game xếp S = vắng nhất — không nói rõ thì
     # người xem hiểu ngược hẳn ý video.
     tieu_de, muc, ket = kq[0], kq[1], kq[2]
-    mo = kq[3] if len(kq) > 3 else f"{tieu_de}. Here they are."
-    _phu = PHU_DE_THEO_BO.get(str(kenh.get("ham") or ""), "")
+    # Phần tử thứ tư: CHUỖI = lời mở riêng (khuôn cũ), DICT = khai cả lời mở lẫn phụ đề.
+    #
+    # 29/8 — vì sao phải cho bộ chuyển đổi khai phụ đề. `PHU_DE_THEO_BO` tra theo NGUỒN, mà một
+    # nguồn nay đẻ ra nhiều đại lượng khác nhau: `game_steam` khai "by players online" — đúng cho
+    # các nhánh xếp theo người đang chơi, nhưng nhánh "mua rồi bỏ" xếp theo TỈ LỆ sở hữu/đang chơi.
+    # Khung thật GAME GRAVEYARD: cột ghi "20.0M : 1" mà phụ đề ngay dưới ghi "by players online" —
+    # phụ đề nói dối chính con số nó đang chú thích. Nhãn sai còn tệ hơn không có nhãn.
+    _x = kq[3] if len(kq) > 3 else None
+    _tuy = _x if isinstance(_x, dict) else ({"mo": _x} if _x else {})
+    mo = _tuy.get("mo") or f"{tieu_de}. Here they are."
+    _phu = _tuy.get("phu") or PHU_DE_THEO_BO.get(str(kenh.get("ham") or ""), "")
     muc = muc[:6]
     # ── CỔNG "BẢNG XẾP HẠNG PHẢI THẬT SỰ XẾP HẠNG" (27/8) ────────────────────────────────────
     # Soi 19 bộ chuyển dữ liệu thì BỐN bộ cho ra bảng mà mọi dòng CÙNG MỘT GIÁ TRỊ:
@@ -1567,7 +1617,11 @@ def _pk_wiki(D, ky):
     # Mỗi bộ lọc có (nhận, LOẠI TRỪ). Không có vế loại trừ thì hai kênh lọc chồng nhau sẽ cùng
     # chọn đúng một bài — đo thật: UNSOLVED LOG và MISSING PIECE cùng ra "Disappearance of Marvin
     # Clark". Và "city" từng bắt nhầm "Manchester City F.C." vào kênh địa danh, nên bỏ hẳn từ đó.
-    TU = {"bi_an":    (("mystery", "unsolved", "unexplained", "cryptid", "hoax", "conspiracy"),
+    # 29/8 — BỎ "hoax" VÀ "conspiracy" KHỎI KÊNH BÍ ẨN. Khung thật UNSOLVED LOG: "Great Moon
+    # Hoax" dưới nhãn "Still no answer" — trò lừa báo chí 1835 ấy đã có lời giải từ lâu, và
+    # thuyết âm mưu thì càng không phải chuyện chưa có đáp án. Nhãn hứa "chưa ai trả lời được"
+    # mà nội dung là chuyện đã khép: đó là nói sai, không phải chọn bài dở.
+    TU = {"bi_an":    (("mystery", "unsolved", "unexplained", "cryptid", "cold case"),
                        ("missing", "disappear", "vanish")),
           "mat_tich": (("missing", "disappear", "vanish", "lost at sea"), ()),
           # Từ đơn bắt nhầm tên người ("Jessie Cave" là diễn viên, không phải hang). Chỉ nhận CỤM
@@ -1579,6 +1633,15 @@ def _pk_wiki(D, ky):
     cap = TU.get(loc)
 
     def _loc(ds):
+        # Kênh địa danh KHÔNG dò chữ nữa: hỏi thẳng Wikipedia bài nào có toạ độ (xem
+        # `du_lieu_mo.noi_co_that`). Chỉ hỏi 150 bài đọc nhiều nhất — ba lần gọi, đủ để ngày nào
+        # cũng có vài chỗ thật, mà không quét cả nghìn bài cho một video.
+        if loc == "dia_diem":
+            dau = ds[:150]
+            co = D.noi_co_that([x["ten"] for x in dau])
+            # Bài có toạ độ mà tên mở đầu bằng một năm là SỰ KIỆN gắn với nơi chốn ("2026 Nepal
+            # floods"), không phải một chỗ để kể. Nhãn kênh hứa một NƠI.
+            return [x for x in dau if x["ten"] in co and not x["ten"][:4].isdigit()]
         if not cap:
             return ds
         nhan, tru = cap
@@ -1646,7 +1709,11 @@ def _pk_nghien_cuu(D, ky):
 
 
 def _pk_nhac(D, ky):
-    r = D.ho_so_nhac(ky.get("tu_khoa", "one hit wonder"), 4)
+    # Kênh này dựng CẢ VIDEO quanh một cái tên, nên tra nhầm là hỏng toàn bộ chứ không phải một
+    # dòng trong bảng: từ khoá cũ "Billboard Hot 100" / "Grammy Award" được đem khớp với TÊN nghệ
+    # sĩ, và kết quả đầu bảng trở thành nhân vật chính của một phim chân dung sáu cảnh.
+    _the = str(ky.get("the") or "").strip()
+    r = (D.nhac_theo_the(_the, 6) if _the else D.ho_so_nhac(ky.get("tu_khoa", "one hit wonder"), 4))
     r = [x for x in r if x.get("bat_dau")]
     if not r:
         return None
@@ -1658,11 +1725,11 @@ def _pk_nhac(D, ky):
         ((f"The record says it ended in {v['ket_thuc'][:4]}." if v.get("ket_thuc")
           else "The record has no end date."), "empty concert stage under one hard spotlight, smoke in the beam, cables coiled"),
         ("This is the catalogue entry, not the legend.",
-         "a wooden card-index drawer pulled open, card edges seen from above, no faces visible"),
+         "a coiled brass instrument valve mechanism, close in, nothing flat in frame"),
         ("MusicBrainz keeps it because somebody had to.",
          "a vinyl record sleeve seen edge-on, records fanned in a crate"),
         ("Every credit here can be checked in a minute.",
-         "a mixing desk fader bank glowing in a dark studio"),
+         "stage lights on a truss seen from below against darkness, beams only"),
     ]
     return (_gon(v["ten"], 46), f"{v['ten']}, on paper.", canh)
 
@@ -2186,6 +2253,33 @@ def _bt_luot_doc(D, ky):
 def _bt_bls(D, ky):
     """Bậc thang: một chỉ số leo qua từng năm."""
     import math
+    if ky.get("nganh") == "viec":
+        # JOB DYING: SỐ VIỆC CÒN THIẾU SO VỚI ĐỈNH của chính ngành đó. Nhãn kênh hứa "nghề đang
+        # biến mất", mà tỉ lệ thất nghiệp chung không đo việc mất đi — nó đo người không có việc,
+        # hai chuyện khác nhau. Khoảng cách đỉnh–nay thì đo đúng thứ ấy, và có dải rộng thật:
+        # chế tạo thiếu 4,49 triệu việc so với đỉnh 2001, tài chính thiếu 121 nghìn.
+        tu = int(ky.get("tu_nam", 2001))
+        d = D.bls_theo_nganh("viec", tu, 2026)
+        ds = []
+        for ten, r in d.items():
+            if len(r) < 24:
+                continue
+            dinh = max(r, key=lambda x: x["gia_tri"])
+            mat = dinh["gia_tri"] - r[-1]["gia_tri"]
+            if mat > 0:
+                ds.append((mat, ten, int(dinh["nam"])))
+        if len(ds) < 4:
+            return None
+        ds = sorted(ds, reverse=True)[:6]
+        muc = [{"label": _gon(ten, 18), "emoji": "📉",
+                "oddsDisp": _gon_so(mat * 1000),
+                "logValue": round(math.log10(max(1.0, mat * 1000)), 3),
+                "vo": f"{ten}. {_gon_so(mat * 1000)} jobs short of its {nam_dinh} peak."}
+               for mat, ten, nam_dinh in ds]
+        return (f"Jobs never replaced since {tu}", muc,
+                ["Every one of these industries has fewer people than it used to.",
+                 "Bureau of Labor Statistics, monthly payrolls."],
+                {"rung_kieu": "dem", "rung_don_vi": "jobs"})
     ten = ky.get("chuoi", "that_nghiep")
     diem = D.lay_bls([ten], int(ky.get("tu_nam", 2015)), int(ky.get("den_nam", 2024))).get(ten) or []
     if len(diem) < 24:
@@ -2226,7 +2320,12 @@ def _bt_bls(D, ky):
 def _bt_nhac(D, ky):
     """Bậc thang: nghệ sĩ và độ dài sự nghiệp trên giấy tờ."""
     import math, datetime as _dt
-    r = [x for x in D.ho_so_nhac(ky.get("tu_khoa", "one hit wonder"), 20) if x.get("bat_dau")]
+    # `the` = thẻ thể loại -> nghệ sĩ THẬT (xem `nhac_theo_the`). Không có thẻ thì mới rơi về
+    # đường tra-theo-tên cũ, và đường ấy chỉ còn đúng khi tham số ĐÚNG LÀ một cái tên.
+    _the = str(ky.get("the") or "").strip()
+    r = ([x for x in D.nhac_theo_the(_the, 20, phai_ket_thuc=True) if x.get("loai") == "Group"]
+         if _the else
+         [x for x in D.ho_so_nhac(ky.get("tu_khoa", "one hit wonder"), 20) if x.get("bat_dau")])
     if len(r) < 4:
         return None
     nay = _dt.date.today().year
@@ -2245,12 +2344,16 @@ def _bt_nhac(D, ky):
             break
     if len(muc) < 4:
         return None
+    # Xếp giảm dần: thang này ĐANG XẾP HẠNG, mà thứ tự MusicBrainz trả về là theo điểm khớp tên —
+    # không liên quan gì tới đại lượng đang vẽ. Để nguyên thì mục đầu (thứ người xem đọc trước và
+    # là thứ chui vào tiêu đề) là một con số bất kỳ, không phải con số đáng kể nhất.
+    muc.sort(key=lambda m: -m["logValue"])
     # 29/8 — KHAI RÕ THANG ĐANG ĐO GÌ. Khung thật ONE HIT: các mục ghi "14y", "79y" (số NĂM) mà
     # thang bên cạnh ghi "1 in 100", "1 in 56,234" — thang XÁC SUẤT áp lên dữ liệu ĐẾM. Người xem
     # đọc "79y" cạnh "1 in 56,234" và không hiểu gì, vì hai con số không cùng một loại đại lượng.
     # Đúng lỗi đã vá cho FAME CURVE (khai `rung_kieu: dem`), nhưng kênh này chưa khai nên vẫn rơi
     # về mặc định "odds" của composition — lại là một cờ khai ở tầng này, tầng kia không nhận.
-    return ("How long they lasted", muc,
+    return (f"How long the {_the} acts lasted" if _the else "How long they lasted", muc,
             ["Careers, measured in years on paper.", "MusicBrainz keeps the dates."],
             {"rung_kieu": "dem", "rung_don_vi": "years"})
 

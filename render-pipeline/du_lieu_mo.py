@@ -215,6 +215,36 @@ BLS_CHUOI = {"cpi": "CUUR0000SA0",            # chỉ số giá tiêu dùng (m�
              "cpi_giai_tri": "CUUR0000SAR"}    # giải trí
 
 
+# ── CHUỖI THEO NGÀNH ────────────────────────────────────────────────────────────────────────
+# Mã CES ghép theo khuôn: CES + 2 số ngành + 6 số 0 + đuôi. Đuôi `003` = lương giờ trung bình,
+# `001` = số việc làm (nghìn người).
+#
+# 29/8 — VÌ SAO CẦN. Hai kênh hứa những thứ chuỗi TỔNG không chứng minh nổi:
+#   SALARY TRUTH "nghề này thật sự trả bao nhiêu" -> đang vẽ TỔNG SỐ VIỆC LÀM phi nông nghiệp,
+#       một con số 157.693,8 không phải lương của bất kỳ ai;
+#   JOB DYING    "nghề đang biến mất"             -> đang vẽ TỈ LỆ THẤT NGHIỆP CHUNG, thứ đo
+#       người không có việc chứ không đo việc mất đi.
+# Chia theo ngành thì cả hai lời hứa đều có số thật đỡ: lương giờ chênh nhau hơn gấp đôi giữa
+# ngành cao nhất và thấp nhất, còn chế tạo thì thiếu 4,5 triệu việc so với đỉnh năm 2001.
+BLS_NGANH = {"Mining & logging": "10", "Construction": "20", "Manufacturing": "30",
+             "Trade & transport": "40", "Information": "50", "Finance": "55",
+             "Professional services": "60", "Education & health": "65",
+             "Leisure & hospitality": "70", "Other services": "80"}
+
+
+def bls_theo_nganh(kieu: str, tu_nam: int, den_nam: int) -> dict:
+    """{tên ngành: [{nam, thang, gia_tri}]}. `kieu` = "luong" (đô/giờ) hoặc "viec" (nghìn người).
+
+    Đi qua `lay_bls` nên ăn FILE TĨNH trước — API v2 không key chỉ trả 10 năm một lượt, không đủ
+    để tìm đỉnh lịch sử (đo thật: hỏi 2001-2025 thì nó cắt còn tới 2010, và "hiện nay" hoá ra là
+    số của mười lăm năm trước — sai mà không báo lỗi).
+    """
+    duoi = "003" if kieu == "luong" else "001"
+    ma = {t: f"CES{v}00000{duoi}" for t, v in BLS_NGANH.items()}
+    d = lay_bls(list(ma.values()), tu_nam, den_nam)
+    return {t: (d.get(m) or []) for t, m in ma.items()}
+
+
 def chuoi_bls(ten: str, tu_nam: int, den_nam: int, key: str = "") -> list[dict]:
     """Chuỗi thời gian chính thức từ Cục Thống kê Lao động. Trả [{nam, thang, gia_tri}]."""
     ma = BLS_CHUOI.get(ten, ten)
@@ -888,6 +918,86 @@ def ho_so_nhac(nghe_si: str, n: int = 8) -> list[dict]:
                    "ket_thuc": str(sp.get("end") or ""),
                    "diem_khop": int(x.get("score") or 0),
                    "nguon": "MusicBrainz"})
+    return ra
+
+
+def noi_co_that(tieu_de: list[str]) -> set:
+    """Trong danh sách tiêu đề Wikipedia, bài nào là MỘT CHỖ CÓ THẬT TRÊN BẢN ĐỒ.
+
+    Phép thử: bài đó có TOẠ ĐỘ hay không. Wikipedia gắn toạ độ cho mọi bài về một địa điểm, và
+    không gắn cho phim, bài hát, người.
+
+    VÌ SAO KHÔNG DÒ CHỮ TRONG TIÊU ĐỀ NỮA
+    -------------------------------------
+    Bản cũ nhận bài có cụm " island", " canyon", " volcano"… rồi loại bỏ bài có "film"/"song".
+    Khung thật kênh REAL PLACE: "Muppet Treasure Island" — khớp " island", không chứa chữ "film"
+    nào trong tên, nên lọt thẳng vào một video có nhãn "nơi có thật, chuyện có thật". Danh sách
+    chữ cấm kiểu này không bao giờ đủ: phim nào cũng có thể đặt tên theo một địa danh.
+    Và nó còn CHẶT quá ở chiều ngược lại — mười hai cụm từ bỏ sót gần hết địa danh thật (thị
+    trấn, công viên, hồ, đèo), nên kênh phải lùi ngày liên miên mới có bài.
+
+    Toạ độ giải cả hai chiều cùng lúc, bằng chính dữ liệu của Wikipedia chứ không bằng phỏng đoán
+    của mình. Đo thật trên bảng đọc nhiều nhất ngày 26/8: Dollywood, Neatsville (Kentucky),
+    Pittman Center (Tennessee) đều có toạ độ; toàn bộ phim, ca sĩ, danh sách bài hát đều không.
+
+    Gọi theo lô 50 tiêu đề — đúng trần một lần gọi của API Wikipedia.
+    """
+    import urllib.parse as _up
+    ra = set()
+    ds = [t for t in tieu_de if t]
+    for i in range(0, len(ds), 50):
+        lo = ds[i:i + 50]
+        d = _goi("https://en.wikipedia.org/w/api.php?" + _up.urlencode(
+            {"action": "query", "format": "json", "prop": "coordinates", "titles": "|".join(lo)}))
+        for p in (((d or {}).get("query") or {}).get("pages") or {}).values():
+            if p.get("coordinates"):
+                ra.add(str(p.get("title") or ""))
+    return ra
+
+
+def nhac_theo_the(the: str, n: int = 20, phai_ket_thuc: bool = False) -> list[dict]:
+    """Nghệ sĩ Mỹ THEO THẺ THỂ LOẠI (MusicBrainz). Trả cùng khuôn `ho_so_nhac`, thêm `the`.
+
+    VÌ SAO KHÔNG DÙNG `ho_so_nhac` CHO VIỆC NÀY
+    -------------------------------------------
+    `ho_so_nhac` là tra THEO TÊN. Đưa vào một cụm thể loại thì MusicBrainz đem cụm ấy khớp với
+    TÊN nghệ sĩ — nên "viral song" trả về các ban tên "Viral", "Viral Load", "Viral Millennium",
+    rồi video gọi họ là nghệ sĩ một-bản-hit. Đo thật trên khung đã render của ONE HIT: đúng ba
+    cái tên đó nằm cạnh Ella Fitzgerald. Không phải video xấu — video NÓI SAI, mà nói sai là thứ
+    chính sách YouTube phạt nặng nhất và người xem không tha thứ.
+
+    Kênh hồ sơ bài hát dính cùng một gốc mà còn đau hơn: nó lấy KẾT QUẢ ĐẦU TIÊN làm nhân vật
+    chính của cả video, nên từ khoá "Grammy Award" hay "Billboard Hot 100" biến thành "nghệ sĩ"
+    được dựng nguyên một phim chân dung.
+
+    MusicBrainz có sẵn đường đúng: truy vấn theo THẺ (`tag:`) kèm nước và loại. Thẻ do người
+    đóng góp gắn nên chỉ phủ các tên có tiếng — đúng thứ cần, vì kênh Mỹ kể về nghệ sĩ người xem
+    đã nghe qua. Đo thật `tag:"new wave" AND country:US AND type:group`: 161 kết quả, đầu bảng là
+    Hall & Oates, ZZ Top, Blondie, Talking Heads — tên thật, ngày tháng thật.
+
+    `phai_ket_thuc` = chỉ lấy nghệ sĩ đã có ngày KẾT THÚC trên hồ sơ. Cần cho kênh đo "trụ được
+    bao lâu": ban còn hoạt động thì quãng đời chưa chốt, đem xếp chung với ban đã tan là so một
+    số đã xong với một số đang chạy.
+    """
+    d = _goi("https://musicbrainz.org/ws/2/artist?" + urllib.parse.urlencode(
+        {"query": f'tag:"{the}" AND country:US', "fmt": "json",
+         "limit": max(1, min(100, n * 4))}))
+    ra = []
+    for x in ((d or {}).get("artists") or []):
+        # Điểm khớp thấp = MusicBrainz đoán mò. Loại "Group"/"Person" = gạt bỏ nhãn đĩa và
+        # nhân vật hư cấu, những thứ không kể được thành chuyện người.
+        if int(x.get("score") or 0) < 70 or str(x.get("type") or "") not in ("Group", "Person"):
+            continue
+        sp = x.get("life-span") or {}
+        bd, kt = str(sp.get("begin") or ""), str(sp.get("end") or "")
+        if not bd[:4].isdigit() or (phai_ket_thuc and not kt[:4].isdigit()):
+            continue
+        ra.append({"ten": str(x.get("name") or ""), "loai": str(x.get("type") or ""),
+                   "nuoc": str(x.get("country") or ""), "bat_dau": bd, "ket_thuc": kt,
+                   "diem_khop": int(x.get("score") or 0), "the": the,
+                   "nguon": "MusicBrainz"})
+        if len(ra) >= n:
+            break
     return ra
 
 

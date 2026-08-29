@@ -25,8 +25,9 @@ TS = {
  "FAME CURVE":        {"loc": "nguoi", "xoay": "nguoi"},
  "SHOW NUMBERS":      {"tu_khoa": "detective", "loc": "moi", "xoay": "tu_khoa"},
  "GONE TOO SOON":     {"tu_khoa": "sci-fi", "loc": "da_huy", "xoay": "tu_khoa"},
- "SONG FILE":         {"tu_khoa": "one hit wonder", "xoay": "nghe_si"},
- "ONE HIT":           {"tu_khoa": "one hit wonder", "loc": "mot_hit", "xoay": "nghe_si"},
+ # Tra theo THẺ thể loại, KHÔNG theo tên: xem `du_lieu_mo.nhac_theo_the`.
+ "SONG FILE":         {"the": "motown", "xoay": "the", "kho_the": ['motown', 'soul', 'blues', 'jazz', 'country', 'hip hop', 'punk', 'reggae', 'gospel', 'bluegrass', 'rockabilly', 'folk']},
+ "ONE HIT":           {"the": "new wave", "xoay": "the", "kho_the": ['new wave', 'glam rock', 'disco', 'grunge', 'hair metal', 'boy band', 'britpop', 'doo-wop', 'surf rock', 'psychedelic rock', 'ska', 'funk']},
  "STEAM TRUTH":       {"loc": "dong_nhat"},
  "GAME GRAVEYARD":    {"loc": "chet_yeu"},
  "CAR RECALL":        {"hang": "ford", "dong": "f-150", "nam": 2020, "xoay": "hang"},

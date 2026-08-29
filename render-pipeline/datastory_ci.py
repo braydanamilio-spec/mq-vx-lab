@@ -537,15 +537,27 @@ def _cf_flux_image(prompt, dest, key, style=None) -> bool:
 # MUỐI PROMPT (23/8, user: "vẫn sợ trùng"): cùng một mô tả, thêm 1 biến thể góc máy/ánh sáng/bố
 # cục -> ảnh AI sinh ra KHÁC NHAU dù chủ đề giống, kể cả khi máy chủ dùng seed cố định. Đây là lớp
 # chống trùng TUYỆT ĐỐI vì mỗi khung được vẽ MỚI, không bốc từ kho chung nào cả.
+# 29/8 — BỎ HẾT TỪ NHIẾP ẢNH KHỎI CHUỖI BIẾN THỂ.
+#
+# Danh sách này ghép vào MỌI lệnh vẽ, và bản cũ toàn tiếng của nghề ảnh: "rim light", "shallow
+# depth", "overcast light", "single strong light source". Trong khi 50 kênh đã khai gu vẽ TRANH
+# (thạch bản, nét chì, vector, chibi) và gu ấy còn nói thẳng "NOT a photograph, not photorealistic".
+# Hai vế đánh nhau ngay trong một chuỗi, và vế nhiếp ảnh thắng: khung thật SONG FILE ra ảnh chụp
+# studio bóng loáng dù gu kênh là in thạch bản 1950.
+# Lý do vế kia thắng thì dễ hiểu — "ánh sáng viền", "độ sâu trường ảnh nông" là những thứ CHỈ tồn
+# tại trong ảnh chụp, nên mô tả chúng là ngầm ra lệnh chụp ảnh; còn "không phải ảnh chụp" chỉ là
+# một lời cấm, mà mô hình khuếch tán không hiểu lời cấm.
+# Giữ lại đúng phần cần: GÓC NHÌN và KHUÔN HÌNH. Hai thứ đó đổi được ảnh mà không kéo theo chất
+# liệu nào, nên tranh vẫn ra tranh.
 _VARY = [
-    "eye-level view, soft daylight from the left",
-    "slightly high angle, warm late-afternoon light",
-    "low angle looking up, crisp cool light",
-    "three-quarter view, gentle rim light from behind",
-    "wide framing with generous empty space, flat even light",
-    "tighter framing, shallow depth, single strong light source",
-    "off-centre composition, cool morning light",
-    "symmetrical head-on composition, soft overcast light",
+    "seen straight on at eye level",
+    "seen from slightly above",
+    "seen from below, looking up",
+    "seen from a three-quarter angle",
+    "wide framing with generous empty space around the subject",
+    "tight framing, subject filling the frame",
+    "off-centre composition, subject to one side",
+    "symmetrical head-on composition",
 ]
 
 
@@ -566,6 +578,15 @@ _DANH_TU_CHU = (
     "page", "pages", "letter", "letters", "newspaper", "headline", "sign", "signage", "label",
     "book", "books", "report", "form", "certificate", "screen", "monitor", "poster", "banner",
     "notice", "chart", "map", "board", "ledger", "manuscript", "envelope", "receipt", "ticket",
+    # 29/8 — bổ sung sau khi soi khung SONG FILE. Hai lệnh vẽ lọt lưới rồi ra chữ bịa:
+    #   "a wooden card-index drawer pulled open" -> mặt ngăn kéo đề "CARDS Tome Ecits"
+    #   "a mixing desk fader bank in a dark studio" -> biển đèn néon đề "CniyGon tadeyelu alidGon"
+    # Cả hai danh từ đều không có trong danh sách cũ. Quy luật rút ra: bất cứ đồ vật nào TRONG
+    # ĐỜI THẬT có nhãn dán, phím bấm hay bảng điều khiển đều là chỗ máy vẽ điền chữ vào.
+    "card", "cards", "sleeve", "drawer", "cabinet", "index", "desk", "console", "panel",
+    "keyboard", "marquee", "plaque", "tag", "sticker", "packaging", "wrapper", "carton",
+    "magazine", "notebook", "brochure", "flyer", "billboard", "display", "dashboard",
+    "terminal", "tablet", "laptop", "phone",
 )
 
 
