@@ -3562,6 +3562,124 @@ def _xep_theo_nhu_cau(kenh: dict, truc: str, kho: list) -> list:
         return kho
 
 
+def _cat_cau_dai(cau: str, tran: int = 20) -> list:   # cùng ngưỡng với nghiem_thu.TRAN_TU
+    """Tách một câu quá dài thành hai, CẮT Ở RANH GIỚI MỆNH ĐỀ chứ không cắt theo số từ.
+
+    29/8 — chấm 50 kênh thì 16 kênh còn hỏng vì đúng một lỗi: một câu 19-23 từ. Với giọng đọc
+    ~2,5 từ/giây thì 22 từ là gần 9 giây cho MỘT câu — trên feed dọc, ngón tay đã lướt từ lâu.
+    Cắt theo số từ thì câu vỡ giữa chừng ("Only 1,240 people still" / "play it tonight"), nghe còn
+    tệ hơn câu dài. Dấu phẩy và các liên từ chính là chỗ tác giả đã đánh dấu sẵn ranh giới ý —
+    cắt ở đó thì hai câu đều đứng được một mình.
+    Không tìm được chỗ cắt hợp lý thì TRẢ NGUYÊN: thà một câu dài còn hơn hai mảnh vụn."""
+    import re as _re
+    t = " ".join(str(cau or "").split())
+    if len(t.split()) <= tran:
+        return [t] if t else []
+    # Ưu tiên: dấu phẩy/chấm phẩy -> liên từ. Chọn chỗ gần GIỮA câu nhất để hai nửa cân nhau.
+    ung = [m.end() for m in _re.finditer(r",\s|;\s", t)]
+    ung += [m.start() for m in _re.finditer(r"\s(?:and|but|while|because|so that|which)\s", t)]
+    if not ung:
+        return [t]
+    giua = len(t) / 2
+    cat = min(ung, key=lambda i: abs(i - giua))
+    a, b = t[:cat].strip(" ,;"), t[cat:].strip(" ,;")
+    if len(a.split()) < 4 or len(b.split()) < 4:
+        return [t]                       # cắt ra một mảnh quá ngắn -> không cắt còn hơn
+    a = a if a.endswith((".", "!", "?")) else a + "."
+    b = (b[:1].upper() + b[1:]) if b else b
+    b = b if b.endswith((".", "!", "?")) else b + "."
+    return [a, b]
+
+
+def hoan_kich_ban(st: dict, kenh: dict) -> dict:
+    """Đảm bảo CÂU ĐẦU của lời đọc là một HOOK, không phải một câu mô tả.
+
+    29/8 — thêm phép chấm kịch bản rồi đo lại 50 kênh: **40 kênh mở đầu bằng câu mô tả**.
+        "Six seasons of points leaders."
+        "Frozen pizza, by calories. Same scale, no tricks."
+        "Dog breeds ranked by how many people quietly looked them up this month."
+    Không câu nào sai. Nhưng không câu nào cho người xem một LÝ DO để ở lại giây thứ hai — chúng
+    giới thiệu chủ đề, đúng cách viết của video giảng bài dài, sai hẳn với feed dọc nơi ngón tay
+    đã sẵn sàng lướt. Và bảng điểm cũ chấm cả 40 kênh này 100/100, vì nó chưa từng chạm tới lời đọc.
+
+    Cách chữa KHÔNG phải viết lại 25 bộ dựng: con số gây choáng vốn đã nằm sẵn trong dữ liệu, chỉ
+    là nó bị chôn ở câu thứ ba. Đưa nó lên trước, giữ nguyên câu mô tả làm câu thứ hai — người xem
+    nhận con số trước, rồi mới nhận bối cảnh. Đó đúng là trật tự của mọi short giữ được chân người.
+
+    Khuôn hook CỐ ĐỊNH THEO KÊNH (băm từ tên): một kênh nên có một giọng mở nhất quán, còn 50 kênh
+    thì không được mở giống nhau."""
+    try:
+        # MỖI DẠNG CẤT LỜI MỞ Ở MỘT KHOÁ KHÁC. Bản đầu của hàm này chỉ đọc `narration` và vá
+        # xong vẫn còn 33 kênh hỏng y nguyên — vì `ranked`/`scaled`/`longshot`/`thennow` để câu
+        # mở ở `intro_vo`, còn `cinematic` để ở `scenes[0].nar`. Sửa một khoá rồi tưởng xong là
+        # đúng cách vá theo triệu chứng: cùng một lỗi, sáu chỗ, vá một chỗ.
+        if st.get("narration"):
+            kho, lay = "narration", lambda: [str(x).strip() for x in st["narration"] if str(x).strip()]
+        elif str(st.get("intro_vo") or "").strip():
+            kho, lay = "intro_vo", lambda: [str(st["intro_vo"]).strip()]
+        elif (st.get("scenes") or [{}])[0].get("nar"):
+            kho, lay = "scenes", lambda: [str(st["scenes"][0].get("nar") or "").strip()]
+        else:
+            return st
+        dan = lay()
+        if not dan:
+            return st
+        dau = dan[0]
+        # Đã có số hoặc đã là câu hỏi -> tự nó đã hook, không đụng vào.
+        if any(c.isdigit() for c in dau) or dau.rstrip().endswith("?"):
+            return st
+        d = _so_noi_bat(st or {})
+        so = " ".join(str(d.get("stat") or "").split())
+        ten = " ".join(str(d.get("name") or "").split())
+        if not so or not any(c.isdigit() for c in so):
+            return st
+        # Chủ thể phải là chữ đọc được — cùng luật với tiêu đề (xem `_tieu_de_tu_du_lieu`).
+        if "_" in ten or any(ord(c) > 127 for c in ten) or len(ten) < 2:
+            ten = ""
+        import hashlib as _h
+        kieu = int(_h.md5(str(kenh.get("ten") or "").encode()).hexdigest(), 16) % 3
+        if ten:
+            hook = (f"{so}. That is {ten}." if kieu == 0
+                    else f"{ten}: {so}." if kieu == 1
+                    else f"Start with this: {so}, {ten}.")
+        else:
+            hook = f"{so}. That is where this starts."
+        if hook.strip().lower() == dau.strip().lower():
+            return st
+        if kho == "narration":
+            st["narration"] = [hook] + dan
+        elif kho == "intro_vo":
+            st["intro_vo"] = f"{hook} {dau}".strip()
+        else:
+            st["scenes"][0] = {**st["scenes"][0], "nar": f"{hook} {dau}".strip()}
+        return _cat_moi_cau_dai(st)
+    except Exception:
+        return st          # lớp làm ĐẸP, không được phép giết một video đã dựng xong
+
+
+def _cat_moi_cau_dai(st: dict) -> dict:
+    """Chạy `_cat_cau_dai` lên MỌI chỗ chứa lời đọc của mọi dạng."""
+    try:
+        if st.get("narration"):
+            ra = []
+            for d in st["narration"]:
+                ra += _cat_cau_dai(d)
+            st["narration"] = ra
+        for k in ("intro_vo", "outro_vo"):
+            if str(st.get(k) or "").strip():
+                st[k] = " ".join(_cat_cau_dai(st[k]))
+        for kho in ("items", "data", "pairs"):
+            for m in (st.get(kho) or []):
+                if isinstance(m, dict) and str(m.get("vo") or "").strip():
+                    m["vo"] = " ".join(_cat_cau_dai(m["vo"]))
+        for m in (st.get("scenes") or []):
+            if isinstance(m, dict) and str(m.get("nar") or "").strip():
+                m["nar"] = " ".join(_cat_cau_dai(m["nar"]))
+    except Exception:
+        pass
+    return st
+
+
 def hoan_tieu_de(st: dict, kenh: dict, truc: str, t: dict, avoid) -> dict:
     """Hoàn thiện tiêu đề của một story: gắn giá trị trục, rồi ưu tiên tiêu đề dựng từ dữ liệu.
 
@@ -3610,7 +3728,7 @@ def hoan_tieu_de(st: dict, kenh: dict, truc: str, t: dict, avoid) -> dict:
     # Ghi lại GIÁ TRỊ TRỤC vào story để bài nghiệm thu so được "tiêu đề có khớp nội dung không".
     if truc:
         st["_truc_gia_tri"] = t.get(truc)
-    return st
+    return hoan_kich_ban(st, kenh)
 
 
 def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None) -> dict | None:

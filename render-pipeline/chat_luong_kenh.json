@@ -1,5 +1,5 @@
 {
- "luc": "2026-08-29T03:29:06Z",
+ "luc": "2026-08-29T05:27:11Z",
  "nguong": 90,
  "canh_bao_motip": [],
  "kenh": {
@@ -31,12 +31,12 @@
    "loi": [],
    "tieu_de": "Ristorante Pizza Rucola: 704 cal — Frozen pizza, by calories"
   },
-  "CARRECALL": {
+  "COLDFILE": {
    "diem": 100,
    "bo_qua": false,
-   "dang": "ranked",
+   "dang": "cinematic",
    "loi": [],
-   "tieu_de": "Ford F-150: what keeps breaking (2016-2020)"
+   "tieu_de": "In re Pride — Habeas corpus"
   },
   "COSTTOGO": {
    "diem": 100,
@@ -51,6 +51,13 @@
    "dang": "race",
    "loi": [],
    "tieu_de": "Shai: 33 pts — NBA points leaders — 2024-25"
+  },
+  "COURTRECORD": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "Iwasa v. Nago — Wrongful death"
   },
   "DEGREEWORTH": {
    "diem": 100,
@@ -72,13 +79,6 @@
    "dang": "longshot",
    "loi": [],
    "tieu_de": "Dolly Parton: the spike — Aug 26, 2026"
-  },
-  "FILINGSSAY": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "ranked",
-   "loi": [],
-   "tieu_de": "Who keeps writing \"artificial intelligence\" to the S E C"
   },
   "GAMEGRAVEYARD": {
    "diem": 100,
@@ -115,12 +115,26 @@
    "loi": [],
    "tieu_de": "Birth rate 2022"
   },
+  "MISSINGPIECE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "Disappearance of Marvin Clark"
+  },
   "MPGTRUTH": {
    "diem": 100,
    "bo_qua": false,
    "dang": "race",
    "loi": [],
    "tieu_de": "Toyota: miles per gallon — bZ4X, 119 mpg"
+  },
+  "NIGHTSHIFT": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "Killing of the Clancy children"
   },
   "ONEHIT": {
    "diem": 100,
@@ -171,19 +185,12 @@
    "loi": [],
    "tieu_de": "Where America shakes — Alaska, M7.9 — week ending 2015-01-01"
   },
-  "QUIETLAYOFFS": {
+  "REALPLACE": {
    "diem": 100,
    "bo_qua": false,
-   "dang": "ranked",
+   "dang": "cinematic",
    "loi": [],
-   "tieu_de": "MAGELLAN MIDSTREAM: 4x — Who keeps writing \"reduction in force\" to the S E C"
-  },
-  "RECALLPLATE": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "ranked",
-   "loi": [],
-   "tieu_de": "MIDWEST POULTRY SERVC C/O: 3.2M — Food recalls you probably missed"
+   "tieu_de": "Muppet Treasure Island — Aug 26, 2026"
   },
   "RENTREALITY": {
    "diem": 100,
@@ -211,7 +218,7 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "497 planes are over America right now — The whole country"
+   "tieu_de": "519 planes are over America right now — The whole country"
   },
   "SPACEINVOICE": {
    "diem": 100,
@@ -234,12 +241,12 @@
    "loi": [],
    "tieu_de": "Ninth Circuit: 4 cases — Where people sue over false advertising"
   },
-  "THENANDNOW": {
+  "UNSOLVEDLOG": {
    "diem": 100,
    "bo_qua": false,
-   "dang": "thennow",
+   "dang": "cinematic",
    "loi": [],
-   "tieu_de": "The same subject, decades apart — City street"
+   "tieu_de": "Great Moon Hoax — Aug 26, 2026"
   },
   "WEAPONPRICE": {
    "diem": 100,
@@ -255,6 +262,13 @@
    "loi": [],
    "tieu_de": "Morning Summit Lightly: 509 cal — Breakfast cereal: what is really in it"
   },
+  "WHATTHEYSEARCH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "What America looks up about love — Marriage, 36.0K"
+  },
   "WHERETOMOVE": {
    "diem": 100,
    "bo_qua": false,
@@ -269,86 +283,75 @@
    "loi": [],
    "tieu_de": "Forest cover 2022"
   },
+  "YOURRIGHTSCASE": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "cinematic",
+   "loi": [],
+   "tieu_de": "Order on Motion - Aldin Associates Ltd. — First amendment"
+  },
   "ARCHIVEREEL": {
-   "diem": 94,
+   "diem": 88,
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [
-    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+    "kịch bản: câu mở đầu không có SỐ cũng không có CÂU HỎI ('A film that belongs to nobody.') — người xem chưa có lý do nào để ở lại"
    ],
-   "tieu_de": "Freedom and Power (Part II) — America 1950"
+   "tieu_de": "new world next week - feb10 — America 1950"
   },
-  "COLDFILE": {
-   "diem": 94,
+  "CARRECALL": {
+   "diem": 88,
    "bo_qua": false,
-   "dang": "cinematic",
+   "dang": "ranked",
    "loi": [
-    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+    "kịch bản: 1 câu dài quá 20 từ (dài nhất 23) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
    ],
-   "tieu_de": "In re Pride — Habeas corpus"
+   "tieu_de": "Ford F-150: what keeps breaking (2016-2020)"
   },
-  "COURTRECORD": {
-   "diem": 94,
+  "FILINGSSAY": {
+   "diem": 88,
    "bo_qua": false,
-   "dang": "cinematic",
+   "dang": "ranked",
    "loi": [
-    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+    "kịch bản: 1 câu dài quá 20 từ (dài nhất 23) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
    ],
-   "tieu_de": "Iwasa v. Nago — Wrongful death"
+   "tieu_de": "Who keeps writing \"artificial intelligence\" to the S E C"
   },
-  "MISSINGPIECE": {
-   "diem": 94,
+  "QUIETLAYOFFS": {
+   "diem": 88,
    "bo_qua": false,
-   "dang": "cinematic",
+   "dang": "ranked",
    "loi": [
-    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+    "kịch bản: 1 câu dài quá 20 từ (dài nhất 21) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
    ],
-   "tieu_de": "Disappearance of Marvin Clark"
+   "tieu_de": "MAGELLAN MIDSTREAM: 4x — Who keeps writing \"reduction in force\" to the S E C"
   },
-  "NIGHTSHIFT": {
-   "diem": 94,
+  "RECALLPLATE": {
+   "diem": 88,
    "bo_qua": false,
-   "dang": "cinematic",
+   "dang": "ranked",
    "loi": [
-    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+    "kịch bản: 1 câu dài quá 20 từ (dài nhất 21) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
    ],
-   "tieu_de": "Killing of the Clancy children"
-  },
-  "REALPLACE": {
-   "diem": 94,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [
-    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
-   ],
-   "tieu_de": "Muppet Treasure Island — Aug 26, 2026"
+   "tieu_de": "MIDWEST POULTRY SERVC C/O: 3.2M — Food recalls you probably missed"
   },
   "SONGFILE": {
-   "diem": 94,
+   "diem": 88,
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [
-    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+    "kịch bản: câu mở đầu không có SỐ cũng không có CÂU HỎI ('One Hit Wonder, on paper.') — người xem chưa có lý do nào để ở lại"
    ],
    "tieu_de": "One Hit Wonder"
   },
-  "UNSOLVEDLOG": {
-   "diem": 94,
+  "THENANDNOW": {
+   "diem": 88,
    "bo_qua": false,
-   "dang": "cinematic",
+   "dang": "thennow",
    "loi": [
-    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
+    "kịch bản: câu mở đầu không có SỐ cũng không có CÂU HỎI ('Two eras of the same thing, both on film.') — người xem chưa có lý do nào để ở lại"
    ],
-   "tieu_de": "Great Moon Hoax — Aug 26, 2026"
-  },
-  "YOURRIGHTSCASE": {
-   "diem": 94,
-   "bo_qua": false,
-   "dang": "cinematic",
-   "loi": [
-    "lỗi bố cục chưa sửa: chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; chưa soi lại được vì máy không có key vẽ ảnh)"
-   ],
-   "tieu_de": "Order on Motion - Aldin Associates Ltd. — First amendment"
+   "tieu_de": "The same subject, decades apart — City street"
   },
   "NEAREARTH": {
    "diem": 0,
@@ -363,15 +366,6 @@
    "diem": 0,
    "bo_qua": true,
    "dang": "cinematic",
-   "loi": [
-    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
-   ],
-   "tieu_de": ""
-  },
-  "WHATTHEYSEARCH": {
-   "diem": 0,
-   "bo_qua": true,
-   "dang": "ranked",
    "loi": [
     "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
    ],

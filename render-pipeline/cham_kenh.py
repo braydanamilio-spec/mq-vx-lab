@@ -55,21 +55,13 @@ def _kenhs() -> list:
 # Nên ghi thẳng vào đây những lỗi đã soi tận mắt trên khung đã render, kèm mức trừ. Mỗi dòng phải
 # XOÁ ĐI khi sửa xong — để lại một dòng đã hết đúng thì nó âm thầm giam một dạng ngoài mẻ render.
 # Đây là chỗ tạm, không phải thiết kế: chỗ đúng là engine tự khai toạ độ từng khối ra tệp để đo.
-LOI_BO_CUC = {
-    # 29/8 — CHỈ GHI THỨ ĐÃ NHÌN TẬN MẮT.
-    # Bản đầu của mục này ghi cinematic "dùng footage kho, trái tiêu chuẩn". SAI: `dung_props_phim`
-    # gọi `build_doc_props(..., ai_only=True)`, và `ai_only` BỎ HẲN nhánh Openverse — mọi ảnh đều
-    # do AI vẽ. Ảnh toà nhà Quốc hội trong khung anh gửi là ảnh AI vẽ trông như ảnh chụp, không
-    # phải footage tải về. Suýt giam 10 kênh ngoài mẻ render vì một lý do tôi không kiểm.
-    # Còn lại đúng một lỗi đã thấy rõ trên khung: hai dòng chữ cùng bị cắt ngang ở một mốc ngang
-    # ("UNITED STATES V. WIL" · "A 2026 CASE ALMOST NOB") — chữ bị cắt là chữ không đọc được.
-    # 29/8 — TRỪ NHẸ, KHÔNG GIAM KÊNH. Bằng chứng là MỘT khung do bản production CŨ dựng, và máy
-    # anh KHÔNG render được dạng này để kiểm lại (nó cần key vẽ ảnh, hồ key chỉ có trên CI). Đã hạ
-    # sàn cỡ chữ trong `Cinematic.tsx` để chữ luôn co vừa thay vì bị cắt — nhưng chưa nhìn tận mắt
-    # kết quả, nên ghi lại mối ngờ mà không chặn 10 kênh dựa trên thứ chưa kiểm được.
-    # Xoá dòng này khi đã soi được một khung cinematic dựng bằng bản mới.
-    "cinematic": (6, "chữ cắt cụt giữa từ ở thẻ mở đầu (thấy trên bản CŨ, đã hạ sàn cỡ chữ; "
-                     "chưa soi lại được vì máy không có key vẽ ảnh)"),
+LOI_BO_CUC: dict = {
+    # 29/8 — GỠ MỤC `cinematic`. Nó ghi "chữ cắt cụt giữa từ ở thẻ mở đầu", bằng chứng là MỘT khung
+    # do bản production CŨ dựng, và lúc ghi thì máy chưa render được dạng này để kiểm lại.
+    # Nay đã lấy được key về máy (xem `lay_key_cuc_bo.py`), render COURT RECORD / MISSING PIECE /
+    # ARCHIVE REEL ba lượt với bản đã hạ sàn cỡ chữ, và soi bằng mắt: KHÔNG khung nào còn cắt chữ.
+    # Giữ một dòng trừ điểm đã hết đúng thì nó âm thầm giam bảy kênh ngoài mẻ render — đúng thứ
+    # chú thích của chính bảng này dặn phải tránh.
 }
 
 
@@ -127,6 +119,11 @@ def cham_mot(k: dict) -> dict:
     for x in NT.cham_story(dang, st):
         loi.append(x)
         diem -= 20
+    # KỊCH BẢN — anh nhắc: "đạt chuẩn kịch bản, nội dung, hình ảnh trên 90/100". Trước nay bảng
+    # điểm không chạm tới lời đọc một dòng nào, mà người xem NGHE trước khi đọc.
+    for x in NT.cham_kich_ban(st):
+        loi.append(f"kịch bản: {x}")
+        diem -= 12
 
     # ── TIÊU ĐỀ CÓ ĐỔI GIỮA HAI LƯỢT KHÔNG ─────────────────────────────────────────────────
     # Phép kiểm này ứng đúng với con số đã đo: 334/600 video ngày 28/8 trùng tiêu đề.

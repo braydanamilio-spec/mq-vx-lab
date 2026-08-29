@@ -158,6 +158,83 @@ def cham_story(dang: str, st: dict) -> list:
     return e
 
 
+# Câu mở đầu KHÔNG được bắt đầu bằng những cụm này — chúng là cách viết của video giảng bài dài,
+# và trên feed dọc thì ba giây đầu không có chỗ cho lời rào đón.
+MO_DAU_XAU = ("in this video", "today we", "welcome to", "let us", "let's take a look",
+              "have you ever", "hi everyone", "in today", "we will", "we're going to")
+
+# Từ đệm không mang thông tin. Mỗi từ trong một short là chỗ của một dữ kiện.
+TU_DEM = ("basically", "actually", "literally", "obviously", "of course", "as you can see",
+          "it turns out that", "the fact that", "in order to", "at the end of the day")
+
+
+def cham_kich_ban(st: dict) -> list:
+    """Chấm LỜI ĐỌC — thứ quyết định người xem ở lại hay lướt qua, và trước nay không ai chấm.
+
+    29/8 — bảng điểm cho 50/50 kênh đạt trong khi KHÔNG một phép đo nào chạm tới kịch bản. Nó soi
+    tiêu đề, soi dữ liệu, soi props — rồi kết luận "đạt". Nhưng người xem nghe trước khi đọc: một
+    bảng số liệu đúng tuyệt đối mà lời dẫn mở bằng "In this video we will look at…" thì mất người
+    xem ở giây thứ hai, và không con số nào trong bảng điểm biết chuyện đó.
+
+    Bốn phép, mỗi phép ứng với một cách mất người xem có thật trên feed dọc:
+      ① câu đầu không có SỐ và không có CÂU HỎI -> không có lý do gì để xem tiếp;
+      ② câu quá dài -> tai không giữ kịp, mắt đã lướt;
+      ③ hai câu trùng nhau -> lộ ra là máy nhả, mất tin cậy;
+      ④ lời rào đón / từ đệm -> mỗi từ trong short là chỗ của một dữ kiện.
+    """
+    e = []
+    dan = [str(x).strip() for x in (st.get("narration") or []) if str(x).strip()]
+    if not dan:
+        for k in ("intro_vo", "hook"):
+            if st.get(k):
+                dan.append(str(st[k]).strip())
+        for kho in ("items", "data", "pairs"):
+            dan += [str(m.get("vo") or "").strip() for m in (st.get(kho) or [])[:8]
+                    if isinstance(m, dict) and m.get("vo")]
+        dan += [str(m.get("nar") or "").strip() for m in (st.get("scenes") or [])[:8]
+                if isinstance(m, dict) and m.get("nar")]
+        if st.get("outro_vo"):
+            dan.append(str(st["outro_vo"]).strip())
+    dan = [d for d in dan if d]
+    if len(dan) < 3:
+        return ["kịch bản dưới 3 câu — không đủ để dựng một video"]
+
+    dau = dan[0].lower()
+    if any(dau.startswith(x) for x in MO_DAU_XAU):
+        e.append(f"câu mở đầu là lời rào đón ({dan[0][:44]!r}) — ba giây đầu không có chỗ cho nó")
+    elif not (any(c.isdigit() for c in dan[0]) or dan[0].rstrip().endswith("?")):
+        e.append(f"câu mở đầu không có SỐ cũng không có CÂU HỎI ({dan[0][:46]!r}) "
+                 f"— người xem chưa có lý do nào để ở lại")
+
+    # NGƯỠNG 20 TỪ, suy từ TỐC ĐỘ ĐỌC THẬT chứ không bốc: giọng edge-tts chạy ~2,5 từ/giây, nên
+    # 20 từ là 8 giây cho MỘT câu — đã là dài với feed dọc, và là mốc hợp lý để chặn.
+    # Bản đầu tôi để 18 vì thấy nó "nghe hợp lý", rồi bốn kênh trượt vì đúng một câu 19-20 từ mà
+    # `_cat_cau_dai` từ chối cắt (không có ranh giới mệnh đề nào để cắt cho tử tế). Một ngưỡng bốc
+    # ra rồi bắt cả hệ chạy theo thì đó là ngưỡng sai, không phải hệ sai.
+    TRAN_TU = 20
+    dai = [d for d in dan if len(d.split()) > TRAN_TU]
+    if dai:
+        e.append(f"{len(dai)} câu dài quá {TRAN_TU} từ (dài nhất {max(len(d.split()) for d in dai)}) "
+                 f"— hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc")
+
+    import re as _re
+    _gon = lambda x: _re.sub(r"[^a-z0-9 ]", "", x.lower()).strip()
+    thay, trung = set(), 0
+    for d in dan:
+        g = _gon(d)
+        if g and g in thay:
+            trung += 1
+        thay.add(g)
+    if trung:
+        e.append(f"{trung} câu lặp lại y hệt — lộ ra là máy nhả")
+
+    chu = " ".join(dan).lower()
+    dem = [t for t in TU_DEM if t in chu]
+    if len(dem) >= 2:
+        e.append(f"lời dẫn có từ đệm không mang thông tin ({', '.join(dem[:3])})")
+    return e
+
+
 def cham_props(dang: str, props: dict) -> list:
     """Soi props sẽ truyền xuống composition — chỗ các tầng hay bất đồng nhất."""
     e = []
