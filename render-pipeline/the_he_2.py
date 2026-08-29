@@ -1250,6 +1250,7 @@ def _dc_hop_dong(D, ky):
             t = _ten_hang(x["ten"], 16)
             gop[t] = gop.get(t, 0) + x["tien"] / 1e6
             ten_thay[t] = True
+        gop = _gop_ten_lap(gop)          # hai hàng đọc ra giống nhau thì phải là một hàng
         frames.append({"t": nam, "data": [{"name": k, "value": round(v, 1)}
                                           for k, v in sorted(gop.items(), key=lambda z: -z[1])[:7]]})
     if len(frames) < 4:
@@ -1771,6 +1772,28 @@ def _sk_the_gioi(D, ky):
             "World Bank open data.")
 
 
+def _gop_ten_lap(gop: dict) -> dict:
+    """Gộp các mục mà NGƯỜI XEM ĐỌC RA GIỐNG NHAU — một tên là tiền tố của tên kia.
+
+    29/8 — khung thật SPACE INVOICE vẫn ra hai hàng "Lockheed Martin 26K" và "Lockheed 9.5K" sau
+    khi đã chuẩn hoá tên. Bới dữ liệu thô: hàng thứ hai là "Lockheed Missiles & Space Comp", một
+    pháp nhân KHÁC thật — nhưng `_gon(..., 16)` cắt nó còn đúng chữ "Lockheed".
+    Nên trên màn hình đó là hai hàng mà người xem không có cách nào phân biệt, và trong biểu đồ
+    ĐUA thì chúng vượt qua nhau suốt video như hai đối thủ. Đúng hay sai về pháp nhân không cứu
+    được chỗ này: thứ hiện ra mới là thứ người xem đọc.
+    Luật: sau khi cắt, nếu một tên là tiền tố của tên kia thì gộp vào tên DÀI HƠN — tên dài hơn
+    mang nhiều thông tin hơn, và tổng thì vẫn đúng."""
+    ten = sorted(gop, key=len, reverse=True)
+    ra: dict = {}
+    for t in ten:
+        khop = next((k for k in ra if k.lower().startswith(t.lower())), None)
+        if khop:
+            ra[khop] += gop[t]
+        else:
+            ra[t] = gop[t]
+    return ra
+
+
 def _ten_hang(ten: str, dai: int = 22) -> str:
     """Tên nhà thầu đã CHUẨN HOÁ để gộp — bỏ đuôi pháp nhân và mạo từ.
 
@@ -1807,7 +1830,7 @@ def _sk_hop_dong(D, ky):
     for x in hd:
         t = _ten_hang(x["ten"])
         gop[t] = gop.get(t, 0.0) + float(x["tien"] or 0)
-    xep = sorted(gop.items(), key=lambda z: -z[1])[:6]
+    xep = sorted(_gop_ten_lap(gop).items(), key=lambda z: -z[1])[:6]
     if len(xep) < 3:
         return None
     muc = [{"name": t, "emoji": "🧾", "value": round(v / 1e6, 1), "disp": _tien(v)}
