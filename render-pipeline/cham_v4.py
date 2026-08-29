@@ -139,6 +139,23 @@ def cham_mot(k: dict) -> dict:
         diem -= min(20, 4 * lech)
         loi.append(f"lệch {lech} từ giữa kịch bản và mốc tiếng — phụ đề sẽ gán nhầm người nói")
 
+    # ── nhịp máy quay không được GIẬT ở khe lặng ───────────────────────────────────────
+    # 30/8 — Mỗi khe im lặng giữa hai lượt là một chỗ mã tra-cứu-theo-thời-gian có thể trượt.
+    # Đo bằng cách đi qua TỪNG khe và hỏi: lượt nào đang có hiệu lực ở đây, và cỡ máy của nó có
+    # phải cỡ của lượt vừa kết thúc không. Lệch nghĩa là khung sẽ giật.
+    for _a, _b in zip(luot, luot[1:]):
+        khe = _b["s"] - _a["e"]
+        if khe <= 0:
+            continue
+        giua = _a["e"] + khe / 2
+        # lượt cuối cùng đã BẮT ĐẦU trước `giua` — đúng luật `KichHai` đang dùng
+        hl = max((x for x in luot if x["s"] <= giua), key=lambda x: x["s"], default=None)
+        if hl is not None and hl.get("co") != _a.get("co"):
+            diem -= 8
+            loi.append(f"khe lặng ở giây {giua:.2f} nhảy cỡ máy {_a.get('co')} → {hl.get('co')} "
+                       f"— khung sẽ giật")
+            break
+
     # ── 10đ CHỮ TRONG KHUNG ────────────────────────────────────────────────────────────
     # `PhuDe` tự co cỡ chữ xuống tới 30. Nếu ở cỡ 30 mà dòng vẫn rộng hơn 920 thì mới là tràn.
     for l in luot:

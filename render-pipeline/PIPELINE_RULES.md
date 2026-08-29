@@ -4276,3 +4276,22 @@ loại nguy hiểm nhất — **do chính một bản vá trước đó đẻ ra
 lượt sát nhau nên không có khe nào để rơi vào. Mỗi khi đổi **cấu trúc thời gian**, phải rà lại
 **mọi chỗ tra cứu theo thời gian**: nhánh dự phòng viết cho một thế giới không có khe hở sẽ im
 lặng làm sai trong một thế giới có khe hở.
+
+### 7ag. IM LẶNG CHỈ "NỔ" NẾU CÓ GÌ ĐỂ NÓ CẮT VÀO — 30/8/2026
+
+Bộ hài phát ra video **không có nhạc nền**: chỉ hai giọng nói trên nền im lặng tuyệt đối. Tôi đã
+dựng cẩn thận khoảng lặng 0,55 giây trước cú chốt để "tiếng cười rơi vào chỗ trống" — nhưng
+**im lặng trên nền im lặng thì không đọc ra là nhịp, chỉ đọc ra là thiếu tiếng.**
+
+Đây là một phần câu trả lời cho *"sao hook hay viral người coi nhận ra được tiếng cười funny
+trong đó"*: khán giả nhận ra cú chốt nhờ **sự THAY ĐỔI**, và muốn có thay đổi thì phải có một
+nền để thay đổi khỏi.
+
+Nhạc lấy từ `public/music` đã có sẵn (không tốn hạn mức nào), mở rất nhỏ (0,07) để không đè
+giọng, có `loop`, và **mỗi kênh một bản** — hai kênh chung một bản nhạc là thứ `selftest` của bộ
+50 kênh đã chặn từ lâu, vì nghe giống nhau chính là dấu hiệu "nội dung sản xuất hàng loạt" mà
+chính sách của YouTube nhắm tới.
+
+**Bài học:** khi dựng một hiệu ứng dựa trên SỰ VẮNG MẶT của một thứ (im lặng, khoảng trống, dừng
+hình), phải kiểm tra rằng thứ ấy CÓ MẶT ở những lúc khác. Một hiệu ứng "vắng mặt" trên nền vốn
+đã trống thì bằng không.

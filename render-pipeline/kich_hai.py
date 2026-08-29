@@ -927,7 +927,20 @@ def main() -> int:
         # Mỹ, hai người trong một cảnh luôn tương phản ở BÓNG — một cao gầy một thấp đậm — vì
         # người xem nhận ra ai đang nói qua hình dáng trước cả khi nhìn mặt.
         tuyA, tuyB = _hai_bong(k)
-        props = {"luot": luot, "tu": tu, "voMp3": rel,
+        # ══ NHẠC NỀN — MỖI KÊNH MỘT BẢN, KHÔNG KÊNH NÀO CHUNG ═══════════════════════════
+        # 30/8 — Bộ này đang phát ra video KHÔNG CÓ NHẠC: chỉ có hai giọng nói trên nền im lặng
+        # tuyệt đối. Trong hài, khoảng lặng chỉ "nổ" nếu có gì đó để nó cắt vào; im lặng trên nền
+        # im lặng thì không đọc ra là nhịp, chỉ đọc ra là thiếu tiếng. Đây là một phần của câu
+        # anh hỏi: "sao hook hay viral người coi nhận ra được tiếng cười funny trong đó".
+        # Nhạc lấy từ kho có sẵn trong `public/music` (không tốn hạn mức nào), mở rất nhỏ (0,07)
+        # để không đè giọng, và MỖI KÊNH MỘT BẢN — hai kênh chung một bản nhạc là thứ `selftest`
+        # của bộ 50 kênh đã chặn từ lâu, vì nghe giống nhau là dấu hiệu "sản xuất hàng loạt".
+        NHAC = {"rent": "music/forecast.mp3", "gym": "music/km_undaunted.mp3",
+                "airport": "music/mind_pad32.mp3", "car": "music/km_interloper.mp3",
+                "office": "music/wallpaper.mp3", "diet": "music/carefree.mp3",
+                "tech": "music/mindloop_pad.mp3", "parent": "music/inspired.mp3",
+                "neighbor": "music/km_ascending.mp3", "dating": "music/km_reawakening.mp3"}
+        props = {"luot": luot, "tu": tu, "voMp3": rel, "nhac": NHAC.get(k["de"], ""),
                  "kieuA": k["a"], "kieuB": k["b"], "kieuTuyA": tuyA, "kieuTuyB": tuyB,
                  "tieuDe": ten, "mucNen": k["mau"]}
         pj = os.path.join(GOC, "out", f"v4_{_ten_tep(k)}.json")

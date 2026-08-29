@@ -406,7 +406,7 @@ export const KichHai: React.FC<PropsHai> = ({
       </AbsoluteFill>
 
       {voMp3 ? <Audio src={staticFile(voMp3)} /> : null}
-      {nhac ? <Audio src={staticFile(nhac)} volume={0.08} /> : null}
+      {nhac ? <Audio src={staticFile(nhac)} volume={0.07} loop /> : null}
       {luot.filter((x) => x.sfx).map((x, k) => (
         <Sequence key={k} from={Math.round(x.s * fps)} durationInFrames={Math.round(1.4 * fps)}>
           <Audio src={staticFile(x.sfx as string)} volume={0.3} />
