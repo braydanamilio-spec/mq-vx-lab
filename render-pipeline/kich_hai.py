@@ -763,7 +763,20 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
         dw = _giay_wav(w)
         if not dw:
             raise RuntimeError(f"lượt {i} giải mã hỏng")
-        moc.append((round(tong, 3), round(tong + dw, 3)))
+        # ══ MỐC LƯỢT LẤY TỪ MỐC TỪ, KHÔNG LẤY TỪ BIÊN ĐOẠN TIẾNG ═══════════════════════
+        # 30/8 — Bản đầu lấy `(tong, tong + dw)` tức là NGUYÊN BIÊN của đoạn WAV. Nhưng edge-tts
+        # tự chèn một quãng im lặng ở ĐẦU và CUỐI mỗi đoạn nó đọc. Dò khoảng lặng thật trong tệp
+        # ghép cho thấy rõ: khe giữa lượt 1 và lượt 2 mình khai là 3,91 → 4,07 (0,16 giây), còn
+        # tiếng thật im từ 2,92 tới 4,35 (1,42 giây).
+        # Hậu quả: thẻ phụ đề nằm lại gần MỘT GIÂY sau khi người ta nói xong, rồi thẻ tiếp theo
+        # bật lên sớm gần ba phần mười giây trước khi người kia mở miệng. Cỡ máy cũng đổi lệch
+        # theo. Không lỗi nào làm render hỏng, nên nó im lặng trôi qua mọi cổng kiểm.
+        # Mốc TỪ thì chính xác — edge-tts trả đúng lúc từng từ phát ra. Nên lượt lấy mốc từ chính
+        # từ đầu và từ cuối của nó, và khoảng lặng giữa hai lượt trở thành khoảng lặng THẬT.
+        # (`KichHai` đã biết cách giữ nguyên lượt vừa kết thúc khi rơi vào khe — xem luật 7af.)
+        t0 = tong + float(subs[0].get("t", 0))
+        tc = tong + float(subs[-1].get("t", 0)) + float(subs[-1].get("d", 0))
+        moc.append((round(t0, 3), round(tc + 0.12, 3)))
         for x in subs:
             tu.append({"t": round(tong + float(x.get("t", 0)), 3),
                        "d": round(float(x.get("d", 0)), 3),

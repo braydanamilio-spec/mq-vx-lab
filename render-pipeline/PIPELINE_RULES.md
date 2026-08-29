@@ -4343,3 +4343,30 @@ Kết quả: 10/10 kênh đạt 100, và thước **nghiêm hơn trước** ở 
 **Quy tắc:** trước khi nới một ngưỡng, phải trả lời được *"con số này đang đo cái gì, và nó có
 đo đúng thứ tôi quan tâm không?"* Nếu phép đo bắt nhầm một thuộc tính hợp lệ, hãy tách phép đo
 ra chứ đừng hạ chuẩn.
+
+### 7aj. edge-tts CHÈN IM LẶNG Ở ĐẦU VÀ CUỐI MỖI ĐOẠN — 30/8/2026
+
+Sau khi tách đọc từng lượt (luật 7ac), mốc lượt lấy theo **biên đoạn WAV**. Nghe hợp lý, và sai.
+
+Dò khoảng lặng thật trong tệp tiếng đã ghép:
+
+| | khai theo biên đoạn | tiếng THẬT |
+|---|---|---|
+| khe giữa lượt 1–2 | 3,91 → 4,07 (0,16 s) | **2,92 → 4,35 (1,42 s)** |
+
+edge-tts tự chèn một quãng im lặng ở đầu và cuối **mỗi đoạn nó đọc**. Nên biên đoạn WAV rộng hơn
+tiếng nói thật gần một giây ở mỗi phía.
+
+**Hậu quả:** thẻ phụ đề nằm lại gần một giây sau khi người ta nói xong, rồi thẻ tiếp theo bật lên
+sớm gần ba phần mười giây trước khi người kia mở miệng. Cỡ máy đổi lệch theo. **Không lỗi nào
+làm render hỏng**, nên nó trôi qua mọi cổng kiểm — đúng loại lỗi chỉ lộ ra khi đi dò bằng số.
+
+**Sửa:** mốc lượt bám **mốc TỪ** (edge-tts trả đúng lúc từng từ phát ra), không bám biên đoạn.
+Khoảng lặng giữa hai lượt vì thế trở thành khoảng lặng THẬT — và `KichHai` đã biết giữ nguyên
+lượt vừa kết thúc khi rơi vào khe (luật 7af mục 4).
+
+**Chốt:** `cham_v4` đo mốc mở lượt phải trùng thời điểm từ đầu tiên (±0,25 s) và mốc đóng phải
+bám từ cuối (±0,35 s).
+
+**Bài học:** khi ghép nhiều đoạn tiếng, **đừng tin biên của đoạn** — bộ đọc nào cũng có thể thêm
+đệm. Chỉ tin mốc mà bộ đọc trả về cho từng TỪ, vì đó là thứ nó thật sự phát ra.

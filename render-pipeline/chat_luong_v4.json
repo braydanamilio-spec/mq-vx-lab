@@ -1,85 +1,15 @@
 {
  "nguong": 90,
  "kenh": {
-  "RENT PANIC": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 21.3,
-   "luot": 6,
-   "sang": 171
-  },
-  "GYM LIES": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 22.9,
-   "luot": 6,
-   "sang": 146
-  },
-  "AIRPORT HELL": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 20.7,
-   "luot": 6,
-   "sang": 166
-  },
-  "CAR GUY": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 20.9,
-   "luot": 6,
-   "sang": 117
-  },
-  "OFFICE SMALL TALK": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 23.4,
-   "luot": 6,
-   "sang": 170
-  },
-  "DIET WARS": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 21.3,
-   "luot": 6,
-   "sang": 180
-  },
-  "TECH SUPPORT": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 20.4,
-   "luot": 6,
-   "sang": 157
-  },
-  "PARENT MODE": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 18.8,
-   "luot": 6,
-   "sang": 149
-  },
   "NEIGHBOR WATCH": {
-   "diem": 100,
+   "diem": 90,
    "bo_qua": false,
-   "loi": [],
+   "loi": [
+    "tiếng lệch hình: lượt 'You have been watching me ' mở lệch 0.00s, đóng lệch 1.05s"
+   ],
    "giay": 23.4,
    "luot": 6,
    "sang": 159
-  },
-  "DATING APP": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 21.0,
-   "luot": 6,
-   "sang": 143
   }
  }
 }

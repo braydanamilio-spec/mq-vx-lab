@@ -167,6 +167,25 @@ def cham_mot(k: dict) -> dict:
         diem -= min(20, 4 * lech)
         loi.append(f"lệch {lech} từ giữa kịch bản và mốc tiếng — phụ đề sẽ gán nhầm người nói")
 
+    # ── mốc lượt phải TRÙNG mốc từ ─────────────────────────────────────────────────────
+    # 30/8 — Đây là phép đo bắt được một lỗi im lặng: mốc lượt từng lấy theo BIÊN ĐOẠN TIẾNG,
+    # mà edge-tts chèn thêm im lặng ở đầu/cuối mỗi đoạn nó đọc. Kết quả là thẻ phụ đề nằm lại
+    # gần một giây sau khi người ta nói xong, và thẻ sau bật lên trước khi người kia mở miệng.
+    # Không gì hỏng, không gì báo — chỉ là tiếng và hình lệch nhau.
+    # Phép đo: mốc mở lượt phải bằng thời điểm TỪ ĐẦU TIÊN của lượt ấy, mốc đóng phải bám từ
+    # cuối. Lệch quá 0,25 giây là mắt bắt được.
+    for l in luot:
+        ws = [w for w in tu if l["s"] - 0.02 <= w["t"] < l["e"] - 0.02]
+        if not ws:
+            continue
+        lech_dau = abs(ws[0]["t"] - l["s"])
+        lech_cuoi = abs((ws[-1]["t"] + ws[-1]["d"]) - l["e"])
+        if lech_dau > 0.25 or lech_cuoi > 0.35:
+            diem -= 10
+            loi.append(f"tiếng lệch hình: lượt {str(l.get('nar'))[:26]!r} mở lệch "
+                       f"{lech_dau:.2f}s, đóng lệch {lech_cuoi:.2f}s")
+            break
+
     # ── nhịp máy quay không được GIẬT ở khe lặng ───────────────────────────────────────
     # 30/8 — Mỗi khe im lặng giữa hai lượt là một chỗ mã tra-cứu-theo-thời-gian có thể trượt.
     # Đo bằng cách đi qua TỪNG khe và hỏi: lượt nào đang có hiệu lực ở đây, và cỡ máy của nó có
