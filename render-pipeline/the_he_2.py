@@ -457,6 +457,128 @@ def _ten_toa(t: str) -> str:
     return t[:26]
 
 
+# Chữ nhỏ trong tên loại kiện. `str.title()` viết hoa TẤT CẢ, ra "Search And Seizure" — sai
+# chính tả tiếng Anh, và nó nằm trên nhãn to nhất khung của một kênh về pháp luật.
+_CHU_NHO = {"and", "or", "of", "to", "the", "a", "an", "in", "on", "for", "vs", "v"}
+
+
+def _doc_cua_so(t) -> tuple:
+    """`"2010-2019"` -> (2010, 2019, "in the 2010s"). `"0-0"` -> (0, 0, "") = mọi thời.
+
+    Cửa sổ là TRỤC XOAY của hai kênh đếm-theo-cụm-từ. Chúng tiêu thụ CẢ kho từ trong một video,
+    nên xoay theo `tu_khoa` (như bản cũ khai) là xoay một thứ không hàm nào đọc — mọi tập sẽ ra
+    y hệt nhau. Xoay theo cửa sổ thì cùng bảy cụm từ ấy kể được sáu chuyện khác nhau: cả thời,
+    từ 2020, thập kỷ 2010… và thứ hạng ĐỔI THẬT giữa các mốc, vì luật thay đổi theo thời gian.
+    """
+    t = str(t or "0-0")
+    try:
+        a, b = (int(x) for x in t.split("-", 1))
+    except Exception:
+        a = b = 0
+    if not a:
+        return (0, 0, "")
+    if a % 10 == 0 and b == a + 9:
+        return (a, b, f"in the {a}s")
+    return (a, b, f"since {a}" if b >= 2026 else f"between {a} and {b}")
+
+
+def _hoa_ten(t: str) -> str:
+    tu = str(t or "").split()
+    return " ".join(w.capitalize() if (i == 0 or w.lower() not in _CHU_NHO) else w.lower()
+                    for i, w in enumerate(tu))
+
+
+def _bd_loai_kien(D, ky):
+    """COURT RECORD — trục LOẠI KIỆN: cả nước kiện nhau về chuyện gì nhiều nhất.
+
+    30/8 — Kênh này đang chạy dạng PHIM KỂ với ảnh than chì: phòng xử trống, xấp hồ sơ buộc dây,
+    hàng cột toà án. Anh: "mấy channel nét chì… nó vẽ ko liên quan nội dung". Đúng — mấy tấm ấy
+    đẹp nhưng không mang một mẩu thông tin nào về vụ án đang kể, và chúng chiếm đúng chỗ đáng
+    lẽ để con số.
+    Hồ sơ toà VỐN LÀ MỘT BẢNG ĐẾM. `dem_ban_an` trả tổng số bản án nhắc tới một cụm từ — hàng
+    trăm nghìn, dải rất rộng — nên xếp bảy loại kiện cạnh nhau là ra ngay một bảng có thứ hạng
+    thật, không cần bịa gì.
+    """
+    kho = list(ky.get("kho_tu_khoa") or [])[:7]
+    if len(kho) < 4:
+        return None
+    a, b, nhan = _doc_cua_so(ky.get("cua_so"))
+    ds = []
+    for tk in kho:
+        n = D.dem_ban_an_theo_moc(tk, a, b) if a else D.dem_ban_an(tk)
+        if n:
+            ds.append({"tk": tk, "n": n})
+    ds.sort(key=lambda g: -g["n"])
+    # Cùng cửa ải của `_bd_ban_an`: bảng phải NHÌN RA THỨ HẠNG. Bốn mục trở lên, và ít nhất ba
+    # giá trị khác nhau — không thì sáu cột cao bằng nhau, người xem nhìn 30 giây và không
+    # biết được gì.
+    if len(ds) < 4 or len({g["n"] for g in ds[:6]}) < 3:
+        print(f"   ⚠️ loại kiện: chỉ {len(ds)} mục có số — BỎ LƯỢT")
+        return None
+    return (f"What Americans actually sue over{' ' + nhan if nhan else ''}",
+            [{"name": _gon(_hoa_ten(g["tk"]), 26), "stat": _so(g["n"]),
+              "vo": f"{_hoa_ten(g['tk'])}: {g['n']:,} opinions on the record."} for g in ds[:6]],
+            "Every one of these is a public file.",
+            "CourtListener (Free Law Project)")
+
+
+def _bd_theo_thap_ky(D, ky):
+    """COLD FILE — trục THỜI GIAN: toà bắt đầu nghe lý lẽ này từ bao giờ.
+
+    30/8 — Ba kênh luật cùng ăn CourtListener, nên nếu cả ba đều "đếm theo cụm từ" thì ra ba
+    biểu đồ giống hệt nhau, chỉ khác chữ trên nhãn. Trục thời gian lấy ĐÚNG một cụm từ rồi cắt
+    theo thập kỷ: câu chuyện đổi hẳn — không phải "kiện về cái gì nhiều nhất" mà "một lý lẽ
+    pháp lý mất bao lâu để được toà chịu nghe". Đó là thứ chỉ nguồn này kể được.
+    """
+    tk = str(ky.get("tu_khoa") or "habeas corpus")
+    moc = [(1950, 1969), (1970, 1989), (1990, 1999), (2000, 2009), (2010, 2019), (2020, 2026)]
+    ds = []
+    for a, b in moc:
+        n = D.dem_ban_an_theo_moc(tk, a, b)
+        if n:
+            ds.append({"nhan": f"{a}s" if a % 10 == 0 else f"{a}-{b}", "n": n, "a": a})
+    if len(ds) < 4 or len({g["n"] for g in ds}) < 3:
+        print(f"   ⚠️ thập kỷ '{tk}': chỉ {len(ds)} mốc có số — BỎ LƯỢT")
+        return None
+    # GIỮ THỨ TỰ THỜI GIAN, KHÔNG XẾP THEO ĐỘ LỚN. Một bảng thời gian mà sắp theo độ lớn thì
+    # mất đúng cái nó muốn kể: đường đi lên. Đây là chỗ kênh này khác hẳn ba kênh luật kia.
+    ds.sort(key=lambda g: g["a"])
+    dinh = max(ds, key=lambda g: g["n"])
+    return (f"When courts started hearing \u201c{tk}\u201d",
+            [{"name": g["nhan"], "stat": _so(g["n"]),
+              "vo": f"The {g['nhan']}: {g['n']:,} opinions."} for g in ds],
+            f"It peaked in the {dinh['nhan']}. Every file is public.",
+            "CourtListener (Free Law Project)")
+
+
+def _bd_quyen_nao(D, ky):
+    """YOUR RIGHTS CASE — trục QUYỀN: quyền hiến định nào bị đem ra toà nhiều nhất.
+
+    30/8 — Cùng phép đếm với COURT RECORD nhưng KHO TỪ khác hẳn về bản chất: bên kia là loại
+    kiện dân sự (chết oan, sai sót y khoa), bên này là điều khoản hiến pháp (Tu chính án thứ
+    nhất, thứ tư, trình tự công bằng). Hai kênh vì thế kể hai chuyện không thay thế được nhau,
+    dù cùng đọc một trường `count`.
+    """
+    kho = list(ky.get("kho_tu_khoa") or [])[:7]
+    if len(kho) < 4:
+        return None
+    a, b, nhan = _doc_cua_so(ky.get("cua_so"))
+    ds = []
+    for tk in kho:
+        n = D.dem_ban_an_theo_moc(tk, a, b) if a else D.dem_ban_an(tk)
+        if n:
+            ds.append({"tk": tk, "n": n})
+    ds.sort(key=lambda g: -g["n"])
+    if len(ds) < 4 or len({g["n"] for g in ds[:6]}) < 3:
+        print(f"   ⚠️ quyền: chỉ {len(ds)} mục có số — BỎ LƯỢT")
+        return None
+    return (f"Which right ends up in court most{' ' + nhan if nhan else ''}",
+            [{"name": _gon(_hoa_ten(g["tk"]), 26), "stat": _so(g["n"]),
+              "vo": f"{_hoa_ten(g['tk'])}: cited in {g['n']:,} opinions."} for g in ds[:6]],
+            "You have these. Courts argue about them daily.",
+            "CourtListener (Free Law Project)")
+
+
 def _bd_ban_an(D, ky):
     """Vu kien -> bang xep hang theo TOA nao xu nhieu nhat.
 
@@ -1372,6 +1494,12 @@ PHU_DE_THEO_BO = {
     "tim_ho_so":      "by filings that mention it",
     "thu_hoi_fda":    "by recalls filed",
     "ban_an":         "by cases on the docket",
+    # 30/8 — Ba trục mới cho ba kênh luật vừa bỏ dạng nét chì. Mỗi câu nói rõ bảng ĐANG XẾP THEO
+    # GÌ, vì đó là dòng chữ hiện dưới tiêu đề và là thứ giữ cho bốn kênh cùng nguồn không đọc ra
+    # như một kênh nhân bốn.
+    "loai_kien":      "by opinions on the record",
+    "thap_ky_toa":    "by decade filed",
+    "quyen_nao":      "by opinions citing the right",
     "trieu_hoi_xe":   "by vehicles recalled",
     "hop_dong_lon":   "by contract dollars awarded",
     "bai_duoc_doc":   "by Wikipedia reads",
@@ -1393,6 +1521,7 @@ BO_CHUYEN = {
     "trieu_hoi_xe": _bd_trieu_hoi, "chi_so_the_gioi": _bd_the_gioi, "tim_ho_so": _bd_ho_so_sec,
     "tieu_hanh_tinh": _bd_thien_thach, "giong_cho": _bd_giong_cho, "phim_truyen": _bd_phim,
     "chuoi_bls": _bd_bls, "thanh_phan_mon": _bd_dinh_duong,
+    "loai_kien": _bd_loai_kien, "thap_ky_toa": _bd_theo_thap_ky, "quyen_nao": _bd_quyen_nao,
 }
 
 TIER = ["S", "A", "A", "B", "B", "C"]
@@ -2900,6 +3029,16 @@ BO_CUC_KENH = {
     "PILLFACTS": "RankedEditorial", "RECALLPLATE": "RankedEditorial",
     "CARRECALL": "RankedEditorial", "SUEDFORTHIS": "RankedEditorial",
     "NEAREARTH": "RankedEditorial", "PAIDVSPLAYED": "RankedEditorial",
+    # 30/8 — BA KÊNH LUẬT BỎ DẠNG NÉT CHÌ. Anh: "mấy channel nét chì… nó vẽ ko liên quan nội
+    # dung". Ba kênh này đang là phim kể với ảnh than chì (phòng xử trống, xấp hồ sơ buộc dây) —
+    # đẹp nhưng không mang một mẩu thông tin nào về vụ án. Hồ sơ toà vốn LÀ một bảng đếm.
+    # COLD FILE nhận `RankedEditorial` chứ KHÔNG nhận `RankedShort`, và đây là lý do bắt buộc:
+    # bảng của nó xếp theo THỜI GIAN (1950s → 2020s), còn `RankedShort` dán nhãn hạng S/A/B/C
+    # THEO VỊ TRÍ. Ghép hai thứ ấy thì màn hình ghi "1950s — hạng S" — một lời nói dối nằm ở
+    # chữ to nhất khung. `RankedEditorial` không có nhãn hạng nên nó là chỗ đúng cho bảng thời gian.
+    "COURTRECORD": "RankedShort",
+    "COLDFILE": "RankedEditorial",
+    "YOURRIGHTSCASE": "RankedEditorial",
     # 29/8 — BỐN KÊNH WIKIPEDIA CHUYỂN SANG BIỂU ĐỒ. Trước đây chúng là dạng phim kể, mỗi cảnh
     # một ảnh AI không liên quan nội dung (sương mù, cửa hé, khúc sông) — anh chỉ ra đúng chỗ đó.
     # Bảng đọc nhiều vốn là một bảng SỐ; vẽ nó thành cột là nói đúng thứ mình có, và bỏ luôn được

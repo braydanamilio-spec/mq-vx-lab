@@ -4028,3 +4028,35 @@ Năm lỗi này đều **không báo lỗi**: render xong, xuất ra mp4, chỉ 
    phóng** — không chia thì ở cỡ cận mép khung xén mất nửa người.
 
 Cây thước: `cham_v4.py` (nhịp hài 25 · khớp tiếng 20 · không trùng 20 · sáng 15 · chữ 10 · dài 10).
+
+### 7u. BA KÊNH LUẬT BỎ NÉT CHÌ — 30/8/2026
+
+COURT RECORD · COLD FILE · YOUR RIGHTS CASE đang là dạng phim kể với ảnh than chì (phòng xử
+trống, xấp hồ sơ buộc dây, hàng cột toà án). Ảnh đúng không khí nhưng **không mang một mẩu thông
+tin nào** về vụ án đang kể, và chúng chiếm đúng chỗ đáng lẽ để con số.
+
+Bốn kênh cùng ăn CourtListener, nên phải **bốn trục khác nhau** — không thì bốn kênh ra bốn cái
+biểu đồ giống hệt, chỉ khác chữ trên nhãn:
+
+| Kênh | Trục | Câu chuyện |
+|---|---|---|
+| SUED FOR THIS | toà nào xử | "kiện loại này ở đâu nhiều nhất" |
+| COURT RECORD | loại kiện | "người Mỹ kiện nhau về chuyện gì" |
+| COLD FILE | thập kỷ nộp đơn | "toà bắt đầu nghe lý lẽ này từ bao giờ" |
+| YOUR RIGHTS CASE | quyền hiến định | "quyền nào ra toà nhiều nhất" |
+
+**Ba bẫy gặp phải, cả ba đều do `selftest` bắt:**
+
+1. **`RankedShort` dán nhãn hạng S/A/B/C THEO VỊ TRÍ.** COLD FILE xếp theo THỜI GIAN nên ghép
+   vào đó thì màn hình ghi "1950s — hạng S", một lời nói dối ở chữ to nhất khung.
+   → bảng theo thời gian phải dùng `RankedEditorial` (không có nhãn hạng).
+2. **Trục xoay phải là thứ hàm dựng THẬT SỰ ĐỌC.** Hai kênh đếm-theo-cụm-từ tiêu thụ CẢ kho từ
+   trong một video, nên `xoay: tu_khoa` là xoay một thứ không ai đọc — mọi tập ra y hệt nhau.
+   → trục đúng là CỬA SỔ THỜI GIAN (`cua_so`), và phải viết `ky.get("cua_so")` THẲNG trong hàm
+   dựng, không giấu trong hàm phụ (chốt `t_moi_kenh_gen2_phai_xoay_duoc_de_tai` soi mã nguồn).
+3. **Đổi định dạng một kênh làm nó đụng kênh khác.** YOUR RIGHTS CASE chuyển sang `ranked` là
+   trùng FILINGS SAY ở ba chiều (định dạng · chuyển cảnh · khung mẫu) → 70,1 điểm, vượt ngưỡng.
+   → **dò cả không gian** (khung × mô-típ × phông) rồi chọn tổ hợp tối ưu, đừng đổi mù: lần đổi
+   mù đầu tiên chỉ dời chỗ đụng sang cặp khác (73,4 với PAID VS PLAYED).
+   Và mô-típ phải nằm trong danh sách `BrandV2.Icon` thật sự vẽ được — đặt tên lạ ("gavel") thì
+   `switch` rơi nhánh mặc định và kênh mất luôn biểu tượng.

@@ -714,6 +714,46 @@ def dem_ban_an(tu_khoa: str) -> int:
     return n
 
 
+def dem_ban_an_theo_moc(tu_khoa: str, tu_nam: int = 0, den_nam: int = 0) -> int:
+    """TỔNG SỐ bản án khớp một cụm từ, GIỚI HẠN trong một khoảng năm nộp đơn. Trả 0 nếu hỏng.
+
+    30/8 — Bốn kênh của mình cùng ăn một nguồn CourtListener. Nếu cả bốn đều "đếm theo cụm từ"
+    thì bốn kênh ra bốn cái biểu đồ giống hệt nhau, chỉ khác chữ trên nhãn — đúng thứ đã bị
+    `selftest` chặn (COURT RECORD ~ COLD FILE). Trục THỜI GIAN là một câu chuyện khác hẳn từ
+    cùng một nguồn: không phải "kiện về cái gì nhiều nhất" mà "toà bắt đầu nghe chuyện này từ
+    bao giờ" — và đó mới là thứ đáng kể về một lý lẽ pháp lý.
+
+    Không tốn kênh gọi mới: vẫn `search/?q=…&type=o`, chỉ thêm `filed_after`/`filed_before`, và
+    vẫn đọc trường `count` có sẵn. Nhớ vào cùng kho đệm của `dem_ban_an` với khoá kèm mốc năm,
+    nên một mốc đã hỏi rồi thì cả phiên không hỏi lại — quan trọng vì CourtListener chặn nhịp
+    rất chặt (đo được HTTP 429 sau chừng mười tám lượt liên tiếp).
+    """
+    k = str(tu_khoa or "").strip().lower()
+    if not k:
+        return 0
+    kho = f"{k}|{tu_nam}-{den_nam}"
+    if kho in _NHO_DEM:
+        return _NHO_DEM[kho]
+    _cu = _nho_doc("toa:" + kho)
+    if _cu:
+        _NHO_DEM[kho] = _cu
+        return _cu
+    ts = {"q": tu_khoa, "type": "o", "order_by": "dateFiled desc"}
+    if tu_nam:
+        ts["filed_after"] = f"01/01/{int(tu_nam)}"
+    if den_nam:
+        ts["filed_before"] = f"12/31/{int(den_nam)}"
+    d = _goi("https://www.courtlistener.com/api/rest/v4/search/?" + urllib.parse.urlencode(ts)) or {}
+    try:
+        n = int(d.get("count") or 0)
+    except Exception:
+        n = 0
+    if n:      # chỉ nhớ khi CÓ số — nhớ số 0 là biến một lượt chập thành cả phiên hỏng
+        _NHO_DEM[kho] = n
+        _nho_ghi("toa:" + kho, n)
+    return n
+
+
 def ban_an(tu_khoa: str, n: int = 6) -> list[dict]:
     """Bản án công khai khớp từ khoá. Trả [{ten_vu, toa, ngay, trich, link}]."""
     u = ("https://www.courtlistener.com/api/rest/v4/search/?"

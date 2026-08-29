@@ -1,0 +1,93 @@
+{
+ "nguong": 90,
+ "kenh": {
+  "RENT PANIC": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 18.7,
+   "luot": 6,
+   "sang": 134
+  },
+  "GYM LIES": {
+   "diem": 95,
+   "bo_qua": false,
+   "loi": [
+    "dài 15s — ngoài khoảng short 15–60s"
+   ],
+   "giay": 15.0,
+   "luot": 6,
+   "sang": 146
+  },
+  "AIRPORT HELL": {
+   "diem": 95,
+   "bo_qua": false,
+   "loi": [
+    "dài 15s — ngoài khoảng short 15–60s"
+   ],
+   "giay": 14.7,
+   "luot": 6,
+   "sang": 152
+  },
+  "CAR GUY": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 19.0,
+   "luot": 6,
+   "sang": 143
+  },
+  "OFFICE SMALL TALK": {
+   "diem": 95,
+   "bo_qua": false,
+   "loi": [
+    "dài 14s — ngoài khoảng short 15–60s"
+   ],
+   "giay": 14.0,
+   "luot": 6,
+   "sang": 155
+  },
+  "DIET WARS": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 15.7,
+   "luot": 6,
+   "sang": 153
+  },
+  "TECH SUPPORT": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 16.0,
+   "luot": 6,
+   "sang": 160
+  },
+  "PARENT MODE": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 20.2,
+   "luot": 6,
+   "sang": 130
+  },
+  "NEIGHBOR WATCH": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 19.5,
+   "luot": 6,
+   "sang": 151
+  },
+  "DATING APP": {
+   "diem": 95,
+   "bo_qua": false,
+   "loi": [
+    "dài 14s — ngoài khoảng short 15–60s"
+   ],
+   "giay": 14.1,
+   "luot": 6,
+   "sang": 124
+  }
+ }
+}

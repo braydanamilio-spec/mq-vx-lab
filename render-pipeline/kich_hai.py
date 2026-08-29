@@ -88,7 +88,10 @@ KENH = [
              "quiet suburban street with mailboxes, morning haze"]},
     {"ten": "DATING APP", "handle": "@datingappusa", "a": "sao_dem", "b": "luat_tre",
      "mau": "#F4E6EE", "de": "dating",
-     "nen": ["small apartment bedroom with an unmade bed, warm evening lamp",
+     # 30/8 — ĐỔI CÂU VẼ: bản cũ ("bedroom … unmade bed") bị chính bộ lọc của Cloudflare chặn là
+     # NSFW, và hôm ấy Gemini vừa cạn nên không có chỗ lui — kênh mất hẳn một nền. Bối cảnh phòng
+     # ngủ không cần cho chuyện hẹn hò: chỗ hai người bạn cùng phòng cãi nhau là PHÒNG KHÁCH.
+     "nen": ["small apartment living room with a couch and a coffee table, warm evening lamp",
              "coffee shop interior with small tables, window light, nobody in frame",
              "city sidewalk at night with shop lights out of focus"]},
 ]
@@ -251,6 +254,42 @@ def _ten_tep(k: dict) -> str:
     return k["ten"].replace(" ", "").lower()
 
 
+def _keo_sang(tep: str, san_den: float = 0.05, san_sang: int = 96) -> None:
+    """Kéo một ảnh nền ra khỏi vùng tối, đo trước khi kéo.
+
+    Hai ngưỡng, vì hai kiểu tối khác nhau:
+      * `san_den`  — tỉ lệ điểm gần như đen. `cham_v4` chặn ở 8%; đặt sàn 5% để còn chỗ cho lớp
+        phủ mỏng mà Remotion đặt lên trên (lớp ấy tối thêm khoảng 2 điểm phần trăm).
+      * `san_sang` — độ sáng trung bình. Một ảnh có thể không có điểm đen nào mà vẫn xám xịt.
+
+    Dùng gamma chứ không cộng thẳng: cộng thẳng làm bệt vùng sáng (trời, cửa sổ) thành mảng
+    trắng phẳng, còn gamma kéo vùng tối lên mà gần như không đụng vùng đã sáng.
+    """
+    try:
+        from PIL import Image, ImageEnhance
+    except ImportError:
+        return
+    im = Image.open(tep).convert("RGB")
+    px = list(im.convert("L").resize((160, 160)).getdata())
+    den = sum(1 for v in px if v < 40) / len(px)
+    tb = sum(px) / len(px)
+    if den <= san_den and tb >= san_sang:
+        return
+    g = 1.0
+    for _ in range(6):
+        if den <= san_den and tb >= san_sang:
+            break
+        g += 0.18
+        thu = im.point([min(255, int(255 * ((x / 255.0) ** (1.0 / g)))) for x in range(256)] * 3)
+        px = list(thu.convert("L").resize((160, 160)).getdata())
+        den = sum(1 for v in px if v < 40) / len(px)
+        tb = sum(px) / len(px)
+        im = thu
+    # gamma làm nhạt màu; trả lại độ đậm để nền không đọc ra là ảnh bạc phếch
+    im = ImageEnhance.Color(im).enhance(1.0 + (g - 1.0) * 0.5)
+    im.save(tep, quality=90)
+
+
 def ve_nen(k: dict, DS, keys) -> list:
     """Vẽ + CACHE ba nền cho một kênh. Trả đường dẫn tương đối trong `public/`.
 
@@ -273,14 +312,30 @@ def ve_nen(k: dict, DS, keys) -> list:
         # 169 khoá vẽ nằm sẵn trong pool mà cả ba nền đều "không vẽ được".
         # `_generate_image_ai` tự lấy khoá từ pool đã nạp (`set_ai_pool`) và tự xoay khoá khi một
         # khoá cạn, nên nó mới là tầng đúng cho việc chỉ-vẽ-chứ-không-tìm-ảnh-thật.
-        try:
-            ok = DS._generate_image_ai(f"{prompt}, {gu}", dest, None, style=gu)
-        except Exception as e:
-            print(f"      ⚠️ nền {i}: {str(e)[:60]}")
+        # 30/8 — THỬ LẠI BA LƯỢT.
+        # Đo được: 2 trong 17 nền hụt (rentpanic_1, gymlies_2), và kênh thiếu nền thì tụt điểm
+        # ở trục "đủ ba nền phân biệt". Một lượt vẽ hỏng gần như luôn là khoá vừa cạn hoặc mạng
+        # chập — lượt sau `_generate_image_ai` tự xoay sang khoá khác nên thường qua ngay. Nền
+        # là thứ CACHE VĨNH VIỄN, nên chịu tốn thêm vài lượt thử ở đây là rẻ nhất: hỏng một lần
+        # là kênh ấy nhàm mãi mãi.
+        ok = None
+        for _lan in range(3):
+            try:
+                ok = DS._generate_image_ai(f"{prompt}, {gu}", dest, None, style=gu)
+            except Exception as e:
+                print(f"      ⚠️ nền {i} lượt {_lan+1}: {str(e)[:56]}")
+                ok = None
+            if ok and os.path.exists(dest) and os.path.getsize(dest) > 20000:
+                break
             ok = None
-        if ok and os.path.exists(dest):
+        if ok:
+            # NÂNG SÁNG THEO SỐ ĐO, KHÔNG NÂNG MÙ.
+            # Nền tối (ga-ra, phòng gọi) kéo tỉ lệ điểm gần-đen lên 13% — quá ngưỡng 8% của
+            # `cham_v4`. Sửa ở ĐÂY chứ không sửa bằng bộ lọc trong Remotion, vì ảnh nền được
+            # cache dùng lại cho mọi tập sau: nâng một lần thì mọi tập đều sáng.
             try:
                 DS.nang_sang_anh(dest)
+                _keo_sang(dest)
             except Exception:
                 pass
             ra.append(rel)
@@ -408,7 +463,13 @@ def main() -> int:
                 l["s"] = luot[i2 - 1]["e"] if i2 else 0.0
                 l["e"] = l["s"] + 1.0
         if luot:
-            luot[-1]["e"] = round(max(luot[-1]["e"], dur), 2)
+            # 30/8 — NHỊP ĐUÔI SAU CÚ CHỐT.
+            # Bốn kênh đo được 14,0–15,0 giây, hụt sàn 15s của short. Nhưng cách vá đúng không
+            # phải là kéo dài lời thoại — mà là trả lại NHỊP ĐUÔI mà YTUONG_V4 §4.5 đã ghi từ
+            # đầu rồi tôi quên dựng: sau câu chốt là một quãng ngắn không ai nói gì, chỉ còn nét
+            # mặt người nghe. Trong hài, tiếng cười rơi vào đúng quãng ấy; cắt phim ngay ở từ
+            # cuối là cắt mất chỗ khán giả cười. Nên quãng này vừa chữa độ dài vừa chữa nhịp.
+            luot[-1]["e"] = round(max(luot[-1]["e"], dur) + 2.2, 2)
 
         # 30/8 — ÉP HAI NGƯỜI KHÁC BÓNG DÁNG.
         # Mười kiểu gốc khác nhau ở tóc và màu áo, nhưng vài kiểu cùng đeo kính và cùng để ria:

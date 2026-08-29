@@ -188,7 +188,13 @@ export const KichHai: React.FC<PropsHai> = ({
                         filter: "saturate(1.05) brightness(1.02)" }} />
           {/* Lớp phủ nhẹ: tách nhân vật vector nét dày khỏi ảnh nền mềm. Thiếu nó thì hai thứ
               đọc ra là hai thế giới dán vào nhau. */}
-          <AbsoluteFill style={{ background: "linear-gradient(180deg,#00000018,#00000042)" }} />
+          {/* 30/8 — LỚP PHỦ MỎNG LẠI, VÀ CHỈ ĐẬM Ở ĐÁY.
+              Bản cũ phủ đều cả khung (#00000018 → #00000042) nên nền vốn tối (ga-ra, phòng gọi)
+              bị đẩy quá ngưỡng: đo được 13% điểm gần như đen, `cham_v4` chặn ở 8%. Việc tách
+              nhân vật khỏi nền đã do nét viền dày của `DienVien` lo; lớp phủ chỉ còn một việc là
+              làm nền dưới chân phụ đề đủ trầm để chữ trắng nổi lên, nên nó dồn xuống đáy. */}
+          <AbsoluteFill style={{ background:
+            "linear-gradient(180deg,#0000000A 0%,#00000005 55%,#00000038 100%)" }} />
         </AbsoluteFill>
       ) : null}
 
