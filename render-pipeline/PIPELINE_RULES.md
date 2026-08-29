@@ -4208,3 +4208,20 @@ bằng cách đếm từ (luật 7t mục 3–4): mỗi lượt LÀ một đoạ
 **Bài học chung:** một chú thích ghi *"để bản sau làm"* là một món nợ, và món nợ này nằm đúng
 trên trục giá trị của sản phẩm. Khi hoãn một việc, phải hỏi: *thứ mình đang hoãn có phải là
 chính cái làm nên sản phẩm không?* Nếu có thì đừng hoãn.
+
+### 7ad. HAI NHÂN VẬT TRONG MỘT KHUNG PHẢI KHÁC MÀU ÁO — ĐO, ĐỪNG NHÌN — 30/8/2026
+
+Đã cho phụ đề mang màu áo người đang nói để tai-mắt gán được câu về đúng người. Nhưng phép ấy
+**chỉ có nghĩa nếu hai màu áo khác nhau**. Đo mười kênh thì **năm kênh trượt**, tệ nhất là
+DATING APP: hai áo lệch nhau **9 trên 255** — hai người mặc gần y hệt.
+
+Đây đúng là kiểu lỗi **chỉ lộ ra khi đo**: mở từng kênh ra nhìn thì không ai thấy gì sai, vì
+mắt so màu theo trí nhớ chứ không theo số.
+
+Hai ngưỡng, vì có hai kiểu "giống nhau":
+* **lệch màu ≥ 120/255** — hai màu phải khác SẮC;
+* **tương phản sáng ≥ 1,9** — hai màu phải khác ĐỘ SÁNG, để khoảng 8% khán giả nam mù màu vẫn
+  tách được hai nhân vật. Bỏ ngưỡng này thì lục-và-cam đạt lệch màu 195 mà tương phản chỉ 1,22:
+  với người mù màu đỏ-lục thì đó là hai người mặc áo giống hệt nhau.
+
+Chốt bằng `cham_v4.hai_ao_co_khac_nhau`, phạt 10 điểm.

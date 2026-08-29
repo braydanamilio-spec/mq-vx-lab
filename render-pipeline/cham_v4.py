@@ -60,6 +60,47 @@ def _sang(v: str, dur: float):
     return (ss / n, tt / n) if n else (None, None)
 
 
+def _rgb(h):
+    h = str(h or "").lstrip("#")
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4)) if len(h) == 6 else (0, 0, 0)
+
+
+def _sang_tuong_doi(c):
+    f = [x / 255 for x in c]
+    f = [(v / 12.92 if v <= .03928 else ((v + .055) / 1.055) ** 2.4) for v in f]
+    return .2126 * f[0] + .7152 * f[1] + .0722 * f[2]
+
+
+def hai_ao_co_khac_nhau(k: dict) -> str:
+    """Áo hai nhân vật phải khác nhau ĐỦ để mắt tách được. Trả lý do hỏng, "" nếu đạt.
+
+    30/8 — Anh: *"2 nhân vật nói thì nên có 2 lời thoại 2 nhân vật có sự khác biệt"*. Đã cho
+    phụ đề mang màu áo người đang nói — nhưng phép ấy chỉ có nghĩa nếu HAI MÀU ÁO KHÁC NHAU.
+    Đo mười kênh thì năm kênh trượt, tệ nhất là DATING APP lệch màu **9 trên 255**: hai người
+    mặc gần y hệt nhau, nên cả thẻ phụ đề lẫn hai nhân vật đều không phân biệt được.
+    Đây đúng là kiểu lỗi chỉ lộ ra khi ĐO: nhìn từng kênh riêng thì không ai thấy gì sai.
+
+    Hai ngưỡng, vì hai kiểu giống nhau khác nhau:
+      · lệch màu ≥ 120 — hai màu phải khác SẮC;
+      · tương phản sáng ≥ 1,9 — hai màu phải khác ĐỘ SÁNG, để người xem mù màu (khoảng 8% nam
+        giới, tức một phần đáng kể khán giả Mỹ) vẫn tách được hai nhân vật.
+    """
+    import kich_hai as H
+    a, b = H._hai_bong(k)
+    ca, cb = a.get("ao"), b.get("ao")
+    if not ca or not cb:
+        return "hai nhân vật chưa được gán màu áo riêng"
+    ra, rb = _rgb(ca), _rgb(cb)
+    d = sum((x - y) ** 2 for x, y in zip(ra, rb)) ** 0.5
+    la, lb = _sang_tuong_doi(ra), _sang_tuong_doi(rb)
+    cr = (max(la, lb) + .05) / (min(la, lb) + .05)
+    if d < 120:
+        return f"áo hai người lệch màu chỉ {d:.0f}/255 ({ca} vs {cb}) — mắt đọc ra là một người"
+    if cr < 1.9:
+        return f"áo hai người tương phản sáng chỉ {cr:.2f} ({ca} vs {cb}) — người mù màu không tách được"
+    return ""
+
+
 def cham_mot(k: dict) -> dict:
     import kich_hai as H
 
@@ -133,6 +174,12 @@ def cham_mot(k: dict) -> dict:
         diem -= 5
         loi.append(f"chỉ {len(_co)} cỡ máy ({', '.join(sorted(str(x) for x in _co))}) — "
                    f"một bối cảnh mà máy không đổi cỡ thì mọi khung như nhau")
+
+    # ── phần của trục KHÔNG TRÙNG: hai nhân vật trong CÙNG một kênh ────────────────────
+    _ao = hai_ao_co_khac_nhau(k)
+    if _ao:
+        diem -= 10
+        loi.append(_ao)
 
     # ── 15đ ĐỘ SÁNG ────────────────────────────────────────────────────────────────────
     s, t = _sang(pv, dur or 18)
