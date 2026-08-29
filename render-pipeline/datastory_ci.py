@@ -499,7 +499,14 @@ def _cf_flux_image(prompt, dest, key, style=None) -> bool:
     _, acc, tok = str(key).split(":", 2)
     # steps=4: FLUX schnell được huấn luyện cho 1-4 bước (thêm bước KHÔNG đẹp hơn, chỉ tốn neuron);
     # 6->4 bước = 77n->58n/ảnh 1024² => ~174 ảnh free/ngày/tài khoản thay vì ~130 (giá niêm yết CF 22/8).
-    body = {"prompt": f"A {style or DEFAULT_AI_STYLE} of: {prompt}. No text, no watermark, no logo.",
+    # LỆNH CẤM CHỮ ĐẶT Ở ĐẦU, KHÔNG PHẢI CUỐI. Khung thật COURT RECORD sau khi đã có câu cấm ở
+    # đuôi vẫn ra tờ giấy đề "PULIC RECORDS" (thiếu chữ B). Mô hình khuếch tán đọc phần đầu chuỗi
+    # nặng hơn hẳn phần đuôi — một mệnh lệnh nhét ở cuối câu gần như bị át bởi phần mô tả.
+    # Không kỳ vọng diệt sạch: máy vẽ ảnh vốn hay bịa chữ. Nhưng chữ bịa trên một kênh mà uy tín
+    # nằm ở chỗ "hồ sơ công có thật" thì đáng để lặp lệnh cấm ở cả hai đầu.
+    body = {"prompt": (f"Absolutely no text, letters, words, numbers, signage or watermarks "
+                       f"anywhere in the image. A {style or DEFAULT_AI_STYLE} of: {prompt}. "
+                       f"Textless image."),
             "steps": 4}
     req = urllib.request.Request(
         f"https://api.cloudflare.com/client/v4/accounts/{acc}/ai/run/@cf/black-forest-labs/flux-1-schnell",
@@ -658,7 +665,9 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
         client = genai2.Client(api_key=_k, http_options={"timeout": 120_000})
         resp = client.models.generate_content(
             model=model,
-            contents=f"A {style or DEFAULT_AI_STYLE} of: {prompt}. No text, no watermark, no logo.")
+            contents=(f"Absolutely no text, letters, words, numbers, signage or watermarks "
+                      f"anywhere in the image. A {style or DEFAULT_AI_STYLE} of: {prompt}. "
+                      f"Textless image."))
         data = None
         for cand in (resp.candidates or []):
             for part in ((cand.content and cand.content.parts) or []):
