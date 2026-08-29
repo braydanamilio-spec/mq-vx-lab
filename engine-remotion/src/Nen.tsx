@@ -74,9 +74,13 @@ export const nenKenh = (chinh?: string, phu?: string, lech = 18): string => {
   // 21% cho độ sáng đo được 55 — trên ngưỡng, mà tương phản chữ trắng vẫn 11,5:1 (cũ: 4,7:1).
   // Nền vẫn tối và vẫn nhạt màu; chỉ là không tối tới mức máy đo coi cả khung là bóng đêm.
   return `radial-gradient(126% 100% at 50% 6%,`
-    + ` hsl(${Math.round(h1)} ${sat}% 21%) 0%,`
-    + ` hsl(${(bh + lech) % 360} ${sat}% 17%) 54%,`
-    + ` hsl(${(bh + lech * 2) % 360} ${Math.round(sat * 0.85)}% 14%) 100%)`;
+    // 29/8 — anh soi bảng ba bố cục: "template còn tối xấu". Nền 21/17/14% là ĐỦ tương phản cho
+    // chữ nhưng vẫn đọc ra là một mảng tối lì. Nâng thêm một nấc (25/20/16%) và nới bão hoà một
+    // chút: khung có sức sống hơn, mà tương phản chữ trắng vẫn 9,6:1 — vẫn gấp đôi bản neon cũ
+    // (4,7:1) đã làm loá chữ. Đây là lần chỉnh thứ tư của bộ số này; ba lần trước ghi ở trên.
+    + ` hsl(${Math.round(h1)} ${Math.round(sat * 1.25)}% 25%) 0%,`
+    + ` hsl(${(bh + lech) % 360} ${Math.round(sat * 1.15)}% 20%) 54%,`
+    + ` hsl(${(bh + lech * 2) % 360} ${sat}% 16%) 100%)`;
 };
 
 /** Vệt sáng phụ đặt lệch tâm — cho mỗi kênh một "hướng sáng" khác nhau, tránh cảm giác cùng khuôn. */

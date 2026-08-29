@@ -82,9 +82,14 @@ export const RankedEditorial: React.FC<RankedProps> = (props) => {
       {/* SỐ THỨ HẠNG KHỔNG LỒ — nằm dưới mọi thứ, cắt bớt ở mép trái cho có sức nặng của trang in */}
       {cur ? (
         <div style={{
-          position: "absolute", left: -40, top: H * 0.13,
-          fontSize: 620, lineHeight: 0.78, fontWeight: 900,
-          color: `${accent}1c`, letterSpacing: -34, ...SO_DEU,
+          // 29/8 — anh: "hơi chồng chéo". Đúng: số hạng đặt ở MÉP TRÁI, đúng cột chữ, nên tên
+          // mục ("Lupin Pharmaceuticals") nằm đè lên nó và cả hai đều khó đọc. Dời sang MÉP PHẢI:
+          // cột trái để nguyên cho chữ, số hạng thành khối nặng ở góc kia — cân hơn, hết chạm nhau.
+          // Và alpha 1c (11%) thì nó gần như biến mất trên nền tối, tức chữ ký của bố cục này
+          // không tồn tại; nâng lên 30 để nó ĐỌC ĐƯỢC là một con số.
+          position: "absolute", right: -26, top: H * 0.10, textAlign: "right" as const,
+          fontSize: 560, lineHeight: 0.78, fontWeight: 900,
+          color: `${accent}30`, letterSpacing: -30, ...SO_DEU,
           transform: `translateY(${(1 - p) * 26}px)`,
         }}>{String(idx + 1).padStart(2, "0")}</div>
       ) : null}
@@ -156,22 +161,28 @@ export const RankedEditorial: React.FC<RankedProps> = (props) => {
 
       {/* DANH SÁCH TÍCH LUỸ — các mục ĐÃ qua, xếp mảnh ở đáy: cuối video vẫn có toàn cảnh bảng */}
       <div style={{
-        position: "absolute", left: 64, right: 64, bottom: dayDS,
-        display: "flex", flexDirection: "column", gap: 9,
+        // 29/8 — neo TỪ TRÊN, không neo đáy. Neo đáy để lại nguyên một phần ba khung trống ở
+        // giữa; anh gọi đúng tên là "tối xấu". Đặt ngay dưới khối số chính thì khung đặc lại và
+        // mắt đi liền một mạch từ con số lớn xuống bảng đã qua.
+        position: "absolute", left: 64, right: 64,
+        top: Math.round(H * 0.345) + 330, bottom: dayDS,
+        // Giãn ĐỀU hết dải còn lại thay vì dồn lên đầu — dồn lên trên thì lại hở một khoảng
+        // trống lớn phía dưới, đúng cái lỗi "khung trống" mà bản này đi sửa.
+        display: "flex", flexDirection: "column", justifyContent: "space-evenly", gap: 6,
       }}>
         {items.slice(0, Math.max(0, idx)).map((it, i) => (
           <div key={i} style={{
             display: "flex", alignItems: "baseline", gap: 16,
-            borderTop: "1px solid #ffffff1f", paddingTop: 9, opacity: 0.5,
+            borderTop: "1px solid #ffffff33", paddingTop: 15, paddingBottom: 4, opacity: 0.92,
           }}>
-            <div style={{ color: accent, fontWeight: 800, fontSize: 20, minWidth: 34, ...SO_DEU }}>
+            <div style={{ color: accent, fontWeight: 900, fontSize: 24, minWidth: 42, ...SO_DEU }}>
               {String(i + 1).padStart(2, "0")}
             </div>
-            <div style={{ flex: 1, color: "#fff", fontWeight: 700, fontSize: 24,
+            <div style={{ flex: 1, color: "#ffffffe8", fontWeight: 700, fontSize: 31,
                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {it.name}
             </div>
-            <div style={{ color: "#ffffffcc", fontWeight: 800, fontSize: 24, ...SO_DEU }}>{it.stat}</div>
+            <div style={{ color: "#fff", fontWeight: 900, fontSize: 31, ...SO_DEU }}>{it.stat}</div>
           </div>
         ))}
       </div>
