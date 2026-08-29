@@ -69,7 +69,11 @@ KENH = [
     {"ten": "DIET WARS", "handle": "@dietwarsusa", "a": "bank", "b": "hang_xom",
      "mau": "#F6EDDC", "de": "diet",
      "nen": ["american home kitchen counter with a fruit bowl, bright morning light",
-             "fast food restaurant booth seating, warm interior, nobody in frame",
+             # 30/8 - ban cu (fast food restaurant booth seating) ra hai bien hieu chu bia.
+             # Noi that quan an nhanh LA mot buc tuong bien hieu; xin may ve dung viet thi vo
+             # ich (xem `_bo_mat_chu`). Ghe ngoi va mat ban nhin gan van doc ra ngay la quan an
+             # nhanh ma khong con mang tuong nao de dan chu.
+             "red vinyl diner booth seats and a table seen close up, warm interior, no walls",
              # 30/8 — bản cũ ("grocery store produce aisle") ra một bức tường cửa hàng có LOGO
              # NIKE. Với kênh bật kiếm tiền thì một nhãn hiệu thật trong khung là rủi ro pháp lý,
              # không phải lỗi thẩm mỹ. Và không xin được: `_CAM_CHU` đã ghi "no logos" mà máy vẫn
