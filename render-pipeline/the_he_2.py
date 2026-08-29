@@ -2344,6 +2344,42 @@ DUONG_RA = {
     "thennow":   ("ThenNowShort", "build_thennow_props"),
     "cinematic": ("CinematicShort", None),          # có đường riêng: build_doc_props (cần ảnh AI)
 }
+
+# ── BỐ CỤC RIÊNG THEO KÊNH (29/8/2026) ─────────────────────────────────────────────────────
+# Anh soi ba kênh `ranked` cạnh nhau: "vẫn còn rẻ tiền, channel nào cũng làm được". Đúng — 18/50
+# kênh dùng chung bảng tier S/A/B/C thẻ màu. `bien_cua` có 27 biến thể nhưng chúng chỉ đổi vị trí
+# nhãn, kiểu viền, hoạ tiết nền; bộ khung thì một, nên ba kênh đọc ra là một kênh đổi filter.
+# Vừa là chuyện thẩm mỹ, vừa là rủi ro lớn nhất còn lại với chính sách "nội dung sản xuất hàng
+# loạt" của YouTube — thứ quyết định bật được kiếm tiền hay không.
+#
+# Cách chữa không phải thêm biến thể màu mà là VIẾT THÊM BỐ CỤC THẬT. Ba bố cục cho 18 kênh, chia
+# đều 6/6/6, gán CỐ ĐỊNH theo tên kênh: một kênh phải giữ một bộ mặt, đổi bố cục giữa các video là
+# tự phá nhận diện của chính nó.
+#
+#   RankedShort      bảng tier S/A/B/C — hợp kênh có thứ hạng rõ ràng, nhiều mục
+#   RankedEditorial  một mục một màn hình, số thứ hạng khổng lồ — hợp kênh ít mục, cần sức nặng
+#   VectorChart      cột ngang nền giấy, đồ hoạ báo dữ liệu — hợp kênh tiền/giá/số liệu khô
+BO_CUC_KENH = {
+    # Bảng tier: kênh có nhiều mục và thứ hạng là chuyện chính.
+    "STEAMTRUTH": "RankedShort", "GAMEGRAVEYARD": "RankedShort", "BREEDFILE": "RankedShort",
+    "SHOWNUMBERS": "RankedShort", "GONETOOSOON": "RankedShort", "WHATTHEYSEARCH": "RankedShort",
+    # Biên tập: ít mục, mỗi mục đáng một màn hình riêng.
+    "PILLFACTS": "RankedEditorial", "RECALLPLATE": "RankedEditorial",
+    "CARRECALL": "RankedEditorial", "SUEDFORTHIS": "RankedEditorial",
+    "NEAREARTH": "RankedEditorial", "PAIDVSPLAYED": "RankedEditorial",
+    # Đồ hoạ vector nền giấy: kênh tiền, lương, giá, hồ sơ doanh nghiệp — số liệu khô cần đọc rõ.
+    "SALARYTRUTH": "VectorChart", "DEGREEWORTH": "VectorChart", "COSTTOGO": "VectorChart",
+    "FILINGSSAY": "VectorChart", "QUIETLAYOFFS": "VectorChart", "WHATISINIT": "VectorChart",
+}
+
+
+def bo_cuc_cua(kenh: dict, dang: str) -> str:
+    """Composition thật sự dùng cho kênh này. Không khai riêng thì dùng mặc định của dạng."""
+    if dang != "ranked":
+        return (DUONG_RA.get(dang) or ("", ""))[0]
+    return BO_CUC_KENH.get(str(kenh.get("ten") or "").replace(" ", "").upper(), "RankedShort")
+
+
 DUNG_STORY = {}      # nạp ở cuối file, sau khi mọi hàm đã định nghĩa
 
 
@@ -3145,6 +3181,9 @@ def chay_chung(kenh: dict, ra: str = "", ky: dict | None = None,
     if not comp or not ten_props:
         print(f"   ⚠️ {kenh.get('ten')}: dạng '{dang}' chưa có đường render chung")
         return None
+    # Bố cục riêng của kênh (xem `BO_CUC_KENH`). Ba composition dùng CHUNG một bộ props, nên đổi
+    # composition không phải đổi dữ liệu — đúng chỗ để tách bộ mặt mà không đụng đường dựng.
+    comp = bo_cuc_cua(kenh, dang)
     # `st_san` = chương ĐÃ CHỌN sẵn (dùng khi dựng BỘ). 26/8 — bản đầu của `chay_bo` chọn chương
     # rồi vẫn gọi `chay_chung` để nó TỰ CHỌN LẠI: hai bên chọn độc lập nên video render ra không
     # phải chương đã ghi sổ, và `avoid` lệch một nhịp khiến chương 2 trùng chương 1 rồi cả bộ

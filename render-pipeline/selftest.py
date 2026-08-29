@@ -2275,6 +2275,7 @@ def main():
     check("gu vẽ gán TAY từng kênh, tiếng Anh, cấm ảnh chụp", t_gu_ve_khop_tung_kenh)
     check("nhãn None không được lọt lên tiêu đề", t_nhan_none_khong_lot_len_tieu_de)
     check("ai_only thì KHÔNG lấy clip kho (không footage)", t_ai_only_khong_lay_clip_kho)
+    check("18 kênh ranked KHÔNG dùng chung một khuôn", t_bo_cuc_ranked_khong_dung_chung_mot_khuon)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
@@ -4602,6 +4603,40 @@ def t_ai_only_khong_lay_clip_kho():
     assert "ai_only" in dieu_kien, \
         ("đường lấy clip kho KHÔNG hỏi `ai_only` -> kênh cam kết tự vẽ vẫn nhận footage tải về: "
          + " ".join(dieu_kien.split())[:110])
+
+
+
+
+def t_bo_cuc_ranked_khong_dung_chung_mot_khuon():
+    """18 kênh `ranked` phải chia ra nhiều bố cục, và mọi kênh phải được gán TAY.
+
+    29/8 — anh soi ba kênh ranked cạnh nhau: "vẫn còn rẻ tiền, channel nào cũng làm được". 18/50
+    kênh dùng chung bảng tier S/A/B/C; `bien_cua` có 27 biến thể nhưng chỉ đổi vị trí nhãn, kiểu
+    viền, hoạ tiết nền — bộ khung thì một, nên ba kênh đọc ra là một kênh đổi filter.
+    Đây là rủi ro lớn nhất còn lại với chính sách "nội dung sản xuất hàng loạt" của YouTube, tức
+    là thứ quyết định bật được kiếm tiền hay không — không phải chuyện thẩm mỹ.
+
+    Chốt đòi ba điều: mọi kênh ranked được gán tay, có ít nhất ba bố cục khác nhau, và không bố
+    cục nào ôm quá nửa số kênh."""
+    import json as _json
+    import the_he_2 as T
+    ks = _json.loads(_doc("kenh_the_he_2.json"))
+    ks = ks if isinstance(ks, list) else list(ks.values())
+    r = [k for k in ks if k.get("dinh_dang") == "ranked"]
+    assert r, "không còn kênh ranked nào — chốt này hết nghĩa, xoá đi"
+    thieu = [k["ten"] for k in r
+             if str(k["ten"]).replace(" ", "").upper() not in T.BO_CUC_KENH]
+    assert not thieu, "kênh ranked chưa gán bố cục (sẽ rơi về bảng tier chung): " + ", ".join(thieu)
+    from collections import Counter
+    dem = Counter(T.bo_cuc_cua(k, "ranked") for k in r)
+    assert len(dem) >= 3, f"chỉ {len(dem)} bố cục cho {len(r)} kênh — vẫn là một khuôn: {dict(dem)}"
+    lon = max(dem.values())
+    assert lon <= len(r) / 2, \
+        f"một bố cục ôm {lon}/{len(r)} kênh — quá nửa thì vẫn đọc ra là cùng một lò: {dict(dem)}"
+    # Và composition được gán phải CÓ THẬT trong Root.tsx, nếu không thì render nổ ở lane.
+    root = _doc("../engine-remotion/src/Root.tsx")
+    for c in set(dem):
+        assert f'id="{c}"' in root, f"bố cục {c} chưa đăng ký trong Root.tsx"
 
 
 
