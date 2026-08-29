@@ -39,16 +39,16 @@ KENH = [
      "kieu": "nu_kinh", "boi": "quay", "mau": "ngan_hang", "nguon": "fdic",
      "hoi": "How many banks does America still have?"},
     {"ten": "FINE PRINT", "handle": "@fineprintusa", "nhan": "The clause they hope you skip",
-     "kieu": "nam_gay", "boi": "van_phong", "mau": "van_phong", "nguon": "cfpb",
+     "kieu": "nam_gay", "boi": "van_phong", "mau": "van_phong", "nguon": "dieu_khoan",
      "hoi": "What do Americans complain about most?"},
     {"ten": "WHO OWNS IT", "handle": "@whoownsitusa", "nhan": "Who really owns the brand",
      "kieu": "nam_dam", "boi": "san_sau", "mau": "san_sau", "nguon": "sec",
      "hoi": "Who owns the company behind your groceries?"},
     {"ten": "KNOW YOUR RIGHT", "handle": "@knowyourrightusa", "nhan": "What you are allowed to do",
-     "kieu": "nu_kinh", "boi": "toa_an", "mau": "luat", "nguon": "toa",
+     "kieu": "nu_kinh", "boi": "toa_an", "mau": "luat", "nguon": "toa_quyen",
      "hoi": "What rights get argued in court this month?"},
     {"ten": "SUED IN AMERICA", "handle": "@suedinamericausa", "nhan": "What Americans sue over",
-     "kieu": "nam_dam", "boi": "toa_an", "mau": "luat", "nguon": "toa",
+     "kieu": "nam_dam", "boi": "toa_an", "mau": "luat", "nguon": "toa_kien",
      "hoi": "What do Americans actually sue each other over?"},
     {"ten": "SKY TONIGHT", "handle": "@skytonightusa", "nhan": "What is above you right now",
      "kieu": "nu_kinh", "boi": "vu_tru", "mau": "vu_tru", "nguon": "nasa",
@@ -123,18 +123,34 @@ def lay_so_lieu(nguon: str, D):
             return None
         return ("Companies writing it into their filings",
                 [(k, v, f"{int(v)}x") for k, v in ds], "SEC EDGAR full-text search")
-    if nguon == "toa":
-        r = D.ban_an("false advertising", 30) or []
+    # 29/8 — HAI KÊNH TOÀ ÁN, HAI CÂU HỎI KHÁC NHAU.
+    # Bản đầu cả hai cùng khai `toa` nên ra ĐÚNG MỘT video: cùng bảng "5 · Court of Appeals",
+    # cùng bối cảnh toà án, cùng con số. Và tệ hơn: gom theo TÊN TOÀ thì bốn cột đều là
+    # "Court of Appeals for the..." — bốn nhãn gần giống hệt nhau, biểu đồ không nói lên gì.
+    # Đây là lần thứ hai tôi tự tạo ra nội dung trùng trong chính bộ kênh mới (lần trước là hai
+    # kênh y tế cùng nguồn FDA). Cùng một cái bẫy: khai `nguon` giống nhau là xong.
+    # Nay mỗi kênh gom theo một TRỤC khác: một bên đếm theo QUYỀN được viện dẫn, một bên đếm
+    # theo LOẠI TRANH CHẤP. Cùng nguồn CourtListener, hai bảng không thể giống nhau.
+    if nguon in ("toa_quyen", "toa_kien"):
+        _KHO = {
+            "toa_quyen": ["first amendment", "fourth amendment", "due process",
+                          "equal protection", "right to counsel", "free speech"],
+            "toa_kien": ["false advertising", "breach of contract", "defamation",
+                         "wrongful termination", "product liability", "unfair competition"],
+        }[nguon]
+        # ĐẾM TỔNG, KHÔNG ĐẾM ĐỘ DÀI TRANG. `ban_an` trả tối đa 20 bản ghi/lượt nên sáu cụm từ
+        # khác hẳn nhau đều ra đúng 20 — bảng phẳng lì, không nói lên gì. `dem_ban_an` đọc trường
+        # `count` trong chính câu trả lời ấy: dải thật từ vài nghìn tới hơn một triệu.
         gom = {}
-        for x in r:
-            t = str(x.get("toa") or "")[:26]
-            if t:
-                gom[t] = gom.get(t, 0) + 1
+        for tk in _KHO:
+            n = D.dem_ban_an(tk)
+            if n:
+                gom[tk.title()] = n
         ds = sorted(gom.items(), key=lambda z: -z[1])[:6]
-        if len(ds) < 3:
+        if len(ds) < 3 or len({v for _, v in ds}) < 3:
             return None
-        return ("Where the cases are filed",
-                [(k, v, f"{int(v)}") for k, v in ds], "CourtListener")
+        return (("Rights argued in court" if nguon == "toa_quyen" else "What Americans sue over"),
+                [(k, v, _so(v)) for k, v in ds], "CourtListener")
     if nguon == "nasa":
         r = D.tieu_hanh_tinh(7) or []
         ds = sorted(r, key=lambda z: float(z.get("khoang_cach_km") or 9e12))[:6]
@@ -164,7 +180,29 @@ def lay_so_lieu(nguon: str, D):
                 [(str(n), sum(theo_nam[n]) / len(theo_nam[n]),
                   f"{sum(theo_nam[n]) / len(theo_nam[n]):,.0f}") for n in nam],
                 "U.S. Bureau of Labor Statistics")
-    if nguon in ("fdic", "cfpb"):
+    if nguon == "fdic":
+        gom = D.ngan_hang_theo_bang(1000)
+        ds = sorted(gom.items(), key=lambda z: -z[1])[:6]
+        if len(ds) < 3 or len({v for _, v in ds}) < 3:
+            return None
+        return ("Banks still operating, by state",
+                [(k, v, f"{int(v)}") for k, v in ds], "FDIC BankFind")
+    if nguon == "dieu_khoan":
+        # FINE PRINT hỏi một câu KHÔNG kênh nào khác hỏi: điều khoản nào bị lôi ra toà nhiều
+        # nhất. Cùng nguồn CourtListener với hai kênh luật, nhưng bộ từ khoá không giao nhau
+        # nên ba bảng không thể giống nhau — cùng cách 50 kênh cũ chia nhau một nguồn.
+        gom = {}
+        for tk in ("arbitration clause", "class action waiver", "non-compete agreement",
+                   "liquidated damages", "indemnification clause", "automatic renewal"):
+            n = D.dem_ban_an(tk)
+            if n:
+                gom[tk.title()] = n
+        ds = sorted(gom.items(), key=lambda z: -z[1])[:6]
+        if len(ds) < 3 or len({v for _, v in ds}) < 3:
+            return None
+        return ("The clauses that end up in court",
+                [(k, v, _so(v)) for k, v in ds], "CourtListener")
+    if nguon in ("fdic_cu", "cfpb"):
         # Hai nguồn này chưa có hàm trong `du_lieu_mo`. KHÔNG bịa số để có demo: dùng chỉ số
         # BLS theo ngành, thứ đã có sẵn và đã kiểm, rồi nói đúng tên nó trên khung.
         d = D.bls_theo_nganh("luong", 2024, 2024)
@@ -208,7 +246,17 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
              "camXuc": cx, "cuChi": cc, "co": co, "nhin": nhin, "boi": k["boi"]}
         if i == 1:
             c["soLon"] = top_hien
-            c["nhanSo"] = top_ten[:18]
+            # CẮT THEO TỪ. Cắt cứng 18 ký tự cho ra "MIDWEST POULTRY SE", "COURT OF APPEALS F",
+            # "ARTIFICIAL INTELLI" — chữ đứt ngang, ngay dưới con số lớn nhất khung.
+            _t = " ".join(str(top_ten).split())
+            if len(_t) > 18:
+                _w, _r = _t.split(" "), []
+                for _x in _w:
+                    if len(" ".join(_r + [_x])) > 18:
+                        break
+                    _r.append(_x)
+                _t = " ".join(_r) or _t[:18]
+            c["nhanSo"] = _t.rstrip(" ,;:-")
         if i == 2:
             c["cot"] = [{"nhan": a, "gt": float(b), "hien": h} for a, b, h in dan]
         canh.append(c)

@@ -546,6 +546,41 @@ def trieu_hoi_xe(hang: str, dong: str = "", nam: int = 2022) -> list[dict]:
 
 
 # ── 7. COURTLISTENER — bản án, vụ kiện ─────────────────────────────────────────────────────
+def ngan_hang_theo_bang(n: int = 1000) -> dict:
+    """{tên bang: số ngân hàng ĐANG HOẠT ĐỘNG}. Nguồn FDIC BankFind, mở, không cần khoá.
+
+    29/8 — thêm cho kênh BANK RUN. Trước đó kênh này mượn tạm chỉ số lương BLS vì chưa có hàm
+    FDIC, và hậu quả là nó ra ĐÚNG một video với kênh FINE PRINT: cùng "$49.78 · Information".
+    Mượn tạm một nguồn cho có số là cách chắc chắn nhất để hai kênh trùng nhau."""
+    u = ("https://banks.data.fdic.gov/api/institutions?" + urllib.parse.urlencode(
+        {"filters": "ACTIVE:1", "fields": "NAME,STNAME,ASSET",
+         "limit": max(1, min(2000, n)), "format": "json"}))
+    d = _goi(u)
+    gom: dict = {}
+    for x in ((d or {}).get("data") or []):
+        b = str(((x or {}).get("data") or {}).get("STNAME") or "").strip()
+        if b:
+            gom[b] = gom.get(b, 0) + 1
+    return gom
+
+
+def dem_ban_an(tu_khoa: str) -> int:
+    """TỔNG SỐ bản án khớp một cụm từ. Trả 0 nếu hỏng.
+
+    29/8 — `ban_an` trả về TỐI ĐA 20 bản ghi mỗi lượt (một trang API), nên đếm độ dài danh sách
+    là đo cái trần chứ không đo thực tế: sáu cụm từ khác hẳn nhau đều ra đúng 20, biểu đồ phẳng
+    lì. CourtListener có sẵn trường `count` trong cùng câu trả lời ấy — 1.579.237 bản án nhắc
+    tới Tu chính án thứ nhất — và đó vừa là con số có dải thật, vừa là câu chuyện mạnh hơn hẳn.
+    Không tốn thêm lượt gọi nào: cùng một truy vấn, chỉ là đọc thêm một trường."""
+    u = ("https://www.courtlistener.com/api/rest/v4/search/?"
+         + urllib.parse.urlencode({"q": tu_khoa, "type": "o", "order_by": "dateFiled desc"}))
+    d = _goi(u) or {}
+    try:
+        return int(d.get("count") or 0)
+    except Exception:
+        return 0
+
+
 def ban_an(tu_khoa: str, n: int = 6) -> list[dict]:
     """Bản án công khai khớp từ khoá. Trả [{ten_vu, toa, ngay, trich, link}]."""
     u = ("https://www.courtlistener.com/api/rest/v4/search/?"
