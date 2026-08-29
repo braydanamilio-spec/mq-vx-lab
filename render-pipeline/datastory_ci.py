@@ -559,13 +559,44 @@ _CAM_CHU = ("no text, no words, no letters, no captions, no signage, no watermar
             "no logos, no numbers written in the image")
 
 
+# Danh từ MỜI CHỮ VÀO KHUNG. Máy vẽ thấy bất cứ từ nào trong đây là dựng ra một bề mặt phẳng
+# hướng về phía người xem, và bề mặt ấy bao giờ cũng có chữ — chữ bịa.
+_DANH_TU_CHU = (
+    "document", "documents", "file", "files", "folder", "record", "records", "paper", "papers",
+    "page", "pages", "letter", "letters", "newspaper", "headline", "sign", "signage", "label",
+    "book", "books", "report", "form", "certificate", "screen", "monitor", "poster", "banner",
+    "notice", "chart", "map", "board", "ledger", "manuscript", "envelope", "receipt", "ticket",
+)
+
+
+def _bo_mat_chu(prompt: str) -> str:
+    """Nếu prompt gọi tên một thứ CÓ MẶT CHỮ, đổi góc nhìn để mặt ấy không hướng vào ống kính.
+
+    29/8 — anh: "ko nên có chữ ở ảnh AI generate". Đã thử ba vòng chỉnh lệnh cấm (đuôi prompt →
+    đầu prompt → "mọi mặt giấy đều trống" → "vẽ chữ thành nét nguệch ngoạc") và khung vẫn ra
+    "COURTE OPITION", "NEW YORKE", "PUBLLTC RECORD". Kết luận đo được: KHÔNG diệt được chữ bằng
+    cách xin máy vẽ đừng viết. Mô hình khuếch tán không có khái niệm "đừng"; nó chỉ có khái niệm
+    "vẽ cái gì".
+    Nên bỏ hẳn chỗ chữ có thể xuất hiện: một tập hồ sơ nhìn TỪ CẠNH, một cuốn sách ĐÓNG, một màn
+    hình quay LƯNG lại — vẫn đúng chủ thể, vẫn đọc ra ngay là hồ sơ, mà không còn một mặt phẳng
+    nào để máy điền chữ vào.
+    Đây là cách duy nhất tôi thử mà không phụ thuộc vào việc mô hình có nghe lời hay không."""
+    t = str(prompt or "")
+    thap = t.lower()
+    if not any(f" {d}" in f" {thap}" or thap.startswith(d) for d in _DANH_TU_CHU):
+        return t
+    return (t + ", seen edge-on from the side or closed and stacked, "
+                "no flat page or screen surface facing the viewer, "
+                "focus on texture edges and shadow rather than any surface")
+
+
 def _salt_prompt(prompt: str) -> str:
     """Thêm biến thể máy quay/ánh sáng theo NGẪU NHIÊN — không đụng nội dung, chỉ đổi cách nhìn.
 
     Và CẤM VẼ CHỮ, luôn luôn: xem `_CAM_CHU`."""
     if not prompt:
         return prompt
-    return f"{prompt}, {random.choice(_VARY)}, {_CAM_CHU}"
+    return f"{_bo_mat_chu(prompt)}, {random.choice(_VARY)}, {_CAM_CHU}"
 
 
 # Cờ "đã báo pool cạn" — khai ngay cạnh nơi dùng. Để tận cuối file thì đọc mã phải nhảy

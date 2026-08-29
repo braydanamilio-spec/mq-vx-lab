@@ -1448,6 +1448,16 @@ def dung_story_race(kenh: dict, ky: dict | None = None) -> dict | None:
 # của kênh ở dung_story_cinematic — đó là chỗ mỗi kênh giữ một gu hình riêng suốt đời.
 # Lời kể lấy TỪ BẢN GHI: tên vụ, ngày, toà, trích đoạn. AI không tham gia ở đây.
 # ══════════════════════════════════════════════════════════════════════════════════════════
+# 29/8 — PROMPT VẼ KHÔNG ĐƯỢC GỌI TÊN THỨ CÓ MẶT CHỮ.
+# Anh: "ko nên có chữ ở ảnh AI generate" — và chữ bịa trên một kênh hồ sơ công CHÍNH LÀ nội dung
+# sai sự thật, không chỉ là chuyện xấu mã.
+# Đã thử bốn vòng chỉnh lệnh cho máy vẽ: cấm ở đuôi prompt, cấm ở đầu prompt, bảo "mọi mặt giấy
+# đều trống", bảo "vẽ chữ thành nét nguệch ngoạc". Khung vẫn lần lượt ra "COURTE OPITION",
+# "NEW YORKE", "PUBLLTC RECORD", "ourt Opitric". Kết luận đo được sau bốn lần: mô hình khuếch tán
+# KHÔNG có khái niệm "đừng vẽ", nó chỉ có khái niệm "vẽ cái gì" — hễ prompt gọi tên một tờ giấy
+# thì nó dựng một mặt phẳng, và mặt phẳng nào cũng được nó điền chữ vào.
+# Nên bỏ hẳn mặt phẳng ra khỏi khung: hồ sơ nhìn TỪ CẠNH, ngăn kéo kéo ra, gáy sách xếp hàng.
+# Vẫn đúng chủ thể, người xem vẫn đọc ra ngay là hồ sơ toà — mà không còn chỗ nào để bịa chữ.
 def _pk_ban_an(D, ky):
     r = D.ban_an(ky.get("tu_khoa", "wrongful death"), 4)
     if not r:
@@ -1457,14 +1467,14 @@ def _pk_ban_an(D, ky):
     trich = " ".join(str(v["trich"] or "").split())[:150]
     canh = [
         (f"This case is real. {_gon(v['ten_vu'], 60)}.", "empty american courtroom, morning light"),
-        (f"Filed in {nam}.", "stack of legal case files on a desk"),
-        (f"The court: {_gon(v['toa'], 50)}.", "exterior of a US federal courthouse"),
+        (f"Filed in {nam}.", "stack of closed manila folders tied with string, seen edge-on, deep shadow"),
+        (f"The court: {_gon(v['toa'], 50)}.", "neoclassical courthouse columns seen from below against the sky"),
         (f"From the opinion: {trich}." if trich else "The opinion runs for pages.",
-         "close up of a printed court opinion page"),
+         "a wooden gavel resting on its block, shallow depth of field"),
         (f"There are {len(r)} more like it filed under the same words.",
-         "long row of archive shelves with case binders"),
+         "long row of archive shelves, binder spines edge-on receding into shadow"),
         ("Every line of this is public record. Anyone can pull it.",
-         "hands opening a public records folder"),
+         "a brass filing cabinet drawer pulled open, folder tabs seen edge-on"),
     ]
     return (_gon(v["ten_vu"], 46), f"A {nam} case almost nobody read.", canh)
 
@@ -1524,7 +1534,7 @@ def _pk_wiki(D, ky):
          "crowd of people walking, all looking down at phones"),
         (f"The second most read that day was {r[1]['ten']}." if len(r) > 1
          else "The rest of the list was ordinary news.",
-         "newspaper front pages spread on a table"),
+         "rolled newspapers stacked and bound with twine, seen from the ends"),
         ("Curiosity leaves a trace. This is what it looks like counted.",
          "a rising line chart drawn on frosted glass"),
         ("Wikimedia publishes these numbers every single day.",
@@ -1540,14 +1550,14 @@ def _pk_nghien_cuu(D, ky):
     v = r[0]
     canh = [
         (f"A real study, published in {v['nam']}.", "a stack of medical journals on a desk"),
-        (f"The title: {_gon(v['tieu_de'], 110)}.", "close up of an academic paper abstract"),
+        (f"The title: {_gon(v['tieu_de'], 110)}.", "a microscope eyepiece and slide tray on a lab bench, shallow focus"),
         (f"It ran in {v['tap_chi']}.", "library shelf of bound medical journals"),
         ("Not a headline about a study. The study itself.",
          "researcher reading a paper under a desk lamp"),
         (f"There are {len(r)} more on the same question, all public.",
          "search results page on a clean monitor"),
         (f"Reference number {v['ma']} on PubMed. Go read it.",
-         "hands typing an ID into a search field"),
+         "a mechanical keyboard lit from one side, keys out of focus"),
     ]
     return (_gon(v["tieu_de"], 46), f"One real study on {ky.get('tu_khoa', 'this')}.", canh)
 
@@ -1567,9 +1577,9 @@ def _pk_nhac(D, ky):
         ("This is the catalogue entry, not the legend.",
          "index card drawer in a music archive"),
         ("MusicBrainz keeps it because somebody had to.",
-         "close up of handwritten liner notes"),
+         "a vinyl record sleeve seen edge-on, records fanned in a crate"),
         ("Every credit here can be checked in a minute.",
-         "screen showing a music database entry"),
+         "a mixing desk fader bank glowing in a dark studio"),
     ]
     return (_gon(v["ten"], 46), f"{v['ten']}, on paper.", canh)
 
@@ -2449,10 +2459,22 @@ GU_VE_EN = {
 # Cách ăn hơn hẳn là RA LỆNH KHẲNG ĐỊNH — mô tả mặt phẳng TRỐNG như một chi tiết muốn có. Nó
 # không phải kìm mình lại nữa, nó có sẵn thứ để vẽ vào chỗ đó.
 # Và chữ bịa đắt nhất đúng ở kênh hồ sơ/lưu trữ, nơi cả uy tín nằm ở chỗ "giấy tờ có thật".
+# 29/8 — VÒNG BA CỦA BÀI TOÁN CHỮ BỊA, và lần này mới đúng gốc.
+# Vòng 1 cấm ở đuôi prompt, vòng 2 cấm ở đầu prompt, vòng 3 bảo "mọi mặt giấy đều trống". Cả ba
+# đều hụt, và khung mới nhất còn tệ hơn: "COURTE OPITION", "NEW YORKE", cả trang toàn chữ vô nghĩa.
+#
+# Lý do vòng 3 hụt: chủ thể của kênh CHÍNH LÀ tài liệu ("stack of legal case files", "hands opening
+# a public records"). Bảo máy vẽ một tờ giấy mà "hoàn toàn trống" là hai mệnh lệnh chỏi nhau, và
+# nó chọn cái cụ thể hơn — vẽ giấy có chữ.
+#
+# Cách ra khỏi bế tắc: đừng bảo nó BỎ chữ, hãy bảo nó vẽ chữ THÀNH THỨ KHÁC. "Nét nguệch ngoạc
+# trừu tượng" là một thứ hình cụ thể, máy vẽ được, và trong một bức ký hoạ thì nó ĐÚNG — hoạ sĩ
+# ký hoạ phiên toà cũng vẽ chữ thành nét lượn chứ không chép từng chữ.
+# Người xem đọc ra "đây là một trang tài liệu" mà không đọc ra một lỗi chính tả nào.
 GU_CAM = ("no photorealistic human faces, no hands in frame, no crowds of people, "
           "illustrative rather than photographic, "
-          "all paper and signage completely blank and unlabeled, smooth empty surfaces, "
-          "wordless")
+          "any writing or signage drawn only as abstract wavy squiggle lines, "
+          "never legible letters or words, no readable text anywhere")
 
 # NÉT CHÌ CHO NHÓM NHÂN VẬT (anh chọn 29/8: "người nổi tiếng, vĩ nhân, người thành công, công ty
 # đế chế gia tộc lớn — vẽ kiểu nét chì sẽ hợp hơn, khác lạ hơn footage free").
