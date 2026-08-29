@@ -555,11 +555,18 @@ def dem_ho_so_sec(cum: str) -> int:
     intelligence") đều trả đúng 10000, tức đã CHẠM TRẦN chứ không phải bằng nhau. Nên chỉ dùng
     hàm này với những cụm đủ hẹp để nằm dưới trần; đo thử: Gatorade 3.318, Doritos 955,
     Cheerios 356, Tide 16 — dải rộng gấp hơn hai trăm lần, thừa để dựng một bảng đọc được."""
+    k = str(cum or "").strip().lower()
+    _cu = _nho_doc("sec:" + k)
+    if _cu:
+        return _cu
     d = _goi("https://efts.sec.gov/LATEST/search-index?" + urllib.parse.urlencode({"q": f'"{cum}"'}))
     try:
-        return int((((d or {}).get("hits") or {}).get("total") or {}).get("value") or 0)
+        n = int((((d or {}).get("hits") or {}).get("total") or {}).get("value") or 0)
     except Exception:
-        return 0
+        n = 0
+    if n:
+        _nho_ghi("sec:" + k, n)
+    return n
 
 
 def tieu_hanh_tinh_jpl(lui: int = 3, toi: int = 7) -> list[dict]:
@@ -633,6 +640,44 @@ def ngan_hang_theo_bang(n: int = 1000) -> dict:
     return gom
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# SỔ NHỚ TRÊN ĐĨA cho các phép ĐẾM TỔNG
+# ------------------------------------------------------------------------------------------
+# 29/8 — CourtListener chặn 429 suốt nhiều giờ sau khi ba kênh luật cùng hỏi 18 lượt liên tiếp.
+# Bộ nhớ trong tiến trình không cứu được: mỗi lượt render là một tiến trình mới, nên lần nào
+# cũng hỏi lại từ đầu và lần nào cũng bị chặn.
+#
+# Nhưng những con số này GẦN NHƯ TĨNH: "breach of contract" có 494.200 bản án, mỗi ngày nhích
+# vài chục — tức thay đổi khoảng 0,006%/ngày. Hỏi lại mỗi lượt render là trả giá bằng việc bị
+# chặn để lấy một con số y hệt hôm qua.
+# Nhớ ra ĐĨA, hạn 7 ngày. Nguồn chập thì dùng số đã nhớ thay vì bỏ lượt — và nói rõ trong log
+# là đang dùng số cũ, không im lặng.
+_SO_NHO = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".dem_nho.json")
+_HAN_NHO = 7 * 86400
+
+
+def _nho_doc(khoa: str):
+    try:
+        import json as _j, time as _t
+        d = _j.load(io.open(_SO_NHO, encoding="utf-8")) if os.path.exists(_SO_NHO) else {}
+        x = d.get(khoa)
+        if x and (_t.time() - float(x.get("luc", 0))) < _HAN_NHO:
+            return int(x.get("n") or 0)
+    except Exception:
+        pass
+    return None
+
+
+def _nho_ghi(khoa: str, n: int) -> None:
+    try:
+        import json as _j, time as _t
+        d = _j.load(io.open(_SO_NHO, encoding="utf-8")) if os.path.exists(_SO_NHO) else {}
+        d[khoa] = {"n": int(n), "luc": _t.time()}
+        io.open(_SO_NHO, "w", encoding="utf-8").write(_j.dumps(d, ensure_ascii=False))
+    except Exception:
+        pass
+
+
 _NHO_DEM: dict = {}          # cụm từ -> tổng số bản án, nhớ trong một tiến trình
 
 
@@ -652,6 +697,10 @@ def dem_ban_an(tu_khoa: str) -> int:
     k = str(tu_khoa or "").strip().lower()
     if k in _NHO_DEM:
         return _NHO_DEM[k]
+    _cu = _nho_doc("toa:" + k)
+    if _cu:
+        _NHO_DEM[k] = _cu
+        return _cu
     u = ("https://www.courtlistener.com/api/rest/v4/search/?"
          + urllib.parse.urlencode({"q": tu_khoa, "type": "o", "order_by": "dateFiled desc"}))
     d = _goi(u) or {}
@@ -661,6 +710,7 @@ def dem_ban_an(tu_khoa: str) -> int:
         n = 0
     if n:                      # chỉ nhớ khi CÓ số; nhớ số 0 là biến một lượt chập thành cả phiên hỏng
         _NHO_DEM[k] = n
+        _nho_ghi("toa:" + k, n)
     return n
 
 
