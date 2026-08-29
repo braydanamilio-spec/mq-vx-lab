@@ -72,3 +72,33 @@ Luật cứng, chốt bằng `cham_v4.py`:
 * lượt thoại **không quá 14 từ** — dài hơn thì nhịp hài chết;
 * **cú chốt phải ở 3 giây cuối** — chốt sớm thì phần sau thành thừa;
 * **hai nhân vật phải nói xen kẽ**, không ai nói hai lượt liền trừ ở phần leo thang.
+
+---
+
+## 5. BẢN VÁ ĐÊM 30/8 — BẢY ĐIỂM ANH NÊU
+
+Anh xem bản demo đầu và chỉ ra bảy chỗ. Cả bảy đều đúng, và bốn trong số đó là **lỗi thật của
+mã**, không phải chuyện thẩm mỹ:
+
+| Anh nói | Gốc rễ thật sự | Cách chữa |
+|---|---|---|
+| *"2 nhân vật nói nên có 2 lời thoại có sự khác biệt"* | cả đoạn đọc bằng **một giọng** — bộ phim hai người mà tai nghe ra một người | `doc_hai_giong`: đọc từng lượt bằng giọng riêng, ghép qua WAV |
+| *"kịch bản nên hay hơn hook hơn"* | câu mở là câu hỏi lịch sự, không phải hook | 40 kịch bản mới: câu đầu là một sự việc **cụ thể, kỳ quặc mà có thật** |
+| *"lỗi nhân vật đứng trên bếp"* | ảnh nền chụp **ngang tầm mặt bàn** nên trong khung không có sàn nào | mọi câu vẽ ép thấy sàn + dải sàn dựng bằng mã làm lớp bảo hiểm |
+| *"nhân vật cao lên nhân vật kia nhỏ lại"* | phép phóng to người nói — **sai vật lý**, không chỉ xấu | bỏ hẳn; thay bằng ngả người + phụ đề mang màu áo người nói |
+| *"chưa thấy funny"* | không nhạc nền (im lặng trên nền im lặng không đọc ra là nhịp), hiệu ứng âm rải đều làm loãng, người nghe không phản ứng | nhạc riêng mỗi kênh · hiệu ứng dồn vào cú chốt · cú giật mình của người nghe |
+| *"nhân vật kiểu simpson, ko khô cứng"* | tỉ lệ người thật (đầu 1/6 thân), chi thể là que, không nén–giãn | `DienVienHai.tsx`: đầu 1/3,6 · găng bốn ngón · nén–giãn giữ thể tích · các chu kỳ sống lệch tần số |
+| *"ko có lỗi vật lý"* | tay xuyên vai người kia · khe lặng làm giật cỡ máy | bảng cử chỉ riêng (mọi cử chỉ hướng lên/vào trong) · khe lặng giữ lượt vừa kết thúc |
+
+**Và ba điều anh nhắn thêm giữa chừng:**
+* *"bối cảnh đa dạng, ko clip nào trùng"* → 4 địa điểm mỗi kênh, mỗi kịch bản gắn cứng một chỗ.
+* *"bối cảnh phải liên quan lời nói, ko phải trong nhà nhảy ra đường"* → **một tập = một địa
+  điểm**; nhịp chuyển sang cỡ máy.
+* *"nhân vật chuyển động thật hơn"* → dáng đi (hai chân lệch pha nửa chu kỳ, tay vung ngược pha
+  chân, thân nhấp nhô hai lần mỗi chu kỳ bước) + cử chỉ suy từ chính câu thoại.
+
+## 6. CÒN THIẾU
+
+* **Chưa nối vào xưởng render GitHub** — bộ này mới chạy trên máy anh. Cần thêm mục vào workflow
+  và đồng bộ tên kênh sang dashboard + đường đăng bài theo `CHANNEL_METHODS.md`.
+* **Chưa có mô tả/thẻ cho từng kênh** ở tầng đăng bài.
