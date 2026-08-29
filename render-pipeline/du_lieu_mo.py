@@ -767,8 +767,52 @@ def thanh_phan_mon(mon: str, n: int = 6, key: str = "") -> list[dict]:
     return ra
 
 
+def _epmc(tu_khoa: str, n: int, chat: bool = True) -> list[dict]:
+    """Europe PMC — cùng kho tài liệu với PubMed, mở, không cần khoá, không chặn nhịp gắt.
+
+    Lọc theo TÊN BÀI (`TITLE:`), không lọc theo toàn văn. Đo thật khi lọc toàn văn: từ khoá
+    "screen time" trả về bài "Cytoscape: a software environment…", "vitamin d" trả về "Gene set
+    enrichment analysis…" — những bài nhiều trích dẫn nhất trong kho, chỉ tình cờ có chứa cụm từ
+    ấy đâu đó. Với một kênh mà cả nội dung là "một nghiên cứu có thật về X" thì đó là NÓI SAI,
+    không phải chọn bài kém.
+    Sắp theo số trích dẫn: trong hàng chục nghìn bài cùng chủ đề, bài được trích dẫn nhiều nhất
+    là bài đồng nghiệp trong ngành thật sự đọc — tiêu chí khách quan, không phải tôi chấm.
+    """
+    q = f'TITLE:"{tu_khoa}" AND SRC:MED' + (" AND HAS_ABSTRACT:Y" if chat else "")
+    d = _goi("https://www.ebi.ac.uk/europepmc/webservices/rest/search?" + urllib.parse.urlencode(
+        {"query": q, "format": "json", "pageSize": max(1, min(20, n)), "sort": "CITED desc"}))
+    ra = []
+    for x in (((d or {}).get("resultList") or {}).get("result") or []):
+        ma = str(x.get("pmid") or x.get("id") or "")
+        if not ma:
+            continue
+        ra.append({"tieu_de": str(x.get("title") or "")[:180],
+                   "tap_chi": str(x.get("journalTitle") or "")[:60],
+                   "nam": str(x.get("pubYear") or "")[:4], "ma": ma,
+                   "link": (f"https://pubmed.ncbi.nlm.nih.gov/{ma}/" if x.get("pmid")
+                            else f"https://europepmc.org/article/{x.get('source') or 'MED'}/{ma}"),
+                   "nguon": "Europe PMC"})
+    return ra
+
+
 def nghien_cuu(tu_khoa: str, n: int = 6) -> list[dict]:
-    """Nghiên cứu y khoa thật (PubMed). Trả [{tieu_de, tap_chi, nam, ma}]."""
+    """Nghiên cứu y khoa thật. Europe PMC trước, PubMed làm đường lui.
+
+    29/8 — ĐỔI NGUỒN CHÍNH VÌ PUBMED ĐANG CHẶN MÌNH. Gọi thử bốn từ khoá liên tiếp thì cả bốn
+    nhận về trang HTML kèm mã 200 (`_goi` nhận ra và báo "nguồn đang CHẶN nhịp gọi"). NCBI cho
+    3 lượt/giây khi không có khoá API, và một khi đã chặn thì chặn cả địa chỉ mạng một lúc lâu —
+    nên kênh ONE STUDY là kênh DUY NHẤT trong 50 kênh không chấm được điểm, suốt mấy lượt chấm.
+    Europe PMC phục vụ cùng kho tài liệu ấy, mở, không đòi khoá, và cho lọc theo TÊN BÀI — thứ
+    PubMed không làm được sạch bằng.
+    Giữ PubMed làm đường lui: hai nguồn cùng chết một lúc thì kênh bỏ lượt, chứ không bịa."""
+    r = _epmc(tu_khoa, n) or _epmc(tu_khoa, n, chat=False)
+    if r:
+        return r
+    return _nghien_cuu_pubmed(tu_khoa, n)
+
+
+def _nghien_cuu_pubmed(tu_khoa: str, n: int = 6) -> list[dict]:
+    """Đường lui: PubMed E-utilities. Trả [{tieu_de, tap_chi, nam, ma}]."""
     # 28/8 — `tool` là thứ NCBI YÊU CẦU trong hướng dẫn E-utilities: nó cho họ biết lượt gọi này
     # của ai để hãm đúng chỗ thay vì chặn cả địa chỉ mạng. Đã dính chặn thật hôm nay (trang
     # "Access Denied" trả về kèm mã 200, xem `_goi`), nên đây không phải phép lịch sự suông.

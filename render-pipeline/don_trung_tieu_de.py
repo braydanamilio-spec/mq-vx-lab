@@ -89,6 +89,52 @@ def _chuan(t: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", str(t or "").lower()).strip()
 
 
+def _danh_dau_d1(owner: str, moc: str, lo_toi_da: int = 40) -> int:
+    """Đánh dấu video engine cũ TRONG D1 — nơi thật sự chứa gần hết thư viện.
+
+    29/8 — VÌ SAO THIẾU BƯỚC NÀY LÀ CẢ LƯỢT DỌN GẦN NHƯ VÔ NGHĨA.
+    Anh: "a thấy 1 đống videos cũ lỗi sao ko dọn đi". Đo trên nhật ký lượt dọn vừa chạy: công cụ
+    này đọc được **561** job 'done' trong Firestore, trong khi bảng điều khiển đếm **3.901** video
+    trong kho. Chênh lệch không phải sai số — Firestore chỉ còn phần đuôi, còn thân kho nằm ở D1
+    (pipeline ghi thẳng vào đó, và `don_job_cu` tỉa Firestore theo ngày).
+    Nên đánh dấu một bên là dọn ~14% thư viện rồi báo "xong".
+    Tệ hơn: thư viện trên bảng, KHI CÓ LỌC NGÀY, đọc thẳng từ D1 và còn gán cứng `status:"done"`
+    cho mọi dòng lấy về. Video đã bị gạt ở Firestore vẫn hiện nguyên vẹn ngay khi bấm "Hôm nay" —
+    đúng cảnh "dọn một nơi, hai kho song song" đã được ghi trong worker.js.
+
+    Cách làm không cần deploy Worker: `job_cuaso` trả về tối đa 400 dòng `done` trong một khoảng
+    thời gian, `ghi_job` thì upsert được trạng thái. Đánh dấu xong thì dòng ấy không còn `done`
+    nên lượt gọi sau không trả nó về nữa — vòng lặp tự cạn, không cần phân trang.
+    """
+    try:
+        import hot_db as H
+    except Exception as e:
+        print(f"  ⚠️ không nạp được hot_db ({str(e)[:50]}) — bỏ phần D1")
+        return 0
+    if not (H.bat_doc() and H.bat_ghi()):
+        print("  ⚠️ D1 đang TẮT (thiếu HOT_KEY/HOT_MODE) — bỏ phần D1")
+        return 0
+    import datetime as _dt
+    luc = _dt.datetime.now(_dt.timezone.utc).isoformat()
+    xong = 0
+    for _ in range(lo_toi_da):
+        rows = H.job_cuaso(owner, "", moc)
+        if not rows:
+            break
+        for r in rows:
+            H.ghi_job(owner, r.get("id"), r.get("channel") or "", r.get("vtype") or "",
+                      "engine_cu", step="dựng bằng engine cũ — không đăng",
+                      queued=True, at=luc)
+        # PHẢI XẢ BỘ ĐỆM MỖI LÔ. `ghi_job` gom vào đệm rồi mới gửi; không xả thì lượt
+        # `job_cuaso` kế tiếp vẫn thấy đúng 400 dòng ấy còn `done` và vòng lặp quay tại chỗ.
+        H.xa_het()
+        xong += len(rows)
+        print(f"     … D1: {xong} bản", flush=True)
+        if len(rows) < 400:
+            break
+    return xong
+
+
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser()
@@ -243,8 +289,10 @@ def main() -> int:
     # không phải việc lặp hằng ngày như dọn trùng.
     n2 = _danh_dau([x for x in cu_engine if x[0] not in {y[0] for y in thua[:a.tran]}],
                    "engine_cu", 4000)
-    print(f"  ✅ {n1} bản trùng + {n2} bản engine cũ đã ra khỏi hàng đăng. "
+    print(f"  ✅ {n1} bản trùng + {n2} bản engine cũ đã ra khỏi hàng đăng (sổ Firestore). "
           f"Tệp vẫn nguyên trên Drive, phục hồi chỉ là một lượt ghi ngược.")
+    n3 = _danh_dau_d1(a.owner, a.moc_engine)
+    print(f"  ✅ D1: {n3} bản engine cũ đã ra khỏi hàng đăng.")
     return 0
 
 

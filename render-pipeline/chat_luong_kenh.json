@@ -1,5 +1,5 @@
 {
- "luc": "2026-08-29T10:41:21Z",
+ "luc": "2026-08-29T10:46:39Z",
  "nguong": 90,
  "canh_bao_motip": [],
  "kenh": {
@@ -129,6 +129,13 @@
    "loi": [],
    "tieu_de": "Jobs never got back, counted from 2001"
   },
+  "MARRIAGEMATH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "scaled",
+   "loi": [],
+   "tieu_de": "Births per woman 2022"
+  },
   "MISSINGPIECE": {
    "diem": 100,
    "bo_qua": false,
@@ -142,6 +149,13 @@
    "dang": "race",
    "loi": [],
    "tieu_de": "Toyota: miles per gallon — bZ4X, 119 mpg"
+  },
+  "NEAREARTH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Rocks that just passed Earth"
   },
   "NIGHTSHIFT": {
    "diem": 100,
@@ -246,7 +260,7 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "497 planes are over America right now — The whole country"
+   "tieu_de": "498 planes are over America right now — The whole country"
   },
   "SONGFILE": {
    "diem": 100,
@@ -304,6 +318,13 @@
    "loi": [],
    "tieu_de": "Morning Summit Lightly: 509 cal — Breakfast cereal: what is really in it"
   },
+  "WHATTHEYSEARCH": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "What America looks up about love — Infidelity, 19.1K"
+  },
   "WHERETOMOVE": {
    "diem": 100,
    "bo_qua": false,
@@ -325,37 +346,10 @@
    "loi": [],
    "tieu_de": "Order on Motion - Aldin Associates Ltd. — First amendment"
   },
-  "MARRIAGEMATH": {
-   "diem": 88,
-   "bo_qua": false,
-   "dang": "scaled",
-   "loi": [
-    "kịch bản: 2 câu lặp lại y hệt — lộ ra là máy nhả"
-   ],
-   "tieu_de": "Births per woman 2022"
-  },
-  "NEAREARTH": {
-   "diem": 0,
-   "bo_qua": true,
-   "dang": "ranked",
-   "loi": [
-    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
-   ],
-   "tieu_de": ""
-  },
   "ONESTUDY": {
    "diem": 0,
    "bo_qua": true,
    "dang": "cinematic",
-   "loi": [
-    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
-   ],
-   "tieu_de": ""
-  },
-  "WHATTHEYSEARCH": {
-   "diem": 0,
-   "bo_qua": true,
-   "dang": "ranked",
    "loi": [
     "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
    ],
