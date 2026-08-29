@@ -196,6 +196,20 @@ def cham_kich_ban(st: dict) -> list:
         if st.get("outro_vo"):
             dan.append(str(st["outro_vo"]).strip())
     dan = [d for d in dan if d]
+    # 29/8 — ĐẾM THEO CÂU, KHÔNG PHẢI THEO TRƯỜNG.
+    #
+    # Mỗi phần tử ở trên là một TRƯỜNG lời đọc, và một trường thường chứa nhiều câu trọn vẹn:
+    #     "A New Life Herbs, LLC pulled 993 across 9 separate recalls. Unapproved drug claims..."
+    # Cổng này đếm cả chuỗi ấy là MỘT câu 24 từ rồi báo trượt, trong khi hai câu bên trong lần
+    # lượt 9 và 13 từ — nghe hoàn toàn bình thường. Ba kênh dừng ở đúng 88 điểm vì phép đếm này,
+    # không phải vì kịch bản.
+    # Và phép đo sai còn kéo theo một chuỗi sửa vô ích: tôi đã đi vá bộ cắt câu hai vòng trước
+    # khi nhận ra bộ cắt vốn chạy đúng — nó cắt ra hai câu rồi ghép lại bằng dấu cách, đúng như
+    # phải thế, còn chỗ sai nằm ở cây thước.
+    # Chính lời ghi chú của cổng cũng nói "8 giây cho MỘT CÂU" — vậy đơn vị đo phải là câu.
+    import re as _re0
+    _tach = lambda t: [x.strip() for x in _re0.split(r"(?<=[.!?])\s+", t) if x.strip()]
+    dan = [c for d in dan for c in _tach(d)]
     if len(dan) < 3:
         return ["kịch bản dưới 3 câu — không đủ để dựng một video"]
 

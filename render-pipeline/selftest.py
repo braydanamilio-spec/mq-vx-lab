@@ -1734,6 +1734,34 @@ def _re_ascii(h) -> bool:
 
 
 
+def t_moc_don_rieng_khop_ten_kenh():
+    """`MOC_THEO_KENH` phải viết tên theo ĐÚNG khuôn khoá của sổ job, nếu không nó dọn 0 video.
+
+    29/8 — bảng ấy khai 15 kênh bằng tên CÓ DẤU CÁCH ("GAME GRAVEYARD") trong khi sổ job ghi tên
+    VIẾT LIỀN ("GAMEGRAVEYARD"). Phép tra không bao giờ trúng, nên cả lớp mốc-riêng chạy như
+    không có — và không một dòng lỗi nào: lượt dọn báo thành công sau khi đánh dấu đúng 0 video.
+    Kiểm chứng thật trên nhật ký lượt dọn 09:56Z: 1.286 video engine cũ được đánh dấu, còn phần
+    mốc riêng thì không in ra một dòng nào.
+    Loại lỗi này không thể phát hiện bằng đọc mã — hai bên đều "trông đúng". Chỉ có phép so tên
+    với danh sách kênh thật mới bắt được."""
+    import json as _json
+    ds = _doc("don_trung_tieu_de.py")
+    ks = _json.loads(_doc("kenh_the_he_2.json"))
+    kk = lambda t: str(t or "").replace(" ", "").upper()
+    that = {kk(k["ten"]) for k in ks}
+    import re as _re
+    kh = _re.search(r"MOC_THEO_KENH\s*=\s*\{[^}]*?\((.*?)\)\}", ds, _re.S)
+    assert kh, "không đọc được MOC_THEO_KENH"
+    ten = _re.findall(r'"([^"]+)"', kh.group(1))
+    assert ten, "MOC_THEO_KENH rỗng"
+    hut = [t for t in ten if kk(t) not in that]
+    assert not hut, ("MOC_THEO_KENH khai tên KHÔNG có trong danh sách kênh (dọn sẽ trúng 0 video): "
+                     + ", ".join(hut[:6]))
+    # và phép tra trong mã PHẢI đi qua chuẩn hoá, không so thẳng
+    assert "moc_kenh.get(_kk(ch))" in ds, \
+        "tra mốc riêng không chuẩn hoá khoá -> tên có dấu cách sẽ không bao giờ khớp"
+
+
 def t_tra_kenh_gen2_phai_khop_ten_seed_luu():
     """Tên kênh mà `seed` LƯU phải tra ra được bằng `doc_kenh` — cả 50, không sót cái nào.
 
@@ -2353,6 +2381,7 @@ def main():
     check("mức âm chuyển cảnh quyết ở MỘT chỗ", t_muc_am_quyet_o_mot_cho)
     check("50 kênh đồng bộ đủ 3 nơi (dropdown/brand/đăng)", t_50_kenh_dong_bo_du_ba_noi)
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
+    check("bảng mốc dọn riêng phải khớp tên kênh thật", t_moc_don_rieng_khop_ten_kenh)
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
     check("gen-2 ra BỘ 1 long + 3 short (có cha/thứ tự)", t_gen2_phai_ra_bo_1long_3short)
     check("bộ không được chọn story hai lần", t_bo_khong_duoc_chon_story_hai_lan)

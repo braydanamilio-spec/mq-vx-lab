@@ -146,7 +146,14 @@ def main() -> int:
         return d if d.tzinfo else d.replace(tzinfo=_dt.timezone.utc)
 
     moc = _luc(a.moc_engine)
-    moc_kenh = {k.upper(): _luc(v) for k, v in MOC_THEO_KENH.items()}
+    # 29/8 — CHUẨN HOÁ KHOÁ KÊNH TRƯỚC KHI SO. Bản đầu của bảng này viết tên có dấu cách
+    # ("GAME GRAVEYARD") còn sổ job ghi tên VIẾT LIỀN ("GAMEGRAVEYARD"), nên phép tra khớp
+    # KHÔNG BAO GIỜ trúng và cả lớp mốc-riêng chạy như không có. Không một dòng lỗi nào: nó chỉ
+    # lặng lẽ dọn 0 video rồi báo thành công.
+    # Đúng họ lỗi "hai bên dùng khuôn khoá khác nhau" đã gây hỏng suốt tuần. Ở đây cái giá là
+    # video sai nhãn vẫn nằm nguyên trong hàng đăng trong khi bảng báo đã dọn xong.
+    _kk = lambda t: str(t or "").replace(" ", "").upper()
+    moc_kenh = {_kk(k): _luc(v) for k, v in MOC_THEO_KENH.items()}
     cu_engine = []
     khong_ro = 0
     rieng = defaultdict(int)
@@ -154,7 +161,7 @@ def main() -> int:
         # Kênh có mốc riêng thì DÙNG MỐC RIÊNG, không phải mốc muộn hơn trong hai cái: mốc riêng
         # bao giờ cũng muộn hơn mốc chung (nó vá thêm lỗi trên nền bản vá chung), nên lấy nó là
         # đã bao trọn cả hai đời lỗi.
-        m = moc_kenh.get(ch) or moc
+        m = moc_kenh.get(_kk(ch)) or moc
         for u, jid, _dr, ten in ds:
             t = _luc(u)
             if t is None:
@@ -162,7 +169,7 @@ def main() -> int:
                 continue
             if m and t < m:
                 cu_engine.append((jid, ch, ten))
-                if ch in moc_kenh:
+                if _kk(ch) in moc_kenh:
                     rieng[ch] += 1
 
     thua = []
@@ -182,6 +189,13 @@ def main() -> int:
     for jid, ch, ten in thua[:8]:
         print(f"     └ {ch}: {ten[:60]}")
 
+    # KHÔNG ĐƯỢC IM LẶNG KHI KHỚP 0. Một bảng mốc khai 15 kênh mà không chạm được kênh nào thì
+    # gần như chắc chắn là sai khoá, không phải "15 kênh ấy sạch cả". Nói ra ngay tại chỗ.
+    _co_kenh = {_kk(ch) for (ch, _t) in nhom}
+    _hut = sorted(k for k in moc_kenh if k not in _co_kenh)
+    if _hut:
+        print(f"\n  ⚠️ {len(_hut)}/{len(moc_kenh)} kênh trong bảng MỐC RIÊNG không khớp tên nào "
+              f"trong sổ job: {', '.join(_hut[:6])} — kiểm lại khuôn khoá tên kênh.")
     if rieng:
         print(f"\n  🏷️ {sum(rieng.values())} video thuộc {len(rieng)} kênh có MỐC RIÊNG "
               f"(nhãn hứa sai nội dung, vá ở fd167c0):")

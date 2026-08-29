@@ -1,5 +1,5 @@
 {
- "luc": "2026-08-29T06:48:08Z",
+ "luc": "2026-08-29T10:18:21Z",
  "nguong": 90,
  "canh_bao_motip": [],
  "kenh": {
@@ -8,14 +8,7 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "California: 15 — Active weather warnings"
-  },
-  "AMERICALOOKEDUP": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "race",
-   "loi": [],
-   "tieu_de": "Dolly Parton: 3,814K — Most-read on Wikipedia — Aug 26, 2026"
+   "tieu_de": "California: 12 — Active weather warnings"
   },
   "BREEDFILE": {
    "diem": 100,
@@ -57,7 +50,7 @@
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [],
-   "tieu_de": "Iwasa v. Nago — Wrongful death"
+   "tieu_de": "Scotty's Contracting — Wrongful death"
   },
   "DEGREEWORTH": {
    "diem": 100,
@@ -85,7 +78,7 @@
    "bo_qua": false,
    "dang": "ranked",
    "loi": [],
-   "tieu_de": "Grand Theft Auto IV: 0 — Games millions bought and nobody plays"
+   "tieu_de": "Grand Theft Auto IV: 20.0M : 1 — Games millions bought and nobody plays"
   },
   "GONETOOSOON": {
    "diem": 100,
@@ -106,21 +99,21 @@
    "bo_qua": false,
    "dang": "longshot",
    "loi": [],
-   "tieu_de": "2019: 1 in 27 — Unemployment by year"
+   "tieu_de": "Jobs never got back, counted from 2001"
   },
   "MARRIAGEMATH": {
    "diem": 100,
    "bo_qua": false,
    "dang": "scaled",
    "loi": [],
-   "tieu_de": "Birth rate 2022"
+   "tieu_de": "Births per woman 2022"
   },
   "MISSINGPIECE": {
    "diem": 100,
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [],
-   "tieu_de": "Disappearance of Marvin Clark"
+   "tieu_de": "Disappearance of Marvin Clark — Aug 23, 2026"
   },
   "MPGTRUTH": {
    "diem": 100,
@@ -134,7 +127,14 @@
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [],
-   "tieu_de": "Killing of the Clancy children"
+   "tieu_de": "Anthony Robinson (serial killer) — Aug 17, 2026"
+  },
+  "ONEHIT": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "longshot",
+   "loi": [],
+   "tieu_de": "Daryl Hall: 57y — How long the new wave acts lasted"
   },
   "PAIDVSPLAYED": {
    "diem": 100,
@@ -155,7 +155,7 @@
    "bo_qua": false,
    "dang": "race",
    "loi": [],
-   "tieu_de": "Raytheon Company: $2,631M — Ammunition contracts by year (2024)"
+   "tieu_de": "Bae Systems Land: $3,459M — Ammunition contracts by year (2024)"
   },
   "PILLFACTS": {
    "diem": 100,
@@ -183,7 +183,7 @@
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [],
-   "tieu_de": "Muppet Treasure Island — Aug 26, 2026"
+   "tieu_de": "Neatsville, Kentucky — Aug 20, 2026"
   },
   "RENTREALITY": {
    "diem": 100,
@@ -197,7 +197,7 @@
    "bo_qua": false,
    "dang": "ranked",
    "loi": [],
-   "tieu_de": "2024: 157,693.8 — Jobs in America by year"
+   "tieu_de": "What each industry paid an hour in 2024"
   },
   "SHOWNUMBERS": {
    "diem": 100,
@@ -211,7 +211,7 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "497 planes are over America right now — The whole country"
+   "tieu_de": "487 planes are over America right now — The whole country"
   },
   "SPACEINVOICE": {
    "diem": 100,
@@ -225,7 +225,7 @@
    "bo_qua": false,
    "dang": "ranked",
    "loi": [],
-   "tieu_de": "Free games beating the ones people paid for — Counter-Strike: Global, 1.0M"
+   "tieu_de": "Free games beating the ones people paid for — Counter-Strike, 1.0M"
   },
   "SUEDFORTHIS": {
    "diem": 100,
@@ -239,7 +239,7 @@
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [],
-   "tieu_de": "Great Moon Hoax — Aug 26, 2026"
+   "tieu_de": "Great Amherst Mystery — Aug 26, 2026"
   },
   "WEAPONPRICE": {
    "diem": 100,
@@ -254,13 +254,6 @@
    "dang": "ranked",
    "loi": [],
    "tieu_de": "Morning Summit Lightly: 509 cal — Breakfast cereal: what is really in it"
-  },
-  "WHATTHEYSEARCH": {
-   "diem": 100,
-   "bo_qua": false,
-   "dang": "ranked",
-   "loi": [],
-   "tieu_de": "What America looks up about love — Marriage, 36.0K"
   },
   "WHERETOMOVE": {
    "diem": 100,
@@ -290,7 +283,7 @@
    "loi": [
     "kịch bản: câu mở đầu không có SỐ cũng không có CÂU HỎI ('A film that belongs to nobody.') — người xem chưa có lý do nào để ở lại"
    ],
-   "tieu_de": "Midwest Holiday (Part I) — America 1950"
+   "tieu_de": "new world next week - feb10 — America 1950"
   },
   "CARRECALL": {
    "diem": 88,
@@ -309,6 +302,15 @@
     "kịch bản: 1 câu dài quá 20 từ (dài nhất 23) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
    ],
    "tieu_de": "Who keeps writing \"artificial intelligence\" to the S E C"
+  },
+  "NEAREARTH": {
+   "diem": 88,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [
+    "kịch bản: 1 câu dài quá 20 từ (dài nhất 23) — hơn 8 giây cho một câu, tai không giữ kịp trên feed dọc"
+   ],
+   "tieu_de": "Rocks that just passed Earth"
   },
   "QUIETLAYOFFS": {
    "diem": 88,
@@ -333,9 +335,9 @@
    "bo_qua": false,
    "dang": "cinematic",
    "loi": [
-    "kịch bản: câu mở đầu không có SỐ cũng không có CÂU HỎI ('One Hit Wonder, on paper.') — người xem chưa có lý do nào để ở lại"
+    "kịch bản: câu mở đầu không có SỐ cũng không có CÂU HỎI ('The Supremes, on paper.') — người xem chưa có lý do nào để ở lại"
    ],
-   "tieu_de": "One Hit Wonder"
+   "tieu_de": "The Supremes — Motown"
   },
   "THENANDNOW": {
    "diem": 88,
@@ -346,21 +348,12 @@
    ],
    "tieu_de": "The same subject, decades apart — City street"
   },
-  "NEAREARTH": {
+  "AMERICALOOKEDUP": {
    "diem": 0,
-   "bo_qua": true,
-   "dang": "ranked",
+   "bo_qua": false,
+   "dang": "race",
    "loi": [
-    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
-   ],
-   "tieu_de": ""
-  },
-  "ONEHIT": {
-   "diem": 0,
-   "bo_qua": true,
-   "dang": "longshot",
-   "loi": [
-    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+    "dựng story ném UnboundLocalError: local variable '_ngay_goc' referenced before assignment"
    ],
    "tieu_de": ""
   },
@@ -368,6 +361,15 @@
    "diem": 0,
    "bo_qua": true,
    "dang": "cinematic",
+   "loi": [
+    "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
+   ],
+   "tieu_de": ""
+  },
+  "WHATTHEYSEARCH": {
+   "diem": 0,
+   "bo_qua": true,
+   "dang": "ranked",
    "loi": [
     "nguồn không trả dữ liệu lượt này (không tính là hỏng)"
    ],

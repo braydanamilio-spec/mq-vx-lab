@@ -386,13 +386,29 @@ def _bd_thu_hoi(D, ky):
     if len(ds) < 3:
         return None
 
+    # 29/8 — MỘT LÝ DO CHỈ ĐƯỢC ĐỌC MỘT LẦN TRONG CẢ VIDEO.
+    # FDA ghi lý do thu hồi bằng một bộ câu chuẩn, nên sáu công ty rất hay chung một câu — khung
+    # thật RECALL PLATE có hai mục cùng đọc "Potential contamination with Salmonella." Câu lặp y
+    # hệt trong một video là dấu hiệu rõ nhất của "máy nhả", đúng thứ cổng nghiệm thu bắt và đúng
+    # thứ người xem nhận ra ngay. Công ty thứ hai bỏ phần lý do: con số của nó vẫn nguyên, nhãn
+    # trên khung vẫn nguyên, chỉ lời đọc không nhắc lại.
+    _da_doc = set()
+    def _ly_do_moi(g):
+        t = " ".join(str(g.get("ly_do") or "").split())[:80].strip()
+        k = "".join(c for c in t.lower() if c.isalnum())
+        if not k or k in _da_doc:
+            return ""
+        _da_doc.add(k)
+        return t
+
     co_so = [g for g in ds if g["sl"] > 0]
     if len(co_so) >= 3:
         co_so.sort(key=lambda g: -g["sl"])
         muc = [{"name": _gon(_ten_cty(g["cong_ty"])), "stat": _gon_so(g["sl"]),
                 "vo": (f"{_gon(g['cong_ty'], 34)} pulled {_gon_so(g['sl'])}"
                        + (f" across {g['lot']} separate recalls" if g["lot"] > 1 else "")
-                       + f". {g['ly_do'][:80]}")} for g in co_so[:6]]
+                       + (f". {_l}" if (_l := _ly_do_moi(g)) else "."))}
+               for g in co_so[:6]]
         don_vi = "units"
     else:
         nang = {"Class I": 0, "Class II": 1, "Class III": 2}
@@ -400,7 +416,8 @@ def _bd_thu_hoi(D, ky):
         muc = [{"name": _gon(_ten_cty(g["cong_ty"])), "stat": g["muc_do"] or "Class ?",
                 "vo": (f"{_gon(g['cong_ty'], 34)}, {g['muc_do'] or 'a recall'}"
                        + (f", {g['lot']} times" if g["lot"] > 1 else "")
-                       + f". {g['ly_do'][:80]}")} for g in ds[:6]]
+                       + (f". {_l}" if (_l := _ly_do_moi(g)) else "."))}
+               for g in ds[:6]]
         don_vi = "severity"
     return (f"{nhan} recalls you probably missed", muc,
             "All of this is filed with the F D A.",
@@ -1438,8 +1455,14 @@ def _dc_wiki(D, ky):
     _TH_G = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-    def _ngay_goc(d):
-        """20260813 -> "Aug 13". Hỏng thì trả nguyên chuỗi, không ném."""
+    def _nhan_ngay(d):
+        """20260813 -> "Aug 13". Hỏng thì trả nguyên chuỗi, không ném.
+
+        29/8 — trước tên là `_ngay_goc`, TRÙNG tên hàm cấp mô-đun tôi vừa thêm. Python thấy có
+        phép gán `_ngay_goc` trong thân hàm nên coi cái tên ấy là BIẾN CỤC BỘ cho cả hàm, kể cả ở
+        dòng 1437 nằm TRƯỚC chỗ định nghĩa — nên lượt gọi đầu ném UnboundLocalError và AMERICA
+        LOOKED UP chấm 0 điểm. Hai hàm hai việc khác hẳn nhau: một cái dựng NGÀY GỐC từ tham số
+        xoay, một cái làm NHÃN hiển thị. Tên khác nhau thì không bao giờ đụng nhau nữa."""
         t = str(d)
         try:
             return f"{_TH_G[int(t[4:6])]} {int(t[6:8])}"
@@ -1468,7 +1491,7 @@ def _dc_wiki(D, ky):
             # và là dấu hiệu rõ nhất rằng video do máy nhả ra không ai xem lại.
             # Các bộ dựng đua khác truyền `nam` (một số nguyên bốn chữ số) nên đồng hồ đọc đúng;
             # riêng đường này đếm theo NGÀY nên phải tự đổi sang chữ người đọc được.
-            frames.append({"t": _ngay_goc(d), "data": sorted(data, key=lambda z: -z["value"])[:7]})
+            frames.append({"t": _nhan_ngay(d), "data": sorted(data, key=lambda z: -z["value"])[:7]})
     if len(frames) < 4:
         return None
     dan = ["Two weeks of what America actually read.",
@@ -1658,7 +1681,9 @@ def _pk_wiki(D, ky):
         # `du_lieu_mo.noi_co_that`). Chỉ hỏi 150 bài đọc nhiều nhất — ba lần gọi, đủ để ngày nào
         # cũng có vài chỗ thật, mà không quét cả nghìn bài cho một video.
         if loc == "dia_diem":
-            dau = ds[:150]
+            # 100 bài, tức HAI lượt gọi. 150 là ba lượt, mà bài thứ 101-150 trong bảng đọc nhiều
+            # gần như không bao giờ là một địa danh — không đáng thêm một lượt cho mỗi ngày lùi.
+            dau = ds[:100]
             co = D.noi_co_that([x["ten"] for x in dau])
             # Bài có toạ độ mà tên mở đầu bằng một năm là SỰ KIỆN gắn với nơi chốn ("2026 Nepal
             # floods"), không phải một chỗ để kể. Nhãn kênh hứa một NƠI.
@@ -4004,6 +4029,17 @@ def _cat_cau_dai(cau: str, tran: int = 20) -> list:   # cùng ngưỡng với ng
     t = " ".join(str(cau or "").split())
     if len(t.split()) <= tran:
         return [t] if t else []
+    # 29/8 chiều — HAI THIẾU SÓT ĐO ĐƯỢC TRÊN KHUNG THẬT.
+    # (1) Một trường `vo` thường chứa HAI câu trọn vẹn, mà cổng nghiệm thu đếm cả chuỗi là MỘT
+    #     câu. Ranh giới rõ nhất — dấu chấm — lại là chỗ hàm này chưa từng nhìn tới.
+    # (2) Hàm chỉ cắt MỘT LẦN. Chuỗi 37 từ chia đôi vẫn còn một nửa 26 từ. ARCHIVE REEL và
+    #     THEN AND NOW trượt đúng vì thế.
+    manh = [x for x in _re.split(r"(?<=[.!?])\s+", t) if x.strip()]
+    if len(manh) > 1:
+        ra = []
+        for m in manh:
+            ra += _cat_cau_dai(m, tran)
+        return ra
     # Ưu tiên: dấu phẩy/chấm phẩy -> liên từ. Chọn chỗ gần GIỮA câu nhất để hai nửa cân nhau.
     ung = [m.end() for m in _re.finditer(r",\s|;\s", t)]
     ung += [m.start() for m in _re.finditer(r"\s(?:and|but|while|because|so that|which)\s", t)]
@@ -4017,11 +4053,25 @@ def _cat_cau_dai(cau: str, tran: int = 20) -> list:   # cùng ngưỡng với ng
     a = a if a.endswith((".", "!", "?")) else a + "."
     b = (b[:1].upper() + b[1:]) if b else b
     b = b if b.endswith((".", "!", "?")) else b + "."
+    # Đệ quy: một nửa vẫn có thể còn quá dài. Điều kiện dừng là "không còn chỗ cắt tử tế", lúc đó
+    # nhánh trên trả nguyên mảnh — nên vòng đệ quy luôn kết thúc.
+    if len(a.split()) > tran or len(b.split()) > tran:
+        return _cat_cau_dai(a, tran) + _cat_cau_dai(b, tran)
     return [a, b]
 
 
 def hoan_kich_ban(st: dict, kenh: dict) -> dict:
-    """Đảm bảo CÂU ĐẦU của lời đọc là một HOOK, không phải một câu mô tả.
+    """Đảm bảo CÂU ĐẦU của lời đọc là một HOOK, không phải một câu mô tả — VÀ cắt mọi câu quá dài.
+
+    29/8 chiều — NĂM KÊNH KẸT Ở ĐÚNG 88 ĐIỂM VÌ MỘT DÒNG `return st`.
+    Phép cắt câu dài (`_cat_moi_cau_dai`) chỉ được gọi ở lối ra CUỐI hàm. Nhưng kênh nào câu mở
+    đầu ĐÃ có sẵn con số thì hàm thoát ngay ở dòng thứ ba — "không cần thêm hook nữa" — và thoát
+    kiểu đó thì lời đọc từng mục không bao giờ đi qua bộ cắt.
+    Nên CAR RECALL vẫn giữ nguyên câu 23 từ lấy thẳng từ mô tả thu hồi của NHTSA, dù bộ cắt đã
+    nằm sẵn trong tệp và chạy tốt. Tôi đã tưởng phải sửa bộ cắt, đo ra mới thấy nó chưa từng được
+    gọi cho những kênh ấy.
+    Nay MỌI lối ra đều đi qua bộ cắt. Việc "thêm hook" và việc "cắt câu dài" là hai việc độc lập;
+    bỏ qua việc thứ hai vì việc thứ nhất không cần làm là một lỗi nối nhầm.
 
     29/8 — thêm phép chấm kịch bản rồi đo lại 50 kênh: **40 kênh mở đầu bằng câu mô tả**.
         "Six seasons of points leaders."
@@ -4046,22 +4096,74 @@ def hoan_kich_ban(st: dict, kenh: dict) -> dict:
             kho, lay = "narration", lambda: [str(x).strip() for x in st["narration"] if str(x).strip()]
         elif str(st.get("intro_vo") or "").strip():
             kho, lay = "intro_vo", lambda: [str(st["intro_vo"]).strip()]
+        # 29/8 — KHOÁ `hook`. Cổng nghiệm thu đọc narration -> intro_vo -> **hook** -> items ->
+        # scenes, còn hàm này bỏ qua hẳn `hook`. Dạng phim kể trả về đúng khoá đó, nên hook tôi
+        # sinh ra rơi vào `scenes[0].nar` trong khi cổng vẫn đọc câu mô tả ở `hook` và vẫn chấm
+        # trượt. Hai bên đọc hai khoá khác nhau thì bên nào cũng "trông đúng".
+        elif str(st.get("hook") or "").strip():
+            kho, lay = "hook", lambda: [str(st["hook"]).strip()]
         elif (st.get("scenes") or [{}])[0].get("nar"):
             kho, lay = "scenes", lambda: [str(st["scenes"][0].get("nar") or "").strip()]
         else:
-            return st
+            return _cat_moi_cau_dai(st)
         dan = lay()
         if not dan:
-            return st
+            return _cat_moi_cau_dai(st)
         dau = dan[0]
+        # 29/8 — XÉT CÂU ĐẦU TIÊN, KHÔNG XÉT CẢ TRƯỜNG. Một trường lời mở thường chứa hook rồi
+        # mới tới câu mô tả; xét cả chuỗi thì hook đã có sẵn vẫn bị coi là "chưa có hook" và hàm
+        # dán thêm một cái nữa. Đo thật trên THEN AND NOW khi hàm chạy hai lượt:
+        #     "The same subject, decades apart. How much of it is on paper?
+        #      The same subject, decades apart. How much of it is on paper?"
+        # Cùng cây thước với cổng nghiệm thu (nó cũng tách câu rồi mới đo) — hai bên đo khác đơn
+        # vị thì bên này sửa xong bên kia vẫn báo trượt, hoặc tệ hơn: sửa thành hỏng.
+        import re as _re0
+        _c1 = [x.strip() for x in _re0.split(r"(?<=[.!?])\s+", dau) if x.strip()]
+        _dau1 = _c1[0] if _c1 else dau
         # Đã có số hoặc đã là câu hỏi -> tự nó đã hook, không đụng vào.
-        if any(c.isdigit() for c in dau) or dau.rstrip().endswith("?"):
-            return st
+        if any(c.isdigit() for c in _dau1) or _dau1.rstrip().endswith("?"):
+            return _cat_moi_cau_dai(st)
         d = _so_noi_bat(st or {})
         so = " ".join(str(d.get("stat") or "").split())
         ten = " ".join(str(d.get("name") or "").split())
         if not so or not any(c.isdigit() for c in so):
-            return st
+            # 29/8 — KHÔNG CÓ SỐ THÌ MỞ BẰNG CÂU HỎI, ĐỪNG BỎ CUỘC.
+            # Ba kênh dừng ở đúng 88 điểm vì nhánh này trả về nguyên trạng: ARCHIVE REEL mở bằng
+            # "A film that belongs to nobody.", SONG FILE bằng "The Supremes, on paper." Cả hai
+            # đều là câu mô tả — đúng thứ hàm này sinh ra để diệt. Dạng phim kể không có bảng số
+            # nên `_so_noi_bat` không tìm được gì, và thế là chúng thoát cửa.
+            # Câu hỏi hook được ngang con số: nó mở một khoảng trống trong đầu người xem, và
+            # khoảng trống thì phải lấp. Đây cũng là thứ cổng nghiệm thu chấp nhận.
+            _td = " ".join(str(st.get("title") or "").split())
+            for _tach in (" — ", " – ", " - ", ": "):
+                if _tach in _td:
+                    _td = _td.split(_tach)[0].strip()
+                    break
+            _td = _td.rstrip(" .,;:")
+            if len(_td) < 3 or len(_td) > 52:
+                return _cat_moi_cau_dai(st)
+            import hashlib as _h2
+            _k2 = int(_h2.md5(str(kenh.get("ten") or "").encode()).hexdigest(), 16) % 3
+            # CÂU HỎI PHẢI ĐỨNG ĐẦU. Khuôn giữa của bản đầu là "{chủ đề}. How much of it is on
+            # paper?" — chủ đề trước, câu hỏi sau. Nhưng cổng đo CÂU ĐẦU TIÊN, nên câu đầu vẫn là
+            # một câu mô tả và kênh vẫn trượt; hook đặt ở câu thứ hai thì với người lướt feed nó
+            # cũng chẳng khác gì không có.
+            hoi = (f"What does the record actually say about {_td}?" if _k2 == 0
+                   else f"How much of {_td} is actually on paper?" if _k2 == 1
+                   else f"How much do we actually know about {_td}?")
+            # ĐỪNG DÁN LẠI THỨ CÂU HỎI ĐÃ NÓI. `_td` lấy từ tiêu đề, mà câu mô tả cũng thường
+            # chính là tiêu đề — ghép thẳng thì ra "How much of X is on paper? X." và cổng đếm
+            # được một câu lặp. Trùng thì bỏ hẳn câu mô tả: câu hỏi đã mang đủ chủ đề rồi.
+            _gon2 = lambda x: "".join(c for c in str(x).lower() if c.isalnum())
+            _duoi = "" if _gon2(_td) and _gon2(_td) in _gon2(dau) else dau
+            _ghep = f"{hoi} {_duoi}".strip()
+            if kho == "narration":
+                st["narration"] = [hoi] + ([] if not _duoi else dan)
+            elif kho in ("intro_vo", "hook"):
+                st[kho] = _ghep
+            else:
+                st["scenes"][0]["nar"] = _ghep
+            return _cat_moi_cau_dai(st)
         # Chủ thể phải là chữ đọc được — cùng luật với tiêu đề (xem `_tieu_de_tu_du_lieu`).
         if "_" in ten or any(ord(c) > 127 for c in ten) or len(ten) < 2:
             ten = ""
@@ -4074,11 +4176,11 @@ def hoan_kich_ban(st: dict, kenh: dict) -> dict:
         else:
             hook = f"{so}. That is where this starts."
         if hook.strip().lower() == dau.strip().lower():
-            return st
+            return _cat_moi_cau_dai(st)
         if kho == "narration":
             st["narration"] = [hook] + dan
-        elif kho == "intro_vo":
-            st["intro_vo"] = f"{hook} {dau}".strip()
+        elif kho in ("intro_vo", "hook"):
+            st[kho] = f"{hook} {dau}".strip()
         else:
             st["scenes"][0] = {**st["scenes"][0], "nar": f"{hook} {dau}".strip()}
         return _cat_moi_cau_dai(st)
@@ -4094,7 +4196,7 @@ def _cat_moi_cau_dai(st: dict) -> dict:
             for d in st["narration"]:
                 ra += _cat_cau_dai(d)
             st["narration"] = ra
-        for k in ("intro_vo", "outro_vo"):
+        for k in ("intro_vo", "outro_vo", "hook"):
             if str(st.get(k) or "").strip():
                 st[k] = " ".join(_cat_cau_dai(st[k]))
         for kho in ("items", "data", "pairs"):

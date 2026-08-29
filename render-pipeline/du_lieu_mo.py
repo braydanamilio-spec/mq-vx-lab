@@ -921,6 +921,9 @@ def ho_so_nhac(nghe_si: str, n: int = 8) -> list[dict]:
     return ra
 
 
+_NHO_TOA_DO: dict = {}          # tiêu đề -> có toạ độ hay không, nhớ trong một tiến trình
+
+
 def noi_co_that(tieu_de: list[str]) -> set:
     """Trong danh sách tiêu đề Wikipedia, bài nào là MỘT CHỖ CÓ THẬT TRÊN BẢN ĐỒ.
 
@@ -944,14 +947,27 @@ def noi_co_that(tieu_de: list[str]) -> set:
     """
     import urllib.parse as _up
     ra = set()
+    # NHỚ TRONG TIẾN TRÌNH. Bộ dựng lùi tối đa 10 ngày để tìm được một chỗ có thật, và bảng đọc
+    # nhiều của hai ngày liền kề trùng nhau tới quá nửa — không nhớ thì cùng một tiêu đề bị hỏi
+    # lại cả chục lần. Đo thật: chấm 50 kênh 6 luồng làm Wikipedia trả 429 hàng loạt, và phần lớn
+    # lượt gọi ấy là hỏi lại thứ vừa hỏi xong.
     ds = [t for t in tieu_de if t]
-    for i in range(0, len(ds), 50):
-        lo = ds[i:i + 50]
+    chua = [t for t in ds if t not in _NHO_TOA_DO]
+    ra = {t for t in ds if _NHO_TOA_DO.get(t)}
+    for i in range(0, len(chua), 50):
+        lo = chua[i:i + 50]
         d = _goi("https://en.wikipedia.org/w/api.php?" + _up.urlencode(
             {"action": "query", "format": "json", "prop": "coordinates", "titles": "|".join(lo)}))
+        if d is None:
+            continue                       # nguồn chập -> ĐỪNG ghi nhớ "không có toạ độ"
         for p in (((d or {}).get("query") or {}).get("pages") or {}).values():
-            if p.get("coordinates"):
-                ra.add(str(p.get("title") or ""))
+            t = str(p.get("title") or "")
+            co = bool(p.get("coordinates"))
+            _NHO_TOA_DO[t] = co
+            if co:
+                ra.add(t)
+        for t in lo:                       # tiêu đề API không trả về = chắc chắn không có toạ độ
+            _NHO_TOA_DO.setdefault(t, False)
     return ra
 
 
