@@ -1,5 +1,5 @@
 {
- "luc": "2026-08-29T10:34:18Z",
+ "luc": "2026-08-29T10:41:21Z",
  "nguong": 90,
  "canh_bao_motip": [],
  "kenh": {
@@ -100,6 +100,13 @@
    "dang": "ranked",
    "loi": [],
    "tieu_de": "Who keeps writing \"artificial intelligence\" to the S E C"
+  },
+  "GAMEGRAVEYARD": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "ranked",
+   "loi": [],
+   "tieu_de": "Grand Theft Auto IV: 20.0M : 1 — Games millions bought and nobody plays"
   },
   "GONETOOSOON": {
    "diem": 100,
@@ -239,7 +246,7 @@
    "bo_qua": false,
    "dang": "mapped",
    "loi": [],
-   "tieu_de": "493 planes are over America right now — The whole country"
+   "tieu_de": "497 planes are over America right now — The whole country"
   },
   "SONGFILE": {
    "diem": 100,
@@ -268,6 +275,13 @@
    "dang": "ranked",
    "loi": [],
    "tieu_de": "Ninth Circuit: 4 cases — Where people sue over false advertising"
+  },
+  "THENANDNOW": {
+   "diem": 100,
+   "bo_qua": false,
+   "dang": "thennow",
+   "loi": [],
+   "tieu_de": "City street in the archive, decades apart — Harlem Is Heaven, SBO Feature"
   },
   "UNSOLVEDLOG": {
    "diem": 100,
@@ -311,15 +325,6 @@
    "loi": [],
    "tieu_de": "Order on Motion - Aldin Associates Ltd. — First amendment"
   },
-  "GAMEGRAVEYARD": {
-   "diem": 88,
-   "bo_qua": false,
-   "dang": "ranked",
-   "loi": [
-    "kịch bản: 4 câu lặp lại y hệt — lộ ra là máy nhả"
-   ],
-   "tieu_de": "Grand Theft Auto IV: 20.0M : 1 — Games millions bought and nobody plays"
-  },
   "MARRIAGEMATH": {
    "diem": 88,
    "bo_qua": false,
@@ -328,15 +333,6 @@
     "kịch bản: 2 câu lặp lại y hệt — lộ ra là máy nhả"
    ],
    "tieu_de": "Births per woman 2022"
-  },
-  "THENANDNOW": {
-   "diem": 80,
-   "bo_qua": false,
-   "dang": "thennow",
-   "loi": [
-    "thennow: tiêu đề 'the same subject, decades apart — harlem is heaven, ' không nhắc gì tới chủ đề 'city street' -> người xem bấm vào vì tưởng một đằng, thấy một nẻo"
-   ],
-   "tieu_de": "The same subject, decades apart — Harlem Is Heaven, SBO Feature"
   },
   "NEAREARTH": {
    "diem": 0,

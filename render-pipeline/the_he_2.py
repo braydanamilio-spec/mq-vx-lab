@@ -797,7 +797,7 @@ def _bd_the_gioi(D, ky):
     if len(r) < 3:
         return None
     return (f"{ky.get('nhan') or 'World ranking'} {ky.get('nam', 2023)}",
-            [{"name": _gon(x["nuoc"], 24), "stat": _so(x["gia_tri"]),
+            [{"name": _gon(_ten_nuoc(x["nuoc"]), 24), "stat": _so(x["gia_tri"]),
               "vo": f"{x['nuoc']}. {_so(x['gia_tri'])}."} for x in r],
             "World Bank open data. Check it yourself.")
 
@@ -1987,6 +1987,29 @@ def _sk_bls(D, ky):
             "Same index, same base year. Bureau of Labor Statistics.")
 
 
+def _ten_nuoc(t: str) -> str:
+    """Tên nước ĐỌC LÊN ĐƯỢC. Ngân hàng Thế giới ghi tên theo kiểu danh mục hành chính.
+
+    29/8 — MARRIAGE MATH kẹt ở 88 điểm vì đúng chỗ này. Nguồn trả "Somalia, Fed. Rep.", và lời
+    đọc ghép thêm dấu chấm câu thành "Somalia, Fed. Rep..". Hai hệ quả:
+      • trên khung hiện hai dấu chấm liền — đọc ra như lỗi hiển thị;
+      • cổng nghiệm thu tách câu ở dấu chấm nên chuỗi ấy vỡ thành "Somalia, Fed." và "Rep..",
+        rồi mảnh "Somalia, Fed." trùng với mảnh cùng tên trong câu kết ⇒ báo "câu lặp y hệt".
+    Một dấu chấm trong dữ liệu làm hỏng cả phép đo câu — đó là lý do phải chuẩn hoá tại nguồn
+    chứ không vá ở cổng.
+    Phần sau dấu phẩy trong tên kiểu này luôn là hậu tố thể chế ("Fed. Rep.", "Dem. People's",
+    "Arab Rep.", "RB"), không phải một phần tên nước người ta gọi. Bỏ nó đi thì vừa đọc đúng vừa
+    hết dấu chấm. Chỉ bỏ khi phần đầu còn đủ dài — "Korea, Dem. People's" -> "Korea" là đúng ý,
+    còn một tên vốn ngắn thì giữ nguyên còn hơn cắt cụt.
+    """
+    t = " ".join(str(t or "").split())
+    if "," in t:
+        dau = t.split(",")[0].strip()
+        if len(dau) >= 4:
+            t = dau
+    return t.rstrip(" .")
+
+
 def _sk_the_gioi(D, ky):
     """So chỉ số quốc gia — LẤY TRẢI ĐỀU CẢ BẢNG, không lấy 6 nước đứng đầu.
 
@@ -2003,7 +2026,7 @@ def _sk_the_gioi(D, ky):
     if len(r) > 6:
         vt = sorted({0} | {round(i * (len(r) - 1) / 5) for i in range(1, 6)})
         r = [r[i] for i in vt]
-    muc = [{"name": _gon(x["nuoc"], 22), "emoji": "🌍", "value": round(x["gia_tri"], 1),
+    muc = [{"name": _gon(_ten_nuoc(x["nuoc"]), 22), "emoji": "🌍", "value": round(x["gia_tri"], 1),
             "disp": _so(x["gia_tri"])} for x in r]
     return (f"{ky.get('nhan') or 'World ranking'} {ky.get('nam', 2023)}", "", muc,
             "World Bank open data.")
