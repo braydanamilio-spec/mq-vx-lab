@@ -279,7 +279,14 @@ def _gon(t: str, toi_da: int = 26) -> str:
             if i < len(tu) - 1 and tu[i].endswith(":"):
                 tu = tu[:i + 1]
                 break
-    return (" ".join(tu).rstrip(" ,;:-–—&+") or t[:toi_da].rstrip(" ,;:-–—&+"))
+    ra = " ".join(tu).rstrip(" ,;:-–—&+") or t[:toi_da].rstrip(" ,;:-–—&+")
+    # 29/8 — ĐỪNG ĐỂ DẤU NGOẶC MỞ MÀ KHÔNG ĐÓNG. Khung thật NIGHT SHIFT: "Anthony Robinson
+    # (serial killer)" bị gọt còn "Anthony Robinson (serial" — một dấu ngoặc treo lơ lửng đọc ra
+    # như chữ bị lỗi, và nó nằm ngay cạnh con số, chỗ mắt nhìn nhiều nhất.
+    for mo, dong in (("(", ")"), ("[", "]"), ("“", "”")):
+        if ra.count(mo) > ra.count(dong):
+            ra = ra[:ra.rfind(mo)].rstrip(" ,;:-–—")
+    return ra
 
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
@@ -530,6 +537,47 @@ def _ngay_goc(ky) -> "object":
         return _dt.date.today() - _dt.timedelta(days=abs(ngay))
 
 
+def _loc_wiki(D, ds: list, loc: str) -> list:
+    """Lọc bảng đọc nhiều theo chủ đề kênh. DÙNG CHUNG cho cả dạng phim kể lẫn dạng bảng.
+
+    29/8 — tách ra khỏi `_pk_wiki` khi chuyển bốn kênh Wikipedia sang dạng biểu đồ. Để hai bản
+    sao của cùng một bộ lọc ở hai chỗ là bảo đảm có ngày chúng lệch nhau, rồi một kênh lọc chặt
+    hơn kênh kia mà không ai biết vì sao."""
+    # 29/8 — NỚI KHO TỪ CHO KÊNH BÍ ẨN. Dạng bảng đòi ĐỦ BA MỤC trong cùng một ngày, chặt hơn
+    # hẳn dạng phim (chỉ cần một bài). Với năm từ khoá cũ thì 13/13 ngày đều hụt — kênh câm.
+    # Thêm các từ vẫn nằm đúng trong "chưa có lời giải": hiện tượng lạ, chuyện ma, vật thể bay,
+    # mật mã chưa giải. KHÔNG thêm lại "hoax"/"conspiracy" — trò lừa đã có lời giải và thuyết âm
+    # mưu đều không phải chuyện chưa ai trả lời được.
+    TU = {"bi_an": (("mystery", "unsolved", "unexplained", "cryptid", "cold case", "paranormal",
+                     "haunting", "haunted", "sighting", "phenomenon", "enigma", "folklore",
+                     "legend of", "cipher", "lost city"),
+                    # "Curse of the Undead" là phim 1959, khớp chữ "curse". Mọi kho từ mở rộng
+                    # đều kéo theo tác phẩm giải trí cùng tên — loại nhóm ấy ở cả ba kênh.
+                    # KHỚP VẾ ĐÓNG NGOẶC, không phải vế mở. "The Vanishing (1993 film)" chứa
+                    # "(1993 film" chứ không chứa "(film" — nên danh sách cấm cũ trượt sạch, và
+                    # hai cuốn phim leo lên đầu bảng kênh mất tích.
+                    ("missing", "disappear", "vanish", "film)", "song)", "album)", "novel)",
+                     "series)", "video game)")),
+          # "Missing square puzzle" là một bài toán hình học, không phải một vụ mất tích.
+          # Nhưng loại cả "square"/"piece"/"game" thì quá tay — kênh mất luôn cả ngày có đủ bài.
+          # Chỉ loại đúng thứ gây nhầm: bài đố và tác phẩm giải trí.
+          "mat_tich": (("missing", "disappear", "vanish", "lost at sea", "whereabouts",
+                        "last seen", "presumed dead"),
+                       ("puzzle", "film)", "song)", "album)", "novel)", "series)")),
+          "ca_dem": (("murder", "killing", "homicide", "night shift", "serial"), ("film", "song"))}
+    if loc == "dia_diem":
+        dau = ds[:100]
+        co = D.noi_co_that([x["ten"] for x in dau])
+        return [x for x in dau if x["ten"] in co and not x["ten"][:4].isdigit()]
+    cap = TU.get(loc)
+    if not cap:
+        return list(ds)
+    nhan, tru = cap
+    return [x for x in ds
+            if any(t in x["ten"].lower() for t in nhan)
+            and not any(t in x["ten"].lower() for t in tru)]
+
+
 def _bd_wiki_top(D, ky):
     # Bảng đọc nhiều trả tới 1000 bài/ngày. Lọc theo chủ đề thì phải quét CẢ bảng, quét
     # 60 dòng đầu là gần như luôn rỗng -> kênh bỏ lượt oan mỗi ngày.
@@ -560,6 +608,52 @@ def _bd_wiki_top(D, ky):
                 [{"name": _gon(x["ten"], 28), "stat": _so(x["luot_doc"]),
                   "vo": f"{_gon(x['ten'], 34)}. {x['luot_doc']:,} searches."} for x in r],
                 "Nobody admits to this one.")
+    # ── LỌC THEO CHỦ ĐỀ KÊNH, RỒI XẾP HẠNG THEO LƯỢT ĐỌC (29/8/2026) ────────────────────
+    # Anh: "mấy channel nét chì chưa phù hợp lắm, nên làm dạng chart animation vì a thấy nó vẽ
+    # ko liên quan nội dung".
+    # Anh đúng, và đây là chỗ tôi bỏ sót. Bốn kênh Wikipedia đang chạy dạng PHIM KỂ, mỗi cảnh
+    # một ảnh AI: sương mù trên đường vắng, cửa hé trong hành lang tối, khúc sông nhìn từ trên
+    # cao. Ảnh đẹp và đúng không khí — nhưng KHÔNG MANG MỘT MẨU THÔNG TIN NÀO về bài đang kể.
+    # Người xem nhìn sương mù rồi nghe "112.394 người đã tra Dollywood hôm qua" thì hai thứ ấy
+    # chẳng dính gì nhau, và ảnh trở thành thứ trang trí che mất chỗ đáng lẽ để con số.
+    # Bảng đọc nhiều thì VỐN LÀ MỘT BẢNG SỐ. Vẽ nó thành biểu đồ là nói đúng thứ mình có.
+    # Mỗi kênh vẫn khác nhau vì bộ lọc `loc` khác nhau — cùng một ngày, bốn bảng khác hẳn.
+    _loc = str(ky.get("loc") or "")
+    if _loc in ("bi_an", "dia_diem", "ca_dem", "mat_tich"):
+        # GOM NHIỀU NGÀY, KHÔNG ĐÒI ĐỦ BA MỤC TRONG MỘT NGÀY (29/8, vòng ba).
+        #
+        # Dạng bảng cần sáu dòng, dạng phim chỉ cần một bài — chênh lệch ấy làm hai kênh câm hẳn:
+        # UNSOLVED LOG hụt 13/13 ngày, MISSING PIECE 13/13. Tôi đã thử nới kho từ, và nới tới đâu
+        # thì rác vào tới đó: thêm "curse" là "Curse of the Undead" (phim 1959) lọt ngay, mà lọc
+        # theo tên thì KHÔNG có cách nào tách một cuốn phim khỏi một chuyện có thật cùng tên.
+        # Đường đúng không phải lọc tinh hơn mà là LẤY RỘNG HƠN: gom bảng đọc nhiều của bảy ngày
+        # rồi mới lọc. Cùng dữ liệu công khai, cùng phép lọc, chỉ khác cỡ mẫu — và câu chuyện
+        # cũng đúng hơn: "tuần này người Mỹ đọc gì về chuyện chưa có lời giải".
+        gom: dict = {}
+        # 14 ngày cho kho từ hiếm. Kênh bí ẩn vẫn hụt ở cửa sổ 7 ngày: từ vựng "chưa có lời
+        # giải" không xuất hiện thường xuyên trong bảng đọc nhiều hằng ngày. Vòng lặp thoát sớm
+        # ngay khi đủ sáu mục, nên các kênh dồi dào dữ liệu vẫn chỉ tốn một, hai lượt gọi.
+        for lui in range(0, 14):
+            d = goc - _dt.timedelta(days=lui)
+            for x in _loc_wiki(D, D.bai_duoc_doc(d.year, d.month, d.day, 1000), _loc):
+                cu_ = gom.get(x["ten"])
+                if not cu_ or x["luot_doc"] > cu_["luot_doc"]:
+                    gom[x["ten"]] = x
+            if len(gom) >= 6:
+                break
+        r = sorted(gom.values(), key=lambda z: -z["luot_doc"])[:6]
+        if len(r) < 3:
+            return None
+        _TEN = {"bi_an": "Mysteries America read about",
+                "dia_diem": "Places America looked up",
+                "ca_dem": "Cases America read about",
+                "mat_tich": "Disappearances America read about"}
+        return (_TEN[_loc],
+                [{"name": _gon(x["ten"], 28), "stat": _so(x["luot_doc"]),
+                  "vo": f"{_gon(x['ten'], 34)}. {x['luot_doc']:,} people looked it up."} for x in r],
+                "One day of reading, counted by Wikimedia.",
+                {"phu": "by reads in one day"})
+
     r = D.bai_duoc_doc(goc.year, goc.month, goc.day, 1000)[:6]
     if len(r) < 3:
         return None
@@ -2794,6 +2888,20 @@ BO_CUC_KENH = {
     "PILLFACTS": "RankedEditorial", "RECALLPLATE": "RankedEditorial",
     "CARRECALL": "RankedEditorial", "SUEDFORTHIS": "RankedEditorial",
     "NEAREARTH": "RankedEditorial", "PAIDVSPLAYED": "RankedEditorial",
+    # 29/8 — BỐN KÊNH WIKIPEDIA CHUYỂN SANG BIỂU ĐỒ. Trước đây chúng là dạng phim kể, mỗi cảnh
+    # một ảnh AI không liên quan nội dung (sương mù, cửa hé, khúc sông) — anh chỉ ra đúng chỗ đó.
+    # Bảng đọc nhiều vốn là một bảng SỐ; vẽ nó thành cột là nói đúng thứ mình có, và bỏ luôn được
+    # sáu lượt vẽ ảnh cho mỗi video.
+    # UNSOLVED LOG KHÔNG chuyển được — và đây là số đo, không phải cảm tính. Quét 30 ngày bảng
+    # đọc nhiều với kho từ chặt ("unsolved", "unexplained", "mystery of", "cold case", "cryptid")
+    # chỉ ra SÁU bài, mà năm trong số đó là "Disappearance of…" tức trùng hẳn địa hạt MISSING
+    # PIECE. Nới kho từ thì rác vào ngay: thêm "curse" là "Curse of the Undead" (phim 1959) lọt,
+    # thêm "legend of" là "The Legend of Vox Machina" (phim hoạt hình) lọt.
+    # Từ vựng "chưa có lời giải" đơn giản không xuất hiện đủ nhiều trong thứ người Mỹ đọc hằng
+    # ngày. Nên nó ở lại dạng phim kể, và việc cần làm là ĐỔI NGUỒN cho nó — không phải ép một
+    # cái bảng không có số.
+    "REALPLACE": "VectorChart",
+    "NIGHTSHIFT": "VectorChart", "MISSINGPIECE": "VectorChart",
     # Đồ hoạ vector nền giấy: kênh tiền, lương, giá, hồ sơ doanh nghiệp — số liệu khô cần đọc rõ.
     "SALARYTRUTH": "VectorChart", "DEGREEWORTH": "VectorChart", "COSTTOGO": "VectorChart",
     "FILINGSSAY": "VectorChart", "QUIETLAYOFFS": "VectorChart", "WHATISINIT": "VectorChart",
