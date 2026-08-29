@@ -4004,3 +4004,27 @@ giờ chạy. Bản đầu chỉ bọc lỗi lúc MỞ client, không bọc lúc
 
 **LUẬT:** chia hệ ra nhiều project để cách ly sự cố thì mọi vòng lặp đi qua nhiều project phải bọc
 lỗi RIÊNG từng project — không thì cách ly chỉ tồn tại trên sơ đồ, còn thực tế vẫn là một điểm chết.
+
+### 7t. NĂM LỖI CỦA BỘ HÀI HAI NHÂN VẬT (thế hệ 4) — 30/8/2026
+
+Năm lỗi này đều **không báo lỗi**: render xong, xuất ra mp4, chỉ nhìn khung mới thấy.
+
+1. **`<svg>` trần bị nền `AbsoluteFill` phủ kín.** Luật vẽ của CSS xếp phần tử-có-định-vị vẽ SAU
+   nội dung tĩnh. Khung ra chỉ còn ảnh nền, mất sạch nhân vật lẫn phụ đề.
+   → Mọi `<svg>` đặt cạnh một lớp nền tuyệt đối **phải** nằm trong `AbsoluteFill` của chính nó.
+
+2. **`fetch_image(ai_only=True)` không kèm `ai_key` thì lặng lẽ trả None.** Thân hàm là
+   `if ai_key and _generate_image_ai(...)`. Có 169 khoá trong pool vẫn "không vẽ được".
+   → Muốn CHỈ vẽ (không tìm ảnh thật) thì gọi thẳng `DS._generate_image_ai`.
+
+3. **Ghép mốc tiếng theo `si` (chỉ số câu) là ghép hỏng.** Bộ tách câu của mình và bộ tách câu
+   trong edge-tts cắt khác nhau. → Ghép theo **SỐ TỪ**: edge-tts trả mốc đúng thứ tự từ.
+
+4. **Biên lượt thoại phải nửa mở.** `e` của lượt bằng ĐÚNG `t` của từ đầu lượt sau; lọc
+   `w.t < e + 0.02` nuốt luôn từ ấy → mỗi thẻ phụ đề thừa một từ của người kia.
+   → Gán từ về lượt chứa **điểm bắt đầu** của nó: `s - 0.02 <= w.t < e - 0.02`.
+
+5. **Khung 9:16 phải đóng cận hơn khung ngang**, và khoảng cách hai nhân vật phải **chia cho độ
+   phóng** — không chia thì ở cỡ cận mép khung xén mất nửa người.
+
+Cây thước: `cham_v4.py` (nhịp hài 25 · khớp tiếng 20 · không trùng 20 · sáng 15 · chữ 10 · dài 10).

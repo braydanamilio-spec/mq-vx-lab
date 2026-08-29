@@ -36,6 +36,7 @@ import { BrandRanked } from "./BrandRanked";
 import { StickDemo } from "./StickAnim";
 import { StickStory, calcStory } from "./StickStory";
 import { KichV2, calcKich } from "./v2/KichV2";
+import { KichHai, calcHai } from "./v4/KichHai";
 import { SayThisMG, calcMG } from "./SayThisMG";
 import { BrandBeyond } from "./BrandBeyond";
 import { BrandLegacy } from "./BrandLegacy";
@@ -249,6 +250,9 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="LottieTest" component={LottieTest} durationInFrames={120} fps={30} width={1920} height={1080} />
     <Composition id="StickDemo" component={StickDemo} durationInFrames={230} fps={30} width={1080} height={1920} />
     {/* THẾ HỆ 3 — phim hoạt hình có nhân vật, dựng hoàn toàn bằng vector, KHÔNG tốn lượt vẽ AI. */}
+    {/* THẾ HỆ 4 — hài, hai nhân vật đối thoại, nền là ảnh AI cache sẵn. */}
+    <Composition id="KichHai" component={KichHai as any} durationInFrames={900} fps={30}
+                 width={1080} height={1920} calculateMetadata={calcHai as any} />
     <Composition id="KichV2" component={KichV2 as any} durationInFrames={600} fps={30}
                  width={1080} height={1920} calculateMetadata={calcKich as any} />
     <Composition id="KichV2Wide" component={KichV2 as any} durationInFrames={600} fps={30}
