@@ -21,6 +21,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -757,9 +758,16 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
         d, subs, _ = TTS.synth(chu, m, voice=v, rate=rate, pitch=pitch)
         if not subs:
             raise RuntimeError(f"lượt {i} không có mốc từ")
-        w = os.path.join(tam, f"{i}.wav")
-        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", m, "-ar", "24000", "-ac", "1", w],
+        w0 = os.path.join(tam, f"{i}.raw.wav")
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", m, "-ar", "24000", "-ac", "1", w0],
                        capture_output=True, timeout=300)
+        w = os.path.join(tam, f"{i}.wav")
+        # Cắt đệm im lặng của bộ đọc, và NHỚ đã cắt bao nhiêu ở đầu — mọi mốc từ của đoạn này
+        # phải trừ đi đúng chừng ấy, không thì khẩu hình chạy trước tiếng.
+        bo_dau = _cat_lang(w0, w)
+        if not os.path.exists(w):
+            w = w0
+            bo_dau = 0.0
         dw = _giay_wav(w)
         if not dw:
             raise RuntimeError(f"lượt {i} giải mã hỏng")
@@ -774,11 +782,11 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
         # Mốc TỪ thì chính xác — edge-tts trả đúng lúc từng từ phát ra. Nên lượt lấy mốc từ chính
         # từ đầu và từ cuối của nó, và khoảng lặng giữa hai lượt trở thành khoảng lặng THẬT.
         # (`KichHai` đã biết cách giữ nguyên lượt vừa kết thúc khi rơi vào khe — xem luật 7af.)
-        t0 = tong + float(subs[0].get("t", 0))
-        tc = tong + float(subs[-1].get("t", 0)) + float(subs[-1].get("d", 0))
-        moc.append((round(t0, 3), round(tc + 0.12, 3)))
+        t0 = tong + max(0.0, float(subs[0].get("t", 0)) - bo_dau)
+        tc = tong + max(0.0, float(subs[-1].get("t", 0)) - bo_dau) + float(subs[-1].get("d", 0))
+        moc.append((round(t0, 3), round(min(tc + 0.12, tong + dw), 3)))
         for x in subs:
-            tu.append({"t": round(tong + float(x.get("t", 0)), 3),
+            tu.append({"t": round(tong + max(0.0, float(x.get("t", 0)) - bo_dau), 3),
                        "d": round(float(x.get("d", 0)), 3),
                        "w": str(x.get("w", "")), "si": i})
         wavs.append(w)
@@ -793,6 +801,54 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
     if r.returncode or not os.path.exists(mp3_dest):
         raise RuntimeError((r.stderr or "ghép tiếng hỏng")[-160:])
     return round(tong, 3), tu, moc
+
+
+def _cat_lang(w_vao: str, w_ra: str) -> float:
+    """Cắt im lặng ở ĐẦU và CUỐI một đoạn WAV. Trả số giây đã cắt ở đầu (để dời mốc từ).
+
+    30/8 — Đo được: sau khi tách đọc từng lượt, khe im lặng THẬT giữa hai câu là 1,0–1,5 giây,
+    trong khi khe mình cố ý chèn chỉ 0,16. Phần dôi ra là đệm của edge-tts ở hai đầu mỗi đoạn.
+    Sáu khe như thế là **sáu giây im lặng trong một phim hai mươi giây** — gần một phần ba thời
+    lượng không có gì xảy ra. Hài sống bằng nhịp chặt; rời rạc thế này thì mỗi câu đứng một mình
+    và cú va giữa hai người không còn.
+    Nên cắt sạch đệm rồi tự chèn đúng khe mình muốn. Giữ lại 0,05 giây ở đầu và 0,10 ở cuối để
+    câu không bị xén mất phụ âm bật (p, t, k) — những âm ấy có phần đầu rất nhỏ, cắt sát là nghe
+    ra "…ay" thay vì "play".
+    """
+    try:
+        r = subprocess.run(["ffmpeg", "-v", "info", "-i", w_vao,
+                            "-af", "silencedetect=n=-42dB:d=0.05", "-f", "null", "-"],
+                           capture_output=True, text=True, timeout=180)
+    except Exception:
+        return 0.0
+    tong = _giay_wav(w_vao)
+    dau, cuoi = 0.0, tong
+    kh, cur = [], None
+    for ln in (r.stderr or "").splitlines():
+        m = re.search(r"silence_start: (-?[\d.]+)", ln)
+        if m:
+            cur = float(m.group(1))
+        m = re.search(r"silence_end: ([\d.]+)", ln)
+        if m and cur is not None:
+            kh.append((cur, float(m.group(1))))
+            cur = None
+    if cur is not None:                       # im lặng kéo tới hết tệp
+        kh.append((cur, tong))
+    for a, b in kh:
+        if a <= 0.02:
+            dau = max(dau, b)
+        if b >= tong - 0.02:
+            cuoi = min(cuoi, a)
+    dau = max(0.0, dau - 0.05)
+    cuoi = min(tong, cuoi + 0.10)
+    if cuoi - dau < 0.25:                     # đo hỏng: giữ nguyên còn hơn cắt mất câu
+        return 0.0
+    r2 = subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{dau:.3f}", "-to", f"{cuoi:.3f}",
+                         "-i", w_vao, "-ar", "24000", "-ac", "1", w_ra],
+                        capture_output=True, timeout=180)
+    if r2.returncode or not os.path.exists(w_ra):
+        return 0.0
+    return dau
 
 
 def _giay_wav(w: str) -> float:
@@ -1060,7 +1116,14 @@ def main() -> int:
             # NHỊP ĐUÔI SAU CÚ CHỐT — sau câu chốt là một quãng không ai nói gì, chỉ còn nét mặt
             # người nghe. Trong hài, tiếng cười rơi vào đúng quãng ấy; cắt phim ngay ở từ cuối là
             # cắt mất chỗ khán giả cười.
-            luot[-1]["e"] = round(max(luot[-1]["e"], dur) + 2.2, 2)
+            # NHỊP ĐUÔI TỰ CO GIÃN.
+            # Sau khi cắt đệm im lặng của bộ đọc (xem `_cat_lang`), lời thoại ngắn đi chừng sáu
+            # giây — nhịp chặt hơn hẳn, nhưng vài kênh vì thế tụt xuống dưới sàn 15 giây của
+            # short. Kéo dài lời thoại để bù là đi ngược cái vừa sửa; kéo dài NHỊP ĐUÔI thì không:
+            # đó vốn là quãng người nghe phản ứng, và phản ứng dài thêm một nhịp còn buồn cười hơn.
+            # Sàn 2,2 giây (đủ cho cú giật mình chạy hết), trần 5 giây (dài hơn thì thành chết hình).
+            _duoi = min(5.0, max(2.2, 17.5 - dur))
+            luot[-1]["e"] = round(max(luot[-1]["e"], dur) + _duoi, 2)
 
         # 30/8 — ÉP HAI NGƯỜI KHÁC BÓNG DÁNG.
         # Mười kiểu gốc khác nhau ở tóc và màu áo, nhưng vài kiểu cùng đeo kính và cùng để ria:

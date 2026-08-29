@@ -4370,3 +4370,25 @@ bám từ cuối (±0,35 s).
 
 **Bài học:** khi ghép nhiều đoạn tiếng, **đừng tin biên của đoạn** — bộ đọc nào cũng có thể thêm
 đệm. Chỉ tin mốc mà bộ đọc trả về cho từng TỪ, vì đó là thứ nó thật sự phát ra.
+
+### 7ak. SÁU GIÂY IM LẶNG TRONG MỘT PHIM HAI MƯƠI GIÂY — 30/8/2026
+
+Sau khi sửa mốc lượt bám mốc từ (7aj), đo được khe im lặng THẬT giữa mỗi hai câu là **1,0–1,5
+giây**. Sáu khe như thế = **sáu giây im lặng trong một phim hai mươi giây**, gần một phần ba thời
+lượng không có gì xảy ra. Hài sống bằng nhịp chặt; rời rạc thế thì mỗi câu đứng một mình và cú va
+giữa hai người không còn.
+
+Gốc: edge-tts chèn đệm ở hai đầu **mỗi đoạn** nó đọc — mà nay mỗi lượt là một đoạn riêng, nên
+đệm nhân lên theo số lượt.
+
+**Sửa:** `_cat_lang` dò im lặng đầu/cuối từng đoạn WAV rồi cắt, và **nhớ đã cắt bao nhiêu ở đầu**
+để trừ vào mọi mốc từ của đoạn ấy — không trừ thì khẩu hình chạy trước tiếng.
+Giữ lại 0,05 s ở đầu và 0,10 s ở cuối: phụ âm bật (p, t, k) có phần đầu rất nhỏ, cắt sát là nghe
+ra *"…ay"* thay vì *"play"*.
+
+**Đo lại:** 20,51 s → **14,58 s**; im lặng 6 s → **1,48 s (10% thời lượng)**.
+
+**Hệ quả phải xử theo:** phim ngắn đi thì vài kênh tụt dưới sàn 15 giây của short. Kéo dài lời
+thoại để bù là đi ngược cái vừa sửa. Kéo dài **nhịp đuôi** thì không — đó vốn là quãng người nghe
+phản ứng, và phản ứng dài thêm một nhịp còn buồn cười hơn. Nhịp đuôi nay tự co giãn: sàn 2,2 s
+(đủ cho cú giật mình chạy hết), trần 5 s (dài hơn thành chết hình).
