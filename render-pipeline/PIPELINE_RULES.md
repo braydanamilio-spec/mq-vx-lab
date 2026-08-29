@@ -4225,3 +4225,28 @@ Hai ngưỡng, vì có hai kiểu "giống nhau":
   với người mù màu đỏ-lục thì đó là hai người mặc áo giống hệt nhau.
 
 Chốt bằng `cham_v4.hai_ao_co_khac_nhau`, phạt 10 điểm.
+
+### 7ae. `esbuild` MÙ TRƯỚC LỖI "DÙNG BIẾN TRƯỚC KHI KHAI BÁO" — 30/8/2026
+
+Dính đúng lỗi này **hai lần trong một đêm**, ở hai biến khác nhau:
+
+```
+ReferenceError  Cannot access 'nhun' before initialization
+ReferenceError  Cannot access 'bat'  before initialization
+```
+
+Cả hai lần `esbuild` báo **dịch thành công**, và lỗi chỉ nổ khi render — sau bốn phút chờ.
+`esbuild` chỉ chuyển cú pháp; nó không phân tích luồng khai báo. `tsc` thì có mã lỗi riêng cho
+đúng chuyện này (**TS2448 · TS2454**) và bắt được trong vài giây.
+
+Nên `selftest` nay chạy **cả hai**: `t_tsx_dich_duoc` (esbuild, bắt lỗi cú pháp trên toàn bộ
+tệp .tsx) và `t_tsx_khong_dung_bien_truoc_khi_khai` (tsc, chỉ soi `v2/` + `v4/` — hai chỗ có mã
+sinh chuyển động, tức là chỗ biến phụ thuộc nhau chằng chịt và dễ đảo thứ tự nhất).
+
+**Hai công cụ bắt hai loại lỗi khác nhau, và loại `esbuild` bỏ sót lại là loại đắt nhất** — nó
+chỉ lộ ra ở tầng render, tức sau khi đã tiêu một lượt máy.
+
+**Vì sao dễ dính:** mã hoạt hình hay được viết theo thứ tự KỂ CHUYỆN (nhịp sống → khung xương →
+vẽ), trong khi thứ tự TÍNH TOÁN lại ngược (nhịp bước phải có trước khung xương vì khung xương
+cộng nhịp bước vào toạ độ). Mỗi lần chèn một khối tính mới, phải hỏi: *khối này đọc biến của ai,
+và biến ấy đã có chưa?*

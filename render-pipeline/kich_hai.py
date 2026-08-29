@@ -484,7 +484,15 @@ def cu_chi_cua(chu: str, i: int, cuoi: bool) -> str:
     return ["nhun_vai", "mo_tay", "chi", "dem"][i % 4]
 
 CU_CHI = ["mo_tay", "chi", "nhun_vai", "dem", "suy_nghi", "khoanh_tay"]
-SFX = {1: "sfx/pop.mp3", 3: "sfx/whoosh.mp3", 5: "sfx/ding.mp3"}
+# 30/8 — HIỆU ỨNG ÂM DỒN VÀO CÚ CHỐT, KHÔNG RẢI ĐỀU.
+# Bản cũ đặt pop ở lượt 1, whoosh ở lượt 3, ding ở lượt 5 — tức là cứ hai câu lại có một tiếng
+# động, bất kể câu ấy có gì đáng nhấn. Trong hài, tiếng động RẢI ĐỀU làm loãng đúng thứ nó định
+# nhấn: tai quen đi, và đến cú chốt thì tiếng động ấy chỉ còn là một tiếng nữa như mọi tiếng
+# trước. Nhấn thì phải hiếm.
+# Nên chỉ còn HAI: một tiếng nhẹ ở lượt VA (chỗ người xem cười lần đầu), và một tiếng ở CÚ CHỐT.
+# `None` nghĩa là "gắn vào lượt cuối", tính lúc dựng vì số lượt mỗi kịch bản một khác.
+SFX = {1: "sfx/pop.mp3"}
+SFX_CHOT = "sfx/ding.mp3"
 
 
 def _ten_tep(k: dict) -> str:
@@ -820,7 +828,9 @@ def dung_luot(k: dict, nen: list, vong: int = 0) -> tuple:
              "co": "rong" if i == 0 else ("can" if (cuoi or i == n - 2) else "trung"),
              "nen": nen1,
              "chot": cuoi}
-        if SFX.get(i):
+        if cuoi:
+            l["sfx"] = SFX_CHOT
+        elif SFX.get(i):
             l["sfx"] = SFX[i]
         luot.append(l)
         loi.append(chu)

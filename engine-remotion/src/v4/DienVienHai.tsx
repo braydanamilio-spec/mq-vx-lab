@@ -55,6 +55,7 @@ export type PropsHai = {
   noi: { w: number; h: number; tron: number };
   t: number;
   nhan?: number;                 // 0..1 — độ nhấn của lượt thoại này (dùng cho nén–giãn)
+  giat?: number;                 // 0..1 — cú giật mình (mắt mở to, đầu bật lùi) ở cú chốt
   nghieng?: number;              // độ ngả người về phía người đối thoại
   buoc?: number;                 // 0 = đứng yên; >0 = đang bước (biên độ sải chân)
   x?: number; y?: number; scale?: number; lat?: boolean;
@@ -73,7 +74,7 @@ const Y_VAI = -262;
 const R_DAU = 58;
 
 export const DienVienHai: React.FC<PropsHai> = ({
-  kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0,
+  kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0, giat = 0,
   x = 0, y = 0, scale = 1, lat = false,
 }) => {
   const E = CAM_XUC[camXuc] || CAM_XUC.trung_tinh;
@@ -89,6 +90,14 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const NG = 7.2 / scale;        // nét bao ngoài
   const NT = 3.4 / scale;        // nét chi tiết bên trong
 
+  // ══ CÚ GIẬT MÌNH ("take") — ngôn ngữ hài hình ảnh cổ điển nhất của hoạt hình Mỹ ═══════
+  // Khi câu chốt rơi, người NGHE phải phản ứng: mắt bật to, đầu giật lùi rồi nảy về. Đây là
+  // thứ báo cho khán giả "chỗ này buồn cười" mà không cần một tiếng cười lồng nào. Không có nó
+  // thì câu chốt trôi qua đúng như mọi câu khác — đó chính là chỗ anh nói "chưa thấy funny".
+  // Đường cong: bật rất nhanh (0,12 giây) rồi tắt dần có nảy, giống hệt cách hoạt hình vẽ một
+  // phản ứng — nhanh vào, chậm ra, có dư chấn.
+  const gt = kep(giat);
+  const bat = gt > 0 ? Math.exp(-gt * 3.2) * Math.sin(gt * 13) : 0;
   // ── NHỊP SỐNG ──────────────────────────────────────────────────────────────────────────
   const tho = Math.sin(t * 2.0);
   const dao = Math.sin(t * 0.6) * 1.6;
@@ -110,7 +119,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // Đầu gật theo lời nói: miệng mở to thì đầu chúi xuống một chút. Đây là thứ làm lời thoại
   // "có người nói" thay vì "có cái miệng động".
   const gat = noi.h * 3.4;
-  const nghiengDau = E.nghieng + dao * 0.6 + treo(0, t, 0.1, 0.6);
+  const nghiengDau = E.nghieng + dao * 0.6 + treo(0, t, 0.1, 0.6) + bat * 9;
 
   // ── DÁNG ĐI ────────────────────────────────────────────────────────────────────────────
   // Bước chân là chuyển động tuần hoàn: hai chân LỆCH PHA NỬA CHU KỲ, và bàn chân nhấc lên
@@ -131,7 +140,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const co: [number, number] = [vai[0] + dao * 0.4, vai[1] - 14 * cao];
   // Đầu nhấc CAO hơn vai đủ để thấy cổ. Bản trước chỉ hở 9 đơn vị nên đầu dính thẳng vào vai
   // và cả khối đọc ra là một hình duy nhất — đầu có quay cũng không ai thấy.
-  const dau: [number, number] = [co[0] + dao * 0.9, co[1] - 60 * cao + gat];
+  const dau: [number, number] = [co[0] + dao * 0.9 - bat * 14, co[1] - 60 * cao + gat - bat * 7];
 
   // Điểm gắn tay phải nằm NGOÀI mép thân, không thì cánh tay chạy chìm trong thân và bàn tay
   // đọc ra là dính vào hông. Và tay phải đủ DÀI: tay ngắn làm nhân vật đọc ra là mập lùn kể cả
@@ -225,7 +234,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // 30/8 — MẮT NHỎ LẠI. Bản trước mắt + gọng kính chiếm 83% bề ngang đầu; mắt to là đúng
   // hướng nhưng quá tay thì đọc ra là mắt lồi ra khỏi mặt chứ không phải dễ thương. Dải đẹp
   // của hoạt hình truyền hình là hai mắt chiếm chừng 60–65% bề ngang đầu.
-  const rMat = 13 * matTo;
+  const rMat = 13 * matTo * (1 + gt * 0.5 * Math.exp(-gt * 2.4));
   const rTrong = 6.4 * matTo;
   const mm = 1 - chop;
   const cachMat = 19 * matTo;

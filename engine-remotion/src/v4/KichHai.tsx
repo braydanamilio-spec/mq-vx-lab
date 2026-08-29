@@ -230,6 +230,12 @@ export const KichHai: React.FC<PropsHai> = ({
   };
   const cuChiNghe = NGHE[(L.camXucKia || "trung_tinh") as string] || "nghi";
 
+  // CÚ GIẬT MÌNH của người NGHE, đúng vào lúc câu chốt vừa rơi.
+  // Trong hài hình ảnh, thứ báo cho khán giả "chỗ này buồn cười" không phải tiếng cười lồng mà
+  // là PHẢN ỨNG của người trên màn hình. Cho nó bắt đầu trễ 0,35 giây so với đầu lượt chốt —
+  // đúng nhịp một người nghe xong mới kịp hiểu.
+  const _giatNghe = L.chot ? kep((giay - L.s - 0.35) / 1.6) : 0;
+
   // 30/8 — ĐO ĐƯỢC: nhân vật chỉ chiếm ~30% chiều cao khung. Trên điện thoại thì mặt bé đến
   // mức không đọc được nét mặt, mà cú chốt của hài nằm ở nét mặt. Short phải đóng cận: người
   // chiếm quá nửa khung. Nâng cả độ phóng lẫn cỡ người, và hạ chân xuống thấp để phần trống
@@ -350,11 +356,13 @@ export const KichHai: React.FC<PropsHai> = ({
                     cuChi={noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
                     nhan={noiA_ ? noiA.h : 0} nghieng={nghiengA} buoc={buocA}
+                    giat={noiA_ ? 0 : _giatNghe}
                     x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
                     nhan={!noiA_ ? noiB.h : 0} nghieng={nghiengB} buoc={buocB}
+                    giat={!noiA_ ? 0 : _giatNghe}
                     x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
         </g>
 

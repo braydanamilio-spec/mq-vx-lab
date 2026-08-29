@@ -1784,6 +1784,42 @@ def t_nhan_tinh_xoay_thi_mat():
         "điều kiện xoá nhãn phải đọc cấu hình kênh — đọc dict ghi đè thì `ky=None` là nó câm"
 
 
+def t_tsx_khong_dung_bien_truoc_khi_khai():
+    """`tsc` phải xanh — vì `esbuild` KHÔNG bắt được lỗi dùng biến trước khi khai báo.
+
+    30/8 — dính đúng lỗi này HAI LẦN trong một đêm, ở hai biến khác nhau (`nhun`, rồi `bat`):
+        ReferenceError  Cannot access 'nhun' before initialization
+        ReferenceError  Cannot access 'bat' before initialization
+    Cả hai lần `esbuild` báo dịch THÀNH CÔNG, và lỗi chỉ nổ khi render — sau bốn phút chờ.
+    Lý do: `esbuild` chỉ chuyển cú pháp, nó không phân tích luồng khai báo. Còn `tsc` có mã lỗi
+    riêng cho đúng chuyện này (TS2448 · TS2454) và bắt được trong vài giây.
+
+    Đây là lý do chốt này tồn tại song song với `t_tsx_dich_duoc`: hai công cụ bắt hai loại lỗi
+    khác nhau, và loại mà `esbuild` bỏ sót lại là loại đắt nhất — nó chỉ lộ ra ở tầng render,
+    tức là sau khi đã tiêu một lượt máy.
+
+    Chỉ soi thư mục `v4` (bộ hài) và `v2` (bộ dữ liệu) — hai chỗ có mã sinh chuyển động phức
+    tạp, tức là chỗ biến phụ thuộc nhau chằng chịt và dễ đảo thứ tự nhất.
+    """
+    import glob as _g
+    import subprocess as _sp
+    import os as _os
+    eng = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "engine-remotion")
+    tsc = _os.path.join(eng, "node_modules", ".bin", "tsc")
+    if not _os.path.exists(tsc):
+        return                      # máy chưa cài phụ thuộc: bỏ qua, không phải lỗi mã
+    tep = sorted(_g.glob(_os.path.join(eng, "src", "v4", "*.tsx"))
+                 + _g.glob(_os.path.join(eng, "src", "v2", "*.tsx")))
+    if not tep:
+        return
+    r = _sp.run([tsc, "--noEmit", "--jsx", "react", "--esModuleInterop", "--skipLibCheck",
+                 "--target", "es2020", "--moduleResolution", "node", "--lib", "es2020,dom"] + tep,
+                capture_output=True, text=True, timeout=600)
+    xau = [l for l in (r.stdout or "").splitlines() if "TS2448" in l or "TS2454" in l]
+    assert not xau, ("dùng biến trước khi khai báo (esbuild không bắt được, chỉ nổ lúc render): "
+                     + " · ".join(x.strip()[:110] for x in xau[:3]))
+
+
 def t_tsx_dich_duoc():
     """MỌI tệp .tsx trong engine phải dịch được. Một tệp hỏng cú pháp là CẢ NHÀ MÁY đứng.
 
@@ -2464,6 +2500,8 @@ def main():
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
     check("bảng mốc dọn riêng phải khớp tên kênh thật", t_moc_don_rieng_khop_ten_kenh)
     check("mọi tệp .tsx phải dịch được (1 tệp hỏng = CẢ 50 kênh đứng)", t_tsx_dich_duoc)
+    check("tsx: không dùng biến trước khi khai báo (esbuild mù chỗ này)",
+          t_tsx_khong_dung_bien_truoc_khi_khai)
     check("nhãn tĩnh phải BIẾN MẤT khi trục xoay đổi chủ đề", t_nhan_tinh_xoay_thi_mat)
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
     check("gen-2 ra BỘ 1 long + 3 short (có cha/thứ tự)", t_gen2_phai_ra_bo_1long_3short)
