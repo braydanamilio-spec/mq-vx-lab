@@ -4461,9 +4461,29 @@ def _dung_story_xoay(dang: str, kenh: dict, ky: dict | None, avoid: list | None)
     # 12/50 kênh có nhãn tĩnh kèm trục xoay, tức 12 kênh cùng dính.
     # Nhãn tĩnh chỉ đúng cho giá trị GỐC; xoay đi thì để bộ dựng tự đặt tên theo giá trị mới.
     _goc_truc = (ky or {}).get(truc) if truc else None
+    # 29/8 — CHỈ XOÁ NHÃN KHI TRỤC XOAY ĐỔI CHÍNH CHỦ ĐỀ, KHÔNG XOÁ KHI NÓ ĐỔI THỜI GIAN.
+    #
+    # Bản vá 28/8 xoá `nhan` mỗi khi trục xoay đi khỏi giá trị gốc. Đúng cho WHAT IS IN IT
+    # (trục `mon`: xoay từ ngũ cốc sang kem thì nhãn "Breakfast cereal" nói dối nội dung).
+    # NHƯNG SAI cho tám kênh xoay theo NĂM: đổi từ 2022 sang 2023 thì thứ đang đo không đổi —
+    # vẫn là độ che phủ rừng — mà nhãn vẫn bị xoá.
+    # Khung thật WILD NUMBERS: tiêu đề ra "World ranking 2023". Người xem không biết đang xếp
+    # hạng cái gì; con số 94,4 cạnh chữ "Suriname" mà không có đơn vị nào. Nhãn biến mất còn tệ
+    # hơn nhãn sai, vì nhãn sai ít ra còn nói một điều gì đó.
+    # Trục thời gian không đổi chủ đề, nên nhãn phải ở lại.
+    _TRUC_THOI_GIAN = {"nam", "tu_nam", "den_nam", "thang", "ngay", "lui", "mua"}
+    # Nhãn tĩnh nằm ở CẤU HÌNH KÊNH, không nằm ở dict ghi đè.
+    _co_nhan = "nhan" in (kenh.get("tham_so") or {})
     def _mot(v):
         t = {**(ky or {}), truc: v}
-        if "nhan" in t and str(v) != str(_goc_truc):
+        # 29/8 — HỎI CẤU HÌNH KÊNH, ĐỪNG HỎI DICT GHI ĐÈ.
+        # Bản 28/8 viết `if "nhan" in t`, mà `t` dựng từ `ky` — và đường chạy THẬT gọi hàm này
+        # với `ky = None`, nên `t` chỉ có đúng một khoá là trục xoay. `"nhan" in t` luôn SAI,
+        # nhánh xoá không bao giờ chạy, và nhãn tĩnh sống nguyên trong mọi lượt xoay.
+        # Tôi đã tưởng lỗi này vá xong từ 28/8, và cả hai lần kiểm sau đó đều truyền `ky` khác
+        # None nên đều thấy nó chạy đúng — bài kiểm đi đúng con đường mà lỗi không nằm trên đó.
+        # Đo trên khung thật hôm nay: "Breakfast cereal: what is really in it — Ice-creams".
+        if _co_nhan and str(v) != str(_goc_truc) and truc not in _TRUC_THOI_GIAN:
             # 29/8 — ĐẶT None, KHÔNG XOÁ KHOÁ. Bản vá 28/8 dùng `t.pop("nhan")` và nó KHÔNG chạy:
             # mọi `dung_story_*` đều mở đầu bằng
             #     ts = dict(kenh.get("tham_so") or {});  ts.update(ky or {})
@@ -4825,11 +4845,29 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
         print(f"   ⚠️ {ten}: không dựng được chương nào — BỎ LƯỢT")
         return None
 
+    # ── SÀN CHƯƠNG CHO VIDEO DÀI (29/8/2026) ────────────────────────────────────────────────
+    # Soi số đo của 329 video làm hôm nay: 86 video mang nhãn LONG, trung vị 3,7 phút, và NGẮN
+    # NHẤT 55 GIÂY — "PAID VS PLAYED LONG 16:9 (2 chương)". Một video dài 55 giây không phải
+    # video dài; nó là một short bị dán nhãn sai, và trên trang kênh nó nằm cạnh những video
+    # sáu phút như một thứ hỏng.
+    # Gốc: kế hoạch nhắm 7-12 chương, nhưng MỖI CHƯƠNG ĂN MỘT ĐỀ TÀI và chống-trùng chặn đề tài
+    # đã dùng — kho cạn thì chỉ dựng được 2-3 chương, phần còn lại rơi im lặng.
+    # Sàn 5 chương (~4 phút): dưới mức đó thì thà không ra video dài còn hơn ra một cái 55 giây.
+    # Các chương ĐÃ DỰNG không mất — chúng vẫn thành short, vì short cắt ra từ chính chúng.
+    SAN_CHUONG = 5
+    if len(chuong) < SAN_CHUONG:
+        print(f"   ⚠️ {ten}: chỉ dựng được {len(chuong)}/{so_chuong} chương "
+              f"(~{len(chuong) * 50}s) — KHÔNG ra video dài, dưới sàn {SAN_CHUONG} chương. "
+              f"Kho đề tài của kênh này đang cạn; các chương đã dựng vẫn thành short.")
+        chuong_long = []
+    else:
+        chuong_long = chuong
+
     # ── LONG 16:9 ───────────────────────────────────────────────────────────────────────────
     br = kenh.get("brand") or {}
     pal = br.get("palette") or {}
     slk = DS.slug(kenh["handle"].lstrip("@"))
-    goi = {"chuong": chuong, "handle": kenh["handle"], "font": br.get("font", ""),
+    goi = {"chuong": chuong_long, "handle": kenh["handle"], "font": br.get("font", ""),
            "accent": pal.get("primary", "#7C5CFF")}
     pf = os.path.join(DS.PUB, f"_th2long_{slk}.json")
     json.dump(goi, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
@@ -4849,19 +4887,26 @@ def chay_bo(kenh: dict, ra_long: str = "", avoid: list | None = None,
               f"BỎ TRƯỚC KHI RENDER, không đốt công")
         return None
     ra_long = os.path.abspath(ra_long or os.path.join(GOC, "out", f"th2long_{slk}.mp4"))
-    os.makedirs(os.path.dirname(ra_long), exist_ok=True)
-    DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "Gen2Long", ra_long,
-                       f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader", "--jpeg-quality=100", "--crf=15",
-                       "--concurrency=2", "--log=error"],
-                      cwd=DS.ENG, timeout=5400, label=f"Gen2Long({ten})")
-    ok, info = DS.qc(ra_long)
-    print(f"{'✅' if ok else '❌'} {ten} LONG 16:9 ({len(chuong)} chương) · {info}")
-    if not ok:
-        return None
-    # Long cũng phải qua cổng hook: khung mở đầu của long là thứ quyết định lượt xem trên trang chủ.
-    chuan_am(ra_long)
-    if not qc_hook_sau_render(ra_long, ten, keys)[0]:
-        return None
+    # Dưới sàn chương thì KHÔNG render video dài — nhưng vẫn đi tiếp để dựng short từ các
+    # chương đã có. Bỏ hẳn cả bộ thì mất luôn phần việc đã làm được.
+    # Dưới sàn chương thì KHÔNG render video dài, nhưng VẪN đi tiếp để dựng short từ các chương
+    # đã có — bỏ cả bộ thì mất luôn phần việc đã làm được.
+    if chuong_long:
+        os.makedirs(os.path.dirname(ra_long), exist_ok=True)
+        DS.run_render_cmd(["npx", "remotion", "render", "src/index.ts", "Gen2Long", ra_long,
+                           f"--props=./{os.path.relpath(pf, DS.ENG)}", "--gl=swiftshader",
+                           "--jpeg-quality=100", "--crf=15", "--concurrency=2", "--log=error"],
+                          cwd=DS.ENG, timeout=5400, label=f"Gen2Long({ten})")
+        ok, info = DS.qc(ra_long)
+        print(f"{'✅' if ok else '❌'} {ten} LONG 16:9 ({len(chuong)} chương) · {info}")
+        if not ok:
+            return None
+        # Long cũng phải qua cổng hook: khung mở đầu quyết định lượt xem trên trang chủ.
+        chuan_am(ra_long)
+        if not qc_hook_sau_render(ra_long, ten, keys)[0]:
+            return None
+    else:
+        ra_long = ""
 
     # ── SHORT 9:16, mỗi cái gộp 2-3 chương ──────────────────────────────────────────────────
     shorts = []

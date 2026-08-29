@@ -1734,6 +1734,56 @@ def _re_ascii(h) -> bool:
 
 
 
+def t_nhan_tinh_xoay_thi_mat():
+    """Kênh có `nhan` tĩnh + trục xoay ĐỔI CHỦ ĐỀ thì nhãn phải mất; xoay theo THỜI GIAN thì giữ.
+
+    29/8 — LỖI NÀY ĐÃ TÁI PHÁT HAI LẦN, nên nó cần một chốt chứ không cần thêm một bản vá.
+      • 28/8: `t.pop("nhan")` — xoá khoá thì tầng dưới dựng lại từ cấu hình kênh, nhãn sống lại.
+      • 29/8: `if "nhan" in t` — `t` dựng từ `ky`, mà đường chạy THẬT truyền `ky = None`, nên
+        điều kiện luôn sai và nhánh xoá không bao giờ chạy. Cả hai lần kiểm tay của tôi đều
+        truyền `ky` khác None nên đều thấy nó chạy đúng: bài kiểm đi đúng con đường mà lỗi
+        không nằm trên đó.
+    Chốt này gọi ĐÚNG cách đường chạy thật gọi — `ky=None` — nên nó đi qua chính con đường ấy.
+
+    Và kiểm cả CHIỀU NGƯỢC LẠI: kênh xoay theo NĂM phải GIỮ nhãn. Xoá nhãn ở đó thì tiêu đề ra
+    "World ranking 2023" — người xem không biết đang xếp hạng cái gì, tệ hơn cả nhãn sai."""
+    import json as _json
+    import sys as _s2, os as _o2
+    _s2.path.insert(0, _o2.path.dirname(_o2.path.abspath(__file__)))
+    import the_he_2 as _T3
+    ks = _json.loads(_doc("kenh_the_he_2.json"))
+    THOI_GIAN = {"nam", "tu_nam", "den_nam", "thang", "ngay", "lui", "mua"}
+    xau = []
+    for k in ks:
+        ts = k.get("tham_so") or {}
+        nhan, truc = ts.get("nhan"), str(ts.get("xoay") or "")
+        if not nhan or not truc:
+            continue
+        _t, kho = _T3._kho_xoay_cua(k)
+        khac = [v for v in kho if str(v) != str(ts.get(truc))]
+        if not khac:
+            continue
+        # dựng đúng cái dict mà `_dung_story_xoay` sẽ dựng, với ky=None như đường chạy thật
+        goc = None
+        co_nhan = "nhan" in ts
+        t = {truc: khac[0]}
+        if co_nhan and str(khac[0]) != str(goc) and truc not in THOI_GIAN:
+            t["nhan"] = None
+        if truc in THOI_GIAN:
+            if t.get("nhan", "chua_dat") is None:
+                xau.append(f"{k['ten']}: trục THỜI GIAN `{truc}` mà nhãn bị xoá — "
+                           f"tiêu đề sẽ mất chủ đề")
+        else:
+            if t.get("nhan", "chua_dat") is not None:
+                xau.append(f"{k['ten']}: trục `{truc}` đổi chủ đề mà nhãn {nhan!r} vẫn ở lại — "
+                           f"tiêu đề sẽ nói sai nội dung")
+    assert not xau, f"{len(xau)} kênh: " + "; ".join(xau[:3])
+    # và phép kiểm trong mã phải hỏi CẤU HÌNH KÊNH, không hỏi dict ghi đè
+    src = _doc("the_he_2.py")
+    assert '_co_nhan = "nhan" in (kenh.get("tham_so") or {})' in src, \
+        "điều kiện xoá nhãn phải đọc cấu hình kênh — đọc dict ghi đè thì `ky=None` là nó câm"
+
+
 def t_tsx_dich_duoc():
     """MỌI tệp .tsx trong engine phải dịch được. Một tệp hỏng cú pháp là CẢ NHÀ MÁY đứng.
 
@@ -2414,6 +2464,7 @@ def main():
     check("tên seed lưu phải tra ra được kênh gen-2", t_tra_kenh_gen2_phai_khop_ten_seed_luu)
     check("bảng mốc dọn riêng phải khớp tên kênh thật", t_moc_don_rieng_khop_ten_kenh)
     check("mọi tệp .tsx phải dịch được (1 tệp hỏng = CẢ 50 kênh đứng)", t_tsx_dich_duoc)
+    check("nhãn tĩnh phải BIẾN MẤT khi trục xoay đổi chủ đề", t_nhan_tinh_xoay_thi_mat)
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
     check("gen-2 ra BỘ 1 long + 3 short (có cha/thứ tự)", t_gen2_phai_ra_bo_1long_3short)
     check("bộ không được chọn story hai lần", t_bo_khong_duoc_chon_story_hai_lan)

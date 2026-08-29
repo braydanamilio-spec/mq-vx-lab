@@ -299,13 +299,34 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
     tieu_de, ds, nguon = so_lieu
     dan = ds[:6]
     top_ten, top_gt, top_hien = dan[0]
+    # ── LỜI THOẠI (29/8) — anh: "nhớ làm nội dung phù hợp hay viral cuốn hút" ──────────────
+    # Bản trước là một khuôn duy nhất cho cả mười kênh, và câu nào cũng là câu tường thuật:
+    # "X. That is Y." / "Second place is Z." — đọc lên nghe như một bảng số được xướng to.
+    # Ba thứ làm nên một mở đầu giữ chân, rút từ chính 50 kênh đang chạy:
+    #   1. CON SỐ TRƯỚC, BỐI CẢNH SAU. Người xem cần một lý do ở giây thứ nhất, không phải giây
+    #      thứ năm. Nên câu đầu ném thẳng con số gây choáng.
+    #   2. NÓI VỚI NGƯỜI XEM, không thuật lại. "You" xuất hiện trong câu — đó là khác biệt giữa
+    #      một bản tin và một người đang nói chuyện với mình.
+    #   3. KHOẢNG TRỐNG PHẢI LẤP. Câu chốt mở ra một câu hỏi mới thay vì đóng lại gọn ghẽ.
+    # Và MỖI KÊNH MỘT GIỌNG VIẾT: khuôn câu bốc theo băm tên kênh, nên mười kênh không mở đầu
+    # giống nhau — cùng cách đã dùng cho 50 kênh thế hệ 2.
+    import hashlib as _h
+    _k = int(_h.md5(k["ten"].encode()).hexdigest(), 16) % 3
+    _mo = [f"{top_hien}. That is {top_ten}, and most people have no idea.",
+           f"Nobody talks about this: {top_hien} for {top_ten}.",
+           f"{top_ten} sits at {top_hien}. Watch what happens next."][_k]
+    _chot = ["Check it yourself before you believe me.",
+             "Everything here is public. Most people never look.",
+             "One search and you can prove me wrong."][_k]
     cau = [
+        (_mo, "bat_ngo", "chi", "can", [0.2, -0.12]),
         (k["hoi"], "nghi_ngo", "mo_tay", "trung", [0, 0]),
-        (f"{top_hien}. That is {top_ten}.", "bat_ngo", "chi", "can", [0.25, -0.15]),
-        (f"{tieu_de}, and the gap is not small.", "tu_tin", "dem", "trung", [-0.3, 0.1]),
-        (f"Second place is {dan[1][0]}, at {dan[1][2]}.", "trung_tinh", "chi", "trung", [0.3, 0]),
-        (f"Every number here comes from {nguon.split(',')[0]}.", "tu_tin", "mo_tay", "can", [0, 0]),
-        ("You can look it up yourself in a minute.", "vui", "nghi", "trung", [0, 0]),
+        (f"{tieu_de}. The gap is bigger than it looks.", "tu_tin", "dem", "trung", [-0.28, 0.1]),
+        (f"{dan[1][0]} comes second at {dan[1][2]}. Then it drops fast.",
+         "trung_tinh", "chi", "trung", [0.3, 0]),
+        (f"This is straight from {nguon.split(',')[0]}, not from me.",
+         "tu_tin", "mo_tay", "can", [0, 0]),
+        (_chot, "vui", "nghi", "trung", [0, 0]),
     ]
     # 29/8 — MỖI CÂU MỘT LỚP HÌNH RIÊNG. Anh: "mỗi lần nhân vật nói gì thì cần có bối cảnh phù
     # hợp và chart + số liệu animation chạy động".
@@ -377,21 +398,31 @@ def main() -> int:
         # MƯỜI NHÂN VẬT, MƯỜI CHẤT GIỌNG. Cao độ là đòn bẩy mạnh nhất: hạ 15Hz nghe bệ vệ,
         # nâng 20Hz nghe lanh lợi. Ba giọng dùng chung cho mười kênh thì tai người nghe ra ngay
         # là cùng một người đọc — y như mười khuôn mặt giống nhau, chỉ khác là ở phần nghe.
+        # 29/8 — anh: "nhiều channel có vẻ giọng đọc chưa phù hợp".
+        # Gán lại theo TÍNH CÁCH chứ không theo giới tính. Ba đòn bẩy: chọn giọng nền, TỐC ĐỘ
+        # (nhanh = gấp gáp/trẻ, chậm = điềm đạm/có tuổi), CAO ĐỘ (hạ = bệ vệ, nâng = lanh lợi).
+        #   luật sư trẻ     — nhanh nhất, cao nhất: người đang muốn chứng minh mình đúng
+        #   ông hàng xóm    — chậm, trầm, kể chuyện qua hàng rào
+        #   thẩm phán       — chậm nhất, trầm nhất, không cần lên giọng mới có sức nặng
+        #   cô gái ngắm sao — nhẹ, đang chỉ cho bạn xem một thứ đẹp
+        #   nhà khoa học    — nhanh, phấn khích, người vừa tìm ra điều gì đó
+        #   người kể vũ trụ — chậm, trầm, giọng phim tài liệu
+        #   y tá            — ấm, vừa phải, giọng trấn an
         _GIONG = {
-            "bank":       ("en-US-JennyNeural",  "+5%", "+10Hz"),
-            "luat_tre":   ("en-US-EricNeural",  "+10%", "+14Hz"),
-            "hang_xom":   ("en-US-GuyNeural",    "-3%", "-16Hz"),
-            "cong_to":    ("en-US-AriaNeural",   "+2%",  "-4Hz"),
+            "bank":       ("en-US-JennyNeural",    "+6%",  "+6Hz"),
+            "luat_tre":   ("en-US-EricNeural",    "+14%", "+16Hz"),
+            "hang_xom":   ("en-US-GuyNeural",      "-8%", "-18Hz"),
+            "cong_to":    ("en-US-AriaNeural",     "-2%",  "-8Hz"),
             # 29/8 — `en-US-DavisNeural` KHÔNG TỒN TẠI. Tôi bốc tên giọng ra từ trí nhớ thay
             # vì hỏi `edge_tts.list_voices()`, và hai kênh dùng nó chết sạch với "No audio was
             # received" sau ba lần thử. Danh sách thật có 17 giọng en-US; nam trầm dùng được là
             # Christopher và Roger.
             "tham_phan":  ("en-US-ChristopherNeural", "-6%", "-20Hz"),
-            "sao_dem":    ("en-US-AnaNeural",    "+7%", "+18Hz"),
-            "khoa_hoc":   ("en-US-EricNeural",  "+12%",  "+6Hz"),
-            "vu_tru_gia": ("en-US-RogerNeural",   "-8%", "-12Hz"),
-            "y_ta":       ("en-US-MichelleNeural", "+4%", "+8Hz"),
-            "vien_phi":   ("en-US-GuyNeural",    "+1%",  "-6Hz"),
+            "sao_dem":    ("en-US-AvaNeural",      "+3%", "+10Hz"),
+            "khoa_hoc":   ("en-US-BrianNeural",   "+11%",  "+4Hz"),
+            "vu_tru_gia": ("en-US-RogerNeural",   "-11%", "-16Hz"),
+            "y_ta":       ("en-US-MichelleNeural", "+2%",  "+4Hz"),
+            "vien_phi":   ("en-US-SteffanNeural",  "+0%",  "-8Hz"),
         }
         v, rate, pitch = _GIONG.get(k["kieu"], ("en-US-GuyNeural", "+0%", "+0Hz"))
         rel = f"v3_{sl_ten}.mp3"

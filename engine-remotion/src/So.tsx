@@ -79,11 +79,19 @@ export const SoChay: React.FC<{
  * Cố ý KHÔNG làm nổi: nó không phải thứ để khoe, nó là thứ để người hoài nghi tìm thấy khi họ
  * đi tìm. Đặt sát đáy, mờ, chữ nhỏ — có mặt suốt video mà không tranh chỗ với dữ liệu.
  */
-export const DongNguon: React.FC<{ nguon?: string; day?: number }> = ({ nguon, day = 96 }) => {
+export const DongNguon: React.FC<{ nguon?: string; day?: number }> = ({ nguon, day }) => {
+  // 29/8 — ĐÁY PHẢI TÍNH THEO KHỔ HÌNH. Anh cắt khung: "Frozen pizza by calories." nằm ĐÈ lên
+  // "Source: USDA FoodData Central", hai lớp chữ chồng khít nhau.
+  // Gốc: băng chữ karaoke neo đáy 200 ở khổ DỌC nhưng chỉ 88 ở khổ NGANG (khung ngang chỉ cao
+  // 1080 so với 1920 nên nó phải lên cao hơn), trong khi dòng nguồn neo cứng 96 cho mọi khổ.
+  // Ở khổ dọc hai lớp cách nhau 104 điểm; ở khổ ngang chúng cách nhau ÂM 8 điểm — tức chồng.
+  // Một hằng số đặt cứng mà thứ nó phải tránh lại đổi theo khổ hình thì sớm muộn cũng va nhau.
+  const { width, height } = useVideoConfig();
+  const _day = day ?? (height > width ? 96 : 34);
   if (!nguon) return null;
   return (
     <div style={{
-      position: "absolute", bottom: day, left: 0, right: 0, textAlign: "center",
+      position: "absolute", bottom: _day, left: 0, right: 0, textAlign: "center",
       color: "#ffffff4d", fontWeight: 600, fontSize: 21, letterSpacing: 0.3,
       padding: "0 60px", textShadow: "0 1px 6px #0009",
       whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",

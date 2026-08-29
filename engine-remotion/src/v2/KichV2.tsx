@@ -97,6 +97,11 @@ const SoTo: React.FC<{ so: string; nhan?: string; p: number; mau: Paltte }> = ({
           riêng nó, rồi nơi gọi cộng thêm một khoảng nữa — hai lần dời chồng lên nhau và con số
           "3,920" bị cắt cụt ở mép trên khung. Một thành phần chỉ nên biết VẼ GÌ; ĐẶT Ở ĐÂU là
           việc của nơi gọi, nơi duy nhất biết khung hình dọc hay ngang. */}
+      {/* TẤM NỀN MỜ SAU CON SỐ. Anh cắt khung DEEP FIELD: "443 m / 221455" nằm đè lên đầu
+          nhân vật ở cỡ cận. Con số không thể tránh nhân vật (nó đứng yên, nhân vật thì phóng
+          theo máy quay), nên cách chắc chắn là cho nó một nền riêng để luôn đọc được. */}
+      <rect x={-330} y={-84} width={660} height={nhan ? 168 : 122} rx={20}
+            fill="#FBF6EA" opacity={0.86 * vao} stroke={mau.muc} strokeWidth={5} />
       <text x={0} y={0} textAnchor="middle" fontSize={124} fontWeight={900}
             fill={mau.nhan} stroke={mau.muc} strokeWidth={9} paintOrder="stroke"
             style={{ fontVariantNumeric: "tabular-nums" }}>{hien}</text>
@@ -226,8 +231,15 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number }> = ({
       {dong.map((d, j) => (
         <text key={j} x={0} y={j * 56} textAnchor="middle" fontSize={44} fontWeight={900}
               stroke={mau.muc} strokeWidth={9} paintOrder="stroke" fill="#FFFFFF">
+          {/* 29/8 — SVG NUỐT KHOẢNG TRẮNG CUỐI. Anh cắt khung: "numberherecomes", "NASA Center
+              for" dính liền. Viết `{w.w} ` thì dấu cách nằm ở CUỐI nội dung tspan, và trình
+              duyệt gộp khoảng trắng ở mép phần tử theo mặc định — nên nó biến mất sạch.
+              Đẩy dấu cách vào GIỮA hai từ (tiền tố từ thứ hai trở đi) thì nó nằm trong lòng nội
+              dung và không bị gộp. */}
           {d.map((w, i) => (
-            <tspan key={i} fill={k >= 0 && tu[k] === w ? mau.nhan : "#FFFFFF"}>{w.w} </tspan>
+            <tspan key={i} fill={k >= 0 && tu[k] === w ? mau.nhan : "#FFFFFF"}>
+              {(i ? " " : "") + w.w}
+            </tspan>
           ))}
         </text>
       ))}
@@ -296,7 +308,7 @@ export const KichV2: React.FC<PropsKich> = ({
         <g transform={`translate(${-cam.x + rung} ${-cam.y}) scale(${cam.z})`}
            style={{ transformOrigin: "0px 0px" }}>
           <BoiCanh ten={C.boi || "san_sau"} mau={mau} t={giay} />
-          {C.cot ? <CotDaoCu cot={C.cot} p={p} mau={mau} noiBat={C.noiBat ?? 0} /> : null}
+
           <DienVien
             kieu={nv}
             camXuc={C.camXuc || "trung_tinh"}
@@ -324,6 +336,17 @@ export const KichV2: React.FC<PropsKich> = ({
             Khung render đầu: "3,797" phóng to theo cỡ cận và đè thẳng lên mặt nhân vật — đúng
             lỗi chồng chữ anh dặn tránh. Con số là lớp THÔNG TIN, không phải vật trong cảnh; nó
             phải đứng yên ở một chỗ cố định trên màn hình bất kể máy quay đi đâu. */}
+        {/* 29/8 — BIỂU ĐỒ CŨNG PHẢI RA KHỎI NHÓM MÁY QUAY.
+            Anh cắt ba khung: cột thứ ba và thứ tư cùng nhãn của chúng bị cắt cụt ở mép phải.
+            Vì biểu đồ nằm TRONG nhóm máy quay nên nó phóng to theo cỡ cận (×1,5) rồi tràn ra
+            ngoài khung. Cùng đúng cái lỗi đã sửa cho con số lớn hôm qua mà tôi không nghĩ tới
+            biểu đồ: cả hai đều là LỚP THÔNG TIN, không phải vật trong cảnh, nên phải đứng yên
+            một chỗ bất kể máy quay đi đâu. */}
+        {C.cot ? (
+          <g transform={`translate(${doc ? -230 : -120} ${doc ? 210 : 120}) scale(${doc ? 0.9 : 0.82})`}>
+            <CotDaoCu cot={C.cot} p={p} mau={mau} noiBat={C.noiBat ?? 0} />
+          </g>
+        ) : null}
         {C.soLon ? (
           <g transform={`translate(0 ${doc ? -530 : -390})`}>
             <SoTo so={C.soLon} nhan={C.nhanSo} p={p} mau={mau} />
