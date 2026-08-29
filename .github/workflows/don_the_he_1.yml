@@ -30,6 +30,15 @@ on:
       chi_kenh:
         description: "CHỈ dọn các kênh này (cách nhau bằng dấu phẩy, vd: AMERICALOOKEDUP,PENTAGONLEDGER). Để trống = cả 50. BẮT BUỘC đi cùng gen2=1."
         default: ""
+      # 29/8 — dọn theo MỐC THỜI GIAN, mọi kênh. Ô "Video trong kho" trên bảng đếm FILE TRÊN
+      # DRIVE, nên đánh dấu job bao nhiêu nó cũng không giảm; muốn giảm thì phải đụng file thật.
+      # Chỉ .mp4/.jpg vào thùng rác; sidecar .json chứa KỊCH BẢN thì tuyệt đối giữ.
+      don_kho_cu:
+        description: "1 = đưa VIDEO dựng TRƯỚC mốc vào thùng rác (mọi kênh). Giữ nguyên sidecar kịch bản."
+        default: "0"
+      truoc:
+        description: "Mốc cho don_kho_cu (ISO-8601 UTC). Mặc định 2026-08-29T10:30:00Z = lúc engine đạt chuẩn."
+        default: "2026-08-29T10:30:00Z"
 
 jobs:
   don:
@@ -105,5 +114,6 @@ jobs:
           if [ "${{ github.event.inputs.don_job }}"     = "1" ]; then ARGS="$ARGS --job"; fi
           if [ "${{ github.event.inputs.gen2 }}"        = "1" ]; then ARGS="$ARGS --gen2"; fi
           if [ "${{ github.event.inputs.tha_de_tai }}"  = "1" ]; then ARGS="$ARGS --tha-de-tai"; fi
+          if [ "${{ github.event.inputs.don_kho_cu }}"  = "1" ]; then ARGS="$ARGS --kho-cu --truoc ${{ github.event.inputs.truoc }}"; fi
           export CHI_KENH="${{ github.event.inputs.chi_kenh }}"
           python render-pipeline/don_the_he_1.py $ARGS

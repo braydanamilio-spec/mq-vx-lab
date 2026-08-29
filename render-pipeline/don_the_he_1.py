@@ -79,7 +79,7 @@ def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6, ten_kho: str = "?") -
     try:
         muc = dr.svc.files().list(
             q=f"'{goc}' in parents and trashed = false",
-            fields="nextPageToken, files(id,name,mimeType)",
+            fields="nextPageToken, files(id,name,mimeType,createdTime)",
             pageSize=200).execute()
     except Exception as e:
         # 26/8 — nêu TÊN KHO, không chỉ id. Log cũ in `thư mục undefined…: invalid_grant` mà
@@ -93,7 +93,7 @@ def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6, ten_kho: str = "?") -
         try:
             muc = dr.svc.files().list(
                 q=f"'{goc}' in parents and trashed = false",
-                fields="nextPageToken, files(id,name,mimeType)",
+                fields="nextPageToken, files(id,name,mimeType,createdTime)",
                 pageSize=200, pageToken=tiep).execute()
         except Exception:
             break
@@ -110,6 +110,80 @@ def _di_het_kho(dr, goc: str, sau: int = 0, tran: int = 6, ten_kho: str = "?") -
         else:
             ra.append(f)
     return ra
+
+
+def kho_theo_moc(moc: str, that: bool) -> int:
+    """Đưa VIDEO dựng trước `moc` vào thùng rác Drive — mọi kênh, không phân biệt thế hệ.
+
+    29/8 — VÌ SAO CẦN MỘT ĐƯỜNG RIÊNG. Lượt đánh dấu đã gạt 3.899 bản ra khỏi hàng đăng, nhưng
+    anh nhìn bảng vẫn thấy "Video trong kho: 3.901" và hỏi sao chưa dọn. Ô ấy đếm FILE TRÊN
+    DRIVE, không đếm hàng đăng — nên đánh dấu bao nhiêu nó cũng không nhúc nhích. Đúng, và phải
+    nói rõ: hai con số đo hai thứ khác nhau.
+    Đường dọn theo TÊN KÊNH (`--kho`) không dùng được ở đây: lần này cần lọc theo THỜI ĐIỂM DỰNG,
+    mà tên tệp không mang thời điểm. Ngày tạo trên Drive thì mang, và nó là nguồn độc lập với cả
+    Firestore lẫn D1 — hai sổ ấy đang lệch nhau nên không sổ nào đáng tin làm căn cứ xoá.
+
+    HAI THỨ TUYỆT ĐỐI KHÔNG ĐỤNG, và đây là lý do:
+      • tệp `.json` cạnh video là SIDECAR CHỨA KỊCH BẢN. Luật của kho: không bao giờ xoá kịch
+        bản. Xoá video thì render lại được; xoá kịch bản là mất hẳn một bài đã viết, và mất luôn
+        đường resume.
+      • thư mục trong `CAM_DUNG` (_KICHBAN, _BACKUP, brand, config) — bộ nhận diện và cấu hình.
+    Chỉ `.mp4` và `.jpg` đi vào thùng rác. Thumbnail đi theo video vì nó vô nghĩa khi video đã đi.
+    """
+    import storage as ST
+    import datetime as _dt
+
+    def _luc(x):
+        t = str(x or "").strip().replace("Z", "+00:00")
+        try:
+            d = _dt.datetime.fromisoformat(t)
+        except Exception:
+            return None
+        return d if d.tzinfo else d.replace(tzinfo=_dt.timezone.utc)
+
+    m = _luc(moc)
+    if not m:
+        print(f"  ❌ mốc không đọc được: {moc!r}")
+        return 2
+    DUOI_XOA = (".mp4", ".jpg", ".jpeg", ".png", ".webp")
+    tong = giu = 0
+    for acc in ST.pool_accounts():
+        try:
+            dr = ST.account_drive(acc)
+        except Exception as e:
+            print(f"  ⚠️ kho {acc.get('name', '?')}: {str(e)[:50]}")
+            continue
+        goc = acc.get("root_id") or acc.get("root")
+        if not goc:
+            continue
+        can = []
+        for f in _di_het_kho(dr, goc, ten_kho=str(acc.get("name") or "?")):
+            ten = str(f.get("name") or "")
+            if not ten.lower().endswith(DUOI_XOA):
+                giu += 1                     # sidecar kịch bản và mọi thứ khác: GIỮ
+                continue
+            tf = _luc(f.get("createdTime"))
+            if tf is None or tf >= m:
+                continue                     # không rõ ngày, hoặc dựng SAU mốc -> để yên
+            can.append(f["id"])
+        tong += len(can)
+        if that and can:
+            xong = 0
+            for fid in can:
+                try:
+                    dr.trash(fid)
+                except Exception as e:
+                    print(f"      ⚠️ bỏ sót 1 tệp: {str(e)[:50]}")
+                xong += 1
+                if xong % 200 == 0:
+                    print(f"      … {xong}/{len(can)} tệp của kho '{acc.get('name', '?')}'", flush=True)
+            print(f"      ✅ kho '{acc.get('name', '?')}': {len(can)} tệp vào thùng rác", flush=True)
+        elif can:
+            print(f"      (sẽ dọn) kho '{acc.get('name', '?')}': {len(can)} tệp")
+    print(f"\n  🗑  {'đã đưa vào thùng rác' if that else '(SẼ đưa vào thùng rác)'} {tong} tệp dựng "
+          f"trước {moc} · giữ nguyên {giu} tệp không phải video/ảnh (sidecar kịch bản nằm trong đó)")
+    print("  ℹ️ Drive giữ thùng rác 30 ngày — khôi phục được trong hạn đó.")
+    return 0
 
 
 def main() -> int:
@@ -138,6 +212,13 @@ def main() -> int:
         print("   `--ban-ghi` xoá BẢN GHI KÊNH — với gen-2 nghĩa là xoá cấu hình 50 kênh đang chạy.")
         print("   Dọn video thì dùng: --gen2 --kho --job --that")
         return 2
+    # `--kho-cu --truoc <ISO> [--that]` — dọn video cũ theo MỐC, mọi kênh (xem `kho_theo_moc`).
+    if "--kho-cu" in sys.argv:
+        _m = "2026-08-29T10:30:00Z"
+        for i, a in enumerate(sys.argv):
+            if a == "--truoc" and i + 1 < len(sys.argv):
+                _m = sys.argv[i + 1]
+        return kho_theo_moc(_m, "--that" in sys.argv)
     lam_tat = "--tat" in sys.argv
     lam_kho = "--kho" in sys.argv
     lam_bg = "--ban-ghi" in sys.argv
