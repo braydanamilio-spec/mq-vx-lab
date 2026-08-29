@@ -2273,6 +2273,7 @@ def main():
     check("cổng an toàn đi hết MỌI kho mục (kể cả frames)", t_cong_an_toan_di_het_moi_kho_muc)
     check("xoay trục thì nhãn tĩnh phải BIẾN MẤT tới tận bộ dựng", t_nhan_tinh_bi_bo_khi_xoay_truc)
     check("gu vẽ gán TAY từng kênh, tiếng Anh, cấm ảnh chụp", t_gu_ve_khop_tung_kenh)
+    check("nhãn None không được lọt lên tiêu đề", t_nhan_none_khong_lot_len_tieu_de)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
@@ -4557,6 +4558,26 @@ def t_gu_ve_khop_tung_kenh():
             f"{k['ten']}: gu vẽ còn chữ tiếng Việt ({''.join(sorted(set(_co)))}) -> máy vẽ bỏ qua"
         assert "not photorealistic" in g or "NOT a photograph" in g, \
             f"{k['ten']}: gu vẽ thiếu lệnh cấm ảnh chụp -> máy vẽ rơi về ảnh người thật"
+
+
+
+
+def t_nhan_none_khong_lot_len_tieu_de():
+    """Không bộ dựng nào được đọc `nhan` bằng `get(khoa, mặc_định)` — phải dùng `or`.
+
+    29/8 — bản vá nhãn-tĩnh đặt `ky["nhan"] = None` khi xoay trục (đặt None chứ không xoá, vì bộ
+    dựng gộp lại tham số từ cấu hình kênh nên khoá đã xoá sẽ sống lại). Nhưng `dict.get(k, mặc)`
+    chỉ trả mặc định khi khoá VẮNG MẶT — khoá có mà giá trị None thì nó trả đúng None.
+    Khung thật DEGREE WORTH: tiêu đề ra **"2024: 299.7 — NONE BY YEAR (2015)"**.
+    Một bản vá tự đẻ ra lỗi ở tầng dưới, và chỉ thấy được khi nhìn khung đã render.
+    `or` xử lý đúng cả hai: khoá vắng, và khoá có giá trị rỗng/None."""
+    import re as _re_n
+    src = _doc("the_he_2.py")
+    xau = _re_n.findall(r"""\.get\(\s*['"]nhan['"]\s*,\s*[^)]+\)""", src)
+    assert not xau, ("đọc `nhan` bằng get(khoá, mặc_định) -> None sẽ lọt lên tiêu đề: "
+                     + " · ".join(xau[:4]))
+    # Và phải CÓ chỗ đọc bằng `or` — nếu không thì chốt trên xanh chỉ vì không ai đọc `nhan` nữa.
+    assert "'nhan') or" in src or '"nhan") or' in src, "không thấy chỗ nào đọc `nhan` bằng `or`"
 
 
 

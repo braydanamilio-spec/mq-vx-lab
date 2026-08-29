@@ -660,7 +660,7 @@ def _bd_the_gioi(D, ky):
     r = D.chi_so_the_gioi(ky.get("ma", "NY.GDP.PCAP.CD"), int(ky.get("nam", 2023)), 6)
     if len(r) < 3:
         return None
-    return (f"{ky.get('nhan', 'World ranking')} {ky.get('nam', 2023)}",
+    return (f"{ky.get('nhan') or 'World ranking'} {ky.get('nam', 2023)}",
             [{"name": _gon(x["nuoc"], 24), "stat": _so(x["gia_tri"]),
               "vo": f"{x['nuoc']}. {_so(x['gia_tri'])}."} for x in r],
             "World Bank open data. Check it yourself.")
@@ -947,7 +947,7 @@ def _bd_bls(D, ky):
     muc = [{"nam": n, "gt": sum(v) / len(v)} for n, v in sorted(theo_nam.items())][-6:]
     if len(muc) < 3:
         return None
-    return (f"{ky.get('nhan', 'Price index')} by year",
+    return (f"{ky.get('nhan') or 'Price index'} by year",
             [{"name": str(m["nam"]), "stat": f"{m['gt']:,.1f}",
               "vo": f"{m['nam']}. {m['gt']:,.1f}."} for m in reversed(muc)],
             "Bureau of Labor Statistics. Official numbers.")
@@ -1715,7 +1715,7 @@ def _sk_the_gioi(D, ky):
         r = [r[i] for i in vt]
     muc = [{"name": _gon(x["nuoc"], 22), "emoji": "🌍", "value": round(x["gia_tri"], 1),
             "disp": _so(x["gia_tri"])} for x in r]
-    return (f"{ky.get('nhan', 'World ranking')} {ky.get('nam', 2023)}", "", muc,
+    return (f"{ky.get('nhan') or 'World ranking'} {ky.get('nam', 2023)}", "", muc,
             "World Bank open data.")
 
 
