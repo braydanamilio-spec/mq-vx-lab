@@ -4158,3 +4158,28 @@ sàn nào cả** — đặt nhân vật ở đâu cũng thành đứng trên m�
 2. **Ở lớp dựng:** thêm một DẢI SÀN mờ ở đáy khung lấy màu từ bảng màu kênh, có đường chân
    tường và bóng đổ. Ảnh AI lượt nào cũng có thể trả về khung không thấy sàn, nên phải có lớp
    bảo hiểm KHÔNG phụ thuộc vào ảnh.
+
+### 7ab. NGỮ PHÁP MÁY QUAY CHO CẢNH HAI NGƯỜI — 30/8/2026
+
+Khi một tập chỉ còn **một bối cảnh** (luật 7x), toàn bộ nhịp thị giác dồn vào máy quay. Bốn
+điều học được, mỗi điều đều từ một khung đo được:
+
+1. **Ba cỡ máy phải chênh ĐỦ ĐỂ MẮT THẤY.** Dải 1,42–1,92 quá hẹp: bốn lượt liền nhau ra bốn
+   khung gần y hệt. Dải 1,25 (toàn) – 1,68 (trung) – 3,6 (cận) thì mỗi cỡ nói một việc khác.
+2. **Cỡ cận NEO VÀO ĐẦU, hai cỡ kia neo vào CHÂN.** Neo mọi cỡ vào chân là lý do "cận cảnh"
+   vẫn ra toàn thân: giữ chân đứng yên thì phóng to bao nhiêu người cũng chỉ dài thêm xuống
+   dưới, đầu bay khỏi khung trước khi mặt kịp to. Mà cận cảnh theo định nghĩa là không thấy chân.
+3. **Cận cảnh là cận vào NGƯỜI ĐANG NÓI, không phải cận cả hai.** Giữ khoảng cách hai người cố
+   định trên màn hình trong khi cỡ người tăng thì ở cỡ cận họ chồng lên nhau. Máy dịch ngang đưa
+   người nói vào giữa; người kia ra hẳn ngoài khung.
+   Và **tính theo điểm XA NHẤT của hình, không theo tâm**: ở hệ số giãn 2,4 thân người kia đã ra
+   ngoài nhưng BÀN TAY thì chưa — một bàn tay lơ lửng ở mép khung còn khó chịu hơn nửa người.
+4. **Nền phải TIẾN THEO MÁY, nhưng tiến chậm hơn người.** Đo được: mặt chiếm nửa màn hình mà
+   hàng rào sau lưng vẫn nhỏ y như lúc toàn cảnh — mắt đọc ra ngay là nhân vật DÁN lên ảnh.
+   Nền phóng theo `zoom` với hệ số 0,42: đủ để không "dán", đủ chậm để vẫn ra chiều sâu.
+
+**Và cây thước phải đổi theo.** `cham_v4` cũ cho điểm cao khi một video có **ít nhất ba nền phân
+biệt** — tức là tôi đã viết một phép đo **chấm điểm cao cho đúng cái lỗi anh vừa bắt**. Nay đo
+ngược: nhiều hơn một nền trong một tập là HỎNG (−10), và thiếu đủ ba cỡ máy cũng là hỏng (−5).
+Bài học: khi sửa một luật thiết kế, **phải sửa cả cây thước** — không thì thước sẽ kéo hệ thống
+quay lại lỗi cũ.

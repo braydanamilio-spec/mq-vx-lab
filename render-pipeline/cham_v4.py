@@ -112,14 +112,27 @@ def cham_mot(k: dict) -> dict:
             continue
         break
 
-    # ── 10đ ĐỘ DÀI + ĐỦ NỀN ────────────────────────────────────────────────────────────
+    # ── 10đ ĐỘ DÀI + LOGIC BỐI CẢNH ────────────────────────────────────────────────────
     dur = _dai(pv) or 0
     if not (15 <= dur <= 60):
         diem -= 5
         loi.append(f"dài {dur:.0f}s — ngoài khoảng short 15–60s")
-    if len({l.get("nen") for l in luot if l.get("nen")}) < 3:
+    # 30/8 — ĐỔI HẲN PHÉP ĐO NÀY. Bản cũ đòi "ít nhất ba nền phân biệt" trong MỘT video, tức là
+    # tôi đã viết một cây thước CHẤM ĐIỂM CAO CHO LỖI: anh bắt đúng chỗ ấy — "bối cảnh phải liên
+    # quan lời nói hành động, ko phải đang ở trong nhà nhảy qua ra ngoài đường". Một cuộc hội
+    # thoại chỉ diễn ra ở MỘT chỗ. Nay đo ngược lại: nhiều hơn một nền trong một tập là HỎNG.
+    _nen = {l.get("nen") for l in luot if l.get("nen")}
+    if len(_nen) > 1:
+        diem -= 10
+        loi.append(f"{len(_nen)} bối cảnh trong MỘT cuộc hội thoại — hai người không dịch "
+                   f"chuyển tức thời giữa câu")
+    # Nhịp thị giác vì thế phải do CỠ MÁY gánh: một tập phải có đủ ba cỡ, không thì khung nào
+    # cũng như khung nào.
+    _co = {l.get("co") for l in luot}
+    if len(_co) < 3:
         diem -= 5
-        loi.append("chưa đủ ba nền phân biệt — khung dễ đọc ra là nhàm")
+        loi.append(f"chỉ {len(_co)} cỡ máy ({', '.join(sorted(str(x) for x in _co))}) — "
+                   f"một bối cảnh mà máy không đổi cỡ thì mọi khung như nhau")
 
     # ── 15đ ĐỘ SÁNG ────────────────────────────────────────────────────────────────────
     s, t = _sang(pv, dur or 18)
@@ -152,6 +165,11 @@ def main() -> int:
     # ── 20đ KHÔNG TRÙNG — đo trên CẢ BỘ ────────────────────────────────────────────────
     # Trùng lặp là thuộc tính của một TẬP, không của một phần tử: một kênh không tự trùng nó.
     trung: dict = {}
+    # Bốn kịch bản của một kênh phải nằm ở BỐN chỗ khác nhau — anh: "ko clip nào trùng lặp".
+    for x in H.KENH:
+        _b = [kb["boi"] for kb in H.KHO[x["de"]]]
+        if len(set(_b)) < len(_b):
+            trung.setdefault("boi_trong_kenh", {})[x["ten"]] = [x["ten"]]
     for truc in ("cap", "nen", "mau"):
         d: dict = {}
         for x in H.KENH:

@@ -20,6 +20,16 @@ import { DienVienHai } from "./DienVienHai";
 
 const kep = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const trn = (a: number, b: number, t: number) => a + (b - a) * kep(t);
+/** Chân nhân vật chạm mặt sàn ở đây. Một hằng số DUY NHẤT: dải sàn, bóng đổ và chỗ đứng đều
+ *  lấy từ nó, nên không bao giờ lệch nhau. */
+const Y_CHAN = 0;
+/** Chân nhân vật LUÔN chạm đúng dòng này TRÊN MÀN HÌNH, ở mọi cỡ máy.
+ *
+ * 30/8 — Bản trước khai cỡ máy bằng một cặp (dịch chuyển, độ phóng) rời nhau, nên mỗi cỡ máy
+ * chân rơi vào một chỗ khác: cỡ cận đẩy chân xuống đúng mép dưới và cắt cụt bàn chân. Máy quay
+ * thật thì tiến lại gần MÀ ĐƯỜNG SÀN ĐỨNG YÊN. Nên chỉ khai độ phóng, còn dịch chuyển TÍNH RA
+ * từ nó — một nguồn sự thật, không có chỗ cho hai số lệch nhau. */
+const CHAN_MH = 690;
 const muot = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
 export type Luot = {
@@ -194,8 +204,16 @@ export const KichHai: React.FC<PropsHai> = ({
   const _truocA = -232 + (i > 0 && luot[i - 1].ai === 0 ? 30 : -14) + (((_iL + 2) % 3) - 1) * 16;
   const _truocB = 232 + (i > 0 && luot[i - 1].ai === 0 ? 14 : -30) + ((_iL % 3) - 1) * 16;
   const tDi = muot(kep((giay - L.s) / 0.6));
-  const xA = trn(_truocA, dichA, tDi);
-  const xB = trn(_truocB, dichB, tDi);
+  // Ở cỡ cận, hai người phải giãn ĐỦ XA để người không nói ra HẲN ngoài khung. Đo được ở hệ
+  // số 1,5: mép phải của người kia còn nằm trong khung 18 điểm, ra một mảnh người lơ lửng ở
+  // mép trái — xấu hơn cả việc chồng người. Nửa vời là tệ nhất; hoặc trong khung hẳn, hoặc ra
+  // hẳn ngoài.
+  // Hệ số 3,6 chứ không phải 2,4: ở hệ số cũ THÂN người kia đã ra ngoài khung nhưng BÀN TAY
+  // thì chưa — tay vươn xa tâm hơn thân, và một bàn tay lơ lửng ở mép khung còn khó chịu hơn
+  // cả nửa người. Tính theo điểm XA NHẤT của hình, không theo tâm.
+  const _gian = (L.co || "trung") === "can" ? 3.6 : 1;
+  const xA = trn(_truocA, dichA, tDi) * _gian;
+  const xB = trn(_truocB, dichB, tDi) * _gian;
   // `buoc` > 0 khi đang di chuyển: bật dáng đi (chân bước so le, tay vung ngược pha).
   const dangDi = Math.abs(dichA - _truocA) > 6 && tDi > 0.02 && tDi < 0.98;
   const buocA = dangDi ? Math.sin(tDi * Math.PI) : 0;
@@ -212,11 +230,45 @@ export const KichHai: React.FC<PropsHai> = ({
   };
   const cuChiNghe = NGHE[(L.camXucKia || "trung_tinh") as string] || "nghi";
 
+  // 30/8 — ĐO ĐƯỢC: nhân vật chỉ chiếm ~30% chiều cao khung. Trên điện thoại thì mặt bé đến
+  // mức không đọc được nét mặt, mà cú chốt của hài nằm ở nét mặt. Short phải đóng cận: người
+  // chiếm quá nửa khung. Nâng cả độ phóng lẫn cỡ người, và hạ chân xuống thấp để phần trống
+  // phía trên không thừa.
+  // 30/8 — CỠ MÁY PHẢI CHÊNH ĐỦ ĐỂ MẮT THẤY.
+  // Một tập chỉ còn MỘT bối cảnh (xem `dung_luot`), nên toàn bộ nhịp thị giác dồn vào máy quay.
+  // Dải 1,42–1,92 quá hẹp: bốn lượt liền nhau ra bốn khung gần y hệt. Nới thành 1,25–2,25 thì
+  // toàn cảnh đọc ra là "đang ở đâu" còn cận cảnh đọc ra là "nhìn mặt nó kìa".
+  const _can = (L.co || "trung") === "can";
   const KH = doc
-    ? { rong: { y: -110, z: 1.18 }, trung: { y: -190, z: 1.36 }, can: { y: -330, z: 1.72 } }
-    : { rong: { y: -40, z: 0.86 }, trung: { y: -120, z: 1.0 }, can: { y: -250, z: 1.28 } };
-  const K = KH[L.co || "trung"];
-  const zoom = K.z * (1 + truocChot * 0.05);
+    ? { rong: 1.25, trung: 1.68, can: 3.6 }
+    : { rong: 0.84, trung: 1.06, can: 2.2 };
+  const zoom = (KH[L.co || "trung"] || 1.68) * (1 + truocChot * 0.05);
+  // ══ CỠ CẬN NEO VÀO ĐẦU, HAI CỠ KIA NEO VÀO CHÂN ═════════════════════════════════════
+  // Neo mọi cỡ vào chân là lý do "cận cảnh" của bản trước vẫn ra TOÀN THÂN: giữ chân đứng yên
+  // thì phóng to bao nhiêu người cũng chỉ dài thêm xuống dưới, đầu bay khỏi khung trước khi mặt
+  // kịp to. Mà cận cảnh theo định nghĩa là KHÔNG THẤY CHÂN.
+  // Nên hai cỡ rộng neo vào đường sàn (để đường sàn đứng yên khi máy tiến vào), còn cỡ cận neo
+  // vào ĐẦU — đúng cách máy quay thật lia lên khi áp sát một khuôn mặt. Cú chốt vì thế rơi vào
+  // một khuôn mặt chiếm gần bốn phần mười chiều cao màn hình, đủ để đọc từng nét.
+  const _yDau = -336 * 1.3;                       // tâm đầu trong hệ toạ độ nhóm
+  const dichY = _can ? -60 - _yDau * zoom : CHAN_MH - Y_CHAN * zoom;
+  // LIA NGANG RẤT CHẬM. Máy quay đứng chết cứng là dấu hiệu của hình dựng máy; một chuyển động
+  // dưới ngưỡng chú ý vẫn làm khung "còn sống". Hướng lia đổi theo lượt nên không thành nhịp đều.
+  const liaNhe = Math.sin(giay * 0.32 + i * 1.7) * 26;
+
+  // ══ CẬN CẢNH LÀ CẬN VÀO NGƯỜI ĐANG NÓI, KHÔNG PHẢI CẬN CẢ HAI ═══════════════════════
+  // Bản trước giữ khoảng cách hai người CỐ ĐỊNH TRÊN MÀN HÌNH (chia x cho độ phóng) trong khi
+  // cỡ người vẫn to lên theo độ phóng. Ở cỡ cận, mỗi người rộng 428 điểm mà khoảng cách tâm chỉ
+  // 464 — hai người chồng lên nhau, tay người này đè mặt người kia. Đo được đúng cảnh ấy.
+  //
+  // Sửa bằng cách chia lại khoảng cách thì chỉ đẩy người ra ngoài mép khung. Đường đúng là
+  // NGỮ PHÁP PHIM: toàn cảnh cho thấy đang ở đâu, trung cảnh cho thấy hai người, còn cận cảnh
+  // thì theo định nghĩa chỉ có MỘT người — người đang nói. Máy quay dịch ngang để đưa người ấy
+  // vào giữa khung, và cú chốt vì thế rơi đúng vào một khuôn mặt chiếm gần hết màn hình.
+  const _canhCan = (L.co || "trung") === "can";
+  const _tamNguoi = noiA_ ? xA : xB;
+  const liaVao = _canhCan ? -_tamNguoi * muot(kep((giay - L.s) / 0.28)) : 0;
+  const lia = liaNhe * (_canhCan ? 0.4 : 1) + liaVao;
 
   const _cao = Math.round(1000 * (height / width));
   const vb = doc ? `-500 ${-Math.round(_cao * 0.47)} 1000 ${_cao}`
@@ -227,9 +279,17 @@ export const KichHai: React.FC<PropsHai> = ({
       {/* NỀN LÀ ẢNH AI — đứng yên, hơi phóng chậm để khung không chết cứng */}
       {L.nen ? (
         <AbsoluteFill style={{ overflow: "hidden" }}>
+          {/* ══ NỀN PHẢI TIẾN THEO MÁY QUAY, NHƯNG TIẾN ÍT HƠN NGƯỜI ══════════════════
+              30/8 — Đo được ở khung cận: mặt chiếm gần nửa màn hình mà hàng rào phía sau vẫn
+              nhỏ y như lúc toàn cảnh. Mắt đọc ra ngay là nhân vật được DÁN lên một tấm ảnh,
+              không phải đứng trong một không gian.
+              Máy quay tiến lại gần thì MỌI THỨ đều to lên — chỉ là thứ ở xa to lên chậm hơn
+              thứ ở gần (đó chính là phối cảnh). Nên nền phóng theo `zoom` với hệ số 0,42:
+              đủ để không "dán", đủ chậm để vẫn ra chiều sâu. Đây cũng là cách các phần mềm
+              dựng phim 2D làm lớp nền xa. */}
           <Img src={staticFile(L.nen)}
                style={{ width: "100%", height: "100%", objectFit: "cover",
-                        transform: `scale(${1.04 + p * 0.03})`,
+                        transform: `translateX(${-lia * 0.3}px) scale(${1.04 + p * 0.03 + (zoom - 1.25) * 0.42})`,
                         filter: "saturate(1.05) brightness(1.02)" }} />
           {/* Lớp phủ nhẹ: tách nhân vật vector nét dày khỏi ảnh nền mềm. Thiếu nó thì hai thứ
               đọc ra là hai thế giới dán vào nhau. */}
@@ -261,15 +321,18 @@ export const KichHai: React.FC<PropsHai> = ({
             trên là gì thì vật lý vẫn đúng: có sàn, có bóng, có chỗ chân chạm. */}
         <defs>
           <linearGradient id="san" x1="0" y1="0" x2="0" y2="1">
+            {/* Mờ hẳn: đây là LỚP BẢO HIỂM cho trường hợp ảnh nền không có sàn, không phải
+                một tấm sàn để nhìn. Đục quá thì nó đè lên mặt đường có sẵn của ảnh và đọc ra
+                là một tờ giấy dán ngang khung. */}
             <stop offset="0%" stopColor={mucNen} stopOpacity={0.0} />
-            <stop offset="26%" stopColor={mucNen} stopOpacity={0.62} />
-            <stop offset="100%" stopColor={mucNen} stopOpacity={0.9} />
+            <stop offset="30%" stopColor={mucNen} stopOpacity={0.16} />
+            <stop offset="100%" stopColor={mucNen} stopOpacity={0.4} />
           </linearGradient>
         </defs>
-        <g transform={`translate(${rung} ${-K.y}) scale(${zoom})`} style={{ transformOrigin: "0px 0px" }}>
-          <rect x={-1600} y={244 - 34} width={3200} height={1400} fill="url(#san)" />
-          <line x1={-1600} y1={244 - 34} x2={1600} y2={244 - 34}
-                stroke="#00000022" strokeWidth={3} />
+        <g transform={`translate(${rung + lia} ${dichY}) scale(${zoom})`} style={{ transformOrigin: "0px 0px" }}>
+          <rect x={-1600} y={Y_CHAN - 34} width={3200} height={1400} fill="url(#san)" />
+          <line x1={-1600} y1={Y_CHAN - 34} x2={1600} y2={Y_CHAN - 34}
+                stroke="#00000014" strokeWidth={2} />
           {/* 30/8 — KHOẢNG CÁCH HAI NGƯỜI CHIA CHO ĐỘ PHÓNG.
               Toàn cảnh được phóng `zoom`; nếu giữ nguyên x thì ở cỡ CẬN (zoom 1,72) hai người
               bị đẩy ra 1,72 lần và mép khung xén mất nửa người — đo được đúng cảnh ấy. Chia x
@@ -287,12 +350,12 @@ export const KichHai: React.FC<PropsHai> = ({
                     cuChi={noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
                     nhan={noiA_ ? noiA.h : 0} nghieng={nghiengA} buoc={buocA}
-                    x={xA / zoom} y={244} scale={1.16 * coA} />
+                    x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
                     nhan={!noiA_ ? noiB.h : 0} nghieng={nghiengB} buoc={buocB}
-                    x={xB / zoom} y={244} scale={1.16 * coB} lat />
+                    x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
         </g>
 
         {tieuDe && giay < 2.6 ? (
@@ -307,7 +370,7 @@ export const KichHai: React.FC<PropsHai> = ({
             hai người, nửa trò đùa nằm ở chỗ AI nói câu nào — mà phụ đề trắng trơn thì hai lượt
             liền nhau đọc ra như một người tự nói. Viền thẻ và chữ được tô lấy đúng màu áo của
             người ấy, nên mắt gán câu về đúng người trước cả khi nghe hết câu. */}
-        <PhuDe tu={tu} giay={giay} nhan="#FFE27A" day={doc ? 596 : 424} s0={L.s} e0={L.e}
+        <PhuDe tu={tu} giay={giay} nhan="#FFE27A" day={doc ? 812 : 470} s0={L.s} e0={L.e}
                vien={noiA_ ? A.ao : B.ao} ben={noiA_ ? -1 : 1} />
       </svg>
       </AbsoluteFill>

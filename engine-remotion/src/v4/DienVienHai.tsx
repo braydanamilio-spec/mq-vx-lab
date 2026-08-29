@@ -112,16 +112,34 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const gat = noi.h * 3.4;
   const nghiengDau = E.nghieng + dao * 0.6 + treo(0, t, 0.1, 0.6);
 
+  // ── DÁNG ĐI ────────────────────────────────────────────────────────────────────────────
+  // Bước chân là chuyển động tuần hoàn: hai chân LỆCH PHA NỬA CHU KỲ, và bàn chân nhấc lên
+  // theo nửa trên của hình sin (nửa dưới là lúc chân chạm đất nên phải giữ y = 0, không thì
+  // chân lún xuống dưới sàn — lỗi vật lý mắt bắt được ngay).
+  // `nhun` là nhịp thân nhấp nhô hai lần mỗi chu kỳ bước: người đi thì trọng tâm lên xuống,
+  // đứng yên mà tay chân vung là thứ đọc ra là hình máy.
+  const bPha = t * 7.4;
+  const sai = buoc * 30;
+  const dapT = Math.sin(bPha), dapP = Math.sin(bPha + Math.PI);
+  const nhacT = buoc > 0 ? Math.max(0, dapT) * 20 : 0;
+  const nhacP = buoc > 0 ? Math.max(0, dapP) * 20 : 0;
+  const nhun = buoc > 0 ? Math.abs(Math.cos(bPha)) * 5 : 0;
+
   // ── KHUNG XƯƠNG ────────────────────────────────────────────────────────────────────────
   const hong: [number, number] = [trong * 0.3, Y_HONG * cao + nhun];
   const vai: [number, number] = [trong * 0.6 + nghieng * 1.6, Y_VAI * cao + tho * 1.2 + nhun];
   const co: [number, number] = [vai[0] + dao * 0.4, vai[1] - 14 * cao];
-  const dau: [number, number] = [co[0] + dao * 0.9, co[1] - 52 * cao + gat];
+  // Đầu nhấc CAO hơn vai đủ để thấy cổ. Bản trước chỉ hở 9 đơn vị nên đầu dính thẳng vào vai
+  // và cả khối đọc ra là một hình duy nhất — đầu có quay cũng không ai thấy.
+  const dau: [number, number] = [co[0] + dao * 0.9, co[1] - 60 * cao + gat];
 
-  const rongVai = 44 * ngang;
-  const vaiT: [number, number] = [vai[0] - rongVai, vai[1] + 4];
-  const vaiP: [number, number] = [vai[0] + rongVai, vai[1] + 4];
-  const dtay = 74 * cao, dcang = 70 * cao;
+  // Điểm gắn tay phải nằm NGOÀI mép thân, không thì cánh tay chạy chìm trong thân và bàn tay
+  // đọc ra là dính vào hông. Và tay phải đủ DÀI: tay ngắn làm nhân vật đọc ra là mập lùn kể cả
+  // khi thân đúng tỉ lệ — đây là chỗ bản đầu sai.
+  const rongVai = 50 * ngang;
+  const vaiT: [number, number] = [vai[0] - rongVai - 4, vai[1] + 8];
+  const vaiP: [number, number] = [vai[0] + rongVai + 4, vai[1] + 8];
+  const dtay = 86 * cao, dcang = 80 * cao;
 
   // Cử chỉ đi theo CUNG CÓ GIA TỐC, không đi thẳng: `muot` làm góc rời khỏi tư thế nghỉ chậm,
   // giữa nhanh, rồi dừng chậm. Tay người thật không quay đều tốc độ.
@@ -140,19 +158,6 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const tayT = P(khuyuT[0], khuyuT[1], dcang, gocVT + gocKT);
   const khuyuP = P(vaiP[0], vaiP[1], dtay, gocVP);
   const tayP = P(khuyuP[0], khuyuP[1], dcang, gocVP + gocKP);
-
-  // ── DÁNG ĐI ────────────────────────────────────────────────────────────────────────────
-  // Bước chân là chuyển động tuần hoàn: hai chân LỆCH PHA NỬA CHU KỲ, và bàn chân nhấc lên
-  // theo nửa trên của hình sin (nửa dưới là lúc chân chạm đất nên phải giữ y = 0, không thì
-  // chân lún xuống dưới sàn — lỗi vật lý mắt bắt được ngay).
-  // `nhun` là nhịp thân nhấp nhô hai lần mỗi chu kỳ bước: người đi thì trọng tâm lên xuống,
-  // đứng yên mà tay chân vung là thứ đọc ra là hình máy.
-  const bPha = t * 7.4;
-  const sai = buoc * 30;
-  const dapT = Math.sin(bPha), dapP = Math.sin(bPha + Math.PI);
-  const nhacT = buoc > 0 ? Math.max(0, dapT) * 20 : 0;
-  const nhacP = buoc > 0 ? Math.max(0, dapP) * 20 : 0;
-  const nhun = buoc > 0 ? Math.abs(Math.cos(bPha)) * 5 : 0;
 
   const rongHong = 30 * ngang;
   const goiT: [number, number] = [hong[0] - rongHong + dapT * sai * 0.5, hong[1] + 82 * cao - nhacT * 0.5];
@@ -178,16 +183,29 @@ export const DienVienHai: React.FC<PropsHai> = ({
    * `goc` = hướng cẳng tay, để bàn tay nối liền chứ không trôi lơ lửng như bản cũ.
    */
   const ban = (p: [number, number], goc: number, key: string) => {
-    const r = 17;
-    const n = (i: number) => P(p[0], p[1], r * 0.98, goc - 34 + i * 22);
+    // 30/8 — MỘT ĐƯỜNG BAO DUY NHẤT, ngón vẽ bằng NÉT KHẮC bên trong.
+    // Bản đầu ghép bốn hình tròn có viền riêng chồng lên nhau; các viền cắt nhau nên bàn tay
+    // đọc ra là một CHÙM NHO chứ không phải một bàn tay. Hoạt hình vẽ găng bằng đúng một hình
+    // bao tròn trịa rồi khắc hai ba đường chia ngón vào TRONG — bao giờ cũng sạch ở mọi cỡ.
+    // 30/8 — BÀN TAY NHỎ LẠI VÀ BỎ VẠCH NGÓN.
+    // Ba vạch khắc ngón ở cỡ này đọc ra là VẾT CÀO chứ không phải ngón, và bàn tay to bằng
+    // nửa cái đầu thì đọc ra là cái vợt. Hoạt hình vẽ tay nghỉ bằng một khối tròn có duy nhất
+    // một khía ngón cái — ngón chỉ hiện ra khi tay LÀM GÌ ĐÓ, không phải khi buông xuôi.
+    const r = 16;
     return (
       <g key={key} transform={`rotate(${goc - 90} ${p[0]} ${p[1]})`}>
-        <circle cx={p[0]} cy={p[1]} r={r} fill={da} stroke={V} strokeWidth={NG * 0.8} />
-        {[0, 1, 2].map((i) => {
-          const q = n(i);
-          return <circle key={i} cx={q[0]} cy={q[1]} r={r * 0.44} fill={da} stroke={V} strokeWidth={NT} />;
-        })}
-        <circle cx={p[0] - r * 0.72} cy={p[1] + r * 0.34} r={r * 0.42} fill={da} stroke={V} strokeWidth={NT} />
+        <path
+          d={`M ${p[0] - r * 0.86} ${p[1] + r * 0.5}
+              q -${r * 0.34} -${r * 0.9} ${r * 0.2} -${r * 1.24}
+              q ${r * 0.5} -${r * 0.3} ${r * 0.86} ${r * 0.02}
+              q ${r * 0.42} -${r * 0.24} ${r * 0.72} ${r * 0.2}
+              q ${r * 0.4} ${r * 0.34} ${r * 0.16} ${r * 1.02}
+              q -${r * 0.24} ${r * 0.62} -${r} ${r * 0.6}
+              q -${r * 0.62} 0 -${r * 0.94} -${r * 0.6} Z`}
+          fill={da} stroke={V} strokeWidth={NG * 0.86} strokeLinejoin="round"
+        />
+        <path d={`M ${p[0] - r * 0.74} ${p[1] + r * 0.1} q ${r * 0.3} -${r * 0.34} ${r * 0.56} -${r * 0.06}`}
+              stroke={V} strokeWidth={NT} fill="none" strokeLinecap="round" opacity={0.85} />
       </g>
     );
   };
@@ -204,10 +222,13 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // ── MẶT ────────────────────────────────────────────────────────────────────────────────
   const mx = kep(nhin[0], -1, 1) * 7;
   const my = kep(nhin[1], -1, 1) * 5;
-  const rMat = 15.5 * matTo;
-  const rTrong = 7.4 * matTo;
+  // 30/8 — MẮT NHỎ LẠI. Bản trước mắt + gọng kính chiếm 83% bề ngang đầu; mắt to là đúng
+  // hướng nhưng quá tay thì đọc ra là mắt lồi ra khỏi mặt chứ không phải dễ thương. Dải đẹp
+  // của hoạt hình truyền hình là hai mắt chiếm chừng 60–65% bề ngang đầu.
+  const rMat = 13 * matTo;
+  const rTrong = 6.4 * matTo;
   const mm = 1 - chop;
-  const cachMat = 21 * matTo;
+  const cachMat = 19 * matTo;
   const yMat = -8;
   const yMay = yMat - 20 - E.mayCao;
 
@@ -240,7 +261,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
             C ${vai[0] - rongVai - 16} ${vai[1] + 40}, ${hong[0] - rongHong - 20} ${hong[1] - 34}, ${hong[0] - rongHong - 12} ${hong[1] + 8}
             Q ${hong[0]} ${hong[1] + 26} ${hong[0] + rongHong + 12} ${hong[1] + 8}
             C ${hong[0] + rongHong + 20} ${hong[1] - 34}, ${vai[0] + rongVai + 16} ${vai[1] + 40}, ${vai[0] + rongVai + 6} ${vai[1] + 6}
-            Q ${vai[0]} ${vai[1] - 14} ${vai[0] - rongVai - 6} ${vai[1] + 6} Z`}
+            Q ${vai[0]} ${vai[1] - 10} ${vai[0] - rongVai - 6} ${vai[1] + 6} Z`}
         fill={ao} stroke={V} strokeWidth={NG} strokeLinejoin="round"
       />
       {/* Cổ áo chữ V + áo trong: một mảng sáng giữa ngực để thân không phẳng lì */}
@@ -263,8 +284,9 @@ export const DienVienHai: React.FC<PropsHai> = ({
       {chi(`M ${vaiP[0]} ${vaiP[1]} Q ${khuyuP[0]} ${khuyuP[1]} ${tayP[0]} ${tayP[1]}`, ao, 23 * ngang, "tP")}
       {ban(tayP, gocVP + gocKP, "bP")}
 
-      {/* CỔ */}
-      {chi(`M ${co[0]} ${co[1] + 16} L ${dau[0]} ${dau[1] + R_DAU * 0.62}`, da, 26, "co")}
+      {/* CỔ — bản đầu vẽ quá ngắn nên đầu dính thẳng vào vai, đọc ra là một khối. Cổ phải
+          THẤY ĐƯỢC thì đầu mới quay được một cách có nghĩa. */}
+      {chi(`M ${co[0]} ${co[1] + 24} L ${dau[0]} ${dau[1] + R_DAU * 0.54}`, da, 38, "co")}
 
       {/* ── ĐẦU ───────────────────────────────────────────────────────────────────────── */}
       <g transform={`rotate(${nghiengDau} ${dau[0]} ${dau[1] + R_DAU})`}>
@@ -346,7 +368,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
         {/* RÂU — vẽ SAU miệng thì nó phủ mất miệng; vẽ trước thì miệng nằm trên. Đây là bẫy đã
             gặp một lần ở bản cũ. */}
         {kieu.rau === "ria" ? (
-          <path d={`M ${dau[0] - 20} ${dau[1] + yMieng - 9} q 20 -9 40 0 q -8 8 -20 8 q -12 0 -20 -8 Z`}
+          <path d={`M ${dau[0] - 21} ${dau[1] + yMieng - 15} q 21 -10 42 0 q -9 8 -21 8 q -12 0 -21 -8 Z`}
                 fill={kieu.toc} stroke={V} strokeWidth={NT} strokeLinejoin="round" />
         ) : null}
         {kieu.rau === "de" ? (
@@ -363,9 +385,11 @@ export const DienVienHai: React.FC<PropsHai> = ({
 
         {kieu.kinh ? (
           <g stroke={V} strokeWidth={NT * 1.5} fill="none">
-            <circle cx={dau[0] - cachMat} cy={dau[1] + yMat} r={rMat + 6} fill="#FFFFFF" fillOpacity={0.13} />
-            <circle cx={dau[0] + cachMat} cy={dau[1] + yMat} r={rMat + 6} fill="#FFFFFF" fillOpacity={0.13} />
-            <line x1={dau[0] - cachMat + rMat + 6} y1={dau[1] + yMat} x2={dau[0] + cachMat - rMat - 6} y2={dau[1] + yMat} />
+            <circle cx={dau[0] - cachMat} cy={dau[1] + yMat} r={rMat + 4} fill="#FFFFFF" fillOpacity={0.1} />
+            <circle cx={dau[0] + cachMat} cy={dau[1] + yMat} r={rMat + 4} fill="#FFFFFF" fillOpacity={0.1} />
+            <line x1={dau[0] - cachMat + rMat + 4} y1={dau[1] + yMat} x2={dau[0] + cachMat - rMat - 4} y2={dau[1] + yMat} />
+            <line x1={dau[0] - cachMat - rMat - 4} y1={dau[1] + yMat} x2={dau[0] - R_DAU * 0.92} y2={dau[1] + yMat - 2} />
+            <line x1={dau[0] + cachMat + rMat + 4} y1={dau[1] + yMat} x2={dau[0] + R_DAU * 0.92} y2={dau[1] + yMat - 2} />
           </g>
         ) : null}
 
