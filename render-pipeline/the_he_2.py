@@ -594,6 +594,42 @@ def _bd_steam(D, ky):
             return None
         return (_ten, _bang(ds), _ket)
 
+    # ── NHÓM "MUA RỒI BỎ": cùng một nguồn, nhìn từ đầu kia ────────────────────────────────
+    # 29/8 — khung thật GAME GRAVEYARD hiện ĐÚNG nội dung của STEAM TRUTH: Counter-Strike 1.0M,
+    # PUBG 314.7K. Hai kênh, một video. Vì `kho_loc` của nó khai bốn giá trị (chet_yeu · tut_manh ·
+    # vang_nhat · bo_hoang) mà hàm này chỉ có nhánh `chet_yeu`; ba giá trị kia rơi xuống nhánh
+    # MẶC ĐỊNH — và nhánh mặc định chính là câu chuyện của kênh bên cạnh.
+    # Đây là lỗi trùng nội dung giữa hai kênh, thứ chính sách "sản xuất hàng loạt" của YouTube
+    # nhắm thẳng vào — nặng hơn hẳn một lỗi hiển thị.
+    BO_HOANG = {
+        "vang_nhat": (lambda x: _gia(x) > 0 and _so_huu(x) > 200000,
+                      "Paid games with the emptiest servers",
+                      "People bought them. Nobody logged in."),
+        "bo_hoang":  (lambda x: _so_huu(x) > 2000000,
+                      "The biggest games nobody opens",
+                      "Two million owners. Look at tonight."),
+        "dat_bo":    (lambda x: _gia(x) >= 40 and _so_huu(x) > 500000,
+                      "Sixty-dollar games sitting empty",
+                      "Full price, empty servers."),
+    }
+    if loc in BO_HOANG:
+        _hop, _ten, _ket = BO_HOANG[loc]
+        ds = sorted([x for x in r if _hop(x)], key=lambda z: z["dang_choi"])[:6]
+        if len(ds) < 3:
+            return None
+        return (_ten,
+                [{"name": _gon(x["ten"], 26), "stat": _so(x["dang_choi"]),
+                  "vo": f"{_gon(x['ten'], 32)}. Only {x['dang_choi']:,} still online."} for x in ds],
+                _ket)
+
+    # KHÔNG có nhánh nào khớp -> BỎ LƯỢT, tuyệt đối không rơi về mặc định.
+    # Rơi về mặc định nghĩa là kênh này nhả ra video của kênh khác, và không một dòng log nào báo.
+    # Thà mất một lượt còn hơn hai kênh cùng đăng một video.
+    if loc not in ("dong_nhat", ""):
+        print(f"   ⚠️ game Steam: bộ lọc '{loc}' chưa có nhánh — BỎ LƯỢT "
+              f"(không rơi về mặc định, tránh trùng nội dung với kênh khác)")
+        return None
+
     ds = sorted(r, key=lambda z: -z["dang_choi"])[:6]
     return ("Games people actually play right now", _bang(ds),
             "Not sales. People actually online.")
@@ -3288,6 +3324,8 @@ _NHAN_TRUC = {
     "dong_nhat":  "Most played",
     "tang_manh": "Biggest gainers",
     "chet_yeu":  "Dead on arrival",
+    "vang_nhat_": "Emptiest",          # giữ khoá cũ khỏi vỡ nếu còn chỗ nào tra
+    "dat_bo":    "Sixty-dollar",       # trùng chữ đã có trong tiêu đề -> không bị bồi đuôi
     "tut_manh":  "Biggest drops",
     "vang_nhat": "Emptiest servers",
     "bo_hoang":  "Abandoned",

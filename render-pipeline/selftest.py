@@ -2278,6 +2278,7 @@ def main():
     check("18 kênh ranked KHÔNG dùng chung một khuôn", t_bo_cuc_ranked_khong_dung_chung_mot_khuon)
     check("prompt vẽ không gọi tên mặt phẳng chứa chữ", t_prompt_ve_khong_goi_ten_mat_chu)
     check("đồng hồ đua hiện được mốc chữ, không ra NaN", t_dong_ho_dua_chiu_moc_chu)
+    check("mọi giá trị trục đều có nhánh riêng (không trùng kênh)", t_moi_gia_tri_truc_deu_co_nhanh)
     check("bản ghi kho hỏng cấu trúc bị loại từ gốc", t_root_rac_loai_tu_goc)
     check("xin độ đậm phông phải nằm trong số phông CÓ", t_do_dam_phong_co_that)
     check("cổng chạy-thật phải biết MỌI cờ CLI", t_cong_biet_moi_co)
@@ -4710,6 +4711,56 @@ def t_dong_ho_dua_chiu_moc_chu():
     assert "isFinite" in khoi or "Number.isFinite" in khoi, \
         "đồng hồ đua nội suy `t` mà không kiểm kiểu -> mốc chữ sẽ ra NaN"
     assert "String(a.t)" in khoi, "không có nhánh hiện mốc CHỮ nguyên văn"
+
+
+
+
+def t_moi_gia_tri_truc_deu_co_nhanh():
+    """HAI KÊNH KHÔNG ĐƯỢC RA CÙNG MỘT TIÊU ĐỀ.
+
+    29/8 — khung thật GAME GRAVEYARD hiện ĐÚNG nội dung của STEAM TRUTH (Counter-Strike 1.0M,
+    PUBG 314.7K). Hai kênh, một video. Vì `kho_loc` của nó khai bốn giá trị mà `_bd_steam` chỉ có
+    nhánh cho một; ba giá trị kia rơi xuống nhánh MẶC ĐỊNH, và nhánh mặc định chính là câu chuyện
+    của kênh bên cạnh. Không một dòng log nào báo.
+    Đây là TRÙNG NỘI DUNG GIỮA HAI KÊNH — thứ chính sách "sản xuất hàng loạt" của YouTube nhắm
+    thẳng vào, nặng hơn hẳn một lỗi hiển thị.
+
+    BẢN ĐẦU CỦA CHỐT NÀY ĐO SAI: nó soi trùng TRONG một kênh, mà lỗi thật là trùng GIỮA hai kênh —
+    nên nó xanh ngay cả khi tôi cố tình phá mã. Một chốt không đỏ được là một chốt không tồn tại.
+    Nay gom tiêu đề của MỌI kênh dùng chung một bộ dựng và đòi chúng đôi một khác nhau."""
+    import json as _json
+    import du_lieu_mo as D
+    import the_he_2 as T
+    ks = _json.loads(_doc("kenh_the_he_2.json"))
+    ks = ks if isinstance(ks, list) else list(ks.values())
+    # Gom theo BỘ DỰNG: chỉ các kênh dùng chung một hàm mới có cửa giẫm chân nhau.
+    theo_ham: dict = {}
+    for k in ks:
+        ts = k.get("tham_so") or {}
+        if str(ts.get("xoay") or "") != "loc":
+            continue
+        theo_ham.setdefault(k.get("ham"), []).append(k)
+    xau = []
+    for ham, nhom in theo_ham.items():
+        if len(nhom) < 2:
+            continue
+        bo = T.BO_CHUYEN.get(ham)
+        if not bo:
+            continue
+        chu: dict = {}
+        for k in nhom:
+            ts = k.get("tham_so") or {}
+            for v in (ts.get("kho_loc") or [ts.get("loc")]):
+                try:
+                    r = bo(D, {**ts, "loc": v})
+                except Exception:
+                    r = None
+                if r:
+                    chu.setdefault(str(r[0]), set()).add(k["ten"])
+        for t, ten in chu.items():
+            if len(ten) > 1:
+                xau.append(f"{sorted(ten)} cùng ra {t[:44]!r}")
+    assert not xau, ("hai kênh ra CÙNG một tiêu đề -> trùng nội dung: " + " · ".join(xau[:3]))
 
 
 

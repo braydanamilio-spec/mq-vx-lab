@@ -1523,9 +1523,9 @@
    "xoay": "loc",
    "kho_loc": [
     "chet_yeu",
-    "tut_manh",
     "vang_nhat",
-    "bo_hoang"
+    "bo_hoang",
+    "dat_bo"
    ]
   },
   "brand": {
