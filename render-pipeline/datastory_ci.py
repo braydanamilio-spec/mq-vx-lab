@@ -542,14 +542,61 @@ _VARY = [
 ]
 
 
+# Máy vẽ ảnh KHÔNG viết được chữ. Nó dựng ra thứ TRÔNG như chữ: sai chính tả, sai ngôn ngữ, sai
+# cả bảng chữ cái. Đo trên khung thật kênh COURT RECORD: tờ giấy trong ảnh đề **"PUBLIC RECCORDS"**
+# — hai chữ R, ngay trên một kênh mà cả uy tín nằm ở chỗ "đây là hồ sơ công có thật".
+# Người xem không cần biết ảnh do AI vẽ; họ chỉ đọc ra một lỗi chính tả và kết luận kênh cẩu thả.
+# Chữ trên màn hình là việc của tầng chữ (tiêu đề, phụ đề, nhãn) — nơi mình kiểm soát từng ký tự.
+# Ảnh chỉ việc lo phần hình.
+_CAM_CHU = ("no text, no words, no letters, no captions, no signage, no watermark, "
+            "no logos, no numbers written in the image")
+
+
 def _salt_prompt(prompt: str) -> str:
-    """Thêm biến thể máy quay/ánh sáng theo NGẪU NHIÊN — không đụng nội dung, chỉ đổi cách nhìn."""
-    return f"{prompt}, {random.choice(_VARY)}" if prompt else prompt
+    """Thêm biến thể máy quay/ánh sáng theo NGẪU NHIÊN — không đụng nội dung, chỉ đổi cách nhìn.
+
+    Và CẤM VẼ CHỮ, luôn luôn: xem `_CAM_CHU`."""
+    if not prompt:
+        return prompt
+    return f"{prompt}, {random.choice(_VARY)}, {_CAM_CHU}"
 
 
 # Cờ "đã báo pool cạn" — khai ngay cạnh nơi dùng. Để tận cuối file thì đọc mã phải nhảy
 # 2.400 dòng mới biết nó là gì, và dễ tưởng là biến chưa gán.
 _CANH_BAO_POOL: dict = {}
+
+
+def nang_sang_anh(duong: str, san: int = 62) -> bool:
+    """Nâng độ sáng một ảnh QUÁ TỐI ngay sau khi vẽ xong. Trả True nếu có sửa.
+
+    29/8 — soi bảng khung của hai kênh cinematic: hai trong sáu khung gần như ĐEN HẲN, ảnh không
+    nhìn ra gì và câu phụ đề nằm trên nền tối thui. Máy vẽ ảnh hay ra khung tối khi prompt có
+    "night", "shadow", "dark hallway" — mà kênh hồ sơ/bí ẩn thì prompt nào cũng thế.
+    Sửa Ở ĐÂY, tại chỗ SINH ra ảnh, chứ không phải ở chỗ hiển thị: một bộ lọc CSS phủ lên toàn
+    khung sẽ làm nhạt cả những ảnh vốn đã đẹp, còn ở đây thì chỉ ảnh nào thật sự tối mới bị đụng.
+    Cũng không vẽ lại: vẽ lại tốn một lượt hạn mức và lần sau chưa chắc sáng hơn.
+
+    Nâng theo TỶ LỆ tới đúng ngưỡng, không nâng cố định: ảnh tối 20 và ảnh tối 55 cần hai mức khác
+    nhau, cộng đều một lượng thì cái này vẫn tối còn cái kia bị bợt."""
+    try:
+        from PIL import Image, ImageEnhance
+        im = Image.open(duong).convert("RGB")
+        nho = im.copy()
+        nho.thumbnail((120, 120))
+        px = list(nho.getdata())
+        tb = sum((r * 299 + g * 587 + b * 114) // 1000 for r, g, b in px) / max(1, len(px))
+        if tb >= san:
+            return False
+        he = min(2.6, san / max(6.0, tb))
+        im = ImageEnhance.Brightness(im).enhance(he)
+        # Nâng sáng làm ảnh bệt màu; kéo lại tương phản một chút để không thành sương mù.
+        im = ImageEnhance.Contrast(im).enhance(1.08)
+        im.save(duong)
+        print(f"   🌗 ảnh tối {tb:.0f}/255 -> nâng ×{he:.2f} ({os.path.basename(duong)})")
+        return True
+    except Exception as e:
+        print(f"   ⚠️ không nâng sáng được ảnh: {str(e)[:60]}")
+        return False
 
 
 def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", style=None) -> bool:
@@ -590,6 +637,7 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
         # "2K" cũ là của trang thứ 3, SAI), xếp TRƯỚC Gemini trong pool.
         try:
             if _cf_flux_image(prompt, dest, _k, style):
+                nang_sang_anh(dest)
                 if _i:
                     print(f"   🔑 vẽ ảnh: đã xoay sang key thứ {_i + 1} (⛅ CF FLUX)")
                 return True
@@ -624,6 +672,7 @@ def _generate_image_ai(prompt, dest, api_key, model="gemini-2.5-flash-image", st
             print(f"   ⚠️ vẽ ảnh '{prompt[:34]}': model trả về không phải ảnh — bỏ khung này")
             return False          # model trả về rỗng/không phải ảnh -> đổi key cũng vô ích
         open(dest, "wb").write(data)
+        nang_sang_anh(dest)
         bao_key(_k, True, "vẽ ảnh")
         if _i:
             print(f"   🔑 vẽ ảnh: đã xoay sang key thứ {_i + 1} (key trước hết hạn mức ảnh)")

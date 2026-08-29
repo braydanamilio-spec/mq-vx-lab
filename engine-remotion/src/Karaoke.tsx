@@ -38,7 +38,15 @@ const chia = (subs: Word[]): Cum[] => {
     const truoc = subs[i - 1];
     if (cur.length && truoc && w.t - (truoc.t + truoc.d) >= NGHI) dong();
     cur.push(w);
-    if (cur.length >= TOI_DA_TU || /[.!?]$/.test(w.w)) dong();
+    // 29/8 — NGẮT Ở DẤU PHẨY NỮA, KHÔNG CHỈ Ở DẤU CHẤM.
+    // Khung thật MISSING PIECE: băng chữ hiện **"day, 21,490 people looked up Disappearance"** —
+    // mở đầu bằng nửa sau của "On one single day,". Luật cũ chỉ ngắt ở `.!?` hoặc khi đủ 7 từ,
+    // nên nó cắt ngay giữa một mệnh đề và cụm sau mở đầu bằng một mảnh câu vô nghĩa.
+    // Người xem short đọc theo CỤM Ý, không đọc theo số từ. Dấu phẩy/chấm phẩy chính là chỗ tác
+    // giả đã đánh dấu sẵn ranh giới ý — dùng nó thì cụm nào cũng đứng được một mình.
+    // Đòi tối thiểu 4 từ để không vỡ vụn thành từng mẩu hai chữ.
+    if (cur.length >= TOI_DA_TU || /[.!?]$/.test(w.w)
+        || (cur.length >= 4 && /[,;:]$/.test(w.w))) dong();
   }
   dong();
   return ra;
