@@ -587,6 +587,13 @@ _DANH_TU_CHU = (
     "keyboard", "marquee", "plaque", "tag", "sticker", "packaging", "wrapper", "carton",
     "magazine", "notebook", "brochure", "flyer", "billboard", "display", "dashboard",
     "terminal", "tablet", "laptop", "phone",
+    # 29/8 vòng hai — vẫn lọt. Khung thật: "a parked patrol car" ra biển số đề "PATTICE TONE";
+    # "condensation on cold glass" ra "SLON WASER"; phố có mặt tiền cửa hàng thì mọi biển hiệu
+    # đều là chữ bịa. Ba nhóm này đời thật LUÔN mang chữ, nên máy vẽ luôn vẽ chữ vào:
+    #   xe cộ (biển số, tên hãng) · mặt tiền/cửa hàng (biển hiệu) · mặt kính (chữ viết, chữ khắc).
+    "car", "cars", "van", "truck", "bus", "vehicle", "patrol", "police", "ambulance",
+    "storefront", "shop", "store", "cafe", "diner", "bar", "pub", "restaurant", "shopfront",
+    "glass", "windshield", "window", "mirror", "jersey", "uniform", "badge", "banner",
 )
 
 
@@ -625,7 +632,7 @@ def _salt_prompt(prompt: str) -> str:
 _CANH_BAO_POOL: dict = {}
 
 
-def nang_sang_anh(duong: str, san: int = 62) -> bool:
+def nang_sang_anh(duong: str, san: int = 100) -> bool:
     """Nâng độ sáng một ảnh QUÁ TỐI ngay sau khi vẽ xong. Trả True nếu có sửa.
 
     29/8 — soi bảng khung của hai kênh cinematic: hai trong sáu khung gần như ĐEN HẲN, ảnh không
@@ -636,7 +643,16 @@ def nang_sang_anh(duong: str, san: int = 62) -> bool:
     Cũng không vẽ lại: vẽ lại tốn một lượt hạn mức và lần sau chưa chắc sáng hơn.
 
     Nâng theo TỶ LỆ tới đúng ngưỡng, không nâng cố định: ảnh tối 20 và ảnh tối 55 cần hai mức khác
-    nhau, cộng đều một lượng thì cái này vẫn tối còn cái kia bị bợt."""
+    nhau, cộng đều một lượng thì cái này vẫn tối còn cái kia bị bợt.
+
+    29/8 chiều — SÀN 62 LÀ QUÁ THẤP, và tôi biết được điều đó bằng phép đo chứ không bằng mắt.
+    Đo độ sáng trung bình 147 khung đã render của 49 kênh: 12 kênh nằm dưới 55/255, RENT REALITY
+    ở 29,8 với 89,6% số điểm gần như đen. Tôi đã tưởng thủ phạm là nền khuôn, nên nâng nền từ
+    25% lên 38% rồi render lại sáu kênh tối nhất — độ sáng đo được KHÔNG ĐỔI một phần mười.
+    Nền bị ảnh phủ kín, nên chỉnh nền không đụng gì tới thứ người xem thật sự nhìn thấy.
+    Sàn 62 nghĩa là một tấm ảnh trung bình 63/255 vẫn được coi là đạt — mà 63 thì tối gần bằng
+    một căn phòng tắt đèn. Ảnh chụp bình thường nằm quanh 110-130. Đặt sàn 100: đủ để khung
+    không còn là một mảng đen, chưa tới mức làm bợt những ảnh vốn đã đúng sáng."""
     try:
         from PIL import Image, ImageEnhance
         im = Image.open(duong).convert("RGB")
@@ -1439,6 +1455,9 @@ def fetch_image(query, dest, orient=None, verify=None, max_check=4, ai_key=None,
         if not picked:
             return None                                   # verify bật mà không ảnh nào khớp -> THÀ KHÔNG ẢNH còn hơn ảnh SAI
         open(dest, "wb").write(picked[0])
+        # Ảnh TẢI VỀ cũng đi qua cửa nâng sáng. Trước đây chỉ ảnh AI vẽ mới qua — nhưng khung tối
+        # thì người xem không quan tâm tấm ảnh ấy từ đâu ra.
+        nang_sang_anh(dest)
         for _k, _p in enumerate(extra or []):             # ảnh phụ: thiếu thì thôi, caller tự kiểm tồn tại
             if _k + 1 < len(picked):
                 open(_p, "wb").write(picked[_k + 1])

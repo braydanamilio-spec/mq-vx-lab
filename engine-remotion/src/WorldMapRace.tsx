@@ -61,7 +61,7 @@ export const WorldMapRace: React.FC<RaceProps> = (props) => {
   const pulse = 0.5 + 0.5 * Math.sin(f / 5);
 
   return (
-    <AbsoluteFill style={{ background: "radial-gradient(120% 100% at 50% 20%, #0d1730 0%, #070a14 100%)", fontFamily: "'Poppins',Arial", opacity: intro }}>
+    <AbsoluteFill style={{ background: "radial-gradient(120% 100% at 50% 20%, #244085 0%, #1e2a55 100%)", fontFamily: "'Poppins',Arial", opacity: intro }}>
       {/* bản đồ */}
       <svg width={W} height={H} style={{ position: "absolute", inset: 0 }}>
         <defs>

@@ -183,7 +183,7 @@ const HudView: React.FC<{ hud: HUD; l: number; d: number; accent: string; accent
 };
 
 const CosmicBg: React.FC<{ f: number }> = ({ f }) => (
-  <AbsoluteFill style={{ background: "radial-gradient(70% 60% at 50% 38%, #0C1A33 0%, #060B18 55%, #02030A 100%)" }}>
+  <AbsoluteFill style={{ background: "radial-gradient(70% 60% at 50% 38%, #21478b 0%, #182c60 55%, #0f174c 100%)" }}>
     <svg width="100%" height="100%">{Array.from({ length: 120 }).map((_, i) => <circle key={i} cx={(i * 733) % 1920} cy={(i * 419) % 1080} r={i % 5 === 0 ? 2.4 : 1.2} fill="#fff" opacity={0.12 + (i % 7) / 16} />)}</svg>
   </AbsoluteFill>
 );

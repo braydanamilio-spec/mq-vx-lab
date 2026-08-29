@@ -234,7 +234,7 @@ export const PulseShort: React.FC<PulseProps> = (props) => {
   }
 
   return (
-    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #1a1210 0%, #0e0908 55%, #07050a 100%)", fontFamily: "'Poppins',Arial", overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #563b35 0%, #442c27 55%, #2d2040 100%)", fontFamily: "'Poppins',Arial", overflow: "hidden" }}>
       <AbsoluteFill style={{ transform: `translate(${shakeX}px, ${shakeY}px)` }}>
         {/* TIÊU ĐỀ */}
         <div style={{ position: "absolute", top: 76, left: 0, right: 0, textAlign: "center", padding: "0 50px", zIndex: 3 }}>

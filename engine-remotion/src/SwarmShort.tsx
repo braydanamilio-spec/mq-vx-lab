@@ -153,7 +153,7 @@ export const SwarmShort: React.FC<SwarmProps> = (props) => {
   const CX = W / 2, CY = 900; // tâm sân khấu hạt (chừa chỗ tiêu đề trên, số/label dưới)
 
   return (
-    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #0f2a26 0%, #0a1614 55%, #050908 100%)", fontFamily: "'Poppins',Arial" }}>
+    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 8%, #2b786c 0%, #26544d 55%, #223c36 100%)", fontFamily: "'Poppins',Arial" }}>
       {/* TIÊU ĐỀ */}
       <div style={{ position: "absolute", top: 90, left: 0, right: 0, textAlign: "center", padding: "0 50px" }}>
         <div style={{ display: "inline-block", background: color, color: "#04120f", fontWeight: 900, fontSize: 30, letterSpacing: 2, padding: "8px 22px", borderRadius: 12 }}>🐝 SWARM</div>

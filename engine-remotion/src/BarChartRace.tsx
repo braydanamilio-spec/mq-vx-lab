@@ -89,7 +89,7 @@ export const BarChartRace: React.FC<RaceProps> = (props) => {
   const introF = Math.round((introSec || 0) * fps);   // khung cuối của thẻ mở đầu Bookend
 
   return (
-    <AbsoluteFill style={{ background: props.transparent ? "transparent" : "linear-gradient(160deg,#22305a 0%,#131c38 55%,#0d1428 100%)"  /* 26/8: sáng lên, xem 7.ek */, fontFamily: phong(font), opacity: intro }}>
+    <AbsoluteFill style={{ background: props.transparent ? "transparent" : "linear-gradient(160deg,#405baa 0%,#30478f 55%,#263b76 100%)"  /* 26/8: sáng lên, xem 7.ek */, fontFamily: phong(font), opacity: intro }}>
       {/* tiêu đề — ẨN trong lúc Bookend đang vẽ thẻ mở đầu.
           26/8 — chốt `t_bookend_la_noi_duy_nhat_ve_tieu_de_mo_dau` bắt đúng ca này ngay khi em
           thêm Bookend vào đây: hai tiêu đề cùng hiện trong 2,6 giây đầu = chữ chồng chữ, đúng

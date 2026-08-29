@@ -174,7 +174,7 @@ const TitleScreen: React.FC<Seg & { kind: "intro" | "outro" }> = ({ title = "", 
   const pad = port ? "0 60px" : "0 96px";
   return (
     // HƯỚNG A · IMPACT — canh TRÁI, số dẫn (kiểu top data-channel USA)
-    <AbsoluteFill style={{ background: "linear-gradient(180deg,#0b1020,#070a14)", fontFamily: "'Poppins',Arial", justifyContent: "center", alignItems: "flex-start", padding: pad, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: "linear-gradient(180deg,#243468,#1e2a55)", fontFamily: "'Poppins',Arial", justifyContent: "center", alignItems: "flex-start", padding: pad, overflow: "hidden" }}>
       <BgImage src={bg} dim={0.5} />
       <AbsoluteFill style={{ background: port
         ? "linear-gradient(180deg, rgba(7,10,20,0.55) 0%, rgba(7,10,20,0.25) 45%, rgba(7,10,20,0.9) 100%)"

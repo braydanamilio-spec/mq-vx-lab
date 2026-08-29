@@ -1700,23 +1700,30 @@ def _pk_wiki(D, ky):
     # Trục `loc` vốn đã tách các kênh này về mặt DỮ LIỆU; giờ tách nốt về mặt KỂ CHUYỆN: mỗi kênh
     # một giọng, một thế giới hình ảnh. Cùng con số, khác hẳn video.
     # Chủ thể chọn theo luật đã đo: không mặt phẳng nào để máy vẽ điền chữ vào.
-    _chung = [
-        ("Curiosity leaves a trace. This is what it looks like counted.",
-         "a single rising line traced through condensation on cold glass, no axes or ticks"),
-        ("Wikimedia publishes these numbers every single day.",
-         "a cold blue corridor of tall dark cabinets, indicator lights receding"),
-    ]
+    # SÁU CẢNH RIÊNG HẲN, KHÔNG CÒN CẢNH DÙNG CHUNG (29/8, vòng hai).
+    # Vòng một tôi để hai cảnh cuối dùng chung cho gọn. Khung thật cho thấy ngay: REAL PLACE và
+    # NIGHT SHIFT lại hiện đúng một tấm đường-cong-đi-lên với đúng một câu đọc. Chia sẻ dù chỉ hai
+    # trên sáu cảnh vẫn là hai kênh chung một khung — mà chống trùng thì không có mức "trùng ít".
+    #
+    # Và CHỦ THỂ phải không có chỗ nào để máy vẽ điền chữ. Đo trên khung vừa render: "a parked
+    # patrol car" ra biển số đề "PATTICE TONE"; "condensation on cold glass" ra "SLON WASER";
+    # phố có mặt tiền cửa hàng thì mọi biển hiệu đều là chữ bịa. Xe cộ, cửa hàng, mặt kính, bảng
+    # điều khiển — bỏ hết. Còn lại: địa hình, bóng đổ, vệt sáng, hình bóng.
     BO = {
         "bi_an": [
             (f"{v['luot_doc']:,} people went looking for an answer to this in one day.",
-             "fog lying low over a empty country road at dusk, headlights absent"),
+             "fog lying low over an empty country road at dusk"),
             (f"It was the number {v['hang']} thing read on Wikipedia that day.",
              "a single porch light burning on a dark house, trees closing in"),
             ("Nobody told them to. The question just never closed.",
              "a door standing ajar in a dark hallway, nothing visible beyond it"),
             ((f"The second most read that day was {hai}." if hai
               else "Everything else on the list had an ending."),
-             "a chain-link fence at the edge of woods, dusk light behind it"),
+             "bare winter branches crossing a pale sky, seen from directly below"),
+            ("Curiosity leaves a trace. Here it is, counted.",
+             "a long shadow stretching across frost-covered ground toward the viewer"),
+            ("Wikimedia counts every one of those reads, every day.",
+             "concentric ripples spreading on still black water"),
         ],
         "dia_diem": [
             (f"{v['luot_doc']:,} people looked up this one place in a single day.",
@@ -1728,17 +1735,25 @@ def _pk_wiki(D, ky):
             ((f"The second most read that day was {hai}." if hai
               else "The rest of the list was ordinary news."),
              "a coastline seen from high above, surf line and headland"),
+            ("Curiosity leaves a trace. Here it is, counted.",
+             "layered sandstone strata in a canyon wall, raking light"),
+            ("Wikimedia counts every one of those reads, every day.",
+             "a wide salt flat cracked into polygons, horizon far off"),
         ],
         "ca_dem": [
             (f"While most of the country slept, {v['luot_doc']:,} people read this.",
-             "an empty city street under sodium streetlights, wet asphalt, nobody in frame"),
+             "an empty road at night under a single overhead lamp, wet asphalt, nobody in frame"),
             (f"It finished the day at number {v['hang']} on Wikipedia.",
-             "a lit window high in a dark apartment block, everything else unlit"),
+             "one lit window high in a dark apartment block, everything else unlit"),
             ("Nobody assigned it. People just could not put it down.",
-             "an empty diner booth lit from above, coffee cup left behind"),
+             "an empty booth seat lit from directly above, everything around it dark"),
             ((f"The second most read that day was {hai}." if hai
               else "Everything else that night was quiet."),
-             "a parked patrol car silhouette under one streetlight, seen from behind"),
+             "a chain-link fence throwing a diamond shadow pattern under a floodlight"),
+            ("Curiosity leaves a trace. Here it is, counted.",
+             "rain falling through a cone of lamplight against black"),
+            ("Wikimedia counts every one of those reads, every day.",
+             "a lone radio mast silhouette against a deep blue pre-dawn sky"),
         ],
         "mat_tich": [
             (f"{v['luot_doc']:,} people opened this file in one day.",
@@ -1750,6 +1765,10 @@ def _pk_wiki(D, ky):
             ((f"The second most read that day was {hai}." if hai
               else "The rest of the list had endings."),
              "an open field at dusk with a single fence post, nothing beyond"),
+            ("Curiosity leaves a trace. Here it is, counted.",
+             "a swing hanging still in an empty yard, long grass"),
+            ("Wikimedia counts every one of those reads, every day.",
+             "a flight of birds scattering off a bare field at low light"),
         ],
     }
     canh = BO.get(loc, [
@@ -1762,7 +1781,11 @@ def _pk_wiki(D, ky):
         ((f"The second most read that day was {hai}." if hai
           else "The rest of the list was ordinary news."),
          "two stacked shapes of different height casting long shadows"),
-    ]) + _chung
+        ("Curiosity leaves a trace. Here it is, counted.",
+         "a long shadow stretching across bare ground toward the viewer"),
+        ("Wikimedia counts every one of those reads, every day.",
+         "concentric ripples spreading on still water"),
+    ])
     return (_gon(v["ten"], 46), f"{v['luot_doc']:,} people looked this up in one day.", canh)
 
 
@@ -3285,6 +3308,13 @@ def _ve_vat(kenh: dict, props: dict, keys: list | None, ky_hieu: str = "") -> in
             continue
         dest = os.path.join(thu, f"{i}.jpg")
         try:
+            # Ảnh đã có sẵn từ lượt trước thì KHÔNG tải lại — nhưng vẫn phải qua cửa nâng sáng,
+            # vì cửa ấy nằm trong `fetch_image` mà nhánh này nhảy cóc qua. Đo thật: RENT REALITY
+            # render lại vẫn 89,6% điểm gần như đen dù sàn nâng sáng đã lên 100, và trong nhật ký
+            # không có một dòng 🌗 nào — tức lớp vá mới chưa từng được gọi cho kênh này.
+            # `nang_sang_anh` tự đo trước khi sửa nên gọi lại trên ảnh đã sáng là một phép đo suông.
+            if os.path.exists(dest):
+                DS.nang_sang_anh(dest)
             if os.path.exists(dest) or DS.fetch_image(ten, dest, ai_only=True, ai_style=style,
                                                       ai_prompt=f"{ten}, {style}" if style else ten):
                 it["img"] = os.path.relpath(dest, DS.PUB)

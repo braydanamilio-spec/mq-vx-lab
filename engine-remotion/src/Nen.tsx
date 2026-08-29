@@ -78,9 +78,22 @@ export const nenKenh = (chinh?: string, phu?: string, lech = 18): string => {
     // chữ nhưng vẫn đọc ra là một mảng tối lì. Nâng thêm một nấc (25/20/16%) và nới bão hoà một
     // chút: khung có sức sống hơn, mà tương phản chữ trắng vẫn 9,6:1 — vẫn gấp đôi bản neon cũ
     // (4,7:1) đã làm loá chữ. Đây là lần chỉnh thứ tư của bộ số này; ba lần trước ghi ở trên.
-    + ` hsl(${Math.round(h1)} ${Math.round(sat * 1.25)}% 25%) 0%,`
-    + ` hsl(${(bh + lech) % 360} ${Math.round(sat * 1.15)}% 20%) 54%,`
-    + ` hsl(${(bh + lech * 2) % 360} ${sat}% 16%) 100%)`;
+    // 29/8 vòng năm — LẦN NÀY ĐO TRƯỚC KHI CHỌN, thay vì lại nhích thêm một nấc.
+    //
+    // Đo độ sáng trung bình 147 khung đã render của 49 kênh: 12 kênh nằm dưới 55/255, RENT
+    // REALITY 29,8 với 89,6% điểm gần như đen. Bốn lần chỉnh trước đều là nhích 4-5% rồi thấy
+    // "đỡ hơn" bằng mắt — mà mắt thì quen rất nhanh với nền tối, nên lần nào cũng tưởng xong.
+    //
+    // Bảng tính tương phản cho biết trần thật nằm ở đâu:
+    //     nền 25% -> sáng đo 64  · chữ trắng 10,4:1     (bản cũ)
+    //     nền 38% -> sáng đo 97  · chữ trắng  6,2:1     <- chọn
+    //     nền 44% -> sáng đo 112 · chữ trắng  4,9:1     (sát ngưỡng AA 4,5 — không còn biên)
+    // 38% là mức sáng nhất còn giữ được biên tương phản tử tế cho chữ trắng. Sáng hơn nữa thì
+    // phải đổi chữ sang màu mực, tức đổi cả bộ khuôn — việc đó làm riêng từng khuôn, không làm
+    // bằng một dòng ở đây.
+    + ` hsl(${Math.round(h1)} ${Math.round(sat * 1.25)}% 38%) 0%,`
+    + ` hsl(${(bh + lech) % 360} ${Math.round(sat * 1.15)}% 32%) 54%,`
+    + ` hsl(${(bh + lech * 2) % 360} ${sat}% 26%) 100%)`;
 };
 
 /** Vệt sáng phụ đặt lệch tâm — cho mỗi kênh một "hướng sáng" khác nhau, tránh cảm giác cùng khuôn. */

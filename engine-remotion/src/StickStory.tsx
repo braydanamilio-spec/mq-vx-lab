@@ -263,7 +263,7 @@ export const StickStory: React.FC<StoryProps> = ({ theme = "broke", scenes, voMp
             {sc.kind === "cta" ? (() => {   // END-CARD PREMIUM (bỏ cartoon)
               const rv = ease(clamp((time - sc.s) / 0.5)), pulse = 1 + Math.sin(time * 3) * 0.05;
               return (<>
-                <AbsoluteFill style={{ background: "radial-gradient(80% 72% at 50% 40%, #17253f 0%, #0c1526 52%, #060a12 100%)" }} />
+                <AbsoluteFill style={{ background: "radial-gradient(80% 72% at 50% 40%, #385a99 0%, #244073 52%, #1b2e52 100%)" }} />
                 <svg viewBox={`0 0 ${width} ${height}`} style={{ position: "absolute", inset: 0, width, height, pointerEvents: "none" }}>
                   <defs><radialGradient id="ctaGlow" cx="50%" cy="40%" r="45%"><stop offset="0" stopColor={T.accent} stopOpacity="0.2" /><stop offset="1" stopColor={T.accent} stopOpacity="0" /></radialGradient></defs>
                   <ellipse cx={width * 0.5} cy={height * 0.4} rx={width * 0.42} ry={height * 0.4} fill="url(#ctaGlow)" />
@@ -308,13 +308,13 @@ export const StickStory: React.FC<StoryProps> = ({ theme = "broke", scenes, voMp
                 <Img src={staticFile(sc.photo)} style={{ position: "absolute", width: "118%", height: "118%", left: "-9%", top: "-9%", objectFit: "cover", transform: `scale(${kb})`, filter: "brightness(0.4) saturate(1.06)" }} />
                 <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(9,14,26,0.5) 0%, rgba(9,14,26,0.72) 60%, rgba(9,14,26,0.9) 100%)" }} />
               </>);
-            })() : <AbsoluteFill style={{ background: "linear-gradient(180deg,#0b1322,#132038)" }} />}
+            })() : <AbsoluteFill style={{ background: "linear-gradient(180deg,#233d6c,#30528f)" }} />}
             <BigStat p={lp} big={sc.big} label={sc.label} icon={sc.icon} accent={sc.big.includes("4") ? "#22D3EE" : "#EF4444"} />
           </>
         ) : sc.kind === "chart" ? (
-          <><AbsoluteFill style={{ background: "linear-gradient(180deg,#0b1322,#152238)" }} /><MiniBars p={lp} title={sc.title} bars={sc.bars} accent={T.accent} wide={wide} /></>
+          <><AbsoluteFill style={{ background: "linear-gradient(180deg,#233d6c,#35568e)" }} /><MiniBars p={lp} title={sc.title} bars={sc.bars} accent={T.accent} wide={wide} /></>
         ) : (
-          <><AbsoluteFill style={{ background: "linear-gradient(180deg,#0b1322,#152238)" }} /><MiniBars p={lp} title={sc.title} bars={[{ label: sc.left.label, value: sc.left.value, color: sc.left.color }, { label: sc.right.label, value: sc.right.value, color: sc.right.color }]} accent={T.accent} wide={wide} /></>
+          <><AbsoluteFill style={{ background: "linear-gradient(180deg,#233d6c,#35568e)" }} /><MiniBars p={lp} title={sc.title} bars={[{ label: sc.left.label, value: sc.left.value, color: sc.left.color }, { label: sc.right.label, value: sc.right.value, color: sc.right.color }]} accent={T.accent} wide={wide} /></>
         )}
       </div>
 

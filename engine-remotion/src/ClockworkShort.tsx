@@ -107,7 +107,7 @@ export const ClockworkShort: React.FC<ClockworkProps> = (props) => {
   const clampX = (x: number, halfW: number) => Math.min(Math.max(x, halfW + 16), W - halfW - 16);
 
   return (
-    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 10%, #1a0f08 0%, #0e0906 50%, #050403 100%)", fontFamily: "'Poppins',Arial", overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: "radial-gradient(120% 90% at 50% 10%, #60381e 0%, #482f1f 50%, #352a20 100%)", fontFamily: "'Poppins',Arial", overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, transform: `scale(${sceneScale})`, transformOrigin: "50% 55%" }}>
         {/* mặt đồng hồ mờ trang trí phía sau — gắn thương hiệu CLOCKWORK mà không cản mạch chính (thanh tiến trình) */}
         <svg width={W} height={H} style={{ position: "absolute", inset: 0, opacity: 0.10 }}>
