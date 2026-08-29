@@ -167,6 +167,29 @@ def cham_mot(k: dict) -> dict:
         diem -= min(20, 4 * lech)
         loi.append(f"lệch {lech} từ giữa kịch bản và mốc tiếng — phụ đề sẽ gán nhầm người nói")
 
+    # ── KHÔNG ĐƯỢC CÓ KHUNG ĐEN Ở ĐẦU HAY CUỐI ────────────────────────────────────────
+    # Anh dặn từ sớm: "tránh… kết thúc khung đen". Khung đen ở cuối là lỗi hay gặp nhất của mọi
+    # dây chuyền dựng phim — thời lượng khai dài hơn nội dung một hai khung là ra ngay một nháy
+    # đen, và trên YouTube Shorts (phát lặp vô hạn) thì cái nháy ấy chớp mỗi vòng lặp.
+    # Đo ở 0,05 giây đầu và 0,12 giây trước hết phim, ngưỡng 60/255.
+    for _ten, _ss in (("đầu", 0.05), ("cuối", max(0.0, (dur or 18) - 0.12))):
+        _p = os.path.join("/tmp", f"_v4den{int(_ss*100)}.png")
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{_ss:.2f}", "-i", pv,
+                        "-vframes", "1", "-vf", "scale=120:-1", _p], capture_output=True, timeout=60)
+        if not os.path.exists(_p):
+            continue
+        try:
+            from PIL import Image
+        except ImportError:
+            break
+        _px = list(Image.open(_p).convert("L").getdata())
+        _tb = sum(_px) / len(_px)
+        if _tb < 60:
+            diem -= 10
+            loi.append(f"khung {_ten} gần như ĐEN ({_tb:.0f}/255) — Shorts phát lặp nên cái nháy "
+                       f"đen ấy chớp mỗi vòng")
+            break
+
     # ── mốc lượt phải TRÙNG mốc từ ─────────────────────────────────────────────────────
     # 30/8 — Đây là phép đo bắt được một lỗi im lặng: mốc lượt từng lấy theo BIÊN ĐOẠN TIẾNG,
     # mà edge-tts chèn thêm im lặng ở đầu/cuối mỗi đoạn nó đọc. Kết quả là thẻ phụ đề nằm lại
