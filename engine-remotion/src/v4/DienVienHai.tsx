@@ -324,9 +324,23 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const vungP = buoc > 0 ? Math.sin(t * 7.4) * buoc * 26 : 0;
   const nhipTay = noi.h * 7 * dien;
   const gocVT = trn(100, G.vaiT, mo) + Math.sin(t * 1.7) * 2.2 + vungT - nhipTay;
-  const gocKT = trn(-8, G.khuyuT, mo);
+  // ══ RÀNG BUỘC GIẢI PHẪU CHO KHUỶU ══════════════════════════════════════════════════════
+  // 30/8 — chuyển chi sang mô hình xương xong thì hết cong queo, nhưng lộ ra lỗi nằm dưới nó:
+  // cẳng tay **gập ngược lên ngực** thành một vòng cung khép kín, trông như quàng dải băng chéo.
+  //
+  // Vì bảng cử chỉ đưa vào bao nhiêu thì engine gập bấy nhiêu — không có ngưỡng nào. Đường cong
+  // cũ che bớt điều đó (nó phình đều nên góc gập khó đọc); xương thì phơi ra ngay, vì hai đoạn
+  // thẳng gặp nhau ở một góc là thứ mắt đọc được chính xác.
+  //
+  // Khuỷu người gập **một chiều** và tối đa khoảng 145°; duỗi ngược quá vài độ là trật khớp.
+  // Kẹp ở tầng ENGINE chứ không sửa từng dòng trong bảng: bảng có mười cử chỉ hôm nay và sẽ có
+  // hai mươi ngày mai, còn ngưỡng giải phẫu thì chỉ có một. Đặt luật ở nơi nó không thể bị bỏ
+  // sót — đúng bài học đã trả giá cả ngày với những quy tắc tồn tại ở ba, bốn bản.
+  const KHUYU_MIN = -108, KHUYU_MAX = 12;
+  const _kep = (v: number) => Math.max(KHUYU_MIN, Math.min(KHUYU_MAX, v));
+  const gocKT = _kep(trn(-8, G.khuyuT, mo));
   const gocVP = trn(80, G.vaiP, mo) + Math.sin(t * 1.7 + 1) * 2.2 + vungP + nhipTay;
-  const gocKP = trn(8, G.khuyuP, mo);
+  const gocKP = -_kep(-(trn(8, G.khuyuP, mo)));
 
   const khuyuT = P(vaiT[0], vaiT[1], dtay, gocVT);
   const tayT = P(khuyuT[0], khuyuT[1], dcang, gocVT + gocKT);
@@ -362,6 +376,37 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const aoSau = _sang(ao, 0.82);
 
   /** Chi thể: một nét bao dày rồi một nét màu mỏng hơn đè lên — ra hình con nhộng có viền. */
+  // ══ CHI VẼ BẰNG XƯƠNG, KHÔNG BẰNG ĐƯỜNG CONG ═══════════════════════════════════════════
+  // 30/8 — Anh gửi khung: *"tay chân thì méo vẹo như dị tật"*, và bảo dừng vá, làm lại.
+  //
+  // Gốc rễ nằm ở cách vẽ, không ở con số góc — nên mọi lần tôi chỉnh góc chỉ là đổi chỗ méo.
+  // Chi cũ vẽ bằng MỘT đường cong bậc hai `M vai Q khuỷu tay`. Trong đường cong ấy, khuỷu là
+  // **điểm điều khiển**, không phải điểm mà đường đi qua: đường cong chỉ *bị hút* về phía khuỷu
+  // rồi phình ra. Gập nhẹ thì trông như cánh tay; gập nhiều thì thành một khối cong queo không
+  // có khớp, đúng cái anh gọi là dị tật.
+  //
+  // Chi thật là **xương**: hai đoạn CỨNG nối nhau bằng một khớp. Đoạn thẳng không có gì để
+  // phình, nên nó không thể méo ở bất kỳ góc nào — đó là lý do mọi phần mềm hoạt hình 2D đều
+  // dựng chi theo lối này chứ không dùng một đường cong duy nhất.
+  //
+  // Ba phần: đoạn trên · đoạn dưới · một chấm tròn ở khớp để che mối nối. Chấm ấy quan trọng
+  // hơn vẻ ngoài của nó: thiếu nó thì hai đoạn thẳng gặp nhau thành một góc nhọn, và góc nhọn
+  // ở giữa cánh tay đọc ra là gãy.
+  const xuong = (a: [number, number], b: [number, number], c: [number, number],
+                 mau: string, day: number, key: string) => (
+    <g key={key}>
+      {/* viền ngoài vẽ trước, dày hơn — cùng cách bộ này vẽ mọi nét */}
+      <path d={`M ${a[0]} ${a[1]} L ${b[0]} ${b[1]} L ${c[0]} ${c[1]}`}
+            stroke={V} strokeWidth={day + NG} fill="none"
+            strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={b[0]} cy={b[1]} r={(day + NG) / 2} fill={V} />
+      <path d={`M ${a[0]} ${a[1]} L ${b[0]} ${b[1]} L ${c[0]} ${c[1]}`}
+            stroke={mau} strokeWidth={day} fill="none"
+            strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={b[0]} cy={b[1]} r={day / 2} fill={mau} />
+    </g>
+  );
+
   const chi = (d: string, mau: string, day: number, key: string) => (
     <g key={key}>
       <path d={d} stroke={V} strokeWidth={day + NG} fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -454,15 +499,15 @@ export const DienVienHai: React.FC<PropsHai> = ({
       <ellipse cx={0} cy={2} rx={62 * ngang * (1 + nen * 2)} ry={11} fill="#00000026" />
 
       {/* CHÂN — vẽ trước thân để thân che chỗ nối ở hông */}
-      {chi(`M ${hong[0] - rongHong} ${hong[1]} Q ${goiT[0] - 4} ${goiT[1]} ${chanT[0]} ${chanT[1]}`, quan, 27 * ngang, "cT")}
-      {chi(`M ${hong[0] + rongHong} ${hong[1]} Q ${goiP[0] + 4} ${goiP[1]} ${chanP[0]} ${chanP[1]}`, quan, 27 * ngang, "cP")}
+      {xuong([hong[0] - rongHong, hong[1]], [goiT[0], goiT[1]], [chanT[0], chanT[1]], quan, 27 * ngang, "cT")}
+      {xuong([hong[0] + rongHong, hong[1]], [goiP[0], goiP[1]], [chanP[0], chanP[1]], quan, 27 * ngang, "cP")}
       {/* Giày tô màu RIÊNG, không dùng màu nét. Khung đo được: quần sẫm + giày màu nét = một
           khối tối liền từ hông xuống sàn, không đọc ra là có bàn chân. */}
       {giay(chanT, -1, "gT")}
       {giay(chanP, 1, "gP")}
 
       {/* TAY SAU (bên trái) — vẽ trước thân, nên nó nằm sau lưng: ra chiều sâu mà không cần đổ bóng */}
-      {chi(`M ${vaiT[0]} ${vaiT[1]} Q ${khuyuT[0]} ${khuyuT[1]} ${tayT[0]} ${tayT[1]}`, aoSau, 23 * ngang, "tT")}
+      {xuong([vaiT[0], vaiT[1]], [khuyuT[0], khuyuT[1]], [tayT[0], tayT[1]], aoSau, 23 * ngang, "tT")}
       {ban(tayT, gocVT + gocKT, "bT")}
 
       {/* THÂN — hình hạt đậu, KHÔNG phải hình chữ nhật. Vai tròn và eo hơi thóp là thứ làm
@@ -575,7 +620,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
       ) : null}
 
       {/* TAY TRƯỚC (bên phải) — vẽ sau thân nên nằm trước ngực */}
-      {chi(`M ${vaiP[0]} ${vaiP[1]} Q ${khuyuP[0]} ${khuyuP[1]} ${tayP[0]} ${tayP[1]}`, aoTruoc, 23 * ngang, "tP")}
+      {xuong([vaiP[0], vaiP[1]], [khuyuP[0], khuyuP[1]], [tayP[0], tayP[1]], aoTruoc, 23 * ngang, "tP")}
       {ban(tayP, gocVP + gocKP, "bP")}
       {/* ĐỒ VẬT TUỘT KHỎI TAY ở cú chốt — trò đùa hình thể cổ điển nhất, và nó nói đúng thứ mà
           lời thoại vừa nói: "tôi không tin nổi". Rơi theo gia tốc (bình phương thời gian) và xoay

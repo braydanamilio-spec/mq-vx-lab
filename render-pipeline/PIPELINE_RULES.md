@@ -5258,3 +5258,43 @@ khoá Gemini dùng được:  1/68  →  66/68
 **Và bài học về báo cáo:** tôi nói "hết hạn mức, mai chạy lại" mà chưa đếm khoá sống. Một câu báo
 cáo về giới hạn phải dựa trên phép đo, không dựa trên thông báo lỗi cuối cùng mình nhìn thấy —
 thông báo ấy có thể đang nói về một góc rất nhỏ của bức tranh.
+
+### 7cc. LÀM LẠI, KHÔNG VÁ — CHI VẼ BẰNG XƯƠNG — 30/8/2026
+
+Anh dừng tôi lại: *"sao càng fix càng lỗi thế, tay chân thì méo vẹo như dị tật, người thì lúc to
+lúc nhỏ… tự lên kế hoạch làm lại từ đầu, không sửa nữa"*.
+
+Anh đúng. Trong một phiên tôi đã vá cử chỉ **bốn lần**, và mỗi lần vá xong lỗi lại đổi chỗ. Đó
+không phải xui — đó là dấu hiệu **cái sai nằm ở kiến trúc**, và vá thêm chỉ làm nó rối hơn.
+
+**Gốc rễ một — chi vẽ bằng một đường cong, không phải bằng xương.**
+
+```
+cũ:  M vai  Q khuỷu  bàn-tay      ← khuỷu là ĐIỂM ĐIỀU KHIỂN
+```
+
+Trong đường cong bậc hai, điểm giữa là điểm **điều khiển**: đường không đi qua nó mà chỉ *bị hút*
+về phía nó rồi phình ra. Gập nhẹ thì trông như cánh tay; gập nhiều thì thành một khối cong queo
+**không có khớp** — đúng cái anh gọi là dị tật. Mọi lần tôi chỉnh góc chỉ là đổi chỗ méo, vì cái
+méo nằm ở **cách vẽ**, không ở con số.
+
+Chi thật là **xương**: hai đoạn **cứng** nối bằng một khớp. Đoạn thẳng không có gì để phình nên
+không thể méo ở bất kỳ góc nào. Kèm một chấm tròn ở khớp — thiếu nó thì hai đoạn gặp nhau thành
+góc nhọn, và góc nhọn giữa cánh tay đọc ra là **gãy**.
+
+**Gốc rễ hai — khuỷu không có ràng buộc giải phẫu.**
+
+Chuyển sang xương xong thì hết cong queo, nhưng lộ ra lỗi nằm dưới: cẳng tay **gập ngược lên
+ngực** thành vòng cung khép kín. Đường cong cũ che bớt điều đó (nó phình đều nên góc gập khó
+đọc); xương thì phơi ra ngay, vì hai đoạn thẳng gặp nhau ở một góc là thứ mắt đọc chính xác.
+
+Khuỷu người gập **một chiều**, tối đa ~145°, duỗi ngược quá vài độ là trật khớp. Kẹp ở tầng
+**engine** chứ không sửa từng dòng trong bảng: bảng có mười cử chỉ hôm nay và sẽ có hai mươi
+ngày mai, còn ngưỡng giải phẫu thì **chỉ có một**.
+
+> **Đặt luật ở nơi nó không thể bị bỏ sót.** Cả ngày hôm nay tôi trả giá cho những quy tắc tồn
+> tại ở ba, bốn bản — câu cấm chữ ba bản, câu góc máy bốn mươi bản, giới tính ba bảng. Một luật
+> đặt đúng tầng thì không có bản thứ hai để quên.
+
+**Và bài học lớn nhất của phiên:** khi cùng một lỗi quay lại lần thứ ba, dừng sửa. Lần thứ ba
+không phải là xui — nó là bằng chứng rằng chỗ mình đang sửa không phải chỗ hỏng.
