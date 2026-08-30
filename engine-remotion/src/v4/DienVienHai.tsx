@@ -100,7 +100,10 @@ const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; k
   chi:        { vaiT: 100, khuyuT: -16,  vaiP: 34, khuyuP: 10 },   // tay phải chỉ chếch ngang
   mo_tay:     { vaiT: 138, khuyuT: -46,  vaiP: 42, khuyuP: 46 },   // mở hai tay ra trước-ngoài
   dem:        { vaiT: 118, khuyuT: -78,  vaiP: 68, khuyuP: 74 },   // hai cẳng thu vào giữa ngực
-  suy_nghi:   { vaiT: 98,  khuyuT: -12,  vaiP: 35, khuyuP: 138 },  // một tay đưa lên tầm cổ
+  // Chống cằm: cánh tay đưa gần NGANG (10°) rồi cẳng hất ngược lên (-125° → hướng 245°, tức
+  // lên-vào). Bản trước để vai 35°/khuỷu 138° nên bàn tay dừng ở tầm ngực, và cổng cử chỉ đo
+  // ra nó chỉ cách `ngan_ngam` 50 đơn vị — hai tư thế khác tên nhưng trên màn hình là một.
+  suy_nghi:   { vaiT: 98,  khuyuT: -12,  vaiP: 10, khuyuP: -125 },  // tay chống cằm, bàn TRÊN vai
   nhun_vai:   { vaiT: 128, khuyuT: -62,  vaiP: 52, khuyuP: 62 },   // khuỷu gập, hai bàn ngửa
   gio_len:    { vaiT: 100, khuyuT: -14,  vaiP: 300, khuyuP: 20 },  // giơ CHẾCH lên, không thẳng đứng
   // Khoanh tay: cánh tay phải đưa gần NGANG (155°/25°) chứ không xuôi. Đặt vai xuôi thì khuỷu
