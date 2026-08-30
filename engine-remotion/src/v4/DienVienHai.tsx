@@ -83,16 +83,32 @@ const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; k
   // Dưới 70° là vung quá vai — chỉ dành cho một khoảnh khắc kinh ngạc, và cả bảng này không có
   // khoảnh khắc nào như thế. Nên **không dòng nào dưới 70**, và đó là luật để lần sau ai đọc
   // bảng cũng biết ngưỡng ở đâu.
-  nghi:       { vaiT: 168, khuyuT: -10, vaiP: 168, khuyuP: 10 },   // hai tay buông, hơi cong
-  chi:        { vaiT: 162, khuyuT: -12, vaiP: 104, khuyuP: -13 },  // chỉ NGANG về phía bạn diễn
-  mo_tay:     { vaiT: 128, khuyuT: -20, vaiP: 124, khuyuP: 20 },   // mở hai tay tầm ngực
-  dem:        { vaiT: 134, khuyuT: -30, vaiP: 118, khuyuP: 22 },   // hai tay trước ngực, lệch tầng
-  suy_nghi:   { vaiT: 166, khuyuT: -8,  vaiP: 140, khuyuP: -49 },  // một tay chống cằm
-  nhun_vai:   { vaiT: 122, khuyuT: -23, vaiP: 126, khuyuP: 23 },   // nhún: khuỷu gập, bàn ngửa
-  gio_len:    { vaiT: 150, khuyuT: -18, vaiP: 96,  khuyuP: -20 },  // nâng MỘT tay tầm vai, không cao hơn
-  khoanh_tay: { vaiT: 140, khuyuT: -40, vaiP: 132, khuyuP: 38 },   // khoanh trước ngực
-  chong_nanh: { vaiT: 146, khuyuT: -44, vaiP: 138, khuyuP: 43 },   // chống hông
-  ngan_ngam:  { vaiT: 170, khuyuT: -8,  vaiP: 144, khuyuP: 45 },   // một tay buông, một chống
+  // Quy ước: P() theo trục SVG (y hướng XUỐNG), nên 90°=xuôi thẳng, 180°=ngang trái,
+  // 0°=ngang phải, 270°=thẳng lên. `khuyu` CỘNG vào góc vai; gập vào trong là ÂM cho tay
+  // trái và DƯƠNG cho tay phải. Khuỷu người chỉ gập một chiều, tối đa ~145° — mọi giá trị
+  // dưới đây nằm trong ngưỡng đó.
+  //
+  // Bảng cũ hỏng theo HAI cách cùng lúc, và bảng tư thế nền trơn mới lộ ra cả hai:
+  //  · SAI HƯỚNG: `nghi` đặt vaiP = 168, tức tay PHẢI vắt ngang sang TRÁI trong lúc đang
+  //    buông xuôi. Nhiều dòng khác cũng vậy — hai tay cùng chìa về một phía.
+  //  · MẤT BIÊN ĐỘ: lượt trước tôi chia đôi mọi góc khuỷu để chữa "tay khèo", làm cả mười
+  //    cử chỉ dẹt thành một tư thế duy nhất — khoanh tay không khoanh, chống hông không
+  //    chống. Chữa lỗi này bằng cách phá tính năng kia.
+  // Lỗi "khèo" thật ra nằm ở NÉT VẼ (một đường Q không có khớp), không nằm ở bảng số. Sửa
+  // đúng chỗ rồi thì bảng được trả lại biên độ đầy đủ.
+  nghi:       { vaiT: 96,  khuyuT: -14,  vaiP: 84, khuyuP: 14 },   // buông xuôi, khuỷu cong nhẹ
+  chi:        { vaiT: 100, khuyuT: -16,  vaiP: 34, khuyuP: 10 },   // tay phải chỉ chếch ngang
+  mo_tay:     { vaiT: 138, khuyuT: -46,  vaiP: 42, khuyuP: 46 },   // mở hai tay ra trước-ngoài
+  dem:        { vaiT: 118, khuyuT: -78,  vaiP: 68, khuyuP: 74 },   // hai cẳng thu vào giữa ngực
+  suy_nghi:   { vaiT: 98,  khuyuT: -12,  vaiP: 35, khuyuP: 138 },  // một tay đưa lên tầm cổ
+  nhun_vai:   { vaiT: 128, khuyuT: -62,  vaiP: 52, khuyuP: 62 },   // khuỷu gập, hai bàn ngửa
+  gio_len:    { vaiT: 100, khuyuT: -14,  vaiP: 300, khuyuP: 20 },  // giơ CHẾCH lên, không thẳng đứng
+  // Khoanh tay: cánh tay phải đưa gần NGANG (155°/25°) chứ không xuôi. Đặt vai xuôi thì khuỷu
+  // rơi xuống ngang hông, và hai cẳng bắt chéo ở BỤNG — đọc ra là "chắp tay trước bụng", một
+  // tư thế nhũn nhặn, trái hẳn nghĩa phòng thủ/khó chịu mà khoanh tay cần truyền.
+  khoanh_tay: { vaiT: 155, khuyuT: -140, vaiP: 25, khuyuP: 140 },  // hai cẳng bắt chéo ngang NGỰC
+  chong_nanh: { vaiT: 132, khuyuT: -104, vaiP: 48, khuyuP: 104 },  // hai bàn về hông
+  ngan_ngam:  { vaiT: 98,  khuyuT: -12,  vaiP: 56, khuyuP: 98 },   // một buông, một chống hông
 };
 
 
@@ -383,6 +399,41 @@ export const DienVienHai: React.FC<PropsHai> = ({
   );
 
   /**
+   * CHI HAI ĐOẠN — vai→khuỷu→bàn, gập THẬT tại khớp.
+   *
+   * Bản cũ vẽ cả cánh tay bằng MỘT đường `Q` với khuỷu làm điểm điều khiển. Nhưng Bezier bậc
+   * hai KHÔNG ĐI QUA điểm điều khiển — nó chỉ bị kéo về phía đó. Nên dù bảng cử chỉ đặt góc
+   * khuỷu bằng bao nhiêu, nét vẽ vẫn luôn ra một cung tròn trơn KHÔNG CÓ KHỚP. Đó chính là
+   * "tay cong cong khèo khèo": không phải sai số, mà sai loại hình. Bốn lượt trước tôi chỉnh
+   * số góc, đổi cách tính góc, rồi revert — nhưng cả bốn lượt đường vẽ vẫn là một `Q`, nên
+   * đầu vào nào cũng ra cung tròn. Sửa cái mình chưa từng đụng mới hết.
+   *
+   * Kèm hai chuyện nữa cùng gốc, tự hết khi gập đúng:
+   *  · ĐOẠN THON — bắp dày hơn cẳng. Ống dày đều đọc ra là cọng bún, không phải chi thể.
+   *  · BÀN TAY hết trôi — nó vốn đã đặt tại `tay`, hướng `gocVai+gocKhuyu`; chỉ có nét vẽ là
+   *    bỏ qua khuỷu, nên bàn tay khớp với một cẳng tay KHÔNG được vẽ ra. Vẽ đúng thì khớp lại.
+   *
+   * Viền cả hai đoạn vẽ TRƯỚC, màu vẽ SAU: nếu vẽ xong đoạn một rồi mới đoạn hai, viền đoạn
+   * hai sẽ cắt một vạch đen ngang giữa khuỷu.
+   */
+  const chi2 = (
+    a: [number, number], b: [number, number], c: [number, number],
+    mau: string, dayTren: number, dayDuoi: number, key: string,
+  ) => {
+    const d1 = `M ${a[0]} ${a[1]} L ${b[0]} ${b[1]}`;
+    const d2 = `M ${b[0]} ${b[1]} L ${c[0]} ${c[1]}`;
+    const nut = { fill: "none", strokeLinecap: "round", strokeLinejoin: "round" } as const;
+    return (
+      <g key={key}>
+        <path d={d1} stroke={V} strokeWidth={dayTren + NG} {...nut} />
+        <path d={d2} stroke={V} strokeWidth={dayDuoi + NG} {...nut} />
+        <path d={d1} stroke={mau} strokeWidth={dayTren} {...nut} />
+        <path d={d2} stroke={mau} strokeWidth={dayDuoi} {...nut} />
+      </g>
+    );
+  };
+
+  /**
    * BÀN TAY GĂNG BỐN NGÓN — ngôn ngữ tạo hình chung của hoạt hình phương Tây từ thập niên 1930
    * (bốn ngón vẽ nhanh hơn năm, và đọc rõ hơn ở cỡ nhỏ). Không thuộc về hãng nào.
    * `goc` = hướng cẳng tay, để bàn tay nối liền chứ không trôi lơ lửng như bản cũ.
@@ -467,15 +518,15 @@ export const DienVienHai: React.FC<PropsHai> = ({
       <ellipse cx={0} cy={2} rx={62 * ngang * (1 + nen * 2)} ry={11} fill="#00000026" />
 
       {/* CHÂN — vẽ trước thân để thân che chỗ nối ở hông */}
-      {chi(`M ${hong[0] - rongHong} ${hong[1]} Q ${goiT[0] - 4} ${goiT[1]} ${chanT[0]} ${chanT[1]}`, quan, 27 * ngang, "cT")}
-      {chi(`M ${hong[0] + rongHong} ${hong[1]} Q ${goiP[0] + 4} ${goiP[1]} ${chanP[0]} ${chanP[1]}`, quan, 27 * ngang, "cP")}
+      {chi2([hong[0] - rongHong, hong[1]], goiT, chanT, quan, 28 * ngang, 23 * ngang, "cT")}
+      {chi2([hong[0] + rongHong, hong[1]], goiP, chanP, quan, 28 * ngang, 23 * ngang, "cP")}
       {/* Giày tô màu RIÊNG, không dùng màu nét. Khung đo được: quần sẫm + giày màu nét = một
           khối tối liền từ hông xuống sàn, không đọc ra là có bàn chân. */}
       {giay(chanT, -1, "gT")}
       {giay(chanP, 1, "gP")}
 
       {/* TAY SAU (bên trái) — vẽ trước thân, nên nó nằm sau lưng: ra chiều sâu mà không cần đổ bóng */}
-      {chi(`M ${vaiT[0]} ${vaiT[1]} Q ${khuyuT[0]} ${khuyuT[1]} ${tayT[0]} ${tayT[1]}`, aoSau, 23 * ngang, "tT")}
+      {chi2(vaiT, khuyuT, tayT, aoSau, 24 * ngang, 19 * ngang, "tT")}
       {ban(tayT, gocVT + gocKT, "bT")}
 
       {/* THÂN — hình hạt đậu, KHÔNG phải hình chữ nhật. Vai tròn và eo hơi thóp là thứ làm
@@ -588,7 +639,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
       ) : null}
 
       {/* TAY TRƯỚC (bên phải) — vẽ sau thân nên nằm trước ngực */}
-      {chi(`M ${vaiP[0]} ${vaiP[1]} Q ${khuyuP[0]} ${khuyuP[1]} ${tayP[0]} ${tayP[1]}`, aoTruoc, 23 * ngang, "tP")}
+      {chi2(vaiP, khuyuP, tayP, aoTruoc, 24 * ngang, 19 * ngang, "tP")}
       {ban(tayP, gocVP + gocKP, "bP")}
       {/* ĐỒ VẬT TUỘT KHỎI TAY ở cú chốt — trò đùa hình thể cổ điển nhất, và nó nói đúng thứ mà
           lời thoại vừa nói: "tôi không tin nổi". Rơi theo gia tốc (bình phương thời gian) và xoay

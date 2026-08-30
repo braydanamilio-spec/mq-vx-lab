@@ -1,3 +1,9 @@
+// 30/8 — kyHieu PHẢI là true. Bảng này dựng để soi cử chỉ kênh HÀI, mà kênh hài chạy
+// kyHieu=true. Đặt false thì component áp bảng _GHIM_NGUC (chế độ người-dẫn, cố ý ghim tay
+// trong tầm ngực để không che thẻ số ở đỉnh khung), nên `gio_len` và `chi` bị đổi thành `dem`
+// TRƯỚC khi vẽ. Tôi nhìn bảng, thấy "gio_len không giơ", và suýt đi sửa một bảng số vốn đã
+// đúng. Cổng đo sai chế độ thì mọi kết luận rút từ nó đều sai — đây là lần thứ năm trong
+// phiên này một cổng tôi tự viết tố oan phần code lành.
 import React from "react";
 import { AbsoluteFill } from "remotion";
 import { DienVienHai } from "./DienVienHai";
@@ -65,7 +71,7 @@ export const BangTuThe: React.FC = () => {
                   nhin={[0.2, 0]}
                   noi={{ w: 0.3, h: 0.1, tron: 0.2 }}
                   t={T_DU}
-                  kyHieu={false}
+                  kyHieu={true}
                   doiCuChi={1}
                   scale={0.62}
                 />
