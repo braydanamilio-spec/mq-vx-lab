@@ -13,14 +13,22 @@ on:
   # sản lượng là NHỊP.
   # Cron Trigger của Cloudflare bắn đúng giờ; nó gọi `repository_dispatch` với event này.
   # Giữ luôn cron gốc của GitHub làm lưới đỡ: Cloudflare chết thì vẫn còn 4-6 lượt/ngày.
-  repository_dispatch:
-    types: [mm0-render]
+  # ⛔ 30/8 — TẮT NỐT NGUỒN KÍCH THỨ HAI. Cron Trigger của Cloudflare gọi vào đây; tắt mỗi cron
+  # của GitHub là chưa đủ, vì Cloudflare vẫn bắn đều và bảng điều khiển vẫn báo "đang chạy 18".
+  # Một cái công tắc chỉ tắt được thứ đi qua nó — muốn dừng thật phải đếm ĐỦ số lối vào.
+  # repository_dispatch:
+  #   types: [mm0-render]
   workflow_dispatch:
     inputs:
       force: { description: "FORCE=1 chạy dù pipeline đang tắt", default: "1" }
       pilot_channel: { description: "PILOT: chỉ render 1 kênh này, đúng 1 short (để kiểm chuỗi trước khi mở 18 luồng)", default: "" }
-  schedule:
-    - cron: "*/10 * * * *"  # mỗi 10': nhận "Render ngay" nhanh + mở mẻ theo giờ (0/4/8/12/16/20 UTC). Chống trùng bằng last_session_at.
+  # schedule:      ← khoá rỗng làm YAML hỏng, mà YAML hỏng thì mất luôn nút bật lại bằng tay
+    # ⛔ 30/8/2026 — TẮT THEO YÊU CẦU CỦA ANH ("stop render, dọn xoá videos 50 channel").
+    # Huỷ lượt đang chạy là chưa đủ: cron này bắn mỗi mười phút nên vừa huỷ xong nó kích lượt
+    # mới, và bảng điều khiển vẫn báo "đang chạy 18". Muốn dừng thật thì phải tắt NGUỒN KÍCH.
+    # Giữ nguyên `workflow_dispatch` bên dưới để bật lại bằng một nút bấm khi 50 kênh đã chuyển
+    # xong sang dạng phân tích — không xoá dòng này, chỉ khoá nó lại.
+    # - cron: "*/10 * * * *"  # mỗi 10': nhận "Render ngay" nhanh + mở mẻ theo giờ (0/4/8/12/16/20 UTC). Chống trùng bằng last_session_at.
 
 # KHOÁ CHỐNG CHỒNG PHIÊN (19/8, phát hiện thiếu sau sự cố job treo): last_session_at ở tầng app chỉ
 # "check rồi mới ghi" — không atomic, 2 lượt trigger gần sát giờ (tick lịch trùng lúc chạy tay) vẫn có
