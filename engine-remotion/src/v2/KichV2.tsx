@@ -446,13 +446,31 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number }> = ({
   // 29/8 — SÁU TỪ, XUỐNG HAI DÒNG. Bản đầu đổ chín từ lên MỘT dòng và nó chạy tràn cả hai mép
   // khung. SVG `<text>` KHÔNG tự xuống dòng — không có thuộc tính nào bảo nó làm thế — nên phải
   // tự cắt dòng. Sáu từ là vừa đủ để mắt bắt kịp ở tốc độ đọc 2,5 từ/giây mà không phải liếc.
-  const doan = tu.slice(dau, dau + 6);
+  // 31/8 — CẮT THEO CÂU, KHÔNG CẮT GIỮA CHỪNG.
+  // Lưới khung lô 1 đọc ra toàn những mẩu vỡ: "it looks. Arizona comes second at", "than it
+  // looks. 6 comes second". Cửa sổ sáu từ trượt đều đặn nên nó rơi vào giữa câu, và người xem
+  // đọc được một mảnh không có đầu không có đuôi — tệ hơn không có phụ đề, vì mắt vẫn dừng lại
+  // để đọc rồi mới nhận ra không hiểu gì.
+  // Lùi về đầu câu gần nhất (sau dấu chấm/hỏi/than) rồi mới lấy sáu từ.
+  let _dau = dau;
+  for (let i = dau; i > Math.max(0, dau - 7); i--) {
+    if (/[.!?]$/.test(tu[i - 1]?.w || "")) { _dau = i; break; }
+    if (i === 0) { _dau = 0; break; }
+  }
+  const doan = tu.slice(_dau, _dau + 6);
   const nua = Math.ceil(doan.length / 2);
   const dong = [doan.slice(0, nua), doan.slice(nua)];
   return (
-    <g transform={`translate(0 ${day})`}>
+    // 31/8 — PHỤ ĐỀ DỊCH SANG PHẢI, RA KHỎI CHỖ NHÂN VẬT ĐỨNG.
+    // Đo trên lưới: nhân vật chiếm dải x từ −504 đến −146 (đứng góc trái, scale 1,42), còn phụ
+    // đề canh giữa khung nên nó trải từ −400 đến +400 — chồng thẳng lên mặt nhân vật ở CẢ MƯỜI
+    // HAI kênh. Không cổng nào báo, vì cổng đọc chữ và đo nhịp chứ không nhìn hai lớp có đè
+    // nhau không; chỉ xếp mười hai khung cạnh nhau mới thấy đó là lỗi hệ thống.
+    // Dời tâm chữ sang +130 và thu cỡ chữ một nấc: dải chữ thành −70…+330, nằm gọn trong khoảng
+    // trống bên phải nhân vật. Không hạ xuống đáy khung vì đáy là chỗ giao diện điện thoại che.
+    <g transform={`translate(130 ${day})`}>
       {dong.map((d, j) => (
-        <text key={j} x={0} y={j * 56} textAnchor="middle" fontSize={44} fontWeight={900}
+        <text key={j} x={0} y={j * 52} textAnchor="middle" fontSize={40} fontWeight={900}
               stroke={mau.muc} strokeWidth={9} paintOrder="stroke" fill="#FFFFFF">
           {/* 29/8 — SVG NUỐT KHOẢNG TRẮNG CUỐI. Anh cắt khung: "numberherecomes", "NASA Center
               for" dính liền. Viết `{w.w} ` thì dấu cách nằm ở CUỐI nội dung tspan, và trình
@@ -536,7 +554,14 @@ export const KichV2: React.FC<PropsKich> = ({
   const _noiBatKe = _cot ? (i - _iCot) % Math.min(4, _cot.length) : 0;
   // Số mục đã được nhắc tới tính tới cảnh này. Cảnh đầu tiên có bảng thì hiện hai mục (một mục
   // đơn độc không phải một phép so sánh), rồi mỗi cảnh thêm một.
-  const _hienDen = _cot ? Math.min(_cot.length, 2 + Math.max(0, i - _iCot)) : 0;
+  // 31/8 — KHỞI ĐIỂM BA CỘT, KHÔNG PHẢI HAI.
+  // Lưới khung lô 1: gần như mọi kênh ở giữa video mới có ĐÚNG HAI cột. Hai cột không phải một
+  // biểu đồ — nó là một phép so sánh đôi, và mắt đọc xong trong nửa giây rồi không còn gì để
+  // nhìn suốt phần còn lại của cảnh. Chính anh đã chỉ ra ở bản trước: "chỉ 3 mục — bảng bốn
+  // cột không đủ chỗ so sánh".
+  // Vẫn giữ nguyên tinh thần dựng-dần (nói tới mục nào mục ấy mọc), chỉ nâng điểm xuất phát để
+  // khung đầu tiên đã có đủ ba mục cho mắt bắt được một xu hướng.
+  const _hienDen = _cot ? Math.min(_cot.length, 3 + Math.max(0, i - _iCot)) : 0;
 
   // Băm tên kênh để mỗi kênh có một dáng biểu đồ MẶC ĐỊNH cố định — người xem quen kênh nhận ra
   // ngay bộ mặt của nó, mà sáu mươi kênh vẫn không cùng một hình.
