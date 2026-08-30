@@ -208,9 +208,12 @@ const CotNgang: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
   // Nhãn chạy NGANG theo thanh nên không phải xuống dòng hay cắt cụt — đúng chỗ đau của những
   // nguồn có tên sản phẩm dài. Đổi lại chỉ hiện được bốn mục, nên chỉ dùng khi nhãn thật sự dài.
   const N = Math.min(4, cot.length);
-  const DAI = 380, DAY = 52, BUOC = 74;
+  // 30/8 — anh gửi khung: nhãn "Family Brands" đè lên thanh phía trên. Tính lại thì đúng: chữ
+  // cỡ 19 đặt ở y = −6 kéo lên tới −25, mà thanh của mục trước kết thúc ở −20. Đè 5 điểm.
+  // Lỗi tôi vừa tạo lúc thêm dáng này: đặt nhãn NGAY TRÊN thanh mà quên chữ có chiều cao.
+  const DAI = 380, DAY = 52, BUOC = 92;
   const dinh = Math.max(1, ...cot.slice(0, N).map((c) => c.gt));
-  const nenX = -250, nenY = -46, nenW = 500, nenH = BUOC * N + 52;
+  const nenX = -250, nenY = -54, nenW = 500, nenH = BUOC * N + 46;
   return (
     <g transform={`translate(0 ${-nenH / 2 + 40})`}>
       <rect x={nenX} y={nenY} width={nenW} height={nenH} rx={18}
@@ -221,7 +224,7 @@ const CotNgang: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
         const sang = i === noiBat;
         return (
           <g key={i} transform={`translate(${-232} ${i * BUOC})`}>
-            <text x={0} y={-6} fontSize={19} fontWeight={800} fill={mau.muc}
+            <text x={0} y={-13} fontSize={19} fontWeight={800} fill={mau.muc}
                   opacity={0.9 * moc}>{c.nhan}</text>
             <rect x={0} y={2} width={Math.max(2, w)} height={DAY} rx={7}
                   fill={sang ? mau.nhan : "#F2C230"} stroke={mau.muc}
@@ -271,7 +274,18 @@ const ChamQue: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
 };
 
 const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat?: number;
-                           dang?: DangChart }> = ({ cot, p, mau, noiBat = 0, dang = "dung" }) => {
+                           dang?: DangChart; hien?: number }> =
+({ cot, p, mau, noiBat = 0, dang = "dung", hien }) => {
+  // ══ NÓI TỚI MỤC NÀO THÌ MỤC ẤY MỚI MỌC ═══════════════════════════════════════════════
+  // Anh: *"chart vẫn đang bị chạy lặp đi lặp lại… hoặc nói tới dữ liệu nào dữ liệu đó chạy,
+  // tránh chạy lặp lại"*.
+  // Trước nay cả bảng mọc lên MỘT LẦN ở cảnh đầu rồi đứng đó tới hết; những cảnh sau chỉ đổi
+  // cột nào được tô đỏ. Nên xem hai cảnh liền nhau thấy đúng một hình, và cái "chuyển động"
+  // duy nhất là màu nhảy từ cột này sang cột kia — lặp, và không nói thêm điều gì.
+  // Cách anh chỉ đúng hơn hẳn: biểu đồ **dựng dần theo lời**. Câu nói tới mục thứ nhất thì chỉ
+  // mục thứ nhất có mặt; câu sau mục thứ hai mọc thêm; tới cuối bài bảng mới đủ. Mỗi cảnh vì
+  // thế có một chuyển động THẬT và mang thông tin, thay vì một hình tĩnh đổi màu.
+  cot = typeof hien === "number" ? cot.slice(0, Math.max(1, hien)) : cot;
   if (dang === "ngang") return <CotNgang cot={cot} p={p} mau={mau} noiBat={noiBat} />;
   if (dang === "cham") return <ChamQue cot={cot} p={p} mau={mau} noiBat={noiBat} />;
   // ══════════════════════════════════════════════════════════════════════════════════════
@@ -478,6 +492,9 @@ export const KichV2: React.FC<PropsKich> = ({
   // Cột nổi bật khi cảnh không tự khai: xoay theo thứ tự cảnh, để mỗi câu dẫn mắt sang một cột
   // khác thay vì soi mãi một chỗ.
   const _noiBatKe = _cot ? (i - _iCot) % Math.min(4, _cot.length) : 0;
+  // Số mục đã được nhắc tới tính tới cảnh này. Cảnh đầu tiên có bảng thì hiện hai mục (một mục
+  // đơn độc không phải một phép so sánh), rồi mỗi cảnh thêm một.
+  const _hienDen = _cot ? Math.min(_cot.length, 2 + Math.max(0, i - _iCot)) : 0;
 
   // Băm tên kênh để mỗi kênh có một dáng biểu đồ MẶC ĐỊNH cố định — người xem quen kênh nhận ra
   // ngay bộ mặt của nó, mà sáu mươi kênh vẫn không cùng một hình.
@@ -652,7 +669,7 @@ export const KichV2: React.FC<PropsKich> = ({
         {_cot ? (
           <g transform={`translate(${doc ? CHART_TAM : 150} ${doc ? CHART_Y : 84}) scale(${doc ? CHART_CO : 1.02})`}>
             <CotDaoCu cot={_cot} p={_pCot} mau={mau} noiBat={C.noiBat ?? _noiBatKe}
-                      dang={chonDang(_cot, _soKenh)} />
+                      dang={chonDang(_cot, _soKenh)} hien={_hienDen} />
           </g>
         ) : null}
         {C.soLon ? (
