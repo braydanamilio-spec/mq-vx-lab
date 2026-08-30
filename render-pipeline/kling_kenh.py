@@ -72,6 +72,11 @@ VAI_TOI_DA = 4             # quá 4 người trong khung thì Kling chia ngân s
 # hàng rào chống "thêm tay, thêm chân, chữ loằng ngoằng". Nên không bao giờ để tràn rồi phó mặc:
 # `prompt()` tự CO cho vừa, và co theo thứ tự GIÁ TRỊ chứ không cắt bừa phần cuối.
 KY_TU_MIN, KY_TU_MAX = 2400, 3000
+_CAM_TU_LOAT: list = []    # từ đã mòn trong loạt đang chạy; `main` nạp, `cham` đọc
+# Chữ thuộc về khuôn prompt hoặc về căn nhà thì lặp là ĐÚNG — cấm chúng là cấm nhầm.
+_BO_QUA = {"static", "shot", "level", "wide", "kitchen", "living", "backyard", "garage", "porch",
+           "front", "table", "floor", "wooden", "camera", "counter", "couch", "coffee", "house",
+           "while", "which", "their", "there", "about", "where", "holding", "standing"}
 VONG_VIET = 8              # số lần cho AI viết lại một tập. Dây chuyền để 3 — hợp cho việc trích
                            # dữ liệu, quá ít cho việc sáng tác: kịch bản hỏng nhịp thường tới lần
                            # thứ tư, thứ năm mới ra được bản dùng được.
@@ -83,6 +88,22 @@ DO_TO = ("island", "dishwasher", "staircase", "stairs", "fireplace", "balcony", 
          "chandelier", "bookshelf", "bookcase", "television", "tv screen", "piano", "treadmill",
          "washing machine", "dryer", "pantry", "bar stool", "kitchen bar", "breakfast bar",
          "second floor", "hallway", "basement", "attic", "elevator", "escalator")
+
+# Loạt 15 tập chia đều phòng và đều người lật, nhưng **5/15 hook mở bằng "teeters"** và 4 tập
+# xoay quanh một chồng đồ chực đổ. AI tìm ra một khuôn hình ảnh hiệu quả rồi dùng lại — tầng thứ
+# BA của cùng một bệnh, sau phòng và người lật.
+# Cách chữa vẫn thế (luật 7bi): không dặn, mà cấp theo lịch. Tám loại tai nạn mở màn, luân phiên
+# lệch pha với hai trục kia — 5 phòng × 5 người × 8 kiểu, đủ cho hai trăm tập không trùng bộ ba.
+KIEU_MO = (
+    "something is stacked far too high and is about to fall",
+    "a liquid is spreading across a surface where it should not be",
+    "smoke or steam is coming from something that should not be smoking",
+    "an object is somewhere it physically cannot have got to on its own",
+    "something that was there a moment ago is now missing",
+    "an object is stuck fast and someone is losing a fight with it",
+    "a sound keeps happening and nobody can find the source",
+    "one character is dressed or equipped completely wrong for the room",
+)
 
 CAM_KY = [
     ("subtitle", "Kling vẽ chữ ra ký tự loằng ngoằng — chữ để khâu ghép làm, không nhờ Kling"),
@@ -300,6 +321,10 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
             e.append(f"có {tu!r} — {ly}")
             break
 
+    for _t in (_CAM_TU_LOAT or ()):
+        if re.search(r"\b" + re.escape(_t) + r"\w*", ca):
+            e.append(f"dùng lại chữ {_t!r} — đã mòn ở các tập trước, đổi hình ảnh khác")
+            break
     if "proving" in pay or "was right all along" in pay:
         e.append("payoff đóng bằng khuôn 'proving ... was right' — cú lật phải TỰ nói lên điều "
                  "đó qua hình, không cần câu giải thích ai đúng ai sai")
@@ -503,7 +528,7 @@ def _ho_key(keys=None) -> list:
 
 def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
              tranh: list | None = None, keys: list | None = None, phong: str = "",
-             lat: str = "") -> dict:
+             lat: str = "", kieu: str = "", cam_tu: list | None = None) -> dict:
     """Viết một tập. Viết lại tới khi qua hết thước. Trả dict sáu trường.
 
     Key cạn thì ĐỔI KEY chứ không bỏ cuộc — cùng bài học đã trả giá ở sáu hàm viết bên kia."""
@@ -523,6 +548,14 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
     if lat:
         ne += (f"\nThe reversal in the payoff MUST be delivered by {lat} — nobody else. Build "
                f"the ending around what {lat} does.")
+    global _CAM_TU_LOAT
+    _CAM_TU_LOAT = list(cam_tu or [])
+    if kieu:
+        ne += (f"\nThe opening image MUST be of this kind: {kieu}. Not a stack about to fall "
+               f"unless that is the kind named here.")
+    if cam_tu:
+        ne += ("\nThese words are worn out from earlier episodes — do not use any of them: "
+               + ", ".join(sorted(set(cam_tu))[:24]))
     sch = SCHEMA.replace("ROOM_LIST", phong or " | ".join(ho_so(kenh)["phong"]))
     goc = f'Episode idea: "{y_tuong}".\n\n{sch}{ne}'
     fb, cuoi = "", None
@@ -630,6 +663,11 @@ def nguoi_lat_ke(kenh: str, da: list[dict]) -> str:
     return vs[(len(da) // ps + len(da)) % len(vs)]
 
 
+def kieu_ke(da: list[dict], ps: int) -> str:
+    """Loại tai nạn mở màn cho tập tới. Lệch pha với cả hai trục kia."""
+    return KIEU_MO[(len(da) // (ps * 2) + len(da)) % len(KIEU_MO)]
+
+
 def phong_ke(kenh: str, da: list[dict]) -> str:
     """Phòng nên dùng cho tập tới: phòng LÂU NHẤT chưa quay.
 
@@ -678,14 +716,24 @@ def main() -> int:
     for i in range(a.sl):
         ph = a.phong or phong_ke(a.kenh, da)
         lt = nguoi_lat_ke(a.kenh, da)
+        ki = kieu_ke(da, len(hs["phong"]) or 1)
+        # Sổ từ mòn: chữ nào đã dùng ở BA tập trở lên thì cấm hẳn. Ngưỡng ba vì hai lần còn có
+        # thể là trùng hợp; ba lần là AI đã bám vào một khuôn.
+        dem: dict[str, int] = {}
+        for x in da:
+            for w in set(re.findall(r"[a-z]{5,}", (x.get("hook", "") + " " + x["title"]).lower())):
+                dem[w] = dem.get(w, 0) + 1
+        cam = [w for w, n in dem.items() if n >= 3 and w not in _BO_QUA]
         y = a.y or f"a fresh everyday moment in the {ph}"
-        print(f"\n▶ {hs['ten']} tập {so:03d} · {a.giay:g}s · {ph} · {lt} lật")
-        tap = sinh_tap(a.kenh, y, a.giay, tranh=[x["title"] for x in da], phong=ph, lat=lt)
+        print(f"\n▶ {hs['ten']} tập {so:03d} · {a.giay:g}s · {ph} · {lt} lật · {ki[:34]}…")
+        tap = sinh_tap(a.kenh, y, a.giay, tranh=[x["title"] for x in da], phong=ph, lat=lt,
+                       kieu=ki, cam_tu=cam)
         tm = luu(a.kenh, tap, a.giay, so)
         n = len(io.open(os.path.join(tm, "PROMPT.txt"), encoding="utf-8").read())
         canh = "✓" if KY_TU_MIN <= n <= KY_TU_MAX else "⚠️ ngoài khoảng"
         print(f"   📄 {os.path.join(tm, 'PROMPT.txt')}  ({n} ký tự {canh})")
-        da.append({"title": str(tap.get("title") or ""), "room": ph, "lat": lt})
+        da.append({"title": str(tap.get("title") or ""), "room": ph, "lat": lt,
+                   "hook": str(tap.get("hook") or "")})
         so += 1
     return 0
 

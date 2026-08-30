@@ -156,6 +156,19 @@ const SoTo: React.FC<{ so: string; nhan?: string; p: number; mau: Paltte }> = ({
 };
 
 /** Biểu đồ cột làm ĐẠO CỤ trong cảnh — mọc lên từ đáy, so được bằng mắt. */
+// ══ BỐ CỤC DỌC: NHÂN VẬT GÓC TRÁI, CHART CHIẾM PHẦN CÒN LẠI ═══════════════════════════════
+// Anh: *"nhân vật nên nhỏ chỉ bằng 50-60% hiện tại thôi, sát góc trái"* — nên cỡ hạ từ 2,5 xuống
+// 1,42 (57%). Người hẹp lại thì khoảng trống bên phải rộng ra, và chart phải lấy đúng phần rộng
+// ra ấy chứ không phải giữ nguyên rồi để thừa.
+// Ba số dưới đây suy ra nhau, không phải ba số chỉnh tay độc lập — đó là lý do bản trước sai:
+// mỗi lần đổi một số lại phải nhớ đi sửa hai số kia, và có lần quên.
+const VB_PHAI = 500;              // mép phải viewBox dọc
+const NGUOI_PHAI = -196;          // mép phải nhân vật ở cỡ 1,42 (x = -362, nửa rộng ~166)
+const LE = 22;                    // khe hở để chart không dính người và không dính mép khung
+const CHART_RONG_GOC = 488;       // bề rộng tấm nền bốn cột trong hệ toạ độ riêng của nó
+const CHART_CO = Math.min(1.34, (VB_PHAI - LE - (NGUOI_PHAI + LE)) / CHART_RONG_GOC);
+const CHART_TAM = (NGUOI_PHAI + LE + VB_PHAI - LE) / 2;
+
 const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat?: number }> = ({ cot, p, mau, noiBat = 0 }) => {
   // ══════════════════════════════════════════════════════════════════════════════════════
   // BIỂU ĐỒ PHẢI CÓ TẤM NỀN RIÊNG
@@ -203,7 +216,7 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
   };
 
   return (
-    <g transform="translate(30 150)">
+    <g transform={`translate(${-(nenX + nenW / 2)} 150)`}>
       {/* TẤM NỀN — giấy kem mờ, viền dày, bo góc. Đây là thứ tách biểu đồ khỏi bối cảnh. */}
       <rect x={nenX} y={nenY} width={nenW} height={nenH} rx={18}
             fill="#FBF6EA" stroke={mau.muc} strokeWidth={6} />
@@ -214,14 +227,36 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
         const moc = muot(kep((p - i * 0.07) / 0.3));
         const h = (c.gt / dinh) * CAO * moc;
         const sang = i === noiBat;
+        // ══ BIỂU ĐỒ PHẢI DIỄN THEO LỜI NÓI ═══════════════════════════════════════════════
+        // Anh: *"cần có chart + số liệu animation chuyển động phù hợp nội dung phân tích và
+        // nói cho hợp lý bắt mắt hơn"*.
+        // Bản cũ chỉ có một chuyển động: bốn cột cùng mọc lên một lần ở đầu cảnh, rồi đứng
+        // yên tới hết. Cột "đang được nói" có đổi màu, nhưng đổi PHỰT — không có gì dẫn mắt
+        // tới đó, nên người xem vẫn phải tự dò xem lời đang nói ứng với cột nào.
+        // Ba chuyển động thêm, mỗi cái làm một việc rõ:
+        //   · `nhan` — cột được nhắc nảy lên trong 0,45 giây đầu khi tới lượt nó: mắt bắt
+        //     chuyển động trước khi kịp đọc chữ, nên đây là thứ dẫn mắt thật sự;
+        //   · `mo`   — ba cột còn lại lùi lại một nấc, để cột được nói nổi lên bằng TƯƠNG PHẢN
+        //     chứ không phải bằng cách tự to thêm mãi;
+        //   · số ĐẾM LÊN thay vì hiện sẵn — con số đang chạy là thứ người ta chờ xem dừng ở
+        //     đâu, và nó khớp đúng nhịp người đọc đang đọc con số ấy.
+        const nhip = muot(kep((p - 0.02) / 0.45));          // nhịp nhấn trong cảnh
+        const nhan = sang ? Math.sin(nhip * Math.PI) * 16 : 0;
+        const mo = sang ? 1 : 1 - 0.34 * nhip;
+        // Đếm lên CHỈ khi nhãn là số thuần — "127.8K" hay "3 in 5" thì đếm sẽ ra chuỗi vô
+        // nghĩa, nên những nhãn ấy giữ nguyên và chỉ hiện dần.
+        const soThuan = /^-?[\d,]+$/.test(String(c.hien || ""));
+        const hienSo = soThuan
+          ? Math.round(Number(String(c.hien).replace(/,/g, "")) * moc).toLocaleString("en-US")
+          : c.hien;
         return (
-          <g key={i} transform={`translate(${i * BUOC} 0)`}>
+          <g key={i} transform={`translate(${i * BUOC} ${-nhan})`} opacity={mo}>
             <rect x={0} y={-h - (sang ? 10 : 0)} width={RONG} height={h + (sang ? 10 : 0)}
                   rx={8} fill={sang ? mau.nhan : "#F2C230"}
                   stroke={mau.muc} strokeWidth={sang ? 7 : 5} />
             <text x={RONG / 2} y={-h - 24 - (sang ? 10 : 0)} textAnchor="middle"
                   fontSize={sang ? 34 : 28} fontWeight={900}
-                  fill={mau.muc} opacity={moc}>{c.hien}</text>
+                  fill={mau.muc} opacity={moc}>{hienSo}</text>
             {chiaDong(c.nhan, BUOC - 12, 18).map((d, j) => (
               <text key={j} x={RONG / 2} y={30 + j * 21} textAnchor="middle" fontSize={18}
                     fontWeight={700} fill={mau.muc} opacity={0.85 * moc}>{d}</text>
@@ -330,10 +365,37 @@ export const KichV2: React.FC<PropsKich> = ({
           thứ tự vẽ (đã trả giá một lần ở bộ hài — luật 7t mục 1). */}
       {(nenTheoCanh[i] || nenAnh) ? (
         <AbsoluteFill style={{ overflow: "hidden" }}>
-          <Img src={staticFile(nenTheoCanh[i] || nenAnh)}
-               style={{ width: "100%", height: "100%", objectFit: "cover",
-                        transform: `scale(${1.04 + (giay / Math.max(1, canh.length ? Math.max(...canh.map((c) => c.e)) : 20)) * 0.05})`,
-                        filter: "saturate(1.02) brightness(1.03)" }} />
+          {/* 30/8 — Anh: *"nhiều channel bối cảnh ảnh chưa thay đổi sau mỗi câu thoại nhìn bị
+              tĩnh chán"*.
+              Đếm lại thì nền CÓ đổi: chín trên mười kênh có đủ sáu ảnh khác nhau cho sáu câu.
+              Nên lời anh nói không phải "ảnh không đổi" mà là "nhìn không thấy đổi" — và đó là
+              hai chuyện khác nhau, chữa bằng hai cách khác nhau.
+              Hai lý do mắt không bắt được:
+                · ĐỔI PHỰT. Ảnh cũ biến mất và ảnh mới xuất hiện trong đúng một khung hình. Mắt
+                  người bắt CHUYỂN ĐỘNG, không bắt trạng thái; một cú thay tức thời giữa hai ảnh
+                  tĩnh trôi qua mà không để lại cảm giác gì. Nay ảnh mới chồng lên ảnh cũ trong
+                  0,4 giây — thấy được chính động tác đổi.
+                · PHÓNG QUÁ CHẬM. Bản cũ phóng 5% trải đều hai mươi giây, tức 0,25% mỗi giây —
+                  dưới ngưỡng nhận biết. Nay mỗi CẢNH có nhịp phóng riêng khoảng 4% trong ba
+                  giây, và hướng đổi luân phiên (cảnh chẵn tiến vào, cảnh lẻ lùi ra) để sáu cảnh
+                  không thành một nhịp đều ru ngủ. */}
+          {[i - 1, i].filter((k) => k >= 0 && (nenTheoCanh[k] || nenAnh)).map((k) => {
+            const _s = canh[k]?.s ?? 0;
+            const _e = canh[k]?.e ?? _s + 3;
+            const _t = kep((giay - _s) / Math.max(0.6, _e - _s));
+            const _huong = k % 2 === 0 ? 1 : -1;
+            const _phong = 1.05 + _huong * (_t - 0.5) * 0.045;
+            // Ảnh của cảnh TRƯỚC chỉ còn nhiệm vụ đỡ phía dưới trong lúc ảnh mới chồng lên.
+            const _hien = k === i ? muot(kep((giay - (canh[i]?.s ?? 0)) / 0.4)) : 1;
+            return (
+              <AbsoluteFill key={k} style={{ opacity: _hien }}>
+                <Img src={staticFile(nenTheoCanh[k] || nenAnh)}
+                     style={{ width: "100%", height: "100%", objectFit: "cover",
+                              transform: `scale(${_phong})`,
+                              filter: "saturate(1.02) brightness(1.03)" }} />
+              </AbsoluteFill>
+            );
+          })}
           {/* Lớp phủ ĐẬM HƠN bộ hài. Bộ này có BIỂU ĐỒ và SỐ LIỆU đè lên nền; nền ảnh nhiều chi
               tiết làm chữ số khó đọc, mà đọc được số mới là toàn bộ giá trị của mười kênh này. */}
           <AbsoluteFill style={{ background:
@@ -390,13 +452,13 @@ export const KichV2: React.FC<PropsKich> = ({
             // vị, nên tỉ lệ 1.12 cho ra một người cao 470/1500 — lọt thỏm, đúng như khung render
             // thử. Muốn nhân vật chiếm khoảng 3/5 chiều cao (tỉ lệ quen thuộc của phim hoạt hình
             // kể chuyện) thì cần ~2.1 cho khung dọc và ~1.6 cho khung ngang.
-            x={doc ? -338 : -430}
+            x={doc ? -362 : -430}
             y={doc ? 800 : 560}
             // 29/8 lần hai — lần trước tôi tăng cỡ nhân vật 1.12->2.1 NHƯNG cùng lúc hạ zoom
             // máy quay 1.5->1.0. Tích hai số không đổi (1.68), nên khung render ra y hệt và tôi
             // suýt kết luận "sửa không ăn". Bài học: đổi hai hệ số nhân với nhau trong cùng một
             // lượt thì không đo được cái nào có tác dụng.
-            scale={doc ? 2.5 : 1.7}
+            scale={doc ? 1.42 : 1.7}
           />
         </g>
 
@@ -418,8 +480,17 @@ export const KichV2: React.FC<PropsKich> = ({
             "Expected ) but found transform" — vì ở vị trí đó nó là CON THỨ HAI bên cạnh thẻ <g>,
             mà một nhánh ba ngôi chỉ nhận một biểu thức. Hai lần trước tôi đã ghi lại bài học rồi
             vẫn tái phạm, nên lần này ghi ngay tại chỗ dễ sai nhất. */}
+        {/* 30/8 — Anh: *"chart vẫn bị lệch phải quá nhiều che khuất"*, kèm ảnh chụp mất hẳn
+            cột cuối. Đo ra ngay: viewBox dọc chạy từ -500 đến 500, mà tấm nền bốn cột sau
+            `translate(78) scale(1.24)` chạy tới x = 688 — tràn 188 điểm, đúng gần hai cột.
+            Đây là lỗi tôi tự tạo ở lần trước, khi anh bảo làm chart to hơn: tôi phóng 1,24 và
+            đẩy sang phải 78 mà KHÔNG kiểm mép phải. Phóng to một thứ đã sát mép thì phần lớn
+            phần phóng thêm rơi ra ngoài khung — thấy to hơn ở chỗ còn nhìn được, và mất hẳn
+            phần bị đẩy ra.
+            Nay hai con số cùng suy từ một chỗ: nhân vật đứng ở TRAI_MEP, chart lấy trọn phần
+            còn lại và căn giữa phần ấy. Đổi cỡ nhân vật thì chart tự dịch theo. */}
         {C.cot ? (
-          <g transform={`translate(${doc ? 78 : 150} ${doc ? 120 : 84}) scale(${doc ? 1.24 : 1.02})`}>
+          <g transform={`translate(${doc ? CHART_TAM : 150} ${doc ? 120 : 84}) scale(${doc ? CHART_CO : 1.02})`}>
             <CotDaoCu cot={C.cot} p={p} mau={mau} noiBat={C.noiBat ?? 0} />
           </g>
         ) : null}

@@ -4995,3 +4995,30 @@ thứ anh nhờ nâng cấp ngay từ đầu.
 
 **Khi thu hẹp phạm vi một thứ không sửa được lời phàn nàn, đó là dấu hiệu vấn đề nằm ở bản thân
 thứ ấy chứ không ở liều lượng.**
+
+### 7bp. TÁI PHẠM LẦN BA — NGAY DƯỚI DÒNG CẢNH BÁO VỀ CHÍNH NÓ
+
+Trong `KichV2.tsx`, ngay trên chỗ đặt biểu đồ, có sẵn dòng này từ hai lần hỏng trước:
+
+> *…mà một nhánh ba ngôi chỉ nhận một biểu thức. **Hai lần trước tôi đã ghi lại bài học rồi vẫn
+> tái phạm**, nên lần này ghi ngay tại chỗ dễ sai nhất.*
+
+Rồi tôi chèn một khối chú thích `{/* … */}` làm phần tử **đứng trước** `<g>` trong đúng nhánh ba
+ngôi ấy — **lần thứ ba, ngay bên dưới câu cảnh báo**.
+
+Hai chuyện đáng ghi:
+
+**Một.** `tsc --noEmit` báo **sạch**. esbuild — thứ Remotion thật sự dùng — từ chối ngay. Cây cổng
+duy nhất bắt được là `selftest`, vì nó dịch bằng đúng công cụ dùng lúc render. **Kiểm bằng công cụ
+khác với công cụ chạy thật thì cái "sạch" ấy không có nghĩa gì.**
+
+**Hai.** Một dòng cảnh báo đặt đúng chỗ vẫn không ngăn được lỗi, vì lúc chèn tôi đang nghĩ về bố
+cục biểu đồ chứ không đọc đoạn văn bên cạnh. Chú thích **nhắc người đang đọc**, không chặn được
+người đang viết. Thứ chặn được là **cổng máy** — và ở đây cổng ấy đã làm đúng việc của nó.
+
+Cách viết an toàn, từ nay:
+
+```jsx
+{/* chú thích đặt Ở NGOÀI, ngang hàng với biểu thức */}
+{dieuKien ? (<g …/>) : null}
+```
