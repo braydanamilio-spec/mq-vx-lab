@@ -115,10 +115,21 @@ def cham_mot(d: dict, ten: str) -> tuple[int, list]:
     # ── 15đ · BIỂU ĐỒ CÓ GÌ ĐỂ SO KHÔNG ───────────────────────────────────────────────────
     if cot and len(cot) >= 3:
         g = [float(c.get("gt") or 0) for c in cot[:4]]
+        # 31/8 — So trên TOÀN BỘ cột, không chỉ bốn cột đầu. Bảng dựng dần theo lời nên bốn cột
+        # đầu là bốn hạng cao nhất, và bốn hạng cao nhất của bất cứ bảng nào cũng gần bằng nhau.
+        # Đo cả bảng mới biết biểu đồ có kể được khoảng biến thiên hay không.
+        ga = [float(c.get("gt") or 0) for c in cot]
         if min(g) > 0 and max(g) / min(g) < 1.6:
-            diem -= 15
-            loi.append(f"bốn cột chênh nhau {max(g)/min(g):.1f} lần — mắt không thấy chênh lệch, "
-                       f"biểu đồ thành hàng rào")
+            # Phân biệt LỖI CHỌN với BẢN CHẤT DỮ LIỆU. Nếu cả bảng cũng phẳng thì không phép
+            # chọn nào tạo được chênh lệch mà không bịa số — điểm ghi của các ngôi sao NBA nằm
+            # trong dải 30–33 là sự thật về giải đấu, không phải lỗi của hệ. Trừ nặng một thứ
+            # không ai sửa được chỉ dạy người đọc thước bỏ qua cảnh báo ấy.
+            _von_phang = min(ga) > 0 and max(ga) / min(ga) < 1.8
+            diem -= 5 if _von_phang else 15
+            loi.append(f"bốn cột chênh nhau {max(g)/min(g):.1f} lần — "
+                       + ("dữ liệu vốn phẳng, cần kể bằng lời chứ không bằng chiều cao cột"
+                          if _von_phang else
+                          "mắt không thấy chênh lệch, biểu đồ thành hàng rào (chọn lát khác)"))
     if cot is not None and len(cot) < 3:
         diem -= 15
         loi.append(f"chỉ {len(cot)} cột — dưới ba thì không có gì để so")
@@ -167,7 +178,15 @@ def cham_mot(d: dict, ten: str) -> tuple[int, list]:
                # bằng "A" hoa — đó là tên một công ty, và thước bản đầu tố nó là mảnh câu.
                or (str(c.get("nhan") or "").strip().split()[:1] and
                    str(c.get("nhan")).strip().split()[0] in _NOI)
-               or re.search(r"[^\x00-\x7F]", str(c.get("nhan") or ""))]
+               # 31/8 — KHÔNG chặn mọi ký tự ngoài ASCII. Bản trước làm thế và tố ngay
+               # 'Nikola Jokić' là mảnh câu, chỉ vì chữ 'ć'. Tên riêng phương Tây đầy dấu phụ
+               # Latin — Jokić, Dončić, Häagen-Dazs, Nuñez — và chúng là tên THẬT, đọc được,
+               # đúng thứ nhãn cần có. Thứ cần chặn là chữ thuộc HỆ VIẾT KHÁC (Cyrillic, CJK,
+               # Ả Rập, Hy Lạp) và dấu tiếng Việt: đó mới là dấu hiệu nguồn trả nhầm ngôn ngữ.
+               or re.search(r"[\u0400-\u04FF\u4E00-\u9FFF\u3040-\u30FF\u0600-\u06FF"
+                            r"\u0370-\u03FF\u0102\u0103\u01A0\u01A1\u01AF\u01B0"
+                            r"\u1EA0-\u1EF9\u0110\u0111]",
+                            str(c.get("nhan") or ""))]
         if xau:
             diem -= 12
             loi.append(f"nhãn không phải tên mục mà là mảnh câu bị chặt: "

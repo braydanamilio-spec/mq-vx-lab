@@ -446,7 +446,60 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
             ds.append((ten, gt, hien))
     if len(ds) < 3:
         return None          # dưới ba cột thì không có gì để so — bỏ lượt, không bịa thêm
+    ds = _giai_rong(ds, 6)
     return (str(st.get("title") or ten_kenh), ds, str(st.get("nguon") or ""))
+
+
+def _dai_von_phang(ds: list) -> bool:
+    """Bảng này vốn phẳng, hay do chọn nhầm lát?
+
+    31/8 — Phân biệt này quan trọng vì hai trường hợp cần hai cách xử. Nếu bảng có mục chênh
+    lệch mà hệ lại lấy sáu mục đầu gần bằng nhau, đó là LỖI CHỌN và `_giai_rong` sửa được. Còn
+    điểm ghi trung bình của các ngôi sao NBA thì 32,7 với 30,4 — cả giải đấu nằm trong một dải
+    hẹp, và không phép chọn nào tạo ra chênh lệch mà không bịa số.
+    Trường hợp sau không phải lỗi của hệ, nên không đáng bị trừ điểm như một lỗi. Đánh dấu để
+    thước biết mà phân biệt — thay vì trừ mãi một thứ không ai sửa được, và dạy người đọc thước
+    bỏ qua cảnh báo ấy.
+    """
+    gt = [float(x[1]) for x in ds if float(x[1]) > 0]
+    return bool(gt) and (max(gt) / min(gt)) < 1.8
+
+
+def _giai_rong(ds: list, n: int = 6) -> list:
+    """Chọn mục sao cho biểu đồ CÓ CHÊNH LỆCH — trải đều theo thứ hạng, không lấy top liên tiếp.
+
+    31/8 — Thước đọc ra ở bốn kênh: "bốn cột chênh nhau 1,1 lần — mắt không thấy chênh lệch,
+    biểu đồ thành hàng rào". Gốc nằm ở khâu CHỌN chứ không ở khâu vẽ: mọi nguồn đều sắp xếp
+    giảm dần rồi lấy sáu mục ĐẦU, mà sáu mục đầu của một bảng đã sắp xếp thì tất nhiên gần bằng
+    nhau. Bao nhiêu công làm đẹp cột cũng không cứu được một lát dữ liệu không có gì để so.
+
+    Cách chọn: giữ nguyên hạng nhất (câu chuyện luôn bắt đầu từ đỉnh), rồi lấy các hạng TRẢI
+    ĐỀU xuống tới cuối bảng. Người xem thấy được cả khoảng biến thiên thật thay vì một lát cắt
+    phẳng ở đỉnh.
+
+    Đây KHÔNG phải chọn số cho đẹp: mọi mục đều là dữ liệu thật của cùng một nguồn, và một lát
+    trải đều thể hiện ĐÚNG HƠN về nguồn ấy — lát hẹp mới là lát kể thiếu. Chỉ đổi khi lát hiện
+    tại thật sự phẳng (đỉnh chưa gấp rưỡi đáy) và bảng còn đủ mục để trải.
+    """
+    if len(ds) <= n:
+        return ds
+    gt = [float(x[1]) for x in ds[:n]]
+    if not gt or min(gt) <= 0:
+        return ds[:n]
+    if max(gt) / min(gt) >= 1.8:
+        return ds[:n]          # đã đủ chênh lệch, không đụng vào
+    buoc = (len(ds) - 1) / (n - 1)
+    chon = [ds[0]] + [ds[min(len(ds) - 1, round(i * buoc))] for i in range(1, n)]
+    # Trải đều có thể trúng cùng một mục hai lần khi bảng ngắn; bỏ trùng rồi bù từ đầu bảng.
+    ra, da = [], set()
+    for x in chon + list(ds):
+        k = str(x[0])
+        if k not in da:
+            da.add(k)
+            ra.append(x)
+        if len(ra) >= n:
+            break
+    return ra
 
 
 def _doc_so(hien: str):
@@ -532,7 +585,14 @@ def _tach_so_dai(tu: list) -> list:
     ra = []
     for w in tu:
         chu = str(w.get("w") or "")
-        so = _re.fullmatch(r"[\$]?([\d,]+)([%a-zA-Z]*)[.,!?]?", chu.strip())
+        # 31/8 — SỐ THẬP PHÂN VÀ HẬU TỐ CŨNG PHẢI TÁCH.
+        # Thước còn tố "'32.7.' dài 1,2s chưa tách" và "'33.8K' chưa tách". Regex cũ chỉ khớp
+        # số NGUYÊN có dấu phẩy, nên mọi con số có dấu chấm thập phân — thứ chiếm phần lớn số
+        # liệu thể thao, giá cả, tỉ lệ — đều lọt qua và giữ nguyên lỗi cũ: phụ đề đứng im còn
+        # miệng mấp máy theo chuỗi chữ số.
+        # "33.8K" đọc là "thirty three point eight thousand": phần nguyên, "point", phần thập
+        # phân đọc TỪNG CHỮ SỐ (đúng cách người Mỹ đọc), rồi hậu tố.
+        so = _re.fullmatch(r"[\$]?([\d,]+)(?:\.(\d+))?([%a-zA-Z]*)[.,!?]?", chu.strip())
         d = float(w.get("d") or 0)
         if not so or d < 0.45:
             ra.append(w)
@@ -543,12 +603,19 @@ def _tach_so_dai(tu: list) -> list:
             ra.append(w)
             continue
         phan = doc(n)
+        if so.group(2):
+            phan = (phan or ["zero"]) + ["point"] + [DON[int(c)] for c in so.group(2) if c.isdigit()]
+        _HAU = {"k": "thousand", "m": "million", "b": "billion", "%": "percent"}
+        _h = (so.group(3) or "").strip()
+        if _h and _h.lower() in _HAU:
+            phan = phan + [_HAU[_h.lower()]]
         if len(phan) < 2:
             ra.append(w)
             continue
-        # Đuôi chữ đi kèm ("cal", "%") cũng là một từ được đọc riêng.
-        if so.group(2):
-            phan.append(so.group(2))
+        # Đuôi chữ đi kèm ("cal") cũng là một từ được đọc riêng — trừ những hậu tố đã quy
+        # thành chữ ở trên, thêm lần nữa sẽ đọc thành "thousand K".
+        if so.group(3) and so.group(3).strip().lower() not in _HAU:
+            phan.append(so.group(3))
         buoc = d / len(phan)
         t0 = float(w.get("t") or 0)
         for i, p in enumerate(phan):
@@ -682,7 +749,27 @@ def _lam_sach_nhan(ds: list) -> list:
         w = x.split()
         # Hai từ mà vẫn dài quá bề ngang cột ("Haagen-Dazs Chocolate", 21 ký tự) thì giữ
         # nguyên là để nó bị cắt cụt ở cuối — mà cuối lại là phần phân biệt. Giữ từ CUỐI.
-        if len(w) > 2 and len(x) > 16:
+        # 31/8 — Nhãn 26 ký tự vẫn lọt: "The occurrence of sleep-di", "Prospective study of the
+        # a". Điều kiện cũ chỉ rút gọn khi có HƠN hai từ VÀ dài hơn 16 — một đoạn văn dài thì
+        # thoả cả hai, nhưng hai từ cuối của một đoạn văn lại rơi vào giữa mệnh đề. Với cụm quá
+        # dài (từ năm từ trở lên) thì đó không phải TÊN mà là một câu, và không hai từ nào cứu
+        # được nó — lấy phần đầu cho tới giới hạn, cắt theo TỪ, để ít nhất còn đọc ra chủ đề.
+        if len(w) >= 5:
+            # Lấy CỤM NỘI DUNG LIỀN MẠCH Ở CUỐI: đi ngược từ từ cuối, dừng ngay khi gặp một từ
+            # chức năng. Lấy phần đầu thì ra "Prospective study of" — cụt ở giới từ; lấy đúng
+            # hai từ cuối thì ra "of the a" khi đuôi rơi vào giữa mệnh đề. Cụm cuối liền mạch
+            # thì luôn là một danh ngữ đọc được: "sleep-disorder events", "association".
+            _CN = {"of", "the", "a", "an", "and", "or", "in", "on", "at", "for", "to", "by",
+                   "with", "from", "vs", "de", "la", "el", "its", "their"}
+            _r = []
+            for _t in reversed(w):
+                if _t.lower().strip(",.;:") in _CN or len(" ".join([_t] + _r)) > 22:
+                    break
+                _r.insert(0, _t)
+                if len(_r) >= 3:
+                    break
+            ra.append(" ".join(_r) if _r else w[-1])
+        elif len(w) > 2 and len(x) > 16:
             ra.append(" ".join(w[-2:]))
         elif len(w) == 2 and len(x) > 17:
             ra.append(w[-1])
