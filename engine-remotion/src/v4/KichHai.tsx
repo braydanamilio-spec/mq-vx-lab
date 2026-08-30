@@ -412,8 +412,14 @@ export const KichHai: React.FC<PropsHai> = ({
             : _motNguoi ? (noiA_ ? 9999 : 0)
             : 292;
   // Tiền cảnh gần ống kính nên TO hơn và TỐI hơn — hai dấu hiệu chiều sâu mà mắt đọc tức thì.
-  const _coA = _quaVai && !noiA_ ? 1.5 : 1;
-  const _coB = _quaVai && noiA_ ? 1.5 : 1;
+  // 30/8 — anh nhắc lại: *"nhớ ko nhân vật to nhỏ lỗi nha"*.
+  // Hệ số 1,5 cho người tiền cảnh là con số tôi bốc, không phải con số đo. Hai người đứng cách
+  // nhau một hai mét — khoảng cách của một cuộc trò chuyện — thì người gần ống kính chỉ lớn hơn
+  // khoảng **1,15 tới 1,2 lần**. Ở 1,5 thì họ phải cách nhau bốn năm mét, tức đang nói vọng qua
+  // phòng chứ không phải đứng cạnh nhau, và mắt đọc ra ngay là "thằng to thằng nhỏ".
+  // Đây là phối cảnh, và phối cảnh có số của nó — không bốc được.
+  const _coA = _quaVai && !noiA_ ? 1.18 : 1;
+  const _coB = _quaVai && noiA_ ? 1.18 : 1;
   // Anh gửi khung: người tiền cảnh TRONG SUỐT, nhìn xuyên qua thấy cả xe phía sau — đọc ra là
   // một bóng ma chứ không phải một người đứng gần ống kính.
   // Lỗi ở chỗ tôi dùng ĐỘ MỜ để tả chiều sâu. Trong hoạt hình, vật ở tiền cảnh không mờ đi —

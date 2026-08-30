@@ -430,6 +430,67 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // Ba phần: đoạn trên · đoạn dưới · một chấm tròn ở khớp để che mối nối. Chấm ấy quan trọng
   // hơn vẻ ngoài của nó: thiếu nó thì hai đoạn thẳng gặp nhau thành một góc nhọn, và góc nhọn
   // ở giữa cánh tay đọc ra là gãy.
+  // ══ CHI VẼ BẰNG MẢNH CẮT, KHÔNG BẰNG NÉT KẺ ═══════════════════════════════════════════
+  // 30/8, làm lại lần hai — anh: *"mãi vẫn lỗi, tìm cách làm khác đi, phân tích lại cách ông
+  // lớn thế giới làm"*.
+  //
+  // Anh đúng, và lần này tôi nhìn ra chỗ mình chưa từng nhìn: **tôi vẽ chi bằng một đường KẺ
+  // dày có đầu tròn**. Dù tính góc bằng công thức nào, dù thêm động học ngược, kết quả vẫn là
+  // một khúc ống đều đặn — nên nó ra hình giọt nước, hình khúc dồi, không bao giờ ra cánh tay.
+  // Cái sai không nằm ở cách TÍNH nữa; nó nằm ở cách VẼ.
+  //
+  // Hoạt hình 2D chuyên nghiệp dùng **cut-out**: mỗi đoạn chi là một HÌNH VẼ HOÀN CHỈNH có
+  // đường viền riêng, ghép lại bằng khớp xoay. Cánh tay trên **thuôn** từ vai (dày) xuống khuỷu
+  // (mảnh hơn); cẳng tay thuôn tiếp xuống cổ tay. Chính cái thuôn ấy làm mắt đọc ra là một chi
+  // có cơ và xương — một ống đều tăm tắp thì không.
+  //
+  // Nên hàm này vẽ mỗi đoạn bằng một đa giác bốn điểm: hai điểm ở đầu dày, hai điểm ở đầu mảnh,
+  // cộng một hình tròn ở khớp để nối liền hai mảnh. Đó là toàn bộ bí quyết, và nó là thứ tôi
+  // đáng ra phải làm từ đầu thay vì ba lần chỉnh công thức góc.
+  const manh = (a: [number, number], b: [number, number],
+                dayA: number, dayB: number, mau: string, key: string) => {
+    const gx = b[0] - a[0], gy = b[1] - a[1];
+    const L = Math.max(0.001, Math.hypot(gx, gy));
+    const nx = -gy / L, ny = gx / L;          // pháp tuyến, để nới bề dày sang hai bên
+    const d = `M ${a[0] + nx * dayA} ${a[1] + ny * dayA}
+               L ${b[0] + nx * dayB} ${b[1] + ny * dayB}
+               L ${b[0] - nx * dayB} ${b[1] - ny * dayB}
+               L ${a[0] - nx * dayA} ${a[1] - ny * dayA} Z`;
+    return (
+      <g key={key}>
+        <path d={d} fill={mau} stroke={V} strokeWidth={NG} strokeLinejoin="round" />
+      </g>
+    );
+  };
+
+  // Một chi = hai mảnh thuôn + ba hình tròn (vai · khuỷu · cổ tay) để bịt kín mọi mối nối.
+  // Hình tròn ở khớp không phải trang trí: thiếu nó thì hai đa giác gặp nhau chừa một khe hình
+  // nêm, và cái khe ấy đọc ra là gãy xương.
+  const chiCat = (a: [number, number], b: [number, number], c: [number, number],
+                  day: number, mau: string, key: string) => {
+    // Ba bề dày, thuôn dần: vai dày nhất, khuỷu vừa, cổ tay mảnh nhất. Tỉ lệ lấy từ giải phẫu
+    // thô — bắp tay dày hơn cẳng tay, cẳng tay dày hơn cổ tay — vì mắt đọc đúng cái thuôn ấy
+    // ra "chi có cơ", còn một ống đều tăm tắp thì đọc ra là ống nước.
+    const d1 = day * 0.62, d2 = day * 0.48, d3 = day * 0.36;
+    return (
+      <g key={key}>
+        <circle cx={a[0]} cy={a[1]} r={d1} fill={mau} stroke={V} strokeWidth={NG} />
+        {manh(a, b, d1, d2, mau, key + "1")}
+        <circle cx={b[0]} cy={b[1]} r={d2} fill={mau} stroke={V} strokeWidth={NG} />
+        {manh(b, c, d2, d3, mau, key + "2")}
+        <circle cx={c[0]} cy={c[1]} r={d3} fill={mau} stroke={V} strokeWidth={NG} />
+      </g>
+    );
+  };
+  // Bàn tay vẽ RIÊNG và TO hơn tỉ lệ thật. Đây là luật của hoạt hình chứ không của giải phẫu:
+  // bàn tay là thứ mang cử chỉ, mà cử chỉ là nửa phần diễn của một nhân vật không có ngón. Vẽ
+  // đúng tỉ lệ người thật thì ở khổ dọc trên điện thoại nó teo thành một chấm — và một chấm thì
+  // không cử chỉ được gì. Mọi nhân vật hoạt hình kinh điển đều có bàn tay múp vì lý do này.
+  const banTo = (v: [number, number], mau: string, key: string) => (
+    <circle key={key} cx={v[0]} cy={v[1]} r={13.5 * ngang} fill={mau}
+            stroke={V} strokeWidth={NG} />
+  );
+
   const xuong = (a: [number, number], b: [number, number], c: [number, number],
                  mau: string, day: number, key: string) => (
     <g key={key}>
@@ -537,16 +598,16 @@ export const DienVienHai: React.FC<PropsHai> = ({
       <ellipse cx={0} cy={2} rx={62 * ngang * (1 + nen * 2)} ry={11} fill="#00000026" />
 
       {/* CHÂN — vẽ trước thân để thân che chỗ nối ở hông */}
-      {xuong([hong[0] - rongHong, hong[1]], [goiT[0], goiT[1]], [chanT[0], chanT[1]], quan, 27 * ngang, "cT")}
-      {xuong([hong[0] + rongHong, hong[1]], [goiP[0], goiP[1]], [chanP[0], chanP[1]], quan, 27 * ngang, "cP")}
+      {chiCat([hong[0] - rongHong, hong[1]], [goiT[0], goiT[1]], [chanT[0], chanT[1]], 27 * ngang, quan, "cT")}
+      {chiCat([hong[0] + rongHong, hong[1]], [goiP[0], goiP[1]], [chanP[0], chanP[1]], 27 * ngang, quan, "cP")}
       {/* Giày tô màu RIÊNG, không dùng màu nét. Khung đo được: quần sẫm + giày màu nét = một
           khối tối liền từ hông xuống sàn, không đọc ra là có bàn chân. */}
       {giay(chanT, -1, "gT")}
       {giay(chanP, 1, "gP")}
 
       {/* TAY SAU (bên trái) — vẽ trước thân, nên nó nằm sau lưng: ra chiều sâu mà không cần đổ bóng */}
-      {xuong([vaiT[0], vaiT[1]], [khuyuT[0], khuyuT[1]], [tayT[0], tayT[1]], aoSau, 23 * ngang, "tT")}
-      {ban(tayT, gocVT2 + 90, "bT")}
+      {chiCat([vaiT[0], vaiT[1]], [khuyuT[0], khuyuT[1]], [tayT[0], tayT[1]], 25 * ngang, aoSau, "tT")}
+      {banTo(tayT, da, "bT")}
 
       {/* THÂN — hình hạt đậu, KHÔNG phải hình chữ nhật. Vai tròn và eo hơi thóp là thứ làm
           nhân vật đọc ra là dễ thương thay vì cứng đờ. */}
@@ -658,8 +719,8 @@ export const DienVienHai: React.FC<PropsHai> = ({
       ) : null}
 
       {/* TAY TRƯỚC (bên phải) — vẽ sau thân nên nằm trước ngực */}
-      {xuong([vaiP[0], vaiP[1]], [khuyuP[0], khuyuP[1]], [tayP[0], tayP[1]], aoTruoc, 23 * ngang, "tP")}
-      {ban(tayP, gocVP2 + 90, "bP")}
+      {chiCat([vaiP[0], vaiP[1]], [khuyuP[0], khuyuP[1]], [tayP[0], tayP[1]], 25 * ngang, aoTruoc, "tP")}
+      {banTo(tayP, da, "bP")}
       {/* ĐỒ VẬT TUỘT KHỎI TAY ở cú chốt — trò đùa hình thể cổ điển nhất, và nó nói đúng thứ mà
           lời thoại vừa nói: "tôi không tin nổi". Rơi theo gia tốc (bình phương thời gian) và xoay
           chậm, đúng như một vật rơi thật. */}
