@@ -322,27 +322,113 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
     k2 = T2.doc_kenh(ten_kenh)
     if not k2:
         return None
-    st = T2._dung_story_xoay(k2.get("dinh_dang"), k2, None, list(avoid or []))
-    if not st:
-        return None
-    ds = []
-    for it in (st.get("items") or []):
-        hien = str(it.get("stat") or "").strip()
-        # Giá trị SỐ rút từ chữ hiện: "351 cal" -> 351.0, "$1.2M" -> 1.2. Biểu đồ cần con số để
-        # tính chiều cao cột; chữ hiện giữ nguyên đơn vị để người xem đọc đúng thứ nguồn nói.
-        m = _re.search(r"-?[\d,]+\.?\d*", hien.replace(",", ""))
-        if not m:
-            continue
-        try:
-            gt = float(m.group(0))
-        except ValueError:
-            continue
-        ten = str(it.get("name") or "").strip()
-        if ten:
-            ds.append((ten, gt, hien))
+    # ══ CHỌN LÁT CÓ CHÊNH LỆCH, KHÔNG LẤY SÁU MỤC ĐẦU BẢNG ══════════════════════════════
+    # Khung đo được ở WHAT IS IN IT: bốn cột 631 · 616 · 599 · 566 — chênh nhau **1,1 lần**.
+    # Người xem nhìn bốn cột cao gần bằng nhau thì không thấy có gì đáng xem. Một biểu đồ không
+    # có chênh lệch thì không phải biểu đồ, nó là một hàng rào.
+    #
+    # Gốc rễ nằm ở khâu CHỌN, không ở khâu vẽ: hệ lấy sáu mục đầu của một bảng đã sắp xếp, mà
+    # sáu mục đầu của một bảng đã sắp xếp thì tất nhiên gần bằng nhau. Bao nhiêu công làm đẹp
+    # cột cũng không cứu được một lát dữ liệu không có gì để so.
+    #
+    # Nên thử vài LÁT khác nhau rồi giữ lát có dải rộng nhất. Đây KHÔNG phải chọn số cho đẹp:
+    # mọi lát đều là dữ liệu thật của cùng một nguồn, và lát có dải rộng thể hiện ĐÚNG HƠN về
+    # khoảng biến thiên thật — lát hẹp mới là lát kể thiếu.
+    _thu, _tot, _dai_nhat = [], None, 0.0
+    for _l in range(3):
+        _st = T2._dung_story_xoay(k2.get("dinh_dang"), k2, None,
+                                  list(avoid or []) + [x.get("title", "") for x in _thu])
+        if not _st:
+            break
+        _thu.append(_st)
+        _g = []
+        for _it in (_st.get("items") or []):
+            _m = _re.search(r"-?[\d,]+\.?\d*", str(_it.get("stat") or "").replace(",", ""))
+            if _m:
+                try:
+                    _g.append(float(_m.group(0)))
+                except ValueError:
+                    pass
+        if len(_g) >= 3:
+            _r = max(_g) / max(0.001, min(_g))
+            if _r > _dai_nhat:
+                _dai_nhat, _tot = _r, _st
+            if _r >= 2.2:
+                break          # đủ rộng để mắt đọc ra chênh lệch — không cần thử thêm
+    st = _tot or (_thu[0] if _thu else None)
+    if st and _dai_nhat:
+        print(f"      📊 dải dữ liệu: cao nhất gấp {_dai_nhat:.1f} lần thấp nhất"
+              f"{' — hẹp, biểu đồ sẽ khó thấy chênh lệch' if _dai_nhat < 1.6 else ''}")
     if len(ds) < 3:
         return None          # dưới ba cột thì không có gì để so — bỏ lượt, không bịa thêm
     return (str(st.get("title") or ten_kenh), ds, str(st.get("nguon") or ""))
+
+
+def _tach_so_dai(tu: list) -> list:
+    """Tách một mốc chứa CON SỐ thành nhiều mốc, theo đúng cách nó được đọc thành lời.
+
+    30/8 — anh: *"miệng mấp máy chưa đúng với sub chạy ra"*. Soi ra một mốc duy nhất:
+
+        7,14 → 8,64  '14747'
+
+    Một mục, **1,5 giây**. Vì "14747" đọc thành *fourteen thousand seven hundred forty seven* —
+    bảy từ — nhưng bộ đọc trả nó về như MỘT từ. Hai thứ hỏng cùng lúc từ đúng chỗ ấy:
+      · phụ đề đứng im ở một cụm chữ số suốt một giây rưỡi, trong khi tai nghe bảy từ trôi qua;
+      · hình miệng lấy chuỗi âm từ chính các CHỮ SỐ `1-4-7-4-7`, mà chữ số không có âm nào
+        tương ứng — nên miệng mấp máy theo một chuỗi vô nghĩa.
+    Cả hai sai từ cùng một giả định: **một mục trong danh sách mốc = một từ được đọc**. Giả
+    định ấy đúng với chữ và sai với số, mà kênh dữ liệu thì câu nào cũng có số.
+
+    Nên tách tại đây — nơi dữ liệu vào engine — chứ không vá trong engine: engine đọc mốc nào
+    thì tin mốc ấy, và nó có quyền tin.
+    """
+    DON = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+           "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+           "seventeen", "eighteen", "nineteen"]
+    CHUC = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+
+    def doc(n: int) -> list:
+        """Số -> danh sách từ tiếng Anh. Đủ tới hàng triệu, quá đó thì trả rỗng (để giữ nguyên)."""
+        if n < 0 or n >= 1_000_000_000:
+            return []
+        if n < 20:
+            return [DON[n]]
+        if n < 100:
+            return [CHUC[n // 10]] + ([DON[n % 10]] if n % 10 else [])
+        if n < 1000:
+            return [DON[n // 100], "hundred"] + doc(n % 100)
+        for mo, ten in ((1_000_000, "million"), (1000, "thousand")):
+            if n >= mo:
+                return doc(n // mo) + [ten] + doc(n % mo)
+        return []
+
+    import re as _re
+    ra = []
+    for w in tu:
+        chu = str(w.get("w") or "")
+        so = _re.fullmatch(r"[\$]?([\d,]+)([%a-zA-Z]*)[.,!?]?", chu.strip())
+        d = float(w.get("d") or 0)
+        if not so or d < 0.45:
+            ra.append(w)
+            continue
+        try:
+            n = int(so.group(1).replace(",", ""))
+        except ValueError:
+            ra.append(w)
+            continue
+        phan = doc(n)
+        if len(phan) < 2:
+            ra.append(w)
+            continue
+        # Đuôi chữ đi kèm ("cal", "%") cũng là một từ được đọc riêng.
+        if so.group(2):
+            phan.append(so.group(2))
+        buoc = d / len(phan)
+        t0 = float(w.get("t") or 0)
+        for i, p in enumerate(phan):
+            ra.append({"t": round(t0 + i * buoc, 3), "d": round(buoc, 3), "w": p,
+                       "si": int(w.get("si", 0))})
+    return ra
 
 
 def _ten_nguon(t: str) -> str:
@@ -1278,10 +1364,11 @@ def main() -> int:
                         import kich_hai as _KH2
                         dur = _KH2._giay_wav(_w1)
                         print(f"   ✂️ cắt {_bo_dau:.2f}s im lặng đầu · còn {dur:.1f}s")
-        # `subs` là [{w, t, d, si}] — đúng khuôn `Tu` mà `visemeTai` cần, không phải đổi gì.
+        # `subs` là [{w, t, d, si}] — đúng khuôn `Tu` mà `visemeTai` cần.
         tu = [{"t": round(max(0.0, float(x.get("t", 0)) - _bo_dau), 3),
                "d": float(x.get("d", 0)), "w": str(x.get("w", "")),
                "si": int(x.get("si", 0))} for x in (subs or [])]
+        tu = _tach_so_dai(tu)
         if not tu:
             print("   ❌ giọng đọc không trả mốc từ nào — BỎ (khỏi ra video câm)")
             continue

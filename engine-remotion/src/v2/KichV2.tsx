@@ -428,10 +428,20 @@ export const KichV2: React.FC<PropsKich> = ({
             const _hien = k === i ? muot(kep((giay - (canh[i]?.s ?? 0)) / 0.4)) : 1;
             return (
               <AbsoluteFill key={k} style={{ opacity: _hien }}>
+                {/* 30/8 — Anh: *"phần nội dung footage nên đẩy lên phía trên để không bị che
+                    khuất, và làm mờ nền để đỡ phân tâm"*.
+                    Ảnh nền do máy vẽ luôn đặt chủ thể ở GIỮA khung — mà giữa khung cũng đúng
+                    là chỗ tấm biểu đồ ngồi. Hai thứ quan trọng nhất của hai lớp chồng lên
+                    nhau, và lớp dưới thua.
+                    `objectPosition` kéo ảnh lên để phần chủ thể lộ ra ở dải TRÊN, nơi không có
+                    gì đè. Không phải cắt bớt ảnh — chỉ là chọn phần nào của ảnh được thấy.
+                    Kèm một chút làm mờ: nền không cần sắc nét, nó cần GỢI ra bối cảnh. Nét quá
+                    thì mắt đọc chi tiết ở nền thay vì đọc con số ở trên. */}
                 <Img src={staticFile(nenTheoCanh[k] || nenAnh)}
                      style={{ width: "100%", height: "100%", objectFit: "cover",
+                              objectPosition: "center 24%",
                               transform: `scale(${_phong})`,
-                              filter: "saturate(1.02) brightness(1.03)" }} />
+                              filter: "saturate(0.94) brightness(1.06) blur(1.6px)" }} />
               </AbsoluteFill>
             );
           })}
@@ -449,7 +459,7 @@ export const KichV2: React.FC<PropsKich> = ({
           <AbsoluteFill style={{ background:
             `linear-gradient(180deg,${mau.troi[1]}99 0%,${mau.troi[1]}77 45%,${mau.dat}AA 100%)` }} />
           <AbsoluteFill style={{ background:
-            `linear-gradient(180deg,transparent 8%,${mau.troi[1]}55 22%,${mau.troi[1]}55 62%,transparent 76%)` }} />
+            `linear-gradient(180deg,transparent 6%,${mau.troi[1]}88 20%,${mau.troi[1]}88 64%,transparent 78%)` }} />
         </AbsoluteFill>
       ) : null}
       <AbsoluteFill>
