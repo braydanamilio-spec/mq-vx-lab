@@ -5193,3 +5193,30 @@ giây nào tĩnh.
 
 Ghi lại để sau này đọc không tưởng là mâu thuẫn: **cùng một triệu chứng có thể tới từ hai nguyên
 nhân, và chữa nhầm nguyên nhân thì triệu chứng vẫn còn — chỉ đổi hình dạng.**
+
+### 7ca. CÂY THƯỚC MỚI VIẾT CHÊ NHẦM NHIỀU HƠN BẮT ĐÚNG — 30/8/2026
+
+Anh: *"xây pipeline rule chuẩn để nếu ok thì sau áp dụng cho các channel sau, đỡ sửa đi sửa
+lại"*. `cham_v3.py` ra đời từ đó — mỗi trục của nó là một lỗi **có thật, đã trả giá** trong ngày.
+
+Lần chạy đầu nó tố **5 kênh**. Soi từng ca thì **ba trong năm là thước sai, không phải video
+sai**:
+
+| thước nói | sự thật |
+|---|---|
+| *"13y vẽ thấp hơn 14y"* | cột của kênh ấy **vốn không sắp xếp giảm dần** — thứ tự do nguồn |
+| *"'443 m' mất hậu tố triệu"* | `m` ở đây là **mét** — đường kính một tiểu hành tinh |
+| *"'A New Life Herbs' là mảnh câu"* | đó là **tên một công ty**, mở đầu bằng `A` viết hoa |
+
+Cả ba đều là phép đo dựng trên một **giả định chưa kiểm**: cột luôn giảm dần · chữ cái sau số
+luôn là bậc · từ đầu nhãn là từ nối thì nhãn bị chặt.
+
+> **Một cây thước kêu oan thì lần sau người đọc bỏ qua cả những lần nó kêu đúng.** Phép đo dựng
+> trên giả định chưa kiểm còn tệ hơn không có phép đo nào — nó tiêu tiền uy tín của mọi phép đo
+> khác trong cùng cây thước.
+
+Nên luật cho mọi cổng viết từ nay: **soi từng ca mà cổng tố, trước khi tin cổng.** Ba lần sửa ở
+trên đều là sửa THƯỚC, không sửa video — và nếu không soi thì tôi đã đi sửa ba kênh vốn đúng.
+
+Hai lỗi thật còn lại (mốc số dài chưa tách · biểu đồ không có gì để so) thì đúng, và đã có
+đường sửa.
