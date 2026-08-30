@@ -5298,3 +5298,42 @@ ngày mai, còn ngưỡng giải phẫu thì **chỉ có một**.
 
 **Và bài học lớn nhất của phiên:** khi cùng một lỗi quay lại lần thứ ba, dừng sửa. Lần thứ ba
 không phải là xui — nó là bằng chứng rằng chỗ mình đang sửa không phải chỗ hỏng.
+
+### 30/8 — Tay khèo: bốn lượt sửa sai chỗ, gốc nằm ở NÉT VẼ
+
+Anh chê "tay cong cong khèo khèo" ba lần. Bốn lượt tôi chỉnh bảng góc, đổi sang IK, rồi
+revert. Không lượt nào đụng dòng thật sự vẽ cánh tay: `M vai Q khuyu tay`.
+
+**Bezier bậc hai không đi qua điểm điều khiển.** Khuỷu chỉ kéo đường cong về phía nó. Nên mọi
+bảng số, mọi cách tính đều cho ra một cung tròn trơn không có khớp. Đổi đầu vào của một công
+thức luôn ra cung tròn thì vẫn ra cung tròn.
+
+Dấu hiệu nhận ra sớm: **đổi kiến trúc mà triệu chứng không đổi một chút nào** — không phải "đỡ
+hơn", mà y hệt. Đó không phải sửa chưa đủ; đó là bằng chứng mình đang sửa một phần không nằm
+trên đường đi của lỗi. Lúc ấy việc đúng là đọc ngược từ PIXEL ra: dòng nào thật sự sinh ra
+hình này? Chứ không phải chỉnh tiếp thứ mình đang chỉnh.
+
+Hệ quả kèm theo, đáng nhớ riêng: lượt trước tôi dập "khèo" bằng cách **chia đôi mọi góc
+khuỷu**. Khèo vẫn còn (vì sai chỗ), nhưng mười cử chỉ dẹt thành một — khoanh tay không khoanh,
+chống hông không chống. **Chữa lỗi A bằng cách phá tính năng B, rồi lỗi A vẫn còn.** Khi một
+bản sửa làm giảm biên độ/khả năng của hệ để triệu chứng bớt lộ, gần như chắc chắn nó sai chỗ.
+
+### 30/8 — Cổng chấm 100/100 cho khung hình hỏng rõ ràng
+
+Bộ mười video được chấm 95–100 và tôi suýt gửi anh duyệt. Trích một khung ra nhìn thì thấy
+nguyên si lỗi anh đã chửi ba lần. **Cổng nội dung đọc chữ và đo nhịp; nó mù hoàn toàn về hình.**
+Điểm cao của nó không nói gì về việc khung hình có xem được không.
+
+Quy tắc: **trước khi gửi bất cứ bộ video nào cho anh duyệt, phải TRÍCH KHUNG RA NHÌN.** Không
+có ngoại lệ, không thay bằng điểm số. Và soi trên **nền trơn** (bảng tư thế) chứ không chỉ trên
+video màu — nền màu và bối cảnh che lỗi hình thể rất giỏi.
+
+### 30/8 — Cổng đo sai chế độ thì mọi kết luận từ nó đều sai
+
+Bảng tư thế đặt `kyHieu=false`, tức dựng chế độ người-dẫn vốn CỐ Ý ghim tay trong tầm ngực,
+trong khi kênh hài chạy `kyHieu=true`. Tôi nhìn bảng, thấy "gio_len không giơ", và suýt sửa một
+bảng số đã đúng.
+
+Đây là lần thứ **năm** trong một phiên một cổng tôi tự viết tố oan code lành (trước đó: cột
+chưa sắp xếp, "m" là mét không phải triệu, tên công ty bị coi là mảnh câu, bảng tư thế dựng ở
+t=0). **Khi cổng báo lỗi, việc đầu tiên là kiểm cổng — không phải kiểm code bị tố.**
