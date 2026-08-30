@@ -251,9 +251,16 @@ def cham_mot(k: dict) -> dict:
         break
 
     # ── 10đ ĐỘ DÀI + LOGIC BỐI CẢNH ────────────────────────────────────────────────────
-    if not (15 <= dur <= 60):
+    # 30/8 — BỎ SÀN 15 GIÂY. Nó là con số TÔI TỰ ĐẶT, không phải luật của nền tảng: YouTube
+    # Shorts không có độ dài tối thiểu. Và cái sàn tự đặt ấy đã kéo cả hệ thống đi sai — để đạt
+    # nó, tôi cho nhịp đuôi giãn tới 5 giây, tức thêm 5 giây CHẾT HÌNH vào cuối mỗi video.
+    # Anh xem và bắt ngay: "đoạn cuối đang bị hơi dài ko có ý nghĩa".
+    # Một cây thước đặt sai làm sản phẩm xấu đi mà bảng điểm lại đẹp lên — nguy hiểm hơn nhiều so
+    # với không đo gì cả. Nay chỉ chặn trần 60 giây (đây mới là luật thật của nền tảng) và chặn
+    # sàn 8 giây (dưới mức ấy thì một cú va + một cú chốt không kịp diễn ra).
+    if not (8 <= dur <= 60):
         diem -= 5
-        loi.append(f"dài {dur:.0f}s — ngoài khoảng short 15–60s")
+        loi.append(f"dài {dur:.0f}s — ngoài khoảng 8–60s")
     # 30/8 — ĐỔI HẲN PHÉP ĐO NÀY. Bản cũ đòi "ít nhất ba nền phân biệt" trong MỘT video, tức là
     # tôi đã viết một cây thước CHẤM ĐIỂM CAO CHO LỖI: anh bắt đúng chỗ ấy — "bối cảnh phải liên
     # quan lời nói hành động, ko phải đang ở trong nhà nhảy qua ra ngoài đường". Một cuộc hội

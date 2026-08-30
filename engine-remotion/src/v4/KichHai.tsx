@@ -266,7 +266,22 @@ export const KichHai: React.FC<PropsHai> = ({
   // Trong hài hình ảnh, thứ báo cho khán giả "chỗ này buồn cười" không phải tiếng cười lồng mà
   // là PHẢN ỨNG của người trên màn hình. Cho nó bắt đầu trễ 0,35 giây so với đầu lượt chốt —
   // đúng nhịp một người nghe xong mới kịp hiểu.
-  const _giatNghe = L.chot ? kep((giay - L.s - 0.35) / 1.6) : 0;
+  // CÚ GIẬT MÌNH PHẢI NỔ ĐÚNG LÚC MÁY CẮT SANG. Bản trước tính từ đầu lượt chốt + 0,35 giây,
+  // nên tới lúc máy quay sang người nghe thì cú giật đã tắt từ lâu — máy cắt sang một khuôn mặt
+  // đứng yên. Mốc đúng là thời điểm câu chốt VỪA DỨT, tức chỗ bắt đầu nhịp đuôi.
+  const _giatNghe = L.chot ? kep((giay - (L.e - 1.25)) / 1.5) : 0;
+
+  // ══ HOOK HÌNH ẢNH 1,4 GIÂY ĐẦU ══════════════════════════════════════════════════════
+  // 30/8 — Bộ 500 prompt anh gửi ghi rõ nhịp mở của mỗi tập:
+  //   *"0.0–1.5s: Use a quick wide shot, then a close-up on the final facial reaction.
+  //     Establish the comedic situation immediately with a clear visual hook."*
+  // Bản của mình mở bằng hai người đứng yên rồi bắt đầu nói — không có hook nào cả, và khán giả
+  // lướt short quyết định đúng trong quãng ấy.
+  // Nên 1,4 giây đầu: máy quay TIẾN VÀO (từ rộng hơn về cỡ đã định) và người nói NHÚN người một
+  // nhịp. Hai chuyển động rất nhỏ, nhưng chúng làm khung "đang xảy ra chuyện" thay vì "đang chờ".
+  const _hook = kep(1 - giay / 1.4);
+  const hookZoom = 1 - _hook * 0.16;
+  const hookNhun = Math.sin(kep(giay / 0.55) * Math.PI) * 0.4;
 
   // 30/8 — ĐO ĐƯỢC: nhân vật chỉ chiếm ~30% chiều cao khung. Trên điện thoại thì mặt bé đến
   // mức không đọc được nét mặt, mà cú chốt của hài nằm ở nét mặt. Short phải đóng cận: người
@@ -280,7 +295,7 @@ export const KichHai: React.FC<PropsHai> = ({
   const KH = doc
     ? { rong: 1.25, trung: 1.68, can: 3.6 }
     : { rong: 0.84, trung: 1.06, can: 2.2 };
-  const zoom = (KH[L.co || "trung"] || 1.68) * (1 + truocChot * 0.05);
+  const zoom = (KH[L.co || "trung"] || 1.68) * (1 + truocChot * 0.05) * hookZoom;
   // ══ CỠ CẬN NEO VÀO ĐẦU, HAI CỠ KIA NEO VÀO CHÂN ═════════════════════════════════════
   // Neo mọi cỡ vào chân là lý do "cận cảnh" của bản trước vẫn ra TOÀN THÂN: giữ chân đứng yên
   // thì phóng to bao nhiêu người cũng chỉ dài thêm xuống dưới, đầu bay khỏi khung trước khi mặt
@@ -304,8 +319,30 @@ export const KichHai: React.FC<PropsHai> = ({
   // thì theo định nghĩa chỉ có MỘT người — người đang nói. Máy quay dịch ngang để đưa người ấy
   // vào giữa khung, và cú chốt vì thế rơi đúng vào một khuôn mặt chiếm gần hết màn hình.
   const _canhCan = (L.co || "trung") === "can";
-  const _tamNguoi = noiA_ ? xA : xB;
-  const liaVao = _canhCan ? -_tamNguoi * muot(kep((giay - L.s) / 0.28)) : 0;
+
+  // ══ CẮT CẢNH PHẢN ỨNG — máy quay bỏ người nói, quay sang NGƯỜI NGHE ═════════════════
+  // 30/8 — Đo trên khung thật: ở cú chốt, máy đang cận vào người NÓI (đúng, họ đang nói câu
+  // chốt) — nhưng thứ buồn cười là PHẢN ỨNG của người NGHE, mà người nghe thì đã bị đẩy hẳn ra
+  // ngoài khung. Nên cú chốt nổ ở một chỗ không ai nhìn thấy.
+  //
+  // Bộ 500 prompt anh gửi ghi đúng cách làm, ngay ở dòng nhịp đầu tiên của mọi tập:
+  //   *"a quick wide shot, then a CLOSE-UP ON THE FINAL FACIAL REACTION"*.
+  // Đó là "reaction cut" — cắt sang mặt người nghe ngay sau khi câu chốt rơi. Trong hài, nó là
+  // cú đánh thứ hai, và thường là cú làm người ta bật cười chứ không phải câu nói.
+  //
+  // Nhịp đuôi dài 1,2 giây; cắt sang người nghe khi vào quãng ấy.
+  // Ở nhịp phản ứng, người NGHE mới là người diễn — `dangNoi` phải trả lại đủ biên độ cho họ,
+  // không thì máy cắt sang một pho tượng. (Chú thích để ở đây, KHÔNG để giữa các thuộc tính JSX:
+  // `{/* */}` xen giữa thuộc tính là lỗi cú pháp — đã dính bốn lần, xem luật 7t.)
+  const _phanUng = !!L.chot && giay > L.e - 1.25;
+  const _aiTrungTam = _phanUng ? !noiA_ : noiA_;
+  const _tamNguoi = _aiTrungTam ? xA : xB;
+  // Khi cắt sang người nghe thì lia RẤT nhanh (0,12 giây) — cắt cảnh trong hài phải dứt khoát,
+  // lia chậm biến một cú cắt thành một cú trượt và mất hết sức nặng.
+  const liaVao = _canhCan
+    ? -_tamNguoi * muot(kep(_phanUng ? (giay - (L.e - 1.25)) / 0.12 : (giay - L.s) / 0.28))
+      - (_phanUng ? 0 : 0)
+    : 0;
   const lia = liaNhe * (_canhCan ? 0.4 : 1) + liaVao;
 
   const _cao = Math.round(1000 * (height / width));
@@ -387,14 +424,16 @@ export const KichHai: React.FC<PropsHai> = ({
           <DienVienHai kieu={A} camXuc={(noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
-                    nhan={noiA_ ? noiA.h : 0} nghieng={nghiengA} buoc={buocA}
-                    giat={noiA_ ? 0 : _giatNghe} dangNoi={noiA_} doVat={vatA}
+                    nhan={(noiA_ ? noiA.h : 0) + (noiA_ ? hookNhun : 0)} nghieng={nghiengA} buoc={buocA}
+                    giat={noiA_ ? 0 : _giatNghe}
+                    dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={vatA}
                     x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
-                    nhan={!noiA_ ? noiB.h : 0} nghieng={nghiengB} buoc={buocB}
-                    giat={!noiA_ ? 0 : _giatNghe} dangNoi={!noiA_} doVat={vatB}
+                    nhan={(!noiA_ ? noiB.h : 0) + (!noiA_ ? hookNhun : 0)} nghieng={nghiengB} buoc={buocB}
+                    giat={!noiA_ ? 0 : _giatNghe}
+                    dangNoi={!noiA_ || (_phanUng && noiA_)} doVat={vatB}
                     x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
         </g>
 

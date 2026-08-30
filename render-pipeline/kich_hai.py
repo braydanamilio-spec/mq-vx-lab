@@ -1187,14 +1187,20 @@ def main() -> int:
             # NHỊP ĐUÔI SAU CÚ CHỐT — sau câu chốt là một quãng không ai nói gì, chỉ còn nét mặt
             # người nghe. Trong hài, tiếng cười rơi vào đúng quãng ấy; cắt phim ngay ở từ cuối là
             # cắt mất chỗ khán giả cười.
-            # NHỊP ĐUÔI TỰ CO GIÃN.
-            # Sau khi cắt đệm im lặng của bộ đọc (xem `_cat_lang`), lời thoại ngắn đi chừng sáu
-            # giây — nhịp chặt hơn hẳn, nhưng vài kênh vì thế tụt xuống dưới sàn 15 giây của
-            # short. Kéo dài lời thoại để bù là đi ngược cái vừa sửa; kéo dài NHỊP ĐUÔI thì không:
-            # đó vốn là quãng người nghe phản ứng, và phản ứng dài thêm một nhịp còn buồn cười hơn.
-            # Sàn 2,2 giây (đủ cho cú giật mình chạy hết), trần 5 giây (dài hơn thì thành chết hình).
-            _duoi = min(5.0, max(2.2, 17.5 - dur))
-            luot[-1]["e"] = round(max(luot[-1]["e"], dur) + _duoi, 2)
+            # ══ NHỊP ĐUÔI CỐ ĐỊNH 1,2 GIÂY — KHÔNG CO GIÃN NỮA ══════════════════════════
+            # 30/8, sửa lần hai. Anh: *"đoạn cuối clip đang bị hơi dài ko có ý nghĩa, nhân vật
+            # đứng yên"*. Đúng, và đây là lỗi TÔI TỰ TẠO RA: bản trước cho nhịp đuôi giãn tới
+            # 5 giây để bù độ dài cho đủ "sàn 15 giây của short".
+            #
+            # Cái sàn ấy là thứ CHÍNH TÔI BỊA RA. YouTube Shorts không có độ dài tối thiểu; tôi
+            # viết 15 giây vào `cham_v4` rồi sau đó kéo dài phim để chiều con số của chính mình.
+            # Đó là **tối ưu cho cây thước thay vì cho người xem** — loại sai lầm tệ nhất, vì nó
+            # làm sản phẩm xấu đi mà bảng điểm lại đẹp lên.
+            #
+            # Nhịp đuôi thật chỉ cần đủ cho cú giật mình chạy hết: 1,2 giây. Dài hơn là chết hình,
+            # và trên Shorts (phát lặp vô hạn) thì mỗi vòng lặp khán giả phải ngồi qua đúng quãng
+            # trống ấy trước khi được nghe lại câu mở.
+            luot[-1]["e"] = round(max(luot[-1]["e"], dur) + 1.2, 2)
 
         # 30/8 — ÉP HAI NGƯỜI KHÁC BÓNG DÁNG.
         # Mười kiểu gốc khác nhau ở tóc và màu áo, nhưng vài kiểu cùng đeo kính và cùng để ria:

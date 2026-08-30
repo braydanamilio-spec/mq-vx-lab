@@ -139,6 +139,14 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // phản ứng — nhanh vào, chậm ra, có dư chấn.
   const gt = kep(giat);
   const bat = gt > 0 ? Math.exp(-gt * 3.2) * Math.sin(gt * 13) : 0;
+  // 30/8, sửa lần hai. Anh: *"a xem clip e làm a chưa thấy sự hài hước"*.
+  // Bản trước cú giật mình chỉ làm mắt to thêm 50% và đầu lùi 14 điểm — quá nhẹ để mắt bắt được
+  // ở cỡ khung điện thoại. Trong hoạt hình Mỹ, phản ứng ở cú chốt là thứ TO NHẤT của cả phim:
+  // mắt lồi gấp đôi, HÀM RƠI, người bật ngửa, và đồ vật đang cầm thì tuột khỏi tay.
+  // Đây là chỗ khán giả BIẾT là phải cười. Không có nó thì câu chốt trôi qua như mọi câu khác,
+  // dù lời hay đến đâu: trò đùa bằng chữ phải ĐỌC mới hiểu, phản ứng bằng hình thì thấy ngay.
+  // `noNo` là đường bao của cả cú giật: bật rất nhanh (0,11 giây) rồi tắt trong khoảng 1,5 giây.
+  const noNo = gt > 0 ? Math.exp(-gt * 2.0) * Math.min(1, gt * 9) : 0;
   // ══════════════════════════════════════════════════════════════════════════════════════
   // AI ĐANG NÓI THÌ NGƯỜI ẤY DIỄN — NGƯỜI KIA GIỮ TƯ THẾ
   // --------------------------------------------------------------------------------------
@@ -320,21 +328,23 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // của hoạt hình truyền hình là hai mắt chiếm chừng 60–65% bề ngang đầu.
   // Mắt bầu dục ĐỨNG nên bề ngang hẹp hơn bản mắt-tròn cũ, và hai mắt gần nhau hơn để hợp với
   // sọ quả lê (chỗ rộng nhất nằm ngang tầm mắt, không ở giữa mặt).
-  const rMat = 11.5 * matTo * (1 + gt * 0.5 * Math.exp(-gt * 2.4));
+  const rMat = 11.5 * matTo * (1 + noNo * 0.82);
   const rTrong = 6.4 * matTo;
   const mm = 1 - chop;
   const cachMat = 17 * matTo;
   const yMat = -8;
-  const yMay = yMat - 20 - E.mayCao;
+  const yMay = yMat - 20 - E.mayCao - noNo * 10;
 
   // Miệng: bề ngang và bề cao lấy thẳng từ khẩu hình, cộng độ cong khoé môi theo cảm xúc.
   const mW = trn(26, 46, noi.w) * (1 + camV * 0.05);
-  const mH = trn(2.5, 34, noi.h);
+  // HÀM RƠI — miệng mở to bất kể khẩu hình đang là gì. Cưỡng bức như vậy là đúng: ở khoảnh khắc
+  // sững người, cái miệng không còn phát âm nữa, nó chỉ há ra.
+  const mH = Math.max(trn(2.5, 34, noi.h), noNo * 40);
   const khoe = E.khoe * 9;
   const yMieng = 26;
 
   return (
-    <g transform={`translate(${x} ${y}) rotate(${lat ? -nghieng * 0.4 : nghieng * 0.4} 0 0) scale(${(lat ? -scale : scale) * sx} ${scale * sy})`}>
+    <g transform={`translate(${x} ${y}) rotate(${(lat ? -1 : 1) * (nghieng * 0.4 - noNo * 7)} 0 0) scale(${(lat ? -scale : scale) * sx} ${scale * sy})`}>
       {/* BÓNG TIẾP ĐẤT — thiếu nó thì nhân vật lơ lửng dù đứng đúng chỗ. Bóng co giãn ngược
           chiều nén–giãn: người nhún xuống thì bóng loe ra. */}
       <ellipse cx={0} cy={2} rx={62 * ngang * (1 + nen * 2)} ry={11} fill="#00000026" />
@@ -380,7 +390,15 @@ export const DienVienHai: React.FC<PropsHai> = ({
       {/* TAY TRƯỚC (bên phải) — vẽ sau thân nên nằm trước ngực */}
       {chi(`M ${vaiP[0]} ${vaiP[1]} Q ${khuyuP[0]} ${khuyuP[1]} ${tayP[0]} ${tayP[1]}`, aoTruoc, 23 * ngang, "tP")}
       {ban(tayP, gocVP + gocKP, "bP")}
-      {doVat ? <DoVat ten={doVat} p={tayP} goc={gocVP + gocKP} V={V} NT={NT} /> : null}
+      {/* ĐỒ VẬT TUỘT KHỎI TAY ở cú chốt — trò đùa hình thể cổ điển nhất, và nó nói đúng thứ mà
+          lời thoại vừa nói: "tôi không tin nổi". Rơi theo gia tốc (bình phương thời gian) và xoay
+          chậm, đúng như một vật rơi thật. */}
+      {doVat ? (
+        <g transform={`translate(0 ${noNo > 0.06 ? Math.pow(gt, 2) * 190 : 0}) rotate(${noNo > 0.06 ? gt * 130 : 0} ${tayP[0]} ${tayP[1]})`}
+           opacity={gt > 0.85 ? 0 : 1}>
+          <DoVat ten={doVat} p={tayP} goc={gocVP + gocKP} V={V} NT={NT} />
+        </g>
+      ) : null}
 
       {/* CỔ — bản đầu vẽ quá ngắn nên đầu dính thẳng vào vai, đọc ra là một khối. Cổ phải
           THẤY ĐƯỢC thì đầu mới quay được một cách có nghĩa. */}

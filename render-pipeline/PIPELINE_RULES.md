@@ -4501,3 +4501,53 @@ bằng số trong `cham_v4`, kể cả giữa hai bộ.
 **Bài học:** khi anh nói "chưa khác nhau", đừng vội thêm biến thể vào trục ĐANG CÓ. Hỏi trước:
 *trục này có phải là chỗ mắt người nhìn vào để phân biệt không?* Bốn trục dáng người là câu trả
 lời sai cho câu hỏi về khuôn mặt.
+
+### 7aq. TÔI TỰ BỊA RA MỘT CÁI SÀN RỒI KÉO DÀI PHIM ĐỂ CHIỀU NÓ — 30/8/2026
+
+Anh: *"đoạn cuối clip đang bị hơi dài ko có ý nghĩa, nhân vật đứng yên"*.
+
+Đúng, và đây là lỗi **tôi tự tạo ra theo một chuỗi**:
+1. viết vào `cham_v4` rằng short phải dài **15–60 giây**;
+2. sau đó cắt đệm im lặng của bộ đọc (7ak) làm phim ngắn đi sáu giây;
+3. vài kênh tụt dưới 15 giây → **cho nhịp đuôi giãn tới 5 giây để bù**;
+4. kết quả: mỗi video có tới **5 giây chết hình** ở cuối, mà bảng điểm thì 100/100.
+
+**Cái sàn 15 giây là con số tôi tự đặt** — YouTube Shorts không có độ dài tối thiểu. Nghĩa là tôi
+đã **tối ưu cho cây thước thay vì cho người xem**, và cây thước ấy do chính tôi viết ra.
+
+Đây là dạng sai lầm nguy hiểm nhất trong cả hệ thống này: một phép đo đặt sai **làm sản phẩm xấu
+đi trong khi bảng điểm đẹp lên**, nên không có tín hiệu nào báo động. Nguy hiểm hơn hẳn việc
+không đo gì cả.
+
+**Sửa:** nhịp đuôi cố định **1,2 giây** (vừa đủ cho cú giật mình chạy hết), và cây thước chỉ còn
+chặn trần 60 giây (luật thật của nền tảng) với sàn 8 giây (dưới đó thì một cú va + một cú chốt
+không kịp diễn ra). Trên Shorts phát lặp vô hạn, mỗi giây chết hình là mỗi vòng lặp khán giả
+phải ngồi qua trước khi được nghe lại câu mở.
+
+**Quy tắc:** trước khi tối ưu để đạt một con số, hỏi *"con số này từ đâu ra — luật của nền tảng,
+số đo từ khán giả, hay do chính tôi gõ vào?"* Nếu là loại thứ ba thì phải xét lại chính nó trước.
+
+### 7ar. HÀI PHẢI THẤY ĐƯỢC, KHÔNG PHẢI ĐỌC ĐƯỢC
+
+Anh: *"a xem clip e làm a chưa thấy sự hài hước hay ko hình dung được sự hài hước"*.
+
+Kịch bản của mình là đối đáp chữ nghĩa — nó buồn cười khi ĐỌC, nhưng khán giả lướt short thì
+XEM. Ba thứ đã thêm, đều lấy từ chính bộ 500 prompt anh gửi:
+
+1. **Hook hình ảnh 1,4 giây đầu.** Bộ prompt ghi: *"0.0–1.5s… establish the comedic situation
+   immediately with a clear visual hook"*. Bản cũ mở bằng hai người đứng yên rồi bắt đầu nói.
+   Nay máy quay tiến vào và người nói nhún một nhịp — hai chuyển động rất nhỏ, đủ để khung đọc ra
+   là "đang xảy ra chuyện" thay vì "đang chờ".
+2. **Phản ứng ở cú chốt phải TO NHẤT phim.** Bản cũ chỉ làm mắt to thêm 50% — quá nhẹ để mắt bắt
+   ở cỡ khung điện thoại. Nay: mắt lồi, **HÀM RƠI** (miệng há bất kể khẩu hình), lông mày bật
+   lên, người bật ngửa, và **đồ vật đang cầm tuột khỏi tay** (rơi theo gia tốc, xoay chậm).
+3. **Cắt cảnh phản ứng.** Bộ prompt ghi: *"then a CLOSE-UP ON THE FINAL FACIAL REACTION"*. Ở cú
+   chốt, máy đang cận vào người NÓI — nhưng thứ buồn cười là mặt người NGHE, mà người nghe đã bị
+   đẩy ra ngoài khung. Nay khi câu chốt vừa dứt, máy **cắt dứt khoát** (0,12 giây) sang mặt người
+   nghe. Trong hài, đó là cú đánh thứ hai — và thường là cú làm người ta bật cười, chứ không phải
+   câu nói.
+
+**Và hai thứ phải khớp nhau về thời điểm:** cú giật mình từng tính từ đầu lượt chốt, nên tới lúc
+máy cắt sang thì nó đã tắt — máy cắt sang một khuôn mặt đứng yên. Mốc đúng là **thời điểm câu
+chốt vừa dứt**. Cùng lúc đó, người nghe phải được trả lại đủ biên độ diễn (`dangNoi`), không thì
+cắt sang một pho tượng.
