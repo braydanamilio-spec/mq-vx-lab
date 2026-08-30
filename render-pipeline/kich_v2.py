@@ -168,7 +168,13 @@ def lay_so_lieu(nguon: str, D):
             if n:
                 gom[nh] = n
         ds = sorted(gom.items(), key=lambda z: -z[1])[:6]
-        if len(ds) < 3 or len({v for _, v in ds}) < 3:
+        # 30/8 — CỬA ẢI 3 → 4 MỤC. Cây thước `cham_v3` trừ điểm khi bảng có dưới BỐN mục ("bảng
+        # bốn cột không đủ chỗ so sánh"), nhưng cửa ải ở đây chỉ đòi BA — nên hệ thống tự cho qua
+        # đúng thứ mà chính nó chấm là hỏng, rồi SUED IN AMERICA ra 77 điểm.
+        # Hai con số này phải khớp nhau: cửa ải ở tầng dữ liệu là chỗ quyết định BỎ LƯỢT, còn cây
+        # thước chỉ đo cái đã lỡ ra. Thà không ra video còn hơn ra một bảng ba cột phẳng.
+        if len(ds) < 4 or len({v for _, v in ds}) < 3:
+            print(f"   ⚠️ {nguon}: chỉ {len(ds)} mục có số (nguồn toà đang chặn nhịp) — BỎ LƯỢT")
             return None
         return (("Rights argued in court" if nguon == "toa_quyen" else "What Americans sue over"),
                 [(k, v, _so(v)) for k, v in ds], "CourtListener")
@@ -219,11 +225,22 @@ def lay_so_lieu(nguon: str, D):
             dau = sum(x["gia_tri"] for x in r[:12]) / 12
             nay = sum(x["gia_tri"] for x in r[-12:]) / 12
             if dau > 0:
-                ds.append((ten, round(nay / dau * 100), f"{nay / dau * 100:,.0f}"))
+                # 30/8 — ĐO PHẦN TRĂM TĂNG, KHÔNG ĐO CHỈ SỐ.
+                # Cây thước vẫn bắt "cột cao nhất chỉ gấp 1,2 lần cột thấp nhất" dù đã đổi từ
+                # chỉ-số-theo-năm sang so-các-nhóm-chi. Lý do: chỉ số CPI đều bắt đầu từ 100, nên
+                # một nhóm tăng 130% và một nhóm tăng 5% ra 230 và 105 — chênh nhau 2,2 lần trên
+                # giấy nhưng chỉ 1,2 lần khi vài nhóm rơi rụng vì thiếu dữ liệu.
+                # Bỏ đi cái gốc 100 ấy thì thành 130 và 5 — chênh HAI MƯƠI SÁU lần, và mắt thấy
+                # ngay. Cùng một dữ liệu, chỉ khác chỗ đặt gốc.
+                # Và nó ĐÚNG HƠN về thông tin: câu hỏi của kênh là "giá tăng bao nhiêu", không
+                # phải "chỉ số hiện là bao nhiêu" — chỉ số là thứ không ai đọc ra ý nghĩa.
+                _tang = nay / dau * 100 - 100
+                if _tang > 0:
+                    ds.append((ten, round(_tang, 1), f"+{_tang:,.0f}%"))
         if len(ds) < 4:
             return None
         ds.sort(key=lambda z: -z[1])
-        return ("Prices since 2000, same starting line",
+        return ("How much prices rose since 2000",
                 [(a, float(b), c) for a, b, c in ds[:6]],
                 "U.S. Bureau of Labor Statistics")
     if nguon == "fdic":
@@ -319,7 +336,13 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
              "Everything here is public. Most people never look.",
              "One search and you can prove me wrong."][_k]
     cau = [
-        (_mo, "bat_ngo", "chi", "can", [0.2, -0.12]),
+        # 30/8 — CẢNH MỞ DÙNG CỠ RỘNG, KHÔNG DÙNG CỠ CẬN.
+        # Sau khi chuyển sang bố cục người-dẫn-ở-góc, cảnh mở khai "can" làm nhân vật to nhất
+        # phim ngay giây đầu và tràn hẳn mép trái — đo được trên khung mở FINE PRINT: mất một
+        # phần ba khuôn mặt. Và nó còn sai về kể chuyện: giây đầu là lúc người xem cần thấy MÌNH
+        # ĐANG Ở ĐÂU, tức là lúc cần thấy bối cảnh nhiều nhất, chứ không phải lúc soi vào mặt.
+        # Cỡ cận để dành cho câu chốt — chỗ cần nét mặt.
+        (_mo, "bat_ngo", "mo_tay", "rong", [0.2, -0.12]),
         (k["hoi"], "nghi_ngo", "mo_tay", "trung", [0, 0]),
         # 29/8 — CẢNH CÓ BIỂU ĐỒ THÌ TAY PHẢI Ở TRONG NGƯỜI. Khung thật: cử chỉ "chỉ" duỗi tay
         # sang phải và cắt ngang tấm biểu đồ, nhìn ra là hai lớp chồng nhau chứ không ra là người

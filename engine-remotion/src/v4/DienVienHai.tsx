@@ -119,7 +119,16 @@ export const DienVienHai: React.FC<PropsHai> = ({
   x = 0, y = 0, scale = 1, lat = false,
 }) => {
   const E = CAM_XUC[camXuc] || CAM_XUC.trung_tinh;
-  const G = CU_CHI_HAI[cuChi as string] || CU_CHI[cuChi] || CU_CHI.nghi;
+  // ══ CỬ CHỈ GIỚI HẠN TRONG VÙNG NGỰC KHI LÀM NGƯỜI DẪN ═══════════════════════════════
+  // 30/8 — Anh gửi khung có tay giơ cao che mất thẻ số ở đỉnh video. Trong bố cục người-dẫn-ở-góc,
+  // mọi thứ phía trên đầu là CHỖ CỦA CHỮ (tiêu đề, thẻ số), nên tay tuyệt đối không được vào đó.
+  // Chặn ngay tại bảng thay vì đi vá từng chỗ dùng: đổi mọi cử chỉ hướng-lên thành cử chỉ ngang
+  // tầm ngực. Nhân vật vẫn "nói bằng tay", chỉ là nói trong vùng của mình.
+  const _GHIM_NGUC: Record<string, TenCuChi> = {
+    chi: "dem", gio_len: "dem", mo_tay: "mo_tay", nhun_vai: "mo_tay",
+  };
+  const _cc = (kyHieu ? cuChi : (_GHIM_NGUC[cuChi as string] || cuChi)) as string;
+  const G = CU_CHI_HAI[_cc] || CU_CHI[_cc as TenCuChi] || CU_CHI.nghi;
   const cao = kieu.cao ?? 1;
   const ngang = kieu.beNgang ?? 1;
   const matTo = kieu.matTo ?? 1;
@@ -383,6 +392,71 @@ export const DienVienHai: React.FC<PropsHai> = ({
       {kieu.caVat ? (
         <path d={`M ${vai[0] - 8} ${vai[1] + 26} L ${vai[0] + 8} ${vai[1] + 26} L ${vai[0] + 5} ${vai[1] + 78} L ${vai[0]} ${vai[1] + 86} L ${vai[0] - 5} ${vai[1] + 78} Z`}
               fill={kieu.caVat} stroke={V} strokeWidth={NT} strokeLinejoin="round" />
+      ) : null}
+      {/* ══ TRANG PHỤC NGHỀ ═══════════════════════════════════════════════════════════
+          30/8 — Anh: *"nhân vật chuẩn usa, chuẩn phong cách của niche đó — kênh tài chính thì
+          là chuyên gia tài chính, kênh luật thì là chuyên gia luật"*.
+          Trước bản này con rối chỉ vẽ được cà vạt và thẻ đeo; mọi nghề khác mặc đúng một cái áo
+          cổ chữ V trơn. Và sau khi chuyển sang bố cục người-dẫn-ở-góc (cắt ngang hông), phần
+          thấy được chỉ còn ĐẦU · VAI · NGỰC — nghĩa là trang phục phần trên là thứ DUY NHẤT nói
+          lên nghề. Áo trơn ở đó thì mười kênh thành mười người vô danh mặc mười màu áo.
+          Năm bộ dưới đây phủ hết mười kênh dữ liệu, và mỗi bộ đọc ra nghề trong một phần mười
+          giây — trước cả dòng chữ đầu tiên. */}
+      {kieu.phuKien === "ve_vest" ? (
+        <g>
+          {/* ve áo vest — hai mảng chếch từ vai xuống ngực, màu sẫm hơn áo */}
+          <path d={`M ${vai[0] - 22} ${vai[1] + 2} L ${vai[0] - 2} ${vai[1] + 40}
+                    L ${vai[0] - 4} ${vai[1] + 96} L ${vai[0] - 42} ${vai[1] + 40} Z`}
+                fill={_sang(ao, 0.72)} stroke={V} strokeWidth={NT * 1.2} strokeLinejoin="round" />
+          <path d={`M ${vai[0] + 22} ${vai[1] + 2} L ${vai[0] + 2} ${vai[1] + 40}
+                    L ${vai[0] + 4} ${vai[1] + 96} L ${vai[0] + 42} ${vai[1] + 40} Z`}
+                fill={_sang(ao, 0.72)} stroke={V} strokeWidth={NT * 1.2} strokeLinejoin="round" />
+        </g>
+      ) : null}
+      {kieu.phuKien === "ao_blouse" ? (
+        <g>
+          {/* áo blouse — vạt trắng hai bên, có túi ngực. Nghề y và nghề nghiên cứu. */}
+          <path d={`M ${vai[0] - 26} ${vai[1] + 4} L ${vai[0] - 6} ${vai[1] + 42}
+                    L ${vai[0] - 8} ${vai[1] + 108} L ${vai[0] - 48} ${vai[1] + 100} Z`}
+                fill="#F7F9FC" stroke={V} strokeWidth={NT * 1.2} strokeLinejoin="round" />
+          <path d={`M ${vai[0] + 26} ${vai[1] + 4} L ${vai[0] + 6} ${vai[1] + 42}
+                    L ${vai[0] + 8} ${vai[1] + 108} L ${vai[0] + 48} ${vai[1] + 100} Z`}
+                fill="#F7F9FC" stroke={V} strokeWidth={NT * 1.2} strokeLinejoin="round" />
+          <rect x={vai[0] + 16} y={vai[1] + 52} width={22} height={18} rx={2}
+                fill="none" stroke={V} strokeWidth={NT} opacity={0.6} />
+        </g>
+      ) : null}
+      {kieu.phuKien === "ong_nghe" ? (
+        <g fill="none" stroke="#3B4250" strokeWidth={NT * 2.2} strokeLinecap="round">
+          {/* ống nghe quàng cổ */}
+          <path d={`M ${vai[0] - 20} ${vai[1] + 2} Q ${vai[0] - 30} ${vai[1] + 62} ${vai[0] - 12} ${vai[1] + 78}`} />
+          <path d={`M ${vai[0] + 20} ${vai[1] + 2} Q ${vai[0] + 30} ${vai[1] + 58} ${vai[0] + 16} ${vai[1] + 70}`} />
+          <circle cx={vai[0] - 12} cy={vai[1] + 84} r={9} fill="#9AA3AD" stroke={V} strokeWidth={NT} />
+        </g>
+      ) : null}
+      {kieu.phuKien === "no_buom" ? (
+        <g>
+          {/* nơ bướm — luật sư trẻ, kiến trúc sư, người dẫn chương trình */}
+          <path d={`M ${vai[0] - 22} ${vai[1] + 20} l 16 -9 l 0 22 Z`}
+                fill={kieu.caVat || "#8A2F3C"} stroke={V} strokeWidth={NT} strokeLinejoin="round" />
+          <path d={`M ${vai[0] + 22} ${vai[1] + 20} l -16 -9 l 0 22 Z`}
+                fill={kieu.caVat || "#8A2F3C"} stroke={V} strokeWidth={NT} strokeLinejoin="round" />
+          <rect x={vai[0] - 5} y={vai[1] + 15} width={10} height={12} rx={3}
+                fill={_sang(kieu.caVat || "#8A2F3C", 0.75)} stroke={V} strokeWidth={NT} />
+        </g>
+      ) : null}
+      {kieu.phuKien === "ao_choang" ? (
+        <g>
+          {/* áo choàng toà — vạt đen rộng, cổ trắng. Thẩm phán, công tố viên. */}
+          <path d={`M ${vai[0] - 30} ${vai[1] + 2} L ${vai[0] - 8} ${vai[1] + 44}
+                    L ${vai[0] - 10} ${vai[1] + 116} L ${vai[0] - 54} ${vai[1] + 108} Z`}
+                fill="#1E2028" stroke={V} strokeWidth={NT * 1.2} strokeLinejoin="round" />
+          <path d={`M ${vai[0] + 30} ${vai[1] + 2} L ${vai[0] + 8} ${vai[1] + 44}
+                    L ${vai[0] + 10} ${vai[1] + 116} L ${vai[0] + 54} ${vai[1] + 108} Z`}
+                fill="#1E2028" stroke={V} strokeWidth={NT * 1.2} strokeLinejoin="round" />
+          <path d={`M ${vai[0] - 11} ${vai[1] + 22} l 22 0 l -3 34 l -16 0 Z`}
+                fill="#FFFFFF" stroke={V} strokeWidth={NT} strokeLinejoin="round" />
+        </g>
       ) : null}
       {kieu.phuKien === "the_deo" ? (
         <g>

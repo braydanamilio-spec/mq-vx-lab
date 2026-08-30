@@ -46,9 +46,15 @@ const KHUNG: Record<CoCanh, { x: number; y: number; z: number }> = {
   // Con rối cao ~420 đơn vị × 1.75 = 735; nó trải từ y=236 (gót) tới y=-499 (đỉnh đầu), tâm ở
   // khoảng -130. Đặt máy quay đúng tâm ấy thì nhân vật nằm giữa khung, không bị cụt đầu cũng
   // không lọt thỏm — hai lỗi đã lần lượt xảy ra ở hai lượt render trước.
-  rong: { x: 0, y: -100, z: 0.8 },       // thấy cả bối cảnh
-  trung: { x: 0, y: -130, z: 1.0 },      // thấy nửa người + cử chỉ tay
-  can: { x: 0, y: -330, z: 1.5 },        // thấy mặt: mắt, chân mày, khoé miệng
+  // 30/8 — DẢI ZOOM SIẾT HẲN sau khi chuyển sang bố cục người-dẫn-ở-góc.
+  // Trong bố cục cũ (toàn thân, giữa khung) thì zoom 0,8–1,5 là hợp lý. Nay người dẫn đã được
+  // đặt cận sẵn ở góc, nên cùng dải ấy làm cỡ RỘNG đẩy nhân vật tràn hẳn ra mép trái — đo được
+  // trên khung mở của FINE PRINT: mất nửa khuôn mặt.
+  // Người dẫn không cần "toàn cảnh": bối cảnh đã là ảnh nền full khung rồi, máy quay chỉ còn
+  // một việc là nhấn nhá quanh khuôn mặt. Dải 0,96–1,18 đủ để thấy nhịp mà không phá bố cục.
+  rong: { x: 0, y: -120, z: 0.96 },      // hơi lùi — thấy rộng bối cảnh hơn
+  trung: { x: 0, y: -150, z: 1.06 },     // mặc định
+  can: { x: 0, y: -230, z: 1.18 },       // siết vào mặt: mắt, chân mày, khoé miệng
 };
 
 export type Canh = {
@@ -346,12 +352,24 @@ export const KichV2: React.FC<PropsKich> = ({
               nền đơn giản hơn. Không bao giờ để một kênh câm chỉ vì thiếu ảnh. */}
           {nenAnh ? null : <BoiCanh ten={C.boi || "san_sau"} mau={mau} t={giay} />}
 
-          {/* Xê dịch mượt giữa hai cảnh: nhảy cóc đọc ra là lỗi dựng, nội suy đọc ra là người
-              ta bước sang một chút. 0,5 giây đầu mỗi cảnh là đủ.
-              Chú thích để ở ĐÂY, không xen giữa các thuộc tính JSX: chú thích kiểu JSX đặt giữa
-              hai thuộc tính là lỗi cú pháp, đã dính năm lần — xem luật 7t.
-              Và trong thân chú thích cũng không được viết ra ký hiệu đóng của chính nó, vì nó
-              sẽ tự đóng sớm ngay tại đó. */}
+          {/* ══ NGƯỜI DẪN ĐỨNG MỘT GÓC, CẮT NGANG HÔNG — dựng lại 30/8/2026 ═════════════
+              Anh gửi ba khung và chỉ ra ba lỗi, cả ba đều do một nguyên nhân: cho nhân vật đứng
+              TOÀN THÂN giữa khung rồi bắt nó xê dịch và giơ tay.
+                · chân đứng lơ lửng trên nóc tủ hồ sơ — nền là ẢNH, mà ảnh thì sàn nằm ở đâu là
+                  tuỳ tấm; đặt chân theo một con số cố định thì sớm muộn cũng trúng mặt bàn;
+                · tay giơ cao che mất thẻ số ở đỉnh khung;
+                · càng cho xê dịch nhiều thì càng nhiều chỗ sai.
+              Anh chỉ luôn cách chữa, và nó gọn hơn hẳn mọi bản vá tôi định làm: *"làm kiểu nhân
+              vật ở 1 góc màn hình nói phân tích, chỉ cử động tay và miệng mắt, biểu cảm khuôn
+              mặt thôi, còn ảnh bối cảnh làm như ảnh nền videos"*.
+              Đặt người dẫn ở góc trái và ĐẨY XUỐNG cho mép khung cắt ngang hông thì:
+                · KHÔNG CÒN CHÂN trong khung, nên không còn bài toán chân-chạm-sàn — lỗi lơ lửng
+                  biến mất hoàn toàn thay vì được vá;
+                · mặt to gần gấp rưỡi, nên khẩu hình và biểu cảm đọc rõ — đó mới là thứ đáng xem
+                  ở một kênh phân tích;
+                · nửa phải khung trống hẳn cho biểu đồ và số liệu.
+              Đây là bố cục của mọi video giải thích có người dẫn, và nó đúng vì lý do vật lý chứ
+              không phải vì thẩm mỹ: thứ gì không nằm trong khung thì không thể sai. */}
           <DienVienHai
             kieu={nv}
             camXuc={C.camXuc || "trung_tinh"}
@@ -370,13 +388,13 @@ export const KichV2: React.FC<PropsKich> = ({
             // vị, nên tỉ lệ 1.12 cho ra một người cao 470/1500 — lọt thỏm, đúng như khung render
             // thử. Muốn nhân vật chiếm khoảng 3/5 chiều cao (tỉ lệ quen thuộc của phim hoạt hình
             // kể chuyện) thì cần ~2.1 cho khung dọc và ~1.6 cho khung ngang.
-            x={(C.cot ? -368 : 0) + (C.dich || 0) * Math.min(1, (giay - C.s) / 0.5)}
-            y={236}
+            x={doc ? -158 : -330}
+            y={doc ? 1240 : 820}
             // 29/8 lần hai — lần trước tôi tăng cỡ nhân vật 1.12->2.1 NHƯNG cùng lúc hạ zoom
             // máy quay 1.5->1.0. Tích hai số không đổi (1.68), nên khung render ra y hệt và tôi
             // suýt kết luận "sửa không ăn". Bài học: đổi hai hệ số nhân với nhau trong cùng một
             // lượt thì không đo được cái nào có tác dụng.
-            scale={doc ? 1.75 : 1.35}
+            scale={doc ? 4.0 : 2.6}
           />
         </g>
 
@@ -399,12 +417,12 @@ export const KichV2: React.FC<PropsKich> = ({
             mà một nhánh ba ngôi chỉ nhận một biểu thức. Hai lần trước tôi đã ghi lại bài học rồi
             vẫn tái phạm, nên lần này ghi ngay tại chỗ dễ sai nhất. */}
         {C.cot ? (
-          <g transform={`translate(${doc ? -128 : -60} ${doc ? 196 : 112}) scale(${doc ? 0.9 : 0.8})`}>
+          <g transform={`translate(${doc ? 96 : 170} ${doc ? 150 : 96}) scale(${doc ? 0.86 : 0.78})`}>
             <CotDaoCu cot={C.cot} p={p} mau={mau} noiBat={C.noiBat ?? 0} />
           </g>
         ) : null}
         {C.soLon ? (
-          <g transform={`translate(0 ${doc ? -530 : -390})`}>
+          <g transform={`translate(${doc ? 150 : 190} ${doc ? -430 : -330})`}>
             <SoTo so={C.soLon} nhan={C.nhanSo} p={p} mau={mau} />
           </g>
         ) : null}
