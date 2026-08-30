@@ -1515,6 +1515,30 @@ def main() -> int:
           "neighbor": (("en-US-ChristopherNeural", "-6%", "-12Hz"), ("en-US-MichelleNeural", "+4%", "+4Hz")),
           "dating":   (("en-US-BrianNeural",   "+10%", "+8Hz"),  ("en-US-AriaNeural",    "-4%",  "-4Hz")),
         }
+        # ══ BÓNG DÁNG RIÊNG — THỨ THAY CHO MÀU ÁO ═════════════════════════════════════
+        # Anh: *"10 channel chưa có phong cách nhân vật riêng đặc trưng vẫn hơi na ná nhau"*.
+        # Với nhân vật có khối thì lời than ấy đúng mà khó chữa: mười kênh dùng chung một khuôn
+        # mặt, chỉ khác màu áo — mà màu áo là thứ mắt nhận ra SAU CÙNG, sau dáng và sau bóng.
+        # Người que lật ngược bài toán: nó KHÔNG CÓ màu áo để dựa, nên buộc phải phân biệt bằng
+        # đúng thứ mắt đọc trước — BÓNG DÁNG. Sáu trục dưới đây đều nhìn thấy được ở cỡ nhỏ và
+        # ở một phần tư giây: tóc · mũ · kính · râu · cà vạt · dáng cao thấp.
+        # Hai mươi người, hai mươi tổ hợp, không ai trùng ai.
+        _NHAN_DANG = {
+          #  kênh:     ( người A                                     , người B )
+          "rent":     (dict(kieuToc="roi",       caVat=""),            dict(kieuToc="bui",  caVat="")),
+          "gym":      (dict(kieuToc="ngan", kinh=True),                dict(kieuToc="duoi_ngua", mu="luoi_trai")),
+          "airport":  (dict(kieuToc="hoi",  rau="ria"),                dict(kieuToc="bob",  caVat="#2E4A6B")),
+          "car":      (dict(kieuToc="xoan"),                           dict(kieuToc="trocs", mu="luoi_trai", rau="quai")),
+          "office":   (dict(kieuToc="duoi_ngua", kinh=True),           dict(kieuToc="hoi",  caVat="#7A2E2E")),
+          "diet":     (dict(kieuToc="bob"),                            dict(kieuToc="xoan", rau="de")),
+          "tech":     (dict(kieuToc="trocs", kinh=True, rau="quai"),   dict(kieuToc="ngan", caVat="#2F5B45")),
+          "parent":   (dict(kieuToc="ngan", rau="de"),                 dict(kieuToc="duoi_ngua")),
+          "neighbor": (dict(kieuToc="hoi",  rau="ria", kinh=True),     dict(kieuToc="bui")),
+          "dating":   (dict(kieuToc="xoan", caVat="#5A3E7A"),          dict(kieuToc="roi",  kinh=True)),
+        }
+        for _b, _nd in zip(_BONG.get(k["de"], ({}, {})), _NHAN_DANG.get(k["de"], ({}, {}))):
+            _b.update(_nd)
+
         # Ép hình theo bảng giới tính. Làm ở đây, một chỗ, thay vì đi sửa hai mươi dòng `_BONG`
         # — sửa tay thì lần thêm kênh thứ mười một lại quên, còn ép ở đây thì không quên được.
         for _b, _g in zip(_BONG.get(k["de"], ({}, {})), GIOI.get(k["de"], ("nam", "nam"))):
@@ -1608,9 +1632,25 @@ def main() -> int:
         # Vẽ đạo cụ đủ chi tiết để chịu được cỡ cận là một việc khác hẳn về quy mô, và nó không
         # nằm trong thứ anh đang cần. Bỏ hẳn thì tay được rảnh để diễn — mà cử chỉ tay mới là
         # thứ anh nhờ nâng cấp ngay từ đầu.
-        for _l3 in luot:
-            _l3["vatA"] = ""
-            _l3["vatB"] = ""
+        # ══ ĐẠO CỤ QUAY LẠI, VÌ LÝ DO ĐÃ ĐỔI ═══════════════════════════════════════════
+        # Bỏ hẳn đạo cụ hôm nay là đúng — với nhân vật CÓ KHỐI. Vật vẽ bằng vài hình vector đặc,
+        # nằm trong một bàn tay có khối và có màu, ở cỡ cận phóng to thành cục màu không đọc ra
+        # được là gì (anh chỉ hai lần).
+        # Người que đổi hẳn điều kiện ấy: vật cũng vẽ bằng NÉT ĐEN như người, cùng một ngôn ngữ
+        # hình, nên nó không còn cãi nhau với nhân vật. Đây không phải đổi ý — là cùng một
+        # nguyên tắc ("đạo cụ phải cùng lối vẽ với nhân vật") cho ra kết luận khác khi lối vẽ
+        # của nhân vật đã khác.
+        # Vẫn giữ luật đã trả giá: chỉ hiện ở lượt MỞ và lượt CHỐT, không cầm suốt phim.
+        VAT = {"rent": ("", "giay_to"), "gym": ("chai_nuoc", ""),
+               "airport": ("ve_may_bay", ""), "car": ("", "co_le"),
+               "office": ("coc", ""), "diet": ("", "banh"),
+               "tech": ("", "coc"), "parent": ("", "dien_thoai"),
+               "neighbor": ("", "ong_nhom"), "dating": ("dien_thoai", "")}
+        _vA, _vB = VAT.get(k["de"], ("", ""))
+        for _i3, _l3 in enumerate(luot):
+            _hien = (_i3 == 0) or bool(_l3.get("chot"))
+            _l3["vatA"] = _vA if _hien else ""
+            _l3["vatB"] = _vB if _hien else ""
         props = {"luot": luot, "tu": tu, "voMp3": rel, "nhac": NHAC.get(k["de"], ""),
                  "kieuA": k["a"], "kieuB": k["b"], "kieuTuyA": tuyA, "kieuTuyB": tuyB,
                  "tieuDe": ten, "mucNen": k["mau"]}

@@ -5067,3 +5067,68 @@ bằng bản yếu hơn của chính câu cấm mình đã viết.
 
 Cùng gốc với luật **7bf**: sửa một chỗ mà không đi soi mọi chỗ cùng dạng. Nay chỉ còn một hằng số
 `CAM_CHU`, và cây thước đếm số bản để không mọc lại bản thứ hai.
+
+### 7bt. MƯỜI KÊNH HÀI CHUYỂN SANG NHÂN VẬT QUE — 30/8/2026
+
+Anh xem một phim ngắn stick rồi hỏi thẳng: *"nếu làm người kiểu stick thì cử chỉ tay chân có
+linh động dễ khớp mượt mà hơn ko"*. Có — và nó gỡ **cùng lúc bốn thứ** mà bộ nhân vật có khối
+lượng đã phải chống đỡ suốt tuần:
+
+| | nhân vật có khối | que |
+|---|---|---|
+| tay | ống có đường viền phải khớp vai và thân → góc hẹp | đoạn thẳng xoay quanh khớp, **bẻ góc nào cũng đúng** |
+| tay qua trước thân | đè lên áo, lộ chỗ chồng hình → phải cấm cử chỉ ngang | qua thoải mái |
+| đạo cụ | vector đặc trong tay có khối → cỡ cận thành cục màu | vẽ bằng nét, **cùng ngôn ngữ hình** |
+| phân biệt | bằng màu áo — thứ mắt đọc **sau cùng** | bằng **bóng dáng** — thứ mắt đọc **trước** |
+
+Và một điều nữa: nhân vật vẽ nửa vời đứng trước ảnh nền AI nhiều chi tiết thì **hai bên cạnh
+tranh mà không bên nào thắng**. Nét đen trên nền chi tiết là tương phản có chủ đích.
+
+**Đánh đổi, ghi ra để sau khỏi tranh luận lại:** mất hẳn "nét USA màu sắc" kiểu sitcom hoạt hình
+mà chính anh đặt ra lúc đầu. Đây là đổi *bảng màu* lấy *chuyển động*, có ý thức. Và **chỉ áp cho
+mười kênh hài** — mười kênh dữ liệu giữ `DienVien`, vì chuyên gia phân tích vẽ bằng hình que thì
+mất đúng thứ mười kênh ấy sống bằng: vẻ đáng tin.
+
+`DienVienHai.tsx` **giữ nguyên trên đĩa**. Xoá một engine đang chạy được để "cho gọn" là cách
+chắc nhất để mất đường lui.
+
+### 7bu. BẢNG SỐ CHÉP SANG HỆ TOẠ ĐỘ KHÁC THÌ TRÌNH DỊCH KHÔNG BAO GIỜ BIẾT
+
+Bản đầu của `CU_CHI_QUE` chép quy ước góc từ `DienVienHai` (0° hướng **lên**) trong khi hàm
+`diem` ở tệp mới tính từ trục **xuống**. Dựng ra: **tay và chân mọc ngược lên trời**, thân co
+còn một mẩu, nhân vật thành một cái đầu treo giữa mấy que chĩa lên.
+
+`tsc` sạch. `esbuild` sạch. Mọi con số trong bảng đọc lên vẫn "hợp lý". **Không cổng nào bắt
+được, vì không có gì sai về kiểu — chỉ sai về nghĩa.**
+
+Hai việc rút ra:
+1. **Quy ước phải viết ngay trên bảng số**, không nằm trong đầu người viết. Nay dòng đầu của
+   `CU_CHI_QUE` ghi rõ `0° = buông thẳng xuống · 90° = dang ngang · 160° = giơ quá đầu`.
+2. **Kiểm bằng hình học trước khi kiểm bằng mắt.** Một đoạn mười dòng tính thử ba tư thế
+   ("khuỷu có nằm dưới vai không", "bàn chân có chạm đất không") bắt được lỗi này trong hai
+   giây, thay vì một lượt dựng mười lăm phút.
+
+### 7bv. ĐO MỘT CHIỀU THÌ KẾT LUẬN SAI
+
+Soi khung thấy hai cẳng tay chụm thành **hình thoi kín** — mắt đọc hình khép kín ấy như một vật
+thể, không như hai cánh tay. Viết ngay một phép đo "khoảng cách hai bàn tay", và nó tố `suy_nghi`
+là chụm.
+
+Nhưng `suy_nghi` **là** một tay chống cằm — hai bàn tay gần nhau theo `x` mà cách xa theo `y`.
+Phép đo chỉ nhìn `x` nên **chê nhầm một tư thế đúng**. Đo đủ hai chiều thì cả mười hai tư thế
+sạch.
+
+Cùng gốc với **7br** (ràng buộc nhầm trục) — hai lỗi trong một ngày, cùng một dạng: **tính rất
+kỹ trên một trục, trong khi vấn đề nằm ở trục kia.**
+
+### 7bw. CÙNG MỘT NGUYÊN TẮC, KẾT LUẬN NGƯỢC LẠI KHI ĐIỀU KIỆN ĐỔI
+
+Sáng nay bỏ hẳn đạo cụ. Chiều nay cho đạo cụ quay lại. Không phải đổi ý — nguyên tắc không đổi:
+
+> **đạo cụ phải cùng lối vẽ với nhân vật.**
+
+Với nhân vật có khối và có màu, vật vẽ bằng vài hình vector đặc là *khác lối* → cục màu vô nghĩa
+ở cỡ cận → bỏ. Với nhân vật vẽ bằng nét, vật vẽ bằng nét là *đúng lối* → giữ.
+
+Ghi lại vì nếu chỉ chép kết luận ("đã bỏ đạo cụ") mà không chép lý do, thì lần sau đọc lại sẽ
+thấy mâu thuẫn và có thể đi sửa nhầm.

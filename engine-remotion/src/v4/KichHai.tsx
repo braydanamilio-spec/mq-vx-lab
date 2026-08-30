@@ -1,7 +1,11 @@
 import React from "react";
 import { AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { CAM_XUC, KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVien";
-import { DienVienHai } from "./DienVienHai";
+// 30/8 — MƯỜI KÊNH HÀI CHUYỂN SANG NHÂN VẬT QUE (anh chọn sau khi xem một phim ngắn stick).
+// `DienVienHai` GIỮ NGUYÊN trên đĩa, không xoá: mười kênh dữ liệu vẫn dùng `DienVien` cùng họ,
+// và nếu hướng này không hợp thì đổi lại chỉ là một dòng import. Xoá một engine đang chạy được
+// để "cho gọn" là cách chắc chắn nhất để mất đường lui.
+import { DienVienQue as DienVienHai } from "./DienVienQue";
 
 /**
  * KỊCH HÀI V4 — hai nhân vật đối thoại, nền là ẢNH AI (29/8/2026).
@@ -450,9 +454,9 @@ export const KichHai: React.FC<PropsHai> = ({
               cầu của anh ("nhân vật cao lên, nhân vật kia nhỏ lại rất thiếu thẩm mỹ") — nên hai
               bóng bằng nhau. Vẫn buộc bóng vào hệ số ấy để nếu sau này cỡ người lại đổi thì
               bóng không phải đi sửa lần nữa. */}
-          <ellipse cx={xA / zoom} cy={Y_CHAN - 4} rx={126 * coA} ry={19 * coA}
+          <ellipse cx={xA / zoom} cy={Y_CHAN - 4} rx={99 * coA} ry={15 * coA}
                    fill="url(#bongchan)" />
-          <ellipse cx={xB / zoom} cy={Y_CHAN - 4} rx={126 * coB} ry={19 * coB}
+          <ellipse cx={xB / zoom} cy={Y_CHAN - 4} rx={99 * coB} ry={15 * coB}
                    fill="url(#bongchan)" />
           {/* 30/8 — KHOẢNG CÁCH HAI NGƯỜI CHIA CHO ĐỘ PHÓNG.
               Toàn cảnh được phóng `zoom`; nếu giữ nguyên x thì ở cỡ CẬN (zoom 1,72) hai người
@@ -474,7 +478,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     giat={noiA_ ? 0 : _giatNghe}
                     cuChiTruoc={ccTruocA} doiCuChi={doiCC} tuoiCanh={giay - L.s}
                     dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={L.vatA ?? vatA}
-                    x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
+                    x={xA / zoom} y={Y_CHAN} scale={1.02 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
@@ -482,7 +486,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     giat={!noiA_ ? 0 : _giatNghe}
                     cuChiTruoc={ccTruocB} doiCuChi={doiCC} tuoiCanh={giay - L.s}
                     dangNoi={!noiA_ || (_phanUng && noiA_)} doVat={L.vatB ?? vatB}
-                    x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
+                    x={xB / zoom} y={Y_CHAN} scale={1.02 * coB} lat />
         </g>
 
         {tieuDe && giay < 2.6 ? (
