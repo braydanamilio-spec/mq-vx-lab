@@ -521,12 +521,20 @@ class _CfShim:
 #
 # **Một hồ khoá lớn không tự nó thành năng lực. Năng lực = khoá × model gọi được × đường tới
 # chúng.** Thiếu bất kỳ vế nào thì hai vế kia thành vô nghĩa.
+# 31/8 — Đo trên hồ 295 key: chỉ `gemini-2.5-flash-lite` còn chạy được. Danh sách cũ không có
+# tên ấy, nên key sống vẫn bị coi là chết. Hạn mức Gemini tính THEO TỪNG MODEL chứ không theo
+# key — bài học đã ghi hôm 29/8 nhưng danh sách model thì chưa cập nhật theo. Bản `-lite` có
+# hạn mức rộng nhất nên xếp lên đầu; các bản đầy vẫn giữ để dùng khi còn lượt.
 GEMINI_MODELS = [
-    (os.environ.get("GEMINI_MODEL") or "gemini-3.5-flash"),
-    "gemini-3-flash-preview",
-    "gemini-flash-latest",
+    (os.environ.get("GEMINI_MODEL") or "gemini-2.5-flash-lite"),
+    "gemini-2.0-flash-lite",
     "gemini-flash-lite-latest",
+    "gemini-2.0-flash",
     "gemini-2.5-flash",
+    "gemini-flash-latest",
+    "gemini-1.5-flash",
+    "gemini-3.5-flash",
+    "gemini-3-flash-preview",
 ]
 
 
