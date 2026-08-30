@@ -464,30 +464,88 @@ _SAN_V3 = ("wide shot, camera at standing eye level, floor clearly visible acros
            "the right half")
 NEN_V3 = {
     "BANK RUN":            ["american bank branch lobby with teller counters along the left wall",
-                            "bank vault door seen from inside a quiet corridor"],
+                            "bank vault door seen from inside a quiet corridor",
+                            "bank branch back office with desks and a computer on the left",
+                            "bank drive-through window seen from inside, morning light",],
     "FINE PRINT":          ["law office room with tall filing cabinets on the left, warm lamps",
-                            "records archive room with rows of document boxes on shelves"],
+                            "records archive room with rows of document boxes on shelves",
+                            "law office desk with a lamp and stacked folders on the left",
+                            "quiet meeting room with a long table on the left, blinds",],
     "WHO OWNS IT":         ["corporate lobby with a reception desk on the left, glass and stone",
-                            "empty boardroom with a long table pushed to the left"],
+                            "empty boardroom with a long table pushed to the left",
+                            "corporate hallway with glass office doors on the left",
+                            "office floor with empty desks on the left, late afternoon",],
     "KNOW YOUR RIGHT":     ["american courthouse corridor with tall columns on the left",
-                            "quiet courtroom gallery seen from the side, wooden benches"],
+                            "quiet courtroom gallery seen from the side, wooden benches",
+                            "courthouse steps seen from the side, stone columns on the left",
+                            "clerk office counter with document trays on the left",],
     "SUED IN AMERICA":     ["courtroom bench and witness stand seen from the left side",
-                            "law library with rows of legal volumes on the left wall"],
+                            "law library with rows of legal volumes on the left wall",
+                            "judge chambers with bookshelves on the left, warm lamp",
+                            "empty jury box seen from the side, wooden panels",],
     "SKY TONIGHT":         ["observatory dome interior at night, telescope on the left, deep blue",
-                            "open field at night under a clear starry sky, low horizon"],
+                            "open field at night under a clear starry sky, low horizon",
+                            "observatory control desk with monitors on the left, night",
+                            "rooftop terrace at night with a small telescope on the left",],
     "ONE EXPERIMENT":      ["university research lab bench on the left, clean bright light",
-                            "quiet laboratory corridor with glass doors on the left"],
+                            "quiet laboratory corridor with glass doors on the left",
+                            "lab office with a microscope and notebooks on the left",
+                            "clean room corridor with lab windows on the left",],
     "DEEP FIELD":          ["mission control room at night, console banks on the left, blue glow",
-                            "radio telescope dish seen from the ground at dusk, wide open sky"],
+                            "radio telescope dish seen from the ground at dusk, wide open sky",
+                            "deep space network operations room, screens on the left, night",
+                            "telescope maintenance floor with cables and rigs on the left",],
     "WHAT THE CHART SAYS": ["hospital records office with folders on the left, clean daylight",
-                            "empty clinic corridor with doors on the left, bright and calm"],
+                            "empty clinic corridor with doors on the left, bright and calm",
+                            "clinic nurse station with a counter on the left, bright light",
+                            "hospital supply room with labelled shelves on the left",],
     "PRICE OF CARE":       ["hospital admissions desk on the left, waiting chairs, daylight",
-                            "pharmacy counter seen from the side, shelves on the left"],
+                            "pharmacy counter seen from the side, shelves on the left",
+                            "hospital billing office with a desk on the left, daylight",
+                            "clinic waiting area seen from the side, chairs on the left",],
 }
 
 
-def ve_nen_v3(k: dict, DS, keys) -> list:
-    """Vẽ + cache hai nền cho một kênh. Chỉ vẽ tệp CHƯA CÓ."""
+# Tên riêng KHÔNG được lọt vào câu vẽ. Máy vẽ thấy "Gatorade" là dựng ngay một cái chai có logo
+# — mà logo thật trong khung của kênh bật kiếm tiền là rủi ro pháp lý (luật 7w). Bảng này đổi
+# tên riêng thành LOẠI HÀNG: cùng thông tin cho máy vẽ, không có nhãn hiệu nào.
+_LOAI = [
+    (("gatorade", "pepsi", "coca", "drink", "soda", "juice"), "bottled drinks on a shelf"),
+    (("pringles", "doritos", "cheerios", "snack", "chip", "cereal"), "snack boxes on a shelf"),
+    (("poultry", "meat", "beef", "chicken", "food", "produce"), "packaged food on a shelf"),
+    (("drug", "pill", "pharma", "medicine", "recall"), "medicine boxes on a pharmacy shelf"),
+    (("bank", "deposit", "loan", "credit"), "bank counter and paperwork"),
+    (("court", "lawsuit", "clause", "contract", "damages"), "legal documents on a desk"),
+    (("asteroid", "orbit", "space", "km", "telescope"), "night sky through an observatory window"),
+    (("study", "research", "trial", "evidence"), "lab notebooks and glassware on a bench"),
+    (("price", "cost", "cpi", "inflation"), "receipts and a calculator on a counter"),
+]
+
+
+def _chu_de_nen(tieu_de: str, nhan_cot: list) -> str:
+    """Một cụm mô tả CHỦ ĐỀ CỦA TẬP để ghép vào câu vẽ nền. Rỗng nếu không đoán được.
+
+    30/8 — Anh: *"footage là nền lấy từ ai generate của mình cho phù hợp NỘI DUNG VIDEOS ấy"*.
+    Trước bản này nền chọn theo NGHỀ CỦA KÊNH và cố định — nên tập nào của WHO OWNS IT cũng đứng
+    trong đúng một cái sảnh công ty, dù tập này nói về nước ngọt còn tập kia nói về thịt gà.
+    Nền phải nói về THỨ ĐANG KỂ, không chỉ về nơi người kể đang đứng.
+    Đoán chủ đề từ tiêu đề + nhãn cột, rồi đổi sang LOẠI HÀNG (không giữ tên riêng).
+    """
+    t = (str(tieu_de or "") + " " + " ".join(str(x) for x in (nhan_cot or []))).lower()
+    for tu, mo in _LOAI:
+        if any(x in t for x in tu):
+            return mo
+    return ""
+
+
+def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
+    """Vẽ + cache nền cho một kênh. Chỉ vẽ tệp CHƯA CÓ.
+
+    `chu_de` rỗng  -> bốn nền CỐ ĐỊNH của kênh (nơi làm việc, dùng lại mọi tập);
+    `chu_de` có    -> thêm MỘT nền riêng cho tập này, ghép chủ đề vào câu vẽ. Nền ấy cache theo
+                      chính chủ đề, nên hai tập cùng chủ đề dùng chung một ảnh — không tốn lượt
+                      vẽ lần thứ hai.
+    """
     thu = os.path.join(PUB, "v3nen")
     os.makedirs(thu, exist_ok=True)
     ra = []
@@ -530,6 +588,43 @@ def ve_nen_v3(k: dict, DS, keys) -> list:
         else:
             print(f"      ⚠️ nền {i}: không vẽ được — cảnh này dùng bối cảnh vector")
             ra.append("")
+
+    # ── NỀN RIÊNG CHO TẬP NÀY ─────────────────────────────────────────────────────────
+    if chu_de:
+        import hashlib as _hl
+        _kh = _hl.md5(chu_de.encode("utf-8")).hexdigest()[:8]
+        rel = os.path.join("v3nen", f"{k['ten'].replace(' ', '').lower()}_t{_kh}.jpg")
+        dest = os.path.join(PUB, rel)
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            ra.insert(0, rel)
+            return ra
+        _pr = f"{chu_de}, seen in a {k['ten'].split()[0].lower()} setting"
+        ok = None
+        for _lan in range(2):
+            try:
+                import datastory_ci as _DC
+                _p = _DC._salt_prompt(f"{_pr}, {_SAN_V3}, {gu}")
+            except Exception:
+                _p = f"{_pr}, {_SAN_V3}, {gu}"
+            try:
+                ok = DS._generate_image_ai(_p, dest, None, style=gu)
+            except Exception:
+                ok = None
+            if ok and os.path.exists(dest) and os.path.getsize(dest) > 20000:
+                break
+            ok = None
+        if ok:
+            try:
+                import kich_hai as _KH
+                DS.nang_sang_anh(dest)
+                _KH._keo_sang(dest)
+                if _KH._nen_hong(dest):
+                    os.remove(dest); ok = None
+            except Exception:
+                pass
+        if ok and os.path.exists(dest):
+            print(f"      🎨 nền theo chủ đề ({chu_de[:34]}) xong")
+            ra.insert(0, rel)   # ưu tiên dùng cho cảnh mở
     return ra
 
 
@@ -636,13 +731,15 @@ def main() -> int:
     for k in chon:
         ten = k["ten"]
         print(f"\n▶ {ten}", flush=True)
-        nen2 = ve_nen_v3(k, DS, keys)
         if a.nen:
+            ve_nen_v3(k, DS, keys)
             continue
         sl = lay_so_lieu(k["nguon"], D)
         if not sl:
             print(f"   ⚠️ {ten}: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)")
             continue
+        # Nền vẽ SAU khi có số liệu, vì chủ đề của tập nằm trong chính số liệu ấy.
+        nen2 = ve_nen_v3(k, DS, keys, _chu_de_nen(sl[0], [a2 for a2, _b2, _c2 in sl[1]]))
         canh, loi = dung_canh(k, sl)
         sl_ten = ten.replace(" ", "").lower()
 
@@ -767,6 +864,16 @@ def main() -> int:
             "doVat": VAT_V3.get(k["ten"], ""),
             # Một nền cho cả video — cùng luật "một tập một địa điểm" đã chốt cho bộ hài
             # (luật 7x): người kể không dịch chuyển giữa câu. Nền thứ hai để dành cho tập sau.
+            # 30/8 — MỘT NỀN CHO MỖI ĐOẠN NỘI DUNG, không phải một nền cho cả video.
+            # Anh: *"chuyển cảnh phù hợp với nội dung lời nói"*. Sáu cảnh chia làm ba đoạn —
+            # MỞ (giới thiệu) · SỐ LIỆU (đọc bảng) · CHỐT (kết luận) — và mỗi đoạn một nền.
+            # Nền đầu tiên trong `nen2` là nền vẽ THEO CHỦ ĐỀ CỦA TẬP (nếu đoán được chủ đề),
+            # nên nó dành cho đoạn MỞ: giây đầu người xem thấy ngay video này nói về cái gì.
+            # Hai nền sau là nơi làm việc của kênh — cùng một thế giới nghề nghiệp, nên đổi cảnh
+            # giữa chúng vẫn logic (người dẫn đi từ sảnh vào bàn làm việc), khác hẳn kiểu nhảy
+            # từ ngân hàng sang bãi biển.
+            "nenTheoCanh": [(nen2[min(i * 3 // max(1, len(canh)), len(nen2) - 1)] if nen2 else "")
+                            for i in range(len(canh))],
             "nenAnh": (nen2[0] if nen2 and nen2[0] else ""),
         }
         pj = os.path.join(GOC, "out", f"v3_{sl_ten}.json")

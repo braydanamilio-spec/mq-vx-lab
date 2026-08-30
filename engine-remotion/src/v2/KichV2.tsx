@@ -82,6 +82,7 @@ export type PropsKich = {
   nhac?: string;
   doVat?: string;                // đạo cụ cầm tay — nói ngay kênh này về gì (xem `DoVat`)
   nenAnh?: string;               // ảnh nền AI đã cache; rỗng thì lui về bối cảnh vector
+  nenTheoCanh?: string[];        // một nền cho mỗi cảnh — đổi theo đoạn nội dung
   kieu?: Partial<Kieu>;
   kieuGoc?: keyof typeof KIEU_MAU;
   bangMau?: keyof typeof BANG_MAU;
@@ -266,7 +267,8 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number }> = ({
 };
 
 export const KichV2: React.FC<PropsKich> = ({
-  canh = [], tu = [], voMp3 = "", nhac = "", doVat = "", nenAnh = "", kieu = {}, kieuGoc = "nam_dam",
+  canh = [], tu = [], voMp3 = "", nhac = "", doVat = "", nenAnh = "", nenTheoCanh = [],
+  kieu = {}, kieuGoc = "nam_dam",
   bangMau = "san_sau", tieuDe = "", nguon = "", font = "",
 }) => {
   const f = useCurrentFrame();
@@ -326,9 +328,9 @@ export const KichV2: React.FC<PropsKich> = ({
           phần tử TĨNH, mà luật vẽ của CSS cho phần tử-có-định-vị vẽ SAU nội dung tĩnh. Đặt ảnh
           trong một lớp định vị rồi đặt svg trong một lớp khác thì thứ tự viết trong JSX mới là
           thứ tự vẽ (đã trả giá một lần ở bộ hài — luật 7t mục 1). */}
-      {nenAnh ? (
+      {(nenTheoCanh[i] || nenAnh) ? (
         <AbsoluteFill style={{ overflow: "hidden" }}>
-          <Img src={staticFile(nenAnh)}
+          <Img src={staticFile(nenTheoCanh[i] || nenAnh)}
                style={{ width: "100%", height: "100%", objectFit: "cover",
                         transform: `scale(${1.04 + (giay / Math.max(1, canh.length ? Math.max(...canh.map((c) => c.e)) : 20)) * 0.05})`,
                         filter: "saturate(1.02) brightness(1.03)" }} />
