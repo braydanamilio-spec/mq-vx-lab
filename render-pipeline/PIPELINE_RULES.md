@@ -4598,3 +4598,39 @@ cụ (7an).
 
 **Thước đo đúng cho một cảnh hài short: TẮT TIẾNG mà vẫn hiểu và vẫn buồn cười.** Nếu tắt tiếng
 đi mà chỉ còn hai người đứng mấp máy môi thì cảnh ấy chưa xong, dù lời thoại hay đến đâu.
+
+### 7au. MƯỢN CÁCH LÀM, KHÔNG MƯỢN CHẤT — 30/8/2026
+
+Anh: *"ứng dụng 10 channel funny sau vào 10 channel trước"*, rồi nhắc ngay: *"vẫn làm 10 channel
+trước phù hợp niche, KO PHẢI THEO KIỂU FUNNY, chỉ bắt chước nâng cấp CÁCH LÀM thôi"*.
+
+Đó là hai câu phải đọc cùng nhau, và ranh giới giữa chúng là chỗ dễ làm hỏng nhất.
+
+**MƯỢN ĐƯỢC — vì đây là hạ tầng, không mang chất:**
+
+| Mục | Vì sao mượn được |
+|---|---|
+| khuôn mặt kiểu hoạt hình Mỹ | đẹp hơn thì kênh nào cũng hưởng |
+| **nền ảnh AI cache** thay bối cảnh vector | câu vẽ chọn theo NGHỀ của kênh — sảnh ngân hàng, phòng lưu trữ, đài quan sát |
+| cắt đệm im lặng edge-tts | nhịp chặt hơn, không liên quan chất hài |
+| nhạc nền riêng mỗi kênh | chỉ cần chọn bản TRẦM, ĐỀU — chất tài liệu |
+| thumbnail trích từ video | hook lấy TIÊU ĐỀ kênh, không lấy câu thoại |
+| đạo cụ cầm tay | nhưng phải là đạo cụ NGHỀ NGHIÊM TÚC |
+| cử chỉ suy từ chính câu thoại | phép suy giống nhau, kết quả khác nhau |
+
+**KHÔNG MƯỢN — vì đây là CHẤT HÀI:**
+* **ký hiệu cảm xúc kiểu truyện tranh** (chùm gân đỏ "điên tiết", giọt mồ hôi "chột dạ") — dán lên
+  một kênh kể số liệu ngân hàng thì kênh ấy mất vẻ đáng tin, mà **đáng tin là toàn bộ giá trị**
+  của mười kênh dữ liệu;
+* hàm rơi · đồ vật tuột khỏi tay · cắt cảnh phản ứng ở cú chốt.
+
+Tách bằng một cờ duy nhất: `kyHieu` — bộ hài bật, bộ dữ liệu tắt. **Cùng một con rối, hai cách
+diễn.**
+
+**Và một lỗi phải sửa ngay khi rà lại:** bản nháp đầu gán *cờ-lê* cho kênh "ai sở hữu thương
+hiệu" và *cốc cà phê* cho kênh chi phí y tế — hai thứ chẳng nói lên gì về nội dung.
+**Đạo cụ sai còn tệ hơn không có đạo cụ**: nó nói dối về nhân vật ngay giây đầu tiên.
+
+**Kho nhạc không đủ thì tạo biến thể, đừng đi tải.** 15 bản nhạc cho 20 kênh. Hạ tông ba nửa cung
+rồi kéo lại tốc độ (`asetrate` + `atempo`) cho ra một bản nghe khác hẳn — không tốn lượt gọi nào,
+không thêm rủi ro bản quyền nào (vẫn nguồn đã dùng). Đủ 20 bản cho 20 kênh.
