@@ -203,8 +203,10 @@ const chonDang = (cot: { nhan: string; gt: number }[], kenhSo: number): DangChar
   return (["dung", "ngang", "cham"] as DangChart[])[kenhSo % 3];
 };
 
-const CotNgang: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat: number }> =
-({ cot, p, mau, noiBat }) => {
+const CotNgang: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat: number;
+                           pCua?: (i: number) => number }> =
+({ cot, p, mau, noiBat, pCua }) => {
+  const _p = pCua || (() => p);
   // Nhãn chạy NGANG theo thanh nên không phải xuống dòng hay cắt cụt — đúng chỗ đau của những
   // nguồn có tên sản phẩm dài. Đổi lại chỉ hiện được bốn mục, nên chỉ dùng khi nhãn thật sự dài.
   const N = Math.min(4, cot.length);
@@ -219,7 +221,7 @@ const CotNgang: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
       <rect x={nenX} y={nenY} width={nenW} height={nenH} rx={18}
             fill="#FBF6EA" stroke={mau.muc} strokeWidth={6} />
       {cot.slice(0, N).map((c, i) => {
-        const moc = muot(kep((p - i * 0.07) / 0.3));
+        const moc = muot(kep((_p(i) - i * 0.07) / 0.3));
         const w = (c.gt / dinh) * DAI * moc;
         const sang = i === noiBat;
         return (
@@ -238,8 +240,10 @@ const CotNgang: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
   );
 };
 
-const ChamQue: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat: number }> =
-({ cot, p, mau, noiBat }) => {
+const ChamQue: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat: number;
+                          pCua?: (i: number) => number }> =
+({ cot, p, mau, noiBat, pCua }) => {
+  const _p = pCua || (() => p);
   // Khi một giá trị vượt trội hẳn, cột dọc biến ba mục kia thành ba vạch sát đáy. Chấm-que giữ
   // được vị trí đọc được cho mọi mục vì cái mắt đọc là CHẤM, không phải diện tích cột.
   const N = Math.min(5, cot.length);
@@ -251,7 +255,7 @@ const ChamQue: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
       <rect x={nenX} y={nenY} width={nenW} height={nenH} rx={18}
             fill="#FBF6EA" stroke={mau.muc} strokeWidth={6} />
       {cot.slice(0, N).map((c, i) => {
-        const moc = muot(kep((p - i * 0.06) / 0.28));
+        const moc = muot(kep((_p(i) - i * 0.06) / 0.28));
         const x = (c.gt / dinh) * DAI * moc;
         const sang = i === noiBat;
         const y = i * BUOC + 16;
@@ -274,8 +278,8 @@ const ChamQue: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
 };
 
 const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat?: number;
-                           dang?: DangChart; hien?: number }> =
-({ cot, p, mau, noiBat = 0, dang = "dung", hien }) => {
+                           dang?: DangChart; hien?: number; pMoi?: number }> =
+({ cot, p, mau, noiBat = 0, dang = "dung", hien, pMoi }) => {
   // ══ NÓI TỚI MỤC NÀO THÌ MỤC ẤY MỚI MỌC ═══════════════════════════════════════════════
   // Anh: *"chart vẫn đang bị chạy lặp đi lặp lại… hoặc nói tới dữ liệu nào dữ liệu đó chạy,
   // tránh chạy lặp lại"*.
@@ -285,9 +289,19 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
   // Cách anh chỉ đúng hơn hẳn: biểu đồ **dựng dần theo lời**. Câu nói tới mục thứ nhất thì chỉ
   // mục thứ nhất có mặt; câu sau mục thứ hai mọc thêm; tới cuối bài bảng mới đủ. Mỗi cảnh vì
   // thế có một chuyển động THẬT và mang thông tin, thay vì một hình tĩnh đổi màu.
-  cot = typeof hien === "number" ? cot.slice(0, Math.max(1, hien)) : cot;
-  if (dang === "ngang") return <CotNgang cot={cot} p={p} mau={mau} noiBat={noiBat} />;
-  if (dang === "cham") return <ChamQue cot={cot} p={p} mau={mau} noiBat={noiBat} />;
+  const _soHien = typeof hien === "number" ? Math.max(1, hien) : cot.length;
+  cot = cot.slice(0, _soHien);
+  // 30/8 — Anh: *"chart số liệu cột cuối a thấy nó ra luôn ko thấy nó chạy"*.
+  // Đúng, và là lỗi tôi vừa tạo khi cho bảng dựng dần: cảnh nào MƯỢN bảng của cảnh trước thì
+  // được truyền `p = 1` — nghĩa là "bảng này đã mọc xong từ lâu rồi, đừng mọc lại". Đúng với
+  // những cột đã có mặt từ trước, nhưng SAI với cột vừa mới thêm vào ở chính cảnh này: nó cũng
+  // nhận `p = 1` nên bật ra ở trạng thái hoàn tất, không có một khung hình nào cho nó lớn lên.
+  // Nên cột CUỐI CÙNG — cột mới — phải dùng tiến độ của cảnh HIỆN TẠI, còn các cột cũ giữ
+  // nguyên `p = 1`. Một bảng có hai loại cột thì cần hai đồng hồ, không phải một.
+  const _pCua = (i: number) =>
+    (typeof pMoi === "number" && i === _soHien - 1 && _soHien > 1) ? pMoi : p;
+  if (dang === "ngang") return <CotNgang cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
+  if (dang === "cham") return <ChamQue cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
   // ══════════════════════════════════════════════════════════════════════════════════════
   // BIỂU ĐỒ PHẢI CÓ TẤM NỀN RIÊNG
   // --------------------------------------------------------------------------------------
@@ -342,7 +356,7 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
       <line x1={nenX + 12} y1={2} x2={nenX + nenW - 12} y2={2}
             stroke={mau.muc} strokeWidth={5} opacity={0.55} />
       {cot.slice(0, N).map((c, i) => {
-        const moc = muot(kep((p - i * 0.07) / 0.3));
+        const moc = muot(kep((_pCua(i) - i * 0.07) / 0.3));
         const h = (c.gt / dinh) * CAO * moc;
         const sang = i === noiBat;
         // ══ BIỂU ĐỒ PHẢI DIỄN THEO LỜI NÓI ═══════════════════════════════════════════════
@@ -669,7 +683,7 @@ export const KichV2: React.FC<PropsKich> = ({
         {_cot ? (
           <g transform={`translate(${doc ? CHART_TAM : 150} ${doc ? CHART_Y : 84}) scale(${doc ? CHART_CO : 1.02})`}>
             <CotDaoCu cot={_cot} p={_pCot} mau={mau} noiBat={C.noiBat ?? _noiBatKe}
-                      dang={chonDang(_cot, _soKenh)} hien={_hienDen} />
+                      dang={chonDang(_cot, _soKenh)} hien={_hienDen} pMoi={p} />
           </g>
         ) : null}
         {C.soLon ? (
