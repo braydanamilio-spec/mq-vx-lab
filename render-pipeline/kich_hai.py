@@ -1912,3 +1912,23 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def _nen_ghep(duong: str) -> str:
+    """ĐÃ GỠ — phép đo này tố oan 26/60 ảnh nền lành.
+
+    31/8 — Khung BANK RUN có một ảnh nền hỏng thật: nửa trên là trần bếp, nửa dưới là cánh đồng
+    ngô, cắt nhau bằng một đường ngang thẳng băng. Tôi viết phép dò "bước nhảy màu theo chiều
+    cao" để bắt nó, và nó tố ngay 26/60 ảnh. Mở ra xem thì cả sáu ảnh đầu đều LÀNH: mái nhà
+    giáp trời, tường giáp trần, sàn giáp tường.
+
+    Chỗ sai nằm ở giả định: tôi cho rằng "một cảnh thật đổi màu từ từ theo chiều cao". Điều đó
+    đúng với ảnh chụp, và SAI hoàn toàn với tranh phẳng — nơi mảng màu lớn giáp nhau bằng ranh
+    giới cứng CHÍNH LÀ phong cách. Phép đo không phân biệt được ranh giới kiến trúc với vết
+    ghép, và không có ngưỡng nào cứu được điều đó.
+
+    Giữ lại hàm rỗng cùng ghi chú này để lần sau không ai viết lại nó. Ảnh nền ghép hai cảnh là
+    hiếm; dựng một cổng sai để bắt một lỗi hiếm thì cái giá — bỏ đi hàng trăm ảnh lành và dạy
+    người ta bỏ qua cảnh báo — đắt hơn nhiều so với chính lỗi ấy.
+    """
+    return ""

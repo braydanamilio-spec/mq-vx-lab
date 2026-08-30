@@ -49,15 +49,31 @@ CAU_HOI = [
     ("mat_nguoi",
      "Is a cartoon person's face fully visible in this image? A face cut in half by the frame "
      "edge does not count as visible. Answer exactly one word: YES or NO."),
+    # 31/8 — CÂU HỎI CŨ TỐ NHẦM GẦN NHƯ MỌI KÊNH.
+    # Nó hỏi "có chữ nào không thuộc hộp phụ đề không". Nhưng video này CỐ Ý có ba lớp chữ do
+    # hệ thống vẽ: thẻ số lớn ở đỉnh, nhãn cột trong bảng, và dòng ghi nguồn ở đáy. Cả ba đều
+    # là "không thuộc hộp phụ đề", nên AI trả YES ở hầu hết khung và mỗi kênh mất 10 điểm cho
+    # một thứ hoàn toàn đúng thiết kế. Đó là lý do điểm đứng yên ở 63–82 dù hình đã sửa.
+    # Thứ THẬT SỰ cần bắt là chữ nằm TRONG ẢNH NỀN do AI vẽ — chữ méo, chữ vô nghĩa, chữ giả
+    # tiếng Anh trên tường và biển hiệu. Nên hỏi đúng vào đó, và liệt kê rõ những lớp được phép.
     ("chu_gia",
-     "Does this image contain any letters or words that are NOT part of a subtitle box at the "
-     "bottom — for example on a wall, sign, poster or product? Answer exactly one word: "
-     "YES or NO."),
+     "Ignore all clean overlay graphics: the big number card at the top, the chart panel with "
+     "its labels, the subtitle box, and the small source line at the bottom — those are part of "
+     "the design. Looking ONLY at the drawn background scene behind them, does the background "
+     "itself contain any letters, words or signage? Answer exactly one word: YES or NO."),
+    # 31/8 — Soi mắt khung mà nó tố: không có chữ nào bị cắt cả. Câu cũ hỏi "có bị panel edge
+    # hay frame edge cắt không", và AI coi cả những con số nằm SÁT mép bảng là bị cắt — sát mép
+    # không phải là mất chữ. Hỏi đúng vào thứ đo được: có đọc thiếu ký tự nào không.
     ("chu_tran",
-     "Is any text or number cut off or clipped by a panel edge or the frame edge, so it cannot "
-     "be read fully? Answer exactly one word: YES or NO."),
+     "Look at every word and number on screen. Is any of them missing letters or digits because "
+     "it runs past an edge — so you can only read part of the word or number? Text that merely "
+     "sits close to an edge but is fully readable does NOT count. Answer exactly one word: "
+     "YES or NO."),
+    # Nền LUÔN nằm sau biểu đồ — đó là bố cục, không phải lỗi. Chỉ là lỗi khi nền làm chữ hoặc
+    # cột KHÔNG ĐỌC ĐƯỢC nữa. Câu cũ hỏi "có che không" nên câu trả lời đúng luôn là YES.
     ("nen_de",
-     "Does any background object overlap and hide part of the chart or the text? "
+     "Are any chart bars, chart labels or numbers UNREADABLE because the background behind them "
+     "is too busy or too similar in colour? Judge readability only, not overlap. "
      "Answer exactly one word: YES or NO."),
     ("khong_co_nguoi",
      "Is there at least one cartoon person visible in this image? "
