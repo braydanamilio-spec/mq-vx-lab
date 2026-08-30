@@ -430,12 +430,25 @@ export const KichV2: React.FC<PropsKich> = ({
         ) : null}
 
         {/* Lớp chữ KHÔNG đi theo máy quay — phụ đề mà lia theo thì không đọc nổi. */}
+        {/* TIÊU ĐỀ PHẢI CÓ THẺ NỀN, KHÔNG CHỈ CÓ VIỀN.
+            30/8 — Từ khi nền là ẢNH AI thay cho mảng màu phẳng, chữ trắng viền đen không còn đủ:
+            trên một kệ hàng sáng màu, đo được tiêu đề "Who really owns the brand" chìm gần hết.
+            Viền chỉ tách chữ khỏi nền ĐỒNG MÀU; nó không cứu được nền NHIỀU CHI TIẾT, vì mắt
+            phải tách chữ khỏi hàng chục cạnh nhỏ chứ không phải khỏi một mảng.
+            Một thẻ tối mờ phía sau giải đúng việc ấy — cùng cách đã làm cho phụ đề. */}
         {tieuDe && giay < 3.2 ? (
-          <text x={0} y={doc ? -648 : -498} textAnchor="middle" fontSize={doc ? 58 : 52}
-                fontWeight={900} fill="#FFFFFF" stroke={mau.muc} strokeWidth={10}
-                paintOrder="stroke" opacity={kep((3.2 - giay) / 0.4)}>
-            {tieuDe.slice(0, 42)}
-          </text>
+          <g opacity={kep((3.2 - giay) / 0.4)}>
+            <rect x={-Math.min(470, tieuDe.slice(0, 42).length * (doc ? 17 : 15) + 34)}
+                  y={(doc ? -648 : -498) - (doc ? 46 : 42)}
+                  width={2 * Math.min(470, tieuDe.slice(0, 42).length * (doc ? 17 : 15) + 34)}
+                  height={doc ? 78 : 70} rx={18}
+                  fill="#101218" fillOpacity={0.52} />
+            <text x={0} y={doc ? -648 : -498} textAnchor="middle" fontSize={doc ? 58 : 52}
+                  fontWeight={900} fill="#FFFFFF" stroke={mau.muc} strokeWidth={9}
+                  paintOrder="stroke">
+              {tieuDe.slice(0, 42)}
+            </text>
+          </g>
         ) : null}
         <PhuDe tu={tu} giay={giay} mau={mau} day={doc ? 610 : 430} />
         {/* 29/8 — DÒNG NGUỒN PHẢI ĐỔI MÀU THEO NỀN. Trên hai kênh vũ trụ (nền tím than) dòng

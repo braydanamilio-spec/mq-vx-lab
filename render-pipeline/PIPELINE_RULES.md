@@ -4674,3 +4674,48 @@ cho máy vẽ, không có nhãn hiệu nào.
 
 Nền theo chủ đề **cache theo chính chủ đề** (md5 của cụm mô tả), nên hai tập cùng chủ đề dùng
 chung một ảnh — không tốn lượt vẽ lần thứ hai.
+
+### 7ax. PHÂN TÍCH NỘI DUNG PHẢI ĐỌC Ý, KHÔNG DÒ CHUỖI — 30/8/2026
+
+Anh: *"sao cho phù hợp nội dung, nhớ PHÂN TÍCH ĐÚNG ko máy móc"*.
+
+Bản đầu chọn cảnh nền bằng một bảng **dò từ khoá cứng**: thấy chuỗi `"poultry"` thì trả
+`"packaged food"`. Đó đúng là máy móc, và nó hỏng theo **hai chiều**:
+* **bỏ sót** khi tiêu đề dùng từ ngoài bảng;
+* **gán bừa** khi một từ trùng nghĩa khác — `"class action"` có chữ *class*, `"damages"` có
+  chữ *age*.
+
+Một câu hỏi cho mô hình ngôn ngữ đọc được **Ý**, không đọc chuỗi. Đo thử:
+
+| Kênh · số liệu | Trả về |
+|---|---|
+| WHO OWNS IT · Gatorade, Pringles | *warehouse shelves stacked with sealed snack bags and beverage cartons* |
+| SKY TONIGHT · 2026 QB2 | *expansive star-filled night sky stretching overhead* |
+| SUED IN AMERICA · Contract, Defamation | *courtroom bench, gavel, torn contract, broken product, courtroom scale* |
+
+Rẻ hơn nhiều so với vẽ ảnh — một lượt sinh văn bản ngắn, chạy trên Groq free (1000 lượt/ngày),
+và kết quả **cache theo chủ đề** nên tập sau cùng chủ đề không hỏi lại. Bảng từ khoá giữ làm
+đường lui khi không có khoá.
+
+### 7ay. CẤM PHẢI BÁM VÀO VẬT, KHÔNG BÁM VÀO TÊN
+
+Khung WHO OWNS IT sau khi đổi sang nền-theo-nội-dung: kệ hàng đầy bao gói có **nhãn hiệu bịa**
+— *"Sunalis"*, *"Picn"*, *"RET IFT"*.
+
+Lọt qua vì chủ đề do AI sinh (*"kitchen pantry with assorted snack packets"*) **không có tên
+riêng nào** — luật cấm cũ chỉ chặn tên riêng. Nhưng **chỉ cần nhắc tới BAO GÓI là máy vẽ tự bịa
+nhãn lên đó**.
+
+Nên câu cấm phải bám vào **VẬT**: hễ chủ đề nói tới thứ có bề mặt in được (packet · box · bottle
+· carton · label · shelf · brand…) thì ép thêm *"all packaging completely blank and unbranded,
+plain surfaces, no printed text on any package"*. Cùng nguyên tắc `_bo_mat_chu` — không xin máy
+đừng viết, mà **bỏ hẳn chỗ chữ có thể bám**.
+
+### 7az. VIỀN CHỮ KHÔNG CỨU ĐƯỢC NỀN NHIỀU CHI TIẾT
+
+Từ khi nền là ảnh AI thay cho mảng màu phẳng, chữ trắng viền đen không còn đủ: đo được tiêu đề
+*"Who really owns the brand"* chìm gần hết trên một kệ hàng sáng màu.
+
+**Viền chỉ tách chữ khỏi nền ĐỒNG MÀU.** Nó không cứu được nền **nhiều chi tiết**, vì mắt phải
+tách chữ khỏi hàng chục cạnh nhỏ chứ không phải khỏi một mảng. Một thẻ tối mờ phía sau giải đúng
+việc ấy — cùng cách đã làm cho phụ đề.

@@ -656,7 +656,21 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.insert(0, rel)
             return ra
-        _pr = f"{chu_de}, seen in a {k['ten'].split()[0].lower()} setting"
+        # ══ CHỦ ĐỀ CÓ BAO BÌ THÌ PHẢI ÉP BAO BÌ TRỐNG ═══════════════════════════════
+        # 30/8 — Khung WHO OWNS IT đo được: kệ hàng đầy bao gói có NHÃN HIỆU BỊA — "Sunalis",
+        # "Picn", "RET IFT". Đúng thứ luật 7w cấm, và lần này nó lọt qua vì chủ đề do AI sinh ra
+        # ("kitchen pantry with assorted snack packets") vốn KHÔNG có tên riêng nào — nhưng chỉ
+        # cần nhắc tới BAO GÓI là máy vẽ tự bịa nhãn lên đó.
+        # Nên câu cấm phải bám vào VẬT, không bám vào tên: hễ chủ đề nói tới thứ có bề mặt in
+        # được thì ép "bao bì trơn, mặt trắng". Cùng nguyên tắc `_bo_mat_chu` — không xin máy
+        # đừng viết, mà bỏ hẳn chỗ chữ có thể bám.
+        _CO_BAO = ("packet", "package", "packaging", "box", "boxes", "bottle", "can ", "cans",
+                   "carton", "label", "product", "shelf", "shelves", "grocer", "snack", "brand")
+        _them = ""
+        if any(x in chu_de.lower() for x in _CO_BAO):
+            _them = (", all packaging completely blank and unbranded, plain white and solid "
+                     "colour surfaces, no labels, no printed text on any package")
+        _pr = f"{chu_de}, seen in a {k['ten'].split()[0].lower()} setting{_them}"
         ok = None
         for _lan in range(2):
             try:
