@@ -1573,7 +1573,7 @@ def main() -> int:
           "tech":     (("en-US-ChristopherNeural", "-14%", "-16Hz"), ("en-US-EricNeural","+6%",  "+10Hz")),
           "parent":   (("en-US-GuyNeural",     "-8%",  "-16Hz"), ("en-US-AnaNeural",     "+18%", "+18Hz")),
           "neighbor": (("en-US-ChristopherNeural", "-6%", "-12Hz"), ("en-US-MichelleNeural", "+4%", "+4Hz")),
-          "dating":   (("en-US-BrianNeural",   "+10%", "+8Hz"),  ("en-US-DavisNeural",   "-4%",  "-10Hz")),
+          "dating":   (("en-US-BrianNeural",   "+10%", "+8Hz"),  ("en-US-RogerNeural",   "-4%",  "-10Hz")),
         }
         # ══ BÓNG DÁNG RIÊNG — THỨ THAY CHO MÀU ÁO ═════════════════════════════════════
         # Anh: *"10 channel chưa có phong cách nhân vật riêng đặc trưng vẫn hơi na ná nhau"*.

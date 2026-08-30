@@ -2360,6 +2360,37 @@ def t_plan_khong_duoc_doc_goi_cua_chinh_no():
     assert co, "job render KHÔNG nhận CHANNEL_CFGS -> mỗi lane đọc lại Firestore, 720 lượt/phiên"
 
 
+def t_giong_phai_co_that():
+    """Mọi giọng khai trong bảng phải TỒN TẠI ở nhà cung cấp.
+
+    30/8 — tôi đổi giọng của một nhân vật sang `en-US-DavisNeural` mà không tra danh sách. Giọng
+    ấy không có trong edge-tts, nên bộ đọc trả về rỗng và cả kênh chết với thông báo mơ hồ
+    "No audio was received. Please verify that your parameters are correct".
+    Lỗi im lặng đúng kiểu khó chịu nhất: không ngoại lệ ở chỗ gán, chỉ hỏng ở chỗ dùng, và thông
+    báo lỗi không nhắc gì tới cái tên sai.
+    Cùng một dạng với cổng `kiem_gan` (gán giá trị mà engine không vẽ) — chỉ khác là bên kia
+    engine của mình, bên này là dịch vụ ngoài. Cả hai đều cần kiểm: khai một tên thì phải chắc
+    có thứ mang tên ấy.
+    """
+    import re as _re, io as _io, os as _os, asyncio as _aio
+    _goc = _os.path.dirname(_os.path.abspath(__file__))
+    src = _io.open(_os.path.join(_goc, "kich_hai.py"), encoding="utf-8").read()
+    khai = set(_re.findall(r'"(en-US-\w+Neural)"', src))
+    src2 = _io.open(_os.path.join(_goc, "kich_v2.py"), encoding="utf-8").read()
+    khai |= set(_re.findall(r'"(en-US-\w+Neural)"', src2))
+    if not khai:
+        return
+    try:
+        import edge_tts
+        co = _aio.run(edge_tts.list_voices())
+        co = {v["ShortName"] for v in co}
+    except Exception:
+        return                      # không tra được danh sách thì bỏ qua, đừng chặn phiên
+    thieu = sorted(khai - co)
+    assert not thieu, ("giọng khai trong bảng nhưng nhà cung cấp KHÔNG CÓ: "
+                       + ", ".join(thieu) + " — bộ đọc sẽ trả rỗng và kênh chết trong im lặng")
+
+
 def t_hinh_va_giong_cung_mot_gioi():
     """Ba bảng nói về cùng một người phải khớp giới: HÌNH · GIỌNG · bảng giới.
 
@@ -2460,6 +2491,7 @@ def main():
     check("tiêu đề dẫn bằng chủ thể, không phải khuôn + ngày", t_tieu_de_phai_noi_ve_noi_dung)
     check("key vẽ ảnh chết hẳn -> đổi key, không bỏ khung", t_key_ve_anh_chet_phai_doi_key)
     check("gán gì thì engine phải vẽ được (mũ/tóc/phụ kiện)", t_gan_gi_engine_phai_ve_duoc)
+    check("mọi giọng khai trong bảng phải có thật", t_giong_phai_co_that)
     check("hình · giọng · giới của cùng một người phải khớp", t_hinh_va_giong_cung_mot_gioi)
     check("dựng thử 1 khung — bắt TDZ và lỗi chỉ lộ lúc chạy", t_dung_thu_mot_khung)
     check("18 lane vào 18 điểm khác nhau trong hồ key ảnh", t_18_lane_khong_don_mot_key_anh)
