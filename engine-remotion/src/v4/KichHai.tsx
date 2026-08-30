@@ -355,7 +355,16 @@ export const KichHai: React.FC<PropsHai> = ({
   // dưới ngưỡng chú ý vẫn làm khung "còn sống". Hướng lia đổi theo lượt nên không thành nhịp đều.
   const _canNay = (L.co || "trung") === "can";
   const _canTruoc = ((i > 0 ? luot[i - 1].co : L.co) || "trung") === "can";
-  const _mucTieu = (co: boolean) => (co ? -(noiA_ ? dichA : dichB) * zoom : 0);
+  // 30/8, sửa lần hai — anh gửi ba khung liên tiếp: nhân vật trôi dần ra khỏi khung rồi biến
+  // mất hẳn, chỉ còn nền và một mảng áo ở mép.
+  // Lỗi ở đúng một hệ số thừa. Nhân vật được đặt ở `xA / zoom` bên trong một nhóm có
+  // `scale(zoom)`, nên vị trí THẬT của nó trên khung là `xA` — phép chia và phép nhân đã triệt
+  // tiêu nhau. Muốn kéo nó về giữa thì dịch khung đi `-xA`. Tôi lại nhân thêm `zoom` lần nữa,
+  // thành dịch `-xA * zoom`: ở cỡ cận (zoom 2,4) là dịch 700 điểm thay vì 292, đẩy chính người
+  // đang nói văng ra mép rồi ra hẳn ngoài.
+  // Bài học: khi một toạ độ đã đi qua phép chia rồi phép nhân của cùng một hệ số, nó KHÔNG còn
+  // mang hệ số ấy nữa. Đọc chuỗi biến đổi từ trong ra ngoài trước khi cộng thêm một phép nào.
+  const _mucTieu = (co: boolean) => (co ? -(noiA_ ? dichA : dichB) : 0);
   const _liaTam = trn(_mucTieu(_canTruoc), _mucTieu(_canNay),
                       muot(kep((giay - L.s) / 0.5)));
   // ▲ KHỐI TRÊN PHẢI NẰM SAU `zoom`. Bản đầu tôi đặt nó cạnh `dichA`/`dichB` cho gọn ý, nhưng

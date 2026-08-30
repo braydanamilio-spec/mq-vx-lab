@@ -2360,6 +2360,40 @@ def t_plan_khong_duoc_doc_goi_cua_chinh_no():
     assert co, "job render KHÔNG nhận CHANNEL_CFGS -> mỗi lane đọc lại Firestore, 720 lượt/phiên"
 
 
+def t_hinh_va_giong_cung_mot_gioi():
+    """Ba bảng nói về cùng một người phải khớp giới: HÌNH · GIỌNG · bảng giới.
+
+    Anh nghe ra lỗi này BA LẦN trong một ngày — "con trai mà sao giọng con gái". Cả ba lần đều
+    do cùng một chuyện: ba bảng độc lập (`_BONG` tả râu tóc · `GIONG_KENH` chọn giọng · `GIOI`
+    khai giới) nói về cùng một nhân vật mà không bảng nào biết bảng kia.
+    Hai lần trước tôi sửa MỘT bảng cho khớp một bảng khác, rồi bảng thứ ba vẫn lệch — nên lỗi
+    chỉ đổi chỗ chứ không mất. Ba bảng thì phải kiểm cả ba cùng lúc, và kiểm bằng máy.
+    """
+    import re as _re, io as _io, os as _os
+    _goc = _os.path.dirname(_os.path.abspath(__file__))
+    src = _io.open(_os.path.join(_goc, "kich_hai.py"), encoding="utf-8").read()
+    import importlib.util as _iu
+    _sp = _iu.spec_from_file_location("_kh", _os.path.join(_goc, "kich_hai.py"))
+    _kh = _iu.module_from_spec(_sp); _sp.loader.exec_module(_kh)
+    NU = {"Jenny", "Aria", "Ava", "Michelle", "Ana", "Emma", "Nancy", "Sara"}
+    m = _re.search(r"GIONG_KENH = \{(.*?)\n        \}", src, _re.S).group(1)
+    xau = []
+    for de, va, vb in _re.findall(r'"(\w+)":\s*\(\("([\w-]+)",[^)]*\),\s*\("([\w-]+)"', m):
+        for i, v in enumerate((va, vb)):
+            gi = _kh.GIOI.get(de, ("nam", "nam"))[i]
+            bo = (_kh._BONG.get(de) or ({}, {}))[i]
+            ten = v.replace("en-US-", "").replace("Neural", "")
+            g_giong = "nu" if ten in NU else "nam"
+            # Hình: có râu là nam chắc chắn; tóc kiểu nữ là nữ.
+            g_hinh = ("nam" if bo.get("rau") else
+                      ("nu" if bo.get("kieuToc") in ("duoi_ngua", "bui", "bob") else None))
+            if g_giong != gi:
+                xau.append(f"{de}[{i}]: bảng giới {gi}, giọng {ten} là {g_giong}")
+            if g_hinh and g_hinh != g_giong:
+                xau.append(f"{de}[{i}]: hình {g_hinh} (râu={bo.get('rau')!r}), giọng {ten} là {g_giong}")
+    assert not xau, "hình/giọng/giới lệch nhau:\n  " + "\n  ".join(xau)
+
+
 def t_dung_thu_mot_khung():
     """Dựng đúng MỘT khung hình để bắt lỗi chỉ lộ lúc chạy.
 
@@ -2426,6 +2460,7 @@ def main():
     check("tiêu đề dẫn bằng chủ thể, không phải khuôn + ngày", t_tieu_de_phai_noi_ve_noi_dung)
     check("key vẽ ảnh chết hẳn -> đổi key, không bỏ khung", t_key_ve_anh_chet_phai_doi_key)
     check("gán gì thì engine phải vẽ được (mũ/tóc/phụ kiện)", t_gan_gi_engine_phai_ve_duoc)
+    check("hình · giọng · giới của cùng một người phải khớp", t_hinh_va_giong_cung_mot_gioi)
     check("dựng thử 1 khung — bắt TDZ và lỗi chỉ lộ lúc chạy", t_dung_thu_mot_khung)
     check("18 lane vào 18 điểm khác nhau trong hồ key ảnh", t_18_lane_khong_don_mot_key_anh)
     check("mọi loại key báo trạng thái + lời đúng loại", t_moi_loai_key_deu_bao_trang_thai)
