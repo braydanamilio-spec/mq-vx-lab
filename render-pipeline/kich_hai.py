@@ -1553,6 +1553,33 @@ def dung_luot(k: dict, nen: list, vong: int = 0, nen_luot: list | None = None) -
     return luot, " ".join(loi), cau
 
 
+def canh_bao_ho_key(keys=None) -> None:
+    """In một dòng về sức khoẻ hồ khoá trước khi dựng. KHÔNG chặn phiên.
+
+    30/8 — hệ chạy suốt một ngày với 1 trên 68 khoá Gemini mà không ai biết: log chỉ nói `429`,
+    và `429` đọc ra như "hết hạn mức, mai chạy lại". Sự thật là hệ gọi đúng một model, model ấy
+    cạn, còn ba mươi chín model khác trên cùng khoá vẫn còn nguyên.
+    **Không ai biết vì không ai ĐẾM.** Một con số không được đo thì không tồn tại — hệ vẫn chạy,
+    vẫn ra video, chỉ là chạy ở một phần sáu mươi sáu năng lực, và mọi dấu hiệu đọc ra như bình
+    thường.
+    Dòng này chạy MỘT lần mỗi phiên, thử mẫu tám khoá mỗi nhà. Nó chỉ BÁO chứ không chặn: một
+    hồ khoá yếu vẫn dựng được video, và chặn phiên vì lý do ấy là đổi một bất tiện lấy một tổn
+    thất lớn hơn.
+    """
+    try:
+        import kiem_key as KK
+        kq = KK.do(mau=6)
+    except Exception:
+        return
+    p = []
+    for ten, (s, n, tong) in kq.items():
+        if not n:
+            continue
+        p.append(f"{ten} {s}/{n}" + ("" if s / n >= KK.NGUONG else " ⚠️"))
+    if p:
+        print("   🔑 hồ khoá (mẫu): " + " · ".join(p))
+
+
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser()
@@ -1584,6 +1611,12 @@ def main() -> int:
             DS.set_ai_pool(keys, "V4")
     except Exception:
         pass
+
+    # Đặt SAU cả khối nạp khoá. Bản đầu tôi chèn lời gọi lên TRƯỚC phần nạp (nên `keys` chưa
+    # tồn tại), bản thứ hai chèn vào GIỮA khối `try` (nên cắt đôi khối và hỏng cú pháp).
+    # Cùng một dòng mã, hai cách đặt sai liên tiếp — vì tôi neo theo một dòng văn bản thay vì
+    # theo CẤU TRÚC. Neo văn bản không biết mình đang đứng trong khối nào.
+    canh_bao_ho_key(keys)
 
     if a.thumb:
         n = 0
