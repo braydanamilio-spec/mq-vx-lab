@@ -522,6 +522,52 @@ _LOAI = [
 ]
 
 
+def _chu_de_ai(ten_kenh: str, tieu_de: str, nhan_cot: list, keys) -> str:
+    """Hỏi AI: video này nói về gì, và cảnh nền nào hợp nhất? Trả cụm mô tả, rỗng nếu hỏng.
+
+    30/8 — Anh: *"sao cho phù hợp nội dung, nhớ PHÂN TÍCH ĐÚNG ko máy móc"*.
+    Bản trước dò từ khoá cứng (`_LOAI`): thấy chuỗi "poultry" thì trả "packaged food". Đó đúng là
+    máy móc, và nó hỏng theo hai chiều — bỏ sót khi tiêu đề dùng từ ngoài bảng, và gán bừa khi
+    một từ trùng nghĩa khác ("class action" có chữ "class", "damages" có chữ "age").
+    Một câu hỏi cho mô hình ngôn ngữ thì đọc được Ý, không đọc chuỗi. Rẻ hơn nhiều so với vẽ ảnh:
+    một lượt sinh văn bản ngắn, và kết quả được cache theo chủ đề nên tập sau cùng chủ đề không
+    hỏi lại.
+    Ba ràng buộc ép vào câu hỏi, vì cả ba đều là lỗi đã trả giá:
+      · KHÔNG tên riêng, KHÔNG nhãn hiệu — máy vẽ thấy tên là dựng logo (luật 7w);
+      · KHÔNG người trong khung — nhân vật đã là vector, thêm người vẽ vào nền là hai thế giới;
+      · KHÔNG chữ, KHÔNG biển hiệu — máy vẽ bịa chữ sai chính tả (luật 7t).
+    """
+    if not keys:
+        return ""
+    try:
+        import content_brain as CB
+    except Exception:
+        return ""
+    cot = ", ".join(str(x) for x in (nhan_cot or [])[:5])
+    hoi = (
+        "You pick the background setting for one short explainer video.\n"
+        f"Channel: {ten_kenh}\nVideo title: {tieu_de}\nChart labels: {cot}\n\n"
+        "Reply with ONE short English phrase (max 12 words) describing the physical place or "
+        "objects that best match WHAT THIS VIDEO IS ABOUT — not where a presenter would stand.\n"
+        "Hard rules: no brand names, no proper nouns, no people, no text or signage in the "
+        "scene. Describe objects and a place only.\n"
+        "Reply with the phrase alone, nothing else."
+    )
+    for k in list(keys)[:3]:
+        try:
+            g = CB._genai(k if isinstance(k, str) else k.get("key"))
+            m = g.GenerativeModel("gemini-2.5-flash")
+            r = m.generate_content(hoi)
+            t = " ".join(str(getattr(r, "text", "") or "").split())[:120]
+            # Bỏ dấu nháy và dấu chấm cuối mà mô hình hay thêm vào.
+            t = t.strip().strip('"').strip("'").rstrip(".")
+            if 8 <= len(t) <= 120:
+                return t
+        except Exception:
+            continue
+    return ""
+
+
 def _chu_de_nen(tieu_de: str, nhan_cot: list) -> str:
     """Một cụm mô tả CHỦ ĐỀ CỦA TẬP để ghép vào câu vẽ nền. Rỗng nếu không đoán được.
 
@@ -751,7 +797,13 @@ def main() -> int:
             print(f"   ⚠️ {ten}: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)")
             continue
         # Nền vẽ SAU khi có số liệu, vì chủ đề của tập nằm trong chính số liệu ấy.
-        nen2 = ve_nen_v3(k, DS, keys, _chu_de_nen(sl[0], [a2 for a2, _b2, _c2 in sl[1]]))
+        # HỎI AI TRƯỚC, BẢNG TỪ KHOÁ LÀ ĐƯỜNG LUI. Không có khoá hoặc mô hình chập thì vẫn ra
+        # được một chủ đề thô còn hơn không có nền theo nội dung nào.
+        _nhan = [a2 for a2, _b2, _c2 in sl[1]]
+        _cd = _chu_de_ai(ten, sl[0], _nhan, keys) or _chu_de_nen(sl[0], _nhan)
+        if _cd:
+            print(f"   🧭 chủ đề nền: {_cd}")
+        nen2 = ve_nen_v3(k, DS, keys, _cd)
         canh, loi = dung_canh(k, sl)
         sl_ten = ten.replace(" ", "").lower()
 
