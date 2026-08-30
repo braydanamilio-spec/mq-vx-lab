@@ -5220,3 +5220,41 @@ trên đều là sửa THƯỚC, không sửa video — và nếu không soi th�
 
 Hai lỗi thật còn lại (mốc số dài chưa tách · biểu đồ không có gì để so) thì đúng, và đã có
 đường sửa.
+
+### 7cb. MỘT HỒ KHOÁ LỚN KHÔNG TỰ NÓ THÀNH NĂNG LỰC — 30/8/2026
+
+Tôi báo với anh rằng "cả ba nhà cung cấp đều cạn hạn mức, mai mới chạy lại được". Anh hỏi lại:
+
+> *"thế sao sản xuất 60+10 channel hàng ngày cho a được nhỉ, a có 68 gemini, 83 groq, 97 cf mà"*
+
+Câu hỏi ấy lộ ra hai lỗi chồng nhau, và tôi đã báo cáo sai vì không kiểm.
+
+**Lỗi một — hạn mức Gemini tính THEO TỪNG MODEL, không theo khoá.** Đo trên đúng một khoá của
+anh, trong đúng một phút:
+
+| model | kết quả |
+|---|---|
+| `gemini-3.5-flash` (hệ đang gọi) | **429 — cạn** |
+| `gemini-3-flash-preview` | **OK** |
+| `gemini-flash-lite-latest` | **OK** |
+
+Hệ chỉ gọi **đúng một** model viết trong hằng số. Model ấy cạn là cả khoá coi như chết — trong
+khi **39 model khác trên chính khoá đó còn nguyên hạn mức**.
+
+**Lỗi hai — chỉ nhánh Gemini thiếu lớp bọc.** Groq và Cloudflare đều đã có `_resolve_live_model`
+để dò model sống khi 404. Nhánh Gemini trả thẳng module `genai`, không qua lớp nào — nên nó là
+nhà cung cấp **duy nhất** không tự chữa được, mà cũng là nhà có **nhiều khoá nhất**.
+
+Kết quả sau khi thêm `_GemShim`:
+
+```
+khoá Gemini dùng được:  1/68  →  66/68
+```
+
+> **Năng lực = khoá × model gọi được × đường tới chúng.** Thiếu bất kỳ vế nào thì hai vế kia
+> thành vô nghĩa. Một hồ 248 khoá chạy như một hồ một khoá, và không có gì trong log nói ra điều
+> đó — nó chỉ nói "429", đúng chữ mà sai nghĩa.
+
+**Và bài học về báo cáo:** tôi nói "hết hạn mức, mai chạy lại" mà chưa đếm khoá sống. Một câu báo
+cáo về giới hạn phải dựa trên phép đo, không dựa trên thông báo lỗi cuối cùng mình nhìn thấy —
+thông báo ấy có thể đang nói về một góc rất nhỏ của bức tranh.

@@ -498,6 +498,90 @@ class _CfShim:
         return type("R", (), {"text": txt})()
 
 
+# ══ MODEL DỰ PHÒNG CHO GEMINI — mở lại toàn bộ hồ khoá (30/8/2026) ═══════════════════════════
+# Anh hỏi: *"sao sản xuất 60+10 kênh hàng ngày được, a có 68 gemini, 83 groq, 97 cf mà"*.
+# Câu hỏi ấy lộ ra hai lỗi chồng nhau, và cả hai đều khiến một hồ khoá lớn hoạt động như một hồ
+# khoá bé tí:
+#
+#   1. **67 trên 68 khoá Gemini của anh ở định dạng mới `AQ.…`** Nhánh này vốn nhận chúng (nó chỉ
+#      loại `cf:` và `gsk_` rồi cho phần còn lại qua), nên khoá KHÔNG bị bỏ — nhưng mọi lời gọi
+#      đều thất bại vì lý do thứ hai, và log đọc ra như "hết khoá".
+#
+#   2. **Hạn mức Gemini tính THEO TỪNG MODEL, không theo khoá.** Đo trên chính khoá của anh:
+#         gemini-3.5-flash        -> 429 (cạn)
+#         gemini-3-flash-preview  -> OK
+#         gemini-flash-lite-latest-> OK
+#      Cùng một khoá, cùng một phút. Hệ chỉ gọi ĐÚNG MỘT model viết trong hằng số, nên model ấy
+#      cạn là cả khoá coi như chết — trong khi ba mươi chín model khác trên chính khoá đó còn
+#      nguyên hạn mức.
+#
+# Groq và Cloudflare đều đã có cơ chế dò model sống (`_resolve_live_model`); chỉ nhánh Gemini là
+# không, vì nó trả thẳng module `genai` chứ không qua lớp bọc nào. Đây là chỗ duy nhất trong ba
+# nhà cung cấp thiếu lớp ấy, và cũng là nhà có nhiều khoá nhất.
+#
+# **Một hồ khoá lớn không tự nó thành năng lực. Năng lực = khoá × model gọi được × đường tới
+# chúng.** Thiếu bất kỳ vế nào thì hai vế kia thành vô nghĩa.
+GEMINI_MODELS = [
+    (os.environ.get("GEMINI_MODEL") or "gemini-3.5-flash"),
+    "gemini-3-flash-preview",
+    "gemini-flash-latest",
+    "gemini-flash-lite-latest",
+    "gemini-2.5-flash",
+]
+
+
+class _GemShim:
+    """Bọc `google.generativeai` để tự đổi model khi model hiện dùng 404 hoặc cạn hạn mức.
+
+    Giữ nguyên giao diện `GenerativeModel(...).generate_content(...)` nên mọi nơi gọi không phải
+    đổi một dòng nào."""
+
+    _song = None            # model đã chứng minh chạy được — nhớ giữa các lần gọi
+
+    def __init__(self, mod):
+        self._m = mod
+
+    def GenerativeModel(self, ten=None, **kw):
+        shim = self
+
+        class _M:
+            def __init__(self):
+                self._kw = kw
+                self._ten = ten
+
+            def generate_content(self, *a, **k):
+                # Thứ tự thử: model đã biết chạy được -> model nơi gọi xin -> danh sách dự phòng.
+                ds = []
+                if _GemShim._song:
+                    ds.append(_GemShim._song)
+                if self._ten and self._ten not in ds:
+                    ds.append(self._ten)
+                for x in GEMINI_MODELS:
+                    if x not in ds:
+                        ds.append(x)
+                cuoi = None
+                for mn in ds:
+                    try:
+                        r = shim._m.GenerativeModel(mn, **self._kw).generate_content(*a, **k)
+                        _GemShim._song = mn
+                        return r
+                    except Exception as ex:
+                        low = str(ex).lower()
+                        cuoi = ex
+                        # 404 = model đóng với khoá này · 429 = model ấy cạn hạn mức.
+                        # Cả hai đều là "đổi model", không phải "khoá chết".
+                        if "404" in low or "429" in low or "not found" in low \
+                                or "no longer available" in low or "quota" in low:
+                            continue
+                        raise
+                raise cuoi if cuoi else RuntimeError("không model Gemini nào chạy được")
+
+        return _M()
+
+    def __getattr__(self, ten):
+        return getattr(self._m, ten)
+
+
 def _genai(api_key=None):
     key0 = api_key or os.environ.get("GEMINI_API_KEY", "")
     if str(key0).startswith("cf:"):
@@ -516,7 +600,7 @@ def _genai(api_key=None):
             "   export GEMINI_API_KEY=xxx   (hoặc thêm vào GitHub Secrets)"
         )
     genai.configure(api_key=key)
-    return genai
+    return _GemShim(genai)
 
 
 def _extract_json(text: str) -> dict:
