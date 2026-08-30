@@ -336,11 +336,21 @@ export const KichHai: React.FC<PropsHai> = ({
   // Hạ cận xuống 2,4 (vẫn đủ thấy nét mặt) và NỘI SUY độ phóng trong nửa giây đầu mỗi lượt —
   // máy quay tiến vào, không cắt phựt.
   const KH: Record<string, number> = doc
-    ? { rong: 1.25, trung: 1.68, can: 2.4 }
+    // 30/8 — Anh: *"khi đổi góc quay vào 1 nhân vật thì tránh zoom quá gần"*, và *"nhớ phải
+    // đúng theo tiêu chuẩn làm phim chuyên nghiệp"*.
+    // Ở 2,4 lần, khung chỉ còn đầu và ngực — trong ngôn ngữ quay phim đó là "big close-up",
+    // cỡ dành cho khoảnh khắc căng nhất của một bộ phim, không phải cho một câu thoại hài.
+    // Cỡ đúng ở đây là "medium close-up": đầu, vai và một phần thân trên, đủ để thấy cả nét mặt
+    // lẫn cử chỉ tay — mà cử chỉ tay chính là nửa phần diễn của nhân vật này.
+    // Và một luật của nghề: **không cắt ngang khớp**. Cắt ở cổ, khuỷu hay đầu gối làm người xem
+    // thấy khó chịu mà không gọi tên được; cắt ở giữa cánh tay hoặc giữa thân thì không.
+    ? { rong: 1.18, trung: 1.52, can: 1.86 }
     : { rong: 0.84, trung: 1.06, can: 1.6 };
   const _zTruoc = KH[((i > 0 ? luot[i - 1].co : L.co) || "trung") as string] || 1.68;
   const _zNay = KH[(L.co || "trung") as string] || 1.68;
-  const zoom = trn(_zTruoc, _zNay, muot(kep((giay - L.s) / 0.5)))
+  // Đổi cỡ máy trong 0,5 giây là một cú giật; máy quay thật mất khoảng một giây để tiến vào
+  // một cỡ khác, và có gia tốc ở hai đầu. Kéo dài lên 0,9 giây.
+  const zoom = trn(_zTruoc, _zNay, muot(kep((giay - L.s) / 0.9)))
                * (1 + truocChot * 0.05) * hookZoom;
   // ══ CỠ CẬN NEO VÀO ĐẦU, HAI CỠ KIA NEO VÀO CHÂN ═════════════════════════════════════
   // Neo mọi cỡ vào chân là lý do "cận cảnh" của bản trước vẫn ra TOÀN THÂN: giữ chân đứng yên
@@ -366,7 +376,7 @@ export const KichHai: React.FC<PropsHai> = ({
   // mang hệ số ấy nữa. Đọc chuỗi biến đổi từ trong ra ngoài trước khi cộng thêm một phép nào.
   const _mucTieu = (co: boolean) => (co ? -(noiA_ ? dichA : dichB) : 0);
   const _liaTam = trn(_mucTieu(_canTruoc), _mucTieu(_canNay),
-                      muot(kep((giay - L.s) / 0.5)));
+                      muot(kep((giay - L.s) / 0.9)));
   // ▲ KHỐI TRÊN PHẢI NẰM SAU `zoom`. Bản đầu tôi đặt nó cạnh `dichA`/`dichB` cho gọn ý, nhưng
   // `_mucTieu` đọc `zoom` — mà `zoom` mãi mấy chục dòng dưới mới khai. Dựng ra:
   //     ReferenceError: Cannot access 'zoom' before initialization
@@ -375,7 +385,10 @@ export const KichHai: React.FC<PropsHai> = ({
   // về THỨ TỰ, và thứ tự chỉ lộ ra lúc chạy.
   // Đặt mã cạnh thứ nó nói VỀ thì dễ đọc; đặt cạnh thứ nó ĐỌC TỪ thì chạy được. Khi hai điều ấy
   // xung khắc, chạy được thắng — và để lại một dòng chỉ đường như dòng ở chỗ cũ.
-  const liaNhe = Math.sin(giay * 0.32 + i * 1.7) * 26;
+  // Anh: *"tránh lia zoom máy quá nhanh nhiều"*. Biên độ lia hạ từ 26 xuống 14 và chu kỳ chậm
+  // lại: một chuyển động máy quay tốt là thứ người xem KHÔNG nhận ra — nó chỉ giữ cho khung
+  // "còn sống". Thấy được máy đang lia nghĩa là lia quá tay.
+  const liaNhe = Math.sin(giay * 0.19 + i * 1.7) * 14;
 
   // ══ CẬN CẢNH LÀ CẬN VÀO NGƯỜI ĐANG NÓI, KHÔNG PHẢI CẬN CẢ HAI ═══════════════════════
   // Bản trước giữ khoảng cách hai người CỐ ĐỊNH TRÊN MÀN HÌNH (chia x cho độ phóng) trong khi
@@ -494,9 +507,9 @@ export const KichHai: React.FC<PropsHai> = ({
               cầu của anh ("nhân vật cao lên, nhân vật kia nhỏ lại rất thiếu thẩm mỹ") — nên hai
               bóng bằng nhau. Vẫn buộc bóng vào hệ số ấy để nếu sau này cỡ người lại đổi thì
               bóng không phải đi sửa lần nữa. */}
-          <ellipse cx={xA / zoom} cy={Y_CHAN - 4} rx={126 * coA} ry={19 * coA}
+          <ellipse cx={xA / zoom} cy={Y_CHAN - 4} rx={110 * coA} ry={16 * coA}
                    fill="url(#bongchan)" />
-          <ellipse cx={xB / zoom} cy={Y_CHAN - 4} rx={126 * coB} ry={19 * coB}
+          <ellipse cx={xB / zoom} cy={Y_CHAN - 4} rx={110 * coB} ry={16 * coB}
                    fill="url(#bongchan)" />
           {/* 30/8 — KHOẢNG CÁCH HAI NGƯỜI CHIA CHO ĐỘ PHÓNG.
               Toàn cảnh được phóng `zoom`; nếu giữ nguyên x thì ở cỡ CẬN (zoom 1,72) hai người
@@ -518,7 +531,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     giat={noiA_ ? 0 : _giatNghe}
                     cuChiTruoc={ccTruocA} doiCuChi={noiA_ ? doiCC : doiCCnghe} tuoiCanh={giay - L.s}
                     dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={L.vatA ?? vatA}
-                    x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
+                    x={xA / zoom} y={Y_CHAN} scale={1.12 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
@@ -526,7 +539,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     giat={!noiA_ ? 0 : _giatNghe}
                     cuChiTruoc={ccTruocB} doiCuChi={noiA_ ? doiCCnghe : doiCC} tuoiCanh={giay - L.s}
                     dangNoi={!noiA_ || (_phanUng && noiA_)} doVat={L.vatB ?? vatB}
-                    x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
+                    x={xB / zoom} y={Y_CHAN} scale={1.12 * coB} lat />
         </g>
 
         {tieuDe && giay < 2.6 ? (
