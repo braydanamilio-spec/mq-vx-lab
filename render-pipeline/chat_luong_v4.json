@@ -7,15 +7,17 @@
    "loi": [],
    "giay": 15.9,
    "luot": 6,
-   "sang": 163
+   "sang": 176
   },
   "GYM LIES": {
-   "diem": 100,
+   "diem": 95,
    "bo_qua": false,
-   "loi": [],
+   "loi": [
+    "nền xám xịt: sáng trung bình 99/255 (ngưỡng 110)"
+   ],
    "giay": 16.2,
    "luot": 6,
-   "sang": 141
+   "sang": 101
   },
   "AIRPORT HELL": {
    "diem": 100,
@@ -23,7 +25,7 @@
    "loi": [],
    "giay": 16.2,
    "luot": 6,
-   "sang": 153
+   "sang": 133
   },
   "CAR GUY": {
    "diem": 100,
@@ -31,7 +33,7 @@
    "loi": [],
    "giay": 15.2,
    "luot": 6,
-   "sang": 114
+   "sang": 123
   },
   "OFFICE SMALL TALK": {
    "diem": 100,
@@ -39,7 +41,7 @@
    "loi": [],
    "giay": 15.3,
    "luot": 6,
-   "sang": 155
+   "sang": 154
   },
   "DIET WARS": {
    "diem": 100,
@@ -47,7 +49,7 @@
    "loi": [],
    "giay": 14.2,
    "luot": 6,
-   "sang": 169
+   "sang": 162
   },
   "TECH SUPPORT": {
    "diem": 100,
@@ -55,7 +57,7 @@
    "loi": [],
    "giay": 18.5,
    "luot": 6,
-   "sang": 152
+   "sang": 133
   },
   "PARENT MODE": {
    "diem": 100,
@@ -63,7 +65,7 @@
    "loi": [],
    "giay": 12.9,
    "luot": 6,
-   "sang": 142
+   "sang": 145
   },
   "NEIGHBOR WATCH": {
    "diem": 100,
@@ -71,7 +73,7 @@
    "loi": [],
    "giay": 15.6,
    "luot": 6,
-   "sang": 161
+   "sang": 150
   },
   "DATING APP": {
    "diem": 100,
@@ -79,7 +81,7 @@
    "loi": [],
    "giay": 17.1,
    "luot": 6,
-   "sang": 139
+   "sang": 163
   }
  }
 }

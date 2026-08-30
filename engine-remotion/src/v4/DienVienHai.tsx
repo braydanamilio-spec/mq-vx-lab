@@ -101,6 +101,12 @@ export type PropsHai = {
   // số liệu ngân hàng thì kênh ấy mất hết vẻ đáng tin — mà đáng tin chính là TOÀN BỘ giá trị của
   // mười kênh dữ liệu. Bộ hài BẬT, bộ dữ liệu TẮT: cùng một con rối, hai cách diễn.
   kyHieu?: boolean;
+  // 30/8 — KÝ HIỆU LÀ MỘT CHỚP, KHÔNG PHẢI PHỤ KIỆN ĐỘI ĐẦU.
+  // Khung đo được: gần như MỌI nhân vật ở MỌI khung đều có chùm tia bật trên đầu. Vẽ đúng, nhưng
+  // hiện suốt lượt thì nó thôi làm dấu nhấn và thành một thứ dính vào tóc.
+  // Trong truyện tranh, ký hiệu bật ra đúng lúc cảm xúc ập tới rồi tan trong khoảng một giây —
+  // nó đánh dấu KHOẢNH KHẮC, không mô tả trạng thái. `tuoiCanh` = số giây kể từ đầu lượt.
+  tuoiCanh?: number;
   giat?: number;                 // 0..1 — cú giật mình (mắt mở to, đầu bật lùi) ở cú chốt
   nghieng?: number;              // độ ngả người về phía người đối thoại
   buoc?: number;                 // 0 = đứng yên; >0 = đang bước (biên độ sải chân)
@@ -128,7 +134,7 @@ const R_DAU_GOC = 58;
 
 export const DienVienHai: React.FC<PropsHai> = ({
   kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0, giat = 0, dangNoi = true,
-  cuChiTruoc, doiCuChi = 1, doVat = "", kyHieu = true,
+  cuChiTruoc, doiCuChi = 1, doVat = "", kyHieu = true, tuoiCanh = 0,
   x = 0, y = 0, scale = 1, lat = false,
 }) => {
   const E = CAM_XUC[camXuc] || CAM_XUC.trung_tinh;
@@ -749,7 +755,11 @@ export const DienVienHai: React.FC<PropsHai> = ({
             là "chột dạ", tia bật là "sững người". Ai cũng đọc được, không cần một chữ nào.
             Đây là cách rẻ nhất để một cảnh hài đọc được khi TẮT TIẾNG — mà tắt tiếng mới là
             cách phần lớn người ta xem short. */}
-        {kyHieu ? <KyHieu camXuc={camXuc} dau={dau} R={R_DAU} V={V} NT={NT} t={t} manh={noNo} /> : null}
+        {kyHieu && (tuoiCanh < 1.35 || noNo > 0.05) ? (
+          <g opacity={noNo > 0.05 ? 1 : kep((1.35 - tuoiCanh) / 0.35)}>
+            <KyHieu camXuc={camXuc} dau={dau} R={R_DAU} V={V} NT={NT} t={t} manh={noNo} />
+          </g>
+        ) : null}
       </g>
     </g>
   );

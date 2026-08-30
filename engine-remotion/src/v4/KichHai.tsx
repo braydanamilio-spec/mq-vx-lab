@@ -434,7 +434,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
                     nhan={(noiA_ ? noiA.h : 0) + (noiA_ ? hookNhun : 0)} nghieng={nghiengA} buoc={buocA}
                     giat={noiA_ ? 0 : _giatNghe}
-                    cuChiTruoc={ccTruocA} doiCuChi={doiCC}
+                    cuChiTruoc={ccTruocA} doiCuChi={doiCC} tuoiCanh={giay - L.s}
                     dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={vatA}
                     x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
@@ -442,7 +442,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
                     nhan={(!noiA_ ? noiB.h : 0) + (!noiA_ ? hookNhun : 0)} nghieng={nghiengB} buoc={buocB}
                     giat={!noiA_ ? 0 : _giatNghe}
-                    cuChiTruoc={ccTruocB} doiCuChi={doiCC}
+                    cuChiTruoc={ccTruocB} doiCuChi={doiCC} tuoiCanh={giay - L.s}
                     dangNoi={!noiA_ || (_phanUng && noiA_)} doVat={vatB}
                     x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
         </g>
