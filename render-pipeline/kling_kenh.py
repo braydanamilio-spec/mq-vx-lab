@@ -1489,6 +1489,63 @@ def luu(kenh: str, tap: dict, giay: float, so: int,
     return tm
 
 
+# ── XUẤT CHO GIAO DIỆN WEB ──────────────────────────────────────────────────────────────────
+def xuat_web(thu_muc: str) -> list[str]:
+    """Xuất hồ sơ + KHUÔN prompt cho dashboard, mỗi kênh một tệp.
+
+    31/8 — Anh muốn bấm chọn kênh và thời lượng ngay trên web, có nút chép và nút tạo. Cách dễ
+    nhất là viết lại phép ghép prompt bằng JavaScript — và đó sẽ là **bản thứ hai của sự thật**,
+    đúng cái bẫy đã trả giá nhiều lần trong dự án này (câu cấm chữ ba bản, câu góc máy bốn mươi
+    bản). Sửa một luật hài ở Python mà quên sửa bản JS thì web lặng lẽ sinh prompt theo luật cũ,
+    và không ai biết cho tới khi xem lại vài chục video.
+    Nên web KHÔNG ghép prompt. Python ghép sẵn toàn bộ phần cố định — mọi khối khoá, luật hình
+    ảnh, hàng rào chống lỗi — và chừa đúng bốn chỗ trống cho phần AI viết. Việc của web chỉ là
+    điền vào chỗ trống. Luật vẫn nằm ở một nơi duy nhất.
+    """
+    os.makedirs(thu_muc, exist_ok=True)
+    ra = []
+    MAU = {"title": "@@TITLE@@", "room": "", "hook": "@@HOOK@@", "setup": "@@SETUP@@",
+           "escalate": "@@ESCALATE@@", "payoff": "@@PAYOFF@@",
+           "lines": [{"who": "@@WHO@@", "act": "says", "say": "@@LINES@@"}]}
+    for ten, k in KENH.items():
+        hs = ho_so(ten)
+        # Khuôn xuất theo GIÂY, không nhân bản cho từng phòng: phòng chỉ đổi vài dòng, mà nhân
+        # bản làm tệp phồng lên gấp năm (6,6 MB cho mười kênh — quá nặng để tải trên web).
+        # Tên và mô tả phòng thành chỗ trống, web điền lại từ `phong` đã có sẵn trong tệp này.
+        ph0 = next(iter(hs["phong"]))
+        mo0 = hs["phong"][ph0]
+        khuon = {}
+        for g in GIAY_CHUAN:
+            tap = dict(MAU, room=ph0)
+            khuon[str(g)] = {}
+            for kieu, cf in (("gon", False), ("day", True)):
+                t = prompt(ten, tap, g, so=0, day=cf)
+                khuon[str(g)][kieu] = t.replace(mo0, "@@ROOMDESC@@").replace(ph0, "@@ROOM@@")
+        ra_kenh = {
+            "ten": ten, "mo_ta": hs["mo_ta"], "ty_le": hs["ty_le"],
+            "vai": {t: hs["nhan_vat"][t] for t in hs["vai"]},
+            "phong": hs["phong"],
+            "mach": hs["mach"],
+            "giay": list(GIAY_CHUAN),
+            "nhip": {str(g): nhip(g) for g in GIAY_CHUAN},
+            "sys": {str(g): _sys(ten, g) for g in GIAY_CHUAN},
+            "tu_toi_da": {str(g): int(_giay_thoai(g) * TU_MOI_GIAY) for g in GIAY_CHUAN},
+            "gioi_han": {"vai": VAI_TOI_DA, "luot": LUOT_TOI_DA, "tu_moi_luot": TU_MOI_LUOT},
+            "khuon": khuon,
+        }
+        f = os.path.join(thu_muc, _slug(ten) + ".json")
+        io.open(f, "w", encoding="utf-8").write(json.dumps(ra_kenh, ensure_ascii=False))
+        ra.append(f)
+    # mục lục nhẹ để web nạp danh sách kênh mà không phải tải hết
+    io.open(os.path.join(thu_muc, "index.json"), "w", encoding="utf-8").write(json.dumps(
+        {"kenh": [{"ten": t, "slug": _slug(t), "mo_ta": k["mo_ta"],
+                   "vai": list(ho_so(t)["vai"]), "phong": list(ho_so(t)["phong"])}
+                  for t, k in KENH.items()],
+         "giay": list(GIAY_CHUAN),
+         "luat": LUAT_HAI_MY}, ensure_ascii=False))
+    return ra
+
+
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser(description="Sinh prompt Kling có khoá nhân vật.")
@@ -1499,6 +1556,7 @@ def main() -> int:
     ap.add_argument("--sl", type=int, default=1, help="sinh mấy tập một lượt")
     ap.add_argument("--phong", default="", help="ép một phòng cụ thể; bỏ trống = luân phiên")
     ap.add_argument("--kenh-liet-ke", action="store_true")
+    ap.add_argument("--xuat-web", default="", help="xuất hồ sơ + khuôn prompt cho dashboard")
     ap.add_argument("--day", action="store_true",
                     help="prompt ĐẦY ĐỦ ~2700 từ (13 khối chỉ đạo hình ảnh) thay vì bản gọn "
                          "~2700 ký tự. Dùng khi giao diện Kling nhận trọn prompt dài.")
@@ -1506,6 +1564,12 @@ def main() -> int:
                     help="một ý tưởng ra NHIỀU độ dài, ví dụ 5,8,15 — cùng dàn vai, cùng phòng, "
                          "cùng cú lật, chỉ khác cách nén nhịp")
     a = ap.parse_args()
+
+    if a.xuat_web:
+        fs = xuat_web(a.xuat_web)
+        tong = sum(os.path.getsize(f) for f in fs)
+        print(f"  ✅ xuất {len(fs)} kênh · {tong/1024:.0f} KB → {a.xuat_web}")
+        return 0
 
     if a.kenh_liet_ke:
         for k, v in KENH.items():
