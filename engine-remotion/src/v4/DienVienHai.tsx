@@ -636,9 +636,60 @@ export const DienVienHai: React.FC<PropsHai> = ({
 
         {/* TÓC — đặt CUỐI cùng để nó phủ lên mép sọ, đúng như tóc thật phủ lên trán. */}
         <Toc kieu={kieu} dau={dau} R={R_DAU} V={V} NG={NG} t={t} />
+
+        {/* ══ KÝ HIỆU CẢM XÚC ("emanata") — dấu hỏi, gân giận, giọt mồ hôi, tia bật ═══════
+            30/8 — Anh xem clip và nói *"ko hình dung được sự hài hước"*. Một phần vì lời thoại
+            là tiếng Anh: hài đối đáp kiểu Mỹ phải NGHE HIỂU mới buồn cười, còn khán giả lướt
+            short thì phần lớn xem KHÔNG TIẾNG.
+            Hoạt hình phương Tây giải bài này từ thời truyện tranh báo: vẽ thẳng cảm xúc thành
+            KÝ HIỆU nổi quanh đầu — dấu hỏi là "không hiểu", chùm gân là "điên tiết", giọt mồ hôi
+            là "chột dạ", tia bật là "sững người". Ai cũng đọc được, không cần một chữ nào.
+            Đây là cách rẻ nhất để một cảnh hài đọc được khi TẮT TIẾNG — mà tắt tiếng mới là
+            cách phần lớn người ta xem short. */}
+        <KyHieu camXuc={camXuc} dau={dau} R={R_DAU} V={V} NT={NT} t={t} manh={noNo} />
       </g>
     </g>
   );
+};
+
+/** Ký hiệu cảm xúc nổi quanh đầu. `manh` > 0 là đang ở cú giật mình — ký hiệu bật to hơn. */
+const KyHieu: React.FC<{ camXuc: string; dau: [number, number]; R: number; V: string;
+                         NT: number; t: number; manh: number }> =
+({ camXuc, dau, R, V, NT, t, manh }) => {
+  const [x, y] = dau;
+  // Nhấp nhô rất nhẹ để ký hiệu "sống" chứ không dán chết vào đầu.
+  const bay = Math.sin(t * 3.1) * 3;
+  // Phóng 1,7 lần: ở cỡ trung cảnh trên khung dọc, ký hiệu vẽ đúng cỡ "thật" thì bé bằng đầu
+  // ngón tay và không ai đọc ra. Cùng lý do phải phóng đại cử chỉ và đạo cụ.
+  const co = 1.7 * (1 + manh * 0.5);
+  const g = (n: React.ReactNode) => (
+    <g transform={`translate(0 ${bay}) translate(${x + R * 0.86} ${y - R * 0.98}) scale(${co}) translate(${-(x + R * 0.86)} ${-(y - R * 0.98)})`}>{n}</g>
+  );
+  const X = x + R * 0.86, Y = y - R * 0.98;
+
+  if (camXuc === "nghi_ngo")            // DẤU HỎI — "không hiểu nổi"
+    return g(<>
+      <path d={`M ${X - 8} ${Y - 8} q 0 -13 10 -13 q 11 0 11 10 q 0 8 -9 11 q -5 2 -5 8`}
+            stroke={V} strokeWidth={NT * 2.4} fill="none" strokeLinecap="round" />
+      <circle cx={X + 7} cy={Y + 15} r={NT * 1.5} fill={V} />
+    </>);
+  if (camXuc === "bat_ngo" || camXuc === "so")   // TIA BẬT — "sững người"
+    return g(<>{[0, 1, 2, 3, 4].map((i) => {
+      const a2 = -118 + i * 26;
+      const r1 = 13, r2 = 26;
+      const c = Math.cos(D(a2)), s2 = Math.sin(D(a2));
+      return <line key={i} x1={X + c * r1} y1={Y + s2 * r1} x2={X + c * r2} y2={Y + s2 * r2}
+                   stroke={V} strokeWidth={NT * 1.9} strokeLinecap="round" />;
+    })}</>);
+  if (camXuc === "tuc")                 // CHÙM GÂN — "điên tiết"
+    return g(<g stroke="#D2453A" strokeWidth={NT * 2.1} fill="none" strokeLinecap="round">
+      <path d={`M ${X - 11} ${Y - 9} l 9 9 l -9 9`} />
+      <path d={`M ${X + 3} ${Y - 9} l 9 9 l -9 9`} />
+    </g>);
+  if (camXuc === "buon")                // GIỌT MỒ HÔI — "chột dạ"
+    return g(<path d={`M ${X} ${Y - 13} q 10 15 4 21 q -7 5 -11 -2 q -3 -7 7 -19 Z`}
+                   fill="#8FC7E8" stroke={V} strokeWidth={NT * 1.2} strokeLinejoin="round" />);
+  return null;
 };
 
 // ══════════════════════════════════════════════════════════════════════════════════════════

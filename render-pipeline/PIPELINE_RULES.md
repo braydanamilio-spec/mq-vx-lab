@@ -4571,3 +4571,30 @@ Nay lượt chốt ép cảm xúc người nghe thành `bat_ngo`, và bỏ `"vui
 Ở đây `n = 6` và mọi kịch bản đều đúng 6 lượt, nên "xoay vòng" thực ra là **gán cứng** — vị trí
 cuối luôn trúng phần tử cuối. Cứ thấy phép chia lấy dư thì phải hỏi: *độ dài thật có bằng đúng
 mô-đun không?*
+
+### 7at. KÝ HIỆU CẢM XÚC — CÁCH RẺ NHẤT ĐỂ HÀI ĐỌC ĐƯỢC KHI TẮT TIẾNG — 30/8/2026
+
+Anh: *"ko hình dung được sự hài hước"*. Đọc lại kịch bản thì chúng **buồn cười thật** —
+*"Closing is also labor."* · *"On whether I should do the homework."* · *"That is what the last
+one said too."* đều là cú chốt kiểu Mỹ đúng bài.
+
+Nhưng anh **nghe tiếng Anh**, và hài đối đáp cần nghe-hiểu mới thấy buồn cười. Quan trọng hơn:
+**phần lớn người xem short xem KHÔNG TIẾNG.** Một cảnh hài chỉ buồn cười khi bật loa là một cảnh
+hài hỏng một nửa.
+
+Hoạt hình phương Tây giải bài này từ thời truyện tranh báo: vẽ thẳng cảm xúc thành **KÝ HIỆU** nổi
+quanh đầu.
+
+| Ký hiệu | Nghĩa | Dùng cho |
+|---|---|---|
+| dấu hỏi | "không hiểu nổi" | `nghi_ngo` |
+| tia bật quanh đầu | "sững người" | `bat_ngo` · `so` |
+| chùm gân đỏ | "điên tiết" | `tuc` |
+| giọt mồ hôi | "chột dạ" | `buon` |
+
+Ai cũng đọc được, **không cần một chữ nào**. Phóng 1,7 lần vì ở cỡ trung cảnh trên khung dọc, ký
+hiệu vẽ đúng cỡ "thật" thì bé bằng đầu ngón tay — cùng lý do phải phóng đại cử chỉ (7ah) và đạo
+cụ (7an).
+
+**Thước đo đúng cho một cảnh hài short: TẮT TIẾNG mà vẫn hiểu và vẫn buồn cười.** Nếu tắt tiếng
+đi mà chỉ còn hai người đứng mấp máy môi thì cảnh ấy chưa xong, dù lời thoại hay đến đâu.
