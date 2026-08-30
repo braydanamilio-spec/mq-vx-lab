@@ -630,7 +630,7 @@ def canh_moi_luot_ai(k: dict, cau: list, keys) -> list:
         "Format strictly as: 1. phrase\n2. phrase\n... nothing else."
     )
     import re as _re
-    for kk in list(keys)[:3]:
+    for kk in xoay_key(keys):
         try:
             g = CB._genai(kk if isinstance(kk, str) else kk.get("key"))
             m = g.GenerativeModel("gemini-2.5-flash")
@@ -728,7 +728,7 @@ def canh_nen_ai(k: dict, cau: list, keys) -> str:
         "all packaging blank and unbranded. Describe a place and objects only.\n"
         "Reply with the phrase alone, nothing else."
     )
-    for kk in list(keys)[:3]:
+    for kk in xoay_key(keys):
         try:
             g = CB._genai(kk if isinstance(kk, str) else kk.get("key"))
             m = g.GenerativeModel("gemini-2.5-flash")
@@ -976,6 +976,30 @@ _BONG = {
     "dating":   ({"cao": 1.06, "beNgang": .94,  "kinh": False, "rau": "",    "matTo": 1.18, "cam": .2, "ao": "#D96A3C", "quan": "#6B3F28", "kieuMui": "moc", "kieuMat": "tron", "kieuMay": "manh", "tiLeDau": 1.05},
                  {"cao": .98,  "beNgang": 1.16, "kinh": True,  "rau": "quai", "matTo": .96, "cam": .6, "ao": "#35566E", "quan": "#335066", "kieuMui": "nhon", "kieuMat": "hep", "kieuMay": "xech", "tiLeDau": 0.97}),
 }
+
+
+def xoay_key(keys, toi_da: int = 14):
+    """Sinh lần lượt khoá để thử, bắt đầu từ một chỗ KHÁC NHAU mỗi lần gọi.
+
+    30/8 — anh gửi hai khung và nói nền chưa mờ, chưa liên quan. Đào tới cùng thì hoá ra video
+    **không có ảnh nền nào**, và lý do là bốn hàm gọi mô hình đều viết `for kk in list(keys)[:3]`
+    — thử đúng BA khoá đầu trong một hồ **295 khoá**.
+    Ba khoá đầu hôm nay: một cạn hạn mức ngày, một bị thu hồi, một sống. Nhưng hàm bỏ cuộc
+    trước khi tới khoá sống, nên toàn bộ khâu vẽ nền chết lặng.
+    Repo đã có luật "key cạn quota thì ĐỔI KEY, đừng giết luồng" và cả một cổng selftest cho
+    nó — mà bốn hàm này không hưởng, vì chúng tự viết vòng lặp riêng.
+    Hai việc hàm này làm:
+      · thử tới `toi_da` khoá thay vì ba;
+      · mỗi lần gọi bắt đầu từ một VỊ TRÍ khác, nên vài khoá hỏng ở đầu hồ không chặn mãi mọi
+        lời gọi — thứ khiến lỗi trên trông như "mô hình không trả lời" thay vì "khoá hỏng".
+    """
+    ds = [k if isinstance(k, str) else (k or {}).get("key") for k in (keys or [])]
+    ds = [k for k in ds if k]
+    if not ds:
+        return
+    xoay_key._i = (getattr(xoay_key, "_i", 0) + 1) % max(1, len(ds))
+    for j in range(min(toi_da, len(ds))):
+        yield ds[(xoay_key._i + j) % len(ds)]
 
 
 def _co_chu(tep: str, keys=None) -> bool:

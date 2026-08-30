@@ -908,7 +908,7 @@ def _chu_de_ai(ten_kenh: str, tieu_de: str, nhan_cot: list, keys) -> str:
         "scene. Describe objects and a place only.\n"
         "Reply with the phrase alone, nothing else."
     )
-    for k in list(keys)[:3]:
+    for k in _xoay(keys):
         try:
             g = CB._genai(k if isinstance(k, str) else k.get("key"))
             m = g.GenerativeModel("gemini-2.5-flash")
@@ -921,6 +921,12 @@ def _chu_de_ai(ten_kenh: str, tieu_de: str, nhan_cot: list, keys) -> str:
         except Exception:
             continue
     return ""
+
+
+def _xoay(keys):
+    """Mượn vòng xoay khoá của bộ hài — một bản duy nhất cho cả hai bộ."""
+    import kich_hai as _KHx
+    return _KHx.xoay_key(keys)
 
 
 def canh_moi_cau_ai(ten_kenh: str, tieu_de: str, cau_noi: list, keys) -> list:
@@ -953,7 +959,7 @@ def canh_moi_cau_ai(ten_kenh: str, tieu_de: str, cau_noi: list, keys) -> list:
         "Format strictly as: 1. phrase\n2. phrase\n... nothing else."
     )
     import re as _re
-    for kk in list(keys)[:3]:
+    for kk in _xoay(keys):
         try:
             g = CB._genai(kk if isinstance(kk, str) else kk.get("key"))
             m = g.GenerativeModel("gemini-2.5-flash")
@@ -1366,11 +1372,24 @@ def main() -> int:
         _canhDS = canh_moi_cau_ai(ten, sl[0], [c["nar"] for c in canh], keys)
         for _i2, _c2 in enumerate(_canhDS):
             print(f"   🧭 {_i2+1}. {_c2[:62]}")
+        # 30/8 — anh gửi hai khung và nói nền "chưa mờ" với "chưa liên quan". Soi props thì ra
+        # chuyện khác hẳn: `nenTheoCanh` RỖNG HẾT và `nenAnh` cũng rỗng — video **không có tấm
+        # ảnh nền nào**. Thứ anh nhìn thấy là màu trơn vẽ vector, nên nó vừa không mờ được (mờ
+        # cái gì khi không có ảnh) vừa không liên quan được.
+        # Và cả lượt dựng **không in ra một dòng nào** về việc ấy. Đây đúng dạng lỗi vừa gặp ở
+        # CALORIE SHOCK: hỏng mà im lặng, nên nó sống sót qua nhiều lượt kiểm.
+        # Một khâu hỏng phải KÊU. Không kêu thì nó không phải là khâu hỏng — nó là khâu vô hình.
+        if not _canhDS:
+            print(f"   ⚠️ {ten}: mô hình không trả cảnh nào (thiếu khoá vẽ, hoặc hết hạn mức)"
+                  f" — nền sẽ lùi về bối cảnh vector của kênh")
         nenCau = ve_nen_moi_cau(k, DS, _canhDS) if _canhDS else []
         # Nền cố định của kênh làm ĐƯỜNG LUI cho những câu mà mô hình không trả hoặc vẽ hỏng —
         # không bao giờ để một cảnh trống nền.
         _nhan = [a2 for a2, _b2, _c2 in sl[1]]
         nen2 = ve_nen_v3(k, DS, keys, "") if (not nenCau or not all(nenCau)) else []
+        if not any(nenCau) and not any(nen2):
+            print(f"   ⚠️ {ten}: KHÔNG có ảnh nền nào — video sẽ chỉ có màu trơn phía sau."
+                  f" (khoá vẽ: {len(keys or [])} cái)")
         sl_ten = ten.replace(" ", "").lower()
 
         # GIỌNG ĐỌC + MỐC TỪNG TỪ. Dùng lại `tts_karaoke.synth` — đúng đường đã chạy cho 50 kênh,
