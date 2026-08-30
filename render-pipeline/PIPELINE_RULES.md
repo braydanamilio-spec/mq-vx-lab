@@ -4551,3 +4551,23 @@ XEM. Ba thứ đã thêm, đều lấy từ chính bộ 500 prompt anh gửi:
 máy cắt sang thì nó đã tắt — máy cắt sang một khuôn mặt đứng yên. Mốc đúng là **thời điểm câu
 chốt vừa dứt**. Cùng lúc đó, người nghe phải được trả lại đủ biên độ diễn (`dangNoi`), không thì
 cắt sang một pho tượng.
+
+### 7as. NGƯỜI NGHE CƯỜI THÌ KHÁN GIẢ KHÔNG CƯỜI — 30/8/2026
+
+Soi khung cú chốt của cả mười kênh: **cả mười đều kết thúc bằng một khuôn mặt đang cười.**
+
+Gốc là một dòng vô tình: cảm xúc người nghe lấy theo `["nghi_ngo","bat_ngo","trung_tinh","tuc",
+"buon","vui"][i % 6]`, và kịch bản của bộ này luôn có **sáu lượt** — nên `"vui"` rơi đúng vào lượt
+cuối, ở mọi kênh, mọi tập.
+
+Nhưng đó là **ngược hẳn nguyên tắc hài**: nhân vật trên màn hình cười là nhân vật đã cười HỘ khán
+giả, và cú chốt hoá ra chỉ là một câu vui vẻ. Thứ làm người ta bật cười là mặt **SỮNG NGƯỜI** —
+hàm rơi, mắt trợn, chưa kịp hiểu chuyện gì vừa xảy ra. Khán giả cười vào khoảng trống giữa "câu
+vừa nói" và "mặt chưa hiểu".
+
+Nay lượt chốt ép cảm xúc người nghe thành `bat_ngo`, và bỏ `"vui"` khỏi bảng xoay vòng.
+
+**Bài học chung:** một bảng xoay theo `i % n` là an toàn khi `n` không chia hết cho độ dài thật.
+Ở đây `n = 6` và mọi kịch bản đều đúng 6 lượt, nên "xoay vòng" thực ra là **gán cứng** — vị trí
+cuối luôn trúng phần tử cuối. Cứ thấy phép chia lấy dư thì phải hỏi: *độ dài thật có bằng đúng
+mô-đun không?*

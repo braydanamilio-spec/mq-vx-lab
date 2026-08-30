@@ -1066,7 +1066,14 @@ def dung_luot(k: dict, nen: list, vong: int = 0) -> tuple:
              "camXuc": cx,
              # CẢM XÚC NGƯỜI NGHE — nửa còn lại của trò đùa. Trong hài thoại, mặt người nghe
              # thường buồn cười hơn câu của người nói.
-             "camXucKia": ["nghi_ngo", "bat_ngo", "trung_tinh", "tuc", "buon", "vui"][i % 6],
+             # 30/8 — Ở CÚ CHỐT, NGƯỜI NGHE PHẢI SỮNG, KHÔNG ĐƯỢC CƯỜI.
+             # Bảng xoay vòng `i % 6` đặt "vui" vào đúng lượt cuối của kịch bản sáu lượt, nên cả
+             # mười kênh đều kết thúc bằng một khuôn mặt đang cười. Đó là ngược hẳn nguyên tắc:
+             # NGƯỜI NGHE CƯỜI THÌ KHÁN GIẢ KHÔNG CƯỜI — nhân vật đã cười hộ mất rồi, và cú chốt
+             # hoá ra chỉ là một câu vui vẻ. Cái làm người ta bật cười là mặt SỮNG NGƯỜI: hàm rơi,
+             # mắt trợn, chưa kịp hiểu chuyện gì vừa xảy ra.
+             "camXucKia": ("bat_ngo" if cuoi else
+                           ["nghi_ngo", "bat_ngo", "trung_tinh", "tuc", "buon", "nghi_ngo"][i % 6]),
              "cuChi": cu_chi_cua(chu, i, cuoi),
              # CỠ MÁY LÀ CHỖ TẠO NHỊP, thay cho việc đổi nền. Mở bằng toàn cảnh cho người xem
              # đọc ra đang ở đâu, siết dần vào khi câu chuyện leo thang, và cú chốt đóng cận
