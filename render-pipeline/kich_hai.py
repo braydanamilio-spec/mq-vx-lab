@@ -129,6 +129,23 @@ KENH = [
 #
 # `giong` ghi CHỮ KÝ giọng chứ không ghi mã giọng: mã giọng là việc của `GIONG` bên dưới, còn
 # đây là mô tả để người đọc mã hiểu vì sao chọn mã ấy.
+# ══ GIỚI TÍNH NHÂN VẬT — NGUỒN SỰ THẬT DUY NHẤT ═══════════════════════════════════════════
+# 30/8 — Anh: *"nhiều khi a thấy con trai mà giọng nữ"*. Soi ra thì giọng không sai; HÌNH sai:
+#   · Mrs. Vale, 54 tuổi, chủ nhà  → `"rau": "de"`   (râu dê)
+#   · Coach Bree, huấn luyện viên  → `"rau": "quai"` (râu quai nón)
+# Gốc rễ là BA BẢNG ĐỘC LẬP nói về cùng một người mà không bảng nào biết bảng kia:
+#   `NHAN_VAT` (tên, tuổi, tính) · `_BONG` (dáng, râu, màu áo) · `GIONG_KENH` (giọng).
+# `_BONG` được viết theo DÁNG NGƯỜI — cao thấp, gầy béo — nên lúc chọn râu cho "người thứ hai
+# trông đô con hơn" thì không có gì nhắc rằng người thứ hai ấy tên là Mrs. Vale.
+# Ba bảng thì phải có MỘT bảng cầm sự thật, và hai bảng kia suy từ nó. Bảng ấy là đây.
+GIOI = {
+    "rent":     ("nam", "nu"),  "gym":      ("nam", "nu"),
+    "airport":  ("nam", "nu"),  "car":      ("nam", "nam"),
+    "office":   ("nu",  "nam"), "diet":     ("nu",  "nam"),
+    "tech":     ("nam", "nu"),  "parent":   ("nam", "nu"),
+    "neighbor": ("nam", "nu"),  "dating":   ("nam", "nam"),
+}
+
 NHAN_VAT = {
  "rent":     (("Danny", 29, "người thuê nhà, làm ca đêm, tin vào hợp đồng đã ký",
                "trẻ, hơi gấp gáp"),
@@ -1498,6 +1515,15 @@ def main() -> int:
           "neighbor": (("en-US-ChristopherNeural", "-6%", "-12Hz"), ("en-US-MichelleNeural", "+4%", "+4Hz")),
           "dating":   (("en-US-BrianNeural",   "+10%", "+8Hz"),  ("en-US-AriaNeural",    "-4%",  "-4Hz")),
         }
+        # Ép hình theo bảng giới tính. Làm ở đây, một chỗ, thay vì đi sửa hai mươi dòng `_BONG`
+        # — sửa tay thì lần thêm kênh thứ mười một lại quên, còn ép ở đây thì không quên được.
+        for _b, _g in zip(_BONG.get(k["de"], ({}, {})), GIOI.get(k["de"], ("nam", "nam"))):
+            if _g == "nu":
+                _b["rau"] = ""
+                _b.setdefault("kieuToc", "dai")
+            else:
+                _b.setdefault("kieuToc", "ngan")
+
         ga, gb = GIONG_KENH.get(k["de"], (("en-US-GuyNeural", "+4%", "+0Hz"),
                                           ("en-US-JennyNeural", "+2%", "+6Hz")))
         rel = f"v4_{_ten_tep(k)}.mp3"
