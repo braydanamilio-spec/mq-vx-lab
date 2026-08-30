@@ -298,6 +298,59 @@ def lay_so_lieu(nguon: str, D):
 #   • phần giải thích ở cỡ TRUNG với cử chỉ tay — tay dẫn mắt người xem tới biểu đồ;
 #   • câu chốt ở cỡ CẬN, cảm xúc TỰ TIN — người xem nhớ khuôn mặt lúc kết.
 # ══════════════════════════════════════════════════════════════════════════════════════════
+def _muc_so_lieu(st: dict) -> list:
+    """Rút bảng số ra khỏi story, BẤT KỂ dạng ấy cất nó ở đâu.
+
+    30/8 — Đo ra thì 20/50 kênh thế hệ 2 (40%) chưa từng ra nổi một video, và mỗi lượt đều báo
+    "nguồn không trả đủ dữ liệu". Nguồn không hề thiếu: gọi thẳng thì Zillow trả 51 vùng × 319
+    tháng, MLB trả 12 đội, NBA trả 12 cầu thủ. Thiếu là ở phía tôi.
+
+    Năm dạng story cất bảng số ở NĂM KHOÁ KHÁC NHAU — `items`, `frames`, `pairs`, `data` — và
+    dùng tên trường khác nhau cho cùng một thứ (`name`/`label`/`state`, `stat`/`value`/`disp`/
+    `oddsDisp`). Bộ chuyển tôi viết chỉ biết `items[].name/stat`, tức đúng dạng `ranked` mà tôi
+    mở ra xem lúc ấy. Rồi tôi báo cáo "đã chuyển xong 50 kênh" — trong khi mới nối được 30.
+
+    Hai bài học, và bài thứ hai đắt hơn:
+     · Viết bộ chuyển khuôn thì phải mở ĐỦ CÁC DẠNG ra xem, không suy từ một dạng ra cả họ.
+     · Thông báo lỗi phải chỉ đúng phía hỏng. "Nguồn không trả đủ dữ liệu" khiến tôi đi kiểm
+       API suốt, trong khi API vẫn tốt — câu đúng phải là "không rút được bảng số từ story dạng
+       X". Một câu báo lỗi đổ sai phía làm mất nhiều thời gian hơn là không báo gì.
+
+    Còn lại dạng `cinematic` (4 kênh): nó kể bằng `scenes`, không có bảng số nào để rút. Đó là
+    thiếu THẬT, không phải lỗi nối — cần nguồn số riêng cho bốn kênh ấy, và tôi để nguyên đó
+    thay vì nặn ra một bảng số không có thật.
+    """
+    if not st:
+        return []
+    _TEN = ("name", "label", "state", "ten", "doi")
+    _SO = ("stat", "disp", "hien", "value", "so", "gt", "oddsDisp", "nowVal")
+
+    def _chuan(ds):
+        ra = []
+        for m in ds or []:
+            if not isinstance(m, dict):
+                continue
+            ten = next((str(m[k]).strip() for k in _TEN if m.get(k) not in (None, "")), "")
+            gia = next((m[k] for k in _SO if m.get(k) not in (None, "")), "")
+            if ten and gia != "":
+                ra.append({"name": ten, "stat": gia})
+        return ra
+
+    if st.get("items"):
+        return _chuan(st["items"])
+    if st.get("frames"):
+        # race: lấy KHUNG CUỐI — bảng xếp hạng ở mốc mới nhất. Cả cuộc đua nén thành một bảng
+        # so sánh, đúng thứ dạng phân tích cần; diễn biến vẫn còn trong lời dẫn.
+        return _chuan((st["frames"][-1] or {}).get("data"))
+    if st.get("pairs"):
+        # thennow: lấy giá trị NAY. Mức chênh xưa→nay nằm trong lời, còn cột thì cần một con số
+        # nhất quán giữa các mục để so được chiều cao.
+        return _chuan(st["pairs"])
+    if st.get("data"):
+        return _chuan(st["data"])
+    return []
+
+
 def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
     """Lấy số liệu của một kênh THẾ HỆ 2 và trả về đúng khuôn `lay_so_lieu` — để 50 kênh ấy
     dựng được bằng chính đường của mười kênh phân tích.
@@ -342,7 +395,7 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
             break
         _thu.append(_st)
         _g = []
-        for _it in (_st.get("items") or []):
+        for _it in _muc_so_lieu(_st):
             _v = None
             for _k2f in ("stat", "disp", "hien", "value", "so", "gt"):
                 if _it.get(_k2f) not in (None, ""):
@@ -377,7 +430,7 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
     # của sự thật, và dạng thứ tám sẽ lại quên.
     _TRUONG_SO = ("stat", "disp", "hien", "value", "so", "gt")
     ds = []
-    for it in (st.get("items") or []):
+    for it in _muc_so_lieu(st):
         hien = ""
         for _k in _TRUONG_SO:
             if it.get(_k) not in (None, ""):
