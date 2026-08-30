@@ -365,9 +365,23 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
     # lát ở trên: tôi cắt mã bằng hai mốc đầu–cuối mà không nhìn phần nằm giữa hai mốc ấy, và
     # phần nằm giữa chính là chỗ dựng `ds`. Sửa mã bằng cách cắt theo mốc thì phải đọc đoạn bị
     # cắt trước khi thay — nếu không, thứ biến mất là thứ mình không nghĩ tới.)
+    # ══ BẢY DẠNG, BẢY TÊN TRƯỜNG ═══════════════════════════════════════════════════════
+    # CALORIE SHOCK bỏ lượt với lý do "nguồn không trả đủ dữ liệu" — mà nguồn trả đủ. Nó thuộc
+    # dạng `scaled`, và dạng ấy để con số ở `value`/`disp`, không phải `stat`. Hàm chuyển khuôn
+    # này tôi viết khi chỉ nhìn MỘT dạng (`ranked`), rồi mang áp cho cả năm mươi kênh gồm bảy
+    # dạng khác nhau.
+    # Lỗi im lặng đúng kiểu khó chịu nhất: không có ngoại lệ nào, không có cảnh báo nào — kênh
+    # chỉ lặng lẽ bỏ lượt, và thông báo còn đổ lỗi cho nguồn.
+    # Thử lần lượt các tên đã gặp thay vì khai một bảng dạng→tên: bảng ấy là một bản thứ hai
+    # của sự thật, và dạng thứ tám sẽ lại quên.
+    _TRUONG_SO = ("stat", "disp", "hien", "value", "so", "gt")
     ds = []
     for it in (st.get("items") or []):
-        hien = str(it.get("stat") or "").strip()
+        hien = ""
+        for _k in _TRUONG_SO:
+            if it.get(_k) not in (None, ""):
+                hien = str(it[_k]).strip()
+                break
         # Giá trị SỐ rút từ chữ hiện: "351 cal" -> 351.0. Biểu đồ cần con số để tính chiều cao
         # cột; chữ hiện giữ nguyên đơn vị để người xem đọc đúng thứ nguồn nói.
         m = _re.search(r"-?[\d,]+\.?\d*", hien.replace(",", ""))
