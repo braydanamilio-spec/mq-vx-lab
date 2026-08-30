@@ -52,6 +52,19 @@ import { CAM_XUC, CU_CHI, Kieu, TenCamXuc, TenCuChi, Tu, visemeTai } from "../v2
 // Cánh tay duỗi ngang hết cỡ dài hơn khoảng trống giữa hai người, nên chỉ cần một cử chỉ ngang
 // là chạm. Chỉ lên trời còn đúng ngôn ngữ hài hơn: nó là điệu bộ "tuyên bố", còn chỉ ngang vào
 // mặt người đối diện thì vừa thô vừa che mất mặt người ấy.
+// ══ BIÊN ĐỘ GẬP KHUỶU — sửa 30/8, lần cuối cùng ═══════════════════════════════════════════
+// Anh: *"tay vẫn cong cong khèo khèo thế"* — nói sau khi tôi ĐÃ hoàn tác cách vẽ về bản cũ.
+// Đó là dữ kiện quan trọng nhất: **cả bản cũ lẫn ba bản mới đều cong khèo như nhau.** Nghĩa là
+// suốt ba lượt tôi sửa nhầm chỗ — vấn đề chưa bao giờ nằm ở cách VẼ (nét kẻ hay mảnh cắt hay
+// xương), nó nằm ở BẢNG SỐ.
+// Bảng có `chong_nanh: khuyuT = -86` và `suy_nghi: khuyuP = -96`: cẳng tay quay ngược gần chín
+// mươi độ so với cánh tay. Ở góc ấy thì cách vẽ nào cũng ra hình móc câu — đường cong thì phình
+// thành lưỡi liềm, xương thì gãy gập, mảnh cắt thì như khớp giả.
+// Hạ biên độ gập còn khoảng một nửa. Giữ nguyên dấu (chiều gập) và giữ những giá trị vốn đã nhỏ.
+//
+// Bài học đắt nhất phiên: ba lượt liền tôi đổi KIẾN TRÚC để chữa một triệu chứng do MỘT BẢNG SỐ
+// gây ra. Dấu hiệu đáng lẽ phải nhận ra ngay: nếu đổi hẳn cách làm mà triệu chứng không đổi,
+// thì cái hỏng nằm ở phần KHÔNG đổi.
 const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; khuyuP: number }> = {
   // ══ VIẾT LẠI TOÀN BẢNG — 30/8, sau khi anh nhắc lần thứ tư về tay ══════════════════════
   // Anh: *"tự dưng dơ tay lên trời thấy lỗi… fix 1 lần triệt để"*. Trước nay tôi vá từng cử chỉ
@@ -71,15 +84,15 @@ const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; k
   // khoảnh khắc nào như thế. Nên **không dòng nào dưới 70**, và đó là luật để lần sau ai đọc
   // bảng cũng biết ngưỡng ở đâu.
   nghi:       { vaiT: 168, khuyuT: -10, vaiP: 168, khuyuP: 10 },   // hai tay buông, hơi cong
-  chi:        { vaiT: 162, khuyuT: -12, vaiP: 104, khuyuP: -26 },  // chỉ NGANG về phía bạn diễn
-  mo_tay:     { vaiT: 128, khuyuT: -40, vaiP: 124, khuyuP: 40 },   // mở hai tay tầm ngực
-  dem:        { vaiT: 134, khuyuT: -58, vaiP: 118, khuyuP: 44 },   // hai tay trước ngực, lệch tầng
-  suy_nghi:   { vaiT: 166, khuyuT: -8,  vaiP: 140, khuyuP: -96 },  // một tay chống cằm
-  nhun_vai:   { vaiT: 122, khuyuT: -46, vaiP: 126, khuyuP: 46 },   // nhún: khuỷu gập, bàn ngửa
+  chi:        { vaiT: 162, khuyuT: -12, vaiP: 104, khuyuP: -13 },  // chỉ NGANG về phía bạn diễn
+  mo_tay:     { vaiT: 128, khuyuT: -20, vaiP: 124, khuyuP: 20 },   // mở hai tay tầm ngực
+  dem:        { vaiT: 134, khuyuT: -30, vaiP: 118, khuyuP: 22 },   // hai tay trước ngực, lệch tầng
+  suy_nghi:   { vaiT: 166, khuyuT: -8,  vaiP: 140, khuyuP: -49 },  // một tay chống cằm
+  nhun_vai:   { vaiT: 122, khuyuT: -23, vaiP: 126, khuyuP: 23 },   // nhún: khuỷu gập, bàn ngửa
   gio_len:    { vaiT: 150, khuyuT: -18, vaiP: 96,  khuyuP: -20 },  // nâng MỘT tay tầm vai, không cao hơn
-  khoanh_tay: { vaiT: 140, khuyuT: -78, vaiP: 132, khuyuP: 74 },   // khoanh trước ngực
-  chong_nanh: { vaiT: 146, khuyuT: -86, vaiP: 138, khuyuP: 84 },   // chống hông
-  ngan_ngam:  { vaiT: 170, khuyuT: -8,  vaiP: 144, khuyuP: 88 },   // một tay buông, một chống
+  khoanh_tay: { vaiT: 140, khuyuT: -40, vaiP: 132, khuyuP: 38 },   // khoanh trước ngực
+  chong_nanh: { vaiT: 146, khuyuT: -44, vaiP: 138, khuyuP: 43 },   // chống hông
+  ngan_ngam:  { vaiT: 170, khuyuT: -8,  vaiP: 144, khuyuP: 45 },   // một tay buông, một chống
 };
 
 
