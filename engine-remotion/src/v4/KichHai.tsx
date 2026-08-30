@@ -552,6 +552,31 @@ export const KichHai: React.FC<PropsHai> = ({
         </defs>
         <g transform={`translate(${rung + lia + _liaTam} ${dichY}) scale(${zoom})`} style={{ transformOrigin: "0px 0px" }}>
           <rect x={-1600} y={Y_CHAN - 34} width={3200} height={1400} fill="url(#san)" />
+          {/* ══ NGƯỜI QUA ĐƯỜNG ═══════════════════════════════════════════════════════════
+              Rút từ phim ngắn anh gửi: trong năm giây ấy có một người đi ngang hậu cảnh suốt
+              từ đầu tới cuối. Không ai để ý tới họ, và đó chính là công dụng — một khung có
+              người đi qua thì đọc ra là MỘT NƠI CÓ THẬT; khung chỉ có hai diễn viên đứng thì
+              đọc ra là một sân khấu dựng để quay.
+              Vẽ thật đơn giản: một bóng tối, không mặt, nhỏ hơn vì ở xa, trượt ngang trong vài
+              giây rồi khuất. Chi tiết hơn là hỏng — mắt sẽ bám vào họ thay vì vào lời thoại.
+              Chỉ hiện ở lượt CHẴN để nó là điểm nhấn thưa, không thành một dòng người. */}
+          {i % 2 === 1 && giay - L.s > 0.3 ? (() => {
+            const _tt = kep((giay - L.s - 0.3) / 3.4);
+            if (_tt >= 1) return null;
+            const _huong = i % 4 === 1 ? 1 : -1;
+            const _x = (-1 + 2 * _tt) * 760 * _huong;
+            const _co = 0.46;                       // ở xa nên nhỏ hơn hẳn
+            return (
+              <g transform={`translate(${_x} ${Y_CHAN - 150}) scale(${_co})`}
+                 opacity={0.3}>
+                <ellipse cx={0} cy={-330} rx={52} ry={58} fill="#1E1E28" />
+                <path d={`M -46 -270 q 46 -26 92 0 l 14 210 l -40 6 l -8 130 l -24 0
+                          l -6 -130 l -40 -6 Z`} fill="#1E1E28" />
+                <path d={`M -46 -250 l -30 150 l 22 8 l 30 -140 Z
+                          M 46 -250 l 30 150 l -22 8 l -30 -140 Z`} fill="#1E1E28" />
+              </g>
+            );
+          })() : null}
           <line x1={-1600} y1={Y_CHAN - 34} x2={1600} y2={Y_CHAN - 34}
                 stroke="#00000014" strokeWidth={2} />
           {/* Bóng vẽ TRƯỚC nhân vật (nằm dưới trong thứ tự vẽ) và nhân theo đúng hệ số cỡ người
