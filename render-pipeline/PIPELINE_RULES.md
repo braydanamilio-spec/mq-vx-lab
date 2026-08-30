@@ -4856,3 +4856,33 @@ nên `CAM_THE` chặn cứng ở mã thay vì tin AI nhớ lời dặn.
 Và ba nền tảng được viết ba bài riêng, vì chúng thưởng ba thứ khác nhau: YouTube thưởng **câu
 người ta gõ vào ô tìm kiếm**; Facebook thưởng **bình luận** (hashtag gần như vô dụng); Instagram
 thưởng **hashtag** (15-20 thẻ là kênh khám phá thật sự).
+
+### 7bi. LOẠT 15 TẬP RA 13 TẬP TRONG BẾP — LẠI ĐÚNG LUẬT 7bb
+
+Loạt Kling đầu tiên chạy sạch: 13/15 tập qua hết thước, prompt đúng khoảng ký tự, nhân vật khoá
+chặt. Nhưng nhìn danh sách tên tập là thấy hỏng:
+
+```
+001 kitchen  Sink Surprise Showdown        009 kitchen  Freezer Thermostat Mixup
+002 kitchen  Cereal Flood Fix              010 kitchen  Flour Cloud Kitchen Chaos
+…                                          013 kitchen  Cold Kitchen Misunderstanding
+```
+
+**13/15 tập trong bếp. Bốn tập xoay quanh ngũ cốc / sữa / bột. Hai tập về máy điều nhiệt.**
+Một kênh mười lăm tập mà xem như một tập.
+
+Nguyên nhân tầm thường: `_da_lam()` chỉ trả **tên tập** để AI tránh lặp ý, không trả **phòng**.
+AI thấy `kitchen` đứng đầu danh sách phòng thì cứ chọn nó, và **không có gì bảo nó đừng**.
+
+Đây đúng dạng lỗi đã ghi ở **7bb** hôm trước, tái diễn ở tệp khác: *cây thước chỉ đo phần mình
+nghĩ ra để đo; chỗ nó im lặng KHÔNG có nghĩa là chỗ ấy tốt.* Trục "đa dạng bối cảnh" đã thêm cho
+bộ hài bên kia — **và quên thêm ở đây**. Viết được luật ra giấy không có nghĩa là đã áp dụng nó
+sang mọi chỗ cùng dạng.
+
+Cách sửa **không** phải là dặn AI kỹ hơn. Dặn thì nó vẫn chọn bếp, vì bếp hợp lý thật. Cách sửa
+là **lấy quyền chọn phòng khỏi AI**: `phong_ke()` cấp phòng lâu nhất chưa quay, ép cứng vào cả
+hệ lệnh lẫn trường `room`. Loạt 15 tập nay chia đều năm phòng, ba tập mỗi phòng — và đó cũng đúng
+cách một sitcom thật vận hành: mỗi tập một phòng, cả căn nhà được dùng hết.
+
+**Quy tắc rút ra: khi AI cứ chọn mãi một giá trị hợp lý, đừng dặn — hãy lấy lựa chọn ấy khỏi tay
+nó và cấp theo lịch.**

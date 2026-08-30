@@ -484,7 +484,7 @@ def _ho_key(keys=None) -> list:
 
 
 def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
-             tranh: list | None = None, keys: list | None = None) -> dict:
+             tranh: list | None = None, keys: list | None = None, phong: str = "") -> dict:
     """Viết một tập. Viết lại tới khi qua hết thước. Trả dict sáu trường.
 
     Key cạn thì ĐỔI KEY chứ không bỏ cuộc — cùng bài học đã trả giá ở sáu hàm viết bên kia."""
@@ -498,7 +498,10 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
 
     model = _model()
     ne = ("\nDo not repeat these episodes already made: " + " | ".join(list(tranh)[-40:])) if tranh else ""
-    sch = SCHEMA.replace("ROOM_LIST", " | ".join(ho_so(kenh)["phong"]))
+    if phong:
+        ne += (f"\nThis episode MUST take place in the {phong} — not the kitchen, not anywhere "
+               f"else. Build the joke out of what is actually in that room.")
+    sch = SCHEMA.replace("ROOM_LIST", phong or " | ".join(ho_so(kenh)["phong"]))
     goc = f'Episode idea: "{y_tuong}".\n\n{sch}{ne}'
     fb, cuoi = "", None
     # Số vòng phải đủ để vừa viết lại kịch bản vừa duyệt hồ key. Trước đây dừng ở MAX_TRIES nên
@@ -531,6 +534,8 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
         except Exception as ex:
             fb = f"JSON lỗi ({ex})."; continue
         d = don(d)
+        if phong:
+            d["room"] = phong           # ép cứng: phòng do lịch luân phiên quyết, không do AI
         loi = cham(d, kenh, giay)
         cuoi = d
         if loi:
@@ -554,8 +559,15 @@ def _slug(t: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", (t or "tap").lower()).strip("-")[:48] or "tap"
 
 
-def _da_lam(kenh: str) -> list[str]:
-    """Tên các tập đã làm — đưa vào prompt để AI không lặp ý."""
+def _da_lam(kenh: str) -> list[dict]:
+    """Các tập đã làm — tên VÀ phòng.
+
+    Bản đầu chỉ trả tên tập, và cái giá hiện ra ngay ở loạt 15 tập đầu tiên: **13 tập diễn trong
+    bếp**, bốn tập xoay quanh ngũ cốc/sữa/bột. AI thấy "kitchen" đứng đầu danh sách phòng thì cứ
+    chọn nó, và không có gì bảo nó đừng. Một kênh 15 tập mà xem như một tập.
+
+    Đây đúng dạng lỗi đã ghi ở luật 7bb: THƯỚC IM LẶNG Ở ĐÂU THÌ CHỖ ĐÓ KHÔNG ĐƯỢC BẢO VỆ. Trục
+    "đa dạng bối cảnh" đã thêm cho bộ hài bên kia mà quên thêm ở đây."""
     tm = os.path.join(KHO, _slug(kenh))
     if not os.path.isdir(tm):
         return []
@@ -564,10 +576,24 @@ def _da_lam(kenh: str) -> list[str]:
         j = os.path.join(tm, d, "tap.json")
         if os.path.isfile(j):
             try:
-                r.append(str(json.load(io.open(j, encoding="utf-8")).get("title") or d))
+                x = json.load(io.open(j, encoding="utf-8"))
+                r.append({"title": str(x.get("title") or d), "room": str(x.get("room") or "")})
             except Exception:
                 pass
     return r
+
+
+def phong_ke(kenh: str, da: list[dict]) -> str:
+    """Phòng nên dùng cho tập tới: phòng LÂU NHẤT chưa quay.
+
+    Không để AI tự chọn nữa. Tự chọn thì nó chọn bếp, mãi mãi — và ép luân phiên cũng đúng với
+    cách một sitcom thật vận hành: mỗi tập một phòng, cả nhà được dùng hết."""
+    ps = list(ho_so(kenh)["phong"])
+    gan = [x.get("room") for x in da[-len(ps):]]
+    for k in ps:
+        if k not in gan:
+            return k
+    return ps[len(da) % len(ps)]
 
 
 def luu(kenh: str, tap: dict, giay: float, so: int) -> str:
@@ -590,6 +616,7 @@ def main() -> int:
     ap.add_argument("--giay", type=float, default=8, help=f"độ dài clip {GIAY_CHUAN}")
     ap.add_argument("--so", type=int, default=0, help="số tập; 0 = tự đếm tiếp")
     ap.add_argument("--sl", type=int, default=1, help="sinh mấy tập một lượt")
+    ap.add_argument("--phong", default="", help="ép một phòng cụ thể; bỏ trống = luân phiên")
     ap.add_argument("--kenh-liet-ke", action="store_true")
     a = ap.parse_args()
 
@@ -599,17 +626,18 @@ def main() -> int:
         return 0
 
     hs = ho_so(a.kenh)
-    tranh = _da_lam(a.kenh)
-    so = a.so or (len(tranh) + 1)
+    da = _da_lam(a.kenh)
+    so = a.so or (len(da) + 1)
     for i in range(a.sl):
-        y = a.y or f"a fresh everyday moment inside {hs['mo_ta']}"
-        print(f"\n▶ {hs['ten']} tập {so:03d} · {a.giay:g}s")
-        tap = sinh_tap(a.kenh, y, a.giay, tranh=tranh)
+        ph = a.phong or phong_ke(a.kenh, da)
+        y = a.y or f"a fresh everyday moment in the {ph}"
+        print(f"\n▶ {hs['ten']} tập {so:03d} · {a.giay:g}s · {ph}")
+        tap = sinh_tap(a.kenh, y, a.giay, tranh=[x["title"] for x in da], phong=ph)
         tm = luu(a.kenh, tap, a.giay, so)
         n = len(io.open(os.path.join(tm, "PROMPT.txt"), encoding="utf-8").read())
         canh = "✓" if KY_TU_MIN <= n <= KY_TU_MAX else "⚠️ ngoài khoảng"
         print(f"   📄 {os.path.join(tm, 'PROMPT.txt')}  ({n} ký tự {canh})")
-        tranh.append(str(tap.get("title") or ""))
+        da.append({"title": str(tap.get("title") or ""), "room": ph})
         so += 1
     return 0
 
