@@ -2,114 +2,88 @@
  "nguong": 90,
  "kenh": {
   "RENT PANIC": {
-   "diem": 85,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "6 bối cảnh trong MỘT cuộc hội thoại — hai người không dịch chuyển tức thời giữa câu",
-    "câu mở không có hook (không số, không mâu thuẫn): 'My rent went up four hundred dollars.'"
-   ],
-   "giay": 15.3,
+   "loi": [],
+   "giay": 17.0,
    "luot": 6,
-   "sang": 149
+   "sang": 160
   },
   "GYM LIES": {
-   "diem": 85,
+   "diem": 95,
    "bo_qua": false,
    "loi": [
-    "6 bối cảnh trong MỘT cuộc hội thoại — hai người không dịch chuyển tức thời giữa câu",
-    "câu mở không có hook (không số, không mâu thuẫn): 'I have been coming here for five months.'"
+    "câu mở không có hook (không số, không mâu thuẫn): 'I have paid this gym nine hundred dollars to'"
    ],
-   "giay": 16.2,
+   "giay": 17.7,
    "luot": 6,
-   "sang": 141
+   "sang": 165
   },
   "AIRPORT HELL": {
-   "diem": 85,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "6 bối cảnh trong MỘT cuộc hội thoại — hai người không dịch chuyển tức thời giữa câu",
-    "câu mở không có hook (không số, không mâu thuẫn): 'The board says my flight left twenty minutes'"
-   ],
-   "giay": 15.6,
+   "loi": [],
+   "giay": 17.1,
    "luot": 6,
-   "sang": 155
+   "sang": 162
   },
   "CAR GUY": {
-   "diem": 85,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "6 bối cảnh trong MỘT cuộc hội thoại — hai người không dịch chuyển tức thời giữa câu",
-    "câu mở không có hook (không số, không mâu thuẫn): 'You said the whole thing would be two hundre'"
-   ],
-   "giay": 14.3,
+   "loi": [],
+   "giay": 16.0,
    "luot": 6,
-   "sang": 141
+   "sang": 152
   },
   "OFFICE SMALL TALK": {
-   "diem": 85,
+   "diem": 95,
    "bo_qua": false,
    "loi": [
-    "6 bối cảnh trong MỘT cuộc hội thoại — hai người không dịch chuyển tức thời giữa câu",
-    "câu mở không có hook (không số, không mâu thuẫn): 'This meeting has been going for fifty minute'"
+    "câu mở không có hook (không số, không mâu thuẫn): 'We are fifty minutes into a meeting about th'"
    ],
-   "giay": 15.0,
+   "giay": 15.5,
+   "luot": 6,
+   "sang": 171
+  },
+  "DIET WARS": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 15.2,
    "luot": 6,
    "sang": 167
   },
-  "DIET WARS": {
-   "diem": 85,
-   "bo_qua": false,
-   "loi": [
-    "6 bối cảnh trong MỘT cuộc hội thoại — hai người không dịch chuyển tức thời giữa câu",
-    "câu mở không có hook (không số, không mâu thuẫn): 'I am starting a new diet on Monday.'"
-   ],
-   "giay": 14.1,
-   "luot": 6,
-   "sang": 163
-  },
   "TECH SUPPORT": {
-   "diem": 85,
+   "diem": 100,
    "bo_qua": false,
-   "loi": [
-    "6 bối cảnh trong MỘT cuộc hội thoại — hai người không dịch chuyển tức thời giữa câu",
-    "câu mở không có hook (không số, không mâu thuẫn): 'My screen has been black for three hours.'"
-   ],
-   "giay": 18.3,
-   "luot": 6,
-   "sang": 153
-  },
-  "PARENT MODE": {
-   "diem": 85,
-   "bo_qua": false,
-   "loi": [
-    "6 bối cảnh trong MỘT cuộc hội thoại — hai người không dịch chuyển tức thời giữa câu",
-    "câu mở không có hook (không số, không mâu thuẫn): 'You have been on that phone for six hours.'"
-   ],
-   "giay": 12.5,
-   "luot": 6,
-   "sang": 155
-  },
-  "NEIGHBOR WATCH": {
-   "diem": 85,
-   "bo_qua": false,
-   "loi": [
-    "6 bối cảnh trong MỘT cuộc hội thoại — hai người không dịch chuyển tức thời giữa câu",
-    "câu mở không có hook (không số, không mâu thuẫn): 'You have been watching me unload boxes for a'"
-   ],
-   "giay": 15.4,
-   "luot": 6,
-   "sang": 172
-  },
-  "DATING APP": {
-   "diem": 85,
-   "bo_qua": false,
-   "loi": [
-    "6 bối cảnh trong MỘT cuộc hội thoại — hai người không dịch chuyển tức thời giữa câu",
-    "câu mở không có hook (không số, không mâu thuẫn): 'My profile says I love hiking.'"
-   ],
-   "giay": 16.8,
+   "loi": [],
+   "giay": 20.5,
    "luot": 6,
    "sang": 161
+  },
+  "PARENT MODE": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 14.5,
+   "luot": 6,
+   "sang": 154
+  },
+  "NEIGHBOR WATCH": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 15.9,
+   "luot": 6,
+   "sang": 157
+  },
+  "DATING APP": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 19.8,
+   "luot": 6,
+   "sang": 164
   }
  }
 }

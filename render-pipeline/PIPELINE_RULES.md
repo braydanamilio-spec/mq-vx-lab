@@ -4799,3 +4799,60 @@ buồn cười:
 
 Cả bốn mươi câu mở đã viết lại theo luật này, và `cham_v4` nay chốt: câu mở phải có **số** hoặc
 **dấu hiệu mâu thuẫn**, không thì trừ điểm.
+
+### 7be. KÊNH KLING: NHÂN VẬT TRÔI KHÔNG PHẢI VÌ KLING KÉM — 30/8/2026
+
+Anh xin "prompt chuẩn để đồng nhất nhân vật nhất quán qua mỗi prompt". Gốc của việc trôi nằm ở
+phía mình, không phía Kling:
+
+> `kling_studio` để **AI viết trọn prompt**. Mỗi lần AI viết lại phần tả nhân vật, nó đổi một chi
+> tiết — tóc nâu thành tóc hạt dẻ, áo trắng thành áo kem, 42 tuổi thành "trung niên". Kling vẽ
+> đúng cái nó đọc được. **Mười tập ra mười người vì mình đưa cho Kling mười bản mô tả khác nhau.**
+
+Nên `kling_kenh.py` đảo ngược quyền: **AI chỉ viết phần CHUYỆN; bốn khối khoá do MÃ ghép vào,
+nguyên văn, không qua tay AI.** Prompt có sáu khối, bốn khối là hằng số của kênh.
+
+**LOCATION LOCK là khối MỚI, và quan trọng ngang CHARACTER LOCK.** Bộ 500 cũ khoá người mà không
+khoá nhà: cùng "the kitchen" mà tập này bếp trắng đảo giữa, tập kia bếp gỗ sát tường. Khán giả
+không gọi tên được lỗi ấy, nhưng họ cảm thấy **đây không phải cùng một gia đình** — thứ giết một
+kênh sitcom, nơi người ta quay lại vì thấy quen chứ không vì thấy mới.
+
+**Khoá bối cảnh chỉ có tác dụng nếu KỊCH BẢN cũng bị khoá.** Ba tập thử đầu đều bịa đồ đạc nhà
+không có: *"over the island"*, *"revealing a dishwasher already running"*. Tả nhà rồi để AI tự
+thêm đồ thì khoá chỉ là trang trí. Nay bảng phòng đi thẳng vào hệ lệnh, và thước chặn 26 món đồ
+lớn cố định hay bị bịa.
+
+### 7bf. CHỈ CHÈN NGƯỜI CÓ MẶT — VÀ ĐI SOI MỌI KHỐI CÙNG DẠNG
+
+Prompt tả cả 5 nhân vật trong khi tập dùng 3. Kling có thói quen **kéo vào khung bất cứ ai được
+tả kỹ**, nên tả Grandpa Joe ở một tập không có ông là tự chuốc thêm một cụ già đứng thừa ở nền.
+
+Khoá nằm ở chỗ **cùng một chuỗi chữ mỗi lần người ấy xuất hiện** — không phải ở chỗ điểm danh đủ
+cả nhà. Nên prompt chỉ chèn người có mặt: vừa hết cụ già thừa, vừa tiết kiệm ~300 ký tự.
+
+Sửa xong CHARACTER LOCK, render ra vẫn thấy *"distinct voices for Mike, Lisa, Tommy and Grandpa
+Joe"* — **AUDIO LOCK dính đúng lỗi vừa sửa, ở khối bên cạnh.** Bài học: sửa một lỗi thì phải đi
+soi **mọi khối có cùng dạng dữ liệu**, không sửa mỗi chỗ mình nhìn thấy.
+
+### 7bg. LỖI MÁY SỬA ĐƯỢC THÌ MÁY SỬA
+
+Thước bắt đúng *"Mike toast is burnt"* thiếu dấu câu và bắt AI viết lại **cả tập**. Thêm một dấu
+chấm là việc một dòng mã; đốt một lượt gọi API để làm việc ấy là đốt một lượt không còn cho tập
+sau. Nay có `don()` chạy trước thước: chuẩn hoá khoảng trắng, thêm dấu kết câu, viết hoa đầu câu.
+**Chỉ bắt AI viết lại thứ máy không sửa nổi** — nhịp hỏng, cú lật thiếu, đồ đạc bịa.
+
+Kèm theo: `MAX_TRIES` của dây chuyền là **3** — hợp cho việc trích dữ liệu, **quá ít cho việc
+sáng tác**. Kịch bản hài hỏng nhịp thường tới lần thứ tư, thứ năm mới ra bản dùng được. Tách hằng
+riêng `VONG_VIET = 8`.
+
+### 7bh. THẺ "KIDS" LÀ LỖI TIỀN BẠC, KHÔNG PHẢI LỖI THẨM MỸ
+
+AI viết bài đăng tự thêm `#kidsanimation` và tag `kids cartoon humor`. Hoạt hình + chữ
+kids/children/nursery là **đúng công thức để YouTube xếp video vào "made for kids"**: tắt bình
+luận, không lưu được vào playlist, không gửi thông báo, chặn quảng cáo cá nhân hoá — mất gần hết
+doanh thu và gần hết đường phân phối. Một cái thẻ AI thêm cho đủ số không đáng đổi lấy chừng ấy,
+nên `CAM_THE` chặn cứng ở mã thay vì tin AI nhớ lời dặn.
+
+Và ba nền tảng được viết ba bài riêng, vì chúng thưởng ba thứ khác nhau: YouTube thưởng **câu
+người ta gõ vào ô tìm kiếm**; Facebook thưởng **bình luận** (hashtag gần như vô dụng); Instagram
+thưởng **hashtag** (15-20 thẻ là kênh khám phá thật sự).
