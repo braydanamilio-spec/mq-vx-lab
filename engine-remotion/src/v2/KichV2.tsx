@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { BoiCanh, BANG_MAU, TenBoiCanh, Paltte } from "./BoiCanh";
 import { CAM_XUC, KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, TenDang, Tu } from "./DienVien";
 // 30/8 — MƯỜI KÊNH DỮ LIỆU DÙNG CHUNG DIỄN VIÊN MỚI CỦA BỘ HÀI.
@@ -52,6 +52,7 @@ const KHUNG: Record<CoCanh, { x: number; y: number; z: number }> = {
 };
 
 export type Canh = {
+  dich?: number;                  // xê dịch chỗ đứng của cảnh này (điểm)
   s: number;                 // giây bắt đầu
   e: number;                 // giây kết thúc
   nar: string;               // lời đọc (để dựng phụ đề, TTS đã render sẵn)
@@ -73,6 +74,8 @@ export type PropsKich = {
   tu?: Tu[];                 // mốc thời gian từng từ (edge-tts WordBoundary)
   voMp3?: string;
   nhac?: string;
+  doVat?: string;                // đạo cụ cầm tay — nói ngay kênh này về gì (xem `DoVat`)
+  nenAnh?: string;               // ảnh nền AI đã cache; rỗng thì lui về bối cảnh vector
   kieu?: Partial<Kieu>;
   kieuGoc?: keyof typeof KIEU_MAU;
   bangMau?: keyof typeof BANG_MAU;
@@ -257,7 +260,7 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number }> = ({
 };
 
 export const KichV2: React.FC<PropsKich> = ({
-  canh = [], tu = [], voMp3 = "", nhac = "", kieu = {}, kieuGoc = "nam_dam",
+  canh = [], tu = [], voMp3 = "", nhac = "", doVat = "", nenAnh = "", kieu = {}, kieuGoc = "nam_dam",
   bangMau = "san_sau", tieuDe = "", nguon = "", font = "",
 }) => {
   const f = useCurrentFrame();
@@ -313,11 +316,42 @@ export const KichV2: React.FC<PropsKich> = ({
 
   return (
     <AbsoluteFill style={{ background: mau.troi[1], fontFamily: font || "Poppins, Arial, sans-serif" }}>
+      {/* LỚP ẢNH NỀN — nằm dưới cùng, và PHẢI trong `AbsoluteFill` riêng: thẻ `<svg>` bên dưới là
+          phần tử TĨNH, mà luật vẽ của CSS cho phần tử-có-định-vị vẽ SAU nội dung tĩnh. Đặt ảnh
+          trong một lớp định vị rồi đặt svg trong một lớp khác thì thứ tự viết trong JSX mới là
+          thứ tự vẽ (đã trả giá một lần ở bộ hài — luật 7t mục 1). */}
+      {nenAnh ? (
+        <AbsoluteFill style={{ overflow: "hidden" }}>
+          <Img src={staticFile(nenAnh)}
+               style={{ width: "100%", height: "100%", objectFit: "cover",
+                        transform: `scale(${1.04 + (giay / Math.max(1, canh.length ? Math.max(...canh.map((c) => c.e)) : 20)) * 0.05})`,
+                        filter: "saturate(1.02) brightness(1.03)" }} />
+          {/* Lớp phủ ĐẬM HƠN bộ hài. Bộ này có BIỂU ĐỒ và SỐ LIỆU đè lên nền; nền ảnh nhiều chi
+              tiết làm chữ số khó đọc, mà đọc được số mới là toàn bộ giá trị của mười kênh này. */}
+          <AbsoluteFill style={{ background:
+            `linear-gradient(180deg,${mau.troi[1]}66 0%,${mau.troi[1]}33 45%,${mau.dat}88 100%)` }} />
+        </AbsoluteFill>
+      ) : null}
+      <AbsoluteFill>
       <svg viewBox={vb} width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
         <g transform={`translate(${-cam.x + rung} ${-cam.y}) scale(${cam.z})`}
            style={{ transformOrigin: "0px 0px" }}>
-          <BoiCanh ten={C.boi || "san_sau"} mau={mau} t={giay} />
+          {/* ══ NỀN: ẢNH AI TRƯỚC, VECTOR LÀ LỚP LUI ═══════════════════════════════════
+              30/8 — Anh: *"tham khảo nâng cấp phần bối cảnh"*. Đúng chỗ yếu nhất: bối cảnh vector
+              của bộ này chỉ là vài mảng màu và mấy hình khối, trong khi bộ hài đã chạy nền ảnh AI
+              cache và khung đẹp hơn hẳn. Cùng một dàn nhân vật mà hai bộ trông như hai mức đầu tư.
+              Ảnh vẽ MỘT LẦN rồi cache vĩnh viễn (`kich_v2.py --nen`), nên từ video thứ hai trở đi
+              không tốn một lượt vẽ nào — cùng cách đã đo được ở bộ hài.
+              Giữ `BoiCanh` vector làm lớp lui: ngày kho khoá vẽ cạn thì kênh vẫn ra video, chỉ là
+              nền đơn giản hơn. Không bao giờ để một kênh câm chỉ vì thiếu ảnh. */}
+          {nenAnh ? null : <BoiCanh ten={C.boi || "san_sau"} mau={mau} t={giay} />}
 
+          {/* Xê dịch mượt giữa hai cảnh: nhảy cóc đọc ra là lỗi dựng, nội suy đọc ra là người
+              ta bước sang một chút. 0,5 giây đầu mỗi cảnh là đủ.
+              Chú thích để ở ĐÂY, không xen giữa các thuộc tính JSX: chú thích kiểu JSX đặt giữa
+              hai thuộc tính là lỗi cú pháp, đã dính năm lần — xem luật 7t.
+              Và trong thân chú thích cũng không được viết ra ký hiệu đóng của chính nó, vì nó
+              sẽ tự đóng sớm ngay tại đó. */}
           <DienVienHai
             kieu={nv}
             camXuc={C.camXuc || "trung_tinh"}
@@ -325,12 +359,18 @@ export const KichV2: React.FC<PropsKich> = ({
             nhin={nhin}
             noi={noi}
             t={giay}
+            doVat={doVat}
+            /* TẮT KÝ HIỆU CẢM XÚC KIỂU TRUYỆN TRANH. Chùm gân đỏ "điên tiết", giọt mồ hôi
+               "chột dạ" là ngôn ngữ HÀI; dán lên một kênh kể số liệu ngân hàng thì kênh ấy mất
+               vẻ đáng tin — mà đáng tin là toàn bộ giá trị của mười kênh này.
+               Anh dặn rõ: mượn CÁCH LÀM của bộ hài, không mượn chất hài. */
+            kyHieu={false}
             // 29/8 — CỠ NHÂN VẬT TÍNH THEO KHUNG, KHÔNG BỐC MỘT SỐ.
             // Con rối vẽ trong hệ cao ~420 đơn vị (từ đỉnh đầu tới gót). Khung dọc cao 1500 đơn
             // vị, nên tỉ lệ 1.12 cho ra một người cao 470/1500 — lọt thỏm, đúng như khung render
             // thử. Muốn nhân vật chiếm khoảng 3/5 chiều cao (tỉ lệ quen thuộc của phim hoạt hình
             // kể chuyện) thì cần ~2.1 cho khung dọc và ~1.6 cho khung ngang.
-            x={C.cot ? -368 : 0}
+            x={(C.cot ? -368 : 0) + (C.dich || 0) * Math.min(1, (giay - C.s) / 0.5)}
             y={236}
             // 29/8 lần hai — lần trước tôi tăng cỡ nhân vật 1.12->2.1 NHƯNG cùng lúc hạ zoom
             // máy quay 1.5->1.0. Tích hai số không đổi (1.68), nên khung render ra y hệt và tôi
@@ -390,9 +430,13 @@ export const KichV2: React.FC<PropsKich> = ({
           </text>
         ) : null}
       </svg>
+      </AbsoluteFill>
 
       {voMp3 ? <Audio src={staticFile(voMp3)} /> : null}
-      {nhac ? <Audio src={staticFile(nhac)} volume={0.1} /> : null}
+      {/* 30/8 — mức 0,1 quá nhỏ để nghe trên loa điện thoại; cùng phép đo đã làm cho bộ hài
+          (mức 0,07 cho đỉnh −32 dB, gần như im lặng). 0,18 nghe rõ là có nền mà vẫn thấp hơn
+          hẳn giọng đọc. `loop` vì nhạc nền ngắn hơn video. */}
+      {nhac ? <Audio src={staticFile(nhac)} volume={0.18} loop /> : null}
       {/* TIẾNG ĐỘNG phải nổ ĐÚNG lúc cảnh bắt đầu. `Audio` một mình luôn phát từ khung 0 của
           composition; muốn hẹn giờ thì phải bọc trong `Sequence` — đó mới là thứ dời mốc. */}
       {canh.filter((c) => c.sfx).map((c, k) => (

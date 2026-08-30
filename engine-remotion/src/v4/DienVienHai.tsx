@@ -88,7 +88,13 @@ export type PropsHai = {
   t: number;
   nhan?: number;                 // 0..1 — độ nhấn của lượt thoại này (dùng cho nén–giãn)
   dangNoi?: boolean;             // người này có đang nói không — quyết định được phép diễn bao nhiêu
-  doVat?: string;                // đạo cụ cầm ở tay phải — xem `DAO_CU`
+  doVat?: string;                // đạo cụ cầm ở tay phải — xem `DoVat`
+  // 30/8 — Anh: *"10 channel trước phù hợp niche, ko phải theo kiểu funny, chỉ bắt chước nâng
+  // cấp CÁCH LÀM thôi"*. Đúng, và đây là chỗ suýt gán nhầm: ký hiệu cảm xúc kiểu truyện tranh
+  // (chùm gân đỏ "điên tiết", giọt mồ hôi "chột dạ") là ngôn ngữ HÀI. Dán chúng lên một kênh kể
+  // số liệu ngân hàng thì kênh ấy mất hết vẻ đáng tin — mà đáng tin chính là TOÀN BỘ giá trị của
+  // mười kênh dữ liệu. Bộ hài BẬT, bộ dữ liệu TẮT: cùng một con rối, hai cách diễn.
+  kyHieu?: boolean;
   giat?: number;                 // 0..1 — cú giật mình (mắt mở to, đầu bật lùi) ở cú chốt
   nghieng?: number;              // độ ngả người về phía người đối thoại
   buoc?: number;                 // 0 = đứng yên; >0 = đang bước (biên độ sải chân)
@@ -109,7 +115,7 @@ const R_DAU_GOC = 58;
 
 export const DienVienHai: React.FC<PropsHai> = ({
   kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0, giat = 0, dangNoi = true,
-  doVat = "",
+  doVat = "", kyHieu = true,
   x = 0, y = 0, scale = 1, lat = false,
 }) => {
   const E = CAM_XUC[camXuc] || CAM_XUC.trung_tinh;
@@ -646,7 +652,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
             là "chột dạ", tia bật là "sững người". Ai cũng đọc được, không cần một chữ nào.
             Đây là cách rẻ nhất để một cảnh hài đọc được khi TẮT TIẾNG — mà tắt tiếng mới là
             cách phần lớn người ta xem short. */}
-        <KyHieu camXuc={camXuc} dau={dau} R={R_DAU} V={V} NT={NT} t={t} manh={noNo} />
+        {kyHieu ? <KyHieu camXuc={camXuc} dau={dau} R={R_DAU} V={V} NT={NT} t={t} manh={noNo} /> : null}
       </g>
     </g>
   );
@@ -758,6 +764,36 @@ const DoVat: React.FC<{ ten: string; p: [number, number]; goc: number; V: string
         <path d={`M ${x - 15} ${y + 14} q 15 -16 30 0 q -3 16 -15 16 q -12 0 -15 -16 Z`}
               fill="#E8A64C" {...net} />
         <path d={`M ${x - 13} ${y + 15} q 13 -12 26 0`} stroke="#C4636B" strokeWidth={NT * 1.6} fill="none" />
+      </>);
+    // ── BỐN ĐẠO CỤ CHO BỘ DỮ LIỆU (30/8) ─────────────────────────────────────────────
+    // Cùng vai trò như đạo cụ bộ hài — nói ngay nhân vật này làm nghề gì trước cả câu thoại đầu
+    // — nhưng chọn theo NGHỀ NGHIÊM TÚC, không theo trò đùa. Anh dặn: mười kênh trước phải hợp
+    // niche, chỉ mượn CÁCH LÀM chứ không mượn chất hài.
+    case "kinh_lup":   // kính lúp — soi điều khoản, soi hồ sơ sở hữu
+      return g(<>
+        <circle cx={x} cy={y + 4} r={15} fill="#CFE8F5" fillOpacity={0.55} stroke={V} strokeWidth={NT * 1.6} />
+        <rect x={x - 4} y={y + 18} width={8} height={26} rx={3} fill="#6B4A2F" stroke={V} strokeWidth={NT * 1.3} />
+      </>);
+    case "ong_nghiem": // ống nghiệm — kênh nghiên cứu
+      return g(<>
+        <path d={`M ${x - 8} ${y - 4} l 0 34 q 0 10 8 10 q 8 0 8 -10 l 0 -34 Z`}
+              fill="#BFE8D6" fillOpacity={0.7} stroke={V} strokeWidth={NT * 1.5} strokeLinejoin="round" />
+        <path d={`M ${x - 8} ${y + 16} l 16 0 l 0 14 q 0 10 -8 10 q -8 0 -8 -10 Z`} fill="#4FA882" />
+        <rect x={x - 11} y={y - 8} width={22} height={6} rx={2} fill="#9AA3AD" stroke={V} strokeWidth={NT} />
+      </>);
+    case "bang_ke":    // bảng kẹp hồ sơ — kênh biểu đồ, kênh chi phí
+      return g(<>
+        <rect x={x - 16} y={y + 2} width={32} height={42} rx={3} fill="#C9A87C" stroke={V} strokeWidth={NT * 1.4} />
+        <rect x={x - 13} y={y + 7} width={26} height={33} rx={1} fill="#FBF6E8" stroke={V} strokeWidth={NT} />
+        <rect x={x - 7} y={y - 2} width={14} height={8} rx={2} fill="#9AA3AD" stroke={V} strokeWidth={NT} />
+        <path d={`M ${x - 8} ${y + 16} l 16 0 M ${x - 8} ${y + 24} l 16 0 M ${x - 8} ${y + 32} l 10 0`}
+              stroke={V} strokeWidth={NT * 0.9} opacity={0.55} />
+      </>);
+    case "bua_toa":    // búa toà — kênh luật, kênh kiện tụng
+      return g(<>
+        <rect x={x - 4} y={y + 6} width={8} height={38} rx={3} fill="#8A5A32" stroke={V} strokeWidth={NT * 1.3} />
+        <rect x={x - 17} y={y - 8} width={34} height={16} rx={5} fill="#8A5A32" stroke={V} strokeWidth={NT * 1.5} />
+        <rect x={x - 12} y={y - 5} width={9} height={10} rx={2} fill="#6B4A2F" />
       </>);
     case "ong_nhom":   // ống nhòm — NEIGHBOR WATCH
       return g(<>

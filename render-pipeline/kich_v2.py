@@ -358,8 +358,23 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
         # làm việc → văn phòng), xoay vòng theo cảnh. Không kênh nào trùng bộ ba với kênh khác.
         # KHÔNG tốn thêm một lượt hạn mức nào: bối cảnh là vector dựng bằng mã.
         _bo = k["boi"] if isinstance(k["boi"], list) else [k["boi"]]
+        # ── CỬ CHỈ SUY TỪ CHÍNH CÂU ĐANG NÓI (30/8) ─────────────────────────────────────
+        # Anh: *"tham khảo nâng cấp phần… cử động"*. Bảng `cau` gán cử chỉ theo VỊ TRÍ câu, nên
+        # câu ở vị trí ba luôn cùng một cử chỉ dù nội dung câu ấy mỗi kênh một khác — tay nói một
+        # đằng, miệng nói một nẻo. Bộ hài đã chữa chuyện này bằng `cu_chi_cua`, suy từ chính chữ:
+        # có con số thì đếm ngón tay, câu hỏi thì ngửa tay, phủ định thì khoanh tay.
+        # Dùng lại đúng hàm ấy (không chép), và chỉ ĐÈ khi bảng gốc để trống — bảng gốc có mấy
+        # chỗ gán cố ý (cảnh chốt) thì phải tôn trọng.
+        try:
+            import kich_hai as _KH3
+            _cc = cc or _KH3.cu_chi_cua(nar, i, i == len(cau) - 1)
+        except Exception:
+            _cc = cc
         c = {"s": round(t, 2), "e": round(t + giay_moi_cau, 2), "nar": nar,
-             "camXuc": cx, "cuChi": cc, "co": co, "nhin": nhin,
+             "camXuc": cx, "cuChi": _cc, "co": co, "nhin": nhin,
+             # XÊ DỊCH CHỖ ĐỨNG theo cảnh. Người kể đứng chôn chân suốt hai mươi giây là dấu hiệu
+             # rõ nhất của hình dựng máy; nhích vài chục điểm mỗi cảnh là đủ để khung "còn sống".
+             "dich": [-26, 12, -8, 22, -14, 4][i % 6],
              "boi": _bo[i % len(_bo)]}
         # 29/8 — LỚP HÌNH PHẢI KHỚP CÂU ĐANG NÓI. Khi đảo thứ tự lời thoại (đưa con số lên câu
         # đầu để hook mạnh hơn) tôi quên đảo bảng gán lớp hình theo — nên con số lớn hiện ở cảnh
@@ -398,16 +413,193 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
     return canh, " ".join(x[0] for x in cau)
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# DÙNG LẠI PHẦN ĐÃ VIẾT CHO BỘ HÀI — KHÔNG CHÉP LẠI
+# ------------------------------------------------------------------------------------------
+# 30/8 — Anh: *"ứng dụng 10 channel funny sau vào 10 channel trước"*.
+# Ba thứ dưới đây đã viết và đã đo trong `kich_hai.py`; chép lại là tạo ra hai bản sẽ trôi xa
+# nhau. Nhập thẳng từ đó — sửa một chỗ thì cả hai bộ được hưởng.
+#   · `_cat_lang`  — cắt đệm im lặng edge-tts chèn ở hai đầu mỗi đoạn (luật 7ak)
+#   · `lam_thumb`  — thumbnail trích từ chính video ở nhịp đuôi (luật 7…)
+#   · `_giay_wav`  — đo độ dài THẬT của tệp wav
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# NỀN ẢNH AI CHO BỘ DỮ LIỆU — HAI NỀN MỖI KÊNH, VẼ MỘT LẦN DÙNG MÃI
+# ------------------------------------------------------------------------------------------
+# 30/8 — Anh: *"tham khảo nâng cấp phần bối cảnh"*. Bối cảnh vector của bộ này chỉ là vài mảng
+# màu với mấy hình khối, trong khi bộ hài đã chạy nền ảnh AI và khung đẹp hơn hẳn — cùng một dàn
+# nhân vật mà hai bộ trông như hai mức đầu tư.
+#
+# Câu vẽ chọn theo NGHỀ của kênh, không theo "cho đẹp": sảnh ngân hàng cho kênh ngân hàng, phòng
+# lưu trữ hồ sơ cho kênh điều khoản, đài quan sát cho kênh thiên văn. Người xem phải đọc ra kênh
+# này nói về gì trước cả dòng chữ đầu tiên.
+#
+# Mọi câu đều kèm `_SAN_V3`: ép ảnh có sàn ở một phần ba dưới khung (nếu không, ảnh chụp ngang
+# tầm mặt bàn và nhân vật hoá ra đứng trên mặt bàn — lỗi đã trả giá ở bộ hài, luật 7aa) và ép
+# CHỪA KHOẢNG TRỐNG BÊN PHẢI cho biểu đồ, vì bộ này luôn có một bảng số đè lên nền.
+_SAN_V3 = ("wide shot, camera at standing eye level, floor clearly visible across the lower "
+           "third, large empty wall space on the right side of the frame, nothing important on "
+           "the right half")
+NEN_V3 = {
+    "BANK RUN":            ["american bank branch lobby with teller counters along the left wall",
+                            "bank vault door seen from inside a quiet corridor"],
+    "FINE PRINT":          ["law office room with tall filing cabinets on the left, warm lamps",
+                            "records archive room with rows of document boxes on shelves"],
+    "WHO OWNS IT":         ["corporate lobby with a reception desk on the left, glass and stone",
+                            "empty boardroom with a long table pushed to the left"],
+    "KNOW YOUR RIGHT":     ["american courthouse corridor with tall columns on the left",
+                            "quiet courtroom gallery seen from the side, wooden benches"],
+    "SUED IN AMERICA":     ["courtroom bench and witness stand seen from the left side",
+                            "law library with rows of legal volumes on the left wall"],
+    "SKY TONIGHT":         ["observatory dome interior at night, telescope on the left, deep blue",
+                            "open field at night under a clear starry sky, low horizon"],
+    "ONE EXPERIMENT":      ["university research lab bench on the left, clean bright light",
+                            "quiet laboratory corridor with glass doors on the left"],
+    "DEEP FIELD":          ["mission control room at night, console banks on the left, blue glow",
+                            "radio telescope dish seen from the ground at dusk, wide open sky"],
+    "WHAT THE CHART SAYS": ["hospital records office with folders on the left, clean daylight",
+                            "empty clinic corridor with doors on the left, bright and calm"],
+    "PRICE OF CARE":       ["hospital admissions desk on the left, waiting chairs, daylight",
+                            "pharmacy counter seen from the side, shelves on the left"],
+}
+
+
+def ve_nen_v3(k: dict, DS, keys) -> list:
+    """Vẽ + cache hai nền cho một kênh. Chỉ vẽ tệp CHƯA CÓ."""
+    thu = os.path.join(PUB, "v3nen")
+    os.makedirs(thu, exist_ok=True)
+    ra = []
+    gu = ("flat 2D cartoon background in the style of a clean American explainer animation, "
+          "bold clean outlines, simple flat colours, no people, no text, no signage, "
+          "wide establishing shot, calm professional mood")
+    for i, prompt in enumerate(NEN_V3.get(k["ten"], [])):
+        rel = os.path.join("v3nen", f"{k['ten'].replace(' ', '').lower()}_{i}.jpg")
+        dest = os.path.join(PUB, rel)
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            ra.append(rel)
+            continue
+        ok = None
+        for _lan in range(3):
+            try:
+                import datastory_ci as _DC
+                _p = _DC._salt_prompt(f"{prompt}, {_SAN_V3}, {gu}")
+            except Exception:
+                _p = f"{prompt}, {_SAN_V3}, {gu}"
+            try:
+                ok = DS._generate_image_ai(_p, dest, None, style=gu)
+            except Exception as e:
+                print(f"      ⚠️ nền {i} lượt {_lan+1}: {str(e)[:56]}")
+                ok = None
+            if ok and os.path.exists(dest) and os.path.getsize(dest) > 20000:
+                break
+            ok = None
+        if ok:
+            try:
+                import kich_hai as _KH
+                DS.nang_sang_anh(dest)
+                _KH._keo_sang(dest)
+                if _KH._nen_hong(dest):
+                    os.remove(dest); ok = None
+            except Exception:
+                pass
+        if ok and os.path.exists(dest):
+            ra.append(rel)
+            print(f"      🎨 nền {i} xong")
+        else:
+            print(f"      ⚠️ nền {i}: không vẽ được — cảnh này dùng bối cảnh vector")
+            ra.append("")
+    return ra
+
+
+def _mau_kenh(ten_bang: str) -> str:
+    """Mã màu nhấn của một bảng màu, đọc thẳng từ `BANG_MAU` trong `BoiCanh.tsx`.
+
+    Đọc từ nguồn thật thay vì chép sang đây một bản: chép là tạo ra hai bảng sẽ trôi xa nhau, và
+    lần sau ai đổi màu kênh trong `BoiCanh.tsx` thì thumbnail lặng lẽ mang màu cũ.
+    """
+    import re as _re
+    try:
+        src = io.open(os.path.join(ENG, "src", "v2", "BoiCanh.tsx"), encoding="utf-8").read()
+        m = _re.search(r"\b" + _re.escape(str(ten_bang)) + r":\s*\{[^}]*?nhan:\s*\"(#[0-9A-Fa-f]{6})\"", src, _re.S)
+        if m:
+            return m.group(1)
+    except Exception:
+        pass
+    return "#C9A24A"
+
+
+def _muon_bo_hai():
+    """Trả (cat_lang, lam_thumb) mượn từ bộ hài; trả (None, None) nếu chưa có."""
+    try:
+        import kich_hai as _KH
+        return _KH._cat_lang, _KH.lam_thumb
+    except Exception as e:
+        print(f"   ⚠️ không mượn được hàm của bộ hài: {str(e)[:60]}")
+        return None, None
+
+
+# NHẠC NỀN — mỗi kênh một bản, không kênh nào chung với kênh khác (kể cả với bộ hài).
+# Video không nhạc thì mọi khoảng lặng đọc ra là thiếu tiếng chứ không phải nhịp (luật 7ag).
+# Chọn bản TRẦM, ĐỀU — chất tài liệu. KHÔNG dùng những bản vui nhộn đang chạy cho bộ hài
+# (carefree, km_undaunted, inspired): nhạc vui trên một kênh kể số liệu ngân hàng làm người xem
+# đọc ra là đùa, mà cả mười kênh này sống bằng vẻ đáng tin.
+# Không kênh nào chung bản với kênh khác, và không bản nào trùng với mười kênh hài.
+NHAC_V3 = {
+    "BANK RUN":            "music/km_impact_andante.mp3",
+    "FINE PRINT":          "music/km_long_note_four.mp3",
+    "WHO OWNS IT":         "music/broke_pad.mp3",
+    "KNOW YOUR RIGHT":     "music/km_ossuary_air.mp3",
+    "SUED IN AMERICA":     "music/km_ossuary_rest.mp3",
+    "SKY TONIGHT":         "music/broke_pad_tram.mp3",
+    "ONE EXPERIMENT":      "music/forecast_tram.mp3",
+    "DEEP FIELD":          "music/inspired_tram.mp3",
+    "WHAT THE CHART SAYS": "music/km_ascending_tram.mp3",
+    "PRICE OF CARE":       "music/carefree_tram.mp3",
+}
+
+# ĐẠO CỤ — mỗi kênh một vật, nói ngay kênh này về gì trước cả câu thoại đầu tiên (luật 7an).
+# Gán theo ĐÚNG việc nhân vật làm, không gán bừa cho có. Bản nháp đầu đặt cờ-lê cho kênh "ai sở
+# hữu thương hiệu" và cốc cà phê cho kênh chi phí y tế — hai thứ chẳng nói lên gì về nội dung, mà
+# đạo cụ sai còn tệ hơn không có: nó nói dối về nhân vật ngay giây đầu tiên.
+# Và KHÔNG kênh nào dùng chung đạo cụ với kênh khác — cùng luật chống trùng đã áp cho bộ hài.
+VAT_V3 = {
+    "BANK RUN":            "giay_to",     # hồ sơ FDIC
+    "FINE PRINT":          "kinh_lup",    # soi điều khoản in nhỏ
+    "WHO OWNS IT":         "bang_ke",     # bảng kê cổ đông
+    "KNOW YOUR RIGHT":     "bua_toa",     # quyền công dân
+    "SUED IN AMERICA":     "bua_toa",     # kiện tụng
+    "SKY TONIGHT":         "ong_nhom",    # bầu trời đêm nay
+    "ONE EXPERIMENT":      "ong_nghiem",  # một nghiên cứu
+    "DEEP FIELD":          "ong_nhom",    # vũ trụ sâu
+    "WHAT THE CHART SAYS": "bang_ke",     # biểu đồ
+    "PRICE OF CARE":       "giay_to",     # hoá đơn viện phí
+}
+
+
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true", help="dựng 1 video ngắn cho mỗi kênh")
     ap.add_argument("--kenh", default="", help="chỉ kênh này (tên viết liền)")
     ap.add_argument("--luong", type=int, default=2)
+    ap.add_argument("--nen", action="store_true", help="chỉ vẽ + cache nền ảnh, không render")
     a = ap.parse_args()
 
     import du_lieu_mo as D
     import datastory_ci as DS
+
+    # Nạp kho khoá vẽ ảnh — cùng đường bộ hài dùng. Không có khoá thì `ve_nen_v3` tự lui về bối
+    # cảnh vector, kênh vẫn ra video.
+    # Nạp kho khoá vẽ ảnh — DÙNG ĐÚNG ĐƯỜNG bộ hài đang dùng (`the_he_2.keys_cuc_bo`), không tự
+    # viết một đường khác. Không có khoá thì `ve_nen_v3` tự lui về bối cảnh vector, kênh vẫn ra
+    # video — không bao giờ để một kênh câm chỉ vì thiếu ảnh.
+    keys = None
+    try:
+        import the_he_2 as T2
+        keys = T2.keys_cuc_bo() or None
+        if keys:
+            DS.set_ai_pool(keys, "V3")
+    except Exception as e:
+        print(f"   ⚠️ không nạp được kho khoá vẽ: {str(e)[:60]}")
 
     chon = KENH
     if a.kenh:
@@ -421,6 +613,9 @@ def main() -> int:
     for k in chon:
         ten = k["ten"]
         print(f"\n▶ {ten}", flush=True)
+        nen2 = ve_nen_v3(k, DS, keys)
+        if a.nen:
+            continue
         sl = lay_so_lieu(k["nguon"], D)
         if not sl:
             print(f"   ⚠️ {ten}: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)")
@@ -469,8 +664,32 @@ def main() -> int:
         except Exception as e:
             print(f"   ❌ giọng đọc hỏng: {str(e)[:70]}")
             continue
+        # CẮT ĐỆM IM LẶNG edge-tts chèn ở hai đầu (luật 7ak). Bộ này đọc CẢ ĐOẠN một lần nên chỉ
+        # có một cặp đệm — ít hơn bộ hài nhiều, nhưng vẫn là một hai giây chết ở đầu và cuối
+        # video. Cắt xong phải DỜI mọi mốc từ đi đúng phần đã bỏ ở đầu, không thì khẩu hình chạy
+        # trước tiếng.
+        _cat, _thumb = _muon_bo_hai()
+        _bo_dau = 0.0
+        if _cat:
+            import tempfile as _tf
+            _tam = _tf.mkdtemp(prefix="v3lang_")
+            _w0 = os.path.join(_tam, "a.wav"); _w1 = os.path.join(_tam, "b.wav")
+            subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", mp3, "-ar", "24000", "-ac", "1",
+                            _w0], capture_output=True, timeout=300)
+            if os.path.exists(_w0):
+                _bo_dau = _cat(_w0, _w1)
+                if _bo_dau and os.path.exists(_w1):
+                    r2 = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", _w1,
+                                         "-b:a", "96k", mp3], capture_output=True, timeout=300)
+                    if r2.returncode:
+                        _bo_dau = 0.0
+                    else:
+                        import kich_hai as _KH2
+                        dur = _KH2._giay_wav(_w1)
+                        print(f"   ✂️ cắt {_bo_dau:.2f}s im lặng đầu · còn {dur:.1f}s")
         # `subs` là [{w, t, d, si}] — đúng khuôn `Tu` mà `visemeTai` cần, không phải đổi gì.
-        tu = [{"t": float(x.get("t", 0)), "d": float(x.get("d", 0)), "w": str(x.get("w", "")),
+        tu = [{"t": round(max(0.0, float(x.get("t", 0)) - _bo_dau), 3),
+               "d": float(x.get("d", 0)), "w": str(x.get("w", "")),
                "si": int(x.get("si", 0))} for x in (subs or [])]
         if not tu:
             print("   ❌ giọng đọc không trả mốc từ nào — BỎ (khỏi ra video câm)")
@@ -521,6 +740,11 @@ def main() -> int:
             "canh": canh, "tu": tu, "voMp3": rel,
             "kieuGoc": k["kieu"], "bangMau": k["mau"],
             "tieuDe": k["nhan"], "nguon": sl[2],
+            "nhac": NHAC_V3.get(k["ten"], ""),
+            "doVat": VAT_V3.get(k["ten"], ""),
+            # Một nền cho cả video — cùng luật "một tập một địa điểm" đã chốt cho bộ hài
+            # (luật 7x): người kể không dịch chuyển giữa câu. Nền thứ hai để dành cho tập sau.
+            "nenAnh": (nen2[0] if nen2 and nen2[0] else ""),
         }
         pj = os.path.join(GOC, "out", f"v3_{sl_ten}.json")
         os.makedirs(os.path.dirname(pj), exist_ok=True)
@@ -533,6 +757,19 @@ def main() -> int:
             print(f"   ❌ render hỏng: {(r.stderr or r.stdout or '')[-200:]}")
             continue
         mb = os.path.getsize(out) / 1e6
+        # THUMBNAIL — trích từ chính video, không vẽ mới (cùng cách bộ hài, luật 7…).
+        # Câu hook lấy TIÊU ĐỀ kênh chứ không lấy câu thoại đầu: bộ này là kênh dữ liệu, và thứ
+        # kéo người xem là CÂU HỎI mà video trả lời ("Is your bank actually healthy?"), không
+        # phải một mẩu đối đáp.
+        if _thumb:
+            _th = os.path.join(GOC, "out", f"v3_{sl_ten}.jpg")
+            # `k["mau"]` ở bộ này là TÊN bảng màu ("ngan_hang"), không phải mã màu — khác hẳn
+            # bộ hài, nơi `mau` là mã hex. Đọc mã `nhan` từ chính `BANG_MAU` trong `BoiCanh.tsx`
+            # thì dải nhận diện trên thumbnail mang đúng màu kênh; đoán bừa một mã là dải ấy
+            # chẳng liên quan gì tới kênh.
+            _hex = _mau_kenh(k["mau"])
+            if _thumb(out, k.get("nhan") or ten, ten, _hex, _th):
+                print(f"   🖼  thumbnail: {os.path.basename(_th)}")
         print(f"   ✅ {ten}: {out}  ({mb:.1f} MB)")
         ra.append(out)
 
