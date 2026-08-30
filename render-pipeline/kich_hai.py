@@ -1559,9 +1559,23 @@ def dung_luot(k: dict, nen: list, vong: int = 0, nen_luot: list | None = None) -
              # trái, ở mọi góc. Vượt qua đường ấy thì người xem mất phương hướng ngay lập tức,
              # dù không ai gọi tên được vì sao.
              "co": "rong" if i == 0 else ("can" if (cuoi or i == n - 2) else "trung"),
+             # 30/8 — BỎ `qua_vai`. Anh gửi khung: người tiền cảnh bị cắt mất nửa, to hơn hẳn
+             # người kia, lại bị làm mờ và tối. Anh gọi đúng tên ba lỗi: "xê dịch", "lúc to lúc
+             # nhỏ", "lúc mờ lúc rõ" — và cả ba đều chỉ là MỘT cú máy này.
+             #
+             # Tệ hơn: cổng bố cục ĐÃ tố nó ("nhân vật ở x=430 tràn khung"), và tôi đã tắt cảnh
+             # báo với lý do "người tiền cảnh cố ý bị cắt, đó là bản chất cú qua vai". Lý do ấy
+             # đúng với cú qua-vai THẬT — nơi tiền cảnh chỉ lộ một mảng vai và gáy, cắt gọn theo
+             # chiều dọc. Ở đây nó lộ NGUYÊN người đứng thẳng, mờ mờ, lệch nửa ra ngoài: không
+             # ai đọc ra là "qua vai", người ta đọc ra là "nhân vật bị lọt khung".
+             #
+             # Và anh nói trúng gốc: đây KHÔNG PHẢI đổi góc quay. Dịch ngang + phóng to + làm mờ
+             # vẫn là một nhân vật vẽ CHÍNH DIỆN. Góc quay thật cần tư thế nghiêng, ba-phần-tư,
+             # sau lưng — tức phải VẼ SẴN các tư thế ấy trước, đúng như anh đã chỉ. Chưa vẽ được
+             # thì hai góc thật còn hơn ba góc mà một cái hỏng.
              "goc": ("hai_nguoi" if i == 0 else
                      ("mot_nguoi" if cuoi else
-                      ("qua_vai" if i % 2 else "hai_nguoi"))),
+                      ("mot_nguoi" if i % 2 else "hai_nguoi"))),
              # Nền của LƯỢT NÀY; thiếu thì lui về nền cố định của kênh.
              "nen": (nenLuot[i] if i < len(nenLuot) and nenLuot[i] else nen1),
              "chot": cuoi}

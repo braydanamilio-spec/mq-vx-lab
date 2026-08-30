@@ -671,7 +671,13 @@ export const KichV2: React.FC<PropsKich> = ({
             // vị, nên tỉ lệ 1.12 cho ra một người cao 470/1500 — lọt thỏm, đúng như khung render
             // thử. Muốn nhân vật chiếm khoảng 3/5 chiều cao (tỉ lệ quen thuộc của phim hoạt hình
             // kể chuyện) thì cần ~2.1 cho khung dọc và ~1.6 cho khung ngang.
-            x={doc ? -362 : -430}
+            // 30/8 — ĐO, không ướm. Cử chỉ rộng nhất thực sự xảy ra ở kênh phân tích là
+            // `mo_tay`: bàn tay cách tâm người 118,7 đơn vị. Nhân với scale 1,42 thành 169, nên
+            // ở x=-362 mép người rơi vào -531 trong khung chỉ rộng tới -500 — tràn 31.
+            // (`chi` còn rộng hơn, 181, nhưng ở chế độ người-dẫn nó bị đổi thành `dem` trước khi
+            // vẽ, nên tính theo nó là tính dư. Đo trên tập cử chỉ THỰC SỰ hiện ra.)
+            // -325 chừa thêm 6 đơn vị cho nhịp thở và độ nghiêng người.
+            x={doc ? -325 : -430}
             y={doc ? 800 : 560}
             // 29/8 lần hai — lần trước tôi tăng cỡ nhân vật 1.12->2.1 NHƯNG cùng lúc hạ zoom
             // máy quay 1.5->1.0. Tích hai số không đổi (1.68), nên khung render ra y hệt và tôi

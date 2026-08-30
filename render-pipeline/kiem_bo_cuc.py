@@ -58,11 +58,11 @@ def cham(f: str) -> list[str]:
         nua = NUA_NGUOI * co
         # Vị trí theo góc — phải khớp `_xA`/`_xB` trong engine.
         if goc == "qua_vai":
-            # Chỉ kiểm NGƯỜI ĐANG NÓI (x = 40). Người tiền cảnh ở x = 430 CỐ Ý bị khung cắt bớt
-            # — đó chính là bản chất của cú qua-vai: một khối gần ống kính đóng khung cho khuôn
-            # mặt ở xa. Bản đầu của cổng kiểm cả hai và tố tràn, tức tố đúng cái mình vừa thiết
-            # kế. Cổng phải biết ý ĐỊNH của bố cục, không chỉ biết toạ độ.
-            xs = [40]
+            # 30/8 — kiểm NGHIÊM trở lại. Bản trước tôi cho qua người tiền cảnh (x=430) với lý
+            # do nó "cố ý bị cắt". Khung anh gửi cho thấy lý do ấy chỉ đúng trên giấy: trên màn
+            # hình nó là một nhân vật lọt khung. Tôi đã dùng ý-định-thiết-kế để bịt miệng một
+            # phép đo đúng — cổng nói thật, tôi bảo nó im.
+            xs = [40, 430]
         elif goc == "mot_nguoi":
             xs = [0]
         else:
