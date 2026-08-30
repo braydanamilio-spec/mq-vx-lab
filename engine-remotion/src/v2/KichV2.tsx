@@ -390,13 +390,13 @@ export const KichV2: React.FC<PropsKich> = ({
             // vị, nên tỉ lệ 1.12 cho ra một người cao 470/1500 — lọt thỏm, đúng như khung render
             // thử. Muốn nhân vật chiếm khoảng 3/5 chiều cao (tỉ lệ quen thuộc của phim hoạt hình
             // kể chuyện) thì cần ~2.1 cho khung dọc và ~1.6 cho khung ngang.
-            x={doc ? -158 : -330}
-            y={doc ? 1240 : 820}
+            x={doc ? -338 : -430}
+            y={doc ? 800 : 560}
             // 29/8 lần hai — lần trước tôi tăng cỡ nhân vật 1.12->2.1 NHƯNG cùng lúc hạ zoom
             // máy quay 1.5->1.0. Tích hai số không đổi (1.68), nên khung render ra y hệt và tôi
             // suýt kết luận "sửa không ăn". Bài học: đổi hai hệ số nhân với nhau trong cùng một
             // lượt thì không đo được cái nào có tác dụng.
-            scale={doc ? 4.0 : 2.6}
+            scale={doc ? 2.5 : 1.7}
           />
         </g>
 
@@ -419,12 +419,12 @@ export const KichV2: React.FC<PropsKich> = ({
             mà một nhánh ba ngôi chỉ nhận một biểu thức. Hai lần trước tôi đã ghi lại bài học rồi
             vẫn tái phạm, nên lần này ghi ngay tại chỗ dễ sai nhất. */}
         {C.cot ? (
-          <g transform={`translate(${doc ? 96 : 170} ${doc ? 150 : 96}) scale(${doc ? 0.86 : 0.78})`}>
+          <g transform={`translate(${doc ? 78 : 150} ${doc ? 120 : 84}) scale(${doc ? 1.24 : 1.02})`}>
             <CotDaoCu cot={C.cot} p={p} mau={mau} noiBat={C.noiBat ?? 0} />
           </g>
         ) : null}
         {C.soLon ? (
-          <g transform={`translate(${doc ? 150 : 190} ${doc ? -430 : -330})`}>
+          <g transform={`translate(${doc ? 96 : 150} ${doc ? -440 : -340}) scale(${doc ? 1.12 : 1})`}>
             <SoTo so={C.soLon} nhan={C.nhanSo} p={p} mau={mau} />
           </g>
         ) : null}

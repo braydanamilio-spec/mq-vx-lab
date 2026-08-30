@@ -459,6 +459,10 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
 # Mọi câu đều kèm `_SAN_V3`: ép ảnh có sàn ở một phần ba dưới khung (nếu không, ảnh chụp ngang
 # tầm mặt bàn và nhân vật hoá ra đứng trên mặt bàn — lỗi đã trả giá ở bộ hài, luật 7aa) và ép
 # CHỪA KHOẢNG TRỐNG BÊN PHẢI cho biểu đồ, vì bộ này luôn có một bảng số đè lên nền.
+# Từ nào báo hiệu chủ đề có BỀ MẶT IN ĐƯỢC — thấy nó thì phải ép bao bì trơn (luật 7ay).
+# Khai ở TẦNG MODULE vì hai hàm vẽ nền đều cần: để trong thân một hàm thì hàm kia không thấy.
+_CO_BAO = ("packet", "package", "packaging", "box", "boxes", "bottle", "can ", "cans",
+           "carton", "label", "product", "shelf", "shelves", "grocer", "snack", "brand")
 _SAN_V3 = ("wide shot, camera at standing eye level, floor clearly visible across the lower "
            "third, large empty wall space on the right side of the frame, nothing important on "
            "the right half")
@@ -568,6 +572,55 @@ def _chu_de_ai(ten_kenh: str, tieu_de: str, nhan_cot: list, keys) -> str:
     return ""
 
 
+def canh_moi_cau_ai(ten_kenh: str, tieu_de: str, cau_noi: list, keys) -> list:
+    """Một cảnh nền cho MỖI CÂU nói. Trả danh sách cùng độ dài `cau_noi`, hoặc [] nếu hỏng.
+
+    30/8 — Anh: *"chuyển cảnh footage chưa đa dạng, khi nói hết 1 câu thì phải thay đổi nền
+    footage đúng ai phân tích vẽ ra"*.
+    Bản trước chia sáu cảnh làm ba đoạn, ba nền — nên hai câu liền nhau vẫn cùng một khung, và
+    video hai mươi giây chỉ có ba lần đổi hình. Anh muốn mỗi câu một hình, và hình ấy phải nói
+    đúng câu đang nói.
+    Nên hỏi mô hình MỘT lần cho cả bài: đưa nguyên sáu câu, nhận về sáu cảnh. Hỏi một lần thay vì
+    sáu lần vì mô hình cần thấy CẢ MẠCH mới chọn được cảnh nối nhau hợp lý — sáu câu hỏi rời sẽ
+    cho sáu cảnh chẳng liên quan gì nhau.
+    """
+    if not keys or not cau_noi:
+        return []
+    try:
+        import content_brain as CB
+    except Exception:
+        return []
+    ds = "\n".join(f"{i+1}. {c}" for i, c in enumerate(cau_noi))
+    hoi = (
+        "You pick one background image per line for a short explainer video.\n"
+        f"Channel: {ten_kenh}\nTitle: {tieu_de}\nLines:\n{ds}\n\n"
+        f"Return exactly {len(cau_noi)} numbered lines. For line N, give ONE short English "
+        "phrase (max 12 words) describing the place or objects that best illustrate THAT line.\n"
+        "Keep all scenes inside one coherent world so cuts between them feel natural.\n"
+        "Hard rules: no brand names, no proper nouns, no people, no text or signage, all "
+        "packaging blank. Objects and places only.\n"
+        "Format strictly as: 1. phrase\n2. phrase\n... nothing else."
+    )
+    import re as _re
+    for kk in list(keys)[:3]:
+        try:
+            g = CB._genai(kk if isinstance(kk, str) else kk.get("key"))
+            m = g.GenerativeModel("gemini-2.5-flash")
+            t = str(getattr(m.generate_content(hoi), "text", "") or "")
+            ra = []
+            for ln in t.splitlines():
+                mm = _re.match(r"\s*(\d+)[.)]\s*(.+)", ln)
+                if mm:
+                    v = " ".join(mm.group(2).split()).strip().strip('"').rstrip(".")
+                    if 6 <= len(v) <= 130:
+                        ra.append(v)
+            if len(ra) >= len(cau_noi):
+                return ra[:len(cau_noi)]
+        except Exception:
+            continue
+    return []
+
+
 def _chu_de_nen(tieu_de: str, nhan_cot: list) -> str:
     """Một cụm mô tả CHỦ ĐỀ CỦA TẬP để ghép vào câu vẽ nền. Rỗng nếu không đoán được.
 
@@ -582,6 +635,60 @@ def _chu_de_nen(tieu_de: str, nhan_cot: list) -> str:
         if any(x in t for x in tu):
             return mo
     return ""
+
+
+def ve_nen_moi_cau(k: dict, DS, canh_ds: list) -> list:
+    """Vẽ một nền cho mỗi cảnh trong `canh_ds`. Trả danh sách đường dẫn (rỗng ở chỗ vẽ hỏng).
+
+    Cache theo NỘI DUNG CẢNH, không theo chỉ số: hai tập khác nhau mà có một cảnh giống nhau thì
+    dùng chung ảnh. Với sáu cảnh mỗi tập, cách này cắt hẳn phần lớn chi phí vẽ từ tập thứ hai.
+    """
+    import hashlib as _hl
+    thu = os.path.join(PUB, "v3nen")
+    os.makedirs(thu, exist_ok=True)
+    try:
+        import kich_hai as _KHG
+        gu = _KHG.GU_NEN
+    except Exception:
+        gu = "flat 2D cartoon background, bold clean outlines, simple flat colours"
+    ra = []
+    for canh in canh_ds:
+        if not canh:
+            ra.append("")
+            continue
+        rel = os.path.join("v3nen", f"c{_hl.md5(canh.encode('utf-8')).hexdigest()[:10]}.jpg")
+        dest = os.path.join(PUB, rel)
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            ra.append(rel)
+            continue
+        _them = (", no signs on walls, no lettering anywhere, blank walls")
+        if any(x in canh.lower() for x in _CO_BAO):
+            _them += ", all packaging completely blank and unbranded, no printed text"
+        ok = None
+        for _l in range(2):
+            try:
+                import datastory_ci as _DC
+                _p = _DC._salt_prompt(f"{canh}{_them}, {_SAN_V3}, {gu}")
+            except Exception:
+                _p = f"{canh}{_them}, {_SAN_V3}, {gu}"
+            try:
+                ok = DS._generate_image_ai(_p, dest, None, style=gu)
+            except Exception:
+                ok = None
+            if ok and os.path.exists(dest) and os.path.getsize(dest) > 20000:
+                break
+            ok = None
+        if ok:
+            try:
+                import kich_hai as _KH
+                DS.nang_sang_anh(dest); _KH._keo_sang(dest)
+                if _KH._nen_hong(dest):
+                    os.remove(dest); ok = None
+            except Exception:
+                pass
+        ra.append(rel if (ok and os.path.exists(dest)) else "")
+    print(f"      🎨 {sum(1 for x in ra if x)}/{len(ra)} nền theo câu")
+    return ra
 
 
 def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
@@ -664,8 +771,6 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
         # Nên câu cấm phải bám vào VẬT, không bám vào tên: hễ chủ đề nói tới thứ có bề mặt in
         # được thì ép "bao bì trơn, mặt trắng". Cùng nguyên tắc `_bo_mat_chu` — không xin máy
         # đừng viết, mà bỏ hẳn chỗ chữ có thể bám.
-        _CO_BAO = ("packet", "package", "packaging", "box", "boxes", "bottle", "can ", "cans",
-                   "carton", "label", "product", "shelf", "shelves", "grocer", "snack", "brand")
         # CẤM CHỮ ÁP CHO MỌI NỀN, KHÔNG CHỈ NỀN CÓ BAO BÌ.
         # 30/8 — Khung BANK RUN đo được một biển hiệu ghi "BAND ANK": máy vẽ thấy chủ đề nói tới
         # ngân hàng là dựng ngay một cái biển trên tường, rồi bịa chữ lên đó. Chủ đề ấy KHÔNG có
@@ -821,12 +926,18 @@ def main() -> int:
         # Nền vẽ SAU khi có số liệu, vì chủ đề của tập nằm trong chính số liệu ấy.
         # HỎI AI TRƯỚC, BẢNG TỪ KHOÁ LÀ ĐƯỜNG LUI. Không có khoá hoặc mô hình chập thì vẫn ra
         # được một chủ đề thô còn hơn không có nền theo nội dung nào.
-        _nhan = [a2 for a2, _b2, _c2 in sl[1]]
-        _cd = _chu_de_ai(ten, sl[0], _nhan, keys) or _chu_de_nen(sl[0], _nhan)
-        if _cd:
-            print(f"   🧭 chủ đề nền: {_cd}")
-        nen2 = ve_nen_v3(k, DS, keys, _cd)
         canh, loi = dung_canh(k, sl)
+        # ══ MỘT NỀN CHO MỖI CÂU ═════════════════════════════════════════════════════════
+        # Anh: *"khi nói hết 1 câu thì phải thay đổi nền footage"*. Hỏi mô hình MỘT lần cho cả
+        # bài (nó cần thấy cả mạch mới chọn được các cảnh nối nhau hợp lý), nhận về sáu cảnh.
+        _canhDS = canh_moi_cau_ai(ten, sl[0], [c["nar"] for c in canh], keys)
+        for _i2, _c2 in enumerate(_canhDS):
+            print(f"   🧭 {_i2+1}. {_c2[:62]}")
+        nenCau = ve_nen_moi_cau(k, DS, _canhDS) if _canhDS else []
+        # Nền cố định của kênh làm ĐƯỜNG LUI cho những câu mà mô hình không trả hoặc vẽ hỏng —
+        # không bao giờ để một cảnh trống nền.
+        _nhan = [a2 for a2, _b2, _c2 in sl[1]]
+        nen2 = ve_nen_v3(k, DS, keys, "") if (not nenCau or not all(nenCau)) else []
         sl_ten = ten.replace(" ", "").lower()
 
         # GIỌNG ĐỌC + MỐC TỪNG TỪ. Dùng lại `tts_karaoke.synth` — đúng đường đã chạy cho 50 kênh,
@@ -958,9 +1069,10 @@ def main() -> int:
             # Hai nền sau là nơi làm việc của kênh — cùng một thế giới nghề nghiệp, nên đổi cảnh
             # giữa chúng vẫn logic (người dẫn đi từ sảnh vào bàn làm việc), khác hẳn kiểu nhảy
             # từ ngân hàng sang bãi biển.
-            "nenTheoCanh": [(nen2[min(i * 3 // max(1, len(canh)), len(nen2) - 1)] if nen2 else "")
+            "nenTheoCanh": [((nenCau[i] if i < len(nenCau) and nenCau[i] else
+                              (nen2[i % len(nen2)] if nen2 else "")))
                             for i in range(len(canh))],
-            "nenAnh": (nen2[0] if nen2 and nen2[0] else ""),
+            "nenAnh": (next((x for x in (nenCau + nen2) if x), "")),
         }
         pj = os.path.join(GOC, "out", f"v3_{sl_ten}.json")
         os.makedirs(os.path.dirname(pj), exist_ok=True)
