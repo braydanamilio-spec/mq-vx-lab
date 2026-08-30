@@ -282,8 +282,22 @@ const ChamQue: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
                   strokeLinecap="round" />
             <circle cx={Math.max(4, x)} cy={y + 8} r={sang ? 17 : 12}
                     fill={sang ? mau.nhan : "#F2C230"} stroke={mau.muc} strokeWidth={sang ? 6 : 4} />
-            <text x={Math.max(4, x) + 26} y={y + 15} fontSize={sang ? 27 : 23}
-                  fontWeight={900} fill={mau.muc} opacity={moc}>{c.hien}</text>
+            {/* 30/8 — anh gửi khung "2M km" bị mép phải chặt. Cùng một lỗi với dáng ngang mà
+                tôi đã sửa lúc chiều: số đặt SAU chấm, chấm chạy tới cuối thanh thì số ra ngoài
+                tấm nền. Tôi sửa dáng kia rồi quên dáng này.
+                Nên lần này gộp phép tính chỗ đặt số thành MỘT quy tắc dùng chung: còn chỗ thì
+                đặt sau, hết chỗ thì lùi vào trước — không dáng nào tự viết lại phép ấy. */}
+            {(() => {
+              const _x = Math.max(4, x);
+              const _rong = String(c.hien || "").length * (sang ? 15 : 13);
+              const _trong = _x + 26 + _rong > DAI + 10;
+              return (
+                <text x={_trong ? _x - 26 : _x + 26} y={y + 15}
+                      textAnchor={_trong ? "end" : "start"}
+                      fontSize={sang ? 27 : 23} fontWeight={900}
+                      fill={mau.muc} opacity={moc}>{c.hien}</text>
+              );
+            })()}
           </g>
         );
       })}

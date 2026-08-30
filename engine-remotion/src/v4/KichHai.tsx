@@ -59,6 +59,15 @@ export type Luot = {
   cuChi?: TenCuChi;
   nen?: string;                 // tệp ảnh nền cho lượt này
   co?: "rong" | "trung" | "can";
+  // ══ GÓC MÁY — thêm 30/8 ═══════════════════════════════════════════════════════════════
+  // Anh: *"cần đa dạng góc quay chứ ko phải là zoom hay chuyển động"*. Cả hệ trước nay chỉ có
+  // MỘT góc (máy chính diện) và mọi "thay đổi" là đổi khoảng cách — nên nó ra đúng cảm giác
+  // "xa quá rồi tự dưng gần".
+  //   hai_nguoi — cả hai trong khung, chính diện. Mở màn, cho biết ai đứng đâu với ai.
+  //   qua_vai   — qua vai người NGHE nhìn người NÓI. Góc chủ lực của mọi phim đối thoại: thấy
+  //               mặt người nói VÀ lưng người nghe cùng lúc, mà vẫn là một cú cận.
+  //   mot_nguoi — chỉ người nói. Dành cho câu quan trọng nhất.
+  goc?: "hai_nguoi" | "qua_vai" | "mot_nguoi";
   sfx?: string;
   chot?: boolean;               // lượt này là cú chốt -> có khoảng lặng trước, rung nhẹ khi nổ
   vatA?: string;                // đạo cụ người A cầm Ở LƯỢT NÀY (rỗng = tay trống)
@@ -374,7 +383,40 @@ export const KichHai: React.FC<PropsHai> = ({
   // đang nói văng ra mép rồi ra hẳn ngoài.
   // Bài học: khi một toạ độ đã đi qua phép chia rồi phép nhân của cùng một hệ số, nó KHÔNG còn
   // mang hệ số ấy nữa. Đọc chuỗi biến đổi từ trong ra ngoài trước khi cộng thêm một phép nào.
-  const _mucTieu = (co: boolean) => (co ? -(noiA_ ? dichA : dichB) : 0);
+  // Người đang nói nay LUÔN ở giữa nhờ bố cục theo góc, nên không cần lia bù nữa. Giữ hàm để
+  // đọc lịch sử: đây từng là cách chữa lỗi "nhân vật văng khỏi khung", và nó chữa triệu chứng
+  // (kéo khung theo người) chứ không chữa nguyên nhân (bố cục cố định không hợp cỡ máy).
+  const _mucTieu = (_co: boolean) => 0;
+  // ══ BỐ CỤC THEO GÓC ═══════════════════════════════════════════════════════════════════
+  // Ba góc, ba cách đặt người — và cả ba đều đưa NGƯỜI ĐANG NÓI về giữa khung. Đó cũng là cách
+  // chữa triệt để lỗi anh nêu ("nhân vật vẫn bị đứng ra mép rìa"): trước nay chỉ có một bố cục
+  // cố định ±292, nên hễ máy tiến vào là ai đó rơi ra mép. Nay vị trí do GÓC quyết.
+  //
+  // Quy tắc 180 độ giữ nguyên ở mọi góc: người A luôn đứng bên trái, B bên phải, nên A luôn
+  // nhìn sang phải và B nhìn sang trái. Không bao giờ đổi bên giữa chừng.
+  const _goc = (L.goc || "hai_nguoi") as string;
+  // `qua_vai`: người nghe thành TIỀN CẢNH — to hơn, tối hơn, đứng lệch hẳn ra mép và bị khung
+  // cắt bớt. Đó chính là cái làm nên chiều sâu của cú qua-vai: một khối gần ống kính, mất nét,
+  // đóng khung cho khuôn mặt ở xa.
+  const _quaVai = _goc === "qua_vai";
+  const _motNguoi = _goc === "mot_nguoi";
+  // Soi bốn khung dựng thử thì ba góc ra GIỐNG HỆT NHAU: hai người luôn sát nhau, không tiền
+  // cảnh nào, và ở góc "một người" vẫn thấy cả hai. Tôi khai đủ biến nhưng chỉ nối chúng vào
+  // BÓNG ĐỔ, quên nối vào chính nhân vật — đúng lỗi cổng `kiem_gan` sinh ra để chặn, mắc lại
+  // ngay trong ngày viết nó.
+  // Ba góc phải cho ba BỐ CỤC khác hẳn, không phải ba biến thể của một bố cục:
+  const _xA = _quaVai ? (noiA_ ? -40 : -430)      // qua vai: người nói lệch nhẹ khỏi tâm (quy
+            : _motNguoi ? (noiA_ ? 0 : -9999)     //   tắc một-phần-ba), người nghe ra sát mép
+            : -292;                               //   và bị khung cắt bớt — đó là tiền cảnh
+  const _xB = _quaVai ? (noiA_ ? 430 : 40)        // một người: người kia đẩy hẳn ra ngoài
+            : _motNguoi ? (noiA_ ? 9999 : 0)
+            : 292;
+  // Tiền cảnh gần ống kính nên TO hơn và TỐI hơn — hai dấu hiệu chiều sâu mà mắt đọc tức thì.
+  const _coA = _quaVai && !noiA_ ? 1.5 : 1;
+  const _coB = _quaVai && noiA_ ? 1.5 : 1;
+  const _mA = _quaVai && !noiA_ ? 0.55 : 1;
+  const _mB = _quaVai && noiA_ ? 0.55 : 1;
+
   const _liaTam = trn(_mucTieu(_canTruoc), _mucTieu(_canNay),
                       muot(kep((giay - L.s) / 0.9)));
   // ▲ KHỐI TRÊN PHẢI NẰM SAU `zoom`. Bản đầu tôi đặt nó cạnh `dichA`/`dichB` cho gọn ý, nhưng
@@ -507,9 +549,9 @@ export const KichHai: React.FC<PropsHai> = ({
               cầu của anh ("nhân vật cao lên, nhân vật kia nhỏ lại rất thiếu thẩm mỹ") — nên hai
               bóng bằng nhau. Vẫn buộc bóng vào hệ số ấy để nếu sau này cỡ người lại đổi thì
               bóng không phải đi sửa lần nữa. */}
-          <ellipse cx={xA / zoom} cy={Y_CHAN - 4} rx={110 * coA} ry={16 * coA}
+          <ellipse cx={_xA / zoom} cy={Y_CHAN - 4} rx={110 * coA * _coA} ry={16 * coA}
                    fill="url(#bongchan)" />
-          <ellipse cx={xB / zoom} cy={Y_CHAN - 4} rx={110 * coB} ry={16 * coB}
+          <ellipse cx={_xB / zoom} cy={Y_CHAN - 4} rx={110 * coB * _coB} ry={16 * coB}
                    fill="url(#bongchan)" />
           {/* 30/8 — KHOẢNG CÁCH HAI NGƯỜI CHIA CHO ĐỘ PHÓNG.
               Toàn cảnh được phóng `zoom`; nếu giữ nguyên x thì ở cỡ CẬN (zoom 1,72) hai người
@@ -524,6 +566,7 @@ export const KichHai: React.FC<PropsHai> = ({
               ĐI tới đó trong 0,6 giây đầu lượt, có bước chân hẳn hoi (`buoc` > 0 bật dáng đi).
               Khoảng cách hai người vì thế thay đổi theo nội dung: dồn nhau thì gần lại, đầu
               hàng thì giãn ra. */}
+          <g opacity={_mA}>
           <DienVienHai kieu={A} camXuc={(noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
@@ -531,7 +574,9 @@ export const KichHai: React.FC<PropsHai> = ({
                     giat={noiA_ ? 0 : _giatNghe}
                     cuChiTruoc={ccTruocA} doiCuChi={noiA_ ? doiCC : doiCCnghe} tuoiCanh={giay - L.s}
                     dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={L.vatA ?? vatA}
-                    x={xA / zoom} y={Y_CHAN} scale={1.12 * coA} />
+                    x={_xA / zoom} y={Y_CHAN} scale={1.12 * coA * _coA} />
+          </g>
+          <g opacity={_mB}>
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
@@ -539,7 +584,8 @@ export const KichHai: React.FC<PropsHai> = ({
                     giat={!noiA_ ? 0 : _giatNghe}
                     cuChiTruoc={ccTruocB} doiCuChi={noiA_ ? doiCCnghe : doiCC} tuoiCanh={giay - L.s}
                     dangNoi={!noiA_ || (_phanUng && noiA_)} doVat={L.vatB ?? vatB}
-                    x={xB / zoom} y={Y_CHAN} scale={1.12 * coB} lat />
+                    x={_xB / zoom} y={Y_CHAN} scale={1.12 * coB * _coB} lat />
+          </g>
         </g>
 
         {tieuDe && giay < 2.6 ? (

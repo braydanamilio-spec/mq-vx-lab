@@ -1537,10 +1537,31 @@ def dung_luot(k: dict, nen: list, vong: int = 0, nen_luot: list | None = None) -
              "camXucKia": ("bat_ngo" if cuoi else
                            ["nghi_ngo", "bat_ngo", "trung_tinh", "tuc", "buon", "nghi_ngo"][i % 6]),
              "cuChi": cu_chi_cua(chu, i, cuoi),
-             # CỠ MÁY LÀ CHỖ TẠO NHỊP, thay cho việc đổi nền. Mở bằng toàn cảnh cho người xem
-             # đọc ra đang ở đâu, siết dần vào khi câu chuyện leo thang, và cú chốt đóng cận
-             # nhất — vì cú chốt nằm ở NÉT MẶT, không ở lời.
+             # ══ GÓC MÁY, KHÔNG CHỈ CỠ MÁY ═══════════════════════════════════════════════
+             # 30/8 — Anh: *"cần đa dạng góc quay chứ ko phải là zoom hay chuyển động… cần vẽ
+             # các góc mà nhân vật đối diện nhau nói chuyện, hay góc nghiêng"*.
+             # Đúng chỗ thiếu nhất. Cả hệ chỉ có MỘT góc — máy đứng chính diện — và mọi "thay
+             # đổi" đều là đổi KHOẢNG CÁCH. Nên nó ra đúng cảm giác anh mô tả: xa quá rồi tự
+             # dưng gần, không tự nhiên.
+             #
+             # Một cảnh đối thoại trong phim không bao giờ được dựng bằng cách tiến lùi máy. Nó
+             # được dựng bằng một BỘ GÓC, và cắt qua lại giữa chúng:
+             #   · `hai_nguoi`  — cả hai trong khung, chính diện. Mở màn: cho người xem biết ai
+             #                    đang ở đâu với ai. Không có nó thì mọi cú cắt sau đều mơ hồ.
+             #   · `qua_vai`    — qua vai người NGHE nhìn người NÓI. Đây là góc chủ lực của mọi
+             #                    phim đối thoại, vì nó cho thấy CẢ HAI cùng lúc: mặt người nói
+             #                    và phản ứng lưng người nghe, mà vẫn là một cú cận.
+             #   · `mot_nguoi`  — chỉ người nói, thân xoay ba phần tư về phía bạn diễn. Dùng cho
+             #                    câu quan trọng nhất, nơi không muốn gì khác trong khung.
+             #
+             # Và một luật xương sống của nghề — **quy tắc 180 độ**: máy luôn đứng về MỘT phía
+             # của đường nối hai nhân vật. Nhờ nó, A luôn nhìn sang phải và B luôn nhìn sang
+             # trái, ở mọi góc. Vượt qua đường ấy thì người xem mất phương hướng ngay lập tức,
+             # dù không ai gọi tên được vì sao.
              "co": "rong" if i == 0 else ("can" if (cuoi or i == n - 2) else "trung"),
+             "goc": ("hai_nguoi" if i == 0 else
+                     ("mot_nguoi" if cuoi else
+                      ("qua_vai" if i % 2 else "hai_nguoi"))),
              # Nền của LƯỢT NÀY; thiếu thì lui về nền cố định của kênh.
              "nen": (nenLuot[i] if i < len(nenLuot) and nenLuot[i] else nen1),
              "chot": cuoi}
