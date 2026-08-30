@@ -359,6 +359,27 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
     if st and _dai_nhat:
         print(f"      📊 dải dữ liệu: cao nhất gấp {_dai_nhat:.1f} lần thấp nhất"
               f"{' — hẹp, biểu đồ sẽ khó thấy chênh lệch' if _dai_nhat < 1.6 else ''}")
+    if not st:
+        return None
+    # Rút danh sách cột từ lát đã chọn. (Khối này từng bị chính tôi xoá mất khi chèn phần chọn
+    # lát ở trên: tôi cắt mã bằng hai mốc đầu–cuối mà không nhìn phần nằm giữa hai mốc ấy, và
+    # phần nằm giữa chính là chỗ dựng `ds`. Sửa mã bằng cách cắt theo mốc thì phải đọc đoạn bị
+    # cắt trước khi thay — nếu không, thứ biến mất là thứ mình không nghĩ tới.)
+    ds = []
+    for it in (st.get("items") or []):
+        hien = str(it.get("stat") or "").strip()
+        # Giá trị SỐ rút từ chữ hiện: "351 cal" -> 351.0. Biểu đồ cần con số để tính chiều cao
+        # cột; chữ hiện giữ nguyên đơn vị để người xem đọc đúng thứ nguồn nói.
+        m = _re.search(r"-?[\d,]+\.?\d*", hien.replace(",", ""))
+        if not m:
+            continue
+        try:
+            gt = float(m.group(0))
+        except ValueError:
+            continue
+        ten = str(it.get("name") or "").strip()
+        if ten:
+            ds.append((ten, gt, hien))
     if len(ds) < 3:
         return None          # dưới ba cột thì không có gì để so — bỏ lượt, không bịa thêm
     return (str(st.get("title") or ten_kenh), ds, str(st.get("nguon") or ""))
