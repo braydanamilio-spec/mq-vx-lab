@@ -504,6 +504,18 @@ def _tach_so_dai(tu: list) -> list:
     return ra
 
 
+# Mã bối cảnh nội bộ -> chữ tiếng Anh cho mô hình vẽ. Mã trần ("ke_sieu_thi") không nói gì với
+# một mô hình tiếng Anh; nó cần thấy nơi chốn thật.
+_BOI_CHU = {
+    "quay": "a bank teller counter", "ban_lam_viec": "a working desk area",
+    "van_phong": "an office floor", "ke_sieu_thi": "a supermarket aisle",
+    "san_sau": "a suburban backyard", "phong_xu": "a courtroom",
+    "toa_an": "a courthouse hall", "thu_phong": "a study room with shelves",
+    "san_thuong": "a rooftop at night", "tinh_van": "a starfield",
+    "vu_tru": "deep space", "bep": "a home kitchen", "kho": "a storage warehouse",
+}
+
+
 def _ten_nguon(t: str) -> str:
     """Mã nguồn nội bộ -> tên cơ quan cho người xem.
 
@@ -929,7 +941,8 @@ def _xoay(keys):
     return _KHx.xoay_key(keys)
 
 
-def canh_moi_cau_ai(ten_kenh: str, tieu_de: str, cau_noi: list, keys) -> list:
+def canh_moi_cau_ai(ten_kenh: str, tieu_de: str, cau_noi: list, keys,
+                    the_gioi: str = "") -> list:
     """Một cảnh nền cho MỖI CÂU nói. Trả danh sách cùng độ dài `cau_noi`, hoặc [] nếu hỏng.
 
     30/8 — Anh: *"chuyển cảnh footage chưa đa dạng, khi nói hết 1 câu thì phải thay đổi nền
@@ -951,9 +964,18 @@ def canh_moi_cau_ai(ten_kenh: str, tieu_de: str, cau_noi: list, keys) -> list:
     hoi = (
         "You pick one background image per line for a short explainer video.\n"
         f"Channel: {ten_kenh}\nTitle: {tieu_de}\nLines:\n{ds}\n\n"
+        # 30/8 — anh: hai cảnh cuối của RECALL PLATE là "data center" và "study hall", lạc hẳn
+        # khỏi một kênh nói về thu hồi THỰC PHẨM. Prompt cũ dặn "giữ mọi cảnh trong cùng một thế
+        # giới" mà KHÔNG nói thế giới ấy là gì — nên với câu "straight from openFDA", mô hình
+        # chọn một phòng máy chủ: đúng nghĩa đen, lạc niche.
+        # Đây đúng trường hợp luật 7bi mô tả: khi AI cứ chọn một giá trị hợp lý mà sai chỗ, đừng
+        # dặn kỹ hơn — hãy CẤP cho nó danh sách được phép chọn.
         f"Return exactly {len(cau_noi)} numbered lines. For line N, give ONE short English "
         "phrase (max 12 words) describing the place or objects that best illustrate THAT line.\n"
-        "Keep all scenes inside one coherent world so cuts between them feel natural.\nEVERY scene must be a WIDE shot at standing eye level, showing a room or open space with the floor visible and the line where floor meets the far wall visible. The camera stands back far enough that no single object fills more than a third of the frame; furniture at normal size for a room a standing adult walks through. Never a close-up, never a macro shot, never a low angle looking up at an object.\n\n"
+        + (f"EVERY scene must take place inside this world: {the_gioi}. A line about where the "
+           f"data came from still happens in that world — show the place the subject lives, not "
+           f"an office or a server room.\n" if the_gioi else "")
+        + "Keep all scenes inside one coherent world so cuts between them feel natural.\nEVERY scene must be a WIDE shot at standing eye level, showing a room or open space with the floor visible and the line where floor meets the far wall visible. The camera stands back far enough that no single object fills more than a third of the frame; furniture at normal size for a room a standing adult walks through. Never a close-up, never a macro shot, never a low angle looking up at an object.\n\n"
         "Hard rules: no brand names, no proper nouns, no people, no text or signage, all "
         "packaging blank. Objects and places only.\n"
         "Format strictly as: 1. phrase\n2. phrase\n... nothing else."
@@ -1369,7 +1391,16 @@ def main() -> int:
         # ══ MỘT NỀN CHO MỖI CÂU ═════════════════════════════════════════════════════════
         # Anh: *"khi nói hết 1 câu thì phải thay đổi nền footage"*. Hỏi mô hình MỘT lần cho cả
         # bài (nó cần thấy cả mạch mới chọn được các cảnh nối nhau hợp lý), nhận về sáu cảnh.
-        _canhDS = canh_moi_cau_ai(ten, sl[0], [c["nar"] for c in canh], keys)
+        # Thế giới của kênh: lấy từ chính danh sách bối cảnh đã khai cho kênh ấy, nên không có
+        # bảng thứ hai nào phải nhớ đồng bộ.
+        # CHỈ bối cảnh đầu — cái duy nhất thuộc về niche này. Hai cái sau ("ban_lam_viec",
+        # "van_phong") là mặc định chung cho mọi kênh; cấp cả ba thì mô hình chọn văn phòng ba
+        # trên năm cảnh, đúng theo danh sách tôi đưa, và thế giới của kênh loãng ra.
+        # Cấp một danh sách rộng không phải là cho mô hình nhiều lựa chọn hơn — là cho nó nhiều
+        # cách đi chệch hơn.
+        _boi = (k.get("boi") or ["van_phong"])
+        _tg = _BOI_CHU.get(_boi[0], _boi[0])
+        _canhDS = canh_moi_cau_ai(ten, sl[0], [c["nar"] for c in canh], keys, the_gioi=_tg)
         for _i2, _c2 in enumerate(_canhDS):
             print(f"   🧭 {_i2+1}. {_c2[:62]}")
         # 30/8 — anh gửi hai khung và nói nền "chưa mờ" với "chưa liên quan". Soi props thì ra

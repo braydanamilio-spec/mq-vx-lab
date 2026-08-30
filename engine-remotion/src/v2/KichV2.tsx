@@ -177,7 +177,103 @@ const CHART_CO = Math.min((NGUOI_DAU - LE - CHART_Y) / CHART_DAY_GOC,
                           (2 * VB_PHAI - 2 * LE) / CHART_RONG_GOC);
 const CHART_TAM = 26;             // nhích phải một chút: mắt người đọc từ trái, chừa lối vào
 
-const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat?: number }> = ({ cot, p, mau, noiBat = 0 }) => {
+// ══ BIỂU ĐỒ PHẢI CÓ HƠN MỘT DÁNG ═══════════════════════════════════════════════════════════
+// 30/8 — Anh: *"chart dữ liệu đang bị lặp đi lặp lại hơi nhàm chán"*. Đúng: sáu mươi kênh, mỗi
+// kênh nhiều tập, tất cả dùng CHUNG một dáng cột dọc vàng-với-một-cột-đỏ. Xem hai video liền
+// nhau là thấy cùng một hình, chỉ đổi con số.
+//
+// Nhưng đa dạng không phải là đổi dáng ngẫu nhiên cho vui. Mỗi dáng giải một bài toán riêng, và
+// chọn đúng dáng làm số liệu DỄ ĐỌC HƠN chứ không chỉ mới mắt hơn:
+//   · CỘT DỌC  — mặc định, tốt khi nhãn ngắn và các giá trị cùng bậc;
+//   · CỘT NGANG — khi nhãn DÀI: chữ chạy ngang theo cột nên không phải xuống dòng hay cắt cụt,
+//                 đúng chỗ đau của những nguồn có tên sản phẩm dài;
+//   · CHẤM-QUE  — khi một giá trị vượt trội hẳn: cột dọc lúc ấy biến ba cột kia thành ba vạch
+//                 sát đáy, còn chấm-que giữ được vị trí đọc được cho mọi mục.
+// Nên luật chọn đọc DỮ LIỆU trước, và chỉ khi dữ liệu không đòi hỏi gì thì mới lấy dáng cố định
+// của kênh — để mỗi kênh vẫn có một bộ mặt quen thuộc.
+type DangChart = "dung" | "ngang" | "cham";
+
+const chonDang = (cot: { nhan: string; gt: number }[], kenhSo: number): DangChart => {
+  const n = Math.min(4, cot.length);
+  if (!n) return "dung";
+  const dai = Math.max(...cot.slice(0, n).map((c) => (c.nhan || "").length));
+  const gt = cot.slice(0, n).map((c) => c.gt).sort((a, b) => b - a);
+  if (gt.length > 1 && gt[1] > 0 && gt[0] / gt[1] > 3.5) return "cham";
+  if (dai > 14) return "ngang";
+  return (["dung", "ngang", "cham"] as DangChart[])[kenhSo % 3];
+};
+
+const CotNgang: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat: number }> =
+({ cot, p, mau, noiBat }) => {
+  // Nhãn chạy NGANG theo thanh nên không phải xuống dòng hay cắt cụt — đúng chỗ đau của những
+  // nguồn có tên sản phẩm dài. Đổi lại chỉ hiện được bốn mục, nên chỉ dùng khi nhãn thật sự dài.
+  const N = Math.min(4, cot.length);
+  const DAI = 380, DAY = 52, BUOC = 74;
+  const dinh = Math.max(1, ...cot.slice(0, N).map((c) => c.gt));
+  const nenX = -250, nenY = -46, nenW = 500, nenH = BUOC * N + 52;
+  return (
+    <g transform={`translate(0 ${-nenH / 2 + 40})`}>
+      <rect x={nenX} y={nenY} width={nenW} height={nenH} rx={18}
+            fill="#FBF6EA" stroke={mau.muc} strokeWidth={6} />
+      {cot.slice(0, N).map((c, i) => {
+        const moc = muot(kep((p - i * 0.07) / 0.3));
+        const w = (c.gt / dinh) * DAI * moc;
+        const sang = i === noiBat;
+        return (
+          <g key={i} transform={`translate(${-232} ${i * BUOC})`}>
+            <text x={0} y={-6} fontSize={19} fontWeight={800} fill={mau.muc}
+                  opacity={0.9 * moc}>{c.nhan}</text>
+            <rect x={0} y={2} width={Math.max(2, w)} height={DAY} rx={7}
+                  fill={sang ? mau.nhan : "#F2C230"} stroke={mau.muc}
+                  strokeWidth={sang ? 6 : 4} />
+            <text x={Math.max(2, w) + 12} y={DAY * 0.72} fontSize={sang ? 30 : 25}
+                  fontWeight={900} fill={mau.muc} opacity={moc}>{c.hien}</text>
+          </g>
+        );
+      })}
+    </g>
+  );
+};
+
+const ChamQue: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat: number }> =
+({ cot, p, mau, noiBat }) => {
+  // Khi một giá trị vượt trội hẳn, cột dọc biến ba mục kia thành ba vạch sát đáy. Chấm-que giữ
+  // được vị trí đọc được cho mọi mục vì cái mắt đọc là CHẤM, không phải diện tích cột.
+  const N = Math.min(5, cot.length);
+  const BUOC = 62, DAI = 400;
+  const dinh = Math.max(1, ...cot.slice(0, N).map((c) => c.gt));
+  const nenX = -250, nenY = -40, nenW = 500, nenH = BUOC * N + 46;
+  return (
+    <g transform={`translate(0 ${-nenH / 2 + 34})`}>
+      <rect x={nenX} y={nenY} width={nenW} height={nenH} rx={18}
+            fill="#FBF6EA" stroke={mau.muc} strokeWidth={6} />
+      {cot.slice(0, N).map((c, i) => {
+        const moc = muot(kep((p - i * 0.06) / 0.28));
+        const x = (c.gt / dinh) * DAI * moc;
+        const sang = i === noiBat;
+        const y = i * BUOC + 16;
+        return (
+          <g key={i} transform={`translate(${-226} 0)`}>
+            <text x={0} y={y - 12} fontSize={18} fontWeight={800} fill={mau.muc}
+                  opacity={0.88 * moc}>{c.nhan}</text>
+            <line x1={0} y1={y + 8} x2={Math.max(4, x)} y2={y + 8}
+                  stroke={mau.muc} strokeWidth={sang ? 7 : 4} opacity={sang ? 0.9 : 0.42}
+                  strokeLinecap="round" />
+            <circle cx={Math.max(4, x)} cy={y + 8} r={sang ? 17 : 12}
+                    fill={sang ? mau.nhan : "#F2C230"} stroke={mau.muc} strokeWidth={sang ? 6 : 4} />
+            <text x={Math.max(4, x) + 26} y={y + 15} fontSize={sang ? 27 : 23}
+                  fontWeight={900} fill={mau.muc} opacity={moc}>{c.hien}</text>
+          </g>
+        );
+      })}
+    </g>
+  );
+};
+
+const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat?: number;
+                           dang?: DangChart }> = ({ cot, p, mau, noiBat = 0, dang = "dung" }) => {
+  if (dang === "ngang") return <CotNgang cot={cot} p={p} mau={mau} noiBat={noiBat} />;
+  if (dang === "cham") return <ChamQue cot={cot} p={p} mau={mau} noiBat={noiBat} />;
   // ══════════════════════════════════════════════════════════════════════════════════════
   // BIỂU ĐỒ PHẢI CÓ TẤM NỀN RIÊNG
   // --------------------------------------------------------------------------------------
@@ -383,6 +479,10 @@ export const KichV2: React.FC<PropsKich> = ({
   // khác thay vì soi mãi một chỗ.
   const _noiBatKe = _cot ? (i - _iCot) % Math.min(4, _cot.length) : 0;
 
+  // Băm tên kênh để mỗi kênh có một dáng biểu đồ MẶC ĐỊNH cố định — người xem quen kênh nhận ra
+  // ngay bộ mặt của nó, mà sáu mươi kênh vẫn không cùng một hình.
+  const _soKenh = Array.from(String(tieuDe || "")).reduce((a, c) => a + c.charCodeAt(0), 0);
+
   const noi = visemeTai(tu, giay, CAM_XUC[C.camXuc || "trung_tinh"].ha);
   const nhin = C.nhin || [0, 0];
 
@@ -551,7 +651,8 @@ export const KichV2: React.FC<PropsKich> = ({
             còn lại và căn giữa phần ấy. Đổi cỡ nhân vật thì chart tự dịch theo. */}
         {_cot ? (
           <g transform={`translate(${doc ? CHART_TAM : 150} ${doc ? CHART_Y : 84}) scale(${doc ? CHART_CO : 1.02})`}>
-            <CotDaoCu cot={_cot} p={_pCot} mau={mau} noiBat={C.noiBat ?? _noiBatKe} />
+            <CotDaoCu cot={_cot} p={_pCot} mau={mau} noiBat={C.noiBat ?? _noiBatKe}
+                      dang={chonDang(_cot, _soKenh)} />
           </g>
         ) : null}
         {C.soLon ? (
