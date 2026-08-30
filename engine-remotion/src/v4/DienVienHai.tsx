@@ -147,6 +147,7 @@ export type PropsHai = {
   // số liệu ngân hàng thì kênh ấy mất hết vẻ đáng tin — mà đáng tin chính là TOÀN BỘ giá trị của
   // mười kênh dữ liệu. Bộ hài BẬT, bộ dữ liệu TẮT: cùng một con rối, hai cách diễn.
   kyHieu?: boolean;
+  ghimNguc?: boolean;            // ép cử chỉ về tầm ngực — xem `_GHIM_NGUC` và chỗ dùng ở KichHai
   // 30/8 — KÝ HIỆU LÀ MỘT CHỚP, KHÔNG PHẢI PHỤ KIỆN ĐỘI ĐẦU.
   // Khung đo được: gần như MỌI nhân vật ở MỌI khung đều có chùm tia bật trên đầu. Vẽ đúng, nhưng
   // hiện suốt lượt thì nó thôi làm dấu nhấn và thành một thứ dính vào tóc.
@@ -181,7 +182,7 @@ const R_DAU_GOC = 58;
 export const DienVienHai: React.FC<PropsHai> = ({
   kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0, giat = 0, dangNoi = true,
   cuChiTruoc, doiCuChi = 1, doVat = "", kyHieu = true, tuoiCanh = 0,
-  x = 0, y = 0, scale = 1, lat = false,
+  x = 0, y = 0, scale = 1, lat = false, ghimNguc = false,
 }) => {
   const E = CAM_XUC[camXuc] || CAM_XUC.trung_tinh;
   // ══ CỬ CHỈ GIỚI HẠN TRONG VÙNG NGỰC KHI LÀM NGƯỜI DẪN ═══════════════════════════════
@@ -192,9 +193,17 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const _GHIM_NGUC: Record<string, TenCuChi> = {
     chi: "dem", gio_len: "dem", mo_tay: "mo_tay", nhun_vai: "mo_tay",
   };
-  const _cc = (kyHieu ? cuChi : (_GHIM_NGUC[cuChi as string] || cuChi)) as string;
-  const _ccT = (kyHieu ? (cuChiTruoc || cuChi) : (_GHIM_NGUC[(cuChiTruoc || cuChi) as string]
-                || cuChiTruoc || cuChi)) as string;
+  // 31/8 — ghim cũng bật theo BỐ CỤC, không chỉ theo chế độ kênh. Tính ra thì hai người cùng
+  // khung với cử chỉ dang ngang (`chi` vươn 181 đơn vị) là BẤT KHẢ ở cỡ trung và cận: chỗ cần
+  // để hai người không chồng nhau (≥288) lớn hơn chỗ có để không ai tràn khung (≤225). Không
+  // có giá trị nào của khoảng cách thoả mãn cả hai — nên mọi lần chỉnh tay đều thất bại, và
+  // tôi đã chỉnh bốn lần. Ghim tay về tầm ngực hạ bề ngang xuống 119 và mở lại khoảng khả thi
+  // ở cả ba cỡ. Cỡ rộng vẫn để cử chỉ tự do vì ở đó vẫn vừa, và tay dang rộng là thứ làm nhân
+  // vật sống động — chỉ ghim đúng chỗ nó gây tràn.
+  const _ghim = ghimNguc || !kyHieu;
+  const _cc = (_ghim ? (_GHIM_NGUC[cuChi as string] || cuChi) : cuChi) as string;
+  const _ccT = (_ghim ? (_GHIM_NGUC[(cuChiTruoc || cuChi) as string] || cuChiTruoc || cuChi)
+                      : (cuChiTruoc || cuChi)) as string;
   const _G1 = CU_CHI_HAI[_cc] || CU_CHI[_cc as TenCuChi] || CU_CHI.nghi;
   const _G0 = CU_CHI_HAI[_ccT] || CU_CHI[_ccT as TenCuChi] || _G1;
   // NỘI SUY GIỮA HAI TƯ THẾ, có gia tốc hai đầu (`muot`): rời tư thế cũ chậm, giữa nhanh, vào tư

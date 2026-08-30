@@ -409,10 +409,13 @@ export const KichHai: React.FC<PropsHai> = ({
   //
   // Công thức: muốn mép đúng bằng rìa khung thì  x = (nửa_khung − nửa_người × cỡ) / cỡ.
   // Trừ thêm một khe an toàn để bàn tay khi dang rộng cũng không chạm rìa.
-  const _NUA_NGUOI = 115 * 1.12;         // đo từ bảng tư thế, nhân cỡ vẽ nhân vật
+  // 31/8 — ĐO LẠI TỪ BẢNG CỬ CHỈ, không đo bằng mắt trên một khung.
+  // 115 là bề ngang ở tư thế NGHỈ. Nhưng nhân vật không đứng nghỉ cả clip: `chi` vươn tay ngang
+  // tới 181 đơn vị, `gio_len` 156. Lấy tư thế hẹp nhất làm chuẩn cho một công thức chống tràn
+  // thì công thức ấy sai đúng vào lúc cần nó nhất — lúc nhân vật đang diễn.
+  // Hai con số vì bố cục có hai chế độ: ghim tay tầm ngực (hai người, cỡ trung/cận) và tự do.
+  const _NUA_TU_DO = 181, _NUA_GHIM = 119;
   const _KHE = 26;
-  const _xToiDa = Math.max(120, (500 - _KHE - _NUA_NGUOI * zoom) / zoom);
-  const dichA = -Math.min(292, _xToiDa), dichB = Math.min(292, _xToiDa);
   // ▲ Khối trên PHẢI nằm sau `zoom`: nó đọc `zoom` để tính khoảng cách co theo cỡ máy. Đặt nó
   // cạnh `dichA`/`dichB` cho gọn ý thì ra `Cannot access 'zoom' before initialization` — TDZ lần
   // thứ SÁU trong kho này, và lần này cổng dựng-thử-một-khung bắt được trong vài giây thay vì
@@ -424,6 +427,19 @@ export const KichHai: React.FC<PropsHai> = ({
   // đóng khung cho khuôn mặt ở xa.
   const _quaVai = _goc === "qua_vai";
   const _motNguoi = _goc === "mot_nguoi";
+
+  // Ghim khi HAI người ở cỡ trung/cận — chỗ duy nhất bài toán vô nghiệm nếu để tay tự do.
+  const _ghimTay = !_motNguoi && zoom >= 1.4;
+  const _NUA_NGUOI = _ghimTay ? _NUA_GHIM : _NUA_TU_DO;
+  // Chặn dưới phải đủ để hai người KHÔNG CHỒNG nhau, chứ không phải một số tròn cho đẹp: bản
+  // trước để 120, tức cho phép hai nhân vật lồng vào nhau khi zoom lớn.
+  // Toạ độ x BỊ nhân zoom cùng nhân vật, nên điều kiện "không chồng nhau" phải viết ở đơn vị
+  // CHƯA nhân: khoảng cách thật giữa hai tâm là 2·x·zoom, bề ngang thật là 2·NUA·zoom, nên
+  // x ≥ NUA + KHE/(2·zoom). Viết nhầm thành NUA·zoom + KHE/2 là trộn hai hệ đơn vị, và ra một
+  // ngưỡng lớn gấp rưỡi — cổng lập tức tố cả mười kênh tràn khung dù engine đặt đúng.
+  const _xToiThieu = _NUA_NGUOI + _KHE / (2 * zoom);
+  const _xToiDa = Math.max(_xToiThieu, (500 - _KHE - _NUA_NGUOI * zoom) / zoom);
+  const dichA = -Math.min(292, _xToiDa), dichB = Math.min(292, _xToiDa);
   // Soi bốn khung dựng thử thì ba góc ra GIỐNG HỆT NHAU: hai người luôn sát nhau, không tiền
   // cảnh nào, và ở góc "một người" vẫn thấy cả hai. Tôi khai đủ biến nhưng chỉ nối chúng vào
   // BÓNG ĐỔ, quên nối vào chính nhân vật — đúng lỗi cổng `kiem_gan` sinh ra để chặn, mắc lại
@@ -640,7 +656,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     giat={noiA_ ? 0 : _giatNghe}
                     cuChiTruoc={ccTruocA} doiCuChi={noiA_ ? doiCC : doiCCnghe} tuoiCanh={giay - L.s}
                     dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={L.vatA ?? vatA}
-                    x={_xA / zoom} y={Y_CHAN} scale={1.12 * coA * _coA} />
+                    x={_xA / zoom} y={Y_CHAN} scale={1.12 * coA * _coA} ghimNguc={_ghimTay} />
           </g>
           <g style={_toiB ? { filter: "brightness(0.52) saturate(0.7) blur(1.4px)" } : undefined}>
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
@@ -650,7 +666,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     giat={!noiA_ ? 0 : _giatNghe}
                     cuChiTruoc={ccTruocB} doiCuChi={noiA_ ? doiCCnghe : doiCC} tuoiCanh={giay - L.s}
                     dangNoi={!noiA_ || (_phanUng && noiA_)} doVat={L.vatB ?? vatB}
-                    x={_xB / zoom} y={Y_CHAN} scale={1.12 * coB * _coB} lat />
+                    x={_xB / zoom} y={Y_CHAN} scale={1.12 * coB * _coB} lat ghimNguc={_ghimTay} />
           </g>
         </g>
 

@@ -34,16 +34,24 @@ VB_NUA = 500                 # nửa bề ngang viewBox dọc
 CO_MAY = {"rong": 1.18, "trung": 1.52, "can": 1.86}
 CO_NGUOI = 1.12
 NUA_RONG_NGUOI = 150         # nửa bề ngang một nhân vật ở cỡ 1.0 (đo từ engine)
-NUA_NGUOI = 115 * 1.12       # nửa bề ngang nhân vật, đo trên bảng tư thế nền trơn
+# 31/8 — HAI con số, vì bố cục có hai chế độ. 115 là bề ngang ở tư thế NGHỈ, và cổng dùng nó
+# nên nó báo "lành 10" trong khi khung render vẫn cắt mất nửa người: nhân vật không đứng nghỉ
+# cả clip, `chi` vươn tay ngang tới 181 đơn vị. Đo tư thế hẹp nhất rồi dùng cho công thức chống
+# tràn thì công thức sai đúng lúc cần nó nhất — lúc nhân vật đang diễn.
+NUA_TU_DO, NUA_GHIM = 181.0, 119.0
 KHE = 26                     # khe an toàn để bàn tay dang rộng cũng không chạm rìa
 
 
-def x_dung(co: float) -> float:
+def x_dung(co: float, mot_nguoi: bool = False) -> float:
     """Toạ độ đứng của hai người, CO theo cỡ máy — khớp công thức trong KichHai.tsx.
 
     Bản đầu của cổng này dùng hằng 292 chép tay, nên sau khi engine chuyển sang công thức thì
     cổng vẫn tố tràn ở mọi tập. Một cổng đo bằng con số đã lỗi thời thì tố nhầm y như không đo."""
-    return min(292, max(120, (500 - KHE - NUA_NGUOI * co) / co))
+    ghim = not mot_nguoi and co >= 1.4
+    nua = NUA_GHIM if ghim else NUA_TU_DO
+    # x bị nhân co cùng nhân vật, nên điều kiện không-chồng viết ở đơn vị CHƯA nhân.
+    toi_thieu = nua + KHE / (2 * co)
+    return max(toi_thieu, (500 - KHE - nua * co) / co)
 
 
 def cham(f: str) -> list[str]:
@@ -55,7 +63,11 @@ def cham(f: str) -> list[str]:
     for i, l in enumerate(d.get("luot") or []):
         co = CO_MAY.get(l.get("co") or "trung", 1.52)
         goc = l.get("goc") or "hai_nguoi"
-        nua = NUA_NGUOI * co
+        # Bề ngang phụ thuộc BỐ CỤC: hai người ở cỡ trung/cận thì engine ghim tay tầm ngực,
+        # một người thì tay tự do. Cổng phải mô phỏng đúng điều kiện ấy, nếu không nó lại đo
+        # một chế độ và kết luận cho chế độ kia — đúng lỗi đã mắc với bảng tư thế hôm qua.
+        _mot = goc == "mot_nguoi"
+        nua = (NUA_GHIM if (not _mot and co >= 1.4) else NUA_TU_DO) * co
         # Vị trí theo góc — phải khớp `_xA`/`_xB` trong engine.
         if goc == "qua_vai":
             # 30/8 — kiểm NGHIÊM trở lại. Bản trước tôi cho qua người tiền cảnh (x=430) với lý
@@ -66,7 +78,7 @@ def cham(f: str) -> list[str]:
         elif goc == "mot_nguoi":
             xs = [0]
         else:
-            xs = [-x_dung(co), x_dung(co)]
+            xs = [-x_dung(co, _mot), x_dung(co, _mot)]
         for x in xs:
             trai, phai = x * co - nua, x * co + nua
             if trai < -VB_NUA - 40 or phai > VB_NUA + 40:
