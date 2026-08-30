@@ -52,35 +52,29 @@ import { CAM_XUC, CU_CHI, Kieu, TenCamXuc, TenCuChi, Tu, visemeTai } from "../v2
 // Cánh tay duỗi ngang hết cỡ dài hơn khoảng trống giữa hai người, nên chỉ cần một cử chỉ ngang
 // là chạm. Chỉ lên trời còn đúng ngôn ngữ hài hơn: nó là điệu bộ "tuyên bố", còn chỉ ngang vào
 // mặt người đối diện thì vừa thô vừa che mất mặt người ấy.
-const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; khuyuP: number }> = {
-  // ══ VIẾT LẠI TOÀN BẢNG — 30/8, sau khi anh nhắc lần thứ tư về tay ══════════════════════
-  // Anh: *"tự dưng dơ tay lên trời thấy lỗi… fix 1 lần triệt để"*. Trước nay tôi vá từng cử chỉ
-  // một, và mỗi lần vá xong lại còn một cái khác vung quá tay. Lần này sửa cả bảng theo MỘT
-  // luật, thay vì chỉnh từng dòng.
+const CU_CHI_HAI: Record<string, { tayT: [number, number]; tayP: [number, number] }> = {
+  // ══ TƯ THẾ ĐỊNH NGHĨA BẰNG VỊ TRÍ BÀN TAY, KHÔNG BẰNG GÓC ═══════════════════════════════
+  // Mỗi cặp số là chỗ BÀN TAY đứng, tính từ vai, theo đơn vị "tầm với" (1.0 = tay duỗi hết):
+  //     x dương = ra XA thân   ·   y dương = XUỐNG dưới
+  // Đọc bảng là hình dung được tư thế, không phải chạy thử mới biết — đó là điểm khác lớn nhất
+  // so với bảng góc cũ, nơi `vaiT: 126, khuyuT: -96` chẳng nói lên điều gì cho tới khi dựng ra.
   //
-  // QUY ƯỚC GÓC ở tệp này: **0° = thẳng lên trời · 90° = ngang vai · 180° = buông thẳng xuống.**
-  // Đọc lại bảng cũ theo quy ước ấy thì ra ngay thủ phạm:
-  //     chi:      vaiP = -86   → tay chỉ THẲNG LÊN TRỜI
-  //     gio_len:  vaiP = -96   → còn quá thẳng đứng
-  // Không ai vừa nói chuyện vừa giơ tay lên trời, trừ lúc hô khẩu hiệu.
-  //
-  // DẢI ĐÚNG cho người đang trò chuyện, đo từ chính phim tham khảo anh gửi:
-  //     buông tự nhiên  165–175°     ·  tay ngang ngực   110–135°
-  //     chỉ về phía kia  95–110°     ·  cao nhất cho phép      70°
-  // Dưới 70° là vung quá vai — chỉ dành cho một khoảnh khắc kinh ngạc, và cả bảng này không có
-  // khoảnh khắc nào như thế. Nên **không dòng nào dưới 70**, và đó là luật để lần sau ai đọc
-  // bảng cũng biết ngưỡng ở đâu.
-  nghi:       { vaiT: 168, khuyuT: -10, vaiP: 168, khuyuP: 10 },   // hai tay buông, hơi cong
-  chi:        { vaiT: 162, khuyuT: -12, vaiP: 104, khuyuP: -26 },  // chỉ NGANG về phía bạn diễn
-  mo_tay:     { vaiT: 128, khuyuT: -40, vaiP: 124, khuyuP: 40 },   // mở hai tay tầm ngực
-  dem:        { vaiT: 134, khuyuT: -58, vaiP: 118, khuyuP: 44 },   // hai tay trước ngực, lệch tầng
-  suy_nghi:   { vaiT: 166, khuyuT: -8,  vaiP: 140, khuyuP: -96 },  // một tay chống cằm
-  nhun_vai:   { vaiT: 122, khuyuT: -46, vaiP: 126, khuyuP: 46 },   // nhún: khuỷu gập, bàn ngửa
-  gio_len:    { vaiT: 150, khuyuT: -18, vaiP: 96,  khuyuP: -20 },  // nâng MỘT tay tầm vai, không cao hơn
-  khoanh_tay: { vaiT: 140, khuyuT: -78, vaiP: 132, khuyuP: 74 },   // khoanh trước ngực
-  chong_nanh: { vaiT: 146, khuyuT: -86, vaiP: 138, khuyuP: 84 },   // chống hông
-  ngan_ngam:  { vaiT: 170, khuyuT: -8,  vaiP: 144, khuyuP: 88 },   // một tay buông, một chống
+  // Ba ràng buộc để không tư thế nào lạ:
+  //   · x ≥ 0.12  — bàn tay không đi qua trục giữa thân (đó là "chéo qua ngực" của bản cũ)
+  //   · dài ≤ 0.98 — không đòi tay duỗi quá tầm với
+  //   · y ≥ -0.45 — tay không vượt quá đỉnh đầu
+  nghi:       { tayT: [0.26, 0.92], tayP: [0.26, 0.92] },   // buông tự nhiên
+  chi:        { tayT: [0.22, 0.88], tayP: [0.78, 0.16] },   // một tay chỉ ngang về phía kia
+  mo_tay:     { tayT: [0.72, 0.34], tayP: [0.72, 0.34] },   // dang hai tay tầm ngực
+  dem:        { tayT: [0.40, 0.30], tayP: [0.46, 0.16] },   // hai tay trước ngực, lệch tầng
+  suy_nghi:   { tayT: [0.24, 0.90], tayP: [0.20, -0.18] },  // một tay lên cằm
+  nhun_vai:   { tayT: [0.62, 0.44], tayP: [0.62, 0.44] },   // ngửa hai tay
+  gio_len:    { tayT: [0.24, 0.88], tayP: [0.42, -0.30] },  // nâng MỘT tay ngang vai
+  khoanh_tay: { tayT: [0.30, 0.34], tayP: [0.34, 0.26] },   // khoanh trước ngực
+  chong_nanh: { tayT: [0.34, 0.70], tayP: [0.34, 0.70] },   // bàn tay lên hông
+  ngan_ngam:  { tayT: [0.26, 0.92], tayP: [0.34, 0.70] },   // một buông, một chống hông
 };
+
 
 
 const kep = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -92,6 +86,34 @@ const trn = (a: number, b: number, t: number) => a + (b - a) * kep(t);
 // dính họ lỗi này (xem luật 7ae) — thứ dùng ở nhiều chỗ thì khai ở chỗ ai cũng thấy.
 const muot = (v: number) => v * v * (3 - 2 * v);
 const D = (deg: number) => (deg * Math.PI) / 180;
+// ══ ĐỘNG HỌC NGƯỢC CHO TAY — 30/8/2026 ═══════════════════════════════════════════════════
+// Anh: *"ép nó quay xong tay rồi người lỗi tùm lum"*. Đúng, và gốc rễ là tôi đã định nghĩa cử
+// chỉ bằng **góc khớp** rồi để máy tính ra hình. Với góc thì tôi điều khiển được PHƯƠNG của
+// từng đoạn xương, mà thứ người xem nhìn lại là **VỊ TRÍ BÀN TAY** — hai chuyện khác nhau, và
+// khoảng cách giữa chúng chính là chỗ mọi tư thế xấu chui ra.
+//
+// Bảng dựng bằng góc luôn ra kiểu này: chỉnh một góc cho tư thế A đẹp thì tư thế B xấu đi, vì
+// cùng một cặp góc cho ra bàn tay ở chỗ khác nhau tuỳ chiều dài xương và tư thế vai.
+//
+// Phần mềm hoạt hình thật làm ngược lại: người vẽ **kéo bàn tay tới chỗ mình muốn**, xương tự
+// tính khuỷu. Đó là động học ngược — với hai đoạn xương thì nó chỉ là một phép lượng giác:
+// biết vai, biết đích, biết hai chiều dài, tam giác đóng lại theo đúng một cách (chọn chiều gập
+// bằng dấu). Không có chỗ nào cho tư thế lạ chui vào, vì đích đến do mình đặt.
+const ikKhuyu = (vai: [number, number], dich: [number, number],
+                 L1: number, L2: number, ben: number): [number, number] => {
+  const vx = dich[0] - vai[0], vy = dich[1] - vai[1];
+  let d = Math.hypot(vx, vy);
+  // Kẹp tầm với: xa quá thì tay duỗi thẳng, gần quá thì gập hết cỡ — cả hai đều là giới hạn
+  // vật lý thật, và kẹp ở đây thì không tư thế nào đòi được cái tay không làm nổi.
+  d = Math.max(Math.abs(L1 - L2) + 1, Math.min(L1 + L2 - 1, d));
+  const goc = Math.atan2(vy, vx);
+  const a = Math.acos(Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))));
+  // `ben` quyết định khuỷu chĩa ra NGOÀI thân hay vào trong. Khuỷu người chĩa ra ngoài; chĩa
+  // vào trong là tư thế trật khớp, và đó chính là cái "cẳng tay chéo qua ngực" của bản cũ.
+  const g = goc + ben * a;
+  return [vai[0] + Math.cos(g) * L1, vai[1] + Math.sin(g) * L1];
+};
+
 const P = (x: number, y: number, d: number, a: number): [number, number] =>
   [x + Math.cos(D(a)) * d, y + Math.sin(D(a)) * d];
 
@@ -186,11 +208,13 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // khuỷu, lệch pha hai bên. Biên độ dưới ngưỡng chú ý — thấy thì không thấy, nhưng bỏ nó đi
   // thì hình đọc ra là ảnh chụp có mấy khớp xoay.
   const _tho = (pha: number) => Math.sin(t * 1.15 + pha) * 1.9 * (dangNoi ? 1 : 0.45);
+  // Nội suy VỊ TRÍ bàn tay giữa hai tư thế — đường đi thẳng, không phải cung lượn như khi nội
+  // suy góc. Dao động nhỏ cộng vào toạ độ để tay không đứng chết.
   const G = {
-    vaiT: trn(_G0.vaiT, _G1.vaiT, _q) + _tho(0),
-    khuyuT: trn(_G0.khuyuT, _G1.khuyuT, _q) + _tho(1.7),
-    vaiP: trn(_G0.vaiP, _G1.vaiP, _q) + _tho(3.1),
-    khuyuP: trn(_G0.khuyuP, _G1.khuyuP, _q) + _tho(4.6),
+    tayT: [trn(_G0.tayT[0], _G1.tayT[0], _q) + _tho(0) * 0.004,
+           trn(_G0.tayT[1], _G1.tayT[1], _q) + _tho(1.7) * 0.004] as [number, number],
+    tayP: [trn(_G0.tayP[0], _G1.tayP[0], _q) + _tho(3.1) * 0.004,
+           trn(_G0.tayP[1], _G1.tayP[1], _q) + _tho(4.6) * 0.004] as [number, number],
   };
   // ══ NHÌN MỘT GIÂY PHẢI BIẾT NAM · NỮ · TRẺ CON ═══════════════════════════════════════
   // Anh: *"nhân vật nam và nữ hay con nít nhìn là phân biệt được rõ, ko phải na ná"*.
@@ -342,10 +366,24 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const gocVP = trn(80, G.vaiP, mo) + Math.sin(t * 1.7 + 1) * 2.2 + vungP + nhipTay;
   const gocKP = -_kep(-(trn(8, G.khuyuP, mo)));
 
-  const khuyuT = P(vaiT[0], vaiT[1], dtay, gocVT);
-  const tayT = P(khuyuT[0], khuyuT[1], dcang, gocVT + gocKT);
-  const khuyuP = P(vaiP[0], vaiP[1], dtay, gocVP);
-  const tayP = P(khuyuP[0], khuyuP[1], dcang, gocVP + gocKP);
+  // Vị trí bàn tay lấy thẳng từ bảng cử chỉ (đơn vị tương đối với tầm với), rồi khuỷu tính
+  // ngược. `mo` vẫn dùng để MỞ dần vào tư thế, chỉ khác là nay nội suy VỊ TRÍ chứ không nội
+  // suy góc — nên đường đi của bàn tay là một đường thẳng, không phải một cung lượn.
+  const _tam = dtay + dcang;
+  const _dichT: [number, number] = [
+    vaiT[0] - trn(0.26, G.tayT[0], mo) * _tam,
+    vaiT[1] + trn(0.92, G.tayT[1], mo) * _tam,
+  ];
+  const _dichP: [number, number] = [
+    vaiP[0] + trn(0.26, G.tayP[0], mo) * _tam,
+    vaiP[1] + trn(0.92, G.tayP[1], mo) * _tam,
+  ];
+  const khuyuT = ikKhuyu(vaiT, _dichT, dtay, dcang, -1);
+  const tayT = _dichT;
+  const khuyuP = ikKhuyu(vaiP, _dichP, dtay, dcang, 1);
+  const tayP = _dichP;
+  const gocVT2 = Math.atan2(tayT[1] - khuyuT[1], tayT[0] - khuyuT[0]) * 180 / Math.PI;
+  const gocVP2 = Math.atan2(tayP[1] - khuyuP[1], tayP[0] - khuyuP[0]) * 180 / Math.PI;
 
   const rongHong = 30 * ngang * _hongRong;
   const goiT: [number, number] = [hong[0] - rongHong + dapT * sai * 0.5, hong[1] + 82 * cao - nhacT * 0.5];
@@ -508,7 +546,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
 
       {/* TAY SAU (bên trái) — vẽ trước thân, nên nó nằm sau lưng: ra chiều sâu mà không cần đổ bóng */}
       {xuong([vaiT[0], vaiT[1]], [khuyuT[0], khuyuT[1]], [tayT[0], tayT[1]], aoSau, 23 * ngang, "tT")}
-      {ban(tayT, gocVT + gocKT, "bT")}
+      {ban(tayT, gocVT2 + 90, "bT")}
 
       {/* THÂN — hình hạt đậu, KHÔNG phải hình chữ nhật. Vai tròn và eo hơi thóp là thứ làm
           nhân vật đọc ra là dễ thương thay vì cứng đờ. */}
@@ -621,7 +659,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
 
       {/* TAY TRƯỚC (bên phải) — vẽ sau thân nên nằm trước ngực */}
       {xuong([vaiP[0], vaiP[1]], [khuyuP[0], khuyuP[1]], [tayP[0], tayP[1]], aoTruoc, 23 * ngang, "tP")}
-      {ban(tayP, gocVP + gocKP, "bP")}
+      {ban(tayP, gocVP2 + 90, "bP")}
       {/* ĐỒ VẬT TUỘT KHỎI TAY ở cú chốt — trò đùa hình thể cổ điển nhất, và nó nói đúng thứ mà
           lời thoại vừa nói: "tôi không tin nổi". Rơi theo gia tốc (bình phương thời gian) và xoay
           chậm, đúng như một vật rơi thật. */}
