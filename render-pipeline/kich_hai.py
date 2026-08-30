@@ -1144,7 +1144,22 @@ def main() -> int:
                 "office": "music/wallpaper.mp3", "diet": "music/carefree.mp3",
                 "tech": "music/mindloop_pad.mp3", "parent": "music/inspired.mp3",
                 "neighbor": "music/km_ascending.mp3", "dating": "music/km_reawakening.mp3"}
+        # ══ ĐẠO CỤ — MỖI NGƯỜI MỘT VẬT, NÓI NGAY NHÂN VẬT LÀ AI ═════════════════════════
+        # 30/8 — Clip anh gửi cho thấy trò đùa nằm ở HÀNH ĐỘNG: người bố lục ghế sofa rồi giơ
+        # cái điều khiển lên. Không cần một câu thoại nào cũng hiểu. Bộ của mình thì hai người
+        # đứng nói suông — mọi trò đùa dồn vào chữ, mà chữ thì phải ĐỌC mới hiểu, trong khi khán
+        # giả lướt short quyết định ở hai giây đầu bằng MẮT.
+        # Một cái cờ-lê trên tay thợ máy làm ba việc cùng lúc: nói ngay đây là thợ máy · cho tay
+        # một việc để làm nên tay không buông thõng · và ở cú chốt là thứ để chìa ra.
+        # Chỉ gán cho MỘT người mỗi kênh: hai người cùng cầm đồ thì khung rối và mất tương phản.
+        VAT = {"rent": ("", "giay_to"), "gym": ("chai_nuoc", ""),
+               "airport": ("ve_may_bay", ""), "car": ("", "co_le"),
+               "office": ("coc", ""), "diet": ("", "banh"),
+               "tech": ("", "coc"), "parent": ("", "dien_thoai"),
+               "neighbor": ("", "ong_nhom"), "dating": ("dien_thoai", "")}
+        _vA, _vB = VAT.get(k["de"], ("", ""))
         props = {"luot": luot, "tu": tu, "voMp3": rel, "nhac": NHAC.get(k["de"], ""),
+                 "vatA": _vA, "vatB": _vB,
                  "kieuA": k["a"], "kieuB": k["b"], "kieuTuyA": tuyA, "kieuTuyB": tuyB,
                  "tieuDe": ten, "mucNen": k["mau"]}
         pj = os.path.join(GOC, "out", f"v4_{_ten_tep(k)}.json")

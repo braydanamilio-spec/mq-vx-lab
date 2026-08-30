@@ -4439,3 +4439,39 @@ Mọi biên độ sống nhân với `dien`: người nói **1,0** · người n
 *đứng YÊN mà vẫn CÓ HÌNH*, và hoạt hình giải bằng **TƯ THẾ**: chống nạnh, khoanh tay, chống cằm,
 ngán ngẩm. Đứng yên trong một tư thế rõ ràng đọc ra là "đang chờ nghe"; đứng yên buông thõng tay
 đọc ra là quên vẽ. Bảng `NGHE` vì thế **không bao giờ được trả về tư thế buông tay**.
+
+### 7an. TRÒ ĐÙA PHẢI CÓ HÌNH, KHÔNG CHỈ CÓ LỜI — 30/8/2026
+
+Anh: *"xem chưa có hài hước"*. Soi clip tham chiếu thì thấy chỗ khác nhau lớn nhất **không phải
+lời thoại** — mà là: trong clip ấy, người bố **lục tung ghế sofa** rồi **giơ cái điều khiển lên**.
+Cả đoạn không cần một câu thoại nào cũng đọc ra được chuyện gì đang xảy ra và buồn cười ở đâu.
+
+Bộ của mình thì hai người **đứng nói suông**: mọi trò đùa dồn hết vào chữ. Mà chữ thì phải ĐỌC
+mới hiểu — trong khi khán giả lướt short quyết định ở lành hai giây đầu, **bằng MẮT**.
+
+**Đạo cụ là cách rẻ nhất để có hành động.** Một cái cờ-lê trên tay thợ máy làm ba việc cùng lúc:
+* nói ngay nhân vật này là AI, **trước cả câu thoại đầu tiên**;
+* cho tay một việc để làm, nên tay không còn buông thõng;
+* và ở cú chốt, nó là thứ để **CHÌA RA** — cú chốt có hình chứ không chỉ có lời.
+
+Tám đạo cụ, mỗi kênh một cái, và **chỉ gán cho MỘT người** mỗi kênh (hai người cùng cầm đồ thì
+khung rối và mất tương phản). Vẽ ở toạ độ bàn tay, xoay theo hướng cẳng tay, **phóng to 1,5 lần**
+— đúng tỉ lệ đời thật thì nhỏ bằng bàn tay và bị chính bàn tay che, cùng lý do phải phóng đại
+cử chỉ (7ah).
+
+### 7ao. "CHARACTER LOCK" — BÀI HỌC TỪ BỘ 500 PROMPT ANH GỬI
+
+Tệp 500 prompt Kling mở đầu **mọi tập** bằng cùng một khối:
+
+> *Mike: 42-year-old man, slightly round body, short brown hair, white short-sleeve shirt…
+> Keep exact same faces, body proportions, hair, clothing, colors, ages, personalities, and
+> voice identity in every episode. Never redesign, recolor, age, or replace the characters.*
+
+Đó là thứ bộ của mình đang thiếu ở tầng **ý niệm**, không phải tầng mã: mười kênh có mười cặp
+nhân vật khác nhau về màu áo và bóng dáng, nhưng **không ai có tên, tuổi, tính cách**. Nhân vật
+không tên thì mỗi tập là một người lạ, và kênh không tích luỹ được nhận diện nào.
+
+Việc phải làm tiếp: mỗi kênh khai một **dàn nhân vật cố định** — tên · tuổi · trang phục · tính
+cách · giọng — dùng lại ở mọi tập, không bao giờ đổi. Kịch bản viết cho ĐÚNG những người ấy
+(người này luôn tự tin dù sai, người kia luôn khô khan và đúng), chứ không viết cho "nhân vật A"
+và "nhân vật B".

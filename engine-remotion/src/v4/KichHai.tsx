@@ -54,6 +54,8 @@ export type PropsHai = {
   kieuB?: keyof typeof KIEU_MAU | string;
   kieuTuyA?: Partial<Kieu>;
   kieuTuyB?: Partial<Kieu>;
+  vatA?: string;                // đạo cụ nhân vật A cầm (xem `DoVat` trong DienVienHai)
+  vatB?: string;
   tieuDe?: string;
   font?: string;
   mucNen?: string;              // màu nền dự phòng khi chưa có ảnh
@@ -148,7 +150,7 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; nhan: string; day: number; s0: n
 
 export const KichHai: React.FC<PropsHai> = ({
   luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
-  kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", font = "", mucNen = "#F2E6CE",
+  kieuTuyA = {}, kieuTuyB = {}, vatA = "", vatB = "", tieuDe = "", font = "", mucNen = "#F2E6CE",
 }) => {
   const f = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
@@ -386,13 +388,13 @@ export const KichHai: React.FC<PropsHai> = ({
                     cuChi={noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
                     nhan={noiA_ ? noiA.h : 0} nghieng={nghiengA} buoc={buocA}
-                    giat={noiA_ ? 0 : _giatNghe} dangNoi={noiA_}
+                    giat={noiA_ ? 0 : _giatNghe} dangNoi={noiA_} doVat={vatA}
                     x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
                     nhan={!noiA_ ? noiB.h : 0} nghieng={nghiengB} buoc={buocB}
-                    giat={!noiA_ ? 0 : _giatNghe} dangNoi={!noiA_}
+                    giat={!noiA_ ? 0 : _giatNghe} dangNoi={!noiA_} doVat={vatB}
                     x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
         </g>
 

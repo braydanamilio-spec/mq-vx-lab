@@ -88,6 +88,7 @@ export type PropsHai = {
   t: number;
   nhan?: number;                 // 0..1 — độ nhấn của lượt thoại này (dùng cho nén–giãn)
   dangNoi?: boolean;             // người này có đang nói không — quyết định được phép diễn bao nhiêu
+  doVat?: string;                // đạo cụ cầm ở tay phải — xem `DAO_CU`
   giat?: number;                 // 0..1 — cú giật mình (mắt mở to, đầu bật lùi) ở cú chốt
   nghieng?: number;              // độ ngả người về phía người đối thoại
   buoc?: number;                 // 0 = đứng yên; >0 = đang bước (biên độ sải chân)
@@ -108,6 +109,7 @@ const R_DAU = 58;
 
 export const DienVienHai: React.FC<PropsHai> = ({
   kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0, giat = 0, dangNoi = true,
+  doVat = "",
   x = 0, y = 0, scale = 1, lat = false,
 }) => {
   const E = CAM_XUC[camXuc] || CAM_XUC.trung_tinh;
@@ -372,6 +374,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
       {/* TAY TRƯỚC (bên phải) — vẽ sau thân nên nằm trước ngực */}
       {chi(`M ${vaiP[0]} ${vaiP[1]} Q ${khuyuP[0]} ${khuyuP[1]} ${tayP[0]} ${tayP[1]}`, aoTruoc, 23 * ngang, "tP")}
       {ban(tayP, gocVP + gocKP, "bP")}
+      {doVat ? <DoVat ten={doVat} p={tayP} goc={gocVP + gocKP} V={V} NT={NT} /> : null}
 
       {/* CỔ — bản đầu vẽ quá ngắn nên đầu dính thẳng vào vai, đọc ra là một khối. Cổ phải
           THẤY ĐƯỢC thì đầu mới quay được một cách có nghĩa. */}
@@ -574,6 +577,84 @@ export const DienVienHai: React.FC<PropsHai> = ({
       </g>
     </g>
   );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// ĐẠO CỤ CẦM TAY
+// ------------------------------------------------------------------------------------------
+// 30/8 — Soi clip tham chiếu: trò đùa không nằm ở LỜI mà nằm ở HÀNH ĐỘNG — người bố lục tung ghế
+// sofa, rồi giơ cái điều khiển lên. Cả đoạn ấy không cần một câu thoại nào cũng đọc ra được.
+// Bộ hài của mình thì hai người đứng nói suông: mọi trò đùa dồn hết vào chữ, và chữ thì phải ĐỌC
+// mới hiểu — trong khi khán giả lướt short quyết định ở lành hai giây đầu, bằng MẮT.
+//
+// Đạo cụ là cách rẻ nhất để có hành động: một cái cờ-lê trên tay thợ máy, một cái điện thoại
+// trên tay đứa teen, một cốc cà phê ở văn phòng. Nó làm ba việc cùng lúc:
+//   · nói ngay nhân vật này là AI, trước cả câu đầu tiên;
+//   · cho tay một việc để làm, nên tay không còn buông thõng;
+//   · và ở cú chốt, nó là thứ để CHÌA RA — cú chốt có hình chứ không chỉ có lời.
+//
+// Vẽ ở toạ độ bàn tay và XOAY theo hướng cẳng tay, nên nó luôn nằm đúng trong tay.
+const DoVat: React.FC<{ ten: string; p: [number, number]; goc: number; V: string; NT: number }> =
+({ ten, p, goc, V, NT }) => {
+  const [x, y] = p;
+  // PHÓNG TO 1,5 LẦN. Đo trên khung thật: ở cỡ trung cảnh, đạo cụ vẽ đúng tỉ lệ đời thật thì
+  // nhỏ bằng bàn tay và bị chính bàn tay che mất. Hoạt hình luôn vẽ đạo cụ TO HƠN thật — cùng
+  // lý do phải phóng đại cử chỉ (luật 7ah): khán giả đọc khung trong một phần mười giây.
+  const g = (n: React.ReactNode) => (
+    <g transform={`rotate(${goc - 90} ${x} ${y}) translate(${x} ${y}) scale(1.5) translate(${-x} ${-y})`}>{n}</g>
+  );
+  const net = { stroke: V, strokeWidth: NT * 1.3, strokeLinejoin: "round" as const };
+  switch (ten) {
+    case "co_le":      // cờ-lê — CAR GUY
+      return g(<>
+        <rect x={x - 5} y={y - 4} width={10} height={50} rx={4} fill="#9AA3AD" {...net} />
+        <path d={`M ${x - 11} ${y - 4} q 0 -13 11 -13 q 11 0 11 13 l -7 0 q 0 -5 -4 -5 q -4 0 -4 5 Z`}
+              fill="#9AA3AD" {...net} />
+      </>);
+    case "dien_thoai": // điện thoại — PARENT MODE, DATING APP
+      return g(<>
+        <rect x={x - 12} y={y - 2} width={24} height={42} rx={5} fill="#2A2E38" {...net} />
+        <rect x={x - 8} y={y + 3} width={16} height={30} rx={2} fill="#7FC8E8" />
+      </>);
+    case "coc":        // cốc cà phê — OFFICE SMALL TALK, TECH SUPPORT
+      return g(<>
+        <path d={`M ${x - 12} ${y} l 3 32 q 1 6 9 6 q 8 0 9 -6 l 3 -32 Z`} fill="#F2EDE4" {...net} />
+        <path d={`M ${x + 12} ${y + 8} q 11 2 9 12 q -2 8 -11 7`} fill="none" {...net} />
+      </>);
+    case "chai_nuoc":  // chai nước — GYM LIES
+      return g(<>
+        <rect x={x - 9} y={y + 2} width={18} height={44} rx={7} fill="#8FD3B0" {...net} />
+        <rect x={x - 5} y={y - 6} width={10} height={10} rx={2} fill="#2E5A4A" {...net} />
+      </>);
+    case "ve_may_bay": // thẻ lên máy bay — AIRPORT HELL
+      return g(<>
+        <rect x={x - 16} y={y + 2} width={32} height={44} rx={3} fill="#FBF6E8" {...net} />
+        <path d={`M ${x - 10} ${y + 12} l 20 0 M ${x - 10} ${y + 20} l 20 0 M ${x - 10} ${y + 28} l 12 0`}
+              stroke={V} strokeWidth={NT * 0.9} opacity={0.55} />
+      </>);
+    case "giay_to":    // xấp giấy — RENT PANIC
+      return g(<>
+        <rect x={x - 15} y={y + 4} width={30} height={40} rx={2} fill="#FBF6E8" {...net}
+              transform={`rotate(-7 ${x} ${y + 24})`} />
+        <rect x={x - 15} y={y + 1} width={30} height={40} rx={2} fill="#FFFFFF" {...net} />
+        <path d={`M ${x - 9} ${y + 11} l 18 0 M ${x - 9} ${y + 19} l 18 0 M ${x - 9} ${y + 27} l 11 0`}
+              stroke={V} strokeWidth={NT * 0.9} opacity={0.5} />
+      </>);
+    case "banh":       // cái bánh — DIET WARS
+      return g(<>
+        <path d={`M ${x - 15} ${y + 14} q 15 -16 30 0 q -3 16 -15 16 q -12 0 -15 -16 Z`}
+              fill="#E8A64C" {...net} />
+        <path d={`M ${x - 13} ${y + 15} q 13 -12 26 0`} stroke="#C4636B" strokeWidth={NT * 1.6} fill="none" />
+      </>);
+    case "ong_nhom":   // ống nhòm — NEIGHBOR WATCH
+      return g(<>
+        <rect x={x - 16} y={y + 2} width={13} height={34} rx={5} fill="#3B4250" {...net} />
+        <rect x={x + 3} y={y + 2} width={13} height={34} rx={5} fill="#3B4250" {...net} />
+        <path d={`M ${x - 3} ${y + 12} l 6 0`} {...net} />
+      </>);
+    default:
+      return null;
+  }
 };
 
 /** Tóc — khối có CHÓP và có MẢNG BÓNG, không phải một vòm trơn.
