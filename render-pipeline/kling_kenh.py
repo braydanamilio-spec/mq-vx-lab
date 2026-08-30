@@ -1228,6 +1228,7 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
 
     Key cạn thì ĐỔI KEY chứ không bỏ cuộc — cùng bài học đã trả giá ở sáu hàm viết bên kia."""
     import content_brain as CB
+    _kho_cu = _da_lam(kenh)      # đọc MỘT lần: vòng viết lại có thể chạy tới tám lượt
     ho = ([api_key] if api_key else []) or _ho_key(keys) or [None]
     _n = {"i": 0}
 
@@ -1291,6 +1292,14 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
         loi = cham(d, kenh, giay)
         if lat and lat.split()[0] not in str(d.get("payoff") or ""):
             loi.append(f"cú lật phải do {lat} thực hiện — payoff không nhắc tới {lat}")
+        # Trùng NỘI DUNG với bất kỳ tập nào trong TOÀN kho, không chỉ 40 tập gần nhất và không
+        # chỉ so tên. Đặt sau `cham` để một tập vừa sai luật vừa trùng thì báo cả hai một lượt.
+        _x, _d = trung_voi(d, _kho_cu)
+        if _x:
+            loi.append(f"trùng {_d:.0%} với tập đã làm {_x!r} — đổi CÚ LẬT, không đổi mỗi cái tên")
+        _kt = trung_khuon_ten(d, _kho_cu)
+        if _kt:
+            loi.append(f"tên theo khuôn đã dùng ({_kt}) — đặt tên theo cách khác hẳn")
         cuoi = d
         if loi:
             fb = "; ".join(loi[:6])
@@ -1311,6 +1320,82 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
 # ── LƯU RA ĐĨA ──────────────────────────────────────────────────────────────────────────────
 def _slug(t: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", (t or "tap").lower()).strip("-")[:48] or "tap"
+
+
+# ── CHỐNG TRÙNG THEO NỘI DUNG ───────────────────────────────────────────────────────────────
+# 30/8 — Anh hỏi đúng chỗ yếu: "sợ kịch bản trùng lặp hay không nhớ". Có nhớ, nhưng nhớ nông.
+# Cơ chế cũ đưa cho AI danh sách TÊN của 40 tập gần nhất kèm câu "đừng lặp lại". Hai chỗ hở:
+#   · Chỉ 40 tập. Kênh chạy tới tập 500 thì 460 tập đầu không ai kiểm, và AI có xu hướng quay
+#     lại đúng những trò đùa dễ nghĩ nhất — tức những trò nó đã nghĩ ra ở các tập đầu.
+#   · Chỉ so TÊN. "The Last Slice" và "One Piece Left" là hai cái tên khác nhau và CÙNG MỘT
+#     trò đùa. Tên là nhãn, không phải nội dung.
+# Cổng này so CÚ LẬT và TÌNH HUỐNG với TOÀN BỘ kho, bằng phép đo chứ không bằng AI — nên nó
+# không tốn lượt gọi, và không cạn hạn mức khi kho lớn dần.
+_TU_RONG = {
+    "the","a","an","and","or","but","of","to","in","on","at","for","with","is","are","was","were",
+    "be","been","it","its","he","she","they","them","his","her","their","that","this","these",
+    "those","as","by","from","up","down","out","into","then","than","so","just","one","two","who",
+    "what","when","while","already","still","not","no","never","all","both","each","him","you",
+    "your","my","me","we","us","have","has","had","do","does","did","will","would","can","could",
+}
+
+
+def _van_tay(tap: dict) -> set:
+    """Dấu vân tay của một tập: tập từ có nghĩa trong cú lật và tình huống.
+
+    Lấy `payoff` + `hook` chứ không lấy cả tập: cú lật LÀ trò đùa, và tình huống mở là thứ quyết
+    định người xem có thấy quen hay không. Phần thoại giữa bỏ qua — hai tập có thể nói khác nhau
+    hoàn toàn mà vẫn là cùng một trò.
+    """
+    import re as _re
+    chu = " ".join(str(tap.get(k) or "") for k in ("payoff", "hook", "title")).lower()
+    tu = {t for t in _re.findall(r"[a-z]{3,}", chu) if t not in _TU_RONG}
+    return tu
+
+
+def trung_voi(tap: dict, da: list, nguong: float = 0.45) -> tuple:
+    """So tập mới với TOÀN BỘ kho. Trả (tên tập trùng, độ giống) hoặc ("", 0.0).
+
+    Dùng Jaccard trên tập từ có nghĩa: giống nhau bao nhiêu phần trong tổng số từ hai bên cộng
+    lại. Ngưỡng 0.45 là mức mà đọc hai tập lên thấy rõ "cái này kể rồi" — dưới nữa thì bắt oan
+    những tập chỉ tình cờ dùng chung vài danh từ của cùng một căn phòng.
+    """
+    moi = _van_tay(tap)
+    if len(moi) < 3:
+        return "", 0.0
+    xau, diem = "", 0.0
+    for cu in da:
+        c = _van_tay(cu)
+        if not c:
+            continue
+        g = len(moi & c) / max(1, len(moi | c))
+        if g > diem:
+            xau, diem = str(cu.get("title") or "?"), g
+    return (xau, diem) if diem >= nguong else ("", diem)
+
+
+def trung_khuon_ten(tap: dict, da: list) -> str:
+    """Bắt KHUÔN TÊN lặp lại, kể cả khi nội dung khác nhau.
+
+    Chạy trên 15 tập HOUSE RULES có sẵn thì lộ ngay: "Pizza Box Panic" / "Paint Can Panic",
+    "Trash Tower Tumble" / "Plate Tower Tumble". Nội dung có thể khác, nhưng người xem lướt qua
+    danh sách tập chỉ đọc TÊN — và một trang toàn "X Panic" trông như một kênh tự lặp lại, dù
+    từng tập đều mới. Tên là mặt tiền của kênh.
+    """
+    import re as _re
+    lay = lambda t: tuple(_re.findall(r"[A-Za-z]+", str(t or "").lower())[-2:])
+    duoi = lay(tap.get("title"))
+    if len(duoi) < 2:
+        return ""
+    for cu in da:
+        if lay(cu.get("title")) == duoi:
+            return str(cu.get("title") or "")
+    # một từ cuối trùng ở từ ba tập trở lên thì đó đã thành công thức, không còn là trùng hợp
+    if duoi:
+        dem = sum(1 for cu in da if lay(cu.get("title"))[-1:] == duoi[-1:])
+        if dem >= 2:
+            return f"{dem} tập đã kết thúc bằng {duoi[-1]!r}"
+    return ""
 
 
 def _da_lam(kenh: str) -> list[dict]:
