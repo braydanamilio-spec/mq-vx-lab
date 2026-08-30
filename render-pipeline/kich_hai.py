@@ -111,6 +111,75 @@ KENH = [
 ]
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
+# KHOÁ NHÂN VẬT — MỖI KÊNH MỘT CẶP CỐ ĐỊNH, CÓ TÊN, CÓ TÍNH CÁCH
+# ------------------------------------------------------------------------------------------
+# 30/8 — Học từ bộ 500 prompt anh gửi. Nó mở đầu MỌI tập bằng cùng một khối "CHARACTER LOCK":
+# tên, tuổi, dáng người, tóc, áo, quần, giày, tính cách — rồi dặn "never redesign, recolor, age,
+# or replace the characters".
+#
+# Đó chính là thứ bộ này thiếu ở tầng Ý NIỆM (không phải tầng mã): mười kênh đã có mười cặp khác
+# nhau về màu áo và bóng dáng, nhưng KHÔNG AI CÓ TÊN. Nhân vật không tên thì mỗi tập là một người
+# lạ, và kênh không tích luỹ được nhận diện nào — người xem không thể "hóng tập sau của ai".
+#
+# Bảng này là bản khai chính thức. Nó dùng cho ba việc, và đó là lý do nó đáng tồn tại:
+#   1. VIẾT KỊCH BẢN cho ĐÚNG hai người ấy — người luôn tự tin dù sai, người luôn khô khan và
+#      đúng — thay vì viết cho "nhân vật A" và "nhân vật B";
+#   2. GIỌNG ĐỌC chọn theo tuổi và tính cách, không chọn theo kiểu vẽ;
+#   3. MÔ TẢ KÊNH lúc đăng bài: giới thiệu được hai nhân vật là kênh có mặt mũi.
+#
+# `giong` ghi CHỮ KÝ giọng chứ không ghi mã giọng: mã giọng là việc của `GIONG` bên dưới, còn
+# đây là mô tả để người đọc mã hiểu vì sao chọn mã ấy.
+NHAN_VAT = {
+ "rent":     (("Danny", 29, "người thuê nhà, làm ca đêm, tin vào hợp đồng đã ký",
+               "trẻ, hơi gấp gáp"),
+              ("Mrs. Vale", 54, "chủ nhà, luôn tươi cười khi báo tin xấu",
+               "ngọt, chậm rãi, không bao giờ mất bình tĩnh")),
+ "gym":      (("Rick", 38, "hội viên năm thứ năm, chủ yếu ngồi trong xe",
+               "trầm, thở dài"),
+              ("Coach Bree", 31, "huấn luyện viên, nhiệt tình quá mức cần thiết",
+               "cao, nhanh, hào hứng")),
+ "airport":  (("Paul", 44, "khách bay công tác, đã lỡ ba chuyến trong tháng",
+               "mệt mỏi, cố giữ lịch sự"),
+              ("Agent Kim", 36, "nhân viên quầy, đọc quy định như đọc thời tiết",
+               "đều đều, không lên xuống")),
+ "car":      (("Wes", 33, "chủ xe, biết đúng một câu về động cơ",
+               "hơi cao giọng khi lo"),
+              ("Big Ray", 51, "thợ máy, báo giá theo từng phút",
+               "trầm, chậm, chắc nịch")),
+ "office":   (("Nina", 27, "nhân viên, đếm phút trong mọi cuộc họp",
+               "gọn, khô"),
+              ("Todd", 47, "sếp, tin rằng mọi thứ nên là một cuộc họp",
+               "ấm, hào hứng, dài dòng")),
+ "diet":     (("Marcy", 34, "tuần nào cũng bắt đầu một chế độ mới vào thứ Hai",
+               "hăng hái đầu câu, xìu cuối câu"),
+              ("Gus", 36, "bạn thân, ăn tất, không giấu giếm",
+               "thấp, thủng thẳng, buồn cười")),
+ "tech":     (("Hal", 61, "người dùng, gọi tổng đài như gọi cấp cứu",
+               "chậm, hơi run"),
+              ("Jae", 25, "tổng đài viên, thuộc lòng kịch bản trả lời",
+               "trẻ, đều, lịch sự đến mức khó chịu")),
+ "parent":   (("Dean", 46, "bố, đo mọi thứ bằng số giờ",
+               "trầm, cụt"),
+              ("Zoe", 16, "con gái, có lý lẽ cho mọi chuyện",
+               "cao, nhanh, tự tin")),
+ "neighbor": (("Earl", 58, "hàng xóm, biết mọi chuyện trong bán kính ba nhà",
+               "thấp, tò mò, thân mật quá mức"),
+              ("Priya", 34, "người mới dọn đến, chỉ muốn dỡ xong đồ",
+               "rõ ràng, kiên nhẫn cạn dần")),
+ "dating":   (("Owen", 30, "hồ sơ hẹn hò đẹp hơn đời thật một chút",
+               "hào hứng, hay chống chế"),
+              ("Sam", 30, "bạn cùng phòng, đọc hồ sơ ấy và không nể nang",
+               "khô, thẳng, buồn cười")),
+}
+
+
+def ten_nv(de: str, ai: int) -> str:
+    """Tên nhân vật A (0) hoặc B (1) của một kênh."""
+    c = NHAN_VAT.get(de)
+    return c[ai][0] if c else ("A" if ai == 0 else "B")
+
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
 # KỊCH BẢN HÀI — mở · va · leo · chốt
 # ------------------------------------------------------------------------------------------
 # Mỗi kênh một kho tình huống. Cấu trúc giống nhau (đó là cấu trúc của mọi mẩu hài 30 giây),
@@ -1073,27 +1142,29 @@ def main() -> int:
         luot, loi, kb_cau = dung_luot(k, nen, a.vong)
 
         # GIỌNG: hai nhân vật, hai chất giọng. Đây là thứ làm đối thoại nghe ra là hai người.
-        GIONG = {"nam_gay": ("en-US-EricNeural", "+12%", "+14Hz"),
-                 "bank": ("en-US-JennyNeural", "+4%", "+6Hz"),
-                 "khoa_hoc": ("en-US-BrianNeural", "+10%", "+4Hz"),
-                 "hang_xom": ("en-US-GuyNeural", "-6%", "-16Hz"),
-                 "luat_tre": ("en-US-EricNeural", "+14%", "+16Hz"),
-                 "y_ta": ("en-US-MichelleNeural", "+2%", "+4Hz"),
-                 "vien_phi": ("en-US-SteffanNeural", "+0%", "-8Hz"),
-                 "cong_to": ("en-US-AriaNeural", "-2%", "-8Hz"),
-                 "sao_dem": ("en-US-AvaNeural", "+3%", "+10Hz")}
-        # 29/8 — MỘT TỆP TIẾNG CHO CẢ ĐOẠN, KHÔNG GHÉP HAI GIỌNG.
-        # Ghép hai tệp mp3 rời thì mốc thời gian từng từ của tệp sau phải dời đi, mà edge-tts trả
-        # mốc tính từ 0 của CHÍNH tệp đó — cộng dồn sai một nhịp là khẩu hình lệch cả nửa video.
-        # Đọc cả đoạn bằng giọng nhân vật A, rồi ĐỔI CAO ĐỘ theo lượt là việc của bản sau; ở bản
-        # này ưu tiên KHỚP TUYỆT ĐỐI giữa tiếng và hình.
-        ga = GIONG.get(k["a"], ("en-US-GuyNeural", "+4%", "+0Hz"))
-        gb = GIONG.get(k["b"], ("en-US-JennyNeural", "+2%", "+6Hz"))
-        # HAI GIỌNG PHẢI KHÁC NHAU THẬT. Vài kênh bốc trúng hai kiểu nhân vật dùng chung một
-        # giọng nền; khi ấy đẩy giọng người thứ hai lệch hẳn cao độ và nhịp, vì hai người nói
-        # giống nhau thì cả bộ phim đọc ra là một người tự nói với mình.
-        if ga[0] == gb[0]:
-            gb = (gb[0], "-8%", "-18Hz")
+        # ══ GIỌNG CHỌN THEO NHÂN VẬT, KHÔNG THEO KIỂU VẼ ═══════════════════════════════
+        # 30/8 — Bản trước tra giọng theo `k["a"]`/`k["b"]` tức là theo KIỂU VẼ (nam_gay, bank,
+        # hang_xom…). Kiểu vẽ nói về tóc và màu áo, không nói gì về tuổi hay tính cách — nên
+        # Mrs. Vale 54 tuổi và Coach Bree 31 tuổi có thể trúng cùng một giọng, còn Hal 61 tuổi
+        # thì nói bằng giọng thanh niên.
+        # Nay tra theo `NHAN_VAT` (luật 7ao): tuổi quyết cao độ, tính cách quyết nhịp.
+        #   · nhiều tuổi hơn  -> cao độ thấp hơn, nhịp chậm hơn
+        #   · "hào hứng/nhanh" -> nhịp nhanh, cao độ cao;  "khô/đều" -> nhịp chậm, cao độ phẳng
+        GIONG_KENH = {
+          # kênh:      (giọng A, rate, pitch),                    (giọng B, rate, pitch)
+          "rent":     (("en-US-EricNeural",    "+14%", "+12Hz"), ("en-US-JennyNeural",   "-6%",  "-6Hz")),
+          "gym":      (("en-US-SteffanNeural", "-8%",  "-14Hz"), ("en-US-AvaNeural",     "+16%", "+16Hz")),
+          "airport":  (("en-US-GuyNeural",     "-2%",  "-6Hz"),  ("en-US-MichelleNeural","-10%", "-2Hz")),
+          "car":      (("en-US-EricNeural",    "+10%", "+10Hz"), ("en-US-ChristopherNeural", "-12%", "-18Hz")),
+          "office":   (("en-US-AriaNeural",    "+6%",  "+4Hz"),  ("en-US-BrianNeural",   "+2%",  "-8Hz")),
+          "diet":     (("en-US-AvaNeural",     "+8%",  "+8Hz"),  ("en-US-SteffanNeural", "-10%", "-16Hz")),
+          "tech":     (("en-US-ChristopherNeural", "-14%", "-16Hz"), ("en-US-EricNeural","+6%",  "+10Hz")),
+          "parent":   (("en-US-GuyNeural",     "-8%",  "-16Hz"), ("en-US-AnaNeural",     "+18%", "+18Hz")),
+          "neighbor": (("en-US-ChristopherNeural", "-6%", "-12Hz"), ("en-US-MichelleNeural", "+4%", "+4Hz")),
+          "dating":   (("en-US-BrianNeural",   "+10%", "+8Hz"),  ("en-US-AriaNeural",    "-4%",  "-4Hz")),
+        }
+        ga, gb = GIONG_KENH.get(k["de"], (("en-US-GuyNeural", "+4%", "+0Hz"),
+                                          ("en-US-JennyNeural", "+2%", "+6Hz")))
         rel = f"v4_{_ten_tep(k)}.mp3"
         mp3 = os.path.join(PUB, rel)
         try:

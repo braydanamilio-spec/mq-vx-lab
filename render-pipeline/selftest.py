@@ -1784,6 +1784,48 @@ def t_nhan_tinh_xoay_thi_mat():
         "điều kiện xoá nhãn phải đọc cấu hình kênh — đọc dict ghi đè thì `ky=None` là nó câm"
 
 
+def t_bo_hai_giong_va_nhan_vat():
+    """Bộ hài: giọng phải CÓ THẬT, hai người trong một kênh phải khác giọng, và mọi kênh phải
+    có dàn nhân vật khoá.
+
+    30/8 — Ba chốt trong một, vì cả ba đều là lỗi ĐÃ XẢY RA:
+      · **Giọng không tồn tại.** Từng đoán `en-US-DavisNeural` từ trí nhớ; edge-tts không có
+        giọng ấy và hai kênh chết với "No audio was received" — hỏng ở tận tầng render.
+      · **Hai người cùng một giọng.** Suốt một ngày, phim HAI NGƯỜI đọc bằng MỘT giọng (luật
+        7ac). Đó là lỗi giết đúng thứ làm nên sản phẩm, mà không có gì báo.
+      · **Nhân vật không tên.** Bộ 500 prompt anh gửi khoá nhân vật ở mọi tập; bộ mình từng
+        không ai có tên, nên mỗi tập là một người lạ (luật 7ao).
+    Không gọi mạng: chỉ so với bản chụp danh sách giọng en-US đã lưu. Nếu chưa có bản chụp thì
+    bỏ qua phần tên giọng (máy chưa cài edge-tts), nhưng hai chốt kia vẫn chạy.
+    """
+    import re as _re
+    import os as _os
+    goc = _os.path.dirname(_os.path.abspath(__file__))
+    src = open(_os.path.join(goc, "kich_hai.py"), encoding="utf-8").read()
+
+    m = _re.search(r"GIONG_KENH = \{(.*?)\n        \}", src, _re.S)
+    assert m, "không tìm thấy bảng GIONG_KENH — bộ hài mất bảng giọng theo nhân vật"
+    cap = _re.findall(r'"(\w+)":\s*\(\("([\w-]+)",[^)]*\),\s*\("([\w-]+)"', m.group(1))
+    assert len(cap) >= 10, f"chỉ {len(cap)} kênh có giọng (cần 10)"
+    trung = [de for de, a, b in cap if a == b]
+    assert not trung, ("hai nhân vật dùng CHUNG một giọng ở kênh: " + ", ".join(trung)
+                       + " — phim hai người mà tai nghe ra một người")
+
+    try:
+        import asyncio as _as, edge_tts as _et
+        co = {v["ShortName"] for v in _as.run(_et.list_voices()) if v["Locale"] == "en-US"}
+    except Exception:
+        co = set()
+    if co:
+        dung = {x for _de, a, b in cap for x in (a, b)}
+        thieu = sorted(dung - co)
+        assert not thieu, ("giọng KHÔNG TỒN TẠI (render sẽ chết với 'No audio was received'): "
+                           + ", ".join(thieu))
+
+    nv = _re.findall(r'^ "(\w+)":\s*\(\("', src, _re.M)
+    assert len(nv) >= 10, f"chỉ {len(nv)} kênh có dàn nhân vật khoá trong NHAN_VAT (cần 10)"
+
+
 def t_tsx_khong_dung_bien_truoc_khi_khai():
     """`tsc` phải xanh — vì `esbuild` KHÔNG bắt được lỗi dùng biến trước khi khai báo.
 
@@ -2502,6 +2544,8 @@ def main():
     check("mọi tệp .tsx phải dịch được (1 tệp hỏng = CẢ 50 kênh đứng)", t_tsx_dich_duoc)
     check("tsx: không dùng biến trước khi khai báo (esbuild mù chỗ này)",
           t_tsx_khong_dung_bien_truoc_khi_khai)
+    check("bộ hài: giọng có thật · hai người khác giọng · nhân vật có tên",
+          t_bo_hai_giong_va_nhan_vat)
     check("nhãn tĩnh phải BIẾN MẤT khi trục xoay đổi chủ đề", t_nhan_tinh_xoay_thi_mat)
     check("mỗi kênh gen-2 phải xoay được đề tài", t_moi_kenh_gen2_phai_xoay_duoc_de_tai)
     check("gen-2 ra BỘ 1 long + 3 short (có cha/thứ tự)", t_gen2_phai_ra_bo_1long_3short)
