@@ -247,12 +247,22 @@ export const KichHai: React.FC<PropsHai> = ({
   // nhịp theo lời, nét mặt, khẩu hình. Đây cũng đúng "limited animation" — cách hoạt hình truyền
   // hình Mỹ vẫn làm suốt tám mươi năm.
   const dichA = -292, dichB = 292;
-  // Ở cỡ cận, hai người giãn xa để người không nói ra HẲN ngoài khung. Hệ số tính theo điểm XA
-  // NHẤT của hình (bàn tay), không theo tâm: ở hệ số nhỏ hơn thì thân đã ra ngoài mà bàn tay còn
-  // lơ lửng ở mép — nửa vời là tệ nhất.
-  const _gian = (L.co || "trung") === "can" ? 3.6 : 1;
-  const xA = dichA * _gian;
-  const xB = dichB * _gian;
+  // ══ MÁY LIA TỚI NGƯỜI, NGƯỜI KHÔNG DẠT RA HAI BÊN ═══════════════════════════════════════
+  // 30/8 — Anh: *"mỗi khi zoom chuyển nhân vật thì nhân vật nhảy sang vị trí khác… nên giữ
+  // nguyên và zoom hay focus vào từng nhân vật chứ nhân vật ko nhảy thế"*.
+  // Đúng, và bản cũ làm sai hẳn về ngôn ngữ điện ảnh: hễ vào cỡ cận là nhân khoảng cách hai
+  // người lên 3,6 lần để đẩy người-không-nói ra ngoài khung. Trên màn hình nó đọc ra là **hai
+  // diễn viên bị kéo dạt sang hai bên**, đúng lúc máy đang áp sát — chuyện không xảy ra ở bất
+  // kỳ đoạn phim nào.
+  // Máy quay áp sát thì nó LIA TỚI một người. Diễn viên đứng nguyên chỗ; thứ dịch chuyển là
+  // KHUNG HÌNH. Nên nay hai người có toạ độ cố định suốt cả tập, còn ở cỡ cận thì cả nhóm được
+  // dịch ngang sao cho người đang nói về giữa khung.
+  // Và dịch phải NỘI SUY trong nửa giây đầu lượt, cùng nhịp với độ phóng — cắt phựt sang một
+  // khung khác chính là "nhảy" mà anh nhìn thấy, dù lần này là khung nhảy chứ không phải người.
+  const xA = dichA;
+  const xB = dichB;
+  // (khối lia máy đã dời xuống dưới `zoom` — xem chú thích ở đó)
+
   const buocA = 0, buocB = 0;
 
   // CỬ CHỈ NGƯỜI NGHE PHẢI THEO CẢM XÚC CỦA CHÍNH NÓ.
@@ -343,6 +353,19 @@ export const KichHai: React.FC<PropsHai> = ({
   const dichY = _can ? -60 - _yDau * zoom : CHAN_MH - Y_CHAN * zoom;
   // LIA NGANG RẤT CHẬM. Máy quay đứng chết cứng là dấu hiệu của hình dựng máy; một chuyển động
   // dưới ngưỡng chú ý vẫn làm khung "còn sống". Hướng lia đổi theo lượt nên không thành nhịp đều.
+  const _canNay = (L.co || "trung") === "can";
+  const _canTruoc = ((i > 0 ? luot[i - 1].co : L.co) || "trung") === "can";
+  const _mucTieu = (co: boolean) => (co ? -(noiA_ ? dichA : dichB) * zoom : 0);
+  const _liaTam = trn(_mucTieu(_canTruoc), _mucTieu(_canNay),
+                      muot(kep((giay - L.s) / 0.5)));
+  // ▲ KHỐI TRÊN PHẢI NẰM SAU `zoom`. Bản đầu tôi đặt nó cạnh `dichA`/`dichB` cho gọn ý, nhưng
+  // `_mucTieu` đọc `zoom` — mà `zoom` mãi mấy chục dòng dưới mới khai. Dựng ra:
+  //     ReferenceError: Cannot access 'zoom' before initialization
+  // Đây là lần thứ NĂM cùng một lỗi trong kho này, và cả năm lần đều qua được `tsc` lẫn
+  // `esbuild`: không cổng nào bắt được vì mã hoàn toàn hợp lệ về kiểu và cú pháp — nó chỉ sai
+  // về THỨ TỰ, và thứ tự chỉ lộ ra lúc chạy.
+  // Đặt mã cạnh thứ nó nói VỀ thì dễ đọc; đặt cạnh thứ nó ĐỌC TỪ thì chạy được. Khi hai điều ấy
+  // xung khắc, chạy được thắng — và để lại một dòng chỉ đường như dòng ở chỗ cũ.
   const liaNhe = Math.sin(giay * 0.32 + i * 1.7) * 26;
 
   // ══ CẬN CẢNH LÀ CẬN VÀO NGƯỜI ĐANG NÓI, KHÔNG PHẢI CẬN CẢ HAI ═══════════════════════
@@ -452,7 +475,7 @@ export const KichHai: React.FC<PropsHai> = ({
             <stop offset="100%" stopColor={mucNen} stopOpacity={0.4} />
           </linearGradient>
         </defs>
-        <g transform={`translate(${rung + lia} ${dichY}) scale(${zoom})`} style={{ transformOrigin: "0px 0px" }}>
+        <g transform={`translate(${rung + lia + _liaTam} ${dichY}) scale(${zoom})`} style={{ transformOrigin: "0px 0px" }}>
           <rect x={-1600} y={Y_CHAN - 34} width={3200} height={1400} fill="url(#san)" />
           <line x1={-1600} y1={Y_CHAN - 34} x2={1600} y2={Y_CHAN - 34}
                 stroke="#00000014" strokeWidth={2} />

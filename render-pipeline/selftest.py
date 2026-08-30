@@ -2360,6 +2360,25 @@ def t_plan_khong_duoc_doc_goi_cua_chinh_no():
     assert co, "job render KHÔNG nhận CHANNEL_CFGS -> mỗi lane đọc lại Firestore, 720 lượt/phiên"
 
 
+def t_dung_thu_mot_khung():
+    """Dựng đúng MỘT khung hình để bắt lỗi chỉ lộ lúc chạy.
+
+    `ReferenceError: Cannot access 'X' before initialization` đã nổ NĂM lần trong kho này, và cả
+    năm lần đều qua được `tsc` lẫn `esbuild` — mã hợp lệ về kiểu và cú pháp, chỉ sai THỨ TỰ.
+    Tôi từng viết một cổng quét mã bằng biểu thức chính quy để bắt nó; nó báo 3.590 chỗ, gần như
+    toàn phát hiện sai. Biểu thức chính quy không phân tích được phạm vi JavaScript.
+    Cách rẻ mà đúng: dựng một khung thật. TDZ nổ ở khung đầu, nên một khung là đủ — vài giây
+    thay vì mười lăm phút, và không có phát hiện sai nào vì thứ kiểm chính là thứ sẽ chạy.
+    """
+    import subprocess, os as _os
+    _goc = _os.path.dirname(_os.path.abspath(__file__))
+    if not _os.path.isdir(_os.path.join(_goc, "out")):
+        return
+    r = subprocess.run([sys.executable, _os.path.join(_goc, "kiem_khung1.py")],
+                       capture_output=True, text=True, timeout=900)
+    assert r.returncode == 0, "dựng thử một khung hỏng:\n" + (r.stdout or "")[-600:]
+
+
 def t_gan_gi_engine_phai_ve_duoc():
     """Mọi giá trị bảng nhân vật gán, engine phải có nhánh vẽ cho nó.
 
@@ -2407,6 +2426,7 @@ def main():
     check("tiêu đề dẫn bằng chủ thể, không phải khuôn + ngày", t_tieu_de_phai_noi_ve_noi_dung)
     check("key vẽ ảnh chết hẳn -> đổi key, không bỏ khung", t_key_ve_anh_chet_phai_doi_key)
     check("gán gì thì engine phải vẽ được (mũ/tóc/phụ kiện)", t_gan_gi_engine_phai_ve_duoc)
+    check("dựng thử 1 khung — bắt TDZ và lỗi chỉ lộ lúc chạy", t_dung_thu_mot_khung)
     check("18 lane vào 18 điểm khác nhau trong hồ key ảnh", t_18_lane_khong_don_mot_key_anh)
     check("mọi loại key báo trạng thái + lời đúng loại", t_moi_loai_key_deu_bao_trang_thai)
     check("làm mới token không ép scope (invalid_scope)", t_khong_ep_scope_khi_lam_moi_token)

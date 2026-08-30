@@ -150,7 +150,13 @@ GIOI = {
     "rent":     ("nam", "nu"),  "gym":      ("nam", "nu"),
     "airport":  ("nam", "nu"),  "car":      ("nam", "nam"),
     "office":   ("nu",  "nam"), "diet":     ("nu",  "nam"),
-    "tech":     ("nam", "nu"),  "parent":   ("nam", "nu"),
+    # Jae và Sam là tên TRUNG TÍNH, nên lúc viết bảng này tôi đoán giới của họ — và đoán ngược
+    # với giọng đã chọn từ trước (Jae nhận giọng Eric nam, Sam nhận giọng Aria nữ). Anh nghe ra
+    # ngay: "có clip nam nói tiếng nữ".
+    # Sửa theo GIỌNG chứ không theo phỏng đoán của tôi: bảng giọng được chọn theo tuổi và tính
+    # cách của từng người, có lý do rõ; còn giới thì tôi suy từ cái tên, mà tên trung tính thì
+    # không suy được. Khi hai nguồn mâu thuẫn, tin nguồn có lý do.
+    "tech":     ("nam", "nam"), "parent":   ("nam", "nu"),
     "neighbor": ("nam", "nu"),  "dating":   ("nam", "nam"),
 }
 
@@ -572,14 +578,18 @@ def cu_chi_cua(chu: str, i: int, cuoi: bool) -> str:
     if cuoi:
         return "mo_tay"                       # cú chốt: mở rộng tay, "đấy, xong"
     if "?" in t:
-        return "chi" if t.strip().startswith(("what", "why", "who")) else "mo_tay"
+        return "chi" if t.strip().startswith(("what", "why", "who")) else "nhun_vai"
     if any(c.isdigit() for c in t) or any(w in t for w in (" one", " two", " four", " nine", " forty", " hundred")):
         return "dem"                          # có con số thì đếm ngón tay
     if any(w in t for w in _PHU):
         return "khoanh_tay"                   # phủ định: khép người lại
     if t.strip().startswith(("i think", "maybe", "then ", "so ")):
         return "suy_nghi"
-    return ["nhun_vai", "mo_tay", "chi", "dem"][i % 4]
+    # Vòng xoay mặc định cũ có "mở tay" chiếm hai trên bốn chỗ, cộng với cú chốt và câu hỏi
+    # cũng dùng nó — nên nó ra 20 lần trên mười tập, gần một phần ba tổng số lượt. Một cử chỉ
+    # biên độ lớn dùng dày như thế thì thôi làm dấu nhấn và thành thói quen khua tay.
+    # Vòng mới lấy toàn cử chỉ NHỎ, để dành "mở tay" cho đúng chỗ nó có nghĩa: cú chốt.
+    return ["nghi", "dem", "chong_nanh", "chi", "ngan_ngam", "suy_nghi"][i % 6]
 
 CU_CHI = ["mo_tay", "chi", "nhun_vai", "dem", "suy_nghi", "khoanh_tay"]
 # 30/8 — HIỆU ỨNG ÂM DỒN VÀO CÚ CHỐT, KHÔNG RẢI ĐỀU.

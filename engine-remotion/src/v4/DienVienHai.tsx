@@ -55,7 +55,12 @@ import { CAM_XUC, CU_CHI, Kieu, TenCamXuc, TenCuChi, Tu, visemeTai } from "../v2
 const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; khuyuP: number }> = {
   nghi:       { vaiT: 100, khuyuT: -8,  vaiP: 80,  khuyuP: 8 },
   chi:        { vaiT: 104, khuyuT: -10, vaiP: -86, khuyuP: -18 },   // chỉ LÊN, không chỉ ngang
-  mo_tay:     { vaiT: 142, khuyuT: -74, vaiP: 38,  khuyuP: 74 },    // dang rộng hai tay
+  // 30/8 — Anh: *"tay cứ vòng vòng lên như muốn đánh nhau, hơi cứng chưa ổn lắm"*.
+  // Đếm ra: "mở tay" dùng 20 lần và "đếm" 18 lần trên mười tập — hai cử chỉ BIÊN ĐỘ LỚN NHẤT
+  // chiếm hơn nửa số lượt. Cử chỉ lớn dùng thưa thì là nhấn mạnh; dùng liên tục thì thành một
+  // người đang khua tay, và khua tay đối diện nhau đọc ra là sắp đánh nhau.
+  // Hạ biên độ "mở tay" xuống tầm ngực — vẫn là mở tay, chỉ không còn vung lên quá vai.
+  mo_tay:     { vaiT: 118, khuyuT: -52, vaiP: 58,  khuyuP: 52 },    // mở tay tầm ngực
   // 30/8 — anh gửi khung cận: hai bàn tay chụm lại trước bụng, trông như đang bấu vào nhau.
   // Đây là tư thế "đếm" với hai cánh tay gập vào cùng một góc, nên hai bàn tay rơi về cùng một
   // điểm giữa thân. Người thật khi nói không bao giờ để hai bàn tay chạm nhau ở giữa bụng —
