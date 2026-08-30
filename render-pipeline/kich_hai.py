@@ -638,7 +638,7 @@ def ve_nen_moi_luot(k: dict, DS, canh_ds: list) -> list:
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.append(rel)
             continue
-        _them = ", no signs on walls, no lettering anywhere, blank walls"
+        _them = CAM_CHU
         if any(x in canh.lower() for x in ("packet", "package", "box", "bottle", "carton",
                                            "label", "product", "shelf", "brand", "snack")):
             _them += ", all packaging completely blank and unbranded, no printed text"
@@ -659,7 +659,7 @@ def ve_nen_moi_luot(k: dict, DS, canh_ds: list) -> list:
         if ok:
             try:
                 DS.nang_sang_anh(dest); _keo_sang(dest)
-                if _nen_hong(dest):
+                if _nen_hong(dest) or _co_chu(dest):
                     os.remove(dest); ok = None
             except Exception:
                 pass
@@ -734,6 +734,19 @@ def _ten_tep(k: dict) -> str:
 # ra đứng trên mặt bàn (luật 7aa).
 SAN_NEN = ("wide shot, camera at standing eye level, floor clearly visible across the lower "
            "third, open space in the centre of the frame, no furniture blocking the middle")
+# ══ CÂU CẤM CHỮ — MỘT BẢN DUY NHẤT CHO CẢ HAI BỘ ══════════════════════════════════════════
+# 30/8 — anh gửi ảnh: "uabu", "5&iT", "CLARTUY" trên nền mười kênh hài. Câu cấm chữ ĐÃ có, nhưng
+# nó tồn tại ở BA BẢN khác nhau trong hai tệp, và bản yếu nhất — thiếu hẳn "no shop signs, no
+# window text" — lại là bản `kich_hai` đang chạy.
+# Sáng nay tôi gộp hai bản bên `kich_v2` và tưởng đã xong. Bản thứ ba vẫn ngồi đây, vì tôi sửa
+# tệp mình đang mở chứ không đi tìm mọi chỗ cùng dạng — đúng lỗi luật 7bf mô tả, tái phạm trong
+# cùng một ngày. Nay chỉ còn MỘT hằng, và `kich_v2` mượn từ đây.
+CAM_CHU = (", no signs on walls, no lettering anywhere in the scene, no shop signs, "
+           "no window text, no posters, no framed text, no labels on furniture, "
+           "no numbers, no writing of any kind, blank walls")
+CAM_BAO_BI = (", all packaging completely blank and unbranded, plain white and solid colour "
+              "surfaces, no labels, no printed text on any package")
+
 GU_NEN = ("flat 2D cartoon background in the style of classic American animated sitcoms, "
           "bold clean outlines, simple flat colours, no people, no text, no signage, "
           "wide establishing shot, slightly stylised perspective")
@@ -818,7 +831,7 @@ def ve_nen(k: dict, DS, keys, canh_tap: str = "") -> list:
             if _ok:
                 try:
                     DS.nang_sang_anh(dest); _keo_sang(dest)
-                    if _nen_hong(dest):
+                    if _nen_hong(dest) or _co_chu(dest):
                         os.remove(dest); _ok = None
                 except Exception:
                     pass
@@ -830,7 +843,7 @@ def ve_nen(k: dict, DS, keys, canh_tap: str = "") -> list:
         rel = os.path.join("v4nen", f"{_ten_tep(k)}_{i}.jpg")
         dest = os.path.join(PUB, rel)
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
-            _xau = _nen_hong(dest)
+            _xau = _nen_hong(dest) or (_co_chu(dest) and 'còn chữ trong ảnh')
             if not _xau:
                 ra.append(rel)
                 continue
@@ -870,7 +883,7 @@ def ve_nen(k: dict, DS, keys, canh_tap: str = "") -> list:
                 print(f"      ⚠️ nền {i} lượt {_lan+1}: {str(e)[:56]}")
                 ok = None
             if ok and os.path.exists(dest) and os.path.getsize(dest) > 20000:
-                _xau = _nen_hong(dest)
+                _xau = _nen_hong(dest) or (_co_chu(dest) and 'còn chữ trong ảnh')
                 if not _xau:
                     break
                 print(f"      ♻️ nền {i} lượt {_lan+1} không dùng được: {_xau}")
@@ -940,6 +953,72 @@ _BONG = {
 }
 
 
+def _co_chu(tep: str, keys=None) -> bool:
+    """Ảnh này có chữ không? Trả True nếu CHẮC là có.
+
+    30/8 — chú thích cũ ở `_nen_hong` tự nhận "chữ bịa thì không đo được nếu không có bộ nhận
+    chữ". Câu ấy sai, và sai theo kiểu tốn kém nhất: **bộ nhận chữ nằm ngay trong nhà**. Đường
+    vision đã chạy cho việc khác từ lâu. Tôi đã tự thuyết phục mình rằng không đo được, rồi ghi
+    lý do ấy thành chú thích — nên lần sau đọc lại, chính tôi cũng tin.
+    Anh nói đúng chỗ: *"1 là generate đúng, 2 là không nên có text"*. Lời cấm trong prompt là
+    cách thứ nhất và nó có ngày trượt; cách thứ hai phải là ĐO RỒI LOẠI.
+
+    HAI ĐIỀU ĐO ĐƯỢC KHI THỬ, và cả hai đổi hẳn cách viết hàm này:
+      · **Không phải model vision nào cũng đọc được chữ.** Thử trên đúng khung có "COMPANT":
+        `llava-1.5-7b` của CF trả NO — nó không đọc nổi cả dòng phụ đề trắng to giữa màn hình.
+        Gemini trả YES ngay. Nên thứ tự hỏi phải theo ĐỘ TIN CẬY ĐỌC CHỮ, không theo độ sẵn có;
+        hỏi một model không đọc được chữ thì câu trả lời "không có chữ" là vô nghĩa, mà tệ hơn
+        nữa, nó đọc ra như một lời bảo đảm.
+      · **Ảnh phải thu nhỏ.** Gửi nguyên tấm 1024px thì Groq từ chối thẳng ("reduce the length
+        of the messages") — mất luôn 83 key khỏi cuộc chơi. Thu về 560px thì vừa đủ đọc chữ
+        trên biển hiệu mà vẫn lọt cửa.
+    """
+    try:
+        from PIL import Image
+        import content_brain as CB
+    except Exception:
+        return False
+    try:
+        im = Image.open(tep).convert("RGB")
+        if max(im.size) > 560:
+            r = 560 / max(im.size)
+            im = im.resize((max(1, int(im.width * r)), max(1, int(im.height * r))))
+        bo = io.BytesIO(); im.save(bo, "JPEG", quality=82); dl = bo.getvalue()
+    except Exception:
+        return False
+
+    ho = keys or _co_chu._ho
+    if not ho:
+        try:
+            import the_he_2 as T2
+            ho = [k.get("key") for k in (T2.keys_cuc_bo() or []) if k.get("key")]
+        except Exception:
+            ho = []
+        _co_chu._ho = ho
+    # Xếp theo độ tin cậy ĐỌC CHỮ, không theo số lượng key sẵn có.
+    xep = ([k for k in ho if str(k).startswith("AIza")][:2]
+           + [k for k in ho if str(k).startswith("gsk_")][:3]
+           + [k for k in ho if str(k).startswith("cf:")][:2])
+    hoi = ("Does this image contain ANY readable letters, words, numbers or writing anywhere — "
+           "on walls, signs, screens, packaging or posters? Answer exactly one word: YES or NO.")
+    for k in xep:
+        try:
+            g = CB._genai(k)
+            r = g.GenerativeModel(CB.MODEL).generate_content(
+                [hoi, {"mime_type": "image/jpeg", "data": dl}])
+            t = str(getattr(r, "text", "") or "").strip().upper()
+            if t.startswith("YES"):
+                return True
+            if t.startswith("NO"):
+                return False
+        except Exception:
+            continue
+    return False        # dò không được thì cho qua — chặn nhầm nền lành tốn hơn để lọt một tấm
+
+
+_co_chu._ho = []        # nhớ hồ key giữa các lần gọi, khỏi đọc lại tệp bảy lần mỗi video
+
+
 def _nen_hong(tep: str) -> str:
     """Nền này có dùng được không. Trả lý do hỏng, hoặc "" nếu lành.
 
@@ -948,9 +1027,8 @@ def _nen_hong(tep: str) -> str:
     trắng chói ở mép), và một tấm còn chữ bịa trên biển hiệu. Soi mắt không phải cách chạy được
     hằng đêm, nên phép đo phải nằm ở đây.
 
-    Chỉ đo thứ ĐO ĐƯỢC CHẮC CHẮN: bốn góc gần trắng. Chữ bịa thì không đo được nếu không có bộ
-    nhận chữ, nên nó được chặn ở đầu vào (`_salt_prompt` bỏ hẳn mặt phẳng hướng vào ống kính)
-    chứ không chặn ở đây — chặn nhầm một nền lành còn tốn hơn để lọt một biển hiệu mờ.
+    Đo bốn góc gần trắng ở đây. Chữ bịa nay đo ở `_co_chu` bằng đường vision — xem chú thích ở
+    hàm ấy về việc chú thích cũ chỗ này đã sai suốt một thời gian dài.
     """
     try:
         from PIL import Image
