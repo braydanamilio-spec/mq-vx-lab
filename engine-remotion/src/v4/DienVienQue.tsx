@@ -337,6 +337,59 @@ const KyHieuQue: React.FC<{ camXuc: TenCamXuc; R: number; NET: number; tuoi: num
   return null;
 };
 
+// ══ PHỤ KIỆN NGHỀ — VẼ BẰNG NÉT ══════════════════════════════════════════════════════════
+// Đặt hai khung cạnh nhau (bản khối và bản que của cùng một giây) thì thấy rõ điều duy nhất bản
+// que thua: **nhìn không ra nghề**. Bản khối có áo blouse và bảng kẹp nên đọc ngay là chuyên
+// gia; bản que là một người trung tính.
+// Đó là thứ anh dặn riêng — *"kênh luật thì là chuyên gia luật"* — nên không được bỏ. Nhưng nó
+// KHÔNG phải lý do để quay về lối vẽ có khối: phụ kiện nghề vẽ bằng nét được, chỉ là tôi chưa
+// vẽ. Một cái ống nghe là hai đường cong và ba vòng tròn; một tà áo choàng là hai đường xiên.
+const NgheQue: React.FC<{ ten: string; yCo: number; yHong: number; NET: number; R: number }> =
+({ ten, yCo, yHong, NET, R }) => {
+  const s = { fill: "none", stroke: "#141414", strokeWidth: NET * 0.62,
+              strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const nguc = yCo + (yHong - yCo) * 0.3;
+  switch (ten) {
+    case "ao_blouse":        // hai tà áo choàng trắng đổ xuống hai bên thân
+      return <g>
+        <path d={`M -14 ${yCo + 14} L -26 ${yHong + 34} L -12 ${yHong + 30} L -8 ${yCo + 16} Z`}
+              fill="#FFFFFF" stroke="#141414" strokeWidth={NET * 0.55} strokeLinejoin="round" />
+        <path d={`M 14 ${yCo + 14} L 26 ${yHong + 34} L 12 ${yHong + 30} L 8 ${yCo + 16} Z`}
+              fill="#FFFFFF" stroke="#141414" strokeWidth={NET * 0.55} strokeLinejoin="round" />
+      </g>;
+    case "ao_choang":        // áo choàng toà: tà rộng hơn, tối màu
+      return <path d={`M -12 ${yCo + 10} L -34 ${yHong + 46} L 34 ${yHong + 46} L 12 ${yCo + 10} Z`}
+                   fill="#2A2A33" stroke="#141414" strokeWidth={NET * 0.55} strokeLinejoin="round"
+                   opacity={0.92} />;
+    case "ong_nghe":         // ống nghe vắt cổ
+      return <g {...s}>
+        <path d={`M -13 ${yCo + 6} q -6 26 -2 44 M 13 ${yCo + 6} q 6 26 2 44`} />
+        <circle cx={-16} cy={yCo + 54} r={NET * 0.7} fill="#141414" />
+        <circle cx={16} cy={yCo + 54} r={NET * 0.7} fill="#141414" />
+      </g>;
+    case "the_deo":          // thẻ đeo cổ — dây chữ V và một tấm thẻ
+      return <g {...s}>
+        <path d={`M -11 ${yCo + 6} L 0 ${nguc} L 11 ${yCo + 6}`} />
+        <rect x={-9} y={nguc} width={18} height={24} rx={2} />
+      </g>;
+    case "bang_kep":         // bảng kẹp — dấu hiệu "người đi đo đếm"
+      return <g {...s} transform={`translate(-30 ${nguc + 16}) rotate(-12)`}>
+        <rect x={-13} y={-18} width={26} height={36} rx={2} />
+        <rect x={-6} y={-22} width={12} height={7} rx={2} fill="#141414" />
+        <path d="M -7 -6 L 7 -6 M -7 2 L 7 2 M -7 10 L 2 10" />
+      </g>;
+    case "no_buom":
+      return <path d={`M -12 ${yCo + 10} L -2 ${yCo + 4} L -2 ${yCo + 18} Z
+                       M 12 ${yCo + 10} L 2 ${yCo + 4} L 2 ${yCo + 18} Z`}
+                   fill="#141414" stroke="#141414" strokeWidth={NET * 0.4} />;
+    case "khan_quang":
+      return <path d={`M -13 ${yCo + 8} q 13 12 26 0 q -4 16 -13 16 q -9 0 -13 -16 Z`}
+                   fill="#141414" stroke="#141414" strokeWidth={NET * 0.4} opacity={0.85} />;
+    default:
+      return null;
+  }
+};
+
 export const DienVienQue: React.FC<PropsQue> = ({
   kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0, giat = 0, dangNoi = true,
   cuChiTruoc, doiCuChi = 1, doVat = "", kyHieu = true, tuoiCanh = 0,
@@ -416,6 +469,10 @@ export const DienVienQue: React.FC<PropsQue> = ({
           <g transform={`translate(${tayPx} ${tayPy}) scale(${lat ? -1 : 1} 1)`}>
             <DoVatQue ten={doVat} NET={NET} />
           </g>
+        ) : null}
+
+        {kieu.phuKien ? (
+          <NgheQue ten={kieu.phuKien} yCo={yCo} yHong={yHong} NET={NET} R={R} />
         ) : null}
 
         {/* CÀ VẠT — một dấu nhận dạng rẻ mà đọc được ngay ở cỡ nhỏ */}

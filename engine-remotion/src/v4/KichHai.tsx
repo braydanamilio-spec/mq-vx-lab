@@ -5,7 +5,7 @@ import { CAM_XUC, KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../
 // `DienVienHai` GIỮ NGUYÊN trên đĩa, không xoá: mười kênh dữ liệu vẫn dùng `DienVien` cùng họ,
 // và nếu hướng này không hợp thì đổi lại chỉ là một dòng import. Xoá một engine đang chạy được
 // để "cho gọn" là cách chắc chắn nhất để mất đường lui.
-import { DienVienQue as DienVienHai } from "./DienVienQue";
+import { DienVienHai } from "./DienVienHai";
 
 /**
  * KỊCH HÀI V4 — hai nhân vật đối thoại, nền là ẢNH AI (29/8/2026).
@@ -280,7 +280,15 @@ export const KichHai: React.FC<PropsHai> = ({
   const ccTruocA = (_noiAt ? (_Lt.cuChi || "nghi") : _ccNgheT) as TenCuChi;
   const ccTruocB = (!_noiAt ? (_Lt.cuChi || "nghi") : _ccNgheT) as TenCuChi;
   // Nửa giây đầu mỗi lượt là quãng chuyển tư thế: ngắn hơn thì vẫn giật, dài hơn thì tay lờ đờ.
-  const doiCC = kep((giay - L.s) / 0.5);
+  // ══ HAI NGƯỜI KHÔNG ĐỔI TƯ THẾ CÙNG MỘT LÚC ═══════════════════════════════════════════
+  // Anh nêu từ đầu: *"sao cử động cả 2 cùng cử động đồng thời 1 lúc"*. Tôi đã sửa phần DI
+  // CHUYỂN (bỏ hẳn đi lại) nhưng bỏ sót phần CỬ CHỈ: cả hai vẫn dùng chung một `doiCC`, nên ở
+  // đúng khung hình bắt đầu mỗi lượt, bốn cánh tay cùng khởi hành.
+  // Trong đối thoại thật, người nói đổi tư thế TRƯỚC — tư thế đi cùng câu nói — còn người nghe
+  // phản ứng SAU khi đã nghe được vài chữ. Lệch một phần năm giây là đủ để mắt đọc ra quan hệ
+  // nhân quả giữa hai người, thay vì hai con rối chung một sợi dây.
+  const doiCC = kep((giay - L.s) / 0.58);
+  const doiCCnghe = kep((giay - L.s - 0.2) / 0.58);
 
   // CÚ GIẬT MÌNH của người NGHE, đúng vào lúc câu chốt vừa rơi.
   // Trong hài hình ảnh, thứ báo cho khán giả "chỗ này buồn cười" không phải tiếng cười lồng mà
@@ -454,9 +462,9 @@ export const KichHai: React.FC<PropsHai> = ({
               cầu của anh ("nhân vật cao lên, nhân vật kia nhỏ lại rất thiếu thẩm mỹ") — nên hai
               bóng bằng nhau. Vẫn buộc bóng vào hệ số ấy để nếu sau này cỡ người lại đổi thì
               bóng không phải đi sửa lần nữa. */}
-          <ellipse cx={xA / zoom} cy={Y_CHAN - 4} rx={99 * coA} ry={15 * coA}
+          <ellipse cx={xA / zoom} cy={Y_CHAN - 4} rx={126 * coA} ry={19 * coA}
                    fill="url(#bongchan)" />
-          <ellipse cx={xB / zoom} cy={Y_CHAN - 4} rx={99 * coB} ry={15 * coB}
+          <ellipse cx={xB / zoom} cy={Y_CHAN - 4} rx={126 * coB} ry={19 * coB}
                    fill="url(#bongchan)" />
           {/* 30/8 — KHOẢNG CÁCH HAI NGƯỜI CHIA CHO ĐỘ PHÓNG.
               Toàn cảnh được phóng `zoom`; nếu giữ nguyên x thì ở cỡ CẬN (zoom 1,72) hai người
@@ -476,17 +484,17 @@ export const KichHai: React.FC<PropsHai> = ({
                     nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
                     nhan={(noiA_ ? noiA.h : 0) + (noiA_ ? hookNhun : 0)} nghieng={nghiengA} buoc={buocA}
                     giat={noiA_ ? 0 : _giatNghe}
-                    cuChiTruoc={ccTruocA} doiCuChi={doiCC} tuoiCanh={giay - L.s}
+                    cuChiTruoc={ccTruocA} doiCuChi={noiA_ ? doiCC : doiCCnghe} tuoiCanh={giay - L.s}
                     dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={L.vatA ?? vatA}
-                    x={xA / zoom} y={Y_CHAN} scale={1.02 * coA} />
+                    x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
                     nhan={(!noiA_ ? noiB.h : 0) + (!noiA_ ? hookNhun : 0)} nghieng={nghiengB} buoc={buocB}
                     giat={!noiA_ ? 0 : _giatNghe}
-                    cuChiTruoc={ccTruocB} doiCuChi={doiCC} tuoiCanh={giay - L.s}
+                    cuChiTruoc={ccTruocB} doiCuChi={noiA_ ? doiCCnghe : doiCC} tuoiCanh={giay - L.s}
                     dangNoi={!noiA_ || (_phanUng && noiA_)} doVat={L.vatB ?? vatB}
-                    x={xB / zoom} y={Y_CHAN} scale={1.02 * coB} lat />
+                    x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
         </g>
 
         {tieuDe && giay < 2.6 ? (

@@ -154,10 +154,29 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // NỘI SUY GIỮA HAI TƯ THẾ, có gia tốc hai đầu (`muot`): rời tư thế cũ chậm, giữa nhanh, vào tư
   // thế mới chậm. Đó là cách một cánh tay thật chuyển động, và là thứ tách "cử chỉ" khỏi "nhảy
   // khung".
-  const _q = muot(kep(doiCuChi));
+  // ══ TAY PHẢI CÓ ĐÀ, KHÔNG PHANH GẤP ═══════════════════════════════════════════════════
+  // Anh nhắc lần thứ ba: *"tay cử động mượt hơn"*. Hai lần trước tôi chữa bằng cách NỘI SUY
+  // (thay vì nhảy phựt) rồi KÉO DÀI thời gian nội suy. Cả hai đều đúng mà đều chưa tới, vì cái
+  // còn thiếu không phải tốc độ — là **đà**.
+  // Một cánh tay thật không dừng đúng tại đích: nó vượt qua một chút rồi lùi về, và tay càng đi
+  // nhanh thì vượt càng nhiều. Trong hoạt hình đây là nguyên tắc "follow through", và nó là
+  // ranh giới giữa "hình chạy từ tư thế A sang tư thế B" với "một người vừa vung tay".
+  // `muot` (mượt hai đầu) cho ra chuyển động sạch nhưng CHẾT: tới đích là đứng phắt.
+  // Hàm dưới đây vượt đích khoảng 5% quanh mốc 0,7 rồi lắng về đúng 1.
+  const _daVuot = (t: number) => {
+    const u = kep(t) - 1;
+    return 1 + 2.2 * u * u * u + 1.2 * u * u;
+  };
+  const _q = _daVuot(kep(doiCuChi));
+  // Và tay không bao giờ đứng tuyệt đối yên kể cả khi đã vào tư thế: một dao động rất nhỏ ở
+  // khuỷu, lệch pha hai bên. Biên độ dưới ngưỡng chú ý — thấy thì không thấy, nhưng bỏ nó đi
+  // thì hình đọc ra là ảnh chụp có mấy khớp xoay.
+  const _tho = (pha: number) => Math.sin(t * 1.15 + pha) * 1.9 * (dangNoi ? 1 : 0.45);
   const G = {
-    vaiT: trn(_G0.vaiT, _G1.vaiT, _q), khuyuT: trn(_G0.khuyuT, _G1.khuyuT, _q),
-    vaiP: trn(_G0.vaiP, _G1.vaiP, _q), khuyuP: trn(_G0.khuyuP, _G1.khuyuP, _q),
+    vaiT: trn(_G0.vaiT, _G1.vaiT, _q) + _tho(0),
+    khuyuT: trn(_G0.khuyuT, _G1.khuyuT, _q) + _tho(1.7),
+    vaiP: trn(_G0.vaiP, _G1.vaiP, _q) + _tho(3.1),
+    khuyuP: trn(_G0.khuyuP, _G1.khuyuP, _q) + _tho(4.6),
   };
   const cao = kieu.cao ?? 1;
   const ngang = kieu.beNgang ?? 1;

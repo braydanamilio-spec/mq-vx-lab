@@ -471,7 +471,7 @@ except Exception:
 
 _CO_BAO = ("packet", "package", "packaging", "box", "boxes", "bottle", "can ", "cans",
            "carton", "label", "product", "shelf", "shelves", "grocer", "snack", "brand")
-_SAN_V3 = ("wide shot, camera at standing eye level, floor clearly visible across the lower "
+_SAN_V3 = ("wide shot, camera at standing eye level, no single object fills more than a third of the frame, furniture at normal size for a standing adult, floor clearly visible across the lower "
            "third, large empty wall space on the right side of the frame, nothing important on "
            "the right half")
 NEN_V3 = {
@@ -604,7 +604,7 @@ def canh_moi_cau_ai(ten_kenh: str, tieu_de: str, cau_noi: list, keys) -> list:
         f"Channel: {ten_kenh}\nTitle: {tieu_de}\nLines:\n{ds}\n\n"
         f"Return exactly {len(cau_noi)} numbered lines. For line N, give ONE short English "
         "phrase (max 12 words) describing the place or objects that best illustrate THAT line.\n"
-        "Keep all scenes inside one coherent world so cuts between them feel natural.\nEVERY scene must be a WIDE shot at standing eye level, showing a room or open space with the floor visible. Never a close-up, never a macro shot, never a low angle looking up at an object.\n\n"
+        "Keep all scenes inside one coherent world so cuts between them feel natural.\nEVERY scene must be a WIDE shot at standing eye level, showing a room or open space with the floor visible and the line where floor meets the far wall visible. The camera stands back far enough that no single object fills more than a third of the frame; furniture at normal size for a room a standing adult walks through. Never a close-up, never a macro shot, never a low angle looking up at an object.\n\n"
         "Hard rules: no brand names, no proper nouns, no people, no text or signage, all "
         "packaging blank. Objects and places only.\n"
         "Format strictly as: 1. phrase\n2. phrase\n... nothing else."
@@ -1061,6 +1061,21 @@ def main() -> int:
             canh[-1]["e"] = round(max(canh[-1]["e"], dur), 2)
         props = {
             "canh": canh, "tu": tu, "voMp3": rel,
+            # ══ NGHỀ HIỆN LÊN NGƯỜI ═══════════════════════════════════════════════════
+            # Đặt hai khung cạnh nhau (khối và que của cùng một giây) thì bản que thua đúng một
+            # điểm: **nhìn không ra nghề**. Bản khối có áo blouse và bảng kẹp nên đọc ngay là
+            # chuyên gia; bản que là một người trung tính.
+            # Đó là thứ anh dặn riêng — *"kênh luật thì là chuyên gia luật"* — nên phải trả lại.
+            # Trả bằng NÉT, không bằng cách quay về lối vẽ có khối: một tà áo choàng là hai
+            # đường xiên, một ống nghe là hai đường cong với ba vòng tròn.
+            # Vài kênh dùng chung một phụ kiện (luật sư và thẩm phán cùng áo choàng) — đúng
+            # thực tế, và chúng vẫn phân biệt được bằng tóc, kính, dáng.
+            "kieu": {"phuKien": {
+                "bank": "the_deo", "luat_tre": "bang_kep", "hang_xom": "bang_kep",
+                "cong_to": "ao_choang", "tham_phan": "ao_choang", "sao_dem": "khan_quang",
+                "khoa_hoc": "ao_blouse", "vu_tru_gia": "ao_blouse", "y_ta": "ong_nghe",
+                "vien_phi": "ong_nghe",
+            }.get(k["kieu"], "the_deo")},
             "kieuGoc": k["kieu"], "bangMau": k["mau"],
             "tieuDe": k["nhan"], "nguon": sl[2],
             "nhac": NHAC_V3.get(k["ten"], ""),
