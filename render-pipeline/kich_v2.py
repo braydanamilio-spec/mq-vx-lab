@@ -343,12 +343,13 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
         _thu.append(_st)
         _g = []
         for _it in (_st.get("items") or []):
-            _m = _re.search(r"-?[\d,]+\.?\d*", str(_it.get("stat") or "").replace(",", ""))
-            if _m:
-                try:
-                    _g.append(float(_m.group(0)))
-                except ValueError:
-                    pass
+            _v = None
+            for _k2f in ("stat", "disp", "hien", "value", "so", "gt"):
+                if _it.get(_k2f) not in (None, ""):
+                    _v = _doc_so(_it[_k2f])
+                    break
+            if _v is not None:
+                _g.append(_v)
         if len(_g) >= 3:
             _r = max(_g) / max(0.001, min(_g))
             if _r > _dai_nhat:
@@ -384,12 +385,8 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
                 break
         # Giá trị SỐ rút từ chữ hiện: "351 cal" -> 351.0. Biểu đồ cần con số để tính chiều cao
         # cột; chữ hiện giữ nguyên đơn vị để người xem đọc đúng thứ nguồn nói.
-        m = _re.search(r"-?[\d,]+\.?\d*", hien.replace(",", ""))
-        if not m:
-            continue
-        try:
-            gt = float(m.group(0))
-        except ValueError:
+        gt = _doc_so(hien)
+        if gt is None:
             continue
         ten = str(it.get("name") or "").strip()
         if ten:
@@ -397,6 +394,47 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
     if len(ds) < 3:
         return None          # dưới ba cột thì không có gì để so — bỏ lượt, không bịa thêm
     return (str(st.get("title") or ten_kenh), ds, str(st.get("nguon") or ""))
+
+
+def _doc_so(hien: str):
+    """Chữ hiện -> con số THẬT. Trả None nếu không có số nào.
+
+    ══ LỖI NẶNG NHẤT CỦA CẢ PHIÊN, GHI ĐỦ ĐỂ KHÔNG BAO GIỜ LẶP ══════════════════════════════
+    Khung RECALL PLATE: cột `269.7K` được vẽ **thấp nhất**, ba cột `3,580 / 3,024 / 2,773` vẽ
+    cao. Mà 269.700 lớn hơn 3.580 **bảy mươi lăm lần**.
+
+    Nguyên nhân: tôi rút số bằng một biểu thức chỉ bắt chữ số — `"269.7K"` cho ra `269.7`, mất
+    hẳn hậu tố nghìn. Chữ trên đầu cột vẫn in "269.7K" nên người xem đọc đúng, còn CHIỀU CAO
+    cột thì tính theo 269,7.
+
+    Đây không phải lỗi thẩm mỹ. **Biểu đồ nói ngược lại con số nó đang in ra** — với mười kênh
+    sống bằng vẻ đáng tin của số liệu, đó là lỗi không được phép tồn tại một phút nào. Một khán
+    giả tinh mắt bắt được nó là mất luôn kênh, và họ có lý.
+
+    Bài học rộng hơn: **khi con số hiển thị và con số dùng để vẽ đi qua HAI đường khác nhau,
+    chúng sẽ lệch nhau** — chỉ là chưa lộ. Nay cả hai cùng đi qua hàm này.
+    """
+    import re as _re
+    t = str(hien or "").strip().replace(",", "")
+    m = _re.search(r"(-?\d+\.?\d*)\s*([KkMmBb])?", t)
+    if not m:
+        return None
+    try:
+        v = float(m.group(1))
+    except ValueError:
+        return None
+    nhan = {"k": 1e3, "m": 1e6, "b": 1e9}.get((m.group(2) or "").lower())
+    if nhan:
+        v *= nhan
+    # "1.2 million" / "3 billion" viết bằng chữ cũng phải đọc ra.
+    low = t.lower()
+    if not nhan:
+        for tu_, he in (("trillion", 1e12), ("billion", 1e9), ("million", 1e6),
+                        ("thousand", 1e3)):
+            if tu_ in low:
+                v *= he
+                break
+    return v
 
 
 def _tach_so_dai(tu: list) -> list:
