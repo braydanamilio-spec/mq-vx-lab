@@ -4475,3 +4475,29 @@ Việc phải làm tiếp: mỗi kênh khai một **dàn nhân vật cố địn
 cách · giọng — dùng lại ở mọi tập, không bao giờ đổi. Kịch bản viết cho ĐÚNG những người ấy
 (người này luôn tự tin dù sai, người kia luôn khô khan và đúng), chứ không viết cho "nhân vật A"
 và "nhân vật B".
+
+### 7ap. DÁNG NGƯỜI ≠ KHUÔN MẶT — 30/8/2026
+
+Anh dặn nhiều lần: *"10 channel thì phong cách nhân vật 10 channel… ko chung chung 1 template"*.
+Tôi đã đáp bằng bốn trục: **cao · bề ngang · cỡ mắt · độ bạnh hàm** — và tưởng thế là xong.
+
+Không xong. Bốn trục ấy đổi được **DÁNG NGƯỜI**, không đổi được **KHUÔN MẶT**. Xem mười khung
+cạnh nhau vẫn ra một người tô lại màu khác, vì cả mười cái mặt có **cùng một cái mũi, cùng một
+hình mắt, cùng một kiểu lông mày**.
+
+Trong hoạt hình, thứ tách hai nhân vật ra là **BA NÉT**: mũi · mắt · lông mày. Một cái mũi củ
+hành và một cái mũi nhọn cho ra hai người khác hẳn dù mọi thứ còn lại giống nhau.
+
+| Trục | Kiểu |
+|---|---|
+| `kieuMui` | móc · **củ hành** · nhọn · hạt đậu · quặp |
+| `kieuMat` | bầu dục đứng · tròn · hẹp · xếch |
+| `kieuMay` | dày khối · mảnh · xếch · rủ |
+| `tiLeDau` | 0,90 → 1,12 — trục đổi **TUỔI** rẻ nhất: đầu to đọc ra là trẻ và hài, đầu nhỏ là người lớn nghiêm |
+
+**20 nhân vật bộ hài + 10 nhân vật bộ dữ liệu = 30 tổ hợp, không hai người nào trùng** — kiểm
+bằng số trong `cham_v4`, kể cả giữa hai bộ.
+
+**Bài học:** khi anh nói "chưa khác nhau", đừng vội thêm biến thể vào trục ĐANG CÓ. Hỏi trước:
+*trục này có phải là chỗ mắt người nhìn vào để phân biệt không?* Bốn trục dáng người là câu trả
+lời sai cho câu hỏi về khuôn mặt.
