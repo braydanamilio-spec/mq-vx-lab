@@ -635,6 +635,27 @@ def _lam_sach_nhan(ds: list) -> list:
             ra.append(w[-1])
         else:
             ra.append(x)
+    # ══ RÚT GỌN KHÔNG ĐƯỢC LÀM HAI MỤC THÀNH MỘT ═══════════════════════════════════════
+    # Khung CALORIE SHOCK: hai cột cùng mang nhãn "Peanut Butter" — hai sản phẩm khác nhau, hai
+    # con số khác nhau, mà tên hiện ra giống hệt. Người xem đọc thành "cùng một thứ có hai giá
+    # trị", tức là biểu đồ tự mâu thuẫn.
+    # Nguyên nhân là chính phép rút gọn ở trên: giữ hai từ cuối cho gọn, mà phần PHÂN BIỆT hai
+    # tên ấy lại nằm ở những từ vừa bị bỏ.
+    # Nên rút gọn phải KIỂM LẠI kết quả: nếu sinh ra trùng lặp thì trả lại tên đầy đủ cho những
+    # mục bị trùng. Một nhãn dài mà đúng vẫn hơn một nhãn gọn mà nói sai.
+    # Bài học chung: mọi phép LÀM ĐẸP dữ liệu đều có thể làm mất thông tin, nên phép nào cũng
+    # cần một bước kiểm ngược "sau khi làm đẹp, dữ liệu còn phân biệt được không".
+    _dem: dict = {}
+    for x in ra:
+        _dem[x] = _dem.get(x, 0) + 1
+    if any(v > 1 for v in _dem.values()):
+        ra = [(ten[i] if _dem.get(ra[i], 0) > 1 else ra[i]) for i in range(len(ra))]
+        # Còn trùng cả ở tên đầy đủ (nguồn trả trùng thật) thì đánh số để không ai đọc nhầm.
+        _d2: dict = {}
+        for i, x in enumerate(ra):
+            _d2[x] = _d2.get(x, 0) + 1
+            if _d2[x] > 1:
+                ra[i] = f"{x} ({_d2[x]})"
     return [(ra[i], ds[i][1], ds[i][2]) for i in range(len(ds))]
 
 
