@@ -22,6 +22,20 @@ const kep = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const trn = (a: number, b: number, t: number) => a + (b - a) * kep(t);
 /** Chân nhân vật chạm mặt sàn ở đây. Một hằng số DUY NHẤT: dải sàn, bóng đổ và chỗ đứng đều
  *  lấy từ nó, nên không bao giờ lệch nhau. */
+/** Màu áo làm SÁNG lên để dùng cho chữ phụ đề.
+ *  Màu áo nguyên bản quá tối trên nền thẻ đen — chữ phải sáng mới đọc được, mà vẫn phải giữ đúng
+ *  sắc để mắt nhận ra là người nào đang nói. Kéo 55% về phía trắng là điểm cân bằng đo được:
+ *  đủ sáng để đọc ở cỡ khung điện thoại, còn đủ sắc để phân biệt hai người. */
+const _sangChu = (h: string) => {
+  const c = (h || "#DDDDDD").replace("#", "");
+  if (c.length !== 6) return "#FFFFFF";
+  const v = [0, 2, 4].map((i) => {
+    const x = parseInt(c.slice(i, i + 2), 16);
+    return Math.min(255, Math.round(x + (255 - x) * 0.55));
+  });
+  return "#" + v.map((x) => x.toString(16).padStart(2, "0")).join("");
+};
+
 const Y_CHAN = 0;
 /** Chân nhân vật LUÔN chạm đúng dòng này TRÊN MÀN HÌNH, ở mọi cỡ máy.
  *
@@ -43,6 +57,8 @@ export type Luot = {
   co?: "rong" | "trung" | "can";
   sfx?: string;
   chot?: boolean;               // lượt này là cú chốt -> có khoảng lặng trước, rung nhẹ khi nổ
+  vatA?: string;                // đạo cụ người A cầm Ở LƯỢT NÀY (rỗng = tay trống)
+  vatB?: string;
 };
 
 export type PropsHai = {
@@ -435,7 +451,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     nhan={(noiA_ ? noiA.h : 0) + (noiA_ ? hookNhun : 0)} nghieng={nghiengA} buoc={buocA}
                     giat={noiA_ ? 0 : _giatNghe}
                     cuChiTruoc={ccTruocA} doiCuChi={doiCC} tuoiCanh={giay - L.s}
-                    dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={vatA}
+                    dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={L.vatA ?? vatA}
                     x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
@@ -443,7 +459,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     nhan={(!noiA_ ? noiB.h : 0) + (!noiA_ ? hookNhun : 0)} nghieng={nghiengB} buoc={buocB}
                     giat={!noiA_ ? 0 : _giatNghe}
                     cuChiTruoc={ccTruocB} doiCuChi={doiCC} tuoiCanh={giay - L.s}
-                    dangNoi={!noiA_ || (_phanUng && noiA_)} doVat={vatB}
+                    dangNoi={!noiA_ || (_phanUng && noiA_)} doVat={L.vatB ?? vatB}
                     x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
         </g>
 
@@ -459,8 +475,12 @@ export const KichHai: React.FC<PropsHai> = ({
             hai người, nửa trò đùa nằm ở chỗ AI nói câu nào — mà phụ đề trắng trơn thì hai lượt
             liền nhau đọc ra như một người tự nói. Viền thẻ và chữ được tô lấy đúng màu áo của
             người ấy, nên mắt gán câu về đúng người trước cả khi nghe hết câu. */}
+        {/* 30/8 — Anh: *"phần sub nhân vật cần thay đổi màu riêng cho mỗi nhân vật để phân
+            biệt"*. Bản trước chỉ đổi VIỀN thẻ và một chấm ở mép — chữ vẫn trắng cho cả hai
+            người, mà mắt đọc CHỮ chứ không đọc viền. Nay chính chữ mang màu người nói. */}
         <PhuDe tu={tu} giay={giay} nhan="#FFE27A" day={doc ? 812 : 470} s0={L.s} e0={L.e}
-               vien={noiA_ ? A.ao : B.ao} ben={noiA_ ? -1 : 1} />
+               vien={noiA_ ? A.ao : B.ao} ben={noiA_ ? -1 : 1}
+               chuMau={_sangChu(noiA_ ? A.ao : B.ao)} />
       </svg>
       </AbsoluteFill>
 

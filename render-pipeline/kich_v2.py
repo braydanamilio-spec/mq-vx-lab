@@ -596,7 +596,7 @@ def canh_moi_cau_ai(ten_kenh: str, tieu_de: str, cau_noi: list, keys) -> list:
         f"Channel: {ten_kenh}\nTitle: {tieu_de}\nLines:\n{ds}\n\n"
         f"Return exactly {len(cau_noi)} numbered lines. For line N, give ONE short English "
         "phrase (max 12 words) describing the place or objects that best illustrate THAT line.\n"
-        "Keep all scenes inside one coherent world so cuts between them feel natural.\n"
+        "Keep all scenes inside one coherent world so cuts between them feel natural.\nEVERY scene must be a WIDE shot at standing eye level, showing a room or open space with the floor visible. Never a close-up, never a macro shot, never a low angle looking up at an object.\n\n"
         "Hard rules: no brand names, no proper nouns, no people, no text or signage, all "
         "packaging blank. Objects and places only.\n"
         "Format strictly as: 1. phrase\n2. phrase\n... nothing else."

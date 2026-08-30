@@ -568,6 +568,106 @@ SFX = {1: "sfx/pop.mp3"}
 SFX_CHOT = "sfx/ding.mp3"
 
 
+def canh_moi_luot_ai(k: dict, cau: list, keys) -> list:
+    """Một cảnh nền cho MỖI LƯỢT thoại. Trả danh sách cùng độ dài `cau`, hoặc [].
+
+    30/8 — Anh: *"bối cảnh cũng thế cần ai phân tích vẽ cho phù hợp"*. Bộ dữ liệu đã chạy một
+    nền mỗi câu; bộ hài vẫn một nền cho cả tập, nên sáu lượt đối đáp diễn ra trong đúng một khung
+    đứng yên — và trong hài, khung đứng yên hai mươi giây là chỗ khán giả lướt qua.
+    Và MỌI cảnh phải là TOÀN CẢNH ở tầm mắt người đứng. Để mô hình tự do chọn góc thì nó trả về
+    "close-up of engine block" hay "low angle looking into pistons" — vẽ ra là máy móc khổng lồ
+    chiếm cả khung, mà nhân vật thì luôn được vẽ ở cỡ người, nên hai thứ lệch tỉ lệ và nhân vật
+    hoá ra đứng tí hon giữa một cái pít-tông. Nền của phim hoạt hình có người đứng trước thì
+    không bao giờ được là ảnh cận.
+
+    Khác bộ dữ liệu ở một điểm: hài phải giữ LOGIC KHÔNG GIAN (luật 7x — hai người đang nói với
+    nhau thì không dịch chuyển). Nên câu hỏi ép rõ: cùng MỘT địa điểm, chỉ đổi GÓC NHÌN và chi
+    tiết tiền cảnh. Đổi khung mà không đổi chỗ — đúng cách một cảnh phim thật được dựng.
+    """
+    if not keys or not cau:
+        return []
+    try:
+        import content_brain as CB
+    except Exception:
+        return []
+    _nv = NHAN_VAT.get(k["de"])
+    _ai = (f"A is {_nv[0][0]}, {_nv[0][2]}. B is {_nv[1][0]}, {_nv[1][2]}.\n" if _nv else "")
+    ds = "\n".join(f"{i+1}. {'AB'[c[1]]}: {c[0]}" for i, c in enumerate(cau))
+    hoi = (
+        "You are the background artist for one short 2D cartoon comedy scene.\n"
+        f"{_ai}Dialogue:\n{ds}\n\n"
+        f"All lines happen in ONE single location. Return exactly {len(cau)} numbered lines: for "
+        "line N, ONE short English phrase (max 12 words) describing the SAME place from a "
+        "different angle or with different foreground detail that suits that line.\n"
+        "Never move to another location. Vary the camera angle and props, not the place.\nEVERY scene must be a WIDE shot at standing eye level, showing a room or open space with the floor visible. Never a close-up, never a macro shot, never a low angle looking up at an object.\n\n"
+        "Hard rules: no brand names, no proper nouns, no people, no text or signage, all "
+        "packaging blank. Objects and places only.\n"
+        "Format strictly as: 1. phrase\n2. phrase\n... nothing else."
+    )
+    import re as _re
+    for kk in list(keys)[:3]:
+        try:
+            g = CB._genai(kk if isinstance(kk, str) else kk.get("key"))
+            m = g.GenerativeModel("gemini-2.5-flash")
+            t = str(getattr(m.generate_content(hoi), "text", "") or "")
+            ra = []
+            for ln in t.splitlines():
+                mm = _re.match(r"\s*(\d+)[.)]\s*(.+)", ln)
+                if mm:
+                    v = " ".join(mm.group(2).split()).strip().strip('"').rstrip(".")
+                    if 6 <= len(v) <= 130:
+                        ra.append(v)
+            if len(ra) >= len(cau):
+                return ra[:len(cau)]
+        except Exception:
+            continue
+    return []
+
+
+def ve_nen_moi_luot(k: dict, DS, canh_ds: list) -> list:
+    """Vẽ một nền cho mỗi cảnh. Cache theo NỘI DUNG cảnh nên tập sau dùng lại được."""
+    import hashlib as _hl
+    os.makedirs(NEN, exist_ok=True)
+    ra = []
+    for canh in canh_ds:
+        if not canh:
+            ra.append("")
+            continue
+        rel = os.path.join("v4nen", f"c{_hl.md5(canh.encode('utf-8')).hexdigest()[:10]}.jpg")
+        dest = os.path.join(PUB, rel)
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            ra.append(rel)
+            continue
+        _them = ", no signs on walls, no lettering anywhere, blank walls"
+        if any(x in canh.lower() for x in ("packet", "package", "box", "bottle", "carton",
+                                           "label", "product", "shelf", "brand", "snack")):
+            _them += ", all packaging completely blank and unbranded, no printed text"
+        ok = None
+        for _l in range(2):
+            try:
+                import datastory_ci as _DC
+                _p = _DC._salt_prompt(f"{canh}{_them}, {SAN_NEN}, {GU_NEN}")
+            except Exception:
+                _p = f"{canh}{_them}, {SAN_NEN}, {GU_NEN}"
+            try:
+                ok = DS._generate_image_ai(_p, dest, None, style=GU_NEN)
+            except Exception:
+                ok = None
+            if ok and os.path.exists(dest) and os.path.getsize(dest) > 20000:
+                break
+            ok = None
+        if ok:
+            try:
+                DS.nang_sang_anh(dest); _keo_sang(dest)
+                if _nen_hong(dest):
+                    os.remove(dest); ok = None
+            except Exception:
+                pass
+        ra.append(rel if (ok and os.path.exists(dest)) else "")
+    print(f"      🎨 {sum(1 for x in ra if x)}/{len(ra)} nền theo lượt")
+    return ra
+
+
 def canh_nen_ai(k: dict, cau: list, keys) -> str:
     """Hỏi AI: mẩu hài này diễn ra ở đâu thì hợp nhất? Trả cụm mô tả, rỗng nếu hỏng.
 
@@ -924,10 +1024,45 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
             wavs.append(w)
             tong += _giay_wav(w)
 
+    # ══ NGỮ ĐIỆU: MỖI CÂU MỘT NHỊP, MỘT CAO ĐỘ ══════════════════════════════════════════
+    # 30/8 — Anh: *"cần có ngữ điệu lên xuống giọng khi nói"*.
+    # Bản trước gán ĐÚNG MỘT cặp (nhịp, cao độ) cho cả sáu câu của một người. Nên câu hỏi, câu
+    # bực, câu chốt đều đọc bằng một giọng phẳng — và giọng phẳng giết hài nhanh hơn cả kịch bản
+    # dở, vì tai nghe ra ngay là máy đọc.
+    # edge-tts nhận `rate` và `pitch` cho MỖI lượt gọi, mà bộ này đã tách mỗi câu một lượt gọi
+    # (luật 7ac) — nên chỉ việc đưa cảm xúc của câu vào đó. Không tốn thêm gì.
+    #   · bực   -> nhanh hơn, cao hơn      · buồn  -> chậm hơn, trầm hơn
+    #   · ngạc nhiên -> cao vọt, hơi chậm  · nghi ngờ -> chậm, trầm nhẹ (nhấn nhá)
+    #   · tự tin -> chậm, trầm (chắc nịch) · vui   -> nhanh, cao
+    # CÚ CHỐT luôn CHẬM LẠI một nấc: người kể chuyện hài nào cũng hạ nhịp ở câu cuối để câu ấy
+    # rơi xuống có trọng lượng.
+    _DIEU = {
+        "tuc":       (+10, +8), "buon":     (-12, -8), "bat_ngo": (+2, +16),
+        "nghi_ngo":  (-8,  -4), "tu_tin":   (-6,  -6), "vui":     (+8, +10),
+        "so":        (+12, +14), "trung_tinh": (0, 0),
+    }
+
+    def _dieu(rate0: str, pitch0: str, cx: str, la_chot: bool) -> tuple:
+        """Cộng độ lệch cảm xúc vào nhịp/cao độ gốc của nhân vật."""
+        dr, dp = _DIEU.get(cx or "trung_tinh", (0, 0))
+        if la_chot:
+            dr -= 10          # câu chốt chậm lại để rơi có trọng lượng
+        try:
+            r0 = int(str(rate0).replace("%", "").replace("+", "") or 0)
+            p0 = int(str(pitch0).replace("Hz", "").replace("+", "") or 0)
+        except Exception:
+            return rate0, pitch0
+        r, pp = max(-40, min(40, r0 + dr)), max(-40, min(40, p0 + dp))
+        return (f"{r:+d}%", f"{pp:+d}Hz")
+
     for i, (chu, ai, _cx) in enumerate(cau):
         if i:
-            _lang(0.55 if i == len(cau) - 1 else 0.16)
+            # 30/8 — Anh: *"đoạn cuối videos vẫn hơi bị kéo dài"*. Khoảng lặng trước cú chốt hạ
+            # từ 0,55 xuống 0,34 giây: vẫn đủ tách câu chốt khỏi câu trước, mà không còn thành
+            # một quãng trống nghe ra là phim bị treo.
+            _lang(0.34 if i == len(cau) - 1 else 0.16)
         v, rate, pitch = ga if ai == 0 else gb
+        rate, pitch = _dieu(rate, pitch, _cx, i == len(cau) - 1)
         m = os.path.join(tam, f"{i}.mp3")
         d, subs, _ = TTS.synth(chu, m, voice=v, rate=rate, pitch=pitch)
         if not subs:
@@ -1141,7 +1276,7 @@ def lam_thumb(video: str, hook: str, ten_kenh: str, mau: str, dest: str) -> bool
     return True
 
 
-def dung_luot(k: dict, nen: list, vong: int = 0) -> tuple:
+def dung_luot(k: dict, nen: list, vong: int = 0, nen_luot: list | None = None) -> tuple:
     """Trả (danh sách lượt thoại, lời đọc ghép). Kịch bản bốc theo `vong` để mỗi tập một chuyện.
 
     ── MỘT TẬP = MỘT ĐỊA ĐIỂM (30/8/2026) ──────────────────────────────────────────────
@@ -1163,6 +1298,7 @@ def dung_luot(k: dict, nen: list, vong: int = 0) -> tuple:
     cau = kb["loi"]
     # Nền của CẢ TẬP — chọn một lần, dùng cho mọi lượt.
     nen1 = nen[kb["boi"] % len(nen)] if nen else ""
+    nenLuot = nen_luot or []
     luot, loi = [], []
     n = len(cau)
     for i, (chu, ai, cx) in enumerate(cau):
@@ -1184,7 +1320,8 @@ def dung_luot(k: dict, nen: list, vong: int = 0) -> tuple:
              # đọc ra đang ở đâu, siết dần vào khi câu chuyện leo thang, và cú chốt đóng cận
              # nhất — vì cú chốt nằm ở NÉT MẶT, không ở lời.
              "co": "rong" if i == 0 else ("can" if (cuoi or i == n - 2) else "trung"),
-             "nen": nen1,
+             # Nền của LƯỢT NÀY; thiếu thì lui về nền cố định của kênh.
+             "nen": (nenLuot[i] if i < len(nenLuot) and nenLuot[i] else nen1),
              "chot": cuoi}
         if cuoi:
             l["sfx"] = SFX_CHOT
@@ -1250,13 +1387,16 @@ def main() -> int:
         print(f"\n▶ {ten}", flush=True)
         # Cảnh nền chọn theo CHÍNH mẩu chuyện của tập này, không theo bảng cố định của kênh.
         _kb0 = KHO[k["de"]][a.vong % len(KHO[k["de"]])]["loi"]
-        _canh = canh_nen_ai(k, _kb0, keys)
-        if _canh:
-            print(f"   🧭 cảnh: {_canh}")
-        nen = ve_nen(k, DS, keys, _canh)
+        # MỘT NỀN CHO MỖI LƯỢT, cùng một địa điểm chỉ đổi góc nhìn (giữ luật 7x).
+        _canhDS = canh_moi_luot_ai(k, _kb0, keys)
+        for _i4, _c4 in enumerate(_canhDS):
+            print(f"   🧭 {_i4+1}. {_c4[:60]}")
+        nenLuot = ve_nen_moi_luot(k, DS, _canhDS) if _canhDS else []
+        # Nền cố định của kênh làm đường lui cho lượt nào mô hình không trả hoặc vẽ hỏng.
+        nen = ve_nen(k, DS, keys, "") if (not nenLuot or not all(nenLuot)) else []
         if a.nen:
             continue
-        luot, loi, kb_cau = dung_luot(k, nen, a.vong)
+        luot, loi, kb_cau = dung_luot(k, nen, a.vong, nenLuot)
 
         # GIỌNG: hai nhân vật, hai chất giọng. Đây là thứ làm đối thoại nghe ra là hai người.
         # ══ GIỌNG CHỌN THEO NHÂN VẬT, KHÔNG THEO KIỂU VẼ ═══════════════════════════════
@@ -1317,7 +1457,11 @@ def main() -> int:
             # Nhịp đuôi thật chỉ cần đủ cho cú giật mình chạy hết: 1,2 giây. Dài hơn là chết hình,
             # và trên Shorts (phát lặp vô hạn) thì mỗi vòng lặp khán giả phải ngồi qua đúng quãng
             # trống ấy trước khi được nghe lại câu mở.
-            luot[-1]["e"] = round(max(luot[-1]["e"], dur) + 1.2, 2)
+            # Nhịp đuôi 1,2 → 0,85 giây. Anh: *"đoạn cuối videos vẫn hơi bị kéo dài"*. Cú giật
+            # mình của người nghe nổ trong khoảng 0,6 giây đầu; phần còn lại chỉ là chờ. Trên
+            # Shorts phát lặp vô hạn, mỗi phần mười giây thừa là mỗi vòng lặp khán giả phải ngồi
+            # qua trước khi được nghe lại câu mở.
+            luot[-1]["e"] = round(max(luot[-1]["e"], dur) + 0.85, 2)
 
         # 30/8 — ÉP HAI NGƯỜI KHÁC BÓNG DÁNG.
         # Mười kiểu gốc khác nhau ở tóc và màu áo, nhưng vài kiểu cùng đeo kính và cùng để ria:
@@ -1352,8 +1496,18 @@ def main() -> int:
                "tech": ("", "coc"), "parent": ("", "dien_thoai"),
                "neighbor": ("", "ong_nhom"), "dating": ("dien_thoai", "")}
         _vA, _vB = VAT.get(k["de"], ("", ""))
+        # 30/8 — Anh: *"nhân vật tay cầm vật gì đó có vẻ không hợp lắm"*.
+        # Đúng: đạo cụ đang được cầm SUỐT phim, kể cả ở những câu chẳng liên quan gì tới nó —
+        # nên nó đọc ra là một món đồ dán vào tay chứ không phải thứ nhân vật đang dùng.
+        # Trong hoạt hình, một đạo cụ chỉ xuất hiện khi nó CÓ VIỆC: lúc được nhắc tới, lúc được
+        # chìa ra, lúc rơi ở cú chốt. Ngoài ra thì tay phải trống để còn diễn.
+        # Nên gắn đạo cụ theo TỪNG LƯỢT: chỉ hiện ở lượt mở (giới thiệu nhân vật) và lượt chốt
+        # (chỗ nó rơi khỏi tay).
+        for _i3, _l3 in enumerate(luot):
+            _hien = (_i3 == 0) or bool(_l3.get("chot"))
+            _l3["vatA"] = _vA if _hien else ""
+            _l3["vatB"] = _vB if _hien else ""
         props = {"luot": luot, "tu": tu, "voMp3": rel, "nhac": NHAC.get(k["de"], ""),
-                 "vatA": _vA, "vatB": _vB,
                  "kieuA": k["a"], "kieuB": k["b"], "kieuTuyA": tuyA, "kieuTuyB": tuyB,
                  "tieuDe": ten, "mucNen": k["mau"]}
         pj = os.path.join(GOC, "out", f"v4_{_ten_tep(k)}.json")
