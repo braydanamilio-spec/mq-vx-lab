@@ -246,9 +246,17 @@ export const KichHai: React.FC<PropsHai> = ({
   // giây trong khi mặt đổi từ ngạc nhiên sang bực sang buồn — tay và mặt kể hai chuyện khác
   // nhau. Trong hài thoại thì phản ứng của người NGHE thường buồn cười hơn câu của người nói,
   // nên đây không phải chi tiết phụ.
+  // 30/8 — NGƯỜI NGHE KHÔNG BAO GIỜ ĐƯỢC BUÔNG THÕNG TAY.
+  // Bản trước ánh xạ hai cảm xúc về "nghi" (buông xuôi hai tay). Cộng với việc đã hạ biên độ
+  // nhịp sống của người nghe xuống 22%, kết quả là người nghe đứng chôn chân, tay dán vào thân —
+  // đọc ra là một pho tượng đặt cạnh diễn viên.
+  // Bài toán đúng là: đứng YÊN mà vẫn CÓ HÌNH. Hoạt hình giải bằng TƯ THẾ — chống nạnh, khoanh
+  // tay, chống cằm, ngán ngẩm. Đứng yên trong một tư thế rõ ràng thì đọc ra là "đang chờ nghe",
+  // còn đứng yên buông thõng tay thì đọc ra là quên vẽ.
   const NGHE: Record<string, TenCuChi> = {
     bat_ngo: "mo_tay", so: "mo_tay", nghi_ngo: "suy_nghi", tuc: "khoanh_tay",
-    buon: "nghi", vui: "nhun_vai", tu_tin: "khoanh_tay", trung_tinh: "nghi",
+    buon: "ngan_ngam" as TenCuChi, vui: "nhun_vai",
+    tu_tin: "chong_nanh" as TenCuChi, trung_tinh: "chong_nanh" as TenCuChi,
   };
   const cuChiNghe = NGHE[(L.camXucKia || "trung_tinh") as string] || "nghi";
 
@@ -378,13 +386,13 @@ export const KichHai: React.FC<PropsHai> = ({
                     cuChi={noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
                     nhan={noiA_ ? noiA.h : 0} nghieng={nghiengA} buoc={buocA}
-                    giat={noiA_ ? 0 : _giatNghe}
+                    giat={noiA_ ? 0 : _giatNghe} dangNoi={noiA_}
                     x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
                     nhan={!noiA_ ? noiB.h : 0} nghieng={nghiengB} buoc={buocB}
-                    giat={!noiA_ ? 0 : _giatNghe}
+                    giat={!noiA_ ? 0 : _giatNghe} dangNoi={!noiA_}
                     x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
         </g>
 

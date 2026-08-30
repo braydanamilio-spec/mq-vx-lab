@@ -4392,3 +4392,50 @@ ra *"…ay"* thay vì *"play"*.
 thoại để bù là đi ngược cái vừa sửa. Kéo dài **nhịp đuôi** thì không — đó vốn là quãng người nghe
 phản ứng, và phản ứng dài thêm một nhịp còn buồn cười hơn. Nhịp đuôi nay tự co giãn: sàn 2,2 s
 (đủ cho cú giật mình chạy hết), trần 5 s (dài hơn thành chết hình).
+
+### 7al. TẠO HÌNH USA — CHÍN CHI TIẾT, HỌC TỪ CLIP THAM CHIẾU — 30/8/2026
+
+Anh gửi một clip Kling và nói: *"nhân vật vẫn xấu, nhìn vào chưa có nét usa và nhận ra được luôn"*.
+Soi clip khung-đối-khung thì khoảng cách nằm ở **chín chi tiết hình hoạ cụ thể**, không ở
+"vẽ đẹp hơn":
+
+| # | Tham chiếu | Bản cũ của mình |
+|---|---|---|
+| 1 | sọ **quả lê ngược** — trán rộng nhất ở 1/3 trên, má phình, cằm thu | hình **tròn** → đọc ra là nhân vật thiếu nhi, không ra hoạt hình truyền hình Mỹ |
+| 2 | mắt **bầu dục ĐỨNG**, tròng trắng lớn, con ngươi chỉ là một **chấm** | hai vòng tròn, con ngươi to → mắt búp bê |
+| 3 | lông mày **khối đặc** dày, **sát ngay trên mắt** | nét cong mảnh đặt cao → nét trang trí, không phải bộ phận của mặt |
+| 4 | **mũi là một nét móc** rõ, có cánh mũi — nét chính của khuôn mặt dòng phim này | một nét cong bằng đầu ngón tay |
+| 5 | **nếp cười** từ cánh mũi vòng quá khoé miệng | không có |
+| 6 | **nếp nhăn trán** 2–3 đường rất mảnh | trán phẳng như nhựa |
+| 7 | miệng cười **rộng**, khoé kéo lên tận má, có **răng + lưỡi** | miệng đơn giản |
+| 8 | **cằm có ngấn** | không có |
+| 9 | **tai có vành trong** | hình bầu dục trơn |
+
+**Ranh giới bản quyền:** chín thứ này là NGUYÊN TẮC TẠO HÌNH của cả một dòng phim (đã dùng từ
+những năm 1990 ở hàng chục sê-ri khác nhau), không phải thiết kế riêng của phim nào. Thứ KHÔNG
+mượn: gương mặt cụ thể, tỉ lệ đặc trưng, màu da đặc trưng của một nhân vật có bản quyền.
+
+**Ba bẫy gặp khi dựng lại, đều phải sửa tiếp:**
+* **Râu quai nón vẽ thành mảng đặc** nuốt sạch mũi, nếp cười, miệng, cằm — tức nuốt đúng những
+  chi tiết vừa dựng ra. Râu thật chỉ bám **viền xương hàm** và chừa hẳn vùng quanh miệng.
+* **Mí mắt vẽ thành nét cong nằm TRONG tròng trắng** → đọc ra là lông mi rối, mắt thành mắt hí.
+  Mí phải bám **đúng nửa trên** của tròng mắt (cung ellipse cùng bán kính).
+* **Mũi vẽ thành hình khép kín có viền** → ở cỡ này nó đọc ra là một dấu hỏi giữa mặt. Mũi chỉ
+  nên là MỘT nét.
+
+### 7am. TRONG MỘT CẢNH, CHỈ MỘT NGƯỜI DIỄN
+
+Anh: *"sao cử động cả 2 cùng cử động đồng thời 1 lúc"*. Đúng — cả hai nhân vật cùng chạy đủ bộ
+nhịp sống (thở · đảo người · dồn trọng tâm · vung tay · nén–giãn), chỉ khác pha một chút. Hai
+hình cùng nhấp nhô theo một công thức đọc ra ngay là **hai con rối cùng một dây**.
+
+Luật thật của hoạt hình: **chỉ MỘT người diễn**; người kia GIỮ TƯ THẾ, chỉ chớp mắt và bật ra
+một phản ứng ngắn ở đúng một thời điểm. Đó là cách mắt khán giả biết phải nhìn ai — và cũng là
+cách nghề này tiết kiệm công vẽ suốt tám mươi năm ("limited animation").
+
+Mọi biên độ sống nhân với `dien`: người nói **1,0** · người nghe **0,22**.
+
+**Nhưng hạ biên độ KHÔNG đủ** — người nghe hoá thành pho tượng tay dán vào thân. Bài toán đúng là
+*đứng YÊN mà vẫn CÓ HÌNH*, và hoạt hình giải bằng **TƯ THẾ**: chống nạnh, khoanh tay, chống cằm,
+ngán ngẩm. Đứng yên trong một tư thế rõ ràng đọc ra là "đang chờ nghe"; đứng yên buông thõng tay
+đọc ra là quên vẽ. Bảng `NGHE` vì thế **không bao giờ được trả về tư thế buông tay**.

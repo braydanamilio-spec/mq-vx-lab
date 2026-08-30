@@ -61,6 +61,12 @@ const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; k
   nhun_vai:   { vaiT: 148, khuyuT: -80, vaiP: 32,  khuyuP: 80 },
   gio_len:    { vaiT: 100, khuyuT: -6,  vaiP: -96, khuyuP: -12 },
   khoanh_tay: { vaiT: 122, khuyuT: -96, vaiP: 58,  khuyuP: 96 },
+  // 30/8 — CHỐNG NẠNH: hai tay chống hông, khuỷu chĩa ra ngoài. Đây là tư thế ĐỨNG NGHE điển
+  // hình nhất của hoạt hình Mỹ, và nó giải đúng bài toán "người nghe không được nhấp nhô mà cũng
+  // không được thành tượng": một tư thế CÓ HÌNH, đọc ra ngay là đang chờ, mà đứng yên hoàn toàn.
+  chong_nanh: { vaiT: 134, khuyuT: -104, vaiP: 46, khuyuP: 104 },
+  // Nghiêng người dồn trọng tâm một chân, một tay buông một tay chống — dáng "chán rồi đấy".
+  ngan_ngam: { vaiT: 108, khuyuT: -14, vaiP: 44, khuyuP: 108 },
 };
 
 const kep = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -81,6 +87,7 @@ export type PropsHai = {
   noi: { w: number; h: number; tron: number };
   t: number;
   nhan?: number;                 // 0..1 — độ nhấn của lượt thoại này (dùng cho nén–giãn)
+  dangNoi?: boolean;             // người này có đang nói không — quyết định được phép diễn bao nhiêu
   giat?: number;                 // 0..1 — cú giật mình (mắt mở to, đầu bật lùi) ở cú chốt
   nghieng?: number;              // độ ngả người về phía người đối thoại
   buoc?: number;                 // 0 = đứng yên; >0 = đang bước (biên độ sải chân)
@@ -100,7 +107,7 @@ const Y_VAI = -262;
 const R_DAU = 58;
 
 export const DienVienHai: React.FC<PropsHai> = ({
-  kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0, giat = 0,
+  kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0, giat = 0, dangNoi = true,
   x = 0, y = 0, scale = 1, lat = false,
 }) => {
   const E = CAM_XUC[camXuc] || CAM_XUC.trung_tinh;
@@ -124,16 +131,33 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // phản ứng — nhanh vào, chậm ra, có dư chấn.
   const gt = kep(giat);
   const bat = gt > 0 ? Math.exp(-gt * 3.2) * Math.sin(gt * 13) : 0;
+  // ══════════════════════════════════════════════════════════════════════════════════════
+  // AI ĐANG NÓI THÌ NGƯỜI ẤY DIỄN — NGƯỜI KIA GIỮ TƯ THẾ
+  // --------------------------------------------------------------------------------------
+  // 30/8 — Anh xem bản demo và chỉ ra: *"sao cử động cả 2 cùng cử động đồng thời 1 lúc"*.
+  // Đúng, và đó là lỗi tôi tự viết vào: cả hai nhân vật cùng chạy đủ bộ nhịp sống (thở, đảo
+  // người, dồn trọng tâm, vung tay, nén–giãn), chỉ khác pha một chút. Hai hình cùng nhấp nhô
+  // theo một công thức đọc ra ngay là HAI CON RỐI CÙNG MỘT DÂY.
+  //
+  // Soi clip tham chiếu thì thấy rõ luật thật của hoạt hình: trong một cảnh, **chỉ MỘT người
+  // diễn**. Người kia GIỮ TƯ THẾ — đứng yên, chỉ chớp mắt, và bật ra một phản ứng NGẮN ở đúng
+  // một thời điểm rồi lại yên. Đó là cách mắt khán giả biết phải nhìn ai, và cũng là cách nghề
+  // này tiết kiệm công vẽ suốt tám mươi năm nay ("limited animation").
+  //
+  // Nên mọi biên độ sống đều nhân với `dien`: người nói 1,0 · người nghe 0,22. Người nghe vẫn
+  // "còn sống" (thở rất nhẹ, chớp mắt) nhưng không cạnh tranh sự chú ý với người đang nói.
+  const dien = dangNoi ? 1 : 0.22;
+
   // ── NHỊP SỐNG ──────────────────────────────────────────────────────────────────────────
-  const tho = Math.sin(t * 2.0);
-  const dao = Math.sin(t * 0.6) * 1.6;
+  const tho = Math.sin(t * 2.0) * dien;
+  const dao = Math.sin(t * 0.6) * 1.6 * dien;
   // Dồn trọng tâm: người đứng lâu thì đổi chân trụ. Chu kỳ dài và lệch pha với nhịp thở nên
   // hai chuyển động không bao giờ trùng nhịp — trùng nhịp là dấu hiệu rõ nhất của hình máy.
-  const trong = Math.sin(t * 0.41 + 1.2) * 3.2;
+  const trong = Math.sin(t * 0.41 + 1.2) * 3.2 * dien;
 
   // NÉN – GIÃN. Thân lùn xuống thì phình ngang ra, và ngược lại: giữ nguyên thể tích, nếu
   // không thì nhân vật đọc ra là bị kéo méo chứ không phải đang nhún.
-  const nen = Math.sin(t * 2.0) * 0.012 + nhan * 0.03;
+  const nen = (Math.sin(t * 2.0) * 0.012 + nhan * 0.03) * dien;
   const sy = 1 + nen;
   const sx = 1 - nen * 0.85;
 
@@ -187,7 +211,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // là chi tiết làm dáng đi đọc ra là đi chứ không phải trượt ngang.
   const vungT = buoc > 0 ? Math.sin(t * 7.4 + Math.PI) * buoc * 26 : 0;
   const vungP = buoc > 0 ? Math.sin(t * 7.4) * buoc * 26 : 0;
-  const nhipTay = noi.h * 7;
+  const nhipTay = noi.h * 7 * dien;
   const gocVT = trn(100, G.vaiT, mo) + Math.sin(t * 1.7) * 2.2 + vungT - nhipTay;
   const gocKT = trn(-8, G.khuyuT, mo);
   const gocVP = trn(80, G.vaiP, mo) + Math.sin(t * 1.7 + 1) * 2.2 + vungP + nhipTay;
@@ -221,8 +245,10 @@ export const DienVienHai: React.FC<PropsHai> = ({
     const v = [0, 2, 4].map((i) => Math.min(255, Math.round(parseInt(c.slice(i, i + 2), 16) * k)));
     return "#" + v.map((x) => x.toString(16).padStart(2, "0")).join("");
   };
-  const aoTruoc = _sang(ao, 1.13);
-  const aoSau = _sang(ao, 0.9);
+  // Chênh 13% chưa đủ khi tay ôm sát thân: khung đo được cánh tay đọc ra như một vạt áo choàng
+  // chứ không phải một cánh tay. Nới lên 22% / 82% thì hai khối tách hẳn mà vẫn cùng một cái áo.
+  const aoTruoc = _sang(ao, 1.22);
+  const aoSau = _sang(ao, 0.82);
 
   /** Chi thể: một nét bao dày rồi một nét màu mỏng hơn đè lên — ra hình con nhộng có viền. */
   const chi = (d: string, mau: string, day: number, key: string) => (
@@ -270,7 +296,11 @@ export const DienVienHai: React.FC<PropsHai> = ({
     <g key={key}>
       <path d={`M ${p[0] - 15} ${p[1]} q -12 0 -12 -11 q 0 -12 13 -12 l 30 0 q 13 0 13 12 q 0 11 -13 11 z`}
             transform={`translate(${huong > 0 ? 6 : -20} 6)`}
-            fill={V} stroke={V} strokeWidth={NG * 0.6} strokeLinejoin="round" />
+            fill={_sang(quan, 0.55)} stroke={V} strokeWidth={NG * 0.7} strokeLinejoin="round" />
+      {/* Đế giày — một dải sáng ở đáy. Không có nó thì giày dính xuống sàn thành một vệt. */}
+      <path d={`M ${p[0] - 25} ${p[1] + 15} l 56 0`}
+            transform={`translate(${huong > 0 ? 6 : -20} 0)`}
+            stroke="#F2EDE4" strokeWidth={NG * 0.9} strokeLinecap="round" opacity={0.85} />
     </g>
   );
 
@@ -280,10 +310,12 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // 30/8 — MẮT NHỎ LẠI. Bản trước mắt + gọng kính chiếm 83% bề ngang đầu; mắt to là đúng
   // hướng nhưng quá tay thì đọc ra là mắt lồi ra khỏi mặt chứ không phải dễ thương. Dải đẹp
   // của hoạt hình truyền hình là hai mắt chiếm chừng 60–65% bề ngang đầu.
-  const rMat = 13 * matTo * (1 + gt * 0.5 * Math.exp(-gt * 2.4));
+  // Mắt bầu dục ĐỨNG nên bề ngang hẹp hơn bản mắt-tròn cũ, và hai mắt gần nhau hơn để hợp với
+  // sọ quả lê (chỗ rộng nhất nằm ngang tầm mắt, không ở giữa mặt).
+  const rMat = 11.5 * matTo * (1 + gt * 0.5 * Math.exp(-gt * 2.4));
   const rTrong = 6.4 * matTo;
   const mm = 1 - chop;
-  const cachMat = 19 * matTo;
+  const cachMat = 17 * matTo;
   const yMat = -8;
   const yMay = yMat - 20 - E.mayCao;
 
@@ -302,6 +334,8 @@ export const DienVienHai: React.FC<PropsHai> = ({
       {/* CHÂN — vẽ trước thân để thân che chỗ nối ở hông */}
       {chi(`M ${hong[0] - rongHong} ${hong[1]} Q ${goiT[0] - 4} ${goiT[1]} ${chanT[0]} ${chanT[1]}`, quan, 27 * ngang, "cT")}
       {chi(`M ${hong[0] + rongHong} ${hong[1]} Q ${goiP[0] + 4} ${goiP[1]} ${chanP[0]} ${chanP[1]}`, quan, 27 * ngang, "cP")}
+      {/* Giày tô màu RIÊNG, không dùng màu nét. Khung đo được: quần sẫm + giày màu nét = một
+          khối tối liền từ hông xuống sàn, không đọc ra là có bàn chân. */}
       {giay(chanT, -1, "gT")}
       {giay(chanP, 1, "gP")}
 
@@ -345,80 +379,160 @@ export const DienVienHai: React.FC<PropsHai> = ({
 
       {/* ── ĐẦU ───────────────────────────────────────────────────────────────────────── */}
       <g transform={`rotate(${nghiengDau} ${dau[0]} ${dau[1] + R_DAU})`}>
-        {/* Tai */}
-        <ellipse cx={dau[0] - R_DAU * 0.94} cy={dau[1] + 6} rx={11} ry={15} fill={da} stroke={V} strokeWidth={NT * 1.2} />
-        <ellipse cx={dau[0] + R_DAU * 0.94} cy={dau[1] + 6} rx={11} ry={15} fill={da} stroke={V} strokeWidth={NT * 1.2} />
+        {/* ══════════════════════════════════════════════════════════════════════════════
+            KHUÔN MẶT KIỂU HOẠT HÌNH MỸ — dựng lại hoàn toàn 30/8/2026
+            ------------------------------------------------------------------------------
+            Anh: *"nhân vật vẫn xấu, nhìn vào chưa có nét usa và nhận ra được luôn"*, kèm một
+            clip tham chiếu. Soi clip ấy khung-đối-khung thì khoảng cách nằm ở CHÍN chi tiết
+            hình hoạ, không phải ở "vẽ đẹp hơn":
 
-        {/* SỌ — không phải hình tròn. Trán rộng, hàm thóp lại theo `cam`: 0 = mặt tròn trẻ con,
-            1 = hàm vuông vức. Một trục này đủ tách "đứa trẻ" khỏi "ông chú" mà không cần thêm nét nào. */}
-        <path
-          d={`M ${dau[0] - R_DAU} ${dau[1] - 4}
-              C ${dau[0] - R_DAU} ${dau[1] - R_DAU * 1.12}, ${dau[0] + R_DAU} ${dau[1] - R_DAU * 1.12}, ${dau[0] + R_DAU} ${dau[1] - 4}
-              C ${dau[0] + R_DAU} ${dau[1] + R_DAU * (0.5 + camV * 0.34)}, ${dau[0] + R_DAU * (0.42 + camV * 0.4)} ${dau[1] + R_DAU * 0.98}, ${dau[0]} ${dau[1] + R_DAU * 0.98}
-              C ${dau[0] - R_DAU * (0.42 + camV * 0.4)} ${dau[1] + R_DAU * 0.98}, ${dau[0] - R_DAU} ${dau[1] + R_DAU * (0.5 + camV * 0.34)}, ${dau[0] - R_DAU} ${dau[1] - 4} Z`}
-          fill={da} stroke={V} strokeWidth={NG} strokeLinejoin="round"
-        />
+              1. SỌ hình QUẢ LÊ NGƯỢC — trán rộng nhất ở khoảng một phần ba trên, hai má phình,
+                 cằm THU LẠI. Bản cũ là hình tròn, và hình tròn thì đọc ra là nhân vật thiếu nhi
+                 châu Á/châu Âu chứ không ra hoạt hình truyền hình Mỹ.
+              2. MẮT là hai BẦU DỤC ĐỨNG (cao hơn rộng), tròng trắng lớn, con ngươi chỉ là một
+                 CHẤM nhỏ. Bản cũ vẽ hai vòng tròn với con ngươi to — đó là mắt búp bê.
+              3. LÔNG MÀY là KHỐI ĐẶC dày, nằm SÁT ngay trên mắt. Bản cũ là nét cong mảnh đặt
+                 cao, đọc ra là nét trang trí chứ không phải một bộ phận của mặt.
+              4. MŨI là một KHỐI NHÔ có sống mũi và cánh mũi — đây là nét chính của khuôn mặt
+                 trong dòng phim này, và bản cũ chỉ có một nét cong bằng đầu ngón tay.
+              5. NẾP CƯỜI (hai đường từ cánh mũi vòng xuống quá khoé miệng). Chi tiết rẻ nhất mà
+                 đổi hẳn quốc tịch của khuôn mặt.
+              6. NẾP NHĂN TRÁN — hai ba đường ngang rất mảnh. Không có nó thì trán phẳng như nhựa.
+              7. MIỆNG cười RỘNG, khoé kéo lên tận má, có dải RĂNG và LƯỠI.
+              8. CẰM có ngấn (một nét cong dưới môi dưới).
+              9. TAI có VÀNH TRONG, không phải một hình bầu dục trơn.
 
-        {/* MẮT — tròng trắng to, con ngươi nhỏ và ĐI THEO HƯỚNG NHÌN. Mắt to là chỗ khán giả
-            đọc cảm xúc; đây là lý do chính khiến đầu phải to. */}
-        {[-1, 1].map((s) => (
-          <g key={s}>
-            <ellipse cx={dau[0] + s * cachMat} cy={dau[1] + yMat} rx={rMat} ry={rMat * (0.24 + 0.86 * mm)}
-                     fill="#FFFFFF" stroke={V} strokeWidth={NT * 1.25} />
-            {mm > 0.22 ? (
-              <>
-                <circle cx={dau[0] + s * cachMat + mx} cy={dau[1] + yMat + my} r={rTrong} fill="#1B1D25" />
-                <circle cx={dau[0] + s * cachMat + mx - rTrong * 0.34} cy={dau[1] + yMat + my - rTrong * 0.4}
-                        r={rTrong * 0.32} fill="#FFFFFF" />
-              </>
-            ) : null}
+            Chín thứ này đều là NGUYÊN TẮC TẠO HÌNH của cả một dòng phim, không phải thiết kế
+            riêng của phim nào — nên mượn được, và mượn xong vẫn là nhân vật của mình. Thứ
+            KHÔNG mượn: gương mặt cụ thể, tỉ lệ đặc trưng, màu da đặc trưng của một nhân vật có
+            bản quyền.
+            ══════════════════════════════════════════════════════════════════════════════ */}
+
+        {/* TAI — có vành trong. Vẽ TRƯỚC sọ để sọ đè lên chỗ nối, ra tai mọc từ đầu chứ không
+            phải dán vào đầu. */}
+        {[-1, 1].map((sg) => (
+          <g key={sg}>
+            <path d={`M ${dau[0] + sg * R_DAU * 0.9} ${dau[1] - 4}
+                      q ${sg * 17} -2 ${sg * 15} 14 q ${-sg * 2} 16 ${-sg * 15} 14 Z`}
+                  fill={da} stroke={V} strokeWidth={NT * 1.4} strokeLinejoin="round" />
+            <path d={`M ${dau[0] + sg * R_DAU * 0.98} ${dau[1] + 1}
+                      q ${sg * 8} 0 ${sg * 7} 8`}
+                  stroke={V} strokeWidth={NT} fill="none" strokeLinecap="round" opacity={0.75} />
           </g>
         ))}
 
-        {/* LÔNG MÀY — vẽ như một nét cong dày, không phải một gạch thẳng. Độ nghiêng lấy từ
-            bảng cảm xúc; đây là chỗ đọc ra "đang bực" hay "đang ngơ" trước cả miệng. */}
-        {[-1, 1].map((s) => {
-          const bx = dau[0] + s * cachMat;
+        {/* SỌ QUẢ LÊ NGƯỢC. `camV` điều khiển bề rộng hàm: 0 = cằm nhỏ (trẻ con), 1 = hàm bạnh
+            (đàn ông đứng tuổi). Điểm rộng nhất nằm ở NGANG TẦM MẮT, không ở giữa mặt. */}
+        <path
+          d={`M ${dau[0] - R_DAU * 0.86} ${dau[1] - R_DAU * 0.22}
+              C ${dau[0] - R_DAU * 0.98} ${dau[1] - R_DAU * 0.95}, ${dau[0] - R_DAU * 0.42} ${dau[1] - R_DAU * 1.2}, ${dau[0]} ${dau[1] - R_DAU * 1.2}
+              C ${dau[0] + R_DAU * 0.42} ${dau[1] - R_DAU * 1.2}, ${dau[0] + R_DAU * 0.98} ${dau[1] - R_DAU * 0.95}, ${dau[0] + R_DAU * 0.86} ${dau[1] - R_DAU * 0.22}
+              C ${dau[0] + R_DAU * 0.94} ${dau[1] + R_DAU * 0.42}, ${dau[0] + R_DAU * (0.6 + camV * 0.24)} ${dau[1] + R_DAU * 0.98}, ${dau[0] + R_DAU * 0.08} ${dau[1] + R_DAU * 1.0}
+              C ${dau[0] - R_DAU * (0.56 + camV * 0.24)} ${dau[1] + R_DAU * 1.0}, ${dau[0] - R_DAU * 0.94} ${dau[1] + R_DAU * 0.42}, ${dau[0] - R_DAU * 0.86} ${dau[1] - R_DAU * 0.22} Z`}
+          fill={da} stroke={V} strokeWidth={NG} strokeLinejoin="round"
+        />
+
+        {/* NẾP NHĂN TRÁN — mảnh, mờ, hai đường. Chỉ vẽ cho người có hàm bạnh (camV cao = đứng
+            tuổi); trẻ con trán phẳng. */}
+        {camV > 0.45 ? (
+          <g stroke={V} strokeWidth={NT * 0.75} fill="none" opacity={0.42} strokeLinecap="round">
+            <path d={`M ${dau[0] - 22} ${dau[1] - R_DAU * 0.66} q 22 -6 44 0`} />
+            <path d={`M ${dau[0] - 18} ${dau[1] - R_DAU * 0.52} q 18 -5 36 0`} />
+          </g>
+        ) : null}
+
+        {/* MẮT — BẦU DỤC ĐỨNG, tròng trắng lớn, con ngươi là một CHẤM. Mí trên là một nét dày
+            đè lên mép trên tròng trắng: đó là thứ làm mắt có "mí" thay vì là hai quả trứng. */}
+        {[-1, 1].map((sg) => (
+          <g key={sg}>
+            <ellipse cx={dau[0] + sg * cachMat} cy={dau[1] + yMat} rx={rMat} ry={rMat * 1.24 * (0.2 + 0.8 * mm)}
+                     fill="#FFFFFF" stroke={V} strokeWidth={NT * 1.5} />
+            {mm > 0.22 ? (
+              <>
+                <circle cx={dau[0] + sg * cachMat + mx} cy={dau[1] + yMat + my + rMat * 0.16} r={rTrong * 0.62}
+                        fill="#1B1D25" />
+                <circle cx={dau[0] + sg * cachMat + mx - rTrong * 0.24} cy={dau[1] + yMat + my - rTrong * 0.1}
+                        r={rTrong * 0.22} fill="#FFFFFF" />
+              </>
+            ) : null}
+            {/* MÍ TRÊN — một CUNG ôm đúng MÉP TRÊN tròng trắng, không phải nét cong nằm bên
+                trong. Bản trước vẽ nét ấy chạy ngang giữa mắt nên đọc ra là lông mi rối và mắt
+                thành mắt hí. Mí thật chỉ làm dày mép trên và hơi trùm xuống hai bên. */}
+            <path d={`M ${dau[0] + sg * cachMat - rMat} ${dau[1] + yMat}
+                      A ${rMat} ${rMat * 1.24} 0 0 1 ${dau[0] + sg * cachMat + rMat} ${dau[1] + yMat}`}
+                  stroke={V} strokeWidth={NT * 2.2} fill="none" strokeLinecap="round"
+                  transform={`rotate(${sg * -6} ${dau[0] + sg * cachMat} ${dau[1] + yMat})`} />
+          </g>
+        ))}
+
+        {/* LÔNG MÀY — KHỐI ĐẶC, dày, sát ngay trên mắt. Đây là bộ phận biểu cảm mạnh nhất của
+            khuôn mặt: khán giả đọc "đang bực / đang ngơ" từ lông mày trước cả từ miệng. */}
+        {[-1, 1].map((sg) => {
+          const bx = dau[0] + sg * cachMat;
           const by = dau[1] + yMay;
-          const ng = E.may * s * -1;
+          const ng = E.may * sg * -1;
           return (
-            <path key={s}
-              d={`M ${bx - 16} ${by + ng * 0.34} Q ${bx} ${by - 7 - ng * 0.2} ${bx + 16} ${by - ng * 0.34}`}
-              stroke={kieu.toc} strokeWidth={7.5} fill="none" strokeLinecap="round" />
+            <path key={sg}
+              d={`M ${bx - rMat * 1.16} ${by + ng * 0.42 + 5}
+                  Q ${bx} ${by - 8 - ng * 0.24} ${bx + rMat * 1.16} ${by - ng * 0.42 + 5}
+                  Q ${bx} ${by - ng * 0.24} ${bx - rMat * 1.16} ${by + ng * 0.42 + 5} Z`}
+              fill={kieu.toc} stroke={V} strokeWidth={NT * 0.9} strokeLinejoin="round" />
           );
         })}
 
-        {/* MÁ HỒNG — hai chấm mờ. Rẻ tiền về mặt kỹ thuật mà đổi hẳn cảm giác: có má hồng thì
-            nhân vật đọc ra là dễ thương, không có thì đọc ra là hình minh hoạ. */}
-        <ellipse cx={dau[0] - cachMat - 8} cy={dau[1] + 16} rx={12} ry={7} fill="#E8836F" opacity={0.3} />
-        <ellipse cx={dau[0] + cachMat + 8} cy={dau[1] + 16} rx={12} ry={7} fill="#E8836F" opacity={0.3} />
+        {/* MŨI — KHỐI NHÔ có sống và cánh. Nét chính của khuôn mặt trong dòng phim này. Lệch nhẹ
+            theo hướng nhìn nên khi nhân vật quay sang, mũi quay theo — thứ làm mặt có chiều. */}
+        {/* MŨI — MỘT NÉT MÓC, không phải hình khép kín. Bản trước vẽ mũi thành khối có viền, và
+            ở cỡ này nó đọc ra là một dấu hỏi giữa mặt. Trong dòng phim tham chiếu, mũi chỉ là một
+            nét: xuống từ giữa hai mắt, móc sang một bên, hết. Ít nét thì mặt sạch mà vẫn có mũi. */}
+        <path d={`M ${dau[0] + mx * 0.45} ${dau[1] + 1}
+                  q -2 11 4 15 q 7 4 11 -3`}
+              stroke={V} strokeWidth={NT * 1.6} fill="none" strokeLinecap="round" strokeLinejoin="round" />
 
-        {/* MŨI — một nét cong nhỏ, không vẽ lỗ mũi (lỗ mũi ở cỡ này đọc ra là vết bẩn) */}
-        <path d={`M ${dau[0] - 4} ${dau[1] + 11} q 5 7 9 0`} stroke={V} strokeWidth={NT * 1.25} fill="none" strokeLinecap="round" />
+        {/* MÁ HỒNG — hai chấm mờ, đặt THẤP và RỘNG hơn bản cũ để hợp với sọ quả lê. */}
+        <ellipse cx={dau[0] - cachMat - 10} cy={dau[1] + 22} rx={13} ry={7} fill="#E8836F" opacity={0.28} />
+        <ellipse cx={dau[0] + cachMat + 10} cy={dau[1] + 22} rx={13} ry={7} fill="#E8836F" opacity={0.28} />
 
-        {/* MIỆNG — mở theo khẩu hình. Có lưỡi và răng khi mở to, vì một cái lỗ đen thui đọc ra
-            là thủng mặt chứ không phải đang nói. */}
+        {/* MIỆNG — mở theo khẩu hình, khoé kéo CAO lên má. Có dải răng và lưỡi khi mở to: một
+            cái lỗ đen thui đọc ra là thủng mặt chứ không phải đang nói. */}
         <g>
           <path
-            d={`M ${dau[0] - mW / 2} ${dau[1] + yMieng - khoe * 0.5}
-                Q ${dau[0]} ${dau[1] + yMieng - khoe} ${dau[0] + mW / 2} ${dau[1] + yMieng - khoe * 0.5}
-                Q ${dau[0] + mW * (0.24 + noi.tron * 0.16)} ${dau[1] + yMieng + mH}
+            d={`M ${dau[0] - mW / 2} ${dau[1] + yMieng - khoe * 0.8}
+                Q ${dau[0]} ${dau[1] + yMieng - khoe * 1.1} ${dau[0] + mW / 2} ${dau[1] + yMieng - khoe * 0.8}
+                Q ${dau[0] + mW * (0.26 + noi.tron * 0.16)} ${dau[1] + yMieng + mH}
                   ${dau[0]} ${dau[1] + yMieng + mH}
-                Q ${dau[0] - mW * (0.24 + noi.tron * 0.16)} ${dau[1] + yMieng + mH}
-                  ${dau[0] - mW / 2} ${dau[1] + yMieng - khoe * 0.5} Z`}
-            fill="#6E2A2E" stroke={V} strokeWidth={NT * 1.4} strokeLinejoin="round"
+                Q ${dau[0] - mW * (0.26 + noi.tron * 0.16)} ${dau[1] + yMieng + mH}
+                  ${dau[0] - mW / 2} ${dau[1] + yMieng - khoe * 0.8} Z`}
+            fill="#6E2A2E" stroke={V} strokeWidth={NT * 1.5} strokeLinejoin="round"
           />
-          {mH > 12 ? (
+          {mH > 11 ? (
             <>
-              <path d={`M ${dau[0] - mW / 2 + 3} ${dau[1] + yMieng - khoe * 0.5 + 1}
-                        L ${dau[0] + mW / 2 - 3} ${dau[1] + yMieng - khoe * 0.5 + 1}
-                        L ${dau[0] + mW / 2 - 6} ${dau[1] + yMieng - khoe * 0.5 + 7}
-                        L ${dau[0] - mW / 2 + 6} ${dau[1] + yMieng - khoe * 0.5 + 7} Z`}
+              <path d={`M ${dau[0] - mW / 2 + 3} ${dau[1] + yMieng - khoe * 0.8 + 1}
+                        L ${dau[0] + mW / 2 - 3} ${dau[1] + yMieng - khoe * 0.8 + 1}
+                        L ${dau[0] + mW / 2 - 7} ${dau[1] + yMieng - khoe * 0.8 + 8}
+                        L ${dau[0] - mW / 2 + 7} ${dau[1] + yMieng - khoe * 0.8 + 8} Z`}
                     fill="#FFFFFF" />
-              <ellipse cx={dau[0]} cy={dau[1] + yMieng + mH * 0.62} rx={mW * 0.26} ry={mH * 0.28} fill="#C4636B" />
+              <ellipse cx={dau[0]} cy={dau[1] + yMieng + mH * 0.66} rx={mW * 0.28} ry={mH * 0.3} fill="#C4636B" />
             </>
           ) : null}
         </g>
+
+        {/* NẾP CƯỜI — hai đường từ cánh mũi vòng xuống quá khoé miệng. Đậm dần theo độ cười.
+            Chi tiết rẻ nhất trong cả khuôn mặt mà đổi hẳn "quốc tịch" của nó. */}
+        {[-1, 1].map((sg) => (
+          <path key={sg}
+            d={`M ${dau[0] + sg * 11} ${dau[1] + 15}
+                Q ${dau[0] + sg * (mW / 2 + 5)} ${dau[1] + yMieng - 5}
+                  ${dau[0] + sg * (mW / 2 - 1)} ${dau[1] + yMieng + 6}`}
+            stroke={V} strokeWidth={NT * 1.05} fill="none" strokeLinecap="round"
+            opacity={0.3 + Math.max(0, E.khoe) * 0.42} />
+        ))}
+
+        {/* CẰM có ngấn — một nét cong ngắn dưới môi dưới. */}
+        {camV > 0.3 ? (
+          <path d={`M ${dau[0] - 11} ${dau[1] + yMieng + mH + 11} q 11 6 22 0`}
+                stroke={V} strokeWidth={NT * 0.95} fill="none" strokeLinecap="round" opacity={0.4} />
+        ) : null}
 
         {/* RÂU — vẽ SAU miệng thì nó phủ mất miệng; vẽ trước thì miệng nằm trên. Đây là bẫy đã
             gặp một lần ở bản cũ. */}
@@ -430,12 +544,19 @@ export const DienVienHai: React.FC<PropsHai> = ({
           <path d={`M ${dau[0] - 13} ${dau[1] + yMieng + mH + 3} q 13 16 26 0 q -4 20 -13 20 q -9 0 -13 -20 Z`}
                 fill={kieu.toc} stroke={V} strokeWidth={NT} strokeLinejoin="round" />
         ) : null}
+        {/* RÂU QUAI NÓN — CHỈ LÀ MỘT VIỀN QUANH HÀM, không phải một mảng phủ nửa mặt.
+            30/8 — bản đầu vẽ râu như một khối đặc từ tai này sang tai kia: nó nuốt sạch mũi,
+            nếp cười, miệng và cằm — tức là nuốt đúng những chi tiết vừa dựng ra để mặt có nét
+            Mỹ. Râu thật chỉ bám VIỀN xương hàm và chừa hẳn vùng quanh miệng.
+            Vẽ bằng một dải có bề dày: đường ngoài bám mép mặt, đường trong lùi vào 20 điểm. */}
         {kieu.rau === "quai" ? (
-          <path d={`M ${dau[0] - R_DAU * 0.96} ${dau[1] - 6}
-                    Q ${dau[0] - R_DAU * 0.8} ${dau[1] + R_DAU * 0.92} ${dau[0]} ${dau[1] + R_DAU * 1.02}
-                    Q ${dau[0] + R_DAU * 0.8} ${dau[1] + R_DAU * 0.92} ${dau[0] + R_DAU * 0.96} ${dau[1] - 6}
-                    q -12 26 -24 22 q -18 -6 -34 -6 q -16 0 -34 6 q -12 4 -24 -22 Z`}
-                fill={kieu.toc} stroke={V} strokeWidth={NT} strokeLinejoin="round" opacity={0.96} />
+          <path d={`M ${dau[0] - R_DAU * 0.88} ${dau[1] + 6}
+                    C ${dau[0] - R_DAU * 0.9} ${dau[1] + R_DAU * 0.55}, ${dau[0] - R_DAU * 0.4} ${dau[1] + R_DAU * 1.0}, ${dau[0] + R_DAU * 0.05} ${dau[1] + R_DAU * 1.02}
+                    C ${dau[0] + R_DAU * 0.5} ${dau[1] + R_DAU * 1.0}, ${dau[0] + R_DAU * 0.9} ${dau[1] + R_DAU * 0.55}, ${dau[0] + R_DAU * 0.88} ${dau[1] + 6}
+                    l -13 2
+                    C ${dau[0] + R_DAU * 0.66} ${dau[1] + R_DAU * 0.52}, ${dau[0] + R_DAU * 0.38} ${dau[1] + R_DAU * 0.82}, ${dau[0] + R_DAU * 0.05} ${dau[1] + R_DAU * 0.84}
+                    C ${dau[0] - R_DAU * 0.3} ${dau[1] + R_DAU * 0.82}, ${dau[0] - R_DAU * 0.66} ${dau[1] + R_DAU * 0.52}, ${dau[0] - R_DAU * 0.75} ${dau[1] + 8} Z`}
+                fill={kieu.toc} stroke={V} strokeWidth={NT * 0.9} strokeLinejoin="round" />
         ) : null}
 
         {kieu.kinh ? (
@@ -455,42 +576,75 @@ export const DienVienHai: React.FC<PropsHai> = ({
   );
 };
 
-/** Tóc — chín kiểu, vẽ bám theo vòm sọ. Đuôi tóc và búi có trễ pha nên đầu quay thì tóc theo sau. */
+/** Tóc — khối có CHÓP và có MẢNG BÓNG, không phải một vòm trơn.
+ *
+ * 30/8 — Soi clip tham chiếu: tóc trong dòng phim này là một KHỐI có hình, chân tóc uốn lượn
+ * chứ không cắt ngang, có vài chóp nhọn nhô lên, và có một mảng đậm hơn ở chỗ khuất sáng. Bản
+ * cũ vẽ một vòm tròn trơn úp lên đầu — đọc ra là cái mũ bảo hiểm chứ không phải tóc.
+ *
+ * Ba lớp: khối chính (có chóp) · mảng bóng (cùng màu, đậm hơn) · vài sợi rời ở mép.
+ */
 const Toc: React.FC<{ kieu: Kieu; dau: [number, number]; R: number; V: string; NG: number; t: number }> =
 ({ kieu, dau, R, V, NG, t }) => {
   const c = kieu.toc, k = kieu.kieuToc;
   const [x, y] = dau;
-  const s = { fill: c, stroke: V, strokeWidth: NG * 0.82, strokeLinejoin: "round" as const };
+  const dam = (h: string) => {
+    const q = (h || "#4A3626").replace("#", "");
+    if (q.length !== 6) return h;
+    const v = [0, 2, 4].map((i) => Math.round(parseInt(q.slice(i, i + 2), 16) * 0.72));
+    return "#" + v.map((n) => n.toString(16).padStart(2, "0")).join("");
+  };
+  const s = { fill: c, stroke: V, strokeWidth: NG * 0.85, strokeLinejoin: "round" as const };
   const tre = treo(0, t, 0.16, 2.2);
   if (k === "trocs") {
-    return <path d={`M ${x - R} ${y - 6} C ${x - R} ${y - R * 0.9}, ${x + R} ${y - R * 0.9}, ${x + R} ${y - 6}
-                     q -14 -16 -${R * 0.9} -16 q -${R * 0.7} 0 -${R * 0.2} 16 Z`} {...s} opacity={0.001} />;
+    // hói: chỉ còn một vành tóc hai bên
+    return (
+      <path d={`M ${x - R * 0.9} ${y - R * 0.2} q 4 -${R * 0.5} ${R * 0.34} -${R * 0.56}
+                q -${R * 0.16} ${R * 0.3} -${R * 0.1} ${R * 0.56} Z
+                M ${x + R * 0.9} ${y - R * 0.2} q -4 -${R * 0.5} -${R * 0.34} -${R * 0.56}
+                q ${R * 0.16} ${R * 0.3} ${R * 0.1} ${R * 0.56} Z`} {...s} />
+    );
   }
-  const vom = `M ${x - R - 2} ${y - 2}
-               C ${x - R - 2} ${y - R * 1.2}, ${x + R + 2} ${y - R * 1.2}, ${x + R + 2} ${y - 2}`;
+  // KHỐI CHÍNH — chân tóc uốn lượn (không cắt ngang), đỉnh có ba chóp nhô lên.
+  const chinh = `M ${x - R * 0.92} ${y - R * 0.14}
+      C ${x - R * 1.0} ${y - R * 0.84}, ${x - R * 0.5} ${y - R * 1.3}, ${x - R * 0.06} ${y - R * 1.26}
+      l ${R * 0.16} -${R * 0.26} l ${R * 0.1} ${R * 0.24}
+      l ${R * 0.22} -${R * 0.2} l ${R * 0.06} ${R * 0.22}
+      C ${x + R * 0.68} ${y - R * 1.14}, ${x + R * 1.02} ${y - R * 0.8}, ${x + R * 0.92} ${y - R * 0.14}
+      C ${x + R * 0.78} ${y - R * 0.5}, ${x + R * 0.5} ${y - R * 0.62}, ${x + R * 0.16} ${y - R * 0.56}
+      C ${x - R * 0.2} ${y - R * 0.5}, ${x - R * 0.6} ${y - R * 0.44}, ${x - R * 0.92} ${y - R * 0.14} Z`;
   return (
     <g>
-      {/* Vòm tóc chung cho mọi kiểu — khác nhau ở phần rủ xuống bên dưới */}
-      <path d={`${vom} C ${x + R} ${y - R * 0.42}, ${x + R * 0.3} ${y - R * 0.6}, ${x} ${y - R * 0.58}
-                C ${x - R * 0.3} ${y - R * 0.6}, ${x - R} ${y - R * 0.42}, ${x - R - 2} ${y - 2} Z`} {...s} />
-      {k === "bui" ? <circle cx={x + tre * 0.5} cy={y - R * 1.22} r={22} {...s} /> : null}
+      <path d={chinh} {...s} />
+      {/* MẢNG BÓNG — cùng màu tóc nhưng đậm hơn, nằm ở nửa khuất. Không có nó thì tóc phẳng lì. */}
+      <path d={`M ${x + R * 0.2} ${y - R * 1.2}
+                C ${x + R * 0.72} ${y - R * 1.06}, ${x + R * 1.0} ${y - R * 0.78}, ${x + R * 0.92} ${y - R * 0.14}
+                C ${x + R * 0.8} ${y - R * 0.48}, ${x + R * 0.54} ${y - R * 0.6}, ${x + R * 0.3} ${y - R * 0.58} Z`}
+            fill={dam(c)} opacity={0.85} />
+      {k === "bui" ? <ellipse cx={x + tre * 0.5} cy={y - R * 1.34} rx={23} ry={20} {...s} /> : null}
       {k === "duoi_ngua" ? (
-        <path d={`M ${x + R * 0.8} ${y - R * 0.5} q ${26 + tre} ${18} ${16 + tre} ${58} q -12 -22 -26 -34 Z`} {...s} />
+        <path d={`M ${x + R * 0.82} ${y - R * 0.62} q ${28 + tre} ${20} ${17 + tre} ${62}
+                  q -13 -24 -28 -37 Z`} {...s} />
       ) : null}
       {k === "bob" ? (
-        <path d={`M ${x - R - 2} ${y - 6} q -4 ${R * 0.9} 6 ${R * 1.05} l 12 -6 q -8 -${R * 0.62} -6 -${R * 0.92} Z
-                  M ${x + R + 2} ${y - 6} q 4 ${R * 0.9} -6 ${R * 1.05} l -12 -6 q 8 -${R * 0.62} 6 -${R * 0.92} Z`} {...s} />
+        <path d={`M ${x - R * 0.92} ${y - R * 0.2} q -6 ${R * 0.92} 5 ${R * 1.08} l 13 -7
+                  q -9 -${R * 0.64} -7 -${R * 0.94} Z
+                  M ${x + R * 0.92} ${y - R * 0.2} q 6 ${R * 0.92} -5 ${R * 1.08} l -13 -7
+                  q 9 -${R * 0.64} 7 -${R * 0.94} Z`} {...s} />
       ) : null}
       {k === "xoan" ? (
-        <g>{[-1, -0.45, 0.45, 1].map((p, i) => (
-          <circle key={i} cx={x + p * R * 0.84} cy={y - R * (0.78 + Math.abs(p) * 0.12)} r={19} {...s} />
+        <g>{[-0.9, -0.32, 0.32, 0.9].map((pp, i) => (
+          <circle key={i} cx={x + pp * R * 0.82} cy={y - R * (0.92 + Math.abs(pp) * 0.16)} r={20} {...s} />
         ))}</g>
       ) : null}
-      {k === "roi" || k === "hoi" ? (
-        <path d={`M ${x - R * 0.7} ${y - R * 0.72} l 10 -22 l 8 18 l 12 -26 l 10 24 l 14 -20 l 6 22 Z`} {...s} />
-      ) : null}
+      {/* SỢI RỜI Ở MÉP — hai ba nét mảnh nhô ra ngoài khối. Tóc không bao giờ có mép sạch. */}
+      <g stroke={V} strokeWidth={NG * 0.6} fill="none" strokeLinecap="round">
+        <path d={`M ${x - R * 0.86} ${y - R * 0.5} l -10 -8`} />
+        <path d={`M ${x + R * 0.88} ${y - R * 0.44} l 11 -6`} />
+      </g>
       {k === "re_ngoi" ? (
-        <path d={`M ${x - R * 0.16} ${y - R * 0.95} l 4 26 l -10 -4 Z`} fill={V} opacity={0.5} />
+        <path d={`M ${x - R * 0.18} ${y - R * 1.2} q 6 ${R * 0.4} 2 ${R * 0.62}`}
+              stroke={V} strokeWidth={NG * 0.55} fill="none" opacity={0.5} />
       ) : null}
     </g>
   );
