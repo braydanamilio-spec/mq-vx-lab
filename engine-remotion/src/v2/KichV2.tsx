@@ -262,8 +262,17 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
             <rect x={0} y={-h - (sang ? 10 : 0)} width={RONG} height={h + (sang ? 10 : 0)}
                   rx={8} fill={sang ? mau.nhan : "#F2C230"}
                   stroke={mau.muc} strokeWidth={sang ? 7 : 5} />
-            <text x={RONG / 2} y={-h - 24 - (sang ? 10 : 0)} textAnchor="middle"
-                  fontSize={sang ? 34 : 28} fontWeight={900}
+            {/* 30/8 — khung đo được: "351 cal" và "336 cal" dính thành "351 cal336 cal".
+                Khi hai giá trị gần bằng nhau thì hai cột cao xấp xỉ nhau, mà nhãn số nằm ở
+                cùng một độ cao so với đỉnh cột — thế là hai chuỗi chữ nằm ngang hàng và chạm
+                nhau, vì bề rộng chữ ("351 cal") lớn hơn bề rộng một cột.
+                Hai việc: nâng nhãn của cột LẺ lên một nấc để hai hàng chữ so le, và thu cỡ chữ
+                lại vừa đủ khi nhãn dài. So le rẻ hơn thu nhỏ — thu nhỏ mãi thì số hết đọc
+                được, mà đọc được số mới là toàn bộ giá trị của những kênh này. */}
+            <text x={RONG / 2} y={-h - 24 - (sang ? 10 : 0) - (i % 2 ? 30 : 0)}
+                  textAnchor="middle"
+                  fontSize={(sang ? 34 : 28) * (String(hienSo).length > 6 ? 0.82 : 1)}
+                  fontWeight={900}
                   fill={mau.muc} opacity={moc}>{hienSo}</text>
             {chiaDong(c.nhan, BUOC - 12, 18).map((d, j) => (
               <text key={j} x={RONG / 2} y={30 + j * 21} textAnchor="middle" fontSize={18}

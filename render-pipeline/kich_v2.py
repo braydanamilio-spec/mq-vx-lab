@@ -345,6 +345,26 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
     return (str(st.get("title") or ten_kenh), ds, str(st.get("nguon") or ""))
 
 
+def _ten_nguon(t: str) -> str:
+    """Mã nguồn nội bộ -> tên cơ quan cho người xem.
+
+    `usda`, `fdic` là chữ viết thường dùng trong mã. Hiện nguyên si lên khung thành
+    "Source: usda" — trông như lỗi đánh máy, và làm hỏng đúng thứ những kênh này bán: vẻ đáng
+    tin của con số. Chuẩn hoá TẠI ĐÂY, một chỗ duy nhất mà cả loa lẫn màn hình cùng lấy từ đó —
+    sửa riêng cho lời đọc rồi quên màn hình là lỗi đã lặp năm lần hôm nay (luật 7bf).
+    """
+    t = str(t or "").strip()
+    if not t:
+        return ""
+    dep = {"usda": "USDA", "fdic": "FDIC BankFind", "bls": "U.S. Bureau of Labor Statistics",
+           "nasa": "NASA", "court": "CourtListener", "worldbank": "World Bank",
+           "usaspending": "USAspending.gov", "openfda": "openFDA", "zillow": "Zillow Research",
+           "wikipedia": "Wikipedia", "sec": "SEC EDGAR", "dieu_khoan": "Terms of service"}
+    if t.lower() in dep:
+        return dep[t.lower()]
+    return t.upper() if (t.islower() and " " not in t and len(t) <= 12) else t
+
+
 def _lam_sach_nhan(ds: list) -> list:
     """Dọn nhãn cột trước khi lên biểu đồ.
 
@@ -384,7 +404,14 @@ def _lam_sach_nhan(ds: list) -> list:
     ra = []
     for x in ten:
         w = x.split()
-        ra.append(" ".join(w[-2:]) if (len(w) > 2 and len(x) > 16) else x)
+        # Hai từ mà vẫn dài quá bề ngang cột ("Haagen-Dazs Chocolate", 21 ký tự) thì giữ
+        # nguyên là để nó bị cắt cụt ở cuối — mà cuối lại là phần phân biệt. Giữ từ CUỐI.
+        if len(w) > 2 and len(x) > 16:
+            ra.append(" ".join(w[-2:]))
+        elif len(w) == 2 and len(x) > 17:
+            ra.append(w[-1])
+        else:
+            ra.append(x)
     return [(ra[i], ds[i][1], ds[i][2]) for i in range(len(ds))]
 
 
@@ -1023,18 +1050,58 @@ def main() -> int:
         # Ba trường ấy suy từ chính hồ sơ kênh thế hệ 2 chứ không bốc bừa — một kênh nói về giá
         # nhà mà người dẫn mặc áo blouse phòng thí nghiệm thì hỏng đúng thứ anh dặn giữ.
         import the_he_2 as _T2
-        _NGHE_THEO_NGUON = {
-            "usda": ("y_ta", "ke_sieu_thi"), "openfda": ("y_ta", "van_phong"),
-            "bls": ("bank", "ban_lam_viec"), "worldbank": ("bank", "van_phong"),
-            "usaspending": ("cong_to", "van_phong"), "court": ("tham_phan", "phong_xu"),
-            "zillow": ("hang_xom", "san_sau"), "wikipedia": ("khoa_hoc", "thu_phong"),
-            "nasa": ("sao_dem", "san_thuong"), "fdic": ("bank", "quay"),
+        # ══ NGHỀ SUY TỪ NICHE CỦA KÊNH, KHÔNG TỪ NGUỒN DỮ LIỆU ═══════════════════════════
+        # 30/8 — anh soi cận nhân vật WHAT IS IN IT và hỏi *"nhân vật đại diện chuyên gia cho
+        # channel đã phù hợp chưa"*. Chưa: kênh nói về THÀNH PHẦN TRÊN NHÃN THỰC PHẨM mà nhân
+        # vật mặc áo scrubs, đeo ống nghe, đội mũ y tá. Ống nghe nói "khám bệnh", không nói
+        # "đọc nhãn dinh dưỡng".
+        #
+        # Lỗi nằm ở chỗ bảng đầu của tôi map theo NGUỒN DỮ LIỆU (`usda -> y tá`). Nguồn nói về
+        # nơi lấy số, không nói gì về nghề của người dẫn: cùng một nguồn USDA có thể là kênh
+        # thực phẩm, kênh nông nghiệp hay kênh giá cả — ba nghề khác hẳn nhau. Suy nghề từ
+        # nguồn là suy từ một thứ không mang thông tin ấy.
+        # NICHE mới là thứ nói đúng: năm mươi kênh chia thành hai mươi tư niche, và mỗi niche
+        # có một nghề rõ ràng mà người xem nhận ra trong một giây.
+        _NGHE_THEO_NICHE = {
+          # niche:                        (kiểu người,   phụ kiện,     bối cảnh)
+          "Đồ ăn & đồ uống":              ("khoa_hoc",  "bang_kep",   "ke_sieu_thi"),
+          "Sức khoẻ & gym":               ("hang_xom",  "khan_quang", "san_sau"),
+          "Thú cưng & động vật":          ("y_ta",      "ong_nghe",   "van_phong"),
+          "Tiền cá nhân":                 ("bank",      "the_deo",    "quay"),
+          "Nhà ở":                        ("hang_xom",  "bang_kep",   "van_phong"),
+          "Nghề nghiệp":                  ("luat_tre",  "the_deo",    "ban_lam_viec"),
+          "Luật & quyền công dân":        ("cong_to",   "ao_choang",  "phong_xu"),
+          "Tội phạm có thật":             ("tham_phan", "bang_kep",   "thu_phong"),
+          "Quân sự":                      ("cong_to",   "the_deo",    "ban_lam_viec"),
+          "Lịch sử":                      ("khoa_hoc",  "ao_choang",  "thu_phong"),
+          "Bí ẩn chưa lời giải":          ("khoa_hoc",  "bang_kep",   "thu_phong"),
+          "Kinh dị & rùng rợn":           ("tham_phan", "khan_quang", "thu_phong"),
+          "Vũ trụ":                       ("sao_dem",   "ao_blouse",  "san_thuong"),
+          "Thời tiết & thảm hoạ":         ("khoa_hoc",  "the_deo",    "van_phong"),
+          "Giáo dục":                     ("luat_tre",  "bang_kep",   "ban_lam_viec"),
+          "Công nghệ & AI":               ("khoa_hoc",  "the_deo",    "ban_lam_viec"),
+          "Game":                         ("luat_tre",  "the_deo",    "ban_lam_viec"),
+          "Xe":                           ("hang_xom",  "ao_blouse",  "san_sau"),
+          "Du lịch":                      ("sao_dem",   "the_deo",    "van_phong"),
+          "Thể thao":                     ("hang_xom",  "khan_quang", "san_sau"),
+          "Nhạc":                         ("luat_tre",  "the_deo",    "van_phong"),
+          "Phim & truyền hình":           ("luat_tre",  "the_deo",    "van_phong"),
+          "Người nổi tiếng":              ("hang_xom",  "the_deo",    "van_phong"),
+          "Quan hệ & hẹn hò":             ("y_ta",      "bang_kep",   "van_phong"),
         }
-        _MAU_THEO_NGUON = {
-            "usda": "ke_sieu_thi", "openfda": "van_phong", "bls": "ngan_hang",
-            "worldbank": "van_phong", "usaspending": "van_phong", "court": "luat",
-            "zillow": "san_sau", "wikipedia": "thu_phong", "nasa": "san_thuong",
-            "fdic": "ngan_hang",
+        _MAU_THEO_NICHE = {
+          "Đồ ăn & đồ uống": "ke_sieu_thi", "Sức khoẻ & gym": "san_sau",
+          "Thú cưng & động vật": "van_phong", "Tiền cá nhân": "ngan_hang",
+          "Nhà ở": "san_sau", "Nghề nghiệp": "van_phong",
+          "Luật & quyền công dân": "luat", "Tội phạm có thật": "thu_phong",
+          "Quân sự": "van_phong", "Lịch sử": "thu_phong",
+          "Bí ẩn chưa lời giải": "thu_phong", "Kinh dị & rùng rợn": "thu_phong",
+          "Vũ trụ": "san_thuong", "Thời tiết & thảm hoạ": "van_phong",
+          "Giáo dục": "van_phong", "Công nghệ & AI": "van_phong",
+          "Game": "van_phong", "Xe": "san_sau", "Du lịch": "san_thuong",
+          "Thể thao": "san_sau", "Nhạc": "van_phong",
+          "Phim & truyền hình": "van_phong", "Người nổi tiếng": "van_phong",
+          "Quan hệ & hẹn hò": "van_phong",
         }
         chon = []
         for _t in [x.strip() for x in a.gen2.split(",") if x.strip()]:
@@ -1043,7 +1110,8 @@ def main() -> int:
                 print(f"   ⚠️ không có kênh thế hệ 2 tên {_t!r}")
                 continue
             _ng = str(_k2.get("nguon") or "")
-            _kieu, _boi = _NGHE_THEO_NGUON.get(_ng, ("bank", "van_phong"))
+            _nic = str(_k2.get("niche") or "")
+            _kieu, _pk, _boi = _NGHE_THEO_NICHE.get(_nic, ("bank", "the_deo", "van_phong"))
             # `goc_nhin` là mô tả nội bộ BẰNG TIẾNG VIỆT ("Thành phần thật trong món quen").
             # Bản đầu tôi đổ thẳng nó vào `nhan` và `hoi` — hai trường mà `dung_canh` dùng làm
             # LỜI DẪN. Kết quả: một câu tiếng Việt lọt vào giữa bài, giọng Anh đọc nó thành âm
@@ -1055,7 +1123,8 @@ def main() -> int:
             chon.append({"ten": _k2["ten"], "handle": _k2.get("handle", ""),
                          "nhan": _k2["ten"],
                          "kieu": _kieu, "boi": [_boi, "ban_lam_viec", "van_phong"],
-                         "mau": _MAU_THEO_NGUON.get(_ng, "van_phong"),
+                         "mau": _MAU_THEO_NICHE.get(_nic, "van_phong"),
+                         "_phuKien": _pk,
                          "nguon": _ng, "hoi": "", "_gen2": True})
     elif a.kenh:
         vt = {x.strip().upper() for x in a.kenh.split(",")}
@@ -1233,7 +1302,7 @@ def main() -> int:
             # đường xiên, một ống nghe là hai đường cong với ba vòng tròn.
             # Vài kênh dùng chung một phụ kiện (luật sư và thẩm phán cùng áo choàng) — đúng
             # thực tế, và chúng vẫn phân biệt được bằng tóc, kính, dáng.
-            "kieu": {"phuKien": {
+            "kieu": {"phuKien": k.get("_phuKien") or {
                 "bank": "the_deo", "luat_tre": "bang_kep", "hang_xom": "bang_kep",
                 "cong_to": "ao_choang", "tham_phan": "ao_choang", "sao_dem": "khan_quang",
                 "khoa_hoc": "ao_blouse", "vu_tru_gia": "ao_blouse", "y_ta": "ong_nghe",
