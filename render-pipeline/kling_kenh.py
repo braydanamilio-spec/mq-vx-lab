@@ -220,8 +220,14 @@ def don(d: dict) -> dict:
         ln["act"] = " ".join(str(ln.get("act") or "says").split()).strip() or "says"
     for k in ("hook", "setup", "escalate", "payoff", "title", "room"):
         if d.get(k):
-            d[k] = " ".join(str(d[k]).split()).strip()
+            d[k] = _mao_tu(" ".join(str(d[k]).split()).strip())
     return d
+
+
+def _mao_tu(t: str) -> str:
+    """`a avalanche` -> `an avalanche`. Kling không quan tâm, người xem đọc phụ đề thì có."""
+    t = re.sub(r"\ba (?=[aeiouAEIOU])", "an ", t)
+    return re.sub(r"\ban (?=[bcdfgjklmnpqrstvwxyz])", "a ", t)
 
 
 def cham(d: dict, kenh: str, giay: float) -> list[str]:
@@ -294,6 +300,9 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
             e.append(f"có {tu!r} — {ly}")
             break
 
+    if "proving" in pay or "was right all along" in pay:
+        e.append("payoff đóng bằng khuôn 'proving ... was right' — cú lật phải TỰ nói lên điều "
+                 "đó qua hình, không cần câu giải thích ai đúng ai sai")
     if not str(d.get("title") or "").strip():
         e.append("thiếu title")
     # Đông người là lỗi kịch bản, không phải lỗi prompt dài. Năm nhân vật trong tám giây thì
@@ -371,9 +380,15 @@ def _ghep(kenh: str, tap: dict, giay: float, so: int, bien: int, muc: int) -> st
     r.append("LOCATION LOCK — KEEP IDENTICAL ACROSS EVERY EPISODE:")
     ta = hs["phong"].get(phong) or next(iter(hs["phong"].values()))
     if muc >= 1:
-        # Mức 1: giữ TÊN phòng và những mốc mắt nhận ra ngay (màu tường, đồ lớn nhất), bỏ phần
-        # liệt kê chi tiết. Kling giữ được bối cảnh bằng ba bốn mốc; phần còn lại chỉ tốn chỗ.
-        ta = ", ".join(ta.split(", ")[:3]) + "."
+        # Mức 1: giữ TÊN phòng, những mốc mắt nhận ra ngay, VÀ mọi mốc kịch bản đang nhắc tới.
+        # Bỏ mốc đang được dùng là co vào đúng chỗ không được đụng: Kling đọc chuyện có cái đèn
+        # mà bối cảnh không có cái đèn nào thì nó tự đặt một cái, mỗi tập một chỗ.
+        _ke = (ke + " " + " ".join(str((l or {}).get("say") or "")
+                                   for l in (tap.get("lines") or []))).lower()
+        _m = ta.split(", ")
+        giu = _m[:3] + [x for x in _m[3:]
+                        if any(w in _ke for w in re.findall(r"[a-z]{4,}", x.lower()))]
+        ta = ", ".join(dict.fromkeys(giu)).rstrip(".") + "."
     r.append(hs["nha"] if muc < 1 else hs["nha"].split(". ")[0] + ". Never redesign or recolor the house.")
     r.append(ta)
     r.append("")
@@ -462,6 +477,9 @@ def _sys(kenh: str, giay: float) -> str:
         f"late' — 'it is Thursday'.\n"
         f"  · The funniest person is the one who is calm. Panic is not a joke; being unbothered "
         f"next to panic is.\n"
+        f"  · Vary WHO delivers the reversal across episodes — the cat solving everything twice "
+        f"in a row is a formula the viewer spots before the joke.\n"
+        f"  · Never end on a line that explains who was right. Show it and stop.\n"
         f"  · The last line must REVERSE something, not summarise it. The viewer should want to "
         f"replay the first two seconds to check they missed it.\n"
         f"  · Dialogue is how real Americans actually talk to family: interrupting, understating, "

@@ -4886,3 +4886,39 @@ cách một sitcom thật vận hành: mỗi tập một phòng, cả căn nhà 
 
 **Quy tắc rút ra: khi AI cứ chọn mãi một giá trị hợp lý, đừng dặn — hãy lấy lựa chọn ấy khỏi tay
 nó và cấp theo lịch.**
+
+### 7bj. CO PROMPT PHẢI CO PHẦN KHÔNG DÙNG
+
+Tập 002 kể *"the TV remote teeters on the lamp's shade"*, nhưng LOCATION LOCK in ra chỉ có:
+
+```
+Living room: soft blue-grey walls, a worn brown three-seat couch, a low wooden coffee table.
+```
+
+**Cái đèn đã bị cơ chế co cắt mất** — trong khi chính nó là chỗ diễn ra cú mở màn. Kling đọc một
+câu chuyện có cái đèn mà bối cảnh không có cái đèn nào, nên nó **tự đặt một cái**, và tập sau đặt
+chỗ khác. Đúng cái bệnh mà LOCATION LOCK sinh ra để chữa.
+
+Bản đầu của `_ghep` co bằng cách **giữ ba mốc đầu, bỏ phần còn lại** — một phép cắt không nhìn
+kịch bản. Nay nó giữ ba mốc đầu **cộng mọi mốc mà kịch bản đang nhắc tới**.
+
+**Nén cái gì cũng được, trừ cái đang được dùng.** Một cơ chế rút gọn không đọc nội dung thì sớm
+muộn cũng cắt trúng chỗ quan trọng nhất — và cắt lặng lẽ, không báo gì.
+
+### 7bk. KHUÔN LẶP BỊ NHẬN RA TRƯỚC CẢ NỘI DUNG
+
+Hai tập liền nhau đóng thế này:
+
+> *…pulls a hidden bag of peas from behind the fridge, **proving Tommy was right**.*
+> *…paws out the missing remote, **proving the cat was right all along**.*
+
+Cả hai đều có cú lật thật, đều qua thước. Nhưng cả hai đều là **Buddy cứu tình thế**, và đều đóng
+bằng **một câu giải thích ai đúng**. Người xem nhận ra **khuôn** trước khi kịp nhận ra nội dung —
+xem tập thứ ba là đoán được tập thứ tư.
+
+Hai luật thêm vào: cấm đóng bằng `proving … was right` (cú lật phải tự nói lên qua hình, không
+cần câu giải thích), và dặn AI **đổi người thực hiện cú lật** giữa các tập.
+
+Ghi chung với **7bi** thành một mối: cả ba lỗi của loạt Kling đầu tiên — 13 tập một phòng, hai tập
+một khuôn kết, bốn tập một chủ đề — đều là **lặp**, và **không lỗi nào bị thước bắt** vì thước
+chấm từng tập một, không ai chấm cả loạt. **Thước tầng tập không thấy được lỗi tầng loạt.**
