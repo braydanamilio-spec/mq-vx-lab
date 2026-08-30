@@ -1,7 +1,16 @@
 import React from "react";
 import { AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { BoiCanh, BANG_MAU, TenBoiCanh, Paltte } from "./BoiCanh";
-import { DienVien, CAM_XUC, KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, TenDang, Tu } from "./DienVien";
+import { CAM_XUC, KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, TenDang, Tu } from "./DienVien";
+// 30/8 — MƯỜI KÊNH DỮ LIỆU DÙNG CHUNG DIỄN VIÊN MỚI CỦA BỘ HÀI.
+// Anh: *"ứng dụng những cải tiến ở 10 channel sau này nâng cấp vào 10 channel đầu tiên"*.
+// `DienVienHai` mang toàn bộ phần đã sửa qua một đêm: khuôn mặt kiểu hoạt hình Mỹ (sọ quả lê,
+// mắt bầu dục, lông mày khối, mũi nét móc, nếp cười), tóc có khối và mảng bóng, bàn tay găng bốn
+// ngón liền mạch, nén–giãn giữ thể tích, các chu kỳ sống lệch tần số, giày có đế.
+// Đổi được vì hai bộ dùng CHUNG giao diện: mười kênh dữ liệu chỉ có một người trong khung và
+// luôn ở dáng ĐỨNG (kiểm bằng `kich_v2.py`: không kênh nào khai `dang`), tức là không dùng tới
+// `dang`/`ngoi`/`di` — thứ duy nhất `DienVienHai` không có.
+import { DienVienHai } from "../v4/DienVienHai";
 
 /**
  * KỊCH V2 — phim hoạt hình có nhân vật, dựng hoàn toàn bằng vector (29/8/2026).
@@ -309,11 +318,10 @@ export const KichV2: React.FC<PropsKich> = ({
            style={{ transformOrigin: "0px 0px" }}>
           <BoiCanh ten={C.boi || "san_sau"} mau={mau} t={giay} />
 
-          <DienVien
+          <DienVienHai
             kieu={nv}
             camXuc={C.camXuc || "trung_tinh"}
             cuChi={C.cuChi || "nghi"}
-            dang={C.dang || "dung"}
             nhin={nhin}
             noi={noi}
             t={giay}
