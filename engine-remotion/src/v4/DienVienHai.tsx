@@ -71,6 +71,12 @@ const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; k
 
 const kep = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const trn = (a: number, b: number, t: number) => a + (b - a) * kep(t);
+// Cung có gia tốc hai đầu: rời điểm đầu chậm, giữa nhanh, vào điểm cuối chậm. Tay người thật
+// không quay đều tốc độ, và mọi phép nội suy tư thế trong tệp này đều đi qua nó.
+// 30/8 — khai ở TẦNG MODULE chứ không trong thân component: phép nội suy cử chỉ nằm ở đầu thân
+// hàm, trước chỗ khai cũ, nên nó đọc phải một hằng chưa khởi tạo và render chết. Lần thứ tư
+// dính họ lỗi này (xem luật 7ae) — thứ dùng ở nhiều chỗ thì khai ở chỗ ai cũng thấy.
+const muot = (v: number) => v * v * (3 - 2 * v);
 const D = (deg: number) => (deg * Math.PI) / 180;
 const P = (x: number, y: number, d: number, a: number): [number, number] =>
   [x + Math.cos(D(a)) * d, y + Math.sin(D(a)) * d];
@@ -249,9 +255,6 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const vaiP: [number, number] = [vai[0] + rongVai + 4, vai[1] + 8];
   const dtay = 86 * cao, dcang = 80 * cao;
 
-  // Cử chỉ đi theo CUNG CÓ GIA TỐC, không đi thẳng: `muot` làm góc rời khỏi tư thế nghỉ chậm,
-  // giữa nhanh, rồi dừng chậm. Tay người thật không quay đều tốc độ.
-  const muot = (v: number) => v * v * (3 - 2 * v);
   // `mo` chỉ còn lo lượt ĐẦU TIÊN của video (từ tư thế nghỉ vào tư thế đầu); các lượt sau đã
   // được `doiCuChi` lo, và nhân hai lần làm cử chỉ ì ra ở đầu mỗi lượt.
   const mo = muot(kep(t / 0.45));

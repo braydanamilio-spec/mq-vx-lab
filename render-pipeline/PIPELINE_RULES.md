@@ -4719,3 +4719,25 @@ Từ khi nền là ảnh AI thay cho mảng màu phẳng, chữ trắng viền �
 **Viền chỉ tách chữ khỏi nền ĐỒNG MÀU.** Nó không cứu được nền **nhiều chi tiết**, vì mắt phải
 tách chữ khỏi hàng chục cạnh nhỏ chứ không phải khỏi một mảng. Một thẻ tối mờ phía sau giải đúng
 việc ấy — cùng cách đã làm cho phụ đề.
+
+### 7ba. CHỐT `tsc` CÓ ĐIỂM MÙ — VÀ NÓ VỪA LỘT RA — 30/8/2026
+
+Luật 7ae dựng chốt `tsc` để bắt lỗi *"dùng biến trước khi khai báo"* mà `esbuild` bỏ sót. Chốt ấy
+đã cứu được hai lần. Hôm nay nó **để lọt lần thứ tư**:
+
+```
+ReferenceError  Cannot access 'muot' before initialization
+```
+
+`muot` khai trong THÂN component, còn phép nội suy cử chỉ nằm ở đầu thân hàm — trước chỗ khai.
+`tsc` **không** báo TS2448 ở trường hợp này (nó chỉ bắt được một số hình thái TDZ nhất định, và
+hằng khai bằng `const` với hàm mũi tên dùng trong cùng scope không nằm trong số đó).
+
+**Giá phải trả:** 8 trong 10 kênh render hỏng trước khi phát hiện.
+
+**Cách chữa gốc, không phải vá chốt:** thứ dùng ở NHIỀU CHỖ thì khai ở **tầng module**, cạnh
+`kep`/`trn`. Ở đó không có TDZ nào cả — module-level `const` được khởi tạo trước khi bất kỳ
+component nào chạy. Điểm mù của công cụ biến mất vì bài toán biến mất.
+
+**Quy tắc rút ra:** mỗi khi thêm một phép tính dùng chung vào thân một component, hỏi ngay
+*"chỗ nào khác cũng cần nó không?"* — nếu có, nó thuộc về tầng module ngay từ đầu.

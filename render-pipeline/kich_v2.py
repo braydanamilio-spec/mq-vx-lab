@@ -666,10 +666,18 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
         # đừng viết, mà bỏ hẳn chỗ chữ có thể bám.
         _CO_BAO = ("packet", "package", "packaging", "box", "boxes", "bottle", "can ", "cans",
                    "carton", "label", "product", "shelf", "shelves", "grocer", "snack", "brand")
-        _them = ""
+        # CẤM CHỮ ÁP CHO MỌI NỀN, KHÔNG CHỈ NỀN CÓ BAO BÌ.
+        # 30/8 — Khung BANK RUN đo được một biển hiệu ghi "BAND ANK": máy vẽ thấy chủ đề nói tới
+        # ngân hàng là dựng ngay một cái biển trên tường, rồi bịa chữ lên đó. Chủ đề ấy KHÔNG có
+        # từ nào trong danh sách bao-bì, nên lệnh cấm cũ không chạm tới.
+        # Bài học lặp lại lần thứ ba (luật 7t · 7w · 7ay): chỗ nào có MẶT PHẲNG là chỗ đó có thể
+        # mọc chữ, mà mọi bối cảnh trong nhà đều có tường. Nên câu cấm chữ phải áp cho TẤT CẢ,
+        # còn câu cấm bao-bì chỉ là phần cộng thêm khi chủ đề nhắc tới hàng hoá.
+        _them = (", no signs on walls, no lettering anywhere in the scene, no shop signs, "
+                 "no window text, blank walls")
         if any(x in chu_de.lower() for x in _CO_BAO):
-            _them = (", all packaging completely blank and unbranded, plain white and solid "
-                     "colour surfaces, no labels, no printed text on any package")
+            _them += (", all packaging completely blank and unbranded, plain white and solid "
+                      "colour surfaces, no labels, no printed text on any package")
         _pr = f"{chu_de}, seen in a {k['ten'].split()[0].lower()} setting{_them}"
         ok = None
         for _lan in range(2):
