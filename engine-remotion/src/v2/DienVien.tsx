@@ -56,14 +56,14 @@ export type TenCamXuc =
 export const CAM_XUC: Record<TenCamXuc, {
   may: number; mayCao: number; mi: number; khoe: number; ha: number; nghieng: number; than: number;
 }> = {
-  trung_tinh: { may: 0.0, mayCao: 0.0, mi: 0.08, khoe: 0.1, ha: 0.08, nghieng: 0, than: 0 },
-  vui: { may: -6.4, mayCao: 4.0, mi: 0.22, khoe: 1, ha: 0.35, nghieng: -3, than: -1.5 },
-  buon: { may: 19.2, mayCao: -4.8, mi: 0.34, khoe: -0.8, ha: 0.06, nghieng: 6, than: 3 },
-  so: { may: 25.6, mayCao: 8.0, mi: -0.16, khoe: -0.5, ha: 0.67, nghieng: -2, than: 5 },
-  tuc: { may: -28.8, mayCao: -6.4, mi: 0.02, khoe: -0.65, ha: 0.16, nghieng: 0, than: -4 },
-  bat_ngo: { may: 3.2, mayCao: 12.8, mi: -0.24, khoe: 0.1, ha: 0.99, nghieng: -1, than: -2 },
-  nghi_ngo: { may: -9.6, mayCao: 4.8, mi: 0.3, khoe: -0.15, ha: 0.06, nghieng: 7, than: 1 },
-  tu_tin: { may: -4.8, mayCao: 1.6, mi: 0.06, khoe: 0.55, ha: 0.1, nghieng: -2, than: -2.5 },
+  trung_tinh: { may: 0.0, mayCao: 0.0, mi: 0.08, khoe: 0.1, ha: 0.06, nghieng: 0, than: 0 },
+  vui: { may: -5.12, mayCao: 3.2, mi: 0.22, khoe: 1, ha: 0.28, nghieng: -3, than: -1.5 },
+  buon: { may: 15.36, mayCao: -3.84, mi: 0.34, khoe: -0.8, ha: 0.05, nghieng: 6, than: 3 },
+  so: { may: 20.48, mayCao: 6.4, mi: -0.16, khoe: -0.5, ha: 0.54, nghieng: -2, than: 5 },
+  tuc: { may: -23.04, mayCao: -5.12, mi: 0.02, khoe: -0.65, ha: 0.13, nghieng: 0, than: -4 },
+  bat_ngo: { may: 2.56, mayCao: 10.24, mi: -0.24, khoe: 0.1, ha: 0.79, nghieng: -1, than: -2 },
+  nghi_ngo: { may: -7.68, mayCao: 3.84, mi: 0.3, khoe: -0.15, ha: 0.05, nghieng: 7, than: 1 },
+  tu_tin: { may: -3.84, mayCao: 1.28, mi: 0.06, khoe: 0.55, ha: 0.08, nghieng: -2, than: -2.5 },
 };
 
 // ══════════════════════════════════════════════════════════════════════════════════════════

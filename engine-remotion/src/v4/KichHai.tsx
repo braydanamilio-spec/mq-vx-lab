@@ -414,8 +414,13 @@ export const KichHai: React.FC<PropsHai> = ({
   // Tiền cảnh gần ống kính nên TO hơn và TỐI hơn — hai dấu hiệu chiều sâu mà mắt đọc tức thì.
   const _coA = _quaVai && !noiA_ ? 1.5 : 1;
   const _coB = _quaVai && noiA_ ? 1.5 : 1;
-  const _mA = _quaVai && !noiA_ ? 0.55 : 1;
-  const _mB = _quaVai && noiA_ ? 0.55 : 1;
+  // Anh gửi khung: người tiền cảnh TRONG SUỐT, nhìn xuyên qua thấy cả xe phía sau — đọc ra là
+  // một bóng ma chứ không phải một người đứng gần ống kính.
+  // Lỗi ở chỗ tôi dùng ĐỘ MỜ để tả chiều sâu. Trong hoạt hình, vật ở tiền cảnh không mờ đi —
+  // nó TỐI đi (ngược sáng) và MẤT NÉT. Cả hai đều là hiện tượng quang học thật; độ mờ thì
+  // không, và mắt đọc ra ngay là sai.
+  const _toiA = _quaVai && !noiA_;
+  const _toiB = _quaVai && noiA_;
 
   const _liaTam = trn(_mucTieu(_canTruoc), _mucTieu(_canNay),
                       muot(kep((giay - L.s) / 0.9)));
@@ -566,7 +571,7 @@ export const KichHai: React.FC<PropsHai> = ({
               ĐI tới đó trong 0,6 giây đầu lượt, có bước chân hẳn hoi (`buoc` > 0 bật dáng đi).
               Khoảng cách hai người vì thế thay đổi theo nội dung: dồn nhau thì gần lại, đầu
               hàng thì giãn ra. */}
-          <g opacity={_mA}>
+          <g style={_toiA ? { filter: "brightness(0.52) saturate(0.7) blur(1.4px)" } : undefined}>
           <DienVienHai kieu={A} camXuc={(noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
@@ -576,7 +581,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={L.vatA ?? vatA}
                     x={_xA / zoom} y={Y_CHAN} scale={1.12 * coA * _coA} />
           </g>
-          <g opacity={_mB}>
+          <g style={_toiB ? { filter: "brightness(0.52) saturate(0.7) blur(1.4px)" } : undefined}>
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
                     cuChi={!noiA_ ? (L.cuChi || "nghi") : cuChiNghe}
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}

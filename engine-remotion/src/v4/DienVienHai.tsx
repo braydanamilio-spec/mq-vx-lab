@@ -53,31 +53,35 @@ import { CAM_XUC, CU_CHI, Kieu, TenCamXuc, TenCuChi, Tu, visemeTai } from "../v2
 // là chạm. Chỉ lên trời còn đúng ngôn ngữ hài hơn: nó là điệu bộ "tuyên bố", còn chỉ ngang vào
 // mặt người đối diện thì vừa thô vừa che mất mặt người ấy.
 const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; khuyuP: number }> = {
-  nghi:       { vaiT: 100, khuyuT: -8,  vaiP: 80,  khuyuP: 8 },
-  chi:        { vaiT: 104, khuyuT: -10, vaiP: -86, khuyuP: -18 },   // chỉ LÊN, không chỉ ngang
-  // 30/8 — Anh: *"tay cứ vòng vòng lên như muốn đánh nhau, hơi cứng chưa ổn lắm"*.
-  // Đếm ra: "mở tay" dùng 20 lần và "đếm" 18 lần trên mười tập — hai cử chỉ BIÊN ĐỘ LỚN NHẤT
-  // chiếm hơn nửa số lượt. Cử chỉ lớn dùng thưa thì là nhấn mạnh; dùng liên tục thì thành một
-  // người đang khua tay, và khua tay đối diện nhau đọc ra là sắp đánh nhau.
-  // Hạ biên độ "mở tay" xuống tầm ngực — vẫn là mở tay, chỉ không còn vung lên quá vai.
-  mo_tay:     { vaiT: 118, khuyuT: -52, vaiP: 58,  khuyuP: 52 },    // mở tay tầm ngực
-  // 30/8 — anh gửi khung cận: hai bàn tay chụm lại trước bụng, trông như đang bấu vào nhau.
-  // Đây là tư thế "đếm" với hai cánh tay gập vào cùng một góc, nên hai bàn tay rơi về cùng một
-  // điểm giữa thân. Người thật khi nói không bao giờ để hai bàn tay chạm nhau ở giữa bụng —
-  // một tay bao giờ cũng cao hơn, xa hơn, và hai bàn tay cách nhau ít nhất một bàn tay.
-  // Lệch hẳn hai bên: tay trái gập cao trước ngực, tay phải thấp và mở ra ngoài.
-  dem:        { vaiT: 126, khuyuT: -96, vaiP: 54,  khuyuP: 62 },    // một tay cao, một tay mở
-  suy_nghi:   { vaiT: 100, khuyuT: -6,  vaiP: 78,  khuyuP: -122 },  // tay chống cằm
-  nhun_vai:   { vaiT: 148, khuyuT: -80, vaiP: 32,  khuyuP: 80 },
-  gio_len:    { vaiT: 100, khuyuT: -6,  vaiP: -96, khuyuP: -12 },
-  khoanh_tay: { vaiT: 122, khuyuT: -96, vaiP: 58,  khuyuP: 96 },
-  // 30/8 — CHỐNG NẠNH: hai tay chống hông, khuỷu chĩa ra ngoài. Đây là tư thế ĐỨNG NGHE điển
-  // hình nhất của hoạt hình Mỹ, và nó giải đúng bài toán "người nghe không được nhấp nhô mà cũng
-  // không được thành tượng": một tư thế CÓ HÌNH, đọc ra ngay là đang chờ, mà đứng yên hoàn toàn.
-  chong_nanh: { vaiT: 134, khuyuT: -104, vaiP: 46, khuyuP: 104 },
-  // Nghiêng người dồn trọng tâm một chân, một tay buông một tay chống — dáng "chán rồi đấy".
-  ngan_ngam: { vaiT: 108, khuyuT: -14, vaiP: 44, khuyuP: 108 },
+  // ══ VIẾT LẠI TOÀN BẢNG — 30/8, sau khi anh nhắc lần thứ tư về tay ══════════════════════
+  // Anh: *"tự dưng dơ tay lên trời thấy lỗi… fix 1 lần triệt để"*. Trước nay tôi vá từng cử chỉ
+  // một, và mỗi lần vá xong lại còn một cái khác vung quá tay. Lần này sửa cả bảng theo MỘT
+  // luật, thay vì chỉnh từng dòng.
+  //
+  // QUY ƯỚC GÓC ở tệp này: **0° = thẳng lên trời · 90° = ngang vai · 180° = buông thẳng xuống.**
+  // Đọc lại bảng cũ theo quy ước ấy thì ra ngay thủ phạm:
+  //     chi:      vaiP = -86   → tay chỉ THẲNG LÊN TRỜI
+  //     gio_len:  vaiP = -96   → còn quá thẳng đứng
+  // Không ai vừa nói chuyện vừa giơ tay lên trời, trừ lúc hô khẩu hiệu.
+  //
+  // DẢI ĐÚNG cho người đang trò chuyện, đo từ chính phim tham khảo anh gửi:
+  //     buông tự nhiên  165–175°     ·  tay ngang ngực   110–135°
+  //     chỉ về phía kia  95–110°     ·  cao nhất cho phép      70°
+  // Dưới 70° là vung quá vai — chỉ dành cho một khoảnh khắc kinh ngạc, và cả bảng này không có
+  // khoảnh khắc nào như thế. Nên **không dòng nào dưới 70**, và đó là luật để lần sau ai đọc
+  // bảng cũng biết ngưỡng ở đâu.
+  nghi:       { vaiT: 168, khuyuT: -10, vaiP: 168, khuyuP: 10 },   // hai tay buông, hơi cong
+  chi:        { vaiT: 162, khuyuT: -12, vaiP: 104, khuyuP: -26 },  // chỉ NGANG về phía bạn diễn
+  mo_tay:     { vaiT: 128, khuyuT: -40, vaiP: 124, khuyuP: 40 },   // mở hai tay tầm ngực
+  dem:        { vaiT: 134, khuyuT: -58, vaiP: 118, khuyuP: 44 },   // hai tay trước ngực, lệch tầng
+  suy_nghi:   { vaiT: 166, khuyuT: -8,  vaiP: 140, khuyuP: -96 },  // một tay chống cằm
+  nhun_vai:   { vaiT: 122, khuyuT: -46, vaiP: 126, khuyuP: 46 },   // nhún: khuỷu gập, bàn ngửa
+  gio_len:    { vaiT: 150, khuyuT: -18, vaiP: 96,  khuyuP: -20 },  // nâng MỘT tay tầm vai, không cao hơn
+  khoanh_tay: { vaiT: 140, khuyuT: -78, vaiP: 132, khuyuP: 74 },   // khoanh trước ngực
+  chong_nanh: { vaiT: 146, khuyuT: -86, vaiP: 138, khuyuP: 84 },   // chống hông
+  ngan_ngam:  { vaiT: 170, khuyuT: -8,  vaiP: 144, khuyuP: 88 },   // một tay buông, một chống
 };
+
 
 const kep = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const trn = (a: number, b: number, t: number) => a + (b - a) * kep(t);
