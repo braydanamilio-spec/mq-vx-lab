@@ -365,6 +365,46 @@ def _ten_nguon(t: str) -> str:
     return t.upper() if (t.islower() and " " not in t and len(t) <= 12) else t
 
 
+# Từ báo hiệu bản ghi KHÔNG phải tiếng Anh. Danh sách hẹp có chủ đích: chỉ những từ vừa phổ
+# biến trong dữ liệu thực phẩm/hàng hoá Mỹ, vừa không bao giờ là một từ tiếng Anh. Rộng hơn thì
+# bắt đầu loại nhầm tên riêng hợp lệ, mà loại nhầm một mục đúng tệ hơn giữ lại một mục lạ.
+# Chỉ những từ vừa phổ biến trong dữ liệu hàng hoá Mỹ, vừa KHÔNG BAO GIỜ là một từ tiếng Anh.
+# Bản đầu có thêm "pauz" và "shing" — hai mảnh tên riêng, không phải từ ngoại ngữ — và chúng
+# loại nhầm `Wafers Shing` (một nhãn có "Wafers" hoàn toàn tiếng Anh). Loại nhầm một mục đúng
+# tệ hơn giữ lại một mục lạ: mục lạ chỉ khó đọc, mục bị loại thì biểu đồ mất một cột.
+_TU_NGOAI = ("cacahuete", "noir", "leche", "queso", "galleta", "bizcocho", "azucar",
+             "fromage", "beurre", "au lait", "sin azucar", "con leche")
+
+
+def _loc_du_lieu(ds: list) -> list:
+    """Bỏ bản ghi hỏng trước khi lên biểu đồ. Trả danh sách đã lọc (có thể rỗng)."""
+    import re as _re
+    ra = []
+    for t, g, h in ds:
+        low = str(t).lower()
+        if any(x in low for x in _TU_NGOAI):
+            continue
+        # Chữ ngoài bảng chữ cái Latin cơ bản sau khi đã bỏ dấu -> gần như chắc không phải tên
+        # tiếng Anh. Giữ dấu nháy, gạch ngang, phần trăm, số.
+        if _re.search(r"[^\x00-\x7F]", str(t)) and not _re.match(r"^[\w\s'\-%.,&]+$", str(t)):
+            continue
+        ra.append((t, g, h))
+    # Lọc chữ có thể ăn quá tay khi nguồn nhiều tên nước ngoài. Dưới bốn mục thì biểu đồ bốn
+    # cột không còn gì để so — lúc ấy TRẢ LẠI danh sách gốc và chỉ giữ phép lọc giá trị lạc,
+    # vì một nhãn khó đọc còn dùng được, còn một biểu đồ hai cột thì không.
+    if len(ra) < 4:
+        ra = list(ds)
+    if len(ra) < 3:
+        return ra
+    # GIÁ TRỊ LẠC: một bản ghi cao gấp nhiều lần phần còn lại gần như luôn là lỗi đơn vị, không
+    # phải một kỷ lục. Đo bằng cột thứ HAI chứ không bằng trung bình — trung bình đã bị chính
+    # giá trị lạc kéo lệch, nên nó không còn là thước đo đáng tin để phát hiện ra kẻ kéo nó.
+    gt = sorted((x[1] for x in ra), reverse=True)
+    if gt[1] > 0 and gt[0] / gt[1] > 6:
+        ra = [x for x in ra if x[1] != gt[0]]
+    return ra
+
+
 def _lam_sach_nhan(ds: list) -> list:
     """Dọn nhãn cột trước khi lên biểu đồ.
 
@@ -380,6 +420,18 @@ def _lam_sach_nhan(ds: list) -> list:
     import re as _re
     _DAU = str.maketrans("àáâãäåèéêëìíîïòóôõöùúûüýñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝÑÇ",
                          "aaaaaaeeeeiiiiooooouuuuyncAAAAAAEEEEIIIIOOOOOUUUUYNC")
+    # ══ HAI LƯỚI LỌC DỮ LIỆU, ĐẶT TRƯỚC MỌI VIỆC LÀM ĐẸP ═════════════════════════════════
+    # Khung đo được ở WHAT IS IN IT: cột đầu **14.747 cal** — không món ăn nào như thế; con số
+    # ấy là một bản ghi sai đơn vị trong nguồn (nhiều khả năng kilojoule). Hậu quả không dừng ở
+    # một cột sai: nó kéo trần biểu đồ lên cao gấp hai mươi lần, ba cột còn lại bẹp dí xuống
+    # đáy, và cả tấm biểu đồ thành vô dụng. **Một bản ghi hỏng giết cả khung hình.**
+    # Cùng khung ấy: `Cacahuetes`, `Pauz`, `Noir 82%` — tên tiếng Tây Ban Nha và tiếng Pháp lẫn
+    # trong dữ liệu USDA. Kênh nói tiếng Anh mà nhãn cột nửa nọ nửa kia thì người xem đọc ra là
+    # lỗi, không đọc ra là dữ liệu quốc tế.
+    #
+    # Cả hai lọc phải đứng TRƯỚC phần dọn nhãn: làm đẹp một bản ghi hỏng chỉ ra một bản ghi hỏng
+    # trông gọn gàng hơn.
+    ds = _loc_du_lieu(ds)
     ten = []
     for t, _g, _h in ds:
         t = str(t).translate(_DAU)
@@ -1309,7 +1361,7 @@ def main() -> int:
                 "vien_phi": "ong_nghe",
             }.get(k["kieu"], "the_deo")},
             "kieuGoc": k["kieu"], "bangMau": k["mau"],
-            "tieuDe": k["nhan"], "nguon": sl[2],
+            "tieuDe": k["nhan"], "nguon": _ten_nguon(sl[2]),
             "nhac": NHAC_V3.get(k["ten"], ""),
             "doVat": VAT_V3.get(k["ten"], ""),
             # Một nền cho cả video — cùng luật "một tập một địa điểm" đã chốt cho bộ hài
