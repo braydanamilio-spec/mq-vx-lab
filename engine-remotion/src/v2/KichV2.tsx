@@ -231,8 +231,22 @@ const CotNgang: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
             <rect x={0} y={2} width={Math.max(2, w)} height={DAY} rx={7}
                   fill={sang ? mau.nhan : "#F2C230"} stroke={mau.muc}
                   strokeWidth={sang ? 6 : 4} />
-            <text x={Math.max(2, w) + 12} y={DAY * 0.72} fontSize={sang ? 30 : 25}
-                  fontWeight={900} fill={mau.muc} opacity={moc}>{c.hien}</text>
+            {/* 30/8 — anh gửi khung "1262 cal" bị một đường dọc chặt đôi. Đường ấy là mép tấm
+                nền: số đặt SAU thanh, mà thanh dài thì số đẩy ra ngoài khung.
+                Chỗ đặt số phải phụ thuộc CÒN BAO NHIÊU CHỖ, không phải luôn đặt sau thanh.
+                Thanh dài thì số vào NẰM TRONG thanh (đổi sang màu nền cho đọc được); thanh
+                ngắn thì giữ nguyên bên ngoài. */}
+            {(() => {
+              const _w = Math.max(2, w);
+              const _rongChu = String(c.hien || "").length * (sang ? 16 : 13);
+              const _trong = _w + 12 + _rongChu > DAI - 6;
+              return (
+                <text x={_trong ? _w - 10 : _w + 12} y={DAY * 0.72}
+                      textAnchor={_trong ? "end" : "start"}
+                      fontSize={sang ? 30 : 25} fontWeight={900}
+                      fill={_trong ? "#FBF6EA" : mau.muc} opacity={moc}>{c.hien}</text>
+              );
+            })()}
           </g>
         );
       })}

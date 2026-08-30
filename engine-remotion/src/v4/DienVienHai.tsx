@@ -56,7 +56,12 @@ const CU_CHI_HAI: Record<string, { vaiT: number; khuyuT: number; vaiP: number; k
   nghi:       { vaiT: 100, khuyuT: -8,  vaiP: 80,  khuyuP: 8 },
   chi:        { vaiT: 104, khuyuT: -10, vaiP: -86, khuyuP: -18 },   // chỉ LÊN, không chỉ ngang
   mo_tay:     { vaiT: 142, khuyuT: -74, vaiP: 38,  khuyuP: 74 },    // dang rộng hai tay
-  dem:        { vaiT: 118, khuyuT: -88, vaiP: 62,  khuyuP: 88 },    // hai tay trước ngực
+  // 30/8 — anh gửi khung cận: hai bàn tay chụm lại trước bụng, trông như đang bấu vào nhau.
+  // Đây là tư thế "đếm" với hai cánh tay gập vào cùng một góc, nên hai bàn tay rơi về cùng một
+  // điểm giữa thân. Người thật khi nói không bao giờ để hai bàn tay chạm nhau ở giữa bụng —
+  // một tay bao giờ cũng cao hơn, xa hơn, và hai bàn tay cách nhau ít nhất một bàn tay.
+  // Lệch hẳn hai bên: tay trái gập cao trước ngực, tay phải thấp và mở ra ngoài.
+  dem:        { vaiT: 126, khuyuT: -96, vaiP: 54,  khuyuP: 62 },    // một tay cao, một tay mở
   suy_nghi:   { vaiT: 100, khuyuT: -6,  vaiP: 78,  khuyuP: -122 },  // tay chống cằm
   nhun_vai:   { vaiT: 148, khuyuT: -80, vaiP: 32,  khuyuP: 80 },
   gio_len:    { vaiT: 100, khuyuT: -6,  vaiP: -96, khuyuP: -12 },
