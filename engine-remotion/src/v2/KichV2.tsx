@@ -163,11 +163,19 @@ const SoTo: React.FC<{ so: string; nhan?: string; p: number; mau: Paltte }> = ({
 // Ba số dưới đây suy ra nhau, không phải ba số chỉnh tay độc lập — đó là lý do bản trước sai:
 // mỗi lần đổi một số lại phải nhớ đi sửa hai số kia, và có lần quên.
 const VB_PHAI = 500;              // mép phải viewBox dọc
-const NGUOI_PHAI = -196;          // mép phải nhân vật ở cỡ 1,42 (x = -362, nửa rộng ~166)
+const NGUOI_DAU = 470;            // đỉnh đầu nhân vật ở cỡ 1,42 — soi khung đo được
 const LE = 22;                    // khe hở để chart không dính người và không dính mép khung
 const CHART_RONG_GOC = 488;       // bề rộng tấm nền bốn cột trong hệ toạ độ riêng của nó
-const CHART_CO = Math.min(1.34, (VB_PHAI - LE - (NGUOI_PHAI + LE)) / CHART_RONG_GOC);
-const CHART_TAM = (NGUOI_PHAI + LE + VB_PHAI - LE) / 2;
+const CHART_DAY_GOC = 230;        // mép dưới tấm nền, tính từ gốc nhóm của nó
+const CHART_Y = 120;
+// Soi khung xong mới thấy tôi đã ràng buộc NHẦM TRỤC. Nhân vật chỉ chiếm góc DƯỚI trái — phần
+// trên bên trái bỏ trống hoàn toàn — nên chiều ngang không phải thứ giới hạn biểu đồ. Thứ giới
+// hạn là CHIỀU CAO: mép dưới bảng phải nằm trên đỉnh đầu nhân vật.
+// Ràng theo đúng trục ấy thì bảng rộng ra được một phần tám và trải gần hết bề ngang khung,
+// thay vì co lại tránh một người mà nó vốn không hề chạm tới.
+const CHART_CO = Math.min((NGUOI_DAU - LE - CHART_Y) / CHART_DAY_GOC,
+                          (2 * VB_PHAI - 2 * LE) / CHART_RONG_GOC);
+const CHART_TAM = 26;             // nhích phải một chút: mắt người đọc từ trái, chừa lối vào
 
 const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat?: number }> = ({ cot, p, mau, noiBat = 0 }) => {
   // ══════════════════════════════════════════════════════════════════════════════════════
@@ -344,6 +352,28 @@ export const KichV2: React.FC<PropsKich> = ({
   };
   const _nenToi = _lum(mau.troi[1]) < 0.16;
 
+  // ══ BIỂU ĐỒ PHẢI Ở LẠI, KHÔNG BIẾN MẤT NỬA VIDEO ══════════════════════════════════════
+  // Đếm ra: đúng BA TRÊN SÁU cảnh mỗi tập có dữ liệu. Nửa còn lại là ảnh nền, một nhân vật nhỏ
+  // ở góc, và một dòng phụ đề — bảy phần mười màn hình bỏ trống.
+  // Với mười kênh mà toàn bộ lý do người xem ở lại là CON SỐ, để nửa thời lượng không có con số
+  // nào là bỏ đi nửa giá trị. Và nó cũng chính là thứ anh gọi là "nhìn bị tĩnh chán": không có
+  // gì đổi vì không có gì ở đó cả.
+  // Các kênh dữ liệu thật làm ngược lại: BIỂU ĐỒ Ở LẠI, lời dẫn đi qua từng phần của nó. Nên
+  // cảnh nào không có bảng riêng thì mượn bảng của cảnh gần nhất có — và cột nổi bật vẫn đổi
+  // theo câu, nên bảng không đứng chết mà được "đọc" dần.
+  let _cot = C.cot, _iCot = i, _pCot = p;
+  if (!_cot) {
+    for (let k = i - 1; k >= 0; k--) {
+      if (canh[k]?.cot) { _cot = canh[k].cot; _iCot = k; break; }
+    }
+    // Bảng mượn đã mọc xong từ cảnh trước rồi — cho `p` = 1 để nó không mọc lại từ đầu mỗi lần
+    // chuyển cảnh, thứ sẽ đọc ra là biểu đồ nhấp nháy.
+    _pCot = 1;
+  }
+  // Cột nổi bật khi cảnh không tự khai: xoay theo thứ tự cảnh, để mỗi câu dẫn mắt sang một cột
+  // khác thay vì soi mãi một chỗ.
+  const _noiBatKe = _cot ? (i - _iCot) % Math.min(4, _cot.length) : 0;
+
   const noi = visemeTai(tu, giay, CAM_XUC[C.camXuc || "trung_tinh"].ha);
   const nhin = C.nhin || [0, 0];
 
@@ -489,9 +519,9 @@ export const KichV2: React.FC<PropsKich> = ({
             phần bị đẩy ra.
             Nay hai con số cùng suy từ một chỗ: nhân vật đứng ở TRAI_MEP, chart lấy trọn phần
             còn lại và căn giữa phần ấy. Đổi cỡ nhân vật thì chart tự dịch theo. */}
-        {C.cot ? (
-          <g transform={`translate(${doc ? CHART_TAM : 150} ${doc ? 120 : 84}) scale(${doc ? CHART_CO : 1.02})`}>
-            <CotDaoCu cot={C.cot} p={p} mau={mau} noiBat={C.noiBat ?? 0} />
+        {_cot ? (
+          <g transform={`translate(${doc ? CHART_TAM : 150} ${doc ? CHART_Y : 84}) scale(${doc ? CHART_CO : 1.02})`}>
+            <CotDaoCu cot={_cot} p={_pCot} mau={mau} noiBat={C.noiBat ?? _noiBatKe} />
           </g>
         ) : null}
         {C.soLon ? (

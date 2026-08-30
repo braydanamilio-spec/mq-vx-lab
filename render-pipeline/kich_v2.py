@@ -461,6 +461,18 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
 # CHỪA KHOẢNG TRỐNG BÊN PHẢI cho biểu đồ, vì bộ này luôn có một bảng số đè lên nền.
 # Từ nào báo hiệu chủ đề có BỀ MẶT IN ĐƯỢC — thấy nó thì phải ép bao bì trơn (luật 7ay).
 # Khai ở TẦNG MODULE vì hai hàm vẽ nền đều cần: để trong thân một hàm thì hàm kia không thấy.
+# ══ CÂU CẤM CHỮ — MỘT BẢN DUY NHẤT ════════════════════════════════════════════════════════
+# 30/8 — soi khung thấy "COMPANT" trên tường một tập FINE PRINT. Câu cấm chữ ĐÃ có, nhưng nó tồn
+# tại ở HAI BẢN: bản đầy đủ ở `ve_nen_v3`, và một bản rút gọn ở `ve_nen_moi_cau` thiếu hẳn
+# "no shop signs, no window text". Mà `ve_nen_moi_cau` chính là đường đang chạy — nên suốt thời
+# gian qua nền được vẽ bằng bản YẾU HƠN của chính câu cấm mình đã viết.
+# Đây đúng dạng lỗi ghi ở luật 7bf: sửa một chỗ mà không đi soi mọi chỗ cùng dạng. Hai bản của
+# một quy tắc thì bản nào cũng có ngày là bản bị bỏ quên. Nay chỉ còn một.
+CAM_CHU = (", no signs on walls, no lettering anywhere in the scene, no shop signs, "
+           "no window text, no posters, no framed text, no labels on furniture, blank walls")
+CAM_BAO_BI = (", all packaging completely blank and unbranded, plain white and solid colour "
+              "surfaces, no labels, no printed text on any package")
+
 _CO_BAO = ("packet", "package", "packaging", "box", "boxes", "bottle", "can ", "cans",
            "carton", "label", "product", "shelf", "shelves", "grocer", "snack", "brand")
 _SAN_V3 = ("wide shot, camera at standing eye level, floor clearly visible across the lower "
@@ -661,9 +673,9 @@ def ve_nen_moi_cau(k: dict, DS, canh_ds: list) -> list:
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.append(rel)
             continue
-        _them = (", no signs on walls, no lettering anywhere, blank walls")
+        _them = CAM_CHU
         if any(x in canh.lower() for x in _CO_BAO):
-            _them += ", all packaging completely blank and unbranded, no printed text"
+            _them += CAM_BAO_BI
         ok = None
         for _l in range(2):
             try:
@@ -778,11 +790,9 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
         # Bài học lặp lại lần thứ ba (luật 7t · 7w · 7ay): chỗ nào có MẶT PHẲNG là chỗ đó có thể
         # mọc chữ, mà mọi bối cảnh trong nhà đều có tường. Nên câu cấm chữ phải áp cho TẤT CẢ,
         # còn câu cấm bao-bì chỉ là phần cộng thêm khi chủ đề nhắc tới hàng hoá.
-        _them = (", no signs on walls, no lettering anywhere in the scene, no shop signs, "
-                 "no window text, blank walls")
+        _them = CAM_CHU
         if any(x in chu_de.lower() for x in _CO_BAO):
-            _them += (", all packaging completely blank and unbranded, plain white and solid "
-                      "colour surfaces, no labels, no printed text on any package")
+            _them += CAM_BAO_BI
         _pr = f"{chu_de}, seen in a {k['ten'].split()[0].lower()} setting{_them}"
         ok = None
         for _lan in range(2):

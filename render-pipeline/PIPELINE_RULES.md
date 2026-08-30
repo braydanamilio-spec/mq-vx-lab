@@ -5022,3 +5022,48 @@ Cách viết an toàn, từ nay:
 {/* chú thích đặt Ở NGOÀI, ngang hàng với biểu thức */}
 {dieuKien ? (<g …/>) : null}
 ```
+
+### 7bq. NỬA SỐ CẢNH KHÔNG CÓ DỮ LIỆU, Ở MƯỜI KÊNH SỐNG BẰNG DỮ LIỆU
+
+Anh: *"nhiều channel bối cảnh ảnh chưa thay đổi sau mỗi câu thoại nhìn bị tĩnh chán"*.
+
+Soi khung thì thấy chuyện khác hẳn, và nặng hơn: **3 trên 6 cảnh mỗi tập không có biểu đồ, không
+có con số, không có gì.** Nền, một nhân vật nhỏ ở góc, một dòng phụ đề — bảy phần mười màn hình
+bỏ trống, đúng nửa thời lượng video.
+
+Với mười kênh mà **toàn bộ lý do người xem ở lại là con số**, để nửa thời lượng không có con số
+nào là bỏ đi nửa giá trị. Và nó cũng chính là cái anh gọi là "tĩnh": **không có gì đổi vì không
+có gì ở đó cả.**
+
+Các kênh dữ liệu thật làm ngược lại — **biểu đồ ở lại, lời dẫn đi qua từng phần của nó.** Nay
+cảnh nào không có bảng riêng thì mượn bảng của cảnh gần nhất có, và cột nổi bật vẫn xoay theo
+câu, nên bảng được "đọc" dần thay vì đứng chết.
+
+### 7br. RÀNG BUỘC NHẦM TRỤC
+
+Sửa chart tràn khung xong, tôi ràng cỡ nó theo **chiều ngang** — chừa chỗ cho nhân vật ở bên
+trái. Soi khung mới thấy nhân vật chỉ chiếm góc **dưới** trái; **cả vùng trên bên trái bỏ trống**,
+và biểu đồ chưa bao giờ chạm tới nhân vật.
+
+Thứ thật sự giới hạn là **chiều cao**: mép dưới bảng phải nằm trên đỉnh đầu nhân vật. Ràng đúng
+trục thì bảng rộng thêm 7% và trải gần hết bề ngang khung, thay vì co lại để tránh một người mà
+nó vốn không hề chạm.
+
+**Trước khi tính một ràng buộc, hãy soi khung xem hai vật có thật sự gặp nhau ở trục ấy không.**
+Tôi đã tính rất kỹ — trên trục sai.
+
+### 7bs. HAI BẢN CỦA MỘT QUY TẮC THÌ CÓ NGÀY BẢN YẾU LÀ BẢN ĐANG CHẠY
+
+Soi khung FINE PRINT thấy chữ **"COMPANT"** trên tường. Câu cấm chữ **đã có** — và đó mới là chỗ
+đáng ghi: nó tồn tại ở **hai bản**.
+
+| | |
+|---|---|
+| `ve_nen_v3` | `no signs on walls, no lettering anywhere in the scene, **no shop signs, no window text**, blank walls` |
+| `ve_nen_moi_cau` | `no signs on walls, no lettering anywhere, blank walls` |
+
+Bản thứ hai thiếu hẳn hai vế — **và nó chính là đường đang chạy**. Suốt thời gian qua nền được vẽ
+bằng bản yếu hơn của chính câu cấm mình đã viết.
+
+Cùng gốc với luật **7bf**: sửa một chỗ mà không đi soi mọi chỗ cùng dạng. Nay chỉ còn một hằng số
+`CAM_CHU`, và cây thước đếm số bản để không mọc lại bản thứ hai.
