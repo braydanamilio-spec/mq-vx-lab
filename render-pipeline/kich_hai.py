@@ -1494,7 +1494,25 @@ def main() -> int:
         _canhDS = canh_moi_luot_ai(k, _kb0, keys)
         for _i4, _c4 in enumerate(_canhDS):
             print(f"   🧭 {_i4+1}. {_c4[:60]}")
-        nenLuot = ve_nen_moi_luot(k, DS, _canhDS) if _canhDS else []
+        # ══ MỘT BỐI CẢNH CHO CẢ TẬP — 30/8, sau khi anh gửi ba phim ngắn tham khảo ═══════
+        # Đo trên chính ba phim ấy: 11 giây / **KHÔNG một lần đổi cảnh**; phim dài 18 giây có ba
+        # lần, mà cả ba chỉ là đổi CỠ MÁY trong cùng một phòng khách. Hình của họ đơn giản hơn
+        # của mình, có chỗ còn thô hơn — mà xem vào là hiểu ngay và cười ngay.
+        #
+        # Lý do không nằm ở chất lượng vẽ: **họ giữ khung yên để người xem nghe được lời.**
+        # Mình đổi khung mỗi lượt nên người xem không kịp bám vào đâu, và mỗi cảnh chỉ sống hai
+        # ba giây thì cảnh nào cũng lộ ra là yếu. Đổi cảnh liên tục KHÔNG che được hình yếu —
+        # nó phơi hình yếu ra sáu lần thay vì một.
+        #
+        # Đây đảo ngược yêu cầu trước của anh ("nói hết một câu thì đổi nền"). Yêu cầu ấy sinh
+        # ra từ triệu chứng ĐÚNG — anh thấy tĩnh và chán — nhưng nguyên nhân thì khác: cái tĩnh
+        # đến từ nhân vật diễn nhạt, không từ nền đứng yên. Ba phim kia có nền bất động suốt mà
+        # không giây nào tĩnh, vì nhân vật diễn liên tục.
+        # Nhịp thị giác từ nay do CỠ MÁY và DIỄN XUẤT gánh, không do đổi địa điểm.
+        # Vẽ ĐÚNG MỘT nền rồi phát cho mọi lượt. Số lượt lấy từ `_canhDS` — danh sách cảnh mô
+        # hình vừa trả — chứ không từ `luot`, vì `luot` mãi dòng dưới mới dựng xong.
+        _nenMot = ve_nen_moi_luot(k, DS, _canhDS[:1]) if _canhDS else []
+        nenLuot = ([_nenMot[0]] * max(1, len(_canhDS))) if (_nenMot and _nenMot[0]) else []
         # Nền cố định của kênh làm đường lui cho lượt nào mô hình không trả hoặc vẽ hỏng.
         nen = ve_nen(k, DS, keys, "") if (not nenLuot or not all(nenLuot)) else []
         if a.nen:
@@ -1565,9 +1583,16 @@ def main() -> int:
         # Ép hình theo bảng giới tính. Làm ở đây, một chỗ, thay vì đi sửa hai mươi dòng `_BONG`
         # — sửa tay thì lần thêm kênh thứ mười một lại quên, còn ép ở đây thì không quên được.
         for _b, _g in zip(_BONG.get(k["de"], ({}, {})), GIOI.get(k["de"], ("nam", "nam"))):
+            # Truyền `gioi` xuống engine — nó quyết bề ngang vai, độ nở hông và cỡ đầu, tức là
+            # những thứ đọc được từ xa. Trước đây bảng này chỉ dùng để XOÁ râu cho nhân vật nữ:
+            # sửa được một lỗi thô, mà không giải được việc "nhìn là biết nam hay nữ".
+            _b["gioi"] = _g
             if _g == "nu":
                 _b["rau"] = ""
-                _b.setdefault("kieuToc", "dai")
+                # Nữ mà tóc ngắn kiểu nam là mất luôn dấu hiệu đọc-từ-xa mạnh nhất. Ép sang một
+                # kiểu tóc dài nếu bảng chưa chọn kiểu nào thuộc nhóm nữ.
+                if _b.get("kieuToc") not in ("duoi_ngua", "bui", "bob", "xoan"):
+                    _b["kieuToc"] = "bob"
             else:
                 _b.setdefault("kieuToc", "ngan")
 

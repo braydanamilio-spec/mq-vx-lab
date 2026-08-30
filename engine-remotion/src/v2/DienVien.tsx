@@ -56,14 +56,14 @@ export type TenCamXuc =
 export const CAM_XUC: Record<TenCamXuc, {
   may: number; mayCao: number; mi: number; khoe: number; ha: number; nghieng: number; than: number;
 }> = {
-  trung_tinh: { may: 0, mayCao: 0, mi: 0.08, khoe: 0.1, ha: 0.05, nghieng: 0, than: 0 },
-  vui: { may: -4, mayCao: 2.5, mi: 0.22, khoe: 1, ha: 0.22, nghieng: -3, than: -1.5 },
-  buon: { may: 12, mayCao: -3, mi: 0.34, khoe: -0.8, ha: 0.04, nghieng: 6, than: 3 },
-  so: { may: 16, mayCao: 5, mi: -0.16, khoe: -0.5, ha: 0.42, nghieng: -2, than: 5 },
-  tuc: { may: -18, mayCao: -4, mi: 0.02, khoe: -0.65, ha: 0.1, nghieng: 0, than: -4 },
-  bat_ngo: { may: 2, mayCao: 8, mi: -0.24, khoe: 0.1, ha: 0.62, nghieng: -1, than: -2 },
-  nghi_ngo: { may: -6, mayCao: 3, mi: 0.3, khoe: -0.15, ha: 0.04, nghieng: 7, than: 1 },
-  tu_tin: { may: -3, mayCao: 1, mi: 0.06, khoe: 0.55, ha: 0.06, nghieng: -2, than: -2.5 },
+  trung_tinh: { may: 0.0, mayCao: 0.0, mi: 0.08, khoe: 0.1, ha: 0.08, nghieng: 0, than: 0 },
+  vui: { may: -6.4, mayCao: 4.0, mi: 0.22, khoe: 1, ha: 0.35, nghieng: -3, than: -1.5 },
+  buon: { may: 19.2, mayCao: -4.8, mi: 0.34, khoe: -0.8, ha: 0.06, nghieng: 6, than: 3 },
+  so: { may: 25.6, mayCao: 8.0, mi: -0.16, khoe: -0.5, ha: 0.67, nghieng: -2, than: 5 },
+  tuc: { may: -28.8, mayCao: -6.4, mi: 0.02, khoe: -0.65, ha: 0.16, nghieng: 0, than: -4 },
+  bat_ngo: { may: 3.2, mayCao: 12.8, mi: -0.24, khoe: 0.1, ha: 0.99, nghieng: -1, than: -2 },
+  nghi_ngo: { may: -9.6, mayCao: 4.8, mi: 0.3, khoe: -0.15, ha: 0.06, nghieng: 7, than: 1 },
+  tu_tin: { may: -4.8, mayCao: 1.6, mi: 0.06, khoe: 0.55, ha: 0.1, nghieng: -2, than: -2.5 },
 };
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -203,6 +203,14 @@ export type Kieu = {
   // mày. Một cái mũi củ hành và một cái mũi nhọn cho ra hai người khác hẳn dù mọi thứ khác
   // giống nhau. Nên thêm đúng ba trục ấy, mỗi trục vài kiểu — mười kênh chọn mười tổ hợp.
   kieuMui?: "moc" | "cu" | "nhon" | "hat" | "quap";
+  // ══ GIỚI VÀ TUỔI — đọc được trong một giây ════════════════════════════════════════════
+  // Anh: *"nhân vật nam và nữ hay con nít nhìn là phân biệt được rõ, ko phải na ná"*.
+  // Ba phim ngắn anh gửi giải việc này bằng đúng hai thứ, cả hai đọc được ở cỡ nhỏ: MÁI TÓC
+  // và DÁNG NGƯỜI. Bộ của mình trước nay phân biệt bằng màu áo, kính và râu — cả ba là chi
+  // tiết nhỏ, và ở khổ dọc trên điện thoại chúng biến mất trước tiên. Đó là gốc của "na ná".
+  // Trẻ con có dấu hiệu mạnh hơn mọi thứ: TỈ LỆ ĐẦU TRÊN THÂN (người lớn ~1:7, trẻ ~1:4) —
+  // mắt đọc tỉ lệ ấy trước cả khi kịp nhìn mặt.
+  gioi?: "nam" | "nu" | "tre";
   kieuMat?: "bau" | "tron" | "hep" | "xech";
   kieuMay?: "day" | "manh" | "xech" | "ru";
   tiLeDau?: number;                 // 0.9 = đầu nhỏ (dáng người lớn) · 1.12 = đầu to (trẻ, hài)

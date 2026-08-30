@@ -178,13 +178,31 @@ export const DienVienHai: React.FC<PropsHai> = ({
     vaiP: trn(_G0.vaiP, _G1.vaiP, _q) + _tho(3.1),
     khuyuP: trn(_G0.khuyuP, _G1.khuyuP, _q) + _tho(4.6),
   };
-  const cao = kieu.cao ?? 1;
-  const ngang = kieu.beNgang ?? 1;
+  // ══ NHÌN MỘT GIÂY PHẢI BIẾT NAM · NỮ · TRẺ CON ═══════════════════════════════════════
+  // Anh: *"nhân vật nam và nữ hay con nít nhìn là phân biệt được rõ, ko phải na ná"*.
+  // Trong ba phim ngắn anh gửi, việc này được giải bằng đúng hai thứ — và cả hai đọc được ở
+  // cỡ nhỏ: **mái tóc** (nữ tóc dài phủ vai, nam tóc ngắn dựng) và **DÁNG NGƯỜI** (nữ vai hẹp
+  // hông rộng, nam vai rộng thân thẳng).
+  // Bộ của mình trước nay phân biệt bằng màu áo, kính và râu — cả ba đều là chi tiết NHỎ, và
+  // ở khổ dọc trên điện thoại thì chúng biến mất trước tiên. Đó là lý do mười kênh "na ná".
+  //
+  // Trẻ con thì có một dấu hiệu mạnh hơn mọi thứ khác: **tỉ lệ đầu trên thân**. Người lớn
+  // khoảng 1:7, trẻ con 1:4 — mắt người đọc tỉ lệ ấy trước cả khi kịp nhìn mặt. Bảng cũ có
+  // `tiLeDau` nhưng chỉ dùng trong dải 0,92–1,1: đủ để tách hai người lớn, không đủ để nói
+  // "đây là một đứa trẻ".
+  const _gioi = kieu.gioi || "nam";
+  const _nu = _gioi === "nu";
+  const _tre = _gioi === "tre";
+  const cao = (kieu.cao ?? 1) * (_tre ? 0.74 : 1);
+  // Nữ: vai hẹp lại, thân thon. Trẻ con: người ngắn và tròn hơn.
+  const ngang = (kieu.beNgang ?? 1) * (_nu ? 0.9 : 1) * (_tre ? 1.06 : 1);
+  const _vaiHep = _nu ? 0.82 : 1;                 // bề ngang vai — dấu hiệu giới đọc từ xa
+  const _hongRong = _nu ? 1.16 : 1;
   const matTo = kieu.matTo ?? 1;
   const camV = kieu.cam ?? 0.4;
   // Đầu to/nhỏ là trục đổi TUỔI mạnh nhất: đầu to đọc ra là trẻ con và hài, đầu nhỏ đọc ra là
   // người lớn nghiêm. Rẻ hơn nhiều so với vẽ lại toàn bộ nét mặt.
-  const R_DAU = R_DAU_GOC * (kieu.tiLeDau ?? 1);
+  const R_DAU = R_DAU_GOC * (kieu.tiLeDau ?? 1) * (_tre ? 1.34 : 1);
   const kMui = kieu.kieuMui || "moc";
   const kMat = kieu.kieuMat || "bau";
   const kMay = kieu.kieuMay || "day";
@@ -275,7 +293,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // Điểm gắn tay phải nằm NGOÀI mép thân, không thì cánh tay chạy chìm trong thân và bàn tay
   // đọc ra là dính vào hông. Và tay phải đủ DÀI: tay ngắn làm nhân vật đọc ra là mập lùn kể cả
   // khi thân đúng tỉ lệ — đây là chỗ bản đầu sai.
-  const rongVai = 50 * ngang;
+  const rongVai = 50 * ngang * _vaiHep;
   const vaiT: [number, number] = [vai[0] - rongVai - 4, vai[1] + 8];
   const vaiP: [number, number] = [vai[0] + rongVai + 4, vai[1] + 8];
   const dtay = 86 * cao, dcang = 80 * cao;
@@ -301,7 +319,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const khuyuP = P(vaiP[0], vaiP[1], dtay, gocVP);
   const tayP = P(khuyuP[0], khuyuP[1], dcang, gocVP + gocKP);
 
-  const rongHong = 30 * ngang;
+  const rongHong = 30 * ngang * _hongRong;
   const goiT: [number, number] = [hong[0] - rongHong + dapT * sai * 0.5, hong[1] + 82 * cao - nhacT * 0.5];
   const goiP: [number, number] = [hong[0] + rongHong + dapP * sai * 0.5, hong[1] + 82 * cao - nhacP * 0.5];
   const chanT: [number, number] = [hong[0] - rongHong - 2 + dapT * sai, -4 - nhacT];
@@ -384,7 +402,16 @@ export const DienVienHai: React.FC<PropsHai> = ({
   );
 
   // ── MẶT ────────────────────────────────────────────────────────────────────────────────
-  const mx = kep(nhin[0], -1, 1) * 7;
+  // 30/8 — Anh: *"khi đối thoại nhân vật quay mặt vào nhau chứ ko phải quay đơ ra trước màn
+  // hình"*. Đo ra thì hướng nhìn ĐÃ được truyền đúng ý ở `KichHai` — nhưng nhân vật bên phải
+  // được vẽ bằng phép LẬT NGANG (`scale(-x)`), và phép lật đảo luôn dấu của con ngươi.
+  // Nên `nhin[0] = -0.3` (ý là "nhìn sang trái, về phía bạn diễn") sau khi lật hiện ra thành
+  // nhìn sang PHẢI — tức nhìn ra khỏi khung, quay lưng lại với người đang nói chuyện với mình.
+  // Hai người cùng nhìn ra hai phía ngược nhau thì không đọc ra là đối thoại; nó đọc ra là hai
+  // người đứng cạnh nhau nói với ai đó ngoài màn hình.
+  // Bù dấu ngay tại đây — nơi biết mình có bị lật hay không — thay vì bắt mọi chỗ gọi phải nhớ.
+  const _huong = lat ? -1 : 1;
+  const mx = kep(nhin[0], -1, 1) * 7 * _huong;
   const my = kep(nhin[1], -1, 1) * 5;
   // 30/8 — MẮT NHỎ LẠI. Bản trước mắt + gọng kính chiếm 83% bề ngang đầu; mắt to là đúng
   // hướng nhưng quá tay thì đọc ra là mắt lồi ra khỏi mặt chứ không phải dễ thương. Dải đẹp
@@ -781,6 +808,8 @@ export const DienVienHai: React.FC<PropsHai> = ({
         ) : null}
 
         {/* TÓC — đặt CUỐI cùng để nó phủ lên mép sọ, đúng như tóc thật phủ lên trán. */}
+        {/* Con ngươi liếc sang là chưa đủ: người thật QUAY ĐẦU về phía người mình đang nói
+            chuyện. Một góc nhỏ thôi — quay nhiều thành nhìn nghiêng, mất mặt. */}
         <Toc kieu={kieu} dau={dau} R={R_DAU} V={V} NG={NG} t={t} />
         {/* 30/8 — MŨ. Kiểu `Kieu` khai trường `mu` từ lâu, bảng nhân vật gán nó, JSON mang nó
             sang tận đây — mà ENGINE CHƯA BAO GIỜ VẼ. Dữ liệu đúng, hình thiếu, không một lời

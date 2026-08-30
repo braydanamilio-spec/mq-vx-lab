@@ -298,6 +298,53 @@ def lay_so_lieu(nguon: str, D):
 #   • phần giải thích ở cỡ TRUNG với cử chỉ tay — tay dẫn mắt người xem tới biểu đồ;
 #   • câu chốt ở cỡ CẬN, cảm xúc TỰ TIN — người xem nhớ khuôn mặt lúc kết.
 # ══════════════════════════════════════════════════════════════════════════════════════════
+def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
+    """Lấy số liệu của một kênh THẾ HỆ 2 và trả về đúng khuôn `lay_so_lieu` — để 50 kênh ấy
+    dựng được bằng chính đường của mười kênh phân tích.
+
+    VÌ SAO NỐI Ở ĐÂY, KHÔNG VIẾT ENGINE MỚI (30/8/2026)
+    ---------------------------------------------------
+    Anh muốn 50 kênh nâng cấp sang kiểu mười kênh phân tích. Phản xạ đầu tiên là viết một dạng
+    render mới — và đó sẽ là sai lầm đắt nhất trong ngày, vì nó đẻ ra **bản thứ hai** của toàn
+    bộ đường dựng: giọng, karaoke, cảm xúc, cử chỉ, nền theo câu, biểu đồ, thước chấm. Hai bản
+    thì mọi lần sửa sau này phải nhớ sửa cả hai — đúng cái bệnh đã trả giá bốn lần hôm nay
+    (câu cấm chữ ba bản, câu góc máy bốn mươi bản).
+    Nhìn kỹ thì `main()` có ĐÚNG MỘT điểm nối với nguồn dữ liệu:
+
+        sl = lay_so_lieu(k["nguon"], D)     # -> (tiêu đề, [(tên, giá trị, chữ hiện)], nguồn)
+
+    Mà `story` của thế hệ 2 đã có sẵn cả ba: `title`, `items[].name/stat`, `nguon`. Nên việc cần
+    làm chỉ là một hàm CHUYỂN KHUÔN. Không dòng nào của đường dựng phải đổi, và mọi cải tiến từ
+    nay áp cho cả sáu mươi kênh cùng lúc.
+    """
+    import re as _re
+    import the_he_2 as T2
+    k2 = T2.doc_kenh(ten_kenh)
+    if not k2:
+        return None
+    st = T2._dung_story_xoay(k2.get("dinh_dang"), k2, None, list(avoid or []))
+    if not st:
+        return None
+    ds = []
+    for it in (st.get("items") or []):
+        hien = str(it.get("stat") or "").strip()
+        # Giá trị SỐ rút từ chữ hiện: "351 cal" -> 351.0, "$1.2M" -> 1.2. Biểu đồ cần con số để
+        # tính chiều cao cột; chữ hiện giữ nguyên đơn vị để người xem đọc đúng thứ nguồn nói.
+        m = _re.search(r"-?[\d,]+\.?\d*", hien.replace(",", ""))
+        if not m:
+            continue
+        try:
+            gt = float(m.group(0))
+        except ValueError:
+            continue
+        ten = str(it.get("name") or "").strip()
+        if ten:
+            ds.append((ten, gt, hien))
+    if len(ds) < 3:
+        return None          # dưới ba cột thì không có gì để so — bỏ lượt, không bịa thêm
+    return (str(st.get("title") or ten_kenh), ds, str(st.get("nguon") or ""))
+
+
 def _nhan_gon(t: str, tran: int = 18) -> str:
     """Nhãn dưới con số lớn — CẮT THEO TỪ. Cắt cứng cho ra "MIDWEST POULTRY SE", "COURT OF
     APPEALS F", "ARTIFICIAL INTELLI": chữ đứt ngang ngay dưới con số to nhất khung."""
@@ -891,6 +938,7 @@ def main() -> int:
     ap.add_argument("--kenh", default="", help="chỉ kênh này (tên viết liền)")
     ap.add_argument("--luong", type=int, default=2)
     ap.add_argument("--nen", action="store_true", help="chỉ vẽ + cache nền ảnh, không render")
+    ap.add_argument("--gen2", default="", help="dựng kênh THẾ HỆ 2 bằng đường này (tên, cách nhau bởi dấu phẩy)")
     a = ap.parse_args()
 
     import du_lieu_mo as D
@@ -911,7 +959,39 @@ def main() -> int:
         print(f"   ⚠️ không nạp được kho khoá vẽ: {str(e)[:60]}")
 
     chon = KENH
-    if a.kenh:
+    if a.gen2:
+        # Kênh thế hệ 2 mượn đường dựng này. Chúng KHÔNG có mục trong `KENH`, nên dựng một mục
+        # tạm mang đủ thứ đường dựng cần: kiểu nhân vật, bảng màu, bối cảnh.
+        # Ba trường ấy suy từ chính hồ sơ kênh thế hệ 2 chứ không bốc bừa — một kênh nói về giá
+        # nhà mà người dẫn mặc áo blouse phòng thí nghiệm thì hỏng đúng thứ anh dặn giữ.
+        import the_he_2 as _T2
+        _NGHE_THEO_NGUON = {
+            "usda": ("y_ta", "ke_sieu_thi"), "openfda": ("y_ta", "van_phong"),
+            "bls": ("bank", "ban_lam_viec"), "worldbank": ("bank", "van_phong"),
+            "usaspending": ("cong_to", "van_phong"), "court": ("tham_phan", "phong_xu"),
+            "zillow": ("hang_xom", "san_sau"), "wikipedia": ("khoa_hoc", "thu_phong"),
+            "nasa": ("sao_dem", "san_thuong"), "fdic": ("bank", "quay"),
+        }
+        _MAU_THEO_NGUON = {
+            "usda": "ke_sieu_thi", "openfda": "van_phong", "bls": "ngan_hang",
+            "worldbank": "van_phong", "usaspending": "van_phong", "court": "luat",
+            "zillow": "san_sau", "wikipedia": "thu_phong", "nasa": "san_thuong",
+            "fdic": "ngan_hang",
+        }
+        chon = []
+        for _t in [x.strip() for x in a.gen2.split(",") if x.strip()]:
+            _k2 = _T2.doc_kenh(_t)
+            if not _k2:
+                print(f"   ⚠️ không có kênh thế hệ 2 tên {_t!r}")
+                continue
+            _ng = str(_k2.get("nguon") or "")
+            _kieu, _boi = _NGHE_THEO_NGUON.get(_ng, ("bank", "van_phong"))
+            chon.append({"ten": _k2["ten"], "handle": _k2.get("handle", ""),
+                         "nhan": _k2.get("goc_nhin") or _k2["ten"],
+                         "kieu": _kieu, "boi": [_boi, "ban_lam_viec", "van_phong"],
+                         "mau": _MAU_THEO_NGUON.get(_ng, "van_phong"),
+                         "nguon": _ng, "hoi": _k2.get("goc_nhin") or "", "_gen2": True})
+    elif a.kenh:
         vt = {x.strip().upper() for x in a.kenh.split(",")}
         chon = [k for k in KENH if k["ten"].replace(" ", "").upper() in vt]
     if not chon:
@@ -925,7 +1005,8 @@ def main() -> int:
         if a.nen:
             ve_nen_v3(k, DS, keys)
             continue
-        sl = lay_so_lieu(k["nguon"], D)
+        sl = (so_lieu_tu_gen2(k["ten"], avoid=[]) if k.get("_gen2")
+              else lay_so_lieu(k["nguon"], D))
         if not sl:
             print(f"   ⚠️ {ten}: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)")
             continue
