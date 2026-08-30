@@ -1064,13 +1064,14 @@ def ve_nen_moi_cau(k: dict, DS, canh_ds: list) -> list:
             _dau = dest + ".ok"
             if not os.path.exists(_dau):
                 import kich_hai as _KHc
-                if _KHc._co_chu(dest):
+                _kq = _KHc._co_chu(dest)
+                if _kq is True:
                     try:
                         os.remove(dest)
                     except OSError:
                         pass
-                else:
-                    io.open(_dau, "w").write("1")
+                elif _kq is False:
+                    io.open(_dau, "w").write("1")   # chỉ đóng dấu khi CHẮC CHẮN sạch
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.append(rel)
             continue
@@ -1139,13 +1140,14 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
             _dau = dest + ".ok"
             if not os.path.exists(_dau):
                 import kich_hai as _KHc
-                if _KHc._co_chu(dest):
+                _kq = _KHc._co_chu(dest)
+                if _kq is True:
                     try:
                         os.remove(dest)
                     except OSError:
                         pass
-                else:
-                    io.open(_dau, "w").write("1")
+                elif _kq is False:
+                    io.open(_dau, "w").write("1")   # chỉ đóng dấu khi CHẮC CHẮN sạch
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.append(rel)
             continue
@@ -1192,13 +1194,14 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
             _dau = dest + ".ok"
             if not os.path.exists(_dau):
                 import kich_hai as _KHc
-                if _KHc._co_chu(dest):
+                _kq = _KHc._co_chu(dest)
+                if _kq is True:
                     try:
                         os.remove(dest)
                     except OSError:
                         pass
-                else:
-                    io.open(_dau, "w").write("1")
+                elif _kq is False:
+                    io.open(_dau, "w").write("1")   # chỉ đóng dấu khi CHẮC CHẮN sạch
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.insert(0, rel)
             return ra

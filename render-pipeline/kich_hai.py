@@ -681,13 +681,19 @@ def ve_nen_moi_luot(k: dict, DS, canh_ds: list) -> list:
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             _dau = dest + ".ok"
             if not os.path.exists(_dau):
-                if _co_chu(dest):
+                _kq = _co_chu(dest)
+                if _kq is True:
                     try:
                         os.remove(dest)
                     except OSError:
                         pass
+                elif _kq is False:
+                    io.open(_dau, "w").write("1")     # chỉ đóng dấu khi CHẮC CHẮN sạch
                 else:
-                    io.open(_dau, "w").write("1")
+                    _co_chu._cam = getattr(_co_chu, "_cam", 0) + 1
+                    if _co_chu._cam == 1:
+                        print("   ⚠️ không dò được chữ trên nền (cả ba nhà cung cấp cạn hạn mức)"
+                              " — ảnh đi vào video MÀ CHƯA ĐƯỢC KIỂM, và không đóng dấu")
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.append(rel)
             continue
@@ -712,9 +718,10 @@ def ve_nen_moi_luot(k: dict, DS, canh_ds: list) -> list:
         if ok:
             try:
                 DS.nang_sang_anh(dest); _keo_sang(dest)
-                if _nen_hong(dest) or _co_chu(dest):
+                _kq2 = _co_chu(dest)
+                if _nen_hong(dest) or _kq2 is True:
                     os.remove(dest); ok = None
-                else:
+                elif _kq2 is False:
                     io.open(dest + ".ok", "w").write("1")
             except Exception:
                 pass
@@ -872,13 +879,19 @@ def ve_nen(k: dict, DS, keys, canh_tap: str = "") -> list:
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             _dau = dest + ".ok"
             if not os.path.exists(_dau):
-                if _co_chu(dest):
+                _kq = _co_chu(dest)
+                if _kq is True:
                     try:
                         os.remove(dest)
                     except OSError:
                         pass
+                elif _kq is False:
+                    io.open(_dau, "w").write("1")     # chỉ đóng dấu khi CHẮC CHẮN sạch
                 else:
-                    io.open(_dau, "w").write("1")
+                    _co_chu._cam = getattr(_co_chu, "_cam", 0) + 1
+                    if _co_chu._cam == 1:
+                        print("   ⚠️ không dò được chữ trên nền (cả ba nhà cung cấp cạn hạn mức)"
+                              " — ảnh đi vào video MÀ CHƯA ĐƯỢC KIỂM, và không đóng dấu")
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.append(rel)
         else:
@@ -926,13 +939,19 @@ def ve_nen(k: dict, DS, keys, canh_tap: str = "") -> list:
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             _dau = dest + ".ok"
             if not os.path.exists(_dau):
-                if _co_chu(dest):
+                _kq = _co_chu(dest)
+                if _kq is True:
                     try:
                         os.remove(dest)
                     except OSError:
                         pass
+                elif _kq is False:
+                    io.open(_dau, "w").write("1")     # chỉ đóng dấu khi CHẮC CHẮN sạch
                 else:
-                    io.open(_dau, "w").write("1")
+                    _co_chu._cam = getattr(_co_chu, "_cam", 0) + 1
+                    if _co_chu._cam == 1:
+                        print("   ⚠️ không dò được chữ trên nền (cả ba nhà cung cấp cạn hạn mức)"
+                              " — ảnh đi vào video MÀ CHƯA ĐƯỢC KIỂM, và không đóng dấu")
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             _xau = _nen_hong(dest) or (_co_chu(dest) and 'còn chữ trong ảnh')
             if not _xau:
@@ -1068,7 +1087,7 @@ def xoay_key(keys, toi_da: int = 14):
         yield ds[(xoay_key._i + j) % len(ds)]
 
 
-def _co_chu(tep: str, keys=None) -> bool:
+def _co_chu(tep: str, keys=None):
     """Ảnh này có chữ không? Trả True nếu CHẮC là có.
 
     30/8 — chú thích cũ ở `_nen_hong` tự nhận "chữ bịa thì không đo được nếu không có bộ nhận
@@ -1092,7 +1111,7 @@ def _co_chu(tep: str, keys=None) -> bool:
         from PIL import Image
         import content_brain as CB
     except Exception:
-        return False
+        return None
     try:
         im = Image.open(tep).convert("RGB")
         if max(im.size) > 560:
@@ -1100,7 +1119,7 @@ def _co_chu(tep: str, keys=None) -> bool:
             im = im.resize((max(1, int(im.width * r)), max(1, int(im.height * r))))
         bo = io.BytesIO(); im.save(bo, "JPEG", quality=82); dl = bo.getvalue()
     except Exception:
-        return False
+        return None
 
     ho = keys or _co_chu._ho
     if not ho:
@@ -1128,7 +1147,16 @@ def _co_chu(tep: str, keys=None) -> bool:
                 return False
         except Exception:
             continue
-    return False        # dò không được thì cho qua — chặn nhầm nền lành tốn hơn để lọt một tấm
+    # ══ KHÔNG HỎI ĐƯỢC AI ≠ KHÔNG CÓ CHỮ ═════════════════════════════════════════════════
+    # 30/8, cuối ngày — anh soi ra chữ giả VẪN còn sau khi tôi nối bộ dò và sửa lớp đệm. Đào tới
+    # cùng: cả ba nhà cung cấp đều trả 429 (cạn hạn mức ngày), nên hàm này không hỏi được ai và
+    # trả `False` — tức "ảnh sạch". Chữ giả đi thẳng vào video, và lớp đệm còn ghi cho nó một
+    # cái dấu `.ok` nghĩa là "đã kiểm, khỏi kiểm lại".
+    # **Tôi đã đóng dấu ĐÃ KIỂM cho một tấm ảnh chưa từng được kiểm.** Đó là hỏng nặng hơn không
+    # có cổng: không cổng thì còn biết mình mù, còn cái dấu kia thì nói dối rằng đã sáng mắt.
+    # Nên hàm trả BA trạng thái: True (có chữ) · False (chắc chắn không) · None (không hỏi được).
+    # Nơi gọi phải phân biệt None với False — None thì đừng đóng dấu, và hãy nói ra.
+    return None         # không hỏi được ai — KHÔNG phải "sạch"
 
 
 _co_chu._ho = []        # nhớ hồ key giữa các lần gọi, khỏi đọc lại tệp bảy lần mỗi video
