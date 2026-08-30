@@ -4922,3 +4922,39 @@ cần câu giải thích), và dặn AI **đổi người thực hiện cú lậ
 Ghi chung với **7bi** thành một mối: cả ba lỗi của loạt Kling đầu tiên — 13 tập một phòng, hai tập
 một khuôn kết, bốn tập một chủ đề — đều là **lặp**, và **không lỗi nào bị thước bắt** vì thước
 chấm từng tập một, không ai chấm cả loạt. **Thước tầng tập không thấy được lỗi tầng loạt.**
+
+### 7bl. VIẾT MỘT LUẬT VÀO SỔ KHÔNG LÀM NÓ TỰ CHẠY
+
+Luật **7bi** kết bằng đúng một câu:
+
+> *Khi AI cứ chọn mãi một giá trị hợp lý, đừng dặn — hãy lấy lựa chọn ấy khỏi tay nó và cấp theo
+> lịch.*
+
+Ghi xong câu đó, tôi phát hiện hai tập liền đóng bằng cùng một khuôn, và **sửa bằng cách dặn AI**
+*"vary WHO delivers the reversal"*. Loạt sau ra bốn tập đầu: Buddy lật, Buddy lật, Buddy lật,
+Buddy lật.
+
+Dặn không ăn thua vì con mèo lật ván cờ **là** cú lật hợp lý nhất — AI chọn đúng, chọn mãi. Đây
+chính xác là trường hợp luật 7bi mô tả, và tôi vừa viết ra nó xong.
+
+**Một luật chỉ có tác dụng khi đi tìm mọi chỗ cùng dạng mà áp vào.** Nằm trong sổ thì nó là một
+đoạn văn.
+
+### 7bm. LUÂN PHIÊN HAI TRỤC PHẢI LỆCH PHA
+
+Ép luân phiên người lật xong, hai trục lại xoay cùng nhịp — 5 phòng, 5 người, cùng chạy theo số
+tập, nên **tập 6 lặp đúng cặp bếp+Mike của tập 1**. Kênh lặp sau năm tập thay vì hai mươi lăm.
+
+Sửa lần một (`i // ps`) cho 25 cặp khác nhau, nhưng đẻ ra lỗi ngược lại: **năm tập liền nhau đều
+Mike lật**. Xem liền năm tập thấy một người lật cả năm thì vẫn là lặp, chỉ đổi dạng.
+
+Hai yêu cầu phải thoả **cùng lúc**, và công thức đúng là `(i // ps + i) % len(vai)`:
+
+| | hai tập liền khác người | 25 cặp không trùng |
+|---|---|---|
+| `i % 5` | ✅ | ❌ lặp sau 5 tập |
+| `i // 5` | ❌ năm tập liền một người | ✅ |
+| `i // 5 + i` | ✅ | ✅ |
+
+**Đo một chiều thì sửa xong lỗi này lại đẻ lỗi kia.** Cả hai điều kiện phải nằm trong cùng một
+phép kiểm, không phải kiểm lần lượt.

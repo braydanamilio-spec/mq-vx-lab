@@ -218,7 +218,13 @@ def day_kho(tm: str, kenh_dang: str, video: str, bai: dict, tap: dict) -> bool:
         "topic": tap.get("title"),
         "title": yt.get("title") or tap.get("title"),
         "description": yt.get("description") or "",
-        "sources": ["Generated with Kling AI"],
+        "sources": [],
+        # `enqueue_drive` ghi VÔ ĐIỀU KIỆN "Imagery: Pexels · Pixabay · Wikimedia · NASA…" khi
+        # không có sổ ghi công. Với video Kling thì đó là MÔ TẢ SAI SỰ THẬT — không có tấm ảnh
+        # Pexels nào trong đây, tất cả do Kling sinh. Chính đoạn mã ấy đã chép lại bài học y hệt
+        # về việc ghi công Kevin MacLeod cho video không có nhạc: mô tả sai là điểm trừ khi
+        # YouTube xét kênh, và ghi công một giấy phép mình không dùng thì chẳng được gì.
+        "_credits": ["Animation generated with Kling AI"],
         "hashtags": (bai.get("instagram") or {}).get("hashtags") or ["#shorts"],
         # Bài riêng của FB/IG đi kèm để khâu đăng dùng đúng bản của nền tảng nó, thay vì lấy
         # bản YouTube dán sang cả ba chỗ.

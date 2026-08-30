@@ -502,7 +502,8 @@ def _ho_key(keys=None) -> list:
 
 
 def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
-             tranh: list | None = None, keys: list | None = None, phong: str = "") -> dict:
+             tranh: list | None = None, keys: list | None = None, phong: str = "",
+             lat: str = "") -> dict:
     """Viết một tập. Viết lại tới khi qua hết thước. Trả dict sáu trường.
 
     Key cạn thì ĐỔI KEY chứ không bỏ cuộc — cùng bài học đã trả giá ở sáu hàm viết bên kia."""
@@ -519,6 +520,9 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
     if phong:
         ne += (f"\nThis episode MUST take place in the {phong} — not the kitchen, not anywhere "
                f"else. Build the joke out of what is actually in that room.")
+    if lat:
+        ne += (f"\nThe reversal in the payoff MUST be delivered by {lat} — nobody else. Build "
+               f"the ending around what {lat} does.")
     sch = SCHEMA.replace("ROOM_LIST", phong or " | ".join(ho_so(kenh)["phong"]))
     goc = f'Episode idea: "{y_tuong}".\n\n{sch}{ne}'
     fb, cuoi = "", None
@@ -554,7 +558,11 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
         d = don(d)
         if phong:
             d["room"] = phong           # ép cứng: phòng do lịch luân phiên quyết, không do AI
+        if lat:
+            d["lat"] = lat
         loi = cham(d, kenh, giay)
+        if lat and lat.split()[0] not in str(d.get("payoff") or ""):
+            loi.append(f"cú lật phải do {lat} thực hiện — payoff không nhắc tới {lat}")
         cuoi = d
         if loi:
             fb = "; ".join(loi[:6])
@@ -595,10 +603,31 @@ def _da_lam(kenh: str) -> list[dict]:
         if os.path.isfile(j):
             try:
                 x = json.load(io.open(j, encoding="utf-8"))
-                r.append({"title": str(x.get("title") or d), "room": str(x.get("room") or "")})
+                r.append({"title": str(x.get("title") or d), "room": str(x.get("room") or ""),
+                          "lat": str(x.get("lat") or "")})
             except Exception:
                 pass
     return r
+
+
+def nguoi_lat_ke(kenh: str, da: list[dict]) -> str:
+    """Ai lật ván cờ ở tập tới — luân phiên, cùng lý lẽ với `phong_ke`.
+
+    Buddy lật ván cờ là cú lật hợp lý nhất, nên để AI tự chọn thì nó chọn con mèo mãi mãi. Mà
+    khuôn lặp bị nhận ra trước cả nội dung (luật 7bk): xem tập ba là đoán được tập bốn."""
+    # Lệch pha với `phong_ke` có chủ đích. Nếu cả hai cùng xoay theo `len(da)` thì chu kỳ trùng
+    # nhau: tập 6 lại đúng cặp bếp+Mike của tập 1, và kênh lặp sau đúng năm tập. Cho người lật
+    # xoay MỘT NẤC MỖI VÒNG PHÒNG thì năm phòng nhân năm người ra 25 cặp khác nhau — hai mươi
+    # lăm tập không tập nào trùng cặp bối cảnh-người lật.
+    # Hai yêu cầu phải thoả CÙNG LÚC, và bản trước chỉ thoả một:
+    #   · hai tập LIỀN NHAU không được cùng người lật — xem liền năm tập thấy Mike lật cả năm
+    #     thì vẫn là lặp, chỉ đổi dạng;
+    #   · cặp (phòng, người lật) không được trùng trong cả vòng lớn.
+    # `i//ps` thoả điều thứ hai, hỏng điều thứ nhất. Cộng thêm `i` thì mỗi tập nhích một người,
+    # mà sau đúng ps×len(vs) tập mới quay lại cặp cũ — thoả cả hai.
+    vs = list(ho_so(kenh)["vai"])
+    ps = len(ho_so(kenh)["phong"]) or 1
+    return vs[(len(da) // ps + len(da)) % len(vs)]
 
 
 def phong_ke(kenh: str, da: list[dict]) -> str:
@@ -648,14 +677,15 @@ def main() -> int:
     so = a.so or (len(da) + 1)
     for i in range(a.sl):
         ph = a.phong or phong_ke(a.kenh, da)
+        lt = nguoi_lat_ke(a.kenh, da)
         y = a.y or f"a fresh everyday moment in the {ph}"
-        print(f"\n▶ {hs['ten']} tập {so:03d} · {a.giay:g}s · {ph}")
-        tap = sinh_tap(a.kenh, y, a.giay, tranh=[x["title"] for x in da], phong=ph)
+        print(f"\n▶ {hs['ten']} tập {so:03d} · {a.giay:g}s · {ph} · {lt} lật")
+        tap = sinh_tap(a.kenh, y, a.giay, tranh=[x["title"] for x in da], phong=ph, lat=lt)
         tm = luu(a.kenh, tap, a.giay, so)
         n = len(io.open(os.path.join(tm, "PROMPT.txt"), encoding="utf-8").read())
         canh = "✓" if KY_TU_MIN <= n <= KY_TU_MAX else "⚠️ ngoài khoảng"
         print(f"   📄 {os.path.join(tm, 'PROMPT.txt')}  ({n} ký tự {canh})")
-        da.append({"title": str(tap.get("title") or ""), "room": ph})
+        da.append({"title": str(tap.get("title") or ""), "room": ph, "lat": lt})
         so += 1
     return 0
 
