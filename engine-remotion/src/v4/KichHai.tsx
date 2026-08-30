@@ -414,7 +414,9 @@ export const KichHai: React.FC<PropsHai> = ({
   // tới 181 đơn vị, `gio_len` 156. Lấy tư thế hẹp nhất làm chuẩn cho một công thức chống tràn
   // thì công thức ấy sai đúng vào lúc cần nó nhất — lúc nhân vật đang diễn.
   // Hai con số vì bố cục có hai chế độ: ghim tay tầm ngực (hai người, cỡ trung/cận) và tự do.
-  const _NUA_TU_DO = 181, _NUA_GHIM = 119;
+  // Đo trên bảng cử chỉ, tính cả KHUỶU chứ không chỉ bàn tay: `chong_nanh` chìa khuỷu ra xa
+  // hơn bàn tay rất nhiều (98 so với 39), nên đo bàn tay là đo hụt đúng những tư thế rộng nhất.
+  const _NUA_TU_DO = 181, _NUA_GHIM = 126;
   const _KHE = 26;
   // ▲ Khối trên PHẢI nằm sau `zoom`: nó đọc `zoom` để tính khoảng cách co theo cỡ máy. Đặt nó
   // cạnh `dichA`/`dichB` cho gọn ý thì ra `Cannot access 'zoom' before initialization` — TDZ lần
@@ -445,12 +447,21 @@ export const KichHai: React.FC<PropsHai> = ({
   // BÓNG ĐỔ, quên nối vào chính nhân vật — đúng lỗi cổng `kiem_gan` sinh ra để chặn, mắc lại
   // ngay trong ngày viết nó.
   // Ba góc phải cho ba BỐ CỤC khác hẳn, không phải ba biến thể của một bố cục:
+  // 31/8 — CHỖ NÀY MỚI LÀ CHỖ QUYẾT ĐỊNH, và hai lượt trước tôi sửa nhầm chỗ khác.
+  // Tôi tính `dichA`/`dichB` co theo cỡ máy rất kỹ — rồi đặt nhân vật bằng hằng ±292 chép tay,
+  // không dùng tới chúng. Toạ độ lại chia cho zoom rồi nằm trong nhóm đã nhân zoom, nên vị trí
+  // cuối cùng LUÔN là ±292 bất kể cỡ máy, trong khi nhân vật to dần theo cỡ. Mọi phép tính đều
+  // đúng và không phép nào chạm tới kết quả. Đúng bài học đã ghi ba lần: nếu sửa mà triệu chứng
+  // không đổi, thì chỗ đang sửa không nằm trên đường đi của hình.
+  // Điều kiện thật, ở đơn vị viewBox cuối: |x| + nửa_người·zoom ≤ 500. Chừa 6 cho nét viền.
+  const _nuaPx = _NUA_NGUOI * zoom;
+  const _xAn = Math.min(292, 500 - _nuaPx - 6);
   const _xA = _quaVai ? (noiA_ ? -40 : -430)      // qua vai: người nói lệch nhẹ khỏi tâm (quy
             : _motNguoi ? (noiA_ ? 0 : -9999)     //   tắc một-phần-ba), người nghe ra sát mép
-            : -292;                               //   và bị khung cắt bớt — đó là tiền cảnh
+            : -_xAn;
   const _xB = _quaVai ? (noiA_ ? 430 : 40)        // một người: người kia đẩy hẳn ra ngoài
             : _motNguoi ? (noiA_ ? 9999 : 0)
-            : 292;
+            : _xAn;
   // Tiền cảnh gần ống kính nên TO hơn và TỐI hơn — hai dấu hiệu chiều sâu mà mắt đọc tức thì.
   // 30/8 — anh nhắc lại: *"nhớ ko nhân vật to nhỏ lỗi nha"*.
   // Hệ số 1,5 cho người tiền cảnh là con số tôi bốc, không phải con số đo. Hai người đứng cách

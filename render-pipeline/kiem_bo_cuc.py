@@ -38,7 +38,7 @@ NUA_RONG_NGUOI = 150         # nửa bề ngang một nhân vật ở cỡ 1.0 (
 # nên nó báo "lành 10" trong khi khung render vẫn cắt mất nửa người: nhân vật không đứng nghỉ
 # cả clip, `chi` vươn tay ngang tới 181 đơn vị. Đo tư thế hẹp nhất rồi dùng cho công thức chống
 # tràn thì công thức sai đúng lúc cần nó nhất — lúc nhân vật đang diễn.
-NUA_TU_DO, NUA_GHIM = 181.0, 119.0
+NUA_TU_DO, NUA_GHIM = 181.0, 126.0
 KHE = 26                     # khe an toàn để bàn tay dang rộng cũng không chạm rìa
 
 
@@ -47,11 +47,11 @@ def x_dung(co: float, mot_nguoi: bool = False) -> float:
 
     Bản đầu của cổng này dùng hằng 292 chép tay, nên sau khi engine chuyển sang công thức thì
     cổng vẫn tố tràn ở mọi tập. Một cổng đo bằng con số đã lỗi thời thì tố nhầm y như không đo."""
-    ghim = not mot_nguoi and co >= 1.4
-    nua = NUA_GHIM if ghim else NUA_TU_DO
-    # x bị nhân co cùng nhân vật, nên điều kiện không-chồng viết ở đơn vị CHƯA nhân.
-    toi_thieu = nua + KHE / (2 * co)
-    return max(toi_thieu, (500 - KHE - nua * co) / co)
+    # 31/8 — khớp ĐÚNG công thức engine, ở đơn vị viewBox CUỐI (toạ độ đã nhân zoom).
+    # Bản trước tôi viết ở đơn vị chưa nhân, còn engine thì lại dùng hằng 292 chẳng theo đơn vị
+    # nào — ba cách hiểu cho một con số, nên cổng xanh mà khung vẫn cắt.
+    nua = (NUA_GHIM if (not mot_nguoi and co >= 1.4) else NUA_TU_DO) * co
+    return min(292.0, 500 - nua - 6)
 
 
 def cham(f: str) -> list[str]:
@@ -78,9 +78,9 @@ def cham(f: str) -> list[str]:
         elif goc == "mot_nguoi":
             xs = [0]
         else:
-            xs = [-x_dung(co, _mot), x_dung(co, _mot)]
+            xs = [-x_dung(co, _mot), x_dung(co, _mot)]   # đơn vị viewBox cuối
         for x in xs:
-            trai, phai = x * co - nua, x * co + nua
+            trai, phai = x - nua, x + nua
             if trai < -VB_NUA - 40 or phai > VB_NUA + 40:
                 loi.append(f"lượt {i} ({goc}/{l.get('co')}): nhân vật ở x={x} tràn khung "
                            f"({trai:.0f}..{phai:.0f} ngoài ±{VB_NUA})")
