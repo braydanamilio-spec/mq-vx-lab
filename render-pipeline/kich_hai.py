@@ -189,7 +189,7 @@ def ten_nv(de: str, ai: int) -> str:
 KHO = {
  "rent": [
    {"boi": 0, "loi": [
-     ("My rent went up four hundred dollars.", 0, "bat_ngo"),
+     ("They raised my rent four hundred dollars. For a hallway.", 0, "bat_ngo"),
      ("Yes. We repainted the hallway.", 1, "vui"),
      ("I do not live in the hallway.", 0, "tuc"),
      ("You walk through it. That is a premium.", 1, "tu_tin"),
@@ -197,7 +197,7 @@ KHO = {
      ("Then we will need to talk about the stairs.", 1, "vui")
    ]},
    {"boi": 1, "loi": [
-     ("There are six packages missing from the lobby.", 0, "tuc"),
+     ("Six packages vanished from a lobby with a camera.", 0, "tuc"),
      ("The lobby is not a secure area.", 1, "trung_tinh"),
      ("It has a lock and a camera.", 0, "nghi_ngo"),
      ("The camera is decorative.", 1, "vui"),
@@ -205,7 +205,7 @@ KHO = {
      ("It deters honest people. Those are the ones who matter.", 1, "tu_tin")
    ]},
    {"boi": 2, "loi": [
-     ("The laundry room has been closed for nine weeks.", 0, "tuc"),
+     ("The laundry room has been closed longer than my lease.", 0, "tuc"),
      ("We are waiting on a part.", 1, "trung_tinh"),
      ("For nine weeks?", 0, "bat_ngo"),
      ("It is a very specific part.", 1, "vui"),
@@ -213,7 +213,7 @@ KHO = {
      ("The one that makes it a laundry room.", 1, "vui")
    ]},
    {"boi": 3, "loi": [
-     ("Someone is living in the hallway.", 0, "so"),
+     ("There is a man living in our hallway. With a couch.", 0, "so"),
      ("That is our new resident engagement program.", 1, "vui"),
      ("He has a couch out there.", 0, "bat_ngo"),
      ("He pays for the couch. Separately.", 1, "tu_tin"),
@@ -223,7 +223,7 @@ KHO = {
  ],
  "gym": [
    {"boi": 0, "loi": [
-     ("I have been coming here for five months.", 0, "tu_tin"),
+     ("I have paid this gym nine hundred dollars to sit in my car.", 0, "tu_tin"),
      ("Four of those you sat in the car.", 1, "vui"),
      ("The car is in the parking lot. That counts.", 0, "nghi_ngo"),
      ("Then you have the strongest parking lot in town.", 1, "vui"),
@@ -231,7 +231,7 @@ KHO = {
      ("Your car has lost weight. Very little gas.", 1, "vui")
    ]},
    {"boi": 1, "loi": [
-     ("This smoothie costs fourteen dollars.", 0, "bat_ngo"),
+     ("This smoothie costs fourteen dollars because the almonds were asleep.", 0, "bat_ngo"),
      ("It has activated almonds.", 1, "tu_tin"),
      ("What were the almonds doing before?", 0, "nghi_ngo"),
      ("Sleeping. We woke them up.", 1, "vui"),
@@ -239,7 +239,7 @@ KHO = {
      ("Twelve. Two dollars is for the waking.", 1, "vui")
    ]},
    {"boi": 2, "loi": [
-     ("Somebody put my gym bag in the trash.", 0, "tuc"),
+     ("Somebody threw out my gym bag. It had been there since March.", 0, "tuc"),
      ("How long had it been in the locker?", 1, "trung_tinh"),
      ("Since March.", 0, "buon"),
      ("Then it was not a bag anymore.", 1, "vui"),
@@ -247,7 +247,7 @@ KHO = {
      ("It had a civilization in it.", 1, "vui")
    ]},
    {"boi": 3, "loi": [
-     ("Nobody is in this spin class but me.", 0, "nghi_ngo"),
+     ("I am the entire spin class. Again.", 0, "nghi_ngo"),
      ("That is because it is Tuesday at six.", 1, "trung_tinh"),
      ("You said Tuesday at six was peak hour.", 0, "tuc"),
      ("Peak for you. You are the peak.", 1, "vui"),
@@ -257,7 +257,7 @@ KHO = {
  ],
  "airport": [
    {"boi": 0, "loi": [
-     ("The board says my flight left twenty minutes ago.", 0, "so"),
+     ("My flight left twenty minutes ago. I never left this counter.", 0, "so"),
      ("It did. Without you.", 1, "trung_tinh"),
      ("I have been standing at this counter for an hour.", 0, "tuc"),
      ("Then you were very close to it.", 1, "vui"),
@@ -265,7 +265,7 @@ KHO = {
      ("I can put you on a list about the next one.", 1, "tu_tin")
    ]},
    {"boi": 1, "loi": [
-     ("They just changed our gate for the fourth time.", 0, "tuc"),
+     ("They have moved our gate four times. The plane has not moved once.", 0, "tuc"),
      ("Third. One of those was a drill.", 1, "trung_tinh"),
      ("A gate change drill.", 0, "bat_ngo"),
      ("We practice. That is why we are so good at it.", 1, "vui"),
@@ -273,7 +273,7 @@ KHO = {
      ("There is always a reason. It is just not yours.", 1, "vui")
    ]},
    {"boi": 2, "loi": [
-     ("My bag came out wet.", 0, "bat_ngo"),
+     ("My bag came out of the plane wet. It was not raining.", 0, "bat_ngo"),
      ("Was it raining where you left from?", 1, "trung_tinh"),
      ("It was raining inside the plane?", 0, "nghi_ngo"),
      ("Planes are complicated.", 1, "vui"),
@@ -281,7 +281,7 @@ KHO = {
      ("Was. Was a laptop.", 1, "vui")
    ]},
    {"boi": 3, "loi": [
-     ("This walkway has been broken since I landed.", 0, "tuc"),
+     ("This moving walkway has not moved since I landed.", 0, "tuc"),
      ("It is not broken. It is a floor now.", 1, "tu_tin"),
      ("It is a floor that used to move.", 0, "nghi_ngo"),
      ("Most floors used to be something.", 1, "vui"),
@@ -291,7 +291,7 @@ KHO = {
  ],
  "car": [
    {"boi": 0, "loi": [
-     ("You said the whole thing would be two hundred.", 0, "nghi_ngo"),
+     ("You said two hundred. This invoice says nine hundred.", 0, "nghi_ngo"),
      ("That was before I opened it.", 1, "trung_tinh"),
      ("What is it now?", 0, "so"),
      ("Two hundred. Per hour. Since I opened it.", 1, "vui"),
@@ -299,7 +299,7 @@ KHO = {
      ("Closing is also labor.", 1, "vui")
    ]},
    {"boi": 1, "loi": [
-     ("There is a bird living in my engine.", 0, "bat_ngo"),
+     ("There is a bird living in my engine. You knew.", 0, "bat_ngo"),
      ("Yes. She has been there since spring.", 1, "trung_tinh"),
      ("You saw her and said nothing?", 0, "tuc"),
      ("She was not causing trouble. You were.", 1, "vui"),
@@ -307,7 +307,7 @@ KHO = {
      ("We wait. Two more weeks and the eggs drive off.", 1, "vui")
    ]},
    {"boi": 2, "loi": [
-     ("You charged me for four new tyres.", 0, "tuc"),
+     ("I asked for two tyres. You billed me for four.", 0, "tuc"),
      ("Correct. Four is how many the car has.", 1, "tu_tin"),
      ("I only asked for the front two.", 0, "nghi_ngo"),
      ("The back two felt left out.", 1, "vui"),
@@ -315,7 +315,7 @@ KHO = {
      ("Then why did two of them cost extra?", 1, "vui")
    ]},
    {"boi": 3, "loi": [
-     ("This car has eleven miles on it.", 0, "nghi_ngo"),
+     ("This brand new car already has eleven miles on it.", 0, "nghi_ngo"),
      ("Someone had to drive it here.", 1, "trung_tinh"),
      ("From where? The factory is eleven miles away?", 0, "bat_ngo"),
      ("No. He took the long way around the lot.", 1, "vui"),
@@ -325,7 +325,7 @@ KHO = {
  ],
  "office": [
    {"boi": 0, "loi": [
-     ("This meeting has been going for fifty minutes.", 0, "buon"),
+     ("We are fifty minutes into a meeting about the next meeting.", 0, "buon"),
      ("And we have covered a lot.", 1, "vui"),
      ("We have covered the agenda for the next meeting.", 0, "tuc"),
      ("That is the hardest part.", 1, "tu_tin"),
@@ -333,7 +333,7 @@ KHO = {
      ("It was. Nobody read it. So here we are.", 1, "vui")
    ]},
    {"boi": 1, "loi": [
-     ("Someone drank my coffee out of the pot.", 0, "tuc"),
+     ("Someone drank the coffee I bought. From the pot I filled.", 0, "tuc"),
      ("The pot is communal.", 1, "trung_tinh"),
      ("I bought the beans.", 0, "nghi_ngo"),
      ("Then the beans were communal too.", 1, "vui"),
@@ -341,7 +341,7 @@ KHO = {
      ("Your desk is yours. Until Friday.", 1, "vui")
    ]},
    {"boi": 2, "loi": [
-     ("Why is my desk in the hallway?", 0, "bat_ngo"),
+     ("My desk is in the hallway. With a printer on it.", 0, "bat_ngo"),
      ("We are opening up the floor plan.", 1, "vui"),
      ("The hallway is not the floor plan.", 0, "tuc"),
      ("It is now. We call it the corridor of ideas.", 1, "tu_tin"),
@@ -349,7 +349,7 @@ KHO = {
      ("Then you are the printer team. Congratulations.", 1, "vui")
    ]},
    {"boi": 3, "loi": [
-     ("The printer says it needs yellow.", 0, "nghi_ngo"),
+     ("The printer wants yellow ink. For a black and white page.", 0, "nghi_ngo"),
      ("Yes. For a black and white document.", 1, "trung_tinh"),
      ("Why does it need yellow for that?", 0, "bat_ngo"),
      ("It does not. It just wants yellow.", 1, "vui"),
@@ -359,7 +359,7 @@ KHO = {
  ],
  "diet": [
    {"boi": 0, "loi": [
-     ("I am starting a new diet on Monday.", 0, "tu_tin"),
+     ("This is my fourth diet this month. It is the twelfth.", 0, "tu_tin"),
      ("That is what you said about the last Monday.", 1, "vui"),
      ("This one is different. No sugar at all.", 0, "tu_tin"),
      ("There is a birthday cake in your fridge.", 1, "nghi_ngo"),
@@ -367,7 +367,7 @@ KHO = {
      ("Whose?", 1, "vui")
    ]},
    {"boi": 1, "loi": [
-     ("I only ate one fry off your plate.", 0, "tu_tin"),
+     ("I had one fry. The waiter offered to bring me my own.", 0, "tu_tin"),
      ("You ate the plate around the fry.", 1, "vui"),
      ("That is an exaggeration.", 0, "nghi_ngo"),
      ("The waiter asked if I wanted another one. For me.", 1, "vui"),
@@ -375,7 +375,7 @@ KHO = {
      ("You had a portion with a name and a table.", 1, "vui")
    ]},
    {"boi": 2, "loi": [
-     ("Everything at this market is organic.", 0, "tu_tin"),
+     ("This potato costs four dollars because it has a sticker.", 0, "tu_tin"),
      ("So is a potato in a normal store.", 1, "trung_tinh"),
      ("This one has a sticker.", 0, "nghi_ngo"),
      ("The sticker costs four dollars.", 1, "vui"),
@@ -383,7 +383,7 @@ KHO = {
      ("You are buying a sticker and a small potato.", 1, "vui")
    ]},
    {"boi": 3, "loi": [
-     ("I am doing the meat only diet now.", 0, "tu_tin"),
+     ("I am meat only now. I cried at a burger advert last week.", 0, "tu_tin"),
      ("You cried at a hamburger commercial last week.", 1, "nghi_ngo"),
      ("That was about the family in it.", 0, "buon"),
      ("The family was eating hamburgers.", 1, "vui"),
@@ -393,7 +393,7 @@ KHO = {
  ],
  "tech": [
    {"boi": 0, "loi": [
-     ("My screen has been black for three hours.", 0, "buon"),
+     ("My screen has been black since Tuesday. It is Friday.", 0, "buon"),
      ("Have you tried turning it off and on again?", 1, "trung_tinh"),
      ("It is already off. That is the problem.", 0, "tuc"),
      ("Then turn it on and off again.", 1, "tu_tin"),
@@ -401,7 +401,7 @@ KHO = {
      ("In a different order. That is the fix.", 1, "vui")
    ]},
    {"boi": 1, "loi": [
-     ("I have been on hold for forty minutes.", 0, "tuc"),
+     ("Forty minutes on hold to be told my call is important.", 0, "tuc"),
      ("Your call is very important to us.", 1, "vui"),
      ("Then why am I still on hold?", 0, "nghi_ngo"),
      ("Because it is important. We are savoring it.", 1, "vui"),
@@ -409,7 +409,7 @@ KHO = {
      ("You are. That is the sad part.", 1, "vui")
    ]},
    {"boi": 2, "loi": [
-     ("The update deleted all of my files.", 0, "so"),
+     ("The update deleted my files. Including the backup.", 0, "so"),
      ("Did you back them up?", 1, "trung_tinh"),
      ("The backup was a file.", 0, "buon"),
      ("Then it worked exactly as designed.", 1, "tu_tin"),
@@ -417,7 +417,7 @@ KHO = {
      ("Improved file management.", 1, "vui")
    ]},
    {"boi": 3, "loi": [
-     ("You quoted me ninety dollars to fix the screen.", 0, "nghi_ngo"),
+     ("Ninety dollars. That was the price of you looking at it.", 0, "nghi_ngo"),
      ("That was the diagnostic.", 1, "trung_tinh"),
      ("The diagnostic was you looking at it.", 0, "tuc"),
      ("With trained eyes.", 1, "tu_tin"),
@@ -427,7 +427,7 @@ KHO = {
  ],
  "parent": [
    {"boi": 0, "loi": [
-     ("You have been on that phone for six hours.", 0, "tuc"),
+     ("Six hours. That is how long that phone has been in your hand.", 0, "tuc"),
      ("I was doing homework on it.", 1, "trung_tinh"),
      ("What subject has that much scrolling?", 0, "nghi_ngo"),
      ("Research.", 1, "tu_tin"),
@@ -435,7 +435,7 @@ KHO = {
      ("On whether I should do the homework.", 1, "vui")
    ]},
    {"boi": 1, "loi": [
-     ("You have had your license for one week.", 0, "so"),
+     ("You have driven twice. The mirror is pointed at your face.", 0, "so"),
      ("And zero accidents. That is a perfect record.", 1, "tu_tin"),
      ("You have driven twice.", 0, "nghi_ngo"),
      ("Two for two. Nobody is doing better.", 1, "vui"),
@@ -443,7 +443,7 @@ KHO = {
      ("That is the most important thing behind me.", 1, "vui")
    ]},
    {"boi": 2, "loi": [
-     ("There are nine cups in this room.", 0, "bat_ngo"),
+     ("There are eleven cups in this room. You know exactly where.", 0, "bat_ngo"),
      ("Eleven. Two are under the bed.", 1, "trung_tinh"),
      ("Why do you know that and not bring them down?", 0, "tuc"),
      ("Knowing and carrying are different jobs.", 1, "tu_tin"),
@@ -451,7 +451,7 @@ KHO = {
      ("Historically? You.", 1, "vui")
    ]},
    {"boi": 3, "loi": [
-     ("I have been parked here for thirty minutes.", 0, "tuc"),
+     ("I have been parked here thirty minutes. In an orange car.", 0, "tuc"),
      ("I did not see you.", 1, "trung_tinh"),
      ("I am in a bright orange car.", 0, "nghi_ngo"),
      ("I was not looking for a car. I was looking for a ride.", 1, "vui"),
@@ -461,7 +461,7 @@ KHO = {
  ],
  "neighbor": [
    {"boi": 0, "loi": [
-     ("You have been watching me unload boxes for an hour.", 0, "nghi_ngo"),
+     ("You have watched me carry forty boxes and offered nothing.", 0, "nghi_ngo"),
      ("Forty minutes. I took a break.", 1, "vui"),
      ("Do you want to help?", 0, "trung_tinh"),
      ("No. I want to know what is in the long one.", 1, "tu_tin"),
@@ -469,7 +469,7 @@ KHO = {
      ("That is what the last one said too.", 1, "vui")
    ]},
    {"boi": 1, "loi": [
-     ("Your sprinkler hits my porch every morning.", 0, "tuc"),
+     ("Your sprinkler has hit my porch every morning for a year.", 0, "tuc"),
      ("It hits a lot of things. It is a strong one.", 1, "tu_tin"),
      ("Can you turn it two inches to the left?", 0, "nghi_ngo"),
      ("Then it would hit the Hendersons.", 1, "trung_tinh"),
@@ -477,7 +477,7 @@ KHO = {
      ("They complain less. So it is you.", 1, "vui")
    ]},
    {"boi": 2, "loi": [
-     ("You put a camera facing my mailbox.", 0, "tuc"),
+     ("There is a camera on your house. Zoomed in on my mailbox.", 0, "tuc"),
      ("It faces the street. Your mailbox is on the street.", 1, "tu_tin"),
      ("It is zoomed in on the mailbox.", 0, "nghi_ngo"),
      ("The street is boring at that distance.", 1, "vui"),
@@ -485,7 +485,7 @@ KHO = {
      ("I cannot. It is watching itself now.", 1, "vui")
    ]},
    {"boi": 3, "loi": [
-     ("Your car is parked across both driveways.", 0, "tuc"),
+     ("Your car is blocking two driveways. Mine is one of them.", 0, "tuc"),
      ("I know. That is the only way it fits.", 1, "trung_tinh"),
      ("Then it does not fit.", 0, "nghi_ngo"),
      ("It fits. Just not for you.", 1, "vui"),
@@ -495,7 +495,7 @@ KHO = {
  ],
  "dating": [
    {"boi": 0, "loi": [
-     ("My profile says I love hiking.", 0, "tu_tin"),
+     ("My profile says I love hiking. I have hiked once. In 2019.", 0, "tu_tin"),
      ("You have been hiking once. In two thousand nineteen.", 1, "nghi_ngo"),
      ("It made a big impression.", 0, "trung_tinh"),
      ("You called it a walk with a hill problem.", 1, "vui"),
@@ -503,7 +503,7 @@ KHO = {
      ("Then I am a sailor. I once stood on a boat.", 1, "vui")
    ]},
    {"boi": 1, "loi": [
-     ("She asked what I do for fun.", 0, "so"),
+     ("She asked what I do for fun. I said I enjoy experiences.", 0, "so"),
      ("What did you say?", 1, "nghi_ngo"),
      ("I said I enjoy experiences.", 0, "buon"),
      ("That is what a hostage says.", 1, "vui"),
@@ -511,7 +511,7 @@ KHO = {
      ("So is breathing. Do not lead with it.", 1, "vui")
    ]},
    {"boi": 2, "loi": [
-     ("He was forty minutes late to the coffee.", 0, "tuc"),
+     ("He was forty minutes late and told me time is a construct.", 0, "tuc"),
      ("Did he say why?", 1, "nghi_ngo"),
      ("He said time is a construct.", 0, "buon"),
      ("So is the bill. Did he pay it?", 1, "vui"),
@@ -519,7 +519,7 @@ KHO = {
      ("Then the bill is a construct. He is not.", 1, "vui")
    ]},
    {"boi": 3, "loi": [
-     ("I matched with someone who lives four floors up.", 0, "bat_ngo"),
+     ("I matched with someone four floors up. We have never met.", 0, "bat_ngo"),
      ("In this building?", 1, "nghi_ngo"),
      ("Yes. We have been chatting all week.", 0, "vui"),
      ("You could take the stairs.", 1, "trung_tinh"),

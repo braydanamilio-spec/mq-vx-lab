@@ -261,15 +261,17 @@ def cham_mot(k: dict) -> dict:
     if not (8 <= dur <= 60):
         diem -= 5
         loi.append(f"dài {dur:.0f}s — ngoài khoảng 8–60s")
-    # 30/8 — ĐỔI HẲN PHÉP ĐO NÀY. Bản cũ đòi "ít nhất ba nền phân biệt" trong MỘT video, tức là
-    # tôi đã viết một cây thước CHẤM ĐIỂM CAO CHO LỖI: anh bắt đúng chỗ ấy — "bối cảnh phải liên
-    # quan lời nói hành động, ko phải đang ở trong nhà nhảy qua ra ngoài đường". Một cuộc hội
-    # thoại chỉ diễn ra ở MỘT chỗ. Nay đo ngược lại: nhiều hơn một nền trong một tập là HỎNG.
-    _nen = {l.get("nen") for l in luot if l.get("nen")}
-    if len(_nen) > 1:
-        diem -= 10
-        loi.append(f"{len(_nen)} bối cảnh trong MỘT cuộc hội thoại — hai người không dịch "
-                   f"chuyển tức thời giữa câu")
+    # 30/8, sửa lần HAI. Phép đo ở đây đã đổi chiều hai lần trong một ngày, và cả hai lần đều
+    # đúng với thiết kế lúc ấy:
+    #   · bản đầu  — thưởng cho "ba nền khác nhau" trong một video;
+    #   · bản hai  — phạt vì "hai người không dịch chuyển tức thời giữa câu" (luật 7x);
+    #   · bản này  — nền đổi mỗi lượt nhưng CÙNG MỘT ĐỊA ĐIỂM, chỉ khác GÓC NHÌN. Không ai
+    #     dịch chuyển; máy quay đổi chỗ đứng, đúng như một cảnh phim thật được dựng.
+    # Nên phép đo "nhiều nền là hỏng" phải GỠ ĐI, không phải nới ngưỡng — nó thuộc về một thiết
+    # kế không còn nữa. Trục nền nay đo ở phần bổ sung bên dưới: THIẾU nền mới là hỏng.
+    # Bài học: khi đổi luật thiết kế, việc đầu tiên là đi tìm phép đo cũ của luật ấy và gỡ nó.
+    # Để lại thì hai phép đo chống nhau, và cây thước không bao giờ cho điểm nữa.
+
     # Nhịp thị giác vì thế phải do CỠ MÁY gánh: một tập phải có đủ ba cỡ, không thì khung nào
     # cũng như khung nào.
     _co = {l.get("co") for l in luot}
@@ -283,6 +285,61 @@ def cham_mot(k: dict) -> dict:
     if _ao:
         diem -= 10
         loi.append(_ao)
+
+    # ══════════════════════════════════════════════════════════════════════════════════
+    # BỐN TRỤC BỔ SUNG — 30/8/2026
+    # ----------------------------------------------------------------------------------
+    # Anh hỏi thang điểm, và câu trả lời thật là: thước cũ cho 100/100 trong khi anh nhìn
+    # thấy chưa đạt. Vì nó chỉ đo những thứ TÔI ĐÃ NGHĨ RA ĐỂ ĐO — khớp tiếng, độ sáng,
+    # chữ trong khung, khung đen. Bốn thứ anh chỉ ra thì nó mù hoàn toàn.
+    # Một cây thước chỉ đo được phần mình biết; chỗ nó im lặng KHÔNG có nghĩa là chỗ ấy tốt.
+    # Nên mỗi lần anh chỉ ra một lỗi mà thước cho 100, việc đầu tiên là THÊM TRỤC, không
+    # phải sửa mã rồi chạy lại thước cũ.
+    # ══════════════════════════════════════════════════════════════════════════════════
+
+    # ── 10đ NGỮ ĐIỆU: mỗi câu phải có nhịp/cao độ riêng ────────────────────────────────
+    # Đo gián tiếp mà chắc: nếu ngữ điệu có đổi theo cảm xúc thì TỐC ĐỘ ĐỌC (từ/giây) của
+    # các lượt phải khác nhau. Sáu lượt cùng một tốc độ nghĩa là giọng phẳng.
+    _td = []
+    for l in luot:
+        ws = [w for w in tu if l["s"] - 0.02 <= w["t"] < l["e"] - 0.02]
+        _dt = l["e"] - l["s"]
+        if ws and _dt > 0.3:
+            _td.append(len(ws) / _dt)
+    if len(_td) >= 4:
+        _tb = sum(_td) / len(_td)
+        _lech = (sum((x - _tb) ** 2 for x in _td) / len(_td)) ** 0.5 / max(0.01, _tb)
+        if _lech < 0.06:
+            diem -= 10
+            loi.append(f"giọng PHẲNG: tốc độ đọc các lượt chỉ lệch {_lech*100:.0f}% "
+                       f"— câu hỏi, câu bực, câu chốt đọc như nhau")
+
+    # ── 10đ NỀN PHẢI ĐỔI THEO LƯỢT ────────────────────────────────────────────────────
+    # Ngược hẳn luật cũ (một tập một nền): nay mỗi lượt một GÓC của cùng địa điểm, nên số
+    # nền phân biệt phải xấp xỉ số lượt. Một nền cho sáu lượt là khung đứng yên hai mươi giây.
+    _nen = {l.get("nen") for l in luot if l.get("nen")}
+    if len(_nen) < max(3, len(luot) - 2):
+        diem -= 10
+        loi.append(f"chỉ {len(_nen)} nền cho {len(luot)} lượt — khung gần như đứng yên")
+
+    # ── 5đ ĐẠO CỤ KHÔNG ĐƯỢC CẦM SUỐT PHIM ────────────────────────────────────────────
+    # Đạo cụ chỉ có nghĩa khi nó CÓ VIỆC (lượt mở, lượt chốt). Cầm ở mọi lượt thì nó đọc ra
+    # là món đồ dán vào tay.
+    _cam = sum(1 for l in luot if l.get("vatA") or l.get("vatB"))
+    if _cam > max(2, len(luot) // 2):
+        diem -= 5
+        loi.append(f"đạo cụ cầm ở {_cam}/{len(luot)} lượt — đọc ra là đồ dán vào tay")
+
+    # ── 5đ CÂU MỞ PHẢI LÀ HOOK ────────────────────────────────────────────────────────
+    # Hook = mâu thuẫn lộ ngay, hoặc một con số cụ thể. Câu mở chỉ nêu tình trạng ("tôi đã
+    # ở đây năm tháng") không cho người xem lý do nào để ở lại giây thứ ba.
+    _mo = str((luot[0].get("nar") if luot else "") or "")
+    _co_so = any(c.isdigit() for c in _mo)
+    _co_va = any(w in _mo.lower() for w in (" but ", " never ", " already ", " still ",
+                                            " and ", ". ", " for a ", " since "))
+    if not (_co_so or _co_va):
+        diem -= 5
+        loi.append(f"câu mở không có hook (không số, không mâu thuẫn): {_mo[:44]!r}")
 
     # ── 15đ ĐỘ SÁNG ────────────────────────────────────────────────────────────────────
     # 30/8 — ĐỔI PHÉP ĐO, KHÔNG NỚI NGƯỠNG.

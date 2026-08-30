@@ -4741,3 +4741,61 @@ component nào chạy. Điểm mù của công cụ biến mất vì bài toán 
 
 **Quy tắc rút ra:** mỗi khi thêm một phép tính dùng chung vào thân một component, hỏi ngay
 *"chỗ nào khác cũng cần nó không?"* — nếu có, nó thuộc về tầng module ngay từ đầu.
+
+### 7bb. CÂY THƯỚC CHO 100/100 KHÔNG CÓ NGHĨA LÀ ĐẠT — 30/8/2026
+
+Anh hỏi: *"trên thang điểm 100 thì cần nâng cấp gì để đạt trên 95"*.
+
+Câu trả lời thật phải bắt đầu bằng một thừa nhận: **`cham_v4` cho 100/100 trong khi anh nhìn thấy
+chưa đạt.** Không phải thước sai — mà nó chỉ đo **những thứ tôi đã nghĩ ra để đo**:
+
+| Đang đo | KHÔNG đo |
+|---|---|
+| khớp tiếng · độ sáng · chữ trong khung · khung đen · trùng lặp · độ dài | **ngữ điệu** · **chất lượng kịch bản** · **độ hợp của đạo cụ** · **độ đa dạng nền** · **phụ đề phân biệt người nói** |
+
+Ước tính thật khi tính cả phần chưa đo: **≈ 68/100**.
+
+**Một cây thước chỉ đo được phần mình biết; chỗ nó im lặng KHÔNG có nghĩa là chỗ ấy tốt.**
+Nên mỗi lần anh chỉ ra một lỗi mà thước cho 100, việc đầu tiên phải là **THÊM TRỤC**, không phải
+sửa mã rồi chạy lại thước cũ. Bốn trục vừa thêm:
+
+* **10đ ngữ điệu** — đo gián tiếp mà chắc: nếu giọng có lên xuống thì **tốc độ đọc từng lượt phải
+  khác nhau**. Sáu lượt cùng một tốc độ (lệch < 6%) nghĩa là giọng phẳng.
+* **10đ nền đổi theo lượt** — một nền cho sáu lượt là khung đứng yên hai mươi giây.
+* **5đ đạo cụ** — cầm ở quá nửa số lượt thì nó đọc ra là món đồ dán vào tay.
+* **5đ câu mở phải là hook** — có số cụ thể, hoặc có mâu thuẫn lộ ngay.
+
+### 7bc. ĐỔI LUẬT THIẾT KẾ THÌ PHẢI ĐI GỠ PHÉP ĐO CŨ CỦA LUẬT ẤY
+
+Trục "nền" đã đổi chiều **ba lần trong một ngày**, và cả ba lần đều đúng với thiết kế lúc ấy:
+
+1. **thưởng** cho "ba nền khác nhau trong một video";
+2. **phạt** vì "hai người không dịch chuyển tức thời giữa câu" (luật 7x);
+3. nay: nền đổi **mỗi lượt** nhưng **cùng một địa điểm**, chỉ khác **góc nhìn** — không ai dịch
+   chuyển, máy quay đổi chỗ đứng.
+
+Ở bước 3 tôi **thêm** phép đo mới mà **quên gỡ** phép đo của bước 2 — và hai phép đo chống nhau
+làm cả mười kênh rớt xuống 85 dù không có gì hỏng.
+
+**Khi đổi một luật thiết kế, việc đầu tiên là đi tìm phép đo cũ của luật ấy và GỠ nó** — không
+phải nới ngưỡng. Phép đo cũ thuộc về một thiết kế không còn tồn tại; để lại thì cây thước không
+bao giờ cho điểm nữa, và tệ hơn, nó dạy mình quay về thiết kế cũ.
+
+### 7bd. HOOK = MÂU THUẪN LỘ NGAY, KHÔNG PHẢI NÊU TÌNH TRẠNG
+
+Bốn mươi câu mở cũ đều một dạng: *"X đã bao lâu rồi"* — *"I have been coming here for five
+months"*, *"This meeting has been going for fifty minutes"*. Nêu đúng vấn đề, nhưng không cho
+người xem **lý do nào để ở lại giây thứ ba**.
+
+Hook chuẩn short Mỹ **lộ mâu thuẫn ngay trong câu đầu**, hoặc dùng một con số cụ thể đến mức
+buồn cười:
+
+| Cũ | Mới |
+|---|---|
+| *I have been coming here for five months.* | *I have paid this gym nine hundred dollars to sit in my car.* |
+| *You said the whole thing would be two hundred.* | *You said two hundred. This invoice says nine hundred.* |
+| *My screen has been black for three hours.* | *My screen has been black since Tuesday. It is Friday.* |
+| *My profile says I love hiking.* | *My profile says I love hiking. I have hiked once. In 2019.* |
+
+Cả bốn mươi câu mở đã viết lại theo luật này, và `cham_v4` nay chốt: câu mở phải có **số** hoặc
+**dấu hiệu mâu thuẫn**, không thì trừ điểm.
