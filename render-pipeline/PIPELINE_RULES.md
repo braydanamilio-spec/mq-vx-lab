@@ -4958,3 +4958,40 @@ Hai yêu cầu phải thoả **cùng lúc**, và công thức đúng là `(i // 
 
 **Đo một chiều thì sửa xong lỗi này lại đẻ lỗi kia.** Cả hai điều kiện phải nằm trong cùng một
 phép kiểm, không phải kiểm lần lượt.
+
+### 7bn. LƠ LỬNG KHÔNG PHẢI LỖI TOẠ ĐỘ — LÀ LỖI THIẾU BÓNG
+
+Anh gửi ảnh chụp: *"người vẫn hơi lơ lửng trong 1 số trường hợp"*.
+
+Đo lại toạ độ: **chân đặt đúng đường sàn, không lệch điểm nào.** `CHAN_MH` giữ bàn chân ở đúng
+một độ cao màn hình ở mọi cỡ máy — phần ấy đã sửa từ trước và vẫn đúng.
+
+Cái thiếu là **bóng**. Mắt người không đọc toạ độ; nó đọc **bóng tiếp xúc** để biết một vật đứng
+trên mặt phẳng hay treo phía trước nó. Thiếu bóng thì dù chân đúng chỗ, hình vẫn đọc ra là nhân
+vật **dán lên** ảnh nền — và càng rõ khi ảnh nền có sàn với phối cảnh riêng, vì lúc ấy có **hai
+mặt sàn đối nhau mà không mặt nào nhận lấy nhân vật**.
+
+Đây là thứ mọi phim hoạt hình vẽ tay đều có và **không ai để ý khi nó có mặt**. Một ellipse mờ
+dưới mỗi bàn chân là đủ.
+
+**Bài học rộng hơn: khi hình "trông sai" mà số đo đúng, đừng đo lại lần nữa — đi tìm thứ mắt
+người dùng để phán đoán mà mình chưa vẽ.**
+
+### 7bo. NGƯỠNG "HIỆN ÍT HƠN" KHÔNG CỨU ĐƯỢC MỘT HÌNH VẼ KHÔNG ĐỌC ĐƯỢC
+
+Lần đầu anh nói *"tay cầm vật gì đó có vẻ không hợp lắm"*, tôi **thu hẹp phạm vi**: đạo cụ chỉ
+hiện ở lượt mở và lượt chốt thay vì suốt phim. Hợp lý, và sai chỗ.
+
+Anh xem lại vẫn thấy — *"tay vẫn còn cầm đồ gì đó trên tay"* — kèm ảnh chụp một bàn tay cầm vật
+màu cam-nâu **không đọc ra được là gì**.
+
+Gốc rễ không nằm ở **chỗ** đạo cụ xuất hiện mà ở **chính nó**: đạo cụ vẽ bằng vài hình vector đơn
+giản. Ở toàn cảnh nó bé nên qua được; ở cỡ **cận** nó phóng to gấp đôi và lộ ra là một cục màu vô
+nghĩa nằm trong lòng bàn tay.
+
+**Không có ngưỡng "hiện ít hơn" nào cứu được điều đó** — một hình vẽ không đọc được thì hiện một
+giây cũng là một giây khán giả phải đoán. Đã bỏ hẳn; tay rảnh ra để diễn, mà cử chỉ tay mới là
+thứ anh nhờ nâng cấp ngay từ đầu.
+
+**Khi thu hẹp phạm vi một thứ không sửa được lời phàn nàn, đó là dấu hiệu vấn đề nằm ở bản thân
+thứ ấy chứ không ở liều lượng.**

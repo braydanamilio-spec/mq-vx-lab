@@ -419,6 +419,18 @@ export const KichHai: React.FC<PropsHai> = ({
             có đường chân tường và bóng đổ. Nhân vật đứng lên ĐƯỜNG NÀY, nên dù ảnh nền phía
             trên là gì thì vật lý vẫn đúng: có sàn, có bóng, có chỗ chân chạm. */}
         <defs>
+          {/* 30/8 — Anh: *"người vẫn hơi lơ lửng trong 1 số trường hợp"*.
+              Chân ĐÃ đặt đúng đường sàn — đo lại thấy không lệch điểm nào. Cái thiếu là BÓNG.
+              Mắt người không đọc toạ độ; nó đọc bóng tiếp xúc để biết một vật đứng trên mặt
+              phẳng hay treo trước nó. Thiếu bóng thì dù chân đúng chỗ, hình vẫn đọc ra là một
+              nhân vật DÁN LÊN ảnh nền — và càng rõ khi ảnh nền có sàn với phối cảnh riêng, vì
+              lúc ấy có hai mặt sàn đối nhau mà không mặt nào nhận lấy nhân vật.
+              Đây là thứ hoạt hình vẽ tay nào cũng có và không ai để ý khi nó có mặt. */}
+          <radialGradient id="bongchan">
+            <stop offset="0%" stopColor="#000" stopOpacity={0.34} />
+            <stop offset="55%" stopColor="#000" stopOpacity={0.17} />
+            <stop offset="100%" stopColor="#000" stopOpacity={0} />
+          </radialGradient>
           <linearGradient id="san" x1="0" y1="0" x2="0" y2="1">
             {/* Mờ hẳn: đây là LỚP BẢO HIỂM cho trường hợp ảnh nền không có sàn, không phải
                 một tấm sàn để nhìn. Đục quá thì nó đè lên mặt đường có sẵn của ảnh và đọc ra
@@ -432,6 +444,16 @@ export const KichHai: React.FC<PropsHai> = ({
           <rect x={-1600} y={Y_CHAN - 34} width={3200} height={1400} fill="url(#san)" />
           <line x1={-1600} y1={Y_CHAN - 34} x2={1600} y2={Y_CHAN - 34}
                 stroke="#00000014" strokeWidth={2} />
+          {/* Bóng vẽ TRƯỚC nhân vật (nằm dưới trong thứ tự vẽ) và nhân theo đúng hệ số cỡ người
+              đang dùng, nên khi cỡ ấy đổi thì bóng đổi cùng thay vì trôi thành một vệt rời.
+              Hiện `coA` và `coB` đều bằng 1 — hiệu ứng phóng to người đang nói đã bỏ theo yêu
+              cầu của anh ("nhân vật cao lên, nhân vật kia nhỏ lại rất thiếu thẩm mỹ") — nên hai
+              bóng bằng nhau. Vẫn buộc bóng vào hệ số ấy để nếu sau này cỡ người lại đổi thì
+              bóng không phải đi sửa lần nữa. */}
+          <ellipse cx={xA / zoom} cy={Y_CHAN - 4} rx={126 * coA} ry={19 * coA}
+                   fill="url(#bongchan)" />
+          <ellipse cx={xB / zoom} cy={Y_CHAN - 4} rx={126 * coB} ry={19 * coB}
+                   fill="url(#bongchan)" />
           {/* 30/8 — KHOẢNG CÁCH HAI NGƯỜI CHIA CHO ĐỘ PHÓNG.
               Toàn cảnh được phóng `zoom`; nếu giữ nguyên x thì ở cỡ CẬN (zoom 1,72) hai người
               bị đẩy ra 1,72 lần và mép khung xén mất nửa người — đo được đúng cảnh ấy. Chia x

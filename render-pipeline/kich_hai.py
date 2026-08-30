@@ -1490,23 +1490,23 @@ def main() -> int:
         # Một cái cờ-lê trên tay thợ máy làm ba việc cùng lúc: nói ngay đây là thợ máy · cho tay
         # một việc để làm nên tay không buông thõng · và ở cú chốt là thứ để chìa ra.
         # Chỉ gán cho MỘT người mỗi kênh: hai người cùng cầm đồ thì khung rối và mất tương phản.
-        VAT = {"rent": ("", "giay_to"), "gym": ("chai_nuoc", ""),
-               "airport": ("ve_may_bay", ""), "car": ("", "co_le"),
-               "office": ("coc", ""), "diet": ("", "banh"),
-               "tech": ("", "coc"), "parent": ("", "dien_thoai"),
-               "neighbor": ("", "ong_nhom"), "dating": ("dien_thoai", "")}
-        _vA, _vB = VAT.get(k["de"], ("", ""))
-        # 30/8 — Anh: *"nhân vật tay cầm vật gì đó có vẻ không hợp lắm"*.
-        # Đúng: đạo cụ đang được cầm SUỐT phim, kể cả ở những câu chẳng liên quan gì tới nó —
-        # nên nó đọc ra là một món đồ dán vào tay chứ không phải thứ nhân vật đang dùng.
-        # Trong hoạt hình, một đạo cụ chỉ xuất hiện khi nó CÓ VIỆC: lúc được nhắc tới, lúc được
-        # chìa ra, lúc rơi ở cú chốt. Ngoài ra thì tay phải trống để còn diễn.
-        # Nên gắn đạo cụ theo TỪNG LƯỢT: chỉ hiện ở lượt mở (giới thiệu nhân vật) và lượt chốt
-        # (chỗ nó rơi khỏi tay).
-        for _i3, _l3 in enumerate(luot):
-            _hien = (_i3 == 0) or bool(_l3.get("chot"))
-            _l3["vatA"] = _vA if _hien else ""
-            _l3["vatB"] = _vB if _hien else ""
+        # ══ BỎ HẲN ĐẠO CỤ — 30/8, lần anh nhắc THỨ HAI ═══════════════════════════════════
+        # Lần đầu anh nói *"tay cầm vật gì đó có vẻ không hợp lắm"*, tôi thu hẹp lại: chỉ hiện ở
+        # lượt mở và lượt chốt. Anh xem lại vẫn thấy: *"tay vẫn còn cầm đồ gì đó trên tay"*, kèm
+        # ảnh chụp một bàn tay cầm cái gì đó màu cam-nâu không đọc ra được là vật gì.
+        #
+        # Ảnh ấy chỉ đúng ra gốc rễ, và gốc rễ không nằm ở CHỖ đạo cụ xuất hiện mà ở CHÍNH NÓ:
+        # đạo cụ vẽ bằng vài hình vector đơn giản. Ở toàn cảnh nó bé nên qua được; ở cỡ CẬN nó
+        # phóng to gấp đôi và lộ ra là một cục màu vô nghĩa nằm trong lòng bàn tay. Không có
+        # ngưỡng "hiện ít hơn" nào cứu được điều đó — một hình vẽ không đọc được thì hiện một
+        # giây cũng là một giây khán giả phải đoán.
+        #
+        # Vẽ đạo cụ đủ chi tiết để chịu được cỡ cận là một việc khác hẳn về quy mô, và nó không
+        # nằm trong thứ anh đang cần. Bỏ hẳn thì tay được rảnh để diễn — mà cử chỉ tay mới là
+        # thứ anh nhờ nâng cấp ngay từ đầu.
+        for _l3 in luot:
+            _l3["vatA"] = ""
+            _l3["vatB"] = ""
         props = {"luot": luot, "tu": tu, "voMp3": rel, "nhac": NHAC.get(k["de"], ""),
                  "kieuA": k["a"], "kieuB": k["b"], "kieuTuyA": tuyA, "kieuTuyB": tuyB,
                  "tieuDe": ten, "mucNen": k["mau"]}
