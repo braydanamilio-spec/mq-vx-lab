@@ -255,7 +255,8 @@ export const KichHai: React.FC<PropsHai> = ({
   // Hai người đứng CỐ ĐỊNH. Sinh khí dồn hết sang thứ vốn làm tốt: tư thế đổi mượt, tay đánh
   // nhịp theo lời, nét mặt, khẩu hình. Đây cũng đúng "limited animation" — cách hoạt hình truyền
   // hình Mỹ vẫn làm suốt tám mươi năm.
-  const dichA = -292, dichB = 292;
+  // (khối tính khoảng cách hai người đã dời xuống sau `zoom` — xem chú thích ở đó)
+
   // ══ MÁY LIA TỚI NGƯỜI, NGƯỜI KHÔNG DẠT RA HAI BÊN ═══════════════════════════════════════
   // 30/8 — Anh: *"mỗi khi zoom chuyển nhân vật thì nhân vật nhảy sang vị trí khác… nên giữ
   // nguyên và zoom hay focus vào từng nhân vật chứ nhân vật ko nhảy thế"*.
@@ -268,8 +269,10 @@ export const KichHai: React.FC<PropsHai> = ({
   // dịch ngang sao cho người đang nói về giữa khung.
   // Và dịch phải NỘI SUY trong nửa giây đầu lượt, cùng nhịp với độ phóng — cắt phựt sang một
   // khung khác chính là "nhảy" mà anh nhìn thấy, dù lần này là khung nhảy chứ không phải người.
-  const xA = dichA;
-  const xB = dichB;
+  // (`xA`/`xB` đã bỏ: chúng là mã chết sót lại từ trước khi bố cục chuyển sang tính theo GÓC.
+  //  Không ai đọc chúng nữa, nhưng chúng vẫn đọc `dichA` — và khi `dichA` dời xuống dưới `zoom`
+  //  thì chính hai dòng chết ấy ném ReferenceError. Mã chết không vô hại: nó vẫn giữ ràng buộc
+  //  thứ tự với phần còn lại, và ràng buộc ấy nổ đúng lúc mình không ngờ nhất.)
   // (khối lia máy đã dời xuống dưới `zoom` — xem chú thích ở đó)
 
   const buocA = 0, buocB = 0;
@@ -394,6 +397,27 @@ export const KichHai: React.FC<PropsHai> = ({
   //
   // Quy tắc 180 độ giữ nguyên ở mọi góc: người A luôn đứng bên trái, B bên phải, nên A luôn
   // nhìn sang phải và B nhìn sang trái. Không bao giờ đổi bên giữa chừng.
+  // ══ KHOẢNG CÁCH HAI NGƯỜI PHẢI CO THEO CỠ MÁY ═════════════════════════════════════════
+  // 30/8 — anh nhắc ba lần "nhân vật bị lệch khỏi khung". Đo ra con số thì rõ ngay: nửa bề
+  // ngang một nhân vật là 115 đơn vị (đo trên bảng tư thế nền trơn), và khoảng cách hai người
+  // là HẰNG SỐ ±292 — trong khi độ phóng nhân cả hai lên.
+  //     cỡ rộng  1,18 → mép ở 497   ✓ vừa khít
+  //     cỡ trung 1,52 → mép ở 640   ✗ tràn 140
+  //     cỡ cận   1,86 → mép ở 783   ✗ tràn 283
+  // Nên nó không phải "thỉnh thoảng lệch" — nó tràn ở HAI TRÊN BA cỡ máy, mọi tập, mọi kênh.
+  // Tôi đã chỉnh nó bằng mắt ba lượt mà không lần nào tính, nên ba lượt đều trượt.
+  //
+  // Công thức: muốn mép đúng bằng rìa khung thì  x = (nửa_khung − nửa_người × cỡ) / cỡ.
+  // Trừ thêm một khe an toàn để bàn tay khi dang rộng cũng không chạm rìa.
+  const _NUA_NGUOI = 115 * 1.12;         // đo từ bảng tư thế, nhân cỡ vẽ nhân vật
+  const _KHE = 26;
+  const _xToiDa = Math.max(120, (500 - _KHE - _NUA_NGUOI * zoom) / zoom);
+  const dichA = -Math.min(292, _xToiDa), dichB = Math.min(292, _xToiDa);
+  // ▲ Khối trên PHẢI nằm sau `zoom`: nó đọc `zoom` để tính khoảng cách co theo cỡ máy. Đặt nó
+  // cạnh `dichA`/`dichB` cho gọn ý thì ra `Cannot access 'zoom' before initialization` — TDZ lần
+  // thứ SÁU trong kho này, và lần này cổng dựng-thử-một-khung bắt được trong vài giây thay vì
+  // sau một lượt dựng mười lăm phút. Đó đúng là việc nó sinh ra để làm.
+
   const _goc = (L.goc || "hai_nguoi") as string;
   // `qua_vai`: người nghe thành TIỀN CẢNH — to hơn, tối hơn, đứng lệch hẳn ra mép và bị khung
   // cắt bớt. Đó chính là cái làm nên chiều sâu của cú qua-vai: một khối gần ống kính, mất nét,
@@ -418,8 +442,14 @@ export const KichHai: React.FC<PropsHai> = ({
   // khoảng **1,15 tới 1,2 lần**. Ở 1,5 thì họ phải cách nhau bốn năm mét, tức đang nói vọng qua
   // phòng chứ không phải đứng cạnh nhau, và mắt đọc ra ngay là "thằng to thằng nhỏ".
   // Đây là phối cảnh, và phối cảnh có số của nó — không bốc được.
-  const _coA = _quaVai && !noiA_ ? 1.18 : 1;
-  const _coB = _quaVai && noiA_ ? 1.18 : 1;
+  // 30/8 — anh nhắc lần thứ ba: *"nhớ nhân vật ko zoom lên nhân vật to nhân vật nhỏ, hay nhân
+  // vật bị lệch khỏi khung"*.
+  // Tôi đã hạ hệ số tiền cảnh từ 1,5 xuống 1,18 và vẫn bị nhắc. Nên bỏ HẲN: hai người luôn cùng
+  // một cỡ, ở mọi góc.
+  // Chiều sâu của cú qua-vai vẫn còn — nó đến từ việc người tiền cảnh TỐI đi và MẤT NÉT, hai
+  // dấu hiệu quang học thật. Cỡ chỉ là dấu hiệu thứ ba, và là dấu hiệu duy nhất gây ra cái
+  // "thằng to thằng nhỏ" mà anh thấy. Bỏ một dấu hiệu để giữ hai cái kia là đổi đúng chiều.
+  const _coA = 1, _coB = 1;
   // Anh gửi khung: người tiền cảnh TRONG SUỐT, nhìn xuyên qua thấy cả xe phía sau — đọc ra là
   // một bóng ma chứ không phải một người đứng gần ống kính.
   // Lỗi ở chỗ tôi dùng ĐỘ MỜ để tả chiều sâu. Trong hoạt hình, vật ở tiền cảnh không mờ đi —
@@ -470,7 +500,7 @@ export const KichHai: React.FC<PropsHai> = ({
   // `{/* */}` xen giữa thuộc tính là lỗi cú pháp — đã dính bốn lần, xem luật 7t.)
   const _phanUng = !!L.chot && giay > L.e - 1.25;
   const _aiTrungTam = _phanUng ? !noiA_ : noiA_;
-  const _tamNguoi = _aiTrungTam ? xA : xB;
+  const _tamNguoi = _aiTrungTam ? dichA : dichB;
   // Khi cắt sang người nghe thì lia RẤT nhanh (0,12 giây) — cắt cảnh trong hài phải dứt khoát,
   // lia chậm biến một cú cắt thành một cú trượt và mất hết sức nặng.
   const liaVao = _canhCan
