@@ -2360,6 +2360,24 @@ def t_plan_khong_duoc_doc_goi_cua_chinh_no():
     assert co, "job render KHÔNG nhận CHANNEL_CFGS -> mỗi lane đọc lại Firestore, 720 lượt/phiên"
 
 
+def t_gan_gi_engine_phai_ve_duoc():
+    """Mọi giá trị bảng nhân vật gán, engine phải có nhánh vẽ cho nó.
+
+    Ca thật 30/8: anh thấy huấn luyện viên NỮ trông ra đàn ông. JSON đúng hết —
+    `kieuToc="duoi_ngua"`, `mu="luoi_trai"`, `phuKien="khan_quang"` — nhưng engine **chưa bao
+    giờ vẽ mũ** (không dòng nào đọc `kieu.mu`), và `khan_quang` rơi qua hết sáu nhánh phụ kiện
+    rồi biến mất.
+    Đây là dạng lỗi tốn nhất trong dây chuyền vì MỌI CỔNG ĐỀU BÁO XANH: JSON hợp lệ, TypeScript
+    hợp lệ (trường có trong kiểu), esbuild dịch được, video render xong. Chỉ khung hình là
+    thiếu — và chỉ mắt người mới thấy, mà mắt người không chạy được hằng đêm.
+    """
+    import subprocess, os as _os
+    _goc = _os.path.dirname(_os.path.abspath(__file__))
+    r = subprocess.run([sys.executable, _os.path.join(_goc, "kiem_gan.py")],
+                       capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, "có giá trị được gán mà engine không vẽ:\n" + r.stdout[-700:]
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
@@ -2388,6 +2406,7 @@ def main():
     check("tiêu đề không lộ mã nội bộ (quét 50 kênh)", t_tieu_de_khong_lo_ma_noi_bo)
     check("tiêu đề dẫn bằng chủ thể, không phải khuôn + ngày", t_tieu_de_phai_noi_ve_noi_dung)
     check("key vẽ ảnh chết hẳn -> đổi key, không bỏ khung", t_key_ve_anh_chet_phai_doi_key)
+    check("gán gì thì engine phải vẽ được (mũ/tóc/phụ kiện)", t_gan_gi_engine_phai_ve_duoc)
     check("18 lane vào 18 điểm khác nhau trong hồ key ảnh", t_18_lane_khong_don_mot_key_anh)
     check("mọi loại key báo trạng thái + lời đúng loại", t_moi_loai_key_deu_bao_trang_thai)
     check("làm mới token không ép scope (invalid_scope)", t_khong_ep_scope_khi_lam_moi_token)

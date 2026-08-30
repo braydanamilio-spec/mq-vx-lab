@@ -506,6 +506,11 @@ export const DienVienHai: React.FC<PropsHai> = ({
                 fill="#FFFFFF" stroke={V} strokeWidth={NT} strokeLinejoin="round" />
         </g>
       ) : null}
+      {kieu.phuKien === "khan_quang" ? (
+        <path d={`M ${-26} ${Y_VAI + 16} q 26 20 52 0 q -6 30 -26 30 q -20 0 -26 -30 Z`}
+              fill={kieu.aoTrong || "#D8D2C4"} stroke={V} strokeWidth={NG * 0.7}
+              strokeLinejoin="round" />
+      ) : null}
       {kieu.phuKien === "the_deo" ? (
         <g>
           <path d={`M ${vai[0] - 16} ${vai[1] + 6} Q ${vai[0]} ${vai[1] + 52} ${vai[0] + 16} ${vai[1] + 6}`}
@@ -764,6 +769,11 @@ export const DienVienHai: React.FC<PropsHai> = ({
 
         {/* TÓC — đặt CUỐI cùng để nó phủ lên mép sọ, đúng như tóc thật phủ lên trán. */}
         <Toc kieu={kieu} dau={dau} R={R_DAU} V={V} NG={NG} t={t} />
+        {/* 30/8 — MŨ. Kiểu `Kieu` khai trường `mu` từ lâu, bảng nhân vật gán nó, JSON mang nó
+            sang tận đây — mà ENGINE CHƯA BAO GIỜ VẼ. Dữ liệu đúng, hình thiếu, không một lời
+            cảnh báo nào ở giữa: đây là dạng lỗi tốn nhất, vì soi JSON thấy đủ nên không ai ngờ.
+            Mũ là dấu nhận dạng mạnh nhất trong bộ — đọc được ở cỡ nhỏ hơn cả tóc. */}
+        <Mu kieu={kieu} dau={dau} R={R_DAU} V={V} NG={NG} />
 
         {/* ══ KÝ HIỆU CẢM XÚC ("emanata") — dấu hỏi, gân giận, giọt mồ hôi, tia bật ═══════
             30/8 — Anh xem clip và nói *"ko hình dung được sự hài hước"*. Một phần vì lời thoại
@@ -940,6 +950,47 @@ const DoVat: React.FC<{ ten: string; p: [number, number]; goc: number; V: string
  *
  * Ba lớp: khối chính (có chóp) · mảng bóng (cùng màu, đậm hơn) · vài sợi rời ở mép.
  */
+const Mu: React.FC<{ kieu: Kieu; dau: [number, number]; R: number; V: string; NG: number }> =
+({ kieu, dau, R, V, NG }) => {
+  const [x, y] = dau;
+  const m = kieu.mu;
+  if (!m) return null;
+  const mau = kieu.ao || "#3A4B6C";
+  const s = { fill: mau, stroke: V, strokeWidth: NG * 0.85, strokeLinejoin: "round" as const };
+  if (m === "luoi_trai") {
+    return (
+      <g>
+        <path d={`M ${x - R * 1.02} ${y - R * 0.34} a ${R * 1.02} ${R * 1.02} 0 0 1 ${R * 2.04} 0 Z`} {...s} />
+        <path d={`M ${x + R * 0.1} ${y - R * 0.34} q ${R * 1.24} -6 ${R * 1.34} ${R * 0.24}
+                  q -${R * 0.68} ${R * 0.16} -${R * 1.34} ${R * 0.02} Z`} {...s} />
+      </g>
+    );
+  }
+  if (m === "cao_bo") {
+    return (
+      <g>
+        <path d={`M ${x - R * 0.72} ${y - R * 0.42} q 0 -${R * 0.98} ${R * 0.72} -${R * 0.98}
+                  q ${R * 0.72} 0 ${R * 0.72} ${R * 0.98} Z`} {...s} />
+        <path d={`M ${x - R * 1.42} ${y - R * 0.38} q ${R * 1.42} -${R * 0.3} ${R * 2.84} 0
+                  q -${R * 1.42} ${R * 0.26} -${R * 2.84} 0 Z`} {...s} />
+      </g>
+    );
+  }
+  if (m === "y_ta") {
+    return <path d={`M ${x - R * 0.86} ${y - R * 0.5} q ${R * 0.86} -${R * 0.44} ${R * 1.72} 0
+                     l -${R * 0.16} ${R * 0.24} q -${R * 0.7} -${R * 0.3} -${R * 1.4} 0 Z`}
+                 fill="#FFFFFF" stroke={V} strokeWidth={NG * 0.85} strokeLinejoin="round" />;
+  }
+  // "len" — mũ len trùm, có vành gấp
+  return (
+    <g>
+      <path d={`M ${x - R * 1.0} ${y - R * 0.3} q 0 -${R * 1.1} ${R * 1.0} -${R * 1.1}
+                q ${R * 1.0} 0 ${R * 1.0} ${R * 1.1} Z`} {...s} />
+      <path d={`M ${x - R * 1.06} ${y - R * 0.34} h ${R * 2.12} v ${R * 0.2} h -${R * 2.12} Z`} {...s} />
+    </g>
+  );
+};
+
 const Toc: React.FC<{ kieu: Kieu; dau: [number, number]; R: number; V: string; NG: number; t: number }> =
 ({ kieu, dau, R, V, NG, t }) => {
   const c = kieu.toc, k = kieu.kieuToc;
@@ -987,6 +1038,26 @@ const Toc: React.FC<{ kieu: Kieu; dau: [number, number]; R: number; V: string; N
                   q -9 -${R * 0.64} -7 -${R * 0.94} Z
                   M ${x + R * 0.92} ${y - R * 0.2} q 6 ${R * 0.92} -5 ${R * 1.08} l -13 -7
                   q 9 -${R * 0.64} 7 -${R * 0.94} Z`} {...s} />
+      ) : null}
+      {/* 30/8 — HÓI VÀ RỐI: hai kiểu tóc bảng nhân vật vẫn gán, mà engine chưa từng vẽ riêng —
+          cả hai rơi vào nhánh mặc định nên ra ĐÚNG một dáng với "ngắn". Ba tên khác nhau cho
+          một mái tóc: bảng tưởng đã tách ba người, khung hình cho ra ba người giống nhau.
+          Đây chính là "na ná nhau" mà anh nêu, và nó không nằm ở chỗ tôi tìm suốt mấy hôm. */}
+      {k === "hoi" ? (
+        <path d={`M ${x - R * 0.94} ${y - R * 0.24} q ${R * 0.1} -${R * 0.66} ${R * 0.46} -${R * 0.72}
+                  q -${R * 0.16} ${R * 0.36} -${R * 0.12} ${R * 0.7} Z
+                  M ${x + R * 0.94} ${y - R * 0.24} q -${R * 0.1} -${R * 0.66} -${R * 0.46} -${R * 0.72}
+                  q ${R * 0.16} ${R * 0.36} ${R * 0.12} ${R * 0.7} Z
+                  M ${x - R * 0.5} ${y - R * 0.96} q ${R * 0.5} -${R * 0.2} ${R * 1.0} 0
+                  q -${R * 0.5} -${R * 0.06} -${R * 1.0} 0 Z`} {...s} />
+      ) : null}
+      {k === "roi" ? (
+        <g>{[-0.74, -0.26, 0.22, 0.68].map((pp, i) => (
+          <path key={i}
+                d={`M ${x + pp * R * 0.9} ${y - R * 0.92}
+                    l ${8 + i * 3} -${26 + (i % 2) * 14 + tre}
+                    l ${9 - i * 2} ${24 + (i % 2) * 12} Z`} {...s} />
+        ))}</g>
       ) : null}
       {k === "xoan" ? (
         <g>{[-0.9, -0.32, 0.32, 0.9].map((pp, i) => (
