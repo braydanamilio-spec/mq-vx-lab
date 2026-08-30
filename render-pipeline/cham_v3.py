@@ -103,6 +103,35 @@ def cham_mot(k: dict, D) -> dict:
         diem -= 5
         loi.append(f"nhãn dưới số lớn {_nhan!r} rộng quá khung")
 
+    # ── KHÔNG ĐƯỢC CÓ KHUNG ĐEN Ở ĐẦU HAY CUỐI ────────────────────────────────────────
+    # 30/8 — mượn phép đo đã viết cho bộ hài. Khung đen ở cuối là lỗi hay gặp nhất của mọi dây
+    # chuyền dựng phim, và trên Shorts (phát lặp vô hạn) thì cái nháy đen ấy chớp mỗi vòng lặp.
+    import glob as _g2
+    import subprocess as _sp2
+    _mp4 = os.path.join(GOC, "out", f"v3_{k['ten'].replace(' ', '').lower()}.mp4")
+    if os.path.exists(_mp4):
+        try:
+            _d = float(_sp2.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                                 "-of", "csv=p=0", _mp4], capture_output=True, text=True,
+                                timeout=60).stdout.strip() or 0)
+        except Exception:
+            _d = 0
+        if _d:
+            from PIL import Image as _Im
+            for _ten2, _ss in (("đầu", 0.05), ("cuối", max(0.0, _d - 0.12))):
+                _pp = os.path.join("/tmp", f"_v3den{int(_ss*100)}.png")
+                _sp2.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{_ss:.2f}", "-i", _mp4,
+                          "-vframes", "1", "-vf", "scale=120:-1", _pp],
+                         capture_output=True, timeout=60)
+                if not os.path.exists(_pp):
+                    continue
+                _px2 = list(_Im.open(_pp).convert("L").getdata())
+                _tb2 = sum(_px2) / len(_px2)
+                if _tb2 < 60:
+                    diem -= 10
+                    loi.append(f"khung {_ten2} gần như ĐEN ({_tb2:.0f}/255)")
+                    break
+
     # ── 15đ ĐỘ SÁNG ────────────────────────────────────────────────────────────────────
     s, t = _sang(k["ten"].replace(" ", ""))
     if s is None:
