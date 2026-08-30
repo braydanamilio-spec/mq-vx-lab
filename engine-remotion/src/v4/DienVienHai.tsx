@@ -511,6 +511,19 @@ export const DienVienHai: React.FC<PropsHai> = ({
               fill={kieu.aoTrong || "#D8D2C4"} stroke={V} strokeWidth={NG * 0.7}
               strokeLinejoin="round" />
       ) : null}
+      {/* BẢNG KẸP — dấu hiệu "người đi đo đếm": nhà báo điều tra, người soi hợp đồng, người
+          rà số liệu. Cây kiểm `kiem_gan` bắt được ngay lần chạy đầu rằng tôi đã gán phụ kiện
+          này cho hai kênh dữ liệu mà chỉ vẽ nó ở engine QUE, quên vẽ ở engine KHỐI — đúng loại
+          lỗi mà cổng ấy sinh ra để chặn, và nó chặn ngay hôm được viết. */}
+      {kieu.phuKien === "bang_kep" ? (
+        <g transform={`translate(${vai[0] - 46} ${vai[1] + 74}) rotate(-11)`}>
+          <rect x={-17} y={-23} width={34} height={46} rx={3}
+                fill="#E8E2D4" stroke={V} strokeWidth={NT} />
+          <rect x={-8} y={-28} width={16} height={9} rx={3} fill={V} />
+          <path d="M -9 -8 H 9 M -9 1 H 9 M -9 10 H 3" stroke={V} strokeWidth={NT * 0.7}
+                fill="none" strokeLinecap="round" />
+        </g>
+      ) : null}
       {kieu.phuKien === "the_deo" ? (
         <g>
           <path d={`M ${vai[0] - 16} ${vai[1] + 6} Q ${vai[0]} ${vai[1] + 52} ${vai[0] + 16} ${vai[1] + 6}`}
