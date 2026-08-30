@@ -428,8 +428,19 @@ export const KichV2: React.FC<PropsKich> = ({
           })}
           {/* Lớp phủ ĐẬM HƠN bộ hài. Bộ này có BIỂU ĐỒ và SỐ LIỆU đè lên nền; nền ảnh nhiều chi
               tiết làm chữ số khó đọc, mà đọc được số mới là toàn bộ giá trị của mười kênh này. */}
+          {/* 30/8 — Anh: *"background nền nên làm lớp mờ hơn"* và *"nền bối cảnh chọn sao cho
+              không ảnh hưởng tới chart, gây đè che lấp"*.
+              Hai lớp, mỗi lớp một việc:
+                · lớp một phủ đều cả khung, đục hơn bản cũ một nửa — ảnh nền lùi hẳn về sau và
+                  thôi tranh chỗ với chữ số;
+                · lớp hai chỉ phủ DẢI GIỮA, nơi tấm biểu đồ nằm. Ảnh nền nhiều chi tiết ở đúng
+                  dải ấy là thứ làm con số khó đọc, mà đọc được con số mới là toàn bộ giá trị
+                  của những kênh này. Phủ có trọng điểm giữ được không khí của ảnh ở trên và
+                  dưới, chỗ không có gì phải đọc. */}
           <AbsoluteFill style={{ background:
-            `linear-gradient(180deg,${mau.troi[1]}66 0%,${mau.troi[1]}33 45%,${mau.dat}88 100%)` }} />
+            `linear-gradient(180deg,${mau.troi[1]}99 0%,${mau.troi[1]}77 45%,${mau.dat}AA 100%)` }} />
+          <AbsoluteFill style={{ background:
+            `linear-gradient(180deg,transparent 8%,${mau.troi[1]}55 22%,${mau.troi[1]}55 62%,transparent 76%)` }} />
         </AbsoluteFill>
       ) : null}
       <AbsoluteFill>

@@ -345,6 +345,49 @@ def so_lieu_tu_gen2(ten_kenh: str, avoid: list | None = None):
     return (str(st.get("title") or ten_kenh), ds, str(st.get("nguon") or ""))
 
 
+def _lam_sach_nhan(ds: list) -> list:
+    """Dọn nhãn cột trước khi lên biểu đồ.
+
+    Ảnh anh gửi có bốn lỗi trong đúng một hàng nhãn:
+      · `Häagen-Da…`  — cắt cụt giữa một từ, và chữ `ä` không phải bảng chữ cái tiếng Anh;
+      · `Trader Joe'S` — chữ S viết hoa do một lượt title-case thô;
+      · `Ben`         — vốn là một cái tên có dấu `&`, bị chặt mất nửa sau;
+      · bốn nhãn cùng bắt đầu bằng một tên thương hiệu, nên phần PHÂN BIỆT chúng
+        lại chính là phần bị cắt mất.
+    Điều cuối là quan trọng nhất: khi mọi nhãn có chung một tiền tố, cắt từ phải sang là cắt
+    đúng chỗ duy nhất mang thông tin. Nên bỏ tiền tố chung TRƯỚC rồi mới rút gọn.
+    """
+    import re as _re
+    _DAU = str.maketrans("àáâãäåèéêëìíîïòóôõöùúûüýñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝÑÇ",
+                         "aaaaaaeeeeiiiiooooouuuuyncAAAAAAEEEEIIIIOOOOOUUUUYNC")
+    ten = []
+    for t, _g, _h in ds:
+        t = str(t).translate(_DAU)
+        t = _re.sub(r"\s+", " ", t).strip(" .,-")
+        t = _re.sub(r"(\w)'S\b", r"\1's", t)          # Joe'S -> Joe's (ký tự trước là chữ
+                                                        # thường, nên lớp [A-Z] của bản đầu
+                                                        # không khớp cái nào)
+        ten.append(t)
+    # Bỏ tiền tố chung (theo TỪ, không theo ký tự — cắt giữa từ ra chữ vô nghĩa).
+    if len(ten) > 2:
+        tach = [x.split() for x in ten]
+        n = 0
+        while all(len(w) > n + 1 for w in tach) and len({w[n].lower() for w in tach}) == 1:
+            n += 1
+        if n:
+            ten = [" ".join(w[n:]) for w in tach]
+    # Tiền tố chung chỉ bỏ được khi MỌI nhãn cùng mang nó. Thực tế hay gặp là ba trên bốn nhãn
+    # cùng một thương hiệu — lúc ấy phép trên bó tay, mà nhãn vẫn dài quá chỗ và vẫn bị cắt
+    # cụt ở cuối, tức cắt đúng phần phân biệt chúng.
+    # Với tên nhiều từ, phần mang thông tin gần như luôn nằm ở ĐUÔI (thương hiệu đứng đầu, loại
+    # sản phẩm đứng sau). Nên khi quá dài thì giữ hai từ cuối thay vì chặt từ phải sang.
+    ra = []
+    for x in ten:
+        w = x.split()
+        ra.append(" ".join(w[-2:]) if (len(w) > 2 and len(x) > 16) else x)
+    return [(ra[i], ds[i][1], ds[i][2]) for i in range(len(ds))]
+
+
 def _nhan_gon(t: str, tran: int = 18) -> str:
     """Nhãn dưới con số lớn — CẮT THEO TỪ. Cắt cứng cho ra "MIDWEST POULTRY SE", "COURT OF
     APPEALS F", "ARTIFICIAL INTELLI": chữ đứt ngang ngay dưới con số to nhất khung."""
@@ -361,6 +404,12 @@ def _nhan_gon(t: str, tran: int = 18) -> str:
 
 def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
     tieu_de, ds, nguon = so_lieu
+    # Mã nguồn dữ liệu ("usda", "fdic") là chữ NỘI BỘ viết thường. Đọc nguyên si thành "from
+    # usda" nghe như một từ lạ; viết hoa thì máy đọc tách từng chữ cái, đúng cách người ta nói
+    # tên một cơ quan. Luật 7t (mã nội bộ không được lên màn hình) áp cả cho LOA.
+    if nguon and nguon.islower() and len(nguon) <= 12 and " " not in nguon:
+        nguon = nguon.upper()
+    ds = _lam_sach_nhan(ds)
     dan = ds[:6]
     top_ten, top_gt, top_hien = dan[0]
     # ── LỜI THOẠI (29/8) — anh: "nhớ làm nội dung phù hợp hay viral cuốn hút" ──────────────
@@ -480,6 +529,15 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
             c.pop("sfx")
         canh.append(c)
         t += giay_moi_cau
+    # ══ CẢNH KHÔNG CÓ LỜI THÌ KHÔNG PHẢI LÀ MỘT CẢNH ═════════════════════════════════════
+    # 30/8 — anh: *"lúc đầu chuyển cảnh thay đổi liên tục lúc sau thì hầu như đứng im"*.
+    # Đo ra: 0,1s · 0,9s · 0,4s · 0,3s rồi một cảnh **19 giây** đứng im. Thủ phạm là một cảnh có
+    # lời RỖNG (kênh thế hệ 2 không có trường `hoi`, nên câu hỏi mở màn thành chuỗi trống).
+    # Cảnh rỗng không sinh câu nào cho máy đọc, nhưng vẫn CHIẾM một chỗ trong danh sách cảnh —
+    # nên mốc thời gian của mọi cảnh sau nó lệch đi đúng một câu, dồn hết về đầu, và phần đuôi
+    # không còn cảnh nào nhận nên bị cảnh cuối nuốt trọn.
+    # Một cảnh rỗng không "hiển thị ít hơn"; nó làm hỏng mốc thời gian của cả bài.
+    canh = [c for c in canh if str(c.get("nar") or "").strip()]
     return canh, " ".join(x[0] for x in cau)
 
 
@@ -986,11 +1044,19 @@ def main() -> int:
                 continue
             _ng = str(_k2.get("nguon") or "")
             _kieu, _boi = _NGHE_THEO_NGUON.get(_ng, ("bank", "van_phong"))
+            # `goc_nhin` là mô tả nội bộ BẰNG TIẾNG VIỆT ("Thành phần thật trong món quen").
+            # Bản đầu tôi đổ thẳng nó vào `nhan` và `hoi` — hai trường mà `dung_canh` dùng làm
+            # LỜI DẪN. Kết quả: một câu tiếng Việt lọt vào giữa bài, giọng Anh đọc nó thành âm
+            # vô nghĩa, và mốc karaoke lệch hẳn từ đó trở đi — nhịp sáu cảnh dồn cả vào 4,8 giây
+            # đầu rồi cảnh cuối kéo 21 giây đứng im. Đúng cái anh thấy.
+            # Bài học: mã nội bộ và chữ CHO NGƯỜI XEM phải tách bạch. Trường nào ra màn hình
+            # hoặc ra loa thì chỉ được nhận chữ tiếng Anh — luật 7t đã ghi cho tiêu đề, và tôi
+            # vừa vi phạm đúng nó ở một trường khác.
             chon.append({"ten": _k2["ten"], "handle": _k2.get("handle", ""),
-                         "nhan": _k2.get("goc_nhin") or _k2["ten"],
+                         "nhan": _k2["ten"],
                          "kieu": _kieu, "boi": [_boi, "ban_lam_viec", "van_phong"],
                          "mau": _MAU_THEO_NGUON.get(_ng, "van_phong"),
-                         "nguon": _ng, "hoi": _k2.get("goc_nhin") or "", "_gen2": True})
+                         "nguon": _ng, "hoi": "", "_gen2": True})
     elif a.kenh:
         vt = {x.strip().upper() for x in a.kenh.split(",")}
         chon = [k for k in KENH if k["ten"].replace(" ", "").upper() in vt]
@@ -1123,20 +1189,36 @@ def main() -> int:
             _dai.append((_bd, _bd + _n - 1))
             _bd += _n
         _mocs = {}
-        for w in tu:
-            _mocs.setdefault(w["si"], []).append(w)
-        for i2, c2 in enumerate(canh):
-            _a, _b = _dai[i2]
-            ws = [w for si in range(_a, _b + 1) for w in (_mocs.get(si) or [])]
+        # ══ CHIA CẢNH THEO SỐ TỪ, KHÔNG THEO CHỈ SỐ CÂU ══════════════════════════════════
+        # 30/8 — anh: *"lúc đầu chuyển cảnh liên tục, lúc sau hầu như đứng im; chart cũng dồn
+        # hết vào lúc đầu"*. Đo ra: 2,8s · 0,5s · 0,7s · 0,3s rồi một cảnh **19,3 giây**.
+        #
+        # Gốc rễ không nằm ở cảnh nào cả — nó nằm ở một chữ viết tắt bị hiểu nhầm. Trường `si`
+        # mà bộ đọc trả về là **chỉ số TỪ**, không phải chỉ số CÂU: đo trên chính tập này, 52 từ
+        # cho ra 50 giá trị `si` khác nhau, gần như mỗi từ một số. Mã cũ gom từ theo `si` rồi
+        # coi mỗi `si` là một câu, nên mỗi cảnh chỉ vớ được một hai từ đầu — mốc kết thúc rơi
+        # ngay sau đó, cảnh nào cũng ngắn ngủn, và toàn bộ phần đuôi không cảnh nào nhận nên
+        # cảnh cuối nuốt trọn mười chín giây.
+        #
+        # Chỗ này trước nay chạy đúng cho mười kênh cũ hoàn toàn do may: lời của chúng ngắn và
+        # đều, nên "một câu" với "một từ" lệch nhau ít tới mức không ai thấy. Đưa một nguồn có
+        # câu dài ngắn khác nhau vào là lộ ngay.
+        #
+        # Cách chắc chắn là không dựa vào `si` nữa mà đếm TỪ: mỗi cảnh biết lời của mình có bao
+        # nhiêu từ, cộng dồn qua các cảnh thì ra đúng lát cắt trong danh sách từ. Phép này không
+        # phụ thuộc bộ tách câu của thư viện ngoài, nên không hỏng khi thư viện đổi cách tách.
+        _dem = 0
+        for _i2, _c2 in enumerate(canh):
+            _n = len(str(_c2.get("nar") or "").split())
+            ws = tu[_dem:_dem + _n]
+            _dem += _n
             if ws:
-                c2["s"] = round(min(x["t"] for x in ws), 2)
-                _sau = _mocs.get(_b + 1) or []
-                c2["e"] = round(min(x["t"] for x in _sau) if _sau
-                                else max(x["t"] + x["d"] for x in ws) + 0.35, 2)
+                _c2["s"] = round(ws[0]["t"], 2)
+                _sau = tu[_dem] if _dem < len(tu) else None
+                _c2["e"] = round(_sau["t"] if _sau else (ws[-1]["t"] + ws[-1]["d"] + 0.35), 2)
             else:
-                # câu không có từ nào (TTS nuốt) -> nối tiếp cảnh trước, đừng để lỗ thời gian
-                c2["s"] = canh[i2 - 1]["e"] if i2 else 0.0
-                c2["e"] = c2["s"] + 1.2
+                _c2["s"] = canh[_i2 - 1]["e"] if _i2 else 0.0
+                _c2["e"] = _c2["s"] + 1.2
         # cảnh cuối kéo tới hết tiếng, khỏi cụt đuôi
         if canh:
             canh[-1]["e"] = round(max(canh[-1]["e"], dur), 2)

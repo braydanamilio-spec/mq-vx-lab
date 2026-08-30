@@ -5132,3 +5132,64 @@ Với nhân vật có khối và có màu, vật vẽ bằng vài hình vector �
 
 Ghi lại vì nếu chỉ chép kết luận ("đã bỏ đạo cụ") mà không chép lý do, thì lần sau đọc lại sẽ
 thấy mâu thuẫn và có thể đi sửa nhầm.
+
+### 7bx. `si` LÀ CHỈ SỐ TỪ, KHÔNG PHẢI CHỈ SỐ CÂU — 30/8/2026
+
+Anh: *"lúc đầu chuyển cảnh thay đổi liên tục lúc sau thì hầu như đứng im, chart cũng bị dồn hết
+vào lúc đầu"*. Đo ra: **2,8s · 0,5s · 0,7s · 0,3s** rồi một cảnh **19,3 giây**.
+
+Gốc rễ không nằm ở cảnh nào — nó nằm ở **một tên trường bị hiểu nhầm**. Trường `si` mà bộ đọc
+trả về là **chỉ số TỪ**, không phải chỉ số CÂU: đo trên chính tập ấy, **52 từ cho ra 50 giá trị
+`si` khác nhau**, gần như mỗi từ một số.
+
+Mã cũ gom từ theo `si` rồi coi mỗi `si` là một câu, nên mỗi cảnh chỉ vớ được một hai từ đầu —
+mốc kết thúc rơi ngay sau đó, cảnh nào cũng ngắn ngủn, và toàn bộ phần đuôi không cảnh nào nhận
+nên cảnh cuối nuốt trọn mười chín giây.
+
+**Chỗ này chạy đúng cho mười kênh cũ hoàn toàn do may.** Lời của chúng ngắn và đều, nên "một
+câu" với "một từ" lệch nhau ít tới mức không ai thấy. Đưa một nguồn có câu dài ngắn khác nhau
+vào là lộ ngay.
+
+> **Một phép tính sai vẫn cho kết quả đúng khi dữ liệu quá đều. Dữ liệu đều không phải bằng
+> chứng rằng phép tính đúng — nó chỉ là chưa có ai thử.**
+
+Cách chữa là **đếm TỪ, không đọc `si`**: mỗi cảnh biết lời của mình có bao nhiêu từ, cộng dồn qua
+các cảnh thì ra đúng lát cắt trong danh sách từ. Phép này không phụ thuộc bộ tách câu của thư
+viện ngoài, nên không hỏng khi thư viện đổi cách tách.
+
+### 7by. MÃ NỘI BỘ KHÔNG ĐƯỢC LÊN MÀN HÌNH — VÀ CŨNG KHÔNG ĐƯỢC RA LOA
+
+Luật **7t** ghi "tiêu đề không lộ mã nội bộ", và có cả một cổng quét 50 kênh cho việc ấy. Hôm nay
+tôi vi phạm đúng luật đó ở **một trường khác**:
+
+* `goc_nhin` — mô tả nội bộ **bằng tiếng Việt** (*"Thành phần thật trong món quen"*) — đổ thẳng
+  vào lời dẫn. Giọng Anh đọc nó thành âm vô nghĩa giữa bài.
+* `nguon` — mã viết thường (`usda`) — đọc lên thành *"straight from usda"*, nghe như một từ lạ
+  thay vì tên một cơ quan.
+
+Cổng cũ chỉ canh **tiêu đề**. Nay biết thêm: mọi trường đi ra **màn hình hoặc loa** đều phải qua
+cùng một luật, và danh sách trường ấy dài hơn mình nhớ.
+
+### 7bz. BA VIDEO THAM KHẢO — GIỮ KHUNG YÊN ĐỂ NGƯỜI XEM NGHE ĐƯỢC LỜI
+
+Anh gửi ba phim ngắn và nhận xét: *"bối cảnh và hình ảnh họ làm rất đơn giản, còn xấu hơn mình,
+nhưng họ diễn đạt đúng ý, người xem hook hay hiểu ngay gây tiếng cười ngay"*.
+
+Đo bằng máy trên chính ba phim ấy:
+
+| | ba phim tham khảo | mười kênh của mình |
+|---|---|---|
+| số lần đổi cảnh | **0** (phim 11 giây) · 3 (phim 18 giây, đều là đổi **cỡ máy** trong cùng một phòng) | **6** — đổi hẳn địa điểm |
+| máy quay | đứng yên hoặc tiến rất chậm | zoom + lia liên tục |
+| thay đổi nằm ở | **nhân vật** | **khung hình** |
+| biểu cảm | lông mày xếch hẳn, miệng há trọn | nhẹ hơn nhiều |
+
+**Đổi cảnh liên tục không che được hình yếu — nó phơi hình yếu ra sáu lần thay vì một.**
+
+Việc này **đảo ngược** một yêu cầu trước của anh (*"nói hết một câu thì đổi nền"*). Yêu cầu ấy
+sinh ra từ triệu chứng **đúng** — anh thấy tĩnh và chán — nhưng nguyên nhân thì khác: cái tĩnh
+đến từ **nhân vật diễn nhạt**, không từ nền đứng yên. Ba phim kia có nền bất động suốt mà không
+giây nào tĩnh.
+
+Ghi lại để sau này đọc không tưởng là mâu thuẫn: **cùng một triệu chứng có thể tới từ hai nguyên
+nhân, và chữa nhầm nguyên nhân thì triệu chứng vẫn còn — chỉ đổi hình dạng.**
