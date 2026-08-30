@@ -41,9 +41,18 @@ GOC = os.path.dirname(os.path.abspath(__file__))
 # Mỗi câu hỏi là một lỗi CÓ THẬT anh đã chỉ ra hôm nay. Không thêm câu nào "cho đủ bộ": mỗi câu
 # tốn một lượt gọi mô hình, và một câu chưa từng bắt được lỗi nào chỉ làm chậm cổng.
 CAU_HOI = [
-    ("nhan_vat_cut",
-     "Is any cartoon person cut off by the edge of the frame so that part of their body is "
-     "missing? Answer exactly one word: YES or NO."),
+    # Câu đầu tiên của bản này hỏi "có nhân vật nào bị mép khung cắt mất một phần thân không".
+    # Nó tố cả ba video, và soi mắt thì cả ba đều ở CỠ CẬN — nơi cắt vai là ngôn ngữ điện ảnh
+    # bình thường, không phải lỗi. Câu hỏi đúng ngữ pháp mà sai ngưỡng: nó bắt cả những cú cận
+    # cảnh đúng đắn.
+    # Thứ THẬT SỰ hỏng là khi cắt tới mức không còn đọc được MẶT — đó mới là khung mất nhân vật.
+    ("mat_nguoi",
+     "Is a cartoon person's face fully visible in this image? A face cut in half by the frame "
+     "edge does not count as visible. Answer exactly one word: YES or NO."),
+    ("chu_gia",
+     "Does this image contain any letters or words that are NOT part of a subtitle box at the "
+     "bottom — for example on a wall, sign, poster or product? Answer exactly one word: "
+     "YES or NO."),
     ("chu_tran",
      "Is any text or number cut off or clipped by a panel edge or the frame edge, so it cannot "
      "be read fully? Answer exactly one word: YES or NO."),
@@ -55,7 +64,8 @@ CAU_HOI = [
      "Answer exactly one word: YES or NO."),
 ]
 # Câu nào mà câu trả lời ĐÚNG là "NO" thì ghi ở đây; còn lại đúng là "YES".
-DAP_AN = {"nhan_vat_cut": "NO", "chu_tran": "NO", "nen_de": "NO", "khong_co_nguoi": "YES"}
+DAP_AN = {"mat_nguoi": "YES", "chu_gia": "NO", "chu_tran": "NO", "nen_de": "NO",
+          "khong_co_nguoi": "YES"}
 
 
 def _khung(mp4: str, giay: float, ra: str) -> bool:

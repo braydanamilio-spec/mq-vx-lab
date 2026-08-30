@@ -670,6 +670,24 @@ def ve_nen_moi_luot(k: dict, DS, canh_ds: list) -> list:
             continue
         rel = os.path.join("v4nen", f"c{_hl.md5(canh.encode('utf-8')).hexdigest()[:10]}.jpg")
         dest = os.path.join(PUB, rel)
+        # 30/8 — anh soi ra chữ giả vẫn còn trên nền ("MATLE", "GYM", "PRICE") dù bộ dò chữ đã
+        # nối vào sáng nay. Gốc rễ ở ngay dòng này: ảnh đã có trên đĩa thì trả về NGAY, không
+        # qua bất kỳ phép kiểm nào. Gần mười một nghìn ảnh nền vẽ TRƯỚC khi có bộ dò, và tất cả
+        # đi thẳng vào video mà không lần nào bị hỏi.
+        # **Một cổng đặt sau bộ nhớ đệm thì nó chỉ gác những thứ chưa từng đi qua.**
+        # Nay ảnh cache phải có DẤU ĐÃ KIỂM (`.ok` bên cạnh) mới được dùng thẳng; ảnh cũ không
+        # có dấu thì bị dò một lần rồi ghi dấu — nên mỗi ảnh chỉ tốn một lượt hỏi, đúng một lần
+        # trong đời nó.
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            _dau = dest + ".ok"
+            if not os.path.exists(_dau):
+                if _co_chu(dest):
+                    try:
+                        os.remove(dest)
+                    except OSError:
+                        pass
+                else:
+                    io.open(_dau, "w").write("1")
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.append(rel)
             continue
@@ -696,6 +714,8 @@ def ve_nen_moi_luot(k: dict, DS, canh_ds: list) -> list:
                 DS.nang_sang_anh(dest); _keo_sang(dest)
                 if _nen_hong(dest) or _co_chu(dest):
                     os.remove(dest); ok = None
+                else:
+                    io.open(dest + ".ok", "w").write("1")
             except Exception:
                 pass
         ra.append(rel if (ok and os.path.exists(dest)) else "")
@@ -841,6 +861,24 @@ def ve_nen(k: dict, DS, keys, canh_tap: str = "") -> list:
         _kh = _hl.md5(canh_tap.encode("utf-8")).hexdigest()[:8]
         rel = os.path.join("v4nen", f"{_ten_tep(k)}_t{_kh}.jpg")
         dest = os.path.join(PUB, rel)
+        # 30/8 — anh soi ra chữ giả vẫn còn trên nền ("MATLE", "GYM", "PRICE") dù bộ dò chữ đã
+        # nối vào sáng nay. Gốc rễ ở ngay dòng này: ảnh đã có trên đĩa thì trả về NGAY, không
+        # qua bất kỳ phép kiểm nào. Gần mười một nghìn ảnh nền vẽ TRƯỚC khi có bộ dò, và tất cả
+        # đi thẳng vào video mà không lần nào bị hỏi.
+        # **Một cổng đặt sau bộ nhớ đệm thì nó chỉ gác những thứ chưa từng đi qua.**
+        # Nay ảnh cache phải có DẤU ĐÃ KIỂM (`.ok` bên cạnh) mới được dùng thẳng; ảnh cũ không
+        # có dấu thì bị dò một lần rồi ghi dấu — nên mỗi ảnh chỉ tốn một lượt hỏi, đúng một lần
+        # trong đời nó.
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            _dau = dest + ".ok"
+            if not os.path.exists(_dau):
+                if _co_chu(dest):
+                    try:
+                        os.remove(dest)
+                    except OSError:
+                        pass
+                else:
+                    io.open(_dau, "w").write("1")
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.append(rel)
         else:
@@ -877,6 +915,24 @@ def ve_nen(k: dict, DS, keys, canh_tap: str = "") -> list:
     for i, prompt in enumerate(k["nen"]):
         rel = os.path.join("v4nen", f"{_ten_tep(k)}_{i}.jpg")
         dest = os.path.join(PUB, rel)
+        # 30/8 — anh soi ra chữ giả vẫn còn trên nền ("MATLE", "GYM", "PRICE") dù bộ dò chữ đã
+        # nối vào sáng nay. Gốc rễ ở ngay dòng này: ảnh đã có trên đĩa thì trả về NGAY, không
+        # qua bất kỳ phép kiểm nào. Gần mười một nghìn ảnh nền vẽ TRƯỚC khi có bộ dò, và tất cả
+        # đi thẳng vào video mà không lần nào bị hỏi.
+        # **Một cổng đặt sau bộ nhớ đệm thì nó chỉ gác những thứ chưa từng đi qua.**
+        # Nay ảnh cache phải có DẤU ĐÃ KIỂM (`.ok` bên cạnh) mới được dùng thẳng; ảnh cũ không
+        # có dấu thì bị dò một lần rồi ghi dấu — nên mỗi ảnh chỉ tốn một lượt hỏi, đúng một lần
+        # trong đời nó.
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            _dau = dest + ".ok"
+            if not os.path.exists(_dau):
+                if _co_chu(dest):
+                    try:
+                        os.remove(dest)
+                    except OSError:
+                        pass
+                else:
+                    io.open(_dau, "w").write("1")
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             _xau = _nen_hong(dest) or (_co_chu(dest) and 'còn chữ trong ảnh')
             if not _xau:

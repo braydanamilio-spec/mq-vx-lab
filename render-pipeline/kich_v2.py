@@ -1058,6 +1058,19 @@ def ve_nen_moi_cau(k: dict, DS, canh_ds: list) -> list:
             continue
         rel = os.path.join("v3nen", f"c{_hl.md5(canh.encode('utf-8')).hexdigest()[:10]}.jpg")
         dest = os.path.join(PUB, rel)
+        # Cùng lỗi với bên `kich_hai`: cache trả ảnh về trước mọi phép kiểm, nên ảnh cũ không
+        # bao giờ bị dò chữ. Xem chú thích đầy đủ ở đó.
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            _dau = dest + ".ok"
+            if not os.path.exists(_dau):
+                import kich_hai as _KHc
+                if _KHc._co_chu(dest):
+                    try:
+                        os.remove(dest)
+                    except OSError:
+                        pass
+                else:
+                    io.open(_dau, "w").write("1")
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.append(rel)
             continue
@@ -1120,6 +1133,19 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
     for i, prompt in enumerate(NEN_V3.get(k["ten"], [])):
         rel = os.path.join("v3nen", f"{k['ten'].replace(' ', '').lower()}_{i}.jpg")
         dest = os.path.join(PUB, rel)
+        # Cùng lỗi với bên `kich_hai`: cache trả ảnh về trước mọi phép kiểm, nên ảnh cũ không
+        # bao giờ bị dò chữ. Xem chú thích đầy đủ ở đó.
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            _dau = dest + ".ok"
+            if not os.path.exists(_dau):
+                import kich_hai as _KHc
+                if _KHc._co_chu(dest):
+                    try:
+                        os.remove(dest)
+                    except OSError:
+                        pass
+                else:
+                    io.open(_dau, "w").write("1")
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.append(rel)
             continue
@@ -1160,6 +1186,19 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
         _kh = _hl.md5(chu_de.encode("utf-8")).hexdigest()[:8]
         rel = os.path.join("v3nen", f"{k['ten'].replace(' ', '').lower()}_t{_kh}.jpg")
         dest = os.path.join(PUB, rel)
+        # Cùng lỗi với bên `kich_hai`: cache trả ảnh về trước mọi phép kiểm, nên ảnh cũ không
+        # bao giờ bị dò chữ. Xem chú thích đầy đủ ở đó.
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            _dau = dest + ".ok"
+            if not os.path.exists(_dau):
+                import kich_hai as _KHc
+                if _KHc._co_chu(dest):
+                    try:
+                        os.remove(dest)
+                    except OSError:
+                        pass
+                else:
+                    io.open(_dau, "w").write("1")
         if os.path.exists(dest) and os.path.getsize(dest) > 20000:
             ra.insert(0, rel)
             return ra
