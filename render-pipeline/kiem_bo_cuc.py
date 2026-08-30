@@ -77,6 +77,11 @@ def cham(f: str) -> list[str]:
             xs = [40, 430]
         elif goc == "mot_nguoi":
             xs = [0]
+        elif (l.get("co") or "trung") == "can":
+            # 31/8 — cỡ cận là cận MỘT người: máy lia đưa người trung tâm về giữa khung, người
+            # kia ra hẳn ngoài. Cổng phải mô phỏng đúng cú lia ấy, nếu không nó lại chấm một bố
+            # cục không hề tồn tại — và đó là cách nó báo "lành" trong khi khung vẫn cắt.
+            xs = [0.0]
         else:
             xs = [-x_dung(co, _mot), x_dung(co, _mot)]   # đơn vị viewBox cuối
         for x in xs:

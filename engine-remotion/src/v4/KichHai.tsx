@@ -454,13 +454,30 @@ export const KichHai: React.FC<PropsHai> = ({
   // đúng và không phép nào chạm tới kết quả. Đúng bài học đã ghi ba lần: nếu sửa mà triệu chứng
   // không đổi, thì chỗ đang sửa không nằm trên đường đi của hình.
   // Điều kiện thật, ở đơn vị viewBox cuối: |x| + nửa_người·zoom ≤ 500. Chừa 6 cho nét viền.
+  const _canhCan = (L.co || "trung") === "can";
+
+  // Khai SỚM: toạ độ nhân vật cần biết ai là trung tâm, mà bản trước khai mãi phía dưới —
+  // dùng trước khi khai là ReferenceError lúc render, lỗi đã dính bảy lần trong dự án này.
+  const _phanUng = !!L.chot && giay > L.e - 1.25;
+  const _aiTrungTam = _phanUng ? !noiA_ : noiA_;
+
   const _nuaPx = _NUA_NGUOI * zoom;
   const _xAn = Math.min(292, 500 - _nuaPx - 6);
+  // 31/8 — CỠ CẬN LÀ CẬN MỘT NGƯỜI. Ở cỡ cận, máy lia sang người đang nói (`liaVao`), và cú
+  // lia ấy đẩy người kia ra mép: nửa trong nửa ngoài. Đó chính là thứ anh gọi là "nhân vật bị
+  // lệch khỏi khung" — không phải toạ độ đặt sai, mà là máy quay dịch sau khi đặt.
+  // Tính ra thì lia và giữ-trọn-hai-người xung khắc: muốn cả hai còn nguyên thì chỉ được lia
+  // tối đa 16 đơn vị, tức gần như không lia. Không có cách nào vừa lia vừa giữ đủ hai người.
+  // Nghề phim giải bài này từ lâu và giải bằng DỰNG chứ không bằng bố cục: cận cảnh là cận MỘT
+  // người. Người kia ra hẳn khỏi khung — đó là một cú cắt, còn để hở nửa người là một cú lỗi.
+  const _canOne = _canhCan && !_motNguoi && !_quaVai;
   const _xA = _quaVai ? (noiA_ ? -40 : -430)      // qua vai: người nói lệch nhẹ khỏi tâm (quy
             : _motNguoi ? (noiA_ ? 0 : -9999)     //   tắc một-phần-ba), người nghe ra sát mép
+            : _canOne ? (_aiTrungTam ? -_xAn : -9999)
             : -_xAn;
   const _xB = _quaVai ? (noiA_ ? 430 : 40)        // một người: người kia đẩy hẳn ra ngoài
             : _motNguoi ? (noiA_ ? 9999 : 0)
+            : _canOne ? (_aiTrungTam ? 9999 : _xAn)
             : _xAn;
   // Tiền cảnh gần ống kính nên TO hơn và TỐI hơn — hai dấu hiệu chiều sâu mà mắt đọc tức thì.
   // 30/8 — anh nhắc lại: *"nhớ ko nhân vật to nhỏ lỗi nha"*.
@@ -509,7 +526,6 @@ export const KichHai: React.FC<PropsHai> = ({
   // NGỮ PHÁP PHIM: toàn cảnh cho thấy đang ở đâu, trung cảnh cho thấy hai người, còn cận cảnh
   // thì theo định nghĩa chỉ có MỘT người — người đang nói. Máy quay dịch ngang để đưa người ấy
   // vào giữa khung, và cú chốt vì thế rơi đúng vào một khuôn mặt chiếm gần hết màn hình.
-  const _canhCan = (L.co || "trung") === "can";
 
   // ══ CẮT CẢNH PHẢN ỨNG — máy quay bỏ người nói, quay sang NGƯỜI NGHE ═════════════════
   // 30/8 — Đo trên khung thật: ở cú chốt, máy đang cận vào người NÓI (đúng, họ đang nói câu
@@ -525,8 +541,6 @@ export const KichHai: React.FC<PropsHai> = ({
   // Ở nhịp phản ứng, người NGHE mới là người diễn — `dangNoi` phải trả lại đủ biên độ cho họ,
   // không thì máy cắt sang một pho tượng. (Chú thích để ở đây, KHÔNG để giữa các thuộc tính JSX:
   // `{/* */}` xen giữa thuộc tính là lỗi cú pháp — đã dính bốn lần, xem luật 7t.)
-  const _phanUng = !!L.chot && giay > L.e - 1.25;
-  const _aiTrungTam = _phanUng ? !noiA_ : noiA_;
   const _tamNguoi = _aiTrungTam ? dichA : dichB;
   // Khi cắt sang người nghe thì lia RẤT nhanh (0,12 giây) — cắt cảnh trong hài phải dứt khoát,
   // lia chậm biến một cú cắt thành một cú trượt và mất hết sức nặng.
