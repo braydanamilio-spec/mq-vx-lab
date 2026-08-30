@@ -549,9 +549,21 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
     thu = os.path.join(PUB, "v3nen")
     os.makedirs(thu, exist_ok=True)
     ra = []
-    gu = ("flat 2D cartoon background in the style of a clean American explainer animation, "
-          "bold clean outlines, simple flat colours, no people, no text, no signage, "
-          "wide establishing shot, calm professional mood")
+    # 30/8 — DÙNG ĐÚNG MỘT CÂU GU VỚI BỘ HÀI. Anh: *"vẽ theo kiểu như bối cảnh style dạng như
+    # mấy videos trước e demo"*.
+    # Bản trước tôi tự viết một câu gu riêng cho bộ dữ liệu ("clean American explainer animation,
+    # calm professional mood") vì nghĩ kênh nghiêm túc thì nền phải điềm đạm hơn. Kết quả: nền
+    # V3 nhạt màu, ít chi tiết, trông như bản nháp bên cạnh nền của bộ hài.
+    # Sai ở chỗ lẫn hai thứ: CHẤT (nghiêm túc hay hài) nằm ở nội dung, ở nhạc, ở ký hiệu cảm xúc
+    # — KHÔNG nằm ở nét vẽ nền. Cùng một nét vẽ ấm và giàu chi tiết thì kênh nào cũng đẹp hơn.
+    # Nên hai bộ dùng CHUNG một câu gu, và giữ nó ở một chỗ để không bao giờ trôi xa nhau nữa.
+    try:
+        import kich_hai as _KHG
+        gu = _KHG.GU_NEN
+    except Exception:
+        gu = ("flat 2D cartoon background in the style of classic American animated sitcoms, "
+              "bold clean outlines, simple flat colours, no people, no text, no signage, "
+              "wide establishing shot, slightly stylised perspective")
     for i, prompt in enumerate(NEN_V3.get(k["ten"], [])):
         rel = os.path.join("v3nen", f"{k['ten'].replace(' ', '').lower()}_{i}.jpg")
         dest = os.path.join(PUB, rel)

@@ -4634,3 +4634,43 @@ hiệu" và *cốc cà phê* cho kênh chi phí y tế — hai thứ chẳng nó
 **Kho nhạc không đủ thì tạo biến thể, đừng đi tải.** 15 bản nhạc cho 20 kênh. Hạ tông ba nửa cung
 rồi kéo lại tốc độ (`asetrate` + `atempo`) cho ra một bản nghe khác hẳn — không tốn lượt gọi nào,
 không thêm rủi ro bản quyền nào (vẫn nguồn đã dùng). Đủ 20 bản cho 20 kênh.
+
+### 7av. CHẤT CỦA KÊNH KHÔNG NẰM Ở NÉT VẼ NỀN — 30/8/2026
+
+Anh: *"vẽ theo kiểu như bối cảnh style dạng như mấy videos trước e demo"*.
+
+Khi làm nền cho bộ dữ liệu, tôi **tự viết một câu gu riêng** — `"clean American explainer
+animation, calm professional mood"` — với lý do: kênh nghiêm túc thì nền phải điềm đạm hơn kênh
+hài. Kết quả: nền V3 **nhạt màu, ít chi tiết**, trông như bản nháp đặt cạnh nền của bộ hài.
+
+**Sai ở chỗ lẫn hai thứ.** Chất của một kênh (nghiêm túc hay hài) nằm ở:
+* nội dung và cách kể · nhạc nền · ký hiệu cảm xúc bật hay tắt · trang phục nhân vật · đạo cụ.
+
+Nó **không** nằm ở nét vẽ nền. Một cái sảnh ngân hàng vẽ ấm và giàu chi tiết vẫn là một cái sảnh
+ngân hàng nghiêm túc — chỉ là đẹp hơn. **Cùng một nét vẽ đẹp thì kênh nào cũng hưởng.**
+
+Nay `GU_NEN` là **một hằng số duy nhất** trong `kich_hai.py`, bộ dữ liệu nhập thẳng từ đó. Hai
+câu gu riêng là hai thứ chắc chắn sẽ trôi xa nhau — lần này trôi thành "đẹp" và "nhạt".
+
+**Ranh giới bản quyền của chính câu gu:** `"classic American animated sitcoms"` là tên một DÒNG
+phim (hàng chục sê-ri từ thập niên 1990), không phải tên một tác phẩm. Cố ý không nhắc tên phim
+nào — cùng nguyên tắc đã áp cho tạo hình nhân vật (luật 7al).
+
+### 7aw. NỀN PHẢI NÓI VỀ THỨ ĐANG KỂ, KHÔNG CHỈ VỀ CHỖ NGƯỜI KỂ ĐANG ĐỨNG
+
+Anh: *"footage là nền lấy từ ai generate của mình cho phù hợp NỘI DUNG VIDEOS ấy"*.
+
+Bản đầu chọn nền theo **nghề của kênh** và cố định một tấm cho cả video — nên tập nào của WHO
+OWNS IT cũng đứng trong đúng một cái sảnh công ty, dù tập này nói về nước ngọt còn tập kia nói
+về thịt gà.
+
+`_chu_de_nen` đoán chủ đề từ **tiêu đề + nhãn cột** rồi sinh thêm MỘT nền riêng cho tập, dành cho
+đoạn MỞ — giây đầu người xem thấy ngay video nói về cái gì.
+
+**Tên riêng tuyệt đối không được lọt vào câu vẽ.** Máy vẽ thấy `"Gatorade"` là dựng ngay một cái
+chai có logo, mà logo thật trong khung của kênh bật kiếm tiền là rủi ro pháp lý (luật 7w). Bảng
+`_LOAI` đổi tên riêng thành LOẠI HÀNG: `Gatorade → "bottled drinks on a shelf"`. Cùng thông tin
+cho máy vẽ, không có nhãn hiệu nào.
+
+Nền theo chủ đề **cache theo chính chủ đề** (md5 của cụm mô tả), nên hai tập cùng chủ đề dùng
+chung một ảnh — không tốn lượt vẽ lần thứ hai.

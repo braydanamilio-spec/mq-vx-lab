@@ -572,6 +572,21 @@ def _ten_tep(k: dict) -> str:
     return k["ten"].replace(" ", "").lower()
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# CÂU GU VẼ NỀN — MỘT CHỖ DUY NHẤT, DÙNG CHUNG CHO CẢ HAI BỘ
+# ------------------------------------------------------------------------------------------
+# 30/8 — Trước đây mỗi bộ tự viết một câu gu, và hai câu ấy trôi xa nhau: bộ hài được "classic
+# American animated sitcoms" (ấm, giàu chi tiết), bộ dữ liệu bị "clean explainer animation, calm
+# professional mood" (nhạt, ít chi tiết) vì tôi nghĩ kênh nghiêm túc thì nền phải điềm đạm hơn.
+# Nghĩ thế là lẫn hai thứ: CHẤT của kênh nằm ở nội dung, ở nhạc, ở ký hiệu cảm xúc — KHÔNG nằm
+# ở nét vẽ nền. Cùng một nét vẽ đẹp thì kênh nào cũng hưởng.
+# Cố ý KHÔNG nhắc tên một bộ phim nào: "classic American animated sitcoms" là tên một DÒNG phim
+# (đã có hàng chục sê-ri từ thập niên 1990), không phải tên một tác phẩm có bản quyền.
+GU_NEN = ("flat 2D cartoon background in the style of classic American animated sitcoms, "
+          "bold clean outlines, simple flat colours, no people, no text, no signage, "
+          "wide establishing shot, slightly stylised perspective")
+
+
 def _keo_sang(tep: str, san_den: float = 0.05, san_sang: int = 96) -> None:
     """Kéo một ảnh nền ra khỏi vùng tối, đo trước khi kéo.
 
@@ -629,9 +644,7 @@ def ve_nen(k: dict, DS, keys) -> list:
                 continue
             print(f"      ♻️ nền {i} bỏ và vẽ lại: {_xau}")
             os.remove(dest)
-        gu = ("flat 2D cartoon background in the style of classic American animated sitcoms, "
-              "bold clean outlines, simple flat colours, no people, no text, no signage, "
-              "wide establishing shot, slightly stylised perspective")
+        gu = GU_NEN
         # 29/8 — GỌI THẲNG `_generate_image_ai`, KHÔNG QUA `fetch_image`.
         # `fetch_image` chỉ vẽ khi có tham số `ai_key` truyền vào (`if ai_key and ...`), nên gọi
         # nó với `ai_only=True` mà không kèm khoá thì nó lặng lẽ trả None — đúng cảnh vừa gặp:
