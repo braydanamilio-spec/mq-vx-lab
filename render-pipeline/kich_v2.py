@@ -688,6 +688,25 @@ def _lam_sach_nhan(ds: list) -> list:
             ra.append(w[-1])
         else:
             ra.append(x)
+    # ══ NHÃN PHẢI LÀ MỘT CÁI TÊN, KHÔNG PHẢI MỘT MẢNH CÂU ══════════════════════════════
+    # 31/8 — Thước chấm đọc ra: 'of Delaware', 'the a', 'of sleep-di', và ba nhãn chỉ là '12',
+    # '6', '1'. Đấy đều là sản phẩm của chính phép rút gọn ngay trên: giữ hai từ cuối của một
+    # cụm dài thì hai từ ấy có thể rơi vào giữa mệnh đề, và cái còn lại là một mẩu không ai đọc
+    # ra nghĩa. Người xem nhìn cột ghi "of Delaware" thì không biết cột ấy nói về cái gì — biểu
+    # đồ mất luôn lý do tồn tại.
+    # Ba dấu hiệu một nhãn đã hỏng: bắt đầu bằng từ chức năng, chỉ còn toàn chữ số, hoặc ngắn
+    # dưới ba ký tự. Gặp thì trả lại tên đầy đủ: dài mà đọc được vẫn hơn gọn mà vô nghĩa.
+    _CHUC_NANG = {"of", "the", "a", "an", "and", "or", "in", "on", "at", "for", "to", "by",
+                  "with", "from", "vs", "de", "la", "el"}
+    for _i, _x in enumerate(ra):
+        _w = _x.split()
+        _hong = (not _w
+                 or _w[0].lower() in _CHUC_NANG
+                 or _re.fullmatch(r"[\d.,%+-]+", _x or "")
+                 or len(_x.strip()) < 3)
+        if _hong and ten[_i] and ten[_i] != _x:
+            ra[_i] = ten[_i]
+
     # ══ RÚT GỌN KHÔNG ĐƯỢC LÀM HAI MỤC THÀNH MỘT ═══════════════════════════════════════
     # Khung CALORIE SHOCK: hai cột cùng mang nhãn "Peanut Butter" — hai sản phẩm khác nhau, hai
     # con số khác nhau, mà tên hiện ra giống hệt. Người xem đọc thành "cùng một thứ có hai giá
