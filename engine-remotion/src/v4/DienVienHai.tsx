@@ -105,7 +105,7 @@ export type PropsHai = {
 // ══════════════════════════════════════════════════════════════════════════════════════════
 const Y_HONG = -168;
 const Y_VAI = -262;
-const R_DAU = 58;
+const R_DAU_GOC = 58;
 
 export const DienVienHai: React.FC<PropsHai> = ({
   kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0, giat = 0, dangNoi = true,
@@ -118,6 +118,12 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const ngang = kieu.beNgang ?? 1;
   const matTo = kieu.matTo ?? 1;
   const camV = kieu.cam ?? 0.4;
+  // Đầu to/nhỏ là trục đổi TUỔI mạnh nhất: đầu to đọc ra là trẻ con và hài, đầu nhỏ đọc ra là
+  // người lớn nghiêm. Rẻ hơn nhiều so với vẽ lại toàn bộ nét mặt.
+  const R_DAU = R_DAU_GOC * (kieu.tiLeDau ?? 1);
+  const kMui = kieu.kieuMui || "moc";
+  const kMat = kieu.kieuMat || "bau";
+  const kMay = kieu.kieuMay || "day";
 
   // Nét bao dày là thứ đầu tiên mắt đọc ra "đây là phim hoạt hình". Giữ bề dày TRÊN MÀN HÌNH
   // không đổi bằng cách chia cho `scale` — không chia thì nhân vật càng xa nét càng mảnh và
@@ -448,8 +454,14 @@ export const DienVienHai: React.FC<PropsHai> = ({
             đè lên mép trên tròng trắng: đó là thứ làm mắt có "mí" thay vì là hai quả trứng. */}
         {[-1, 1].map((sg) => (
           <g key={sg}>
-            <ellipse cx={dau[0] + sg * cachMat} cy={dau[1] + yMat} rx={rMat} ry={rMat * 1.24 * (0.2 + 0.8 * mm)}
-                     fill="#FFFFFF" stroke={V} strokeWidth={NT * 1.5} />
+            {/* BỐN KIỂU MẮT — bầu dục đứng (mặc định) · tròn (ngơ ngác) · hẹp (ranh mãnh) ·
+                xếch (đanh đá). Tỉ lệ cao/rộng là thứ đổi tính cách nhanh nhất. */}
+            <ellipse cx={dau[0] + sg * cachMat} cy={dau[1] + yMat}
+                     rx={rMat * (kMat === "hep" ? 1.16 : 1)}
+                     ry={rMat * (kMat === "tron" ? 1.0 : kMat === "hep" ? 0.62 : 1.24)
+                         * (0.2 + 0.8 * mm)}
+                     fill="#FFFFFF" stroke={V} strokeWidth={NT * 1.5}
+                     transform={kMat === "xech" ? `rotate(${sg * 9} ${dau[0] + sg * cachMat} ${dau[1] + yMat})` : undefined} />
             {mm > 0.22 ? (
               <>
                 <circle cx={dau[0] + sg * cachMat + mx} cy={dau[1] + yMat + my + rMat * 0.16} r={rTrong * 0.62}
@@ -476,9 +488,25 @@ export const DienVienHai: React.FC<PropsHai> = ({
           const ng = E.may * sg * -1;
           return (
             <path key={sg}
-              d={`M ${bx - rMat * 1.16} ${by + ng * 0.42 + 5}
-                  Q ${bx} ${by - 8 - ng * 0.24} ${bx + rMat * 1.16} ${by - ng * 0.42 + 5}
-                  Q ${bx} ${by - ng * 0.24} ${bx - rMat * 1.16} ${by + ng * 0.42 + 5} Z`}
+              d={kMay === "manh"
+                 // mảnh — nét cong một đường, nữ tính hoặc trẻ
+                 ? `M ${bx - rMat * 1.1} ${by + ng * 0.42 + 6}
+                    Q ${bx} ${by - 5 - ng * 0.24} ${bx + rMat * 1.1} ${by - ng * 0.42 + 6}
+                    Q ${bx} ${by - 1 - ng * 0.24} ${bx - rMat * 1.1} ${by + ng * 0.42 + 6} Z`
+                 : kMay === "xech"
+                 // xếch — đầu trong thấp, đuôi ngoài cao: mặt đanh, hay phán xét
+                 ? `M ${bx - sg * rMat * 1.14} ${by + ng * 0.42 + 9}
+                    Q ${bx} ${by - 9 - ng * 0.24} ${bx + sg * rMat * 1.14} ${by - ng * 0.42 - 2}
+                    Q ${bx} ${by - ng * 0.24} ${bx - sg * rMat * 1.14} ${by + ng * 0.42 + 9} Z`
+                 : kMay === "ru"
+                 // rủ — hai đầu chúi xuống: mặt lo lắng, cam chịu
+                 ? `M ${bx - rMat * 1.14} ${by + ng * 0.42 - 1}
+                    Q ${bx} ${by + 9 - ng * 0.24} ${bx + rMat * 1.14} ${by - ng * 0.42 - 1}
+                    Q ${bx} ${by + 3 - ng * 0.24} ${bx - rMat * 1.14} ${by + ng * 0.42 - 1} Z`
+                 // dày — khối đặc, mặc định
+                 : `M ${bx - rMat * 1.16} ${by + ng * 0.42 + 5}
+                    Q ${bx} ${by - 8 - ng * 0.24} ${bx + rMat * 1.16} ${by - ng * 0.42 + 5}
+                    Q ${bx} ${by - ng * 0.24} ${bx - rMat * 1.16} ${by + ng * 0.42 + 5} Z`}
               fill={kieu.toc} stroke={V} strokeWidth={NT * 0.9} strokeLinejoin="round" />
           );
         })}
@@ -488,9 +516,25 @@ export const DienVienHai: React.FC<PropsHai> = ({
         {/* MŨI — MỘT NÉT MÓC, không phải hình khép kín. Bản trước vẽ mũi thành khối có viền, và
             ở cỡ này nó đọc ra là một dấu hỏi giữa mặt. Trong dòng phim tham chiếu, mũi chỉ là một
             nét: xuống từ giữa hai mắt, móc sang một bên, hết. Ít nét thì mặt sạch mà vẫn có mũi. */}
-        <path d={`M ${dau[0] + mx * 0.45} ${dau[1] + 1}
-                  q -2 11 4 15 q 7 4 11 -3`}
-              stroke={V} strokeWidth={NT * 1.6} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        {(() => {
+          const nx = dau[0] + mx * 0.45, ny = dau[1] + 1;
+          const net = { stroke: V, strokeWidth: NT * 1.6, fill: "none" as const,
+                        strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+          // NĂM KIỂU MŨI. Đây là nét tách hai nhân vật mạnh nhất trên khuôn mặt: đổi mũi là đổi
+          // người, dù mọi thứ khác giữ nguyên.
+          if (kMui === "cu")                        // củ hành — ông chú, thợ thuyền
+            return <ellipse cx={nx + 4} cy={ny + 11} rx={11} ry={9} fill={_sang(da, 0.94)}
+                            stroke={V} strokeWidth={NT * 1.5} />;
+          if (kMui === "nhon")                      // nhọn — người sắc sảo, hay soi
+            return <path d={`M ${nx} ${ny - 2} l 13 17 l -12 2 Z`} fill={_sang(da, 0.96)}
+                         stroke={V} strokeWidth={NT * 1.4} strokeLinejoin="round" />;
+          if (kMui === "hat")                       // hạt đậu — trẻ con, dễ thương
+            return <ellipse cx={nx + 2} cy={ny + 9} rx={6} ry={5} fill={_sang(da, 0.92)}
+                            stroke={V} strokeWidth={NT * 1.3} />;
+          if (kMui === "quap")                      // quặp xuống — người khó tính
+            return <path d={`M ${nx} ${ny - 1} q 2 12 9 15 q 6 2 5 -5`} {...net} />;
+          return <path d={`M ${nx} ${ny} q -2 11 4 15 q 7 4 11 -3`} {...net} />;   // móc — mặc định
+        })()}
 
         {/* MÁ HỒNG — hai chấm mờ, đặt THẤP và RỘNG hơn bản cũ để hợp với sọ quả lê. */}
         <ellipse cx={dau[0] - cachMat - 10} cy={dau[1] + 22} rx={13} ry={7} fill="#E8836F" opacity={0.28} />

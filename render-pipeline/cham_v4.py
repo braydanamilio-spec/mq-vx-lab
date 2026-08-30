@@ -327,6 +327,25 @@ def main() -> int:
         _b = [kb["boi"] for kb in H.KHO[x["de"]]]
         if len(set(_b)) < len(_b):
             trung.setdefault("boi_trong_kenh", {})[x["ten"]] = [x["ten"]]
+    # 30/8 — HAI MƯƠI NHÂN VẬT PHẢI CÓ HAI MƯƠI KHUÔN MẶT.
+    # Sau khi dựng lại mặt kiểu hoạt hình Mỹ, cả mười kênh dùng CHUNG một khuôn — chỉ khác chiều
+    # cao, bề ngang, cỡ mắt, độ bạnh hàm. Bốn trục ấy đổi được DÁNG NGƯỜI nhưng không đổi được
+    # KHUÔN MẶT: xem mười khung cạnh nhau vẫn ra một người tô lại, đúng thứ anh dặn tránh.
+    # Trong hoạt hình, thứ tách hai nhân vật là BA NÉT — mũi, mắt, lông mày. Phép đo này chốt
+    # rằng không hai nhân vật nào (kể cả ở hai kênh khác nhau) dùng chung một tổ hợp.
+    _mat = {}
+    for x in H.KENH:
+        a, b = H._hai_bong(x)
+        for ben, y in ((0, a), (1, b)):
+            khoa = (y.get("kieuMui"), y.get("kieuMat"), y.get("kieuMay"), y.get("tiLeDau"))
+            if None in khoa[:3]:
+                trung.setdefault("net_mat_thieu", {})[x["ten"]] = [x["ten"]]
+                continue
+            _mat.setdefault(khoa, []).append(f"{x['ten']}/{'AB'[ben]}")
+    _lap = {k: v for k, v in _mat.items() if len(v) > 1}
+    if _lap:
+        trung["net_mat"] = {k: v for k, v in list(_lap.items())[:3]}
+
     for truc in ("cap", "nen", "mau"):
         d: dict = {}
         for x in H.KENH:

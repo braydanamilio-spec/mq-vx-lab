@@ -7,15 +7,15 @@
    "loi": [],
    "giay": 18.3,
    "luot": 6,
-   "sang": 167
+   "sang": 165
   },
   "GYM LIES": {
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 18.9,
+   "giay": 18.3,
    "luot": 6,
-   "sang": 144
+   "sang": 146
   },
   "AIRPORT HELL": {
    "diem": 100,
@@ -23,13 +23,13 @@
    "loi": [],
    "giay": 18.3,
    "luot": 6,
-   "sang": 170
+   "sang": 163
   },
   "CAR GUY": {
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 17.9,
+   "giay": 18.3,
    "luot": 6,
    "sang": 118
   },
@@ -39,13 +39,13 @@
    "loi": [],
    "giay": 18.3,
    "luot": 6,
-   "sang": 165
+   "sang": 166
   },
   "DIET WARS": {
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 18.2,
+   "giay": 18.0,
    "luot": 6,
    "sang": 168
   },
@@ -53,15 +53,15 @@
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 18.3,
+   "giay": 19.5,
    "luot": 6,
-   "sang": 161
+   "sang": 155
   },
   "PARENT MODE": {
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 16.7,
+   "giay": 16.8,
    "luot": 6,
    "sang": 146
   },
@@ -79,7 +79,7 @@
    "loi": [],
    "giay": 18.3,
    "luot": 6,
-   "sang": 139
+   "sang": 142
   }
  }
 }

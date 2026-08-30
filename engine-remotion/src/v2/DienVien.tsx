@@ -193,6 +193,19 @@ export type Kieu = {
   beNgang?: number;                 // 0.9 = mảnh, 1.15 = đậm người
   matTo?: number;                   // 1.0 chuẩn; >1 mắt to hơn (trẻ hơn, ngơ ngác hơn)
   cam?: number;                     // độ bạnh của hàm: 0 = tròn, 1 = vuông vức
+  // ══ NÉT MẶT RIÊNG — thêm 30/8/2026 ══════════════════════════════════════════════════
+  // Anh đã dặn nhiều lần: *"10 channel thì phong cách nhân vật 10 channel… ko chung chung 1
+  // template"*. Sau khi dựng lại khuôn mặt kiểu hoạt hình Mỹ, cả mười kênh dùng CHUNG một
+  // khuôn — chỉ khác chiều cao, bề ngang, cỡ mắt và độ bạnh hàm. Bốn trục ấy đổi được DÁNG
+  // NGƯỜI nhưng không đổi được KHUÔN MẶT: nhìn mười khung cạnh nhau vẫn ra một người tô lại.
+  //
+  // Trong hoạt hình, thứ tách hai nhân vật ra không phải màu áo mà là BA NÉT: mũi, mắt, lông
+  // mày. Một cái mũi củ hành và một cái mũi nhọn cho ra hai người khác hẳn dù mọi thứ khác
+  // giống nhau. Nên thêm đúng ba trục ấy, mỗi trục vài kiểu — mười kênh chọn mười tổ hợp.
+  kieuMui?: "moc" | "cu" | "nhon" | "hat" | "quap";
+  kieuMat?: "bau" | "tron" | "hep" | "xech";
+  kieuMay?: "day" | "manh" | "xech" | "ru";
+  tiLeDau?: number;                 // 0.9 = đầu nhỏ (dáng người lớn) · 1.12 = đầu to (trẻ, hài)
 };
 
 // MƯỜI NHÂN VẬT, MỖI KÊNH MỘT NGƯỜI. Khác nhau ở SÁU trục cùng lúc — dáng người, kiểu tóc,
@@ -201,44 +214,74 @@ export const KIEU_MAU: Record<string, Kieu> = {
   // 1. BANK RUN — nữ giao dịch viên, gọn gàng, thẻ đeo cổ
   bank: { da: "#F6CBA0", toc: "#4A3626", kieuToc: "bui", ao: "#1D7A5F", aoTrong: "#FFFFFF",
           quan: "#1B4B3A", net: "#20180F", kinh: true, phuKien: "the_deo", caVat: "#0E5C46",
-          cao: 1.02, beNgang: 0.94, matTo: 1.0, cam: 0.25 },
+          cao: 1.02, beNgang: 0.94, matTo: 1.0, cam: 0.25 ,
+            // nét mặt riêng (30/8): mũi/mắt/lông mày là ba thứ tách hai nhân vật ra.
+            // Không tổ hợp nào trùng hai mươi nhân vật bộ hài — `cham_v4` chốt việc đó.
+            kieuMui: "moc", kieuMat: "bau", kieuMay: "day", tiLeDau: 0.97 },
   // 2. FINE PRINT — luật sư trẻ, tóc rẽ ngôi, nơ bướm, cao gầy
   luat_tre: { da: "#EFC49A", toc: "#2E2018", kieuToc: "re_ngoi", ao: "#2B4C7E", aoTrong: "#FFFFFF",
               quan: "#1B2E4B", net: "#191F2B", phuKien: "no_buom", cao: 1.08, beNgang: 0.86,
-              matTo: 1.05, cam: 0.5 },
+              matTo: 1.05, cam: 0.5 ,
+            // nét mặt riêng (30/8): mũi/mắt/lông mày là ba thứ tách hai nhân vật ra.
+            // Không tổ hợp nào trùng hai mươi nhân vật bộ hài — `cham_v4` chốt việc đó.
+            kieuMui: "nhon", kieuMat: "xech", kieuMay: "manh", tiLeDau: 1.03 },
   // 3. WHO OWNS IT — ông chú sân sau, ria rậm, mũ lưỡi trai, đậm người
   hang_xom: { da: "#F2C08A", toc: "#5A3A1E", kieuToc: "ngan", ao: "#C0392B", aoTrong: "#FFFFFF",
               quan: "#2C6E8F", net: "#241A12", rau: "ria", mu: "luoi_trai",
-              cao: 0.95, beNgang: 1.2, matTo: 0.95, cam: 0.7 },
+              cao: 0.95, beNgang: 1.2, matTo: 0.95, cam: 0.7 ,
+            // nét mặt riêng (30/8): mũi/mắt/lông mày là ba thứ tách hai nhân vật ra.
+            // Không tổ hợp nào trùng hai mươi nhân vật bộ hài — `cham_v4` chốt việc đó.
+            kieuMui: "cu", kieuMat: "tron", kieuMay: "day", tiLeDau: 0.98 },
   // 4. KNOW YOUR RIGHT — nữ cựu công tố, tóc bob, áo choàng sẫm
   cong_to: { da: "#E8B489", toc: "#241A14", kieuToc: "bob", ao: "#3B2E5A", aoTrong: "#F2EDE4",
              quan: "#241C38", net: "#1B1526", phuKien: "ao_choang", aoKhoac: "#3B2E5A",
-             cao: 1.03, beNgang: 0.96, matTo: 1.0, cam: 0.35 },
+             cao: 1.03, beNgang: 0.96, matTo: 1.0, cam: 0.35 ,
+            // nét mặt riêng (30/8): mũi/mắt/lông mày là ba thứ tách hai nhân vật ra.
+            // Không tổ hợp nào trùng hai mươi nhân vật bộ hài — `cham_v4` chốt việc đó.
+            kieuMui: "moc", kieuMat: "hep", kieuMay: "xech", tiLeDau: 0.99 },
   // 5. SUED IN AMERICA — thẩm phán về hưu, hói, râu quai nón, bệ vệ
   tham_phan: { da: "#E5B085", toc: "#8A8A86", kieuToc: "trocs", ao: "#2C2438", aoTrong: "#FFFFFF",
                quan: "#221C2E", net: "#1A1522", rau: "quai", caVat: "#8A2F3C",
                phuKien: "ao_choang", aoKhoac: "#2C2438", cao: 0.98, beNgang: 1.22,
-               matTo: 0.92, cam: 0.8 },
+               matTo: 0.92, cam: 0.8 ,
+            // nét mặt riêng (30/8): mũi/mắt/lông mày là ba thứ tách hai nhân vật ra.
+            // Không tổ hợp nào trùng hai mươi nhân vật bộ hài — `cham_v4` chốt việc đó.
+            kieuMui: "quap", kieuMat: "hep", kieuMay: "day", tiLeDau: 0.9 },
   // 6. SKY TONIGHT — cô gái trẻ, đuôi ngựa, khăn quàng, áo khoác dạ
   sao_dem: { da: "#F4C6A0", toc: "#3A2A44", kieuToc: "duoi_ngua", ao: "#2E4E86", aoTrong: "#DCE6F5",
              quan: "#22355C", net: "#161B2E", phuKien: "khan_quang", aoKhoac: "#2E4E86",
-             cao: 1.0, beNgang: 0.9, matTo: 1.12, cam: 0.15 },
+             cao: 1.0, beNgang: 0.9, matTo: 1.12, cam: 0.15 ,
+            // nét mặt riêng (30/8): mũi/mắt/lông mày là ba thứ tách hai nhân vật ra.
+            // Không tổ hợp nào trùng hai mươi nhân vật bộ hài — `cham_v4` chốt việc đó.
+            kieuMui: "hat", kieuMat: "xech", kieuMay: "manh", tiLeDau: 1.08 },
   // 7. ONE EXPERIMENT — nhà khoa học tóc xoăn rối, áo blouse trắng
   khoa_hoc: { da: "#E9B98A", toc: "#3E2A1C", kieuToc: "xoan", ao: "#F2A33C", aoTrong: "#FFFFFF",
               quan: "#4C74AE", net: "#1E1A14", kinh: true, phuKien: "ao_blouse",
-              cao: 1.04, beNgang: 0.95, matTo: 1.08, cam: 0.3 },
+              cao: 1.04, beNgang: 0.95, matTo: 1.08, cam: 0.3 ,
+            // nét mặt riêng (30/8): mũi/mắt/lông mày là ba thứ tách hai nhân vật ra.
+            // Không tổ hợp nào trùng hai mươi nhân vật bộ hài — `cham_v4` chốt việc đó.
+            kieuMui: "nhon", kieuMat: "tron", kieuMay: "day", tiLeDau: 1.01 },
   // 8. DEEP FIELD — người kể lớn tuổi, tóc bạc rẽ, râu dê, trầm
   vu_tru_gia: { da: "#DFAF84", toc: "#B9B6AE", kieuToc: "hoi", ao: "#33305C", aoTrong: "#C9CBE0",
                 quan: "#232244", net: "#12112A", rau: "de", cao: 1.0, beNgang: 1.02,
-                matTo: 0.96, cam: 0.55 },
+                matTo: 0.96, cam: 0.55 ,
+            // nét mặt riêng (30/8): mũi/mắt/lông mày là ba thứ tách hai nhân vật ra.
+            // Không tổ hợp nào trùng hai mươi nhân vật bộ hài — `cham_v4` chốt việc đó.
+            kieuMui: "quap", kieuMat: "bau", kieuMay: "ru", tiLeDau: 0.92 },
   // 9. WHAT THE CHART SAYS — y tá, áo scrubs xanh, ống nghe, mũ y tá
   y_ta: { da: "#F3C49C", toc: "#2E2018", kieuToc: "bui", ao: "#4E9C93", aoTrong: "#DFF1EE",
           quan: "#2F6E68", net: "#17322F", phuKien: "ong_nghe", mu: "y_ta",
-          cao: 1.0, beNgang: 0.98, matTo: 1.05, cam: 0.3 },
+          cao: 1.0, beNgang: 0.98, matTo: 1.05, cam: 0.3 ,
+            // nét mặt riêng (30/8): mũi/mắt/lông mày là ba thứ tách hai nhân vật ra.
+            // Không tổ hợp nào trùng hai mươi nhân vật bộ hài — `cham_v4` chốt việc đó.
+            kieuMui: "hat", kieuMat: "bau", kieuMay: "ru", tiLeDau: 1.07 },
   // 10. PRICE OF CARE — nhân viên viện phí, tóc ngắn, kính, cà vạt, dáng vuông
   vien_phi: { da: "#EDBE93", toc: "#4A3220", kieuToc: "ngan", ao: "#B8474F", aoTrong: "#FFFFFF",
               quan: "#3A3F52", net: "#20222E", kinh: true, caVat: "#7A2E38", phuKien: "the_deo",
-              cao: 0.99, beNgang: 1.1, matTo: 0.98, cam: 0.65 },
+              cao: 0.99, beNgang: 1.1, matTo: 0.98, cam: 0.65 ,
+            // nét mặt riêng (30/8): mũi/mắt/lông mày là ba thứ tách hai nhân vật ra.
+            // Không tổ hợp nào trùng hai mươi nhân vật bộ hài — `cham_v4` chốt việc đó.
+            kieuMui: "cu", kieuMat: "xech", kieuMay: "manh", tiLeDau: 0.96 },
 };
 
 // ══════════════════════════════════════════════════════════════════════════════════════════

@@ -703,35 +703,35 @@ def ve_nen(k: dict, DS, keys) -> list:
 # Cặp nào cũng tương phản mạnh, nhưng không cặp nào lặp lại cặp khác.
 _BONG = {
     # rent: chủ nhà cao lớn tươi cười ↔ người thuê nhỏ bé
-    "rent":     ({"cao": .92, "beNgang": 1.06, "kinh": True,  "rau": "",     "matTo": 1.14, "cam": .1, "ao": "#C0392B", "quan": "#3A4B6C"},
-                 {"cao": 1.14, "beNgang": .94, "kinh": False, "rau": "de",   "matTo": .92,  "cam": .9, "ao": "#EFC24B", "quan": "#544836"}),
+    "rent":     ({"cao": .92, "beNgang": 1.06, "kinh": True,  "rau": "",     "matTo": 1.14, "cam": .1, "ao": "#C0392B", "quan": "#3A4B6C", "kieuMui": "moc", "kieuMat": "bau", "kieuMay": "manh", "tiLeDau": 1.02},
+                 {"cao": 1.14, "beNgang": .94, "kinh": False, "rau": "de",   "matTo": .92,  "cam": .9, "ao": "#EFC24B", "quan": "#544836", "kieuMui": "cu", "kieuMat": "hep", "kieuMay": "day", "tiLeDau": 0.94}),
     # gym: học viên mềm oặt ↔ huấn luyện viên vai u thịt bắp
-    "gym":      ({"cao": .96, "beNgang": 1.28, "kinh": True,  "rau": "",     "matTo": 1.0,  "cam": .2, "ao": "#1E6B50", "quan": "#275A4E"},
-                 {"cao": 1.06, "beNgang": 1.02, "kinh": False, "rau": "quai", "matTo": .9,  "cam": 1.0, "ao": "#F2B33C", "quan": "#5C481E"}),
+    "gym":      ({"cao": .96, "beNgang": 1.28, "kinh": True,  "rau": "",     "matTo": 1.0,  "cam": .2, "ao": "#1E6B50", "quan": "#275A4E", "kieuMui": "quap", "kieuMat": "tron", "kieuMay": "ru", "tiLeDau": 0.96},
+                 {"cao": 1.06, "beNgang": 1.02, "kinh": False, "rau": "quai", "matTo": .9,  "cam": 1.0, "ao": "#F2B33C", "quan": "#5C481E", "kieuMui": "hat", "kieuMat": "tron", "kieuMay": "manh", "tiLeDau": 1.1}),
     # airport: khách bay bơ phờ ↔ nhân viên quầy thẳng đơ
-    "airport":  ({"cao": 1.02, "beNgang": .88, "kinh": False, "rau": "ria",  "matTo": 1.08, "cam": .35, "ao": "#24486E", "quan": "#324E70"},
-                 {"cao": .94,  "beNgang": 1.14, "kinh": True, "rau": "",     "matTo": .9,   "cam": .75, "ao": "#E3D2A2", "quan": "#5A4E33"}),
+    "airport":  ({"cao": 1.02, "beNgang": .88, "kinh": False, "rau": "ria",  "matTo": 1.08, "cam": .35, "ao": "#24486E", "quan": "#324E70", "kieuMui": "nhon", "kieuMat": "hep", "kieuMay": "xech", "tiLeDau": 0.98},
+                 {"cao": .94,  "beNgang": 1.14, "kinh": True, "rau": "",     "matTo": .9,   "cam": .75, "ao": "#E3D2A2", "quan": "#5A4E33", "kieuMui": "moc", "kieuMat": "bau", "kieuMay": "manh", "tiLeDau": 0.96}),
     # car: chủ xe gọn gàng ↔ thợ máy đô con
-    "car":      ({"cao": 1.10, "beNgang": .90, "kinh": True,  "rau": "",     "matTo": 1.05, "cam": .25, "ao": "#A8432A", "quan": "#5D4336"},
-                 {"cao": .90,  "beNgang": 1.30, "kinh": False, "rau": "quai", "matTo": .88, "cam": .95, "ao": "#79AEC8", "quan": "#34505F"}),
+    "car":      ({"cao": 1.10, "beNgang": .90, "kinh": True,  "rau": "",     "matTo": 1.05, "cam": .25, "ao": "#A8432A", "quan": "#5D4336", "kieuMui": "hat", "kieuMat": "bau", "kieuMay": "manh", "tiLeDau": 1.06},
+                 {"cao": .90,  "beNgang": 1.30, "kinh": False, "rau": "quai", "matTo": .88, "cam": .95, "ao": "#79AEC8", "quan": "#34505F", "kieuMui": "cu", "kieuMat": "hep", "kieuMay": "day", "tiLeDau": 0.92}),
     # office: nhân viên trẻ ↔ sếp đứng tuổi
-    "office":   ({"cao": 1.04, "beNgang": .92, "kinh": False, "rau": "",     "matTo": 1.20, "cam": .05, "ao": "#3B2E5A", "quan": "#4D3E79"},
-                 {"cao": .96,  "beNgang": 1.18, "kinh": True,  "rau": "de",  "matTo": .86,  "cam": .85, "ao": "#D9A441", "quan": "#5B4727"}),
+    "office":   ({"cao": 1.04, "beNgang": .92, "kinh": False, "rau": "",     "matTo": 1.20, "cam": .05, "ao": "#3B2E5A", "quan": "#4D3E79", "kieuMui": "moc", "kieuMat": "xech", "kieuMay": "xech", "tiLeDau": 1.0},
+                 {"cao": .96,  "beNgang": 1.18, "kinh": True,  "rau": "de",  "matTo": .86,  "cam": .85, "ao": "#D9A441", "quan": "#5B4727", "kieuMui": "cu", "kieuMat": "bau", "kieuMay": "day", "tiLeDau": 0.95}),
     # diet: người ăn kiêng gầy khô ↔ bạn thân ăn tất
-    "diet":     ({"cao": 1.08, "beNgang": .82, "kinh": False, "rau": "",     "matTo": 1.10, "cam": .15, "ao": "#1D7A5F", "quan": "#205D54"},
-                 {"cao": .94,  "beNgang": 1.34, "kinh": True,  "rau": "ria", "matTo": .94,  "cam": .7, "ao": "#F0AE93", "quan": "#644036"}),
+    "diet":     ({"cao": 1.08, "beNgang": .82, "kinh": False, "rau": "",     "matTo": 1.10, "cam": .15, "ao": "#1D7A5F", "quan": "#205D54", "kieuMui": "nhon", "kieuMat": "tron", "kieuMay": "manh", "tiLeDau": 1.04},
+                 {"cao": .94,  "beNgang": 1.34, "kinh": True,  "rau": "ria", "matTo": .94,  "cam": .7, "ao": "#F0AE93", "quan": "#644036", "kieuMui": "cu", "kieuMat": "hep", "kieuMay": "ru", "tiLeDau": 0.93}),
     # tech: người dùng luống tuổi ↔ tổng đài viên trẻ măng
-    "tech":     ({"cao": .93,  "beNgang": 1.20, "kinh": True,  "rau": "quai", "matTo": .88, "cam": .9, "ao": "#24486E", "quan": "#2E4F76"},
-                 {"cao": 1.10, "beNgang": .88,  "kinh": False, "rau": "",    "matTo": 1.22, "cam": .05, "ao": "#F2A33C", "quan": "#66441F"}),
+    "tech":     ({"cao": .93,  "beNgang": 1.20, "kinh": True,  "rau": "quai", "matTo": .88, "cam": .9, "ao": "#24486E", "quan": "#2E4F76", "kieuMui": "quap", "kieuMat": "hep", "kieuMay": "ru", "tiLeDau": 0.91},
+                 {"cao": 1.10, "beNgang": .88,  "kinh": False, "rau": "",    "matTo": 1.22, "cam": .05, "ao": "#F2A33C", "quan": "#66441F", "kieuMui": "hat", "kieuMat": "tron", "kieuMay": "manh", "tiLeDau": 1.12}),
     # parent: bố to bè ↔ con tuổi teen cao lêu nghêu
-    "parent":   ({"cao": .95,  "beNgang": 1.26, "kinh": True,  "rau": "de",  "matTo": .9,   "cam": .95, "ao": "#8E3B4E", "quan": "#653B4C"},
-                 {"cao": 1.16, "beNgang": .80,  "kinh": False, "rau": "",    "matTo": 1.26, "cam": .0, "ao": "#83C4A2", "quan": "#355543"}),
+    "parent":   ({"cao": .95,  "beNgang": 1.26, "kinh": True,  "rau": "de",  "matTo": .9,   "cam": .95, "ao": "#8E3B4E", "quan": "#653B4C", "kieuMui": "cu", "kieuMat": "bau", "kieuMay": "day", "tiLeDau": 0.93},
+                 {"cao": 1.16, "beNgang": .80,  "kinh": False, "rau": "",    "matTo": 1.26, "cam": .0, "ao": "#83C4A2", "quan": "#355543", "kieuMui": "hat", "kieuMat": "tron", "kieuMay": "xech", "tiLeDau": 1.12}),
     # neighbor: hàng xóm lùn tròn ↔ người mới dọn đến cao gầy
-    "neighbor": ({"cao": .90,  "beNgang": 1.22, "kinh": True,  "rau": "ria", "matTo": .94,  "cam": .85, "ao": "#E0725A", "quan": "#693E33"},
-                 {"cao": 1.12, "beNgang": .86,  "kinh": False, "rau": "",    "matTo": 1.16, "cam": .10, "ao": "#33305C", "quan": "#454182"}),
+    "neighbor": ({"cao": .90,  "beNgang": 1.22, "kinh": True,  "rau": "ria", "matTo": .94,  "cam": .85, "ao": "#E0725A", "quan": "#693E33", "kieuMui": "cu", "kieuMat": "xech", "kieuMay": "day", "tiLeDau": 0.94},
+                 {"cao": 1.12, "beNgang": .86,  "kinh": False, "rau": "",    "matTo": 1.16, "cam": .10, "ao": "#33305C", "quan": "#454182", "kieuMui": "nhon", "kieuMat": "bau", "kieuMay": "xech", "tiLeDau": 1.0}),
     # dating: người dùng chỉn chu ↔ bạn cùng phòng luộm thuộm
-    "dating":   ({"cao": 1.06, "beNgang": .94,  "kinh": False, "rau": "",    "matTo": 1.18, "cam": .2, "ao": "#D96A3C", "quan": "#6B3F28"},
-                 {"cao": .98,  "beNgang": 1.16, "kinh": True,  "rau": "quai", "matTo": .96, "cam": .6, "ao": "#35566E", "quan": "#335066"}),
+    "dating":   ({"cao": 1.06, "beNgang": .94,  "kinh": False, "rau": "",    "matTo": 1.18, "cam": .2, "ao": "#D96A3C", "quan": "#6B3F28", "kieuMui": "moc", "kieuMat": "tron", "kieuMay": "manh", "tiLeDau": 1.05},
+                 {"cao": .98,  "beNgang": 1.16, "kinh": True,  "rau": "quai", "matTo": .96, "cam": .6, "ao": "#35566E", "quan": "#335066", "kieuMui": "nhon", "kieuMat": "hep", "kieuMay": "xech", "tiLeDau": 0.97}),
 }
 
 
