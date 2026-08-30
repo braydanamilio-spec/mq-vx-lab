@@ -568,6 +568,54 @@ SFX = {1: "sfx/pop.mp3"}
 SFX_CHOT = "sfx/ding.mp3"
 
 
+def canh_nen_ai(k: dict, cau: list, keys) -> str:
+    """Hỏi AI: mẩu hài này diễn ra ở đâu thì hợp nhất? Trả cụm mô tả, rỗng nếu hỏng.
+
+    30/8 — Anh: *"10 channel hài cũng nên ứng dụng ai gọi để vẽ bối cảnh"*.
+    Bộ này đang dùng bốn câu vẽ CỐ ĐỊNH mỗi kênh, gán theo chỉ số kịch bản. Nên tập nói về cái
+    máy giặt hỏng và tập nói về gói hàng mất trộm cùng đứng trong đúng một cái sảnh chung cư.
+    Bối cảnh phải là NƠI MẨU CHUYỆN NÀY XẢY RA, không phải nơi kênh này hay lui tới.
+    Đưa nguyên lời thoại cho mô hình đọc — nó hiểu chuyện đang diễn ra ở đâu tốt hơn mọi bảng
+    từ khoá tôi viết được.
+    """
+    if not keys:
+        return ""
+    try:
+        import content_brain as CB
+    except Exception:
+        return ""
+    thoai = " / ".join(str(c[0]) for c in cau[:6])
+    # NGỮ CẢNH KÊNH PHẢI ĐI KÈM LỜI THOẠI.
+    # Đo được: đưa mỗi lời thoại của CAR GUY ("That was before I opened it") thì AI hiểu là mở
+    # thùng hàng và trả về "warehouse aisle beside an open shipping crate" — đọc đúng chữ nhưng
+    # sai chuyện, vì lời thoại hài cố ý không nói ra bối cảnh (nói ra thì mất duyên).
+    # Kèm nghề của hai nhân vật thì mô hình có đủ để hiểu "opened it" là mở nắp ca-pô.
+    _nv = NHAN_VAT.get(k["de"])
+    _ai = (f"Character A is {_nv[0][0]}, {_nv[0][2]}. Character B is {_nv[1][0]}, {_nv[1][2]}.\n"
+           if _nv else "")
+    hoi = (
+        "You pick the background setting for one short 2D cartoon comedy scene.\n"
+        f"{_ai}"
+        f"Two characters talk. Dialogue: {thoai}\n\n"
+        "Reply with ONE short English phrase (max 14 words) describing the exact physical place "
+        "this conversation happens in. Be specific to the dialogue, not generic.\n"
+        "Hard rules: no brand names, no proper nouns, no people in the scene, no text or signage, "
+        "all packaging blank and unbranded. Describe a place and objects only.\n"
+        "Reply with the phrase alone, nothing else."
+    )
+    for kk in list(keys)[:3]:
+        try:
+            g = CB._genai(kk if isinstance(kk, str) else kk.get("key"))
+            m = g.GenerativeModel("gemini-2.5-flash")
+            t = " ".join(str(getattr(m.generate_content(hoi), "text", "") or "").split())[:130]
+            t = t.strip().strip('"').strip("'").rstrip(".")
+            if 8 <= len(t) <= 130:
+                return t
+        except Exception:
+            continue
+    return ""
+
+
 def _ten_tep(k: dict) -> str:
     return k["ten"].replace(" ", "").lower()
 
@@ -582,6 +630,10 @@ def _ten_tep(k: dict) -> str:
 # ở nét vẽ nền. Cùng một nét vẽ đẹp thì kênh nào cũng hưởng.
 # Cố ý KHÔNG nhắc tên một bộ phim nào: "classic American animated sitcoms" là tên một DÒNG phim
 # (đã có hàng chục sê-ri từ thập niên 1990), không phải tên một tác phẩm có bản quyền.
+# Ép ảnh có SÀN ở một phần ba dưới khung — nếu không, ảnh chụp ngang tầm mặt bàn và nhân vật hoá
+# ra đứng trên mặt bàn (luật 7aa).
+SAN_NEN = ("wide shot, camera at standing eye level, floor clearly visible across the lower "
+           "third, open space in the centre of the frame, no furniture blocking the middle")
 GU_NEN = ("flat 2D cartoon background in the style of classic American animated sitcoms, "
           "bold clean outlines, simple flat colours, no people, no text, no signage, "
           "wide establishing shot, slightly stylised perspective")
@@ -627,13 +679,53 @@ def _keo_sang(tep: str, san_den: float = 0.05, san_sang: int = 96) -> None:
     im.save(tep, quality=90)
 
 
-def ve_nen(k: dict, DS, keys) -> list:
+def ve_nen(k: dict, DS, keys, canh_tap: str = "") -> list:
     """Vẽ + CACHE ba nền cho một kênh. Trả đường dẫn tương đối trong `public/`.
 
     Chỉ vẽ tệp CHƯA CÓ. Đây là lý do bộ này chạy được kể cả ngày kho key cạn: sau lượt đầu, mọi
     video đều dùng lại đúng ba ảnh ấy."""
     os.makedirs(NEN, exist_ok=True)
     ra = []
+    # NỀN THEO CHÍNH MẨU CHUYỆN NÀY — vẽ một lần, cache theo nội dung. Đặt TRƯỚC các nền cố định
+    # nên nó là nền được dùng (xem `dung_luot`: một tập một địa điểm).
+    if canh_tap:
+        import hashlib as _hl
+        _kh = _hl.md5(canh_tap.encode("utf-8")).hexdigest()[:8]
+        rel = os.path.join("v4nen", f"{_ten_tep(k)}_t{_kh}.jpg")
+        dest = os.path.join(PUB, rel)
+        if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+            ra.append(rel)
+        else:
+            _gu = GU_NEN
+            _them = ("" if not any(x in canh_tap.lower() for x in
+                                   ("packet", "package", "box", "bottle", "carton", "label",
+                                    "product", "shelf", "shelves", "brand", "snack", "grocer"))
+                     else ", all packaging completely blank and unbranded, no printed text")
+            _ok = None
+            for _l in range(2):
+                try:
+                    import datastory_ci as _DC
+                    _p = _DC._salt_prompt(f"{canh_tap}{_them}, {SAN_NEN}, {_gu}")
+                except Exception:
+                    _p = f"{canh_tap}{_them}, {SAN_NEN}, {_gu}"
+                try:
+                    _ok = DS._generate_image_ai(_p, dest, None, style=_gu)
+                except Exception:
+                    _ok = None
+                if _ok and os.path.exists(dest) and os.path.getsize(dest) > 20000:
+                    break
+                _ok = None
+            if _ok:
+                try:
+                    DS.nang_sang_anh(dest); _keo_sang(dest)
+                    if _nen_hong(dest):
+                        os.remove(dest); _ok = None
+                except Exception:
+                    pass
+            if _ok and os.path.exists(dest):
+                print(f"      🎨 nền theo mẩu chuyện xong")
+                ra.append(rel)
+
     for i, prompt in enumerate(k["nen"]):
         rel = os.path.join("v4nen", f"{_ten_tep(k)}_{i}.jpg")
         dest = os.path.join(PUB, rel)
@@ -1156,7 +1248,12 @@ def main() -> int:
     for k in chon:
         ten = k["ten"]
         print(f"\n▶ {ten}", flush=True)
-        nen = ve_nen(k, DS, keys)
+        # Cảnh nền chọn theo CHÍNH mẩu chuyện của tập này, không theo bảng cố định của kênh.
+        _kb0 = KHO[k["de"]][a.vong % len(KHO[k["de"]])]["loi"]
+        _canh = canh_nen_ai(k, _kb0, keys)
+        if _canh:
+            print(f"   🧭 cảnh: {_canh}")
+        nen = ve_nen(k, DS, keys, _canh)
         if a.nen:
             continue
         luot, loi, kb_cau = dung_luot(k, nen, a.vong)

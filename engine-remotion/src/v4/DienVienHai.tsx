@@ -98,6 +98,13 @@ export type PropsHai = {
   giat?: number;                 // 0..1 — cú giật mình (mắt mở to, đầu bật lùi) ở cú chốt
   nghieng?: number;              // độ ngả người về phía người đối thoại
   buoc?: number;                 // 0 = đứng yên; >0 = đang bước (biên độ sải chân)
+  // 30/8 — CỬ CHỈ CŨ + TIẾN TRÌNH ĐỔI. Anh: *"cử chỉ tay cần mượt hơn"*.
+  // Bản trước đổi cử chỉ NGAY tại ranh giới lượt thoại: một khung tay đang khoanh, khung sau tay
+  // đã dang ra. Ở 30 khung/giây thì đó là một cú GIẬT, không phải một cử chỉ.
+  // Người thật chuyển tư thế mất khoảng nửa giây, và cánh tay đi theo cung có gia tốc chứ không
+  // nhảy. Nên truyền thêm cử chỉ TRƯỚC ĐÓ và tiến trình 0→1, rồi nội suy từng góc khớp.
+  cuChiTruoc?: TenCuChi;
+  doiCuChi?: number;             // 0 = vừa đổi, 1 = đã vào hẳn tư thế mới
   x?: number; y?: number; scale?: number; lat?: boolean;
 };
 
@@ -115,7 +122,7 @@ const R_DAU_GOC = 58;
 
 export const DienVienHai: React.FC<PropsHai> = ({
   kieu, camXuc, cuChi, nhin, noi, t, nhan = 0, nghieng = 0, buoc = 0, giat = 0, dangNoi = true,
-  doVat = "", kyHieu = true,
+  cuChiTruoc, doiCuChi = 1, doVat = "", kyHieu = true,
   x = 0, y = 0, scale = 1, lat = false,
 }) => {
   const E = CAM_XUC[camXuc] || CAM_XUC.trung_tinh;
@@ -128,7 +135,18 @@ export const DienVienHai: React.FC<PropsHai> = ({
     chi: "dem", gio_len: "dem", mo_tay: "mo_tay", nhun_vai: "mo_tay",
   };
   const _cc = (kyHieu ? cuChi : (_GHIM_NGUC[cuChi as string] || cuChi)) as string;
-  const G = CU_CHI_HAI[_cc] || CU_CHI[_cc as TenCuChi] || CU_CHI.nghi;
+  const _ccT = (kyHieu ? (cuChiTruoc || cuChi) : (_GHIM_NGUC[(cuChiTruoc || cuChi) as string]
+                || cuChiTruoc || cuChi)) as string;
+  const _G1 = CU_CHI_HAI[_cc] || CU_CHI[_cc as TenCuChi] || CU_CHI.nghi;
+  const _G0 = CU_CHI_HAI[_ccT] || CU_CHI[_ccT as TenCuChi] || _G1;
+  // NỘI SUY GIỮA HAI TƯ THẾ, có gia tốc hai đầu (`muot`): rời tư thế cũ chậm, giữa nhanh, vào tư
+  // thế mới chậm. Đó là cách một cánh tay thật chuyển động, và là thứ tách "cử chỉ" khỏi "nhảy
+  // khung".
+  const _q = muot(kep(doiCuChi));
+  const G = {
+    vaiT: trn(_G0.vaiT, _G1.vaiT, _q), khuyuT: trn(_G0.khuyuT, _G1.khuyuT, _q),
+    vaiP: trn(_G0.vaiP, _G1.vaiP, _q), khuyuP: trn(_G0.khuyuP, _G1.khuyuP, _q),
+  };
   const cao = kieu.cao ?? 1;
   const ngang = kieu.beNgang ?? 1;
   const matTo = kieu.matTo ?? 1;
@@ -234,6 +252,8 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // Cử chỉ đi theo CUNG CÓ GIA TỐC, không đi thẳng: `muot` làm góc rời khỏi tư thế nghỉ chậm,
   // giữa nhanh, rồi dừng chậm. Tay người thật không quay đều tốc độ.
   const muot = (v: number) => v * v * (3 - 2 * v);
+  // `mo` chỉ còn lo lượt ĐẦU TIÊN của video (từ tư thế nghỉ vào tư thế đầu); các lượt sau đã
+  // được `doiCuChi` lo, và nhân hai lần làm cử chỉ ì ra ở đầu mỗi lượt.
   const mo = muot(kep(t / 0.45));
   // TAY ĐÁNH NHỊP THEO LỜI. Người nói thật không giữ nguyên một tư thế suốt câu — tay nhấn theo
   // trọng âm. `noi.h` (độ mở miệng) là thứ gần nhất với trọng âm mà mình có sẵn mốc: miệng mở to

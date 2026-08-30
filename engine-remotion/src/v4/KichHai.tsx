@@ -216,32 +216,24 @@ export const KichHai: React.FC<PropsHai> = ({
   // đóng cận hơn hẳn video ngang.
   // Đích đứng của mỗi lượt: người nói tiến lại gần khoảng 26 đơn vị, người nghe lùi nhẹ.
   // Cộng thêm một chút lệch theo chỉ số lượt để hai người không đứng đúng chỗ cũ mỗi lần.
-  const _iL = Math.max(0, i);
-  // 30/8 — KHOẢNG CÁCH CƠ SỞ 232 → 292: LỖI VẬT LÝ.
-  // Đo trên khung thật: khi người nói dùng cử chỉ CHỈ TAY, bàn tay vươn xuyên qua VAI người kia.
-  // Cánh tay duỗi hết dài chừng 216 điểm màn hình, mà khoảng trống giữa hai thân chỉ còn 304 —
-  // trừ đi phần hai người nghiêng vào nhau và phần người nói tiến lên 30, khoảng trống thật
-  // xuống dưới 200. Hai hình vẽ lồng vào nhau là lỗi mắt bắt được ngay, và nó phá cả cảm giác
-  // "hai người đang đứng trong một không gian có thật".
-  const dichA = -292 + (noiA_ ? 30 : -14) + ((_iL % 3) - 1) * 16;
-  const dichB = 292 + (noiA_ ? 14 : -30) + (((_iL + 1) % 3) - 1) * 16;
-  const _truocA = -292 + (i > 0 && luot[i - 1].ai === 0 ? 30 : -14) + (((_iL + 2) % 3) - 1) * 16;
-  const _truocB = 292 + (i > 0 && luot[i - 1].ai === 0 ? 14 : -30) + ((_iL % 3) - 1) * 16;
-  const tDi = muot(kep((giay - L.s) / 0.6));
-  // Ở cỡ cận, hai người phải giãn ĐỦ XA để người không nói ra HẲN ngoài khung. Đo được ở hệ
-  // số 1,5: mép phải của người kia còn nằm trong khung 18 điểm, ra một mảnh người lơ lửng ở
-  // mép trái — xấu hơn cả việc chồng người. Nửa vời là tệ nhất; hoặc trong khung hẳn, hoặc ra
-  // hẳn ngoài.
-  // Hệ số 3,6 chứ không phải 2,4: ở hệ số cũ THÂN người kia đã ra ngoài khung nhưng BÀN TAY
-  // thì chưa — tay vươn xa tâm hơn thân, và một bàn tay lơ lửng ở mép khung còn khó chịu hơn
-  // cả nửa người. Tính theo điểm XA NHẤT của hình, không theo tâm.
+  // ══ BỎ HẲN DÁNG ĐI VÀ XÊ DỊCH ═══════════════════════════════════════════════════════
+  // 30/8 — Anh: *"lúc nói hay di chuyển cả 2 nhân vật đều di chuyển chưa phù hợp, và cử chỉ đi
+  // chưa phù hợp; NẾU KO LÀM ĐƯỢC ĐI THÌ NÊN CHO NHÂN VẬT ĐỨNG YÊN, khẽ thay đổi tư thế và động
+  // tác tay là được"*.
+  // Anh cho phép dứt khoát, và đó là lựa chọn đúng: một dáng đi vẽ chưa tới còn tệ hơn hẳn một
+  // người đứng yên. Dáng đi cần bàn chân trượt đúng tốc độ thân, trọng tâm dồn đúng chân trụ, và
+  // bóng đổ đi theo — sai một trong ba thì mắt đọc ra ngay là trượt băng.
+  // Hai người đứng CỐ ĐỊNH. Sinh khí dồn hết sang thứ vốn làm tốt: tư thế đổi mượt, tay đánh
+  // nhịp theo lời, nét mặt, khẩu hình. Đây cũng đúng "limited animation" — cách hoạt hình truyền
+  // hình Mỹ vẫn làm suốt tám mươi năm.
+  const dichA = -292, dichB = 292;
+  // Ở cỡ cận, hai người giãn xa để người không nói ra HẲN ngoài khung. Hệ số tính theo điểm XA
+  // NHẤT của hình (bàn tay), không theo tâm: ở hệ số nhỏ hơn thì thân đã ra ngoài mà bàn tay còn
+  // lơ lửng ở mép — nửa vời là tệ nhất.
   const _gian = (L.co || "trung") === "can" ? 3.6 : 1;
-  const xA = trn(_truocA, dichA, tDi) * _gian;
-  const xB = trn(_truocB, dichB, tDi) * _gian;
-  // `buoc` > 0 khi đang di chuyển: bật dáng đi (chân bước so le, tay vung ngược pha).
-  const dangDi = Math.abs(dichA - _truocA) > 6 && tDi > 0.02 && tDi < 0.98;
-  const buocA = dangDi ? Math.sin(tDi * Math.PI) : 0;
-  const buocB = Math.abs(dichB - _truocB) > 6 && tDi > 0.02 && tDi < 0.98 ? Math.sin(tDi * Math.PI) : 0;
+  const xA = dichA * _gian;
+  const xB = dichB * _gian;
+  const buocA = 0, buocB = 0;
 
   // CỬ CHỈ NGƯỜI NGHE PHẢI THEO CẢM XÚC CỦA CHÍNH NÓ.
   // Bản cũ ghim cứng "khoanh_tay" cho người nghe suốt cả phim: một người khoanh tay hai mươi
@@ -261,6 +253,14 @@ export const KichHai: React.FC<PropsHai> = ({
     tu_tin: "chong_nanh" as TenCuChi, trung_tinh: "chong_nanh" as TenCuChi,
   };
   const cuChiNghe = NGHE[(L.camXucKia || "trung_tinh") as string] || "nghi";
+  // Cử chỉ của lượt TRƯỚC, để nội suy sang tư thế mới thay vì nhảy khung.
+  const _Lt = i > 0 ? luot[i - 1] : L;
+  const _noiAt = _Lt.ai === 0;
+  const _ccNgheT = NGHE[(_Lt.camXucKia || "trung_tinh") as string] || "nghi";
+  const ccTruocA = (_noiAt ? (_Lt.cuChi || "nghi") : _ccNgheT) as TenCuChi;
+  const ccTruocB = (!_noiAt ? (_Lt.cuChi || "nghi") : _ccNgheT) as TenCuChi;
+  // Nửa giây đầu mỗi lượt là quãng chuyển tư thế: ngắn hơn thì vẫn giật, dài hơn thì tay lờ đờ.
+  const doiCC = kep((giay - L.s) / 0.5);
 
   // CÚ GIẬT MÌNH của người NGHE, đúng vào lúc câu chốt vừa rơi.
   // Trong hài hình ảnh, thứ báo cho khán giả "chỗ này buồn cười" không phải tiếng cười lồng mà
@@ -292,10 +292,18 @@ export const KichHai: React.FC<PropsHai> = ({
   // Dải 1,42–1,92 quá hẹp: bốn lượt liền nhau ra bốn khung gần y hệt. Nới thành 1,25–2,25 thì
   // toàn cảnh đọc ra là "đang ở đâu" còn cận cảnh đọc ra là "nhìn mặt nó kìa".
   const _can = (L.co || "trung") === "can";
-  const KH = doc
-    ? { rong: 1.25, trung: 1.68, can: 3.6 }
-    : { rong: 0.84, trung: 1.06, can: 2.2 };
-  const zoom = (KH[L.co || "trung"] || 1.68) * (1 + truocChot * 0.05) * hookZoom;
+  // 30/8 — Anh: *"chỗ cuối đang bị zoom videos lên hơi thô ko hợp"*.
+  // Hai lỗi trong một: cỡ cận 3,6 gấp hơn HAI LẦN cỡ trung — cú nhảy quá lớn; và độ phóng đổi
+  // NGAY tại ranh giới lượt, tức nhảy trọn một nấc trong đúng một khung hình.
+  // Hạ cận xuống 2,4 (vẫn đủ thấy nét mặt) và NỘI SUY độ phóng trong nửa giây đầu mỗi lượt —
+  // máy quay tiến vào, không cắt phựt.
+  const KH: Record<string, number> = doc
+    ? { rong: 1.25, trung: 1.68, can: 2.4 }
+    : { rong: 0.84, trung: 1.06, can: 1.6 };
+  const _zTruoc = KH[((i > 0 ? luot[i - 1].co : L.co) || "trung") as string] || 1.68;
+  const _zNay = KH[(L.co || "trung") as string] || 1.68;
+  const zoom = trn(_zTruoc, _zNay, muot(kep((giay - L.s) / 0.5)))
+               * (1 + truocChot * 0.05) * hookZoom;
   // ══ CỠ CẬN NEO VÀO ĐẦU, HAI CỠ KIA NEO VÀO CHÂN ═════════════════════════════════════
   // Neo mọi cỡ vào chân là lý do "cận cảnh" của bản trước vẫn ra TOÀN THÂN: giữ chân đứng yên
   // thì phóng to bao nhiêu người cũng chỉ dài thêm xuống dưới, đầu bay khỏi khung trước khi mặt
@@ -426,6 +434,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     nhin={noiA_ ? [0.3, 0] : [0.5, -0.06]} noi={noiA} t={giay}
                     nhan={(noiA_ ? noiA.h : 0) + (noiA_ ? hookNhun : 0)} nghieng={nghiengA} buoc={buocA}
                     giat={noiA_ ? 0 : _giatNghe}
+                    cuChiTruoc={ccTruocA} doiCuChi={doiCC}
                     dangNoi={noiA_ || (_phanUng && !noiA_)} doVat={vatA}
                     x={xA / zoom} y={Y_CHAN} scale={1.3 * coA} />
           <DienVienHai kieu={B} camXuc={(!noiA_ ? L.camXuc : L.camXucKia) || "trung_tinh"}
@@ -433,6 +442,7 @@ export const KichHai: React.FC<PropsHai> = ({
                     nhin={!noiA_ ? [-0.3, 0] : [-0.5, -0.06]} noi={noiB} t={giay + 1.7}
                     nhan={(!noiA_ ? noiB.h : 0) + (!noiA_ ? hookNhun : 0)} nghieng={nghiengB} buoc={buocB}
                     giat={!noiA_ ? 0 : _giatNghe}
+                    cuChiTruoc={ccTruocB} doiCuChi={doiCC}
                     dangNoi={!noiA_ || (_phanUng && noiA_)} doVat={vatB}
                     x={xB / zoom} y={Y_CHAN} scale={1.3 * coB} lat />
         </g>
