@@ -25,9 +25,9 @@ name: MM0 Phân tích (56 kênh, theo lô)
 # cộng cài đặt thì chạm trần — hỏng ở phút thứ 350 là mất trắng cả lượt.
 
 on:
-  schedule:
-    # 04:40 UTC = 11:40 giờ VN — lệch 90 phút sau bộ comic để hai xưởng không tranh runner.
-    - cron: "40 4 * * *"
+  # 1/9 — TẮT CRON: bản 18 luồng (`render_phan_tich_18.yml`) thay thế bản theo lô này. Để cả
+  # hai cùng cron là dựng 56 kênh HAI LẦN mỗi ngày, tốn runner và ghi đè lẫn nhau. Giữ tệp này
+  # để chạy tay khi cần dựng đúng một lô.
   # Dashboard gọi qua Cloudflare Worker bằng repository_dispatch — cùng đường mà worker đang
   # dùng cho `mm0-render`, chỉ khác tên sự kiện. Nhờ vậy nút trên web bắn thẳng vào đây mà
   # không phải chờ cron nào.

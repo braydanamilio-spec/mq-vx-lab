@@ -29,6 +29,7 @@ WF = os.path.join(GOC, "..", ".github", "workflows")
 CAP = {
     "render_hai.yml": ("kich_comic.py", "kich_comic_long.py", True),
     "render_phan_tich.yml": ("kich_v2.py", "kich_v2_long.py", False),
+    "render_phan_tich_18.yml": ("kich_v2.py", "kich_v2_long.py", False),
 }
 
 

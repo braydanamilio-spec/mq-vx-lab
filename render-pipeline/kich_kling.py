@@ -90,12 +90,65 @@ LOI_DUNG = {
     "muted":            dict(no="",        giu=1.50, canCanh=True,  aiLat=1, cuChi="nghi",       rung=False),
     "clean_timing":     dict(no="",        giu=1.25, canCanh=False, aiLat=1, cuChi="chi",        rung=False),
 }
+LOI_DUNG_TT = {k: i for i, k in enumerate(LOI_DUNG)}   # lối dựng -> số thứ tự, để chọn khuôn
 NHAC = "music/carefree.mp3"
 
 
-def _kho() -> list:
+def _kho(theo_tinh_huong: bool = True) -> list:
+    """1.500 tập. Mặc định xếp lại theo TÌNH HUỐNG TRƯỚC, biến thể sau.
+
+    Thứ tự trong tệp gốc là tình-huống-1 × 10 biến thể, rồi tình-huống-2 × 10… Dựng theo thứ tự
+    ấy thì mười video đầu là mười cách chốt của CÙNG một câu chuyện, đăng liên tiếp trong mười
+    ngày đầu. Người xem thấy lại đúng câu thoại ấy mười lần, và YouTube đọc ra là nội dung
+    trùng lặp — hỏng kênh ngay tuần đầu.
+
+    Xếp lại: chạy hết 150 tình huống ở biến thể 1, rồi 150 tình huống ở biến thể 2… Đăng mỗi
+    ngày một tập thì phải qua **150 ngày** mới gặp lại một tình huống, mà lần gặp lại đã là
+    cách chốt khác. 1.500 tập = hơn bốn năm đăng hằng ngày không lặp.
+    """
     d = json.load(io.open(os.path.join(GOC, "kho_kling.json"), encoding="utf-8"))
-    return d["tap"]
+    tap = d["tap"]
+    if not theo_tinh_huong:
+        return tap
+    # gom theo tình huống rồi trải theo cột
+    nhom = {}
+    for t in tap:
+        nhom.setdefault(t["ten"] + "|" + t["loi"][0][0][:30], []).append(t)
+    ds = list(nhom.values())
+    ra = []
+    for i in range(max(len(v) for v in ds)):
+        for v in ds:
+            if i < len(v):
+                ra.append(v[i])
+    return ra
+
+
+# Mười khuôn tiêu đề — MỖI BIẾN THỂ MỘT KHUÔN. Mười biến thể của một tình huống dùng chung lời
+# thoại, nên nếu tiêu đề cũng chung thì đó là mười lần đăng cùng một video dưới mắt nền tảng.
+# Mười khuôn dưới đây rút từ chính chất liệu của tập (câu mở · câu chốt · tên tình huống · vai),
+# không bịa thêm gì.
+KHUON_TD = [
+    "{chot}",
+    "{mo}",
+    "{ten}",
+    "When {a} says \u201c{mo}\u201d",
+    "{ten}: {chot}",
+    "{a} vs {b}: {ten}",
+    "The {ten} problem",
+    "{mo} \u2014 {ten}",
+    "{b} has one answer: {chot}",
+    "Every house has this: {ten}",
+]
+
+
+def _tieu_de_tap(t: dict, a_en: str, b_en: str) -> str:
+    loi = t["loi"]
+    mo = loi[0][0].strip().rstrip(".")
+    chot = (loi[1][0] if len(loi) > 1 else mo).strip().rstrip(".")
+    i = LOI_DUNG_TT.get(t["loiDung"], 0)
+    td = KHUON_TD[i % len(KHUON_TD)].format(
+        chot=chot, mo=mo, ten=t["ten"], a=a_en.title(), b=b_en.title())
+    return f"{td} #shorts"[:98]
 
 
 def _giong(vai: str, i: int) -> tuple:
@@ -171,8 +224,8 @@ def _im_lang(mp3: str, them: float) -> float:
         return 0.0
 
 
-def mot_tap(idx: int) -> str:
-    kho = _kho()
+def mot_tap(idx: int, theo_tep: bool = False) -> str:
+    kho = _kho(not theo_tep)
     t = kho[idx % len(kho)]
     k = KENH_KLING
     slug = f"{_ten_tep(k)}_{idx:04d}"
@@ -268,9 +321,8 @@ def mot_tap(idx: int) -> str:
         # tiếng Anh hiện ra: "When The Dad Meets The Mom", "…The Kid Meets Grandpa".
         _en = {"mike": "the dad", "lisa": "the mom", "tommy": "the kid", "joe": "grandpa"}
         _v = ((None,) * 5 + (_en[vaiA],), (None,) * 5 + (_en[vaiB],))
-        _chot = (loi[1][0] if len(loi) > 1 else loi[0][0]).strip().rstrip(".")
         SD.mot_video(KENH_KLING, idx, False, lam_anh=False, tien="v6_", slug=slug, vai=_v,
-                     tieu_de=f"{_chot} #shorts"[:98])
+                     tieu_de=_tieu_de_tap(t, _en[vaiA], _en[vaiB]))
     except Exception as e:
         print(f"   ⚠️ chữ đăng lỗi: {str(e)[:90]}")
     am = chuan(out)
@@ -283,8 +335,11 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tu", type=int, default=0, help="bắt đầu từ prompt thứ mấy (0 = 0001)")
     ap.add_argument("--so", type=int, default=1, help="dựng bao nhiêu tập")
+    ap.add_argument("--theo-tep", action="store_true",
+                    help="giữ đúng thứ tự trong tệp gốc (10 biến thể của MỘT tình huống liền "
+                         "nhau) — chỉ dùng để thử, không dùng để sản xuất")
     a = ap.parse_args()
-    ra = [v for v in (mot_tap(a.tu + i) for i in range(a.so)) if v]
+    ra = [v for v in (mot_tap(a.tu + i, a.theo_tep) for i in range(a.so)) if v]
     print(f"\n✅ {len(ra)}/{a.so} video")
     return 0 if ra else 1
 

@@ -1,0 +1,146 @@
+name: MM0 Phân tích — 18 luồng song song
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# 1/9/2026 — Anh: *"đưa nó vào github chuẩn pepline render 18 luồng song song tối ưu hiệu suất"*.
+#
+# VÌ SAO 18 LUỒNG THAY VÌ 6 LÔ TUẦN TỰ
+#   Bản theo lô dựng 10 kênh trong MỘT job: ~45 phút mỗi lô, sáu ngày mới phủ hết 56 kênh. Một
+#   job hỏng ở phút 40 là mất cả lô. Chia 18 luồng thì mỗi luồng chỉ 3–4 kênh (~15 phút), cả 56
+#   kênh xong trong khoảng thời gian của MỘT luồng, và một luồng hỏng chỉ mất 3 kênh.
+#
+#   Repo này PUBLIC nên phút Actions miễn phí; trần đồng thời của tài khoản là 20 job, nên 18
+#   vừa đủ chừa chỗ cho các workflow đăng bài đang chạy.
+#
+# CHIA XEN KẼ, KHÔNG CẮT KHỐI
+#   `kenh_cua_lo.py --luong N --tong 18` chia `[N-1::18]`. Các kênh nặng nhẹ khác nhau và nằm
+#   cạnh nhau theo chủ đề, nên cắt khối liền làm một luồng ôm trọn cụm nặng còn luồng khác xong
+#   sớm ngồi không.
+#
+# `fail-fast: false` LÀ BẮT BUỘC
+#   Mặc định của matrix là một job hỏng thì HUỶ tất cả job còn lại. Với 18 luồng đang dựng dở,
+#   đó là mất 17 luồng vì một lỗi ở luồng thứ 18.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+
+on:
+  schedule:
+    # 18:10 UTC = 01:10 giờ VN — chạy trong đêm, sáng ra anh có kết quả.
+    - cron: "10 18 * * *"
+  workflow_dispatch:
+    inputs:
+      luong:
+        description: "Chỉ chạy một luồng (1-18). Bỏ trống = cả 18."
+        default: ""
+  repository_dispatch:
+    types: [mm0-phantich-18]
+
+# Không huỷ lượt đang chạy: một lượt dở dang vẫn đang sinh video có ích.
+concurrency: { group: mm0-phantich-18, cancel-in-progress: false }
+
+jobs:
+  dung:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix:
+        luong: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: npm, cache-dependency-path: engine-remotion/package-lock.json }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Cache Chrome Remotion
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.remotion
+            ~/.cache/remotion
+          key: remotion-chrome-${{ hashFiles('engine-remotion/package-lock.json') }}
+
+      - name: Cài đặt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+            libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 \
+            libasound2t64 libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg
+          pip install --quiet -c render-pipeline/constraints.txt edge-tts pyyaml
+          pip install --quiet pillow
+          cd engine-remotion && npm ci && npx remotion browser ensure
+
+      # Cổng chạy TRƯỚC bước dựng — hỏng thì biết ngay, không tốn cả lượt render.
+      - name: Cổng
+        run: |
+          cd render-pipeline
+          python selftest.py
+          python kiem_san.py
+          python kiem_xoay_key.py
+          python kiem_nen.py
+          python kiem_am.py
+          python kiem_workflow.py
+
+      - name: Luồng ${{ matrix.luong }} — kênh phụ trách
+        id: ds
+        run: |
+          cd render-pipeline
+          echo "── luồng ${{ matrix.luong }}/18 ──"
+          python kenh_cua_lo.py --luong ${{ matrix.luong }} --tong 18
+
+      - name: Chuẩn bị nền (được phép gọi API, được phép hỏng)
+        env:
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+        run: cd render-pipeline && python chuan_bi_nen.py || true
+
+      - name: Dựng ngắn 9:16
+        env:
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+        run: |
+          cd render-pipeline
+          L=${{ matrix.luong }}
+          # Hai đường dựng khác nhau: kênh GỐC nhận `--kenh` (tên viết liền), kênh THẾ HỆ 2 nhận
+          # `--gen2` (danh sách, cách nhau dấu phẩy). Gộp nhầm là kênh gen-2 dựng bằng đường gốc
+          # và ra video không có bảng số nào.
+          GOC=$(python kenh_cua_lo.py --luong $L --tong 18 --goc | tr -d ' ' | paste -sd, -)
+          GEN=$(python kenh_cua_lo.py --luong $L --tong 18 --gen2 | paste -sd, -)
+          [ -n "$GOC" ] && python kich_v2.py --kenh "$GOC" || echo "  (luồng này không có kênh gốc)"
+          [ -n "$GEN" ] && python kich_v2.py --gen2 "$GEN" || echo "  (luồng này không có kênh gen-2)"
+
+      - name: Dựng dài 16:9
+        env:
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+        run: |
+          cd render-pipeline
+          L=${{ matrix.luong }}
+          # Cờ `--gen2` CHỈ cho kênh thế hệ 2. Gắn nhầm cho kênh gốc là nó đi tra bảng
+          # `kenh_the_he_2.json` không có tên ấy rồi bỏ lượt — im lặng, không lỗi nào báo.
+          python kenh_cua_lo.py --luong $L --tong 18 --goc | while read -r K; do
+            [ -z "$K" ] && continue
+            echo "→ dài (gốc): $K"; python kich_v2_long.py --kenh "$K" || true
+          done
+          python kenh_cua_lo.py --luong $L --tong 18 --gen2 | while read -r K; do
+            [ -z "$K" ] && continue
+            echo "→ dài (gen2): $K"; python kich_v2_long.py --kenh "$K" --gen2 || true
+          done
+
+      - name: Chấm + soi khung
+        run: |
+          cd render-pipeline
+          python qc_kenh.py || true
+          python kiem_bo_cuc.py || true
+
+      - name: Gói kết quả
+        uses: actions/upload-artifact@v4
+        with:
+          name: phantich-luong-${{ matrix.luong }}
+          path: |
+            render-pipeline/out/v3_*.mp4
+            render-pipeline/out/v3_*.jpg
+            render-pipeline/out/v3L_*.mp4
+            render-pipeline/out/v3L_*.jpg
+          retention-days: 14
+          if-no-files-found: warn
