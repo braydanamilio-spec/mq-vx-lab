@@ -100,17 +100,26 @@ BO_CUC_KENH = {
     "dating":   dict(duoi=False, bo=28, no="OUCH!"),
 }
 
+# 31/8 — TỈ LỆ NGƯỜI HẠ XUỐNG ĐỂ BỐI CẢNH CÓ CHỖ.
+# Anh nói ba lần "chưa nhận ra được bối cảnh gì", và sau khi sửa xong thước đo, vị trí, lớp —
+# vẫn chưa rõ. Đo mới thấy ràng buộc thật: ở tỉ lệ 0,60 thì hai người chiếm 52% bề ngang và
+# chỉ chừa 35% chiều cao phía trên đầu. Vật chủ đạo đặt đâu cũng bị che, và phần nền thấy được
+# quá ít để đọc ra chỗ nào.
+#
+# Đây là ĐÁNH ĐỔI, không phải bản vá: mặt nhỏ đi khoảng một phần năm ở cảnh hai người, đổi lấy
+# một nền đọc được. Cảnh CẬN (một người) vẫn giữ mặt to như cũ — nhịp rộng/cận vì thế còn rõ
+# hơn trước, vì hai cỡ cảnh nay chênh nhau nhiều hơn.
 NET_KENH = {
-    "rent":     dict(net=9,  cham=13, bo=8,  tile=0.62),   # tiền nhà: gắt, thô, dồn nén
-    "gym":      dict(net=7,  cham=8,  bo=20, tile=0.66),   # phòng tập: khoẻ, sát mặt
-    "airport":  dict(net=6,  cham=10, bo=14, tile=0.56),   # sân bay: rộng, thấy nhiều bối cảnh
-    "car":      dict(net=10, cham=14, bo=6,  tile=0.60),   # gara: thô nhất, vuông nhất
-    "office":   dict(net=5,  cham=7,  bo=30, tile=0.58),   # văn phòng: mảnh, mịn, hiền
-    "diet":     dict(net=6,  cham=9,  bo=34, tile=0.64),   # ăn kiêng: tròn trịa, gần
-    "tech":     dict(net=7,  cham=11, bo=12, tile=0.60),   # kỹ thuật: vuông vắn vừa phải
-    "parent":   dict(net=8,  cham=8,  bo=28, tile=0.63),   # làm cha mẹ: dày ấm, tròn
-    "neighbor": dict(net=9,  cham=14, bo=10, tile=0.57),   # hàng xóm: biếm hoạ, thô, lùi xa
-    "dating":   dict(net=5,  cham=7,  bo=32, tile=0.65),   # hẹn hò: mảnh mềm, sát mặt
+    "rent":     dict(net=9,  cham=13, bo=8,  tile=0.48),   # tiền nhà: gắt, thô, dồn nén
+    "gym":      dict(net=7,  cham=8,  bo=20, tile=0.51),   # phòng tập: khoẻ, sát mặt
+    "airport":  dict(net=6,  cham=10, bo=14, tile=0.44),   # sân bay: rộng, thấy nhiều bối cảnh
+    "car":      dict(net=10, cham=14, bo=6,  tile=0.47),   # gara: thô nhất, vuông nhất
+    "office":   dict(net=5,  cham=7,  bo=30, tile=0.45),   # văn phòng: mảnh, mịn, hiền
+    "diet":     dict(net=6,  cham=9,  bo=34, tile=0.5),   # ăn kiêng: tròn trịa, gần
+    "tech":     dict(net=7,  cham=11, bo=12, tile=0.47),   # kỹ thuật: vuông vắn vừa phải
+    "parent":   dict(net=8,  cham=8,  bo=28, tile=0.49),   # làm cha mẹ: dày ấm, tròn
+    "neighbor": dict(net=9,  cham=14, bo=10, tile=0.44),   # hàng xóm: biếm hoạ, thô, lùi xa
+    "dating":   dict(net=5,  cham=7,  bo=32, tile=0.51),   # hẹn hò: mảnh mềm, sát mặt
 }
 
 

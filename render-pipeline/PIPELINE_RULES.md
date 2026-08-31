@@ -6013,3 +6013,40 @@ cháy, camera lọt tường).
 Thay bằng **2,5D**: nền chia ba lớp (xa nhỏ+nhạt+cao · giữa · gần to+đè lên nhân vật) cộng bóng
 đổ cùng một hướng. Được phần lớn cảm giác chiều sâu mà vẫn là hình vẽ phẳng — không model,
 không ánh sáng, không có gì để hỏng.
+
+### 17.5 Bốn vòng sửa cùng một triệu chứng — và bài học về thứ tự đo
+
+Anh nói "bối cảnh lộn xộn, chưa nhận ra là gì". Tôi sửa bốn vòng, mỗi vòng chữa một nguyên
+nhân THẬT, mà triệu chứng vẫn còn — vì bốn nguyên nhân chồng lên nhau:
+
+| Vòng | Sửa gì | Vì sao chưa hết |
+|---|---|---|
+| 1 | ba mặt sàn → một hằng `SAN` | hết lơ lửng, nhưng đồ vẫn tràn |
+| 2 | thước đo theo bề ngang thay chiều cao | hết tràn, nhưng vật lớn vẫn bị che |
+| 3 | vật cao ra giữa, vật thấp ra mép + hạ tỉ lệ người | thấy nhiều nền hơn, nhưng vẫn không đọc ra chỗ nào |
+| 4 | **cận cảnh mới là nơi vẽ bối cảnh** | đây mới là chỗ có chỗ |
+
+Vòng 4 là chỗ tôi lẽ ra phải đo TRƯỚC TIÊN. Phép đo mất một dòng:
+
+```
+cảnh HAI người : người chiếm 92–464 và 528–900  →  hở 64px giữa
+cảnh CẬN       : người chiếm 286–706            →  hở 286px mỗi bên
+```
+
+Cảnh hai người **không có chỗ** cho vật lớn — không bản vá nào đổi được điều đó. Mà bản trước
+lại vẽ nền PHẲNG ở đúng cảnh cận, tức bỏ phí chỗ duy nhất còn chỗ, rồi cố nhồi vật lớn vào chỗ
+không còn chỗ.
+
+**Luật:** trước khi sửa một vấn đề bố cục, đo xem **chỗ trống thật sự nằm ở đâu**. Ba vòng đầu
+đều là tối ưu cách vẽ trong một khoảng không đủ rộng — đúng về kỹ thuật, vô ích về kết quả.
+
+### 17.6 Tương phản: đồ đạc phải ĐẬM hơn tường rõ rệt
+
+Phép đo: tường `nhat(màu, 0.85)` và đồ đạc `nhat(màu, 0.50)` chênh nhau **20%** tổng kênh màu —
+mắt đọc ra cùng một mảng. Hạ đồ đạc xuống quanh `0.28` thì chênh **32%**, tách được.
+
+Cách kiểm rẻ nhất, không cần render:
+```python
+d = sum(abs(a-b) for a,b in zip(nhat(mau,0.85), nhat(mau,0.28)))
+# dưới 25% của 765 là quá ít
+```

@@ -571,7 +571,13 @@ export const NenPanel: React.FC<{
           <circle cx={cham * 0.28} cy={cham * 0.28} r={cham * 0.17} fill={`${mau}1F`} />
         </pattern>
       </defs>
-      {rong ? (
+      {/* 31/8 — CẬN CẢNH CŨNG VẼ BỐI CẢNH ĐẦY ĐỦ.
+          Đo trên khung dọc 992px: cảnh HAI người để hở đúng 64px ở giữa, nên vật lớn đặt đâu
+          cũng bị che 85% — không cách nào đọc ra chỗ nào. Nhưng cảnh CẬN chỉ có một người ở
+          giữa, hở 286px mỗi bên: thừa chỗ cho một vật lớn.
+          Vậy mà bản trước vẽ nền PHẲNG ở đúng cảnh cận — bỏ phí chỗ duy nhất còn chỗ, rồi cố
+          nhồi vật lớn vào chỗ không còn chỗ. Đảo lại: cận cảnh mới là nơi khoe bối cảnh. */}
+      {true ? (
         <>
           {/* 31/8 — BỐI CẢNH NAY LẮP TỪ MÔ-ĐUN, KHÔNG CÒN MỖI KÊNH MỘT HÀM VẼ.
               Mười kênh × một nơi chốn là thứ bó tay cả người viết kịch bản lẫn mắt người xem:

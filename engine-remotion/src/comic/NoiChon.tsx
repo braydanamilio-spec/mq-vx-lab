@@ -29,6 +29,13 @@ export const SAN = 0.95;
 // thì ngược lại: đặt giữa là bị che sạch, phải ra mép mới thấy trọn.
 // Phép đo dẫn tới quy tắc này: khung dọc 992px, hai nhân vật chiếm 153–403 và 589–839, nên
 // khoảng trống lớn nhất chỉ 186px — không chỗ nào chứa nổi một vật rộng 758px.
+// Vật NGANG (rộng hơn cao) không bao giờ được làm vật chủ đạo: phóng to lên thì nó rộng hơn
+// cả khung và bị cắt thành mấy mảnh rời — khung NEIGHBOR WATCH vừa cho ra hai khối trắng dưới
+// chân nhân vật, đó là cái hàng rào bị cắt vụn. Vật chủ đạo phải là vật ĐỨNG.
+const VAT_NGANG = new Set([
+  "hang_rao", "ban_dai", "sofa", "xe", "tu_bep", "quay", "giuong", "booth", "ban",
+]);
+
 const VAT_CAO = new Set([
   "tu_lanh", "ke_sach", "tu_ho_so", "cua_ra_vao", "guong", "gia_treo", "cua_so",
   "cua_luoi", "cua_cuon", "gia_ta", "may_nuoc",
@@ -247,12 +254,11 @@ const MANH_HOP: Record<string, string[]> = {
 
 // Ba khuôn đặt chỗ. Cả ba đều chừa vùng 0.24–0.76 cho hai nhân vật — ràng buộc bất biến của hệ.
 const KHUON: { x: number; co: number }[][] = [
-  // Bốn chỗ, không phải hai-ba: nơi sinh tổ hợp trước đây chỉ có hai mảnh ở hai mép, và ở
-  // khung dọc thì hai mép là chỗ nhân vật che nhiều nhất — nên nền ra trống dù danh sách mảnh
-  // rất dài. Chỗ thứ tư nằm sát mép ngoài, chỗ giữa để vật thấp.
-  [{ x: 0.08, co: 1 }, { x: 0.92, co: 0.9 }, { x: 0.5, co: 0.6 }, { x: 0.2, co: 0.75 }],
-  [{ x: 0.06, co: 1.05 }, { x: 0.5, co: 0.75 }, { x: 0.94, co: 0.85 }, { x: 0.82, co: 0.7 }],
-  [{ x: 0.1, co: 0.95 }, { x: 0.9, co: 1.05 }, { x: 0.26, co: 0.7 }, { x: 0.74, co: 0.68 }],
+  // Mọi x đều nằm NGOÀI hai dải nhân vật (0,20–0,34 và 0,66–0,80). Đặt vật ngay sau chân người
+  // thì khung ra trông như người đang đứng trên nó — lỗi vừa thấy ở NEIGHBOR WATCH.
+  [{ x: 0.07, co: 1 }, { x: 0.93, co: 0.9 }, { x: 0.5, co: 0.6 }, { x: 0.16, co: 0.72 }],
+  [{ x: 0.05, co: 1.05 }, { x: 0.5, co: 0.75 }, { x: 0.95, co: 0.85 }, { x: 0.88, co: 0.68 }],
+  [{ x: 0.09, co: 0.95 }, { x: 0.91, co: 1.05 }, { x: 0.5, co: 0.7 }, { x: 0.15, co: 0.66 }],
 ];
 
 const bam2 = (a: number, b: number) => ((a * 73856093) ^ (b * 19349663)) >>> 0;
@@ -305,8 +311,8 @@ export const LapNoi: React.FC<{
   ];
   return (
     <>
-      <rect x={0} y={0} width={w} height={yS} fill={nhat(mau, 0.85)} />
-      <rect x={0} y={yS} width={w} height={h - yS} fill={noi.san || nhat(mau, 0.62)} />
+      <rect x={0} y={0} width={w} height={yS} fill={nhat(mau, 0.88)} />
+      <rect x={0} y={yS} width={w} height={h - yS} fill={noi.san || nhat(mau, 0.5)} />
       <line x1={0} y1={yS} x2={w} y2={yS} stroke="#14110F" strokeWidth={4} opacity={0.5} />
       {/* chân tường và vệt sáng chéo — hai thứ rẻ nhất để mảng tường phẳng có chiều sâu */}
       <rect x={0} y={yS - h * 0.04} width={w} height={h * 0.04} fill="#00000010" />
@@ -318,7 +324,7 @@ export const LapNoi: React.FC<{
         const xa = m.lop === "xa";
         // Mảnh treo ở tầm mắt trở lên; mảnh xa lùi lên cao và co nhỏ; còn lại chân chạm sàn.
         const y = m.treo ? h * 0.26 : xa ? yS - h * 0.1 : yS;
-        const m2 = { ...m, co: (m.co ?? 1) * (xa ? 0.66 : m.chu ? (VAT_CAO.has(m.m) ? 1.12 : 1.3) : 1) };
+        const m2 = { ...m, co: (m.co ?? 1) * (xa ? 0.66 : m.chu ? (VAT_NGANG.has(m.m) ? 0.92 : VAT_CAO.has(m.m) ? 1.12 : 1.3) : 1) };
         return (
           <g key={i} transform={`translate(${w * m.x} ${y})`}
              opacity={xa ? 0.5 : 1}>

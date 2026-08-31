@@ -2635,6 +2635,306 @@
     "tinh_huong": "Trash Chute Jam",
     "ma": "ef3ee9af8bc9",
     "diem_chot": 4
+   },
+   {
+    "loi": [
+     [
+      "My lease says one dryer per hour.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Correct, and only if you wear a white hat.",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "So I can wear a hat and start?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Only if the hat matches the dryer's door color.",
+      1,
+      "vui"
+     ],
+     [
+      "My hat's blue, dryer door's red-what's the workaround?",
+      0,
+      "tu_tin"
+     ],
+     [
+      "You wait until sunrise; the rule resets with daylight.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "shared laundry room",
+    "hook": "ONE DRYER PER HOUR RULE",
+    "diem_chot": 8,
+    "tinh_huong": "Dryer Dilemma",
+    "ma": "c191c864c42f"
+   },
+   {
+    "loi": [
+     [
+      "Mrs. Vale, the rent ticker's changing in three seconds.",
+      0,
+      "buon"
+     ],
+     [
+      "I know, Danny, but first let me explain the adjustment clause.",
+      1,
+      "vui"
+     ],
+     [
+      "Do I need to sign anything before it updates?",
+      0,
+      "buon"
+     ],
+     [
+      "The clause was added after a city-wide rent review last month.",
+      1,
+      "tuc"
+     ],
+     [
+      "So the amount could jump now?",
+      0,
+      "buon"
+     ],
+     [
+      "Your lease already caps it at the current rate.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the building manager's office",
+    "hook": "RENT TICKER COUNTS DOWN",
+    "diem_chot": 7,
+    "tinh_huong": "Ticker Update Panic",
+    "ma": "e51b679d8930"
+   },
+   {
+    "loi": [
+     [
+      "The dryer stopped spinning after I put in one shirt.",
+      0,
+      "buon"
+     ],
+     [
+      "We'll replace the dryer; the old one was a fire hazard.",
+      1,
+      "vui"
+     ],
+     [
+      "Will the new dryer fit in the same space?",
+      0,
+      "tuc"
+     ],
+     [
+      "We'll extend the vent through the stairwell and add a second dryer.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "the shared laundry room",
+    "hook": "WHAT HAPPENS WHEN A DRYER BREAKS",
+    "diem_chot": 8,
+    "tinh_huong": "Dryer Expansion Panic",
+    "ma": "aacc80d39134"
+   },
+   {
+    "loi": [
+     [
+      "My utility bill includes a midnight oxygen tax.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "You inhale cubic footage while sleeping.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I am unconscious and stationary.",
+      0,
+      "tuc"
+     ],
+     [
+      "Your lungs still operate machinery.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Should I hold my breath until dawn?",
+      0,
+      "so"
+     ],
+     [
+      "That falls under unauthorized vacuum storage.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the apartment hallway",
+    "hook": "BREATHING AFTER MIDNIGHT COSTS EXTRA",
+    "diem_chot": 8,
+    "tinh_huong": "Night Air Surcharge",
+    "ma": "cca94d55551b"
+   },
+   {
+    "loi": [
+     [
+      "The hallway ceiling bulb has been burned out since Tuesday.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We removed the bulb to save on hallway electricity.",
+      1,
+      "vui"
+     ],
+     [
+      "I work night shifts, I need to see my door.",
+      0,
+      "tuc"
+     ],
+     [
+      "Total darkness reduces tenant stress from visual stimuli.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I cannot find my key in total darkness.",
+      0,
+      "so"
+     ],
+     [
+      "That is why we added the braille navigation surcharge.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "the apartment hallway",
+    "hook": "THE HALLWAY LIGHT BULB WENT OUT",
+    "diem_chot": 8,
+    "tinh_huong": "Night Light Surcharge",
+    "ma": "d1b60d3120f3"
+   },
+   {
+    "loi": [
+     [
+      "Why is there a utility charge on my empty unit?",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "You left the refrigerator door open overnight.",
+      1,
+      "vui"
+     ],
+     [
+      "The apartment is completely empty.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "The cold air leaked into the hallway.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "The hallway is not my apartment.",
+      0,
+      "tuc"
+     ],
+     [
+      "It is now a secondary studio.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "an empty apartment",
+    "hook": "HE OPENED THE FRIDGE DOOR",
+    "diem_chot": 8,
+    "tinh_huong": "refrigerator air tax",
+    "ma": "7431b93b3a2c"
+   },
+   {
+    "loi": [
+     [
+      "The door's going to lock in three seconds, right?",
+      0,
+      "tuc"
+     ],
+     [
+      "First, the new security schedule aligns with the night shift.",
+      1,
+      "vui"
+     ],
+     [
+      "So I can still get in before it seals?",
+      0,
+      "tuc"
+     ],
+     [
+      "It never seals; the lock's just a light show.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the building manager's office",
+    "hook": "DOOR WILL LOCK IN SECONDS",
+    "diem_chot": 7,
+    "tinh_huong": "Lock Countdown Misfire",
+    "ma": "6428c441e009"
+   },
+   {
+    "loi": [
+     [
+      "The hallway bulb flickered and went out.",
+      0,
+      "buon"
+     ],
+     [
+      "I'll install LED panels, they'll brighten the entire corridor.",
+      1,
+      "vui"
+     ],
+     [
+      "Do I need to move my furniture for that?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We'll replace the wiring too, it's safer during night shifts.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Will that shut off power to all units?",
+      0,
+      "tuc"
+     ],
+     [
+      "Yes, we'll add decorative skylights-your hallway will be a showroom.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "the apartment hallway",
+    "hook": "WHAT'S WRONG WITH ONE BULB",
+    "diem_chot": 7,
+    "tinh_huong": "Hallway Light Upgrade",
+    "ma": "b6873c53d1ba"
    }
   ],
   "gym": [
@@ -3505,6 +3805,316 @@
     "tinh_huong": "Auto‑Start Row Panic",
     "ma": "bb2cb0ba3c2a",
     "diem_chot": 8
+   },
+   {
+    "loi": [
+     [
+      "My watch is about to wipe itself in ten seconds.",
+      0,
+      "so"
+     ],
+     [
+      "Before it does, note the cardio zone rule.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Five seconds. What is the emergency override code?",
+      0,
+      "tuc"
+     ],
+     [
+      "Zone three requires a spiritual awakening first.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Two seconds. Just give me the four digits.",
+      0,
+      "so"
+     ],
+     [
+      "Do you even know how many calories a dream burns?",
+      1,
+      "nghi_ngo"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the weight floor",
+    "hook": "THE TEN SECOND WATCH LOCKOUT",
+    "diem_chot": 8,
+    "tinh_huong": "Smartwatch Lock Timer",
+    "ma": "ccc0a0de78d4"
+   },
+   {
+    "loi": [
+     [
+      "My locker door is stuck on the third latch.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We welded the doors shut to protect your socks.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I keep my car keys in there.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "You now own a very secure metal storage cube.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "the locker room",
+    "hook": "HIS LOCKER DOOR JUST LOCKED FOREVER",
+    "diem_chot": 7,
+    "tinh_huong": "Locker Door Upgrade",
+    "ma": "7558951ae77f"
+   },
+   {
+    "loi": [
+     [
+      "Bree, I need to come clean about the front desk.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Did you delete all the member payment records?",
+      1,
+      "tuc"
+     ],
+     [
+      "No, not that, just something I slipped away.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You hid the cash drawer? I already wrote it off.",
+      1,
+      "tuc"
+     ],
+     [
+      "Actually I only borrowed the spare key for my car.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "So the only theft was a key, not the cash.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the gym front desk",
+    "hook": "WHAT DID RICK STEAL FROM THE DESK",
+    "diem_chot": 7,
+    "tinh_huong": "Key Borrowing Confession",
+    "ma": "3b5329020755"
+   },
+   {
+    "loi": [
+     [
+      "The Wi-Fi sign says 'password123', but it doesn't work.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We'll reset it; the new password will be on the board.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I need internet for my workout music, not a scavenger hunt.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We'll add a QR code so you can scan the password instantly.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Now the sign also shows everyone's membership expiration dates.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Great! Everyone can see when they'll be kicked out, keeps accountability high.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "gym front desk",
+    "hook": "GYM DISPLAYING MEMBERSHIP EXPIRATIONS",
+    "diem_chot": 8,
+    "tinh_huong": "wifi reveal",
+    "ma": "db54e7674743"
+   },
+   {
+    "loi": [
+     [
+      "Bree, do I still get the free towel before it ends?",
+      0,
+      "tuc"
+     ],
+     [
+      "First, the towel program launched with our new humidity sensors.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "But the sign says five seconds left, I need an answer.",
+      0,
+      "tuc"
+     ],
+     [
+      "You already have a towel, the timer was just decorative.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "gym front desk",
+    "hook": "FREE TOWEL IS RUNNING OUT",
+    "diem_chot": 8,
+    "tinh_huong": "Towel Timer Tension",
+    "ma": "f562eb5677e5"
+   },
+   {
+    "loi": [
+     [
+      "My towel rack lost a single hook.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We'll install smart racks that dispense fresh towels automatically.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "That sounds great, but I just need the one hook.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We'll upgrade every locker room with climate-controlled towel farms.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Now the whole gym will need a water system?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Exactly, a full towel irrigation network-my proudest project yet!",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "gym front desk",
+    "hook": "ONE MISSING TOWEL HOOK",
+    "diem_chot": 8,
+    "tinh_huong": "Hook Shortage",
+    "ma": "eb6075b41f0e"
+   },
+   {
+    "loi": [
+     [
+      "I am currently paying thirty dollars to breathe in here.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "That covers the oxygen phase. Carbon dioxide removal is extra.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I have not even exhaled yet.",
+      0,
+      "tuc"
+     ],
+     [
+      "Your lungs stored that air without a permit.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I am holding my breath.",
+      0,
+      "buon"
+     ],
+     [
+      "Holding it is storage. That is a rental fee.",
+      1,
+      "vui"
+     ],
+     [
+      "So I am paying to keep air inside my chest.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "You are subletting square footage from our HVAC unit.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the yoga studio",
+    "hook": "THE STUDIO AIR COSTS TEN DOLLARS",
+    "diem_chot": 8,
+    "tinh_huong": "Air Breath Deposit",
+    "ma": "cc9a5c67a09e"
+   },
+   {
+    "loi": [
+     [
+      "My locker has three seconds before the battery dies forever.",
+      0,
+      "so"
+     ],
+     [
+      "First you must understand the emotional life of zinc.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I have no time for the emotional life of zinc.",
+      0,
+      "tuc"
+     ],
+     [
+      "Zinc feels the cold metal door just like you do.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Just tell me the override code before it locks.",
+      0,
+      "so"
+     ],
+     [
+      "It is locker four. You do not own a lock.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the locker room",
+    "hook": "HE HAD THREE SECONDS TO GUESS",
+    "diem_chot": 6,
+    "tinh_huong": "Locker Code Panic",
+    "ma": "a4245927c5fe"
    }
   ],
   "airport": [
@@ -4295,6 +4905,426 @@
     "tinh_huong": "Lock Lockdown",
     "ma": "0782322a4b09",
     "diem_chot": 2
+   },
+   {
+    "loi": [
+     [
+      "I missed three flights this month, can I rebook?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Since you missed any, you must recite all state capitals now.",
+      1,
+      "so"
+     ],
+     [
+      "Just the first ten? I'm not a walking encyclopedia.",
+      0,
+      "buon"
+     ],
+     [
+      "The rule says complete list, no shortcuts, no notes.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Can I record myself and play it back at the desk?",
+      0,
+      "tu_tin"
+     ],
+     [
+      "But it only applies to flights missed in the last 24 hours",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the check-in counter",
+    "hook": "MISSED FLIGHTS TRIGGER QUIZ",
+    "diem_chot": 8,
+    "tinh_huong": "Capital Recital Rule",
+    "ma": "c26fb22ba6d0"
+   },
+   {
+    "loi": [
+     [
+      "The final boarding call is in ten seconds, can I rebook?",
+      0,
+      "tuc"
+     ],
+     [
+      "Policy states you need a 24-hour notice for any change.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I missed three trips this month, I need this now.",
+      0,
+      "tuc"
+     ],
+     [
+      "If you missed the cutoff, you must purchase a new ticket.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Will they let me on this flight?",
+      0,
+      "tuc"
+     ],
+     [
+      "Your boarding pass is already printed.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the rebooking desk",
+    "hook": "FINAL BOARDING CALL IN TEN SECONDS",
+    "diem_chot": 7,
+    "tinh_huong": "Rebooking Countdown",
+    "ma": "d063449b1879"
+   },
+   {
+    "loi": [
+     [
+      "My tray table won't drop down.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "That requires a twenty dollar activation fee.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I just want to use the plastic shelf.",
+      0,
+      "tuc"
+     ],
+     [
+      "You now own twelve square inches of aisle.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "the security line",
+    "hook": "HIS TRAY TABLE JUST COST MORE",
+    "diem_chot": 8,
+    "tinh_huong": "Tray Table Rental Deposit",
+    "ma": "0bbba29cebf7"
+   },
+   {
+    "loi": [
+     [
+      "Why must I breathe into this plastic tube twice?",
+      0,
+      "tuc"
+     ],
+     [
+      "To prove your lungs meet cabin pressure density.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I am breathing normal air in a public hallway.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Which you are currently consuming without a pre-flight permit.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "You charge me to breathe room air?",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "Only the parts you do not exhale back into storage.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the security line",
+    "hook": "HE PAID TO BREATHE HARD",
+    "diem_chot": 7,
+    "tinh_huong": "Altitude Pressure Calibration",
+    "ma": "58923e18b445"
+   },
+   {
+    "loi": [
+     [
+      "Gate's closing in ten seconds, can I board now?",
+      0,
+      "tuc"
+     ],
+     [
+      "Policy says you must show a boarding pass.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Do I need printed or can I use my phone?",
+      0,
+      "tuc"
+     ],
+     [
+      "If the QR code scans, the system registers you as present.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "The countdown overlay says five seconds left, can I still board?",
+      0,
+      "tuc"
+     ],
+     [
+      "Only passengers cleared security may step onto the bridge.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I'm already through security, I just need the pass now!",
+      0,
+      "tuc"
+     ],
+     [
+      "Paul, your boarding pass is in your pocket.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the departure gate",
+    "hook": "THE GATE WILL CLOSE IN SECONDS",
+    "diem_chot": 9,
+    "tinh_huong": "Final Call Question",
+    "ma": "19c80cad348d"
+   },
+   {
+    "loi": [
+     [
+      "Why is there a five dollar fee to touch my ticket?",
+      0,
+      "tuc"
+     ],
+     [
+      "Paper degrades under human contact. The fee preserves the integrity.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "People should not be allowed to raw dog their boarding passes.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "It protects the airline from lawsuits over soggy bar codes.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "A laminated ticket is the only safe ticket in America.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "That will be ten dollars since you touched it twice.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the check-in counter",
+    "hook": "HE PAID FIVE DOLLARS TO SIT",
+    "diem_chot": 8,
+    "tinh_huong": "Boarding Pass Laminating Fee",
+    "ma": "07093a2f7203"
+   },
+   {
+    "loi": [
+     [
+      "I need to turn myself in before boarding starts.",
+      0,
+      "so"
+     ],
+     [
+      "You are thirty minutes late for a federal inquiry.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "It happened in row twelve on Tuesday.",
+      0,
+      "buon"
+     ],
+     [
+      "The marshals are handling the smuggling ring in cargo.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I snapped the plastic thing on the seat back.",
+      0,
+      "tuc"
+     ],
+     [
+      "We do not extradite for minor armrest domestic damage.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I dropped my sandwich mustard right on the hinge.",
+      0,
+      "so"
+     ],
+     [
+      "I am talking about the emergency exit door handle.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the departure gate",
+    "hook": "HE BROKE A PLASTIC TAB",
+    "diem_chot": 8,
+    "tinh_huong": "Tray Latch Liability",
+    "ma": "e90100dbab6b"
+   },
+   {
+    "loi": [
+     [
+      "I missed my 2 p.m. flight, need a new ticket.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Do you have a pet traveling in the cabin?",
+      1,
+      "tu_tin"
+     ],
+     [
+      "No, I'm asking for the next Chicago flight.",
+      0,
+      "so"
+     ],
+     [
+      "Pets must stay in carriers under 18 inches.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I'm not traveling with a dog, just a meeting.",
+      0,
+      "so"
+     ],
+     [
+      "So you need a pet waiver, not a new ticket.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the rebooking desk",
+    "hook": "PAUL MISSES THIRD FLIGHT TODAY",
+    "diem_chot": 7,
+    "tinh_huong": "Pet Waiver Mixup",
+    "ma": "e488cdc8bd7f"
+   },
+   {
+    "loi": [
+     [
+      "My bag is two pounds over the limit.",
+      0,
+      "tuc"
+     ],
+     [
+      "Then you must pay or discard the excess.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I am wearing three sweaters and two jackets right now.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Weigh-in includes the passenger in motion.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Motion? I am standing entirely still.",
+      0,
+      "so"
+     ],
+     [
+      "Your current velocity registers as momentum.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I am breathing at nine miles an hour.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "Exhalation is technically checked baggage.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the check-in counter",
+    "hook": "HE PAID TO WEAR HIS COAT",
+    "diem_chot": 8,
+    "tinh_huong": "Air Speed Weight Limit",
+    "ma": "5c8d803c89a3"
+   },
+   {
+    "loi": [
+     [
+      "The scanner's about to beep. Can I keep my laptop in?",
+      0,
+      "tuc"
+     ],
+     [
+      "Per regulation 3.2, laptops must be removed for X-ray.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "But the line's moving. How long do I have?",
+      0,
+      "tuc"
+     ],
+     [
+      "You have fifteen seconds after the beep before manual inspection.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Timer's at three. Is that enough?",
+      0,
+      "tuc"
+     ],
+     [
+      "No, the scanner already flagged it.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the security line",
+    "hook": "SCANNER WILL BEEP IN SECONDS",
+    "diem_chot": 7,
+    "tinh_huong": "Laptop Scan Countdown",
+    "ma": "513fb7d7e060"
    }
   ],
   "car": [
@@ -5085,6 +6115,246 @@
     "tinh_huong": "Leakage Warning",
     "ma": "e0c88200b905",
     "diem_chot": 8
+   },
+   {
+    "loi": [
+     [
+      "Your estimate was fifty, now it's two hundred.",
+      0,
+      "tuc"
+     ],
+     [
+      "That's because you've been waiting forty minutes.",
+      1,
+      "so"
+     ],
+     [
+      "I was standing here, not the car.",
+      0,
+      "buon"
+     ],
+     [
+      "When you wait, the car waits too, per the Wait Rule.",
+      1,
+      "so"
+     ],
+     [
+      "Can we stop the clock while we talk?",
+      0,
+      "vui"
+     ],
+     [
+      "Talking halts the car, not the bill.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the service counter",
+    "hook": "WHY DOES WAITING INCREASE THE PRICE",
+    "diem_chot": 7,
+    "tinh_huong": "Waiting Bill Expands",
+    "ma": "1365cae1cbcf"
+   },
+   {
+    "loi": [
+     [
+      "The trunk is closing. Which wire cuts power?",
+      0,
+      "so"
+     ],
+     [
+      "We must first review the latch warranty history.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "It drops in four seconds. Hurry.",
+      0,
+      "tuc"
+     ],
+     [
+      "Warranty paper involves three signatures and a notary.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "It clicked. What did I lose?",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "My turkey wrap was on the spare tire.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the customer driveway",
+    "hook": "THE TRUNK IS GOING DOWN NOW",
+    "diem_chot": 8,
+    "tinh_huong": "The Trunk Latch Timer",
+    "ma": "1ea2adfb9da0"
+   },
+   {
+    "loi": [
+     [
+      "My passenger side wiper blade is leaving streaks.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "That is because the rubber has surrendered entirely.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Can you just clip a new one on?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We have to cut the roof off first.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "the service counter",
+    "hook": "HE ASKED ABOUT A WIPER BLADE",
+    "diem_chot": 7,
+    "tinh_huong": "The Windshield Wiper Debt",
+    "ma": "637f4c1f8ac7"
+   },
+   {
+    "loi": [
+     [
+      "You still charge per minute, even when I'm idle?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Rule says any minute you're in the shop counts.",
+      1,
+      "so"
+     ],
+     [
+      "What about the minute I'm standing outside?",
+      0,
+      "vui"
+     ],
+     [
+      "Outside minute counts if you can see the roof.",
+      1,
+      "so"
+     ],
+     [
+      "So waiting in my car under the lot lights still bills?",
+      0,
+      "vui"
+     ],
+     [
+      "Exactly-billing starts the second you breathe on site.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the service counter",
+    "hook": "WHY DOES EVERY SECOND COST",
+    "diem_chot": 7,
+    "tinh_huong": "Minute Meter Madness",
+    "ma": "964706bdd59a"
+   },
+   {
+    "loi": [
+     [
+      "The lift's about to drop in three seconds.",
+      0,
+      "tuc"
+     ],
+     [
+      "Before that, you should know the last service date.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Did you check the safety pins?",
+      0,
+      "tuc"
+     ],
+     [
+      "The pins were replaced last month, after the oil spill.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Are they still in place right now?",
+      0,
+      "tuc"
+     ],
+     [
+      "They were tightened during the last inspection, per protocol.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "So the lift is safe to lower?",
+      0,
+      "tuc"
+     ],
+     [
+      "No, because you never installed any pins.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the car lift",
+    "hook": "LIFT WILL DROP IN THREE SECONDS",
+    "diem_chot": 8,
+    "tinh_huong": "Missing safety pins",
+    "ma": "a449bbf5aabc"
+   },
+   {
+    "loi": [
+     [
+      "My check engine light just blinked once.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "That means a sensor misread, I'll run a diagnostic now.",
+      1,
+      "tuc"
+     ],
+     [
+      "It only happened when I turned the radio up.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Radio draws power, we'll replace the alternator to prevent overload.",
+      1,
+      "tuc"
+     ],
+     [
+      "But the car still starts, no real issue.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Great, a brand-new alternator boosts resale value by ten percent.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "the repair bay",
+    "hook": "ONE LIGHT SPARKS A BIG BILL",
+    "diem_chot": 8,
+    "tinh_huong": "Alternator Upsell",
+    "ma": "ef5d7d0a0167"
    }
   ],
   "office": [
@@ -9630,7 +10900,197 @@
   "i need «t n» or no «t n» s buzzing": 1,
   "well you know «t n» were seasoned with sea salt": 1,
   "okay answer before it dings did you move it": 1,
-  "it stayed but it s just «t n» almond on «t n»": 1
+  "it stayed but it s just «t n» almond on «t n»": 1,
+  "«t n» says «s » dryer per hour": 1,
+  "correct and only if you wear «t n» hat": 1,
+  "so i can wear «t n» and start": 1,
+  "only if «t n» matches «t n» s door color": 1,
+  "«t n» s blue dryer door s red what s «t n»": 1,
+  "you wait until sunrise «t n» resets with daylight": 1,
+  "mrs vale «t n» ticker s changing in «s » seconds": 1,
+  "i know danny but first let me explain «t n» clause": 1,
+  "do i need to sign anything before it updates": 1,
+  "«t n» was added after «t n» wide rent review last month": 1,
+  "so «t n» could jump now": 1,
+  "«t n» already caps it at «t n» rate": 1,
+  "«t n» stopped spinning after i put in «s » shirt": 1,
+  "we ll replace «t n» «t n» «s » was «t n» hazard": 1,
+  "will «t n» dryer fit in «t n» space": 1,
+  "we ll extend «t n» through «t n» and add «t n» dryer": 1,
+  "«t n» bill includes «t n» oxygen tax": 1,
+  "you inhale cubic footage while sleeping": 1,
+  "i am unconscious and stationary": 1,
+  "«t n» still operate machinery": 1,
+  "should i hold «t n» until dawn": 1,
+  "that falls under unauthorized vacuum storage": 1,
+  "«t n» ceiling bulb has been burned out since «ng y»": 1,
+  "we removed «t n» to save on hallway electricity": 1,
+  "i work night shifts i need to see «t n»": 1,
+  "total darkness reduces tenant stress from visual stimuli": 1,
+  "i cannot find «t n» in total darkness": 1,
+  "that is why we added «t n» navigation surcharge": 1,
+  "why is there «t n» charge on «t n» unit": 1,
+  "you left «t n» door open overnight": 1,
+  "«t n» is completely empty": 1,
+  "«t n» air leaked into «t n»": 1,
+  "«t n» is not «t n»": 1,
+  "it is now «t n» studio": 1,
+  "«t n» s going to lock in «s » seconds right": 1,
+  "first «t n» security schedule aligns with «t n» shift": 1,
+  "so i can still get in before it seals": 1,
+  "it never seals «t n» s just «t n» show": 1,
+  "«t n» bulb flickered and went out": 1,
+  "i ll install led panels they ll brighten «t n» corridor": 1,
+  "do i need to move «t n» for that": 1,
+  "we ll replace «t n» too it s safer during night shifts": 1,
+  "will that shut off power to all units": 1,
+  "yes we ll add decorative skylights «t n» will be «t n»": 1,
+  "«t n» is about to wipe itself in «s » seconds": 1,
+  "before it does note «t n» zone rule": 1,
+  "«s » seconds what is «t n» override code": 1,
+  "zone «s » requires «t n» awakening first": 1,
+  "«s » seconds just give me the «s » digits": 1,
+  "do you even know how many calories «t n» burns": 1,
+  "«t n» door is stuck on «t n» latch": 1,
+  "we welded «t n» shut to protect «t n»": 1,
+  "i keep «t n» keys in there": 1,
+  "you now own «t n» secure metal storage cube": 1,
+  "bree i need to come clean about «t n» desk": 1,
+  "did you delete all «t n» payment records": 1,
+  "no not that just something i slipped away": 1,
+  "you hid «t n» drawer i already wrote it off": 1,
+  "actually i only borrowed «t n» key for «t n»": 1,
+  "so «t n» theft was «t n» not «t n»": 1,
+  "«t n» fi sign says password «s » but it doesn t work": 1,
+  "we ll reset it «t n» password will be on «t n»": 1,
+  "i need internet for «t n» music not «t n» hunt": 1,
+  "we ll add «t n» code so you can scan «t n» instantly": 1,
+  "now «t n» also shows everyone s membership expiration dates": 1,
+  "great everyone can see when they ll be kicked out keeps accountability high": 1,
+  "bree do i still get «t n» towel before it ends": 1,
+  "first «t n» program launched with «t n» humidity sensors": 1,
+  "but «t n» says «s » seconds left i need «t n»": 1,
+  "you already have «t n» «t n» was just decorative": 1,
+  "«t n» rack lost «t n» hook": 1,
+  "we ll install smart racks that dispense fresh towels automatically": 1,
+  "that sounds great but i just need the «s » hook": 1,
+  "we ll upgrade every locker room with climate controlled towel farms": 1,
+  "now «t n» gym will need «t n» system": 1,
+  "exactly «t n» towel irrigation network «t n» project yet": 1,
+  "i am currently paying «s » dollars to breathe in here": 1,
+  "that covers «t n» phase carbon dioxide removal is extra": 1,
+  "i have not even exhaled yet": 1,
+  "«t n» stored that air without «t n»": 1,
+  "i am holding «t n»": 1,
+  "holding it is storage that is «t n» fee": 1,
+  "so i am paying to keep air inside «t n»": 1,
+  "you are subletting square footage from «t n» unit": 1,
+  "«t n» has «s » seconds before «t n» dies forever": 1,
+  "first you must understand «t n» life of zinc": 1,
+  "i have no time for «t n» life of zinc": 1,
+  "zinc feels «t n» metal door just like you do": 1,
+  "just tell me «t n» code before it locks": 1,
+  "it is locker «s » you do not own «t n»": 1,
+  "i missed «s » flights this month can i rebook": 1,
+  "since you missed any you must recite all state capitals now": 1,
+  "just «t n» «s » i m not «t n» encyclopedia": 1,
+  "«t n» says complete list no shortcuts no notes": 1,
+  "can i record myself and play it back at «t n»": 1,
+  "but it only applies to flights missed in «t n» «s » hours": 1,
+  "«t n» boarding call is in «s » seconds can i rebook": 1,
+  "policy states you need a «s » hour notice for any change": 1,
+  "i missed «s » trips this month i need this now": 1,
+  "if you missed «t n» you must purchase «t n» ticket": 1,
+  "will they let me on this flight": 1,
+  "«t n» pass is already printed": 1,
+  "«t n» table won t drop down": 1,
+  "that requires a «s » dollar activation fee": 1,
+  "i just want to use «t n» shelf": 1,
+  "you now own twelve square inches of aisle": 1,
+  "why must i breathe into this plastic tube twice": 1,
+  "to prove «t n» meet cabin pressure density": 1,
+  "i am breathing normal air in «t n» hallway": 1,
+  "which you are currently consuming without «t n» flight permit": 1,
+  "you charge me to breathe room air": 1,
+  "only «t n» you do not exhale back into storage": 1,
+  "gate s closing in «s » seconds can i board now": 1,
+  "policy says you must show «t n» pass": 1,
+  "do i need printed or can i use «t n»": 1,
+  "if «t n» code scans «t n» registers you as present": 1,
+  "«t n» overlay says «s » seconds left can i still board": 1,
+  "only passengers cleared security «ng y» step onto «t n»": 1,
+  "i m already through security i just need «t n» now": 1,
+  "paul «t n» pass is in «t n»": 1,
+  "why is there a «s » dollar fee to touch «t n»": 1,
+  "paper degrades under human contact «t n» preserves «t n»": 1,
+  "people should not be allowed to raw dog «t n» passes": 1,
+  "it protects «t n» from lawsuits over soggy bar codes": 1,
+  "«t n» ticket is «t n» safe ticket in america": 1,
+  "that will be «s » dollars since you touched it twice": 1,
+  "i need to turn myself in before boarding starts": 1,
+  "you are «s » minutes late for «t n» inquiry": 1,
+  "it happened in row twelve on «ng y»": 1,
+  "«t n» are handling «t n» ring in cargo": 1,
+  "i snapped «t n» thing on «t n» back": 1,
+  "we do not extradite for minor armrest domestic damage": 1,
+  "i dropped «t n» mustard right on «t n»": 1,
+  "i am talking about «t n» exit door handle": 1,
+  "i missed my «s » p m flight need «t n» ticket": 1,
+  "do you have «t n» traveling in «t n»": 1,
+  "no i m asking for «t n» chicago flight": 1,
+  "pets must stay in carriers under «s » inches": 1,
+  "i m not traveling with «t n» just «t n»": 1,
+  "so you need «t n» waiver not «t n» ticket": 1,
+  "«t n» is «s » pounds over «t n»": 1,
+  "then you must pay or discard «t n»": 1,
+  "i am wearing «s » sweaters and «s » jackets right now": 1,
+  "weigh in includes «t n» in motion": 1,
+  "motion i am standing entirely still": 1,
+  "«t n» velocity registers as momentum": 1,
+  "i am breathing at «s » miles «t n»": 1,
+  "exhalation is technically checked baggage": 1,
+  "«t n» s about to beep can i keep «t n» in": 1,
+  "per regulation «s » laptops must be removed for x ray": 1,
+  "but «t n» s moving how long do i have": 1,
+  "you have fifteen seconds after «t n» before manual inspection": 1,
+  "timer s at «s » is that enough": 1,
+  "no «t n» already flagged it": 1,
+  "«t n» was «s » now it s «s » «s »": 1,
+  "that s because you ve been waiting «s » minutes": 1,
+  "i was standing here not «t n»": 1,
+  "when you wait «t n» waits too per «t n» rule": 1,
+  "can we stop «t n» while we talk": 1,
+  "talking halts «t n» not «t n»": 1,
+  "«t n» is closing which wire cuts power": 1,
+  "we must first review «t n» warranty history": 1,
+  "it drops in «s » seconds hurry": 1,
+  "warranty paper involves «s » signatures and «t n»": 1,
+  "it clicked what did i lose": 1,
+  "«t n» wrap was on «t n» tire": 1,
+  "«t n» side wiper blade is leaving streaks": 1,
+  "that is because «t n» has surrendered entirely": 1,
+  "can you just clip «t n» «s » on": 1,
+  "we have to cut «t n» off first": 1,
+  "you still charge per minute even when i m idle": 1,
+  "rule says any minute you re in «t n» counts": 1,
+  "what about «t n» i m standing outside": 1,
+  "outside minute counts if you can see «t n»": 1,
+  "so waiting in «t n» under «t n» lights still bills": 1,
+  "exactly billing starts «t n» you breathe on site": 1,
+  "«t n» s about to drop in «s » seconds": 1,
+  "before that you should know «t n» service date": 1,
+  "did you check «t n» pins": 1,
+  "«t n» were replaced last month after «t n» spill": 1,
+  "are they still in place right now": 1,
+  "they were tightened during «t n» inspection per protocol": 1,
+  "so «t n» is safe to lower": 1,
+  "no because you never installed any pins": 1,
+  "«t n» engine light just blinked once": 1,
+  "that means «t n» misread i ll run «t n» now": 1,
+  "it only happened when i turned «t n» up": 1,
+  "radio draws power we ll replace «t n» to prevent overload": 1,
+  "but «t n» still starts no real issue": 1,
+  "great «t n» new alternator boosts resale value by «s » percent": 1
  },
  "tinh_huong": {
   "tech": [
@@ -9707,7 +11167,15 @@
    "Ceiling Crack Upgrade",
    "Shadow Occupancy Fee",
    "Balcony Pigeon Tax",
-   "Trash Chute Jam"
+   "Trash Chute Jam",
+   "Dryer Dilemma",
+   "Ticker Update Panic",
+   "Dryer Expansion Panic",
+   "Night Air Surcharge",
+   "Night Light Surcharge",
+   "refrigerator air tax",
+   "Lock Countdown Misfire",
+   "Hallway Light Upgrade"
   ],
   "gym": [
    "Car Cardio Confusion",
@@ -9732,7 +11200,15 @@
    "Rowing Reset",
    "Membership Fingerprint Scan",
    "Color Code Row",
-   "Auto‑Start Row Panic"
+   "Auto‑Start Row Panic",
+   "Smartwatch Lock Timer",
+   "Locker Door Upgrade",
+   "Key Borrowing Confession",
+   "wifi reveal",
+   "Towel Timer Tension",
+   "Hook Shortage",
+   "Air Breath Deposit",
+   "Locker Code Panic"
   ],
   "airport": [
    "Overweight Bag Misread",
@@ -9755,7 +11231,17 @@
    "Oversized Laptop",
    "Proof of Negative",
    "Jetbridge Countdown",
-   "Lock Lockdown"
+   "Lock Lockdown",
+   "Capital Recital Rule",
+   "Rebooking Countdown",
+   "Tray Table Rental Deposit",
+   "Altitude Pressure Calibration",
+   "Final Call Question",
+   "Boarding Pass Laminating Fee",
+   "Tray Latch Liability",
+   "Pet Waiver Mixup",
+   "Air Speed Weight Limit",
+   "Laptop Scan Countdown"
   ],
   "car": [
    "Misread Quote",
@@ -9778,7 +11264,13 @@
    "Coolant Overhaul",
    "Conversation Billing",
    "Pump Countdown",
-   "Leakage Warning"
+   "Leakage Warning",
+   "Waiting Bill Expands",
+   "The Trunk Latch Timer",
+   "The Windshield Wiper Debt",
+   "Minute Meter Madness",
+   "Missing safety pins",
+   "Alternator Upsell"
   ],
   "office": [
    "Quarterly Budget Sync",
