@@ -1,0 +1,246 @@
+import React from "react";
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// BỘ MÔ-ĐUN ĐỒ ĐẠC — vật liệu để lắp ra hàng chục nơi chốn cho mỗi kênh
+// ------------------------------------------------------------------------------------------
+// Anh: *"phải đảm bảo đa dạng mỗi channel có vài chục bối cảnh phù hợp liên quan để xoay vòng
+// chứ, nếu vài cái thì hơi ít và kịch bản sợ sẽ bị thu hẹp lại."*
+//
+// Đúng ở cả hai vế, và vế thứ hai mới là vế nặng: khi engine chỉ vẽ được một nơi chốn cho mỗi
+// kênh thì bộ sinh kịch bản buộc phải viết mọi chuyện xảy ra ở đúng chỗ ấy — tức là công cụ vẽ
+// đang bó tay người viết. Đó là đuôi vẫy chó.
+//
+// Nhưng vẽ ba mươi nền cho mười kênh là ba trăm hàm vẽ, không ai duy trì nổi. Nên đảo cách
+// chia việc: KHÔNG vẽ nền, vẽ MẢNH. Hai mươi mảnh đồ đạc dưới đây, mỗi mảnh tự biết đứng trên
+// sàn và tự co theo khung. Một "nơi chốn" khi ấy chỉ còn là một dòng dữ liệu — chọn ba tới năm
+// mảnh, đặt vị trí, chọn bảng màu. Ba mươi nơi là ba mươi dòng.
+//
+// Và vì bộ mảnh là ĐÓNG, mô hình có thể sinh thêm nơi chốn mà không bao giờ ra hình bậy: nó
+// chỉ được chọn trong danh sách, còn bố cục (chạm sàn, không tràn, chừa chỗ nhân vật) do code
+// giữ. Đây là chỗ dùng AI đúng việc — sắp xếp, không phải vẽ.
+// ══════════════════════════════════════════════════════════════════════════════════════════
+
+const MUC = "#14110F";
+
+export const nhat = (hex: string, t: number) => {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const p = (v: number) => Math.round(v + (255 - v) * t);
+  return `rgb(${p(r)},${p(g)},${p(b)})`;
+};
+
+/** Tham số một mảnh: x là tâm theo tỉ lệ bề ngang, co là hệ số phóng (1 = cỡ chuẩn). */
+export type ThamSo = {
+  x: number; co?: number; yS: number; w: number; h: number; mau: string; mauPhu: string;
+};
+
+type Ve = (p: ThamSo) => React.ReactNode;
+
+// Mọi mảnh vẽ quanh gốc (0,0) đặt ở CHÂN của nó, rồi được `LapNoi` dịch tới chỗ cần. Nhờ vậy
+// "chạm sàn" là bất biến của hệ, không phải thứ mỗi chỗ vẽ phải tự nhớ — bản trước quên nhớ
+// và cho ra cái bàn treo giữa không khí.
+const g = (el: React.ReactNode, sw = 4.5) => (
+  <g stroke={MUC} strokeWidth={sw} strokeLinejoin="round">{el}</g>
+);
+
+export const MO_DUN: Record<string, Ve> = {
+  // ── BÀN GHẾ ────────────────────────────────────────────────────────────────────────────
+  ban: (p) => { const S = p.h * 0.3 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.9} y={-S * 0.42} width={S * 1.8} height={S * 0.12} fill={nhat(p.mau, 0.45)} />
+    <rect x={-S * 0.78} y={-S * 0.3} width={S * 0.1} height={S * 0.3} fill={nhat(p.mau, 0.3)} />
+    <rect x={S * 0.68} y={-S * 0.3} width={S * 0.1} height={S * 0.3} fill={nhat(p.mau, 0.3)} />
+  </>); },
+  ban_dai: (p) => { const S = p.h * 0.3 * (p.co ?? 1); return g(<>
+    <rect x={-S * 1.5} y={-S * 0.4} width={S * 3} height={S * 0.11} fill={nhat(p.mauPhu, 0.4)} />
+    <rect x={-S * 1.3} y={-S * 0.29} width={S * 0.1} height={S * 0.29} fill={nhat(p.mauPhu, 0.25)} />
+    <rect x={S * 1.2} y={-S * 0.29} width={S * 0.1} height={S * 0.29} fill={nhat(p.mauPhu, 0.25)} />
+  </>); },
+  ghe: (p) => { const S = p.h * 0.26 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.42} y={-S * 0.5} width={S * 0.84} height={S * 0.14} fill={nhat(p.mauPhu, 0.4)} />
+    <rect x={-S * 0.42} y={-S} width={S * 0.16} height={S * 0.5} fill={nhat(p.mauPhu, 0.3)} />
+    <rect x={-S * 0.34} y={-S * 0.36} width={S * 0.08} height={S * 0.36} fill={MUC} opacity={0.7} />
+    <rect x={S * 0.26} y={-S * 0.36} width={S * 0.08} height={S * 0.36} fill={MUC} opacity={0.7} />
+  </>); },
+  sofa: (p) => { const S = p.h * 0.34 * (p.co ?? 1); return g(<>
+    <rect x={-S} y={-S * 0.62} width={S * 2} height={S * 0.62} rx={S * 0.1} fill={nhat(p.mauPhu, 0.42)} />
+    <rect x={-S} y={-S} width={S * 2} height={S * 0.42} rx={S * 0.12} fill={nhat(p.mauPhu, 0.32)} />
+    <rect x={-S * 1.08} y={-S * 0.9} width={S * 0.2} height={S * 0.9} rx={S * 0.08} fill={nhat(p.mauPhu, 0.36)} />
+    <rect x={S * 0.88} y={-S * 0.9} width={S * 0.2} height={S * 0.9} rx={S * 0.08} fill={nhat(p.mauPhu, 0.36)} />
+  </>); },
+  giuong: (p) => { const S = p.h * 0.3 * (p.co ?? 1); return g(<>
+    <rect x={-S * 1.2} y={-S * 0.5} width={S * 2.4} height={S * 0.5} rx={6} fill={nhat(p.mauPhu, 0.5)} />
+    <rect x={-S * 1.3} y={-S * 1.05} width={S * 0.16} height={S * 1.05} fill={nhat(p.mau, 0.4)} />
+    <rect x={-S * 1.1} y={-S * 0.72} width={S * 0.7} height={S * 0.24} rx={6} fill="#FFFFFF" />
+  </>); },
+
+  // ── TỦ, KỆ ─────────────────────────────────────────────────────────────────────────────
+  tu_ho_so: (p) => { const S = p.h * 0.46 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.34} y={-S} width={S * 0.68} height={S} fill={nhat(p.mau, 0.5)} />
+    {[0, 1, 2].map((i) => (<g key={i}>
+      <line x1={-S * 0.34} y1={-S + (S / 3) * (i + 1)} x2={S * 0.34} y2={-S + (S / 3) * (i + 1)} strokeWidth={3} />
+      <rect x={-S * 0.1} y={-S + (S / 3) * i + S * 0.12} width={S * 0.2} height={S * 0.05} rx={3} fill={MUC} />
+    </g>))}
+  </>); },
+  ke_sach: (p) => { const S = p.h * 0.5 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.42} y={-S} width={S * 0.84} height={S} fill={nhat(p.mau, 0.56)} />
+    {[0, 1, 2].map((i) => (
+      <line key={i} x1={-S * 0.42} y1={-S + (S / 3) * (i + 1)} x2={S * 0.42} y2={-S + (S / 3) * (i + 1)} strokeWidth={3.5} />
+    ))}
+    {[0, 1, 2, 3].map((i) => (
+      <rect key={i} x={-S * 0.36 + i * S * 0.09} y={-S * 0.94} width={S * 0.06} height={S * 0.26}
+            fill={i % 2 ? nhat(p.mauPhu, 0.3) : nhat(p.mau, 0.2)} strokeWidth={2.5} />
+    ))}
+  </>); },
+  tu_lanh: (p) => { const S = p.h * 0.62 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.28} y={-S} width={S * 0.56} height={S} rx={5} fill="#FFFFFF" />
+    <line x1={-S * 0.28} y1={-S * 0.62} x2={S * 0.28} y2={-S * 0.62} />
+    <rect x={-S * 0.22} y={-S * 0.56} width={S * 0.035} height={S * 0.18} rx={3} fill={MUC} />
+    <rect x={-S * 0.22} y={-S * 0.88} width={S * 0.035} height={S * 0.16} rx={3} fill={MUC} />
+  </>); },
+  tu_bep: (p) => { const S = p.h * 0.22 * (p.co ?? 1); return g(<>
+    <rect x={-S * 1.1} y={-S} width={S * 2.2} height={S} fill={nhat(p.mau, 0.48)} />
+    <rect x={-S * 1.15} y={-S * 1.1} width={S * 2.3} height={S * 0.16} fill={nhat(p.mau, 0.28)} />
+    <line x1={0} y1={-S} x2={0} y2={0} strokeWidth={3.5} />
+  </>); },
+  quay: (p) => { const S = p.h * 0.42 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.8} y={-S} width={S * 1.6} height={S} fill={nhat(p.mauPhu, 0.52)} />
+    <rect x={-S * 0.88} y={-S * 1.1} width={S * 1.76} height={S * 0.14} rx={3} fill={nhat(p.mauPhu, 0.3)} />
+  </>); },
+  gia_treo: (p) => { const S = p.h * 0.5 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.04} y={-S} width={S * 0.08} height={S} fill={nhat(p.mau, 0.4)} />
+    <line x1={-S * 0.4} y1={-S} x2={S * 0.4} y2={-S} />
+    {[-1, 1].map((d, i) => (
+      <path key={i} d={`M${d * S * 0.26} ${-S} l0 ${S * 0.1} l${d * S * 0.14} ${S * 0.34} l${-d * S * 0.28} 0 Z`}
+            fill={nhat(p.mauPhu, 0.35)} />
+    ))}
+  </>); },
+
+  // ── TƯỜNG, CỬA ─────────────────────────────────────────────────────────────────────────
+  cua_so: (p) => { const S = p.h * 0.4 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.5} y={-S * 1.55} width={S} height={S} rx={4} fill="#FFFFFF" opacity={0.55} />
+    <line x1={0} y1={-S * 1.55} x2={0} y2={-S * 0.55} />
+    <line x1={-S * 0.5} y1={-S * 1.05} x2={S * 0.5} y2={-S * 1.05} />
+  </>); },
+  cua_ra_vao: (p) => { const S = p.h * 0.66 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.3} y={-S} width={S * 0.6} height={S} fill={nhat(p.mauPhu, 0.45)} />
+    <circle cx={S * 0.2} cy={-S * 0.48} r={S * 0.035} fill={MUC} />
+    <rect x={-S * 0.2} y={-S * 0.9} width={S * 0.4} height={S * 0.16} rx={2} fill="#FFFFFF" strokeWidth={3} />
+  </>); },
+  guong: (p) => { const S = p.h * 0.55 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.34} y={-S * 1.35} width={S * 0.68} height={S * 1.1} fill="#FFFFFF" opacity={0.5} />
+    <line x1={-S * 0.3} y1={-S * 1.3} x2={S * 0.28} y2={-S * 0.75} strokeWidth={7} stroke="#FFFFFF" opacity={0.7} />
+  </>); },
+  bang_ghim: (p) => { const S = p.h * 0.34 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.55} y={-S * 1.5} width={S * 1.1} height={S * 0.8} fill={nhat(p.mau, 0.62)} />
+    {[0, 1, 2].map((i) => (
+      <rect key={i} x={-S * 0.42 + i * S * 0.34} y={-S * 1.4 + (i % 2) * S * 0.16}
+            width={S * 0.24} height={S * 0.3} fill="#FFFFFF" strokeWidth={3}
+            transform={`rotate(${i * 5 - 5} 0 ${-S * 1.2})`} />
+    ))}
+  </>); },
+  hang_rao: (p) => { const S = p.h * 0.3 * (p.co ?? 1); const n = 7; return g(<>
+    {Array.from({ length: n }, (_, i) => (
+      <rect key={i} x={-S * 1.5 + i * (S * 3) / n} y={-S} width={(S * 3) / n - S * 0.12} height={S}
+            rx={3} fill="#FFFFFF" strokeWidth={3.5} />
+    ))}
+    <line x1={-S * 1.5} y1={-S * 0.62} x2={S * 1.5} y2={-S * 0.62} strokeWidth={3.5} />
+  </>); },
+  bang_hieu: (p) => { const S = p.h * 0.3 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.7} y={-S * 1.9} width={S * 1.4} height={S * 0.5} rx={4} fill={MUC} />
+    {[0, 1, 2].map((i) => (
+      <rect key={i} x={-S * 0.56 + i * S * 0.42} y={-S * 1.76} width={S * 0.3} height={S * 0.22}
+            fill={i === 1 ? p.mauPhu : "#FFFFFF"} opacity={0.85} strokeWidth={0} />
+    ))}
+  </>); },
+
+  // ── VẬT DỤNG ───────────────────────────────────────────────────────────────────────────
+  may_tinh: (p) => { const S = p.h * 0.2 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.55} y={-S} width={S * 1.1} height={S * 0.72} rx={4} fill={MUC} />
+    <rect x={-S * 0.47} y={-S * 0.92} width={S * 0.94} height={S * 0.56} fill={p.mauPhu} opacity={0.8} strokeWidth={0} />
+    <rect x={-S * 0.12} y={-S * 0.28} width={S * 0.24} height={S * 0.28} fill={MUC} />
+  </>); },
+  tv: (p) => { const S = p.h * 0.26 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.8} y={-S * 1.1} width={S * 1.6} height={S * 0.92} rx={5} fill={MUC} />
+    <rect x={-S * 0.72} y={-S * 1.02} width={S * 1.44} height={S * 0.76} fill={nhat(p.mauPhu, 0.2)} strokeWidth={0} />
+    <rect x={-S * 0.1} y={-S * 0.18} width={S * 0.2} height={S * 0.18} fill={MUC} />
+  </>); },
+  cay: (p) => { const S = p.h * 0.36 * (p.co ?? 1); return g(<>
+    <path d={`M${-S * 0.22} 0 L${-S * 0.16} ${-S * 0.34} L${S * 0.16} ${-S * 0.34} L${S * 0.22} 0 Z`}
+          fill={nhat(p.mau, 0.4)} />
+    <circle cx={0} cy={-S * 0.66} r={S * 0.36} fill="#6FA84E" />
+    <circle cx={-S * 0.26} cy={-S * 0.48} r={S * 0.24} fill="#7CB85C" />
+  </>); },
+  thung: (p) => { const S = p.h * 0.22 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.5} y={-S * 0.8} width={S} height={S * 0.8} fill={nhat(p.mau, 0.45)} />
+    <line x1={-S * 0.5} y1={-S * 0.5} x2={S * 0.5} y2={-S * 0.5} strokeWidth={3.5} />
+    <rect x={-S * 0.44} y={-S * 1.5} width={S * 0.88} height={S * 0.7} fill={nhat(p.mau, 0.58)} />
+  </>); },
+  gia_ta: (p) => { const S = p.h * 0.34 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.6} y={-S * 0.5} width={S * 1.2} height={S * 0.12} fill={nhat(p.mau, 0.35)} />
+    <rect x={-S * 0.6} y={-S * 0.9} width={S * 1.2} height={S * 0.12} fill={nhat(p.mau, 0.35)} />
+    <rect x={-S * 0.66} y={-S} width={S * 0.1} height={S} fill={nhat(p.mau, 0.2)} />
+    <rect x={S * 0.56} y={-S} width={S * 0.1} height={S} fill={nhat(p.mau, 0.2)} />
+    {[0, 1].map((i) => (<g key={i}>
+      <circle cx={-S * 0.3 + i * S * 0.6} cy={-S * 0.76} r={S * 0.13} fill={MUC} />
+    </g>))}
+  </>); },
+  may_ca_phe: (p) => { const S = p.h * 0.24 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.34} y={-S} width={S * 0.68} height={S} rx={4} fill={MUC} />
+    <rect x={-S * 0.24} y={-S * 0.86} width={S * 0.48} height={S * 0.3} fill={nhat(p.mauPhu, 0.35)} strokeWidth={0} />
+    <rect x={-S * 0.16} y={-S * 0.3} width={S * 0.32} height={S * 0.2} fill="#FFFFFF" strokeWidth={3} />
+  </>); },
+  xe: (p) => { const S = p.h * 0.34 * (p.co ?? 1); return g(<>
+    <rect x={-S * 1.3} y={-S * 0.66} width={S * 2.6} height={S * 0.46} rx={S * 0.16} fill={nhat(p.mauPhu, 0.35)} />
+    <rect x={-S * 0.8} y={-S * 0.96} width={S * 1.5} height={S * 0.34} rx={S * 0.12} fill={nhat(p.mauPhu, 0.55)} />
+    <circle cx={-S * 0.8} cy={-S * 0.16} r={S * 0.24} fill={MUC} />
+    <circle cx={S * 0.8} cy={-S * 0.16} r={S * 0.24} fill={MUC} />
+  </>); },
+};
+
+// ── MẢNH TREO TƯỜNG ────────────────────────────────────────────────────────────────────
+// 31/8 — Khung dọc 9:16 với hai người vẽ cả thân thì nền chỉ còn hai dải mép, và cả nửa trên
+// là tường trơn. Đồ đứng sàn không với tới đó được (chúng chỉ cao tới ngang ngực người). Nhóm
+// này treo ở tầm mắt trở lên — chỗ mà nhân vật không bao giờ che, và cũng là chỗ mắt người xem
+// đi qua khi đọc bong bóng thoại.
+export const MO_TREO: Record<string, Ve> = {
+  tranh: (p) => { const S = p.h * 0.12 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.7} y={-S * 0.55} width={S * 1.4} height={S * 1.1} fill={nhat(p.mauPhu, 0.45)} />
+    <rect x={-S * 0.56} y={-S * 0.42} width={S * 1.12} height={S * 0.84} fill="#FFFFFF" strokeWidth={3} />
+    <path d={`M${-S * 0.5} ${S * 0.36} L${-S * 0.16} ${-S * 0.16} L${S * 0.12} ${S * 0.12}
+              L${S * 0.36} ${-S * 0.24} L${S * 0.5} ${S * 0.36} Z`}
+          fill={nhat(p.mau, 0.4)} strokeWidth={3} />
+  </>); },
+  dong_ho: (p) => { const S = p.h * 0.1 * (p.co ?? 1); return g(<>
+    <circle cx={0} cy={0} r={S} fill="#FFFFFF" />
+    <line x1={0} y1={0} x2={0} y2={-S * 0.6} strokeWidth={5} />
+    <line x1={0} y1={0} x2={S * 0.42} y2={S * 0.2} strokeWidth={5} />
+  </>); },
+  ke_treo: (p) => { const S = p.h * 0.13 * (p.co ?? 1); return g(<>
+    <rect x={-S} y={0} width={S * 2} height={S * 0.16} fill={nhat(p.mau, 0.42)} />
+    {[0, 1, 2].map((i) => (
+      <rect key={i} x={-S * 0.8 + i * S * 0.55} y={-S * 0.5} width={S * 0.34} height={S * 0.5}
+            fill={i % 2 ? nhat(p.mauPhu, 0.3) : nhat(p.mau, 0.25)} strokeWidth={3.5} />
+    ))}
+  </>); },
+  bang_trang: (p) => { const S = p.h * 0.16 * (p.co ?? 1); return g(<>
+    <rect x={-S * 1.1} y={-S * 0.7} width={S * 2.2} height={S * 1.4} fill="#FFFFFF" />
+    {[0, 1].map((i) => (
+      <line key={i} x1={-S * 0.85} y1={-S * 0.3 + i * S * 0.45} x2={S * (0.5 - i * 0.35)}
+            y2={-S * 0.3 + i * S * 0.45} strokeWidth={4} stroke={i ? p.mauPhu : p.mau} />
+    ))}
+  </>); },
+  cua_so_cao: (p) => { const S = p.h * 0.17 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.8} y={-S * 0.8} width={S * 1.6} height={S * 1.6} rx={4}
+          fill="#FFFFFF" opacity={0.55} />
+    <line x1={0} y1={-S * 0.8} x2={0} y2={S * 0.8} />
+    <line x1={-S * 0.8} y1={0} x2={S * 0.8} y2={0} />
+  </>); },
+  bien_bao: (p) => { const S = p.h * 0.11 * (p.co ?? 1); return g(<>
+    <rect x={-S} y={-S * 0.42} width={S * 2} height={S * 0.84} rx={5} fill={nhat(p.mau, 0.3)} />
+    <rect x={-S * 0.78} y={-S * 0.2} width={S * 1.1} height={S * 0.16} fill="#FFFFFF" strokeWidth={0} />
+  </>); },
+};
+
+export const TEN_MO_TREO = Object.keys(MO_TREO);
+export const TEN_MO_DUN = Object.keys(MO_DUN);

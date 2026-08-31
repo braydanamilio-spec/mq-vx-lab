@@ -1,4 +1,5 @@
 import React from "react";
+import { LapNoi, Noi } from "./NoiChon";
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // NỀN PANEL — vẽ bằng code, không dùng ảnh
@@ -537,10 +538,9 @@ const Tran: React.FC<{ kenh: string; w: number; H: number; mau: string; mauPhu: 
  * nhân vật — đúng lỗi "cái giỏ giặt chắn ngang bụng" của bản cũ, chỉ khác nguồn.
  */
 export const NenPanel: React.FC<{
-  kenh: string; w: number; h: number; mau: string; mauPhu: string; hat: number;
+  kenh: string; noi: Noi; w: number; h: number; mau: string; mauPhu: string; hat: number;
   rong: boolean; bien?: number; net?: number; cham?: number;
-}> = ({ kenh, w, h, mau, mauPhu, hat, rong, bien = 0, net = 5, cham = 9 }) => {
-  const Ve = BOI_CANH[kenh];
+}> = ({ kenh, noi, w, h, mau, mauPhu, hat, rong, bien = 0, net = 5, cham = 9 }) => {
   // 31/8 — MỖI PANEL MỘT GÓC NHÌN KHÁC. Khung thử cho ra sáu panel với cùng cái màn hình ở
   // cùng một chỗ, và sáu lần lặp lại một hình trong hai mươi giây thì mắt đọc ra là ảnh dán,
   // không phải là sáu ô truyện tranh. Cùng một căn phòng nhìn từ ba chỗ đứng vẫn là một căn
@@ -559,34 +559,32 @@ export const NenPanel: React.FC<{
           <circle cx={cham * 0.28} cy={cham * 0.28} r={cham * 0.17} fill={`${mau}1F`} />
         </pattern>
       </defs>
-      {rong && Ve
-        ? <>
-            {/* 31/8 — SÂN KHẤU CAO CỐ ĐỊNH THEO CHIỀU RỘNG, KHÔNG THEO CHIỀU CAO PANEL.
-                Khung DATING APP cho ra một cái bàn tím treo giữa không khí và hai vật tròn lơ
-                lửng; NEIGHBOR WATCH thì hàng rào cao tới cổ người. Cả hai cùng một gốc: mọi
-                kích thước trong các hàm nền viết theo `h`, nên panel cao 800px thì cái bàn cao
-                bằng cái bàn của panel 500px NHÂN 1,6 — đồ đạc phình theo khung.
-                Đồ đạc trong một căn phòng không đổi kích thước khi máy quay lùi ra. Nên chiều
-                cao "sân khấu" chốt theo chiều RỘNG panel (thứ tương ứng với bề ngang căn phòng),
-                phần thừa phía trên là tường trơn — đúng như một khung hình cao chụp một căn
-                phòng bình thường. */}
-            <rect width={w} height={h} fill={nhat(mau, 0.84)} />
-            {/* 31/8, khung dọc — SÂN KHẤU PHẢI CAO HƠN.
-                Từ khi mỗi lượt chiếm trọn một khung 1080×1786, sân khấu cũ (cao bằng 62% bề
-                ngang) chỉ với tới hai phần năm khung, và phần còn lại là một mảng tường trơn
-                cao hơn nghìn pixel. Sân khấu nay lấy theo cả hai chiều, và phần tường phía trên
-                được một đường trần cùng hai bóng đèn — đủ để mắt đọc ra "trên đầu vẫn là căn
-                phòng ấy" thay vì đọc ra khoảng trống chưa vẽ. */}
-            <g transform={`translate(${w * DICH[b]} ${h - hSK}) scale(${PHONG[b]})`}>
-              <Ve w={w} h={hSK} mau={mau} mauPhu={mauPhu} hat={hat} rong={rong} />
-            </g>
-            {h - hSK > 120 ? <Tran kenh={kenh} w={w} H={h - hSK} mau={mau} mauPhu={mauPhu} /> : null}
-          </>
-        : <>
-            {/* cận cảnh: chỉ mảng màu và vệt sáng chéo, giữ mắt ở khuôn mặt */}
-            <rect width={w} height={h} fill={nhat(mau, 0.8)} />
-            <path d={`M0 ${h} L${w * 0.55} 0 L${w} 0 L${w} ${h} Z`} fill={nhat(mauPhu, 0.72)} />
-          </>}
+      {rong ? (
+        <>
+          {/* 31/8 — BỐI CẢNH NAY LẮP TỪ MÔ-ĐUN, KHÔNG CÒN MỖI KÊNH MỘT HÀM VẼ.
+              Mười kênh × một nơi chốn là thứ bó tay cả người viết kịch bản lẫn mắt người xem:
+              ba mươi tập ở cùng một góc phòng thì dù thoại khác nhau, mắt vẫn đọc ra là một.
+              Nay mỗi kênh có mười nơi có tên cộng với số nơi sinh tổ hợp không giới hạn — xem
+              `NoiChon.tsx`. Cả hệ nặng 30 KB, so với 104 GB ảnh nền của bản cũ. */}
+          {/* 31/8 — NỀN VÀ NGƯỜI PHẢI ĐỨNG CHUNG MỘT MẶT SÀN.
+              Khung thử đầu cho ra đồ đạc bé và chìm: sân khấu cũ cao bằng 62–74% khung nên
+              đường sàn của NỀN nằm ở 1500px trong khi chân nhân vật ở 1697px — đồ đạc lơ lửng
+              trên lưng chừng, và vì sân khấu ngắn nên mọi mảnh cũng bị co lại theo.
+              Nay nền vẽ trên TOÀN khung với đường sàn ngay dưới chân người. Trần vẫn vẽ đè lên
+              phần tường phía trên, nên khoảng trống ở đỉnh vẫn được lấp. */}
+          <g transform={`translate(${w * DICH[b]} 0) scale(${PHONG[b]})`}>
+            <LapNoi noi={noi} w={w} h={h} mau={mau} mauPhu={mauPhu} net={net} />
+          </g>
+          <Tran kenh={noi.ngoai ? "neighborwatch" : kenh} w={w} H={h * 0.3}
+                mau={mau} mauPhu={mauPhu} />
+        </>
+      ) : (
+        <>
+          {/* cận cảnh: chỉ mảng màu và vệt sáng chéo, giữ mắt ở khuôn mặt */}
+          <rect width={w} height={h} fill={nhat(mau, 0.8)} />
+          <path d={`M0 ${h} L${w * 0.55} 0 L${w} 0 L${w} ${h} Z`} fill={nhat(mauPhu, 0.72)} />
+        </>
+      )}
       <rect width={w} height={h} fill={`url(#hp${hat | 0})`} />
     </svg>
   );

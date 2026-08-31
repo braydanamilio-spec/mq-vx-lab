@@ -4,6 +4,7 @@ import { DienVienHai } from "../v4/DienVienHai";
 import { KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVien";
 import type { Luot } from "../v4/KichHai";
 import { NenPanel, DaoCu, doDaoCu } from "./NenComic";
+import { noiCuaTap, Noi } from "./NoiChon";
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // KỊCH COMIC — 31/8/2026
@@ -172,9 +173,9 @@ const ChuNo: React.FC<{ chu: string; w: number; h: number; p: number; mau: strin
 const Panel: React.FC<{
   L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
-  dangNoi: boolean; hai?: boolean;
+  dangNoi: boolean; hai?: boolean; noi: Noi;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
-}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai,
+}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, noi,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0 }) => {
   const { w, h } = o;
   const p = kep((giay - L.s) / 0.38);
@@ -261,7 +262,7 @@ const Panel: React.FC<{
                  + (L.chot && trong > 0.25 && trong < 0.75
                     ? ` translate(${Math.sin(trong * 62) * 5}px, ${Math.cos(trong * 54) * 4}px)` : ""),
     }}>
-      <NenPanel kenh={kenh} w={w} h={h} mau={mau} mauPhu={mauPhu} hat={hat + thuTu * 13}
+      <NenPanel kenh={kenh} noi={noi} w={w} h={h} mau={mau} mauPhu={mauPhu} hat={hat + thuTu * 13}
                 bien={(hat + thuTu * 5) % 3} rong net={netMuc} cham={cham} />
 
       {/* Đạo cụ đọc ra từ chính câu thoại của cảnh này — thoại nói "router" thì trong khung có
@@ -391,6 +392,10 @@ export const KichComic: React.FC<PropsComic> = ({
   // mọi thứ đọc hạt đều đổi theo tập: thứ tự rộng/cận, chuỗi chuyển cảnh, góc nhìn của nền.
   // Sáng tạo trong khuôn khổ — khuôn vẫn là khuôn comic, nhưng không tập nào trùng bản dựng.
   const hat = bam(kenh || tieuDe || "comic") + soTap * 7919;
+  // MỘT TẬP = MỘT NƠI CHỐN. Các cảnh trong tập khác nhau bằng GÓC NHÌN (máy dịch trái/giữa/
+  // phải), không bằng đổi địa điểm — hai người đang nói với nhau thì không dịch chuyển tức thời
+  // sang chỗ khác giữa câu. Luật này đã trả giá một lần ở bản cũ.
+  const noi = React.useMemo(() => noiCuaTap(kenh, soTap), [kenh, soTap]);
   const o: ONhoPanel = { i: 0, x: LE, y: LE, w: width - LE * 2, h: height - LE * 2 - CAO_TEN };
 
   // Lượt đang phát. Sau lượt cuối thì GIỮ NGUYÊN lượt cuối — không trả -1 rồi rơi vào nhánh dự
@@ -405,7 +410,7 @@ export const KichComic: React.FC<PropsComic> = ({
   const veCanh = (Lx: Luot, ix: number, dangNoi: boolean) => (
     <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
-           hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi}
+           hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi} noi={noi}
            netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLe}
            hook={ix === 0 ? kep((giay - Lx.s) / 1.15) : 0} />
   );
