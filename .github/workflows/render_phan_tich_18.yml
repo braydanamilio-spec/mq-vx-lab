@@ -23,8 +23,14 @@ name: MM0 Phân tích — 18 luồng song song
 
 on:
   schedule:
-    # 18:10 UTC = 01:10 giờ VN — chạy trong đêm, sáng ra anh có kết quả.
-    - cron: "10 18 * * *"
+    # 19:35 UTC = 02:35 giờ VN — chạy trong đêm, sáng ra anh có kết quả.
+    #
+    # 1/9 — ĐỔI TỪ 18:10 SANG 19:35. Lượt 18:10 KHÔNG nổ: lịch được đẩy lên lúc 17:44, tức chỉ
+    # 26 phút trước giờ hẹn. GitHub cần thời gian đăng ký lịch mới, và còn hay hoãn lượt hẹn
+    # giờ khi hệ thống đông. Bài học: một `cron` mới cần ít nhất một giờ đệm trước lần nổ đầu —
+    # nếu không thì nó im lặng bỏ lượt, không báo lỗi, và người ta tưởng workflow hỏng.
+    # Phút 35 cũng là cố ý: hàng đợi Actions đông nhất ở phút 00 và 30.
+    - cron: "35 19 * * *"
   workflow_dispatch:
     inputs:
       luong:
