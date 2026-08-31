@@ -45,8 +45,12 @@ jobs:
               raise SystemExit("❌ thiếu HOT_KEY hoặc OWNER_UID trong secrets của repo này")
           tong = int(os.environ.get("TONG") or 0)
           url = "https://mm0-connect.adisondurham-ef1.workers.dev/api/hot"
-          body = json.dumps({"op": "kho_that_ghi", "owner": o, "tong": tong,
-                             "luc": datetime.now(timezone.utc).isoformat()}).encode()
+          # Worker nhận {lenh, tham:{...}} — không phải {op, ...}. Gửi sai khuôn thì nó trả
+          # 400 chứ không nói thiếu gì, nên phải đọc thẳng mã worker mới biết. Đã trả giá một
+          # lượt chạy cho chỗ này.
+          body = json.dumps({"lenh": "kho_that_ghi",
+                             "tham": {"owner": o, "tong": tong,
+                                      "luc": datetime.now(timezone.utc).isoformat()}}).encode()
           req = urllib.request.Request(url, method="POST", data=body, headers={
               "content-type": "application/json", "x-hot-key": k,
               # thiếu User-Agent thì Cloudflare chặn mã 1010 và trả 403 y như sai khoá
