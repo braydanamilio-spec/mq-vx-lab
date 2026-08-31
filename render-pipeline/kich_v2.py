@@ -743,6 +743,38 @@ def lay_so_lieu(nguon: str, D):
 #   nguon    — bắt đầu từ chính bộ dữ liệu, rồi mới tới con số
 # Mỗi kiểu lại có nhiều biến thể câu. Chọn theo băm (tên kênh + số tập) nên hai tập liền của
 # cùng một kênh không bao giờ trùng kiểu, mà mỗi kênh vẫn có thiên hướng riêng.
+# Hai câu này xuất hiện ở MỌI kiểu kể — câu dẫn nguồn và câu chốt — nên chúng là chỗ lặp nặng
+# nhất dù cấu trúc bài đã đa dạng. Đo trên mười video đầu tiên sau khi thêm sáu kiểu: tỉ lệ
+# trùng khuôn xuống 51%→41%, và bốn trong năm khuôn còn lặp đều là hai câu này.
+# Nên tách riêng thành kho lớn, chọn bằng một băm ĐỘC LẬP với kiểu kể: hai tập cùng kiểu vẫn
+# khác câu chốt, và cùng một câu chốt không bao giờ đi liền hai tập của một kênh.
+CAU_NGUON = [
+    "This is straight from {ng}, not from me.",
+    "{ng} published every figure here.",
+    "None of this is mine. It is all {ng}.",
+    "{ng} counted it. I just read the file.",
+    "Every number came out of {ng}.",
+    "{ng} keeps this current. Anyone can pull it.",
+    "I did not estimate any of this. {ng} did the work.",
+    "Straight out of {ng}, unedited.",
+    "{ng} has this on record, free to read.",
+    "The source is {ng}, and it is public.",
+]
+CAU_CHOT = [
+    "Check it yourself before you believe me.",
+    "Everything here is public. Most people never look.",
+    "One search and you can prove me wrong.",
+    "Go read the file. It is not hiding.",
+    "Nobody classified this. People just never opened it.",
+    "You can find this in about a minute.",
+    "The hard part was never finding it.",
+    "Believe the file, not the video.",
+    "It took one search. That is the whole trick.",
+    "Most of what surprises people is already published.",
+    "Open data only works when somebody opens it.",
+    "Look it up and come back angrier.",
+]
+
 KIEU_KE = ("dinh", "nguoc", "do", "khoang", "nguoi", "nguon")
 
 
@@ -751,6 +783,12 @@ def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai
     """Sáu câu cho một tập, theo kiểu kể đã chọn. Trả [(lời, cảm xúc, cử chỉ)]."""
     ng = str(nguon).split(",")[0].strip()
     b = lambda ds: ds[bien % len(ds)]
+    # Câu dẫn nguồn và câu chốt lấy từ kho chung, bằng một băm ĐỘC LẬP với kiểu kể — nếu dùng
+    # chung `bien` thì hai tập cùng kiểu lại ra cùng cặp câu, đúng chỗ vừa đo thấy lặp nặng.
+    import hashlib as _h2
+    _rieng = int(_h2.md5(f"{nguon}|{tieu_de}|{bien}|{kieu}".encode()).hexdigest(), 16)
+    _ngC = CAU_NGUON[_rieng % len(CAU_NGUON)].format(ng=ng)
+    _chotC = CAU_CHOT[(_rieng // 7) % len(CAU_CHOT)]
 
     if kieu == "nguoc":
         return [
@@ -764,12 +802,8 @@ def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai
             (b([f"And the top is {top_ten}, at {top_hien}.",
                 f"All the way up: {top_ten}, {top_hien}.",
                 f"{top_hien}. That is {top_ten}, sitting alone at the top."]), "tu_tin", "gio_len"),
-            (b([f"{ng} publishes every one of these.",
-                f"All of it sits in {ng}, open to anyone.",
-                f"{ng} has had this online the whole time."]), "trung_tinh", "khoanh_tay"),
-            (b(["Read it from the bottom and it tells a different story.",
-                "Same table, opposite direction, different feeling.",
-                "The bottom of a list is where the surprises hide."]), "vui", "nghi"),
+            (_ngC, "trung_tinh", "khoanh_tay"),
+            (_chotC, "vui", "nghi"),
         ]
 
     if kieu == "do":
@@ -784,12 +818,8 @@ def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai
             (b([f"{hai_ten} is second, at {hai_hien}.",
                 f"Second place, {hai_ten}, {hai_hien}.",
                 f"Behind it: {hai_ten} at {hai_hien}."]), "trung_tinh", "dem"),
-            (b([f"Every figure here comes from {ng}.",
-                f"{ng} keeps the record, not me.",
-                f"These are {ng} numbers, unedited."]), "tu_tin", "khoanh_tay"),
-            (b(["If you guessed right, you were paying attention.",
-                "Most people pick the second one. Now you know why.",
-                "Say your guess out loud next time. It sticks better."]), "vui", "nghi"),
+            (_ngC, "tu_tin", "khoanh_tay"),
+            (_chotC, "vui", "nghi"),
         ]
 
     if kieu == "khoang":
@@ -804,12 +834,8 @@ def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai
             (b([f"{cuoi_ten} sits at the floor with {cuoi_hien}.",
                 f"Down at the bottom: {cuoi_ten}, {cuoi_hien}.",
                 f"And {cuoi_ten} never gets past {cuoi_hien}."]), "trung_tinh", "dem"),
-            (b([f"{ng} lists both, side by side.",
-                f"Both numbers come from the same {ng} table.",
-                f"{ng} put them in one file. Nobody reads it."]), "trung_tinh", "khoanh_tay"),
-            (b(["A gap that wide is never an accident.",
-                "Distance like that has a reason behind it.",
-                "Ask who benefits from the gap staying that wide."]), "nghi_ngo", "nghi"),
+            (_ngC, "trung_tinh", "khoanh_tay"),
+            (_chotC, "nghi_ngo", "nghi"),
         ]
 
     if kieu == "nguoi":
@@ -824,19 +850,13 @@ def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai
             (b([f"{hai_ten} is next, and already down at {hai_hien}.",
                 f"The next one, {hai_ten}, drops to {hai_hien}.",
                 f"After that it falls to {hai_hien} for {hai_ten}."]), "trung_tinh", "dem"),
-            (b([f"{ng} counted it, not me.",
-                f"The counting was done by {ng}.",
-                f"{ng} keeps this list current."]), "trung_tinh", "khoanh_tay"),
-            (b(["Numbers this size only matter when you scale them down.",
-                "Divide it by a household and it starts to bite.",
-                "Big numbers hide small decisions."]), "nghi_ngo", "nghi"),
+            (_ngC, "trung_tinh", "khoanh_tay"),
+            (_chotC, "nghi_ngo", "nghi"),
         ]
 
     if kieu == "nguon":
         return [
-            (b([f"{ng} keeps a file most people never open.",
-                f"There is a public {ng} table behind this.",
-                f"{ng} updates this quietly, all year."]), "nghi_ngo", "khoanh_tay"),
+            (_ngC, "nghi_ngo", "khoanh_tay"),
             (hoi, "nghi_ngo", "mo_tay"),
             (b([f"Top of the file: {top_ten}, {top_hien}.",
                 f"First line, {top_ten}, at {top_hien}.",
@@ -847,9 +867,7 @@ def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai
             (b([f"Down at the end, {cuoi_ten} with {cuoi_hien}.",
                 f"The file closes with {cuoi_ten}, {cuoi_hien}.",
                 f"Last line, {cuoi_ten}: {cuoi_hien}."]), "trung_tinh", "chi"),
-            (b(["Public does not mean anyone looks.",
-                "Open data only works if somebody opens it.",
-                "The file was never hidden. It was just boring."]), "vui", "nghi"),
+            (_chotC, "vui", "nghi"),
         ]
 
     # dinh — kiểu gốc, giữ lại nhưng cũng có biến thể
@@ -864,12 +882,8 @@ def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai
         (b([f"{hai_ten} comes second at {hai_hien}. Then it drops fast.",
             f"Second is {hai_ten}, {hai_hien}, and after that it falls away.",
             f"{hai_ten} takes second with {hai_hien}. The rest are far behind."]), "trung_tinh", "khoanh_tay"),
-        (b([f"This is straight from {ng}, not from me.",
-            f"{ng} published every figure here.",
-            f"None of this is mine. It is all {ng}."]), "tu_tin", "dem"),
-        (b(["Check it yourself before you believe me.",
-            "Everything here is public. Most people never look.",
-            "One search and you can prove me wrong."]), "vui", "nghi"),
+        (_ngC, "tu_tin", "dem"),
+        (_chotC, "vui", "nghi"),
     ]
 
 
@@ -1041,7 +1055,11 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
     # một khác. Biến thể câu đổi sau mỗi vòng sáu tập, nên vòng thứ hai không lặp lại vòng đầu.
     _hs = int(_h.md5(k["ten"].encode()).hexdigest(), 16)
     _perm = sorted(KIEU_KE, key=lambda x: _h.md5(f"{k['ten']}|{x}".encode()).hexdigest())
-    _kieu = _perm[so % len(_perm)]
+    # Mỗi kênh có hoán vị riêng, nhưng ở lượt đầu MỌI kênh đều lấy phần tử thứ nhất — và phần
+    # tử thứ nhất của nhiều hoán vị lại tình cờ trùng nhau: thử ra 4/6 kênh cùng rơi vào `dinh`.
+    # Dịch thêm băm tên kênh vào chỉ số thì mỗi kênh vào hoán vị của mình ở một ĐIỂM KHÁC nhau,
+    # nên lượt đầu cũng trải đều sáu kiểu.
+    _kieu = _perm[(so + _hs) % len(_perm)]
     _bien = ((so // len(_perm)) + _hs) % 3
     _cuoi = dan[-1] if len(dan) > 2 else dan[1]
     _loi = _loi_ke(_kieu, _bien,

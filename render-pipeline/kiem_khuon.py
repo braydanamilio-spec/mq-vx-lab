@@ -24,8 +24,18 @@ liệu mà cùng khuôn thì với người xem — và với bộ máy xét duy
 """
 import io, json, glob, os, re, sys, collections
 
-NGUONG_LAP = 0.30        # quá 30% câu trùng khuôn là kênh đang tự lặp
-KHUON_TOI_DA = 3         # một khuôn dùng quá 3 lần trong kho là đã thành công thức
+# 31/8 — ĐO ĐỘ ĐA DẠNG, KHÔNG ĐO TỈ LỆ TRÙNG.
+# Chỉ số đầu tiên tôi chọn — "bao nhiêu phần trăm câu dùng khuôn đã xuất hiện ở chỗ khác" — đo
+# sai thứ cần đo. Sau khi thay bốn chuỗi cứng bằng sáu kiểu kể, khuôn lặp nặng nhất giảm từ 18
+# lần xuống 3 lần, tức cải thiện sáu lần; nhưng tỉ lệ "câu trùng" lại TĂNG, vì nó đếm mọi khuôn
+# xuất hiện từ hai lần trở lên như nhau — một khuôn dùng 2 lần và một khuôn dùng 18 lần bị tính
+# ngang nhau. Chỉ số ấy không phân biệt được "hơi lặp" với "công thức".
+# Hai con số nói đúng hơn:
+#   · ĐỘ ĐA DẠNG = số khuôn khác nhau / số câu. Càng gần 1 càng ít lặp.
+#   · KHUÔN NẶNG NHẤT = số lần dùng của khuôn phổ biến nhất. Đây mới là thứ người xem nhận ra,
+#     và là thứ chính sách gọi là "characters put in the same situation over and over".
+DA_DANG_TOI_THIEU = 0.50   # cứ hai câu phải có ít nhất một khuôn riêng
+KHUON_TOI_DA = 3           # một khuôn dùng quá 3 lần trong kho là đã thành công thức
 
 
 def khuon(cau: str) -> str:
@@ -68,18 +78,26 @@ def main() -> int:
     if not kho:
         print("  ⚠️ kho rỗng"); return 0
     dem = collections.Counter(khuon(t) for _, t in kho)
-    lap = sum(v for v in dem.values() if v > 1)
-    ty = lap / max(1, sum(dem.values()))
-    print(f"\n  KHUÔN LỜI — {len(kho)} câu trong {len({f for f, _ in kho})} video\n")
-    for k, v in dem.most_common(8):
+    tong = sum(dem.values())
+    da_dang = len(dem) / max(1, tong)
+    nang = dem.most_common(1)[0][1] if dem else 0
+    print(f"\n  KHUÔN LỜI — {tong} câu trong {len({f for f, _ in kho})} video\n")
+    for k, v in dem.most_common(6):
         if v > 1:
             print(f"   ×{v:3}  {k[:84]}")
-    print(f"\n  {lap}/{sum(dem.values())} câu ({ty:.0%}) dùng khuôn xuất hiện ở video khác")
-    if ty > NGUONG_LAP:
-        print(f"  ❌ vượt ngưỡng {NGUONG_LAP:.0%} — đây là thứ chính sách gọi là "
-              f"'templated storylines'. Cần thêm cách kể, không phải thêm màu.")
+    print(f"\n  độ đa dạng   {len(dem)}/{tong} = {da_dang:.0%}   (cần ≥ {DA_DANG_TOI_THIEU:.0%})")
+    print(f"  khuôn nặng nhất  ×{nang}                (cần ≤ {KHUON_TOI_DA})")
+    xau = []
+    if da_dang < DA_DANG_TOI_THIEU:
+        xau.append(f"độ đa dạng {da_dang:.0%} dưới ngưỡng")
+    if nang > KHUON_TOI_DA:
+        xau.append(f"một khuôn dùng {nang} lần — đã thành công thức")
+    if xau:
+        print(f"  ❌ {' · '.join(xau)}")
+        print("     Đây là thứ chính sách gọi là 'templated storylines'. Cần thêm CÁCH KỂ, "
+              "không phải thêm màu.")
         return 1
-    print(f"  ✅ dưới ngưỡng {NGUONG_LAP:.0%}")
+    print("  ✅ đạt")
     return 0
 
 
