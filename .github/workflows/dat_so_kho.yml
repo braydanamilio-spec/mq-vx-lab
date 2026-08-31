@@ -1,0 +1,56 @@
+name: MM0 Đặt lại sổ kho
+
+# 31/8 — SỬA CON SỐ, KHÔNG SỬA KHO.
+# Dashboard đọc sổ `kho_that` (D1) và dán nhãn "✓ kho thật". Sổ ấy do bộ lập kế hoạch ghi một
+# lần mỗi ngày sau khi quét Drive. Dọn kho xong giữa hai lần ghi thì sổ giữ nguyên số cũ, và
+# nhãn "kho thật" khiến không ai nghĩ tới việc nghi ngờ nó.
+#
+# Lệnh dọn bên repo publish đã tự đóng sổ, NHƯNG repo ấy không có secret HOT_KEY/OWNER_UID —
+# chỉ repo này có. Nên đặt nút bấm ở đây: một việc duy nhất, ghi thẳng số vào sổ.
+#
+# KHÔNG đụng tới file nào trong kho. Nếu số đưa vào sai thì lượt quét Drive kế tiếp sẽ ghi đè
+# lại bằng số thật — chỗ tệ nhất có thể xảy ra là dashboard hiển thị sai thêm một ngày.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tong:
+        description: "Số video thật trong kho (0 = kho vừa dọn sạch)"
+        type: string
+        default: "0"
+
+concurrency:
+  group: mm0-dat-so-kho
+  cancel-in-progress: false
+
+jobs:
+  dat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Ghi sổ kho_that
+        env:
+          HOT_KEY:   ${{ secrets.HOT_KEY }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          TONG:      ${{ inputs.tong }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          from datetime import datetime, timezone
+          k, o = os.environ.get("HOT_KEY", ""), os.environ.get("OWNER_UID", "")
+          if not k or not o:
+              raise SystemExit("❌ thiếu HOT_KEY hoặc OWNER_UID trong secrets của repo này")
+          tong = int(os.environ.get("TONG") or 0)
+          url = "https://mm0-connect.adisondurham-ef1.workers.dev/api/hot"
+          body = json.dumps({"op": "kho_that_ghi", "owner": o, "tong": tong,
+                             "luc": datetime.now(timezone.utc).isoformat()}).encode()
+          req = urllib.request.Request(url, method="POST", data=body, headers={
+              "content-type": "application/json", "x-hot-key": k,
+              # thiếu User-Agent thì Cloudflare chặn mã 1010 và trả 403 y như sai khoá
+              "user-agent": "MM0-Pipeline/1.0"})
+          with urllib.request.urlopen(req, timeout=25) as r:
+              print("📕 đã ghi sổ kho_that =", tong, "·", r.read().decode("utf-8", "ignore")[:120])
+          PY
