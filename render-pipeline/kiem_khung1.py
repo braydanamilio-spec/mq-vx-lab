@@ -40,7 +40,13 @@ def thu(comp: str, props: str) -> tuple[bool, str]:
     ra = os.path.join(GOC, "out", "_khung1.png")
     os.makedirs(os.path.dirname(ra), exist_ok=True)
     r = subprocess.run(
-        ["npx", "remotion", "still", "src/index.ts", comp, ra,
+        # 31/8 — RENDER KHUNG GIỮA, KHÔNG PHẢI KHUNG 0.
+        # Cổng này vừa bỏ lọt một ReferenceError chết người (`props is not defined` trong nhánh
+        # vẽ biểu đồ) và vẫn báo xanh. Vì khung 0 là lúc bài mới mở: chưa có biểu đồ, chưa có
+        # thẻ số, nhân vật vừa vào — tức phần lớn code vẽ CHƯA từng chạy.
+        # Một cổng chống lỗi lúc chạy mà chỉ chạy một phần code thì nó bảo vệ đúng phần ấy.
+        # Khung 300 (giây thứ 10) là lúc mọi lớp đã có mặt: biểu đồ, thẻ số, phụ đề, nhân vật.
+        ["npx", "remotion", "still", "src/index.ts", comp, ra, "--frame=300",
          f"--props=./{os.path.relpath(props, ENG)}", "--gl=swiftshader", "--log=error"],
         cwd=ENG, capture_output=True, text=True, timeout=600)
     if r.returncode == 0:

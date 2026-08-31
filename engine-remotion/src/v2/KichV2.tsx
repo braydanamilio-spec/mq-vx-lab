@@ -94,6 +94,8 @@ export type PropsKich = {
   tieuDe?: string;
   nguon?: string;
   font?: string;
+  /** kiểu kể của tập — engine dùng để chọn dạng biểu đồ nói được đúng câu chuyện */
+  kieuKe?: string;
 };
 
 export const calcKich = async ({ props }: { props: PropsKich }) => {
@@ -888,7 +890,7 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number; lech?:
 export const KichV2: React.FC<PropsKich> = ({
   canh = [], tu = [], voMp3 = "", nhac = "", doVat = "", nenAnh = "", nenTheoCanh = [],
   kieu = {}, kieuGoc = "nam_dam",
-  bangMau = "san_sau", tieuDe = "", nguon = "", font = "",
+  bangMau = "san_sau", tieuDe = "", nguon = "", font = "", kieuKe = "",
 }) => {
   const f = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
@@ -1160,7 +1162,7 @@ export const KichV2: React.FC<PropsKich> = ({
         {_cot ? (
           <g transform={`translate(${doc ? CHART_TAM * _dau : 150} ${doc ? CHART_Y : 84}) scale(${doc ? CHART_CO : 1.02})`}>
             <CotDaoCu cot={_cot} p={_pCot} mau={mau} noiBat={C.noiBat ?? _noiBatKe}
-                      dang={chonDang(_cot, _soKenh, (C as any).kieuKe || (props as any).kieuKe)} hien={_hienDen} pMoi={p} />
+                      dang={chonDang(_cot, _soKenh, kieuKe)} hien={_hienDen} pMoi={p} />
           </g>
         ) : null}
         {C.soLon ? (
