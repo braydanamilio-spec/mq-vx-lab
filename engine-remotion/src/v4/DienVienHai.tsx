@@ -343,7 +343,20 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const co: [number, number] = [vai[0] + dao * 0.4, vai[1] - 14 * cao];
   // Đầu nhấc CAO hơn vai đủ để thấy cổ. Bản trước chỉ hở 9 đơn vị nên đầu dính thẳng vào vai
   // và cả khối đọc ra là một hình duy nhất — đầu có quay cũng không ai thấy.
-  const dau: [number, number] = [co[0] + dao * 0.9 - bat * 14, co[1] - 60 * cao + gat - bat * 7];
+  //
+  // 31/8 — KHOẢNG HỞ PHẢI THEO BÁN KÍNH ĐẦU, KHÔNG PHẢI MỘT HẰNG SỐ.
+  // Anh nhìn banner rồi hỏi *"hình như cổ, đầu nó bị đè xuống, không có cổ phải không"*. Đúng:
+  // khoảng cách này là 60 cố định, trong khi `R_DAU` đổi theo `tiLeDau` của từng nhân vật
+  // (0,91 tới 1,12, và trẻ con còn nhân thêm 1,34). Đầu càng to thì mép dưới của nó càng trùm
+  // xuống — với `tiLeDau` ≥ 1,0 thì cằm chạm ngay điểm cổ và cả đoạn cổ nằm khuất sau thân.
+  // Nên hở phải tính TỪ bán kính đầu: mọi nhân vật đều lộ đúng một đoạn cổ như nhau, dù đầu to
+  // hay nhỏ. Đây là họ lỗi "một hằng số phục vụ hai thứ đổi độc lập" — cùng họ với cỡ chữ ở
+  // mục 8.1 và chỗ chừa bong bóng ở mục 9.3.
+  // Hệ số 0,92 vẫn cho ra đoạn cổ chỉ 30 đơn vị — có tồn tại nhưng ở cỡ banner thì không đọc
+  // ra. Nâng lên 1,08 và tăng phần cộng: đầu tách hẳn khỏi vai, cổ thành một đoạn nhìn thấy
+  // được ở mọi cỡ, mà chưa tới mức đầu "bay" khỏi thân.
+  const _hoCo = R_DAU * 1.08 + 22 * cao;
+  const dau: [number, number] = [co[0] + dao * 0.9 - bat * 14, co[1] - _hoCo + gat - bat * 7];
 
   // Điểm gắn tay phải nằm NGOÀI mép thân, không thì cánh tay chạy chìm trong thân và bàn tay
   // đọc ra là dính vào hông. Và tay phải đủ DÀI: tay ngắn làm nhân vật đọc ra là mập lùn kể cả
@@ -665,7 +678,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
 
       {/* CỔ — bản đầu vẽ quá ngắn nên đầu dính thẳng vào vai, đọc ra là một khối. Cổ phải
           THẤY ĐƯỢC thì đầu mới quay được một cách có nghĩa. */}
-      {chi(`M ${co[0]} ${co[1] + 24} L ${dau[0]} ${dau[1] + R_DAU * 0.54}`, da, 38, "co")}
+      {chi(`M ${co[0]} ${co[1] + 24} L ${dau[0]} ${dau[1] + R_DAU * 0.62}`, da, 42, "co")}
 
       {/* ── ĐẦU ───────────────────────────────────────────────────────────────────────── */}
       <g transform={`rotate(${nghiengDau} ${dau[0]} ${dau[1] + R_DAU})`}>

@@ -272,6 +272,10 @@ export const RemotionRoot: React.FC = () => (
                  width={800} height={800} defaultProps={{ kind: "avatar" }} />
     <Composition id="ComicBanner" component={BrandComic as any} durationInFrames={1} fps={30}
                  width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="ComicAvatarLon" component={BrandComic as any} durationInFrames={1} fps={30}
+                 width={1080} height={1080} defaultProps={{ kind: "avatar_lon" }} />
+    <Composition id="ComicCoverFB" component={BrandComic as any} durationInFrames={1} fps={30}
+                 width={1640} height={624} defaultProps={{ kind: "cover_fb" }} />
     <Composition id="ComicWatermark" component={BrandComic as any} durationInFrames={1} fps={30}
                  width={150} height={150} defaultProps={{ kind: "watermark" }} />
     <Composition id="ThumbComicWide" component={ThumbComic as any} durationInFrames={1} fps={30}

@@ -56,8 +56,15 @@ AVATAR_VAI = {
     "dating":   ("A", "vui"),        # anh chồng cười toe
 }
 
-CO = {"avatar": ("ComicAvatar", "avatar"), "banner": ("ComicBanner", "banner"),
-      "watermark": ("ComicWatermark", "watermark")}
+# Năm cỡ cho ba nền tảng. YouTube và Facebook có ô an toàn khác hẳn nhau (FB mobile cắt hai
+# bên, YouTube mobile cắt trên dưới), nên hai ảnh bìa phải dựng riêng chứ không co giãn từ một.
+CO = {
+    "avatar":     ("ComicAvatar", "avatar"),          # 800×800   — YouTube
+    "avatar_lon": ("ComicAvatarLon", "avatar_lon"),   # 1080×1080 — Facebook page + Instagram
+    "banner":     ("ComicBanner", "banner"),          # 2560×1440 — ảnh bìa kênh YouTube
+    "cover_fb":   ("ComicCoverFB", "cover_fb"),       # 1640×624  — ảnh bìa fanpage Facebook
+    "watermark":  ("ComicWatermark", "watermark"),    # 150×150   — hình chìm
+}
 
 
 # ══ CỔNG CHỐNG CHỒNG LẤN ═══════════════════════════════════════════════════════════════
@@ -142,7 +149,7 @@ def mot_kenh(k: dict, chi: str = "") -> int:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--kenh", default="")
-    ap.add_argument("--chi", default="", choices=["", "avatar", "banner", "watermark"])
+    ap.add_argument("--chi", default="", choices=["", "avatar", "avatar_lon", "banner", "cover_fb", "watermark"])
     a = ap.parse_args()
     if kiem_chong():
         print("⛔ có khuôn banner đặt chữ đè lên người — sửa BrandComic.tsx rồi chạy lại")

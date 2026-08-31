@@ -22,7 +22,14 @@ import { KIEU_MAU, Kieu, TenCamXuc, TenCuChi } from "../v2/DienVien";
 // ══════════════════════════════════════════════════════════════════════════════════════════
 
 export type PropsBrand = {
-  kind?: "avatar" | "banner" | "watermark";
+  // 31/8 — Anh: *"brandkit nhớ đủ size cho cả youtube, facebook fanpage"*.
+  //   avatar      800×800    YouTube (hiển thị 98px)
+  //   avatar_lon  1080×1080  Facebook page + Instagram (FB hiển thị 170px, IG 110px)
+  //   banner      2560×1440  ảnh bìa kênh YouTube, vùng an toàn 1546×423
+  //   cover_fb    1640×624   ảnh bìa fanpage Facebook — desktop hiện 820×312, mobile crop hẹp
+  //                          hai bên và cao hơn, nên vùng luôn hiện chỉ là dải giữa
+  //   watermark   150×150    hình chìm đè lên video
+  kind?: "avatar" | "avatar_lon" | "banner" | "cover_fb" | "watermark";
   kieuA?: string; kieuB?: string; kieuTuyA?: Partial<Kieu>; kieuTuyB?: Partial<Kieu>;
   tieuDe?: string; handle?: string; khau?: string;
   mau?: string; mauPhu?: string;
@@ -59,8 +66,8 @@ export const BrandComic: React.FC<PropsBrand> = ({
   const CAO_NG = 378, NGUC = 150;              // đo trên ảnh bìa, xem PIPELINE_RULES 12.2
 
   // ── AVATAR: một khuôn mặt, cắt sát, không chữ ────────────────────────────────────────
-  if (kind === "avatar") {
-    const S = 800;
+  if (kind === "avatar" || kind === "avatar_lon") {
+    const S = kind === "avatar_lon" ? 1080 : 800;
     const N = dungB ? B : A;
     const caoA = N.cao ?? 1;
     // Cắt từ đỉnh đầu tới ngang cằm-cổ: ở 48px thì phần thân chỉ làm mặt nhỏ đi.
@@ -173,8 +180,15 @@ export const BrandComic: React.FC<PropsBrand> = ({
   // Sáu khuôn. Khác nhau ở BA trục cùng lúc — nền, chỗ đứng của nhân vật, cách đặt tên — vì
   // đổi một trục thì mắt vẫn nhận ra cùng một khuôn tô lại. Ô an toàn thì khuôn nào cũng phải
   // tôn trọng: nhân vật và chữ nằm trọn trong 1546×423, phần ngoài chỉ là màu tràn.
-  const W = 2560, H = 1440;
-  const AT = { w: 1546, h: 423, x: (2560 - 1546) / 2, y: (1440 - 423) / 2 };
+  // Hai khung, hai ô an toàn khác hẳn nhau. Ô an toàn của Facebook rộng hơn theo tỉ lệ (78%
+  // bề ngang) nhưng CAO hơn nhiều (87% chiều cao) — vì mobile của Facebook cắt hai bên chứ
+  // không cắt trên dưới, ngược hẳn với YouTube. Dùng chung một ô cho cả hai là cách chắc chắn
+  // để một trong hai bị cắt mất chữ.
+  const fb = kind === "cover_fb";
+  const W = fb ? 1640 : 2560, H = fb ? 624 : 1440;
+  const AT = fb
+    ? { w: 1280, h: 540, x: (1640 - 1280) / 2, y: (624 - 540) / 2 }
+    : { w: 1546, h: 423, x: (2560 - 1546) / 2, y: (1440 - 423) / 2 };
   const bcB = ((boCuc % 6) + 6) % 6;
   const V = "#14110F";
   // 31/8, sửa lần hai — ANH: *"nó bị ép ngắn xuống làm lỗi"*. Đúng, và tôi tự gây ra:
@@ -193,7 +207,7 @@ export const BrandComic: React.FC<PropsBrand> = ({
   // vẹn ở banner — dấu hiệu rõ ràng rằng luật ấy đáng lẽ phải nằm trong MỘT hàm dùng chung
   // chứ không nằm trong một ghi chú.
   const caoMaxB = Math.max(A.cao ?? 1, B.cao ?? 1);
-  const kChung = (AT.h * 1.5) / (CAO_NG * caoMaxB);
+  const kChung = (AT.h * (fb ? 1.02 : 1.5)) / (CAO_NG * caoMaxB);
   const kA = kChung, kB = kChung;
 
   // chỗ đứng của hai nhân vật theo khuôn (tỉ lệ trong ô an toàn); null = không vẽ người ấy
@@ -291,17 +305,18 @@ export const BrandComic: React.FC<PropsBrand> = ({
         transform: bcB === 4 ? "rotate(-3deg)" : "none",
       }}>
         <div style={{
-          fontSize: Math.min(bcB === 5 ? 190 : 150, (bcB === 5 ? 2600 : 1900) / Math.max(6, tieuDe.length)),
+          fontSize: Math.min((bcB === 5 ? 190 : 150) * (fb ? 0.72 : 1),
+                             (bcB === 5 ? 2600 : 1900) * (fb ? 0.72 : 1) / Math.max(6, tieuDe.length)),
           fontWeight: 900, color: "#FFFFFF", letterSpacing: -1, lineHeight: 1,
           WebkitTextStroke: "12px #14110F", paintOrder: "stroke fill",
           textShadow: bcB % 2 ? "0 0 0 #14110F" : "10px 11px 0 #14110F",
         }}>{tieuDe}</div>
         <div style={{
           marginTop: 26, background: bcB === 4 ? mau : V, color: "#FFFFFF", padding: "10px 26px",
-          fontSize: 42, fontWeight: 800, letterSpacing: 1.4,
+          fontSize: fb ? 30 : 42, fontWeight: 800, letterSpacing: 1.4,
           border: bcB === 4 ? `6px solid ${V}` : "none",
         }}>{khau || "NEW EPISODE EVERY DAY"}</div>
-        <div style={{ marginTop: 16, fontSize: 36, fontWeight: 800, color: V }}>{handle}</div>
+        <div style={{ marginTop: 14, fontSize: fb ? 26 : 36, fontWeight: 800, color: V }}>{handle}</div>
       </div>
     </AbsoluteFill>
   );

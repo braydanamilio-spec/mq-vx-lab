@@ -5800,3 +5800,63 @@ hình. Dùng chung một công thức tỉ lệ cho cả hai là lỗi tôi vừ
 python3 sieu_du_lieu.py --vong 0            # bìa + 3 bộ chữ cho 3 nền tảng
 python3 brand_comic.py                      # avatar + banner + watermark, ra out/brand/
 ```
+
+---
+
+## 14. CỔ: MỘT HẰNG SỐ PHỤC VỤ HAI THỨ ĐỔI ĐỘC LẬP (31/8)
+
+Anh nhìn banner rồi hỏi: *"hình như cổ, đầu nó bị đè xuống, không có cổ phải không?"* Đúng.
+
+`DienVienHai` CÓ vẽ cổ, và vẽ đúng thứ tự (sau thân, nên không bị thân đè). Nhưng khoảng cách
+từ vai lên tâm đầu là **hằng số 60**, trong khi bán kính đầu `R_DAU` đổi theo `tiLeDau` của
+từng nhân vật (0,91 → 1,12) và trẻ con còn nhân thêm 1,34. Đầu càng to thì mép dưới của nó
+càng trùm xuống: với `tiLeDau ≥ 1,0` thì cằm chạm ngay điểm cổ, và cả đoạn cổ nằm khuất.
+
+```tsx
+const _hoCo = R_DAU * 1.08 + 22 * cao;          // hở tính TỪ bán kính đầu
+const dau = [..., co[1] - _hoCo + gat - bat * 7];
+```
+
+**Họ lỗi — một hằng số phục vụ hai thứ đổi độc lập.** Đã gặp bốn lần, mỗi lần một chỗ khác:
+
+| Lần | Hằng số | Hai thứ nó phải phục vụ |
+|---|---|---|
+| 8.1 | `fontSize = cạnh × 0.19` | cỡ ô và độ dài chuỗi |
+| 9.3 | chừa 28% cho bong bóng | chiều cao ô và số dòng của câu |
+| 12.2 | `CAO_NGUOI = 460` | khung video và ảnh bìa (hai ngữ cảnh cắt khác nhau) |
+| 14 | hở cổ = 60 | vai và bán kính đầu |
+
+**Cách nhận ra trước khi nó thành lỗi:** mỗi khi viết một con số vào công thức bố cục, hỏi
+"con số này có phải điều chỉnh khi một tham số khác đổi không?" Nếu có, nó không phải hằng số —
+nó là một hàm của tham số ấy.
+
+Sửa ở tầng vẽ nhân vật thì **mọi sản phẩm phải dựng lại**: video, ảnh bìa, avatar, banner.
+Không có cách nào vá riêng một tầng.
+
+### 14.1 Ba hệ số nhân chồng: đứa trẻ thành quả trứng
+
+Anh gửi khung PARENT MODE: *"này có phải là con nít đang vẽ lỗi ko, ko thấy cổ và thân người
+đầu quá to"*. Đo ra: đứa trẻ **1,2 "đầu"** trong khi người lớn 4 đầu — đầu chiếm hơn nửa người.
+
+Nguyên nhân là ba hệ số nhân chồng, và tôi chỉ nhìn từng cái một nên cái nào cũng "hợp lý":
+
+| Nguồn | Hệ số | Tác dụng |
+|---|---|---|
+| bảng `VAI` | `cao: 0.66` | thân thấp bằng 2/3 người lớn — hợp lý |
+| engine `DienVienHai` | `× 0.74` cho giới `"tre"` | thân thấp thêm nữa — cũng hợp lý |
+| bảng `VAI` | `tiLeDau: 1.22` | đầu to hơn — hợp lý với trẻ con |
+| engine | `× 1.34` cho giới `"tre"` | đầu to thêm — cũng hợp lý |
+
+Kết quả: thân co còn **0,49** mà đầu phình lên **1,63**. Hai chiều ngược nhau nên sai số không
+cộng mà nhân đôi.
+
+**Luật:** khi một thuộc tính được đặt ở HAI nơi (bảng dữ liệu và engine), đừng chỉnh bằng cảm
+giác — tính ngược từ mục tiêu đo được. Ở đây mục tiêu là "trẻ con hoạt hình = 3 đầu", giải ra
+`cao = 0.89` và `tiLeDau = 0.65` (những con số trông vô lý nếu đọc rời, nhưng đúng sau khi nhân
+với hệ số của engine).
+
+**Cách phát hiện rẻ nhất** — một dòng Python, không cần render:
+```python
+R = 58 * tiLeDau * (1.34 if tre else 1);  than = 460 * cao * (0.74 if tre else 1)
+print(than / (2 * R), "đầu")     # người lớn 4.0 · trẻ con 3.0 · dưới 2.0 là hỏng
+```

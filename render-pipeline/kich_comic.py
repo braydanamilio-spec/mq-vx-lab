@@ -153,8 +153,16 @@ VAI = {
                  ("sao_dem",   "nu",  "tre",     0.92, "nhân viên hỗ trợ", "tech support")),
     # PARENT MODE là chỗ anh nêu đích danh: con phải thấp hơn mẹ. 0.66 so với 1.00 — chênh
     # đúng cỡ một đứa trẻ đứng cạnh người lớn, nhìn một giây là ra quan hệ.
+    # 31/8 — Anh: *"này có phải là con nít đang vẽ lỗi ko, ko thấy cổ và thân người đầu quá to"*.
+    # Đúng, và tôi đo được: đứa trẻ ra 1,2 "đầu" (đầu chiếm hơn nửa người) trong khi người lớn
+    # là 4 đầu. Nguyên nhân: BA hệ số nhân chồng lên nhau mà tôi chỉ nhìn từng cái một —
+    #   cao 0,66 ở bảng này  ×  0,74 mà engine nhân cho giới "tre"  = thân chỉ còn 0,49
+    #   tiLeDau 1,22          ×  1,34 mà engine cũng nhân cho "tre" = đầu to gấp 1,63
+    # Thân co lại còn đầu phình ra, hai chiều ngược nhau nên sai số nhân đôi.
+    # Số dưới đây tính NGƯỢC từ mục tiêu: trẻ con hoạt hình đúng tỉ lệ là 3 đầu (đầu to hơn
+    # người lớn theo tỉ lệ, nhưng không nuốt cả thân), sau khi đã tính cả hệ số của engine.
     "parent":   (("bank",      "nu",  "trung",   1.00, "mẹ", "mom"),
-                 ("luat_tre",  "tre", "tre_con", 0.66, "con nhỏ", "the kid")),
+                 ("luat_tre",  "tre", "tre_con", 0.89, "con nhỏ", "the kid")),
     "neighbor": (("vu_tru_gia","nam", "gia",     0.99, "ông hàng xóm", "the neighbor"),
                  ("y_ta",      "nu",  "trung",   0.94, "hàng xóm nữ", "the woman next door")),
     # Vợ chồng — ví dụ thứ hai anh nêu. Vợ thấp hơn chồng, và cả hai cùng lứa.
@@ -209,7 +217,7 @@ def vai_va_giong(k: dict) -> tuple:
             "rau": ("" if gioi != "nam" or tuoi == "tre_con"
                     else ["", "ria", "quai", "de"][(hs + i) % 4]),
             # Trẻ con: đầu to hơn, mắt to hơn — hai thứ đọc ra "trẻ con" nhanh hơn cả chiều cao.
-            **({"tiLeDau": 1.22, "matTo": 1.3, "beNgang": 0.9} if tuoi == "tre_con" else {}),
+            **({"tiLeDau": 0.65, "matTo": 1.3, "beNgang": 0.94} if tuoi == "tre_con" else {}),
         }
         ra.append((kieu, ghi, giong))
     return ra[0][0], ra[1][0], ra[0][1], ra[1][1], ra[0][2], ra[1][2]
