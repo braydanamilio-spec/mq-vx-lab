@@ -18,6 +18,10 @@ on:
         description: "Số video thật trong kho (0 = kho vừa dọn sạch)"
         type: string
         default: "0"
+      chi_doc:
+        description: "Chỉ ĐỌC trạng thái, không ghi gì"
+        type: boolean
+        default: true
 
 concurrency:
   group: mm0-dat-so-kho
@@ -36,6 +40,7 @@ jobs:
           HOT_KEY:   ${{ secrets.HOT_KEY }}
           OWNER_UID: ${{ secrets.OWNER_UID }}
           TONG:      ${{ inputs.tong }}
+          CHI_DOC:   ${{ inputs.chi_doc }}
         run: |
           python - <<'PY'
           import json, os, urllib.request
@@ -44,6 +49,25 @@ jobs:
           if not k or not o:
               raise SystemExit("❌ thiếu HOT_KEY hoặc OWNER_UID trong secrets của repo này")
           tong = int(os.environ.get("TONG") or 0)
+          chi_doc = (os.environ.get("CHI_DOC") or "").lower() == "true"
+
+          # ĐỌC TRƯỚC, LUÔN LUÔN. Con số trên dashboard là thứ anh nhìn thấy, nhưng nó đi qua
+          # ba lớp — sổ kho_that, bản ghi D1, rồi phép cộng "đã làm thêm" — và mỗi lớp có thể
+          # nói khác nhau. In cả ba ra thì hết phải đoán lớp nào đang sai.
+          import urllib.parse as _up
+          _base = "https://mm0-connect.adisondurham-ef1.workers.dev"
+          try:
+              _u = f"{_base}/api/hot-stat?owner={_up.quote(o)}"
+              with urllib.request.urlopen(_u, timeout=25) as r:
+                  _d = json.loads(r.read().decode("utf-8", "ignore"))
+              print("📊 dashboard đang thấy:")
+              for _k2 in ("tong", "tong_nguon", "homnay", "loi", "dangchay"):
+                  print(f"     {_k2:12} = {_d.get(_k2)}")
+          except Exception as _e:
+              print("   ⚠️ đọc trạng thái hụt:", type(_e).__name__, str(_e)[:90])
+
+          if chi_doc:
+              raise SystemExit(0)
           url = "https://mm0-connect.adisondurham-ef1.workers.dev/api/hot"
           # Worker nhận {lenh, tham:{...}} — không phải {op, ...}. Gửi sai khuôn thì nó trả
           # 400 chứ không nói thiếu gì, nên phải đọc thẳng mã worker mới biết. Đã trả giá một
