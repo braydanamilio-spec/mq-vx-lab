@@ -124,6 +124,7 @@ jobs:
           path: |
             render-pipeline/out/v3_*.mp4
             render-pipeline/out/v3_*.jpg
+            render-pipeline/out/v3_*.tai.json
             render-pipeline/out/v3L_*.mp4
             render-pipeline/out/v3L_*.jpg
             render-pipeline/out/_khung/**

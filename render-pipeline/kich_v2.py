@@ -2248,6 +2248,14 @@ def main() -> int:
             if _thumb(out, k.get("nhan") or ten, ten, _hex, _th):
                 print(f"   🖼  thumbnail: {os.path.basename(_th)}")
         _am = chuan(out)
+        # CHỮ ĐĂNG NGAY SAU KHI DỰNG. Trước 1/9, 56 kênh phân tích có video và ảnh bìa nhưng
+        # KHÔNG có tiêu đề/mô tả/thẻ — dựng xong vẫn không đăng được, phải viết tay 56 lần.
+        # Nuốt mọi lỗi: đây là bước đánh bóng, không được phép làm hỏng một video đã dựng xong.
+        try:
+            import sieu_du_lieu as _SD
+            _SD.mot_video_du_lieu(k, os.path.splitext(os.path.basename(out))[0][3:])
+        except Exception as _e:
+            print(f"   ⚠️ chữ đăng lỗi: {str(_e)[:90]}")
         print(f"   ✅ {ten}: {out}  ({mb:.1f} MB{' · ' + _am if _am else ''})")
         ra.append(out)
 

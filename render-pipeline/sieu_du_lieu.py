@@ -208,7 +208,8 @@ def lam_bia(k: dict, hook: str, so_tap: int, dai: bool, dest: str) -> bool:
 
 
 def mot_video(k: dict, so_tap: int, dai: bool, lam_anh: bool = True,
-              tien: str = "", slug: str = "", vai=None, tieu_de: str = "") -> str:
+              tien: str = "", slug: str = "", vai=None, tieu_de: str = "",
+              mo_ta: str = "", the=None, danh_muc: str = "", cau_ngoai=None) -> str:
     """1/9 — `tien`/`slug` cho phép dùng lại cho kênh ngoài bộ comic.
 
     Bản trước khoá cứng tiền tố `v5_` và `_ten_tep(k)`, nên kênh HOUSE RULES (`v6_`, mỗi tập
@@ -228,6 +229,8 @@ def mot_video(k: dict, so_tap: int, dai: bool, lam_anh: bool = True,
     if os.path.exists(pj):
         d = json.load(io.open(pj, encoding="utf-8"))
         cau = [(l["nar"], l["ai"], l.get("camXuc", "")) for l in d.get("luot", [])]
+    if cau_ngoai:
+        cau = cau_ngoai
     if not cau:
         _kho = KHO.get(k["de"]) or []
         if _kho:
@@ -273,22 +276,73 @@ def mot_video(k: dict, so_tap: int, dai: bool, lam_anh: bool = True,
 
         "youtube": {
             "title": td,
-            "description": _mo_ta(k, cau, so_tap, dai, chuong, vai),
-            "tags": _the(k, dai),
+            "description": mo_ta or _mo_ta(k, cau, so_tap, dai, chuong, vai),
+            "tags": the or _the(k, dai),
             # Ba trường dưới đây bắt buộc khi đăng qua API và hay bị bỏ quên:
-            "category_id": "23",       # Comedy
+            "category_id": danh_muc or "23",   # 23 = Comedy · 27 = Education
             "made_for_kids": False,    # khai sai là rủi ro pháp lý, không phải lỗi kỹ thuật
             "default_language": "en",
             "privacy": "public",
         },
-        "facebook": _fb(k, cau, td, dai),
-        "instagram": _ig(k, cau, dai) if hop["instagram"] else None,
+        "facebook": (_fb(k, cau, td, dai) if not mo_ta else
+                     {"title": td.replace(" #shorts", ""),
+                      "description": f"{mo_ta}\n\n{k.get('handle', '')}",
+                      "call_to_action": "LEARN_MORE"}),
+        "instagram": ((_ig(k, cau, dai) if not mo_ta else
+                       {"caption": f"{td.replace(' #shorts','')}\n\n"
+                                   + " ".join("#" + t.replace(" ", "") for t in (the or _the(k, dai))[:8]),
+                        "share_to_feed": True})
+                      if hop["instagram"] else None),
     }
     dest = os.path.join(GOC, "out", f"{tien}{slug}.tai.json")
     io.open(dest, "w", encoding="utf-8").write(json.dumps(tai, ensure_ascii=False, indent=1))
     _n = [x for x, v in tai['dang_duoc'].items() if v]
     print(f"   ✅ {k['ten']:19s} {tai['youtube']['title'][:44]:44s} → {'+'.join(_n)}")
     return dest
+
+
+# ══ KÊNH DỮ LIỆU (56 kênh phân tích) ══════════════════════════════════════════════════════
+# 1/9 — Trước hôm nay 56 kênh phân tích CÓ video, CÓ ảnh bìa, nhưng KHÔNG có tiêu đề/mô tả/thẻ
+# để đăng, và không có `dang_duoc` cho biết video nào lên được nền tảng nào. Tức dựng xong vẫn
+# không đăng được, phải ngồi viết tay 56 lần.
+#
+# Không viết bộ sinh chữ THỨ HAI: mở tham số ở bộ đang có (`mo_ta`, `the`, `danh_muc`,
+# `cau_ngoai`). Hai bộ rồi sẽ lệch nhau — đúng họ lỗi đã trả giá sáu lần.
+#
+# Khác biệt thật giữa hai loại kênh nằm ở ba chỗ:
+#   · tiêu đề — kênh hài lấy câu chốt, kênh dữ liệu lấy CON SỐ gây sốc ở câu mở;
+#   · mô tả — kênh dữ liệu phải ghi NGUỒN, đó là thứ tạo tin cậy và cũng là hàng rào bản quyền;
+#   · danh mục YouTube — 27 (Education), không phải 23 (Comedy).
+
+THE_DU_LIEU = ["data", "statistics", "facts", "usa", "explained", "numbers", "research"]
+
+
+def mot_video_du_lieu(k: dict, slug: str, dai: bool = False) -> str:
+    """Chữ đăng cho một tập của kênh phân tích. Đọc thẳng props `v3_<slug>.json`."""
+    tien = "v3L_" if dai else "v3_"
+    pj = os.path.join(GOC, "out", f"{tien}{slug}.json")
+    if not os.path.exists(pj):
+        return ""
+    d = json.load(io.open(pj, encoding="utf-8"))
+    canh = d.get("canh") or []
+    cau = [(str(c.get("nar", "")), 0, "") for c in canh if c.get("nar")]
+    if not cau:
+        return ""
+
+    # Tiêu đề: câu MỞ đã được bộ sinh kịch bản ép phải có con số gây sốc ngay giây đầu, nên nó
+    # cũng là tiêu đề tốt nhất — người xem nghe lại đúng câu ấy sau một giây.
+    mo = _sach(cau[0][0]).rstrip(".")
+    td = (mo if len(mo) > 24 else f"{mo} — {k['ten']}")
+    td = f"{td} #shorts" if not dai else f"{td} | {k['ten']}"
+
+    nguon = d.get("nguon") or k.get("nguon", "")
+    mota = (f"{k.get('nhan', '')}\n\n"
+            f"Source: {nguon}. All figures pulled from the public dataset — nothing invented.\n"
+            f"New numbers every day on {k.get('handle', '')}.")
+    the = [k["ten"].lower()] + THE_DU_LIEU + ([str(nguon).lower()] if nguon else [])
+    return mot_video(k, 0, dai, lam_anh=False, tien=tien, slug=slug,
+                     tieu_de=td[:98], mo_ta=mota, the=the[:12], danh_muc="27",
+                     cau_ngoai=cau)
 
 
 def main() -> int:

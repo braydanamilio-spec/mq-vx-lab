@@ -28,8 +28,10 @@ WF = os.path.join(GOC, "..", ".github", "workflows")
 # Ghi thành cổng thay vì thành lời dặn — lời dặn không chặn được lượt chạy nào.
 CAP = {
     "render_hai.yml": ("kich_comic.py", "kich_comic_long.py", True),
-    "render_phan_tich.yml": ("kich_v2.py", "kich_v2_long.py", False),
-    "render_phan_tich_18.yml": ("kich_v2.py", "kich_v2_long.py", False),
+    # 1/9 — bật `True`: nay kênh phân tích cũng sinh `.tai.json` (`mot_video_du_lieu`), nên
+    # artifact phải mang nó theo. Có video mà không có chữ đăng thì vẫn chưa đăng được.
+    "render_phan_tich.yml": ("kich_v2.py", "kich_v2_long.py", True),
+    "render_phan_tich_18.yml": ("kich_v2.py", "kich_v2_long.py", True),
 }
 
 
