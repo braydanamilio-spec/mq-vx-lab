@@ -5613,3 +5613,118 @@ lên giọng và nhanh hơn · câu cảm thán bật cả cao độ lẫn nhị
 lại · câu chốt hạ giọng (hạ nghe chắc hơn hét). Và một trục nữa làm nên cảm giác đối đáp:
 **tương phản với lượt trước** — câu trước lên cao thì câu này hạ xuống. Vài Hz là đủ để tai
 nghe ra hai người đang trao đổi thay vì hai đoạn thu rời.
+
+---
+
+## 10. HÀNG NGHÌN TẬP MÀ KHÔNG LẶP MOTIP (31/8)
+
+Anh: *"sau mỗi channel có làm hàng nghìn videos đảm bảo được tính đa dạng sáng tạo, ko nhàm
+chán, lặp lại hay cùng 1 motip — sáng tạo linh động trong khuôn khổ."*
+
+Kho viết tay có 40 mẩu = 4 tập/kênh. Tập thứ năm đã quay lại mẩu thứ nhất. Đa dạng phải đến từ
+hệ thống, không từ việc viết thêm tay.
+
+### 10.1 Ba nguồn đa dạng, ba tầng khác nhau
+
+| Tầng | Cơ chế | Tệp |
+|---|---|---|
+| Nội dung | 6 khung truyện × 3 độ dài = 18 dạng dựng chuyện, xoay theo số mẩu đã có | `sinh_kich_ban.py` |
+| Bản dựng | `hat = bam(kênh) + soTap × 7919` — cỡ cảnh, chuyển cảnh, góc nhìn nền đều đổi theo TẬP | `KichComic.tsx` |
+| Nét vẽ | 4 trục riêng mỗi kênh: độ dày mực · cỡ halftone · bo góc bong bóng · tỉ lệ người | `NET_KENH` trong `kich_comic.py` |
+
+Trước đây hạt băm chỉ lấy tên kênh, nên mười kênh khác nhau nhưng một kênh thì tập nào cũng
+dựng y hệt: cùng thứ tự rộng/cận, cùng chuỗi chuyển cảnh. Một nghìn tập như thế là một nghìn
+lần lặp một bản dựng — đúng thứ chính sách gọi là "minimal variation".
+
+### 10.2 Cổng chống lặp phải ĐO ĐƯỢC
+
+`sinh_kich_ban.py` chuẩn hoá mỗi câu (số → «số», danh từ sau mạo từ → «tên», ngày → «ngày») rồi
+đối chiếu khuôn với cả kho. Trùng quá 34% số câu thì LOẠI, không lưu. Hai câu "raised my rent
+four hundred dollars" và "raised my fee two hundred dollars" khác chữ nhưng cùng khuôn — và
+người xem tập thứ hai vẫn thấy "xem rồi".
+
+Sinh bằng mô hình KHÔNG tự cho ra đa dạng: hỏi cùng một câu thì nó trả về cùng một vùng ý tưởng.
+Đa dạng phải ép từ ngoài — bằng khung truyện xoay vòng, bằng danh sách cấm tái dùng, và bằng
+cổng đo được ở trên.
+
+### 10.3 Chất lượng mẩu sinh: CHO XEM giọng, đừng MÔ TẢ giọng
+
+Mẻ đầu (chỉ có luật, không có ví dụ) cho ra một mẩu "đảo vai" mà hai người nói lộn xộn và một
+câu chốt không lật được gì. Thêm hai mẩu viết tay CỦA CHÍNH KÊNH ẤY làm ví dụ thì chất lượng
+lên hẳn ngay lượt sau. Bốn mươi mẩu viết tay vì thế không bị bỏ đi — chúng thành mẫu giọng.
+
+Ba cổng cấu trúc, đều đo được: hai lượt liền cùng một người thì loại · câu chốt dưới 5 từ thì
+loại · mô hình không nêu được "cú lật này lật cái gì" thì loại (nếu chính nó không biết trò đùa
+nằm ở đâu thì người xem cũng không). Và làm sạch ký tự sắp chữ — nháy cong với gạch nối không
+ngắt đi qua edge-tts thành âm lạ.
+
+### 10.4 MỘT CHI TIẾT DÙNG CHUNG MẠNH HƠN MƯỜI CHI TIẾT RIÊNG
+
+Bài học đắt nhất của mục này. Sau khi đã làm bảng nét riêng cho mười kênh, tôi lấp khoảng tường
+phía trên bằng đúng một hình — một đường trần và hai bóng đèn — cho cả mười. Xếp mười khung
+cạnh nhau thì hai cái đèn giống hệt ở cùng toạ độ đập vào mắt trước cả màu sắc, và nó xoá sạch
+cảm giác riêng của mọi thứ còn lại.
+
+**Mắt bắt cái lặp trước.** Khi thêm bất cứ chi tiết nào vào lớp nền dùng chung, hỏi ngay: xếp
+mười kênh cạnh nhau thì chi tiết này có giống hệt nhau không? Trần nay đi theo nơi chốn — đèn
+tuýp văn phòng, quạt trần phòng khách, xà thép gara, tủ treo bếp, bảng chỉ dẫn sân bay, trời
+mây ngoài sân.
+
+### 10.5 Lệnh
+
+```
+python3 sinh_kich_ban.py --kenh "TECHSUPPORT" --so 20     # sinh thêm 20 mẩu cho một kênh
+python3 kich_comic.py --kenh "TECHSUPPORT" --vong 7       # dựng tập thứ 8
+```
+
+Kho tích luỹ ở `kho_comic.json`, ghi nguyên tử sau mỗi mẩu (đứt giữa chừng không mất kho cũ).
+`kich_comic.py` tự nối kho ấy sau 4 mẩu viết tay.
+
+---
+
+## 11. GIỚI · TUỔI · CHIỀU CAO · GIỌNG — MỘT NGUỒN SỰ THẬT (31/8)
+
+Anh: *"giọng nào nam thì lồng nam, nữ lồng nữ, con nhỏ lồng con nhỏ, ông già lồng giọng ông"*
+và *"con đứng với mẹ thì con phải thấp hơn mẹ, vợ đứng với chồng thì vợ thường thấp hơn chồng
+— nhớ logic nha e"*.
+
+### 11.1 Gốc: giới và tuổi CHƯA TỪNG được ghi vào dữ liệu
+
+Chúng chỉ nằm trong chú thích tiếng Việt phía trên mỗi kiểu vẽ ("nữ giao dịch viên", "thẩm
+phán về hưu"). Bộ chọn giọng không đọc được chú thích, nên giọng gán theo KÊNH rồi trượt khỏi
+nhân vật; bảng `_BONG` ghi đè chiều cao và râu cũng theo kênh, độc lập với giới. Hậu quả đo
+được: **nữ cựu công tố đeo râu dê**, và ở PARENT MODE **đứa con cao hơn bố**.
+
+Nay `VAI` trong `kich_comic.py` là nguồn sự thật duy nhất cho ba thứ đi liền nhau — ai là ai ·
+cao thấp bao nhiêu · giọng nào. Tách ra ba chỗ là cách chắc chắn để chúng lại mâu thuẫn.
+Chiều cao lấy mốc nam trưởng thành = 1.00; nữ 0.92–0.95; ông bà 0.96–0.99; **trẻ con 0.62–0.70**.
+
+### 11.2 Chênh lệch chiều cao là THÔNG TIN, không phải lỗi
+
+Sáng cùng ngày tôi thấy hai người chênh nhau nhiều nên chia tỉ lệ cho `√cao` để kéo họ gần
+bằng nhau — sai hướng, và anh chỉ ra ngay sau đó. Cái cần sửa không phải chiều cao mà là MỨC
+CẮT: chọn tỉ lệ theo người **cao nhất** (đỉnh đầu không chui vào vùng bong bóng), chọn mức cắt
+theo người **thấp nhất** (không ai bị cắt mất mặt). Trước đó tôi dùng chung một mốc cho hai
+mục đích, nên buộc phải chọn: hoặc người cao mất đầu, hoặc người thấp mất mặt.
+
+### 11.3 Ba lỗi tự gây, ghi để không lặp
+
+| Lỗi | Triệu chứng | Bài học |
+|---|---|---|
+| Chèn `gioi/tuoi` kèm comment `//` **giữa dòng** | mặt và tay đen kịt trên mọi kênh | `//` nuốt hết phần còn lại của DÒNG — `da:`, `toc:`, `ao:` biến mất, màu thành undefined. **Không bao giờ chèn comment vào giữa một dòng khai báo.** Chèn xong phải grep lại trường bị đẩy ra sau dấu `//` |
+| `DavisNeural`, `NancyNeural` | "TTS rỗng sau 3 lần thử" | Hai giọng ấy KHÔNG tồn tại. Triệu chứng đọc như lỗi mạng/khoá, nên dễ đi sửa nhầm chỗ. `edge-tts --list-voices` là câu lệnh rẻ nhất — en-US chỉ có 13 giọng |
+| `caoMax` dùng trước khi khai báo | render chết ngay | Khi chuyển một khối tính toán, kiểm thứ tự khai báo. Lỗi này **cổng render bắt được** — đó là lý do phải render thật chứ không chỉ đọc code |
+
+Giọng en-US có thật: nam — Andrew · Brian · Christopher · Eric · Guy · Roger · Steffan; nữ —
+Aria · Ava · Emma · Jenny · Michelle; **trẻ em — Ana** (giọng trẻ con thật duy nhất).
+
+### 11.4 Đạo cụ theo lời thoại: KHÔNG cần AI
+
+Anh hỏi có cần AI phân tích để vẽ bối cảnh khớp thoại không. Không — lời thoại đã là văn bản
+sẵn trong tay; dò từ khoá rồi vẽ vật từ bộ vẽ có sẵn là đủ. Gọi mô hình cho việc này vừa chậm,
+vừa tốn hạn mức, vừa không hứa gì về bố cục — đúng ba lý do đã khiến đường sinh ảnh nền của
+bản cũ phải bỏ. Bảng `TU_KHOA` trong `NenComic.tsx`: thoại nói "router" thì khung có router.
+
+Chỗ đặt đạo cụ: **khoảng giữa hai người**. Hai nhân vật đứng ở 28% và 72% bề ngang, nên dải
+giữa là khoảng duy nhất chắc chắn trống ở mọi cảnh hai người; mép phải là chỗ của tủ, của kệ,
+và của chính người thứ hai — bản đầu đặt ở đó nên gần như không nhìn thấy vật.

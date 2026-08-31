@@ -761,6 +761,25 @@ export const DienVienHai: React.FC<PropsHai> = ({
           </g>
         ))}
 
+        {/* 31/8 — LÔNG MI: dấu hiệu giới đọc được ở cỡ nhỏ nhất.
+            Anh đã dặn *"nhân vật nam và nữ hay con nít nhìn là phân biệt được rõ"*, và engine
+            đã có vai hẹp 0,82 + hông rộng 1,16 cho nữ. Nhưng soi mười khung thật thì vẫn không
+            đọc ra: ở cỡ một phần năm màn hình, bề ngang vai chênh 18% là thứ mắt không bắt kịp.
+            Hoạt hình Mỹ giải việc này bằng đúng hai chi tiết ở KHUÔN MẶT — lông mi và tóc buông
+            — vì mắt người luôn nhìn mặt trước, và mặt thì luôn to hơn vai trong mọi cỡ cảnh. */}
+        {_nu ? [-1, 1].map((sg) => (
+          <g key={`mi${sg}`}>
+            {[0, 1, 2].map((i) => {
+              const g0 = -0.42 + i * 0.30;
+              const x0 = dau[0] + sg * cachMat + sg * Math.cos(g0) * rMat * 0.98;
+              const y0 = dau[1] + yMat - Math.sin(g0 + 0.5) * rMat * 0.72;
+              return <line key={i} x1={x0} y1={y0}
+                           x2={x0 + sg * rMat * 0.34} y2={y0 - rMat * 0.30}
+                           stroke={V} strokeWidth={NT * 1.5} strokeLinecap="round" />;
+            })}
+          </g>
+        )) : null}
+
         {/* LÔNG MÀY — KHỐI ĐẶC, dày, sát ngay trên mắt. Đây là bộ phận biểu cảm mạnh nhất của
             khuôn mặt: khán giả đọc "đang bực / đang ngơ" từ lông mày trước cả từ miệng. */}
         {[-1, 1].map((sg) => {
@@ -896,6 +915,18 @@ export const DienVienHai: React.FC<PropsHai> = ({
             <line x1={dau[0] + cachMat + rMat + 4} y1={dau[1] + yMat} x2={dau[0] + R_DAU * 0.92} y2={dau[1] + yMat - 2} />
           </g>
         ) : null}
+
+        {/* 31/8 — TÓC BUÔNG HAI BÊN MÁ cho nhân vật nữ. Dấu hiệu thứ hai (cùng lông mi) để
+            giới đọc được ngay ở khuôn mặt. Vẽ TRƯỚC khối tóc chính nên nó nằm dưới, ôm hai bên
+            sọ và buông quá cằm — đúng cách một mái tóc dài đổ xuống khi nhìn chính diện. */}
+        {_nu ? [-1, 1].map((sg) => (
+          <path key={`tocb${sg}`}
+                d={`M ${dau[0] + sg * R_DAU * 0.92} ${dau[1] - R_DAU * 0.35}
+                    q ${sg * R_DAU * 0.34} ${R_DAU * 0.85} ${sg * R_DAU * 0.16} ${R_DAU * 1.5}
+                    q ${-sg * R_DAU * 0.3} ${R_DAU * 0.12} ${-sg * R_DAU * 0.42} ${-R_DAU * 0.22}
+                    q ${sg * R_DAU * 0.1} ${-R_DAU * 0.7} ${-sg * R_DAU * 0.04} ${-R_DAU * 1.2} Z`}
+                fill={kieu.toc} stroke={V} strokeWidth={NT * 1.5} strokeLinejoin="round" />
+        )) : null}
 
         {/* TÓC — đặt CUỐI cùng để nó phủ lên mép sọ, đúng như tóc thật phủ lên trán. */}
         {/* Con ngươi liếc sang là chưa đủ: người thật QUAY ĐẦU về phía người mình đang nói

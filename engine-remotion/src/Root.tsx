@@ -258,6 +258,14 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="KichHai" component={KichHai as any} durationInFrames={900} fps={30}
                  width={1080} height={1920} calculateMetadata={calcHai as any} />
     {/* 31/8 — KỊCH COMIC. Thay bản hài cũ (dán người vector lên ảnh AI). Xem đầu KichComic.tsx. */}
+    {/* 31/8 — BẢN NGANG CHO VIDEO DÀI.
+        Anh: *"long thì phải 16:9 và dựng cho phù hợp 16:9 chứ e"*. Đúng — và may là engine viết
+        sẵn hai nhánh bố cục: khung dọc vẽ cả người (bong bóng trên đầu, nền lấp giữa), khung
+        ngang cắt ngang hông cho mặt to. Bản ngang dùng lại nhánh thứ hai, không phải viết lại.
+        Tiền YouTube nằm ở video dài: từ 8 phút mới bật được quảng cáo giữa video, và đường vào
+        YPP qua 4.000 giờ xem dễ hơn nhiều so với 10 triệu lượt Shorts trong 90 ngày. */}
+    <Composition id="KichComicWide" component={KichComic as any} durationInFrames={600} fps={30}
+                 width={1920} height={1080} calculateMetadata={calcComic as any} />
     <Composition id="KichComic" component={KichComic as any} durationInFrames={600} fps={30}
                  width={1080} height={1920} calculateMetadata={calcComic as any}
                  defaultProps={{ kenh: "techsupport", tieuDe: "TECH SUPPORT", handle: "@techsupportusa",

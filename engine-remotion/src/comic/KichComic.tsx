@@ -3,7 +3,7 @@ import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from
 import { DienVienHai } from "../v4/DienVienHai";
 import { KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVien";
 import type { Luot } from "../v4/KichHai";
-import { NenPanel } from "./NenComic";
+import { NenPanel, DaoCu, doDaoCu } from "./NenComic";
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // KỊCH COMIC — 31/8/2026
@@ -57,7 +57,7 @@ const Y_NGUC = 230;           // ngực dưới cách gót
 const NUA_RONG = 100;         // nửa bề ngang khi tay ghim ngực
 
 const LE = 44;                // lề mực quanh khung
-const NET = 7;                // độ dày viền mực
+const NET = 7;                // độ dày viền mực MẶC ĐỊNH (mỗi kênh ghi đè, xem `netMuc`)
 const CAO_TEN = 62;           // dải tên kênh dưới đáy
 
 type ONhoPanel = { i: number; x: number; y: number; w: number; h: number };
@@ -79,7 +79,9 @@ const BongThoai: React.FC<{
   chu: string; tu: Tu[]; giay: number; W: number; H: number;
   ben: "trai" | "phai"; duoi?: "trai" | "phai"; hep?: boolean;
   p: number; mau: string; la: boolean; s0?: number; e0?: number;
-}> = ({ chu, tu, giay, W, H, ben, duoi, hep, p, mau, la, s0 = 0, e0 = 0 }) => {
+  net?: number; boGoc?: number; hook?: number;
+}> = ({ chu, tu, giay, W, H, ben, duoi, hep, p, mau, la, s0 = 0, e0 = 0,
+        net = NET, boGoc = 26, hook = 0 }) => {
   // 31/8 — CHỮ SÁNG PHẢI ĐI THEO MỐC TIẾNG THẬT, KHÔNG THEO VỊ TRÍ TRONG CÂU.
   // Anh: *"voice nhớ khớp với sub 100%"*. Bản trước lấy từ thứ i của câu rồi tra vào `tu` theo
   // tỉ lệ `i / số_từ` — mà `tu` là mốc từ của CẢ VIDEO, nên từ thứ hai của lượt bốn tra ra mốc
@@ -92,7 +94,12 @@ const BongThoai: React.FC<{
   const _duoi = duoi || ben;
   const rong = hep ? Math.min(W * 0.46, W - 40) : Math.min(W * 0.86, W - 56);
   const caoToiDa = hep ? H * 0.62 : H * 0.3;
-  const fs = coChu(chu, rong - 36, caoToiDa - 30, la ? 62 : 52);
+  // HOOK: bong bóng của lượt MỞ MÀN bắt đầu to gấp rưỡi rồi co về cỡ thật trong một giây.
+  // Anh chấm hạng mục hook 55/100 và đúng: giây 0 của bản trước là một câu setup cỡ thường,
+  // không có lý do gì để người lướt dừng lại. Phóng to chính câu đầu là cách hook KHÔNG phải
+  // bịa thêm chữ — chữ vẫn là lời thoại thật, vẫn khớp tiếng, chỉ chiếm chỗ như một tấm bìa.
+  const phongHook = hook > 0 ? trn(1.5, 1, muot(kep(hook))) : 1;
+  const fs = coChu(chu, rong - 36, caoToiDa - 30, la ? 62 : 52) * phongHook;
   const sc = p < 0.55 ? trn(0.72, 1.06, muot(p / 0.55)) : trn(1.06, 1, muot((p - 0.55) / 0.45));
   const nghieng = ben === "trai" ? -1.2 : 1.2;
 
@@ -166,7 +173,9 @@ const Panel: React.FC<{
   L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
   dangNoi: boolean; hai?: boolean;
-}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai }) => {
+  netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
+}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai,
+        netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0 }) => {
   const { w, h } = o;
   const p = kep((giay - L.s) / 0.38);
   const trong = giay - L.s;
@@ -176,6 +185,21 @@ const Panel: React.FC<{
   const doiNguoi = hai !== undefined ? hai : (w >= 620 && h >= 540);
   const khungDoc = h > w * 1.1;
   const noiA = L.ai === 0;
+
+  // 31/8, sửa lại — CHÊNH LỆCH CHIỀU CAO LÀ CHỦ Ý, PHẢI GIỮ NGUYÊN.
+  // Sáng nay tôi thấy hai người chênh nhau nhiều quá nên chia tỉ lệ cho căn bậc hai của `cao`
+  // để kéo họ gần bằng nhau. Sai hướng: anh nói ngay sau đó *"con đứng với mẹ thì con phải
+  // thấp hơn mẹ, vợ đứng với chồng thì vợ thường thấp hơn chồng — nhớ logic nha e"*. Chênh
+  // lệch chính là thông tin: nhìn một giây là ra quan hệ, trước cả câu thoại đầu tiên.
+  //
+  // Cái cần sửa không phải chiều cao mà là MỨC CẮT. Cả hai đứng chung một mặt đất và chung
+  // một tỉ lệ; chỉ cần chọn tỉ lệ theo người CAO NHẤT (để đỉnh đầu không chui vào vùng bong
+  // bóng) và chọn mức cắt theo người THẤP NHẤT (để người thấp không bị cắt mất mặt). Hai mốc
+  // khác nhau cho hai mục đích khác nhau — trước đây tôi dùng chung một mốc nên phải chọn:
+  // hoặc người cao mất đầu, hoặc người thấp mất mặt.
+  const caoA = A.cao ?? 1, caoB = B.cao ?? 1;
+  const caoMax = Math.max(caoA, caoB), caoMin = Math.min(caoA, caoB);
+
 
   // Chỗ chừa cho bong bóng theo ĐỘ DÀI CÂU. Câu chốt hai dòng cao gấp rưỡi câu một dòng, nên
   // một con số cố định vừa đủ cho câu ngắn vẫn đè đầu ở câu dài — cùng họ lỗi với cỡ chữ ở 8.1.
@@ -187,17 +211,20 @@ const Panel: React.FC<{
   // phía trên. Khung dọc có chỗ cho cả người: người đứng nửa dưới, bong bóng trên, nền lấp giữa.
   const CAO_TREN = khungDoc ? CAO_NGUOI : CAO_NGUOI - Y_HONG;
   const kRong = khungDoc
-    ? Math.min((h * 0.60) / CAO_NGUOI, (w / 2 - 24) / (NUA_RONG * 2.15))
-    : Math.min((h * (1 - chuaTren)) / CAO_TREN, (w / 2 - 30) / (NUA_RONG * 2.15));
+    ? Math.min((h * tiLe) / (CAO_NGUOI * caoMax), (w / 2 - 24) / (NUA_RONG * 2.15))
+    // Khung ngang: đỉnh đầu người cao ở mức chừa bong bóng, hông người thấp ở đáy khung.
+    // Hai điều kiện ấy giải ra đúng một tỉ lệ.
+    : Math.min((h * (1 - chuaTren)) / (CAO_NGUOI * caoMax - Y_HONG * caoMin),
+               (w / 2 - 30) / (NUA_RONG * 2.15));
 
   const canRong = !doiNguoi && w > h * 1.15;      // ô NGANG chứa một người -> lệch hẳn một mép
   const _chuaCan = canRong ? 0.08 : chuaTren;
   const kCan = Math.min((w * (khungDoc ? 0.74 : 0.46)) / (NUA_RONG * 2.1),
-                        (h * (1 - _chuaCan)) / (CAO_NGUOI - Y_NGUC));
+                        (h * (1 - _chuaCan)) / ((CAO_NGUOI - Y_NGUC) * (noiA ? caoA : caoB)));
   const k = doiNguoi ? kRong : kCan;
   const yChan = doiNguoi
-    ? (khungDoc ? h * 0.95 : Math.min(h + Y_HONG * k, h * chuaTren + CAO_NGUOI * k))
-    : h * (khungDoc ? 0.30 : _chuaCan) + CAO_NGUOI * kCan;
+    ? (khungDoc ? h * 0.95 : h + Y_HONG * caoMin * k)
+    : h * (khungDoc ? 0.30 : _chuaCan) + CAO_NGUOI * (noiA ? caoA : caoB) * kCan;
 
   // Người NGHE không được đứng yên tay buông — nửa còn lại của trò đùa nằm ở phản ứng của nó.
   const CU_CHI_NGHE: Record<string, TenCuChi> = {
@@ -225,20 +252,32 @@ const Panel: React.FC<{
   return (
     <div style={{
       position: "absolute", left: o.x, top: o.y, width: w, height: h, overflow: "hidden",
-      border: `${NET}px solid #14110F`, background: "#EDE7DA", boxSizing: "border-box",
+      border: `${netMuc}px solid #14110F`, background: "#EDE7DA", boxSizing: "border-box",
       boxShadow: "6px 7px 0 #14110F22",
-      transform: `scale(${trn(0.985, 1, bat(p))})`,
+      // CẢNH PHẢI ĐỘNG. Anh chấm dựng phim 70/100 với lý do máy đứng yên suốt. Một cú đẩy máy
+      // rất chậm (3,5% trong cả cảnh) không ai gọi tên được, nhưng nó là khác biệt giữa "một
+      // đoạn phim" và "một bức tranh có tiếng". Cú chốt thì rung nhẹ — cú đấm của trò đùa.
+      transform: `scale(${trn(0.985, 1, bat(p)) * (1 + kep(trong / 3.2) * 0.035)})`
+                 + (L.chot && trong > 0.25 && trong < 0.75
+                    ? ` translate(${Math.sin(trong * 62) * 5}px, ${Math.cos(trong * 54) * 4}px)` : ""),
     }}>
       <NenPanel kenh={kenh} w={w} h={h} mau={mau} mauPhu={mauPhu} hat={hat + thuTu * 13}
-                bien={(hat + thuTu * 5) % 3} rong />
+                bien={(hat + thuTu * 5) % 3} rong net={netMuc} cham={cham} />
+
+      {/* Đạo cụ đọc ra từ chính câu thoại của cảnh này — thoại nói "router" thì trong khung có
+          cái router. Không gọi mô hình: câu thoại là văn bản, dò từ khoá là đủ. */}
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
+           style={{ position: "absolute", inset: 0, zIndex: 2 }}>
+        <DaoCu ten={doDaoCu(L.nar)} w={w} h={h} mau={mau} mauPhu={mauPhu} hai={doiNguoi} />
+      </svg>
 
       {L.chot ? <VachToc w={w} h={h} p={kep(trong / 0.7)} mau={mauPhu} /> : null}
 
       <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ position: "absolute", inset: 0, zIndex: 3 }}>
         {doiNguoi ? (
           <>
-            <ellipse cx={cxA} cy={yChan - 3} rx={92 * k} ry={13 * k} fill="#14110F22" />
-            <ellipse cx={cxB} cy={yChan - 3} rx={92 * k} ry={13 * k} fill="#14110F22" />
+            <ellipse cx={cxA} cy={yChan - 3} rx={92 * k * caoA} ry={13 * k * caoA} fill="#14110F22" />
+            <ellipse cx={cxB} cy={yChan - 3} rx={92 * k * caoB} ry={13 * k * caoB} fill="#14110F22" />
           </>
         ) : null}
 
@@ -250,6 +289,7 @@ const Panel: React.FC<{
             nhin={doiNguoi ? [noiA ? 0.45 : 0.5, 0] : [0, 0]}
             noi={noiA ? viseme : imLang}
             t={giay} dangNoi={noiA} kyHieu={false} ghimNguc nghieng={doiNguoi ? 0.09 : 0}
+            cuChiTruoc={"nghi" as TenCuChi} doiCuChi={kep((giay - L.s) / 0.5)}
             doVat={L.vatA || ""}
             x={cxA} y={yChan} scale={k}
           />
@@ -263,6 +303,7 @@ const Panel: React.FC<{
             nhin={doiNguoi ? [!noiA ? -0.45 : -0.5, 0] : [0, 0]}
             noi={!noiA ? viseme : imLang}
             t={giay + 0.7} dangNoi={!noiA} kyHieu={false} ghimNguc nghieng={doiNguoi ? -0.09 : 0}
+            cuChiTruoc={"nghi" as TenCuChi} doiCuChi={kep((giay - L.s - 0.2) / 0.5)}
             doVat={L.vatB || ""}
             x={cxB} y={yChan} scale={k} lat
           />
@@ -272,7 +313,7 @@ const Panel: React.FC<{
       <BongThoai chu={L.nar} tu={tu} giay={giay} W={w} H={h}
                  ben={canRong ? (noiA ? "phai" : "trai") : (noiA ? "trai" : "phai")}
                  duoi={canRong ? (noiA ? "trai" : "phai") : undefined}
-                 hep={canRong} s0={L.s} e0={L.e}
+                 hep={canRong} s0={L.s} e0={L.e} net={netMuc} boGoc={boGoc} hook={hook}
                  p={kep(trong / 0.3)} mau={mauPhu} la={L.chot === true} />
 
       {L.chot && trong > 0.25 ? (
@@ -308,6 +349,16 @@ export type PropsComic = {
   luot?: Luot[]; tu?: Tu[]; voMp3?: string; nhac?: string;
   kieuA?: string; kieuB?: string; kieuTuyA?: Partial<Kieu>; kieuTuyB?: Partial<Kieu>;
   tieuDe?: string; handle?: string; mau?: string; mauPhu?: string; kenh?: string;
+  // ── NÉT RIÊNG CỦA KÊNH ────────────────────────────────────────────────────────────────
+  // Anh: *"sao cho 10 channel có nét riêng và phong cách riêng"*. Đổi màu là chưa đủ — mười
+  // kênh cùng độ dày nét, cùng cỡ chấm halftone, cùng bo góc bong bóng thì vẫn đọc ra là một
+  // xưởng vẽ tô mười bảng màu. Bốn trục dưới đây đổi CHẤT của nét vẽ, và mắt đọc chúng trước
+  // khi kịp đọc màu.
+  soTap?: number;     // số thứ tự tập — xem ghi chú "HÀNG NGHÌN TẬP" bên dưới
+  netMuc?: number;    // độ dày viền mực: 5 (mảnh, sạch) .. 10 (thô, mạnh)
+  cham?: number;      // cỡ ô halftone: 7 (mịn) .. 14 (thô như báo in)
+  boGoc?: number;     // bo góc bong bóng: 6 (vuông, đanh) .. 34 (tròn, hiền)
+  tiLe?: number;      // người cao bao nhiêu phần khung: 0.54 .. 0.68
 };
 
 export const calcComic = async ({ props }: { props: PropsComic }) => {
@@ -319,7 +370,7 @@ export const calcComic = async ({ props }: { props: PropsComic }) => {
 export const KichComic: React.FC<PropsComic> = ({
   luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
   kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", handle = "", mau = "#F0483C",
-  mauPhu = "#1F7AE0", kenh = "",
+  mauPhu = "#1F7AE0", kenh = "", soTap = 0, netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
 }) => {
   const f = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
@@ -327,7 +378,19 @@ export const KichComic: React.FC<PropsComic> = ({
 
   const A: Kieu = { ...(KIEU_MAU[kieuA] || KIEU_MAU.hang_xom), ...kieuTuyA };
   const B: Kieu = { ...(KIEU_MAU[kieuB] || KIEU_MAU.bank), ...kieuTuyB };
-  const hat = bam(kenh || tieuDe || "comic");
+  // ── HÀNG NGHÌN TẬP MÀ KHÔNG TẬP NÀO GIỐNG TẬP NÀO ────────────────────────────────────
+  // Anh: *"sau mỗi channel có làm hàng nghìn videos đảm bảo được tính đa dạng sáng tạo, ko
+  // nhàm chán, lặp lại hay cùng 1 motip"*.
+  //
+  // Hạt băm cũ chỉ lấy TÊN KÊNH, nên mười kênh khác nhau nhưng một kênh thì tập nào cũng dựng
+  // y hệt tập nào: cùng thứ tự cỡ cảnh, cùng chuỗi kiểu chuyển, cùng biến thể nền. Một nghìn
+  // tập như thế là một nghìn lần lặp lại một bản dựng — đúng thứ YouTube gọi tên là "minimal
+  // variation".
+  //
+  // Cộng số tập vào hạt (nhân một số nguyên tố để hai tập liền nhau không ra hạt gần nhau) thì
+  // mọi thứ đọc hạt đều đổi theo tập: thứ tự rộng/cận, chuỗi chuyển cảnh, góc nhìn của nền.
+  // Sáng tạo trong khuôn khổ — khuôn vẫn là khuôn comic, nhưng không tập nào trùng bản dựng.
+  const hat = bam(kenh || tieuDe || "comic") + soTap * 7919;
   const o: ONhoPanel = { i: 0, x: LE, y: LE, w: width - LE * 2, h: height - LE * 2 - CAO_TEN };
 
   // Lượt đang phát. Sau lượt cuối thì GIỮ NGUYÊN lượt cuối — không trả -1 rồi rơi vào nhánh dự
@@ -342,7 +405,9 @@ export const KichComic: React.FC<PropsComic> = ({
   const veCanh = (Lx: Luot, ix: number, dangNoi: boolean) => (
     <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
-           hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi} />
+           hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi}
+           netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLe}
+           hook={ix === 0 ? kep((giay - Lx.s) / 1.15) : 0} />
   );
 
   return (
@@ -350,8 +415,8 @@ export const KichComic: React.FC<PropsComic> = ({
       <AbsoluteFill>
         <svg width={width} height={height} style={{ position: "absolute", inset: 0 }}>
           <defs>
-            <pattern id="ht" width="11" height="11" patternUnits="userSpaceOnUse">
-              <circle cx="3" cy="3" r="1.7" fill={`${mau}22`} />
+            <pattern id="ht" width={cham + 2} height={cham + 2} patternUnits="userSpaceOnUse">
+              <circle cx="3" cy="3" r={cham * 0.19} fill={`${mau}22`} />
             </pattern>
             <linearGradient id="giay" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#FBF7EE" />

@@ -70,6 +70,129 @@ MAU_PHU = {"rent": "#1F7AE0", "gym": "#F2994A", "airport": "#2A9D8F", "car": "#F
            "office": "#10B981", "diet": "#EC4899", "tech": "#F97316", "parent": "#3B82F6",
            "neighbor": "#B45309", "dating": "#8B5CF6"}
 
+# ══ NÉT RIÊNG CỦA TỪNG KÊNH ════════════════════════════════════════════════════════════
+# Anh: *"sao cho 10 channel có nét riêng và phong cách riêng, và chuẩn USA"*.
+# Đổi màu là chưa đủ — mười kênh cùng độ dày nét, cùng cỡ chấm halftone, cùng bo góc bong bóng
+# thì vẫn đọc ra là MỘT xưởng vẽ tô mười bảng màu. Bốn trục dưới đây đổi CHẤT của nét, và mắt
+# đọc chất trước khi kịp đọc màu:
+#
+#   net   — viền mực: 5 mảnh sạch (đời sống, hiện đại) .. 10 thô mạnh (báo biếm hoạ)
+#   cham  — halftone: 7 mịn (in đẹp) .. 14 thô (báo giấy rẻ, kiểu tranh Lichtenstein)
+#   bo    — bong bóng: 6 vuông đanh (gắt gỏng) .. 34 tròn hiền (nhẹ nhàng)
+#   tile  — người cao bao nhiêu phần khung: 0.54 (thấy nhiều bối cảnh) .. 0.68 (áp sát, dồn nén)
+#
+# Mỗi kênh một tổ hợp, chọn theo CHẤT của chuyện chứ không bốc ngẫu nhiên: chuyện tiền nong thì
+# nét gắt, chuyện hẹn hò thì nét mềm, chuyện hàng xóm rình nhau thì thô như tranh biếm.
+NET_KENH = {
+    "rent":     dict(net=9,  cham=13, bo=8,  tile=0.62),   # tiền nhà: gắt, thô, dồn nén
+    "gym":      dict(net=7,  cham=8,  bo=20, tile=0.66),   # phòng tập: khoẻ, sát mặt
+    "airport":  dict(net=6,  cham=10, bo=14, tile=0.56),   # sân bay: rộng, thấy nhiều bối cảnh
+    "car":      dict(net=10, cham=14, bo=6,  tile=0.60),   # gara: thô nhất, vuông nhất
+    "office":   dict(net=5,  cham=7,  bo=30, tile=0.58),   # văn phòng: mảnh, mịn, hiền
+    "diet":     dict(net=6,  cham=9,  bo=34, tile=0.64),   # ăn kiêng: tròn trịa, gần
+    "tech":     dict(net=7,  cham=11, bo=12, tile=0.60),   # kỹ thuật: vuông vắn vừa phải
+    "parent":   dict(net=8,  cham=8,  bo=28, tile=0.63),   # làm cha mẹ: dày ấm, tròn
+    "neighbor": dict(net=9,  cham=14, bo=10, tile=0.57),   # hàng xóm: biếm hoạ, thô, lùi xa
+    "dating":   dict(net=5,  cham=7,  bo=32, tile=0.65),   # hẹn hò: mảnh mềm, sát mặt
+}
+
+
+# ══ VAI, QUAN HỆ, CHIỀU CAO, GIỌNG — MỘT BẢNG DUY NHẤT ═══════════════════════════════
+# 31/8 — Anh: *"giọng nào nam thì lồng nam, nữ lồng nữ, con nhỏ lồng con nhỏ, ông già lồng
+# giọng ông"* và *"con đứng với mẹ thì con phải thấp hơn mẹ, vợ đứng với chồng thì vợ thường
+# thấp hơn chồng — nhớ logic nha e"*.
+#
+# Cả hai việc đều hỏng vì cùng một lý do: **giới và tuổi của nhân vật chưa từng được ghi vào
+# dữ liệu.** Chúng chỉ nằm trong lời chú thích tiếng Việt phía trên mỗi kiểu vẽ ("nữ giao dịch
+# viên", "thẩm phán về hưu"). Bộ chọn giọng không đọc được chú thích, nên giọng gán theo KÊNH
+# rồi trượt khỏi nhân vật; bảng `_BONG` ghi đè chiều cao và râu cũng theo kênh, độc lập với
+# giới — thành ra có nữ cựu công tố đeo râu dê, và ở PARENT MODE thì đứa con cao hơn bố.
+#
+# Bảng này là nguồn sự thật DUY NHẤT cho ba thứ đi liền nhau: ai là ai · cao thấp thế nào ·
+# giọng nào. Tách chúng ra ba chỗ là cách chắc chắn để chúng lại mâu thuẫn lần nữa.
+#
+# Chiều cao lấy mốc nam trưởng thành = 1.00. Nữ trưởng thành 0.92–0.95, ông bà hơi còng 0.96–
+# 0.99, trẻ con 0.62–0.70. Đây là quan hệ THẬT giữa hai người trong cùng khung, nên khán giả
+# đọc ra quan hệ trước khi nghe câu đầu tiên.
+VAI = {
+    #            A: (kiểu vẽ, giới, tuổi, cao, vai trò)              B: (…)
+    "rent":     (("luat_tre",  "nam", "tre",     0.97, "người thuê"),
+                 ("cong_to",   "nu",  "trung",   0.94, "chủ nhà")),
+    "gym":      (("khoa_hoc",  "nu",  "trung",   0.93, "học viên"),
+                 ("hang_xom",  "nam", "trung",   1.06, "huấn luyện viên")),
+    "airport":  (("vien_phi",  "nam", "trung",   1.02, "khách bay"),
+                 ("y_ta",      "nu",  "trung",   0.93, "nhân viên quầy")),
+    "car":      (("bank",      "nu",  "trung",   0.93, "chủ xe"),
+                 ("tham_phan", "nam", "gia",     1.04, "thợ máy già")),
+    "office":   (("sao_dem",   "nu",  "tre",     0.94, "nhân viên trẻ"),
+                 ("vu_tru_gia","nam", "gia",     1.01, "sếp đứng tuổi")),
+    "diet":     (("cong_to",   "nu",  "trung",   0.94, "người ăn kiêng"),
+                 ("hang_xom",  "nam", "trung",   1.05, "bạn cùng nhà")),
+    "tech":     (("hang_xom",  "nam", "trung",   1.03, "khách gọi hỗ trợ"),
+                 ("sao_dem",   "nu",  "tre",     0.92, "nhân viên hỗ trợ")),
+    # PARENT MODE là chỗ anh nêu đích danh: con phải thấp hơn mẹ. 0.66 so với 1.00 — chênh
+    # đúng cỡ một đứa trẻ đứng cạnh người lớn, nhìn một giây là ra quan hệ.
+    "parent":   (("bank",      "nu",  "trung",   1.00, "mẹ"),
+                 ("luat_tre",  "tre", "tre_con", 0.66, "con nhỏ")),
+    "neighbor": (("vu_tru_gia","nam", "gia",     0.99, "ông hàng xóm"),
+                 ("y_ta",      "nu",  "trung",   0.94, "hàng xóm nữ")),
+    # Vợ chồng — ví dụ thứ hai anh nêu. Vợ thấp hơn chồng, và cả hai cùng lứa.
+    "dating":   (("luat_tre",  "nam", "tre",     1.04, "chồng"),
+                 ("sao_dem",   "nu",  "tre",     0.95, "vợ")),
+}
+
+# Giọng chọn theo (giới, tuổi) của CHÍNH nhân vật, không theo kênh. Mỗi ô nhiều giọng để mười
+# kênh không dùng lại một giọng — hai kênh chung một giọng là dấu hiệu sản xuất hàng loạt.
+# 31/8 — CHỈ DÙNG GIỌNG CÓ THẬT. Bản đầu của bảng này ghi `DavisNeural` và `NancyNeural` —
+# hai giọng KHÔNG tồn tại trong edge-tts. Triệu chứng không phải "tên giọng sai" mà là "TTS trả
+# về rỗng", nên nhìn log thì tưởng hỏng mạng hoặc hỏng khoá. Danh sách thật của en-US chỉ có
+# 13 giọng; dưới đây lấy đúng trong số ấy.
+#   nam: Andrew Brian Christopher Eric Guy Roger Steffan
+#   nữ:  Aria Ava Emma Jenny Michelle
+#   trẻ em: Ana  (giọng trẻ con thật duy nhất — dùng đúng chỗ của nó)
+GIONG_VAI = {
+    ("nam", "tre"):    [("en-US-BrianNeural", "+8%", "+6Hz"), ("en-US-AndrewNeural", "+10%", "+8Hz")],
+    ("nam", "trung"):  [("en-US-GuyNeural", "+2%", "-2Hz"), ("en-US-ChristopherNeural", "-4%", "-8Hz"),
+                        ("en-US-EricNeural", "+4%", "+2Hz")],
+    # Ông già: chậm hẳn và trầm hẳn. Hai trục cùng lúc mới ra tuổi; chỉ hạ cao độ thì nghe ra
+    # là người trẻ đang giả giọng.
+    ("nam", "gia"):    [("en-US-SteffanNeural", "-16%", "-22Hz"), ("en-US-RogerNeural", "-14%", "-18Hz")],
+    ("nu", "tre"):     [("en-US-AvaNeural", "+12%", "+14Hz"), ("en-US-JennyNeural", "+8%", "+10Hz")],
+    ("nu", "trung"):   [("en-US-AriaNeural", "+2%", "+2Hz"), ("en-US-MichelleNeural", "-4%", "-2Hz"),
+                        ("en-US-EmmaNeural", "0%", "+4Hz")],
+    ("nu", "gia"):     [("en-US-EmmaNeural", "-14%", "-12Hz")],
+    ("tre", "tre_con"): [("en-US-AnaNeural", "+14%", "+24Hz")],
+}
+
+# Tóc phải hợp giới, nếu không thì mọi thứ khác đều vô nghĩa: một nhân vật nữ để tóc "ngắn nam"
+# và đeo râu thì người xem đọc ra là nam, bất kể dữ liệu ghi gì.
+TOC_HOP = {("nu", "tre"): "duoi_ngua", ("nu", "trung"): "bui", ("nu", "gia"): "bob",
+           ("nam", "tre"): "re_ngoi", ("nam", "trung"): "ngan", ("nam", "gia"): "hoi",
+           ("tre", "tre_con"): "roi"}
+
+
+def vai_va_giong(k: dict) -> tuple:
+    """Trả (kiểuA, kiểuB, ghi_đè_A, ghi_đè_B, giọngA, giọngB) — nhất quán giới · tuổi · cao · giọng."""
+    de = k["de"]
+    va, vb = VAI[de]
+    hs = sum(ord(c) for c in de)
+    ra = []
+    for i, (kieu, gioi, tuoi, cao, _vt) in enumerate((va, vb)):
+        ds = GIONG_VAI[(gioi, tuoi)]
+        giong = ds[(hs + i * 3) % len(ds)]
+        ghi = {
+            "gioi": gioi, "tuoi": tuoi, "cao": cao,
+            "kieuToc": TOC_HOP[(gioi, tuoi)],
+            # Râu chỉ có ở nam đã trưởng thành. Bảng `_BONG` cũ gán râu theo kênh nên có cả nữ
+            # công tố râu dê — một chi tiết đủ để người xem thôi tin vào cả nhân vật.
+            "rau": ("" if gioi != "nam" or tuoi == "tre_con"
+                    else ["", "ria", "quai", "de"][(hs + i) % 4]),
+            # Trẻ con: đầu to hơn, mắt to hơn — hai thứ đọc ra "trẻ con" nhanh hơn cả chiều cao.
+            **({"tiLeDau": 1.22, "matTo": 1.3, "beNgang": 0.9} if tuoi == "tre_con" else {}),
+        }
+        ra.append((kieu, ghi, giong))
+    return ra[0][0], ra[1][0], ra[0][1], ra[1][1], ra[0][2], ra[1][2]
+
 
 def dung_luot_comic(k: dict, vong: int) -> tuple:
     """Trả (danh sách lượt, danh sách câu thô). Mỏng hơn `dung_luot` của bản cũ đúng một cột:
@@ -82,7 +205,23 @@ def dung_luot_comic(k: dict, vong: int) -> tuple:
     Nay panel tự đo mình rồi tự chọn: đủ chỗ thì hai người, không đủ thì cận một người.
     Kịch bản chỉ còn nói thứ nó thật sự biết — ai nói câu gì, với cảm xúc nào.
     """
-    kho = KHO[k["de"]]
+    # ── NGUỒN MẨU: KHO VIẾT TAY + KHO SINH BẰNG AI ────────────────────────────────────
+    # Anh: *"mỗi channel làm hàng nghìn videos đảm bảo đa dạng, ko lặp lại hay cùng 1 motip"*.
+    # Bốn mẩu viết tay cho mỗi kênh nghĩa là tập thứ năm quay lại mẩu thứ nhất. `sinh_kich_ban.py`
+    # sinh thêm bằng chính bộ khoá AI của hệ, có cổng chống trùng khuôn câu; kho ấy nối vào đây.
+    # Mẩu viết tay đứng TRƯỚC vì chúng là mẫu giọng chuẩn của kênh — bốn tập đầu đặt nền, rồi
+    # kho sinh mới nối tiếp.
+    kho = list(KHO[k["de"]])
+    try:
+        _kt = os.path.join(GOC, "kho_comic.json")
+        if os.path.exists(_kt):
+            _k2 = json.load(io.open(_kt, encoding="utf-8"))
+            for _m in _k2.get("mau", {}).get(k["de"], []):
+                kho.append({"boi": 0, "loi": [tuple(c) for c in _m["loi"]]})
+    except Exception as e:
+        # Không nuốt: kho hỏng mà lặng lẽ bỏ qua thì hệ âm thầm quay về vòng lặp bốn mẩu, và
+        # triệu chứng duy nhất là "sao dạo này video giống nhau thế" — nhìn ra thì đã hàng trăm tập.
+        print(f"   ⚠️ kho sinh không đọc được, chỉ dùng kho viết tay: {str(e)[:70]}")
     kb = kho[vong % len(kho)]
     cau = kb["loi"]
     n = len(cau)
@@ -108,8 +247,7 @@ def mot_kenh(k: dict, vong: int) -> str:
     print(f"\n▶ {ten}", flush=True)
 
     luot, cau = dung_luot_comic(k, vong)
-    ga, gb = GIONG_KENH.get(k["de"], (("en-US-GuyNeural", "+4%", "+0Hz"),
-                                      ("en-US-JennyNeural", "+2%", "+6Hz")))
+    kieuA, kieuB, ghiA, ghiB, ga, gb = vai_va_giong(k)
     rel = f"v5_{slug}.mp3"
     mp3 = os.path.join(PUB, rel)
     try:
@@ -124,13 +262,19 @@ def mot_kenh(k: dict, vong: int) -> str:
     for i, l in enumerate(luot):
         l["s"], l["e"] = moc[i]
 
+    # Nét mặt và màu áo vẫn lấy từ `_hai_bong` (chúng làm mười kênh khác nhau), nhưng giới,
+    # tuổi, chiều cao, tóc và râu thì bảng VAI nói lời cuối — nếu không, hai nguồn lại mâu thuẫn.
     tuyA, tuyB = _hai_bong(k)
+    tuyA.update(ghiA); tuyB.update(ghiB)
     props = {
         "luot": luot, "tu": tu, "voMp3": rel, "nhac": NHAC.get(k["de"], ""),
-        "kieuA": k["a"], "kieuB": k["b"], "kieuTuyA": tuyA, "kieuTuyB": tuyB,
+        "kieuA": kieuA, "kieuB": kieuB, "kieuTuyA": tuyA, "kieuTuyB": tuyB,
         "tieuDe": ten, "handle": k.get("handle", ""), "kenh": slug,
         "mau": MAU_CHINH.get(k["de"], "#E4572E"), "mauPhu": MAU_PHU.get(k["de"], "#1F7AE0"),
     }
+    _nk = NET_KENH.get(k["de"], dict(net=7, cham=9, bo=26, tile=0.60))
+    props.update(netMuc=_nk["net"], cham=_nk["cham"], boGoc=_nk["bo"], tiLe=_nk["tile"],
+                 soTap=vong)
     pj = os.path.join(GOC, "out", f"v5_{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
     io.open(pj, "w", encoding="utf-8").write(json.dumps(props, ensure_ascii=False))

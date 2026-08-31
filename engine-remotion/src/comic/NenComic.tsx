@@ -20,6 +20,9 @@ import React from "react";
 
 const MUC = "#14110F";
 
+/** Hệ số nét: mỗi kênh một độ dày, tính quanh mốc 5 của bản vẽ gốc. */
+let HE_NET = 1;
+
 /** Pha màu về phía trắng — dùng cho tường, để nhân vật luôn đậm hơn nền. */
 const nhat = (hex: string, t: number) => {
   const h = hex.replace("#", "");
@@ -116,12 +119,9 @@ const AirportHell: React.FC<P> = (p) => {
       <line key={i} x1={w * (0.08 + i * 0.28)} y1={0} x2={w * (0.08 + i * 0.28)} y2={yS}
             stroke={MUC} strokeWidth={4} opacity={0.3} />
     ))}
-    <rect x={w * 0.28} y={h * 0.04} width={w * 0.44} height={h * 0.15} rx={4}
-          fill={MUC} stroke={MUC} strokeWidth={4} />
-    <text x={w * 0.5} y={h * 0.145} textAnchor="middle" fill="#FF7A4A"
-          fontFamily="Poppins, sans-serif" fontWeight={900} fontSize={Math.min(h * 0.1, 40)}>
-      DELAYED
-    </text>
+    {/* 31/8 — bỏ tấm bảng DELAYED ở đây. Từ khi khung dọc có thêm lớp TRẦN, sân bay đã có một
+        bảng chỉ dẫn treo ở đúng vùng ấy, và hai tấm bảng đen chồng lên nhau che mất chữ của
+        nhau. Một nơi chốn chỉ cần MỘT tấm bảng — cái treo trên trần đọc ra tự nhiên hơn. */}
     {[0, 1, 2].map((i) => (
       <g key={i}>
         <rect x={w * (0.03 + i * 0.11)} y={yS - h * 0.16} width={w * 0.1} height={h * 0.05}
@@ -309,6 +309,226 @@ const BOI_CANH: Record<string, React.FC<P>> = {
   parentmode: ParentMode, neighborwatch: NeighborWatch, datingapp: DatingApp,
 };
 
+// ══ ĐẠO CỤ ĐỌC RA TỪ CHÍNH LỜI THOẠI ═══════════════════════════════════════════════════
+// Anh: *"e vẽ được bối cảnh liên quan tới lời thoại để người xem dễ hình dung chứ, có cần AI
+// phân tích ko?"* — vẽ được, và KHÔNG cần AI.
+//
+// Lời thoại đã nằm sẵn trong tay dưới dạng văn bản. Việc cần làm chỉ là dò từ khoá rồi vẽ vật
+// tương ứng từ một bộ vẽ có sẵn. Gọi mô hình để làm việc ấy vừa chậm, vừa tốn hạn mức, vừa
+// không hứa gì về bố cục — đúng ba lý do đã khiến đường sinh ảnh nền của bản cũ phải bỏ.
+//
+// Bảng dưới đây là toàn bộ "phân tích": từ khoá -> vật. Thứ tự có ý nghĩa — mục đứng trước
+// thắng, nên câu vừa có "phone" vừa có "bill" thì vẽ điện thoại (thứ nhân vật đang cầm) chứ
+// không vẽ hoá đơn. Vật đặt ở mép dưới-phải, chỗ mà cả bong bóng lẫn nhân vật đều không dùng.
+const TU_KHOA: [RegExp, string][] = [
+  [/\b(phone|scroll|text|app|call|texting)\b/i, "dien_thoai"],
+  [/\b(router|wi-?fi|internet|modem|signal|reboot|reset)\b/i, "router"],
+  [/\b(invoice|bill|charge|paid|dollars?|refund|fee|rent)\b/i, "giay"],
+  [/\b(box|boxes|package|deliver|parcel)\b/i, "thung"],
+  [/\b(tire|engine|car|brake|oil|garage)\b/i, "lop_xe"],
+  [/\b(homework|school|class|teacher|book|study|essay|grade)\b/i, "sach"],
+  [/\b(coffee|cup|mug|drink|latte)\b/i, "coc"],
+  [/\b(laptop|computer|keyboard|monitor|screen|desktop|boot|reboot|crash)\b/i, "may_tinh"],
+  [/\b(sugar|snack|calorie|diet|eat|food|fridge)\b/i, "hop_do_an"],
+  [/\b(gym|weight|workout|rep|treadmill|cardio)\b/i, "ta_tay"],
+  [/\b(bag|luggage|suitcase|gate|flight|boarding)\b/i, "vali"],
+];
+
+export const doDaoCu = (cau: string): string => {
+  for (const [re, ten] of TU_KHOA) if (re.test(cau)) return ten;
+  return "";
+};
+
+/** Vẽ một đạo cụ ở mép dưới-phải panel. Nhỏ, đứng trên sàn, không tranh chỗ với ai. */
+export const DaoCu: React.FC<{ ten: string; w: number; h: number; mau: string; mauPhu: string; hai?: boolean }> =
+({ ten, w, h, mau, mauPhu, hai }) => {
+  if (!ten) return null;
+  // 31/8 — CHỖ TRỐNG THẬT LÀ KHOẢNG GIỮA HAI NGƯỜI, KHÔNG PHẢI MÉP PHẢI.
+  // Bản đầu đặt đạo cụ ở mép dưới-phải và khung ra gần như không thấy nó: mép phải là chỗ của
+  // tủ, của kệ, và của chính người thứ hai. Hai nhân vật đứng ở 28% và 72% bề ngang, nên dải
+  // giữa mới là khoảng duy nhất chắc chắn trống trong mọi cảnh hai người. Cận cảnh thì ngược
+  // lại — người đứng giữa, nên vật lùi ra mép.
+  const S = Math.min(w, h) * (hai ? 0.17 : 0.15);
+  const x = hai ? w * 0.5 : w * 0.86;
+  const y = h * (hai ? 0.93 : 0.9);
+  const G = (el: React.ReactNode) => (
+    <g transform={`translate(${x} ${y})`} stroke={MUC} strokeWidth={4.5} strokeLinejoin="round">{el}</g>
+  );
+  if (ten === "dien_thoai") return G(<>
+    <rect x={-S * 0.28} y={-S} width={S * 0.56} height={S} rx={S * 0.1} fill={MUC} />
+    <rect x={-S * 0.21} y={-S * 0.9} width={S * 0.42} height={S * 0.72} fill={nhat(mauPhu, 0.35)} strokeWidth={0} />
+  </>);
+  if (ten === "router") return G(<>
+    <rect x={-S * 0.5} y={-S * 0.5} width={S} height={S * 0.5} rx={4} fill={nhat(mau, 0.5)} />
+    <line x1={-S * 0.3} y1={-S * 0.5} x2={-S * 0.42} y2={-S} />
+    <line x1={S * 0.2} y1={-S * 0.5} x2={S * 0.34} y2={-S} />
+    <circle cx={-S * 0.2} cy={-S * 0.25} r={3.5} fill={mauPhu} strokeWidth={0} />
+    <circle cx={0} cy={-S * 0.25} r={3.5} fill={mauPhu} strokeWidth={0} />
+  </>);
+  if (ten === "giay") return G(
+    <path d={`M${-S * 0.38} ${-S} L${S * 0.38} ${-S * 0.92} L${S * 0.32} 0 L${-S * 0.42} ${-S * 0.06} Z`}
+          fill="#FFFFFF" />);
+  if (ten === "thung") return G(<>
+    <rect x={-S * 0.5} y={-S * 0.78} width={S} height={S * 0.78} fill={nhat(mau, 0.45)} />
+    <line x1={-S * 0.5} y1={-S * 0.5} x2={S * 0.5} y2={-S * 0.5} />
+  </>);
+  if (ten === "lop_xe") return G(<>
+    <circle cx={0} cy={-S * 0.45} r={S * 0.45} fill={MUC} />
+    <circle cx={0} cy={-S * 0.45} r={S * 0.2} fill={nhat(mau, 0.6)} />
+  </>);
+  if (ten === "sach") return G(<>
+    <rect x={-S * 0.45} y={-S * 0.32} width={S * 0.9} height={S * 0.32} fill={nhat(mauPhu, 0.4)} />
+    <rect x={-S * 0.4} y={-S * 0.6} width={S * 0.9} height={S * 0.3} fill={nhat(mau, 0.4)} />
+  </>);
+  if (ten === "coc") return G(<>
+    <path d={`M${-S * 0.3} ${-S * 0.6} L${S * 0.3} ${-S * 0.6} L${S * 0.22} 0 L${-S * 0.22} 0 Z`}
+          fill="#FFFFFF" />
+    <path d={`M${S * 0.3} ${-S * 0.5} q ${S * 0.22} ${S * 0.1} 0 ${S * 0.3}`} fill="none" />
+  </>);
+  if (ten === "may_tinh") return G(<>
+    <path d={`M${-S * 0.5} 0 L${-S * 0.4} ${-S * 0.6} L${S * 0.4} ${-S * 0.6} L${S * 0.5} 0 Z`}
+          fill={nhat(mau, 0.5)} />
+    <rect x={-S * 0.36} y={-S * 0.56} width={S * 0.72} height={S * 0.42} fill={MUC} strokeWidth={0} />
+  </>);
+  if (ten === "hop_do_an") return G(<>
+    <rect x={-S * 0.45} y={-S * 0.55} width={S * 0.9} height={S * 0.55} rx={4} fill={nhat(mauPhu, 0.35)} />
+    <rect x={-S * 0.5} y={-S * 0.68} width={S} height={S * 0.16} rx={3} fill={nhat(mau, 0.35)} />
+  </>);
+  if (ten === "ta_tay") return G(<>
+    <circle cx={-S * 0.34} cy={-S * 0.3} r={S * 0.26} fill={MUC} />
+    <circle cx={S * 0.34} cy={-S * 0.3} r={S * 0.26} fill={MUC} />
+    <rect x={-S * 0.3} y={-S * 0.4} width={S * 0.6} height={S * 0.2} fill={nhat(mau, 0.5)} />
+  </>);
+  if (ten === "vali") return G(<>
+    <rect x={-S * 0.44} y={-S * 0.7} width={S * 0.88} height={S * 0.7} rx={5} fill={nhat(mauPhu, 0.4)} />
+    <path d={`M${-S * 0.14} ${-S * 0.7} l0 ${-S * 0.24} l${S * 0.28} 0 l0 ${S * 0.24}`} fill="none" />
+  </>);
+  return null;
+};
+
+/**
+ * TRẦN — phần tường phía trên sân khấu, trong khung dọc.
+ *
+ * 31/8, sửa ngay sau khi dựng đủ mười kênh: bản trước lấp khoảng ấy bằng ĐÚNG MỘT hình — một
+ * đường trần và hai bóng đèn hình thang — cho cả mười kênh. Xếp mười khung cạnh nhau thì hai
+ * cái đèn giống hệt nhau ở cùng một toạ độ là thứ đập vào mắt trước cả màu sắc, và nó phá đúng
+ * cái việc mà cả buổi đang làm: cho mười kênh mười nét riêng.
+ *
+ * Bài học nhỏ mà đắt: **một chi tiết dùng chung cho mọi kênh thì mạnh hơn mười chi tiết riêng
+ * cộng lại** — mắt bắt cái lặp trước, và cái lặp xoá cảm giác riêng của mọi thứ còn lại.
+ * Trần nay đi theo nơi chốn: đèn tuýp cho văn phòng, quạt trần cho phòng khách, xà thép cho
+ * gara, tủ treo cho bếp, bảng chỉ dẫn cho sân bay, trời mây cho ngoài sân.
+ */
+const Tran: React.FC<{ kenh: string; w: number; H: number; mau: string; mauPhu: string }> =
+({ kenh, w, H, mau, mauPhu }) => {
+  const y = H * 0.42;
+  const D = (n: number) => H * n;
+
+  if (kenh === "neighborwatch") {          // ngoài trời: mây
+    return (<>
+      {[0.24, 0.62].map((fx, i) => (
+        <g key={i} opacity={0.9}>
+          <circle cx={w * fx} cy={D(0.34 + i * 0.2)} r={D(0.11)} fill="#FFFFFF" stroke={MUC} strokeWidth={4} />
+          <circle cx={w * fx + D(0.1)} cy={D(0.38 + i * 0.2)} r={D(0.085)} fill="#FFFFFF" stroke={MUC} strokeWidth={4} />
+          <circle cx={w * fx - D(0.09)} cy={D(0.39 + i * 0.2)} r={D(0.07)} fill="#FFFFFF" stroke={MUC} strokeWidth={4} />
+        </g>
+      ))}
+    </>);
+  }
+
+  if (kenh === "officesmalltalk" || kenh === "techsupport") {   // đèn tuýp văn phòng
+    return (<>
+      <line x1={0} y1={y} x2={w} y2={y} stroke={MUC} strokeWidth={4} opacity={0.25} />
+      {[0.18, 0.58].map((fx, i) => (
+        <rect key={i} x={w * fx} y={D(0.52 + i * 0.16)} width={w * 0.26} height={D(0.075)} rx={3}
+              fill="#FFFFFF" stroke={MUC} strokeWidth={4} opacity={0.92} />
+      ))}
+    </>);
+  }
+
+  if (kenh === "carguy" || kenh === "gymlies") {                // xà thép + đèn chao công nghiệp
+    return (<>
+      <rect x={0} y={y} width={w} height={D(0.075)} fill={nhat(mau, 0.55)} stroke={MUC} strokeWidth={4} />
+      {[0.28, 0.68].map((fx, i) => (
+        <g key={i}>
+          <line x1={w * fx} y1={y + D(0.075)} x2={w * fx} y2={D(0.66)} stroke={MUC} strokeWidth={4} />
+          <path d={`M${w * fx - D(0.13)} ${D(0.78)} Q ${w * fx} ${D(0.6)} ${w * fx + D(0.13)} ${D(0.78)} Z`}
+                fill={nhat(mauPhu, 0.4)} stroke={MUC} strokeWidth={4} />
+        </g>
+      ))}
+    </>);
+  }
+
+  if (kenh === "parentmode") {                                  // quạt trần
+    // Bản trước vẽ hai cánh đối xứng quanh một trục, và ở cỡ nhỏ nó đọc ra là cái NƠ BƯỚM chứ
+    // không ra quạt. Quạt cần BỐN cánh lệch pha và một bầu tròn ở giữa — bốn cánh mới cho ra
+    // cảm giác quay.
+    return (<>
+      <line x1={w * 0.5} y1={0} x2={w * 0.5} y2={D(0.4)} stroke={MUC} strokeWidth={5} />
+      {[0, 1, 2, 3].map((i) => {
+        const g = (i * Math.PI) / 2 + 0.4;
+        const dx = Math.cos(g), dy = Math.sin(g) * 0.34;
+        return <ellipse key={i} cx={w * 0.5 + dx * D(0.3)} cy={D(0.48) + dy * D(0.3)}
+                        rx={D(0.22)} ry={D(0.07)} fill={nhat(mauPhu, 0.45)}
+                        stroke={MUC} strokeWidth={4}
+                        transform={`rotate(${(g * 180) / Math.PI * 0.25} ${w * 0.5} ${D(0.48)})`} />;
+      })}
+      <circle cx={w * 0.5} cy={D(0.48)} r={D(0.09)} fill={nhat(mau, 0.35)} stroke={MUC} strokeWidth={5} />
+    </>);
+  }
+
+  if (kenh === "dietwars") {                                    // tủ bếp treo
+    return (<>
+      <rect x={w * 0.04} y={D(0.3)} width={w * 0.4} height={D(0.55)} fill={nhat(mau, 0.55)}
+            stroke={MUC} strokeWidth={5} />
+      <line x1={w * 0.24} y1={D(0.3)} x2={w * 0.24} y2={D(0.85)} stroke={MUC} strokeWidth={4} />
+      <rect x={w * 0.6} y={D(0.36)} width={w * 0.34} height={D(0.42)} fill={nhat(mau, 0.68)}
+            stroke={MUC} strokeWidth={5} />
+    </>);
+  }
+
+  if (kenh === "airporthell") {                                 // bảng chỉ dẫn treo
+    return (<>
+      <line x1={w * 0.2} y1={0} x2={w * 0.2} y2={D(0.36)} stroke={MUC} strokeWidth={4} />
+      <line x1={w * 0.8} y1={0} x2={w * 0.8} y2={D(0.36)} stroke={MUC} strokeWidth={4} />
+      <rect x={w * 0.14} y={D(0.36)} width={w * 0.72} height={D(0.34)} rx={4}
+            fill={MUC} stroke={MUC} strokeWidth={4} />
+      {[0.2, 0.45, 0.7].map((fx, i) => (
+        <rect key={i} x={w * (fx)} y={D(0.46)} width={w * 0.14} height={D(0.12)} rx={2}
+              fill={i === 1 ? mauPhu : "#FFFFFF"} opacity={0.85} />
+      ))}
+    </>);
+  }
+
+  if (kenh === "datingapp") {                                   // đèn thả bàn + dây đèn nháy
+    return (<>
+      <path d={`M0 ${D(0.2)} Q ${w * 0.5} ${D(0.42)} ${w} ${D(0.2)}`} fill="none"
+            stroke={MUC} strokeWidth={4} />
+      {[0.16, 0.34, 0.5, 0.66, 0.84].map((fx, i) => (
+        <circle key={i} cx={w * fx} cy={D(0.26 + Math.sin(fx * 3.14) * 0.12)} r={D(0.05)}
+                fill={nhat(mauPhu, 0.3)} stroke={MUC} strokeWidth={3.5} />
+      ))}
+      {[0.3, 0.7].map((fx, i) => (
+        <g key={i}>
+          <line x1={w * fx} y1={D(0.5)} x2={w * fx} y2={D(0.66)} stroke={MUC} strokeWidth={3.5} />
+          <path d={`M${w * fx - D(0.1)} ${D(0.8)} L${w * fx + D(0.1)} ${D(0.8)}
+                    L${w * fx + D(0.06)} ${D(0.66)} L${w * fx - D(0.06)} ${D(0.66)} Z`}
+                fill={nhat(mau, 0.35)} stroke={MUC} strokeWidth={4} strokeLinejoin="round" />
+        </g>
+      ))}
+    </>);
+  }
+
+  // rentpanic và mặc định: hành lang — đèn ốp trần tròn, đều đặn như chung cư
+  return (<>
+    <line x1={0} y1={y} x2={w} y2={y} stroke={MUC} strokeWidth={4} opacity={0.3} />
+    {[0.22, 0.5, 0.78].map((fx, i) => (
+      <circle key={i} cx={w * fx} cy={D(0.62)} r={D(0.1)} fill="#FFFFFF"
+              stroke={MUC} strokeWidth={4} opacity={0.9} />
+    ))}
+  </>);
+};
+
 /**
  * Nền của một panel.
  *
@@ -318,8 +538,8 @@ const BOI_CANH: Record<string, React.FC<P>> = {
  */
 export const NenPanel: React.FC<{
   kenh: string; w: number; h: number; mau: string; mauPhu: string; hat: number;
-  rong: boolean; bien?: number;
-}> = ({ kenh, w, h, mau, mauPhu, hat, rong, bien = 0 }) => {
+  rong: boolean; bien?: number; net?: number; cham?: number;
+}> = ({ kenh, w, h, mau, mauPhu, hat, rong, bien = 0, net = 5, cham = 9 }) => {
   const Ve = BOI_CANH[kenh];
   // 31/8 — MỖI PANEL MỘT GÓC NHÌN KHÁC. Khung thử cho ra sáu panel với cùng cái màn hình ở
   // cùng một chỗ, và sáu lần lặp lại một hình trong hai mươi giây thì mắt đọc ra là ảnh dán,
@@ -327,13 +547,16 @@ export const NenPanel: React.FC<{
   // phòng — chỉ là máy đã dịch đi, đúng như một hoạ sĩ truyện tranh vẽ trang của mình.
   const DICH = [-0.20, 0.02, 0.16], PHONG = [1.18, 1.0, 1.10];
   const b = ((bien % 3) + 3) % 3;
+  HE_NET = Math.max(0.7, Math.min(1.5, net / 6));
   const hSK = Math.min(h, Math.max(w * 0.62, Math.min(h * 0.74, w * 1.2)));   // chiều cao sân khấu
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
          style={{ position: "absolute", inset: 0, zIndex: 1 }}>
       <defs>
-        <pattern id={`hp${hat | 0}`} width="9" height="9" patternUnits="userSpaceOnUse">
-          <circle cx="2.5" cy="2.5" r="1.5" fill={`${mau}1F`} />
+        {/* Cỡ chấm halftone là một trong bốn trục tạo nét riêng của kênh: chấm mịn cho ra cảm
+            giác in đẹp, chấm thô cho ra cảm giác báo giấy rẻ tiền. Cùng một bức vẽ, hai chất. */}
+        <pattern id={`hp${hat | 0}`} width={cham} height={cham} patternUnits="userSpaceOnUse">
+          <circle cx={cham * 0.28} cy={cham * 0.28} r={cham * 0.17} fill={`${mau}1F`} />
         </pattern>
       </defs>
       {rong && Ve
@@ -357,37 +580,7 @@ export const NenPanel: React.FC<{
             <g transform={`translate(${w * DICH[b]} ${h - hSK}) scale(${PHONG[b]})`}>
               <Ve w={w} h={hSK} mau={mau} mauPhu={mauPhu} hat={hat} rong={rong} />
             </g>
-            {h - hSK > 120 && NGOAI_TROI[kenh] ? (
-              // Ngoài trời thì phần trên là TRỜI, không phải trần. Khung NEIGHBOR WATCH vừa
-              // rồi có hai bóng đèn treo lơ lửng giữa sân cỏ — một chi tiết vô lý đủ để người
-              // xem mất tin vào cả cảnh. Cùng một khoảng trống, hai nơi chốn, hai cách lấp.
-              <>
-                {[0.24, 0.62].map((fx, i) => (
-                  <g key={i} opacity={0.9}>
-                    <circle cx={w * fx} cy={(h - hSK) * (0.34 + i * 0.2)} r={(h - hSK) * 0.11}
-                            fill="#FFFFFF" stroke={MUC} strokeWidth={4} />
-                    <circle cx={w * fx + (h - hSK) * 0.1} cy={(h - hSK) * (0.38 + i * 0.2)}
-                            r={(h - hSK) * 0.085} fill="#FFFFFF" stroke={MUC} strokeWidth={4} />
-                    <circle cx={w * fx - (h - hSK) * 0.09} cy={(h - hSK) * (0.39 + i * 0.2)}
-                            r={(h - hSK) * 0.07} fill="#FFFFFF" stroke={MUC} strokeWidth={4} />
-                  </g>
-                ))}
-              </>
-            ) : h - hSK > 120 ? (
-              <>
-                <line x1={0} y1={(h - hSK) * 0.42} x2={w} y2={(h - hSK) * 0.42}
-                      stroke={MUC} strokeWidth={4} opacity={0.28} />
-                {[0.3, 0.7].map((fx, i) => (
-                  <g key={i}>
-                    <line x1={w * fx} y1={(h - hSK) * 0.42} x2={w * fx} y2={(h - hSK) * 0.62}
-                          stroke={MUC} strokeWidth={3.5} opacity={0.5} />
-                    <path d={`M${w * fx - 34} ${(h - hSK) * 0.62} L${w * fx + 34} ${(h - hSK) * 0.62}
-                              L${w * fx + 22} ${(h - hSK) * 0.75} L${w * fx - 22} ${(h - hSK) * 0.75} Z`}
-                          fill={nhat(mauPhu, 0.4)} stroke={MUC} strokeWidth={4} strokeLinejoin="round" />
-                  </g>
-                ))}
-              </>
-            ) : null}
+            {h - hSK > 120 ? <Tran kenh={kenh} w={w} H={h - hSK} mau={mau} mauPhu={mauPhu} /> : null}
           </>
         : <>
             {/* cận cảnh: chỉ mảng màu và vệt sáng chéo, giữ mắt ở khuôn mặt */}
