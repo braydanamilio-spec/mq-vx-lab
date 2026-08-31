@@ -6404,3 +6404,73 @@ hẳn một lượt render hỏng ở phút chót — nhất là trên Actions, 
 Gọi ở **cả ba** đường dựng (`kich_comic`, `kich_comic_long`, `kich_v2`) — chúng không dùng chung
 hàm dựng nào nên đây đúng là chỗ dễ tái phạm *vá một nhánh, để nguyên nhánh song song*.
 `kiem_am.py` canh cả ba.
+
+---
+
+## 24. ĐƯA VÀO SẢN XUẤT: BỐN LỖ IM LẶNG (31/8)
+
+Anh: *"cho 10 channel vào pepline methord chuẩn đưa vào sản xuất trên github"* và *"nhớ
+pepline methord chuẩn long short, thumbnail, fileupload chuẩn."* Rà lại trước khi bật cron —
+bốn lỗ, **không lỗ nào làm lượt chạy thất bại**, nên cả bốn đã sống qua mọi lần đọc trước.
+
+### 24.1 Workflow gói tệp không tồn tại
+
+`render_hai.yml` gói `out/v4_*.mp4`, pipeline comic xuất `v5_*`. Một lượt chạy dựng đủ 10 video
+rồi **gói về tay không** — vì "glob không khớp gì" không phải lỗi trong `upload-artifact`.
+
+### 24.2 Bảng chấm chấm nhầm engine
+
+`cham_v4.py` cũng tìm `v4_`, nên trả "chưa dựng" cho cả mười kênh: **cổng chất lượng vô hiệu**,
+và báo cáo vẫn xanh. Sửa xong nó chấm thật: 10/10 đạt, 90–100.
+
+Kèm theo: hai phép đo của nó đọc `l["co"]` (cỡ máy) và `l["nen"]` — trường của engine cũ. Engine
+comic tự quyết cỡ cảnh bằng `coCanh(ix, n, hạt)` và dùng một ảnh nền cho cả tập. **Không chép
+lại `coCanh` sang Python** (hai bản của một luật rồi sẽ lệch nhau — bẫy đã dính nhiều lần); thay
+bằng **đo bố cục từ chính video**: một khung giữa mỗi lượt, thu nhỏ 32×32 xám, gom khung giống
+nhau. Đo thứ mắt thật sự nhận, không phụ thuộc engine nào.
+
+> Một cổng luôn ĐỎ vì lý do sai còn tệ hơn không có cổng: nó dạy người ta bỏ qua nó.
+
+### 24.3 Bản dài không có trong workflow nào
+
+`kich_comic_long.py` và `kich_v2_long.py` nằm trong repo từ lâu mà **không lượt chạy nào gọi
+tới** — tức mất hẳn chỗ bật quảng cáo giữa video. Một tệp có trong repo không có nghĩa là nó
+đang chạy.
+
+Nay `kiem_workflow.py` canh **bộ giao hàng**: ngắn · dài · ảnh bìa · `.tai.json`, và cổng phải
+chạy trước bước dựng. Bản đầu của cổng này **bị lừa bởi chú thích** — nó dò tên tệp trên toàn
+YAML, mà chú thích ngay phía trên có nhắc tên ấy. Cổng phải đọc thứ CHẠY được, không đọc thứ
+NÓI về nó.
+
+### 24.4 Bản dài dựng props riêng — mọi nâng cấp đều không tới nó
+
+`v5L_techsupport.json` ra `nhacVol: None`, `sang: False`, `anhNen: None`. Bản dài xây props
+bằng khối riêng, nên toàn bộ việc của mục 22–23 (bóng theo hướng sáng, khớp màu, hệ số nhạc,
+nhận diện bố cục riêng của kênh, nền 3D) **không có mặt ở đó**. Nó chạy engine đúng như trước
+mọi nâng cấp. Im lặng, vì props thiếu chỉ rơi về giá trị mặc định của engine.
+
+*Họ lỗi:* **vá một nhánh, để nguyên nhánh song song** — hôm nay tái phạm bốn lần (bóng ·
+chuẩn âm · props bản dài · và ngay trong lúc chữa: `dung_tap_dai` có ba lệnh `return`, sửa hai
+quên một, nên nhánh "tập có mạch" nổ `not enough values to unpack`).
+
+**Dấu hiệu nhận ra:** hai tệp cùng dựng một loại sản phẩm nhưng không dùng chung hàm nào. Chữa
+tận gốc là **tách thành một hàm dùng chung** — `noi_va_nen()` nay là nguồn duy nhất cho cả ngắn
+lẫn dài. Và khi sửa một hàm có nhiều `return`, đếm chúng: `ast` đếm hộ trong ba giây.
+
+### 24.5 Kích thước tệp cũng là một quyết định
+
+Remotion mặc định `--crf 18`: 586 MB cho một tập bảy phút. Nhân mười kênh là **5,8 GB artifact
+mỗi lượt** — vượt hạn lưu trữ và làm bước tải lên lâu hơn cả bước dựng. Hình ở đây là mảng màu
+phẳng với viền mực, gần như không có chuyển sắc để mất, nên `--crf 22` nhìn không khác mà nhẹ
+khoảng ba lần. YouTube nén lại lần nữa dù ta gửi gì.
+
+### 24.6 Cron
+
+| Xưởng | Giờ UTC | Tham số tự tính |
+|---|---|---|
+| comic | 03:10 | vòng = ngày trong năm (kho 28–39 mẩu/kênh đủ một tháng không lặp) |
+| phân tích | 04:40 | lô = (ngày mod 6) + 1 → sáu ngày phủ hết 56 kênh |
+
+Lệch 90 phút để hai xưởng không tranh runner. Cố ý **không** dựng cả 56 kênh trong một lượt:
+trần Actions là 6 tiếng, 56 video ở ~4 phút là gần 4 tiếng, cộng cài đặt thì chạm trần — hỏng
+ở phút thứ 350 là mất trắng cả lượt.

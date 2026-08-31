@@ -521,6 +521,12 @@ export type PropsComic = {
   // chứ không để engine đọc tệp: bước render trên Actions không được phép chạm đĩa ngoài
   // `staticFile`, và số đo là thứ tính một lần rồi dùng mãi.
   sang?: { huong: number; manh: number; mau?: string; sang?: number };
+  // BẢN DÀI: một tập nối tới 16 tình huống ở 16 nơi chốn khác nhau, nên MỘT ảnh nền cho cả bảy
+  // phút vừa chán vừa lệch ngữ cảnh với thoại đang nói. Hai mảng này cho mỗi CẢNH một nền và
+  // một hướng sáng riêng. Bản ngắn không truyền thì rơi về `anhNen`/`sang` như cũ — đường chạy
+  // đã duyệt không đụng gì.
+  anhNens?: string[];
+  sangs?: ({ huong: number; manh: number; mau?: string; sang?: number } | null)[];
   netMuc?: number;    // độ dày viền mực: 5 (mảnh, sạch) .. 10 (thô, mạnh)
   cham?: number;      // cỡ ô halftone: 7 (mịn) .. 14 (thô như báo in)
   boGoc?: number;     // bo góc bong bóng: 6 (vuông, đanh) .. 34 (tròn, hiền)
@@ -545,7 +551,7 @@ export const KichComic: React.FC<PropsComic> = ({
   nhacVol = 0.16,
   kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", handle = "", mau = "#F0483C",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
-  sang,
+  sang, anhNens, sangs,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
 }) => {
@@ -589,8 +595,9 @@ export const KichComic: React.FC<PropsComic> = ({
   const veCanh = (Lx: Luot, ix: number, dangNoi: boolean) => (
     <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
-           hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi} noi={noi} anhNen={anhNen}
-           sang={sang}
+           hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi} noi={noi}
+           anhNen={(anhNens && anhNens[ix]) || anhNen}
+           sang={(sangs && sangs[ix]) || sang}
            netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLe}
            bongDuoi={bongDuoi} boKhung={boKhung} chuNo={chuNo}
            hook={ix === 0 ? kep((giay - Lx.s) / 1.15) : 0} />

@@ -39,7 +39,8 @@ import subprocess
 
 from kich_hai import (KENH, KHO, cu_chi_cua, doc_hai_giong, _ten_tep, lam_thumb,
                       _hai_bong, GOC, ENG, PUB)
-from kich_comic import GIONG_KENH, NHAC, MAU_CHINH, MAU_PHU, NET_KENH
+from kich_comic import (GIONG_KENH, NHAC, MAU_CHINH, MAU_PHU, NET_KENH, BO_CUC_KENH,
+                        noi_va_nen, _sang_cua, _am_nhac)
 
 # Mục tiêu độ dài: qua ngưỡng tám phút để bật được quảng cáo giữa video, và dừng quanh mười một
 # phút — dài hơn nữa thì tỉ lệ xem hết tụt nhanh với thể loại hài ngắn nối chương.
@@ -82,29 +83,31 @@ def dung_tap_dai(k: dict, so_tap: int) -> tuple:
             kd = []
         if kd:
             t = kd[so_tap % len(kd)]
-            cau, chuong, chon = [], [], []
-            for c in t["canh"]:
+            cau, chuong, chon, thuoc = [], [], [], []
+            for _i, c in enumerate(t["canh"]):
                 chuong.append((c.get("tro_ngai") or "")[:58])
                 chon.append(c)
                 for x in c["loi"]:
                     cau.append(tuple(x))
+                    thuoc.append(_i)
             print(f"   📖 tập có mạch: {t.get('tua','')} — {t.get('viec','')[:56]}")
-            return chon, cau, chuong
+            return chon, cau, chuong, thuoc
 
     print("   ⚠️ kênh chưa có tập dài nào — lùi về NỐI MẨU RỜI (đây là compilation, "
           "chạy sinh_tap_dai.py để có tập thật)")
     kho = _kho_day(k)
     if len(kho) < 6:
-        return [], [], []
+        return [], [], [], []
     n_can = min(len(kho), 16)
     bat_dau = (so_tap * n_can) % len(kho)
     chon = [kho[(bat_dau + i) % len(kho)] for i in range(n_can)]
-    cau, chuong = [], []
+    cau, chuong, thuoc = [], [], []
     for i, m in enumerate(chon):
         chuong.append(m.get("nhan") or f"Part {i + 1}")
         for c in m["loi"]:
             cau.append(tuple(c))
-    return chon, cau, chuong
+            thuoc.append(i)          # lượt này thuộc mẩu thứ mấy -> nền của nơi chốn mẩu ấy
+    return chon, cau, chuong, thuoc
 
 
 def mot_kenh_dai(k: dict, so_tap: int) -> str:
@@ -112,7 +115,7 @@ def mot_kenh_dai(k: dict, so_tap: int) -> str:
     slug = _ten_tep(k)
     print(f"\n▶ {ten} — bản dài", flush=True)
 
-    chon, cau, chuong = dung_tap_dai(k, so_tap)
+    chon, cau, chuong, thuoc = dung_tap_dai(k, so_tap)
     if not cau:
         print("   ⏭ kho chưa đủ mẩu cho một tập dài (cần ≥ 6). Chạy sinh_kich_ban.py trước.")
         return ""
@@ -149,6 +152,7 @@ def mot_kenh_dai(k: dict, so_tap: int) -> str:
 
     tuyA, tuyB = _hai_bong(k)
     nk = NET_KENH.get(k["de"], dict(net=7, cham=9, bo=26, tile=0.60))
+    _bc = BO_CUC_KENH.get(k["de"], dict(duoi=False, bo=0, no="BOOM!"))
     props = {
         "luot": luot, "tu": tu, "voMp3": rel, "nhac": NHAC.get(k["de"], ""),
         "kieuA": k["a"], "kieuB": k["b"], "kieuTuyA": tuyA, "kieuTuyB": tuyB,
@@ -157,13 +161,39 @@ def mot_kenh_dai(k: dict, so_tap: int) -> str:
         "netMuc": nk["net"], "cham": nk["cham"], "boGoc": nk["bo"], "tiLe": nk["tile"],
         "soTap": so_tap,
     }
+
+    # 31/8 — BẢN DÀI DỰNG PROPS RIÊNG, nên mọi nâng cấp của bản ngắn hôm nay đều KHÔNG có ở đây:
+    # không nền 3D (`anhNen` rỗng -> nền vector), không bóng theo hướng sáng, không khớp màu,
+    # không hệ số nhạc riêng, không cả nhận diện bố cục riêng của kênh. Đúng họ lỗi "vá một
+    # nhánh, để nguyên nhánh song song" — và nó im lặng vì props thiếu chỉ rơi về giá trị mặc
+    # định của engine, không ném lỗi nào.
+    # Nền lấy THEO TỪNG MẨU: một tập dài nối tới 16 tình huống ở 16 nơi khác nhau, dùng chung
+    # một nền là vừa chán vừa lệch ngữ cảnh với thoại. `noi_va_nen` dùng chung với bản ngắn để
+    # hai đường không lệch luật chọn nền.
+    _nen_mau, _sang_mau = [], []
+    for _i, _m in enumerate(chon):
+        _idx, _anh = noi_va_nen(k, _m, [tuple(c) for c in _m["loi"]], so_tap + _i)
+        _nen_mau.append(_anh)
+        _sang_mau.append(_sang_cua(_anh))
+    props.update(
+        anhNens=[_nen_mau[t] for t in thuoc],
+        sangs=[_sang_mau[t] for t in thuoc],
+        anhNen=_nen_mau[0] if _nen_mau else "",
+        sang=_sang_mau[0] if _sang_mau else None,
+        nhacVol=_am_nhac(NHAC.get(k["de"], "")),
+        bongDuoi=_bc["duoi"], boKhung=_bc["bo"], chuNo=_bc["no"],
+    )
     pj = os.path.join(GOC, "out", f"v5L_{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
     io.open(pj, "w", encoding="utf-8").write(json.dumps(props, ensure_ascii=False))
 
     out = os.path.join(GOC, "out", f"v5L_{slug}.mp4")
+    # `--crf 22`: mặc định của Remotion là 18, cho ra 586 MB cho một tập bảy phút — nhân mười
+    # kênh là 5,8 GB artifact mỗi lượt Actions, vượt hạn lưu trữ và làm bước tải lên lâu hơn cả
+    # bước dựng. Hình ở đây là mảng màu phẳng và viền mực, gần như không có chuyển sắc để mất,
+    # nên 22 nhìn không khác 18 mà nhẹ hơn khoảng ba lần. YouTube nén lại lần nữa dù ta gửi gì.
     r = subprocess.run(["npx", "remotion", "render", "src/index.ts", "KichComicWide", out,
-                        f"--props={pj}", "--gl=swiftshader", "--log=error"],
+                        f"--props={pj}", "--gl=swiftshader", "--log=error", "--crf", "22"],
                        cwd=ENG, capture_output=True, text=True, timeout=9000)
     if r.returncode or not os.path.exists(out):
         print(f"   ❌ render hỏng: {(r.stderr or r.stdout or '')[-200:]}")

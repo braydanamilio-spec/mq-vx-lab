@@ -250,6 +250,56 @@ def _am_nhac(nhac: str) -> float:
     return float(_bang("music/am_luong.json").get(os.path.basename(nhac), 0.16))
 
 
+def noi_va_nen(k: dict, kb: dict, cau: list, vong: int) -> tuple:
+    """Nơi chốn của mẩu này -> (chỉ số nơi, đường dẫn ảnh nền). Nguồn DUY NHẤT cho cả ngắn+dài.
+
+    Thứ tự có ý nghĩa và đã từng đặt sai: nơi chốn phải chốt TRƯỚC khi chọn nền. Bản cũ tính
+    `_NOI_IDX` mười mấy dòng SAU chỗ dùng nó, nên nhánh chọn nền theo nơi chết hẳn và cả 86/306
+    mẩu có nhãn nơi đều rơi về "mượn nền theo số tập". Python không báo gì vì biến đã có sẵn
+    giá trị -1 (mục 22.5).
+
+    Ba tầng, theo thứ tự tin cậy giảm dần:
+      1. nhãn `noi` của mẩu, nếu khớp danh sách nơi của kênh;
+      2. SUY TỪ LỜI THOẠI — câu nào nhắc "server", "front desk", "closet" thì nơi chốn nằm ngay
+         trong câu. Dò từ khoá, không gọi mô hình. Tầng này cứu 105/213 mẩu không có nhãn;
+      3. mượn nền của một nơi khác CÙNG KÊNH — mười nơi của một kênh thuộc cùng thế giới nên
+         nền mượn vẫn khớp ngữ cảnh, hơn hẳn rơi về nền vector và mất chiều sâu.
+    """
+    idx = -1
+    try:
+        ds_noi = json.load(io.open(os.path.join(GOC, "noi_chon.json"), encoding="utf-8"))
+    except Exception as e:
+        print(f"   ⚠️ không đọc được noi_chon.json: {str(e)[:60]}")
+        ds_noi = {}
+    ten = [x.lower() for x in ds_noi.get(k["de"], [])]
+    nhan = (kb.get("noi") or "").strip().lower()
+    if nhan and nhan in ten:
+        idx = ten.index(nhan)
+    elif ten:
+        loi = " ".join(str(c[0]) for c in cau).lower()
+        diem = []
+        for i, t in enumerate(ten):
+            tu = [w for w in t.replace("'s", "").split()
+                  if len(w) > 3 and w not in ("the", "a", "an", "some")]
+            diem.append((sum(1 for w in tu if w in loi), -i))
+        tot = max(diem)
+        if tot[0] > 0:
+            idx = -tot[1]
+
+    anh = ""
+    try:
+        nc = json.load(io.open(os.path.join(GOC, "nen_cf.json"), encoding="utf-8"))
+        ds = nc.get(_ten_tep(k), {})
+        if idx >= 0:
+            anh = ds.get(str(idx), "")
+        if not anh and ds:
+            khoa = sorted(ds.keys(), key=lambda x: int(x))
+            anh = ds[khoa[vong % len(khoa)]]
+    except Exception:
+        pass
+    return idx, anh
+
+
 def vai_va_giong(k: dict) -> tuple:
     """Trả (kiểuA, kiểuB, ghi_đè_A, ghi_đè_B, giọngA, giọngB) — nhất quán giới · tuổi · cao · giọng."""
     de = k["de"]
@@ -325,57 +375,10 @@ def dung_luot_comic(k: dict, vong: int) -> tuple:
     if not _hk and cau:
         _hk = " ".join(str(cau[0][0]).replace(".", "").split()[:6]).upper()
     globals()["_HOOK"] = _hk
-    # NƠI CHỐN PHẢI CHỐT TRƯỚC KHI CHỌN NỀN. 31/8 — khối này vốn nằm SAU đoạn chọn `_ANH_NEN`
-    # mười mấy dòng, nên `_ix >= 0` không bao giờ đúng và nền chưa bao giờ được chọn theo nơi
-    # kịch bản nói: 86/306 mẩu có nhãn nơi khớp danh sách engine, cả 86 đều rơi về nhánh "mượn
-    # nền theo số tập". Không lỗi nào được ném ra — chỉ là nền hơi lệch ngữ cảnh, thứ rất dễ
-    # tưởng là "AI vẽ chưa chuẩn" thay vì một dòng đặt sai chỗ.
-    # *Họ lỗi:* giá trị được TIÊU THỤ trước khi được TÍNH — cùng họ với `caoMax`/`_hsDau` dùng
-    # trước khi khai báo, chỉ khác là ở đây Python không báo lỗi vì biến đã có sẵn giá trị -1.
-    _ds_noi = {}
-    try:
-        _ds_noi = json.load(io.open(os.path.join(GOC, "noi_chon.json"), encoding="utf-8"))
-    except Exception as e:
-        print(f"   ⚠️ không đọc được noi_chon.json: {str(e)[:60]}")
-    _ten = [x.lower() for x in _ds_noi.get(k["de"], [])]
-    _nhan = (kb.get("noi") or "").strip().lower()
-    if _nhan and _nhan in _ten:
-        globals()["_NOI_IDX"] = _ten.index(_nhan)
-    elif _ten:
-        # 213/306 mẩu không có nhãn nơi (viết tay, hoặc sinh trước khi trường `noi` tồn tại).
-        # Thay vì bỏ mặc cho số tập quyết, ĐỌC LỜI THOẠI: câu nào nhắc "server", "front desk",
-        # "closet" thì nơi chốn đã nằm ngay trong câu. Không gọi mô hình — dò từ khoá là đủ, và
-        # đây là bước chuẩn bị nên có sai cũng chỉ rơi về hành vi cũ.
-        _loi = " ".join(str(c[0]) for c in cau).lower()
-        _diem = []
-        for _i, _t in enumerate(_ten):
-            _tu = [w for w in _t.replace("'s", "").split()
-                   if len(w) > 3 and w not in ("the", "a", "an", "some")]
-            _diem.append((sum(1 for w in _tu if w in _loi), -_i))
-        _tot = max(_diem)
-        if _tot[0] > 0:
-            globals()["_NOI_IDX"] = -_tot[1]
-
-    # Nền 3D của nơi chốn này, nếu đã sinh. Không có thì để rỗng -> engine vẽ nền vector.
-    globals()["_ANH_NEN"] = ""
-    try:
-        _nc = json.load(io.open(os.path.join(GOC, "nen_cf.json"), encoding="utf-8"))
-        _ix = globals().get("_NOI_IDX", -1)
-        if _ix >= 0:
-            globals()["_ANH_NEN"] = _nc.get(_ten_tep(k), {}).get(str(_ix), "")
-        _ds = _nc.get(_ten_tep(k), {})
-        if not globals()["_ANH_NEN"] and _ds:
-            # Hai trường hợp cùng rơi vào đây:
-            #   · mẩu viết tay, chưa có nhãn nơi -> lấy nền theo số tập;
-            #   · tập từ thứ 11 trở đi, nơi chốn SINH TỔ HỢP nên không có ảnh riêng.
-            # Cả hai đều MƯỢN nền của một nơi đã có trong CÙNG kênh. Mượn trong cùng kênh là an
-            # toàn: mười nơi của một kênh đều thuộc cùng thế giới (văn phòng của TECH SUPPORT,
-            # sân trước của NEIGHBOR WATCH), nên nền mượn vẫn khớp ngữ cảnh — hơn hẳn việc rơi
-            # về nền vector và mất luôn chiều sâu.
-            _khoa = sorted(_ds.keys(), key=lambda x: int(x))
-            globals()["_ANH_NEN"] = _ds[_khoa[vong % len(_khoa)]]
-    except Exception:
-        pass
+    # Nơi chốn + nền: MỘT nguồn duy nhất, dùng chung với bản dài. Bản dài dựng props riêng nên
+    # nếu để hai chỗ tự tính, chúng sẽ lệch nhau — đúng cái bẫy "vá một nhánh, để nguyên nhánh
+    # song song" đã ghi ở mục 22.1.
+    globals()["_NOI_IDX"], globals()["_ANH_NEN"] = noi_va_nen(k, kb, cau, vong)
     n = len(cau)
     luot = []
     for i, (chu, ai, cx) in enumerate(cau):
