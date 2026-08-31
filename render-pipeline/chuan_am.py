@@ -77,6 +77,19 @@ def chuan(d: str) -> str:
         if os.path.exists(tam):
             os.remove(tam)
         return ""
+
+    # GIẢI MÃ THỬ TRƯỚC KHI THAY THẾ. 31/8 — năm tệp ra hỏng luồng hình (NAL lỗi) mà bước này
+    # vẫn thản nhiên đè lên bản gốc: `returncode == 0` và kích thước hợp lý KHÔNG chứng minh
+    # tệp giải mã được. Một bước ĐÁNH BÓNG mà làm hỏng bản gốc thì tệ hơn hẳn không có nó —
+    # nên phải tự chứng minh sản phẩm của mình dùng được rồi mới đụng vào tệp thật.
+    kt = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-nostats", "-v", "error", "-xerror",
+         "-i", tam, "-f", "null", "-"],
+        capture_output=True, text=True)
+    if kt.returncode != 0 or "Invalid NAL" in kt.stderr or "Error splitting" in kt.stderr:
+        os.remove(tam)
+        return "âm: BỎ QUA (bản chuẩn hoá giải mã lỗi, giữ bản gốc)"
+
     shutil.move(tam, d)
     return f"âm: {truoc:.1f} -> {MOC:.0f} LUFS"
 
