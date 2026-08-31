@@ -42,6 +42,13 @@ on:
     - cron: "35 20 * * *"
     - cron: "35 21 * * *"
     - cron: "35 22 * * *"
+    # 1/9, thêm hai mốc: bốn mốc đầu (19:35–22:35) rơi trọn vào một quãng CHẾT — cả repo không
+    # nổ lượt cron nào suốt 90 phút. Lịch sống lại lúc 22:50, và bằng chứng cho thấy GitHub trả
+    # tick TRỄ chứ không bỏ hẳn: `cleanup.yml` cron "0 3 * * *" được giao lúc 22:50, trễ ~20 giờ.
+    # Sáu mốc rải rộng thì xác suất rơi trọn vào quãng chết thấp hẳn. Job `chot` vẫn bảo đảm
+    # chỉ dựng một lần mỗi ngày.
+    - cron: "35 23 * * *"
+    - cron: "35 0 * * *"
   workflow_dispatch:
     inputs:
       luong:
