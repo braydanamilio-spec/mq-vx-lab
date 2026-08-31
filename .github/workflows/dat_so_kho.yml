@@ -58,7 +58,11 @@ jobs:
           _base = "https://mm0-connect.adisondurham-ef1.workers.dev"
           try:
               _u = f"{_base}/api/hot-stat?owner={_up.quote(o)}"
-              with urllib.request.urlopen(_u, timeout=25) as r:
+              # User-Agent BẮT BUỘC: thiếu thì Cloudflare chặn mã 1010 và trả 403 — giống hệt
+              # sai khoá, nên rất dễ đi nhầm hướng. Chính mã worker đã ghi chú điều này ở chỗ
+              # khác, mà tôi vẫn quên khi viết request mới.
+              _rq = urllib.request.Request(_u, headers={"user-agent": "MM0-Pipeline/1.0"})
+              with urllib.request.urlopen(_rq, timeout=25) as r:
                   _d = json.loads(r.read().decode("utf-8", "ignore"))
               print("📊 dashboard đang thấy:")
               for _k2 in ("tong", "tong_nguon", "homnay", "loi", "dangchay"):
