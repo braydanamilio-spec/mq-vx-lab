@@ -5337,3 +5337,48 @@ bảng số đã đúng.
 Đây là lần thứ **năm** trong một phiên một cổng tôi tự viết tố oan code lành (trước đó: cột
 chưa sắp xếp, "m" là mét không phải triệu, tên công ty bị coi là mảnh câu, bảng tư thế dựng ở
 t=0). **Khi cổng báo lỗi, việc đầu tiên là kiểm cổng — không phải kiểm code bị tố.**
+
+### 31/8 — Tám cổng tố oan trong hai ngày, và điểm chung của cả tám
+
+Đếm được tám lần một cổng tôi tự viết tố code lành: cột chưa sắp xếp · "m" là mét không phải
+triệu · tên công ty bị coi là mảnh câu · bảng tư thế dựng ở t=0 · bảng tư thế đo sai chế độ ·
+phép dò chạm mép trên nền phủ kín (120/170 khung) · phép dò nền ghép hai cảnh (26/60 ảnh) ·
+`Nikola Jokić` bị coi là mảnh câu vì chữ `ć`.
+
+Điểm chung: **tôi đo một đại lượng DỄ ĐO thay cho đại lượng ĐÚNG, rồi tin con số vì nó là con
+số.** Chạm mép dễ đo hơn "nhân vật có bị cắt không". Bước nhảy màu dễ đo hơn "ảnh này có phải
+một cảnh không". Ký tự ngoài ASCII dễ đo hơn "nhãn này có phải tiếng Anh không".
+
+Hai luật rút ra, đã áp dụng ngay trong phiên:
+1. **Chạy cổng mới trên dữ liệu ĐANG LÀNH trước.** Nếu nó tố quá vài phần trăm thì cổng sai,
+   không phải dữ liệu. Cả hai cổng bị gỡ đêm nay đều lộ ra trong ba mươi giây nhờ bước này.
+2. **Khi cổng báo lỗi, kiểm cổng trước, đừng kiểm code bị tố.** Xác suất cổng sai cao hơn nhiều
+   so với cảm giác — tám lần trong hai ngày.
+
+Và một luật về ngưỡng: cổng bắt oan tệ hơn cổng bỏ sót, vì nó dạy người ta bỏ qua cảnh báo.
+Hạ ngưỡng để cổng bớt ồn KHÔNG phải là sửa — nếu phép đo sai đối tượng thì không ngưỡng nào
+cứu được, phải gỡ.
+
+### 31/8 — Thước xác suất phải đòi bằng chứng lặp lại
+
+Ba lượt dựng cùng một bộ code cho điểm lệch nhau tới 14 (92→82→92). Nguồn dao động là phần
+chấm hình hỏi mô hình thị giác — cùng một khung, hai lượt hai câu trả lời.
+
+Hậu quả nặng hơn con số: tôi sửa bốn lỗi hình thật, điểm không nhúc nhích, và suýt kết luận
+bản sửa vô dụng rồi đi làm lại từ đầu. **Thước dao động không chỉ đo sai — nó làm người sửa
+mất phương hướng.**
+
+Cách chữa rẻ nhất, không tốn thêm lượt gọi nào: **chỉ tin lỗi xuất hiện từ hai khung trở lên.**
+Lỗi hình thật thì lặp (bố cục sai thì sai suốt video); nhiễu thì rơi lẻ vào một khung. Sau khi
+lọc, điểm lên 26/33 đạt ngưỡng từ 17/33 mà không đụng thêm một dòng engine nào.
+
+### 31/8 — Một quy tắc dọn dữ liệu chỉ có giá trị khi không có đường vòng
+
+Bộ dọn nhãn được sửa hai lượt mà khung hình vẫn hiện "Sleep Quali", "metabolite ci". Vì nó chỉ
+được gọi ở một chỗ, còn mười mấy nhánh nguồn thì tự cắt `[:26]` ký tự trước đó — mỗi nhánh một
+đường vòng lách qua đúng cái quy tắc sinh ra để chữa lỗi ấy.
+
+Dấu hiệu nhận ra: **sửa quy tắc mà triệu chứng không đổi.** Cùng họ với "sửa mà triệu chứng
+không đổi thì đang sửa sai chỗ", nhưng ở đây sửa ĐÚNG chỗ — chỉ là dữ liệu không đi qua chỗ
+ấy. Việc phải làm không phải sửa tiếp quy tắc, mà là đi tìm và đóng mọi đường vòng.
+
