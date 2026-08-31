@@ -88,15 +88,28 @@ def sau_render(mp4: str, keys=None) -> tuple[int, list]:
     # Mỗi loại lỗi trừ một mức khác nhau: chữ tràn và nhân vật mất mặt là lỗi người xem THẤY
     # ngay; nền đè biểu đồ thì khó chịu nhưng còn đọc được.
     muc = {"chu_tran": 14, "mat_nguoi": 14, "chu_gia": 10, "nen_de": 8, "khong_co_nguoi": 20}
-    diem = 100
-    da = set()
+    # 31/8 — CHỈ TIN LỖI LẶP LẠI Ở HAI KHUNG TRỞ LÊN.
+    # Ba lượt dựng cùng một bộ code cho ra điểm lệch nhau tới 14 (knowyourright 92→82→92,
+    # paycheckgap 94→86). Code chỉ tốt lên, nên chênh lệch ấy không đến từ video — nó đến từ
+    # chính thước: phần chấm hình hỏi một mô hình thị giác, và mô hình ấy trả lời khác nhau
+    # giữa các lượt cho cùng một khung.
+    # Một thước dao động ±14 thì không đo được tiến bộ: sửa đúng cũng có thể ra điểm thấp hơn,
+    # và người sửa mất phương hướng. Đó là điều đã xảy ra với tôi hai lượt liền.
+    # Lọc bằng tính CHẤT của lỗi thật: một lỗi hình có thật thì gần như luôn xuất hiện ở nhiều
+    # khung (bố cục sai thì sai suốt), còn một câu trả lời nhiễu thì rơi lẻ vào đúng một khung.
+    # Nên đếm số khung mắc từng lỗi, và chỉ trừ khi nó xuất hiện từ hai khung trở lên.
+    dem: dict = {}
     for l in loi:
         ten = l.split(": ")[-1]
-        if ten in da:          # cùng một lỗi ở nhiều khung chỉ trừ một lần
+        dem[ten] = dem.get(ten, 0) + 1
+    diem = 100
+    da = []
+    for ten, n in sorted(dem.items()):
+        if n < 2:
             continue
-        da.add(ten)
+        da.append(f"{ten} ×{n}")
         diem -= muc.get(ten, 8)
-    return max(0, diem), sorted(da)
+    return max(0, diem), da
 
 
 def cham(props_json: str, mp4: str = "", keys=None) -> tuple[int, list]:
