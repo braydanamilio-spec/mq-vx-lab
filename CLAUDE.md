@@ -111,28 +111,46 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 
 ## 10. HAI BỘ, HAI XƯỞNG — ĐỪNG TRỘN
 
-| Bộ | Kênh | Pipeline | Workflow | Trạng thái |
+| Bộ | Kênh | Pipeline | Workflow | Luồng |
 |---|---|---|---|---|
-| **Comic (hài)** | 10 | `kich_comic.py` · `sieu_du_lieu.py` · `brand_comic.py` | `render_hai.yml` | 10/10 video, 100 nền 3D, brandkit 8 cỡ |
-| **Phân tích** | 56 (6 lô) | `kich_v2.py` · `duyet_lo.py` | `render_phan_tich.yml` | 25/56 video — đang dựng nốt |
-| Thế hệ 1 (cũ) | ~50 | `run_render.py` | `render_cron.yml` | cron ĐANG TẮT theo yêu cầu anh |
+| **Comic (hài)** | 10 | `kich_comic.py` · `kich_comic_long.py` · `sieu_du_lieu.py` | `render_hai.yml` | 10 (mỗi kênh một luồng) |
+| **Phân tích** | 56 | `kich_v2.py` · `kich_v2_long.py` | `render_phan_tich_18.yml` | 18 (chia xen kẽ) |
+| Thế hệ 1 (cũ) | ~50 | `datastory_ci.py` | `render_cron.yml` | cron TẮT |
 
 Ba hệ này **không dùng chung engine, không dùng chung workflow**. Trộn chúng là cách chắc chắn
-để một bản sửa ở bộ này làm hỏng bộ kia — luật đã ghi trong chính `render_hai.yml`.
+để một bản sửa ở bộ này làm hỏng bộ kia.
 
-### Chạy 56 kênh phân tích
+### 10.1 Chia luồng theo TRẦN THỜI GIAN THẬT, không theo cảm giác
 
-```bash
-python3 duyet_lo.py --liet-ke        # xem 6 lô gồm kênh nào
-python3 duyet_lo.py --lo 3           # dựng lô 3 (10 kênh) + chấm + soi khung
-```
+Đo thời gian dựng thật của một đơn vị · nhân số đơn vị · **nhân hai** cho runner 2 nhân · cộng
+30% dự phòng. Vượt trần thì **chia luồng, đừng nâng trần** — trần cao chỉ làm lỗi hiện ra muộn.
 
-Trên GitHub: workflow `render_phan_tich.yml`, chạy **theo lô** chứ không dựng cả 56 kênh một
-lượt — một lượt Actions có trần 6 tiếng, mà 56 video ở ~4 phút mỗi cái là gần 4 tiếng, cộng
-cài đặt thì chạm trần. Lô 10 kênh xong trong ~45 phút, và hỏng một lô thì 5 lô kia vẫn nguyên.
+| | thời lượng | dựng ở máy anh | trên runner |
+|---|---|---|---|
+| comic ngắn | 14 giây | ~35 giây | ~1 phút |
+| comic dài | 7 phút | ~19 phút | ~38 phút |
+| phân tích ngắn | 20 giây | ~1 phút | ~2 phút |
 
-Dashboard gọi được qua `repository_dispatch` với `event_type: mm0-phantich` — cùng đường mà
-worker đang dùng cho `mm0-render`, chỉ khác tên sự kiện.
+Job bị huỷ vì quá giờ thì **`upload-artifact` không chạy** — mất luôn cả những video đã dựng
+xong. Hỏng mà không để lại tệp nào thì trông y hệt chưa từng chạy.
+
+### 10.2 `cron` của repo này KHÔNG đáng tin — đặt bốn mốc
+
+Bằng chứng: `cleanup.yml` chỉ có một cron `"0 3 * * *"` nhưng nổ lúc 17:37, 09:37, 08:38, 00:36
+— không lần nào đúng giờ. Có tick bị bỏ hẳn: hai tick đầu của `render_phan_tich_18.yml` (18:10
+và 19:35) đều **0 lượt**, trong khi workflow khác cùng repo vẫn nổ.
+
+Nên mỗi workflow đặt **bốn mốc cách nhau một giờ** + một job `chot` hỏi API xem 20h qua đã có
+lượt thành công chưa. Bốn mốc nổ cả bốn cũng chỉ tốn bốn lượt kiểm 5 giây.
+
+Khi cron không nổ, kiểm **ba** thứ trước khi đổ lỗi cho cấu hình: workflow `state == active` ·
+`cron` có mặt trên `main` · workflow khác trong repo có nổ không. Đủ ba mà vẫn không nổ thì ghi
+nhận đúng hiện trạng, đừng sửa bừa.
+
+### 10.3 Bộ giao hàng của một tập — cổng `kiem_workflow.py` canh
+
+**ngắn · dài · ảnh bìa · `.tai.json`**. Thiếu `.tai.json` là có video mà không đăng được. Cổng
+đọc MÃ trong YAML, không đọc chú thích — bản đầu của nó bị lừa bởi một dòng comment nhắc tên tệp.
 
 ## 11. CHẠY MỘT TẬP COMIC TỪ ĐẦU ĐẾN CUỐI
 
