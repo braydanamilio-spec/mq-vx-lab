@@ -94,7 +94,32 @@ Mỗi lỗi ghi ba thứ: triệu chứng · gốc rễ · **họ lỗi** (để
 | Bản hài cũ (giữ để đối chiếu) | `render-pipeline/kich_hai.py` · `src/v4/KichHai.tsx` — vẫn là nơi giữ `KHO` 40 mẩu viết tay, `doc_hai_giong`, `lam_thumb` |
 | Luật + buglog | `render-pipeline/PIPELINE_RULES.md` |
 
-## 9. CHẠY MỘT TẬP TỪ ĐẦU ĐẾN CUỐI
+## 9. HAI BỘ, HAI XƯỞNG — ĐỪNG TRỘN
+
+| Bộ | Kênh | Pipeline | Workflow | Trạng thái |
+|---|---|---|---|---|
+| **Comic (hài)** | 10 | `kich_comic.py` · `sieu_du_lieu.py` · `brand_comic.py` | `render_hai.yml` | 10/10 video, 100 nền 3D, brandkit 8 cỡ |
+| **Phân tích** | 56 (6 lô) | `kich_v2.py` · `duyet_lo.py` | `render_phan_tich.yml` | 25/56 video — đang dựng nốt |
+| Thế hệ 1 (cũ) | ~50 | `run_render.py` | `render_cron.yml` | cron ĐANG TẮT theo yêu cầu anh |
+
+Ba hệ này **không dùng chung engine, không dùng chung workflow**. Trộn chúng là cách chắc chắn
+để một bản sửa ở bộ này làm hỏng bộ kia — luật đã ghi trong chính `render_hai.yml`.
+
+### Chạy 56 kênh phân tích
+
+```bash
+python3 duyet_lo.py --liet-ke        # xem 6 lô gồm kênh nào
+python3 duyet_lo.py --lo 3           # dựng lô 3 (10 kênh) + chấm + soi khung
+```
+
+Trên GitHub: workflow `render_phan_tich.yml`, chạy **theo lô** chứ không dựng cả 56 kênh một
+lượt — một lượt Actions có trần 6 tiếng, mà 56 video ở ~4 phút mỗi cái là gần 4 tiếng, cộng
+cài đặt thì chạm trần. Lô 10 kênh xong trong ~45 phút, và hỏng một lô thì 5 lô kia vẫn nguyên.
+
+Dashboard gọi được qua `repository_dispatch` với `event_type: mm0-phantich` — cùng đường mà
+worker đang dùng cho `mm0-render`, chỉ khác tên sự kiện.
+
+## 10. CHẠY MỘT TẬP COMIC TỪ ĐẦU ĐẾN CUỐI
 
 Bốn lệnh, đúng thứ tự. Chạy được ở máy anh và trong GitHub Actions y như nhau — chỉ cần
 `edge-tts` + `remotion` + bộ khoá AI sẵn có. **Không lệnh nào cần Claude Code.**

@@ -2335,6 +2335,266 @@
     "tinh_huong": "Fun Fact Limit",
     "ma": "6615ed3e0b70",
     "diem_chot": 3
+   },
+   {
+    "loi": [
+     [
+      "I have something terrible to tell you about my profile.",
+      0,
+      "so"
+     ],
+     [
+      "Did you hack the algorithm or kidnap a reference?",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "It is much worse than a federal crime.",
+      0,
+      "buon"
+     ],
+     [
+      "You listed your ex as an emergency contact again.",
+      1,
+      "tuc"
+     ],
+     [
+      "I paid twenty dollars for a custom brass fanfare.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I already forgave the identity theft, Owen.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the apartment doorway",
+    "hook": "HE PAID FOR A THEME SONG",
+    "diem_chot": 8,
+    "tinh_huong": "The Custom Intro Song",
+    "ma": "1742bd1f277f"
+   },
+   {
+    "loi": [
+     [
+      "Sam, what do you think of my Saturday hike?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I love documentaries about deep sea diving.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I asked about the hike, not aquatic documentaries.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "The ocean's silence always feels like a meditation.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "The hike is in the city park tomorrow.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "City parks remind me of underwater canyons, surprisingly.",
+      1,
+      "so"
+     ],
+     [
+      "Are you ignoring me or just being weird?",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "I was answering your profile's 'favorite film genre' prompt.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the coffee shop",
+    "hook": "ASKED ABOUT HIKING, GOT OCEAN",
+    "diem_chot": 8,
+    "tinh_huong": "Misread Prompt",
+    "ma": "55b9ec98ce8a"
+   },
+   {
+    "loi": [
+     [
+      "This fun-fact rule makes profiles sound like scripted ads.",
+      0,
+      "buon"
+     ],
+     [
+      "But it gives people a hook for the first message.",
+      1,
+      "vui"
+     ],
+     [
+      "Hooks feel fake, like we're selling ourselves on a billboard.",
+      0,
+      "buon"
+     ],
+     [
+      "A billboard gets attention; profiles need that same quick glance.",
+      1,
+      "vui"
+     ],
+     [
+      "Alright, maybe a billboard is exactly what we need.",
+      0,
+      "tuc"
+     ],
+     [
+      "But then every swipe becomes a sales pitch, not a date.",
+      1,
+      "buon"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the bar counter",
+    "hook": "FUN FACT RULE DEBATE AT BAR",
+    "diem_chot": 8,
+    "tinh_huong": "Rule Reversal",
+    "ma": "caf0d5d5b4f9"
+   },
+   {
+    "loi": [
+     [
+      "Sam, the timer's at three, do I keep the picture?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Hold on, you know my profile paints me richer than reality.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Exactly, that's why I need your take now.",
+      0,
+      "tuc"
+     ],
+     [
+      "Because if you fake, you'll attract people chasing a myth.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "My myth is a polished selfie, not a circus.",
+      0,
+      "vui"
+     ],
+     [
+      "And you've already told the app you're an astronaut.",
+      1,
+      "so"
+     ],
+     [
+      "Timer's at one, what should I do?",
+      0,
+      "tuc"
+     ],
+     [
+      "It already posted, you can't un-post now.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "a coffee shop",
+    "hook": "THREE SECONDS LEFT TO DECIDE",
+    "diem_chot": 7,
+    "tinh_huong": "Countdown Context Clash",
+    "ma": "fcdfe92e2692"
+   },
+   {
+    "loi": [
+     [
+      "I ran a background check on my dinner date.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "You used the police database again.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Just the municipal court records and a credit bureau.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "You should also check their active bankruptcy filings.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I added that to my monthly subscription plan.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "We now offer comprehensive roadside assistance for bad matches.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "a restaurant table",
+    "hook": "HE RAN A BACKGROUND CHECK",
+    "diem_chot": 8,
+    "tinh_huong": "The Emergency Credit Check",
+    "ma": "20ea9fb40120"
+   },
+   {
+    "loi": [
+     [
+      "Sam, my bio says I love salsa dancing.",
+      0,
+      "vui"
+     ],
+     [
+      "Rule: every hobby claim must be verifiable within five minutes.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "I can prove it, I danced at 3:02 PM today.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Proof must be timestamped exactly at 3:14 PM, not approximate.",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "So I'll record a salsa video at 3:14:00.999?",
+      0,
+      "so"
+     ],
+     [
+      "Rule actually covers any mention of dancing, not just timestamps.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the coffee shop",
+    "hook": "WHY IS EVERY DANCE CLAIM TIMED",
+    "diem_chot": 7,
+    "tinh_huong": "Salsa Timing Rule",
+    "ma": "4df3b5950cbe"
    }
   ],
   "rent": [
@@ -11385,6 +11645,86 @@
     "diem_chot": 8,
     "tinh_huong": "The Blue Shingle Bylaw",
     "ma": "38a43bcb6b0b"
+   },
+   {
+    "loi": [
+     [
+      "Did you buy twenty leaf bags for your yard yet?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "They take forty minutes in the high setting.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Leaf bags do not have a high setting.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Mine do if you remove the plastic wrap.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "You are putting yard waste in an oven.",
+      0,
+      "tuc"
+     ],
+     [
+      "Only the ones that fit the Thanksgiving bird.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the trash bins",
+    "hook": "SHE BOUGHT TWENTY BAGS FOR WHAT",
+    "diem_chot": 8,
+    "tinh_huong": "The Emergency Leaf Bag Count",
+    "ma": "c94d0a2d3205"
+   },
+   {
+    "loi": [
+     [
+      "I hate the rule that all parcels go to the watch table.",
+      0,
+      "tuc"
+     ],
+     [
+      "It keeps thieves from snatching packages before you answer door.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "But I just moved, I need my box now.",
+      0,
+      "buon"
+     ],
+     [
+      "If you leave it here, the whole block knows you have deliveries.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "So the rule lets everyone spot suspicious activity, right?",
+      0,
+      "vui"
+     ],
+     [
+      "And that means I wait in line for my own package.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the neighborhood watch table",
+    "hook": "WHO GETS THE PACKAGE NOW",
+    "diem_chot": 7,
+    "tinh_huong": "Parcel Paradox",
+    "ma": "35dc42282c83"
    }
   ]
  },
@@ -13150,7 +13490,59 @@
   "section «s » was repealed after «t n» incident": 1,
   "«t n» must be defended against total anarchy": 1,
   "now you are starting to sound like «t n» local": 1,
-  "i painted it blue so you could not spot me": 1
+  "i painted it blue so you could not spot me": 1,
+  "did you buy «s » leaf bags for «t n» yet": 1,
+  "they take «s » minutes in «t n» setting": 1,
+  "leaf bags do not have «t n» setting": 1,
+  "mine do if you remove «t n» wrap": 1,
+  "you are putting yard waste in «t n»": 1,
+  "only «t n» that fit «t n» bird": 1,
+  "i hate «t n» that all parcels go to «t n» table": 1,
+  "it keeps thieves from snatching packages before you answer door": 1,
+  "but i just moved i need «t n» now": 1,
+  "if you leave it here «t n» block knows you have deliveries": 1,
+  "so «t n» lets everyone spot suspicious activity right": 1,
+  "and that means i wait in line for «t n» package": 1,
+  "i have something terrible to tell you about «t n»": 1,
+  "did you hack «t n» or kidnap «t n»": 1,
+  "it is much worse than «t n» crime": 1,
+  "you listed «t n» as «t n» contact again": 1,
+  "i paid «s » dollars for «t n» brass fanfare": 1,
+  "i already forgave «t n» theft owen": 1,
+  "sam what do you think of my «ng y» hike": 1,
+  "i love documentaries about deep sea diving": 1,
+  "i asked about «t n» not aquatic documentaries": 1,
+  "«t n» s silence always feels like «t n»": 1,
+  "«t n» is in «t n» park tomorrow": 1,
+  "city parks remind me of underwater canyons surprisingly": 1,
+  "are you ignoring me or just being weird": 1,
+  "i was answering «t n» s favorite film genre prompt": 1,
+  "this fun fact rule makes profiles sound like scripted ads": 1,
+  "but it gives people «t n» for «t n» message": 1,
+  "hooks feel fake like we re selling ourselves on «t n»": 1,
+  "«t n» gets attention profiles need that same quick glance": 1,
+  "alright maybe «t n» is exactly what we need": 1,
+  "but then every swipe becomes «t n» pitch not «t n»": 1,
+  "sam «t n» s at «s » do i keep «t n»": 1,
+  "hold on you know «t n» paints me richer than reality": 1,
+  "exactly that s why i need «t n» now": 1,
+  "because if you fake you ll attract people chasing «t n»": 1,
+  "«t n» is «t n» selfie not «t n»": 1,
+  "and you ve already told «t n» you re «t n»": 1,
+  "timer s at «s » what should i do": 1,
+  "it already posted you can t un post now": 1,
+  "i ran «t n» check on «t n» date": 1,
+  "you used «t n» database again": 1,
+  "just «t n» court records and «t n» bureau": 1,
+  "you should also check «t n» bankruptcy filings": 1,
+  "i added that to «t n» subscription plan": 1,
+  "we now offer comprehensive roadside assistance for bad matches": 1,
+  "sam «t n» says i love salsa dancing": 1,
+  "rule every hobby claim must be verifiable within «s » minutes": 1,
+  "i can prove it i danced at «s » «s » pm today": 1,
+  "proof must be timestamped exactly at «s » «s » pm not approximate": 1,
+  "so i ll record «t n» video at «s » «s » «s »": 1,
+  "rule actually covers any mention of dancing not just timestamps": 1
  },
  "tinh_huong": {
   "tech": [
@@ -13216,7 +13608,13 @@
    "The Swipe Cap Limit",
    "The Drafted Bio",
    "Height vs Cooking Mixup",
-   "Fun Fact Limit"
+   "Fun Fact Limit",
+   "The Custom Intro Song",
+   "Misread Prompt",
+   "Rule Reversal",
+   "Countdown Context Clash",
+   "The Emergency Credit Check",
+   "Salsa Timing Rule"
   ],
   "rent": [
    "Rent increase confusion",
@@ -13468,7 +13866,9 @@
    "Alarm Code Countdown",
    "Pencil Width Fence Gap Rule",
    "Siren Countdown",
-   "The Blue Shingle Bylaw"
+   "The Blue Shingle Bylaw",
+   "The Emergency Leaf Bag Count",
+   "Parcel Paradox"
   ]
  }
 }

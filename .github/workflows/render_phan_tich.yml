@@ -1,0 +1,98 @@
+name: MM0 Phân tích (56 kênh, theo lô)
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# XƯỞNG CHO 56 KÊNH PHÂN TÍCH — 31/8/2026
+#
+# Anh: *"60 channel phân tích ổn chưa e, xây pepline methord chuẩn cho nó lên web và github để
+# render"*. Khảo sát ra hai chuyện:
+#   · 25/56 kênh có video, thiếu 31;
+#   · và KHÔNG workflow nào gọi `kich_v2.py` — tức bộ này chưa bao giờ tự chạy, mọi video đều
+#     dựng tay ở máy anh.
+#
+# Tệp này là xưởng cho nó. Ba nguyên tắc, rút từ những gì đã trả giá ở bộ hài:
+#
+#   1. CHẠY THEO LÔ, KHÔNG DỰNG CẢ 56 KÊNH MỘT LƯỢT. Một lượt Actions có trần 6 tiếng; 56 video
+#      ở ~4 phút mỗi cái là gần 4 tiếng, cộng cài đặt và tải nguồn thì chạm trần. Lô 10 kênh
+#      xong trong khoảng 45 phút, và hỏng một lô thì 5 lô kia vẫn nguyên.
+#   2. CỔNG CHẠY TRƯỚC, KHÔNG PHẢI SAU. Chạy sau thì tốn cả lượt render mới biết hỏng.
+#   3. KHÔNG CRON CHO TỚI KHI ANH DUYỆT HÌNH. Bật cron trước khi anh xem là tự ý cho phát hàng
+#      loạt — đúng lỗi đã ghi trong luật của bộ hài.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+
+on:
+  # Dashboard gọi qua Cloudflare Worker bằng repository_dispatch — cùng đường mà worker đang
+  # dùng cho `mm0-render`, chỉ khác tên sự kiện. Nhờ vậy nút trên web bắn thẳng vào đây mà
+  # không phải chờ cron nào.
+  repository_dispatch:
+    types: [mm0-phantich]
+  workflow_dispatch:
+    inputs:
+      lo:
+        description: "Lô cần dựng (1-6). Lô 1 = 10 kênh gốc, lô 2-6 = thế hệ 2"
+        default: "1"
+      kenh:
+        description: "Chỉ dựng vài kênh, cách nhau bằng dấu phẩy (bỏ trống = cả lô)"
+        default: ""
+
+concurrency: { group: mm0-phantich, cancel-in-progress: false }
+
+jobs:
+  dung:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330          # dưới trần 6 tiếng của Actions, chừa chỗ cho bước gói
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: npm, cache-dependency-path: engine-remotion/package-lock.json }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Cài đặt
+        run: |
+          cd engine-remotion && npm ci --no-audit --no-fund
+          cd .. && pip install -q edge-tts pillow requests
+
+      # ── CỔNG: chạy TRƯỚC khi tốn một phút render nào ────────────────────────────────────
+      - name: Cổng — mặt sàn, xoay khoá, khuôn kịch bản
+        run: |
+          cd render-pipeline
+          python kiem_san.py
+          python kiem_xoay_key.py
+          python kiem_khung1.py || true      # cổng render một khung: cảnh báo, không chặn
+
+      - name: Dựng lô
+        env:
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+        run: |
+          cd render-pipeline
+          # `inputs` chỉ có khi bấm tay; khi worker bắn repository_dispatch thì tham số nằm
+          # trong client_payload. Lấy cả hai, và có mặc định — thiếu tham số mà workflow chết
+          # thì lỗi chỉ hiện trong log Actions, không ai thấy.
+          LO="${{ inputs.lo || github.event.client_payload.lo || '1' }}"
+          KENH="${{ inputs.kenh || github.event.client_payload.kenh || '' }}"
+          echo "→ lô $LO ${KENH:+· kênh $KENH}"
+          if [ -n "$KENH" ]; then
+            python kich_v2.py --kenh "$KENH"
+          else
+            python duyet_lo.py --lo "$LO"
+          fi
+
+      # Chấm và soi khung ra ảnh để anh duyệt mà không phải tải cả video về
+      - name: Soi khung + chấm
+        run: |
+          cd render-pipeline
+          python kiem_khuon.py || true
+          ls -la out/*.mp4 | tail -20
+
+      - name: Gói kết quả
+        uses: actions/upload-artifact@v4
+        with:
+          name: phantich-lo-${{ inputs.lo || github.event.client_payload.lo || '1' }}
+          path: |
+            render-pipeline/out/v3_*.mp4
+            render-pipeline/out/v3_*.jpg
+            render-pipeline/out/_khung/**
+          retention-days: 14
+          if-no-files-found: warn
