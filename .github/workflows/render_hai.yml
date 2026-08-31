@@ -19,7 +19,13 @@ name: MM0 Comic (10 kênh hài)
 on:
   schedule:
     # 03:10 UTC = 10:10 giờ VN. Lệch khỏi đầu giờ tròn: hàng đợi Actions đông nhất ở phút 00.
+    # 1/9 — BỐN MỐC, KHÔNG PHẢI MỘT. Lịch của repo này bị GitHub hoãn hàng giờ và có tick bị
+    # bỏ hẳn (xem ghi chú trong `render_phan_tich_18.yml`). Job `chot` bảo đảm chỉ dựng một lần
+    # mỗi ngày dù cả bốn mốc cùng nổ.
     - cron: "10 3 * * *"
+    - cron: "10 4 * * *"
+    - cron: "10 5 * * *"
+    - cron: "10 6 * * *"
   workflow_dispatch:
     inputs:
       vong:
@@ -32,7 +38,33 @@ on:
 concurrency: { group: mm0-hai, cancel-in-progress: false }
 
 jobs:
+  chot:
+    runs-on: ubuntu-latest
+    outputs:
+      chay: ${{ steps.q.outputs.chay }}
+    steps:
+      - id: q
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "chay=yes" >> $GITHUB_OUTPUT; echo "bấm tay -> chạy"; exit 0
+          fi
+          CUT=$(date -u -d '20 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-20H +%Y-%m-%dT%H:%M:%SZ)
+          N=$(gh api "repos/${{ github.repository }}/actions/workflows/render_hai.yml/runs?per_page=20" \
+              --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }})
+                     | select(.created_at > \"$CUT\")
+                     | select(.conclusion == \"success\" or .status == \"in_progress\")] | length")
+          echo "lượt gần đây (20h): $N"
+          if [ "${N:-0}" -gt 0 ]; then
+            echo "chay=no" >> $GITHUB_OUTPUT; echo "hôm nay đã dựng rồi -> bỏ lượt"
+          else
+            echo "chay=yes" >> $GITHUB_OUTPUT
+          fi
+
   dung:
+    needs: chot
+    if: needs.chot.outputs.chay == 'yes'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     # ══ 1/9 — MỖI KÊNH MỘT LUỒNG ═════════════════════════════════════════════════════════

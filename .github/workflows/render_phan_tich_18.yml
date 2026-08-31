@@ -30,7 +30,18 @@ on:
     # giờ khi hệ thống đông. Bài học: một `cron` mới cần ít nhất một giờ đệm trước lần nổ đầu —
     # nếu không thì nó im lặng bỏ lượt, không báo lỗi, và người ta tưởng workflow hỏng.
     # Phút 35 cũng là cố ý: hàng đợi Actions đông nhất ở phút 00 và 30.
+    #
+    # 1/9 — NHIỀU MỐC GIỜ, KHÔNG PHẢI MỘT. Bằng chứng: `cleanup.yml` chỉ có MỘT cron "0 3 * * *"
+    # nhưng thực tế nổ lúc 17:37, 09:37, 08:38, 00:36 — không lần nào đúng 03:00. Lịch của repo
+    # này bị GitHub hoãn hàng giờ rồi trả về theo cụm, và có tick bị bỏ hẳn (hai tick đầu của
+    # workflow này: 18:10 và 19:35, cả hai đều 0 lượt).
+    # Nên đặt bốn mốc cách nhau một giờ: chỉ cần MỘT mốc lọt là đủ. Job `chot` phía dưới bảo
+    # đảm không dựng lại nếu hôm nay đã có lượt thành công — bốn mốc nổ cả bốn cũng chỉ tốn bốn
+    # lượt kiểm 5 giây, không phải bốn lượt render.
     - cron: "35 19 * * *"
+    - cron: "35 20 * * *"
+    - cron: "35 21 * * *"
+    - cron: "35 22 * * *"
   workflow_dispatch:
     inputs:
       luong:
@@ -43,7 +54,37 @@ on:
 concurrency: { group: mm0-phantich-18, cancel-in-progress: false }
 
 jobs:
+  # CHỐT CHỐNG DỰNG TRÙNG — bốn mốc cron ở trên cho bốn cơ hội nổ, nhưng chỉ được dựng MỘT lần
+  # mỗi ngày. Job này hỏi API xem 20 giờ qua đã có lượt nào của chính workflow này thành công
+  # hoặc đang chạy chưa; có rồi thì 18 luồng phía dưới không khởi động.
+  # Bấm tay (`workflow_dispatch`) thì luôn chạy — người bấm là người quyết.
+  chot:
+    runs-on: ubuntu-latest
+    outputs:
+      chay: ${{ steps.q.outputs.chay }}
+    steps:
+      - id: q
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "chay=yes" >> $GITHUB_OUTPUT; echo "bấm tay -> chạy"; exit 0
+          fi
+          CUT=$(date -u -d '20 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-20H +%Y-%m-%dT%H:%M:%SZ)
+          N=$(gh api "repos/${{ github.repository }}/actions/workflows/render_phan_tich_18.yml/runs?per_page=20" \
+              --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }})
+                     | select(.created_at > \"$CUT\")
+                     | select(.conclusion == \"success\" or .status == \"in_progress\")] | length")
+          echo "lượt gần đây (20h): $N"
+          if [ "${N:-0}" -gt 0 ]; then
+            echo "chay=no" >> $GITHUB_OUTPUT; echo "hôm nay đã dựng rồi -> bỏ lượt"
+          else
+            echo "chay=yes" >> $GITHUB_OUTPUT
+          fi
+
   dung:
+    needs: chot
+    if: needs.chot.outputs.chay == 'yes'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
