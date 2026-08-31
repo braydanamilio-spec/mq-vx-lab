@@ -79,7 +79,7 @@ Episode: A is trying to {dc.get('viec','')}.
 Write the dialogue for these scenes, in order:
 {ds}
 
-For each scene: 4 or 6 lines, alternating A and B, starting with A. Every line under 12 words.
+For each scene: EXACTLY 6 lines, alternating A and B, starting with A. Every line under 12 words.
 The humour comes from the situation and from both characters being consistent — never from puns,
 and nobody is stupid.
 
@@ -143,7 +143,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--kenh", default="")
     ap.add_argument("--so", type=int, default=1, help="số TẬP dài cần sinh cho mỗi kênh")
-    ap.add_argument("--canh", type=int, default=12)
+    # 28 cảnh × 6 lượt × 3,1 giây ≈ 8,7 phút — vừa qua ngưỡng bật quảng cáo giữa video (8
+    # phút). 12 cảnh × 4,3 lượt chỉ ra 2,7 phút, tức chưa tới một phần ba chỗ cần.
+    ap.add_argument("--canh", type=int, default=28)
     a = ap.parse_args()
 
     import the_he_2 as T2

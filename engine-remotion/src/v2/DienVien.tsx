@@ -218,6 +218,17 @@ export type Kieu = {
   // kiểu ("nữ giao dịch viên", "thẩm phán về hưu"). Chú thích thì bộ chọn giọng không đọc
   // được, nên giọng gán theo KÊNH và trượt khỏi nhân vật; chiều cao cũng vậy.
   tuoi?: "tre_con" | "tre" | "trung" | "gia";
+  // ── LỐI VẼ — 31/8/2026 ────────────────────────────────────────────────────────────────
+  // Anh: *"brandkit mỗi channel nên tạo 1 kiểu khác nhau, tránh họ nhìn vào biết cùng 1 người
+  // làm"*. Sau khi tách được bố cục, nền, khung, màu, nhịp và chữ nổ, thứ CÒN LẠI chung giữa
+  // mười kênh chính là cách vẽ người: cùng kiểu mắt to viền dày, cùng tỉ lệ thân.
+  //
+  // Ba lối dưới đây khác nhau ở đúng ba thứ mắt đọc đầu tiên trên một khuôn mặt — độ dày nét,
+  // hình con mắt, và tỉ lệ đầu-thân:
+  //   mat_to    mắt to tròn, nét dày   — bản gốc, kiểu hoạt hình truyền hình Mỹ hiện đại
+  //   net_manh  mắt CHẤM, nét mảnh     — kiểu webcomic; mặt nhỏ hơn, người cao hơn
+  //   goc_canh  mắt dẹt, nét vừa       — kiểu UPA những năm 50: hình khối, vai vuông
+  loiVe?: "mat_to" | "net_manh" | "goc_canh";
   kieuMat?: "bau" | "tron" | "hep" | "xech";
   kieuMay?: "day" | "manh" | "xech" | "ru";
   tiLeDau?: number;                 // 0.9 = đầu nhỏ (dáng người lớn) · 1.12 = đầu to (trẻ, hài)

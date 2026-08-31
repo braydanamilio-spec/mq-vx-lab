@@ -6050,3 +6050,141 @@ Cách kiểm rẻ nhất, không cần render:
 d = sum(abs(a-b) for a,b in zip(nhat(mau,0.85), nhat(mau,0.28)))
 # dưới 25% của 765 là quá ít
 ```
+
+---
+
+## 18. BA LỐI VẼ NHÂN VẬT (31/8)
+
+Sau khi tách được bố cục, nền, khung, màu, nhịp, chữ nổ và nơi chốn, thứ CÒN LẠI chung giữa
+mười kênh chính là cách vẽ người — cùng kiểu mắt to viền dày, cùng tỉ lệ thân.
+
+| Lối | Nét | Mắt | Đầu | Cảm giác |
+|---|---|---|---|---|
+| `mat_to` | ×1.00 | tròn to | ×1.00 | hoạt hình truyền hình Mỹ hiện đại (bản gốc) |
+| `net_manh` | ×0.58 | **chấm** ×0.58 | ×0.84 | webcomic — mặt nhỏ, người thanh |
+| `goc_canh` | ×1.16 | **dẹt** ry×0.58 | ×0.94 | UPA thập niên 50 — hình khối, vai vuông |
+
+Chia 4/3/3 và gán theo chất kênh: chuyện đời thường nhẹ thì nét mảnh, chuyện gắt thì nét dày,
+chuyện công sở khô khan thì hình khối.
+
+**Cách làm quan trọng hơn kết quả:** ba lối KHÔNG viết lại hình, chỉ **nhân hệ số** vào các
+hằng đã có (`NG`, `NT`, `rMat`, `R_DAU`, `ry` của mắt). Viết lại hình là viết lại 1200 dòng và
+mất hết mọi bản vá đã tích trong đó — cổ, tỉ lệ trẻ con, lông mi, tóc buông. Nhân hệ số thì ba
+lối dùng chung mọi bản vá về sau.
+
+Một chỉnh sau khi nhìn khung thật: `net_manh` ban đầu để mắt ×0.46, và con mắt bé tới mức mất
+biểu cảm — mà biểu cảm mới là thứ gánh trò đùa. 0,58 vẫn đọc ra "mắt chấm" nhưng còn chỗ cho
+tròng mắt đảo và mí nhướn.
+
+### 18.1 Lỗi thứ tự khai báo — lần thứ hai trong ngày
+
+`_hsDau` khai sau `R_DAU` nhưng được dùng trong đó → `Cannot access before initialization`,
+render chết ngay. Sáng nay cũng đúng lỗi này với `caoMax`.
+
+**Luật:** khi thêm một khối hệ số vào một component dài, đặt nó **ngay sau phần destructure
+props** — trước mọi phép tính. Và kiểm bằng một dòng, rẻ hơn mọi lần render:
+```python
+assert s.index("const _hsDau") < s.index("const R_DAU =")
+```
+
+---
+
+## 19. NỀN 3D SINH BẰNG CLOUDFLARE — QUAY LẠI ẢNH AI, NHƯNG CÓ LỚP CHẶN (31/8)
+
+Anh: *"thấy vẽ 2.5D vẫn chưa ổn đẹp lắm... e thử thay lại bối cảnh 3D cf generate đúng ngữ
+cảnh kịch bản, và nhớ đừng có lỗi lơ lửng."*
+
+Đây là quay lại đúng cách mà `KichHai` đã hỏng. Nên nó chỉ được phép làm nếu chặn được hai lỗi
+đã giết bản cũ:
+
+| Lỗi cũ | Chặn bằng |
+|---|---|
+| ảnh photoreal đá nhau với người vector | prompt ép **clay-render, hình khối tròn, màu pastel** — gần lối vẽ nhân vật hơn photoreal; cộng `blur(1.6px)` + `saturate(0.86)` để ảnh **lùi ra sau** |
+| ảnh không có sàn → nhân vật lơ lửng | prompt ép **sàn chiếm trọn phần ba dưới, đồ đạc dồn hai mép, giữa để trống**; và quan trọng nhất — **dải sàn vẽ đè bằng code** ở đúng mức `SAN` |
+
+**Lớp thứ ba là lớp quyết định.** Prompt có thể bị mô hình bỏ qua; dải sàn vẽ bằng code thì
+không. Dù ảnh trả về không có sàn nào, nhân vật vẫn đứng trên một mặt phẳng có thật — đó chính
+là thứ bản cũ thiếu.
+
+### 19.1 Chi phí và cách cache
+
+Ảnh cache theo **(kênh, nơi chốn)**, mỗi nơi sinh MỘT lần: 100 nơi = 100 ảnh, dùng lại cho hàng
+nghìn tập. Hạn mức CF free ≈ 174 ảnh FLUX/ngày nên cả bộ chạy gọn trong một ngày, và từ đó về
+sau không tốn thêm gì.
+
+Nền vector vẫn giữ nguyên làm đường lùi: kênh nào chưa có ảnh thì engine tự vẽ như cũ. Không
+mẩu nào bị bỏ lại.
+
+### 19.2 `<Img>` không lồng được trong `<svg>`
+
+Bản đầu tôi nhét `<AbsoluteFill><Img/></AbsoluteFill>` vào giữa thẻ `<svg>` của `NenPanel`.
+esbuild báo `The character "}" is not valid inside a JSX element`, và sửa xong lỗi ấy thì còn
+ba fragment `<>` thừa — mỗi lần vá lại lộ một chỗ.
+
+Cách đúng: **trả về sớm** cả nhánh ảnh, ngoài thẻ `<svg>`. `<Img>` là phần tử HTML; lồng trong
+svg thì trình duyệt bỏ qua nó và khung ra trống trơn — một lỗi không báo gì cả.
+
+### 19.3 Ghi đè thay vì gộp: 40 ảnh nằm trên đĩa mà không ai tìm ra
+
+Chạy `nen_cf.py` lần đầu cho 10 kênh (40 ảnh), rồi chạy lần hai cho 3 kênh để sửa prompt. Lần
+hai khởi tạo `ra = {}` rồi ghi đè `nen_cf.json` — **xoá mất đường dẫn của 7 kênh**. Ảnh vẫn
+nằm nguyên trên đĩa; chỉ là engine không còn biết chúng ở đâu, nên 9/10 video quay về nền
+vector mà không báo lỗi gì.
+
+Họ lỗi: **công cụ chỉ biết phần việc của lần chạy này.** Mỗi lần chạy đều đúng, nhưng kết quả
+cộng lại thì sai. Bất kỳ tệp chỉ mục nào ghi lại sau mỗi lần chạy đều phải ĐỌC bản cũ và GỘP.
+
+Cách chữa cũng cho một bài học: bản đồ dựng lại được **từ chính đĩa** (quét tên tệp
+`<kênh>_<số>.jpg`) mà không cần gọi AI lần nào. Khi tên tệp đã mã hoá đủ thông tin thì tệp chỉ
+mục chỉ là bộ nhớ đệm — mất thì dựng lại, không mất gì thật.
+
+---
+
+## 20. LUẬT KHÔNG CÓ CÔNG CỤ CHẶN THÌ SẼ LẶP LẠI (31/8)
+
+Anh: *"qua cũng bị lỗi thế sao nay vẫn bị, cần fix đúng rule ko lặp lại nha"* — và *"fix cả
+auto trên pipeline sau này tự động trên github"*.
+
+Đây là lời trách đúng nhất trong cả ngày. Luật về xoay khoá đã nằm trong tài liệu từ hôm qua,
+và hôm nay tôi lặp lại y nguyên. Vì luật chỉ là chữ; không có gì trong CODE chặn nó.
+
+### 20.1 Lỗi: một dòng 429 bị đọc thành "cả pool đã cạn"
+
+Cloudflare trả HTTP 429 cho HAI chuyện khác hẳn:
+- **hết neuron trong ngày** (kèm mã 4006) — phải chờ thật;
+- **gọi quá nhanh** (giới hạn theo phút) — chỉ cần nghỉ một nhịp.
+
+`_cf_flux_image` ghi cứng thông điệp *"429 hết neuron CF trong ngày"* cho cả hai. Tôi đọc log,
+thấy dòng ấy, rồi **báo lại với anh rằng phải chờ hôm sau** — trong khi:
+
+| | |
+|---|---|
+| khoá CF | 97, thuộc **94 tài khoản riêng biệt** |
+| trần thật | ~16.300 ảnh/ngày (hạn mức tính theo **tài khoản**) |
+| đã dùng | **52 ảnh** |
+
+Bằng chứng phân biệt nằm ngay trong log và tôi bỏ qua: **ảnh ngay sau dòng 429 vẫn sinh thành
+công.** Nếu cạn thật thì ảnh sau cũng phải hỏng.
+
+Sau khi sửa: 59 ảnh liên tiếp, **1 lần 429** duy nhất (trước đó 52 ảnh mà 429 liên tục).
+
+### 20.2 Ba thứ đã làm để nó không lặp lại
+
+1. **`xoay_key.py` — một đường duy nhất.** Mọi lệnh gọi ảnh CF đi qua `goi_xoay()`: bắt đầu từ
+   vị trí khác nhau mỗi lần (luôn bắt đầu từ khoá đầu nghĩa là mỗi lần đều đâm vào đúng khoá
+   vừa cạn, và mỗi lần đâm vẫn trừ hạn mức), nghỉ một nhịp khi gặp rate-limit, và **chỉ ném
+   `CanThat` khi MỌI khoá đều trả mã 4006**.
+2. **`kiem_xoay_key.py` — cổng quét mã nguồn**, tìm thông điệp khẳng định cạn quota và vòng lặp
+   khoá tự viết quanh lệnh sinh ảnh.
+3. **Cổng chạy TRƯỚC trong workflow**, không phải sau: `render_hai.yml` chạy `kiem_san.py` và
+   `kiem_xoay_key.py` trước bước dựng. Chạy sau thì tốn cả lượt render mới biết hỏng, mà trên
+   Actions một lượt là gần một tiếng máy.
+
+### 20.3 Cổng tự viết tố oan — hai lần trong một ngày
+
+`kiem_xoay_key.py` lượt đầu tố `firestore_bridge.py` (nói về Firestore, một chuyện có thật) và
+`run_render.py` (vòng lặp ấy là **kiểm tra sức khoẻ khoá**, không phải gọi ảnh). Phải thu hẹp
+hai lần: thông điệp phải nhắc CF/neuron, và vòng lặp phải có lệnh sinh ảnh bên trong.
+
+**Một cổng chỉ đáng tin khi nó bắt đúng cái mẫu đã có bằng chứng, không bắt mọi thứ trông
+giống.** Lời tố oan làm người ta thôi tin cả cái cổng — và một cổng không ai tin thì bằng không.

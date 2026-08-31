@@ -1,0 +1,122 @@
+{
+ "airporthell": {
+  "0": "comic_nen/airporthell_00.jpg",
+  "1": "comic_nen/airporthell_01.jpg",
+  "2": "comic_nen/airporthell_02.jpg",
+  "3": "comic_nen/airporthell_03.jpg",
+  "4": "comic_nen/airporthell_04.jpg",
+  "5": "comic_nen/airporthell_05.jpg",
+  "6": "comic_nen/airporthell_06.jpg",
+  "7": "comic_nen/airporthell_07.jpg",
+  "8": "comic_nen/airporthell_08.jpg",
+  "9": "comic_nen/airporthell_09.jpg"
+ },
+ "carguy": {
+  "0": "comic_nen/carguy_00.jpg",
+  "1": "comic_nen/carguy_01.jpg",
+  "2": "comic_nen/carguy_02.jpg",
+  "3": "comic_nen/carguy_03.jpg",
+  "4": "comic_nen/carguy_04.jpg",
+  "5": "comic_nen/carguy_05.jpg",
+  "6": "comic_nen/carguy_06.jpg",
+  "7": "comic_nen/carguy_07.jpg",
+  "8": "comic_nen/carguy_08.jpg",
+  "9": "comic_nen/carguy_09.jpg"
+ },
+ "datingapp": {
+  "0": "comic_nen/datingapp_00.jpg",
+  "1": "comic_nen/datingapp_01.jpg",
+  "2": "comic_nen/datingapp_02.jpg",
+  "3": "comic_nen/datingapp_03.jpg",
+  "4": "comic_nen/datingapp_04.jpg",
+  "5": "comic_nen/datingapp_05.jpg",
+  "6": "comic_nen/datingapp_06.jpg",
+  "7": "comic_nen/datingapp_07.jpg",
+  "8": "comic_nen/datingapp_08.jpg",
+  "9": "comic_nen/datingapp_09.jpg"
+ },
+ "dietwars": {
+  "0": "comic_nen/dietwars_00.jpg",
+  "1": "comic_nen/dietwars_01.jpg",
+  "2": "comic_nen/dietwars_02.jpg",
+  "3": "comic_nen/dietwars_03.jpg",
+  "4": "comic_nen/dietwars_04.jpg",
+  "5": "comic_nen/dietwars_05.jpg",
+  "6": "comic_nen/dietwars_06.jpg",
+  "7": "comic_nen/dietwars_07.jpg",
+  "8": "comic_nen/dietwars_08.jpg",
+  "9": "comic_nen/dietwars_09.jpg"
+ },
+ "gymlies": {
+  "0": "comic_nen/gymlies_00.jpg",
+  "1": "comic_nen/gymlies_01.jpg",
+  "2": "comic_nen/gymlies_02.jpg",
+  "3": "comic_nen/gymlies_03.jpg",
+  "4": "comic_nen/gymlies_04.jpg",
+  "5": "comic_nen/gymlies_05.jpg",
+  "6": "comic_nen/gymlies_06.jpg",
+  "7": "comic_nen/gymlies_07.jpg",
+  "8": "comic_nen/gymlies_08.jpg",
+  "9": "comic_nen/gymlies_09.jpg"
+ },
+ "neighborwatch": {
+  "0": "comic_nen/neighborwatch_00.jpg",
+  "1": "comic_nen/neighborwatch_01.jpg",
+  "2": "comic_nen/neighborwatch_02.jpg",
+  "3": "comic_nen/neighborwatch_03.jpg",
+  "4": "comic_nen/neighborwatch_04.jpg",
+  "5": "comic_nen/neighborwatch_05.jpg",
+  "6": "comic_nen/neighborwatch_06.jpg",
+  "7": "comic_nen/neighborwatch_07.jpg",
+  "8": "comic_nen/neighborwatch_08.jpg",
+  "9": "comic_nen/neighborwatch_09.jpg"
+ },
+ "officesmalltalk": {
+  "0": "comic_nen/officesmalltalk_00.jpg",
+  "1": "comic_nen/officesmalltalk_01.jpg",
+  "2": "comic_nen/officesmalltalk_02.jpg",
+  "3": "comic_nen/officesmalltalk_03.jpg",
+  "4": "comic_nen/officesmalltalk_04.jpg",
+  "5": "comic_nen/officesmalltalk_05.jpg",
+  "6": "comic_nen/officesmalltalk_06.jpg",
+  "7": "comic_nen/officesmalltalk_07.jpg",
+  "8": "comic_nen/officesmalltalk_08.jpg",
+  "9": "comic_nen/officesmalltalk_09.jpg"
+ },
+ "parentmode": {
+  "0": "comic_nen/parentmode_00.jpg",
+  "1": "comic_nen/parentmode_01.jpg",
+  "2": "comic_nen/parentmode_02.jpg",
+  "3": "comic_nen/parentmode_03.jpg",
+  "4": "comic_nen/parentmode_04.jpg",
+  "5": "comic_nen/parentmode_05.jpg",
+  "6": "comic_nen/parentmode_06.jpg",
+  "7": "comic_nen/parentmode_07.jpg",
+  "8": "comic_nen/parentmode_08.jpg",
+  "9": "comic_nen/parentmode_09.jpg"
+ },
+ "rentpanic": {
+  "0": "comic_nen/rentpanic_00.jpg",
+  "1": "comic_nen/rentpanic_01.jpg",
+  "2": "comic_nen/rentpanic_02.jpg",
+  "3": "comic_nen/rentpanic_03.jpg",
+  "4": "comic_nen/rentpanic_04.jpg",
+  "5": "comic_nen/rentpanic_05.jpg",
+  "6": "comic_nen/rentpanic_06.jpg",
+  "7": "comic_nen/rentpanic_07.jpg",
+  "8": "comic_nen/rentpanic_08.jpg",
+  "9": "comic_nen/rentpanic_09.jpg"
+ },
+ "techsupport": {
+  "0": "comic_nen/techsupport_00.jpg",
+  "1": "comic_nen/techsupport_01.jpg",
+  "2": "comic_nen/techsupport_02.jpg",
+  "3": "comic_nen/techsupport_03.jpg",
+  "4": "comic_nen/techsupport_04.jpg",
+  "5": "comic_nen/techsupport_05.jpg",
+  "6": "comic_nen/techsupport_06.jpg",
+  "7": "comic_nen/techsupport_07.jpg",
+  "8": "comic_nen/techsupport_08.jpg",
+  "9": "comic_nen/techsupport_09.jpg"
+ }
+}

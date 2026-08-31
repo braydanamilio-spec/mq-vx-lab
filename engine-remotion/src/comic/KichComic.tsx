@@ -179,10 +179,10 @@ const ChuNo: React.FC<{ chu: string; w: number; h: number; p: number; mau: strin
 const Panel: React.FC<{
   L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
-  dangNoi: boolean; hai?: boolean; noi: Noi;
+  dangNoi: boolean; hai?: boolean; noi: Noi; anhNen?: string;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
-}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, noi,
+}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, noi, anhNen,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
         bongDuoi = false, boKhung = 0, chuNo = "BOOM!" }) => {
   const { w, h } = o;
@@ -274,7 +274,7 @@ const Panel: React.FC<{
                  + (L.chot && trong > 0.25 && trong < 0.75
                     ? ` translate(${Math.sin(trong * 62) * 5}px, ${Math.cos(trong * 54) * 4}px)` : ""),
     }}>
-      <NenPanel kenh={kenh} noi={noi} w={w} h={h} mau={mau} mauPhu={mauPhu} hat={hat + thuTu * 13}
+      <NenPanel kenh={kenh} noi={noi} anh={anhNen} w={w} h={h} mau={mau} mauPhu={mauPhu} hat={hat + thuTu * 13}
                 bien={(hat + thuTu * 5) % 3} rong net={netMuc} cham={cham} />
 
       {/* Đạo cụ đọc ra từ chính câu thoại của cảnh này — thoại nói "router" thì trong khung có
@@ -429,6 +429,7 @@ export type PropsComic = {
   // Để -1 (hoặc bỏ trống) thì quay về cách cũ: chọn theo số tập.
   noiIdx?: number;
   hook?: string;      // thẻ hook 2 giây đầu — xem `TheHook`
+  anhNen?: string;    // nền 3D sinh bằng Cloudflare; bỏ trống thì vẽ nền vector như cũ
   netMuc?: number;    // độ dày viền mực: 5 (mảnh, sạch) .. 10 (thô, mạnh)
   cham?: number;      // cỡ ô halftone: 7 (mịn) .. 14 (thô như báo in)
   boGoc?: number;     // bo góc bong bóng: 6 (vuông, đanh) .. 34 (tròn, hiền)
@@ -451,7 +452,8 @@ export const calcComic = async ({ props }: { props: PropsComic }) => {
 export const KichComic: React.FC<PropsComic> = ({
   luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
   kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", handle = "", mau = "#F0483C",
-  mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
+  mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
+  netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
 }) => {
   const f = useCurrentFrame();
@@ -494,7 +496,7 @@ export const KichComic: React.FC<PropsComic> = ({
   const veCanh = (Lx: Luot, ix: number, dangNoi: boolean) => (
     <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
-           hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi} noi={noi}
+           hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi} noi={noi} anhNen={anhNen}
            netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLe}
            bongDuoi={bongDuoi} boKhung={boKhung} chuNo={chuNo}
            hook={ix === 0 ? kep((giay - Lx.s) / 1.15) : 0} />

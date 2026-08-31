@@ -204,6 +204,15 @@ GIONG_VAI = {
 
 # Tóc phải hợp giới, nếu không thì mọi thứ khác đều vô nghĩa: một nhân vật nữ để tóc "ngắn nam"
 # và đeo râu thì người xem đọc ra là nam, bất kể dữ liệu ghi gì.
+# Lối vẽ của từng kênh — trục thứ tám tách mười kênh ra. Chia 4/3/3 và gán theo CHẤT của kênh:
+# chuyện đời thường nhẹ nhàng thì nét mảnh, chuyện gắt gỏng thì nét dày, chuyện công sở khô
+# khan thì hình khối góc cạnh.
+LOI_VE_KENH = {
+    "rent": "goc_canh", "gym": "mat_to", "airport": "goc_canh", "car": "mat_to",
+    "office": "goc_canh", "diet": "net_manh", "tech": "mat_to", "parent": "mat_to",
+    "neighbor": "net_manh", "dating": "net_manh",
+}
+
 TOC_HOP = {("nu", "tre"): "duoi_ngua", ("nu", "trung"): "bui", ("nu", "gia"): "bob",
            ("nam", "tre"): "re_ngoi", ("nam", "trung"): "ngan", ("nam", "gia"): "hoi",
            ("tre", "tre_con"): "roi"}
@@ -220,6 +229,7 @@ def vai_va_giong(k: dict) -> tuple:
         giong = ds[(hs + i * 3) % len(ds)]
         ghi = {
             "gioi": gioi, "tuoi": tuoi, "cao": cao,
+            "loiVe": LOI_VE_KENH.get(de, "mat_to"),
             "kieuToc": TOC_HOP[(gioi, tuoi)],
             # Râu chỉ có ở nam đã trưởng thành. Bảng `_BONG` cũ gán râu theo kênh nên có cả nữ
             # công tố râu dê — một chi tiết đủ để người xem thôi tin vào cả nhân vật.
@@ -283,6 +293,26 @@ def dung_luot_comic(k: dict, vong: int) -> tuple:
     if not _hk and cau:
         _hk = " ".join(str(cau[0][0]).replace(".", "").split()[:6]).upper()
     globals()["_HOOK"] = _hk
+    # Nền 3D của nơi chốn này, nếu đã sinh. Không có thì để rỗng -> engine vẽ nền vector.
+    globals()["_ANH_NEN"] = ""
+    try:
+        _nc = json.load(io.open(os.path.join(GOC, "nen_cf.json"), encoding="utf-8"))
+        _ix = globals().get("_NOI_IDX", -1)
+        if _ix >= 0:
+            globals()["_ANH_NEN"] = _nc.get(_ten_tep(k), {}).get(str(_ix), "")
+        _ds = _nc.get(_ten_tep(k), {})
+        if not globals()["_ANH_NEN"] and _ds:
+            # Hai trường hợp cùng rơi vào đây:
+            #   · mẩu viết tay, chưa có nhãn nơi -> lấy nền theo số tập;
+            #   · tập từ thứ 11 trở đi, nơi chốn SINH TỔ HỢP nên không có ảnh riêng.
+            # Cả hai đều MƯỢN nền của một nơi đã có trong CÙNG kênh. Mượn trong cùng kênh là an
+            # toàn: mười nơi của một kênh đều thuộc cùng thế giới (văn phòng của TECH SUPPORT,
+            # sân trước của NEIGHBOR WATCH), nên nền mượn vẫn khớp ngữ cảnh — hơn hẳn việc rơi
+            # về nền vector và mất luôn chiều sâu.
+            _khoa = sorted(_ds.keys(), key=lambda x: int(x))
+            globals()["_ANH_NEN"] = _ds[_khoa[vong % len(_khoa)]]
+    except Exception:
+        pass
     _nhan = (kb.get("noi") or "").strip().lower()
     if _nhan:
         try:
@@ -344,7 +374,8 @@ def mot_kenh(k: dict, vong: int) -> str:
     _bc = BO_CUC_KENH.get(k["de"], dict(duoi=False, bo=0, no="BOOM!"))
     props.update(netMuc=_nk["net"], cham=_nk["cham"], boGoc=_nk["bo"], tiLe=_nk["tile"],
                  soTap=vong, bongDuoi=_bc["duoi"], boKhung=_bc["bo"], chuNo=_bc["no"],
-                 noiIdx=globals().get("_NOI_IDX", -1), hook=globals().get("_HOOK", ""))
+                 noiIdx=globals().get("_NOI_IDX", -1), hook=globals().get("_HOOK", ""),
+                 anhNen=globals().get("_ANH_NEN", ""))
     pj = os.path.join(GOC, "out", f"v5_{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
     io.open(pj, "w", encoding="utf-8").write(json.dumps(props, ensure_ascii=False))

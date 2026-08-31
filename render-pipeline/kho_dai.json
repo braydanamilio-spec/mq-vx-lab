@@ -1,352 +1,1044 @@
 {
  "tech": [
   {
-   "viec": "A wants to stream her live webinar from her living room without any technical glitches.",
-   "tua": "Webinar Woes Unplugged",
+   "viec": "A needs to upload the final project file to the client before 5 PM.",
+   "tua": "Deadline Disaster Loop",
    "canh": [
     {
      "stt": 1,
      "loi": [
       [
-       "My TV just says 'No internet connection'.",
+       "VPN won't connect from home, deadline at five.",
        0,
-       "so"
+       "buon"
       ],
       [
-       "Let's restart the router and the TV together.",
+       "Check if you're on the corporate network.",
        1,
        "trung_tinh"
       ],
       [
-       "I turned the router off, then unplugged TV. It's dead now.",
+       "I'm on Wi-Fi, same as yesterday.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Try disconnecting and reconnecting to Wi-Fi.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "Reconnected, still no VPN access.",
        1,
        "buon"
       ],
       [
-       "Okay, plug the TV back in and we'll check the picture.",
+       "Probably router issue; reboot it now.",
        1,
        "trung_tinh"
       ]
      ],
-     "noi": "the customer's living room",
-     "tro_ngai": "A's smart TV shows “No internet connection,” and when she power‑cycles the router she also unplugs the TV, leaving it blank."
+     "noi": "the home office",
+     "tro_ngai": "A cannot log into the company VPN from his home office."
     },
     {
      "stt": 2,
      "loi": [
       [
-       "I found a spare strip, but I tripped and it snapped.",
+       "Rebooting router, brief internet outage incoming.",
        0,
-       "bat_ngo"
+       "trung_tinh"
       ],
       [
-       "Do you still have power at the outlet?",
+       "I'll wait for the connection to re-establish.",
        1,
        "trung_tinh"
       ],
       [
-       "The outlet is fine, the strip's fuse blew.",
+       "Lights off, modem flashing; no signal.",
+       1,
+       "buon"
+      ],
+      [
+       "Without internet, upload impossible. Use mobile hotspot.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Switching to phone hotspot, battery low already.",
        1,
        "so"
       ],
       [
-       "We'll need a new strip before the TV can power up.",
+       "Proceed, but conserve power while uploading.",
        1,
        "trung_tinh"
       ]
      ],
-     "noi": "the cramped supply closet",
-     "tro_ngai": "To restore power she grabs a spare power strip from the cramped supply closet, but trips and breaks the strip’s fuse, keeping the TV off."
+     "noi": "the home office",
+     "tro_ngai": "He restarts his router, which temporarily cuts off his internet connection."
     },
     {
      "stt": 3,
      "loi": [
       [
-       "The laptop's battery is dead; it won't turn on.",
+       "Hotspot active, uploading file, battery draining fast.",
        0,
-       "buon"
+       "so"
       ],
       [
-       "Did the outage affect the charger as well?",
+       "File size large; expect several minutes.",
        1,
        "trung_tinh"
       ],
       [
-       "Yes, the charger was unplugged when the lights flickered.",
+       "Battery at five percent, still uploading.",
+       1,
+       "buon"
+      ],
+      [
+       "If it dies, you'll lose progress.",
        1,
        "bat_ngo"
       ],
       [
-       "Grab a charger from the hallway; the laptop should revive.",
+       "Phone died, screen black, no power.",
+       1,
+       "buon"
+      ],
+      [
+       "Find another power source or device quickly.",
        1,
        "trung_tinh"
       ]
      ],
-     "noi": "the break room",
-     "tro_ngai": "B tells her to use the backup laptop in the break room, but the laptop’s battery is dead because the earlier power loss drained it."
+     "noi": "the home office",
+     "tro_ngai": "With no internet, A switches to his phone hotspot, quickly draining the battery."
     },
     {
      "stt": 4,
      "loi": [
       [
-       "I reached the hallway, but I accidentally hit the alarm.",
+       "Grabbed charger, it's sparking, not working.",
        0,
-       "tuc"
+       "buon"
       ],
       [
-       "Stay calm, evacuate, and we'll handle the alarm later.",
+       "That charger is faulty; do you have another?",
        1,
        "trung_tinh"
       ],
       [
-       "Everyone's leaving; my webinar is now impossible.",
+       "Only this one, and it's broken.",
+       1,
+       "buon"
+      ],
+      [
+       "Without power, you can't finish upload.",
        1,
        "so"
       ],
       [
-       "Once evacuated, we'll find a stable power source for the stream.",
+       "Stuck, deadline looming, nothing works.",
        1,
-       "tu_tin"
+       "buon"
+      ],
+      [
+       "I'll email IT for emergency remote assistance.",
+       1,
+       "trung_tinh"
       ]
      ],
-     "noi": "the office hallway",
-     "tro_ngai": "She runs to the office hallway to fetch a charger, but in her rush pulls the fire alarm, causing an evacuation."
+     "noi": "the home office",
+     "tro_ngai": "The phone battery dies, and the charger he grabs is broken, leaving him powerless."
     },
     {
      "stt": 5,
      "loi": [
       [
-       "My laptop died; I need a charger now.",
+       "My charger stopped working, I need it before 5 PM.",
        0,
-       "so"
+       "tuc"
       ],
       [
-       "We only have a USB-C to Lightning; it won't charge.",
+       "Let's check the cable; is the LED flashing?",
        1,
        "trung_tinh"
       ],
       [
-       "That's useless; I need proper AC adapter.",
+       "LED is off, cable looks fine.",
        1,
-       "so"
+       "trung_tinh"
       ],
       [
-       "There's a spare power bank in the server room, try there.",
+       "Try a hard reset on the power brick.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Reset done, still no charge.",
+       1,
+       "buon"
+      ],
+      [
+       "We'll reinstall the power driver; please reboot your PC.",
        1,
        "trung_tinh"
       ]
      ],
      "noi": "the IT help desk",
-     "tro_ngai": "After the alarm clears, she goes to the IT help desk for a charger, but the staff hands her a USB‑C to Lightning cable that won’t charge her laptop."
+     "tro_ngai": "A calls B at the IT help desk for charger troubleshooting."
     },
     {
      "stt": 6,
      "loi": [
       [
-       "Where's the power bank?",
+       "Rebooting now, hope it fixes the charger.",
        0,
-       "trung_tinh"
+       "tuc"
       ],
       [
-       "It's tucked behind server three, in the corner.",
+       "The reset will also reinstall the power driver.",
        1,
        "trung_tinh"
       ],
       [
-       "I'm pulling the panel out now.",
+       "System is restarting; Windows says an update is pending.",
        1,
        "trung_tinh"
       ],
       [
-       "Watch out-the cooling fan is loose.",
+       "That update runs automatically; it may take a while.",
        1,
-       "bat_ngo"
+       "trung_tinh"
       ],
       [
-       "The fan drops, servers crash, lights flicker.",
+       "I need the computer fast; deadline is looming.",
        1,
        "so"
       ],
       [
-       "Everything's dead; you'll need another source.",
+       "Unfortunately you can't cancel; let it finish.",
        1,
-       "trung_tinh"
+       "bat_ngo"
       ]
      ],
-     "noi": "the server room",
-     "tro_ngai": "B suggests a portable power bank stored in the server room; opening the rack dislodges a cooling fan that topples servers and shuts down building power."
+     "noi": "the home office",
+     "tro_ngai": "B advises a system reset that triggers an automatic OS update, slowing A’s computer."
     },
     {
      "stt": 7,
      "loi": [
       [
-       "The shop's closed; do you have a loaner bank?",
+       "I'm on the client video call now, please hold.",
        0,
-       "so"
+       "tuc"
       ],
       [
-       "No loaners, but we can swap your phone battery.",
+       "The update just initiated a forced reboot.",
        1,
        "trung_tinh"
       ],
       [
-       "Fine, replace it; I need the link on my phone.",
+       "My screen went black, the client can't see me.",
        1,
-       "tuc"
+       "buon"
       ],
       [
-       "Battery installed, but your phone is now off.",
+       "It will restart; the call will disconnect automatically.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Connection dropped, they're angry about the interruption.",
+       1,
+       "so"
+      ],
+      [
+       "I'm sorry; the update can't be paused now.",
        1,
        "buon"
       ]
      ],
-     "noi": "the phone repair counter",
-     "tro_ngai": "With the building dark, she heads to the phone repair counter for a loaner power bank, but the shop is closed and she ends up swapping her phone’s battery, leaving the phone dead."
+     "noi": "the home office",
+     "tro_ngai": "The update forces a reboot during a pending client video call, dropping the connection."
     },
     {
      "stt": 8,
      "loi": [
       [
-       "I can't see the screen; it's blinding.",
+       "They moved the meeting to reception; I have to run.",
        0,
-       "so"
+       "tuc"
       ],
       [
-       "Turn the projector off, then join the call.",
+       "Take the backup USB; I'll email it to you.",
        1,
        "trung_tinh"
       ],
       [
-       "I'm trying-accidentally hit record on the conference system.",
+       "File is on my desktop, but it's still syncing.",
        1,
-       "bat_ngo"
+       "trung_tinh"
       ],
       [
-       "Your rant is now live across the office.",
+       "Copy it now; the network here is faster.",
        1,
-       "so"
+       "trung_tinh"
       ],
       [
-       "Everyone's watching me complain about the whole day!",
+       "Got it, heading out; hope reception has a power outlet.",
        1,
-       "so"
+       "tuc"
       ],
       [
-       "Let's end this, then reset everything.",
+       "You'll make it; I'll keep the file ready there.",
        1,
        "tu_tin"
       ]
      ],
+     "noi": "the office reception",
+     "tro_ngai": "The client reschedules the call to the office reception, so A must rush to the office."
+    },
+    {
+     "stt": 9,
+     "loi": [
+      [
+       "Damn, the rug just gave way under my feet.",
+       0,
+       "bat_ngo"
+      ],
+      [
+       "Are you okay? That looked like a tumble.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "I'm fine, but my coffee's now a shirt tattoo.",
+       1,
+       "buon"
+      ],
+      [
+       "You need to get cleaned up before the deadline.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "I'll head to the break room, hope there's a spare.",
+       1,
+       "tuc"
+      ],
+      [
+       "Hurry, the client waits for the final upload.",
+       1,
+       "tuc"
+      ]
+     ],
+     "noi": "the office hallway",
+     "tro_ngai": "In the office hallway, A trips over a loose rug, spilling coffee on his shirt."
+    },
+    {
+     "stt": 10,
+     "loi": [
+      [
+       "Where's the spare shirt? This stain is impossible.",
+       0,
+       "buon"
+      ],
+      [
+       "Check the supply closet; that's where we keep extras.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Locked door... I guess I need the key.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "The key's on the hook by the coffee machine.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "No time, I'll force it; the upload's at five.",
+       1,
+       "tuc"
+      ],
+      [
+       "Be careful, those drives are stacked nearby.",
+       1,
+       "nghi_ngo"
+      ]
+     ],
+     "noi": "the break room",
+     "tro_ngai": "He dashes to the break room to change, discovering his only spare shirt is locked in the cramped supply closet."
+    },
+    {
+     "stt": 11,
+     "loi": [
+      [
+       "This latch is stuck, give me a second.",
+       0,
+       "trung_tinh"
+      ],
+      [
+       "Watch those hard drives; they're critical backups.",
+       1,
+       "nghi_ngo"
+      ],
+      [
+       "Oops-knocked the stack, they're scattering everywhere.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "The alarm just started; that must be the fire sensor.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "Great, now I'm stuck with a noisy alarm.",
+       1,
+       "buon"
+      ],
+      [
+       "Evacuate immediately; the meeting room is the nearest exit.",
+       1,
+       "tuc"
+      ]
+     ],
+     "noi": "the cramped supply closet",
+     "tro_ngai": "While forcing the closet door, A knocks over a stack of spare hard drives, triggering a fire alarm."
+    },
+    {
+     "stt": 12,
+     "loi": [
+      [
+       "The doors locked behind me; I can't get out.",
+       0,
+       "buon"
+      ],
+      [
+       "Stay calm, the fire marshal will open them soon.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "My laptop's on the table, project file ready.",
+       1,
+       "tu_tin"
+      ],
+      [
+       "Focus on the upload; that's the priority now.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "I'll send it the moment the door opens.",
+       1,
+       "tuc"
+      ],
+      [
+       "I'll notify the client of the slight delay.",
+       1,
+       "trung_tinh"
+      ]
+     ],
      "noi": "the meeting room",
-     "tro_ngai": "Unable to receive the meeting link, she meets B in the meeting room, where the bright projector blinds her and she accidentally starts recording her rant, broadcasting it office‑wide."
+     "tro_ngai": "The fire alarm forces an evacuation; A ends up stuck in the meeting room with his laptop."
+    },
+    {
+     "stt": 13,
+     "loi": [
+      [
+       "The Wi-Fi just dropped, drill's messing everything.",
+       0,
+       "bat_ngo"
+      ],
+      [
+       "I see. The drill likely interfered with the access point.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "I need that upload before 5 PM, any quick fix?",
+       1,
+       "so"
+      ],
+      [
+       "Only a router reboot can restore the signal now.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Where's the main router? I'm in the meeting room.",
+       1,
+       "nghi_ngo"
+      ],
+      [
+       "Head to the server room and reboot the main router.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the meeting room",
+     "tro_ngai": "The meeting room’s Wi‑Fi is down due to the drill, prompting A to call B again."
+    },
+    {
+     "stt": 14,
+     "loi": [
+      [
+       "I'm in the server room, humming fans everywhere.",
+       0,
+       "trung_tinh"
+      ],
+      [
+       "Good. Locate the rack with the main router.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Found it, lights blinking, cables tangled.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "Press the reset button on the back, then power cycle.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "There's a lever beside the rack, looks like a power switch.",
+       1,
+       "nghi_ngo"
+      ],
+      [
+       "Ignore that lever; just use the router's reset button.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the server room",
+     "tro_ngai": "B tells A to reboot the main router in the server room, so A heads there."
+    },
+    {
+     "stt": 15,
+     "loi": [
+      [
+       "I'm resetting now-oops, I grabbed the big lever.",
+       0,
+       "tuc"
+      ],
+      [
+       "What? That's the building's main power switch!",
+       1,
+       "so"
+      ],
+      [
+       "The lights are flickering, then everything went dark.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "All systems offline, including the backup generator.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "I can't see anything, I think I broke everything.",
+       1,
+       "buon"
+      ],
+      [
+       "We need emergency lights; the phone charger will lose power soon.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the server room",
+     "tro_ngai": "While rebooting, A accidentally pulls the main power switch, darkening the whole building."
+    },
+    {
+     "stt": 16,
+     "loi": [
+      [
+       "The charger just died; the phone won't power up.",
+       0,
+       "buon"
+      ],
+      [
+       "The blackout cut the generator, so no AC power here.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Do we have a UPS for the repair counter?",
+       1,
+       "nghi_ngo"
+      ],
+      [
+       "Yes, a small UPS is under the desk; plug the charger.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Plugged it in, the phone is booting now.",
+       1,
+       "tu_tin"
+      ],
+      [
+       "Great. Once power returns, upload the project from the meeting room.",
+       1,
+       "vui"
+      ]
+     ],
+     "noi": "the phone repair counter",
+     "tro_ngai": "The blackout disables the backup generator, causing the phone repair counter’s charger to stop working."
     },
     {
      "stt": 1,
      "loi": [
       [
-       "I can't log in; I forgot my password after that panic.",
+       "My phone died, I can't call the client about the delay.",
        0,
-       "buon"
-      ],
-      [
-       "Let's reset it; I'll send a link to your recovery email.",
-       1,
        "trung_tinh"
       ],
       [
-       "The computer's locked; I need the old password now.",
+       "I understand, the deadline is tight. Let's find another channel.",
        1,
        "tuc"
       ],
       [
-       "Okay, you can use the sticky-note password from the office.",
+       "Do I have any other device that could send a quick message?",
        1,
        "trung_tinh"
+      ],
+      [
+       "Your laptop still works; try emailing the client from there.",
+       1,
+       "tuc"
+      ],
+      [
+       "Laptop's Wi-Fi is down due to the building outage.",
+       1,
+       "buon"
+      ],
+      [
+       "Head home, use your landline; the office power might still be up.",
+       1,
+       "tu_tin"
       ]
      ],
-     "noi": "the customer's living room",
-     "tro_ngai": "A's smart TV shows “No internet connection,” and when she power‑cycles the router she also unplugs the TV, leaving it blank."
+     "noi": "the home office",
+     "tro_ngai": "A cannot log into the company VPN from his home office."
     },
     {
      "stt": 2,
      "loi": [
       [
-       "I'm here for the sticky-note password, please.",
+       "The landline clicks dead; no dial tone at all.",
        0,
+       "buon"
+      ],
+      [
+       "That indicates the building's main power is out.",
+       1,
+       "tuc"
+      ],
+      [
+       "I can't reach the client, nor the IT desk.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Try sending an email from your phone's hotspot, if possible.",
+       1,
+       "tuc"
+      ],
+      [
+       "My laptop can't connect; the router's offline too.",
+       1,
        "trung_tinh"
       ],
       [
-       "It's on a note... I wrapped it around a coffee cup.",
+       "I'll ship a spare laptop to your IT desk right now.",
        1,
-       "bat_ngo"
-      ],
-      [
-       "You threw it in the trash? That's the only copy!",
-       1,
-       "so"
-      ],
-      [
-       "I'll get you another; check the supply closet for a spare.",
-       1,
-       "trung_tinh"
+       "tu_tin"
       ]
      ],
-     "noi": "the cramped supply closet",
-     "tro_ngai": "To restore power she grabs a spare power strip from the cramped supply closet, but trips and breaks the strip’s fuse, keeping the TV off."
+     "noi": "the home office",
+     "tro_ngai": "He restarts his router, which temporarily cuts off his internet connection."
     },
     {
      "stt": 3,
      "loi": [
       [
-       "Alright, I'll write a new password on a fresh note.",
+       "The spare laptop arrived, but the drive asks for a password.",
        0,
        "trung_tinh"
       ],
       [
-       "Make sure it's legible; we can't guess it.",
-       1,
-       "nghi_ngo"
-      ],
-      [
-       "Oops, I wrote it upside down; it's unreadable.",
+       "That's unusual; the device shouldn't be locked out of the box.",
        1,
        "bat_ngo"
       ],
       [
-       "Alright, just type a simple password you can remember.",
+       "I don't know the password; it's not written anywhere.",
        1,
        "trung_tinh"
+      ],
+      [
+       "I'll initiate a password reset through the corporate management console.",
+       1,
+       "tuc"
+      ],
+      [
+       "Will the reset email reach me on my corporate account?",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Reset email sent; you need to access your corporate inbox now.",
+       1,
+       "tu_tin"
       ]
      ],
-     "noi": "the break room",
-     "tro_ngai": "B tells her to use the backup laptop in the break room, but the laptop’s battery is dead because the earlier power loss drained it."
+     "noi": "the home office",
+     "tro_ngai": "With no internet, A switches to his phone hotspot, quickly draining the battery."
     },
     {
      "stt": 4,
      "loi": [
       [
-       "I've logged in; restarting the webinar now.",
+       "My corporate inbox is still offline; power outage persists.",
        0,
-       "tu_tin"
+       "buon"
       ],
       [
-       "Great, the stream should go live.",
+       "Without that email you can't unlock the laptop remotely.",
+       1,
+       "tuc"
+      ],
+      [
+       "What alternatives do we have to retrieve the project file?",
        1,
        "trung_tinh"
       ],
       [
-       "The screen still says 'No internet connection'...",
+       "I'll create a temporary local admin account on the laptop.",
+       1,
+       "tu_tin"
+      ],
+      [
+       "Will that let me copy the file to a USB drive?",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Yes, connect a drive and transfer; I'll guide you step-by-step.",
+       1,
+       "tuc"
+      ]
+     ],
+     "noi": "the home office",
+     "tro_ngai": "The phone battery dies, and the charger he grabs is broken, leaving him powerless."
+    },
+    {
+     "stt": 21,
+     "loi": [
+      [
+       "line",
+       0,
+       "buon"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ],
+      [
+       "line",
+       1,
+       "nghi_ngo"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "tu_tin"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ]
+     ],
+     "noi": "the break room",
+     "tro_ngai": "B directs A to a USB recovery drive stored in the break room to bypass the login."
+    },
+    {
+     "stt": 22,
+     "loi": [
+      [
+       "line",
+       0,
+       "buon"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
        1,
        "buon"
       ],
       [
-       "Looks like we're back to square one.",
+       "line",
+       1,
+       "tuc"
+      ],
+      [
+       "line",
+       1,
+       "buon"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ]
+     ],
+     "noi": "the break room",
+     "tro_ngai": "The USB drive is corrupted, making the file unopenable for upload."
+    },
+    {
+     "stt": 23,
+     "loi": [
+      [
+       "line",
+       0,
+       "tu_tin"
+      ],
+      [
+       "line",
+       1,
+       "buon"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ],
+      [
+       "line",
+       1,
+       "buon"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ]
+     ],
+     "noi": "the meeting room",
+     "tro_ngai": "Desperate, A decides to copy the file onto a CD in the meeting room, but the CD burner is jammed."
+    },
+    {
+     "stt": 24,
+     "loi": [
+      [
+       "line",
+       0,
+       "buon"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "buon"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ],
+      [
+       "line",
+       1,
+       "tu_tin"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ]
+     ],
+     "noi": "the meeting room",
+     "tro_ngai": "After fixing the jam, the CD burns blank because the client requires a PDF, not a disc image."
+    },
+    {
+     "stt": 1,
+     "loi": [
+      [
+       "line",
+       0,
+       "tuc"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ],
+      [
+       "line",
        1,
        "trung_tinh"
       ]
      ],
-     "noi": "the office hallway",
-     "tro_ngai": "She runs to the office hallway to fetch a charger, but in her rush pulls the fire alarm, causing an evacuation."
+     "noi": "the home office",
+     "tro_ngai": "A cannot log into the company VPN from his home office."
+    },
+    {
+     "stt": 2,
+     "loi": [
+      [
+       "line",
+       0,
+       "tuc"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "so"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the home office",
+     "tro_ngai": "He restarts his router, which temporarily cuts off his internet connection."
+    },
+    {
+     "stt": 3,
+     "loi": [
+      [
+       "line",
+       0,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "buon"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the home office",
+     "tro_ngai": "With no internet, A switches to his phone hotspot, quickly draining the battery."
+    },
+    {
+     "stt": 4,
+     "loi": [
+      [
+       "line",
+       0,
+       "buon"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "buon"
+      ],
+      [
+       "line",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "line",
+       1,
+       "tuc"
+      ],
+      [
+       "line",
+       1,
+       "tu_tin"
+      ]
+     ],
+     "noi": "the home office",
+     "tro_ngai": "The phone battery dies, and the charger he grabs is broken, leaving him powerless."
     }
    ]
   }

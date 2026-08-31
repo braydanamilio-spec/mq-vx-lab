@@ -1,4 +1,5 @@
 import React from "react";
+import { AbsoluteFill, Img, staticFile } from "remotion";
 import { LapNoi, LopGan, Noi, SAN } from "./NoiChon";
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -551,8 +552,8 @@ export const NenGan: React.FC<{
 
 export const NenPanel: React.FC<{
   kenh: string; noi: Noi; w: number; h: number; mau: string; mauPhu: string; hat: number;
-  rong: boolean; bien?: number; net?: number; cham?: number;
-}> = ({ kenh, noi, w, h, mau, mauPhu, hat, rong, bien = 0, net = 5, cham = 9 }) => {
+  rong: boolean; bien?: number; net?: number; cham?: number; anh?: string;
+}> = ({ kenh, noi, w, h, mau, mauPhu, hat, rong, bien = 0, net = 5, cham = 9, anh = "" }) => {
   // 31/8 — MỖI PANEL MỘT GÓC NHÌN KHÁC. Khung thử cho ra sáu panel với cùng cái màn hình ở
   // cùng một chỗ, và sáu lần lặp lại một hình trong hai mươi giây thì mắt đọc ra là ảnh dán,
   // không phải là sáu ô truyện tranh. Cùng một căn phòng nhìn từ ba chỗ đứng vẫn là một căn
@@ -561,6 +562,48 @@ export const NenPanel: React.FC<{
   const b = ((bien % 3) + 3) % 3;
   HE_NET = Math.max(0.7, Math.min(1.5, net / 6));
   const hSK = Math.min(h, Math.max(w * 0.62, Math.min(h * 0.74, w * 1.2)));   // chiều cao sân khấu
+
+  // ══ NỀN 3D SINH BẰNG CLOUDFLARE ═══════════════════════════════════════════════════════
+  // Anh: *"thử thay lại bối cảnh 3D cf generate đúng ngữ cảnh, và nhớ đừng có lỗi lơ lửng"*.
+  // Ảnh AI làm nền chính là cách bản cũ hỏng, nên ở đây nó đi kèm hai lớp chặn:
+  //   · ẢNH LÙI RA SAU — mờ nhẹ, hạ bão hoà. Nền sắc nét ngang nhân vật là nền cãi nhau với
+  //     nhân vật; lùi ra sau thì hai lớp hết tranh chỗ.
+  //   · DẢI SÀN VẼ ĐÈ, KHÔNG PHỤ THUỘC ẢNH — vẽ bằng code ở đúng mức `SAN`. Dù mô hình trả về
+  //     một khung không có sàn nào (bản cũ hỏng vì đúng chuyện này), nhân vật VẪN đứng trên
+  //     một mặt phẳng có thật. Đây là lớp quyết định.
+  //
+  // Trả về SỚM, ngoài thẻ <svg>: `<Img>` là phần tử HTML, lồng trong svg thì trình duyệt bỏ
+  // qua nó và khung ra trống trơn.
+  if (anh) {
+    return (
+      <>
+        <AbsoluteFill style={{ overflow: "hidden" }}>
+          <Img src={staticFile(anh)} style={{
+            width: "100%", height: "100%", objectFit: "cover",
+            filter: "saturate(0.86) brightness(1.04) blur(1.6px)",
+          }} />
+        </AbsoluteFill>
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
+             style={{ position: "absolute", inset: 0 }}>
+          <defs>
+            <linearGradient id={`sn${hat | 0}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#00000000" />
+              <stop offset="55%" stopColor="#00000012" />
+              <stop offset="100%" stopColor="#00000026" />
+            </linearGradient>
+            <pattern id={`hq${hat | 0}`} width={cham} height={cham} patternUnits="userSpaceOnUse">
+              <circle cx={cham * 0.28} cy={cham * 0.28} r={cham * 0.17} fill={`${mau}18`} />
+            </pattern>
+          </defs>
+          <rect x={0} y={h * SAN - h * 0.1} width={w} height={h - h * SAN + h * 0.1}
+                fill={`url(#sn${hat | 0})`} />
+          <line x1={0} y1={h * SAN} x2={w} y2={h * SAN}
+                stroke="#14110F" strokeWidth={3} opacity={0.16} />
+          <rect width={w} height={h} fill={`url(#hq${hat | 0})`} />
+        </svg>
+      </>
+    );
+  }
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
          style={{ position: "absolute", inset: 0, zIndex: 1 }}>
@@ -571,6 +614,7 @@ export const NenPanel: React.FC<{
           <circle cx={cham * 0.28} cy={cham * 0.28} r={cham * 0.17} fill={`${mau}1F`} />
         </pattern>
       </defs>
+
       {/* 31/8 — CẬN CẢNH CŨNG VẼ BỐI CẢNH ĐẦY ĐỦ.
           Đo trên khung dọc 992px: cảnh HAI người để hở đúng 64px ở giữa, nên vật lớn đặt đâu
           cũng bị che 85% — không cách nào đọc ra chỗ nào. Nhưng cảnh CẬN chỉ có một người ở

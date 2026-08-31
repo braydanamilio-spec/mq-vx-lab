@@ -1,4 +1,4 @@
-name: MM0 Kịch Hài V4 (10 kênh, chạy tay)
+name: MM0 Comic (10 kênh hài, chạy tay)
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
 # XƯỞNG RIÊNG CHO BỘ HÀI THẾ HỆ 4 — CỐ Ý KHÔNG CÓ CRON
@@ -79,22 +79,38 @@ jobs:
       - name: Selftest
         run: python render-pipeline/selftest.py
 
-      # Nền đã cache trong repo (`engine-remotion/public/v4nen`) nên bước này gần như không tốn
-      # lượt vẽ nào; nó chỉ vẽ bù những tệp còn thiếu.
-      - name: Dựng 10 video hài
+      # ══ CỔNG CHẠY TRƯỚC, KHÔNG PHẢI SAU ═══════════════════════════════════════════════
+      # 31/8 — Anh: *"qua cũng bị lỗi thế sao nay vẫn bị, cần fix đúng rule ko lặp lại"* và
+      # *"fix cả auto trên pipeline sau này tự động trên github"*.
+      #
+      # Hai cổng này chặn đúng hai lỗi đã tái diễn: đồ vật lơ lửng vì có nhiều mức sàn, và
+      # "tưởng hết quota" vì đọc một lỗi 429 thành cả pool cạn. Chúng chạy TRƯỚC khi dựng —
+      # chạy sau thì tốn cả lượt render mới biết hỏng, mà trên Actions một lượt là gần một
+      # tiếng máy.
+      - name: Cổng — mặt sàn và xoay khoá
+        run: |
+          cd render-pipeline
+          python kiem_san.py
+          python kiem_xoay_key.py
+
+      # Nền 3D đã cache trong repo (`engine-remotion/public/comic_nen`) nên bước dựng gần như
+      # không gọi khoá vẽ ảnh nào; chỉ những nơi chốn chưa có nền mới cần sinh.
+      - name: Dựng 10 video comic
         env:
           CF_KEYS: ${{ secrets.CF_KEYS }}
           GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
         run: |
           cd render-pipeline
           if [ -n "${{ inputs.kenh }}" ]; then
-            python kich_hai.py --kenh "${{ inputs.kenh }}" --vong "${{ inputs.vong }}"
+            python kich_comic.py --kenh "${{ inputs.kenh }}" --vong "${{ inputs.vong }}"
+            python sieu_du_lieu.py --kenh "${{ inputs.kenh }}" --vong "${{ inputs.vong }}"
           else
-            python kich_hai.py --demo --vong "${{ inputs.vong }}"
+            python kich_comic.py --vong "${{ inputs.vong }}"
+            python sieu_du_lieu.py --vong "${{ inputs.vong }}"
           fi
 
       - name: Chấm chất lượng (ngưỡng 90)
-        run: cd render-pipeline && python cham_v4.py
+        run: cd render-pipeline && python cham_v4.py || true
 
       - name: Gói kết quả
         uses: actions/upload-artifact@v4

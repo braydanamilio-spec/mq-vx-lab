@@ -245,6 +245,19 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // khoảng 1:7, trẻ con 1:4 — mắt người đọc tỉ lệ ấy trước cả khi kịp nhìn mặt. Bảng cũ có
   // `tiLeDau` nhưng chỉ dùng trong dải 0,92–1,1: đủ để tách hai người lớn, không đủ để nói
   // "đây là một đứa trẻ".
+  // ── LỐI VẼ: ba bộ hệ số, áp lên nét · mắt · tỉ lệ đầu ─────────────────────────────────
+  // Không viết lại hình — chỉ nhân hệ số vào những hằng đã có. Viết lại hình là viết lại 1200
+  // dòng và mất hết những gì đã sửa; nhân hệ số thì ba lối dùng chung mọi bản vá về sau.
+  const _lv = kieu.loiVe || "mat_to";
+  const _hsNet = _lv === "net_manh" ? 0.58 : _lv === "goc_canh" ? 1.16 : 1;
+  const _hsMat = _lv === "net_manh" ? 0.58 : _lv === "goc_canh" ? 0.86 : 1;
+  // 0,46 cho ra con mắt bé tới mức mất biểu cảm — mà biểu cảm mới là thứ gánh trò đùa. 0,58
+  // vẫn đọc ra là "mắt chấm kiểu webcomic" nhưng còn đủ chỗ cho tròng mắt đảo và mí nhướn.
+  const _hsDau = _lv === "net_manh" ? 0.84 : _lv === "goc_canh" ? 0.94 : 1;
+  const _detMat = _lv === "goc_canh" ? 0.58 : 1;      // mắt dẹt theo chiều dọc
+  const NG = (7.2 * _hsNet) / scale;        // nét bao ngoài
+  const NT = (3.4 * _hsNet) / scale;        // nét chi tiết bên trong
+
   const _gioi = kieu.gioi || "nam";
   const _nu = _gioi === "nu";
   const _tre = _gioi === "tre";
@@ -257,7 +270,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const camV = kieu.cam ?? 0.4;
   // Đầu to/nhỏ là trục đổi TUỔI mạnh nhất: đầu to đọc ra là trẻ con và hài, đầu nhỏ đọc ra là
   // người lớn nghiêm. Rẻ hơn nhiều so với vẽ lại toàn bộ nét mặt.
-  const R_DAU = R_DAU_GOC * (kieu.tiLeDau ?? 1) * (_tre ? 1.34 : 1);
+  const R_DAU = R_DAU_GOC * (kieu.tiLeDau ?? 1) * _hsDau * (_tre ? 1.34 : 1);
   const kMui = kieu.kieuMui || "moc";
   const kMat = kieu.kieuMat || "bau";
   const kMay = kieu.kieuMay || "day";
@@ -265,8 +278,6 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // Nét bao dày là thứ đầu tiên mắt đọc ra "đây là phim hoạt hình". Giữ bề dày TRÊN MÀN HÌNH
   // không đổi bằng cách chia cho `scale` — không chia thì nhân vật càng xa nét càng mảnh và
   // hai người trong cùng khung trông như vẽ bằng hai cây bút khác nhau.
-  const NG = 7.2 / scale;        // nét bao ngoài
-  const NT = 3.4 / scale;        // nét chi tiết bên trong
 
   // ══ CÚ GIẬT MÌNH ("take") — ngôn ngữ hài hình ảnh cổ điển nhất của hoạt hình Mỹ ═══════
   // Khi câu chốt rơi, người NGHE phải phản ứng: mắt bật to, đầu giật lùi rồi nảy về. Đây là
@@ -529,7 +540,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // của hoạt hình truyền hình là hai mắt chiếm chừng 60–65% bề ngang đầu.
   // Mắt bầu dục ĐỨNG nên bề ngang hẹp hơn bản mắt-tròn cũ, và hai mắt gần nhau hơn để hợp với
   // sọ quả lê (chỗ rộng nhất nằm ngang tầm mắt, không ở giữa mặt).
-  const rMat = 11.5 * matTo * (1 + noNo * 0.82);
+  const rMat = 11.5 * matTo * _hsMat * (1 + noNo * 0.82);
   const rTrong = 6.4 * matTo;
   const mm = 1 - chop;
   const cachMat = 17 * matTo;
@@ -760,7 +771,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
                 xếch (đanh đá). Tỉ lệ cao/rộng là thứ đổi tính cách nhanh nhất. */}
             <ellipse cx={dau[0] + sg * cachMat} cy={dau[1] + yMat}
                      rx={rMat * (kMat === "hep" ? 1.16 : 1)}
-                     ry={rMat * (kMat === "tron" ? 1.0 : kMat === "hep" ? 0.62 : 1.24)
+                     ry={rMat * _detMat * (kMat === "tron" ? 1.0 : kMat === "hep" ? 0.62 : 1.24)
                          * (0.2 + 0.8 * mm)}
                      fill="#FFFFFF" stroke={V} strokeWidth={NT * 1.5}
                      transform={kMat === "xech" ? `rotate(${sg * 9} ${dau[0] + sg * cachMat} ${dau[1] + yMat})` : undefined} />

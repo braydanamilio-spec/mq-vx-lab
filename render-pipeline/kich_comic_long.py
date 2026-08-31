@@ -61,17 +61,43 @@ def _kho_day(k: dict) -> list:
 
 
 def dung_tap_dai(k: dict, so_tap: int) -> tuple:
-    """Ghép nhiều mẩu thành MỘT tập có mạch. Trả (danh sách lượt, danh sách câu, tên chương)."""
+    """Trả (danh sách cảnh, danh sách câu, tên chương).
+
+    ── ƯU TIÊN KHO TẬP DÀI, KHÔNG NỐI MẨU RỜI ────────────────────────────────────────────
+    31/8 — Bản trước nối mẩu short theo cửa sổ trượt. Nó cho ra video chín phút, nhưng mười bốn
+    mẩu không liên quan nhau nối lại thì vẫn là mười bốn mẩu không liên quan nhau — tức là
+    compilation, đúng thứ chính sách nội dung tái sử dụng nhắm tới.
+
+    `sinh_tap_dai.py` sinh TẬP có mạch: một việc A cố làm xong, mỗi cảnh là hậu quả của cách A
+    xử lý cảnh trước, cảnh cuối gọi lại cảnh đầu. Kho ấy đứng trước; chỉ khi kênh chưa có tập
+    nào thì mới lùi về cách nối mẩu — và khi lùi thì NÓI RA, để không ai tưởng đang có mạch.
+    """
+    tep = os.path.join(GOC, "kho_dai.json")
+    if os.path.exists(tep):
+        try:
+            kd = json.load(io.open(tep, encoding="utf-8")).get(k["de"], [])
+        except Exception as e:
+            print(f"   ⚠️ kho tập dài không đọc được: {str(e)[:60]}")
+            kd = []
+        if kd:
+            t = kd[so_tap % len(kd)]
+            cau, chuong, chon = [], [], []
+            for c in t["canh"]:
+                chuong.append((c.get("tro_ngai") or "")[:58])
+                chon.append(c)
+                for x in c["loi"]:
+                    cau.append(tuple(x))
+            print(f"   📖 tập có mạch: {t.get('tua','')} — {t.get('viec','')[:56]}")
+            return chon, cau, chuong
+
+    print("   ⚠️ kênh chưa có tập dài nào — lùi về NỐI MẨU RỜI (đây là compilation, "
+          "chạy sinh_tap_dai.py để có tập thật)")
     kho = _kho_day(k)
     if len(kho) < 6:
         return [], [], []
-
-    # Chọn mẩu theo cửa sổ trượt: tập sau bắt đầu từ chỗ tập trước dừng, nên hai tập liền nhau
-    # không dùng chung mẩu nào — và sau khi đi hết kho thì quay vòng ở một điểm lệch.
     n_can = min(len(kho), 16)
     bat_dau = (so_tap * n_can) % len(kho)
     chon = [kho[(bat_dau + i) % len(kho)] for i in range(n_can)]
-
     cau, chuong = [], []
     for i, m in enumerate(chon):
         chuong.append(m.get("nhan") or f"Part {i + 1}")

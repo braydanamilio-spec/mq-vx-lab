@@ -521,7 +521,17 @@ def _cf_flux_image(prompt, dest, key, style=None) -> bool:
         try: detail = e.read().decode()[:200]
         except Exception: pass
         if e.code == 429 or "4006" in detail or "neuron" in detail.lower():
-            raise RuntimeError(f"429 hết neuron CF trong ngày: {detail}")
+            # 31/8 — THÔNG ĐIỆP NÀY TỪNG NÓI SAI VÀ TÔI ĐÃ BÁO CÁO LẠI CÁI SAI ẤY.
+            # Cloudflare trả 429 cho HAI chuyện khác hẳn nhau: hết neuron trong ngày, và gọi
+            # quá nhanh (giới hạn theo phút). Bản trước ghi cứng "hết neuron trong ngày", nên
+            # khi tôi gọi 2 ảnh/giây và ăn rate-limit, log nói là cạn hạn mức — tôi đọc rồi
+            # báo với anh rằng phải chờ hôm sau, trong khi 94 tài khoản CF mới dùng hết 52 ảnh
+            # trên trần ~16.000/ngày.
+            # Bằng chứng phân biệt được ngay trong log: nếu là cạn thật thì ảnh SAU cũng hỏng;
+            # ở đây ảnh ngay sau đó thành công.
+            _loai = ("hết neuron trong ngày" if ("4006" in detail or "neuron" in detail.lower())
+                     else "gọi quá nhanh (rate-limit) HOẶC hết neuron — xem ảnh kế có sinh được không")
+            raise RuntimeError(f"CF 429 [{_loai}]: {detail}")
         print(f"   ⚠️ CF FLUX HTTP {e.code}: {detail[:90]}")
         return False
     b64 = ((out.get("result") or {}).get("image")) or ""
