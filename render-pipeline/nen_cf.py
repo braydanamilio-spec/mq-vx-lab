@@ -68,7 +68,12 @@ PHONG_CACH = {
     "neighbor": "fresh grass green and burnt sienna palette, natural outdoor daylight, "
                 "painted timber and stucco textures, quiet suburban street",
     "dating":   "rose pink and violet palette, warm low-hanging pendant light, velvet and "
-                "polished wood, intimate and softly lit",
+                "polished wood, intimate and softly lit",    # Nhà của một gia đình Mỹ ngoại ô: gỗ ấm, nắng qua rèm, đồ dùng bày bừa vừa phải. Cố ý
+    # KHÁC mười kênh kia — chúng đều là nơi công cộng (phòng gym, sân bay, văn phòng), còn đây
+    # là trong nhà, nên tông ấm hơn và tương phản dịu hơn.
+    "houserules": "warm suburban American family home, oak and cream palette, soft afternoon "
+                  "daylight through curtains, lived-in but tidy, gentle contrast",
+
 }
 
 
@@ -164,10 +169,20 @@ def main() -> int:
     print(f"→ {len(NGOAI)}/100 nơi ngoài trời")
     if not NGOAI:
         print("   ⚠️ KHÔNG nơi nào — cách đọc cờ đang hỏng, mọi ảnh sẽ ra nội thất")
-    chon = KENH
+    # Kênh HOUSE RULES không nằm trong `KENH` (bảng ấy do `kich_comic` dùng, mà nó tra `VAI`
+    # theo từng kênh — thêm vào đó là làm `kich_comic` nổ KeyError). Nhưng nó vẫn cần nền, nên
+    # nối vào ĐÂY thay vì viết một bộ sinh nền thứ hai: hai bộ sinh nền rồi sẽ lệch luật ép sàn.
+    try:
+        from kich_kling import KENH_KLING
+        chon = KENH + [KENH_KLING]
+    except Exception:
+        chon = KENH
     if a.kenh:
         vt = {x.strip().upper() for x in a.kenh.split(",")}
-        chon = [x for x in KENH if x["ten"].replace(" ", "").upper() in vt]
+        # LỌC TỪ `chon`, KHÔNG TỪ `KENH`. Vừa nối kênh mới vào `chon` ở trên rồi lọc lại từ
+        # `KENH` thì kênh mới rơi ra ngay — và rơi im lặng: lệnh chạy xong, báo "✅ 100 ảnh
+        # nền" (số cũ), không ảnh nào được sinh. Lại đúng họ lỗi vá một chỗ quên chỗ song song.
+        chon = [x for x in chon if x["ten"].replace(" ", "").upper() in vt]
 
     # 31/8 — GỘP, KHÔNG GHI ĐÈ.
     # Lần chạy thứ hai (chỉ 3 kênh) đã ghi đè bản đồ và xoá mất 7 kênh sinh ở lần đầu — 40 ảnh

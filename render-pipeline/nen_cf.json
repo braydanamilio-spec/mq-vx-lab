@@ -118,5 +118,17 @@
   "7": "comic_nen/techsupport_07.jpg",
   "8": "comic_nen/techsupport_08.jpg",
   "9": "comic_nen/techsupport_09.jpg"
+ },
+ "houserules": {
+  "0": "comic_nen/houserules_00.jpg",
+  "1": "comic_nen/houserules_01.jpg",
+  "2": "comic_nen/houserules_02.jpg",
+  "3": "comic_nen/houserules_03.jpg",
+  "4": "comic_nen/houserules_04.jpg",
+  "5": "comic_nen/houserules_05.jpg",
+  "6": "comic_nen/houserules_06.jpg",
+  "7": "comic_nen/houserules_07.jpg",
+  "8": "comic_nen/houserules_08.jpg",
+  "9": "comic_nen/houserules_09.jpg"
  }
 }

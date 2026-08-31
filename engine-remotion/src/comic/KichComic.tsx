@@ -422,12 +422,19 @@ const Panel: React.FC<{
       {/* lớp gần vẽ SAU nhân vật -> che một phần người, cho ra chiều sâu */}
       <NenGan noi={noi} w={w} h={h} mau={mau} mauPhu={mauPhu} rong={doiNguoi} />
 
+      {/* PANEL LẬT KHÔNG LỜI — 1/9. Gói prompt của anh viết cú lật bằng HÀNH ĐỘNG, không bằng
+          lời ("Mike freezes and looks at his hand"), và đó là nhịp 2.5–4.9s của cả 1.500 tập.
+          Panel ấy phải có mặt mà không có bong bóng: một bong bóng rỗng trên màn hình đọc ra
+          là lỗi render, không đọc ra là im lặng. Im lặng có chủ ý là ngôn ngữ của truyện
+          tranh — chữ nổ và nét mặt gánh phần còn lại. */}
+      {L.nar ? (
       <BongThoai chu={L.nar} tu={tu} giay={giay} W={w} H={h}
                  ben={canRong ? (noiA ? "phai" : "trai") : (noiA ? "trai" : "phai")}
                  duoi={canRong ? (noiA ? "trai" : "phai") : undefined}
                  hep={canRong} s0={L.s} e0={L.e} net={netMuc} boGoc={boGoc} hook={hook}
                  duoiKhung={bongDuoi}
                  p={kep(trong / 0.3)} mau={mauPhu} la={L.chot === true} />
+      ) : null}
 
       {L.chot && trong > 0.25 ? (
         <ChuNo chu={chuNo} w={w} h={h} p={kep((trong - 0.25) / 0.45)} mau={mau} tren={bongDuoi} />
@@ -527,6 +534,7 @@ export type PropsComic = {
   // đã duyệt không đụng gì.
   anhNens?: string[];
   sangs?: ({ huong: number; manh: number; mau?: string; sang?: number } | null)[];
+  hookGiay?: number;  // thẻ hook hiện bao nhiêu giây (mặc định 2.2)
   netMuc?: number;    // độ dày viền mực: 5 (mảnh, sạch) .. 10 (thô, mạnh)
   cham?: number;      // cỡ ô halftone: 7 (mịn) .. 14 (thô như báo in)
   boGoc?: number;     // bo góc bong bóng: 6 (vuông, đanh) .. 34 (tròn, hiền)
@@ -551,7 +559,7 @@ export const KichComic: React.FC<PropsComic> = ({
   nhacVol = 0.16,
   kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", handle = "", mau = "#F0483C",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
-  sang, anhNens, sangs,
+  sang, anhNens, sangs, hookGiay,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
 }) => {
@@ -595,7 +603,12 @@ export const KichComic: React.FC<PropsComic> = ({
   const veCanh = (Lx: Luot, ix: number, dangNoi: boolean) => (
     <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
-           hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi} noi={noi}
+           /* Cỡ cảnh: mặc định do engine xoay theo hạt của tập, nhưng một lượt được phép
+              ÉP cỡ của riêng nó (`canh`). Kênh HOUSE RULES cần điều đó: mười biến thể của gói
+              đổi cách CHỐT, và cỡ cảnh ở panel lật chính là thứ phân biệt "đẩy máy" với "cắt
+              sang mặt người nghe". Không có nó thì mười lối dựng ra mười video giống hệt. */
+           hai={typeof (Lx as any).canh === "boolean" ? (Lx as any).canh : coCanh(ix, luot.length, hat)}
+           dangNoi={dangNoi} noi={noi}
            anhNen={(anhNens && anhNens[ix]) || anhNen}
            sang={(sangs && sangs[ix]) || sang}
            netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLe}
@@ -643,7 +656,12 @@ export const KichComic: React.FC<PropsComic> = ({
         <div style={{ fontWeight: 700, fontSize: 21, color: mau }}>{handle}</div>
       </div>
 
-      <TheHook chu={hook} W={width} H={height} p={kep(giay / 2.2)} mau={mau} />
+      {/* 1/9 — THỜI LƯỢNG THẺ HOOK PHẢI THEO ĐỘ DÀI VIDEO. Hằng 2,2 giây hợp với bản comic
+          14–19 giây, nhưng kênh HOUSE RULES dựng đúng 6 giây theo gói của anh — 2,2 giây là
+          hơn một phần ba video, và thẻ nằm ở 62% chiều cao nên nó che người suốt quãng ấy.
+          Lại là họ lỗi "một hằng phục vụ hai thứ biến thiên độc lập": thời lượng thẻ và độ dài
+          video biến thiên riêng, mà công thức chỉ mã hoá một. */}
+      <TheHook chu={hook} W={width} H={height} p={kep(giay / (hookGiay || 2.2))} mau={mau} />
 
       {voMp3 ? <Audio src={staticFile(voMp3)} /> : null}
       {/* ÂM LƯỢNG NHẠC — 31/8. Hằng cũ `0.16` dùng chung cho 10 tệp có độ to gốc trải 26 dB

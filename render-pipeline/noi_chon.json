@@ -118,5 +118,17 @@
   "a grocery checkout",
   "the apartment doorway",
   "a rooftop terrace"
+ ],
+ "houserules": [
+  "the kitchen counter",
+  "the living room",
+  "the front entry hall",
+  "the dining table",
+  "the garage",
+  "the back porch",
+  "the laundry room",
+  "the kid's bedroom",
+  "the hallway by the stairs",
+  "the driveway"
  ]
 }
