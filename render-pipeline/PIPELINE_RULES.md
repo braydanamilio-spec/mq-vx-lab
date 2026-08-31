@@ -5382,3 +5382,19 @@ Dấu hiệu nhận ra: **sửa quy tắc mà triệu chứng không đổi.** C
 không đổi thì đang sửa sai chỗ", nhưng ở đây sửa ĐÚNG chỗ — chỉ là dữ liệu không đi qua chỗ
 ấy. Việc phải làm không phải sửa tiếp quy tắc, mà là đi tìm và đóng mọi đường vòng.
 
+### 31/8 — Commit message có dấu ` phải dùng heredoc, không dùng -m
+
+Mắc hai lần trong hai ngày: viết `git commit -m "... `ranked` ..."` thì zsh diễn giải phần
+trong dấu ` như một lệnh, chạy nó, rồi nhét kết quả (rỗng) vào thông điệp. Lần một mất chữ
+`ranked` và `cinematic`; lần hai còn tệ hơn — nó nuốt luôn cả chuỗi lệnh phía sau, nên bản
+dựng KHÔNG CHẠY mà tôi vẫn tưởng đã chạy.
+
+Luật: mọi commit message dài, hoặc có bất kỳ ký tự ` $ " nào, viết bằng
+`git commit -F - <<'MSG' ... MSG`. Dấu nháy quanh MSG là phần quan trọng nhất: nó tắt mọi phép
+thay thế của shell.
+
+Cùng họ với một lỗi khác trong ngày: `rm -f out/*.json.cu` khi không khớp tệp nào thì zsh báo
+"no matches found" và DỪNG CẢ CHUỖI `&&` phía sau — lần ấy bản dựng cũng không chạy, và tôi đọc
+kết quả cũ tưởng là kết quả mới. Trong zsh, một lệnh dọn dẹp vô hại có thể chặn cả dây chuyền;
+thêm `2>/dev/null || true` cho những lệnh chỉ mang tính dọn dẹp.
+

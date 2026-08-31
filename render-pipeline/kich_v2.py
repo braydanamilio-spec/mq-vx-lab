@@ -856,7 +856,13 @@ def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai
 
     if kieu == "nguon":
         return [
-            (_ngC, "nghi_ngo", "khoanh_tay"),
+            # 31/8 — Câu mở RIÊNG, không dùng câu dẫn nguồn chung. Phép thay hàng loạt lúc gộp
+            # kho câu đã nuốt mất câu mở của kiểu này, nên hai kênh mở bài bằng "None of this is
+            # mine" — một câu thanh minh, không phải một cú hook. Câu đầu tiên là chỗ giữ chân
+            # người xem; nó phải mở ra một cánh cửa, không phải rào trước.
+            (b([f"{ng} keeps a file most people never open.",
+                f"There is a public {ng} table behind this.",
+                f"{ng} updates this quietly, all year."]), "nghi_ngo", "khoanh_tay"),
             (hoi, "nghi_ngo", "mo_tay"),
             (b([f"Top of the file: {top_ten}, {top_hien}.",
                 f"First line, {top_ten}, at {top_hien}.",
@@ -1023,7 +1029,24 @@ def _nhan_gon(t: str, tran: int = 18) -> str:
     return (" ".join(r) or t[:tran]).rstrip(" ,;:-")
 
 
-def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
+def _da_lam_v3(ten_kenh: str) -> list:
+    """Các tập đã dựng của một kênh v3 — dùng để biết tập này là tập thứ mấy.
+
+    Đọc từ chính các tệp props trong `out/`: mỗi tệp là một tập đã dựng. Không cần một sổ riêng,
+    và không có chỗ nào để sổ ấy lệch khỏi thực tế."""
+    import glob as _g
+    ra = []
+    for f in _g.glob(os.path.join(PUB, "..", "..", "render-pipeline", "out", "v3_*.json")):
+        try:
+            d = json.load(io.open(f, encoding="utf-8"))
+        except Exception:
+            continue
+        if str(d.get("kenh") or "").strip().upper() == str(ten_kenh).strip().upper():
+            ra.append(d)
+    return ra
+
+
+def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4, so_tap: int = 0) -> tuple:
     tieu_de, ds, nguon = so_lieu
     # Mã nguồn dữ liệu ("usda", "fdic") là chữ NỘI BỘ viết thường. Đọc nguyên si thành "from
     # usda" nghe như một từ lạ; viết hoa thì máy đọc tách từng chữ cái, đúng cách người ta nói
@@ -1059,8 +1082,16 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
     # tử thứ nhất của nhiều hoán vị lại tình cờ trùng nhau: thử ra 4/6 kênh cùng rơi vào `dinh`.
     # Dịch thêm băm tên kênh vào chỉ số thì mỗi kênh vào hoán vị của mình ở một ĐIỂM KHÁC nhau,
     # nên lượt đầu cũng trải đều sáu kiểu.
-    _kieu = _perm[(so + _hs) % len(_perm)]
-    _bien = ((so // len(_perm)) + _hs) % 3
+    # 31/8 — DÙNG `so_tap`, KHÔNG DÙNG `so`.
+    # Bản trước viết `so` — một biến KHÔNG phải tham số và KHÔNG được gán trong hàm, tức một
+    # biến toàn cục tình cờ tồn tại. Python không báo gì, hàm chạy trơn tru, và mọi kênh nhận
+    # cùng một giá trị nên cùng rơi vào một kiểu kể: đo ra 5/5 kênh cùng kiểu, hai lượt sửa
+    # liền không nhúc nhích. Bản sửa "trải đều" trước đó đúng về ý nhưng vô nghĩa vì nó cộng
+    # thêm vào một hằng số.
+    # Bài học: một biến đọc được mà không khai trong hàm thì phải nghi ngay — Python im lặng ở
+    # đúng chỗ cần nói.
+    _kieu = _perm[(so_tap + _hs) % len(_perm)]
+    _bien = ((so_tap // len(_perm)) + _hs) % 3
     _cuoi = dan[-1] if len(dan) > 2 else dan[1]
     _loi = _loi_ke(_kieu, _bien,
                    top_ten, top_hien,
@@ -1829,7 +1860,10 @@ def main() -> int:
         # Nền vẽ SAU khi có số liệu, vì chủ đề của tập nằm trong chính số liệu ấy.
         # HỎI AI TRƯỚC, BẢNG TỪ KHOÁ LÀ ĐƯỜNG LUI. Không có khoá hoặc mô hình chập thì vẫn ra
         # được một chủ đề thô còn hơn không có nền theo nội dung nào.
-        canh, loi = dung_canh(k, sl)
+        # Số tập của kênh này = số tập đã có + 1. Kiểu kể xoay theo nó, nên hai tập liên tiếp
+        # của cùng một kênh không bao giờ dùng chung một cách vào chuyện.
+        _sotap = len(_da_lam_v3(k["ten"])) + 1
+        canh, loi = dung_canh(k, sl, so_tap=_sotap)
         # ══ MỘT NỀN CHO MỖI CÂU ═════════════════════════════════════════════════════════
         # Anh: *"khi nói hết 1 câu thì phải thay đổi nền footage"*. Hỏi mô hình MỘT lần cho cả
         # bài (nó cần thấy cả mạch mới chọn được các cảnh nối nhau hợp lý), nhận về sáu cảnh.
