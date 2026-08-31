@@ -191,16 +191,34 @@ const CHART_TAM = 26;             // nhích phải một chút: mắt người �
 //                 sát đáy, còn chấm-que giữ được vị trí đọc được cho mọi mục.
 // Nên luật chọn đọc DỮ LIỆU trước, và chỉ khi dữ liệu không đòi hỏi gì thì mới lấy dáng cố định
 // của kênh — để mỗi kênh vẫn có một bộ mặt quen thuộc.
-type DangChart = "dung" | "ngang" | "cham";
+// 31/8 — Anh: *"vẫn nói + chart + nền mờ, lặp đi lặp lại, còn gì đa dạng hơn không"*.
+// Có, và không cần bỏ nhân vật hay bỏ nền — anh đã nói rõ là muốn GIỮ hai thứ ấy. Chỗ còn đơn
+// điệu là LOẠI biểu đồ: ba dáng cột/thanh/chấm đều là cùng một ý tưởng "so chiều dài".
+// Thêm ba loại nói bằng ngôn ngữ hình khác hẳn:
+//   khoi   — ô vuông to nhỏ theo giá trị: mắt so DIỆN TÍCH, hợp khi chênh lệch lớn
+//   thehai — hai tấm thẻ lớn đối đầu, đỉnh so đáy: hợp khi câu chuyện là một khoảng cách
+//   vong   — vòng tròn chia phần: hợp khi các mục cộng lại thành một tổng thể
+type DangChart = "dung" | "ngang" | "cham" | "khoi" | "thehai" | "vong";
 
 const chonDang = (cot: { nhan: string; gt: number }[], kenhSo: number): DangChart => {
   const n = Math.min(4, cot.length);
   if (!n) return "dung";
   const dai = Math.max(...cot.slice(0, n).map((c) => (c.nhan || "").length));
   const gt = cot.slice(0, n).map((c) => c.gt).sort((a, b) => b - a);
+  // 31/8 — CHỌN THEO DỮ LIỆU TRƯỚC, XOAY THEO KÊNH SAU.
+  // Mỗi loại hình nói tốt một kiểu quan hệ; ép sai loại thì biểu đồ đúng số mà vẫn khó đọc:
+  //   · đỉnh vượt xa phần còn lại  -> chấm trên thang (cột sẽ dẹp lép hết)
+  //   · chỉ hai mục                -> hai thẻ đối đầu (hai cột trơ trọi không thành bảng)
+  //   · các mục là phần trăm       -> vòng chia phần (chúng cộng lại thành một tổng thể)
+  //   · nhãn dài                   -> thanh ngang (nhãn nằm ngang mới đủ chỗ)
+  // Chỉ khi dữ liệu không đòi hỏi gì riêng thì mới xoay theo băm kênh — và xoay trong SÁU loại
+  // chứ không phải ba, nên hai kênh cạnh nhau hiếm khi trùng bộ mặt.
   if (gt.length > 1 && gt[1] > 0 && gt[0] / gt[1] > 3.5) return "cham";
+  if (cot.length === 2) return "thehai";
+  const _phan = cot.slice(0, n).every((c) => /%/.test(String(c.nhan)) || /%/.test(String((c as any).hien || "")));
+  if (_phan && cot.length >= 3) return "vong";
   if (dai > 14) return "ngang";
-  return (["dung", "ngang", "cham"] as DangChart[])[kenhSo % 3];
+  return (["dung", "ngang", "cham", "khoi", "thehai", "vong"] as DangChart[])[kenhSo % 6];
 };
 
 const CotNgang: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat: number;
@@ -314,6 +332,120 @@ const ChamQue: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
   );
 };
 
+/** Ô VUÔNG TỈ LỆ — mắt so diện tích thay vì so chiều dài. */
+const KhoiVuong: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
+                            noiBat: number; pCua: (i: number) => number }> =
+({ cot, p, mau, noiBat, pCua }) => {
+  const N = Math.min(4, cot.length);
+  const ds = cot.slice(0, N);
+  const dinh = Math.max(1, ...ds.map((c) => c.gt));
+  // Cạnh ô theo CĂN BẬC HAI của giá trị: diện tích mới là thứ mắt đọc, nên cạnh phải là căn.
+  // Lấy cạnh tỉ lệ thẳng với giá trị thì ô lớn nhất trông to gấp bội lần sự thật.
+  const canh = (g: number) => 60 + 130 * Math.sqrt(Math.max(0, g) / dinh);
+  let x = -230;
+  return (
+    <g>
+      <rect x={-268} y={-150} width={536} height={330} rx={18} fill="#FBF6EA"
+            stroke={mau.muc} strokeWidth={6} />
+      {ds.map((c, i) => {
+        const pi = muot(kep(pCua(i)));
+        const k = canh(c.gt) * pi;
+        const sang = i === noiBat;
+        const gx = x + k / 2;
+        x += canh(c.gt) + 16;
+        return (
+          <g key={i} transform={`translate(${gx} 40)`}>
+            <rect x={-k / 2} y={-k / 2} width={k} height={k} rx={10}
+                  fill={sang ? mau.nhan : "#F2C230"} stroke={mau.muc} strokeWidth={sang ? 6 : 4} />
+            <text x={0} y={6} textAnchor="middle" fontSize={Math.max(15, k * 0.19)}
+                  fontWeight={900} fill={mau.muc} opacity={pi}>{c.hien}</text>
+            <text x={0} y={k / 2 + 26} textAnchor="middle" fontSize={17} fontWeight={800}
+                  fill={mau.muc} opacity={0.9 * pi}>{c.nhan}</text>
+          </g>
+        );
+      })}
+    </g>
+  );
+};
+
+/** HAI THẺ ĐỐI ĐẦU — đỉnh bảng so với đáy bảng. Câu chuyện là KHOẢNG CÁCH, không phải thứ hạng. */
+const TheDoiDau: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
+                            noiBat: number; pCua: (i: number) => number }> =
+({ cot, p, mau, noiBat, pCua }) => {
+  const a = cot[0];
+  const b = cot[cot.length - 1] || cot[1] || cot[0];
+  if (!a) return null;
+  const the = (c: NonNullable<Canh["cot"]>[number], dx: number, i: number, tren: boolean) => {
+    const pi = muot(kep(pCua(i)));
+    return (
+      <g transform={`translate(${dx} 0)`} opacity={pi}>
+        <rect x={-124} y={-96} width={248} height={192} rx={16}
+              fill={tren ? mau.nhan : "#F2C230"} stroke={mau.muc} strokeWidth={6} />
+        <text x={0} y={-30} textAnchor="middle" fontSize={19} fontWeight={800}
+              fill={tren ? "#FFFFFF" : mau.muc} opacity={0.9}>{c.nhan}</text>
+        <text x={0} y={34} textAnchor="middle" fontSize={46} fontWeight={900}
+              fill={tren ? "#FFFFFF" : mau.muc}>{c.hien}</text>
+      </g>
+    );
+  };
+  return (
+    <g>
+      <rect x={-292} y={-150} width={584} height={300} rx={18} fill="#FBF6EA"
+            stroke={mau.muc} strokeWidth={6} />
+      {the(a, -140, 0, true)}
+      <text x={0} y={12} textAnchor="middle" fontSize={30} fontWeight={900}
+            fill={mau.muc} opacity={0.55}>vs</text>
+      {the(b, 140, Math.min(cot.length - 1, 1), false)}
+    </g>
+  );
+};
+
+/** VÒNG CHIA PHẦN — hợp khi các mục cộng lại thành một tổng thể. */
+const VongPhan: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
+                           noiBat: number; pCua: (i: number) => number }> =
+({ cot, p, mau, noiBat, pCua }) => {
+  const N = Math.min(5, cot.length);
+  const ds = cot.slice(0, N);
+  const tong = Math.max(1, ds.reduce((t, c) => t + Math.max(0, c.gt), 0));
+  const MAU = ["#F2C230", "#E4572E", "#3B8EA5", "#7B6CD9", "#4C9A6B"];
+  const R = 104, r = 58;
+  let goc = -Math.PI / 2;
+  return (
+    <g>
+      <rect x={-292} y={-150} width={584} height={310} rx={18} fill="#FBF6EA"
+            stroke={mau.muc} strokeWidth={6} />
+      <g transform="translate(-150 10)">
+        {ds.map((c, i) => {
+          const pi = muot(kep(pCua(i)));
+          const phan = (Math.max(0, c.gt) / tong) * Math.PI * 2 * pi;
+          const g0 = goc, g1 = goc + phan;
+          goc += (Math.max(0, c.gt) / tong) * Math.PI * 2;
+          const lon = phan > Math.PI ? 1 : 0;
+          const d = [`M ${Math.cos(g0) * R} ${Math.sin(g0) * R}`,
+                     `A ${R} ${R} 0 ${lon} 1 ${Math.cos(g1) * R} ${Math.sin(g1) * R}`,
+                     `L ${Math.cos(g1) * r} ${Math.sin(g1) * r}`,
+                     `A ${r} ${r} 0 ${lon} 0 ${Math.cos(g0) * r} ${Math.sin(g0) * r}`, "Z"].join(" ");
+          return <path key={i} d={d} fill={i === noiBat ? mau.nhan : MAU[i % MAU.length]}
+                       stroke={mau.muc} strokeWidth={4} />;
+        })}
+      </g>
+      <g transform="translate(30 -66)">
+        {ds.map((c, i) => (
+          <g key={i} transform={`translate(0 ${i * 42})`} opacity={muot(kep(pCua(i)))}>
+            <rect x={0} y={-13} width={22} height={22} rx={5}
+                  fill={i === noiBat ? mau.nhan : MAU[i % MAU.length]}
+                  stroke={mau.muc} strokeWidth={3} />
+            <text x={32} y={5} fontSize={18} fontWeight={800} fill={mau.muc}>{c.nhan}</text>
+            <text x={232} y={5} textAnchor="end" fontSize={19} fontWeight={900}
+                  fill={mau.muc}>{c.hien}</text>
+          </g>
+        ))}
+      </g>
+    </g>
+  );
+};
+
+
 const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat?: number;
                            dang?: DangChart; hien?: number; pMoi?: number }> =
 ({ cot, p, mau, noiBat = 0, dang = "dung", hien, pMoi }) => {
@@ -339,6 +471,9 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
     (typeof pMoi === "number" && i === _soHien - 1 && _soHien > 1) ? pMoi : p;
   if (dang === "ngang") return <CotNgang cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
   if (dang === "cham") return <ChamQue cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
+  if (dang === "khoi") return <KhoiVuong cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
+  if (dang === "thehai") return <TheDoiDau cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
+  if (dang === "vong") return <VongPhan cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
   // ══════════════════════════════════════════════════════════════════════════════════════
   // BIỂU ĐỒ PHẢI CÓ TẤM NỀN RIÊNG
   // --------------------------------------------------------------------------------------
