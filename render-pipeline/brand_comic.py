@@ -68,7 +68,7 @@ CO = {"avatar": ("ComicAvatar", "avatar"), "banner": ("ComicBanner", "banner"),
 # Chép hai bảng toạ độ từ `BrandComic.tsx` sang đây là tạo bản thứ hai của sự thật — và bản thứ
 # hai sẽ lệch. Nhưng đổi lại, cổng này bắt được đúng loại lỗi mà mắt bỏ sót, nên giữ, kèm ghi
 # chú: SỬA `BrandComic.tsx` THÌ SỬA CẢ Ở ĐÂY.
-_CHO = [(0.10, 0.90), (0.16, None), (0.82, 0.94), (0.08, 0.32), (None, 0.86), (None, 0.88)]
+_CHO = [(0.10, 0.90), (0.16, 0.31), (0.82, 0.94), (0.08, 0.32), (0.71, 0.88), (0.79, 0.94)]
 _NUA_NGUOI = 0.085          # nửa bề ngang nhân vật, theo tỉ lệ ô an toàn
 
 

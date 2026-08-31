@@ -177,23 +177,43 @@ export const BrandComic: React.FC<PropsBrand> = ({
   const AT = { w: 1546, h: 423, x: (2560 - 1546) / 2, y: (1440 - 423) / 2 };
   const bcB = ((boCuc % 6) + 6) % 6;
   const V = "#14110F";
-  const kA = (AT.h * 0.92) / (CAO_NG * (A.cao ?? 1));
-  const kB = (AT.h * 0.86) / (CAO_NG * (B.cao ?? 1));
+  // 31/8, sửa lần hai — ANH: *"nó bị ép ngắn xuống làm lỗi"*. Đúng, và tôi tự gây ra:
+  // bản trước ép CẢ NGƯỜI nằm trong ô an toàn 423px, mà ô ấy chỉ chiếm 29% chiều cao banner —
+  // nên nhân vật cao chưa tới một phần ba khung, đứng lọt thỏm giữa một mảng màu mênh mông và
+  // đọc ra như bị nén.
+  //
+  // Luật đúng không phải "cả người trong ô an toàn" mà là **MẶT trong ô an toàn**. Đó mới là
+  // thứ bắt buộc phải thấy ở mọi tỉ lệ màn hình; thân và chân tràn xuống dưới thì trên điện
+  // thoại bị cắt bớt — không sao, vì phần bị cắt không mang thông tin nào. Người nay cao gấp
+  // rưỡi ô an toàn, tức hơn 44% chiều cao banner, và trông ra dáng một nhân vật.
+  // 31/8, lỗi lặp lại — MỘT TỈ LỆ CHUNG CHO CẢ HAI, tính theo người CAO NHẤT.
+  // Banner PARENT MODE ra khung có đứa con TO HƠN MẸ. Vì tôi chia tỉ lệ cho `cao` của từng
+  // người: ai thấp thì được nhân lên nhiều hơn để bù, và bù xong thì mất luôn cái chênh lệch
+  // vốn là thông tin. Đây đúng lỗi đã ghi ở PIPELINE_RULES 11.2 cho video, tôi lặp lại nguyên
+  // vẹn ở banner — dấu hiệu rõ ràng rằng luật ấy đáng lẽ phải nằm trong MỘT hàm dùng chung
+  // chứ không nằm trong một ghi chú.
+  const caoMaxB = Math.max(A.cao ?? 1, B.cao ?? 1);
+  const kChung = (AT.h * 1.5) / (CAO_NG * caoMaxB);
+  const kA = kChung, kB = kChung;
 
   // chỗ đứng của hai nhân vật theo khuôn (tỉ lệ trong ô an toàn); null = không vẽ người ấy
   const CHO: ([number, number | null])[] = [
     [0.10, 0.90],    // 0 — hai bên, tên ở giữa
-    [0.16, null],    // 1 — một người bên trái, tên chiếm phải
+    [0.16, 0.31],    // 1 — hai người sát nhau bên trái, tên chiếm phải
     [0.82, 0.94],    // 2 — hai người dồn về phải, tên chiếm trái
     [0.08, 0.32],    // 3 — hai người dồn trái, tên chiếm phải
-    [null as any, 0.86], // 4 — chỉ người B bên phải
-    [null as any, 0.88], // 5 — một người bên phải, tên trái, nền vòng tròn lớn
+    [0.71, 0.88],    // 4 — hai người bên phải, tên trái, nền vạch toả
+    [0.79, 0.94],    // 5 — hai người bên phải, tên trái, nền vòng tròn lớn
   ];
   // 31/8 — HAI KHUÔN NÀY TỪNG ĐẶT NGƯỜI ĐÚNG CHỖ CỦA CHỮ.
   // Banner DIET WARS ra khung có chữ "DIET WARS" đè thẳng lên nhân vật: khuôn 5 đặt người ở
   // giữa (0,50) trong khi dải chữ trải 0,22–1,12. Khuôn 3 cũng vậy ở mức nhẹ hơn.
   // Lỗi này không lộ khi xem từng banner một — nó chỉ lộ khi ĐO. Nên phép đo ấy nay nằm trong
   // `brand_comic.py` và chạy trước mỗi lần dựng, thay vì trông vào việc mở ảnh ra nhìn.
+  // 31/8 — MỌI BANNER PHẢI CÓ CẢ HAI NHÂN VẬT.
+  // Ba khuôn trước đây chỉ vẽ một người, và rà soát mười kênh mới thấy hậu quả: banner PARENT
+  // MODE mất hẳn đứa con — mà cặp mẹ-con chính LÀ nhận diện của kênh ấy. Bộ đôi là thứ người
+  // xem nhớ; bỏ một nửa đi để bố cục thoáng hơn là đổi chác lỗ.
   const [xa, xb] = CHO[bcB];
   const chuTrai = bcB === 2 ? 0.04 : bcB === 1 ? 0.4 : bcB === 3 ? 0.56 : bcB === 4 ? 0.06
     : bcB === 5 ? 0.02 : 0.22;
@@ -233,7 +253,11 @@ export const BrandComic: React.FC<PropsBrand> = ({
       {/* dải màu chính — khuôn 3 và 5 bỏ dải này, dùng nền hình học thay */}
       {bcB !== 3 && bcB !== 5 ? (
         <div style={{
-          position: "absolute", left: 0, top: AT.y - 60, width: W, height: AT.h + 120,
+          // Dải màu phải CHỨA ĐƯỢC nhân vật, không chỉ chứa chữ. Từ khi người cao gấp rưỡi ô
+          // an toàn, chân họ tràn xuống dưới dải và đứng lên nền ngoài — đọc ra là hình dán
+          // chứ không phải người đứng trong khung. Đáy dải nay tính từ chỗ chân thật sự chạm.
+          position: "absolute", left: 0, top: AT.y - 60, width: W,
+          height: AT.h * 0.06 + CAO_NG * caoMaxB * kChung + 80,
           background: mau, borderTop: `12px solid ${V}`, borderBottom: `12px solid ${V}`,
         }} />
       ) : null}
@@ -244,14 +268,14 @@ export const BrandComic: React.FC<PropsBrand> = ({
             <DienVienHai
               kieu={A} camXuc={"bat_ngo" as TenCamXuc} cuChi={"mo_tay" as TenCuChi} nhin={[0.4, 0]}
               noi={{ w: 24, h: 18, tron: 0.1 } as any} t={1.1} dangNoi={false} kyHieu={false} ghimNguc
-              x={AT.x + AT.w * xa} y={AT.y + AT.h * 0.97} scale={kA}
+              x={AT.x + AT.w * xa} y={AT.y + AT.h * 0.06 + CAO_NG * caoMaxB * kChung} scale={kA}
             />
           ) : null}
           {xb != null ? (
             <DienVienHai
               kieu={B} camXuc={"tu_tin" as TenCamXuc} cuChi={"khoanh_tay" as TenCuChi} nhin={[-0.4, 0]}
               noi={{ w: 20, h: 12, tron: 0.1 } as any} t={1.7} dangNoi={false} kyHieu={false} ghimNguc lat
-              x={AT.x + AT.w * xb} y={AT.y + AT.h * 0.97} scale={kB}
+              x={AT.x + AT.w * xb} y={AT.y + AT.h * 0.06 + CAO_NG * caoMaxB * kChung} scale={kB}
             />
           ) : null}
         </svg>
