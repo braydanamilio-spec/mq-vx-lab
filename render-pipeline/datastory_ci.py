@@ -1703,6 +1703,23 @@ def run_render_cmd(cmd, cwd, timeout=RENDER_TIMEOUT, label=""):
     if proc.returncode != 0:
         raise subprocess.CalledProcessError(proc.returncode, cmd)
 
+    # CHUẨN ÂM NGAY TẠI CHỖ NGHẼN CHUNG. 1/9 — mọi đường dựng của thế hệ 1 và `the_he_2.py` đều
+    # đi qua hàm này, nên vá ở đây là vá một lần cho tất cả, thay vì đi tìm từng lời gọi
+    # `remotion render` rải rác (chỉ riêng hai tệp ấy đã hơn mười chỗ) rồi chắc chắn sót vài
+    # chỗ — đúng họ lỗi "vá một nhánh, để nguyên nhánh song song".
+    # YouTube/FB/IG chuẩn hoá về −14 LUFS và CHỈ HẠ, KHÔNG NÂNG: video nhỏ hơn mốc phát ra yếu
+    # hơn mọi video quanh nó trong feed. `chuan()` tự nuốt mọi lỗi và tự giải mã thử trước khi
+    # thay tệp, nên nó không thể làm hỏng một lượt render đã thành công.
+    try:
+        from chuan_am import chuan
+        _o = cmd[5] if len(cmd) > 5 else ""
+        if isinstance(_o, str) and _o.endswith(".mp4"):
+            _am = chuan(_o)
+            if _am:
+                print(f"   🔊 {os.path.basename(_o)}: {_am}")
+    except Exception:
+        pass
+
 
 # CHUẨN THUMBNAIL YOUTUBE (áp cho CẢ long lẫn short — YouTube chỉ nhận thumbnail tuỳ chỉnh 16:9,
 # Shorts cũng vậy, nó tự cắt khi hiển thị dọc): 1280x720, JPG, dưới 2MB (trần cứng của YouTube).

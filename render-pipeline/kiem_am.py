@@ -56,12 +56,43 @@ def main() -> int:
     # YouTube/FB/IG chuẩn hoá về −14 LUFS và chỉ HẠ chứ không nâng. Cả BA đường dựng phải gọi
     # `chuan()` — đây chính là chỗ dễ tái phạm họ lỗi "vá một nhánh, để nguyên nhánh song song",
     # vì ba tệp này không dùng chung hàm dựng nào.
-    thieu_chuan = [t for t in ("kich_comic.py", "kich_comic_long.py", "kich_v2.py")
-                   if "chuan(out)" not in io.open(os.path.join(GOC, t), encoding="utf-8").read()]
+    # TỰ TÌM, KHÔNG DÒ DANH SÁCH VIẾT CỨNG. 1/9 — bản trước liệt kê đúng ba tệp, nên khi
+    # `kich_v2_long.py` (đường thứ tư, chưa ai chạy bao giờ) không gọi `chuan()` thì cổng vẫn
+    # báo xanh. Một cổng chống lỗi "vá một nhánh, để nguyên nhánh song song" mà bản thân nó
+    # cũng viết cứng danh sách nhánh thì nó chính là nhánh bị bỏ quên tiếp theo.
+    # Luật thật là: TỆP NÀO DỰNG RA MP4 thì tệp ấy phải chuẩn âm. Dò theo lời gọi render.
+    WF = os.path.join(GOC, "..", ".github", "workflows")
+    goi = ""
+    if os.path.isdir(WF):
+        for w in os.listdir(WF):
+            if w.endswith((".yml", ".yaml")):
+                goi += io.open(os.path.join(WF, w), encoding="utf-8").read()
+
+    duong, ngu = [], []
+    for t in sorted(os.listdir(GOC)):
+        if not t.endswith(".py"):
+            continue
+        n = io.open(os.path.join(GOC, t), encoding="utf-8").read()
+        if '"remotion", "render"' not in n and "'remotion', 'render'" not in n:
+            continue
+        # CHỈ BẮT ĐƯỜNG ĐANG CHẠY. Có bốn tệp dựng mp4 nhưng không workflow nào gọi tới:
+        # `kich_hai.py` (engine hài cũ, giữ để đối chiếu) và `receipt_pilot.py` (pilot). Bắt
+        # chúng là cổng tố oan, mà cổng tố oan thì người ta tắt cổng.
+        # Đạt nếu tự gọi `chuan()`, HOẶC uỷ thác qua `run_render_cmd` — hàm ấy đã chuẩn âm
+        # ngay tại chỗ nghẽn chung. Bản trước chỉ dò chữ "chuan(" nên tố oan `the_he_2.py`,
+        # tệp đi qua đúng đường đã vá. Cổng tố oan thì người ta tắt cổng — nguy hiểm ngang cổng
+        # bỏ sót.
+        ok = ("chuan(" in n) or ("run_render_cmd(" in n and t != "datastory_ci.py")
+        (duong if t in goi else ngu).append((t, ok))
+    thieu_chuan = [t for t, ok in duong if not ok]
+    if ngu:
+        print(f"  ℹ️ {len(ngu)} đường dựng KHÔNG workflow nào gọi (bỏ qua): "
+              f"{' · '.join(t for t, _ in ngu)}")
     if thieu_chuan:
         loi.append("chưa chuẩn âm đầu ra: " + " · ".join(thieu_chuan) + "  (gọi `chuan(out)`)")
     else:
-        print("  ✅ cả 3 đường dựng đều đưa âm lượng về −14 LUFS")
+        print(f"  ✅ cả {len(duong)} đường dựng ra mp4 đều đưa âm lượng về −14 LUFS "
+              f"({' · '.join(t for t, _ in duong)})")
 
     if loi:
         print("\n❌ " + "\n❌ ".join(loi))

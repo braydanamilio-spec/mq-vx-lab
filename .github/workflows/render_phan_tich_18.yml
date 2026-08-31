@@ -115,23 +115,30 @@ jobs:
           [ -n "$GOC" ] && python kich_v2.py --kenh "$GOC" || echo "  (luồng này không có kênh gốc)"
           [ -n "$GEN" ] && python kich_v2.py --gen2 "$GEN" || echo "  (luồng này không có kênh gen-2)"
 
-      - name: Dựng dài 16:9
+      # BẢN DÀI 16:9 — MỖI LUỒNG MỘT KÊNH MỖI NGÀY, KHÔNG PHẢI CẢ 3-4 KÊNH.
+      # Đo: bản ngắn v3 ~20 giây video (~2 phút dựng); bản dài 14 lát ước ~6-9 phút video, tức
+      # ~35 phút trên runner 2 nhân. Ba kênh × (2 + 35) = 111 phút, vượt trần 90 — job bị huỷ
+      # thì `upload-artifact` không chạy và mất luôn cả bản ngắn đã xong (mục 24.1).
+      # Xoay theo ngày: 18 luồng × 1 bản dài = 18 bản/ngày, ba ngày phủ hết 56 kênh.
+      - name: Dựng dài 16:9 (một kênh, xoay theo ngày)
         env:
           CF_KEYS: ${{ secrets.CF_KEYS }}
           GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
         run: |
           cd render-pipeline
           L=${{ matrix.luong }}
-          # Cờ `--gen2` CHỈ cho kênh thế hệ 2. Gắn nhầm cho kênh gốc là nó đi tra bảng
-          # `kenh_the_he_2.json` không có tên ấy rồi bỏ lượt — im lặng, không lỗi nào báo.
-          python kenh_cua_lo.py --luong $L --tong 18 --goc | while read -r K; do
-            [ -z "$K" ] && continue
-            echo "→ dài (gốc): $K"; python kich_v2_long.py --kenh "$K" || true
-          done
-          python kenh_cua_lo.py --luong $L --tong 18 --gen2 | while read -r K; do
-            [ -z "$K" ] && continue
-            echo "→ dài (gen2): $K"; python kich_v2_long.py --kenh "$K" --gen2 || true
-          done
+          python kenh_cua_lo.py --luong $L --tong 18 > /tmp/ds.txt
+          N=$(wc -l < /tmp/ds.txt | tr -d ' ')
+          [ "$N" -eq 0 ] && exit 0
+          IDX=$(( ($(date -u +%j) % N) + 1 ))
+          K=$(sed -n "${IDX}p" /tmp/ds.txt)
+          echo "→ dài: $K  (kênh $IDX/$N của luồng $L)"
+          # Cờ `--gen2` CHỈ cho kênh thế hệ 2; gắn nhầm cho kênh gốc là nó bỏ lượt im lặng.
+          if python kenh_cua_lo.py --luong $L --tong 18 --gen2 | grep -qx "$K"; then
+            python kich_v2_long.py --kenh "$K" --gen2 || true
+          else
+            python kich_v2_long.py --kenh "$K" || true
+          fi
 
       - name: Chấm + soi khung
         run: |

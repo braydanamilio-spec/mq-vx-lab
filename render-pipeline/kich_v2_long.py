@@ -31,6 +31,7 @@ Cách này chậm hơn (mỗi lát một lượt render ~3 phút) nhưng KHÔNG 
 của 56 kênh — luật đầu tiên trong CLAUDE.md.
 """
 import os
+from chuan_am import chuan   # đưa âm lượng về mốc −14 LUFS của nền tảng
 import io
 import json
 import shutil
@@ -124,7 +125,9 @@ def ghep(ten_kenh: str, gen2: bool, so_lat: int) -> str:
     if r.returncode or not os.path.exists(out):
         print(f"   ❌ render hỏng: {(r.stderr or r.stdout or '')[-200:]}")
         return ""
-    print(f"   ✅ {ten_kenh}: {os.path.basename(out)} · {moc/60:.1f} phút · {len(canh)} cảnh")
+    _am = chuan(out)
+    print(f"   ✅ {ten_kenh}: {os.path.basename(out)} · {moc/60:.1f} phút · {len(canh)} cảnh"
+          f"{' · ' + _am if _am else ''}")
     return out
 
 

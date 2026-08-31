@@ -34,7 +34,22 @@ concurrency: { group: mm0-hai, cancel-in-progress: false }
 jobs:
   dung:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 90
+    # ══ 1/9 — MỖI KÊNH MỘT LUỒNG ═════════════════════════════════════════════════════════
+    # Bản trước dựng 10 bản ngắn + 10 BẢN DÀI trong MỘT job với trần 120 phút. Đo ra:
+    #   bản ngắn 14 giây  -> ~35 giây dựng
+    #   bản dài 7 phút    -> ~19 phút trên máy anh, tức ~38 phút trên runner 2 nhân
+    #   tổng: 10×1 + 10×38 = ~390 phút,  gấp hơn ba lần trần.
+    # Job sẽ bị huỷ ở phút 120 — và huỷ thì bước `upload-artifact` KHÔNG chạy, nên mất luôn cả
+    # 10 bản ngắn đã dựng xong. Cùng họ lỗi "gói về tay không" ở mục 24.1: hỏng mà không có
+    # tệp nào để lại thì trông y hệt như chưa từng chạy.
+    # Chia mỗi kênh một luồng: ~40 phút, thừa chỗ trong trần 90.
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        kenh: ["RENTPANIC", "GYMLIES", "AIRPORTHELL", "CARGUY", "OFFICESMALLTALK",
+               "DIETWARS", "TECHSUPPORT", "PARENTMODE", "NEIGHBORWATCH", "DATINGAPP"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -117,29 +132,22 @@ jobs:
 
       # Nền 3D đã cache trong repo (`engine-remotion/public/comic_nen`) nên bước dựng gần như
       # không gọi khoá vẽ ảnh nào; chỉ những nơi chốn chưa có nền mới cần sinh.
-      - name: Dựng 10 video comic
+      - name: Dựng ngắn 9:16 — ${{ matrix.kenh }}
         env:
           CF_KEYS: ${{ secrets.CF_KEYS }}
           GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
         run: |
           cd render-pipeline
-          # Cron không truyền `inputs`, nên số tập lấy theo ngày trong năm — mỗi ngày một mẩu.
           VONG="${{ inputs.vong }}"
           [ -z "$VONG" ] && VONG=$(date -u +%j)
-          echo "  vòng = $VONG"
-          if [ -n "${{ inputs.kenh }}" ]; then
-            python kich_comic.py --kenh "${{ inputs.kenh }}" --vong "$VONG"
-            python sieu_du_lieu.py --kenh "${{ inputs.kenh }}" --vong "$VONG"
-          else
-            python kich_comic.py --vong "$VONG"
-            python sieu_du_lieu.py --vong "$VONG"
-          fi
+          echo "  vòng = $VONG · kênh = ${{ matrix.kenh }}"
+          python kich_comic.py --kenh "${{ matrix.kenh }}" --vong "$VONG"
+          python sieu_du_lieu.py --kenh "${{ matrix.kenh }}" --vong "$VONG"
 
       # BẢN DÀI 16:9 — chỗ bật quảng cáo giữa video, tức nguồn tiền chính. Trước 31/8 nó hoàn
-      # toàn không có trong workflow nào: có tệp `kich_comic_long.py` trong repo mà không lượt
-      # chạy nào gọi tới. `|| true` vì bản dài cần ≥25 mẩu trong kho — kênh nào chưa đủ thì bỏ
-      # lượt dài, KHÔNG được kéo theo bản ngắn đã dựng xong.
-      - name: Dựng bản dài 16:9
+      # toàn không có trong workflow nào. `|| true` vì bản dài cần ≥25 mẩu trong kho — kênh nào
+      # chưa đủ thì bỏ lượt dài, KHÔNG được kéo theo bản ngắn đã dựng xong.
+      - name: Dựng dài 16:9 — ${{ matrix.kenh }}
         env:
           CF_KEYS: ${{ secrets.CF_KEYS }}
           GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
@@ -147,8 +155,8 @@ jobs:
           cd render-pipeline
           VONG="${{ inputs.vong }}"
           [ -z "$VONG" ] && VONG=$(date -u +%j)
-          python kich_comic_long.py --vong "$VONG" || true
-          python sieu_du_lieu.py --vong "$VONG" --long || true
+          python kich_comic_long.py --kenh "${{ matrix.kenh }}" --vong "$VONG" || true
+          python sieu_du_lieu.py --kenh "${{ matrix.kenh }}" --vong "$VONG" --long || true
 
       - name: Chấm chất lượng (ngưỡng 90)
         run: cd render-pipeline && python cham_v4.py || true
@@ -161,7 +169,7 @@ jobs:
       - name: Gói kết quả
         uses: actions/upload-artifact@v4
         with:
-          name: comic-vong-${{ inputs.vong || github.run_number }}
+          name: comic-${{ matrix.kenh }}-${{ inputs.vong || github.run_number }}
           path: |
             render-pipeline/out/v5_*.mp4
             render-pipeline/out/v5_*.jpg
@@ -170,3 +178,4 @@ jobs:
             render-pipeline/out/v5L_*.jpg
             render-pipeline/out/v5L_*.tai.json
           retention-days: 14
+          if-no-files-found: warn

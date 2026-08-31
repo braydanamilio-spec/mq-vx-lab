@@ -6474,3 +6474,63 @@ khoảng ba lần. YouTube nén lại lần nữa dù ta gửi gì.
 Lệch 90 phút để hai xưởng không tranh runner. Cố ý **không** dựng cả 56 kênh trong một lượt:
 trần Actions là 6 tiếng, 56 video ở ~4 phút là gần 4 tiếng, cộng cài đặt thì chạm trần — hỏng
 ở phút thứ 350 là mất trắng cả lượt.
+
+---
+
+## 25. KHI CHÍNH CÁI CỔNG CŨNG MẮC ĐÚNG LỖI NÓ CANH (1/9)
+
+`kiem_am.py` sinh ra để chặn họ lỗi *vá một nhánh, để nguyên nhánh song song*. Nó kiểm ba tệp:
+
+```python
+thieu_chuan = [t for t in ("kich_comic.py", "kich_comic_long.py", "kich_v2.py") ...]
+```
+
+Ba tệp ấy **viết cứng**. Nên khi `kich_v2_long.py` — đường thứ tư, chưa ai chạy bao giờ — không
+gọi `chuan()`, cổng vẫn báo xanh, và bản dài của 56 kênh phân tích ra **−21,4 LUFS** thay vì
+−14. Một cổng chống lỗi "quên nhánh song song" mà bản thân nó liệt kê cứng danh sách nhánh thì
+chính nó là nhánh bị bỏ quên tiếp theo.
+
+**Luật thật, không phải danh sách:** *tệp nào dựng ra mp4 thì tệp ấy phải chuẩn âm.* Cổng nay
+tự quét mọi `.py` tìm lời gọi `remotion render`. Quét ra 8 đường thay vì 3.
+
+Ba điều chỉnh để cổng không tố oan — cổng tố oan nguy hiểm ngang cổng bỏ sót, vì người ta sẽ
+tắt nó:
+
+1. **Chỉ bắt đường ĐANG CHẠY.** Ba tệp dựng mp4 mà không workflow nào gọi (`kich_hai.py` engine
+   cũ giữ để đối chiếu, `receipt_pilot.py`, `kich_kling.py` đang tạm dừng) chỉ ghi chú, không
+   chặn.
+2. **Nhận cả đường UỶ THÁC.** `the_he_2.py` không tự gọi `chuan()` mà đi qua
+   `DS.run_render_cmd` — hàm ấy đã chuẩn âm. Dò chữ thuần thì tố oan nó.
+3. **Vá tại CHỖ NGHẼN CHUNG.** Thế hệ 1 và `the_he_2.py` có hơn mười chỗ gọi `remotion render`
+   rải rác; đi vá từng chỗ thì chắc chắn sót. Cả mười chỗ đều đi qua `run_render_cmd`, nên vá
+   một lần ở đó là xong — và lần sau thêm đường mới cũng tự được chuẩn âm.
+
+### 25.1 Trần thời gian là một quyết định thiết kế, không phải con số cho có
+
+`render_hai.yml` dựng 10 bản ngắn + 10 **bản dài** trong MỘT job, trần 120 phút. Đo thật:
+
+| | thời lượng video | thời gian dựng (máy anh) | trên runner 2 nhân |
+|---|---|---|---|
+| ngắn | 14 giây | ~35 giây | ~1 phút |
+| dài | 7 phút | ~19 phút | ~38 phút |
+
+10×1 + 10×38 = **~390 phút**, gấp hơn ba lần trần. Job bị huỷ ở phút 120 — và huỷ thì
+`upload-artifact` **không chạy**, nên mất luôn cả 10 bản ngắn đã dựng xong. Đúng họ lỗi "gói về
+tay không" ở mục 24.1: hỏng mà không để lại tệp nào thì trông y hệt chưa từng chạy.
+
+Chữa: **mỗi kênh một luồng** (10 luồng, ~40 phút mỗi luồng). Với 56 kênh phân tích thì mỗi
+luồng chỉ dựng **một** bản dài mỗi ngày, xoay theo ngày — 18 bản/ngày, ba ngày phủ hết.
+
+**Cách tính trần cho một job:** đo thời gian dựng THẬT của một đơn vị, nhân số đơn vị, nhân hai
+cho runner, rồi cộng 30% dự phòng. Nếu vượt trần thì chia luồng, đừng nâng trần — trần cao chỉ
+làm lỗi hiện ra muộn hơn.
+
+### 25.2 `cron` mới cần thời gian đệm
+
+Lịch đẩy lên lúc 17:44 UTC hẹn 18:10 — **không nổ**. Đổi sang 19:35 với 68 phút đệm — cũng
+không nổ, trong khi lịch của workflow khác trong cùng repo vẫn chạy bình thường (Health Guardian
+19:58). Cấu hình đúng: workflow `active`, `cron` có mặt trên `main`, YAML hợp lệ.
+
+Kết luận trung thực: GitHub có bỏ lượt hẹn giờ, và **không báo gì cả** — không log, không lỗi,
+`total_count` đơn giản là 0. Đừng đoán bừa là mình cấu hình sai; kiểm ba thứ (state `active` ·
+`cron` trên `main` · workflow khác có nổ không) rồi ghi nhận đúng hiện trạng.
