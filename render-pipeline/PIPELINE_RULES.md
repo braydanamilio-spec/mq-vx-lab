@@ -5456,3 +5456,160 @@ thận" mà là **chưa có danh sách để soát**. Đây là danh sách ấy.
 Nó chỉ dò những dạng ĐÃ có bằng chứng thật — không đoán lỗi mới bằng trực giác, vì đoán thì
 sinh ra tám cổng tố oan.
 
+
+---
+
+## 8. BUG LOG 31/8 — CỠ CHỮ VÀ CỔNG KHÔNG ĐI QUA NHÁNH MỚI
+
+### 8.1 Cỡ chữ tính theo cạnh ô mà không tính độ dài chuỗi
+
+Ô vuông nhỏ nhất chứa `365.1K km` — chín ký tự trong ô cạnh 60px — nên chữ rộng hơn ô và tràn
+ra hai bên. Công thức cũ là `fontSize = k * 0.19`: chỉ hỏi ô to bao nhiêu, không hỏi phải chứa
+bao nhiêu chữ.
+
+Sửa: lấy giá trị nhỏ hơn giữa HAI ràng buộc.
+
+```tsx
+fontSize={Math.max(11, Math.min(k * 0.19, (k * 1.55) / Math.max(3, String(c.hien).length)))}
+```
+
+**Dạng lỗi để nhớ:** một kích thước chịu hai ràng buộc mà công thức chỉ mã hoá một. Nơi khác
+cùng dạng: nhãn cột dọc, tiêu đề bảng, tên hạng mục trong lưới chấm. Khi thêm chỗ hiển thị chữ
+trong hộp có kích thước động, luôn viết `min(theo-hộp, theo-độ-dài)`.
+
+### 8.2 Cổng render 1 khung không đi qua nhánh vừa viết
+
+Hôm nay tôi viết phụ đề gọi `_ve(...)`, rồi `_khungChu(...)` — **cả hai hàm đều không tồn tại**.
+Cổng `kiem_khung1.py` vẫn báo ✅ hai lần liền, vì khung 300 không rơi vào nhánh câu-dài nên
+đường code chứa lời gọi ấy không bao giờ chạy.
+
+Đây là đúng cái bẫy đã ghi ở mục 4d (khung 0 không có biểu đồ), chỉ đổi toạ độ: **khung nào
+không chạy thì cổng không thấy.** Một khung tĩnh chứng minh được "không nổ ở khung ấy", không
+chứng minh được "không nổ".
+
+Hai luật rút ra:
+
+1. **Sau khi sửa engine, grep tên mọi hàm vừa gọi.** Rẻ hơn mọi cổng render:
+   `grep -c "_tenHam(" KichV2.tsx` — nếu ra 1 (chỉ chỗ gọi, không có chỗ khai báo) thì hỏng.
+2. **Đừng thêm đường vẽ thứ hai.** Nhánh mới nên đổi *dữ liệu vào* (ở đây là hai mốc cắt
+   `_dau`/`_cat`) rồi để đường vẽ sẵn có làm việc. Thêm một đường vẽ song song là thêm một chỗ
+   để hai đường lệch nhau — và là lý do tôi với tay gọi hàm không có tới hai lần.
+
+### 8.3 Method dựng demo (chốt sau khi anh duyệt 5 video)
+
+Bốn bước trong `duyet_lo.py`, không bỏ bước nào:
+
+| Bước | Việc | Công cụ | Ngưỡng |
+|---|---|---|---|
+| 1 | DỰNG | `kich_v2.py --gen2` | 10/10 video |
+| 2 | CHẤM | `kiem_khuon.py` | đa dạng ≥ 70%, khuôn nặng nhất ≤ ×4 |
+| 3 | SOI KHUNG | `qc_anh.py` + `luoi_khung.py` | không tràn, không lệch trái/phải |
+| 4 | BÁO CÁO | gửi lưới + video | — |
+
+Bước 3 là bắt buộc và **không thay được bằng điểm số**. Ba lỗi tràn khung của tuần này đều đi
+qua bước 2 với điểm sạch; chỉ đến khi trích khung ra nhìn mới thấy.
+
+---
+
+## 9. KỊCH COMIC — 10 kênh hài dựng lại (31/8)
+
+Anh xem ba khung của bản hài cũ rồi bảo xoá làm lại theo lối truyện tranh. Chẩn đoán và luật
+đầy đủ nằm ở đầu `engine-remotion/src/comic/KichComic.tsx`; đây là phần cần nhớ khi sửa tiếp.
+
+### 9.1 Gốc của cả bốn lỗi bản cũ là MỘT
+
+Bản cũ **dán người vector lên ảnh AI**. Từ đó chảy ra: nền photoreal đá nhau với người vẽ
+phẳng · nền không khớp thoại (giỏ giặt chắn ngang bụng) · 60% khung là tường trống · và cận
+cảnh cắt mất người thứ hai, tức hài đối đáp mất nửa còn lại của trò đùa.
+
+Không bản vá nào ở tầng prompt chạm tới được bốn thứ này. Đổi đơn vị dựng hình từ *khung*
+sang *trang gồm nhiều panel* thì cả bốn mất cùng lúc.
+
+### 9.2 Cỡ cảnh do CHỖ CÓ THẬT quyết định, không do kịch bản
+
+Luật quan trọng nhất của engine mới. Bản cũ để `Luot.goc` ghi sẵn `"hai_nguoi"` rồi engine vẫn
+cắt mất một người — vì **kịch bản không biết khung rộng bao nhiêu pixel**, nên nó không đủ
+thông tin để quyết định việc ấy. Nay panel tự đo mình: `w ≥ 620 && h ≥ 540` thì hai người,
+không đủ thì cận một người. `dung_luot_comic` vì thế mỏng hơn `dung_luot` đúng hai cột (`goc`
+và `co` biến mất) — kịch bản chỉ còn nói thứ nó thật sự biết.
+
+### 9.3 Bốn lỗi tự gây trong ngày, cùng một họ
+
+| Lỗi | Triệu chứng | Gốc |
+|---|---|---|
+| Trang trống nửa dưới | panel chưa tới lượt thì không vẽ | hiểu sai vật liệu: trong truyện tranh TRANG có trước, nội dung điền sau |
+| Cả trang xám | panel chưa tới bị `saturate(0.35)` | vá lỗi trên bằng ô gạch chéo rỗng — nhẹ hơn nhưng vẫn sai chỗ ấy |
+| Bong bóng đè mặt | chừa 28% cố định cho bong bóng | một kích thước chịu hai ràng buộc, công thức chỉ mã hoá một (**cùng họ với mục 8.1**) |
+| Bong bóng đè trán ở cận | sửa nhánh panel rộng, quên nhánh cận | vá một nhánh, để nguyên nhánh song song dùng chung ràng buộc |
+
+Ba trong bốn lỗi trên **do chính bản vá trước sinh ra**. Khi sửa bố cục, đi hết mọi nhánh dùng
+chung một ràng buộc trước khi render lại.
+
+### 9.4 `k["mau"]` KHÔNG phải màu thương hiệu
+
+Nó là `mucNen` của bản cũ — màu nền dự phòng, ví dụ `#E9E6F4` của TECH SUPPORT. Truyền thẳng
+xuống làm màu nhấn thì handle biến mất trên giấy trắng và cả trang nhợt. Màu nhấn nay lấy từ
+`MAU_CHINH` / `MAU_PHU` trong `kich_comic.py`. Họ lỗi: **mượn một giá trị cho việc nó không
+sinh ra để làm** — hãy kiểm giá trị thật trước khi dùng lại một trường của bản cũ.
+
+### 9.5 Mọi vật trong nền phải chạm một mặt nào đó
+
+Màn hình treo giữa không khí, ô trắng lơ lửng, đường dây vắt cong — ở cỡ panel chúng không đọc
+ra là đồ đạc, chúng đọc ra là lỗi vẽ. Vật phải đứng trên bàn, bàn phải có chân chạm sàn, tủ
+phải có tay nắm. `Xuong` lo tường + chân tường + sàn cho cả mười bối cảnh.
+
+### 9.6 Lệnh
+
+```
+python3 kich_comic.py --kenh "TECHSUPPORT" --vong 0
+```
+
+Không gọi API ảnh lần nào — chỉ `edge-tts` + `remotion`, nên chạy trong GitHub Actions giống
+hệt ở máy. Video ra `out/v5_<slug>.mp4` (bản cũ là `v4_`, vẫn giữ để đối chiếu).
+
+### 9.7 Lỗi gốc của cả buổi: chia toạ độ cho `scale`
+
+Suốt buổi tôi sửa bố cục comic bảy vòng — người quá nhỏ, người mất đầu, hai bên panel trống,
+tay hai người chồng nhau — và mỗi vòng chỉ chữa được một triệu chứng. Nguyên nhân chung:
+
+```tsx
+<DienVienHai x={cxA / k} y={yChan / k} scale={k} />   // SAI
+<DienVienHai x={cxA}     y={yChan}     scale={k} />   // ĐÚNG
+```
+
+`DienVienHai` dựng nhóm bằng `translate(${x} ${y}) … scale(${scale})` — **translate đứng
+TRƯỚC scale, nên x/y là toạ độ trực tiếp, không nhân tỉ lệ.** Tôi chép phép chia từ
+`KichHai.tsx`, nơi nó đúng vì viewBox bên ấy đã bị zoom. Cùng một dòng mã, hai hệ quy chiếu.
+
+Ba hằng `CAO_NGUOI` / `Y_DAU` / `NUA_RONG` cũng chép từ đó và cũng sai vì cùng lý do (545 /
+−437 / 119 là số đã nhân zoom 1.3). Số đúng lấy từ chính `DienVienHai.tsx`: `Y_HONG = −168`,
+`Y_VAI = −262`, `R_DAU_GOC = 58`, và chiều cao đo được trên khung là **460**.
+
+**Luật:** khi mượn hằng toạ độ từ một engine khác, kiểm hệ quy chiếu trước — đọc thẳng thứ tự
+`translate`/`scale` trong component đích. Một hằng đúng ở file A có thể sai ở file B mà không
+báo lỗi nào; nó chỉ làm hình lệch, và hình lệch thì trông như lỗi thẩm mỹ nên tôi đi sửa thẩm
+mỹ. Đó là lý do bảy vòng sửa không vòng nào tới gốc.
+
+**Cách phát hiện rẻ nhất:** render một ô TOÀN TRANG với một lượt duy nhất và nhìn. Ô lớn thì
+mọi sai lệch tỉ lệ lộ ra ngay, còn ô nhỏ thì nó ẩn dưới chỗ cắt.
+
+### 9.8 Ba lỗi anh chỉ ra sau bản comic đầu (31/8)
+
+| Anh nói | Gốc | Sửa |
+|---|---|---|
+| *"lúc nói thì tất cả nhân vật đều mấp máy miệng"* | `visemeTai(tu, giay, 0)` tra mốc từ của CẢ VIDEO tại giây hiện tại, nên cảnh nào cũng nhận khẩu hình ấy — kể cả cảnh đã nói xong | khẩu hình chỉ cấp cho cảnh `dangNoi`, còn lại ngậm |
+| *"hơi giống truyện quá, muốn 1 cảnh 1 xong chuyển cảnh"* | ba ô cùng hiện ⇒ hai ô không thoại vẫn chiếm ⅔ màn hình, mặt đang diễn chỉ còn ⅓ khung | một lượt = một cảnh chiếm trọn khung; ba kiểu chuyển cảnh đổi theo lượt |
+| *"voice nhớ khớp với sub 100%"* | bong bóng tra từ theo TỈ LỆ `i / số_từ` vào mảng mốc của cả video ⇒ từ thứ hai của lượt bốn lấy mốc của lượt một | lọc `tu` theo `[s, e]` của lượt rồi khớp theo thứ tự |
+
+Hai lỗi đầu và lỗi thứ ba đều thuộc cùng một họ: **dùng dữ liệu toàn cục ở chỗ chỉ được dùng dữ
+liệu cục bộ.** `tu` là mốc của cả video; `giay` là giây của cả video. Ở đâu cần "của lượt này"
+thì phải cắt ra theo `[L.s, L.e]` trước khi dùng. Khi thêm bất kỳ thứ gì đọc `tu` hay `giay`,
+hỏi ngay: cảnh không phải cảnh đang phát thì giá trị này còn đúng không?
+
+### 9.9 Giọng đọc nhấn nhá theo ngữ cảnh câu
+
+`_dieu()` trong `kich_hai.py` nay đọc thêm chính CÂU chứ không chỉ cảm xúc của lượt: câu hỏi
+lên giọng và nhanh hơn · câu cảm thán bật cả cao độ lẫn nhịp · câu ngắn đáp gọn, câu dài chậm
+lại · câu chốt hạ giọng (hạ nghe chắc hơn hét). Và một trục nữa làm nên cảm giác đối đáp:
+**tương phản với lượt trước** — câu trước lên cao thì câu này hạ xuống. Vài Hz là đủ để tai
+nghe ra hai người đang trao đổi thay vì hai đoạn thu rời.

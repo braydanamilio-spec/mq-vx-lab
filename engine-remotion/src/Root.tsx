@@ -37,6 +37,7 @@ import { StickDemo } from "./StickAnim";
 import { StickStory, calcStory } from "./StickStory";
 import { KichV2, calcKich } from "./v2/KichV2";
 import { KichHai, calcHai } from "./v4/KichHai";
+import { KichComic, calcComic } from "./comic/KichComic";
 import { BangTuThe } from "./v4/BangTuThe";
 import { SayThisMG, calcMG } from "./SayThisMG";
 import { BrandBeyond } from "./BrandBeyond";
@@ -256,6 +257,19 @@ export const RemotionRoot: React.FC = () => (
                  fps={30} width={1500} height={1000} />
     <Composition id="KichHai" component={KichHai as any} durationInFrames={900} fps={30}
                  width={1080} height={1920} calculateMetadata={calcHai as any} />
+    {/* 31/8 — KỊCH COMIC. Thay bản hài cũ (dán người vector lên ảnh AI). Xem đầu KichComic.tsx. */}
+    <Composition id="KichComic" component={KichComic as any} durationInFrames={600} fps={30}
+                 width={1080} height={1920} calculateMetadata={calcComic as any}
+                 defaultProps={{ kenh: "techsupport", tieuDe: "TECH SUPPORT", handle: "@techsupportusa",
+                   mau: "#F0483C", mauPhu: "#1F7AE0", kieuA: "luat_tre", kieuB: "khoa_hoc",
+                   luot: [
+                     { s: 0, e: 3, ai: 0, nar: "My laptop is making a noise.", camXuc: "so", cuChi: "mo_tay" },
+                     { s: 3.2, e: 6, ai: 1, nar: "What kind of noise?", camXuc: "nghi_ngo", cuChi: "suy_nghi" },
+                     { s: 6.2, e: 9.5, ai: 0, nar: "Like it is thinking about quitting.", camXuc: "buon", cuChi: "nhun_vai" },
+                     { s: 9.7, e: 13, ai: 1, nar: "Have you tried turning it off?", camXuc: "trung_tinh", cuChi: "dem" },
+                     { s: 13.2, e: 16.5, ai: 0, nar: "It turned itself off. Twice.", camXuc: "tuc", cuChi: "chi" },
+                     { s: 16.7, e: 20, ai: 1, nar: "Then it already fixed itself!", camXuc: "vui", cuChi: "gio_len", chot: true },
+                   ] }} />
     <Composition id="KichV2" component={KichV2 as any} durationInFrames={600} fps={30}
                  width={1080} height={1920} calculateMetadata={calcKich as any} />
     <Composition id="KichV2Wide" component={KichV2 as any} durationInFrames={600} fps={30}

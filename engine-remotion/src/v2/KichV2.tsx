@@ -444,7 +444,12 @@ const KhoiVuong: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltt
           <g key={i} transform={`translate(${gx} 40)`}>
             <rect x={-k / 2} y={-k / 2} width={k} height={k} rx={10}
                   fill={sang ? mau.nhan : "#F2C230"} stroke={mau.muc} strokeWidth={sang ? 6 : 4} />
-            <text x={0} y={6} textAnchor="middle" fontSize={Math.max(15, k * 0.19)}
+            {/* 31/8 — Cỡ chữ phải tính theo CẢ độ dài chuỗi, không chỉ theo cạnh ô.
+                Khung anh gửi: ô nhỏ nhất chứa "365.1K km" — bảy ký tự trong một ô 60px, nên chữ
+                rộng hơn ô và tràn ra hai bên. Cạnh ô nói ô to bao nhiêu; nó không biết mình phải
+                chứa bao nhiêu chữ. Lấy giá trị nhỏ hơn giữa hai ràng buộc ấy. */}
+            <text x={0} y={6} textAnchor="middle"
+                  fontSize={Math.max(11, Math.min(k * 0.19, (k * 1.55) / Math.max(3, String(c.hien).length)))}
                   fontWeight={900} fill={mau.muc} opacity={pi}>{c.hien}</text>
             <text x={0} y={k / 2 + 26} textAnchor="middle" fontSize={17} fontWeight={800}
                   fill={mau.muc} opacity={0.9 * pi}>{c.nhan}</text>
@@ -880,7 +885,29 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number; lech?:
   for (let i = _dau; i < _het; i++) {
     if (/[.!?]$/.test(tu[i]?.w || "")) { _het = i + 1; break; }
   }
-  const doan = tu.slice(_dau, _het);
+  // 31/8 — CÂU DÀI CHIA THEO CỤM, không cắt cứng ở từ thứ sáu.
+  // Còn sót những khung như "That is Unfair sitting alone at" — không dính hai câu nữa, nhưng
+  // vẫn đứt giữa chừng vì cửa sổ cứng sáu từ. Câu mười từ thì phải đọc làm hai nhịp, và chỗ
+  // ngắt nên rơi vào ranh giới cụm — sau dấu phẩy, hoặc trước một giới từ — chứ không rơi vào
+  // giữa một cụm danh từ.
+  let _cat = _het;
+  if (_het - _dau > 6) {
+    const _giua = _dau + Math.ceil((_het - _dau) / 2);
+    let _tot = _giua;
+    for (let i = _giua - 1; i <= _giua + 1 && i < _het; i++) {
+      if (i <= _dau) continue;
+      const w = (tu[i - 1]?.w || "");
+      const sau = (tu[i]?.w || "").toLowerCase();
+      if (/[,;:]$/.test(w) || ["and", "but", "then", "so", "at", "in", "on", "for", "with", "from"].includes(sau)) {
+        _tot = i; break;
+      }
+    }
+    // Từ đang đọc nằm ở nửa nào thì hiện nửa ấy. CHỈ đổi hai mốc cắt, không viết thêm một
+    // đường vẽ thứ hai — thêm một đường vẽ là thêm một chỗ để hai đường lệch nhau, và tôi vừa
+    // suýt làm thế hai lần liền (gọi `_ve`, rồi `_khungChu` — cả hai đều không tồn tại).
+    if (tam >= _tot) { _dau = _tot; _cat = _het; } else { _cat = _tot; }
+  }
+  const doan = tu.slice(_dau, _cat);
   const nua = Math.ceil(doan.length / 2);
   const dong = [doan.slice(0, nua), doan.slice(nua)];
   return (

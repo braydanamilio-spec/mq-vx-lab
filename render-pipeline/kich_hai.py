@@ -1263,11 +1263,41 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
         "so":        (+12, +14), "trung_tinh": (0, 0),
     }
 
-    def _dieu(rate0: str, pitch0: str, cx: str, la_chot: bool) -> tuple:
-        """Cộng độ lệch cảm xúc vào nhịp/cao độ gốc của nhân vật."""
+    def _dieu(rate0: str, pitch0: str, cx: str, la_chot: bool, chu: str = "", truoc: int = 0) -> tuple:
+        """Cộng độ lệch cảm xúc vào nhịp/cao độ gốc của nhân vật.
+
+        ── NHẤN NHÁ THEO NGỮ CẢNH CÂU — 31/8/2026 ────────────────────────────────────────
+        Anh: *"xem lại giọng đọc sao cho nhấn nhá theo đúng kiểu hội thoại ngữ cảnh lên xuống
+        giọng cho hay hook"*. Bản trước chỉ đọc cảm xúc của lượt, nên mọi câu của cùng một cảm
+        xúc đọc y hệt nhau — kể cả một câu hỏi và một câu khẳng định. Trong hội thoại thật, ba
+        thứ đổi giọng mà không cần đổi cảm xúc:
+
+          · CÂU HỎI lên giọng ở cuối và nhanh hơn một chút;
+          · CÂU CẢM THÁN bật lên cả cao độ lẫn nhịp;
+          · CÂU NGẮN đáp lại thì nhanh và gọn, câu dài thì chậm để nghe kịp.
+
+        Và thứ tư, thứ làm nên cảm giác "hai người đang đối đáp" chứ không phải hai đoạn thu
+        rời: TƯƠNG PHẢN VỚI LƯỢT TRƯỚC. Nếu câu trước vừa lên cao thì câu này hạ xuống, và
+        ngược lại. Tai nghe ra ngay là một cuộc trao đổi, dù chỉ lệch vài Hz.
+        """
         dr, dp = _DIEU.get(cx or "trung_tinh", (0, 0))
+        c = (chu or "").strip()
+        if c.endswith("?"):
+            dr += 4; dp += 8            # hỏi: nhanh hơn, cao hơn
+        elif c.endswith("!"):
+            dr += 8; dp += 6            # cảm thán: bật lên cả hai
+        if len(c) <= 26:
+            dr += 6                     # câu đáp ngắn thì gọn và nhanh
+        elif len(c) >= 52:
+            dr -= 4                     # câu dài thì chậm lại để nghe kịp
+        # tương phản với lượt trước: câu trước cao thì câu này hạ, và ngược lại
+        if truoc > 4:
+            dp -= 5
+        elif truoc < -4:
+            dp += 5
         if la_chot:
             dr -= 10          # câu chốt chậm lại để rơi có trọng lượng
+            dp -= 6           # và hạ giọng: cú chốt hạ giọng nghe chắc hơn là hét lên
         try:
             r0 = int(str(rate0).replace("%", "").replace("+", "") or 0)
             p0 = int(str(pitch0).replace("Hz", "").replace("+", "") or 0)
@@ -1276,6 +1306,7 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
         r, pp = max(-40, min(40, r0 + dr)), max(-40, min(40, p0 + dp))
         return (f"{r:+d}%", f"{pp:+d}Hz")
 
+    _dp_truoc = 0                      # cao độ của lượt vừa đọc, để lượt sau tương phản lại
     for i, (chu, ai, _cx) in enumerate(cau):
         if i:
             # 30/8 — Anh: *"đoạn cuối videos vẫn hơi bị kéo dài"*. Khoảng lặng trước cú chốt hạ
@@ -1283,7 +1314,11 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
             # một quãng trống nghe ra là phim bị treo.
             _lang(0.34 if i == len(cau) - 1 else 0.16)
         v, rate, pitch = ga if ai == 0 else gb
-        rate, pitch = _dieu(rate, pitch, _cx, i == len(cau) - 1)
+        rate, pitch = _dieu(rate, pitch, _cx, i == len(cau) - 1, chu, _dp_truoc)
+        try:
+            _dp_truoc = int(str(pitch).replace("Hz", "").replace("+", "") or 0)
+        except Exception:
+            _dp_truoc = 0
         m = os.path.join(tam, f"{i}.mp3")
         d, subs, _ = TTS.synth(chu, m, voice=v, rate=rate, pitch=pitch)
         if not subs:
