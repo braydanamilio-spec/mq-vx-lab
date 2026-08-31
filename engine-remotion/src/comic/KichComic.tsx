@@ -176,15 +176,44 @@ const ChuNo: React.FC<{ chu: string; w: number; h: number; p: number; mau: strin
 };
 
 // ── MỘT CẢNH ──────────────────────────────────────────────────────────────────────────────
+/** Bóng của một người: lớp tiếp đất + lớp đổ xiên theo hướng sáng của ảnh nền. */
+const BongNguoi: React.FC<{ x: number; y: number; k: number; cao: number; huong: number; manh: number }> =
+({ x, y, k, cao, huong, manh }) => {
+  const rx = 92 * k * cao;
+  const ry = 13 * k * cao;
+  // CHỖ CHẠM SÀN, đo trong ĐÚNG hệ toạ độ của `DienVienHai`: ở đó chân chạm y = 0 và người mọc
+  // lên theo chiều âm, còn ĐẾ giày nằm ở y = +11 (`p[1] + 15` với `p[1] = -4`). Bóng cũ đặt ở
+  // `y - 3` nên rơi ngang THÂN giày — phóng to là thấy ngay: khối bóng nổi phía sau giày thay
+  // vì nằm dưới đế. Và `+11` KHÔNG nhân `cao`: toạ độ bàn chân trong hàm vẽ không nhân `cao`
+  // (chỉ các đốt thân trên mới nhân), nên nhân vào đây là chép hằng sang hệ quy chiếu khác —
+  // đúng họ lỗi đã trả giá ở `545 / −437 / 119`.
+  const yCham = y + 11 * k;
+  const dai = 1 + manh * 1.15;                                    // nắng gắt thì bóng dài
+  const lech = huong === 0 ? 0 : -huong * rx * (0.28 + manh * 0.5);
+  return (
+    <>
+      {huong !== 0 || manh > 0.1 ? (
+        <ellipse cx={x + lech} cy={yCham} rx={rx * dai} ry={ry * 0.92}
+                 fill="#14110F" opacity={0.10 + manh * 0.07}
+                 transform={`rotate(${-huong * manh * 7} ${x} ${yCham})`} />
+      ) : null}
+      {/* Lớp tiếp đất: hẹp và đậm hơn hẳn bóng cũ — 0x22 (≈13%) quá nhạt để neo một hình vẽ
+          phẳng xuống sàn của ảnh 3D có tương phản thật. */}
+      <ellipse cx={x} cy={yCham} rx={rx * 0.62} ry={ry * 0.66} fill="#14110F" opacity={0.30} />
+    </>
+  );
+};
+
 const Panel: React.FC<{
   L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
   dangNoi: boolean; hai?: boolean; noi: Noi; anhNen?: string;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
+  sang?: { huong: number; manh: number };
 }> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, noi, anhNen,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
-        bongDuoi = false, boKhung = 0, chuNo = "BOOM!" }) => {
+        bongDuoi = false, boKhung = 0, chuNo = "BOOM!", sang }) => {
   const { w, h } = o;
   const p = kep((giay - L.s) / 0.38);
   const trong = giay - L.s;
@@ -258,6 +287,11 @@ const Panel: React.FC<{
   const imLang = { w: 12, h: 3, tron: 0 } as any;
   const viseme = dangNoi ? visemeTai(tu, giay, 0) : imLang;
 
+  // Hướng sáng đọc từ chính ảnh nền đang dùng. Không có số đo thì đổ thẳng — mặc định an
+  // toàn, và cũng đúng với 63/100 nền là phòng trong sáng đều.
+  const huongSang = sang ? sang.huong : 0;
+  const manhSang = sang ? sang.manh : 0;
+
   const cxA = doiNguoi ? w * 0.28 : canRong ? w * 0.29 : w * 0.5;
   const cxB = doiNguoi ? w * 0.72 : canRong ? w * 0.71 : w * 0.5;
 
@@ -287,12 +321,17 @@ const Panel: React.FC<{
       {L.chot ? <VachToc w={w} h={h} p={kep(trong / 0.7)} mau={mauPhu} /> : null}
 
       <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ position: "absolute", inset: 0, zIndex: 3 }}>
-        {doiNguoi ? (
-          <>
-            <ellipse cx={cxA} cy={yChan - 3} rx={92 * k * caoA} ry={13 * k * caoA} fill="#14110F22" />
-            <ellipse cx={cxB} cy={yChan - 3} rx={92 * k * caoB} ry={13 * k * caoB} fill="#14110F22" />
-          </>
-        ) : null}
+        {/* BÓNG — 31/8. Anh: *"người vẽ phẳng trên nền có chiều sâu vẫn hơi như dán lên"*.
+            Hai lỗi ở cùng một chỗ. (1) Khối cũ nằm trong nhánh `doiNguoi`, nên CẢNH MỘT NGƯỜI
+            KHÔNG CÓ BÓNG NÀO — mà cảnh một người chiếm quá nửa số khung, đúng những khung
+            trông như dán. Lại là họ lỗi "vá một nhánh, để nguyên nhánh song song". (2) Bóng cũ
+            đối xứng, đổ thẳng xuống: đó là bóng đèn studio, đặt lên ảnh có nắng xiên thì mắt
+            bắt được ngay dù không gọi tên được.
+            Nay mỗi người hai lớp, và chỗ ăn thua là lớp TIẾP ĐẤT (đậm, ôm sát chân) — nó nói
+            "vật này đứng trên mặt phẳng"; còn lớp ĐỔ (nhạt, dài, xiên theo `huongSang` đo từ
+            chính ảnh nền) nói "cùng một mặt trời với căn phòng". */}
+        <BongNguoi x={cxA} y={yChan} k={k} cao={caoA} huong={huongSang} manh={manhSang} />
+        {doiNguoi ? <BongNguoi x={cxB} y={yChan} k={k} cao={caoB} huong={huongSang} manh={manhSang} /> : null}
 
         {(doiNguoi || noiA) ? (
           <DienVienHai
@@ -414,6 +453,7 @@ const bienCanh = (kieu: KieuChuyen, p: number, cu: boolean, W: number, H: number
 
 export type PropsComic = {
   luot?: Luot[]; tu?: Tu[]; voMp3?: string; nhac?: string;
+  nhacVol?: number;   // hệ số riêng của tệp nhạc, do `can_nhac.py` tính
   kieuA?: string; kieuB?: string; kieuTuyA?: Partial<Kieu>; kieuTuyB?: Partial<Kieu>;
   tieuDe?: string; handle?: string; mau?: string; mauPhu?: string; kenh?: string;
   // ── NÉT RIÊNG CỦA KÊNH ────────────────────────────────────────────────────────────────
@@ -430,6 +470,10 @@ export type PropsComic = {
   noiIdx?: number;
   hook?: string;      // thẻ hook 2 giây đầu — xem `TheHook`
   anhNen?: string;    // nền 3D sinh bằng Cloudflare; bỏ trống thì vẽ nền vector như cũ
+  // Hướng sáng ĐO TỪ chính `anhNen` (`huong_sang.py` -> `huong_sang.json`), đưa sang bằng props
+  // chứ không để engine đọc tệp: bước render trên Actions không được phép chạm đĩa ngoài
+  // `staticFile`, và số đo là thứ tính một lần rồi dùng mãi.
+  sang?: { huong: number; manh: number };
   netMuc?: number;    // độ dày viền mực: 5 (mảnh, sạch) .. 10 (thô, mạnh)
   cham?: number;      // cỡ ô halftone: 7 (mịn) .. 14 (thô như báo in)
   boGoc?: number;     // bo góc bong bóng: 6 (vuông, đanh) .. 34 (tròn, hiền)
@@ -451,8 +495,10 @@ export const calcComic = async ({ props }: { props: PropsComic }) => {
 
 export const KichComic: React.FC<PropsComic> = ({
   luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
+  nhacVol = 0.16,
   kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", handle = "", mau = "#F0483C",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
+  sang,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
 }) => {
@@ -497,6 +543,7 @@ export const KichComic: React.FC<PropsComic> = ({
     <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
            hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi} noi={noi} anhNen={anhNen}
+           sang={sang}
            netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLe}
            bongDuoi={bongDuoi} boKhung={boKhung} chuNo={chuNo}
            hook={ix === 0 ? kep((giay - Lx.s) / 1.15) : 0} />
@@ -545,7 +592,19 @@ export const KichComic: React.FC<PropsComic> = ({
       <TheHook chu={hook} W={width} H={height} p={kep(giay / 2.2)} mau={mau} />
 
       {voMp3 ? <Audio src={staticFile(voMp3)} /> : null}
-      {nhac ? <Audio src={staticFile(nhac)} volume={0.16} loop /> : null}
+      {/* ÂM LƯỢNG NHẠC — 31/8. Hằng cũ `0.16` dùng chung cho 10 tệp có độ to gốc trải 26 dB
+          (−12,1 .. −38,3 LUFS): OFFICE nhạc gần bằng giọng, DATING coi như câm. Nay mỗi tệp
+          một hệ số riêng, tính sẵn bởi `can_nhac.py` về cùng mốc −37 LUFS (dưới giọng 17 dB).
+          Thêm NÉ GIỌNG: đang có người nói thì nhạc lùi còn 55%, hết thoại thì trả lại — đây là
+          thứ khiến câu chốt nghe rõ mà đoạn lặng vẫn có không khí. */}
+      {nhac ? (
+        <Audio src={staticFile(nhac)} loop
+               volume={(f: number) => {
+                 const gy = f / fps;
+                 const dangThoai = luot.some(x => gy >= x.s - 0.15 && gy <= x.e + 0.25);
+                 return nhacVol * (dangThoai ? 0.55 : 1);
+               }} />
+      ) : null}
     </AbsoluteFill>
   );
 };

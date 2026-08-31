@@ -218,6 +218,37 @@ TOC_HOP = {("nu", "tre"): "duoi_ngua", ("nu", "trung"): "bui", ("nu", "gia"): "b
            ("tre", "tre_con"): "roi"}
 
 
+# ── SỐ ĐO ĐỌC TỪ ĐĨA, ĐƯA SANG ENGINE BẰNG PROPS ────────────────────────────────────────────
+# Hai bảng dưới được tính MỘT LẦN bằng `huong_sang.py` / `can_nhac.py`; engine chỉ nhận con số.
+# Không để engine tự đọc tệp: bước render trên Actions chỉ được chạm `staticFile`, và đo lại ở
+# mỗi lượt render là tốn công cho một con số không bao giờ đổi.
+
+def _bang(ten: str) -> dict:
+    d = os.path.join(GOC, "..", "engine-remotion", "public", ten)
+    try:
+        return json.load(io.open(d, encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _sang_cua(anh: str):
+    """Hướng sáng của ảnh nền đang dùng -> bóng nhân vật đổ cùng chiều với ảnh."""
+    if not anh:
+        return None
+    return _bang("comic_nen/huong_sang.json").get(os.path.splitext(os.path.basename(anh))[0])
+
+
+def _am_nhac(nhac: str) -> float:
+    """Hệ số âm lượng riêng của tệp nhạc này.
+
+    Mốc cũ là một hằng 0.16 dùng chung cho 10 tệp trải 26 dB — nên OFFICE nhạc gần bằng giọng
+    còn DATING coi như câm. Không có số đo thì trả 0.16, giữ nguyên hành vi cũ.
+    """
+    if not nhac:
+        return 0.16
+    return float(_bang("music/am_luong.json").get(os.path.basename(nhac), 0.16))
+
+
 def vai_va_giong(k: dict) -> tuple:
     """Trả (kiểuA, kiểuB, ghi_đè_A, ghi_đè_B, giọngA, giọngB) — nhất quán giới · tuổi · cao · giọng."""
     de = k["de"]
@@ -293,6 +324,37 @@ def dung_luot_comic(k: dict, vong: int) -> tuple:
     if not _hk and cau:
         _hk = " ".join(str(cau[0][0]).replace(".", "").split()[:6]).upper()
     globals()["_HOOK"] = _hk
+    # NƠI CHỐN PHẢI CHỐT TRƯỚC KHI CHỌN NỀN. 31/8 — khối này vốn nằm SAU đoạn chọn `_ANH_NEN`
+    # mười mấy dòng, nên `_ix >= 0` không bao giờ đúng và nền chưa bao giờ được chọn theo nơi
+    # kịch bản nói: 86/306 mẩu có nhãn nơi khớp danh sách engine, cả 86 đều rơi về nhánh "mượn
+    # nền theo số tập". Không lỗi nào được ném ra — chỉ là nền hơi lệch ngữ cảnh, thứ rất dễ
+    # tưởng là "AI vẽ chưa chuẩn" thay vì một dòng đặt sai chỗ.
+    # *Họ lỗi:* giá trị được TIÊU THỤ trước khi được TÍNH — cùng họ với `caoMax`/`_hsDau` dùng
+    # trước khi khai báo, chỉ khác là ở đây Python không báo lỗi vì biến đã có sẵn giá trị -1.
+    _ds_noi = {}
+    try:
+        _ds_noi = json.load(io.open(os.path.join(GOC, "noi_chon.json"), encoding="utf-8"))
+    except Exception as e:
+        print(f"   ⚠️ không đọc được noi_chon.json: {str(e)[:60]}")
+    _ten = [x.lower() for x in _ds_noi.get(k["de"], [])]
+    _nhan = (kb.get("noi") or "").strip().lower()
+    if _nhan and _nhan in _ten:
+        globals()["_NOI_IDX"] = _ten.index(_nhan)
+    elif _ten:
+        # 213/306 mẩu không có nhãn nơi (viết tay, hoặc sinh trước khi trường `noi` tồn tại).
+        # Thay vì bỏ mặc cho số tập quyết, ĐỌC LỜI THOẠI: câu nào nhắc "server", "front desk",
+        # "closet" thì nơi chốn đã nằm ngay trong câu. Không gọi mô hình — dò từ khoá là đủ, và
+        # đây là bước chuẩn bị nên có sai cũng chỉ rơi về hành vi cũ.
+        _loi = " ".join(str(c[0]) for c in cau).lower()
+        _diem = []
+        for _i, _t in enumerate(_ten):
+            _tu = [w for w in _t.replace("'s", "").split()
+                   if len(w) > 3 and w not in ("the", "a", "an", "some")]
+            _diem.append((sum(1 for w in _tu if w in _loi), -_i))
+        _tot = max(_diem)
+        if _tot[0] > 0:
+            globals()["_NOI_IDX"] = -_tot[1]
+
     # Nền 3D của nơi chốn này, nếu đã sinh. Không có thì để rỗng -> engine vẽ nền vector.
     globals()["_ANH_NEN"] = ""
     try:
@@ -313,15 +375,6 @@ def dung_luot_comic(k: dict, vong: int) -> tuple:
             globals()["_ANH_NEN"] = _ds[_khoa[vong % len(_khoa)]]
     except Exception:
         pass
-    _nhan = (kb.get("noi") or "").strip().lower()
-    if _nhan:
-        try:
-            _ds = json.load(io.open(os.path.join(GOC, "noi_chon.json"), encoding="utf-8"))
-            _ten = [x.lower() for x in _ds.get(k["de"], [])]
-            if _nhan in _ten:
-                globals()["_NOI_IDX"] = _ten.index(_nhan)
-        except Exception as e:
-            print(f"   ⚠️ không đọc được noi_chon.json: {str(e)[:60]}")
     n = len(cau)
     luot = []
     for i, (chu, ai, cx) in enumerate(cau):
@@ -375,7 +428,9 @@ def mot_kenh(k: dict, vong: int) -> str:
     props.update(netMuc=_nk["net"], cham=_nk["cham"], boGoc=_nk["bo"], tiLe=_nk["tile"],
                  soTap=vong, bongDuoi=_bc["duoi"], boKhung=_bc["bo"], chuNo=_bc["no"],
                  noiIdx=globals().get("_NOI_IDX", -1), hook=globals().get("_HOOK", ""),
-                 anhNen=globals().get("_ANH_NEN", ""))
+                 anhNen=globals().get("_ANH_NEN", ""),
+                 sang=_sang_cua(globals().get("_ANH_NEN", "")),
+                 nhacVol=_am_nhac(NHAC.get(k["de"], "")))
     pj = os.path.join(GOC, "out", f"v5_{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
     io.open(pj, "w", encoding="utf-8").write(json.dumps(props, ensure_ascii=False))

@@ -87,12 +87,13 @@ jobs:
       # "tưởng hết quota" vì đọc một lỗi 429 thành cả pool cạn. Chúng chạy TRƯỚC khi dựng —
       # chạy sau thì tốn cả lượt render mới biết hỏng, mà trên Actions một lượt là gần một
       # tiếng máy.
-      - name: Cổng — mặt sàn, xoay khoá, prompt nền
+      - name: Cổng — mặt sàn, xoay khoá, prompt nền, âm lượng + bóng
         run: |
           cd render-pipeline
           python kiem_san.py
           python kiem_xoay_key.py
           python kiem_nen.py
+          python kiem_am.py
 
       # Nền 3D đã cache trong repo (`engine-remotion/public/comic_nen`) nên bước dựng gần như
       # không gọi khoá vẽ ảnh nào; chỉ những nơi chốn chưa có nền mới cần sinh.

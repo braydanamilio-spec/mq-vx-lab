@@ -6252,3 +6252,95 @@ Và với kênh phân tích, bối cảnh phải được **viết cùng lúc v�
 dịch từ ngôn ngữ dữ liệu ("median rent by state") sang ngôn ngữ hình ("a leasing office with a
 large wall map and a row of chairs"). Bản trước ghép thô `f"{chu_de}, seen in a {kênh} setting"`
 — đưa cho mô hình vẽ một cụm số liệu thay vì một nơi chốn, rồi để nó tự bịa.
+
+---
+
+## 22. BA LỖI CỦA "HOÀ VÀO NỀN" VÀ "NHẠC ÁT GIỌNG" (31/8)
+
+### 22.1 Bóng chỉ vẽ ở nhánh hai người — cảnh một người không có bóng nào
+
+Anh: *"nhân vật chưa hoà vào nền 3D — người vẽ phẳng trên nền có chiều sâu vẫn hơi như dán
+lên."* Đi tìm chỗ chỉnh độ đậm của bóng thì phát hiện thứ nặng hơn: cả khối bóng nằm trong
+`{doiNguoi ? (...) : null}`. **Cảnh một người không hề có bóng** — mà cảnh một người chiếm quá
+nửa số khung, và đó đúng là những khung trông như dán.
+
+*Họ lỗi:* **vá một nhánh, để nguyên nhánh song song** — đã ghi ở mục 6, lại tái phạm. Dấu hiệu
+nhận ra: một hiệu ứng thị giác được đặt bên trong điều kiện bố cục thay vì đi kèm chính đối
+tượng nó thuộc về. Bóng thuộc về NGƯỜI, nên nó phải nằm trong thành phần vẽ người
+(`BongNguoi`), không nằm trong nhánh đếm số người.
+
+### 22.2 Bóng đặt ngang thân giày, không ở đế
+
+`cy = yChan - 3`. Nhưng trong hệ toạ độ của `DienVienHai`, chân chạm `y = 0`, người mọc lên
+theo chiều âm, và **đế giày ở `y = +11`** (`p[1] + 15` với `p[1] = -4`). Bóng cũ rơi ngang thân
+giày: phóng to thấy khối bóng nổi phía sau giày thay vì nằm dưới đế. Đúng đến 14 pixel thì
+không ai gọi tên được, nhưng mắt vẫn đọc ra "không chạm đất".
+
+Và `+11` **không** nhân `cao`: toạ độ bàn chân trong hàm vẽ không nhân `cao` (chỉ các đốt thân
+trên mới nhân). Nhân vào là **chép hằng sang hệ quy chiếu khác** — họ lỗi đã trả giá ở
+`545 / −437 / 119`.
+
+### 22.3 Hai lớp bóng, không phải một
+
+Mắt đọc "vật này có thật trong ảnh" qua hai thứ khác nhau, nên phải vẽ cả hai:
+
+| Lớp | Hình dạng | Nói điều gì |
+|---|---|---|
+| **tiếp đất** | hẹp, đậm (30%), ôm sát đế | "đứng trên mặt phẳng" |
+| **đổ** | dài, nhạt (10–17%), xiên theo hướng sáng | "cùng một mặt trời với căn phòng" |
+
+Thiếu lớp một thì lơ lửng; thiếu lớp hai thì thuộc về một căn phòng khác. Hướng sáng đo bằng
+`huong_sang.py` từ chính ảnh nền (so độ sáng một phần ba trái với phải ở nửa TRÊN ảnh — nửa
+dưới là sàn nên phản xạ lẫn lộn), ra `comic_nen/huong_sang.json`. Đo 100 nền: 17 sáng từ trái ·
+63 đều · 20 sáng từ phải. Chênh dưới 4,5% coi như đều — đổ bóng xiên theo một chênh lệch nhiễu
+còn sai hơn đổ thẳng.
+
+### 22.4 Một hằng âm lượng cho 10 tệp trải 26 dB
+
+Anh: *"nhạc nền em chưa hề soi."* Engine để `volume={0.16}` cho cả 10 tệp, trong khi độ to gốc
+của chúng trải từ **−12,1 đến −38,3 LUFS**. Hệ quả: OFFICE (`wallpaper.mp3`) nhạc gần bằng
+giọng, DATING (`km_reawakening.mp3`) coi như câm. Không lỗi nào được ném ra nên nó sống sót qua
+mọi cổng — chỉ tai mới bắt được, mà chưa ai nghe.
+
+*Họ lỗi:* **một hằng phục vụ hai thứ biến thiên độc lập** — lần thứ năm. Chữa: `can_nhac.py` đo
+LUFS từng tệp, tính hệ số riêng về cùng mốc **−37 LUFS** (dưới giọng edge-tts −19,8 LUFS đúng
+17 dB), ghi `music/am_luong.json`. Thêm **né giọng**: đang có thoại thì nhạc lùi còn 55%.
+
+Cả hai bảng số (`huong_sang.json`, `am_luong.json`) tính **một lần** rồi đưa sang engine bằng
+props. Không để engine đọc tệp: bước render trên Actions chỉ được chạm `staticFile`, và đo lại
+mỗi lượt render là tốn công cho một con số không bao giờ đổi.
+
+> **Bài học chung của cả bốn:** ba trong bốn lỗi này vô hình với mọi cổng đang có, vì không cái
+> nào làm render thất bại. Cổng chỉ biết thứ nó được dạy để đo — soi khung và **nghe thử** vẫn
+> là cổng cuối, không thay được bằng điểm số.
+
+### 22.5 Nền chưa bao giờ khớp nơi chốn kịch bản — vì một khối đặt sau chỗ dùng nó
+
+Anh yêu cầu *"10 videos theo đúng bối cảnh đúng kịch bản"*. Đi kiểm thì phát hiện mã chọn nền
+theo nơi chốn **có đủ và đúng**, nhưng nằm sai chỗ:
+
+```python
+globals()["_NOI_IDX"] = -1          # dòng 309
+...
+_ix = globals().get("_NOI_IDX", -1) # dòng 331 — vẫn là -1
+if _ix >= 0: ...                    # không bao giờ vào
+...
+_nhan = (kb.get("noi") or "")       # dòng 347 — CHỐT NƠI CHỐN Ở ĐÂY, quá muộn
+```
+
+`_NOI_IDX` được **tiêu thụ ở dòng 331 nhưng chỉ được tính ở dòng 347**. Nên nhánh "chọn nền
+theo nơi" chết hẳn, và **cả 86/306 mẩu có nhãn nơi đều rơi về nhánh mượn nền theo số tập**.
+
+*Họ lỗi:* **giá trị bị tiêu thụ trước khi được tính** — cùng họ với `caoMax` / `_hsDau` dùng
+trước khi khai báo. Khác một điểm chí mạng: ở JavaScript nó ném lỗi ngay, còn ở đây biến đã có
+sẵn giá trị khởi tạo `-1`, nên **Python im lặng** và hậu quả chỉ hiện ra dưới dạng "nền hơi
+lệch ngữ cảnh" — thứ rất dễ đổ cho "AI vẽ chưa chuẩn" thay vì cho một dòng đặt sai chỗ. Đã đi
+sửa prompt vẽ nền mấy vòng trong khi lỗi nằm ở thứ tự thực thi.
+
+**Dấu hiệu nhận ra họ lỗi này:** một biến được `globals()[...] = giá_trị_mặc_định` ở đầu hàm,
+rồi tính lại ở cuối. Giá trị mặc định che mất việc nó chưa được tính.
+
+Nhân tiện chữa luôn 213 mẩu không có nhãn nơi: **đọc lời thoại**. Câu nào nhắc "server",
+"front desk", "closet" thì nơi chốn nằm ngay trong câu — dò từ khoá, không gọi mô hình. Kết
+quả: **0 → 191/306 mẩu dùng đúng nền của nơi chốn** (86 theo nhãn + 105 suy từ thoại); 115 mẩu
+còn lại mượn nền cùng kênh nên vẫn cùng thế giới.
