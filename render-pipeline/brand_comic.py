@@ -74,6 +74,10 @@ def mot_kenh(k: dict, chi: str = "") -> int:
         "khau": KHAU_HIEU.get(k["de"], "NEW EPISODE EVERY DAY"),
         "mau": MAU_CHINH.get(k["de"], "#E4572E"), "mauPhu": MAU_PHU.get(k["de"], "#1F7AE0"),
     }
+    # Khuôn dựng riêng cho mỗi kênh — anh: *"tránh họ nhìn vào biết cùng 1 người làm"*.
+    # Lấy theo THỨ TỰ kênh chứ không theo băm: băm có thể cho hai kênh cạnh nhau cùng số, mà
+    # hai kênh cạnh nhau trong danh sách lại chính là hai kênh hay bị đem ra so nhất.
+    goc["boCuc"] = [x["de"] for x in KENH].index(k["de"])
     _ai, _cx = AVATAR_VAI.get(k["de"], ("A", "vui"))
     goc["dungB"] = (_ai == "B")
     goc["camXuc"] = _cx

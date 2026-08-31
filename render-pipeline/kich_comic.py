@@ -83,6 +83,23 @@ MAU_PHU = {"rent": "#1F7AE0", "gym": "#F2994A", "airport": "#2A9D8F", "car": "#F
 #
 # Mỗi kênh một tổ hợp, chọn theo CHẤT của chuyện chứ không bốc ngẫu nhiên: chuyện tiền nong thì
 # nét gắt, chuyện hẹn hò thì nét mềm, chuyện hàng xóm rình nhau thì thô như tranh biếm.
+# Ba trục BỐ CỤC riêng cho mỗi kênh — khác với bốn trục nét vẽ ở dưới. Anh: *"kiểu videos làm
+# cũng thế"*: mười kênh cùng đặt bong bóng trên đầu, cùng khung vuông, cùng kêu "BOOM!" thì dù
+# nét và màu khác nhau, mắt vẫn đọc ra một xưởng. Bốn kênh dùng lối bong bóng-DƯỚI (kiểu manga
+# dịch): người ở nửa trên, lời ở đáy — một bố cục khác hẳn, không phải một biến thể.
+BO_CUC_KENH = {
+    "rent":     dict(duoi=False, bo=0,  no="BOOM!"),
+    "gym":      dict(duoi=True,  bo=18, no="OOF!"),
+    "airport":  dict(duoi=False, bo=6,  no="WELP!"),
+    "car":      dict(duoi=True,  bo=0,  no="CLUNK!"),
+    "office":   dict(duoi=False, bo=26, no="YIKES!"),
+    "diet":     dict(duoi=True,  bo=22, no="NOPE!"),
+    "tech":     dict(duoi=False, bo=10, no="BEEP!"),
+    "parent":   dict(duoi=False, bo=24, no="WHAM!"),
+    "neighbor": dict(duoi=True,  bo=4,  no="AH-HA!"),
+    "dating":   dict(duoi=False, bo=28, no="OUCH!"),
+}
+
 NET_KENH = {
     "rent":     dict(net=9,  cham=13, bo=8,  tile=0.62),   # tiền nhà: gắt, thô, dồn nén
     "gym":      dict(net=7,  cham=8,  bo=20, tile=0.66),   # phòng tập: khoẻ, sát mặt
@@ -277,8 +294,9 @@ def mot_kenh(k: dict, vong: int) -> str:
         "mau": MAU_CHINH.get(k["de"], "#E4572E"), "mauPhu": MAU_PHU.get(k["de"], "#1F7AE0"),
     }
     _nk = NET_KENH.get(k["de"], dict(net=7, cham=9, bo=26, tile=0.60))
+    _bc = BO_CUC_KENH.get(k["de"], dict(duoi=False, bo=0, no="BOOM!"))
     props.update(netMuc=_nk["net"], cham=_nk["cham"], boGoc=_nk["bo"], tiLe=_nk["tile"],
-                 soTap=vong)
+                 soTap=vong, bongDuoi=_bc["duoi"], boKhung=_bc["bo"], chuNo=_bc["no"])
     pj = os.path.join(GOC, "out", f"v5_{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
     io.open(pj, "w", encoding="utf-8").write(json.dumps(props, ensure_ascii=False))

@@ -80,9 +80,9 @@ const BongThoai: React.FC<{
   chu: string; tu: Tu[]; giay: number; W: number; H: number;
   ben: "trai" | "phai"; duoi?: "trai" | "phai"; hep?: boolean;
   p: number; mau: string; la: boolean; s0?: number; e0?: number;
-  net?: number; boGoc?: number; hook?: number;
+  net?: number; boGoc?: number; hook?: number; duoiKhung?: boolean;
 }> = ({ chu, tu, giay, W, H, ben, duoi, hep, p, mau, la, s0 = 0, e0 = 0,
-        net = NET, boGoc = 26, hook = 0 }) => {
+        net = NET, boGoc = 26, hook = 0, duoiKhung = false }) => {
   // 31/8 — CHỮ SÁNG PHẢI ĐI THEO MỐC TIẾNG THẬT, KHÔNG THEO VỊ TRÍ TRONG CÂU.
   // Anh: *"voice nhớ khớp với sub 100%"*. Bản trước lấy từ thứ i của câu rồi tra vào `tu` theo
   // tỉ lệ `i / số_từ` — mà `tu` là mốc từ của CẢ VIDEO, nên từ thứ hai của lượt bốn tra ra mốc
@@ -106,9 +106,11 @@ const BongThoai: React.FC<{
 
   return (
     <div style={{
-      position: "absolute", top: 18, [ben === "trai" ? "left" : "right"]: 24,
+      position: "absolute", [duoiKhung ? "bottom" : "top"]: 18,
+      [ben === "trai" ? "left" : "right"]: 24,
       maxWidth: rong, transform: `scale(${sc}) rotate(${nghieng}deg)`,
-      transformOrigin: ben === "trai" ? "left top" : "right top", zIndex: 6,
+      transformOrigin: `${ben === "trai" ? "left" : "right"} ${duoiKhung ? "bottom" : "top"}`,
+      zIndex: 6,
     } as React.CSSProperties}>
       <div style={{
         background: "#FFFFFF", border: `${Math.max(4, NET - 2)}px solid #14110F`,
@@ -154,14 +156,18 @@ const VachToc: React.FC<{ w: number; h: number; p: number; mau: string }> = ({ w
   );
 };
 
-const ChuNo: React.FC<{ chu: string; w: number; h: number; p: number; mau: string }> =
-({ chu, w, h, p, mau }) => {
+const ChuNo: React.FC<{ chu: string; w: number; h: number; p: number; mau: string; tren?: boolean }> =
+({ chu, w, h, p, mau, tren }) => {
   const sc = p < 0.4 ? trn(0.3, 1.14, bat(p / 0.4)) : trn(1.14, 1, muot((p - 0.4) / 0.6));
   return (
     <div style={{
-      // góc DƯỚI-TRÁI: bong bóng luôn ở nửa trên, nên đây là chỗ chắc chắn trống.
-      position: "absolute", left: "6%", bottom: h * 0.05,
-      transform: `scale(${sc}) rotate(-7deg)`, transformOrigin: "left bottom",
+      // Chữ nổ phải ở phía ĐỐI DIỆN bong bóng. Kênh dùng lối bong bóng-dưới thì góc dưới-trái
+      // không còn trống nữa — khung GYM LIES vừa cho ra "OOF!" đè thẳng lên câu chốt. Một chỗ
+      // "chắc chắn trống" chỉ chắc chắn trong bố cục đã sinh ra nó.
+      position: "absolute", left: "6%",
+      [tren ? "top" : "bottom"]: h * 0.05,
+      transform: `scale(${sc}) rotate(-7deg)`,
+      transformOrigin: `left ${tren ? "top" : "bottom"}`,
       fontFamily: "Poppins, Arial Black, sans-serif", fontWeight: 900,
       fontSize: Math.min(w * 0.17, 96), color: mau, WebkitTextStroke: "10px #14110F",
       paintOrder: "stroke fill", letterSpacing: 1, zIndex: 7, whiteSpace: "nowrap",
@@ -175,8 +181,10 @@ const Panel: React.FC<{
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
   dangNoi: boolean; hai?: boolean; noi: Noi;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
+  bongDuoi?: boolean; boKhung?: number; chuNo?: string;
 }> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, noi,
-        netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0 }) => {
+        netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
+        bongDuoi = false, boKhung = 0, chuNo = "BOOM!" }) => {
   const { w, h } = o;
   const p = kep((giay - L.s) / 0.38);
   const trong = giay - L.s;
@@ -206,13 +214,16 @@ const Panel: React.FC<{
   // một con số cố định vừa đủ cho câu ngắn vẫn đè đầu ở câu dài — cùng họ lỗi với cỡ chữ ở 8.1.
   const dongUoc = Math.max(1, Math.ceil(L.nar.length / 27));
   const chuaTren = Math.min(0.44, 0.20 + 0.08 * dongUoc);
+  // Kênh dùng lối bong bóng-dưới thì chỗ chừa nằm ở đáy, nên nhân vật nhích lên và chỉ cần
+  // chừa một dải mỏng phía trên cho thoáng.
+  const chua = bongDuoi ? 0.06 : chuaTren;
 
   // KHUNG DỌC THÌ VẼ CẢ NGƯỜI. Cắt ngang hông là bố cục của ô NGANG — nó dồn hết chiều cao ít
   // ỏi cho phần thân trên. Trong khung dọc 1080×1786, cắt hông để lại hơn nghìn pixel trống
   // phía trên. Khung dọc có chỗ cho cả người: người đứng nửa dưới, bong bóng trên, nền lấp giữa.
   const CAO_TREN = khungDoc ? CAO_NGUOI : CAO_NGUOI - Y_HONG;
   const kRong = khungDoc
-    ? Math.min((h * tiLe) / (CAO_NGUOI * caoMax), (w / 2 - 24) / (NUA_RONG * 2.15))
+    ? Math.min((h * (bongDuoi ? tiLe * 0.82 : tiLe)) / (CAO_NGUOI * caoMax), (w / 2 - 24) / (NUA_RONG * 2.15))
     // Khung ngang: đỉnh đầu người cao ở mức chừa bong bóng, hông người thấp ở đáy khung.
     // Hai điều kiện ấy giải ra đúng một tỉ lệ.
     : Math.min((h * (1 - chuaTren)) / (CAO_NGUOI * caoMax - Y_HONG * caoMin),
@@ -253,7 +264,8 @@ const Panel: React.FC<{
   return (
     <div style={{
       position: "absolute", left: o.x, top: o.y, width: w, height: h, overflow: "hidden",
-      border: `${netMuc}px solid #14110F`, background: "#EDE7DA", boxSizing: "border-box",
+      border: `${netMuc}px solid #14110F`, borderRadius: boKhung,
+      background: "#EDE7DA", boxSizing: "border-box",
       boxShadow: "6px 7px 0 #14110F22",
       // CẢNH PHẢI ĐỘNG. Anh chấm dựng phim 70/100 với lý do máy đứng yên suốt. Một cú đẩy máy
       // rất chậm (3,5% trong cả cảnh) không ai gọi tên được, nhưng nó là khác biệt giữa "một
@@ -315,10 +327,11 @@ const Panel: React.FC<{
                  ben={canRong ? (noiA ? "phai" : "trai") : (noiA ? "trai" : "phai")}
                  duoi={canRong ? (noiA ? "trai" : "phai") : undefined}
                  hep={canRong} s0={L.s} e0={L.e} net={netMuc} boGoc={boGoc} hook={hook}
+                 duoiKhung={bongDuoi}
                  p={kep(trong / 0.3)} mau={mauPhu} la={L.chot === true} />
 
       {L.chot && trong > 0.25 ? (
-        <ChuNo chu="BOOM!" w={w} h={h} p={kep((trong - 0.25) / 0.45)} mau={mau} />
+        <ChuNo chu={chuNo} w={w} h={h} p={kep((trong - 0.25) / 0.45)} mau={mau} tren={bongDuoi} />
       ) : null}
     </div>
   );
@@ -360,6 +373,13 @@ export type PropsComic = {
   cham?: number;      // cỡ ô halftone: 7 (mịn) .. 14 (thô như báo in)
   boGoc?: number;     // bo góc bong bóng: 6 (vuông, đanh) .. 34 (tròn, hiền)
   tiLe?: number;      // người cao bao nhiêu phần khung: 0.54 .. 0.68
+  // 31/8 — Anh: *"kiểu videos làm cũng thế e nha"* (mỗi kênh một kiểu, đừng để nhìn ra cùng
+  // một người làm). Bốn trục ở trên đổi CHẤT NÉT VẼ, nhưng bố cục khung thì mười kênh vẫn y
+  // hệt: viền dày như nhau, bong bóng luôn trên, dải tên luôn đáy-trái, chữ nổ luôn "BOOM!".
+  // Ba trục dưới đây đổi chính BỐ CỤC — thứ mắt đọc trước cả nét.
+  bongDuoi?: boolean;  // bong bóng nằm dưới (lối manga) thay vì trên
+  boKhung?: number;    // bo góc khung: 0 vuông đanh .. 28 mềm
+  chuNo?: string;      // chữ nổ ở cú chốt — mỗi kênh một tiếng
 };
 
 export const calcComic = async ({ props }: { props: PropsComic }) => {
@@ -372,6 +392,7 @@ export const KichComic: React.FC<PropsComic> = ({
   luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
   kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", handle = "", mau = "#F0483C",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
+  bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
 }) => {
   const f = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
@@ -412,6 +433,7 @@ export const KichComic: React.FC<PropsComic> = ({
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
            hai={coCanh(ix, luot.length, hat)} dangNoi={dangNoi} noi={noi}
            netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLe}
+           bongDuoi={bongDuoi} boKhung={boKhung} chuNo={chuNo}
            hook={ix === 0 ? kep((giay - Lx.s) / 1.15) : 0} />
   );
 
