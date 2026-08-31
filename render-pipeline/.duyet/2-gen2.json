@@ -1,0 +1,132 @@
+{
+  "lo": "2-gen2",
+  "kenh": [
+    "WHAT IS IN IT",
+    "RECALL PLATE",
+    "CALORIE SHOCK",
+    "PILL FACTS",
+    "PAYCHECK GAP",
+    "RENT REALITY",
+    "PRICE OF NOW",
+    "COURT RECORD",
+    "SUED FOR THIS",
+    "COLD FILE"
+  ],
+  "video": [
+    "v3_whatisinit.mp4",
+    "v3_recallplate.mp4",
+    "v3_calorieshock.mp4",
+    "v3_pillfacts.mp4",
+    "v3_paycheckgap.mp4",
+    "v3_rentreality.mp4",
+    "v3_priceofnow.mp4",
+    "v3_courtrecord.mp4",
+    "v3_suedforthis.mp4",
+    "v3_coldfile.mp4"
+  ],
+  "bo_luot": [
+    "⚠️ bản án 'data breach': không toà nào nổi trội (đỉnh 2) — BỎ LƯỢT thay vì dựng bảng sáu cột bằng nhau",
+    "⚠️ SUED FOR THIS: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)",
+    "⚠️ thập kỷ 'habeas corpus': chỉ 3 mốc có số — BỎ LƯỢT",
+    "⚠️ COLD FILE: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)",
+    "⚠️ thập kỷ 'DNA testing': chỉ 3 mốc có số — BỎ LƯỢT",
+    "⚠️ COLD FILE: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)",
+    "⚠️ thập kỷ 'ineffective assistance': chỉ 2 mốc có số — BỎ LƯỢT",
+    "⚠️ COLD FILE: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)",
+    "⚠️ thập kỷ 'actual innocence': chỉ 3 mốc có số — BỎ LƯỢT",
+    "⚠️ COLD FILE: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)"
+  ],
+  "khung": {
+    "v3_whatisinit.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_whatisinit-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_whatisinit-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_whatisinit-3.png"
+    ],
+    "v3_recallplate.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_recallplate-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_recallplate-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_recallplate-3.png"
+    ],
+    "v3_calorieshock.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_calorieshock-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_calorieshock-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_calorieshock-3.png"
+    ],
+    "v3_pillfacts.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_pillfacts-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_pillfacts-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_pillfacts-3.png"
+    ],
+    "v3_paycheckgap.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_paycheckgap-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_paycheckgap-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_paycheckgap-3.png"
+    ],
+    "v3_rentreality.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_rentreality-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_rentreality-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_rentreality-3.png"
+    ],
+    "v3_priceofnow.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_priceofnow-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_priceofnow-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_priceofnow-3.png"
+    ],
+    "v3_courtrecord.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_courtrecord-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_courtrecord-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_courtrecord-3.png"
+    ],
+    "v3_suedforthis.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_suedforthis-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_suedforthis-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_suedforthis-3.png"
+    ],
+    "v3_coldfile.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_coldfile-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_coldfile-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_coldfile-3.png"
+    ]
+  },
+  "diem": [
+    "  ✅ v3_bankrun                100",
+    "  ✅ v3_calorieshock           100",
+    "  ✅ v3_coldfile               100",
+    "  ❌ v3_courtkings              85",
+    "  ✅ v3_courtrecord            100",
+    "  ✅ v3_deepfield              100",
+    "  ✅ v3_diamondnumbers          95",
+    "  ❌ v3_famecurve               83",
+    "  ✅ v3_fineprint              100",
+    "  ✅ v3_knowyourright          100",
+    "  ✅ v3_missingpiece            90",
+    "  ❌ v3_oneexperiment           86",
+    "  ✅ v3_paycheckgap             94",
+    "  ✅ v3_pillfacts              100",
+    "  ❌ v3_priceofcare             65",
+    "  ❌ v3_priceofnow              82",
+    "  ✅ v3_recallplate            100",
+    "  ✅ v3_rentreality            100",
+    "  ✅ v3_skyrightnow            100",
+    "  ✅ v3_skytonight             100",
+    "  ❌ v3_suedforthis             88",
+    "  ❌ v3_suedinamerica           75",
+    "  ✅ v3_whatisinit              95",
+    "  ✅ v3_whatthechartsays       100",
+    "  ✅ v3_whoownsit              100",
+    "  ✅ v4_airporthell            100",
+    "  ❌ v4_carguy                  80",
+    "  ✅ v4_datingapp              100",
+    "  ✅ v4_dietwars               100",
+    "  ✅ v4_gymlies                 90",
+    "  ✅ v4_neighborwatch          100",
+    "  ✅ v4_officesmalltalk         90",
+    "  ❌ v4_parentmode              80",
+    "  ✅ v4_rentpanic              100",
+    "  ✅ v4_techsupport            100",
+    "  ✅ đạt 26  ·  ❌ dưới ngưỡng 9   (ngưỡng 90/100)"
+  ],
+  "bo_cuc": [
+    "  ✅ lành 10  ·  ❌ tràn khung 0"
+  ]
+}

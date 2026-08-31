@@ -160,7 +160,29 @@ def _rule_model(k: dict, khung: str, n_luot: int, cam: list) -> str:
     if cam:
         tranh = ("\nSituations already used on this channel — do NOT reuse any of them, not even "
                  "a variation:\n" + "\n".join(f"- {x}" for x in cam[-40:]) + "\n")
-    return f"""You write short two-person comedy scenes for an American animated series.{vidu}
+    # ── NƠI CHỐN PHẢI DO KỊCH BẢN CHỌN, TRONG DANH SÁCH CÓ SẴN ────────────────────────
+    # Anh: *"bối cảnh đã đa dạng và liên quan tới nội dung videos được nói tới chưa?"*
+    # Đa dạng thì có, nhưng nơi chốn đang chọn theo SỐ TẬP — tức hình và lời chỉ tình cờ khớp
+    # nhau. Nếu mô hình viết một chuyện xảy ra ở nhà khách mà engine vẫn vẽ bàn hỗ trợ văn
+    # phòng thì lại đúng cái lỗi "giỏ giặt chắn ngang bụng" của bản cũ, chỉ khác nguồn.
+    #
+    # Cho mô hình chọn nơi TRONG DANH SÁCH engine vẽ được, và bắt nó trả về nhãn đã chọn. Nó
+    # không mô tả nơi chốn tự do (mô tả tự do thì engine không vẽ nổi), nó chỉ CHỌN — nên hình
+    # và lời khớp nhau từ gốc, không phải khớp nhờ may.
+    import json as _js, os as _os
+    _dsn = {}
+    try:
+        _dsn = _js.load(io.open(_os.path.join(GOC, "noi_chon.json"), encoding="utf-8"))
+    except Exception:
+        pass
+    _noi = _dsn.get(k["de"], [])
+    _kn = ""
+    if _noi:
+        _kn = ("\nThe scene must take place in ONE of these locations (pick the one that fits "
+               "your story best, and use its exact label):\n"
+               + "\n".join(f"- {x}" for x in _noi) + "\n")
+
+    return f"""You write short two-person comedy scenes for an American animated series.{vidu}{_kn}
 
 CHANNEL: {k['ten']} — every scene happens in the world of {k['ten'].lower()}.
 {ai}
@@ -187,6 +209,7 @@ Use only plain ASCII: straight quotes, normal hyphens, no typographic dashes.
 
 Return STRICT JSON, nothing else:
 {{"tinh_huong": "short label",
+  "noi": "exact label of the chosen location, copied from the list",
   "cu_lat": "one sentence: what the last line reframes",
   "loi": [["line text", 0, "emotion"], ["line text", 1, "emotion"], ...]}}
 where the second item is 0 for A and 1 for B, and emotion is exactly one of:
@@ -262,7 +285,7 @@ def sinh_mot(k: dict, kho: dict, keys, khung: str, n_luot: int, nguong: float = 
         return {"_loai": True, "ty_le": trung / max(1, len(loi))}
 
     return {
-        "loi": loi, "khung": khung,
+        "loi": loi, "khung": khung, "noi": str(d.get("noi", ""))[:70],
         "tinh_huong": str(d.get("tinh_huong", ""))[:70],
         "khuon": khuon_moi,
         "ma": hashlib.md5(("|".join(c[0] for c in loi)).encode()).hexdigest()[:12],
@@ -315,7 +338,7 @@ def main() -> int:
             if not got:
                 print("   ⚠️ bỏ qua một mẩu (mọi lần thử đều hỏng hoặc bị loại)")
                 continue
-            kho["mau"][de].append({"loi": got["loi"], "khung": got["khung"],
+            kho["mau"][de].append({"loi": got["loi"], "khung": got["khung"], "noi": got["noi"],
                                    "tinh_huong": got["tinh_huong"], "ma": got["ma"]})
             kho["tinh_huong"][de].append(got["tinh_huong"])
             for kh in got["khuon"]:

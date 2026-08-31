@@ -369,6 +369,12 @@ export type PropsComic = {
   // xưởng vẽ tô mười bảng màu. Bốn trục dưới đây đổi CHẤT của nét vẽ, và mắt đọc chúng trước
   // khi kịp đọc màu.
   soTap?: number;     // số thứ tự tập — xem ghi chú "HÀNG NGHÌN TẬP" bên dưới
+  // 31/8 — NƠI CHỐN DO KỊCH BẢN CHỌN, không do số tập.
+  // Bản trước lấy nơi theo `soTap`, nên hình và lời chỉ tình cờ khớp nhau: kịch bản có thể
+  // viết chuyện xảy ra ở nhà khách trong khi engine vẫn vẽ bàn hỗ trợ văn phòng. Nay bộ sinh
+  // kịch bản chọn nơi TRONG danh sách engine vẽ được và trả về chỉ số ấy — khớp từ gốc.
+  // Để -1 (hoặc bỏ trống) thì quay về cách cũ: chọn theo số tập.
+  noiIdx?: number;
   netMuc?: number;    // độ dày viền mực: 5 (mảnh, sạch) .. 10 (thô, mạnh)
   cham?: number;      // cỡ ô halftone: 7 (mịn) .. 14 (thô như báo in)
   boGoc?: number;     // bo góc bong bóng: 6 (vuông, đanh) .. 34 (tròn, hiền)
@@ -391,7 +397,7 @@ export const calcComic = async ({ props }: { props: PropsComic }) => {
 export const KichComic: React.FC<PropsComic> = ({
   luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
   kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", handle = "", mau = "#F0483C",
-  mauPhu = "#1F7AE0", kenh = "", soTap = 0, netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
+  mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
 }) => {
   const f = useCurrentFrame();
@@ -416,7 +422,10 @@ export const KichComic: React.FC<PropsComic> = ({
   // MỘT TẬP = MỘT NƠI CHỐN. Các cảnh trong tập khác nhau bằng GÓC NHÌN (máy dịch trái/giữa/
   // phải), không bằng đổi địa điểm — hai người đang nói với nhau thì không dịch chuyển tức thời
   // sang chỗ khác giữa câu. Luật này đã trả giá một lần ở bản cũ.
-  const noi = React.useMemo(() => noiCuaTap(kenh, soTap), [kenh, soTap]);
+  const noi = React.useMemo(
+    () => noiCuaTap(kenh, noiIdx >= 0 ? noiIdx : soTap),
+    [kenh, noiIdx, soTap],
+  );
   const o: ONhoPanel = { i: 0, x: LE, y: LE, w: width - LE * 2, h: height - LE * 2 - CAO_TEN };
 
   // Lượt đang phát. Sau lượt cuối thì GIỮ NGUYÊN lượt cuối — không trả -1 rồi rơi vào nhánh dự

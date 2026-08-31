@@ -63,8 +63,15 @@ CO = {
     "avatar_lon": ("ComicAvatarLon", "avatar_lon"),   # 1080×1080 — Facebook page + Instagram
     "banner":     ("ComicBanner", "banner"),          # 2560×1440 — ảnh bìa kênh YouTube
     "cover_fb":   ("ComicCoverFB", "cover_fb"),       # 1640×624  — ảnh bìa fanpage Facebook
+    "x_header":   ("ComicXHeader", "x_header"),       # 1500×500  — ảnh bìa X/Twitter
     "watermark":  ("ComicWatermark", "watermark"),    # 150×150   — hình chìm
 }
+
+# Ba cỡ nữa mà dashboard đòi, nhưng KHÔNG cần dựng riêng: chúng chỉ là bản thu nhỏ của ảnh
+# vuông 1080. Thu nhỏ bằng Lanczos giữ được nét mực sắc, còn dựng lại thì tốn thêm ba lần
+# render cho ra đúng cùng một hình.
+THU_NHO = {"fb_avatar_500": ("avatar_lon", 500), "ig_avatar_640": ("avatar_lon", 640),
+           "ig_post_1080": ("avatar_lon", 1080)}
 
 
 # ══ CỔNG CHỐNG CHỒNG LẤN ═══════════════════════════════════════════════════════════════
@@ -142,7 +149,21 @@ def mot_kenh(k: dict, chi: str = "") -> int:
             print(f"   ❌ {ten}: {(r.stderr or r.stdout or '')[-140:]}")
             continue
         n += 1
-    print(f"   ✅ {k['ten']:19s} {n}/{len(CO) if not chi else 1} ảnh")
+    # thu nhỏ ra ba cỡ còn lại
+    if not chi:
+        try:
+            from PIL import Image
+            for ten, (nguon, cx) in THU_NHO.items():
+                sn = os.path.join(thu, f"{slug}_{nguon}.png")
+                if not os.path.exists(sn):
+                    continue
+                im = Image.open(sn).convert("RGBA").resize((cx, cx), Image.LANCZOS)
+                im.save(os.path.join(thu, f"{slug}_{ten}.png"))
+                n += 1
+        except ImportError:
+            print("   ⚠️ thiếu Pillow — bỏ qua ba cỡ thu nhỏ")
+
+    print(f"   ✅ {k['ten']:19s} {n} ảnh")
     return n
 
 

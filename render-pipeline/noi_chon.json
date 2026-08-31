@@ -1,0 +1,122 @@
+{
+ "tech": [
+  "the IT help desk",
+  "a server room",
+  "the customer's living room",
+  "the office reception",
+  "a cramped supply closet",
+  "the break room",
+  "a meeting room",
+  "the home office",
+  "the office hallway",
+  "a phone repair counter"
+ ],
+ "rent": [
+  "the apartment hallway",
+  "the mailbox lobby",
+  "an empty apartment",
+  "the building manager's office",
+  "the shared laundry room",
+  "the stairwell",
+  "the back courtyard",
+  "the parking lot",
+  "a small living room",
+  "the front door of the unit"
+ ],
+ "gym": [
+  "the weight floor",
+  "the cardio row",
+  "the locker room",
+  "the gym front desk",
+  "the stretching corner",
+  "the smoothie bar",
+  "the equipment storage",
+  "the yoga studio",
+  "the gym parking lot",
+  "a personal training room"
+ ],
+ "airport": [
+  "the check-in counter",
+  "the departure gate",
+  "baggage claim",
+  "the security line",
+  "an airport coffee stand",
+  "the moving walkway",
+  "the rebooking desk",
+  "the airline lounge",
+  "the jet bridge door",
+  "the information desk"
+ ],
+ "car": [
+  "the repair bay",
+  "the service counter",
+  "the parts room",
+  "the waiting area",
+  "the car lift",
+  "the front lot",
+  "the tire wall",
+  "the garage office",
+  "the wash bay",
+  "the customer driveway"
+ ],
+ "office": [
+  "the cubicle row",
+  "the coffee machine",
+  "the meeting room",
+  "the elevator lobby",
+  "the copy room",
+  "the reception desk",
+  "the break room",
+  "the boss's office",
+  "the open floor",
+  "the office kitchen"
+ ],
+ "diet": [
+  "the kitchen",
+  "in front of the open fridge",
+  "the dinner table",
+  "a grocery aisle",
+  "the kitchen island",
+  "the living room couch",
+  "the backyard grill",
+  "a coffee shop table",
+  "the snack cupboard",
+  "the bathroom scale"
+ ],
+ "parent": [
+  "the living room",
+  "the kid's bedroom",
+  "the kitchen table",
+  "the homework desk",
+  "the backyard",
+  "the car back seat",
+  "a toy store aisle",
+  "the laundry room",
+  "the front hallway",
+  "the playroom floor"
+ ],
+ "neighbor": [
+  "over the front fence",
+  "by the mailboxes",
+  "the front porch",
+  "the shared driveway",
+  "the open garage",
+  "the sidewalk",
+  "the back garden",
+  "the trash bins",
+  "the front door",
+  "the neighborhood watch table"
+ ],
+ "dating": [
+  "a coffee shop",
+  "a restaurant table",
+  "a park bench",
+  "the bar counter",
+  "her living room",
+  "the car front seats",
+  "a movie theater lobby",
+  "a grocery checkout",
+  "the apartment doorway",
+  "a rooftop terrace"
+ ]
+}

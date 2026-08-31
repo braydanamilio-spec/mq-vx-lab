@@ -5860,3 +5860,62 @@ với hệ số của engine).
 R = 58 * tiLeDau * (1.34 if tre else 1);  than = 460 * cao * (0.74 if tre else 1)
 print(than / (2 * R), "đầu")     # người lớn 4.0 · trẻ con 3.0 · dưới 2.0 là hỏng
 ```
+
+### 14.2 Sửa tầng dùng chung: phải soi CẢ HAI nơi trước khi chốt
+
+Anh: *"nãy e nâng cấp phần cổ đầu nhân vật lại lỡ nâng cả phần videos làm cho cổ dài quá; a
+nói là phần profile và brandkit e làm lỗi chứ ko nói trong phần videos."*
+
+Chuỗi sự việc, và cái sai không nằm ở con số:
+
+1. Lỗi THẬT: ở ảnh tĩnh cỡ lớn, nhân vật đầu to bị đầu trùm che mất cổ.
+2. Tôi chữa bằng cách nâng hằng lên `1.08·R + 22` = **85** đơn vị — hơn bản gốc **41%**.
+3. `DienVienHai` là tầng vẽ dùng chung, nên video cũng dài cổ theo, dù video vốn không sao.
+4. Và tôi không soi lại khung video sau khi sửa — chỉ soi banner, đúng nơi mình đang chữa.
+
+Con số đúng là `0.78·R + 18`: **bằng bản gốc ở đầu cỡ trung bình** (63 ≈ 60) và chỉ tự tăng khi
+đầu to thật (R = 65 → 69). Chữa lỗi cũ mà không đẻ lỗi mới.
+
+**Luật:** khi sửa một tầng dùng chung (engine vẽ, bảng màu, hàm bố cục), phải render và soi
+**mọi đầu ra dùng tầng ấy**, không chỉ đầu ra đang có lỗi. Ở đây là bốn: video · ảnh bìa ·
+avatar · banner. Nếu chỉ soi một, thì xác suất sửa xong một chỗ và hỏng ba chỗ là rất cao —
+và ba chỗ kia sẽ do anh phát hiện chứ không phải tôi.
+
+**Dấu hiệu nhận ra ngay:** nếu bản sửa lệch khỏi giá trị cũ hơn 20% ở trường hợp thông thường,
+gần như chắc chắn nó đang chữa một trường hợp biên bằng cách phá trường hợp chính.
+
+---
+
+## 15. BỐI CẢNH: ĐA DẠNG LÀ MỘT VIỆC, KHỚP NỘI DUNG LÀ VIỆC KHÁC (31/8)
+
+Anh: *"bối cảnh đã đa dạng và liên quan tới nội dung videos được nói tới chưa, e đã áp dụng vô
+chưa?"* — câu hỏi tách đúng hai thứ mà tôi đã gộp làm một.
+
+| | Trước | Sau |
+|---|---|---|
+| Đa dạng | ✅ 10 nơi có tên + sinh tổ hợp không giới hạn | giữ nguyên |
+| Chọn theo | ❌ **số tập** | ✅ **kịch bản chọn**, trả về nhãn nơi |
+| Kịch bản biết nơi nào vẽ được | ❌ không | ✅ prompt kèm danh sách nhãn |
+| Đạo cụ khớp thoại | ✅ dò từ khoá | giữ nguyên |
+
+Điểm mấu chốt: mô hình **không mô tả nơi chốn tự do** (mô tả tự do thì engine không vẽ nổi) —
+nó **chọn trong danh sách** engine vẽ được và trả về nhãn. Hình và lời khớp nhau từ gốc, không
+phải khớp nhờ may.
+
+### 15.1 Ngẫu nhiên trong một túi lẫn lộn thì sớm muộn cũng ra thứ vô lý
+
+Anh: *"bối cảnh phải vẽ logic đúng, ko vẽ bừa lộn xộn."* Chỗ nguy hiểm là nơi **sinh tổ hợp**
+(từ tập thứ mười một): nó bốc mảnh từ danh sách của kênh, và nếu danh sách trộn mọi loại phòng
+thì sẽ có lúc ra "giường + tủ lạnh + hàng rào" trong một phòng server.
+
+Nên mảnh chia theo **nhóm không gian** (văn phòng · bếp · phòng khách · gara · ngoài trời ·
+phòng tập · sân bay · quán), và một nơi chỉ lấy mảnh cùng nhóm cộng nhóm **trung tính** (ghế,
+cây, thùng — thứ ở đâu cũng hợp lý). Kiểm được bằng một đoạn Python: liệt kê mảnh bị loại của
+từng kênh, thấy `car` loại `may_ca_phe` và `diet` loại `guong` là biết lọc đang chạy đúng.
+
+### 15.2 Chuẩn Mỹ nằm ở ĐỒ ĐẠC, không chỉ ở tên gọi
+
+Nơi chốn đã Mỹ từ tên (HOA, DMV, drive-thru), nhưng đồ đạc thì trung tính — một cái bàn với
+một cái tủ thì nước nào cũng thế. Sáu mảnh thêm vào là thứ nhìn phát ra ngay: **hộp thư trụ**
+ngoài sân · **cửa lưới** chống muỗi · **máy nước lạnh** văn phòng · **cửa cuốn** gara · **ghế
+booth** quán ăn · **lò vi sóng** đặt trên bếp.

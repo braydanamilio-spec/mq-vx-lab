@@ -352,10 +352,18 @@ export const DienVienHai: React.FC<PropsHai> = ({
   // Nên hở phải tính TỪ bán kính đầu: mọi nhân vật đều lộ đúng một đoạn cổ như nhau, dù đầu to
   // hay nhỏ. Đây là họ lỗi "một hằng số phục vụ hai thứ đổi độc lập" — cùng họ với cỡ chữ ở
   // mục 8.1 và chỗ chừa bong bóng ở mục 9.3.
-  // Hệ số 0,92 vẫn cho ra đoạn cổ chỉ 30 đơn vị — có tồn tại nhưng ở cỡ banner thì không đọc
-  // ra. Nâng lên 1,08 và tăng phần cộng: đầu tách hẳn khỏi vai, cổ thành một đoạn nhìn thấy
-  // được ở mọi cỡ, mà chưa tới mức đầu "bay" khỏi thân.
-  const _hoCo = R_DAU * 1.08 + 22 * cao;
+  // 31/8, sửa lần ba — anh: *"nãy e nâng cấp phần cổ đầu nhân vật lại lỡ nâng cả phần videos
+  // làm cho cổ dài quá; a nói là phần profile và brandkit e làm lỗi chứ ko nói trong phần
+  // videos"*. Đúng, và đây là lỗi của cách tôi sửa chứ không phải của con số:
+  //
+  //   · lỗi THẬT anh chỉ ra: ở ảnh tĩnh cỡ lớn, nhân vật ĐẦU TO bị đầu trùm che mất cổ;
+  //   · tôi chữa bằng cách nâng hằng lên 1,08·R + 22 = 85 đơn vị — hơn bản gốc 41%;
+  //   · và vì đây là tầng vẽ dùng chung, cả video cũng dài cổ theo, dù video vốn không sao.
+  //
+  // Cái sai là chỉnh cho MỘT nơi rồi để nó ăn sang mọi nơi mà không soi lại nơi kia. Con số
+  // dưới đây bằng đúng bản gốc ở đầu cỡ trung bình (63 ≈ 60) và chỉ TỰ TĂNG khi đầu to thật
+  // (R = 65 -> 69) — chữa được lỗi cũ mà không đẻ ra lỗi mới.
+  const _hoCo = R_DAU * 0.78 + 18 * cao;
   const dau: [number, number] = [co[0] + dao * 0.9 - bat * 14, co[1] - _hoCo + gat - bat * 7];
 
   // Điểm gắn tay phải nằm NGOÀI mép thân, không thì cánh tay chạy chìm trong thân và bàn tay
@@ -678,7 +686,7 @@ export const DienVienHai: React.FC<PropsHai> = ({
 
       {/* CỔ — bản đầu vẽ quá ngắn nên đầu dính thẳng vào vai, đọc ra là một khối. Cổ phải
           THẤY ĐƯỢC thì đầu mới quay được một cách có nghĩa. */}
-      {chi(`M ${co[0]} ${co[1] + 24} L ${dau[0]} ${dau[1] + R_DAU * 0.62}`, da, 42, "co")}
+      {chi(`M ${co[0]} ${co[1] + 24} L ${dau[0]} ${dau[1] + R_DAU * 0.58}`, da, 40, "co")}
 
       {/* ── ĐẦU ───────────────────────────────────────────────────────────────────────── */}
       <g transform={`rotate(${nghiengDau} ${dau[0]} ${dau[1] + R_DAU})`}>

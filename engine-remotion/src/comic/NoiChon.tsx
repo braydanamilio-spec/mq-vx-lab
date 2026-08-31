@@ -1,5 +1,5 @@
 import React from "react";
-import { MO_DUN, MO_TREO, TEN_MO_TREO, nhat, ThamSo } from "./MoDun";
+import { MO_DUN, MO_MY, MO_TREO, TEN_MO_TREO, nhat, ThamSo } from "./MoDun";
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // NƠI CHỐN — mười nơi cho mỗi kênh, mỗi nơi là MỘT DÒNG dữ liệu
@@ -157,8 +157,36 @@ export const NOI: Record<string, Noi[]> = {
 // Mười nơi viết tay ở trên vẫn giữ, và vẫn đứng trước: chúng có TÊN đẹp để bộ sinh kịch bản
 // chọn ("the server room", "over the front fence"), còn nơi sinh tổ hợp chỉ có tên ghép máy
 // móc. Mười tập đầu của mỗi kênh dùng nơi có tên; từ tập mười một trở đi dùng nơi sinh.
+// 31/8 — Anh: *"bối cảnh phải vẽ logic đúng, ko vẽ bừa lộn xộn"*. Đây là chỗ dễ vẽ bừa nhất:
+// nơi chốn SINH TỔ HỢP (từ tập thứ mười một) bốc mảnh từ danh sách của kênh, và nếu danh sách
+// ấy trộn lẫn mọi loại phòng thì sẽ có lúc ra "giường + tủ lạnh + hàng rào" trong một phòng
+// server. Ngẫu nhiên trong một túi lẫn lộn thì sớm muộn cũng ra thứ vô lý.
+//
+// Nên mảnh chia theo NHÓM KHÔNG GIAN, và một nơi chốn chỉ lấy mảnh trong CÙNG nhóm, cộng thêm
+// nhóm "trung tính" (ghế, cây, thùng, bảng ghim — thứ có mặt ở đâu cũng hợp lý).
+const NHOM: Record<string, string[]> = {
+  vanphong: ["ban", "ban_dai", "may_tinh", "tu_ho_so", "bang_ghim", "may_ca_phe", "quay", "tv", "may_nuoc"],
+  bep:      ["tu_lanh", "tu_bep", "ban", "ghe", "may_ca_phe", "ke_sach", "lo_vi_song"],
+  phongkhach: ["sofa", "tv", "giuong", "ke_sach", "ban", "gia_treo", "cua_so"],
+  gara:     ["xe", "gia_treo", "thung", "ke_sach", "quay", "cua_cuon"],
+  ngoaitroi: ["hang_rao", "cay", "thung", "xe", "cua_ra_vao", "ghe", "bang_hieu", "hop_thu_tru", "cua_luoi"],
+  phongtap: ["gia_ta", "guong", "ghe", "tu_ho_so", "quay", "ban_dai", "may_ca_phe"],
+  // Sân bay và quán ăn có bộ đồ đạc riêng, không nhét vừa "văn phòng" hay "phòng khách":
+  // sân bay thì hàng ghế nối + biển chỉ dẫn treo; quán thì quầy bar + booth + máy pha.
+  sanbay:   ["ghe", "quay", "ban_dai", "bang_hieu", "cua_so", "gia_treo", "thung", "may_ca_phe"],
+  quan:     ["ban", "ghe", "quay", "may_ca_phe", "gia_treo", "cay", "ke_sach", "bang_hieu", "booth"],
+  trungtinh: ["ghe", "cay", "thung", "bang_ghim", "cua_so", "cua_ra_vao"],
+};
+
+/** Nhóm không gian chính của mỗi kênh — nơi sinh tổ hợp chỉ được lấy trong nhóm này. */
+const NHOM_KENH: Record<string, string> = {
+  tech: "vanphong", office: "vanphong", rent: "phongkhach", gym: "phongtap",
+  airport: "sanbay", car: "gara", diet: "bep", parent: "phongkhach",
+  neighbor: "ngoaitroi", dating: "quan",
+};
+
 const MANH_HOP: Record<string, string[]> = {
-  tech:     ["ban", "may_tinh", "tu_ho_so", "ke_sach", "ghe", "quay", "cua_so", "bang_ghim",
+  tech:     ["may_nuoc", "ban", "may_tinh", "tu_ho_so", "ke_sach", "ghe", "quay", "cua_so", "bang_ghim",
              "thung", "may_ca_phe", "cay", "sofa", "tv", "cua_ra_vao", "bang_hieu"],
   rent:     ["cua_ra_vao", "cua_so", "ke_sach", "thung", "ban", "ghe", "sofa", "cay", "tv",
              "bang_ghim", "tu_ho_so", "gia_treo", "hang_rao", "guong", "tu_lanh"],
@@ -166,25 +194,28 @@ const MANH_HOP: Record<string, string[]> = {
              "may_ca_phe", "cua_so", "bang_hieu", "gia_treo", "ban_dai", "bang_ghim"],
   airport:  ["ghe", "quay", "ban_dai", "bang_hieu", "thung", "cua_so", "cay", "may_ca_phe",
              "gia_treo", "hang_rao", "cua_ra_vao", "ban", "may_tinh", "sofa", "ke_sach"],
-  car:      ["xe", "gia_treo", "ke_sach", "thung", "quay", "ghe", "ban", "may_tinh", "bang_hieu",
+  car:      ["cua_cuon", "xe", "gia_treo", "ke_sach", "thung", "quay", "ghe", "ban", "may_tinh", "bang_hieu",
              "may_ca_phe", "tu_ho_so", "hang_rao", "cay", "bang_ghim", "guong"],
-  office:   ["ban", "may_tinh", "bang_ghim", "may_ca_phe", "ban_dai", "cua_so", "cay", "ke_sach",
+  office:   ["may_nuoc", "ban", "may_tinh", "bang_ghim", "may_ca_phe", "ban_dai", "cua_so", "cay", "ke_sach",
              "quay", "ghe", "tu_lanh", "tu_bep", "cua_ra_vao", "thung", "tu_ho_so"],
-  diet:     ["tu_lanh", "tu_bep", "ban", "ghe", "ke_sach", "sofa", "tv", "may_ca_phe", "quay",
+  diet:     ["lo_vi_song", "tu_lanh", "tu_bep", "ban", "ghe", "ke_sach", "sofa", "tv", "may_ca_phe", "quay",
              "cay", "guong", "hang_rao", "thung", "cua_so", "giuong"],
-  parent:   ["sofa", "tv", "giuong", "ke_sach", "ban", "ghe", "thung", "tu_lanh", "cay",
+  parent:   ["cua_luoi", "sofa", "tv", "giuong", "ke_sach", "ban", "ghe", "thung", "tu_lanh", "cay",
              "gia_treo", "cua_ra_vao", "hang_rao", "tu_bep", "cua_so", "guong"],
-  neighbor: ["hang_rao", "cay", "thung", "xe", "cua_ra_vao", "ghe", "ban", "gia_treo",
+  neighbor: ["hop_thu_tru", "cua_luoi", "hang_rao", "cay", "thung", "xe", "cua_ra_vao", "ghe", "ban", "gia_treo",
              "bang_hieu", "ke_sach", "guong", "quay", "tv", "sofa", "cua_so"],
-  dating:   ["ban", "ghe", "quay", "cay", "sofa", "tv", "may_ca_phe", "ke_sach", "thung",
+  dating:   ["booth", "ban", "ghe", "quay", "cay", "sofa", "tv", "may_ca_phe", "ke_sach", "thung",
              "bang_hieu", "cua_ra_vao", "gia_treo", "hang_rao", "cua_so", "guong"],
 };
 
 // Ba khuôn đặt chỗ. Cả ba đều chừa vùng 0.24–0.76 cho hai nhân vật — ràng buộc bất biến của hệ.
 const KHUON: { x: number; co: number }[][] = [
-  [{ x: 0.12, co: 1 }, { x: 0.88, co: 0.9 }, { x: 0.5, co: 0.62 }],
-  [{ x: 0.1, co: 1.05 }, { x: 0.5, co: 0.8 }, { x: 0.9, co: 0.85 }],
-  [{ x: 0.14, co: 0.9 }, { x: 0.86, co: 1.05 }],
+  // Bốn chỗ, không phải hai-ba: nơi sinh tổ hợp trước đây chỉ có hai mảnh ở hai mép, và ở
+  // khung dọc thì hai mép là chỗ nhân vật che nhiều nhất — nên nền ra trống dù danh sách mảnh
+  // rất dài. Chỗ thứ tư nằm sát mép ngoài, chỗ giữa để vật thấp.
+  [{ x: 0.08, co: 1 }, { x: 0.92, co: 0.9 }, { x: 0.5, co: 0.6 }, { x: 0.2, co: 0.75 }],
+  [{ x: 0.06, co: 1.05 }, { x: 0.5, co: 0.75 }, { x: 0.94, co: 0.85 }, { x: 0.82, co: 0.7 }],
+  [{ x: 0.1, co: 0.95 }, { x: 0.9, co: 1.05 }, { x: 0.26, co: 0.7 }, { x: 0.74, co: 0.68 }],
 ];
 
 const bam2 = (a: number, b: number) => ((a * 73856093) ^ (b * 19349663)) >>> 0;
@@ -193,7 +224,12 @@ const bam2 = (a: number, b: number) => ((a * 73856093) ^ (b * 19349663)) >>> 0;
 export const noiCuaTap = (kenh: string, tap: number): Noi => {
   const ds = NOI[kenh] || [];
   if (tap < ds.length) return ds[tap];
-  const manh = MANH_HOP[kenh] || MANH_HOP.office;
+  // Lấy mảnh trong ĐÚNG nhóm không gian của kênh, cộng nhóm trung tính. Danh sách `MANH_HOP`
+  // vẫn dùng làm thứ tự ưu tiên, nhưng bị lọc qua nhóm — nên không tổ hợp nào ra một căn phòng
+  // chứa những thứ không bao giờ ở cùng nhau.
+  const nhom = NHOM_KENH[kenh] || "vanphong";
+  const chophep = new Set([...(NHOM[nhom] || []), ...NHOM.trungtinh]);
+  const manh = (MANH_HOP[kenh] || MANH_HOP.office).filter((x) => chophep.has(x));
   const hs = bam2(kenh.length * 31 + tap, tap + 7);
   const kh = KHUON[hs % KHUON.length];
   // chọn các mảnh cách đều nhau trong danh sách bằng một bước nguyên tố — cùng một tập luôn ra
@@ -231,7 +267,7 @@ export const LapNoi: React.FC<{
       <path d={`M${w * 0.62} 0 L${w * 0.86} 0 L${w * 0.5} ${yS} L${w * 0.3} ${yS} Z`}
             fill="#FFFFFF" opacity={0.13} />
       {[...noi.mo, ...treo].map((m, i) => {
-        const Ve = m.treo ? MO_TREO[m.m] : MO_DUN[m.m];
+        const Ve = m.treo ? MO_TREO[m.m] : (MO_DUN[m.m] || MO_MY[m.m]);
         if (!Ve) return null;                       // mảnh lạ thì bỏ qua, không làm hỏng cả cảnh
         // Mảnh treo đặt ở tầm mắt trở lên — chỗ nhân vật không che; mảnh đứng thì chân chạm sàn.
         const y = m.treo ? h * 0.26 : yS;

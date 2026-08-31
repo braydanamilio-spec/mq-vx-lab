@@ -29,7 +29,8 @@ export type PropsBrand = {
   //   cover_fb    1640×624   ảnh bìa fanpage Facebook — desktop hiện 820×312, mobile crop hẹp
   //                          hai bên và cao hơn, nên vùng luôn hiện chỉ là dải giữa
   //   watermark   150×150    hình chìm đè lên video
-  kind?: "avatar" | "avatar_lon" | "banner" | "cover_fb" | "watermark";
+  //   x_header    1500×500   ảnh bìa X/Twitter — tỉ lệ 3:1, dẹt nhất trong cả bộ
+  kind?: "avatar" | "avatar_lon" | "banner" | "cover_fb" | "x_header" | "watermark";
   kieuA?: string; kieuB?: string; kieuTuyA?: Partial<Kieu>; kieuTuyB?: Partial<Kieu>;
   tieuDe?: string; handle?: string; khau?: string;
   mau?: string; mauPhu?: string;
@@ -185,8 +186,14 @@ export const BrandComic: React.FC<PropsBrand> = ({
   // không cắt trên dưới, ngược hẳn với YouTube. Dùng chung một ô cho cả hai là cách chắc chắn
   // để một trong hai bị cắt mất chữ.
   const fb = kind === "cover_fb";
-  const W = fb ? 1640 : 2560, H = fb ? 624 : 1440;
-  const AT = fb
+  const xh = kind === "x_header";
+  const W = xh ? 1500 : fb ? 1640 : 2560;
+  const H = xh ? 500 : fb ? 624 : 1440;
+  const AT = xh
+    // X/Twitter cắt hai bên trên mobile và chèn ảnh đại diện đè lên góc TRÁI-DƯỚI, nên vùng
+    // dùng được lệch sang phải và không chạm đáy.
+    ? { w: 1180, h: 430, x: (1500 - 1180) / 2 + 60, y: 24 }
+    : fb
     ? { w: 1280, h: 540, x: (1640 - 1280) / 2, y: (624 - 540) / 2 }
     : { w: 1546, h: 423, x: (2560 - 1546) / 2, y: (1440 - 423) / 2 };
   const bcB = ((boCuc % 6) + 6) % 6;
@@ -207,7 +214,7 @@ export const BrandComic: React.FC<PropsBrand> = ({
   // vẹn ở banner — dấu hiệu rõ ràng rằng luật ấy đáng lẽ phải nằm trong MỘT hàm dùng chung
   // chứ không nằm trong một ghi chú.
   const caoMaxB = Math.max(A.cao ?? 1, B.cao ?? 1);
-  const kChung = (AT.h * (fb ? 1.02 : 1.5)) / (CAO_NG * caoMaxB);
+  const kChung = (AT.h * (xh ? 0.98 : fb ? 1.02 : 1.5)) / (CAO_NG * caoMaxB);
   const kA = kChung, kB = kChung;
 
   // chỗ đứng của hai nhân vật theo khuôn (tỉ lệ trong ô an toàn); null = không vẽ người ấy
@@ -305,18 +312,18 @@ export const BrandComic: React.FC<PropsBrand> = ({
         transform: bcB === 4 ? "rotate(-3deg)" : "none",
       }}>
         <div style={{
-          fontSize: Math.min((bcB === 5 ? 190 : 150) * (fb ? 0.72 : 1),
-                             (bcB === 5 ? 2600 : 1900) * (fb ? 0.72 : 1) / Math.max(6, tieuDe.length)),
+          fontSize: Math.min((bcB === 5 ? 190 : 150) * (fb ? 0.72 : xh ? 0.62 : 1),
+                             (bcB === 5 ? 2600 : 1900) * (fb ? 0.72 : xh ? 0.62 : 1) / Math.max(6, tieuDe.length)),
           fontWeight: 900, color: "#FFFFFF", letterSpacing: -1, lineHeight: 1,
           WebkitTextStroke: "12px #14110F", paintOrder: "stroke fill",
           textShadow: bcB % 2 ? "0 0 0 #14110F" : "10px 11px 0 #14110F",
         }}>{tieuDe}</div>
         <div style={{
           marginTop: 26, background: bcB === 4 ? mau : V, color: "#FFFFFF", padding: "10px 26px",
-          fontSize: fb ? 30 : 42, fontWeight: 800, letterSpacing: 1.4,
+          fontSize: xh ? 24 : fb ? 30 : 42, fontWeight: 800, letterSpacing: 1.4,
           border: bcB === 4 ? `6px solid ${V}` : "none",
         }}>{khau || "NEW EPISODE EVERY DAY"}</div>
-        <div style={{ marginTop: 14, fontSize: fb ? 26 : 36, fontWeight: 800, color: V }}>{handle}</div>
+        <div style={{ marginTop: 14, fontSize: xh ? 22 : fb ? 26 : 36, fontWeight: 800, color: V }}>{handle}</div>
       </div>
     </AbsoluteFill>
   );

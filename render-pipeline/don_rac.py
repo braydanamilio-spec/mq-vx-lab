@@ -57,6 +57,39 @@ def _tep_duoc_nhac(thu_muc: str) -> set:
     return ra
 
 
+def _tep_trong_ma() -> set:
+    """Tệp được IMPORT thẳng trong mã nguồn — thứ mà quét props không bao giờ thấy.
+
+    31/8 — Bản đầu của công cụ này chỉ đọc các `.json` props, và nó xoá mất
+    `geo/states-10m.json` cùng `geo/countries-110m.json`: hai tệp dữ liệu bản đồ mà
+    `WorldMapRace` import thẳng bằng `import ... from "../public/geo/..."`. Không props nào
+    nhắc tên chúng, nên theo phép đo của tôi chúng là rác — và render chết ngay lượt sau.
+    May là chúng là dữ liệu công khai nên tải lại được; nếu là ảnh AI đã sinh thì mất hẳn.
+
+    Bài học: "không ai nhắc tới" phải xét ở MỌI đường nhắc, không chỉ đường mình nghĩ ra
+    trước. Mã nguồn là đường thứ hai, và nó là đường mà chỉ có mã nguồn mới trả lời được.
+    """
+    ra = set()
+    goc_src = os.path.join(GOC, "..", "engine-remotion", "src")
+    for goc, _, ts in os.walk(goc_src):
+        for t in ts:
+            if not t.endswith((".ts", ".tsx", ".js", ".jsx")):
+                continue
+            try:
+                nd = io.open(os.path.join(goc, t), encoding="utf-8", errors="ignore").read()
+            except OSError:
+                continue
+            for m in re.finditer(r'["\']([^"\']*public/[^"\']+)["\']', nd):
+                d = m.group(1).split("public/")[-1]
+                ra.add(d)
+                ra.add(os.path.basename(d))
+            # staticFile("...") cũng là một đường nhắc, và nó KHÔNG chứa chữ "public"
+            for m in re.finditer(r'staticFile\(\s*["\']([^"\']+)["\']', nd):
+                ra.add(m.group(1))
+                ra.add(os.path.basename(m.group(1)))
+    return ra
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--xoa", action="store_true", help="xoá thật (mặc định chỉ liệt kê)")
@@ -67,8 +100,8 @@ def main() -> int:
         print("❌ không thấy public/")
         return 2
 
-    print("→ quét tham chiếu trong out/ và public/ …", flush=True)
-    dung = _tep_duoc_nhac(OUT) | _tep_duoc_nhac(PUB)
+    print("→ quét tham chiếu trong out/, public/ và MÃ NGUỒN …", flush=True)
+    dung = _tep_duoc_nhac(OUT) | _tep_duoc_nhac(PUB) | _tep_trong_ma()
     print(f"   {len(dung)} tên tệp còn được nhắc tới trong các props")
 
     nguong = time.time() - a.ngay * 86400

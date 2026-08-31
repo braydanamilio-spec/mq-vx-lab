@@ -246,13 +246,26 @@ def dung_luot_comic(k: dict, vong: int) -> tuple:
         if os.path.exists(_kt):
             _k2 = json.load(io.open(_kt, encoding="utf-8"))
             for _m in _k2.get("mau", {}).get(k["de"], []):
-                kho.append({"boi": 0, "loi": [tuple(c) for c in _m["loi"]]})
+                kho.append({"boi": 0, "loi": [tuple(c) for c in _m["loi"]],
+                            "noi": _m.get("noi", "")})
     except Exception as e:
         # Không nuốt: kho hỏng mà lặng lẽ bỏ qua thì hệ âm thầm quay về vòng lặp bốn mẩu, và
         # triệu chứng duy nhất là "sao dạo này video giống nhau thế" — nhìn ra thì đã hàng trăm tập.
         print(f"   ⚠️ kho sinh không đọc được, chỉ dùng kho viết tay: {str(e)[:70]}")
     kb = kho[vong % len(kho)]
     cau = kb["loi"]
+    # Nhãn nơi chốn -> chỉ số trong danh sách engine vẽ được. Mẩu viết tay không có nhãn, nên
+    # trả -1 và engine tự chọn theo số tập như trước — không mẩu nào bị bỏ lại.
+    globals()["_NOI_IDX"] = -1
+    _nhan = (kb.get("noi") or "").strip().lower()
+    if _nhan:
+        try:
+            _ds = json.load(io.open(os.path.join(GOC, "noi_chon.json"), encoding="utf-8"))
+            _ten = [x.lower() for x in _ds.get(k["de"], [])]
+            if _nhan in _ten:
+                globals()["_NOI_IDX"] = _ten.index(_nhan)
+        except Exception as e:
+            print(f"   ⚠️ không đọc được noi_chon.json: {str(e)[:60]}")
     n = len(cau)
     luot = []
     for i, (chu, ai, cx) in enumerate(cau):
@@ -304,7 +317,8 @@ def mot_kenh(k: dict, vong: int) -> str:
     _nk = NET_KENH.get(k["de"], dict(net=7, cham=9, bo=26, tile=0.60))
     _bc = BO_CUC_KENH.get(k["de"], dict(duoi=False, bo=0, no="BOOM!"))
     props.update(netMuc=_nk["net"], cham=_nk["cham"], boGoc=_nk["bo"], tiLe=_nk["tile"],
-                 soTap=vong, bongDuoi=_bc["duoi"], boKhung=_bc["bo"], chuNo=_bc["no"])
+                 soTap=vong, bongDuoi=_bc["duoi"], boKhung=_bc["bo"], chuNo=_bc["no"],
+                 noiIdx=globals().get("_NOI_IDX", -1))
     pj = os.path.join(GOC, "out", f"v5_{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
     io.open(pj, "w", encoding="utf-8").write(json.dumps(props, ensure_ascii=False))

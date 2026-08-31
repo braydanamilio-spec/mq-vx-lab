@@ -555,6 +555,368 @@
     "khung": "dem_nguoc",
     "tinh_huong": "Router Reboot Countdown",
     "ma": "d4dc84445965"
+   },
+   {
+    "loi": [
+     [
+      "My fridge stopped making ice, but the freezer still works.",
+      0,
+      "buon"
+     ],
+     [
+      "Let's run a diagnostic; it may affect the entire cooling system.",
+      1,
+      "tuc"
+     ],
+     [
+      "I just need ice for my drinks tonight.",
+      0,
+      "buon"
+     ],
+     [
+      "Great, we'll start a full HVAC reboot; your house will chill.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Fridge Ice Escalation",
+    "ma": "8cf492fd5e89"
+   },
+   {
+    "loi": [
+     [
+      "I need to return my router, but the portal says I can't.",
+      0,
+      "buon"
+     ],
+     [
+      "Returns are only allowed on prime-numbered dates, per policy.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Today is the 17th, which is prime. Should work.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "Only if the product was purchased in a leap year, also.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I bought it in 2020, a leap year, so I'm good.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "We still need to verify you're not a time traveler.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Prime Date Return",
+    "ma": "01c5b51fffae"
+   },
+   {
+    "loi": [
+     [
+      "My garage door is about to shut in three seconds.",
+      0,
+      "tuc"
+     ],
+     [
+      "Before I answer, let me explain the safety timer protocol.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I need to know if I can keep it open.",
+      0,
+      "tuc"
+     ],
+     [
+      "The timer was introduced after the 2022 firmware update.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "But I'm counting down, not reading history.",
+      0,
+      "tuc"
+     ],
+     [
+      "The update also changed the default close delay to five seconds.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "So what do I do right now?",
+      0,
+      "tuc"
+     ],
+     [
+      "The door never got a close command, so it stays open.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Garage Door Countdown",
+    "ma": "d8f8c783c7a7"
+   },
+   {
+    "loi": [
+     [
+      "My backyard sprinkler won't start today.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Let's reset the whole mesh network to sync the controller.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Now the front lawn is also dead.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We'll reboot the municipal water schedule for simultaneous coverage.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "All neighborhoods are getting water cut off now.",
+      0,
+      "so"
+     ],
+     [
+      "Excellent, we've achieved citywide conservation during drought.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Sprinkler Mesh Overload",
+    "ma": "4d4bf4c8bfa2"
+   },
+   {
+    "loi": [
+     [
+      "My backup won't start at 3:17, what's wrong?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Backups run only on dates matching your name's letter count.",
+      1,
+      "so"
+     ],
+     [
+      "My name has eight letters, today is the 17th.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Then backups shift to the day equal to your vowel count.",
+      1,
+      "so"
+     ],
+     [
+      "I have three vowels, so backup should run on the 3rd.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Every rule you test spawns another, so backups stay impossible.",
+      1,
+      "so"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Backup Rule Spiral",
+    "ma": "c2b101ab60d6"
+   },
+   {
+    "loi": [
+     [
+      "The emergency cable snaps in three seconds. Which wire do I cut?",
+      0,
+      "so"
+     ],
+     [
+      "Safety protocol requires reading liability disclosures before any wire manipulation.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I am falling right now. Just tell me red or blue.",
+      0,
+      "tuc"
+     ],
+     [
+      "Neither. You just had to press the lobby button.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Elevator Brake Override",
+    "ma": "0f561a6036d2"
+   },
+   {
+    "loi": [
+     [
+      "My desk is stuck two inches too high.",
+      0,
+      "tuc"
+     ],
+     [
+      "Lower the legs by holding the emergency reset button.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I held it and now the desk is through the ceiling.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "That means calibration mode is successfully engaged.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "It is currently crushing my upstairs neighbor's sofa.",
+      0,
+      "so"
+     ],
+     [
+      "Your square footage just doubled for free.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Standing Desk Calibration",
+    "ma": "4421706e0bab"
+   },
+   {
+    "loi": [
+     [
+      "My router keeps dropping, what do I do?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You may reboot only when room temperature is a multiple of 13.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "It's 26 degrees now, can I reboot?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Yes, 26 is a multiple of 13, proceed.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "What if it's 39 degrees, still allowed?",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Yes, any multiple works, even 52 or 65.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "So eventually every temperature qualifies, right?",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Exactly, the rule decides when we answer calls.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Temp Reboot Rule",
+    "ma": "edf3b01de05e"
+   },
+   {
+    "loi": [
+     [
+      "The hallway alarm will fire in three seconds, what now?",
+      0,
+      "tuc"
+     ],
+     [
+      "First, the system distinguishes between fire, fire drill, and maintenance alerts.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I need a clear yes or no before it sounds.",
+      0,
+      "tuc"
+     ],
+     [
+      "The sensor array calibrates hourly, and today it's due for a test.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Three, two, one-now!",
+      0,
+      "tuc"
+     ],
+     [
+      "It's just a scheduled test.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the office hallway",
+    "tinh_huong": "Alarm Test Panic",
+    "ma": "f94b9101d181"
+   },
+   {
+    "loi": [
+     [
+      "My coffee machine stopped brewing, just a single cup.",
+      0,
+      "buon"
+     ],
+     [
+      "Let's route the power through the server rack for stability.",
+      1,
+      "tuc"
+     ],
+     [
+      "Now the whole office lights are flickering with espresso smells.",
+      0,
+      "buon"
+     ],
+     [
+      "Excellent, we've turned the building into a smart cafe network!",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "the IT help desk",
+    "tinh_huong": "Coffee Machine Crash",
+    "ma": "3dd36fc405ec"
    }
   ],
   "dating": [
@@ -685,6 +1047,687 @@
     "khung": "dem_nguoc",
     "tinh_huong": "Boost Countdown",
     "ma": "c59a2fa1f80c"
+   },
+   {
+    "loi": [
+     [
+      "My bio says I'm a marathon runner, but I never run.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You're hiding a chronic laziness? That's more than a little fib.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "I claim I'm fluent in Spanish, yet I can't order tacos.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "So you're faking language skills? That feels like major deception.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "And I say I love dogs, but I'm allergic.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Your whole profile is a lie, I forgive all that.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Actually, the only thing I edited was the background color.",
+      0,
+      "vui"
+     ],
+     [
+      "Wow, I totally over-reacted to a simple filter.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "tinh_huong": "Profile Filter Confession",
+    "ma": "519b6f74d030"
+   },
+   {
+    "loi": [
+     [
+      "Do you think my bio is too extra for a date?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I think you should mention you love hiking with llamas.",
+      1,
+      "vui"
+     ],
+     [
+      "I'm not asking about hobbies, I'm asking about tone.",
+      0,
+      "tuc"
+     ],
+     [
+      "Tone? Like the color of your favorite salsa?",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "No, tone like sarcastic vs sincere, not taco seasoning.",
+      0,
+      "tuc"
+     ],
+     [
+      "Oh, you were asking about my taco preferences, not tone.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "tinh_huong": "Wrong Prompt",
+    "ma": "1d7f21f56d05"
+   },
+   {
+    "loi": [
+     [
+      "Why does the app cap us at three photos?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "It forces you to pick a real shot, not a slideshow.",
+      1,
+      "so"
+     ],
+     [
+      "But I want to show my travel photos, not just one.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "If you pick one, you'll hide the adventure you brag about.",
+      1,
+      "so"
+     ],
+     [
+      "Exactly, authenticity matters more than bragging about every trip.",
+      0,
+      "vui"
+     ],
+     [
+      "So the limit actually curtails storytelling, not protects honesty.",
+      1,
+      "nghi_ngo"
+     ]
+    ],
+    "khung": "dao_vai",
+    "tinh_huong": "Photo Limit Debate",
+    "ma": "f4d3525a586d"
+   },
+   {
+    "loi": [
+     [
+      "My profile says I'm a complete open book.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I forgive any dark past you might have.",
+      1,
+      "buon"
+     ],
+     [
+      "Only secret? I keep cereal soggy for extra crunch.",
+      0,
+      "vui"
+     ],
+     [
+      "I already forgave the dark past; soggy cereal works.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "tinh_huong": "Forgiven Dark Past",
+    "ma": "7f26ad06e61c"
+   },
+   {
+    "loi": [
+     [
+      "Should I just leave her on read for two days?",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "You must drop it in the metal box by midnight.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "She sent a text about our coffee date.",
+      0,
+      "tuc"
+     ],
+     [
+      "The late fee doubles if you wait until Friday.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "We are talking about a human woman, Sam.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "I am talking about the biography of Millard Fillmore.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "tinh_huong": "Ghosting Policy Debate",
+    "ma": "9a94395e11ad"
+   },
+   {
+    "loi": [
+     [
+      "Why must my profile state my exact zip code?",
+      0,
+      "tuc"
+     ],
+     [
+      "Apps require honesty so people know your commute cost.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Commutes kill romance. We should all be listed as nearby.",
+      0,
+      "tuc"
+     ],
+     [
+      "If you lie about living downtown, dates turn into kidnappings.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Nobody wants a lover across county lines.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "You said proximity was tyranny yesterday.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Tyranny keeps neighborhoods safe from outer-district riffraff.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "The zoning board sends matches now?",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "dao_vai",
+    "tinh_huong": "Mandatory Bio Location Swap",
+    "ma": "0f67123ec5bf"
+   },
+   {
+    "loi": [
+     [
+      "I need to tell you something heavy about my profile.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Did you use a photo from high school again?",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "It is worse. My car insurance expired last month.",
+      0,
+      "so"
+     ],
+     [
+      "You drove us to the state line uninsured?",
+      1,
+      "tuc"
+     ],
+     [
+      "I was careful. I stayed under the speed limit.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I forgive the manslaughter, Owen. Just renew the policy.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "tinh_huong": "Expired Insurance Card",
+    "ma": "18cb4d0db5b6"
+   },
+   {
+    "loi": [
+     [
+      "Did you really claim you can read minds on your profile?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Yeah, I can tell when my dog wants a walk.",
+      1,
+      "vui"
+     ],
+     [
+      "I meant the psychic claim, not your dog intuition.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "My dog's intuition beats any human psychic, honestly.",
+      1,
+      "vui"
+     ],
+     [
+      "The app asks if you have supernatural abilities.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I was answering about my dog's sixth sense, not tarot.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "tinh_huong": "Profile Psychic Mix-up",
+    "ma": "81d39de9c511"
+   },
+   {
+    "loi": [
+     [
+      "I hate the three-prompt minimum; it forces me to lie.",
+      0,
+      "buon"
+     ],
+     [
+      "But prompts let people see who you really are.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Seeing real you is why I want rule to stay.",
+      0,
+      "tuc"
+     ],
+     [
+      "If you have to fake answers, the rule just tricks us.",
+      1,
+      "buon"
+     ]
+    ],
+    "khung": "dao_vai",
+    "tinh_huong": "Prompt Minimum Debate",
+    "ma": "fc63f1ea009e"
+   },
+   {
+    "loi": [
+     [
+      "I need to change my emergency contact before tonight.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Who is it now? Someone you buried in the woods?",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Not buried. Just currently unreachable by modern cell towers.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "So it is a cartel boss. Or a hostage situation.",
+      1,
+      "so"
+     ],
+     [
+      "It is my high school math teacher. From Nebraska.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I already forgave the tax fraud. Just text your mom.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "tinh_huong": "The Emergency Contact Bio",
+    "ma": "1599931b8da7"
+   },
+   {
+    "loi": [
+     [
+      "Sam, did you see my 'first date' prompt?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Yeah, you said you love tacos on Tuesdays.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I asked about date ideas, not taco schedule.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "I just thought you were being specific about meals.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "No, I meant activities, like mini golf.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Well, mini golf is a sport, like soccer.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I'm trying to steer back to date logistics.",
+      0,
+      "tuc"
+     ],
+     [
+      "I was answering the 'Pet preference' prompt, not your date question.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "tinh_huong": "Prompt Mix-up",
+    "ma": "00be241c0713"
+   },
+   {
+    "loi": [
+     [
+      "Why must my profile picture feature a borrowed golden retriever?",
+      0,
+      "tuc"
+     ],
+     [
+      "Rules exist to protect hopeful singles from deception.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "It is just a neighbor's dog who hates me.",
+      0,
+      "buon"
+     ],
+     [
+      "Then he is your emotional anchor now.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "He bit my thumb through the fence.",
+      0,
+      "so"
+     ],
+     [
+      "A committed relationship always starts with minor injuries.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "dao_vai",
+    "tinh_huong": "Mandatory Pet Photo Rule",
+    "ma": "e596f43781f3"
+   },
+   {
+    "loi": [
+     [
+      "I need to tell you something about my verification badge.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Did you steal someone else identity again?",
+      1,
+      "so"
+     ],
+     [
+      "It is worse. My account is technically illegal.",
+      0,
+      "tuc"
+     ],
+     [
+      "I already forgave the tax fraud, Owen.",
+      1,
+      "buon"
+     ],
+     [
+      "I used an expired driver license for the selfie.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "You could have just said your bangs were different.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "tinh_huong": "The Verification Selfie",
+    "ma": "db254893a5e7"
+   },
+   {
+    "loi": [
+     [
+      "Sam, my bio asks what I do on Saturdays, right?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I love extra cheese, especially on thin crust.",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "No, I meant my weekend hobbies, not pizza preferences.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Oh, you meant the pizza prompt, not my Saturday plan.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "tinh_huong": "Pizza Prompt Mix-up",
+    "ma": "75d8eab28b4f"
+   },
+   {
+    "loi": [
+     [
+      "This app capping free swipes at fifty is tyranny.",
+      0,
+      "tuc"
+     ],
+     [
+      "Fifty swipes a day is public safety policy, Owen.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "It limits my freedom to choose heartbreak.",
+      0,
+      "tuc"
+     ],
+     [
+      "Unrestricted swiping turns people into HOA compliance officers.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "A strict daily quota protects the local dating economy.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "You hit your daily economy limit by nine a.m.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "dao_vai",
+    "tinh_huong": "The Swipe Cap Limit",
+    "ma": "cda4208b53d7"
+   },
+   {
+    "loi": [
+     [
+      "I have a confession about my dating app profile.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "You stole someone else's entire identity again.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "It is much worse than identity theft.",
+      0,
+      "so"
+     ],
+     [
+      "You listed your mother as a dependent.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "I can explain the legal gray area.",
+      0,
+      "so"
+     ],
+     [
+      "I already forgave the tax fraud, Owen.",
+      1,
+      "tuc"
+     ],
+     [
+      "It is not tax fraud.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Then what did you lie about in the bio?",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "I do not actually bake artisanal sourdough.",
+      0,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "tinh_huong": "The Drafted Bio",
+    "ma": "b278b499ae53"
+   },
+   {
+    "loi": [
+     [
+      "Sam, does saying I'm 5'11 in my bio feel braggy?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I think saying you can make a decent lasagna is impressive.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I didn't ask about cooking, I asked about height.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Honestly, confidence in the kitchen wins most first dates.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I'm still wondering if the height claim sounds fake.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "I'm just replying to the roommate's question about his lasagna.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "tinh_huong": "Height vs Cooking Mixup",
+    "ma": "8b04806b815b"
+   },
+   {
+    "loi": [
+     [
+      "Why does the app only let me add one fun fact?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Because multiple facts flood the swipe feed with noise.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I have two jokes, both would increase my matches.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "If everyone does that, profiles become punch-card catalogs.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Exactly, too many punch-cards drown genuine humor, so limit works.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "But limiting jokes hides the quirks that make me swipe.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dao_vai",
+    "tinh_huong": "Fun Fact Limit",
+    "ma": "6615ed3e0b70"
    }
   ],
   "rent": [
@@ -5412,6 +6455,662 @@
     "khung": "thu_nhan",
     "tinh_huong": "The Hidden Basement Key",
     "ma": "92bf9f8d48db"
+   },
+   {
+    "loi": [
+     [
+      "You said we can only wear socks after 6 PM.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Correct. Socks after six keep the floor from feeling lonely.",
+      1,
+      "vui"
+     ],
+     [
+      "What about slippers? They're also foot coverings.",
+      0,
+      "tuc"
+     ],
+     [
+      "Slippers count as socks after six, just softer.",
+      1,
+      "vui"
+     ],
+     [
+      "And barefoot? No covering at all.",
+      0,
+      "tuc"
+     ],
+     [
+      "The rule protects the floor, not our feet.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Evening Sock Rule",
+    "ma": "b91079ee6d19"
+   },
+   {
+    "loi": [
+     [
+      "We have five seconds, tell me: should I stop the door?",
+      0,
+      "tuc"
+     ],
+     [
+      "Because I left my bike inside, and it's still wet.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "The timer's at three, decide now or it'll lock.",
+      0,
+      "tuc"
+     ],
+     [
+      "It already locked, so stopping doesn't matter.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Garage Door Countdown",
+    "ma": "98294a779e50"
+   },
+   {
+    "loi": [
+     [
+      "Laundry's been running for two hours; we need it done.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I can add the spare shirts to use the remaining cycle.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "But the machine's timer shows thirty minutes left.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "More items will balance the load, so it'll finish faster.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Now it's at fifty percent capacity, and the cycle's doubled.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We've got a week's wardrobe ready; that's a huge efficiency win!",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Laundry Load Timing",
+    "ma": "8c071a324fa2"
+   },
+   {
+    "loi": [
+     [
+      "So the lawn can only be mowed on full moons?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Exactly. And only after three complete cycles since the last mow.",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "What if the moon is cloudy? Does that count?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Clouds don't affect lunar phase, they just hide it.",
+      1,
+      "so"
+     ],
+     [
+      "Can I start mowing at sunrise on the third day?",
+      0,
+      "tuc"
+     ],
+     [
+      "No. The mower must wait until the moon is at zenith.",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "What about trimming the hedge? Same rule applies?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Yes, everything green follows the lunar schedule, even houseplants.",
+      1,
+      "so"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Backyard Lunar Rule",
+    "ma": "3944c9058abc"
+   },
+   {
+    "loi": [
+     [
+      "Three seconds left, tell me-car in the way?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I need to explain why the sensor malfunctioned today.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Explain quickly, the gate's about to drop.",
+      0,
+      "tuc"
+     ],
+     [
+      "The sensor thinks a leaf is a car, remember?",
+      1,
+      "vui"
+     ],
+     [
+      "We have two seconds, answer now!",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "Yes, the car is definitely not in the way.",
+      1,
+      "so"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Gate Countdown",
+    "ma": "a4e043e96f78"
+   },
+   {
+    "loi": [
+     [
+      "That wall patch took four hours to dry.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "It dries faster without the drywall there.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "The drywall is part of the wall.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "It was blocking the air circulation.",
+      1,
+      "vui"
+     ],
+     [
+      "You removed fifty square feet of structure.",
+      0,
+      "tuc"
+     ],
+     [
+      "Now we have an open floor plan.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Living Room Paint Audit",
+    "ma": "c1bff424ed41"
+   },
+   {
+    "loi": [
+     [
+      "Three feet. That is the distance from the toaster.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Safety zone. You are standing in it.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I am standing at the kitchen sink.",
+      0,
+      "tuc"
+     ],
+     [
+      "Precisely. Which is outside the three-foot zone.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Kitchen Counter Radius",
+    "ma": "7ac1a713f20e"
+   },
+   {
+    "loi": [
+     [
+      "Three seconds. Is the plastic bowl microwave safe?",
+      0,
+      "so"
+     ],
+     [
+      "We need to discuss the definition of safe.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Two seconds. Yes or no.",
+      0,
+      "tuc"
+     ],
+     [
+      "Chemically or emotionally?",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "One second. Zoe!",
+      0,
+      "tuc"
+     ],
+     [
+      "It is safe for the soup, bad for the plastic.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Microwave Soup Countdown",
+    "ma": "e6e207cdef81"
+   },
+   {
+    "loi": [
+     [
+      "That hoop is twelve feet in the air.",
+      0,
+      "tuc"
+     ],
+     [
+      "I adjusted it for better shooting form.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "You cannot dunk from the roof.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Not with that attitude about gravity.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "The HOA will fine us fifty dollars.",
+      0,
+      "so"
+     ],
+     [
+      "I moved it over the neighbor's fence.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "That is private property.",
+      0,
+      "tuc"
+     ],
+     [
+      "They have a better trampoline anyway.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Driveway Basketball Hoop Height",
+    "ma": "0d8a0ad9deb8"
+   },
+   {
+    "loi": [
+     [
+      "The clock just hit 7:31, you can't say a word.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Fine, I'll stay silent until 7:32, okay?",
+      1,
+      "tuc"
+     ],
+     [
+      "What about humming? That's not speaking.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Even humming counts as sound, rule says no noise.",
+      1,
+      "tuc"
+     ],
+     [
+      "So tapping my foot also breaks it?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Exactly, any noise violates the odd-minute silence rule.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Odd Minute Silence",
+    "ma": "879b1e383998"
+   },
+   {
+    "loi": [
+     [
+      "Three seconds, should I press the lock button?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "The lock's been squeaking all month, might need oil.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "I need a yes or no now.",
+      0,
+      "tuc"
+     ],
+     [
+      "But if we oil it, the click might fail.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Time's up, I'm pressing anyway.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "It was already locked, so nothing changes.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Front Door Auto-Lock",
+    "ma": "0de0225a3730"
+   },
+   {
+    "loi": [
+     [
+      "That mailbox lid was forty-eight hours past warranty.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "I upgraded it so mail delivery is now eighty percent faster.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "It is an empty concrete hole by the driveway.",
+      0,
+      "tuc"
+     ],
+     [
+      "The postman can just drop it directly into the basement.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "mailbox replacement protocol",
+    "ma": "9b42a826fda5"
+   },
+   {
+    "loi": [
+     [
+      "You said no priced item can go above drawer nine.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Correct, any price ending in nine must stay in drawer nine.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Then where does a $5 bottle belong? Drawer five?",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "Exactly, but only after the clock strikes five PM.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "So a $5 bottle at six PM must go where?",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "It goes in the pantry, because after five PM all prices move.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Price Drawer Rule",
+    "ma": "b2dcf0546200"
+   },
+   {
+    "loi": [
+     [
+      "Five seconds left, tell me: keep the lights on?",
+      0,
+      "so"
+     ],
+     [
+      "First, the solar panel's output dropped because clouds rolled in.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "We have a timer set for exactly five seconds.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "And the HOA sent a notice about light pollution after sunset.",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "I need a yes or no now.",
+      0,
+      "so"
+     ],
+     [
+      "Also, the kids' bedtime routine depends on darkness for sleep.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Timer's beeping, answer!",
+      0,
+      "so"
+     ],
+     [
+      "They were already off when the timer hit zero.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Patio Light Countdown",
+    "ma": "86672a6642b8"
+   },
+   {
+    "loi": [
+     [
+      "The living room's been at 68 for two hours.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Let's raise it to 72; comfort improves quickly.",
+      1,
+      "vui"
+     ],
+     [
+      "It was already set to 72 for an hour.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Then we should boost to 78; it'll heat faster.",
+      1,
+      "vui"
+     ],
+     [
+      "Now the thermostat shows 78 for three hours straight.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Great, the whole house will be a perfect sauna.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Thermostat Escalation",
+    "ma": "4226ff2ff592"
+   },
+   {
+    "loi": [
+     [
+      "You said 42 steps before any carpet contact.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Exactly. Not 41, not 43.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "What about after 84 steps? Twice the number.",
+      0,
+      "so"
+     ],
+     [
+      "That's still valid; the rule counts in multiples of 42.",
+      1,
+      "so"
+     ],
+     [
+      "So I could walk 126 steps and still be allowed.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Yes, and you could also count zero and stay off forever.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Carpet Step Rule",
+    "ma": "f57e46deef1c"
+   },
+   {
+    "loi": [
+     [
+      "The timer's at five seconds, I need the oven temperature.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "First, the recipe calls for 350, then a lower finish.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Timer's ringing, answer now before the oven shuts off.",
+      0,
+      "tuc"
+     ],
+     [
+      "350 degrees - just as I was saying.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Oven Timer Countdown",
+    "ma": "a2c283ff7664"
+   },
+   {
+    "loi": [
+     [
+      "I spent three hours fixing the leaky sink.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Perfect, now we have extra water for the new hydroponics.",
+      1,
+      "vui"
+     ],
+     [
+      "Hydroponics need electricity, not just water.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Then we should install solar panels on the roof.",
+      1,
+      "vui"
+     ],
+     [
+      "Solar panels require permits and wiring.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I'll file permits; our house becomes a certified green building.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Green Upgrade Plan",
+    "ma": "a805d6715225"
    }
   ],
   "neighbor": [
@@ -5525,6 +7224,662 @@
     "khung": "thu_nhan",
     "tinh_huong": "Stolen Garden Gnome",
     "ma": "c82f5909426f"
+   },
+   {
+    "loi": [
+     [
+      "I just need to drop my couch here, okay?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Couches count as items, and items must arrive in threes.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "What if I bring two chairs now and a table later?",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Each drop counts, so you need three items now.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I could split the couch into two loads, then three loads total?",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "The rule cares about total items, not how many trips you make.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Triple item rule",
+    "ma": "f427e6d36af6"
+   },
+   {
+    "loi": [
+     [
+      "Step away from the folding stairs right now, Priya.",
+      0,
+      "so"
+     ],
+     [
+      "I am just looking for the breaker box.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "You have three seconds before the latch lets go.",
+      0,
+      "so"
+     ],
+     [
+      "Did the last guy build it out of pine?",
+      1,
+      "nghi_ngo"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "The Attic Hatch Countdown",
+    "ma": "8ee1a42a8281"
+   },
+   {
+    "loi": [
+     [
+      "My front yard sprinkler drips onto my porch each night.",
+      0,
+      "buon"
+     ],
+     [
+      "I'll attach a hose to channel the water into your garden.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "The garden already has enough water; the soil is soggy.",
+      0,
+      "so"
+     ],
+     [
+      "I'll add a second hose to fill the neighbor's flower beds.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Now the sidewalk is puddled and the mailboxes are floating.",
+      0,
+      "so"
+     ],
+     [
+      "Great, we've created a community pond; the HOA loves it.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Sprinkler to Pond",
+    "ma": "bca0d4038bb4"
+   },
+   {
+    "loi": [
+     [
+      "I moved the sofa, now your rule's triggered?",
+      0,
+      "so"
+     ],
+     [
+      "Every item must be an even number of inches from any other.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "The sofa is five inches from the coffee table.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Five is odd, so you must add a two-inch spacer.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "If I put the spacer under the lamp, does it count?",
+      0,
+      "tuc"
+     ],
+     [
+      "Lamp now touches floor, so all floor objects need even gaps.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "What about the ceiling fan? It never touches the floor.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "The rule applies to everything, including the fan's shadows.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Shadow Rule",
+    "ma": "6570bc695b24"
+   },
+   {
+    "loi": [
+     [
+      "Priya, the truck leaves in ten seconds-did you lock gate?",
+      0,
+      "tuc"
+     ],
+     [
+      "Hold on, those boxes are still in hallway, stairs creak.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Just answer-gate locked or not?",
+      0,
+      "tuc"
+     ],
+     [
+      "I was stashing trash, but cat knocked it over.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Five seconds, answer now or the truck drives off!",
+      0,
+      "tuc"
+     ],
+     [
+      "It was locked-just missed the cue.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Moving Truck Countdown",
+    "ma": "4880717d1810"
+   },
+   {
+    "loi": [
+     [
+      "My trash can won't close; the lid's jammed.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Add extra hinges; you'll never need to lift it again.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "But then the lid swings open in the wind.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Install a magnetic latch; it'll stay shut during storms.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Now the lid's stuck; I can't empty it.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Turn it into a community compost bin; we love that.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Trash Can Jam",
+    "ma": "da6e89ecbfe6"
+   },
+   {
+    "loi": [
+     [
+      "I noticed you only water plants on prime-numbered days.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Correct, rule says any flora watering must be on prime dates.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "What about my fake cactus? Does it count as flora?",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Actually, the rule bans watering anything on non-prime days, plants included.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Prime Water Rule",
+    "ma": "1fc1e3bd1427"
+   },
+   {
+    "loi": [
+     [
+      "Three seconds until the carrier hits number six. Red flag up or down?",
+      0,
+      "so"
+     ],
+     [
+      "The flag is symbolic. It represents our ongoing dialog with the district office.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "We have two seconds. Does it point north or east?",
+      0,
+      "tuc"
+     ],
+     [
+      "It points forty-five degrees because the mounting bracket lacks structural integrity.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "One second. Up or down?",
+      0,
+      "tuc"
+     ],
+     [
+      "It is sideways. The mail carrier prefers a jaunty angle.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Mailbox Flag Angle",
+    "ma": "6024e33ae8a3"
+   },
+   {
+    "loi": [
+     [
+      "Priya, the recycling bin's lid won't stay closed.",
+      0,
+      "so"
+     ],
+     [
+      "I'll secure it with a bungee cord for extra hold.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "That cord is for the garden hose, not the bin.",
+      0,
+      "so"
+     ],
+     [
+      "Then I'll tie the hose to the bin, solves both.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Now the hose loops around the street.",
+      0,
+      "tuc"
+     ],
+     [
+      "I'll redirect the loop into the neighbor's driveway for aesthetics.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Now water's spilling onto their car.",
+      0,
+      "buon"
+     ],
+     [
+      "Great, everyone's watering plants for free, thanks to my fix.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Recycling Bin Fix",
+    "ma": "0580b7ef8cad"
+   },
+   {
+    "loi": [
+     [
+      "I need a place for this box, any floor will do.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You can only set it down on a surface with an 'e'.",
+      1,
+      "vui"
+     ],
+     [
+      "The kitchen floor works, it has an 'e'.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "But it's also a work surface, not a floor.",
+      1,
+      "vui"
+     ],
+     [
+      "Then the garage door, it has an 'e' too.",
+      0,
+      "tuc"
+     ],
+     [
+      "So the rule is really about letters, not placement.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Lettered Surfaces",
+    "ma": "0eb567e8de72"
+   },
+   {
+    "loi": [
+     [
+      "The service lift drops in three seconds, will you secure the box?",
+      0,
+      "tuc"
+     ],
+     [
+      "I need to explain why this box matters first.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Explain later, I have a timer beeping now.",
+      0,
+      "tuc"
+     ],
+     [
+      "It's my grandmother's recipe book, not just junk.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Timer's at zero, do you still need to talk?",
+      0,
+      "tuc"
+     ],
+     [
+      "Fine, just lock the latch.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Elevator Box",
+    "ma": "1c23f7c8b45e"
+   },
+   {
+    "loi": [
+     [
+      "My porch light's been flickering all night.",
+      0,
+      "buon"
+     ],
+     [
+      "Add a dimmer, it'll smooth the pulses.",
+      1,
+      "vui"
+     ],
+     [
+      "Now the whole house is dimming randomly.",
+      0,
+      "buon"
+     ],
+     [
+      "Great, we just upgraded the neighborhood to smart lighting!",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Porch Light Upgrade",
+    "ma": "c6f36c7df4bd"
+   },
+   {
+    "loi": [
+     [
+      "You said each box needs a tile matching its label length.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Exactly, the tile side equals the letters in the description.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "What if a description has ten letters but no ten-inch tile?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Then I must make a ten-inch tile from the driveway.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "So now the driveway becomes a tile factory for your boxes.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Which means the rule governs the whole property, not just porch.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Tile Rule",
+    "ma": "da53f04accc6"
+   },
+   {
+    "loi": [
+     [
+      "Priya, HOA timer hits in three seconds-want sprinkler on?",
+      0,
+      "tuc"
+     ],
+     [
+      "Hold on, I'm still unpacking boxes from the truck.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "If you say yes, I'll shut the valve now.",
+      0,
+      "tuc"
+     ],
+     [
+      "But I need to explain why I bought a ladder.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "The timer's flashing red; we've got seconds left.",
+      0,
+      "tuc"
+     ],
+     [
+      "I was just moving a fridge, not planning a renovation.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Answer now-yes to keep water, no to shut off?",
+      0,
+      "tuc"
+     ],
+     [
+      "It's just a test; the sprinkler never actually turns on.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Timered Sprinkler Test",
+    "ma": "6935b8c5e11a"
+   },
+   {
+    "loi": [
+     [
+      "Your faucet's drip is soaking my front step.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I'll put a small bucket under it.",
+      1,
+      "vui"
+     ],
+     [
+      "The bucket overflows onto the sidewalk.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I'll connect a hose to redirect water to the garden.",
+      1,
+      "vui"
+     ],
+     [
+      "Now the garden's a swamp; my neighbor's car is submerged.",
+      0,
+      "buon"
+     ],
+     [
+      "Great, we've created the neighborhood's first shared lake!",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Leaky Faucet Flood",
+    "ma": "eb5da77a09d4"
+   },
+   {
+    "loi": [
+     [
+      "Priya, why are my boxes still on the porch?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Nothing can be set down unless all clocks read prime minutes.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Hallway clock shows 13, so I can put the box.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "But the kitchen timer reads 12, and that's also a clock.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "If any clock is non-prime, nothing can be placed anywhere.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "So the rule just guarantees nothing ever moves.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "tinh_huong": "Prime Clock Rule",
+    "ma": "934a50c69953"
+   },
+   {
+    "loi": [
+     [
+      "Priya, the fire alarm will go off in three seconds-stop it?",
+      0,
+      "tuc"
+     ],
+     [
+      "I just moved, still unpacking boxes, need to find the breaker.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "We have exactly three seconds before it blares.",
+      0,
+      "tuc"
+     ],
+     [
+      "I wasn't pulling it; it's already blaring.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "tinh_huong": "Fire Alarm Countdown",
+    "ma": "2b22e1e8ae20"
+   },
+   {
+    "loi": [
+     [
+      "My Wi-Fi cuts out every night around ten.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I'll add a booster in your attic to extend range.",
+      1,
+      "vui"
+     ],
+     [
+      "Will that affect the streetlights' sensors?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I'll sync it with the streetlights, they'll broadcast too.",
+      1,
+      "vui"
+     ],
+     [
+      "But the HOA limits signal emissions to five watts.",
+      0,
+      "buon"
+     ],
+     [
+      "Now every house shares a 50-watt mesh; we're a neighborhood hotspot.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "tinh_huong": "Wi-Fi Upgrade",
+    "ma": "63541b5beb9b"
    }
   ]
  },
@@ -6139,7 +8494,7 @@
   "exactly «t n» makes every conversation «t n» minute": 1,
   "ray will «t n» pump stay on when timer hits zero": 1,
   "«t n» cycles off after «t n» minute of idle load": 1,
-  "i need «t n» or no now": 1,
+  "i need «t n» or no now": 3,
   "yes it stays on right when it cuts off": 1,
   "i hear «t n» from «t n» just «t n» leak": 1,
   "that means «t n» s worn i ll replace it minutes per dollar": 1,
@@ -6418,7 +8773,385 @@
   "i have no second device just «t n»": 1,
   "«t n» step ensures security compliance across all networks": 1,
   "timer s flashing red i m about to lose connection": 1,
-  "«t n» code is simply «t n» button": 1
+  "«t n» code is simply «t n» button": 1,
+  "«t n» stopped making ice but «t n» still works": 1,
+  "let s run «t n» it «ng y» affect «t n» cooling system": 1,
+  "i just need ice for «t n» tonight": 1,
+  "great we ll start «t n» hvac reboot «t n» will chill": 1,
+  "i need to return «t n» but «t n» says i can t": 1,
+  "returns are only allowed on prime numbered dates per policy": 1,
+  "today is the «s » th which is prime should work": 1,
+  "only if «t n» was purchased in «t n» year also": 1,
+  "i bought it in «s » «t n» year so i m good": 1,
+  "we still need to verify you re not «t n» traveler": 1,
+  "«t n» door is about to shut in «s » seconds": 1,
+  "before i answer let me explain «t n» timer protocol": 1,
+  "i need to know if i can keep it open": 1,
+  "«t n» was introduced after the «s » firmware update": 1,
+  "but i m counting down not reading history": 1,
+  "«t n» also changed «t n» close delay to «s » seconds": 1,
+  "so what do i do right now": 1,
+  "«t n» never got «t n» command so it stays open": 1,
+  "«t n» sprinkler won t start today": 1,
+  "let s reset «t n» mesh network to sync «t n»": 1,
+  "now «t n» lawn is also dead": 1,
+  "we ll reboot «t n» water schedule for simultaneous coverage": 1,
+  "all neighborhoods are getting water cut off now": 1,
+  "excellent we ve achieved citywide conservation during drought": 1,
+  "«t n» won t start at «s » «s » what s wrong": 1,
+  "backups run only on dates matching «t n» s letter count": 1,
+  "«t n» has «s » letters today is the «s » th": 1,
+  "then backups shift to «t n» equal to «t n» count": 1,
+  "i have «s » vowels so backup should run on the «s » rd": 1,
+  "every rule you test spawns another so backups stay impossible": 1,
+  "«t n» cable snaps in «s » seconds which wire do i cut": 1,
+  "safety protocol requires reading liability disclosures before any wire manipulation": 1,
+  "i am falling right now just tell me red or blue": 1,
+  "neither you just had to press «t n» button": 1,
+  "«t n» is stuck «s » inches too high": 1,
+  "lower «t n» by holding «t n» reset button": 1,
+  "i held it and now «t n» is through «t n»": 1,
+  "that means calibration mode is successfully engaged": 1,
+  "it is currently crushing «t n» neighbor s sofa": 1,
+  "«t n» footage just doubled for free": 1,
+  "«t n» keeps dropping what do i do": 1,
+  "you «ng y» reboot only when room temperature is «t n» of «s »": 1,
+  "it s «s » degrees now can i reboot": 1,
+  "yes «s » is «t n» of «s » proceed": 1,
+  "what if it s «s » degrees still allowed": 1,
+  "yes any multiple works even «s » or «s »": 1,
+  "so eventually every temperature qualifies right": 1,
+  "exactly «t n» decides when we answer calls": 1,
+  "you said we can only wear socks after «s » pm": 1,
+  "correct socks after «s » keep «t n» from feeling lonely": 1,
+  "what about slippers they re also foot coverings": 1,
+  "slippers count as socks after «s » just softer": 1,
+  "and barefoot no covering at all": 1,
+  "«t n» protects «t n» not «t n»": 1,
+  "we have «s » seconds tell me should i stop «t n»": 1,
+  "because i left «t n» inside and it s still wet": 1,
+  "«t n» s at «s » decide now or it ll lock": 1,
+  "it already locked so stopping doesn t matter": 1,
+  "laundry s been running for «s » hours we need it done": 1,
+  "i can add «t n» shirts to use «t n» cycle": 1,
+  "but «t n» s timer shows «s » minutes left": 1,
+  "more items will balance «t n» so it ll finish faster": 1,
+  "now it s at «s » percent capacity and «t n» s doubled": 1,
+  "we ve got «t n» s wardrobe ready that s «t n» efficiency win": 1,
+  "so «t n» can only be mowed on full moons": 1,
+  "exactly and only after «s » complete cycles since «t n» mow": 1,
+  "what if «t n» is cloudy does that count": 1,
+  "clouds don t affect lunar phase they just hide it": 1,
+  "can i start mowing at sunrise on «t n» day": 1,
+  "no «t n» must wait until «t n» is at zenith": 1,
+  "what about trimming «t n» same rule applies": 1,
+  "yes everything green follows «t n» schedule even houseplants": 1,
+  "«s » seconds left tell me car in «t n»": 1,
+  "i need to explain why «t n» malfunctioned today": 1,
+  "explain quickly «t n» s about to drop": 1,
+  "«t n» thinks «t n» is «t n» remember": 1,
+  "we have «s » seconds answer now": 1,
+  "yes «t n» is definitely not in «t n»": 1,
+  "that wall patch took «s » hours to dry": 1,
+  "it dries faster without «t n» there": 1,
+  "«t n» is part of «t n»": 1,
+  "it was blocking «t n» circulation": 1,
+  "you removed «s » square feet of structure": 1,
+  "now we have «t n» floor plan": 1,
+  "«s » feet that is «t n» from «t n»": 1,
+  "safety zone you are standing in it": 1,
+  "i am standing at «t n» sink": 1,
+  "precisely which is outside the «s » foot zone": 1,
+  "«s » seconds is «t n» bowl microwave safe": 1,
+  "we need to discuss «t n» of safe": 1,
+  "«s » seconds yes or no": 1,
+  "chemically or emotionally": 1,
+  "«s » second zoe": 1,
+  "it is safe for «t n» bad for «t n»": 1,
+  "that hoop is twelve feet in «t n»": 1,
+  "i adjusted it for better shooting form": 1,
+  "you cannot dunk from «t n»": 1,
+  "not with that attitude about gravity": 1,
+  "«t n» will fine us «s » dollars": 1,
+  "i moved it over «t n» s fence": 1,
+  "that is private property": 1,
+  "they have «t n» trampoline anyway": 1,
+  "«t n» just hit «s » «s » you can t say «t n»": 1,
+  "fine i ll stay silent until «s » «s » okay": 1,
+  "what about humming that s not speaking": 1,
+  "even humming counts as sound rule says no noise": 1,
+  "so tapping «t n» also breaks it": 1,
+  "exactly any noise violates «t n» minute silence rule": 1,
+  "«s » seconds should i press «t n» button": 1,
+  "«t n» s been squeaking all month might need oil": 1,
+  "but if we oil it «t n» might fail": 1,
+  "time s up i m pressing anyway": 1,
+  "it was already locked so nothing changes": 1,
+  "that mailbox lid was «s » «s » hours past warranty": 1,
+  "i upgraded it so mail delivery is now eighty percent faster": 1,
+  "it is «t n» concrete hole by «t n»": 1,
+  "«t n» can just drop it directly into «t n»": 1,
+  "you said no priced item can go above drawer «s »": 1,
+  "correct any price ending in «s » must stay in drawer «s »": 1,
+  "then where does a «s » bottle belong drawer «s »": 1,
+  "exactly but only after «t n» strikes «s » pm": 1,
+  "so a «s » bottle at «s » pm must go where": 1,
+  "it goes in «t n» because after «s » pm all prices move": 1,
+  "«s » seconds left tell me keep «t n» on": 1,
+  "first «t n» panel s output dropped because clouds rolled in": 1,
+  "we have «t n» set for exactly «s » seconds": 1,
+  "and «t n» sent «t n» about light pollution after sunset": 1,
+  "also «t n» bedtime routine depends on darkness for sleep": 1,
+  "timer s beeping answer": 1,
+  "they were already off when «t n» hit zero": 1,
+  "«t n» room s been at «s » for «s » hours": 1,
+  "let s raise it to «s » comfort improves quickly": 1,
+  "it was already set to «s » for «t n»": 1,
+  "then we should boost to «s » it ll heat faster": 1,
+  "now «t n» shows «s » for «s » hours straight": 1,
+  "great «t n» house will be «t n» sauna": 1,
+  "you said «s » steps before any carpet contact": 1,
+  "exactly not «s » not «s »": 1,
+  "what about after «s » steps twice «t n»": 1,
+  "that s still valid «t n» counts in multiples of «s »": 1,
+  "so i could walk «s » steps and still be allowed": 1,
+  "yes and you could also count zero and stay off forever": 1,
+  "«t n» s at «s » seconds i need «t n» temperature": 1,
+  "first «t n» calls for «s » then «t n» finish": 1,
+  "timer s ringing answer now before «t n» shuts off": 1,
+  "«s » degrees just as i was saying": 1,
+  "i spent «s » hours fixing «t n» sink": 1,
+  "perfect now we have extra water for «t n» hydroponics": 1,
+  "hydroponics need electricity not just water": 1,
+  "then we should install solar panels on «t n»": 1,
+  "solar panels require permits and wiring": 1,
+  "i ll file permits «t n» becomes «t n» green building": 1,
+  "i just need to drop «t n» here okay": 1,
+  "couches count as items and items must arrive in threes": 1,
+  "what if i bring «s » chairs now and «t n» later": 1,
+  "each drop counts so you need «s » items now": 1,
+  "i could split «t n» into «s » loads then «s » loads total": 1,
+  "«t n» cares about total items not how many trips you make": 1,
+  "step away from «t n» stairs right now priya": 1,
+  "i am just looking for «t n» box": 1,
+  "you have «s » seconds before «t n» lets go": 1,
+  "did «t n» guy build it out of pine": 1,
+  "«t n» yard sprinkler drips onto «t n» each night": 1,
+  "i ll attach «t n» to channel «t n» into «t n»": 1,
+  "«t n» already has enough water «t n» is soggy": 1,
+  "i ll add «t n» hose to fill «t n» s flower beds": 1,
+  "now «t n» is puddled and «t n» are floating": 1,
+  "great we ve created «t n» pond «t n» loves it": 1,
+  "i moved «t n» now «t n» s triggered": 1,
+  "every item must be «t n» number of inches from any other": 1,
+  "«t n» is «s » inches from «t n» table": 1,
+  "«s » is odd so you must add a «s » inch spacer": 1,
+  "if i put «t n» under «t n» does it count": 1,
+  "lamp now touches floor so all floor objects need even gaps": 1,
+  "what about «t n» fan it never touches «t n»": 1,
+  "«t n» applies to everything including «t n» s shadows": 1,
+  "priya «t n» leaves in «s » seconds did you lock gate": 1,
+  "hold on those boxes are still in hallway stairs creak": 1,
+  "just answer gate locked or not": 1,
+  "i was stashing trash but cat knocked it over": 1,
+  "«s » seconds answer now or «t n» drives off": 1,
+  "it was locked just missed «t n»": 1,
+  "«t n» can won t close «t n» s jammed": 1,
+  "add extra hinges you ll never need to lift it again": 1,
+  "but then «t n» swings open in «t n»": 1,
+  "install «t n» latch it ll stay shut during storms": 1,
+  "now «t n» s stuck i can t empty it": 1,
+  "turn it into «t n» compost bin we love that": 1,
+  "i noticed you only water plants on prime numbered days": 1,
+  "correct rule says any flora watering must be on prime dates": 1,
+  "what about «t n» cactus does it count as flora": 1,
+  "actually «t n» bans watering anything on non prime days plants included": 1,
+  "«s » seconds until «t n» hits number «s » red flag up or down": 1,
+  "«t n» is symbolic it represents «t n» dialog with «t n» office": 1,
+  "we have «s » seconds does it point north or east": 1,
+  "it points «s » «s » degrees because «t n» bracket lacks structural integrity": 1,
+  "«s » second up or down": 1,
+  "it is sideways «t n» carrier prefers «t n» angle": 1,
+  "priya «t n» bin s lid won t stay closed": 1,
+  "i ll secure it with «t n» cord for extra hold": 1,
+  "that cord is for «t n» hose not «t n»": 1,
+  "then i ll tie «t n» to «t n» solves both": 1,
+  "now «t n» loops around «t n»": 1,
+  "i ll redirect «t n» into «t n» s driveway for aesthetics": 1,
+  "now water s spilling onto «t n»": 1,
+  "great everyone s watering plants for free thanks to «t n»": 1,
+  "i need «t n» for this box any floor will do": 1,
+  "you can only set it down on «t n» with an e": 1,
+  "«t n» floor works it has an e": 1,
+  "but it s also «t n» surface not «t n»": 1,
+  "then «t n» door it has an e too": 1,
+  "so «t n» is really about letters not placement": 1,
+  "«t n» lift drops in «s » seconds will you secure «t n»": 1,
+  "i need to explain why this box matters first": 1,
+  "explain later i have «t n» beeping now": 1,
+  "it s «t n» s recipe book not just junk": 1,
+  "timer s at zero do you still need to talk": 1,
+  "fine just lock «t n»": 1,
+  "«t n» light s been flickering all night": 1,
+  "add «t n» it ll smooth «t n»": 1,
+  "now «t n» house is dimming randomly": 1,
+  "great we just upgraded «t n» to smart lighting": 1,
+  "you said each box needs «t n» matching its label length": 1,
+  "exactly «t n» side equals «t n» in «t n»": 1,
+  "what if «t n» has «s » letters but no «s » inch tile": 1,
+  "then i must make a «s » inch tile from «t n»": 1,
+  "so now «t n» becomes «t n» factory for «t n»": 1,
+  "which means «t n» governs «t n» property not just porch": 1,
+  "priya hoa timer hits in «s » seconds want sprinkler on": 1,
+  "hold on i m still unpacking boxes from «t n»": 1,
+  "if you say yes i ll shut «t n» now": 1,
+  "but i need to explain why i bought «t n»": 1,
+  "«t n» s flashing red we ve got seconds left": 1,
+  "i was just moving «t n» not planning «t n»": 1,
+  "answer now yes to keep water no to shut off": 1,
+  "it s just «t n» «t n» never actually turns on": 1,
+  "«t n» s drip is soaking «t n» step": 1,
+  "i ll put «t n» bucket under it": 1,
+  "«t n» overflows onto «t n»": 1,
+  "i ll connect «t n» to redirect water to «t n»": 1,
+  "now «t n» s «t n» «t n» s car is submerged": 1,
+  "great we ve created «t n» s first shared lake": 1,
+  "priya why are «t n» still on «t n»": 1,
+  "nothing can be set down unless all clocks read prime minutes": 1,
+  "hallway clock shows «s » so i can put «t n»": 1,
+  "but «t n» timer reads «s » and that s also «t n»": 1,
+  "if any clock is non prime nothing can be placed anywhere": 1,
+  "so «t n» just guarantees nothing ever moves": 1,
+  "priya «t n» alarm will go off in «s » seconds stop it": 1,
+  "i just moved still unpacking boxes need to find «t n»": 1,
+  "we have exactly «s » seconds before it blares": 1,
+  "i wasn t pulling it it s already blaring": 1,
+  "«t n» fi cuts out every night around «s »": 1,
+  "i ll add «t n» in «t n» to extend range": 1,
+  "will that affect «t n» sensors": 1,
+  "i ll sync it with «t n» they ll broadcast too": 1,
+  "but «t n» limits signal emissions to «s » watts": 1,
+  "now every house shares a «s » watt mesh we re «t n» hotspot": 1,
+  "«t n» says i m «t n» runner but i never run": 1,
+  "you re hiding «t n» laziness that s more than «t n» fib": 1,
+  "i claim i m fluent in spanish yet i can t order tacos": 1,
+  "so you re faking language skills that feels like major deception": 1,
+  "and i say i love dogs but i m allergic": 1,
+  "«t n» profile is «t n» i forgive all that": 1,
+  "actually «t n» thing i edited was «t n» color": 1,
+  "wow i totally over reacted to «t n» filter": 1,
+  "do you think «t n» is too extra for «t n»": 1,
+  "i think you should mention you love hiking with llamas": 1,
+  "i m not asking about hobbies i m asking about tone": 1,
+  "tone like «t n» of «t n» salsa": 1,
+  "no tone like sarcastic vs sincere not taco seasoning": 1,
+  "oh you were asking about «t n» preferences not tone": 1,
+  "why does «t n» cap us at «s » photos": 1,
+  "it forces you to pick «t n» shot not «t n»": 1,
+  "but i want to show «t n» photos not just «s »": 1,
+  "if you pick «s » you ll hide «t n» you brag about": 1,
+  "exactly authenticity matters more than bragging about every trip": 1,
+  "so «t n» actually curtails storytelling not protects honesty": 1,
+  "«t n» says i m «t n» open book": 1,
+  "i forgive any dark past you might have": 1,
+  "only secret i keep cereal soggy for extra crunch": 1,
+  "i already forgave «t n» past soggy cereal works": 1,
+  "should i just leave «t n» read for «s » days": 1,
+  "you must drop it in «t n» box by midnight": 1,
+  "she sent «t n» about «t n» date": 1,
+  "«t n» fee doubles if you wait until «ng y»": 1,
+  "we are talking about «t n» woman sam": 1,
+  "i am talking about «t n» of millard fillmore": 1,
+  "why must «t n» state «t n» zip code": 1,
+  "apps require honesty so people know «t n» cost": 1,
+  "commutes kill romance we should all be listed as nearby": 1,
+  "if you lie about living downtown dates turn into kidnappings": 1,
+  "nobody wants «t n» across county lines": 1,
+  "you said proximity was tyranny yesterday": 1,
+  "tyranny keeps neighborhoods safe from outer district riffraff": 1,
+  "«t n» board sends matches now": 1,
+  "i need to tell you something heavy about «t n»": 1,
+  "did you use «t n» from high school again": 1,
+  "it is worse «t n» insurance expired last month": 1,
+  "you drove us to «t n» line uninsured": 1,
+  "i was careful i stayed under «t n» limit": 1,
+  "i forgive «t n» owen just renew «t n»": 1,
+  "did you really claim you can read minds on «t n»": 1,
+  "yeah i can tell when «t n» wants «t n»": 1,
+  "i meant «t n» claim not «t n» intuition": 1,
+  "«t n» s intuition beats any human psychic honestly": 1,
+  "«t n» asks if you have supernatural abilities": 1,
+  "i was answering about «t n» s sixth sense not tarot": 1,
+  "i hate the «s » prompt minimum it forces me to lie": 1,
+  "but prompts let people see who you really are": 1,
+  "seeing real you is why i want rule to stay": 1,
+  "if you have to fake answers «t n» just tricks us": 1,
+  "i need to change «t n» contact before tonight": 1,
+  "who is it now someone you buried in «t n»": 1,
+  "not buried just currently unreachable by modern cell towers": 1,
+  "so it is «t n» boss or «t n» situation": 1,
+  "it is «t n» school math teacher from nebraska": 1,
+  "i already forgave «t n» fraud just text «t n»": 1,
+  "sam did you see my first date prompt": 1,
+  "yeah you said you love tacos on tuesdays": 1,
+  "i asked about date ideas not taco schedule": 1,
+  "i just thought you were being specific about meals": 1,
+  "no i meant activities like mini golf": 1,
+  "well mini golf is «t n» like soccer": 1,
+  "i m trying to steer back to date logistics": 1,
+  "i was answering the pet preference prompt not «t n» question": 1,
+  "why must «t n» picture feature «t n» golden retriever": 1,
+  "rules exist to protect hopeful singles from deception": 1,
+  "it is just «t n» s dog who hates me": 1,
+  "then he is «t n» anchor now": 1,
+  "he bit «t n» through «t n»": 1,
+  "«t n» relationship always starts with minor injuries": 1,
+  "i need to tell you something about «t n» badge": 1,
+  "did you steal someone else identity again": 1,
+  "it is worse «t n» is technically illegal": 1,
+  "i already forgave «t n» fraud owen": 2,
+  "i used «t n» driver license for «t n»": 1,
+  "you could have just said «t n» were different": 1,
+  "sam «t n» asks what i do on saturdays right": 1,
+  "i love extra cheese especially on thin crust": 1,
+  "no i meant «t n» hobbies not pizza preferences": 1,
+  "oh you meant «t n» prompt not my «ng y» plan": 1,
+  "this app capping free swipes at «s » is tyranny": 1,
+  "«s » swipes «t n» is public safety policy owen": 1,
+  "it limits «t n» to choose heartbreak": 1,
+  "unrestricted swiping turns people into hoa compliance officers": 1,
+  "«t n» daily quota protects «t n» dating economy": 1,
+  "you hit «t n» economy limit by «s » a m": 1,
+  "i have «t n» about «t n» app profile": 1,
+  "you stole someone else s entire identity again": 1,
+  "it is much worse than identity theft": 1,
+  "you listed «t n» as «t n»": 1,
+  "i can explain «t n» gray area": 1,
+  "it is not tax fraud": 1,
+  "then what did you lie about in «t n»": 1,
+  "i do not actually bake artisanal sourdough": 1,
+  "sam does saying i m «s » «s » in «t n» feel braggy": 1,
+  "i think saying you can make «t n» lasagna is impressive": 1,
+  "i didn t ask about cooking i asked about height": 1,
+  "honestly confidence in «t n» wins most first dates": 1,
+  "i m still wondering if «t n» claim sounds fake": 1,
+  "i m just replying to «t n» s question about «t n»": 1,
+  "why does «t n» only let me add «s » fun fact": 1,
+  "because multiple facts flood «t n» feed with noise": 1,
+  "i have «s » jokes both would increase «t n»": 1,
+  "if everyone does that profiles become punch card catalogs": 1,
+  "exactly too many punch cards drown genuine humor so limit works": 1,
+  "but limiting jokes hides «t n» that make me swipe": 1,
+  "«t n» alarm will fire in «s » seconds what now": 1,
+  "first «t n» distinguishes between fire fire drill and maintenance alerts": 1,
+  "i need «t n» yes or no before it sounds": 1,
+  "«t n» array calibrates hourly and today it s due for «t n»": 1,
+  "«s » «s » «s » now": 1,
+  "it s just «t n» test": 1,
+  "«t n» machine stopped brewing just «t n» cup": 1,
+  "let s route «t n» through «t n» rack for stability": 1,
+  "now «t n» office lights are flickering with espresso smells": 1,
+  "excellent we ve turned «t n» into «t n» cafe network": 1
  },
  "tinh_huong": {
   "tech": [
@@ -6436,13 +9169,41 @@
    "Rocket Launch Abort Sequence",
    "Dual Monitor Alignment",
    "Please Question Rule",
-   "Router Reboot Countdown"
+   "Router Reboot Countdown",
+   "Fridge Ice Escalation",
+   "Prime Date Return",
+   "Garage Door Countdown",
+   "Sprinkler Mesh Overload",
+   "Backup Rule Spiral",
+   "Elevator Brake Override",
+   "Standing Desk Calibration",
+   "Temp Reboot Rule",
+   "Alarm Test Panic",
+   "Coffee Machine Crash"
   ],
   "dating": [
    "Bio Miscommunication",
    "Influencer Photo",
    "Rule Enforcement",
-   "Boost Countdown"
+   "Boost Countdown",
+   "Profile Filter Confession",
+   "Wrong Prompt",
+   "Photo Limit Debate",
+   "Forgiven Dark Past",
+   "Ghosting Policy Debate",
+   "Mandatory Bio Location Swap",
+   "Expired Insurance Card",
+   "Profile Psychic Mix-up",
+   "Prompt Minimum Debate",
+   "The Emergency Contact Bio",
+   "Prompt Mix-up",
+   "Mandatory Pet Photo Rule",
+   "The Verification Selfie",
+   "Pizza Prompt Mix-up",
+   "The Swipe Cap Limit",
+   "The Drafted Bio",
+   "Height vs Cooking Mixup",
+   "Fun Fact Limit"
   ],
   "rent": [
    "Rent increase confusion",
@@ -6585,12 +9346,48 @@
   "parent": [
    "Cleaning Hours Mixup",
    "Evening Snack Rule",
-   "The Hidden Basement Key"
+   "The Hidden Basement Key",
+   "Evening Sock Rule",
+   "Garage Door Countdown",
+   "Laundry Load Timing",
+   "Backyard Lunar Rule",
+   "Gate Countdown",
+   "Living Room Paint Audit",
+   "Kitchen Counter Radius",
+   "Microwave Soup Countdown",
+   "Driveway Basketball Hoop Height",
+   "Odd Minute Silence",
+   "Front Door Auto-Lock",
+   "mailbox replacement protocol",
+   "Price Drawer Rule",
+   "Patio Light Countdown",
+   "Thermostat Escalation",
+   "Carpet Step Rule",
+   "Oven Timer Countdown",
+   "Green Upgrade Plan"
   ],
   "neighbor": [
    "measuring the dog leash",
    "Truck time rule",
-   "Stolen Garden Gnome"
+   "Stolen Garden Gnome",
+   "Triple item rule",
+   "The Attic Hatch Countdown",
+   "Sprinkler to Pond",
+   "Shadow Rule",
+   "Moving Truck Countdown",
+   "Trash Can Jam",
+   "Prime Water Rule",
+   "Mailbox Flag Angle",
+   "Recycling Bin Fix",
+   "Lettered Surfaces",
+   "Elevator Box",
+   "Porch Light Upgrade",
+   "Tile Rule",
+   "Timered Sprinkler Test",
+   "Leaky Faucet Flood",
+   "Prime Clock Rule",
+   "Fire Alarm Countdown",
+   "Wi-Fi Upgrade"
   ]
  }
 }

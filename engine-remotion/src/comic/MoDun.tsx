@@ -242,5 +242,57 @@ export const MO_TREO: Record<string, Ve> = {
   </>); },
 };
 
+// ── SÁU MẢNH ĐẶC MỸ ────────────────────────────────────────────────────────────────────
+// Anh: *"bối cảnh cũng vẽ theo chuẩn style usa chứ e"*. Nơi chốn thì đã Mỹ từ tên gọi (HOA,
+// DMV, drive-thru), nhưng ĐỒ ĐẠC thì vẫn trung tính — một cái bàn với một cái tủ thì ở nước
+// nào cũng thế. Sáu mảnh dưới đây là thứ người Mỹ nhìn phát ra ngay, và người nước khác nhìn
+// cũng đọc ra "đây là nước Mỹ": hộp thư trụ ngoài sân, cửa lưới chống muỗi, máy nước lạnh văn
+// phòng, cửa cuốn gara, ghế booth quán ăn, lò vi sóng đặt trên bếp.
+export const MO_MY: Record<string, Ve> = {
+  hop_thu_tru: (p) => { const S = p.h * 0.3 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.05} y={-S} width={S * 0.1} height={S} fill={nhat(p.mau, 0.35)} />
+    <path d={`M${-S * 0.3} ${-S} l0 ${-S * 0.2} a${S * 0.3} ${S * 0.22} 0 0 1 ${S * 0.6} 0 l0 ${S * 0.2} Z`}
+          fill={nhat(p.mauPhu, 0.4)} />
+    <rect x={-S * 0.3} y={-S * 1.06} width={S * 0.08} height={S * 0.06} fill="#C0392B" />
+  </>); },
+  cua_luoi: (p) => { const S = p.h * 0.62 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.3} y={-S} width={S * 0.6} height={S} fill={nhat(p.mauPhu, 0.6)} />
+    {[0, 1, 2, 3].map((i) => (
+      <line key={i} x1={-S * 0.3 + i * S * 0.2} y1={-S} x2={-S * 0.3 + i * S * 0.2} y2={0}
+            strokeWidth={2.5} opacity={0.5} />
+    ))}
+    <rect x={-S * 0.26} y={-S * 0.94} width={S * 0.52} height={S * 0.4} fill="#FFFFFF" opacity={0.35} />
+  </>); },
+  may_nuoc: (p) => { const S = p.h * 0.4 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.22} y={-S * 0.62} width={S * 0.44} height={S * 0.62} fill={nhat(p.mau, 0.55)} />
+    <path d={`M${-S * 0.2} ${-S * 0.62} l${S * 0.06} ${-S * 0.38} l${S * 0.28} 0 l${S * 0.06} ${S * 0.38} Z`}
+          fill={nhat(p.mauPhu, 0.25)} />
+    <rect x={-S * 0.06} y={-S * 0.36} width={S * 0.12} height={S * 0.08} fill={MUC} />
+  </>); },
+  cua_cuon: (p) => { const S = p.h * 0.72 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.5} y={-S} width={S} height={S} fill={nhat(p.mau, 0.5)} />
+    {[0, 1, 2, 3, 4].map((i) => (
+      <line key={i} x1={-S * 0.5} y1={-S + (S / 5) * (i + 1)} x2={S * 0.5}
+            y2={-S + (S / 5) * (i + 1)} strokeWidth={3.5} opacity={0.7} />
+    ))}
+  </>); },
+  booth: (p) => { const S = p.h * 0.34 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.9} y={-S * 0.46} width={S * 1.8} height={S * 0.46} rx={4}
+          fill={nhat(p.mauPhu, 0.35)} />
+    <rect x={-S * 0.9} y={-S * 1.12} width={S * 1.8} height={S * 0.68} rx={S * 0.1}
+          fill={nhat(p.mauPhu, 0.28)} />
+    {[0, 1, 2].map((i) => (
+      <line key={i} x1={-S * 0.5 + i * S * 0.5} y1={-S * 1.06} x2={-S * 0.5 + i * S * 0.5}
+            y2={-S * 0.5} strokeWidth={3} opacity={0.55} />
+    ))}
+  </>); },
+  lo_vi_song: (p) => { const S = p.h * 0.16 * (p.co ?? 1); return g(<>
+    <rect x={-S * 0.7} y={-S * 0.62} width={S * 1.4} height={S * 0.62} rx={4} fill={MUC} />
+    <rect x={-S * 0.6} y={-S * 0.54} width={S * 0.86} height={S * 0.46} fill={nhat(p.mauPhu, 0.3)} />
+    <circle cx={S * 0.48} cy={-S * 0.32} r={S * 0.07} fill="#FFFFFF" strokeWidth={2.5} />
+  </>); },
+};
+
+export const TEN_MO_MY = Object.keys(MO_MY);
 export const TEN_MO_TREO = Object.keys(MO_TREO);
 export const TEN_MO_DUN = Object.keys(MO_DUN);
