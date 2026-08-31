@@ -125,6 +125,56 @@ def _the(k: dict, dai: bool) -> list:
     return out
 
 
+# ══ BA NỀN TẢNG, BA LUẬT KHÁC NHAU ═════════════════════════════════════════════════════
+# Anh: *"nhớ chuẩn file upload cho fb, insta nữa vì mình có youtube, fb, insta"*.
+#
+# Ba nơi này KHÔNG nhận cùng một bộ chữ, và chỗ khác nhau nằm ở những giới hạn mà không nơi nào
+# báo lỗi khi vượt — nó chỉ lặng lẽ cắt, hoặc lặng lẽ không đăng:
+#
+#   YouTube   tiêu đề ≤ 100 · mô tả ≤ 5000 · TỔNG thẻ ≤ 500 ký tự · cần category + made_for_kids
+#   Facebook  có tiêu đề riêng · phần chữ là NỘI DUNG BÀI ĐĂNG · hashtag ít mới hiệu quả (3–5)
+#             · Reels giới hạn 90 giây, video thường thì không
+#   Instagram KHÔNG có tiêu đề, chỉ caption ≤ 2200 · tối đa 30 hashtag · link trong caption
+#             KHÔNG bấm được (đừng chèn) · Reels nên ≤ 90 giây
+#
+# Hệ quả cần nhớ: **bản dài 9 phút đăng được YouTube và Facebook, nhưng KHÔNG lên Reels của
+# Instagram.** Nên mỗi bộ siêu dữ liệu tự ghi rõ nền tảng nào nhận được và nền tảng nào không,
+# kèm lý do — để bộ đăng tự động không phải đoán, và không im lặng bỏ sót.
+GIAY_REELS = 90
+
+
+def _fb(k: dict, cau: list, tieu_de: str, dai: bool) -> dict:
+    """Facebook: phần chữ là nội dung bài đăng, không phải mô tả kỹ thuật."""
+    mo = _sach(cau[0][0]) if cau else ""
+    the = THE_KENH.get(k["de"], [])[:3]
+    return {
+        "title": tieu_de.replace(" #shorts", ""),
+        "description": (
+            f"{mo}\n\n"
+            f"New animated comedy every day on {k.get('handle', '')}.\n"
+            + " ".join("#" + x.replace(" ", "") for x in the)
+        ),
+        # FB quyết định trong 3 giây đầu, nên câu mở của video cũng là câu mở của bài đăng.
+        "call_to_action": "LIKE_PAGE",
+    }
+
+
+def _ig(k: dict, cau: list, dai: bool) -> dict:
+    """Instagram: caption + đúng 30 hashtag, không tiêu đề, không link."""
+    mo = _sach(cau[0][0]) if cau else ""
+    goc = THE_KENH.get(k["de"], [])
+    chung = ["animation", "cartoon", "comedy", "funny", "animatedshorts", "comedyreels",
+             "cartoonshorts", "sketchcomedy", "relatable", "dailylaugh", "toon", "reels",
+             "funnyvideos", "comedyanimation", "animatedseries", "2danimation", "humor",
+             "lol", "viralreels", "explorepage"]
+    tags = [x.replace(" ", "") for x in goc] + chung
+    tags = list(dict.fromkeys(tags))[:30]        # Instagram chặn ở 30, thừa thì hỏng cả cụm
+    return {
+        "caption": f"{mo}\n\n" + " ".join("#" + t for t in tags),
+        "share_to_feed": True,
+    }
+
+
 def lam_bia(k: dict, hook: str, so_tap: int, dai: bool, dest: str) -> bool:
     """Dựng ảnh bìa bằng Remotion. Trả True nếu ra tệp."""
     kieuA, kieuB, ghiA, ghiB, _ga, _gb = vai_va_giong(k)
@@ -177,23 +227,48 @@ def mot_video(k: dict, so_tap: int, dai: bool, lam_anh: bool = True) -> str:
     if lam_anh:
         lam_bia(k, hook, so_tap, dai, bia)
 
+    try:
+        giay = float(subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", mp4],
+            capture_output=True, text=True, timeout=60).stdout.strip() or 0)
+    except Exception:
+        giay = 0.0
+
+    td = _tieu_de(k, cau, so_tap, dai)
+    # Nền tảng nào nhận được video này. Ghi rõ cả lý do KHÔNG nhận, để bộ đăng tự động không
+    # phải đoán và cũng không im lặng bỏ sót.
+    hop = {"youtube": True, "facebook": True,
+           "instagram": giay <= GIAY_REELS and not dai}
+    ly_do = {} if hop["instagram"] else {
+        "instagram": f"dài {giay:.0f}s — Reels giới hạn {GIAY_REELS}s" if giay > GIAY_REELS
+                     else "bản dài không hợp định dạng Reels"}
+
     tai = {
         "video": os.path.basename(mp4),
         "thumbnail": os.path.basename(bia) if os.path.exists(bia) else "",
         "kenh": k["ten"], "handle": k.get("handle", ""), "slug": slug,
         "loai": "long" if dai else "short", "so_tap": so_tap,
-        "title": _tieu_de(k, cau, so_tap, dai),
-        "description": _mo_ta(k, cau, so_tap, dai, chuong),
-        "tags": _the(k, dai),
-        # Ba trường dưới đây là bắt buộc khi đăng qua API và hay bị bỏ quên:
-        "category_id": "23",          # Comedy
-        "made_for_kids": False,       # khai sai trường này là rủi ro pháp lý, không phải lỗi kỹ thuật
-        "default_language": "en",
-        "privacy": "public",
+        "giay": round(giay, 1),
+        "khung_hinh": "16:9" if dai else "9:16",
+        "dang_duoc": hop, "khong_dang_vi": ly_do,
+
+        "youtube": {
+            "title": td,
+            "description": _mo_ta(k, cau, so_tap, dai, chuong),
+            "tags": _the(k, dai),
+            # Ba trường dưới đây bắt buộc khi đăng qua API và hay bị bỏ quên:
+            "category_id": "23",       # Comedy
+            "made_for_kids": False,    # khai sai là rủi ro pháp lý, không phải lỗi kỹ thuật
+            "default_language": "en",
+            "privacy": "public",
+        },
+        "facebook": _fb(k, cau, td, dai),
+        "instagram": _ig(k, cau, dai) if hop["instagram"] else None,
     }
     dest = os.path.join(GOC, "out", f"{tien}{slug}.tai.json")
     io.open(dest, "w", encoding="utf-8").write(json.dumps(tai, ensure_ascii=False, indent=1))
-    print(f"   ✅ {k['ten']:19s} {tai['title'][:56]}")
+    _n = [x for x, v in tai['dang_duoc'].items() if v]
+    print(f"   ✅ {k['ten']:19s} {tai['youtube']['title'][:44]:44s} → {'+'.join(_n)}")
     return dest
 
 

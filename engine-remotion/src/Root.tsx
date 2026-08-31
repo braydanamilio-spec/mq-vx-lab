@@ -39,6 +39,7 @@ import { KichV2, calcKich } from "./v2/KichV2";
 import { KichHai, calcHai } from "./v4/KichHai";
 import { KichComic, calcComic } from "./comic/KichComic";
 import { ThumbComic } from "./comic/ThumbComic";
+import { BrandComic } from "./comic/BrandComic";
 import { BangTuThe } from "./v4/BangTuThe";
 import { SayThisMG, calcMG } from "./SayThisMG";
 import { BrandBeyond } from "./BrandBeyond";
@@ -266,6 +267,13 @@ export const RemotionRoot: React.FC = () => (
         Tiền YouTube nằm ở video dài: từ 8 phút mới bật được quảng cáo giữa video, và đường vào
         YPP qua 4.000 giờ xem dễ hơn nhiều so với 10 triệu lượt Shorts trong 90 ngày. */}
     {/* Ảnh bìa dựng riêng, không trích khung — xem đầu ThumbComic.tsx. Hai cỡ, hai bố cục. */}
+    {/* Brand kit bộ hài — ba cỡ, ba việc khác hẳn. Xem đầu BrandComic.tsx. */}
+    <Composition id="ComicAvatar" component={BrandComic as any} durationInFrames={1} fps={30}
+                 width={800} height={800} defaultProps={{ kind: "avatar" }} />
+    <Composition id="ComicBanner" component={BrandComic as any} durationInFrames={1} fps={30}
+                 width={2560} height={1440} defaultProps={{ kind: "banner" }} />
+    <Composition id="ComicWatermark" component={BrandComic as any} durationInFrames={1} fps={30}
+                 width={150} height={150} defaultProps={{ kind: "watermark" }} />
     <Composition id="ThumbComicWide" component={ThumbComic as any} durationInFrames={1} fps={30}
                  width={1280} height={720} defaultProps={{ ngang: true }} />
     <Composition id="ThumbComicDoc" component={ThumbComic as any} durationInFrames={1} fps={30}

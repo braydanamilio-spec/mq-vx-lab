@@ -89,7 +89,7 @@ Mỗi lỗi ghi ba thứ: triệu chứng · gốc rễ · **họ lỗi** (để
 |---|---|
 | 60 kênh phân tích | `render-pipeline/kich_v2.py` · `engine-remotion/src/v2/KichV2.tsx` |
 | **10 kênh hài — engine** | `engine-remotion/src/comic/KichComic.tsx` (dựng cảnh) · `NenComic.tsx` (nền + trần + đạo cụ) · `MoDun.tsx` (30 mảnh đồ đạc) · `NoiChon.tsx` (nơi chốn) · `ThumbComic.tsx` (ảnh bìa) |
-| **10 kênh hài — pipeline** | `render-pipeline/kich_comic.py` (short 9:16) · `kich_comic_long.py` (long 16:9) · `sinh_kich_ban.py` (kịch bản) · `sieu_du_lieu.py` (bìa + tiêu đề/mô tả/thẻ) |
+| **10 kênh hài — pipeline** | `render-pipeline/kich_comic.py` (short 9:16) · `kich_comic_long.py` (long 16:9) · `sinh_kich_ban.py` (kịch bản) · `sieu_du_lieu.py` (bìa + chữ đăng cho 3 nền tảng) · `brand_comic.py` (avatar/banner/watermark) |
 | Kho kịch bản tích luỹ | `render-pipeline/kho_comic.json` |
 | Bản hài cũ (giữ để đối chiếu) | `render-pipeline/kich_hai.py` · `src/v4/KichHai.tsx` — vẫn là nơi giữ `KHO` 40 mẩu viết tay, `doc_hai_giong`, `lam_thumb` |
 | Luật + buglog | `render-pipeline/PIPELINE_RULES.md` |
@@ -111,9 +111,16 @@ python3 kich_comic_long.py --vong 0
 
 # 4. Ảnh bìa + tiêu đề/mô tả/thẻ  ->  out/v5_<slug>.tai.json
 python3 sieu_du_lieu.py --vong 0            # thêm --long cho bản dài
+
+# 5. Brand kit — chỉ chạy khi mở kênh mới hoặc đổi tạo hình
+python3 brand_comic.py
 ```
 
 Sản phẩm của một tập: `v5_<slug>.mp4` · `v5_<slug>.jpg` · `v5_<slug>.tai.json` (đủ để đăng).
+
+Tệp `.tai.json` chứa **ba bộ chữ riêng** cho YouTube / Facebook / Instagram, cộng `dang_duoc`
+cho biết nền tảng nào nhận được video này — bản dài 9 phút lên YouTube và Facebook nhưng không
+lên Reels Instagram (giới hạn 90 giây).
 
 ### Ba tầng đa dạng — không tầng nào thay được tầng nào
 

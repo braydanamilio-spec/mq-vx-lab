@@ -5763,3 +5763,40 @@ bối cảnh nên dài, còn câu ngắn trong nhóm ấy gần như luôn là c
 - **`made_for_kids`**: khai sai là rủi ro pháp lý, không phải lỗi kỹ thuật. Luôn khai tường minh.
 
 Xuất ra `out/v5_<slug>.tai.json` — đủ trường để đăng qua API mà không phải điền tay gì thêm.
+
+---
+
+## 13. BA NỀN TẢNG VÀ BRAND KIT (31/8)
+
+### 13.1 YouTube · Facebook · Instagram không nhận cùng một bộ chữ
+
+Anh: *"nhớ chuẩn file upload cho fb, insta nữa vì mình có youtube, fb, insta."*
+
+| | Giới hạn thật | Cái bẫy |
+|---|---|---|
+| YouTube | tiêu đề ≤100 · mô tả ≤5000 · **tổng** thẻ ≤500 ký tự | điện thoại cắt tiêu đề ở ~45 ký tự; thẻ vượt 500 bị **lặng lẽ** cắt |
+| Facebook | có tiêu đề riêng; phần chữ là **nội dung bài đăng** | hashtag nhiều không giúp gì (3–5 là đủ); Reels chặn ở 90 giây |
+| Instagram | **không có tiêu đề**; caption ≤2200; tối đa 30 hashtag | link trong caption không bấm được; thừa hashtag hỏng cả cụm |
+
+Hệ quả phải mã hoá vào dữ liệu: **bản dài 9 phút lên được YouTube và Facebook, nhưng KHÔNG lên
+Reels Instagram.** Nên `v5_<slug>.tai.json` có `dang_duoc` (nền tảng nào nhận) và `khong_dang_vi`
+(lý do bị loại) — bộ đăng tự động không phải đoán, và không im lặng bỏ sót.
+
+### 13.2 Brand kit: ba cỡ, ba việc, dễ nhầm nhất
+
+| Cỡ | Hiển thị THẬT ở đâu | Luật rút ra |
+|---|---|---|
+| Avatar 800×800 | **48px** cạnh mỗi bình luận | chỉ một khuôn mặt, **không chữ** — chữ ở 48px là một vệt xám. Chừa 14% trên cho tóc/mũ |
+| Banner 2560×1440 | vùng luôn hiện chỉ **1546×423** ở giữa | nhân vật phải nằm TRỌN trong ô ấy. Bản đầu tính tỉ lệ theo đoạn đầu-tới-ngực (như ảnh bìa) nên người cao 716px trong ô cao 423px — chân bị cắt trên điện thoại |
+| Watermark 150×150 | đè lên video, nền trong suốt | phải đọc được trên cả nền sáng lẫn tối → viền mực dày, không màu nhạt |
+
+Ảnh bìa video và banner kênh **khác nhau ở chỗ được phép cắt**: bìa cắt sát mặt là đúng (nó
+luôn hiện nguyên khung), banner thì không được cắt ai cả vì nó phải đọc được ở mọi tỉ lệ màn
+hình. Dùng chung một công thức tỉ lệ cho cả hai là lỗi tôi vừa mắc.
+
+### 13.3 Lệnh
+
+```
+python3 sieu_du_lieu.py --vong 0            # bìa + 3 bộ chữ cho 3 nền tảng
+python3 brand_comic.py                      # avatar + banner + watermark, ra out/brand/
+```
