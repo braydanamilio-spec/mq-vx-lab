@@ -1126,6 +1126,12 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4, so_tap: int = 0) -> t
               ("trung", [0.3, 0]), ("trung", [0.1, 0]), ("trung", [0, 0])]
     cau = [(_loi[x][0], _loi[x][1], _loi[x][2], _khung[x][0], _khung[x][1])
            for x in range(min(len(_loi), len(_khung)))]
+    # 31/8 — Anh nhắc: kịch bản và biểu đồ phải KHỚP LOGIC với nhau. Trước nay kiểu kể chọn ở
+    # đây (Python) còn dạng biểu đồ chọn bên engine (TSX), hai bên không biết nhau — nên có thể
+    # ra cảnh lời nói "bắt đầu từ đáy bảng rồi leo lên" trong khi hình là vòng chia phần, một
+    # thứ không có trên dưới nào. Người xem nghe một đằng nhìn một nẻo.
+    # Đưa kiểu kể sang props để engine biết mà chọn dạng hình nói được đúng câu chuyện ấy.
+    globals()["_KIEU_KE_HIEN"] = _kieu
     # 29/8 — MỖI CÂU MỘT LỚP HÌNH RIÊNG. Anh: "mỗi lần nhân vật nói gì thì cần có bối cảnh phù
     # hợp và chart + số liệu animation chạy động".
     # Bản trước chỉ cảnh 2 có số và cảnh 3 có biểu đồ; bốn cảnh còn lại nhân vật nói vào khoảng
@@ -2068,6 +2074,9 @@ def main() -> int:
                 "vien_phi": "ong_nghe",
             }.get(k["kieu"], "the_deo")},
             "kieuGoc": k["kieu"], "bangMau": k["mau"],
+            # kiểu kể của tập này — engine dùng nó để chọn dạng biểu đồ nói được
+            # đúng câu chuyện đang kể (xem `chonDang` trong KichV2.tsx).
+            "kieuKe": globals().get("_KIEU_KE_HIEN", ""),
             "tieuDe": k["nhan"], "nguon": _ten_nguon(sl[2]),
             "nhac": NHAC_V3.get(k["ten"], ""),
             "doVat": VAT_V3.get(k["ten"], ""),

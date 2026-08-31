@@ -212,7 +212,27 @@ const CHART_TAM = 26;             // nhích phải một chút: mắt người �
 // Cả ba vẫn nằm trong khung có người dẫn và nền mờ — anh muốn giữ hai thứ đó.
 type DangChart = "dung" | "ngang" | "cham" | "khoi" | "thehai" | "vong" | "luoi" | "thuoc" | "diem" | "bando";
 
-const chonDang = (cot: { nhan: string; gt: number }[], kenhSo: number): DangChart => {
+// 31/8 — CHỌN DẠNG PHẢI BIẾT ĐANG KỂ KIỂU GÌ.
+// Anh nhắc kịch bản và biểu đồ phải khớp logic. Trước nay hai thứ chọn độc lập: kiểu kể quyết
+// bên Python, dạng hình quyết ở đây, không bên nào biết bên kia. Nên có thể ra cảnh lời nói
+// "bắt đầu từ đáy bảng rồi leo lên" trong khi hình là vòng chia phần — một thứ không có trên
+// dưới nào. Người xem nghe một đằng nhìn một nẻo, và đó là kiểu sai khó chịu nhất vì không ai
+// chỉ ra được cụ thể chỗ nào sai.
+// Mỗi kiểu kể cần một loại hình nói được đúng ý nó:
+//   nguoc  — leo từ đáy lên đỉnh  -> phải thấy THỨ TỰ: cột, thanh, chấm
+//   khoang — khoảng cách hai đầu  -> phải thấy HAI ĐẦU: thẻ dọc, thước, cột
+//   nguoi  — quy về một người     -> phải thấy PHẦN trong tổng: lưới ô, thước
+//   nguon  — đọc từ bảng dữ liệu  -> hợp dạng bảng: thanh ngang, cột
+// Kiểu `dinh` và `do` không đòi hỏi gì riêng nên dùng được mọi dạng.
+const HOP_KIEU: Record<string, DangChart[]> = {
+  nguoc:  ["dung", "ngang", "cham"],
+  khoang: ["thehai", "thuoc", "dung", "cham"],
+  nguoi:  ["luoi", "thuoc", "khoi"],
+  nguon:  ["ngang", "dung", "cham"],
+};
+
+const chonDang = (cot: { nhan: string; gt: number }[], kenhSo: number,
+                  kieuKe?: string): DangChart => {
   const n = Math.min(4, cot.length);
   if (!n) return "dung";
   const dai = Math.max(...cot.slice(0, n).map((c) => (c.nhan || "").length));
@@ -249,9 +269,16 @@ const chonDang = (cot: { nhan: string; gt: number }[], kenhSo: number): DangChar
   if (dai > 14) return "ngang";
   // Bỏ hai dạng "phần trên tổng" khi dữ liệu không cộng được; những dạng còn lại đều chỉ so
   // từng mục với nhau nên luôn đọc đúng, bất kể đơn vị là gì.
-  const _kho = _khongCong
+  let _kho = _khongCong
     ? (["dung", "ngang", "cham", "khoi", "thehai", "thuoc"] as DangChart[])
     : (["dung", "ngang", "cham", "khoi", "thehai", "vong", "luoi", "thuoc", "diem"] as DangChart[]);
+  // Lọc theo kiểu kể. Nếu giao của hai danh sách rỗng (đơn vị không cộng được mà kiểu lại đòi
+  // dạng "phần trên tổng") thì giữ danh sách theo đơn vị: nói sai đơn vị tệ hơn nói lệch giọng.
+  const _hop = kieuKe ? HOP_KIEU[kieuKe] : undefined;
+  if (_hop) {
+    const _giao = _kho.filter((d) => _hop.includes(d));
+    if (_giao.length) _kho = _giao;
+  }
   return _kho[kenhSo % _kho.length];
 };
 
@@ -1133,7 +1160,7 @@ export const KichV2: React.FC<PropsKich> = ({
         {_cot ? (
           <g transform={`translate(${doc ? CHART_TAM * _dau : 150} ${doc ? CHART_Y : 84}) scale(${doc ? CHART_CO : 1.02})`}>
             <CotDaoCu cot={_cot} p={_pCot} mau={mau} noiBat={C.noiBat ?? _noiBatKe}
-                      dang={chonDang(_cot, _soKenh)} hien={_hienDen} pMoi={p} />
+                      dang={chonDang(_cot, _soKenh, (C as any).kieuKe || (props as any).kieuKe)} hien={_hienDen} pMoi={p} />
           </g>
         ) : null}
         {C.soLon ? (

@@ -5398,3 +5398,61 @@ Cùng họ với một lỗi khác trong ngày: `rm -f out/*.json.cu` khi không
 kết quả cũ tưởng là kết quả mới. Trong zsh, một lệnh dọn dẹp vô hại có thể chặn cả dây chuyền;
 thêm `2>/dev/null || true` cho những lệnh chỉ mang tính dọn dẹp.
 
+## LUẬT KIỂM TRƯỚC KHI GIAO — để anh không phải nhắc
+
+31/8 — Anh nói: *"sau đừng để anh nhắc nha, nhớ có rule pipeline rõ ràng"*. Đếm lại hai ngày
+qua: anh phải chỉ ra chín lỗi mà lẽ ra tôi tự thấy — nhân vật lọt khung, phụ đề đè mặt, số bị
+đường kẻ xuyên qua, lưới ô tràn bảng, kênh nào cũng một khuôn, kho báo 2067 khi đã sạch, dung
+lượng 156 GB khi chỉ có 18, tab bấm không vào, nút Tạo báo lỗi khoá.
+
+Gần như lỗi nào cũng đã xuất hiện ở một chỗ khác trước đó. Nên vấn đề không phải "chưa cẩn
+thận" mà là **chưa có danh sách để soát**. Đây là danh sách ấy.
+
+### A. Trước khi nói "xong" với bất cứ thay đổi nào về HÌNH
+
+1. **Trích khung ra nhìn.** Không thay bằng điểm số. Cổng nội dung đọc chữ và đo nhịp — nó mù
+   hoàn toàn về hình. (30/8: mười video chấm 95–100, trích một khung thấy nguyên lỗi cũ.)
+2. **Xếp nhiều khung cạnh nhau.** Lỗi hệ thống chỉ lộ khi so sánh — "mọi kênh cùng một bố cục"
+   không thể thấy khi nhìn từng video một.
+3. **Mọi con số vẽ ra phải suy từ kích thước khung**, không bốc cho vừa mắt. Ba lần trả giá:
+   nhân vật ±292, nửa người 115, ô lưới 42px. Viết phép tính ra, đừng viết kết quả.
+
+### B. Trước khi nói "xong" với bất cứ thay đổi nào về SỐ LIỆU
+
+4. **Số không là một con số, không phải "chưa có dữ liệu".** Mọi phép `> 0` quyết định "có dữ
+   liệu hay không" đều sai khi giá trị thật bằng không — tức đúng lúc người ta cần nó nhất.
+5. **Thao tác làm thay đổi kho phải đóng sổ ngay trong chính thao tác ấy.** Để lượt chạy sau
+   ghi hộ là để hệ có hai sự thật, và cái sai lại là cái được hiển thị.
+6. **Đọc đúng đại lượng, không đọc thứ gần giống.** `usage` là cả tài khoản Google;
+   `usageInDrive` mới là Drive. Chênh nhau 127 GB.
+7. **Không nuốt lỗi quanh thao tác ghi/đọc.** `catch (_) {}` biến "ghi hụt" thành "xong", và
+   người dùng đi kiểm lại ba lần.
+
+### C. Trước khi nói "xong" với bất cứ thay đổi nào về CODE
+
+8. **Sửa một chỗ thì grep tìm mọi chỗ cùng dạng.** `tong > 0` nằm ở worker VÀ dashboard; hằng
+   292 nằm ở engine VÀ cổng. Sửa một nửa thì triệu chứng y nguyên, và người dùng thấy mình bị
+   phớt lờ.
+9. **Một biến đọc được mà không khai trong hàm thì phải nghi ngay.** Python im lặng ở đúng chỗ
+   cần nói. (`so` là biến toàn cục tình cờ, làm hai lượt sửa thành vô nghĩa.)
+10. **Khối chỉ chạy ở đường thật là chỗ dễ hỏng nhất và ít được chạy nhất.** Viết xong phải
+    chạy thẳng nó một lần. (`import os` thiếu, chỉ lộ khi dọn thật.)
+11. **Hỏi "cái này chạy trên GitHub được không" sau MỖI thay đổi**, không phải một lần lúc
+    cuối. Đường dẫn đi vòng, secret thiếu, tệp chỉ có trên máy — cả ba đều im lặng ở đây.
+
+### D. Trước khi tin bất cứ cổng nào mình vừa viết
+
+12. **Chạy cổng mới trên dữ liệu ĐANG LÀNH trước.** Tố quá vài phần trăm thì cổng sai, không
+    phải dữ liệu. Tám lần trong hai ngày, và cả tám đều lộ ra trong ba mươi giây nhờ bước này.
+13. **Khi cổng báo lỗi, kiểm cổng trước, đừng kiểm code bị tố.**
+14. **Cổng bắt oan tệ hơn cổng bỏ sót** — nó dạy người ta bỏ qua cảnh báo. Hạ ngưỡng cho đỡ ồn
+    KHÔNG phải là sửa; nếu phép đo sai đối tượng thì phải gỡ.
+15. **Đo đúng đại lượng cần đo.** "Tỉ lệ câu trùng" tính khuôn dùng 2 lần ngang khuôn dùng 18
+    lần, nên một cải tiến gấp bốn lần lại làm chỉ số xấu đi.
+
+### E. Công cụ
+
+`soi_du_an.py` quét toàn dự án tìm các dạng ở mục B và C. Chạy trước mỗi lần giao việc lớn.
+Nó chỉ dò những dạng ĐÃ có bằng chứng thật — không đoán lỗi mới bằng trực giác, vì đoán thì
+sinh ra tám cổng tố oan.
+
