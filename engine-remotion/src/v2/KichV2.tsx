@@ -292,9 +292,18 @@ const ChamQue: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
               const _rong = String(c.hien || "").length * (sang ? 15 : 13);
               const _trong = _x + 26 + _rong > DAI + 10;
               return (
+                // 31/8 — Anh gửi khung: "127.8K" và "105.4K" bị chính đường thang XUYÊN NGANG
+                // qua giữa chữ. Con số vẽ ở đúng cao độ của đường, và khi nó lùi vào trước chấm
+                // thì nằm chồng lên đoạn đường đã vẽ. Không phải lỗi vị trí — số ở đúng chỗ cần
+                // ở; lỗi là hai lớp cùng cao độ mà không lớp nào nhường.
+                // Cho chữ một viền dày màu nền tấm bảng và vẽ viền TRƯỚC (paintOrder): viền ấy
+                // xoá một khoảng trống quanh từng chữ số, nên đường bị cắt gọn ở hai bên chữ.
+                // Rẻ hơn nhiều so với đo bề rộng chữ để né, và không bao giờ lệch.
                 <text x={_trong ? _x - 26 : _x + 26} y={y + 15}
                       textAnchor={_trong ? "end" : "start"}
                       fontSize={sang ? 27 : 23} fontWeight={900}
+                      stroke="#FBF6EA" strokeWidth={8} paintOrder="stroke"
+                      strokeLinejoin="round"
                       fill={mau.muc} opacity={moc}>{c.hien}</text>
               );
             })()}
@@ -438,7 +447,7 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
 };
 
 /** Phụ đề karaoke — tô sáng đúng từ đang được đọc, lấy từ chính mốc thời gian của giọng. */
-const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number }> = ({ tu, giay, mau, day }) => {
+const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number; lech?: number }> = ({ tu, giay, mau, day, lech = 130 }) => {
   const k = tu.findIndex((w) => giay >= w.t && giay < w.t + w.d);
   if (k < 0 && !tu.some((w) => Math.abs(w.t - giay) < 1.2)) return null;
   const tam = k >= 0 ? k : tu.findIndex((w) => w.t > giay);
@@ -468,7 +477,7 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number }> = ({
     // nhau không; chỉ xếp mười hai khung cạnh nhau mới thấy đó là lỗi hệ thống.
     // Dời tâm chữ sang +130 và thu cỡ chữ một nấc: dải chữ thành −70…+330, nằm gọn trong khoảng
     // trống bên phải nhân vật. Không hạ xuống đáy khung vì đáy là chỗ giao diện điện thoại che.
-    <g transform={`translate(130 ${day})`}>
+    <g transform={`translate(${lech} ${day})`}>
       {dong.map((d, j) => (
         <text key={j} x={0} y={j * 52} textAnchor="middle" fontSize={40} fontWeight={900}
               stroke={mau.muc} strokeWidth={9} paintOrder="stroke" fill="#FFFFFF">
@@ -565,7 +574,28 @@ export const KichV2: React.FC<PropsKich> = ({
 
   // Băm tên kênh để mỗi kênh có một dáng biểu đồ MẶC ĐỊNH cố định — người xem quen kênh nhận ra
   // ngay bộ mặt của nó, mà sáu mươi kênh vẫn không cùng một hình.
-  const _soKenh = Array.from(String(tieuDe || "")).reduce((a, c) => a + c.charCodeAt(0), 0);
+  // 31/8 — Cộng dồn mã ký tự thì phân bố rất lệch: sáu kênh thử ra năm kênh cùng một bên, vì
+  // tên tiếng Anh dài ngắn khác nhau nhưng tổng mã lại rơi vào cùng một lớp chẵn/lẻ. Nhân dồn
+  // với một số nguyên tố trộn đều các bit thấp, nên hai kênh tên gần giống nhau vẫn ra hai bố
+  // cục khác nhau.
+  const _soKenh = Array.from(String(tieuDe || "")).reduce(
+    (a, c) => (a * 31 + c.charCodeAt(0)) % 100003, 7);
+
+  // ══ MỖI KÊNH MỘT BỐ CỤC ═══════════════════════════════════════════════════════════════
+  // 31/8 — Anh: *"nếu các channel hay các videos nào cũng lặp lại y chang này thì rất là nhàm
+  // chán"*. Đúng, và nặng hơn tôi tưởng: bản trước có ba dáng biểu đồ và vài bảng màu, nhưng
+  // KHUNG THÌ chỉ một — thẻ số ở đỉnh, bảng ở giữa, nhân vật góc trái dưới, ở cả sáu mươi kênh.
+  // Đổi dáng cột bên trong một cái khung bất biến thì người xem vẫn thấy "vẫn video ấy".
+  //
+  // Hai trục đảo, băm từ tên kênh nên CỐ ĐỊNH với mỗi kênh: người xem quen kênh vẫn nhận ra bộ
+  // mặt của nó, còn lướt qua sáu mươi kênh thì thấy sáu mươi kênh khác nhau.
+  //   · lật ngang  — nhân vật sang phải, bảng và phụ đề sang trái;
+  //   · thẻ số     — ở đỉnh khung, hoặc tụt xuống ngay trên bảng.
+  // Hai trục này nhân với ba dáng biểu đồ và bảng màu riêng thành mười hai bộ mặt, đủ để không
+  // hai kênh cạnh nhau nào trông giống nhau.
+  const _lat = _soKenh % 2 === 1;
+  const _theDuoi = Math.floor(_soKenh / 2) % 2 === 1;
+  const _dau = _lat ? -1 : 1;
 
   const noi = visemeTai(tu, giay, CAM_XUC[C.camXuc || "trung_tinh"].ha);
   const nhin = C.nhin || [0, 0];
@@ -702,7 +732,7 @@ export const KichV2: React.FC<PropsKich> = ({
             // (`chi` còn rộng hơn, 181, nhưng ở chế độ người-dẫn nó bị đổi thành `dem` trước khi
             // vẽ, nên tính theo nó là tính dư. Đo trên tập cử chỉ THỰC SỰ hiện ra.)
             // -325 chừa thêm 6 đơn vị cho nhịp thở và độ nghiêng người.
-            x={doc ? -325 : -430}
+            x={doc ? -325 * _dau : -430 * _dau}
             y={doc ? 800 : 560}
             // 29/8 lần hai — lần trước tôi tăng cỡ nhân vật 1.12->2.1 NHƯNG cùng lúc hạ zoom
             // máy quay 1.5->1.0. Tích hai số không đổi (1.68), nên khung render ra y hệt và tôi
@@ -740,13 +770,13 @@ export const KichV2: React.FC<PropsKich> = ({
             Nay hai con số cùng suy từ một chỗ: nhân vật đứng ở TRAI_MEP, chart lấy trọn phần
             còn lại và căn giữa phần ấy. Đổi cỡ nhân vật thì chart tự dịch theo. */}
         {_cot ? (
-          <g transform={`translate(${doc ? CHART_TAM : 150} ${doc ? CHART_Y : 84}) scale(${doc ? CHART_CO : 1.02})`}>
+          <g transform={`translate(${doc ? CHART_TAM * _dau : 150} ${doc ? CHART_Y : 84}) scale(${doc ? CHART_CO : 1.02})`}>
             <CotDaoCu cot={_cot} p={_pCot} mau={mau} noiBat={C.noiBat ?? _noiBatKe}
                       dang={chonDang(_cot, _soKenh)} hien={_hienDen} pMoi={p} />
           </g>
         ) : null}
         {C.soLon ? (
-          <g transform={`translate(${doc ? 96 : 150} ${doc ? -440 : -340}) scale(${doc ? 1.12 : 1})`}>
+          <g transform={`translate(${doc ? 96 * _dau : 150} ${doc ? (_theDuoi ? -300 : -440) : -340}) scale(${doc ? 1.12 : 1})`}>
             <SoTo so={C.soLon} nhan={C.nhanSo} p={p} mau={mau} />
           </g>
         ) : null}
@@ -772,7 +802,7 @@ export const KichV2: React.FC<PropsKich> = ({
             </text>
           </g>
         ) : null}
-        <PhuDe tu={tu} giay={giay} mau={mau} day={doc ? 610 : 430} />
+        <PhuDe tu={tu} giay={giay} mau={mau} day={doc ? 610 : 430} lech={doc ? 130 * _dau : 0} />
         {/* 29/8 — DÒNG NGUỒN PHẢI ĐỔI MÀU THEO NỀN. Trên hai kênh vũ trụ (nền tím than) dòng
             "Source: NASA/JPL…" vẽ bằng màu mực sẫm nên chìm hẳn, gần như không nhìn thấy.
             Uy tín của cả bộ kênh nằm ở chỗ số liệu tra được — mà dòng chỉ ra nơi tra thì lại là
