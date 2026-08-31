@@ -107,14 +107,14 @@ def _trai_deu(ds: list, n: int = 6) -> list:
     return [ds[i] for i in vt]
 
 
-def lay_so_lieu(nguon: str, D):
+def _lay_so_lieu_tho(nguon: str, D):
     if nguon == "fda":
         # `thu_hoi_fda` đòi tham số KHO trước tiên; gọi thiếu thì rơi vào endpoint sai và nhận
         # 404 — đo được ở lượt chạy đầu, kênh im lặng bỏ lượt.
         r = D.thu_hoi_fda("thuc_pham", 60) or []
         gom: dict = {}
         for x in r:
-            t = str(x.get("cong_ty") or "").strip()[:26]
+            t = str(x.get("cong_ty") or "").strip()
             if not t:
                 continue
             # `so_luong` là CHUỖI như "1,589,577 dozen total" — lấy cụm số đầu tiên. Không đọc
@@ -192,12 +192,12 @@ def lay_so_lieu(nguon: str, D):
         if nguon == "nasa_gan":
             ds = _trai_deu(sorted(r, key=lambda z: float(z["cach_km"])), 6)
             return ("How close they came, this week",
-                    [(str(x["ten"])[:20], float(x["cach_km"]), _so(float(x["cach_km"])) + " km")
+                    [(str(x["ten"]), float(x["cach_km"]), _so(float(x["cach_km"])) + " km")
                      for x in ds],
                     "NASA Center for Near-Earth Object Studies")
         ds = sorted(r, key=lambda z: -float(z["duong_kinh_m"]))[:6]
         return ("The biggest rocks we are tracking",
-                [(str(x["ten"])[:20], float(x["duong_kinh_m"]),
+                [(str(x["ten"]), float(x["duong_kinh_m"]),
                   f"{float(x['duong_kinh_m']):,.0f} m") for x in ds],
                 "NASA Center for Near-Earth Object Studies")
     if nguon == "epmc":
@@ -205,7 +205,7 @@ def lay_so_lieu(nguon: str, D):
         if len(r) < 3:
             return None
         nam_nay = 2026
-        ds = [(str(x.get("tieu_de") or "")[:26], max(1, nam_nay - int(str(x.get("nam") or nam_nay)[:4] or nam_nay)),
+        ds = [(str(x.get("tieu_de") or ""), max(1, nam_nay - int(str(x.get("nam") or nam_nay)[:4] or nam_nay)),
                f"{max(1, nam_nay - int(str(x.get('nam') or nam_nay)[:4] or nam_nay))}y") for x in r[:6]]
         return ("How old the evidence actually is", ds, "Europe PMC")
     if nguon == "gia_yte":
@@ -694,6 +694,29 @@ def _loc_du_lieu(ds: list) -> list:
     if gt[1] > 0 and gt[0] / gt[1] > 6:
         ra = [x for x in ra if x[1] != gt[0]]
     return ra
+
+
+def lay_so_lieu(nguon: str, D):
+    """Lấy số liệu rồi DỌN NHÃN — mọi nguồn, một đường.
+
+    31/8 — Lưới khung lô 1 vẫn còn "Sleep Quali", "The occurrence of sleep-di", "metabolite ci"
+    dù bộ dọn nhãn đã sửa. Vì bộ dọn ấy chỉ được gọi ở MỘT chỗ, còn `lay_so_lieu` thì không đi
+    qua nó — và trong thân hàm, mỗi nhánh nguồn lại tự cắt nhãn bằng `[:26]` hay `[:20]`, tức
+    cắt giữa từ, đúng cái lỗi mà bộ dọn sinh ra để chữa.
+    Sửa ở hai đầu: bỏ hết những lát cắt ký tự thô trong từng nhánh, và bọc hàm gốc lại để kết
+    quả nào cũng đi qua bộ dọn. Một quy tắc dọn dữ liệu chỉ có giá trị khi KHÔNG CÓ ĐƯỜNG VÒNG
+    nào lách qua nó được — mà ở đây tồn tại tới mười mấy đường vòng, mỗi nhánh nguồn một cái.
+    """
+    r = _lay_so_lieu_tho(nguon, D)
+    if not r or not isinstance(r, tuple) or len(r) != 3:
+        return r
+    tt, ds, ng = r
+    try:
+        ds = _lam_sach_nhan(ds)
+        ds = _giai_rong(ds, 6)
+    except Exception:
+        pass
+    return (tt, ds, ng)
 
 
 def _lam_sach_nhan(ds: list) -> list:
