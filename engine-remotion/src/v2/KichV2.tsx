@@ -212,6 +212,16 @@ const CHART_TAM = 26;             // nhích phải một chút: mắt người �
 //   thuoc — khung thước kiểu bản vẽ kỹ thuật: đo MỘT đại lượng, hợp cho một con số duy nhất
 //   diem  — điểm phân tán trên nền kẻ ô: mật độ thay cho chiều dài, hợp cho số rất lớn
 // Cả ba vẫn nằm trong khung có người dẫn và nền mờ — anh muốn giữ hai thứ đó.
+// ══ MỘT TẤM BẢNG DUY NHẤT CHO MỌI DẠNG ══════════════════════════════════════════════════
+// 31/8 — Ba lần tràn khung trong một ngày: nhân vật, lưới ô, rồi ô vuông tỉ lệ. Nhìn lại thì
+// nguyên nhân chung lộ ra ngay: tấm nền của biểu đồ có NĂM kích thước khác nhau tuỳ dạng
+// (536 · 564 · 584 · 488 …), nên mỗi lần thêm một dạng tôi lại đoán lại chỗ trống, và đoán
+// sai thì nội dung lòi ra ngoài.
+// Một chuẩn duy nhất thì mọi dạng suy kích thước từ cùng một chỗ, và câu hỏi "có vừa không"
+// trở thành một phép trừ chứ không phải một cảm nhận.
+const BANG = { x: -282, y: -140, w: 564, h: 286 };
+const BANG_TRONG = { w: BANG.w - 68, h: BANG.h - 78 };   // trừ lề trong và chỗ nhãn/tiêu đề
+
 type DangChart = "dung" | "ngang" | "cham" | "khoi" | "thehai" | "vong" | "luoi" | "thuoc" | "diem" | "bando";
 
 // 31/8 — CHỌN DẠNG PHẢI BIẾT ĐANG KỂ KIỂU GÌ.
@@ -404,11 +414,25 @@ const KhoiVuong: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltt
   const dinh = Math.max(1, ...ds.map((c) => c.gt));
   // Cạnh ô theo CĂN BẬC HAI của giá trị: diện tích mới là thứ mắt đọc, nên cạnh phải là căn.
   // Lấy cạnh tỉ lệ thẳng với giá trị thì ô lớn nhất trông to gấp bội lần sự thật.
-  const canh = (g: number) => 60 + 130 * Math.sqrt(Math.max(0, g) / dinh);
-  let x = -230;
+  // 31/8 — CO CHO VỪA BẢNG, không xếp liên tiếp rồi mặc kệ.
+  // Anh gửi khung: ô thứ tư lòi hẳn ra ngoài tấm bảng. Tôi xếp ô nối nhau từ mép trái mà không
+  // bao giờ cộng lại xem tổng có vừa không — bốn ô lớn thành 678px trong khi bảng rộng 536.
+  // Ngay cả BA ô cũng đã tràn 41px, chỉ là ít nên nhìn không rõ.
+  // Cùng một lỗi với lưới ô sáng nay và với nhân vật hôm qua: đặt kích thước cho vừa mắt trên
+  // một bộ dữ liệu, rồi bộ dữ liệu khác đến là vỡ. Nay tính tổng trước, thừa bao nhiêu thì co
+  // đều bấy nhiêu — mọi ô nhỏ lại cùng tỉ lệ nên phép so DIỆN TÍCH vẫn đọc đúng.
+  const RONG_CO = BANG_TRONG.w, KHE_O = 16;
+  const _canhTho = (g: number) => 60 + 130 * Math.sqrt(Math.max(0, g) / dinh);
+  const _tong = ds.reduce((t, c) => t + _canhTho(c.gt), 0) + KHE_O * Math.max(0, ds.length - 1);
+  const _co = _tong > RONG_CO ? (RONG_CO - KHE_O * Math.max(0, ds.length - 1))
+                              / Math.max(1, _tong - KHE_O * Math.max(0, ds.length - 1)) : 1;
+  const canh = (g: number) => _canhTho(g) * _co;
+  // Căn giữa phần đã co, thay vì luôn bắt đầu từ một mép cố định.
+  const _rongThat = ds.reduce((t, c) => t + canh(c.gt), 0) + KHE_O * Math.max(0, ds.length - 1);
+  let x = -_rongThat / 2;
   return (
     <g>
-      <rect x={-268} y={-150} width={536} height={330} rx={18} fill="#FBF6EA"
+      <rect x={BANG.x} y={BANG.y} width={BANG.w} height={BANG.h} rx={18} fill="#FBF6EA"
             stroke={mau.muc} strokeWidth={6} />
       {ds.map((c, i) => {
         const pi = muot(kep(pCua(i)));
