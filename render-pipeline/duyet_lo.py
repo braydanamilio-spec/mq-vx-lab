@@ -67,18 +67,14 @@ def lo(ten_lo: str, kenh: list, gen2: bool) -> dict:
     print(f"\n  ══ LÔ {ten_lo}: {len(kenh)} kênh ══")
     print("  [1/4] dựng…")
     if gen2:
-        # 31/8 — MỖI DẠNG DỮ LIỆU MỘT HÌNH THỨC, theo lựa chọn của anh.
-        # Trước đó tôi ép cả 50 kênh gen-2 qua `kich_v2 --gen2`, tức qua ĐÚNG MỘT hình thức
-        # (người dẫn + biểu đồ cột + nền mờ). Anh nói trúng: sáu mươi kênh hoá ra một chương
-        # trình duy nhất, và đó chính là thứ chính sách gọi là template-based.
-        # Nhưng engine VỐN đã có bảy hình thức riêng cho bảy dạng dữ liệu — đua cột theo năm,
-        # bản đồ nước Mỹ, thẻ so sánh xưa/nay, so sánh kích thước vật thể, đố vui đếm ngược...
-        # Chúng vẫn chạy được; tôi chỉ vô tình tắt chúng đi khi làm bộ chuyển.
-        # Nên kênh gen-2 quay lại đường gốc `the_he_2.py`, nơi mỗi dạng tự chọn composition của
-        # mình. Mười kênh v3 giữ hình thức người-dẫn, thành hình thức thứ tám.
-        log = ""
-        for _t in kenh:
-            log += _chay([sys.executable, "-u", "the_he_2.py", "--kenh", _t, "--render"], phut=45)
+        # 31/8 — QUAY LẠI đường KichV2 cho kênh gen-2. Lượt trước tôi đổi sang `the_he_2.py` vì
+        # hiểu nhầm lựa chọn của anh: anh chọn "trộn hình thức", tôi hiểu thành "bỏ nhân vật,
+        # dùng lại bảy dạng gốc". Anh nói rõ ngay sau đó — vẫn muốn CÓ người và CÓ nền AI mờ,
+        # chỉ cần đa dạng thêm cho đỡ nhàm.
+        # Nên sự đa dạng nằm BÊN TRONG khung có người: nay chín dạng biểu đồ (cột · thanh ·
+        # chấm · ô vuông · thẻ dọc · vòng · lưới ô · khung thước · điểm phân tán · bản đồ Mỹ),
+        # sáu kiểu kể, mười hai bố cục. Không kênh nào phải bỏ nhân vật để khác kênh khác.
+        log = _chay([sys.executable, "-u", "kich_v2.py", "--gen2", ",".join(kenh)], phut=90)
     else:
         log = _chay([sys.executable, "-u", "kich_v2.py", "--demo"])
 
@@ -89,7 +85,7 @@ def lo(ten_lo: str, kenh: list, gen2: bool) -> dict:
         if "BỎ LƯỢT" in d:
             bo.append(d.strip())
 
-    _mau = "v3_*.mp4" if not gen2 else "*.mp4"
+    _mau = "v3_*.mp4"
     mp4 = sorted(glob.glob(os.path.join(OUT, _mau)), key=os.path.getmtime)[-len(kenh):]
     print(f"        {len(mp4)} video · {len(bo)} bỏ lượt")
 

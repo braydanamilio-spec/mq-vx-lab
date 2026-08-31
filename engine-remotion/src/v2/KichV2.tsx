@@ -1,4 +1,9 @@
 import React from "react";
+// 31/8 — Anh chỉ vào ảnh bản đồ nước Mỹ và hỏi đã tích hợp chưa. Chưa — nên thêm, và dùng lại
+// đúng bộ đã có sẵn trong bundle (MappedShort dùng chung ba thứ này), không kéo thêm gói nào.
+import { geoAlbersUsa, geoPath } from "d3-geo";
+import { feature as _feature } from "topojson-client";
+import _statesTopo from "../../public/geo/states-10m.json";
 import { AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { BoiCanh, BANG_MAU, TenBoiCanh, Paltte } from "./BoiCanh";
 import { CAM_XUC, KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, TenDang, Tu } from "./DienVien";
@@ -205,7 +210,7 @@ const CHART_TAM = 26;             // nhích phải một chút: mắt người �
 //   thuoc — khung thước kiểu bản vẽ kỹ thuật: đo MỘT đại lượng, hợp cho một con số duy nhất
 //   diem  — điểm phân tán trên nền kẻ ô: mật độ thay cho chiều dài, hợp cho số rất lớn
 // Cả ba vẫn nằm trong khung có người dẫn và nền mờ — anh muốn giữ hai thứ đó.
-type DangChart = "dung" | "ngang" | "cham" | "khoi" | "thehai" | "vong" | "luoi" | "thuoc" | "diem";
+type DangChart = "dung" | "ngang" | "cham" | "khoi" | "thehai" | "vong" | "luoi" | "thuoc" | "diem" | "bando";
 
 const chonDang = (cot: { nhan: string; gt: number }[], kenhSo: number): DangChart => {
   const n = Math.min(4, cot.length);
@@ -221,6 +226,13 @@ const chonDang = (cot: { nhan: string; gt: number }[], kenhSo: number): DangChar
   // Chỉ khi dữ liệu không đòi hỏi gì riêng thì mới xoay theo băm kênh — và xoay trong SÁU loại
   // chứ không phải ba, nên hai kênh cạnh nhau hiếm khi trùng bộ mặt.
   if (gt.length > 1 && gt[1] > 0 && gt[0] / gt[1] > 3.5) return "cham";
+  // Bản đồ chỉ dùng khi nhãn ĐÚNG LÀ tên bang — vẽ bản đồ cho dữ liệu không theo bang thì
+  // hình đẹp mà nói sai, tệ hơn một cái cột tẻ nhạt.
+  const _BANG = ["california", "texas", "florida", "new york", "illinois", "ohio", "arizona",
+                 "nevada", "oregon", "washington", "georgia", "michigan", "virginia",
+                 "colorado", "delaware", "alaska", "hawaii", "utah", "maine", "iowa"];
+  if (cot.length >= 3 && cot.slice(0, 3).every((c) => _BANG.includes(String(c.nhan).trim().toLowerCase())))
+    return "bando";
   if (cot.length === 2) return "thehai";
   const _phan = cot.slice(0, n).every((c) => /%/.test(String(c.nhan)) || /%/.test(String((c as any).hien || "")));
   if (_phan && cot.length >= 3) return "vong";
@@ -376,33 +388,40 @@ const KhoiVuong: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltt
 };
 
 /** HAI THẺ ĐỐI ĐẦU — đỉnh bảng so với đáy bảng. Câu chuyện là KHOẢNG CÁCH, không phải thứ hạng. */
+/** HAI THẺ CHỒNG DỌC — đỉnh bảng trên, đáy bảng dưới. Đọc từ trên xuống là thấy khoảng cách.
+ *
+ * 31/8 — Anh chỉ vào ảnh "1970 $0.28 / 2024 $2.74" xếp dọc và hỏi đã tích hợp chưa. Bản trước
+ * tôi xếp NGANG với chữ "vs" ở giữa — đọc ra là một trận đấu, không phải một khoảng cách. Xếp
+ * dọc thì mắt đi từ trên xuống và tự thấy chênh lệch, đúng cách ảnh ấy kể.
+ * Thẻ trên tô đậm và số to hơn; thẻ dưới nhạt đi. Không cần mũi tên hay chữ "vs" nào.
+ */
 const TheDoiDau: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
                             noiBat: number; pCua: (i: number) => number }> =
 ({ cot, p, mau, noiBat, pCua }) => {
   const a = cot[0];
   const b = cot[cot.length - 1] || cot[1] || cot[0];
   if (!a) return null;
-  const the = (c: NonNullable<Canh["cot"]>[number], dx: number, i: number, tren: boolean) => {
+  const the = (c: NonNullable<Canh["cot"]>[number], dy: number, i: number, tren: boolean) => {
     const pi = muot(kep(pCua(i)));
     return (
-      <g transform={`translate(${dx} 0)`} opacity={pi}>
-        <rect x={-124} y={-96} width={248} height={192} rx={16}
+      <g transform={`translate(0 ${dy})`} opacity={pi}>
+        <rect x={-244} y={-62} width={488} height={124} rx={14}
               fill={tren ? mau.nhan : "#F2C230"} stroke={mau.muc} strokeWidth={6} />
-        <text x={0} y={-30} textAnchor="middle" fontSize={19} fontWeight={800}
-              fill={tren ? "#FFFFFF" : mau.muc} opacity={0.9}>{c.nhan}</text>
-        <text x={0} y={34} textAnchor="middle" fontSize={46} fontWeight={900}
+        <text x={-216} y={-24} fontSize={17} fontWeight={800}
+              fill={tren ? "#FFFFFF" : mau.muc} opacity={0.92} letterSpacing={1.2}>
+          {String(c.nhan).toUpperCase()}
+        </text>
+        <text x={-216} y={34} fontSize={tren ? 52 : 44} fontWeight={900}
               fill={tren ? "#FFFFFF" : mau.muc}>{c.hien}</text>
       </g>
     );
   };
   return (
     <g>
-      <rect x={-292} y={-150} width={584} height={300} rx={18} fill="#FBF6EA"
+      <rect x={-282} y={-142} width={564} height={290} rx={18} fill="#FBF6EA"
             stroke={mau.muc} strokeWidth={6} />
-      {the(a, -140, 0, true)}
-      <text x={0} y={12} textAnchor="middle" fontSize={30} fontWeight={900}
-            fill={mau.muc} opacity={0.55}>vs</text>
-      {the(b, 140, Math.min(cot.length - 1, 1), false)}
+      {the(a, -70, 0, true)}
+      {the(b, 74, Math.min(cot.length - 1, 1), false)}
     </g>
   );
 };
@@ -564,6 +583,53 @@ const DiemPhanTan: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Pal
 };
 
 
+/** BẢN ĐỒ NƯỚC MỸ — bang đậm nhạt theo giá trị. Chỉ dùng khi nhãn LÀ tên bang. */
+const BanDoMy: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
+                          noiBat: number; pCua: (i: number) => number }> =
+({ cot, p, mau, noiBat, pCua }) => {
+  const { duong, giaTri, dinh } = React.useMemo(() => {
+    const g: any = _feature(_statesTopo as any, (_statesTopo as any).objects.states);
+    // Khung bảng rộng 560 cao 250 — vừa đúng chỗ tấm nền, nên bản đồ nằm gọn như mọi dạng khác.
+    const proj = geoAlbersUsa().fitExtent([[-250, -108], [250, 112]], g);
+    const pg = geoPath(proj);
+    const m = new Map<string, number>();
+    for (const c of cot) m.set(String(c.nhan).trim().toLowerCase(), Math.max(0, c.gt));
+    return { duong: pg, giaTri: m, dinh: Math.max(1, ...cot.map((c) => c.gt)), geo: g };
+  }, [cot]);
+  const g: any = _feature(_statesTopo as any, (_statesTopo as any).objects.states);
+  const pi = muot(kep(p));
+  const a = cot[noiBat] || cot[0];
+  return (
+    <g>
+      <rect x={-282} y={-130} width={564} height={266} rx={18} fill="#FBF6EA"
+            stroke={mau.muc} strokeWidth={6} />
+      {g.features.map((f: any, i: number) => {
+        const v = giaTri.get(String(f.properties?.name || "").trim().toLowerCase());
+        // Bang KHÔNG có số thì tô xám nhạt, không tô màu nhạt của thang giá trị: tô theo thang
+        // sẽ đọc ra là "bang này giá trị thấp", trong khi sự thật là "không có số liệu". Hai
+        // chuyện khác hẳn nhau, và vẽ nhầm là nói sai.
+        const co = v === undefined ? "#E4DED0" : undefined;
+        const t = v === undefined ? 0 : Math.min(1, v / dinh) * pi;
+        return (
+          <path key={i} d={duong(f) || ""} fill={co || (t > 0.66 ? mau.nhan : t > 0.33 ? "#F2C230" : "#F7E9B8")}
+                stroke={mau.muc} strokeWidth={1.1} opacity={v === undefined ? 0.75 : 1} />
+        );
+      })}
+      {a ? (
+        <>
+          <text x={-250} y={-96} fontSize={19} fontWeight={800} fill={mau.muc} opacity={0.85}>
+            {a.nhan}
+          </text>
+          <text x={250} y={-92} textAnchor="end" fontSize={34} fontWeight={900} fill={mau.muc}>
+            {a.hien}
+          </text>
+        </>
+      ) : null}
+    </g>
+  );
+};
+
+
 const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat?: number;
                            dang?: DangChart; hien?: number; pMoi?: number }> =
 ({ cot, p, mau, noiBat = 0, dang = "dung", hien, pMoi }) => {
@@ -595,6 +661,7 @@ const CotDaoCu: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte
   if (dang === "luoi") return <LuoiO cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
   if (dang === "thuoc") return <KhungThuoc cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
   if (dang === "diem") return <DiemPhanTan cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
+  if (dang === "bando") return <BanDoMy cot={cot} p={p} mau={mau} noiBat={noiBat} pCua={_pCua} />;
   // ══════════════════════════════════════════════════════════════════════════════════════
   // BIỂU ĐỒ PHẢI CÓ TẤM NỀN RIÊNG
   // --------------------------------------------------------------------------------------
@@ -717,11 +784,15 @@ const PhuDe: React.FC<{ tu: Tu[]; giay: number; mau: Paltte; day: number; lech?:
   // đọc được một mảnh không có đầu không có đuôi — tệ hơn không có phụ đề, vì mắt vẫn dừng lại
   // để đọc rồi mới nhận ra không hiểu gì.
   // Lùi về đầu câu gần nhất (sau dấu chấm/hỏi/than) rồi mới lấy sáu từ.
+  // 31/8 — LÙI VỀ ĐẦU CÂU, KHÔNG GIỚI HẠN SỐ TỪ.
+  // Bản trước chỉ lùi tối đa bảy từ rồi bỏ cuộc, nên với câu dài — mà câu nào có số cũng dài,
+  // vì "109" đọc thành "one hundred nine" chiếm ba từ — nó dừng giữa chừng và khung phụ đề bắt
+  // đầu bằng một mẩu: "hundred nine This is straight from". Hai câu dán vào nhau, đọc không ra
+  // nghĩa nào.
+  // Giới hạn ấy tôi đặt vì sợ lùi quá xa; nhưng câu dài nhất trong bài cũng chỉ hơn chục từ,
+  // nên không có gì để sợ. Lùi tới khi gặp dấu chấm hoặc về đầu bài.
   let _dau = dau;
-  for (let i = dau; i > Math.max(0, dau - 7); i--) {
-    if (/[.!?]$/.test(tu[i - 1]?.w || "")) { _dau = i; break; }
-    if (i === 0) { _dau = 0; break; }
-  }
+  while (_dau > 0 && !/[.!?]$/.test(tu[_dau - 1]?.w || "")) _dau--;
   // 31/8 — DỪNG Ở CUỐI CÂU, đừng tràn sang câu sau.
   // Lùi về đầu câu đã đúng, nhưng cửa sổ vẫn lấy đủ sáu từ nên nó vắt qua dấu chấm và dán đuôi
   // câu này vào đầu câu kia: "Illinois at one hundred nine This", "six million The file closes
