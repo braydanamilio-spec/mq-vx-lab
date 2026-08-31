@@ -2595,6 +2595,46 @@
     "diem_chot": 7,
     "tinh_huong": "Salsa Timing Rule",
     "ma": "4df3b5950cbe"
+   },
+   {
+    "loi": [
+     [
+      "I can't stand the exact height rule.",
+      0,
+      "buon"
+     ],
+     [
+      "It stops everyone from inflating their stats.",
+      1,
+      "tuc"
+     ],
+     [
+      "My profile already looks taller than I am.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Keeping numbers real forces honest connections.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "So the rule actually protects us from those lies.",
+      0,
+      "vui"
+     ],
+     [
+      "Honestly, I miss the freedom to embellish.",
+      1,
+      "buon"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the car front seats",
+    "hook": "EXACT HEIGHT REQUIREMENT ON DATING APP",
+    "diem_chot": 8,
+    "tinh_huong": "Height Rule Flip",
+    "ma": "986f739f9de1"
    }
   ],
   "rent": [
@@ -13542,7 +13582,13 @@
   "i can prove it i danced at «s » «s » pm today": 1,
   "proof must be timestamped exactly at «s » «s » pm not approximate": 1,
   "so i ll record «t n» video at «s » «s » «s »": 1,
-  "rule actually covers any mention of dancing not just timestamps": 1
+  "rule actually covers any mention of dancing not just timestamps": 1,
+  "i can t stand «t n» height rule": 1,
+  "it stops everyone from inflating «t n»": 1,
+  "«t n» already looks taller than i am": 1,
+  "keeping numbers real forces honest connections": 1,
+  "so «t n» actually protects us from those lies": 1,
+  "honestly i miss «t n» to embellish": 1
  },
  "tinh_huong": {
   "tech": [
@@ -13614,7 +13660,8 @@
    "Rule Reversal",
    "Countdown Context Clash",
    "The Emergency Credit Check",
-   "Salsa Timing Rule"
+   "Salsa Timing Rule",
+   "Height Rule Flip"
   ],
   "rent": [
    "Rent increase confusion",

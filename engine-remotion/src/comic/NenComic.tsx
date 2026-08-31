@@ -577,10 +577,21 @@ export const NenPanel: React.FC<{
   if (anh) {
     return (
       <>
+        {/* NỀN LÀ TRANH NỀN, KHÔNG PHẢI ẢNH CHỤP — 31/8.
+            Đã thử hướng 3D-giả-2D (chia bậc màu cho nền "vẽ" hơn, kiểu Spider-Verse): hỏng.
+            `feComponentTransfer type="discrete"` trên một bức tường chuyển sắc mượt đẻ ra vệt
+            cầu vồng, vì ba kênh màu vượt ngưỡng ở những chỗ khác nhau. Kỹ thuật ấy hợp với ảnh
+            tương phản cao, không hợp với nền phẳng của ta.
+            Đo lại thì tiền đề mới là chỗ sai: phim 2D thật KHÔNG khớp chất liệu. Nền Ghibli là
+            tranh vẽ mềm, nhân vật là cel phẳng — hai chất liệu khác hẳn, cố ý. Thứ làm chúng
+            thuộc về nhau là MÀU và ÁNH SÁNG (đúng bước 色指定 ở `KichComic`), cộng với việc nền
+            phải đọc ra là TRANH NỀN chứ không phải ảnh chụp.
+            Nên cách chữa là hạ chi tiết chứ không phải thêm hiệu ứng: mờ thêm chút, giảm tương
+            phản, giảm bão hoà. Nền lùi thành phông, người nổi lên phía trước. */}
         <AbsoluteFill style={{ overflow: "hidden" }}>
           <Img src={staticFile(anh)} style={{
             width: "100%", height: "100%", objectFit: "cover",
-            filter: "saturate(0.86) brightness(1.04) blur(1.6px)",
+            filter: "saturate(0.80) brightness(1.06) contrast(0.94) blur(2.4px)",
           }} />
         </AbsoluteFill>
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}

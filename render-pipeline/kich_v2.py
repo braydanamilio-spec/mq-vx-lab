@@ -19,6 +19,7 @@ from __future__ import annotations
 import io
 import json
 import os
+from chuan_am import chuan   # đưa âm lượng về mốc −14 LUFS của nền tảng
 import subprocess
 import sys
 
@@ -1504,7 +1505,12 @@ def ve_nen_moi_cau(k: dict, DS, canh_ds: list) -> list:
     os.makedirs(thu, exist_ok=True)
     try:
         import kich_hai as _KHG
-        gu = _KHG.GU_NEN
+        # 31/8 — `kich_hai` đã có sẵn `SAN_NEN`: "wide shot, camera at standing eye level,
+        # floor clearly visible across the lower third, open space in the centre of the frame".
+        # Đúng câu anh khen ở bộ comic. Nhưng đường này xưa nay chỉ lấy `GU_NEN` và BỎ QUA nó —
+        # nên nền kênh phân tích không bao giờ được ép sàn, và người dẫn hay lơ lửng.
+        # Lấy cả hai, thay vì tôi viết lại câu thứ ba: hai bản của cùng một lệnh sẽ lệch nhau.
+        gu = getattr(_KHG, "SAN_NEN", "") + ", " + _KHG.GU_NEN
     except Exception:
         gu = "flat 2D cartoon background, bold clean outlines, simple flat colours"
     ra = []
@@ -1561,6 +1567,56 @@ def ve_nen_moi_cau(k: dict, DS, canh_ds: list) -> list:
     return ra
 
 
+def _noi_theo_chu_de(chu_de: str, ten_kenh: str, keys) -> str:
+    """Chủ đề dữ liệu -> MỘT nơi chốn vẽ được. Cache theo chủ đề trong `noi_theo_chu_de.json`.
+
+    Mô hình vẽ không hiểu "median rent by state" là cảnh gì. Nó hiểu "a leasing office with a
+    large wall map and a row of chairs". Bước này dịch từ ngôn ngữ dữ liệu sang ngôn ngữ hình.
+    Hỏng thì lùi về nơi chốn cố định của kênh — không bao giờ trả về chuỗi rỗng.
+    """
+    tep = os.path.join(GOC, "noi_theo_chu_de.json")
+    kho = {}
+    if os.path.exists(tep):
+        try:
+            kho = json.load(io.open(tep, encoding="utf-8"))
+        except Exception:
+            kho = {}
+    khoa = f"{ten_kenh}|{chu_de}"[:180]
+    if kho.get(khoa):
+        return kho[khoa]
+
+    du_phong = (NEN_V3.get(ten_kenh) or ["a plain office room with a desk on the left"])[0]
+    if not keys:
+        return du_phong
+    try:
+        import content_brain as CB
+        hoi = (f'A short video on the channel "{ten_kenh}" is about: {chu_de}.\n'
+               "Name ONE real physical place where a person could plausibly be standing while "
+               "talking about this. Describe it in 8-14 words as a room or outdoor spot with "
+               "furniture, for a background artist.\n"
+               "No people, no text, no charts, no numbers in the description.\n"
+               'Return STRICT JSON only: {"noi": "..."}')
+        for kk in _xoay(keys):
+            try:
+                g = CB._genai(kk if isinstance(kk, str) else kk.get("key"))
+                t = str(getattr(g.GenerativeModel("gemini-2.5-flash").generate_content(hoi),
+                                "text", "") or "")
+                import re as _re
+                m = _re.search(r'"noi"\s*:\s*"([^"]{10,140})"', t)
+                if m:
+                    noi = " ".join(m.group(1).split())
+                    kho[khoa] = noi
+                    io.open(tep, "w", encoding="utf-8").write(
+                        json.dumps(kho, ensure_ascii=False, indent=1))
+                    print(f"      🗺  bối cảnh cho chủ đề: {noi[:56]}")
+                    return noi
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return du_phong
+
+
 def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
     """Vẽ + cache nền cho một kênh. Chỉ vẽ tệp CHƯA CÓ.
 
@@ -1582,11 +1638,22 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
     # Nên hai bộ dùng CHUNG một câu gu, và giữ nó ở một chỗ để không bao giờ trôi xa nhau nữa.
     try:
         import kich_hai as _KHG
-        gu = _KHG.GU_NEN
+        # 31/8 — `kich_hai` đã có sẵn `SAN_NEN`: "wide shot, camera at standing eye level,
+        # floor clearly visible across the lower third, open space in the centre of the frame".
+        # Đúng câu anh khen ở bộ comic. Nhưng đường này xưa nay chỉ lấy `GU_NEN` và BỎ QUA nó —
+        # nên nền kênh phân tích không bao giờ được ép sàn, và người dẫn hay lơ lửng.
+        # Lấy cả hai, thay vì tôi viết lại câu thứ ba: hai bản của cùng một lệnh sẽ lệch nhau.
+        gu = getattr(_KHG, "SAN_NEN", "") + ", " + _KHG.GU_NEN
     except Exception:
         gu = ("flat 2D cartoon background in the style of classic American animated sitcoms, "
               "bold clean outlines, simple flat colours, no people, no text, no signage, "
               "wide establishing shot, slightly stylised perspective")
+    # Nhánh dự phòng (không import được `kich_hai`) cũng phải có lệnh ép bố cục — nếu không,
+    # ngày nào import hỏng là ngày ấy nền quay về không sàn mà chẳng ai biết.
+    if "bottom third" not in gu and "lower third" not in gu:
+        gu += (" Camera at standing eye level, straight on. The floor is clearly visible across "
+               "the entire bottom third of the frame. Furniture and props pushed to the far left "
+               "and far right edges, leaving the center of the frame completely empty.")
     for i, prompt in enumerate(NEN_V3.get(k["ten"], [])):
         rel = os.path.join("v3nen", f"{k['ten'].replace(' ', '').lower()}_{i}.jpg")
         dest = os.path.join(PUB, rel)
@@ -1679,7 +1746,20 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
         _them = CAM_CHU
         if any(x in chu_de.lower() for x in _CO_BAO):
             _them += CAM_BAO_BI
-        _pr = f"{chu_de}, seen in a {k['ten'].split()[0].lower()} setting{_them}"
+        # ══ VIẾT BỐI CẢNH CÙNG LÚC VỚI KỊCH BẢN ═══════════════════════════════════════
+        # Anh: *"nên lúc viết kịch bản cần có sẵn pepline để viết luôn bối cảnh cho phù hợp"*.
+        #
+        # Bản trước ghép thô: `f"{chu_de}, seen in a {tên kênh} setting"`. Với chủ đề "rent
+        # prices by state" và kênh RENT REALITY, câu gửi cho mô hình vẽ là "rent prices by
+        # state, seen in a rent setting" — không phải một NƠI CHỐN, mà là một cụm số liệu nhét
+        # cạnh một từ vu vơ. Mô hình vẽ cần nơi chốn; đưa cho nó một chủ đề thống kê thì nó tự
+        # bịa ra thứ gì đó, và đó là nguồn của những nền không ăn nhập.
+        #
+        # Nay có một bước viết bối cảnh riêng: một lượt gọi mô hình, hỏi "chủ đề này thì cảnh
+        # nào hợp" và bắt trả về MỘT nơi chốn cụ thể. Cache theo chính chủ đề nên mỗi chủ đề
+        # chỉ tốn một lượt, và tập sau cùng chủ đề dùng lại ngay.
+        _noi = _noi_theo_chu_de(chu_de, k["ten"], keys)
+        _pr = f"{_noi}{_them}"
         ok = None
         for _lan in range(2):
             try:
@@ -2167,7 +2247,8 @@ def main() -> int:
             _hex = _mau_kenh(k["mau"])
             if _thumb(out, k.get("nhan") or ten, ten, _hex, _th):
                 print(f"   🖼  thumbnail: {os.path.basename(_th)}")
-        print(f"   ✅ {ten}: {out}  ({mb:.1f} MB)")
+        _am = chuan(out)
+        print(f"   ✅ {ten}: {out}  ({mb:.1f} MB{' · ' + _am if _am else ''})")
         ra.append(out)
 
     print(f"\n{'✅' if ra else '⚠️'} {len(ra)}/{len(chon)} video")

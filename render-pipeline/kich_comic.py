@@ -27,6 +27,7 @@ import io
 import json
 import argparse
 import subprocess
+from chuan_am import chuan   # đưa âm lượng về mốc −14 LUFS của nền tảng
 
 from kich_hai import (KENH, KHO, cu_chi_cua, doc_hai_giong, _ten_tep, lam_thumb,
                       _hai_bong, GOC, ENG, PUB)
@@ -446,8 +447,12 @@ def mot_kenh(k: dict, vong: int) -> str:
     th = os.path.join(GOC, "out", f"v5_{slug}.jpg")
     if lam_thumb(out, cau[0][0] if cau else ten, ten, k["mau"], th):
         print(f"   🖼  thumbnail: {os.path.basename(th)}")
+    # YouTube/FB/IG chuẩn hoá về −14 LUFS và chỉ HẠ chứ không nâng — video nhỏ hơn mốc thì
+    # phát ra yếu hơn mọi thứ quanh nó trong feed. Đánh bóng ở bước cuối, nuốt mọi lỗi.
+    _am = chuan(out)
     print(f"   ✅ {ten}: {os.path.basename(out)}  "
-          f"({os.path.getsize(out) / 1e6:.1f} MB · {dur:.0f}s · {len(luot)} panel)")
+          f"({os.path.getsize(out) / 1e6:.1f} MB · {dur:.0f}s · {len(luot)} panel"
+          f"{' · ' + _am if _am else ''})")
     return out
 
 

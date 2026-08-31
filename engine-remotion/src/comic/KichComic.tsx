@@ -210,7 +210,7 @@ const Panel: React.FC<{
   dangNoi: boolean; hai?: boolean; noi: Noi; anhNen?: string;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
-  sang?: { huong: number; manh: number };
+  sang?: { huong: number; manh: number; mau?: string; sang?: number };
 }> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, noi, anhNen,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
         bongDuoi = false, boKhung = 0, chuNo = "BOOM!", sang }) => {
@@ -291,6 +291,11 @@ const Panel: React.FC<{
   // toàn, và cũng đúng với 63/100 nền là phòng trong sáng đều.
   const huongSang = sang ? sang.huong : 0;
   const manhSang = sang ? sang.manh : 0;
+  // Màu môi trường + chỉnh sáng. Biên độ cố ý HẸP (±7%): mục tiêu là nhân vật thuộc về căn
+  // phòng, không phải nhân vật đổi màu. Vượt quá là mất luôn nhận diện màu của kênh — mà nhận
+  // diện riêng từng kênh là thứ anh đã dặn giữ.
+  const mauNen = (sang as any)?.mau || "#FFFFFF";
+  const doSang = sang ? Math.min(1.06, 0.86 + ((sang as any).sang ?? 0.68) * 0.24) : 1;
 
   const cxA = doiNguoi ? w * 0.28 : canRong ? w * 0.29 : w * 0.5;
   const cxB = doiNguoi ? w * 0.72 : canRong ? w * 0.71 : w * 0.5;
@@ -333,6 +338,30 @@ const Panel: React.FC<{
         <BongNguoi x={cxA} y={yChan} k={k} cao={caoA} huong={huongSang} manh={manhSang} />
         {doiNguoi ? <BongNguoi x={cxB} y={yChan} k={k} cao={caoB} huong={huongSang} manh={manhSang} /> : null}
 
+        {/* 色指定 (IROSHITEI) LÀM BẰNG MÁY — 31/8.
+            Xưởng anime có hẳn một người *chỉ định màu*: mỗi tập dựng lại bảng màu nhân vật theo
+            ánh sáng của bối cảnh, vì nhân vật trong phòng tối không thể dùng đúng bảng màu như
+            lúc đứng ngoài nắng. Ta vẽ nhân vật bằng MỘT bảng màu cố định rồi đặt lên 100 nền
+            khác nhau — nên luôn có vài cái "không thuộc về đó", và đó chính là cảm giác dán lên
+            mà bóng đổ một mình không chữa hết.
+            `huong_sang.py` đo sẵn màu + độ sáng của DẢI NGANG TẦM NGƯỜI trong từng ảnh (35–80%
+            chiều cao — không lấy trần, vì nhân vật không nhận ánh sáng của trần). Ở đây phủ lại
+            lên nhân vật: một lớp màu môi trường rất mỏng, cộng chỉnh sáng theo nền. Đúng bước
+            "color match" trong bộ kiểm tra hoà nền của compositor. */}
+        <defs>
+          <filter id={`iro${thuTu}`} x="-12%" y="-12%" width="124%" height="124%"
+                  colorInterpolationFilters="sRGB">
+            <feComponentTransfer in="SourceGraphic" result="s">
+              <feFuncR type="linear" slope={doSang} />
+              <feFuncG type="linear" slope={doSang} />
+              <feFuncB type="linear" slope={doSang} />
+            </feComponentTransfer>
+            <feFlood floodColor={mauNen} floodOpacity={0.13} result="f" />
+            <feComposite in="f" in2="s" operator="in" result="t" />
+            <feMerge><feMergeNode in="s" /><feMergeNode in="t" /></feMerge>
+          </filter>
+        </defs>
+        <g filter={anhNen ? `url(#iro${thuTu})` : undefined}>
         {(doiNguoi || noiA) ? (
           <DienVienHai
             kieu={A}
@@ -370,6 +399,24 @@ const Panel: React.FC<{
             x={cxB} y={yChan} scale={k} lat
           />
         ) : null}
+        </g>
+      </svg>
+
+      {/* HẠT PHỦ TOÀN BẢN GHÉP — 31/8. Halftone vốn chỉ vẽ trong `NenComic`, tức chỉ phủ TẤM
+          NỀN; nhân vật nằm trên nó hoàn toàn sạch hạt. Đó đúng là lỗi "grain mismatch" mà
+          compositor kiểm đầu tiên: hạt phim phải nằm ở lớp CUỐI, phủ đều mọi thứ trong khung —
+          hai vùng khác mật độ hạt thì mắt tách chúng thành hai lớp dù không gọi tên được.
+          Nhạt hơn hạt nền nhiều (nền đã có phần của nó rồi); đây chỉ là phần cộng thêm cho
+          nhân vật. Nằm dưới bong bóng thoại: trong truyện tranh, chữ và bong bóng thuộc lớp
+          LỜI, không thuộc lớp tranh — nên chúng không ăn hạt. */}
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
+           style={{ position: "absolute", inset: 0, zIndex: 4, pointerEvents: "none" }}>
+        <defs>
+          <pattern id={`hg${thuTu}`} width={cham} height={cham} patternUnits="userSpaceOnUse">
+            <circle cx={cham * 0.28} cy={cham * 0.28} r={cham * 0.16} fill="#14110F" />
+          </pattern>
+        </defs>
+        <rect width={w} height={h} fill={`url(#hg${thuTu})`} opacity={anhNen ? 0.07 : 0.05} />
       </svg>
 
       {/* lớp gần vẽ SAU nhân vật -> che một phần người, cho ra chiều sâu */}
@@ -473,7 +520,7 @@ export type PropsComic = {
   // Hướng sáng ĐO TỪ chính `anhNen` (`huong_sang.py` -> `huong_sang.json`), đưa sang bằng props
   // chứ không để engine đọc tệp: bước render trên Actions không được phép chạm đĩa ngoài
   // `staticFile`, và số đo là thứ tính một lần rồi dùng mãi.
-  sang?: { huong: number; manh: number };
+  sang?: { huong: number; manh: number; mau?: string; sang?: number };
   netMuc?: number;    // độ dày viền mực: 5 (mảnh, sạch) .. 10 (thô, mạnh)
   cham?: number;      // cỡ ô halftone: 7 (mịn) .. 14 (thô như báo in)
   boGoc?: number;     // bo góc bong bóng: 6 (vuông, đanh) .. 34 (tròn, hiền)

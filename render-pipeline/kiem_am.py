@@ -52,6 +52,17 @@ def main() -> int:
         print(f"  ✅ bóng vẽ cho cả cảnh một người ({len(goi)} lời gọi, "
               f"{sum(1 for g in goi if not g)} nằm ngoài nhánh `doiNguoi`)")
 
+    # ── 3. mốc phát của nền tảng ─────────────────────────────────────────────────────────
+    # YouTube/FB/IG chuẩn hoá về −14 LUFS và chỉ HẠ chứ không nâng. Cả BA đường dựng phải gọi
+    # `chuan()` — đây chính là chỗ dễ tái phạm họ lỗi "vá một nhánh, để nguyên nhánh song song",
+    # vì ba tệp này không dùng chung hàm dựng nào.
+    thieu_chuan = [t for t in ("kich_comic.py", "kich_comic_long.py", "kich_v2.py")
+                   if "chuan(out)" not in io.open(os.path.join(GOC, t), encoding="utf-8").read()]
+    if thieu_chuan:
+        loi.append("chưa chuẩn âm đầu ra: " + " · ".join(thieu_chuan) + "  (gọi `chuan(out)`)")
+    else:
+        print("  ✅ cả 3 đường dựng đều đưa âm lượng về −14 LUFS")
+
     if loi:
         print("\n❌ " + "\n❌ ".join(loi))
         return 1

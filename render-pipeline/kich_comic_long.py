@@ -31,6 +31,7 @@ chứa cả người mà vẫn đọc được nét mặt. Bản dài dùng nhá
 `KichComicWide` (1920×1080). Không phải viết lại engine, chỉ đổi khung.
 """
 import os
+from chuan_am import chuan   # đưa âm lượng về mốc −14 LUFS của nền tảng
 import io
 import json
 import argparse
@@ -170,8 +171,10 @@ def mot_kenh_dai(k: dict, so_tap: int) -> str:
 
     th = os.path.join(GOC, "out", f"v5L_{slug}.jpg")
     lam_thumb(out, cau[0][0] if cau else ten, ten, k["mau"], th)
+    _am = chuan(out)
     print(f"   ✅ {ten}: {os.path.basename(out)} "
-          f"({os.path.getsize(out)/1e6:.0f} MB · {dur/60:.1f} phút · {len(luot)} cảnh)")
+          f"({os.path.getsize(out)/1e6:.0f} MB · {dur/60:.1f} phút · {len(luot)} cảnh"
+          f"{' · ' + _am if _am else ''})")
     return out
 
 

@@ -37,6 +37,35 @@ RA = os.path.join(NEN, "huong_sang.json")
 NGUONG = 0.045
 
 
+def mau_moi_truong(d: str):
+    """Màu và độ sáng của vùng nhân vật ĐỨNG — tức ánh sáng mà nhân vật thật sự nhận.
+
+    Đây là 色指定 (iroshitei) của xưởng anime làm bằng máy: mỗi tập có người *chỉ định màu*,
+    dựng bảng màu nhân vật đổi theo ánh sáng bối cảnh — nhân vật trong phòng tối không dùng
+    đúng bảng màu như lúc đứng ngoài nắng. Nhân vật vẽ bằng một bảng màu cố định rồi đặt lên
+    trăm cái nền khác nhau thì luôn có vài cái "không thuộc về đó".
+
+    Đo ở dải NGANG TẦM NGƯỜI (35–80% chiều cao) chứ không đo cả ảnh: trần nhà và đèn kéo trung
+    bình lệch hẳn, mà nhân vật thì không nhận ánh sáng của trần.
+    """
+    im = Image.open(d).convert("RGB")
+    w, h = im.size
+    im = im.resize((60, max(1, int(60 * h / w))), Image.BILINEAR)
+    w, h = im.size
+    vung = im.crop((0, int(h * 0.35), w, int(h * 0.80)))
+    px = vung.load()
+    W, H = vung.size
+    r = g = b = 0
+    for y in range(H):
+        for x in range(W):
+            c = px[x, y]
+            r += c[0]; g += c[1]; b += c[2]
+    n = max(1, W * H)
+    r, g, b = r / n, g / n, b / n
+    return {"mau": "#%02X%02X%02X" % (int(r), int(g), int(b)),
+            "sang": round((0.299 * r + 0.587 * g + 0.114 * b) / 255.0, 3)}
+
+
 def do_mot(d: str):
     im = Image.open(d).convert("L")
     w, h = im.size
@@ -73,7 +102,10 @@ def main() -> int:
         if not t.lower().endswith((".jpg", ".jpeg", ".png")):
             continue
         try:
-            ra[os.path.splitext(t)[0]] = do_mot(os.path.join(NEN, t))
+            d = os.path.join(NEN, t)
+            mot = do_mot(d)
+            mot.update(mau_moi_truong(d))
+            ra[os.path.splitext(t)[0]] = mot
         except Exception as e:
             print(f"  ⚠️ {t}: {e}")
 
@@ -84,6 +116,8 @@ def main() -> int:
     tb_manh = sum(v["manh"] for v in ra.values()) / max(1, len(ra))
     print(f"  ✅ đo {len(ra)} nền -> comic_nen/huong_sang.json")
     print(f"     sáng từ trái {dem[-1]} · đều {dem[0]} · sáng từ phải {dem[1]} · độ gắt tb {tb_manh:.2f}")
+    ds = sorted(v["sang"] for v in ra.values())
+    print(f"     độ sáng vùng người: {ds[0]:.2f} .. {ds[-1]:.2f} (giữa {ds[len(ds)//2]:.2f})")
     return 0
 
 

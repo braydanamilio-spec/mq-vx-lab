@@ -6344,3 +6344,63 @@ Nhân tiện chữa luôn 213 mẩu không có nhãn nơi: **đọc lời thoạ
 "front desk", "closet" thì nơi chốn nằm ngay trong câu — dò từ khoá, không gọi mô hình. Kết
 quả: **0 → 191/306 mẩu dùng đúng nền của nơi chốn** (86 theo nhãn + 105 suy từ thoại); 115 mẩu
 còn lại mượn nền cùng kênh nên vẫn cùng thế giới.
+
+---
+
+## 23. BỘ KIỂM TRA HOÀ NỀN CỦA COMPOSITOR — và một mốc mà cả ngành dùng (31/8)
+
+Anh: *"tìm cách tốt nhất, phương pháp mà các ông lớn hiện nay đang áp dụng."* Tra ra hai thứ
+dùng được ngay, và một thứ tưởng dùng được nhưng không.
+
+### 23.1 Bộ kiểm tra hoà nền (VFX compositing)
+
+Compositor có một danh sách cố định để một phần tử "thuộc về" tấm nền: **bóng tiếp đất → khớp
+màu/tương phản → hạt phim → độ sâu trường ảnh → xử lý mép**. Ta mới làm bóng. Ba bước còn lại:
+
+- **Khớp màu** — xem 23.2.
+- **Hạt phim** — halftone vốn chỉ vẽ trong `NenComic`, tức chỉ phủ TẤM NỀN; nhân vật nằm trên
+  nó hoàn toàn sạch hạt. Đó đúng là lỗi *grain mismatch*: hai vùng khác mật độ hạt thì mắt tách
+  chúng thành hai lớp dù không gọi tên được. Hạt phải ở lớp CUỐI, phủ đều cả khung. Nằm dưới
+  bong bóng thoại — trong truyện tranh, chữ thuộc lớp LỜI, không thuộc lớp tranh.
+- **Độ sâu trường ảnh** — nền mờ hơn người. Đã có, nay đẩy thêm (blur 1,6 → 2,4).
+
+### 23.2 色指定 (iroshitei) — bảng màu nhân vật đổi theo ánh sáng bối cảnh
+
+Xưởng anime có hẳn một chức danh *chỉ định màu*: mỗi tập dựng lại bảng màu nhân vật theo ánh
+sáng của bối cảnh, vì nhân vật trong phòng tối không thể dùng đúng bảng màu như lúc đứng ngoài
+nắng. Ta vẽ nhân vật bằng MỘT bảng màu cố định rồi đặt lên 100 nền khác nhau — nên luôn có vài
+cái "không thuộc về đó", và bóng đổ một mình không chữa được.
+
+`huong_sang.py` đo màu + độ sáng của **dải ngang tầm người** (35–80% chiều cao — không lấy trần,
+nhân vật không nhận ánh sáng của trần). Đo 100 nền: độ sáng 0,49 → 0,80. Engine phủ lại lên
+nhân vật một lớp màu môi trường 13% cộng chỉnh sáng ±7%. Biên độ cố ý HẸP: mục tiêu là nhân vật
+thuộc về căn phòng, không phải nhân vật đổi màu — vượt quá là mất nhận diện màu riêng của kênh.
+
+### 23.3 Thứ KHÔNG dùng được: chia bậc màu nền kiểu 3D-giả-2D
+
+Dòng phim Spider-Verse làm nền "vẽ" hơn bằng cách giảm số bậc màu + tăng tương phản + halftone.
+Thử `feComponentTransfer type="discrete"` 6 bậc: **hỏng** — trên một bức tường chuyển sắc mượt
+nó đẻ ra vệt cầu vồng, vì ba kênh màu vượt ngưỡng ở những chỗ khác nhau. Kỹ thuật ấy hợp ảnh
+tương phản cao, không hợp nền phẳng.
+
+Và tiền đề mới là chỗ sai: **phim 2D thật không khớp chất liệu**. Nền Ghibli là tranh vẽ mềm,
+nhân vật là cel phẳng — hai chất liệu khác hẳn, cố ý. Thứ làm chúng thuộc về nhau là MÀU và ÁNH
+SÁNG, không phải chất liệu. Nên cách chữa là **hạ chi tiết của nền** (mờ thêm, giảm tương phản,
+giảm bão hoà) để nó lùi thành phông, chứ không phải thêm hiệu ứng cho nó.
+
+### 23.4 −14 LUFS: mốc phát của nền tảng
+
+YouTube chuẩn hoá mọi video về **−14 LUFS**, đỉnh thật dưới **−1 dBTP**. Điểm chí mạng: nó
+**chỉ HẠ, không nâng**. Video ta đo được **−20,9 LUFS** — thấp hơn mốc 7 dB, nên trong feed nó
+phát ra yếu hơn hẳn mọi video xung quanh. Người xem không phân tích được vì sao, họ chỉ thấy
+"video này yếu" rồi lướt. Đây là khoảng cách đo được mà kênh chuyên nghiệp không bao giờ có, và
+đóng nó không tốn gì.
+
+`chuan_am.py` dùng `loudnorm` **hai lượt** (lượt một đo, lượt hai sửa theo số đo — một lượt phải
+đoán khi vừa đọc vừa sửa, với video ngắn có đoạn lặng thì đoán sai khá xa). Video copy nguyên,
+chỉ mã hoá lại tiếng. Mọi lỗi đều nuốt: đây là bước ĐÁNH BÓNG, một tệp chưa chuẩn âm vẫn hơn
+hẳn một lượt render hỏng ở phút chót — nhất là trên Actions, nơi hỏng ở đây là mất cả lượt.
+
+Gọi ở **cả ba** đường dựng (`kich_comic`, `kich_comic_long`, `kich_v2`) — chúng không dùng chung
+hàm dựng nào nên đây đúng là chỗ dễ tái phạm *vá một nhánh, để nguyên nhánh song song*.
+`kiem_am.py` canh cả ba.

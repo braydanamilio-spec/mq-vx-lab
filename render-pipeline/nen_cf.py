@@ -38,7 +38,41 @@ from kich_hai import KENH, _ten_tep, GOC, ENG
 THU = os.path.join(ENG, "public", "comic_nen")
 
 
-def _prompt(noi: str, kenh_ten: str, ngoai: bool = False) -> str:
+# ══ RULE PHONG CÁCH NỀN CHO TỪNG KÊNH ══════════════════════════════════════════════════
+# Anh: *"thế thì e có thể vẫn đúng bối cảnh nhưng xây pepline rule chuẩn phong cách cho
+# channel"*. Đúng chỗ còn thiếu: mười kênh đang dùng CHUNG một gu ("clay render, pastel"), nên
+# nơi chốn khác nhau mà nền vẫn cùng một chất — xếp mười khung cạnh nhau lại ra một xưởng.
+#
+# Ba trục dưới đây là thứ mắt đọc được trên một tấm nền, xếp theo thứ tự nhận ra:
+#   · BẢNG MÀU — bám theo `MAU_CHINH`/`MAU_PHU` của kênh, để nền và nhân vật cùng một họ màu;
+#   · ÁNH SÁNG — gắt hay dịu, ấm hay lạnh, từ trên hay từ cửa sổ;
+#   · CHẤT LIỆU — clay mềm, nhựa bóng, giấy mờ, kim loại nhám.
+# Ba trục ấy đổi thì cùng một căn phòng cho ra hai thế giới khác hẳn.
+PHONG_CACH = {
+    "rent":     "warm brick red and deep navy palette, hard directional light from one side, "
+                "matte painted walls, slightly worn urban feel",
+    "gym":      "emerald green and bright orange palette, crisp even gym lighting, glossy "
+                "rubber and chrome surfaces, energetic and clean",
+    "airport":  "cool grey blue and muted teal palette, flat institutional ceiling light, "
+                "polished floors with soft reflections, wide and impersonal",
+    "car":      "amber orange and steel blue palette, industrial overhead lamps casting warm "
+                "pools of light, brushed metal and concrete textures",
+    "office":   "lavender purple and mint palette, flat fluorescent lighting with no shadows, "
+                "smooth matte plastic surfaces, tidy and slightly sterile",
+    "diet":     "soft teal and warm pink palette, bright kitchen daylight from a window, "
+                "clean ceramic and light wood, cosy domestic feel",
+    "tech":     "electric blue and orange palette, cool screen glow mixed with white ceiling "
+                "light, matte plastic and cable clutter, modern workplace",
+    "parent":   "warm coral and sky blue palette, soft afternoon light through curtains, "
+                "plush fabrics and rounded wooden furniture, lived-in and homely",
+    "neighbor": "fresh grass green and burnt sienna palette, natural outdoor daylight, "
+                "painted timber and stucco textures, quiet suburban street",
+    "dating":   "rose pink and violet palette, warm low-hanging pendant light, velvet and "
+                "polished wood, intimate and softly lit",
+}
+
+
+def _prompt(noi: str, kenh_ten: str, ngoai: bool = False, de: str = "") -> str:
     """Prompt ép ba thứ: có sàn · giữa trống · không người không chữ."""
     # 31/8 — hai lỗi thấy trên mẻ đầu:
     #   · nơi NGOÀI TRỜI (sân trước, hàng rào) bị dựng thành phòng kín có hàng rào bên trong —
@@ -60,14 +94,17 @@ def _prompt(noi: str, kenh_ten: str, ngoai: bool = False) -> str:
         "Camera at standing eye level, straight on. Furniture and props pushed to the far left "
         "and far right edges, leaving the center of the frame completely empty. "
         # phong cách: gần với nhân vật vector phẳng hơn là photoreal
-        "Soft matte clay-render look, simple rounded shapes, flat even lighting, no harsh "
-        "shadows, muted pastel colors, clean and uncluttered. "
+        # Rule phong cách của kênh — thay cho câu gu dùng chung. Giữ "stylized 3D cartoon"
+        # làm nền tảng để nền vẫn hợp với nhân vật vẽ phẳng, còn màu/sáng/chất thì mỗi kênh một.
+        + (PHONG_CACH.get(de, "soft matte clay-render look, muted pastel colors") + ". ")
+        + "Simple rounded shapes, clean and uncluttered, no clutter in the centre. "
         # (loại thứ hay làm hỏng khung)
         "No people, no characters, no watermark, no text of any kind."
     )
 
 
-def sinh_mot(kenh: str, idx: int, noi: str, ten: str, keys, ngoai: bool = False) -> str:
+def sinh_mot(kenh: str, idx: int, noi: str, ten: str, keys, ngoai: bool = False,
+             de: str = "") -> str:
     os.makedirs(THU, exist_ok=True)
     dest = os.path.join(THU, f"{kenh}_{idx:02d}.jpg")
     rel = f"comic_nen/{kenh}_{idx:02d}.jpg"
@@ -80,7 +117,7 @@ def sinh_mot(kenh: str, idx: int, noi: str, ten: str, keys, ngoai: bool = False)
     from xoay_key import goi_xoay, bao_cao, CanThat
 
     def _thu(kk):
-        return DS._cf_flux_image(_prompt(noi, ten, ngoai), dest, kk) and \
+        return DS._cf_flux_image(_prompt(noi, ten, ngoai, de), dest, kk) and \
             os.path.getsize(dest) > 20000
 
     try:
@@ -147,7 +184,7 @@ def main() -> int:
         noi_ds = ds.get(k["de"], [])[:a.so]
         print(f"\n▶ {k['ten']}", flush=True)
         for i, noi in enumerate(noi_ds):
-            r = sinh_mot(slug, i, noi, k["ten"], cf, noi in NGOAI)
+            r = sinh_mot(slug, i, noi, k["ten"], cf, noi in NGOAI, k["de"])
             print(f"   {'✅' if r else '❌'} {i:02d} {noi[:46]}", flush=True)
             if r:
                 ra.setdefault(slug, {})[str(i)] = r
