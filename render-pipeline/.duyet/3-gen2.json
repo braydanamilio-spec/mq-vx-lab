@@ -1,0 +1,131 @@
+{
+  "lo": "3-gen2",
+  "kenh": [
+    "MISSING PIECE",
+    "DIAMOND NUMBERS",
+    "COURT KINGS",
+    "PAID VS PLAYED",
+    "AMERICA LOOKED UP",
+    "FAME CURVE",
+    "SHOW NUMBERS",
+    "GONE TOO SOON",
+    "ONE HIT",
+    "STEAM TRUTH"
+  ],
+  "video": [
+    "v3_missingpiece.mp4",
+    "v3_diamondnumbers.mp4",
+    "v3_courtkings.mp4",
+    "v3_paidvsplayed.mp4",
+    "v3_americalookedup.mp4",
+    "v3_famecurve.mp4",
+    "v3_shownumbers.mp4",
+    "v3_gonetoosoon.mp4",
+    "v3_onehit.mp4",
+    "v3_steamtruth.mp4"
+  ],
+  "bo_luot": [
+    "⚠️ MISSING PIECE: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)",
+    "⚠️ GONE TOO SOON: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)",
+    "⚠️ GONE TOO SOON: nguồn không trả đủ dữ liệu — BỎ LƯỢT (không bịa)"
+  ],
+  "khung": {
+    "v3_missingpiece.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_missingpiece-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_missingpiece-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_missingpiece-3.png"
+    ],
+    "v3_diamondnumbers.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_diamondnumbers-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_diamondnumbers-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_diamondnumbers-3.png"
+    ],
+    "v3_courtkings.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_courtkings-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_courtkings-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_courtkings-3.png"
+    ],
+    "v3_paidvsplayed.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_paidvsplayed-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_paidvsplayed-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_paidvsplayed-3.png"
+    ],
+    "v3_americalookedup.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_americalookedup-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_americalookedup-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_americalookedup-3.png"
+    ],
+    "v3_famecurve.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_famecurve-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_famecurve-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_famecurve-3.png"
+    ],
+    "v3_shownumbers.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_shownumbers-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_shownumbers-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_shownumbers-3.png"
+    ],
+    "v3_gonetoosoon.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_gonetoosoon-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_gonetoosoon-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_gonetoosoon-3.png"
+    ],
+    "v3_onehit.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_onehit-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_onehit-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_onehit-3.png"
+    ],
+    "v3_steamtruth.mp4": [
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_steamtruth-1.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_steamtruth-2.png",
+      "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline/out/_khung/v3_steamtruth-3.png"
+    ]
+  },
+  "diem": [
+    "  ❌ v3_americalookedup         53",
+    "  ✅ v3_bankrun                100",
+    "  ✅ v3_calorieshock           100",
+    "  ✅ v3_coldfile               100",
+    "  ✅ v3_courtkings              95",
+    "  ✅ v3_courtrecord            100",
+    "  ✅ v3_deepfield              100",
+    "  ✅ v3_diamondnumbers          95",
+    "  ❌ v3_famecurve               68",
+    "  ✅ v3_fineprint              100",
+    "  ✅ v3_gonetoosoon             94",
+    "  ✅ v3_knowyourright          100",
+    "  ❌ v3_missingpiece            86",
+    "  ✅ v3_oneexperiment          100",
+    "  ✅ v3_onehit                 100",
+    "  ❌ v3_paidvsplayed            89",
+    "  ✅ v3_paycheckgap             94",
+    "  ✅ v3_pillfacts              100",
+    "  ❌ v3_priceofcare             65",
+    "  ❌ v3_priceofnow              82",
+    "  ✅ v3_recallplate            100",
+    "  ✅ v3_rentreality            100",
+    "  ❌ v3_shownumbers             85",
+    "  ✅ v3_skyrightnow            100",
+    "  ❌ v3_skytonight              86",
+    "  ✅ v3_steamtruth             100",
+    "  ❌ v3_suedforthis             88",
+    "  ❌ v3_suedinamerica           75",
+    "  ✅ v3_whatisinit              95",
+    "  ✅ v3_whatthechartsays       100",
+    "  ✅ v3_whoownsit              100",
+    "  ✅ v4_airporthell            100",
+    "  ❌ v4_carguy                  80",
+    "  ✅ v4_datingapp              100",
+    "  ✅ v4_dietwars               100",
+    "  ✅ v4_gymlies                100",
+    "  ✅ v4_neighborwatch           90",
+    "  ✅ v4_officesmalltalk         90",
+    "  ❌ v4_parentmode              80",
+    "  ✅ v4_rentpanic              100",
+    "  ✅ v4_techsupport            100",
+    "  ✅ đạt 29  ·  ❌ dưới ngưỡng 12   (ngưỡng 90/100)"
+  ],
+  "bo_cuc": [
+    "  ✅ lành 10  ·  ❌ tràn khung 0"
+  ]
+}

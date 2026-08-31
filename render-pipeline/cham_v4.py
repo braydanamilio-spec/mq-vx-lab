@@ -129,13 +129,61 @@ def _sang_nen(luot):
     return (ss / n, tt / n) if n else (None, None)
 
 
+
+def _bo_cuc_khac_nhau(pv: str, luot: list) -> int:
+    """Đếm số BỐ CỤC THỊ GIÁC khác nhau, đo từ chính video.
+
+    31/8 — Hai phép đo cũ hỏi props: `l["co"]` (cỡ máy) và `l["nen"]` (nền của lượt). Engine
+    comic không ghi hai trường ấy — nó tự quyết cỡ cảnh bằng `coCanh(ix, n, hạt)` và dùng một
+    ảnh nền cho cả tập, đổi góc bằng cách dựng. Nên trên Actions bảng chấm báo "chỉ 1 cỡ máy
+    (None)" cho cả mười kênh, mãi mãi: một cổng chất lượng luôn đỏ vì lý do sai thì tệ hơn
+    không có cổng — nó dạy người ta bỏ qua nó.
+
+    Cách chữa không phải chép lại logic `coCanh` sang Python (hai bản của một luật rồi sẽ lệch
+    nhau — đúng cái bẫy đã dính nhiều lần). Mà là ĐO ĐẦU RA: lấy một khung giữa mỗi lượt, thu
+    nhỏ còn 32×32 xám, rồi gom những khung giống nhau thành một nhóm. Cỡ máy đổi hay nền đổi
+    thì khung khác đi — đo thẳng thứ mắt người thật sự nhận, không phụ thuộc engine nào.
+    """
+    import subprocess
+    import tempfile
+    try:
+        from PIL import Image
+    except Exception:
+        return -1
+    anh = []
+    for l in luot:
+        giua = (float(l.get("s", 0)) + float(l.get("e", 0))) / 2
+        t = tempfile.mktemp(suffix=".png")
+        r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{giua:.2f}", "-i", pv,
+                            "-frames:v", "1", "-vf", "scale=32:32", t], capture_output=True)
+        if r.returncode == 0 and os.path.exists(t):
+            anh.append(list(Image.open(t).convert("L").getdata()))
+            os.remove(t)
+    if not anh:
+        return -1
+    nhom = []
+    for a in anh:
+        if not any(sum(abs(x - y) for x, y in zip(a, b)) / len(a) < 9 for b in nhom):
+            nhom.append(a)
+    return len(nhom)
+
+
 def cham_mot(k: dict) -> dict:
     import kich_hai as H
 
     ten_tep = H._ten_tep(k)
-    pj = os.path.join(GOC, "out", f"v4_{ten_tep}.json")
-    pv = os.path.join(GOC, "out", f"v4_{ten_tep}.mp4")
-    if not os.path.exists(pj) or not os.path.exists(pv):
+    # 31/8 — CHẤM ĐÚNG THỨ VỪA DỰNG. Bảng chấm này viết cho engine `v4_` (bản hài cũ), nhưng
+    # pipeline comic xuất ra `v5_`. Trên Actions nó lặng lẽ trả "chưa dựng" cho cả mười kênh và
+    # cổng chất lượng thành vô hiệu — không lỗi nào được ném ra. Ưu tiên `v5_`, còn `v4_` giữ
+    # lại để chấm được bản cũ khi cần đối chiếu.
+    pj = pv = None
+    for tien_to in ("v5_", "v4_"):
+        _j = os.path.join(GOC, "out", f"{tien_to}{ten_tep}.json")
+        _v = os.path.join(GOC, "out", f"{tien_to}{ten_tep}.mp4")
+        if os.path.exists(_j) and os.path.exists(_v):
+            pj, pv = _j, _v
+            break
+    if not pj:
         return {"diem": 0, "bo_qua": True, "loi": ["chưa dựng — render rồi chấm lại"]}
 
     d = json.load(io.open(pj, encoding="utf-8"))
@@ -274,11 +322,18 @@ def cham_mot(k: dict) -> dict:
 
     # Nhịp thị giác vì thế phải do CỠ MÁY gánh: một tập phải có đủ ba cỡ, không thì khung nào
     # cũng như khung nào.
-    _co = {l.get("co") for l in luot}
-    if len(_co) < 3:
-        diem -= 5
-        loi.append(f"chỉ {len(_co)} cỡ máy ({', '.join(sorted(str(x) for x in _co))}) — "
-                   f"một bối cảnh mà máy không đổi cỡ thì mọi khung như nhau")
+    _co = {l.get("co") for l in luot if l.get("co")}
+    if _co:
+        if len(_co) < 3:
+            diem -= 5
+            loi.append(f"chỉ {len(_co)} cỡ máy ({', '.join(sorted(str(x) for x in _co))}) — "
+                       f"một bối cảnh mà máy không đổi cỡ thì mọi khung như nhau")
+    else:
+        # Engine comic không ghi cỡ máy vào props — đo bố cục từ chính video.
+        _bc = _bo_cuc_khac_nhau(pv, luot)
+        if 0 <= _bc < max(3, len(luot) - 2):
+            diem -= 5
+            loi.append(f"chỉ {_bc} bố cục khác nhau cho {len(luot)} lượt — khung gần như đứng yên")
 
     # ── phần của trục KHÔNG TRÙNG: hai nhân vật trong CÙNG một kênh ────────────────────
     _ao = hai_ao_co_khac_nhau(k)
@@ -317,8 +372,11 @@ def cham_mot(k: dict) -> dict:
     # ── 10đ NỀN PHẢI ĐỔI THEO LƯỢT ────────────────────────────────────────────────────
     # Ngược hẳn luật cũ (một tập một nền): nay mỗi lượt một GÓC của cùng địa điểm, nên số
     # nền phân biệt phải xấp xỉ số lượt. Một nền cho sáu lượt là khung đứng yên hai mươi giây.
+    # Chỉ áp cho engine cũ (một nền mỗi lượt). Bản comic dùng MỘT ảnh nền cho cả tập và đổi
+    # góc bằng dựng — sự đa dạng của nó đã được đo ở phép đo bố cục phía trên, đo lại ở đây là
+    # phạt hai lần cùng một thứ.
     _nen = {l.get("nen") for l in luot if l.get("nen")}
-    if len(_nen) < max(3, len(luot) - 2):
+    if _nen and len(_nen) < max(3, len(luot) - 2):
         diem -= 10
         loi.append(f"chỉ {len(_nen)} nền cho {len(luot)} lượt — khung gần như đứng yên")
 

@@ -2,88 +2,98 @@
  "nguong": 90,
  "kenh": {
   "RENT PANIC": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 17.0,
-   "luot": 6,
-   "sang": 160
-  },
-  "GYM LIES": {
    "diem": 95,
    "bo_qua": false,
    "loi": [
-    "câu mở không có hook (không số, không mâu thuẫn): 'I have paid this gym nine hundred dollars to'"
+    "câu mở không có hook (không số, không mâu thuẫn): 'Six packages vanished from a lobby with a ca'"
    ],
-   "giay": 17.7,
+   "giay": 14.2,
    "luot": 6,
-   "sang": 165
+   "sang": 171
+  },
+  "GYM LIES": {
+   "diem": 90,
+   "bo_qua": false,
+   "loi": [
+    "chỉ 3 bố cục khác nhau cho 6 lượt — khung gần như đứng yên",
+    "câu mở không có hook (không số, không mâu thuẫn): 'This smoothie costs fourteen dollars because'"
+   ],
+   "giay": 16.4,
+   "luot": 6,
+   "sang": 171
   },
   "AIRPORT HELL": {
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 17.1,
+   "giay": 19.6,
    "luot": 6,
-   "sang": 162
+   "sang": 182
   },
   "CAR GUY": {
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 16.0,
+   "giay": 18.7,
    "luot": 6,
-   "sang": 152
+   "sang": 176
   },
   "OFFICE SMALL TALK": {
+   "diem": 100,
+   "bo_qua": false,
+   "loi": [],
+   "giay": 13.7,
+   "luot": 6,
+   "sang": 173
+  },
+  "DIET WARS": {
    "diem": 95,
    "bo_qua": false,
    "loi": [
-    "câu mở không có hook (không số, không mâu thuẫn): 'We are fifty minutes into a meeting about th'"
+    "chỉ 3 bố cục khác nhau cho 6 lượt — khung gần như đứng yên"
    ],
-   "giay": 15.5,
+   "giay": 16.1,
    "luot": 6,
-   "sang": 171
-  },
-  "DIET WARS": {
-   "diem": 100,
-   "bo_qua": false,
-   "loi": [],
-   "giay": 15.2,
-   "luot": 6,
-   "sang": 167
+   "sang": 202
   },
   "TECH SUPPORT": {
-   "diem": 100,
+   "diem": 90,
    "bo_qua": false,
-   "loi": [],
-   "giay": 20.5,
+   "loi": [
+    "chỉ 3 bố cục khác nhau cho 6 lượt — khung gần như đứng yên",
+    "câu mở không có hook (không số, không mâu thuẫn): 'Forty minutes on hold to be told my call is '"
+   ],
+   "giay": 14.6,
    "luot": 6,
-   "sang": 161
+   "sang": 171
   },
   "PARENT MODE": {
    "diem": 100,
    "bo_qua": false,
    "loi": [],
-   "giay": 14.5,
+   "giay": 17.3,
    "luot": 6,
-   "sang": 154
+   "sang": 192
   },
   "NEIGHBOR WATCH": {
-   "diem": 100,
+   "diem": 95,
    "bo_qua": false,
-   "loi": [],
-   "giay": 15.9,
+   "loi": [
+    "chỉ 3 bố cục khác nhau cho 6 lượt — khung gần như đứng yên"
+   ],
+   "giay": 18.9,
    "luot": 6,
-   "sang": 157
+   "sang": 186
   },
   "DATING APP": {
-   "diem": 100,
+   "diem": 95,
    "bo_qua": false,
-   "loi": [],
-   "giay": 19.8,
+   "loi": [
+    "chỉ 3 bố cục khác nhau cho 6 lượt — khung gần như đứng yên"
+   ],
+   "giay": 11.7,
    "luot": 6,
-   "sang": 164
+   "sang": 161
   }
  }
 }

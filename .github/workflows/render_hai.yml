@@ -1,4 +1,4 @@
-name: MM0 Comic (10 kênh hài, chạy tay)
+name: MM0 Comic (10 kênh hài)
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
 # XƯỞNG RIÊNG CHO BỘ HÀI THẾ HỆ 4 — CỐ Ý KHÔNG CÓ CRON
@@ -12,10 +12,14 @@ name: MM0 Comic (10 kênh hài, chạy tay)
 #      edge-tts + Remotion. Nhồi nó vào workflow chung là bắt nó chờ những bước nó không dùng.
 #   3. **CHƯA ĐƯỢC ANH DUYỆT HÌNH ẢNH.** Bật cron trước khi anh xem là tự ý cho phát hàng loạt.
 #
-# Nên tệp này CHỈ có `workflow_dispatch`. Khi anh duyệt, thêm khối `schedule` là chạy được ngay.
+# 31/8 — ANH ĐÃ DUYỆT HÌNH, BẬT SẢN XUẤT. Thêm `schedule`. Số tập lấy theo NGÀY trong năm nên
+# mỗi ngày một mẩu khác nhau, và kho 28–39 mẩu/kênh đủ cho một tháng không lặp.
 # ══════════════════════════════════════════════════════════════════════════════════════════
 
 on:
+  schedule:
+    # 03:10 UTC = 10:10 giờ VN. Lệch khỏi đầu giờ tròn: hàng đợi Actions đông nhất ở phút 00.
+    - cron: "10 3 * * *"
   workflow_dispatch:
     inputs:
       vong:
@@ -94,6 +98,22 @@ jobs:
           python kiem_xoay_key.py
           python kiem_nen.py
           python kiem_am.py
+          python kiem_workflow.py
+
+      # BƯỚC CHUẨN BỊ TÁCH KHỎI BƯỚC DỰNG — đây là chỗ được phép gọi API và được phép hỏng.
+      # Bước dựng phía dưới chỉ đọc đĩa, không gọi khoá nào, nên một sự cố mạng không thể làm
+      # mất cả lượt render. `|| true`: thiếu nền thì engine còn ba tầng đỡ phía sau (mượn nền
+      # cùng kênh, rồi nền vector vẽ bằng code) — không tầng nào cần API.
+      - name: Chuẩn bị nền (tầng 2 — được phép gọi API, được phép hỏng)
+        env:
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+        run: |
+          cd render-pipeline
+          python chuan_bi_nen.py || true
+          # Đo lại hướng sáng: nếu bước trên vừa sinh nền mới thì chúng chưa có số đo, mà thiếu
+          # số đo là nhân vật ở nền ấy mất luôn phần khớp màu — lặng lẽ, không lỗi nào báo.
+          python huong_sang.py || true
 
       # Nền 3D đã cache trong repo (`engine-remotion/public/comic_nen`) nên bước dựng gần như
       # không gọi khoá vẽ ảnh nào; chỉ những nơi chốn chưa có nền mới cần sinh.
@@ -103,22 +123,50 @@ jobs:
           GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
         run: |
           cd render-pipeline
+          # Cron không truyền `inputs`, nên số tập lấy theo ngày trong năm — mỗi ngày một mẩu.
+          VONG="${{ inputs.vong }}"
+          [ -z "$VONG" ] && VONG=$(date -u +%j)
+          echo "  vòng = $VONG"
           if [ -n "${{ inputs.kenh }}" ]; then
-            python kich_comic.py --kenh "${{ inputs.kenh }}" --vong "${{ inputs.vong }}"
-            python sieu_du_lieu.py --kenh "${{ inputs.kenh }}" --vong "${{ inputs.vong }}"
+            python kich_comic.py --kenh "${{ inputs.kenh }}" --vong "$VONG"
+            python sieu_du_lieu.py --kenh "${{ inputs.kenh }}" --vong "$VONG"
           else
-            python kich_comic.py --vong "${{ inputs.vong }}"
-            python sieu_du_lieu.py --vong "${{ inputs.vong }}"
+            python kich_comic.py --vong "$VONG"
+            python sieu_du_lieu.py --vong "$VONG"
           fi
+
+      # BẢN DÀI 16:9 — chỗ bật quảng cáo giữa video, tức nguồn tiền chính. Trước 31/8 nó hoàn
+      # toàn không có trong workflow nào: có tệp `kich_comic_long.py` trong repo mà không lượt
+      # chạy nào gọi tới. `|| true` vì bản dài cần ≥25 mẩu trong kho — kênh nào chưa đủ thì bỏ
+      # lượt dài, KHÔNG được kéo theo bản ngắn đã dựng xong.
+      - name: Dựng bản dài 16:9
+        env:
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+        run: |
+          cd render-pipeline
+          VONG="${{ inputs.vong }}"
+          [ -z "$VONG" ] && VONG=$(date -u +%j)
+          python kich_comic_long.py --vong "$VONG" || true
+          python sieu_du_lieu.py --vong "$VONG" --long || true
 
       - name: Chấm chất lượng (ngưỡng 90)
         run: cd render-pipeline && python cham_v4.py || true
 
+      # 31/8 — GÓI ĐÚNG THỨ VỪA DỰNG. Đường dẫn cũ là `v4_*`, mà pipeline comic xuất ra `v5_*`:
+      # một lượt chạy sẽ dựng đủ 10 video rồi gói về TAY KHÔNG, và không lỗi nào được ném ra.
+      # Cùng họ lỗi với `cham_v4.py` chấm nhầm tiền tố — cả hai đều là mảnh sót lại của engine
+      # cũ, sống sót vì "không có tệp khớp" không phải là lỗi trong YAML.
+      # Kèm `.tai.json`: thiếu nó thì có video mà không có tiêu đề/mô tả/thẻ để đăng.
       - name: Gói kết quả
         uses: actions/upload-artifact@v4
         with:
-          name: kich-hai-vong-${{ inputs.vong }}
+          name: comic-vong-${{ inputs.vong || github.run_number }}
           path: |
-            render-pipeline/out/v4_*.mp4
-            render-pipeline/out/v4_*.jpg
+            render-pipeline/out/v5_*.mp4
+            render-pipeline/out/v5_*.jpg
+            render-pipeline/out/v5_*.tai.json
+            render-pipeline/out/v5L_*.mp4
+            render-pipeline/out/v5L_*.jpg
+            render-pipeline/out/v5L_*.tai.json
           retention-days: 14
