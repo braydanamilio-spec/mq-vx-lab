@@ -125,6 +125,18 @@ def _lay_so_lieu_tho(nguon: str, D):
         ds = sorted(gom.items(), key=lambda z: -z[1])[:6]
         if len(ds) < 3:
             return None
+        # 31/8 — GIỮ LẠI LÝ DO, vì lý do MỚI LÀ CHUYỆN.
+        # Anh chỉ vào hai clip kể một nghịch lý rồi giải thích, và hỏi bên mình có làm không.
+        # Chưa — vì hệ chỉ giữ tên và con số, còn phần "vì sao" thì vứt đi ngay tại đây.
+        # openFDA ghi rõ lý do mỗi vụ thu hồi, và có những lý do tự nó đã là một câu chuyện:
+        # "nhãn ghi kem và phô mai, nhưng KHÔNG khai báo sữa". Đó là thứ giữ người xem lại,
+        # và quan trọng hơn — nó CÓ THẬT, do FDA ghi, không phải AI suy ra.
+        _vi = {}
+        for x in r:
+            t = str(x.get("cong_ty") or "").strip()
+            if t and t not in _vi and x.get("ly_do"):
+                _vi[t] = " ".join(str(x["ly_do"]).split())[:120]
+        globals()["_LY_DO_HIEN"] = _vi
         return ("Recalls filed this month", [(k, v, _so(v)) for k, v in ds],
                 "openFDA, U.S. Food and Drug Administration")
     if nguon == "sec":
@@ -786,10 +798,19 @@ CAU_CHOT = [
 ]
 
 KIEU_KE = ("dinh", "nguoc", "do", "khoang", "nguoi", "nguon")
+# 31/8 — Kiểu thứ bảy, CHỈ dùng khi nguồn có ghi lý do. Anh chỉ vào hai clip kể một nghịch lý
+# rồi giải thích cơ chế, và hỏi bên mình có làm không — chưa, vì hệ chỉ đọc bảng xếp hạng.
+# Khác biệt cốt lõi: bảng xếp hạng hết câu đầu là hết chuyện, còn một nghịch lý thì đặt câu hỏi
+# trong đầu người xem và giữ họ tới lúc có đáp án.
+# Ràng buộc bắt buộc: phần "vì sao" phải LẤY TỪ NGUỒN, không để AI suy. Một lời giải thích bịa
+# mà nghe hợp lý còn tệ hơn một video nhạt — người xem tin nó, và sai về y tế hay tài chính là
+# loại sai không sửa lại được.
+KIEU_NGHICH_LY = "nghich_ly"
 
 
 def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai_hien: str,
-            cuoi_ten: str, cuoi_hien: str, tieu_de: str, nguon: str, hoi: str) -> list:
+            cuoi_ten: str, cuoi_hien: str, tieu_de: str, nguon: str, hoi: str,
+            vi_do: dict | None = None) -> list:
     """Sáu câu cho một tập, theo kiểu kể đã chọn. Trả [(lời, cảm xúc, cử chỉ)]."""
     ng = str(nguon).split(",")[0].strip()
     b = lambda ds: ds[bien % len(ds)]
@@ -883,6 +904,28 @@ def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai
             (b([f"Down at the end, {cuoi_ten} with {cuoi_hien}.",
                 f"The file closes with {cuoi_ten}, {cuoi_hien}.",
                 f"Last line, {cuoi_ten}: {cuoi_hien}."]), "trung_tinh", "chi"),
+            (_chotC, "vui", "nghi"),
+        ]
+
+    if kieu == "nghich_ly" and vi_do:
+        _a = vi_do.get(top_ten, "")
+        _b = vi_do.get(hai_ten, "")
+        # Lý do do nguồn ghi, viết thường giữa câu cho liền mạch; không sửa nội dung.
+        _la = _a[:1].lower() + _a[1:] if _a else ""
+        _lb = _b[:1].lower() + _b[1:] if _b else ""
+        return [
+            (b([f"{top_hien} pulled off shelves, and the reason is on the record.",
+                f"{top_hien} recalled. Somebody wrote down why.",
+                f"{top_hien}. The paperwork says exactly what went wrong."]), "bat_ngo", "mo_tay"),
+            (hoi, "nghi_ngo", "chi"),
+            (b([f"It was {top_ten}.", f"{top_ten} filed it.", f"The name on it: {top_ten}."]),
+             "trung_tinh", "dem"),
+            # Câu này là lý do THẬT từ nguồn — phần duy nhất người xem mang về được.
+            (f"The reason: {_la or 'not stated in the filing'}.", "nghi_ngo", "suy_nghi"),
+            (b([f"{hai_ten} came next, {hai_hien}" + (f", {_lb}." if _lb else "."),
+                f"Then {hai_ten} at {hai_hien}" + (f" — {_lb}." if _lb else "."),
+                f"{hai_ten} follows with {hai_hien}" + (f", {_lb}." if _lb else ".")]),
+             "trung_tinh", "khoanh_tay"),
             (_chotC, "vui", "nghi"),
         ]
 
@@ -1112,13 +1155,18 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4, so_tap: int = 0) -> t
     # Bài học: một biến đọc được mà không khai trong hàm thì phải nghi ngay — Python im lặng ở
     # đúng chỗ cần nói.
     _kieu = _perm[(so_tap + _hs) % len(_perm)]
+    # Có lý do từ nguồn thì XEN KẼ kiểu nghịch lý — anh dặn "kênh nào áp dụng được thì áp dụng
+    # xen kẽ". Cứ hai tập một lần: đủ để kênh có chiều sâu mà không thành công thức mới.
+    _vido = globals().get("_LY_DO_HIEN") or {}
+    if _vido and so_tap % 2 == 0:
+        _kieu = "nghich_ly"
     _bien = ((so_tap // len(_perm)) + _hs) % 3
     _cuoi = dan[-1] if len(dan) > 2 else dan[1]
     _loi = _loi_ke(_kieu, _bien,
                    top_ten, top_hien,
                    dan[1][0], dan[1][2],
                    _cuoi[0], _cuoi[2],
-                   tieu_de, nguon, k["hoi"])
+                   tieu_de, nguon, k["hoi"], _vido)
     # Cỡ máy và hướng nhìn giữ nguyên theo VỊ TRÍ trong bài, không theo kiểu kể: cảnh mở luôn
     # cần khung rộng để người xem thấy mình đang ở đâu, cảnh chốt luôn cần nét mặt. Đó là ngữ
     # pháp hình, không phải phần cần đa dạng.
