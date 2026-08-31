@@ -229,7 +229,12 @@ def mot_tap(idx: int) -> str:
         "kieuA": "hang_xom", "kieuB": "bank", "kieuTuyA": A, "kieuTuyB": B,
         "tieuDe": KENH_KLING["ten"], "handle": KENH_KLING["handle"], "kenh": _ten_tep(k),
         "mau": MAU_CHINH, "mauPhu": MAU_PHU,
-        "netMuc": 7, "cham": 9, "boGoc": 22, "tiLe": 0.62, "hookGiay": 1.15,
+        # NÉT RIÊNG CỦA KÊNH — anh dặn "tránh họ nhìn vào biết cùng 1 người làm". Tổ hợp dưới
+        # đây chưa kênh nào trong mười kênh comic dùng: halftone MỊN NHẤT (6 — mười kênh kia từ
+        # 7 đến 14), bo bong bóng 24, khung bo 14, và người CHIẾM KHUNG LỚN NHẤT (0.62 so với
+        # 0.44–0.51). Cỡ người lớn là quyết định của định dạng: 6 giây thì mắt không kịp tìm
+        # nhân vật nhỏ, phải thấy mặt ngay từ khung đầu.
+        "netMuc": 8, "cham": 6, "boGoc": 24, "tiLe": 0.62, "hookGiay": 1.15,
         # HOOK LÀ CÂU CHO NGƯỜI XEM, KHÔNG PHẢI CHỈ DẪN ĐẠO DIỄN. Bản đầu in thẳng dòng HOOK
         # của gói — "MIKE FRANTICALLY SEARCHES WHILE HIS KEYS ARE VISIBLY IN HIS" — vừa là văn
         # phòng dựng vừa bị cắt giữa chữ. Đúng cái lỗi đã ghi ngay trong bảng `VAI`: chú thích
@@ -238,7 +243,7 @@ def mot_tap(idx: int) -> str:
         # video, và người xem nghe lại đúng câu ấy sau một giây.
         "soTap": idx, "hook": loi[0][0].rstrip("?.!").upper()[:38],
         "anhNen": anh, "sang": _sang_cua(anh), "nhacVol": _am_nhac(NHAC),
-        "bongDuoi": False, "boKhung": 0, "chuNo": ld["no"] or "…",
+        "bongDuoi": False, "boKhung": 14, "chuNo": ld["no"] or "…",
         "noiIdx": idx_noi,
     }
     pj = os.path.join(GOC, "out", f"v6_{slug}.json")
@@ -255,6 +260,19 @@ def mot_tap(idx: int) -> str:
 
     th = os.path.join(GOC, "out", f"v6_{slug}.jpg")
     lam_thumb(out, t["hook"] or t["ten"], KENH_KLING["ten"], MAU_CHINH, th)
+    # Chữ đăng cho YouTube / Facebook / Instagram — dùng CHÍNH bộ của mười kênh comic, chỉ
+    # truyền tiền tố và slug khác. Không có tệp này thì có video mà không đăng được.
+    try:
+        import sieu_du_lieu as SD
+        # Cặp vai của CHÍNH tập này (bốn nhân vật, mỗi tập hai người) — khuôn tiêu đề cần tên
+        # tiếng Anh hiện ra: "When The Dad Meets The Mom", "…The Kid Meets Grandpa".
+        _en = {"mike": "the dad", "lisa": "the mom", "tommy": "the kid", "joe": "grandpa"}
+        _v = ((None,) * 5 + (_en[vaiA],), (None,) * 5 + (_en[vaiB],))
+        _chot = (loi[1][0] if len(loi) > 1 else loi[0][0]).strip().rstrip(".")
+        SD.mot_video(KENH_KLING, idx, False, lam_anh=False, tien="v6_", slug=slug, vai=_v,
+                     tieu_de=f"{_chot} #shorts"[:98])
+    except Exception as e:
+        print(f"   ⚠️ chữ đăng lỗi: {str(e)[:90]}")
     am = chuan(out)
     print(f"   ✅ {os.path.basename(out)} ({os.path.getsize(out)/1e6:.1f} MB · {dur:.1f}s"
           f"{' · ' + am if am else ''})")

@@ -49,6 +49,8 @@ THE_KENH = {
     "parent":   ["parenting", "kids", "family", "screen time", "mom life"],
     "neighbor": ["neighbors", "hoa", "suburbs", "neighborhood", "yard"],
     "dating":   ["dating", "dating app", "relationships", "couples", "first date"],
+    # HOUSE RULES: hài gia đình trong nhà, không phải nơi công cộng như mười kênh kia.
+    "houserules": ["family", "dad jokes", "husband and wife", "funny family", "home life"]
 }
 
 # Khuôn tiêu đề. Nhiều khuôn để một kênh chạy hàng trăm tập mà tiêu đề không thành một dãy
@@ -71,8 +73,11 @@ def _sach(t: str) -> str:
     return " ".join(str(t).replace("’", "'").split()).strip()
 
 
-def _tieu_de(k: dict, cau: list, so_tap: int, dai: bool) -> str:
-    va, vb = VAI[k["de"]]
+def _tieu_de(k: dict, cau: list, so_tap: int, dai: bool, vai=None) -> str:
+    # `vai` truyền vào được vì có kênh mà CẶP VAI đổi theo từng tập: HOUSE RULES có bốn nhân
+    # vật, mỗi tập hai người khác nhau. Khoá cứng `VAI[de]` thì tiêu đề luôn ghi "bố và mẹ" kể
+    # cả tập chỉ có thằng bé với ông nội.
+    va, vb = vai or VAI[k["de"]]
     # Chủ đề lấy từ thẻ đầu tiên, KHÔNG lấy tên kênh. Tên kênh là một cái nhãn ("GYM LIES",
     # "NEIGHBOR WATCH"), nhét vào giữa câu thì ra "This Is Why Gym Lies Never Works" — đọc lủng
     # củng và không ai gõ cụm ấy khi đi tìm. Thẻ đầu tiên là từ người Mỹ thật sự dùng.
@@ -84,9 +89,9 @@ def _tieu_de(k: dict, cau: list, so_tap: int, dai: bool) -> str:
     return t[:98]
 
 
-def _mo_ta(k: dict, cau: list, so_tap: int, dai: bool, chuong=None) -> str:
+def _mo_ta(k: dict, cau: list, so_tap: int, dai: bool, chuong=None, vai=None) -> str:
     # (không dùng `list | None`: Python 3.9 trên máy anh chưa nhận cú pháp ấy ở annotation runtime)
-    va, vb = VAI[k["de"]]
+    va, vb = vai or VAI[k["de"]]
     mo = _sach(cau[0][0]) if cau else ""
     d = [
         f"{mo}",
@@ -202,9 +207,17 @@ def lam_bia(k: dict, hook: str, so_tap: int, dai: bool, dest: str) -> bool:
     return True
 
 
-def mot_video(k: dict, so_tap: int, dai: bool, lam_anh: bool = True) -> str:
-    slug = _ten_tep(k)
-    tien = "v5L_" if dai else "v5_"
+def mot_video(k: dict, so_tap: int, dai: bool, lam_anh: bool = True,
+              tien: str = "", slug: str = "", vai=None, tieu_de: str = "") -> str:
+    """1/9 — `tien`/`slug` cho phép dùng lại cho kênh ngoài bộ comic.
+
+    Bản trước khoá cứng tiền tố `v5_` và `_ten_tep(k)`, nên kênh HOUSE RULES (`v6_`, mỗi tập
+    một slug riêng vì một kênh có 1.500 tập) không dùng được — và hậu quả là có video mà không
+    có tiêu đề/mô tả/thẻ để đăng. Viết một bộ sinh chữ đăng THỨ HAI thì hai bộ sẽ lệch nhau,
+    nên mở tham số ở bộ đang có.
+    """
+    slug = slug or _ten_tep(k)
+    tien = tien or ("v5L_" if dai else "v5_")
     mp4 = os.path.join(GOC, "out", f"{tien}{slug}.mp4")
     if not os.path.exists(mp4):
         print(f"   ⏭ {k['ten']}: chưa có {os.path.basename(mp4)}")
@@ -216,7 +229,9 @@ def mot_video(k: dict, so_tap: int, dai: bool, lam_anh: bool = True) -> str:
         d = json.load(io.open(pj, encoding="utf-8"))
         cau = [(l["nar"], l["ai"], l.get("camXuc", "")) for l in d.get("luot", [])]
     if not cau:
-        cau = [(c[0], c[1], c[2]) for c in KHO[k["de"]][so_tap % len(KHO[k["de"]])]["loi"]]
+        _kho = KHO.get(k["de"]) or []
+        if _kho:
+            cau = [(c[0], c[1], c[2]) for c in _kho[so_tap % len(_kho)]["loi"]]
 
     # Chữ bìa lấy câu NGẮN NHẤT trong ba lượt đầu, không phải câu đầu tiên. Câu đầu thường là
     # câu dựng bối cảnh nên dài; câu ngắn trong nhóm ấy gần như luôn là câu đắt — và ngắn thì
@@ -234,7 +249,11 @@ def mot_video(k: dict, so_tap: int, dai: bool, lam_anh: bool = True) -> str:
     except Exception:
         giay = 0.0
 
-    td = _tieu_de(k, cau, so_tap, dai)
+    # `tieu_de` truyền vào được: khuôn mặc định viết cho các kênh THAN PHIỀN ("This Is Why X
+    # Never Works"), đặt vào một kênh hài gia đình thì ra câu vô nghĩa — "This Is Why Family
+    # Never Works". Khuôn tốt cho kênh này là chính CÂU CHỐT, vì nó vừa là câu buồn cười vừa
+    # tạo tò mò mà không lộ hết.
+    td = tieu_de or _tieu_de(k, cau, so_tap, dai, vai)
     # Nền tảng nào nhận được video này. Ghi rõ cả lý do KHÔNG nhận, để bộ đăng tự động không
     # phải đoán và cũng không im lặng bỏ sót.
     hop = {"youtube": True, "facebook": True,
@@ -254,7 +273,7 @@ def mot_video(k: dict, so_tap: int, dai: bool, lam_anh: bool = True) -> str:
 
         "youtube": {
             "title": td,
-            "description": _mo_ta(k, cau, so_tap, dai, chuong),
+            "description": _mo_ta(k, cau, so_tap, dai, chuong, vai),
             "tags": _the(k, dai),
             # Ba trường dưới đây bắt buộc khi đăng qua API và hay bị bỏ quên:
             "category_id": "23",       # Comedy
