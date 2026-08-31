@@ -302,7 +302,15 @@ const Panel: React.FC<{
             nhin={doiNguoi ? [noiA ? 0.45 : 0.5, 0] : [0, 0]}
             noi={noiA ? viseme : imLang}
             t={giay} dangNoi={noiA} kyHieu={false} ghimNguc nghieng={doiNguoi ? 0.09 : 0}
-            cuChiTruoc={"nghi" as TenCuChi} doiCuChi={kep((giay - L.s) / 0.5)}
+            // 31/8 — DIỄN LIÊN TỤC, KHÔNG PHẢI ĐỔI MỘT LẦN.
+            // Bản trước cho `doiCuChi` chạy 0→1 trong nửa giây rồi đứng yên tới hết cảnh: nhân
+            // vật đổi tư thế đúng một lần rồi bất động ba giây. Anh chấm dựng phim 84 và đây là
+            // phần lớn số điểm bị trừ. Nay nó dao động liên tục theo một nhịp lệch pha với nhịp
+            // thở của engine — hai chuyển động không bao giờ trùng nhau, nên không đọc ra là
+            // vòng lặp. `nhan` lấy từ độ mở miệng: nói to thì cả người nhấn theo.
+            cuChiTruoc={"nghi" as TenCuChi}
+            doiCuChi={0.5 + 0.5 * Math.sin((giay - L.s) * 2.3 - 1.2)}
+            nhan={noiA ? kep((viseme as any).h / 26) : 0}
             doVat={L.vatA || ""}
             x={cxA} y={yChan} scale={k}
           />
@@ -316,7 +324,9 @@ const Panel: React.FC<{
             nhin={doiNguoi ? [!noiA ? -0.45 : -0.5, 0] : [0, 0]}
             noi={!noiA ? viseme : imLang}
             t={giay + 0.7} dangNoi={!noiA} kyHieu={false} ghimNguc nghieng={doiNguoi ? -0.09 : 0}
-            cuChiTruoc={"nghi" as TenCuChi} doiCuChi={kep((giay - L.s - 0.2) / 0.5)}
+            cuChiTruoc={"nghi" as TenCuChi}
+            doiCuChi={0.5 + 0.5 * Math.sin((giay - L.s) * 1.9 + 0.7)}
+            nhan={!noiA ? kep((viseme as any).h / 26) : 0}
             doVat={L.vatB || ""}
             x={cxB} y={yChan} scale={k} lat
           />
@@ -333,6 +343,46 @@ const Panel: React.FC<{
       {L.chot && trong > 0.25 ? (
         <ChuNo chu={chuNo} w={w} h={h} p={kep((trong - 0.25) / 0.45)} mau={mau} tren={bongDuoi} />
       ) : null}
+    </div>
+  );
+};
+
+// ── THẺ HOOK ──────────────────────────────────────────────────────────────────────────────
+/**
+ * Hai giây đầu quyết định người xem ở lại hay lướt qua, và bản trước không có gì ở đó ngoài
+ * một câu thoại cỡ thường. Anh chấm hạng mục hook 55/100 — đúng, vì giây 0 không cho ai lý do
+ * nào để dừng lại.
+ *
+ * Thẻ này là một câu VIẾT RIÊNG, không phải lời thoại: nó nêu TÌNH HUỐNG và tạo đúng một câu
+ * hỏi trong đầu người xem ("HE WAITED FORTY MINUTES. FOR THIS." — "this" là cái gì?). Bộ sinh
+ * kịch bản có cổng chặn hook nào trùng câu chốt: hook lộ cú chốt là hook tự huỷ, vì biết kết
+ * quả rồi thì không còn lý do xem tiếp.
+ *
+ * Đặt ở NỬA DƯỚI khung, không phải giữa: giữa là chỗ khuôn mặt, mà mặt đang diễn ở giây đầu
+ * cũng là một phần của hook. Che mặt để nhường chỗ cho chữ là đổi chác lỗ.
+ */
+const TheHook: React.FC<{ chu: string; W: number; H: number; p: number; mau: string }> =
+({ chu, W, H, p, mau }) => {
+  if (!chu || p >= 1) return null;
+  const vao = kep(p / 0.09);                    // bật lên trong 0,2 giây đầu
+  const ra = kep((p - 0.86) / 0.14);            // rồi trượt lên và mờ đi
+  const sc = vao < 1 ? trn(0.82, 1.04, bat(vao)) : trn(1.04, 1, muot(kep((p - 0.09) / 0.08)));
+  const n = Math.max(6, chu.length);
+  const fs = Math.max(34, Math.min(96, Math.sqrt((W * 0.86 * H * 0.2) / 0.62 / n)));
+  return (
+    <div style={{
+      position: "absolute", left: 0, right: 0, top: H * 0.62,
+      display: "flex", justifyContent: "center", pointerEvents: "none", zIndex: 9,
+      transform: `translateY(${-ra * H * 0.14}px) scale(${sc})`, opacity: 1 - ra,
+    }}>
+      <div style={{
+        background: mau, border: "9px solid #14110F", borderRadius: 10,
+        padding: "18px 26px", maxWidth: W * 0.86, textAlign: "center",
+        boxShadow: "11px 12px 0 #14110F",
+        fontFamily: "Poppins, Arial Black, sans-serif", fontWeight: 900,
+        fontSize: fs, lineHeight: 1.04, color: "#FFFFFF", letterSpacing: 0.4,
+        WebkitTextStroke: `${Math.round(fs * 0.06)}px #14110F`, paintOrder: "stroke fill",
+      }}>{chu}</div>
     </div>
   );
 };
@@ -375,6 +425,7 @@ export type PropsComic = {
   // kịch bản chọn nơi TRONG danh sách engine vẽ được và trả về chỉ số ấy — khớp từ gốc.
   // Để -1 (hoặc bỏ trống) thì quay về cách cũ: chọn theo số tập.
   noiIdx?: number;
+  hook?: string;      // thẻ hook 2 giây đầu — xem `TheHook`
   netMuc?: number;    // độ dày viền mực: 5 (mảnh, sạch) .. 10 (thô, mạnh)
   cham?: number;      // cỡ ô halftone: 7 (mịn) .. 14 (thô như báo in)
   boGoc?: number;     // bo góc bong bóng: 6 (vuông, đanh) .. 34 (tròn, hiền)
@@ -397,7 +448,7 @@ export const calcComic = async ({ props }: { props: PropsComic }) => {
 export const KichComic: React.FC<PropsComic> = ({
   luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
   kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", handle = "", mau = "#F0483C",
-  mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
+  mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
 }) => {
   const f = useCurrentFrame();
@@ -485,6 +536,8 @@ export const KichComic: React.FC<PropsComic> = ({
         <div style={{ fontWeight: 900, fontSize: 27, letterSpacing: 1.4 }}>{tieuDe}</div>
         <div style={{ fontWeight: 700, fontSize: 21, color: mau }}>{handle}</div>
       </div>
+
+      <TheHook chu={hook} W={width} H={height} p={kep(giay / 2.2)} mau={mau} />
 
       {voMp3 ? <Audio src={staticFile(voMp3)} /> : null}
       {nhac ? <Audio src={staticFile(nhac)} volume={0.16} loop /> : null}

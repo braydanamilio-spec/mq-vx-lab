@@ -247,7 +247,7 @@ def dung_luot_comic(k: dict, vong: int) -> tuple:
             _k2 = json.load(io.open(_kt, encoding="utf-8"))
             for _m in _k2.get("mau", {}).get(k["de"], []):
                 kho.append({"boi": 0, "loi": [tuple(c) for c in _m["loi"]],
-                            "noi": _m.get("noi", "")})
+                            "noi": _m.get("noi", ""), "hook": _m.get("hook", "")})
     except Exception as e:
         # Không nuốt: kho hỏng mà lặng lẽ bỏ qua thì hệ âm thầm quay về vòng lặp bốn mẩu, và
         # triệu chứng duy nhất là "sao dạo này video giống nhau thế" — nhìn ra thì đã hàng trăm tập.
@@ -257,6 +257,23 @@ def dung_luot_comic(k: dict, vong: int) -> tuple:
     # Nhãn nơi chốn -> chỉ số trong danh sách engine vẽ được. Mẩu viết tay không có nhãn, nên
     # trả -1 và engine tự chọn theo số tập như trước — không mẩu nào bị bỏ lại.
     globals()["_NOI_IDX"] = -1
+    # Bốn mươi mẩu viết tay không có thẻ hook (chúng có trước khi hook tồn tại). Dựng một thẻ
+    # từ chính câu MỞ: rút gọn còn 6 từ, viết hoa. Không hay bằng hook viết riêng, nhưng vẫn
+    # hơn hẳn không có gì — và không mẩu nào bị bỏ lại phía sau.
+    _hk = (kb.get("hook") or "").strip()
+    # Mẩu viết tay lấy hook từ `hook_tay.json` (sinh một lần bằng AI). Chỉ số của chúng trùng
+    # với thứ tự trong `KHO`, vì kho viết tay luôn đứng TRƯỚC trong danh sách nguồn.
+    if not _hk:
+        _i = vong % len(kho)
+        if _i < len(KHO[k["de"]]):
+            try:
+                _ht = json.load(io.open(os.path.join(GOC, "hook_tay.json"), encoding="utf-8"))
+                _hk = _ht.get(f"{k['de']}|{_i}", "")
+            except Exception:
+                pass
+    if not _hk and cau:
+        _hk = " ".join(str(cau[0][0]).replace(".", "").split()[:6]).upper()
+    globals()["_HOOK"] = _hk
     _nhan = (kb.get("noi") or "").strip().lower()
     if _nhan:
         try:
@@ -318,7 +335,7 @@ def mot_kenh(k: dict, vong: int) -> str:
     _bc = BO_CUC_KENH.get(k["de"], dict(duoi=False, bo=0, no="BOOM!"))
     props.update(netMuc=_nk["net"], cham=_nk["cham"], boGoc=_nk["bo"], tiLe=_nk["tile"],
                  soTap=vong, bongDuoi=_bc["duoi"], boKhung=_bc["bo"], chuNo=_bc["no"],
-                 noiIdx=globals().get("_NOI_IDX", -1))
+                 noiIdx=globals().get("_NOI_IDX", -1), hook=globals().get("_HOOK", ""))
     pj = os.path.join(GOC, "out", f"v5_{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
     io.open(pj, "w", encoding="utf-8").write(json.dumps(props, ensure_ascii=False))

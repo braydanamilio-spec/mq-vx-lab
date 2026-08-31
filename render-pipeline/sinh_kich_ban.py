@@ -202,6 +202,13 @@ Craft rules — these are what separate a real sitcom beat from a joke listicle:
 
 Also give the scene a two-to-five word situation label, so it is never repeated later.
 
+Also write a HOOK CARD: 4 to 7 words, shouted in capitals, shown on screen for the first two
+seconds while the first line is spoken. Rules for it:
+- It states the SITUATION, never the punchline. If it gives away the joke, nobody watches on.
+- It must create one specific question in the viewer's head. "HE WAITED FORTY MINUTES. FOR THIS."
+  works because you want to know what "this" is. "A FUNNY PHONE CALL" works on nobody.
+- No question marks, no emoji, no channel name.
+
 Before the dialogue, state in one sentence what the final line reframes. If you cannot state
 it, the scene is not finished — rewrite it until you can.
 
@@ -210,6 +217,7 @@ Use only plain ASCII: straight quotes, normal hyphens, no typographic dashes.
 Return STRICT JSON, nothing else:
 {{"tinh_huong": "short label",
   "noi": "exact label of the chosen location, copied from the list",
+  "hook": "4-7 WORD HOOK CARD IN CAPITALS",
   "cu_lat": "one sentence: what the last line reframes",
   "loi": [["line text", 0, "emotion"], ["line text", 1, "emotion"], ...]}}
 where the second item is 0 for A and 1 for B, and emotion is exactly one of:
@@ -224,6 +232,40 @@ def _doc_json(t: str):
         return json.loads(m.group(0))
     except Exception:
         return None
+
+
+def cham_chot(loi: list, keys, nguong: int = 6) -> tuple:
+    """Chấm cú chốt bằng một lượt gọi RIÊNG, đóng vai người phản biện. Trả (đạt, điểm, lý do).
+
+    ── VÌ SAO PHẢI CÓ LƯỢT THỨ HAI ───────────────────────────────────────────────────────
+    Cổng hiện có chỉ bắt mô hình TỰ KHAI "cú chốt này lật cái gì" — và mô hình nào cũng khai
+    được, kể cả khi câu chốt chẳng lật gì. Nó đang chấm bài của chính nó, ngay sau khi viết,
+    trong cùng một mạch suy nghĩ đã sinh ra bài ấy.
+    
+    Lượt thứ hai KHÔNG thấy quá trình viết, chỉ thấy kết quả, và được giao đúng một việc: tìm
+    lý do để loại. Đây là chỗ khác biệt giữa "tự chấm" và "bị chấm" — cùng một mô hình, nhưng
+    một bên đang bảo vệ thứ vừa viết, một bên không có gì để bảo vệ.
+    """
+    ds = "\n".join(f"{'AB'[c[1]]}: {c[0]}" for c in loi)
+    hoi = (
+        "You are a tough comedy editor. Judge ONLY the last line of this scene.\n\n"
+        + ds + "\n\n"
+        "A good last line REFRAMES everything before it — after hearing it, the earlier lines "
+        "mean something different. A weak last line merely continues the conversation, or is "
+        "just one more complaint, or restates a joke already made.\n\n"
+        "Test: if you delete the last line, does the scene lose its point? If it survives fine "
+        "without it, the line is weak.\n\n"
+        "Be strict. Most lines are weak. Score 7+ only if you can name exactly what got "
+        "reframed.\n"
+        'Return STRICT JSON: {"diem": 1-10, "vi_sao": "one short sentence"}'
+    )
+    t = _hoi_ai(hoi, keys)
+    d = _doc_json(t) or {}
+    try:
+        diem = int(d.get("diem", 0))
+    except (TypeError, ValueError):
+        diem = 0
+    return diem >= nguong, diem, str(d.get("vi_sao", ""))[:80]
 
 
 def sinh_mot(k: dict, kho: dict, keys, khung: str, n_luot: int, nguong: float = 0.34):
@@ -265,6 +307,15 @@ def sinh_mot(k: dict, kho: dict, keys, khung: str, n_luot: int, nguong: float = 
         return None
     if len(str(d.get("cu_lat", "")).split()) < 5:
         return None
+    # Thẻ hook: 3–8 từ, và KHÔNG được trùng câu chốt. Hook lộ cú chốt là hook tự huỷ — người
+    # xem biết kết quả rồi thì không có lý do gì xem tiếp.
+    _hk = " ".join(str(d.get("hook", "")).split())
+    if not (3 <= len(_hk.split()) <= 8):
+        return None
+    _chot_tu = set(loi[-1][0].lower().replace(".", "").split())
+    _hook_tu = set(_hk.lower().replace(".", "").split())
+    if len(_chot_tu & _hook_tu) >= max(3, len(_hook_tu) // 2):
+        return None
     HOP_LE = {"trung_tinh", "vui", "buon", "so", "tuc", "bat_ngo", "nghi_ngo", "tu_tin"}
     for c in loi:
         if c[2] not in HOP_LE:
@@ -286,6 +337,7 @@ def sinh_mot(k: dict, kho: dict, keys, khung: str, n_luot: int, nguong: float = 
 
     return {
         "loi": loi, "khung": khung, "noi": str(d.get("noi", ""))[:70],
+        "hook": " ".join(str(d.get("hook", "")).split())[:60].upper(),
         "tinh_huong": str(d.get("tinh_huong", ""))[:70],
         "khuon": khuon_moi,
         "ma": hashlib.md5(("|".join(c[0] for c in loi)).encode()).hexdigest()[:12],
@@ -296,6 +348,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--kenh", default="", help="lọc kênh, cách nhau bằng dấu phẩy")
     ap.add_argument("--so", type=int, default=4, help="số mẩu MỚI cần sinh cho mỗi kênh")
+    ap.add_argument("--cham", action="store_true",
+                    help="bật cổng chấm cú chốt bằng một lượt gọi riêng (chậm hơn, chất hơn)")
     ap.add_argument("--thu", type=int, default=3, help="số lần thử lại khi bị cổng loại")
     a = ap.parse_args()
 
@@ -313,7 +367,7 @@ def main() -> int:
         chon = [x for x in KENH if x["ten"].replace(" ", "").upper() in vt]
 
     kho = _nap_kho()
-    tong_moi = tong_loai = 0
+    tong_moi = tong_loai = tong_yeu = 0
     for k in chon:
         de = k["de"]
         kho["mau"].setdefault(de, [])
@@ -329,6 +383,14 @@ def main() -> int:
             for _ in range(a.thu):
                 r = sinh_mot(k, kho, keys, khung, n_luot)
                 if r and not r.get("_loai"):
+                    if a.cham:
+                        dat, diem, vs = cham_chot(r["loi"], keys)
+                        if not dat:
+                            tong_yeu += 1
+                            print(f"   ↺ cú chốt yếu ({diem}/10): {vs}", flush=True)
+                            time.sleep(0.3)
+                            continue
+                        r["diem_chot"] = diem
                     got = r
                     break
                 if r and r.get("_loai"):
@@ -339,6 +401,7 @@ def main() -> int:
                 print("   ⚠️ bỏ qua một mẩu (mọi lần thử đều hỏng hoặc bị loại)")
                 continue
             kho["mau"][de].append({"loi": got["loi"], "khung": got["khung"], "noi": got["noi"],
+                                   "hook": got["hook"], "diem_chot": got.get("diem_chot", 0),
                                    "tinh_huong": got["tinh_huong"], "ma": got["ma"]})
             kho["tinh_huong"][de].append(got["tinh_huong"])
             for kh in got["khuon"]:
@@ -347,7 +410,7 @@ def main() -> int:
             print(f"   ✅ {got['khung']:9s} · {len(got['loi'])} lượt · {got['tinh_huong']}", flush=True)
             _luu_kho(kho)          # lưu sau MỖI mẩu: đứt giữa chừng vẫn giữ được phần đã sinh
 
-    print(f"\n✅ thêm {tong_moi} mẩu · loại {tong_loai} vì trùng khuôn · "
+    print(f"\n✅ thêm {tong_moi} mẩu · loại {tong_loai} trùng khuôn · {tong_yeu} chốt yếu · "
           f"kho tổng {sum(len(v) for v in kho['mau'].values())} mẩu")
     return 0 if tong_moi else 1
 

@@ -917,6 +917,74 @@
     "noi": "the IT help desk",
     "tinh_huong": "Coffee Machine Crash",
     "ma": "3dd36fc405ec"
+   },
+   {
+    "loi": [
+     [
+      "My mouse is shaking like a leaf.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We'll reinstall the mouse driver to stabilize it.",
+      1,
+      "vui"
+     ],
+     [
+      "Do I need to reboot my computer?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We'll wipe the OS, reinstall everything, now it's enterprise-ready.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "home office",
+    "hook": "JITTERY MOUSE TRIGGERED WHAT",
+    "tinh_huong": "Mouse Jitter Upgrade",
+    "ma": "cedfd0c1500e"
+   },
+   {
+    "loi": [
+     [
+      "My monitor just froze, I need help now.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You may only reset it during a prime-numbered minute.",
+      1,
+      "so"
+     ],
+     [
+      "It's 3:14 PM, minute 14, not prime. What now?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Wait until the next prime minute, then count each prime aloud.",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "Can I just unplug it? That seems faster.",
+      0,
+      "buon"
+     ],
+     [
+      "Unplugging counts as resetting, so you still must count primes.",
+      1,
+      "so"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the IT help desk",
+    "hook": "YOU CAN'T REBOOT ON MINUTE FOURTEEN",
+    "tinh_huong": "Prime Minute Reset",
+    "ma": "5c4aa2271149"
    }
   ],
   "dating": [
@@ -3266,6 +3334,84 @@
     "khung": "leo_thang",
     "tinh_huong": "Membership Fingerprint Scan",
     "ma": "43b96ca37f50"
+   },
+   {
+    "loi": [
+     [
+      "I thought the row was free of dress codes.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Every rower must match socks exactly to their shirt.",
+      1,
+      "tuc"
+     ],
+     [
+      "What if I wear neutral socks?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Neutral counts as mismatch; you need exact hue.",
+      1,
+      "so"
+     ],
+     [
+      "So I can't row barefoot either?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "The point was consistency, not color.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the cardio row",
+    "hook": "SANDALS BANNED FROM CARDIO ROWERS",
+    "tinh_huong": "Color Code Row",
+    "ma": "1ecd14d83fa3"
+   },
+   {
+    "loi": [
+     [
+      "Bree, will the rower auto-start in three?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "First, you need to know the resistance curve works like tides.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I'm standing on the footplate, timer counting down.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "And the proper technique is to engage core before the splash.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Got it, just tell me-do I press the green button?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "It's already green; the machine's already started.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the cardio row",
+    "hook": "ROWING MACHINE COUNTDOWN IN PROGRESS",
+    "tinh_huong": "Auto‑Start Row Panic",
+    "ma": "bb2cb0ba3c2a"
    }
   ],
   "airport": [
@@ -6342,6 +6488,86 @@
     "khung": "leo_thang",
     "tinh_huong": "Cellar Muffin Ledger",
     "ma": "88374697e398"
+   },
+   {
+    "loi": [
+     [
+      "I grabbed a slice, it's not a prime day.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "Prime days are when day or month number is prime.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Today is June 4, both numbers composite.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "Tuesday counts too; its number is 2, a prime.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I ate it here, not in the dining room.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Rule bans dairy anywhere on any prime-counted day.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the kitchen island",
+    "hook": "CHEESE ON PRIME DAY?",
+    "diem_chot": 8,
+    "tinh_huong": "Prime Day Cheese Ban",
+    "ma": "1a6386a2a9c2"
+   },
+   {
+    "loi": [
+     [
+      "Two seconds left, Gus, is the almond butter still there?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I was just thinking why I ate the whole bag of chips.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I need a yes or no, the timer's buzzing.",
+      0,
+      "so"
+     ],
+     [
+      "Well, you know, the chips were seasoned with sea salt.",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "Okay, answer before it dings-did you move it?",
+      0,
+      "so"
+     ],
+     [
+      "It stayed, but it's just a single almond on a spoon.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the kitchen island",
+    "hook": "LAST SECOND ALMOND BUTTER OR NOTHING",
+    "diem_chot": 8,
+    "tinh_huong": "Almond Butter Countdown",
+    "ma": "3816367a34ee"
    }
   ],
   "parent": [
@@ -9151,7 +9377,41 @@
   "«t n» machine stopped brewing just «t n» cup": 1,
   "let s route «t n» through «t n» rack for stability": 1,
   "now «t n» office lights are flickering with espresso smells": 1,
-  "excellent we ve turned «t n» into «t n» cafe network": 1
+  "excellent we ve turned «t n» into «t n» cafe network": 1,
+  "i thought «t n» was free of dress codes": 1,
+  "every rower must match socks exactly to «t n»": 1,
+  "what if i wear neutral socks": 1,
+  "neutral counts as mismatch you need exact hue": 1,
+  "so i can t row barefoot either": 1,
+  "«t n» was consistency not color": 1,
+  "bree will «t n» auto start in «s »": 1,
+  "first you need to know «t n» curve works like tides": 1,
+  "i m standing on «t n» timer counting down": 1,
+  "and «t n» technique is to engage core before «t n»": 1,
+  "got it just tell me do i press «t n» button": 1,
+  "it s already green «t n» s already started": 1,
+  "«t n» is shaking like «t n»": 1,
+  "we ll reinstall «t n» driver to stabilize it": 1,
+  "do i need to reboot «t n»": 1,
+  "we ll wipe «t n» reinstall everything now it s enterprise ready": 1,
+  "«t n» just froze i need help now": 1,
+  "you «ng y» only reset it during «t n» numbered minute": 1,
+  "it s «s » «s » pm minute «s » not prime what now": 1,
+  "wait until «t n» prime minute then count each prime aloud": 1,
+  "can i just unplug it that seems faster": 1,
+  "unplugging counts as resetting so you still must count primes": 1,
+  "i grabbed «t n» it s not «t n» day": 1,
+  "prime days are when day or month number is prime": 1,
+  "today is «ng y» «s » both numbers composite": 1,
+  "«ng y» counts too its number is «s » «t n»": 1,
+  "i ate it here not in «t n» room": 1,
+  "rule bans dairy anywhere on any prime counted day": 1,
+  "«s » seconds left gus is «t n» butter still there": 1,
+  "i was just thinking why i ate «t n» bag of chips": 1,
+  "i need «t n» or no «t n» s buzzing": 1,
+  "well you know «t n» were seasoned with sea salt": 1,
+  "okay answer before it dings did you move it": 1,
+  "it stayed but it s just «t n» almond on «t n»": 1
  },
  "tinh_huong": {
   "tech": [
@@ -9179,7 +9439,9 @@
    "Standing Desk Calibration",
    "Temp Reboot Rule",
    "Alarm Test Panic",
-   "Coffee Machine Crash"
+   "Coffee Machine Crash",
+   "Mouse Jitter Upgrade",
+   "Prime Minute Reset"
   ],
   "dating": [
    "Bio Miscommunication",
@@ -9249,7 +9511,9 @@
    "Mat Odor Escalation",
    "Sauna Precision",
    "Rowing Reset",
-   "Membership Fingerprint Scan"
+   "Membership Fingerprint Scan",
+   "Color Code Row",
+   "Auto‑Start Row Panic"
   ],
   "airport": [
    "Overweight Bag Misread",
@@ -9341,7 +9605,9 @@
    "Kale Smoothie Spill",
    "Shadow Calorie Ledger",
    "Microwave Soup Countdown",
-   "Cellar Muffin Ledger"
+   "Cellar Muffin Ledger",
+   "Prime Day Cheese Ban",
+   "Almond Butter Countdown"
   ],
   "parent": [
    "Cleaning Hours Mixup",

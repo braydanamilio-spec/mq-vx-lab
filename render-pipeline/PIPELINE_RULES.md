@@ -5919,3 +5919,48 @@ Nơi chốn đã Mỹ từ tên (HOA, DMV, drive-thru), nhưng đồ đạc thì
 một cái tủ thì nước nào cũng thế. Sáu mảnh thêm vào là thứ nhìn phát ra ngay: **hộp thư trụ**
 ngoài sân · **cửa lưới** chống muỗi · **máy nước lạnh** văn phòng · **cửa cuốn** gara · **ghế
 booth** quán ăn · **lò vi sóng** đặt trên bếp.
+
+---
+
+## 16. BA NÂNG CẤP LÊN NGƯỠNG 90 (31/8)
+
+Anh chấm bốn hạng mục, tổng ≈ 80. Ba việc dưới đây nhắm vào ba chỗ mất điểm nhiều nhất.
+
+### 16.1 Hook: một câu VIẾT RIÊNG, không phải lời thoại phóng to
+
+Hạng mục yếu nhất (55/100). Bản trước "hook" chỉ là bong bóng lượt đầu phóng to 1,5× — vẫn là
+câu thoại thường, không cho ai lý do dừng lại.
+
+Nay mỗi mẩu có **thẻ hook**: 4–7 từ, in hoa, hiện 2,2 giây đầu ở **nửa dưới** khung (giữa là
+chỗ khuôn mặt, mà mặt đang diễn ở giây đầu cũng là một phần của hook).
+
+Hai cổng, đều đo được:
+- **độ dài** 3–8 từ;
+- **không trùng câu chốt** — nếu hook và chốt dùng chung quá nửa số từ thì loại. Hook lộ cú
+  chốt là hook tự huỷ: biết kết quả rồi thì không còn lý do xem tiếp.
+
+Bốn mươi mẩu viết tay có trước khi hook tồn tại, nên `hook_tay.py` sinh riêng cho chúng (38/40
+đạt cổng). Bản dự phòng cũ — lấy sáu từ đầu câu mở — cho ra tấm thẻ **lặp lại đúng câu người
+xem đang nghe**, tức không hook gì cả.
+
+### 16.2 Cú chốt: phải có lượt gọi THỨ HAI để chấm
+
+Cổng cũ chỉ bắt mô hình **tự khai** "cú chốt này lật cái gì" — và mô hình nào cũng khai được,
+kể cả khi câu chốt chẳng lật gì. Nó đang chấm bài của chính nó, ngay sau khi viết, trong cùng
+một mạch suy nghĩ đã sinh ra bài ấy.
+
+`cham_chot()` là một lượt gọi riêng, đóng vai người phản biện: không thấy quá trình viết, chỉ
+thấy kết quả, và được giao đúng một việc — tìm lý do để loại. Ngưỡng 6/10.
+
+Bắt được ngay ở mẻ thử: *"just adds another example, it doesn't change the meaning of the
+earlier lines"* — đúng loại lỗi mà bản tự chấm luôn cho qua.
+
+**Luật rút ra:** một mô hình tự đánh giá thứ nó vừa viết thì đang bảo vệ, không phải đang chấm.
+Muốn có phán xét thật thì lượt chấm phải TÁCH khỏi lượt viết.
+
+### 16.3 Diễn xuất: dao động liên tục, không đổi một lần
+
+`doiCuChi` cũ chạy 0→1 trong nửa giây rồi đứng yên — nhân vật đổi tư thế đúng một lần rồi bất
+động ba giây. Nay nó dao động theo nhịp **lệch pha** với nhịp thở của engine (2,3 và 1,9 rad/s
+so với 2,0 của nhịp thở), nên hai chuyển động không bao giờ trùng — trùng nhịp là dấu hiệu rõ
+nhất của hình máy. `nhan` lấy từ độ mở miệng: nói to thì cả người nhấn theo.
