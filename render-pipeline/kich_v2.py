@@ -616,10 +616,20 @@ def _tach_so_dai(tu: list) -> list:
         # thành chữ ở trên, thêm lần nữa sẽ đọc thành "thousand K".
         if so.group(3) and so.group(3).strip().lower() not in _HAU:
             phan.append(so.group(3))
+        # 31/8 — GIỮ DẤU CÂU Ở TỪ CUỐI.
+        # Regex nuốt dấu chấm cuối ("3,318." -> các từ đều không có dấu), nên bộ cắt phụ đề
+        # không nhận ra câu đã hết và vắt sang câu sau: "three thousand three hundred eighteen
+        # Second..." Đây là mắt xích cuối của chuỗi lỗi phụ đề — hai lượt sửa trước đều đúng
+        # hướng nhưng không thể ăn, vì tín hiệu "hết câu" đã bị xoá từ khâu này.
+        _dau_cau = ""
+        _m = _re.search(r"([.,!?])$", chu.strip())
+        if _m:
+            _dau_cau = _m.group(1)
         buoc = d / len(phan)
         t0 = float(w.get("t") or 0)
         for i, p in enumerate(phan):
-            ra.append({"t": round(t0 + i * buoc, 3), "d": round(buoc, 3), "w": p,
+            _w = p + (_dau_cau if (i == len(phan) - 1 and _dau_cau) else "")
+            ra.append({"t": round(t0 + i * buoc, 3), "d": round(buoc, 3), "w": _w,
                        "si": int(w.get("si", 0))})
     return ra
 

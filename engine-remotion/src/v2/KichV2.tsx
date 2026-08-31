@@ -234,10 +234,25 @@ const chonDang = (cot: { nhan: string; gt: number }[], kenhSo: number): DangChar
   if (cot.length >= 3 && cot.slice(0, 3).every((c) => _BANG.includes(String(c.nhan).trim().toLowerCase())))
     return "bando";
   if (cot.length === 2) return "thehai";
+  // 31/8 — CÓ LOẠI DỮ LIỆU CỘNG LẠI THÌ VÔ NGHĨA.
+  // Anh nhắc biểu đồ phải hợp với từng loại dữ liệu. Chỗ hở nằm ở hai dạng "phần trên tổng":
+  // lưới ô và vòng chia phần. Chúng chỉ đúng khi các mục HỢP THÀNH một tổng thể — thị phần,
+  // ngân sách, số ca. Còn tuổi (37y · 33y), khoảng cách (365K km), nhiệt độ, năm thì cộng lại
+  // không ra cái gì cả: "tổng số năm của ba nghiên cứu" là một con số không tồn tại, mà cả hai
+  // dạng ấy đều lấy nó làm mẫu số. Biểu đồ khi đó vẫn đẹp và vẫn sai.
+  // Đọc đơn vị từ chuỗi hiển thị để loại chúng ra.
+  const _donVi = String((cot[0] as any)?.hien || "");
+  const _khongCong = /\b\d+\s*(y|yr|yrs|năm|km|mi|m|cm|kg|lb|°|k?m\/h)\b/i.test(_donVi)
+                     || /\b(19|20)\d\d\b/.test(String(cot[0]?.nhan || ""));
   const _phan = cot.slice(0, n).every((c) => /%/.test(String(c.nhan)) || /%/.test(String((c as any).hien || "")));
   if (_phan && cot.length >= 3) return "vong";
   if (dai > 14) return "ngang";
-  return (["dung", "ngang", "cham", "khoi", "thehai", "vong", "luoi", "thuoc", "diem"] as DangChart[])[kenhSo % 9];
+  // Bỏ hai dạng "phần trên tổng" khi dữ liệu không cộng được; những dạng còn lại đều chỉ so
+  // từng mục với nhau nên luôn đọc đúng, bất kể đơn vị là gì.
+  const _kho = _khongCong
+    ? (["dung", "ngang", "cham", "khoi", "thehai", "thuoc"] as DangChart[])
+    : (["dung", "ngang", "cham", "khoi", "thehai", "vong", "luoi", "thuoc", "diem"] as DangChart[]);
+  return _kho[kenhSo % _kho.length];
 };
 
 const CotNgang: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte; noiBat: number;
@@ -484,7 +499,15 @@ const LuoiO: React.FC<{ cot: NonNullable<Canh["cot"]>; p: number; mau: Paltte;
   // thành số không, kể cả khi nó rất nhỏ — vẽ ra số không là nói sai.
   const sang = Math.max(1, Math.min(N, Math.round((Math.max(0, a.gt) / tong) * N)));
   const pi = muot(kep(pCua(noiBat)));
-  const O = 42, KHE = 8;
+  // 31/8 — KÍCH THƯỚC Ô SUY TỪ CHỖ CÒN LẠI, KHÔNG BỐC SỐ.
+  // Anh gửi khung: hàng ô cuối cùng nằm HẲN ngoài tấm bảng. Tôi đặt ô 42px khe 8px mà không
+  // nhân ra: 5 hàng thành 242px, trong khi từ mép dưới nhãn (-62) tới đáy bảng (146) chỉ có
+  // 208px. Tràn 34px — đúng bằng hai phần ba một hàng, nên nó lòi ra rất rõ.
+  // Cùng loại lỗi với nhân vật tràn khung hôm qua: đặt một con số cho vừa mắt trên máy mình,
+  // thay vì tính từ chỗ thật sự có. Nay suy ngược từ khung: 5 hàng + 4 khe phải nằm trong 208.
+  const CAO_CO = 208, HG5 = 5;
+  const KHE = 7;
+  const O = Math.floor((CAO_CO - (HG5 - 1) * KHE) / HG5);   // = 36
   return (
     <g>
       <rect x={-282} y={-140} width={564} height={286} rx={18} fill="#FBF6EA"
