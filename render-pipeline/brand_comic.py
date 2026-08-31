@@ -60,6 +60,41 @@ CO = {"avatar": ("ComicAvatar", "avatar"), "banner": ("ComicBanner", "banner"),
       "watermark": ("ComicWatermark", "watermark")}
 
 
+# ══ CỔNG CHỐNG CHỒNG LẤN ═══════════════════════════════════════════════════════════════
+# Banner DIET WARS ra khung có tên kênh đè thẳng lên nhân vật, và tôi chỉ thấy khi anh gửi ảnh
+# lại. Nhìn từng banner một thì không thấy — mỗi cái trông vẫn "có chữ, có người". Thứ phát hiện
+# được là PHÉP ĐO: dải chữ chiếm khoảng nào, người đứng ở đâu, hai khoảng ấy có giao nhau không.
+#
+# Chép hai bảng toạ độ từ `BrandComic.tsx` sang đây là tạo bản thứ hai của sự thật — và bản thứ
+# hai sẽ lệch. Nhưng đổi lại, cổng này bắt được đúng loại lỗi mà mắt bỏ sót, nên giữ, kèm ghi
+# chú: SỬA `BrandComic.tsx` THÌ SỬA CẢ Ở ĐÂY.
+_CHO = [(0.10, 0.90), (0.16, None), (0.82, 0.94), (0.08, 0.32), (None, 0.86), (None, 0.88)]
+_NUA_NGUOI = 0.085          # nửa bề ngang nhân vật, theo tỉ lệ ô an toàn
+
+
+def _chu_trai(b):
+    return {2: 0.04, 1: 0.40, 3: 0.56, 4: 0.06, 5: 0.02}.get(b, 0.22)
+
+
+def _chu_rong(b):
+    return 0.62 if b == 5 else 0.56 if b == 0 else 0.50
+
+
+def kiem_chong(im_lang=False) -> list:
+    """Trả danh sách khuôn có chữ đè lên người. Rỗng = sạch."""
+    xau = []
+    for b in range(6):
+        t, r = _chu_trai(b), _chu_rong(b)
+        for x in (v for v in _CHO[b] if v is not None):
+            if x + _NUA_NGUOI > t and x - _NUA_NGUOI < t + r:
+                xau.append((b, x))
+    if not im_lang:
+        for b, x in xau:
+            print(f"   ❌ khuôn {b}: người ở {x:.2f} nằm trong dải chữ "
+                  f"[{_chu_trai(b):.2f}..{_chu_trai(b)+_chu_rong(b):.2f}]")
+    return xau
+
+
 def mot_kenh(k: dict, chi: str = "") -> int:
     slug = _ten_tep(k)
     thu = os.path.join(GOC, "out", "brand")
@@ -109,6 +144,10 @@ def main() -> int:
     ap.add_argument("--kenh", default="")
     ap.add_argument("--chi", default="", choices=["", "avatar", "banner", "watermark"])
     a = ap.parse_args()
+    if kiem_chong():
+        print("⛔ có khuôn banner đặt chữ đè lên người — sửa BrandComic.tsx rồi chạy lại")
+        return 3
+
     chon = KENH
     if a.kenh:
         vt = {x.strip().upper() for x in a.kenh.split(",")}

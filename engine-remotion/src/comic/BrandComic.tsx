@@ -185,13 +185,19 @@ export const BrandComic: React.FC<PropsBrand> = ({
     [0.10, 0.90],    // 0 — hai bên, tên ở giữa
     [0.16, null],    // 1 — một người bên trái, tên chiếm phải
     [0.82, 0.94],    // 2 — hai người dồn về phải, tên chiếm trái
-    [0.08, 0.50],    // 3 — trái và giữa, tên lệch phải
+    [0.08, 0.32],    // 3 — hai người dồn trái, tên chiếm phải
     [null as any, 0.86], // 4 — chỉ người B bên phải
-    [0.5, null],     // 5 — một người chính giữa, tên hai bên
+    [null as any, 0.88], // 5 — một người bên phải, tên trái, nền vòng tròn lớn
   ];
+  // 31/8 — HAI KHUÔN NÀY TỪNG ĐẶT NGƯỜI ĐÚNG CHỖ CỦA CHỮ.
+  // Banner DIET WARS ra khung có chữ "DIET WARS" đè thẳng lên nhân vật: khuôn 5 đặt người ở
+  // giữa (0,50) trong khi dải chữ trải 0,22–1,12. Khuôn 3 cũng vậy ở mức nhẹ hơn.
+  // Lỗi này không lộ khi xem từng banner một — nó chỉ lộ khi ĐO. Nên phép đo ấy nay nằm trong
+  // `brand_comic.py` và chạy trước mỗi lần dựng, thay vì trông vào việc mở ảnh ra nhìn.
   const [xa, xb] = CHO[bcB];
-  const chuTrai = bcB === 2 ? 0.04 : bcB === 1 ? 0.4 : bcB === 3 ? 0.56 : bcB === 4 ? 0.06 : 0.22;
-  const chuRong = bcB === 5 ? 0.9 : bcB === 0 ? 0.56 : 0.5;
+  const chuTrai = bcB === 2 ? 0.04 : bcB === 1 ? 0.4 : bcB === 3 ? 0.56 : bcB === 4 ? 0.06
+    : bcB === 5 ? 0.02 : 0.22;
+  const chuRong = bcB === 5 ? 0.62 : bcB === 0 ? 0.56 : 0.5;
 
   const NenB = () => {
     if (bcB === 0) return null;                       // dải màu trơn
