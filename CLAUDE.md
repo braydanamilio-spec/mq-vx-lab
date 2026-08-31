@@ -73,7 +73,22 @@ Mỗi lỗi ghi ba thứ: triệu chứng · gốc rễ · **họ lỗi** (để
 - *chép hằng sang hệ quy chiếu khác* — `545 / −437 / 119` đúng ở `KichHai` (đã nhân zoom), sai ở
   `KichComic`. Không báo lỗi, chỉ làm hình lệch — nên dễ đi sửa thẩm mỹ suốt bảy vòng
 
-## 7. NGUYÊN TẮC CỨNG
+## 7. BA MỆNH LỆNH CHO MỌI PROMPT VẼ NỀN
+
+```
+wide shot, camera at standing eye level,
+floor clearly visible across the lower third,
+open space in the centre of the frame
+```
+
+Thiếu một trong ba là nhân vật lơ lửng. Đừng viết lại câu thứ hai — `import SAN_NEN` từ
+`kich_hai.py`. Cổng `kiem_nen.py` quét mọi tệp dựng prompt nền và chặn nếu thiếu.
+
+Bốn tầng để render không bao giờ thiếu nền: **nền riêng đã cache** → **sinh bù ở bước chuẩn bị**
+(`chuan_bi_nen.py`, chạy TRƯỚC render) → **mượn nền cùng kênh** → **nền vector vẽ bằng code**.
+Tầng cuối không gọi API nên không bao giờ hỏng.
+
+## 8. NGUYÊN TẮC CỨNG
 
 - **Không `gh workflow run` để "kiểm tra"** — kể cả một lần. Đợi cron. (Đã vi phạm 2 lần, tốn
   quota thật.)
@@ -83,7 +98,7 @@ Mỗi lỗi ghi ba thứ: triệu chứng · gốc rễ · **họ lỗi** (để
 - **Tận dụng free 100%** — nền vẽ bằng code thay ảnh AI vừa đẹp hơn vừa cắt hẳn phụ thuộc hạn
   mức ảnh.
 
-## 8. BẢN ĐỒ TỆP
+## 9. BẢN ĐỒ TỆP
 
 | Việc | Tệp |
 |---|---|
@@ -94,7 +109,7 @@ Mỗi lỗi ghi ba thứ: triệu chứng · gốc rễ · **họ lỗi** (để
 | Bản hài cũ (giữ để đối chiếu) | `render-pipeline/kich_hai.py` · `src/v4/KichHai.tsx` — vẫn là nơi giữ `KHO` 40 mẩu viết tay, `doc_hai_giong`, `lam_thumb` |
 | Luật + buglog | `render-pipeline/PIPELINE_RULES.md` |
 
-## 9. HAI BỘ, HAI XƯỞNG — ĐỪNG TRỘN
+## 10. HAI BỘ, HAI XƯỞNG — ĐỪNG TRỘN
 
 | Bộ | Kênh | Pipeline | Workflow | Trạng thái |
 |---|---|---|---|---|
@@ -119,7 +134,7 @@ cài đặt thì chạm trần. Lô 10 kênh xong trong ~45 phút, và hỏng m�
 Dashboard gọi được qua `repository_dispatch` với `event_type: mm0-phantich` — cùng đường mà
 worker đang dùng cho `mm0-render`, chỉ khác tên sự kiện.
 
-## 10. CHẠY MỘT TẬP COMIC TỪ ĐẦU ĐẾN CUỐI
+## 11. CHẠY MỘT TẬP COMIC TỪ ĐẦU ĐẾN CUỐI
 
 Bốn lệnh, đúng thứ tự. Chạy được ở máy anh và trong GitHub Actions y như nhau — chỉ cần
 `edge-tts` + `remotion` + bộ khoá AI sẵn có. **Không lệnh nào cần Claude Code.**

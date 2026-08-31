@@ -59,6 +59,7 @@ jobs:
           cd render-pipeline
           python kiem_san.py
           python kiem_xoay_key.py
+          python kiem_nen.py
           python kiem_khung1.py || true      # cổng render một khung: cảnh báo, không chặn
 
       - name: Dựng lô

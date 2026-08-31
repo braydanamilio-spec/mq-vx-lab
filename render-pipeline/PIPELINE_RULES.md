@@ -6188,3 +6188,67 @@ hai lần: thông điệp phải nhắc CF/neuron, và vòng lặp phải có l�
 
 **Một cổng chỉ đáng tin khi nó bắt đúng cái mẫu đã có bằng chứng, không bắt mọi thứ trông
 giống.** Lời tố oan làm người ta thôi tin cả cái cổng — và một cổng không ai tin thì bằng không.
+
+---
+
+## 21. BA MỆNH LỆNH BẮT BUỘC CHO MỌI PROMPT VẼ NỀN (31/8)
+
+Anh: *"cái ép sàn chiếm trọn phần ba dưới, đồ đạc dồn hai mép, giữa để trống đang hoạt động
+tốt mà mấy bữa nay ko fix được — e đã làm được thì nên note lại đưa vào pepline methord rule
+chuẩn để sau ko lỗi lặp lại."*
+
+Ba mệnh lệnh này chữa lỗi **nhân vật lơ lửng** đã đeo bám cả bản hài cũ lẫn 56 kênh phân tích:
+
+```
+wide shot, camera at standing eye level,
+floor clearly visible across the lower third,
+open space in the centre of the frame
+```
+
+| Mệnh lệnh | Chữa gì |
+|---|---|
+| máy ngang tầm mắt người ĐỨNG | mô hình hay chọn góc ngang tầm bàn — khung ra không có sàn nào |
+| sàn chiếm trọn phần ba dưới | cho nhân vật một mặt phẳng để đứng |
+| đồ đạc dồn hai mép, giữa để trống | chừa chỗ cho nhân vật, và giữ vật lớn khỏi bị che |
+
+### 21.1 Vì sao phải có CỔNG chứ không chỉ có luật
+
+Hôm nay có bằng chứng rõ nhất: `kich_hai.py` **đã có sẵn** câu `SAN_NEN` đúng như trên từ lâu.
+Nhưng `kich_v2.py` chỉ lấy `GU_NEN` và **bỏ qua** nó — nên suốt thời gian ấy nền 56 kênh phân
+tích chưa bao giờ được ép sàn, và không ai biết, vì thiếu một câu trong prompt thì không có lỗi
+nào được ném ra.
+
+`kiem_nen.py` quét mọi tệp dựng prompt nền và kiểm đủ ba mệnh lệnh. Mỗi mệnh lệnh nhận nhiều
+cách diễn đạt — chúng được viết ở ba tệp bởi ba lần khác nhau, nên bắt đúng một chuỗi thì cổng
+sẽ tố oan ngay khi ai đó viết lại cho gọn hơn.
+
+**Và một nguồn duy nhất:** đừng viết câu thứ hai, `import SAN_NEN` về dùng. Hai bản của cùng
+một lệnh rồi sẽ lệch nhau — đó chính là cách `kich_v2` trôi khỏi `kich_hai`.
+
+### 21.2 Bốn tầng bảo vệ để render không bao giờ thiếu nền
+
+Anh: *"phải có 2 tầng bảo vệ hoặc tìm hướng xử lý"*. Hướng xử lý không phải thêm lớp thử-lại,
+mà **tách hẳn hai việc**: chuẩn bị tài nguyên (gọi API, được phép chậm và hỏng) và render (chỉ
+đọc đĩa, không gọi API). Trên Actions là hai bước riêng.
+
+| Tầng | Là gì | Hỏng thì sao |
+|---|---|---|
+| 1 | nền riêng của nơi chốn/chủ đề, đã cache | xuống tầng 2 |
+| 2 | sinh bù ở bước **chuẩn bị**, trước khi render | hỏng ở đây, không tốn phút render nào |
+| 3 | mượn nền nơi khác **cùng kênh** — cùng thế giới nên vẫn khớp | xuống tầng 4 |
+| 4 | **nền vector vẽ bằng code** — không API, không tệp, luôn có sàn | không bao giờ hỏng |
+
+Tầng 4 là thứ khiến hệ không có điểm chết. Bản `KichHai` cũ chỉ có tầng 2, nên ngày nào API
+trục trặc là ngày ấy video ra không nền.
+
+### 21.3 Cache theo thứ QUYẾT ĐỊNH bối cảnh, không theo tập
+
+| Bộ | Cache theo | Vì |
+|---|---|---|
+| Comic | **nơi chốn** | nơi chốn thuộc thế giới cố định của kênh; kịch bản CHỌN nơi trong danh sách nên nền luôn khớp |
+| Phân tích | **chủ đề** | mỗi tập một chủ đề dữ liệu khác hẳn |
+
+Và với kênh phân tích, bối cảnh phải được **viết cùng lúc với kịch bản**: `_noi_theo_chu_de()`
+dịch từ ngôn ngữ dữ liệu ("median rent by state") sang ngôn ngữ hình ("a leasing office with a
+large wall map and a row of chairs"). Bản trước ghép thô `f"{chu_de}, seen in a {kênh} setting"`
+— đưa cho mô hình vẽ một cụm số liệu thay vì một nơi chốn, rồi để nó tự bịa.
