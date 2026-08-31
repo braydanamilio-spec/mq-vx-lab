@@ -5728,3 +5728,38 @@ bản cũ phải bỏ. Bảng `TU_KHOA` trong `NenComic.tsx`: thoại nói "rout
 Chỗ đặt đạo cụ: **khoảng giữa hai người**. Hai nhân vật đứng ở 28% và 72% bề ngang, nên dải
 giữa là khoảng duy nhất chắc chắn trống ở mọi cảnh hai người; mép phải là chỗ của tủ, của kệ,
 và của chính người thứ hai — bản đầu đặt ở đó nên gần như không nhìn thấy vật.
+
+---
+
+## 12. ẢNH BÌA VÀ SIÊU DỮ LIỆU ĐĂNG TẢI (31/8)
+
+### 12.1 Ảnh bìa dựng riêng, KHÔNG trích khung
+
+Bản cũ trích một khung của video rồi đặt chữ lên. Hai chỗ hỏng không sửa được ở tầng chữ:
+khung ấy được dựng cho VIDEO (nhân vật đứng chỗ hợp với bong bóng thoại, không hợp với tấm
+bìa), và biểu cảm trong một khung bất kỳ gần như luôn trung tính — trong khi bìa cần biểu cảm
+mạnh nhất. Nay có `ThumbComic.tsx`: bố cục chia sẵn (chữ một bên, mặt một bên), biểu cảm chọn
+`bat_ngo`, cỡ chữ theo số ký tự nên không tràn.
+
+Hai cỡ, hai bố cục khác hẳn: **1280×720** cho bản dài (đọc được ở bề ngang 210px trong lưới
+gợi ý → chỉ 3–5 từ), **1080×1920** cho short.
+
+### 12.2 Hai lỗi của bìa, cả hai đều là lỗi cũ đội lốt
+
+| Lỗi | Gốc |
+|---|---|
+| Chữ cụt: "MY PROFILE SAYS I LOVE" | cắt cứng ở từ thứ 5 — **đúng lỗi phụ đề đã sửa tuần trước**, chỉ đổi chỗ. Nay lùi về ranh giới cụm, bỏ giới từ đứng cuối |
+| Nhân vật chìm dưới đáy khung | `CAO_NGUOI = 460` chép từ engine video, nhưng phép đo ấy thực hiện lúc nhân vật đang bị mép panel cắt nên đo thiếu. Đo lại trên chính tấm bìa: 378 |
+
+Chữ bìa lấy **câu ngắn nhất trong ba lượt đầu**, không lấy câu đầu tiên — câu đầu thường dựng
+bối cảnh nên dài, còn câu ngắn trong nhóm ấy gần như luôn là câu đắt và vừa bìa.
+
+### 12.3 Siêu dữ liệu: ba giới hạn dễ vượt mà không báo lỗi
+
+- **Tiêu đề** tối đa 100 ký tự, nhưng điện thoại cắt ở ~40–50. Dồn thông tin vào nửa đầu, và
+  không mở bằng tên kênh (tên kênh đã hiện ngay dưới tiêu đề — lặp là phí chỗ đắt nhất).
+  **Không dùng câu chốt làm tiêu đề**: đọc xong biết trò đùa thì không ai bấm nữa.
+- **Thẻ**: tổng mọi thẻ cộng lại ≤ 500 ký tự. Vượt thì YouTube lặng lẽ cắt thẻ cuối, không báo.
+- **`made_for_kids`**: khai sai là rủi ro pháp lý, không phải lỗi kỹ thuật. Luôn khai tường minh.
+
+Xuất ra `out/v5_<slug>.tai.json` — đủ trường để đăng qua API mà không phải điền tay gì thêm.

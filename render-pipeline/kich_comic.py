@@ -115,30 +115,34 @@ NET_KENH = {
 # 0.99, trẻ con 0.62–0.70. Đây là quan hệ THẬT giữa hai người trong cùng khung, nên khán giả
 # đọc ra quan hệ trước khi nghe câu đầu tiên.
 VAI = {
-    #            A: (kiểu vẽ, giới, tuổi, cao, vai trò)              B: (…)
-    "rent":     (("luat_tre",  "nam", "tre",     0.97, "người thuê"),
-                 ("cong_to",   "nu",  "trung",   0.94, "chủ nhà")),
-    "gym":      (("khoa_hoc",  "nu",  "trung",   0.93, "học viên"),
-                 ("hang_xom",  "nam", "trung",   1.06, "huấn luyện viên")),
-    "airport":  (("vien_phi",  "nam", "trung",   1.02, "khách bay"),
-                 ("y_ta",      "nu",  "trung",   0.93, "nhân viên quầy")),
-    "car":      (("bank",      "nu",  "trung",   0.93, "chủ xe"),
-                 ("tham_phan", "nam", "gia",     1.04, "thợ máy già")),
-    "office":   (("sao_dem",   "nu",  "tre",     0.94, "nhân viên trẻ"),
-                 ("vu_tru_gia","nam", "gia",     1.01, "sếp đứng tuổi")),
-    "diet":     (("cong_to",   "nu",  "trung",   0.94, "người ăn kiêng"),
-                 ("hang_xom",  "nam", "trung",   1.05, "bạn cùng nhà")),
-    "tech":     (("hang_xom",  "nam", "trung",   1.03, "khách gọi hỗ trợ"),
-                 ("sao_dem",   "nu",  "tre",     0.92, "nhân viên hỗ trợ")),
+    # 31/8 — VAI CÓ HAI TÊN: một tiếng Việt để tôi đọc, một tiếng Anh để HIỆN RA.
+    # Bản đầu chỉ có tên tiếng Việt, và nó lọt thẳng vào tiêu đề YouTube: "When Khách Gọi Hỗ
+    # Trợ Meets Nhân Viên Hỗ Trợ". Chú thích dành cho người viết code và nhãn dành cho người
+    # xem là hai thứ khác nhau — trộn chung thì sớm muộn cũng rò ra mặt trước.
+    #            A: (kiểu vẽ, giới, tuổi, cao, vai trò VN, vai trò EN)     B: (…)
+    "rent":     (("luat_tre",  "nam", "tre",     0.97, "người thuê", "the tenant"),
+                 ("cong_to",   "nu",  "trung",   0.94, "chủ nhà", "the landlord")),
+    "gym":      (("khoa_hoc",  "nu",  "trung",   0.93, "học viên", "the member"),
+                 ("hang_xom",  "nam", "trung",   1.06, "huấn luyện viên", "the trainer")),
+    "airport":  (("vien_phi",  "nam", "trung",   1.02, "khách bay", "the passenger"),
+                 ("y_ta",      "nu",  "trung",   0.93, "nhân viên quầy", "the gate agent")),
+    "car":      (("bank",      "nu",  "trung",   0.93, "chủ xe", "the car owner"),
+                 ("tham_phan", "nam", "gia",     1.04, "thợ máy già", "the old mechanic")),
+    "office":   (("sao_dem",   "nu",  "tre",     0.94, "nhân viên trẻ", "the new hire"),
+                 ("vu_tru_gia","nam", "gia",     1.01, "sếp đứng tuổi", "the boss")),
+    "diet":     (("cong_to",   "nu",  "trung",   0.94, "người ăn kiêng", "the dieter"),
+                 ("hang_xom",  "nam", "trung",   1.05, "bạn cùng nhà", "the roommate")),
+    "tech":     (("hang_xom",  "nam", "trung",   1.03, "khách gọi hỗ trợ", "the caller"),
+                 ("sao_dem",   "nu",  "tre",     0.92, "nhân viên hỗ trợ", "tech support")),
     # PARENT MODE là chỗ anh nêu đích danh: con phải thấp hơn mẹ. 0.66 so với 1.00 — chênh
     # đúng cỡ một đứa trẻ đứng cạnh người lớn, nhìn một giây là ra quan hệ.
-    "parent":   (("bank",      "nu",  "trung",   1.00, "mẹ"),
-                 ("luat_tre",  "tre", "tre_con", 0.66, "con nhỏ")),
-    "neighbor": (("vu_tru_gia","nam", "gia",     0.99, "ông hàng xóm"),
-                 ("y_ta",      "nu",  "trung",   0.94, "hàng xóm nữ")),
+    "parent":   (("bank",      "nu",  "trung",   1.00, "mẹ", "mom"),
+                 ("luat_tre",  "tre", "tre_con", 0.66, "con nhỏ", "the kid")),
+    "neighbor": (("vu_tru_gia","nam", "gia",     0.99, "ông hàng xóm", "the neighbor"),
+                 ("y_ta",      "nu",  "trung",   0.94, "hàng xóm nữ", "the woman next door")),
     # Vợ chồng — ví dụ thứ hai anh nêu. Vợ thấp hơn chồng, và cả hai cùng lứa.
-    "dating":   (("luat_tre",  "nam", "tre",     1.04, "chồng"),
-                 ("sao_dem",   "nu",  "tre",     0.95, "vợ")),
+    "dating":   (("luat_tre",  "nam", "tre",     1.04, "chồng", "the husband"),
+                 ("sao_dem",   "nu",  "tre",     0.95, "vợ", "the wife")),
 }
 
 # Giọng chọn theo (giới, tuổi) của CHÍNH nhân vật, không theo kênh. Mỗi ô nhiều giọng để mười
@@ -177,7 +181,7 @@ def vai_va_giong(k: dict) -> tuple:
     va, vb = VAI[de]
     hs = sum(ord(c) for c in de)
     ra = []
-    for i, (kieu, gioi, tuoi, cao, _vt) in enumerate((va, vb)):
+    for i, (kieu, gioi, tuoi, cao, _vt, _en) in enumerate((va, vb)):
         ds = GIONG_VAI[(gioi, tuoi)]
         giong = ds[(hs + i * 3) % len(ds)]
         ghi = {

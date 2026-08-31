@@ -38,6 +38,7 @@ import { StickStory, calcStory } from "./StickStory";
 import { KichV2, calcKich } from "./v2/KichV2";
 import { KichHai, calcHai } from "./v4/KichHai";
 import { KichComic, calcComic } from "./comic/KichComic";
+import { ThumbComic } from "./comic/ThumbComic";
 import { BangTuThe } from "./v4/BangTuThe";
 import { SayThisMG, calcMG } from "./SayThisMG";
 import { BrandBeyond } from "./BrandBeyond";
@@ -264,6 +265,11 @@ export const RemotionRoot: React.FC = () => (
         ngang cắt ngang hông cho mặt to. Bản ngang dùng lại nhánh thứ hai, không phải viết lại.
         Tiền YouTube nằm ở video dài: từ 8 phút mới bật được quảng cáo giữa video, và đường vào
         YPP qua 4.000 giờ xem dễ hơn nhiều so với 10 triệu lượt Shorts trong 90 ngày. */}
+    {/* Ảnh bìa dựng riêng, không trích khung — xem đầu ThumbComic.tsx. Hai cỡ, hai bố cục. */}
+    <Composition id="ThumbComicWide" component={ThumbComic as any} durationInFrames={1} fps={30}
+                 width={1280} height={720} defaultProps={{ ngang: true }} />
+    <Composition id="ThumbComicDoc" component={ThumbComic as any} durationInFrames={1} fps={30}
+                 width={1080} height={1920} defaultProps={{ ngang: false }} />
     <Composition id="KichComicWide" component={KichComic as any} durationInFrames={600} fps={30}
                  width={1920} height={1080} calculateMetadata={calcComic as any} />
     <Composition id="KichComic" component={KichComic as any} durationInFrames={600} fps={30}
