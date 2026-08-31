@@ -1,0 +1,354 @@
+{
+ "tech": [
+  {
+   "viec": "A wants to stream her live webinar from her living room without any technical glitches.",
+   "tua": "Webinar Woes Unplugged",
+   "canh": [
+    {
+     "stt": 1,
+     "loi": [
+      [
+       "My TV just says 'No internet connection'.",
+       0,
+       "so"
+      ],
+      [
+       "Let's restart the router and the TV together.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "I turned the router off, then unplugged TV. It's dead now.",
+       1,
+       "buon"
+      ],
+      [
+       "Okay, plug the TV back in and we'll check the picture.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the customer's living room",
+     "tro_ngai": "A's smart TV shows “No internet connection,” and when she power‑cycles the router she also unplugs the TV, leaving it blank."
+    },
+    {
+     "stt": 2,
+     "loi": [
+      [
+       "I found a spare strip, but I tripped and it snapped.",
+       0,
+       "bat_ngo"
+      ],
+      [
+       "Do you still have power at the outlet?",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "The outlet is fine, the strip's fuse blew.",
+       1,
+       "so"
+      ],
+      [
+       "We'll need a new strip before the TV can power up.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the cramped supply closet",
+     "tro_ngai": "To restore power she grabs a spare power strip from the cramped supply closet, but trips and breaks the strip’s fuse, keeping the TV off."
+    },
+    {
+     "stt": 3,
+     "loi": [
+      [
+       "The laptop's battery is dead; it won't turn on.",
+       0,
+       "buon"
+      ],
+      [
+       "Did the outage affect the charger as well?",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Yes, the charger was unplugged when the lights flickered.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "Grab a charger from the hallway; the laptop should revive.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the break room",
+     "tro_ngai": "B tells her to use the backup laptop in the break room, but the laptop’s battery is dead because the earlier power loss drained it."
+    },
+    {
+     "stt": 4,
+     "loi": [
+      [
+       "I reached the hallway, but I accidentally hit the alarm.",
+       0,
+       "tuc"
+      ],
+      [
+       "Stay calm, evacuate, and we'll handle the alarm later.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Everyone's leaving; my webinar is now impossible.",
+       1,
+       "so"
+      ],
+      [
+       "Once evacuated, we'll find a stable power source for the stream.",
+       1,
+       "tu_tin"
+      ]
+     ],
+     "noi": "the office hallway",
+     "tro_ngai": "She runs to the office hallway to fetch a charger, but in her rush pulls the fire alarm, causing an evacuation."
+    },
+    {
+     "stt": 5,
+     "loi": [
+      [
+       "My laptop died; I need a charger now.",
+       0,
+       "so"
+      ],
+      [
+       "We only have a USB-C to Lightning; it won't charge.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "That's useless; I need proper AC adapter.",
+       1,
+       "so"
+      ],
+      [
+       "There's a spare power bank in the server room, try there.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the IT help desk",
+     "tro_ngai": "After the alarm clears, she goes to the IT help desk for a charger, but the staff hands her a USB‑C to Lightning cable that won’t charge her laptop."
+    },
+    {
+     "stt": 6,
+     "loi": [
+      [
+       "Where's the power bank?",
+       0,
+       "trung_tinh"
+      ],
+      [
+       "It's tucked behind server three, in the corner.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "I'm pulling the panel out now.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Watch out-the cooling fan is loose.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "The fan drops, servers crash, lights flicker.",
+       1,
+       "so"
+      ],
+      [
+       "Everything's dead; you'll need another source.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the server room",
+     "tro_ngai": "B suggests a portable power bank stored in the server room; opening the rack dislodges a cooling fan that topples servers and shuts down building power."
+    },
+    {
+     "stt": 7,
+     "loi": [
+      [
+       "The shop's closed; do you have a loaner bank?",
+       0,
+       "so"
+      ],
+      [
+       "No loaners, but we can swap your phone battery.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "Fine, replace it; I need the link on my phone.",
+       1,
+       "tuc"
+      ],
+      [
+       "Battery installed, but your phone is now off.",
+       1,
+       "buon"
+      ]
+     ],
+     "noi": "the phone repair counter",
+     "tro_ngai": "With the building dark, she heads to the phone repair counter for a loaner power bank, but the shop is closed and she ends up swapping her phone’s battery, leaving the phone dead."
+    },
+    {
+     "stt": 8,
+     "loi": [
+      [
+       "I can't see the screen; it's blinding.",
+       0,
+       "so"
+      ],
+      [
+       "Turn the projector off, then join the call.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "I'm trying-accidentally hit record on the conference system.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "Your rant is now live across the office.",
+       1,
+       "so"
+      ],
+      [
+       "Everyone's watching me complain about the whole day!",
+       1,
+       "so"
+      ],
+      [
+       "Let's end this, then reset everything.",
+       1,
+       "tu_tin"
+      ]
+     ],
+     "noi": "the meeting room",
+     "tro_ngai": "Unable to receive the meeting link, she meets B in the meeting room, where the bright projector blinds her and she accidentally starts recording her rant, broadcasting it office‑wide."
+    },
+    {
+     "stt": 1,
+     "loi": [
+      [
+       "I can't log in; I forgot my password after that panic.",
+       0,
+       "buon"
+      ],
+      [
+       "Let's reset it; I'll send a link to your recovery email.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "The computer's locked; I need the old password now.",
+       1,
+       "tuc"
+      ],
+      [
+       "Okay, you can use the sticky-note password from the office.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the customer's living room",
+     "tro_ngai": "A's smart TV shows “No internet connection,” and when she power‑cycles the router she also unplugs the TV, leaving it blank."
+    },
+    {
+     "stt": 2,
+     "loi": [
+      [
+       "I'm here for the sticky-note password, please.",
+       0,
+       "trung_tinh"
+      ],
+      [
+       "It's on a note... I wrapped it around a coffee cup.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "You threw it in the trash? That's the only copy!",
+       1,
+       "so"
+      ],
+      [
+       "I'll get you another; check the supply closet for a spare.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the cramped supply closet",
+     "tro_ngai": "To restore power she grabs a spare power strip from the cramped supply closet, but trips and breaks the strip’s fuse, keeping the TV off."
+    },
+    {
+     "stt": 3,
+     "loi": [
+      [
+       "Alright, I'll write a new password on a fresh note.",
+       0,
+       "trung_tinh"
+      ],
+      [
+       "Make sure it's legible; we can't guess it.",
+       1,
+       "nghi_ngo"
+      ],
+      [
+       "Oops, I wrote it upside down; it's unreadable.",
+       1,
+       "bat_ngo"
+      ],
+      [
+       "Alright, just type a simple password you can remember.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the break room",
+     "tro_ngai": "B tells her to use the backup laptop in the break room, but the laptop’s battery is dead because the earlier power loss drained it."
+    },
+    {
+     "stt": 4,
+     "loi": [
+      [
+       "I've logged in; restarting the webinar now.",
+       0,
+       "tu_tin"
+      ],
+      [
+       "Great, the stream should go live.",
+       1,
+       "trung_tinh"
+      ],
+      [
+       "The screen still says 'No internet connection'...",
+       1,
+       "buon"
+      ],
+      [
+       "Looks like we're back to square one.",
+       1,
+       "trung_tinh"
+      ]
+     ],
+     "noi": "the office hallway",
+     "tro_ngai": "She runs to the office hallway to fetch a charger, but in her rush pulls the fire alarm, causing an evacuation."
+    }
+   ]
+  }
+ ]
+}

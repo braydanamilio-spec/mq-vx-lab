@@ -1,5 +1,5 @@
 import React from "react";
-import { LapNoi, Noi } from "./NoiChon";
+import { LapNoi, LopGan, Noi, SAN } from "./NoiChon";
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // NỀN PANEL — vẽ bằng code, không dùng ảnh
@@ -349,9 +349,9 @@ export const DaoCu: React.FC<{ ten: string; w: number; h: number; mau: string; m
   // tủ, của kệ, và của chính người thứ hai. Hai nhân vật đứng ở 28% và 72% bề ngang, nên dải
   // giữa mới là khoảng duy nhất chắc chắn trống trong mọi cảnh hai người. Cận cảnh thì ngược
   // lại — người đứng giữa, nên vật lùi ra mép.
-  const S = Math.min(w, h) * (hai ? 0.17 : 0.15);
+  const S = Math.min(w, h) * (hai ? 0.17 : 0.15);   // đã theo cạnh NGẮN — đúng
   const x = hai ? w * 0.5 : w * 0.86;
-  const y = h * (hai ? 0.93 : 0.9);
+  const y = h * (hai ? SAN : SAN - 0.05);   // cận cảnh thì vật lùi ra mép, cao hơn chút
   const G = (el: React.ReactNode) => (
     <g transform={`translate(${x} ${y})`} stroke={MUC} strokeWidth={4.5} strokeLinejoin="round">{el}</g>
   );
@@ -537,6 +537,18 @@ const Tran: React.FC<{ kenh: string; w: number; H: number; mau: string; mauPhu: 
  * mọi đồ đạc đều rơi ra ngoài mép. Vẽ chúng vào chỉ tạo ra những mẩu hình khó hiểu sau lưng
  * nhân vật — đúng lỗi "cái giỏ giặt chắn ngang bụng" của bản cũ, chỉ khác nguồn.
  */
+/** Lớp GẦN — dùng riêng, vẽ SAU nhân vật. Xem ghi chú ở `LopGan`. */
+export const NenGan: React.FC<{
+  noi: Noi; w: number; h: number; mau: string; mauPhu: string; rong: boolean;
+}> = ({ noi, w, h, mau, mauPhu, rong }) => (
+  rong ? (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
+         style={{ position: "absolute", inset: 0, zIndex: 4, pointerEvents: "none" }}>
+      <LopGan noi={noi} w={w} h={h} mau={mau} mauPhu={mauPhu} />
+    </svg>
+  ) : null
+);
+
 export const NenPanel: React.FC<{
   kenh: string; noi: Noi; w: number; h: number; mau: string; mauPhu: string; hat: number;
   rong: boolean; bien?: number; net?: number; cham?: number;

@@ -5964,3 +5964,52 @@ Muốn có phán xét thật thì lượt chấm phải TÁCH khỏi lượt vi�
 động ba giây. Nay nó dao động theo nhịp **lệch pha** với nhịp thở của engine (2,3 và 1,9 rad/s
 so với 2,0 của nhịp thở), nên hai chuyển động không bao giờ trùng — trùng nhịp là dấu hiệu rõ
 nhất của hình máy. `nhan` lấy từ độ mở miệng: nói to thì cả người nhấn theo.
+
+---
+
+## 17. BỐI CẢNH LỘN XỘN: BA LỖI CHỒNG NHAU (31/8)
+
+Anh nói ba lần, mỗi lần một cách: *"thấy nó lơ lửng giữa"* · *"cần có rule gì đó để ko cảnh nào
+lỗi"* · *"nhiều bối cảnh nhìn còn hơi lộn xộn, chưa nhận ra được bối cảnh gì"*. Đo ra thì là ba
+lỗi khác nhau chồng lên nhau, và mỗi lỗi che lỗi kia.
+
+### 17.1 Ba mặt sàn cho một khung hình
+
+Nhân vật đứng ở `h*0.95`, sàn của nền ở `h*0.93`, đạo cụ cũng `h*0.93`. Lệch 36px — đủ để mắt
+đọc ra "cái điện thoại đang bay".
+
+Rule không phải "nhớ chỉnh cho khớp" — đã quên ba lần rồi. Rule là **không còn chỗ nào được tự
+đặt số**: một hằng `SAN` trong `NoiChon.tsx`, mọi thứ đứng trên mặt đất import về. `kiem_san.py`
+grep tìm số sàn viết tay còn sót, chạy trước mỗi lần dựng lô.
+
+### 17.2 Đồ đạc tính theo chiều CAO khung — gốc của "lộn xộn"
+
+Mọi mô-đun tính kích thước theo `p.h`. Ở khung ngang không sao vì h ≈ w. Nhưng khung dọc
+992×1786 thì h gấp 1,8 lần w, nên **mỗi vật to lên 1,8 lần**: cái tủ bếp rộng 1124px trong một
+khung rộng 992px — tràn ra ngoài, và người xem chỉ còn thấy MỘT MẢNG MÀU.
+
+Mô-đun không vẽ xấu. Chúng vẽ đúng, chỉ bị phóng quá cỡ nên chỉ thấy được một góc.
+Chốt thước đo theo bề ngang — `min(h, w*1.05)` — thì mọi vật về đúng cỡ một món đồ đạc.
+
+### 17.3 Vật lớn đặt ở đâu cũng bị che — trừ khi nó CAO
+
+Đo trên khung dọc 992px: hai nhân vật chiếm 153–403 và 589–839, nên khoảng trống lớn nhất chỉ
+**186px**. Một vật rộng 758px không có chỗ nào chứa nổi — đặt đâu cũng bị che.
+
+Nhưng vật **cao** thì phần trên nằm trên đầu nhân vật. Nên quy tắc chia đôi:
+
+| | Đặt ở đâu | Vì sao |
+|---|---|---|
+| Vật CAO (tủ lạnh, kệ, cửa, gương) | **giữa** khung | phần trên vượt đầu người, vẫn đọc ra |
+| Vật THẤP (bàn, ghế, sofa, thùng) | **mép** | đặt giữa là bị che sạch |
+
+### 17.4 Về 3D — không, và lý do là hạ tầng
+
+Anh hỏi nâng 3D có đẹp hơn không. GitHub Actions **không có GPU**, nên render 3D bằng CPU chậm
+gấp hàng chục lần — video dài 9 phút gần như bất khả. Ngoài ra 3D cần **model** (mua hoặc dựng
+tay), không sinh bằng code như 2D, và lỗi của nó khó đo hơn nhiều (xuyên vật thể, ánh sáng
+cháy, camera lọt tường).
+
+Thay bằng **2,5D**: nền chia ba lớp (xa nhỏ+nhạt+cao · giữa · gần to+đè lên nhân vật) cộng bóng
+đổ cùng một hướng. Được phần lớn cảm giác chiều sâu mà vẫn là hình vẽ phẳng — không model,
+không ánh sáng, không có gì để hỏng.

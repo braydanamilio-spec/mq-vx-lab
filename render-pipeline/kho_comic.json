@@ -26,7 +26,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Wi-Fi Billing Mix-up",
-    "ma": "f1caa8411ba8"
+    "ma": "f1caa8411ba8",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -63,7 +64,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Mandatory Patch Outage",
-    "ma": "2c8c5ad5867c"
+    "ma": "2c8c5ad5867c",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -100,7 +102,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Password Change Rule",
-    "ma": "0ded37affa52"
+    "ma": "0ded37affa52",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -147,7 +150,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "Missing CSV Panic",
-    "ma": "8ae8925e2912"
+    "ma": "8ae8925e2912",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -184,7 +188,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Printer Driver Nightmare",
-    "ma": "fc43ebaecf2d"
+    "ma": "fc43ebaecf2d",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -211,7 +216,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Microwave Network Override",
-    "ma": "d132a6452289"
+    "ma": "d132a6452289",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -248,7 +254,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Smart Thermostat Lockout",
-    "ma": "72890658ab48"
+    "ma": "72890658ab48",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -295,7 +302,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Audio Jack Warranty Void",
-    "ma": "280ea8e6b13e"
+    "ma": "280ea8e6b13e",
+    "diem_chot": 6
    },
    {
     "loi": [
@@ -332,7 +340,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Server Shutdown Countdown",
-    "ma": "6f6e573e192e"
+    "ma": "6f6e573e192e",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -369,7 +378,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Smart Lamp Escalation",
-    "ma": "702bca9385ae"
+    "ma": "702bca9385ae",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -396,7 +406,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Alphabetical Power Cycle",
-    "ma": "51dd8c32ec35"
+    "ma": "51dd8c32ec35",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -433,7 +444,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Rocket Launch Abort Sequence",
-    "ma": "1a2df5bed8c8"
+    "ma": "1a2df5bed8c8",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -480,7 +492,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Dual Monitor Alignment",
-    "ma": "798ce453982b"
+    "ma": "798ce453982b",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -517,7 +530,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Please Question Rule",
-    "ma": "3211590acc79"
+    "ma": "3211590acc79",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -554,7 +568,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Router Reboot Countdown",
-    "ma": "d4dc84445965"
+    "ma": "d4dc84445965",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -581,7 +596,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Fridge Ice Escalation",
-    "ma": "8cf492fd5e89"
+    "ma": "8cf492fd5e89",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -618,7 +634,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Prime Date Return",
-    "ma": "01c5b51fffae"
+    "ma": "01c5b51fffae",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -665,7 +682,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Garage Door Countdown",
-    "ma": "d8f8c783c7a7"
+    "ma": "d8f8c783c7a7",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -702,7 +720,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Sprinkler Mesh Overload",
-    "ma": "4d4bf4c8bfa2"
+    "ma": "4d4bf4c8bfa2",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -739,7 +758,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Backup Rule Spiral",
-    "ma": "c2b101ab60d6"
+    "ma": "c2b101ab60d6",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -766,7 +786,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Elevator Brake Override",
-    "ma": "0f561a6036d2"
+    "ma": "0f561a6036d2",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -803,7 +824,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Standing Desk Calibration",
-    "ma": "4421706e0bab"
+    "ma": "4421706e0bab",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -850,7 +872,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Temp Reboot Rule",
-    "ma": "edf3b01de05e"
+    "ma": "edf3b01de05e",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -888,7 +911,8 @@
     "khung": "dem_nguoc",
     "noi": "the office hallway",
     "tinh_huong": "Alarm Test Panic",
-    "ma": "f94b9101d181"
+    "ma": "f94b9101d181",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -916,7 +940,8 @@
     "khung": "leo_thang",
     "noi": "the IT help desk",
     "tinh_huong": "Coffee Machine Crash",
-    "ma": "3dd36fc405ec"
+    "ma": "3dd36fc405ec",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -945,7 +970,8 @@
     "noi": "home office",
     "hook": "JITTERY MOUSE TRIGGERED WHAT",
     "tinh_huong": "Mouse Jitter Upgrade",
-    "ma": "cedfd0c1500e"
+    "ma": "cedfd0c1500e",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -984,7 +1010,8 @@
     "noi": "the IT help desk",
     "hook": "YOU CAN'T REBOOT ON MINUTE FOURTEEN",
     "tinh_huong": "Prime Minute Reset",
-    "ma": "5c4aa2271149"
+    "ma": "5c4aa2271149",
+    "diem_chot": 4
    }
   ],
   "dating": [
@@ -1013,7 +1040,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Bio Miscommunication",
-    "ma": "40e05fe26f21"
+    "ma": "40e05fe26f21",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -1050,7 +1078,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Influencer Photo",
-    "ma": "d14a0e667dda"
+    "ma": "d14a0e667dda",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -1087,7 +1116,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Rule Enforcement",
-    "ma": "57f417cf97e8"
+    "ma": "57f417cf97e8",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -1114,7 +1144,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Boost Countdown",
-    "ma": "c59a2fa1f80c"
+    "ma": "c59a2fa1f80c",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -1161,7 +1192,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "Profile Filter Confession",
-    "ma": "519b6f74d030"
+    "ma": "519b6f74d030",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -1198,7 +1230,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Wrong Prompt",
-    "ma": "1d7f21f56d05"
+    "ma": "1d7f21f56d05",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -1235,7 +1268,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Photo Limit Debate",
-    "ma": "f4d3525a586d"
+    "ma": "f4d3525a586d",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -1262,7 +1296,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "Forgiven Dark Past",
-    "ma": "7f26ad06e61c"
+    "ma": "7f26ad06e61c",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -1299,7 +1334,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Ghosting Policy Debate",
-    "ma": "9a94395e11ad"
+    "ma": "9a94395e11ad",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -1346,7 +1382,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Mandatory Bio Location Swap",
-    "ma": "0f67123ec5bf"
+    "ma": "0f67123ec5bf",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -1383,7 +1420,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "Expired Insurance Card",
-    "ma": "18cb4d0db5b6"
+    "ma": "18cb4d0db5b6",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -1420,7 +1458,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Profile Psychic Mix-up",
-    "ma": "81d39de9c511"
+    "ma": "81d39de9c511",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -1447,7 +1486,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Prompt Minimum Debate",
-    "ma": "fc63f1ea009e"
+    "ma": "fc63f1ea009e",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -1484,7 +1524,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "The Emergency Contact Bio",
-    "ma": "1599931b8da7"
+    "ma": "1599931b8da7",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -1531,7 +1572,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Prompt Mix-up",
-    "ma": "00be241c0713"
+    "ma": "00be241c0713",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -1568,7 +1610,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Mandatory Pet Photo Rule",
-    "ma": "e596f43781f3"
+    "ma": "e596f43781f3",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -1605,7 +1648,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "The Verification Selfie",
-    "ma": "db254893a5e7"
+    "ma": "db254893a5e7",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -1632,7 +1676,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Pizza Prompt Mix-up",
-    "ma": "75d8eab28b4f"
+    "ma": "75d8eab28b4f",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -1669,7 +1714,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "The Swipe Cap Limit",
-    "ma": "cda4208b53d7"
+    "ma": "cda4208b53d7",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -1721,7 +1767,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "The Drafted Bio",
-    "ma": "b278b499ae53"
+    "ma": "b278b499ae53",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -1758,7 +1805,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Height vs Cooking Mixup",
-    "ma": "8b04806b815b"
+    "ma": "8b04806b815b",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -1795,7 +1843,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Fun Fact Limit",
-    "ma": "6615ed3e0b70"
+    "ma": "6615ed3e0b70",
+    "diem_chot": 3
    }
   ],
   "rent": [
@@ -1824,7 +1873,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Rent increase confusion",
-    "ma": "6284f8757004"
+    "ma": "6284f8757004",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -1861,7 +1911,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Music Curfew",
-    "ma": "9974d1f9a42e"
+    "ma": "9974d1f9a42e",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -1908,7 +1959,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "Basement Confession",
-    "ma": "12646433172e"
+    "ma": "12646433172e",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -1945,7 +1997,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Parking Permit Paradox",
-    "ma": "ea83c2331b36"
+    "ma": "ea83c2331b36",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -1972,7 +2025,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Fire Drill Countdown",
-    "ma": "a05c8498677a"
+    "ma": "a05c8498677a",
+    "diem_chot": 5
    },
    {
     "loi": [
@@ -2009,7 +2063,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Faucet to Full Renovation",
-    "ma": "264ef7980df8"
+    "ma": "264ef7980df8",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2056,7 +2111,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Blue After Dusk",
-    "ma": "351d30a62bba"
+    "ma": "351d30a62bba",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -2093,7 +2149,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Meter Reset Countdown",
-    "ma": "396b2a05fc63"
+    "ma": "396b2a05fc63",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -2130,7 +2187,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Faucet to Roof",
-    "ma": "daa51ff0c901"
+    "ma": "daa51ff0c901",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -2157,7 +2215,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Furniture Age Rule",
-    "ma": "72dc58cbe861"
+    "ma": "72dc58cbe861",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2194,7 +2253,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Gate Countdown",
-    "ma": "69c8727afdc9"
+    "ma": "69c8727afdc9",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2241,7 +2301,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Kitchen Wall Leak",
-    "ma": "37e2d1dbd05c"
+    "ma": "37e2d1dbd05c",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2278,7 +2339,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Daylight Window Surcharge",
-    "ma": "40e0bf8241a6"
+    "ma": "40e0bf8241a6",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2315,7 +2377,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "AC Test Dilemma",
-    "ma": "12da045da51c"
+    "ma": "12da045da51c",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -2342,7 +2405,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "mailbox lock removal",
-    "ma": "72b40b200a70"
+    "ma": "72b40b200a70",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -2379,7 +2443,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Pet Rule",
-    "ma": "33781b5d89f9"
+    "ma": "33781b5d89f9",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -2426,7 +2491,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Elevator Free Fall Protocol",
-    "ma": "e129991e2993"
+    "ma": "e129991e2993",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2463,7 +2529,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Ceiling Crack Upgrade",
-    "ma": "5a9f964a25bb"
+    "ma": "5a9f964a25bb",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2500,7 +2567,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Shadow Occupancy Fee",
-    "ma": "5152fef54627"
+    "ma": "5152fef54627",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2527,7 +2595,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Balcony Pigeon Tax",
-    "ma": "c7b99a7c31ca"
+    "ma": "c7b99a7c31ca",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -2564,7 +2633,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Trash Chute Jam",
-    "ma": "ef3ee9af8bc9"
+    "ma": "ef3ee9af8bc9",
+    "diem_chot": 4
    }
   ],
   "gym": [
@@ -2593,7 +2663,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Car Cardio Confusion",
-    "ma": "ca2ac37941c0"
+    "ma": "ca2ac37941c0",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -2630,7 +2701,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Locker Silence",
-    "ma": "b8a6aae22aef"
+    "ma": "b8a6aae22aef",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -2677,7 +2749,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "Snack Confession",
-    "ma": "90468ab79b67"
+    "ma": "90468ab79b67",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -2714,7 +2787,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Battery Treadmill Ban",
-    "ma": "a767d973c3ee"
+    "ma": "a767d973c3ee",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -2741,7 +2815,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "The Fire Drill Code",
-    "ma": "b62b2be9696a"
+    "ma": "b62b2be9696a",
+    "diem_chot": 9
    },
    {
     "loi": [
@@ -2778,7 +2853,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Heated Gym Escalation",
-    "ma": "112ebb35fb0f"
+    "ma": "112ebb35fb0f",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2825,7 +2901,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Parking Lot Perimeter",
-    "ma": "6bb2260d271d"
+    "ma": "6bb2260d271d",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2862,7 +2939,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "The Towel Tax",
-    "ma": "5db4eff4414d"
+    "ma": "5db4eff4414d",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -2899,7 +2977,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Leak to Lagoon",
-    "ma": "3bbaf3444232"
+    "ma": "3bbaf3444232",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -2926,7 +3005,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Moving Book Rule",
-    "ma": "90c4328a78ae"
+    "ma": "90c4328a78ae",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -2963,7 +3043,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Fire Sprinkler Countdown",
-    "ma": "162fcc216123"
+    "ma": "162fcc216123",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3010,7 +3091,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Shoe Glue Warranty",
-    "ma": "c08e7f101ebe"
+    "ma": "c08e7f101ebe",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3047,7 +3129,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Sit-Up Sync",
-    "ma": "e67d6f92af13"
+    "ma": "e67d6f92af13",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -3084,7 +3167,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "The Weight Bench Timer",
-    "ma": "0724af176cf7"
+    "ma": "0724af176cf7",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3111,7 +3195,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Hydration Leak",
-    "ma": "d9cabf8e9ece"
+    "ma": "d9cabf8e9ece",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3148,7 +3233,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Water Bottle Audit",
-    "ma": "e60d2e24605e"
+    "ma": "e60d2e24605e",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3195,7 +3281,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Treadmill Launch Countdown",
-    "ma": "cb2dd26cbab1"
+    "ma": "cb2dd26cbab1",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3232,7 +3319,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Mat Odor Escalation",
-    "ma": "547ca838ebd9"
+    "ma": "547ca838ebd9",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3269,7 +3357,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Sauna Precision",
-    "ma": "9cd24a0c58c2"
+    "ma": "9cd24a0c58c2",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3296,7 +3385,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Rowing Reset",
-    "ma": "08549d3605b9"
+    "ma": "08549d3605b9",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3333,7 +3423,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Membership Fingerprint Scan",
-    "ma": "43b96ca37f50"
+    "ma": "43b96ca37f50",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3372,7 +3463,8 @@
     "noi": "the cardio row",
     "hook": "SANDALS BANNED FROM CARDIO ROWERS",
     "tinh_huong": "Color Code Row",
-    "ma": "1ecd14d83fa3"
+    "ma": "1ecd14d83fa3",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3411,7 +3503,8 @@
     "noi": "the cardio row",
     "hook": "ROWING MACHINE COUNTDOWN IN PROGRESS",
     "tinh_huong": "Auto‑Start Row Panic",
-    "ma": "bb2cb0ba3c2a"
+    "ma": "bb2cb0ba3c2a",
+    "diem_chot": 8
    }
   ],
   "airport": [
@@ -3440,7 +3533,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Overweight Bag Misread",
-    "ma": "d230a6a88a6c"
+    "ma": "d230a6a88a6c",
+    "diem_chot": 6
    },
    {
     "loi": [
@@ -3477,7 +3571,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Shoe Removal Policy",
-    "ma": "dfdeaf756b84"
+    "ma": "dfdeaf756b84",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3524,7 +3619,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "The Leftover Sandwich Confession",
-    "ma": "93d16b5ca193"
+    "ma": "93d16b5ca193",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3561,7 +3657,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Pre-boarding breathing tax",
-    "ma": "ed009057d67a"
+    "ma": "ed009057d67a",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3588,7 +3685,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Gate Closure Countdown",
-    "ma": "8beb98232ab8"
+    "ma": "8beb98232ab8",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -3625,7 +3723,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Frequent Flyer Tax Audit",
-    "ma": "30aca8d7b458"
+    "ma": "30aca8d7b458",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -3672,7 +3771,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Punctuality Bond",
-    "ma": "91047d14fbb2"
+    "ma": "91047d14fbb2",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3709,7 +3809,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Gate Countdown",
-    "ma": "bf84d728c9d4"
+    "ma": "bf84d728c9d4",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3746,7 +3847,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Armrest Evacuation",
-    "ma": "1535e742f577"
+    "ma": "1535e742f577",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3773,7 +3875,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Square Seat Rule",
-    "ma": "964163615488"
+    "ma": "964163615488",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3810,7 +3913,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Boarding Call Countdown",
-    "ma": "d5d2463d9456"
+    "ma": "d5d2463d9456",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3857,7 +3961,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Tag Trouble",
-    "ma": "2ab4592cb700"
+    "ma": "2ab4592cb700",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3894,7 +3999,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Altitude Resiliency Waiver",
-    "ma": "1c7954a67645"
+    "ma": "1c7954a67645",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3931,7 +4037,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Tray Reclamation Window",
-    "ma": "32d2ae6bd844"
+    "ma": "32d2ae6bd844",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -3958,7 +4065,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Tray Table Rental Deposit",
-    "ma": "f9aadf77cc36"
+    "ma": "f9aadf77cc36",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -3995,7 +4103,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Passport Sum Gate",
-    "ma": "3561be41aa72"
+    "ma": "3561be41aa72",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -4042,7 +4151,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Gate Countdown Crisis",
-    "ma": "c3e0f683884c"
+    "ma": "c3e0f683884c",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -4079,7 +4189,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Oversized Laptop",
-    "ma": "c2cd53f13542"
+    "ma": "c2cd53f13542",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -4116,7 +4227,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Proof of Negative",
-    "ma": "c14d77d5c099"
+    "ma": "c14d77d5c099",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -4143,7 +4255,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Jetbridge Countdown",
-    "ma": "ecee07c1742f"
+    "ma": "ecee07c1742f",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -4180,7 +4293,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Lock Lockdown",
-    "ma": "0782322a4b09"
+    "ma": "0782322a4b09",
+    "diem_chot": 2
    }
   ],
   "car": [
@@ -4209,7 +4323,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Misread Quote",
-    "ma": "cf64017ffaa5"
+    "ma": "cf64017ffaa5",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -4246,7 +4361,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "The Gravity Tax",
-    "ma": "6c6f3fa95ef6"
+    "ma": "6c6f3fa95ef6",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -4293,7 +4409,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "The Parking Garage Scratch",
-    "ma": "4f839823671c"
+    "ma": "4f839823671c",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -4330,7 +4447,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "The Treadmill Surcharge",
-    "ma": "51c2f16e3f1a"
+    "ma": "51c2f16e3f1a",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -4357,7 +4475,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Coolant Countdown",
-    "ma": "23c3226338bb"
+    "ma": "23c3226338bb",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -4394,7 +4513,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Performance Fan",
-    "ma": "d0350e454ee5"
+    "ma": "d0350e454ee5",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -4441,7 +4561,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Silent Clock Rule",
-    "ma": "9a0d976adb15"
+    "ma": "9a0d976adb15",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -4478,7 +4599,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Ignition Countdown",
-    "ma": "9e68264e882d"
+    "ma": "9e68264e882d",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -4515,7 +4637,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "The Bluetooth Debt",
-    "ma": "b877ff6a6553"
+    "ma": "b877ff6a6553",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -4542,7 +4665,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Idle Engine Rule",
-    "ma": "1b32a0d648dc"
+    "ma": "1b32a0d648dc",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -4579,7 +4703,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Fuel Pump Countdown",
-    "ma": "8c72b5ef2478"
+    "ma": "8c72b5ef2478",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -4626,7 +4751,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "ECU Upgrade Spiral",
-    "ma": "a8c8ddc98767"
+    "ma": "a8c8ddc98767",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -4663,7 +4789,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "The Headlight Compass",
-    "ma": "b193aa6bde5d"
+    "ma": "b193aa6bde5d",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -4700,7 +4827,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Airbag Countdown",
-    "ma": "b3c6d0319c3d"
+    "ma": "b3c6d0319c3d",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -4727,7 +4855,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "The Trunk Echo",
-    "ma": "ff63539316c3"
+    "ma": "ff63539316c3",
+    "diem_chot": 9
    },
    {
     "loi": [
@@ -4764,7 +4893,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Mileage Minute Rule",
-    "ma": "35234575f394"
+    "ma": "35234575f394",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -4811,7 +4941,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Brake Engagement Countdown",
-    "ma": "254865d5b441"
+    "ma": "254865d5b441",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -4848,7 +4979,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Coolant Overhaul",
-    "ma": "7ccbc2225f42"
+    "ma": "7ccbc2225f42",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -4885,7 +5017,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Conversation Billing",
-    "ma": "f84aeb2ea34b"
+    "ma": "f84aeb2ea34b",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -4912,7 +5045,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Pump Countdown",
-    "ma": "f7d8aebc2703"
+    "ma": "f7d8aebc2703",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -4949,7 +5083,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Leakage Warning",
-    "ma": "e0c88200b905"
+    "ma": "e0c88200b905",
+    "diem_chot": 8
    }
   ],
   "office": [
@@ -4978,7 +5113,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Quarterly Budget Sync",
-    "ma": "c084362cf199"
+    "ma": "c084362cf199",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -5015,7 +5151,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Meeting Minutes Rule",
-    "ma": "61f8d26f8673"
+    "ma": "61f8d26f8673",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -5062,7 +5199,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "The Printer Jam",
-    "ma": "6f0bd93c031f"
+    "ma": "6f0bd93c031f",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -5099,7 +5237,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Mandatory Breathing Protocol",
-    "ma": "0c43be020cd6"
+    "ma": "0c43be020cd6",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -5126,7 +5265,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Elevator Door Countdown",
-    "ma": "65d00d61f696"
+    "ma": "65d00d61f696",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -5163,7 +5303,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Coffee Fountain Upgrade",
-    "ma": "427b9e45d17b"
+    "ma": "427b9e45d17b",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -5210,7 +5351,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Roll Call Rule",
-    "ma": "9fd06cb447de"
+    "ma": "9fd06cb447de",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -5247,7 +5389,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "The Annual Fire Drill",
-    "ma": "8fed2861c2d1"
+    "ma": "8fed2861c2d1",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -5284,7 +5427,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Parking Space Lottery",
-    "ma": "4691effe1ac4"
+    "ma": "4691effe1ac4",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -5311,7 +5455,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Desk Chair Rotation",
-    "ma": "f17b54513c69"
+    "ma": "f17b54513c69",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -5348,7 +5493,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Projector Shutdown Countdown",
-    "ma": "f26987a11858"
+    "ma": "f26987a11858",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -5395,7 +5541,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Thermostat Debate",
-    "ma": "bf1c9e64584d"
+    "ma": "bf1c9e64584d",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -5432,7 +5579,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Mandatory Bathroom Attendance",
-    "ma": "af07ad13040a"
+    "ma": "af07ad13040a",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -5469,7 +5617,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Software License Expiration",
-    "ma": "3b85f1db7489"
+    "ma": "3b85f1db7489",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -5496,7 +5645,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Snack Drawer",
-    "ma": "a4f11eb53517"
+    "ma": "a4f11eb53517",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -5533,7 +5683,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Snail Mail Invite",
-    "ma": "5d6c71a1bac7"
+    "ma": "5d6c71a1bac7",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -5580,7 +5731,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Microwave Countdown",
-    "ma": "12a4aef3aaef"
+    "ma": "12a4aef3aaef",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -5617,7 +5769,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Air Freshener Issue",
-    "ma": "132050683506"
+    "ma": "132050683506",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -5654,7 +5807,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Blink Rate Policy",
-    "ma": "b520a1aa89ef"
+    "ma": "b520a1aa89ef",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -5681,7 +5835,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Password Expiration Alert",
-    "ma": "81e221a2d8a8"
+    "ma": "81e221a2d8a8",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -5718,7 +5873,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Emergency Pen Shortage",
-    "ma": "b7c01a66cb22"
+    "ma": "b7c01a66cb22",
+    "diem_chot": 3
    }
   ],
   "diet": [
@@ -5747,7 +5903,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Salad Car Mixup",
-    "ma": "b0e90f3ef87e"
+    "ma": "b0e90f3ef87e",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -5784,7 +5941,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Midnight Snack Standoff",
-    "ma": "7e22306ae3d9"
+    "ma": "7e22306ae3d9",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -5831,7 +5989,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "Pistachio Shell Crisis",
-    "ma": "6d8fce8202da"
+    "ma": "6d8fce8202da",
+    "diem_chot": 9
    },
    {
     "loi": [
@@ -5868,7 +6027,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Vowel Syllable Ban",
-    "ma": "d754366b1d3f"
+    "ma": "d754366b1d3f",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -5895,7 +6055,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Protein Bar Countdown",
-    "ma": "8346ebb6db83"
+    "ma": "8346ebb6db83",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -5932,7 +6093,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Snack Bar Buffet",
-    "ma": "9766cb7cec4a"
+    "ma": "9766cb7cec4a",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -5979,7 +6141,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Prime Price Rule",
-    "ma": "ab92fc901460"
+    "ma": "ab92fc901460",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6016,7 +6179,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Cauliflower Countdown",
-    "ma": "0cd2ebd3b853"
+    "ma": "0cd2ebd3b853",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -6053,7 +6217,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Dressing Overload",
-    "ma": "3a50ea67b5f4"
+    "ma": "3a50ea67b5f4",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -6080,7 +6245,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Alphabet Diet Rule",
-    "ma": "315d4ffba40a"
+    "ma": "315d4ffba40a",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6117,7 +6283,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Microwave Soup Minute",
-    "ma": "1562d5410300"
+    "ma": "1562d5410300",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -6164,7 +6331,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Cellar Juice Protocol",
-    "ma": "3c75307f2fa5"
+    "ma": "3c75307f2fa5",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -6201,7 +6369,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Prime Calorie Rule",
-    "ma": "58985947df0f"
+    "ma": "58985947df0f",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -6238,7 +6407,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Boiled Egg Countdown",
-    "ma": "2513425f7035"
+    "ma": "2513425f7035",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6265,7 +6435,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Airfryer Steam Leak",
-    "ma": "5a2bc5f22873"
+    "ma": "5a2bc5f22873",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -6302,7 +6473,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Prime Calorie Plate",
-    "ma": "d4804883d79a"
+    "ma": "d4804883d79a",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -6349,7 +6521,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Cookie Countdown",
-    "ma": "73031489667b"
+    "ma": "73031489667b",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -6386,7 +6559,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Kale Smoothie Spill",
-    "ma": "f7c28a32ac0d"
+    "ma": "f7c28a32ac0d",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -6423,7 +6597,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Shadow Calorie Ledger",
-    "ma": "2ba992f4ec92"
+    "ma": "2ba992f4ec92",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6450,7 +6625,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Microwave Soup Countdown",
-    "ma": "206949c081c7"
+    "ma": "206949c081c7",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -6487,7 +6663,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Cellar Muffin Ledger",
-    "ma": "88374697e398"
+    "ma": "88374697e398",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6596,7 +6773,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "Cleaning Hours Mixup",
-    "ma": "a08b16e90d3a"
+    "ma": "a08b16e90d3a",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6633,7 +6811,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Evening Snack Rule",
-    "ma": "5a2f7a58bca7"
+    "ma": "5a2f7a58bca7",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6680,7 +6859,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "The Hidden Basement Key",
-    "ma": "92bf9f8d48db"
+    "ma": "92bf9f8d48db",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6717,7 +6897,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Evening Sock Rule",
-    "ma": "b91079ee6d19"
+    "ma": "b91079ee6d19",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6744,7 +6925,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Garage Door Countdown",
-    "ma": "98294a779e50"
+    "ma": "98294a779e50",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -6781,7 +6963,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Laundry Load Timing",
-    "ma": "8c071a324fa2"
+    "ma": "8c071a324fa2",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6828,7 +7011,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Backyard Lunar Rule",
-    "ma": "3944c9058abc"
+    "ma": "3944c9058abc",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6865,7 +7049,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Gate Countdown",
-    "ma": "a4e043e96f78"
+    "ma": "a4e043e96f78",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6902,7 +7087,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Living Room Paint Audit",
-    "ma": "c1bff424ed41"
+    "ma": "c1bff424ed41",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -6929,7 +7115,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Kitchen Counter Radius",
-    "ma": "7ac1a713f20e"
+    "ma": "7ac1a713f20e",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -6966,7 +7153,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Microwave Soup Countdown",
-    "ma": "e6e207cdef81"
+    "ma": "e6e207cdef81",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -7013,7 +7201,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Driveway Basketball Hoop Height",
-    "ma": "0d8a0ad9deb8"
+    "ma": "0d8a0ad9deb8",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7050,7 +7239,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Odd Minute Silence",
-    "ma": "879b1e383998"
+    "ma": "879b1e383998",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -7087,7 +7277,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Front Door Auto-Lock",
-    "ma": "0de0225a3730"
+    "ma": "0de0225a3730",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7114,7 +7305,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "mailbox replacement protocol",
-    "ma": "9b42a826fda5"
+    "ma": "9b42a826fda5",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -7151,7 +7343,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Price Drawer Rule",
-    "ma": "b2dcf0546200"
+    "ma": "b2dcf0546200",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7198,7 +7391,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Patio Light Countdown",
-    "ma": "86672a6642b8"
+    "ma": "86672a6642b8",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -7235,7 +7429,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Thermostat Escalation",
-    "ma": "4226ff2ff592"
+    "ma": "4226ff2ff592",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7272,7 +7467,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Carpet Step Rule",
-    "ma": "f57e46deef1c"
+    "ma": "f57e46deef1c",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -7299,7 +7495,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Oven Timer Countdown",
-    "ma": "a2c283ff7664"
+    "ma": "a2c283ff7664",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7336,7 +7533,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Green Upgrade Plan",
-    "ma": "a805d6715225"
+    "ma": "a805d6715225",
+    "diem_chot": 4
    }
   ],
   "neighbor": [
@@ -7365,7 +7563,8 @@
     ],
     "khung": "hieu_lam",
     "tinh_huong": "measuring the dog leash",
-    "ma": "b9d97680f6bd"
+    "ma": "b9d97680f6bd",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -7402,7 +7601,8 @@
     ],
     "khung": "dao_vai",
     "tinh_huong": "Truck time rule",
-    "ma": "22cd8b10e78a"
+    "ma": "22cd8b10e78a",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -7449,7 +7649,8 @@
     ],
     "khung": "thu_nhan",
     "tinh_huong": "Stolen Garden Gnome",
-    "ma": "c82f5909426f"
+    "ma": "c82f5909426f",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7486,7 +7687,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Triple item rule",
-    "ma": "f427e6d36af6"
+    "ma": "f427e6d36af6",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7513,7 +7715,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "The Attic Hatch Countdown",
-    "ma": "8ee1a42a8281"
+    "ma": "8ee1a42a8281",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7550,7 +7753,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Sprinkler to Pond",
-    "ma": "bca0d4038bb4"
+    "ma": "bca0d4038bb4",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -7597,7 +7801,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Shadow Rule",
-    "ma": "6570bc695b24"
+    "ma": "6570bc695b24",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7634,7 +7839,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Moving Truck Countdown",
-    "ma": "4880717d1810"
+    "ma": "4880717d1810",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7671,7 +7877,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Trash Can Jam",
-    "ma": "da6e89ecbfe6"
+    "ma": "da6e89ecbfe6",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -7698,7 +7905,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Prime Water Rule",
-    "ma": "1fc1e3bd1427"
+    "ma": "1fc1e3bd1427",
+    "diem_chot": 2
    },
    {
     "loi": [
@@ -7735,7 +7943,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Mailbox Flag Angle",
-    "ma": "6024e33ae8a3"
+    "ma": "6024e33ae8a3",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -7782,7 +7991,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Recycling Bin Fix",
-    "ma": "0580b7ef8cad"
+    "ma": "0580b7ef8cad",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -7819,7 +8029,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Lettered Surfaces",
-    "ma": "0eb567e8de72"
+    "ma": "0eb567e8de72",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7856,7 +8067,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Elevator Box",
-    "ma": "1c23f7c8b45e"
+    "ma": "1c23f7c8b45e",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7883,7 +8095,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Porch Light Upgrade",
-    "ma": "c6f36c7df4bd"
+    "ma": "c6f36c7df4bd",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7920,7 +8133,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Tile Rule",
-    "ma": "da53f04accc6"
+    "ma": "da53f04accc6",
+    "diem_chot": 3
    },
    {
     "loi": [
@@ -7967,7 +8181,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Timered Sprinkler Test",
-    "ma": "6935b8c5e11a"
+    "ma": "6935b8c5e11a",
+    "diem_chot": 4
    },
    {
     "loi": [
@@ -8004,7 +8219,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Leaky Faucet Flood",
-    "ma": "eb5da77a09d4"
+    "ma": "eb5da77a09d4",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -8041,7 +8257,8 @@
     ],
     "khung": "luat_ngo",
     "tinh_huong": "Prime Clock Rule",
-    "ma": "934a50c69953"
+    "ma": "934a50c69953",
+    "diem_chot": 7
    },
    {
     "loi": [
@@ -8068,7 +8285,8 @@
     ],
     "khung": "dem_nguoc",
     "tinh_huong": "Fire Alarm Countdown",
-    "ma": "2b22e1e8ae20"
+    "ma": "2b22e1e8ae20",
+    "diem_chot": 8
    },
    {
     "loi": [
@@ -8105,7 +8323,8 @@
     ],
     "khung": "leo_thang",
     "tinh_huong": "Wi-Fi Upgrade",
-    "ma": "63541b5beb9b"
+    "ma": "63541b5beb9b",
+    "diem_chot": 3
    }
   ]
  },

@@ -3,8 +3,8 @@ import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from
 import { DienVienHai } from "../v4/DienVienHai";
 import { KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVien";
 import type { Luot } from "../v4/KichHai";
-import { NenPanel, DaoCu, doDaoCu } from "./NenComic";
-import { noiCuaTap, Noi } from "./NoiChon";
+import { NenPanel, NenGan, DaoCu, doDaoCu } from "./NenComic";
+import { noiCuaTap, Noi, SAN } from "./NoiChon";
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // KỊCH COMIC — 31/8/2026
@@ -235,7 +235,7 @@ const Panel: React.FC<{
                         (h * (1 - _chuaCan)) / ((CAO_NGUOI - Y_NGUC) * (noiA ? caoA : caoB)));
   const k = doiNguoi ? kRong : kCan;
   const yChan = doiNguoi
-    ? (khungDoc ? h * 0.95 : h + Y_HONG * caoMin * k)
+    ? (khungDoc ? h * (bongDuoi ? SAN - 0.21 : SAN) : h + Y_HONG * caoMin * k)
     : h * (khungDoc ? 0.30 : _chuaCan) + CAO_NGUOI * (noiA ? caoA : caoB) * kCan;
 
   // Người NGHE không được đứng yên tay buông — nửa còn lại của trò đùa nằm ở phản ứng của nó.
@@ -332,6 +332,9 @@ const Panel: React.FC<{
           />
         ) : null}
       </svg>
+
+      {/* lớp gần vẽ SAU nhân vật -> che một phần người, cho ra chiều sâu */}
+      <NenGan noi={noi} w={w} h={h} mau={mau} mauPhu={mauPhu} rong={doiNguoi} />
 
       <BongThoai chu={L.nar} tu={tu} giay={giay} W={w} H={h}
                  ben={canRong ? (noiA ? "phai" : "trai") : (noiA ? "trai" : "phai")}
