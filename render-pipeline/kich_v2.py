@@ -719,6 +719,160 @@ def lay_so_lieu(nguon: str, D):
     return (tt, ds, ng)
 
 
+# ── THƯ VIỆN KIỂU KỂ ────────────────────────────────────────────────────────────────────────
+# 31/8 — Anh hỏi cách làm template đa dạng để không vi phạm chính sách YouTube. Đo trước khi
+# thiết kế, và con số chỉ ngược lại chỗ tôi định sửa: 52% câu trong 25 video dùng KHUÔN đã có ở
+# video khác, khuôn nặng nhất lặp 18 lần. Nhìn vào code thì hiển nhiên — kịch bản có sáu câu,
+# BỐN CÂU LÀ CHUỖI CỨNG dùng chung cho mọi kênh, mọi tập, chỉ thay tên và số:
+#     "{tiêu đề}. The gap is bigger than it looks."
+#     "{hạng nhì} comes second at {số}. Then it drops fast."
+#     "This is straight from {nguồn}, not from me."
+#     + một trong ba câu chốt cố định
+#
+# Chính sách "inauthentic content" (YouTube làm rõ 16/7/2026) gọi đúng tên thứ này: "templated
+# storylines", "minimal variation", "characters put in the same situation over and over again
+# with the same outcome". Đổi bố cục hình — nhân vật sang phải, đổi màu, đổi dáng cột — KHÔNG
+# chạm tới điều đó. Cái được xét là câu chuyện, không phải cách trang trí.
+#
+# Nên thay bốn chuỗi cứng bằng SÁU KIỂU KỂ khác nhau về CẤU TRÚC, không chỉ khác chữ:
+#   dinh     — mở từ đỉnh bảng, đi xuống
+#   nguoc    — mở từ đáy bảng, leo lên đỉnh (đảo hẳn hướng kể)
+#   do       — mời người xem đoán trước khi tiết lộ
+#   khoang   — lấy KHOẢNG CÁCH giữa hai mục làm nhân vật chính
+#   nguoi    — quy con số về một người bình thường
+#   nguon    — bắt đầu từ chính bộ dữ liệu, rồi mới tới con số
+# Mỗi kiểu lại có nhiều biến thể câu. Chọn theo băm (tên kênh + số tập) nên hai tập liền của
+# cùng một kênh không bao giờ trùng kiểu, mà mỗi kênh vẫn có thiên hướng riêng.
+KIEU_KE = ("dinh", "nguoc", "do", "khoang", "nguoi", "nguon")
+
+
+def _loi_ke(kieu: str, bien: int, top_ten: str, top_hien: str, hai_ten: str, hai_hien: str,
+            cuoi_ten: str, cuoi_hien: str, tieu_de: str, nguon: str, hoi: str) -> list:
+    """Sáu câu cho một tập, theo kiểu kể đã chọn. Trả [(lời, cảm xúc, cử chỉ)]."""
+    ng = str(nguon).split(",")[0].strip()
+    b = lambda ds: ds[bien % len(ds)]
+
+    if kieu == "nguoc":
+        return [
+            (b([f"Start at the bottom. {cuoi_ten} is only {cuoi_hien}.",
+                f"{cuoi_hien}. That is the smallest number here, and it belongs to {cuoi_ten}.",
+                f"Everyone looks at the top. Look at {cuoi_ten} instead: {cuoi_hien}."]), "nghi_ngo", "chi"),
+            (hoi, "nghi_ngo", "mo_tay"),
+            (b([f"Now climb. {hai_ten} is already at {hai_hien}.",
+                f"One step up and you are at {hai_hien}, which is {hai_ten}.",
+                f"{hai_ten} sits well above that, at {hai_hien}."]), "bat_ngo", "dem"),
+            (b([f"And the top is {top_ten}, at {top_hien}.",
+                f"All the way up: {top_ten}, {top_hien}.",
+                f"{top_hien}. That is {top_ten}, sitting alone at the top."]), "tu_tin", "gio_len"),
+            (b([f"{ng} publishes every one of these.",
+                f"All of it sits in {ng}, open to anyone.",
+                f"{ng} has had this online the whole time."]), "trung_tinh", "khoanh_tay"),
+            (b(["Read it from the bottom and it tells a different story.",
+                "Same table, opposite direction, different feeling.",
+                "The bottom of a list is where the surprises hide."]), "vui", "nghi"),
+        ]
+
+    if kieu == "do":
+        return [
+            (b([f"Guess which one leads. Most people get this wrong.",
+                f"Before the numbers: pick one. You have a second.",
+                f"Take a guess, then keep watching."]), "nghi_ngo", "mo_tay"),
+            (hoi, "nghi_ngo", "chi"),
+            (b([f"It is {top_ten}, at {top_hien}.",
+                f"The answer is {top_ten}. {top_hien}.",
+                f"{top_ten}. {top_hien}, and it is not close."]), "bat_ngo", "gio_len"),
+            (b([f"{hai_ten} is second, at {hai_hien}.",
+                f"Second place, {hai_ten}, {hai_hien}.",
+                f"Behind it: {hai_ten} at {hai_hien}."]), "trung_tinh", "dem"),
+            (b([f"Every figure here comes from {ng}.",
+                f"{ng} keeps the record, not me.",
+                f"These are {ng} numbers, unedited."]), "tu_tin", "khoanh_tay"),
+            (b(["If you guessed right, you were paying attention.",
+                "Most people pick the second one. Now you know why.",
+                "Say your guess out loud next time. It sticks better."]), "vui", "nghi"),
+        ]
+
+    if kieu == "khoang":
+        return [
+            (b([f"The gap is the story: {top_hien} against {cuoi_hien}.",
+                f"Look at the distance, not the top. {top_hien} versus {cuoi_hien}.",
+                f"{top_hien} at one end, {cuoi_hien} at the other."]), "bat_ngo", "mo_tay"),
+            (hoi, "nghi_ngo", "chi"),
+            (b([f"{top_ten} holds the high end.",
+                f"Up top, {top_ten}.",
+                f"{top_ten} is what sets the ceiling here."]), "tu_tin", "gio_len"),
+            (b([f"{cuoi_ten} sits at the floor with {cuoi_hien}.",
+                f"Down at the bottom: {cuoi_ten}, {cuoi_hien}.",
+                f"And {cuoi_ten} never gets past {cuoi_hien}."]), "trung_tinh", "dem"),
+            (b([f"{ng} lists both, side by side.",
+                f"Both numbers come from the same {ng} table.",
+                f"{ng} put them in one file. Nobody reads it."]), "trung_tinh", "khoanh_tay"),
+            (b(["A gap that wide is never an accident.",
+                "Distance like that has a reason behind it.",
+                "Ask who benefits from the gap staying that wide."]), "nghi_ngo", "nghi"),
+        ]
+
+    if kieu == "nguoi":
+        return [
+            (b([f"{top_hien}. Try holding that number in your head.",
+                f"Put {top_hien} next to anything you own.",
+                f"{top_hien} is the kind of number that stops meaning anything."]), "bat_ngo", "mo_tay"),
+            (hoi, "nghi_ngo", "chi"),
+            (b([f"It belongs to {top_ten}.",
+                f"That is {top_ten}, alone at the top.",
+                f"{top_ten} carries that figure."]), "tu_tin", "gio_len"),
+            (b([f"{hai_ten} is next, and already down at {hai_hien}.",
+                f"The next one, {hai_ten}, drops to {hai_hien}.",
+                f"After that it falls to {hai_hien} for {hai_ten}."]), "trung_tinh", "dem"),
+            (b([f"{ng} counted it, not me.",
+                f"The counting was done by {ng}.",
+                f"{ng} keeps this list current."]), "trung_tinh", "khoanh_tay"),
+            (b(["Numbers this size only matter when you scale them down.",
+                "Divide it by a household and it starts to bite.",
+                "Big numbers hide small decisions."]), "nghi_ngo", "nghi"),
+        ]
+
+    if kieu == "nguon":
+        return [
+            (b([f"{ng} keeps a file most people never open.",
+                f"There is a public {ng} table behind this.",
+                f"{ng} updates this quietly, all year."]), "nghi_ngo", "khoanh_tay"),
+            (hoi, "nghi_ngo", "mo_tay"),
+            (b([f"Top of the file: {top_ten}, {top_hien}.",
+                f"First line, {top_ten}, at {top_hien}.",
+                f"{top_ten} opens the list at {top_hien}."]), "bat_ngo", "gio_len"),
+            (b([f"{hai_ten} follows at {hai_hien}.",
+                f"Line two: {hai_ten}, {hai_hien}.",
+                f"Then {hai_ten}, {hai_hien}."]), "trung_tinh", "dem"),
+            (b([f"Down at the end, {cuoi_ten} with {cuoi_hien}.",
+                f"The file closes with {cuoi_ten}, {cuoi_hien}.",
+                f"Last line, {cuoi_ten}: {cuoi_hien}."]), "trung_tinh", "chi"),
+            (b(["Public does not mean anyone looks.",
+                "Open data only works if somebody opens it.",
+                "The file was never hidden. It was just boring."]), "vui", "nghi"),
+        ]
+
+    # dinh — kiểu gốc, giữ lại nhưng cũng có biến thể
+    return [
+        (b([f"{top_hien}. That is {top_ten}, and most people have no idea.",
+            f"Nobody talks about this: {top_hien} for {top_ten}.",
+            f"{top_ten} sits at {top_hien}. Watch what happens next."]), "bat_ngo", "mo_tay"),
+        (hoi, "nghi_ngo", "mo_tay"),
+        (b([f"{tieu_de}. The gap is bigger than it looks.",
+            f"{tieu_de}. And the spread is wider than anyone says.",
+            f"{tieu_de}. The distance between these is the whole point."]), "tu_tin", "dem"),
+        (b([f"{hai_ten} comes second at {hai_hien}. Then it drops fast.",
+            f"Second is {hai_ten}, {hai_hien}, and after that it falls away.",
+            f"{hai_ten} takes second with {hai_hien}. The rest are far behind."]), "trung_tinh", "khoanh_tay"),
+        (b([f"This is straight from {ng}, not from me.",
+            f"{ng} published every figure here.",
+            f"None of this is mine. It is all {ng}."]), "tu_tin", "dem"),
+        (b(["Check it yourself before you believe me.",
+            "Everything here is public. Most people never look.",
+            "One search and you can prove me wrong."]), "vui", "nghi"),
+    ]
+
+
 def _lam_sach_nhan(ds: list) -> list:
     """Dọn nhãn cột trước khi lên biểu đồ.
 
@@ -878,34 +1032,30 @@ def dung_canh(k: dict, so_lieu, giay_moi_cau: float = 3.4) -> tuple:
     # giống nhau — cùng cách đã dùng cho 50 kênh thế hệ 2.
     import hashlib as _h
     _k = int(_h.md5(k["ten"].encode()).hexdigest(), 16) % 3
-    _mo = [f"{top_hien}. That is {top_ten}, and most people have no idea.",
-           f"Nobody talks about this: {top_hien} for {top_ten}.",
-           f"{top_ten} sits at {top_hien}. Watch what happens next."][_k]
-    _chot = ["Check it yourself before you believe me.",
-             "Everything here is public. Most people never look.",
-             "One search and you can prove me wrong."][_k]
-    cau = [
-        # 30/8 — CẢNH MỞ DÙNG CỠ RỘNG, KHÔNG DÙNG CỠ CẬN.
-        # Sau khi chuyển sang bố cục người-dẫn-ở-góc, cảnh mở khai "can" làm nhân vật to nhất
-        # phim ngay giây đầu và tràn hẳn mép trái — đo được trên khung mở FINE PRINT: mất một
-        # phần ba khuôn mặt. Và nó còn sai về kể chuyện: giây đầu là lúc người xem cần thấy MÌNH
-        # ĐANG Ở ĐÂU, tức là lúc cần thấy bối cảnh nhiều nhất, chứ không phải lúc soi vào mặt.
-        # Cỡ cận để dành cho câu chốt — chỗ cần nét mặt.
-        (_mo, "bat_ngo", "mo_tay", "rong", [0.2, -0.12]),
-        (k["hoi"], "nghi_ngo", "mo_tay", "trung", [0, 0]),
-        # 29/8 — CẢNH CÓ BIỂU ĐỒ THÌ TAY PHẢI Ở TRONG NGƯỜI. Khung thật: cử chỉ "chỉ" duỗi tay
-        # sang phải và cắt ngang tấm biểu đồ, nhìn ra là hai lớp chồng nhau chứ không ra là người
-        # đang chỉ vào bảng. Nhân vật đứng bên trái, bảng bên phải — khoảng giữa quá hẹp để một
-        # cánh tay duỗi hết cỡ nằm gọn.
-        # Ba cảnh có bảng dùng cử chỉ khép: đếm trên ngón, khoanh tay, ngửa lòng bàn tay. Mắt
-        # người xem đã có con số dẫn đường rồi, không cần một ngón tay chỉ nữa.
-        (f"{tieu_de}. The gap is bigger than it looks.", "tu_tin", "dem", "trung", [-0.28, 0.1]),
-        (f"{dan[1][0]} comes second at {dan[1][2]}. Then it drops fast.",
-         "trung_tinh", "khoanh_tay", "trung", [0.3, 0]),
-        (f"This is straight from {nguon.split(',')[0]}, not from me.",
-         "tu_tin", "dem", "trung", [0.1, 0]),
-        (_chot, "vui", "nghi", "trung", [0, 0]),
-    ]
+    # 31/8 — CHỌN KIỂU KỂ theo (kênh + số tập). Băm cả số tập nên hai tập liền của cùng một
+    # kênh không bao giờ trùng kiểu; băm cả tên kênh nên mỗi kênh vẫn nghiêng về một vài kiểu
+    # riêng và giữ được giọng của nó. Xem `KIEU_KE` để biết vì sao phải làm thế.
+    # Băm thẳng số tập rồi lấy dư thì hai tập liền vẫn va nhau — thử ra BANK RUN tập 1 và 2
+    # cùng kiểu. Nên mỗi kênh có một HOÁN VỊ riêng của sáu kiểu, và tập thứ i lấy phần tử thứ i
+    # trong hoán vị ấy: sáu tập liên tiếp chắc chắn sáu kiểu khác nhau, mà thứ tự thì mỗi kênh
+    # một khác. Biến thể câu đổi sau mỗi vòng sáu tập, nên vòng thứ hai không lặp lại vòng đầu.
+    _hs = int(_h.md5(k["ten"].encode()).hexdigest(), 16)
+    _perm = sorted(KIEU_KE, key=lambda x: _h.md5(f"{k['ten']}|{x}".encode()).hexdigest())
+    _kieu = _perm[so % len(_perm)]
+    _bien = ((so // len(_perm)) + _hs) % 3
+    _cuoi = dan[-1] if len(dan) > 2 else dan[1]
+    _loi = _loi_ke(_kieu, _bien,
+                   top_ten, top_hien,
+                   dan[1][0], dan[1][2],
+                   _cuoi[0], _cuoi[2],
+                   tieu_de, nguon, k["hoi"])
+    # Cỡ máy và hướng nhìn giữ nguyên theo VỊ TRÍ trong bài, không theo kiểu kể: cảnh mở luôn
+    # cần khung rộng để người xem thấy mình đang ở đâu, cảnh chốt luôn cần nét mặt. Đó là ngữ
+    # pháp hình, không phải phần cần đa dạng.
+    _khung = [("rong", [0.2, -0.12]), ("trung", [0, 0]), ("trung", [-0.28, 0.1]),
+              ("trung", [0.3, 0]), ("trung", [0.1, 0]), ("trung", [0, 0])]
+    cau = [(_loi[x][0], _loi[x][1], _loi[x][2], _khung[x][0], _khung[x][1])
+           for x in range(min(len(_loi), len(_khung)))]
     # 29/8 — MỖI CÂU MỘT LỚP HÌNH RIÊNG. Anh: "mỗi lần nhân vật nói gì thì cần có bối cảnh phù
     # hợp và chart + số liệu animation chạy động".
     # Bản trước chỉ cảnh 2 có số và cảnh 3 có biểu đồ; bốn cảnh còn lại nhân vật nói vào khoảng
