@@ -1036,13 +1036,24 @@ def _da_lam_v3(ten_kenh: str) -> list:
     và không có chỗ nào để sổ ấy lệch khỏi thực tế."""
     import glob as _g
     ra = []
-    for f in _g.glob(os.path.join(PUB, "..", "..", "render-pipeline", "out", "v3_*.json")):
-        try:
-            d = json.load(io.open(f, encoding="utf-8"))
-        except Exception:
-            continue
-        if str(d.get("kenh") or "").strip().upper() == str(ten_kenh).strip().upper():
-            ra.append(d)
+    # 31/8 — Đường dẫn suy từ CHÍNH TỆP NÀY, không đi vòng qua PUB rồi ".." hai lần. Trên máy
+    # tôi hai đường ấy trỏ cùng chỗ nên không lộ; trên GitHub Actions thư mục làm việc khác,
+    # và một đường vòng như thế là chỗ hỏng lặng lẽ — hàm trả rỗng, mọi kênh thành "tập 1", và
+    # kiểu kể lại về cùng một loại. Anh dặn đúng: chạy được trên máy chưa phải là chạy được.
+    _OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
+    # 31/8 — ĐẾM THEO TÊN TỆP, không đọc trường `kenh` trong props.
+    # Bản trước lọc theo `d["kenh"]` — mà props KHÔNG có trường ấy (chỉ có tieuDe, nguon...).
+    # Nên hàm luôn trả rỗng, mọi kênh thành "tập 1", và kiểu kể lại về đúng một loại. Lỗi im
+    # lặng: không ngoại lệ, không cảnh báo, chỉ là sự đa dạng biến mất.
+    # Tên tệp `v3_<slug>.json` do chính đường dựng này đặt, nên nó là nguồn đáng tin sẵn có —
+    # thêm một trường mới vào props chỉ tạo thêm một chỗ để lệch.
+    # Dùng ĐÚNG phép đặt tên của nơi ghi tệp (dòng ~1905: replace(" ","").lower()). Viết một
+    # phép "tương đương" khác — như bỏ mọi ký tự không phải chữ số — thì hai bên lệch nhau ở
+    # những tên có dấu & hoặc gạch nối, và lệch âm thầm.
+    _sl = str(ten_kenh).replace(" ", "").lower()
+    for f in _g.glob(os.path.join(_OUT, "v3_*.json")):
+        if os.path.basename(f)[3:-5] == _sl:
+            ra.append(f)
     return ra
 
 
