@@ -42,7 +42,9 @@ on:
         description: "Chỉ dựng vài kênh, cách nhau bằng dấu phẩy (bỏ trống = cả lô)"
         default: ""
 
-concurrency: { group: mm0-phantich, cancel-in-progress: false }
+# LUẬT 18+2: mọi xưởng render dùng CHUNG một nhóm, kể cả xưởng theo lô đã tắt cron —
+# nó vẫn bấm tay được, nên vẫn chồng được. Xem `kiem_song_song.py`.
+concurrency: { group: mm0-render, cancel-in-progress: false }
 
 jobs:
   dung:

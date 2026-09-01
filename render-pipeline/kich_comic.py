@@ -250,6 +250,35 @@ def _am_nhac(nhac: str) -> float:
     return float(_bang("music/am_luong.json").get(os.path.basename(nhac), 0.16))
 
 
+def kho_cua_kenh(k: dict) -> list:
+    """Kho mẩu của một kênh: viết tay TRƯỚC, sinh mới nối sau.
+
+    Tách thành hàm để bước CHUẨN BỊ NỀN hỏi được đúng mẩu mà bước dựng sẽ dùng. Nếu hai bên tự
+    tính riêng thì sớm muộn chúng lệch nhau, và triệu chứng là nền sinh cho nơi A trong khi
+    thoại diễn ra ở nơi B — sai mà không có lỗi nào báo.
+    """
+    kho = list(KHO[k["de"]])
+    try:
+        _kt = os.path.join(GOC, "kho_comic.json")
+        if os.path.exists(_kt):
+            _k2 = json.load(io.open(_kt, encoding="utf-8"))
+            for _m in _k2.get("mau", {}).get(k["de"], []):
+                kho.append({"boi": 0, "loi": [tuple(c) for c in _m["loi"]],
+                            "noi": _m.get("noi", ""), "hook": _m.get("hook", "")})
+    except Exception as e:
+        # Không nuốt: kho hỏng mà lặng lẽ bỏ qua thì hệ âm thầm quay về vòng lặp bốn mẩu, và
+        # triệu chứng duy nhất là "sao dạo này video giống nhau thế".
+        print(f"   ⚠️ kho sinh không đọc được, chỉ dùng kho viết tay: {str(e)[:70]}")
+    return kho
+
+
+def mau_cua_tap(k: dict, vong: int) -> tuple:
+    """(mẩu, câu thoại) của tập `vong` — dùng chung cho bước chuẩn bị nền và bước dựng."""
+    kho = kho_cua_kenh(k)
+    kb = kho[vong % len(kho)]
+    return kb, kb["loi"]
+
+
 def noi_va_nen(k: dict, kb: dict, cau: list, vong: int) -> tuple:
     """Nơi chốn của mẩu này -> (chỉ số nơi, đường dẫn ảnh nền). Nguồn DUY NHẤT cho cả ngắn+dài.
 
@@ -287,6 +316,16 @@ def noi_va_nen(k: dict, kb: dict, cau: list, vong: int) -> tuple:
             idx = -tot[1]
 
     anh = ""
+    # TẦNG 0 — NỀN RIÊNG CỦA TẬP NÀY. 1/9, anh: *"tạo cho đa dạng, ko dùng lại, mà tạo cho đúng
+    # bối cảnh channel, videos"* + *"key api free dư sức mà"*. Dùng lại một ảnh cho mọi tập là
+    # tự tay làm kênh nhàm; 97 khoá CF cho ~16.300 ảnh/ngày nên sinh mới mỗi tập là rẻ.
+    # Ảnh của tập do bước CHUẨN BỊ sinh trước (`chuan_bi_nen.py --vong N`), nên bước render vẫn
+    # không gọi API lần nào. Không có thì rơi xuống kho 110 ảnh chuẩn — lớp đỡ, không phải lớp
+    # chính.
+    if idx >= 0:
+        rieng = f"comic_nen/{_ten_tep(k)}_{idx:02d}_t{vong:03d}.jpg"
+        if os.path.exists(os.path.join(PUB, rieng)):
+            return idx, rieng
     try:
         nc = json.load(io.open(os.path.join(GOC, "nen_cf.json"), encoding="utf-8"))
         ds = nc.get(_ten_tep(k), {})
@@ -339,20 +378,7 @@ def dung_luot_comic(k: dict, vong: int) -> tuple:
     # Anh: *"mỗi channel làm hàng nghìn videos đảm bảo đa dạng, ko lặp lại hay cùng 1 motip"*.
     # Bốn mẩu viết tay cho mỗi kênh nghĩa là tập thứ năm quay lại mẩu thứ nhất. `sinh_kich_ban.py`
     # sinh thêm bằng chính bộ khoá AI của hệ, có cổng chống trùng khuôn câu; kho ấy nối vào đây.
-    # Mẩu viết tay đứng TRƯỚC vì chúng là mẫu giọng chuẩn của kênh — bốn tập đầu đặt nền, rồi
-    # kho sinh mới nối tiếp.
-    kho = list(KHO[k["de"]])
-    try:
-        _kt = os.path.join(GOC, "kho_comic.json")
-        if os.path.exists(_kt):
-            _k2 = json.load(io.open(_kt, encoding="utf-8"))
-            for _m in _k2.get("mau", {}).get(k["de"], []):
-                kho.append({"boi": 0, "loi": [tuple(c) for c in _m["loi"]],
-                            "noi": _m.get("noi", ""), "hook": _m.get("hook", "")})
-    except Exception as e:
-        # Không nuốt: kho hỏng mà lặng lẽ bỏ qua thì hệ âm thầm quay về vòng lặp bốn mẩu, và
-        # triệu chứng duy nhất là "sao dạo này video giống nhau thế" — nhìn ra thì đã hàng trăm tập.
-        print(f"   ⚠️ kho sinh không đọc được, chỉ dùng kho viết tay: {str(e)[:70]}")
+    kho = kho_cua_kenh(k)
     kb = kho[vong % len(kho)]
     cau = kb["loi"]
     # Nhãn nơi chốn -> chỉ số trong danh sách engine vẽ được. Mẩu viết tay không có nhãn, nên

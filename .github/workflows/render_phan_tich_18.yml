@@ -58,7 +58,23 @@ on:
     types: [mm0-phantich-18]
 
 # Không huỷ lượt đang chạy: một lượt dở dang vẫn đang sinh video có ích.
-concurrency: { group: mm0-phantich-18, cancel-in-progress: false }
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# LUẬT 18+2 — KHÔNG BAO GIỜ CHIẾM QUÁ 18 JOB CÙNG LÚC
+#
+# Trần đồng thời của tài khoản Free là 20 job cho CẢ tài khoản, không phải cho mỗi workflow.
+# Hai luồng cuối phải để trống cho các workflow ĐIỀU PHỐI vẫn chạy được: `publish.yml` (mỗi
+# 30'), `publish_social.yml`, `health_guardian.yml` (mỗi giờ), `thumb_requests.yml`. Chúng bị
+# xếp hàng là dashboard đứng hình và video xong không được đăng.
+#
+# 1/9 — anh nhắc: *"bữa kêu là chỉ chạy 18 luồng còn 2 luồng để điều phối mà sao ko ghi rule
+# vào"*. Đúng: luật này chỉ nằm trong đầu, nên khi em thêm workflow comic 10 luồng và bấm chạy
+# cùng lúc với 18 luồng phân tích thì thành 28 job — 8 job xếp hàng, và hai luồng điều phối
+# cũng xếp hàng theo. Luật không có cơ chế thì nó không phải luật.
+#
+# CƠ CHẾ: hai xưởng render dùng CHUNG một `concurrency group`. Một xưởng chạy thì xưởng kia
+# đợi, nên tổng job render không bao giờ vượt `max-parallel` của xưởng lớn nhất = 18.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+concurrency: { group: mm0-render, cancel-in-progress: false }
 
 jobs:
   # CHỐT CHỐNG DỰNG TRÙNG — bốn mốc cron ở trên cho bốn cơ hội nổ, nhưng chỉ được dựng MỘT lần
@@ -140,6 +156,7 @@ jobs:
           python kiem_nen.py
           python kiem_am.py
           python kiem_workflow.py
+          python kiem_song_song.py
 
       - name: Luồng ${{ matrix.luong }} — kênh phụ trách
         id: ds

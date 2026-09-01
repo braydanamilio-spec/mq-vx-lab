@@ -77,8 +77,39 @@ PHONG_CACH = {
 }
 
 
-def _prompt(noi: str, kenh_ten: str, ngoai: bool = False, de: str = "") -> str:
-    """Prompt ép ba thứ: có sàn · giữa trống · không người không chữ."""
+# BIẾN THỂ THEO TẬP — 1/9. Anh: *"tạo cho đa dạng, ko dùng lại, mà tạo cho đúng bối cảnh
+# channel, videos"* và *"key api free dư sức mà"*. Đúng: dùng lại một ảnh cho mọi tập là tự
+# tay làm kênh nhàm, trong khi 97 khoá CF cho ~16.300 ảnh/ngày — sinh 10-18 ảnh mỗi lượt là
+# không đáng kể.
+# Mỗi tập đổi BA trục: giờ trong ngày · độ cao máy · thời tiết/ánh sáng. Ba trục này đổi hẳn
+# cảm giác khung hình mà KHÔNG đụng vào bố cục ép sàn — thứ đã mất nhiều vòng mới đúng.
+# 1/9, sau mẻ thử: BỎ hai biến thể "evening interior lighting" và "cool blue-hour light" —
+# chúng đẩy mô hình sang tông NEON, ra ảnh photoreal rực đèn, lệch hẳn phong cách 3D cartoon
+# phẳng của nhân vật. Đa dạng phải nằm trong khuôn phong cách, không phải phá khuôn.
+BIEN_THE = [
+    "early morning light, long soft shadows",
+    "bright midday light, crisp shadows",
+    "late afternoon golden light, warm tones",
+    "overcast daylight, soft even shadows",
+    "hazy sunlight, gentle bloom",
+    "clear cool daylight, slightly desaturated",
+    "soft diffused light, no harsh shadows",
+    "warm indoor daylight, gentle contrast",
+]
+GOC_MAY = [
+    "camera slightly left of centre",
+    "camera straight on, centred",
+    "camera slightly right of centre",
+    "camera a step further back, wider view",
+]
+
+
+def _prompt(noi: str, kenh_ten: str, ngoai: bool = False, de: str = "", tap: int = -1) -> str:
+    """Prompt ép ba thứ: có sàn · giữa trống · không người không chữ.
+
+    `tap >= 0` thì thêm biến thể ánh sáng + góc máy của tập ấy — cùng một nơi chốn ra khung
+    khác hẳn, mà vẫn đúng nơi chốn kịch bản nói.
+    """
     # 31/8 — hai lỗi thấy trên mẻ đầu:
     #   · nơi NGOÀI TRỜI (sân trước, hàng rào) bị dựng thành phòng kín có hàng rào bên trong —
     #     vì prompt không nói rõ, và "interior" là mặc định của mô hình;
@@ -91,9 +122,15 @@ def _prompt(noi: str, kenh_ten: str, ngoai: bool = False, de: str = "") -> str:
         "Interior scene. The floor is clearly visible across the entire bottom third. "
     )
     return (
+        # 1/9 — CẤM CHỮ Ở CẢ ĐẦU LẪN CUỐI, và cấm luôn thứ SINH RA chữ. Mẻ thử ra ảnh phòng máy
+        # chủ có "TECL", "TechShort" viết trên biển và màn hình — chữ rác là dấu hiệu AI rõ nhất
+        # và trông nghiệp dư ngay. Cấm "text" thôi không đủ: phải cấm cả BIỂN HIỆU, MÀN HÌNH CÓ
+        # CHỮ, ÁP PHÍCH — tức cấm chỗ chữ hay bám vào.
+        "NO TEXT, NO LETTERS, NO WORDS, NO SIGNAGE, NO SCREENS SHOWING TEXT, NO LABELS. "
         f"Stylized 3D cartoon render of {noi}, in the world of a comedy show about "
         f"{kenh_ten.lower()}. Absolutely no text anywhere: no letters, no words, no writing, "
-        f"no labels, no signs, no logos, no posters with writing. "
+        f"no labels, no signs, no logos, no posters with writing, no branded screens, "
+        f"blank screens only. "
         + khong_gian +
         # (A) ép bố cục chừa chỗ cho nhân vật
         "Camera at standing eye level, straight on. Furniture and props pushed to the far left "
@@ -103,16 +140,21 @@ def _prompt(noi: str, kenh_ten: str, ngoai: bool = False, de: str = "") -> str:
         # làm nền tảng để nền vẫn hợp với nhân vật vẽ phẳng, còn màu/sáng/chất thì mỗi kênh một.
         + (PHONG_CACH.get(de, "soft matte clay-render look, muted pastel colors") + ". ")
         + "Simple rounded shapes, clean and uncluttered, no clutter in the centre. "
+        + (f"{BIEN_THE[tap % len(BIEN_THE)]}, {GOC_MAY[(tap // 3) % len(GOC_MAY)]}. "
+           if tap >= 0 else "")
         # (loại thứ hay làm hỏng khung)
-        "No people, no characters, no watermark, no text of any kind."
+        + "No people, no characters, no watermark, no text of any kind."
     )
 
 
 def sinh_mot(kenh: str, idx: int, noi: str, ten: str, keys, ngoai: bool = False,
-             de: str = "") -> str:
+             de: str = "", tap: int = -1) -> str:
     os.makedirs(THU, exist_ok=True)
-    dest = os.path.join(THU, f"{kenh}_{idx:02d}.jpg")
-    rel = f"comic_nen/{kenh}_{idx:02d}.jpg"
+    # Tên tệp mang số TẬP: mỗi tập một ảnh riêng, không đè lên ảnh nền chuẩn của nơi chốn.
+    # Ảnh chuẩn (`{kenh}_{idx}.jpg`) vẫn nằm trong repo làm lớp đỡ khi API hỏng.
+    ma = f"{kenh}_{idx:02d}" + (f"_t{tap:03d}" if tap >= 0 else "")
+    dest = os.path.join(THU, f"{ma}.jpg")
+    rel = f"comic_nen/{ma}.jpg"
     if os.path.exists(dest) and os.path.getsize(dest) > 20000:
         return rel
 
@@ -122,7 +164,7 @@ def sinh_mot(kenh: str, idx: int, noi: str, ten: str, keys, ngoai: bool = False,
     from xoay_key import goi_xoay, bao_cao, CanThat
 
     def _thu(kk):
-        return DS._cf_flux_image(_prompt(noi, ten, ngoai, de), dest, kk) and \
+        return DS._cf_flux_image(_prompt(noi, ten, ngoai, de, tap), dest, kk) and \
             os.path.getsize(dest) > 20000
 
     try:

@@ -37,7 +37,23 @@ on:
         description: "Chỉ dựng vài kênh, cách nhau bằng dấu phẩy (bỏ trống = cả 10)"
         default: ""
 
-concurrency: { group: mm0-hai, cancel-in-progress: false }
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# LUẬT 18+2 — KHÔNG BAO GIỜ CHIẾM QUÁ 18 JOB CÙNG LÚC
+#
+# Trần đồng thời của tài khoản Free là 20 job cho CẢ tài khoản, không phải cho mỗi workflow.
+# Hai luồng cuối phải để trống cho các workflow ĐIỀU PHỐI vẫn chạy được: `publish.yml` (mỗi
+# 30'), `publish_social.yml`, `health_guardian.yml` (mỗi giờ), `thumb_requests.yml`. Chúng bị
+# xếp hàng là dashboard đứng hình và video xong không được đăng.
+#
+# 1/9 — anh nhắc: *"bữa kêu là chỉ chạy 18 luồng còn 2 luồng để điều phối mà sao ko ghi rule
+# vào"*. Đúng: luật này chỉ nằm trong đầu, nên khi em thêm workflow comic 10 luồng và bấm chạy
+# cùng lúc với 18 luồng phân tích thì thành 28 job — 8 job xếp hàng, và hai luồng điều phối
+# cũng xếp hàng theo. Luật không có cơ chế thì nó không phải luật.
+#
+# CƠ CHẾ: hai xưởng render dùng CHUNG một `concurrency group`. Một xưởng chạy thì xưởng kia
+# đợi, nên tổng job render không bao giờ vượt `max-parallel` của xưởng lớn nhất = 18.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+concurrency: { group: mm0-render, cancel-in-progress: false }
 
 jobs:
   chot:
@@ -148,6 +164,7 @@ jobs:
           python kiem_nen.py
           python kiem_am.py
           python kiem_workflow.py
+          python kiem_song_song.py
 
       # BƯỚC CHUẨN BỊ TÁCH KHỎI BƯỚC DỰNG — đây là chỗ được phép gọi API và được phép hỏng.
       # Bước dựng phía dưới chỉ đọc đĩa, không gọi khoá nào, nên một sự cố mạng không thể làm
@@ -159,7 +176,15 @@ jobs:
           GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
         run: |
           cd render-pipeline
-          python chuan_bi_nen.py || true
+          VONG="${{ inputs.vong }}"
+          [ -z "$VONG" ] && VONG=$(date -u +%j)
+          # NỀN RIÊNG CHO TẬP HÔM NAY — anh: *"tạo cho đa dạng, ko dùng lại, mà tạo cho đúng
+          # bối cảnh channel, videos"*. Mỗi tập một ảnh, đổi ánh sáng + góc máy, nhưng vẫn ép
+          # sàn chiếm trọn phần ba dưới · đồ đạc dồn hai mép · giữa để trống.
+          python chuan_bi_nen.py --vong "$VONG" --kenh "${{ matrix.kenh }}" || true
+          # Lớp đỡ: nếu nơi chốn nào chưa có ảnh CHUẨN thì sinh bù, để `noi_va_nen` luôn có
+          # thứ để rơi xuống khi ảnh riêng của tập sinh hỏng.
+          python chuan_bi_nen.py --kenh "${{ matrix.kenh }}" || true
           # Đo lại hướng sáng: nếu bước trên vừa sinh nền mới thì chúng chưa có số đo, mà thiếu
           # số đo là nhân vật ở nền ấy mất luôn phần khớp màu — lặng lẽ, không lỗi nào báo.
           python huong_sang.py || true

@@ -60,7 +60,48 @@ def main() -> int:
     ap.add_argument("--kenh", default="")
     ap.add_argument("--so", type=int, default=10, help="số nơi chốn mỗi kênh cần có nền")
     ap.add_argument("--sinh", action="store_true", help="sinh bù nếu thiếu (gọi API)")
+    ap.add_argument("--vong", type=int, default=-1,
+                    help="sinh NỀN RIÊNG cho tập này (mỗi tập một ảnh, không dùng lại)")
     a = ap.parse_args()
+
+    # ── NỀN RIÊNG CHO TỪNG TẬP ────────────────────────────────────────────────────────────
+    # 1/9 — anh: *"tạo cho đa dạng, ko dùng lại, mà tạo cho đúng bối cảnh channel, videos"* và
+    # *"key api free dư sức mà"*. Đúng cả hai: dùng lại một ảnh cho mọi tập là tự tay làm kênh
+    # nhàm, còn 97 khoá CF cho ~16.300 ảnh/ngày nên 10 ảnh mỗi lượt là không đáng kể.
+    #
+    # Sinh Ở ĐÂY, không sinh lúc render: bước chuẩn bị được phép gọi API và được phép hỏng;
+    # bước render chỉ đọc đĩa. Hỏng ở đây thì `noi_va_nen` rơi xuống kho 110 ảnh chuẩn — video
+    # vẫn có nền, chỉ là nền dùng chung.
+    if a.vong >= 0:
+        import kich_comic as KC
+        from nen_cf import sinh_mot as _sinh
+        import the_he_2 as T2
+        keys = [x for x in (T2.keys_cuc_bo() or [])
+                if (x if isinstance(x, str) else x.get("key", "")).startswith("cf:")]
+        if not keys:
+            print("⚠️ không có khoá CF — bỏ bước sinh nền riêng, dùng kho ảnh chuẩn")
+            return 0
+        n_ok = 0
+        chon0 = KENH_HAI
+        if a.kenh:
+            vt0 = {x.strip().upper() for x in a.kenh.split(",")}
+            chon0 = [x for x in KENH_HAI if x["ten"].replace(" ", "").upper() in vt0]
+        ds0 = json.load(io.open(os.path.join(GOC, "noi_chon.json"), encoding="utf-8"))
+        for k in chon0:
+            # Nơi chốn của ĐÚNG tập này — hỏi chính hàm mà bước dựng sẽ hỏi, để hai bên không
+            # bao giờ lệch nhau về nơi chốn.
+            kb, cau = KC.mau_cua_tap(k, a.vong)
+            idx, _cu = KC.noi_va_nen(k, kb, cau, a.vong)
+            if idx < 0:
+                print(f"   ⏭ {k['ten']:19s} tập {a.vong}: không rõ nơi chốn -> dùng kho chuẩn")
+                continue
+            ten_noi = (ds0.get(k["de"]) or [""] * (idx + 1))[idx]
+            r = _sinh(_ten_tep(k), idx, ten_noi, k["ten"], keys, False, k["de"], a.vong)
+            print(f"   {'✅' if r else '❌'} {k['ten']:19s} tập {a.vong} · {ten_noi[:34]}",
+                  flush=True)
+            n_ok += bool(r)
+        print(f"\n✅ {n_ok}/{len(chon0)} nền riêng cho tập {a.vong}")
+        return 0
 
     ds = {}
     try:
