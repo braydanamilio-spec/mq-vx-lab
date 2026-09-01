@@ -62,9 +62,9 @@ BRAND = {
     # Màu lấy đúng từ câu `style` của từng kênh trong `kling_kenh.py`, không chọn lại. Biểu
     # tượng chọn theo SILHOUETTE khác nhau — ở 48px chỉ hình dáng ngoài là đọc được, nên hai
     # kênh có cùng bóng ngoài là hai kênh trông giống nhau dù màu khác.
-    "NIGHT SHIFT":    dict(chinh="#E23B2E", phu="#5FB6E8", nen="#101318", bt="cup",
+    "NIGHT SHIFT":    dict(chinh="#E23B2E", phu="#5FB6E8", nen="#101318", bt="pump",
                            khau_hieu="OPEN. ALWAYS. UNFORTUNATELY."),
-    "OPEN HOUSE":     dict(chinh="#1E9B94", phu="#EDE7DC", nen="#2A2723", bt="house",
+    "OPEN HOUSE":     dict(chinh="#1E9B94", phu="#EDE7DC", nen="#2A2723", bt="sign",
                            khau_hieu="COZY MEANS SMALL"),
     "AISLE SIX":      dict(chinh="#3E9B4F", phu="#F2C230", nen="#1C221D", bt="cart",
                            khau_hieu="IT RANG UP WRONG"),
@@ -212,13 +212,27 @@ def bieu_tuong(d: ImageDraw.ImageDraw, ten: str, cx: int, cy: int, r: int, c1, c
         d.polygon([(cx, cy - r * .78), (cx + r * .42, cy + r * .50), (cx - r * .42, cy + r * .50)], fill=c1)
         d.rectangle([cx - r * .26, cy - r * .22, cx + r * .26, cy - r * .02], fill=c_nen_bt)
         d.rounded_rectangle([cx - r * .78, cy + r * .50, cx + r * .78, cy + r * .74], radius=r * .10, fill=c1)
-    elif ten == "box":                        # thùng carton — vuông có nắp và băng dính giữa
-        d.rectangle([cx - r * .70, cy - r * .34, cx + r * .70, cy + r * .70], fill=c1)
-        d.polygon([(cx - r * .70, cy - r * .34), (cx - r * .06, cy - r * .34),
-                   (cx - r * .06, cy - r * .68), (cx - r * .82, cy - r * .68)], fill=c1)
-        d.polygon([(cx + r * .70, cy - r * .34), (cx + r * .06, cy - r * .34),
-                   (cx + r * .06, cy - r * .68), (cx + r * .82, cy - r * .68)], fill=c1)
-        d.rectangle([cx - r * .09, cy - r * .34, cx + r * .09, cy + r * .70], fill=c_nen_bt)
+    elif ten == "pump":                       # trụ bơm xăng — chữ nhật đứng cao có vòi bên
+        d.rounded_rectangle([cx - r * .44, cy - r * .74, cx + r * .30, cy + r * .74],
+                            radius=r * .10, fill=c1)
+        d.rectangle([cx - r * .30, cy - r * .58, cx + r * .16, cy - r * .22], fill=c_nen_bt)
+        d.line([(cx + r * .30, cy - r * .10), (cx + r * .74, cy - r * .10)], fill=c1, width=int(r * .15))
+        d.rectangle([cx + r * .62, cy - r * .40, cx + r * .84, cy + r * .04], fill=c1)
+    elif ten == "sign":                       # biển bán nhà — bảng chữ nhật treo trên hai cọc
+        d.rectangle([cx - r * .62, cy + r * .10, cx - r * .48, cy + r * .80], fill=c1)
+        d.rectangle([cx + r * .48, cy + r * .10, cx + r * .62, cy + r * .80], fill=c1)
+        d.rounded_rectangle([cx - r * .80, cy - r * .62, cx + r * .80, cy + r * .18],
+                            radius=r * .10, fill=c1)
+        d.rectangle([cx - r * .56, cy - r * .42, cx + r * .56, cy - r * .28], fill=c_nen_bt)
+        d.rectangle([cx - r * .56, cy - r * .14, cx + r * .20, cy - r * .02], fill=c_nen_bt)
+    elif ten == "box":                        # thùng carton. Bản đầu vẽ hai nắp mở hai bên và
+        # một dải băng dính giữa — ở 48px cả ba nét ấy gộp lại thành HAI THANH DỌC, không ai
+        # đọc ra cái thùng. Bóng ngoài phải là một khối vuông ĐẶC, chi tiết khoét vào bên trong.
+        d.rectangle([cx - r * .74, cy - r * .56, cx + r * .74, cy + r * .72], fill=c1)
+        d.rectangle([cx - r * .74, cy - r * .56, cx + r * .74, cy - r * .28], fill=c_nen_bt)
+        d.rectangle([cx - r * .74, cy - r * .50, cx - r * .10, cy - r * .34], fill=c1)
+        d.rectangle([cx + r * .10, cy - r * .50, cx + r * .74, cy - r * .34], fill=c1)
+        d.rectangle([cx - r * .12, cy - r * .28, cx + r * .12, cy + r * .72], fill=c_nen_bt)
     elif ten == "scissors":                   # kéo — hai lưỡi chéo và hai vòng tay cầm
         d.line([(cx - r * .52, cy - r * .62), (cx + r * .34, cy + r * .34)], fill=c1, width=int(r * .19))
         d.line([(cx + r * .52, cy - r * .62), (cx - r * .34, cy + r * .34)], fill=c1, width=int(r * .19))
@@ -504,3 +518,35 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+# ══ CỔNG VA CHẠM BÓNG NGOÀI ═══════════════════════════════════════════════════════════════
+# 1/9 — Soi lưới hai mươi avatar bằng mắt thì thấy ngay NIGHT SHIFT dùng đúng cái cốc của
+# BREAK ROOM và OPEN HOUSE gần trùng mái nhà của HOUSE RULES. Nhưng "soi bằng mắt" không dùng
+# lại được: kênh thứ hai mươi mốt sẽ va chạm với một trong hai mươi kênh kia và không ai nhớ hết.
+#
+# Ở 48px — cỡ avatar thật trong danh sách đăng ký — **chỉ BÓNG NGOÀI là đọc được**, màu chỉ giúp
+# phân biệt sau khi hình đã khác. Nên phép đo đúng là: vẽ riêng biểu tượng trên nền trống, hạ
+# xuống 48px, nhị phân hoá, rồi so hai mặt nạ. Hai kênh trùng bóng là hai kênh trông giống nhau
+# dù bảng màu khác hẳn.
+def _mask(bt: str, N: int = 48):
+    im = Image.new("L", (N * 4, N * 4), 0)
+    d = ImageDraw.Draw(im)
+    bieu_tuong(d, bt, N * 2, N * 2, int(N * 1.3), 255, 0, 0)
+    im = im.resize((N, N), Image.LANCZOS)
+    return [1 if p > 96 else 0 for p in im.getdata()]
+
+
+def kiem_bong(nguong: float = 0.72) -> list:
+    """Cặp biểu tượng nào có bóng ngoài trùng nhau quá `nguong` (Jaccard trên mặt nạ 48px)."""
+    import itertools
+    m = {t: _mask(b["bt"]) for t, b in BRAND.items()}
+    e = []
+    for a, b in itertools.combinations(m, 2):
+        x, y = m[a], m[b]
+        chung = sum(1 for i, j in zip(x, y) if i and j)
+        hop = sum(1 for i, j in zip(x, y) if i or j)
+        g = chung / max(1, hop)
+        if g > nguong:
+            e.append((round(g, 2), a, b, BRAND[a]["bt"], BRAND[b]["bt"]))
+    return sorted(e, reverse=True)

@@ -7865,3 +7865,80 @@ trong mọi luồng CÒN CHẠY. Đã thử ngược cả hai chiều.
 **Luật:** `|| true` chỉ được dùng ở bước mà hỏng cũng không mất dữ liệu (chấm điểm, gói phụ).
 Ở mắt xích cuối của dây chuyền thì nó biến "mất hàng" thành "báo xanh" — và một lượt xanh mà
 video không lên kho là lời nói dối tốn kém nhất trong hệ này.
+
+---
+
+## HAI MƯƠI KÊNH — CỔNG CHÍNH SÁCH (1/9)
+
+### 8k37 — Luật YouTube nêu SÁU DANH TỪ, và cả sáu đều đo được
+
+Tháng 7/2025 YouTube đổi *"repetitious content"* thành **"inauthentic content"**. Câu định nghĩa
+rủi ro cao nói tới sản xuất tự động sinh hàng trăm video từ **prompt · bố cục · kịch bản · cảnh ·
+giọng · khuôn chuyện** gần như giống hệt nhau. Phạt ba nấc: cảnh cáo → treo 90 ngày → **loại
+vĩnh viễn khỏi YPP**.
+
+Sáu danh từ ấy không phải chuyện trừu tượng — chúng là sáu trường trong hồ sơ kênh. `kiem_da_dang.py`
+đo chúng giữa **mọi cặp** trong 20 kênh (190 cặp), cộng ba phép đếm (đồ vật · tên phòng · tên vai)
+và một phép kiểm lịch (hai kênh có bao giờ nhận cùng bộ bảy trục ở cùng số tập không).
+
+Vì sao cần cổng chứ không cần lời hứa: mười kênh đầu từng có `audio` giống nhau **1,00** và
+`style` **0,89** mà không ai thấy, cho tới khi đo. Người viết nhớ được ba kênh, không nhớ hai mươi.
+
+### 8k38 — Ba lần cùng một lỗi thước: phần TAY NGHỀ dùng chung làm phồng độ giống
+
+Cổng chạy lần đầu báo **185/190 cặp vượt ngưỡng**. Nhìn vào thì thấy ngay cổng sai, không phải
+dữ liệu sai — hai phần ba lệnh hệ thống là luật hài, chuẩn hook và giới hạn cứng, thứ **mọi kênh
+buộc phải dùng chung** vì đó là tay nghề, không phải bản sắc.
+
+Cùng lỗi ấy lặp ba lần trong một buổi, mỗi lần ở một trường khác:
+
+| trường | phần chung làm phồng | sau khi cắt |
+|---|---|---|
+| `style` | `SAN_NGHE` (sàn tay nghề) | 0,89 → **0,03** |
+| `sys` | bộ luật hài + chuẩn hook + khuôn kể | 0,82 → **0,04** |
+| `audio` · `nha` | "precise lip sync" · "keep the exact same layout…" | xem 8k39 |
+
+**Luật:** trước khi đo hai thứ có giống nhau không, phải hỏi *"phần nào giống nhau là ĐÚNG"* và
+cắt phần ấy ra. Không cắt thì cổng đo chuẩn nghề chứ không đo bản sắc.
+
+### 8k39 — Đo CHUỖI khi thứ cần đo là NỘI DUNG
+
+Sau khi cắt phần chung, `audio` vẫn báo 22 cặp trùng. Đọc lên thì AISLE SIX (*loa siêu thị ·
+bánh xe đẩy · tiếng máy quét*) và BAGGAGE CLAIM (*chuông sân bay · bánh vali · tiếng băng chuyền*)
+**không hề giống nhau** — thứ giống nhau là KHUÔN CÂU: *"[tính từ] American voices for {vai}.
+[ba âm thanh]. [một câu về cách nói]"*.
+
+Khuôn câu giống nhau không phải lỗi: đó là cách một câu tả giọng được viết. **Người xem nghe thấy
+ÂM THANH, không nghe thấy cú pháp.** Đổi sang Jaccard trên tập từ mang nghĩa: 22 cặp → **0**,
+cao nhất còn 0,15.
+
+**Họ lỗi:** *chọn phép đo theo thứ dễ tính, không theo thứ người xem cảm được.*
+
+### 8k40 — Ở 48px chỉ BÓNG NGOÀI đọc được, nên va chạm phải đo bằng bóng
+
+Soi lưới 20 avatar bằng mắt thì thấy ngay NIGHT SHIFT dùng đúng cái cốc của BREAK ROOM, và
+OPEN HOUSE gần trùng mái nhà của HOUSE RULES. Nhưng "soi bằng mắt" không dùng lại được: kênh thứ
+21 sẽ va chạm với một trong 20 kênh kia và không ai nhớ hết.
+
+`kiem_bong()` vẽ riêng từng biểu tượng trên nền trống, hạ xuống 48px — **cỡ avatar thật trong
+danh sách đăng ký** — nhị phân hoá rồi so mặt nạ. Màu không tham gia phép đo, vì ở cỡ ấy màu chỉ
+giúp phân biệt SAU KHI hình đã khác.
+
+Kiểm hai chiều theo luật 8k15: ép hai kênh dùng chung một biểu tượng → cổng trả **1,00**; ở dữ
+liệu thật cặp gần nhất là 0,71 và mắt xác nhận hai hình vẫn khác nhau.
+
+Và một lỗi bóng ngoài mà con số không bắt: `box` vẽ hai nắp mở cộng một dải băng dính, ở 48px ba
+nét ấy **gộp thành hai thanh dọc**. Bóng ngoài phải là một khối ĐẶC, chi tiết khoét vào trong.
+
+### 8k41 — 5–8 giây là quyết định CHI PHÍ, và số đo nói nó không phải hy sinh
+
+Kling tính tiền theo lượt, nên độ dài là chuyện chi phí trước khi là chuyện thẩm mỹ. Vùng ưu tiên
+đặt ở **5–8 giây**, và đây là lý do nó không phải cắt cụt:
+
+- **5–6s** — khuôn ONE JOKE, ONE PUNCH. Cả clip nằm gọn trong "3 giây đầu" mà số đo giữ chân gọi
+  là khoảnh khắc quyết định lướt hay ở lại; giữ được khung đầu thì tỉ lệ xem hết gần 100%.
+- **7–8s** — khuôn SETUP AND TURN. Tỉ lệ dựng/chốt của hai mốc này là **67% / 33%**, khớp đúng số
+  đo công bố cho short hài (dựng 60–70% · chốt 30–40%).
+- **10–15s** — mỗi giây thêm là tiền thêm mà số đo không hứa thêm gì: vùng tối ưu đo được của hài
+  short là **18–28 giây**, quá xa 15. Nên 10–15 nằm đúng khoảng *"không rẻ nữa mà chưa đủ dài để
+  hơn"* — khoảng tệ nhất trong ba khoảng.
