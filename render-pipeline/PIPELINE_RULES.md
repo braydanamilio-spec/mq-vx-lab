@@ -7240,3 +7240,37 @@ Lần này cổng báo đỏ oan nên vô hại. Nhưng cùng một lỗi đo sa
 XANH cho thứ đang hỏng — và đó là loại cổng nguy hiểm nhất.
 
 **Luật:** cổng phải đo THỨ THẬT SỰ ĐI VÀO SẢN PHẨM, không đo một khâu trung gian tiện tay hơn.
+
+### 8k14 — Một brief cho tám thời lượng: co giãn kịch bản thay vì đổi loại chuyện
+
+Đo `_sys()` của clip 5 giây và clip 15 giây: **giống nhau 99,9%**, khác đúng ba con số. Nên AI
+viết MỘT kiểu chuyện bốn nhịp cho mọi thời lượng, rồi engine gộp lại hoặc trải ra.
+
+Cả hai đầu đều hỏng, theo hai cách khác nhau:
+
+| | chuyện gì xảy ra | người xem thấy gì |
+|---|---|---|
+| gộp (5–6s) | ba nhịp nhồi vào một khối 3,3 giây | không kịp hiểu; cú lật mất chỗ gài |
+| trải (12–15s) | chuyện 8 giây kéo qua 15 giây | khúc giữa không có việc gì xảy ra |
+
+Phim ngắn thật **không co giãn một kịch bản — nó đổi LOẠI chuyện**. Năm giây kể được một trò đùa
+một cú đấm; mười lăm giây *bắt buộc* phải có tiếng cười thứ hai ở khúc giữa, không thì thừa tám
+giây. Nay có `KHUON_KE`: ba khuôn, khớp đúng ba dạng nhịp mà `nhip()` dựng.
+
+Và đây là chỗ dễ tưởng đã xong mà chưa: tám thời lượng gom lại chỉ còn **ba loại chuyện**, không
+phải tám. Viết sẵn "cho mỗi thời lượng" là nhân ba lần công việc lên tám lần.
+
+**Họ lỗi:** *tham số hoá kích thước mà không tham số hoá thể loại.* Con số đổi, khuôn không đổi
+— nên đầu ra trông đúng cỡ và sai chất.
+
+### 8k15 — Cổng không báo lỗi giả CHƯA phải cổng tốt; phải thử nó có BẮT được không
+
+Cổng thoại kiểu Mỹ chạy trên 30 tập thật: **0 lỗi**. Đọc con số ấy một mình thì có hai cách hiểu
+ngược nhau — "thoại đã chuẩn" hoặc "cổng không hoạt động". Cùng một số đo.
+
+Nên phải thử chiều ngược lại: sáu kịch bản cố tình viết sai, mỗi cái sai một kiểu (15 giây mà
+hai lượt thoại · 5 giây mà cú lật là thông tin · thoại viết dạng đầy đủ · giọng sân khấu · thoại
+dồn một nhịp). **Cả sáu đều bị chặn, đúng lý do.** Lúc đó con số 0 mới có nghĩa.
+
+**Luật:** mỗi cổng mới phải có hai phép thử — *không bắt oan* (chạy trên dữ liệu thật) và
+*bắt được* (chạy trên mẫu cố tình sai). Chỉ có phép thử thứ nhất thì một cổng chết vẫn xanh.
