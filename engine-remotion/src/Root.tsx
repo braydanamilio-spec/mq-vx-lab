@@ -46,6 +46,10 @@ import { KichQue, calcQue } from "./que/KichQue";
 // giây, bảy khuôn hình xoay vòng, bốn khuôn thuần code. Xem PHAN_TICH_GIAI_THICH.md.
 // Hai bản: ngang cho long 7-10 phút, dọc cho short cắt ra từ chính bản long ấy.
 import { KichGiaiThich, calcGT } from "./gt/KichGiaiThich";
+// Brand kit 10 kênh giải thích — vẽ bằng code vì avatar/banner mang TÊN KÊNH và chữ phải
+// đúng tuyệt đối (FLUX đo được 5/6 đúng: chấp nhận cho khung phim thoáng qua, không chấp
+// nhận cho ảnh đứng vĩnh viễn trên trang kênh).
+import { BrandGT } from "./gt/BrandGT";
 import { ThumbComic } from "./comic/ThumbComic";
 import { BrandComic } from "./comic/BrandComic";
 import { BangTuThe } from "./v4/BangTuThe";
@@ -294,6 +298,16 @@ export const RemotionRoot: React.FC = () => (
                  width={1080} height={1920} defaultProps={{ ngang: false }} />
     <Composition id="KichComicWide" component={KichComic as any} durationInFrames={600} fps={30}
                  width={1920} height={1080} calculateMetadata={calcComic as any} />
+    <Composition id="GTAvatar" component={BrandGT as any} durationInFrames={1} fps={1}
+                 width={800} height={800} defaultProps={{ loai: "avatar" }} />
+    <Composition id="GTAvatarLon" component={BrandGT as any} durationInFrames={1} fps={1}
+                 width={1080} height={1080} defaultProps={{ loai: "avatar" }} />
+    <Composition id="GTBanner" component={BrandGT as any} durationInFrames={1} fps={1}
+                 width={2560} height={1440} defaultProps={{ loai: "banner" }} />
+    <Composition id="GTCover" component={BrandGT as any} durationInFrames={1} fps={1}
+                 width={1640} height={856} defaultProps={{ loai: "cover" }} />
+    <Composition id="GTPost" component={BrandGT as any} durationInFrames={1} fps={1}
+                 width={1080} height={1080} defaultProps={{ loai: "post" }} />
     <Composition id="GiaiThich" component={KichGiaiThich as any} durationInFrames={1800} fps={30}
                  width={1920} height={1080} calculateMetadata={calcGT as any} />
     <Composition id="GiaiThichDoc" component={KichGiaiThich as any} durationInFrames={1800} fps={30}

@@ -102,15 +102,21 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string 
   return (
     <>
       <div style={{
-        position: "absolute", left: 0, right: 0, bottom: 0, height: H * 0.30,
-        background: "linear-gradient(180deg,#00000000,#00000066)", pointerEvents: "none",
+        position: "absolute", left: 0, right: 0, bottom: 0, height: H * 0.34,
+        /* 1/9 — ĐO LẠI SAU KHI BỎ HỘP ĐEN: tương phản chữ/nền chỉ còn 2,8:1, dưới chuẩn
+           WCAG AA 4,5:1. Bỏ hộp đen làm hình đẹp hơn thật, nhưng tôi đổi lấy điều đó mà KHÔNG
+           ĐO — và cái mất là chữ khó đọc, đúng thứ phụ đề sinh ra để giải quyết.
+           Nay dải tối đậm hơn hẳn và cao hơn, nhưng vẫn CHUYỂN DẦN không có cạnh — giữ được
+           vẻ không-phải-hộp mà vẫn qua chuẩn. */
+        background: "linear-gradient(180deg,#00000000 0%,#0000008C 38%,#000000C4 100%)",
+        pointerEvents: "none",
       }} />
       <div style={{
         position: "absolute", left: W * 0.08, right: W * 0.08, bottom: H * 0.075,
         display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0 0.30em",
         fontFamily: F, fontWeight: 700, fontSize: fs, lineHeight: 1.25,
         textAlign: "center", letterSpacing: "-0.01em",
-        textShadow: `0 ${H * 0.003}px ${H * 0.010}px #000000cc, 0 0 ${H * 0.024}px #00000099`,
+        textShadow: `0 ${H * 0.004}px ${H * 0.012}px #000000ee, 0 0 ${H * 0.030}px #000000cc`,
         pointerEvents: "none",
       }}>
         {cua.map((w, k) => (
@@ -151,7 +157,6 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
      Và: cắt CỨNG, không dissolve — đo được 0 cặp điểm cắt cách nhau dưới 0,09 giây trên cả
      244 nhát cắt. Nên không thêm mờ chồng; cái làm nó mượt là NHỊP đều, không phải hiệu ứng. */
   const kb = 1.0 + p * 0.016;
-  const hookCu = "";   // giữ chỗ: thẻ hook đã bỏ, xem chú thích bên dưới
 
   const Nen = (
     <>
@@ -259,7 +264,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
           Trong 3 giây có hook, đẩy nội dung khuôn xuống đúng bằng chiều cao thẻ. */}
       <AbsoluteFill style={{
         opacity: 0.35 + 0.65 * vao,
-        transform: `scale(${1.02 - vao * 0.02}) translateY(${hook && t < 3.0 ? H * 0.085 : 0}px)`,
+        transform: `scale(${1.02 - vao * 0.02})`,
       }}>
         {nen}
         {lop ? (

@@ -69,6 +69,9 @@ QUANG_DUONG = [                                  # dặm
     ("New York to Los Angeles",          2445,    "xe"),
     ("the bottom of the Mariana Trench",  6.8,    "trai_dat"),
     ("the top of Mount Everest",          5.5,    "cay"),
+    ("New York to London",               3459,    "may_bay"),
+    ("the length of the Mississippi",    2340,    "trai_dat"),
+    ("all the way around Saturn",       235298,   "trai_dat"),
 ]
 
 CO_LON = [                                       # feet
@@ -182,6 +185,37 @@ KENH = [
     {"ma": "therules",  "ten": "THE RULES NOBODY READS", "mau": "#C9552F", "phu": "#4E7C4A", "sinh": "therules"},
     {"ma": "speedof",   "ten": "THE SPEED OF EVERYTHING","mau": "#2F6E8A", "phu": "#D9622B", "sinh": "speedof"},
 ]
+
+# ══ GU RIÊNG TỪNG NICHE ═════════════════════════════════════════════════════════════════════
+# Anh: *"phải có một cái gu riêng cho từng niche, không bắt chước hoàn toàn nhau."*
+#
+# Đúng — nhưng có một mâu thuẫn phải nói rõ: sáng nay tôi CỐ Ý gộp cả mười kênh về một phong
+# cách vẽ, vì trộn ảnh chụp với cartoon trong cùng một tập nhìn rất nghiệp dư (đo được: 30/74
+# ảnh lệch phong cách). Nếu giờ cho mỗi kênh một chất vẽ khác thì rất dễ quay lại đúng chỗ ấy.
+#
+# Nên phân biệt ở những trục KHÔNG phá tính đồng nhất trong một tập:
+#   · GIỌNG ĐỌC — trục mạnh nhất và rẻ nhất. Tai nhận ra kênh trước cả mắt, và giọng khác nhau
+#     thì không cách nào nhầm hai kênh, dù hình có cùng chất vẽ.
+#   · NHẠC NỀN cố định cho mỗi kênh, không xoay vòng — nhạc xoay vòng là thứ làm mười kênh
+#     nghe như một xưởng.
+#   · TỈ LỆ KHUÔN HÌNH — kênh tài chính nặng biểu đồ, kênh lịch sử nặng cảnh diễn, kênh so sánh
+#     nặng khung chia đôi. Cùng bộ khuôn, khác hẳn nhịp điệu thị giác.
+#   · SẮC THÁI CARTOON — vẫn phẳng, nhưng khác nét: viền dày / không viền / nét tay hơi run /
+#     bảng màu hạn chế ba màu. Bốn thứ này đều nằm trong "cartoon phẳng" nên không kéo về ảnh thật.
+#   · KIỂU CHỮ — hoa toàn phần / hoa đầu câu, và độ giãn chữ.
+GU_RIENG = {
+    #            giọng                     nhạc                        sắc thái vẽ
+    "howlong":  ("en-US-GuyNeural",   "music/km_ascending.mp3",  "bold black outlines, playful"),
+    "howbig":   ("en-US-EricNeural",  "music/forecast.mp3",      "no outlines, clean geometric shapes, generous white space"),
+    "realcost": ("en-US-RogerNeural", "music/mind_pad32.mp3",    "thin precise outlines, restrained three-colour palette, editorial"),
+    "howmuch":  ("en-US-AriaNeural",  "music/mindloop_pad.mp3",  "no outlines, soft rounded shapes, pastel accents"),
+    "whatif":   ("en-US-JennyNeural", "music/carefree.mp3",      "bold black outlines, exaggerated proportions, playful"),
+    "survive":  ("en-US-ChristopherNeural", "music/broke_pad.mp3", "rough hand-drawn outlines, muted earthy palette, gritty"),
+    "dayinlife": ("en-US-DavisNeural", "music/km_interloper.mp3", "soft hand-drawn outlines, warm limited palette, storybook"),
+    "wheregoes": ("en-US-EricNeural", "music/km_impact_andante.mp3", "clean thin outlines, isometric-leaning shapes, tidy"),
+    "therules": ("en-US-GuyNeural",   "music/inspired.mp3",      "bold outlines, flat suburban palette, deadpan"),
+    "speedof":  ("en-US-BrianNeural", "music/km_undaunted.mp3",  "sharp outlines, motion lines, high-contrast palette"),
+}
 
 VAI_KE = {"gioi": "nam", "tuoi": "trung", "toc": "bu", "mauToc": "#5A3E28",
           "ao": "#8A6A46", "quan": "#6E5A3E", "pk": [], "cao": 1.0, "ten": "narrator"}
@@ -938,12 +972,100 @@ HOOK_LOI = {
 }
 
 
-def mot_tap(ma: str, idx: int, doc: bool = True) -> str:
+# ══ BẢN DÀI: MỘT CHƯƠNG CHO MỖI DÒNG DỮ LIỆU ════════════════════════════════════════════════
+# Bản dài 7-10 phút cần ~200 nhịp ở nhịp cắt 2,1 giây. Không nhờ AI viết 200 nhịp: kênh này
+# sống bằng "mọi con số tính ra được", mà AI viết 200 nhịp là 200 chỗ để bịa.
+#
+# Cách làm giữ được điều ấy: bản dài = NỐI CÁC CHƯƠNG, mỗi chương là một dòng trong bảng dữ
+# liệu, và mỗi chương dùng lại đúng bộ sinh của bản ngắn. Mười dòng -> mười chương -> ~200 nhịp,
+# và mọi con số vẫn là phép tính, không phải phép tra.
+#
+# Thêm ba thứ chỉ bản dài mới có:
+#   · MỞ ĐẦU đặt câu hỏi chung và hứa hẹn (giữ chân 30 giây đầu)
+#   · THẺ CHƯƠNG giữa các chương — người xem biết mình đang ở đâu, và đây cũng là mốc để đặt
+#     chương trong phần mô tả YouTube (thứ hai video tham chiếu KHÔNG có)
+#   · TỔNG HỢP cuối: một biểu đồ so tất cả các chương, thứ chỉ bản dài làm được
+def sinh_long(ma: str, idx: int, so_chuong: int = 10):
+    k = next(x for x in KENH if x["ma"] == ma)
+    bo = BO_SINH[k["sinh"]]
+    nhip, muc = [], []
+
+    # ── MỞ ĐẦU ──────────────────────────────────────────────────────────────────────────
+    tieu0, hook0, hp0, _n0 = bo(idx)
+    nhip.append(_n("the_chu", HOOK_LOI.get(ma, "Here is the question."),
+                   the=HOOK_LOI.get(ma, "").replace(". ", ".|"), dinh=True))
+    nhip.append(_n("canh", "We are going to answer it properly.", dinh=True,
+                   ve=_ve("one simple cartoon figure standing alone at the centre",
+                          "looking straight ahead, about to begin",
+                          "calm and curious",
+                          "a plain open background with a single horizon line",
+                          "flat empty ground", "bright cheerful palette")))
+
+    # ── CÁC CHƯƠNG ──────────────────────────────────────────────────────────────────────
+    for c in range(so_chuong):
+        tieu, _h, _hp, nc = bo(idx + c)
+        if not nc:
+            continue
+        muc.append((len(nhip), tieu))
+        # thẻ chương: dùng chính khuôn thẻ chữ, nhưng NGẮN — nó là mốc, không phải nội dung
+        nhip.append(_n("the_chu", tieu + ".", the=f"{c+1}.|{tieu}"))
+        nhip.extend(nc)
+
+    # ── TỔNG HỢP ────────────────────────────────────────────────────────────────────────
+    # Chỉ bản dài mới làm được: đặt cả mười chương cạnh nhau trên một trục. Đây là lý do người
+    # xem ngồi hết 8 phút thay vì xem một bản ngắn.
+    cot = []
+    for c in range(min(so_chuong, 6)):
+        t2, _h2, hp2, _n2 = bo(idx + c)
+        v = "".join(ch for ch in (hp2.split()[0] if hp2 else "0") if ch.isdigit() or ch == ".")
+        try:
+            cot.append({"nhan": t2.split()[-1][:9], "v": float(v or 0)})
+        except ValueError:
+            pass
+    if len(cot) >= 2:
+        nhip.append(_n("chart", "Here they all are, side by side.", don="compared", cot=cot, dinh=True))
+    nhip.append(_n("canh", "That is the whole picture.", dinh=True,
+                   ve=_ve("one simple cartoon figure seen from behind, small in the frame",
+                          "looking out over a wide open view",
+                          "quietly satisfied",
+                          "a broad open landscape stretching to a distant horizon",
+                          "flat ground in the lower part of the frame",
+                          "warm bright palette")))
+    return (f"{k['ten'].title()} — {so_chuong} answers", hook0, hp0, nhip, muc)
+
+
+# ══ SHORT DỰNG LẠI TỪ KỊCH BẢN CỦA LONG — KHÔNG CẮT VIDEO ═══════════════════════════════════
+# Anh: *"short không phải cắt long ra, mà là chỉ lấy KỊCH BẢN từ long ra rồi dựng lại sao cho
+# hook đúng tỉ lệ, tránh lỗi che khuất hay không đúng định dạng."*
+#
+# Anh đúng, và điều này bác kế hoạch trước của em (cắt theo cờ `dinh`). Cắt video thì short
+# thừa hưởng NGUYÊN bố cục của bản ngang: chữ số đặt theo ngân sách chiều cao 1080, dải chữ
+# đặt theo khung rộng. Đem khung ấy nhét vào 1080×1920 thì hoặc phải cắt hai mép (mất chữ),
+# hoặc phải thêm viền đen (sai định dạng Shorts). Cả hai đều hỏng, và hỏng theo cách không sửa
+# được ở khâu cắt.
+#
+# Dựng lại từ kịch bản thì mỗi tỉ lệ có bố cục riêng, hook riêng, và ảnh nền sinh ĐÚNG hướng
+# khung (`_ten()` đã mang hậu tố `_d`/`_n` từ trước).
+#
+# Quan hệ giữa hai bản: CHƯƠNG k của bản dài = tập ngắn thứ (idx + k). Cùng một bộ sinh, cùng
+# một dữ liệu, cùng những con số — chỉ khác khuôn hình và nhịp. Nên không có nguy cơ hai bản
+# nói khác nhau, thứ sẽ xảy ra nếu viết hai kịch bản riêng.
+def short_tu_long(ma: str, idx: int, chuong: int) -> str:
+    """Dựng bản short 9:16 từ ĐÚNG kịch bản của chương `chuong` trong bản dài `idx`."""
+    return mot_tap(ma, idx + chuong, doc=True, long=False)
+
+
+def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
+            so_chuong: int = 10) -> str:
     k = next((x for x in KENH if x["ma"] == ma), None)
     if not k:
         print(f"❌ không có kênh {ma}")
         return ""
-    tieu, hook, hook_phu, nhip = BO_SINH[k["sinh"]](idx)
+    muc = []
+    if long:
+        tieu, hook, hook_phu, nhip, muc = sinh_long(ma, idx, so_chuong)
+    else:
+        tieu, hook, hook_phu, nhip = BO_SINH[k["sinh"]](idx)
     # Nhịp 0 = HOOK. Chèn ở đây chứ không viết vào từng bộ sinh: hook là quy tắc chung của cả
     # bộ phim, không phải nội dung riêng của một kênh — viết mười chỗ là mười chỗ để lệch nhau.
     # CHỈ chèn khung số liệu khi THẬT SỰ CÓ SỐ. Bốn kênh (whatif · dayinlife · wheregoes ·
@@ -961,13 +1083,17 @@ def mot_tap(ma: str, idx: int, doc: bool = True) -> str:
     elif HOOK_LOI.get(ma) and nhip:
         nhip[0]["loi"] = HOOK_LOI[ma]
         nhip[0]["dinh"] = True
-    slug = f"{ma}_{idx:04d}"
+    slug = f"{ma}_{idx:04d}" + ("_long" if long else "")
     print(f"\n▶ {k['ten']} · {tieu}", flush=True)
 
     hat = sum(ord(c) for c in ma) + idx
     # Giọng kể: một người, trầm, chậm vừa. Phim giải thích không có đối thoại — mọi lời là
     # của người kể, nên `doc_hai_giong` chỉ dùng một giọng cho cả hai khe.
-    ga = ("en-US-GuyNeural", "-4%", "-2Hz")
+    gr = GU_RIENG.get(ma, ("en-US-GuyNeural", NHAC[0], ""))
+    # Nhịp và cao độ cũng lệch theo kênh: cùng một giọng máy mà khác tốc độ đã đủ để tai
+    # tách ra hai người kể. Băm từ mã kênh nên cố định qua mọi tập.
+    _h = sum(ord(c) for c in ma)
+    ga = (gr[0], f"{-8 + _h % 9}%", f"{-4 + _h % 7}Hz")
     cau = [(n["loi"], 0, "trung_tinh") for n in nhip]
     rel = f"v9_{slug}.mp3"
     try:
@@ -1009,7 +1135,7 @@ def mot_tap(ma: str, idx: int, doc: bool = True) -> str:
 
     mk = MAU_KENH.get(ma, {"nen": "#F3EEE4", "mau": k["mau"], "phu": k["phu"], "chu": "#2C2722"})
     props = {"nhip": nhip, "tu": tu, "voMp3": rel,
-             "nhac": NHAC[hat % len(NHAC)], "nhacVol": 0.11,
+             "nhac": gr[1], "nhacVol": 0.11,
              "tieuDe": k["ten"], "handle": "@" + ma + "usa",
              "mau": mk["mau"], "mauPhu": mk["phu"],
              "nenTrang": mk["nen"], "chuTrang": mk["chu"],
@@ -1025,7 +1151,17 @@ def mot_tap(ma: str, idx: int, doc: bool = True) -> str:
                         f"--props={pj}", "--gl=swiftshader", "--log=error", "--crf", "21"],
                        cwd=ENG, capture_output=True, text=True, timeout=3000)
     if r.returncode or not os.path.exists(out):
-        print(f"   ❌ render hỏng: {(r.stderr or r.stdout or '')[-260:]}")
+        # 1/9 — IN LỖI PHẢI LỌC, KHÔNG CẮT ĐUÔI.
+        # Bản trước lấy 260 ký tự CUỐI stderr. Remotion in cảnh báo phông ở cuối, nên lỗi thật
+        # bị đẩy ra ngoài cửa sổ và tôi đọc được đúng câu cảnh báo vô hại. Hai lần trong ngày
+        # cách in lỗi của chính mình giấu mất nguyên nhân.
+        _e = (r.stderr or r.stdout or "")
+        _dong = [d for d in _e.splitlines()
+                 if any(t in d for t in ("Error", "error:", "Cannot", "undefined is not",
+                                         "TypeError", "ReferenceError", "failed", "Expected"))]
+        print("   ❌ render hỏng:")
+        for d in (_dong[:4] or _e.splitlines()[-4:]):
+            print(f"      {d.strip()[:190]}")
         return ""
     am = chuan(out)
     lam_thumb(out, tieu, k["ten"], k["mau"], os.path.join(GOC, "out", f"v9_{slug}.jpg"))
@@ -1042,11 +1178,23 @@ def main() -> int:
     ap.add_argument("--kenh", default="")
     ap.add_argument("--tu", type=int, default=0)
     ap.add_argument("--so", type=int, default=1)
-    ap.add_argument("--ngang", action="store_true", help="dựng bản 16:9 (long) thay vì 9:16")
+    ap.add_argument("--ngang", action="store_true", help="dựng bản 16:9 thay vì 9:16")
+    ap.add_argument("--long", action="store_true", help="bản dài (chương theo dòng dữ liệu)")
+    # Anh: *"long demo e dựng ngắn a coi là được, nào vào dựng thật thì scale lên."*
+    # Đúng: cấu trúc bản dài (mở đầu -> thẻ chương -> các chương -> biểu đồ tổng hợp -> chốt)
+    # kiểm được với 3 chương y như với 10, mà tốn 1/3 số ảnh. Vào sản xuất chỉ đổi con số này.
+    ap.add_argument("--chuong", type=int, default=10, help="số chương của bản dài (demo: 3)")
+    ap.add_argument("--short-tu-long", type=int, default=-1, metavar="N",
+                    help="dựng N short 9:16 từ kịch bản N chương đầu của bản dài")
     a = ap.parse_args()
     ds = [x.strip() for x in a.kenh.split(",") if x.strip()] or [k["ma"] for k in KENH]
-    ra = [v for j, de in enumerate(ds) for i in range(a.so)
-          if (v := mot_tap(de, a.tu + i + j, doc=not a.ngang))]
+    if a.short_tu_long > 0:
+        ra = [v for de in ds for c in range(a.short_tu_long)
+              if (v := short_tu_long(de, a.tu, c))]
+    else:
+        ra = [v for j, de in enumerate(ds) for i in range(a.so)
+              if (v := mot_tap(de, a.tu + i + j, doc=not a.ngang, long=a.long,
+                               so_chuong=a.chuong))]
     print(f"\n✅ {len(ra)}/{len(ds) * a.so} video")
     return 0 if ra else 1
 

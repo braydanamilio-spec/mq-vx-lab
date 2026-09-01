@@ -25,7 +25,8 @@ import subprocess
 import tempfile
 
 MOC = -14.0      # LUFS — mốc chuẩn hoá của YouTube / Facebook / Instagram
-DINH = -1.0      # dBTP — YouTube khuyến nghị đỉnh thật dưới −1 để không vỡ tiếng khi nén lại
+DINH = -1.5   # 1/9: đặt -1.0 thì đo lại ra -0.7 dBTP (loudnorm không đạt trần tuyệt đối
+              # trên mọi nội dung). Hạ xuống -1.5 để bản ra thật sự nằm dưới -1.      # dBTP — YouTube khuyến nghị đỉnh thật dưới −1 để không vỡ tiếng khi nén lại
 DAI = 11.0       # LRA
 
 

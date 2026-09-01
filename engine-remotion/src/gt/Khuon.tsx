@@ -149,11 +149,23 @@ export const SoLieu: React.FC<{
   W: number; H: number; so: string; don: string; chu: string; bt: string; mau: string; p: number;
   tren_anh?: boolean;
 }> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false }) => {
+  /* ── BỐ CỤC PHẢI ĐỔI THEO HƯỚNG KHUNG ────────────────────────────────────────────────
+     Anh: *"bản 16:9 đang bị che khuất."* Đúng, và gốc rễ là mọi vị trí ở đây tính theo `H`.
+     Khung dọc cao 1920 nên `H*0.20` cho chữ số là vừa; khung ngang chỉ cao 1080 nên cùng công
+     thức ấy cho ra dải số chiếm gần một phần ba chiều cao, và dòng chú thích ở `H*0.94` rơi
+     đúng vào giữa thân người.
+     Đây lại là họ lỗi "một hằng phục vụ hai thứ biến thiên độc lập": một bộ toạ độ phục vụ cả
+     hai tỉ lệ khung, mà hai tỉ lệ ấy có ngân sách chiều cao khác hẳn nhau.
+     Khung ngang: chữ số nhỏ hơn, dải nền mỏng hơn, chú thích nằm NGAY DƯỚI số thay vì ở đáy. */
+  const ngang = W > H;
+  const cCao = ngang ? 0.13 : 0.20;     // cỡ chữ số theo chiều cao
+  const yCao = ngang ? 0.17 : 0.26;     // chỗ đặt chữ số
+  const yChu = ngang ? 0.33 : 0.94;     // chỗ đặt dòng chú thích
   const q = Math.min(1, p / 0.28);
   /* Cùng lỗi với `ChiaDoi`, và thêm một lỗi nữa: biểu tượng đặt ở `H*0.62` còn con số ở
      `H*0.30` với cỡ `H*0.20` — hai lớp cùng chọn chỗ theo H mà không biết nhau, nên số "9"
      nằm đè lên cái biểu tượng. Nay biểu tượng bám ĐÁY khung và số bám ĐỈNH, không gặp nhau. */
-  const cs = Math.min(H * 0.20, (W * 0.88 / Math.max(1, so.length)) * 1.65);
+  const cs = Math.min(H * cCao, (W * 0.88 / Math.max(1, so.length)) * 1.65);
   /* SỐ ĐẾM LÊN — anh: *"số liệu động animation là đẹp hay."*
      Không phải hiệu ứng cho vui: con số nhảy dần làm người xem CẢM được độ lớn, còn con số
      hiện sẵn thì chỉ được đọc. Với kênh mà cả nội dung là những con số thì đây là chỗ đắt nhất.
@@ -178,12 +190,12 @@ export const SoLieu: React.FC<{
           Chữ đặt trên ảnh thì PHẢI có nền riêng — không có cách nào khác bảo đảm đọc được, vì
           ảnh mỗi nhịp một sáng tối khác nhau và không ai biết trước. */}
       {tren_anh ? (
-        <rect x={W * 0.04} y={H * 0.09} width={W * 0.92} height={cs * 1.62}
+        <rect x={W * 0.04} y={H * (ngang ? 0.05 : 0.09)} width={W * 0.92} height={cs * 1.62}
               rx={H * 0.02} fill="#12151C" opacity={0.62} />
       ) : null}
-      {bt ? <g transform={`translate(${W / 2} ${H * 0.70})`} opacity={0.92}>
+      {bt ? <g transform={`translate(${W / 2} ${H * (ngang ? 0.62 : 0.70)})`} opacity={0.92}>
         <BieuTuong ten={bt} s={Math.min(H * 0.30, W * 0.30)} /></g> : null}
-      <g transform={`translate(${W / 2} ${H * 0.26}) scale(${0.86 + q * 0.14})`} opacity={q}>
+      <g transform={`translate(${W / 2} ${H * yCao}) scale(${0.86 + q * 0.14})`} opacity={q}>
         <text x="0" y="0" textAnchor="middle" fontFamily={F} fontWeight={900}
               fontSize={cs}
               fill={tren_anh ? "#FFFFFF" : "#2C2722"}
@@ -195,7 +207,7 @@ export const SoLieu: React.FC<{
                      style={{ filter: `drop-shadow(0 ${H*0.003}px ${H*0.009}px #00000099)` }}
                      >{don.toUpperCase()}</text> : null}
       </g>
-      {chu ? <text x={W / 2} y={H * 0.94} textAnchor="middle" fontFamily={F} fontWeight={700}
+      {chu ? <text x={W / 2} y={H * yChu} textAnchor="middle" fontFamily={F} fontWeight={700}
                    fontSize={Math.min(H * 0.042, (W * 0.90 / Math.max(1, chu.length)) * 1.45)}
                    fill="#3A342C">{chu}</text> : null}
     </g>
@@ -294,7 +306,7 @@ export const DaiChu: React.FC<{ W: number; H: number; chu: string; p: number }> 
 ({ W, H, chu, p }) => {
   if (!chu) return null;
   const q = Math.min(1, p / 0.25);
-  const fs = Math.min(H * 0.075, (W * 0.80 / Math.max(1, chu.length)) * 1.5);
+  const fs = Math.min(H * (W > H ? 0.055 : 0.075), (W * 0.80 / Math.max(1, chu.length)) * 1.5);
   return (
     <g opacity={q}>
       <rect x="0" y={H - fs * 1.7} width={W} height={fs * 1.7} fill="#FFFFFF" opacity={0.94} />

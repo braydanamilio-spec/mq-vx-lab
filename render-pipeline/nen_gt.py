@@ -298,6 +298,20 @@ def do_phang(tep: str):
         return None
 
 
+def _sac_thai(ma: str) -> str:
+    """Sắc thái vẽ riêng của kênh — vẫn trong khuôn 'cartoon phẳng', chỉ khác nét.
+
+    Không cho mỗi kênh một PHONG CÁCH khác (đã thử và hỏng: trộn ảnh thật với cartoon làm
+    30/74 ảnh lệch nhau). Cho mỗi kênh một SẮC THÁI trong cùng một phong cách: viền dày hay
+    mảnh, có viền hay không, nét máy hay nét tay, bảng màu rộng hay hạn chế ba màu.
+    Bốn thứ ấy đủ để mười kênh không nhìn ra cùng một xưởng, mà không kéo cái nào về ảnh thật."""
+    try:
+        from giai_thich import GU_RIENG
+        return GU_RIENG.get(ma, ("", "", ""))[2]
+    except Exception:
+        return ""
+
+
 def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool = False) -> str:
     """Ghép prompt cho MỘT nhịp.
 
@@ -325,7 +339,7 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
     # hai lần trong hôm nay (câu cấm chữ, và câu ép sàn). Để phong cách ở cuối câu là để nó bị
     # át bởi phần mô tả cảnh, và đó là lý do cùng một kênh ra ảnh lúc vector phẳng lúc ảnh chụp.
     phan = [
-        (gu or GU) + ".",          # 1. phong cách — phải đứng đầu, đây là thứ giữ chất cartoon
+        ((gu or GU) + ", " + _sac_thai(ma)).rstrip(", ") + ".",   # 1. phong cách + sắc thái riêng
         _khoa(ma, ve).rstrip(),    # 2. khoá nhân vật (rỗng nếu cảnh không có người)
         ve + mt + ",",             # 3. chính cảnh của nhịp này
         khung + ",",               # 4. chừa chỗ cho chữ
