@@ -399,3 +399,189 @@ người Việt không có cảm giác về dặm.
 Kênh giải thích **sống bằng việc quy con số về thứ người xem CẢM ĐƯỢC**. Dùng sai hệ đơn vị là
 phá đúng cơ chế ấy ngay ở gốc. Dặm · mph · pound · feet · Fahrenheit · đô la.
 
+
+---
+
+## 13. LUẬT RÚT TỪ NGÀY 1/9 — BỘ KLING, 20 KÊNH
+
+Một ngày đưa bộ Kling từ 10 lên 20 kênh và nâng điểm kịch bản AI từ **85,9 lên 94,0/100**.
+Chi tiết từng lỗi nằm ở `PIPELINE_RULES.md` mục 8k1–8k41. Đây là những luật **vượt ra ngoài bộ
+Kling** — chúng sẽ đúng ở bộ tiếp theo, nên để ở đây.
+
+### 13.1 Giới hạn của hệ ngoài phải có ĐƠN VỊ viết ra và NGUỒN dẫn
+
+`KY_TU_MAX = 3000` với ghi chú *"anh dặn prompt 2.500–3.000 từ"*. Trần thật của Kling là **2.500
+KÝ TỰ**. Hai đơn vị chênh nhau bảy lần, và hậu quả là **30/30 tệp đã xuất đều bị cắt mất đuôi** —
+đuôi là khối `DO NOT`, tức đúng hàng rào chặn lỗi hình. Prompt vẫn gửi được, video vẫn ra, chỉ
+là ra xấu hơn mức lẽ ra. Không có gì báo.
+
+**"2.500" không phải một giới hạn — nó là một con số.** Giới hạn là "2.500 ký tự, theo tài liệu
+API ngày X".
+
+### 13.2 Cổng đo một TỪ thì lệnh dặn phải LIỆT KÊ chính những từ ấy
+
+Ba cổng đốt **49 vòng gọi AI** trong một lượt chạy 30 tập, và cả ba là lỗi của lệnh dặn:
+
+| cổng | thước tìm | lệnh dặn nói |
+|---|---|---|
+| `beat` | `beat != "hook"` | **liệt kê `hook` là nhịp hợp lệ** rồi phạt khi dùng |
+| `escalate` | một từ trong `again/further/more…` | "phải leo thang thứ đo được" — một Ý |
+| `payoff` | một động từ đảo tình thế | "phải là cú lật" — một Ý |
+
+AI viết đúng ý mà sai từ, rồi bị bắt viết lại. Cái đầu tệ nhất: nó **mâu thuẫn**, không chỉ mơ hồ.
+
+Sửa xong, cổng giữ nguyên độ chặt và điểm nhảy 85,9 → 94,0. **Cổng không liệt kê từ nó tìm thì
+không phải cổng chất lượng — nó là thuế.**
+
+### 13.3 Chấm mà không chặn thì chỉ là lời khuyên
+
+Luật *"Not 'expensive' but 'nine hundred dollars'"* nằm trong bộ luật hài từ đầu, nhưng chỉ được
+**chấm điểm**, không **chặn**. Kết quả: mất 108 điểm ở 18/28 tập, đứng thứ hai trong mọi trục.
+**Một luật chỉ trừ điểm là một luật tuỳ chọn.**
+
+### 13.4 Trước khi đo hai thứ có giống nhau không, cắt phần TAY NGHỀ chung ra
+
+Cổng đa dạng chạy lần đầu báo **185/190 cặp kênh vượt ngưỡng**. Cổng sai, không phải dữ liệu sai:
+hai phần ba lệnh hệ thống là luật hài và chuẩn hook — thứ **mọi kênh buộc phải dùng chung** vì
+đó là tay nghề, không phải bản sắc.
+
+Cùng lỗi ấy lặp **ba lần trong một buổi**, mỗi lần một trường: `style` (0,89 → 0,03 sau khi cắt
+`SAN_NGHE`) · `sys` (0,82 → 0,04) · `audio`/`nha`.
+
+**Luật:** hỏi *"phần nào giống nhau là ĐÚNG"* rồi cắt, trước khi đo.
+
+### 13.5 Đo CHUỖI khi thứ cần đo là NỘI DUNG
+
+Sau khi cắt phần chung, `audio` vẫn báo 22 cặp trùng. Đọc lên thì *loa siêu thị · bánh xe đẩy ·
+máy quét* và *chuông sân bay · bánh vali · băng chuyền* **không hề giống nhau** — thứ giống nhau
+là KHUÔN CÂU. Người xem nghe thấy âm thanh, không nghe thấy cú pháp. Đổi sang Jaccard trên tập
+từ: 22 cặp → **0**.
+
+**Họ lỗi:** *chọn phép đo theo thứ dễ tính, không theo thứ người xem cảm được.*
+
+### 13.6 Hằng số sống lâu hơn ngữ cảnh sinh ra nó
+
+`MOC = (0.1875, 0.5625, 0.8125)` lấy từ bộ 500 prompt ở clip **8 giây chia bốn khối**. Nhưng
+`nhip()` đã đổi để 8 giây đi nhánh **ba khối** — nên `MOC` chỉ còn dùng cho clip ≥10 giây, **một
+ngữ cảnh nó chưa bao giờ được đo**. Ghi chú "lấy từ bộ 500" vẫn đúng về lịch sử và đã sai về
+hiện tại; vì nó đọc rất có căn cứ, nó là chỗ cuối cùng người ta nghĩ tới.
+
+**Khi đổi một hàm, đi soát mọi hằng số mà hàm ấy từng nuôi.**
+
+### 13.7 Sai một hằng số tới lần thứ ba thì THÔI TÌM CON SỐ — đo thẳng vật thật
+
+`VAN_KE_MAX` em đặt nhầm **sáu lần**: 800 → 720 → 670 → 640 → 600 → 447. Lần nào cũng "đo cẩn
+thận trên cả 10 kênh × 8 thời lượng". Lần nào cũng còn hàng chục trường hợp tràn.
+
+Sáu lần sai vì mỗi lần chỉ mô hình hoá một chiều và bỏ sót chiều khác (độ dài thoại · tên phòng
+vs mô tả phòng · số vai có mặt vs vai có thoại · khối bắt buộc mới · web điền cast · **thứ giao
+đi là khuôn web chứ không phải đường Python**).
+
+Chữa: `_ngan_sach_khuon()` nhận **chính khuôn sắp giao đi** và ghép bằng **chính phép ghép mà web
+sẽ chạy**. Không còn chiều nào để bỏ sót, vì không còn mô hình nào — chỉ còn vật thật.
+
+### 13.8 Cổng BẮT OAN tệ hơn cổng không bắt
+
+Ba chỗ bắt oan tìm được, cả ba chặn kịch bản **hoàn toàn đúng**: phòng `stairwell` (tả là
+*"concrete steps"*) chặn chữ `stairs`; phòng `motel room` (tả là *"a boxy TV"*) chặn `television`;
+vai tên hai chữ `Chef Nick` bị phép quét một-chữ **xé đôi**, nửa sau thành "người lạ".
+
+Cổng bắt oan không chỉ phiền: nó **ép AI viết lại một kịch bản vốn đúng**, và ép tới hết vòng thì
+trả về bản tệ hơn bản đầu. **Nó làm chất lượng đi xuống trong khi trông như đang canh gác.**
+
+### 13.9 Danh sách ngoại lệ là danh sách VÔ HẠN
+
+Cổng chặn nhân vật lạ quét chữ viết hoa và bỏ qua một danh sách (`The · This · That…`). Câu
+*"Behind Mike the freezer rattles"* làm cổng chặn một kịch bản đúng. Thêm `Behind` vào rồi mai
+`Across`, `Beneath`, `Inside` lại nổ.
+
+Chữ hoa **đầu câu là ngữ pháp, không phải tên riêng**. Bỏ chữ đầu mỗi câu trước khi quét thì chỉ
+còn tên thật, và danh sách hết cần dài. **Nhận ra quy luật sinh ra ngoại lệ, đừng liệt kê chúng.**
+
+### 13.10 Cổng cho mã chạy ở môi trường khác phải CHẠY CHÍNH MÃ ẤY
+
+Ba lỗi chỉ hiện ra khi em trích **đúng đoạn JavaScript của dashboard** ra khỏi `index.html` và
+chạy nó bằng `node` trên **đúng dữ liệu vừa xuất**. Mọi phép kiểm trước đó viết bằng Python mô
+phỏng lại điều web *sẽ* làm — và bản mô phỏng thừa hưởng đúng những giả định sai đang cần bắt.
+
+```bash
+node -e 'const s=require("fs").readFileSync("index.html","utf8");
+         const code=s.slice(s.indexOf("<mốc đầu>"), s.indexOf("<mốc cuối>"))+"; ({p});";
+         /* nạp dữ liệu thật, rồi eval(code) */'
+```
+
+### 13.11 Mỗi cổng cần HAI phép thử: không bắt oan, VÀ bắt được
+
+Cổng thoại kiểu Mỹ chạy trên 30 tập thật: **0 lỗi**. Con số ấy một mình có hai cách hiểu ngược
+nhau — "thoại đã chuẩn" hoặc "cổng không hoạt động". Phải thử chiều ngược lại: sáu kịch bản cố
+tình viết sai, mỗi cái sai một kiểu. **Cả sáu bị chặn đúng lý do** — lúc đó con số 0 mới có nghĩa.
+
+Chỉ có phép thử thứ nhất thì **một cổng chết vẫn xanh**.
+
+### 13.12 Lỗi MÁY SỬA ĐƯỢC thì đừng đốt một vòng gọi AI
+
+AI viết `who: "Nick"` cho vai `"Chef Nick"` và bị thước chặn. Đúng luật, nhưng nó tiêu một vòng
+viết lại — một lượt gọi AI và một chỗ trong hạn mức — cho thứ máy sửa được, y như chuyện thiếu
+dấu chấm câu. Nay `don()` tự chuẩn hoá, **và chỉ khi khớp DUY NHẤT**: đoán bừa còn tệ hơn chặn.
+
+### 13.13 Bộ lịch chia theo modulo lặp sau `lcm`, không phải sau TÍCH
+
+Cấp cho mỗi tập một bộ N trục bằng `chỉ_số_i = số_tập % độ_dài_i` thì **mỗi trục nhìn riêng đều
+trải hết**, nhưng bộ N trục lặp lại sau `lcm(các độ dài)`. Với 7 trục, tích = 7,37 triệu mà
+lcm = **240**. Trần to mà lịch không với tới, và không cách nào thấy bằng cách nhìn từng trục.
+
+Chữa: đánh số thẳng trên không gian tích, bước bằng số **nguyên tố cùng nhau với tích**.
+
+Và: `hash()` của Python **đổi theo từng lần chạy** (`PYTHONHASHSEED`) — dùng nó để lệch pha thì
+hai môi trường ra hai lịch khác nhau. Phải viết phép băm ra tường minh.
+
+### 13.14 Kiểm bằng MẮT ở CỠ THẬT, không ở cỡ đang xem
+
+Lưới 10 avatar nhìn ở cỡ lớn thì đẹp. Ở **48px** — cỡ avatar thật trong danh sách đăng ký
+YouTube — mới thấy huy hiệu số đè lên chữ ở **10/10 kênh**, tên kênh tràn khỏi vòng tròn, và hai
+biểu tượng đọc sai hẳn (cờ lê thành chìa khoá, cốc thành hình chữ nhật).
+
+Và khi có 20 kênh thì mắt không dùng lại được: `brand_kling.kiem_bong()` vẽ riêng từng biểu
+tượng, hạ xuống 48px, nhị phân hoá rồi so mặt nạ. **Màu không tham gia phép đo** — ở cỡ ấy màu
+chỉ giúp phân biệt SAU KHI hình đã khác.
+
+### 13.15 Trước khi kết luận hạ tầng của anh hỏng, kiểm lại BÀI KIỂM của mình
+
+Em đo hồ khoá bằng `urllib` trần, thấy Groq trả `403` trên cả 5 khoá thử, và báo cáo **"83 khoá
+Groq đã chết"**. Anh nói khoá vẫn dùng tốt — và anh đúng. `403 error code 1010` là mã chặn bot
+của **CDN**, không phải của Groq. Thêm một dòng `User-Agent`: **5/5 khoá OK ngay**.
+`content_brain` vốn đã đặt `User-Agent` ở mọi lệnh gọi — chỉ bài kiểm của em là thiếu.
+
+**Bài kiểm phải gọi bằng đúng đường mà mã thật gọi.** Gọi bằng đường khác thì cái hỏng có thể là
+bài kiểm, và lúc đó ta đi sửa thứ không hỏng. *(Mã 403/1010/1020 gần như luôn là tầng CDN; ứng
+dụng từ chối khoá thì trả 401 kèm giải thích.)*
+
+### 13.16 Chép kịch bản của người khác thì không, nhưng SỐ ĐO công bố thì có
+
+Chép kịch bản kênh hot vừa vướng bản quyền vừa trái luật kênh mình. Thứ tham khảo được là số đo
+công bố, và chúng quy được thành cổng:
+
+| chuẩn | dùng vào đâu |
+|---|---|
+| giữ >80% trong 3 giây đầu (quyết định lướt ~400ms) | hook phải là hình SAI TRÁI sẵn, không dựng cảnh |
+| xem hết >70% là vùng được đẩy | cú lật đặt ở cuối, clip ngắn |
+| dựng 60–70% · chốt + phản ứng 30–40% | hiệu chỉnh `MOC` (xem 13.6) |
+| rewatch là tín hiệu nặng nhất của TikTok | kết ghép vòng được |
+| **hài ăn nhất ở 18–28 giây** | **khoảng cách thật: clip Kling dài nhất 15 giây** |
+| **đổi hình mỗi 1,5–2 giây** | **khoảng cách thật: Kling cho một cú máy liền** |
+
+Hai dòng cuối **không sửa được bằng prompt** — cần khâu dựng ghép nhiều clip. Ghi ra để lần sau
+không đi tìm lời giải ở chỗ không có.
+
+### 13.17 Luật YouTube nêu SÁU DANH TỪ, và cả sáu đều đo được
+
+Luật *"inauthentic content"* (7/2025) nhắm vào sản xuất tự động sinh video từ **prompt · bố cục ·
+kịch bản · cảnh · giọng · khuôn chuyện** gần như giống hệt nhau. Phạt: cảnh cáo → treo 90 ngày →
+**loại vĩnh viễn khỏi YPP**.
+
+Sáu danh từ ấy là sáu trường trong hồ sơ kênh, nên `kiem_da_dang.py` đo được chúng giữa mọi cặp.
+**Chạy cổng này TRƯỚC khi thêm kênh mới** — mười kênh đầu từng có `audio` giống nhau 1,00 mà
+không ai thấy, cho tới khi đo. Người viết nhớ được ba kênh, không nhớ hai mươi.
+
+Nhưng phải nói thẳng: cổng chỉ chứng minh **hồ sơ kênh** khác nhau. Thứ YouTube xét là **video**.
+Cổng là điều kiện cần, không phải điều kiện đủ.
