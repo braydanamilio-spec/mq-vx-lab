@@ -65,6 +65,10 @@ jobs:
           FIREBASE_PROJECT_ID_B2:           mm0-shard-b2
           GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
           FIREBASE_PROJECT_ID_C:            ${{ secrets.FIREBASE_PROJECT_ID_C }}
+          # BẮT BUỘC ĐI KÈM. `client_publish()` chỉ trỏ Project C khi `SHARD_PUBLISH=1`;
+          # truyền ID mà quên cờ thì nó ÂM THẦM rơi về Project A — đọc/ghi nhầm kho mà
+          # không có lỗi nào báo. `selftest.t_shard_publish` bắt đúng chỗ này.
+          SHARD_PUBLISH: "1"
           OWNER_UID:                        ${{ secrets.OWNER_UID }}
           CHANNELS_YAML:                    ${{ github.workspace }}/_autopublisher/config/channels.yaml
           PYTHONPATH:                       ${{ github.workspace }}/render-pipeline

@@ -7785,3 +7785,52 @@ thật"*). Thứ tham khảo được là **số đo công bố**, và chúng qu
 
 Hai dòng cuối là khoảng cách thật và **không sửa được bằng prompt** — chúng cần khâu dựng ghép
 nhiều clip lại. Ghi ra đây để lần sau không đi tìm lời giải ở chỗ không có.
+
+### 7cz — Đường đẩy Drive nay KHÔNG cần Firestore: hồ kho tự lưu vào D1 (1/9)
+
+Anh: *"bữa e kêu có cách ko ảnh hưởng mà, tìm hướng tối ưu."* Đúng, và hôm nay đã trả giá cho
+việc chưa làm — Firestore cạn đúng lúc bước đẩy kho chạy, 17 lượt render xong nằm lại (7cw).
+
+`storage._kho_tu_kv()` sinh ra đúng cho tình huống này, nhưng khoá KV `conn:` chỉ được ghi **lúc
+kết nối tài khoản**, mà các kho nối trước 31/8 chưa từng có khoá — nên đường sống cuối rỗng.
+
+Bịt bằng đường **không cần deploy Worker** (máy không có token Cloudflare): lệnh `nho_ghi`/
+`nho_doc` đã có sẵn, ghi/đọc bảng `bo_nho` trong D1. Thứ tự mới:
+
+    bộ nhớ (10') -> KV -> **D1** -> Firestore
+                            ↑___________|   mỗi lần Firestore đọc được là ghi lại vào D1
+
+Nghĩa là **chỉ cần Firestore sống MỘT lần là từ đó không cần nó nữa.** Tự đầy, không có bước tay.
+
+Và thông báo lỗi của `enqueue.py` nay phân biệt hai tình huống: *"chưa nối kho"* (phải đi nối) và
+*"không đọc được danh sách"* (phải chờ hạn mức). Câu cũ nói cái đầu trong khi sự thật là cái sau,
+và nó làm mất nửa giờ đi kiểm cấu hình.
+
+### 7da — Bốn cổng cùng cầm danh sách chép tay, cùng báo đỏ cho việc đã nghỉ (1/9)
+
+Chạy `selftest` ra 4 lỗi, và ba trong bốn là **cổng đòi thứ không còn chạy**:
+
+| cổng | đòi gì | thực tế |
+|---|---|---|
+| `t_khong_tron_so` | chỉ soi `firestore_bridge.py` | bỏ sót 4 lối đọc trốn sổ của `don_sach.py` |
+| Kling A-Z | `KLINGCOMEDY` phải có trong `channels.yaml` | luồng Kling đã tắt |
+| `t_50_kenh_dong_bo` | 50 kênh gen-2 phải có trong `RS_PRESETS` | bộ ấy đã nghỉ |
+| `t_shard_publish` | — | **lỗi THẬT**: `don_sach.yml` truyền `FIREBASE_PROJECT_ID_C` mà quên `SHARD_PUBLISH=1`, nên âm thầm đọc/ghi Project A |
+
+Ba cổng đầu đã sửa để **tự đọc trạng thái thật** (thư mục workflow · `channels.yaml`) thay vì
+cầm danh sách. Đây là lần thứ tư trong ngày của cùng một họ lỗi (`kiem_workflow.CAP`,
+`kiem_az.RENDER`, `RS_PRESETS`).
+
+**Vì sao nó nguy hơn nó trông:** một cổng báo đỏ vĩnh viễn cho việc không ai làm thì người ta
+thôi đọc nó — và lỗi THẬT nằm cạnh đó (`SHARD_PUBLISH`) chìm theo. Cổng sai phạm vi không chỉ vô
+dụng, nó còn che.
+
+### 7db — 18 kênh thiếu trong `brands.json`: đăng được mà không có nhận diện (1/9)
+
+Cổng đồng bộ (sau khi sửa phạm vi) bắt ngay: 18/18 kênh mới **không có trong `config/brands.json`**
+— tệp mà khâu ĐĂNG đọc để lấy handle · tagline · hashtag · category.
+
+Hậu quả nếu không bắt: video lên YouTube/FB/IG với mô tả rỗng, không hashtag, sai category — tức
+đủ ba nơi "kỹ thuật" (dropdown · brand kit · channels.yaml) mà vẫn hỏng ở nơi thứ tư.
+
+Sinh từ `giai_thich.KENH` + `brand_gt.MO_TA/NHAN/BO_CUC`, không chép tay. Bỏ 50 kênh đã nghỉ.

@@ -1686,7 +1686,14 @@ def t_muc_am_quyet_o_mot_cho():
 
 
 def t_50_kenh_dong_bo_du_ba_noi():
-    """50 kênh gen-2 phải có mặt ĐỦ ở ba nơi, theo `CHANNEL_METHODS §THÊM 1 KÊNH MỚI`.
+    """Kênh ĐANG DÙNG phải có mặt đủ ở ba nơi, theo `CHANNEL_METHODS §THÊM 1 KÊNH MỚI`.
+
+    1/9 — SỬA PHẠM VI. Bản trước cầm cứng danh sách 50 kênh thế hệ 2. Sau khi bộ ấy nghỉ và
+    `channels.yaml` chuyển sang 18 kênh giải thích, cổng đòi 50 kênh đã nghỉ phải có trong
+    `RS_PRESETS` — một dòng đỏ vĩnh viễn cho việc không ai làm, và nó che mất những lỗi thật
+    bên cạnh. Cùng họ với `kiem_workflow.CAP` và `t_khong_tron_so`: cổng cầm danh sách chép tay.
+    Nay đọc thẳng `channels.yaml` — thêm/bớt kênh ở đó là phạm vi cổng tự đổi theo.
+
 
     26/8 — kiểm lại thì thiếu SẠCH: `RS_PRESETS` 0/50, `RS_BRANDS` 0/50, `brands.json` 0/50, trong
     khi 55 kênh cũ đủ cả. Nghĩa là đã làm xong hết phần khó (engine · giọng riêng · phông riêng ·
@@ -1708,8 +1715,15 @@ def t_50_kenh_dong_bo_du_ba_noi():
         # im lặng bỏ qua chính là cái bẫy "phép thử chạy trên đầu vào rỗng".
         print("      ⏭  bỏ qua: không có repo MM0-AutoPublisher ở đây (chốt liên-repo)")
         return
-    ks = _json.loads(_doc("kenh_the_he_2.json"))
-    ten = [k["ten"].replace(" ", "").upper() for k in ks]
+    # DANH SÁCH KÊNH ĐANG DÙNG = `channels.yaml`, không phải bảng gen-2 chép cứng.
+    # `kenh_the_he_2.json` mô tả bộ 50 kênh ĐÃ NGHỈ; đòi chúng có trong RS_PRESETS là đòi một
+    # việc không ai làm, và dòng đỏ vĩnh viễn ấy che mất lỗi thật bên cạnh.
+    import yaml as _yaml
+    _cy = _doc("../MM0-AutoPublisher/config/channels.yaml")
+    ten = sorted({str(k).upper() for k in ((_yaml.safe_load(_cy) or {}).get("channels") or {})})
+    if not ten:
+        print("      ⏭  bỏ qua: channels.yaml không khai kênh nào")
+        return
     d = _doc("../MM0-AutoPublisher/dashboard/index.html")
     bj = _json.loads(_doc("../MM0-AutoPublisher/config/brands.json"))
     thieu = []
@@ -6319,6 +6333,16 @@ def t_kling_az_dung_dung_cho_khi_chua_co_key():
         return
     txt = _io.open(cfg, encoding="utf-8").read()
     ma = _o.environ.get("KLING_KENH") or "KLINGCOMEDY"
+    # CHỈ ĐÒI KHI LUỒNG KLING CÒN CHẠY. `kling_cron.yml` đã gỡ `schedule:` (nghỉ từ 1/9), nên
+    # đòi kênh của nó phải khai trong channels.yaml là tạo một dòng đỏ VĨNH VIỄN cho việc không
+    # ai làm — và một cổng đỏ mãi thì người ta thôi đọc nó, mất luôn những lỗi thật bên cạnh.
+    _wf = _o.path.join(G, ".github", "workflows", "kling_cron.yml")
+    if _o.path.exists(_wf):
+        _y = _io.open(_wf, encoding="utf-8").read()
+        _ma_y = "\n".join(l for l in _y.split("\n") if not l.lstrip().startswith("#"))
+        if "cron:" not in _ma_y:
+            print("      ⏭️ luồng Kling đã nghỉ (không còn cron) — không đòi kênh trong channels.yaml")
+            return
     assert f"  {ma}:" in txt, (
         f"kênh {ma} CHƯA khai trong channels.yaml -> enqueue.py sẽ SystemExit và video dựng xong "
         f"bị vứt (đúng lỗi 20/8 làm 27/40 kênh mất video nhiều tuần)")

@@ -5,9 +5,13 @@ name: MM0 Kling A-Z (ý tưởng -> video -> kho -> đăng)
 # đống việc tay mà không ai làm, và vẫn tốn lượt gọi model để viết. Nên nhịp hẹn giờ được GÁC
 # bằng chính sự tồn tại của secret: ngày anh dán key vào là nó tự bắt đầu, không phải sửa gì.
 # Muốn chạy tay lúc chưa có key thì bấm "Run workflow" — vẫn ra bảng chụp bình thường.
+# ── NGHỈ TỪ 1/9/2026 ─────────────────────────────────────────────────────────────────
+# Bộ Kling đã tắt trên GitHub từ trước; gỡ `schedule:` để trạng thái ấy đọc được TỪ REPO.
+# Để nguyên sáu dòng cron trong tệp thì người sau mở ra tưởng nó đang chạy, rồi đi tìm
+# lỗi ở chỗ khác — và `selftest` cũng đòi KLINGCOMEDY phải có trong channels.yaml cho một
+# workflow không chạy, tạo một dòng đỏ vĩnh viễn không ai sửa được.
+# Giữ `workflow_dispatch` để bấm tay khi cần.
 on:
-  schedule:
-    - cron: "20 */6 * * *"        # 4 lượt/ngày; trần chi tiêu nằm ở KLING_TRAN_NGAY
   workflow_dispatch:
     inputs:
       so:
