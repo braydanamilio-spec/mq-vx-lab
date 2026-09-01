@@ -119,6 +119,11 @@ jobs:
             libasound2t64 libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg
           pip install --quiet -c render-pipeline/constraints.txt edge-tts pyyaml requests
           pip install --quiet pillow
+          # `google-generativeai` chỉ cần cho khoá `AIza` (hồ có 1 khoá loại này, và nó là
+          # khoá ĐỌC CHỮ tốt nhất cho cổng `_co_chu`). Thiếu nó không còn giết lượt dựng
+          # nữa — `content_brain._genai` đã trả None để xoay sang cf:/gsk_ — nhưng cài vẫn
+          # hơn: mất khoá tốt nhất là cổng chữ yếu đi mà không ai thấy.
+          pip install --quiet google-generativeai || true
           cd engine-remotion && npm ci && npx remotion browser ensure
 
       # Cổng chạy TRƯỚC bước dựng — hỏng thì biết ngay, không tốn cả lượt render.

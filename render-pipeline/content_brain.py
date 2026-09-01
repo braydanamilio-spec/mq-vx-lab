@@ -599,13 +599,27 @@ def _genai(api_key=None):
     try:
         import google.generativeai as genai
     except ImportError:
-        raise SystemExit("❌ Thiếu thư viện. Cài: pip install google-generativeai")
+        # 1/9 — LỖI THƯỜNG, KHÔNG `SystemExit`. `google-generativeai` chỉ cần cho khoá `AIza`;
+        # hồ khoá còn 97 khoá `cf:` và 83 khoá `gsk_` chạy bằng shim, không cần thư viện nào.
+        #
+        # Gốc rễ của sự cố: `SystemExit` **không bị `except Exception` bắt** (nó kế thừa
+        # BaseException), nên nó xuyên thẳng qua mọi vòng xoay khoá và giết cả tiến trình. Đo ở
+        # lượt 33520531804: 18/18 luồng chết ở bước "Dựng ngắn" vì đúng dòng này, dù hồ thừa
+        # khoá dùng được.
+        #
+        # Cũng KHÔNG trả `None`: sáu chỗ gọi trong tệp này dùng ngay `.GenerativeModel(...)` mà
+        # không kiểm, nên None chỉ đổi lỗi rõ ràng thành `AttributeError` khó đọc.
+        # `RuntimeError` để vòng xoay bắt được và đi tiếp sang khoá kế.
+        raise RuntimeError("thiếu google-generativeai — khoá AIza không dùng được, "
+                           "xoay sang cf:/gsk_")
     key = api_key or os.environ.get("GEMINI_API_KEY")
     if not key:
-        raise SystemExit(
-            "❌ Chưa có GEMINI_API_KEY.\n"
-            "   Tạo FREE tại https://aistudio.google.com/apikey rồi:\n"
-            "   export GEMINI_API_KEY=xxx   (hoặc thêm vào GitHub Secrets)"
+        # Cùng lý do với nhánh thiếu thư viện ngay trên: `SystemExit` kế thừa BaseException nên
+        # `except Exception` không bắt được, và một khoá rỗng trong hồ 180 khoá sẽ giết cả lượt
+        # dựng thay vì bị bỏ qua. Lỗi thường thì vòng xoay đi tiếp sang khoá kế.
+        raise RuntimeError(
+            "chưa có GEMINI_API_KEY cho khoá này — xoay sang khoá kế. "
+            "Tạo FREE tại https://aistudio.google.com/apikey, hoặc đặt secret GEMINI_KEYS."
         )
     genai.configure(api_key=key)
     return _GemShim(genai)
