@@ -14,6 +14,15 @@ engine-remotion/public/**
 !engine-remotion/public/img/
 !engine-remotion/public/img/_fallback.jpg
 !engine-remotion/public/music/
+!engine-remotion/public/comic_nen/
+# 1/9 — NỀN 3D VÀ HAI BẢNG SỐ ĐO PHẢI ĐI THEO GIT.
+# Lượt 00:44 UTC chết ở cổng `kiem_am` với "thiếu số đo âm lượng": `music/am_luong.json` và
+# `comic_nen/huong_sang.json` chưa bao giờ lên git, và CẢ 110 ẢNH NỀN cũng vậy. Nghĩa là mọi
+# nâng cấp của đêm 31/8 — nền 3D, bóng theo hướng sáng, khớp màu 色指定, cân nhạc — chỉ tồn
+# tại trên máy anh; trên Actions chúng rơi hết về nền vector và hằng âm lượng cũ.
+# Đây đúng bài học đã ghi ở buglog và vẫn tái phạm: KHÔNG tin "có trên máy" nghĩa là "có trên
+# CI". Sau mỗi lần sinh ra tài nguyên mới, chạy `git ls-files <path>` để kiểm.
+# 110 ảnh × 431 KB = 46 MB — rẻ hơn nhiều so với một phiên render ra 56 video không có nền.
 # 27/8 — TRƯỚC ĐÂY LIỆT KÊ TỪNG TỆP MỘT, và đó là gốc của một sự cố mất gần hết video:
 # chỉ 6/18 bản nhạc từng được liệt kê, nên CI thiếu 12 bản; 29/50 kênh được gán một bản không
 # có -> `remotion render` 404 -> hỏng cả bộ. Máy làm việc có đủ 18 nên chạy thử ở nhà luôn đẹp.

@@ -1,0 +1,662 @@
+{
+ "airporthell_00": {
+  "huong": 0,
+  "manh": 0.026,
+  "mau": "#D3A38C",
+  "sang": 0.687
+ },
+ "airporthell_01": {
+  "huong": 0,
+  "manh": 0.011,
+  "mau": "#B5C3C7",
+  "sang": 0.753
+ },
+ "airporthell_02": {
+  "huong": 0,
+  "manh": 0.083,
+  "mau": "#BCB0A2",
+  "sang": 0.7
+ },
+ "airporthell_03": {
+  "huong": 0,
+  "manh": 0.035,
+  "mau": "#C5A27C",
+  "sang": 0.662
+ },
+ "airporthell_04": {
+  "huong": 0,
+  "manh": 0.037,
+  "mau": "#B79371",
+  "sang": 0.605
+ },
+ "airporthell_05": {
+  "huong": 0,
+  "manh": 0.012,
+  "mau": "#B4A49B",
+  "sang": 0.66
+ },
+ "airporthell_06": {
+  "huong": 0,
+  "manh": 0.051,
+  "mau": "#C8A79C",
+  "sang": 0.691
+ },
+ "airporthell_07": {
+  "huong": 0,
+  "manh": 0.059,
+  "mau": "#D9BA99",
+  "sang": 0.754
+ },
+ "airporthell_08": {
+  "huong": 0,
+  "manh": 0.059,
+  "mau": "#D59677",
+  "sang": 0.651
+ },
+ "airporthell_09": {
+  "huong": 0,
+  "manh": 0.109,
+  "mau": "#C7B1AC",
+  "sang": 0.721
+ },
+ "carguy_00": {
+  "huong": 0,
+  "manh": 0.01,
+  "mau": "#A8938D",
+  "sang": 0.6
+ },
+ "carguy_01": {
+  "huong": 0,
+  "manh": 0.057,
+  "mau": "#D4987A",
+  "sang": 0.655
+ },
+ "carguy_02": {
+  "huong": 0,
+  "manh": 0.132,
+  "mau": "#BE9885",
+  "sang": 0.634
+ },
+ "carguy_03": {
+  "huong": -1,
+  "manh": 0.444,
+  "mau": "#A6A6A2",
+  "sang": 0.651
+ },
+ "carguy_04": {
+  "huong": 0,
+  "manh": 0.003,
+  "mau": "#B7A99D",
+  "sang": 0.675
+ },
+ "carguy_05": {
+  "huong": 0,
+  "manh": 0.139,
+  "mau": "#BDB3AA",
+  "sang": 0.711
+ },
+ "carguy_06": {
+  "huong": -1,
+  "manh": 0.415,
+  "mau": "#D9B598",
+  "sang": 0.741
+ },
+ "carguy_07": {
+  "huong": 1,
+  "manh": 0.369,
+  "mau": "#BAA79B",
+  "sang": 0.675
+ },
+ "carguy_08": {
+  "huong": 0,
+  "manh": 0.149,
+  "mau": "#B7A697",
+  "sang": 0.667
+ },
+ "carguy_09": {
+  "huong": 0,
+  "manh": 0.069,
+  "mau": "#A89885",
+  "sang": 0.609
+ },
+ "datingapp_00": {
+  "huong": -1,
+  "manh": 0.472,
+  "mau": "#BE906E",
+  "sang": 0.606
+ },
+ "datingapp_01": {
+  "huong": 1,
+  "manh": 0.469,
+  "mau": "#A48578",
+  "sang": 0.553
+ },
+ "datingapp_02": {
+  "huong": 0,
+  "manh": 0.102,
+  "mau": "#D6B99F",
+  "sang": 0.75
+ },
+ "datingapp_03": {
+  "huong": -1,
+  "manh": 0.555,
+  "mau": "#A97966",
+  "sang": 0.526
+ },
+ "datingapp_04": {
+  "huong": 1,
+  "manh": 0.574,
+  "mau": "#CFB8AA",
+  "sang": 0.745
+ },
+ "datingapp_05": {
+  "huong": 0,
+  "manh": 0.163,
+  "mau": "#A67A70",
+  "sang": 0.528
+ },
+ "datingapp_06": {
+  "huong": 0,
+  "manh": 0.013,
+  "mau": "#A5776E",
+  "sang": 0.52
+ },
+ "datingapp_07": {
+  "huong": 1,
+  "manh": 0.361,
+  "mau": "#CDA282",
+  "sang": 0.673
+ },
+ "datingapp_08": {
+  "huong": 1,
+  "manh": 0.242,
+  "mau": "#DABCA9",
+  "sang": 0.765
+ },
+ "datingapp_09": {
+  "huong": 0,
+  "manh": 0.098,
+  "mau": "#CFBCAB",
+  "sang": 0.755
+ },
+ "dietwars_00": {
+  "huong": 0,
+  "manh": 0.002,
+  "mau": "#C2B1A1",
+  "sang": 0.709
+ },
+ "dietwars_01": {
+  "huong": 0,
+  "manh": 0.103,
+  "mau": "#B69B8D",
+  "sang": 0.634
+ },
+ "dietwars_02": {
+  "huong": 1,
+  "manh": 0.251,
+  "mau": "#D1C2AE",
+  "sang": 0.77
+ },
+ "dietwars_03": {
+  "huong": 0,
+  "manh": 0.003,
+  "mau": "#BCA69E",
+  "sang": 0.676
+ },
+ "dietwars_04": {
+  "huong": 0,
+  "manh": 0.145,
+  "mau": "#C9A996",
+  "sang": 0.695
+ },
+ "dietwars_05": {
+  "huong": 1,
+  "manh": 0.376,
+  "mau": "#D1B9A3",
+  "sang": 0.745
+ },
+ "dietwars_06": {
+  "huong": 0,
+  "manh": 0.154,
+  "mau": "#998D84",
+  "sang": 0.565
+ },
+ "dietwars_07": {
+  "huong": -1,
+  "manh": 0.264,
+  "mau": "#9E896F",
+  "sang": 0.552
+ },
+ "dietwars_08": {
+  "huong": 1,
+  "manh": 0.505,
+  "mau": "#BD978A",
+  "sang": 0.633
+ },
+ "dietwars_09": {
+  "huong": 0,
+  "manh": 0.141,
+  "mau": "#D2BDAC",
+  "sang": 0.761
+ },
+ "gymlies_00": {
+  "huong": -1,
+  "manh": 0.91,
+  "mau": "#CB8160",
+  "sang": 0.581
+ },
+ "gymlies_01": {
+  "huong": 0,
+  "manh": 0.27,
+  "mau": "#A7A5A6",
+  "sang": 0.652
+ },
+ "gymlies_02": {
+  "huong": 0,
+  "manh": 0.048,
+  "mau": "#D0BCA9",
+  "sang": 0.755
+ },
+ "gymlies_03": {
+  "huong": 0,
+  "manh": 0.105,
+  "mau": "#C4A98D",
+  "sang": 0.683
+ },
+ "gymlies_04": {
+  "huong": 0,
+  "manh": 0.276,
+  "mau": "#D6C0A0",
+  "sang": 0.766
+ },
+ "gymlies_05": {
+  "huong": 0,
+  "manh": 0.294,
+  "mau": "#D89582",
+  "sang": 0.657
+ },
+ "gymlies_06": {
+  "huong": 0,
+  "manh": 0.227,
+  "mau": "#AD978F",
+  "sang": 0.617
+ },
+ "gymlies_07": {
+  "huong": 0,
+  "manh": 0.097,
+  "mau": "#D79F87",
+  "sang": 0.68
+ },
+ "gymlies_08": {
+  "huong": 0,
+  "manh": 0.204,
+  "mau": "#CDC8BA",
+  "sang": 0.785
+ },
+ "gymlies_09": {
+  "huong": -1,
+  "manh": 0.232,
+  "mau": "#9C947E",
+  "sang": 0.58
+ },
+ "houserules_00": {
+  "huong": 1,
+  "manh": 0.312,
+  "mau": "#A87D59",
+  "sang": 0.525
+ },
+ "houserules_01": {
+  "huong": 0,
+  "manh": 0.09,
+  "mau": "#B78C68",
+  "sang": 0.585
+ },
+ "houserules_02": {
+  "huong": 0,
+  "manh": 0.198,
+  "mau": "#C7A67A",
+  "sang": 0.671
+ },
+ "houserules_03": {
+  "huong": 0,
+  "manh": 0.04,
+  "mau": "#C69E71",
+  "sang": 0.649
+ },
+ "houserules_04": {
+  "huong": 0,
+  "manh": 0.09,
+  "mau": "#B98F67",
+  "sang": 0.595
+ },
+ "houserules_05": {
+  "huong": -1,
+  "manh": 0.301,
+  "mau": "#B38C63",
+  "sang": 0.578
+ },
+ "houserules_06": {
+  "huong": 0,
+  "manh": 0.042,
+  "mau": "#BE9C79",
+  "sang": 0.638
+ },
+ "houserules_07": {
+  "huong": 0,
+  "manh": 0.003,
+  "mau": "#C7A57B",
+  "sang": 0.669
+ },
+ "houserules_08": {
+  "huong": 1,
+  "manh": 0.209,
+  "mau": "#B6906A",
+  "sang": 0.593
+ },
+ "houserules_09": {
+  "huong": 0,
+  "manh": 0.078,
+  "mau": "#A8957A",
+  "sang": 0.596
+ },
+ "neighborwatch_00": {
+  "huong": -1,
+  "manh": 0.251,
+  "mau": "#A7A69A",
+  "sang": 0.649
+ },
+ "neighborwatch_01": {
+  "huong": -1,
+  "manh": 0.562,
+  "mau": "#CEB8A9",
+  "sang": 0.742
+ },
+ "neighborwatch_02": {
+  "huong": 0,
+  "manh": 0.194,
+  "mau": "#D1AF8D",
+  "sang": 0.712
+ },
+ "neighborwatch_03": {
+  "huong": 0,
+  "manh": 0.004,
+  "mau": "#D1B8A2",
+  "sang": 0.744
+ },
+ "neighborwatch_04": {
+  "huong": 0,
+  "manh": 0.136,
+  "mau": "#C8B6AB",
+  "sang": 0.731
+ },
+ "neighborwatch_05": {
+  "huong": -1,
+  "manh": 0.663,
+  "mau": "#CABDA2",
+  "sang": 0.746
+ },
+ "neighborwatch_06": {
+  "huong": 0,
+  "manh": 0.17,
+  "mau": "#BAA581",
+  "sang": 0.657
+ },
+ "neighborwatch_07": {
+  "huong": 1,
+  "manh": 0.3,
+  "mau": "#A99B72",
+  "sang": 0.608
+ },
+ "neighborwatch_08": {
+  "huong": 0,
+  "manh": 0.276,
+  "mau": "#D0986C",
+  "sang": 0.643
+ },
+ "neighborwatch_09": {
+  "huong": 0,
+  "manh": 0.075,
+  "mau": "#B3B6A5",
+  "sang": 0.706
+ },
+ "officesmalltalk_00": {
+  "huong": 0,
+  "manh": 0.132,
+  "mau": "#BBA0A4",
+  "sang": 0.662
+ },
+ "officesmalltalk_01": {
+  "huong": -1,
+  "manh": 0.305,
+  "mau": "#B48A6B",
+  "sang": 0.578
+ },
+ "officesmalltalk_02": {
+  "huong": 0,
+  "manh": 0.104,
+  "mau": "#D5928A",
+  "sang": 0.649
+ },
+ "officesmalltalk_03": {
+  "huong": 0,
+  "manh": 0.296,
+  "mau": "#BC9470",
+  "sang": 0.613
+ },
+ "officesmalltalk_04": {
+  "huong": 1,
+  "manh": 0.3,
+  "mau": "#D4B48B",
+  "sang": 0.727
+ },
+ "officesmalltalk_05": {
+  "huong": 0,
+  "manh": 0.163,
+  "mau": "#D8B695",
+  "sang": 0.742
+ },
+ "officesmalltalk_06": {
+  "huong": 0,
+  "manh": 0.225,
+  "mau": "#CCA075",
+  "sang": 0.663
+ },
+ "officesmalltalk_07": {
+  "huong": -1,
+  "manh": 0.419,
+  "mau": "#D3AB90",
+  "sang": 0.708
+ },
+ "officesmalltalk_08": {
+  "huong": 1,
+  "manh": 0.215,
+  "mau": "#D8AB99",
+  "sang": 0.717
+ },
+ "officesmalltalk_09": {
+  "huong": 1,
+  "manh": 0.409,
+  "mau": "#C7AC9A",
+  "sang": 0.701
+ },
+ "parentmode_00": {
+  "huong": 0,
+  "manh": 0.004,
+  "mau": "#DDC6AE",
+  "sang": 0.796
+ },
+ "parentmode_01": {
+  "huong": 1,
+  "manh": 0.22,
+  "mau": "#DEBCA8",
+  "sang": 0.77
+ },
+ "parentmode_02": {
+  "huong": 0,
+  "manh": 0.105,
+  "mau": "#E0C5B4",
+  "sang": 0.797
+ },
+ "parentmode_03": {
+  "huong": 0,
+  "manh": 0.127,
+  "mau": "#B29884",
+  "sang": 0.62
+ },
+ "parentmode_04": {
+  "huong": 0,
+  "manh": 0.129,
+  "mau": "#A89380",
+  "sang": 0.595
+ },
+ "parentmode_05": {
+  "huong": 0,
+  "manh": 0.198,
+  "mau": "#94756C",
+  "sang": 0.492
+ },
+ "parentmode_06": {
+  "huong": 0,
+  "manh": 0.064,
+  "mau": "#C9A687",
+  "sang": 0.681
+ },
+ "parentmode_07": {
+  "huong": 0,
+  "manh": 0.203,
+  "mau": "#D6AAA0",
+  "sang": 0.715
+ },
+ "parentmode_08": {
+  "huong": 1,
+  "manh": 0.387,
+  "mau": "#D6B597",
+  "sang": 0.737
+ },
+ "parentmode_09": {
+  "huong": -1,
+  "manh": 0.444,
+  "mau": "#CCBEB1",
+  "sang": 0.757
+ },
+ "rentpanic_00": {
+  "huong": -1,
+  "manh": 0.236,
+  "mau": "#B28473",
+  "sang": 0.567
+ },
+ "rentpanic_01": {
+  "huong": -1,
+  "manh": 0.251,
+  "mau": "#B8A27B",
+  "sang": 0.646
+ },
+ "rentpanic_02": {
+  "huong": -1,
+  "manh": 0.228,
+  "mau": "#D5C4AE",
+  "sang": 0.78
+ },
+ "rentpanic_03": {
+  "huong": 1,
+  "manh": 0.235,
+  "mau": "#C8B08F",
+  "sang": 0.705
+ },
+ "rentpanic_04": {
+  "huong": 0,
+  "manh": 0.245,
+  "mau": "#D0BAAF",
+  "sang": 0.752
+ },
+ "rentpanic_05": {
+  "huong": 0,
+  "manh": 0.274,
+  "mau": "#CFA27F",
+  "sang": 0.676
+ },
+ "rentpanic_06": {
+  "huong": 1,
+  "manh": 0.32,
+  "mau": "#C7C59A",
+  "sang": 0.757
+ },
+ "rentpanic_07": {
+  "huong": 1,
+  "manh": 0.303,
+  "mau": "#C3B292",
+  "sang": 0.706
+ },
+ "rentpanic_08": {
+  "huong": -1,
+  "manh": 0.719,
+  "mau": "#D59E84",
+  "sang": 0.675
+ },
+ "rentpanic_09": {
+  "huong": 0,
+  "manh": 0.028,
+  "mau": "#D48575",
+  "sang": 0.61
+ },
+ "techsupport_00": {
+  "huong": 0,
+  "manh": 0.026,
+  "mau": "#C7ADA9",
+  "sang": 0.71
+ },
+ "techsupport_01": {
+  "huong": 0,
+  "manh": 0.268,
+  "mau": "#AAA59F",
+  "sang": 0.652
+ },
+ "techsupport_02": {
+  "huong": 1,
+  "manh": 0.228,
+  "mau": "#CFABA0",
+  "sang": 0.71
+ },
+ "techsupport_03": {
+  "huong": 0,
+  "manh": 0.211,
+  "mau": "#B5A594",
+  "sang": 0.66
+ },
+ "techsupport_04": {
+  "huong": 1,
+  "manh": 0.213,
+  "mau": "#C2A382",
+  "sang": 0.663
+ },
+ "techsupport_05": {
+  "huong": 0,
+  "manh": 0.113,
+  "mau": "#BBBCB9",
+  "sang": 0.737
+ },
+ "techsupport_06": {
+  "huong": 0,
+  "manh": 0.283,
+  "mau": "#D4C4B3",
+  "sang": 0.783
+ },
+ "techsupport_07": {
+  "huong": 1,
+  "manh": 0.418,
+  "mau": "#A59C8F",
+  "sang": 0.618
+ },
+ "techsupport_08": {
+  "huong": 0,
+  "manh": 0.194,
+  "mau": "#D0BFAC",
+  "sang": 0.763
+ },
+ "techsupport_09": {
+  "huong": 0,
+  "manh": 0.081,
+  "mau": "#C7C5B6",
+  "sang": 0.769
+ }
+}
