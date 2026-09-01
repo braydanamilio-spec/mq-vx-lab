@@ -794,3 +794,29 @@ tư số ca trượt là do phép so chứ không do dữ liệu, thì phép so 
 Và một dấu hiệu để nhận ra sớm: hai bảng nói về cùng một thứ mà **không khớp nhau**. `HO_LAT` họ
 đầu tiên bắt đầu bằng `lifts?`, trong khi danh sách "đổi hình dạng" của cổng 5 giây lại không có
 `lifts` — một bảng gọi nó là cú lật, bảng kia bảo nó không phải đổi hình.
+
+### 13.22 Đo xong rồi QUYẾT ĐỊNH KHÔNG LÀM CỔNG cũng là một kết quả
+
+Ba chỗ còn dang dở, đo trên 42 kịch bản thật. Hai cái làm cổng, **một cái quyết định không làm**:
+
+| chỗ | đo được | quyết định |
+|---|---|---|
+| câu ghim máy lặp / nhét vào đuôi | 3/42 · 1/42 | **làm** — cổng đơn giản, chính xác |
+| nhấc một vật gắn cố định | 1/42 | **làm** — hiếm, nhưng khi xảy ra thì cả clip hỏng |
+| cú lật có trả lời cú dựng không | 2/42 | **KHÔNG làm** |
+
+Cái thứ ba: phép đo là *"payoff có chia một danh từ nào với hook/setup không"*. Nó bắt đúng 2 ca —
+và **đọc lên thì cả hai đều là kịch bản tốt**: *"Deb slides out, already done."* (97/100) không
+chia danh từ nào vì nó cô đọng và trỏ ngược ngầm; *"Grandpa Joe walks in holding an empty
+bottle — the flood was just his water bottle"* trả lời cú dựng rất gọn nhưng bằng chữ khác.
+
+Nếu ship, cổng ấy sẽ là một **cỗ máy bắt oan**: 2/2 ca nó bắt đều sai. Nên không ship, và ghi ra
+đây rằng *chỗ này chưa đo được* — thay vì ship một cổng tệ rồi tin là đã giải quyết.
+
+**Luật:** một cổng chỉ đáng ship khi **đọc tay các ca nó bắt** và thấy chúng thật sự hỏng. Tỉ lệ
+bắt cao không phải bằng chứng cổng tốt; nó cũng có thể là bằng chứng cổng sai. Và *"chưa đo được"*
+ghi vào buglog là một kết luận hợp lệ — nó ngăn phiên sau đi làm lại đúng cái cổng đã bị bác.
+
+Chi tiết hẹp cũng có giá: `machine` và `cabinet` bị loại khỏi danh sách vật gắn cố định, vì máy
+pha cà phê thì nhấc được còn máy bán hàng thì không. **Một chữ có hai nghĩa vật lý là chữ không
+dùng làm cổng được.**

@@ -327,6 +327,19 @@ THOAI_TU_THUAT = (
     r"|\byour \w+ (made|turned|caused) \b"
 )
 
+# 4 · NHẤC MỘT VẬT GẮN CỐ ĐỊNH. Đo trên 42 kịch bản thật: 1 ca — "Bitsy lifts the board" (bảng
+#     thông báo sân bay gắn tường). Hiếm, nhưng khi xảy ra thì Kling vẽ ra thứ vô nghĩa và cả
+#     clip hỏng. Danh sách cố ý HẸP: bỏ `machine` và `cabinet` vì máy pha cà phê thì nhấc được
+#     còn máy bán hàng thì không — một chữ có hai nghĩa vật lý là chữ không dùng làm cổng được.
+VAT_CO_DINH = r"\b(board|sign|meter|clock|mirror|vent|panel|rail|hydrant|post|pole|dispenser|fixture|hood)\b"
+DONG_TAC_NHAC = r"\b(lifts?|picks? up|carr(y|ies)|holds? up|raises?)\b"
+
+# 5 · CÂU GHIM MÁY. Nó là chỉ thị cho máy quay, phải đứng ĐẦU và đúng MỘT lần. Đo được: 3/42
+#     tập lặp nó ở cả hook lẫn setup, 1/42 nhét nó vào cuối câu không dấu chấm —
+#     "...coffee splatter on the grate showing his mess static eye-level wide shot". Đó là AI
+#     bắt chước hình dạng của cổng chứ không hiểu nó, và câu ấy Kling đọc không ra gì.
+CAU_GHIM = r"(static\s+)?(eye[- ]level|wide|low angle|high angle|medium|close)[^.,;]{0,18}shot"
+
 CAM_KY = [
     ("subtitle", "Kling vẽ chữ ra ký tự loằng ngoằng — chữ để khâu ghép làm, không nhờ Kling"),
     ("caption", "như trên: chữ trên màn hình do ffmpeg vẽ, không để Kling vẽ"),
@@ -3245,6 +3258,22 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
             e.append(f"có {tu!r} — {ly}")
             break
 
+    _pay = str(d.get("payoff") or "")
+    if re.search(DONG_TAC_NHAC, _pay, re.I) and re.search(VAT_CO_DINH, _pay, re.I):
+        e.append(f"nhấc một vật GẮN CỐ ĐỊNH ({re.search(VAT_CO_DINH, _pay, re.I).group(0)!r}) — "
+                 f"bảng · biển · đồng hồ · gương gắn tường thì không ai nhấc lên được. Kling vẽ "
+                 f"đúng thứ được tả, nên cả clip ra vô nghĩa")
+
+    # Câu ghim máy: đúng MỘT lần, và đứng ĐẦU hook hoặc đầu setup.
+    _h, _st = str(d.get("hook") or ""), str(d.get("setup") or "")
+    if len(re.findall(CAU_GHIM, _h + " " + _st, re.I)) > 1:
+        e.append("ghim góc máy hai lần (cả hook lẫn setup) — nói một lần là đủ, lần thứ hai "
+                 "chiếm chỗ của hình")
+    _m = re.search(CAU_GHIM, _h, re.I)
+    if _m and _m.start() > 40:
+        e.append(f"câu ghim máy nhét vào GIỮA/CUỐI hook — nó là chỉ thị cho máy quay, phải đứng "
+                 f"đầu câu. Nhét vào đuôi thì Kling đọc nó như một phần của cảnh")
+
     _hinh = " ".join(str(d.get(k) or "") for k in ("hook", "setup", "escalate", "payoff"))
     _m = re.search(CHU_TRONG_KHUNG, _hinh, re.I)
     if _m:
@@ -3860,7 +3889,14 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         f"too high · too many. 'A tower of mugs teeters' passes; 'Brad sits on a foam roller' "
         f"does not, because nothing in it is stated as wrong.\n"
         f"  · It must make the viewer ask one specific question that the payoff answers.\n"
-        f"  · Pin the camera in it: static eye-level wide shot, or low angle, or medium shot.\n\n"
+        f"  · Pin the camera in it: static eye-level wide shot, or low angle, or medium shot. "
+        f"It goes at the START of the hook, exactly once, and never again in 'setup'. This is "
+        f"checked — bolting it onto the end of a sentence makes the renderer read it as part of "
+        f"the scene.\n"
+        f"  · Nothing bolted to a wall or floor can be lifted. Checked: a board, sign, meter, "
+        f"clock, mirror, vent, panel, rail, post, pole or dispenser cannot be picked up, raised "
+        f"or carried. The renderer draws exactly what you write, so an impossible action makes "
+        f"the whole clip nonsense.\n\n"
         f"WHAT MAKES THESE WORK IN AMERICA:\n"
         f"  · The first moment shows something ALREADY WRONG. Do not spend time establishing "
         f"normal. The viewer arrives mid-disaster.\n"
@@ -4487,6 +4523,9 @@ def luat_web(kenh: str) -> dict:
         "chu_trong_khung": CHU_TRONG_KHUNG,
         "khong_ve_duoc": KHONG_VE_DUOC,
         "thoai_tu_thuat": THOAI_TU_THUAT,
+        "vat_co_dinh": VAT_CO_DINH,
+        "dong_tac_nhac": DONG_TAC_NHAC,
+        "cau_ghim": CAU_GHIM,
         "nhac_lo": r"\b(remember when|last time|as we (saw|know)|like (last|the other) (time|"
                    r"episode)|in the last (one|episode)|you (may )?recall|previously|"
                    r"same as (last|before))\b",
