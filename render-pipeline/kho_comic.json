@@ -11987,6 +11987,86 @@
     "diem_chot": 0,
     "tinh_huong": "Cash Countdown",
     "ma": "c53ebf57046a"
+   },
+   {
+    "loi": [
+     [
+      "When will my new license be ready?",
+      0,
+      "buon"
+     ],
+     [
+      "Ticket number 42 will be called next.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I'm not asking about tickets, I need the license.",
+      0,
+      "buon"
+     ],
+     [
+      "We've increased the ticket interval to ten minutes.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Please tell me when my license is printed.",
+      0,
+      "buon"
+     ],
+     [
+      "Your license prints when ticket 42 is called.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the payment window",
+    "hook": "ASKING ABOUT LICENSE, GETTING TICKET NUMBERS",
+    "diem_chot": 0,
+    "tinh_huong": "Ticket Miscommunication",
+    "ma": "97bdf13efbaa"
+   },
+   {
+    "loi": [
+     [
+      "My receipt didn't print a barcode.",
+      0,
+      "buon"
+     ],
+     [
+      "We'll generate a digital barcode and email it.",
+      1,
+      "vui"
+     ],
+     [
+      "But I need it for the car inspection.",
+      0,
+      "buon"
+     ],
+     [
+      "We'll attach a temporary barcode sticker to your license.",
+      1,
+      "vui"
+     ],
+     [
+      "That sticker could fall off while driving.",
+      0,
+      "buon"
+     ],
+     [
+      "We'll replace the payment window with barcode-embedded glass, proud upgrade.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "leo_thang",
+    "noi": "the payment window",
+    "hook": "MISSING BARCODE? BIGGER PROBLEM AHEAD",
+    "diem_chot": 0,
+    "tinh_huong": "Barcode Overkill",
+    "ma": "923762bb5198"
    }
   ],
   "erbill": [
@@ -12109,6 +12189,166 @@
     "diem_chot": 0,
     "tinh_huong": "Tiny Secret",
     "ma": "72d572a7fc95"
+   },
+   {
+    "loi": [
+     [
+      "They charged me $30 for using the stairs.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "The rule covers any vertical transit in the ER.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "What about the elevator? That's vertical too.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Elevator rides are billed as separate vertical trips.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "So walking to the exit also counts?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Every step, lift, or crawl incurs the same fee.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the billing window",
+    "hook": "ER BILLING FOR ANY VERTICAL MOVE",
+    "diem_chot": 0,
+    "tinh_huong": "Staircase Surcharge",
+    "ma": "d8e9da8f3c8d"
+   },
+   {
+    "loi": [
+     [
+      "There's a $300 discrepancy on my ER bill.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We're talking about a three-hundred-dollar audit, right?",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I think it might be a mistake.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Mistake? That could trigger a compliance investigation.",
+      1,
+      "so"
+     ],
+     [
+      "I've been trying to figure out what caused it.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "If it's fraud, we'll need to involve the state.",
+      1,
+      "so"
+     ],
+     [
+      "It's just... I have a coin stuck to my shoe.",
+      0,
+      "vui"
+     ],
+     [
+      "A coin? Then the bill makes sense.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the billing window",
+    "hook": "MYSTERIOUS $300 CHARGE APPEARS",
+    "diem_chot": 0,
+    "tinh_huong": "Stuck Coin Confession",
+    "ma": "3edc23a7d37d"
+   },
+   {
+    "loi": [
+     [
+      "Bill prints in five, should I add my copay now?",
+      0,
+      "tuc"
+     ],
+     [
+      "First, let me explain why the hospital bundles copays with service fees.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Will the total change if I enter it?",
+      0,
+      "tuc"
+     ],
+     [
+      "It won't change-the system already includes it, just sign.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the billing window",
+    "hook": "COPAY INCLUDED BEFORE BILL PRINTS",
+    "diem_chot": 0,
+    "tinh_huong": "Copay Inclusion",
+    "ma": "2be24a9c4ad8"
+   },
+   {
+    "loi": [
+     [
+      "Why is my transport fee six hundred dollars?",
+      0,
+      "tuc"
+     ],
+     [
+      "You were moved four miles across town.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I was in the front seat the whole time.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "The leg rode in the back.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "It was attached to me.",
+      0,
+      "tuc"
+     ],
+     [
+      "Not when we crossed county lines.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the billing window",
+    "hook": "THEY BILLED HIM FOR THE TRIP",
+    "diem_chot": 0,
+    "tinh_huong": "Ambulance Mileage Dispute",
+    "ma": "2b9ee448d832"
    }
   ],
   "hoa": [
@@ -12231,6 +12471,166 @@
     "diem_chot": 0,
     "tinh_huong": "The Unregistered Gnome",
     "ma": "b70918ae2870"
+   },
+   {
+    "loi": [
+     [
+      "Your shadow crossed my property line for twenty minutes.",
+      0,
+      "tuc"
+     ],
+     [
+      "The sun is at a severe angle today.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I cannot control the sun.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "You control where your shade lands.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "It is attached to my body.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "Then you need a variance for the extension.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the front porch",
+    "hook": "THE SHADOW COSTS EXTRA",
+    "diem_chot": 0,
+    "tinh_huong": "the unauthorized shade",
+    "ma": "e363eed17a90"
+   },
+   {
+    "loi": [
+     [
+      "I left something on the porch that might breach rules.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Did you install a metal fence without approval?",
+      1,
+      "tu_tin"
+     ],
+     [
+      "No, not a fence.",
+      0,
+      "so"
+     ],
+     [
+      "Then maybe you built a second entryway?",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Nothing that large.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Fine, we'll just ask the board to overlook it.",
+      1,
+      "vui"
+     ],
+     [
+      "Actually, it's just a single decorative rock.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Well, at least the rock doesn't need a permit.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the front porch",
+    "hook": "WHAT'S HIDING ON THE PORCH?",
+    "diem_chot": 0,
+    "tinh_huong": "Porch Secret",
+    "ma": "6da333e8c369"
+   },
+   {
+    "loi": [
+     [
+      "Does the zone three head spray the driveway?",
+      0,
+      "tuc"
+     ],
+     [
+      "Zone three covers the entire easement.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Is that a yes or a no?",
+      0,
+      "tuc"
+     ],
+     [
+      "Are you wearing suede shoes?",
+      1,
+      "nghi_ngo"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the front lawn",
+    "hook": "THE SYSTEM TURNS ON IN SECONDS",
+    "diem_chot": 0,
+    "tinh_huong": "the sprinkler test",
+    "ma": "9a2040821de9"
+   },
+   {
+    "loi": [
+     [
+      "There is a purple petunia sitting in my mulch.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We inspected that flower at dawn.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "It was not on my approved planting sheet.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "It has four legs and chewed my cable wire.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "It is a plant. In the dirt.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Then why does it bark at the mailman?",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the front lawn",
+    "hook": "THE PETUNIA WAS NOT ON THE LIST",
+    "diem_chot": 0,
+    "tinh_huong": "the rogue petunia",
+    "ma": "2f39be6d27e6"
    }
   ],
   "ret": [
@@ -12353,6 +12753,166 @@
     "diem_chot": 0,
     "tinh_huong": "Tiny confession, huge panic",
     "ma": "82d7b9ca1179"
+   },
+   {
+    "loi": [
+     [
+      "I bought a toaster, it's broken, can I return?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We accept returns indefinitely, as long as you bring the receipt.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I lost the receipt, can I use the original purchase date?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Date irrelevant; we track returns from when you re-enter.",
+      1,
+      "so"
+     ],
+     [
+      "If I never leave the store, does that mean I never return?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Policy refunds your exit, not the item you bought.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the returns counter",
+    "hook": "EVERY ITEM RETURNS FOREVER",
+    "diem_chot": 0,
+    "tinh_huong": "Infinite Return Window",
+    "ma": "9759fe3fa30b"
+   },
+   {
+    "loi": [
+     [
+      "I noticed the cardboard pallet you moved yesterday.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "That pallet? You pocketed half the store's inventory.",
+      1,
+      "so"
+     ],
+     [
+      "No, just shifted a few boxes.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Those boxes contained the new gadget line, right?",
+      1,
+      "so"
+     ],
+     [
+      "I couldn't find the return receipt for them.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Without a receipt we call it loss, but can waive.",
+      1,
+      "so"
+     ],
+     [
+      "Honestly, I just took the free silicone wristband from the counter.",
+      0,
+      "vui"
+     ],
+     [
+      "That's fine, we'll write it off.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the returns counter",
+    "hook": "WHY DID HE MOVE THE PALLET?",
+    "diem_chot": 0,
+    "tinh_huong": "Pallet Panic",
+    "ma": "9221089840b8"
+   },
+   {
+    "loi": [
+     [
+      "The timer's at three seconds; can I still return this?",
+      0,
+      "tuc"
+     ],
+     [
+      "Our return window aligns with the server clock, which syncs hourly.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "So you need to check the sync before answering?",
+      0,
+      "tuc"
+     ],
+     [
+      "Sorry, the window just closed.",
+      1,
+      "buon"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the returns counter",
+    "hook": "THE RETURN TIMER IS COUNTING DOWN",
+    "diem_chot": 0,
+    "tinh_huong": "Timer Return",
+    "ma": "fb2b440e755a"
+   },
+   {
+    "loi": [
+     [
+      "I bought this blender yesterday, can I return it?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Our recycling bins accept plastic containers on Tuesdays.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I'm not asking about recycling, I need a refund.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Refunds are processed when the bin is emptied at noon.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "The bin isn't relevant; I want my money back.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "When the bin empties at noon, you can return it.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the returns counter",
+    "hook": "RETURN REQUEST OR RECYCLING SCHEDULE?",
+    "diem_chot": 0,
+    "tinh_huong": "Bin Refund Mixup",
+    "ma": "a9ddfa062392"
    }
   ],
   "wed": [
@@ -12475,6 +13035,166 @@
     "diem_chot": 0,
     "tinh_huong": "Napkin Nonsense",
     "ma": "f2f0ad446b84"
+   },
+   {
+    "loi": [
+     [
+      "The frosting can't be taller than six inches.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "That's to guarantee uniform slice distribution.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "What about a two-tier cake?",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Each tier must stay under six inches.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Can I add a taller base?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "The base counts as frosting, so six inches.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the cake display",
+    "hook": "WHY IS THE FROSTING HEIGHT LIMITED",
+    "diem_chot": 0,
+    "tinh_huong": "Frosting Height Rule",
+    "ma": "2eb787414b66"
+   },
+   {
+    "loi": [
+     [
+      "I have a terrible confession about the ice swan.",
+      0,
+      "so"
+     ],
+     [
+      "I already know about the illicit offshore shell company.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "It has nothing to do with offshore accounts.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We will simply launder the reception through the bakery.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "The swan never made it onto the truck.",
+      0,
+      "buon"
+     ],
+     [
+      "embezzling millions is easier to forgive than logistics.",
+      1,
+      "tuc"
+     ],
+     [
+      "I forgot to pay the deposit for the ice.",
+      0,
+      "so"
+     ],
+     [
+      "I was worried you bought the wrong brand of butter.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the tasting table",
+    "hook": "THE EXPENSIVE ICE SCULPTURE VANISHED",
+    "diem_chot": 0,
+    "tinh_huong": "The Missing Ice Swan",
+    "ma": "b3eb0de4ce9a"
+   },
+   {
+    "loi": [
+     [
+      "Are the spotlights on? They fire in five seconds.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We just rewired the rig for safety compliance.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Will that delay the cue?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "They already lit-your cue's missed.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the venue hall",
+    "hook": "SPOTLIGHTS WILL FIRE IN SECONDS",
+    "diem_chot": 0,
+    "tinh_huong": "spotlight countdown",
+    "ma": "cb77f066f78d"
+   },
+   {
+    "loi": [
+     [
+      "How many extra chairs did we order for the grandparents?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We added three more tables for the dessert station.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "No, I meant seating for the grandparents, not dessert.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "The extra tables will keep the cake from touching the floor.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "The grandparents need seats, not a safety net for the cake.",
+      0,
+      "so"
+     ],
+     [
+      "I ordered safety tables, cake's 18 inches tall.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the reception setup",
+    "hook": "GRANDPARENTS SEATS OR CAKE",
+    "diem_chot": 0,
+    "tinh_huong": "Grandparents vs Cake",
+    "ma": "f19214019d45"
    }
   ],
   "mov": [
@@ -12597,6 +13317,166 @@
     "diem_chot": 0,
     "tinh_huong": "Missing Heirloom Panic",
     "ma": "0c5b037e365c"
+   },
+   {
+    "loi": [
+     [
+      "There is a parking meter on top of my sofa.",
+      0,
+      "tuc"
+     ],
+     [
+      "You parked the sofa in the metered zone.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "It is inside the moving truck.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "The truck is parked.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "It is vertical space.",
+      0,
+      "tuc"
+     ],
+     [
+      "Vertical space is municipal property.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the curb outside",
+    "hook": "THEY BILLED HIM FOR THE SKY",
+    "diem_chot": 0,
+    "tinh_huong": "Airspace Rental Dispute",
+    "ma": "4485f6c201e0"
+   },
+   {
+    "loi": [
+     [
+      "I think I left something on the moving ramp.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Like the couch? We can't leave that behind.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Not the couch, just a tiny thing I missed.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Tiny? Like the missing dishwasher we saw?",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "No, not the dishwasher, something far cheaper.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Fine, we'll just abandon the dishwasher, no problem.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Actually, it's just a single, lonely sock.",
+      0,
+      "tuc"
+     ],
+     [
+      "A sock? That's all? Then let's load the truck.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the moving truck ramp",
+    "hook": "WHAT'S LEFT ON THE RAMP?",
+    "diem_chot": 0,
+    "tinh_huong": "Sock Panic",
+    "ma": "6108b6ec6d9a"
+   },
+   {
+    "loi": [
+     [
+      "Do we have room for this box before the ramp drops?",
+      0,
+      "tu_tin"
+     ],
+     [
+      "We need to consider dimensions, angle, and load limits.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Box is a foot by a foot, it's fine!",
+      0,
+      "vui"
+     ],
+     [
+      "It was a pizza box.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the moving truck ramp",
+    "hook": "LAST BOX BEFORE RAMP DROPS",
+    "diem_chot": 0,
+    "tinh_huong": "pizza_box_panic",
+    "ma": "383930bcac47"
+   },
+   {
+    "loi": [
+     [
+      "Why is this ramp so steep?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "It's rated for two thousand pounds total.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I'm not asking about pounds, the angle?",
+      0,
+      "tuc"
+     ],
+     [
+      "The rating ensures safety for heavy furniture.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "The angle makes the boxes slide off.",
+      0,
+      "so"
+     ],
+     [
+      "The rating prevents the ramp from breaking under weight.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the moving truck ramp",
+    "hook": "RAMP IS STEEP, WHY",
+    "diem_chot": 0,
+    "tinh_huong": "Ramp Angle Mixup",
+    "ma": "c8cd975691e0"
    }
   ],
   "vet": [
@@ -12759,6 +13639,126 @@
     "diem_chot": 0,
     "tinh_huong": "Hidden Tag",
     "ma": "afbd63592a62"
+   },
+   {
+    "loi": [
+     [
+      "I think someone's been sneaking out of their crate.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You mean the golden retriever that disappeared yesterday?",
+      1,
+      "buon"
+     ],
+     [
+      "Not that one, just a small... something missing.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "A whole litter vanished? That's a crisis.",
+      1,
+      "buon"
+     ],
+     [
+      "No, just a single chew toy, maybe.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "The entire kennel is on lockdown until we find it.",
+      1,
+      "so"
+     ],
+     [
+      "Honestly, I swallowed the tiny rubber ball.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I already covered the missing dog, you're fine.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "kennel hallway",
+    "hook": "A CRISIS OVER A LOST TOY",
+    "diem_chot": 0,
+    "tinh_huong": "Missing Toy Panic",
+    "ma": "0bf5d353dfbf"
+   },
+   {
+    "loi": [
+     [
+      "Timer starts in three seconds, I need your go.",
+      0,
+      "tuc"
+     ],
+     [
+      "First, the microchip's last ping was two weeks ago.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Will it work if the cat's still awake?",
+      0,
+      "tuc"
+     ],
+     [
+      "Yes, it always works when the cat's awake.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the exam room",
+    "hook": "MICROCHIP PING VS SEDATION TIMER",
+    "diem_chot": 0,
+    "tinh_huong": "Microchip Timing",
+    "ma": "2e3b62f44b4c"
+   },
+   {
+    "loi": [
+     [
+      "He bit the assistant over a simple nail trim.",
+      0,
+      "tuc"
+     ],
+     [
+      "We never cut those past twelve on Tuesdays.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "He was defending his third digit.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "The kitchen staff needs a twenty minute break.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "This has nothing to do with the kitchen.",
+      0,
+      "tuc"
+     ],
+     [
+      "The ham sandwiching must stop promptly at noon.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the grooming station",
+    "hook": "THE DOGREFUSED TO LOSE A CLAW",
+    "diem_chot": 0,
+    "tinh_huong": "Nail Trim Resistance",
+    "ma": "4c60365ae54b"
    }
   ],
   "cab": [
@@ -12881,6 +13881,126 @@
     "diem_chot": 0,
     "tinh_huong": "equipment return fee dispute",
     "ma": "fa77d23421f9"
+   },
+   {
+    "loi": [
+     [
+      "Why am I being charged for using the stairs?",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "Our policy bills every footstep taken in the building.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "What about walking on the treadmill in the gym?",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "If the treadmill records steps, you incur fees.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Even standing still while the belt moves counts?",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "Yes, motion anywhere triggers the Dynamic Footprint surcharge.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the call center row",
+    "hook": "WHY ARE THEY CHARGING FOR STAIR USE",
+    "diem_chot": 0,
+    "tinh_huong": "Stair Fee Loop",
+    "ma": "b84997b3c7aa"
+   },
+   {
+    "loi": [
+     [
+      "I think someone tampered with our service.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You mean the $300 unauthorized channel subscription?",
+      1,
+      "buon"
+     ],
+     [
+      "No, just the... thing with the blinking light.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "That's the equipment theft report I filed.",
+      1,
+      "buon"
+     ],
+     [
+      "It's not the box; it's the remote battery.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I've already written off the $250 penalty.",
+      1,
+      "tuc"
+     ],
+     [
+      "Honestly, I just took the last battery.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "At least the TV still works.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the cable box shelf",
+    "hook": "WHAT'S MISSING FROM THE CABLE SHELF?",
+    "diem_chot": 0,
+    "tinh_huong": "Hidden Battery Confession",
+    "ma": "464b3d164210"
+   },
+   {
+    "loi": [
+     [
+      "The timer's at five, do I need to confirm?",
+      0,
+      "tuc"
+     ],
+     [
+      "It's a system refresh, only needed after a plan change.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I haven't changed anything, so?",
+      0,
+      "tuc"
+     ],
+     [
+      "It already refreshed, your bill stayed the same.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the service counter",
+    "hook": "TIMER RUNNING WILL THEY CONFIRM IN TIME",
+    "diem_chot": 0,
+    "tinh_huong": "Countdown Confirmation",
+    "ma": "72d976762faa"
    }
   ],
   "sch": [
@@ -13003,6 +14123,166 @@
     "diem_chot": 0,
     "tinh_huong": "Muffin Misunderstanding",
     "ma": "82d91454250c"
+   },
+   {
+    "loi": [
+     [
+      "I'm wearing these socks, they're not shoes.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Socks still count as foot coverings.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "What about sandals? They have holes.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Open-toe still touches floor, same rule.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Then I just crawl.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Crawling violates the rule-no foot contact allowed.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the school hallway",
+    "hook": "NO FOOTWEAR AFTER NOON",
+    "diem_chot": 0,
+    "tinh_huong": "Hallway Footwear Ban",
+    "ma": "f30033123030"
+   },
+   {
+    "loi": [
+     [
+      "I need to tell you something about desk five.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Did you sell the answers again?",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "No, it is much worse.",
+      0,
+      "so"
+     ],
+     [
+      "You carved your name into the oak.",
+      1,
+      "tuc"
+     ],
+     [
+      "I took a black permanent marker.",
+      0,
+      "so"
+     ],
+     [
+      "We can fix the graffiti. Just tell me where.",
+      1,
+      "tuc"
+     ],
+     [
+      "I used it on my math test.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I thought you stole the school laptop.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the classroom door",
+    "hook": "HE HID THE BLACK SHARPIE",
+    "diem_chot": 0,
+    "tinh_huong": "The Lost Permanent Marker",
+    "ma": "52fe0d6a3bd9"
+   },
+   {
+    "loi": [
+     [
+      "The bus departs in three seconds, can I still board?",
+      0,
+      "tuc"
+     ],
+     [
+      "The district mandates a 10-second boarding window after doors open.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "I missed the doors opening, what now?",
+      0,
+      "tuc"
+     ],
+     [
+      "The bus is already at the next stop.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the bus loading zone",
+    "hook": "BUS LEAVING IN SECONDS",
+    "diem_chot": 0,
+    "tinh_huong": "Last Second Boarding",
+    "ma": "a037430e695f"
+   },
+   {
+    "loi": [
+     [
+      "That space was marked for buses.",
+      0,
+      "tuc"
+     ],
+     [
+      "We emptied it out yesterday morning.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "It is asphalt. You cannot empty asphalt.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "The water took three hours to drain.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "There was no water. It is a parking lane.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "The swim team needed a lap pool by noon.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the pickup line curb",
+    "hook": "HE PARKED IN THE BUS ZONE",
+    "diem_chot": 0,
+    "tinh_huong": "The Drained Parking Spot",
+    "ma": "bf73cf4a4914"
    }
   ],
   "chk": [
@@ -13125,6 +14405,96 @@
     "diem_chot": 0,
     "tinh_huong": "Stolen Parking Spot Guilt",
     "ma": "2ded27c775a2"
+   },
+   {
+    "loi": [
+     [
+      "Your rule says scan items heaviest to lightest.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Exactly. Heaviest first, then each lighter item.",
+      1,
+      "so"
+     ],
+     [
+      "What if two items weigh the same?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Treat them as a single weight class, scan together.",
+      1,
+      "so"
+     ],
+     [
+      "But I only have one scanner.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "The rule concerns cart weight, not scan sequence.",
+      1,
+      "so"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the self checkout station",
+    "hook": "HE'S SCANNING BY WEIGHT",
+    "diem_chot": 0,
+    "tinh_huong": "Weight Order",
+    "ma": "81789952ebf4"
+   },
+   {
+    "loi": [
+     [
+      "I think something slipped past the scanner.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "You missed the whole family-size ice cream?",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "No, it's just a little thing.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "You tried to walk out with a dozen donuts?",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "It's worth less than a buck.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Alright, I'll write off the missing bakery section.",
+      1,
+      "tuc"
+     ],
+     [
+      "I only forgot to scan my gum.",
+      0,
+      "vui"
+     ],
+     [
+      "Good, gum's not worth a bakery.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the self checkout station",
+    "hook": "WHAT DID HE REALLY STEAL",
+    "diem_chot": 0,
+    "tinh_huong": "Forgotten Gum",
+    "ma": "092e394b1721"
    }
   ]
  },
@@ -15148,7 +16518,213 @@
   "«t n» screen expires in «s » seconds can i use «t n» license": 1,
   "«t n» license only works after «t n» resets at midnight": 1,
   "it ll lock now i need confirmation now": 1,
-  "it s cash only you could ve just used «t n» slot": 1
+  "it s cash only you could ve just used «t n» slot": 1,
+  "when will «t n» license be ready": 1,
+  "ticket number «s » will be called next": 1,
+  "i m not asking about tickets i need «t n»": 1,
+  "we ve increased «t n» interval to «s » minutes": 1,
+  "please tell me when «t n» is printed": 1,
+  "«t n» prints when ticket «s » is called": 1,
+  "«t n» didn t print «t n»": 1,
+  "we ll generate «t n» barcode and email it": 1,
+  "but i need it for «t n» inspection": 1,
+  "we ll attach «t n» barcode sticker to «t n»": 1,
+  "that sticker could fall off while driving": 1,
+  "we ll replace «t n» window with barcode embedded glass proud upgrade": 1,
+  "they charged me «s » for using «t n»": 1,
+  "«t n» covers any vertical transit in «t n»": 1,
+  "what about «t n» that s vertical too": 1,
+  "elevator rides are billed as separate vertical trips": 1,
+  "so walking to «t n» also counts": 1,
+  "every step lift or crawl incurs «t n» fee": 1,
+  "there s a «s » discrepancy on «t n» bill": 1,
+  "we re talking about a «s » «s » dollar audit right": 1,
+  "i think it might be «t n»": 1,
+  "mistake that could trigger «t n» investigation": 1,
+  "i ve been trying to figure out what caused it": 1,
+  "if it s fraud we ll need to involve «t n»": 1,
+  "it s just i have «t n» stuck to «t n»": 1,
+  "«t n» then «t n» makes sense": 1,
+  "bill prints in «s » should i add «t n» now": 1,
+  "first let me explain why «t n» bundles copays with service fees": 1,
+  "will «t n» change if i enter it": 1,
+  "it won t change «t n» already includes it just sign": 1,
+  "why is «t n» fee «s » «s » dollars": 1,
+  "you were moved «s » miles across town": 1,
+  "i was in «t n» seat «t n» time": 1,
+  "«t n» rode in «t n»": 1,
+  "it was attached to me": 1,
+  "not when we crossed county lines": 1,
+  "«t n» crossed «t n» line for «s » minutes": 1,
+  "«t n» is at «t n» angle today": 1,
+  "i cannot control «t n»": 1,
+  "you control where «t n» lands": 1,
+  "it is attached to «t n»": 1,
+  "then you need «t n» for «t n»": 1,
+  "i left something on «t n» that might breach rules": 1,
+  "did you install «t n» fence without approval": 1,
+  "no not «t n»": 1,
+  "then maybe you built «t n» entryway": 1,
+  "nothing that large": 1,
+  "fine we ll just ask «t n» to overlook it": 1,
+  "actually it s just «t n» decorative rock": 1,
+  "well at least «t n» doesn t need «t n»": 1,
+  "does «t n» «s » head spray «t n»": 1,
+  "zone «s » covers «t n» easement": 1,
+  "is that «t n» or «t n»": 1,
+  "are you wearing suede shoes": 1,
+  "there is «t n» petunia sitting in «t n»": 1,
+  "we inspected that flower at dawn": 1,
+  "it was not on «t n» planting sheet": 1,
+  "it has «s » legs and chewed «t n» wire": 1,
+  "it is «t n» in «t n»": 1,
+  "then why does it bark at «t n»": 1,
+  "i bought «t n» it s broken can i return": 1,
+  "we accept returns indefinitely as long as you bring «t n»": 1,
+  "i lost «t n» can i use «t n» purchase date": 1,
+  "date irrelevant we track returns from when you re enter": 1,
+  "if i never leave «t n» does that mean i never return": 1,
+  "policy refunds «t n» not «t n» you bought": 1,
+  "i noticed «t n» pallet you moved yesterday": 1,
+  "that pallet you pocketed half «t n» s inventory": 1,
+  "no just shifted «t n» boxes": 1,
+  "those boxes contained «t n» gadget line right": 1,
+  "i couldn t find «t n» receipt for them": 1,
+  "without «t n» we call it loss but can waive": 1,
+  "honestly i just took «t n» silicone wristband from «t n»": 1,
+  "that s fine we ll write it off": 1,
+  "«t n» s at «s » seconds can i still return this": 1,
+  "«t n» window aligns with «t n» clock which syncs hourly": 1,
+  "so you need to check «t n» before answering": 1,
+  "sorry «t n» just closed": 1,
+  "i bought this blender yesterday can i return it": 1,
+  "«t n» bins accept plastic containers on tuesdays": 1,
+  "i m not asking about recycling i need «t n»": 1,
+  "refunds are processed when «t n» is emptied at noon": 1,
+  "«t n» isn t relevant i want «t n» back": 1,
+  "when «t n» empties at noon you can return it": 1,
+  "«t n» can t be taller than «s » inches": 1,
+  "that s to guarantee uniform slice distribution": 1,
+  "what about a «s » tier cake": 1,
+  "each tier must stay under «s » inches": 1,
+  "can i add «t n» base": 1,
+  "«t n» counts as frosting so «s » inches": 1,
+  "i have «t n» confession about «t n» swan": 1,
+  "i already know about «t n» offshore shell company": 1,
+  "it has nothing to do with offshore accounts": 1,
+  "we will simply launder «t n» through «t n»": 1,
+  "«t n» never made it onto «t n»": 1,
+  "embezzling millions is easier to forgive than logistics": 1,
+  "i forgot to pay «t n» for «t n»": 1,
+  "i was worried you bought «t n» brand of butter": 1,
+  "are «t n» on they fire in «s » seconds": 1,
+  "we just rewired «t n» for safety compliance": 1,
+  "will that delay «t n»": 1,
+  "they already lit «t n» s missed": 1,
+  "how many extra chairs did we order for «t n»": 1,
+  "we added «s » more tables for «t n» station": 1,
+  "no i meant seating for «t n» not dessert": 1,
+  "«t n» tables will keep «t n» from touching «t n»": 1,
+  "«t n» need seats not «t n» net for «t n»": 1,
+  "i ordered safety tables cake s «s » inches tall": 1,
+  "there is «t n» meter on top of «t n»": 1,
+  "you parked «t n» in «t n» zone": 1,
+  "it is inside «t n» truck": 1,
+  "«t n» is parked": 1,
+  "it is vertical space": 1,
+  "vertical space is municipal property": 1,
+  "i think i left something on «t n» ramp": 1,
+  "like «t n» we can t leave that behind": 1,
+  "not «t n» just «t n» thing i missed": 1,
+  "tiny like «t n» dishwasher we saw": 1,
+  "no not «t n» something far cheaper": 1,
+  "fine we ll just abandon «t n» no problem": 1,
+  "actually it s just «t n» lonely sock": 1,
+  "«t n» that s all then let s load «t n»": 1,
+  "do we have room for this box before «t n» drops": 1,
+  "we need to consider dimensions angle and load limits": 1,
+  "box is «t n» by «t n» it s fine": 1,
+  "it was «t n» box": 1,
+  "why is this ramp so steep": 1,
+  "it s rated for «s » «s » pounds total": 1,
+  "i m not asking about pounds «t n»": 1,
+  "«t n» ensures safety for heavy furniture": 1,
+  "«t n» makes «t n» slide off": 1,
+  "«t n» prevents «t n» from breaking under weight": 1,
+  "i think someone s been sneaking out of «t n»": 1,
+  "you mean «t n» retriever that disappeared yesterday": 1,
+  "not that «s » just «t n» something missing": 1,
+  "«t n» litter vanished that s «t n»": 1,
+  "no just «t n» chew toy maybe": 1,
+  "«t n» kennel is on lockdown until we find it": 1,
+  "honestly i swallowed «t n» rubber ball": 1,
+  "i already covered «t n» dog you re fine": 1,
+  "timer starts in «s » seconds i need «t n»": 1,
+  "first «t n» s last ping was «s » weeks ago": 1,
+  "will it work if «t n» s still awake": 1,
+  "yes it always works when «t n» s awake": 1,
+  "he bit «t n» over «t n» nail trim": 1,
+  "we never cut those past twelve on tuesdays": 1,
+  "he was defending «t n» digit": 1,
+  "«t n» staff needs a «s » minute break": 1,
+  "this has nothing to do with «t n»": 1,
+  "«t n» sandwiching must stop promptly at noon": 1,
+  "why am i being charged for using «t n»": 1,
+  "«t n» bills every footstep taken in «t n»": 1,
+  "what about walking on «t n» in «t n»": 1,
+  "if «t n» records steps you incur fees": 1,
+  "even standing still while «t n» moves counts": 1,
+  "yes motion anywhere triggers «t n» footprint surcharge": 1,
+  "i think someone tampered with «t n»": 1,
+  "you mean the «s » unauthorized channel subscription": 1,
+  "no just the thing with «t n» light": 1,
+  "that s «t n» theft report i filed": 1,
+  "it s not «t n» it s «t n» battery": 1,
+  "i ve already written off the «s » penalty": 1,
+  "honestly i just took «t n» battery": 1,
+  "at least «t n» still works": 1,
+  "«t n» s at «s » do i need to confirm": 1,
+  "it s «t n» refresh only needed after «t n» change": 1,
+  "i haven t changed anything so": 1,
+  "it already refreshed «t n» stayed «t n»": 1,
+  "i m wearing these socks they re not shoes": 1,
+  "socks still count as foot coverings": 1,
+  "what about sandals they have holes": 1,
+  "open toe still touches floor same rule": 1,
+  "then i just crawl": 1,
+  "crawling violates «t n» no foot contact allowed": 1,
+  "i need to tell you something about desk «s »": 1,
+  "did you sell «t n» again": 1,
+  "no it is much worse": 1,
+  "you carved «t n» into «t n»": 1,
+  "i took «t n» permanent marker": 1,
+  "we can fix «t n» just tell me where": 1,
+  "i used it on «t n» test": 1,
+  "i thought you stole «t n» laptop": 1,
+  "«t n» departs in «s » seconds can i still board": 1,
+  "«t n» mandates a «s » second boarding window after doors open": 1,
+  "i missed «t n» opening what now": 1,
+  "«t n» is already at «t n» stop": 1,
+  "that space was marked for buses": 1,
+  "we emptied it out yesterday morning": 1,
+  "it is asphalt you cannot empty asphalt": 1,
+  "«t n» took «s » hours to drain": 1,
+  "there was no water it is «t n» lane": 1,
+  "«t n» team needed «t n» pool by noon": 1,
+  "«t n» says scan items heaviest to lightest": 1,
+  "exactly heaviest first then each lighter item": 1,
+  "what if «s » items weigh «t n»": 1,
+  "treat them as «t n» weight class scan together": 1,
+  "but i only have «s » scanner": 1,
+  "«t n» concerns cart weight not scan sequence": 1,
+  "i think something slipped past «t n»": 1,
+  "you missed «t n» family size ice cream": 1,
+  "no it s just «t n» thing": 1,
+  "you tried to walk out with «t n» donuts": 1,
+  "it s worth less than «t n»": 1,
+  "alright i ll write off «t n» bakery section": 1,
+  "i only forgot to scan «t n»": 1,
+  "good gum s not worth «t n»": 1
  },
  "tinh_huong": {
   "tech": [
@@ -15483,65 +17059,99 @@
    "Fake ID Mustache",
    "Seven Foot Rule",
    "Check Deadline",
-   "Cash Countdown"
+   "Cash Countdown",
+   "Ticket Miscommunication",
+   "Barcode Overkill"
   ],
   "erbill": [
    "Prescription Mix-Up",
    "Kiosk Fee Fight",
-   "Tiny Secret"
+   "Tiny Secret",
+   "Staircase Surcharge",
+   "Stuck Coin Confession",
+   "Copay Inclusion",
+   "Ambulance Mileage Dispute"
   ],
   "hoa": [
    "Permit vs Chlorine",
    "BBQ Ban Debate",
-   "The Unregistered Gnome"
+   "The Unregistered Gnome",
+   "the unauthorized shade",
+   "Porch Secret",
+   "the sprinkler test",
+   "the rogue petunia"
   ],
   "ret": [
    "The Wrong Policy",
    "the lifetime exchange window",
-   "Tiny confession, huge panic"
+   "Tiny confession, huge panic",
+   "Infinite Return Window",
+   "Pallet Panic",
+   "Timer Return",
+   "Bin Refund Mixup"
   ],
   "wed": [
    "Seating chart hostage negotiation",
    "Rule Reversal",
-   "Napkin Nonsense"
+   "Napkin Nonsense",
+   "Frosting Height Rule",
+   "The Missing Ice Swan",
+   "spotlight countdown",
+   "Grandparents vs Cake"
   ],
   "mov": [
    "Permit vs Fine Mixup",
    "Stairweight Debate",
-   "Missing Heirloom Panic"
+   "Missing Heirloom Panic",
+   "Airspace Rental Dispute",
+   "Sock Panic",
+   "pizza_box_panic",
+   "Ramp Angle Mixup"
   ],
   "vet": [
    "dog breath consultation",
    "rabies tag ordinance debate",
    "The Lost Earring Back",
-   "Hidden Tag"
+   "Hidden Tag",
+   "Missing Toy Panic",
+   "Microchip Timing",
+   "Nail Trim Resistance"
   ],
   "cab": [
    "Broadband plan renewal audit",
    "Late fee grace period dispute",
-   "equipment return fee dispute"
+   "equipment return fee dispute",
+   "Stair Fee Loop",
+   "Hidden Battery Confession",
+   "Countdown Confirmation"
   ],
   "sch": [
    "Lock Mix-up",
    "Backpack Ban Battle",
-   "Muffin Misunderstanding"
+   "Muffin Misunderstanding",
+   "Hallway Footwear Ban",
+   "The Lost Permanent Marker",
+   "Last Second Boarding",
+   "The Drained Parking Spot"
   ],
   "chk": [
    "Wi-Fi Checkout Mix-up",
    "Bag-First Argument",
-   "Stolen Parking Spot Guilt"
+   "Stolen Parking Spot Guilt",
+   "Weight Order",
+   "Forgotten Gum"
   ]
  },
  "mo_dau": {
   "«t n» fi": 5,
   "sure i see": 1,
-  "i m not": 4,
+  "i m not": 7,
   "then paying «t": 1,
   "«t n» rebooted": 1,
   "that was «t": 2,
   "approved i never": 1,
   "«t n» ticket": 2,
-  "«t n» team": 1,
+  "«t n» team": 2,
   "exactly that s": 4,
   "why do we": 6,
   "because frequent changes": 1,
@@ -15551,12 +17161,12 @@
   "so «t n»": 24,
   "«t n» panel": 1,
   "that indicates «t": 1,
-  "i think i": 4,
+  "i think i": 5,
   "running unknown scripts": 1,
   "also «t n»": 3,
   "printer issues can": 1,
   "actually i just": 4,
-  "«t n» is": 34,
+  "«t n» is": 37,
   "have you tried": 1,
   "there is no": 1,
   "then «t n»": 6,
@@ -15565,7 +17175,7 @@
   "«t n» room": 2,
   "first i need": 1,
   "it is «s": 1,
-  "it is «t": 8,
+  "it is «t": 9,
   "that protects «t": 1,
   "i am sweating": 1,
   "how do i": 4,
@@ -15577,10 +17187,10 @@
   "i am listening": 1,
   "«t n» to": 1,
   "you must become": 1,
-  "«t n» s": 34,
+  "«t n» s": 36,
   "«t n» requires": 2,
   "confirming now won": 1,
-  "then why does": 1,
+  "then why does": 2,
   "it was just": 4,
   "«t n» lamp": 1,
   "let s reset": 2,
@@ -15597,7 +17207,7 @@
   "we must first": 4,
   "just replace «t": 1,
   "«t n» monitor": 1,
-  "we can fix": 1,
+  "we can fix": 2,
   "gravity is doing": 1,
   "both monitors just": 1,
   "structural clearance achieved": 1,
@@ -15618,7 +17228,7 @@
   "let s run": 1,
   "i just need": 7,
   "great we ll": 3,
-  "i need to": 15,
+  "i need to": 16,
   "returns are only": 1,
   "today is the": 1,
   "only if «t": 3,
@@ -15630,7 +17240,7 @@
   "but i m": 3,
   "«t n» also": 1,
   "so what do": 1,
-  "«t n» never": 1,
+  "«t n» never": 2,
   "«t n» sprinkler": 1,
   "we ll reboot": 1,
   "all neighborhoods are": 1,
@@ -15658,11 +17268,11 @@
   "so eventually every": 1,
   "exactly «t n»": 15,
   "«t n» alarm": 2,
-  "first «t n»": 9,
+  "first «t n»": 10,
   "i need «t": 12,
   "«t n» array": 1,
   "«s » «s": 3,
-  "it s just": 2,
+  "it s just": 3,
   "«t n» machine": 2,
   "let s route": 1,
   "we ll reinstall": 1,
@@ -15672,7 +17282,7 @@
   "wait until «t": 1,
   "can i just": 5,
   "unplugging counts as": 1,
-  "«t n» says": 13,
+  "«t n» says": 14,
   "form «s »": 1,
   "tomorrow is still": 1,
   "«t n» actually": 2,
@@ -15745,7 +17355,7 @@
   "rule every claim": 1,
   "i can prove": 2,
   "then dmv must": 1,
-  "i have «t": 5,
+  "i have «t": 6,
   "boost timer s": 1,
   "hold up i": 1,
   "you re hiding": 2,
@@ -15800,13 +17410,13 @@
   "yeah you said": 1,
   "i asked about": 3,
   "i just thought": 1,
-  "no i meant": 2,
+  "no i meant": 3,
   "well mini golf": 1,
   "i m trying": 1,
   "rules exist to": 1,
   "it is just": 2,
   "then he is": 1,
-  "he bit «t": 1,
+  "he bit «t": 2,
   "«t n» relationship": 1,
   "did you steal": 2,
   "i used «t": 1,
@@ -15879,9 +17489,9 @@
   "if i m": 1,
   "mrs vale i": 1,
   "did «t n»": 2,
-  "not «t n»": 1,
+  "not «t n»": 2,
   "you moved «t": 1,
-  "no just «t": 2,
+  "no just «t": 3,
   "«t n» washing": 1,
   "actually i took": 1,
   "you said i": 5,
@@ -15892,10 +17502,10 @@
   "they re designed": 1,
   "«t n» faucet": 2,
   "i ll send": 2,
-  "we ll replace": 4,
+  "we ll replace": 5,
   "adjacent pipes are": 1,
   "because any blue": 1,
-  "what about «t": 10,
+  "what about «t": 11,
   "morning s fine": 1,
   "if i wear": 1,
   "even «t n»": 4,
@@ -15923,7 +17533,7 @@
   "you have «t": 1,
   "i want «t": 1,
   "that will be": 3,
-  "«t n» window": 1,
+  "«t n» window": 2,
   "sunlight generates passive": 1,
   "i work nights": 1,
   "«t n» still": 3,
@@ -15966,7 +17576,7 @@
   "you wait until": 1,
   "mrs vale «t": 1,
   "i know danny": 1,
-  "will «t n»": 2,
+  "will «t n»": 3,
   "we ll extend": 1,
   "«t n» bill": 1,
   "you inhale cubic": 1,
@@ -15997,7 +17607,7 @@
   "if we can": 1,
   "i guess i": 1,
   "you stole «t": 4,
-  "no it s": 3,
+  "no it s": 4,
   "if you robbed": 1,
   "actually i hid": 1,
   "i ran «s": 1,
@@ -16005,7 +17615,7 @@
   "not quite battery": 1,
   "clearance means you": 1,
   "we can install": 1,
-  "but i only": 1,
+  "but i only": 2,
   "we ll upgrade": 2,
   "great we created": 1,
   "coach «t n»": 1,
@@ -16015,7 +17625,7 @@
   "exits are part": 1,
   "then i could": 2,
   "and parking lot": 1,
-  "why is «t": 3,
+  "why is «t": 4,
   "water pressure testing": 1,
   "it is raining": 2,
   "we charge «s": 1,
@@ -16028,7 +17638,7 @@
   "then you can": 1,
   "water pressure optimization": 1,
   "we call that": 1,
-  "does «t n»": 1,
+  "does «t n»": 2,
   "«t n» sneaker": 1,
   "that is just": 2,
   "it left «t": 1,
@@ -16082,7 +17692,7 @@
   "got it just": 1,
   "it s already": 4,
   "before it does": 1,
-  "zone «s »": 1,
+  "zone «s »": 2,
   "do you even": 1,
   "we welded «t": 1,
   "i keep «t": 1,
@@ -16110,7 +17720,7 @@
   "zinc feels «t": 1,
   "just tell me": 4,
   "it is locker": 1,
-  "i missed «t": 1,
+  "i missed «t": 2,
   "«t n» exceeds": 1,
   "no i m": 3,
   "i was talking": 3,
@@ -16212,7 +17822,7 @@
   "which you are": 1,
   "you charge me": 1,
   "gate s closing": 1,
-  "if «t n»": 3,
+  "if «t n»": 4,
   "«t n» overlay": 1,
   "only passengers cleared": 1,
   "i m already": 1,
@@ -16227,7 +17837,7 @@
   "i missed my": 1,
   "do you have": 1,
   "pets must stay": 1,
-  "so you need": 1,
+  "so you need": 2,
   "then you must": 2,
   "i am wearing": 1,
   "weigh in includes": 1,
@@ -16259,7 +17869,7 @@
   "before i give": 1,
   "i checked it": 1,
   "there s «t": 1,
-  "that s «t": 2,
+  "that s «t": 3,
   "it stopped but": 1,
   "fan bearings wear": 1,
   "«t n» shakes": 1,
@@ -16277,7 +17887,7 @@
   "you could depress": 1,
   "we only have": 3,
   "i only need": 1,
-  "«t n» that": 1,
+  "«t n» that": 2,
   "we ll also": 1,
   "you now have": 1,
   "«t n» headlight": 1,
@@ -16290,11 +17900,11 @@
   "it will not": 1,
   "do it now": 1,
   "they were all": 1,
-  "«t n» makes": 1,
+  "«t n» makes": 2,
   "it sounds heavier": 1,
   "exactly «s »": 3,
-  "«t n» counts": 1,
-  "i already know": 1,
+  "«t n» counts": 2,
+  "i already know": 2,
   "so is «t": 1,
   "given «t n»": 1,
   "time s up": 3,
@@ -16346,7 +17956,7 @@
   "that is what": 1,
   "when can i": 1,
   "when you buy": 1,
-  "we need to": 2,
+  "we need to": 3,
   "we just need": 1,
   "that will not": 1,
   "because face to": 1,
@@ -16356,7 +17966,7 @@
   "you embezzled from": 1,
   "we are going": 1,
   "i took them": 1,
-  "«t n» can": 3,
+  "«t n» can": 4,
   "they were binder": 1,
   "keep «t n»": 1,
   "every exhale now": 1,
@@ -16396,7 +18006,7 @@
   "we ll expand": 1,
   "you marked «t": 1,
   "it was unscheduled": 1,
-  "it was «t": 1,
+  "it was «t": 2,
   "biology is just": 1,
   "i will hold": 1,
   "great add it": 1,
@@ -16451,7 +18061,7 @@
   "great now we": 2,
   "todd why must": 1,
   "because «s »": 1,
-  "what about a": 1,
+  "what about a": 2,
   "it still needs": 1,
   "even sticky notes": 1,
   "i already took": 1,
@@ -16559,7 +18169,7 @@
   "if you stop": 1,
   "fine i m": 1,
   "i stood «s": 1,
-  "i was in": 1,
+  "i was in": 2,
   "«t n» travels": 1,
   "i held «t": 1,
   "«t n» hits": 1,
@@ -16582,7 +18192,7 @@
   "«t n» zoe": 1,
   "you traded «t": 2,
   "you accidentally bought": 1,
-  "i lost «t": 1,
+  "i lost «t": 2,
   "oh thank god": 1,
   "you said we": 1,
   "correct socks after": 1,
@@ -16697,7 +18307,7 @@
   "i found it": 1,
   "keep him we": 1,
   "it is made": 1,
-  "i thought you": 1,
+  "i thought you": 2,
   "couches count as": 1,
   "each drop counts": 1,
   "i could split": 1,
@@ -16736,7 +18346,7 @@
   "but it s": 1,
   "«t n» lift": 1,
   "explain later i": 1,
-  "it s «t": 1,
+  "it s «t": 2,
   "fine just lock": 1,
   "great we just": 1,
   "you said each": 1,
@@ -16746,7 +18356,7 @@
   "priya hoa timer": 1,
   "hold on i": 3,
   "if you say": 1,
-  "but i need": 1,
+  "but i need": 2,
   "answer now yes": 1,
   "«t n» overflows": 1,
   "i ll connect": 1,
@@ -16764,7 +18374,7 @@
   "round items must": 1,
   "«t n» watch": 1,
   "«t n» matches": 1,
-  "actually it s": 1,
+  "actually it s": 3,
   "you cannot slide": 1,
   "«t n» state": 1,
   "it traps «t": 1,
@@ -16800,12 +18410,12 @@
   "cash speeds verification": 1,
   "honestly preventing chargebacks": 1,
   "if we want": 1,
-  "you tried to": 1,
+  "you tried to": 2,
   "you were planning": 1,
   "honestly it s": 1,
   "fine i forgive": 2,
   "okay i admit": 2,
-  "well at least": 4,
+  "well at least": 5,
   "can you tell": 1,
   "sure «t n»": 1,
   "got it «t": 1,
@@ -16813,7 +18423,7 @@
   "but those staff": 1,
   "if we cut": 1,
   "so keeping «t": 1,
-  "i ve been": 1,
+  "i ve been": 2,
   "what you covered": 1,
   "not that big": 1,
   "you let «t": 1,
@@ -16839,7 +18449,7 @@
   "those appliances chose": 1,
   "we are keeping": 1,
   "it belongs in": 1,
-  "you mean the": 1,
+  "you mean the": 2,
   "did you hide": 2,
   "are you confessing": 1,
   "uncle gary cannot": 1,
@@ -16924,12 +18534,157 @@
   "just walk to": 1,
   "«t n» could": 1,
   "maybe it s": 1,
-  "if it s": 2,
+  "if it s": 3,
   "i already removed": 1,
   "toy mouse won": 1,
   "«t n» screen": 1,
   "«t n» license": 1,
   "it ll lock": 1,
-  "it s cash": 1
+  "it s cash": 1,
+  "when will «t": 1,
+  "ticket number «s": 1,
+  "we ve increased": 1,
+  "please tell me": 1,
+  "«t n» prints": 1,
+  "«t n» didn": 1,
+  "we ll generate": 1,
+  "we ll attach": 1,
+  "that sticker could": 1,
+  "they charged me": 1,
+  "«t n» covers": 1,
+  "elevator rides are": 1,
+  "so walking to": 1,
+  "every step lift": 1,
+  "there s a": 1,
+  "we re talking": 1,
+  "i think it": 1,
+  "mistake that could": 1,
+  "«t n» then": 1,
+  "bill prints in": 1,
+  "first let me": 1,
+  "it won t": 1,
+  "you were moved": 1,
+  "«t n» rode": 1,
+  "it was attached": 1,
+  "not when we": 1,
+  "«t n» crossed": 1,
+  "i cannot control": 1,
+  "you control where": 1,
+  "it is attached": 1,
+  "then you need": 1,
+  "i left something": 1,
+  "did you install": 1,
+  "no not «t": 2,
+  "then maybe you": 1,
+  "nothing that large": 1,
+  "fine we ll": 2,
+  "is that «t": 1,
+  "are you wearing": 1,
+  "there is «t": 2,
+  "we inspected that": 1,
+  "it was not": 1,
+  "it has «s": 1,
+  "i bought «t": 1,
+  "we accept returns": 1,
+  "date irrelevant we": 1,
+  "if i never": 1,
+  "policy refunds «t": 1,
+  "i noticed «t": 1,
+  "that pallet you": 1,
+  "no just shifted": 1,
+  "those boxes contained": 1,
+  "i couldn t": 1,
+  "without «t n»": 1,
+  "honestly i just": 2,
+  "that s fine": 1,
+  "sorry «t n»": 1,
+  "i bought this": 1,
+  "«t n» bins": 1,
+  "refunds are processed": 1,
+  "«t n» isn": 1,
+  "when «t n»": 1,
+  "that s to": 1,
+  "each tier must": 1,
+  "can i add": 1,
+  "it has nothing": 1,
+  "we will simply": 1,
+  "embezzling millions is": 1,
+  "i forgot to": 1,
+  "i was worried": 1,
+  "are «t n»": 1,
+  "we just rewired": 1,
+  "will that delay": 1,
+  "they already lit": 1,
+  "how many extra": 1,
+  "we added «s": 1,
+  "«t n» tables": 1,
+  "«t n» need": 1,
+  "i ordered safety": 1,
+  "you parked «t": 1,
+  "it is inside": 1,
+  "it is vertical": 1,
+  "vertical space is": 1,
+  "like «t n»": 1,
+  "tiny like «t": 1,
+  "do we have": 1,
+  "box is «t": 1,
+  "why is this": 1,
+  "it s rated": 1,
+  "«t n» ensures": 1,
+  "«t n» prevents": 1,
+  "i think someone": 2,
+  "you mean «t": 1,
+  "not that «s": 1,
+  "«t n» litter": 1,
+  "«t n» kennel": 1,
+  "honestly i swallowed": 1,
+  "i already covered": 1,
+  "timer starts in": 1,
+  "will it work": 1,
+  "yes it always": 1,
+  "we never cut": 1,
+  "he was defending": 1,
+  "«t n» staff": 1,
+  "this has nothing": 1,
+  "«t n» sandwiching": 1,
+  "why am i": 1,
+  "«t n» bills": 1,
+  "what about walking": 1,
+  "even standing still": 1,
+  "yes motion anywhere": 1,
+  "no just the": 1,
+  "it s not": 1,
+  "i ve already": 1,
+  "at least «t": 1,
+  "i haven t": 1,
+  "it already refreshed": 1,
+  "i m wearing": 1,
+  "socks still count": 1,
+  "what about sandals": 1,
+  "open toe still": 1,
+  "then i just": 1,
+  "crawling violates «t": 1,
+  "did you sell": 1,
+  "no it is": 1,
+  "you carved «t": 1,
+  "i took «t": 1,
+  "i used it": 1,
+  "«t n» departs": 1,
+  "«t n» mandates": 1,
+  "that space was": 1,
+  "we emptied it": 1,
+  "it is asphalt": 1,
+  "«t n» took": 1,
+  "there was no": 1,
+  "exactly heaviest first": 1,
+  "what if «s": 1,
+  "treat them as": 1,
+  "«t n» concerns": 1,
+  "i think something": 1,
+  "you missed «t": 1,
+  "it s worth": 1,
+  "alright i ll": 1,
+  "i only forgot": 1,
+  "good gum s": 1
  }
 }

@@ -52,13 +52,27 @@ export const live = (p: Pose, t: number, mo: number): Pose => {
 export const StickFigure: React.FC<{
   x: number; y: number; scale?: number; flip?: boolean; pose: Pose; mouthOpen?: number; mouthWide?: number;
   expr?: Expr; blink?: number; skin?: string; shirt?: string; pants?: string; hair?: string; ink?: string; breath?: number; cap?: string; hoodie?: boolean; outfit?: "casual" | "suit"; glasses?: boolean; tie?: string;
-}> = ({ x, y, scale = 1, flip = false, pose, mouthOpen = 0, mouthWide = 0.5, expr = "neutral", blink = 1, skin = "#F6C89A", shirt = "#3E7BFA", pants = "#2B3A55", hair = "#3A2A22", ink = "#1E2A38", breath = 0, cap, hoodie = false, outfit = "casual", glasses = false, tie = "#C1272D" }) => {
+  // 1/9 — CHÂN DIỄN THEO TƯ THẾ. `POSES` khai bốn góc chân và `live()` cũng hoạt hoá
+  // chúng ("dồn trọng tâm chân so le"), nhưng phần vẽ dưới đây BỎ QUA hết: chân là hai
+  // đoạn thẳng đứng cố định y=-12 -> y=24. Nghĩa là chân chưa bao giờ được diễn — cái
+  // mượt mà thấy được chỉ đến từ TAY.
+  // Bật cờ này thì chân vẽ bằng đúng bốn góc ấy: đùi -> gối -> cẳng chân -> giày, cùng
+  // cách đã làm cho tay. Mặc định TẮT nên bốn kênh dữ liệu đang chạy không đổi một pixel.
+  chanDong?: boolean;
+  // 1/9 — CHẾ ĐỘ NGƯỜI QUE THẬT. Anh: *"kiểu người que phong cách chuẩn usa"*. Bản hiện tại là
+  // cartoon ĐẦY ĐẶN (thân khiên đặc, tay dày 20, chân 17) — đúng lựa chọn anh chốt hồi 14/8 cho
+  // bốn kênh dữ liệu. Với hài gia đình thì anh muốn nét que.
+  // Bật cờ này: tay chân mảnh, thân là một nét dọc bo tròn thay cho khối đặc, đầu vẫn to và
+  // biểu cảm (đó là chất USA — Stickman viral vẫn có mặt rõ nét, không phải que trơn).
+  que?: boolean;
+}> = ({ x, y, scale = 1, flip = false, pose, mouthOpen = 0, mouthWide = 0.5, expr = "neutral", blink = 1, skin = "#F6C89A", shirt = "#3E7BFA", pants = "#2B3A55", hair = "#3A2A22", ink = "#1E2A38", breath = 0, cap, hoodie = false, outfit = "casual", glasses = false, tie = "#C1272D", chanDong = false, que = false }) => {
   const e = EXPR[expr];
   const shY = -86 + breath * 0.4, shX = pose.lean;
   const hc = { x: shX + pose.headTilt * 0.5, y: shY - 60 };
   const shLx = shX - 32, shRx = shX + 32, shYa = shY + 14;
-  const aL = PT(shLx, shYa, 26, pose.armL), fL = PT(aL[0], aL[1], 24, pose.foreL);
-  const aR = PT(shRx, shYa, 26, pose.armR), fR = PT(aR[0], aR[1], 24, pose.foreR);
+  const _dt = que ? 32 : 26, _dc = que ? 30 : 24;   // que: tay dài hơn cho cân với chân
+  const aL = PT(shLx, shYa, _dt, pose.armL), fL = PT(aL[0], aL[1], _dc, pose.foreL);
+  const aR = PT(shRx, shYa, _dt, pose.armR), fR = PT(aR[0], aR[1], _dc, pose.foreR);
   const limb = (a: number[], b: number[], w: number, col: string) => (<><line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={ink} strokeWidth={w + 4} strokeLinecap="round" /><line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={col} strokeWidth={w} strokeLinecap="round" /></>);
   const hand = (p: number[]) => <circle cx={p[0]} cy={p[1]} r={10} fill={skin} stroke={ink} strokeWidth={4} />;
   const eyeY = hc.y - 2, lk = e.look * 3.5;
@@ -81,16 +95,41 @@ export const StickFigure: React.FC<{
       </defs>
       <ellipse cx={shX} cy={10} rx={52} ry={11} fill="#00000026" />
       {/* legs + shoes */}
-      <line x1={shX - 13} y1={-12} x2={shX - 13} y2={24} stroke={ink} strokeWidth={21} strokeLinecap="round" />
-      <line x1={shX - 13} y1={-12} x2={shX - 13} y2={24} stroke={pants} strokeWidth={15} strokeLinecap="round" />
-      <line x1={shX + 13} y1={-12} x2={shX + 13} y2={24} stroke={ink} strokeWidth={21} strokeLinecap="round" />
-      <line x1={shX + 13} y1={-12} x2={shX + 13} y2={24} stroke={pants} strokeWidth={15} strokeLinecap="round" />
-      <ellipse cx={shX - 15} cy={28} rx={16} ry={8.5} fill={ink} />
-      <ellipse cx={shX + 15} cy={28} rx={16} ry={8.5} fill={ink} />
+      {chanDong ? (() => {
+        // Đùi -> gối -> cẳng chân -> giày, dựng bằng đúng bốn góc của tư thế, y hệt cách tay
+        // đang làm. Nhờ đó `live()` (đã hoạt hoá bốn góc ấy từ đầu) mới thật sự hiện ra: hai
+        // chân dồn trọng tâm so le, và cẳng chân trễ pha so với đùi.
+        const hL = [shX - 13, -12], hR = [shX + 13, -12];
+        // Chế độ que: đùi và cẳng dài hơn hẳn. Đầu của rig này to (bán kính 40) nên nếu
+        // giữ chân ngắn 20 thì cả hình lùn tịt — đầu chiếm hơn một phần ba người.
+        const DAI = que ? 30 : 20;
+        const gL = PT(hL[0], hL[1], DAI, pose.legL), cL = PT(gL[0], gL[1], DAI, pose.shinL);
+        const gR = PT(hR[0], hR[1], DAI, pose.legR), cR = PT(gR[0], gR[1], DAI, pose.shinR);
+        return (<>
+          {limb(hR, gR, que ? 9 : 17, pants)}{limb(gR, cR, que ? 8 : 15, pants)}
+          <ellipse cx={cR[0] + 2} cy={cR[1] + 5} rx={16} ry={8.5} fill={ink} />
+          {limb(hL, gL, que ? 9 : 17, pants)}{limb(gL, cL, que ? 8 : 15, pants)}
+          <ellipse cx={cL[0] - 2} cy={cL[1] + 5} rx={16} ry={8.5} fill={ink} />
+        </>);
+      })() : (<>
+        <line x1={shX - 13} y1={-12} x2={shX - 13} y2={24} stroke={ink} strokeWidth={21} strokeLinecap="round" />
+        <line x1={shX - 13} y1={-12} x2={shX - 13} y2={24} stroke={pants} strokeWidth={15} strokeLinecap="round" />
+        <line x1={shX + 13} y1={-12} x2={shX + 13} y2={24} stroke={ink} strokeWidth={21} strokeLinecap="round" />
+        <line x1={shX + 13} y1={-12} x2={shX + 13} y2={24} stroke={pants} strokeWidth={15} strokeLinecap="round" />
+        <ellipse cx={shX - 15} cy={28} rx={16} ry={8.5} fill={ink} />
+        <ellipse cx={shX + 15} cy={28} rx={16} ry={8.5} fill={ink} />
+      </>)}
       {/* back arm (right) */}
-      {limb([shRx, shYa], aR, 20, shirt)}{limb(aR, fR, 18, shirt)}{hand(fR)}
-      {/* SHIELD BODY (đầy đặn) */}
+      {limb([shRx, shYa], aR, que ? 9 : 20, shirt)}{limb(aR, fR, que ? 8 : 18, shirt)}{hand(fR)}
+      {/* THÂN — khối khiên đặc (cartoon) hoặc một nét dọc bo tròn (người que). */}
+      {que ? (
+        <><line x1={shX} y1={shY + 6} x2={shX} y2={-6} stroke={ink} strokeWidth={26} strokeLinecap="round" />
+        <line x1={shX} y1={shY + 6} x2={shX} y2={-6} stroke={shirt} strokeWidth={19} strokeLinecap="round" />
+        <line x1={shLx} y1={shYa} x2={shRx} y2={shYa} stroke={ink} strokeWidth={12} strokeLinecap="round" />
+        <line x1={shLx} y1={shYa} x2={shRx} y2={shYa} stroke={shirt} strokeWidth={7} strokeLinecap="round" /></>
+      ) : (
       <path d={bodyPath} fill={shirt} stroke={ink} strokeWidth={5} strokeLinejoin="round" />
+      )}
       <path d={bodyPath} fill="url(#sfShade)" stroke="none" />
       {outfit === "coat" ? (
         <>
@@ -112,7 +151,7 @@ export const StickFigure: React.FC<{
         <path d={`M ${shX - 15} ${shY + 2} Q ${shX} ${shY + 20} ${shX + 15} ${shY + 2}`} fill="none" stroke={ink} strokeWidth={3} opacity={0.5} />
       )}
       {/* front arm (left) */}
-      {limb([shLx, shYa], aL, 20, shirt)}{limb(aL, fL, 18, shirt)}{hand(fL)}
+      {limb([shLx, shYa], aL, que ? 9 : 20, shirt)}{limb(aL, fL, que ? 8 : 18, shirt)}{hand(fL)}
       {/* neck */}
       <line x1={shX} y1={shY - 4} x2={hc.x} y2={hc.y + 30} stroke={skin} strokeWidth={22} strokeLinecap="round" />
       {/* ears */}

@@ -38,6 +38,10 @@ import { StickStory, calcStory } from "./StickStory";
 import { KichV2, calcKich } from "./v2/KichV2";
 import { KichHai, calcHai } from "./v4/KichHai";
 import { KichComic, calcComic } from "./comic/KichComic";
+// 1/9 — KỊCH NGƯỜI QUE cho gói 15 giây. Xem đầu KichQue.tsx: bộ khung `StickAnim`
+// có lớp `live()` chạy trên chín khớp nên diễn được hành động từng nhịp, thứ engine
+// truyện tranh (tám tư thế tĩnh, chân cố định) không làm được.
+import { KichQue, calcQue } from "./que/KichQue";
 import { ThumbComic } from "./comic/ThumbComic";
 import { BrandComic } from "./comic/BrandComic";
 import { BangTuThe } from "./v4/BangTuThe";
@@ -286,6 +290,8 @@ export const RemotionRoot: React.FC = () => (
                  width={1080} height={1920} defaultProps={{ ngang: false }} />
     <Composition id="KichComicWide" component={KichComic as any} durationInFrames={600} fps={30}
                  width={1920} height={1080} calculateMetadata={calcComic as any} />
+    <Composition id="KichQue" component={KichQue as any} durationInFrames={450} fps={30}
+                 width={1080} height={1920} calculateMetadata={calcQue as any} />
     <Composition id="KichComic" component={KichComic as any} durationInFrames={600} fps={30}
                  width={1080} height={1920} calculateMetadata={calcComic as any}
                  defaultProps={{ kenh: "techsupport", tieuDe: "TECH SUPPORT", handle: "@techsupportusa",
