@@ -69,7 +69,14 @@ def chuan(d: str) -> str:
     loc = (f"loudnorm=I={MOC}:TP={DINH}:LRA={DAI}"
            f":measured_I={do['input_i']}:measured_TP={do['input_tp']}"
            f":measured_LRA={do['input_lra']}:measured_thresh={do['input_thresh']}"
-           f":offset={do.get('target_offset', 0)}:linear=true")
+           f":offset={do.get('target_offset', 0)}:linear=true"
+           # TRẦN CỨNG SAU LOUDNORM. `TP=` của `loudnorm` là mục tiêu MỀM: đặt −1.0 đo ra −0.7,
+           # đặt −1.5 vẫn đo ra −0.7…−0.9 trên 9/14 tệp. Nâng con số ấy nữa chỉ làm bản trộn
+           # nhỏ đi mà đỉnh vẫn vượt — vì loudnorm bù bằng khuếch đại tuyến tính, không cắt đỉnh.
+           # `alimiter` cắt thật — nhưng PHẢI `level=disabled`: mặc định nó tự NÂNG mức lên chạm
+           # trần sau khi cắt, và bản thử đầu ra −12,5 LUFS / −0,1 dBTP, tệ hơn trước. 0.84 ≈ −1.5 dBFS, chừa chỗ cho đỉnh giữa hai mẫu (inter-sample)
+           # mà phép đo true-peak tính tới còn phép đo mẫu thì không.
+           ",alimiter=level_in=1:level_out=1:limit=0.84:attack=5:release=50:level=disabled")
     r = subprocess.run(
         ["ffmpeg", "-y", "-hide_banner", "-nostats", "-loglevel", "error", "-i", d,
          "-c:v", "copy", "-af", loc, "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",

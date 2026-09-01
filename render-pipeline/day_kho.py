@@ -50,7 +50,9 @@ def day_mot(mp4: str, thu_publish: str, biet: set, that: bool) -> bool:
         print(f"   ⏭ {os.path.basename(mp4)}: chưa có .tai.json -> bỏ")
         return False
     d = json.load(io.open(tai, encoding="utf-8"))
-    kenh = (d.get("kenh") or "").replace(" ", "").upper()
+    # Ưu tiên `ma` — mã kênh do bộ sinh siêu dữ liệu ghi thẳng. Chỉ khi không có mới suy từ tên
+    # hiển thị (bộ v3/v5 cũ chưa ghi `ma`, và cách suy ấy vẫn đúng với chúng).
+    kenh = (d.get("ma") or (d.get("kenh") or "").replace(" ", "")).upper()
     if biet and kenh not in biet:
         print(f"   ⏭ {os.path.basename(mp4)}: kênh {kenh} chưa có trong channels.yaml -> bỏ")
         return False
@@ -80,7 +82,10 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--publish", default=os.path.join(GOC, "..", "_autopublisher"),
                     help="thư mục repo MM0-AutoPublisher đã checkout")
-    ap.add_argument("--mau", default="v3_*.mp4,v3L_*.mp4,v5_*.mp4,v5L_*.mp4",
+    # `v9_` = 18 kênh GIẢI THÍCH (1/9). Thiếu tiền tố ở đây là video dựng xong mà không bao giờ
+    # lên Drive — và bước này báo "⚠️ không có video nào để đẩy" rồi trả 0, tức lượt chạy vẫn
+    # XANH. Mỗi thế hệ mới phải thêm tiền tố vào đây; cổng `kiem_az.py` canh đúng chỗ này.
+    ap.add_argument("--mau", default="v3_*.mp4,v3L_*.mp4,v5_*.mp4,v5L_*.mp4,v9_*.mp4",
                     help="mẫu tên video cần đẩy, cách nhau bằng dấu phẩy")
     ap.add_argument("--that", action="store_true", help="đẩy thật (mặc định chỉ in ra để xem)")
     a = ap.parse_args()

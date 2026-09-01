@@ -6820,3 +6820,62 @@ nhận diện · mọi bộ sinh chạy được · nhạc tồn tại trên đ�
 
 Giọng đọc **được phép trùng** (11/18) và đó là chủ đích: gán theo độ hợp niche đắt hơn gán để
 không trùng.
+
+### 7ca — Dây chuyền A-Z đứt ở BA mắt xích cùng lúc, cả ba đều báo xanh (1/9)
+
+18 kênh giải thích có engine, brand kit, giọng, nhạc, cổng chấm — và **không đăng được một
+video nào**. Ba chỗ đứt, không chỗ nào ném lỗi:
+
+| mắt xích | đứt thế nào | vì sao im lặng |
+|---|---|---|
+| workflow | không tệp `.yml` nào gọi `giai_thich.py` | không có gì chạy thì không có gì hỏng |
+| `.tai.json` | chưa có bộ sinh chữ đăng | `day_kho.py` in "⏭ chưa có .tai.json" rồi **trả 0** |
+| mã kênh | suy từ TÊN HIỂN THỊ: `HOW MUCH IS A BILLION` → `HOWMUCHISABILLION`, còn `channels.yaml` dùng `HOWMUCH` | in "⏭ bỏ" cho từng tệp rồi **trả 0** = xanh |
+
+Đo được: `0/68 video vào hàng đợi đăng`, mà bước ấy vẫn kết thúc thành công.
+
+**Họ lỗi — *mượn giá trị cho việc nó không sinh ra để làm*.** Tên hiển thị sinh ra để ĐỌC, không
+sinh ra để làm khoá. Sửa: `sieu_gt.py` ghi thẳng trường `ma`; `day_kho.py` đọc `ma` trước, chỉ
+suy từ tên khi không có (bộ v3/v5 cũ chưa ghi `ma`, và cách suy vẫn đúng với chúng).
+
+**Luật rút ra: bước cuối của dây chuyền không được trả 0 khi nó không làm được việc.** Ba lần
+hôm nay "thành công" nghĩa là "không làm gì cả".
+
+### 7cb — `TP=` của loudnorm là mục tiêu MỀM, không phải trần (1/9)
+
+9/14 tệp đo được đỉnh thật −0,7…−0,9 dBTP, vượt trần −1,0, dù `chuan_am.py` đã đặt `TP=-1.5`.
+Chú thích trong tệp còn ghi sẵn rằng đặt −1.0 thì đo ra −0.7 — tức đã biết triệu chứng và chữa
+bằng cách hạ con số, mà con số ấy không phải cái đang quyết định.
+
+`loudnorm` bù bằng khuếch đại tuyến tính, **không cắt đỉnh**. Hạ `TP=` chỉ làm cả bản trộn nhỏ
+đi trong khi đỉnh vẫn vượt. Trần cứng phải do bộ giới hạn làm:
+
+    ,alimiter=level_in=1:level_out=1:limit=0.84:attack=5:release=50:level=disabled
+
+`level=disabled` là bắt buộc — mặc định `alimiter` **tự nâng mức lên chạm trần** sau khi cắt, và
+bản thử đầu ra −12,5 LUFS / −0,1 dBTP, tệ hơn hẳn trước khi sửa. Sau khi tắt: −14,0 / −1,5.
+
+### 7cc — Hằng thẩm mỹ chọn không đo trường hợp xấu nhất (1/9)
+
+Dải nền phụ đề `#000000C4` (alpha 0,77) cho tương phản chữ trắng **3,7:1 trên nền trắng** — dưới
+chuẩn WCAG AA. Đo được 2,8:1 trên tập có nền gần trắng. Công thức có sẵn, chỉ là chưa ai đặt số
+vào: `1,05 / ((1−a) + 0,05)`. Cần a ≥ 0,82; đặt `E0` (0,88) ra 6,1:1.
+
+**Mọi hằng thẩm mỹ chắn cho chữ phải tính từ NỀN XẤU NHẤT CÓ THỂ, không từ ảnh mẫu đang xem.**
+
+### 7cd — Ba cổng cùng dùng bảng cứng, cùng im lặng bỏ qua cái mới (1/9)
+
+`RS_PRESETS` (dashboard) · `kiem_workflow.CAP` · `kiem_az.RENDER` — cả ba liệt kê tay thứ chúng
+canh. Thêm kênh/workflow mới mà quên thêm dòng thì cổng vẫn in ✅, vì **nó chỉ kiểm những cái nó
+biết**. Cổng bỏ sót còn nguy hơn không có cổng: nó cấp một cảm giác đã được kiểm.
+
+Sửa cả ba theo cùng một cách: đối chiếu với NGUỒN THẬT (thư mục workflow · `giai_thich.KENH`)
+và báo lỗi khi có mục nào ngoài bảng.
+
+### 7ce — Kiểm quy ước đặt tên thay vì kiểm phủ (1/9)
+
+`kiem_workflow.py` đòi bản dài phải gói `vNL_*.mp4`. Nhưng repo có HAI cách đặt tên bản dài và
+cả hai đều đúng: `v3L_<slug>.mp4` (tiền tố) và `v9_<slug>_long.mp4` (hậu tố). Cổng tố oan cách
+thứ hai, dù mẫu `v9_*.mp4` đã phủ trọn.
+
+**Cổng phải hỏi "mẫu này có phủ tệp kia không", đừng hỏi "tệp kia có tên đúng kiểu không".**

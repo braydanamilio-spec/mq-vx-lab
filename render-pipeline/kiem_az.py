@@ -23,7 +23,28 @@ import re
 GOC = os.path.dirname(os.path.abspath(__file__))
 WF = os.path.join(GOC, "..", ".github", "workflows")
 YAML_KENH = os.path.join(GOC, "..", "MM0-AutoPublisher", "config", "channels.yaml")
-RENDER = ["render_hai.yml", "render_phan_tich_18.yml"]
+# Danh sách này TỪNG là bảng cứng, và bảng cứng thì thêm workflow mới là cổng im lặng bỏ qua
+# nó — đúng họ lỗi đã gặp ở `RS_PRESETS` và `kiem_workflow.CAP` hôm nay. Nay đọc thẳng thư mục:
+# mọi `render_*.yml` đang bật cron đều phải có mắt xích sang khâu đăng.
+def _render_dang_bat() -> list:
+    import os as _o, io as _i
+    d = _o.path.join(_o.path.dirname(GOC), ".github", "workflows")
+    if not _o.path.isdir(d):
+        return []
+    ra = []
+    for f in sorted(_o.listdir(d)):
+        if not (f.startswith("render_") and f.endswith(".yml")):
+            continue
+        y = _i.open(_o.path.join(d, f), encoding="utf-8").read()
+        # Chỉ đòi workflow CÒN CHẠY. Hệ thế hệ 1 đã tắt cron thì không cần mắt xích nữa, và
+        # đòi nó chỉ tạo ra một lỗi đỏ vĩnh viễn mà không ai sửa được.
+        ma = "\n".join(l for l in y.split("\n") if not l.lstrip().startswith("#"))
+        if "cron:" in ma:
+            ra.append(f)
+    return ra
+
+
+RENDER = _render_dang_bat()
 
 
 def main() -> int:

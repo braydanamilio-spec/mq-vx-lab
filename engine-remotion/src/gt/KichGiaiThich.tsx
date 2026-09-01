@@ -108,7 +108,12 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string 
            ĐO — và cái mất là chữ khó đọc, đúng thứ phụ đề sinh ra để giải quyết.
            Nay dải tối đậm hơn hẳn và cao hơn, nhưng vẫn CHUYỂN DẦN không có cạnh — giữ được
            vẻ không-phải-hộp mà vẫn qua chuẩn. */
-        background: "linear-gradient(180deg,#00000000 0%,#0000008C 38%,#000000C4 100%)",
+        // ĐỘ ĐẬM TÍNH TỪ TRƯỜNG HỢP XẤU NHẤT, không chọn bằng mắt. Nền sáng nhất có thể là
+        // trắng tuyệt đối; chữ trắng trên lớp phủ đen alpha a cho tương phản 1,05/((1−a)+0,05).
+        // Mốc cũ `C4` (alpha 0,77) chỉ được 3,7:1 — dưới chuẩn WCAG AA, và đúng con số đo được
+        // trên tập `howlong_0001` (2,8:1) vì nền tập ấy gần trắng. `E0` (alpha 0,88) cho 6,1:1,
+        // đủ biên cho mọi ảnh nền mà không làm đáy khung thành một vệt đen.
+        background: "linear-gradient(180deg,#00000000 0%,#000000A8 38%,#000000E0 100%)",
         pointerEvents: "none",
       }} />
       <div style={{
