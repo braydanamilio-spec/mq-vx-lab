@@ -73,4 +73,6 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           OWNER_UID: ${{ secrets.OWNER_UID }}
           HOT_KEY: ${{ secrets.HOT_KEY }}
-        run: cd render-pipeline && python kiem_kho.py --ghi --owner "$OWNER_UID"
+        # `|| true`: đối chiếu Drive cần Firestore; cạn hạn mức thì bước này hỏng, nhưng
+        # phần dọn D1 ở trên ĐÃ xong. Cho cả lượt đỏ vì một bước phụ là báo sai việc đã làm được.
+        run: cd render-pipeline && python kiem_kho.py --ghi --owner "$OWNER_UID" || true

@@ -161,8 +161,11 @@ def don_d1(giu: set, owner: str, that: bool) -> int:
     cu = [c for c in co if c and c not in giu]
     print(f"   D1: {len(co)} kênh có bản ghi · {len(cu)} kênh ngoài danh sách giữ lại")
     if not cu:
-        print("   ✅ D1 đã sạch" if co else "   ⚠ D1 không trả về kênh nào — kiểm HOT_KEY")
-        return 0
+        print("   ✅ D1 sạch phần theo kênh" if co else "   ℹ D1 không còn kênh nào có bản ghi")
+        # VẪN dọn phần mồ côi. Bản trước `return 0` ngay ở đây, nên 33 dòng `channel` rỗng/NULL
+        # không bao giờ được chạm tới — chúng chỉ sống sót ĐÚNG vì lệnh theo-kênh bỏ qua chúng.
+        # Thoát sớm ở nhánh "đã sạch" là tự tin rằng sạch, trong khi cái bẩn nằm ngoài phép lọc.
+        return _don_mo_coi(H, owner) if that else 0
     print(f"   sẽ dọn: {', '.join(cu[:10])}" + (" …" if len(cu) > 10 else ""))
     if not that:
         return 0
@@ -237,9 +240,10 @@ def don(that: bool = False, owner: str = "") -> int:
     #
     # Dọn sổ là việc PHỤ: không chạy thì chỉ vài con số trên màn hình sai, còn chạy sai lúc thì
     # làm mất cả lượt render. Nên nó dừng ở mức 70% như mọi việc phụ khác.
+    _own = owner or os.environ.get("OWNER_UID", "")
     try:
         import firestore_bridge as _FB
-        _FB.nap_nen_ngan_sach()
+        _FB.nap_nen_ngan_sach(_own)     # CẦN `owner` — thiếu là TypeError, và bức tường im lặng
         if not _FB.con_ngan_sach("doc"):
             print("⏹ Ngân sách đọc Firestore đã qua mức việc-phụ (70%) — HOÃN dọn Firestore.")
             print(f"   {_FB.bao_ngan_sach()}")
