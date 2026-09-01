@@ -151,6 +151,11 @@ def cham(mp4: str, keys=None) -> tuple:
 
 
 def main() -> int:
+    # `out/` KHÔNG có trên máy sạch: nó nằm trong .gitignore, nên lượt chạy đầu trên runner
+    # vào cổng này là ném FileNotFoundError và giết cả luồng TRƯỚC KHI dựng gì. Đo được ở
+    # lượt 33519795185: 3/18 luồng chết ở bước "Cổng" vì đúng một dòng `os.listdir`.
+    # Không có tệp để chấm là chuyện BÌNH THƯỜNG ở lượt đầu, không phải lỗi.
+    os.makedirs(os.path.join(GOC, "out"), exist_ok=True)
     ap = argparse.ArgumentParser()
     ap.add_argument("tep", nargs="*")
     ap.add_argument("--nguong", type=int, default=90)

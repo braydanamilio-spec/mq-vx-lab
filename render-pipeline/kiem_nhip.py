@@ -67,7 +67,12 @@ def cau_dai(nhip: list, nguong: int = 11) -> list:
 
 
 def main() -> int:
+    # `out/` KHÔNG có trên máy sạch: nó nằm trong .gitignore, nên lượt chạy đầu trên runner
+    # vào cổng này là ném FileNotFoundError và giết cả luồng TRƯỚC KHI dựng gì. Đo được ở
+    # lượt 33519795185: 3/18 luồng chết ở bước "Cổng" vì đúng một dòng `os.listdir`.
+    # Không có tệp để chấm là chuyện BÌNH THƯỜNG ở lượt đầu, không phải lỗi.
     goc = os.path.dirname(os.path.abspath(__file__))
+    os.makedirs(os.path.join(goc, "out"), exist_ok=True)
     ds = sys.argv[1:] or sorted(
         os.path.join(goc, "out", f) for f in os.listdir(os.path.join(goc, "out"))
         # LOẠI `.tai.json` (chữ đăng cho ba nền tảng, thêm 1/9). Nó cũng là `v9_*.json` nhưng
