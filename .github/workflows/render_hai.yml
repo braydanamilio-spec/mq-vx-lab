@@ -102,6 +102,16 @@ jobs:
                "DIETWARS", "TECHSUPPORT", "PARENTMODE", "NEIGHBORWATCH", "DATINGAPP"]
     steps:
       - uses: actions/checkout@v4
+      # Checkout repo đăng bài NGAY ĐẦU JOB, không để giữa chừng.
+      # `actions/checkout` có `clean: true` mặc định; đặt nó sau bước dựng là đánh cược rằng
+      # nó chỉ dọn đúng thư mục `path:`. Hệ cũ (`render_cron.yml`) cố ý checkout ở đầu — làm
+      # y hệt thì không phải đánh cược, và video trong `out/` chắc chắn còn nguyên lúc đẩy kho.
+      - name: Checkout repo đăng bài
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
       - uses: actions/setup-node@v4
         with: { node-version: "20" }
       - uses: actions/setup-python@v5
@@ -234,12 +244,6 @@ jobs:
       # hạn sau 14 ngày là mất trắng, và trong lúc đó không ai đăng được gì.
       # Dây chuyền thật của hệ cũ: render -> `enqueue.py` (đẩy Drive + ghi hàng đợi) ->
       # `publish.yml` đăng. Nay nối vào đúng đường ấy, KHÔNG viết lối đẩy Drive thứ hai.
-      - name: Checkout repo đăng bài
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
-          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
-          path: _autopublisher
       - name: Đẩy video vào hàng đợi đăng
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
