@@ -44,20 +44,10 @@ jobs:
           pip install --quiet -r _autopublisher/requirements.txt 2>/dev/null || \
             pip install --quiet google-api-python-client google-auth google-cloud-firestore
 
-      # CHẠY THỬ TRƯỚC, IN KIỂM KÊ. Bước dọn thật ở dưới đọc cùng danh sách giữ lại, nên nhìn
-      # log là biết trước nó sẽ đụng vào gì — không dọn mù.
-      - name: Kiểm kê (chạy thử, chưa xoá gì)
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          OWNER_UID: ${{ secrets.OWNER_UID }}
-          HOT_KEY: ${{ secrets.HOT_KEY }}
-          CHANNELS_YAML: ${{ github.workspace }}/_autopublisher/config/channels.yaml
-        run: |
-          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
-          cd render-pipeline && python don_sach.py --owner "$OWNER_UID"
-
-      - name: Dọn thật (Firestore + D1)
+      # MỘT LƯỢT DUY NHẤT, không chạy thử rồi chạy thật.
+      # `don_sach.py` in kiểm kê đầy đủ trước khi xoá, nên bước thử riêng chỉ nhân đôi
+      # chi phí đọc Firestore — và chính chi phí ấy đã làm cạn hạn mức hôm nay.
+      - name: Dọn (in kiểm kê rồi xoá)
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}

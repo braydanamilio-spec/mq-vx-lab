@@ -80,23 +80,54 @@ def _ten(c) -> str:
     return str(c.get("name") or c.get("kenh") or c.get("channel") or "").upper().replace(" ", "")
 
 
+def _dem(db, ten_bo, owner: str) -> int:
+    """Đếm tài liệu bằng TRUY VẤN ĐẾM, không duyệt từng tài liệu.
+
+    ── VÌ SAO (1/9/2026) ───────────────────────────────────────────────────────────────────
+    Anh: *"ngày nay a chưa chạy gì đã cạn firebase."* Thủ phạm là chính hàm này ở bản trước:
+    nó `.stream()` TOÀN BỘ `render_jobs` chỉ để đếm. Với ~2.000 bản ghi thì mỗi lần kiểm kê là
+    ~2.000 lượt đọc, mà `don()` gọi kiểm kê HAI lần (trước và sau khi dọn), và workflow chạy
+    `don_sach.py` hai bước (thử rồi thật). Một lượt bấm = ~8.000 lượt đọc; tôi bấm hai lượt là
+    ~16.000 trên hạn mức free 50.000/ngày. Firestore cạn, và cạn vì công cụ DỌN chứ không phải
+    vì dây chuyền render.
+
+    Truy vấn đếm (`aggregation`) tính ở phía máy chủ: **1 lượt đọc thay cho N**.
+    Client cũ không có `.count()` thì rơi về đếm thủ công — chậm và tốn, nhưng vẫn đúng, và có
+    dòng cảnh báo để biết mình đang trả giá gì.
+    """
+    q = db.collection(ten_bo).where("owner", "==", owner)
+    try:
+        r = q.count().get()
+        return int(r[0][0].value)
+    except Exception:
+        print(f"   ⚠ client không hỗ trợ truy vấn đếm — đếm thủ công `{ten_bo}` (tốn hạn mức)")
+        return sum(1 for _ in q.stream())
+
+
 def kiem_ke(db, owner: str, giu: set):
-    """Đếm trước khi đụng vào gì. Trả (kênh giữ, kênh dọn, job giữ, job dọn)."""
-    kg, kd, jg, jd = [], [], 0, 0
+    """Đếm trước khi đụng vào gì. Trả (kênh giữ, kênh dọn, job giữ, job dọn).
+
+    `render_channels` PHẢI tải tài liệu — ta cần `_id` để xoá, và nó chỉ vài chục bản ghi.
+    `render_jobs` chỉ cần CON SỐ, nên dùng truy vấn đếm: xem chú thích ở `_dem`.
+    """
+    kg, kd = [], []
     for d in db.collection("render_channels").where("owner", "==", owner).stream():
         c = d.to_dict() or {}
         c["_id"] = d.id
         (kg if _ten(c) in giu else kd).append(c)
-    for d in db.collection("render_jobs").where("owner", "==", owner).stream():
-        j = d.to_dict() or {}
-        if _ten(j) in giu:
-            jg += 1
-        else:
-            jd += 1
-    return kg, kd, jg, jd
-
-
-WORKER = "https://mm0-connect.adisondurham-ef1.workers.dev/api/hot"
+    # Không thể lọc theo danh sách giữ lại bằng truy vấn (Firestore không có "NOT IN" quá 10
+    # phần tử), nên đếm TỔNG rồi trừ phần giữ lại — mỗi kênh giữ lại một truy vấn đếm, 18 lượt
+    # đọc thay cho hai nghìn.
+    tong = _dem(db, "render_jobs", owner)
+    jg = 0
+    for ten in sorted(giu):
+        try:
+            r = (db.collection("render_jobs").where("owner", "==", owner)
+                 .where("name", "==", ten).count().get())
+            jg += int(r[0][0].value)
+        except Exception:
+            pass
+    return kg, kd, jg, max(0, tong - jg)
 
 
 def don_d1(giu: set, owner: str, that: bool) -> int:
@@ -105,28 +136,37 @@ def don_d1(giu: set, owner: str, that: bool) -> int:
     ── VÌ SAO CẦN (1/9/2026) ───────────────────────────────────────────────────────────────
     Dọn kênh ở Firestore (`render_channels`) là dọn CẤU HÌNH. Nhưng dashboard đếm video và đổ
     ô xổ "Tất cả kênh" từ bảng `render_job` bên **D1** — một kho khác. Anh gửi ảnh: ô xổ vẫn
-    liệt kê đủ 50 kênh cũ kèm số đếm (ALERTNOW 55 · AMERICALOOKEDUP 57 · …), tổng 2088, dù
-    `render_channels` chỉ còn 18 kênh mới.
-    Chính mã worker đã ghi sẵn bài học này ở `don_job_kenh`: *"Hai kho dữ liệu song song thì
-    lệnh dọn phải đụng cả hai."* Tôi dọn một kho rồi báo đã xong — đó là lỗi của tôi.
+    liệt kê đủ 50 kênh cũ kèm số đếm, tổng 2088, dù `render_channels` chỉ còn 18 kênh mới.
+    Chính mã worker đã ghi sẵn bài học ở `don_job_kenh`: *"Hai kho dữ liệu song song thì lệnh
+    dọn phải đụng cả hai."*
 
-    Nguồn danh sách kênh cần dọn vẫn là `channels.yaml` (qua `giu`), không chép tay: thêm kênh
-    vào yaml là nó tự được giữ, không cần sửa thêm chỗ nào.
+    ── DÙNG `hot_db`, KHÔNG TỰ GỌI HTTP ────────────────────────────────────────────────────
+    Bản trước tôi viết một đường gọi HTTP riêng và nhận **403**. Không phải sai khoá:
+    `hot_db.goi` có chú thích ghi sẵn rằng thiếu `User-Agent` thì Cloudflare chặn ở cổng với mã
+    1010 và trả 403 **y hệt sai khoá**. Tôi viết đường gọi thứ ba nên mất luôn cả bài học đã
+    trả giá lẫn cơ chế tự tắt sau 20 lần hỏng. Nay đi qua `hot_db` — một cửa duy nhất.
     """
-    khoa = os.environ.get("HOT_KEY", "")
-    if not khoa:
-        print("   ⏭ không có HOT_KEY -> bỏ bước dọn D1 (chạy trong workflow thì có)")
+    import hot_db as H
+    if not H.bat_ghi():
+        print("   ⏭ D1 đang tắt (thiếu HOT_KEY) — bỏ bước dọn D1")
         return 0
-    import json
-    import urllib.request
+    ds = H.goi("dem_tat_ca", {"owner": owner}) or {}
+    # `dem_tat_ca` trả `{rows: [{channel, vtype, n}]}` — đọc đúng khoá `rows`, không đoán.
+    co = sorted({str(x.get("channel") or "").upper()
+                 for x in (ds.get("rows") or []) if x.get("channel")})
+    cu = [c for c in co if c and c not in giu]
+    print(f"   D1: {len(co)} kênh có bản ghi · {len(cu)} kênh ngoài danh sách giữ lại")
+    if not cu:
+        print("   ✅ D1 đã sạch" if co else "   ⚠ D1 không trả về kênh nào — kiểm HOT_KEY")
+        return 0
+    print(f"   sẽ dọn: {', '.join(cu[:10])}" + (" …" if len(cu) > 10 else ""))
+    if not that:
+        return 0
+    r = H.goi("don_job_kenh", {"owner": owner, "kenh": cu}, timeout=90) or {}
+    n = int(r.get("xoa", 0))
+    print(f"   ✓ D1 xoá {n} bản ghi · còn lại {r.get('con_lai', '?')}")
+    return n
 
-    def goi(lenh, tham):
-        r = urllib.request.Request(
-            WORKER, method="POST",
-            data=json.dumps({"lenh": lenh, "tham": tham}).encode(),
-            headers={"content-type": "application/json", "x-hot-key": khoa})
-        with urllib.request.urlopen(r, timeout=60) as f:
-            return json.loads(f.read().decode())
 
     try:
         ds = goi("dem_tat_ca", {"owner": owner})

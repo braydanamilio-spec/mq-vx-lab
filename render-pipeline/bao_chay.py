@@ -21,41 +21,35 @@ Và D1 rẻ hơn nhiều: một lượt gọi Worker, không tốn hạn mức F
     python bao_chay.py --kenh howlong --loai short --trang_thai failed
 """
 import argparse
-import json
 import os
-import urllib.request
 
-WORKER = "https://mm0-connect.adisondurham-ef1.workers.dev/api/hot"
+# Đi qua `hot_db` chứ KHÔNG tự gọi HTTP. Bản trước tôi viết đường gọi riêng và nhận 403 — không
+# phải sai khoá: `hot_db.goi` ghi sẵn rằng thiếu `User-Agent` thì Cloudflare chặn ở cổng với mã
+# 1010 và trả 403 y hệt sai khoá. Viết đường thứ hai là mất cả bài học lẫn cơ chế tự tắt sau
+# 20 lần hỏng.
 
 
 def bao(kenh: str, loai: str, trang_thai: str, buoc: str = "") -> bool:
     """Ghi/cập nhật một bản ghi job trong D1. Trả True nếu ghi được."""
-    khoa = os.environ.get("HOT_KEY", "")
     owner = os.environ.get("OWNER_UID", "")
-    if not khoa or not owner:
+    if not owner:
+        return False
+    try:
+        import hot_db as H
+    except Exception:
+        return False
+    if not H.bat_ghi():
         return False
     from datetime import datetime, timezone
     at = datetime.now(timezone.utc).isoformat()
-    # ID ỔN ĐỊNH theo (kênh, loại, ngày): mỗi ngày một bản ghi cho mỗi loại, cập nhật tại chỗ
-    # thay vì đẻ thêm dòng mỗi lần đổi trạng thái. `ghi_job` có ON CONFLICT DO UPDATE nên cùng
-    # id sẽ ghi đè. Không dùng id ngẫu nhiên: bảng D1 chỉ tăng, và mỗi lượt render sẽ để lại
-    # bốn dòng rác thay vì một.
+    # ID ỔN ĐỊNH theo (kênh, loại, ngày): mỗi ngày một bản ghi cho mỗi loại, cập nhật tại chỗ.
+    # `ghi_job` có ON CONFLICT DO UPDATE nên cùng id sẽ ghi đè. Không dùng id ngẫu nhiên: bảng
+    # D1 chỉ tăng, và mỗi lượt render sẽ để lại ba dòng rác thay vì một.
     ma = f"gt-{kenh.lower()}-{loai}-{at[:10]}"
-    goi = {"lenh": "ghi_job", "tham": {
+    r = H.goi("ghi_job", {
         "id": ma, "owner": owner, "channel": kenh.upper(), "vtype": loai,
-        "status": trang_thai, "step": buoc or trang_thai, "queued": False, "at": at}}
-    try:
-        r = urllib.request.Request(
-            WORKER, method="POST", data=json.dumps(goi).encode(),
-            headers={"content-type": "application/json", "x-hot-key": khoa})
-        with urllib.request.urlopen(r, timeout=30) as f:
-            json.loads(f.read().decode())
-        return True
-    except Exception as e:
-        # KHÔNG để việc báo cáo làm hỏng lượt render. Ô trạng thái sai thì khó chịu; mất một
-        # lượt dựng vì không gọi được Worker thì tốn thật.
-        print(f"   ⚠ không báo được trạng thái: {str(e)[:80]}")
-        return False
+        "status": trang_thai, "step": buoc or trang_thai, "queued": False, "at": at})
+    return bool(r)
 
 
 def main() -> int:

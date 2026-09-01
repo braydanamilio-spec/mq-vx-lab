@@ -7466,3 +7466,46 @@ Không lỗi nào báo. Chỉ là mỗi tập mất vài cảnh.
 
 **Luật:** đổi số lần thử thì sửa CẢ hai đầu — biên vòng lặp và điều kiện thoát — rồi thử một
 lượt xem nhánh cuối có chạy không.
+
+### 7cs — Công cụ DỌN đốt hết hạn mức Firestore, không phải dây chuyền render (1/9)
+
+Anh: *"ngày nay a chưa chạy gì đã cạn firebase."* Đúng, và thủ phạm là công cụ tôi vừa viết.
+
+`don_sach.kiem_ke` **`.stream()` toàn bộ `render_jobs` chỉ để ĐẾM**. Với ~2.000 bản ghi:
+
+| chỗ tốn | lượt đọc |
+|---|---|
+| một lần `kiem_ke` | ~2.000 |
+| `don()` gọi kiểm kê hai lần (trước + sau khi dọn) | ~4.000 |
+| workflow chạy `don_sach.py` hai bước (thử rồi thật) | ~8.000 |
+| tôi bấm hai lượt | **~16.000** |
+
+Hạn mức free là 50.000 lượt đọc/ngày. Hai lượt dọn ăn một phần ba, cộng với dashboard tải lại
+nhiều lần trong lúc kiểm là chạm trần.
+
+**Ba sai lầm chồng nhau, và cả ba đều là của tôi:**
+
+1. *Duyệt tài liệu để lấy một con số.* Firestore có truy vấn đếm (`aggregation`) tính ở phía máy
+   chủ: **1 lượt đọc thay cho N**. Duyệt để đếm là trả giá gấp hai nghìn lần cho cùng một kết quả.
+2. *Kiểm kê hai lần trong một lệnh.* "Trước và sau" nghe cẩn thận, nhưng nhân đôi chi phí.
+3. *Workflow chạy thử rồi chạy thật.* Lại nhân đôi lần nữa — trong khi bản thật đã in kiểm kê.
+
+**Luật:** trước khi viết `.stream()` trên một bộ sưu tập, hỏi *"tôi cần TÀI LIỆU hay cần CON SỐ?"*
+Cần con số thì dùng truy vấn đếm. Và mỗi lần thêm một bước "cho chắc", nhân chi phí lên rồi mới
+quyết — cẩn thận không miễn phí.
+
+### 7ct — Viết đường gọi HTTP thứ ba, mất luôn bài học đã trả giá (1/9)
+
+`don_d1` và `bao_chay.py` bản đầu tự dựng `urllib.request` gọi `/api/hot`, và nhận **403**. Tôi
+suýt đi kiểm `HOT_KEY`.
+
+Nhưng repo đã có `hot_db.goi`, và ngay trong nó là chú thích:
+
+> *thiếu `User-Agent` thì Cloudflare chặn ngay ở cổng với mã 1010 ("browser signature"), trả 403
+> y như sai khoá nên rất dễ chẩn nhầm.*
+
+Đường gọi của tôi thiếu đúng cái header ấy. Viết đường thứ ba nghĩa là mất cả **bài học đã trả
+giá** lẫn cơ chế `hot_db` có sẵn (tự tắt sau 20 lần hỏng, ba chế độ off/shadow/on).
+
+**Luật:** trước khi viết một client mới cho dịch vụ repo đã gọi, đọc client cũ. Chú thích trong
+đó là những lần đã trả giá — bỏ qua chúng là mua lại cùng một bài học.
