@@ -3861,6 +3861,13 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         f"  · at most {tran} spoken words in the whole short\n"
         f"  · never write on-screen text, captions, signs or logos\n"
         f"  · never name a real brand or an existing TV show\n"
+        # Đo trên lượt sinh thật: cổng "lượng chính xác" là chốt chặn số một, dính 3/3 ca hỏng.
+        # Nó vốn nằm ở khối "WHAT MAKES THESE WORK IN AMERICA" — phần lời khuyên. Chuyển lên
+        # khối GIỚI HẠN CỨNG, nơi AI tuân thủ chặt nhất, vì nó LÀ một giới hạn cứng.
+        f"  · at least ONE exact quantity somewhere in the script — a number, an amount of "
+        f"money, a day name, or a count. It can live in the opening image ('nine jars', 'eleven "
+        f"packages', 'forty tools') and does not have to be spoken. A short with no number in "
+        f"it reads as a sketch of a joke rather than a joke\n"
         + (f"  · 'escalate' MUST contain one of these words, literally: again, another, "
            f"further, more, bigger, deeper, harder, higher, a second, one more, the whole, "
            f"even the, instead of. This is checked; an escalation the reader has to infer "
@@ -4216,7 +4223,7 @@ HO_LAT = {
     # thắng vì lý do khác, người đúng thua vì đúng, và cả hai cùng sai với một người thứ ba.
     "đúng-mà-vẫn-thua":      r"\b(was right|had been right|correct all along)\b.{0,40}\b(but|and still|anyway)\b",
     "sai-mà-vẫn-thắng":      r"\b(works? anyway|holds? anyway|somehow (works?|holds?)|by accident)\b",
-    "người-thứ-ba-đã-xong":  r"\b(already (done|fixed|finished|handled|set|tucked|there|sorted|packed|swapped|paid)|had already|had (done|fixed) it|was already)\b",
+    "người-thứ-ba-đã-xong":  r"\b(already (\w+ing|done|fixed|finished|handled|set|tucked|there|sorted|packed|swapped|paid)|had already|had (done|fixed) it|was already)\b",
 }
 
 
