@@ -3606,6 +3606,56 @@ def _ngan_sach_sys(kenh: str, giay: float) -> int:
     return _ngan_sach_khuon(kh, hs, giay, ph)
 
 
+# Cứ mấy tập thì gọi lại một tập cũ. Bốn: đủ thưa để người xem mới không thấy khó hiểu, đủ dày
+# để người xem cũ nhận ra kênh này CÓ TRÍ NHỚ.
+NHIP_GOI_LAI = 4
+
+
+def _tom_lat(payoff: str) -> str:
+    """Rút cú lật của một tập cũ thành một mệnh đề ngắn để nhắc lại.
+
+    Nhắc nguyên câu payoff dài 150 ký tự thì cú gọi lại chiếm mất chỗ của chính tập đang viết —
+    và ngân sách văn kể chỉ có 640 ký tự."""
+    t = " ".join(str(payoff or "").split())
+    t = re.split(r"(?<=[.!?]) ", t)[0]
+    return (t[:96].rsplit(" ", 1)[0] + "…") if len(t) > 100 else t
+
+
+def goi_lai(kenh: str, so: int, da: list | None = None) -> dict:
+    """Tập này có gọi lại tập cũ nào không, và tập nào.
+
+    VÌ SAO ĐÂY LÀ THỨ ĐÁNG LÀM NHẤT CÒN LẠI
+    ---------------------------------------
+    Hai lý do, và lý do thứ hai mới là lý do thật.
+
+    1. Luật `inauthentic content` của YouTube không cấm AI và không cấm "trông giống kênh khác" —
+       nó nhắm vào *các video của CHÍNH bạn giống hệt nhau, không có bàn tay biên tập*. Một tập
+       nhắc tới tập trước là bằng chứng khó cãi nhất rằng đây là **một chương trình**, không phải
+       một lô hàng: nó đòi TRẠNG THÁI, mà một dây chuyền sinh hàng loạt thì không có trạng thái.
+
+    2. Quan trọng hơn: nó là thứ duy nhất còn lại có thể nâng **giữ chân** mà không tốn thêm một
+       giây Kling nào. Người xem đã xem tập cũ nhận ra cú gọi lại và thấy mình được thưởng; người
+       chưa xem vẫn hiểu trọn tập vì cú gọi lại nằm ở CHI TIẾT, không nằm ở tiền đề. Đó chính là
+       cơ chế biến người lướt qua thành người đăng ký — và không kênh tự động nào làm được, vì
+       nó đòi nhớ mình đã kể gì.
+
+    Ràng buộc cứng: cú gọi lại **không được là tiền đề**. Nếu phải xem tập cũ mới hiểu tập này
+    thì tập này hỏng với 95% người xem — đúng luật "hiểu được mà không cần ngữ cảnh".
+    """
+    if so % NHIP_GOI_LAI or so < NHIP_GOI_LAI:
+        return {}
+    da = _da_lam(kenh) if da is None else da
+    # Tập cũ lưu trước khi có trường `_dao_cu` thì KHÔNG tính lại bằng `_lich`: bộ lịch đã đổi
+    # (thêm trục thứ bảy), nên tính lại cho ra một đồ vật KHÁC thứ tập ấy thật sự kể. Dùng thứ
+    # tập cũ thật sự có — cú lật của nó. Sai nguồn còn tệ hơn không gọi lại.
+    cu = [x for x in da if x.get("title") and (x.get("dao_cu") or x.get("payoff"))]
+    if not cu:
+        return {}
+    # Chọn tập cách đây một khoảng, không phải tập ngay trước: gọi lại tập vừa xong thì giống
+    # phần hai hơn là giống trí nhớ. Bước lẻ để không rơi vào cùng một tập mãi.
+    return cu[-(1 + (so // NHIP_GOI_LAI * 3) % max(1, len(cu)))]
+
+
 def de_bai(kenh: str, so: int) -> str:
     """Đề bài của MỘT tập, viết thành câu cho AI. Sáu trục do `_lich` cấp.
 
@@ -3634,7 +3684,16 @@ def de_bai(kenh: str, so: int) -> str:
         f"  · {x['gay']} caused it (and does not admit it)\n"
         f"  · {x['lat']} delivers the reversal, and delivers it THIS way — not the way that "
         f"comes to mind first: {HO_LAT_TA.get(x['co_che'], x['co_che'])}\n"
-        f"These seven are fixed. Everything else — what is wanted, what is said, how it turns — is "
+        + (lambda g: (
+            f"  · CALLBACK — this channel remembers. Somewhere in this episode, refer to what "
+            f"happened in the earlier episode \"{g['title']}\" — "
+            f"{g['dao_cu'] or _tom_lat(g.get('payoff'))} — in ONE short detail: a "
+            f"repaired thing, a rule someone now follows, an object still where it ended up. "
+            f"Rules: it must be a DETAIL, never the premise — a first-time viewer must understand "
+            f"this episode completely without it. Nobody explains the reference or says 'remember "
+            f"when'. A returning viewer notices; a new viewer sees an ordinary detail.\n"
+        ) if g else "")(goi_lai(kenh, so))
+        + f"These seven are fixed. Everything else — what is wanted, what is said, how it turns — is "
         f"yours to invent, and must be invented fresh: this exact combination has not been used "
         f"before on this channel.\n\n"
     )
@@ -4078,7 +4137,9 @@ def _da_lam(kenh: str) -> list[dict]:
             try:
                 x = json.load(io.open(j, encoding="utf-8"))
                 r.append({"title": str(x.get("title") or d), "room": str(x.get("room") or ""),
-                          "lat": str(x.get("lat") or "")})
+                          "lat": str(x.get("lat") or ""), "so": int(x.get("_so") or 0),
+                          "dao_cu": str(x.get("_dao_cu") or ""),
+                          "payoff": str(x.get("payoff") or "")})
             except Exception:
                 pass
     return r
@@ -4143,7 +4204,9 @@ def luu(kenh: str, tap: dict, giay: float, so: int,
     tm = os.path.join(KHO, _slug(kenh), f"{so:03d}-{_slug(tap.get('title'))}")
     os.makedirs(os.path.join(tm, "clips"), exist_ok=True)
     pr = prompt(kenh, tap, giay, so=so, day=day)
-    tap = dict(tap, _kenh=kenh, _giay=giay, _so=so)
+    # Ghi kèm ĐỒ VẬT của tập: tập sau muốn gọi lại tập này thì phải biết tập này nói về cái gì.
+    # Không suy ngược từ văn kể được — một tập nhắc năm danh từ, chỉ một trong đó là chủ đề.
+    tap = dict(tap, _kenh=kenh, _giay=giay, _so=so, _dao_cu=_lich(kenh, so)["dao_cu"])
     io.open(os.path.join(tm, "tap.json"), "w", encoding="utf-8").write(
         json.dumps(tap, ensure_ascii=False, indent=2))
     io.open(os.path.join(tm, "PROMPT.txt"), "w", encoding="utf-8").write(pr)
