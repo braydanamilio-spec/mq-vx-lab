@@ -83,7 +83,13 @@ def main() -> int:
     tc = tl = 0
     for k in G.KENH:
         bo = G.BO_SINH[k["sinh"]]
-        ds = [[x.get("loi", "") for x in bo(G.vi_tri_short(k["ma"], i))[3]] for i in range(6)]
+        # ĐO THỨ THẬT SỰ LÊN VIDEO, không đo đầu ra thô của bộ sinh. Lời kể còn đi qua `ap_gu`
+        # (ngữ pháp riêng kênh) và `doi_loi` (biến thể câu) trước khi vào props — đo trước hai
+        # bước ấy thì cổng báo 89% trong khi thực tế đã 0%. Cổng đo sai khâu thì sai cả hai
+        # chiều: có lúc báo đỏ oan, có lúc báo xanh cho thứ đang hỏng.
+        ds = [[x.get("loi", "") for x in
+               G.doi_loi(G.ap_gu(k["ma"], i, bo(G.vi_tri_short(k["ma"], i))[3]), i)]
+              for i in range(6)]
         n = min(len(x) for x in ds)
         tc += sum(1 for j in range(n) if len({d[j] for d in ds}) == 1)
         tl += n

@@ -184,6 +184,28 @@ jobs:
           cd render-pipeline
           python day_kho.py --publish ../_autopublisher --that || true
 
+      # ══ ĐỐI CHIẾU SỐ KHO VỚI DRIVE  (1/9/2026) ═════════════════════════════════════════
+      # Anh: *"Video trong kho 2088 sao ko fix triệt để, kho đã xoá hết rồi."* Đúng, và mọi mắt
+      # xích đều đã có sẵn — chỉ là không cái nào chạy theo lịch:
+      #   · `apiHotStat` ĐÃ ưu tiên `kho_that` (số đếm TỆP thật trên Drive) hơn số đếm bản ghi
+      #   · `kiem_kho.py --ghi` ĐÃ đi hết kho Drive, ghi `kho_that` vào D1 và xoá bản ghi job
+      #     trỏ vào tệp đã mất
+      #   · nhưng `kiem_kho.py` chỉ nằm trong hai workflow BẤM TAY (0 cron)
+      # Nên `kho_that.luc` luôn quá hạn 26 giờ, worker rơi về đếm bản ghi, và màn hình hiện 2088
+      # — con số đúng theo nghĩa "số lượt render từng thành công", sai với thứ anh muốn biết.
+      # Đặt ở đây thì mỗi ngày một lần con số tự đúng lại, không phải vá tay lần nào nữa.
+      # `|| true`: đối chiếu hỏng không được phép làm hỏng lượt render đã xong.
+      - name: Đối chiếu số kho với Drive (số thật, không đếm bản ghi)
+        # CHỈ LUỒNG 1. Bước này đi hết mọi kho Drive; chạy ở cả 18 luồng song song là quét
+        # Drive 18 lượt cho cùng một kết quả — vừa phí vừa dễ chạm trần API.
+        if: matrix.luong == 1
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: cd render-pipeline && python kiem_kho.py --ghi --owner "$OWNER_UID" || true
+
       - name: Gói kết quả
         uses: actions/upload-artifact@v4
         with:

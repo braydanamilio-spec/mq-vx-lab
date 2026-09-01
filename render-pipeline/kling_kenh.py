@@ -62,6 +62,69 @@ MOC = (0.1875, 0.5625, 0.8125)
 # anh nhập số nào thì hệ dựng nhịp theo số ấy, vì chỉ anh mới biết giao diện mình đang có gì.
 GIAY_CHUAN = (5, 6, 7, 8, 9, 10, 12, 15)
 
+# ── KHUÔN KỂ THEO THỜI LƯỢNG ────────────────────────────────────────────────────────────────
+# 1/9 — Đo được: lệnh hệ thống cho clip 5 giây và clip 15 giây **giống nhau 99,9%**, chỉ khác
+# mỗi con số. Nên AI viết đúng MỘT kiểu chuyện bốn nhịp cho mọi thời lượng, rồi engine gộp lại
+# (5 giây) hoặc trải ra (15 giây). Cả hai đều hỏng theo cách riêng:
+#   · gộp   -> ba nhịp nhồi vào một khối 3,3 giây: xem không kịp hiểu, cú lật mất chỗ gài
+#   · trải  -> một chuyện 8 giây kéo qua 15 giây: khúc giữa không có việc gì xảy ra, người xem lướt
+#
+# Phim ngắn thật không co giãn một kịch bản — nó ĐỔI LOẠI CHUYỆN. Năm giây kể được một trò đùa
+# một cú đấm; mười lăm giây BẮT BUỘC phải có tiếng cười thứ hai ở khúc giữa, không thì thừa
+# tám giây. Ba khuôn dưới đây khớp đúng ba dạng nhịp mà `nhip()` dựng.
+KHUON_KE = (
+    (6.5, "ONE JOKE, ONE PUNCH", (
+        "This length holds exactly ONE idea. There is no room to establish anything, so the "
+        "first frame must already BE the setup — the viewer understands the situation from the "
+        "image alone, before anyone speaks.",
+        "Do NOT write a small version of a longer story. Write a different kind of story: a "
+        "single wrong image that turns once.",
+        "The reversal must be readable in under a second, so it has to be a change of SHAPE or "
+        "POSITION, not a piece of information. Something falls, opens, is revealed to be facing "
+        "the other way, or someone simply walks off. A reversal the viewer has to think about "
+        "does not exist at this length.",
+        "'escalate' here is not a story beat — it is one physical half-second between the image "
+        "and the turn (a doorknob turning, a stack leaning further, someone drawing breath). "
+        "Keep it to one short clause.",
+        "Dialogue is ONE exchange: two lines, and the second is shorter than the first. Nobody "
+        "explains, nobody names the problem. Often the funniest second line is one word.",
+    )),
+    (9.5, "SETUP AND TURN", (
+        "This length holds a situation and its reversal — but not a second laugh. Do not try to "
+        "escalate twice; a second attempt at this length steals the time the punchline needs.",
+        "Use the middle to make the viewer PREDICT something specific. The turn is only funny "
+        "if the prediction was clear, so the middle must commit to one obvious outcome.",
+        "'escalate' folds into the middle: one small physical gag that makes the prediction "
+        "stronger, not a new development.",
+        "Dialogue is two or three lines: a want, a refusal or a correction, and then the image "
+        "does the rest. The last line is the shortest and lands before the reversal is visible.",
+    )),
+    (99.0, "ESCALATION AND TWO LAUGHS", (
+        "This length REQUIRES a second laugh in the middle, or the last third drags and the "
+        "viewer leaves before the punchline. A ten-second short with one joke is an eight-second "
+        "short with two seconds of nothing.",
+        "The engine of the middle is EFFORT: the wrong solution gets bigger, more elaborate, "
+        "more committed — never abandoned. The audience laughs once at how far the character "
+        "will go, and again at what it turns out to be.",
+        "'escalate' must genuinely RAISE something measurable — more of it, further in, one more "
+        "time, a bigger tool, a second person recruited. If 'escalate' could be deleted without "
+        "changing the payoff, it is description, not escalation.",
+        "The reversal must pay off the ESCALATION specifically, not just the opening image. The "
+        "bigger the effort, the smaller and more ordinary the true answer should be.",
+        "Dialogue is three or four lines spread across the beats — do not stack them all in the "
+        "middle. Give the payoff beat its own short line, or no line at all.",
+    )),
+)
+
+
+def khuon_ke(giay: float) -> tuple[str, tuple]:
+    """Loại chuyện mà thời lượng này kể được. Khớp đúng ba dạng nhịp của `nhip()`."""
+    for tran, ten, luat in KHUON_KE:
+        if float(giay) <= tran:
+            return ten, luat
+    return KHUON_KE[-1][1], KHUON_KE[-1][2]
+
+
 # ── GIỚI HẠN THẬT CỦA KLING, DÙNG ĐỂ CHẤM KỊCH BẢN ──────────────────────────────────────────
 # Không phải để trang trí. Mỗi con số dưới đây là một lần render hỏng đã trả giá.
 TU_MOI_GIAY = 2.7          # người Mỹ thoại tự nhiên ~2,7 từ/giây. Quá số này là nói như đọc rap.
@@ -125,6 +188,24 @@ KIEU_MO = (
     "a sound keeps happening and nobody can find the source",
     "one character is dressed or equipped completely wrong for the room",
 )
+
+# ── THOẠI KIỂU MỸ — chặn những chỗ AI hay trượt sang giọng sách vở ─────────────────────────
+# Người Mỹ nói tắt, nói thiếu, và trả lời lệch câu hỏi. AI viết tiếng Anh "đúng ngữ pháp" nên
+# hay ra giọng phụ đề phim tài liệu. Ba nhóm dưới đây bắt được gần hết, và bắt CHÍNH XÁC —
+# không có từ nào ở đây mà một câu thoại gia đình Mỹ thật lại cần dùng.
+KHONG_MY = [
+    # dạng đầy đủ ở chỗ người Mỹ luôn nói tắt
+    (r"\b(I am|it is|that is|you are|we are|they are|do not|does not|did not|cannot|"
+     r"will not|is not|are not|have not|has not|I will|I have|I would)\b",
+     "viết dạng đầy đủ — người Mỹ nói tắt: I'm · it's · that's · don't · can't · won't"),
+    # giọng sân khấu / giọng dịch
+    (r"\b(indeed|perhaps|quite so|very well|shall|mustn't we|oh dear|my goodness|"
+     r"how wonderful|splendid|marvellous|marvelous|dreadful|terribly)\b",
+     "giọng sân khấu, không phải giọng người Mỹ nói trong bếp"),
+    # câu cảm thán rỗng — chiếm chỗ trong ngân sách từ mà không đưa thông tin nào
+    (r"^(oh no|wow|whoa|uh oh|oh my|no way|amazing|incredible)\b",
+     "câu cảm thán rỗng — ở clip ngắn mỗi từ phải đưa một thông tin hoặc một cú đùa"),
+]
 
 CAM_KY = [
     ("subtitle", "Kling vẽ chữ ra ký tự loằng ngoằng — chữ để khâu ghép làm, không nhờ Kling"),
@@ -1118,6 +1199,51 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
         e.append(f"tổng {tong_tu} từ thoại — clip {giay:g}s chỉ chứa nổi {tran} từ "
                  f"({TU_MOI_GIAY} từ/giây), quá là nói như đọc rap")
 
+    # ── KHUÔN KỂ PHẢI KHỚP THỜI LƯỢNG ──────────────────────────────────────────────────────
+    # Không co giãn một kịch bản: năm giây và mười lăm giây là hai LOẠI chuyện khác nhau.
+    _ten_kh, _ = khuon_ke(giay)
+    _esc = str(d.get("escalate") or "")
+    if giay <= 6.5:
+        if len(lines) != 2:
+            e.append(f"{len(lines)} lượt thoại cho clip {giay:g}s — khuôn {_ten_kh} cần ĐÚNG MỘT "
+                     f"lượt trao đổi: hai câu, câu sau ngắn hơn câu trước")
+        if len(_esc) > 90:
+            e.append(f"'escalate' dài {len(_esc)} ký tự — ở {giay:g} giây nó không phải một nhịp "
+                     f"chuyện, chỉ là nửa giây vật lý giữa hình và cú lật. Một mệnh đề ngắn")
+        if not re.search(r"\b(falls?|opens?|tips?|swings?|drops?|shuts?|slides?|steps?|turns?|"
+                         r"collapses?|lands?|rolls?|pulls?|walks?|leaves?)\b", str(d.get("payoff") or ""), re.I):
+            e.append(f"cú lật ở {giay:g} giây phải là ĐỔI HÌNH DẠNG hoặc VỊ TRÍ thấy ngay (đổ · "
+                     f"mở · lật · bước ra), không phải một thông tin người xem phải nghĩ mới hiểu")
+    elif giay <= 9.5:
+        if not 2 <= len(lines) <= 3:
+            e.append(f"{len(lines)} lượt thoại cho clip {giay:g}s — khuôn {_ten_kh} hợp với 2–3 "
+                     f"lượt: một cái muốn, một cái chặn, rồi để hình chốt")
+    else:
+        if len(lines) < 3:
+            e.append(f"chỉ {len(lines)} lượt thoại cho clip {giay:g}s — khuôn {_ten_kh} cần 3–4 "
+                     f"lượt rải đều các nhịp, không dồn vào khúc giữa")
+        if not re.search(r"\b(further|again|another|more|bigger|second|third|harder|deeper|"
+                         r"higher|faster|whole|entire|all of|now the|even the|one more|"
+                         r"instead of|not enough)\b", _esc, re.I):
+            e.append(f"'escalate' không LEO THANG gì đo được — ở {giay:g} giây khúc giữa phải có "
+                     f"tiếng cười riêng của nó: nỗ lực sai lầm phải TO HƠN (sâu hơn · thêm một "
+                     f"lần · thêm một người · dụng cụ to hơn), không phải tả thêm")
+        _b = [str((l or {}).get("beat") or "") for l in lines if isinstance(l, dict)]
+        if len(set(x for x in _b if x)) < 2:
+            e.append(f"tất cả lượt thoại nằm cùng một nhịp — clip {giay:g}s có "
+                     f"{len(nhip(giay))} khối, rải lời ra bằng trường 'beat' "
+                     f"({', '.join(x[2] for x in nhip(giay))})")
+
+    # ── THOẠI PHẢI RA GIỌNG MỸ ─────────────────────────────────────────────────────────────
+    for ln in lines:
+        if not isinstance(ln, dict):
+            continue
+        say = str(ln.get("say") or "")
+        for rx, ly in KHONG_MY:
+            if re.search(rx, say, re.I):
+                e.append(f"{str(ln.get('who') or '')}: {say!r} — {ly}")
+                break
+
     for khoa in ("hook", "escalate", "payoff"):
         if not str(d.get(khoa) or "").strip():
             e.append(f"thiếu khối {khoa!r}")
@@ -1486,7 +1612,7 @@ SCHEMA = """Return ONLY a JSON object with exactly these fields:
   "room":     "ROOM_LIST",
   "hook":     "16-30 words. The WRONG-LOOKING IMAGE the viewer sees in the first moment, containing all three of: the wrong object, what is wrong with it, and one detail proving somebody caused it. Pin the camera. A picture a storyboard artist could draw, not a feeling. No dialogue here.",
   "setup":    "one sentence of physical staging: who is where, doing what, camera angle pinned (static eye-level shot / low angle / wide shot)",
-  "lines":    [{"who":"Mike","say":"spoken words","act":"says|snaps|whispers|mutters|announces"}],
+  "lines":    [{"who":"Mike","say":"spoken words","act":"says|snaps|whispers|mutters|announces","beat":"which timeline beat this line is spoken in - use one of the beat names listed in THE SHAPE section"}],
   "escalate": "one sentence: the reaction grows, one small physical gag, one beat of silence",
   "payoff":   "one sentence: the REVERSAL. Something is revealed, someone walks in, an object turns out to be something else. Not just a bigger emotion."
 }"""
@@ -1582,6 +1708,15 @@ def _sys(kenh: str, giay: float) -> str:
         # ai nói ra; hài quán đêm sống bằng sự mệt mỏi; hài phòng gym sống bằng cái tôi va vào
         # vật lý. Đưa chung một luật cho cả ba là cách chắc chắn để cả ba đều nhạt.
         f"HOW COMEDY WORKS ON THIS CHANNEL — this is the engine, not a mood:\n{hs['hai']}\n\n"
+        # Khuôn kể riêng cho thời lượng này. Đặt NGAY SAU cơ chế hài và TRƯỚC mọi giới hạn con
+        # số, vì nó quyết định LOẠI chuyện — còn các con số chỉ quyết định kích thước.
+        + f"THE SHAPE OF A {giay:g}-SECOND SHORT — {khuon_ke(giay)[0]}:\n"
+        + "".join(f"  · {x}\n" for x in khuon_ke(giay)[1])
+        + f"  · The timeline you are writing for has {len(nhip(giay))} beats: "
+        + ", ".join(f"{a:.1f}-{b:.1f}s {t}" for a, b, t in nhip(giay)) + ".\n"
+        + f"  · Total spoken words across the whole short: {int(_giay_thoai(giay) * TU_MOI_GIAY)}. "
+        f"That is the real constraint on this length — write to it, do not write long and trust "
+        f"someone to cut.\n\n"
         f"CAST YOU MAY USE (and only these): {', '.join(hs['vai'])}. Buddy is a cat and never "
         f"speaks.\n"
         f"ROOMS YOU MAY USE — the whole short happens in ONE room, nobody teleports in "

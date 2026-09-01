@@ -2085,6 +2085,195 @@ GU_KENH = {
 }
 
 
+# ══ BIẾN THỂ CHO LỜI KỂ RIÊNG CỦA TỪNG KÊNH  (1/9/2026) ═════════════════════════════════════
+# `LOI_MAU` ở trên chỉ phủ được câu NỐI dùng chung. Đo lại sau bản ấy: vẫn 116/130 câu (89%)
+# dùng lại nguyên văn ở mọi tập — và những câu ấy chính là GIỌNG của kênh ("You walk. Light does
+# not." · "Nobody says stop. Just look."), nên không thể thay bằng câu nối chung chung.
+#
+# Bảng này viết 2 cách nói khác cho từng câu, giữ nguyên nghĩa và nhịp. Xoay theo số tập, tất
+# định — cùng một tập luôn ra cùng lời, ở máy và trên runner như nhau.
+#
+# Đặt ở MỘT bảng thay vì sửa 18 bộ sinh: sửa trong hàm thì mỗi lần thêm biến thể phải mở 18 chỗ,
+# và đó là cách một bảng thứ hai lặng lẽ mọc ra rồi lệch khỏi bảng đầu.
+BIEN_THE = {
+    # ── howlong ────────────────────────────────────────────────────────────────────────────
+    "You walk. Light does not.": ["Light does not walk. You do.", "You are on foot. Light is not."],
+    "Nobody has ever done this.": ["No one has ever tried it.", "This has never been done."],
+    "So start walking.": ["So set off.", "So begin the walk."],
+    "No breaks.": ["No stopping.", "No rest."],
+    "No sleep.": ["No sleeping.", "Not once."],
+    "Days go by.": ["The days pass.", "Day after day."],
+    "And they keep going.": ["And they do not stop.", "And still more."],
+    "You arrive.": ["You get there.", "You finally arrive."],
+    "On foot.": ["Walking.", "By foot."],
+    "By car.": ["Driving.", "In a car."],
+    "By jet.": ["Flying.", "On a plane."],
+    "Side by side.": ["All three together.", "Lined up."],
+    "Light wins.": ["Light gets there first.", "Light is already done."],
+    # ── howbig ─────────────────────────────────────────────────────────────────────────────
+    "Two things. One question.": ["Two objects. One question.", "Here are two of them."],
+    "Numbers alone mean nothing.": ["A number on its own tells you nothing.",
+                                    "Numbers need something to sit next to."],
+    "So here is the ratio.": ["So here is how they compare.", "Here is the multiple."],
+    "That is the other one.": ["And here is the second.", "Now the other."],
+    "Your brain was wrong.": ["Your guess was off.", "That is not what you pictured."],
+    # ── realcost ───────────────────────────────────────────────────────────────────────────
+    "It feels like nothing.": ["It barely registers.", "It seems too small to matter."],
+    "One purchase.": ["Just the one.", "A single buy."],
+    "But you do not buy it once.": ["But it is not a one-off.", "But you keep buying it."],
+    "That is one year.": ["One year in.", "After twelve months."],
+    "Now leave it alone.": ["Now do not touch it.", "Now let it sit."],
+    "Ten years of the same habit.": ["Ten years, same habit.", "A decade of the same thing."],
+    "Invested instead.": ["Put to work instead.", "Saved instead."],
+    "Keep going.": ["Carry on.", "And on."],
+    "Thirty years.": ["Three decades.", "Thirty years in."],
+    "The habit, or the number.": ["The habit against the number.", "One or the other."],
+    "Nobody says stop. Just look.": ["Nobody is telling you to stop. Just look.",
+                                     "This is not advice. It is arithmetic."],
+    # ── howmuch ────────────────────────────────────────────────────────────────────────────
+    "Two words. One letter apart.": ["Two words, one letter apart.", "One letter between them."],
+    "Count a million seconds.": ["Start counting to a million.", "Count out a million."],
+    "That is a normal trip.": ["That is a holiday.", "That is a couple of weeks."],
+    "Now count a billion.": ["Now go to a billion.", "Now the bigger one."],
+    "Same scale. Look again.": ["Same axis. Look again.", "Put them on one scale."],
+    "One is a trip. One is a life.": ["One is a holiday. One is a lifetime.",
+                                      "One you could do. One you could not."],
+    # ── whatif ─────────────────────────────────────────────────────────────────────────────
+    "One person does it.": ["Start with one person.", "Just one person does it."],
+    "Nothing happens.": ["Nothing at all.", "No effect."],
+    "Now ten people.": ["Now make it ten.", "Ten people."],
+    "Now a hundred.": ["Now a hundred of them.", "A hundred."],
+    "Now everyone.": ["Now all of us.", "Everyone at once."],
+    "One, against all of us.": ["One person against everyone.", "One, then all."],
+    "Small things do not stay small.": ["Small does not stay small.",
+                                        "Scale changes what a small thing is."],
+    # ── survive ────────────────────────────────────────────────────────────────────────────
+    "You. Dropped here.": ["You, put here.", "Here you are."],
+    "You need this much.": ["This is what you need.", "Here is the requirement."],
+    "Nothing here has a label.": ["Nothing here comes labelled.", "No labels out here."],
+    "What you know. What they knew.": ["What you know against what they knew.",
+                                       "Your knowledge, and theirs."],
+    "That was not instinct.": ["None of that was instinct.", "Instinct had nothing to do with it."],
+    "It was training.": ["It was learned.", "It was taught."],
+    "Count the days you last.": ["Count how long you last.", "Count the days."],
+    "You would last a week.": ["A week, at best.", "About a week."],
+    # ── dayinlife ──────────────────────────────────────────────────────────────────────────
+    "The day starts before light.": ["The day begins before dawn.", "It starts in the dark."],
+    "Up before light.": ["Awake before dawn.", "Up in the dark."],
+    "Working through noon.": ["Still at it by midday.", "Straight through noon."],
+    "Still going at dusk.": ["Still working at dusk.", "And still going as it gets dark."],
+    "That is the daily distance.": ["That is one day's distance.", "That is a single day."],
+    "Their day, and yours.": ["Their day against yours.", "Put your day next to theirs."],
+    "Then they do it again.": ["Then it starts over.", "And then again tomorrow."],
+    "Every day. For life.": ["Every day, for a lifetime.", "Day after day, for good."],
+    # ── wheregoes ──────────────────────────────────────────────────────────────────────────
+    "You put it in the bin.": ["It goes in the bin.", "You drop it in the bin."],
+    "You stop thinking about it.": ["And you forget it.", "That is where your part ends."],
+    "It has four more stops.": ["It has four stops to go.", "Four more stops ahead."],
+    "First the truck.": ["The truck comes first.", "First stop: the truck."],
+    "Then the sorting line.": ["Then it hits the sorting line.", "Next: the sorting line."],
+    "Most of it stops here.": ["Most of it goes no further.", "This is where most of it ends."],
+    "What you think happens, and what does.": ["What you assume, against what happens.",
+                                               "The story you have, and the real one."],
+    "Nobody told you. Now you know.": ["Nobody ever explained it. Now you know.",
+                                       "No one tells you this part."],
+    # ── therules ───────────────────────────────────────────────────────────────────────────
+    "You own it. You paid for it.": ["You paid for it. It is yours.", "You bought it outright."],
+    "There is still a rule.": ["There is a rule anyway.", "And still there is a rule."],
+    "It is written right here.": ["It is written down, right here.", "Here it is, in writing."],
+    "What you assumed, and what it says.": ["Your assumption, and the actual wording.",
+                                            "What you thought against what it says."],
+    "Then the letter arrives.": ["Then a letter turns up.", "And then the letter comes."],
+    "Nobody reads it until it matters.": ["Nobody reads it until it costs them.",
+                                          "It gets read only when it is too late."],
+    # ── speedof ────────────────────────────────────────────────────────────────────────────
+    "It happens too fast to see.": ["Too fast for your eyes.", "It is over before you see it."],
+    "So here is the number.": ["Here is the actual speed.", "So here is what it is."],
+    "Next to you, walking.": ["Next to a person walking.", "Put a walker beside it."],
+    "That is the multiple.": ["That is the gap.", "That is how many times over."],
+    "You never had a chance.": ["You were never close.", "Not even close."],
+    # ── odds ───────────────────────────────────────────────────────────────────────────────
+    "These are the real odds.": ["Here are the actual odds.", "These are the true odds."],
+    "Numbers that big mean nothing.": ["A number that big does not land.",
+                                       "Your head cannot hold a number like that."],
+    "So try it once a day.": ["So try every single day.", "So do it daily."],
+    "You would need this long.": ["This is how long it would take.", "That is the wait."],
+    "Next to things you fear.": ["Beside the things you actually worry about.",
+                                 "Next to what you are already afraid of."],
+    "Somebody still wins.": ["And yet somebody wins.", "Someone does win."],
+    # ── hiddenfee ──────────────────────────────────────────────────────────────────────────
+    "You pay this.": ["This is what you pay.", "Here is the price."],
+    "Almost none of it goes where you think.": ["Hardly any of it goes where you assume.",
+                                                "Almost none of it lands where you expect."],
+    "Here is the split.": ["Here is where it goes.", "This is the breakdown."],
+    "The biggest slice.": ["The largest share.", "Here is the biggest piece."],
+    "What you assumed, and what it is.": ["Your assumption against the real split.",
+                                          "What you pictured, and what it is."],
+    "Now you can see the price.": ["Now the price makes sense.", "Now you can read the price."],
+    # ── yearsof ────────────────────────────────────────────────────────────────────────────
+    "It is a few hours a day.": ["A few hours a day.", "Only a few hours each day."],
+    "That is today.": ["That is one day.", "That is just today."],
+    "Now add up a whole life.": ["Now add up a lifetime.", "Now total a whole life."],
+    "Day after day after day.": ["Day after day.", "Every day, without a gap."],
+    "Across seventy-nine years.": ["Over seventy-nine years.", "Across a full lifetime."],
+    "Against one whole life.": ["Set against a whole life.", "Next to a whole lifetime."],
+    "Nobody adds it up.": ["Nobody ever totals it.", "No one adds this up."],
+    # ── howloud ────────────────────────────────────────────────────────────────────────────
+    "Decibels do not add up the way you think.": ["Decibels do not add the way you expect.",
+                                                  "The decibel scale is not what it looks like."],
+    "Ten more is ten times more.": ["Ten more decibels is ten times the energy.",
+                                    "Add ten, multiply by ten."],
+    "Your ears do the maths for you.": ["Your ears hide the maths from you.",
+                                        "Your ears compress all of it."],
+    # ── whatweighs ─────────────────────────────────────────────────────────────────────────
+    "Weight is the sense we are worst at.": ["Weight is the one we judge worst.",
+                                             "We are worse at weight than anything."],
+    "You guessed wrong. Everyone does.": ["You were wrong. So is everyone.",
+                                          "Your guess was off, like everyone's."],
+    # ── rightnow ───────────────────────────────────────────────────────────────────────────
+    "Right now, while you watch this.": ["Right now, as you watch.", "At this exact moment."],
+    "This many people are too.": ["This many others are doing it too.",
+                                  "So are this many people."],
+    "You, and all of them.": ["You and everyone else.", "You, plus all of them."],
+    "Nothing you do is only yours.": ["Nothing you do is yours alone.",
+                                      "Whatever you are doing, you are not alone in it."],
+    "That is the whole point.": ["That is the point.", "That is the whole idea."],
+    # ── howhot ─────────────────────────────────────────────────────────────────────────────
+    "Next to a warm room.": ["Next to a comfortable room.", "Beside room temperature."],
+    "Your body has a very narrow window.": ["Your body works in a very narrow band.",
+                                            "The range your body survives is tiny."],
+    "Outside it, minutes matter.": ["Outside that band, minutes count.",
+                                    "Step outside it and minutes matter."],
+    "We live in a very thin band.": ["We live inside a very thin band.",
+                                     "Our whole range is that narrow."],
+    # ── smallest ───────────────────────────────────────────────────────────────────────────
+    "Start with something you can see.": ["Start with something visible.",
+                                          "Begin with something your eyes can catch."],
+    "Now go smaller.": ["Now smaller.", "Now go further down."],
+    "Your eyes stop long before this.": ["Your eyes gave up long before this.",
+                                         "Your eyes stopped a long way back."],
+    "Both, at true scale.": ["Both of them, to scale.", "Side by side, at true scale."],
+    "Everything you are is built from that.": ["All of you is built from that.",
+                                               "Everything you are starts there."],
+}
+
+
+def doi_loi(nhip: list, idx: int) -> list:
+    """Thay lời kể bằng biến thể của tập `idx`. Câu không có trong bảng thì giữ nguyên.
+
+    Xoay theo `idx` chứ không ngẫu nhiên: tất định, nên dựng lại cùng một tập luôn ra cùng lời —
+    ở máy và trên runner như nhau. Ngẫu nhiên thì mọi phép so sánh trước/sau đều mất nghĩa.
+    """
+    for n in nhip:
+        l = (n.get("loi") or "").strip()
+        bt = BIEN_THE.get(l)
+        if not bt:
+            continue
+        ds = [l] + list(bt)
+        n["loi"] = ds[idx % len(ds)]
+    return nhip
+
+
 def _cau_hook(hook: str, lui: str) -> str:
     """Lời của nhịp hook, viết lại từ `hook` của chính tập ấy.
 
@@ -2163,7 +2352,7 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
     # ── CÁC CHƯƠNG ──────────────────────────────────────────────────────────────────────
     for c in range(so_chuong):
         tieu, _h, _hp, nc = bo(vi_tri_long(ma, idx, c))
-        nc = ap_gu(ma, idx + c, nc)     # mỗi chương một biến thể, không 10 chương một khuôn
+        nc = doi_loi(ap_gu(ma, idx + c, nc), idx + c)   # mỗi chương một biến thể
         if not nc:
             continue
         muc.append((len(nhip), tieu))
@@ -2228,7 +2417,7 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
         # Short lấy vị trí CHẴN, bản dài lấy vị trí LẺ — xem `vi_tri_short`/`vi_tri_long`.
         tieu, hook, hook_phu, nhip = BO_SINH[k["sinh"]](vi_tri_short(ma, idx))
         # Ngữ pháp riêng của kênh, biến thể xoay theo số tập — xem `GU_KENH`.
-        nhip = ap_gu(ma, idx, nhip)
+        nhip = doi_loi(ap_gu(ma, idx, nhip), idx)
     # Nhịp 0 = HOOK. Chèn ở đây chứ không viết vào từng bộ sinh: hook là quy tắc chung của cả
     # bộ phim, không phải nội dung riêng của một kênh — viết mười chỗ là mười chỗ để lệch nhau.
     # CHỈ chèn khung số liệu khi THẬT SỰ CÓ SỐ. Bốn kênh (whatif · dayinlife · wheregoes ·

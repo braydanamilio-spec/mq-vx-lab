@@ -7206,3 +7206,37 @@ node -e 'const s=require("fs").readFileSync("index.html","utf8");
 
 **Luật:** cổng cho mã chạy ở môi trường khác phải **chạy chính mã ấy**. Mô phỏng nó là kiểm tra
 sự hiểu của mình, không phải kiểm tra mã.
+
+### 7cn — Con số "2088 video trong kho": mọi mắt xích đã đúng, không cái nào chạy theo lịch (1/9)
+
+Anh: *"Video trong kho 2088 sao ko fix triệt để, kho đã xoá hết rồi."* Truy ra thì **không có
+mắt xích nào sai** — chỉ thiếu một cái chạy:
+
+| mắt xích | trạng thái |
+|---|---|
+| `apiHotStat` ưu tiên `kho_that` (đếm TỆP thật trên Drive) hơn đếm bản ghi | ✅ đã có từ 31/8 |
+| điều kiện `tong >= 0` để 0 không bị coi là "thiếu dữ liệu" | ✅ đã sửa 31/8 |
+| `kiem_kho.py --ghi` đi hết kho Drive, ghi `kho_that` vào D1, xoá job trỏ vào tệp đã mất | ✅ đã có từ 24/8 |
+| có workflow nào chạy `kiem_kho.py` theo lịch không | ❌ **không** — nó chỉ nằm trong hai workflow BẤM TAY (0 cron) |
+
+Nên `kho_that.luc` luôn quá hạn 26 giờ, worker rơi về đếm bản ghi, và màn hình hiện 2088 —
+con số đúng theo nghĩa *"số lượt render từng thành công"*, sai với thứ anh muốn biết.
+
+**Bài học:** một bản vá chỉ tồn tại khi có thứ CHẠY nó. Bốn lần sửa đúng trong bảy ngày mà triệu
+chứng không đổi, vì cả bốn đều nằm ở nhánh không ai gọi tới. Trước khi kết luận "đã sửa", hỏi
+thêm một câu: *cái gì gọi nó, và bao lâu một lần?*
+
+Và một lỗi tôi tự gây khi đang sửa: chèn `tong_nguon: nguon` vào nhánh `return` BÁO LỖI, nơi
+`nguon` chưa khai — `node --check` không bắt (nó chỉ kiểm cú pháp). Cùng họ với hai lần
+`ReferenceError` hôm nay, và là lý do `kiem_pham_vi.py` tồn tại.
+
+### 7co — Cổng đo sai KHÂU thì sai cả hai chiều (1/9)
+
+`kiem_trung.py` đo lời kể trên **đầu ra thô của bộ sinh**, trong khi lời còn đi qua `ap_gu`
+(ngữ pháp riêng kênh) rồi `doi_loi` (biến thể câu) mới vào props. Sau khi thêm 115 câu biến thể,
+thực tế đã 0% lời cố định mà cổng vẫn báo **89%**.
+
+Lần này cổng báo đỏ oan nên vô hại. Nhưng cùng một lỗi đo sai khâu, nếu lệch chiều kia, sẽ báo
+XANH cho thứ đang hỏng — và đó là loại cổng nguy hiểm nhất.
+
+**Luật:** cổng phải đo THỨ THẬT SỰ ĐI VÀO SẢN PHẨM, không đo một khâu trung gian tiện tay hơn.
