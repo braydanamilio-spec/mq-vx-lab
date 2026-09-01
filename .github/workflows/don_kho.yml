@@ -67,6 +67,42 @@ jobs:
 
       # Đối chiếu với Drive SAU khi dọn: `kho_that` là thứ `apiHotStat` ưu tiên hơn số đếm bản
       # ghi, nhưng chỉ khi nó mới hơn 26 giờ. Không chạy bước này thì số vẫn rơi về đếm bản ghi.
+      # ── DÒ ĐƯỜNG LẤY HỒ KHO  (1/9/2026) ────────────────────────────────────────────────
+      # Tôi đã KẾT LUẬN "KV rỗng" chỉ vì log thiếu một dòng in — chưa bao giờ hỏi thẳng. Đó là
+      # suy đoán, và nó dẫn tới câu trả lời "chờ tới mai", trong khi có thể đang có đường đi được.
+      # Bước này hỏi TỪNG tầng và in ra tầng nào trả lời được. Vài giây, không tốn hạn mức
+      # Firestore ở hai tầng đầu.
+      - name: Dò đường lấy hồ kho (KV / D1 / Firestore)
+        if: always()
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: |
+          cd _autopublisher/src
+          python - <<'PYEOF'
+          import sys, os
+          sys.path.insert(0, ".")
+          import storage as ST
+          print("── DÒ TỪNG TẦNG ──")
+          try:
+              kv = ST._kho_tu_kv()
+              print(f"  KV        : {len(kv)} tài khoản")
+          except Exception as e:
+              print(f"  KV        : lỗi {type(e).__name__}: {str(e)[:70]}")
+          try:
+              d1 = ST._kho_tu_d1()
+              print(f"  D1        : {len(d1)} tài khoản")
+          except Exception as e:
+              print(f"  D1        : lỗi {type(e).__name__}: {str(e)[:70]}")
+          try:
+              ho = ST.pool_accounts()
+              print(f"  TỔNG HỢP  : {len(ho)} tài khoản  -> {'ĐẨY ĐƯỢC NGAY' if ho else 'CHƯA đẩy được'}")
+          except Exception as e:
+              print(f"  TỔNG HỢP  : lỗi {type(e).__name__}: {str(e)[:90]}")
+          PYEOF
+
       - name: Đối chiếu số kho với Drive
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
