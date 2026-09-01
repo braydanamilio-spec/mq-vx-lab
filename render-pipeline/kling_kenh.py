@@ -275,8 +275,13 @@ AP_LUC = (
 # không có từ nào ở đây mà một câu thoại gia đình Mỹ thật lại cần dùng.
 KHONG_MY = [
     # dạng đầy đủ ở chỗ người Mỹ luôn nói tắt
-    (r"\b(I am|it is|that is|you are|we are|they are|do not|does not|did not|cannot|"
-     r"will not|is not|are not|have not|has not|I will|I have|I would)\b",
+    # Dạng đầy đủ chỉ SAI khi còn vế sau. "Here they are." không rút gọn được ("Here they're"
+    # là sai ngữ pháp) và là câu Mỹ hoàn toàn tự nhiên — cổng bản đầu chặn nó, ép một kịch bản
+    # ĐÚNG viết lại tám vòng rồi tụt xuống 81 điểm. Luật 13.8: cổng bắt oan tệ hơn cổng không
+    # bắt. Đòi thêm một chữ phía sau thì phân biệt được "It is making a noise" (sai) với
+    # "Here they are." (đúng).
+    (r"\b(I am|it is|that is|you are|we are|they are|I will|I have|I would)\s+\w"
+     r"|\b(do not|does not|did not|cannot|will not|is not|are not|have not|has not)\b",
      "viết dạng đầy đủ — người Mỹ nói tắt: I'm · it's · that's · don't · can't · won't"),
     # giọng sân khấu / giọng dịch
     (r"\b(indeed|perhaps|quite so|very well|shall|mustn't we|oh dear|my goodness|"
@@ -3095,8 +3100,8 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
         if len(_esc) > 90:
             e.append(f"'escalate' dài {len(_esc)} ký tự — ở {giay:g} giây nó không phải một nhịp "
                      f"chuyện, chỉ là nửa giây vật lý giữa hình và cú lật. Một mệnh đề ngắn")
-        if not re.search(r"\b(falls?|opens?|tips?|swings?|drops?|shuts?|slides?|steps?|turns?|"
-                         r"collapses?|lands?|rolls?|pulls?|walks?|leaves?)\b", str(d.get("payoff") or ""), re.I):
+        if not re.search(r"\b(falls?|opens?|tips?|swings?|drops?|shuts?|slides?|steps?|turns?|lifts?|"
+                         r"knocks?|pushes|pops?|snaps?|tears?|spills?|flips?|collapses?|lands?|rolls?|pulls?|walks?|leaves?)\b", str(d.get("payoff") or ""), re.I):
             e.append(f"cú lật ở {giay:g} giây phải là ĐỔI HÌNH DẠNG hoặc VỊ TRÍ thấy ngay (đổ · "
                      f"mở · lật · bước ra), không phải một thông tin người xem phải nghĩ mới hiểu")
     elif giay <= 9.5:
@@ -4450,8 +4455,8 @@ def luat_web(kenh: str) -> dict:
         "bo_tu": ["the","a","an","of","in","on","with","that","one","some","and","for",
                   "somebody","someone","nobody","last","good","shared"],
         "ho_lat": {k: v for k, v in HO_LAT.items()},
-        "lat_doi_hinh": r"\b(falls?|opens?|tips?|swings?|drops?|shuts?|slides?|steps?|turns?|"
-                        r"collapses?|lands?|rolls?|pulls?|walks?|leaves?)\b",
+        "lat_doi_hinh": r"\b(falls?|opens?|tips?|swings?|drops?|shuts?|slides?|steps?|turns?|lifts?|"
+                        r"knocks?|pushes|pops?|snaps?|tears?|spills?|flips?|collapses?|lands?|rolls?|pulls?|walks?|leaves?)\b",
         "esc_leo": r"\b(further|again|another|more|bigger|second|third|harder|deeper|higher|"
                    r"faster|whole|entire|all of|now the|even the|one more|instead of|not enough)\b",
         "lat_bat_ky": r"\b(reveal\w*|turns? out|was never|all along|instead|behind (him|her|them))\b",
