@@ -156,6 +156,7 @@ jobs:
           python kiem_nen.py
           python kiem_am.py
           python kiem_workflow.py
+          python kiem_bien.py
           python kiem_song_song.py
 
       - name: Luồng ${{ matrix.luong }} — kênh phụ trách

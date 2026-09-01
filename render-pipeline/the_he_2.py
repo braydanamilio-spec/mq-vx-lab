@@ -3419,6 +3419,31 @@ def keys_cuc_bo() -> list:
         cf:<account_id>:<token>  (Cloudflare Workers AI — FLUX vẽ ảnh)
     Không có tệp thì trả rỗng và mọi thứ chạy y như trước."""
     ra = []
+
+    # ── 1/9 — LỐI LẤY KHOÁ KHÔNG QUA FIRESTORE ────────────────────────────────────────────
+    # Anh: *"tại sao trước đã xây sẵn rồi mà lần nào lên cũng ko tự động chạy mà toàn bị lỗi
+    # firebase này nọ, tìm fix triệt để."*
+    #
+    # Gốc rễ: trên CI, khoá AI **chỉ** đến từ hồ Firestore. Firestore cạn lượt đọc là không có
+    # khoá, không có khoá là không vẽ được nền, và cả nhà máy đứng. Mọi vòng tối ưu trước đây
+    # đều chữa TRIỆU CHỨNG (giảm lượt đọc) thay vì cắt sự phụ thuộc.
+    #
+    # Và có một chi tiết làm chuyện này khó thấy: ba workflow render ĐỀU khai
+    # `CF_KEYS: ${{ secrets.CF_KEYS }}`, nhìn vào tưởng đã có đường dự phòng — nhưng KHÔNG
+    # dòng mã nào đọc biến ấy, mà secret cũng chưa từng tồn tại. Hàng rào giả còn nguy hơn
+    # không có hàng rào: nó làm người ta thôi đi tìm.
+    #
+    # Nay đọc thật. Đặt TRƯỚC Firestore trong thứ tự ưu tiên: có secret thì không cần chạm
+    # Firestore lần nào để render.
+    for bien in ("CF_KEYS", "GEMINI_KEYS", "MM0_KEYS"):
+        for d in (os.environ.get(bien, "") or "").replace(",", "\n").splitlines():
+            d = d.strip()
+            if d and not d.startswith("#"):
+                ra.append({"id": f"env{len(ra)}", "key": d})
+    if ra:
+        print(f"   🔑 {len(ra)} khoá từ biến môi trường (không cần Firestore)")
+        return ra
+
     for nguon in (os.path.join(GOC, ".keys.local"),
                   os.environ.get("MM0_KEYS_FILE") or ""):
         if not (nguon and os.path.exists(nguon)):

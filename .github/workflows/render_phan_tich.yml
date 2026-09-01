@@ -73,6 +73,7 @@ jobs:
           python kiem_khung1.py || true      # cổng render một khung: cảnh báo, không chặn
           python kiem_am.py
           python kiem_workflow.py
+          python kiem_bien.py
 
       - name: Dựng lô
         env:
