@@ -47,8 +47,42 @@ def _render_dang_bat() -> list:
 RENDER = _render_dang_bat()
 
 
+def _nuot_loi() -> list:
+    """Mắt xích A-Z nào đang bị `|| true` nuốt lỗi.
+
+    ── VÌ SAO (1/9/2026) ───────────────────────────────────────────────────────────────────
+    `render_giai_thich_18.yml` có `python day_kho.py ... || true`. Đẩy kho hỏng thì luồng BÁO
+    XANH rồi đi tiếp, và 18 video nằm lại artifact mà không ai biết. Đo thật hôm nay: lượt
+    33521077570 xanh 18/18 luồng, `⚠️ 0/2 video vào hàng đợi đăng`, dashboard hiện 0 — và không
+    một dấu hiệu nào nói rằng có gì đó đã hỏng.
+
+    `|| true` ở bước GÓI ARTIFACT hay bước CHẤM ĐIỂM thì đúng: chúng hỏng cũng không mất video.
+    Ở bước ĐẨY KHO thì sai: đó là mắt xích cuối, hỏng ở đó là video không tới đích.
+    """
+    if not os.path.isdir(WF):
+        return []
+    XUNG_YEU = ("day_kho.py", "enqueue.py", "sieu_gt.py")
+    ra = []
+    # CHỈ LUỒNG CÒN CHẠY. `RENDER` ở trên đã lọc theo `cron:` — đòi luồng đã nghỉ sửa `|| true`
+    # là tạo dòng đỏ vĩnh viễn cho việc không ai làm, và dòng đỏ ấy che mất lỗi thật (đã trả giá
+    # đúng hôm nay: ba cổng sai phạm vi che mất lỗi SHARD_PUBLISH).
+    for f in RENDER:
+        p = os.path.join(WF, f)
+        if not os.path.exists(p):
+            continue
+        y = io.open(p, encoding="utf-8").read()
+        for ln in y.split("\n"):
+            if ln.lstrip().startswith("#"):
+                continue
+            if "|| true" in ln and any(x in ln for x in XUNG_YEU):
+                ra.append(f"{f}: {ln.strip()[:72]}")
+    return ra
+
+
 def main() -> int:
     loi = []
+    for d in _nuot_loi():
+        loi.append(f"nuốt lỗi ở mắt xích xung yếu -> {d}")
     for w in RENDER:
         p = os.path.join(WF, w)
         if not os.path.exists(p):

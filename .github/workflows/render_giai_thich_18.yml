@@ -229,7 +229,24 @@ jobs:
           pip install --quiet -r _autopublisher/requirements.txt || \
             pip install --quiet 'google-api-python-client>=2.120,<3' 'google-auth>=2.29,<3' 'google-cloud-firestore>=2.27,<2.29' 'google-api-core>=2.30,<2.35' 'PyYAML>=6.0,<7'
           cd render-pipeline
-          python day_kho.py --publish ../_autopublisher --that || true
+          # ── THỬ LẠI, VÀ KHÔNG HỎNG TRONG IM LẶNG  (1/9/2026) ────────────────────────────
+          # Anh: *"đang kêu tự động a-z đồng bộ dữ liệu auto."* Bản trước là `|| true`: đẩy hỏng
+          # thì luồng BÁO XANH rồi đi tiếp, và 18 video nằm lại artifact mà không ai biết — đúng
+          # thứ luật §12.8 gọi là "báo xanh cho lượt không làm gì".
+          #
+          # Ba lần thử cách nhau 60s: lỗi hạn mức/mạng thường qua trong một phút, và chuỗi đọc
+          # hồ kho (KV -> D1 -> Firestore B -> B2 -> A) có thể chỉ nghẽn một nhánh.
+          # Vẫn hỏng thì GHI CỜ, không dừng ở đây — phải để bước gói artifact chạy, nếu không
+          # video mất trắng (luật §10.1: job chết thì `upload-artifact` không chạy).
+          # Bước chốt cuối cùng sẽ đọc cờ và cho cả lượt HỎNG, để ba mốc cron còn lại trong đêm
+          # tự dựng và đẩy lại — đó chính là việc bốn mốc sinh ra để làm.
+          ok=0
+          for i in 1 2 3; do
+            if python day_kho.py --publish ../_autopublisher --that; then ok=1; break; fi
+            echo "   ⚠ đẩy kho hụt lần $i/3 — chờ 60s rồi thử lại"
+            sleep 60
+          done
+          [ "$ok" = "1" ] || touch /tmp/day_kho_hong
 
       # ══ ĐỐI CHIẾU SỐ KHO VỚI DRIVE  (1/9/2026) ═════════════════════════════════════════
       # Anh: *"Video trong kho 2088 sao ko fix triệt để, kho đã xoá hết rồi."* Đúng, và mọi mắt
@@ -279,3 +296,19 @@ jobs:
             render-pipeline/out/v9_*.tai.json
           retention-days: 14
           if-no-files-found: warn
+
+      # ── CHỐT CUỐI: video phải LÊN ĐƯỢC KHO, không chỉ dựng xong ────────────────────────
+      # Đặt SAU bước gói artifact là cố ý: video đã dựng phải được giữ lại dù khâu đẩy hỏng.
+      # Nhưng lượt chạy thì phải HỎNG — vì `chot` chỉ coi một ngày là "đã dựng rồi" khi có job
+      # dựng chạy thành công, nên một lượt đỏ ở đây sẽ để ba mốc cron còn lại trong đêm thử lại.
+      # Một lượt xanh mà video không lên kho là lời nói dối tốn kém nhất trong hệ này.
+      - name: Chốt — video đã lên kho chưa
+        if: always()
+        run: |
+          if [ -f /tmp/day_kho_hong ]; then
+            echo "❌ dựng xong nhưng KHÔNG đẩy được lên Drive sau 3 lần thử."
+            echo "   Video vẫn nằm trong artifact của lượt này (giữ 14 ngày)."
+            echo "   Mốc cron kế tiếp trong đêm sẽ dựng và đẩy lại — không cần bấm tay."
+            exit 1
+          fi
+          echo "✅ video đã lên kho"

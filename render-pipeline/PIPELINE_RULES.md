@@ -7834,3 +7834,34 @@ Hậu quả nếu không bắt: video lên YouTube/FB/IG với mô tả rỗng, 
 đủ ba nơi "kỹ thuật" (dropdown · brand kit · channels.yaml) mà vẫn hỏng ở nơi thứ tư.
 
 Sinh từ `giai_thich.KENH` + `brand_gt.MO_TA/NHAN/BO_CUC`, không chép tay. Bỏ 50 kênh đã nghỉ.
+
+### 7dc — `|| true` ở mắt xích cuối: lượt chạy xanh mà video không tới đích (1/9)
+
+Anh: *"đang kêu tự động a-z đồng bộ dữ liệu auto"* — và anh đúng khi gạt phăng cái tôi vừa dựng.
+Tôi đã viết một workflow BẤM TAY để tải artifact về rồi đẩy lên Drive. Đó là chống chế, không
+phải sửa: nó biến một hệ tự động thành một hệ cần người trực.
+
+Lỗi thật nằm ở một dòng trong luồng tự động:
+
+    python day_kho.py --publish ../_autopublisher --that || true
+
+`|| true` nghĩa là **đẩy kho hỏng thì lượt chạy vẫn XANH**. Đo hôm nay: lượt 33521077570 xanh
+18/18 luồng, log ghi `⚠️ 0/2 video vào hàng đợi đăng`, dashboard hiện 0 — và không một dấu hiệu
+nào nói rằng có gì đã hỏng. Video nằm lại artifact chờ hết hạn 14 ngày.
+
+**Sửa đúng hình dạng của một hệ tự động:**
+
+1. **Thử lại 3 lần, cách nhau 60 giây.** Lỗi hạn mức/mạng thường qua trong một phút, và chuỗi đọc
+   hồ kho (KV → D1 → Firestore B → B2 → A) có thể chỉ nghẽn một nhánh.
+2. **Vẫn hỏng thì GHI CỜ, không dừng ngay.** Phải để bước gói artifact chạy — luật §10.1: job
+   chết thì `upload-artifact` không chạy, mất luôn video đã dựng.
+3. **Chốt SAU khi gói artifact, và cho cả lượt HỎNG.** Vì `chot` chỉ coi một ngày là "đã dựng
+   rồi" khi có job dựng chạy thành công — nên một lượt đỏ ở đây để **ba mốc cron còn lại trong
+   đêm tự dựng và đẩy lại**. Đó chính là việc bốn mốc sinh ra để làm, và nó tự chạy, không cần bấm.
+
+Cổng `kiem_az._nuot_loi` chặn `|| true` ở ba mắt xích xung yếu (`day_kho` · `enqueue` · `sieu_gt`)
+trong mọi luồng CÒN CHẠY. Đã thử ngược cả hai chiều.
+
+**Luật:** `|| true` chỉ được dùng ở bước mà hỏng cũng không mất dữ liệu (chấm điểm, gói phụ).
+Ở mắt xích cuối của dây chuyền thì nó biến "mất hàng" thành "báo xanh" — và một lượt xanh mà
+video không lên kho là lời nói dối tốn kém nhất trong hệ này.

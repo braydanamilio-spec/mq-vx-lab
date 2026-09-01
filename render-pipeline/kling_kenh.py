@@ -1188,6 +1188,1232 @@ KENH: dict[str, dict] = {
             "where the least likely family member turns out to be right."
         ),
     },
+    "NIGHT SHIFT": {
+        "ten": "NIGHT SHIFT",
+        "mo_ta": (
+            "Hài cửa hàng tiện lợi 24h Mỹ — hai giờ sáng, đèn huỳnh quang, và những vị khách chỉ "
+            "xuất hiện lúc ấy."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Dez": (
+                "Dez: 27-year-old man, short black twists, red store polo over a grey hoodie, black "
+                "jeans, white sneakers; unshockable, has seen every version of this night."
+            ),
+            "Marisol": (
+                "Marisol: 34-year-old woman, dark hair in a claw clip, red store polo, khaki pants, "
+                "black slip-resistant shoes; runs the register like a control tower, keeps receipts "
+                "on everyone."
+            ),
+            "Rusty": (
+                "Rusty: 61-year-old man, grey buzz cut, tan work jacket, jeans, scuffed boots; comes "
+                "in every night at the same hour, confidently wrong about everything."
+            ),
+            "Pip": (
+                "Pip: 19-year-old man, floppy blond hair, oversized red polo, cargo shorts, high-top "
+                "sneakers; brand new, takes every instruction literally."
+            ),
+        },
+        "nha": (
+            "The Gas-N-Go, a 24-hour convenience store off a state highway: white tile floor, "
+            "humming coolers along the back wall, one register by the door under a bright "
+            "fluorescent grid. Keep the exact same layout, colors, shelving and camera geography "
+            "in every episode. Never redesign or recolor the store."
+        ),
+        "phong": {
+            "register": (
+                "Register: a low counter with a scanner and a tip cup, a rack of gum, a lottery "
+                "ticket dispenser, a small monitor showing the pumps."
+            ),
+            "cooler aisle": (
+                "Cooler Aisle: a long wall of glass-door coolers glowing blue, a wet spot on the "
+                "tile, a yellow caution sign nobody moved."
+            ),
+            "snack aisle": (
+                "Snack Aisle: two metal shelves of bagged snacks, one shelf sagging, a cardboard "
+                "display half collapsed at the end."
+            ),
+            "coffee counter": (
+                "Coffee Counter: three carafes on warmers, a tower of lids, a sugar caddy, a stack of "
+                "napkins in a wet spot."
+            ),
+            "back stock": (
+                "Back Stock: grey concrete floor, stacked cases of drinks to the ceiling, a hand "
+                "truck, a single caged bulb."
+            ),
+            "forecourt": (
+                "Forecourt: cracked asphalt under a bright canopy, two fuel pumps, an air hose reel, "
+                "dark highway beyond."
+            ),
+            "walk-in fridge": (
+                "Walk-In Fridge: steel racks stacked with crates, a heavy insulated door, cold blue "
+                "light, breath visible."
+            ),
+        },
+        "style": (
+            "Hard fluorescent light with no shadow anywhere — the specific flatness of a store at "
+            "two in the morning, where everything is equally lit and nothing looks good. Palette "
+            "is white tile, cooler-glass blue, and one loud brand red on the uniforms. Clean even "
+            "line of constant weight. Outside the windows is pure black, so the store reads as an "
+            "island.. hand-drawn 2D animation on twos, held key poses with snappy transitions "
+            "between them, tapered ink line that thickens on the shadow side, appealing readable "
+            "silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Flat, unhurried American voices for {vai} — nobody at this hour has energy to raise "
+            "their voice. Cooler compressors, a door chime, a radio playing to nobody. Precise "
+            "lip sync. The pauses are long because there is nowhere to be"
+        ),
+        "dien": (
+            "Dez is unshockable and has seen this exact thing before; Marisol runs the counter "
+            "and keeps receipts; Rusty is confidently wrong and comes back every night; Pip is "
+            "new and takes every instruction literally"
+        ),
+        "hai": (
+            "Two in the morning comedy: the rules of daytime do not apply and everyone knows it. "
+            "The staff are not surprised by anything, which makes the customer's urgency funny by "
+            "contrast. Status is who has been on this shift longer. Escalate through the "
+            "transaction — a simple purchase acquires one more condition at a time until it is a "
+            "negotiation. Never let the staff panic; the joke dies the moment somebody treats it "
+            "as an emergency."
+        ),
+        "dao_cu": (
+            "the coffee that has been on the warmer since midnight",
+            "a lottery ticket",
+            "the hot dog roller",
+            "a bag of ice",
+            "the card reader",
+            "a mop bucket",
+            "the last energy drink",
+            "a pump that will not authorize",
+            "the bathroom key on a giant plastic paddle",
+            "a phone charger on a peg hook",
+            "the price gun",
+            "a stack of scratch-offs",
+            "the air hose",
+            "a broken freezer door",
+            "the security monitor",
+            "a case of water on a hand truck",
+            "the receipt roll",
+            "a sign taped to the door",
+            "the microwave by the coffee",
+            "a delivery pallet in the aisle",
+            "the trash can by the pumps",
+            "a coupon that expired",
+            "the window squeegee",
+            "the shift schedule on a clipboard",
+        ),
+        "mach": (
+            "Late-night convenience store friction blown one size too big: a card that will not "
+            "read, a pump that will not start, a customer who wants something the store has never "
+            "carried, a delivery arriving at the worst hour. One small transaction escalates and "
+            "lands on a reversal where the person nobody was listening to turns out to have "
+            "solved it already."
+        ),
+    },
+
+    "OPEN HOUSE": {
+        "ten": "OPEN HOUSE",
+        "mo_ta": (
+            "Hài môi giới nhà đất Mỹ — mở cửa xem nhà cuối tuần, nơi mọi khuyết điểm của căn nhà "
+            "và của con người cùng lộ ra."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Brenda": (
+                "Brenda: 45-year-old woman, blonde bob, teal blazer over a white blouse, cream "
+                "slacks, low heels; sells everything as a feature, never says a negative word."
+            ),
+            "Curtis": (
+                "Curtis: 38-year-old man, neat beard, grey quarter-zip, dark jeans, brown loafers; "
+                "dry, reads the inspection report out loud at the worst moments."
+            ),
+            "Nadia": (
+                "Nadia: 31-year-old woman, black hair in a high ponytail, olive jacket, wide-leg "
+                "trousers, white trainers; fast and literal, opens every cupboard."
+            ),
+            "Mr. Ellery": (
+                "Mr. Ellery: 68-year-old man, thin white hair, brown cardigan, grey trousers, "
+                "orthopedic shoes; comes to every open house in the county, buys nothing, knows "
+                "everything."
+            ),
+        },
+        "nha": (
+            "A 1970s split-level house on a cul-de-sac, staged for sale: beige carpet, fresh "
+            "white paint over everything, borrowed furniture that is one size too small for each "
+            "room. Keep the exact same layout, colors, staging furniture and camera geography in "
+            "every episode. Never redesign or recolor the house."
+        ),
+        "phong": {
+            "living room": (
+                "Living Room: beige carpet, a rented grey sofa too small for the wall, a glass coffee "
+                "table with one staged book, vertical blinds."
+            ),
+            "kitchen": (
+                "Kitchen: white cabinets, laminate counters, a bowl of plastic lemons, a dishwasher "
+                "with the sticker still on."
+            ),
+            "primary bedroom": (
+                "Primary Bedroom: a bed with a hotel-white duvet, two mismatched lamps, an empty "
+                "closet with the door removed."
+            ),
+            "basement": (
+                "Basement: bare concrete floor, a sump pump in the corner, one small window at "
+                "ceiling height, a dehumidifier running."
+            ),
+            "garage": (
+                "Garage: oil-stained concrete, a pegboard with no tools on it, a water heater in the "
+                "corner, a single hanging bulb."
+            ),
+            "backyard": (
+                "Backyard: patchy grass, a chain-link fence, a concrete patio slab, one shrub trimmed "
+                "into a ball."
+            ),
+            "driveway": (
+                "Driveway: cracked concrete to the street, an OPEN HOUSE sign frame with no sign in "
+                "it, two cars parked at odd angles."
+            ),
+        },
+        "style": (
+            "Everything is staged, and staged reads as slightly wrong: furniture one size too "
+            "small, every surface bare, a house pretending nobody lives in it. Palette is builder "
+            "beige, landlord white, and one teal accent that follows Brenda around. Clean thin "
+            "line, flat midday light through vertical blinds throwing hard stripes across the "
+            "carpet.. hand-drawn 2D animation on twos, held key poses with snappy transitions "
+            "between them, tapered ink line that thickens on the shadow side, appealing readable "
+            "silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Bright, relentlessly positive American voices for {vai} describing things that are "
+            "not good. A door chime, footsteps on bare floors, the specific hollow sound of an "
+            "empty room. Precise lip sync. Nobody says the negative word out loud"
+        ),
+        "dien": (
+            "Brenda sells every flaw as a feature and never says a negative word; Curtis reads "
+            "the inspection report out loud at the worst moment; Nadia opens every cupboard and "
+            "says what she finds; Mr. Ellery has been to every open house in the county and buys "
+            "nothing"
+        ),
+        "hai": (
+            "Comedy of the thing nobody will name. Everyone in the room can see the problem and "
+            "the language forbids saying it — 'cozy' means small, 'original' means broken, "
+            "'motivated seller' means run. Status is who can hold the euphemism longest. Escalate "
+            "by the house itself supplying evidence at the worst moment. The reversal is usually "
+            "that the flaw is exactly what one person was looking for."
+        ),
+        "dao_cu": (
+            "a bowl of plastic lemons",
+            "the inspection report",
+            "a lockbox on the door",
+            "an air freshener plugged in",
+            "the sump pump",
+            "a closet door that will not slide",
+            "the water heater",
+            "a stack of flyers",
+            "fresh paint over a stain",
+            "the thermostat",
+            "a doorbell camera",
+            "the sign-in sheet",
+            "a tray of grocery store cookies",
+            "the garage door opener",
+            "a window that is painted shut",
+            "the fuse box",
+            "a plug-in nightlight",
+            "the crawl space hatch",
+            "a rented sofa",
+            "the mailbox with the flag stuck up",
+            "a smoke detector chirping",
+            "the sprinkler control box",
+            "a key that does not work",
+            "the neighbor's dog barking through the fence",
+        ),
+        "mach": (
+            "American open-house friction blown one size too big: a smell nobody will name, a "
+            "noise that starts every time someone stops talking, a neighbor who wanders over, a "
+            "room that is not on the floor plan. One euphemism escalates until the house "
+            "contradicts it out loud, and lands on a reversal where the flaw turns out to be the "
+            "selling point."
+        ),
+    },
+
+    "AISLE SIX": {
+        "ten": "AISLE SIX",
+        "mo_ta": (
+            "Hài siêu thị Mỹ — nhân viên ca tối, xe đẩy, và những yêu cầu chỉ nảy ra trong lòng "
+            "một siêu thị."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Tay": (
+                "Tay: 24-year-old man, short dreads, green store apron over a black tee, jeans, black "
+                "sneakers; fast, literal, answers exactly what was asked."
+            ),
+            "Ginny": (
+                "Ginny: 52-year-old woman, short grey-streaked hair, green apron, floral blouse, navy "
+                "trousers; has worked here through four owners, deadpan."
+            ),
+            "Omar": (
+                "Omar: 29-year-old man, close beard, green apron over a blue button-down, chinos, "
+                "brown shoes; the manager, confidently wrong, loves a system."
+            ),
+            "Kelsey": (
+                "Kelsey: 21-year-old woman, red hair in a bun, green apron, black leggings, white "
+                "trainers; anxious over-preparer, carries a label maker everywhere."
+            ),
+        },
+        "nha": (
+            "A mid-size American grocery store on a weeknight: polished grey floor, long aisles "
+            "under bright white light, a row of registers at the front with only two open. Keep "
+            "the exact same layout, colors, fixtures and camera geography in every episode. Never "
+            "redesign or recolor the store."
+        ),
+        "phong": {
+            "aisle six": (
+                "Aisle Six: two tall shelves of canned goods, a stepstool left in the middle, a price "
+                "gun on a shelf edge, an endcap of sale items."
+            ),
+            "produce": (
+                "Produce: sloped green display tables of fruit, a misting pipe overhead, a stack of "
+                "paper bags, a scale on a post."
+            ),
+            "registers": (
+                "Registers: four checkout lanes with only two lights on, conveyor belts, a candy "
+                "rack, a self-checkout kiosk at the end."
+            ),
+            "deli counter": (
+                "Deli Counter: a glass case of sliced meats, a slicer on the back bench, a number "
+                "dispenser, a ticket display on the wall."
+            ),
+            "freezer aisle": (
+                "Freezer Aisle: glass doors fogged from the inside, a stack of empty pallets, one "
+                "door propped with a box."
+            ),
+            "stockroom": (
+                "Stockroom: concrete floor, pallets shrink-wrapped to the ceiling, a baler, a time "
+                "clock by the door."
+            ),
+            "parking lot": (
+                "Parking Lot: painted asphalt at dusk, three cart corrals, a light pole with one dead "
+                "lamp, carts scattered between spaces."
+            ),
+        },
+        "style": (
+            "Supermarket bright — flat white light everywhere, saturated packaging colors stacked "
+            "into walls, and long straight perspective down the aisles. Palette is store-apron "
+            "green, polished grey floor, and the loud multicolor of product shelves used as "
+            "texture, never as detail. Clean medium line, everything perpendicular, which makes "
+            "one crooked thing scream.. hand-drawn 2D animation on twos, held key poses with "
+            "snappy transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Even, professionally pleasant American voices for {vai}. A PA announcement nobody "
+            "listens to, cart wheels, the beep of a scanner. Precise lip sync. Everything is said "
+            "at the volume of someone who has been standing for six hours"
+        ),
+        "dien": (
+            "Tay answers exactly what was asked and nothing more; Ginny has worked here through "
+            "four owners and has seen this; Omar is the manager and loves a system that does not "
+            "fit; Kelsey over-prepares and labels everything"
+        ),
+        "hai": (
+            "Comedy of the customer request that has no correct answer. The staff are "
+            "professionally obligated to help with something that cannot be helped. Status is "
+            "seniority, and the manager has less of it than the woman who has been here twenty "
+            "years. Escalate through procedure — a simple question triggers a policy, which "
+            "triggers a form, which triggers a phone call. The reversal is usually that the "
+            "customer was right about something nobody checked."
+        ),
+        "dao_cu": (
+            "a price gun",
+            "the last rotisserie chicken",
+            "a cart with one bad wheel",
+            "the number dispenser at the deli",
+            "a coupon from 2019",
+            "the self-checkout kiosk",
+            "a pallet in the aisle",
+            "the PA microphone",
+            "a stepstool left out",
+            "the misting pipe over the produce",
+            "a case of eggs",
+            "the time clock",
+            "a spill and a wet floor sign",
+            "the schedule taped to the stockroom wall",
+            "a broken scale",
+            "the freezer door that will not seal",
+            "a stack of paper bags",
+            "the baler",
+            "a customer's shopping list",
+            "the cart corral",
+            "a sale sign for the wrong item",
+            "the deli slicer",
+            "a box cutter",
+            "the intercom handset",
+        ),
+        "mach": (
+            "American grocery store friction blown one size too big: an item that is on sale but "
+            "not in the system, a request the policy has no answer for, a cart nobody will claim, "
+            "a delivery that arrives during the rush. One small question escalates through "
+            "procedure and lands on a reversal where the customer turns out to have been right "
+            "the whole time."
+        ),
+    },
+
+    "PARENT PICKUP": {
+        "ten": "PARENT PICKUP",
+        "mo_ta": (
+            "Hài hàng xe đón con Mỹ — ba giờ chiều, hai mươi phút, và toàn bộ chính trị của phụ "
+            "huynh trong một hàng xe."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Todd": (
+                "Todd: 41-year-old man, receding brown hair, quarter-zip fleece over a polo, cargo "
+                "pants, running shoes; confidently wrong, has a theory about the line."
+            ),
+            "Priya": (
+                "Priya: 37-year-old woman, black hair in a low bun, denim jacket, dark jeans, white "
+                "sneakers; dry, arrives late on purpose and gets out first."
+            ),
+            "Coach Dane": (
+                "Coach Dane: 33-year-old man, buzz cut, school windbreaker, athletic shorts, whistle "
+                "on a lanyard; runs the pickup line like a drill, deadpan."
+            ),
+            "Mrs. Vail": (
+                "Mrs. Vail: 59-year-old woman, silver bob, quilted vest over a turtleneck, pressed "
+                "slacks, loafers; head of the parent committee, has a laminated map."
+            ),
+        },
+        "nha": (
+            "The front loop of Riverbend Elementary at three in the afternoon: a covered walkway "
+            "along the school wall, a painted lane curving past it, orange cones marking the "
+            "numbered zones. Keep the exact same layout, colors, signage and camera geography in "
+            "every episode. Never redesign or recolor the school."
+        ),
+        "phong": {
+            "pickup lane": (
+                "Pickup Lane: a painted curve of asphalt beside a covered walkway, orange cones every "
+                "few yards, numbered zone signs on posts."
+            ),
+            "front steps": (
+                "Front Steps: four wide concrete steps to a glass double door, a metal handrail, a "
+                "bell housing above."
+            ),
+            "crosswalk": (
+                "Crosswalk: white stripes across the loop, a portable stop sign on a stand, a yellow "
+                "curb."
+            ),
+            "overflow lot": (
+                "Overflow Lot: gravel with faded parking lines, a chain across the far entrance, "
+                "weeds along the edge."
+            ),
+            "front office": (
+                "Front Office: a laminate counter, a sign-out clipboard, two chairs against the wall, "
+                "a wall clock."
+            ),
+            "playground fence": (
+                "Playground Fence: chain-link along the field, a gate with a spring latch, a bike "
+                "rack half full."
+            ),
+            "bus lane": (
+                "Bus Lane: a wide separate strip with a yellow curb, a shelter with two benches, a NO "
+                "CARS sign on a post."
+            ),
+        },
+        "style": (
+            "Bright flat afternoon sun on asphalt — the specific glare of three o'clock, with "
+            "hard short shadows directly under everything. Palette is school-bus yellow, cone "
+            "orange, and the washed grey of a parking lot, with each family's car a different "
+            "saturated color so the line reads as a row of blocks. Clean medium line, strong "
+            "horizontal composition.. hand-drawn 2D animation on twos, held key poses with snappy "
+            "transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Extremely polite American voices for {vai} through half-open car windows. Idling "
+            "engines, a distant bell, a whistle. Precise lip sync. Everyone is pleasant and "
+            "nobody is happy"
+        ),
+        "dien": (
+            "Todd has a theory about why the line is slow and is wrong; Priya arrives late on "
+            "purpose and it works; Coach Dane runs the line like a drill and does not negotiate; "
+            "Mrs. Vail heads the parent committee and has a laminated map"
+        ),
+        "hai": (
+            "Comedy of the rule that everyone follows and nobody agreed to. The pickup line has a "
+            "hierarchy, a folklore and an unwritten law, all invisible to outsiders and defended "
+            "to the death by insiders. Status is your position in the line, which is a moral "
+            "judgment. Escalate through waiting — every extra second in a stopped car doubles the "
+            "stakes. Nobody can leave the vehicle, so nobody can win an argument outright."
+        ),
+        "dao_cu": (
+            "a laminated zone map",
+            "a car seat nobody can uninstall",
+            "the numbered placard on the dashboard",
+            "an orange cone",
+            "a permission slip due yesterday",
+            "the sign-out clipboard",
+            "a whistle",
+            "a lunchbox left in the back seat",
+            "the portable stop sign",
+            "a group text nobody answers",
+            "a bag of soccer gear",
+            "the school bell",
+            "a folding chair in a trunk",
+            "a magnetic honor roll sticker",
+            "the crossing guard's vest",
+            "a birthday invitation for the whole class",
+            "an idling engine",
+            "the bike rack",
+            "a juice box leaking in a backpack",
+            "a dented bumper",
+            "the parent committee sign-up sheet",
+            "a spare pair of shoes",
+            "the drop-off gate latch",
+            "a coffee in the cup holder going cold",
+        ),
+        "mach": (
+            "American school pickup friction blown one size too big: a car in the wrong zone, a "
+            "rule nobody was told, a parent who parks and walks up, a bell that rings two minutes "
+            "late. One small breach of line etiquette escalates and lands on a reversal where the "
+            "person breaking the rule turns out to have been told to."
+        ),
+    },
+
+    "MOVING DAY": {
+        "ten": "MOVING DAY",
+        "mo_ta": (
+            "Hài chuyển nhà Mỹ — hai người khuân, một cầu thang, và một cái ghế sofa không chịu "
+            "qua cửa."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Big Ray": (
+                "Big Ray: 44-year-old man, heavy build, shaved head, grey moving-company tee, work "
+                "jeans, steel-toe boots; deadpan veteran, has moved this exact sofa before."
+            ),
+            "Jonesy": (
+                "Jonesy: 26-year-old man, wiry, backwards cap, grey company tee, cargo shorts, "
+                "sneakers; confidently wrong about angles, always says it will fit."
+            ),
+            "Tam": (
+                "Tam: 30-year-old woman, black hair in a braid, grey company tee, work pants, gloves "
+                "tucked in the belt; dry, does the math and is always right."
+            ),
+            "Mr. Diggs": (
+                "Mr. Diggs: 71-year-old man, white mustache, plaid shirt, suspenders, khakis, "
+                "slippers; the customer, supervises, packed nothing."
+            ),
+        },
+        "nha": (
+            "A second-floor walk-up apartment on moving day: bare walls with picture hooks still "
+            "in them, a narrow stairwell with one tight turn, a truck backed up to the curb "
+            "outside. Keep the exact same layout, colors, stair geometry and camera geography in "
+            "every episode. Never redesign or recolor the building."
+        ),
+        "phong": {
+            "stairwell": (
+                "Stairwell: narrow painted steps with one tight landing turn, a metal handrail, a "
+                "scuffed wall at shoulder height."
+            ),
+            "empty apartment": (
+                "Empty Apartment: bare beige walls with picture hooks left in, scratched wood floor, "
+                "one bare bulb, a window with no curtain."
+            ),
+            "truck ramp": (
+                "Truck Ramp: a metal ramp down from a box truck to the curb, furniture pads stacked "
+                "at the bottom, a dolly leaning on the truck."
+            ),
+            "curb": (
+                "Curb: a strip of pavement between the truck and the door, a NO PARKING cone, a "
+                "wheeled trash bin pushed aside."
+            ),
+            "landing": (
+                "Landing: a small square between flights, a fire extinguisher case on the wall, a "
+                "window painted shut."
+            ),
+            "storage unit": (
+                "Storage Unit: a corrugated roll-up door, concrete floor, boxes stacked to the "
+                "ceiling on one side, a bare bulb on a pull chain."
+            ),
+            "loading dock": (
+                "Loading Dock: a raised concrete edge, a rubber bumper strip, a rolling cage cart, a "
+                "taped-up sign about hours."
+            ),
+        },
+        "style": (
+            "Working daylight — flat overcast outside, one bare bulb inside, and everything "
+            "covered in the specific grey of moving pads and cardboard. Palette is cardboard "
+            "brown, blanket grey and one safety-orange accent on the equipment. Heavy confident "
+            "ink line, blocky rectangular shapes everywhere, so a diagonal reads as an "
+            "emergency.. hand-drawn 2D animation on twos, held key poses with snappy transitions "
+            "between them, tapered ink line that thickens on the shadow side, appealing readable "
+            "silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Short, breath-conscious American voices for {vai} — people carrying something heavy "
+            "do not make speeches. Boots on stairs, cardboard scraping, a ramp banging. Precise "
+            "lip sync. Sentences are three or four words because that is all the air anyone has"
+        ),
+        "dien": (
+            "Big Ray has moved this exact sofa before and says so once; Jonesy is confidently "
+            "wrong about angles and always says it will fit; Tam does the math and is always "
+            "right; Mr. Diggs is the customer, supervises, and packed nothing"
+        ),
+        "hai": (
+            "Comedy of physics against confidence. The object does not care what anyone believes "
+            "about it. Status is who is holding the heavy end — whoever is carrying more has less "
+            "say, which is exactly backwards. Escalate through commitment: the more turns the "
+            "sofa has already made, the more impossible it is to admit it will not fit. The "
+            "reversal is usually that the obvious easy solution was available at the start and "
+            "somebody mentioned it."
+        ),
+        "dao_cu": (
+            "a sofa that will not turn the corner",
+            "a roll of packing tape with no end",
+            "the dolly",
+            "a box labeled MISC",
+            "furniture pads",
+            "the truck ramp",
+            "a door taken off its hinges",
+            "a mattress with no handles",
+            "the elevator that is out of service",
+            "a box of dishes packed wrong",
+            "the parking cone somebody moved",
+            "a mirror wrapped in a blanket",
+            "the ratchet strap",
+            "a fish tank still full",
+            "the box spring",
+            "a shelf with the screws missing",
+            "a lamp with no shade",
+            "the storage unit padlock",
+            "a box that says FRAGILE on every side",
+            "the door frame measurement",
+            "a plant nobody wants to carry",
+            "the last trip up",
+            "a pizza ordered for the crew",
+            "the tip envelope",
+        ),
+        "mach": (
+            "American moving-day friction blown one size too big: an item that will not fit "
+            "through a door it came in through, a customer who packed nothing, a parking spot "
+            "lost to a neighbor, an elevator out of service on the day. One confident measurement "
+            "escalates and lands on a reversal where the easy answer was said out loud in the "
+            "first ten seconds and ignored."
+        ),
+    },
+
+    "THE SALON": {
+        "ten": "THE SALON",
+        "mo_ta": (
+            "Hài tiệm tóc Mỹ — cái ghế, tấm gương, và những chuyện người ta chỉ kể khi đang bị "
+            "cắt tóc."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Roxie": (
+                "Roxie: 48-year-old woman, platinum blonde with dark roots on purpose, black smock "
+                "over a leopard blouse, black jeans, heeled boots; owns the chair by the window, "
+                "deadpan, knows everyone's business."
+            ),
+            "Junie": (
+                "Junie: 23-year-old woman, box-dyed teal bob, black smock, ripped jeans, chunky "
+                "sneakers; new stylist, anxious, checks the color chart twice."
+            ),
+            "Dominic": (
+                "Dominic: 39-year-old man, slicked dark hair, black smock over a fitted tee, black "
+                "trousers, leather shoes; confidently wrong, insists every client wants a change."
+            ),
+            "Miss Pearl": (
+                "Miss Pearl: 74-year-old woman, tight silver curls, purple cardigan, floral dress, "
+                "orthopedic shoes; same appointment every Thursday for thirty years, unbothered."
+            ),
+        },
+        "nha": (
+            "Roxie's, a small storefront salon on a main street: three stations along a mirrored "
+            "wall, two shampoo bowls at the back, a black-and-white checkered floor. Keep the "
+            "exact same layout, colors, fixtures and camera geography in every episode. Never "
+            "redesign or recolor the salon."
+        ),
+        "phong": {
+            "styling chair": (
+                "Styling Chair: a black hydraulic chair facing a wall mirror, a station counter of "
+                "bottles and brushes, a hair dryer on a hook."
+            ),
+            "shampoo bowl": (
+                "Shampoo Bowl: a reclined black chair at a white basin, a sprayer on a coiled hose, a "
+                "folded towel on the edge."
+            ),
+            "waiting bench": (
+                "Waiting Bench: a padded bench along the window, a low table of curled magazines, a "
+                "coat hook rail above."
+            ),
+            "color station": (
+                "Color Station: a narrow counter of tint bowls and brushes, a wall of numbered tubes, "
+                "a timer stuck to the mirror."
+            ),
+            "back room": (
+                "Back Room: a washer and dryer stacked, shelves of towels, a mop in a bucket, a small "
+                "window high on the wall."
+            ),
+            "front desk": (
+                "Front Desk: a wooden counter with a card reader, an appointment book, a jar of hair "
+                "ties, a bell."
+            ),
+            "sidewalk": (
+                "Sidewalk: pavement outside the glass storefront, a folding sandwich board sign, a "
+                "bench, a parking meter."
+            ),
+        },
+        "style": (
+            "Warm bulb light bouncing off mirrors — every shot has a reflection in it, which "
+            "doubles the cast and lets a reaction happen behind someone's back. Palette is "
+            "checkered black and white floor, salon-chair black, and one hot magenta accent. "
+            "Clean medium line, rounded furniture shapes, and the specific shine of a mirror "
+            "drawn as two flat highlights.. hand-drawn 2D animation on twos, held key poses with "
+            "snappy transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Warm, confiding American voices for {vai} pitched over a hair dryer. Scissors, a "
+            "spray bottle, a dryer switching off mid-sentence. Precise lip sync. Everything "
+            "important is said to a mirror, not to a face"
+        ),
+        "dien": (
+            "Roxie owns the window chair and knows everyone's business; Junie is new and checks "
+            "the color chart twice; Dominic insists every client secretly wants a change; Miss "
+            "Pearl has had the same appointment for thirty years and is unbothered"
+        ),
+        "hai": (
+            "Comedy of the captive conversation. The client cannot leave, cannot see properly, "
+            "and has handed over control of their own head. Status is who is holding the scissors "
+            "— total power, zero authority. Escalate through the haircut itself: every attempt to "
+            "fix it removes another option. Never let anyone panic on camera; the mirror does the "
+            "reacting. The reversal is usually that the client wanted the accident."
+        ),
+        "dao_cu": (
+            "a photo on a phone of a haircut",
+            "the color chart",
+            "a timer stuck to the mirror",
+            "the appointment book",
+            "a cape with a stuck snap",
+            "the spray bottle",
+            "a hair dryer on a hook",
+            "the tip jar",
+            "a tube of the wrong number",
+            "the shampoo sprayer",
+            "a broken chair pump",
+            "the broom",
+            "a stack of towels still damp",
+            "the front door bell",
+            "a magazine from 2019",
+            "the card reader",
+            "a pair of clippers with no guard",
+            "the mirror with a chip in the corner",
+            "a bottle with the label worn off",
+            "the folding sandwich board",
+            "a coat left on the hook",
+            "the parking meter",
+            "a bobby pin on the floor",
+            "the closing-time sign",
+        ),
+        "mach": (
+            "American salon friction blown one size too big: a photo that does not match the head "
+            "it is held next to, a color that develops wrong, a walk-in during a booked hour, a "
+            "client who asks for a trim and means a transformation. One small misunderstanding "
+            "escalates in the mirror and lands on a reversal where the mistake is exactly what "
+            "somebody wanted."
+        ),
+    },
+
+    "TAILGATE": {
+        "ten": "TAILGATE",
+        "mo_ta": (
+            "Hài bãi xe trước trận Mỹ — bốn tiếng nướng thịt, một cái ghế gấp, và luật bất thành "
+            "văn của cả bãi."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Duke": (
+                "Duke: 50-year-old man, heavy build, team jersey over a long-sleeve tee, cargo "
+                "shorts, sneakers; confidently wrong about grilling, owns the canopy."
+            ),
+            "Shell": (
+                "Shell: 43-year-old woman, curly hair under a team cap, hoodie, jeans, boots; dry, "
+                "brought everything everyone forgot."
+            ),
+            "Boz": (
+                "Boz: 28-year-old man, face paint in team colors, sleeveless jersey, athletic shorts, "
+                "high-tops; fast and literal, has a superstition for everything."
+            ),
+            "Pops": (
+                "Pops: 66-year-old man, grey stubble, weathered team jacket, work trousers, worn "
+                "boots; has had this same parking spot for twenty-two years, deadpan."
+            ),
+        },
+        "nha": (
+            "Lot C outside a stadium, four hours before kickoff: rows of painted parking lines, a "
+            "low chain-link fence at the edge, the stadium rim visible above the treeline. Keep "
+            "the exact same layout, colors, landmarks and camera geography in every episode. "
+            "Never redesign or recolor the lot."
+        ),
+        "phong": {
+            "the spot": (
+                "The Spot: two parking spaces with a folding canopy over them, a grill on the "
+                "asphalt, four folding chairs in a rough circle."
+            ),
+            "tailgate": (
+                "Tailgate: the open back of a pickup truck, a cooler on the bed, a folded blanket, "
+                "the tailgate down as a table."
+            ),
+            "cornhole lane": (
+                "Cornhole Lane: two angled boards facing each other on the asphalt, bean bags "
+                "scattered, a chalk line between them."
+            ),
+            "grill zone": (
+                "Grill Zone: a small charcoal grill on a stand, a bag of briquettes leaning, a "
+                "folding table of trays and tongs."
+            ),
+            "porta line": (
+                "Porta Line: three portable toilets against the fence, a hand-wash station, a line of "
+                "people that never gets shorter."
+            ),
+            "fence edge": (
+                "Fence Edge: chain-link at the lot boundary, weeds along the base, the stadium "
+                "visible past a row of trees."
+            ),
+            "shuttle stop": (
+                "Shuttle Stop: a painted curb with a sign on a post, a metal barricade, a bench with "
+                "one slat missing."
+            ),
+        },
+        "style": (
+            "Late-afternoon sun low across an open parking lot — long raking shadows from every "
+            "canopy and chair, and hard warm light on one side of every face. Palette is asphalt "
+            "grey, team colors used as the only saturation, and charcoal smoke drawn as three "
+            "flat shapes, never as haze. Bold line, wide open composition with lots of sky.. "
+            "hand-drawn 2D animation on twos, held key poses with snappy transitions between "
+            "them, tapered ink line that thickens on the shadow side, appealing readable "
+            "silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Loud, cheerful, overlapping American voices for {vai} outdoors. A distant PA, a car "
+            "radio, a bean bag hitting wood. Precise lip sync. Everything is said louder than it "
+            "needs to be because the lot is big and open"
+        ),
+        "dien": (
+            "Duke is confidently wrong about grilling and owns the canopy; Shell brought "
+            "everything everyone else forgot; Boz has a superstition for every situation; Pops "
+            "has had this exact parking spot for twenty-two years"
+        ),
+        "hai": (
+            "Comedy of the tradition nobody can explain. Every rule of the lot is sacred, "
+            "arbitrary, and enforced with total seriousness. Status is how many seasons you have "
+            "parked here. Escalate through preparation — the more elaborate the setup, the more "
+            "catastrophic one missing item becomes. Nobody may admit the ritual is silly, "
+            "including when it clearly is. The reversal is usually that the superstition worked."
+        ),
+        "dao_cu": (
+            "a bag of charcoal",
+            "the folding chair with the broken arm",
+            "a cooler with no ice",
+            "the canopy leg that will not lock",
+            "a bean bag",
+            "the propane tank",
+            "a lucky jersey",
+            "the tailgate speaker",
+            "a package of buns nobody brought",
+            "the tongs",
+            "a folding table leg",
+            "the parking pass on the dashboard",
+            "a bottle opener on a keychain",
+            "the trash bag",
+            "a portable radio",
+            "the extension cord to nowhere",
+            "a foil tray",
+            "the meat thermometer",
+            "a chair claiming a spot",
+            "the shuttle schedule",
+            "a cornhole board with a warped slat",
+            "the ice run",
+            "a phone at four percent",
+            "the ticket in somebody else's pocket",
+        ),
+        "mach": (
+            "American tailgate friction blown one size too big: a grill that will not light, a "
+            "spot somebody else parked in, an item everyone assumed somebody else brought, a "
+            "ritual performed in the wrong order. One small breach of lot tradition escalates and "
+            "lands on a reversal where the superstition turns out to have been load-bearing."
+        ),
+    },
+
+    "BAGGAGE CLAIM": {
+        "ten": "BAGGAGE CLAIM",
+        "mo_ta": (
+            "Hài sân bay Mỹ — cửa ra tàu bay và băng chuyền hành lý, nơi ai cũng mệt và không ai "
+            "nhường."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Renata": (
+                "Renata: 40-year-old woman, dark hair in a tight bun, navy gate-agent blazer, grey "
+                "skirt, low heels; unshockable, has said every sentence before."
+            ),
+            "Wes": (
+                "Wes: 33-year-old man, short red hair, orange high-vis vest over a grey uniform "
+                "shirt, work trousers, boots; ramp crew, dry, knows where the bag actually is."
+            ),
+            "Bitsy": (
+                "Bitsy: 62-year-old woman, silver pixie cut, quilted travel jacket, wide trousers, "
+                "comfortable shoes; a passenger, confidently wrong, has flown this route since 1987."
+            ),
+            "Trev": (
+                "Trev: 25-year-old man, headset around his neck, navy vest over a white shirt, dark "
+                "trousers, sneakers; new gate agent, anxious, reads the policy aloud."
+            ),
+        },
+        "nha": (
+            "Gate 14 and the adjoining baggage hall of a mid-size American airport: grey carpet "
+            "in the gate area, polished concrete at the carousel, a wall of tall windows onto the "
+            "apron. Keep the exact same layout, colors, fixtures and camera geography in every "
+            "episode. Never redesign or recolor the terminal."
+        ),
+        "phong": {
+            "gate 14": (
+                "Gate 14: rows of linked blue seats, a podium with a monitor, a jet bridge door, a "
+                "departure board on the wall."
+            ),
+            "carousel": (
+                "Carousel: an oval metal belt on polished concrete, a rubber curtain where bags "
+                "emerge, a stack of loose luggage carts."
+            ),
+            "jet bridge": (
+                "Jet Bridge: a narrow enclosed ramp with ribbed walls, one small window, a folded "
+                "wheelchair against the side."
+            ),
+            "ramp": (
+                "Ramp: open apron concrete under the aircraft wing, a baggage cart train, orange "
+                "cones, a belt loader."
+            ),
+            "oversize": (
+                "Oversize: a separate roller counter beside the carousel, a strollers-and-skis rack, "
+                "a scuffed floor scale."
+            ),
+            "lost luggage": (
+                "Lost Luggage: a small office counter with a monitor, shelves of unclaimed bags "
+                "behind, a wall of tags."
+            ),
+            "moving walkway": (
+                "Moving Walkway: a rubber belt between two rails down a long corridor, a repeating "
+                "overhead sign, tall windows on one side."
+            ),
+        },
+        "style": (
+            "The specific flat grey light of a terminal — no shadow, no time of day, everything "
+            "lit from an invisible ceiling. Palette is airline navy, high-vis orange on the ramp "
+            "crew, and the washed neutral of carpet and concrete. Thin clean line, strong "
+            "repeating verticals from window mullions and seat rows, so one thing out of "
+            "alignment reads instantly.. hand-drawn 2D animation on twos, held key poses with "
+            "snappy transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Calm, professionally level American voices for {vai}. A PA chime, rolling suitcase "
+            "wheels, the rumble of a carousel starting. Precise lip sync. Nobody raises their "
+            "voice, which makes the smallest sharpness enormous"
+        ),
+        "dien": (
+            "Renata is unshockable and has said every sentence before; Wes is ramp crew and knows "
+            "where the bag actually is; Bitsy is confidently wrong and has flown this route since "
+            "1987; Trev is new and reads the policy aloud"
+        ),
+        "hai": (
+            "Comedy of the system that cannot be argued with. Everyone is tired, the rules are "
+            "real, and no amount of being right changes anything. Status is who has information — "
+            "the ramp crew outranks the gate agent who outranks the passenger, regardless of "
+            "uniform. Escalate through waiting and through announcements that contradict each "
+            "other. The reversal is usually that the bag, the seat or the answer was two feet "
+            "away the entire time."
+        ),
+        "dao_cu": (
+            "a bag that looks exactly like everyone else's",
+            "the boarding pass on a cracked phone screen",
+            "a gate change on the monitor",
+            "the sizer frame for carry-ons",
+            "a stroller at the jet bridge",
+            "the podium microphone",
+            "a luggage tag torn half off",
+            "the standby list",
+            "a seat-back pocket item",
+            "the belt loader",
+            "a wheelchair nobody requested",
+            "the departure board",
+            "a suitcase with a broken wheel",
+            "the oversize counter scale",
+            "a boarding group number",
+            "the rubber curtain on the carousel",
+            "an overhead bin that is full",
+            "the delay announcement",
+            "a passport left at security",
+            "the moving walkway",
+            "a bag of duty-free",
+            "the unclaimed bag shelf",
+            "a connection with nineteen minutes",
+            "the last carousel bag going around alone",
+        ),
+        "mach": (
+            "American airport friction blown one size too big: a gate change announced twice, a "
+            "bag that is identical to four other bags, a policy that contradicts the sign above "
+            "it, a connection that is technically possible. One small procedural conflict "
+            "escalates and lands on a reversal where the thing everyone was looking for was in "
+            "plain view."
+        ),
+    },
+
+    "THE CAMPGROUND": {
+        "ten": "THE CAMPGROUND",
+        "mo_ta": (
+            "Hài khu cắm trại Mỹ — lều, xe RV, và một cái bãi đất mà ai cũng nghĩ là của mình."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Chip": (
+                "Chip: 46-year-old man, sunburned, wide-brim hat, khaki fishing shirt, cargo shorts, "
+                "hiking sandals with socks; confidently wrong about the outdoors, owns every gadget."
+            ),
+            "Marguerite": (
+                "Marguerite: 52-year-old woman, grey braid, flannel over a tank top, jeans, worn "
+                "hiking boots; dry, does this every year, needs almost nothing."
+            ),
+            "Ollie": (
+                "Ollie: 20-year-old man, beanie, oversized hoodie, joggers, unlaced trainers; fast "
+                "and literal, has never been outside overnight before."
+            ),
+            "Ranger Faye": (
+                "Ranger Faye: 57-year-old woman, grey hair under a flat-brim ranger hat, olive "
+                "uniform shirt, dark trousers, boots; deadpan, has told everyone this already."
+            ),
+        },
+        "nha": (
+            "Loop B of a state-park campground: gravel spurs off a one-way loop road, numbered "
+            "wooden site posts, tall pines closing in on all sides. Keep the exact same layout, "
+            "colors, landmarks and camera geography in every episode. Never redesign or recolor "
+            "the campground."
+        ),
+        "phong": {
+            "site 12": (
+                "Site 12: a gravel pad with a fire ring, a weathered picnic table, a numbered wooden "
+                "post, a tent pitched slightly crooked."
+            ),
+            "fire ring": (
+                "Fire Ring: a blackened metal ring on dirt, a grate on one side, three folding chairs "
+                "pulled close, split logs stacked nearby."
+            ),
+            "bathhouse": (
+                "Bathhouse: a small cinderblock building with two doors, a bare bulb over each, a "
+                "hose bib on the outside wall."
+            ),
+            "dump station": (
+                "Dump Station: a concrete pad with a capped inlet, a hose reel on a post, a faded "
+                "sign of instructions."
+            ),
+            "camp store": (
+                "Camp Store: a small wooden building with a screen door, a shelf of firewood bundles, "
+                "an ice chest, a bulletin board."
+            ),
+            "lake dock": (
+                "Lake Dock: weathered planks out over still water, a cleat at the end, one aluminium "
+                "boat tied up, reeds along the bank."
+            ),
+            "trailhead": (
+                "Trailhead: a gravel opening in the treeline, a wooden map board under a shingle "
+                "roof, a boot brush station."
+            ),
+        },
+        "style": (
+            "Deep pine shade with hard shafts of sun coming through in straight beams — the whole "
+            "frame is dark green except where light lands, which makes any bright object a "
+            "subject. Palette is forest green, tent nylon in loud primaries, and campfire orange. "
+            "Medium line, organic irregular shapes for nature against perfectly rectangular human "
+            "gear, which is the joke drawn into the style itself.. hand-drawn 2D animation on "
+            "twos, held key poses with snappy transitions between them, tapered ink line that "
+            "thickens on the shadow side, appealing readable silhouettes, generous squash and "
+            "stretch on the face only"
+        ),
+        "audio": (
+            "Outdoor American voices for {vai} that carry further than intended — nothing is "
+            "private in a campground. Crickets, a zipper, a fire popping, a distant generator. "
+            "Precise lip sync. Every conversation is overheard by the next site"
+        ),
+        "dien": (
+            "Chip is confidently wrong about the outdoors and owns every gadget; Marguerite does "
+            "this every year and needs almost nothing; Ollie has never been outside overnight; "
+            "Ranger Faye has told everyone this already and says it once more"
+        ),
+        "hai": (
+            "Comedy of gear against nature. The person with the most equipment is the least "
+            "prepared, and the person with a pocket knife is fine. Status is how little you need. "
+            "Escalate through the gear itself — each gadget deployed to fix the last gadget. "
+            "Sound carries, so private arguments have an audience nobody acknowledges. The "
+            "reversal is usually that the ranger already said this at check-in and nobody "
+            "listened."
+        ),
+        "dao_cu": (
+            "a tent pole that does not match",
+            "the firewood bundle",
+            "a cooler left open",
+            "the camp stove that will not light",
+            "a bear box",
+            "the air mattress with a slow leak",
+            "a lantern with dead batteries",
+            "the site number post",
+            "a bag of marshmallows",
+            "the generator two sites over",
+            "a folding table",
+            "the hose bib at the bathhouse",
+            "a map of the trails",
+            "the quiet hours sign",
+            "a tarp strung wrong",
+            "the fire ring grate",
+            "a pair of socks drying on a line",
+            "the trash bag hung in a tree",
+            "a camp chair in a puddle",
+            "the reservation printout",
+            "a raccoon-proof latch",
+            "the dump station hose",
+            "a phone with no signal",
+            "the last dry match",
+        ),
+        "mach": (
+            "American campground friction blown one size too big: a site somebody else is set up "
+            "on, a generator running past quiet hours, gear that fails in the exact way the "
+            "instructions warned about, an animal that has done this before. One small outdoor "
+            "problem escalates through equipment and lands on a reversal where the simplest "
+            "option was always there."
+        ),
+    },
+
+    "THE LAUNDROMAT": {
+        "ten": "THE LAUNDROMAT",
+        "mo_ta": (
+            "Hài tiệm giặt tự động Mỹ — ba mươi phút chờ, một máy hỏng, và luật ngầm về việc động "
+            "vào đồ người khác."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Yolanda": (
+                "Yolanda: 55-year-old woman, hair wrapped in a bright scarf, denim jacket over a work "
+                "polo, leggings, slip-on shoes; deadpan, runs the place without owning it."
+            ),
+            "Marcus": (
+                "Marcus: 31-year-old man, tall and thin, hoodie with the strings pulled uneven, "
+                "sweatpants, slides with socks; confidently wrong about machine settings."
+            ),
+            "Winnie": (
+                "Winnie: 68-year-old woman, tight grey perm, floral housecoat over slacks, "
+                "comfortable shoes; has a folding system and will explain it."
+            ),
+            "Kade": (
+                "Kade: 22-year-old man, headphones around his neck, band tee, cuffed jeans, canvas "
+                "shoes; anxious, first time doing his own laundry."
+            ),
+        },
+        "nha": (
+            "Sudz-N-Suds, a storefront laundromat on a corner: two long rows of front-load "
+            "washers facing dryers, a folding counter down the middle, fluorescent tubes overhead "
+            "and a big window onto the street. Keep the exact same layout, colors, machines and "
+            "camera geography in every episode. Never redesign or recolor the laundromat."
+        ),
+        "phong": {
+            "washer row": (
+                "Washer Row: a long bank of front-load washers with round glass doors, a wheeled cart "
+                "at the end, a taped OUT OF ORDER sign on one."
+            ),
+            "dryer wall": (
+                "Dryer Wall: a stacked wall of dryers with round doors, a bench in front, lint trays "
+                "hanging open."
+            ),
+            "folding counter": (
+                "Folding Counter: a long laminate table down the middle, a stack of empty baskets "
+                "underneath, a fluorescent tube directly above."
+            ),
+            "change machine": (
+                "Change Machine: a steel box on the wall with a coin tray, a handwritten sign taped "
+                "beside it, a small trash can below."
+            ),
+            "back corner": (
+                "Back Corner: a soap vending machine, a mop and bucket, a stack of broken carts, a "
+                "door marked EMPLOYEES."
+            ),
+            "window seats": (
+                "Window Seats: three plastic chairs against the front glass, a low table with a "
+                "curled magazine, the street outside."
+            ),
+            "sidewalk": (
+                "Sidewalk: pavement outside the corner storefront, a newspaper box, a bus stop sign, "
+                "a dryer vent breathing warm air."
+            ),
+        },
+        "style": (
+            "Flat fluorescent light on white machines — the whole frame is white and chrome with "
+            "the laundry itself supplying every color, so a pile of clothes is the only saturated "
+            "thing in shot. Palette is machine white, coin-slot steel, and one acid yellow on the "
+            "signage. Clean thin line, strict grid of circular doors, which makes a single open "
+            "door a focal point.. hand-drawn 2D animation on twos, held key poses with snappy "
+            "transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Voices for {vai} pitched over machine noise, then suddenly too loud when a cycle "
+            "ends. Tumbling dryers, coins dropping, a buzzer. Precise lip sync. Conversations "
+            "happen in the gaps between cycles"
+        ),
+        "dien": (
+            "Yolanda runs the place without owning it and says one thing per scene; Marcus is "
+            "confidently wrong about settings; Winnie has a folding system and will explain it; "
+            "Kade is doing his own laundry for the first time"
+        ),
+        "hai": (
+            "Comedy of shared property and unwritten law. Touching someone else's laundry is a "
+            "moral event. Everyone is trapped for a fixed number of minutes with strangers and "
+            "nothing to do. Status is who understands the machines. Escalate through the timer — "
+            "the cycle is a clock nobody can stop, and every problem must be solved before it "
+            "ends. The reversal is usually that the machine everyone avoided was the working one."
+        ),
+        "dao_cu": (
+            "a machine with an OUT OF ORDER sign",
+            "the change machine",
+            "a single red sock",
+            "the last working dryer",
+            "a laundry cart with a bad wheel",
+            "the soap vending machine",
+            "somebody's clothes left in a washer",
+            "a quarter jammed in the slot",
+            "the lint tray",
+            "a folded pile nobody claimed",
+            "the cycle timer",
+            "a bottle of detergent with no cap",
+            "the bench in front of the dryers",
+            "a dryer sheet stuck to a shirt",
+            "the mop bucket",
+            "a handwritten sign taped to the wall",
+            "an empty basket",
+            "the door that will not latch",
+            "a bus schedule",
+            "the vending snack machine",
+            "a shirt on a hanger",
+            "the wet floor by the door",
+            "a phone charging behind the counter",
+            "the last quarter",
+        ),
+        "mach": (
+            "American laundromat friction blown one size too big: a machine that eats money, "
+            "clothes left too long in the only free washer, a setting somebody changed, a cycle "
+            "that ends at the worst moment. One small breach of laundromat etiquette escalates "
+            "against a running timer and lands on a reversal where the avoided machine was fine "
+            "all along."
+        ),
+    },
 }
 
 
