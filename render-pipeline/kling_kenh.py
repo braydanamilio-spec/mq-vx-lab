@@ -2368,9 +2368,19 @@ def de_bai(kenh: str, so: int) -> str:
     CẤP THEO LỊCH: mỗi tập nhận sẵn một bộ sáu trục chưa dùng.
     """
     x = _lich(kenh, so)
+    hs = ho_so(kenh)
+    # Liệt kê ĐỒ ĐẠC của đúng căn phòng được cấp, ngay trong đề bài.
+    # 1/9 — Đo trên 28 tập AI viết: trục "chỉ dùng đồ căn phòng thật có" mất 40 điểm ở 10/28
+    # tập, và sau khi ba trục kia được sửa thì nó là thứ DUY NHẤT còn chặn đường tới 95. Lệnh
+    # hệ thống có liệt kê cả bảy căn phòng ở phần đầu — nhưng đó là một danh sách dài, đọc từ
+    # xa, trong khi đề bài chốt MỘT phòng. AI nhớ căn phòng, quên nội thất của nó.
+    _ta = hs["phong"].get(x["phong"], "")
+    _do = ", ".join(t.strip() for t in _ta.split(":", 1)[-1].split(",") if t.strip())
     return (
         f"THIS EPISODE'S ASSIGNMENT — build the story around exactly these, do not swap them:\n"
-        f"  · ROOM: {x['phong']}\n"
+        f"  · ROOM: {x['phong']}. The ONLY fixed objects in it are: {_do}. This is "
+        f"machine-checked: naming any other furniture (an island, a staircase, a TV, a sink "
+        f"that is not listed) fails the script. A character may CARRY IN a small handheld prop.\n"
         f"  · THE OBJECT this episode is about: {x['dao_cu']}\n"
         f"  · THE PRESSURE that makes it a scene and not just an incident: {x['ap_luc']}\n"
         f"  · THE OPENING IMAGE must be this kind of wrong: {x['kieu_mo']}\n"
