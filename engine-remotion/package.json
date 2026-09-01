@@ -25,5 +25,8 @@
     "react-dom": "^19.2.8",
     "remotion": "^4.0.505",
     "topojson-client": "^3.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   }
 }

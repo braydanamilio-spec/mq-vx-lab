@@ -21,34 +21,20 @@ name: MM0 Phân tích — 18 luồng song song
 #   đó là mất 17 luồng vì một lỗi ở luồng thứ 18.
 # ══════════════════════════════════════════════════════════════════════════════════════════
 
+# ══ NGHỈ TỪ 1/9/2026 ══════════════════════════════════════════════════════════════════════
+# Anh: *"chỉ cần 18 channel sau thôi"*. Bộ này ngừng dựng, KHÔNG bị xoá.
+#
+# Vì sao gỡ `schedule:` chứ không chỉ tắt tay trên GitHub: trạng thái `disabled_manually` sống
+# ở phía GitHub, không ai đọc repo mà thấy được. Người sau (kể cả tôi) mở tệp ra thấy sáu dòng
+# `cron` thì tin là nó đang chạy, rồi đi tìm lỗi ở chỗ khác. Ghi vào tệp thì trạng thái tự nói.
+#
+# Hệ quả thật của việc nghỉ: `channels.yaml` nay chỉ khai 18 kênh giải thích, nên nếu bật lại
+# bộ này mà không thêm kênh của nó vào đó thì video dựng ra KHÔNG đăng được — `enqueue` bỏ qua
+# và bước đẩy kho vẫn trả 0 (xanh). Bật lại = thêm kênh vào `channels.yaml` TRƯỚC.
+#
+# Vẫn giữ `workflow_dispatch` để bấm tay dựng thử một lượt khi cần đối chiếu.
+# ══════════════════════════════════════════════════════════════════════════════════════════
 on:
-  schedule:
-    # 19:35 UTC = 02:35 giờ VN — chạy trong đêm, sáng ra anh có kết quả.
-    #
-    # 1/9 — ĐỔI TỪ 18:10 SANG 19:35. Lượt 18:10 KHÔNG nổ: lịch được đẩy lên lúc 17:44, tức chỉ
-    # 26 phút trước giờ hẹn. GitHub cần thời gian đăng ký lịch mới, và còn hay hoãn lượt hẹn
-    # giờ khi hệ thống đông. Bài học: một `cron` mới cần ít nhất một giờ đệm trước lần nổ đầu —
-    # nếu không thì nó im lặng bỏ lượt, không báo lỗi, và người ta tưởng workflow hỏng.
-    # Phút 35 cũng là cố ý: hàng đợi Actions đông nhất ở phút 00 và 30.
-    #
-    # 1/9 — NHIỀU MỐC GIỜ, KHÔNG PHẢI MỘT. Bằng chứng: `cleanup.yml` chỉ có MỘT cron "0 3 * * *"
-    # nhưng thực tế nổ lúc 17:37, 09:37, 08:38, 00:36 — không lần nào đúng 03:00. Lịch của repo
-    # này bị GitHub hoãn hàng giờ rồi trả về theo cụm, và có tick bị bỏ hẳn (hai tick đầu của
-    # workflow này: 18:10 và 19:35, cả hai đều 0 lượt).
-    # Nên đặt bốn mốc cách nhau một giờ: chỉ cần MỘT mốc lọt là đủ. Job `chot` phía dưới bảo
-    # đảm không dựng lại nếu hôm nay đã có lượt thành công — bốn mốc nổ cả bốn cũng chỉ tốn bốn
-    # lượt kiểm 5 giây, không phải bốn lượt render.
-    - cron: "35 19 * * *"
-    - cron: "35 20 * * *"
-    - cron: "35 21 * * *"
-    - cron: "35 22 * * *"
-    # 1/9, thêm hai mốc: bốn mốc đầu (19:35–22:35) rơi trọn vào một quãng CHẾT — cả repo không
-    # nổ lượt cron nào suốt 90 phút. Lịch sống lại lúc 22:50, và bằng chứng cho thấy GitHub trả
-    # tick TRỄ chứ không bỏ hẳn: `cleanup.yml` cron "0 3 * * *" được giao lúc 22:50, trễ ~20 giờ.
-    # Sáu mốc rải rộng thì xác suất rơi trọn vào quãng chết thấp hẳn. Job `chot` vẫn bảo đảm
-    # chỉ dựng một lần mỗi ngày.
-    - cron: "35 23 * * *"
-    - cron: "35 0 * * *"
   workflow_dispatch:
     inputs:
       luong:

@@ -35,6 +35,57 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string }> =
     <path d={d} fill={f} stroke={mau} strokeWidth={n * w} strokeLinejoin="round" strokeLinecap="round" />
   );
   switch (ten) {
+    /* ── MƯỜI HÌNH THÊM 1/9 ─────────────────────────────────────────────────────────────────
+       Bộ cũ có 13 hình cho tất cả bảng dữ liệu, nên hình bị gán theo CÁI GẦN NHẤT CÒN TRỐNG và
+       nói sai chuyện ở phần lớn trường hợp. Đo được mức chồng lấn:
+         nguoi     -> "an adult human" ĐÚNG, nhưng cũng dùng cho "a red blood cell", "a hair's width"
+         cay       -> "a blue whale", "a giraffe", "a virus", "a bacterium"
+         trai_dat  -> "a single atom", "the Sun", "the Moon", "Mars"
+         xe        -> "a school bus", "a Boeing 747", "a motorbike"
+       Cùng gốc rễ với bộ hình brand kit sáng nay: *bộ hình được chốt TRƯỚC bảng nội dung*.
+       Thêm hình rẻ hơn nhiều so với việc một biểu tượng sai đứng mãi trong video. */
+    case "xe_buyt": return <g>{P(`M ${-k(0.44)} ${-k(0.26)} h ${k(0.88)} v ${k(0.40)} h ${-k(0.88)} Z`, "#E8B324")}
+      {P(`M ${-k(0.36)} ${-k(0.18)} h ${k(0.24)} v ${k(0.16)} h ${-k(0.24)} Z`, "#FFFFFF", 0.6)}
+      {P(`M ${-k(0.06)} ${-k(0.18)} h ${k(0.24)} v ${k(0.16)} h ${-k(0.24)} Z`, "#FFFFFF", 0.6)}
+      <circle cx={-k(0.24)} cy={k(0.16)} r={k(0.10)} fill="#2C2722" />
+      <circle cx={k(0.26)} cy={k(0.16)} r={k(0.10)} fill="#2C2722" /></g>;
+    case "ca_voi": return <g>{P(`M ${-k(0.46)} 0 q ${k(0.22)} ${-k(0.30)} ${k(0.56)} ${-k(0.20)}
+      q ${k(0.20)} ${k(0.04)} ${k(0.26)} ${k(0.20)} q ${-k(0.24)} ${k(0.22)} ${-k(0.56)} ${k(0.16)}
+      q ${-k(0.20)} ${-k(0.04)} ${-k(0.26)} ${-k(0.16)} Z`, "#3E6E93")}
+      {P(`M ${-k(0.46)} 0 l ${-k(0.14)} ${-k(0.16)} l ${-k(0.02)} ${k(0.32)} Z`, "#3E6E93")}
+      <circle cx={k(0.22)} cy={-k(0.06)} r={k(0.035)} fill="#2C2722" /></g>;
+    case "huou": return <g>{P(`M ${-k(0.06)} ${k(0.42)} v ${-k(0.34)} h ${k(0.26)} v ${k(0.34)}`, "none")}
+      {P(`M ${-k(0.06)} ${k(0.08)} q ${-k(0.02)} ${-k(0.34)} ${k(0.16)} ${-k(0.44)}`, "none", 1.4)}
+      {P(`M ${k(0.10)} ${-k(0.36)} l ${k(0.16)} ${-k(0.06)} l ${-k(0.04)} ${k(0.16)} Z`, "#D9A441")}</g>;
+    case "meo": return <g><circle cx="0" cy={k(0.06)} r={k(0.30)} fill="#C98A4B" stroke={mau} strokeWidth={n} />
+      {P(`M ${-k(0.26)} ${-k(0.14)} l ${-k(0.04)} ${-k(0.22)} l ${k(0.20)} ${k(0.10)} Z`, "#C98A4B")}
+      {P(`M ${k(0.26)} ${-k(0.14)} l ${k(0.04)} ${-k(0.22)} l ${-k(0.20)} ${k(0.10)} Z`, "#C98A4B")}
+      <circle cx={-k(0.10)} cy={k(0.02)} r={k(0.035)} fill="#2C2722" />
+      <circle cx={k(0.10)} cy={k(0.02)} r={k(0.035)} fill="#2C2722" /></g>;
+    case "te_bao": return <g><circle cx="0" cy="0" r={k(0.40)} fill="#C4525C" stroke={mau} strokeWidth={n} />
+      <circle cx="0" cy="0" r={k(0.17)} fill="#8E2F3A" stroke={mau} strokeWidth={n * 0.7} /></g>;
+    case "vi_khuan": return <g>{P(`M ${-k(0.30)} ${-k(0.10)} q ${k(0.10)} ${-k(0.34)} ${k(0.34)} ${-k(0.16)}
+      q ${k(0.26)} ${k(0.20)} ${k(0.02)} ${k(0.42)} q ${-k(0.30)} ${k(0.16)} ${-k(0.36)} ${-k(0.16)} Z`, "#6FAE5B")}
+      <circle cx={-k(0.04)} cy={k(0.02)} r={k(0.08)} fill="#33632A" /></g>;
+    case "nguyen_tu": return <g><circle cx="0" cy="0" r={k(0.09)} fill="#4A5CC4" stroke={mau} strokeWidth={n * 0.7} />
+      <ellipse cx="0" cy="0" rx={k(0.42)} ry={k(0.16)} fill="none" stroke={mau} strokeWidth={n * 0.8} />
+      <ellipse cx="0" cy="0" rx={k(0.42)} ry={k(0.16)} fill="none" stroke={mau} strokeWidth={n * 0.8}
+               transform="rotate(60)" />
+      <ellipse cx="0" cy="0" rx={k(0.42)} ry={k(0.16)} fill="none" stroke={mau} strokeWidth={n * 0.8}
+               transform="rotate(-60)" /></g>;
+    case "mat_troi": return <g><circle cx="0" cy="0" r={k(0.26)} fill="#E8A317" stroke={mau} strokeWidth={n} />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((a, i) => (
+        <line key={i} x1={0} y1={-k(0.34)} x2={0} y2={-k(0.46)} stroke={mau} strokeWidth={n}
+              strokeLinecap="round" transform={`rotate(${a})`} />))}</g>;
+    case "mat_trang": return <g>{P(`M ${k(0.12)} ${-k(0.42)} a ${k(0.42)} ${k(0.42)} 0 1 0 0 ${k(0.84)}
+      a ${k(0.33)} ${k(0.33)} 0 1 1 0 ${-k(0.84)} Z`, "#D8D3C6")}</g>;
+    case "giuong": return <g>{P(`M ${-k(0.44)} ${k(0.06)} h ${k(0.88)} v ${k(0.22)} h ${-k(0.88)} Z`, "#8E6B4A")}
+      {P(`M ${-k(0.40)} ${k(0.06)} q 0 ${-k(0.20)} ${k(0.22)} ${-k(0.20)} h ${k(0.30)} v ${k(0.20)}`, "#EDE7DA")}
+      {P(`M ${-k(0.44)} ${k(0.28)} v ${k(0.12)}`)}{P(`M ${k(0.44)} ${k(0.28)} v ${k(0.12)}`)}</g>;
+    case "dan_piano": return <g>{P(`M ${-k(0.44)} ${-k(0.14)} h ${k(0.88)} v ${k(0.30)} h ${-k(0.88)} Z`, "#F4F1EA")}
+      {[-0.34, -0.22, -0.10, 0.02, 0.14, 0.26].map((x, i) => (
+        <rect key={i} x={k(x)} y={-k(0.14)} width={k(0.05)} height={k(0.17)} fill="#2C2722" />))}
+      {P(`M ${-k(0.44)} ${-k(0.14)} v ${-k(0.22)} h ${k(0.66)} l ${k(0.22)} ${k(0.22)}`, "#3A2C22")}</g>;
     case "coc":  return <g>{P(`M ${-k(0.3)} ${-k(0.34)} h ${k(0.6)} l ${-k(0.07)} ${k(0.62)} h ${-k(0.46)} Z`, "#FFFFFF")}
       {P(`M ${k(0.3)} ${-k(0.22)} q ${k(0.2)} ${k(0.02)} ${k(0.16)} ${k(0.18)} q ${-k(0.04)} ${k(0.14)} ${-k(0.19)} ${k(0.12)}`)}
       {P(`M ${-k(0.26)} ${-k(0.2)} h ${k(0.52)} l ${-k(0.05)} ${k(0.36)} h ${-k(0.42)} Z`, "#7A4B2A", 0)}</g>;
@@ -145,10 +196,31 @@ export const ChiaDoi: React.FC<{
 /* ── KHUÔN 3: SỐ LIỆU ĐÈ HÌNH ─────────────────────────────────────────────────────────────
    Con số chiếm 1/5 chiều cao khung. To đến mức khó chịu là CỐ Ý: đây là khuôn dùng cho đúng
    một con số mà cả đoạn xoay quanh, và nó phải đọc được khi video chạy trong luồng cuộn. */
+/* CHỌN MÀU CHỮ BẰNG ĐO TƯƠNG PHẢN, không bằng "trên ảnh hay không".
+   Bản trước: `fill={tren_anh ? "#F2EFE9" : mau}`. Nhánh `mau` là màu nhận diện kênh, và với
+   `howloud` màu ấy là đỏ `#C2352E` — đặt lên nền xám sáng của khung không-ảnh thì đo được ~4:1,
+   dưới chuẩn WCAG AA. Cùng công thức đã cứu brand kit sáng nay: hỏi CON SỐ, đừng hỏi ngữ cảnh.
+   Màu kênh vẫn giữ ở nơi khác (con số, cột chart, dải nền); chỉ nhường ở chỗ phải ĐỌC ĐƯỢC. */
+const _lum = (h: string): number => {
+  const m = /^#([0-9a-f]{6})$/i.exec((h || "").trim());
+  if (!m) return 0;
+  const v = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255)
+    .map((u) => (u <= 0.03928 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4)));
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+};
+const _tp = (a: number, b: number): number =>
+  (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+/** Màu chữ đọc được trên nền `nen`: thử `uu` trước, rơi về đậm/nhạt nếu chưa đạt 4,5:1. */
+export const chuHopNen = (uu: string, nen: string, dam = "#2C2722", nhat = "#F4F1EA"): string => {
+  const n = _lum(nen);
+  if (_tp(_lum(uu), n) >= 4.5) return uu;
+  return _tp(_lum(dam), n) >= _tp(_lum(nhat), n) ? dam : nhat;
+};
+
 export const SoLieu: React.FC<{
   W: number; H: number; so: string; don: string; chu: string; bt: string; mau: string; p: number;
-  tren_anh?: boolean;
-}> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false }) => {
+  tren_anh?: boolean; nen?: string;
+}> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false, nen = "#EFE7D6" }) => {
   /* ── BỐ CỤC PHẢI ĐỔI THEO HƯỚNG KHUNG ────────────────────────────────────────────────
      Anh: *"bản 16:9 đang bị che khuất."* Đúng, và gốc rễ là mọi vị trí ở đây tính theo `H`.
      Khung dọc cao 1920 nên `H*0.20` cho chữ số là vừa; khung ngang chỉ cao 1080 nên cùng công
@@ -160,7 +232,13 @@ export const SoLieu: React.FC<{
   const ngang = W > H;
   const cCao = ngang ? 0.13 : 0.20;     // cỡ chữ số theo chiều cao
   const yCao = ngang ? 0.17 : 0.26;     // chỗ đặt chữ số
-  const yChu = ngang ? 0.33 : 0.94;     // chỗ đặt dòng chú thích
+  /* 0.94 là ĐÁY KHUNG — đúng chỗ dải phụ đề chiếm. Soi khung `howmuch` nhịp 0: dòng
+     "A Billion Is Not A Big Million?" chồng lên vùng phụ đề, hai lớp chữ đè nhau, cả hai cùng
+     khó đọc. Đưa nó lên NGAY DƯỚI con số — chỗ nó vốn thuộc về về mặt nghĩa.
+     Màu chữ cũng phải theo nền: `#3A342C` đậm chỉ đúng trên nền sạch. */
+  /* Trên ảnh thì chú thích phải nằm TRONG dải mờ (dải phủ tới 0,46), không nằm ở mép nó:
+     soi khung hook `survive`, dòng chữ rơi đúng chỗ dải đã tan hết nên chìm vào trời sáng. */
+  const yChu = ngang ? 0.33 : (tren_anh ? 0.37 : 0.44);   // chỗ đặt dòng chú thích
   const q = Math.min(1, p / 0.28);
   /* Cùng lỗi với `ChiaDoi`, và thêm một lỗi nữa: biểu tượng đặt ở `H*0.62` còn con số ở
      `H*0.30` với cỡ `H*0.20` — hai lớp cùng chọn chỗ theo H mà không biết nhau, nên số "9"
@@ -189,12 +267,31 @@ export const SoLieu: React.FC<{
           không ra. Viền trắng quanh chữ không cứu được, vì nền phía sau cũng sáng.
           Chữ đặt trên ảnh thì PHẢI có nền riêng — không có cách nào khác bảo đảm đọc được, vì
           ảnh mỗi nhịp một sáng tối khác nhau và không ai biết trước. */}
+      {/* 1/9 (lần 2) — BỎ THẺ BO GÓC. Bản trước vẽ một `rect` xám mờ 0,62 sau con số. Soi khung
+          `howmuch` nhịp 3 và 5: nó thành một TẤM XÁM ĐÈ NGANG MẶT ĐỒNG HỒ, che mất chính vật mà
+          lời kể đang nói tới — và trông đúng như thứ luật §12.12 của tôi đã cấm ("hộp đen bo góc
+          → chữ trắng + bóng mềm rộng"). Viết luật rồi tự phạm.
+          Dải MỜ DẦN từ đỉnh làm đúng việc cần (nâng tương phản) mà không cắt ngang qua hình. */}
       {tren_anh ? (
-        <rect x={W * 0.04} y={H * (ngang ? 0.05 : 0.09)} width={W * 0.92} height={cs * 1.62}
-              rx={H * 0.02} fill="#12151C" opacity={0.62} />
+        <>
+          <defs>
+            <linearGradient id={`sl${Math.round(W)}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#0B0E14" stopOpacity={0.80} />
+              <stop offset="62%" stopColor="#0B0E14" stopOpacity={0.34} />
+              <stop offset="100%" stopColor="#0B0E14" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <rect x={0} y={0} width={W} height={H * (ngang ? 0.40 : 0.46)}
+                fill={`url(#sl${Math.round(W)})`} />
+        </>
       ) : null}
-      {bt ? <g transform={`translate(${W / 2} ${H * (ngang ? 0.62 : 0.70)})`} opacity={0.92}>
-        <BieuTuong ten={bt} s={Math.min(H * 0.30, W * 0.30)} /></g> : null}
+      {bt ? <g transform={`translate(${W / 2} ${H * (ngang ? 0.62 : tren_anh ? 0.70 : 0.64)})`} opacity={tren_anh ? 0.92 : 1}>
+        {/* CỠ BIỂU TƯỢNG THEO VAI TRÒ, không một cỡ cho hai vai trò khác nhau.
+            Trên ảnh, biểu tượng chỉ là phụ chú -> nhỏ là đúng. KHÔNG có ảnh thì biểu tượng LÀ
+            hình của cả khung, và cỡ 0,30 cho ra khung 60% trống (soi `howmuch` nhịp 0). Ảnh
+            tham chiếu anh gửi đều có chủ thể chiếm quá nửa khung. */}
+        <BieuTuong ten={bt} s={tren_anh ? Math.min(H * 0.26, W * 0.28)
+                                        : Math.min(H * 0.40, W * 0.66)} /></g> : null}
       <g transform={`translate(${W / 2} ${H * yCao}) scale(${0.86 + q * 0.14})`} opacity={q}>
         <text x="0" y="0" textAnchor="middle" fontFamily={F} fontWeight={900}
               fontSize={cs}
@@ -203,13 +300,15 @@ export const SoLieu: React.FC<{
                 ? `drop-shadow(0 ${H * 0.004}px ${H * 0.012}px #000000cc)`
                 : `drop-shadow(0 ${H * 0.003}px ${H * 0.008}px #00000033)` }}>{soHien}</text>
         {don ? <text x="0" y={cs * 0.42} textAnchor="middle" fontFamily={F} fontWeight={800}
-                     fontSize={cd} fill={mau} letterSpacing={2}
+                     fontSize={cd} fill={tren_anh ? "#F2EFE9" : chuHopNen(mau, nen)} letterSpacing={2}
                      style={{ filter: `drop-shadow(0 ${H*0.003}px ${H*0.009}px #00000099)` }}
                      >{don.toUpperCase()}</text> : null}
       </g>
       {chu ? <text x={W / 2} y={H * yChu} textAnchor="middle" fontFamily={F} fontWeight={700}
                    fontSize={Math.min(H * 0.042, (W * 0.90 / Math.max(1, chu.length)) * 1.45)}
-                   fill="#3A342C">{chu}</text> : null}
+                   fill={tren_anh ? "#EDE9E1" : chuHopNen("#3A342C", nen)}
+                   style={tren_anh ? { filter: `drop-shadow(0 ${H * 0.003}px ${H * 0.010}px #000000cc)` }
+                                   : undefined}>{chu}</text> : null}
     </g>
   );
 };
@@ -375,18 +474,24 @@ export const TheChu: React.FC<{ W: number; H: number; chu: string; p: number; ma
   const dong = chu.split("|");
   const dai = Math.max(...dong.map((d) => d.length), 1);
   const fs = Math.min(H * 0.115, (W * 0.74 / dai) * 1.62);
+  /* 1/9 — DỰNG LẠI. Bản trước là một HỘP TRẮNG BO GÓC, chữ `Georgia, serif`, gạch chân màu ở
+     đáy. Ba thứ ấy đều lạc: cả bộ phim dùng một phông sans đậm, và §12.12 xếp "hộp bo góc" cùng
+     "gạch chân màu" vào danh sách dấu hiệu nghiệp dư — người xem đọc ra trong nửa giây.
+     Nó cũng làm nhịp chốt trông như một tấm biển dán đè lên phim, đúng thứ luật ấy cấm.
+     Nay: lời tuyên bố TRÀN KHUNG trên nền màu kênh — đúng cách các kênh Mỹ hàng đầu đóng một ý.
+     Màu chữ chọn bằng đo tương phản, vì màu kênh mỗi kênh một độ sáng. */
+  const nenThe = mau;
+  const chuThe = chuHopNen("#FFFFFF", nenThe);
   return (
-    <g opacity={q} transform={`translate(${W / 2} ${H / 2}) scale(${0.96 + q * 0.04})`}>
-      <rect x={-W * 0.42} y={-fs * dong.length * 0.92} width={W * 0.84}
-            height={fs * dong.length * 1.84} rx={H * 0.02}
-            fill="#FFFFFFEE" stroke="#00000018" strokeWidth={Math.max(1, H * 0.0015)} />
-      {dong.map((d, i) => (
-        <text key={i} x="0" y={(i - (dong.length - 1) / 2) * fs * 1.22 + fs * 0.34}
-              textAnchor="middle" fontFamily="Georgia, serif" fontWeight={700}
-              fontSize={fs} fill="#2C2722">{d.trim()}</text>
-      ))}
-      <rect x={-W * 0.42} y={fs * dong.length * 0.92 - Math.max(3, H * 0.006)}
-            width={W * 0.84} height={Math.max(3, H * 0.006)} fill={mau} />
+    <g opacity={q}>
+      <rect x={0} y={0} width={W} height={H} fill={nenThe} />
+      <g transform={`translate(${W / 2} ${H / 2}) scale(${0.97 + q * 0.03})`}>
+        {dong.map((d, i) => (
+          <text key={i} x="0" y={(i - (dong.length - 1) / 2) * fs * 1.16 + fs * 0.34}
+                textAnchor="middle" fontFamily={F} fontWeight={900}
+                fontSize={fs} fill={chuThe} letterSpacing={fs * 0.005}>{d.trim()}</text>
+        ))}
+      </g>
     </g>
   );
 };
@@ -401,6 +506,22 @@ export const TheChu: React.FC<{ W: number; H: number; chu: string; p: number; ma
      · con số ĐẾM LÊN theo cột: số nhảy dần thì người xem cảm được ĐỘ LỚN, không chỉ đọc chữ.
      · cột lớn nhất TÔ MÀU NHẤN, còn lại xám: ở 2 giây không ai so được năm cột cùng màu.
    Không có lưới, không có trục tung. Ở khung điện thoại thì lưới chỉ là nhiễu. */
+/* BẬC ĐƠN VỊ ĐẦY ĐỦ. Bản trước chỉ có MỘT nhánh: `>= 1000 -> chia 1000 + "K"`. Nên một tỉ hiện
+   ra là `1000000.0K` — vô nghĩa, và đúng ngay ở kênh HOW MUCH IS A BILLION nơi con số tỉ là cả
+   nội dung. Cùng họ lỗi đã trả giá ở `_lau()` bên `giai_thich.py`: *bảng nhánh cố định luôn có
+   một trần, và trên trần ấy mọi thứ hiện ra sai*. Thang phải LEO, không dừng ở một bậc. */
+const _bac = (v: number): string => {
+  const a = Math.abs(v);
+  const B = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]] as [number, string][];
+  for (const [m, k] of B) {
+    if (a >= m) {
+      const x = v / m;
+      return (Math.abs(x) >= 100 ? Math.round(x) : +x.toFixed(1)).toLocaleString() + k;
+    }
+  }
+  return Math.round(v).toLocaleString();
+};
+
 export const Chart: React.FC<{
   W: number; H: number; cot: { nhan: string; v: number }[]; don: string;
   mau: string; mauPhu: string; p: number;
@@ -418,7 +539,10 @@ export const Chart: React.FC<{
       {cot.map((c, i) => {
         // Mỗi cột mọc lệch pha 0,06 -> mắt đọc được THỨ TỰ, không thấy cả rừng bật lên cùng lúc.
         const qi = Math.max(0, Math.min(1, (q - i * 0.06) / 0.55));
-        const h = cao * (Math.abs(c.v) / max) * qi;
+        /* SÀN CHIỀU CAO. Tỉ lệ 1000× làm cột nhỏ cao 0,1% — biến mất hẳn, và người xem đọc ra
+           "thiếu cột" chứ không đọc ra "cột này bé đến thế". Giữ thang TUYẾN TÍNH (chính sự
+           chênh lệch ấy là thông điệp) nhưng cho cột một sàn mỏng để nó còn hiện diện. */
+        const h = Math.max(cao * (Math.abs(c.v) / max), H * 0.006) * qi;
         const x = x0 + b * i + b * 0.14;
         const w = b * 0.72;
         const la = c === dinh;
@@ -430,7 +554,7 @@ export const Chart: React.FC<{
                   fill={la ? mau : "#B8B2A6"} stroke="#2C2722" strokeWidth={Math.max(2, H * 0.004)} />
             <text x={x + w / 2} y={yDay - h - H * 0.018} textAnchor="middle" fontFamily={F}
                   fontWeight={900} fontSize={cs} fill={la ? mau : "#5A544C"} opacity={qi}>
-              {Math.abs(so) >= 1000 ? `${(so / 1000).toFixed(1)}K` : Math.round(so).toLocaleString()}
+              {_bac(so)}
             </text>
             <text x={x + w / 2} y={yDay + H * 0.055} textAnchor="middle" fontFamily={F}
                   fontWeight={800} fontSize={cn} fill="#3A342C">{c.nhan}</text>

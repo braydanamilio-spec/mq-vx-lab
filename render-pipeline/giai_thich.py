@@ -62,8 +62,8 @@ MAY_BAY_MPH = 560.0
 AS_MPS = 186282.0          # tốc độ ánh sáng, dặm mỗi giây
 
 QUANG_DUONG = [                                  # dặm
-    ("the Moon",                       238900,    "trai_dat"),
-    ("the Sun",                      92960000,    "trai_dat"),
+    ("the Moon",                       238900,    "mat_trang"),
+    ("the Sun",                      92960000,    "mat_troi"),
     ("Mars at its closest",          33900000,    "trai_dat"),
     ("all the way around the Earth",    24901,    "trai_dat"),
     ("New York to Los Angeles",          2445,    "xe"),
@@ -75,11 +75,11 @@ QUANG_DUONG = [                                  # dặm
 ]
 
 CO_LON = [                                       # feet
-    ("a blue whale",           98.0, "ft", "cay"),
-    ("a school bus",           36.0, "ft", "xe"),
-    ("a giraffe",              18.0, "ft", "cay"),
+    ("a blue whale",           98.0, "ft", "ca_voi"),
+    ("a school bus",           36.0, "ft", "xe_buyt"),
+    ("a giraffe",              18.0, "ft", "huou"),
     ("an adult human",          5.6, "ft", "nguoi"),
-    ("a Boeing 747",          232.0, "ft", "xe"),
+    ("a Boeing 747",          232.0, "ft", "may_bay"),
     ("the Statue of Liberty",  305.0, "ft", "nha"),
     ("a football field",      300.0, "ft", "cay"),
 ]
@@ -115,7 +115,7 @@ PHI_AN = [                                          # (thứ, giá, các phần 
                                 ("research", 12), ("the shop", 12), ("the brand", 35)]),
 ]
 DOI_NGUOI = [                                       # (việc, giờ mỗi ngày)
-    ("sleeping", 8.0, "dong_ho"), ("looking at a phone", 4.5, "dien_thoai"),
+    ("sleeping", 8.0, "giuong"), ("looking at a phone", 4.5, "dien_thoai"),
     ("eating", 1.2, "hop"), ("commuting", 1.0, "xe"),
     ("waiting in lines", 0.3, "nguoi"), ("watching television", 2.8, "dien_thoai"),
 ]
@@ -127,29 +127,29 @@ AM_THANH = [                                        # (thứ, decibel)
     ("normal talking", 60, "nguoi"), ("a whisper", 30, "nguoi"),
 ]
 KHOI_LUONG = [                                      # (thứ, pound) — mạnh nhất trước
-    ("a school bus", 24000, "xe"), ("a small car", 2900, "xe"),
-    ("a grand piano", 990, "hop"), ("an adult human", 180, "nguoi"),
-    ("a car tyre", 25, "xe"), ("a housecat", 10, "nguoi"),
+    ("a school bus", 24000, "xe_buyt"), ("a small car", 2900, "xe"),
+    ("a grand piano", 990, "dan_piano"), ("an adult human", 180, "nguoi"),
+    ("a car tyre", 25, "xe"), ("a housecat", 10, "meo"),
 ]
 _KHOI_LUONG_CU = [
-    ("a housecat", 10, "nguoi"), ("a car tyre", 25, "xe"),
-    ("an adult human", 180, "nguoi"), ("a grand piano", 990, "hop"),
-    ("a small car", 2900, "xe"), ("a school bus", 24000, "xe"),
+    ("a housecat", 10, "meo"), ("a car tyre", 25, "xe"),
+    ("an adult human", 180, "nguoi"), ("a grand piano", 990, "dan_piano"),
+    ("a small car", 2900, "xe_buyt"), ("a school bus", 24000, "xe"),
 ]
 NHIET_DO = [                                        # (thứ, độ F) — mạnh nhất trước
-    ("the surface of the Sun", 10000, "trai_dat"), ("lava", 2000, "lua"),
+    ("the surface of the Sun", 10000, "mat_troi"), ("lava", 2000, "lua"),
     ("a pizza oven", 800, "lua"), ("boiling water", 212, "lua"),
     ("a hot summer day in Phoenix", 115, "lua"), ("a comfortable room", 70, "nha"),
 ]
 CUC_NHO = [                                         # (thứ, mét) — mạnh nhất trước
-    ("a single atom", 1e-10, "trai_dat"), ("a virus", 1e-7, "cay"),
-    ("a bacterium", 1e-6, "cay"), ("a red blood cell", 8e-6, "nguoi"),
-    ("a human hair's width", 7e-5, "nguoi"), ("a grain of sand", 5e-4, "hop"),
+    ("a single atom", 1e-10, "nguyen_tu"), ("a virus", 1e-7, "vi_khuan"),
+    ("a bacterium", 1e-6, "vi_khuan"), ("a red blood cell", 8e-6, "te_bao"),
+    ("a human hair's width", 7e-5, "te_bao"), ("a grain of sand", 5e-4, "hop"),
 ]
 _CUC_NHO_CU = [
-    ("a grain of sand", 5e-4, "hop"), ("a human hair's width", 7e-5, "nguoi"),
-    ("a red blood cell", 8e-6, "nguoi"), ("a bacterium", 1e-6, "cay"),
-    ("a virus", 1e-7, "cay"), ("a single atom", 1e-10, "trai_dat"),
+    ("a grain of sand", 5e-4, "hop"), ("a human hair's width", 7e-5, "te_bao"),
+    ("a red blood cell", 8e-6, "te_bao"), ("a bacterium", 1e-6, "vi_khuan"),
+    ("a virus", 1e-7, "vi_khuan"), ("a single atom", 1e-10, "nguyen_tu"),
 ]
 
 THOI_QUEN = [
@@ -1495,11 +1495,28 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
     # mở đầu còn tệ hơn không có hook: ba giây đầu là ba giây quyết định.
     # Không có số thì hook nằm ở LỜI, đặt lên chính nhịp đầu vốn đã có ảnh.
     if HOOK_LOI.get(ma) and nhip and hook_phu.strip() and nhip[0].get("khuon") != "so_lieu":
+        # 1/9 (lần 2) — NHỊP HOOK PHẢI CÓ GÌ ĐỂ NHÌN.
+        # Chốt chặn ở trên chỉ hỏi "có SỐ không", nên nó cho qua một thẻ số đặt giữa nền trơn:
+        # soi khung đầu của `howmuch` thì 60% khung là màu xám trống, con số lơ lửng trên cùng.
+        # Đó đúng là "tấm biển tiêu đề" mà luật §12.12 cấm — *hook phải là NỘI DUNG của cảnh đầu*.
+        #
+        # Cho nó thừa hưởng hình của nhịp gần nhất: ưu tiên `bt` (vẽ bằng code, miễn phí, không
+        # bao giờ hỏng), rồi mới tới `ve` (ảnh AI, tốn một lượt gọi và có thể trượt).
+        # Lấy hình của NHỊP ĐẦU, không lấy hình đầu tiên tìm thấy trong cả tập.
+        # Bản trước quét cả danh sách tìm `bt` nào cũng được: với `survive` tập 0 (Kỷ Băng Hà)
+        # nó vớ phải ngọn lửa của nhịp "a week without fire" ở tận cuối — hook mở đầu bằng một
+        # biểu tượng nói SAI chủ đề tập. Nhịp đầu thì theo cấu trúc luôn nói đúng chuyện đang kể.
+        # Khai CẢ HAI: `ve` cho ảnh thật, `bt` làm tầng dự phòng khi ảnh trượt (engine tự bỏ `bt`
+        # khi đã có ảnh, nên không bao giờ vẽ đè).
+        _dau = nhip[0]
+        _ve = _dau.get("ve") or ""
+        _bt = _dau.get("bt") or next((n.get("bt") for n in nhip[:2] if n.get("bt")), "")
         nhip.insert(0, {
             "khuon": "so_lieu", "loi": HOOK_LOI[ma], "dinh": True,
             "so": (hook_phu.split()[0] if hook_phu else ""),
             "don": (" ".join(hook_phu.split()[1:]) if hook_phu else ""),
             "chu": hook.rstrip("?").title() + "?",
+            **({"ve": _ve} if _ve else {}), **({"bt": _bt} if _bt else {}),
         })
     elif HOOK_LOI.get(ma) and nhip:
         nhip[0]["loi"] = HOOK_LOI[ma]

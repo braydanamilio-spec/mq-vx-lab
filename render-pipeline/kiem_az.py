@@ -74,18 +74,36 @@ def main() -> int:
     if biet is not None:
         import sys
         sys.path.insert(0, GOC)
+        # ĐẾM KÊNH CỦA BỘ CÒN CHẠY, không đếm mọi kênh khai trong repo. Bản trước gom cả
+        # `kich_hai.KENH` và `kich_v2.KENH` bất kể luồng của chúng còn cron hay không, nên sau
+        # khi cho hai bộ ấy nghỉ (1/9) nó vẫn báo đỏ 76 kênh — một lỗi không ai sửa được, vì
+        # không có gì để sửa. Cổng báo đỏ vĩnh viễn thì người ta thôi đọc nó, và đó là cách mất
+        # một cổng mà không hề gỡ nó đi.
+        #
+        # `_render_dang_bat()` ở trên đã đọc thư mục workflow và chỉ giữ tệp CÒN `cron:`. Ở đây
+        # chỉ nạp bảng kênh của những bộ ấy.
+        BO = {                       # workflow còn chạy -> cách lấy danh sách kênh của nó
+            "render_hai.yml":            ("kich_hai", "KENH", "ten"),
+            "render_phan_tich_18.yml":   ("kich_v2", "KENH", "ten"),
+            "render_phan_tich.yml":      ("kich_v2", "KENH", "ten"),
+            "render_giai_thich_18.yml":  ("giai_thich", "KENH", "ma"),
+        }
         can = set()
-        try:
-            from kich_hai import KENH
-            can |= {k["ten"].replace(" ", "").upper() for k in KENH}
-        except Exception:
-            pass
-        try:
-            import kich_v2, duyet_lo
-            can |= {k["ten"].replace(" ", "").upper() for k in kich_v2.KENH}
-            can |= {t.replace(" ", "").upper() for t in duyet_lo.ds_gen2()}
-        except Exception:
-            pass
+        for wf in RENDER:
+            if wf not in BO:
+                continue
+            mod, bang, khoa = BO[wf]
+            try:
+                M = __import__(mod)
+                can |= {str(k[khoa]).replace(" ", "").upper() for k in getattr(M, bang)}
+            except Exception:
+                pass
+        if "render_phan_tich_18.yml" in RENDER or "render_phan_tich.yml" in RENDER:
+            try:
+                import duyet_lo
+                can |= {t.replace(" ", "").upper() for t in duyet_lo.ds_gen2()}
+            except Exception:
+                pass
         thieu = sorted(can - biet)
         if thieu:
             loi.append(f"{len(thieu)} kênh dựng ra mà repo đăng KHÔNG biết: "

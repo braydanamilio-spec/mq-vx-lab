@@ -75,6 +75,18 @@ def truoc(props: dict) -> tuple:
         bao.append(f"thiếu ảnh: {len(can)-len(co)}/{len(can)} nhịp rơi về nền vẽ bằng code")
         diem += int(10 * len(co) / max(1, len(can)))
 
+    # 3b. KHUNG TRỐNG — trừ thẳng, không cho qua.
+    # Soi khung `howmuch` nhịp 0: một thẻ số đặt giữa nền xám, 60% khung không có gì. Nhịp ấy
+    # không khai `ve` nên phép đo "thiếu ảnh" ở trên KHÔNG thấy nó — nó không thiếu ảnh, nó
+    # không định có ảnh. Phải hỏi câu khác: *nhịp này có gì để NHÌN không?*
+    TU_VE = {"chia_doi", "truc", "kinh_lup", "the_chu", "dem", "chart", "nhom"}
+    tr = [i for i, n in enumerate(nhip)
+          if n.get("khuon") not in TU_VE
+          and not n.get("nenAnh") and not n.get("ve") and not n.get("bt")]
+    if tr:
+        bao.append(f"KHUNG TRỐNG ở nhịp {tr[:5]} — không ảnh, không biểu tượng, không đồ hoạ")
+        diem -= min(20, 7 * len(tr))
+
     # 4. nhất quán chất vẽ — 15đ
     try:
         import nen_gt

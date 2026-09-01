@@ -6879,3 +6879,76 @@ cả hai đều đúng: `v3L_<slug>.mp4` (tiền tố) và `v9_<slug>_long.mp4` 
 thứ hai, dù mẫu `v9_*.mp4` đã phủ trọn.
 
 **Cổng phải hỏi "mẫu này có phủ tệp kia không", đừng hỏi "tệp kia có tên đúng kiểu không".**
+
+### 7cf — Soi khung bắt được thứ mọi cổng số cho qua (1/9)
+
+Anh gửi ba ảnh mẫu và nói *"đồ hoạ làm ra vẫn xấu"*. Lúc ấy `kiem_hinh.py` đang chấm bộ này
+**98,0/100 và 14/14 đạt**. Cả hai đều đúng: cổng đo tám tính chất, và không tính chất nào trong
+tám cái ấy hỏi *"khung này có gì để NHÌN không"*.
+
+Soi tám khung của một tập ra tám lỗi, không lỗi nào bị cổng bắt:
+
+| lỗi | gốc rễ |
+|---|---|
+| khung mở đầu 60% trống | nhịp hook tự chèn không có ảnh cũng không có biểu tượng |
+| thẻ xám bo góc **đè ngang mặt đồng hồ** | `rect` mờ sau con số — đúng thứ §12.12 của chính tôi cấm |
+| "DAYS"/"YEARS" tím trên xám | màu đơn vị cứng là màu kênh, không đo với nền |
+| chart ghi `1000000.0K` | bảng bậc đơn vị chỉ có MỘT nhánh `K` |
+| cột "million" biến mất | tỉ lệ 1000× không có sàn chiều cao |
+| dải phụ đề ra **nâu bùn** | sàn nền là hằng `#CDBE9F` nâu, cộng với lớp phủ đen |
+| chú thích đè vùng phụ đề | `yChu = 0.94` là đúng đáy khung |
+| `the_chu` dùng **phông có chân + hộp trắng viền đỏ** | lạc hẳn khỏi bộ sans đậm của cả phim |
+
+**Luật:** điểm số chỉ biết thứ nó được dạy để đo. Trước khi gửi, SOI LƯỚI KHUNG — và soi cả các
+khung ĐỒ HOẠ VẼ BẰNG CODE, không chỉ khung ảnh AI. Bảy trong tám lỗi trên nằm ở phía code, còn
+ảnh AI thì đã đúng chất ngay từ đầu.
+
+### 7cg — Bộ biểu tượng chốt TRƯỚC bảng nội dung: hình nói sai chuyện (1/9)
+
+Hai lần trong một ngày, cùng một gốc.
+
+* brand kit: 17 hình / 18 kênh → THE ODDS ra **ngôi sao**, YEARS ra **giọt nước**, WEIGHS ra **ngọn núi**
+* bộ giải thích: 13 hình / mọi bảng dữ liệu → đo được mức chồng lấn:
+
+| hình | phải biểu đạt |
+|---|---|
+| `nguoi` | adult human · **a red blood cell** · **a human hair's width** |
+| `cay` (cây) | **a blue whale** · **a giraffe** · **a virus** · **a bacterium** |
+| `trai_dat` | **a single atom** · the Sun · the Moon · Mars |
+| `xe` (ô tô con) | **a school bus** · **a Boeing 747** · a motorbike |
+
+Không lỗi nào báo — hình vẫn vẽ ra, chỉ là nói sai chuyện. Thêm 11 hình rẻ hơn nhiều so với một
+biểu tượng sai đứng mãi trong video.
+
+Và ngay khi đang sửa, tôi gán `dan_piano` mà quên vẽ hình ấy. Nên có cổng `kiem_hinhve.py`: đọc
+chỗ KHAI (`bt=` / `"bt":` / cột cuối bảng hằng) rồi đối chiếu với `case "…"` trong engine. Bản
+đầu của cổng ĐOÁN ô nào là tên hình theo hình dạng chuỗi — đoán thì lúc bắt lúc không, tức một
+hàng rào giả. Đã thử nghiệm ngược (chèn hình bịa) để chắc nó thật sự chặn.
+
+### 7ch — `esbuild` xanh KHÔNG có nghĩa phạm vi đúng (1/9)
+
+§12.2 ghi chiều xuôi: *`tsc` xanh không có nghĩa build được*. Hôm nay trả giá cho chiều ngược,
+hai lần trong một phiên:
+
+    ReferenceError  _samMau is not defined    (khai DƯỚI chỗ dùng — vùng chết thời gian)
+    ReferenceError  mauNhan is not defined    (khai trong component KHÁC với chỗ dùng)
+
+`esbuild` gói mã chứ không phân tích phạm vi, nên nó im lặng cả hai lần; lỗi chỉ vỡ ra lúc render
+— sau khi đã tốn một lượt dựng, và trên Actions là tốn cả lượt chạy. `tsc` bắt ngay:
+`error TS2304: Cannot find name 'mauNhan'`.
+
+**Không bộ nào một mình là cổng đủ.** `kiem_pham_vi.py` chạy CẢ HAI, và chỉ chặn ở nhóm lỗi
+TS2304/2552/2448/2454 (tên/phạm vi) — siết hết mọi lỗi kiểu sẽ đỏ vì các tệp cũ, và một cổng đỏ
+vĩnh viễn thì người ta thôi đọc nó.
+
+### 7ci — Thừa hưởng "cái đầu tiên tìm thấy" lấy nhầm ngữ cảnh (1/9)
+
+Vá cho nhịp hook thừa hưởng hình của nhịp khác, tôi viết `next(n.get("bt") for n in nhip ...)`
+— tức lấy biểu tượng ĐẦU TIÊN TÌM THẤY trong cả tập. Với `survive` tập 0 (Kỷ Băng Hà) nó vớ phải
+**ngọn lửa** của nhịp *"a week without fire"* ở tận cuối: khung mở đầu nói sai chủ đề tập.
+
+Sửa: lấy hình của **nhịp đầu** — theo cấu trúc nó luôn nói đúng chuyện đang kể — và khai cả `ve`
+lẫn `bt` để ảnh trượt thì còn tầng vẽ bằng code đỡ.
+
+**Họ lỗi:** *quét tìm "một cái hợp lệ" thay vì "cái đúng ngữ cảnh"*. Hợp lệ về kiểu không có
+nghĩa đúng về nghĩa.

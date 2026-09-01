@@ -16,18 +16,20 @@ name: MM0 Comic (10 kênh hài)
 # mỗi ngày một mẩu khác nhau, và kho 28–39 mẩu/kênh đủ cho một tháng không lặp.
 # ══════════════════════════════════════════════════════════════════════════════════════════
 
+# ══ NGHỈ TỪ 1/9/2026 ══════════════════════════════════════════════════════════════════════
+# Anh: *"chỉ cần 18 channel sau thôi"*. Bộ này ngừng dựng, KHÔNG bị xoá.
+#
+# Vì sao gỡ `schedule:` chứ không chỉ tắt tay trên GitHub: trạng thái `disabled_manually` sống
+# ở phía GitHub, không ai đọc repo mà thấy được. Người sau (kể cả tôi) mở tệp ra thấy sáu dòng
+# `cron` thì tin là nó đang chạy, rồi đi tìm lỗi ở chỗ khác. Ghi vào tệp thì trạng thái tự nói.
+#
+# Hệ quả thật của việc nghỉ: `channels.yaml` nay chỉ khai 18 kênh giải thích, nên nếu bật lại
+# bộ này mà không thêm kênh của nó vào đó thì video dựng ra KHÔNG đăng được — `enqueue` bỏ qua
+# và bước đẩy kho vẫn trả 0 (xanh). Bật lại = thêm kênh vào `channels.yaml` TRƯỚC.
+#
+# Vẫn giữ `workflow_dispatch` để bấm tay dựng thử một lượt khi cần đối chiếu.
+# ══════════════════════════════════════════════════════════════════════════════════════════
 on:
-  schedule:
-    # 03:10 UTC = 10:10 giờ VN. Lệch khỏi đầu giờ tròn: hàng đợi Actions đông nhất ở phút 00.
-    # 1/9 — BỐN MỐC, KHÔNG PHẢI MỘT. Lịch của repo này bị GitHub hoãn hàng giờ và có tick bị
-    # bỏ hẳn (xem ghi chú trong `render_phan_tich_18.yml`). Job `chot` bảo đảm chỉ dựng một lần
-    # mỗi ngày dù cả bốn mốc cùng nổ.
-    - cron: "10 3 * * *"
-    - cron: "10 4 * * *"
-    - cron: "10 5 * * *"
-    - cron: "10 6 * * *"
-    - cron: "10 7 * * *"
-    - cron: "10 8 * * *"
   workflow_dispatch:
     inputs:
       vong:

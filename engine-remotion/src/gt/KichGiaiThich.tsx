@@ -75,6 +75,10 @@ export const calcGT = async ({ props }: { props: PropsGT }) => ({
    Chỉ hiện CỬA SỔ 7 từ quanh từ đang đọc — hiện cả câu dài thì chữ phải nhỏ lại và mất tác dụng. */
 const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string }> =
 ({ tu, t, W, H, mau }) => {
+  /* Tính TRONG `PhuDe`, không tính ở component cha: chỗ dùng nằm trong hàm này, và khai ở ngoài
+     thì render ném `ReferenceError: mauNhan is not defined` — cùng họ lỗi vùng phạm vi đã vấp
+     với `_samMau` nửa giờ trước. Biến phải khai trong phạm vi nhìn thấy nó. */
+  const mauNhan = nhanDocDuoc(mau);
   let i = -1;
   for (let k = 0; k < tu.length; k++) if (t >= tu[k].t - 0.06) i = k;
   if (i < 0) return null;
@@ -125,11 +129,53 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string 
         pointerEvents: "none",
       }}>
         {cua.map((w, k) => (
-          <span key={k} style={{ color: a + k === i ? mau : "#FFFFFF" }}>{w.w}</span>
+          <span key={k} style={{ color: a + k === i ? mauNhan : "#FFFFFF" }}>{w.w}</span>
         ))}
       </div>
     </>
   );
+};
+
+/* Làm sẫm một mã màu #RRGGBB theo tỉ lệ. Dùng cho sàn của nền vẽ bằng code — xem chú thích
+   tại chỗ gọi. Giữ ở đây (ngoài component) để không tính lại mỗi khung. */
+/* MÀU TỪ ĐANG ĐỌC TRONG PHỤ ĐỀ.
+   Bản trước dùng thẳng màu kênh. Nhưng dải phụ đề gần như đen, và với kênh màu tối — `howloud`
+   đỏ #C2352E đo 3,2:1, `whatweighs` ô-liu #4A5C2B đo 2,4:1 — chính từ QUAN TRỌNG NHẤT của câu
+   lại là từ khó đọc nhất. Đổi sang trắng thì mất luôn tín hiệu thương hiệu.
+   Nên LÀM SÁNG chính màu ấy tới khi đủ 4,5:1: vẫn nhận ra là màu kênh, mà đọc được. Kênh nào
+   vốn đã đạt (howlong 4,8:1) thì giữ nguyên — sửa đúng chỗ sai, không sửa tất cả. */
+const _sangMau = (h: string, t: number): string => {
+  const m = /^#([0-9a-f]{6})$/i.exec((h || "").trim());
+  if (!m) return h;
+  return "#" + [0, 2, 4].map((i) => {
+    const v = parseInt(m[1].slice(i, i + 2), 16);
+    return Math.min(255, Math.round(v + (255 - v) * t)).toString(16).padStart(2, "0");
+  }).join("");
+};
+const _lumGT = (h: string): number => {
+  const m = /^#([0-9a-f]{6})$/i.exec((h || "").trim());
+  if (!m) return 0;
+  const v = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255)
+    .map((u) => (u <= 0.03928 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4)));
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+};
+/** Màu nhấn đủ đọc trên dải phụ đề (xấp xỉ #1A1A1A sau lớp phủ). */
+const nhanDocDuoc = (mau: string): string => {
+  const nen = _lumGT("#1A1A1A");
+  let c = mau;
+  for (let t = 0; t <= 0.75; t += 0.15) {
+    c = _sangMau(mau, t);
+    if ((_lumGT(c) + 0.05) / (nen + 0.05) >= 4.5) return c;
+  }
+  return c;
+};
+
+const _samMau = (h: string, t: number): string => {
+  const m = /^#([0-9a-f]{6})$/i.exec(h.trim());
+  if (!m) return h;
+  return "#" + [0, 2, 4].map((i) =>
+    Math.max(0, Math.round(parseInt(m[1].slice(i, i + 2), 16) * (1 - t)))
+      .toString(16).padStart(2, "0")).join("");
 };
 
 export const KichGiaiThich: React.FC<PropsGT> = ({
@@ -178,9 +224,16 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
            nền ấy nói một điều SAI về nội dung câu, tệ hơn hẳn nền trống. */
         <AbsoluteFill>
           <div style={{ position: "absolute", inset: 0,
-                        background: `linear-gradient(180deg,${nenTrang},${chuTrang}22)` }} />
+                        /* Đáy pha màu CHỮ (nâu ấm) nên khi dải phụ đề đen phủ lên, hai lớp cộng lại
+                           ra một vệt NÂU BÙN — thấy rõ ở khung đầu `howmuch`. Nền không-ảnh phải
+                           trung tính lạnh, để dải phụ đề đọc ra là bóng chứ không ra mảng màu lạ. */
+                        background: `linear-gradient(180deg,${nenTrang},#C9C6C0)` }} />
+                        /* MÀU SÀN TỪ BẢNG MÀU KÊNH, không phải hằng nâu dùng chung: `#CDBE9F`
+                           đúng với một kênh, sai với mười bảy kênh kia, và dưới dải phụ đề
+                           đen nó cộng thành vệt BÙN (soi khung đầu `howmuch`). Sàn chỉ cần
+                           SẪM HƠN tường để mắt đọc ra mặt phẳng. */
           <div style={{ position: "absolute", left: 0, right: 0, top: sanY,
-                        height: H - sanY, background: "#CDBE9F" }} />
+                        height: H - sanY, background: _samMau(nenTrang, 0.22) }} />
           <div style={{ position: "absolute", left: 0, right: 0, top: sanY,
                         height: Math.max(3, H * 0.004), background: "#00000022" }} />
         </AbsoluteFill>
