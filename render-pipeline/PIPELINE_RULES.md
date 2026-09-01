@@ -7151,3 +7151,58 @@ million"* — sai nghĩa, và trên màn hình còn đá nhau với dòng chú t
 Bộ sinh đã trả sẵn `hook` riêng từng tập; chỉ là không ai dùng. **Khi một giá trị có bản riêng
 cho từng tập và một bản chung cho cả kênh, mặc định phải là bản riêng** — bản chung chỉ là đường
 lui. Ngược lại là bảo đảm sai ở mọi tập trừ tập đầu.
+
+### 8k11 — Đặt nhầm CÙNG MỘT hằng số sáu lần, vì mỗi lần chỉ mô hình hoá một chiều
+
+`VAN_KE_MAX` — bao nhiêu ký tự dành cho văn kể — em đặt rồi đo lại rồi đặt lại: **800 → 720 →
+670 → 640 → 600 → 447**. Lần nào cũng "đo cẩn thận trên cả 10 kênh × 8 thời lượng". Lần nào
+cũng còn hàng chục khuôn tràn.
+
+Sáu lần sai vì mỗi lần chỉ mô hình hoá một chiều, và bỏ sót chiều khác:
+
+| lần | mô hình hoá | bỏ sót |
+|---|---|---|
+| 1 | 10 kênh × 8 thời lượng | lượt thoại ngắn hơn thật 56 ký tự |
+| 2 | + độ dài thoại | tên phòng dài nhất ≠ mô tả phòng dài nhất |
+| 3 | + cả hai cực đại phòng | dàn 4 người nói ở clip 5 giây là bất khả (chỉ 6 từ thoại) |
+| 4 | + độn thoại theo thời lượng | `VISUAL STYLE` chuyển thành khối bắt buộc |
+| 5 | + khối bắt buộc mới | web điền cast, Python thì không |
+| 6 | đo trên đường Python | **thứ giao đi là khuôn web, không phải đường Python** |
+
+**Luật:** một hằng số đại diện cho phép đo thì mỗi chiều bị bỏ sót là một lần sai — và các lần
+sai trông y hệt nhau, nên rất dễ tưởng "lần này chắc đúng rồi". Khi đã sai tới lần thứ ba,
+**thôi tìm con số**: đo thẳng vật thật.
+
+Bản cuối làm đúng thế: `_ngan_sach_khuon()` nhận **chính khuôn sắp giao đi** và ghép bằng
+**chính phép ghép mà web sẽ chạy**. Không còn chiều nào để bỏ sót, vì không còn mô hình nào —
+chỉ còn vật thật.
+
+### 8k12 — Ô trống chỉ áp cho một mức, ba mức kia nhúng cứng
+
+`xuat_web` thay dàn vai bằng ô `@@CAST@@`, nhưng phép thay chỉ khớp dạng **chưa nén**. Ba mức
+nén còn lại dùng `_nen_vai()` nên chuỗi khác — không khớp, và **nhúng cứng cả năm nhân vật**.
+
+Rồi ở phía web, chỗ điền lại điền **mô tả đầy đủ vào cả mức đã nén**: `than[3]` nhận 607 ký tự
+thay vì 440. Thang nén bốn mức tồn tại nhưng **không nén gì cả**.
+
+Hai lỗi ngược chiều nhau ở hai đầu một đường ống, và cùng vô hình: prompt vẫn ra, vẫn gửi được,
+chỉ tràn.
+
+**Họ lỗi:** *một phép biến đổi có N dạng, mã chỉ xử lý dạng thứ nhất.* Dấu hiệu: `replace()` một
+chuỗi được sinh ra bởi hàm có tham số.
+
+### 8k13 — Chạy đúng mã của bên kia, đừng chạy một bản mô phỏng nó
+
+Ba lỗi 8k11–8k12 chỉ hiện ra khi em trích **đúng đoạn JavaScript của dashboard** ra khỏi
+`index.html` và chạy nó bằng `node` trên **đúng dữ liệu vừa xuất**. Mọi phép kiểm trước đó viết
+bằng Python mô phỏng lại điều web *sẽ* làm — và bản mô phỏng thừa hưởng đúng những giả định sai
+đang cần bắt.
+
+```bash
+node -e 'const s=require("fs").readFileSync("index.html","utf8");
+         const code=s.slice(s.indexOf("<mốc đầu>"), s.indexOf("<mốc cuối>"))+"; ({p});";
+         /* nạp dữ liệu thật, rồi eval(code) */'
+```
+
+**Luật:** cổng cho mã chạy ở môi trường khác phải **chạy chính mã ấy**. Mô phỏng nó là kiểm tra
+sự hiểu của mình, không phải kiểm tra mã.
