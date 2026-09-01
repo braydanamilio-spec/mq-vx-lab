@@ -103,8 +103,20 @@ def main() -> int:
         return 0
 
     n = sum(day_mot(f, a.publish, biet, a.that) for f in ds)
+    _tong = len(ds)
     print(f"\n{'✅' if n else '⚠️'} {n}/{len(ds)} video vào hàng đợi đăng"
           f"{'' if a.that else '  (chạy thử — thêm --that để đẩy thật)'}")
+    # THOÁT MÃ THEO KẾT QUẢ, KHÔNG THEO VIỆC ĐÃ CHẠY  (2/9/2026)
+    # Bản trước luôn `return 0`. Nên khi đẩy được 0/2 video, lệnh vẫn báo thành công, bước
+    # workflow xanh, cổng "Chốt — video đã lên kho chưa" của tôi cũng xanh — vì nó kiểm MÃ THOÁT
+    # chứ không kiểm KẾT QUẢ. Đo thật: lượt 33533150981 xanh 18/18, log ghi "0/2 video vào hàng
+    # đợi đăng", dashboard 0. Cổng tôi vừa xây để chặn đúng chuyện này lại bị chính chuyện ấy
+    # lách qua.
+    # Có tệp để đẩy mà đẩy được 0 -> HỎNG. Không có tệp nào thì không phải lỗi.
+    if a.that and _tong and n == 0:
+        print(f"❌ có {_tong} tệp nhưng KHÔNG đẩy được tệp nào — coi là hỏng để lượt chạy đỏ,")
+        print("   nhờ đó mốc cron sau tự thử lại thay vì im lặng bỏ qua.")
+        return 1
     return 0
 
 
