@@ -275,7 +275,10 @@ def mot_tap(idx: int, theo_tep: bool = False) -> str:
     A = dict(DAN[vaiA]); B = dict(DAN[vaiB])
     for d in (A, B):
         d["loiVe"] = "mat_to"
-        d["kieuToc"] = "ngan" if d["gioi"] != "nu" else "dai"
+        # `"dai"` KHÔNG có trong kiểu `Kieu` của engine — nó im lặng rơi về mặc định, nên tóc
+        # nữ ở kênh này chưa bao giờ đúng như tôi tưởng. Giá trị hợp lệ: bui · ngan · roi · hoi
+        # · trocs · duoi_ngua · xoan · bob · re_ngoi.
+        d["kieuToc"] = "ngan" if d["gioi"] != "nu" else "bui"
     idx_noi, anh = noi_va_nen(k, {"noi": ""}, cau, idx)
     props = {
         "luot": luot, "tu": tu, "voMp3": rel, "nhac": NHAC,

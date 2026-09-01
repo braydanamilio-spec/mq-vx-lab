@@ -74,6 +74,7 @@ jobs:
           python kiem_am.py
           python kiem_workflow.py
           python kiem_bien.py
+          python kiem_kieu.py
 
       - name: Dựng lô
         env:

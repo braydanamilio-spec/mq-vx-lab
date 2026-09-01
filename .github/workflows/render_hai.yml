@@ -165,6 +165,7 @@ jobs:
           python kiem_am.py
           python kiem_workflow.py
           python kiem_bien.py
+          python kiem_kieu.py
           python kiem_song_song.py
 
       # BƯỚC CHUẨN BỊ TÁCH KHỎI BƯỚC DỰNG — đây là chỗ được phép gọi API và được phép hỏng.

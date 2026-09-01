@@ -74,6 +74,15 @@ PHONG_CACH = {
     "houserules": "warm suburban American family home, oak and cream palette, soft afternoon "
                   "daylight through curtains, lived-in but tidy, gentle contrast",
 
+    "modernfam": "warm suburban American family home, oak and cream palette, soft afternoon daylight",
+    "kevinlaura": "bright modern family home, white walls and pale birch, cool clean daylight",
+    "marcussofia": "cozy craftsman home, terracotta and deep green, warm lamp light",
+    "ethanmaya": "older family home with lots of wood and patterned rugs, amber tones, homely clutter at the edges",
+    "chrisangela": "contemporary open-plan home, cool grey and teal, large windows, crisp light",
+    "thurung": "cosy woodland cottage interior, warm honey wood, round doorways, soft forest light",
+    "quaivat": "friendly monster household, deep purple and moss green, glowing soft lamps, rounded furniture",
+    "robot": "clean retro-futuristic home, brushed steel and soft blue panels, even diffused light",
+    "alien": "friendly alien family home, mint and lilac surfaces, soft glowing panels, rounded organic furniture",
 }
 
 
@@ -122,15 +131,17 @@ def _prompt(noi: str, kenh_ten: str, ngoai: bool = False, de: str = "", tap: int
         "Interior scene. The floor is clearly visible across the entire bottom third. "
     )
     return (
-        # 1/9 — CẤM CHỮ Ở CẢ ĐẦU LẪN CUỐI, và cấm luôn thứ SINH RA chữ. Mẻ thử ra ảnh phòng máy
-        # chủ có "TECL", "TechShort" viết trên biển và màn hình — chữ rác là dấu hiệu AI rõ nhất
-        # và trông nghiệp dư ngay. Cấm "text" thôi không đủ: phải cấm cả BIỂN HIỆU, MÀN HÌNH CÓ
-        # CHỮ, ÁP PHÍCH — tức cấm chỗ chữ hay bám vào.
-        "NO TEXT, NO LETTERS, NO WORDS, NO SIGNAGE, NO SCREENS SHOWING TEXT, NO LABELS. "
+        # 1/9, LẦN HAI — MÔ TẢ KHẲNG ĐỊNH, KHÔNG RA LỆNH CẤM Ở ĐẦU CÂU.
+        # Bản vá buổi sáng đặt "NO TEXT, NO LETTERS, NO WORDS…" viết hoa ngay đầu prompt để cấm
+        # cho mạnh. Kết quả ngược hẳn: FLUX **vẽ luôn dòng chữ "NO Text."** to đùng trên sàn
+        # bếp. Mô hình sinh ảnh không có ô "negative prompt" — mọi thứ trong prompt đều là thứ
+        # NÊN CÓ trong ảnh, kể cả câu ra lệnh. Đặt càng đầu càng nặng ký, nên lệnh cấm đặt đầu
+        # là cách chắc nhất để nó hiện ra.
+        # Cách đúng: tả cái MÌNH MUỐN THẤY — tường trơn, mặt phẳng trống, đồ vật không nhãn.
+        # Danh sách "no ..." vẫn giữ ở CUỐI, nơi nó ít trọng số nhất và vẫn có tác dụng phụ trợ.
         f"Stylized 3D cartoon render of {noi}, in the world of a comedy show about "
-        f"{kenh_ten.lower()}. Absolutely no text anywhere: no letters, no words, no writing, "
-        f"no labels, no signs, no logos, no posters with writing, no branded screens, "
-        f"blank screens only. "
+        f"{kenh_ten.lower()}. Plain bare walls, smooth unmarked surfaces, unlabeled plain "
+        f"objects, blank dark screens, empty picture frames. "
         + khong_gian +
         # (A) ép bố cục chừa chỗ cho nhân vật
         "Camera at standing eye level, straight on. Furniture and props pushed to the far left "
