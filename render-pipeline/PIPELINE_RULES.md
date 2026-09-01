@@ -7716,3 +7716,72 @@ im lặng, đúng lúc nhánh chính đang có vấn đề.
 
 `selftest.t_moi_workflow_deu_ghim_thu_vien` bắt được — cổng đã có, chỉ là tôi không chạy selftest
 trước khi giao. Ghim cả bốn workflow (kể cả hai luồng đã nghỉ, để bật lại không dính bẫy).
+
+---
+
+## KLING — ĐO TRÊN 28 TẬP AI VIẾT (1/9)
+
+Sinh thật 30 tập (10 kênh × 3 khuôn độ dài) bằng khoá Cloudflare. **28/30 sinh được** ·
+**TB 85,9/100** · 73–98 · **chỉ 7/28 đạt ≥90**. Đây là số nền, đo trước mọi bản sửa dưới đây.
+
+### 8k33 — Cổng đo một TỪ, lệnh dặn nói một Ý: bốn lần, 49 vòng gọi AI
+
+Đếm trên nhật ký chạy: `escalate không LEO THANG` **22 vòng** · `đặt lời vào nhịp hook`
+**14 vòng** · `payoff không có cú lật` **13 vòng**. Cả ba cùng một bệnh, và **cả ba là lỗi của
+lệnh dặn, không phải của AI**:
+
+| cổng | thước tìm | lệnh dặn nói |
+|---|---|---|
+| beat | `beat != "hook"` | **liệt kê `hook` là một nhịp hợp lệ** rồi phạt khi dùng |
+| escalate | một từ trong `again/further/more/…` | "phải leo thang thứ đo được" (ý, không phải từ) |
+| payoff | một động từ đảo tình thế | "phải là cú lật" (ý) |
+| số liệu | một lượng chính xác | "specific beats general" — mà chỉ CHẤM, không CHẶN |
+
+AI viết đúng ý mà sai từ, rồi bị bắt viết lại. Cổng vẫn giữ nguyên độ chặt sau khi sửa — chỉ
+lệnh dặn **nói ra đúng những từ thước đang tìm**. Cái sai nặng nhất là cái đầu: nó **mâu thuẫn**,
+không chỉ mơ hồ.
+
+**Luật:** mỗi cổng dạng "phải chứa một trong các từ sau" bắt buộc phải có một câu trong lệnh dặn
+**liệt kê chính những từ ấy**. Không liệt kê thì cổng không phải cổng chất lượng — nó là thuế.
+
+### 8k34 — Chấm mà không chặn thì chỉ là lời khuyên, và AI bỏ qua lời khuyên
+
+Trục "Cụ thể — số thật" mất **108 điểm ở 18/28 tập**, đứng thứ hai trong mọi trục. Luật đã nằm
+trong `LUAT_HAI_MY` từ đầu (*"Not 'expensive' but 'nine hundred dollars'"*) — nhưng nó chỉ được
+**chấm điểm**, không được **chặn**. Một luật chỉ trừ điểm là một luật tuỳ chọn.
+
+Và khi làm cổng, bản đầu nhận `one` là một con số — nên `"one more time"` qua cổng, tức cổng báo
+sạch cho đúng loại câu mơ hồ nó sinh ra để bắt. `one` · `half` · `twice` là **từ đệm**, không
+phải thứ người xem đếm được.
+
+### 8k35 — `MOC` mất căn cứ mà vẫn ở nguyên chỗ
+
+Tỉ lệ bốn nhịp `(0.1875 · 0.5625 · 0.8125)` lấy từ bộ 500 prompt chạy tốt, ở clip **8 giây chia
+bốn khối**. Nhưng từ 30/8 `nhip()` đổi số khối theo độ dài, và 8 giây nay đi nhánh **ba khối** —
+nên `MOC` chỉ còn dùng cho clip ≥10 giây, **một ngữ cảnh nó chưa bao giờ được đo**.
+
+Hằng số vẫn nằm đó, vẫn có ghi chú giải thích nó đến từ đâu, và căn cứ ấy đã đi mất từ lâu.
+
+Đối chiếu với số đo công bố về short hài (*dựng 60–70% · chốt + phản ứng 30–40%*): bộ cũ cho
+chốt **18,75%** — ở clip 15 giây, cú lật và cả cái mặt phản ứng chỉ được 2,8 giây. Số mới
+`(0.16 · 0.44 · 0.68)` đưa chốt về 32% ở mọi thời lượng bốn khối.
+
+**Họ lỗi:** *hằng số sống lâu hơn ngữ cảnh sinh ra nó.* Ghi chú "lấy từ bộ 500" vẫn đúng về lịch
+sử và đã sai về hiện tại — và vì nó đọc rất có căn cứ, nó là chỗ cuối cùng người ta nghĩ tới.
+
+### 8k36 — Số đo ngoài đời dùng được, kịch bản của người khác thì không
+
+Chép kịch bản kênh khác vừa vướng bản quyền vừa trái luật kênh mình (*"không nhái phim có
+thật"*). Thứ tham khảo được là **số đo công bố**, và chúng quy ra được thành cổng:
+
+| chuẩn đo được | mình đang ở đâu |
+|---|---|
+| giữ >80% trong 3 giây đầu | hook đã là hình sai trái sẵn — không có đoạn dựng cảnh |
+| xem hết >70% là vùng lan | clip 5–15 giây, cú lật ở cuối nên gần như bắt buộc xem hết |
+| dựng 60–70% · chốt 30–40% | 7/8/9s đã đúng; 10/12/15s lệch, **đã sửa** ở 8k35 |
+| kết ghép vòng được | đã có trong `_viral_usa` và trục 8 của thang điểm |
+| **hài ăn nhất ở 18–28 giây** | **clip mình dài nhất 15 giây — dưới vùng tối ưu** |
+| **đổi hình mỗi 1,5–2 giây** | **Kling cho một cú máy liền, không có nhát cắt nào** |
+
+Hai dòng cuối là khoảng cách thật và **không sửa được bằng prompt** — chúng cần khâu dựng ghép
+nhiều clip lại. Ghi ra đây để lần sau không đi tìm lời giải ở chỗ không có.
