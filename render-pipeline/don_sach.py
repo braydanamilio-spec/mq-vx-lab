@@ -189,10 +189,19 @@ def _don_mo_coi(H, owner: str) -> int:
     D1 là kho NÓNG chứ không phải kho lưu trữ (chú thích của chính lệnh ấy), giữ 14 ngày là đủ:
     lịch sử nằm ở Drive và artifact.
     """
-    r = H.goi("don_job_cu", {"owner": owner, "ngay": 14}, timeout=60) or {}
+    # CỬA SỔ GIỮ LẠI PHỤ THUỘC VÀO VIỆC CÓ GÌ ĐỂ GIỮ KHÔNG.
+    # `loi_moi` so số dòng `failed` với "lần done gần nhất". Khi kho CHƯA có dòng `done` nào thì
+    # phép so ấy lấy mốc rỗng, nên MỌI dòng hỏng cũ đều được tính là "lỗi mới" — đo được 33 trong
+    # khi `loi` (2 ngày qua) bằng 0, tức chúng là rác cũ chứ không phải lỗi vừa xảy ra.
+    # Kho không có dòng `done` nào thì không có gì để giữ: dọn tới sát ngày (3 là trần dưới của
+    # lệnh). Có dòng `done` rồi thì giữ 14 ngày như thường, vì lúc ấy lịch sử mới có nghĩa.
+    _tk = H.goi("dem_tat_ca", {"owner": owner}) or {}
+    _co_done = bool(_tk.get("rows"))
+    _ngay = 14 if _co_done else 3
+    r = H.goi("don_job_cu", {"owner": owner, "ngay": _ngay}, timeout=60) or {}
     n = int(r.get("xoa", 0))
     if n:
-        print(f"   ✓ D1 dọn thêm {n} bản ghi mồ côi/cũ (>14 ngày) · còn {r.get('con_lai', '?')}")
+        print(f"   ✓ D1 dọn thêm {n} bản ghi mồ côi/cũ (>{_ngay} ngày) · còn {r.get('con_lai', '?')}")
     return n
 
 

@@ -108,6 +108,10 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 | Kho kịch bản tích luỹ | `render-pipeline/kho_comic.json` |
 | **10 kênh giải thích — engine** | `engine-remotion/src/gt/KichGiaiThich.tsx` (dựng cảnh) · `Khuon.tsx` (8 khuôn: chia đôi · số liệu · trục · kính lúp · dải chữ · đếm · thẻ chữ · chart) |
 | **10 kênh giải thích — pipeline** | `render-pipeline/giai_thich.py` (kịch bản + dựng) · `nen_gt.py` (CF vẽ cảnh, khoá nhân vật, cổng phong cách) · `to_mau.py` (chỉnh màu) · `kiem_nhip.py` (cổng nhịp cắt) |
+| **20 kênh Kling — hồ sơ + thước** | `render-pipeline/kling_kenh.py` — hồ sơ 20 kênh, bộ lịch 7 trục, thước `cham()`, ghép prompt theo ngân sách 2.500 ký tự |
+| **20 kênh Kling — cổng** | `cham100.py` (thang 100 điểm, sàn 90) · `kiem_da_dang.py` (cổng chính sách: đo 190 cặp kênh) · `brand_kling.py` (brand kit vẽ bằng code + cổng bóng ngoài) |
+| **20 kênh Kling — đưa clip về** | `kling_dong_bo.py` (gán clip tải về vào đúng tập, ép 1080×1920, viết bài đăng) |
+| Cách dùng bộ Kling | `render-pipeline/KLING_CACH_DUNG.md` |
 | Phân tích video tham chiếu | `render-pipeline/PHAN_TICH_GIAI_THICH.md` |
 | Bản hài cũ (giữ để đối chiếu) | `render-pipeline/kich_hai.py` · `src/v4/KichHai.tsx` — vẫn là nơi giữ `KHO` 40 mẩu viết tay, `doc_hai_giong`, `lam_thumb` |
 | Luật + buglog | `render-pipeline/PIPELINE_RULES.md` |
@@ -118,9 +122,14 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 |---|---|---|---|---|
 | **Comic (hài)** | 10 | `kich_comic.py` · `kich_comic_long.py` · `sieu_du_lieu.py` | `render_hai.yml` | 10 (mỗi kênh một luồng) |
 | **Phân tích** | 56 | `kich_v2.py` · `kich_v2_long.py` | `render_phan_tich_18.yml` | 18 (chia xen kẽ) |
+| **Kling (hài, AI video)** | 20 | `kling_kenh.py` · `kling_dong_bo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
 | Thế hệ 1 (cũ) | ~50 | `datastory_ci.py` | `render_cron.yml` | cron TẮT |
 
-Ba hệ này **không dùng chung engine, không dùng chung workflow**. Trộn chúng là cách chắc chắn
+Bộ Kling khác ba bộ kia ở một chỗ quyết định: **nó không dựng video trên Actions**. Python chỉ
+viết kịch bản và ghép prompt; phần tốn tiền là anh dán vào Kling web. Nên mọi tối ưu ở bộ này
+phải hỏi *"cái này có làm giảm số lượt gọi Kling không"* trước khi hỏi nó có đẹp hơn không.
+
+Bốn hệ này **không dùng chung engine, không dùng chung workflow**. Trộn chúng là cách chắc chắn
 để một bản sửa ở bộ này làm hỏng bộ kia.
 
 ### 10.1 Chia luồng theo TRẦN THỜI GIAN THẬT, không theo cảm giác
