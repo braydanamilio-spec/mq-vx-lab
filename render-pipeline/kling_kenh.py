@@ -313,8 +313,11 @@ KHONG_VE_DUOC = (
 # 3 · THOẠI TỰ THUẬT. "Kyle, your note made the fridge a sticky wall" — không ai nói thế; đó là
 #     lời dẫn đội lốt lời thoại. Ba dấu hiệu đo được: gọi tên người đối diện, nói ra chính hành
 #     động mình đang làm, và câu dài kiểu văn viết.
+#     Gọi tên KHÔNG tự nó là lỗi: "Grandpa, wait." là câu gọi giật hoàn toàn tự nhiên, và cổng
+#     bản đầu bắt oan đúng nó. Lỗi là gọi tên RỒI TẢ TÌNH HÌNH cho người đã đứng trong tình
+#     hình ấy — lời dẫn cần chữ, nên chỉ chặn khi sau cái tên còn từ năm chữ trở lên.
 THOAI_TU_THUAT = (
-    r"^\s*[A-Z][a-z]+,\s"                       # "Kyle, ..." — gọi tên giữa hai người trong phòng
+    r"^\s*[A-Z][a-z]+,\s+(\S+\s+){5,}"                     # "Kyle, + năm chữ trở lên" = lời dẫn
     r"|\bI'?ll (tape|put|stick|write|make|hang|place) \b"   # tự tường thuật hành động sắp làm
     r"|\byour \w+ (made|turned|caused) \b"
 )
@@ -3858,6 +3861,24 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         # cụ thể, còn lệnh dặn chỉ nói Ý NGHĨA. AI viết đúng ý mà sai từ, rồi bị bắt viết lại —
         # đo được 49 vòng đốt vào ba cổng ấy. Nói thẳng ra từ mà thước đang tìm thì AI thoả được
         # ngay lượt đầu, và cổng vẫn giữ nguyên độ chặt.
+        # Luật 13.2: cổng tìm TỪ thì lệnh dặn phải liệt kê chính những từ ấy. Bốn cổng nghề
+        # dưới đây rút từ việc đọc tay 28 kịch bản AI đã sinh — không nói ra thì chúng đốt vòng
+        # y như ba cổng trước.
+        f"  · NO READABLE TEXT ANYWHERE. This is machine-checked and it is where the renderer "
+        f"fails worst — it produces garbled characters. Never write: reads · spelling out · "
+        f"written · handwritten · labelled · in blue marker · a note saying '…'. A sign, note or "
+        f"badge must be recognisable by SHAPE and COLOUR alone: 'a yellow sticky note', 'a "
+        f"laminated sign', 'a red tag'. Never by what it says.\n"
+        f"  · ONLY WRITE WHAT CAN BE DRAWN. These words are checked and rejected: evidence · "
+        f"proving · confirming · indicating · suggesting · showing that · meaning · obviously. "
+        f"They are you explaining to a reader. 'Ron's gloves lie on top, evidence he made the "
+        f"mess' is not a picture — 'Ron's green gloves lie on top of the pile' is, and the "
+        f"viewer draws the conclusion themselves. That is the whole pleasure.\n"
+        f"  · NOBODY NARRATES. Checked: a line that names the person in front of them and then "
+        f"describes the situation to them is a stage direction wearing a costume. 'Kyle, your "
+        f"note made the fridge a sticky wall' — nobody has ever said that. Short call-outs are "
+        f"fine ('Grandpa, wait.'); it is the explaining that fails. And nobody announces the "
+        f"action they are performing while performing it.\n"
         f"  · 'payoff' is machine-checked for a reversal verb. Write the reversal as a physical "
         f"action containing one of: reveals · turns out · walks in · steps in · opens · lifts · "
         f"tips · swings · drops · slides · knocking · behind him/her/them · was never · all "
@@ -4440,6 +4461,9 @@ def luat_web(kenh: str) -> dict:
         "theo_giay": theo_giay,
         "vong_viet": 4,      # web thử lại tối đa 4 lượt — quá nữa là đốt hạn mức cho một tập
         "nhip_goi_lai": NHIP_GOI_LAI,
+        "chu_trong_khung": CHU_TRONG_KHUNG,
+        "khong_ve_duoc": KHONG_VE_DUOC,
+        "thoai_tu_thuat": THOAI_TU_THUAT,
         "nhac_lo": r"\b(remember when|last time|as we (saw|know)|like (last|the other) (time|"
                    r"episode)|in the last (one|episode)|you (may )?recall|previously|"
                    r"same as (last|before))\b",

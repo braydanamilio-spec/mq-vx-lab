@@ -627,3 +627,32 @@ Hai ràng buộc cứng, cả hai đều có cổng:
 Và một bẫy dữ liệu: tập cũ lưu trước khi có trường `_dao_cu` thì **KHÔNG tính lại bằng `_lich`** —
 bộ lịch đã đổi nên tính lại cho ra một đồ vật KHÁC thứ tập ấy thật sự kể. Dùng thứ tập cũ thật sự
 có (cú lật của nó). **Sai nguồn còn tệ hơn không gọi lại.**
+
+### 13.20 Thang điểm đo được CẤU TRÚC, không đo được BUỒN CƯỜI — nên phải đọc tay
+
+28 kịch bản AI sinh ra, trung bình 85,9/100, tất cả đều "sạch thước". Đọc tay sáu tập (hai cao
+nhất, hai giữa, hai thấp nhất) thì thấy **bốn lỗi nghề mà mọi cổng đều cho qua** — và cả bốn đều
+đo được, chỉ là chưa ai viết ra:
+
+| lỗi | đo được | vì sao lọt |
+|---|---|---|
+| **bắt Kling vẽ CHỮ đọc được** | **6/28 tập** | `CAM_KY` so CHUỖI CON `"sign reads"`, mà kịch bản viết *"a sign on the shed door that reads…"* · *"one neon note reads…"* · *"spelling out Dr Shah"* — không cái nào chứa đúng hai chữ ấy cạnh nhau |
+| chữ **không vẽ được** (*evidence · confirming*) | 1/28 | không cổng nào tồn tại |
+| **thoại tự thuật** (*"Kyle, your note made the fridge a sticky wall"*) | 3/28 | không cổng nào tồn tại |
+| cú lật không trả lời cú dựng | ~4/28 | cần ngữ nghĩa, chưa đo được |
+
+Cái đầu là cái đắt nhất: chữ trong khung là **chỗ Kling hỏng nặng nhất**, nó ra ký tự loằng
+ngoằng và người xem đọc ra "nghiệp dư" trong nửa giây.
+
+**Hai luật rút ra:**
+
+1. **Một danh sách chuỗi con không bắt được ngôn ngữ.** `"sign reads"` là một cách viết trong
+   mười cách. Cấm một khái niệm thì phải bằng biểu thức, không bằng danh sách ví dụ.
+2. **Cứ vài chục tập phải ĐỌC TAY vài tập.** Thang điểm chỉ biết thứ nó được dạy để đo — và mọi
+   thứ nó chưa được dạy đều vô hình, kể cả những thứ hỏng rõ ràng với mắt người. Bốn cổng này
+   sinh ra từ đúng một buổi đọc sáu kịch bản.
+
+Và một lỗi bắt oan ngay trong bản đầu của chính bốn cổng ấy: chặn mọi câu gọi tên người khác, nên
+`"Grandpa, wait."` — câu gọi giật hoàn toàn tự nhiên — bị chặn. **Gọi tên không phải lỗi; gọi tên
+RỒI TẢ TÌNH HÌNH cho người đã đứng trong tình hình ấy mới là lỗi.** Lời dẫn cần chữ, nên chỉ chặn
+khi sau cái tên còn từ năm chữ trở lên (*"Kyle, + tám chữ"* bị chặn, *"Grandpa, wait."* thì không).
