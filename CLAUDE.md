@@ -656,3 +656,115 @@ Và một lỗi bắt oan ngay trong bản đầu của chính bốn cổng ấy
 `"Grandpa, wait."` — câu gọi giật hoàn toàn tự nhiên — bị chặn. **Gọi tên không phải lỗi; gọi tên
 RỒI TẢ TÌNH HÌNH cho người đã đứng trong tình hình ấy mới là lỗi.** Lời dẫn cần chữ, nên chỉ chặn
 khi sau cái tên còn từ năm chữ trở lên (*"Kyle, + tám chữ"* bị chặn, *"Grandpa, wait."* thì không).
+
+---
+
+## 13. LUẬT RÚT TỪ NGÀY 1/9 — ĐỢT 18 KÊNH GIẢI THÍCH
+
+Một ngày dài, và **phần lớn thời gian mất vì sửa nhầm phía**. Ghi lại theo đúng thứ tự sẽ gặp lại.
+
+### 13.1 Cơ chế đã có sẵn — hỏi "cái gì CHẠY nó?" trước khi viết cái mới
+
+Bảy lần trong ngày, thứ cần sửa **đã tồn tại trong repo** và chỉ thiếu một thứ gọi nó:
+
+| cần | đã có sẵn | thiếu |
+|---|---|---|
+| số kho đúng | `apiHotStat` ưu tiên `kho_that`; `kiem_kho.py` đối chiếu Drive | không workflow nào chạy `kiem_kho.py` theo lịch |
+| brand kit khác nhau | `BrandGT.tsx` có sáu bố cục `kk` | `brand_gt.py` không truyền `kk` |
+| bố cục đổi theo tập | `hat` được tính trong dây chuyền | không bao giờ truyền sang engine |
+| màu chữ đọc được | `mauChu` được tính | sáu khối chữ ghi thẳng `#FFFFFF` |
+| trần hạn mức | `con_ngan_sach()` ba mức | `don_sach.py` không đi qua |
+| cứu video chưa đẩy | `heal_unpushed` | chỉ `run_render.py` (thế hệ cũ) gọi |
+| hồ kho không cần Firestore | `_kho_tu_kv` | tôi tưởng KV rỗng, **chưa bao giờ hỏi** |
+
+**Luật:** trước khi viết cơ chế mới, `grep` xem repo đã có chưa. Nếu có mà triệu chứng vẫn còn,
+câu hỏi đúng là *"cái gì gọi nó, bao lâu một lần?"* — không phải *"viết lại thế nào?"*
+
+### 13.2 Cổng cầm danh sách chép tay = cổng che lỗi thật
+
+Năm cổng trong ngày cùng một bệnh: `kiem_workflow.CAP` · `kiem_az.RENDER` · `RS_PRESETS` ·
+`selftest.t_khong_tron_so` (chỉ soi một tệp) · `t_50_kenh_dong_bo` (danh sách gen-2).
+
+Hậu quả không chỉ là bỏ sót. Ba cổng báo đỏ vĩnh viễn cho việc đã nghỉ khiến **lỗi THẬT nằm
+cạnh chúng bị chìm** — `SHARD_PUBLISH` thiếu ở `don_sach.yml` (âm thầm ghi nhầm Project A) chỉ
+lộ ra sau khi dọn ba dòng đỏ giả.
+
+**Luật:** cổng phải TỰ TÌM phạm vi của nó — đọc thư mục workflow (lọc theo `cron:` để bỏ luồng
+đã nghỉ), đọc `channels.yaml`, đọc `KENH`. Và mỗi cổng mới phải **thử ngược** (cố tình phá) để
+chắc nó bắt thật; cổng chưa thử ngược là cổng chưa biết có hoạt động không.
+
+### 13.3 `SystemExit` và `|| true`: hai cách làm hỏng mà vẫn báo xanh
+
+* `content_brain._genai` ném `SystemExit` khi thiếu một thư viện **tuỳ chọn**. `SystemExit` kế
+  thừa `BaseException` nên `except Exception` **không bắt được** — nó xuyên qua mọi vòng xoay
+  khoá và giết cả tiến trình, dù hồ còn 180 khoá dùng được. 18/18 luồng chết vì một dòng.
+* `python day_kho.py ... || true` ở mắt xích cuối: đẩy kho hỏng thì lượt vẫn XANH. Đo được:
+  18/18 luồng xanh, `0/2 video vào hàng đợi`, dashboard 0, không dấu hiệu nào báo hỏng.
+
+**Luật:** trong đường chạy tự động, dùng `RuntimeError` chứ đừng `SystemExit`. `|| true` chỉ
+được dùng ở bước mà hỏng cũng không mất dữ liệu; ở mắt xích cuối thì phải **ghi cờ, để bước gói
+artifact chạy, rồi cho cả lượt HỎNG** — lượt đỏ khiến mốc cron sau tự thử lại, đó là tự động thật.
+
+### 13.4 Đo, đừng suy đoán — kể cả khi suy đoán nghe rất chắc
+
+Bốn lần trong ngày tôi kết luận từ suy đoán rồi số đo bác lại:
+
+* *"chất vẽ lệch 0,44 nên phải siết ngưỡng"* — lập luận toán học đúng (±X quanh mốc cho biên độ
+  2X). **Nhìn ảnh** thì cả bốn cùng một thế giới, ảnh điểm thấp chỉ khác ở chỗ có **đổ bóng mềm**.
+  Thước `do_phang` đo ĐỘ PHẲNG nên nó phạt cái bóng. Siết ngưỡng = ba lượt vẽ lại mỗi tập để đổi
+  lấy không gì. Phải **NỚI**, không siết.
+* *"KV rỗng"* — kết luận từ việc log thiếu một dòng in. Dò thẳng: **KV có 100 tài khoản.** Suy
+  đoán ấy suýt làm cả hệ chờ 15 giờ vô ích.
+* *"Hôm nay: 299 là sai"* — regex của tôi bắt nhầm ô *"📊 Hôm nay: N request"*. Dashboard đúng.
+* *"cạn quota do dây chuyền render"* — thủ phạm là **công cụ dọn của chính tôi**, duyệt ~2.000
+  tài liệu chỉ để ĐẾM (Firestore có truy vấn đếm: 1 lượt thay cho N).
+
+**Luật:** trước khi sửa, đo cái đang bị chấm trượt. Trước khi báo "đã sửa", đo lại. Và khi con số
+với con mắt bất đồng, **nhìn thứ đang bị chấm** rồi mới quyết bên nào sai.
+
+### 13.5 Bốn nguồn sự thật cho một danh sách kênh
+
+Danh sách kênh nằm ở `giai_thich.KENH` · `channels.yaml` · `RS_PRESETS` · `render_channels` (D1
++ Firestore) · `brands.json`. Dọn một nơi rồi báo xong là lỗi đã mắc **hai lần** trong ngày —
+lần hai dù chính mã worker ghi sẵn *"hai kho dữ liệu song song thì lệnh dọn phải đụng cả hai"*.
+
+**Luật:** thêm/bớt kênh thì SINH ra từ một nguồn (`dong_bo_dashboard.py`, `dong_bo_brand.py`),
+đừng chép tay. Và cổng `kiem_kenh.py` kiểm tám bảng phủ đủ danh sách.
+
+### 13.6 Giờ chạy phải khớp mốc hồi hạn mức
+
+Hạn mức free Firestore hồi lúc **nửa đêm giờ Thái Bình Dương = 07:00 UTC**. Bốn mốc cron đặt
+02:20–05:20 UTC đều nổ **trước** lúc hồi — nếu hôm trước có gì làm cạn thì cả bốn lượt dựng xong
+rồi đẩy hỏng. Nay 08:20–11:20 UTC.
+
+**Luật:** chọn giờ cron theo mốc hồi của tài nguyên nó cần, không chọn tuỳ tiện.
+
+### 13.7 Ngân sách hạn mức là tài nguyên DÙNG CHUNG
+
+Tôi tối ưu công cụ dọn như việc riêng; nó tiêu đúng cái hạn mức đường render đang cần, và
+**17 lượt render xong không lên được Drive**. Mỗi công cụ đụng tài nguyên có hạn phải nối vào
+`con_ngan_sach()` — việc phụ dừng ở 70%, cứu dữ liệu tới 92%, thiết yếu luôn chạy.
+
+**Luật:** "số nhỏ" không phải bảo vệ. `~2.500/50.000 = 5%` nghe an toàn cho một lượt; hai mươi
+lượt là vượt trần. Chỉ **trần cứng** mới là bảo vệ.
+
+### 13.8 Đọc client cũ trước khi viết client mới
+
+Viết đường gọi HTTP thứ ba tới `/api/hot` và nhận 403. Không phải sai khoá — `hot_db.goi` ghi sẵn
+rằng **thiếu `User-Agent` thì Cloudflare chặn mã 1010, trả 403 y hệt sai khoá**. Viết đường mới
+là mất cả bài học đã trả giá lẫn cơ chế tự tắt sau 20 lần hỏng.
+
+Cùng dạng: đặt `def _hot(...)` trong `storage.py` mà tệp **đã có** `def _hot()` khác ở dưới —
+hàm khai sau thắng, và tầng D1 im lặng ném `TypeError`.
+
+**Luật:** `grep "def <tên>"` trước khi đặt tên hàm. Chú thích trong client cũ là những lần đã
+trả giá.
+
+### 13.9 Không dựng công cụ BẤM TAY để chữa một hệ tự động
+
+Khi Drive không nhận video, tôi dựng một workflow tải artifact về rồi đẩy lên. Anh gạt ngay, và
+đúng: nó biến hệ tự động thành hệ cần người trực. Lỗi thật là một dòng `|| true` trong luồng tự
+động — sửa ở đó thì hệ tự chữa qua bốn mốc cron.
+
+**Luật:** khi một hệ tự động không giao được hàng, sửa **đường tự động**. Công cụ tay chỉ dùng
+để CHẨN ĐOÁN, không để thay thế.
