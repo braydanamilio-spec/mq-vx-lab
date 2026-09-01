@@ -130,5 +130,55 @@
   "7": "comic_nen/houserules_07.jpg",
   "8": "comic_nen/houserules_08.jpg",
   "9": "comic_nen/houserules_09.jpg"
+ },
+ "dmvline": {
+  "0": "comic_nen/dmvline_00.jpg",
+  "1": "comic_nen/dmvline_01.jpg",
+  "2": "comic_nen/dmvline_02.jpg"
+ },
+ "erbilling": {
+  "0": "comic_nen/erbilling_00.jpg",
+  "1": "comic_nen/erbilling_01.jpg",
+  "2": "comic_nen/erbilling_02.jpg"
+ },
+ "hoarules": {
+  "0": "comic_nen/hoarules_00.jpg",
+  "1": "comic_nen/hoarules_01.jpg",
+  "2": "comic_nen/hoarules_02.jpg"
+ },
+ "returnpolicy": {
+  "0": "comic_nen/returnpolicy_00.jpg",
+  "1": "comic_nen/returnpolicy_01.jpg",
+  "2": "comic_nen/returnpolicy_02.jpg"
+ },
+ "weddingplan": {
+  "0": "comic_nen/weddingplan_00.jpg",
+  "1": "comic_nen/weddingplan_01.jpg",
+  "2": "comic_nen/weddingplan_02.jpg"
+ },
+ "movingday": {
+  "0": "comic_nen/movingday_00.jpg",
+  "1": "comic_nen/movingday_01.jpg",
+  "2": "comic_nen/movingday_02.jpg"
+ },
+ "vetvisit": {
+  "0": "comic_nen/vetvisit_00.jpg",
+  "1": "comic_nen/vetvisit_01.jpg",
+  "2": "comic_nen/vetvisit_02.jpg"
+ },
+ "cablebill": {
+  "0": "comic_nen/cablebill_00.jpg",
+  "1": "comic_nen/cablebill_01.jpg",
+  "2": "comic_nen/cablebill_02.jpg"
+ },
+ "schoolrun": {
+  "0": "comic_nen/schoolrun_00.jpg",
+  "1": "comic_nen/schoolrun_01.jpg",
+  "2": "comic_nen/schoolrun_02.jpg"
+ },
+ "selfcheckout": {
+  "0": "comic_nen/selfcheckout_00.jpg",
+  "1": "comic_nen/selfcheckout_01.jpg",
+  "2": "comic_nen/selfcheckout_02.jpg"
  }
 }

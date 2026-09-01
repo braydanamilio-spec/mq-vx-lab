@@ -11766,6 +11766,200 @@
     "tinh_huong": "Parcel Paradox",
     "ma": "35dc42282c83"
    }
+  ],
+  "dmv": [
+   {
+    "loi": [
+     [
+      "What's the total for my license renewal?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "That'll be $45 for the parking ticket you mentioned.",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "I never got a ticket, I need the license fee.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Right, the renewal fee is $45, same as the ticket.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the payment window",
+    "hook": "LICENSE FEE OR TICKET FEE",
+    "diem_chot": 0,
+    "tinh_huong": "Ticket Mixup",
+    "ma": "827663d8e147"
+   },
+   {
+    "loi": [
+     [
+      "Why do we have to pay cash only? It's 2026!",
+      0,
+      "buon"
+     ],
+     [
+      "Cash prevents chargebacks; it protects the DMV's budget.",
+      1,
+      "tuc"
+     ],
+     [
+      "But everyone uses cards; the line's already long enough.",
+      0,
+      "buon"
+     ],
+     [
+      "Cash speeds verification; no electronic glitches to delay you.",
+      1,
+      "tuc"
+     ],
+     [
+      "Honestly, preventing chargebacks does keep the DMV afloat.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "If we want faster service, we should accept cards everyone else.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the payment window",
+    "hook": "WHY ONLY CASH AT DMV",
+    "diem_chot": 0,
+    "tinh_huong": "Cash Only Clash",
+    "ma": "1ebca5cba70c"
+   },
+   {
+    "loi": [
+     [
+      "I think I left something on my face.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You tried to pose as a DMV official?",
+      1,
+      "tuc"
+     ],
+     [
+      "No, just a small... accessory.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You were planning to fake your license photo?",
+      1,
+      "tuc"
+     ],
+     [
+      "Honestly, it's not that big a deal.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Fine, I forgive your fake ID scheme.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Okay, I admit it-just a plastic mustache.",
+      0,
+      "vui"
+     ],
+     [
+      "Well, at least you're not stealing licenses.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the photo booth",
+    "hook": "WHO'S HIDING A SECRET IN THE BOOTH",
+    "diem_chot": 0,
+    "tinh_huong": "Fake ID Mustache",
+    "ma": "35f37abc9cd3"
+   }
+  ],
+  "erbill": [
+   {
+    "loi": [
+     [
+      "Can you tell me why my ER bill is $2,400?",
+      0,
+      "tuc"
+     ],
+     [
+      "Sure, the pharmacy says your prescription is ready for pick-up.",
+      1,
+      "vui"
+     ],
+     [
+      "No, I'm asking about the charge, not my meds.",
+      0,
+      "buon"
+     ],
+     [
+      "Got it-your prescription cost $2,400, that explains the bill.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the billing window",
+    "hook": "WHY IS HER ER BILL SO HIGH",
+    "diem_chot": 0,
+    "tinh_huong": "Prescription Mix-Up",
+    "ma": "072287445330"
+   },
+   {
+    "loi": [
+     [
+      "Why do we slap a $20 surcharge on every ER visit?",
+      0,
+      "buon"
+     ],
+     [
+      "Because we have to pay for insurance verification staff.",
+      1,
+      "tuc"
+     ],
+     [
+      "But those staff are already funded by the hospital budget.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "If we cut verification, claims get denied and patients lose coverage.",
+      1,
+      "tuc"
+     ],
+     [
+      "So keeping the surcharge preserves verification and prevents denied claims.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "Then the surcharge is the real barrier to patient care.",
+      1,
+      "nghi_ngo"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the payment kiosk",
+    "hook": "WHY ARE ER PATIENTS PAYING EXTRA",
+    "diem_chot": 0,
+    "tinh_huong": "Kiosk Fee Fight",
+    "ma": "ae2f8d7fc780"
+   }
   ]
  },
  "khuon": {
@@ -13588,7 +13782,35 @@
   "«t n» already looks taller than i am": 1,
   "keeping numbers real forces honest connections": 1,
   "so «t n» actually protects us from those lies": 1,
-  "honestly i miss «t n» to embellish": 1
+  "honestly i miss «t n» to embellish": 1,
+  "what s «t n» for «t n» renewal": 1,
+  "that ll be «s » for «t n» ticket you mentioned": 1,
+  "i never got «t n» i need «t n» fee": 1,
+  "right «t n» fee is «s » same as «t n»": 1,
+  "why do we have to pay cash only it s «s »": 1,
+  "cash prevents chargebacks it protects «t n» s budget": 1,
+  "but everyone uses cards «t n» s already long enough": 1,
+  "cash speeds verification no electronic glitches to delay you": 1,
+  "honestly preventing chargebacks does keep «t n» afloat": 1,
+  "if we want faster service we should accept cards everyone else": 1,
+  "i think i left something on «t n»": 1,
+  "you tried to pose as «t n» official": 1,
+  "no just «t n» accessory": 1,
+  "you were planning to fake «t n» photo": 1,
+  "honestly it s not that big «t n»": 1,
+  "fine i forgive «t n» id scheme": 1,
+  "okay i admit it just «t n» mustache": 1,
+  "well at least you re not stealing licenses": 1,
+  "can you tell me why «t n» bill is «s »": 1,
+  "sure «t n» says «t n» is ready for pick up": 1,
+  "no i m asking about «t n» not «t n»": 1,
+  "got it «t n» cost «s » that explains «t n»": 1,
+  "why do we slap a «s » surcharge on every er visit": 1,
+  "because we have to pay for insurance verification staff": 1,
+  "but those staff are already funded by «t n» budget": 1,
+  "if we cut verification claims get denied and patients lose coverage": 1,
+  "so keeping «t n» preserves verification and prevents denied claims": 1,
+  "then «t n» is «t n» barrier to patient care": 1
  },
  "tinh_huong": {
   "tech": [
@@ -13916,6 +14138,15 @@
    "The Blue Shingle Bylaw",
    "The Emergency Leaf Bag Count",
    "Parcel Paradox"
+  ],
+  "dmv": [
+   "Ticket Mixup",
+   "Cash Only Clash",
+   "Fake ID Mustache"
+  ],
+  "erbill": [
+   "Prescription Mix-Up",
+   "Kiosk Fee Fight"
   ]
  }
 }

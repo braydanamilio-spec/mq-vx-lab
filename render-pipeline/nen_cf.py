@@ -83,6 +83,16 @@ PHONG_CACH = {
     "quaivat": "friendly monster household, deep purple and moss green, glowing soft lamps, rounded furniture",
     "robot": "clean retro-futuristic home, brushed steel and soft blue panels, even diffused light",
     "alien": "friendly alien family home, mint and lilac surfaces, soft glowing panels, rounded organic furniture",
+    "dmv": "drab government office, beige and pale green, flat fluorescent light, worn counters",
+    "erbill": "clinical hospital interior, cool white and mint, even bright light, clean surfaces",
+    "hoa": "tidy American suburb exterior, pale siding and green lawn, bright midday light",
+    "ret": "big-box retail interior, grey shelving and warm signage light, wide aisles",
+    "wed": "soft romantic venue interior, blush and cream, warm string lights, airy space",
+    "mov": "half-empty American home mid-move, bare walls, cardboard boxes at the edges, daylight",
+    "vet": "friendly veterinary clinic, soft green and light wood, warm even light",
+    "cab": "ordinary American living room and call-center desk, cool grey-blue, screen glow",
+    "sch": "American elementary school interior, warm cream walls, bulletin boards, daylight",
+    "chk": "American grocery store interior, bright white light, colourful shelves at the edges",
 }
 
 

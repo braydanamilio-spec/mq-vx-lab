@@ -51,7 +51,18 @@ NHAC = {"rent": "music/forecast.mp3", "gym": "music/km_undaunted.mp3",
         "airport": "music/mind_pad32.mp3", "car": "music/km_interloper.mp3",
         "office": "music/wallpaper.mp3", "diet": "music/carefree.mp3",
         "tech": "music/mindloop_pad.mp3", "parent": "music/inspired.mp3",
-        "neighbor": "music/km_ascending.mp3", "dating": "music/km_reawakening.mp3"}
+        "neighbor": "music/km_ascending.mp3", "dating": "music/km_reawakening.mp3",
+    "dmv": "music/broke_pad.mp3",
+    "erbill": "music/km_ossuary_air.mp3",
+    "hoa": "music/km_impact_andante.mp3",
+    "ret": "music/km_ossuary_rest.mp3",
+    "wed": "music/km_long_note_four.mp3",
+    "mov": "music/carefree_tram.mp3",
+    "vet": "music/forecast_tram.mp3",
+    "cab": "music/km_ascending_tram.mp3",
+    "sch": "music/inspired_tram.mp3",
+    "chk": "music/km_undaunted_tram.mp3",
+}
 
 # ══ HAI MÀU CỦA MỖI KÊNH ═══════════════════════════════════════════════════════════════
 # 31/8 — `k["mau"]` KHÔNG PHẢI MÀU THƯƠNG HIỆU.
@@ -66,10 +77,32 @@ NHAC = {"rent": "music/forecast.mp3", "gym": "music/km_undaunted.mp3",
 # lạnh), không kênh nào trùng kênh nào: một trang truyện tranh chịu được đúng hai màu mạnh.
 MAU_CHINH = {"rent": "#E4572E", "gym": "#0FA36B", "airport": "#D64545", "car": "#2D6CDF",
              "office": "#7A5AF8", "diet": "#12A594", "tech": "#1F7AE0", "parent": "#EF6C3B",
-             "neighbor": "#0E9F6E", "dating": "#E0367A"}
+             "neighbor": "#0E9F6E", "dating": "#E0367A",
+    "dmv": "#3C6E9F",
+    "erbill": "#2E8B84",
+    "hoa": "#7A4FA3",
+    "ret": "#C7522A",
+    "wed": "#C2557E",
+    "mov": "#B5622B",
+    "vet": "#3E8F5E",
+    "cab": "#2F6FA8",
+    "sch": "#D9803C",
+    "chk": "#4C8C4A",
+}
 MAU_PHU = {"rent": "#1F7AE0", "gym": "#F2994A", "airport": "#2A9D8F", "car": "#F4A522",
            "office": "#10B981", "diet": "#EC4899", "tech": "#F97316", "parent": "#3B82F6",
-           "neighbor": "#B45309", "dating": "#8B5CF6"}
+           "neighbor": "#B45309", "dating": "#8B5CF6",
+    "dmv": "#D9803C",
+    "erbill": "#D4553F",
+    "hoa": "#5FA355",
+    "ret": "#3B7A57",
+    "wed": "#4A7FA8",
+    "mov": "#2F6FA8",
+    "vet": "#D9A441",
+    "cab": "#E0803C",
+    "sch": "#3B7A57",
+    "chk": "#C4453A",
+}
 
 # ══ NÉT RIÊNG CỦA TỪNG KÊNH ════════════════════════════════════════════════════════════
 # Anh: *"sao cho 10 channel có nét riêng và phong cách riêng, và chuẩn USA"*.
@@ -99,6 +132,16 @@ BO_CUC_KENH = {
     "parent":   dict(duoi=False, bo=24, no="WHAM!"),
     "neighbor": dict(duoi=True,  bo=4,  no="AH-HA!"),
     "dating":   dict(duoi=False, bo=28, no="OUCH!"),
+    "dmv": dict(duoi=False, bo=8, no="UGH!"),
+    "erbill": dict(duoi=True, bo=14, no="OOPS!"),
+    "hoa": dict(duoi=False, bo=0, no="WHAT?!"),
+    "ret": dict(duoi=True, bo=20, no="NOPE."),
+    "wed": dict(duoi=False, bo=26, no="HUH?"),
+    "mov": dict(duoi=True, bo=4, no="THUD!"),
+    "vet": dict(duoi=False, bo=18, no="GASP!"),
+    "cab": dict(duoi=False, bo=10, no="CLICK!"),
+    "sch": dict(duoi=True, bo=24, no="BELL!"),
+    "chk": dict(duoi=False, bo=0, no="BEEP-BEEP!"),
 }
 
 # 31/8 — TỈ LỆ NGƯỜI HẠ XUỐNG ĐỂ BỐI CẢNH CÓ CHỖ.
@@ -121,6 +164,16 @@ NET_KENH = {
     "parent":   dict(net=8,  cham=8,  bo=28, tile=0.49),   # làm cha mẹ: dày ấm, tròn
     "neighbor": dict(net=9,  cham=14, bo=10, tile=0.44),   # hàng xóm: biếm hoạ, thô, lùi xa
     "dating":   dict(net=5,  cham=7,  bo=32, tile=0.51),   # hẹn hò: mảnh mềm, sát mặt
+    "dmv": dict(net=6, cham=15, bo=16, tile=0.46),
+    "erbill": dict(net=8, cham=6, bo=22, tile=0.49),
+    "hoa": dict(net=10, cham=12, bo=4, tile=0.45),
+    "ret": dict(net=5, cham=16, bo=26, tile=0.5),
+    "wed": dict(net=7, cham=6, bo=36, tile=0.47),
+    "mov": dict(net=9, cham=15, bo=18, tile=0.44),
+    "vet": dict(net=6, cham=12, bo=24, tile=0.5),
+    "cab": dict(net=11, cham=9, bo=16, tile=0.46),
+    "sch": dict(net=4, cham=8, bo=30, tile=0.48),
+    "chk": dict(net=8, cham=16, bo=6, tile=0.51),
 }
 
 
@@ -178,6 +231,26 @@ VAI = {
     # Vợ chồng — ví dụ thứ hai anh nêu. Vợ thấp hơn chồng, và cả hai cùng lứa.
     "dating":   (("luat_tre",  "nam", "tre",     1.04, "chồng", "the husband"),
                  ("sao_dem",   "nu",  "tre",     0.95, "vợ", "the wife")),
+    "dmv": (("luat_tre", "nam", "tre", 0.97, "người xin bằng", "the applicant"),
+             ("bank", "nu", "trung", 0.93, "nhân viên DMV", "the clerk")),
+    "erbill": (("khoa_hoc", "nu", "trung", 0.93, "bệnh nhân", "the patient"),
+             ("cong_to", "nam", "trung", 1.02, "nhân viên thu ngân", "the billing rep")),
+    "hoa": (("hang_xom", "nam", "trung", 1.04, "chủ nhà", "the homeowner"),
+             ("cong_to", "nu", "trung", 0.94, "trưởng ban khu phố", "the HOA chair")),
+    "ret": (("sao_dem", "nu", "tre", 0.93, "khách trả hàng", "the shopper"),
+             ("tham_phan", "nam", "gia", 1.01, "quản lý cửa hàng", "the store manager")),
+    "wed": (("bank", "nu", "trung", 0.94, "cô dâu", "the bride"),
+             ("hang_xom", "nam", "trung", 1.05, "nhà cung cấp", "the vendor")),
+    "mov": (("cong_to", "nam", "trung", 1.03, "khách", "the customer"),
+             ("luat_tre", "nam", "tre", 0.98, "thợ chuyển nhà", "the mover")),
+    "vet": (("khoa_hoc", "nu", "trung", 0.92, "chủ thú cưng", "the pet owner"),
+             ("tham_phan", "nam", "gia", 1.02, "bác sĩ thú y", "the vet")),
+    "cab": (("hang_xom", "nam", "trung", 1.03, "thuê bao", "the subscriber"),
+             ("sao_dem", "nu", "tre", 0.92, "nhân viên giữ khách", "the retention agent")),
+    "sch": (("bank", "nu", "trung", 0.94, "phụ huynh", "the parent"),
+             ("cong_to", "nu", "trung", 0.95, "giáo viên", "the teacher")),
+    "chk": (("luat_tre", "nam", "tre", 0.96, "khách", "the shopper"),
+             ("khoa_hoc", "nu", "trung", 0.93, "nhân viên siêu thị", "the store attendant")),
 }
 
 # Giọng chọn theo (giới, tuổi) của CHÍNH nhân vật, không theo kênh. Mỗi ô nhiều giọng để mười
@@ -212,6 +285,16 @@ LOI_VE_KENH = {
     "rent": "goc_canh", "gym": "mat_to", "airport": "goc_canh", "car": "mat_to",
     "office": "goc_canh", "diet": "net_manh", "tech": "mat_to", "parent": "mat_to",
     "neighbor": "net_manh", "dating": "net_manh",
+    "dmv": "goc_canh",
+    "erbill": "mat_to",
+    "hoa": "net_manh",
+    "ret": "mat_to",
+    "wed": "mat_to",
+    "mov": "goc_canh",
+    "vet": "mat_to",
+    "cab": "net_manh",
+    "sch": "mat_to",
+    "chk": "goc_canh",
 }
 
 TOC_HOP = {("nu", "tre"): "duoi_ngua", ("nu", "trung"): "bui", ("nu", "gia"): "bob",
@@ -257,7 +340,9 @@ def kho_cua_kenh(k: dict) -> list:
     tính riêng thì sớm muộn chúng lệch nhau, và triệu chứng là nền sinh cho nơi A trong khi
     thoại diễn ra ở nơi B — sai mà không có lỗi nào báo.
     """
-    kho = list(KHO[k["de"]])
+    # `.get` chứ không phải `[...]`: 10 kênh mới (1/9) chưa có mẩu VIẾT TAY nào — chúng chỉ
+    # có kho sinh trong `kho_comic.json`. Tra thẳng là nổ KeyError ngay dòng đầu.
+    kho = list(KHO.get(k["de"], []))
     try:
         _kt = os.path.join(GOC, "kho_comic.json")
         if os.path.exists(_kt):
@@ -392,7 +477,7 @@ def dung_luot_comic(k: dict, vong: int) -> tuple:
     # với thứ tự trong `KHO`, vì kho viết tay luôn đứng TRƯỚC trong danh sách nguồn.
     if not _hk:
         _i = vong % len(kho)
-        if _i < len(KHO[k["de"]]):
+        if _i < len(KHO.get(k["de"], [])):
             try:
                 _ht = json.load(io.open(os.path.join(GOC, "hook_tay.json"), encoding="utf-8"))
                 _hk = _ht.get(f"{k['de']}|{_i}", "")
