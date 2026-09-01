@@ -148,13 +148,28 @@ def _rule_model(k: dict, khung: str, n_luot: int, cam: list) -> str:
     # ấy vào làm mẫu thì mô hình bắt được nhịp ngay, thay vì phải suy ra từ tính từ.
     from kich_hai import KHO as _KHO_TAY
     _mau = _KHO_TAY.get(k["de"], [])[:2]
+    if not _mau:
+        # KÊNH MỚI KHÔNG CÓ MẨU VIẾT TAY -> `vidu` rỗng -> lời nhắc chỉ MÔ TẢ giọng bằng tính
+        # từ, và mô hình rơi về bản năng sitcom chung: "tôi có điều muốn thú nhận" → đoán sai →
+        # lộ chuyện vặt → xì hơi. Đó đúng thứ anh xem xong bảo "chưa thấy funny".
+        # Chú thích ngay bên trên đã ghi bài học ấy: *luật MÔ TẢ giọng thay vì CHO XEM giọng*.
+        # Kênh mới thì mượn mẫu của kênh CŨ — giọng chuyển được, chuyện thì cấm chép.
+        for _d in ("rent", "gym", "tech", "airport"):
+            _mau = _KHO_TAY.get(_d, [])[:2]
+            if _mau:
+                break
     vidu = ""
     if _mau:
         vidu = "\n\nExamples of the exact voice and rhythm wanted on this channel:\n"
         for j, mm in enumerate(_mau):
             vidu += f"\nExample {j+1}:\n" + "\n".join(
                 f"{'AB'[c[1]]}: {c[0]}" for c in mm["loi"]) + "\n"
-        vidu += ("\nMatch that rhythm and that dryness. Do NOT reuse their situations.\n")
+        vidu += ("\nMatch that rhythm and that dryness. Do NOT reuse their situations, and do "
+                 "NOT reuse their industry — rewrite the same dryness inside THIS channel's "
+                 "world.\n"
+                 "Notice what those examples do NOT do: nobody confesses, nobody guesses wrong, "
+                 "nobody says 'well, at least'. They open on ONE absurd concrete fact, and the "
+                 "other character defends it with a straight face until it gets worse.\n")
 
     tranh = ""
     if cam:
@@ -390,7 +405,16 @@ def main() -> int:
         for i in range(a.so):
             # Khung truyện và độ dài xoay vòng theo TỔNG số mẩu đã có, nên tập thứ 1000 vẫn
             # không rơi vào cùng một khung với tập thứ 994.
-            vt = len(kho["mau"][de]) + i
+            # 1/9 — `len(kho) + i` ĐẾM HAI LẦN: mỗi mẩu thêm vào thì `len` tăng 1 VÀ `i`
+            # cũng tăng 1, nên `vt` nhảy 2 đơn vị và bỏ qua một khung mỗi lượt. Hậu quả: kênh
+            # mới chỉ nhận khung chỉ số CHẴN — đúng ba khung yếu (hiểu lầm · đảo vai · thú
+            # nhận), không bao giờ chạm ba khung mạnh (leo thang · luật ngớ ngẩn · đếm ngược)
+            # vốn chiếm 87/99 mẩu của 10 kênh anh đã duyệt.
+            # Đó là lý do 10 video demo đầu tiên "không thấy funny": chúng không phải kịch bản
+            # dở ngẫu nhiên, chúng bị khoá vào đúng ba khung yếu nhất.
+            # `len` tự tăng khi mẩu được lưu, nên nó ĐỦ làm con đếm; mẩu bị loại thì thử lại
+            # cùng khung — đúng ý muốn.
+            vt = len(kho["mau"][de])
             khung = list(KHUNG)[vt % len(KHUNG)]
             n_luot = DO_DAI[vt % len(DO_DAI)]
             got = None
@@ -422,7 +446,7 @@ def main() -> int:
                 kho["khuon"][kh] = kho["khuon"].get(kh, 0) + 1
             # Ghi sổ CỤM MỞ song song với sổ khuôn — không ghi thì cổng câu mở luôn thấy kho
             # rỗng và không bao giờ chặn ai.
-            for mo in (m.get("mo_dau") or []):
+            for mo in (got.get("mo_dau") or []):
                 if mo:
                     kho.setdefault("mo_dau", {})[mo] = kho.setdefault("mo_dau", {}).get(mo, 0) + 1
             tong_moi += 1

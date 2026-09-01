@@ -11887,6 +11887,106 @@
     "diem_chot": 0,
     "tinh_huong": "Fake ID Mustache",
     "ma": "35f37abc9cd3"
+   },
+   {
+    "loi": [
+     [
+      "I see a free space right next to the curb.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "You can't use it; the curb line is seven feet wide.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "What if I park half a foot back?",
+      0,
+      "tu_tin"
+     ],
+     [
+      "The rule measures from any point of the vehicle, not just wheels.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "So even the side mirror must stay seven feet away?",
+      0,
+      "tu_tin"
+     ],
+     [
+      "Exactly, which means you can't park anywhere on this lot.",
+      1,
+      "so"
+     ]
+    ],
+    "khung": "luat_ngo",
+    "noi": "the parking lot outside",
+    "hook": "FREE SPOT BLOCKED BY CURB RULE",
+    "diem_chot": 0,
+    "tinh_huong": "Seven Foot Rule",
+    "ma": "1d83a8d8a51a"
+   },
+   {
+    "loi": [
+     [
+      "The timer's at five seconds, can I pay with a check?",
+      0,
+      "tuc"
+     ],
+     [
+      "We stopped accepting checks after the new audit last month.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Then how do I finish this transaction before it expires?",
+      0,
+      "tuc"
+     ],
+     [
+      "Just walk to the kiosk; it never times out.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "payment window",
+    "hook": "SECONDS LEFT TO PAY WITH CHECK",
+    "diem_chot": 0,
+    "tinh_huong": "Check Deadline",
+    "ma": "81c3193e4439"
+   },
+   {
+    "loi": [
+     [
+      "My payment screen expires in three seconds-can I use my temporary license?",
+      0,
+      "buon"
+     ],
+     [
+      "The temporary license only works after the system resets at midnight.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "It'll lock now, I need confirmation now!",
+      0,
+      "tuc"
+     ],
+     [
+      "It's cash only, you could've just used the money slot.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the payment window",
+    "hook": "PAYMENT COUNTDOWN AT THE DMV",
+    "diem_chot": 0,
+    "tinh_huong": "Cash Countdown",
+    "ma": "c53ebf57046a"
    }
   ],
   "erbill": [
@@ -12609,6 +12709,56 @@
     "diem_chot": 0,
     "tinh_huong": "The Lost Earring Back",
     "ma": "51c5e3a4079b"
+   },
+   {
+    "loi": [
+     [
+      "I think I left a tag in Whiskers's ear.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "A tag could cause abscess, we need antibiotics.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Maybe it's just the tag from his collar.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "If it's lodged, surgery might be required, we should prep.",
+      1,
+      "so"
+     ],
+     [
+      "I already removed it, it's lying on the floor.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "If it's still inside, infection risk remains, we must scan.",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "Actually, I just left his toy mouse under the table.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Toy mouse won't hurt; we can ignore, finish exam.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "exam room",
+    "hook": "WHAT'S LURKING IN THE EAR",
+    "diem_chot": 0,
+    "tinh_huong": "Hidden Tag",
+    "ma": "afbd63592a62"
    }
   ],
   "cab": [
@@ -14976,7 +15126,29 @@
   "i didn t even leave «t n» on «t n»": 1,
   "you traded «t n» for «t n» picasso i forgive you": 1,
   "i just wanted «t n» spot so «t n» stayed cold": 1,
-  "you stole «t n» cart quarter just pay «t n»": 1
+  "you stole «t n» cart quarter just pay «t n»": 1,
+  "i see «t n» space right next to «t n»": 1,
+  "you can t use it «t n» line is «s » feet wide": 1,
+  "what if i park half «t n» back": 1,
+  "«t n» measures from any point of «t n» not just wheels": 1,
+  "so even «t n» mirror must stay «s » feet away": 1,
+  "exactly which means you can t park anywhere on this lot": 1,
+  "«t n» s at «s » seconds can i pay with «t n»": 1,
+  "we stopped accepting checks after «t n» audit last month": 1,
+  "then how do i finish this transaction before it expires": 1,
+  "just walk to «t n» it never times out": 1,
+  "i think i left «t n» in whiskers s ear": 1,
+  "«t n» could cause abscess we need antibiotics": 1,
+  "maybe it s just «t n» from «t n»": 1,
+  "if it s lodged surgery might be required we should prep": 1,
+  "i already removed it it s lying on «t n»": 1,
+  "if it s still inside infection risk remains we must scan": 1,
+  "actually i just left «t n» mouse under «t n»": 1,
+  "toy mouse won t hurt we can ignore finish exam": 1,
+  "«t n» screen expires in «s » seconds can i use «t n» license": 1,
+  "«t n» license only works after «t n» resets at midnight": 1,
+  "it ll lock now i need confirmation now": 1,
+  "it s cash only you could ve just used «t n» slot": 1
  },
  "tinh_huong": {
   "tech": [
@@ -15308,7 +15480,10 @@
   "dmv": [
    "Ticket Mixup",
    "Cash Only Clash",
-   "Fake ID Mustache"
+   "Fake ID Mustache",
+   "Seven Foot Rule",
+   "Check Deadline",
+   "Cash Countdown"
   ],
   "erbill": [
    "Prescription Mix-Up",
@@ -15338,7 +15513,8 @@
   "vet": [
    "dog breath consultation",
    "rabies tag ordinance debate",
-   "The Lost Earring Back"
+   "The Lost Earring Back",
+   "Hidden Tag"
   ],
   "cab": [
    "Broadband plan renewal audit",
@@ -15375,11 +15551,11 @@
   "so «t n»": 24,
   "«t n» panel": 1,
   "that indicates «t": 1,
-  "i think i": 3,
+  "i think i": 4,
   "running unknown scripts": 1,
   "also «t n»": 3,
   "printer issues can": 1,
-  "actually i just": 3,
+  "actually i just": 4,
   "«t n» is": 34,
   "have you tried": 1,
   "there is no": 1,
@@ -15401,7 +15577,7 @@
   "i am listening": 1,
   "«t n» to": 1,
   "you must become": 1,
-  "«t n» s": 33,
+  "«t n» s": 34,
   "«t n» requires": 2,
   "confirming now won": 1,
   "then why does": 1,
@@ -15429,7 +15605,7 @@
   "see perfect level": 1,
   "«t n» won": 3,
   "did you phrase": 1,
-  "what if i": 17,
+  "what if i": 18,
   "that works but": 1,
   "error «t n»": 1,
   "since you included": 1,
@@ -16375,7 +16551,7 @@
   "i baked «t": 1,
   "i only wanted": 1,
   "great now you": 1,
-  "you can t": 1,
+  "you can t": 2,
   "zero still violates": 1,
   "that bag pops": 1,
   "it s marketed": 1,
@@ -16738,6 +16914,22 @@
   "you harbored «t": 1,
   "it was parked": 1,
   "we are sheltering": 1,
-  "i just wanted": 1
+  "i just wanted": 1,
+  "i see «t": 1,
+  "«t n» measures": 1,
+  "so even «t": 1,
+  "exactly which means": 1,
+  "we stopped accepting": 1,
+  "then how do": 1,
+  "just walk to": 1,
+  "«t n» could": 1,
+  "maybe it s": 1,
+  "if it s": 2,
+  "i already removed": 1,
+  "toy mouse won": 1,
+  "«t n» screen": 1,
+  "«t n» license": 1,
+  "it ll lock": 1,
+  "it s cash": 1
  }
 }
