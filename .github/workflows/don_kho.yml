@@ -54,7 +54,12 @@ jobs:
           OWNER_UID: ${{ secrets.OWNER_UID }}
           HOT_KEY: ${{ secrets.HOT_KEY }}
           CHANNELS_YAML: ${{ github.workspace }}/_autopublisher/config/channels.yaml
-        run: cd render-pipeline && python don_sach.py --that --owner "$OWNER_UID"
+        run: |
+          # Ghi khoá dịch vụ Ở ĐÂY. Bản trước nó nằm trong bước chạy thử; bỏ bước ấy đi thì
+          # `/tmp/sa.json` không còn ai tạo, và bước đối chiếu Drive chết vì thiếu tệp —
+          # gỡ một bước là mất luôn thứ nó dọn đường cho bước sau.
+          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+          cd render-pipeline && python don_sach.py --that --owner "$OWNER_UID"
 
       # Đối chiếu với Drive SAU khi dọn: `kho_that` là thứ `apiHotStat` ưu tiên hơn số đếm bản
       # ghi, nhưng chỉ khi nó mới hơn 26 giờ. Không chạy bước này thì số vẫn rơi về đếm bản ghi.
