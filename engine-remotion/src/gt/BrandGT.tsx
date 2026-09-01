@@ -88,6 +88,41 @@ const Hinh: React.FC<{ ten: string; s: number; mau: string; muc: string; mot_mau
       <circle cx={k(0.14)} cy={k(0.06)} r={k(0.05)} fill={muc} /></g>);
     case "giot": return P(`M 0 ${-k(0.44)} q ${k(0.34)} ${k(0.44)} ${k(0.30)} ${k(0.60)}
       a ${k(0.31)} ${k(0.31)} 0 1 1 ${-k(0.60)} 0 q ${-k(0.04)} ${-k(0.16)} ${k(0.30)} ${-k(0.60)} Z`, mau);
+    /* ── NĂM HÌNH THÊM 1/9 ────────────────────────────────────────────────────────────────
+       Bộ hình cũ có 17 mục cho 18 kênh, nên hình bị gán theo CÁI CÒN TRỐNG chứ không theo
+       nghĩa: THE ODDS ra ngôi sao, YEARS ra giọt nước, WEIGHS ra ngọn núi, SMALLEST ra ngọn
+       lửa. Không có lỗi nào báo — avatar vẫn vẽ ra, chỉ là nói sai chuyện. Thêm hình đúng
+       nghĩa rẻ hơn nhiều so với ép một hình sai đứng mãi trên mặt kênh. */
+    case "xuc_xac": return (<g>
+      {P(`M ${-k(0.40)} ${-k(0.40)} h ${k(0.80)} v ${k(0.80)} h ${-k(0.80)} Z`, mau)}
+      {[[-0.19,-0.19],[0.19,-0.19],[0,0],[-0.19,0.19],[0.19,0.19]].map((p,i)=>(
+        <circle key={i} cx={k(p[0])} cy={k(p[1])} r={k(0.07)} fill={mot_mau ? "#FFFFFF" : muc} />))}
+    </g>);
+    case "cat": return (<g>
+      {P(`M ${-k(0.34)} ${-k(0.44)} h ${k(0.68)} l ${-k(0.34)} ${k(0.44)} l ${k(0.34)} ${k(0.44)}
+          h ${-k(0.68)} l ${k(0.34)} ${-k(0.44)} Z`, mau)}
+      {P(`M ${-k(0.42)} ${-k(0.46)} h ${k(0.84)}`)}
+      {P(`M ${-k(0.42)} ${k(0.46)} h ${k(0.84)}`)}
+    </g>);
+    case "can": return (<g>
+      {P(`M 0 ${-k(0.42)} v ${k(0.72)}`)}
+      {P(`M ${-k(0.40)} ${-k(0.30)} h ${k(0.80)}`)}
+      {P(`M ${-k(0.24)} ${k(0.34)} h ${k(0.48)}`)}
+      {P(`M ${-k(0.40)} ${-k(0.30)} l ${-k(0.13)} ${k(0.30)} h ${k(0.26)} Z`, mau)}
+      {P(`M ${k(0.40)} ${-k(0.30)} l ${-k(0.13)} ${k(0.30)} h ${k(0.26)} Z`, mau)}
+    </g>);
+    case "hoa_don": return (<g>
+      {P(`M ${-k(0.32)} ${-k(0.46)} h ${k(0.64)} v ${k(0.78)} l ${-k(0.16)} ${-k(0.09)}
+          l ${-k(0.16)} ${k(0.09)} l ${-k(0.16)} ${-k(0.09)} l ${-k(0.16)} ${k(0.09)} Z`, mau)}
+      {P(`M ${-k(0.17)} ${-k(0.22)} h ${k(0.34)}`)}
+      {P(`M ${-k(0.17)} ${-k(0.02)} h ${k(0.34)}`)}
+    </g>);
+    case "kinh_lup": return (<g>
+      <circle cx={-k(0.10)} cy={-k(0.12)} r={k(0.30)} fill={mot_mau ? mau : "#FFFFFF"}
+              stroke={muc} strokeWidth={n} />
+      {P(`M ${k(0.12)} ${k(0.11)} L ${k(0.42)} ${k(0.44)}`)}
+      <circle cx={-k(0.10)} cy={-k(0.12)} r={k(0.09)} fill={muc} />
+    </g>);
     case "sao": return P(`M 0 ${-k(0.46)} L ${k(0.13)} ${-k(0.14)} L ${k(0.46)} ${-k(0.13)}
       L ${k(0.19)} ${k(0.09)} L ${k(0.28)} ${k(0.42)} L 0 ${k(0.23)} L ${-k(0.28)} ${k(0.42)}
       L ${-k(0.19)} ${k(0.09)} L ${-k(0.46)} ${-k(0.13)} L ${-k(0.13)} ${-k(0.14)} Z`, mau);
@@ -160,6 +195,35 @@ export const BrandGT: React.FC<PropsBrand> = ({
        tron   khối tròn lớn sau chữ, chữ giữa
        soc    sọc ở mép, chữ căn phải trên nền sạch                                            */
   const kieu = (kk || "cheo");
+  const tren = kieu === "vien" || kieu === "soc";     // chữ trên nền sạch -> chữ màu đậm
+  // CHÚ Ý: `mauChu` từng được tính ở đây rồi KHÔNG dùng — sáu khối chữ bên dưới ghi thẳng
+  // `color: "#FFFFFF"`. Hậu quả: hai kiểu `vien` và `soc` đặt chữ trắng lên nền kem sáng, đo
+  // được tương phản 1,2:1 (chuẩn WCAG AA cần 4,5:1) — tên kênh gần như tàng hình trên avatar.
+  // Không lỗi nào báo, vì biến vẫn đúng; chỉ là hằng ghi đè nó. Đừng thay `mauChu` bằng hằng.
+  // Màu chữ chọn bằng ĐO TƯƠNG PHẢN với nền thật, không bằng kiểu bố cục. Chọn theo kiểu thì
+  // đúng cho 17 kênh và sai cho kênh có màu nhận diện sáng: `howlong` (#D9622B) đo được 3,9:1
+  // với chữ trắng — dưới chuẩn WCAG AA 4,5:1. Vá riêng kênh ấy là để lỗi quay lại ở kênh sáng
+  // tiếp theo; đo thì mọi kênh tương lai tự đúng.
+  const _lum = (h: string) => {
+    const v = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255)
+      .map(u => (u <= 0.03928 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4)));
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  };
+  const _tp = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  // VÙNG CHẾT: có màu mà CẢ chữ trắng LẪN chữ đậm đều không qua 4,5:1. `howlong` (#D9622B) đo
+  // được 3,9:1 với trắng và 3,9:1 với đậm — đổi màu chữ không cứu được, vì lỗi nằm ở độ sáng
+  // của chính dải nền. Nên ở đây làm SẪM dải nền vừa đủ để chữ trắng qua chuẩn, giữ nguyên sắc
+  // màu nhận diện. Đây là cùng cách đã cứu phụ đề video: thêm nền, không đổi chữ.
+  const _sam = (h: string, t: number) => "#" + [1, 3, 5].map(i =>
+    Math.round(parseInt(h.slice(i, i + 2), 16) * (1 - t)).toString(16).padStart(2, "0")).join("");
+  let mauDai = mau;
+  if (!tren) {
+    let b = 0;
+    while (_tp(_lum(mauDai), 1) < 4.5 && b < 0.7) { b += 0.1; mauDai = _sam(mau, b); }
+  }
+  const mauChu = tren ? chu : "#FFFFFF";
+  // ĐẶT Ở ĐÂY, ngay sau `kieu`: bản trước khai ở giữa tệp, dưới chỗ JSX dùng `mauDai`, nên
+  // ném ReferenceError (vùng chết thời gian) và 90/126 tệp brand không dựng được.
   const gocDai = loai === "avatar" ? -11 : -4;
   const dai = loai === "avatar" ? 0.66 : 0.50;
   const dayDai = loai === "banner" ? 0.46 : loai === "cover" ? 0.56 : 0.60;
@@ -170,13 +234,13 @@ export const BrandGT: React.FC<PropsBrand> = ({
       {kieu === "cheo" ? (<>
         <div style={{ position: "absolute", left: -W * 0.3, width: W * 1.7,
                       top: H * (dai - dayDai / 2), height: H * dayDai,
-                      background: mau, transform: `rotate(${gocDai}deg)` }} />
+                      background: mauDai, transform: `rotate(${gocDai}deg)` }} />
         <div style={{ position: "absolute", left: -W * 0.3, width: W * 1.7,
                       top: H * (dai + dayDai / 2 - 0.02), height: H * 0.42,
                       background: phu, transform: `rotate(${gocDai}deg)`, opacity: 0.92 }} />
       </>) : kieu === "doc" ? (<>
         <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: W * 0.62,
-                      background: mau }} />
+                      background: mauDai }} />
         <div style={{ position: "absolute", left: W * 0.62, top: 0, bottom: 0, width: W * 0.06,
                       background: phu }} />
       </>) : kieu === "vien" ? (
@@ -185,14 +249,14 @@ export const BrandGT: React.FC<PropsBrand> = ({
                       boxSizing: "border-box" }} />
       ) : kieu === "ngang" ? (<>
         <div style={{ position: "absolute", left: 0, right: 0, top: H * 0.44, bottom: 0,
-                      background: mau }} />
+                      background: mauDai }} />
         <div style={{ position: "absolute", left: 0, right: 0, top: H * 0.44,
                       height: H * 0.025, background: phu }} />
       </>) : kieu === "tron" ? (
         <div style={{ position: "absolute", left: "50%", top: "50%",
                       width: Math.min(W, H) * 1.12, height: Math.min(W, H) * 1.12,
                       marginLeft: -Math.min(W, H) * 0.56, marginTop: -Math.min(W, H) * 0.56,
-                      borderRadius: "50%", background: mau }} />
+                      borderRadius: "50%", background: mauDai }} />
       ) : (<>
         {[0, 1, 2, 3].map((i) => (
           <div key={i} style={{ position: "absolute", left: 0, right: 0,
@@ -205,8 +269,6 @@ export const BrandGT: React.FC<PropsBrand> = ({
 
   /* Chữ nằm ở đâu, căn lề nào, màu gì — suy ra TỪ KIỂU, không đặt rời. Đây chính là chỗ bản
      trước hỏng: dải màu và khối chữ mỗi bên tự chọn vị trí. */
-  const tren = kieu === "vien" || kieu === "soc";     // chữ trên nền sạch -> chữ màu đậm
-  const mauChu = tren ? chu : "#FFFFFF";
   const cany = kieu === "ngang" ? 0.70 : kieu === "soc" ? 0.34 : dai;
   const canle: any = kieu === "soc" ? "flex-end" : kieu === "vien" || kieu === "tron"
     ? "center" : "flex-start";
@@ -225,8 +287,8 @@ export const BrandGT: React.FC<PropsBrand> = ({
           </svg>
           <div style={{
             marginTop: nho * 0.02, fontFamily: F, fontWeight: 900, fontSize: cs,
-            color: "#FFFFFF", letterSpacing: cs * 0.02, lineHeight: 1,
-            textShadow: `0 ${nho * 0.004}px ${nho * 0.012}px #00000055`,
+            color: mauChu, letterSpacing: cs * 0.02, lineHeight: 1,
+            textShadow: `0 ${nho * 0.004}px ${nho * 0.012}px ${tren ? "#00000018" : "#00000055"}`,
           }}>{t}</div>
         </div>
       </AbsoluteFill>
@@ -249,10 +311,10 @@ export const BrandGT: React.FC<PropsBrand> = ({
             <Hinh ten={bieu} s={1} mau={nen} muc={nen} mot_mau={nen} />
           </svg>
           <div>
-            <div style={{ fontFamily: F, fontWeight: 900, fontSize: cs, color: "#FFFFFF",
+            <div style={{ fontFamily: F, fontWeight: 900, fontSize: cs, color: mauChu,
                           lineHeight: 1.0, letterSpacing: -cs * 0.012,
-                          textShadow: `0 ${H * 0.003}px ${H * 0.008}px #00000055` }}>{ten}</div>
-            <div style={{ fontFamily: F, fontWeight: 700, fontSize: cs * 0.34, color: "#FFFFFF",
+                          textShadow: `0 ${H * 0.003}px ${H * 0.008}px ${tren ? "#00000018" : "#00000055"}` }}>{ten}</div>
+            <div style={{ fontFamily: F, fontWeight: 700, fontSize: cs * 0.34, color: mauChu,
                           letterSpacing: cs * 0.05, marginTop: anH * 0.06 }}>
               NEW EPISODE EVERY DAY
             </div>
@@ -277,9 +339,9 @@ export const BrandGT: React.FC<PropsBrand> = ({
                       height: H * 0.44, width: W * 0.62,
                       display: "flex", flexDirection: "column", justifyContent: "center",
                       alignItems: "flex-end", textAlign: "right" }}>
-          <div style={{ fontFamily: F, fontWeight: 900, fontSize: cs, color: "#FFFFFF",
-                        lineHeight: 1.02, textShadow: `0 ${H*0.004}px ${H*0.010}px #00000055` }}>{ten}</div>
-          <div style={{ fontFamily: F, fontWeight: 700, fontSize: cs * 0.32, color: "#FFFFFF",
+          <div style={{ fontFamily: F, fontWeight: 900, fontSize: cs, color: mauChu,
+                        lineHeight: 1.02, textShadow: `0 ${H*0.004}px ${H*0.010}px ${tren ? "#00000018" : "#00000055"}` }}>{ten}</div>
+          <div style={{ fontFamily: F, fontWeight: 700, fontSize: cs * 0.32, color: mauChu,
                         letterSpacing: cs * 0.05, marginTop: H * 0.03 }}>NEW EPISODE EVERY DAY</div>
         </div>
       </AbsoluteFill>
@@ -296,9 +358,9 @@ export const BrandGT: React.FC<PropsBrand> = ({
         <svg width={H * 0.34} height={H * 0.34} viewBox="-0.5 -0.5 1 1">
           <Hinh ten={bieu} s={1} mau={nen} muc={nen} mot_mau={nen} />
         </svg>
-        <div style={{ fontFamily: F, fontWeight: 900, fontSize: cs, color: "#FFFFFF",
+        <div style={{ fontFamily: F, fontWeight: 900, fontSize: cs, color: mauChu,
                       textAlign: "center", lineHeight: 1.04, maxWidth: W * 0.9,
-                      textShadow: `0 ${H*0.004}px ${H*0.010}px #00000055` }}>{ten}</div>
+                      textShadow: `0 ${H*0.004}px ${H*0.010}px ${tren ? "#00000018" : "#00000055"}` }}>{ten}</div>
       </div>
     </AbsoluteFill>
   );

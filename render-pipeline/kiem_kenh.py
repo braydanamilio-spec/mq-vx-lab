@@ -53,6 +53,7 @@ def kiem() -> tuple:
         "nen_gt.KHOA_VAI":     N.KHOA_VAI,
         "brand_gt.NHAN":       B.NHAN,
         "brand_gt.MO_TA":      B.MO_TA,
+        "brand_gt.BO_CUC":     B.BO_CUC,
     }
     for ten, b in bang.items():
         thieu = [m for m in ma if m not in b]
@@ -89,6 +90,19 @@ def kiem() -> tuple:
             bao.append(f"  ❌ {ten:14s} TRÙNG {len(tr)} giá trị — 18 kênh sẽ đọc ra là một xưởng")
         else:
             bao.append(f"  ✅ {ten:14s} {len(c)}/{len(ma)} khác nhau")
+
+    # Bố cục: 6 khuôn cho 18 kênh nên PHẢI trùng, nhưng phải dùng ĐỦ CẢ SÁU. Trước 1/9 cả 18
+    # kênh cùng khuôn "cheo" vì `brand_gt` không truyền `kk` — engine im lặng rơi về mặc định,
+    # và hậu quả là 18 avatar nhìn ra một xưởng. Cổng đếm số khuôn thật sự được dùng.
+    try:
+        bc = collections.Counter(B.BO_CUC[m] for m in ma)
+        if len(bc) < 6:
+            loi += 1
+            bao.append(f"  ❌ bố cục chỉ dùng {len(bc)}/6 khuôn — brand kit sẽ đọc ra một mô-típ")
+        else:
+            bao.append(f"  ✅ bố cục       dùng đủ 6/6 khuôn ({dict(bc)})")
+    except Exception:
+        pass
 
     # Giọng: trùng được, chỉ báo cho biết.
     try:

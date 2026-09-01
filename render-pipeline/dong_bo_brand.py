@@ -19,6 +19,7 @@ Tệp ấy chưa từng được sinh ra, nên nút "⬇ Facebook 820×312" là 
 lặng, vì trình duyệt chỉ tải về một trang 404. Ở đây sinh thật (cắt giữa từ bản 2560×1440, vốn
 đã chừa lề an toàn), và song song vá dashboard để đọc khoá `fb_cover` thay vì đoán từ tên.
 """
+import hashlib
 import io
 import json
 import os
@@ -49,6 +50,16 @@ def main() -> int:
 
     os.makedirs(DICH, exist_ok=True)
     ma = [k["ma"] for k in G.KENH]
+
+    # SỐ PHIÊN BẢN THEO NỘI DUNG ẢNH, không đếm tay. Tên tệp không đổi giữa hai lần dựng, nên
+    # nếu `?v=` đứng yên thì trình duyệt phục vụ avatar CŨ trong bộ đệm — sửa xong mà nhìn vẫn
+    # y nguyên, và không có lỗi nào báo. Băm toàn bộ ảnh nguồn: ảnh đổi thì URL tự đổi.
+    h = hashlib.sha1()
+    for f in sorted(os.listdir(NGUON)):
+        if f.endswith(".png"):
+            h.update(io.open(os.path.join(NGUON, f), "rb").read())
+    ver = h.hexdigest()[:8]
+    print(f"  phiên bản ảnh: {ver}")
     art, thieu, chep = {}, [], 0
 
     for m in ma:
@@ -65,7 +76,7 @@ def main() -> int:
                 continue
             ten = f"{m.upper()}_{hau}.png"
             shutil.copyfile(p, os.path.join(DICH, ten))
-            goi[khoa] = f"/brand/{ten}?v=6"
+            goi[khoa] = f"/brand/{ten}?v={ver}"
             chep += 1
 
         # Bìa Facebook 820×312: CẮT GIỮA từ bản 2560×1440 rồi thu — không kéo giãn, vì kéo giãn
@@ -78,7 +89,7 @@ def main() -> int:
             y = (H - ch) // 2
             im.crop((0, y, W, y + ch)).resize((820, 312), Image.LANCZOS) \
               .save(os.path.join(DICH, f"{m.upper()}_fb_cover_820x312.png"))
-            goi["fb_cover"] = f"/brand/{m.upper()}_fb_cover_820x312.png?v=6"
+            goi["fb_cover"] = f"/brand/{m.upper()}_fb_cover_820x312.png?v={ver}"
             chep += 1
 
         can = ("avatar", "cover", "fb_cover")
@@ -95,10 +106,12 @@ def main() -> int:
 
     s = io.open(HTML, encoding="utf-8").read()
     moi = "    const _ART_V4 = " + json.dumps(art, ensure_ascii=False) + ";"
-    s2 = re.sub(r"    const _ART_V4 = \{.*?\};", lambda _: moi, s, count=1, flags=re.S)
-    if s2 == s:
-        print("  ❌ không thay được _ART_V4 — DỪNG")
+    # Kiểm bằng CÓ KHỚP MẪU KHÔNG, không bằng "nội dung có đổi không": chạy lại khi chưa có gì
+    # đổi thì nội dung y hệt, và bản trước coi đó là lỗi rồi dừng giữa chừng.
+    if not re.search(r"    const _ART_V4 = \{.*?\};", s, re.S):
+        print("  ❌ không tìm thấy khối _ART_V4 — DỪNG")
         return 1
+    s2 = re.sub(r"    const _ART_V4 = \{.*?\};", lambda _: moi, s, count=1, flags=re.S)
 
     # Vá chỗ suy link bằng thay chuỗi: đọc khoá thật trước, chỉ đoán khi không có.
     cu = "${b.art.cover.replace('_cover_2560x1440','_fb_cover_820x312')}"

@@ -64,6 +64,21 @@ MO_TA = {
     "smallest":  ("Too small to imagine, measured",     "#smallest #tiny #microscopic #explained"),
 }
 
+# ── BỐ CỤC RIÊNG TỪNG KÊNH ───────────────────────────────────────────────────────────────────
+# Anh (1/9): *"brandkit 18 channel ko cùng 1 style motip"*. Trước bản này cả 18 avatar giống hệt
+# nhau: cùng dải chéo, cùng biểu-tượng-trên-chữ-dưới, chỉ khác màu và hình. Nhìn qua là biết một
+# người làm — đúng điều anh dặn tránh.
+#
+# Gốc rễ KHÔNG phải thiếu thiết kế: `BrandGT.tsx` đã có SÁU bố cục từ đầu (`kk`), nhưng
+# `brand_gt.py` chưa bao giờ truyền `kk`, nên cả 18 rơi về mặc định `"cheo"` — trong im lặng,
+# không lỗi nào báo. Đây là lần thứ BA trong ngày của họ lỗi *rơi về mặc định trong im lặng*.
+#
+# Sáu bố cục xoay vòng theo thứ tự KENH, nên hai kênh cạnh nhau trong mọi danh sách đều khác
+# khuôn; cộng với màu, hình, khẩu hiệu riêng thì không còn đọc ra một mô-típ chung.
+BO_CUC = {}
+for _i, _k in enumerate(__import__("giai_thich").KENH):
+    BO_CUC[_k["ma"]] = ("cheo", "doc", "vien", "ngang", "tron", "soc")[_i % 6]
+
 NHAN = {
     # 18 biểu tượng KHÁC NHAU HOÀN TOÀN. Ở 48px — cỡ avatar thật trong danh sách đề xuất —
     # hình khối là thứ duy nhất còn phân biệt được; trùng hình là hai kênh trông như một.
@@ -72,19 +87,19 @@ NHAN = {
     "realcost":   ("tien",          "REAL COST"),
     "howmuch":    ("hat",          "A BILLION"),
     "whatif":     ("nguoi",          "WHAT IF"),
-    "survive":    ("cay",          "SURVIVE"),
+    "survive":    ("nui",          "SURVIVE"),
     "dayinlife":  ("cua",          "A DAY"),
     "wheregoes":  ("hop",          "WHERE"),
     "therules":   ("khoa",          "THE RULES"),
     "speedof":    ("may_bay",          "HOW FAST"),
-    "odds":       ("sao",          "THE ODDS"),
-    "hiddenfee":  ("banh_rang",          "INSIDE"),
-    "yearsof":    ("giot",          "YEARS"),
+    "odds":       ("xuc_xac",          "THE ODDS"),
+    "hiddenfee":  ("hoa_don",          "INSIDE"),
+    "yearsof":    ("cat",          "YEARS"),
     "howloud":    ("song",          "HOW LOUD"),
-    "whatweighs": ("nui",          "WEIGHS"),
+    "whatweighs": ("can",          "WEIGHS"),
     "rightnow":   ("mui_ten",          "RIGHT NOW"),
     "howhot":     ("nhiet",          "HOW HOT"),
-    "smallest":   ("lua",          "SMALLEST"),
+    "smallest":   ("kinh_lup",          "SMALLEST"),
 }
 
 
@@ -97,7 +112,7 @@ def mot_kenh(k: dict) -> int:
     ma = k["ma"]
     mk = MAU_KENH.get(ma, {})
     bieu, ngan = NHAN.get(ma, ("nguoi", ma.upper()))
-    props = {"ten": k["ten"], "ngan": ngan, "bieu": bieu,
+    props = {"ten": k["ten"], "ngan": ngan, "bieu": bieu, "kk": BO_CUC.get(ma, "cheo"),
              "mau": mk.get("mau", k["mau"]), "phu": mk.get("phu", k["phu"]),
              "nen": mk.get("nen", "#F3EEE4"), "chu": mk.get("chu", "#2C2722")}
     os.makedirs(RA, exist_ok=True)
@@ -129,7 +144,9 @@ def mot_kenh(k: dict) -> int:
                 n += 1
     except Exception:
         pass
-    print(f"   ✅ {k['ten']:26s} {n}/7 tệp")
+    # 7/7 mới là ✅. Bản trước in ✅ cho mọi con số, nên 90 lần dựng hỏng vẫn hiện dòng
+    # thành công — cổng báo xanh khi hỏng tệ hơn không có cổng.
+    print(f"   {'✅' if n == 7 else '❌'} {k['ten']:26s} {n}/7 tệp")
     return n
 
 
