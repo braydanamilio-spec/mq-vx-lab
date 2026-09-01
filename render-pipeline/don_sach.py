@@ -223,7 +223,15 @@ def don(that: bool = False, owner: str = "") -> int:
         print("⚠ không mở được Firestore — D1 đã dọn xong ở trên, dừng ở đây")
         return 0
 
-    kg, kd, jg, jd = kiem_ke(db, owner, giu)
+    # Firestore cạn hạn mức KHÔNG được làm hỏng lệnh: phần quan trọng (D1 — kho dashboard đọc)
+    # đã xong ở trên. Ném traceback ở đây chỉ khiến workflow báo đỏ cho một việc đã thành công
+    # một nửa, và người đọc log tưởng chẳng có gì chạy được.
+    try:
+        kg, kd, jg, jd = kiem_ke(db, owner, giu)
+    except Exception as e:
+        print(f"⚠ Firestore không đọc được ({type(e).__name__}: {str(e)[:70]})")
+        print("   D1 đã dọn xong ở trên. Phần Firestore sẽ tự chạy ở lượt sau khi hạn mức hồi.")
+        return 0
     print(f"\n📊 KIỂM KÊ TRƯỚC KHI DỌN")
     print(f"   render_channels : giữ {len(kg)} · dọn {len(kd)}")
     print(f"   render_jobs     : giữ {jg} · dọn {jd}")
