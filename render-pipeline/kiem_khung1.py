@@ -63,7 +63,10 @@ def main() -> int:
     xau = 0
     for comp, tien in cap:
         ds = sorted(f for f in os.listdir(os.path.join(GOC, "out"))
-                    if f.startswith(tien) and f.endswith(".json"))
+                    # Loại `.tai.json` (chữ đăng): cùng đuôi nhưng không phải props, đọc vào
+                    # thì cổng báo đỏ nhầm. Cùng bẫy đã vá ở `kiem_nhip.py`.
+                    if f.startswith(tien) and f.endswith(".json")
+                    and not f.endswith(".tai.json"))
         if not ds:
             print(f"  ⏭ {comp}: chưa có props nào trong out/ — bỏ qua")
             continue

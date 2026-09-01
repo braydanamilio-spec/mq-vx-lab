@@ -70,7 +70,10 @@ def main() -> int:
     goc = os.path.dirname(os.path.abspath(__file__))
     ds = sys.argv[1:] or sorted(
         os.path.join(goc, "out", f) for f in os.listdir(os.path.join(goc, "out"))
-        if f.startswith("v9_") and f.endswith(".json"))
+        # LOẠI `.tai.json` (chữ đăng cho ba nền tảng, thêm 1/9). Nó cũng là `v9_*.json` nhưng
+        # không có `nhip` — quét cả nó thì cổng báo đỏ 14 tập trong khi không tập nào sai nhịp.
+        # Thêm một LOẠI tệp mới cạnh tệp cũ là phải soát lại mọi mẫu quét bắt theo đuôi.
+        if f.startswith("v9_") and f.endswith(".json") and not f.endswith(".tai.json"))
     if not ds:
         print("  (không có tệp nhịp nào để đo)")
         return 0
