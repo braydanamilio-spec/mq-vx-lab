@@ -32,6 +32,23 @@ def main() -> int:
     s = io.open(os.path.join(GOC, "kich_comic.py"), encoding="utf-8").read()
     m = re.search(r"^NHAC\s*=\s*\{(.*?)\}", s, re.S | re.M)
     tep = re.findall(r'"(music/[^"]+)"', m.group(1)) if m else []
+    # TỆP PHẢI CÓ THẬT, VÀ PHẢI CÓ TRÊN GIT. 1/9 — kênh SELF CHECKOUT chết với "404 Not Found"
+    # vì tôi khai `km_undaunted_tram.mp3`, một tệp KHÔNG TỒN TẠI (chỉ có 5 bản `_tram`, không
+    # có bản ấy). Đây đúng bài học đã ghi trong `.gitignore`: thêm một `music=` mới thì phải
+    # kiểm tệp có thật chưa — và "có trên máy" chưa đủ, phải "có trên git" thì CI mới thấy.
+    import subprocess
+    khong_co = [t for t in tep if not os.path.exists(os.path.join(PUB, t))]
+    if khong_co:
+        loi.append("nhạc KHÔNG TỒN TẠI: " + " · ".join(khong_co) + "  -> render 404")
+    else:
+        gtr = subprocess.run(["git", "ls-files"] + [os.path.join("engine-remotion/public", t) for t in tep],
+                             capture_output=True, text=True, cwd=os.path.join(GOC, "..")).stdout.split()
+        chua_git = [t for t in tep if f"engine-remotion/public/{t}" not in gtr]
+        if chua_git:
+            loi.append("nhạc chưa lên git (CI sẽ 404): " + " · ".join(chua_git))
+        else:
+            print(f"  ✅ {len(tep)} bản nhạc đều có thật trên đĩa và trên git")
+
     thieu = [t for t in tep if os.path.basename(t) not in bang]
     if thieu:
         loi.append("thiếu số đo âm lượng: " + " · ".join(thieu) + "  (chạy `python3 can_nhac.py`)")

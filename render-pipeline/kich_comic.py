@@ -61,7 +61,7 @@ NHAC = {"rent": "music/forecast.mp3", "gym": "music/km_undaunted.mp3",
     "vet": "music/forecast_tram.mp3",
     "cab": "music/km_ascending_tram.mp3",
     "sch": "music/inspired_tram.mp3",
-    "chk": "music/km_undaunted_tram.mp3",
+    "chk": "music/broke_pad_tram.mp3",
 }
 
 # ══ HAI MÀU CỦA MỖI KÊNH ═══════════════════════════════════════════════════════════════

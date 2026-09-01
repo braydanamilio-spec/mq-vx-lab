@@ -11959,6 +11959,1022 @@
     "diem_chot": 0,
     "tinh_huong": "Kiosk Fee Fight",
     "ma": "ae2f8d7fc780"
+   },
+   {
+    "loi": [
+     [
+      "I've been meaning to tell you something.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "What, you covered up a massive billing fraud?",
+      1,
+      "so"
+     ],
+     [
+      "Not that big, just a little slip.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You let the hospital lose a six-figure claim?",
+      1,
+      "so"
+     ],
+     [
+      "Actually, I just... I left my calculator.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You stole the entire insurance payout?",
+      1,
+      "so"
+     ],
+     [
+      "Okay, I actually forgot the $0.99 copay.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Well, at least the calculator's fine.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the billing window",
+    "hook": "WHAT'S HIDDEN AT THE BILLING WINDOW",
+    "diem_chot": 0,
+    "tinh_huong": "Tiny Secret",
+    "ma": "72d572a7fc95"
+   }
+  ],
+  "hoa": [
+   {
+    "loi": [
+     [
+      "Do we need a permit for the pool party?",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "The chlorine's at 3.2 ppm, perfect for swimmers.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "But I'm asking about paperwork, not water quality.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "Right, the board wants it below 4 ppm anyway.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "community pool",
+    "hook": "POOL PARTY PERMIT OR NOT",
+    "diem_chot": 0,
+    "tinh_huong": "Permit vs Chlorine",
+    "ma": "4276a33a9b6f"
+   },
+   {
+    "loi": [
+     [
+      "I can't believe the HOA bans BBQs after ten.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "They want to prevent late-night smoke and fire hazards.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "But that stops us from gathering on summer weekends.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "Imagine the complaints if someone sparks a fire at midnight.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Keeping the neighborhood safe is worth missing a few grill nights.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "Maybe the real loss is community, not safety.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the front porch",
+    "hook": "WHY IS THE HOA BANNING BBQS",
+    "diem_chot": 0,
+    "tinh_huong": "BBQ Ban Debate",
+    "ma": "107a20949820"
+   },
+   {
+    "loi": [
+     [
+      "I need to tell you about the thing I buried.",
+      0,
+      "so"
+     ],
+     [
+      "We will help you call a lawyer right now.",
+      1,
+      "tuc"
+     ],
+     [
+      "It is out by the hydrangeas. I panicked.",
+      0,
+      "buon"
+     ],
+     [
+      "Nobody saw you put the evidence there, did they?",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "The neighbors might have noticed the bright red hat.",
+      0,
+      "so"
+     ],
+     [
+      "I absolve you of the embezzlement, just take it down.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Embezzlement? It is just a tiny ceramic garden gnome.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "Oh. Well, the HOA committee still bans non-woodland creatures.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the front lawn",
+    "hook": "HE HID IT UNDER THE MULCH",
+    "diem_chot": 0,
+    "tinh_huong": "The Unregistered Gnome",
+    "ma": "b70918ae2870"
+   }
+  ],
+  "ret": [
+   {
+    "loi": [
+     [
+      "Did you bring the receipt for this spotted cat?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "My deductible went up five hundred dollars last Tuesday.",
+      1,
+      "tuc"
+     ],
+     [
+      "That has nothing to do with the leopard.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Veterinary care is covered under section four.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the customer service desk",
+    "hook": "SHE BROUGHT BACK THE WRONG LEOPARD",
+    "diem_chot": 0,
+    "tinh_huong": "The Wrong Policy",
+    "ma": "ea73dcaa812a"
+   },
+   {
+    "loi": [
+     [
+      "This twenty year old toaster cannot be returned.",
+      0,
+      "tuc"
+     ],
+     [
+      "Our lifetime guarantee honors every single purchase ever made.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Nobody should be chained to a kitchen appliance forever.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Those appliances chose us for better or worse.",
+      1,
+      "vui"
+     ],
+     [
+      "We are keeping this toaster hostage against its will.",
+      0,
+      "bat_ngo"
+     ],
+     [
+      "It belongs in the warehouse until parole hearing day.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the returns counter",
+    "hook": "HE BROUGHT BACK A BROKEN TOASTER",
+    "diem_chot": 0,
+    "tinh_huong": "the lifetime exchange window",
+    "ma": "4d61c51d2192"
+   },
+   {
+    "loi": [
+     [
+      "I think I left something behind.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You mean the $300 blender you tried to return?",
+      1,
+      "so"
+     ],
+     [
+      "No, not that-something... smaller.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Did you hide the entire electronics section?",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "Just a little something, I swear.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Are you confessing to stealing the store's credit system?",
+      1,
+      "so"
+     ],
+     [
+      "Actually, I just took the free sample gum.",
+      0,
+      "vui"
+     ],
+     [
+      "Well, at least you didn't steal the whole register.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the returns counter",
+    "hook": "WHAT DID HE REALLY STEAL",
+    "diem_chot": 0,
+    "tinh_huong": "Tiny confession, huge panic",
+    "ma": "82d7b9ca1179"
+   }
+  ],
+  "wed": [
+   {
+    "loi": [
+     [
+      "Uncle Gary cannot sit anywhere near my college roommates.",
+      0,
+      "tuc"
+     ],
+     [
+      "Start him at running back and we avoid all penalties.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "We are doing table arrangements, not the Sunday playoff roster.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Drafting kicker in round two always ruins the draft board.",
+      1,
+      "trung_tinh"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the planning office",
+    "hook": "THE BRIDE MADE A TERRIBLE MISTAKE",
+    "diem_chot": 0,
+    "tinh_huong": "Seating chart hostage negotiation",
+    "ma": "e3796a094032"
+   },
+   {
+    "loi": [
+     [
+      "Why do we have to ban outside cakes?",
+      0,
+      "so"
+     ],
+     [
+      "Because the venue guarantees quality and liability coverage.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Couples want personal touches, not corporate cookie-cutter desserts.",
+      0,
+      "so"
+     ],
+     [
+      "Our insurance only covers cakes baked on site, per health code.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "If we risk a claim, nobody gets paid.",
+      0,
+      "vui"
+     ],
+     [
+      "But forcing a single vendor kills the couple's unique flavor.",
+      1,
+      "so"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the planning office",
+    "hook": "NO OUTSIDE CAKE RULE DEBATE",
+    "diem_chot": 0,
+    "tinh_huong": "Rule Reversal",
+    "ma": "691ff381e5a8"
+   },
+   {
+    "loi": [
+     [
+      "I feel terrible about what I did.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Did you sabotage the whole dessert lineup?",
+      1,
+      "so"
+     ],
+     [
+      "Maybe I moved something important.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "You stole the catering budget, right?",
+      1,
+      "bat_ngo"
+     ],
+     [
+      "I know it looks bad.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Fine, I forgive you for the big mess.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I just pocketed the lavender napkin.",
+      0,
+      "vui"
+     ],
+     [
+      "That's it? I'm still shocked by the napkin.",
+      1,
+      "so"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the tasting table",
+    "hook": "WHAT DID SHE REALLY STEAL",
+    "diem_chot": 0,
+    "tinh_huong": "Napkin Nonsense",
+    "ma": "f2f0ad446b84"
+   }
+  ],
+  "mov": [
+   {
+    "loi": [
+     [
+      "Did you file the permit for the truck on Main?",
+      0,
+      "tuc"
+     ],
+     [
+      "I already paid the fine for parking on Main.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I mean the permit-did you submit the application?",
+      0,
+      "tuc"
+     ],
+     [
+      "Yeah, the city already cleared our insurance paperwork.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the moving truck ramp",
+    "hook": "PERMIT OR PARKING TICKET CONFUSION",
+    "diem_chot": 0,
+    "tinh_huong": "Permit vs Fine Mixup",
+    "ma": "0ba962f1013d"
+   },
+   {
+    "loi": [
+     [
+      "Why does the HOA ban moving boxes on the stairs",
+      0,
+      "so"
+     ],
+     [
+      "Because the stairwell can't handle that much weight, they said",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "But we could take a few trips, it's not that heavy",
+      0,
+      "tuc"
+     ],
+     [
+      "Every extra pound adds up; the building's warranty depends on it",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "Okay, protecting the building is more important than speed",
+      0,
+      "vui"
+     ],
+     [
+      "Guess losing an hour beats a cracked stair any day",
+      1,
+      "buon"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the stairwell landing",
+    "hook": "WHY ARE THEY BLOCKING THE STAIRS",
+    "diem_chot": 0,
+    "tinh_huong": "Stairweight Debate",
+    "ma": "3eb0f69188cd"
+   },
+   {
+    "loi": [
+     [
+      "I need to tell you something awful about box four.",
+      0,
+      "so"
+     ],
+     [
+      "We can afford bail, just tell me where.",
+      1,
+      "so"
+     ],
+     [
+      "It is gone forever and I feel sick.",
+      0,
+      "buon"
+     ],
+     [
+      "Even if you buried someone, I still love you.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Nobody died, it is just about the glaze.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "I forgive the insurance fraud, just breathe.",
+      1,
+      "vui"
+     ],
+     [
+      "I left the maple bar coupon at the old house.",
+      0,
+      "buon"
+     ],
+     [
+      "You risked prison over a stale breakfast pastry.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the hallway full of boxes",
+    "hook": "HE LOST GRANDPAS SECRET",
+    "diem_chot": 0,
+    "tinh_huong": "Missing Heirloom Panic",
+    "ma": "0c5b037e365c"
+   }
+  ],
+  "vet": [
+   {
+    "loi": [
+     [
+      "Did you notice that weird smell when he barks?",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "The DJ totally ruined the cocktail hour with those polka tracks.",
+      1,
+      "tuc"
+     ],
+     [
+      "I am talking about the dog's breath right now.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Well, your cousin booked the polka band, so you deal with it.",
+      1,
+      "tu_tin"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the exam room",
+    "hook": "THE VET IS IN THE ROOM",
+    "diem_chot": 0,
+    "tinh_huong": "dog breath consultation",
+    "ma": "f883ce5ef604"
+   },
+   {
+    "loi": [
+     [
+      "This county ordinance on metal tags is pure bureaucratic overreach.",
+      0,
+      "tuc"
+     ],
+     [
+      "Public safety requires every canine to display proof of immunization instantly.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Nobody checks them anyway unless the animal bites a mail carrier.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "The law protects innocent citizens from wandering biological hazards on our streets.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "You are completely right, we need strict enforcement before someone loses a limb.",
+      0,
+      "vui"
+     ],
+     [
+      "Actually, let us remove this stray before animal control impounds my own lunch.",
+      1,
+      "so"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the reception desk",
+    "hook": "THE DOG LOST HIS COLLAR AGAIN",
+    "diem_chot": 0,
+    "tinh_huong": "rabies tag ordinance debate",
+    "ma": "a2a7087a8db4"
+   },
+   {
+    "loi": [
+     [
+      "I have a terrible confession about his weight.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Did he eat another couch cushion again?",
+      1,
+      "so"
+     ],
+     [
+      "Worse, it was metal and very shiny.",
+      0,
+      "so"
+     ],
+     [
+      "We need emergency surgery right now.",
+      1,
+      "tuc"
+     ],
+     [
+      "It was just my favorite earring back.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Oh thank goodness, I thought it was grandma's toaster.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the scale corner",
+    "hook": "THE DOG WEIGHS TWENTY POUNDS OVER",
+    "diem_chot": 0,
+    "tinh_huong": "The Lost Earring Back",
+    "ma": "51c5e3a4079b"
+   }
+  ],
+  "cab": [
+   {
+    "loi": [
+     [
+      "Why is my monthly fee jumping sixty dollars today?",
+      0,
+      "tuc"
+     ],
+     [
+      "He just eats too much meat for a senior.",
+      1,
+      "trung_tinh"
+     ],
+     [
+      "I am talking about our broadband data caps.",
+      0,
+      "tuc"
+     ],
+     [
+      "We should have put him on the diet plan.",
+      1,
+      "nghi_ngo"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the home office desk",
+    "hook": "THE TEN YEAR CONTRACT ERROR",
+    "diem_chot": 0,
+    "tinh_huong": "Broadband plan renewal audit",
+    "ma": "af518d5fcf49"
+   },
+   {
+    "loi": [
+     [
+      "Charging thirty dollars for being one minute late is pure theft.",
+      0,
+      "tuc"
+     ],
+     [
+      "Rules exist so civilized humans do not live in chaos.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Chaos sounds cheaper than this rigid midnight cutoff.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "Total predictability is the true luxury we sell.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Without strict deadlines, how would we catch the prompt ones?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "We built the clock specifically to punish the punctual.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the retention desk",
+    "hook": "TEN SECONDS PAST THE DEADLINE",
+    "diem_chot": 0,
+    "tinh_huong": "Late fee grace period dispute",
+    "ma": "2b4532bc0712"
+   },
+   {
+    "loi": [
+     [
+      "I need to tell you something about the drop box.",
+      0,
+      "so"
+     ],
+     [
+      "You burned the rental record, didn't you?",
+      1,
+      "tuc"
+     ],
+     [
+      "It is way worse than that.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "I can protect you from the audit board.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "I threw out the little plastic piece.",
+      0,
+      "buon"
+     ],
+     [
+      "We will survive witness relocation together.",
+      1,
+      "vui"
+     ],
+     [
+      "It was just the battery door for the remote.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I already forged your confession to grand larceny.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the service counter",
+    "hook": "SHE NEVER RETURNED THE MODEM",
+    "diem_chot": 0,
+    "tinh_huong": "equipment return fee dispute",
+    "ma": "fa77d23421f9"
+   }
+  ],
+  "sch": [
+   {
+    "loi": [
+     [
+      "Did you lock the front office after school?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Yeah, I double-checked the bike rack lock this morning.",
+      1,
+      "vui"
+     ],
+     [
+      "I need the front office door, not the bike rack.",
+      0,
+      "buon"
+     ],
+     [
+      "Sorry, I thought you meant my bike lock, not the office.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the school hallway",
+    "hook": "WHO'S LOCKING WHAT TODAY",
+    "diem_chot": 0,
+    "tinh_huong": "Lock Mix-up",
+    "ma": "2d6ee1323058"
+   },
+   {
+    "loi": [
+     [
+      "I don't get why backpacks are banned here.",
+      0,
+      "buon"
+     ],
+     [
+      "They spill crumbs, attract ants, and mess up cleaning.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "But without them we can't carry our lunch properly.",
+      0,
+      "buon"
+     ],
+     [
+      "Yet a clean cafeteria means everyone eats faster, safer.",
+      1,
+      "tuc"
+     ],
+     [
+      "Exactly, a spotless cafeteria outweighs a few extra crumbs.",
+      0,
+      "vui"
+     ],
+     [
+      "Turns out the real issue is lunch, not cleanliness.",
+      1,
+      "nghi_ngo"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the cafeteria",
+    "hook": "WHY NO BACKPACKS IN CAFETERIA",
+    "diem_chot": 0,
+    "tinh_huong": "Backpack Ban Battle",
+    "ma": "024562d25b5e"
+   },
+   {
+    "loi": [
+     [
+      "I've got a secret I've been holding back.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Did you steal the cafeteria's fundraiser cash?",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "No, it's not that big.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Did you hide the whole lunch menu from everyone?",
+      1,
+      "nghi_ngo"
+     ],
+     [
+      "You're making this way too dramatic.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "I forgive you for trashing the entire dessert line.",
+      1,
+      "vui"
+     ],
+     [
+      "Okay, I admit it- I ate the last blueberry muffin.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Well, at least the muffins won't be missing forever.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the cafeteria",
+    "hook": "WHAT'S HIDING IN THE CAFETERIA",
+    "diem_chot": 0,
+    "tinh_huong": "Muffin Misunderstanding",
+    "ma": "82d91454250c"
+   }
+  ],
+  "chk": [
+   {
+    "loi": [
+     [
+      "Did you scan the cereal or the cat food?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "The Wi-Fi password is six characters, starts with a vowel.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "Why is the total $5 higher than expected?",
+      0,
+      "so"
+     ],
+     [
+      "Make sure the router is on the second floor.",
+      1,
+      "bat_ngo"
+     ]
+    ],
+    "khung": "hieu_lam",
+    "noi": "the self checkout station",
+    "hook": "WHY IS MY TOTAL SO HIGH",
+    "diem_chot": 0,
+    "tinh_huong": "Wi-Fi Checkout Mix-up",
+    "ma": "c46e0707fbe3"
+   },
+   {
+    "loi": [
+     [
+      "Why do we have to bag before scanning the next item?",
+      0,
+      "buon"
+     ],
+     [
+      "Because the weight sensor catches missed scans before you walk away.",
+      1,
+      "tuc"
+     ],
+     [
+      "But the cameras already watch everything; the sensor's just redundant.",
+      0,
+      "buon"
+     ],
+     [
+      "Redundant, yet it forces us to pause, reducing impulse buys.",
+      1,
+      "vui"
+     ],
+     [
+      "Exactly, that pause saves the store money, so the rule works.",
+      0,
+      "tu_tin"
+     ],
+     [
+      "So I'm the one who thinks cameras already catch everything.",
+      1,
+      "nghi_ngo"
+     ]
+    ],
+    "khung": "dao_vai",
+    "noi": "the self checkout station",
+    "hook": "WHY BAG BEFORE SCANNING",
+    "diem_chot": 0,
+    "tinh_huong": "Bag-First Argument",
+    "ma": "bdef1063c653"
+   },
+   {
+    "loi": [
+     [
+      "I need to get this off my chest right now.",
+      0,
+      "so"
+     ],
+     [
+      "You harbored a fugitive, I already know about it.",
+      1,
+      "tu_tin"
+     ],
+     [
+      "It was parked right in front of the bakery.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "We are sheltering an international art thief, fine.",
+      1,
+      "buon"
+     ],
+     [
+      "I didn't even leave a note on the bumper.",
+      0,
+      "so"
+     ],
+     [
+      "You traded our minivan for a forged Picasso, I forgive you.",
+      1,
+      "vui"
+     ],
+     [
+      "I just wanted the close spot so my frosting stayed cold.",
+      0,
+      "nghi_ngo"
+     ],
+     [
+      "You stole a shopping cart quarter, just pay the machine.",
+      1,
+      "tuc"
+     ]
+    ],
+    "khung": "thu_nhan",
+    "noi": "the self checkout station",
+    "hook": "HE TOOK THE RESERVE SPACE",
+    "diem_chot": 0,
+    "tinh_huong": "Stolen Parking Spot Guilt",
+    "ma": "2ded27c775a2"
    }
   ]
  },
@@ -13810,7 +14826,157 @@
   "but those staff are already funded by «t n» budget": 1,
   "if we cut verification claims get denied and patients lose coverage": 1,
   "so keeping «t n» preserves verification and prevents denied claims": 1,
-  "then «t n» is «t n» barrier to patient care": 1
+  "then «t n» is «t n» barrier to patient care": 1,
+  "i ve been meaning to tell you something": 1,
+  "what you covered up «t n» billing fraud": 1,
+  "not that big just «t n» slip": 1,
+  "you let «t n» lose a «s » figure claim": 1,
+  "actually i just i left «t n»": 1,
+  "you stole «t n» insurance payout": 1,
+  "okay i actually forgot the «s » copay": 1,
+  "well at least «t n» s fine": 1,
+  "do we need «t n» for «t n» party": 1,
+  "«t n» s at «s » ppm perfect for swimmers": 1,
+  "but i m asking about paperwork not water quality": 1,
+  "right «t n» wants it below «s » ppm anyway": 1,
+  "i can t believe «t n» bans bbqs after «s »": 1,
+  "they want to prevent late night smoke and fire hazards": 1,
+  "but that stops us from gathering on summer weekends": 1,
+  "imagine «t n» if someone sparks «t n» at midnight": 1,
+  "keeping «t n» safe is worth missing «t n» grill nights": 1,
+  "maybe «t n» loss is community not safety": 1,
+  "i need to tell you about «t n» i buried": 1,
+  "we will help you call «t n» right now": 1,
+  "it is out by «t n» i panicked": 1,
+  "nobody saw you put «t n» there did they": 1,
+  "«t n» might have noticed «t n» red hat": 1,
+  "i absolve you of «t n» just take it down": 1,
+  "embezzlement it is just «t n» ceramic garden gnome": 1,
+  "oh well «t n» committee still bans non woodland creatures": 1,
+  "did you bring «t n» for this spotted cat": 1,
+  "«t n» went up «s » «s » dollars last «ng y»": 1,
+  "that has nothing to do with «t n»": 1,
+  "veterinary care is covered under section «s »": 1,
+  "this «s » year old toaster cannot be returned": 1,
+  "«t n» guarantee honors every single purchase ever made": 1,
+  "nobody should be chained to «t n» appliance forever": 1,
+  "those appliances chose us for better or worse": 1,
+  "we are keeping this toaster hostage against its will": 1,
+  "it belongs in «t n» until parole hearing day": 1,
+  "i think i left something behind": 1,
+  "you mean the «s » blender you tried to return": 1,
+  "no not that something smaller": 1,
+  "did you hide «t n» electronics section": 1,
+  "just «t n» something i swear": 1,
+  "are you confessing to stealing «t n» s credit system": 1,
+  "actually i just took «t n» sample gum": 1,
+  "well at least you didn t steal «t n» register": 1,
+  "uncle gary cannot sit anywhere near «t n» roommates": 1,
+  "start him at running back and we avoid all penalties": 1,
+  "we are doing table arrangements not the «ng y» playoff roster": 1,
+  "drafting kicker in round «s » always ruins «t n» board": 1,
+  "why do we have to ban outside cakes": 1,
+  "because «t n» guarantees quality and liability coverage": 1,
+  "couples want personal touches not corporate cookie cutter desserts": 1,
+  "«t n» only covers cakes baked on site per health code": 1,
+  "if we risk «t n» nobody gets paid": 1,
+  "but forcing «t n» vendor kills «t n» s unique flavor": 1,
+  "i feel terrible about what i did": 1,
+  "did you sabotage «t n» dessert lineup": 1,
+  "maybe i moved something important": 1,
+  "you stole «t n» budget right": 1,
+  "i know it looks bad": 1,
+  "fine i forgive you for «t n» mess": 1,
+  "i just pocketed «t n» napkin": 1,
+  "that s it i m still shocked by «t n»": 1,
+  "did you file «t n» for «t n» on main": 1,
+  "i already paid «t n» for parking on main": 1,
+  "i mean «t n» did you submit «t n»": 1,
+  "yeah «t n» already cleared «t n» paperwork": 1,
+  "why does «t n» ban moving boxes on «t n»": 1,
+  "because «t n» can t handle that much weight they said": 1,
+  "but we could take «t n» trips it s not that heavy": 1,
+  "every extra pound adds up «t n» s warranty depends on it": 1,
+  "okay protecting «t n» is more important than speed": 1,
+  "guess losing «t n» beats «t n» stair any day": 1,
+  "i need to tell you something awful about box «s »": 1,
+  "we can afford bail just tell me where": 1,
+  "it is gone forever and i feel sick": 1,
+  "even if you buried someone i still love you": 1,
+  "nobody died it is just about «t n»": 1,
+  "i forgive «t n» fraud just breathe": 1,
+  "i left «t n» bar coupon at «t n» house": 1,
+  "you risked prison over «t n» breakfast pastry": 1,
+  "did you notice that weird smell when he barks": 1,
+  "«t n» totally ruined «t n» hour with those polka tracks": 1,
+  "i am talking about «t n» s breath right now": 1,
+  "well «t n» booked «t n» band so you deal with it": 1,
+  "this county ordinance on metal tags is pure bureaucratic overreach": 1,
+  "public safety requires every canine to display proof of immunization instantly": 1,
+  "nobody checks them anyway unless «t n» bites «t n» carrier": 1,
+  "«t n» protects innocent citizens from wandering biological hazards on «t n»": 1,
+  "you are completely right we need strict enforcement before someone loses «t n»": 1,
+  "actually let us remove this stray before animal control impounds «t n» lunch": 1,
+  "i have «t n» confession about «t n»": 1,
+  "did he eat another couch cushion again": 1,
+  "worse it was metal and very shiny": 1,
+  "we need emergency surgery right now": 1,
+  "it was just «t n» earring back": 1,
+  "oh thank goodness i thought it was grandma s toaster": 1,
+  "why is «t n» fee jumping sixty dollars today": 1,
+  "he just eats too much meat for «t n»": 1,
+  "i am talking about «t n» data caps": 1,
+  "we should have put him on «t n» plan": 1,
+  "charging «s » dollars for being «s » minute late is pure theft": 1,
+  "rules exist so civilized humans do not live in chaos": 1,
+  "chaos sounds cheaper than this rigid midnight cutoff": 1,
+  "total predictability is «t n» luxury we sell": 1,
+  "without strict deadlines how would we catch «t n» ones": 1,
+  "we built «t n» specifically to punish «t n»": 1,
+  "i need to tell you something about «t n» box": 1,
+  "you burned «t n» record didn t you": 1,
+  "it is way worse than that": 1,
+  "i can protect you from «t n» board": 1,
+  "i threw out «t n» plastic piece": 1,
+  "we will survive witness relocation together": 1,
+  "it was just «t n» door for «t n»": 1,
+  "i already forged «t n» to grand larceny": 1,
+  "did you lock «t n» office after school": 1,
+  "yeah i double checked «t n» rack lock this morning": 1,
+  "i need «t n» office door not «t n» rack": 1,
+  "sorry i thought you meant «t n» lock not «t n»": 1,
+  "i don t get why backpacks are banned here": 1,
+  "they spill crumbs attract ants and mess up cleaning": 1,
+  "but without them we can t carry «t n» properly": 1,
+  "yet «t n» cafeteria means everyone eats faster safer": 1,
+  "exactly «t n» cafeteria outweighs «t n» extra crumbs": 1,
+  "turns out «t n» issue is lunch not cleanliness": 1,
+  "i ve got «t n» i ve been holding back": 1,
+  "did you steal «t n» s fundraiser cash": 1,
+  "no it s not that big": 1,
+  "did you hide «t n» lunch menu from everyone": 1,
+  "you re making this way too dramatic": 1,
+  "i forgive you for trashing «t n» dessert line": 1,
+  "okay i admit it i ate «t n» blueberry muffin": 1,
+  "well at least «t n» won t be missing forever": 1,
+  "did you scan «t n» or «t n» food": 1,
+  "«t n» fi password is «s » characters starts with «t n»": 1,
+  "why is «t n» «s » higher than expected": 1,
+  "make sure «t n» is on «t n» floor": 1,
+  "why do we have to bag before scanning «t n» item": 1,
+  "because «t n» sensor catches missed scans before you walk away": 1,
+  "but «t n» already watch everything «t n» s just redundant": 1,
+  "redundant yet it forces us to pause reducing impulse buys": 1,
+  "exactly that pause saves «t n» money so «t n» works": 1,
+  "so i m the «s » who thinks cameras already catch everything": 1,
+  "i need to get this off «t n» right now": 1,
+  "you harbored «t n» i already know about it": 1,
+  "it was parked right in front of «t n»": 1,
+  "we are sheltering «t n» art thief fine": 1,
+  "i didn t even leave «t n» on «t n»": 1,
+  "you traded «t n» for «t n» picasso i forgive you": 1,
+  "i just wanted «t n» spot so «t n» stayed cold": 1,
+  "you stole «t n» cart quarter just pay «t n»": 1
  },
  "tinh_huong": {
   "tech": [
@@ -14146,7 +15312,48 @@
   ],
   "erbill": [
    "Prescription Mix-Up",
-   "Kiosk Fee Fight"
+   "Kiosk Fee Fight",
+   "Tiny Secret"
+  ],
+  "hoa": [
+   "Permit vs Chlorine",
+   "BBQ Ban Debate",
+   "The Unregistered Gnome"
+  ],
+  "ret": [
+   "The Wrong Policy",
+   "the lifetime exchange window",
+   "Tiny confession, huge panic"
+  ],
+  "wed": [
+   "Seating chart hostage negotiation",
+   "Rule Reversal",
+   "Napkin Nonsense"
+  ],
+  "mov": [
+   "Permit vs Fine Mixup",
+   "Stairweight Debate",
+   "Missing Heirloom Panic"
+  ],
+  "vet": [
+   "dog breath consultation",
+   "rabies tag ordinance debate",
+   "The Lost Earring Back"
+  ],
+  "cab": [
+   "Broadband plan renewal audit",
+   "Late fee grace period dispute",
+   "equipment return fee dispute"
+  ],
+  "sch": [
+   "Lock Mix-up",
+   "Backpack Ban Battle",
+   "Muffin Misunderstanding"
+  ],
+  "chk": [
+   "Wi-Fi Checkout Mix-up",
+   "Bag-First Argument",
+   "Stolen Parking Spot Guilt"
   ]
  }
 }
