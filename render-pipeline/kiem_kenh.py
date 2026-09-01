@@ -3,12 +3,12 @@
 """CỔNG KÊNH — mọi bảng phụ thuộc phải phủ đủ danh sách kênh, và không trùng ngoài ý muốn.
 
 ── VÌ SAO CẦN CỔNG NÀY (1/9/2026) ──────────────────────────────────────────────────────────
-`KENH` trong `giai_thich.py` là nguồn sự thật về danh sách kênh. Nhưng có SÁU bảng khác phải
+`KENH` trong `giai_thich.py` là nguồn sự thật về danh sách kênh. Nhưng có BẢY bảng khác phải
 đi kèm nó, nằm ở BA tệp:
 
     giai_thich.MAU_KENH · GU_RIENG · HOOK_LOI · BO_SINH
     nen_gt.KENH_GU · KHOA_VAI
-    brand_gt.NHAN
+    brand_gt.NHAN · MO_TA
 
 Thêm một kênh mà quên một bảng thì KHÔNG có lỗi nào báo — kênh ấy lặng lẽ rơi về mặc định:
 màu chung, giọng chung, biểu tượng chung. Trông vẫn chạy, chỉ là kênh ấy mất bản sắc.
@@ -52,6 +52,7 @@ def kiem() -> tuple:
         "nen_gt.KENH_GU":      N.KENH_GU,
         "nen_gt.KHOA_VAI":     N.KHOA_VAI,
         "brand_gt.NHAN":       B.NHAN,
+        "brand_gt.MO_TA":      B.MO_TA,
     }
     for ten, b in bang.items():
         thieu = [m for m in ma if m not in b]
@@ -73,6 +74,8 @@ def kiem() -> tuple:
         ("sắc thái vẽ",    lambda m: G.GU_RIENG[m][2]),
         ("biểu tượng",     lambda m: B.NHAN[m][0]),
         ("từ avatar",      lambda m: B.NHAN[m][1]),
+        ("khẩu hiệu",      lambda m: B.MO_TA[m][0]),
+        ("bộ thẻ",         lambda m: B.MO_TA[m][1]),
         ("khoá nhân vật",  lambda m: N.KHOA_VAI[m]),
     ]
     for ten, lay in truc:
@@ -138,7 +141,7 @@ def main() -> int:
     for d in bao:
         print(d)
     if loi:
-        print(f"\n❌ {loi} lỗi. Thêm kênh thì phải thêm vào ĐỦ BẢY BẢNG — thiếu một bảng là kênh")
+        print(f"\n❌ {loi} lỗi. Thêm kênh thì phải thêm vào ĐỦ TÁM BẢNG — thiếu một bảng là kênh")
         print("   ấy lặng lẽ mất bản sắc, và không có lỗi nào báo.")
         return 1
     print("\n✅ mọi bảng phủ đủ danh sách kênh · không trùng ở trục nhận diện")

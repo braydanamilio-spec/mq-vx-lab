@@ -38,6 +38,32 @@ from giai_thich import KENH, MAU_KENH                        # noqa: E402
 
 # Biểu tượng nhận diện + từ ngắn cho avatar. Ở 48px chỉ còn đọc được hình khối và 1-2 từ, nên
 # từ ngắn phải là từ MANG NGHĨA NHẤT của tên kênh, không phải từ đầu tiên.
+# ── MÔ TẢ THƯƠNG HIỆU: khẩu hiệu tiếng Anh + thẻ · dùng cho dashboard, bìa kênh và bài đăng ──
+# Đặt ở ĐÂY chứ không ở dashboard, vì `brand_gt.py` đã là nơi giữ nhận diện (biểu tượng + từ
+# avatar trong `NHAN`). Gõ tay lần nữa vào `index.html` là tạo nguồn sự thật thứ tư cho danh
+# sách kênh — và bốn nguồn thì hôm nay đã lệch nhau hai chiều rồi.
+#   ma -> (khẩu hiệu hiện dưới tên kênh, chuỗi thẻ)
+MO_TA = {
+    "howlong":   ("Every journey, in real time",        "#howlong #timescale #distance #explained"),
+    "howbig":    ("Scale you can actually picture",     "#howbig #scale #sizecomparison #explained"),
+    "realcost":  ("The price after the price",          "#realcost #truecost #money #explained"),
+    "howmuch":   ("Big numbers, made human",            "#howmuch #billion #bignumbers #perspective"),
+    "whatif":    ("One change, all the math",           "#whatif #hypothetical #thoughtexperiment"),
+    "survive":   ("The numbers say no",                 "#survive #survival #extremes #explained"),
+    "dayinlife": ("Twenty-four hours, counted",         "#dayinthelife #dailynumbers #routine"),
+    "wheregoes": ("Follow it all the way down",         "#wheredoesitgo #supplychain #hiddensystems"),
+    "therules":  ("The fine print, read out loud",      "#finePrint #therules #knowyourrights"),
+    "speedof":   ("Everything, ranked by speed",        "#speedof #howfast #physics #explained"),
+    "odds":      ("What the chances really are",        "#odds #probability #chances #explained"),
+    "hiddenfee": ("Where your money actually goes",     "#hiddenfees #pricebreakdown #money"),
+    "yearsof":   ("What you spend your life on",        "#yearsofyourlife #timespent #lifemath"),
+    "howloud":   ("Decibels you can feel",              "#howloud #decibels #sound #explained"),
+    "whatweighs":("Heavier than you think",             "#whatitweighs #howheavy #comparison"),
+    "rightnow":  ("Happening while you watch",          "#rightnow #livenumbers #happeningnow"),
+    "howhot":    ("The degrees that matter",            "#howhot #temperature #heat #explained"),
+    "smallest":  ("Too small to imagine, measured",     "#smallest #tiny #microscopic #explained"),
+}
+
 NHAN = {
     # 18 biểu tượng KHÁC NHAU HOÀN TOÀN. Ở 48px — cỡ avatar thật trong danh sách đề xuất —
     # hình khối là thứ duy nhất còn phân biệt được; trùng hình là hai kênh trông như một.
