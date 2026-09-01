@@ -7603,3 +7603,39 @@ lỗi. Gộp chung một câu thì báo đổ sai phía, mà đổ sai phía t�
 
 **Luật:** khi thêm một ràng buộc mới (khuôn kể), phải đi soát lại mọi ghi chú nói về thứ ràng
 buộc ấy chi phối — ghi chú cũ là nơi cuối cùng người ta nghĩ tới, và là nơi đầu tiên người ta tin.
+
+### 8k30 — Danh sách trục viết ở BA nơi; thêm trục thứ bảy, sửa hai
+
+Bộ lịch khai báo độ dài từng trục ở ba chỗ: `_lich()` · `_buoc_lich()` · khối xuất web. Thêm
+trục thứ bảy (cơ chế cú lật), tôi sửa hai chỗ đầu và quên chỗ thứ ba.
+
+Kết quả: web tính theo **sáu** trục, Python theo **bảy** — và **280/280 đề bài lệch ĐÚNG MỘT
+TRƯỜNG**. Sáu trục kia khớp hoàn hảo. Đó là kiểu lệch nguy nhất: nó trông như "gần đúng" chứ
+không trông như hỏng, nên rất dễ bỏ qua trong một bảng đối chiếu đọc lướt.
+
+Chữa: `_do_truc(hs)` — một nguồn duy nhất, cả ba chỗ gọi nó.
+
+**Luật:** một danh sách phải khớp giữa hai môi trường thì nó là **hằng số**, không phải một
+biểu thức viết lại ở mỗi nơi cần. Dấu hiệu: cùng một dãy `len(...)` xuất hiện quá một lần.
+
+### 8k31 — Chỗ duy nhất để AI tự quyết là chỗ nó lười nhất
+
+Đề bài cấp sáu trục: phòng · đồ vật · áp lực · kiểu mở · ai gây · ai lật. **Không cấp cách lật.**
+Đo trên lượt sinh thật, đó chính là trục mất điểm nhiều nhất và lặp nhiều nhất:
+*"Cú lật — cơ chế mới, không lặp kho = 5/10 (họ = nhấc-lộ-vô-hại)"*.
+
+Cùng bài học đã trả giá ở phòng và người lật, lặp lại lần thứ ba: **dặn "đừng lặp" không ăn
+thua, cấp theo lịch thì ăn thua**. Nay cơ chế lật là trục thứ bảy, và có bản mô tả tiếng Anh
+(`HO_LAT_TA`) để cấp cho AI — tên tiếng Việt ở khoá chỉ dùng cho thước phân loại.
+
+Không gian tổ hợp một kênh: 737.280 → **7.372.800**.
+
+### 8k32 — Lỗi MÁY SỬA ĐƯỢC thì đừng đốt một vòng gọi AI
+
+AI viết `who: "Nick"` cho vai tên `"Chef Nick"`, và thước chặn với lý do "không có trong dàn
+khoá". Đúng luật, nhưng nó tiêu một vòng viết lại — tức một lượt gọi AI và một chỗ trong hạn
+mức — cho một thứ máy sửa được, y như chuyện thiếu dấu chấm câu.
+
+`don()` nay tự chuẩn hoá tên viết tắt về tên đầy đủ, **và chỉ khi khớp DUY NHẤT**: `"Joe"` ra
+`"Grandpa Joe"` được, nhưng nếu kênh có hai vai cùng chứa `"Joe"` thì để nguyên cho thước chặn.
+Đoán bừa còn tệ hơn chặn.

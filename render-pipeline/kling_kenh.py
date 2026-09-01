@@ -1186,7 +1186,13 @@ def _lich(kenh: str, so: int) -> dict:
     phong = list(hs["phong"])
     do = list(hs.get("dao_cu") or ["an ordinary object"])
     vai = list(hs["vai"])
-    truc = [len(phong), len(do), len(AP_LUC), len(KIEU_MO), len(vai), max(1, len(vai) - 1)]
+    # 1/9 — THÊM TRỤC THỨ BẢY: cơ chế cú lật. Đo trên lượt sinh thật, đây là chỗ mất điểm lớn
+    # nhất và lặp lại nhiều nhất: "Cú lật — cơ chế mới, không lặp kho = 5/10 (họ =
+    # nhấc-lộ-vô-hại)". Đề bài cấp phòng · đồ vật · áp lực · kiểu mở · ai gây · ai lật, nhưng
+    # KHÔNG cấp cách lật — nên chỗ duy nhất còn để AI tự quyết lại đúng là chỗ nó lười nhất.
+    # Dặn "đừng lặp" đã thử ở phòng và người lật, không ăn thua; cấp theo lịch thì ăn thua.
+    ho_ten = list(HO_LAT)
+    truc = _do_truc(hs)
     P = 1
     for x in truc:
         P *= x
@@ -1198,12 +1204,25 @@ def _lich(kenh: str, so: int) -> dict:
     for x in truc:
         ra.append(chi % x)
         chi //= x
-    i_ph, i_do, i_ap, i_mo, i_gay, i_lat = ra
+    i_ph, i_do, i_ap, i_mo, i_gay, i_lat, i_co = ra
     gay = vai[i_gay]
     con = [v for v in vai if v != gay] or vai
     lat = con[i_lat % len(con)]
     return {"phong": phong[i_ph], "dao_cu": do[i_do], "ap_luc": AP_LUC[i_ap],
-            "kieu_mo": KIEU_MO[i_mo], "gay": gay, "lat": lat, "_khong_gian": P}
+            "kieu_mo": KIEU_MO[i_mo], "gay": gay, "lat": lat, "co_che": ho_ten[i_co],
+            "_khong_gian": P}
+
+
+def _do_truc(hs: dict) -> list:
+    """Độ dài từng trục của bộ lịch. MỘT nguồn duy nhất.
+
+    1/9 — Danh sách trục từng được viết ra ba nơi: `_lich()`, `_buoc_lich()`, và khối xuất web.
+    Thêm trục thứ bảy, tôi sửa hai nơi đầu và quên nơi thứ ba — web tính theo sáu trục, Python
+    theo bảy, và 280/280 đề bài lệch ĐÚNG MỘT TRƯỜNG. Sáu trục kia khớp hoàn hảo, nên nhìn
+    thoáng qua nó giống "gần đúng" chứ không giống hỏng.
+    """
+    return [len(hs["phong"]), len(hs.get("dao_cu") or [1]), len(AP_LUC), len(KIEU_MO),
+            len(hs["vai"]), max(1, len(hs["vai"]) - 1), len(HO_LAT)]
 
 
 def _buoc_lich(kenh: str) -> int:
@@ -1211,8 +1230,7 @@ def _buoc_lich(kenh: str) -> int:
     đi qua một phần không gian rồi lặp — đúng cái bẫy `lcm` đã tránh ở `_lich`."""
     hs = ho_so(kenh)
     P = 1
-    for x in (len(hs["phong"]), len(hs.get("dao_cu") or [1]), len(AP_LUC), len(KIEU_MO),
-              len(hs["vai"]), max(1, len(hs["vai"]) - 1)):
+    for x in _do_truc(hs):
         P *= x
     b = 1_000_003
     while _gcd(b, P) != 1:
@@ -1634,10 +1652,31 @@ def _giay_thoai(giay: float) -> float:
 
 
 # ── THƯỚC CHẤM KỊCH BẢN ─────────────────────────────────────────────────────────────────────
-def don(d: dict) -> dict:
+def don(d: dict, kenh: str = "") -> dict:
     """Sửa những lỗi máy sửa được, tại chỗ, trước khi đưa qua thước."""
     if not isinstance(d, dict):
         return d
+
+    # ── TÊN VAI VIẾT TẮT -> TÊN ĐẦY ĐỦ ─────────────────────────────────────────────────────
+    # 1/9 — Đo trên lượt sinh thật: AI viết `who: "Nick"` cho vai tên "Chef Nick", và thước chặn
+    # với lý do "nhân vật không có trong dàn khoá". Về mặt luật thì đúng, nhưng nó đốt một vòng
+    # viết lại cho một thứ MÁY SỬA ĐƯỢC — mà mỗi vòng là một lượt gọi AI và một chỗ trong hạn
+    # mức. Cùng lý lẽ với việc tự thêm dấu chấm câu: lỗi máy sửa được thì máy sửa.
+    # Chỉ nhận khi khớp DUY NHẤT: "Joe" ra "Grandpa Joe" thì được, nhưng nếu kênh có hai vai
+    # cùng chứa "Joe" thì để nguyên cho thước chặn — đoán bừa còn tệ hơn chặn.
+    if kenh:
+        try:
+            vai = ho_so(kenh)["vai"]
+        except Exception:
+            vai = []
+        for ln in (d.get("lines") or []):
+            if not isinstance(ln, dict):
+                continue
+            w = str(ln.get("who") or "").strip()
+            if w and w not in vai:
+                hop = [v for v in vai if w and (w in v.split() or v.split()[-1] == w)]
+                if len(hop) == 1:
+                    ln["who"] = hop[0]
     for ln in (d.get("lines") or []):
         if not isinstance(ln, dict):
             continue
@@ -2287,8 +2326,9 @@ def de_bai(kenh: str, so: int) -> str:
         f"  · THE PRESSURE that makes it a scene and not just an incident: {x['ap_luc']}\n"
         f"  · THE OPENING IMAGE must be this kind of wrong: {x['kieu_mo']}\n"
         f"  · {x['gay']} caused it (and does not admit it)\n"
-        f"  · {x['lat']} delivers the reversal\n"
-        f"These six are fixed. Everything else — what is wanted, what is said, how it turns — is "
+        f"  · {x['lat']} delivers the reversal, and delivers it THIS way — not the way that "
+        f"comes to mind first: {HO_LAT_TA.get(x['co_che'], x['co_che'])}\n"
+        f"These seven are fixed. Everything else — what is wanted, what is said, how it turns — is "
         f"yours to invent, and must be invented fresh: this exact combination has not been used "
         f"before on this channel.\n\n"
     )
@@ -2474,7 +2514,7 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
             d = CB._extract_json(resp.text)
         except Exception as ex:
             fb = f"JSON lỗi ({ex})."; continue
-        d = don(d)
+        d = don(d, kenh)
         if phong:
             d["room"] = phong           # ép cứng: phòng do lịch luân phiên quyết, không do AI
         if lat:
@@ -2591,6 +2631,30 @@ def trung_voi(tap: dict, da: list, nguong: float = 0.45) -> tuple:
 # Đây là tầng thứ tư của cùng một bệnh, sau tên tập → nội dung → phòng/người lật. Lần này chốt
 # ở chỗ sâu nhất: CƠ CHẾ của cú lật. Một kênh sống được lâu không phải vì đổi đồ vật, mà vì đổi
 # cách tình thế bị đảo.
+# Mô tả tiếng Anh của từng họ cú lật, để CẤP cho AI như một đề bài. Tên tiếng Việt ở khoá chỉ
+# để đọc code và để thước phân loại — đưa nguyên tên ấy vào lệnh hệ thống thì AI không dùng được.
+HO_LAT_TA = {
+    "nhấc-lộ-vô-hại": "someone lifts or moves the object and what was underneath makes the whole "
+                      "panic pointless",
+    "người-bước-vào": "a character walks in at the worst possible moment and the situation flips "
+                      "without anyone explaining it",
+    "vật-hoá-ra-là-khác": "the object turns out to be something completely different from what "
+                          "everyone has been treating it as",
+    "thủ-phạm-lộ-diện": "the real cause becomes visible behind or beside the character who has "
+                        "been blaming something else",
+    "đảo-vai": "the two characters swap positions — whoever was in control hands it over, or has "
+               "it taken",
+    "hậu-quả-đuổi-kịp": "the consequence quietly catches up to the person who caused it, while "
+                        "they are still congratulating themselves",
+    "kẻ-thản-nhiên-bỏ-đi": "one character causes or ignores the disaster and simply leaves, "
+                           "without looking back",
+    "đúng-mà-vẫn-thua": "the person who was right about everything still ends up worse off "
+                        "because of it",
+    "sai-mà-vẫn-thắng": "the obviously wrong approach works anyway, and nobody can explain why",
+    "người-thứ-ba-đã-xong": "a third character had already quietly solved it before the argument "
+                            "even started",
+}
+
 HO_LAT = {
     "nhấc-lộ-vô-hại":        r"\b(lifts?|pulls?|tips?|flips?|slides?|paws?)\b.{0,60}\b(reveal|expos|show)",
     "người-bước-vào":        r"\b(walks? in|steps? in|appears? in the doorway|comes? in)\b",
@@ -2987,11 +3051,20 @@ def xuat_web(thu_muc: str) -> list[str]:
             # Python cấp nên hai bên không thể lệch. Không xuất sẵn danh sách tập vì kho tính
             # được từ sáu con số này, còn xuất 500 tập/kênh thì tệp phồng thêm 750 KB.
             "lich": {
-                "truc": [len(hs["phong"]), len(hs.get("dao_cu") or [1]), len(AP_LUC),
-                         len(KIEU_MO), len(hs["vai"]), max(1, len(hs["vai"]) - 1)],
+                # Bảy trục — phải khớp ĐÚNG danh sách trong `_lich()`. 1/9: thêm trục cơ chế
+                # lật vào `_lich` và `_buoc_lich` mà quên chỗ này, nên web tính theo sáu trục
+                # còn Python theo bảy: 280/280 đề bài lệch, và lệch ĐÚNG MỘT TRƯỜNG nên sáu
+                # trục kia vẫn khớp hoàn hảo — kiểu lệch dễ tin là "gần đúng" nhất.
+                "truc": _do_truc(hs),
                 "buoc": _buoc_lich(ten), "goc": _goc_lich(ten),
                 "phong": list(hs["phong"]), "dao_cu": list(hs.get("dao_cu") or []),
                 "ap_luc": list(AP_LUC), "kieu_mo": list(KIEU_MO), "vai": list(hs["vai"]),
+                # Thứ tự họ cú lật phải lấy TỪ CHÍNH `HO_LAT` — bảng mà `_lich()` dùng — chứ
+                # không từ `HO_LAT_TA`. Hai từ điển có cùng mười khoá nhưng khác thứ tự chèn,
+                # và Python giữ thứ tự chèn: đọc nhầm bảng thì hai bên lệch trục thứ bảy trong
+                # khi sáu trục kia vẫn khớp. Đo được: 280/280 đề bài sai đúng một trường.
+                "ho_lat_ten": list(HO_LAT),
+                "ho_lat_ta": dict(HO_LAT_TA),
             },
             "gioi_han": {"vai": VAI_TOI_DA, "luot": LUOT_TOI_DA, "tu_moi_luot": TU_MOI_LUOT,
                          "ky_tu_max": KY_TU_MAX, "hook_tu": [16, 30], "diem_san": DIEM_SAN},
