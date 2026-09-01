@@ -350,7 +350,14 @@ export const DienVienHai: React.FC<PropsHai> = ({
 
   // ── KHUNG XƯƠNG ────────────────────────────────────────────────────────────────────────
   const hong: [number, number] = [trong * 0.3, Y_HONG * cao + nhun];
-  const vai: [number, number] = [trong * 0.6 + nghieng * 1.6, Y_VAI * cao + tho * 1.2 + nhun];
+  // Thân nghiêng RIÊNG của nhân vật, cộng thêm vào nghiêng của cảnh: hai thứ khác nhau —
+  // nghiêng cảnh là hai người quay vào nhau, nghiêng riêng là tật đứng của người ấy.
+  // Và VAI XUÔI: người mệt vai đổ, người hăng vai vuông. Đây là trục mắt đọc rất nhanh mà
+  // trước giờ mười kênh dùng chung một giá trị.
+  const _ngR = ((kieu as any).nghiengRieng ?? 0) * 6;
+  const _xv = ((kieu as any).xuoiVai ?? 0) * 5;
+  const vai: [number, number] = [trong * 0.6 + (nghieng + _ngR * 0.02) * 1.6 + _ngR,
+                                 Y_VAI * cao + tho * 1.2 + nhun + _xv];
   const co: [number, number] = [vai[0] + dao * 0.4, vai[1] - 14 * cao];
   // Đầu nhấc CAO hơn vai đủ để thấy cổ. Bản trước chỉ hở 9 đơn vị nên đầu dính thẳng vào vai
   // và cả khối đọc ra là một hình duy nhất — đầu có quay cũng không ai thấy.
@@ -406,11 +413,23 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const khuyuP = P(vaiP[0], vaiP[1], dtay, gocVP);
   const tayP = P(khuyuP[0], khuyuP[1], dcang, gocVP + gocKP);
 
-  const rongHong = 30 * ngang * _hongRong;
-  const goiT: [number, number] = [hong[0] - rongHong + dapT * sai * 0.5, hong[1] + 82 * cao - nhacT * 0.5];
-  const goiP: [number, number] = [hong[0] + rongHong + dapP * sai * 0.5, hong[1] + 82 * cao - nhacP * 0.5];
-  const chanT: [number, number] = [hong[0] - rongHong - 2 + dapT * sai, -4 - nhacT];
-  const chanP: [number, number] = [hong[0] + rongHong + 2 + dapP * sai, -4 - nhacP];
+  // ── DÁNG ĐỨNG ──────────────────────────────────────────────────────────────────────
+  // Năm thế đứng. Chỉ số 0 giữ NGUYÊN mọi con số cũ, nên kênh không khai `dangDung` thì
+  // không đổi một pixel — bắt buộc, vì 10 kênh comic đang sản xuất dùng chung engine này.
+  //   _lech  hông dịch ngang (dồn trọng tâm thì hông nhô về phía chân trụ)
+  //   _mo    hệ số dang chân
+  //   _truoc chân phải bước tới trước bao nhiêu
+  const _dd = (kieu as any).dangDung ?? 0;
+  const _lech = [0, 9, -9, 0, 4][_dd] * ngang;
+  const _mo = [1, 0.76, 0.76, 1.42, 0.88][_dd];
+  const _truoc = [0, 0, 0, 0, 15][_dd] * ngang;
+  const _hx = hong[0] + _lech;
+
+  const rongHong = 30 * ngang * _hongRong * _mo;
+  const goiT: [number, number] = [_hx - rongHong + dapT * sai * 0.5, hong[1] + 82 * cao - nhacT * 0.5];
+  const goiP: [number, number] = [_hx + rongHong + _truoc * 0.5 + dapP * sai * 0.5, hong[1] + 82 * cao - nhacP * 0.5];
+  const chanT: [number, number] = [_hx - rongHong - 2 + dapT * sai, -4 - nhacT];
+  const chanP: [number, number] = [_hx + rongHong + 2 + _truoc + dapP * sai, -4 - nhacP];
 
   // ── MÀU ────────────────────────────────────────────────────────────────────────────────
   const V = kieu.net || "#20222B";
@@ -583,9 +602,86 @@ export const DienVienHai: React.FC<PropsHai> = ({
             Q ${vai[0]} ${vai[1] - 10} ${vai[0] - rongVai - 6} ${vai[1] + 6} Z`}
         fill={ao} stroke={V} strokeWidth={NG} strokeLinejoin="round"
       />
-      {/* Cổ áo chữ V + áo trong: một mảng sáng giữa ngực để thân không phẳng lì */}
-      <path d={`M ${vai[0] - 20} ${vai[1] + 2} L ${vai[0]} ${vai[1] + 36} L ${vai[0] + 20} ${vai[1] + 2} Z`}
-            fill={kieu.aoTrong} stroke={V} strokeWidth={NT} strokeLinejoin="round" />
+      {/* ══ CỔ ÁO THEO KIỂU ÁO — 1/9/2026 ═══════════════════════════════════════════════
+          Trước bản này mọi nhân vật đều cổ chữ V, chỉ khác màu. Ở khung 6 giây dọc thì thân áo
+          chiếm quá nửa diện tích, nên đó là thứ mắt đọc TRƯỚC cả khuôn mặt — và mười kênh mặc
+          chung một áo thì mười kênh là một.
+          Bỏ trống -> vẫn vẽ cổ chữ V y như cũ, để 10 kênh comic đang sản xuất không đổi gì. */}
+      {!(kieu as any).kieuAo || (kieu as any).kieuAo === "" ? (
+        <path d={`M ${vai[0] - 20} ${vai[1] + 2} L ${vai[0]} ${vai[1] + 36} L ${vai[0] + 20} ${vai[1] + 2} Z`}
+              fill={kieu.aoTrong} stroke={V} strokeWidth={NT} strokeLinejoin="round" />
+      ) : null}
+
+      {/* ÁO THUN — cổ tròn, viền bo. Đọc ra "ở nhà, thoải mái". */}
+      {(kieu as any).kieuAo === "thun" ? (
+        <path d={`M ${vai[0] - 22} ${vai[1] + 2} Q ${vai[0]} ${vai[1] + 30} ${vai[0] + 22} ${vai[1] + 2}`}
+              fill="none" stroke={V} strokeWidth={NT * 1.4} strokeLinecap="round" />
+      ) : null}
+
+      {/* HOODIE — mũ trùm phía sau gáy + hai dây rút + túi bụng. Ba nét, nhưng nhận ra ngay. */}
+      {(kieu as any).kieuAo === "hoodie" ? (
+        <g>
+          <path d={`M ${vai[0] - rongVai * 0.72} ${vai[1] + 6}
+                    Q ${vai[0]} ${vai[1] - 46} ${vai[0] + rongVai * 0.72} ${vai[1] + 6}
+                    Q ${vai[0]} ${vai[1] + 30} ${vai[0] - rongVai * 0.72} ${vai[1] + 6} Z`}
+                fill={_sang(ao, 0.84)} stroke={V} strokeWidth={NG * 0.85} strokeLinejoin="round" />
+          {[-1, 1].map(sg => (
+            <path key={`day${sg}`}
+                  d={`M ${vai[0] + sg * 11} ${vai[1] + 24} L ${vai[0] + sg * 9} ${vai[1] + 62}`}
+                  stroke={V} strokeWidth={NT * 1.1} strokeLinecap="round" fill="none" />
+          ))}
+          <path d={`M ${hong[0] - rongHong - 2} ${hong[1] - 26}
+                    Q ${hong[0]} ${hong[1] - 12} ${hong[0] + rongHong + 2} ${hong[1] - 26}`}
+                fill="none" stroke={V} strokeWidth={NT} strokeLinecap="round" />
+        </g>
+      ) : null}
+
+      {/* POLO — cổ bẻ nhỏ hai cánh + nẹp ngực hai khuy. */}
+      {(kieu as any).kieuAo === "polo" ? (
+        <g>
+          {[-1, 1].map(sg => (
+            <path key={`co${sg}`}
+                  d={`M ${vai[0] + sg * 6} ${vai[1] + 4} L ${vai[0] + sg * 30} ${vai[1] + 6}
+                      L ${vai[0] + sg * 10} ${vai[1] + 34} Z`}
+                  fill={_sang(ao, 1.18)} stroke={V} strokeWidth={NT} strokeLinejoin="round" />
+          ))}
+          <path d={`M ${vai[0]} ${vai[1] + 12} L ${vai[0]} ${vai[1] + 64}`}
+                stroke={V} strokeWidth={NT} strokeLinecap="round" />
+          {[26, 48].map(y => (
+            <circle key={`khuy${y}`} cx={vai[0] + 5} cy={vai[1] + y} r={3}
+                    fill={_sang(ao, 1.3)} stroke={V} strokeWidth={NT * 0.7} />
+          ))}
+        </g>
+      ) : null}
+
+      {/* CARDIGAN — hai vạt mở, để lộ áo trong ở giữa, ba khuy dọc. */}
+      {(kieu as any).kieuAo === "cardigan" ? (
+        <g>
+          <path d={`M ${vai[0] - 14} ${vai[1] + 2} L ${vai[0] - 14} ${hong[1] - 4}
+                    L ${vai[0] + 14} ${hong[1] - 4} L ${vai[0] + 14} ${vai[1] + 2} Z`}
+                fill={kieu.aoTrong || "#EDE7DA"} stroke={V} strokeWidth={NT} />
+          {[-1, 1].map(sg => (
+            <path key={`vat${sg}`}
+                  d={`M ${vai[0] + sg * 14} ${vai[1] + 2} L ${vai[0] + sg * 34} ${vai[1] + 8}
+                      L ${vai[0] + sg * 30} ${hong[1] - 6} L ${vai[0] + sg * 14} ${hong[1] - 4} Z`}
+                  fill={_sang(ao, 0.9)} stroke={V} strokeWidth={NT} strokeLinejoin="round" />
+          ))}
+        </g>
+      ) : null}
+
+      {/* SƠ MI — cổ nhọn hai cánh + nẹp khuy dài. */}
+      {(kieu as any).kieuAo === "somi" ? (
+        <g>
+          {[-1, 1].map(sg => (
+            <path key={`cs${sg}`}
+                  d={`M ${vai[0] + sg * 4} ${vai[1] + 2} L ${vai[0] + sg * 26} ${vai[1] + 4}
+                      L ${vai[0] + sg * 6} ${vai[1] + 42} Z`}
+                  fill={_sang(ao, 1.22)} stroke={V} strokeWidth={NT} strokeLinejoin="round" />
+          ))}
+          <path d={`M ${vai[0]} ${vai[1] + 16} L ${vai[0]} ${hong[1] - 10}`}
+                stroke={V} strokeWidth={NT} strokeLinecap="round" />
+        </g>
+      ) : null}
       {kieu.caVat ? (
         <path d={`M ${vai[0] - 8} ${vai[1] + 26} L ${vai[0] + 8} ${vai[1] + 26} L ${vai[0] + 5} ${vai[1] + 78} L ${vai[0]} ${vai[1] + 86} L ${vai[0] - 5} ${vai[1] + 78} Z`}
               fill={kieu.caVat} stroke={V} strokeWidth={NT} strokeLinejoin="round" />

@@ -186,6 +186,25 @@ export type Kieu = {
   // Mắt đọc "loài" qua hai thứ: MÀU DA và phần nhô ra khỏi sọ. Màu da đã có (`da`), nên chỉ
   // cần thêm trường này để engine biết vẽ tai · sừng · ăng-ten. Bỏ trống = người, y như cũ.
   loai?: "" | "thu" | "quai" | "robot" | "alien";
+  // ── DÁNG ĐỨNG — 1/9/2026 ────────────────────────────────────────────────────────────
+  // Anh loại 10 kênh GROCK vì *"vẽ không ổn"*. Đo ra thì mặt · màu · nhà đều đã khác nhau;
+  // thứ giống hệt là BÓNG DÁNG. Bảng `CU_CHI` có 8 mục nhưng cả 8 chỉ đổi `vaiT/khuyuT/vaiP/
+  // khuyuP` — tức chỉ CÁNH TAY. Chân thì `chanT/chanP` luôn ở `hông ± rongHong`, chỉ nhúc
+  // nhích khi `buoc > 0` (chu kỳ đi bộ), mà cảnh thoại thì `buoc = 0`.
+  // Mắt người nhận ra nhân vật qua bóng dáng TRƯỚC khi kịp nhìn mặt. Nên đổi mặt bao nhiêu
+  // cũng vô ích nếu mười kênh cùng một thế đứng.
+  // 0 = y NGUYÊN hành vi cũ (mặc định) -> 10 kênh comic đang sản xuất không đổi một pixel.
+  //   1 dồn trọng tâm trái · 2 dồn phải · 3 đứng rộng · 4 một chân bước tới
+  // KIỂU ÁO — trục mạnh nhất ở khung 6 giây dọc, vì thân áo chiếm quá nửa diện tích khung.
+  // 1/9: đối chiếu tắt/bật hệ dáng cho ra hai khung gần y hệt — vì ở cỡ cận, chân gần như
+  // ngoài khung. Nhìn kỹ hai khung ấy thì thấy thứ thật sự giống nhau: CÙNG MỘT CÁI ÁO, cổ
+  // chữ V, chỉ khác màu. Trong khi gói prompt tả rõ 5.000 lần "t-shirt", 2.500 lần "hoodie",
+  // cộng polo · cardigan · blouse — mình vứt hết thông tin ấy.
+  // Bỏ trống = cổ chữ V như cũ, nên 10 kênh comic đang chạy không đổi một pixel.
+  kieuAo?: "" | "thun" | "hoodie" | "polo" | "cardigan" | "somi";
+  dangDung?: 0 | 1 | 2 | 3 | 4;
+  xuoiVai?: number;      // vai xuôi (>0) hay vuông (<0) — người mệt khác người hăng, ±1
+  nghiengRieng?: number; // thân nghiêng riêng của nhân vật, ±1 (khác `nghieng` của cảnh)
   aoKhoac?: string;                 // vạt áo có chuyển động trễ (blouse, áo choàng)
   // 29/8 — PHỤ KIỆN THEO NGHỀ. Anh: "10 channel thì phong cách nhân vật 10 channel phù hợp 10
   // phong cách style khác nhau… ko chung chung 1 template". Ba kiểu gốc dùng cho mười kênh thì

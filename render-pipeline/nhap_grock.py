@@ -129,6 +129,15 @@ def _vai_tu_lock(than: str) -> dict:
             cao = 0.94
         ra[ten] = {"gioi": gioi_ve, "gioiThat": gioi, "tuoi": tuoi, "cao": cao, "thu": la_thu,
                    "so_tuoi": so,
+                   # KIỂU ÁO đọc từ chính mô tả. Gói tả 5.000 lần "t-shirt", 2.500 lần
+                   # "hoodie", cộng polo · cardigan · blouse — bản trước chỉ lấy MÀU rồi vứt
+                   # kiểu đi, nên mọi nhân vật mặc chung một áo cổ chữ V.
+                   "kieuAo": ("hoodie" if "hoodie" in mo or "sweatshirt" in mo else
+                              "polo" if "polo" in mo else
+                              "cardigan" if ("cardigan" in mo or "vest" in mo or "shawl" in mo)
+                              else "somi" if ("blouse" in mo or "button" in mo or
+                                              ("shirt" in mo and "t-shirt" not in mo)) else
+                              "thun"),
                    "ao": _mau_cua(mo, _TREN) or "#8C9095",
                    "quan": _mau_cua(mo, _DUOI) or "#3A3D42",
                    "mo": mo[:150]}

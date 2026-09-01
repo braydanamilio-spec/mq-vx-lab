@@ -106,6 +106,14 @@ def _kieu(v: dict, hat: int, ten_vai: str = "", de: str = "") -> dict:
         be = 0.90
     d = {"gioi": v["gioi"], "tuoi": v["tuoi"], "cao": v["cao"],
          "ao": v["ao"], "quan": v["quan"], "loiVe": "mat_to",
+         "kieuAo": v.get("kieuAo", "thun"),
+         # XOÁ PHỤ KIỆN NGHỀ CỦA KIỂU GỐC. `KIEU_MAU.hang_xom`/`bank` mang sẵn
+         # `phuKien: "ve_vest"` + `caVat` (chúng viết cho kênh dữ liệu: chuyên gia tài chính,
+         # luật sư). Bản ghi đè trộn SAU nhưng không xoá thì hai thứ ấy vẫn còn — nên mọi nhân
+         # vật gia đình đều mặc vest có ve và đeo cà vạt, che luôn cổ áo vừa thêm.
+         # Đây là họ lỗi "mượn giá trị cho việc nó không sinh ra để làm": mượn kiểu gốc của
+         # kênh dữ liệu cho kênh hài gia đình rồi chỉ đổi vài trường.
+         "phuKien": "", "caVat": "", "aoKhoac": "",
          # Tóc theo GIỚI THẬT, không theo nhóm vẽ: bé gái 12 tuổi thuộc nhóm vẽ "tre" nên bản
          # đầu bốc tóc từ danh sách con trai — bé gái ra đầu đinh.
          "kieuToc": _TOC["nu" if v.get("gioiThat") == "nu" else "nam"][b % 4],
@@ -113,7 +121,17 @@ def _kieu(v: dict, hat: int, ten_vai: str = "", de: str = "") -> dict:
          "kieuMay": _MAY[(b // 11) % 4],
          "beNgang": be, "matTo": 0.88 + (b % 5) * 0.09, "cam": (b % 7) * 0.14,
          "tiLeDau": 0.93 + (b % 4) * 0.045,
-         "kinh": (b % 5) == 0, "rau": "", "mu": ""}
+         "kinh": (b % 5) == 0, "rau": "", "mu": "",
+         # ── DÁNG ĐỨNG — trục mắt đọc TRƯỚC cả khuôn mặt ────────────────────────────────
+         # 1/9, sau khi anh loại 10 kênh GROCK vì *"vẽ không ổn"*. Đo ra: mặt · màu · nhà đã
+         # khác nhau, thứ giống hệt là BÓNG DÁNG — `CU_CHI` chỉ đổi cánh tay, chân thì cố định.
+         # Bốc theo cùng một băm với khuôn mặt, nên Derek luôn đứng kiểu Derek qua 2.500 tập;
+         # còn Derek với Kevin thì nhìn từ xa đã khác.
+         # Người lớn mới đổi thế đứng; trẻ con giữ thế đều (0) vì dồn trọng tâm ở trẻ con đọc
+         # ra là đứng xiêu vẹo chứ không ra tính cách.
+         "dangDung": 0 if v["tuoi"] == "tre_con" else [0, 1, 2, 3, 4][(b // 17) % 5],
+         "xuoiVai": [0, 0.6, -0.5, 0.3, -0.8][(b // 23) % 5],
+         "nghiengRieng": [0, 0.5, -0.5, 0.8, -0.3][(b // 29) % 5]}
     if de in LOAI:
         loai, mau_da = LOAI[de]
         # Robot/alien không có tóc và không có râu — để nguyên thì ra "người đội tóc giả".
