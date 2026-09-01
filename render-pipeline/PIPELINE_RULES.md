@@ -6706,3 +6706,58 @@ hai dòng. Cổng nay đọc mã đã bỏ chú thích và đã nối chuỗi ng
 
 Lý do phải sửa ngay: cổng im lặng thì người ta không biết mà bỏ qua; cổng tố oan thì **người ta
 tắt nó đi cho đỡ phiền**, và mất luôn cả những lần nó đúng.
+
+
+### 7bs — Thêm tham số vào API ngoài mà chưa thử: chết CẢ ĐƯỜNG, và chết CHẬM (1/9)
+
+**Triệu chứng.** Đường sinh ảnh treo, không ảnh nào ra, log im. Tôi đi đo thời gian nạp thư viện
+(0,0 s) rồi thời gian đọc giọng (1,2 s/câu) — cả hai đều nhanh — trước khi thử một lệnh gọi.
+
+**Gốc rễ.** Tôi vừa thêm `seed` vào thân yêu cầu CF FLUX **và viết ra như thể nó chạy**. Endpoint
+trả `HTTP 400 Additional or unevaluated properties '/seed'`. Model chỉ nhận `prompt` và `steps`.
+
+**Vì sao khó thấy.** Nó chết **chậm**: `goi_xoay` xoay hết 97 khoá, mỗi khoá một vòng mạng, rồi
+mới bỏ cuộc. Nhìn từ ngoài giống hệt "mạng chậm" — nên tôi đi tìm nghẽn ở đúng những chỗ không
+hỏng.
+
+**Họ lỗi.** *Tin tài liệu thay vì thử.* Cùng ngày còn hai lần nữa: `width`/`height` (cũng 400) và
+prompt vượt trần 2048 ký tự (cũng 400, cũng chết cả đường).
+
+**Chặn.** Mọi chỗ ghép prompt có chốt chặn độ dài, ghép theo thứ tự ưu tiên, cắt từ đuôi.
+
+### 7bt — `tsc --noEmit` xanh không có nghĩa là build được (1/9)
+
+Chú thích JSX `{/* … */}` đặt **giữa các thuộc tính** của một thẻ: `tsc` báo xanh, `esbuild` (thứ
+Remotion thật sự dùng) báo `Expected "..." but found "}"`, render chết.
+
+Tôi đã dùng `tsc` làm cổng suốt ngày và nó cho **niềm tin sai**. Cổng đúng là bộ dựng thật:
+`npx esbuild src/gt/*.tsx --loader:.tsx=tsx --outdir=/tmp/_chk`.
+
+### 7bu — Thước đo calibrate ở hai đầu cực, dùng ở khoảng giữa (1/9)
+
+Thước "độ phẳng" tách ảnh chụp (0,13) khỏi vector phẳng (0,91) rất sạch, mắt nhìn khớp. Lấy làm
+cổng với sàn 0,62 → 6/11 ảnh "trượt". **Nhìn tận mắt sáu ảnh ấy: cả sáu đều là cartoon đúng
+chất.** Tấm 0,30 là cảnh đám đông ban đêm nhiều hình nhỏ + trời chuyển sắc.
+
+Thước lẫn lộn **phong cách phẳng** với **bố cục đơn giản**. Suýt báo "ép cartoon thất bại" trong
+khi nó đã thành công.
+
+**Luật.** Calibrate hai đầu chỉ chứng minh thước tách được hai đầu. Cổng sống ở **khoảng giữa** —
+phải soi tận mắt vài mẫu ở đó trước khi tin.
+
+### 7bv — Cổng canh đếm "lượt success" tự khoá vĩnh viễn (1/9)
+
+`chot` đếm lượt có `conclusion == success` trong 20 h. Nhưng lượt **bị chính cổng bỏ qua** cũng
+kết thúc `success` (job `dung` chỉ `skipped`). Mỗi lượt bỏ qua làm mới dấu success → cửa sổ
+không bao giờ trôi hết → **sau lần dựng thật đầu tiên thì không bao giờ dựng nữa**.
+
+Đo: `01:21` dựng 10/10 job → 10 artifact · `08:34` dựng **0/1 job → 0 artifact**. Dashboard xanh.
+
+Dạng tệ nhất của luật 24.1: hỏng mà **báo xanh**. Sửa: hỏi thẳng job `dung` của từng lượt.
+
+### 7bw — Chữ do mô hình vẽ: ngắn được, số dài có dấu thì không (1/9)
+
+Đo 8 mẫu: `560`/`WALK` (≤4 ký tự) **5/6 đúng** · `238,900` **0/2** (ra `23 8,900`, `238.900`).
+Ngược trực giác: hai mẫu duy nhất có câu nhấn `"Write exactly: …"` **đều sai**.
+
+Nhãn ngắn để mô hình vẽ vào ảnh (hết đè); số dài **luôn** do code vẽ đè.

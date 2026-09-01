@@ -492,7 +492,7 @@ def _check_visual_rot(mp4, keys, tries=3, **kw):
     return True, (info or {"note": "vision-skip: hết key còn hạn mức"})
 
 
-def _cf_flux_image(prompt, dest, key, style=None) -> bool:
+def _cf_flux_image(prompt, dest, key, style=None, seed=None, kt=None) -> bool:
     """VẼ ẢNH bằng Cloudflare FLUX.1 schnell (key 'cf:acc:token'). Trả True khi đã ghi ảnh hợp lệ
     vào dest. Lỗi quota (429/4006 hết neuron) NÉM LÊN để caller xoay key; lỗi khác trả False."""
     import urllib.request, urllib.error, base64, json as _j
@@ -508,6 +508,21 @@ def _cf_flux_image(prompt, dest, key, style=None) -> bool:
                        f"anywhere in the image. A {style or DEFAULT_AI_STYLE} of: {prompt}. "
                        f"Textless image."),
             "steps": 4}
+    # ══ ĐÃ THỬ VÀ BỊ TỪ CHỐI — ĐỪNG THÊM LẠI (1/9/2026) ══════════════════════════════════
+    # Tôi đã thêm `seed` và `width`/`height` vào thân yêu cầu, và VIẾT RA NHƯ THỂ CHÚNG CHẠY,
+    # trước khi thử một lần nào. Endpoint trả thẳng:
+    #     HTTP 400  Additional or unevaluated properties '/seed' at '/' not allowed
+    #     HTTP 400  Additional or unevaluated properties '/width, /height' at '/' not allowed
+    # `@cf/black-forest-labs/flux-1-schnell` trên Cloudflare CHỈ nhận `prompt` và `steps`.
+    #
+    # Cái giá không phải là "thiếu một tính năng": `seed` làm MỌI lệnh vẽ trả 400, nên cả đường
+    # sinh ảnh chết, mà chết theo kiểu chậm — `goi_xoay` xoay hết 97 khoá, mỗi khoá một vòng
+    # mạng, rồi mới bỏ cuộc. Nhìn từ ngoài y hệt "mạng chậm", và tôi đã đi tìm nghẽn ở nạp thư
+    # viện với đọc giọng suốt một lúc trước khi thử đúng một lệnh gọi.
+    #
+    # Luật rút ra: THÊM MỘT THAM SỐ VÀO API NGOÀI THÌ THỬ MỘT LỆNH GỌI TRƯỚC, không đọc tài
+    # liệu rồi tin. Một lệnh gọi mất nửa giây; tin nhầm mất cả buổi.
+    _ = (seed, kt)   # giữ chữ ký để nơi gọi không phải sửa; hai tham số này KHÔNG dùng được
     req = urllib.request.Request(
         f"https://api.cloudflare.com/client/v4/accounts/{acc}/ai/run/@cf/black-forest-labs/flux-1-schnell",
         data=_j.dumps(body).encode(),

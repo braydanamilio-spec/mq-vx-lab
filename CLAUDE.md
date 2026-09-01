@@ -106,6 +106,9 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 | **10 kênh hài — engine** | `engine-remotion/src/comic/KichComic.tsx` (dựng cảnh) · `NenComic.tsx` (nền + trần + đạo cụ) · `MoDun.tsx` (30 mảnh đồ đạc) · `NoiChon.tsx` (nơi chốn) · `ThumbComic.tsx` (ảnh bìa) |
 | **10 kênh hài — pipeline** | `render-pipeline/kich_comic.py` (short 9:16) · `kich_comic_long.py` (long 16:9) · `sinh_kich_ban.py` (kịch bản) · `sieu_du_lieu.py` (bìa + chữ đăng cho 3 nền tảng) · `brand_comic.py` (avatar/banner/watermark) |
 | Kho kịch bản tích luỹ | `render-pipeline/kho_comic.json` |
+| **10 kênh giải thích — engine** | `engine-remotion/src/gt/KichGiaiThich.tsx` (dựng cảnh) · `Khuon.tsx` (8 khuôn: chia đôi · số liệu · trục · kính lúp · dải chữ · đếm · thẻ chữ · chart) |
+| **10 kênh giải thích — pipeline** | `render-pipeline/giai_thich.py` (kịch bản + dựng) · `nen_gt.py` (CF vẽ cảnh, khoá nhân vật, cổng phong cách) · `to_mau.py` (chỉnh màu) · `kiem_nhip.py` (cổng nhịp cắt) |
+| Phân tích video tham chiếu | `render-pipeline/PHAN_TICH_GIAI_THICH.md` |
 | Bản hài cũ (giữ để đối chiếu) | `render-pipeline/kich_hai.py` · `src/v4/KichHai.tsx` — vẫn là nơi giữ `KHO` 40 mẩu viết tay, `doc_hai_giong`, `lam_thumb` |
 | Luật + buglog | `render-pipeline/PIPELINE_RULES.md` |
 
@@ -199,3 +202,191 @@ lên Reels Instagram (giới hạn 90 giây).
 - **Hằng toạ độ phải đo trong ĐÚNG ngữ cảnh dùng nó.** `CAO_NGUOI` là 460 trong khung video và
   378 trên ảnh bìa — không phải vì nhân vật khác, mà vì hai phép đo trước đó đo lúc nhân vật
   đang bị mép cắt. Chép hằng giữa hai tệp là cách chắc chắn để hình lệch mà không có lỗi nào.
+
+---
+
+## 12. LUẬT RÚT TỪ NGÀY 1/9 — BỘ PHIM GIẢI THÍCH
+
+Một ngày làm mười kênh giải thích, và **năm lần tự làm sập đường chạy của chính mình**. Cả năm
+đều cùng một dạng: *tin một điều mà chưa thử*. Ghi lại để không mất thêm buổi nào nữa.
+
+### 12.1 Thêm tham số vào API ngoài thì THỬ MỘT LỆNH GỌI TRƯỚC
+
+Tôi thêm `seed` rồi `width`/`height` vào lệnh gọi Cloudflare FLUX **và báo cáo như thể chúng
+chạy**, trước khi thử lần nào. Endpoint trả thẳng:
+
+```
+HTTP 400  Additional or unevaluated properties '/seed' at '/' not allowed
+HTTP 400  Additional or unevaluated properties '/width, /height' at '/' not allowed
+HTTP 400  Length of '/prompt' must be <= 2048
+```
+
+`@cf/black-forest-labs/flux-1-schnell` **chỉ nhận `prompt` và `steps`**.
+
+Cái giá không phải "thiếu một tính năng". `seed` làm **mọi** lệnh vẽ trả 400, nên cả đường sinh
+ảnh chết — mà chết **chậm**: `goi_xoay` xoay hết 97 khoá, mỗi khoá một vòng mạng, rồi mới bỏ
+cuộc. Nhìn từ ngoài y hệt "mạng chậm". Tôi đi đo thời gian nạp thư viện và đọc giọng một lúc
+lâu trước khi thử đúng một lệnh gọi. Một lệnh gọi mất **nửa giây**; tin nhầm mất **cả buổi**.
+
+Cùng dạng lần thứ ba trong ngày: nhồi prompt lên ~2800 ký tự theo yêu cầu "viết dài chi tiết
+hơn" → vượt trần 2048 → mọi lệnh 400, không một ảnh nào ra.
+
+**Nay:** mọi chỗ ghép prompt phải có **chốt chặn độ dài** ghép theo thứ tự ưu tiên và cắt từ
+đuôi, thay vì để API từ chối cả câu.
+
+### 12.2 `tsc --noEmit` xanh KHÔNG có nghĩa là build được
+
+Chèn chú thích JSX `{/* … */}` vào **giữa các thuộc tính** của một thẻ. `npx tsc --noEmit` báo
+xanh; `esbuild` — thứ Remotion thật sự dùng — báo `Expected "..." but found "}"` và render chết.
+
+Tôi đã dùng typecheck làm cổng suốt ngày và nó cho tôi **niềm tin sai**.
+
+```bash
+npx esbuild src/gt/*.tsx --loader:.tsx=tsx --outdir=/tmp/_chk --log-level=error
+```
+
+Cổng đúng là **bộ dựng thật**, không phải bộ kiểm kiểu.
+
+### 12.3 Thước đo phải soi ở KHOẢNG GIỮA, không chỉ ở hai đầu cực
+
+Tôi xây thước "độ phẳng" để tách ảnh cartoon khỏi ảnh chụp. Calibrate hai đầu: ảnh chụp 0,13 ·
+vector phẳng 0,91 — tách sạch, mắt nhìn khớp. Tin luôn.
+
+Chạy thử: 6/11 ảnh "trượt sàn". **Nhìn vào sáu ảnh ấy thì cả sáu đều là cartoon đúng chất**, cùng
+một nhân vật. Tấm điểm thấp nhất (0,30) là cảnh đám đông ban đêm có nhiều hình nhỏ và trời
+chuyển sắc. Thước lẫn lộn **phong cách phẳng** với **bố cục đơn giản**.
+
+Suýt nữa tôi báo "ép cartoon thất bại" trong khi nó đã thành công.
+
+**Luật:** calibrate ở hai đầu cực chỉ chứng minh thước **có tách được hai đầu**. Trước khi lấy
+nó làm cổng, phải **nhìn tận mắt vài mẫu ở khoảng giữa** — vì cổng sống ở khoảng giữa, không
+sống ở hai đầu.
+
+### 12.4 Cổng tự chuẩn hoá theo mẫu đầu tiên: nhất quán quanh một mốc SAI vẫn sai
+
+Bản đầu của cổng lấy ảnh đầu tiên của tập làm mốc, ép mọi ảnh sau bám theo. Nghe hay. Nhưng nếu
+ảnh đầu lỡ ra chất ảnh chụp thì **cả tập bị khoá vào chất sai ấy** — và cổng báo xanh, vì mọi
+ảnh đều "nhất quán".
+
+Cổng cần **một sàn tuyệt đối** trước, rồi mới tới nhất quán tương đối.
+
+### 12.5 Một câu luật đúng trong ngữ cảnh nó sinh ra, sai ở ngữ cảnh mới
+
+`SAN_NEN` viết cho bộ truyện tranh (mọi cảnh trong nhà): *"all furniture pushed far to the left
+and right edges"*. Đem sang cảnh ngoài trời → FLUX làm đúng điều được bảo: **kê tủ kệ vào sa
+mạc**. Nhịp nói "đi bộ ban đêm giữa sa mạc" ra một phòng khách có tủ.
+
+Cùng dạng, lần thứ hai trong ngày: cắt ảnh vuông xuống 9:16 mất 44% bề ngang, mà luật lại đang
+dặn *"dồn đồ đạc ra hai mép"* — tức dặn mô hình đặt đồ vào **đúng dải sắp bị cắt bỏ**.
+
+**Nhận ra:** mỗi lần dùng lại một hằng/một câu luật ở chỗ mới, hỏi **"câu này còn đúng ở ngữ
+cảnh mới không"** — dùng lại là đúng, dùng lại mà không hỏi là sai.
+
+### 12.6 Prompt tả theo lối ẢNH CHỤP thì ra ẢNH CHỤP
+
+Anh yêu cầu prompt dài và chi tiết hơn. Tôi ghép sáu tầng: chủ thể · hành động · biểu cảm ·
+`background:` · `foreground:` · ánh sáng. Prompt lên 60 chữ, và **ảnh ngả hẳn sang ảnh thật**.
+
+Vì `"background:"`, `"foreground:"`, `"warm light from the left, long soft shadows"` là **ngôn
+ngữ mô tả một bức ảnh**. Mô hình đọc xong thì vẽ một bức ảnh. Đo được: những nhịp có câu ánh
+sáng cho độ phẳng thấp nhất cả tập.
+
+**Chi tiết hơn** và **phẳng như tranh** là hai yêu cầu đánh nhau nếu tả bằng ngôn ngữ quang học.
+Tranh vẽ phẳng không có tiền cảnh/hậu cảnh theo nghĩa quang học, cũng không có đổ bóng mềm — nó
+có: **cái gì ở đâu trong khung, và màu gì**.
+
+### 12.7 Chữ trong ảnh: ngắn thì được, số dài có dấu thì không
+
+Đo trên 8 mẫu, cùng một prompt phong cách:
+
+| chuỗi | kết quả |
+|---|---|
+| `560` · `WALK` (≤ 4 ký tự, không dấu) | **5/6 đúng** |
+| `238,900` (số dài có dấu phẩy) | **0/2 đúng** — ra `23 8,900` và `238.900` |
+
+Và ngược trực giác: **câu nhấn mạnh lặp lại làm hỏng thêm** — hai mẫu duy nhất có
+`"Write exactly: …"` đều sai, kể cả mẫu chuỗi ngắn.
+
+**Luật:** nhãn ngắn để mô hình vẽ vào ảnh (hết đè, hết lệch khớp); **số dài luôn do code vẽ đè**.
+Và phải có **cổng đọc chữ đối chiếu** với chuỗi đặt hàng — `_co_chu` đã có sẵn đường thị giác,
+chỉ cần nâng từ "có chữ không" thành "chữ có đúng không".
+
+### 12.8 Cổng canh đếm "lượt success" sẽ TỰ KHOÁ VĨNH VIỄN
+
+`render_hai.yml` và `render_phan_tich_18.yml` có job `chot` đếm *"20 giờ qua đã có lượt
+`conclusion == success` chưa"* để tránh dựng trùng.
+
+Nhưng **một lượt bị chính cổng ấy bỏ qua cũng kết thúc là `success`**: `chot` chạy xong, `dung`
+chỉ `skipped`, mà `skipped` không làm hỏng lượt chạy. Nên mỗi lượt bỏ qua lại **làm mới dấu
+success**, cửa sổ 20 giờ không bao giờ trôi hết.
+
+Đo được: `01:21` dựng thật 10/10 job → 10 artifact; `08:34` cùng ngày dựng **0/1 job → 0
+artifact**. Dashboard xanh suốt.
+
+Đây là dạng **tệ nhất** của luật 24.1 (*hỏng mà không để lại tệp nào thì trông y hệt chưa từng
+chạy*) — vì nó còn **báo xanh**.
+
+**Sửa:** hỏi thẳng job `dung` của từng lượt, chỉ đếm lượt có job dựng **thật sự chạy**.
+
+### 12.9 Số trên dashboard đếm BẢN GHI, không đếm TỆP
+
+Ô "✅ Video trong kho: 2088" đọc từ D1, đếm **bản ghi job** `status=done AND có drive_id` — không
+liệt kê tệp trong Drive. Xoá sạch kho mà không xoá bản ghi thì con số **không đổi một đơn vị**.
+
+Chính mã đã ghi lại cái bẫy này từ 23/8 (*"đếm bản ghi job → Tổng 1755 trong khi thư viện chỉ
+61"*) và vá bằng cách **đổi chỗ đếm** — nhưng nguồn mới vẫn là bản ghi. Vá đổi chỗ đếm, không
+đổi **thứ được đếm**.
+
+### 12.10 Đo trước khi kết luận — kể cả về video của người khác
+
+Hai lần trong ngày tôi kết luận từ ấn tượng rồi số đo bác lại:
+
+- Xem 12 khung quanh một nhát cắt, thấy con báo dịch chuyển, kết luận *"cảnh vào đã đang chuyển
+  động sẵn"*. Đo `mpdecimate` ba ngưỡng: **cắt cứng tuyệt đối** (0/244 cặp điểm cắt cách nhau
+  <0,09 s), trong cảnh **có trôi máy nhưng biên độ cực nhỏ**.
+- Tuyên bố *"chỉnh màu về bảng màu kênh là đòn bẩy lớn nhất"*. Làm xong, ghép trước/sau: **gần
+  như không thấy khác biệt**, kể cả ở cường độ 0,32. Đòn bẩy thật là **lệch phong cách giữa các
+  ảnh**, và chỉnh màu không cứu được lệch phong cách.
+
+### 12.11 Bộ giải thích — bảy quy tắc nối cảnh
+
+Rút ra khi cắt **24 cảnh LIÊN TIẾP** (không phải khung rời rạc). Lần soi đầu lấy 25 khung rải
+đều và chỉ rút được "bảy khuôn hình" — đó là **từ vựng**. Ngữ pháp nằm ở chỗ cảnh nối cảnh:
+
+| | quy tắc |
+|---|---|
+| A | mỗi cảnh vẽ **đúng mệnh đề đang nói**, không minh hoạ chung chung |
+| B | mệnh đề song song → **khung hình song song**, dải chữ giữ nguyên một chỗ |
+| C | thời gian trôi vẽ bằng **số lượng biểu tượng** để người xem ĐẾM, không đọc "hai tuần sau" |
+| D | cảnh sau **kế thừa** cảnh trước (vệt chân dài dần) |
+| E | lời chuyển từ kể sang **khẳng định** → hình chuyển sang thẻ chữ, bỏ hẳn minh hoạ |
+| F | nói về **cơ chế** → sơ đồ có nhãn, nhân vật bỏ màu thành nét |
+| G | con số luôn đứng cạnh **hình của chính vật ấy** |
+
+Số đo bắt buộc của bộ này: **nhịp cắt trung vị ≤ 2,6 s · không cảnh nào quá 7 s · ≥ 20 cắt/phút**
+— cổng `kiem_nhip.py` đo **trên danh sách nhịp, TRƯỚC khi render**. Nhịp là việc của **khâu
+viết**: muốn cảnh 2 giây thì câu phải 5–8 chữ. Viết câu hai mươi chữ rồi mong khâu dựng cắt
+nhanh là bất khả.
+
+### 12.12 Dấu hiệu "nghiệp dư" — danh sách kiểm trước khi gửi
+
+Đây là những thứ người xem đọc ra trong nửa giây, không liên quan tới nội dung:
+
+- hộp đen bo góc quanh phụ đề (mặc định trình tạo phụ đề điện thoại) → **chữ trắng + bóng mềm rộng**
+- dải tên kênh dưới **mọi** khung → **watermark nhạt ở góc**
+- viền trắng quanh chữ số (`paintOrder="stroke"`) → **bóng mềm**; không hãng phim nào viền chữ
+- đổ bóng cứng lệch (`10px 11px 0`) → viền mảnh
+- thẻ tiêu đề to đè lên ba giây đầu → **hook phải là NỘI DUNG của cảnh đầu**, không phải tấm biển
+- thẻ chữ giữ 3 giây ở cú chốt → **đóng bằng cảnh**, câu chốt để phụ đề nói
+- thiếu lớp hoàn thiện → **vignette + grain rất nhẹ phủ toàn khung**, vì nó phủ lên cả ảnh lẫn
+  đồ hoạ code nên hai thứ khác bản chất mới chung một bề mặt
+
+### 12.13 Kênh Mỹ thì ĐƠN VỊ phải Mỹ
+
+Mười kênh giải thích chạy suốt buổi với **kilômét, km/h, mét**. Người xem Mỹ đọc "384,400
+kilometres" là biết ngay không phải kênh của mình — họ không có cảm giác về kilômét, đúng như
+người Việt không có cảm giác về dặm.
+
+Kênh giải thích **sống bằng việc quy con số về thứ người xem CẢM ĐƯỢC**. Dùng sai hệ đơn vị là
+phá đúng cơ chế ấy ngay ở gốc. Dặm · mph · pound · feet · Fahrenheit · đô la.
+

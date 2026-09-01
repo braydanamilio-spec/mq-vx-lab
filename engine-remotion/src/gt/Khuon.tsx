@@ -63,6 +63,15 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string }> =
       <circle cx="0" cy={-k(0.14)} r={k(0.3)} fill="#5E8C4A" stroke={mau} strokeWidth={n} /></g>;
     case "giay": return <g>{P(`M ${-k(0.3)} ${-k(0.42)} h ${k(0.5)} l ${k(0.1)} ${k(0.12)} v ${k(0.72)} h ${-k(0.6)} Z`, "#FFFFFF")}
       {[-0.16, 0, 0.16].map((y, i) => <line key={i} x1={-k(0.18)} y1={k(y)} x2={k(0.2)} y2={k(y)} stroke={mau} strokeWidth={n * 0.7} />)}</g>;
+    /* 1/9 — soi khung bắt được: kênh SPEED OF nói "a commercial jet" mà biểu tượng vẽ ra là
+       Ô TÔ, vì bảng chỉ có `xe` nên tôi gán tạm. Ở khuôn `so_lieu` thì con số ĐỨNG CẠNH biểu
+       tượng, nên gán tạm không phải là "gần đúng" — nó nói sai hẳn cái đang được đo.
+       Đây đúng quy tắc G rút từ video tham chiếu: con số phải đứng cạnh HÌNH CỦA CHÍNH VẬT ẤY. */
+    case "may_bay": return <g>{P(`M ${-k(0.46)} ${k(0.04)} l ${k(0.62)} ${-k(0.06)} l ${k(0.3)} ${k(0.02)}
+      q ${k(0.12)} ${k(0.03)} 0 ${k(0.07)} l ${-k(0.3)} ${k(0.03)} l ${-k(0.62)} ${-k(0.06)} Z`, "#D8DCE0")}
+      {P(`M ${-k(0.06)} ${-k(0.01)} l ${-k(0.16)} ${-k(0.3)} h ${k(0.1)} l ${k(0.24)} ${k(0.28)} Z`, "#B9BFC6")}
+      {P(`M ${-k(0.06)} ${k(0.05)} l ${-k(0.16)} ${k(0.3)} h ${k(0.1)} l ${k(0.24)} ${-k(0.28)} Z`, "#B9BFC6")}
+      {P(`M ${-k(0.4)} ${-k(0.02)} l ${-k(0.1)} ${-k(0.2)} h ${k(0.07)} l ${k(0.14)} ${k(0.18)} Z`, "#B9BFC6")}</g>;
     case "hop":  return <g>{P(`M ${-k(0.4)} ${-k(0.2)} h ${k(0.8)} v ${k(0.56)} h ${-k(0.8)} Z`, "#C9A06A")}
       {P(`M ${-k(0.44)} ${-k(0.34)} h ${k(0.88)} v ${k(0.14)} h ${-k(0.88)} Z`, "#B08A56")}</g>;
     default:     return <circle cx="0" cy="0" r={k(0.36)} fill={mau} opacity={0.25} />;
@@ -125,7 +134,10 @@ export const ChiaDoi: React.FC<{
           vế thứ hai đúng lúc lời kể nói tới vế thứ hai. */}
       <line x1={W / 2} y1={H * 0.10} x2={W / 2} y2={H * (0.10 + 0.80 * Math.min(1, p / 0.5))}
             stroke="#2C2722" strokeWidth={Math.max(3, H * 0.006)} strokeDasharray={`${H * 0.03} ${H * 0.022}`} />
-      {ben(phai, W * 0.75, 0.35)}
+      {/* Vế phải trễ 0,16 chứ không 0,35: cảnh chỉ dài ~1,8 giây, trễ 0,35 nghĩa là vế phải
+          mới hiện xong lúc cảnh gần hết — soi khung kênh COULD YOU SURVIVE thấy đúng thế, nửa
+          bên phải trống trơn. Trễ vẫn cần (để mắt đọc vế trái trước), nhưng phải vừa với nhịp. */}
+      {ben(phai, W * 0.75, 0.16)}
     </g>
   );
 };
@@ -135,26 +147,56 @@ export const ChiaDoi: React.FC<{
    một con số mà cả đoạn xoay quanh, và nó phải đọc được khi video chạy trong luồng cuộn. */
 export const SoLieu: React.FC<{
   W: number; H: number; so: string; don: string; chu: string; bt: string; mau: string; p: number;
-}> = ({ W, H, so, don, chu, bt, mau, p }) => {
+  tren_anh?: boolean;
+}> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false }) => {
   const q = Math.min(1, p / 0.28);
   /* Cùng lỗi với `ChiaDoi`, và thêm một lỗi nữa: biểu tượng đặt ở `H*0.62` còn con số ở
      `H*0.30` với cỡ `H*0.20` — hai lớp cùng chọn chỗ theo H mà không biết nhau, nên số "9"
      nằm đè lên cái biểu tượng. Nay biểu tượng bám ĐÁY khung và số bám ĐỈNH, không gặp nhau. */
   const cs = Math.min(H * 0.20, (W * 0.88 / Math.max(1, so.length)) * 1.65);
+  /* SỐ ĐẾM LÊN — anh: *"số liệu động animation là đẹp hay."*
+     Không phải hiệu ứng cho vui: con số nhảy dần làm người xem CẢM được độ lớn, còn con số
+     hiện sẵn thì chỉ được đọc. Với kênh mà cả nội dung là những con số thì đây là chỗ đắt nhất.
+     Chỉ đếm phần CHỮ SỐ, giữ nguyên dấu và đơn vị dính liền ($, %, x, km/h). */
+  const dem = (chu: string, tien: number) => {
+    if (tien >= 1) return chu;
+    return chu.replace(/[\d][\d,\.]*/g, (m) => {
+      const v = parseFloat(m.replace(/,/g, ""));
+      if (!isFinite(v)) return m;
+      const w = v * tien;
+      return m.includes(",") ? Math.round(w).toLocaleString()
+           : m.includes(".") ? w.toFixed(1) : `${Math.round(w)}`;
+    });
+  };
+  const soHien = dem(so, Math.min(1, p / 0.42));
   const cd = Math.min(H * 0.055, (W * 0.80 / Math.max(1, (don || "").length)) * 1.7);
   return (
     <g>
+      {/* 1/9 — DẢI NỀN KHI CHỮ ĐÈ LÊN ẢNH.
+          Soi khung kênh A DAY IN THE LIFE: chữ "KILOMETRES" nằm lọt sau người trong ảnh, đọc
+          không ra. Viền trắng quanh chữ không cứu được, vì nền phía sau cũng sáng.
+          Chữ đặt trên ảnh thì PHẢI có nền riêng — không có cách nào khác bảo đảm đọc được, vì
+          ảnh mỗi nhịp một sáng tối khác nhau và không ai biết trước. */}
+      {tren_anh ? (
+        <rect x={W * 0.04} y={H * 0.09} width={W * 0.92} height={cs * 1.62}
+              rx={H * 0.02} fill="#12151C" opacity={0.62} />
+      ) : null}
       {bt ? <g transform={`translate(${W / 2} ${H * 0.70})`} opacity={0.92}>
         <BieuTuong ten={bt} s={Math.min(H * 0.30, W * 0.30)} /></g> : null}
       <g transform={`translate(${W / 2} ${H * 0.26}) scale(${0.86 + q * 0.14})`} opacity={q}>
         <text x="0" y="0" textAnchor="middle" fontFamily={F} fontWeight={900}
-              fontSize={cs} fill="#2C2722"
-              stroke="#FFFFFF" strokeWidth={H * 0.014} paintOrder="stroke">{so}</text>
+              fontSize={cs}
+              fill={tren_anh ? "#FFFFFF" : "#2C2722"}
+              style={{ filter: tren_anh
+                ? `drop-shadow(0 ${H * 0.004}px ${H * 0.012}px #000000cc)`
+                : `drop-shadow(0 ${H * 0.003}px ${H * 0.008}px #00000033)` }}>{soHien}</text>
         {don ? <text x="0" y={cs * 0.42} textAnchor="middle" fontFamily={F} fontWeight={800}
-                     fontSize={cd} fill={mau} letterSpacing={2}>{don.toUpperCase()}</text> : null}
+                     fontSize={cd} fill={mau} letterSpacing={2}
+                     style={{ filter: `drop-shadow(0 ${H*0.003}px ${H*0.009}px #00000099)` }}
+                     >{don.toUpperCase()}</text> : null}
       </g>
       {chu ? <text x={W / 2} y={H * 0.94} textAnchor="middle" fontFamily={F} fontWeight={700}
-                   fontSize={Math.min(H * 0.042, (W * 0.92 / Math.max(1, chu.length)) * 1.75)}
+                   fontSize={Math.min(H * 0.042, (W * 0.90 / Math.max(1, chu.length)) * 1.45)}
                    fill="#3A342C">{chu}</text> : null}
     </g>
   );
@@ -205,6 +247,11 @@ export const KinhLup: React.FC<{
   W: number; H: number; x: number; y: number; nhan: string; mau: string; p: number;
   con: React.ReactNode;
 }> = ({ W, H, x, y, nhan, mau, p, con }) => {
+  /* 1/9 — KÍNH LÚP ĐANG PHÓNG TO CHỖ TRỐNG.
+     Lúc bỏ nhân vật vector, tôi truyền `con={null}` vào đây rồi quên nối ảnh nền vào thay.
+     Soi khung kênh THE RULES: vòng tròn trắng tinh, không phóng gì cả.
+     Đúng luật 7bp vừa ghi sáng nay — *bỏ một lớp thì phải rà những chỗ lớp cũ đang được dựa
+     vào* — và tôi vi phạm chính nó trong cùng một ngày. */
   const r = H * 0.20 * Math.min(1, p / 0.3);
   const cx = W * 0.72, cy = H * 0.34;
   return (
@@ -320,7 +367,7 @@ export const TheChu: React.FC<{ W: number; H: number; chu: string; p: number; ma
     <g opacity={q} transform={`translate(${W / 2} ${H / 2}) scale(${0.96 + q * 0.04})`}>
       <rect x={-W * 0.42} y={-fs * dong.length * 0.92} width={W * 0.84}
             height={fs * dong.length * 1.84} rx={H * 0.02}
-            fill="#F2E7CE" stroke="#8A7550" strokeWidth={Math.max(3, H * 0.005)} />
+            fill="#FFFFFFEE" stroke="#00000018" strokeWidth={Math.max(1, H * 0.0015)} />
       {dong.map((d, i) => (
         <text key={i} x="0" y={(i - (dong.length - 1) / 2) * fs * 1.22 + fs * 0.34}
               textAnchor="middle" fontFamily="Georgia, serif" fontWeight={700}
@@ -328,6 +375,63 @@ export const TheChu: React.FC<{ W: number; H: number; chu: string; p: number; ma
       ))}
       <rect x={-W * 0.42} y={fs * dong.length * 0.92 - Math.max(3, H * 0.006)}
             width={W * 0.84} height={Math.max(3, H * 0.006)} fill={mau} />
+    </g>
+  );
+};
+
+/* ── KHUÔN 8: BIỂU ĐỒ CỘT ĐỘNG ────────────────────────────────────────────────────────────
+   Anh: *"+ chart biểu đồ + số liệu động animation là đẹp hay."*
+
+   Ba thứ làm nên một biểu đồ đọc được trong 2 giây — và cả ba đều là chuyện NHỊP, không phải
+   chuyện màu:
+     · cột MỌC LÊN chứ không hiện sẵn: mắt bám theo cái đang chuyển động, nên cột mọc chính là
+       thứ dẫn mắt vào biểu đồ. Hiện sẵn thì người xem phải tự tìm chỗ bắt đầu.
+     · con số ĐẾM LÊN theo cột: số nhảy dần thì người xem cảm được ĐỘ LỚN, không chỉ đọc chữ.
+     · cột lớn nhất TÔ MÀU NHẤN, còn lại xám: ở 2 giây không ai so được năm cột cùng màu.
+   Không có lưới, không có trục tung. Ở khung điện thoại thì lưới chỉ là nhiễu. */
+export const Chart: React.FC<{
+  W: number; H: number; cot: { nhan: string; v: number }[]; don: string;
+  mau: string; mauPhu: string; p: number;
+}> = ({ W, H, cot, don, mau, mauPhu, p }) => {
+  if (!cot.length) return null;
+  const max = Math.max(...cot.map((c) => Math.abs(c.v)), 1);
+  const dinh = cot.reduce((a, b) => (Math.abs(b.v) > Math.abs(a.v) ? b : a), cot[0]);
+  const yDay = H * 0.80, cao = H * 0.52;
+  const b = (W * 0.86) / cot.length;
+  const x0 = W * 0.07;
+  const q = Math.min(1, p / 0.5);
+  const cn = Math.min(H * 0.038, (b * 0.92 / Math.max(...cot.map((c) => c.nhan.length), 1)) * 1.6);
+  return (
+    <g>
+      {cot.map((c, i) => {
+        // Mỗi cột mọc lệch pha 0,06 -> mắt đọc được THỨ TỰ, không thấy cả rừng bật lên cùng lúc.
+        const qi = Math.max(0, Math.min(1, (q - i * 0.06) / 0.55));
+        const h = cao * (Math.abs(c.v) / max) * qi;
+        const x = x0 + b * i + b * 0.14;
+        const w = b * 0.72;
+        const la = c === dinh;
+        const so = c.v * qi;
+        const cs = Math.min(H * 0.042, (w / Math.max(2, `${Math.round(so)}`.length)) * 1.5);
+        return (
+          <g key={i}>
+            <rect x={x} y={yDay - h} width={w} height={h} rx={W * 0.006}
+                  fill={la ? mau : "#B8B2A6"} stroke="#2C2722" strokeWidth={Math.max(2, H * 0.004)} />
+            <text x={x + w / 2} y={yDay - h - H * 0.018} textAnchor="middle" fontFamily={F}
+                  fontWeight={900} fontSize={cs} fill={la ? mau : "#5A544C"} opacity={qi}>
+              {Math.abs(so) >= 1000 ? `${(so / 1000).toFixed(1)}K` : Math.round(so).toLocaleString()}
+            </text>
+            <text x={x + w / 2} y={yDay + H * 0.055} textAnchor="middle" fontFamily={F}
+                  fontWeight={800} fontSize={cn} fill="#3A342C">{c.nhan}</text>
+          </g>
+        );
+      })}
+      <line x1={x0} y1={yDay} x2={x0 + b * cot.length} y2={yDay}
+            stroke="#2C2722" strokeWidth={Math.max(3, H * 0.006)} />
+      {don ? (
+        <text x={W / 2} y={H * 0.145} textAnchor="middle" fontFamily={F} fontWeight={800}
+              fontSize={Math.min(H * 0.042, (W * 0.8 / Math.max(1, don.length)) * 1.7)}
+              fill={mauPhu} letterSpacing={2}>{don.toUpperCase()}</text>
+      ) : null}
     </g>
   );
 };

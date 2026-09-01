@@ -94,11 +94,34 @@ jobs:
             echo "chay=yes" >> $GITHUB_OUTPUT; echo "bấm tay -> chạy"; exit 0
           fi
           CUT=$(date -u -d '20 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-20H +%Y-%m-%dT%H:%M:%SZ)
-          N=$(gh api "repos/${{ github.repository }}/actions/workflows/render_phan_tich_18.yml/runs?per_page=20" \
+          # ══ ĐẾM LƯỢT CÓ DỰNG THẬT, KHÔNG ĐẾM LƯỢT "KẾT LUẬN SUCCESS" (1/9/2026) ═══════
+          # Bản trước đếm mọi lượt có `conclusion == success`. Nhưng một lượt BỊ CHÍNH CỔNG NÀY
+          # BỎ QUA cũng kết thúc là `success`: job `chot` chạy xong, job `dung` chỉ `skipped`, mà
+          # `skipped` không làm hỏng lượt chạy.
+          #
+          # Hậu quả là cổng TỰ KHOÁ VĨNH VIỄN: mỗi lượt bỏ qua lại làm mới dấu "success", nên cửa
+          # sổ 20 giờ không bao giờ trôi hết, và sau lần dựng thật đầu tiên thì không bao giờ dựng
+          # nữa. Đo được trên repo này: 01:21 ngày 1/9 dựng thật 10/10 job -> 10 artifact; 08:34
+          # cùng ngày dựng 0/1 job -> 0 artifact. Dashboard vẫn xanh suốt.
+          #
+          # Đây là dạng tệ nhất của họ lỗi đã ghi ở luật 24.1 — *hỏng mà không để lại tệp nào thì
+          # trông y hệt chưa từng chạy* — nhưng còn tệ hơn, vì nó BÁO XANH.
+          #
+          # Sửa: hỏi thẳng job `dung` của từng lượt. Chỉ lượt nào có job dựng THẬT SỰ chạy mới
+          # được tính là "hôm nay đã dựng rồi".
+          IDS=$(gh api "repos/${{ github.repository }}/actions/workflows/render_phan_tich_18.yml/runs?per_page=20" \
               --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }})
                      | select(.created_at > \"$CUT\")
-                     | select(.conclusion == \"success\" or .status == \"in_progress\")] | length")
-          echo "lượt gần đây (20h): $N"
+                     | select(.conclusion == \"success\" or .status == \"in_progress\")][].id")
+          N=0
+          for RID in $IDS; do
+            K=$(gh api "repos/${{ github.repository }}/actions/runs/$RID/jobs?per_page=100" \
+                --jq '[.jobs[] | select(.name | startswith("dung"))
+                       | select(.conclusion == "success" or .status == "in_progress")] | length' \
+                2>/dev/null || echo 0)
+            if [ "${K:-0}" -gt 0 ]; then N=$((N+1)); fi
+          done
+          echo "lượt CÓ DỰNG THẬT trong 20h: $N"
           if [ "${N:-0}" -gt 0 ]; then
             echo "chay=no" >> $GITHUB_OUTPUT; echo "hôm nay đã dựng rồi -> bỏ lượt"
           else

@@ -1,0 +1,456 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""VẼ CẢNH BẰNG CLOUDFLARE cho phim giải thích — mỗi nhịp một ảnh.  (1/9/2026)
+
+Anh: *"sao ko dùng cf vẽ chính xác cảnh đẹp ra luôn, ko cần động phần nhân vật đâu, chỉ cần vẽ
+đúng bối cảnh biểu cảm, bối cảnh khớp đẹp là ok."*
+
+Anh đúng, và em đã đi sai một vòng. Em cố vẽ nhân vật bằng vector rồi dán lên nền vẽ tay — mà
+nhân vật vector CHÍNH LÀ chỗ xấu: tóc bù thành cái chổi, thân thành hình chữ nhật nâu, và cảnh
+nhóm thì năm người giống hệt nhau tay chồng lên nhau.
+
+CÓ 97 KHOÁ CF. Vẽ nguyên cảnh bằng FLUX vừa đẹp hơn hẳn vừa không tốn công em, và quan trọng
+hơn: nó VẼ ĐÚNG THỨ CÂU ĐANG NÓI. Vector chỉ vẽ được mười một căn phòng em đã lập trình sẵn.
+
+── VÌ SAO LẦN NÀY KHÁC LẦN TRƯỚC ───────────────────────────────────────────────────────────
+CLAUDE.md ghi: *"bốn lỗi của bản hài cũ đều chảy ra từ dán người vector lên ảnh AI."* Đúng —
+nhưng đó là lỗi của việc DÁN NGƯỜI VECTOR LÊN, không phải lỗi của ảnh AI. Ở đây không dán gì
+cả: FLUX vẽ cả người lẫn cảnh trong cùng một ảnh, nên không có chuyện ánh sáng lệch, bóng sai
+hướng, hay người lơ lửng. Bốn lỗi ấy không có chỗ để phát sinh.
+
+Đổi lại mất tính nhất quán nhân vật giữa các khung. Với kênh HÀI có dàn vai cố định thì đó là
+lỗi chết người (gói 15s viết hoa `MASTER CHARACTER LOCK` vì thế). Với kênh GIẢI THÍCH thì không
+có vai nào cả — chỉ có "một người", "một người đi bộ". Nên cái giá ấy bằng không.
+
+── KHOÁ PHONG CÁCH ─────────────────────────────────────────────────────────────────────────
+Mọi ảnh của cả mười kênh dùng chung một câu khoá phong cách. Không phải để đẹp — để 250 khung
+của một tập trông như MỘT bộ phim chứ không như 250 ảnh nhặt về.
+"""
+import io
+import os
+import re
+
+GOC = os.path.dirname(os.path.abspath(__file__))
+THU = os.path.join(os.path.dirname(GOC), "engine-remotion", "public", "gt_nen")
+
+from kich_hai import SAN_NEN                                   # noqa: E402
+
+# ── LUẬT BỐ CỤC PHẢI ĐỔI THEO TRONG NHÀ / NGOÀI TRỜI ────────────────────────────────────────
+# 1/9 — soi khung bắt được: nhịp "No sleep" nói về người đi bộ ban đêm giữa sa mạc, mà ảnh ra
+# là một PHÒNG KHÁCH có tủ kệ; nhịp "Days go by" thì có chậu cây với cái ghế đặt giữa cồn cát.
+#
+# Gốc rễ nằm ở chính câu `SAN_NEN` mà tôi vừa viết lại sáng nay: *"all FURNITURE and objects
+# pushed far to the left and right edges"*. Câu ấy soạn cho cảnh TRONG NHÀ. Đem nguyên si sang
+# cảnh ngoài trời thì FLUX làm đúng điều được bảo — nó kê đồ nội thất vào sa mạc.
+#
+# Đây là họ lỗi *"mượn giá trị cho việc nó không sinh ra để làm"* đã ghi ở CLAUDE.md. `SAN_NEN`
+# sinh ra cho bộ truyện tranh, nơi mọi cảnh đều trong nhà. Dùng lại là đúng; dùng lại mà không
+# hỏi "câu này còn đúng ở ngữ cảnh mới không" là sai.
+# ══ CẮT VUÔNG XUỐNG KHUNG PHIM — LUẬT BỐ CỤC PHẢI BIẾT ĐIỀU ĐÓ (1/9/2026) ═══════════════════
+# Đã thử và bị từ chối: `@cf/black-forest-labs/flux-1-schnell` KHÔNG nhận `width`/`height`
+# (HTTP 400). Ảnh luôn là 1024×1024 vuông. Thử đổi sang `sdxl-lightning` (model này CÓ nhận
+# khung 768×1344) thì nó trả về một tấm ĐEN THUI — bộ lọc an toàn của SDXL trên CF.
+# Nên: giữ FLUX, và giải bài toán tỉ lệ ở chỗ đúng của nó là LUẬT BỐ CỤC.
+#
+# Số học của phép cắt:
+#   vuông -> 9:16  giữ lại 56% BỀ NGANG   (mất 44%, cắt đều hai bên)
+#   vuông -> 16:9  giữ lại 56% CHIỀU CAO  (mất 44%, cắt đều trên dưới)
+#
+# Và đây mới là chỗ chết người: luật cũ dặn *"dồn đồ đạc ra hai mép"* — tức dặn mô hình đặt đồ
+# vào ĐÚNG dải sắp bị cắt bỏ. Prompt đúng, ảnh đúng, khung phim cắt sạch. Cùng họ lỗi với vụ
+# `SAN_NEN` kê tủ vào sa mạc: một câu luật đúng trong ngữ cảnh nó sinh ra, sai ở ngữ cảnh mới.
+# ══ CHỪA CHỖ CHO CHỮ — ĐO TỪ CHÍNH ENGINE, KHÔNG ƯỚC LƯỢNG ═════════════════════════════════
+# Anh: *"nhớ căn ép ảnh khi generate, chừa vùng trống để có chỗ để chart hay text hay số liệu,
+# để không bị che khuất — như phần trước em làm ấy."*
+#
+# Anh nhắc đúng: tôi đã có luật ép sàn ("sàn chiếm trọn phần ba dưới, đồ đạc dồn hai mép, giữa
+# để trống") và nó hiệu quả — nhưng tôi chỉ áp cho SÀN, quên áp cho VÙNG CHỮ. Hậu quả đã thấy:
+# chữ "KILOMETRES" nằm lọt sau người, số "30" đè lên mặt.
+#
+# Đo lại chính engine xem lớp chữ thật sự nằm ở đâu (tính theo chiều cao khung đầy đủ):
+#     dải nền số liệu  0,07      số liệu        0,21
+#     trục             0,42      đáy cột chart  0,64
+#     dải chữ dưới     0,72      chú thích      0,75      phụ đề  0,92
+# => VÙNG PHẢI TRỐNG: 0,05–0,32 ở trên, và 0,68–1,00 ở dưới. Chủ thể sống ở dải giữa.
+#
+# Viết bằng ngôn ngữ TRANH VẼ, không phải ngôn ngữ ảnh chụp — nói "khoảng trời phẳng", "mặt sàn
+# phẳng", chứ không nói "khoảng âm" hay "vùng an toàn" (mô hình không hiểu hai chữ ấy).
+CHUA_CHO = ("the top third is empty plain sky or flat wall with nothing drawn in it, the "
+            "bottom fifth is empty flat ground with nothing in it, everything important sits "
+            "in the middle band")
+
+KHUNG_DOC = ("tall vertical composition, subject centred, nothing important in the outer "
+             "quarter left or right, " + CHUA_CHO)
+KHUNG_NGANG = ("wide horizontal composition, subject centred, " + CHUA_CHO)
+
+SAN_NGOAI = ("wide shot, camera at standing eye level, "
+             "the ground fills the entire bottom third of the frame as one continuous "
+             "unbroken surface running from the left edge to the right edge, "
+             "rocks plants and scenery pushed far to the left and right edges, "
+             "the centre of the frame is open empty ground, no interior, no walls, no ceiling")
+
+_NGOAI = re.compile(
+    r"\b(desert|tundra|plain|field|sky|outdoor|street|road|highway|forest|valley|coast|"
+    r"beach|mountain|snow|lawn|yard|driveway|kerb|curb|sidewalk|space|moon|planet|stars|"
+    r"horizon|open ground|savanna|wilderness|dunes)\b", re.I)
+
+
+SAN_DOC = ("camera at standing eye level, the ground runs across the lower part of the frame "
+           "as one continuous unbroken surface, the subject standing on it near the centre, "
+           "scenery arranged above and below the subject rather than out to the sides")
+SAN_DOC_NGOAI = SAN_DOC + ", open outdoor scene, no interior, no walls, no ceiling"
+
+
+def _luat(ve: str, doc: bool = False) -> str:
+    """Chọn luật bố cục theo CẢNH và theo HƯỚNG KHUNG.
+
+    Hai trục, không phải một:
+      · trong nhà / ngoài trời — quyết định có được nhắc chữ `furniture` hay không;
+      · dọc / ngang — quyết định thứ quan trọng được đứng ở đâu để sống sót qua phép cắt.
+    Bản dọc KHÔNG được dồn đồ ra hai mép (mép bị cắt), nên chuyển sang xếp chồng theo chiều cao.
+    """
+    ngoai = bool(_NGOAI.search(ve or ""))
+    if doc:
+        return SAN_DOC_NGOAI if ngoai else SAN_DOC
+    return SAN_NGOAI if ngoai else SAN_NEN
+
+# Khoá phong cách — dựng theo đúng thứ đo được ở hai video tham chiếu (mục 6-7 của
+# PHAN_TICH_GIAI_THICH.md): nét đen dày đều, màu phẳng tươi, người que đầu tròn trắng, và nền
+# CÓ CHIỀU SÂU ba lớp (trời -> núi xa -> tiền cảnh) chứ không phải tường phẳng.
+# Anh: *"người que xấu thì có thể vẽ người thật hay dạng khác, sao cho phù hợp USA đẹp và hợp
+# niche."* Nên phong cách là MỘT KHOÁ RIÊNG CHO TỪNG KÊNH, không ép một kiểu cho cả mười.
+# Người que hợp kênh khoa học vui; kênh tài chính thì hình phẳng kiểu tạp chí đọc "đáng tin"
+# hơn hẳn; kênh lịch sử thì tranh vẽ tay ấm màu. Chọn sai phong cách là kênh mất uy trước khi
+# nói được câu nào — và uy tín là thứ quyết định RPM ở mấy niche này.
+# ══ MỘT PHONG CÁCH DUY NHẤT: CARTOON PHẲNG ══════════════════════════════════════════════════
+# Anh gửi hai khung tham chiếu và nói: *"vẽ kiểu thật xấu thì e vẽ kiểu cartoon xem sao."*
+#
+# Đúng, và nó khớp chính xác với số đo của tôi: ảnh mang chất ảnh chụp đo độ phẳng 0,13–0,20 và
+# trông tệ; ảnh phẳng đo 0,85–0,91 và trông đẹp. Hai khung anh gửi (người que trên ghế sofa xanh
+# lá · người que ở cửa nhà vàng) thuộc đúng nhóm sau.
+#
+# BỎ HẲN NĂM PHONG CÁCH. Bản trước tôi gán mỗi niche một phong cách — nghe hợp lý, nhưng thực
+# tế là hai trong năm phong cách ấy (`tranh`, `kich`) YÊU CẦU chất ảnh thật, tức tôi tự tay đặt
+# hàng đúng thứ trông tệ. Mười kênh phân biệt nhau bằng BẢNG MÀU (đã có, xem `MAU_KENH`), không
+# cần phân biệt bằng chất vẽ.
+#
+# VÀ BỎ NGÔN NGỮ MÔ TẢ ẢNH CHỤP. Đây là chỗ tôi đã nhận ra mà chưa sửa: prompt sáu tầng có
+# "background:", "foreground:", "warm light from the left, long soft shadows" — đó là cách người
+# ta tả một BỨC ẢNH. Mô hình đọc xong thì vẽ ra một bức ảnh. Muốn cartoon thì phải nói bằng ngôn
+# ngữ của tranh vẽ: mảng màu phẳng, nét viền đen dày, không chuyển sắc, không kết cấu bề mặt.
+GU_CARTOON = (
+    "flat 2D cartoon illustration, thick uniform black outlines, large areas of solid flat "
+    "colour, no gradients, no texture, crisp vector edges, bright saturated palette, "
+    "stick-figure people with plain round white heads, two dot eyes, a simple line mouth and "
+    "thin black limbs, modern animated explainer look, not photorealistic, not 3D"
+)
+# Neo bối cảnh Mỹ — chỉ giữ những vật CHỈ CÓ Ở MỸ và mô hình vẽ được. "Cảm giác Mỹ" thì nó
+# không vẽ được; "hòm thư trên cột cắm ở lề" thì vẽ được.
+GU_USA = ("set in the United States: clapboard suburban houses with a front porch, a mailbox "
+          "on a post at the kerb, wide two-lane roads, American kitchen with an island; "
+          "people in t-shirt or hoodie, jeans and sneakers")
+GU_KENH = {k: GU_CARTOON for k in
+           ("que", "phang", "tranh", "kich", "iso")}
+KENH_GU = {m: "que" for m in
+           ("howlong", "howbig", "realcost", "howmuch", "whatif",
+            "survive", "dayinlife", "wheregoes", "therules", "speedof")}
+GU = GU_CARTOON
+
+# ══ KHOÁ NHÂN VẬT ═══════════════════════════════════════════════════════════════════════════
+# Anh: *"nhớ khoá nhân vật để cho đồng bộ cả channel cho nó đỡ lộn xộn, xây dựng bộ nhân vật để
+# dùng chung để AI vẽ ra có nét theo niche."*
+#
+# NÓI THẲNG GIỚI HẠN TRƯỚC. FLUX qua Cloudflare chỉ nhận CHỮ — không có ảnh tham chiếu, không
+# có LoRA, không có IP-Adapter. Nên khoá bằng mô tả không bao giờ đạt 100%; thực tế được khoảng
+# bảy tám phần mười. Ai hứa hơn thế là chưa thử.
+#
+# Nhưng có một cách làm phần bảy tám ấy thành đủ dùng: **làm nhân vật ĐƠN GIẢN và cho nó MỘT
+# DẤU HIỆU RẤT MẠNH.** Mô hình khuếch tán tái tạo hình khối đơn giản và màu đặc rất đáng tin;
+# nó tái tạo khuôn mặt tinh tế rất tệ. Nên "người que đầu tròn trắng, áo cam gạch" giữ được
+# xuyên suốt, còn "người đàn ông 41 tuổi mũi thẳng mắt sâu" thì mỗi khung một người.
+# Đây cũng đúng là cách hai video tham chiếu làm: nhân vật của họ gần như không có mặt.
+#
+# BA QUY TẮC VIẾT MỘT KHOÁ:
+#   1. một SILHOUETTE gọi tên được (người que · bóng đặc · người mặc áo phản quang)
+#   2. một MÀU ĐẶC duy nhất, gọi bằng tên màu cụ thể chứ không phải "sáng màu"
+#   3. một PHỤ KIỆN hoặc nét tóc gọn, và KHÔNG tả gì thêm về khuôn mặt
+# Tả thêm là hại: mỗi chi tiết mặt thêm vào là một chỗ để mô hình đi chệch.
+#
+# Khoá đặt Ở ĐẦU prompt. Mô hình khuếch tán đọc phần đầu nặng ký hơn hẳn — cùng lý do câu cấm
+# chữ phải đặt đầu (luật 7bk).
+KHOA_VAI = {
+    "howlong":  "a simple stick figure with a round white head, thick black outline, thin black "
+                "limbs, wearing a plain rust-orange t-shirt and grey shorts, two dot eyes and no "
+                "other facial detail",
+    "whatif":   "a simple stick figure with a round white head, thick black outline, thin black "
+                "limbs, wearing a plain cobalt-blue t-shirt, two dot eyes and no other facial detail",
+    "speedof":  "a simple stick figure with a round white head, thick black outline, thin black "
+                "limbs, wearing a plain mustard-yellow t-shirt, two dot eyes and no other facial detail",
+    "howbig":   "a single solid deep-teal human silhouette with soft rounded edges and no face",
+    "howmuch":  "a single solid indigo human silhouette with soft rounded edges and no face",
+    "realcost": "a flat-vector man in his thirties, plain forest-green crew-neck sweater, charcoal "
+                "trousers, short black hair, two simple dot eyes and no other facial detail",
+    "therules": "a flat-vector man in his forties, plain light-blue polo shirt, khaki shorts, "
+                "short sandy hair, two simple dot eyes and no other facial detail",
+    "wheregoes": "a minimal isometric worker in an orange hi-vis vest and white hard hat, no face",
+    "survive":  "a lean man in his early thirties, short dark hair, a heavy brown fur wrap over "
+                "one shoulder, weathered skin, plain simple features",
+    "dayinlife": "a man in his late twenties, short dark hair, thick eyebrows, a plain worn "
+                 "linen tunic, plain simple features",
+}
+
+# Cảnh nào CÓ NGƯỜI thì mới gắn khoá. Cảnh vẽ đồ vật, biểu đồ, phong cảnh trống thì gắn vào chỉ
+# tổ khiến mô hình nhét thêm một người không ai cần.
+_CO_NGUOI = re.compile(
+    r"\b(figure|person|people|man|woman|child|adult|crowd|silhouette|worker|sprinter|"
+    r"soldier|baker|keeper|watchman|someone|hand|hands)\b", re.I)
+
+
+def _khoa(ma: str, ve: str) -> str:
+    k = KHOA_VAI.get(ma, "")
+    if not k or not _CO_NGUOI.search(ve or ""):
+        return ""
+    return f"the same recurring character in every shot: {k}. "
+
+
+# Câu cấm chữ — đặt Ở ĐẦU và viết THUẬN. Xem luật 7bk: FLUX không có negative prompt, nên câu
+# cấm viết nghịch (`no text`) biến thành lệnh vẽ. Mô tả bề mặt SẠCH thay vì cấm chữ.
+SACH = "every surface blank and unmarked, wordless scene"
+
+
+# ══ DẢI ĐỘ PHẲNG CHO TỪNG PHONG CÁCH ════════════════════════════════════════════════════════
+# Đo trên 74 ảnh đã sinh: thước "độ phẳng" tách sạch từ 0,13 (ảnh chụp / dựng 3D) tới 0,91
+# (vector phẳng). Và đây là bằng chứng của bệnh: TRONG CÙNG MỘT TẬP `realcost`, ảnh nhịp 0 đo
+# 0,136 (người 3D như ảnh chụp) còn ảnh nhịp 7 đo 0,889 (lịch vector phẳng). Cùng kênh, cùng
+# tập, hai thế giới khác nhau.
+#
+# Đó chính là thứ làm video đọc ra "nghiệp dư", và nó KHÔNG phải chuyện màu — thử chỉnh màu
+# tách tông tới cường độ 0,32 vẫn gần như không thấy khác biệt. Lệch phong cách thì chỉnh màu
+# không cứu được.
+#
+# Câu khoá phong cách viết bằng chữ là chưa đủ vì FLUX trôi. Nên thêm CỔNG ĐO: ảnh nào rơi
+# ngoài dải của phong cách kênh thì vẽ lại bằng lần thử khác.
+# ── CỔNG ĐO SỰ NHẤT QUÁN, KHÔNG ĐO "ĐÚNG PHONG CÁCH" ───────────────────────────────────────
+# Bản đầu của cổng này đặt một dải cố định cho từng phong cách rồi loại ảnh nằm ngoài. Thử thật
+# trên kênh `therules` (đang sai 5/5):
+#     phong cách ở cuối prompt  -> độ phẳng 0,162
+#     phong cách ở đầu prompt   -> độ phẳng 0,445     (cải thiện mạnh)
+#     dải cố định đòi           -> 0,58–0,97          (vẫn trượt)
+#
+# Đưa phong cách lên đầu giúp rất nhiều nhưng không đủ, và lý do là MÂU THUẪN DO CHÍNH TÔI TẠO
+# RA: prompt sáu tầng chi tiết ("foreground: grass close to camera", "warm light from the
+# right") là NGÔN NGỮ MÔ TẢ ẢNH CHỤP. Càng tả kỹ chiều sâu và ánh sáng thì mô hình càng vẽ ra
+# ảnh thật. Ép nó về vector phẳng là đi ngược chính những câu mình vừa viết.
+#
+# Nên đổi mục tiêu cho đúng: thứ làm video đọc ra nghiệp dư KHÔNG phải "sai phong cách" mà là
+# "mười lăm ảnh thuộc mười lăm thế giới". Người xem không biết kênh này *đáng lẽ* phải vector
+# phẳng; họ chỉ thấy ảnh này khác ảnh kia.
+#
+# Nên cổng nay TỰ CHUẨN HOÁ: ảnh ĐẦU TIÊN vẽ được của một tập đặt ra mốc, mọi ảnh sau phải nằm
+# trong ±NGUONG quanh mốc ấy. Không có con số phép thuật nào, không đánh nhau với mô hình, và
+# nó ép đúng thứ cần ép.
+# SÀN ĐỘ PHẲNG. Đo trên 74 ảnh cũ: ảnh cartoon phẳng đẹp nằm ở 0,66–0,91; ảnh mang chất ảnh
+# chụp nằm ở 0,13–0,45. Đặt sàn 0,62 — dưới mức ấy là đã bắt đầu ngả sang ảnh thật.
+# Đây là SÀN CỨNG chứ không còn là "nhất quán quanh ảnh đầu": bản trước tự chuẩn hoá theo ảnh
+# đầu tiên, nghĩa là nếu ảnh đầu lỡ ra chất ảnh chụp thì cả tập bị khoá vào chất ấy. Nhất quán
+# quanh một mốc SAI thì vẫn sai — chỉ là sai đều.
+# 1/9, SỬA LẦN HAI — THƯỚC ĐO ĐO SAI THỨ TÔI TƯỞNG.
+# Đặt sàn 0,62 rồi chạy thử: 6/11 ảnh "trượt". NHÌN vào sáu ảnh ấy thì cả sáu đều là cartoon
+# phẳng đúng chất, cùng một nhân vật — tấm điểm thấp nhất (0,30) là cảnh đám đông ban đêm có
+# nhiều hình nhỏ và trời chuyển sắc.
+# Tức thước này lẫn lộn "PHONG CÁCH phẳng" với "BỐ CỤC đơn giản". Tôi calibrate nó trên hai đầu
+# cực (ảnh chụp 0,13 vs vector phẳng 0,91) rồi tưởng nó đọc được cả khoảng giữa. Nó không.
+# Suýt nữa tôi báo "ép cartoon thất bại" trong khi ép cartoon đã thành công — đúng luật
+# CLAUDE.md: *khi con số và con mắt bất đồng thì đo pixel*, và pixel nói con số sai.
+# Nay sàn hạ về 0,26: dưới mức ấy mới thật sự là ảnh chụp (dải đo được của ảnh chụp là 0,13-0,20).
+# Cổng chỉ còn làm một việc: chặn ảnh chụp lọt vào, không phán xét bố cục.
+SAN_PHANG = 0.26
+NGUONG_LECH = 0.40   # nới rộng: xem chú thích trên
+
+
+def do_phang(tep: str):
+    """Độ 'phẳng' của ảnh: 0 = ảnh chụp thật, 1 = hình vẽ phẳng. None nếu không đo được.
+
+    Hai phép đo nhân trọng số:
+      · ĐỘ PHỦ CỦA 8 MÀU CHÍNH — hình vẽ phẳng có ít màu, mỗi màu phủ mảng lớn; ảnh thật thì
+        màu tãi ra hàng nghìn sắc độ vì chuyển sáng liên tục.
+      · ĐỘ MỊN CỤC BỘ — hình vẽ phẳng gần như không đổi trong một mảng, chỉ đổi ở đường viền;
+        ảnh thật đổi khắp nơi vì có kết cấu bề mặt.
+    Đã đối chiếu bằng mắt trên hai đầu dải: khớp."""
+    try:
+        from PIL import Image
+        import collections
+    except Exception:
+        return None
+    try:
+        im = Image.open(tep).convert("RGB").resize((256, 256))
+        q = im.quantize(colors=48, method=Image.MEDIANCUT).convert("RGB")
+        dem = collections.Counter(q.getdata())
+        phu8 = sum(n for _c, n in dem.most_common(8)) / (256 * 256)
+        g = im.convert("L"); px = g.load()
+        doi = n = 0
+        for y in range(0, 256, 2):
+            for x in range(0, 254, 2):
+                doi += abs(px[x, y] - px[x + 2, y]); n += 1
+        min_diem = max(0.0, 1.0 - (doi / n) / 14.0)
+        return round(phu8 * 0.55 + min_diem * 0.45, 3)
+    except Exception:
+        return None
+
+
+def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool = False) -> str:
+    """Ghép prompt cho MỘT nhịp.
+
+    Thứ tự có chủ đích: chủ thể trước, rồi luật bố cục, rồi phong cách, rồi bề mặt sạch.
+    Mô hình khuếch tán đọc phần đầu nặng ký hơn — nên thứ quan trọng nhất (cảnh đang nói tới)
+    phải đứng đầu, không đứng cuối."""
+    mt = {
+        "kho":  ", cold grey overcast light, desaturated palette",
+        "ngay": ", warm golden daylight, bright cheerful palette",
+        "dem":  ", night scene, deep blue palette, warm firelight",
+        "lanh": ", cool blue winter light, pale palette",
+    }.get(tam_trang, "")
+    # Gợi ý bố cục theo hướng khung. Không chỉ là chuyện kích thước tệp: khung dọc và khung
+    # ngang cần BỐ CỤC KHÁC NHAU. "Wide shot" trên khung dọc cho ra chủ thể bé tí giữa hai dải
+    # trống; khung dọc phải xếp chồng theo chiều cao.
+    khung = KHUNG_DOC if doc else KHUNG_NGANG
+    # TRẦN 2048 KÝ TỰ — đo được, không đọc tài liệu: gửi thử 2500 ký tự thì CF trả
+    #     HTTP 400  Length of '/prompt' must be <= 2048
+    # Tôi đã nhồi prompt lên ~2800 ký tự theo yêu cầu "viết dài và chi tiết hơn", và MỌI lệnh
+    # vẽ trả 400 — cả đường sinh ảnh chết câm, không ảnh nào ra. Lần thứ hai trong ngày một
+    # tham số API chưa thử làm sập cả pipeline (lần trước là `seed`).
+    # Nay ghép theo THỨ TỰ ƯU TIÊN và cắt từ đuôi khi vượt trần, thay vì để API từ chối cả câu:
+    # thà thiếu vế phụ còn hơn không có ảnh nào.
+    # PHONG CÁCH ĐẶT Ở ĐẦU. Mô hình khuếch tán đọc phần đầu nặng ký hơn hẳn — đã học điều này
+    # hai lần trong hôm nay (câu cấm chữ, và câu ép sàn). Để phong cách ở cuối câu là để nó bị
+    # át bởi phần mô tả cảnh, và đó là lý do cùng một kênh ra ảnh lúc vector phẳng lúc ảnh chụp.
+    phan = [
+        (gu or GU) + ".",          # 1. phong cách — phải đứng đầu, đây là thứ giữ chất cartoon
+        _khoa(ma, ve).rstrip(),    # 2. khoá nhân vật (rỗng nếu cảnh không có người)
+        ve + mt + ",",             # 3. chính cảnh của nhịp này
+        khung + ",",               # 4. chừa chỗ cho chữ
+        _luat(ve, doc) + ",",      # 5. luật sàn
+        GU_USA + ",",              # 6. neo bối cảnh Mỹ
+        SACH,                      # 7. bề mặt sạch
+    ]
+    ra = ""
+    for x in phan:
+        if not x:
+            continue
+        thu = (ra + " " + x).strip()
+        if len(thu) > 2048:
+            break                  # cắt từ đuôi: vế càng sau càng ít quan trọng
+        ra = thu
+    return ra
+
+
+def _ten(ma: str, idx: int, i: int) -> str:
+    return f"{ma}_{idx:04d}_{i:02d}.jpg"
+
+
+def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str = "",
+         doc: bool = True, moc: float = None) -> str:
+    """Vẽ một cảnh. Trả đường dẫn tương đối trong `public/`, hoặc "" nếu không vẽ được.
+
+    KHÔNG ném lỗi khi hỏng: tầng dưới (`NenQue` vẽ bằng code) luôn đỡ được, nên một ảnh hỏng
+    chỉ làm cảnh ấy xấu hơn chứ không làm hỏng cả tập. Đây là bài học từ bốn tầng nền của bộ
+    truyện tranh — thứ gì gọi mạng thì phải có tầng không gọi mạng đứng dưới."""
+    os.makedirs(THU, exist_ok=True)
+    # Tên tệp mang HƯỚNG KHUNG: bản dọc và bản ngang là hai ảnh khác nhau, không dùng chung
+    # được. Trộn chung một tên là lần sau dựng bản kia lấy nhầm ảnh của bản này.
+    hw = "d" if doc else "n"
+    dest = os.path.join(THU, _ten(ma, idx, i).replace(".jpg", f"_{hw}.jpg"))
+    rel = f"gt_nen/{_ten(ma, idx, i).replace('.jpg', f'_{hw}.jpg')}"
+    if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+        return rel
+    if not ve:
+        return ""
+
+    import datastory_ci as DS
+    from xoay_key import goi_xoay, CanThat
+
+    # (Đã bỏ seed: endpoint FLUX của CF trả HTTP 400 khi có `seed`. `hat0` chỉ còn dùng để
+    #  xoay khoá cho đều, không còn hứa hẹn tái lập ảnh.)
+    hat0 = (sum(ord(c) for c in ma) * 7919 + idx * 131 + i) % 4294967295
+
+    # ── LOẠI VÌ CÓ CHỮ THÌ VẼ LẠI, ĐỪNG BỎ ──────────────────────────────────────────────
+    # Mẻ trước kênh `realcost` chỉ được 4/7 cảnh. Không phải API hỏng — cổng `_co_chu` bắt
+    # được chữ do FLUX bịa ra và XOÁ ảnh, rồi hàm này trả rỗng, nên ba nhịp rơi xuống nền vẽ
+    # bằng code. Cổng làm đúng việc của nó; chỗ sai là tôi coi "bị loại" đồng nghĩa với "chịu
+    # thua".
+    # FLUX bịa chữ hay không phụ thuộc rất nhiều vào seed. Đổi seed rồi vẽ lại là gần như chắc
+    # chắn thoát — và rẻ, vì ảnh chỉ tốn 58 neuron. Ba lần vẫn dính thì mới chịu.
+    for lan in range(3):
+        seed = (hat0 + lan * 104729) % 4294967295
+
+        def _thu(kk):
+            return DS._cf_flux_image(_prompt(ve, tam_trang, gu, ma, doc), dest, kk) and \
+                os.path.getsize(dest) > 20000
+
+        try:
+            ok, _tk = goi_xoay(keys, _thu, hat=hat0 + lan)
+        except CanThat:
+            return ""
+        if not ok:
+            continue
+
+        # CỔNG NHẤT QUÁN — ảnh phải cùng thế giới với ảnh đầu tiên của tập.
+        # Đây là cổng đắt nhất trong bộ: nó ngăn một tập có mười lăm ảnh thuộc mười lăm thế
+        # giới. Lệch phong cách là lỗi người xem thấy trong nửa giây, mà mọi thước đo cũ đều mù.
+        _d = do_phang(dest)
+        _xau = _d is not None and (_d < SAN_PHANG or
+                                   (moc is not None and abs(_d - moc) > NGUONG_LECH))
+        if _xau:
+            if lan < 2:
+                os.remove(dest)
+                continue          # -> vẽ lại
+            # lần cuối thì nhận: nền vẽ bằng code còn lệch xa hơn một ảnh hơi khác chất
+
+        # CỔNG CHỮ — thứ video tham chiếu KHÔNG có, và đó là lý do một khung của họ hiện nguyên
+        # dòng `SPLIT FRAME` (lời dặn cho máy vẽ) giữa màn hình. Chữ do mô hình vẽ ra luôn sai
+        # chính tả và trông ngay ra là máy làm.
+        try:
+            from kich_hai import _co_chu
+            if _co_chu(dest) is True:
+                os.remove(dest)
+                continue          # -> vẽ lại bằng seed khác
+        except Exception:
+            pass
+        return rel
+    return ""
+
+
+def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
+             mau_chu: str = "", mau_nen: str = "") -> int:
+    """Vẽ mọi cảnh của một tập. Trả số ảnh vẽ được.
+
+    Chạy TUẦN TỰ chứ không song song: `goi_xoay` xoay khoá theo trạng thái chung, chạy song
+    song thì nhiều luồng cùng đâm vào một khoá đã 429 và cả mẻ hỏng theo. Chậm hơn nhưng đúng.
+    """
+    gu = GU_KENH.get(KENH_GU.get(ma, "que"), GU)
+    n = 0
+    moc = None      # mốc chất ảnh, do ảnh ĐẦU TIÊN vẽ được của tập đặt ra
+    for i, x in enumerate(nhip):
+        ve = x.get("ve") or ""
+        if not ve:
+            continue
+        rel = sinh(ma, idx, i, ve, keys, x.get("tam_trang", ""), gu, doc, moc)
+        if rel:
+            x["nenAnh"] = rel
+            n += 1
+            duong = os.path.join(THU, os.path.basename(rel))
+            if moc is None:
+                d = do_phang(duong)
+                if d is not None:
+                    moc = d
+                    print(f"     mốc chất ảnh của tập: {moc:.2f} (±{NGUONG_LECH})")
+            # CHỈNH MÀU sau khi cổng đã nhận — để cổng đo đúng thứ mô hình trả về, không đo
+            # thứ mình vừa sửa. Hiệu quả nhẹ (đã đo: gần như không thấy trên ảnh tối), nhưng
+            # rẻ (36 ms) và cộng dồn với vignette + grain thì đủ để cả tập có chung một chất.
+            if mau_chu and mau_nen:
+                try:
+                    from to_mau import to_mau as _tm
+                    _tm(duong, mau_chu, mau_nen)
+                except Exception:
+                    pass
+    return n
