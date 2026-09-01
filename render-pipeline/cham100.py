@@ -12,7 +12,7 @@ cuối cùng ở đó vẫn phải do người đọc chấm.
 import re, json, collections
 
 from kling_kenh import (HO_LAT, ho_lat as ho_cua, _giay_thoai as _gt,
-                        CAU_GIU_HINH, CAU_CHOT_RAO)
+                        CAU_GIU_HINH, CAU_CHOT_RAO, SO_CHINH_XAC)
 
 # Đảo ngôi thứ: người chắc chắn hoá ra sai, hoặc người bị bỏ qua hoá ra đúng. Đây là CƠ CHẾ của
 # trò đùa, không phải trang trí — thiếu nó thì cú lật chỉ là một sự việc nữa xảy ra.
@@ -23,10 +23,10 @@ SAI_TRAI = r"\b(empty|open|stacked|leaning|spill\w*|smok\w*|stuck|missing|upside
            r"soak\w*|frozen|melting|tilt\w*|scatter\w*|cover\w*|wrong|too (high|many|small))\b" \
            r"|\b(every|all of the|not one) \w+ (is|are|laid|stacked|lined|piled)"
 GHIM = r"\b(static|locked[- ]off|eye[- ]level|wide shot|low angle|high angle|medium shot)\b"
-SO_CHU = ("one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|"
-          "fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|"
-          "seventy|eighty|ninety|hundred|thousand|dozen")
-CU_THE = r"(\b\d{1,4}\b|\b(" + SO_CHU + r")\b|\b(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\b|\$\d)"
+# Dùng lại biểu thức của `kling_kenh`, không chép. Hai bản thì sớm muộn lệch, và lúc lệch
+# thì thước CHẤM ĐIỂM khác thước CHẶN — một kịch bản có thể "sạch mà thấp điểm" vì lý do
+# sai, và không ai truy ra được vì cả hai đều "đang chạy đúng".
+CU_THE = SO_CHINH_XAC
 NGUY = r"\b(sign|label|logo|brand|neon|screen reads|caption|subtitle|crowd|text)\b"
 # Chỉ liệt kê ĐỒ CỐ ĐỊNH có thể vắng mặt ở một phòng. Sàn · tường · cửa · trần có ở MỌI phòng
 # nên bắt lỗi chúng là bắt nhầm — đúng lỗi thước đã mắc ở vòng chấm đầu tiên.

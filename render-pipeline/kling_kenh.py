@@ -177,6 +177,20 @@ VONG_VIET = 8              # số lần cho AI viết lại một tập. Dây ch
 CAU_GIU_HINH = "Hold this exact image to the final frame."
 CAU_CHOT_RAO = "The last frame IS the punchline — no settling shot, no fade, exactly {g} seconds."
 
+# Một LƯỢNG CHÍNH XÁC. `one` không tính, `half`/`twice` cũng không: chúng là từ đệm ("one more
+# time", "half the room") chứ không phải thứ người xem đếm được — bản đầu nhận chúng nên cổng
+# báo sạch cho đúng loại kịch bản mơ hồ mà nó sinh ra để bắt.
+# Giữ ở đây làm MỘT NGUỒN: `cham100` và bản xuất web đều đọc lại, không chép.
+# Những chữ mà hook phải dùng để NÓI RA cái sai — thước tìm đúng chúng, nên lệnh dặn phải
+# liệt kê chúng ra (bài học: cổng đo một TỪ, lệnh dặn nói một Ý).
+SAI_TRAI_TA = (r"\b(empty|open|stacked|leaning|spill\w*|smok\w*|stuck|missing|upside|backwards|"
+               r"soak\w*|frozen|melting|tilt\w*|scatter\w*|cover\w*|wrong|too (high|many|small))\b")
+
+SO_CHINH_XAC = (r"\b\d{1,4}\b|\$\d|\b(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\b|"
+                r"\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|"
+                r"fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|"
+                r"fifty|sixty|seventy|eighty|ninety|hundred|thousand|dozen)\b")
+
 GHIM_MAY = ("static", "eye-level", "eye level", "low angle", "high angle", "wide shot",
             "medium shot", "close shot", "over-the-shoulder", "locked-off", "top-down")
 
@@ -1845,10 +1859,8 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
     # `one` KHÔNG tính, và `half`/`twice` cũng không: chúng là từ đệm ("one more time", "one of
     # them", "half the room") chứ không phải một lượng người xem đếm được. Bản đầu nhận chúng
     # nên cổng báo sạch cho đúng những kịch bản mơ hồ mà nó sinh ra để bắt.
-    _SO = (r"\b\d{1,4}\b|\$\d|\b(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\b|"
-           r"\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|"
-           r"fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|"
-           r"seventy|eighty|ninety|hundred|thousand|dozen)\b")
+    _SO = (SO_CHINH_XAC if True else "")  # noqa — giữ tên rõ ràng ở chỗ dùng
+
     _ca_so = " ".join(str(d.get(k) or "") for k in ("hook", "setup", "escalate", "payoff")) \
         + " " + " ".join(str((l or {}).get("say") or "") for l in lines)
     if not re.search(_SO, _ca_so, re.I):
@@ -3014,6 +3026,8 @@ def luat_web(kenh: str) -> dict:
                    r"faster|whole|entire|all of|now the|even the|one more|instead of|not enough)\b",
         "lat_bat_ky": r"\b(reveal\w*|turns? out|was never|all along|instead|behind (him|her|them))\b",
         "bo_ghim_may": r"^[^:]{0,40}(shot|angle)\s*:\s*",
+        "so_chinh_xac": SO_CHINH_XAC,
+        "sai_trai": SAI_TRAI_TA,
         "theo_giay": theo_giay,
         "vong_viet": 4,      # web thử lại tối đa 4 lượt — quá nữa là đốt hạn mức cho một tập
     }
