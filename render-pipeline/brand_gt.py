@@ -39,17 +39,28 @@ from giai_thich import KENH, MAU_KENH                        # noqa: E402
 # Biểu tượng nhận diện + từ ngắn cho avatar. Ở 48px chỉ còn đọc được hình khối và 1-2 từ, nên
 # từ ngắn phải là từ MANG NGHĨA NHẤT của tên kênh, không phải từ đầu tiên.
 NHAN = {
-    "howlong":  ("dong_ho", "HOW LONG"),
-    "howbig":   ("trai_dat", "HOW BIG"),
-    "realcost": ("tien",    "REAL COST"),
-    "howmuch":  ("tien",    "A BILLION"),
-    "whatif":   ("nguoi",   "WHAT IF"),
-    "survive":  ("cay",     "SURVIVE"),
-    "dayinlife": ("dong_ho", "A DAY"),
-    "wheregoes": ("hop",    "WHERE"),
-    "therules": ("hop",     "THE RULES"),
-    "speedof":  ("may_bay", "HOW FAST"),
+    # 18 biểu tượng KHÁC NHAU HOÀN TOÀN. Ở 48px — cỡ avatar thật trong danh sách đề xuất —
+    # hình khối là thứ duy nhất còn phân biệt được; trùng hình là hai kênh trông như một.
+    "howlong":    ("dong_ho",          "HOW LONG"),
+    "howbig":     ("trai_dat",          "HOW BIG"),
+    "realcost":   ("tien",          "REAL COST"),
+    "howmuch":    ("hat",          "A BILLION"),
+    "whatif":     ("nguoi",          "WHAT IF"),
+    "survive":    ("cay",          "SURVIVE"),
+    "dayinlife":  ("cua",          "A DAY"),
+    "wheregoes":  ("hop",          "WHERE"),
+    "therules":   ("khoa",          "THE RULES"),
+    "speedof":    ("may_bay",          "HOW FAST"),
+    "odds":       ("sao",          "THE ODDS"),
+    "hiddenfee":  ("banh_rang",          "INSIDE"),
+    "yearsof":    ("giot",          "YEARS"),
+    "howloud":    ("song",          "HOW LOUD"),
+    "whatweighs": ("nui",          "WEIGHS"),
+    "rightnow":   ("mui_ten",          "RIGHT NOW"),
+    "howhot":     ("nhiet",          "HOW HOT"),
+    "smallest":   ("lua",          "SMALLEST"),
 }
+
 
 CO = [("GTAvatar", "avatar"), ("GTAvatarLon", "avatar_lon"), ("GTBanner", "banner"),
       ("GTCover", "cover"), ("GTPost", "post")]

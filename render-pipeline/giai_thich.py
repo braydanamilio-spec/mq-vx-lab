@@ -84,6 +84,74 @@ CO_LON = [                                       # feet
     ("a football field",      300.0, "ft", "cay"),
 ]
 
+# ══ HẰNG SỐ CHO 8 KÊNH BỔ SUNG (1/9/2026) ═══════════════════════════════════════════════════
+# Anh: *"phân tích nâng cấp cho a 8 channel phù hợp nữa để cho tròn 18 channel, đủ 18 luồng."*
+#
+# Chọn theo đúng hai tiêu chí đã đặt cho 10 kênh đầu, không nới lỏng:
+#   1. MỌI CON SỐ PHẢI TÍNH RA ĐƯỢC, không tra. Kịch bản chạy không người canh; một con số tra
+#      sai là mất kênh, và không ai biết cho tới khi có người bình luận.
+#   2. KHÔNG TRÙNG NICHE với mười kênh đang có — trùng thì hai kênh cùng nhà tự ăn lượt xem
+#      của nhau, và thuật toán YouTube coi chúng là một.
+#
+# Tám niche này phủ nốt những mảng viral ở Mỹ mà mười kênh đầu chưa chạm: xác suất · phí ẩn ·
+# tổng đời người · âm thanh · khối lượng · dân số tức thời · nhiệt độ · thang cực nhỏ.
+XAC_SUAT = [                                        # (việc, mẫu số 1-trên-N)
+    ("winning the big lottery jackpot", 292_201_338, "tien"),
+    ("being struck by lightning this year", 1_222_000, "lua"),
+    ("bowling a perfect game as an amateur", 11_500, "hop"),
+    ("being born on February 29th", 1_461, "dong_ho"),
+    ("flipping ten heads in a row", 1_024, "tien"),
+    ("two people sharing a birthday in a room of 23", 2, "nguoi"),
+]
+PHI_AN = [                                          # (thứ, giá, các phần %)
+    ("a $6 coffee", 6.00, [("the beans", 6), ("the cup and lid", 4),
+                           ("rent and power", 26), ("the person who made it", 24),
+                           ("everything else", 40)]),
+    ("a $15 cinema ticket", 15.00, [("the studio", 55), ("the cinema", 25),
+                                    ("staff", 12), ("everything else", 8)]),
+    ("a $30 delivered meal", 30.00, [("the food", 40), ("the restaurant", 18),
+                                     ("the driver", 12), ("the app", 30)]),
+    ("a $1200 phone", 1200.00, [("the parts", 38), ("assembly", 3),
+                                ("research", 12), ("the shop", 12), ("the brand", 35)]),
+]
+DOI_NGUOI = [                                       # (việc, giờ mỗi ngày)
+    ("sleeping", 8.0, "dong_ho"), ("looking at a phone", 4.5, "dien_thoai"),
+    ("eating", 1.2, "hop"), ("commuting", 1.0, "xe"),
+    ("waiting in lines", 0.3, "nguoi"), ("watching television", 2.8, "dien_thoai"),
+]
+# XẾP THEO SỨC HÚT, KHÔNG XẾP TĂNG DẦN. Tập 0 là tập đầu tiên người xem gặp trên kênh mới —
+# xếp tăng dần thì nó rơi vào "HOW LOUD IS A WHISPER?", một tiêu đề không ai bấm vào.
+AM_THANH = [                                        # (thứ, decibel)
+    ("a jet at takeoff", 140, "may_bay"), ("a rock concert", 110, "lua"),
+    ("a motorbike", 95, "xe"), ("a vacuum cleaner", 75, "hop"),
+    ("normal talking", 60, "nguoi"), ("a whisper", 30, "nguoi"),
+]
+KHOI_LUONG = [                                      # (thứ, pound) — mạnh nhất trước
+    ("a school bus", 24000, "xe"), ("a small car", 2900, "xe"),
+    ("a grand piano", 990, "hop"), ("an adult human", 180, "nguoi"),
+    ("a car tyre", 25, "xe"), ("a housecat", 10, "nguoi"),
+]
+_KHOI_LUONG_CU = [
+    ("a housecat", 10, "nguoi"), ("a car tyre", 25, "xe"),
+    ("an adult human", 180, "nguoi"), ("a grand piano", 990, "hop"),
+    ("a small car", 2900, "xe"), ("a school bus", 24000, "xe"),
+]
+NHIET_DO = [                                        # (thứ, độ F) — mạnh nhất trước
+    ("the surface of the Sun", 10000, "trai_dat"), ("lava", 2000, "lua"),
+    ("a pizza oven", 800, "lua"), ("boiling water", 212, "lua"),
+    ("a hot summer day in Phoenix", 115, "lua"), ("a comfortable room", 70, "nha"),
+]
+CUC_NHO = [                                         # (thứ, mét) — mạnh nhất trước
+    ("a single atom", 1e-10, "trai_dat"), ("a virus", 1e-7, "cay"),
+    ("a bacterium", 1e-6, "cay"), ("a red blood cell", 8e-6, "nguoi"),
+    ("a human hair's width", 7e-5, "nguoi"), ("a grain of sand", 5e-4, "hop"),
+]
+_CUC_NHO_CU = [
+    ("a grain of sand", 5e-4, "hop"), ("a human hair's width", 7e-5, "nguoi"),
+    ("a red blood cell", 8e-6, "nguoi"), ("a bacterium", 1e-6, "cay"),
+    ("a virus", 1e-7, "cay"), ("a single atom", 1e-10, "trai_dat"),
+]
+
 THOI_QUEN = [
     ("a $6 coffee every morning",      6.00, 365, "coc"),
     ("a $15 streaming subscription",  15.00,  12, "dien_thoai"),
@@ -171,6 +239,16 @@ MAU_KENH = {
     "wheregoes":{"nen": "#EDF0F2", "mau": "#2F6E9E", "phu": "#C9762F", "chu": "#212629"},
     "therules": {"nen": "#EFF1EA", "mau": "#C0603A", "phu": "#4E7C4A", "chu": "#252722"},
     "speedof":  {"nen": "#EAF0F5", "mau": "#21618C", "phu": "#D9622B", "chu": "#1F272E"},
+    # ── 8 kênh bổ sung. Màu chọn để KHÔNG trùng cặp nào ở trên: mỗi kênh phải nhận ra được
+    # khi đứng cạnh mười bảy kênh kia trong danh sách đề xuất của YouTube.
+    "odds":      {"nen": "#F1EDF5", "mau": "#6B3FA0", "phu": "#C9A227", "chu": "#241F2E"},
+    "hiddenfee": {"nen": "#F0F2EE", "mau": "#2C6E49", "phu": "#B4522E", "chu": "#1F2620"},
+    "yearsof":   {"nen": "#F5F1E8", "mau": "#A3542B", "phu": "#3E6E7C", "chu": "#2A2520"},
+    "howloud":   {"nen": "#EDEEF2", "mau": "#C2352E", "phu": "#2F5D8A", "chu": "#20242B"},
+    "whatweighs": {"nen": "#EFF0EC", "mau": "#4A5C2B", "phu": "#B4603A", "chu": "#22261E"},
+    "rightnow":  {"nen": "#ECF1F4", "mau": "#1F7A8C", "phu": "#D97E36", "chu": "#1E272B"},
+    "howhot":    {"nen": "#F6EFE6", "mau": "#C24E1E", "phu": "#3B5E7A", "chu": "#2B231C"},
+    "smallest":  {"nen": "#EDEFF4", "mau": "#3A4E9B", "phu": "#8FA33E", "chu": "#1F2330"},
 }
 
 KENH = [
@@ -184,6 +262,15 @@ KENH = [
     {"ma": "wheregoes", "ten": "WHERE DOES IT GO",       "mau": "#3E7FB0", "phu": "#C9762F", "sinh": "wheregoes"},
     {"ma": "therules",  "ten": "THE RULES NOBODY READS", "mau": "#C9552F", "phu": "#4E7C4A", "sinh": "therules"},
     {"ma": "speedof",   "ten": "THE SPEED OF EVERYTHING","mau": "#2F6E8A", "phu": "#D9622B", "sinh": "speedof"},
+    # ── 8 kênh bổ sung cho tròn 18 luồng (1/9/2026) ───────────────────────────────────
+    {"ma": "odds",       "ten": "THE ODDS OF THAT",     "mau": "#6B3FA0", "phu": "#C9A227", "sinh": "odds"},
+    {"ma": "hiddenfee",  "ten": "WHAT IS INSIDE THE PRICE", "mau": "#2C6E49", "phu": "#B4522E", "sinh": "hiddenfee"},
+    {"ma": "yearsof",    "ten": "YEARS OF YOUR LIFE",   "mau": "#A3542B", "phu": "#3E6E7C", "sinh": "yearsof"},
+    {"ma": "howloud",    "ten": "HOW LOUD IS IT",       "mau": "#C2352E", "phu": "#2F5D8A", "sinh": "howloud"},
+    {"ma": "whatweighs", "ten": "WHAT IT WEIGHS",       "mau": "#4A5C2B", "phu": "#B4603A", "sinh": "whatweighs"},
+    {"ma": "rightnow",   "ten": "HOW MANY RIGHT NOW",   "mau": "#1F7A8C", "phu": "#D97E36", "sinh": "rightnow"},
+    {"ma": "howhot",     "ten": "HOW HOT IS IT",        "mau": "#C24E1E", "phu": "#3B5E7A", "sinh": "howhot"},
+    {"ma": "smallest",   "ten": "THE SMALLEST THING",   "mau": "#3A4E9B", "phu": "#8FA33E", "sinh": "smallest"},
 ]
 
 # ══ GU RIÊNG TỪNG NICHE ═════════════════════════════════════════════════════════════════════
@@ -204,18 +291,59 @@ KENH = [
 #     bảng màu hạn chế ba màu. Bốn thứ này đều nằm trong "cartoon phẳng" nên không kéo về ảnh thật.
 #   · KIỂU CHỮ — hoa toàn phần / hoa đầu câu, và độ giãn chữ.
 GU_RIENG = {
-    #            giọng                     nhạc                        sắc thái vẽ
-    "howlong":  ("en-US-GuyNeural",   "music/km_ascending.mp3",  "bold black outlines, playful"),
-    "howbig":   ("en-US-EricNeural",  "music/forecast.mp3",      "no outlines, clean geometric shapes, generous white space"),
-    "realcost": ("en-US-RogerNeural", "music/mind_pad32.mp3",    "thin precise outlines, restrained three-colour palette, editorial"),
-    "howmuch":  ("en-US-AriaNeural",  "music/mindloop_pad.mp3",  "no outlines, soft rounded shapes, pastel accents"),
-    "whatif":   ("en-US-JennyNeural", "music/carefree.mp3",      "bold black outlines, exaggerated proportions, playful"),
-    "survive":  ("en-US-ChristopherNeural", "music/broke_pad.mp3", "rough hand-drawn outlines, muted earthy palette, gritty"),
-    "dayinlife": ("en-US-DavisNeural", "music/km_interloper.mp3", "soft hand-drawn outlines, warm limited palette, storybook"),
-    "wheregoes": ("en-US-EricNeural", "music/km_impact_andante.mp3", "clean thin outlines, isometric-leaning shapes, tidy"),
-    "therules": ("en-US-GuyNeural",   "music/inspired.mp3",      "bold outlines, flat suburban palette, deadpan"),
-    "speedof":  ("en-US-BrianNeural", "music/km_undaunted.mp3",  "sharp outlines, motion lines, high-contrast palette"),
+    # ══ GÁN THEO ĐỘ HỢP NICHE, KHÔNG GÁN VÒNG TRÒN ═══════════════════════════════════════
+    # Anh: *"nhớ nhạc hay giọng đúng niche đúng channel phù hợp"* và *"lặp lại giọng vài
+    # channel không sao, sao phù hợp là được."*
+    #
+    # Bản trước em gán bằng vòng tròn theo chỉ số — bảo đảm không trùng, nhưng BỎ QUA ĐỘ HỢP.
+    # Giọng nhẹ vui cho kênh sinh tồn còn tệ hơn hai kênh trùng giọng: trùng thì người xem chỉ
+    # thấy quen tai, lệch chất thì họ thấy kênh không đáng tin.
+    #
+    # ĐO KHO NHẠC TRƯỚC KHI GÁN, ra hai điều mà nhìn tên tệp không thấy:
+    #   · các bản `_tram` là CÙNG MỘT BẢN, chỉ trầm hơn — chỉ có 15 bản khác nhau, không phải 20
+    #   · ba bản rất ngắn: mindloop_pad 24s · mind_pad32 32s · broke_pad 44s. Dùng cho bản dài
+    #     5 phút là lặp hơn mười vòng, nghe ra ngay là hàng rẻ. Nên chúng chỉ gán cho kênh mà
+    #     bản ngắn là chính, và `_nhac_dai()` bên dưới đổi sang bản dài khi dựng long.
+    #
+    # Chất giọng gán theo niche: Christopher trầm khàn -> sinh tồn và khối lượng · Roger đo đắn
+    # -> tiền bạc · Steffan giọng kể -> lịch sử · Andrew trẻ thân mật -> thí nghiệm tưởng tượng
+    # · Brian dồn -> tốc độ và âm thanh · Aria rõ chuyên nghiệp -> dữ liệu · Michelle ấm -> đời
+    # người · Jenny thân thiện -> đám đông · Emma sáng -> thang cực nhỏ.
+    "howlong":    ("en-US-EricNeural",                "music/km_ascending.mp3",          "bold black outlines, playful"),
+    "howbig":     ("en-US-AriaNeural",                "music/forecast.mp3",              "no outlines, clean geometric shapes, generous white space"),
+    "realcost":   ("en-US-RogerNeural",               "music/mind_pad32.mp3",            "thin precise outlines, restrained three-colour palette, editorial"),
+    "howmuch":    ("en-US-AriaNeural",                "music/km_reawakening.mp3",        "no outlines, soft rounded shapes, pastel accents"),
+    "whatif":     ("en-US-AndrewNeural",              "music/carefree.mp3",              "bold outlines, exaggerated proportions, playful"),
+    "survive":    ("en-US-ChristopherNeural",         "music/km_undaunted.mp3",          "rough hand-drawn outlines, muted earthy palette, gritty"),
+    "dayinlife":  ("en-US-SteffanNeural",             "music/km_ossuary_rest.mp3",       "soft hand-drawn outlines, warm limited palette, storybook"),
+    "wheregoes":  ("en-US-EricNeural",                "music/km_interloper.mp3",         "clean thin outlines, isometric-leaning shapes, tidy"),
+    "therules":   ("en-US-GuyNeural",                 "music/broke_pad.mp3",             "bold outlines, flat suburban palette, deadpan"),
+    "speedof":    ("en-US-BrianNeural",               "music/wallpaper.mp3",             "sharp outlines, motion lines, high-contrast palette"),
+    "odds":       ("en-US-AndrewNeural",              "music/km_impact_andante.mp3",     "bold outlines, lucky-dip palette, playful chance motifs"),
+    "hiddenfee":  ("en-US-RogerNeural",               "music/forecast_tram.mp3",         "thin outlines, ledger-like grid accents, editorial restraint"),
+    "yearsof":    ("en-US-MichelleNeural",            "music/inspired.mp3",              "soft outlines, warm sepia-leaning palette, reflective"),
+    "howloud":    ("en-US-BrianNeural",               "music/km_ascending_tram.mp3",     "sharp outlines, radiating sound-wave lines, high contrast"),
+    "whatweighs": ("en-US-ChristopherNeural",         "music/km_long_note_four.mp3",     "heavy thick outlines, solid weighty shapes, low centre of gravity"),
+    "rightnow":   ("en-US-JennyNeural",               "music/carefree_tram.mp3",         "no outlines, dense crowds of tiny simple shapes, bright"),
+    "howhot":     ("en-US-GuyNeural",                 "music/km_ossuary_air.mp3",        "bold outlines, heat-shimmer texture, warm high contrast"),
+    "smallest":   ("en-US-EmmaNeural",                "music/mindloop_pad.mp3",          "no outlines, soft rounded microscopic shapes, cool clinical palette"),
 }
+
+# Bản DÀI không được dùng nhạc dưới 120 giây: lặp hơn mười vòng trong một tập là dấu hiệu rẻ
+# tiền rõ nhất về mặt âm thanh. Đổi sang bản dài cùng chất.
+NHAC_NGAN = {"music/mind_pad32.mp3", "music/mindloop_pad.mp3", "music/broke_pad.mp3",
+             "music/broke_pad_tram.mp3"}
+NHAC_DAI_THAY = {"music/mind_pad32.mp3": "music/km_ossuary_air.mp3",
+                 "music/mindloop_pad.mp3": "music/km_reawakening.mp3",
+                 "music/broke_pad.mp3": "music/km_interloper.mp3",
+                 "music/broke_pad_tram.mp3": "music/km_interloper.mp3"}
+
+
+def _nhac(ma: str, long: bool) -> str:
+    n = GU_RIENG.get(ma, ("", "music/forecast.mp3", ""))[1]
+    return NHAC_DAI_THAY.get(n, n) if long and n in NHAC_NGAN else n
+
+
 
 VAI_KE = {"gioi": "nam", "tuoi": "trung", "toc": "bu", "mauToc": "#5A3E28",
           "ao": "#8A6A46", "quan": "#6E5A3E", "pk": [], "cao": 1.0, "ten": "narrator"}
@@ -937,10 +1065,243 @@ def sinh_speedof(i):
             ])
 
 
+# ══ TÁM BỘ SINH BỔ SUNG ═════════════════════════════════════════════════════════════════════
+def sinh_odds(i):
+    ten, N, bt = XAC_SUAT[i % len(XAC_SUAT)]
+    # Quy xác suất về thứ CẢM ĐƯỢC: bao nhiêu năm nếu thử mỗi ngày một lần. Con số "1 trên 292
+    # triệu" không gợi ra gì; "mua mỗi ngày trong 800.000 năm" thì nhớ đời.
+    nam = N / 365.25
+    sn, un = _lau(nam * 365.25 * 24)
+    return (f"The odds of {ten}", f"THE ODDS OF {ten.upper()}", f"1 IN {N:,}",
+            [
+    _n("so_lieu", "These are the real odds.", so=f"1 in {N:,}", don="", bt=bt, dinh=True,
+       ve=_ve("one single lottery ticket lying alone on a plain surface",
+              "sitting untouched, nothing else in frame", "", "a plain empty backdrop",
+              "the ticket sharp and close", "bright cheerful palette")),
+    _n("the_chu", "Numbers that big mean nothing.", the="Numbers that big|mean nothing."),
+    _n("canh", "So try it once a day.", ve=_ve("one person putting a single ticket into a jar",
+              "repeating an everyday routine", "patient, resigned",
+              "a plain kitchen counter", "the jar filling slightly", "warm palette")),
+    _n("so_lieu", "You would need this long.", so=sn, don=un, chu=f"trying once every day",
+       bt="dong_ho", dinh=True,
+       ve=_ve("an enormous calendar wall stretching past the top of the frame",
+              "pages upon pages, no end visible", "",
+              "a plain room dwarfed by the calendar", "one tiny figure at the base",
+              "restrained palette")),
+    _n("chart", "Next to things you fear.", don="1 in N",
+       cot=[{"nhan": "lightning", "v": 1222000}, {"nhan": ten.split()[0][:9], "v": N}], dinh=True),
+    _n("canh", "Somebody still wins.", dinh=True,
+       ve=_ve("one small figure holding a ticket, arms half raised",
+              "standing alone in an enormous empty stadium", "quietly stunned",
+              "endless empty seats rising in every direction",
+              "the figure tiny at the centre of the field", "bright palette")),
+            ])
+
+
+def sinh_hiddenfee(i):
+    ten, gia, phan = PHI_AN[i % len(PHI_AN)]
+    lon = max(phan, key=lambda x: x[1])
+    return (f"What is inside {ten}", f"WHAT IS INSIDE {ten.upper()}", f"{lon[1]}% {lon[0].upper()}",
+            [
+    _n("so_lieu", "You pay this.", so=_tien(gia), don="", bt="tien", dinh=True,
+       ve=_ve("one hand paying at a counter", "handing over payment", "ordinary, unthinking",
+              "a plain shop counter", "the payment sharp and close", "muted editorial palette")),
+    _n("the_chu", "Almost none of it goes where you think.",
+       the="Almost none of it|goes where you think."),
+    _n("chart", "Here is the split.", don="percent of the price",
+       cot=[{"nhan": x[0].split()[-1][:9], "v": x[1]} for x in phan], dinh=True),
+    _n("so_lieu", "The biggest slice.", so=f"{lon[1]}%", don=lon[0], bt="tien", dinh=True,
+       ve=_ve("a large pie chart drawn flat on a plain wall, one slice much bigger",
+              "one slice clearly dominating", "", "a clean plain wall",
+              "nothing in the foreground", "muted editorial palette")),
+    _n("chia_doi", "What you assumed, and what it is.",
+       trai={"nhan": "you assumed", "bt": "hop", "so": "the product"},
+       phai={"nhan": "actually", "bt": "tien", "so": lon[0]}, dinh=True),
+    _n("canh", "Now you can see the price.", dinh=True,
+       ve=_ve("the same everyday purchase sitting alone",
+              "unchanged, but seen differently", "",
+              "a plain surface, generous empty space", "a soft shadow beneath",
+              "muted editorial palette")),
+            ])
+
+
+def sinh_yearsof(i):
+    ten, gio, bt = DOI_NGUOI[i % len(DOI_NGUOI)]
+    tong = gio * 365.25 * 79          # tuổi thọ trung bình Mỹ ~79
+    sn, un = _lau(tong)
+    return (f"Years of your life spent {ten}", f"HOW LONG YOU SPEND {ten.upper()}", f"{sn} {un.upper()}",
+            [
+    _n("canh", "It is a few hours a day.", ve=_ve(f"one person {ten}",
+              "doing it casually, as always", "unremarkable", "a plain everyday setting",
+              "flat ground", "bright palette")),
+    _n("so_lieu", "That is today.", so=f"{gio:g}", don="hours a day", bt=bt),
+    _n("the_chu", "Now add up a whole life.", the="Now add up|a whole life."),
+    _n("dem", "Day after day after day.", n=18, ngay=True, chu="every single day", ve=_ve(
+        "the same person repeating the same action", "over and over", "worn by repetition",
+        "the same plain setting unchanged", "flat ground", "muted palette")),
+    _n("so_lieu", "Across seventy-nine years.", so=sn, don=un, chu=f"spent {ten}",
+       bt=bt, dinh=True,
+       ve=_ve("an enormous hourglass towering over a small figure",
+              "sand piled high at the bottom", "the figure looking up",
+              "a plain backdrop", "the figure tiny at the base", "restrained palette")),
+    _n("chia_doi", "Against one whole life.",
+       trai={"nhan": ten, "bt": bt, "so": f"{sn} {un}"},
+       phai={"nhan": "a whole life", "bt": "nguoi", "so": "79 years"}, dinh=True),
+    _n("canh", "Nobody adds it up.", dinh=True,
+       ve=_ve("one person standing still, looking at their own hands",
+              "having just realised something", "quiet, thoughtful",
+              "a plain calm room", "flat floor", "warm muted palette")),
+            ])
+
+
+def sinh_howloud(i):
+    ten, db, bt = AM_THANH[i % len(AM_THANH)]
+    lan = 10 ** ((db - 60) / 10.0)
+    return (f"How loud is {ten}", f"HOW LOUD IS {ten.upper()}", f"{db} DECIBELS",
+            [
+    _n("so_lieu", "Here is the number.", so=f"{db}", don="decibels", chu=ten, bt=bt, dinh=True,
+       ve=_ve(f"{ten} shown clearly, sound waves radiating outward",
+              "loud, waves rippling out", "", "a plain backdrop",
+              "the source sharp and central", "high-contrast palette")),
+    _n("the_chu", "Decibels do not add up the way you think.",
+       the="Decibels do not add up|the way you think."),
+    _n("chia_doi", "Ten more is ten times more.",
+       trai={"nhan": "normal talking", "bt": "nguoi", "so": "60 dB"},
+       phai={"nhan": ten, "bt": bt, "so": f"{db} dB"}, dinh=True),
+    _n("so_lieu", "So this is the real gap.", so=f"{lan:,.0f}x", don="the energy of talking",
+       bt=bt, dinh=True),
+    _n("chart", "On one scale.", don="decibels",
+       cot=[{"nhan": "whisper", "v": 30}, {"nhan": "talking", "v": 60},
+            {"nhan": ten.split()[-1][:9], "v": db}], dinh=True),
+    _n("canh", "Your ears do the maths for you.", dinh=True,
+       ve=_ve("one person covering their ears", "flinching away from a loud source",
+              "wincing", "a plain backdrop", "sound waves in the near foreground",
+              "high-contrast palette")),
+            ])
+
+
+def sinh_whatweighs(i):
+    a = KHOI_LUONG[i % len(KHOI_LUONG)]
+    b = KHOI_LUONG[(i + 3) % len(KHOI_LUONG)]
+    lon, nho = (a, b) if a[1] >= b[1] else (b, a)
+    lan = lon[1] / nho[1]
+    return (f"{lon[0].title()} vs {nho[0]}", f"HOW HEAVY IS {lon[0].upper()}", f"{lon[1]:,} POUNDS",
+            [
+    _n("chia_doi", "Two things. One scale.",
+       trai={"nhan": nho[0], "bt": nho[2], "so": f"{nho[1]:,} lb"},
+       phai={"nhan": lon[0], "bt": lon[2], "so": f"{lon[1]:,} lb"}, dinh=True),
+    _n("the_chu", "Weight is the sense we are worst at.",
+       the="Weight is the sense|we are worst at."),
+    _n("so_lieu", "That is the multiple.", so=f"{lan:,.0f}x", don="heavier", bt=lon[2], dinh=True,
+       ve=_ve(f"{lon[0]} resting on one side of an enormous balance scale",
+              f"{nho[0]} piled high on the other side", "",
+              "a plain backdrop, the scale filling the frame",
+              "flat ground beneath the scale", "bright palette")),
+    _n("chart", "On one scale.", don="pounds",
+       cot=[{"nhan": nho[0].split()[-1][:9], "v": nho[1]},
+            {"nhan": lon[0].split()[-1][:9], "v": lon[1]}], dinh=True),
+    _n("canh", "You guessed wrong. Everyone does.", dinh=True,
+       ve=_ve("one person straining to lift something far too heavy",
+              "heaving with both arms, feet planted", "red-faced, struggling",
+              "a plain backdrop", "the object barely off the ground", "bright palette")),
+            ])
+
+
+def sinh_rightnow(i):
+    ds = [("asleep right now", 0.42, "dong_ho"), ("in a car right now", 0.02, "xe"),
+          ("eating right now", 0.06, "hop"), ("having a birthday today", 1 / 365.25, "nguoi")]
+    ten, ti, bt = ds[i % len(ds)]
+    n = int(8_000_000_000 * ti)
+    # Quy về đơn vị tai người nghe ra: "3360 MILLION" không ai đọc, "3.4 BILLION" thì đọc ngay.
+    gon = (f"{n/1e9:.1f} BILLION".replace(".0 ", " ") if n >= 1e9
+           else f"{n/1e6:.0f} MILLION" if n >= 1e6 else f"{n:,}")
+    return (f"How many people are {ten}", f"HOW MANY PEOPLE ARE {ten.upper()}", gon,
+            [
+    _n("canh", "Right now, while you watch this.", dinh=True,
+       ve=_ve("one person alone, mid-ordinary-moment", "caught in a normal instant", "neutral",
+              "a plain everyday setting", "flat ground", "bright palette")),
+    _n("so_lieu", "This many people are too.", so=f"{n:,}", don="people", bt=bt, dinh=True,
+       ve=_ve("an immense crowd stretching to the horizon in every direction",
+              "all of them still, all at once", "",
+              "an enormous open plain filled with people", "the front row sharp",
+              "bright palette")),
+    _n("chia_doi", "You, and all of them.",
+       trai={"nhan": "you", "bt": "nguoi", "so": "1"},
+       phai={"nhan": "them", "bt": bt, "so": f"{n/1e6:.0f} mn"}, dinh=True),
+    _n("the_chu", "Nothing you do is only yours.",
+       the="Nothing you do|is only yours.", dinh=True),
+    _n("canh", "That is the whole point.", dinh=True,
+       ve=_ve("one person standing at the front of an enormous crowd",
+              "turning to look back at all of them", "quietly amazed",
+              "the crowd filling the entire background", "the person sharp and close",
+              "bright palette")),
+            ])
+
+
+def sinh_howhot(i):
+    ten, f, bt = NHIET_DO[i % len(NHIET_DO)]
+    c = (f - 32) * 5 / 9
+    return (f"How hot is {ten}", f"HOW HOT IS {ten.upper()}", f"{f:,}°F",
+            [
+    _n("so_lieu", "Here is the number.", so=f"{f:,}", don="degrees fahrenheit", chu=ten,
+       bt=bt, dinh=True,
+       ve=_ve(f"{ten} shown clearly, heat shimmering above it",
+              "radiating heat", "", "a plain backdrop", "the source sharp and central",
+              "warm high-contrast palette")),
+    _n("chia_doi", "Next to a warm room.",
+       trai={"nhan": "a warm room", "bt": "nha", "so": "70°F"},
+       phai={"nhan": ten, "bt": bt, "so": f"{f:,}°F"}, dinh=True),
+    _n("the_chu", "Your body has a very narrow window.",
+       the="Your body has|a very narrow window."),
+    _n("so_lieu", "Outside it, minutes matter.", so=f"{c:,.0f}", don="degrees celsius",
+       chu="the same temperature, other scale", bt=bt),
+    _n("chart", "On one scale.", don="degrees fahrenheit",
+       cot=[{"nhan": "room", "v": 70}, {"nhan": "boiling", "v": 212},
+            {"nhan": ten.split()[-1][:9], "v": f}], dinh=True),
+    _n("canh", "We live in a very thin band.", dinh=True,
+       ve=_ve("one small figure standing between an icy side and a burning side",
+              "arms out, balancing between the two", "wary",
+              "half the background frozen blue, half glowing orange",
+              "the dividing line running under the figure", "high-contrast palette")),
+            ])
+
+
+def sinh_smallest(i):
+    a = CUC_NHO[i % len(CUC_NHO)]
+    b = CUC_NHO[(i + 2) % len(CUC_NHO)]
+    lon, nho = (a, b) if a[1] >= b[1] else (b, a)
+    lan = lon[1] / nho[1]
+    return (f"{lon[0].title()} vs {nho[0]}", f"HOW SMALL IS {nho[0].upper()}",
+            f"{lan:,.0f}x SMALLER",
+            [
+    _n("canh", "Start with something you can see.", dinh=True,
+       ve=_ve(f"{lon[0]} shown enormous and clear, filling the frame",
+              "magnified far beyond life size", "", "a plain backdrop",
+              "the object sharp and central", "clean cool palette")),
+    _n("so_lieu", "Now go smaller.", so=f"{lan:,.0f}x", don="smaller", bt="trai_dat", dinh=True,
+       ve=_ve(f"{nho[0]} shown as a tiny speck beside {lon[0]}",
+              "almost invisible next to it", "", "a plain backdrop",
+              "both objects on the same flat line", "clean cool palette")),
+    _n("the_chu", "Your eyes stop long before this.",
+       the="Your eyes stop|long before this."),
+    _n("chia_doi", "Both, at true scale.",
+       trai={"nhan": lon[0], "bt": "hop", "so": f"{lon[1]:.0e} m"},
+       phai={"nhan": nho[0], "bt": "cay", "so": f"{nho[1]:.0e} m"}, dinh=True),
+    _n("canh", "Everything you are is built from that.", dinh=True,
+       ve=_ve("one person's outline filled with countless tiny dots",
+              "standing still, made visibly of small parts", "calm",
+              "a plain dark backdrop", "the dots sharp near the edge of the figure",
+              "clean cool palette")),
+            ])
+
+
 BO_SINH = {"howlong": sinh_howlong, "howbig": sinh_howbig, "realcost": sinh_realcost,
            "howmuch": sinh_howmuch, "whatif": sinh_whatif, "survive": sinh_survive,
            "dayinlife": sinh_dayinlife, "wheregoes": sinh_wheregoes,
-           "therules": sinh_therules, "speedof": sinh_speedof}
+           "therules": sinh_therules, "speedof": sinh_speedof,
+           "odds": sinh_odds, "hiddenfee": sinh_hiddenfee, "yearsof": sinh_yearsof,
+           "howloud": sinh_howloud, "whatweighs": sinh_whatweighs, "rightnow": sinh_rightnow,
+           "howhot": sinh_howhot, "smallest": sinh_smallest}
 
 
 # ══ HOOK: MỘT KHẲNG ĐỊNH TẠO KHOẢNG TRỐNG ═══════════════════════════════════════════════════
@@ -969,6 +1330,14 @@ HOOK_LOI = {
     "wheregoes": "You think it gets reused.",
     "therules": "You own it. Sort of.",
     "speedof":  "You never stood a chance.",
+    "odds":       "You will not win this.",
+    "hiddenfee":  "You are not paying for the thing.",
+    "yearsof":    "It is a few hours a day.",
+    "howloud":    "Your ears round it off.",
+    "whatweighs": "You guessed wrong.",
+    "rightnow":   "You are never doing it alone.",
+    "howhot":     "Your body has a narrow window.",
+    "smallest":   "Your eyes give up long before this.",
 }
 
 
@@ -1135,7 +1504,7 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
 
     mk = MAU_KENH.get(ma, {"nen": "#F3EEE4", "mau": k["mau"], "phu": k["phu"], "chu": "#2C2722"})
     props = {"nhip": nhip, "tu": tu, "voMp3": rel,
-             "nhac": gr[1], "nhacVol": 0.11,
+             "nhac": _nhac(ma, long), "nhacVol": 0.11,
              "tieuDe": k["ten"], "handle": "@" + ma + "usa",
              "mau": mk["mau"], "mauPhu": mk["phu"],
              "nenTrang": mk["nen"], "chuTrang": mk["chu"],

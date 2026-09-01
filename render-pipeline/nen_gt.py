@@ -151,9 +151,14 @@ GU_USA = ("set in the United States: clapboard suburban houses with a front porc
           "people in t-shirt or hoodie, jeans and sneakers")
 GU_KENH = {k: GU_CARTOON for k in
            ("que", "phang", "tranh", "kich", "iso")}
+# Cả 18 kênh dùng CHUNG phong cách cartoon phẳng; phân biệt bằng bảng màu, giọng đọc và sắc
+# thái nét (xem `GU_RIENG`). Cho mỗi kênh một phong cách VẼ khác đã thử và hỏng: đo được 30/74
+# ảnh lệch nhau, và lệch phong cách là lỗi người xem thấy trong nửa giây.
 KENH_GU = {m: "que" for m in
            ("howlong", "howbig", "realcost", "howmuch", "whatif",
-            "survive", "dayinlife", "wheregoes", "therules", "speedof")}
+            "survive", "dayinlife", "wheregoes", "therules", "speedof",
+            "odds", "hiddenfee", "yearsof", "howloud", "whatweighs",
+            "rightnow", "howhot", "smallest")}
 GU = GU_CARTOON
 
 # ══ KHOÁ NHÂN VẬT ═══════════════════════════════════════════════════════════════════════════
@@ -197,6 +202,24 @@ KHOA_VAI = {
                 "one shoulder, weathered skin, plain simple features",
     "dayinlife": "a man in his late twenties, short dark hair, thick eyebrows, a plain worn "
                  "linen tunic, plain simple features",
+    # 8 kênh bổ sung — mỗi khoá là MỘT silhouette + MỘT màu đặc + MỘT phụ kiện, không tả mặt.
+    # Đây là ba quy tắc đã rút ra: mô hình tái tạo hình khối đơn giản rất đáng tin, tái tạo
+    # khuôn mặt tinh tế rất tệ.
+    "odds":       "a simple stick figure with a round white head, thin black limbs, a plain "
+                  "violet t-shirt, two dot eyes and no other facial detail",
+    "hiddenfee":  "a flat-vector person in a plain forest-green apron, short dark hair, "
+                  "two simple dot eyes and no other facial detail",
+    "yearsof":    "a flat-vector person in a plain rust-brown jumper, short grey-streaked "
+                  "hair, two simple dot eyes and no other facial detail",
+    "howloud":    "a simple stick figure with a round white head, thin black limbs, a plain "
+                  "crimson t-shirt, two dot eyes and no other facial detail",
+    "whatweighs": "a stocky flat-vector person in a plain olive work shirt, short dark hair, "
+                  "two simple dot eyes and no other facial detail",
+    "rightnow":   "a single solid teal human silhouette with soft rounded edges and no face",
+    "howhot":     "a simple stick figure with a round white head, thin black limbs, a plain "
+                  "burnt-orange t-shirt, two dot eyes and no other facial detail",
+    "smallest":   "a single solid slate-blue human outline drawn as a thin single line, no fill "
+                  "and no face",
 }
 
 # Cảnh nào CÓ NGƯỜI thì mới gắn khoá. Cảnh vẽ đồ vật, biểu đồ, phong cảnh trống thì gắn vào chỉ

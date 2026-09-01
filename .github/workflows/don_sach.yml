@@ -1,0 +1,73 @@
+name: MM0 — Dọn sạch, giữ đúng danh sách kênh
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# Anh: *"dọn hết các channel cũ hiện tại trên web để làm 10 channel mới"* — kèm ảnh dashboard
+# còn nguyên 37 kênh "đang làm", 13 kênh "đã có video", brand kit còn 50 kênh.
+#
+# VÌ SAO KHÔNG DÙNG `don_the_he_1.yml`. Nó lọc theo THẾ HỆ (`the_he != "2"`), có cờ `doi_dich`
+# để chuyển đích sang thế hệ 2 — nên nó đụng được, nhưng vẫn sai hình dạng: "dọn thế hệ 1" và
+# "dọn thế hệ 2" là hai lần chạy với hai bộ cờ, và mỗi lần lại phải nhớ chọn đúng.
+# Điều anh muốn phát biểu gọn hơn nhiều: **chỉ còn mười kênh này, mọi thứ khác đi ra.** Nên
+# công cụ phải nhận đúng phát biểu ấy — một DANH SÁCH GIỮ LẠI — chứ không nhận thế hệ.
+#
+# Danh sách giữ lại đọc thẳng từ `channels.yaml` của repo publisher. Không chép tay: chép tay
+# là tạo nguồn sự thật thứ hai, và hai nguồn thì sớm muộn lệch nhau.
+#
+# CHẠY THỬ LÀ MẶC ĐỊNH. Phải đặt `lam_that: 1` mới xoá.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+
+on:
+  workflow_dispatch:
+    inputs:
+      lam_that:
+        description: "1 = dọn THẬT; 0 = chỉ kiểm kê (mặc định)"
+        default: "0"
+
+permissions:
+  contents: read
+
+jobs:
+  don:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      # Dùng ĐÚNG bộ thư viện của `render_cron` — bộ đó ngày nào cũng chạy nên chắc chắn pip
+      # giải được. Tự chế bộ khác đã hai lần làm workflow chết ở bước cài (xem chú thích trong
+      # `don_the_he_1.yml`).
+      - name: Deps
+        run: pip install --quiet -c render-pipeline/constraints.txt
+             google-cloud-firestore google-auth pyyaml
+
+      - name: Khoá dịch vụ
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}'   > /tmp/sa.json
+          echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+          echo '${{ secrets.GCP_SA_KEY_C }}' > /tmp/sa_c.json
+
+      # Repo publisher là repo RIÊNG — không có trong checkout của repo render. Thiếu bước này
+      # thì `channels.yaml` không tồn tại, danh sách giữ lại rỗng, và bộ dọn tự dừng.
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+
+      - name: Dọn
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS:   /tmp/sa.json
+          FIREBASE_PROJECT_ID:              ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B:            ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          FIREBASE_PROJECT_ID_B2:           mm0-shard-b2
+          GOOGLE_APPLICATION_CREDENTIALS_C: /tmp/sa_c.json
+          FIREBASE_PROJECT_ID_C:            ${{ secrets.FIREBASE_PROJECT_ID_C }}
+          OWNER_UID:                        ${{ secrets.OWNER_UID }}
+          CHANNELS_YAML:                    ${{ github.workspace }}/_autopublisher/config/channels.yaml
+          PYTHONPATH:                       ${{ github.workspace }}/render-pipeline
+        run: |
+          cd render-pipeline
+          python don_sach.py ${{ github.event.inputs.lam_that == '1' && '--that' || '' }}

@@ -86,6 +86,38 @@ const Hinh: React.FC<{ ten: string; s: number; mau: string; muc: string; mot_mau
     case "cua": return (<g>
       {P(`M ${-k(0.28)} ${k(0.44)} v ${-k(0.86)} h ${k(0.56)} v ${k(0.86)} Z`, mau)}
       <circle cx={k(0.14)} cy={k(0.06)} r={k(0.05)} fill={muc} /></g>);
+    case "giot": return P(`M 0 ${-k(0.44)} q ${k(0.34)} ${k(0.44)} ${k(0.30)} ${k(0.60)}
+      a ${k(0.31)} ${k(0.31)} 0 1 1 ${-k(0.60)} 0 q ${-k(0.04)} ${-k(0.16)} ${k(0.30)} ${-k(0.60)} Z`, mau);
+    case "sao": return P(`M 0 ${-k(0.46)} L ${k(0.13)} ${-k(0.14)} L ${k(0.46)} ${-k(0.13)}
+      L ${k(0.19)} ${k(0.09)} L ${k(0.28)} ${k(0.42)} L 0 ${k(0.23)} L ${-k(0.28)} ${k(0.42)}
+      L ${-k(0.19)} ${k(0.09)} L ${-k(0.46)} ${-k(0.13)} L ${-k(0.13)} ${-k(0.14)} Z`, mau);
+    case "song": return (<g>
+      {P(`M ${-k(0.46)} 0 q ${k(0.115)} ${-k(0.26)} ${k(0.23)} 0 q ${k(0.115)} ${k(0.26)} ${k(0.23)} 0
+          q ${k(0.115)} ${-k(0.26)} ${k(0.23)} 0 q ${k(0.115)} ${k(0.26)} ${k(0.23)} 0`)}
+      {P(`M ${-k(0.46)} ${k(0.26)} q ${k(0.115)} ${-k(0.26)} ${k(0.23)} 0 q ${k(0.115)} ${k(0.26)} ${k(0.23)} 0
+          q ${k(0.115)} ${-k(0.26)} ${k(0.23)} 0 q ${k(0.115)} ${k(0.26)} ${k(0.23)} 0`)}</g>);
+    case "khoa": return (<g>
+      {P(`M ${-k(0.30)} ${-k(0.04)} h ${k(0.60)} v ${k(0.46)} h ${-k(0.60)} Z`, mau)}
+      {P(`M ${-k(0.17)} ${-k(0.04)} v ${-k(0.16)} a ${k(0.17)} ${k(0.17)} 0 0 1 ${k(0.34)} 0 v ${k(0.16)}`)}</g>);
+    case "banh_rang": return (<g>
+      <circle cx="0" cy="0" r={k(0.30)} fill={mau} stroke={muc} strokeWidth={n} />
+      <circle cx="0" cy="0" r={k(0.12)} fill="#FFFFFF" stroke={muc} strokeWidth={n * 0.8} />
+      {[0, 60, 120, 180, 240, 300].map((g, i) => {
+        const a = (g * Math.PI) / 180;
+        return <rect key={i} x={-k(0.055)} y={-k(0.46)} width={k(0.11)} height={k(0.17)}
+                     fill={mau} stroke={muc} strokeWidth={n * 0.7}
+                     transform={`rotate(${g})`} />;
+      })}</g>);
+    case "hat": return (<g>
+      {[[-0.26, -0.20], [0.02, -0.30], [0.28, -0.14], [-0.30, 0.10], [-0.02, 0.02],
+        [0.24, 0.16], [-0.16, 0.32], [0.10, 0.34]].map((q, i) => (
+        <circle key={i} cx={k(q[0])} cy={k(q[1])} r={k(0.075)} fill={mau}
+                stroke={muc} strokeWidth={n * 0.55} />))}</g>);
+    case "nhiet": return (<g>
+      {P(`M ${-k(0.09)} ${-k(0.40)} a ${k(0.09)} ${k(0.09)} 0 0 1 ${k(0.18)} 0 v ${k(0.46)}
+          a ${k(0.19)} ${k(0.19)} 0 1 1 ${-k(0.18)} 0 Z`, "#FFFFFF")}
+      <circle cx="0" cy={k(0.26)} r={k(0.14)} fill={mau} />
+      {P(`M 0 ${k(0.20)} v ${-k(0.34)}`, "none")}</g>);
     default: return (<g>            {/* nguoi — người que, hình mặc định */}
       <circle cx="0" cy={-k(0.30)} r={k(0.16)} fill="#FFFFFF" stroke={muc} strokeWidth={n} />
       {P(`M 0 ${-k(0.14)} v ${k(0.3)}`)}
