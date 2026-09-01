@@ -14495,6 +14495,36 @@
     "diem_chot": 0,
     "tinh_huong": "Forgotten Gum",
     "ma": "092e394b1721"
+   },
+   {
+    "loi": [
+     [
+      "The timer's at three, can I change the quantity?",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "The system locks after scanning to prevent fraud.",
+      1,
+      "tuc"
+     ],
+     [
+      "If I don't, I lose my coupon now.",
+      0,
+      "trung_tinh"
+     ],
+     [
+      "Just press the back arrow; it works.",
+      1,
+      "vui"
+     ]
+    ],
+    "khung": "dem_nguoc",
+    "noi": "the self checkout station",
+    "hook": "TIMER RUNNING, COUPON AT RISK",
+    "diem_chot": 0,
+    "tinh_huong": "Quantity Edit Countdown",
+    "ma": "dd9a1c79ca5c"
    }
   ]
  },
@@ -16724,7 +16754,11 @@
   "it s worth less than «t n»": 1,
   "alright i ll write off «t n» bakery section": 1,
   "i only forgot to scan «t n»": 1,
-  "good gum s not worth «t n»": 1
+  "good gum s not worth «t n»": 1,
+  "«t n» s at «s » can i change «t n»": 1,
+  "«t n» locks after scanning to prevent fraud": 1,
+  "if i don t i lose «t n» now": 1,
+  "just press «t n» arrow it works": 1
  },
  "tinh_huong": {
   "tech": [
@@ -17139,7 +17173,8 @@
    "Bag-First Argument",
    "Stolen Parking Spot Guilt",
    "Weight Order",
-   "Forgotten Gum"
+   "Forgotten Gum",
+   "Quantity Edit Countdown"
   ]
  },
  "mo_dau": {
@@ -17187,7 +17222,7 @@
   "i am listening": 1,
   "«t n» to": 1,
   "you must become": 1,
-  "«t n» s": 36,
+  "«t n» s": 37,
   "«t n» requires": 2,
   "confirming now won": 1,
   "then why does": 2,
@@ -18685,6 +18720,9 @@
   "it s worth": 1,
   "alright i ll": 1,
   "i only forgot": 1,
-  "good gum s": 1
+  "good gum s": 1,
+  "«t n» locks": 1,
+  "if i don": 1,
+  "just press «t": 1
  }
 }

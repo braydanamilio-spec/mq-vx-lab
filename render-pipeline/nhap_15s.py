@@ -108,11 +108,22 @@ def main() -> int:
                                   mk.group(1)):
                 khoi_van = (mm.group(3) + "\n" + (mm.group(4) or "")).strip()
                 # lời thoại: `Ten: "..."` ở bất kỳ đâu trong nhịp
+                # AI NÓI = TÊN VAI CUỐI CÙNG xuất hiện TRƯỚC dấu nháy, không phải chữ ngay
+                # trước dấu hai chấm. Nhịp thứ tư thường viết kiểu:
+                #   "Nana Bea walks by without stopping: 'I've seen worse... from him.'"
+                # -> chữ ngay trước dấu hai chấm là "stopping", nên bản đầu gán nhầm rồi loại
+                # cả câu. Mất trọn nhịp CHỐT của mỗi tập — mà nhịp chốt là chỗ buồn cười nhất.
                 loi = []
-                for q in re.finditer(r'([A-Z][\w ]*?):\s*"([^"]+)"', khoi_van):
-                    ai = q.group(1).strip()
-                    if ai in dan:
-                        loi.append([q.group(2).replace("\u2019", "'"), ai])
+                for q in re.finditer(r'"([^"]+)"', khoi_van):
+                    truoc = khoi_van[:q.start()]
+                    ai = ""
+                    vt = -1
+                    for v in dan:
+                        i = truoc.rfind(v)
+                        if i > vt:
+                            vt, ai = i, v
+                    if ai:
+                        loi.append([q.group(1).replace("\u2019", "'"), ai])
                 hanh = re.sub(r'[A-Z][\w ]*?:\s*"[^"]+"', "", khoi_van)
                 hanh = " ".join(hanh.split())[:140]
                 nhip.append({"s": int(mm.group(1)), "e": int(mm.group(2)),

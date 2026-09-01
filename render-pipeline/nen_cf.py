@@ -134,11 +134,19 @@ def _prompt(noi: str, kenh_ten: str, ngoai: bool = False, de: str = "", tap: int
     #     vì prompt không nói rõ, và "interior" là mặc định của mô hình;
     #   · ảnh TECH SUPPORT có chữ "IT help" vẽ lên tường, dù đã cấm text. Một lần cấm ở cuối
     #     câu không đủ; phải cấm bằng nhiều từ và đặt gần đầu.
+    # 1/9 — anh: *"ảnh không có sàn -> lơ lửng; ép sàn chiếm trọn phần ba dưới, đồ đạc dồn
+    # hai mép, giữa để trống."* Hai câu dưới trước đây chỉ nói vế thứ nhất. Nói "sàn hiện rõ ở
+    # phần ba dưới" là chưa đủ, vì không có gì ngăn mô hình kê một cái ghế ngay giữa khung —
+    # và nó kê thật, che đúng dải sàn ấy. Phải nói cả nơi ĐỒ ĐẠC được phép đứng.
     khong_gian = (
         "Outdoor scene in daylight, open sky above, ground and grass visible across the bottom "
-        "third of the frame. "
+        "third of the frame. Trees, benches and objects pushed far to the left and right edges, "
+        "the centre of the frame is empty open ground. "
         if ngoai else
-        "Interior scene. The floor is clearly visible across the entire bottom third. "
+        "Interior scene. The floor is clearly visible across the entire bottom third as one "
+        "continuous unbroken surface running from the left edge to the right edge. Furniture "
+        "and props pushed far to the left and right edges, leaving the centre of the frame "
+        "completely empty walkable floor. "
     )
     return (
         # 1/9, LẦN HAI — MÔ TẢ KHẲNG ĐỊNH, KHÔNG RA LỆNH CẤM Ở ĐẦU CÂU.

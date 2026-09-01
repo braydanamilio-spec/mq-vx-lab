@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { StickFigure, POSES, live } from "../StickAnim";
+import { POSES, live } from "../StickAnim";
+import { NguoiQue, QUE_CAO, QUE_GOT } from "./NguoiQue";
 import { SceneBG } from "../SceneBG";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
@@ -35,6 +36,7 @@ const bat = (t: number) => 1 - Math.pow(1 - kep(t), 3);
 export type VaiQue = {
   ten: string; skin: string; shirt: string; pants: string; hair: string;
   cap?: string; hoodie?: boolean; glasses?: boolean; scale: number;
+  toc?: string;   // kiểu tóc nét que: re | bum | xoan | mu
 };
 export type NhipQue = {
   s: number; e: number; bg: string; hanh: string;
@@ -93,7 +95,6 @@ export const KichQue: React.FC<PropsQue> = ({
   const mo = dangNoi ? 0.35 + 0.45 * Math.abs(Math.sin(t * 21)) : 0;
 
   const tuThe = live(POSES[N.pose] || POSES.idle, t, mo);
-  const nghi = live(POSES.idle, t + 1.7, 0);
   const blink = Math.sin(t * 2.6) > 0.93 ? 0.12 : 1;
   const breath = Math.sin(t * 2.8) * 3;
 
@@ -101,73 +102,50 @@ export const KichQue: React.FC<PropsQue> = ({
                       hair: "#3A2A22", scale: 1 } as VaiQue;
   const B = vaiB || { ten: "B", skin: "#EFC49A", shirt: "#E0715E", pants: "#3A3D42",
                       hair: "#2E2018", scale: 1 } as VaiQue;
+  const V = N.ai === 0 ? A : B;
 
-  // ── CỠ NGƯỜI: ĐO, KHÔNG ĐOÁN ──────────────────────────────────────────────────────
-  // Bản đầu đặt `co = min(W,H)/1080 * 1.32`. Đo ra: bộ khung `StickFigure` cao ~190 đơn vị
-  // (chân y=0 · vai y=-86 · tâm đầu y=-146), nên 1,32 cho ra người cao 250px trên khung 1920
-  // — tức 13% chiều cao, và hai phần ba khung trống hoác. Trên điện thoại thì không thấy mặt.
-  // Nay tính NGƯỢC từ mục tiêu: người chiếm 55% chiều cao khung -> co = H*0.55/190.
-  // Đây đúng bài học đã ghi ở CLAUDE.md: hằng toạ độ phải ĐO trong ngữ cảnh dùng nó, và khi
-  // con số với con mắt bất đồng thì đo pixel.
-  const CAO_RIG = 215;    // chế độ que: rig cao hơn vì chân dài hơn
-  const co = (H * 0.55) / CAO_RIG;
-  // Sàn: chừa chỗ cho dải chữ thoại (13% từ đáy) và dải tên kênh (5,5%).
-  // Gốc của rig nằm ở HÔNG, chân vẽ xuống dưới ~40 đơn vị. Đặt `y = sàn` là chân thọc xuống
-  // dưới sàn và chui vào dải chữ. Trừ đi phần chân thì bàn chân mới chạm đúng mặt sàn.
-  const CHAN_DUOI = 62;   // chân dài hơn ở chế độ que
-  const sanY = H * 0.74 - CHAN_DUOI * co;
+  /* ── MẶT ĐẤT: MỘT HẰNG DUY NHẤT ────────────────────────────────────────────────────────
+     Anh: *"ảnh không có sàn -> lơ lửng; ép sàn chiếm trọn phần ba dưới, đồ đạc dồn hai mép,
+     giữa để trống."*
+
+     Bản trước có HAI con số cùng trả lời một câu hỏi "mặt đất ở đâu": `floorPct = 0.80` cho
+     nền, và `H*0.74 − 62*co` cho bàn chân. Đo ra: mặt sàn ở 1536, gót ở 1420 — hở 116px, nên
+     người treo lửng giữa không. Đây là họ lỗi đã ghi ở CLAUDE.md, chỉ đảo chiều: *một sự thật
+     bị mã hoá ở hai chỗ.* Vá một chỗ thì lần sau lệch tiếp.
+
+     Nay chỉ còn `SAN`. Nền đọc nó, gót chân đọc nó, cổng `kiem_san.py` đo lại nó trên pixel.
+     Trị 0,66 chứ không phải 0,80 vì luật là SÀN CHIẾM TRỌN PHẦN BA DƯỚI: 1 − 0,66 = 1/3. */
+  const SAN = 0.66;
+  const sanY = H * SAN;                       // gót chân chạm ĐÚNG đây
+  const co = (H * 0.50) / QUE_CAO;            // người cao 50% khung
+  const goc = sanY - QUE_GOT * co;            // gốc rig (hông) = gót trừ phần chân
+
   // MỖI NHỊP MỘT NGƯỜI DIỄN — đọc thẳng từ gói: "Derek stands in the kitchen…", "Sara walks
-  // in…", "Max appears…". Gói viết từng nhịp cho MỘT diễn viên, không phải hai người đối thoại
-  // cùng khung.
-  // Bản đầu vẽ cả hai: ở cỡ 55% chiều cao thì mỗi người rộng ~480px mà khoảng cách chỉ 454px
-  // -> hai thân chồng lên nhau. Chọn giữa "thu nhỏ cả hai" và "mỗi nhịp một người", lấy cái
-  // thứ hai: khung dọc 15 giây trên điện thoại cần MẶT TO, và gói vốn đã viết như thế.
-  // Người kia đứng lùi phía sau, nhỏ và mờ — có mặt để khung không trống, không tranh chỗ.
-  const hai = N.hai === true;
+  // in…". Gói viết từng nhịp cho MỘT diễn viên, không phải hai người đối thoại cùng khung.
+  // Bản trước còn dựng thêm một vai phụ mờ 0,42 đứng lùi ở mép cho "đỡ trống". Bỏ: nét que
+  // chỉ có đường mảnh, làm mờ nó thành một đám xám không đọc ra hình người — thêm nhiễu chứ
+  // không thêm chiều sâu. Khung trống là việc của NỀN, không phải của một cái bóng người.
   const xA = W * 0.5;
-  const xB = W * 0.5;
-  const xPhu = N.ai === 0 ? W * 0.80 : W * 0.20;   // vai phụ đứng lùi, lệch sang mép
 
   return (
     <AbsoluteFill style={{ background: "#0E1116" }}>
-      {/* Bối cảnh vẽ 2D có chiều sâu — đổi theo TỪNG NHỊP, chọn theo lời thoại của nhịp ấy. */}
-      <SceneBG kind={N.bg} width={W} height={H} floorPct={0.80} wide={W > H}
+      {/* Bối cảnh vẽ 2D — đổi theo TỪNG NHỊP, chọn theo lời thoại của chính nhịp ấy. */}
+      <SceneBG kind={N.bg} width={W} height={H} floorPct={SAN} wide={W > H}
                T={{ ink: "#1E2A38", accent: mau, accent2: mauPhu }} time={t} />
 
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
            style={{ position: "absolute", inset: 0 }}>
-        {/* Bóng tiếp đất — thứ neo nhân vật xuống sàn. Thiếu nó là người lơ lửng, lỗi đã trả
-            giá nhiều lần ở engine truyện tranh. */}
-        {(hai || N.ai === 0) ? (
-          <ellipse cx={xA} cy={sanY + 6} rx={74 * co * A.scale} ry={13 * co} fill="#0A0C10" opacity={0.34} />
-        ) : null}
-        {(hai || N.ai === 1) ? (
-          <ellipse cx={xB} cy={sanY + 6} rx={74 * co * B.scale} ry={13 * co} fill="#0A0C10" opacity={0.34} />
-        ) : null}
+        {/* Bóng tiếp đất — nằm ĐÚNG trên đường sàn, là thứ chứng minh bàn chân có chạm đất.
+            Hai lớp: vệt tiếp xúc đậm ngay dưới chân, quầng khuếch tán rộng và nhạt. */}
+        <ellipse cx={xA} cy={sanY + 4} rx={96 * co * V.scale} ry={17 * co}
+                 fill="#0A0C10" opacity={0.16} />
+        <ellipse cx={xA} cy={sanY + 2} rx={44 * co * V.scale} ry={8 * co}
+                 fill="#0A0C10" opacity={0.34} />
 
-        {/* Vai PHỤ đứng lùi: nhỏ 0,62 lần, mờ, không có khẩu hình — cho khung có chiều sâu
-            mà không tranh chỗ với người đang nói. */}
-        <g opacity={0.42}>
-          <ellipse cx={xPhu} cy={sanY - 22} rx={52 * co * 0.62} ry={10 * co * 0.62}
-                   fill="#0A0C10" opacity={0.4} />
-          <StickFigure x={xPhu} y={sanY - 28} scale={co * 0.62}
-                       flip={N.ai === 0} pose={nghi} mouthOpen={0} expr="curious"
-                       blink={blink} breath={breath}
-                       skin={(N.ai === 0 ? B : A).skin} shirt={(N.ai === 0 ? B : A).shirt}
-                       pants={(N.ai === 0 ? B : A).pants} hair={(N.ai === 0 ? B : A).hair}
-                       cap={(N.ai === 0 ? B : A).cap} hoodie={(N.ai === 0 ? B : A).hoodie}
-                       glasses={(N.ai === 0 ? B : A).glasses} chanDong que />
-        </g>
-
-        {/* Người ĐANG NÓI — giữa khung, to, có khẩu hình và biểu cảm của nhịp này. */}
-        <ellipse cx={xA} cy={sanY + 6} rx={74 * co} ry={13 * co} fill="#0A0C10" opacity={0.34} />
-        <StickFigure x={xA} y={sanY} scale={co * (N.ai === 0 ? A.scale : B.scale)}
-                     pose={tuThe} mouthOpen={mo} mouthWide={0.55}
-                     expr={N.expr as any} blink={blink} breath={breath}
-                     skin={(N.ai === 0 ? A : B).skin} shirt={(N.ai === 0 ? A : B).shirt}
-                     pants={(N.ai === 0 ? A : B).pants} hair={(N.ai === 0 ? A : B).hair}
-                     cap={(N.ai === 0 ? A : B).cap} hoodie={(N.ai === 0 ? A : B).hoodie}
-                     glasses={(N.ai === 0 ? A : B).glasses} chanDong que />
+        <NguoiQue x={xA} y={goc} scale={co * V.scale}
+                  pose={tuThe} mouthOpen={mo} expr={N.expr}
+                  blink={blink} breath={breath}
+                  toc={V.toc || (V.cap ? "mu" : "re")} nhan={V.cap || mau} />
       </svg>
 
       <Loi chu={N.nar} W={W} H={H} p={p} mau={mau} />

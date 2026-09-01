@@ -59,6 +59,42 @@
   "mau": "#C7B1AC",
   "sang": 0.721
  },
+ "alien_00": {
+  "huong": 0,
+  "manh": 0.038,
+  "mau": "#D5BBCA",
+  "sang": 0.771
+ },
+ "alien_02": {
+  "huong": 0,
+  "manh": 0.074,
+  "mau": "#C4ABB5",
+  "sang": 0.707
+ },
+ "alien_03": {
+  "huong": -1,
+  "manh": 0.377,
+  "mau": "#C4ACB7",
+  "sang": 0.71
+ },
+ "cablebill_00": {
+  "huong": 0,
+  "manh": 0.225,
+  "mau": "#9EA0A0",
+  "sang": 0.627
+ },
+ "cablebill_01": {
+  "huong": 0,
+  "manh": 0.067,
+  "mau": "#828C96",
+  "sang": 0.544
+ },
+ "cablebill_02": {
+  "huong": 0,
+  "manh": 0.141,
+  "mau": "#909093",
+  "sang": 0.568
+ },
  "carguy_00": {
   "huong": 0,
   "manh": 0.01,
@@ -118,6 +154,18 @@
   "manh": 0.069,
   "mau": "#A89885",
   "sang": 0.609
+ },
+ "chrisangela_00": {
+  "huong": 0,
+  "manh": 0.182,
+  "mau": "#A1A7A8",
+  "sang": 0.65
+ },
+ "chrisangela_01": {
+  "huong": 0,
+  "manh": 0.041,
+  "mau": "#9EA6A7",
+  "sang": 0.643
  },
  "datingapp_00": {
   "huong": -1,
@@ -239,6 +287,54 @@
   "mau": "#D2BDAC",
   "sang": 0.761
  },
+ "dmvline_00": {
+  "huong": 0,
+  "manh": 0.138,
+  "mau": "#C6AB7E",
+  "sang": 0.683
+ },
+ "dmvline_01": {
+  "huong": 0,
+  "manh": 0.04,
+  "mau": "#B8A17A",
+  "sang": 0.643
+ },
+ "dmvline_02": {
+  "huong": 0,
+  "manh": 0.003,
+  "mau": "#A6976A",
+  "sang": 0.591
+ },
+ "erbilling_00": {
+  "huong": 1,
+  "manh": 0.251,
+  "mau": "#D1D5D5",
+  "sang": 0.833
+ },
+ "erbilling_01": {
+  "huong": 0,
+  "manh": 0.034,
+  "mau": "#BACCC9",
+  "sang": 0.779
+ },
+ "erbilling_02": {
+  "huong": 0,
+  "manh": 0.084,
+  "mau": "#C4C8C8",
+  "sang": 0.782
+ },
+ "ethanmaya_00": {
+  "huong": 0,
+  "manh": 0.14,
+  "mau": "#BE8F5F",
+  "sang": 0.595
+ },
+ "ethanmaya_01": {
+  "huong": 0,
+  "manh": 0.054,
+  "mau": "#AB8467",
+  "sang": 0.553
+ },
  "gymlies_00": {
   "huong": -1,
   "manh": 0.91,
@@ -299,11 +395,29 @@
   "mau": "#9C947E",
   "sang": 0.58
  },
+ "hoarules_00": {
+  "huong": -1,
+  "manh": 0.266,
+  "mau": "#DAD5BA",
+  "sang": 0.831
+ },
+ "hoarules_01": {
+  "huong": 0,
+  "manh": 0.067,
+  "mau": "#B6B59C",
+  "sang": 0.701
+ },
+ "hoarules_02": {
+  "huong": 0,
+  "manh": 0.253,
+  "mau": "#B8B296",
+  "sang": 0.694
+ },
  "houserules_00": {
-  "huong": 1,
-  "manh": 0.312,
-  "mau": "#A87D59",
-  "sang": 0.525
+  "huong": 0,
+  "manh": 0.163,
+  "mau": "#BF916A",
+  "sang": 0.607
  },
  "houserules_01": {
   "huong": 0,
@@ -358,6 +472,60 @@
   "manh": 0.078,
   "mau": "#A8957A",
   "sang": 0.596
+ },
+ "kevinlaura_00": {
+  "huong": 0,
+  "manh": 0.13,
+  "mau": "#C6B9B1",
+  "sang": 0.74
+ },
+ "kevinlaura_07": {
+  "huong": 0,
+  "manh": 0.208,
+  "mau": "#CDC5BC",
+  "sang": 0.78
+ },
+ "marcussofia_00": {
+  "huong": 0,
+  "manh": 0.289,
+  "mau": "#C4895A",
+  "sang": 0.587
+ },
+ "marcussofia_04": {
+  "huong": 0,
+  "manh": 0.104,
+  "mau": "#9F7850",
+  "sang": 0.499
+ },
+ "modernfam_00": {
+  "huong": 0,
+  "manh": 0.074,
+  "mau": "#CCAE8B",
+  "sang": 0.704
+ },
+ "modernfam_05": {
+  "huong": 0,
+  "manh": 0.16,
+  "mau": "#C9A47D",
+  "sang": 0.67
+ },
+ "movingday_00": {
+  "huong": 0,
+  "manh": 0.031,
+  "mau": "#CCB8A1",
+  "sang": 0.737
+ },
+ "movingday_01": {
+  "huong": 0,
+  "manh": 0.024,
+  "mau": "#957E67",
+  "sang": 0.512
+ },
+ "movingday_02": {
+  "huong": 0,
+  "manh": 0.158,
+  "mau": "#C4A286",
+  "sang": 0.664
  },
  "neighborwatch_00": {
   "huong": -1,
@@ -539,6 +707,24 @@
   "mau": "#CCBEB1",
   "sang": 0.757
  },
+ "quaivat_00": {
+  "huong": -1,
+  "manh": 0.479,
+  "mau": "#984459",
+  "sang": 0.377
+ },
+ "quaivat_02": {
+  "huong": 0,
+  "manh": 0.035,
+  "mau": "#874E61",
+  "sang": 0.384
+ },
+ "quaivat_09": {
+  "huong": 0,
+  "manh": 0.156,
+  "mau": "#8D5B82",
+  "sang": 0.435
+ },
  "rentpanic_00": {
   "huong": -1,
   "manh": 0.236,
@@ -599,6 +785,78 @@
   "mau": "#D48575",
   "sang": 0.61
  },
+ "returnpolicy_00": {
+  "huong": 0,
+  "manh": 0.02,
+  "mau": "#CB9A7F",
+  "sang": 0.652
+ },
+ "returnpolicy_01": {
+  "huong": 0,
+  "manh": 0.047,
+  "mau": "#B89A8A",
+  "sang": 0.632
+ },
+ "returnpolicy_02": {
+  "huong": 0,
+  "manh": 0.067,
+  "mau": "#B79379",
+  "sang": 0.61
+ },
+ "robot_00": {
+  "huong": 1,
+  "manh": 0.263,
+  "mau": "#B0BBC2",
+  "sang": 0.725
+ },
+ "robot_02": {
+  "huong": 0,
+  "manh": 0.248,
+  "mau": "#B7BCC0",
+  "sang": 0.735
+ },
+ "robot_06": {
+  "huong": 0,
+  "manh": 0.144,
+  "mau": "#ADA49F",
+  "sang": 0.653
+ },
+ "schoolrun_00": {
+  "huong": 0,
+  "manh": 0.035,
+  "mau": "#C19E75",
+  "sang": 0.645
+ },
+ "schoolrun_01": {
+  "huong": 0,
+  "manh": 0.027,
+  "mau": "#CAA479",
+  "sang": 0.67
+ },
+ "schoolrun_02": {
+  "huong": 0,
+  "manh": 0.122,
+  "mau": "#C19D71",
+  "sang": 0.641
+ },
+ "selfcheckout_00": {
+  "huong": 0,
+  "manh": 0.011,
+  "mau": "#9F948D",
+  "sang": 0.591
+ },
+ "selfcheckout_01": {
+  "huong": 0,
+  "manh": 0.156,
+  "mau": "#C2B5AE",
+  "sang": 0.725
+ },
+ "selfcheckout_02": {
+  "huong": 0,
+  "manh": 0.101,
+  "mau": "#CDBDAC",
+  "sang": 0.756
+ },
  "techsupport_00": {
   "huong": 0,
   "manh": 0.026,
@@ -610,6 +868,12 @@
   "manh": 0.268,
   "mau": "#AAA59F",
   "sang": 0.652
+ },
+ "techsupport_01_t007": {
+  "huong": 1,
+  "manh": 0.223,
+  "mau": "#775B50",
+  "sang": 0.386
  },
  "techsupport_02": {
   "huong": 1,
@@ -658,5 +922,53 @@
   "manh": 0.081,
   "mau": "#C7C5B6",
   "sang": 0.769
+ },
+ "thurung_00": {
+  "huong": 1,
+  "manh": 0.369,
+  "mau": "#A9724A",
+  "sang": 0.495
+ },
+ "thurung_02": {
+  "huong": 1,
+  "manh": 0.271,
+  "mau": "#D09E66",
+  "sang": 0.654
+ },
+ "vetvisit_00": {
+  "huong": 0,
+  "manh": 0.017,
+  "mau": "#B5A683",
+  "sang": 0.656
+ },
+ "vetvisit_01": {
+  "huong": 0,
+  "manh": 0.104,
+  "mau": "#BEB982",
+  "sang": 0.708
+ },
+ "vetvisit_02": {
+  "huong": 0,
+  "manh": 0.133,
+  "mau": "#CAB88D",
+  "sang": 0.724
+ },
+ "weddingplan_00": {
+  "huong": 0,
+  "manh": 0.188,
+  "mau": "#DFB7A5",
+  "sang": 0.758
+ },
+ "weddingplan_01": {
+  "huong": 0,
+  "manh": 0.032,
+  "mau": "#CAA38B",
+  "sang": 0.675
+ },
+ "weddingplan_02": {
+  "huong": -1,
+  "manh": 0.232,
+  "mau": "#E7C2A5",
+  "sang": 0.793
  }
 }

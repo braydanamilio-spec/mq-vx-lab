@@ -6597,3 +6597,59 @@ nói sẽ dựng ra một người đàn ông lạ đứng trong bếp.
 
 **Luật:** khi suy thuộc tính từ văn bản tự do, giá trị mặc định phải là thứ *dễ nhận ra là sai*,
 không phải thứ *trông có vẻ hợp lý*. "Nam" là mặc định trông hợp lý — nên nó sống sót.
+
+### 7bk — Câu CẤM trong prompt vẽ ảnh là câu RA LỆNH VẼ (tái phạm, 1/9)
+
+**Triệu chứng.** Anh: *"ảnh không có sàn → lơ lửng."* Mười kênh hài mới ra nền không có mặt sàn,
+dù `SAN_NEN` đã ép "floor clearly visible across the lower third" từ lâu và cổng `kiem_nen.py`
+vẫn xanh.
+
+**Gốc rễ — hai tầng.**
+1. Vế cuối của `SAN_NEN` cũ là `no furniture blocking the middle`. FLUX **không có negative
+   prompt**: mọi danh từ trong câu đều là thứ nó sẽ vẽ. Câu ấy đọc thành "furniture, middle" —
+   tôi tự tay dặn nó kê đồ chắn giữa khung, che đúng dải sàn mà câu trước vừa đòi.
+2. Nặng hơn: bảng `KENH` của 10 kênh mới **nhúng nguyên cả câu sàn vào từng mục `nen`**, trong
+   khi bộ dựng prompt VỐN ĐÃ tự nối `SAN_NEN` vào. Mỗi prompt chở câu sàn hai lần, bản thứ hai
+   là bản hỏng, và bản hỏng đứng sau nên nói tiếng nói cuối cùng.
+
+**Họ lỗi.** (a) *mô tả phủ định trong hệ chỉ hiểu khẳng định* — cùng họ với vụ tiền tố `NO TEXT`
+khiến FLUX viết chữ "NO Text." lên sàn bếp (30/8). (b) *một sự thật mã hoá ở hai chỗ* — hằng
+chung và bản chép tay trong bảng dữ liệu.
+
+**Cách nhận ra ở chỗ khác.** Tìm `no `/`without `/`never ` trong bất kỳ chuỗi nào đi vào mô hình
+sinh ảnh. Và: nếu một hằng được nối tự động vào prompt, thì bảng dữ liệu KHÔNG được chép lại nó.
+
+**Đã chặn.** `kiem_nen.py` thêm `CAM_NGHICH` (chặn dạng câu viết nghịch) và mệnh lệnh thứ tư
+"đồ đạc dồn hai mép". Cổng nay đọc mã đã bỏ chú thích và đã nối chuỗi ngắt dòng — bản trước tố
+oan hai tệp vì quét chữ thô, mà **cổng báo sai còn hại hơn cổng im lặng**: lần sau người ta tắt
+nó đi cho đỡ phiền.
+
+### 7bl — Hai hằng cùng trả lời một câu hỏi thì sớm muộn cũng lệch (1/9)
+
+`KichQue` đặt nền bằng `floorPct = 0.80` và đặt bàn chân bằng `H*0.74 − 62*co`. Hai con số cùng
+trả lời "mặt đất ở đâu". Đo pixel: mặt sàn ở y=1536, gót ở y=1420 — **hở 116px**, người treo
+lửng giữa không. Số `62` còn là số ĐOÁN ("chân dài chừng 62 đơn vị"), đoán hụt 43 đơn vị.
+
+Sửa: một hằng `SAN` duy nhất, nền và gót cùng đọc; và tệp vẽ **xuất ra số đo của chính nó**
+(`QUE_GOT` / `QUE_DINH` / `QUE_CAO`) để nơi dùng không phải đoán. Đo lại sau khi sửa: gót cách
+đường sàn 21px — nằm gọn trong độ dày vệt bóng.
+
+### 7bm — Góc tư thế phải đo trong hệ hình sẽ dùng nó (1/9)
+
+`POSES.idle` cho `armL 100° / armR 80°`, chỉ lệch 10° khỏi trục thân. Ở rig cartoon (thân là
+tấm khiên rộng ~70 đơn vị) thì tay 10° vẫn nằm hẳn bên ngoài. Ở người que (thân là MỘT NÉT) thì
+tay 10° nằm **đè lên chính nét thân và biến mất** — soi khung ra nhân vật một tay, hai chân chập
+thành một que.
+
+Sửa ở nơi VẼ (`xoe()` trong `NguoiQue.tsx`), **không sửa `POSES`** — nó dùng chung với
+`StickStory`, đụng vào là hỏng nhánh song song. Cùng họ với "chép hằng sang hệ quy chiếu khác"
+(`545 / −437 / 119` ở `KichHai` vs `KichComic`).
+
+### 7bn — Rơi về mặc định trong im lặng thì không có lỗi, chỉ có video nhạt (1/9)
+
+`_khop(TU_THE, hanh, "present")`: không khớp mẫu nào thì lặng lẽ trả `"present"`. Vì `hanh` của
+bốn nhịp trong một tập thường viết na ná nhau, cả bốn nhịp ra **cùng một bóng dáng**. Không cổng
+nào đỏ, không dòng log nào lạ.
+
+Sửa: ba tầng có thứ tự — hành động → lời thoại → xoay vòng theo số thứ tự nhịp — và chặn hai
+nhịp liền nhau trùng dáng. Tầng cuối không đoán bừa, nó chỉ bảo đảm silhouette không lặp.

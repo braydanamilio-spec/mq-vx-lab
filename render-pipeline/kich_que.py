@@ -146,7 +146,22 @@ def mot_tap(de: str, idx: int) -> str:
         print("   ❌ không có mốc từ — BỎ")
         return ""
 
+    # 1/9 — DÁNG PHẢI ĐỔI THEO NHỊP. Soi khung bốn nhịp ra bốn hình giống hệt nhau: `_khop`
+    # dò `hanh` không thấy mẫu nào thì lặng lẽ trả "present", mà `hanh` của một tập thường viết
+    # na ná nhau -> cả bốn nhịp cùng "present". Đúng họ lỗi "rơi về mặc định trong im lặng":
+    # không có lỗi nào báo, chỉ có video nhạt.
+    # Ba tầng, tầng sau chỉ dùng khi tầng trước KHÔNG khớp thật:
+    #   1. hành động của nhịp   2. lời thoại của nhịp   3. xoay vòng theo số thứ tự nhịp
+    # Tầng 3 không "đoán bừa" — nó chỉ bảo đảm hai nhịp liền nhau không trùng bóng dáng.
+    VONG = ["present", "point", "lean", "shrug", "lookaway"]
+    def _dang(n, c, i):
+        d = _khop(TU_THE, n["hanh"], "")
+        if not d:
+            d = _khop(TU_THE, c, "")
+        return d or VONG[i % len(VONG)]
+
     nhip = []
+    truoc = ""
     for i, (n, c, ai) in enumerate(ghi):
         van = f"{n['hanh']} {c}"
         nhip.append({
@@ -155,10 +170,12 @@ def mot_tap(de: str, idx: int) -> str:
             "hanh": n["hanh"][:90],
             "ai": 0 if ai == vA else 1,
             "nar": c,
-            "pose": _khop(TU_THE, n["hanh"], "present"),
+            "pose": (lambda d: d if d != truoc else VONG[(VONG.index(d) + 2) % len(VONG)]
+                     if d in VONG else d)(_dang(n, c, i)),
             "expr": _khop(CAM_XUC, c, "neutral"),
             "hai": True,
         })
+        truoc = nhip[-1]["pose"]
 
     props = {
         "nhip": nhip, "tu": tu, "voMp3": rel, "nhac": NHAC[hat % len(NHAC)],
