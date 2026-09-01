@@ -182,6 +182,10 @@ export type Kieu = {
   ao: string; aoTrong: string; quan: string; net: string;
   kinh?: boolean; rau?: "" | "ria" | "quai" | "de"; caVat?: string;
   mu?: "" | "luoi_trai" | "cao_bo" | "y_ta" | "len";
+  // 1/9 — LOÀI. Bốn kênh của gói GROCK là thú · quái vật · robot · người ngoài hành tinh.
+  // Mắt đọc "loài" qua hai thứ: MÀU DA và phần nhô ra khỏi sọ. Màu da đã có (`da`), nên chỉ
+  // cần thêm trường này để engine biết vẽ tai · sừng · ăng-ten. Bỏ trống = người, y như cũ.
+  loai?: "" | "thu" | "quai" | "robot" | "alien";
   aoKhoac?: string;                 // vạt áo có chuyển động trễ (blouse, áo choàng)
   // 29/8 — PHỤ KIỆN THEO NGHỀ. Anh: "10 channel thì phong cách nhân vật 10 channel phù hợp 10
   // phong cách style khác nhau… ko chung chung 1 template". Ba kiểu gốc dùng cho mười kênh thì

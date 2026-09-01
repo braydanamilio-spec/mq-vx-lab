@@ -701,6 +701,64 @@ export const DienVienHai: React.FC<PropsHai> = ({
 
       {/* ── ĐẦU ───────────────────────────────────────────────────────────────────────── */}
       <g transform={`rotate(${nghiengDau} ${dau[0]} ${dau[1] + R_DAU})`}>
+        {/* ══ PHỤ ĐẦU THEO LOÀI — 1/9/2026 ══════════════════════════════════════════════
+            Anh hỏi bốn kênh phi nhân (thú · quái vật · robot · alien) có vẽ được không, và
+            CF/Gemini có giúp được không.
+            KHÔNG dùng AI vẽ nhân vật: đó đúng là kiến trúc đã hỏng một lần (CLAUDE.md mục 2 —
+            "dán người vector lên ảnh AI"), và hai rào cứng nữa: AI không giữ được nhân dạng
+            nhất quán qua 2.500 tập, cũng không làm được khẩu hình khớp giọng từng khung — mà
+            gói của anh khoá chặt cả hai ("Keep exact same faces across the entire series").
+            AI vẫn giúp đúng chỗ nó mạnh: vẽ BỐI CẢNH (nhà quái vật, nhà robot, nhà alien).
+            Nhân vật thì thêm vào đây. Rẻ hơn nhiều so với tưởng, vì mắt đọc loài qua hai thứ:
+            MÀU DA và SILHOUETTE ĐẦU. Màu da pipeline gán sẵn; ở đây chỉ thêm phần nhô ra khỏi
+            sọ — tai, sừng, ăng-ten. Vẽ TRƯỚC khuôn mặt nên chúng nằm sau đầu, dính vào sọ. */}
+        {kieu.loai === "thu" ? (
+          <>
+            {[-1, 1].map(sg => (
+              <ellipse key={`tai${sg}`} cx={dau[0] + sg * R_DAU * 0.74}
+                       cy={dau[1] - R_DAU * 0.86} rx={R_DAU * 0.30} ry={R_DAU * 0.40}
+                       transform={`rotate(${sg * 22} ${dau[0] + sg * R_DAU * 0.74} ${dau[1] - R_DAU * 0.86})`}
+                       fill={da} stroke={V} strokeWidth={NG} />
+            ))}
+          </>
+        ) : null}
+        {kieu.loai === "quai" ? (
+          <>
+            {[-1, 1].map(sg => (
+              <path key={`sung${sg}`}
+                    d={`M ${dau[0] + sg * R_DAU * 0.56} ${dau[1] - R_DAU * 0.92}
+                        q ${sg * R_DAU * 0.16} ${-R_DAU * 0.52} ${sg * R_DAU * 0.40} ${-R_DAU * 0.64}
+                        q ${-sg * R_DAU * 0.06} ${R_DAU * 0.42} ${-sg * R_DAU * 0.22} ${R_DAU * 0.60} z`}
+                    fill={_sang(da, 0.72)} stroke={V} strokeWidth={NG} strokeLinejoin="round" />
+            ))}
+          </>
+        ) : null}
+        {kieu.loai === "alien" ? (
+          <>
+            {[-1, 1].map(sg => (
+              <g key={`ang${sg}`}>
+                <path d={`M ${dau[0] + sg * R_DAU * 0.34} ${dau[1] - R_DAU * 0.98}
+                          q ${sg * R_DAU * 0.10} ${-R_DAU * 0.48} ${sg * R_DAU * 0.30} ${-R_DAU * 0.66}`}
+                      fill="none" stroke={V} strokeWidth={NG * 0.9} strokeLinecap="round" />
+                <circle cx={dau[0] + sg * R_DAU * 0.64} cy={dau[1] - R_DAU * 1.64}
+                        r={R_DAU * 0.15} fill={_sang(da, 1.35)} stroke={V} strokeWidth={NG * 0.8} />
+              </g>
+            ))}
+          </>
+        ) : null}
+        {kieu.loai === "robot" ? (
+          <>
+            <path d={`M ${dau[0]} ${dau[1] - R_DAU * 1.02} L ${dau[0]} ${dau[1] - R_DAU * 1.52}`}
+                  stroke={V} strokeWidth={NG} strokeLinecap="round" />
+            <circle cx={dau[0]} cy={dau[1] - R_DAU * 1.62} r={R_DAU * 0.16}
+                    fill={_sang(da, 1.5)} stroke={V} strokeWidth={NG * 0.8} />
+            {[-1, 1].map(sg => (
+              <rect key={`tainr${sg}`} x={dau[0] + sg * R_DAU * 0.86 - (sg > 0 ? 0 : R_DAU * 0.20)}
+                    y={dau[1] - R_DAU * 0.18} width={R_DAU * 0.20} height={R_DAU * 0.46} rx={4}
+                    fill={_sang(da, 0.80)} stroke={V} strokeWidth={NG * 0.8} />
+            ))}
+          </>
+        ) : null}
         {/* ══════════════════════════════════════════════════════════════════════════════
             KHUÔN MẶT KIỂU HOẠT HÌNH MỸ — dựng lại hoàn toàn 30/8/2026
             ------------------------------------------------------------------------------

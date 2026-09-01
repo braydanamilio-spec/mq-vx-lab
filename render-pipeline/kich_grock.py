@@ -51,6 +51,12 @@ NET = {
 NOI = ["the kitchen", "the living room", "the front entry hall", "the dining table",
        "the garage", "the back porch", "the laundry room", "the kid's bedroom",
        "the hallway by the stairs", "the driveway"]
+# LOÀI + MÀU DA — bốn kênh phi nhân. Mắt đọc loài qua MÀU DA trước, rồi mới tới tai/sừng/
+# ăng-ten. Không dùng AI vẽ nhân vật: AI không giữ được nhân dạng qua 2.500 tập và không làm
+# được khẩu hình khớp giọng — hai thứ gói của anh khoá chặt. AI lo BỐI CẢNH, engine lo NGƯỜI.
+LOAI = {"thurung": ("thu", "#B08247"), "quaivat": ("quai", "#8E7BB8"),
+        "robot": ("robot", "#B9BDC2"), "alien": ("alien", "#8FC4A8")}
+
 NHAC = {"modernfam": "music/carefree.mp3", "kevinlaura": "music/km_undaunted.mp3",
         "marcussofia": "music/km_interloper.mp3", "ethanmaya": "music/inspired.mp3",
         "chrisangela": "music/km_ascending.mp3", "houserules": "music/carefree.mp3",
@@ -80,7 +86,7 @@ _TOC = {"nam": ["ngan", "re_ngoi", "roi", "hoi"], "nu": ["bui", "duoi_ngua", "xo
         "tre": ["ngan", "roi", "re_ngoi", "hoi"]}
 
 
-def _kieu(v: dict, hat: int, ten_vai: str = "") -> dict:
+def _kieu(v: dict, hat: int, ten_vai: str = "", de: str = "") -> dict:
     """Vai -> tham số vẽ của engine. Giới·tuổi·cao lấy từ CHARACTER LOCK, không bịa.
 
     1/9 — MẶT PHẢI KHÁC NHAU. Bản đầu chỉ đổi màu áo, nên mười kênh ra mười người đàn ông
@@ -108,6 +114,14 @@ def _kieu(v: dict, hat: int, ten_vai: str = "") -> dict:
          "beNgang": be, "matTo": 0.88 + (b % 5) * 0.09, "cam": (b % 7) * 0.14,
          "tiLeDau": 0.93 + (b % 4) * 0.045,
          "kinh": (b % 5) == 0, "rau": "", "mu": ""}
+    if de in LOAI:
+        loai, mau_da = LOAI[de]
+        # Robot/alien không có tóc và không có râu — để nguyên thì ra "người đội tóc giả".
+        d.update(loai=loai, da=mau_da, rau="")
+        # Thú cũng bỏ tóc người: mẻ thử cho ra một người đàn ông tóc nâu có tai ẩn sau tóc —
+        # tức mất luôn thứ duy nhất nói lên "đây là con gấu". Lông thì dùng chính màu da.
+        if loai in ("robot", "alien", "thu"):
+            d["kieuToc"] = "trocs"
     if v["tuoi"] == "tre_con":
         # Trẻ con: đầu to hơn, mắt to hơn — hai thứ đọc ra "trẻ con" nhanh hơn cả chiều cao.
         d.update(tiLeDau=0.65, matTo=1.3, beNgang=0.94, kinh=False)
@@ -189,8 +203,8 @@ def mot_tap(de: str, idx: int) -> str:
     props = {
         "luot": luot, "tu": tu, "voMp3": rel, "nhac": NHAC[de],
         "kieuA": "hang_xom", "kieuB": "bank",
-        "kieuTuyA": _kieu(k["dan"][vaiA], hat, vaiA),
-        "kieuTuyB": _kieu(k["dan"].get(vaiB, k["dan"][vaiA]), hat, vaiB),
+        "kieuTuyA": _kieu(k["dan"][vaiA], hat, vaiA, de),
+        "kieuTuyB": _kieu(k["dan"].get(vaiB, k["dan"][vaiA]), hat, vaiB, de),
         "tieuDe": k["ten"], "handle": "@" + de + "usa", "kenh": de,
         "mau": nk["mau"], "mauPhu": nk["phu"],
         "netMuc": nk["net"], "cham": nk["cham"], "boGoc": nk["bo"], "tiLe": 0.62,

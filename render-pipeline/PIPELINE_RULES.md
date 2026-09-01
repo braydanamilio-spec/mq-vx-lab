@@ -6534,3 +6534,66 @@ không nổ, trong khi lịch của workflow khác trong cùng repo vẫn chạy
 Kết luận trung thực: GitHub có bỏ lượt hẹn giờ, và **không báo gì cả** — không log, không lỗi,
 `total_count` đơn giản là 0. Đừng đoán bừa là mình cấu hình sai; kiểm ba thứ (state `active` ·
 `cron` trên `main` · workflow khác có nổ không) rồi ghi nhận đúng hiện trạng.
+
+---
+
+## 26. GÁN GIÁ TRỊ ENGINE KHÔNG BIẾT = KHÔNG GÁN GÌ CẢ (1/9)
+
+Dựng 10 kênh mới từ gói GROCK 2500, và ba lỗi nặng nhất đều thuộc một họ: **sai mà không báo**.
+
+### 26.1 Giá trị lạ rơi về mặc định, im lặng
+
+`kich_grock.py` bịa `kieuMat="cuoi"`, `kieuMay="cong"`, `kieuToc="boc"` để làm mười kênh khác
+mặt nhau. Engine chỉ nhận `bau·tron·hep·xech`, `day·manh·xech·ru`, `bui·ngan·roi·hoi·trocs·
+duoi_ngua·xoan·bob·re_ngoi`. Giá trị lạ **không ném lỗi** — engine dùng mặc định.
+
+Nghĩa là: bản vá chống *"mười kênh giống hệt nhau"* **chính là bản vá không có tác dụng**.
+
+Và nó đã âm thầm sống ở kênh khác: `kich_kling.py` gán `kieuToc="dai"` cho mọi vai nữ của
+HOUSE RULES từ hôm trước — `"dai"` cũng không hợp lệ. Tóc nữ ở kênh ấy chưa bao giờ đúng như
+tôi tưởng, mà mọi khung soi đều "trông ổn".
+
+**TypeScript không cứu được**: props đi qua JSON, kiểu bị xoá lúc chạy.
+
+`kiem_kieu.py` đọc union type trong `v2/DienVien.tsx` rồi đối chiếu mọi giá trị pipeline gán.
+Đã thử đưa lại giá trị bịa để chứng minh nó bắt.
+
+### 26.2 Mô hình sinh ảnh KHÔNG có "negative prompt"
+
+Sáng cùng ngày, để chặn chữ rác trên nền, tôi đặt lệnh cấm viết hoa ngay ĐẦU prompt:
+
+```
+"NO TEXT, NO LETTERS, NO WORDS, NO SIGNAGE. Stylized 3D cartoon render of the kitchen…"
+```
+
+Kết quả: FLUX **vẽ nguyên dòng "NO Text."** to đùng trên sàn bếp.
+
+FLUX không có ô negative prompt. **Mọi thứ trong prompt đều là thứ NÊN CÓ trong ảnh**, và đặt
+càng đầu càng nặng ký — nên lệnh cấm đặt đầu là cách chắc nhất để nó hiện ra.
+
+Cách đúng: **tả cái mình muốn thấy** — *"plain bare walls, smooth unmarked surfaces, unlabeled
+plain objects, blank dark screens, empty picture frames"*. Danh sách `no ...` vẫn giữ ở CUỐI,
+nơi trọng số thấp nhất.
+
+> Bài học rộng hơn: khi một bản vá làm triệu chứng **nặng thêm**, đừng vá tiếp lên trên nó —
+> tiền đề của bản vá đang sai.
+
+### 26.3 Suy thuộc tính từ văn bản: chỗ nào IM LẶNG là chỗ đó sai
+
+Rút dàn nhân vật từ CHARACTER LOCK bằng từ khoá:
+
+| Vai | Mô tả gói | Bản đầu đoán | Đúng |
+|---|---|---|---|
+| Nana (bà cú) | *"elderly anthropomorphic owl, floral shawl over a light blouse"* | **nam** | nữ |
+| Maya, 12 tuổi | *"12-year-old girl"* | nữ ✓ nhưng lấy **tóc con trai** | tóc theo giới |
+| Bingo, Noodle | *"golden retriever"*, *"long-haired white cat"* | **người lớn** | thú cưng, không đóng vai |
+
+Bà cú không có MỘT TỪ nào chỉ giới trong mô tả, nên bộ dò mặc định "nam" — và bà sẽ được lồng
+giọng ông, đúng thứ anh dặn kỹ (*"bà giọng bà"*). Chữa bằng ba tầng: từ chỉ giới → **trang phục**
+(blouse/shawl/dress/skirt/cardigan) → **tên gọi trong nhà** (nana/granny/mama).
+
+Thú cưng nhận ra bằng: không có tuổi **và** không mặc gì. Không loại chúng thì một tập có chó
+nói sẽ dựng ra một người đàn ông lạ đứng trong bếp.
+
+**Luật:** khi suy thuộc tính từ văn bản tự do, giá trị mặc định phải là thứ *dễ nhận ra là sai*,
+không phải thứ *trông có vẻ hợp lý*. "Nam" là mặc định trông hợp lý — nên nó sống sót.
