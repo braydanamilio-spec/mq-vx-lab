@@ -148,6 +148,20 @@ jobs:
           echo "ma=$K" >> $GITHUB_OUTPUT
           echo "── luồng ${{ matrix.luong }}/18 -> kênh $K ──"
 
+      # BÁO "ĐANG CHẠY" CHO DASHBOARD.
+      # Anh hỏi: *"sao a thấy ⚙️ Đang chạy: 0"*. Vì ô ấy đếm bản ghi `render_job` trong D1 có
+      # trạng thái đang-chạy trong 45 phút gần nhất, mà dây chuyền này CHỈ ghi bản ghi lúc XONG
+      # (qua `day_kho.py`). Không ai nói cho nó biết là đang dựng, nên nó bằng 0 theo cấu trúc —
+      # kể cả khi 18 luồng đang chạy thật. Một ô luôn bằng 0 thì vô dụng đúng lúc cần nhất.
+      - name: Báo đang dựng
+        env:
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: |
+          cd render-pipeline
+          python bao_chay.py --kenh ${{ steps.k.outputs.ma }} --loai short --trang_thai rendering
+          python bao_chay.py --kenh ${{ steps.k.outputs.ma }} --loai long  --trang_thai queued
+
       - name: Dựng ngắn 9:16
         env:
           CF_KEYS: ${{ secrets.CF_KEYS }}
@@ -156,6 +170,16 @@ jobs:
 
       # Bản dài dựng SAU bản ngắn, và được phép hỏng: job quá giờ thì `upload-artifact` không
       # chạy và mất luôn bản ngắn đã xong (luật §10.1). Ngắn xong trước là ngắn chắc chắn còn.
+      - name: Báo xong bản ngắn, bắt đầu bản dài
+        if: always()
+        env:
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: |
+          cd render-pipeline
+          python bao_chay.py --kenh ${{ steps.k.outputs.ma }} --loai short --trang_thai done
+          python bao_chay.py --kenh ${{ steps.k.outputs.ma }} --loai long  --trang_thai rendering
+
       - name: Dựng dài 16:9
         env:
           CF_KEYS: ${{ secrets.CF_KEYS }}
@@ -166,6 +190,15 @@ jobs:
 
       # SIÊU DỮ LIỆU TRƯỚC ĐẨY KHO, không phải sau: thiếu `.tai.json` thì `day_kho.py` bỏ qua
       # tệp ấy và vẫn trả 0 — có video mà không đăng được, lượt chạy vẫn xanh.
+      # `always()`: luồng hỏng giữa chừng cũng phải hạ cờ, nếu không bản ghi treo ở
+      # 'rendering' và ô "Đang chạy" hiện số ma suốt 45 phút.
+      - name: Báo xong bản dài
+        if: always()
+        env:
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: cd render-pipeline && python bao_chay.py --kenh ${{ steps.k.outputs.ma }} --loai long --trang_thai done
+
       - name: Chữ đăng cho ba nền tảng
         run: cd render-pipeline && python sieu_gt.py
 

@@ -165,10 +165,23 @@ def don(that: bool = False, owner: str = "") -> int:
     if not owner:
         print("❌ thiếu OWNER_UID")
         return 2
-    db = _db()
+
+    # ── DỌN D1 TRƯỚC, VÀ ĐỘC LẬP VỚI FIRESTORE  (1/9/2026) ──────────────────────────────
+    # Lượt 33524187148 chết ở bước kiểm kê với `RESOURCE_EXHAUSTED: Quota exceeded` — Firestore
+    # cạn hạn mức đọc. Nhưng ô xổ "Tất cả kênh" và số đếm video đọc **D1**, không đọc Firestore.
+    # Để việc dọn D1 nằm sau Firestore nghĩa là hạn mức của kho KHÔNG liên quan quyết định xem
+    # kho LIÊN QUAN có được dọn hay không. Đảo thứ tự: làm việc quan trọng trước, và đừng để nó
+    # phụ thuộc vào thứ có thể cạn.
+    don_d1(giu, owner, that)
+
+    try:
+        db = _db()
+    except Exception as e:
+        print(f"⚠ Firestore không dùng được ({str(e)[:70]}) — D1 đã dọn xong ở trên, dừng ở đây")
+        return 0
     if db is None:
-        print("❌ không mở được Firestore")
-        return 2
+        print("⚠ không mở được Firestore — D1 đã dọn xong ở trên, dừng ở đây")
+        return 0
 
     kg, kd, jg, jd = kiem_ke(db, owner, giu)
     print(f"\n📊 KIỂM KÊ TRƯỚC KHI DỌN")
@@ -205,9 +218,6 @@ def don(that: bool = False, owner: str = "") -> int:
         print("   ✓ đặt lại sổ đếm theo số thật còn lại")
     except Exception as e:
         print(f"   ⚠ không đặt lại được sổ đếm: {str(e)[:90]}")
-
-    # DỌN CẢ D1 — không chỉ Firestore. Xem chú thích ở `don_d1`.
-    don_d1(giu, owner, that)
 
     kg2, kd2, jg2, jd2 = kiem_ke(db, owner, giu)
     print(f"\n🧹 ĐÃ DỌN {n_k} kênh · {n_j} job")
