@@ -1549,6 +1549,26 @@ def _luat_viet() -> str:
             + "".join(f"  {i}. {l}\n" for i, l in enumerate(LUAT_HAI_MY, 1)))
 
 
+def _ngan_sach_sys(kenh: str, giay: float) -> int:
+    """Ngân sách văn kể để nói cho AI. Dựng khuôn tạm rồi hỏi `_ngan_sach_khuon` — cùng một
+    phép đo với thứ web dùng, nên hai bên không thể lệch."""
+    hs = ho_so(kenh)
+    ph = max(hs["phong"], key=lambda p: len(hs["phong"][p]))
+    mau = {"title": "@@TITLE@@", "room": ph, "hook": "@@HOOK@@", "setup": "@@SETUP@@",
+           "escalate": "@@ESCALATE@@", "payoff": "@@PAYOFF@@",
+           "lines": [{"who": "@@WHO@@", "act": "says", "say": "@@LINES@@"}]}
+    names = ", ".join(hs["vai"])
+    def o(t, muc=0):
+        cast = "\n".join((hs["nhan_vat"][x] if muc < 1 else _nen_vai(hs["nhan_vat"][x]))
+                         for x in hs["vai"])
+        return (t.replace(cast, "@@CAST@@").replace(names, "@@CASTNAMES@@")
+                 .replace(hs["phong"][ph], "@@ROOMDESC@@").replace(ph, "@@ROOM@@"))
+    kh = {"than": [o("\n".join(_bat_buoc(kenh, mau, giay, 0, 1, m)[0]), m) for m in (0, 1, 2, 3)],
+          "them": [o("\n".join(x).strip()) for x in _kho_tuy_chon(kenh, mau, giay) if x],
+          "rao":  o("\n".join(_bat_buoc(kenh, mau, giay, 0, 1, 0)[1]))}
+    return _ngan_sach_khuon(kh, hs, giay, ph)
+
+
 def _sys(kenh: str, giay: float) -> str:
     hs = ho_so(kenh)
     tran = int(_giay_thoai(giay) * TU_MOI_GIAY)
@@ -1576,7 +1596,9 @@ def _sys(kenh: str, giay: float) -> str:
         f"  · at most {TU_MOI_LUOT} words per line\n"
         f"  · at most {tran} spoken words in the whole short\n"
         f"  · never write on-screen text, captions, signs or logos\n"
-        f"  · never name a real brand or an existing TV show\n\n"
+        f"  · never name a real brand or an existing TV show\n"
+        f"  · the four story fields together must stay under {_ngan_sach_sys(kenh, giay)} characters "
+        f"— longer and the render-safety block gets cut off by the model's prompt limit\n\n"
         # 1/9 — CHUẨN HOOK VIẾT RÕ RA. Đo 30 tập cũ: hook trung vị 73 ký tự — "A bulging trash
         # bag teeters on the counter." Đủ để Kling dựng một khung, KHÔNG đủ để người xem hiểu
         # chuyện gì đang xảy ra và vì sao nên xem tiếp. Hook cụt là hook mất người ở giây thứ hai.
@@ -1955,6 +1977,63 @@ def luu(kenh: str, tap: dict, giay: float, so: int,
 
 
 # ── XUẤT CHO GIAO DIỆN WEB ──────────────────────────────────────────────────────────────────
+def _ngan_sach_khuon(khuon: dict, hs: dict, giay: float, ph: str) -> int:
+    """Bao nhiêu KÝ TỰ văn kể mà CHÍNH KHUÔN NÀY còn chứa được. Đo thứ sẽ giao đi, không đo
+    một đường song song.
+
+    1/9 — Bản trước đo trên đường Python (`_bat_buoc`) rồi giao khuôn cho web. Hai đường lệch
+    nhau ở ba chỗ nhỏ, cộng lại 213 ký tự, và **0/328 khuôn** lọt trần dù con số ngân sách trông
+    rất hợp lý. Đây là lần thứ sáu trong buổi em đo ở một ngữ cảnh rồi dùng cho ngữ cảnh khác.
+    Cách chữa duy nhất còn lại: **đo đúng vật sẽ giao**, bằng chính phép ghép mà web sẽ chạy.
+    """
+    vai = sorted(hs["vai"], key=len, reverse=True)[:VAI_TOI_DA]
+    tu = int(_giay_thoai(giay) * TU_MOI_GIAY)
+    sl = max(1, min(LUOT_TOI_DA, tu // 3))
+    # Cast phải điền ĐÚNG MỨC NÉN của từng bản thân. Bản trước điền một dạng cho cả bốn mức,
+    # nên thang nén thành vô nghĩa: `than[3]` (đã nén) vẫn nhận mô tả đầy đủ 607 ký tự.
+    cast_m = ["\n".join(hs["nhan_vat"][x] for x in vai)] + \
+             ["\n".join(_nen_vai(hs["nhan_vat"][x]) for x in vai)] * 3
+    ten = ", ".join(vai)
+    thoai = " ".join('%s says: “%s”' % (vai[i % len(vai)],
+                                        " ".join(["wordword"] * max(1, tu // sl)))
+                     for i in range(sl))
+    ty = sum(VAN_KE_CHIA.values())
+
+    def ghep(tong: int) -> int:
+        def dien(t: str, muc: int = 0) -> str:
+            t = (t.replace("@@CAST@@", cast_m[muc]).replace("@@CASTNAMES@@", ten)
+                  .replace("@@ROOMDESC@@", hs["phong"][ph]).replace("@@ROOM@@", ph)
+                  .replace("@@TITLE@@", "An Episode Title Here"))
+            for k, v in VAN_KE_CHIA.items():
+                t = t.replace("@@%s@@" % k.upper(), "w" * (tong * v // ty))
+            return (t.replace('@@WHO@@ says: “@@LINES@@”', thoai)
+                     .replace("@@LINES@@", thoai).replace("@@WHO@@", vai[0]))
+        rao = dien(khuon["rao"])
+        them = [dien(x) for x in khuon["them"]]
+        tot, dai = -1, 10 ** 9
+        for th in (dien(x, m) for m, x in enumerate(khuon["than"])):
+            if len(th) + len(rao) + 2 > KY_TU_MAX:
+                continue
+            con, dem, n = KY_TU_MAX - len(th) - len(rao) - 2, 0, len(th)
+            for t in them:
+                if len(t) + 3 <= con:
+                    con -= len(t) + 3; dem += 1; n += len(t) + 3
+            if dem > tot:
+                tot, dai = dem, n + len(rao) + 1
+        return dai
+
+    lo, hi = 100, 900
+    if ghep(lo) > KY_TU_MAX:
+        return 0                       # kênh này không chứa nổi cả văn kể tối thiểu — báo thẳng
+    while lo < hi:
+        m = (lo + hi + 1) // 2
+        if ghep(m) <= KY_TU_MAX:
+            lo = m
+        else:
+            hi = m - 1
+    return lo
+
+
 def xuat_web(thu_muc: str) -> list[str]:
     """Xuất hồ sơ + KHUÔN prompt cho dashboard, mỗi kênh một tệp.
 
@@ -1991,10 +2070,14 @@ def xuat_web(thu_muc: str) -> list[str]:
         # Hai cái giá: tốn ~750 ký tự thay vì ~300 (đủ để bóp hook xuống còn 20 từ), và tệ hơn
         # — prompt bảo Kling vẽ năm người trong một tập chỉ có hai. Đúng lỗi mà
         # KLING_CACH_DUNG.md đã cảnh báo, tái sinh ở khâu xuất web.
-        _cast = "\n".join(hs["nhan_vat"][t] for t in hs["vai"])
+        # Mỗi mức nén dựng dàn vai một kiểu (mức ≥1 dùng `_nen_vai`), nên phải thay ô trống
+        # THEO ĐÚNG MỨC. Bản đầu chỉ khớp dạng chưa nén, nên mức 1–3 khoá cứng cả năm nhân vật
+        # — vừa tốn ~450 ký tự vừa bảo Kling vẽ ba người không có trong tập.
         _names = ", ".join(hs["vai"])
-        def _o(t):
-            return (t.replace(_cast, "@@CAST@@").replace(_names, "@@CASTNAMES@@")
+        def _o(t, muc=0):
+            cast = "\n".join((hs["nhan_vat"][x] if muc < 1 else _nen_vai(hs["nhan_vat"][x]))
+                             for x in hs["vai"])
+            return (t.replace(cast, "@@CAST@@").replace(_names, "@@CASTNAMES@@")
                      .replace(mo0, "@@ROOMDESC@@").replace(ph0, "@@ROOM@@"))
         khuon = {}
         for g in GIAY_CHUAN:
@@ -2003,14 +2086,23 @@ def xuat_web(thu_muc: str) -> list[str]:
             # đúng thang mà `prompt()` đi ở phía Python. Xuất một mức thôi thì web hoặc luôn
             # thừa chỗ (mức 3, mất chi tiết vô cớ) hoặc luôn tràn (mức 0).
             rao = _bat_buoc(ten, tap, g, 0, 1, 0)[1]
-            khuon[str(g)] = {
-                "than": [_o("\n".join(_bat_buoc(ten, tap, g, 0, 1, m)[0])) for m in (0, 1, 2, 3)],
+            kh = {
+                "than": [_o("\n".join(_bat_buoc(ten, tap, g, 0, 1, m)[0]), m) for m in (0, 1, 2, 3)],
                 "them": [_o("\n".join(x).strip()) for x in _kho_tuy_chon(ten, tap, g) if x],
                 "rao":  _o("\n".join(rao)),
             }
+            # Ngân sách đo trên CHÍNH khuôn vừa dựng, ở ca xấu nhất của kênh: dàn đông nhất,
+            # tên dài nhất, phòng có mô tả dài nhất, thoại kịch trần.
+            kh["van_ke_max"] = _ngan_sach_khuon(
+                kh, hs, g, max(hs["phong"], key=lambda p: len(hs["phong"][p])))
+            khuon[str(g)] = kh
         ra_kenh = {
             "ten": ten, "mo_ta": hs["mo_ta"], "ty_le": hs["ty_le"],
             "vai": {t: hs["nhan_vat"][t] for t in hs["vai"]},
+            # Dạng NÉN của khoá nhân vật — bỏ phần tính nết (thuộc khối PERFORMANCE, Kling
+            # không vẽ được tính nết). Web dùng dạng này cho các mức nén ≥1; điền dạng đầy đủ
+            # vào mức đã nén thì thang nén mất tác dụng và prompt tràn 200 ký tự.
+            "vai_gon": {t: _nen_vai(hs["nhan_vat"][t]) for t in hs["vai"]},
             "phong": hs["phong"],
             "mach": hs["mach"],
             "giay": list(GIAY_CHUAN),
