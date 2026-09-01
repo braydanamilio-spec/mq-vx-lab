@@ -1,0 +1,77 @@
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# DỌN SỔ KHO — đưa con số trên dashboard về ĐÚNG SỰ THẬT  (1/9/2026)
+#
+# Anh: *"Video trong kho 2088 sao ko fix triệt để, kho đã xoá hết rồi."* và ảnh chụp ô xổ
+# "Tất cả kênh (2088)" vẫn liệt kê đủ 50 kênh cũ.
+#
+# ── HAI KHO SONG SONG, PHẢI ĐỤNG CẢ HAI ──────────────────────────────────────────────────
+#   Firestore `render_channels` / `render_jobs`  -> cấu hình kênh + lịch sử job
+#   D1 `render_job`                              -> thứ dashboard ĐỌC để đếm và đổ ô xổ
+# Dọn một kho rồi báo xong là lỗi đã mắc: `render_channels` còn 18 kênh mới, mà ô xổ vẫn hiện
+# 50 kênh cũ vì nó đọc kho kia.
+#
+# ── VÌ SAO TÁCH RA MỘT WORKFLOW RIÊNG ────────────────────────────────────────────────────
+# Hai bước này đã nằm trong luồng render hằng ngày (luồng 1) nên số sẽ tự đúng mỗi ngày. Tệp
+# này để BẤM TAY khi cần đúng NGAY, mà không phải chạy cả 18 luồng dựng video — nó chỉ tốn
+# vài chục giây và không đụng một lượt render nào.
+#
+# KHÔNG có `schedule:` — cố ý. Việc định kỳ đã do luồng render lo; thêm cron ở đây là hai chỗ
+# cùng làm một việc, và sớm muộn chúng đá nhau.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+name: Dọn sổ kho (Firestore + D1)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  don:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout repo đăng bài
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Cài đặt
+        run: |
+          pip install --quiet pyyaml requests
+          pip install --quiet -r _autopublisher/requirements.txt 2>/dev/null || \
+            pip install --quiet google-api-python-client google-auth google-cloud-firestore
+
+      # CHẠY THỬ TRƯỚC, IN KIỂM KÊ. Bước dọn thật ở dưới đọc cùng danh sách giữ lại, nên nhìn
+      # log là biết trước nó sẽ đụng vào gì — không dọn mù.
+      - name: Kiểm kê (chạy thử, chưa xoá gì)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          CHANNELS_YAML: ${{ github.workspace }}/_autopublisher/config/channels.yaml
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+          cd render-pipeline && python don_sach.py --owner "$OWNER_UID"
+
+      - name: Dọn thật (Firestore + D1)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          CHANNELS_YAML: ${{ github.workspace }}/_autopublisher/config/channels.yaml
+        run: cd render-pipeline && python don_sach.py --that --owner "$OWNER_UID"
+
+      # Đối chiếu với Drive SAU khi dọn: `kho_that` là thứ `apiHotStat` ưu tiên hơn số đếm bản
+      # ghi, nhưng chỉ khi nó mới hơn 26 giờ. Không chạy bước này thì số vẫn rơi về đếm bản ghi.
+      - name: Đối chiếu số kho với Drive
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: cd render-pipeline && python kiem_kho.py --ghi --owner "$OWNER_UID"
