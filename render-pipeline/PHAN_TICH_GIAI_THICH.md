@@ -193,3 +193,50 @@ dụng free tối đa.
 5. Phụ đề chạy theo mốc từ (đã có sẵn trong `tts_karaoke`).
 6. Cổng mới: **đếm số cắt / phút**, đỏ nếu dưới 20. Cổng chấm điểm hiện tại không đo nhịp, mà
    nhịp mới là thứ quyết định người xem ở lại hay lướt.
+
+---
+
+## 11. BẢY QUY TẮC NỐI CẢNH — rút ra khi cắt 24 cảnh LIÊN TIẾP
+
+Anh: *"e cắt từng cảnh trong videos họ ra soi, họ làm rất logic, hình ảnh và bối cảnh ăn khớp
+lời nói kịch bản, logic xuyên suốt đó."*
+
+Lần soi đầu tôi lấy 25 khung **rời rạc** rải đều video và rút ra "bảy khuôn hình". Đúng, nhưng
+nông — khuôn hình là **từ vựng**. Thứ làm nên phim là **ngữ pháp**: cảnh này nối cảnh kia thế
+nào. Cắt 24 cảnh liên tiếp (cảnh 12→35 của video A) ra mới thấy:
+
+| | quy tắc | bằng chứng |
+|---|---|---|
+| **A** | Mỗi cảnh vẽ **đúng mệnh đề đang nói**, không minh hoạ chung chung | lời "20 miles" → hình người đi bộ với chữ "20 miles" ngay trên đầu |
+| **B** | Mệnh đề song song → **khung hình song song** | `LIVED · ATE · MARRIED · KNEW`: bốn cảnh khác nội dung, cùng bố cục, dải chữ cùng một chỗ. Báo 70 → ngựa 30 → người 15: cùng khung, số cùng vị trí |
+| **C** | Thời gian trôi vẽ bằng **số lượng**, không bằng chữ | hàng 4 biểu tượng mặt trời–mặt trăng, rồi hàng 12. Người xem **đếm**, không đọc "hai tuần sau" |
+| **D** | Cảnh sau **kế thừa** cảnh trước | vệt dấu chân dài thêm qua từng cảnh; báo và ngựa quay lại dạng bóng mờ |
+| **E** | Lời chuyển từ **kể** sang **khẳng định** → hình chuyển sang **thẻ chữ** | tấm thẻ giấy da hai dòng, không hình |
+| **F** | Nói về **cơ chế** → sơ đồ có nhãn, nhân vật **bỏ màu thành nét** | vòm bàn chân với `ENERGY DOWN / SPRING BACK UP`, gân Achilles tô đỏ, kính lúp chỉ dây chằng gáy |
+| **G** | Con số luôn đứng cạnh **hình của chính vật ấy** | "70 mph" đặt trên con báo, không đặt trên biểu đồ |
+
+Quy tắc B là quy tắc đắt nhất và dễ bỏ sót nhất: **hình phải phục tùng cú pháp của lời.** Câu
+văn có cấu trúc liệt kê thì bốn cảnh phải giữ một chỗ không đổi để mắt nhận ra "đây là một danh
+sách". Đổi cả bố cục lẫn nội dung thì bốn cảnh ấy thành bốn cảnh rời, và cả cấu trúc liệt kê
+của câu biến mất khỏi hình.
+
+**Đã dựng:** `DaiChu` (dải chữ cho bộ song song) · `Dem` (đếm thời gian bằng biểu tượng) ·
+`TheChu` (thẻ khẳng định) · `ke_thua` (vệt chân dài dần) trong `gt/Khuon.tsx`.
+**Chưa dựng:** quy tắc F — sơ đồ cơ chế có nhãn và mũi tên.
+
+## 12. Hai lỗi tự bắt được khi soi khung bản mình
+
+1. **"0 MINUTES" hiện giữa màn hình.** Ánh sáng tới Mặt Trăng mất 1,3 giây; hàm đổi đơn vị
+   không có nhánh GIÂY nên `0,02 phút` làm tròn thành 0. Vá bằng cách thêm nhánh giây → chạy
+   lại, rãnh Mariana ra **"0 SECONDS"**. Cùng lỗi, lùi đúng một bậc: bản vá đẩy lỗi đi chứ
+   không diệt. Gốc rễ là **bảng nhánh cố định luôn có một đáy, và dưới đáy mọi thứ thành 0**.
+   Viết lại: chọn đơn vị lớn nhất mà con số vẫn ≥ 1, cộng một chốt chặn không cho số 0 lọt ra.
+
+   Bài học rộng hơn: *"tính bằng code nên không thể sai"* chỉ đúng tới đoạn **đem con số ra
+   hiển thị**. Cả slate mười kênh được chọn để tránh AI bịa số, rồi số sai vẫn chui vào bằng
+   cửa sau là hàm định dạng của chính mình.
+
+2. **Hai vế so sánh cỡ chữ chênh ba lần** ("5 km/h" 142px, "1.08 billion km/h" 50px). Không
+   tràn khung, nhưng hỏng nặng hơn: cỡ chữ khác nhau **nói rằng hai vế không ngang hàng**,
+   trong khi cả khuôn hình tồn tại để nói chúng ngang hàng. Người xem đọc kích thước trước khi
+   đọc chữ. Sửa: mọi cặp lấy cỡ nhỏ hơn của hai bên.

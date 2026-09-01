@@ -42,6 +42,10 @@ import { KichComic, calcComic } from "./comic/KichComic";
 // có lớp `live()` chạy trên chín khớp nên diễn được hành động từng nhịp, thứ engine
 // truyện tranh (tám tư thế tĩnh, chân cố định) không làm được.
 import { KichQue, calcQue } from "./que/KichQue";
+// 1/9 — PHIM GIẢI THÍCH. Dựng từ số đo hai video tham chiếu anh gửi: nhịp cắt trung vị 2,1
+// giây, bảy khuôn hình xoay vòng, bốn khuôn thuần code. Xem PHAN_TICH_GIAI_THICH.md.
+// Hai bản: ngang cho long 7-10 phút, dọc cho short cắt ra từ chính bản long ấy.
+import { KichGiaiThich, calcGT } from "./gt/KichGiaiThich";
 import { ThumbComic } from "./comic/ThumbComic";
 import { BrandComic } from "./comic/BrandComic";
 import { BangTuThe } from "./v4/BangTuThe";
@@ -290,6 +294,11 @@ export const RemotionRoot: React.FC = () => (
                  width={1080} height={1920} defaultProps={{ ngang: false }} />
     <Composition id="KichComicWide" component={KichComic as any} durationInFrames={600} fps={30}
                  width={1920} height={1080} calculateMetadata={calcComic as any} />
+    <Composition id="GiaiThich" component={KichGiaiThich as any} durationInFrames={1800} fps={30}
+                 width={1920} height={1080} calculateMetadata={calcGT as any} />
+    <Composition id="GiaiThichDoc" component={KichGiaiThich as any} durationInFrames={1800} fps={30}
+                 width={1080} height={1920} calculateMetadata={calcGT as any}
+                 defaultProps={{ doc: true }} />
     <Composition id="KichQue" component={KichQue as any} durationInFrames={450} fps={30}
                  width={1080} height={1920} calculateMetadata={calcQue as any} />
     <Composition id="KichComic" component={KichComic as any} durationInFrames={600} fps={30}
