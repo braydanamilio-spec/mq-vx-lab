@@ -43,21 +43,22 @@ def main() -> int:
         g = g.group(1) if g else "(không có)"
         thay.append((t, n, g))
         nhom.setdefault(g, []).append(t)
-        if n > TRAN:
-            loi.append(f"{t}: max-parallel {n} > {TRAN} — chiếm hết luồng điều phối")
+        # Không chặn từng workflow: hai xưởng CỐ Ý chạy song song (anh chốt 5 + 13). Cái phải
+        # canh là TỔNG, vì trần 20 job là của cả tài khoản.
 
     for t, n, g in thay:
         print(f"  {t:28s} max-parallel={n:<3d} group={g}")
 
-    if len(nhom) > 1:
-        loi.append("các xưởng render KHÔNG dùng chung concurrency group: "
-                   + " · ".join(f"{g}({len(v)})" for g, v in nhom.items())
-                   + " — hai xưởng chạy chồng là vượt trần 20 job")
+    # TỔNG luồng của các NHÓM KHÁC NHAU — vì nhóm khác nhau thì chạy được cùng lúc. Trong cùng
+    # một nhóm thì chỉ một workflow chạy, nên lấy cái lớn nhất của nhóm.
+    tong = sum(max(n for _t, n, g2 in thay if g2 == g) for g in nhom)
+    if tong > TRAN:
+        loi.append(f"tổng {tong} luồng render cùng lúc > {TRAN} — không còn chỗ cho "
+                   f"publish/health, dashboard sẽ đứng và video xong không được đăng")
 
     if loi:
         print("\n❌ " + "\n❌ ".join(loi))
         return 1
-    tong = max((n for _t, n, _g in thay), default=0)
     print(f"\n✅ luật 18+2: tối đa {tong} job render cùng lúc, chừa {20 - tong} cho điều phối")
     return 0
 

@@ -44,7 +44,7 @@ on:
 
 # LUẬT 18+2: mọi xưởng render dùng CHUNG một nhóm, kể cả xưởng theo lô đã tắt cron —
 # nó vẫn bấm tay được, nên vẫn chồng được. Xem `kiem_song_song.py`.
-concurrency: { group: mm0-render, cancel-in-progress: false }
+concurrency: { group: mm0-render-phantich, cancel-in-progress: false }
 
 jobs:
   dung:
