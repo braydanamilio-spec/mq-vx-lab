@@ -7408,3 +7408,61 @@ phải xuất hiện trong văn kể, và cú lật phải do đúng người đ
 
 **Kiểm hai thước có khớp nhau không:** 75 mẫu (5 kênh × 3 tập × 5 kiểu sai) chấm bằng cả Python
 lẫn chính mã JavaScript của trang → **75/75 cùng kết luận**. Trước khi sửa hai lỗi trên: 72/75.
+
+### 7cp — Thước "độ phẳng" đánh lừa LẦN THỨ HAI, và tôi suýt sửa nhầm phía (1/9)
+
+Cổng chấm một tập trượt vì *"chất vẽ lệch 0,44 (cho phép 0,40)"*. Tôi đi sửa khâu SINH ẢNH:
+mốc lấy trung vị ba mẫu thay vì ảnh đầu · nâng 2 lần thử lên 4 · soi lại ba ảnh đầu sau khi có
+mốc · dán neo phong cách ngay cạnh chủ thể. Cả bốn đều là cải tiến thật. Rồi siết `NGUONG_LECH`
+xuống ±0,20 với một lập luận toán học nghe rất chắc:
+
+> `nen_gt` cho mỗi ảnh lệch ±X quanh mốc → biên độ tối đa 2X.
+> `kiem_hinh` đòi biên độ ≤ 0,40. Vậy X phải là 0,20.
+
+Lập luận đúng. Kết luận sai — vì tôi chưa **nhìn ảnh**.
+
+Soi bốn ảnh (độ phẳng 0,36 · 0,65 · 0,73 · 0,80): **cả bốn cùng một thế giới** — cùng nét mực
+dày, cùng người que đầu tròn, cùng bảng màu. Ảnh 0,36 khác đúng một chỗ: **có đổ bóng mềm** trên
+chủ thể. `do_phang` đo ĐỘ PHẲNG, nên nó phạt cái bóng chứ không phạt lệch phong cách. Vẽ lại ba
+lần đều ra 0,36 — không phải may rủi, mà là thước đo sai thứ.
+
+Ở ±0,20, mỗi tập sẽ tốn thêm ba lượt vẽ lại **để đổi lấy không gì cả**.
+
+Đây là lần thứ hai đúng thước này đánh lừa. §12.3 là lần đầu: nó gắn cờ 6/11 ảnh cartoon đúng
+chất, và tôi suýt báo "ép cartoon thất bại" trong khi nó đã thành công.
+
+**Sửa: nới `kiem_hinh` lên 0,60 và `NGUONG_LECH` lên ±0,35 — nới, không siết.** Việc thước này
+thật sự làm được là bắt ảnh NGẢ ẢNH CHỤP, và việc ấy do sàn tuyệt đối `SAN_PHANG` làm; phép so
+tương đối chỉ nên chặn lệch lớn.
+
+**Luật:** trước khi siết một ngưỡng vì hai cổng "mâu thuẫn toán học", hãy nhìn thứ đang bị chấm
+trượt. Hai cổng khớp nhau về số mà cùng đo sai một tính chất thì vẫn sai — chỉ là sai đều nhau.
+
+Bốn cải tiến ở khâu sinh ảnh vẫn giữ: chúng đúng độc lập với chuyện ngưỡng.
+
+### 7cq — Dọn một kho rồi báo đã xong (1/9)
+
+Anh gửi ảnh ô xổ *"Tất cả kênh (2088)"* vẫn liệt kê đủ 50 kênh cũ kèm số đếm, dù `render_channels`
+chỉ còn 18 kênh mới. Vì ô xổ và số đếm đọc bảng `render_job` bên **D1** — một kho khác với
+Firestore, nơi tôi đã dọn.
+
+Chính mã worker ghi sẵn bài học ấy ngay tại `don_job_kenh`:
+*"Hai kho dữ liệu song song thì lệnh dọn phải đụng cả hai."*
+
+Tôi đọc câu ấy hôm nay khi đi tìm endpoint, rồi vẫn dọn một kho và báo "đã sạch". Đọc một cảnh
+báo không bằng làm theo nó.
+
+**Sửa:** `don_sach.py` nay gọi `/api/hot` `don_job_kenh` cho mọi kênh ngoài `channels.yaml`, và
+chạy trong luồng 1 của workflow render mỗi ngày. Danh sách giữ lại vẫn đọc từ yaml, không chép tay.
+
+### 7cr — Off-by-one biến "nhận ảnh hơi lệch" thành "mất hẳn cảnh" (1/9)
+
+Nâng số lần vẽ lại từ 2 lên 3, tôi sửa điều kiện thành `if lan < 3` nhưng để nguyên
+`for lan in range(3)`. Vòng lặp cho `lan` = 0,1,2 nên điều kiện LUÔN đúng: ảnh lệch bị xoá ở cả
+lần cuối, nhịp ấy không có ảnh, và cảnh rơi về nền vẽ bằng code — **tệ hơn hẳn một ảnh hơi khác
+chất**, tức ngược đúng ý định của bản vá.
+
+Không lỗi nào báo. Chỉ là mỗi tập mất vài cảnh.
+
+**Luật:** đổi số lần thử thì sửa CẢ hai đầu — biên vòng lặp và điều kiện thoát — rồi thử một
+lượt xem nhánh cuối có chạy không.

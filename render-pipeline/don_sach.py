@@ -96,6 +96,63 @@ def kiem_ke(db, owner: str, giu: set):
     return kg, kd, jg, jd
 
 
+WORKER = "https://mm0-connect.adisondurham-ef1.workers.dev/api/hot"
+
+
+def don_d1(giu: set, owner: str, that: bool) -> int:
+    """Xoá bản ghi `render_job` trong D1 của mọi kênh NGOÀI danh sách giữ lại.
+
+    ── VÌ SAO CẦN (1/9/2026) ───────────────────────────────────────────────────────────────
+    Dọn kênh ở Firestore (`render_channels`) là dọn CẤU HÌNH. Nhưng dashboard đếm video và đổ
+    ô xổ "Tất cả kênh" từ bảng `render_job` bên **D1** — một kho khác. Anh gửi ảnh: ô xổ vẫn
+    liệt kê đủ 50 kênh cũ kèm số đếm (ALERTNOW 55 · AMERICALOOKEDUP 57 · …), tổng 2088, dù
+    `render_channels` chỉ còn 18 kênh mới.
+    Chính mã worker đã ghi sẵn bài học này ở `don_job_kenh`: *"Hai kho dữ liệu song song thì
+    lệnh dọn phải đụng cả hai."* Tôi dọn một kho rồi báo đã xong — đó là lỗi của tôi.
+
+    Nguồn danh sách kênh cần dọn vẫn là `channels.yaml` (qua `giu`), không chép tay: thêm kênh
+    vào yaml là nó tự được giữ, không cần sửa thêm chỗ nào.
+    """
+    khoa = os.environ.get("HOT_KEY", "")
+    if not khoa:
+        print("   ⏭ không có HOT_KEY -> bỏ bước dọn D1 (chạy trong workflow thì có)")
+        return 0
+    import json
+    import urllib.request
+
+    def goi(lenh, tham):
+        r = urllib.request.Request(
+            WORKER, method="POST",
+            data=json.dumps({"lenh": lenh, "tham": tham}).encode(),
+            headers={"content-type": "application/json", "x-hot-key": khoa})
+        with urllib.request.urlopen(r, timeout=60) as f:
+            return json.loads(f.read().decode())
+
+    try:
+        ds = goi("dem_tat_ca", {"owner": owner})
+    except Exception as e:
+        print(f"   ⚠ không hỏi được D1: {str(e)[:90]}")
+        return 0
+    # `dem_tat_ca` trả `{rows: [{channel, vtype, n}]}` — đọc đúng khoá `rows`, không đoán.
+    co = sorted({str(x.get("channel") or "").upper()
+                 for x in (ds.get("rows") or []) if x.get("channel")})
+    cu = [c for c in co if c and c not in giu]
+    print(f"   D1: {len(co)} kênh có bản ghi · {len(cu)} kênh ngoài danh sách giữ lại")
+    if not cu:
+        print("   ✅ D1 đã sạch")
+        return 0
+    print(f"   sẽ dọn: {', '.join(cu[:10])}" + (" …" if len(cu) > 10 else ""))
+    if not that:
+        return 0
+    try:
+        r = goi("don_job_kenh", {"owner": owner, "kenh": cu})
+        print(f"   ✓ D1 xoá {r.get('xoa', 0)} bản ghi · còn lại {r.get('con_lai', '?')}")
+        return int(r.get("xoa", 0))
+    except Exception as e:
+        print(f"   ⚠ dọn D1 hỏng: {str(e)[:90]}")
+        return 0
+
+
 def don(that: bool = False, owner: str = "") -> int:
     giu = giu_lai()
     if not giu:
@@ -148,6 +205,9 @@ def don(that: bool = False, owner: str = "") -> int:
         print("   ✓ đặt lại sổ đếm theo số thật còn lại")
     except Exception as e:
         print(f"   ⚠ không đặt lại được sổ đếm: {str(e)[:90]}")
+
+    # DỌN CẢ D1 — không chỉ Firestore. Xem chú thích ở `don_d1`.
+    don_d1(giu, owner, that)
 
     kg2, kd2, jg2, jd2 = kiem_ke(db, owner, giu)
     print(f"\n🧹 ĐÃ DỌN {n_k} kênh · {n_j} job")

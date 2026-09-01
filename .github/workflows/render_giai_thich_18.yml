@@ -205,6 +205,22 @@ jobs:
       # — con số đúng theo nghĩa "số lượt render từng thành công", sai với thứ anh muốn biết.
       # Đặt ở đây thì mỗi ngày một lần con số tự đúng lại, không phải vá tay lần nào nữa.
       # `|| true`: đối chiếu hỏng không được phép làm hỏng lượt render đã xong.
+      # DỌN BẢN GHI CỦA KÊNH ĐÃ NGHỈ Ở CẢ HAI KHO.
+      # Anh gửi ảnh ô xổ "Tất cả kênh (2088)" vẫn liệt kê đủ 50 kênh cũ kèm số đếm, dù
+      # `render_channels` bên Firestore chỉ còn 18 kênh mới. Vì ô xổ và số đếm đọc bảng
+      # `render_job` bên **D1** — một kho khác. Chính mã worker đã ghi: *"hai kho dữ liệu song
+      # song thì lệnh dọn phải đụng cả hai"*, và tôi đã dọn một kho rồi báo xong.
+      # Danh sách giữ lại vẫn đọc từ `channels.yaml`, không chép tay.
+      - name: Dọn bản ghi kênh đã nghỉ (Firestore + D1)
+        if: matrix.luong == 1
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          CHANNELS_YAML: ${{ github.workspace }}/_autopublisher/config/channels.yaml
+        run: cd render-pipeline && python don_sach.py --that --owner "$OWNER_UID" || true
+
       - name: Đối chiếu số kho với Drive (số thật, không đếm bản ghi)
         # CHỈ LUỒNG 1. Bước này đi hết mọi kho Drive; chạy ở cả 18 luồng song song là quét
         # Drive 18 lượt cho cùng một kết quả — vừa phí vừa dễ chạm trần API.

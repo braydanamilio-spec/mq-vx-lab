@@ -288,7 +288,22 @@ SACH = "every surface blank and unmarked, wordless scene"
 # Nay sàn hạ về 0,26: dưới mức ấy mới thật sự là ảnh chụp (dải đo được của ảnh chụp là 0,13-0,20).
 # Cổng chỉ còn làm một việc: chặn ảnh chụp lọt vào, không phán xét bố cục.
 SAN_PHANG = 0.26
-NGUONG_LECH = 0.40   # nới rộng: xem chú thích trên
+# NGƯỠNG LỆCH ±0,35 QUANH MỐC — và ghi lại vì sao KHÔNG siết chặt hơn.  (1/9/2026)
+#
+# Tôi đã siết xuống ±0,20 để hai cổng khớp nhau về toán học (±X quanh mốc cho biên độ 2X, mà
+# `kiem_hinh` đòi biên độ ≤ 0,40). Lập luận ấy đúng, nhưng NHÌN ẢNH THẬT thì kết luận đảo lại.
+#
+# Soi bốn ảnh của tập `smallest` (độ phẳng 0.36 · 0.65 · 0.73 · 0.80): **cả bốn cùng một thế
+# giới** — cùng nét mực dày, cùng người que đầu tròn, cùng bảng màu. Ảnh 0,36 khác mỗi chỗ có
+# ĐỔ BÓNG MỀM trên chủ thể. `do_phang` đo độ phẳng, nên nó chấm thấp cho ảnh có bóng, không
+# phải cho ảnh lạc phong cách. Vẽ lại ba lần đều ra 0,36 — không phải may rủi.
+#
+# Đây là lần THỨ HAI thước này đánh lừa (§12.3 là lần đầu, khi nó gắn cờ 6/11 ảnh cartoon đúng
+# chất). Siết ±0,20 chỉ tạo ra ba lượt vẽ lại tốn hạn mức cho mỗi tập, đổi lấy không gì cả.
+#
+# Việc thước NÀY làm được là bắt ảnh THẬT SỰ ngả ảnh chụp — và đó là `SAN_PHANG` (sàn tuyệt
+# đối), không phải phép so tương đối. Giữ ±0,35 để chặn lệch lớn, đừng siết hơn.
+NGUONG_LECH = 0.35
 
 
 def do_phang(tep: str):
@@ -364,7 +379,18 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
     phan = [
         ((gu or GU) + ", " + _sac_thai(ma)).rstrip(", ") + ".",   # 1. phong cách + sắc thái riêng
         _khoa(ma, ve).rstrip(),    # 2. khoá nhân vật (rỗng nếu cảnh không có người)
-        ve + mt + ",",             # 3. chính cảnh của nhịp này
+        # 3. chính cảnh của nhịp này — CÓ NEO PHONG CÁCH DÁN NGAY TRƯỚC CHỦ THỂ.
+        #
+        # Đặt phong cách ở đầu câu (mục 1) là chưa đủ với những chủ thể tự nó gợi ẢNH CHỤP:
+        # `smallest` tả "a virus magnified far beyond life size" — đó là ngôn ngữ ảnh hiển vi,
+        # và mô hình vẽ ra đúng một ảnh hiển vi. Đo được: nhịp ấy có độ phẳng 0,37 trong khi cả
+        # tập ở 0,64–0,81, và VẼ LẠI cũng ra 0,37 — tức không phải may rủi, mà là chính prompt
+        # kéo nó đi.
+        #
+        # FLUX không có negative prompt (§12.1), nên không thể dặn "đừng vẽ ảnh chụp" — mọi danh
+        # từ viết ra đều là thứ SẼ xuất hiện. Cách còn lại là khẳng định dương, và dán ngay cạnh
+        # chủ thể chứ không để cách xa mười lăm chữ ở đầu câu.
+        "a flat cartoon drawing of " + ve + mt + ",",
         khung + ",",               # 4. chừa chỗ cho chữ
         _luat(ve, doc) + ",",      # 5. luật sàn
         GU_USA + ",",              # 6. neo bối cảnh Mỹ
@@ -417,7 +443,9 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
     # thua".
     # FLUX bịa chữ hay không phụ thuộc rất nhiều vào seed. Đổi seed rồi vẽ lại là gần như chắc
     # chắn thoát — và rẻ, vì ảnh chỉ tốn 58 neuron. Ba lần vẫn dính thì mới chịu.
-    for lan in range(3):
+    # BỐN LẦN THỬ, nhận ở lần thứ tư. `range(3)` + `lan < 3` là hụt một: điều kiện luôn đúng
+    # nên ảnh lệch bị xoá ở CẢ lần cuối, và nhịp ấy mất hẳn cảnh — tệ hơn một ảnh hơi khác chất.
+    for lan in range(4):
         seed = (hat0 + lan * 104729) % 4294967295
 
         def _thu(kk):
@@ -438,10 +466,15 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
         _xau = _d is not None and (_d < SAN_PHANG or
                                    (moc is not None and abs(_d - moc) > NGUONG_LECH))
         if _xau:
-            if lan < 2:
+            if lan < 3:
                 os.remove(dest)
                 continue          # -> vẽ lại
-            # lần cuối thì nhận: nền vẽ bằng code còn lệch xa hơn một ảnh hơi khác chất
+            # Lần cuối thì NHẬN — nền vẽ bằng code còn lệch xa hơn một ảnh hơi khác chất.
+            # Nhưng phải NÓI RA. Bản trước nhận trong im lặng, nên một tập có ảnh lạc phong cách
+            # trông y hệt một tập sạch, và chỉ lộ ra ở cổng chấm sau khi đã dựng xong cả video.
+            # Cổng biết mà không nói thì cũng như không có cổng.
+            print(f"     ⚠ nhịp {i}: chất vẽ {_d:.2f} lệch khỏi mốc {moc if moc is None else round(moc,2)}"
+                  f" sau 3 lần vẽ lại — nhận để không mất cảnh")
 
         # CỔNG CHỮ — thứ video tham chiếu KHÔNG có, và đó là lý do một khung của họ hiện nguyên
         # dòng `SPLIT FRAME` (lời dặn cho máy vẽ) giữa màn hình. Chữ do mô hình vẽ ra luôn sai
@@ -472,7 +505,9 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
     """
     gu = GU_KENH.get(KENH_GU.get(ma, "que"), GU)
     n = 0
-    moc = None      # mốc chất ảnh, do ảnh ĐẦU TIÊN vẽ được của tập đặt ra
+    moc = None      # mốc chất ảnh của tập — đặt bằng TRUNG VỊ ba ảnh đầu (xem dưới)
+    _mau = []       # ba số đo đầu, để lấy trung vị
+    _dau = []       # (chỉ số nhịp, prompt) của những ảnh vẽ TRƯỚC khi có mốc
     for i, x in enumerate(nhip):
         ve = x.get("ve") or ""
         if not ve:
@@ -482,11 +517,20 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
             x["nenAnh"] = rel
             n += 1
             duong = os.path.join(THU, os.path.basename(rel))
+            # MỐC = TRUNG VỊ BA ẢNH ĐẦU, không phải ảnh đầu tiên.
+            # CLAUDE.md §12.4 đã ghi cái bẫy này: *cổng tự chuẩn hoá theo mẫu đầu tiên thì nhất quán
+            # quanh một mốc SAI vẫn sai* — nếu ảnh đầu lỡ lạc chất thì cả tập bị khoá vào chất lạc ấy,
+            # và cổng báo xanh vì mọi ảnh đều "nhất quán". Trung vị ba mẫu thì một mẫu lạc không kéo
+            # được mốc đi. Vẫn có sàn tuyệt đối `SAN_PHANG` chặn trước, đúng thứ tự luật ấy đòi.
             if moc is None:
+                _dau.append((i, ve))
                 d = do_phang(duong)
                 if d is not None:
-                    moc = d
-                    print(f"     mốc chất ảnh của tập: {moc:.2f} (±{NGUONG_LECH})")
+                    _mau.append(d)
+                    if len(_mau) >= 3:
+                        moc = sorted(_mau)[len(_mau) // 2]
+                        print(f"     mốc chất ảnh của tập: {moc:.2f} "
+                              f"(trung vị {[round(x, 2) for x in _mau]}, ±{NGUONG_LECH})")
             # CHỈNH MÀU sau khi cổng đã nhận — để cổng đo đúng thứ mô hình trả về, không đo
             # thứ mình vừa sửa. Hiệu quả nhẹ (đã đo: gần như không thấy trên ảnh tối), nhưng
             # rẻ (36 ms) và cộng dồn với vignette + grain thì đủ để cả tập có chung một chất.
@@ -496,4 +540,22 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
                     _tm(duong, mau_chu, mau_nen)
                 except Exception:
                     pass
+    # ── SOI LẠI BA ẢNH ĐẦU  (1/9/2026) ──────────────────────────────────────────────────────
+    # Lỗ hổng cấu trúc, không phải chuyện ngưỡng: ba ảnh đầu được vẽ TRƯỚC khi có mốc, nên
+    # KHÔNG ảnh nào trong ba ảnh ấy bị cổng nhất quán kiểm. Đo trên tập `smallest`: chất vẽ
+    # [0.37, 0.65, 0.74, 0.81] — ảnh lạc chính là ảnh ĐẦU TIÊN, thứ duy nhất không ai soi.
+    # Cổng chỉ canh được từ ảnh thứ tư trở đi thì nó bỏ trống đúng chỗ dễ lạc nhất.
+    # Có mốc rồi thì quay lại soi chúng, và vẽ lại ảnh nào ngoài ngưỡng.
+    if moc is not None and _dau:
+        for i, ve in _dau:
+            p = nhip[i].get("nenAnh")
+            if not p:
+                continue
+            d = do_phang(os.path.join(THU, os.path.basename(p)))
+            if d is None or abs(d - moc) <= NGUONG_LECH:
+                continue
+            print(f"     ↻ nhịp {i}: chất vẽ {d:.2f} lệch khỏi mốc {moc:.2f} — vẽ lại")
+            rel2 = sinh(ma, idx, i, ve, keys, nhip[i].get("tam_trang", ""), gu, doc, moc)
+            if rel2:
+                nhip[i]["nenAnh"] = rel2
     return n

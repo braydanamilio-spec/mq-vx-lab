@@ -95,12 +95,20 @@ def truoc(props: dict) -> tuple:
                          for n in co if os.path.exists(os.path.join(pub, n["nenAnh"])))
              if x is not None]
         if len(v) >= 2:
+            # BIÊN ĐỘ 0,60, không phải 0,40 — và ghi lại vì sao NỚI chứ không siết.
+            # Soi tận mắt bốn ảnh của tập `smallest` (0.36 · 0.65 · 0.73 · 0.80): cả bốn cùng
+            # một thế giới, cùng nét mực, cùng bảng màu. Ảnh điểm thấp khác mỗi chỗ có ĐỔ BÓNG
+            # MỀM. `do_phang` đo ĐỘ PHẲNG, nên nó phạt cái bóng chứ không phạt lệch phong cách.
+            # Ở 0,40 nó chấm trượt một tập hoàn toàn nhất quán — tố oan, đúng lần thứ hai của
+            # cùng một thước (§12.3 là lần đầu).
+            # Thứ thước này thật sự bắt được là ảnh NGẢ ẢNH CHỤP, và việc ấy do sàn tuyệt đối
+            # `SAN_PHANG` làm. Phép so tương đối chỉ nên chặn lệch LỚN.
             lech = max(v) - min(v)
-            if lech <= 0.40:
+            if lech <= 0.60:
                 diem += 15
             else:
-                bao.append(f"chất vẽ lệch {lech:.2f} trong một tập (cho phép 0,40)")
-                diem += max(0, int(15 - (lech - 0.40) * 30))
+                bao.append(f"chất vẽ lệch {lech:.2f} trong một tập (cho phép 0,60)")
+                diem += max(0, int(15 - (lech - 0.60) * 30))
         else:
             diem += 15
     except Exception:
