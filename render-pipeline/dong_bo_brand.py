@@ -104,6 +104,29 @@ def main() -> int:
         return 1
     print("  ✅ mọi kênh đủ avatar · cover · fb_cover")
 
+    # ── DỌN ẢNH MỒ CÔI  (1/9/2026) ──────────────────────────────────────────────────────────
+    # Anh hỏi brand kit có tốn hạn mức không. Đo: thư mục 39 MB / 631 tệp, trong đó **505 tệp
+    # (29,5 MB) thuộc kênh đã nghỉ và KHÔNG ai trỏ tới** — `_ART_V4` chỉ nhắc 126 tệp của 18
+    # kênh, `index.html` nhắc 0 tệp trong số 505 kia. Chúng vẫn được deploy và vẫn nằm trong
+    # mỗi lượt build.
+    #
+    # Không nguy hiểm (Hosting free có 10 GB, và ảnh brand không đụng Firestore lần nào), nhưng
+    # là rác chỉ tăng: mỗi thế hệ kênh mới lại để lại một lớp. Dọn ngay ở đây, nơi vừa biết
+    # chính xác tệp nào còn cần.
+    #
+    # An toàn: mọi tệp đều đang được git theo dõi, nên xoá khỏi thư mục vẫn lấy lại được từ
+    # lịch sử. Đây là dọn thư mục làm việc, không phải xoá vĩnh viễn.
+    can = {os.path.basename(u.split("?")[0]) for v in art.values() for u in v.values()}
+    mo_coi = [f for f in sorted(os.listdir(DICH))
+              if f.lower().endswith((".png", ".jpg", ".jpeg")) and f not in can]
+    if mo_coi:
+        bo = sum(os.path.getsize(os.path.join(DICH, f)) for f in mo_coi)
+        for f in mo_coi:
+            os.remove(os.path.join(DICH, f))
+        print(f"  🧹 dọn {len(mo_coi)} ảnh mồ côi ({bo / 1048576:.1f} MB) — không tệp nào được trỏ tới")
+    else:
+        print("  ✅ không có ảnh mồ côi")
+
     s = io.open(HTML, encoding="utf-8").read()
     moi = "    const _ART_V4 = " + json.dumps(art, ensure_ascii=False) + ";"
     # Kiểm bằng CÓ KHỚP MẪU KHÔNG, không bằng "nội dung có đổi không": chạy lại khi chưa có gì

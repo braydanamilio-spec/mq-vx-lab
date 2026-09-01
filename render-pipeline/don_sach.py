@@ -249,12 +249,23 @@ def don(that: bool = False, owner: str = "") -> int:
             continue
         db.collection("render_channels").document(c["_id"]).delete()
         n_k += 1
-    for d in db.collection("render_jobs").where("owner", "==", owner).stream():
+    # ── XOÁ CÓ TRẦN MỖI LƯỢT  (1/9/2026) ────────────────────────────────────────────────────
+    # Vòng này phải ĐỌC để biết xoá cái nào, nên nó là chỗ tốn hạn mức còn lại trong đường chạy
+    # hằng ngày. Không giới hạn thì một lượt đọc hết ~2.000 bản ghi — đúng thứ đã làm cạn
+    # Firestore hôm nay (xem buglog 7cs).
+    #
+    # Đặt trần 400/lượt: bước này chạy MỖI NGÀY trong luồng render, nên kho tồn sẽ cạn dần sau
+    # vài ngày mà không lượt nào bùng. Dọn chậm mà đều tốt hơn dọn hết một lần rồi làm nghẽn
+    # cả hệ trong ngày ấy — nhất là khi thứ người dùng NHÌN (D1) đã sạch ngay từ đầu.
+    TRAN = 400
+    for d in (db.collection("render_jobs").where("owner", "==", owner).limit(TRAN).stream()):
         j = d.to_dict() or {}
         if _ten(j) in giu or any(x in _ten(j) for x in CAM_DUNG):
             continue
         d.reference.delete()
         n_j += 1
+    if n_j >= TRAN:
+        print(f"   ℹ đã xoá {n_j} bản ghi (trần {TRAN}/lượt) — phần còn lại dọn tiếp ở lượt sau")
 
     # Sổ đếm: đặt lại theo số THẬT còn lại, không để nguyên con số cũ.
     # Đây chính là chỗ đã sinh ra con số "2088" đứng lì trên dashboard sau khi anh dọn kho —

@@ -7509,3 +7509,42 @@ giá** lẫn cơ chế `hot_db` có sẵn (tự tắt sau 20 lần hỏng, ba ch
 
 **Luật:** trước khi viết một client mới cho dịch vụ repo đã gọi, đọc client cũ. Chú thích trong
 đó là những lần đã trả giá — bỏ qua chúng là mua lại cùng một bài học.
+
+### 7cu — Brand kit KHÔNG đụng hạn mức Firestore, nhưng 79% là rác đang được deploy (1/9)
+
+Anh hỏi brand kit lưu trên web có tốn hạn mức Firebase/GitHub không. Đo:
+
+| | |
+|---|---|
+| đường phục vụ | tệp tĩnh `/brand/X.png` — **0** lời gọi Firebase Storage, **0** lượt đọc Firestore |
+| hạn mức liên quan | **Firebase Hosting** (free: 10 GB lưu trữ · 360 MB truyền/ngày) |
+| trước khi dọn | 39 MB · 631 tệp = 0,4% dung lượng |
+| trong đó là rác | **505 tệp · 29,5 MB (79%)** của kênh đã nghỉ, `_ART_V4` và `index.html` nhắc **0 lần** |
+| sau khi dọn | **8,3 MB · 126 tệp** |
+| ảnh hưởng render 24/7 | **không** — luồng render không đụng thư mục brand |
+
+Nên câu trả lời là: an toàn, và hạn mức vừa cạn hôm nay hoàn toàn không liên quan tới nó.
+
+Nhưng rác chỉ TĂNG: mỗi thế hệ kênh để lại một lớp, và mỗi lần dựng lại brand kit là thêm ~8 MB
+vào lịch sử git vĩnh viễn. `dong_bo_brand.py` nay tự dọn ảnh mồ côi ngay tại chỗ nó vừa biết
+chính xác tệp nào còn cần — an toàn vì mọi tệp đều đang được git theo dõi.
+
+### 7cv — Ngân sách đọc Firestore của một lượt render, đo cụ thể (1/9)
+
+Sau sự cố cạn hạn mức, đo lại từng script trong luồng render hằng ngày:
+
+| script | lượt đọc Firestore |
+|---|---|
+| `bao_chay.py` | **0** — đi thẳng D1 |
+| `day_kho.py` | ghi hàng đợi, không quét |
+| `don_sach.py` | ~68 (render_channels) + 19 truy vấn đếm + tối đa **400** (vòng xoá có trần) |
+| `kiem_kho.py` | đọc mọi bản ghi `done` — ~2.000 hôm nay, teo dần khi `don_sach` dọn |
+
+Tổng ~2.500 trên hạn mức 50.000/ngày = **5%**.
+
+Vòng xoá của `don_sach` nay có **trần 400/lượt**: bước này chạy mỗi ngày nên kho tồn cạn dần sau
+vài ngày mà không lượt nào bùng. Dọn chậm mà đều tốt hơn dọn hết một lần rồi làm nghẽn cả hệ
+trong ngày ấy — nhất là khi thứ người dùng NHÌN (D1) đã sạch ngay từ lượt đầu.
+
+**Luật:** mỗi bước trong đường chạy tự động phải có **ngân sách đọc biết trước**. Một vòng lặp
+không trần trong việc chạy hằng ngày là một quả bom hẹn giờ theo kích thước dữ liệu.
