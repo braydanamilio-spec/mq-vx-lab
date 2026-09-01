@@ -906,3 +906,35 @@ hệt nhau trong công thức. Hỏi thẳng: *"trục này chấm gì khi n = 0
 Và một luật về báo cáo: **hai phép đo cho hai con số thì phải truy ra vì sao trước khi báo con số
 nào**. Tôi thấy `sinh_tap` nhận một tập 90 điểm trong khi sàn là 95, và suýt bỏ qua nó như một
 chi tiết lạ — chính chi tiết ấy là sợi dây dẫn tới lỗ hổng.
+
+### 13.26 Sáu mẫu một lượt không phân biệt được 90 với 93 — tôi đã đọc xu hướng từ nhiễu
+
+Chấm lại 42 tập của bảy lượt bằng một phép đo nhất quán:
+
+```
+độ lệch chuẩn của một tập        : 4,7 điểm
+sai số chuẩn của một lượt 6 mẫu  : ±1,9
+khoảng tin cậy 95%               : ±3,7
+```
+
+Chênh lệch giữa lượt tốt nhất (93,2) và tệ nhất (89,5) là **3,7 điểm — đúng bằng khoảng tin cậy**.
+Nói cách khác: **cả bảy lượt không phân biệt được với nhau**. Suốt buổi tôi kể một câu chuyện
+"85,9 → 90,3 → 92,8 → 90,2 → 92,5 → 91,2 → 94,3", giải thích từng bước lên xuống bằng một
+nguyên nhân — mà phần lớn các bước ấy là **nhiễu ngẫu nhiên của sáu mẫu**.
+
+**Thứ THẬT SỰ vượt ngưỡng nhiễu là tỉ lệ CẠN VÒNG**, vì nó là biến nhị phân đếm được:
+
+| lượt | thay đổi | cạn vòng |
+|---|---|---|
+| 2 | sửa 2 cổng bắt oan | **1/6** |
+| 5 | hạ cấp 2 cổng | **1/6** |
+| 4 | thêm 2 cổng nghề, biểu thức hẹp | **6/6** |
+| 7 | sàn 95 | 5/6 |
+
+Đây mới là tín hiệu dùng được: hai bản sửa cổng có tác dụng rõ ràng, và siết cổng có hại rõ ràng.
+Điểm trung bình thì không nói được gì ở cỡ mẫu này.
+
+**Luật:** trước khi giải thích một thay đổi giữa hai lần đo, tính **sai số chuẩn của phép đo**.
+Nếu chênh lệch nhỏ hơn khoảng tin cậy thì không có gì để giải thích — và mọi câu giải thích viết
+ra lúc ấy đều là chuyện bịa nghe hợp lý. Với cỡ mẫu nhỏ và chi phí mỗi mẫu cao, hãy đo bằng
+**biến đếm được** (đạt/không đạt, cạn/không cạn) thay vì bằng trung bình.
