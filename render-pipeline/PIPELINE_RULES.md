@@ -7639,3 +7639,41 @@ mức — cho một thứ máy sửa được, y như chuyện thiếu dấu ch�
 `don()` nay tự chuẩn hoá tên viết tắt về tên đầy đủ, **và chỉ khi khớp DUY NHẤT**: `"Joe"` ra
 `"Grandpa Joe"` được, nhưng nếu kênh có hai vai cùng chứa `"Joe"` thì để nguyên cho thước chặn.
 Đoán bừa còn tệ hơn chặn.
+
+### 7cw — Chuỗi nhân quả đầy đủ: công cụ dọn của tôi làm 17 lượt render không lên được Drive (1/9)
+
+Anh hỏi *"rốt cuộc có render được không, có lưu lên Drive không, sao cứ cạn quota."* Truy hết:
+
+```
+don_sach.kiem_ke duyệt ~2.000 tài liệu để ĐẾM  (7cs)
+   -> tôi bấm dọn 2 lượt  = ~16.000 lượt đọc
+   -> Firestore cạn hạn mức đọc lúc ~15:2x
+   -> đúng 15:30 bước "Đẩy video vào hàng đợi" của luồng render chạy
+   -> storage.pool_accounts() đọc Firestore -> RỖNG
+   -> enqueue.py: "Chưa kết nối tài khoản kho nào"      <- SAI, có ~70 kho đã kết nối
+   -> ⚠️ 0/2 video vào hàng đợi đăng
+```
+
+**Render thành công (17/18 luồng, 577 MB artifact) nhưng không video nào lên Drive** — và nguyên
+nhân không nằm ở đường render, mà ở một công cụ quản trị chạy song song.
+
+**Ba điều rút ra:**
+
+1. *Hạn mức là tài nguyên DÙNG CHUNG giữa các hệ.* Tôi tối ưu công cụ dọn như một việc riêng, mà
+   nó tiêu đúng cái hạn mức đường render đang cần. Trước khi chạy bất cứ thứ gì quét dữ liệu, hỏi
+   *"lúc này có gì khác đang cần hạn mức ấy không?"*
+2. *Thông báo lỗi phải phân biệt "không có" với "không đọc được".* `enqueue.py` nói "chưa kết nối
+   tài khoản kho nào" trong khi sự thật là "không đọc được danh sách". Hai câu ấy dẫn tới hai
+   hành động hoàn toàn khác nhau, và câu sai làm mất nửa giờ đi kiểm cấu hình.
+3. *Cảnh báo bị in ra như thể là lỗi.* Dòng đầu của thông báo là một `DeprecationWarning` về
+   `.where()` truyền vị trí — vô hại — còn lỗi thật nằm ở dòng sau. Cùng cái bẫy đã ghi ở
+   CLAUDE.md khi bộ in lỗi hiện cảnh báo phông chữ thay vì lỗi thật.
+
+**Lớp cứu cuối không hoạt động, và cần ghi lại vì sao:** `storage._kho_tu_kv` đọc danh sách kho
+từ KV của Worker, không đụng Firestore — đúng thứ sinh ra cho tình huống này. Nhưng khoá KV
+`conn:{owner}__{tên}__drive` chỉ được ghi **lúc kết nối tài khoản**, mà các kho của anh kết nối
+TRƯỚC khi cơ chế KV ra đời (31/8). Nên KV rỗng, và đường sống cuối cùng im lặng vô dụng.
+
+Chưa sửa được ở đợt này: cần một endpoint Worker để sao danh sách kết nối từ Firestore sang KV
+(D1 `nho_ghi` ghi bảng khác, không ghi KV). **Ghi ra đây để không quên** — chừng nào chưa có,
+mỗi lần Firestore nghẽn là một lần render xong mà không đẩy được.
