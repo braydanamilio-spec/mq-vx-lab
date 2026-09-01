@@ -201,6 +201,16 @@ def mot_kenh_dai(k: dict, so_tap: int) -> str:
 
     th = os.path.join(GOC, "out", f"v5L_{slug}.jpg")
     lam_thumb(out, cau[0][0] if cau else ten, ten, k["mau"], th)
+    # CHỮ ĐĂNG NGAY TRONG PIPELINE, không để riêng workflow gọi. 1/9 — `v5L_techsupport.mp4`
+    # dựng xong mà không có `.tai.json`, nên `day_kho.py` bỏ qua nó: bản dài — chỗ bật quảng
+    # cáo giữa video, tức nguồn tiền chính — không bao giờ tới được khâu đăng.
+    # Workflow CÓ gọi `sieu_du_lieu --long`, nhưng ai chạy tay pipeline thì không, và bản dài
+    # ấy lặng lẽ thành video không đăng được. Bước sinh chữ phải dính liền bước dựng.
+    try:
+        import sieu_du_lieu as _SD
+        _SD.mot_video(k, so_tap, True, lam_anh=False)
+    except Exception as _e:
+        print(f"   ⚠️ chữ đăng bản dài lỗi: {str(_e)[:90]}")
     _am = chuan(out)
     print(f"   ✅ {ten}: {os.path.basename(out)} "
           f"({os.path.getsize(out)/1e6:.0f} MB · {dur/60:.1f} phút · {len(luot)} cảnh"

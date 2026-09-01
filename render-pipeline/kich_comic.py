@@ -478,6 +478,14 @@ def mot_kenh(k: dict, vong: int) -> str:
         print(f"   🖼  thumbnail: {os.path.basename(th)}")
     # YouTube/FB/IG chuẩn hoá về −14 LUFS và chỉ HẠ chứ không nâng — video nhỏ hơn mốc thì
     # phát ra yếu hơn mọi thứ quanh nó trong feed. Đánh bóng ở bước cuối, nuốt mọi lỗi.
+    # Sinh chữ đăng NGAY TRONG pipeline. Workflow có gọi `sieu_du_lieu` riêng, nhưng ai chạy
+    # tay thì không — và video ra đời không có tiêu đề thì `day_kho.py` bỏ qua, tức dựng xong
+    # để đấy. Bước sinh chữ phải dính liền bước dựng, đừng để nó là việc của người gọi.
+    try:
+        import sieu_du_lieu as _SD
+        _SD.mot_video(k, vong, False, lam_anh=False)
+    except Exception as _e:
+        print(f"   ⚠️ chữ đăng lỗi: {str(_e)[:90]}")
     _am = chuan(out)
     print(f"   ✅ {ten}: {os.path.basename(out)}  "
           f"({os.path.getsize(out) / 1e6:.1f} MB · {dur:.0f}s · {len(luot)} panel"

@@ -169,6 +169,7 @@ jobs:
           python kiem_bien.py
           python kiem_kieu.py
           python kiem_song_song.py
+          python kiem_giao.py || true   # video nào thiếu chữ đăng: cảnh báo
           python kiem_az.py || true   # A-Z: cảnh báo ở workflow không có bước đẩy kho
 
       - name: Luồng ${{ matrix.luong }} — kênh phụ trách

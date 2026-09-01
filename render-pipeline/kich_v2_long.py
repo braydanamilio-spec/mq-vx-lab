@@ -125,6 +125,16 @@ def ghep(ten_kenh: str, gen2: bool, so_lat: int) -> str:
     if r.returncode or not os.path.exists(out):
         print(f"   ❌ render hỏng: {(r.stderr or r.stdout or '')[-200:]}")
         return ""
+    # Bản dài kênh phân tích cũng phải có chữ đăng — cùng lý do như bản dài comic.
+    try:
+        import sieu_du_lieu as _SD
+        import re as _re
+        _sl = _re.sub(r"[^a-z0-9]", "", ten_kenh.lower())
+        _SD.mot_video_du_lieu({"ten": ten_kenh, "de": _sl,
+                               "handle": "@" + _sl, "nhan": "", "nguon": ""},
+                              _sl, dai=True)
+    except Exception as _e:
+        print(f"   ⚠️ chữ đăng bản dài lỗi: {str(_e)[:90]}")
     _am = chuan(out)
     print(f"   ✅ {ten_kenh}: {os.path.basename(out)} · {moc/60:.1f} phút · {len(canh)} cảnh"
           f"{' · ' + _am if _am else ''}")
