@@ -179,11 +179,17 @@ _BO_QUA = {"static", "shot", "level", "wide", "kitchen", "living", "backyard", "
 # chú trong `cham`). Trần 240 = ~40 từ, gấp rưỡi trần hook 30 từ, đủ rộng để không bắt oan.
 VAN_KE_CHIA = {"hook": 240, "setup": 240, "escalate": 200, "payoff": 200}
 
-DIEM_SAN = 90              # sàn thang 100 điểm (`cham100.py`). Dưới sàn thì bắt AI viết lại chứ
-                           # không xuất. Đặt 90 vì đo được: 30 tập đã chạy nằm ở 67–87 — tức
-                           # "sạch thước cũ" và "hay" là hai chuyện khác nhau, cách nhau đúng
-                           # khoảng ấy.
-VONG_VIET = 8              # số lần cho AI viết lại một tập. Dây chuyền để 3 — hợp cho việc trích
+DIEM_SAN = 95              # sàn thang 100 điểm (`cham100.py`). Dưới sàn thì bắt AI viết lại.
+                           # 2/9 — NÂNG 90 -> 95. Bằng chứng: đo 30 tập AI sinh thật, **10/30
+                           # rơi đúng vào 90**, tức vòng lặp dừng NGAY khi chạm sàn. Sàn không
+                           # phải một mức tối thiểu — nó CHÍNH LÀ chất lượng đầu ra, vì không
+                           # có gì thưởng cho việc viết hay hơn mức đủ. Muốn 95 thì đặt 95.
+VONG_VIET = 12             # 2/9 — 8 -> 12. Sàn nâng lên 95 thì cần thêm vòng, và vòng nay RẺ
+                           # hơn: hai cổng nuốt ngân sách nhiều nhất đã hạ cấp (một sang `don()`
+                           # tự sửa, một sang trục chấm), nên mỗi vòng đi vào lỗi thật.
+                           # Và cạn vòng không còn tốn kém như trước vì hệ trả bản TỐT NHẤT đã
+                           # đi qua, không trả bản cuối.
+                           # số lần cho AI viết lại một tập. Dây chuyền để 3 — hợp cho việc trích
                            # dữ liệu, quá ít cho việc sáng tác: kịch bản hỏng nhịp thường tới lần
                            # thứ tư, thứ năm mới ra được bản dùng được.
 
@@ -4034,7 +4040,13 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
                + ", ".join(sorted(set(cam_tu))[:24]))
     sch = SCHEMA.replace("ROOM_LIST", phong or " | ".join(ho_so(kenh)["phong"]))
     goc = f'Episode idea: "{y_tuong}".\n\n{sch}{ne}'
+    # Giữ bản TỐT NHẤT từng thấy, không phải bản CUỐI.
+    # 2/9 — Bản trước cạn vòng thì trả `cuoi` = lần viết gần nhất. Nhưng chất lượng không tăng
+    # đều theo vòng: đo được lượt viết thứ ba đạt 94 rồi lượt thứ tám tụt còn 81, và hệ trả về
+    # 81. Vòng viết lại là một cuộc TÌM KIẾM, không phải một cuộc mài giũa — nên phải nhớ điểm
+    # cao nhất đã đi qua, nếu không thì tám vòng có thể tệ hơn ba vòng.
     fb, cuoi, _so_biet = "", None, []
+    _tot = {"diem": -1, "tap": None}
     # Số vòng phải đủ để vừa viết lại kịch bản vừa duyệt hồ key. Trước đây dừng ở MAX_TRIES nên
     # gặp năm key hỏng liên tiếp là bỏ cuộc trong khi hồ còn 290 key chưa thử.
     for lan in range(1, VONG_VIET + len(ho) + 1):
@@ -4101,9 +4113,11 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
                                            co_che_giao=(_lich(kenh, so)["co_che"] if so >= 0 else ""))
                 _yeu = [f"{k} = {v}/10" + (f" ({_ghi[k[0]]})" if k[0] in _ghi else "")
                         for k, v in _diem.items() if v < 8]
-                if sum(_diem.values()) < DIEM_SAN:
-                    loi.append(f"đạt {sum(_diem.values())}/100, dưới sàn {DIEM_SAN} — yếu ở: "
-                               + "; ".join(_yeu))
+                _tong = sum(_diem.values())
+                if _tong > _tot["diem"]:
+                    _tot = {"diem": _tong, "tap": json.loads(json.dumps(d))}
+                if _tong < DIEM_SAN:
+                    loi.append(f"đạt {_tong}/100, dưới sàn {DIEM_SAN} — yếu ở: " + "; ".join(_yeu))
             except Exception:
                 pass                      # thước phụ hỏng thì không được chặn dây chuyền chính
         cuoi = d
@@ -4119,6 +4133,9 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
         d["_bien_tap"] = {"nhan_o_vong": lan, "so_vong_tu_choi": len(_so_biet),
                           "da_tu_choi": _so_biet}
         return d
+    if _tot["tap"] is not None and _tot["diem"] > 0:
+        cuoi = _tot["tap"]
+        print(f"   ⤒ cạn vòng — trả bản TỐT NHẤT đã đi qua ({_tot['diem']}/100), không phải bản cuối")
     if cuoi is not None:
         cuoi["_con_loi"] = cham(cuoi, kenh, giay, so)
         cuoi["_bien_tap"] = {"nhan_o_vong": None, "so_vong_tu_choi": len(_so_biet),

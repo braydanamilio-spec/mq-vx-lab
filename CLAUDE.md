@@ -856,3 +856,32 @@ don()      máy sửa được       -> sửa, không báo
 cham100()  làm kém đi         -> trừ điểm, cạnh tranh với các trục khác
 cham()     làm HỎNG sản phẩm  -> chặn, tiêu một vòng gọi AI
 ```
+
+### 13.24 SÀN không phải mức tối thiểu — nó CHÍNH LÀ chất lượng đầu ra
+
+Đo phân bố điểm của 30 tập AI sinh thật qua sáu lượt:
+
+```
+81:2  86:1  87:2  88:1  89:1  90:10  92:3  94:2  95:1  97:2  98:5
+                              ^^^^^ đúng bằng sàn
+```
+
+**10/30 rơi CHÍNH XÁC vào 90** — sàn đang đặt. Không phải trùng hợp: `sinh_tap` dừng vòng lặp
+ngay khi `cham100 >= DIEM_SAN`, nên **không có gì thưởng cho việc viết hay hơn mức đủ**. Hệ tối
+ưu đúng thứ được bảo tối ưu, và dừng ở đó.
+
+Suốt buổi tôi đi chỉnh cổng, nới biểu thức, hạ cấp cổng — tất cả đều đúng và cần, nhưng **cái
+đòn bẩy trực tiếp nhất lại là một con số tôi tự đặt và không xét lại**. Muốn 95 thì đặt 95.
+
+Hai thứ phải đi kèm khi nâng sàn:
+
+1. **Thêm vòng viết lại** (8 → 12) — sàn cao hơn cần nhiều lượt thử hơn.
+2. **Trả bản TỐT NHẤT, không phải bản CUỐI.** Đây mới là chỗ hỏng thật sự: bản cũ cạn vòng thì
+   trả lần viết gần nhất, mà chất lượng **không tăng đều theo vòng** — đo được lượt thứ ba đạt
+   94 rồi lượt thứ tám tụt còn 81, và hệ trả về 81. Vòng viết lại là một cuộc **tìm kiếm**,
+   không phải một cuộc mài giũa; phải nhớ điểm cao nhất đã đi qua, nếu không thì tám vòng có
+   thể tệ hơn ba vòng.
+
+**Luật:** khi một hệ có ngưỡng chấp nhận, đi đo **phân bố kết quả** — nếu nó dồn cục ngay trên
+ngưỡng thì ngưỡng đang là trần, không phải sàn. Và mọi vòng lặp "thử tới khi đạt" phải nhớ bản
+tốt nhất, vì lần thử cuối không có lý do gì để là lần thử tốt nhất.
