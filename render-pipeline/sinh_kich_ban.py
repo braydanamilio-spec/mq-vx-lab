@@ -335,11 +335,25 @@ def sinh_mot(k: dict, kho: dict, keys, khung: str, n_luot: int, nguong: float = 
     if trung / max(1, len(loi)) > nguong:
         return {"_loai": True, "ty_le": trung / max(1, len(loi))}
 
+    # ── CỔNG CÂU MỞ — 1/9/2026 ────────────────────────────────────────────────────────
+    # Cổng khuôn ở trên chuẩn hoá CẢ CÂU rồi so, nên "Well, at least you're not stealing
+    # licenses" và "Well, at least the calculator's fine" là hai khuôn khác nhau — cả hai đều
+    # lọt. Kết quả trên 10 kênh mới: 6 câu mở bằng "I forgive you / I absolve you", 4 câu chốt
+    # mở bằng "Well, at least…". Người xem không đọc khuôn ngữ pháp; họ nghe BA TỪ ĐẦU, và ba
+    # từ đầu giống nhau thì mọi tập nghe như một.
+    # Nên đếm riêng CỤM MỞ ba từ. Ngưỡng chặt hơn cổng khuôn (0.25 so với 0.34) vì cụm mở nằm
+    # ở vị trí mắt và tai bắt trước nhất.
+    mo_kho = kho.setdefault("mo_dau", {})
+    mo_moi = [" ".join(_chuan_hoa(c[0]).split()[:3]) for c in loi]
+    trung_mo = sum(1 for m in mo_moi if m and mo_kho.get(m, 0) >= 2)
+    if trung_mo / max(1, len(loi)) > 0.25:
+        return {"_loai": True, "ty_le": trung_mo / max(1, len(loi)), "_mo": True}
+
     return {
         "loi": loi, "khung": khung, "noi": str(d.get("noi", ""))[:70],
         "hook": " ".join(str(d.get("hook", "")).split())[:60].upper(),
         "tinh_huong": str(d.get("tinh_huong", ""))[:70],
-        "khuon": khuon_moi,
+        "khuon": khuon_moi, "mo_dau": mo_moi,
         "ma": hashlib.md5(("|".join(c[0] for c in loi)).encode()).hexdigest()[:12],
     }
 
@@ -406,6 +420,11 @@ def main() -> int:
             kho["tinh_huong"][de].append(got["tinh_huong"])
             for kh in got["khuon"]:
                 kho["khuon"][kh] = kho["khuon"].get(kh, 0) + 1
+            # Ghi sổ CỤM MỞ song song với sổ khuôn — không ghi thì cổng câu mở luôn thấy kho
+            # rỗng và không bao giờ chặn ai.
+            for mo in (m.get("mo_dau") or []):
+                if mo:
+                    kho.setdefault("mo_dau", {})[mo] = kho.setdefault("mo_dau", {}).get(mo, 0) + 1
             tong_moi += 1
             print(f"   ✅ {got['khung']:9s} · {len(got['loi'])} lượt · {got['tinh_huong']}", flush=True)
             _luu_kho(kho)          # lưu sau MỖI mẩu: đứt giữa chừng vẫn giữ được phần đã sinh
