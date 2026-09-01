@@ -339,6 +339,58 @@ NHAC_DAI_THAY = {"music/mind_pad32.mp3": "music/km_ossuary_air.mp3",
                  "music/broke_pad_tram.mp3": "music/km_interloper.mp3"}
 
 
+# ══ ÂM LƯỢNG NHẠC NỀN ═══════════════════════════════════════════════════════════════════════
+# Anh: *"có nên dùng nhạc nhẹ phù hợp không, có lại phản tác dụng?"*
+#
+# ĐO TRƯỚC KHI TRẢ LỜI, và số đo cho ra một câu trả lời khác hẳn câu hỏi:
+#     bản trộn hoàn chỉnh      −14,0 LUFS
+#     nhạc gốc                 −19,0 LUFS
+#     nhạc sau `nhacVol 0.11`  −38,2 LUFS   -> thấp hơn bản trộn 24 dB
+# 24 dB dưới lời nói là gần như biến mất trên loa điện thoại. Nên nhạc hiện KHÔNG phản tác
+# dụng — nó đơn giản là KHÔNG NGHE THẤY. Câu hỏi đúng không phải "nhẹ hay không nhẹ" mà là
+# "có ở đó hay không".
+#
+# VÀ GỐC RỄ LÀ LỖI TÔI VỪA GÂY LẠI. `_am_nhac()` trong `kich_comic.py` đã tồn tại từ trước,
+# đọc hệ số RIÊNG TỪNG TỆP từ `music/am_luong.json` — dựng ra chính để chữa bệnh "một hằng
+# dùng chung cho các tệp trải 26 dB". Tôi hardcode 0.11 ở đây, tức làm lại đúng cái lỗi đã
+# được sửa một lần rồi. Họ lỗi "một hằng phục vụ hai thứ biến thiên độc lập", tái phạm.
+#
+# MỨC NỀN CỦA BỘ NÀY CAO HƠN BỘ HÀI, có lý do: hài sống bằng nhịp thoại và khoảng lặng, nhạc
+# phải tránh đường. Phim giải thích cắt 2,1 giây một cảnh với câu 5-8 chữ, nên giữa các câu có
+# rất nhiều khe ngắn — im lặng ở đó nghe ra là hụt hơi. Nhạc là thứ nối các khe ấy lại.
+# Bảng `am_luong.json` chuẩn về −37 LUFS; nhân 1,58 (tức +4 dB) đưa nền về ~−33 LUFS.
+BUOC_NHAC = 1.58
+
+
+def _am_nhac(nhac: str) -> float:
+    """Hệ số âm lượng RIÊNG cho từng tệp nhạc, không dùng một hằng chung."""
+    try:
+        import json
+        import os as _os
+        p = _os.path.join(_os.path.dirname(GOC), "engine-remotion", "public",
+                          "music", "am_luong.json")
+        if _os.path.exists(p):
+            b = json.load(io.open(p, encoding="utf-8"))
+            h = float(b.get(_os.path.basename(nhac), 0.16))
+            # TRẦN 2.0, KHÔNG PHẢI 1.0. Các hệ số trong `am_luong.json` là hệ số CHUẨN HOÁ:
+            # tệp càng nhỏ tiếng thì hệ số càng CAO (cao nhất đo được 1.16). Kẹp ở 1.0 nghĩa là
+            # cắt đúng phần bù của hai tệp nhỏ tiếng nhất — `howmuch` và `therules` chìm hơn 16
+            # kênh kia, trong khi bảng hệ số sinh ra chính là để chúng ngang nhau. Một trần phục
+            # vụ hai việc (chống giá trị rác · giữ chuẩn hoá) thì hỏng việc thứ hai.
+            # Bộ hài dùng hệ số THÔ tới 1.16 và chạy thật nhiều tháng — Remotion nhận volume > 1.
+            # Trần giữ lại chỉ để chặn một số rác, nên đặt trên đỉnh hợp lệ (1,16 × 1,58 = 1,83).
+            return round(min(2.0, h * BUOC_NHAC), 3)
+    except Exception as e:
+        _am_nhac._loi = str(e)[:70]
+    # Rơi tới đây là MỌI kênh dùng chung một hằng — đúng trạng thái đã làm nhạc chìm 24 dB dưới
+    # lời và không có lỗi nào báo. Nên chỗ này phải kêu, dù chỉ một lần.
+    if not getattr(_am_nhac, "_da_bao", False):
+        _am_nhac._da_bao = True
+        print(f"  ⚠ am_luong.json không đọc được ({getattr(_am_nhac, '_loi', 'không có tệp')})"
+              f" — mọi kênh rơi về hằng 0.16")
+    return 0.16
+
+
 def _nhac(ma: str, long: bool) -> str:
     n = GU_RIENG.get(ma, ("", "music/forecast.mp3", ""))[1]
     return NHAC_DAI_THAY.get(n, n) if long and n in NHAC_NGAN else n
@@ -1504,7 +1556,7 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
 
     mk = MAU_KENH.get(ma, {"nen": "#F3EEE4", "mau": k["mau"], "phu": k["phu"], "chu": "#2C2722"})
     props = {"nhip": nhip, "tu": tu, "voMp3": rel,
-             "nhac": _nhac(ma, long), "nhacVol": 0.11,
+             "nhac": _nhac(ma, long), "nhacVol": _am_nhac(_nhac(ma, long)),
              "tieuDe": k["ten"], "handle": "@" + ma + "usa",
              "mau": mk["mau"], "mauPhu": mk["phu"],
              "nenTrang": mk["nen"], "chuTrang": mk["chu"],

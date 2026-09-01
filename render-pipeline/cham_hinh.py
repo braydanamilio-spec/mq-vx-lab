@@ -141,9 +141,13 @@ def cham(mp4: str, keys=None) -> tuple:
             loi = [str(x)[:130] for x in (j.get("loi") or [])][:4]
             chi = " · ".join(f"{x}:{int(float(j.get(x,0)))}" for x in muc)
             return round(diem), [chi] + loi, lu
-        except Exception:
+        except Exception as e:
+            cham._loi = f"{type(e).__name__}: {str(e)[:80]}"
             continue
-    return None, ["mọi khoá đều không trả lời được"], lu
+    # KHÔNG nói "mọi khoá hỏng" khi chưa biết hỏng ở đâu. Sáng nay đúng câu chẩn đoán sai kiểu
+    # này đã tốn nửa buổi: FLUX trả HTTP 400 vì tham số tôi thêm, mà 97 khoá xoay vòng làm nó
+    # đọc ra như "mạng chậm". In lỗi THẬT của lần cuối để lần sau không phải đoán.
+    return None, [f"không chấm được — {getattr(cham, '_loi', 'không có khoá nào để hỏi')}"], lu
 
 
 def main() -> int:

@@ -6761,3 +6761,62 @@ Dạng tệ nhất của luật 24.1: hỏng mà **báo xanh**. Sửa: hỏi th�
 Ngược trực giác: hai mẫu duy nhất có câu nhấn `"Write exactly: …"` **đều sai**.
 
 Nhãn ngắn để mô hình vẽ vào ảnh (hết đè); số dài **luôn** do code vẽ đè.
+
+### 7bx — Trần kẹp xoá đúng phần chuẩn hoá mà bảng hệ số sinh ra để làm (1/9)
+
+**Triệu chứng.** Nhạc của `howmuch` chìm hơn 17 kênh còn lại, dù cả 18 kênh dùng chung một
+bảng hệ số âm lượng và một hằng nâng. Không có lỗi nào báo — video vẫn dựng, vẫn qua mọi cổng.
+
+**Gốc rễ.** `_am_nhac` trả `min(1.0, h * BUOC_NHAC)`. Các hệ số trong `am_luong.json` là hệ số
+**chuẩn hoá**: tệp càng nhỏ tiếng thì hệ số càng CAO (đo được tới 1,16). Trần 1.0 vì thế cắt
+đúng phần bù của những tệp nhỏ tiếng nhất — tức là nó phá hỏng chính xác cái việc mà bảng hệ số
+tồn tại để làm.
+
+Số đo (mức nhạc sau hệ số, bản trộn ở −14,0 LUFS):
+
+| kênh | tệp nhạc | tệp gốc | dưới trần 1.0 | dưới trần 2.0 |
+|---|---|---|---|---|
+| howmuch | km_reawakening.mp3 | −38,3 | **−38,3** (chìm 24 dB) | −33,0 |
+| therules | broke_pad.mp3 | −34,0 | −34,0 | −33,2 |
+| smallest | mindloop_pad.mp3 | −32,5 | −33,0 | −33,0 |
+
+Ba tệp lệch nhau **5,8 dB ở gốc**, sau hệ số về đúng một mức. Đó là bằng chứng bảng hệ số đúng
+và cái trần sai.
+
+**Họ lỗi — *một hằng phục vụ hai thứ biến thiên độc lập*.** Trần 1.0 vừa làm chốt chặn giá trị
+rác, vừa vô tình làm trần chuẩn hoá. Hai việc ấy không cùng ngưỡng. Sửa: đặt trần **trên** đỉnh
+hợp lệ (1,16 × 1,58 = 1,83 → trần 2.0), nó vẫn chặn số rác mà không đụng dải hợp lệ. Bộ hài
+dùng hệ số THÔ tới 1,16 và chạy thật nhiều tháng — Remotion nhận `volume > 1`. Đo lại: đỉnh
+thật −1,3 dBTP, còn dưới trần an toàn.
+
+**Bài học rộng hơn.** Đây là lần thứ hai TRONG CÙNG MỘT NGÀY của cùng một lỗi âm lượng. Lần đầu
+là `nhacVol` hằng cứng; sửa xong tôi báo "đã xong" mà chỉ nghe MỘT kênh. Bản vá đúng ở 17 kênh
+và sai ở một — và một kênh sai thì không nghe ra nếu không nghe hết. **Sửa thứ áp cho N mục thì
+phải in bảng cả N mục, không nghiệm một mục.**
+
+### 7by — Ba khối `except` im lặng che ba thứ khác nhau (1/9)
+
+Rà 14 khối `except Exception:` trần. Mười một khối trả `None`/`""` lên trên — người gọi xử lý,
+không phải im lặng. Ba khối `pass` mới là im lặng thật, và mỗi khối che một thứ khác nhau:
+
+| chỗ | che gì | vì sao nguy |
+|---|---|---|
+| `nen_gt.sinh` | cổng chữ tắt | cả mẻ đi qua **kèm cảm giác đã được kiểm** — tệ hơn không có cổng |
+| `giai_thich._am_nhac` | rơi về hằng 0,16 | đúng trạng thái đã làm nhạc chìm 24 dB, không lỗi nào báo |
+| `cham_hinh.cham` | lỗi thật của lần gọi cuối | báo "mọi khoá đều hỏng" trong khi có thể là lỗi của chính mình |
+
+Khối thứ ba là loại đắt nhất: nó **sinh ra chẩn đoán sai**. Sáng nay đúng kiểu ấy tốn nửa buổi —
+FLUX trả HTTP 400 vì tham số tôi thêm, mà 97 khoá xoay vòng làm nó đọc ra như "mạng chậm".
+
+Cả ba nay in **một** dòng cảnh báo mỗi lần chạy (không phải mỗi cảnh — 15 dòng giống nhau cũng
+là một kiểu im lặng).
+
+### 7bz — Cổng `kiem_kenh.py`: bảy bảng phải phủ đủ danh sách kênh (1/9)
+
+Thêm một kênh mà quên một bảng thì không có lỗi nào báo — kênh ấy lặng lẽ rơi về mặc định và
+mất bản sắc. Đã dính đúng thế hôm nay: thêm 8 kênh, bốn bảng thiếu, và một bản vá không khớp
+neo vì lệch **một ký tự khoảng trắng**. Cổng mới kiểm bảy bảng ở ba tệp, cộng: trùng ở sáu trục
+nhận diện · mọi bộ sinh chạy được · nhạc tồn tại trên đĩa · bản dài không dùng nhạc ngắn.
+
+Giọng đọc **được phép trùng** (11/18) và đó là chủ đích: gán theo độ hợp niche đắt hơn gán để
+không trùng.

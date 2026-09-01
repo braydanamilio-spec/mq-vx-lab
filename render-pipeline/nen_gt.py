@@ -451,8 +451,14 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
             if _co_chu(dest) is True:
                 os.remove(dest)
                 continue          # -> vẽ lại bằng seed khác
-        except Exception:
-            pass
+        except Exception as e:
+            # NÓI RA khi cổng tắt. Một cổng hỏng mà im lặng còn tệ hơn không có cổng: nó cho
+            # cả mẻ đi qua kèm cảm giác đã được kiểm. Chỉ báo MỘT lần mỗi lần chạy — báo mỗi
+            # cảnh thì 15 dòng giống nhau lại thành nhiễu, và nhiễu cũng là một kiểu im lặng.
+            if not getattr(sinh, "_da_bao", False):
+                sinh._da_bao = True
+                print(f"     ⚠ CỔNG CHỮ TẮT ({type(e).__name__}: {str(e)[:60]}) — "
+                      f"ảnh có chữ bịa sẽ lọt qua")
         return rel
     return ""
 
