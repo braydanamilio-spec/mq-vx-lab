@@ -3013,6 +3013,18 @@ def don(d: dict, kenh: str = "") -> dict:
             say = say[0].upper() + say[1:]
         ln["say"] = say
         ln["act"] = " ".join(str(ln.get("act") or "says").split()).strip() or "says"
+    # Câu ghim máy lặp ở `setup` khi `hook` đã có: CẮT, đừng bắt viết lại.
+    # 1/9 — Đo trên 24 tập của bốn lượt: đây là chốt chặn lớn thứ hai (6/26 lỗi tồn sau tám
+    # vòng), mà cái hại của nó chỉ là tốn ~25 ký tự và đọc như văn mẫu — không làm hỏng hình.
+    # Lỗi máy sửa được thì máy sửa (luật 13.12); đốt một vòng gọi AI cho nó là phí ngân sách
+    # mà các trục thật sự quan trọng đang cần.
+    if d.get("hook") and d.get("setup") and re.search(CAU_GHIM, str(d["hook"]), re.I):
+        _s = str(d["setup"])
+        _s = re.sub(r"^\s*" + CAU_GHIM + r"\s*[:,.]?\s*", "", _s, flags=re.I)
+        _s = re.sub(r"[,;]\s*" + CAU_GHIM + r"\s*", " ", _s, flags=re.I)
+        _s = re.sub(r"\s+([.,;])", r"\1", _s).strip()
+        d["setup"] = _s[:1].upper() + _s[1:] if _s else _s
+
     for k in ("hook", "setup", "escalate", "payoff", "title", "room"):
         if d.get(k):
             d[k] = _mao_tu(" ".join(str(d[k]).split()).strip())
@@ -3266,9 +3278,10 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
 
     # Câu ghim máy: đúng MỘT lần, và đứng ĐẦU hook hoặc đầu setup.
     _h, _st = str(d.get("hook") or ""), str(d.get("setup") or "")
-    if len(re.findall(CAU_GHIM, _h + " " + _st, re.I)) > 1:
-        e.append("ghim góc máy hai lần (cả hook lẫn setup) — nói một lần là đủ, lần thứ hai "
-                 "chiếm chỗ của hình")
+    # Ghim máy lặp: KHÔNG chặn nữa — `don()` tự cắt bản thừa ở `setup`. Đo trên 24 tập: đây là
+    # chốt chặn lớn thứ hai (6/26 lỗi tồn), mà cái hại của nó chỉ là tốn ~25 ký tự và đọc như
+    # văn mẫu — không làm hỏng hình. Lỗi máy sửa được thì máy sửa (luật 13.12), đừng đốt một
+    # vòng gọi AI cho nó.
     _m = re.search(CAU_GHIM, _h, re.I)
     if _m and _m.start() > 40:
         e.append(f"câu ghim máy nhét vào GIỮA/CUỐI hook — nó là chỉ thị cho máy quay, phải đứng "
@@ -3323,20 +3336,16 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
         if _tu and not any(w in _ca_de for w in _tu):
             e.append(f"không dùng đồ vật được cấp cho tập này ({_x['dao_cu']}) — cả chuyện phải "
                      f"xoay quanh nó, không phải nhắc qua")
-        # ── CƠ CHẾ ĐƯỢC GIAO PHẢI ĐƯỢC DÙNG ────────────────────────────────────────────────────
-        # 1/9 — Đo trên 12 kịch bản thật: đề bài chỉ định cơ chế cú lật, nhưng KHÔNG cổng nào kiểm
-        # nó có được dùng không — nên 6/12 tập rơi về "nhấc lên → lộ ra", đúng họ đã mòn 16/30 lần
-        # trong kho. Cấp mà không kiểm thì lại thành lời khuyên (luật 13.3).
+        # ── CƠ CHẾ ĐƯỢC GIAO: CHẤM, KHÔNG CHẶN ─────────────────────────────────────────
+        # 1/9 — Cổng này từng CHẶN, và đo trên 24 tập của bốn lượt thì nó là **chốt chặn lớn
+        # nhất** (7/26 lỗi tồn sau tám vòng). Cái giá không phải "vài tập bị từ chối": nó tiêu
+        # hết ngân sách vòng viết lại vào MỘT trục, nên các trục khác không còn lượt để sửa —
+        # lượt đo thứ tư tụt từ 92,8 xuống 90,2 và 0/6 đạt 95 đúng vì thế.
         #
-        # Trước khi làm cổng này phải NỚI biểu thức: đo lần đầu ra 5/12 khớp, nhưng đọc tay thì
-        # 4 trong 7 ca trượt là biểu thức quá hẹp chứ không phải AI sai ("already SET", "already
-        # TUCKED", "slides out", "behind Mike"). Làm cổng trên biểu thức hẹp là chế tạo thêm một
-        # cổng bắt oan — 5/12 thành 10/12 sau khi nới, và ba ca còn lại mới là lỗi thật.
-        if not re.search(HO_LAT.get(_x["co_che"], r"$^"), str(d.get("payoff") or ""), re.I):
-            e.append(f"cú lật không dùng cơ chế được giao ({_x['co_che']}) — "
-                     f"{HO_LAT_TA.get(_x['co_che'], '')[:90]}. Đừng rơi về 'nhấc lên rồi lộ ra': "
-                     f"đó là họ đã mòn nhất trong kho")
-
+        # Nhưng bỏ hẳn thì lại quay về "cấp mà không kiểm" (luật 13.3). Đường giữa: chuyển sang
+        # TRỤC CHẤM trong `cham100`. Kịch bản bỏ qua cơ chế được giao vẫn mất điểm, và sàn 90
+        # vẫn bắt viết lại — chỉ khác là nó cạnh tranh với chín trục kia thay vì chặn đứng.
+        # Một cổng ĐÚNG vẫn có thể làm giảm chất lượng nếu nó khó thoả tới mức nuốt hết vòng.
         if _x["lat"] not in str(d.get("payoff") or ""):
             e.append(f"cú lật phải do {_x['lat']} thực hiện — payoff không nhắc tới {_x['lat']}")
 
@@ -4088,7 +4097,8 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
             try:
                 import cham100 as C100
                 _diem, _ghi = C100.cham100(d, giay, ho_so(kenh),
-                                           prompt(kenh, d, giay, 0), _kho_cu)
+                                           prompt(kenh, d, giay, 0), _kho_cu,
+                                           co_che_giao=(_lich(kenh, so)["co_che"] if so >= 0 else ""))
                 _yeu = [f"{k} = {v}/10" + (f" ({_ghi[k[0]]})" if k[0] in _ghi else "")
                         for k, v in _diem.items() if v < 8]
                 if sum(_diem.values()) < DIEM_SAN:

@@ -38,7 +38,7 @@ CAM_DO = ("island","dishwasher","staircase","stairs","fireplace","balcony","pool
 DONG_NGHIA = {"fridge": "refrigerator", "sofa": "couch", "icebox": "refrigerator"}
 
 
-def cham100(tap, giay, hs, prompt_txt, kho=()):
+def cham100(tap, giay, hs, prompt_txt, kho=(), co_che_giao=""):
     """kho = danh sách tap đã có, để đo trùng CƠ CHẾ chứ không trùng danh từ."""
     d, ghi = {}, {}
     lines = tap.get("lines") or []
@@ -65,6 +65,13 @@ def cham100(tap, giay, hs, prompt_txt, kho=()):
     p2 += 5 if lan <= max(2, len(kho) // 8) else (2 if lan <= len(kho) // 3 else 0)
     p2 += 3 if ho != "nhấc-lộ-vô-hại" else 0          # họ đã mòn 18/30 lần
     p2 += 2 if re.search(DAO_NGOI, tap["payoff"], re.I) else 0
+    # Cơ chế ĐƯỢC GIAO: chấm, không chặn. Chuyển từ `cham()` sang đây sau khi đo được nó là
+    # chốt chặn lớn nhất (7/26 lỗi tồn sau tám vòng) — nó nuốt hết ngân sách vòng viết lại nên
+    # các trục khác không còn lượt để sửa. Ở đây nó vẫn có răng: mất điểm thì tụt dưới sàn 90.
+    if co_che_giao:
+        p2 = min(10, p2) if re.search(HO_LAT.get(co_che_giao, r"$^"), tap["payoff"], re.I) \
+            else max(0, p2 - 4)
+        ghi["2"] = ghi.get("2", "") + f" · giao {co_che_giao}"
     d["2. Cú lật — cơ chế mới, không lặp kho"] = p2
     ghi["2"] = f"họ = {ho} · kho đã dùng {da.get(ho,0)}/{len(kho)} lần"
 

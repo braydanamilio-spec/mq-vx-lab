@@ -820,3 +820,39 @@ ghi vào buglog là một kết luận hợp lệ — nó ngăn phiên sau đi l
 Chi tiết hẹp cũng có giá: `machine` và `cabinet` bị loại khỏi danh sách vật gắn cố định, vì máy
 pha cà phê thì nhấc được còn máy bán hàng thì không. **Một chữ có hai nghĩa vật lý là chữ không
 dùng làm cổng được.**
+
+### 13.23 Một cổng ĐÚNG vẫn có thể làm giảm chất lượng — đo bằng ĐIỂM CUỐI, không bằng số lỗi bắt được
+
+Thêm hai cổng nghề (cơ chế cú lật · câu ghim máy). Cả hai bắt đúng lỗi thật. Kết quả lượt đo:
+
+| lượt | TB | ≥95 | tập cạn 8 vòng |
+|---|---|---|---|
+| trước khi thêm | **92,8** | 3/6 | 1/6 |
+| sau khi thêm | 90,2 | **0/6** | 3/6 |
+| sau khi nới biểu thức | 92,5 | 1/6 | **6/6** |
+
+Cổng không sai. Nhưng **ngân sách vòng viết lại là hữu hạn** (tám vòng), và hai cổng ấy nuốt hết:
+đo trên 24 tập của bốn lượt, chúng chiếm **13/26 lỗi tồn**. Các trục khác vì thế không còn lượt
+nào để sửa, nên điểm tổng đi xuống dù mỗi cổng riêng đều đúng.
+
+**Chữa bằng cách hạ cấp, không phải bằng cách bỏ:**
+
+| cổng | trước | sau | vì sao |
+|---|---|---|---|
+| cơ chế cú lật | **chặn** | **chấm** (`cham100` trục 2, −4 điểm nếu sai) | vẫn có răng qua sàn 90, nhưng cạnh tranh với chín trục kia thay vì chặn đứng |
+| câu ghim máy lặp | **chặn** | **`don()` tự cắt** | hại của nó chỉ là tốn 25 ký tự và đọc như văn mẫu — không hỏng hình. Máy sửa được thì máy sửa (13.12) |
+
+Lỗi tồn trên 24 tập: **26 → 14**.
+
+**Luật:** khi thêm một cổng, đo lại **điểm cuối cùng**, không đo số lỗi nó bắt được. Một cổng bắt
+nhiều lỗi có thể là cổng đang làm hỏng sản phẩm. Và mỗi cổng mới phải trả lời được: *"nếu kịch
+bản chỉ sai mỗi chỗ này thì có đáng tiêu một lượt gọi AI không?"* — nếu không, nó thuộc về
+`don()` (máy tự sửa) hoặc `cham100` (trừ điểm), không thuộc về `cham()`.
+
+Ba nấc, và chọn nấc là một quyết định thật:
+
+```
+don()      máy sửa được       -> sửa, không báo
+cham100()  làm kém đi         -> trừ điểm, cạnh tranh với các trục khác
+cham()     làm HỎNG sản phẩm  -> chặn, tiêu một vòng gọi AI
+```
