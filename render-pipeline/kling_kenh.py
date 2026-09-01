@@ -3294,6 +3294,20 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
         if _tu and not any(w in _ca_de for w in _tu):
             e.append(f"không dùng đồ vật được cấp cho tập này ({_x['dao_cu']}) — cả chuyện phải "
                      f"xoay quanh nó, không phải nhắc qua")
+        # ── CƠ CHẾ ĐƯỢC GIAO PHẢI ĐƯỢC DÙNG ────────────────────────────────────────────────────
+        # 1/9 — Đo trên 12 kịch bản thật: đề bài chỉ định cơ chế cú lật, nhưng KHÔNG cổng nào kiểm
+        # nó có được dùng không — nên 6/12 tập rơi về "nhấc lên → lộ ra", đúng họ đã mòn 16/30 lần
+        # trong kho. Cấp mà không kiểm thì lại thành lời khuyên (luật 13.3).
+        #
+        # Trước khi làm cổng này phải NỚI biểu thức: đo lần đầu ra 5/12 khớp, nhưng đọc tay thì
+        # 4 trong 7 ca trượt là biểu thức quá hẹp chứ không phải AI sai ("already SET", "already
+        # TUCKED", "slides out", "behind Mike"). Làm cổng trên biểu thức hẹp là chế tạo thêm một
+        # cổng bắt oan — 5/12 thành 10/12 sau khi nới, và ba ca còn lại mới là lỗi thật.
+        if not re.search(HO_LAT.get(_x["co_che"], r"$^"), str(d.get("payoff") or ""), re.I):
+            e.append(f"cú lật không dùng cơ chế được giao ({_x['co_che']}) — "
+                     f"{HO_LAT_TA.get(_x['co_che'], '')[:90]}. Đừng rơi về 'nhấc lên rồi lộ ra': "
+                     f"đó là họ đã mòn nhất trong kho")
+
         if _x["lat"] not in str(d.get("payoff") or ""):
             e.append(f"cú lật phải do {_x['lat']} thực hiện — payoff không nhắc tới {_x['lat']}")
 
@@ -4153,16 +4167,20 @@ HO_LAT_TA = {
 HO_LAT = {
     "nhấc-lộ-vô-hại":        r"\b(lifts?|pulls?|tips?|flips?|slides?|paws?)\b.{0,60}\b(reveal|expos|show)",
     "người-bước-vào":        r"\b(walks? in|steps? in|appears? in the doorway|comes? in)\b",
-    "vật-hoá-ra-là-khác":    r"\b(turns? out|it was (never|actually)|all along)\b",
-    "thủ-phạm-lộ-diện":      r"\b(behind (him|her|them)|caught|knocking|one by one|down the row)\b",
+    "vật-hoá-ra-là-khác":    r"\b(turns? out|it was (never|actually|just|only)|all along|is actually|was (just|only) a|not a \w+ at all)\b",
+    "thủ-phạm-lộ-diện":      r"\b(behind (him|her|them|[A-Z]\w+)|caught|knocking|one by one|down the row|the whole time|was (doing|holding) it)\b",
     "đảo-vai":               r"\b(hands? (it|him|her)|takes? over|swaps?|trades?)\b",
     "hậu-quả-đuổi-kịp":      r"\b(runs? (out|down)|spreads? to|reaches? (his|her|their)|creeps?)\b",
-    "kẻ-thản-nhiên-bỏ-đi":   r"\b(without looking|does not look|pulls? the door shut|steps? (out|past))\b",
-    # 1/9 — ba họ nữa. Chọn ba họ này vì chúng ĐẢO NGÔI THỨ theo ba cách chưa có: người sai
+    "kẻ-thản-nhiên-bỏ-đi":   r"\b(without looking|does not look|pulls? the door shut|(steps?|slides?|walks?|wanders?|strolls?) (out|off|past|away)|carries? on)\b",
+    # 1/9 (chiều) — NỚI BIỂU THỨC sau khi đo trên 12 kịch bản thật: 3/7 ca "trượt" là biểu thức quá
+# hẹp chứ không phải AI viết sai. "turns out it was already SET to 7" và "already TUCKED
+# underneath" đúng là cơ chế người-thứ-ba-đã-xong; "slides out" đúng là kẻ-thản-nhiên-bỏ-đi.
+# Phải nới TRƯỚC khi làm cổng — làm cổng trên biểu thức hẹp là chế tạo thêm một cổng bắt oan.
+# 1/9 — ba họ nữa. Chọn ba họ này vì chúng ĐẢO NGÔI THỨ theo ba cách chưa có: người sai
     # thắng vì lý do khác, người đúng thua vì đúng, và cả hai cùng sai với một người thứ ba.
     "đúng-mà-vẫn-thua":      r"\b(was right|had been right|correct all along)\b.{0,40}\b(but|and still|anyway)\b",
     "sai-mà-vẫn-thắng":      r"\b(works? anyway|holds? anyway|somehow (works?|holds?)|by accident)\b",
-    "người-thứ-ba-đã-xong":  r"\b(already (done|fixed|finished|handled)|had (done|fixed) it)\b",
+    "người-thứ-ba-đã-xong":  r"\b(already (done|fixed|finished|handled|set|tucked|there|sorted|packed|swapped|paid)|had already|had (done|fixed) it|was already)\b",
 }
 
 

@@ -768,3 +768,29 @@ Khi Drive không nhận video, tôi dựng một workflow tải artifact về r�
 
 **Luật:** khi một hệ tự động không giao được hàng, sửa **đường tự động**. Công cụ tay chỉ dùng
 để CHẨN ĐOÁN, không để thay thế.
+
+### 13.21 Nới biểu thức TRƯỚC khi làm cổng trên nó
+
+Đề bài chỉ định cơ chế cú lật, nhưng không cổng nào kiểm nó có được dùng không — nên **6/12 tập
+rơi về "nhấc lên → lộ ra"**, đúng họ đã mòn 16/30 lần trong kho. Cấp mà không kiểm thì lại thành
+lời khuyên (13.3).
+
+Nhưng đo lần đầu chỉ **5/12** khớp cơ chế được giao, và làm cổng ngay lúc ấy sẽ chặn 7/12 — trong
+đó **4 ca là biểu thức của tôi quá hẹp, không phải AI viết sai**:
+
+| AI viết | cơ chế được giao | biểu thức thiếu |
+|---|---|---|
+| *"turns out it was already **set** to 7"* | người-thứ-ba-đã-xong | chỉ nhận `already done/fixed/finished/handled` |
+| *"already **tucked** underneath"* | người-thứ-ba-đã-xong | như trên |
+| *"Deb **slides out**, already done"* | kẻ-thản-nhiên-bỏ-đi | chỉ nhận `steps out` |
+| *"revealing the scissors **behind Mike**"* | thủ-phạm-lộ-diện | chỉ nhận `behind him/her/them`, không nhận tên riêng |
+
+Nới xong: **5/12 → 10/12**, và hai ca còn lại mới là lỗi thật. Cổng nay chặn đúng hai ca ấy.
+
+**Luật:** làm cổng trên một biểu thức hẹp là **chế tạo thêm một cổng bắt oan**. Trước khi biến
+một phép so thành cổng, chạy nó trên dữ liệu thật và **đọc tay mọi ca trượt** — nếu quá một phần
+tư số ca trượt là do phép so chứ không do dữ liệu, thì phép so chưa đủ chín để làm cổng.
+
+Và một dấu hiệu để nhận ra sớm: hai bảng nói về cùng một thứ mà **không khớp nhau**. `HO_LAT` họ
+đầu tiên bắt đầu bằng `lifts?`, trong khi danh sách "đổi hình dạng" của cổng 5 giây lại không có
+`lifts` — một bảng gọi nó là cú lật, bảng kia bảo nó không phải đổi hình.
