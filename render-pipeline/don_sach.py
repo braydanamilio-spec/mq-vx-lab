@@ -169,6 +169,27 @@ def don_d1(giu: set, owner: str, that: bool) -> int:
     r = H.goi("don_job_kenh", {"owner": owner, "kenh": cu}, timeout=90) or {}
     n = int(r.get("xoa", 0))
     print(f"   ✓ D1 xoá {n} bản ghi · còn lại {r.get('con_lai', '?')}")
+    n += _don_mo_coi(H, owner)
+    return n
+
+
+def _don_mo_coi(H, owner: str) -> int:
+    """Dọn bản ghi CŨ mà lệnh xoá-theo-kênh không chạm tới.
+
+    ── VÌ SAO (1/9/2026) ───────────────────────────────────────────────────────────────────
+    Sau khi dọn 6.519 bản ghi theo tên kênh, `hot-jobs` trả 0 dòng và `tong=0` — nhưng ô "❌ Lỗi"
+    vẫn hiện **33**. Máy chủ thật sự trả `loi_moi=33`, tức bảng còn 33 dòng `status='failed'`.
+    Lệnh `don_job_kenh` lọc `UPPER(channel) IN (...)`, mà SQL: `NULL IN (...)` không bao giờ
+    đúng — nên mọi dòng có `channel` rỗng/NULL sống sót qua mọi lượt dọn theo kênh, mãi mãi.
+
+    `don_job_cu` dọn theo TUỔI nên không quan tâm `channel` — đúng công cụ cho phần mồ côi này.
+    D1 là kho NÓNG chứ không phải kho lưu trữ (chú thích của chính lệnh ấy), giữ 14 ngày là đủ:
+    lịch sử nằm ở Drive và artifact.
+    """
+    r = H.goi("don_job_cu", {"owner": owner, "ngay": 14}, timeout=60) or {}
+    n = int(r.get("xoa", 0))
+    if n:
+        print(f"   ✓ D1 dọn thêm {n} bản ghi mồ côi/cũ (>14 ngày) · còn {r.get('con_lai', '?')}")
     return n
 
 

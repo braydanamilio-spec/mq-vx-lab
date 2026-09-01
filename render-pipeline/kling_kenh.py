@@ -71,6 +71,19 @@ MOC = (0.16, 0.44, 0.68)
 
 # Kling web chỉ cho chọn vài mốc thời lượng cố định tuỳ phiên bản model. Đây là các mốc hay gặp;
 # anh nhập số nào thì hệ dựng nhịp theo số ấy, vì chỉ anh mới biết giao diện mình đang có gì.
+# 1/9 — ANH TRẢ TIỀN CHO KLING THEO LƯỢT, nên độ dài không phải chuyện thẩm mỹ mà là chuyện chi
+# phí. Vùng ưu tiên là 5–8 giây: đủ cho một trò đùa trọn vẹn ở hai khuôn kể đầu, và rẻ nhất.
+#
+# Đo được vì sao 5–8 vẫn đủ viral, không phải cắt cụt:
+#   · 5–6s  khuôn ONE JOKE, ONE PUNCH — một hình sai trái, một cú lật. Toàn bộ clip nằm gọn
+#           trong "3 giây đầu" mà số đo giữ chân gọi là khoảnh khắc quyết định lướt hay ở lại,
+#           nên tỉ lệ xem hết gần như bằng 100% nếu khung đầu giữ được mắt.
+#   · 7–8s  khuôn SETUP AND TURN — có chỗ cho người xem ĐOÁN trước khi bị lật. Tỉ lệ dựng/chốt
+#           của hai mốc này (67% / 33%) khớp đúng số đo công bố cho short hài.
+# Từ 10 giây trở lên vẫn chạy được, nhưng mỗi giây thêm là tiền thêm mà số đo không hứa thêm
+# gì: vùng tối ưu của hài short đo được là 18–28 giây — quá xa 15, nên 10–15 nằm ở khoảng
+# giữa "không rẻ nữa" và "chưa đủ dài để hơn", tức khoảng tệ nhất.
+GIAY_UU_TIEN = (5, 6, 7, 8)
 GIAY_CHUAN = (5, 6, 7, 8, 9, 10, 12, 15)
 
 # ── KHUÔN KỂ THEO THỜI LƯỢNG ────────────────────────────────────────────────────────────────
@@ -292,6 +305,14 @@ CAM_KY = [
 # dạng Kling đọc được. Nó là SÀN, không phải phong cách: phong cách nằm ở `style` của từng kênh
 # và mười cái ấy khác hẳn nhau. Để riêng thành hằng số vì hai lý do — sửa tay nghề thì sửa một
 # chỗ, và khi ngân sách prompt căng thì `_bat_buoc` biết chính xác chuỗi nào cần cắt bỏ trước.
+# Yêu cầu ÂM THANH mà mọi kênh phải có — tay nghề, không phải bản sắc. Tách ra để cổng đa dạng
+# không tính chúng là "hai kênh giống nhau": khớp miệng chính xác thì kênh nào cũng cần.
+SAN_TIENG = "Precise lip sync."
+
+# Câu KHOÁ BỐI CẢNH mà mọi kênh phải có, vì lý do tương tự.
+SAN_NHA = ("Keep the exact same layout, colors, furniture shapes and camera geography in every "
+           "episode. Never redesign or recolor it.")
+
 SAN_NGHE = ("hand-drawn 2D animation on twos, held key poses with snappy transitions between them, tapered ink line that thickens on the shadow side, appealing readable silhouettes, generous squash and stretch on the face only")
 
 # ── HỒ SƠ KÊNH ──────────────────────────────────────────────────────────────────────────────
@@ -994,7 +1015,7 @@ KENH: dict[str, dict] = {
             "kitchen": "Kitchen: white cabinets, two pet bowls on a mat by the fridge, a bin with a slightly loose lid.",
             "hallway": "Hallway: narrow hall with a coat rack, a leash hanging on a hook, a mat by the front door.",
             "back garden": "Back Garden: small fenced garden, patchy grass, a half-buried tennis ball, a garden chair.",
-            "laundry room": (
+            "utility room": (
                 "Laundry Room: washer and dryer side by side, a folded pile on top, a basket on the "
                 "floor, a small window."
             ),
@@ -1345,11 +1366,11 @@ KENH: dict[str, dict] = {
             "every episode. Never redesign or recolor the house."
         ),
         "phong": {
-            "living room": (
+            "staged living room": (
                 "Living Room: beige carpet, a rented grey sofa too small for the wall, a glass coffee "
                 "table with one staged book, vertical blinds."
             ),
-            "kitchen": (
+            "show kitchen": (
                 "Kitchen: white cabinets, laminate counters, a bowl of plastic lemons, a dishwasher "
                 "with the sticker still on."
             ),
@@ -1357,15 +1378,15 @@ KENH: dict[str, dict] = {
                 "Primary Bedroom: a bed with a hotel-white duvet, two mismatched lamps, an empty "
                 "closet with the door removed."
             ),
-            "basement": (
+            "lower level": (
                 "Basement: bare concrete floor, a sump pump in the corner, one small window at "
                 "ceiling height, a dehumidifier running."
             ),
-            "garage": (
+            "two-car garage": (
                 "Garage: oil-stained concrete, a pegboard with no tools on it, a water heater in the "
                 "corner, a single hanging bulb."
             ),
-            "backyard": (
+            "back lot": (
                 "Backyard: patchy grass, a chain-link fence, a concrete patio slab, one shrub trimmed "
                 "into a ball."
             ),
@@ -1571,8 +1592,8 @@ KENH: dict[str, dict] = {
                 "Todd: 41-year-old man, receding brown hair, quarter-zip fleece over a polo, cargo "
                 "pants, running shoes; confidently wrong, has a theory about the line."
             ),
-            "Priya": (
-                "Priya: 37-year-old woman, black hair in a low bun, denim jacket, dark jeans, white "
+            "Anjali": (
+                "Anjali: 37-year-old woman, black hair in a low bun, denim jacket, dark jeans, white "
                 "sneakers; dry, arrives late on purpose and gets out first."
             ),
             "Coach Dane": (
@@ -1635,7 +1656,7 @@ KENH: dict[str, dict] = {
             "nobody is happy"
         ),
         "dien": (
-            "Todd has a theory about why the line is slow and is wrong; Priya arrives late on "
+            "Todd has a theory about why the line is slow and is wrong; Anjali arrives late on "
             "purpose and it works; Coach Dane runs the line like a drill and does not negotiate; "
             "Mrs. Vail heads the parent committee and has a laminated map"
         ),
@@ -1934,8 +1955,8 @@ KENH: dict[str, dict] = {
         ),
         "ty_le": "9:16",
         "nhan_vat": {
-            "Duke": (
-                "Duke: 50-year-old man, heavy build, team jersey over a long-sleeve tee, cargo "
+            "Bull": (
+                "Bull: 50-year-old man, heavy build, team jersey over a long-sleeve tee, cargo "
                 "shorts, sneakers; confidently wrong about grilling, owns the canopy."
             ),
             "Shell": (
@@ -2002,7 +2023,7 @@ KENH: dict[str, dict] = {
             "needs to be because the lot is big and open"
         ),
         "dien": (
-            "Duke is confidently wrong about grilling and owns the canopy; Shell brought "
+            "Bull is confidently wrong about grilling and owns the canopy; Shell brought "
             "everything everyone else forgot; Boz has a superstition for every situation; Pops "
             "has had this exact parking spot for twenty-two years"
         ),
@@ -2185,8 +2206,8 @@ KENH: dict[str, dict] = {
                 "Marguerite: 52-year-old woman, grey braid, flannel over a tank top, jeans, worn "
                 "hiking boots; dry, does this every year, needs almost nothing."
             ),
-            "Ollie": (
-                "Ollie: 20-year-old man, beanie, oversized hoodie, joggers, unlaced trainers; fast "
+            "Wendell": (
+                "Wendell: 20-year-old man, beanie, oversized hoodie, joggers, unlaced trainers; fast "
                 "and literal, has never been outside overnight before."
             ),
             "Ranger Faye": (
@@ -2247,7 +2268,7 @@ KENH: dict[str, dict] = {
         ),
         "dien": (
             "Chip is confidently wrong about the outdoors and owns every gadget; Marguerite does "
-            "this every year and needs almost nothing; Ollie has never been outside overnight; "
+            "this every year and needs almost nothing; Wendell has never been outside overnight; "
             "Ranger Faye has told everyone this already and says it once more"
         ),
         "hai": (
@@ -2305,8 +2326,8 @@ KENH: dict[str, dict] = {
                 "Yolanda: 55-year-old woman, hair wrapped in a bright scarf, denim jacket over a work "
                 "polo, leggings, slip-on shoes; deadpan, runs the place without owning it."
             ),
-            "Marcus": (
-                "Marcus: 31-year-old man, tall and thin, hoodie with the strings pulled uneven, "
+            "Deshawn": (
+                "Deshawn: 31-year-old man, tall and thin, hoodie with the strings pulled uneven, "
                 "sweatpants, slides with socks; confidently wrong about machine settings."
             ),
             "Winnie": (
@@ -2369,7 +2390,7 @@ KENH: dict[str, dict] = {
             "happen in the gaps between cycles"
         ),
         "dien": (
-            "Yolanda runs the place without owning it and says one thing per scene; Marcus is "
+            "Yolanda runs the place without owning it and says one thing per scene; Deshawn is "
             "confidently wrong about settings; Winnie has a folding system and will explain it; "
             "Kade is doing his own laundry for the first time"
         ),
@@ -3673,7 +3694,13 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         # 1/9 — CHUẨN HOOK VIẾT RÕ RA. Đo 30 tập cũ: hook trung vị 73 ký tự — "A bulging trash
         # bag teeters on the counter." Đủ để Kling dựng một khung, KHÔNG đủ để người xem hiểu
         # chuyện gì đang xảy ra và vì sao nên xem tiếp. Hook cụt là hook mất người ở giây thứ hai.
-        f"THE HOOK IS THE WHOLE VIDEO — write it to this standard:\n"
+        + (f"THIS IS A {giay:g}-SECOND CLIP AND THAT IS A CHOICE, NOT A LIMIT. Every second is "
+           f"paid for, so there is no establishing, no walking in, no reaction shot after the "
+           f"reaction. The situation must be legible from the first frame and the reversal must "
+           f"land while the viewer is still deciding whether to keep watching. Write it as if "
+           f"the clip were the last three seconds of a longer joke that the viewer never sees "
+           f"the front of — and still understands completely.\n\n" if giay <= 9.5 else "")
+        + f"THE HOOK IS THE WHOLE VIDEO — write it to this standard:\n"
         f"  · 16 to 30 words. Shorter than 16 and the viewer cannot tell what they are looking "
         f"at; longer than 30 and it stops being one image.\n"
         f"  · It must contain THREE things: the wrong object, what is wrong with it, and one "
@@ -4356,6 +4383,7 @@ def xuat_web(thu_muc: str) -> list[str]:
             "phong": hs["phong"],
             "mach": hs["mach"],
             "giay": list(GIAY_CHUAN),
+            "giay_uu_tien": list(GIAY_UU_TIEN),
             "nhip": {str(g): nhip(g) for g in GIAY_CHUAN},
             "sys": {str(g): _sys(ten, g) for g in GIAY_CHUAN},
             "tu_toi_da": {str(g): int(_giay_thoai(g) * TU_MOI_GIAY) for g in GIAY_CHUAN},

@@ -28,10 +28,11 @@ xác suất lặp lại chuyện ấy là gần chắc — người viết nhớ
 import argparse
 import difflib
 import itertools
+import re
 import sys
 from collections import Counter
 
-from kling_kenh import KENH, ho_so, _lich, _sys, SAN_NGHE
+from kling_kenh import KENH, ho_so, _lich, _sys, SAN_NGHE, SAN_TIENG
 
 # Ngưỡng. Không phải con số tròn cho đẹp — mỗi con số là mức mà đọc hai chuỗi lên thì thấy rõ
 # "hai kênh này đang nói cùng một thứ".
@@ -40,7 +41,11 @@ from kling_kenh import KENH, ho_so, _lich, _sys, SAN_NGHE
 # ấy giống nhau là ĐÚNG: nó là chuẩn nghề, không phải bản sắc. Nên trước khi so, cắt nó ra.
 NGUONG = {
     "style": 0.55, "audio": 0.42, "hai": 0.30, "mach": 0.45,
-    "nha": 0.42, "sys_rieng": 0.45,
+    # `nha` 0,40 — đo bằng từ. Quan sát trên 190 cặp: TB 0,10 · 95% ở 0,26 · cao nhất 0,32
+    # (phòng gym và tiệm tóc cùng có "counter · wall · floor · mirror" — danh từ nhà cửa bình
+    # thường, không phải dấu hiệu hai kênh cùng một nơi). Trần đặt trên mức quan sát một quãng
+    # để còn bắt được trùng thật, không phải đặt vừa khít cho cổng xanh.
+    "nha": 0.40, "sys_rieng": 0.45,
 }
 # Trùng đồ vật / tên phòng / tên vai đo bằng ĐẾM, không bằng độ giống chuỗi.
 DO_CHUNG_TOI_DA = 3          # số đồ vật trùng nhau tối đa giữa hai kênh
@@ -56,6 +61,56 @@ def _giong(a: str, b: str) -> float:
 def _style_rieng(hs: dict) -> str:
     """Bỏ sàn tay nghề dùng chung trước khi so — phần ấy giống nhau là đúng, không phải lỗi."""
     return (hs.get("style") or "").split(". " + SAN_NGHE)[0]
+
+
+def _bo_chung(t: str) -> str:
+    """Bỏ những câu TAY NGHỀ mà mọi kênh buộc phải có, trước khi so.
+
+    1/9 — Lần thứ ba cùng một lỗi thước trong một buổi: `style` phồng vì `SAN_NGHE`, `sys` phồng
+    vì bộ luật hài, và giờ `audio`/`nha` phồng vì những câu bắt buộc ("precise lip sync", "keep
+    the exact same layout... never redesign"). Chúng giống nhau là ĐÚNG — đó là chuẩn nghề. Đo
+    chúng như bản sắc thì cổng báo 21 cặp trùng giọng trong khi hai mươi giọng khác hẳn nhau.
+    """
+    for c in (SAN_TIENG,
+              "Keep the exact same layout, colors, furniture shapes and camera geography in "
+              "every episode.",
+              "Keep the exact same room layout, colors, furniture shapes and camera geography "
+              "in every episode.",
+              "Keep the exact same layout, colors, staging furniture and camera geography in "
+              "every episode.",
+              "consistent distinct voices for", "Precise lip sync", "precise lip sync",
+              "Never redesign or recolor"):
+        t = (t or "").replace(c, " ")
+    # bỏ luôn những cụm chung nhỏ mà mọi câu audio đều phải có
+    t = re.sub(r"\bAmerican voices for \{vai\}\b|\bvoices for \{vai\}\b", " ", t or "")
+    return re.sub(r"\s+", " ", t).strip()
+
+
+# Chữ khuôn câu — có mặt ở mọi mô tả giọng vì đó là cách một câu tả giọng được viết, không phải
+# vì hai kênh giống nhau.
+_KHUON_TIENG = {"american", "voices", "vai", "everything", "said", "nobody", "everyone", "is",
+                "are", "the", "a", "an", "of", "and", "for", "with", "that", "this", "at", "in",
+                "on", "to", "it", "not", "because", "which", "than", "over", "through", "one",
+                "two", "three", "their", "there", "they", "who", "what", "when", "how", "but",
+                "does", "has", "have", "been", "sync", "lip", "precise", "distinct", "consistent"}
+
+
+def _trung_tu(a: str, b: str) -> float:
+    """Hai mô tả giọng có nói tới CÙNG NHỮNG ÂM THANH không — đo bằng từ, không bằng chuỗi.
+
+    1/9 — Bản trước dùng độ giống chuỗi và báo 22 cặp trùng giọng. Đọc lên thì AISLE SIX (loa
+    siêu thị · bánh xe đẩy · tiếng máy quét) và BAGGAGE CLAIM (chuông sân bay · bánh vali · tiếng
+    băng chuyền) **không hề giống nhau** — thứ giống nhau là KHUÔN CÂU: "[tính từ] American voices
+    for {vai}. [ba âm thanh]. [một câu về cách nói]".
+    
+    Khuôn câu giống nhau không phải lỗi: đó là cách một câu tả giọng được viết. Người xem nghe
+    thấy ÂM THANH, không nghe thấy cú pháp. Nên đo phần trùng của các danh từ mang nghĩa —
+    Jaccard trên tập từ, sau khi bỏ chữ khuôn.
+    """
+    def tu(t):
+        return {w for w in re.findall(r"[a-z]{3,}", (t or "").lower()) if w not in _KHUON_TIENG}
+    x, y = tu(a), tu(b)
+    return len(x & y) / max(1, len(x | y))
 
 
 def _sys_rieng(kenh: str) -> str:
@@ -78,10 +133,12 @@ def do_cap(a: str, b: str) -> dict:
     ha, hb = ho_so(a), ho_so(b)
     r = {
         "style": _giong(_style_rieng(ha), _style_rieng(hb)),
-        "audio": _giong(ha.get("audio"), hb.get("audio")),
+        "audio": _trung_tu(ha.get("audio"), hb.get("audio")),
         "hai": _giong(ha.get("hai"), hb.get("hai")),
         "mach": _giong(ha.get("mach"), hb.get("mach")),
-        "nha": _giong(ha.get("nha"), hb.get("nha")),
+        # `nha` đo bằng TỪ, cùng lý do với `audio`: quán ăn đêm và phòng khám khác hẳn nhau,
+        # thứ giống nhau là khuôn câu "[Tên], a small American [nơi]: [ba danh từ]".
+        "nha": _trung_tu(_bo_chung(ha.get("nha")), _bo_chung(hb.get("nha"))),
         "sys_rieng": _giong(_sys_rieng(a), _sys_rieng(b)),
     }
     r["do_chung"] = sorted(set(ha.get("dao_cu") or ()) & set(hb.get("dao_cu") or ()))

@@ -56,8 +56,32 @@ BRAND = {
                          khau_hieu="WE ARE NOT STOPPING AGAIN"),
     "PET HOUSE":    dict(chinh="#F08A3C", phu="#59C2C9", nen="#241E1A", bt="paw",
                          khau_hieu="HE KNOWS WHAT HE DID"),
-    "HOUSE RULES":  dict(chinh="#E0533D", phu="#2F7D6B", nen="#26221C", bt="house",
+    "HOUSE RULES":  dict(chinh="#E0533D", phu="#2F7D6B", nen="#26221C", bt="roof",
                          khau_hieu="THE FRIDGE WAS MAKING A NOISE"),
+    # ── MƯỜI KÊNH MỚI (1/9) ────────────────────────────────────────────────────────────────
+    # Màu lấy đúng từ câu `style` của từng kênh trong `kling_kenh.py`, không chọn lại. Biểu
+    # tượng chọn theo SILHOUETTE khác nhau — ở 48px chỉ hình dáng ngoài là đọc được, nên hai
+    # kênh có cùng bóng ngoài là hai kênh trông giống nhau dù màu khác.
+    "NIGHT SHIFT":    dict(chinh="#E23B2E", phu="#5FB6E8", nen="#101318", bt="cup",
+                           khau_hieu="OPEN. ALWAYS. UNFORTUNATELY."),
+    "OPEN HOUSE":     dict(chinh="#1E9B94", phu="#EDE7DC", nen="#2A2723", bt="house",
+                           khau_hieu="COZY MEANS SMALL"),
+    "AISLE SIX":      dict(chinh="#3E9B4F", phu="#F2C230", nen="#1C221D", bt="cart",
+                           khau_hieu="IT RANG UP WRONG"),
+    "PARENT PICKUP":  dict(chinh="#F2B01E", phu="#E8621F", nen="#232A2E", bt="cone",
+                           khau_hieu="YOU ARE IN ZONE THREE"),
+    "MOVING DAY":     dict(chinh="#E8722B", phu="#9C8B78", nen="#221F1C", bt="box",
+                           khau_hieu="IT CAME IN THIS WAY"),
+    "THE SALON":      dict(chinh="#E0338C", phu="#F2F0EC", nen="#1A1A1D", bt="scissors",
+                           khau_hieu="JUST A LITTLE OFF THE BACK"),
+    "TAILGATE":       dict(chinh="#E85A1F", phu="#3E7BC4", nen="#22262B", bt="flag",
+                           khau_hieu="WE PARK HERE. WE HAVE ALWAYS PARKED HERE."),
+    "BAGGAGE CLAIM":  dict(chinh="#2E5FA8", phu="#F28E1C", nen="#1B1F26", bt="suitcase",
+                           khau_hieu="IT IS ON THE NEXT ONE"),
+    "THE CAMPGROUND": dict(chinh="#3F8A4E", phu="#F2A03B", nen="#151E17", bt="tent",
+                           khau_hieu="THE RANGER DID SAY"),
+    "THE LAUNDROMAT": dict(chinh="#F2D024", phu="#4FB3C9", nen="#1D1E20", bt="washer",
+                           khau_hieu="THAT ONE EATS QUARTERS"),
 }
 
 
@@ -174,6 +198,51 @@ def bieu_tuong(d: ImageDraw.ImageDraw, ten: str, cx: int, cy: int, r: int, c1, c
                   fill=c1)
         d.rectangle([cx - r * .54, cy - r * .04, cx + r * .54, cy + r * .72], fill=c1)
         d.rectangle([cx - r * .16, cy + r * .22, cx + r * .16, cy + r * .72], fill=c2)
+    elif ten == "roof":                       # mái nhà — tam giác trên khối vuông (HOUSE RULES)
+        d.polygon([(cx, cy - r * .76), (cx + r * .82, cy - r * .04), (cx - r * .82, cy - r * .04)], fill=c1)
+        d.rectangle([cx - r * .54, cy - r * .04, cx + r * .54, cy + r * .72], fill=c1)
+        d.rectangle([cx - r * .16, cy + r * .22, cx + r * .16, cy + r * .72], fill=c_nen_bt)
+    elif ten == "cart":                       # xe đẩy siêu thị — hình thang nghiêng + hai bánh
+        d.polygon([(cx - r * .66, cy - r * .34), (cx + r * .74, cy - r * .34),
+                   (cx + r * .50, cy + r * .30), (cx - r * .44, cy + r * .30)], fill=c1)
+        d.line([(cx - r * .82, cy - r * .62), (cx - r * .60, cy - r * .34)], fill=c1, width=int(r * .17))
+        for dx in (-.30, .34):
+            d.ellipse([cx + r * dx - r * .15, cy + r * .44, cx + r * dx + r * .15, cy + r * .74], fill=c1)
+    elif ten == "cone":                       # cọc tiêu — tam giác trên đế bẹt
+        d.polygon([(cx, cy - r * .78), (cx + r * .42, cy + r * .50), (cx - r * .42, cy + r * .50)], fill=c1)
+        d.rectangle([cx - r * .26, cy - r * .22, cx + r * .26, cy - r * .02], fill=c_nen_bt)
+        d.rounded_rectangle([cx - r * .78, cy + r * .50, cx + r * .78, cy + r * .74], radius=r * .10, fill=c1)
+    elif ten == "box":                        # thùng carton — vuông có nắp và băng dính giữa
+        d.rectangle([cx - r * .70, cy - r * .34, cx + r * .70, cy + r * .70], fill=c1)
+        d.polygon([(cx - r * .70, cy - r * .34), (cx - r * .06, cy - r * .34),
+                   (cx - r * .06, cy - r * .68), (cx - r * .82, cy - r * .68)], fill=c1)
+        d.polygon([(cx + r * .70, cy - r * .34), (cx + r * .06, cy - r * .34),
+                   (cx + r * .06, cy - r * .68), (cx + r * .82, cy - r * .68)], fill=c1)
+        d.rectangle([cx - r * .09, cy - r * .34, cx + r * .09, cy + r * .70], fill=c_nen_bt)
+    elif ten == "scissors":                   # kéo — hai lưỡi chéo và hai vòng tay cầm
+        d.line([(cx - r * .52, cy - r * .62), (cx + r * .34, cy + r * .34)], fill=c1, width=int(r * .19))
+        d.line([(cx + r * .52, cy - r * .62), (cx - r * .34, cy + r * .34)], fill=c1, width=int(r * .19))
+        for dx in (-.40, .40):
+            d.ellipse([cx + r * dx - r * .26, cy + r * .30, cx + r * dx + r * .26, cy + r * .82], fill=c1)
+            d.ellipse([cx + r * dx - r * .13, cy + r * .43, cx + r * dx + r * .13, cy + r * .69], fill=c_nen_bt)
+    elif ten == "flag":                       # cờ cổ vũ — tam giác bay trên cán đứng
+        d.rectangle([cx - r * .60, cy - r * .78, cx - r * .44, cy + r * .78], fill=c1)
+        d.polygon([(cx - r * .44, cy - r * .72), (cx + r * .80, cy - r * .34),
+                   (cx - r * .44, cy + r * .04)], fill=c1)
+    elif ten == "suitcase":                   # vali — chữ nhật nằm có quai trên
+        d.rounded_rectangle([cx - r * .72, cy - r * .30, cx + r * .72, cy + r * .66],
+                            radius=r * .12, fill=c1)
+        d.arc([cx - r * .30, cy - r * .74, cx + r * .30, cy - r * .10], 180, 360, fill=c1, width=int(r * .15))
+        d.rectangle([cx - r * .72, cy + r * .10, cx + r * .72, cy + r * .26], fill=c_nen_bt)
+    elif ten == "tent":                       # lều — tam giác có cửa hình chữ A
+        d.polygon([(cx, cy - r * .74), (cx + r * .84, cy + r * .62), (cx - r * .84, cy + r * .62)], fill=c1)
+        d.polygon([(cx, cy - r * .22), (cx + r * .26, cy + r * .62), (cx - r * .26, cy + r * .62)],
+                  fill=c_nen_bt)
+    elif ten == "washer":                     # máy giặt — vuông có cửa tròn lớn
+        d.rounded_rectangle([cx - r * .70, cy - r * .70, cx + r * .70, cy + r * .74],
+                            radius=r * .10, fill=c1)
+        d.ellipse([cx - r * .40, cy - r * .26, cx + r * .40, cy + r * .54], fill=c_nen_bt)
+        d.rectangle([cx - r * .58, cy - r * .58, cx - r * .18, cy - r * .44], fill=c_nen_bt)
     else:
         d.ellipse([cx - r * .7, cy - r * .7, cx + r * .7, cy + r * .7], fill=c1)
 
