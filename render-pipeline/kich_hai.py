@@ -1237,7 +1237,7 @@ def _hai_bong(k: dict) -> tuple:
     return dict(a), dict(b)
 
 
-def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
+def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str, moc_dich: list = None) -> tuple:
     """Đọc TỪNG LƯỢT bằng giọng riêng rồi ghép thành một tệp. Trả (tổng giây, mốc từ, mốc lượt).
 
     ── VÌ SAO PHẢI TÁCH TỪNG LƯỢT (30/8/2026) ──────────────────────────────────────────
@@ -1340,7 +1340,19 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str) -> tuple:
 
     _dp_truoc = 0                      # cao độ của lượt vừa đọc, để lượt sau tương phản lại
     for i, (chu, ai, _cx) in enumerate(cau):
-        if i:
+        # ══ ĐẶT LƯỢT VÀO ĐÚNG CỬA SỔ NHỊP CỦA KỊCH BẢN — 1/9/2026 ═══════════════════════
+        # Anh: *"làm demo đúng clip 15s"*. Gói viết rõ bốn cửa sổ: 0-3s · 3-7s · 7-11s · 11-15s,
+        # và cú chốt phải rơi vào ba giây cuối ("strong final reaction in the final 3 seconds").
+        # Bản trước nối bốn lượt sát nhau nên hết ở giây 8: thoại đúng, nhưng nhịp hài sai hẳn —
+        # khoảng lặng trước cú chốt là chỗ tiếng cười rơi vào, mà ở đây không còn khoảng lặng
+        # nào cả. Video cũng chỉ dài 8 giây thay vì 15.
+        # `moc_dich` là tuỳ chọn: không truyền thì giữ nguyên cách cũ, nên bộ truyện tranh
+        # (dùng chung hàm này) không đổi hành vi. Đây là nhánh song song, không được đụng vào.
+        if moc_dich and i < len(moc_dich):
+            can = moc_dich[i] - tong
+            if can > 0.02:
+                _lang(min(can, 6.0))
+        elif i:
             # 30/8 — Anh: *"đoạn cuối videos vẫn hơi bị kéo dài"*. Khoảng lặng trước cú chốt hạ
             # từ 0,55 xuống 0,34 giây: vẫn đủ tách câu chốt khỏi câu trước, mà không còn thành
             # một quãng trống nghe ra là phim bị treo.

@@ -1,64 +1,47 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { POSES, live } from "../StickAnim";
-import { NguoiQue, QUE_CAO, QUE_GOT } from "./NguoiQue";
-import { SceneBG } from "../SceneBG";
+import { NguoiQue, ThuQue, QUE_CAO, QUE_GOT, Vai } from "./NguoiQue";
+import { NenQue } from "./NenQue";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
-   KỊCH NGƯỜI QUE — 15 giây, bốn nhịp  (1/9/2026)
+   KỊCH NGƯỜI QUE — 15 giây, bốn nhịp, cả nhà trong một căn phòng  (1/9/2026)
 
-   Anh: *"xưa có loại hoạt hình animation người que e làm cho a nhân vật di chuyển tay chân cử
-   chỉ mượt lằm mà… làm cho a 10 channel mới này kiểu người que phong cách chuẩn usa cử chỉ
-   biểu cảm mượt mà, bối cảnh đúng như kịch bản."*
+   Anh, bốn lần liền, mỗi lần chỉ đúng một chỗ hỏng:
+     "chưa thể hiện nam nữ"                -> giới/tuổi có sẵn trong gói mà không ai đọc
+     "chưa có đa nhân vật"                 -> vẽ đúng một người mỗi nhịp
+     "nhân vật quá to so với bối cảnh"     -> ĐO RA: đồ đạc nhỏ gấp 3,2 lần, không phải người to
+     "bối cảnh phải đúng như prompt 15s"   -> kitchen/laundry/hallway/bedroom rơi hết về "home"
+     "làm demo đúng clip 15s"              -> thoại nối sát nhau, hết ở giây 8
+     "nhân vật ko phải giống hết… có nét đặc trưng"
 
-   VÌ SAO DÙNG BỘ KHUNG NÀY, KHÔNG DÙNG ENGINE TRUYỆN TRANH
-   Engine truyện tranh (`DienVienHai`) có tám tư thế TĨNH và chỉ đổi cánh tay; hai chân đứng
-   nguyên một chỗ trừ lúc đi bộ. Đo ra hôm qua: mười kênh khác mặt, khác màu, khác nhà mà bóng
-   dáng y hệt nhau.
-   `StickAnim` thì khác về bản chất: bảy tư thế CỘNG lớp `live()` chạy liên tục trên chín khớp,
-   mỗi khớp một pha —
-     · cẳng tay trễ pha so cánh tay  -> follow-through, nguyên tắc gốc của hoạt hình
-     · đầu gật theo độ mở miệng      -> nói tới đâu gật tới đó
-     · hai chân dồn trọng tâm so le  -> đứng mà vẫn sống
-   Đó chính là "cử chỉ mượt" anh nhớ.
+   Một gốc chung cho cả sáu: **tôi dựng phim từ trí nhớ của mình về gói, không dựng từ gói.**
+   Gói viết sẵn tuổi, giới, tóc, áo, kính, nơi chốn, ai có mặt ở nhịp nào, và bốn cửa sổ thời
+   gian 0-3 / 3-7 / 7-11 / 11-15. Tôi đọc lấy lời thoại rồi tự bịa phần còn lại.
 
-   VÌ SAO GÓI 15 GIÂY HỢP HƠN GÓI 6 GIÂY
-   Gói này cho MỖI NHỊP một hành động riêng ("walks in", "takes a photo", "walks by"). Engine
-   truyện tranh không diễn được hành động; engine người que thì ánh xạ thẳng hành động -> tư thế.
-
-   BỐ CỤC: bốn nhịp × ~3,75 giây. Mỗi nhịp một bối cảnh `SceneBG` chọn theo LỜI THOẠI của chính
-   nhịp ấy, một hoặc hai nhân vật đứng diễn trên sàn, chữ thoại ở dưới.
+   Nay mọi thứ trên màn hình đều truy được về một dòng trong gói.
    ══════════════════════════════════════════════════════════════════════════════════════════ */
 
 const kep = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const bat = (t: number) => 1 - Math.pow(1 - kep(t), 3);
 
-export type VaiQue = {
-  ten: string; skin: string; shirt: string; pants: string; hair: string;
-  cap?: string; hoodie?: boolean; glasses?: boolean; scale: number;
-  toc?: string;   // kiểu tóc nét que: re | bum | xoan | mu
-};
+export type VaiQue = Vai & { ten: string; cao: number };
 export type NhipQue = {
-  s: number; e: number; bg: string; hanh: string;
-  ai: number;            // 0 = trái, 1 = phải
-  nar: string;           // lời thoại
-  pose: string; expr: string;
-  hai?: boolean;         // hai người trong khung
+  s: number; e: number; hanh: string; ai: number;
+  nar: string; pose: string; expr: string;
 };
 export type PropsQue = {
-  nhip?: NhipQue[]; tu?: { t: number; d: number }[]; voMp3?: string; nhac?: string;
-  nhacVol?: number; vaiA?: VaiQue; vaiB?: VaiQue;
+  nhip?: NhipQue[]; vai?: VaiQue[]; noi?: string; thu?: string;
+  tu?: { t: number; d: number }[]; voMp3?: string; nhac?: string; nhacVol?: number;
   tieuDe?: string; handle?: string; mau?: string; mauPhu?: string; hook?: string;
 };
 
-export const calcQue = async ({ props }: { props: PropsQue }) => {
-  const n = props.nhip || [];
-  const het = n.length ? Math.max(...n.map((x) => x.e)) : 15;
-  return { durationInFrames: Math.max(90, Math.round((het + 0.5) * 30)), fps: 30 };
-};
+/* ĐÚNG 15 GIÂY. Gói khoá cứng con số này ("exactly 15 seconds", "final reaction in the last 3
+   seconds"), và nó cũng là con số Shorts/Reels thích. Không lấy độ dài tiếng nói làm độ dài
+   phim nữa — tiếng nói ngắn hơn thì phần dôi ra là KHOẢNG LẶNG DIỄN, không phải phim bị thừa. */
+export const DAI_QUE = 15.0;
+export const calcQue = async () => ({ durationInFrames: Math.round(DAI_QUE * 30), fps: 30 });
 
-/* Chữ thoại: dải dưới, chữ to, nền đậm — đọc được trên điện thoại cầm tay. Không dùng bong
-   bóng như bản truyện tranh: người que gầy, bong bóng có đuôi chỉ vào sẽ che mất tay đang diễn. */
 const Loi: React.FC<{ chu: string; W: number; H: number; p: number; mau: string }> =
 ({ chu, W, H, p, mau }) => {
   if (!chu) return null;
@@ -76,85 +59,98 @@ const Loi: React.FC<{ chu: string; W: number; H: number; p: number; mau: string 
   );
 };
 
+/* CHỖ ĐỨNG theo số người. Đo trước khi chọn: ở nét que, người buông tay rộng chừng 0,33 lần
+   chiều cao. Cao 0,42 khung (806px trên khung 1920) -> rộng ~265px; bốn người là 1060px, vừa
+   khít khung 1080. Cao hơn nữa thì bốn người chồng lên nhau — đó là lý do bản trước phải bỏ
+   bớt người chứ không phải vì gói viết mỗi nhịp một người. */
+const CHO = [[0.5], [0.30, 0.70], [0.17, 0.5, 0.83]];
+/* TỐI ĐA BA NGƯỜI trong khung. Gói có bốn vai, và bản trước dựng cả bốn: soi khung ra bốn
+   người chen kín từ mép này sang mép kia, không ai đọc được. Ba người là ngưỡng đo được —
+   mỗi người rộng ~0,33 chiều cao, ba người cao 0,38 khung chiếm 0,64 bề ngang, còn chỗ thở.
+   Ai bị bỏ ra thì bỏ người KHÔNG nói ở nhịp nào — chọn theo dữ liệu, không theo thứ tự. */
+const TOI_DA = 3;
+
 export const KichQue: React.FC<PropsQue> = ({
-  nhip = [], tu = [], voMp3 = "", nhac = "", nhacVol = 0.16,
-  vaiA, vaiB, tieuDe = "", handle = "", mau = "#E0533D", mauPhu = "#2F7D6B", hook = "",
+  nhip = [], vai = [], noi = "phong_khach", thu = "", tu = [], voMp3 = "", nhac = "",
+  nhacVol = 0.16, tieuDe = "", handle = "", mau = "#E0533D", mauPhu = "#2F7D6B", hook = "",
 }) => {
   const frame = useCurrentFrame();
   const { fps, width: W, height: H } = useVideoConfig();
   const t = frame / fps;
 
   const N = nhip.find((x) => t >= x.s && t < x.e) || nhip[nhip.length - 1] ||
-    ({ s: 0, e: 15, bg: "home", hanh: "", ai: 0, nar: "", pose: "idle", expr: "neutral" } as NhipQue);
-  const trong = t - N.s;
-  const p = kep(trong / 0.42);
+    ({ s: 0, e: 15, hanh: "", ai: 0, nar: "", pose: "idle", expr: "neutral" } as NhipQue);
+  const p = kep((t - N.s) / 0.42);
 
-  // Khẩu hình lấy từ MỐC TỪ, không lấy từ biên độ sóng: mốc từ có sẵn từ bước đọc giọng và
-  // chính xác hơn — biên độ còn dính cả tiếng nhạc nền.
   const dangNoi = tu.some((w) => t >= w.t - 0.02 && t < w.t + w.d + 0.05);
   const mo = dangNoi ? 0.35 + 0.45 * Math.abs(Math.sin(t * 21)) : 0;
-
-  const tuThe = live(POSES[N.pose] || POSES.idle, t, mo);
   const blink = Math.sin(t * 2.6) > 0.93 ? 0.12 : 1;
   const breath = Math.sin(t * 2.8) * 3;
 
-  const A = vaiA || { ten: "A", skin: "#F6C89A", shirt: "#3E7BFA", pants: "#2B3A55",
-                      hair: "#3A2A22", scale: 1 } as VaiQue;
-  const B = vaiB || { ten: "B", skin: "#EFC49A", shirt: "#E0715E", pants: "#3A3D42",
-                      hair: "#2E2018", scale: 1 } as VaiQue;
-  const V = N.ai === 0 ? A : B;
+  /* ── MẶT ĐẤT VÀ CỠ NGƯỜI: MỘT NGUỒN DUY NHẤT ─────────────────────────────────────────
+     Bản đầu có HAI hằng cùng trả lời "mặt đất ở đâu" (`floorPct=0.80` cho nền, `H*0.74` cho
+     bàn chân) và lệch 116px — người treo lửng giữa không.
+     Nay `SAN` và `NGUOI` là hai con số duy nhất; nền lẫn người đều đọc từ đây, và `NenQue`
+     nhận `nguoi` để suy ra kích thước từng món đồ. Không còn chỗ nào cho hai số nói khác nhau. */
+  const SAN = 0.66;                       // sàn chiếm trọn phần ba dưới
+  const sanY = H * SAN;
+  const NGUOI = H * 0.38;                 // chiều cao NGƯỜI LỚN, đơn vị của cả căn phòng
 
-  /* ── MẶT ĐẤT: MỘT HẰNG DUY NHẤT ────────────────────────────────────────────────────────
-     Anh: *"ảnh không có sàn -> lơ lửng; ép sàn chiếm trọn phần ba dưới, đồ đạc dồn hai mép,
-     giữa để trống."*
-
-     Bản trước có HAI con số cùng trả lời một câu hỏi "mặt đất ở đâu": `floorPct = 0.80` cho
-     nền, và `H*0.74 − 62*co` cho bàn chân. Đo ra: mặt sàn ở 1536, gót ở 1420 — hở 116px, nên
-     người treo lửng giữa không. Đây là họ lỗi đã ghi ở CLAUDE.md, chỉ đảo chiều: *một sự thật
-     bị mã hoá ở hai chỗ.* Vá một chỗ thì lần sau lệch tiếp.
-
-     Nay chỉ còn `SAN`. Nền đọc nó, gót chân đọc nó, cổng `kiem_san.py` đo lại nó trên pixel.
-     Trị 0,66 chứ không phải 0,80 vì luật là SÀN CHIẾM TRỌN PHẦN BA DƯỚI: 1 − 0,66 = 1/3. */
-  const SAN = 0.66;
-  const sanY = H * SAN;                       // gót chân chạm ĐÚNG đây
-  const co = (H * 0.50) / QUE_CAO;            // người cao 50% khung
-  const goc = sanY - QUE_GOT * co;            // gốc rig (hông) = gót trừ phần chân
-
-  // MỖI NHỊP MỘT NGƯỜI DIỄN — đọc thẳng từ gói: "Derek stands in the kitchen…", "Sara walks
-  // in…". Gói viết từng nhịp cho MỘT diễn viên, không phải hai người đối thoại cùng khung.
-  // Bản trước còn dựng thêm một vai phụ mờ 0,42 đứng lùi ở mép cho "đỡ trống". Bỏ: nét que
-  // chỉ có đường mảnh, làm mờ nó thành một đám xám không đọc ra hình người — thêm nhiễu chứ
-  // không thêm chiều sâu. Khung trống là việc của NỀN, không phải của một cái bóng người.
-  const xA = W * 0.5;
+  const dan = vai.length ? vai : [{ ten: "", gioi: "nam", tuoi: "trung", toc: "ngan",
+    mauToc: "#3B2A20", ao: "#3E7BFA", quan: "#2B3A55", pk: [], cao: 1 } as VaiQue];
+  /* Chọn ai được lên hình: ưu tiên người CÓ NÓI trong tập (đọc từ `nhip`), rồi mới tới người
+     chỉ đứng. `N.ai` trỏ vào danh sách gốc nên phải ánh xạ lại sau khi lọc — quên bước này là
+     nhân vật A mấp máy môi trong khi nhân vật B đang nói, lỗi im lặng kinh điển. */
+  const coNoi: number[] = [];
+  nhip.forEach((x) => { if (!coNoi.includes(x.ai)) coNoi.push(x.ai); });
+  const chon = [...coNoi, ...dan.map((_v, i) => i).filter((i) => !coNoi.includes(i))]
+    .slice(0, TOI_DA).sort((a, b) => a - b);
+  const hien = chon.map((i) => dan[i]);
+  const cho = CHO[Math.min(hien.length, TOI_DA) - 1];
 
   return (
     <AbsoluteFill style={{ background: "#0E1116" }}>
-      {/* Bối cảnh vẽ 2D — đổi theo TỪNG NHỊP, chọn theo lời thoại của chính nhịp ấy. */}
-      <SceneBG kind={N.bg} width={W} height={H} floorPct={SAN} wide={W > H}
-               T={{ ink: "#1E2A38", accent: mau, accent2: mauPhu }} time={t} />
+      <NenQue noi={noi} W={W} H={H} san={sanY} nguoi={NGUOI} t={t} />
 
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
-           style={{ position: "absolute", inset: 0 }}>
-        {/* Bóng tiếp đất — nằm ĐÚNG trên đường sàn, là thứ chứng minh bàn chân có chạm đất.
-            Hai lớp: vệt tiếp xúc đậm ngay dưới chân, quầng khuếch tán rộng và nhạt. */}
-        <ellipse cx={xA} cy={sanY + 4} rx={96 * co * V.scale} ry={17 * co}
-                 fill="#0A0C10" opacity={0.16} />
-        <ellipse cx={xA} cy={sanY + 2} rx={44 * co * V.scale} ry={8 * co}
-                 fill="#0A0C10" opacity={0.34} />
-
-        <NguoiQue x={xA} y={goc} scale={co * V.scale}
-                  pose={tuThe} mouthOpen={mo} expr={N.expr}
-                  blink={blink} breath={breath}
-                  toc={V.toc || (V.cap ? "mu" : "re")} nhan={V.cap || mau} />
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute", inset: 0 }}>
+        {hien.map((v, i) => {
+          const noiVai = chon[i] === N.ai;
+          const co = (NGUOI * v.cao) / QUE_CAO;
+          const x = W * cho[i];
+          /* Người ĐANG NÓI diễn tư thế của nhịp; người đứng nghe thì `idle` lệch pha để hai
+             người không thở cùng nhịp — thở đồng bộ nhìn ra ngay là hình sao chép.
+             KHÔNG làm mờ người đứng nghe: bản trước hạ xuống 0,42 và ở nét que thì một đường
+             mảnh làm mờ chỉ còn là vệt xám, thêm nhiễu chứ không thêm chiều sâu. */
+          const tuThe = live(POSES[noiVai ? (N.pose as string) : "idle"] || POSES.idle,
+                             t + (noiVai ? 0 : 1.3 + i * 0.7), noiVai ? mo : 0);
+          return (
+            <g key={i}>
+              <ellipse cx={x} cy={sanY + 4} rx={NGUOI * 0.15 * v.cao} ry={NGUOI * 0.026}
+                       fill="#0A0C10" opacity={0.15} />
+              <ellipse cx={x} cy={sanY + 2} rx={NGUOI * 0.07 * v.cao} ry={NGUOI * 0.013}
+                       fill="#0A0C10" opacity={0.3} />
+              <NguoiQue x={x} y={sanY - QUE_GOT * co} scale={co}
+                        flip={i > (hien.length - 1) / 2}
+                        pose={tuThe} vai={v}
+                        mouthOpen={noiVai ? mo : 0}
+                        /* Người đứng nghe: `neutral`, KHÔNG phải `deadpan`. Bản trước cho cả ba nửa
+                           nhắm mắt nên khung nào cũng như cả nhà vừa ngủ dậy. Vẻ chán đời chỉ đắt
+                           khi một người có, cả ba cùng có thì nó thành trạng thái nền. */
+                        expr={noiVai ? N.expr : "neutral"}
+                        blink={blink} breath={breath} />
+            </g>
+          );
+        })}
+        {thu ? (
+          <ThuQue x={W * 0.90} y={sanY} scale={(NGUOI / QUE_CAO) * 0.62} mau={thu} t={t} />
+        ) : null}
       </svg>
 
       <Loi chu={N.nar} W={W} H={H} p={p} mau={mau} />
 
-      {/* Thẻ hook 1,4 giây đầu — nhịp 0-3s của gói là HOOK, và YouTube quyết giữ hay lướt ở
-          đúng quãng ấy. */}
       {hook && t < 1.4 ? (
         <div style={{
-          position: "absolute", left: 0, right: 0, top: H * 0.09,
+          position: "absolute", left: 0, right: 0, top: H * 0.055,
           display: "flex", justifyContent: "center", pointerEvents: "none",
           opacity: kep((1.4 - t) / 0.3), transform: `scale(${1 + (1 - kep(t / 0.25)) * 0.08})`,
         }}>
@@ -168,7 +164,6 @@ export const KichQue: React.FC<PropsQue> = ({
         </div>
       ) : null}
 
-      {/* Dải tên kênh — mỏng, đáy khung, không chạm vùng an toàn của nút bấm trên điện thoại. */}
       <div style={{
         position: "absolute", left: 0, right: 0, bottom: 0, height: H * 0.055,
         background: "#12151C", display: "flex", alignItems: "center",
@@ -184,8 +179,8 @@ export const KichQue: React.FC<PropsQue> = ({
         <Audio src={staticFile(nhac)} loop
                volume={(f: number) => {
                  const gy = f / fps;
-                 const noi = nhip.some((x) => gy >= x.s - 0.1 && gy <= x.e + 0.15 && x.nar);
-                 return nhacVol * (noi ? 0.55 : 1);
+                 const noiGi = nhip.some((x) => gy >= x.s - 0.1 && gy <= x.e + 0.15 && x.nar);
+                 return nhacVol * (noiGi ? 0.55 : 1);
                }} />
       ) : null}
     </AbsoluteFill>

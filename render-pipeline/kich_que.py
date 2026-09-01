@@ -115,30 +115,39 @@ def mot_tap(de: str, idx: int) -> str:
     slug = f"{de}_{idx:04d}"
     print(f"\n▶ {k['ten']} · {t['ten'][:44]}", flush=True)
 
-    nguoi = [n for n, v in k["dan"].items() if not v["thu"]]
-    # Hai vai CHÍNH của tập: hai người nói nhiều nhất trong bốn nhịp.
-    dem = {}
-    for n in t["nhip"]:
-        for _c, ai in n["loi"]:
-            if ai in nguoi:
-                dem[ai] = dem.get(ai, 0) + 1
-    thu_tu = sorted(dem, key=lambda x: -dem[x]) or nguoi[:2]
-    vA = thu_tu[0]
-    vB = next((x for x in thu_tu[1:] if x != vA), next((x for x in nguoi if x != vA), vA))
+    # ══ DÀN CỦA TẬP — đọc từ gói, không tự chọn ═══════════════════════════════════════
+    # Bản trước chọn "hai người nói nhiều nhất" rồi vẽ đúng một người mỗi nhịp. Gói thì viết
+    # cả nhà đứng trong một căn phòng suốt mười lăm giây, mỗi nhịp một người phản ứng — và
+    # `nhap_15s.py` đã bóc sẵn danh sách ấy ra `t["vai"]`.
+    dan_t = [x for x in t.get("vai", []) if x in k["dan"] and not k["dan"][x]["thu"]][:4]
+    if not dan_t:
+        dan_t = [n for n, v in k["dan"].items() if not v["thu"]][:3]
+    thu_c = next((v["ao"] for v in k["dan"].values() if v["thu"]), "")
 
+    # Người NÓI của mỗi nhịp -> chỉ số trong dàn. Ai không có trong dàn thì lấy người đầu.
     cau, ghi = [], []
     for n in t["nhip"]:
         for c, ai in n["loi"]:
-            cau.append((c, 0 if ai == vA else 1, "trung_tinh"))
-            ghi.append((n, c, ai))
+            i = dan_t.index(ai) if ai in dan_t else 0
+            cau.append((c, i % 2, "trung_tinh"))
+            ghi.append((n, c, i))
     if len(cau) < 2:
         print("   ⏭ dưới hai lượt thoại — bỏ")
         return ""
 
-    ga, gb = _giong(k["dan"][vA], hat), _giong(k["dan"][vB], hat + 3)
+    # Giọng: mỗi vai một giọng riêng theo giới + tuổi, không còn hai giọng dùng chung.
+    giong = {i: _giong(k["dan"][x], hat + i * 5) for i, x in enumerate(dan_t)}
+
+    # ══ ĐÚNG BỐN CỬA SỔ NHỊP CỦA KỊCH BẢN ════════════════════════════════════════════
+    # Gói ghi rõ 0-3s · 3-7s · 7-11s · 11-15s. Đưa mốc bắt đầu của từng lượt vào bộ đọc để nó
+    # chèn khoảng lặng cho khớp — thay vì nối bốn lượt sát nhau rồi hết ở giây tám.
+    # Trừ 0,15s: người ta bắt đầu nói hơi trước mốc thì nghe tự nhiên hơn là đúng phóc.
+    dich = [max(0.0, n["s"] - 0.15) for n, _c, _i in ghi]
+
     rel = f"v8_{slug}.mp3"
     try:
-        dur, tu, moc = doc_hai_giong(cau, ga, gb, os.path.join(PUB, rel))
+        dur, tu, moc = doc_hai_giong(cau, giong.get(0), giong.get(1) or giong.get(0),
+                                     os.path.join(PUB, rel), moc_dich=dich)
     except Exception as e:
         print(f"   ❌ giọng đọc hỏng: {str(e)[:110]}")
         return ""
@@ -150,37 +159,36 @@ def mot_tap(de: str, idx: int) -> str:
     # dò `hanh` không thấy mẫu nào thì lặng lẽ trả "present", mà `hanh` của một tập thường viết
     # na ná nhau -> cả bốn nhịp cùng "present". Đúng họ lỗi "rơi về mặc định trong im lặng":
     # không có lỗi nào báo, chỉ có video nhạt.
-    # Ba tầng, tầng sau chỉ dùng khi tầng trước KHÔNG khớp thật:
-    #   1. hành động của nhịp   2. lời thoại của nhịp   3. xoay vòng theo số thứ tự nhịp
-    # Tầng 3 không "đoán bừa" — nó chỉ bảo đảm hai nhịp liền nhau không trùng bóng dáng.
     VONG = ["present", "point", "lean", "shrug", "lookaway"]
     def _dang(n, c, i):
-        d = _khop(TU_THE, n["hanh"], "")
-        if not d:
-            d = _khop(TU_THE, c, "")
+        d = _khop(TU_THE, n["hanh"], "") or _khop(TU_THE, c, "")
         return d or VONG[i % len(VONG)]
 
-    nhip = []
-    truoc = ""
+    nhip, truoc = [], ""
     for i, (n, c, ai) in enumerate(ghi):
-        van = f"{n['hanh']} {c}"
+        d = _dang(n, c, i)
+        if d == truoc and d in VONG:
+            d = VONG[(VONG.index(d) + 2) % len(VONG)]
+        # Cửa sổ nhịp lấy từ KỊCH BẢN, không lấy từ độ dài tiếng nói. Nhịp cuối kéo tới 15,0
+        # vì gói đòi "strong final reaction freeze before the 15-second cutoff" — ba giây cuối
+        # là chỗ cú chốt phải đứng yên cho người xem kịp cười.
         nhip.append({
-            "s": moc[i][0], "e": moc[i][1] + (0.25 if i == len(ghi) - 1 else 0.02),
-            "bg": _khop(BOI_CANH, van, "home"),
-            "hanh": n["hanh"][:90],
-            "ai": 0 if ai == vA else 1,
-            "nar": c,
-            "pose": (lambda d: d if d != truoc else VONG[(VONG.index(d) + 2) % len(VONG)]
-                     if d in VONG else d)(_dang(n, c, i)),
-            "expr": _khop(CAM_XUC, c, "neutral"),
-            "hai": True,
+            "s": float(n["s"]), "e": float(n["e"]),
+            "hanh": n["hanh"][:90], "ai": ai, "nar": c,
+            "pose": d, "expr": _khop(CAM_XUC, c, "neutral"),
         })
-        truoc = nhip[-1]["pose"]
+        truoc = d
+
+    def _vq(ten):
+        v = k["dan"][ten]
+        return {"ten": ten, "gioi": v["gioi"], "tuoi": v["tuoi"], "toc": v["toc"],
+                "mauToc": v["mau_toc"], "ao": v["ao"], "quan": v["quan"],
+                "pk": v.get("pk", []), "cao": v.get("cao", 1.0)}
 
     props = {
-        "nhip": nhip, "tu": tu, "voMp3": rel, "nhac": NHAC[hat % len(NHAC)],
+        "nhip": nhip, "vai": [_vq(x) for x in dan_t], "noi": t.get("noi", "phong_khach"),
+        "thu": thu_c, "tu": tu, "voMp3": rel, "nhac": NHAC[hat % len(NHAC)],
         "nhacVol": _am_nhac(NHAC[hat % len(NHAC)]),
-        "vaiA": _vai(vA, k["dan"][vA], 0), "vaiB": _vai(vB, k["dan"][vB], 1),
         "tieuDe": k["ten"].upper(), "handle": "@" + de + "usa",
         "mau": "#E0533D", "mauPhu": "#2F7D6B",
         "hook": (cau[0][0].rstrip("?.!").upper())[:34],
@@ -199,6 +207,15 @@ def mot_tap(de: str, idx: int) -> str:
 
     lam_thumb(out, t["ten"], k["ten"], "#E0533D", os.path.join(GOC, "out", f"v8_{slug}.jpg"))
     am = chuan(out)
+    # Báo độ dài của VIDEO, không phải của mp3. Bản trước in `dur` (tổng giây tiếng nói) nên
+    # báo "12,4s" trong khi tệp dài đúng 15,000s — tôi suýt đi sửa một thứ không hỏng.
+    _dv = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0",
+                          "-show_entries", "stream=duration", "-of", "csv=p=0", out],
+                         capture_output=True, text=True)
+    try:
+        dur = float((_dv.stdout or "0").strip().splitlines()[0].strip().rstrip(","))
+    except Exception:
+        pass
     print(f"   ✅ {os.path.basename(out)} ({os.path.getsize(out)/1e6:.1f} MB · {dur:.1f}s · "
           f"{len(nhip)} nhịp{' · ' + am if am else ''})")
     return out
@@ -209,10 +226,16 @@ def main() -> int:
     ap.add_argument("--kenh", default="")
     ap.add_argument("--tu", type=int, default=0)
     ap.add_argument("--so", type=int, default=1)
+    # 1/9 — mười gói được viết song song nên tập #001 của cả mười đều là cảnh nấu ăn. Dựng
+    # cùng chỉ số cho mọi kênh thì mười video ra cùng một căn bếp, và người xem bản demo sẽ
+    # kết luận "bối cảnh giống hết" — đúng, nhưng vì lý do nằm ở KỊCH BẢN chứ không ở engine.
+    # `--lech` đẩy mỗi kênh sang một tập khác để bản demo phản ánh đúng độ đa dạng thật của kho.
+    ap.add_argument("--lech", type=int, default=0)
     a = ap.parse_args()
     kho = json.load(io.open(KHO, encoding="utf-8"))
     ds = [x.strip() for x in a.kenh.split(",") if x.strip()] or list(kho)
-    ra = [v for de in ds for i in range(a.so) if (v := mot_tap(de, a.tu + i))]
+    ra = [v for j, de in enumerate(ds) for i in range(a.so)
+          if (v := mot_tap(de, a.tu + i + j * a.lech))]
     print(f"\n✅ {len(ra)}/{len(ds) * a.so} video")
     return 0 if ra else 1
 

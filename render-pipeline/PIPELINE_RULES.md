@@ -6653,3 +6653,56 @@ nào đỏ, không dòng log nào lạ.
 
 Sửa: ba tầng có thứ tự — hành động → lời thoại → xoay vòng theo số thứ tự nhịp — và chặn hai
 nhịp liền nhau trùng dáng. Tầng cuối không đoán bừa, nó chỉ bảo đảm silhouette không lặp.
+
+### 7bo — Dựng phim từ TRÍ NHỚ về kịch bản, không dựng từ kịch bản (1/9)
+
+**Triệu chứng.** Anh nêu sáu lỗi trong một buổi: *"chưa thể hiện nam nữ" · "chưa có đa nhân
+vật" · "nhân vật quá to so với bối cảnh" · "bối cảnh phải đúng như prompt 15s" · "làm demo
+đúng clip 15s" · "nhân vật ko phải giống hết, có nét đặc trưng"*.
+
+**Gốc rễ — MỘT cái cho cả sáu.** Gói 15 giây đã ghi sẵn: tuổi và giới từng vai, kiểu tóc, màu
+áo quần, kính, nơi chốn của tập, ai có mặt ở nhịp nào, và bốn cửa sổ 0-3/3-7/7-11/11-15. Tôi
+đọc lấy lời thoại rồi **tự bịa toàn bộ phần còn lại**. Năm mươi vai khác nhau trên giấy ra hình
+thành một người lặp lại năm mươi lần.
+
+**Cách nhận ra ở chỗ khác.** Với mỗi thứ hiện trên màn hình, hỏi: *dòng nào trong nguồn quyết
+định nó?* Không chỉ ra được dòng nào thì đó là chỗ tôi đang bịa — và chỗ ấy sẽ sai theo đúng
+cách người xem nhìn ra ngay còn cổng thì không.
+
+**Bảng đo — khi con số và con mắt bất đồng.** Mắt bảo "người quá to". Đo ra ngược hẳn:
+`người/trần phòng = 1:1,32` (thật 1:1,41, gần đúng) nhưng `người/lưng sofa = 6,4×` (thật 2,0×).
+Người không to — **đồ đạc bị vẽ nhỏ đi 3,2 lần**. Nếu tin mắt mà thu nhỏ người thì mặt biến
+mất trên điện thoại, mà tỉ lệ vẫn sai y nguyên.
+
+**Đã sửa.** `NenQue.tsx` mới: mọi kích thước viết bằng ĐƠN VỊ NGƯỜI lấy từ đời thật (mặt bếp
+0,53 · cửa 1,20 · máy giặt 0,53). Không sửa `SceneBG` vì `StickStory` dùng chung.
+
+### 7bp — Thêm một LỚP mới thì phải rà lại giả định của lớp cũ (1/9)
+
+Mặc áo cho người que xong, soi khung thấy cả nhà **cụt tay**. Không phải lỗi vẽ áo: hai cánh
+tay vốn mọc từ đúng một điểm trên TRỤC GIỮA thân. Thân trần thì không sao; vừa có áo là cả
+cánh tay nằm lọt trong áo, chỉ còn mẩu cẳng tay thò ra.
+
+Cùng buổi, cùng họ lỗi, ba lần nữa: tóc vẽ SAU cái đầu (thân trần thì đúng, có tóc dài thì mảng
+tóc đè lên mặt) · mí mắt vẽ bằng một nét gạch ngang qua tròng (ra băng bịt mắt) · áo dùng cùng
+độ đậm viền với chi (khối áo hút hết mắt, người thành tấm biển).
+
+**Nhận ra:** mỗi khi thêm một lớp vẽ, liệt kê những chỗ lớp cũ đang giả định "chỗ này trống".
+
+### 7bq — Regex bắt cụm màu chết vì một dấu gạch nối (1/9)
+
+`"light blue button-up shirt"` → hàm dò màu bắt hai chữ liền trước "shirt", gặp gạch nối chỉ
+với tới `up`, trả rỗng, rơi về xám mặc định. Ba trong năm vai của một kênh cùng dính → cả nhà
+mặc xám giống hệt nhau, tức là chính cái "nhân vật giống hết" anh nói.
+
+Sửa: tách chữ bằng MỌI ký tự không phải chữ cái rồi dò ngược bốn chữ. Và màu dự phòng phải băm
+theo TÊN VAI — hai vai cùng rơi về dự phòng mà dùng chung một mã là lại giống hệt nhau.
+
+### 7br — Cổng báo SAI hại hơn cổng im lặng (1/9)
+
+`kiem_nen.py` quét chữ thô nên (a) đọc phải chú thích trong đó tôi TRÍCH LẠI câu hỏng để giải
+thích, và tố `kich_hai.py` viết nghịch; (b) trượt câu đúng của `kich_v2.py` vì nó viết vắt qua
+hai dòng. Cổng nay đọc mã đã bỏ chú thích và đã nối chuỗi ngắt dòng.
+
+Lý do phải sửa ngay: cổng im lặng thì người ta không biết mà bỏ qua; cổng tố oan thì **người ta
+tắt nó đi cho đỡ phiền**, và mất luôn cả những lần nó đúng.
