@@ -287,6 +287,38 @@ KHONG_MY = [
      "câu cảm thán rỗng — ở clip ngắn mỗi từ phải đưa một thông tin hoặc một cú đùa"),
 ]
 
+# ── BỐN CỔNG NGHỀ, rút từ việc ĐỌC 28 kịch bản AI đã sinh ─────────────────────────────────
+# Thang 100 điểm đo được CẤU TRÚC (có cú lật không · hook đủ dài không · thoại có vừa nhịp
+# không). Nó không đo được BUỒN CƯỜI. Đọc tay 28 tập thì thấy bốn lỗi nghề mà mọi cổng đều cho
+# qua — và cả bốn đều đo được, chỉ là chưa ai viết ra.
+
+# 1 · CHỮ TRONG KHUNG. Đo được: 6/28 tập bắt Kling vẽ chữ đọc được, chỗ nó hỏng nặng nhất.
+#     `CAM_KY` có mục "sign reads" nhưng so bằng CHUỖI CON, nên "a sign on the shed door that
+#     reads…" · "one neon note reads…" · "spelling out Dr Shah" đều lọt. Một danh sách chuỗi con
+#     không bắt được ngôn ngữ — phải là biểu thức.
+CHU_TRONG_KHUNG = (
+    r"\b(reads?|reading|spell(s|ed|ing)?( out)?|writ(ten|ing)|says on|labell?ed|handwritten|"
+    r"scrawl(ed)?|printed with|marked ['\"“]|in (blue|black|red) marker)\b"
+    r"|['\"“][^'\"”]{2,40}['\"”]\s*(on|across|taped|stuck|hangs|written)"
+)
+
+# 2 · CHỮ KHÔNG VẼ ĐƯỢC. "evidence he made the mess" · "confirming they're his" — đó là người
+#     viết giải thích cho người đọc, không phải thứ hoạ sĩ phân cảnh vẽ được. Kling đọc xong sẽ
+#     tự bịa ra một hình cho khái niệm ấy, và mỗi tập bịa một kiểu.
+KHONG_VE_DUOC = (
+    r"\b(evidence|proving|confirming|indicating|suggesting|implying|symboliz\w+|representing|"
+    r"showing that|revealing that|meaning|as if to say|clearly (his|hers|theirs)|obviously)\b"
+)
+
+# 3 · THOẠI TỰ THUẬT. "Kyle, your note made the fridge a sticky wall" — không ai nói thế; đó là
+#     lời dẫn đội lốt lời thoại. Ba dấu hiệu đo được: gọi tên người đối diện, nói ra chính hành
+#     động mình đang làm, và câu dài kiểu văn viết.
+THOAI_TU_THUAT = (
+    r"^\s*[A-Z][a-z]+,\s"                       # "Kyle, ..." — gọi tên giữa hai người trong phòng
+    r"|\bI'?ll (tape|put|stick|write|make|hang|place) \b"   # tự tường thuật hành động sắp làm
+    r"|\byour \w+ (made|turned|caused) \b"
+)
+
 CAM_KY = [
     ("subtitle", "Kling vẽ chữ ra ký tự loằng ngoằng — chữ để khâu ghép làm, không nhờ Kling"),
     ("caption", "như trên: chữ trên màn hình do ffmpeg vẽ, không để Kling vẽ"),
@@ -3203,6 +3235,25 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
     for tu, ly in CAM_KY:
         if tu in ca:
             e.append(f"có {tu!r} — {ly}")
+            break
+
+    _hinh = " ".join(str(d.get(k) or "") for k in ("hook", "setup", "escalate", "payoff"))
+    _m = re.search(CHU_TRONG_KHUNG, _hinh, re.I)
+    if _m:
+        e.append(f"bắt Kling vẽ CHỮ ĐỌC ĐƯỢC ({_m.group(0).strip()!r}) — đây là chỗ Kling hỏng "
+                 f"nặng nhất, nó ra ký tự loằng ngoằng. Thứ trên biển/giấy phải nhận ra bằng "
+                 f"HÌNH DẠNG và MÀU, không bằng chữ")
+    _m = re.search(KHONG_VE_DUOC, _hinh, re.I)
+    if _m:
+        e.append(f"dùng chữ không vẽ được ({_m.group(0)!r}) — đó là giải thích cho người đọc, "
+                 f"không phải thứ hoạ sĩ phân cảnh vẽ ra được. Tả CÁI THẤY, để người xem tự suy")
+    for _i, _l in enumerate(co_loi, 1):
+        _s = str(_l.get("say") or "")
+        _m = re.search(THOAI_TU_THUAT, _s)
+        if _m:
+            e.append(f"lượt {_i} ({_l.get('who')}): {_s!r} — lời dẫn đội lốt lời thoại. Người "
+                     f"trong phòng không gọi tên nhau trừ khi đang giận, và không ai nói ra "
+                     f"chính hành động mình đang làm")
             break
 
     for _t in (_CAM_TU_LOAT or ()):

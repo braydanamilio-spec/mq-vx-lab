@@ -87,6 +87,7 @@ jobs:
           import storage as ST
           print("── DÒ TỪNG TẦNG ──")
           try:
+              ST._POOL_CACHE["val"] = None   # xoá đệm để đo TẦNG chứ không đo đệm
               kv = ST._kho_tu_kv()
               print(f"  KV        : {len(kv)} tài khoản")
           except Exception as e:
