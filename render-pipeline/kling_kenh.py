@@ -1985,8 +1985,17 @@ def xuat_web(thu_muc: str) -> list[str]:
         hs = ho_so(ten)
         ph0 = next(iter(hs["phong"]))
         mo0 = hs["phong"][ph0]
+        # ── DÀN NHÂN VẬT CŨNG PHẢI LÀ Ô TRỐNG ─────────────────────────────────────────────
+        # 1/9 — Khuôn dựng bằng chỗ trống `@@HOOK@@`, nên `_co_mat()` không thấy tên ai và
+        # rơi về "lấy cả dàn". Khuôn HOUSE RULES vì thế khoá cứng CẢ NĂM nhân vật, ở mọi tập.
+        # Hai cái giá: tốn ~750 ký tự thay vì ~300 (đủ để bóp hook xuống còn 20 từ), và tệ hơn
+        # — prompt bảo Kling vẽ năm người trong một tập chỉ có hai. Đúng lỗi mà
+        # KLING_CACH_DUNG.md đã cảnh báo, tái sinh ở khâu xuất web.
+        _cast = "\n".join(hs["nhan_vat"][t] for t in hs["vai"])
+        _names = ", ".join(hs["vai"])
         def _o(t):
-            return t.replace(mo0, "@@ROOMDESC@@").replace(ph0, "@@ROOM@@")
+            return (t.replace(_cast, "@@CAST@@").replace(_names, "@@CASTNAMES@@")
+                     .replace(mo0, "@@ROOMDESC@@").replace(ph0, "@@ROOM@@"))
         khuon = {}
         for g in GIAY_CHUAN:
             tap = dict(MAU, room=ph0)

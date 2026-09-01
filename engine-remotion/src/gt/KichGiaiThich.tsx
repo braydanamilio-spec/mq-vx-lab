@@ -56,7 +56,7 @@ export type PropsGT = {
   tu?: { t: number; d: number; w: string }[];
   voMp3?: string; nhac?: string; nhacVol?: number;
   tieuDe?: string; handle?: string; mau?: string; mauPhu?: string;
-  dai?: number; doc?: boolean;
+  dai?: number; doc?: boolean; hat?: number;
   /* TÔNG MÀU RIÊNG TỪNG NICHE — anh: *"xây dựng tông màu cho niche, phong cách dựng ảnh sao
      cho đẹp chuẩn USA như một channel top đầu."*
      Nền trơn và chữ không được dùng chung một bảng màu cho cả mười kênh: kênh tài chính cần
@@ -180,7 +180,7 @@ const _samMau = (h: string, t: number): string => {
 
 export const KichGiaiThich: React.FC<PropsGT> = ({
   nhip = [], tu = [], voMp3 = "", nhac = "", nhacVol = 0.13,
-  tieuDe = "", handle = "", mau = "#E0533D", mauPhu = "#2F7D6B", doc = false,
+  tieuDe = "", handle = "", mau = "#E0533D", mauPhu = "#2F7D6B", doc = false, hat = 0,
   nenTrang = "#EFE7D6", chuTrang = "#2C2722",
 }) => {
   const frame = useCurrentFrame();
@@ -256,7 +256,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                        phải để đứng cạnh ảnh. */}
                    <SoLieu W={W} H={H * 0.80} so={N.so || ""} don={N.don || ""} chu={N.chu || ""}
                            bt={N.nenAnh ? "" : (N.bt || "")} mau={mau} p={p}
-                           tren_anh={!!N.nenAnh} />
+                           tren_anh={!!N.nenAnh} nen={nenTrang} bo={hat % 3} />
                    {N.dai_chu ? <DaiChu W={W} H={H * 0.80} chu={N.dai_chu} p={p} /> : null}
                  </g> };
       case "truc":

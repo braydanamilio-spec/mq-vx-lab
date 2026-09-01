@@ -72,6 +72,23 @@ QUANG_DUONG = [                                  # dặm
     ("New York to London",               3459,    "may_bay"),
     ("the length of the Mississippi",    2340,    "trai_dat"),
     ("all the way around Saturn",       235298,   "trai_dat"),
+    # ── NỐI THÊM 1/9 ────────────────────────────────────────────────────────────────────
+    # Bảng cũ 10 mục, mà bộ sinh lấy `ds[i % n]` -> kênh lặp y hệt từ tập 10. Đo được cả 18
+    # kênh lặp trong vòng 1-21 tập. Mọi khoảng cách bằng DẶM (§12.13: kênh Mỹ, đơn vị Mỹ).
+    ("the International Space Station",   254,      "trai_dat"),
+    ("the deepest point of the ocean",      7,      "ca_voi"),
+    ("one lap around the Earth",        24901,      "trai_dat"),
+    ("Miami to Seattle",                 2734,      "may_bay"),
+    ("the edge of space",                  62,      "may_bay"),
+    ("a cross-country road trip",        3000,      "xe"),
+    ("Chicago to Denver",                 920,      "xe"),
+    ("the Moon and back",              477800,      "mat_trang"),
+    ("a year of the average commute",    4700,      "xe"),
+    ("the Appalachian Trail",            2190,      "cay"),
+    ("Alaska to Florida",                4400,      "xe_buyt"),
+    ("the height of a passenger jet",       7,      "may_bay"),
+    ("Boston to Miami",                  1500,      "xe"),
+    ("a marathon",                         26,      "nguoi"),
 ]
 
 CO_LON = [                                       # feet
@@ -82,6 +99,16 @@ CO_LON = [                                       # feet
     ("a Boeing 747",          232.0, "ft", "may_bay"),
     ("the Statue of Liberty",  305.0, "ft", "nha"),
     ("a football field",      300.0, "ft", "cay"),
+    # ── NỐI THÊM 1/9. Chiều cao/dài bằng FOOT. Cặp lấy bằng `_cap`.
+    ("a ten-storey building",       110.0, "ft", "nha"),
+    ("a grand piano",                 9.0, "ft", "dan_piano"),
+    ("a refrigerator",                6.0, "ft", "hop"),
+    ("a smartphone",                  0.5, "ft", "dien_thoai"),
+    ("a housecat",                    1.5, "ft", "meo"),
+    ("a passenger jet",             230.0, "ft", "may_bay"),
+    ("the Empire State Building",  1454.0, "ft", "nha"),
+    ("a redwood tree",              350.0, "ft", "cay"),
+    ("a city bus",                   40.0, "ft", "xe_buyt"),
 ]
 
 # ══ HẰNG SỐ CHO 8 KÊNH BỔ SUNG (1/9/2026) ═══════════════════════════════════════════════════
@@ -102,6 +129,29 @@ XAC_SUAT = [                                        # (việc, mẫu số 1-trê
     ("being born on February 29th", 1_461, "dong_ho"),
     ("flipping ten heads in a row", 1_024, "tien"),
     ("two people sharing a birthday in a room of 23", 2, "nguoi"),
+    # ── NỐI THÊM 1/9. Mẫu số là 1-trong-N, số thật.
+    ("bowling a perfect game",               11500, "hop"),
+    ("finding a four-leaf clover",           10000, "cay"),
+    ("a hole in one",                        12500, "hop"),
+    ("matching five numbers but not the ball", 11688054, "tien"),
+    ("a shark attack in your lifetime",      3748067, "ca_voi"),
+    ("becoming an astronaut after applying",  1500, "may_bay"),
+    ("drawing the ace of spades",               52, "tien"),
+    ("rolling snake eyes",                      36, "hop"),
+    ("your flight being cancelled",             56, "may_bay"),
+    # ── ĐỢT 2 (1/9). Mẫu số 1-trong-N.
+    ("being dealt a royal flush",          649740, "tien"),
+    ("getting a hole in your parachute",   750000, "may_bay"),
+    ("guessing a stranger's PIN",           10000, "tien"),
+    ("both of your coins landing edge-up",  36000000, "tien"),
+    ("being audited this year",               220, "giay"),
+    ("your luggage being lost",               158, "may_bay"),
+    ("meeting someone with your birthday",    365, "dong_ho"),
+    ("being left-handed",                      10, "nguoi"),
+    ("having identical twins",                250, "nguoi"),
+    ("a meteorite hitting your house",   182138880, "trai_dat"),
+    ("winning a coin toss five times",         32, "tien"),
+    ("being born in a leap second",      31557600, "dong_ho"),
 ]
 PHI_AN = [                                          # (thứ, giá, các phần %)
     ("a $6 coffee", 6.00, [("the beans", 6), ("the cup and lid", 4),
@@ -113,11 +163,93 @@ PHI_AN = [                                          # (thứ, giá, các phần 
                                      ("the driver", 12), ("the app", 30)]),
     ("a $1200 phone", 1200.00, [("the parts", 38), ("assembly", 3),
                                 ("research", 12), ("the shop", 12), ("the brand", 35)]),
+    # ── NỐI THÊM 1/9. Bóc giá thành từng phần — phần trăm cộng lại đúng 100.
+    ("a $12 fast-food meal", 12.0, [("the food", 30), ("packaging", 8), ("staff", 27),
+                                     ("rent and power", 20), ("profit", 15)], ),
+    ("a $4 bottle of water", 4.0, [("the water", 1), ("the bottle", 12), ("shipping", 22),
+                                    ("the store's cut", 40), ("profit", 25)], ),
+    ("a $60 pair of sneakers", 60.0, [("materials", 12), ("factory labour", 4),
+                                       ("shipping", 8), ("marketing", 26),
+                                       ("the retailer", 34), ("profit", 16)], ),
+    ("a $25 movie ticket night", 25.0, [("the studio's cut", 50), ("the theatre", 18),
+                                         ("staff", 14), ("building costs", 12),
+                                         ("profit", 6)], ),
+    ("a $200 airline ticket", 200.0, [("fuel", 24), ("crew", 18), ("the aircraft", 16),
+                                       ("airport fees", 15), ("taxes", 14),
+                                       ("profit", 13)], ),
+    ("a $8 pint of beer", 8.0, [("the beer", 11), ("the glass and tap", 5),
+                                 ("staff", 30), ("rent", 34), ("profit", 20)], ),
+    ("a $1,200 phone", 1200.0, [("the parts", 38), ("assembly", 3), ("research", 14),
+                                 ("marketing", 12), ("the carrier's cut", 13),
+                                 ("profit", 20)], ),
+    ("a $35 delivered pizza", 35.0, [("the pizza", 22), ("the driver", 14),
+                                      ("the app's cut", 30), ("the restaurant", 24),
+                                      ("profit", 10)], ),
+    # ── ĐỢT 2 (1/9): n = 12 nên bản dài 10 chương chỉ có 6 mục để dùng -> tự lặp 4 lần.
+    ("a $30 concert ticket", 30.0, [("the artist", 24), ("the venue", 20),
+                                     ("the promoter", 18), ("service fees", 26),
+                                     ("taxes", 12)]),
+    ("a $5 cup of coffee at a chain", 5.0, [("the beans", 5), ("milk and cup", 9),
+                                             ("staff", 28), ("rent", 32),
+                                             ("head office", 14), ("profit", 12)]),
+    ("a $90 pair of jeans", 90.0, [("cotton", 8), ("sewing", 5), ("shipping", 7),
+                                    ("brand and marketing", 28), ("the shop", 36),
+                                    ("profit", 16)]),
+    ("a $15 streaming month", 15.0, [("content licensing", 55), ("servers", 12),
+                                      ("payment fees", 4), ("marketing", 17),
+                                      ("profit", 12)]),
+    ("a $2,000 laptop", 2000.0, [("the parts", 45), ("assembly", 4), ("research", 13),
+                                  ("marketing", 10), ("the retailer", 15),
+                                  ("profit", 13)]),
+    ("a $70 hotel night", 70.0, [("staff", 26), ("the building", 30), ("utilities", 11),
+                                  ("booking site's cut", 18), ("profit", 15)]),
+    ("a $9 bag of chips", 9.0, [("potatoes", 6), ("oil and seasoning", 5),
+                                 ("the bag", 8), ("shipping", 12),
+                                 ("the store", 45), ("profit", 24)]),
+    ("a $45 video game", 45.0, [("development", 30), ("the platform's cut", 30),
+                                 ("marketing", 20), ("the publisher", 12),
+                                 ("profit", 8)]),
+    ("a $600 flight", 600.0, [("fuel", 22), ("crew", 17), ("aircraft costs", 18),
+                              ("airport and taxes", 28), ("profit", 15)]),
+    ("a $18 cocktail", 18.0, [("the spirits", 12), ("mixers and ice", 4),
+                              ("staff", 29), ("rent", 35), ("profit", 20)]),
+    ("a $250 pair of trainers", 250.0, [("materials", 9), ("factory labour", 3),
+                                         ("shipping", 5), ("athlete endorsement", 12),
+                                         ("marketing", 20), ("the retailer", 35),
+                                         ("profit", 16)]),
+    ("a $40 phone case", 40.0, [("plastic and rubber", 4), ("moulding", 3),
+                                 ("shipping", 6), ("brand licence", 22),
+                                 ("the shop", 45), ("profit", 20)]),
 ]
 DOI_NGUOI = [                                       # (việc, giờ mỗi ngày)
     ("sleeping", 8.0, "giuong"), ("looking at a phone", 4.5, "dien_thoai"),
     ("eating", 1.2, "hop"), ("commuting", 1.0, "xe"),
     ("waiting in lines", 0.3, "nguoi"), ("watching television", 2.8, "dien_thoai"),
+    # ── NỐI THÊM 1/9. Giờ mỗi ngày trung bình của người Mỹ.
+    ("waiting in line",              0.3, "nguoi"),
+    ("doing housework",              1.8, "nha"),
+    ("cooking",                      0.9, "lua"),
+    ("scrolling social media",       2.4, "dien_thoai"),
+    ("sitting in meetings",          1.1, "giay"),
+    ("shopping",                     0.6, "tien"),
+    ("caring for family",            1.5, "nguoi"),
+    ("exercising",                   0.3, "nguoi"),
+    ("reading",                      0.3, "giay"),
+    # ── ĐỢT 2 (1/9). Giờ mỗi ngày, trung bình người Mỹ trưởng thành.
+    ("waiting on hold",              0.08, "dien_thoai"),
+    ("looking for things you lost",  0.15, "nha"),
+    ("brushing your teeth",          0.06, "coc"),
+    ("showering",                    0.20, "nha"),
+    ("getting dressed",              0.15, "nguoi"),
+    ("sitting in traffic",           0.45, "xe"),
+    ("checking email",               0.90, "giay"),
+    ("watching adverts",             0.60, "dien_thoai"),
+    ("on video calls",               0.70, "dien_thoai"),
+    ("doing laundry",                0.35, "hop"),
+    ("walking the dog",              0.30, "meo"),
+    ("paying bills",                 0.10, "tien"),
+    ("standing in a lift",           0.04, "nha"),
+    ("scrolling before sleep",       0.55, "giuong"),
 ]
 # XẾP THEO SỨC HÚT, KHÔNG XẾP TĂNG DẦN. Tập 0 là tập đầu tiên người xem gặp trên kênh mới —
 # xếp tăng dần thì nó rơi vào "HOW LOUD IS A WHISPER?", một tiêu đề không ai bấm vào.
@@ -125,11 +257,57 @@ AM_THANH = [                                        # (thứ, decibel)
     ("a jet at takeoff", 140, "may_bay"), ("a rock concert", 110, "lua"),
     ("a motorbike", 95, "xe"), ("a vacuum cleaner", 75, "hop"),
     ("normal talking", 60, "nguoi"), ("a whisper", 30, "nguoi"),
+    # ── NỐI THÊM 1/9. Decibel là thang LOG — chính điều làm kênh này đáng xem.
+    ("a chainsaw",                      110,  "cay"),
+    ("a subway train arriving",         100,  "xe_buyt"),
+    ("a lawn mower",                     90,  "nha"),
+    ("city traffic from the sidewalk",   85,  "xe"),
+    ("a dishwasher",                     60,  "hop"),
+    ("a quiet library",                  40,  "giay"),
+    ("a bedroom at night",               30,  "giuong"),
+    ("a firework overhead",             150,  "lua"),
+    ("a gunshot",                       165,  "lua"),
+    ("an ambulance siren up close",     120,  "xe"),
+    ("a crying baby",                   110,  "nguoi"),
+    ("a hair dryer",                     90,  "nha"),
+    ("a normal conversation",            60,  "nguoi"),
+    # ── ĐỢT 2 (1/9): cần n ≥ 24 để nửa dành cho bản dài đủ 10 chương mà không tự lặp.
+    ("a whisper at arm's length",        20,  "nguoi"),
+    ("rustling leaves",                  25,  "cay"),
+    ("a ticking clock",                  35,  "dong_ho"),
+    ("rain on a window",                 45,  "nha"),
+    ("an office at work",                55,  "giay"),
+    ("a washing machine spinning",       70,  "hop"),
+    ("a busy restaurant",                80,  "hop"),
+    ("a motorcycle passing",             95,  "xe"),
+    ("a rock concert front row",        115,  "nguoi"),
+    ("a jackhammer",                    100,  "nha"),
+    ("thunder directly overhead",       120,  "lua"),
+    ("a balloon popping by your ear",   157,  "hop"),
+    ("a car horn at ten feet",          110,  "xe"),
+    ("a school cafeteria at lunch",      85,  "xe_buyt"),
 ]
 KHOI_LUONG = [                                      # (thứ, pound) — mạnh nhất trước
     ("a school bus", 24000, "xe_buyt"), ("a small car", 2900, "xe"),
     ("a grand piano", 990, "dan_piano"), ("an adult human", 180, "nguoi"),
     ("a car tyre", 25, "xe"), ("a housecat", 10, "meo"),
+    # ── NỐI THÊM 1/9. Cân nặng bằng POUND. Cặp lấy bằng `_cap` nên n mục cho n(n−1)/2 tập.
+    ("a bull elephant",         12000,  "huou"),
+    ("a full moving truck",     26000,  "xe_buyt"),
+    ("a blue whale",           300000,  "ca_voi"),
+    ("a vending machine",         800,  "hop"),
+    ("a refrigerator",            250,  "hop"),
+    ("a large dog",                90,  "meo"),
+    ("a bowling ball",             16,  "hop"),
+    ("a gallon of water",           8,  "coc"),
+    ("a laptop",                    3,  "dien_thoai"),
+    ("a smartphone",                1,  "dien_thoai"),
+    ("a sheet of paper",         0.01,  "giay"),
+    ("a city bus, full",        33000,  "xe_buyt"),
+    ("a pickup truck",           5500,  "xe"),
+    ("a horse",                  1100,  "huou"),
+    ("a washing machine",         200,  "hop"),
+    ("a bag of groceries",         12,  "hop"),
 ]
 _KHOI_LUONG_CU = [
     ("a housecat", 10, "meo"), ("a car tyre", 25, "xe"),
@@ -140,11 +318,46 @@ NHIET_DO = [                                        # (thứ, độ F) — mạn
     ("the surface of the Sun", 10000, "mat_troi"), ("lava", 2000, "lua"),
     ("a pizza oven", 800, "lua"), ("boiling water", 212, "lua"),
     ("a hot summer day in Phoenix", 115, "lua"), ("a comfortable room", 70, "nha"),
+    # ── NỐI THÊM 1/9. Độ F, vì kênh Mỹ (§12.13).
+    ("lava from a volcano",             2000,  "lua"),
+    ("a candle flame",                  1800,  "lua"),
+    ("a car engine running",             210,  "xe"),
+    ("the inside of a parked car",       140,  "xe"),
+    ("a fever",                          102,  "nguoi"),
+    ("a refrigerator",                    37,  "hop"),
+    ("a home freezer",                     0,  "hop"),
+    ("the coldest day recorded in Alaska", -80, "nha"),
+    ("the surface of Mars at night",    -100,  "trai_dat"),
+    ("liquid nitrogen",                 -320,  "nguyen_tu"),
+    ("the Moon at night",               -280,  "mat_trang"),
+    # ── ĐỢT 2 (1/9).
+    ("a cup of fresh coffee",           160,  "coc"),
+    ("a hot shower",                    105,  "nha"),
+    ("body temperature",                 98,  "nguoi"),
+    ("a warm spring day",                72,  "mat_troi"),
+    ("the inside of a fridge door",      40,  "hop"),
+    ("a snowy morning",                  28,  "nha"),
+    ("dry ice",                         -109, "hop"),
+    ("the top of Mount Everest",        -30,  "nui" if False else "cay"),
+    ("a wood stove burning",            1100, "lua"),
+    ("molten steel",                    2500, "lua"),
+    ("a lightning bolt",               50000, "lua"),
+    ("the core of the Earth",          10800, "trai_dat"),
+    ("deep space",                      -455, "nguyen_tu"),
+    ("a laptop under load",             120,  "dien_thoai"),
 ]
 CUC_NHO = [                                         # (thứ, mét) — mạnh nhất trước
     ("a single atom", 1e-10, "nguyen_tu"), ("a virus", 1e-7, "vi_khuan"),
     ("a bacterium", 1e-6, "vi_khuan"), ("a red blood cell", 8e-6, "te_bao"),
     ("a human hair's width", 7e-5, "te_bao"), ("a grain of sand", 5e-4, "hop"),
+    # ── NỐI THÊM 1/9. Kích thước tính bằng MÉT rồi quy ra đơn vị người Mỹ cảm được.
+    ("a water molecule",        2.8e-10,"nguyen_tu"),
+    ("a dust mite",             3e-4,   "vi_khuan"),
+    ("a sheet of paper",        1e-4,   "giay"),
+    ("a smartphone transistor", 5e-9,   "dien_thoai"),
+    ("a speck of pollen",       2.5e-5, "cay"),
+    ("a snowflake",             3e-3,   "nguyen_tu"),
+    ("a credit card's thickness", 7.6e-4, "tien"),
 ]
 _CUC_NHO_CU = [
     ("a grain of sand", 5e-4, "hop"), ("a human hair's width", 7e-5, "te_bao"),
@@ -158,6 +371,31 @@ THOI_QUEN = [
     ("a $12 lunch every workday",     12.00, 260, "hop"),
     ("a $4 energy drink daily",        4.00, 365, "coc"),
     ("a $90 phone plan",              90.00,  12, "dien_thoai"),
+    # ── NỐI THÊM 1/9. Thói quen nhỏ, giá thật ở Mỹ, số lần/năm.
+    ("a $14 lunch every workday",         14.0, 250, "hop"),
+    ("a $60 tank of gas each week",       60.0,  52, "xe"),
+    ("a $30 streaming bundle",            30.0,  12, "dien_thoai"),
+    ("a $9 sandwich every workday",        9.0, 250, "hop"),
+    ("a $120 gym membership",            120.0,  12, "nguoi"),
+    ("a $25 rideshare twice a week",      25.0, 104, "xe"),
+    ("a $3 bottle of water daily",         3.0, 365, "coc"),
+    ("a $50 grocery delivery fee monthly", 50.0, 12, "xe"),
+    ("a $8 parking charge each workday",   8.0, 250, "xe"),
+    ("a $200 cable package",             200.0,  12, "nha"),
+    ("a $5 pastry every morning",          5.0, 365, "coc"),
+    # ── ĐỢT 2 (1/9).
+    ("a $7 smoothie three times a week",   7.0, 156, "coc"),
+    ("a $45 haircut monthly",             45.0,  12, "nguoi"),
+    ("a $2 lottery ticket daily",          2.0, 365, "tien"),
+    ("a $19 cloud storage plan",          19.0,  12, "dien_thoai"),
+    ("a $75 dinner out weekly",           75.0,  52, "hop"),
+    ("a $6 car wash twice a month",        6.0,  24, "xe"),
+    ("a $130 phone upgrade yearly",      130.0,   1, "dien_thoai"),
+    ("a $11 cinema ticket monthly",       11.0,  12, "giay"),
+    ("a $40 tank of gas weekly",          40.0,  52, "xe"),
+    ("a $16 delivery fee twice a week",   16.0, 104, "xe"),
+    ("a $3 snack every afternoon",         3.0, 365, "hop"),
+    ("a $22 music and video bundle",      22.0,  12, "dien_thoai"),
 ]
 
 
@@ -168,6 +406,156 @@ def _tien(v: float) -> str:
     if v >= 1_000:
         return f"${v/1_000:.0f}K"
     return f"${v:,.0f}"
+
+
+# ── CẤP PHÁT SỐ TẬP: SHORT VÀ LONG KHÔNG BAO GIỜ ĐỤNG NHAU  (1/9/2026) ──────────────────────
+# Anh: *"long và short cũng ko được trùng lặp nội dung."* Trước bản này chúng trùng HOÀN TOÀN:
+# `sinh_long` gọi `bo(idx + c)`, tức chương c của bản dài CHÍNH LÀ short tập c. Và vì chu kỳ nội
+# dung chỉ 4–6, một bản dài 10 chương còn **tự lặp chính nó 2–3 lần trong cùng một video**.
+#
+# ── BẢN VÁ ĐẦU SAI, GHI LẠI ĐỂ KHÔNG LÀM LẠI ───────────────────────────────────────────────
+# Tôi chia dãy CHỈ SỐ: short lấy số chẵn, long lấy số lẻ. Nghe hợp lý, đo ra 10/10 chương bản
+# dài vẫn trùng short. Vì bộ sinh lấy `ds[i % n]`, mà với n lẻ thì tập các số chẵn chia dư n
+# PHỦ TRỌN mọi dư — y hệt tập các số lẻ. Chia chỉ số không chia được KHÔNG GIAN.
+#
+# ── CÁCH ĐÚNG: chia chính không gian nội dung ──────────────────────────────────────────────
+# Đo `n` = số tập phân biệt thật của kênh (đi tới khi lặp), rồi cắt đôi: short dùng nửa đầu,
+# long dùng nửa sau. Hai nửa rời nhau theo định nghĩa.
+# Đo bằng cách gọi bộ sinh — tất định, cho cùng kết quả ở máy và trên runner, không cần sổ ghi
+# (trên Actions không trạng thái nào sống qua hai lượt chạy).
+_KG = {}
+
+
+def khong_gian(ma: str) -> int:
+    """Số tập PHÂN BIỆT của một kênh. Đo một lần rồi nhớ."""
+    if ma in _KG:
+        return _KG[ma]
+    k = next((x for x in KENH if x["ma"] == ma), None)
+    bo = BO_SINH.get(k["sinh"]) if k else None
+    if not bo:
+        return 1
+    # ĐO THEO TIÊU ĐỀ, không theo chữ ký đầy đủ. Chữ ký gồm cả lời kể, mà lời kể nay có biến
+    # thể xoay theo `i` (xem `_loi`) — nên chữ ký phồng lên tới bội chung của hai chu kỳ, trong
+    # khi CHỦ ĐỀ vẫn lặp theo chu kỳ cũ. Chia đôi một con số phồng thì hai nửa vẫn trỏ về cùng
+    # tập chủ đề, và đó chính là lỗi vừa đo được: 4 kênh có 10/10 chương bản dài trùng short.
+    # Với người xem, "cùng một tập" nghĩa là cùng CHỦ ĐỀ — nên đó mới là thứ phải chia.
+    thay, n = set(), 0
+    for i in range(600):
+        t = bo(i)[0]
+        if t in thay:
+            break
+        thay.add(t)
+        n += 1
+    _KG[ma] = max(1, n)
+    return _KG[ma]
+
+
+def vi_tri_short(ma: str, idx: int) -> int:
+    """Chỉ số nội dung cho short tập `idx` — luôn nằm ở NỬA ĐẦU không gian."""
+    n = khong_gian(ma)
+    nua = max(1, n // 2)
+    return idx % nua
+
+
+def vi_tri_long(ma: str, idx: int, chuong: int) -> int:
+    """Chỉ số nội dung cho chương `chuong` của bản dài — luôn ở NỬA SAU."""
+    n = khong_gian(ma)
+    nua = max(1, n // 2)
+    con = max(1, n - nua)
+    return nua + ((idx * 40 + chuong) % con)
+
+
+# ══ BIẾN THỂ LỜI KỂ  (1/9/2026) ═════════════════════════════════════════════════════════════
+# Anh: *"ko lặp lại nhàm chán."* Đo được: **127/130 câu (98%) GIỐNG HỆT nhau ở mọi tập** của
+# cùng một kênh — chỉ con số và tên vật đổi. Người xem hai tập nghe gần như cùng một kịch bản,
+# và đó là dạng lặp người ta nhận ra nhanh nhất, nhanh hơn cả lặp hình.
+#
+# Phần lớn những câu ấy là câu NỐI theo vai trò ("Here is the number." · "So this is the real
+# gap.") chứ không phải câu mang nội dung riêng của kênh. Nên: một kho câu nối theo VAI TRÒ,
+# dùng chung cho mọi kênh, xoay theo số tập. Câu mang nội dung riêng thì vẫn viết tại chỗ.
+#
+# Vì sao xoay theo `i` chứ không ngẫu nhiên: tất định — cùng một tập luôn ra cùng một lời, ở máy
+# và trên runner như nhau. Ngẫu nhiên thì hai lần dựng cùng một tập ra hai video khác nhau, và
+# mọi cổng so sánh trước/sau đều mất nghĩa.
+LOI_MAU = {
+    "mo": ["Here is the number.", "Start with the number.", "This is where it starts.",
+           "Look at this first.", "One number, to begin."],
+    "so": ["Here is the number.", "That is the figure.", "This is what it comes to.",
+           "The number lands here.", "Here is what it actually is."],
+    "gap": ["So this is the real gap.", "That is the real distance.", "Here is the true gap.",
+            "The difference is this big.", "That is what separates them."],
+    "so_sanh": ["Put them side by side.", "Line them up.", "Now compare them.",
+                "Set one against the other.", "Two things, one scale."],
+    "bat_ngo": ["That is not what most people guess.", "Almost nobody guesses this.",
+                "Most people are far off.", "The guess is usually wrong.",
+                "It rarely feels like that."],
+    "chot": ["Now you know.", "That is the whole answer.", "That is the number to keep.",
+             "Remember that one.", "That is what it really is."],
+    "than": ["Your brain does not work in these numbers.",
+             "We are bad at numbers this size.",
+             "Nothing in daily life prepares you for this.",
+             "The scale does not fit in your head.",
+             "This is where intuition gives up."],
+}
+
+
+def _loi(vai: str, i: int, rieng: str = "") -> str:
+    """Câu nối theo VAI TRÒ, xoay theo số tập. `rieng` khác rỗng thì dùng nó (câu riêng của kênh)."""
+    if rieng:
+        return rieng
+    ds = LOI_MAU.get(vai)
+    if not ds:
+        return ""
+    return ds[i % len(ds)]
+
+
+def _khu(ds: list) -> list:
+    """Bỏ mục TRÙNG TÊN, giữ mục xuất hiện trước.
+
+    Một mục trùng không gây lỗi nào — nó chỉ lặng lẽ **thu hẹp không gian nội dung**: bảng 16
+    mục có 2 mục trùng thì kênh lặp lại sau 14 tập chứ không phải 16, và không ai biết. Đo được
+    hôm nay: sau khi nối thêm dữ liệu, 26 mục trùng lọt vào 8 bảng, và `speedof` lặp ở tập 5
+    thay vì tập 16.
+
+    Khử ở đây là lưới AN TOÀN, không phải chỗ sửa: cổng `kiem_trung.py` vẫn báo để dữ liệu được
+    dọn cho sạch. Giấu lỗi soạn dữ liệu là cách để nó quay lại.
+    """
+    ra, thay = [], set()
+    for x in ds:
+        k = x[0] if isinstance(x, (list, tuple)) and x else x
+        if k in thay:
+            continue
+        thay.add(k)
+        ra.append(x)
+    return ra
+
+
+def _lay(ds: list, i: int):
+    """Mục thứ `i` của bảng, sau khi đã khử trùng. Chu kỳ = số mục PHÂN BIỆT."""
+    d = _khu(ds)
+    return d[i % len(d)]
+
+
+def _cap(ds: list, i: int) -> tuple:
+    """Cặp (a, b) KHÁC NHAU, đi hết n·(n−1) tổ hợp rồi mới lặp.
+
+    ── VÌ SAO (1/9/2026) ───────────────────────────────────────────────────────────────────
+    Ba bộ sinh so sánh hai vật lấy cặp bằng `ds[i % n]` và `ds[(i+3) % n]`. Bước nhảy CỐ ĐỊNH
+    nghĩa là cặp thứ i luôn là (i, i+3), nên chu kỳ chỉ bằng **n** — với `KHOI_LUONG` n=6 thì
+    tập 6 giống hệt tập 0, dù sáu vật ấy tạo được 30 cặp khác nhau. Đo được: 18/18 kênh lặp
+    nội dung trong vòng 3–10 tập, `howmuch` lặp ngay ở tập 1.
+
+    Ở đây bước nhảy TĂNG DẦN theo vòng: đi hết một vòng bước 1, rồi vòng bước 2, ... Cách này
+    phủ trọn n·(n−1) cặp có thứ tự mà không cần nhớ gì giữa các lần gọi — quan trọng, vì trên
+    Actions không có trạng thái nào sống qua hai lượt chạy.
+    """
+    ds = _khu(ds)
+    n = len(ds)
+    if n < 2:
+        return ds[0], ds[0]
+    vong = (i // n) % (n - 1) + 1          # bước nhảy 1..n-1, không bao giờ 0 (a != b)
+    a = i % n
+    return ds[a], ds[(a + vong) % n]
 
 
 def _lau(gio: float) -> tuple:
@@ -499,7 +887,7 @@ def sinh_howlong(i):
     Nên trường `ve` đứng ngay cạnh `loi`: người viết nhịp là người biết nhịp ấy đang nói gì,
     nên cũng là người duy nhất viết đúng được prompt cho nó. Tách hai việc ra hai chỗ là cách
     chắc chắn để hình lệch lời — đúng cái đã xảy ra khi tôi để `noi` cho một bảng regex đoán."""
-    ten, km, bt = QUANG_DUONG[i % len(QUANG_DUONG)]
+    ten, km, bt = _lay(QUANG_DUONG, i)
     gio_b = km / DI_BO_MPH
     sb, ub = _lau(gio_b)
     sc, uc = _lau(km / XE_MPH)
@@ -599,7 +987,7 @@ def sinh_howlong(i):
     # Đúng: một tấm thẻ chữ giữ 3 giây ở cú chốt là chỗ người xem thoát. Cú chốt phải là HÌNH
     # mạnh nhất của cả tập, câu chốt để phụ đề nói. Video tham chiếu cũng vậy — họ đóng bằng
     # cảnh, không đóng bằng bảng chữ.
-    _n("canh", "So no. Do not walk.", dinh=True, tam_trang="ngay",
+    _n("canh", _loi("chot", i, "So no. Do not walk." if i % 3 == 0 else ""), dinh=True, tam_trang="ngay",
        ve=_ve("a lone figure standing beside a parked car, one hand on the roof",
               "having just given up on walking, looking at the horizon",
               "wry, self-aware, half-smiling",
@@ -610,8 +998,7 @@ def sinh_howlong(i):
 
 
 def sinh_howbig(i):
-    a = CO_LON[i % len(CO_LON)]
-    b = CO_LON[(i + 3) % len(CO_LON)]
+    a, b = _cap(CO_LON, i)
     lon, nho = (a, b) if a[1] >= b[1] else (b, a)
     lan = lon[1] / nho[1]
     xep = int(round(lan))
@@ -648,7 +1035,7 @@ def sinh_howbig(i):
               "a plain pale backdrop with a single faint horizon line",
               "a simple flat ground strip, a tiny human silhouette for scale at the far left",
               "even soft daylight, muted palette, strong sense of scale")),
-    _n("chart", "On one scale.", don="feet",
+    _n("chart", _loi("so_sanh", i), don="feet",
        cot=[{"nhan": nho[0].replace("a ", "")[:9], "v": nho[1]},
             {"nhan": lon[0].replace("a ", "").replace("the ", "")[:9], "v": lon[1]}], dinh=True),
     _n("canh", "Your brain was wrong.", dinh=True,
@@ -662,7 +1049,7 @@ def sinh_howbig(i):
 
 
 def sinh_realcost(i):
-    ten, gia, lan, bt = THOI_QUEN[i % len(THOI_QUEN)]
+    ten, gia, lan, bt = _lay(THOI_QUEN, i)
     nam = gia * lan
     m10 = sum(nam * (1.07 ** k) for k in range(10))
     m30 = sum(nam * (1.07 ** k) for k in range(30))
@@ -733,16 +1120,50 @@ def sinh_realcost(i):
             ])
 
 
+# ── MỐC SỐ LỚN CHO `howmuch` (1/9) ──────────────────────────────────────────────────────────
+# Bộ sinh cũ BỎ QUA HẲN `i`: mọi tập ra đúng một video "A million versus a billion". Đo được
+# n = 1, tức kênh này chưa bao giờ có tập thứ hai. Đây là dạng nặng nhất của lỗi lặp — không
+# phải lặp sau vài tập, mà lặp ngay từ tập một, và không có lỗi nào báo.
+#   (tên nhỏ, số nhỏ, tên lớn, số lớn, đơn vị đếm, hình)
+MOC_LON = [
+    ("a million",        1e6,  "a billion",     1e9,  "seconds",     "tien"),
+    ("a billion",        1e9,  "a trillion",    1e12, "seconds",     "tien"),
+    ("a thousand",       1e3,  "a million",     1e6,  "seconds",     "tien"),
+    ("a million dollars", 1e6, "a billion dollars", 1e9, "dollars",  "tien"),
+    ("a million steps",  1e6,  "a billion steps", 1e9, "steps",      "nguoi"),
+    ("a thousand days",  1e3,  "a million days", 1e6, "days",        "dong_ho"),
+    ("a million grains", 1e6,  "a billion grains", 1e9, "grains",    "hop"),
+    ("a million people", 1e6,  "a billion people", 1e9, "people",    "nguoi"),
+    ("a million miles",  1e6,  "a billion miles", 1e9, "miles",      "may_bay"),
+    ("a million words",  1e6,  "a billion words", 1e9, "words",      "giay"),
+    ("a thousand hours", 1e3,  "a million hours", 1e6, "hours",      "dong_ho"),
+    ("a million drops",  1e6,  "a trillion drops", 1e12, "drops",    "coc"),
+    ("a million cells",  1e6,  "a trillion cells", 1e12, "cells",    "te_bao"),
+    ("a billion stars",  1e9,  "a trillion stars", 1e12, "stars",    "mat_troi"),
+    ("a thousand dollars", 1e3, "a billion dollars", 1e9, "dollars", "tien"),
+    ("a million minutes", 1e6, "a billion minutes", 1e9, "minutes",  "dong_ho"),
+    ("a million pages",  1e6,  "a billion pages", 1e9, "pages",      "giay"),
+    ("a million heartbeats", 1e6, "a billion heartbeats", 1e9, "heartbeats", "nguoi"),
+    ("a million atoms",  1e6,  "a trillion atoms", 1e12, "atoms",    "nguyen_tu"),
+    ("a thousand miles", 1e3,  "a million miles", 1e6, "miles",      "xe"),
+    ("a million bytes",  1e6,  "a trillion bytes", 1e12, "bytes",    "dien_thoai"),
+    ("a million breaths", 1e6, "a billion breaths", 1e9, "breaths",  "nguoi"),
+    ("a million raindrops", 1e6, "a billion raindrops", 1e9, "raindrops", "coc"),
+    ("a thousand seconds", 1e3, "a billion seconds", 1e9, "seconds", "dong_ho"),
+]
+
+
 def sinh_howmuch(i):
-    s1, u1 = _lau(1_000_000 / 3600)
-    s2, u2 = _lau(1_000_000_000 / 3600)
-    return ("A million versus a billion",
-            "A BILLION IS NOT A BIG MILLION", f"{s2} {u2.upper()}",
+    nho, vn, lon, vl, don, bt = _lay(MOC_LON, i)
+    s1, u1 = _lau(vn / 3600)
+    s2, u2 = _lau(vl / 3600)
+    return (f"{nho.title()} versus {lon}",
+            f"{lon.upper()} IS NOT A BIG {nho.upper().replace('A ', '')}", f"{s2} {u2.upper()}",
             [
     _n("chia_doi", "Two words. One letter apart.",
        trai={"nhan": "million", "bt": "tien", "so": "1,000,000"},
        phai={"nhan": "billion", "bt": "tien", "so": "1,000,000,000"}, dinh=True),
-    _n("canh", "Your brain treats them the same.",
+    _n("canh", _loi("than", i),
        ve=_ve("a simplified human silhouette standing between two identical blank boxes",
               "shrugging, both palms turned up", "genuinely unable to tell them apart",
               "a plain pale wall, the two boxes exactly the same size",
@@ -781,8 +1202,34 @@ def sinh_whatif(i):
     ds = [("everyone flushed at once", "hop", "a vast grid of identical bathrooms seen from above"),
           ("everyone jumped at once", "trai_dat", "an enormous crowd of people mid-jump on open ground"),
           ("everyone stopped driving", "xe", "a completely empty multi-lane highway at midday"),
-          ("everyone planted one tree", "cay", "a huge open field newly filled with young saplings")]
-    ten, bt, canh = ds[i % len(ds)]
+          ("everyone planted one tree", "cay", "a huge open field newly filled with young saplings"),
+          # ── NỐI THÊM 1/9: bốn mục -> lặp từ tập 4.
+          ("everyone turned on a light at once", "nha", "a whole city block lit at the same instant seen from a hill"),
+          ("everyone shouted at once", "nguoi", "a dense crowd in a public square all with mouths open"),
+          ("nobody threw anything away for a week", "hop", "a street corner stacked high with neat sealed boxes"),
+          ("everyone worked from home", "dien_thoai", "an empty office tower at midday, every desk bare"),
+          ("everyone drank only tap water", "coc", "a long row of glasses filling from a single tap"),
+          ("everyone walked to work", "nguoi", "a wide road filled with people walking, no vehicles"),
+          ("everyone kept their phone for ten years", "dien_thoai", "an orderly shelf of well-used identical phones"),
+          ("everyone slept eight hours", "giuong", "a quiet neighbourhood at night, every window dark"),
+          ("everyone grew one vegetable", "cay", "rows of small pots on balconies across a whole street"),
+          ("everyone stopped flying for a year", "may_bay", "a large airport apron with parked aircraft and no movement"),
+          ("everyone read one book a month", "giay", "a park bench row where every person holds an open book"),
+          ("everyone got a dog", "meo", "a wide sidewalk with a person and a dog every few steps"),
+          # ── ĐỢT 2 (1/9).
+          ("everyone stopped eating meat for a month", "hop", "a supermarket aisle of produce with empty meat cases"),
+          ("everyone took the bus for a week", "xe_buyt", "a long line of full buses on an otherwise empty road"),
+          ("nobody used plastic for a day", "hop", "a market stall with only paper and cloth wrapping"),
+          ("everyone paid in cash", "tien", "a long shop queue with open wallets and notes"),
+          ("everyone turned the heat down two degrees", "nha", "a street of houses with people in thick jumpers indoors"),
+          ("everyone recycled everything correctly", "hop", "a sorting yard with perfectly separated clean bales"),
+          ("nobody drove alone", "xe", "a highway of cars each visibly full of people"),
+          ("everyone learned one language", "giay", "a park where every bench holds a person with a phrasebook"),
+          ("everyone donated one dollar", "tien", "an enormous heap of single notes in an open hall"),
+          ("everyone planted a garden", "cay", "back yards along a street all turned into vegetable beds"),
+          ("everyone slept in complete darkness", "giuong", "an aerial view of a neighbourhood with no lit windows"),
+          ("everyone wrote one letter", "giay", "a post office counter with towering trays of envelopes")]
+    ten, bt, canh = _lay(ds, i)
     return (f"What if {ten}",
             f"WHAT IF {ten.upper()}?", "",
             [
@@ -821,8 +1268,32 @@ def sinh_survive(i):
     ds = [("a day in the Ice Age", "a frozen tundra under heavy grey sky, bare and endless"),
           ("a week without fire", "a cold dark forest clearing at dusk, no light source"),
           ("a night in the desert", "a vast cold desert at night under a huge starfield"),
-          ("a winter without a shop", "a snowbound valley with no buildings in sight")]
-    ten, canh = ds[i % len(ds)]
+          ("a winter without a shop", "a snowbound valley with no buildings in sight"),
+          # ── NỐI THÊM 1/9.
+          ("a week in the open ocean", "an endless flat sea under a pale empty sky"),
+          ("a night on a mountain top", "a bare rocky summit above the clouds at dusk"),
+          ("three days without water", "a cracked dry lakebed stretching to the horizon"),
+          ("a winter in a cabin with no power", "a snowed-in wooden cabin, no lights, deep drifts"),
+          ("a day in a rainforest alone", "dense green rainforest, thick undergrowth, no path"),
+          ("a week on a deserted island", "a small sandy island with a few palms and open sea"),
+          ("a night in a swamp", "a dark still swamp with dead trees and low mist"),
+          ("a day on the salt flats", "a blinding white salt plain under a hard noon sun"),
+          ("a month with no supermarket", "an empty small-town street with shuttered shopfronts"),
+          ("a night in a cave", "a wide dark cave mouth with faint light from outside"),
+          ("a day in a sandstorm", "a desert road vanishing into a wall of blowing sand"),
+          # ── ĐỢT 2 (1/9).
+          ("a week in the Arctic", "a flat expanse of pack ice under a low pale sun"),
+          ("a day on an active volcano", "a black ash slope with steam venting from cracks"),
+          ("a night in the Everglades", "still dark water between mangrove roots at night"),
+          ("a week without electricity in winter", "a dark suburban street under deep snow"),
+          ("three days in Death Valley", "a shimmering salt basin under a hard white sky"),
+          ("a night in a blizzard", "a wall of driving snow with a fence barely visible"),
+          ("a day adrift in a life raft", "a small orange raft alone on a wide calm ocean"),
+          ("a week in a desert canyon", "sheer red canyon walls with a dry streambed below"),
+          ("a night on a frozen lake", "a vast flat sheet of ice under a clear starry sky"),
+          ("a day in a dust bowl storm", "a farmhouse half-buried under drifting brown dust"),
+          ("a week above the treeline", "bare grey rock and lichen under a hard blue sky")]
+    ten, canh = _lay(ds, i)
     return (f"Could you survive {ten}",
             f"COULD YOU SURVIVE {ten.upper()}?", "PROBABLY NOT",
             [
@@ -886,8 +1357,90 @@ def sinh_dayinlife(i):
           ("a night watchman",
            "a narrow old town street at night, shuttered houses leaning close, cobblestones",
            "a long coat and a single swinging lantern",
-           "one warm lantern light against deep blue darkness, hard pool of light on the stones")]
-    ten, canh, do, sang = ds[i % len(ds)]
+           "one warm lantern light against deep blue darkness, hard pool of light on the stones"),
+          # ── NỐI THÊM 1/9.
+          ("a lighthouse keeper",
+           "a stone lighthouse on a rocky headland at dawn, grey sea stretching out behind",
+           "a heavy wool coat and a brass oil can",
+           "cold blue dawn light from the low right, long thin shadows"),
+          ("a night-shift nurse",
+           "a quiet hospital corridor at 3am, closed doors receding into the distance",
+           "pale scrubs and a clipboard",
+           "flat green-white ceiling light, almost no shadow"),
+          ("a long-haul trucker",
+           "a wide empty interstate at night, headlights on a straight road to the horizon",
+           "a padded jacket and a paper log book",
+           "hard white headlight glow from ahead, deep black beyond"),
+          ("a wheat farmer at harvest",
+           "a vast ripe wheat field under a huge open sky, a combine far off",
+           "worn denim and heavy gloves",
+           "warm gold late-afternoon light from the left"),
+          ("a subway train operator",
+           "a lit underground platform seen from the front of a train, tiled walls curving away",
+           "a uniform jacket and a worn key ring",
+           "hard fluorescent light, sharp reflections on tile"),
+          ("a firefighter on shift",
+           "an open fire station bay at dusk, a red engine and polished concrete floor",
+           "heavy turnout gear and a helmet under one arm",
+           "warm orange bay light against blue evening outside"),
+          ("a fishing-boat deckhand",
+           "an open deck of a small boat on a grey choppy sea, nets piled at the stern",
+           "oilskins and heavy rubber boots",
+           "flat overcast light with no shadows"),
+          ("a hotel night porter",
+           "an empty hotel lobby after midnight, polished floor and a single lit desk",
+           "a plain uniform waistcoat and a brass luggage trolley",
+           "warm pooled lamplight, dark corners"),
+          ("a warehouse picker",
+           "an enormous warehouse aisle of identical shelving running out of sight",
+           "a hi-vis vest and a hand scanner",
+           "even overhead light, faint shadows straight down"),
+          ("an air traffic controller",
+           "a glass tower cabin above a runway at dusk, wide view over the airfield",
+           "a headset and a plain shirt",
+           "dim interior with cool screen glow from below"),
+          # ── ĐỢT 2 (1/9).
+          ("a Victorian factory child",
+           "a long dim spinning-mill floor, rows of machines vanishing into haze",
+           "a plain smock and bare feet",
+           "weak grey daylight from high windows on the left"),
+          ("an Apollo mission controller",
+           "a 1960s control room of identical consoles, a large screen at the far end",
+           "a short-sleeved shirt, tie and headset",
+           "even fluorescent light, faint green glow from screens"),
+          ("a medieval scribe",
+           "a stone monastery scriptorium, high narrow windows, sloped writing desks",
+           "a heavy robe, a quill and an inkpot",
+           "cool light from a tall window on the right, deep shadow behind"),
+          ("a 1920s switchboard operator",
+           "a wall of cable jacks running the length of a narrow room",
+           "a plain blouse and a headset",
+           "flat warm bulb light overhead"),
+          ("a Gold Rush prospector",
+           "a shallow river in a wide valley, tents on the far bank",
+           "muddy boots, a wide pan and a shovel",
+           "hard midday sun straight down, short black shadows"),
+          ("a lighthouse builder",
+           "a half-built stone tower on a wave-lashed rock, open sea beyond",
+           "rope, a chisel and a heavy leather harness",
+           "flat stormy light, no direct sun"),
+          ("an Antarctic researcher",
+           "a small red hut on an endless white plain under a low sun",
+           "a heavy parka and goggles",
+           "low blinding sun from the horizon, very long blue shadows"),
+          ("a 1950s telephone linesman",
+           "a straight country road with wooden poles running to the horizon",
+           "a tool belt and climbing spikes",
+           "clear afternoon light from the left"),
+          ("a submarine sonar operator",
+           "a cramped steel compartment of dials and pipes, no windows",
+           "a plain uniform and heavy headphones",
+           "dim red light, hard shadows"),
+          ("a rail yard signalman",
+           "a raised signal box over a fan of converging tracks at dusk",
+           "a waistcoat and a row of long levers",
+           "warm lamp light inside against blue dusk outside")]
+    ten, canh, do, sang = _lay(ds, i)
     return (f"A day in the life of {ten}",
             f"A DAY IN THE LIFE OF {ten.upper()}", "",
             [
@@ -951,8 +1504,33 @@ def sinh_wheregoes(i):
                "lid propped open, food still on the plate inside", "",
                "a plain kitchen corner, simplified cupboards behind",
                "the bin opening and its contents sharp and close",
-               "flat indoor light, slightly desaturated palette"))]
-    ten, bt, canh = ds[i % len(ds)]
+               "flat indoor light, slightly desaturated palette")),
+          # ── NỐI THÊM 1/9.
+          ("your recycling", "hop", "a sorting facility with conveyor belts of mixed material"),
+          ("your old phone", "dien_thoai", "a warehouse of stacked electronics awaiting processing"),
+          ("your tap water", "coc", "a treatment plant with large open circular tanks"),
+          ("your online return", "hop", "a huge warehouse aisle of returned parcels"),
+          ("your used cooking oil", "coc", "a collection yard with sealed drums lined up"),
+          ("your old car", "xe", "a scrapyard with crushed vehicles stacked in rows"),
+          ("your junk mail", "giay", "a mail sorting hall with bins of unopened envelopes"),
+          ("your worn-out clothes", "hop", "a bale yard of compressed textile bundles"),
+          ("your food scraps", "hop", "an open composting site with long dark windrows"),
+          ("your dead batteries", "hop", "a hazardous-waste bay with labelled containers"),
+          ("your package before it arrives", "hop", "a night distribution hub with parcels on belts"),
+          # ── ĐỢT 2 (1/9).
+          ("your old mattress", "hop", "a yard of stacked mattresses awaiting shredding"),
+          ("your bank transfer", "tien", "a server hall of identical racks with cable trays"),
+          ("your rubbish on collection day", "xe", "a transfer station with a tipping floor of mixed waste"),
+          ("your holiday photos", "dien_thoai", "a data centre aisle with rows of blinking drives"),
+          ("your old tyres", "xe", "a stacked yard of worn tyres in long rows"),
+          ("your prescription bottle", "hop", "a pharmacy return bin with sorted containers"),
+          ("your paper receipt", "giay", "a shredding facility with bales of paper strips"),
+          ("your leftover paint", "hop", "a hazardous collection depot with labelled tins"),
+          ("your old textbooks", "giay", "a warehouse of palletised books under plastic wrap"),
+          ("your worn-out running shoes", "nguoi", "a grinding line turning shoes into rubber crumb"),
+          ("your washing machine water", "coc", "an underground pipe junction with flowing channels"),
+          ("your unwanted gift", "hop", "a liquidation warehouse of mixed unopened boxes")]
+    ten, bt, canh = _lay(ds, i)
     return (f"Where {ten} goes",
             f"WHERE DOES {ten.upper()} GO?", "",
             [
@@ -1014,8 +1592,31 @@ def sinh_therules(i):
            _ve("a plain wooden boundary fence", "running straight between two yards", "",
                "two simplified suburban houses on either side, sky above",
                "fence boards large and sharp at the left, grass at the base",
-               "warm afternoon light from the right, muted palette"))]
-    ten, canh = ds[i % len(ds)]
+               "warm afternoon light from the right, muted palette")),
+          # ── NỐI THÊM 1/9.
+          ("the gym membership you cannot cancel", "a gym reception desk with a long printed contract"),
+          ("the airline ticket small print", "an airport gate desk with a dense printed page"),
+          ("the software you agreed to", "a laptop screen showing an endless scrolling agreement"),
+          ("the rental car extras", "a car rental counter with a stack of forms"),
+          ("the phone contract clause", "a phone shop counter with a folded multi-page document"),
+          ("the concert ticket resale rule", "a venue entrance with a printed notice board"),
+          ("the free trial that renews", "a kitchen table with an unopened bank statement"),
+          ("the warranty that expires early", "a repair shop counter with a small printed card"),
+          ("the parking sign nobody reads", "a city kerb with a dense stack of parking signs"),
+          ("the hotel resort fee", "a hotel front desk with an itemised printed bill"),
+          # ── ĐỢT 2 (1/9).
+          ("the deposit you will not get back", "an empty rental flat with a clipboard on the counter"),
+          ("the overdraft fee schedule", "a bank counter with a dense printed fee sheet"),
+          ("the ticket you cannot refund", "a train station window with a printed notice"),
+          ("the insurance exclusion list", "a desk with an open policy booklet under a lamp"),
+          ("the subscription that auto-renews", "a laptop on a kitchen table showing a renewal notice"),
+          ("the delivery guarantee that is not one", "a doorstep with a printed card left behind"),
+          ("the return window nobody notices", "a shop counter with a receipt and a wall sign"),
+          ("the roaming charge nobody mentions", "an airport lounge with a phone showing a bill alert"),
+          ("the fine print on the coupon", "a supermarket checkout with a long printed voucher"),
+          ("the clause about arbitration", "an office table with a thick contract and a pen"),
+          ("the fee for paying by card", "a small shop counter with a handwritten notice")]
+    ten, canh = _lay(ds, i)
     return (f"The rule about {ten}",
             f"THERE IS A RULE ABOUT {ten.upper()}", "",
             [
@@ -1081,8 +1682,34 @@ def sinh_speedof(i):
                "flying to the right, thin vapour trail stretching behind", "",
                "a deep blue high-altitude sky, a flat cloud deck far below",
                "nothing near the camera, open air",
-               "bright hard sunlight from above left, clean cool palette"))]
-    ten, kmh, canh = ds[i % len(ds)]
+               "bright hard sunlight from above left, clean cool palette")),
+          # ── NỐI THÊM 1/9.
+          ("a sneeze", 160, "a close view of a person mid-sneeze, motion lines"),
+          ("a commercial jet", 900, "a passenger jet cruising above a flat cloud layer"),
+          ("a cheetah at full sprint", 112, "a cheetah stretched flat in mid-stride on open ground"),
+          ("a falling raindrop", 32, "a single large raindrop against a grey sky"),
+          ("a major-league fastball", 160, "a baseball leaving a pitcher's hand, motion blur behind"),
+          ("a passenger train", 130, "a long train crossing an open plain"),
+          ("the space station orbiting", 27600, "a station silhouette against the curve of Earth"),
+          ("a housefly", 7, "a housefly hovering close to a plain surface"),
+          ("a person walking", 5, "a person walking along an empty pavement"),
+          ("a rifle bullet", 3500, "a stylised bullet crossing an empty frame at speed"),
+          ("sound at sea level", 1235, "an expanding ring of pressure lines over flat ground"),
+          ("the Earth around the Sun", 107000, "the Earth as a small disc on a wide curved path"),
+          # ── ĐỢT 2 (1/9): cần n ≥ 24.
+          ("a sprinting human", 37, "a runner at full stride on an empty track"),
+          ("a city bus", 50, "a bus moving along an empty avenue"),
+          ("a hurricane gust", 250, "bent palm trees under a dark sky"),
+          ("a bullet train", 320, "a sleek train blurred against a flat landscape"),
+          ("a diving falcon", 390, "a falcon folded into a steep dive against open sky"),
+          ("a tennis serve", 260, "a tennis ball leaving a racket, motion streak behind"),
+          ("light through glass", 200000000, "a thin bright beam crossing a dark frame"),
+          ("a helicopter", 260, "a helicopter low over open ground"),
+          ("an elevator", 22, "a lift shaft seen from below with cables"),
+          ("a garden snail", 0.05, "a snail on a wide plain surface"),
+          ("the Moon around the Earth", 3680, "a small moon on a wide curved path"),
+          ("a paper plane", 25, "a paper plane gliding across an empty room")]
+    ten, kmh, canh = _lay(ds, i)
     lan = kmh / DI_BO_MPH
     # Biểu tượng phải là HÌNH CỦA CHÍNH VẬT đang đo (quy tắc G). Bản trước gán cứng "xe" cho
     # mọi chủ thể, nên nhịp nói "a commercial jet" mà hình ra ô tô.
@@ -1104,7 +1731,7 @@ def sinh_speedof(i):
               "a plain pale backdrop with a single horizon line",
               "the walking figure sharp, the streak smeared across the frame",
               "even soft light, restrained palette")),
-    _n("chart", "On one scale.", don="mph",
+    _n("chart", _loi("so_sanh", i), don="mph",
        cot=[{"nhan": "walk", "v": 3}, {"nhan": ten.split()[-1][:9], "v": kmh},
             {"nhan": "jet", "v": 560}], dinh=True),
     _n("canh", "You never had a chance.", dinh=True,
@@ -1119,7 +1746,7 @@ def sinh_speedof(i):
 
 # ══ TÁM BỘ SINH BỔ SUNG ═════════════════════════════════════════════════════════════════════
 def sinh_odds(i):
-    ten, N, bt = XAC_SUAT[i % len(XAC_SUAT)]
+    ten, N, bt = _lay(XAC_SUAT, i)
     # Quy xác suất về thứ CẢM ĐƯỢC: bao nhiêu năm nếu thử mỗi ngày một lần. Con số "1 trên 292
     # triệu" không gợi ra gì; "mua mỗi ngày trong 800.000 năm" thì nhớ đời.
     nam = N / 365.25
@@ -1151,7 +1778,7 @@ def sinh_odds(i):
 
 
 def sinh_hiddenfee(i):
-    ten, gia, phan = PHI_AN[i % len(PHI_AN)]
+    ten, gia, phan = _lay(PHI_AN, i)
     lon = max(phan, key=lambda x: x[1])
     return (f"What is inside {ten}", f"WHAT IS INSIDE {ten.upper()}", f"{lon[1]}% {lon[0].upper()}",
             [
@@ -1178,7 +1805,7 @@ def sinh_hiddenfee(i):
 
 
 def sinh_yearsof(i):
-    ten, gio, bt = DOI_NGUOI[i % len(DOI_NGUOI)]
+    ten, gio, bt = _lay(DOI_NGUOI, i)
     tong = gio * 365.25 * 79          # tuổi thọ trung bình Mỹ ~79
     sn, un = _lau(tong)
     return (f"Years of your life spent {ten}", f"HOW LONG YOU SPEND {ten.upper()}", f"{sn} {un.upper()}",
@@ -1207,11 +1834,11 @@ def sinh_yearsof(i):
 
 
 def sinh_howloud(i):
-    ten, db, bt = AM_THANH[i % len(AM_THANH)]
+    ten, db, bt = _lay(AM_THANH, i)
     lan = 10 ** ((db - 60) / 10.0)
     return (f"How loud is {ten}", f"HOW LOUD IS {ten.upper()}", f"{db} DECIBELS",
             [
-    _n("so_lieu", "Here is the number.", so=f"{db}", don="decibels", chu=ten, bt=bt, dinh=True,
+    _n("so_lieu", _loi("so", i), so=f"{db}", don="decibels", chu=ten, bt=bt, dinh=True,
        ve=_ve(f"{ten} shown clearly, sound waves radiating outward",
               "loud, waves rippling out", "", "a plain backdrop",
               "the source sharp and central", "high-contrast palette")),
@@ -1220,9 +1847,9 @@ def sinh_howloud(i):
     _n("chia_doi", "Ten more is ten times more.",
        trai={"nhan": "normal talking", "bt": "nguoi", "so": "60 dB"},
        phai={"nhan": ten, "bt": bt, "so": f"{db} dB"}, dinh=True),
-    _n("so_lieu", "So this is the real gap.", so=f"{lan:,.0f}x", don="the energy of talking",
+    _n("so_lieu", _loi("gap", i), so=f"{lan:,.0f}x", don="the energy of talking",
        bt=bt, dinh=True),
-    _n("chart", "On one scale.", don="decibels",
+    _n("chart", _loi("so_sanh", i), don="decibels",
        cot=[{"nhan": "whisper", "v": 30}, {"nhan": "talking", "v": 60},
             {"nhan": ten.split()[-1][:9], "v": db}], dinh=True),
     _n("canh", "Your ears do the maths for you.", dinh=True,
@@ -1233,13 +1860,12 @@ def sinh_howloud(i):
 
 
 def sinh_whatweighs(i):
-    a = KHOI_LUONG[i % len(KHOI_LUONG)]
-    b = KHOI_LUONG[(i + 3) % len(KHOI_LUONG)]
+    a, b = _cap(KHOI_LUONG, i)
     lon, nho = (a, b) if a[1] >= b[1] else (b, a)
     lan = lon[1] / nho[1]
     return (f"{lon[0].title()} vs {nho[0]}", f"HOW HEAVY IS {lon[0].upper()}", f"{lon[1]:,} POUNDS",
             [
-    _n("chia_doi", "Two things. One scale.",
+    _n("chia_doi", _loi("so_sanh", i),
        trai={"nhan": nho[0], "bt": nho[2], "so": f"{nho[1]:,} lb"},
        phai={"nhan": lon[0], "bt": lon[2], "so": f"{lon[1]:,} lb"}, dinh=True),
     _n("the_chu", "Weight is the sense we are worst at.",
@@ -1249,7 +1875,7 @@ def sinh_whatweighs(i):
               f"{nho[0]} piled high on the other side", "",
               "a plain backdrop, the scale filling the frame",
               "flat ground beneath the scale", "bright palette")),
-    _n("chart", "On one scale.", don="pounds",
+    _n("chart", _loi("so_sanh", i), don="pounds",
        cot=[{"nhan": nho[0].split()[-1][:9], "v": nho[1]},
             {"nhan": lon[0].split()[-1][:9], "v": lon[1]}], dinh=True),
     _n("canh", "You guessed wrong. Everyone does.", dinh=True,
@@ -1261,8 +1887,21 @@ def sinh_whatweighs(i):
 
 def sinh_rightnow(i):
     ds = [("asleep right now", 0.42, "dong_ho"), ("in a car right now", 0.02, "xe"),
-          ("eating right now", 0.06, "hop"), ("having a birthday today", 1 / 365.25, "nguoi")]
-    ten, ti, bt = ds[i % len(ds)]
+          ("eating right now", 0.06, "hop"), ("having a birthday today", 1 / 365.25, "nguoi"),
+          ("at work right now", 0.19, "nha"), ("on a phone right now", 0.31, "dien_thoai"),
+          ("in school right now", 0.08, "giay"), ("watching something right now", 0.14, "dien_thoai"),
+          ("driving right now", 0.015, "xe"), ("cooking right now", 0.05, "lua"),
+          ("on a plane right now", 0.00016, "may_bay"), ("being born this minute", 0.0000032, "nguoi"),
+          ("waiting in a queue right now", 0.03, "nguoi"), ("in a hospital right now", 0.004, "nha"),
+          ("exercising right now", 0.02, "nguoi"), ("shopping right now", 0.04, "tien"),
+          ("reading right now", 0.01, "giay"), ("listening to music right now", 0.11, "dien_thoai"),
+          ("in a meeting right now", 0.03, "giay"), ("on a train right now", 0.006, "xe_buyt"),
+          ("brushing their teeth right now", 0.004, "coc"), ("in a queue at a shop right now", 0.02, "tien"),
+          ("laughing right now", 0.05, "nguoi"), ("crying right now", 0.01, "nguoi"),
+          ("getting married today", 0.00012, "nguoi"), ("taking a photo right now", 0.03, "dien_thoai"),
+          ("on hold right now", 0.002, "dien_thoai"), ("in the air right now", 0.00016, "may_bay"),
+          ("having surgery right now", 0.0005, "nha"), ("starting a new job today", 0.0004, "giay")]
+    ten, ti, bt = _lay(ds, i)
     n = int(8_000_000_000 * ti)
     # Quy về đơn vị tai người nghe ra: "3360 MILLION" không ai đọc, "3.4 BILLION" thì đọc ngay.
     gon = (f"{n/1e9:.1f} BILLION".replace(".0 ", " ") if n >= 1e9
@@ -1291,11 +1930,11 @@ def sinh_rightnow(i):
 
 
 def sinh_howhot(i):
-    ten, f, bt = NHIET_DO[i % len(NHIET_DO)]
+    ten, f, bt = _lay(NHIET_DO, i)
     c = (f - 32) * 5 / 9
     return (f"How hot is {ten}", f"HOW HOT IS {ten.upper()}", f"{f:,}°F",
             [
-    _n("so_lieu", "Here is the number.", so=f"{f:,}", don="degrees fahrenheit", chu=ten,
+    _n("so_lieu", _loi("so", i), so=f"{f:,}", don="degrees fahrenheit", chu=ten,
        bt=bt, dinh=True,
        ve=_ve(f"{ten} shown clearly, heat shimmering above it",
               "radiating heat", "", "a plain backdrop", "the source sharp and central",
@@ -1307,7 +1946,7 @@ def sinh_howhot(i):
        the="Your body has|a very narrow window."),
     _n("so_lieu", "Outside it, minutes matter.", so=f"{c:,.0f}", don="degrees celsius",
        chu="the same temperature, other scale", bt=bt),
-    _n("chart", "On one scale.", don="degrees fahrenheit",
+    _n("chart", _loi("so_sanh", i), don="degrees fahrenheit",
        cot=[{"nhan": "room", "v": 70}, {"nhan": "boiling", "v": 212},
             {"nhan": ten.split()[-1][:9], "v": f}], dinh=True),
     _n("canh", "We live in a very thin band.", dinh=True,
@@ -1319,8 +1958,7 @@ def sinh_howhot(i):
 
 
 def sinh_smallest(i):
-    a = CUC_NHO[i % len(CUC_NHO)]
-    b = CUC_NHO[(i + 2) % len(CUC_NHO)]
+    a, b = _cap(CUC_NHO, i)
     lon, nho = (a, b) if a[1] >= b[1] else (b, a)
     lan = lon[1] / nho[1]
     return (f"{lon[0].title()} vs {nho[0]}", f"HOW SMALL IS {nho[0].upper()}",
@@ -1406,13 +2044,113 @@ HOOK_LOI = {
 #   · THẺ CHƯƠNG giữa các chương — người xem biết mình đang ở đâu, và đây cũng là mốc để đặt
 #     chương trong phần mô tả YouTube (thứ hai video tham chiếu KHÔNG có)
 #   · TỔNG HỢP cuối: một biểu đồ so tất cả các chương, thứ chỉ bản dài làm được
+# ══ NGỮ PHÁP RIÊNG TỪNG KÊNH + BIẾN THIÊN THEO TẬP  (1/9/2026) ══════════════════════════════
+# Anh: *"style template method xây nội dung 18 channel có gu riêng."*
+#
+# ── ĐO TRƯỚC KHI THIẾT KẾ ─────────────────────────────────────────────────────────────────
+# 18/18 kênh có chuỗi khuôn hình KHÁC NHAU (tốt), nhưng mỗi kênh chỉ có **một** chuỗi duy nhất
+# dùng cho MỌI tập: đo 5 tập liên tiếp của cả 18 kênh ra đúng 1,0 chuỗi phân biệt. Người xem hai
+# tập liền thấy y hệt một khuôn dựng, dù nội dung đã khác.
+#
+# ── VÌ SAO KHÔNG ĐẢO THỨ TỰ NHỊP ──────────────────────────────────────────────────────────
+# Quy tắc A của bộ này (PHAN_TICH_GIAI_THICH.md): *mỗi cảnh vẽ đúng mệnh đề đang nói*. Lời của
+# nhịp được viết cho ĐÚNG vị trí ấy, nên đảo thứ tự là phá vỡ khớp hình–lời — đúng cái làm nên
+# chất lượng của thể loại này. Biến thiên phải nằm ở chỗ KHÔNG đụng vào khớp ấy.
+#
+# ── BA TRỤC BIẾN THIÊN AN TOÀN ────────────────────────────────────────────────────────────
+#   `dem`      con số nhỏ kể bằng ĐẾM VẬT thay vì hiện số — cùng nghĩa, khác hẳn thị giác
+#   `dai_chu`  thêm dải chữ giữ nguyên một chỗ qua mấy nhịp (quy tắc B: mệnh đề song song)
+#   `ke_thua`  đánh dấu mạch cảnh liên tiếp (quy tắc D: cảnh sau kế thừa cảnh trước)
+# Cả ba đổi CÁCH KỂ mà không đổi điều đang kể.
+GU_KENH = {
+    # ma -> (các trục được phép dùng, số biến thể xoay vòng)
+    "howlong":   (("dem", "ke_thua"), 3),
+    "howbig":    (("dai_chu",), 2),
+    "realcost":  (("dem", "dai_chu"), 3),
+    "howmuch":   (("dem",), 2),
+    "whatif":    (("dai_chu", "ke_thua"), 3),
+    "survive":   (("ke_thua",), 2),
+    "dayinlife": (("ke_thua", "dai_chu"), 3),
+    "wheregoes": (("ke_thua",), 3),
+    "therules":  (("dai_chu",), 2),
+    "speedof":   (("dem",), 2),
+    "odds":      (("dem", "dai_chu"), 3),
+    "hiddenfee": (("dai_chu",), 2),
+    "yearsof":   (("dem", "ke_thua"), 3),
+    "howloud":   (("dai_chu",), 2),
+    "whatweighs":(("dem",), 2),
+    "rightnow":  (("dem", "dai_chu"), 3),
+    "howhot":    (("dai_chu",), 2),
+    "smallest":  (("dem",), 2),
+}
+
+
+def _cau_hook(hook: str, lui: str) -> str:
+    """Lời của nhịp hook, viết lại từ `hook` của chính tập ấy.
+
+    Giữ ĐÚNG DẤU CÂU: `hook` là chuỗi viết hoa dùng cho tiêu đề ("COULD YOU SURVIVE A DAY IN THE
+    ICE AGE"), nhưng nó là một CÂU HỎI — thêm dấu chấm vào là đọc sai ngữ điệu, và giọng máy đọc
+    câu hỏi khác câu kể. Nhận biết bằng từ để hỏi ở đầu câu."""
+    h = hook.strip().rstrip("?.").strip()
+    if not h:
+        return lui
+    dau = h.split()[0].lower() if h.split() else ""
+    hoi = dau in ("how", "what", "why", "could", "can", "would", "will", "is", "are", "do", "does", "where", "who")
+    return h.capitalize() + ("?" if hoi else ".")
+
+
+def ap_gu(ma: str, idx: int, nhip: list) -> list:
+    """Áp ngữ pháp riêng của kênh, biến thể xoay theo số tập. Trả về CHÍNH danh sách đã sửa."""
+    truc, so_bt = GU_KENH.get(ma, ((), 1))
+    if not truc or not nhip:
+        return nhip
+    bt = idx % so_bt
+    if bt == 0:
+        return nhip                       # biến thể 0 = giữ nguyên chuỗi gốc của kênh
+
+    if "dem" in truc:
+        # Số nhỏ (2..12) kể bằng ĐẾM VẬT. Chỉ đổi MỘT nhịp, và chỉ khi con số đếm được —
+        # "8,000 centuries" mà vẽ 8000 vật thì thành một mảng nhiễu, không thành ý.
+        for n in nhip:
+            if n.get("khuon") != "so_lieu":
+                continue
+            t = str(n.get("so") or "").replace(",", "")
+            if t.isdigit() and 2 <= int(t) <= 12:
+                n["khuon"] = "dem"
+                n["n"] = int(t)
+                n["ngay"] = "day" in str(n.get("don", "")).lower()
+                break
+
+    if "dai_chu" in truc:
+        # Dải chữ GIỮ NGUYÊN qua các nhịp giữa — quy tắc B: mệnh đề song song thì khung hình
+        # song song, và dải chữ là xương sống giữ chúng lại với nhau.
+        giua = [n for n in nhip[1:-1] if n.get("khuon") in ("canh", "so_lieu")]
+        if len(giua) >= 2:
+            d = (giua[0].get("chu") or giua[0].get("don") or "").strip()
+            if d:
+                for n in giua[:3]:
+                    n["dai_chu"] = d.upper()[:34]
+
+    if "ke_thua" in truc:
+        # Đánh số mạch cảnh liên tiếp: cảnh thứ mấy trong một chuỗi. Engine dùng nó để cảnh sau
+        # mang dấu vết cảnh trước (vệt chân dài dần) thay vì mỗi cảnh một thế giới rời rạc.
+        d = 0
+        for n in nhip:
+            if n.get("khuon") == "canh":
+                d += 1
+                n["ke_thua"] = d
+            else:
+                d = 0
+    return nhip
+
+
 def sinh_long(ma: str, idx: int, so_chuong: int = 10):
     k = next(x for x in KENH if x["ma"] == ma)
     bo = BO_SINH[k["sinh"]]
     nhip, muc = [], []
 
     # ── MỞ ĐẦU ──────────────────────────────────────────────────────────────────────────
-    tieu0, hook0, hp0, _n0 = bo(idx)
+    tieu0, hook0, hp0, _n0 = bo(vi_tri_long(ma, idx, 0))
     nhip.append(_n("the_chu", HOOK_LOI.get(ma, "Here is the question."),
                    the=HOOK_LOI.get(ma, "").replace(". ", ".|"), dinh=True))
     nhip.append(_n("canh", "We are going to answer it properly.", dinh=True,
@@ -1424,7 +2162,8 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
 
     # ── CÁC CHƯƠNG ──────────────────────────────────────────────────────────────────────
     for c in range(so_chuong):
-        tieu, _h, _hp, nc = bo(idx + c)
+        tieu, _h, _hp, nc = bo(vi_tri_long(ma, idx, c))
+        nc = ap_gu(ma, idx + c, nc)     # mỗi chương một biến thể, không 10 chương một khuôn
         if not nc:
             continue
         muc.append((len(nhip), tieu))
@@ -1437,7 +2176,7 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
     # xem ngồi hết 8 phút thay vì xem một bản ngắn.
     cot = []
     for c in range(min(so_chuong, 6)):
-        t2, _h2, hp2, _n2 = bo(idx + c)
+        t2, _h2, hp2, _n2 = bo(vi_tri_long(ma, idx, c))
         v = "".join(ch for ch in (hp2.split()[0] if hp2 else "0") if ch.isdigit() or ch == ".")
         try:
             cot.append({"nhan": t2.split()[-1][:9], "v": float(v or 0)})
@@ -1486,7 +2225,10 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
     if long:
         tieu, hook, hook_phu, nhip, muc = sinh_long(ma, idx, so_chuong)
     else:
-        tieu, hook, hook_phu, nhip = BO_SINH[k["sinh"]](idx)
+        # Short lấy vị trí CHẴN, bản dài lấy vị trí LẺ — xem `vi_tri_short`/`vi_tri_long`.
+        tieu, hook, hook_phu, nhip = BO_SINH[k["sinh"]](vi_tri_short(ma, idx))
+        # Ngữ pháp riêng của kênh, biến thể xoay theo số tập — xem `GU_KENH`.
+        nhip = ap_gu(ma, idx, nhip)
     # Nhịp 0 = HOOK. Chèn ở đây chứ không viết vào từng bộ sinh: hook là quy tắc chung của cả
     # bộ phim, không phải nội dung riêng của một kênh — viết mười chỗ là mười chỗ để lệch nhau.
     # CHỈ chèn khung số liệu khi THẬT SỰ CÓ SỐ. Bốn kênh (whatif · dayinlife · wheregoes ·
@@ -1510,16 +2252,28 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
         # khi đã có ảnh, nên không bao giờ vẽ đè).
         _dau = nhip[0]
         _ve = _dau.get("ve") or ""
-        _bt = _dau.get("bt") or next((n.get("bt") for n in nhip[:2] if n.get("bt")), "")
+        # Khuôn `chia_doi` giấu hình trong `trai`/`phai`, không để ở cấp trên — nên phép lấy
+        # `n.get("bt")` trả rỗng và nhịp hook thành khung trống (cổng KHUNG TRỐNG bắt được ở
+        # `howmuch`). Nhìn vào cả hai nửa trước khi bỏ cuộc.
+        def _hinh(n):
+            return (n.get("bt") or (n.get("trai") or {}).get("bt")
+                    or (n.get("phai") or {}).get("bt") or "")
+        _bt = _hinh(_dau) or next((_hinh(n) for n in nhip[:3] if _hinh(n)), "")
+        # LỜI HOOK PHẢI BÁM TẬP, không phải câu cố định của kênh.
+        # `HOOK_LOI[ma]` là một câu viết sẵn cho mỗi kênh. Soi hai tập liền của `howmuch`: tập 2
+        # nói về TRILLION vs BILLION mà lời vẫn đọc "A billion is not a big million" — sai nghĩa,
+        # và trên màn hình còn đá nhau với dòng chú thích (vốn lấy từ tập). Bộ sinh đã trả sẵn
+        # `hook` riêng cho từng tập; dùng nó, `HOOK_LOI` chỉ còn là đường lui.
+        _hl = _cau_hook(hook, HOOK_LOI[ma])
         nhip.insert(0, {
-            "khuon": "so_lieu", "loi": HOOK_LOI[ma], "dinh": True,
+            "khuon": "so_lieu", "loi": _hl, "dinh": True,
             "so": (hook_phu.split()[0] if hook_phu else ""),
             "don": (" ".join(hook_phu.split()[1:]) if hook_phu else ""),
             "chu": hook.rstrip("?").title() + "?",
             **({"ve": _ve} if _ve else {}), **({"bt": _bt} if _bt else {}),
         })
     elif HOOK_LOI.get(ma) and nhip:
-        nhip[0]["loi"] = HOOK_LOI[ma]
+        nhip[0]["loi"] = _cau_hook(hook, HOOK_LOI[ma])
         nhip[0]["dinh"] = True
     slug = f"{ma}_{idx:04d}" + ("_long" if long else "")
     print(f"\n▶ {k['ten']} · {tieu}", flush=True)
@@ -1574,6 +2328,10 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
     mk = MAU_KENH.get(ma, {"nen": "#F3EEE4", "mau": k["mau"], "phu": k["phu"], "chu": "#2C2722"})
     props = {"nhip": nhip, "tu": tu, "voMp3": rel,
              "nhac": _nhac(ma, long), "nhacVol": _am_nhac(_nhac(ma, long)),
+             # HẠT GIỐNG THEO TẬP. Trước bản này `hat` được TÍNH ở trên rồi bỏ đó — engine
+             # không bao giờ nhận, nên mọi tập của một kênh dựng y hệt nhau. Cùng họ lỗi
+             # "tính rồi không dùng" đã vấp ở `mauChu`.
+             "hat": hat,
              "tieuDe": k["ten"], "handle": "@" + ma + "usa",
              "mau": mk["mau"], "mauPhu": mk["phu"],
              "nenTrang": mk["nen"], "chuTrang": mk["chu"],

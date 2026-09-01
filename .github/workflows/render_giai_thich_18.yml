@@ -121,6 +121,7 @@ jobs:
         run: |
           cd render-pipeline
           python kiem_pham_vi.py   # esbuild (cú pháp) + tsc (phạm vi) — mỗi bên bắt thứ kia sót
+          python kiem_trung.py     # đủ tập phân biệt · long không đụng short · long không tự lặp
           python kiem_hinhve.py    # mọi biểu tượng được gán phải có trong engine
           python kiem_kenh.py      # 8 bảng phủ đủ 18 kênh · 8 trục nhận diện không trùng
           python kiem_nen.py       # ba mệnh lệnh cho mọi prompt vẽ nền

@@ -7082,3 +7082,72 @@ nhau là ĐÚNG) · `audio` 1,00 → **0,17** · `hai` **0,03**.
 
 **Luật:** *"mười kênh" mà tả bằng cùng một câu thì nó là một kênh có mười cái tên.* Đo độ giống
 nhau giữa các hồ sơ là cách rẻ nhất để biết mình đang có mấy kênh thật.
+
+### 7cj — Bản dài chính là các short nối lại, và mỗi kênh lặp sau 4–10 tập (1/9)
+
+Anh: *"long và short cũng ko được trùng lặp, nội dung trên channel liền mạch và ko lặp lại."*
+Đo trước khi sửa:
+
+| đo | kết quả |
+|---|---|
+| số tập PHÂN BIỆT mỗi kênh | trung bình **6,9** · `howmuch` = **1** (tập 2 giống hệt tập 1) |
+| bản dài vs short | `sinh_long` gọi `bo(idx + c)` → chương c **chính là** short tập c |
+| bản dài tự lặp | chu kỳ 3–6 mà 10 chương → **tự lặp 2–3 lần trong cùng một video** |
+| lời kể giữa các tập | **127/130 câu (98%) giống hệt nhau** — chỉ số và tên vật đổi |
+
+Không lỗi nào báo. Kênh vẫn ra video mỗi ngày; chỉ là video thứ tám giống video thứ hai.
+
+**Bốn gốc rễ, không phải một:**
+
+1. *bước nhảy cố định trong phép lấy cặp* — `ds[i%n]` và `ds[(i+3)%n]` cho chu kỳ **n**, trong
+   khi n vật tạo được n(n−1) cặp. `_cap` đi hết không gian ấy: `whatweighs` 6 → **231** tập.
+2. *bảng dữ liệu quá nhỏ* — chu kỳ lặp CHÍNH BẰNG số mục. Nới 10 bảng lên 16–33 mục.
+3. *bộ sinh bỏ qua tham số* — `sinh_howmuch(i)` không dùng `i` lần nào. Đây là dạng nặng nhất:
+   không phải lặp sau vài tập mà lặp ngay từ tập một.
+4. *mục trùng trong bảng* — không gây lỗi, chỉ lặng lẽ thu hẹp không gian. Sau khi nối dữ liệu,
+   26 mục trùng lọt vào 8 bảng và `speedof` lặp ở tập 5 thay vì 16.
+
+**Kết quả:** trung bình 6,9 → **46** tập phân biệt · thấp nhất 23 · cao nhất 231.
+
+### 7ck — Chia DÃY CHỈ SỐ không chia được KHÔNG GIAN (1/9)
+
+Bản vá đầu cho long/short: short lấy chỉ số chẵn, long lấy chỉ số lẻ. Nghe hợp lý. Đo ra
+**10/10 chương bản dài vẫn trùng short**.
+
+Vì bộ sinh lấy `ds[i % n]`, mà với n lẻ thì tập các số chẵn chia dư n **phủ trọn mọi dư** — y
+hệt tập các số lẻ. Hai tập chỉ số rời nhau vẫn ánh xạ vào cùng một tập nội dung.
+
+**Cách đúng:** đo `n` = số tập phân biệt thật rồi cắt đôi CHÍNH KHÔNG GIAN — short dùng nửa đầu,
+long dùng nửa sau. Hai nửa rời nhau theo định nghĩa.
+
+**Và phải đo đúng thứ:** bản đầu của `khong_gian` đo chữ ký đầy đủ (gồm cả lời kể). Sau khi lời
+kể có biến thể xoay theo `i`, chữ ký phồng lên tới bội chung hai chu kỳ trong khi CHỦ ĐỀ vẫn lặp
+theo chu kỳ cũ — chia đôi một con số phồng thì hai nửa lại trỏ về cùng tập chủ đề, và 4 kênh
+quay lại lỗi cũ. Với người xem, *"cùng một tập"* nghĩa là **cùng chủ đề**; đó mới là thứ phải chia.
+
+Không dùng sổ ghi trên đĩa: trên Actions không trạng thái nào sống qua hai lượt chạy, nên sổ ghi
+sẽ hoặc rỗng (mất tác dụng) hoặc phải đồng bộ thêm — thêm một chỗ hỏng. Phép chia là tất định.
+
+### 7cl — Mọi tập của một kênh dựng y hệt nhau, dù nội dung đã khác (1/9)
+
+Đo 5 tập liên tiếp của cả 18 kênh: **1,0 chuỗi khuôn phân biệt**. Nội dung khác mà khuôn dựng
+một, nên xem hai tập liền vẫn thấy lặp.
+
+Gốc rễ có hai tầng, và tầng thứ hai là họ lỗi quen: `hat = sum(ord(c) for c in ma) + idx` được
+**TÍNH ở dây chuyền rồi không bao giờ truyền sang engine** — cùng dạng với `mauChu` tính rồi bỏ
+không, và `kk` engine có mà pipeline không gửi.
+
+Biến thiên **không được đảo thứ tự nhịp**: quy tắc A của bộ này là *mỗi cảnh vẽ đúng mệnh đề
+đang nói*, và lời được viết cho đúng vị trí ấy. Ba trục an toàn: `dem` (số nhỏ kể bằng đếm vật)
+· `dai_chu` (dải chữ giữ qua mấy nhịp — quy tắc B) · `ke_thua` (mạch cảnh liên tiếp — quy tắc D),
+cộng `hat % 3` đổi bố cục thẻ số. Cả bốn đổi CÁCH KỂ mà không đổi điều đang kể.
+
+### 7cm — Lời hook cố định theo kênh, nội dung thay theo tập (1/9)
+
+`HOOK_LOI[ma]` là một câu viết sẵn cho mỗi kênh, dùng làm lời của nhịp mở đầu. Soi hai tập liền
+của `howmuch`: tập 2 nói về **trillion vs billion** mà lời vẫn đọc *"A billion is not a big
+million"* — sai nghĩa, và trên màn hình còn đá nhau với dòng chú thích (vốn lấy từ tập).
+
+Bộ sinh đã trả sẵn `hook` riêng từng tập; chỉ là không ai dùng. **Khi một giá trị có bản riêng
+cho từng tập và một bản chung cho cả kênh, mặc định phải là bản riêng** — bản chung chỉ là đường
+lui. Ngược lại là bảo đảm sai ở mọi tập trừ tập đầu.

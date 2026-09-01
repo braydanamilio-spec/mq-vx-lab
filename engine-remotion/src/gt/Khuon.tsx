@@ -219,8 +219,8 @@ export const chuHopNen = (uu: string, nen: string, dam = "#2C2722", nhat = "#F4F
 
 export const SoLieu: React.FC<{
   W: number; H: number; so: string; don: string; chu: string; bt: string; mau: string; p: number;
-  tren_anh?: boolean; nen?: string;
-}> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false, nen = "#EFE7D6" }) => {
+  tren_anh?: boolean; nen?: string; bo?: number;
+}> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false, nen = "#EFE7D6", bo = 0 }) => {
   /* ── BỐ CỤC PHẢI ĐỔI THEO HƯỚNG KHUNG ────────────────────────────────────────────────
      Anh: *"bản 16:9 đang bị che khuất."* Đúng, và gốc rễ là mọi vị trí ở đây tính theo `H`.
      Khung dọc cao 1920 nên `H*0.20` cho chữ số là vừa; khung ngang chỉ cao 1080 nên cùng công
@@ -230,8 +230,15 @@ export const SoLieu: React.FC<{
      hai tỉ lệ khung, mà hai tỉ lệ ấy có ngân sách chiều cao khác hẳn nhau.
      Khung ngang: chữ số nhỏ hơn, dải nền mỏng hơn, chú thích nằm NGAY DƯỚI số thay vì ở đáy. */
   const ngang = W > H;
-  const cCao = ngang ? 0.13 : 0.20;     // cỡ chữ số theo chiều cao
-  const yCao = ngang ? 0.17 : 0.26;     // chỗ đặt chữ số
+  /* BỐ CỤC ĐỔI THEO TẬP (`bo` = hạt giống % 3). Trước bản này mọi tập của một kênh dựng y hệt:
+     đo 5 tập liên tiếp của cả 18 kênh ra đúng MỘT chuỗi khuôn. Nội dung đã khác mà khuôn dựng
+     vẫn một, nên xem hai tập liền vẫn thấy lặp.
+       bo 0  bố cục gốc
+       bo 1  số lớn hơn, đặt cao hơn   — nhấn con số
+       bo 2  số nhỏ hơn, đặt thấp hơn  — nhường chỗ cho hình
+     Ba biến thể đổi TRỌNG TÂM khung mà không đụng khớp hình–lời (quy tắc A). */
+  const cCao = (ngang ? 0.13 : 0.20) * (bo === 1 ? 1.16 : bo === 2 ? 0.84 : 1);
+  const yCao = (ngang ? 0.17 : 0.26) * (bo === 1 ? 0.86 : bo === 2 ? 1.18 : 1);
   /* 0.94 là ĐÁY KHUNG — đúng chỗ dải phụ đề chiếm. Soi khung `howmuch` nhịp 0: dòng
      "A Billion Is Not A Big Million?" chồng lên vùng phụ đề, hai lớp chữ đè nhau, cả hai cùng
      khó đọc. Đưa nó lên NGAY DƯỚI con số — chỗ nó vốn thuộc về về mặt nghĩa.
