@@ -885,3 +885,24 @@ Hai thứ phải đi kèm khi nâng sàn:
 **Luật:** khi một hệ có ngưỡng chấp nhận, đi đo **phân bố kết quả** — nếu nó dồn cục ngay trên
 ngưỡng thì ngưỡng đang là trần, không phải sàn. Và mọi vòng lặp "thử tới khi đạt" phải nhớ bản
 tốt nhất, vì lần thử cuối không có lý do gì để là lần thử tốt nhất.
+
+### 13.25 Kho rỗng không được cho điểm miễn phí — và tôi đã báo cáo con số bị thổi
+
+Trục "cú lật có mới không" chấm theo **độ hiếm trong kho**. Kênh mới có kho rỗng, nên `lan = 0`
+và trục ấy tự động được điểm tối đa. Đo được: cùng một kịch bản GYM FLOOR chấm **95** khi so với
+kho của chính kênh (0 tập) và **90** khi so với kho 30 tập — chênh đúng 5 điểm của trục này.
+
+Hậu quả: **mười kênh mới luôn cao điểm hơn mười kênh cũ cho cùng chất lượng viết**, và mọi câu
+"kênh mới tốt hơn" tôi nói trong buổi đều là ảo giác của phép đo. Tôi đã báo TB 94,3 khi con số
+thật là **93,2**.
+
+Chữa: kho dưới 8 tập thì độ hiếm không có nghĩa thống kê — chấm bằng thứ đo được **không cần
+kho** (cơ chế có phải họ đã mòn không). Nhờ vậy kênh mới và kênh cũ so được với nhau.
+
+**Luật:** mọi trục chấm theo "so với lịch sử" đều có một lỗ ở **điểm bắt đầu**, nơi lịch sử rỗng.
+Lỗ ấy luôn nghiêng về phía cho điểm cao, vì "chưa từng lặp" và "chưa có gì để lặp" trông giống
+hệt nhau trong công thức. Hỏi thẳng: *"trục này chấm gì khi n = 0?"*
+
+Và một luật về báo cáo: **hai phép đo cho hai con số thì phải truy ra vì sao trước khi báo con số
+nào**. Tôi thấy `sinh_tap` nhận một tập 90 điểm trong khi sàn là 95, và suýt bỏ qua nó như một
+chi tiết lạ — chính chi tiết ấy là sợi dây dẫn tới lỗ hổng.

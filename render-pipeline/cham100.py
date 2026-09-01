@@ -60,9 +60,19 @@ def cham100(tap, giay, hs, prompt_txt, kho=(), co_che_giao=""):
     da = collections.Counter(ho_cua(t) for t in kho)
     p2 = 0
     # ĐỘ HIẾM trong kho — "khác" là chưa từng có, tức hiếm nhất, chứ không phải hỏng.
-    lan = len(kho) if ho == "khác" else da.get(ho, 0)
-    lan = 0 if ho == "khác" else lan
-    p2 += 5 if lan <= max(2, len(kho) // 8) else (2 if lan <= len(kho) // 3 else 0)
+    #
+    # 2/9 — KHO RỖNG KHÔNG ĐƯỢC CHO ĐIỂM MIỄN PHÍ. Đo được: cùng một kịch bản GYM FLOOR chấm
+    # 95 khi so với kho của chính kênh (0 tập) và 90 khi so với kho 30 tập — chênh đúng 5 điểm
+    # của trục này. Kênh mới vì thế luôn cao điểm hơn kênh cũ cho cùng chất lượng viết, và mọi
+    # so sánh "kênh mới tốt hơn" đều là ảo giác của phép đo.
+    #
+    # Kho dưới 8 tập thì độ hiếm không có nghĩa thống kê. Lúc ấy chấm bằng thứ đo được không
+    # cần kho: cơ chế có phải họ đã mòn không. Nhờ vậy kênh mới và kênh cũ so được với nhau.
+    lan = 0 if ho == "khác" else da.get(ho, 0)
+    if len(kho) < 8:
+        p2 += 5 if ho != "nhấc-lộ-vô-hại" else 1
+    else:
+        p2 += 5 if lan <= max(2, len(kho) // 8) else (2 if lan <= len(kho) // 3 else 0)
     p2 += 3 if ho != "nhấc-lộ-vô-hại" else 0          # họ đã mòn 18/30 lần
     p2 += 2 if re.search(DAO_NGOI, tap["payoff"], re.I) else 0
     # Cơ chế ĐƯỢC GIAO: chấm, không chặn. Chuyển từ `cham()` sang đây sau khi đo được nó là
