@@ -100,10 +100,40 @@ def check_alive() -> bool:
         return True
 
 
+def _bao_cao_doc() -> None:
+    """In số lượt ĐỌC Firestore mà dashboard đã tự đếm — để biết ai ăn hết hạn mức.
+
+    1/9 — anh: *"làm gì đâu mà hết firebase"*. Đo ra: GitHub Actions chỉ chạy 34 lượt ngày
+    31/8, không thể sinh 50.000 lượt đọc. Dashboard thì viết chắc — bộ đếm 5 giây của nó chỉ
+    bầu tab chủ bằng localStorage, và chỉ MỘT tab được lắng nghe.
+    Nhưng chính dashboard đã tự đếm số đọc và ghi vào `render_stats/__rw__<owner>` mỗi 5 phút.
+    Con số ấy nằm sẵn trong Firestore mà chưa ai nhìn. In nó ra mỗi giờ thì hết phải đoán.
+    Tốn đúng MỘT lượt đọc mỗi giờ — 24 lượt/ngày trên hạn mức 50.000.
+    """
+    try:
+        import firestore_bridge as FB
+        db = FB._db()
+        d = db.collection("render_stats").document("__rw__" + OWNER).get()
+        if not d.exists:
+            print("   📖 chưa có sổ đếm đọc (dashboard chưa chạy lần nào hôm nay)")
+            return
+        x = d.to_dict() or {}
+        ngay = sorted(x.keys())[-3:]
+        print("   📖 lượt ĐỌC Firestore dashboard tự đếm (hạn mức free 50.000/ngày):")
+        for k in ngay:
+            v = x.get(k) or {}
+            r = v.get("r", 0) if isinstance(v, dict) else v
+            canh = " ⚠️ SÁT HẠN MỨC" if isinstance(r, int) and r > 40000 else ""
+            print(f"      {k}: {r:,} lượt{canh}")
+    except Exception as e:
+        print(f"   📖 không đọc được sổ đếm: {str(e)[:80]}")
+
+
 def main():
     if not OWNER:
         print("⚠️ Thiếu OWNER_UID -> bỏ qua."); return
     print(f"🩺 Health Guardian — {_now().isoformat()}")
+    _bao_cao_doc()
     n = heal_stale_jobs()
     if n:
         print(f"   🔧 Đã tự dọn {n} job treo (>{STALE_HOURS}h) — không phụ thuộc dashboard có mở hay không.")
