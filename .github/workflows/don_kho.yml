@@ -41,8 +41,12 @@ jobs:
       - name: Cài đặt
         run: |
           pip install --quiet pyyaml requests
-          pip install --quiet -r _autopublisher/requirements.txt 2>/dev/null || \
-            pip install --quiet google-api-python-client google-auth google-cloud-firestore
+          # GHIM PHIÊN BẢN Ở CẢ HAI NHÁNH. Nhánh dự phòng cũ cài BẢN MỚI NHẤT, và
+          # `2>/dev/null` nuốt luôn lý do requirements.txt hỏng. Chính cái đó đã đưa vào
+          # một bản `google-cloud-firestore` khác pin, làm `.where()` truyền vị trí đổi
+          # hành vi — pin tồn tại ĐÚNG để chặn việc ấy, mà nhánh dự phòng lại vứt nó đi.
+          pip install --quiet -r _autopublisher/requirements.txt || \
+            pip install --quiet 'google-api-python-client>=2.120,<3' 'google-auth>=2.29,<3' 'google-cloud-firestore>=2.27,<2.29' 'google-api-core>=2.30,<2.35' 'PyYAML>=6.0,<7'
 
       # MỘT LƯỢT DUY NHẤT, không chạy thử rồi chạy thật.
       # `don_sach.py` in kiểm kê đầy đủ trước khi xoá, nên bước thử riêng chỉ nhân đôi

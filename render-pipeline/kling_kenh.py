@@ -56,7 +56,18 @@ KHO = os.path.join(HERE, "out", "kling")
 # ── NHỊP KỂ ─────────────────────────────────────────────────────────────────────────────────
 # Bốn mốc, theo TỈ LỆ chứ không theo giây, để một kịch bản dùng được cho clip 5s hay 10s mà nhịp
 # không vỡ. Tỉ lệ lấy đúng từ bộ 500 đang chạy tốt: với T=8s ra 0-1.5 / 1.5-4.5 / 4.5-6.5 / 6.5-8.
-MOC = (0.1875, 0.5625, 0.8125)
+# 1/9 — HIỆU CHỈNH LẠI, và vì sao con số cũ đã hết đúng.
+# Bộ ba cũ (0.1875 · 0.5625 · 0.8125) lấy từ bộ 500 prompt chạy tốt, ở clip 8 GIÂY chia BỐN
+# khối. Nhưng 8 giây nay đi nhánh BA khối (`nhip()` đổi số khối theo độ dài từ 30/8), nên `MOC`
+# chỉ còn dùng cho clip ≥10 giây — một ngữ cảnh nó **chưa bao giờ được đo**. Hằng số vẫn ở đó,
+# vẫn trông có căn cứ, và căn cứ ấy đã đi mất. Đúng họ lỗi "chép hằng sang hệ quy chiếu khác".
+#
+# Số mới đặt theo số đo công bố về short hài: phần DỰNG chiếm 60–70% clip, phần CHỐT cộng phản
+# ứng chiếm 30–40%. Bộ cũ cho chốt đúng 18,75% — tức ở clip 15 giây, cú chốt và cả cái mặt phản
+# ứng chỉ được 2,8 giây, trong khi tài liệu đo được nói cú lật nên nằm trong ba giây cuối và
+# cần chỗ để người xem kịp cười.
+#     hook 16% · setup 28% · escalate 24% · payoff 32%
+MOC = (0.16, 0.44, 0.68)
 
 # Kling web chỉ cho chọn vài mốc thời lượng cố định tuỳ phiên bản model. Đây là các mốc hay gặp;
 # anh nhập số nào thì hệ dựng nhịp theo số ấy, vì chỉ anh mới biết giao diện mình đang có gì.
@@ -106,9 +117,10 @@ KHUON_KE = (
         "The engine of the middle is EFFORT: the wrong solution gets bigger, more elaborate, "
         "more committed — never abandoned. The audience laughs once at how far the character "
         "will go, and again at what it turns out to be.",
-        "'escalate' must genuinely RAISE something measurable — more of it, further in, one more "
-        "time, a bigger tool, a second person recruited. If 'escalate' could be deleted without "
-        "changing the payoff, it is description, not escalation.",
+        "'escalate' must genuinely RAISE something measurable, and must SAY SO in words. Write "
+        "it with one of these: again, another, further, more, bigger, deeper, harder, higher, "
+        "faster, a second, one more, the whole, even the, instead of, not enough. If 'escalate' "
+        "could be deleted without changing the payoff, it is description, not escalation.",
         "The reversal must pay off the ESCALATION specifically, not just the opening image. The "
         "bigger the effort, the smaller and more ordinary the true answer should be.",
         "Dialogue is three or four lines spread across the beats — do not stack them all in the "
@@ -1825,6 +1837,25 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
         if not str(d.get(khoa) or "").strip():
             e.append(f"thiếu khối {khoa!r}")
 
+    # ── PHẢI CÓ ÍT NHẤT MỘT LƯỢNG CHÍNH XÁC ────────────────────────────────────────────────
+    # 1/9 — Đo trên 28 tập AI viết: trục "Cụ thể — số thật" mất 108 điểm ở 18/28 tập, đứng thứ
+    # hai trong mọi trục. Luật đã có trong `LUAT_HAI_MY` ("Not 'expensive' but 'nine hundred
+    # dollars'") nhưng chỉ được CHẤM, không được CHẶN — nên nó là lời khuyên, và AI bỏ qua lời
+    # khuyên. Cùng thứ thuốc đã dùng cho ba cổng kia: đưa vào thước cứng, và nói ra là bị kiểm.
+    # `one` KHÔNG tính, và `half`/`twice` cũng không: chúng là từ đệm ("one more time", "one of
+    # them", "half the room") chứ không phải một lượng người xem đếm được. Bản đầu nhận chúng
+    # nên cổng báo sạch cho đúng những kịch bản mơ hồ mà nó sinh ra để bắt.
+    _SO = (r"\b\d{1,4}\b|\$\d|\b(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\b|"
+           r"\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|"
+           r"fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|"
+           r"seventy|eighty|ninety|hundred|thousand|dozen)\b")
+    _ca_so = " ".join(str(d.get(k) or "") for k in ("hook", "setup", "escalate", "payoff")) \
+        + " " + " ".join(str((l or {}).get("say") or "") for l in lines)
+    if not re.search(_SO, _ca_so, re.I):
+        e.append("không có một lượng chính xác nào — cần ít nhất một con số, một khoản tiền, "
+                 "một tên thứ trong tuần hay một phép đếm. 'chồng cốc' phải thành 'chín cái "
+                 "cốc'; 'đắt' phải thành 'chín trăm đô'")
+
     hook = str(d.get("hook") or "")
     # Bỏ tiền tố ghim máy trước khi đếm: nó là chỉ thị máy quay, không phải bức tranh.
     _hinh = re.sub(r"^[^:]{0,40}(shot|angle)\s*:\s*", "", hook, flags=re.I)
@@ -2153,6 +2184,12 @@ def _bat_buoc(kenh: str, tap: dict, giay: float, so: int, bien: int,
         if tho.get(k):
             mo = f"{mo} {' '.join(tho[k])}".strip()
         if k == "payoff":
+            # Ở clip hai khối (5–6s) khối này gánh cả dựng lẫn chốt, nên phải nói RÕ cú lật
+            # nằm ở đâu trong nó — không thì cú lật trôi ra giữa khối và ba phần tư cuối clip
+            # là phần đã hết chuyện. Số đo công bố: phần chốt + phản ứng chiếm 30–40% clip.
+            if len(n) <= 2:
+                mo += (f" The reversal itself must not begin before {a + (b - a) * 0.62:.1f}s — "
+                       f"everything before that is still the situation.")
             mo += " " + CAU_GIU_HINH
         r.append(f"{a:.1f}–{b:.1f}s: {mo.strip()}")
     r.append("")
@@ -2229,7 +2266,7 @@ SCHEMA = """Return ONLY a JSON object with exactly these fields:
   "setup":    "one sentence of physical staging: who is where, doing what, camera angle pinned (static eye-level shot / low angle / wide shot)",
   "lines":    [{"who":"Mike","say":"spoken words","act":"says|snaps|whispers|mutters|announces","beat":"which timeline beat this line is spoken in - use one of the beat names listed in THE SHAPE section"}],
   "escalate": "one sentence: the reaction grows, one small physical gag, one beat of silence",
-  "payoff":   "one sentence: the REVERSAL. Something is revealed, someone walks in, an object turns out to be something else. Not just a bigger emotion."
+  "payoff":   "one sentence: the REVERSAL, written as a physical action. It is checked for a reversal verb, so it must literally contain one of: reveals, turns out, walks in, steps in, opens, lifts, tips, swings, drops, shuts, slides, knocking, behind him/her/them, was never, all along, already done, instead of. Not just a bigger emotion, and not a line of dialogue explaining who was right."
 }"""
 
 
@@ -2354,6 +2391,13 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         + "".join(f"  · {x}\n" for x in khuon_ke(giay)[1])
         + f"  · The timeline you are writing for has {len(nhip(giay))} beats: "
         + ", ".join(f"{a:.1f}-{b:.1f}s {t}" for a, b, t in nhip(giay)) + ".\n"
+        # 1/9 — Bản trước liệt kê cả `hook` là một nhịp hợp lệ rồi để cổng CHẶN mọi lời đặt ở
+        # đó. AI làm đúng thứ được bảo và bị phạt: đo được 14 vòng viết lại đốt vào riêng chỗ
+        # này. Cổng không sai — lệnh dặn sai, vì nó không nói ra điều cổng đang đòi.
+        + f"  · `beat` on a line must be one of: "
+        + ", ".join(f"\"{t}\"" for _, _, t in nhip(giay) if t != "hook")
+        + ". NEVER \"hook\" — the opening beat is a pure image with no dialogue in it, and a "
+        f"line there both slows the open and breaks the word budget for the whole short.\n"
         + f"  · Total spoken words across the whole short: {int(_giay_thoai(giay) * TU_MOI_GIAY)}. "
         f"That is the real constraint on this length — write to it, do not write long and trust "
         f"someone to cut.\n\n"
@@ -2372,7 +2416,11 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         f"  · at most {tran} spoken words in the whole short\n"
         f"  · never write on-screen text, captions, signs or logos\n"
         f"  · never name a real brand or an existing TV show\n"
-        f"  · the four story fields together must stay under {_ngan_sach_sys(kenh, giay)} characters "
+        + (f"  · 'escalate' MUST contain one of these words, literally: again, another, "
+           f"further, more, bigger, deeper, harder, higher, a second, one more, the whole, "
+           f"even the, instead of. This is checked; an escalation the reader has to infer "
+           f"does not count at this length\n" if giay > 9.5 else "")
+        + f"  · the four story fields together must stay under {_ngan_sach_sys(kenh, giay)} characters "
         f"— longer and the render-safety block gets cut off by the model's prompt limit\n\n"
         # 1/9 — CHUẨN HOOK VIẾT RÕ RA. Đo 30 tập cũ: hook trung vị 73 ký tự — "A bulging trash
         # bag teeters on the counter." Đủ để Kling dựng một khung, KHÔNG đủ để người xem hiểu
@@ -2384,6 +2432,11 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         f"detail that proves somebody caused it. 'A trash bag teeters' has one of the three.\n"
         f"  · It is a PICTURE, not a feeling and not a summary. Write what a storyboard artist "
         f"would draw. No adjectives about mood, no 'chaos', no 'disaster'.\n"
+        f"  · Name the wrongness with a concrete word, not by implication. The check looks for "
+        f"one of: empty · open · stacked · leaning · spilling · smoking · stuck · missing · "
+        f"upside down · backwards · soaked · frozen · melting · tilted · scattered · covered · "
+        f"too high · too many. 'A tower of mugs teeters' passes; 'Brad sits on a foam roller' "
+        f"does not, because nothing in it is stated as wrong.\n"
         f"  · It must make the viewer ask one specific question that the payoff answers.\n"
         f"  · Pin the camera in it: static eye-level wide shot, or low angle, or medium shot.\n\n"
         f"WHAT MAKES THESE WORK IN AMERICA:\n"
@@ -2391,13 +2444,24 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         f"normal. The viewer arrives mid-disaster.\n"
         f"  · American units only, always: miles, mph, pounds, feet, Fahrenheit, dollars. Never "
         f"kilometres, kilos or Celsius — a US viewer stops trusting the channel instantly.\n"
-        f"  · Specific beats general. Not 'the bill is high' — 'nine hundred dollars'. Not 'he is "
-        f"late' — 'it is Thursday'.\n"
+        f"  · Specific beats general, and this is MACHINE-CHECKED: the script must contain at "
+        f"least one exact quantity — a number, an amount of money, a day name, or a count. Not "
+        f"'the bill is high' but 'nine hundred dollars'. Not 'he is late' but 'since Thursday'. "
+        f"Not 'a stack of cups' but 'nine cups'. Precision is what makes a lie sound true and a "
+        f"joke sound real, and a short with no number in it reads as a sketch of a joke.\n"
         f"  · The funniest person is the one who is calm. Panic is not a joke; being unbothered "
         f"next to panic is.\n"
         f"  · Vary WHO delivers the reversal across episodes — the cat solving everything twice "
         f"in a row is a formula the viewer spots before the joke.\n"
         f"  · Never end on a line that explains who was right. Show it and stop.\n"
+        # 1/9 — Ba cổng nổ nhiều nhất trên lượt sinh thật đều cùng một bệnh: thước tìm một TỪ
+        # cụ thể, còn lệnh dặn chỉ nói Ý NGHĨA. AI viết đúng ý mà sai từ, rồi bị bắt viết lại —
+        # đo được 49 vòng đốt vào ba cổng ấy. Nói thẳng ra từ mà thước đang tìm thì AI thoả được
+        # ngay lượt đầu, và cổng vẫn giữ nguyên độ chặt.
+        f"  · 'payoff' is machine-checked for a reversal verb. Write the reversal as a physical "
+        f"action containing one of: reveals · turns out · walks in · steps in · opens · lifts · "
+        f"tips · swings · drops · slides · knocking · behind him/her/them · was never · all "
+        f"along · already done.\n"
         f"  · The last line must REVERSE something, not summarise it. The viewer should want to "
         f"replay the first two seconds to check they missed it.\n"
         f"  · Dialogue is how real Americans actually talk to family: interrupting, understating, "

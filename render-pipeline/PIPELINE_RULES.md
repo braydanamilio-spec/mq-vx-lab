@@ -7677,3 +7677,42 @@ TRƯỚC khi cơ chế KV ra đời (31/8). Nên KV rỗng, và đường sống
 Chưa sửa được ở đợt này: cần một endpoint Worker để sao danh sách kết nối từ Firestore sang KV
 (D1 `nho_ghi` ghi bảng khác, không ghi KV). **Ghi ra đây để không quên** — chừng nào chưa có,
 mỗi lần Firestore nghẽn là một lần render xong mà không đẩy được.
+
+### 7cx — "Số nhỏ" không phải bảo vệ; hệ ĐÃ có bức tường mà công cụ mới đi vòng qua nó (1/9)
+
+Anh: *"nhỡ ngày bấm vài chục lần thì sao."* Câu hỏi đúng chỗ. Tôi báo "~2.500/50.000 = 5%" như
+thể đó là một sự bảo đảm — nó không phải. Hai mươi lượt bấm là vượt trần, và cách bảo vệ duy
+nhất là **trần cứng**, không phải một con số nhỏ.
+
+Hệ **đã có** trần cứng ấy từ 24/8: `firestore_bridge.con_ngan_sach()`, ba mức xếp theo hậu quả
+nếu không chạy — *thiết yếu* (mất video đang làm) luôn chạy · *cứu dữ liệu* (mất video đã xong)
+tới 92% · *việc phụ* dừng ở 70%. Sổ dùng chung cho cả 18 luồng và dashboard.
+
+`don_sach.py` tôi viết hôm nay **không đi qua nó**: bốn lối đọc không gắn sổ, không hỏi tường.
+Nên nó tiêu ~16.000 lượt đọc **ngoài tầm nhìn của chính hệ canh hạn mức** — và đó là lý do
+Firestore cạn đúng lúc bước đẩy kho chạy, 17 lượt render xong không lên được Drive (7cw).
+
+Dọn sổ là **việc phụ**: không chạy thì vài con số trên màn hình sai; chạy sai lúc thì mất cả
+lượt render. Nay nó dừng ở 70% như mọi việc phụ khác.
+
+**Và cổng canh việc này cũng chỉ soi MỘT tệp.** `selftest.t_khong_tron_so` quét đúng
+`firestore_bridge.py`, nên bốn lối đọc trốn sổ của `don_sach.py` đi qua mà nó vẫn in ✅ — cùng
+họ với `kiem_workflow.CAP`: *cổng chỉ kiểm những cái nó được liệt kê sẵn*. Nay nó tự tìm mọi
+script được workflow CÒN CRON gọi tới. Đã thử ngược (gỡ một lối gắn sổ) để chắc nó thật sự bắt.
+
+**Luật:** viết công cụ mới đụng tài nguyên có hạn thì phải nối vào **bộ đếm và bức tường đã có**,
+không tự quản. Và mỗi cổng phải tự tìm phạm vi của nó, đừng cầm một danh sách chép tay.
+
+### 7cy — Nhánh dự phòng của `pip install` vứt bỏ đúng thứ pin sinh ra để bảo vệ (1/9)
+
+Hai workflow tôi viết hôm nay đều có:
+
+    pip install -r requirements.txt 2>/dev/null || pip install google-cloud-firestore ...
+
+Nhánh sau cài **bản mới nhất, không ghim**, và `2>/dev/null` nuốt luôn lý do nhánh đầu hỏng.
+`requirements.txt` ghim `google-cloud-firestore>=2.27,<2.29` **đúng để** chặn lớp lỗi tương thích
+đã trả giá 24/8 (gương B→B2 chết 16 tiếng). Một nhánh dự phòng bỏ pin là bỏ luôn lớp bảo vệ ấy,
+im lặng, đúng lúc nhánh chính đang có vấn đề.
+
+`selftest.t_moi_workflow_deu_ghim_thu_vien` bắt được — cổng đã có, chỉ là tôi không chạy selftest
+trước khi giao. Ghim cả bốn workflow (kể cả hai luồng đã nghỉ, để bật lại không dính bẫy).

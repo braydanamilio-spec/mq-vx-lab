@@ -2736,18 +2736,47 @@ def t_khong_tron_so():
     Mỗi lần thêm code là thêm một lối trốn. Bài này quét mọi lệnh quét-cả-bảng (`.stream(`) trong
     firestore_bridge và bắt buộc quanh đó phải có `_cr(` hoặc đi qua `_stream_at`. Thêm lối đọc mới
     mà quên đếm là FAIL NGAY TẠI ĐÂY, không phải chờ cháy quota mới biết."""
-    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               "firestore_bridge.py"), encoding="utf-8").read().split("\n")
+    # ── QUÉT MỌI SCRIPT NẰM TRONG WORKFLOW CÒN CHẠY, không chỉ `firestore_bridge.py`.
+    # Bản trước chỉ soi một tệp. Nên `don_sach.py` — công cụ tôi viết hôm nay — có bốn lối đọc
+    # KHÔNG gắn sổ mà cổng vẫn in ✅. Hậu quả đo được: nó tiêu ~16.000 lượt đọc ngoài tầm kiểm
+    # soát của chính hệ canh hạn mức, làm Firestore cạn đúng lúc bước đẩy kho chạy, và 17 lượt
+    # render xong không lên được Drive (buglog 7cw).
+    # Cùng họ lỗi với `kiem_workflow.CAP`: cổng chỉ kiểm những cái nó được liệt kê sẵn.
+    # Tự tìm: mọi script được workflow CÒN CRON gọi tới.
+    GOC_ = os.path.dirname(os.path.abspath(__file__))
+    WF_ = os.path.join(os.path.dirname(GOC_), ".github", "workflows")
+    can_ = {"firestore_bridge.py"}
+    if os.path.isdir(WF_):
+        for f_ in sorted(os.listdir(WF_)):
+            if not f_.endswith(".yml"):
+                continue
+            y_ = io.open(os.path.join(WF_, f_), encoding="utf-8").read()
+            ma_ = "\n".join(l for l in y_.split("\n") if not l.lstrip().startswith("#"))
+            if "cron:" not in ma_:
+                continue                  # workflow đã nghỉ -> không đòi
+            for m_ in re.finditer(r"python3? (\w+)\.py", ma_):
+                can_.add(m_.group(1) + ".py")
     tron = []
-    for i, ln in enumerate(src):
-        if ".stream(" not in ln or ln.strip().startswith("#"):
+    for tep_ in sorted(can_):
+        p_ = os.path.join(GOC_, tep_)
+        if not os.path.exists(p_):
             continue
-        if "_stream_at" in ln:
-            continue                      # đi qua lớp bọc -> hợp lệ
-        vung = "\n".join(src[max(0, i - 6):i + 2])
-        if "_cr(" in vung or "def _stream_at" in vung:
-            continue                      # có gắn sổ ngay trên -> hợp lệ
-        tron.append(f"dòng {i+1}: {ln.strip()[:78]}")
+        src = io.open(p_, encoding="utf-8").read().split("\n")
+        trong_doc_ = False           # đang ở trong docstring?
+        for i, ln in enumerate(src):
+            # Chú thích trong DOCSTRING không bắt đầu bằng `#`, nên phép lọc cũ tố oan mọi
+            # câu văn nhắc tới `.stream()` — và một cổng tố oan thì người ta tắt nó đi.
+            if ln.count(chr(34) * 3) % 2 == 1 or ln.count(chr(39) * 3) % 2 == 1:
+                trong_doc_ = not trong_doc_
+                continue
+            if trong_doc_ or ".stream(" not in ln or ln.strip().startswith("#"):
+                continue
+            if "_stream_at" in ln:
+                continue                  # đi qua lớp bọc -> hợp lệ
+            vung = "\n".join(src[max(0, i - 6):i + 2])
+            if "_cr(" in vung or "def _stream_at" in vung:
+                continue                  # có gắn sổ ngay trên -> hợp lệ
+            tron.append(f"{tep_} dòng {i+1}: {ln.strip()[:64]}")
     assert not tron, ("có lối đọc KHÔNG gắn sổ ngân sách:\n   " + "\n   ".join(tron[:6])
                       + "\n-> thêm _cr(\"tên\", n) ngay trước, hoặc gọi qua _stream_at()")
 

@@ -101,7 +101,10 @@ def _dem(db, ten_bo, owner: str) -> int:
         return int(r[0][0].value)
     except Exception:
         print(f"   ⚠ client không hỗ trợ truy vấn đếm — đếm thủ công `{ten_bo}` (tốn hạn mức)")
-        return sum(1 for _ in q.stream())
+        # Đi qua `_stream_at` để lượt đọc này VÀO SỔ. Đường lui vẫn phải đếm tiền: một lối
+        # đọc không ai đếm chính là thứ làm sổ chỉ thấy 3% sự thật (xem `t_khong_tron_so`).
+        import firestore_bridge as _FB
+        return sum(1 for _ in _FB._stream_at(q))
 
 
 def kiem_ke(db, owner: str, giu: set):
@@ -111,7 +114,8 @@ def kiem_ke(db, owner: str, giu: set):
     `render_jobs` chỉ cần CON SỐ, nên dùng truy vấn đếm: xem chú thích ở `_dem`.
     """
     kg, kd = [], []
-    for d in db.collection("render_channels").where("owner", "==", owner).stream():
+    import firestore_bridge as _FB
+    for d in _FB._stream_at(db.collection("render_channels").where("owner", "==", owner)):
         c = d.to_dict() or {}
         c["_id"] = d.id
         (kg if _ten(c) in giu else kd).append(c)
@@ -201,6 +205,28 @@ def don(that: bool = False, owner: str = "") -> int:
         return 2
     print(f"→ giữ lại {len(giu)} kênh: {', '.join(sorted(giu))}")
 
+    # ── HỎI BỨC TƯỜNG NGÂN SÁCH TRƯỚC KHI ĐỌC GÌ  (1/9/2026) ────────────────────────────
+    # Anh: *"nhỡ ngày bấm vài chục lần thì sao."* Đúng — một lượt tốn ~2.500 là an toàn, hai
+    # mươi lượt là vượt trần. Số nhỏ không phải bảo vệ; trần cứng mới là.
+    #
+    # Hệ ĐÃ có bức tường ấy: `firestore_bridge.con_ngan_sach()` với ba mức (thiết yếu / cứu dữ
+    # liệu / việc phụ), sổ dùng chung cho cả 18 luồng và dashboard. Tôi viết công cụ dọn mà
+    # không đi qua nó — nên nó tiêu hạn mức ngoài tầm kiểm soát của chính hệ thống canh hạn mức.
+    # Đó là lý do hôm nay đường render đọc rỗng danh sách kho và 17 lượt dựng không lên Drive.
+    #
+    # Dọn sổ là việc PHỤ: không chạy thì chỉ vài con số trên màn hình sai, còn chạy sai lúc thì
+    # làm mất cả lượt render. Nên nó dừng ở mức 70% như mọi việc phụ khác.
+    try:
+        import firestore_bridge as _FB
+        _FB.nap_nen_ngan_sach()
+        if not _FB.con_ngan_sach("doc"):
+            print("⏹ Ngân sách đọc Firestore đã qua mức việc-phụ (70%) — HOÃN dọn Firestore.")
+            print(f"   {_FB.bao_ngan_sach()}")
+            print("   D1 (kho dashboard đọc) vẫn dọn bình thường ở trên; phần này chạy lượt sau.")
+            return 0
+    except Exception as e:
+        print(f"   ⚠ không đọc được sổ ngân sách ({str(e)[:60]}) — vẫn chạy, nhưng có trần 400")
+
     owner = owner or os.environ.get("OWNER_UID", "")
     if not owner:
         print("❌ thiếu OWNER_UID")
@@ -258,7 +284,9 @@ def don(that: bool = False, owner: str = "") -> int:
     # vài ngày mà không lượt nào bùng. Dọn chậm mà đều tốt hơn dọn hết một lần rồi làm nghẽn
     # cả hệ trong ngày ấy — nhất là khi thứ người dùng NHÌN (D1) đã sạch ngay từ đầu.
     TRAN = 400
-    for d in (db.collection("render_jobs").where("owner", "==", owner).limit(TRAN).stream()):
+    import firestore_bridge as _FB
+    for d in _FB._stream_at(
+            db.collection("render_jobs").where("owner", "==", owner).limit(TRAN)):
         j = d.to_dict() or {}
         if _ten(j) in giu or any(x in _ten(j) for x in CAM_DUNG):
             continue
