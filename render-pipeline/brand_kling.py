@@ -23,6 +23,7 @@ Ra `out/brand_kling/`:
     NN-<slug>_watermark.png    300×300   — hình chìm, nền trong suốt
 """
 import argparse
+import json
 import math
 import os
 
@@ -366,10 +367,53 @@ def mot_kenh(ten: str, so: int, thu: str) -> int:
     return n
 
 
+# ── BẢN XEM TRƯỚC CHO WEB ───────────────────────────────────────────────────────────────────
+# PNG đầy đủ nặng 53 MB cho mười kênh (banner 2,3 MB/tệp). Đẩy chỗ ấy lên Firebase Hosting thì
+# **sáu lượt mở trang là hết hạn mức 360 MB/ngày** của gói free — tức brand kit làm sập chính
+# cái dashboard nó nằm trong.
+#
+# Lý do PNG phồng: lớp hạt nhiễu biến mảng màu phẳng thành nhiễu từng điểm ảnh, và PNG nén theo
+# vùng đồng màu nên mất sạch lợi thế. Đó là cái giá của lớp hoàn thiện — đáng trả ở tệp đem đăng
+# kênh, KHÔNG đáng trả ở ảnh xem trước 320px.
+#
+# Nên tách hai đường, và tách theo CÔNG DỤNG chứ không theo kích thước:
+#   · PNG đầy đủ  -> ở lại máy / Drive, để tải lên YouTube và Facebook (họ cần đúng cỡ, nét)
+#   · WebP nhỏ    -> lên web, chỉ để anh NHÌN. 320px avatar = 5 KB, 640px banner = 8 KB.
+# Cả mười kênh gói lại còn ~130 KB, tức 0,04% hạn mức ngày thay vì 15%.
+def xuat_web(nguon: str, dich: str) -> tuple:
+    import glob
+    os.makedirs(dich, exist_ok=True)
+    RONG = {"avatar": 320, "banner": 640, "cover_fb": 560, "watermark": 96}
+    n, tong = 0, 0
+    for f in sorted(glob.glob(os.path.join(nguon, "*.png"))):
+        ten = os.path.basename(f)[:-4]
+        co = ten.rsplit("_", 1)[-1]
+        if co not in RONG:                      # avatar_yt chỉ là bản thu nhỏ của avatar
+            continue
+        im = Image.open(f)
+        w = RONG[co]
+        im = im.resize((w, int(im.height * w / im.width)), Image.LANCZOS)
+        d = os.path.join(dich, ten + ".webp")
+        im.save(d, format="WEBP", quality=82, method=6)
+        tong += os.path.getsize(d) / 1024
+        n += 1
+    # mục lục để web không phải đoán tên tệp
+    io_json = os.path.join(dich, "index.json")
+    with open(io_json, "w", encoding="utf-8") as fh:
+        json.dump({"kenh": [{"so": list(KENH).index(t) + 1, "ten": t, "slug": _slug(t),
+                             "mau": BRAND[t]["chinh"], "nen": BRAND[t]["nen"],
+                             "khau_hieu": BRAND[t]["khau_hieu"]}
+                            for t in KENH if t in BRAND],
+                   "co": list(RONG)}, fh, ensure_ascii=False)
+    return n, tong
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Brand kit 10 kênh Kling — vẽ bằng code, không AI")
     ap.add_argument("--kenh", default="", help="chỉ một kênh (tên đầy đủ)")
     ap.add_argument("--ra", default=RA)
+    ap.add_argument("--web", default="", metavar="THƯ_MỤC",
+                    help="xuất thêm bản XEM TRƯỚC nhẹ (WebP) cho dashboard")
     a = ap.parse_args()
     os.makedirs(a.ra, exist_ok=True)
     chon = [a.kenh.upper()] if a.kenh else list(KENH)
@@ -383,6 +427,9 @@ def main() -> int:
         tong += n
         print(f"  {so:02d} · {ten:14s} {n} ảnh")
     print(f"\n{'✅' if tong else '⚠️'} {tong} ảnh brand cho {len(chon)} kênh → {a.ra}")
+    if a.web:
+        n, kb = xuat_web(a.ra, a.web)
+        print(f"✅ {n} ảnh xem trước (WebP) · {kb:.0f} KB → {a.web}")
     return 0
 
 

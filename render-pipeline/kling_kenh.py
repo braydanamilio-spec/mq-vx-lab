@@ -2380,6 +2380,30 @@ def _ho_key(keys=None) -> list:
         return []
 
 
+# Khoá đã hỏng CỨNG trong lượt chạy này. `API_KEY_INVALID` thì lần sau vẫn invalid — thử lại
+# là ném đi một vòng mạng và một chỗ trong ngân sách vòng lặp.
+_KEY_CHET: set = set()
+
+
+def _sap_ho(ks: list) -> list:
+    """Xếp hồ khoá theo thứ tự ĐÁNG THỬ TRƯỚC, bỏ khoá đã hỏng cứng.
+
+    1/9 — Đo trên hồ thật (295 khoá): Cloudflare gọi được ngay (2,5 giây/lượt) · Groq gọi được ·
+    Gemini thì 17/40 khoá `API_KEY_INVALID`, 13/40 model đã bị Google gỡ, 10/40 cạn hạn mức.
+    `sinh_tap` duyệt hồ theo ĐÚNG thứ tự trong `.keys.local` — Gemini nằm đầu — nên nó đi qua
+    hàng trăm khoá chết trước khi chạm khoá sống. Nhìn từ ngoài y hệt "mạng chậm": đúng cái bẫy
+    mục 12.1, **chết chậm khó nhận ra hơn chết hẳn**.
+
+    Đường web đã xếp đúng thứ tự này từ trước ("Thử Cloudflare và Groq TRƯỚC"); chỉ đường Python
+    là chưa — vá một nhánh, để nguyên nhánh song song.
+    """
+    ks = [k for k in ks if k and k not in _KEY_CHET]
+    cf = [k for k in ks if str(k).startswith("cf:")]
+    gq = [k for k in ks if str(k).startswith("gsk_")]
+    gm = [k for k in ks if not str(k).startswith(("cf:", "gsk_"))]
+    return cf + gq + gm
+
+
 def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
              tranh: list | None = None, keys: list | None = None, phong: str = "",
              lat: str = "", kieu: str = "", cam_tu: list | None = None,
@@ -2389,7 +2413,7 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
     Key cạn thì ĐỔI KEY chứ không bỏ cuộc — cùng bài học đã trả giá ở sáu hàm viết bên kia."""
     import content_brain as CB
     _kho_cu = _da_lam(kenh)      # đọc MỘT lần: vòng viết lại có thể chạy tới tám lượt
-    ho = ([api_key] if api_key else []) or _ho_key(keys) or [None]
+    ho = ([api_key] if api_key else []) or _sap_ho(_ho_key(keys)) or [None]
     _n = {"i": 0}
 
     def _model():
@@ -2426,6 +2450,12 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
                 request_options=CB.GEN_OPTS)
         except Exception as ex:
             low = str(ex).lower()
+            # 1/9 — Khoá `API_KEY_INVALID` bị loại HẲN khỏi lượt chạy: nó sẽ invalid ở mọi vòng
+            # sau, nên thử lại là ném đi một vòng mạng VÀ một chỗ trong ngân sách vòng lặp. Đo
+            # được 17/40 khoá Gemini rơi vào loại này — tức gần một nửa ngân sách vòng lặp bị
+            # tiêu cho những khoá không bao giờ chạy được.
+            if "api key not valid" in low or "api_key_invalid" in low:
+                _KEY_CHET.add(ho[_n["i"] % len(ho)])
             # Hồ có gần ba trăm key ba nhà cung cấp. Một key cạn hạn mức, một key bị thu hồi, một
             # key gõ sai — cả ba đều KHÔNG phải lý do để bỏ cả tập. Bài học đã trả giá ở sáu hàm
             # viết bên kia: key hỏng thì ĐỔI KEY, đừng giết luồng. Lỗi 429 lẫn lỗi "API key not
