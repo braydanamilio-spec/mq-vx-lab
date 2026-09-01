@@ -2169,6 +2169,60 @@ def _ngan_sach_khuon(khuon: dict, hs: dict, giay: float, ph: str) -> int:
     return lo
 
 
+def luat_web(kenh: str) -> dict:
+    """Xuất THƯỚC dưới dạng DỮ LIỆU để web thi hành.
+
+    1/9 — Web gọi AI viết kịch bản rồi dùng thẳng, không qua cổng nào: cổng nằm bên Python.
+    Nên mọi luật đã trả giá để có (khuôn kể theo thời lượng · chống trùng cơ chế · thoại kiểu
+    Mỹ · hook ba vế) đều KHÔNG áp cho đường web — đúng chỗ anh bấm nút hàng ngày.
+    
+    Cách chữa KHÔNG phải viết lại thước bằng JavaScript: hai bản thước thì sớm muộn lệch nhau,
+    và bài học ấy đã trả giá ở câu cấm chữ (ba bản) và câu góc máy (bốn mươi bản). Cách chữa là
+    Python vẫn GIỮ luật, chỉ đổi dạng: từ mã thành dữ liệu. Web không biết luật gì, nó chỉ chạy
+    danh sách nó được đưa. Sửa luật ở đây thì web đổi theo ngay lượt xuất sau.
+    """
+    hs = ho_so(kenh)
+    theo_giay = {}
+    for g in GIAY_CHUAN:
+        ten, _ = khuon_ke(g)
+        n = nhip(g)
+        if g <= 6.5:
+            luot = [2, 2]
+        elif g <= 9.5:
+            luot = [2, 3]
+        else:
+            luot = [3, LUOT_TOI_DA]
+        theo_giay[str(g)] = {
+            "khuon": ten,
+            "nhip": [x[2] for x in n],
+            "luot": luot,
+            "tu_toi_da": int(_giay_thoai(g) * TU_MOI_GIAY),
+            "esc_toi_da": 90 if g <= 6.5 else 0,          # 0 = không chặn
+            "can_rai_nhip": g > 9.5,
+            "lat_phai_doi_hinh": g <= 6.5,
+            "esc_phai_leo": g > 9.5,
+        }
+    return {
+        "hook_tu": [16, 30],
+        "tu_moi_luot": TU_MOI_LUOT,
+        "vai_toi_da": VAI_TOI_DA,
+        "van_ke_chia": VAN_KE_CHIA,
+        "ghim_may": list(GHIM_MAY),
+        "cam_ky": [[t, ly] for t, ly in CAM_KY],
+        "khong_my": [[rx, ly] for rx, ly in KHONG_MY],
+        "do_to": [x for x in DO_TO],
+        "ho_lat": {k: v for k, v in HO_LAT.items()},
+        "lat_doi_hinh": r"\b(falls?|opens?|tips?|swings?|drops?|shuts?|slides?|steps?|turns?|"
+                        r"collapses?|lands?|rolls?|pulls?|walks?|leaves?)\b",
+        "esc_leo": r"\b(further|again|another|more|bigger|second|third|harder|deeper|higher|"
+                   r"faster|whole|entire|all of|now the|even the|one more|instead of|not enough)\b",
+        "lat_bat_ky": r"\b(reveal\w*|turns? out|was never|all along|instead|behind (him|her|them))\b",
+        "bo_ghim_may": r"^[^:]{0,40}(shot|angle)\s*:\s*",
+        "theo_giay": theo_giay,
+        "vong_viet": 4,      # web thử lại tối đa 4 lượt — quá nữa là đốt hạn mức cho một tập
+    }
+
+
 def xuat_web(thu_muc: str) -> list[str]:
     """Xuất hồ sơ + KHUÔN prompt cho dashboard, mỗi kênh một tệp.
 
@@ -2245,6 +2299,7 @@ def xuat_web(thu_muc: str) -> list[str]:
             "sys": {str(g): _sys(ten, g) for g in GIAY_CHUAN},
             "tu_toi_da": {str(g): int(_giay_thoai(g) * TU_MOI_GIAY) for g in GIAY_CHUAN},
             "hai": hs["hai"],
+            "luat": luat_web(ten),
             "gioi_han": {"vai": VAI_TOI_DA, "luot": LUOT_TOI_DA, "tu_moi_luot": TU_MOI_LUOT,
                          "ky_tu_max": KY_TU_MAX, "hook_tu": [16, 30], "diem_san": DIEM_SAN},
             "khuon": khuon,

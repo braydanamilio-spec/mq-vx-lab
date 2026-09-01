@@ -7274,3 +7274,59 @@ dồn một nhịp). **Cả sáu đều bị chặn, đúng lý do.** Lúc đó 
 
 **Luật:** mỗi cổng mới phải có hai phép thử — *không bắt oan* (chạy trên dữ liệu thật) và
 *bắt được* (chạy trên mẫu cố tình sai). Chỉ có phép thử thứ nhất thì một cổng chết vẫn xanh.
+
+### 8k16 — Đường web gọi AI xong dùng thẳng: mọi cổng đã trả giá đều không áp cho nó
+
+Bên Python, một kịch bản phải qua tới **tám vòng viết lại** mới sạch thước. Bên web — chỗ anh
+bấm nút hàng ngày — AI được gọi **đúng một lần** và kết quả dùng thẳng. Nghĩa là đường web giao
+ra chính thứ mà đường chính sẽ từ chối, và không ai thấy vì cả hai đều "chạy được".
+
+Chữa **không phải** viết lại thước bằng JavaScript: hai bản thước thì sớm muộn lệch nhau (đã trả
+giá ở câu cấm chữ — ba bản, và câu góc máy — bốn mươi bản). Chữa bằng cách **đổi dạng luật, không
+đổi chỗ giữ luật**: `luat_web()` xuất toàn bộ ngưỡng · biểu thức · danh sách thành **dữ liệu**
+trong JSON của kênh; web có một hàm thi hành danh sách ấy và **không chứa luật nào**. Sửa luật ở
+Python thì lượt xuất sau web đổi theo, không ai phải nhớ gì.
+
+**Luật:** khi cùng một quy tắc phải chạy ở hai môi trường, đừng chép quy tắc — **xuất nó thành dữ
+liệu** và để một bên giữ, bên kia thi hành.
+
+### 8k17 — Danh sách chữ được phép là danh sách VÔ HẠN
+
+Cổng chặn nhân vật ngoài dàn quét chữ viết hoa và bỏ qua một danh sách
+(`The · This · That · And · But…`). Câu *"Behind Mike the freezer rattles"* làm cổng chặn một
+kịch bản **hoàn toàn đúng** — vì `Behind` không có trong danh sách. Thêm `Behind` vào rồi mai
+`Across`, `Beneath`, `Inside` lại nổ.
+
+Chữ hoa **đầu câu là ngữ pháp, không phải tên riêng**. Bỏ chữ đầu mỗi câu trước khi quét thì chỉ
+còn lại tên thật — và danh sách hết cần dài.
+
+**Họ lỗi:** *liệt kê ngoại lệ thay vì nhận ra quy luật sinh ra chúng.* Dấu hiệu: một danh sách
+"bỏ qua" mà mỗi lần gặp lỗi lại phải thêm một phần tử.
+
+### 8k18 — Hồ sáu mươi key hành xử như hồ một key
+
+`_klGoiAI` luôn duyệt hồ key từ phần tử **đầu tiên**, cùng thứ tự, mọi lượt gọi. Key sống đầu
+bảng gánh toàn bộ tải và cạn hạn mức trong ngày; những key phía sau không được gọi lần nào.
+
+Sửa: quay vòng thật, vị trí bắt đầu nhớ trong `localStorage`. **Không random** — random vẫn cho
+phép trúng một key ba lần liên tiếp; quay vòng thì tải chia đều tuyệt đối (đo: 60 key · 120 lượt
+gọi → mỗi key đứng đầu đúng 2 lần).
+
+### 8k19 — Lưu KỊCH BẢN, đừng lưu PROMPT; gói vân tay vào MỘT tài liệu
+
+Web không lưu gì, nên không có gì để đối chiếu và AI lặp lại chính nó (đo: 30 tập, một cơ chế
+chiếm 16/30). Nhưng lưu thế nào mới quan trọng:
+
+| | kích thước | ghi chú |
+|---|---|---|
+| prompt đã ghép | ~2.450 B | **không lưu** — suy ra được từ kịch bản |
+| kịch bản (6 trường) | 818 B | thứ đáng lưu |
+| vân tay chống trùng | 116 B | thứ đọc mỗi lần bấm |
+
+Và: **mỗi tập một tài liệu Firestore là bẫy**. Mỗi lần bấm phải so với toàn bộ lịch sử → 2.000
+tập = 2.000 lượt đọc một lần bấm → **25 lượt bấm là hết hạn mức đọc free của cả ngày**. Gói vân
+tay vào MỘT tài liệu: 1 lượt đọc. 2.000 tập × 116 B = 227 KB, dưới trần 1 MiB của một tài liệu.
+
+Trần 2.000 và vì sao không cần chính sách xoá: một kênh chỉ có ~1.400 bộ ba phân biệt, nên quá
+2.000 thì tập cũ nhất chắc chắn đã là lặp cấu trúc. Ở 10 lượt bấm/ngày, kho đầy 1 GiB sau **360
+năm** — chuyện xoá không bao giờ tới.
