@@ -168,6 +168,17 @@ CAU_CHOT_RAO = "The last frame IS the punchline — no settling shot, no fade, e
 GHIM_MAY = ("static", "eye-level", "eye level", "low angle", "high angle", "wide shot",
             "medium shot", "close shot", "over-the-shoulder", "locked-off", "top-down")
 
+# Đồ lớn nói được bằng nhiều tên. Bản trước so chuỗi thẳng nên phòng "stairwell" (tả là "bare
+# concrete steps") vẫn bị chặn khi kịch bản viết "stairs", và phòng "motel room" (tả là "a boxy
+# TV") bị chặn khi viết "television". Cổng bắt oan còn tệ hơn cổng không bắt: nó ép AI viết lại
+# một kịch bản vốn đúng, và ép tới khi hết vòng thì trả bản tệ hơn.
+DONG_NGHIA_DO = {
+    "television": ("tv", "screen"), "tv screen": ("tv",),
+    "stairs": ("stairwell", "step"), "staircase": ("stairwell", "step"),
+    "hallway": ("hall",), "bookcase": ("bookshelf",), "bookshelf": ("bookcase", "shelf"),
+    "basement": ("cellar",), "washing machine": ("washer",), "dryer": ("dryer",),
+}
+
 DO_TO = ("island", "dishwasher", "staircase", "stairs", "fireplace", "balcony", "pool",
          "chandelier", "bookshelf", "bookcase", "television", "tv screen", "piano", "treadmill",
          "washing machine", "dryer", "pantry", "bar stool", "kitchen bar", "breakfast bar",
@@ -187,6 +198,36 @@ KIEU_MO = (
     "an object is stuck fast and someone is losing a fight with it",
     "a sound keeps happening and nobody can find the source",
     "one character is dressed or equipped completely wrong for the room",
+    # 1/9 — tám kiểu nữa. Mỗi kiểu là một CÁCH KHUNG ĐẦU SAI, không phải một chủ đề: đó là lý
+    # do thêm chúng nhân thật sự đa dạng lên chứ không chỉ đổi danh từ.
+    "far too many of one ordinary thing are in one place",
+    "something has been taken apart and not put back together",
+    "an object is wrapped, taped or tied in a way nobody would ever do",
+    "two things that belong apart have been swapped with each other",
+    "somebody has clearly been waiting in one spot far too long",
+    "a thing that should be closed is open, and everything inside is now outside",
+    "one small area is spotless and everything around it is wrecked",
+    "an object is being used confidently as a tool it is not",
+)
+
+# ── ÁP LỰC — thứ biến một sự cố thành một CẢNH ─────────────────────────────────────────────
+# 1/9 — Trục này thiếu hẳn, và nó là trục đắt nhất. Cùng một đồ vật hỏng trong cùng một căn
+# phòng cho ra hai tập KHÁC HẲN nếu áp lực khác: "cái máy pha hỏng" lúc rảnh là một sự cố, lúc
+# khách sắp tới là một cảnh. Luật hài Mỹ số 3 nói cần hai người muốn hai thứ đối nhau — áp lực
+# chính là thứ sinh ra cái muốn, nên thiếu nó thì AI phải tự bịa và nó bịa ra cùng một thứ.
+AP_LUC = (
+    "somebody is arriving in a minute and the room cannot be seen like this",
+    "it is already late and one more delay is the one that matters",
+    "a specific amount of money has just been said out loud",
+    "a rule was made about exactly this, yesterday",
+    "there is only one left and more than one person wants it",
+    "it was borrowed and it was not supposed to leave the house",
+    "somebody is watching who should not see this",
+    "the same thing went wrong last time and everybody remembers",
+    "one person promised this would be handled and said so publicly",
+    "it belongs to somebody who is not in the room",
+    "it has to be working again before anyone notices it stopped",
+    "somebody is trying to leave and cannot until this is settled",
 )
 
 # ── THOẠI KIỂU MỸ — chặn những chỗ AI hay trượt sang giọng sách vở ─────────────────────────
@@ -249,6 +290,18 @@ KENH: dict[str, dict] = {
             "copy corner": "Copy Corner: grey carpet, one large copier against the wall, a paper recycling bin, a small window with closed blinds.",
             "cubicles": "Cubicles: low grey partitions, three desks with old monitors, one dying potted plant on the corner desk.",
             "elevator lobby": "Elevator Lobby: cream walls, two brushed steel elevator doors, a bench nobody sits on, a wall clock.",
+            "supply closet": (
+                "Supply Closet: narrow room, metal shelves of paper reams and boxes, one flickering "
+                "strip light, a mop in the corner."
+            ),
+            "stairwell": (
+                "Stairwell: bare concrete steps, painted steel handrail, a propped fire door, one "
+                "caged bulb overhead."
+            ),
+            "conference room": (
+                "Conference Room: long laminate table, eight mismatched chairs, a whiteboard wiped "
+                "grey, a speakerphone in the middle."
+            ),
         },
         "style": (
             "Flat corporate fluorescent look: everything is built from rectangles — cubicle "
@@ -275,6 +328,33 @@ KENH: dict[str, dict] = {
             "joke is over."
         ),
 
+        "dao_cu": (
+            "the shared microwave",
+            "a mug with someone's name on it",
+            "the one good chair",
+            "a stapler",
+            "the middle fridge shelf",
+            "the thermostat",
+            "a group birthday card",
+            "a laminated sign",
+            "the last coffee filter",
+            "a phone charger",
+            "a reserved parking placard",
+            "a dying office plant",
+            "the one whiteboard marker that still works",
+            "a paper jam",
+            "a toner cartridge",
+            "a lunch bag",
+            "a sticky note",
+            "a spare key on a lanyard",
+            "a chair with one broken armrest",
+            "the water cooler jug",
+            "a conference speakerphone",
+            "a box of pens",
+            "a visitor badge",
+            "a stuck vending machine coil",
+        ),
+
         "mach": ("Ordinary American office friction blown one size too big: stolen lunches, thermostat wars, reply-all disasters, birthday cake politics, the one broken chair everyone avoids. One tiny workplace dispute escalates and lands on a reversal where the person with the least authority turns out to be right."),
     },
 
@@ -296,6 +376,18 @@ KENH: dict[str, dict] = {
             "booth": "Booth: red vinyl booth against a window, a formica table, salt and pepper shakers, a napkin holder.",
             "kitchen pass": "Kitchen Pass: steel pass-through window, heat lamps above, order tickets clipped in a row.",
             "parking lot": "Parking Lot: cracked asphalt at night, one tall lamp post, the diner window glowing behind.",
+            "walk-in": (
+                "Walk-In: steel shelving stacked with crates, a heavy insulated door, cold blue "
+                "light, breath visible."
+            ),
+            "back alley": (
+                "Back Alley: brick wall, a dented dumpster, milk crates stacked as a seat, the "
+                "diner's back door propped open."
+            ),
+            "register": (
+                "Register: worn front counter with a till, a jar of mints, a rack of local flyers, a "
+                "stool nobody uses."
+            ),
         },
         "style": (
             "Warm tungsten interior against deep blue night outside the window — the two "
@@ -321,6 +413,33 @@ KENH: dict[str, dict] = {
             "everyone else was wrong."
         ),
 
+        "dao_cu": (
+            "a coffee pot that has been on since noon",
+            "a ticket spike",
+            "the last slice of pie",
+            "a bottle of hot sauce",
+            "a wobbly table leg",
+            "a bus tub",
+            "the tip jar",
+            "a broken creamer lid",
+            "a laminated menu",
+            "the milkshake machine",
+            "a stack of clean plates",
+            "a ketchup bottle",
+            "a receipt roll",
+            "the bell at the pass",
+            "a sugar caddy",
+            "a paper hat",
+            "the specials board",
+            "a napkin dispenser",
+            "a to-go box",
+            "the mop bucket",
+            "a coat left in a booth",
+            "an order pad",
+            "a butter dish",
+            "the heat lamp",
+        ),
+
         "mach": ("Late-night American diner friction blown one size too big: an order that makes no sense, a coffee pot that has been on since noon, a regular who wants something not on the menu, a health inspection rumour. One small kitchen dispute escalates and lands on a reversal where the quietest person at the counter knew the answer first."),
     },
 
@@ -342,6 +461,18 @@ KENH: dict[str, dict] = {
             "treadmill row": "Treadmill Row: three treadmills facing a wall-mounted television that is always muted.",
             "locker room": "Locker Room: narrow blue lockers, a wooden bench down the middle, one flickering light.",
             "front desk": "Front Desk: white counter with a card scanner, a jar of protein bars, a wall of membership photos.",
+            "stretch mats": (
+                "Stretch Mats: blue foam mats in a corner, a rack of foam rollers, a wall mirror, one "
+                "lost resistance band."
+            ),
+            "sauna": (
+                "Sauna: cedar benches in two tiers, a bucket and ladle, a small thermometer, warm "
+                "amber light."
+            ),
+            "juice bar": (
+                "Juice Bar: short counter with a blender, a shelf of tubs, a cold case of bottles, "
+                "two tall stools."
+            ),
         },
         "style": (
             "High-key bright and hard-edged: rubber mat charcoal, chrome, and two loud primary "
@@ -366,6 +497,33 @@ KENH: dict[str, dict] = {
             "belongs to whoever has said the least and lifted the most."
         ),
 
+        "dao_cu": (
+            "a towel left on a bench",
+            "the last forty-five pound plate",
+            "a chalk bucket",
+            "a foam roller",
+            "the treadmill emergency clip",
+            "a shaker bottle",
+            "a resistance band",
+            "the squat rack pins",
+            "someone's phone on the bench",
+            "a jump rope",
+            "the wall clock",
+            "a spray bottle and rag",
+            "a locker padlock",
+            "the water fountain",
+            "a gym bag in the walkway",
+            "a weight belt",
+            "the sign-in clipboard",
+            "an unracked barbell",
+            "a pair of headphones",
+            "the fan remote",
+            "a protein tub",
+            "the pull-up bar chalk",
+            "a mat nobody wiped",
+            "a stack of step platforms",
+        ),
+
         "mach": ("American gym friction blown one size too big: the machine somebody is sitting on scrolling their phone, the mystery towel, the guy who counts other people's reps, the mirror selfie. One small gym dispute escalates and lands on a reversal where the least athletic person is the one who was right."),
     },
 
@@ -387,6 +545,18 @@ KENH: dict[str, dict] = {
             "hallway": "Hallway: narrow corridor, scuffed grey floor, a row of identical brown doors, a bulletin board.",
             "shared kitchen": "Shared Kitchen: small communal kitchen, one microwave, a sink with a permanent stack of dishes.",
             "laundry room": "Laundry Room: two washers, two dryers, a folding counter, a basket somebody left three days ago.",
+            "study lounge": (
+                "Study Lounge: three study carrels, a sagging couch, a vending machine, a window with "
+                "the blind stuck half open."
+            ),
+            "bike room": (
+                "Bike Room: concrete floor, a rack of chained bikes, a pile of flattened boxes, one "
+                "bare bulb."
+            ),
+            "rooftop": (
+                "Rooftop: flat gravel roof, a low parapet wall, two folding chairs, the campus "
+                "skyline behind."
+            ),
         },
         "style": (
             "Cluttered warm chaos lit by string lights and one laptop screen. Sketchy energetic "
@@ -411,6 +581,33 @@ KENH: dict[str, dict] = {
             "catastrophe. The reversal is usually that the disgusting solution actually worked."
         ),
 
+        "dao_cu": (
+            "one clean bowl",
+            "a phone charger",
+            "the shared mini fridge",
+            "a laundry pod",
+            "somebody's leftovers",
+            "the shower caddy",
+            "a stolen dining hall tray",
+            "the thermostat knob",
+            "an extension cord",
+            "a whiteboard on the door",
+            "the last roll of paper towels",
+            "a fan",
+            "a textbook nobody opened",
+            "the microwave turntable",
+            "a stack of quarters",
+            "a desk lamp",
+            "a wet towel on a chair",
+            "the wifi router",
+            "a bag of chips",
+            "an alarm clock",
+            "somebody's parking permit",
+            "a kettle",
+            "a sock behind the radiator",
+            "the trash bag nobody tied",
+        ),
+
         "mach": ("American college dorm friction blown one size too big: the dish nobody washed, the alarm going off for the fourth time, somebody's food eaten again, a group project at 2am. One small roommate dispute escalates and lands on a reversal where the most chaotic roommate turns out to have been right."),
     },
 
@@ -432,6 +629,18 @@ KENH: dict[str, dict] = {
             "tool wall": "Tool Wall: pegboard wall covered in wrenches and sockets, a workbench with a vice.",
             "waiting area": "Waiting Area: four plastic chairs, a coffee machine nobody trusts, a window looking into the bay.",
             "shop yard": "Shop Yard: gravel yard outside the roll-up door, two parked cars, a stack of old tyres.",
+            "parts counter": (
+                "Parts Counter: chipped laminate counter, a wall of small drawers behind, a spinning "
+                "stool, a taped-up catalogue."
+            ),
+            "pit": (
+                "Pit: recessed service pit under a car, steel steps down, a trouble light on a hook, "
+                "dark oil-stained walls."
+            ),
+            "lot fence": (
+                "Lot Fence: chain-link fence at the edge of the yard, weeds along the base, three "
+                "cars parked nose-in behind."
+            ),
         },
         "style": (
             "Industrial and grounded: oil-stain browns, steel blue, one safety-orange accent. "
@@ -456,6 +665,33 @@ KENH: dict[str, dict] = {
             "is often that the customer's ridiculous description was medically accurate."
         ),
 
+        "dao_cu": (
+            "a socket wrench",
+            "the printed estimate",
+            "a loaner key",
+            "an air hose",
+            "the coffee pot in the waiting area",
+            "a torque wrench",
+            "a box of shop rags",
+            "the lift controls",
+            "a customer's dashcam",
+            "a set of hubcaps",
+            "the parts catalogue",
+            "a funnel",
+            "the tire pressure gauge",
+            "a bottle of coolant",
+            "a jack stand",
+            "the shop radio",
+            "a work order clipboard",
+            "a cracked side mirror",
+            "the drain pan",
+            "a battery charger",
+            "a floor creeper",
+            "the impact gun",
+            "a spare fuse",
+            "the courtesy shuttle sign",
+        ),
+
         "mach": ("American auto shop friction blown one size too big: a noise the customer cannot describe, a quote read out loud, a part that costs more than the car, a check engine light ignored for a year. One small repair dispute escalates and lands on a reversal where the simplest explanation was the right one all along."),
     },
 
@@ -477,6 +713,18 @@ KENH: dict[str, dict] = {
             "neat yard": "Neat Yard: trimmed hedges, a garden gnome, a coiled hose on a wall bracket, a flowerbed with straight edges.",
             "messy yard": "Messy Yard: long grass, a half-built shed, a plastic chair on its side, a tarp over something unidentified.",
             "driveway": "Driveway: shared concrete driveway strip, two mailboxes on posts, a basketball hoop over one garage.",
+            "shared alley": (
+                "Shared Alley: strip of cracked concrete between two fences, two trash bins, a "
+                "basketball hoop bolted to a garage."
+            ),
+            "front lawn": (
+                "Front Lawn: mown grass to the sidewalk, a mailbox on a post, a young tree with a "
+                "support stake."
+            ),
+            "toolshed": (
+                "Toolshed: small wooden shed, a pegboard of hand tools, a bag of fertiliser, one "
+                "dusty window."
+            ),
         },
         "style": (
             "Bright suburban daylight, and the frame is deliberately symmetrical — the fence "
@@ -502,6 +750,33 @@ KENH: dict[str, dict] = {
             "completely innocent."
         ),
 
+        "dao_cu": (
+            "a branch over the fence",
+            "a package on the wrong porch",
+            "a leaf blower",
+            "a garden gnome",
+            "the shared trash bin",
+            "a sprinkler head",
+            "a for-sale sign",
+            "a ladder borrowed last spring",
+            "a bag of grass seed",
+            "a security camera",
+            "a wind chime",
+            "a basketball in the flower bed",
+            "a hose splitter",
+            "a bird feeder",
+            "a gate latch",
+            "a stack of firewood",
+            "a mower with a flat tire",
+            "a string of patio lights",
+            "a wheelbarrow",
+            "a bag of mulch",
+            "a hedge trimmer",
+            "a mailbox flag",
+            "a garden hose left running",
+            "a pile of raked leaves",
+        ),
+
         "mach": ("American suburban neighbor friction blown one size too big: a branch over the fence, a package delivered to the wrong porch, a leaf blower at seven in the morning, a fence painted one inch onto the wrong side. One polite dispute escalates and lands on a reversal where the neighbor everyone blamed was not responsible at all."),
     },
 
@@ -523,6 +798,18 @@ KENH: dict[str, dict] = {
             "waiting room": "Waiting Room: four rows of grey chairs, a wall-mounted television playing nothing, a fake plant in the corner.",
             "hallway": "Hallway: pale green corridor, three closed exam-room doors, a wheeled blood pressure stand.",
             "exam room": "Exam Room: paper-covered exam table, a stool on wheels, a poster of a diagram on the wall.",
+            "records room": (
+                "Records Room: rows of beige filing cabinets, a step stool, a label printer, one high "
+                "narrow window."
+            ),
+            "break nook": (
+                "Break Nook: a small counter with a kettle, two chairs, a corkboard of curled "
+                "notices, a mini fridge."
+            ),
+            "parking bay": (
+                "Parking Bay: painted asphalt spaces outside the glass entrance, a low kerb, a sign "
+                "post with no sign."
+            ),
         },
         "style": (
             "Clinical and calm on the surface: sea-glass mint, clipboard white, pale wood. Thin "
@@ -548,6 +835,33 @@ KENH: dict[str, dict] = {
             "guessed."
         ),
 
+        "dao_cu": (
+            "a form asking the same question four times",
+            "an expired insurance card",
+            "a clipboard pen on a chain",
+            "the sign-in sheet",
+            "a fax machine",
+            "a waiting room magazine from 2019",
+            "a hand sanitizer pump",
+            "the appointment book",
+            "a wheelchair nobody moved",
+            "a label printer",
+            "a thermometer cover box",
+            "a broken chair in the waiting room",
+            "the water dispenser",
+            "a stack of referral slips",
+            "the phone on hold",
+            "a parking validation stamp",
+            "a box of tissues",
+            "a fish tank",
+            "a laminated notice on the glass",
+            "a prescription pad",
+            "a scale with a sticky slider",
+            "a bin of toy blocks",
+            "a name badge",
+            "the after-hours number",
+        ),
+
         "mach": ("American clinic front-desk friction blown one size too big: a form asking the same question four times, an insurance card that expired, a patient who is early for next week, a waiting room television nobody can turn off. One small paperwork dispute escalates and lands on a reversal where the rule everyone was arguing about does not exist."),
     },
 
@@ -569,6 +883,18 @@ KENH: dict[str, dict] = {
             "back seat": "Back Seat: grey bench seat, three seatbelts, a cooler on the floor, a window showing highway.",
             "gas station": "Gas Station: fuel pump island under a bright canopy, the sedan parked at pump three, a convenience store behind.",
             "rest stop": "Rest Stop: a picnic table on grass beside a parking lot, a vending machine shelter, the sedan parked nearby.",
+            "motel room": (
+                "Motel Room: two beds with matching bedspreads, a boxy TV on a dresser, heavy "
+                "curtains half open."
+            ),
+            "diner booth": (
+                "Diner Booth: roadside booth by a window, laminated menus upright behind the napkin "
+                "holder."
+            ),
+            "scenic overlook": (
+                "Scenic Overlook: gravel pull-off, a low guard rail, a coin-operated viewer, wide sky "
+                "beyond."
+            ),
         },
         "style": (
             "Car interior, horizontal composition, and the light MOVES — warm dashboard glow "
@@ -593,6 +919,33 @@ KENH: dict[str, dict] = {
             "is usually visible through a window that one person has been refusing to look at."
         ),
 
+        "dao_cu": (
+            "the aux cable",
+            "a paper map",
+            "a gas station hot dog",
+            "the last phone charger",
+            "a cooler between the seats",
+            "a window that only rolls halfway",
+            "a bag of boiled peanuts",
+            "the tire pressure light",
+            "a road atlas from 1998",
+            "a souvenir snow globe",
+            "a coffee in the cup holder",
+            "the trunk that will not shut",
+            "a roll of quarters for tolls",
+            "a travel pillow",
+            "a bug on the windshield",
+            "the spare key taped under the seat",
+            "a receipt from three states ago",
+            "an air freshener",
+            "the cruise control button",
+            "a wet swimsuit in a bag",
+            "a car seat nobody can uninstall",
+            "the fold-out table at a rest stop",
+            "a bag of ice melting",
+            "the odometer about to roll over",
+        ),
+
         "mach": ("American road-trip friction blown one size too big: a wrong exit taken on purpose, a gas gauge argument, control of the music, somebody needing a bathroom eight minutes after the last stop. One small car dispute escalates and lands on a reversal where the person in the back seat was right about the route."),
     },
 
@@ -615,6 +968,18 @@ KENH: dict[str, dict] = {
             "kitchen": "Kitchen: white cabinets, two pet bowls on a mat by the fridge, a bin with a slightly loose lid.",
             "hallway": "Hallway: narrow hall with a coat rack, a leash hanging on a hook, a mat by the front door.",
             "back garden": "Back Garden: small fenced garden, patchy grass, a half-buried tennis ball, a garden chair.",
+            "laundry room": (
+                "Laundry Room: washer and dryer side by side, a folded pile on top, a basket on the "
+                "floor, a small window."
+            ),
+            "front hall": (
+                "Front Hall: a coat hook rail, a shoe tray, a narrow console table, the front door "
+                "with a letter slot."
+            ),
+            "vet waiting room": (
+                "Vet Waiting Room: bench seating along two walls, a scale on the floor, a rack of "
+                "leaflets, sealed pet food bags."
+            ),
         },
         "style": (
             "Shot from about knee height, because that is where the cast lives — humans are "
@@ -638,6 +1003,33 @@ KENH: dict[str, dict] = {
             "themselves and do not need to. Escalate through evidence accumulating in the wrong "
             "place. The reversal is usually that the animal was right and the human has just "
             "noticed."
+        ),
+
+        "dao_cu": (
+            "a food bowl",
+            "the good spot on the couch",
+            "a squeaky toy under the fridge",
+            "a leash by the door",
+            "a cardboard box",
+            "the vacuum",
+            "a bag of treats on a high shelf",
+            "a scratching post",
+            "the trash bin lid",
+            "a laser pointer",
+            "a chewed shoe",
+            "the cat carrier",
+            "a screen door with a hole",
+            "a sock",
+            "the sunny patch on the floor",
+            "a water fountain bowl",
+            "a bag of kibble",
+            "the doorbell",
+            "a blanket on the bed",
+            "a tennis ball under the couch",
+            "the litter box",
+            "a package on the porch",
+            "a hairbrush full of fur",
+            "the pet gate",
         ),
 
         "mach": ("American pet-household friction blown one size too big: something knocked off a counter, a bin investigated, a vet appointment sensed in advance, one bowl eaten from twice. One small animal dispute escalates and lands on a reversal where the smallest and quietest pet caused all of it."),
@@ -691,6 +1083,18 @@ KENH: dict[str, dict] = {
                       "a single hanging bulb.",
             "front porch": "Front porch: white rail, two wooden steps down to a short path, a "
                            "grey doormat, the pale yellow siding of the house behind.",
+            "laundry room": (
+                "Laundry Room: washer and dryer side by side, a wire shelf of detergent, a basket of "
+                "unsorted clothes."
+            ),
+            "bathroom": (
+                "Bathroom: white tile, a pedestal sink, a mirrored cabinet, a shower curtain on a "
+                "rail."
+            ),
+            "attic stairs": (
+                "Attic Stairs: a pull-down ladder from the hall ceiling, dust in the light, boxes "
+                "visible above."
+            ),
         },
 
         "style": (
@@ -724,6 +1128,33 @@ KENH: dict[str, dict] = {
             "least authority in the room."
         ),
 
+        "dao_cu": (
+            "the last slice of pizza",
+            "the thermostat",
+            "a streaming password",
+            "the good scissors",
+            "a phone charger",
+            "the remote control",
+            "a package on the porch",
+            "the laundry basket",
+            "a jar nobody can open",
+            "the last roll of paper towels",
+            "a birthday cake",
+            "the smoke detector battery",
+            "a grocery list",
+            "the garage door opener",
+            "a permission slip due yesterday",
+            "the ice tray",
+            "a broken drawer handle",
+            "the car keys",
+            "a leftover container with no lid",
+            "the sprinkler timer",
+            "a school project due tomorrow",
+            "the wifi router",
+            "a coupon that expired",
+            "the good towel",
+        ),
+
         "mach": (
             "Everyday American household friction blown one size too big: chores, groceries, "
             "thermostats, streaming passwords, school runs, weekend projects, holiday visits. "
@@ -732,6 +1163,77 @@ KENH: dict[str, dict] = {
         ),
     },
 }
+
+
+def _lich(kenh: str, so: int) -> dict:
+    """Cấp cho tập số `so` một bộ SÁU TRỤC phân biệt: phòng · đồ vật · áp lực · kiểu mở ·
+    ai gây ra · ai lật. Giữ nguyên khoá tạo hình — chỉ tình huống đổi.
+
+    VÌ SAO KHÔNG DÙNG MODULO TỪNG TRỤC
+    ----------------------------------
+    Cách hiển nhiên là `chỉ_số_trục_i = so % độ_dài_i`. Nó sai theo một kiểu rất khó thấy: bộ
+    sáu trục lặp lại sau `lcm(các độ dài)` tập, chứ không phải sau `tích` các độ dài. Với
+    HOUSE RULES: tích = 7.372.800 nhưng lcm(8,20,10,16,24,12) = **240**. Tức lịch chỉ đi qua
+    240 trong 7,3 triệu tổ hợp rồi quay lại từ đầu — trần đa dạng to mà lịch không với tới.
+    Đây đúng họ lỗi "vá một nhánh, để nguyên nhánh song song": mỗi trục nhìn riêng thì đều
+    trải hết, mà bộ sáu thì không.
+
+    Cách đúng: đánh số THẲNG trên không gian tích, rồi bước bằng một số nguyên tố cùng nhau với
+    tích ấy. Bước như thế đi qua **đúng một lần** mọi tổ hợp trước khi lặp — và vì bước rất lớn,
+    hai tập liền nhau rơi vào hai góc xa nhau của không gian, không phải hai ô cạnh nhau.
+    """
+    hs = ho_so(kenh)
+    phong = list(hs["phong"])
+    do = list(hs.get("dao_cu") or ["an ordinary object"])
+    vai = list(hs["vai"])
+    truc = [len(phong), len(do), len(AP_LUC), len(KIEU_MO), len(vai), max(1, len(vai) - 1)]
+    P = 1
+    for x in truc:
+        P *= x
+    # Bước lớn, lẻ, không chia hết cho 3 hay 5 -> nguyên tố cùng nhau với mọi tích ở đây (các
+    # tích chỉ có thừa số 2, 3, 5 và các số nhỏ). Kiểm bằng gcd cho chắc, đừng tin lý lẽ suông.
+    n = (_goc_lich(kenh) % P + so * _buoc_lich(kenh)) % P
+
+    ra, chi = [], n
+    for x in truc:
+        ra.append(chi % x)
+        chi //= x
+    i_ph, i_do, i_ap, i_mo, i_gay, i_lat = ra
+    gay = vai[i_gay]
+    con = [v for v in vai if v != gay] or vai
+    lat = con[i_lat % len(con)]
+    return {"phong": phong[i_ph], "dao_cu": do[i_do], "ap_luc": AP_LUC[i_ap],
+            "kieu_mo": KIEU_MO[i_mo], "gay": gay, "lat": lat, "_khong_gian": P}
+
+
+def _buoc_lich(kenh: str) -> int:
+    """Bước đi trong không gian tổ hợp. Phải NGUYÊN TỐ CÙNG NHAU với tích, không thì lịch chỉ
+    đi qua một phần không gian rồi lặp — đúng cái bẫy `lcm` đã tránh ở `_lich`."""
+    hs = ho_so(kenh)
+    P = 1
+    for x in (len(hs["phong"]), len(hs.get("dao_cu") or [1]), len(AP_LUC), len(KIEU_MO),
+              len(hs["vai"]), max(1, len(hs["vai"]) - 1)):
+        P *= x
+    b = 1_000_003
+    while _gcd(b, P) != 1:
+        b += 2
+    return b
+
+
+def _goc_lich(kenh: str) -> int:
+    """Điểm xuất phát riêng của kênh. `hash()` của Python đổi theo từng lần chạy (PYTHONHASHSEED)
+    nên KHÔNG dùng được: web tính ra một số, Python tính ra số khác, hai bên lệch lịch. Dùng phép
+    băm cố định, viết ra để cả hai bên chạy y hệt."""
+    h = 0
+    for c in kenh:
+        h = (h * 131 + ord(c)) % 1_000_000_007
+    return h
+
+
+def _gcd(a: int, b: int) -> int:
+    while b:
+        a, b = b, a % b
+    return a
 
 
 def ho_so(kenh: str) -> dict:
@@ -1158,7 +1660,14 @@ def _mao_tu(t: str) -> str:
     return re.sub(r"\ban (?=[bcdfgjklmnpqrstvwxyz])", "a ", t)
 
 
-def cham(d: dict, kenh: str, giay: float) -> list[str]:
+def _tu_chinh(cum: str) -> list[str]:
+    """Từ mang nghĩa trong một cụm đồ vật — bỏ mạo từ và giới từ, giữ danh từ."""
+    bo = {"the", "a", "an", "of", "in", "on", "with", "that", "one", "some", "and", "for",
+          "somebody", "someone", "nobody", "last", "good", "shared"}
+    return [w for w in re.findall(r"[a-z]{3,}", cum.lower()) if w not in bo]
+
+
+def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
     """Chấm một tập theo đúng giới hạn Kling. Trả danh sách lỗi để bắt AI viết lại."""
     e: list[str] = []
     if not isinstance(d, dict):
@@ -1170,8 +1679,15 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
     if not isinstance(lines, list) or not lines:
         return ["thiếu mảng lines (các lượt thoại)"]
 
-    if len(lines) > LUOT_TOI_DA:
-        e.append(f"{len(lines)} lượt thoại — quá {LUOT_TOI_DA} thì cắt cảnh liên tục, mặt méo")
+    # "Lượt thoại" = lượt CÓ LỜI. Một lượt chỉ có hành động (Buddy stares) không tốn ngân sách
+    # từ, không tốn khớp miệng, không phải một lượt cắt cảnh — đếm nó vào là chặn oan.
+    # 1/9 — Python đếm cả lượt câm còn web chỉ đếm lượt có lời: cùng một kịch bản, hai kết quả.
+    # Hai thước lệch nhau ở một định nghĩa là cách chắc chắn để một bên cho qua thứ bên kia chặn.
+    lines = [l for l in lines if isinstance(l, dict)]
+    co_loi = [l for l in lines if str(l.get("say") or "").strip()]
+
+    if len(co_loi) > LUOT_TOI_DA:
+        e.append(f"{len(co_loi)} lượt thoại — quá {LUOT_TOI_DA} thì cắt cảnh liên tục, mặt méo")
 
     tong_tu = 0
     for i, ln in enumerate(lines, 1):
@@ -1203,9 +1719,31 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
     # Không co giãn một kịch bản: năm giây và mười lăm giây là hai LOẠI chuyện khác nhau.
     _ten_kh, _ = khuon_ke(giay)
     _esc = str(d.get("escalate") or "")
+
+    # ── `beat` PHẢI CÓ THẬT, VÀ KHÔNG ĐƯỢC LÀ `hook` ───────────────────────────────────────
+    # 1/9 — Hai lỗ cùng một chỗ, cả hai đều lọt cổng mà vẫn sai:
+    #   · AI bịa tên nhịp ("intro"/"climax"/"outro"). `_thoai_theo_nhip` đẩy chúng về khối mặc
+    #     định nên prompt vẫn đúng — nhưng cổng "rải đều các nhịp" ĐẾM chúng là ba nhịp khác
+    #     nhau và cho qua, trong khi thực tế cả ba lời dồn vào một khối.
+    #   · AI đặt lời vào nhịp `hook`. `_giay_thoai()` cố ý TRỪ hook ra khỏi thời gian có thoại
+    #     (hook là hình thuần, một câu ở đó chỉ làm chậm) — nên ngân sách từ được tính như thể
+    #     khối ấy im lặng, còn prompt thì có lời. Clip vượt ngân sách mà thước báo sạch.
+    _khoi = [x[2] for x in nhip(giay)]
+    for i, ln in enumerate(lines, 1):
+        if not isinstance(ln, dict):
+            continue
+        b = str(ln.get("beat") or "").strip()
+        if not b:
+            continue
+        if b not in _khoi:
+            e.append(f"lượt {i}: beat {b!r} không có trong clip {giay:g}s — chỉ có "
+                     f"{', '.join(_khoi)}")
+        elif b == "hook":
+            e.append(f"lượt {i}: đặt lời vào nhịp 'hook' — khung mở là HÌNH thuần, một câu "
+                     f"thoại ở đó vừa làm chậm vừa phá ngân sách từ của cả tập")
     if giay <= 6.5:
-        if len(lines) != 2:
-            e.append(f"{len(lines)} lượt thoại cho clip {giay:g}s — khuôn {_ten_kh} cần ĐÚNG MỘT "
+        if len(co_loi) != 2:
+            e.append(f"{len(co_loi)} lượt thoại cho clip {giay:g}s — khuôn {_ten_kh} cần ĐÚNG MỘT "
                      f"lượt trao đổi: hai câu, câu sau ngắn hơn câu trước")
         if len(_esc) > 90:
             e.append(f"'escalate' dài {len(_esc)} ký tự — ở {giay:g} giây nó không phải một nhịp "
@@ -1215,12 +1753,12 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
             e.append(f"cú lật ở {giay:g} giây phải là ĐỔI HÌNH DẠNG hoặc VỊ TRÍ thấy ngay (đổ · "
                      f"mở · lật · bước ra), không phải một thông tin người xem phải nghĩ mới hiểu")
     elif giay <= 9.5:
-        if not 2 <= len(lines) <= 3:
-            e.append(f"{len(lines)} lượt thoại cho clip {giay:g}s — khuôn {_ten_kh} hợp với 2–3 "
+        if not 2 <= len(co_loi) <= 3:
+            e.append(f"{len(co_loi)} lượt thoại cho clip {giay:g}s — khuôn {_ten_kh} hợp với 2–3 "
                      f"lượt: một cái muốn, một cái chặn, rồi để hình chốt")
     else:
-        if len(lines) < 3:
-            e.append(f"chỉ {len(lines)} lượt thoại cho clip {giay:g}s — khuôn {_ten_kh} cần 3–4 "
+        if len(co_loi) < 3:
+            e.append(f"chỉ {len(co_loi)} lượt thoại cho clip {giay:g}s — khuôn {_ten_kh} cần 3–4 "
                      f"lượt rải đều các nhịp, không dồn vào khúc giữa")
         if not re.search(r"\b(further|again|another|more|bigger|second|third|harder|deeper|"
                          r"higher|faster|whole|entire|all of|now the|even the|one more|"
@@ -1228,7 +1766,7 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
             e.append(f"'escalate' không LEO THANG gì đo được — ở {giay:g} giây khúc giữa phải có "
                      f"tiếng cười riêng của nó: nỗ lực sai lầm phải TO HƠN (sâu hơn · thêm một "
                      f"lần · thêm một người · dụng cụ to hơn), không phải tả thêm")
-        _b = [str((l or {}).get("beat") or "") for l in lines if isinstance(l, dict)]
+        _b = [str(l.get("beat") or "") for l in co_loi]
         if len(set(x for x in _b if x)) < 2:
             e.append(f"tất cả lượt thoại nằm cùng một nhịp — clip {giay:g}s có "
                      f"{len(nhip(giay))} khối, rải lời ra bằng trường 'beat' "
@@ -1291,8 +1829,10 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
             e.append(f"prompt ghép ra {len(_p)} ký tự, quá trần {KY_TU_MAX} của Kling — hàng rào "
                      f"DO NOT sẽ bị cắt. Tập này có {_co} nhân vật; bớt một người rẻ hơn cắt "
                      f"hook, vì mỗi vai tốn ~150 ký tự khoá hình")
-    except Exception:
-        pass
+    except Exception as _ex:
+        # Nuốt im lặng ở đây nghĩa là: prompt hỏng -> thước báo SẠCH -> kịch bản hỏng đi tiếp.
+        # Một cổng hỏng mà vẫn xanh là dạng tệ nhất (luật 12.8). Báo ra, và coi là lỗi.
+        e.append(f"không ghép nổi prompt để đo ({type(_ex).__name__}: {_ex}) — coi như chưa đạt")
     # Bài học 09/08 đã trả giá bên kling_studio: hai thứ Kling trôi mạnh nhất là GÓC MÁY và THỜI
     # ĐẠI. Xin "góc nhìn người đứng dưới đất" mà không ghim thì ra cảnh quay flycam. Luật ấy đã
     # có ở tệp kia; để rơi ở tệp này là học lại một bài đã trả tiền.
@@ -1310,6 +1850,24 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
             r"\b(reveal\w*|turns? out|was never|all along|instead|behind (him|her|them))\b", pay):
         e.append("payoff không có cú lật — phải ĐẢO tình thế (ai đó bước vào, vật hoá ra là thứ "
                  "khác, thủ phạm lộ diện, hậu quả đuổi kịp), không phải tả thêm cảm xúc")
+
+    # ── NHÂN VẬT NGOÀI DÀN TRONG VĂN KỂ ────────────────────────────────────────────────────
+    # 1/9 — Thước chỉ kiểm `who` của từng lượt thoại, nên một cái tên lạ nằm trong VĂN KỂ đi lọt
+    # hoàn toàn. Nó nguy hơn tên lạ trong thoại: `_co_mat()` không nhận ra nên không khoá hình
+    # người ấy, mà prompt vẫn nhắc tên — Kling tự nghĩ ra một người mới, mỗi tập một kiểu.
+    # Quét phần CÒN LẠI sau khi bỏ mọi tên hợp lệ: vai tên hai chữ ("Chef Nick") bị phép quét
+    # một-chữ xé đôi và nửa sau thành "người lạ", chặn oan kịch bản đúng.
+    _con = " ".join(str(d.get(k) or "") for k in ("hook", "setup", "escalate", "payoff"))
+    for _v in sorted(hs["vai"], key=len, reverse=True):
+        _con = _con.replace(_v, " ")
+    _la = []
+    for _c in re.split(r"(?<=[.!?])\s+", _con):
+        for _w in re.findall(r"([A-Z][a-z]{2,})", re.sub(r"^\s*\S+\s*", "", _c)):
+            if _w not in _la and not any(_w.lower() in p for p in hs["phong"]):
+                _la.append(_w)
+    if _la:
+        e.append(f"tên lạ trong văn kể: {', '.join(_la[:4])} — kênh này chỉ có "
+                 f"{', '.join(hs['vai'])}. Kling sẽ vẽ ra người không có trong dàn")
 
     ca = " ".join(str(d.get(k) or "") for k in ("hook", "setup", "escalate", "payoff")).lower()
     ca += " " + " ".join(str((l or {}).get("say") or "") for l in lines if isinstance(l, dict)).lower()
@@ -1338,10 +1896,28 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
         e.append(f"{len(comat)} nhân vật trong {giay:g} giây ({', '.join(comat)}) — quá "
                  f"{VAI_TOI_DA} thì Kling chia ngân sách khuôn mặt và làm nát hết. Bỏ bớt người.")
 
+    # Đề bài chỉ là lời khuyên nếu không ai kiểm. AI hay "ghi nhận" đồ vật được cấp rồi viết
+    # một chuyện khác — đúng lỗi đã đo ở phòng và người lật trước đây.
+    if so >= 0:
+        _x = _lich(kenh, so)
+        _ca_de = " ".join(str(d.get(k) or "") for k in
+                          ("hook", "setup", "escalate", "payoff", "title")).lower()
+        _tu = _tu_chinh(_x["dao_cu"])
+        if _tu and not any(w in _ca_de for w in _tu):
+            e.append(f"không dùng đồ vật được cấp cho tập này ({_x['dao_cu']}) — cả chuyện phải "
+                     f"xoay quanh nó, không phải nhắc qua")
+        if _x["lat"] not in str(d.get("payoff") or ""):
+            e.append(f"cú lật phải do {_x['lat']} thực hiện — payoff không nhắc tới {_x['lat']}")
+
     ph = str(d.get("room") or "").strip().lower()
     ta = (hs["phong"].get(ph) or "").lower()
+    _phong_ten = ph or ""
     for do in DO_TO:
-        if do in ca and do not in ta:
+        # Đồ được coi là CÓ nếu tên nó, hoặc một tên khác của nó, xuất hiện trong mô tả phòng
+        # HOẶC trong chính tên phòng.
+        _co = (do in ta or do in _phong_ten
+               or any(x in ta or x in _phong_ten for x in DONG_NGHIA_DO.get(do, ())))
+        if do in ca and not _co:
             e.append(f"nhắc {do!r} — căn nhà không có thứ đó. Chỉ dùng đồ đã tả trong phòng "
                      f"({ph or '?'}), hoặc một món cầm tay nhân vật mang vào.")
             break
@@ -1695,7 +2271,30 @@ def _ngan_sach_sys(kenh: str, giay: float) -> int:
     return _ngan_sach_khuon(kh, hs, giay, ph)
 
 
-def _sys(kenh: str, giay: float) -> str:
+def de_bai(kenh: str, so: int) -> str:
+    """Đề bài của MỘT tập, viết thành câu cho AI. Sáu trục do `_lich` cấp.
+
+    1/9 — Trước đây AI chỉ được cấp phòng và (đôi khi) người lật; đồ vật, áp lực và kiểu mở đều
+    để nó tự nghĩ. Nó nghĩ ra cùng một thứ — đo được 16/30 tập cùng một cơ chế cú lật và 22/30
+    hook mở bằng chữ "A". Cách chữa không phải dặn "đừng lặp" (đã dặn, không ăn thua) mà là
+    CẤP THEO LỊCH: mỗi tập nhận sẵn một bộ sáu trục chưa dùng.
+    """
+    x = _lich(kenh, so)
+    return (
+        f"THIS EPISODE'S ASSIGNMENT — build the story around exactly these, do not swap them:\n"
+        f"  · ROOM: {x['phong']}\n"
+        f"  · THE OBJECT this episode is about: {x['dao_cu']}\n"
+        f"  · THE PRESSURE that makes it a scene and not just an incident: {x['ap_luc']}\n"
+        f"  · THE OPENING IMAGE must be this kind of wrong: {x['kieu_mo']}\n"
+        f"  · {x['gay']} caused it (and does not admit it)\n"
+        f"  · {x['lat']} delivers the reversal\n"
+        f"These six are fixed. Everything else — what is wanted, what is said, how it turns — is "
+        f"yours to invent, and must be invented fresh: this exact combination has not been used "
+        f"before on this channel.\n\n"
+    )
+
+
+def _sys(kenh: str, giay: float, so: int = -1) -> str:
     hs = ho_so(kenh)
     tran = int(_giay_thoai(giay) * TU_MOI_GIAY)
     return (
@@ -1708,6 +2307,7 @@ def _sys(kenh: str, giay: float) -> str:
         # ai nói ra; hài quán đêm sống bằng sự mệt mỏi; hài phòng gym sống bằng cái tôi va vào
         # vật lý. Đưa chung một luật cho cả ba là cách chắc chắn để cả ba đều nhạt.
         f"HOW COMEDY WORKS ON THIS CHANNEL — this is the engine, not a mood:\n{hs['hai']}\n\n"
+        + (de_bai(kenh, so) if so >= 0 else "")
         # Khuôn kể riêng cho thời lượng này. Đặt NGAY SAU cơ chế hài và TRƯỚC mọi giới hạn con
         # số, vì nó quyết định LOẠI chuyện — còn các con số chỉ quyết định kích thước.
         + f"THE SHAPE OF A {giay:g}-SECOND SHORT — {khuon_ke(giay)[0]}:\n"
@@ -1782,7 +2382,8 @@ def _ho_key(keys=None) -> list:
 
 def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
              tranh: list | None = None, keys: list | None = None, phong: str = "",
-             lat: str = "", kieu: str = "", cam_tu: list | None = None) -> dict:
+             lat: str = "", kieu: str = "", cam_tu: list | None = None,
+             so: int = -1) -> dict:
     """Viết một tập. Viết lại tới khi qua hết thước. Trả dict sáu trường.
 
     Key cạn thì ĐỔI KEY chứ không bỏ cuộc — cùng bài học đã trả giá ở sáu hàm viết bên kia."""
@@ -1793,7 +2394,7 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
 
     def _model():
         return CB._genai(ho[_n["i"] % len(ho)]).GenerativeModel(
-            CB.MODEL, system_instruction=_sys(kenh, giay))
+            CB.MODEL, system_instruction=_sys(kenh, giay, so))
 
     model = _model()
     ne = ("\nDo not repeat these episodes already made: " + " | ".join(list(tranh)[-40:])) if tranh else ""
@@ -1848,7 +2449,7 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
             d["room"] = phong           # ép cứng: phòng do lịch luân phiên quyết, không do AI
         if lat:
             d["lat"] = lat
-        loi = cham(d, kenh, giay)
+        loi = cham(d, kenh, giay, so)
         if lat and lat.split()[0] not in str(d.get("payoff") or ""):
             loi.append(f"cú lật phải do {lat} thực hiện — payoff không nhắc tới {lat}")
         # Trùng NỘI DUNG với bất kỳ tập nào trong TOÀN kho, không chỉ 40 tập gần nhất và không
@@ -1968,6 +2569,11 @@ HO_LAT = {
     "đảo-vai":               r"\b(hands? (it|him|her)|takes? over|swaps?|trades?)\b",
     "hậu-quả-đuổi-kịp":      r"\b(runs? (out|down)|spreads? to|reaches? (his|her|their)|creeps?)\b",
     "kẻ-thản-nhiên-bỏ-đi":   r"\b(without looking|does not look|pulls? the door shut|steps? (out|past))\b",
+    # 1/9 — ba họ nữa. Chọn ba họ này vì chúng ĐẢO NGÔI THỨ theo ba cách chưa có: người sai
+    # thắng vì lý do khác, người đúng thua vì đúng, và cả hai cùng sai với một người thứ ba.
+    "đúng-mà-vẫn-thua":      r"\b(was right|had been right|correct all along)\b.{0,40}\b(but|and still|anyway)\b",
+    "sai-mà-vẫn-thắng":      r"\b(works? anyway|holds? anyway|somehow (works?|holds?)|by accident)\b",
+    "người-thứ-ba-đã-xong":  r"\b(already (done|fixed|finished|handled)|had (done|fixed) it)\b",
 }
 
 
@@ -2211,6 +2817,9 @@ def luat_web(kenh: str) -> dict:
         "cam_ky": [[t, ly] for t, ly in CAM_KY],
         "khong_my": [[rx, ly] for rx, ly in KHONG_MY],
         "do_to": [x for x in DO_TO],
+        "dong_nghia_do": {k: list(v) for k, v in DONG_NGHIA_DO.items()},
+        "bo_tu": ["the","a","an","of","in","on","with","that","one","some","and","for",
+                  "somebody","someone","nobody","last","good","shared"],
         "ho_lat": {k: v for k, v in HO_LAT.items()},
         "lat_doi_hinh": r"\b(falls?|opens?|tips?|swings?|drops?|shuts?|slides?|steps?|turns?|"
                         r"collapses?|lands?|rolls?|pulls?|walks?|leaves?)\b",
@@ -2251,8 +2860,19 @@ def xuat_web(thu_muc: str) -> list[str]:
            "lines": [{"who": "@@WHO@@", "act": "says", "say": "@@LINES@@"}]}
     for ten, k in KENH.items():
         hs = ho_so(ten)
-        ph0 = next(iter(hs["phong"]))
-        mo0 = hs["phong"][ph0]
+        # ── PHÒNG DÙNG Ô TRỐNG GỐC, KHÔNG THAY CHUỖI SAU ─────────────────────────────────
+        # 1/9 — Bản trước dựng khuôn với phòng thật rồi `replace(ten_phong, "@@ROOM@@")`. Với
+        # DINER SHIFT phòng tên "counter", và chữ ấy CÒN NẰM trong câu tả căn nhà ("a long
+        # counter with chrome stools") lẫn trong câu tả nét vẽ. Nên web điền "booth" vào sẽ ra
+        # "Ruby's Diner ... a long booth with chrome stools" — Kling đọc và vẽ đúng thứ vô nghĩa
+        # ấy. Không lỗi nào báo, vì về mặt chuỗi phép thay hoàn toàn thành công.
+        #
+        # Không có cách nào chữa bằng phép thay: tên phòng là danh từ thường, nó SẼ trùng. Nên
+        # dựng thẳng bằng ô trống — đặt một khoá phòng giả có mô tả là ô trống, rồi ghép như
+        # bình thường. Không còn phép thay nào để trượt.
+        _KP, _KD = "@@room@@", "@@ROOMDESC@@"
+        hs["phong"][_KP] = _KD
+        ph0, mo0 = _KP, _KD
         # ── DÀN NHÂN VẬT CŨNG PHẢI LÀ Ô TRỐNG ─────────────────────────────────────────────
         # 1/9 — Khuôn dựng bằng chỗ trống `@@HOOK@@`, nên `_co_mat()` không thấy tên ai và
         # rơi về "lấy cả dàn". Khuôn HOUSE RULES vì thế khoá cứng CẢ NĂM nhân vật, ở mọi tập.
@@ -2266,8 +2886,10 @@ def xuat_web(thu_muc: str) -> list[str]:
         def _o(t, muc=0):
             cast = "\n".join((hs["nhan_vat"][x] if muc < 1 else _nen_vai(hs["nhan_vat"][x]))
                              for x in hs["vai"])
+            # Chỉ còn phải thay dàn vai — chuỗi dài, duy nhất, không thể trùng nhầm. Phòng đã
+            # là ô trống từ lúc dựng nên không có phép thay nào cho nó.
             return (t.replace(cast, "@@CAST@@").replace(_names, "@@CASTNAMES@@")
-                     .replace(mo0, "@@ROOMDESC@@").replace(ph0, "@@ROOM@@"))
+                     .replace(_KP, "@@ROOM@@"))
         khuon = {}
         for g in GIAY_CHUAN:
             tap = dict(MAU, room=ph0)
@@ -2283,8 +2905,10 @@ def xuat_web(thu_muc: str) -> list[str]:
             # Ngân sách đo trên CHÍNH khuôn vừa dựng, ở ca xấu nhất của kênh: dàn đông nhất,
             # tên dài nhất, phòng có mô tả dài nhất, thoại kịch trần.
             kh["van_ke_max"] = _ngan_sach_khuon(
-                kh, hs, g, max(hs["phong"], key=lambda p: len(hs["phong"][p])))
+                kh, hs, g, max((p for p in hs["phong"] if p != _KP),
+                               key=lambda p: len(hs["phong"][p])))
             khuon[str(g)] = kh
+        hs["phong"].pop(_KP, None)      # khoá giả chỉ sống trong lúc dựng khuôn của kênh này
         ra_kenh = {
             "ten": ten, "mo_ta": hs["mo_ta"], "ty_le": hs["ty_le"],
             "vai": {t: hs["nhan_vat"][t] for t in hs["vai"]},
@@ -2300,6 +2924,16 @@ def xuat_web(thu_muc: str) -> list[str]:
             "tu_toi_da": {str(g): int(_giay_thoai(g) * TU_MOI_GIAY) for g in GIAY_CHUAN},
             "hai": hs["hai"],
             "luat": luat_web(ten),
+            # Tham số bộ lịch. Web tính ra cùng một bộ trục bằng cùng công thức — tham số do
+            # Python cấp nên hai bên không thể lệch. Không xuất sẵn danh sách tập vì kho tính
+            # được từ sáu con số này, còn xuất 500 tập/kênh thì tệp phồng thêm 750 KB.
+            "lich": {
+                "truc": [len(hs["phong"]), len(hs.get("dao_cu") or [1]), len(AP_LUC),
+                         len(KIEU_MO), len(hs["vai"]), max(1, len(hs["vai"]) - 1)],
+                "buoc": _buoc_lich(ten), "goc": _goc_lich(ten),
+                "phong": list(hs["phong"]), "dao_cu": list(hs.get("dao_cu") or []),
+                "ap_luc": list(AP_LUC), "kieu_mo": list(KIEU_MO), "vai": list(hs["vai"]),
+            },
             "gioi_han": {"vai": VAI_TOI_DA, "luot": LUOT_TOI_DA, "tu_moi_luot": TU_MOI_LUOT,
                          "ky_tu_max": KY_TU_MAX, "hook_tu": [16, 30], "diem_san": DIEM_SAN},
             "khuon": khuon,
@@ -2356,9 +2990,13 @@ def main() -> int:
     da = _da_lam(a.kenh)
     so = a.so or (len(da) + 1)
     for i in range(a.sl):
-        ph = a.phong or phong_ke(a.kenh, da)
-        lt = nguoi_lat_ke(a.kenh, da)
-        ki = kieu_ke(da, len(hs["phong"]) or 1)
+        # 1/9 — Ba cách cấp rời rạc (phòng · người lật · kiểu mở) mỗi cái đếm kho một kiểu, và
+        # không cái nào biết cái kia — nên ba trục có thể cùng quay về một chỗ. Nay MỘT bộ lịch
+        # cấp cả sáu trục từ một chỉ số duy nhất, đi hết không gian tích rồi mới lặp.
+        _x = _lich(a.kenh, so)
+        ph = a.phong or _x["phong"]
+        lt = _x["lat"]
+        ki = _x["kieu_mo"]
         # Sổ từ mòn: chữ nào đã dùng ở BA tập trở lên thì cấm hẳn. Ngưỡng ba vì hai lần còn có
         # thể là trùng hợp; ba lần là AI đã bám vào một khuôn.
         dem: dict[str, int] = {}
@@ -2367,9 +3005,10 @@ def main() -> int:
                 dem[w] = dem.get(w, 0) + 1
         cam = [w for w, n in dem.items() if n >= 3 and w not in _BO_QUA]
         y = a.y or f"a fresh everyday moment in the {ph}"
-        print(f"\n▶ {hs['ten']} tập {so:03d} · {a.giay:g}s · {ph} · {lt} lật · {ki[:34]}…")
+        print(f"\n▶ {hs['ten']} tập {so:03d} · {a.giay:g}s · {ph} · {_x['dao_cu'][:26]} · "
+              f"{lt} lật · {ki[:30]}…")
         tap = sinh_tap(a.kenh, y, a.giay, tranh=[x["title"] for x in da], phong=ph, lat=lt,
-                       kieu=ki, cam_tu=cam)
+                       kieu=ki, cam_tu=cam, so=so)
         _bo = tuple(float(x) for x in a.bo_short.replace(" ", "").split(",") if x)
         tm = luu(a.kenh, tap, a.giay, so, day=a.day, bo=_bo)
         n = len(io.open(os.path.join(tm, "PROMPT.txt"), encoding="utf-8").read())

@@ -7330,3 +7330,81 @@ tay vào MỘT tài liệu: 1 lượt đọc. 2.000 tập × 116 B = 227 KB, dư
 Trần 2.000 và vì sao không cần chính sách xoá: một kênh chỉ có ~1.400 bộ ba phân biệt, nên quá
 2.000 thì tập cũ nhất chắc chắn đã là lặp cấu trúc. Ở 10 lượt bấm/ngày, kho đầy 1 GiB sau **360
 năm** — chuyện xoá không bao giờ tới.
+
+---
+
+## KLING — VÒNG SOI LỖI TIỀM ẨN + MỞ TRẦN ĐA DẠNG (1/9)
+
+### 8k20 — Bốn lỗ cùng một dạng: **lọt cổng mà vẫn sai**
+
+Không lỗi nào trong bốn lỗi này làm chương trình dừng. Cả bốn đều để kịch bản hỏng đi tiếp
+trong khi thước báo SẠCH.
+
+| lỗ | vì sao lọt |
+|---|---|
+| lời thoại đặt ở nhịp `hook` | `_giay_thoai()` cố ý TRỪ hook khỏi thời gian có thoại, nên ngân sách từ tính như thể khối ấy im lặng — còn prompt thì có lời |
+| AI bịa tên nhịp (`intro`/`climax`) | `_thoai_theo_nhip` đẩy về khối mặc định nên prompt vẫn đúng, nhưng cổng "rải đều các nhịp" ĐẾM chúng là ba nhịp khác nhau |
+| lượt câm (`say` rỗng) | Python đếm là một lượt thoại, web thì không — cùng kịch bản, hai kết luận |
+| `cham()` nuốt lỗi `prompt()` | `except: pass` → prompt hỏng thì thước báo sạch (đúng dạng luật 12.8: hỏng mà vẫn xanh) |
+
+**Luật:** khi một hàm phụ trợ **cố ý bỏ qua** một phần dữ liệu (`_giay_thoai` bỏ hook,
+`_thoai_theo_nhip` gộp beat lạ), phần bị bỏ qua ấy phải có cổng riêng — nếu không, thứ rơi vào
+đó biến mất khỏi mọi phép đo mà vẫn có mặt trong sản phẩm.
+
+### 8k21 — Tên phòng là danh từ THƯỜNG, nên nó sẽ trùng
+
+`xuat_web` dựng khuôn với phòng thật rồi `replace(ten_phong, "@@ROOM@@")`. DINER SHIFT có phòng
+tên `counter`, và chữ ấy còn nằm trong câu tả căn nhà (*"a long counter with chrome stools"*).
+Web điền `booth` vào sẽ ra *"Ruby's Diner … a long booth with chrome stools"* — Kling đọc và vẽ
+đúng thứ vô nghĩa ấy. **Phép thay hoàn toàn thành công về mặt chuỗi**, nên không lỗi nào báo.
+
+Không có cách nào chữa bằng phép thay tốt hơn. Chữa bằng cách **dựng thẳng bằng ô trống**: đặt
+một khoá phòng giả có mô tả là ô trống, ghép như bình thường, không còn phép thay nào để trượt.
+
+**Họ lỗi:** *thay chuỗi trên văn bản tự nhiên* — mọi danh từ thường đều là mìn.
+
+### 8k22 — Cổng bắt oan còn tệ hơn cổng không bắt
+
+Ba chỗ bắt oan tìm được, cả ba đều chặn kịch bản **hoàn toàn đúng**:
+
+- phòng `stairwell` (tả là *"concrete steps"*) chặn chữ `stairs`
+- phòng `motel room` (tả là *"a boxy TV"*) chặn chữ `television`
+- vai tên hai chữ `Chef Nick` · `Coach Ed` bị phép quét một-chữ **xé đôi**, nửa sau thành "người lạ"
+
+Cổng bắt oan không chỉ phiền: nó **ép AI viết lại một kịch bản vốn đúng**, và ép tới khi hết
+vòng thì trả về bản tệ hơn bản đầu. Nó làm chất lượng ĐI XUỐNG trong khi trông như đang canh gác.
+
+Chữa: bảng đồng nghĩa cho đồ đạc; và với tên vai — **xoá mọi tên hợp lệ trước khi quét**, quét
+cái còn lại. Không còn nửa tên nào để hiểu nhầm, và danh sách ngoại lệ hết cần dài (luật 8k17).
+
+### 8k23 — Bộ lịch chia theo modulo lặp sau `lcm`, không phải sau `tích`
+
+Mở trần đa dạng lên **737.280 tổ hợp** một kênh (8 phòng × 24 đồ vật × 12 áp lực × 16 kiểu mở ×
+5 người gây × 4 người lật). Cách cấp hiển nhiên là `chỉ_số_trục_i = số_tập % độ_dài_i`.
+
+Nó sai theo kiểu rất khó thấy: **mỗi trục nhìn riêng đều trải hết**, nhưng bộ sáu trục lặp lại
+sau `lcm(8,24,12,16,5,4)` = **240 tập**. Tức lịch chỉ đi qua 240 trong 737.280 tổ hợp. Trần to
+mà lịch không với tới — và không có cách nào thấy điều đó bằng cách nhìn từng trục.
+
+Chữa: đánh số thẳng trên không gian tích, bước bằng một số **nguyên tố cùng nhau với tích**.
+Đo: 5.000 tập → 5.000 bộ phân biệt, mọi trục chia đều (lệch ≤ 8/5.000).
+
+**Họ lỗi:** *kiểm từng phần đều đạt rồi kết luận tổng thể đạt.*
+
+### 8k24 — `hash()` của Python đổi theo từng lần chạy
+
+Bộ lịch lệch pha giữa các kênh bằng `abs(hash(kenh))`. `hash()` của chuỗi phụ thuộc
+`PYTHONHASHSEED`, **đổi sau mỗi lần khởi động**. Nên Python và web tính ra hai lịch khác nhau,
+và Python cũng khác chính nó ở lần chạy sau. Thay bằng phép băm cố định viết ra tường minh.
+
+Đối chiếu sau khi sửa: **580 đề bài** (10 kênh × 58 tập rải tới tập 400), Python và JavaScript
+ra đúng cùng một bộ, không sai một trường nào.
+
+### 8k25 — Đề bài không được kiểm thì chỉ là lời khuyên
+
+Cấp cho AI sáu trục rồi tin nó dùng là quay lại đúng chỗ cũ: AI "ghi nhận" đồ vật được cấp rồi
+viết chuyện khác — y hệt chuyện phòng và người lật trước đây. Nay `cham()` kiểm: đồ vật được cấp
+phải xuất hiện trong văn kể, và cú lật phải do đúng người được chỉ định thực hiện.
+
+**Kiểm hai thước có khớp nhau không:** 75 mẫu (5 kênh × 3 tập × 5 kiểu sai) chấm bằng cả Python
+lẫn chính mã JavaScript của trang → **75/75 cùng kết luận**. Trước khi sửa hai lỗi trên: 72/75.
