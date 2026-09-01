@@ -7548,3 +7548,58 @@ trong ngày ấy — nhất là khi thứ người dùng NHÌN (D1) đã sạch 
 
 **Luật:** mỗi bước trong đường chạy tự động phải có **ngân sách đọc biết trước**. Một vòng lặp
 không trần trong việc chạy hằng ngày là một quả bom hẹn giờ theo kích thước dữ liệu.
+
+### 8k26 — Groq trả 403 vì THIẾU `User-Agent`, không phải vì khoá hỏng
+
+Đo hồ khoá bằng `urllib` trần: Groq trả `403 error code 1010` trên cả 5 khoá thử. Tôi kết luận
+"83 khoá Groq đã chết" và báo cáo như thế. Anh nói khoá vẫn dùng tốt — và anh đúng.
+
+`1010` là mã chặn bot của CDN đứng trước Groq, không phải mã của Groq. Thêm một dòng
+`User-Agent` vào header: **5/5 khoá OK ngay**. `content_brain` vốn đã đặt `User-Agent` ở mọi
+lệnh gọi — chỉ bài kiểm của tôi là thiếu.
+
+**Họ lỗi:** *kết luận về HỆ THỐNG từ một phép đo bằng công cụ khác công cụ hệ thống dùng.* Bài
+kiểm phải gọi bằng đúng đường mà mã thật gọi; gọi bằng đường khác thì cái hỏng có thể là bài
+kiểm, và lúc đó ta đi sửa thứ không hỏng.
+
+**Cách nhận ra sớm:** mã lỗi 403/1010/1020 gần như luôn là tầng CDN, không phải tầng ứng dụng.
+Ứng dụng từ chối khoá thì trả 401 kèm câu giải thích.
+
+### 8k27 — Chết chậm ở hồ khoá: Gemini đứng đầu hàng
+
+`sinh_tap` duyệt hồ theo ĐÚNG thứ tự trong `.keys.local`, mà Gemini nằm đầu. Đo trên 40 khoá
+Gemini: **17 invalid · 13 model đã bị Google gỡ · 10 cạn hạn mức** — không khoá nào chạy. Nên
+mỗi lượt sinh lội qua hàng trăm khoá chết trước khi chạm Cloudflare (khoá sống, 2,5 giây/lượt).
+
+Nhìn từ ngoài y hệt "mạng chậm". Đường web đã xếp `CF → Groq → Gemini` từ lâu, kèm ghi chú giải
+thích vì sao; **chỉ đường Python là chưa**. Vá một nhánh, để nguyên nhánh song song — lần thứ
+tư trong dự án này.
+
+### 8k28 — Gốc đánh số tập lệch nhau một bước giữa hai đường
+
+Python: `so = len(da) + 1` → tập đầu mang số **1**. Web: `soTap = kho.length` → tập đầu mang số
+**0**. Cùng một kênh, hai đường tính ra **hai đề bài khác nhau** cho cùng một tập — và không có
+gì báo, vì cả hai lịch đều hợp lệ, chỉ lệch nhau một bước.
+
+Đây là loại lỗi mà mọi phép kiểm "hai bên có khớp không" đều bỏ sót nếu phép kiểm truyền cùng
+một `so` vào cả hai — nó chỉ hiện ra khi đi hỏi **mỗi bên tự tính `so` thế nào**.
+
+### 8k29 — Ghi chú hứa một đằng, mã làm một nẻo
+
+Ghi chú của `luu()` viết: *"Không phải cắt ngắn bản dài — mà dựng lại nhịp cho đúng độ dài ấy"*.
+Mã thì gọi `prompt(kenh, tap, _g)` với **cùng một `tap`**: dòng thời gian đổi, còn kịch bản (số
+lượt thoại, khúc leo thang, ngân sách từ) giữ nguyên.
+
+Lúc viết ghi chú ấy nó đúng — chưa có khuôn kể, "dựng lại nhịp" là tất cả những gì có. Ghi chú
+không sai lúc sinh ra; nó **thành sai khi mã quanh nó tiến lên**. Và vì nó vẫn đọc rất thuyết
+phục, nó che đúng chỗ cần nhìn.
+
+Đo: kịch bản 8 giây (khuôn SETUP AND TURN) xuất ra bản 15 giây thì **thiếu hẳn khúc leo thang**,
+bản 5 giây thì **vượt ngân sách từ 10/6**. Đúng hai lỗi "kéo dài" và "cắt cụt".
+
+Nay mỗi bản phụ đi qua `cham()` với đúng khuôn của độ dài ấy; không đạt thì không xuất, và câu
+báo **phân biệt hai lý do khác hẳn nhau**: sai khuôn (phải viết riêng) hay kịch bản gốc vốn còn
+lỗi. Gộp chung một câu thì báo đổ sai phía, mà đổ sai phía tốn thời gian hơn không báo gì.
+
+**Luật:** khi thêm một ràng buộc mới (khuôn kể), phải đi soát lại mọi ghi chú nói về thứ ràng
+buộc ấy chi phối — ghi chú cũ là nơi cuối cùng người ta nghĩ tới, và là nơi đầu tiên người ta tin.

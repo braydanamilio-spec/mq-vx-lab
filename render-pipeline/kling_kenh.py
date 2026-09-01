@@ -2681,6 +2681,11 @@ def _da_lam(kenh: str) -> list[dict]:
     return r
 
 
+# ⚠️ BA HÀM DƯỚI ĐÂY ĐÃ NGHỈ VIỆC (1/9). Việc cấp phòng · người lật · kiểu mở nay do `_lich()`
+# làm gọn trong một chỗ, vì ba bộ đếm rời rạc mỗi cái nhìn kho một kiểu và không cái nào biết
+# cái kia — nên ba trục có thể cùng quay về một chỗ mà không ai thấy.
+# Giữ lại vì `--so` và các đường gọi cũ có thể còn dùng, NHƯNG: sửa cách cấp trục thì sửa ở
+# `_lich()`, đừng sửa ở đây. Hai nơi cấp cùng một thứ là cách chắc chắn để chúng lệch nhau.
 def nguoi_lat_ke(kenh: str, da: list[dict]) -> str:
     """Ai lật ván cờ ở tập tới — luân phiên, cùng lý lẽ với `phong_ke`.
 
@@ -2725,12 +2730,12 @@ def luu(kenh: str, tap: dict, giay: float, so: int,
 
     BỘ SHORT NHIỀU ĐỘ DÀI (30/8, anh dặn "các short cho 1 video độ dài phù hợp")
     ---------------------------------------------------------------------------
-    Cùng MỘT ý tưởng xuất ra nhiều độ dài. Không phải cắt ngắn bản dài — mà dựng lại nhịp cho
-    đúng độ dài ấy: 5 giây có hai khối (một trò đùa, một cú đấm), 8 giây có ba, 15 giây có bốn.
-    Dàn vai, căn phòng và cú lật giữ nguyên, nên các bản là ANH EM của nhau chứ không phải bản
-    cắt xén — người xem gặp bản nào cũng thấy trọn một mẩu chuyện.
-    Vì sao đáng làm: mỗi nền tảng ăn một độ dài khác nhau, và cùng một ý tưởng tốt thì nên được
-    dùng hết ở cả ba chỗ thay vì phải nghĩ ba ý tưởng.
+    Cùng MỘT ý tưởng xuất ra nhiều độ dài — nhưng CHỈ những độ dài mà kịch bản này thật sự vừa.
+    Mỗi bản phụ đều đi qua `cham()` với đúng khuôn kể của độ dài ấy; không đạt thì không xuất,
+    và in ra lý do. Bản cũ xuất hết mọi độ dài được yêu cầu, nên một kịch bản 8 giây có thể ra
+    một tệp "15 giây" thiếu hẳn khúc leo thang — đúng lỗi kéo dài mà khuôn kể sinh ra để chặn.
+    Vì sao vẫn đáng làm: 5s và 6s chung một khuôn, 7/8/9 chung một khuôn, 10/12/15 chung một
+    khuôn — nên một kịch bản tốt vẫn phủ được hai ba độ dài trong cùng nhóm mà không mất gì.
     """
     tm = os.path.join(KHO, _slug(kenh), f"{so:03d}-{_slug(tap.get('title'))}")
     os.makedirs(os.path.join(tm, "clips"), exist_ok=True)
@@ -2739,11 +2744,35 @@ def luu(kenh: str, tap: dict, giay: float, so: int,
     io.open(os.path.join(tm, "tap.json"), "w", encoding="utf-8").write(
         json.dumps(tap, ensure_ascii=False, indent=2))
     io.open(os.path.join(tm, "PROMPT.txt"), "w", encoding="utf-8").write(pr)
+    # ── ĐỘ DÀI PHỤ: CHỈ XUẤT KHI KỊCH BẢN THẬT SỰ VỪA ─────────────────────────────────────
+    # 1/9 — Ghi chú trên HỨA "không phải cắt ngắn bản dài — mà dựng lại nhịp cho đúng độ dài
+    # ấy". Mã thì chỉ đổi DÒNG THỜI GIAN rồi in lại y nguyên kịch bản. Lúc viết ghi chú ấy điều
+    # đó là đủ, vì chưa có khuôn kể. Nay có rồi, và ba khuôn đòi ba thứ khác nhau:
+    #     5–6s   đúng 2 lượt thoại, cú lật phải đổi HÌNH
+    #     7–9s   2–3 lượt
+    #     10–15s 3–4 lượt, escalate phải LEO THANG đo được
+    # Nên một kịch bản 8 giây đem in ra bản 15 giây là bản thiếu hẳn tiếng cười giữa, và bản
+    # 5 giây là bản vượt ngân sách từ. Đúng hai lỗi "kéo dài" và "cắt cụt".
+    #
+    # Không tự sửa kịch bản cho vừa — sửa tự động là đoán hộ người viết. Chấm, và chỉ xuất bản
+    # nào ĐẠT; bản không đạt thì nói rõ vì sao để viết riêng một kịch bản cho độ dài ấy.
     for _g in bo:
-        if abs(float(_g) - float(giay)) < 0.01:
+        _g = float(_g)
+        if abs(_g - float(giay)) < 0.01:
             continue
-        io.open(os.path.join(tm, f"PROMPT-{float(_g):g}s.txt"), "w", encoding="utf-8").write(
-            prompt(kenh, tap, float(_g), so=so, day=day))
+        _l = cham(tap, kenh, _g, so)
+        if _l:
+            # Phân biệt hai lý do khác hẳn nhau: SAI KHUÔN (viết cho độ dài khác, phải viết
+            # riêng) và KỊCH BẢN VỐN CÒN LỖI (bản chính cũng chưa sạch). Gộp chung một câu thì
+            # câu báo đổ sai phía, và đổ sai phía tốn thời gian hơn không báo gì.
+            _khac = khuon_ke(_g)[0] != khuon_ke(giay)[0]
+            print(f"   ⏭  bỏ bản {_g:g}s — "
+                  + (f"khuôn {khuon_ke(_g)[0]} khác khuôn {khuon_ke(giay)[0]} của bản chính, "
+                     f"phải viết riêng: " if _khac
+                     else "kịch bản gốc vốn còn lỗi này: ") + _l[0][:76])
+            continue
+        io.open(os.path.join(tm, f"PROMPT-{_g:g}s.txt"), "w", encoding="utf-8").write(
+            prompt(kenh, tap, _g, so=so, day=day))
     return tm
 
 
