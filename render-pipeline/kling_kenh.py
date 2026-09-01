@@ -3238,6 +3238,21 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
         if _x["lat"] not in str(d.get("payoff") or ""):
             e.append(f"cú lật phải do {_x['lat']} thực hiện — payoff không nhắc tới {_x['lat']}")
 
+    # ── CÚ GỌI LẠI KHÔNG ĐƯỢC GIẢI THÍCH MÌNH ──────────────────────────────────────────────
+    # 1/9 — Cú gọi lại chỉ có giá trị khi người xem CŨ nhận ra còn người xem MỚI không thấy gì
+    # lạ. Câu "remember when…" phá cả hai: người cũ mất phần thưởng vì bị nói toạc, người mới
+    # bị nhắc rằng có một tập trước mà mình chưa xem — tức bị đẩy ra. Đây cũng là ranh giới
+    # giữa "một chương trình có trí nhớ" và "phần hai của một video khác".
+    _NHAC_LO = (r"\b(remember when|last time|as we (saw|know)|like (last|the other) (time|episode)|"
+                r"in the last (one|episode)|you (may )?recall|previously|earlier this week|"
+                r"same as (last|before)|again like)\b")
+    if so >= 0 and goi_lai(kenh, so):
+        _ca_g = " ".join(str(d.get(k) or "") for k in ("hook", "setup", "escalate", "payoff")) \
+            + " " + " ".join(str((l or {}).get("say") or "") for l in lines)
+        if re.search(_NHAC_LO, _ca_g, re.I):
+            e.append("cú gọi lại tự giải thích ('remember when' / 'last time') — nó phải là một "
+                     "CHI TIẾT bình thường: người xem cũ nhận ra, người xem mới không thấy gì lạ")
+
     ph = str(d.get("room") or "").strip().lower()
     ta = (hs["phong"].get(ph) or "").lower()
     _phong_ten = ph or ""
@@ -3876,7 +3891,7 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
                + ", ".join(sorted(set(cam_tu))[:24]))
     sch = SCHEMA.replace("ROOM_LIST", phong or " | ".join(ho_so(kenh)["phong"]))
     goc = f'Episode idea: "{y_tuong}".\n\n{sch}{ne}'
-    fb, cuoi = "", None
+    fb, cuoi, _so_biet = "", None, []
     # Số vòng phải đủ để vừa viết lại kịch bản vừa duyệt hồ key. Trước đây dừng ở MAX_TRIES nên
     # gặp năm key hỏng liên tiếp là bỏ cuộc trong khi hồ còn 290 key chưa thử.
     for lan in range(1, VONG_VIET + len(ho) + 1):
@@ -3949,6 +3964,7 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
                 pass                      # thước phụ hỏng thì không được chặn dây chuyền chính
         cuoi = d
         if loi:
+            _so_biet.append({"vong": lan, "loi": loi[:8]})
             fb = "; ".join(loi[:6])
             print(f"   ↻ vòng {lan}: {fb[:110]}")
             if lan >= VONG_VIET:
@@ -3956,9 +3972,13 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
             continue
         print(f"   ✅ đạt vòng {lan}: {d.get('title')!r} · "
               f"{sum(len(str((l or {}).get('say') or '').split()) for l in d.get('lines') or [])} từ thoại")
+        d["_bien_tap"] = {"nhan_o_vong": lan, "so_vong_tu_choi": len(_so_biet),
+                          "da_tu_choi": _so_biet}
         return d
     if cuoi is not None:
-        cuoi["_con_loi"] = cham(cuoi, kenh, giay)
+        cuoi["_con_loi"] = cham(cuoi, kenh, giay, so)
+        cuoi["_bien_tap"] = {"nhan_o_vong": None, "so_vong_tu_choi": len(_so_biet),
+                             "da_tu_choi": _so_biet}
         print(f"   ⚠️ {VONG_VIET} vòng chưa sạch — trả bản cuối kèm {len(cuoi['_con_loi'])} điểm sửa tay")
         return cuoi
     raise SystemExit("không sinh được tập nào")
@@ -4210,6 +4230,18 @@ def luu(kenh: str, tap: dict, giay: float, so: int,
     io.open(os.path.join(tm, "tap.json"), "w", encoding="utf-8").write(
         json.dumps(tap, ensure_ascii=False, indent=2))
     io.open(os.path.join(tm, "PROMPT.txt"), "w", encoding="utf-8").write(pr)
+
+    # ── SỔ BIÊN TẬP ────────────────────────────────────────────────────────────────────────
+    # Luật `inauthentic content` cho phép AI làm gần hết, với điều kiện có **bàn tay biên tập**.
+    # Ở đây bàn tay ấy có thật và đo được: mỗi tập bị từ chối nhiều vòng với lý do cụ thể trước
+    # khi được nhận. Nhưng nó chỉ tồn tại trong bộ nhớ rồi biến mất — nên nhìn từ ngoài, một tập
+    # qua tám vòng sửa và một tập viết một lần trông y hệt nhau.
+    # Ghi ra đĩa. Không phải để trưng ra, mà vì: (1) đọc lại sổ này là cách nhanh nhất thấy cổng
+    # nào đang đốt vòng vô ích — chính nó chỉ ra ba cổng "đo TỪ mà dặn Ý"; (2) nếu có ngày phải
+    # chứng minh, thứ chứng minh được là bản ghi, không phải lời kể.
+    if tap.get("_bien_tap"):
+        io.open(os.path.join(tm, "bien_tap.json"), "w", encoding="utf-8").write(
+            json.dumps(tap["_bien_tap"], ensure_ascii=False, indent=2))
     # ── ĐỘ DÀI PHỤ: CHỈ XUẤT KHI KỊCH BẢN THẬT SỰ VỪA ─────────────────────────────────────
     # 1/9 — Ghi chú trên HỨA "không phải cắt ngắn bản dài — mà dựng lại nhịp cho đúng độ dài
     # ấy". Mã thì chỉ đổi DÒNG THỜI GIAN rồi in lại y nguyên kịch bản. Lúc viết ghi chú ấy điều
@@ -4356,6 +4388,10 @@ def luat_web(kenh: str) -> dict:
         "sai_trai": SAI_TRAI_TA,
         "theo_giay": theo_giay,
         "vong_viet": 4,      # web thử lại tối đa 4 lượt — quá nữa là đốt hạn mức cho một tập
+        "nhip_goi_lai": NHIP_GOI_LAI,
+        "nhac_lo": r"\b(remember when|last time|as we (saw|know)|like (last|the other) (time|"
+                   r"episode)|in the last (one|episode)|you (may )?recall|previously|"
+                   r"same as (last|before))\b",
     }
 
 

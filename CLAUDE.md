@@ -585,3 +585,45 @@ không ai thấy, cho tới khi đo. Người viết nhớ được ba kênh, kh
 
 Nhưng phải nói thẳng: cổng chỉ chứng minh **hồ sơ kênh** khác nhau. Thứ YouTube xét là **video**.
 Cổng là điều kiện cần, không phải điều kiện đủ.
+
+### 13.18 Luật không cấm "giống kênh khác" — nó cấm "các video của CHÍNH BẠN giống hệt nhau"
+
+Anh phản biện đúng: *"trên thị trường hàng nghìn channel na ná nhau họ vẫn hoạt động ổn"*. Đọc
+lại nguyên văn phần **được phép** của luật thì rõ:
+
+> *AI-generated animation **can** qualify when the creator adds original creative direction,
+> meaningful variation, useful information, entertainment value, commentary, or a distinctive
+> narrative. An animated channel **does not become ineligible simply because AI produced**
+> characters, backgrounds, visual effects, rough scripts, voices, or editing elements.*
+
+Nên trục xét **không phải** "kênh này có giống kênh kia không" — mà là **"các video trong CÙNG
+một kênh có giống hệt nhau không, và có bàn tay biên tập nào không"**. Đó là lý do nghìn kênh
+na ná nhau vẫn sống: mỗi kênh vẫn là một *chương trình*.
+
+Nhận ra điều này đổi hẳn hướng giải: thôi né, chuyển sang **biến dây chuyền thành bộ phim**.
+
+**Ba thứ đã dựng, theo đúng ba chữ mà luật dùng:**
+
+| chữ trong luật | thứ đã dựng | đo được ở đâu |
+|---|---|---|
+| *meaningful variation* | lịch 7 trục, 3,87–7,37 triệu tổ hợp mỗi kênh, không lặp bộ nào trong 5.000 tập | `_lich()` · `kiem_da_dang.py` |
+| *distinctive narrative* | **cú gọi lại**: cứ 4 tập thì nhắc một tập cũ bằng MỘT chi tiết | `goi_lai()` |
+| *editorial work* | **sổ biên tập**: mỗi tập ghi lại đã bị từ chối mấy vòng và vì lý do gì | `bien_tap.json` |
+
+### 13.19 Cú gọi lại — thứ duy nhất còn nâng được giữ chân mà không tốn thêm một giây Kling
+
+Lý do thật để làm nó không phải là chính sách, mà là **giữ chân**:
+
+- người xem **cũ** nhận ra cú gọi lại và thấy mình được thưởng → quay lại
+- người xem **mới** vẫn hiểu trọn tập, vì cú gọi lại nằm ở **chi tiết**, không ở tiền đề
+- không kênh tự động nào làm được, vì nó đòi **trạng thái** — nhớ mình đã kể gì
+
+Hai ràng buộc cứng, cả hai đều có cổng:
+
+1. **Không được là tiền đề.** Phải xem tập cũ mới hiểu tập này thì tập này hỏng với 95% người xem.
+2. **Không được tự giải thích.** Câu *"remember when…"* phá cả hai phía: người cũ mất phần thưởng
+   vì bị nói toạc, người mới bị nhắc rằng có một tập trước mà mình chưa xem — tức bị đẩy ra.
+
+Và một bẫy dữ liệu: tập cũ lưu trước khi có trường `_dao_cu` thì **KHÔNG tính lại bằng `_lich`** —
+bộ lịch đã đổi nên tính lại cho ra một đồ vật KHÁC thứ tập ấy thật sự kể. Dùng thứ tập cũ thật sự
+có (cú lật của nó). **Sai nguồn còn tệ hơn không gọi lại.**
