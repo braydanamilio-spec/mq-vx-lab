@@ -213,7 +213,12 @@ const _tp = (a: number, b: number): number =>
 /** Màu chữ đọc được trên nền `nen`: thử `uu` trước, rơi về đậm/nhạt nếu chưa đạt 4,5:1. */
 export const chuHopNen = (uu: string, nen: string, dam = "#2C2722", nhat = "#F4F1EA"): string => {
   const n = _lum(nen);
-  if (_tp(_lum(uu), n) >= 4.5) return uu;
+  // NGƯỠNG 5.2, KHÔNG PHẢI 4.5 — vì `nen` là màu PHẲNG còn nền thật là DẢI CHUYỂN sáng hơn ở
+  // phía trên. Đo `howloud`: đỏ #C2352E trên #EFE7D6 ra đúng 4.50, vừa đủ nên giữ màu đỏ —
+  // nhưng soi khung thật thì chữ đỏ ấy nằm trên phần sáng hơn của dải và gần không đọc được.
+  // Một ngưỡng tính trên màu KHÔNG PHẢI màu thật sau lưng chữ thì phải có biên; 5.2 là 4.5 cộng
+  // phần dải sáng lên đo được (~0.7).
+  if (_tp(_lum(uu), n) >= 5.2) return uu;
   return _tp(_lum(dam), n) >= _tp(_lum(nhat), n) ? dam : nhat;
 };
 

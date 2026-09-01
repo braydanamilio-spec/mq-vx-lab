@@ -482,7 +482,11 @@ LOI_MAU = {
            "Look at this first.", "One number, to begin."],
     "so": ["Here is the number.", "That is the figure.", "This is what it comes to.",
            "The number lands here.", "Here is what it actually is."],
-    "gap": ["So this is the real gap.", "That is the real distance.", "Here is the true gap.",
+    # TRUNG TÍNH VỀ MIỀN. "That is the real distance" nghe hay, nhưng kênh duy nhất dùng vai
+    # `gap` là `howloud` — đo DECIBEL. Soi khung ra "100,000x — THE REAL DISTANCE" trên một kênh
+    # âm thanh. Câu nối dùng chung thì không được mang danh từ của một miền cụ thể (khoảng cách,
+    # cân nặng, tiền); nó phải nói về QUAN HỆ giữa hai số, thứ đúng ở mọi kênh.
+    "gap": ["So this is the real gap.", "That is the true difference.", "Here is the real gap.",
             "The difference is this big.", "That is what separates them."],
     "so_sanh": ["Put them side by side.", "Line them up.", "Now compare them.",
                 "Set one against the other.", "Two things, one scale."],
@@ -2458,7 +2462,13 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             "khuon": "so_lieu", "loi": _hl, "dinh": True,
             "so": (hook_phu.split()[0] if hook_phu else ""),
             "don": (" ".join(hook_phu.split()[1:]) if hook_phu else ""),
-            "chu": hook.rstrip("?").title() + "?",
+            # BỎ CHÚ THÍCH KHI NÓ TRÙNG LỜI ĐỌC.
+            # Từ khi lời hook bám tập (`_cau_hook`), cả `loi` lẫn `chu` cùng dựng từ `hook` —
+            # nên màn hình hiện ĐÚNG MỘT CÂU HAI LẦN: một dòng chú thích nhỏ giữa khung và một
+            # dòng phụ đề to ở đáy. Soi khung `realcost` thấy rõ. Phụ đề đã nói câu ấy rồi;
+            # chú thích lặp lại chỉ chiếm chỗ và làm khung rối.
+            "chu": "" if _cau_hook(hook, "").lower() == _hl.lower()
+                   else hook.rstrip("?").title() + "?",
             **({"ve": _ve} if _ve else {}), **({"bt": _bt} if _bt else {}),
         })
     elif HOOK_LOI.get(ma) and nhip:
