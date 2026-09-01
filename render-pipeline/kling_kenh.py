@@ -71,15 +71,36 @@ VAI_TOI_DA = 4             # quá 4 người trong khung thì Kling chia ngân s
 # Trần ký tự. Kling CẮT ĐUÔI prompt quá dài, mà đuôi là RENDER REQUIREMENTS — mất khối đó là mất
 # hàng rào chống "thêm tay, thêm chân, chữ loằng ngoằng". Nên không bao giờ để tràn rồi phó mặc:
 # `prompt()` tự CO cho vừa, và co theo thứ tự GIÁ TRỊ chứ không cắt bừa phần cuối.
-KY_TU_MIN, KY_TU_MAX = 2400, 3000
+#
+# 1/9 — HẠ 3000 -> 2500. Tài liệu API Kling ghi trần `prompt` là 2.500 KÝ TỰ. Bản cũ đặt trần
+# 3000 nên **30/30 tệp đã xuất đều vượt** (đo được 2.731–3.024) — tức mọi tập đang chạy đều bị
+# Kling cắt mất đuôi, mà đuôi đúng là khối DO NOT. Hình hỏng, và không có gì báo lỗi.
+#
+# Con số "2.500 TỪ" từng ghi ở đây là đọc nhầm đơn vị: 2.500 từ ≈ 16.800 ký tự, gấp gần bảy lần
+# trần thật. Bản `day=True` sinh ra đúng 16.834 ký tự và không bao giờ tới được Kling nguyên vẹn.
+KY_TU_MIN, KY_TU_MAX = 2000, 2500
 _CAM_TU_LOAT: list = []    # từ đã mòn trong loạt đang chạy; `main` nạp, `cham` đọc
 # Chữ thuộc về khuôn prompt hoặc về căn nhà thì lặp là ĐÚNG — cấm chúng là cấm nhầm.
 _BO_QUA = {"static", "shot", "level", "wide", "kitchen", "living", "backyard", "garage", "porch",
            "front", "table", "floor", "wooden", "camera", "counter", "couch", "coffee", "house",
            "while", "which", "their", "there", "about", "where", "holding", "standing"}
+# Đây vẫn gần GẤP ĐÔI trung vị hiện tại (379 ký tự) — tức nới chỗ cho hook viết đủ ý, không
+# phải siết. Chia theo giá trị: hook và setup là chỗ người xem quyết định ở lại hay lướt.
+# Trần TỪNG KHỐI — nay chỉ là chốt chặn chống "một đoạn văn thay vì một câu tả một hình".
+# Ngân sách thật không nằm ở đây nữa: `cham()` ghép prompt của chính tập ấy rồi đo (xem ghi
+# chú trong `cham`). Trần 240 = ~40 từ, gấp rưỡi trần hook 30 từ, đủ rộng để không bắt oan.
+VAN_KE_CHIA = {"hook": 240, "setup": 240, "escalate": 200, "payoff": 200}
+
+DIEM_SAN = 90              # sàn thang 100 điểm (`cham100.py`). Dưới sàn thì bắt AI viết lại chứ
+                           # không xuất. Đặt 90 vì đo được: 30 tập đã chạy nằm ở 67–87 — tức
+                           # "sạch thước cũ" và "hay" là hai chuyện khác nhau, cách nhau đúng
+                           # khoảng ấy.
 VONG_VIET = 8              # số lần cho AI viết lại một tập. Dây chuyền để 3 — hợp cho việc trích
                            # dữ liệu, quá ít cho việc sáng tác: kịch bản hỏng nhịp thường tới lần
                            # thứ tư, thứ năm mới ra được bản dùng được.
+
+CAU_GIU_HINH = "Hold this exact image to the final frame."
+CAU_CHOT_RAO = "The last frame IS the punchline — no settling shot, no fade, exactly {g} seconds."
 
 GHIM_MAY = ("static", "eye-level", "eye level", "low angle", "high angle", "wide shot",
             "medium shot", "close shot", "over-the-shoulder", "locked-off", "top-down")
@@ -118,6 +139,13 @@ CAM_KY = [
 ]
 
 
+# ── SÀN TAY NGHỀ — phần CHUNG của mười kênh, và chỉ chung đúng phần thật sự chung ───────────
+# Đây là những quyết định một xưởng hoạt hình Mỹ chốt trước khi vẽ khung đầu tiên, viết dưới
+# dạng Kling đọc được. Nó là SÀN, không phải phong cách: phong cách nằm ở `style` của từng kênh
+# và mười cái ấy khác hẳn nhau. Để riêng thành hằng số vì hai lý do — sửa tay nghề thì sửa một
+# chỗ, và khi ngân sách prompt căng thì `_bat_buoc` biết chính xác chuỗi nào cần cắt bỏ trước.
+SAN_NGHE = ("hand-drawn 2D animation on twos, held key poses with snappy transitions between them, tapered ink line that thickens on the shadow side, appealing readable silhouettes, generous squash and stretch on the face only")
+
 # ── HỒ SƠ KÊNH ──────────────────────────────────────────────────────────────────────────────
 # Mỗi kênh là một cuốn "sổ tay phim": dàn diễn viên, bối cảnh, nét vẽ, giọng, và loại chuyện kênh
 # ấy kể. Thêm kênh mới = thêm một mục vào đây, không phải sửa mã.
@@ -141,9 +169,31 @@ KENH: dict[str, dict] = {
             "cubicles": "Cubicles: low grey partitions, three desks with old monitors, one dying potted plant on the corner desk.",
             "elevator lobby": "Elevator Lobby: cream walls, two brushed steel elevator doors, a bench nobody sits on, a wall clock.",
         },
-        "style": ("Original 2D cartoon animation, original character designs, clean dark outlines, simple flat shapes, bright saturated colors, expressive facial animation, readable gestures, smooth limited animation, American office break room setting"),
-        "audio": ("Natural American English dialogue, consistent distinct voices for {{vai}}, playful expressive delivery, precise lip sync, clean vocal recording, short conversational pauses, useful ambient sound effects, one clear comedic escalation and a strong final punchline"),
+        "style": (
+            "Flat corporate fluorescent look: everything is built from rectangles — cubicle "
+            "walls, the vending machine, the shoulders of people who have stopped fighting it. "
+            "Thin even line of constant weight, no texture. Palette is beige, grey and one "
+            "aggressive corporate teal accent that appears exactly once per shot. Light is "
+            "even, shadowless and slightly green, the way overhead office light actually is.. "
+            "hand-drawn 2D animation on twos, held key poses with snappy transitions between "
+            "them, tapered ink line that thickens on the shadow side, appealing readable "
+            "silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Flat American office voices for {vai} — nobody raises their voice, everything is "
+            "said pleasantly. Hum of a vending machine and a distant printer under everything. "
+            "Precise lip sync. The laugh is in what is not said, so leave the pauses long"
+        ),
         "dien": "Dave is confident even when obviously wrong; Priya is dry and keeps evidence; Kyle says out loud what everyone is thinking; Marge has seen this exact thing happen twice before",
+        "hai": (
+            "The joke is always what nobody says out loud. These are people being extremely "
+            "polite to someone they are furious with. Status is job title versus actual power — "
+            "the person who controls the supply closet outranks the person who runs the "
+            "meeting. Escalate through procedure: a note becomes a policy becomes a laminated "
+            "sign. Never let anyone actually argue; the moment someone says the real thing, the "
+            "joke is over."
+        ),
+
         "mach": ("Ordinary American office friction blown one size too big: stolen lunches, thermostat wars, reply-all disasters, birthday cake politics, the one broken chair everyone avoids. One tiny workplace dispute escalates and lands on a reversal where the person with the least authority turns out to be right."),
     },
 
@@ -166,9 +216,30 @@ KENH: dict[str, dict] = {
             "kitchen pass": "Kitchen Pass: steel pass-through window, heat lamps above, order tickets clipped in a row.",
             "parking lot": "Parking Lot: cracked asphalt at night, one tall lamp post, the diner window glowing behind.",
         },
-        "style": ("Original 2D cartoon animation, original character designs, clean dark outlines, simple flat shapes, bright saturated colors, expressive facial animation, readable gestures, smooth limited animation, American late-night diner setting"),
-        "audio": ("Natural American English dialogue, consistent distinct voices for {{vai}}, playful expressive delivery, precise lip sync, clean vocal recording, short conversational pauses, useful ambient sound effects, one clear comedic escalation and a strong final punchline"),
+        "style": (
+            "Warm tungsten interior against deep blue night outside the window — the two "
+            "temperatures never mix, they meet at a hard edge. Rounded chrome and vinyl shapes, "
+            "thick brushy ink line that varies in weight. Palette is amber, cherry red vinyl "
+            "and cold window blue. A faint film grain over everything. Light pools on the "
+            "counter and falls off fast.. hand-drawn 2D animation on twos, held key poses with "
+            "snappy transitions between them, tapered ink line that thickens on the shadow "
+            "side, appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Tired, unhurried American voices for {vai} at two in the morning. Coffee machine "
+            "hiss, plate clatter from off-screen, the door bell. Precise lip sync. Everyone "
+            "speaks at the pace of the eleventh hour of a shift, never faster"
+        ),
         "dien": "Rosa is unshockable and deadpan; Chef Nick defends every bad idea he has ever had; Toby is new and over-prepares everything; Walt comments once and is always right",
+        "hai": (
+            "Exhaustion comedy. The staff have seen everything; the customer has seen nothing. "
+            "Status is seniority — how many years, not what rank. Play every absurd request "
+            "completely straight and answer it with logistics, never with outrage. Escalate "
+            "through the ticket: a simple order becomes an impossible one, one substitution at "
+            "a time. The reversal is usually that the strange request was reasonable and "
+            "everyone else was wrong."
+        ),
+
         "mach": ("Late-night American diner friction blown one size too big: an order that makes no sense, a coffee pot that has been on since noon, a regular who wants something not on the menu, a health inspection rumour. One small kitchen dispute escalates and lands on a reversal where the quietest person at the counter knew the answer first."),
     },
 
@@ -191,9 +262,29 @@ KENH: dict[str, dict] = {
             "locker room": "Locker Room: narrow blue lockers, a wooden bench down the middle, one flickering light.",
             "front desk": "Front Desk: white counter with a card scanner, a jar of protein bars, a wall of membership photos.",
         },
-        "style": ("Original 2D cartoon animation, original character designs, clean dark outlines, simple flat shapes, bright saturated colors, expressive facial animation, readable gestures, smooth limited animation, American neighborhood gym setting"),
-        "audio": ("Natural American English dialogue, consistent distinct voices for {{vai}}, playful expressive delivery, precise lip sync, clean vocal recording, short conversational pauses, useful ambient sound effects, one clear comedic escalation and a strong final punchline"),
+        "style": (
+            "High-key bright and hard-edged: rubber mat charcoal, chrome, and two loud primary "
+            "accents on equipment. Elastic shape language — bodies compress and rebound, "
+            "weights have weight. Bold line that thickens hard under load. Flat top light that "
+            "puts a crisp shadow directly under everyone. Sweat is drawn as three specific "
+            "drops, never a sheen.. hand-drawn 2D animation on twos, held key poses with snappy "
+            "transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Confident, slightly breathless American voices for {vai}. Plate clank, treadmill "
+            "belt, somebody else's headphones leaking. Precise lip sync. Effort sounds are "
+            "small and real, never cartoon strain"
+        ),
         "dien": "Brad gives confident wrong advice; Nia is dry and stronger than everyone; Gary reads every instruction and still gets it wrong; Coach Ed says one sentence and ends the argument",
+        "hai": (
+            "Ego against physics, and physics always wins on camera. Status is what you can "
+            "actually do versus what you are explaining. The loudest advice comes from the "
+            "weakest person in frame, and nobody points it out. Escalate through numbers — the "
+            "weight, the reps, the count — because numbers make the failure exact. The reversal "
+            "belongs to whoever has said the least and lifted the most."
+        ),
+
         "mach": ("American gym friction blown one size too big: the machine somebody is sitting on scrolling their phone, the mystery towel, the guy who counts other people's reps, the mirror selfie. One small gym dispute escalates and lands on a reversal where the least athletic person is the one who was right."),
     },
 
@@ -216,9 +307,29 @@ KENH: dict[str, dict] = {
             "shared kitchen": "Shared Kitchen: small communal kitchen, one microwave, a sink with a permanent stack of dishes.",
             "laundry room": "Laundry Room: two washers, two dryers, a folding counter, a basket somebody left three days ago.",
         },
-        "style": ("Original 2D cartoon animation, original character designs, clean dark outlines, simple flat shapes, bright saturated colors, expressive facial animation, readable gestures, smooth limited animation, American college dorm room setting"),
-        "audio": ("Natural American English dialogue, consistent distinct voices for {{vai}}, playful expressive delivery, precise lip sync, clean vocal recording, short conversational pauses, useful ambient sound effects, one clear comedic escalation and a strong final punchline"),
+        "style": (
+            "Cluttered warm chaos lit by string lights and one laptop screen. Sketchy energetic "
+            "line with visible construction strokes left in. Palette is poster-print primaries "
+            "over cinderblock grey, everything slightly too saturated. Piles read as "
+            "silhouettes, not as detail. Two light sources fighting: warm string lights and "
+            "cold blue screen glow.. hand-drawn 2D animation on twos, held key poses with "
+            "snappy transitions between them, tapered ink line that thickens on the shadow "
+            "side, appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Young American voices for {vai}, overlapping in energy but never in timing. "
+            "Distant hallway noise, a microwave, someone else's music through a wall. Precise "
+            "lip sync. Everything is said at the volume of people who have not slept"
+        ),
         "dien": "Jess is dry and exhausted; Marcus has a confident theory about everything; Ollie takes everything literally; Sam has already made a chart about it",
+        "hai": (
+            "Nobody has money, nobody has slept, and nothing belongs to one person. Status is "
+            "who cleaned last — an authority that expires in a day. Escalate through avoidance: "
+            "the problem is not solved, it is moved, then moved again, until it is somebody's "
+            "bed. Play catastrophe as a mild inconvenience and mild inconvenience as "
+            "catastrophe. The reversal is usually that the disgusting solution actually worked."
+        ),
+
         "mach": ("American college dorm friction blown one size too big: the dish nobody washed, the alarm going off for the fourth time, somebody's food eaten again, a group project at 2am. One small roommate dispute escalates and lands on a reversal where the most chaotic roommate turns out to have been right."),
     },
 
@@ -241,9 +352,29 @@ KENH: dict[str, dict] = {
             "waiting area": "Waiting Area: four plastic chairs, a coffee machine nobody trusts, a window looking into the bay.",
             "shop yard": "Shop Yard: gravel yard outside the roll-up door, two parked cars, a stack of old tyres.",
         },
-        "style": ("Original 2D cartoon animation, original character designs, clean dark outlines, simple flat shapes, bright saturated colors, expressive facial animation, readable gestures, smooth limited animation, American auto repair shop setting"),
-        "audio": ("Natural American English dialogue, consistent distinct voices for {{vai}}, playful expressive delivery, precise lip sync, clean vocal recording, short conversational pauses, useful ambient sound effects, one clear comedic escalation and a strong final punchline"),
+        "style": (
+            "Industrial and grounded: oil-stain browns, steel blue, one safety-orange accent. "
+            "Heavy confident ink line, hard-edged mechanical shapes against soft human ones. "
+            "One strong raking light from the open bay door with visible dust in the beam, and "
+            "deep shadow where it does not reach. Metal reads by a single hard highlight, never "
+            "by gradient.. hand-drawn 2D animation on twos, held key poses with snappy "
+            "transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Unhurried working American voices for {vai}. Air tools two bays over, a radio "
+            "nobody listens to, the specific sound being diagnosed. Precise lip sync. Prices "
+            "are said quietly and land hard"
+        ),
         "dien": "Hank diagnoses a car by listening to it; Rico is quick and learns the hard way; Denise is dry and actually runs the place; Mr. Palmer explains cars to mechanics",
+        "hai": (
+            "Expertise against price. One person can name a sound from across the room; the "
+            "other cannot describe it and cannot afford it. Status is who can diagnose, not who "
+            "owns the car. Escalate through the estimate — each new discovery adds a number, "
+            "and the numbers are always said flatly. Never let the mechanic gloat. The reversal "
+            "is often that the customer's ridiculous description was medically accurate."
+        ),
+
         "mach": ("American auto shop friction blown one size too big: a noise the customer cannot describe, a quote read out loud, a part that costs more than the car, a check engine light ignored for a year. One small repair dispute escalates and lands on a reversal where the simplest explanation was the right one all along."),
     },
 
@@ -266,9 +397,30 @@ KENH: dict[str, dict] = {
             "messy yard": "Messy Yard: long grass, a half-built shed, a plastic chair on its side, a tarp over something unidentified.",
             "driveway": "Driveway: shared concrete driveway strip, two mailboxes on posts, a basketball hoop over one garage.",
         },
-        "style": ("Original 2D cartoon animation, original character designs, clean dark outlines, simple flat shapes, bright saturated colors, expressive facial animation, readable gestures, smooth limited animation, American suburban backyard setting"),
-        "audio": ("Natural American English dialogue, consistent distinct voices for {{vai}}, playful expressive delivery, precise lip sync, clean vocal recording, short conversational pauses, useful ambient sound effects, one clear comedic escalation and a strong final punchline"),
+        "style": (
+            "Bright suburban daylight, and the frame is deliberately symmetrical — the fence "
+            "splits it, one world each side, and the two sides are drawn with the same care so "
+            "the difference reads instantly. Clean medium line. Palette is lawn green, white "
+            "picket, and one clashing accent per yard. Hard midday shadows with crisp edges.. "
+            "hand-drawn 2D animation on twos, held key poses with snappy transitions between "
+            "them, tapered ink line that thickens on the shadow side, appealing readable "
+            "silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Extremely pleasant American voices for {vai} saying unpleasant things. Distant "
+            "sprinkler, a leaf blower that stops at the worst moment, birds. Precise lip sync. "
+            "Nobody ever sounds angry"
+        ),
         "dien": "Ron measures the lawn and the fence; Deb is unbothered on purpose; Chad helps and makes it worse; Mrs. Okafor sees everything and comments once",
+        "hai": (
+            "Territorial war conducted entirely through politeness. Every attack is a favour "
+            "and every favour is an attack. Status is whose yard is winning, judged by a "
+            "standard nobody has agreed on. Escalate through escalating niceness — the "
+            "friendlier the line, the worse the intent. The fence is the joke: it decides what "
+            "is a problem. The reversal is usually that the neighbour was doing something "
+            "completely innocent."
+        ),
+
         "mach": ("American suburban neighbor friction blown one size too big: a branch over the fence, a package delivered to the wrong porch, a leaf blower at seven in the morning, a fence painted one inch onto the wrong side. One polite dispute escalates and lands on a reversal where the neighbor everyone blamed was not responsible at all."),
     },
 
@@ -291,9 +443,30 @@ KENH: dict[str, dict] = {
             "hallway": "Hallway: pale green corridor, three closed exam-room doors, a wheeled blood pressure stand.",
             "exam room": "Exam Room: paper-covered exam table, a stool on wheels, a poster of a diagram on the wall.",
         },
-        "style": ("Original 2D cartoon animation, original character designs, clean dark outlines, simple flat shapes, bright saturated colors, expressive facial animation, readable gestures, smooth limited animation, American clinic waiting room setting"),
-        "audio": ("Natural American English dialogue, consistent distinct voices for {{vai}}, playful expressive delivery, precise lip sync, clean vocal recording, short conversational pauses, useful ambient sound effects, one clear comedic escalation and a strong final punchline"),
+        "style": (
+            "Clinical and calm on the surface: sea-glass mint, clipboard white, pale wood. Thin "
+            "clean line with no texture at all. Waiting-room symmetry — chairs in a row, "
+            "everything aligned, which makes one thing out of place scream. Soft even light "
+            "with a faint cool cast and almost no shadow.. hand-drawn 2D animation on twos, "
+            "held key poses with snappy transitions between them, tapered ink line that "
+            "thickens on the shadow side, appealing readable silhouettes, generous squash and "
+            "stretch on the face only"
+        ),
+        "audio": (
+            "Warm, endlessly patient American voices for {vai}. A phone that rings and is never "
+            "answered, a printer, the specific squeak of a chair. Precise lip sync. The patient "
+            "voice never cracks, which is the joke"
+        ),
         "dien": "Carla has heard every excuse twice; Trent follows the form even when it makes no sense; Bev arrives with a diagnosis she found online; Dr. Shah is dry and running late",
+        "hai": (
+            "A system against a person who needs something from it. Status is who holds the "
+            "form. The staff are not villains — they are the third-most-trapped people in the "
+            "room. Escalate through repetition: the same question asked a fourth time, in a "
+            "slightly different way. Never let the desk lose its temper. The reversal is "
+            "usually that the absurd rule exists for a reason nobody in the room could have "
+            "guessed."
+        ),
+
         "mach": ("American clinic front-desk friction blown one size too big: a form asking the same question four times, an insurance card that expired, a patient who is early for next week, a waiting room television nobody can turn off. One small paperwork dispute escalates and lands on a reversal where the rule everyone was arguing about does not exist."),
     },
 
@@ -316,9 +489,29 @@ KENH: dict[str, dict] = {
             "gas station": "Gas Station: fuel pump island under a bright canopy, the sedan parked at pump three, a convenience store behind.",
             "rest stop": "Rest Stop: a picnic table on grass beside a parking lot, a vending machine shelter, the sedan parked nearby.",
         },
-        "style": ("Original 2D cartoon animation, original character designs, clean dark outlines, simple flat shapes, bright saturated colors, expressive facial animation, readable gestures, smooth limited animation, American car interior on a highway setting"),
-        "audio": ("Natural American English dialogue, consistent distinct voices for {{vai}}, playful expressive delivery, precise lip sync, clean vocal recording, short conversational pauses, useful ambient sound effects, one clear comedic escalation and a strong final punchline"),
+        "style": (
+            "Car interior, horizontal composition, and the light MOVES — warm dashboard glow "
+            "inside against cool sky outside, with scenery sliding past the windows at a "
+            "constant speed. Medium line, soft rounded upholstery shapes. Palette is faded "
+            "upholstery beige, highway grey and whatever colour the sky is doing. Everyone is "
+            "framed by a headrest.. hand-drawn 2D animation on twos, held key poses with snappy "
+            "transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Close, slightly boxed-in American voices for {vai} — a car interior is a small "
+            "room. Constant tyre hum, indicator tick, one song nobody agreed on. Precise lip "
+            "sync. Nobody can leave, so nobody can end a conversation"
+        ),
         "dien": "Ted refuses to stop for anything; Anne is dry and holds the map; Ellie narrates everything out loud; Grandma Rue produces exactly what is needed from her bag",
+        "hai": (
+            "Confinement comedy: four people, one small room, and it is moving. Status is who "
+            "holds the wheel versus who holds the map, and those are different powers. Escalate "
+            "through distance — every mile makes the disagreement more expensive to fix. Nobody "
+            "can walk out, so arguments do not end, they get parked and reopened. The reversal "
+            "is usually visible through a window that one person has been refusing to look at."
+        ),
+
         "mach": ("American road-trip friction blown one size too big: a wrong exit taken on purpose, a gas gauge argument, control of the music, somebody needing a bathroom eight minutes after the last stop. One small car dispute escalates and lands on a reversal where the person in the back seat was right about the route."),
     },
 
@@ -342,9 +535,30 @@ KENH: dict[str, dict] = {
             "hallway": "Hallway: narrow hall with a coat rack, a leash hanging on a hook, a mat by the front door.",
             "back garden": "Back Garden: small fenced garden, patchy grass, a half-buried tennis ball, a garden chair.",
         },
-        "style": ("Original 2D cartoon animation, original character designs, clean dark outlines, simple flat shapes, bright saturated colors, expressive facial animation, readable gestures, smooth limited animation, American home living room with pets setting"),
-        "audio": ("Natural American English dialogue, consistent distinct voices for {{vai}}, playful expressive delivery, precise lip sync, clean vocal recording, short conversational pauses, useful ambient sound effects, one clear comedic escalation and a strong final punchline"),
+        "style": (
+            "Shot from about knee height, because that is where the cast lives — humans are "
+            "often just legs and a voice. Soft rounded shape language, toy-bright saturated "
+            "palette, and a fine broken line that reads as fur on the animals and stays solid "
+            "on the furniture. Warm low sun through a window, long shadows across the floor.. "
+            "hand-drawn 2D animation on twos, held key poses with snappy transitions between "
+            "them, tapered ink line that thickens on the shadow side, appealing readable "
+            "silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Human American voices for {vai} heard from floor level, plus animal sounds only — "
+            "no talking animals. Collar tags, claws on floorboards, a bag being investigated. "
+            "Precise lip sync on the humans; the animals act with the face"
+        ),
         "dien": "Duke is confident every plan will work; Cleo watches and judges silently; Nugget observes everything from the cage; Owen over-researches; Rae already knows which animal is responsible",
+        "hai": (
+            "Animal logic played completely straight — the pets have a plan and it is "
+            "internally consistent. Status is which animal the human believes. Never "
+            "anthropomorphise with speech; the whole joke is that they cannot explain "
+            "themselves and do not need to. Escalate through evidence accumulating in the wrong "
+            "place. The reversal is usually that the animal was right and the human has just "
+            "noticed."
+        ),
+
         "mach": ("American pet-household friction blown one size too big: something knocked off a counter, a bin investigated, a vet appointment sensed in advance, one bowl eaten from twice. One small animal dispute escalates and lands on a reversal where the smallest and quietest pet caused all of it."),
     },
 
@@ -399,16 +613,19 @@ KENH: dict[str, dict] = {
         },
 
         "style": (
-            "Original 2D cartoon animation, original character designs, clean dark outlines, "
-            "simple flat shapes, bright saturated colors, expressive facial animation, readable "
-            "gestures, smooth limited animation, suburban American setting"
+            "Classic American family-sitcom warmth: cream walls, honey oak, and one saturated "
+            "accent per room. Medium confident line that tapers at the ends of a stroke. "
+            "Staging is theatrical — the room reads like a set, with a clear centre and clear "
+            "wings. Warm key light from a practical window, gentle fill, one soft shadow per "
+            "figure.. hand-drawn 2D animation on twos, held key poses with snappy transitions "
+            "between them, tapered ink line that thickens on the shadow side, appealing "
+            "readable silhouettes, generous squash and stretch on the face only"
         ),
         # {vai} do mã điền theo người CÓ MẶT trong tập — xem chú thích ở `_ghep`.
         "audio": (
-            "Natural American English dialogue, consistent distinct voices for {vai}, playful "
-            "expressive delivery, precise lip sync, clean vocal recording, short conversational "
-            "pauses, useful ambient sound effects, one clear comedic escalation and a strong "
-            "final punchline"
+            "Familiar, overlapping American family voices for {vai} — people who interrupt each "
+            "other because they have known each other forever. House ambience: a fridge hum, a "
+            "screen door, a TV in another room. Precise lip sync"
         ),
         "dien": (
             "Mike is confident even when obviously wrong; Lisa is dry and practical; Tommy is "
@@ -417,6 +634,15 @@ KENH: dict[str, dict] = {
         ),
 
         # Mạch kênh: thứ quyết định tập nào HỢP kênh, tập nào lạc. Dùng làm đề bài cho AI.
+        "hai": (
+            "Domestic friction where the stakes are absurdly small and the commitment is "
+            "absolute. Status is who is currently right, and it changes hands within the scene. "
+            "The confident one is always wrong and never learns; the quiet one is always right "
+            "and never says so. Escalate through effort — the wrong solution gets more "
+            "elaborate, never abandoned. The reversal belongs to the family member with the "
+            "least authority in the room."
+        ),
+
         "mach": (
             "Everyday American household friction blown one size too big: chores, groceries, "
             "thermostats, streaming passwords, school runs, weekend projects, holiday visits. "
@@ -897,9 +1123,50 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
             e.append(f"thiếu khối {khoa!r}")
 
     hook = str(d.get("hook") or "")
-    if len(hook.split()) < 10:
-        e.append(f"hook {len(hook.split())} từ — 1,5 giây đầu phải tả một hình ảnh SAI TRÁI thấy "
-                 f"ngay, đủ chi tiết để Kling dựng được khung")
+    # Bỏ tiền tố ghim máy trước khi đếm: nó là chỉ thị máy quay, không phải bức tranh.
+    _hinh = re.sub(r"^[^:]{0,40}(shot|angle)\s*:\s*", "", hook, flags=re.I)
+    # 1/9 — NÂNG SÀN HOOK TỪ 10 LÊN 16 TỪ. Đo 30 tập cũ: trung vị 73 ký tự (~12 từ), tức vừa đủ
+    # qua sàn cũ và vừa đủ cụt. "A bulging trash bag teeters on the counter" cho Kling một khung
+    # vẽ được, nhưng không cho người xem lý do nào để ở lại giây thứ hai — không biết ai gây ra,
+    # không biết sắp hỏng chuyện gì. Sàn mới đòi đủ BA VẾ, và trần 30 từ để nó vẫn là MỘT hình.
+    if len(_hinh.split()) < 16:
+        e.append(f"hook {len(_hinh.split())} từ (không tính lời ghim máy) — cụt. Phải 16–30 từ và đủ ba vế: vật gì sai · "
+                 f"sai chỗ nào · một chi tiết cho thấy CÓ NGƯỜI gây ra. Đây là toàn bộ lý do "
+                 f"người xem ở lại giây thứ hai")
+    elif len(_hinh.split()) > 30:
+        e.append(f"hook {len(_hinh.split())} từ — quá 30 thì không còn là MỘT hình ảnh nữa, "
+                 f"Kling phải chọn vẽ cái nào và nó chọn sai")
+
+    # Văn kể dài quá thì prompt không còn chỗ cho hàng rào DO NOT. Chặn ở khâu VIẾT, vì tới khâu
+    # ghép thì chỉ còn hai lựa chọn tồi: cắt chuyện, hoặc mất hàng rào.
+    for _k, _tr in VAN_KE_CHIA.items():
+        if len(str(d.get(_k) or "")) > _tr:
+            e.append(f"khối {_k!r} dài {len(str(d[_k]))} ký tự — trần {_tr}. Đây là MỘT câu tả "
+                     f"một hình, không phải một đoạn văn")
+
+    # ── ĐO THẲNG PROMPT THẬT, THÔI ĐO GIÁN TIẾP QUA SỐ KÝ TỰ VĂN KỂ ────────────────────────
+    # 1/9 — Chỗ này từng là một trần cứng cho tổng văn kể, và em đã đặt nhầm nó bốn lần liên
+    # tiếp (800 → 720 → 670 → 640 → 600), lần nào cũng đo ở một ngữ cảnh hơi lệch. Cả bốn lần
+    # đều sai theo cùng một kiểu: TRẦN CỨNG là phép đo GIÁN TIẾP.
+    #
+    # Chỗ tốn ký tự lớn nhất không phải văn kể, mà là SỐ NHÂN VẬT — mỗi vai là ~150 ký tự khoá
+    # hình. Một tập hai người có thừa chỗ cho hook 30 từ; một tập bốn người thì không, dù văn
+    # kể y hệt. Một con số chung không thể đúng cho cả hai, nên đừng tìm con số ấy nữa.
+    #
+    # Ghép thử prompt của CHÍNH tập này rồi đo. Chính xác tuyệt đối, và câu báo lỗi nói được
+    # cách sửa nào rẻ hơn: bớt một người thường rẻ hơn cắt hook.
+    try:
+        _p = prompt(kenh, d, giay)
+        if len(_p) > KY_TU_MAX or not _p.rstrip().endswith("seconds."):
+            _co = len([t for t in hs["vai"] if t in " ".join(str(d.get(k) or "") for k in
+                       ("hook", "setup", "escalate", "payoff"))
+                       or any(str((l or {}).get("who") or "") == t for l in lines
+                              if isinstance(l, dict))])
+            e.append(f"prompt ghép ra {len(_p)} ký tự, quá trần {KY_TU_MAX} của Kling — hàng rào "
+                     f"DO NOT sẽ bị cắt. Tập này có {_co} nhân vật; bớt một người rẻ hơn cắt "
+                     f"hook, vì mỗi vai tốn ~150 ký tự khoá hình")
+    except Exception:
+        pass
     # Bài học 09/08 đã trả giá bên kling_studio: hai thứ Kling trôi mạnh nhất là GÓC MÁY và THỜI
     # ĐẠI. Xin "góc nhìn người đứng dưới đất" mà không ghim thì ra cảnh quay flycam. Luật ấy đã
     # có ở tệp kia; để rơi ở tệp này là học lại một bài đã trả tiền.
@@ -908,11 +1175,15 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
                  "vào hook hoặc setup, không thì Kling tự chọn và hay ra cảnh drone")
 
     pay = str(d.get("payoff") or "").lower()
-    if not any(k in pay for k in ("reveal", "turn", "revers", "cut to", "reaction", "realiz",
-                                  "holds up", "opens", "points", "walks in", "drops", "lifts",
-                                  "pulls", "steps in", "appears", "hands", "shows", "swaps",
-                                  "behind", "underneath", "was never", "already", "the whole")):
-        e.append("payoff không có cú lật — phải ĐẢO tình thế, không phải tả thêm cảm xúc")
+    # 1/9 — Trước đây chỗ này giữ một danh sách 20 từ khoá riêng ("reveal", "pulls", "lifts"…).
+    # Nó vừa lỏng vừa chặt sai chỗ: "Tommy pulls the chair away and the plates settle safely"
+    # ĐI QUA (có chữ "pulls") trong khi không có cú lật nào, còn "Buddy walks down the row
+    # knocking each tool over" BỊ CHẶN vì không từ nào trong danh sách khớp. Nay hỏi thẳng bảng
+    # HO_LAT — cùng bảng mà cổng chống trùng và thang 100 điểm đang dùng.
+    if ho_lat(d) == "khác" and not re.search(
+            r"\b(reveal\w*|turns? out|was never|all along|instead|behind (him|her|them))\b", pay):
+        e.append("payoff không có cú lật — phải ĐẢO tình thế (ai đó bước vào, vật hoá ra là thứ "
+                 "khác, thủ phạm lộ diện, hậu quả đuổi kịp), không phải tả thêm cảm xúc")
 
     ca = " ".join(str(d.get(k) or "") for k in ("hook", "setup", "escalate", "payoff")).lower()
     ca += " " + " ".join(str((l or {}).get("say") or "") for l in lines if isinstance(l, dict)).lower()
@@ -954,144 +1225,256 @@ def cham(d: dict, kenh: str, giay: float) -> list[str]:
 
 
 # ── GHÉP PROMPT HOÀN CHỈNH ──────────────────────────────────────────────────────────────────
+# 1/9 — DỰNG LẠI THEO NGÂN SÁCH, không theo "ghép rồi co".
+#
+# Bản cũ ghép hết rồi hạ mức chi tiết cho tới khi lọt trần. Nghe hợp lý, nhưng nó cho phép một
+# kết cục không được phép xảy ra: mức 3 vẫn tràn thì hàm TRẢ VỀ BẢN TRÀN, và Kling cắt đuôi —
+# đuôi là DO NOT. Đo trên 30 tệp đã xuất: cả 30 đều rơi đúng vào kết cục ấy.
+#
+# Bản này chia ngân sách TRƯỚC. Ba khối không bao giờ nhường chỗ cho ai:
+#     CHARACTER LOCK · TIMELINE · DO NOT
+# vì chúng quyết định (1) nhân vật có trôi không, (2) chuyện có kể đúng nhịp không, (3) hình có
+# thừa ngón/hiện chữ không. Phần TẢ THÊM chỉ tiêu chỗ CÒN LẠI, và tiêu theo thứ tự giá trị —
+# hết ngân sách thì khối cuối bảng đơn giản là không được chèn, chứ không bị cắt nửa chừng.
 def prompt(kenh: str, tap: dict, giay: float, so: int = 0, bien: int = 1,
            tran: int = KY_TU_MAX, day: bool = False) -> str:
-    """Ghép prompt gửi Kling. `day=False` bản gọn đã chạy tốt; `day=True` bản chỉ đạo đầy đủ.
+    """Ghép prompt gửi Kling, bảo đảm ≤ `tran` ký tự với hàng rào DO NOT còn nguyên vẹn.
 
-    Bốn khối khoá lấy từ hồ sơ, KHÔNG qua tay AI. Nếu dài quá thì hạ MỨC CHI TIẾT theo đúng thứ
-    tự giá trị: phần tả bối cảnh rườm rà đi trước, rồi phần dặn cách diễn — còn dàn nhân vật,
-    chuyện của tập, và hàng rào RENDER thì không bao giờ đụng tới.
-
-    HAI BẢN, VÀ VÌ SAO (30/8)
-    -------------------------
-    Anh dặn "prompt 2500–3000 từ". Con số ấy khớp chính xác với KÝ TỰ của bộ 500 prompt anh đang
-    chạy: đo được 424 từ / 2.970 ký tự. Còn 2.500 TỪ thì vào khoảng 17.000 ký tự — gấp gần sáu
-    lần, và ghi chú đầu tệp này (viết từ chính bộ 500 ấy) nói rõ Kling CẮT ĐUÔI prompt quá dài.
-    Đuôi là khối DO NOT và RENDER REQUIREMENTS, tức đúng hàng rào chặn "thừa ngón, thêm tay,
-    chữ loằng ngoằng". Prompt dài hơn mà mất hàng rào thì hình XẤU ĐI, ngược hẳn ý anh.
-
-    Tôi không tự quyết thay anh, cũng không đoán bừa giới hạn của Kling 3.0 (tôi không có tài
-    khoản để đo). Nên làm cả hai và để anh chọn:
-      · `day=False` (mặc định) — bản gọn 2.400–3.000 KÝ TỰ, đúng khuôn bộ 500 đang chạy tốt.
-      · `day=True`  — bản đầy đủ 2.500–3.000 TỪ, thêm bảy khối chỉ đạo hình ảnh (máy quay, ánh
-        sáng, màu, diễn xuất, tiếng động, hook, nối cảnh). Không co, không cắt.
-    Nếu Kling nhận trọn bản đầy thì dùng bản đầy: nó nói rõ TRÔNG NHƯ THẾ NÀO, và mỗi câu bỏ
-    trống trong prompt là một chỗ máy tự bịa — nguồn gốc của mọi tập trông khác nhau.
+    `day` giữ lại cho tương thích ngược và KHÔNG còn tác dụng: bản "đầy đủ 2.500 từ" sinh ra
+    16.834 ký tự, gấp gần bảy lần trần thật của Kling, nên nó không phải một lựa chọn — nó là
+    một prompt bị cắt cụt. Mười sáu khối chỉ đạo hình ảnh của bản ấy không mất đi: chúng thành
+    KHO TUỲ CHỌN của bộ chia ngân sách dưới đây, và được chèn tới đâu ngân sách cho phép.
     """
-    if day:
-        return _ghep(kenh, tap, giay, so, bien, 0, day=True)
+    # Chọn mức nén theo GIÁ TRỊ TỔNG, không theo "mức ít nén nhất mà còn lọt trần".
+    # 1/9 — Quy tắc tham cũ lấy mức 0 vì nó vừa đủ lọt (2.435/2.500) rồi không còn chỗ cho khối
+    # nào — đo được 0/328 khuôn có nổi một khối tả thêm. Một thân nén nhẹ CỘNG bốn khối chỉ đạo
+    # đáng giá hơn hẳn một thân đầy đủ đứng trơ. Nên thử cả bốn mức và lấy mức chèn được NHIỀU
+    # khối nhất; hoà thì lấy mức ít nén hơn.
+    _kho = _kho_tuy_chon(kenh, tap, giay)
+    tot, best = -1, None
     for muc in (0, 1, 2, 3):
-        r = _ghep(kenh, tap, giay, so, bien, muc)
-        if len(r) <= tran or muc == 3:
-            return r
-    return r
+        bb, rao = _bat_buoc(kenh, tap, giay, so, bien, muc)
+        lo, ra = "\n".join(bb), "\n".join(rao)
+        if len(lo) + len(ra) + 2 > tran:
+            continue
+        con, dem = tran - len(lo) - len(ra) - 2, 0
+        for kh in _kho:
+            t = "\n".join(kh).strip()
+            if t and len(t) + 3 <= con:
+                dem += 1
+                con -= len(t) + 3
+        if dem > tot:
+            tot, best = dem, (bb, rao, lo, ra)
+    if best:
+        bb, rao, lo, ra = best
+    else:
+        bb, rao = _bat_buoc(kenh, tap, giay, so, bien, 3)
+        lo, ra = "\n".join(bb), "\n".join(rao)
+    # BẢO ĐẢM CỨNG. Mức 3 vẫn tràn nghĩa là kịch bản viết quá dài — `cham()` chặn chuyện đó ở
+    # khâu viết. Nhưng nếu một kịch bản cũ lọt qua, KHÔNG được trả về bản tràn: Kling sẽ cắt
+    # đuôi và mất hàng rào. Cắt bớt VĂN KỂ ở ranh giới câu, và nói ra là đã cắt.
+    if len(lo) + len(ra) + 2 > tran:
+        tap = dict(tap)
+        for _ in range(40):
+            k = max(("hook", "setup", "escalate", "payoff"),
+                    key=lambda x: len(str(tap.get(x) or "")))
+            cau = re.split(r"(?<=[.!?]) ", str(tap.get(k) or "").strip())
+            if len(cau) < 2:
+                break
+            tap[k] = " ".join(cau[:-1])
+            bb, rao = _bat_buoc(kenh, tap, giay, so, bien, 3)
+            lo, ra = "\n".join(bb), "\n".join(rao)
+            if len(lo) + len(ra) + 2 <= tran:
+                break
+        sys.stderr.write(f"⚠️  {tap.get('title')!r}: văn kể quá dài, đã cắt bớt câu để giữ hàng "
+                         f"rào DO NOT. Viết ngắn lại ở khâu kịch bản.\n")
+        lo = lo[:tran - len(ra) - 2]      # chốt chặn cuối cùng, không bao giờ chạm tới trong thực tế
+    con = tran - len(lo) - len(ra) - 2
+    them: list[str] = []
+    for kh in _kho_tuy_chon(kenh, tap, giay):
+        t = "\n".join(kh).strip()
+        if t and len(t) + 3 <= con:
+            them.append(t)
+            con -= len(t) + 3
+    return lo + "\n" + "".join(x + "\n\n" for x in them) + ra
 
 
-def _ghep(kenh: str, tap: dict, giay: float, so: int, bien: int, muc: int,
-          day: bool = False) -> str:
-    hs = ho_so(kenh)
-    n = nhip(giay)
-    g = f"{giay:g}"
-    ten = str(tap.get("title") or "Untitled")
+def _nen_vai(mo: str) -> str:
+    """Nén CHARACTER LOCK: giữ phần Kling VẼ ĐƯỢC, bỏ phần Kling không vẽ được.
 
-    # Thoại xếp theo thứ tự, gộp vào khối setup — đúng cách bộ 500 đang làm và Kling đọc tốt.
-    tho = []
+    "confident, clumsy, optimistic" là TÍNH NẾT — nó thuộc khối PERFORMANCE, không thuộc khối
+    khoá hình. Để ở đây tốn ~35 ký tự mỗi vai mà không ghim thêm một pixel nào."""
+    return re.split(r";\s*", mo, 1)[0].rstrip(".") + "."
+
+
+def _nen_phong(ta: str) -> str:
+    """Nén SET: giữ ba mốc đầu — ba thứ mắt nhận ra căn phòng ngay."""
+    m = ta.split(", ")
+    return ", ".join(m[:3]).rstrip(".") + "."
+
+
+def _co_mat(hs: dict, tap: dict) -> list:
+    """Ai THỰC SỰ có mặt trong tập này. Tả người vắng mặt là mời Kling vẽ họ vào khung."""
+    ke = " ".join(str(tap.get(k) or "") for k in ("hook", "setup", "escalate", "payoff"))
+    ai = [str((l or {}).get("who") or "") for l in (tap.get("lines") or []) if isinstance(l, dict)]
+    ra = [t for t in hs["vai"] if t in ke or t in ai]
+    return ra or list(hs["nhan_vat"])
+
+
+def _dien_loc(hs: dict, comat: list) -> str:
+    """Chỉ giữ vế chỉ đạo diễn xuất của người CÓ MẶT.
+
+    1/9 — `hs["dien"]` tả cả năm vai. Bản cũ chèn nguyên chuỗi, nên một tập chỉ có Tommy và
+    Grandpa Joe vẫn nhắc tên Mike, Lisa và Buddy ngay giữa prompt. KLING_CACH_DUNG.md đã cảnh
+    báo đúng cơ chế này cho khối CHARACTER LOCK ("tả Grandpa Joe ở tập không có ông là tự chuốc
+    thêm một cụ già đứng thừa ở nền") — chỉ là chưa ai áp luật ấy cho khối PERFORMANCE.
+    """
+    ve = [v.strip().rstrip(".") for v in str(hs.get("dien") or "").split(";")
+          if any(t in v for t in comat)]
+    return "; ".join(ve) + "." if ve else ""
+
+
+def _thoai_theo_nhip(tap: dict, khoi: list[str]) -> dict:
+    """Xếp mỗi lượt thoại vào ĐÚNG khối thời gian của nó.
+
+    1/9 — Bản cũ dồn TOÀN BỘ thoại vào một khối (`setup`). Ở clip 10 giây điều đó có nghĩa là
+    câu chốt được nói ở giây 5,7 trong khi cú lật xảy ra ở giây 8,2: người xem nghe câu chốt
+    trước khi thấy thứ nó chốt, và 4,3 giây cuối không có lời nào. Cả hai đều là lỗi nhịp mà
+    không thước nào bắt được, vì thước đo SỐ TỪ chứ không đo CHỖ ĐẶT.
+
+    Lượt nào không ghi `beat` thì về khối mặc định — giữ nguyên hành vi cũ cho kịch bản cũ.
+    """
+    mac = "setup" if "setup" in khoi else "payoff"
+    ra: dict[str, list[str]] = {k: [] for k in khoi}
     for ln in (tap.get("lines") or []):
         if not isinstance(ln, dict):
             continue
         who, say = str(ln.get("who") or ""), str(ln.get("say") or "").strip()
-        act = str(ln.get("act") or "").strip()
+        act = str(ln.get("act") or "").strip() or "says"
+        b = str(ln.get("beat") or "")
+        b = b if b in khoi else mac
         if say:
-            tho.append(f'{who} {act or "says"}: “{say}”')
+            ra[b].append(f'{who} {act}: “{say}”')
         elif act:
-            tho.append(f"{who} {act}")
-    thoai = " ".join(tho)
+            ra[b].append(f"{who} {act}")
+    return ra
 
-    r = [f"VIDEO {so:03d} — {ten} — Variation {bien}", ""]
 
-    ke = " ".join(str(tap.get(k) or "") for k in ("hook", "setup", "escalate", "payoff"))
-    comat = [t for t in hs["vai"]
-             if t in ke or any(str((l or {}).get("who") or "") == t for l in (tap.get("lines") or []))]
-    comat = comat or list(hs["nhan_vat"])
-    r.append(f"CHARACTER LOCK — KEEP IDENTICAL ACROSS EVERY EPISODE OF {hs['ten']}:")
-    r.append("\n".join(hs["nhan_vat"][t] for t in comat))
-    r.append(f"Only these characters appear: {', '.join(comat)}. No other people in frame.")
-    r.append("Keep exact same faces, body proportions, hair, clothing, colors, ages, "
-             "personalities, and voice identity in every episode. Never redesign, recolor, age, "
-             "or replace the characters.")
+def _bat_buoc(kenh: str, tap: dict, giay: float, so: int, bien: int,
+              muc: int) -> tuple[list[str], list[str]]:
+    """Khối KHÔNG BAO GIỜ bị bỏ. Trả (thân, hàng rào) để bộ chia ngân sách giữ hàng rào riêng."""
+    hs = ho_so(kenh)
+    n = nhip(giay)
+    g = f"{giay:g}"
+    ten = str(tap.get("title") or "Untitled")
+    comat = _co_mat(hs, tap)
+    phong = str(tap.get("room") or "").strip().lower()
+    if phong not in hs["phong"]:
+        phong = next(iter(hs["phong"]))
+
+    r = [f'{hs["ten"]} EP{so:03d} “{ten}” — Variation {bien} — original 2D cartoon, '
+         f'vertical {hs["ty_le"]}, exactly {g} seconds.', ""]
+
+    r.append(f"CHARACTER LOCK — identical in every episode of {hs['ten']}, never redesign, "
+             f"recolor, age or replace:")
+    r += [(hs["nhan_vat"][t] if muc < 1 else _nen_vai(hs["nhan_vat"][t])) for t in comat]
+    r.append(f"Only {', '.join(comat)} are in frame. No other people, no background extras.")
     r.append("")
 
-    phong = str(tap.get("room") or "kitchen").strip().lower()
-    r.append("LOCATION LOCK — KEEP IDENTICAL ACROSS EVERY EPISODE:")
-    ta = hs["phong"].get(phong) or next(iter(hs["phong"].values()))
-    if muc >= 1:
-        # Mức 1: giữ TÊN phòng, những mốc mắt nhận ra ngay, VÀ mọi mốc kịch bản đang nhắc tới.
-        # Bỏ mốc đang được dùng là co vào đúng chỗ không được đụng: Kling đọc chuyện có cái đèn
-        # mà bối cảnh không có cái đèn nào thì nó tự đặt một cái, mỗi tập một chỗ.
-        _ke = (ke + " " + " ".join(str((l or {}).get("say") or "")
-                                   for l in (tap.get("lines") or []))).lower()
-        _m = ta.split(", ")
-        giu = _m[:3] + [x for x in _m[3:]
-                        if any(w in _ke for w in re.findall(r"[a-z]{4,}", x.lower()))]
-        ta = ", ".join(dict.fromkeys(giu)).rstrip(".") + "."
-    r.append(hs["nha"] if muc < 1 else hs["nha"].split(". ")[0] + ". Never redesign or recolor the house.")
-    r.append(ta)
+    r.append("LOCATION LOCK — identical in every episode, never rearrange:")
+    ta = hs["phong"][phong]
+    r.append(ta if muc < 2 else _nen_phong(ta))
+    if muc < 1:
+        r.append(hs["nha"].split(". ")[0] + ". Never redesign or recolor it.")
+    # Danh sách "no pan / no zoom / no drone" đã nằm trong hàng rào — nhắc lại ở đây là 90 ký
+    # tự lặp, và 90 ký tự ấy đúng bằng nửa cái hook.
+    r.append("Camera locked off at standing eye level, wide.")
     r.append("")
 
+    # VISUAL STYLE LOCK là khối BẮT BUỘC, không phải khối tả thêm.
+    # 1/9 — Ban đầu để nó ở kho tuỳ chọn và đo được: 0/328 khuôn web chèn nổi nó, vì thân ăn
+    # hết ngân sách trước. Mười kênh vì thế ra cùng một thứ — đúng điều đang phải chữa. Khối
+    # này ngang hàng CHARACTER LOCK: một cái giữ nhân vật khỏi trôi, cái kia giữ KÊNH khỏi trôi.
     r.append("VISUAL STYLE LOCK:")
-    r.append(f"{hs['style'] if muc < 2 else hs['style'].split(',')[0] + ', clean dark outlines, flat bright colors, expressive faces'}, vertical {hs['ty_le']}, exactly {g} seconds. No imitation of an "
-             f"existing show, no recognizable copyrighted characters, no logos, no branded products.")
-    r.append("")
-
-    r.append("AUDIO STYLE LOCK:")
-    nguoi = [t for t in comat if t != "Buddy"] or comat
-    au = hs["audio"].format(vai=", ".join(nguoi)) if muc < 3 else ("Natural American English dialogue, consistent distinct "
-                                      "voices, precise lip sync, one clear comedic escalation "
-                                      "and a strong final punchline")
-    r.append(f"{au}. No subtitles, no captions, no on-screen text.")
+    _st = hs["style"]
+    if muc >= 2:                       # bỏ sàn tay nghề dùng chung, giữ nét riêng của kênh
+        _st = _st.split(". " + SAN_NGHE)[0]
+    if muc >= 3:                       # chỉ còn hai câu đầu — phần nói kênh này TRÔNG ra sao
+        _st = ". ".join(_st.split(". ")[:2])
+    r.append(_st.rstrip(".") + ".")
     r.append("")
 
     r.append("TIMING AND STORY:")
-    _g = _gop(tap, n)
-    _co_setup = any(x[2] == "setup" for x in n)
-    for _a, _b, _ten in n:
-        _mo = _g.get(_ten, "")
-        # Thoại đặt ở khối dựng; clip ngắn không có khối dựng thì thoại về cú chốt.
-        if _ten == ("setup" if _co_setup else "payoff"):
-            _mo = f"{_mo} {thoai}".strip()
-        if _ten == "payoff":
-            _mo += " Hold the final reaction for a fraction of a second."
-        r.append(f"{_a:.1f}–{_b:.1f}s: {_mo.strip()}")
+    gop = _gop(tap, n)
+    tho = _thoai_theo_nhip(tap, [x[2] for x in n])
+    for a, b, k in n:
+        mo = gop.get(k, "")
+        if tho.get(k):
+            mo = f"{mo} {' '.join(tho[k])}".strip()
+        if k == "payoff":
+            mo += " " + CAU_GIU_HINH
+        r.append(f"{a:.1f}–{b:.1f}s: {mo.strip()}")
     r.append("")
 
-    r.append("PERFORMANCE:")
-    if muc < 1:
-        r.append(f"Keep dialogue fast but natural for a {g}-second short. {hs['dien']}. Keep all "
-                 f"spoken English concise enough to fit the timing. Only one character moves at "
-                 f"a time; the others hold a readable pose and react with the face.")
-    else:
-        r.append(f"Fast but natural for {g} seconds. Only one character moves at a time; the "
-                 f"others hold a readable pose and react with the face.")
-    r.append("")
+    # Khối DIALOGUE lặp lại lời thoại đã có trong TIMING. Lặp là CÓ CHỦ Ý — Kling đọc prompt
+    # như văn xuôi và trọng số giảm dần, nên lời cần khớp miệng phải được nhắc gần cuối. Nhưng
+    # nó là 270 ký tự LẶP: khi ngân sách căng, giữ CHUYỆN quan trọng hơn giữ bản lặp. Vì thế nó
+    # nằm ở đầu kho tuỳ chọn, không nằm trong khối bắt buộc.
 
-    # Bảy khối chỉ đạo hình ảnh — chỉ ở bản đầy. Chúng đứng TRƯỚC hàng rào RENDER, để nếu Kling
-    # có cắt đuôi thì phần bị mất là phần tả thêm, không phải phần chặn lỗi.
-    if day:
-        _ph = str(tap.get("room") or next(iter(hs["phong"]), "room"))
-        for _kh in (_hook(tap, n), _cu_may(n, g), _dan_dung(n, hs), _anh_sang(hs, _ph),
-                    _mau(hs), _nghe_hoat_hinh(), _dien_xuat(tap, hs), _thoai_nhip(tap, g),
-                    _tieng_dong(n, hs, _ph), _khung_mau(tap, n, hs), _trang_phuc(hs, comat),
-                    _luat_the_gioi(hs), _noi_canh(hs), _viral_usa(n, g),
-                    _thanh_chat_luong(hs, g), _cam(hs)):
-            r.extend(_kh)
-            r.append("")
+    # Hàng rào. Giữ riêng vì nó là khối DUY NHẤT mà mất đi thì hình hỏng mà không ai biết.
+    rao = ["DO NOT:",
+           "No text in frame at all: captions, subtitles, signs, labels, numbers, logos, brand "
+           "names, packaging print.",
+           "No extra limbs, fused or extra fingers, morphing faces, age drift, clothing change, "
+           "floating feet, objects passing through bodies.",
+           "No camera move: no pan, zoom, dolly, handheld or drone. No imitation of an existing "
+           "show or character. Nobody looks into the lens.",
+           CAU_CHOT_RAO.format(g=g)]
+    return r, rao
 
-    r.append("RENDER REQUIREMENTS:")
-    r.append(f"Exactly {g} seconds, vertical {hs['ty_le']}, crisp clean animation, readable "
-             f"silhouettes, stable character identity, no character morphing, no extra limbs, no "
-             f"text overlays, no subtitles, no watermark, no logos, no branded objects, no "
-             f"recognizable existing characters or settings.")
-    return "\n".join(r)
+
+def _kho_tuy_chon(kenh: str, tap: dict, giay: float) -> list[list[str]]:
+    """Kho khối TẢ THÊM, xếp theo GIÁ TRỊ giảm dần — bộ chia ngân sách lấy từ trên xuống.
+
+    Thứ tự không tuỳ tiện. Trên cùng là những khối trả lời câu hỏi "Kling sẽ tự bịa gì nếu
+    không ai nói?": cách diễn (nó tự cho ai cũng cử động), khuôn hình chốt (nó tự chọn cỡ
+    cảnh), nét vẽ (nó trôi về phong cách ảnh chụp). Dưới cùng là những khối dễ chịu nhưng
+    không cứu được tập nào nếu thiếu.
+    """
+    hs = ho_so(kenh)
+    n = nhip(giay)
+    g = f"{giay:g}"
+    comat = _co_mat(hs, tap)
+    ph = str(tap.get("room") or next(iter(hs["phong"]), "room")).lower()
+    if ph not in hs["phong"]:
+        ph = next(iter(hs["phong"]))
+    dien = _dien_loc(hs, comat)
+    noi = [f'{l["who"]}: “{str(l["say"]).strip()}”' for l in (tap.get("lines") or [])
+           if isinstance(l, dict) and str(l.get("say") or "").strip()]
+    return [
+        (["DIALOGUE — these exact words, natural American English, precise lip sync, mouth "
+          "still during silence:"] + noi) if noi else [],
+        ["PERFORMANCE:",
+         "Play it completely straight — nobody in the scene knows this is funny, nobody performs "
+         "the joke. Only one character moves at a time; the others hold a readable pose and "
+         "react with the face.",
+         dien],
+        _khung_mau(tap, n, hs),
+        _cu_may(n, g),
+        _viral_usa(n, g),
+        ["AUDIO STYLE LOCK:",
+         hs["audio"].format(vai=", ".join([t for t in comat if t != "Buddy"] or comat))
+         + ". No subtitles, no captions, no on-screen text."],
+        _anh_sang(hs, ph),
+        _mau(hs),
+        _tieng_dong(n, hs, ph),
+        _trang_phuc(hs, comat),
+        _dien_xuat(tap, hs),
+        _luat_the_gioi(hs),
+        _nghe_hoat_hinh(),
+        _noi_canh(hs),
+        _thanh_chat_luong(hs, g),
+    ]
 
 
 # ── SINH KỊCH BẢN BẰNG AI ───────────────────────────────────────────────────────────────────
@@ -1101,7 +1484,7 @@ SCHEMA = """Return ONLY a JSON object with exactly these fields:
 {
   "title":    "3-5 word episode title, no punctuation",
   "room":     "ROOM_LIST",
-  "hook":     "one sentence describing the WRONG-LOOKING IMAGE the viewer sees in the first moment. A visual, not a feeling. No dialogue here.",
+  "hook":     "16-30 words. The WRONG-LOOKING IMAGE the viewer sees in the first moment, containing all three of: the wrong object, what is wrong with it, and one detail proving somebody caused it. Pin the camera. A picture a storyboard artist could draw, not a feeling. No dialogue here.",
   "setup":    "one sentence of physical staging: who is where, doing what, camera angle pinned (static eye-level shot / low angle / wide shot)",
   "lines":    [{"who":"Mike","say":"spoken words","act":"says|snaps|whispers|mutters|announces"}],
   "escalate": "one sentence: the reaction grows, one small physical gag, one beat of silence",
@@ -1174,6 +1557,11 @@ def _sys(kenh: str, giay: float) -> str:
         f"{hs['ten']}.\n\n"
         f"THE SHOW: {hs['mo_ta']}\n"
         f"WHAT THIS CHANNEL IS ABOUT: {hs['mach']}\n\n"
+        # 1/9 — CƠ CHẾ HÀI RIÊNG CỦA NICHE. Trước đây mười kênh dùng chung một bộ luật hài, nên
+        # mười kênh cười theo cùng một kiểu — chỉ đổi bối cảnh. Hài công sở sống bằng thứ KHÔNG
+        # ai nói ra; hài quán đêm sống bằng sự mệt mỏi; hài phòng gym sống bằng cái tôi va vào
+        # vật lý. Đưa chung một luật cho cả ba là cách chắc chắn để cả ba đều nhạt.
+        f"HOW COMEDY WORKS ON THIS CHANNEL — this is the engine, not a mood:\n{hs['hai']}\n\n"
         f"CAST YOU MAY USE (and only these): {', '.join(hs['vai'])}. Buddy is a cat and never "
         f"speaks.\n"
         f"ROOMS YOU MAY USE — the whole short happens in ONE room, nobody teleports in "
@@ -1189,9 +1577,23 @@ def _sys(kenh: str, giay: float) -> str:
         f"  · at most {tran} spoken words in the whole short\n"
         f"  · never write on-screen text, captions, signs or logos\n"
         f"  · never name a real brand or an existing TV show\n\n"
+        # 1/9 — CHUẨN HOOK VIẾT RÕ RA. Đo 30 tập cũ: hook trung vị 73 ký tự — "A bulging trash
+        # bag teeters on the counter." Đủ để Kling dựng một khung, KHÔNG đủ để người xem hiểu
+        # chuyện gì đang xảy ra và vì sao nên xem tiếp. Hook cụt là hook mất người ở giây thứ hai.
+        f"THE HOOK IS THE WHOLE VIDEO — write it to this standard:\n"
+        f"  · 16 to 30 words. Shorter than 16 and the viewer cannot tell what they are looking "
+        f"at; longer than 30 and it stops being one image.\n"
+        f"  · It must contain THREE things: the wrong object, what is wrong with it, and one "
+        f"detail that proves somebody caused it. 'A trash bag teeters' has one of the three.\n"
+        f"  · It is a PICTURE, not a feeling and not a summary. Write what a storyboard artist "
+        f"would draw. No adjectives about mood, no 'chaos', no 'disaster'.\n"
+        f"  · It must make the viewer ask one specific question that the payoff answers.\n"
+        f"  · Pin the camera in it: static eye-level wide shot, or low angle, or medium shot.\n\n"
         f"WHAT MAKES THESE WORK IN AMERICA:\n"
         f"  · The first moment shows something ALREADY WRONG. Do not spend time establishing "
         f"normal. The viewer arrives mid-disaster.\n"
+        f"  · American units only, always: miles, mph, pounds, feet, Fahrenheit, dollars. Never "
+        f"kilometres, kilos or Celsius — a US viewer stops trusting the channel instantly.\n"
         f"  · Specific beats general. Not 'the bill is high' — 'nine hundred dollars'. Not 'he is "
         f"late' — 'it is Thursday'.\n"
         f"  · The funniest person is the one who is calm. Panic is not a joke; being unbothered "
@@ -1300,6 +1702,25 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
         _kt = trung_khuon_ten(d, _kho_cu)
         if _kt:
             loi.append(f"tên theo khuôn đã dùng ({_kt}) — đặt tên theo cách khác hẳn")
+        _cc = trung_co_che(d, _kho_cu)
+        if _cc:
+            loi.append(_cc)
+        # THANG 100 ĐIỂM. `cham()` chỉ biết ĐẠT/HỎNG, nên một tập nhạt vẫn "sạch" — đo được:
+        # cả 30 tập đã xuất đều sạch thước cũ, và cả 30 đều dưới 90 điểm. Thang này bắt phần
+        # `cham()` không được dạy để nhìn: cú lật có mới không, hook có đủ ý không, câu chốt có
+        # phải câu ngắn nhất không. Chỉ chạy được khi ghép nổi prompt, nên đặt sau mọi thước kia.
+        if not loi:
+            try:
+                import cham100 as C100
+                _diem, _ghi = C100.cham100(d, giay, ho_so(kenh),
+                                           prompt(kenh, d, giay, 0), _kho_cu)
+                _yeu = [f"{k} = {v}/10" + (f" ({_ghi[k[0]]})" if k[0] in _ghi else "")
+                        for k, v in _diem.items() if v < 8]
+                if sum(_diem.values()) < DIEM_SAN:
+                    loi.append(f"đạt {sum(_diem.values())}/100, dưới sàn {DIEM_SAN} — yếu ở: "
+                               + "; ".join(_yeu))
+            except Exception:
+                pass                      # thước phụ hỏng thì không được chặn dây chuyền chính
         cuoi = d
         if loi:
             fb = "; ".join(loi[:6])
@@ -1372,6 +1793,50 @@ def trung_voi(tap: dict, da: list, nguong: float = 0.45) -> tuple:
         if g > diem:
             xau, diem = str(cu.get("title") or "?"), g
     return (xau, diem) if diem >= nguong else ("", diem)
+
+
+# ── VÂN TAY CƠ CHẾ — tầng chống trùng mà vân tay danh từ không với tới ──────────────────────
+# 1/9 — Đo 30 tập đã xuất: 23/30 payoff là "nhấc/kéo một vật", 20/30 có "lộ ra", **18/30 dùng
+# ĐÚNG CHUỖI ẤY**. Cổng `trung_voi` cho cả 30 tập đi qua, và nó không sai: nó so DANH TỪ, mà
+# danh từ thì khác thật — tote, pizza box, grill, paint can. Cùng một trò đùa mặc mười bộ đồ.
+#
+# Đây là tầng thứ tư của cùng một bệnh, sau tên tập → nội dung → phòng/người lật. Lần này chốt
+# ở chỗ sâu nhất: CƠ CHẾ của cú lật. Một kênh sống được lâu không phải vì đổi đồ vật, mà vì đổi
+# cách tình thế bị đảo.
+HO_LAT = {
+    "nhấc-lộ-vô-hại":        r"\b(lifts?|pulls?|tips?|flips?|slides?|paws?)\b.{0,60}\b(reveal|expos|show)",
+    "người-bước-vào":        r"\b(walks? in|steps? in|appears? in the doorway|comes? in)\b",
+    "vật-hoá-ra-là-khác":    r"\b(turns? out|it was (never|actually)|all along)\b",
+    "thủ-phạm-lộ-diện":      r"\b(behind (him|her|them)|caught|knocking|one by one|down the row)\b",
+    "đảo-vai":               r"\b(hands? (it|him|her)|takes? over|swaps?|trades?)\b",
+    "hậu-quả-đuổi-kịp":      r"\b(runs? (out|down)|spreads? to|reaches? (his|her|their)|creeps?)\b",
+    "kẻ-thản-nhiên-bỏ-đi":   r"\b(without looking|does not look|pulls? the door shut|steps? (out|past))\b",
+}
+
+
+def ho_lat(tap: dict) -> str:
+    """Cú lật của tập này thuộc HỌ nào. `khác` = chưa có trong bảng, tức mới — đó là điều tốt."""
+    p = str(tap.get("payoff") or "")
+    for ten, rx in HO_LAT.items():
+        if re.search(rx, p, re.I):
+            return ten
+    return "khác"
+
+
+def trung_co_che(tap: dict, da: list, tran: float = 0.25) -> str:
+    """Chặn khi họ cú lật này đã chiếm quá `tran` phần kho. Trả câu giải thích, hoặc ''.
+
+    Ngưỡng 0,25: một kênh có bảy họ cú lật, chia đều là 0,14 mỗi họ. Cho tới 0,25 là còn chỗ
+    cho họ nào hợp kênh hơn được dùng nhiều hơn; quá đó thì kênh bắt đầu có MỘT trò đùa.
+    """
+    ho = ho_lat(tap)
+    if ho == "khác" or len(da) < 8:
+        return ""
+    n = sum(1 for x in da if ho_lat(x) == ho)
+    if n / len(da) > tran:
+        return (f"cú lật thuộc họ {ho!r} — kho đã dùng họ này {n}/{len(da)} lần. Đảo tình thế "
+                f"bằng cách KHÁC: {', '.join(k for k in HO_LAT if k != ho)}")
+    return ""
 
 
 def trung_khuon_ten(tap: dict, da: list) -> str:
@@ -1504,23 +1969,36 @@ def xuat_web(thu_muc: str) -> list[str]:
     """
     os.makedirs(thu_muc, exist_ok=True)
     ra = []
+    # ── VÌ SAO XUẤT BA PHẦN RỜI, KHÔNG XUẤT MỘT CHUỖI ─────────────────────────────────────
+    # 1/9 — Bản trước xuất một chuỗi đã ghép sẵn, và Python phải ĐOÁN TRƯỚC văn kể sẽ dài bao
+    # nhiêu để chừa chỗ. Đoán ba lần, ba lần sai (774 → 710 → 762 ký tự), và lần nào cũng còn
+    # vài chục khuôn tràn — vì chỗ phình xảy ra ở trình duyệt, nơi Python không đo được.
+    #
+    # Không đoán nữa. Xuất ba phần rời: THÂN (có ô trống) · KHỐI TẢ THÊM (rời từng khối) ·
+    # HÀNG RÀO. Web điền ô trống xong thì ĐO chuỗi thật, rồi chèn từng khối tả thêm chừng nào
+    # còn chỗ, rồi mới nối hàng rào vào cuối. Luật vẫn một nơi — luật là "hàng rào không bao
+    # giờ nhường chỗ", và nó đúng ở cả hai bên vì cả hai bên thi hành cùng một câu ấy.
     MAU = {"title": "@@TITLE@@", "room": "", "hook": "@@HOOK@@", "setup": "@@SETUP@@",
            "escalate": "@@ESCALATE@@", "payoff": "@@PAYOFF@@",
            "lines": [{"who": "@@WHO@@", "act": "says", "say": "@@LINES@@"}]}
     for ten, k in KENH.items():
         hs = ho_so(ten)
-        # Khuôn xuất theo GIÂY, không nhân bản cho từng phòng: phòng chỉ đổi vài dòng, mà nhân
-        # bản làm tệp phồng lên gấp năm (6,6 MB cho mười kênh — quá nặng để tải trên web).
-        # Tên và mô tả phòng thành chỗ trống, web điền lại từ `phong` đã có sẵn trong tệp này.
         ph0 = next(iter(hs["phong"]))
         mo0 = hs["phong"][ph0]
+        def _o(t):
+            return t.replace(mo0, "@@ROOMDESC@@").replace(ph0, "@@ROOM@@")
         khuon = {}
         for g in GIAY_CHUAN:
             tap = dict(MAU, room=ph0)
-            khuon[str(g)] = {}
-            for kieu, cf in (("gon", False), ("day", True)):
-                t = prompt(ten, tap, g, so=0, day=cf)
-                khuon[str(g)][kieu] = t.replace(mo0, "@@ROOMDESC@@").replace(ph0, "@@ROOM@@")
+            # Bốn mức nén của THÂN, xuất cả bốn. Web chọn mức ÍT NÉN NHẤT mà còn lọt trần —
+            # đúng thang mà `prompt()` đi ở phía Python. Xuất một mức thôi thì web hoặc luôn
+            # thừa chỗ (mức 3, mất chi tiết vô cớ) hoặc luôn tràn (mức 0).
+            rao = _bat_buoc(ten, tap, g, 0, 1, 0)[1]
+            khuon[str(g)] = {
+                "than": [_o("\n".join(_bat_buoc(ten, tap, g, 0, 1, m)[0])) for m in (0, 1, 2, 3)],
+                "them": [_o("\n".join(x).strip()) for x in _kho_tuy_chon(ten, tap, g) if x],
+                "rao":  _o("\n".join(rao)),
+            }
         ra_kenh = {
             "ten": ten, "mo_ta": hs["mo_ta"], "ty_le": hs["ty_le"],
             "vai": {t: hs["nhan_vat"][t] for t in hs["vai"]},
@@ -1530,7 +2008,9 @@ def xuat_web(thu_muc: str) -> list[str]:
             "nhip": {str(g): nhip(g) for g in GIAY_CHUAN},
             "sys": {str(g): _sys(ten, g) for g in GIAY_CHUAN},
             "tu_toi_da": {str(g): int(_giay_thoai(g) * TU_MOI_GIAY) for g in GIAY_CHUAN},
-            "gioi_han": {"vai": VAI_TOI_DA, "luot": LUOT_TOI_DA, "tu_moi_luot": TU_MOI_LUOT},
+            "hai": hs["hai"],
+            "gioi_han": {"vai": VAI_TOI_DA, "luot": LUOT_TOI_DA, "tu_moi_luot": TU_MOI_LUOT,
+                         "ky_tu_max": KY_TU_MAX, "hook_tu": [16, 30], "diem_san": DIEM_SAN},
             "khuon": khuon,
         }
         f = os.path.join(thu_muc, _slug(ten) + ".json")

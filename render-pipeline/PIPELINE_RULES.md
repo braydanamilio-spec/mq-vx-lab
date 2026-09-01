@@ -6952,3 +6952,133 @@ lẫn `bt` để ảnh trượt thì còn tầng vẽ bằng code đỡ.
 
 **Họ lỗi:** *quét tìm "một cái hợp lệ" thay vì "cái đúng ngữ cảnh"*. Hợp lệ về kiểu không có
 nghĩa đúng về nghĩa.
+
+---
+
+## KLING — NGÀY 1/9: TRẦN 2.500 LÀ KÝ TỰ, KHÔNG PHẢI TỪ
+
+### 8k1 — Đọc nhầm đơn vị của một giới hạn, và trả giá trên toàn bộ kho
+
+`kling_kenh.py` đặt `KY_TU_MAX = 3000` với ghi chú "anh dặn prompt 2.500–3.000 từ". Tài liệu API
+Kling ghi trần `prompt` là **2.500 KÝ TỰ**. Hai đơn vị chênh nhau bảy lần.
+
+Hậu quả đo được, không phải suy đoán:
+
+| | đo được |
+|---|---|
+| 30 tệp `PROMPT.txt` đã xuất | 2.731–3.024 ký tự — **30/30 đều vượt** |
+| bản "Đầy đủ ~2.700 từ" trên dashboard | **16.279 ký tự**, gấp 6,5 lần |
+
+Kling **cắt đuôi**, và đuôi là khối `DO NOT` — hàng rào chặn thừa ngón, méo mặt, hiện chữ. Nên
+mọi tập đã dựng đều render **không có hàng rào**, mà không có gì báo lỗi: prompt vẫn gửi được,
+video vẫn ra, chỉ là ra xấu hơn mức lẽ ra.
+
+**Họ lỗi:** *tin một giới hạn của hệ ngoài mà chưa thử* — cùng họ với mục 12.1 (`seed` gửi
+Cloudflare FLUX). Lần ấy API trả 400 nên còn biết; lần này Kling **im lặng cắt**, nên tốn cả kho.
+
+**Luật:** giới hạn của hệ ngoài phải có **đơn vị viết ra** và **nguồn dẫn**. "2.500" không phải
+một giới hạn, nó là một con số.
+
+### 8k2 — `prompt()` được phép trả về bản tràn
+
+Bản cũ đi thang bốn mức rồi `if muc == 3: return r` — tức **mức 3 vẫn tràn thì trả bản tràn**.
+Thang co không phải bảo đảm, nó chỉ là một cố gắng.
+
+Nay: khối `CHARACTER LOCK` · `TIMING` · `VISUAL STYLE` · `DO NOT` được cấp ngân sách TRƯỚC; khối
+tả thêm chỉ tiêu phần còn lại. Tràn tới cùng thì cắt **văn kể** ở ranh giới câu và **in cảnh báo
+ra stderr** — không bao giờ cắt hàng rào, không bao giờ im lặng.
+
+### 8k3 — Trần cứng là phép đo GIÁN TIẾP; em đặt nhầm nó **năm lần liên tiếp**
+
+Để chừa chỗ cho văn kể, em đặt `VAN_KE_MAX` và đo lại sau mỗi lần hỏng: **800 → 720 → 670 → 640
+→ 600**. Lần nào cũng "đo cẩn thận", lần nào cũng còn vài chục khuôn tràn.
+
+Cả năm lần sai cùng một kiểu. Chỗ tốn ký tự lớn nhất **không phải văn kể** mà là **số nhân vật**
+— mỗi vai tốn ~150 ký tự khoá hình. Tập hai người thừa chỗ cho hook 30 từ; tập bốn người thì
+không, dù văn kể y hệt. **Một con số chung không thể đúng cho cả hai.**
+
+Chữa: thôi tìm con số. `cham()` **ghép thử prompt của chính tập ấy rồi đo**. Chính xác tuyệt
+đối, và câu báo lỗi chỉ được cách sửa rẻ hơn: *bớt một người rẻ hơn cắt hook*.
+
+**Họ lỗi:** *thay một phép đo trực tiếp bằng một hằng số đại diện* — hằng số ấy đúng ở ngữ cảnh
+sinh ra nó và sai ở mọi ngữ cảnh khác, nên nó hỏng âm thầm và sửa mãi không hết.
+
+### 8k4 — Ngân sách canh ở Python, chỗ phình xảy ra ở trình duyệt
+
+`xuat_web` xuất MỘT chuỗi đã ghép sẵn với ô trống `@@HOOK@@` (8 ký tự). Bộ chia ngân sách thấy
+prompt 2.388 ký tự, thấy còn chỗ, nhét thêm bốn khối tả. Rồi JavaScript thay 8 ký tự ấy bằng
+220 ký tự văn thật: **80/80 khuôn vượt trần, cái dài nhất 3.687**.
+
+Không thước nào bên Python thấy được, vì chỗ phình nằm bên kia hàng rào ngôn ngữ.
+
+Chữa: xuất **ba phần rời** — thân (bốn mức nén) · khối tả thêm (rời từng khối) · hàng rào. Web
+điền xong thì **đo chuỗi thật**, chọn mức nén, chèn khối, nối hàng rào. Vẫn một nguồn sự thật:
+nội dung và thứ tự khối do Python quyết; web thi hành đúng một câu luật.
+
+**Họ lỗi:** *canh ngân sách ở nơi không phải nơi tiêu tiền.*
+
+### 8k5 — Quy tắc THAM lấy hết ngân sách rồi bỏ đói mọi khối sau
+
+Chọn "mức nén ít nhất mà còn lọt trần" lấy mức 0 (2.435/2.500) rồi **không còn chỗ cho khối
+nào**: đo được **0/328 khuôn** chèn nổi một khối chỉ đạo — kể cả `VISUAL STYLE LOCK`, khối duy
+nhất nói kênh này trông khác chín kênh kia.
+
+Nay chọn mức nén **theo giá trị tổng**: thử cả bốn mức, lấy mức chèn được nhiều khối nhất. Và
+`VISUAL STYLE LOCK` chuyển hẳn sang khối **bắt buộc** — nó ngang hàng `CHARACTER LOCK`, một cái
+giữ nhân vật khỏi trôi, cái kia giữ **kênh** khỏi trôi.
+
+### 8k6 — 18/30 tập dùng CÙNG MỘT cú lật, và cả ba cổng đều cho qua
+
+Đo trên 30 tập: 23/30 payoff là "nhấc/kéo một vật", 20/30 có "lộ ra", **18/30 dùng đúng chuỗi
+ấy**. 22/30 hook mở bằng chữ `A `. 16/30 diễn ra trong bếp.
+
+Cổng `trung_voi` so **danh từ** — mà danh từ khác thật (tote · pizza box · grill · paint can).
+Cùng một trò đùa mặc mười bộ đồ. Đây là **tầng thứ tư** của cùng một bệnh, sau tên tập → nội
+dung → phòng/người lật.
+
+Nay có `HO_LAT`: bảy **cơ chế** đảo tình thế, và `trung_co_che()` chặn khi một họ chiếm quá 25%
+kho. Cùng bảng ấy thay luôn danh sách 20 từ khoá của cổng payoff — danh sách cũ vừa lỏng vừa
+chặt sai chỗ: *"Tommy pulls the chair away and the plates settle safely"* **đi qua** (có chữ
+`pulls`) trong khi không có cú lật nào.
+
+### 8k7 — `cham()` chỉ biết ĐẠT/HỎNG, nên "sạch" và "hay" là hai chuyện
+
+Cả 30 tập đều **sạch** thước cũ. Chấm bằng thang 100 điểm (`cham100.py`, mười trục): **trung
+bình 68, không tập nào tới 90**. Thước cũ đo đúng thứ nó được dạy để đo, và nó không được dạy
+nhìn: cú lật có mới không · hook có đủ ý không · câu chốt có phải câu ngắn nhất không.
+
+Nay `DIEM_SAN = 90` là cổng: dưới sàn thì bắt AI viết lại.
+
+**Trong lúc dựng thang, thang bắt lỗi chính ba kịch bản của em — và em bắt được bốn chỗ thang
+sai**: chấm trượt số viết bằng chữ (`eleven`), coi sàn/tường/cửa là "đồ không có trong phòng",
+đọc `car keys` thành chiếc sedan, và **trừ điểm sự mới lạ** (cú lật không thuộc họ nào đã biết
+chỉ được 1/4 điểm — ngược hẳn thứ cần đo). Đúng luật 12.3: *thước phải soi ở khoảng giữa*.
+
+### 8k8 — Thoại dồn hết vào một khối, câu chốt nói trước cú lật 4 giây
+
+`_ghep` nhét TOÀN BỘ thoại vào khối `setup`. Ở clip 10 giây: câu chốt nói ở giây 5,7 trong khi
+cú lật xảy ra ở giây 8,2 — **người xem nghe câu chốt trước khi thấy thứ nó chốt**, và 4,3 giây
+cuối không một lời nào. Không thước nào bắt được, vì thước đo **số từ** chứ không đo **chỗ đặt**.
+
+Nay mỗi lượt thoại mang trường `beat` và nằm đúng khối của nó.
+
+### 8k9 — Khối PERFORMANCE gọi tên cả dàn, kể cả người không có mặt
+
+`hs["dien"]` tả cả năm vai. Tập chỉ có Tommy và Grandpa Joe vẫn nhắc Mike, Lisa, Buddy giữa
+prompt — và Kling kéo họ vào khung. `KLING_CACH_DUNG.md` đã cảnh báo đúng cơ chế này cho khối
+`CHARACTER LOCK`; chỉ là **chưa ai áp luật ấy cho khối bên cạnh**.
+
+**Họ lỗi:** *vá một nhánh, để nguyên nhánh song song.*
+
+### 8k10 — Mười kênh, một bộ mặt
+
+Đo độ giống nhau giữa 10 hồ sơ kênh: `style` **0,89** · `audio` **1,00**. Mười kênh dùng chung
+một chuỗi mô tả đồ hoạ, chỉ đổi ba chữ cuối ("American office break room setting"). Và một bộ
+luật hài chung — nên hài công sở, hài quán đêm và hài phòng gym cười theo cùng một kiểu.
+
+Nay mỗi kênh có `style` · `audio` · **`hai`** (cơ chế hài của niche) riêng. Sau khi cấy:
+`style` 0,89 → **0,39** (phần còn lại là `SAN_NGHE`, sàn tay nghề dùng chung — chỗ này giống
+nhau là ĐÚNG) · `audio` 1,00 → **0,17** · `hai` **0,03**.
+
+**Luật:** *"mười kênh" mà tả bằng cùng một câu thì nó là một kênh có mười cái tên.* Đo độ giống
+nhau giữa các hồ sơ là cách rẻ nhất để biết mình đang có mấy kênh thật.

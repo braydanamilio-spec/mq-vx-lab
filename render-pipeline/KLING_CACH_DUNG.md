@@ -92,12 +92,28 @@ Kịch bản phải qua hết mới ra prompt:
 | ≤ 4 người trong khung | năm người thì Kling chia ngân sách khuôn mặt, nát cả năm |
 | ≤ 4 lượt · ≤ 9 từ/lượt | dài hơn thì khớp miệng trượt |
 | ≤ 13 từ thoại cho clip 8s | 2,7 từ/giây; quá là nói như đọc rap |
-| hook ≥ 10 từ, ghim góc máy | không ghim thì Kling hay ra cảnh drone *(bài học 09/08)* |
+| **hook 16–30 từ**, ghim góc máy | dưới 16 là cụt — người xem không biết ai gây ra chuyện gì nên lướt luôn; trên 30 thì không còn là MỘT hình ảnh và Kling phải tự chọn vẽ cái nào |
 | payoff phải có **cú lật** | đảo tình thế, không phải tả thêm cảm xúc |
+| **cú lật không lặp CƠ CHẾ** | đo được 18/30 tập cũ dùng đúng một chuỗi "nhấc vật lên → lộ ra là vô hại". Đổi đồ vật không phải đổi trò đùa |
+| **prompt ghép ra ≤ 2.500 ký tự** | trần thật của Kling. Vượt là bị cắt đuôi, mà đuôi là khối `DO NOT` |
+| **≥ 90/100 điểm** (`cham100.py`) | "sạch lỗi" và "hay" là hai chuyện — 30 tập cũ đều sạch, không tập nào tới 90 |
 | không đồ đạc nhà không có | 26 món lớn hay bị AI bịa — island, dishwasher, staircase… |
 | không chữ / biển / logo | chỗ Kling hỏng nặng nhất |
 
 Lỗi máy sửa được (thiếu dấu chấm, thừa khoảng trắng) thì **máy tự sửa**, không đốt lượt gọi AI.
+
+### 4b · Vì sao 2.500 là KÝ TỰ, không phải TỪ
+
+Tài liệu API Kling ghi trần `prompt` là **2.500 ký tự**. 2.500 *từ* thì vào khoảng 16.800 ký tự
+— gấp gần bảy lần. Bản "Đầy đủ ~2.700 từ" từng có trên dashboard sinh ra đúng 16.279 ký tự và
+**chưa bao giờ tới được Kling nguyên vẹn**; nó đã bị bỏ.
+
+`prompt()` tự lo phần này: bốn khối *(nhân vật · bối cảnh+nét vẽ · dòng thời gian · `DO NOT`)*
+được cấp ngân sách trước, khối tả thêm chỉ tiêu phần còn lại. **Hàng rào `DO NOT` không bao giờ
+bị cắt** — nếu tràn tới cùng thì hệ cắt bớt văn kể và in cảnh báo, không im lặng.
+
+Chỗ tốn ký tự lớn nhất **không phải văn kể mà là số nhân vật**: mỗi vai tốn ~150 ký tự khoá
+hình. Nên khi thước báo prompt vượt trần, **bớt một người thường rẻ hơn cắt hook**.
 
 ---
 
@@ -126,5 +142,26 @@ Thêm **một mục** vào `KENH` trong [kling_kenh.py](kling_kenh.py) — khôn
     "mach": "loại chuyện kênh này kể — dùng làm đề bài cho AI",
 }
 ```
+
+Ba trường **bắt buộc phải viết riêng**, đừng chép của kênh khác:
+
+| trường | là gì | hỏng nếu chép |
+|---|---|---|
+| `style` | nét vẽ · bảng màu · ánh sáng · ngôn ngữ hình khối của niche | mười kênh ra cùng một bộ mặt. Đo được: bản cũ giống nhau **0,89** |
+| `audio` | giọng · tiếng nền · nhịp nói của niche | bản cũ giống nhau **1,00** — y hệt |
+| `hai` | **cơ chế** hài của niche: trò đùa làm bằng gì, ai trên ai dưới, leo thang bằng cách nào | hài công sở sống bằng thứ KHÔNG ai nói ra; hài quán đêm sống bằng sự mệt mỏi. Chung một luật thì cả hai đều nhạt |
+
+Kiểm nhanh sau khi thêm kênh:
+
+```bash
+python3 -c "
+import kling_kenh as K, difflib
+ks=list(K.KENH)
+for f in ('style','audio','hai'):
+    r=[difflib.SequenceMatcher(None,K.KENH[a][f],K.KENH[b][f]).ratio() for i,a in enumerate(ks) for b in ks[i+1:]]
+    print(f, f'{sum(r)/len(r):.2f}')"
+```
+
+`hai` trên 0,15 hoặc `audio` trên 0,30 là dấu hiệu kênh mới chỉ là kênh cũ đổi tên.
 
 Thước, hệ lệnh, bài đăng dùng chung — không phải viết lại gì.
