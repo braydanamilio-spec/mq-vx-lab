@@ -76,7 +76,7 @@ BRAND = {
                            khau_hieu="JUST A LITTLE OFF THE BACK"),
     "TAILGATE":       dict(chinh="#E85A1F", phu="#3E7BC4", nen="#22262B", bt="flag",
                            khau_hieu="WE PARK HERE. WE HAVE ALWAYS PARKED HERE."),
-    "BAGGAGE CLAIM":  dict(chinh="#2E5FA8", phu="#F28E1C", nen="#1B1F26", bt="suitcase",
+    "BAGGAGE CLAIM":  dict(chinh="#4E86D6", phu="#F28E1C", nen="#1B1F26", bt="suitcase",
                            khau_hieu="IT IS ON THE NEXT ONE"),
     "THE CAMPGROUND": dict(chinh="#3F8A4E", phu="#F2A03B", nen="#151E17", bt="tent",
                            khau_hieu="THE RANGER DID SAY"),

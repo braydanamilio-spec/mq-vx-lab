@@ -210,6 +210,41 @@ SO_CHINH_XAC = (r"\b\d{1,4}\b|\$\d|\b(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\b|
                 r"fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|"
                 r"fifty|sixty|seventy|eighty|ninety|hundred|thousand|dozen)\b")
 
+# TÁM KHUÔN HÌNH TĨNH — trục thứ tám của bộ lịch  (2/9)
+#
+# Vì sao phải có: `_bat_buoc` ghi cứng "Camera locked off at standing eye level, wide." vào MỌI
+# prompt, và đề bài tuy nêu ba lựa chọn thì AI vẫn lấy cái đầu tiên — đo trên sáu bản thảo thật:
+# **6/6 hook mở bằng "static eye-level wide shot"**. Tức ba mươi kênh, mọi tập, cùng một khuôn
+# hình. Bộ lịch bảy trục đổi CHUYỆN rất giỏi mà không đổi được thứ người xem thấy trước cả
+# chuyện — và đó đúng là chữ "cảnh" (scenes) trong câu luật YouTube nói về nội dung hàng loạt.
+#
+# Vì sao TẤT CẢ đều khoá cứng: hàng rào cấm "no pan, zoom, dolly, handheld or drone", và cấm
+# như thế là ĐÚNG — trôi máy là chỗ Kling hỏng nặng nhất. Nên biến thể nằm ở CHIỀU CAO, KHOẢNG
+# CÁCH và TIỀN CẢNH, không nằm ở chuyển động. Tám khuôn, không cái nào cần máy nhúc nhích.
+#
+# Mỗi câu phải chứa một từ trong `GHIM_MAY`, vì `cham()` đọc chính bảng ấy để bắt lỗi trôi máy.
+KHUON_HINH = (
+    ("static eye-level wide shot",
+     "Camera locked off at standing eye level, wide — the whole room reads at once."),
+    ("static low angle wide shot",
+     "Camera locked off low, near floor level, wide — figures rise tall in frame."),
+    ("static high angle shot",
+     "Camera locked off high, looking down at a shallow angle across the space."),
+    ("static eye-level medium shot",
+     "Camera locked off at eye level, medium — two figures fill the frame from the waist up."),
+    ("static wide shot past a foreground object",
+     "Camera locked off wide at eye level, a large object of the room sitting dark in the near "
+     "foreground on the left."),
+    ("static over-the-shoulder shot",
+     "Camera locked off just behind one character's shoulder at eye level, the rest of the room "
+     "beyond them."),
+    ("static top-down shot",
+     "Camera locked off directly above, looking straight down on the floor and everything on it."),
+    ("static eye-level wide shot from behind",
+     "Camera locked off at eye level, wide, from behind the group — faces turn into frame to "
+     "speak."),
+)
+
 GHIM_MAY = ("static", "eye-level", "eye level", "low angle", "high angle", "wide shot",
             "medium shot", "close shot", "over-the-shoulder", "locked-off", "top-down")
 
@@ -975,6 +1010,7 @@ KENH: dict[str, dict] = {
         "ten": "ROAD TRIP",
         "mo_ta": "Hài trong xe Mỹ — bốn người, một chuyến đi dài, và không ai chịu nhường quyền chỉnh nhạc.",
         "ty_le": "9:16",
+        "khuon_cam": ("top-down", "high angle", "from behind"),
         "nhan_vat": {
             "Ted": "Ted: 47-year-old man, receding brown hair, blue polo shirt, cargo shorts, driving sandals; confidently wrong, refuses to stop for directions or for anything.",
             "Anne": "Anne: 45-year-old woman, straight dark hair, striped red top, jeans, white sneakers; dry, unimpressed, holds the map she does not need.",
@@ -1059,6 +1095,7 @@ KENH: dict[str, dict] = {
         "ten": "PET HOUSE",
         "mo_ta": "Hài nhà nhiều thú cưng Mỹ — hai con vật cạnh tranh, một con chuột lang quan sát, và hai người chủ không hiểu gì.",
         "ty_le": "9:16",
+        "khuon_cam": ("top-down", "high angle"),
         "nhan_vat": {
             "Duke": "Duke: large brown dog, floppy ears, red collar, expressive eyebrows; confidently wrong, believes every plan will work.",
             "Cleo": "Cleo: sleek grey cat, green eyes, silver collar with a bell; dry and unimpressed, silently judges Duke.",
@@ -2881,6 +2918,7 @@ KENH: dict[str, dict] = {
             "người lớn mà chúng nghe lỏm được. Người không bao giờ nói."
         ),
         "ty_le": "9:16",
+        "khuon_cam": ("top-down", "high angle"),
         "mo_cam": ("smoke or steam",),
         "nhan_vat": {
             "Meatball": (
@@ -3188,8 +3226,8 @@ KENH: dict[str, dict] = {
             "Everything lit by screens: faces washed in cool console blue with warm amber only "
             "from the one supervisor lamp, so the room reads as a submarine at night. Palette is "
             "monitor blue, government beige and amber. Line is fine and even on the hardware and "
-            "looser on people. Held wide shots — the camera almost never cuts closer, because the "
-            "comedy is stillness against panic.. hand-drawn 2D animation on twos, held key poses "
+            "looser on people. Stillness against panic is the whole look: whatever the framing, "
+            "nobody in it moves much and the room never does.. hand-drawn 2D animation on twos, held key poses "
             "with snappy transitions between them, tapered ink line that thickens on the shadow "
             "side, appealing readable silhouettes, generous squash and stretch on the face only"
         ),
@@ -3442,8 +3480,8 @@ KENH: dict[str, dict] = {
             "Municipal solemnity in cheap materials: fake wood veneer, drop ceiling, fluorescent "
             "panels and a marble corridor that promises more than the room delivers. Palette is "
             "veneer brown, institutional cream and one deep oxblood on the bench and the flag. "
-            "Compositions are rigidly symmetrical and shot flat on, so any object placed on a "
-            "table becomes the most important thing in frame.. hand-drawn 2D animation on twos, "
+            "Compositions are rigidly symmetrical, so any object placed on a table becomes the "
+            "most important thing in frame.. hand-drawn 2D animation on twos, "
             "held key poses with snappy transitions between them, tapered ink line that thickens "
             "on the shadow side, appealing readable silhouettes, generous squash and stretch on "
             "the face only"
@@ -3803,6 +3841,7 @@ def _lich(kenh: str, so: int) -> dict:
     lat = con[i_lat % len(con)]
     return {"phong": phong[i_ph], "dao_cu": do[i_do], "ap_luc": AP_LUC[i_ap],
             "kieu_mo": _mo_kenh(hs)[i_mo], "gay": gay, "lat": lat, "co_che": ho_ten[i_co],
+            "khuon_hinh": _khuon_hinh(kenh, so)[0], "may": _khuon_hinh(kenh, so)[1],
             "_khong_gian": P}
 
 
@@ -3840,9 +3879,70 @@ def _do_truc(hs: dict) -> list:
     Thêm trục thứ bảy, tôi sửa hai nơi đầu và quên nơi thứ ba — web tính theo sáu trục, Python
     theo bảy, và 280/280 đề bài lệch ĐÚNG MỘT TRƯỜNG. Sáu trục kia khớp hoàn hảo, nên nhìn
     thoáng qua nó giống "gần đúng" chứ không giống hỏng.
+
+    2/9 — Thêm trục thứ TÁM (khuôn hình). Đặt nó ở CUỐI chứ không chèn giữa: chèn giữa thì mọi
+    chỉ số phía sau dịch một ô, và bản JS trên dashboard đọc `ix[4]`, `ix[5]`, `ix[6]` theo vị
+    trí — tức đúng một lần nữa cái lỗi vừa kể trên. Thêm ở cuối thì bảy trục cũ giữ nguyên ý
+    nghĩa và web chỉ cần biết thêm `ix[7]`.
     """
     return [len(hs["phong"]), len(hs.get("dao_cu") or [1]), len(AP_LUC), len(_mo_kenh(hs)),
             len(hs["vai"]), max(1, len(hs["vai"]) - 1), len(HO_LAT)]
+
+
+def _khuon_hinh(kenh: str, so: int) -> tuple:
+    """Khuôn hình của tập `so` — vòng quay RIÊNG, không nằm trong không gian tích.
+
+    2/9 — Lần đầu em nhét nó thành trục thứ tám của bộ lịch. Đo trên 200 tập: **144/199 tập
+    liền nhau trùng khuôn**, dù cả tám khuôn đều được dùng đều (28 lượt mỗi cái). Vì trong phép
+    phân rã cơ số, trục thêm sau cùng là CHỮ SỐ CAO NHẤT, và chữ số cao nhất đổi chậm nhất —
+    nó đi thành từng vệt dài chứ không xen kẽ.
+
+    Thứ người xem cảm được không phải "cả tám khuôn có được dùng đều không" mà là "hai tập
+    liền nhau có trông khác nhau không". Nên khuôn hình cần vòng quay riêng: bước 3, nguyên tố
+    cùng nhau với 8, nên nó đi hết tám khuôn trong tám tập và KHÔNG BAO GIỜ lặp liền kề.
+
+    Không nằm trong không gian tích cũng đúng về ý nghĩa: bảy trục kia sinh ra CHUYỆN, khuôn
+    hình chỉ quyết cách nhìn chuyện ấy. Trộn hai loại vào một phép đảm bảo là trộn hai thứ khác
+    bản chất.
+    """
+    ds = _khuon_kenh(ho_so(kenh))
+    return ds[(_goc_lich(kenh) + so * _khuon_buoc(len(ds))) % len(ds)]
+
+
+def _khuon_kenh(hs: dict) -> tuple:
+    """Khuôn hình mà bản sắc hình ảnh của kênh này CHO PHÉP.
+
+    2/9 — Ba kênh khoá chiều cao máy ngay trong `style`/`nha` vì đó là bản sắc, không phải tuỳ
+    tiện: DOG PARK "camera sits at dog height", PET HOUSE "shot from about knee height", ROAD
+    TRIP "a fixed camera on the dashboard". Cấp cho chúng một khuôn top-down là bảo mô hình vẽ
+    ngược lại chính lệnh khoá bối cảnh — cùng dạng với `mo_cam` (14.2), chỉ khác trục.
+
+    Không nới câu `style` của ba kênh ấy, vì câu ấy đang làm đúng việc của nó. Nới thì mất bản
+    sắc để lấy một khuôn hình — đổi sai chiều.
+    """
+    cam = hs.get("khuon_cam") or ()
+    if isinstance(cam, str):
+        cam = (cam,)
+    if not cam:
+        return KHUON_HINH
+    con = tuple(k for k in KHUON_HINH if not any(c in k[0] for c in cam))
+    if len(con) < 3:
+        raise SystemExit(f"❌ khuon_cam {cam!r} chỉ còn {len(con)} khuôn — viết sai mẩu chữ?")
+    return con
+
+
+def _khuon_buoc(n: int) -> int:
+    """Bước quay của khuôn hình: số nhỏ nhất từ 3 trở lên NGUYÊN TỐ CÙNG NHAU với `n`.
+
+    Không được ghi cứng 3. Kênh có `khuon_cam` còn 6 khuôn thì gcd(3,6)=3, và bước 3 trên 6 ô
+    chỉ đi qua HAI ô rồi lặp — tức đúng cái lặp vừa đi chữa, xuất hiện lại ở kênh bị lọc. Đây là
+    họ lỗi "hằng số sống lâu hơn ngữ cảnh sinh ra nó" (13.6): 3 đúng khi n luôn bằng 8.
+    """
+    from math import gcd
+    b = 3
+    while gcd(b, n) != 1:
+        b += 1
+    return b
 
 
 def _buoc_lich(kenh: str) -> int:
@@ -4839,7 +4939,12 @@ def _bat_buoc(kenh: str, tap: dict, giay: float, so: int, bien: int,
         r.append(hs["nha"].split(". ")[0] + ". Never redesign or recolor it.")
     # Danh sách "no pan / no zoom / no drone" đã nằm trong hàng rào — nhắc lại ở đây là 90 ký
     # tự lặp, và 90 ký tự ấy đúng bằng nửa cái hook.
-    r.append("Camera locked off at standing eye level, wide.")
+    # 2/9 — Câu này từng GHI CỨNG "Camera locked off at standing eye level, wide." vào mọi
+    # prompt của mọi kênh. Đo trên sáu bản thảo thật: 6/6 hook mở bằng "static eye-level wide
+    # shot" — ba mươi kênh, mọi tập, một khuôn hình. Nay lấy theo lịch (`_khuon_hinh`), và đề
+    # bài được cấp ĐÚNG cùng một khuôn để hook không nói ngược lại prompt.
+    r.append(_khuon_hinh(hs["ten"], so)[1] if so >= 0
+             else "Camera locked off at standing eye level, wide.")
     r.append("")
 
     # VISUAL STYLE LOCK là khối BẮT BUỘC, không phải khối tả thêm.
@@ -5122,6 +5227,9 @@ def de_bai(kenh: str, so: int) -> str:
 def _sys(kenh: str, giay: float, so: int = -1) -> str:
     hs = ho_so(kenh)
     tran = int(_giay_thoai(giay) * TU_MOI_GIAY)
+    # Khuôn hình của tập này — phải là ĐÚNG khuôn mà `prompt()` ghi vào body, nếu không thì hook
+    # nói một đằng và câu máy quay nói một nẻo, và Kling nhận hai lệnh trái nhau.
+    _kh = _khuon_hinh(kenh, so)[0] if so >= 0 else "static eye-level wide shot"
     return (
         f"You write {giay:g}-second vertical cartoon shorts for an American channel called "
         f"{hs['ten']}.\n\n"
@@ -5199,10 +5307,12 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         f"too high · too many. 'A tower of mugs teeters' passes; 'Brad sits on a foam roller' "
         f"does not, because nothing in it is stated as wrong.\n"
         f"  · It must make the viewer ask one specific question that the payoff answers.\n"
-        f"  · Pin the camera in it: static eye-level wide shot, or low angle, or medium shot. "
-        f"It goes at the START of the hook, exactly once, and never again in 'setup'. This is "
-        f"checked — bolting it onto the end of a sentence makes the renderer read it as part of "
-        f"the scene.\n"
+        f"  · Pin the camera in it with EXACTLY this framing, which is assigned for this "
+        f"episode and is not yours to change: {_kh}. Write it at the START of the hook, once, "
+        f"and never again in 'setup'. This is checked — bolting it onto the end of a sentence "
+        f"makes the renderer read it as part of the scene. Build the staging FOR this framing: "
+        f"a top-down shot sees the floor, an over-the-shoulder sees past a head, a medium shot "
+        f"cannot show the whole room.\n"
         f"  · Nothing bolted to a wall or floor can be lifted. Checked: a board, sign, meter, "
         f"clock, mirror, vent, panel, rail, post, pole or dispenser cannot be picked up, raised "
         f"or carried. The renderer draws exactly what you write, so an impossible action makes "
@@ -5335,6 +5445,12 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
     # cao nhất đã đi qua, nếu không thì tám vòng có thể tệ hơn ba vòng.
     fb, cuoi, _so_biet = "", None, []
     _tot = {"diem": -1, "tap": None}
+    # 2/9 — VÀ CÙNG BÀI HỌC ẤY Ở NHÁNH SONG SONG, chưa ai áp vào. `_tot` chỉ nhận những bản đã
+    # QUA `cham()` (vì `cham100` chỉ chạy khi `not loi`). Nên khi KHÔNG vòng nào sạch — đo được
+    # 4/6 tập của lượt chạy hôm nay — `_tot` rỗng và hệ trả về `cuoi`, tức bản VIẾT SAU CÙNG.
+    # Mà số lỗi cũng không giảm đều theo vòng: có tập vòng 3 còn 1 lỗi rồi vòng 12 còn 4, và hệ
+    # trả về bản 4 lỗi. Đúng họ lỗi "vá một nhánh, để nguyên nhánh song song" (luật 6).
+    _it = {"n": 10 ** 9, "tap": None, "loi": []}
     # Số vòng phải đủ để vừa viết lại kịch bản vừa duyệt hồ key. Trước đây dừng ở MAX_TRIES nên
     # gặp năm key hỏng liên tiếp là bỏ cuộc trong khi hồ còn 290 key chưa thử.
     for lan in range(1, VONG_VIET + len(ho) + 1):
@@ -5409,6 +5525,8 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
             except Exception:
                 pass                      # thước phụ hỏng thì không được chặn dây chuyền chính
         cuoi = d
+        if loi and len(loi) < _it["n"]:
+            _it = {"n": len(loi), "tap": json.loads(json.dumps(d)), "loi": list(loi)}
         if loi:
             _so_biet.append({"vong": lan, "loi": loi[:8]})
             fb = "; ".join(loi[:6])
@@ -5424,6 +5542,10 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
     if _tot["tap"] is not None and _tot["diem"] > 0:
         cuoi = _tot["tap"]
         print(f"   ⤒ cạn vòng — trả bản TỐT NHẤT đã đi qua ({_tot['diem']}/100), không phải bản cuối")
+    elif _it["tap"] is not None and len(cham(cuoi or {}, kenh, giay, so)) > _it["n"]:
+        print(f"   ⤒ cạn vòng, không bản nào sạch — trả bản ÍT LỖI NHẤT ({_it['n']} lỗi), "
+              f"không phải bản cuối")
+        cuoi = _it["tap"]
     if cuoi is not None:
         cuoi["_con_loi"] = cham(cuoi, kenh, giay, so)
         cuoi["_bien_tap"] = {"nhan_o_vong": None, "so_vong_tu_choi": len(_so_biet),
@@ -5923,8 +6045,12 @@ def xuat_web(thu_muc: str) -> list[str]:
                              for x in hs["vai"])
             # Chỉ còn phải thay dàn vai — chuỗi dài, duy nhất, không thể trùng nhầm. Phòng đã
             # là ô trống từ lúc dựng nên không có phép thay nào cho nó.
+            # 2/9 — Câu máy quay đổi theo TẬP (`_khuon_hinh`), nhưng khuôn web dựng MỘT lần
+            # cho cả kênh. Không đục thành ô trống thì mọi tập sinh từ web đều mang khuôn hình
+            # của tập 0 — tức đúng cái lặp vừa đi chữa, chỉ khác là lặp ở phía web.
             return (t.replace(cast, "@@CAST@@").replace(_names, "@@CASTNAMES@@")
-                     .replace(_KP, "@@ROOM@@"))
+                     .replace(_KP, "@@ROOM@@")
+                     .replace(_khuon_hinh(ten, 0)[1], "@@MAY@@"))
         khuon = {}
         for g in GIAY_CHUAN:
             tap = dict(MAU, room=ph0)
@@ -5972,6 +6098,10 @@ def xuat_web(thu_muc: str) -> list[str]:
                 "buoc": _buoc_lich(ten), "goc": _goc_lich(ten),
                 "phong": list(hs["phong"]), "dao_cu": list(hs.get("dao_cu") or []),
                 "ap_luc": list(AP_LUC), "kieu_mo": list(_mo_kenh(hs)), "vai": list(hs["vai"]),
+                # Khuôn hình KHÔNG nằm trong `truc`: nó có vòng quay riêng bước 3 (xem
+                # `_khuon_hinh`). Web phải dùng ĐÚNG công thức ấy, không phải giải mã từ `n`.
+                "khuon_hinh": [list(x) for x in _khuon_kenh(hs)],
+                "khuon_buoc": _khuon_buoc(len(_khuon_kenh(hs))),
                 # Thứ tự họ cú lật phải lấy TỪ CHÍNH `HO_LAT` — bảng mà `_lich()` dùng — chứ
                 # không từ `HO_LAT_TA`. Hai từ điển có cùng mười khoá nhưng khác thứ tự chèn,
                 # và Python giữ thứ tự chèn: đọc nhầm bảng thì hai bên lệch trục thứ bảy trong

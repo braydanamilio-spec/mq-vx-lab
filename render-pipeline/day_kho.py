@@ -73,7 +73,20 @@ def day_mot(mp4: str, thu_publish: str, biet: set, that: bool) -> bool:
         return True
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
     ok = r.returncode == 0
-    print(f"   {'✅' if ok else '❌'} {kenh:18s} {os.path.basename(mp4)}"
+    # NÓI RA VIDEO VÀO KHO NÀO — nếu không thì không ai kiểm được việc CHIA ĐỀU.
+    # `enqueue.py` in `[kho:TÊN]` và `Drive file id: …`, nhưng ta bắt toàn bộ đầu ra của nó nên
+    # hai dòng ấy biến mất. Anh hỏi "chia đều các kho chưa" và log không trả lời được — một
+    # cơ chế không quan sát được thì cũng như không có: không ai biết nó lệch cho tới khi một
+    # kho đầy và cả mẻ hỏng.
+    import re as _re
+    _kho = ""
+    if ok:
+        _m = _re.search(r"\[kho:([^\]]+)\]", r.stdout or "")
+        _id = _re.search(r"Drive file id:\s*(\S+)", r.stdout or "")
+        _kho = (f"  → kho {_m.group(1)}" if _m else "")
+        if _id:
+            _kho += f" · {_id.group(1)[:16]}"
+    print(f"   {'✅' if ok else '❌'} {kenh:18s} {os.path.basename(mp4)}{_kho}"
           f"{'' if ok else ' — ' + (r.stderr or r.stdout or '')[-160:]}")
     return ok
 

@@ -6251,12 +6251,13 @@ def t_bieu_tuong_doc_duoc_tren_nen_cua_no():
     lưới avatar thì hai biểu tượng ấy gần như biến mất. Cùng họ lỗi với `k["mau"]`: mượn một giá
     trị cho việc nó không sinh ra để làm.
 
-    BAGGAGE CLAIM (2,61) có từ trước bản này và được nêu riêng, không sửa lén.
+    BAGGAGE CLAIM (2,61) có từ trước bản này; sau khi anh duyệt đã nâng lên 4,49 nên cổng
+    không còn ngoại lệ nào — một cổng có ngoại lệ là một cổng đang chờ ngoại lệ thứ hai.
     """
     import sys as _s, os as _o
     _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
     import brand_kling as BK
-    xau = [t for _, t, _c, _n in BK.kiem_tuong_phan(3.0) if t != "BAGGAGE CLAIM"]
+    xau = [t for _, t, _c, _n in BK.kiem_tuong_phan(3.0)]
     assert not xau, f"biểu tượng chìm vào nền: {xau}"
 
 def t_kling_chan_dung_diem_yeu():
