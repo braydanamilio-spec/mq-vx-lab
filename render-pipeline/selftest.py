@@ -2518,6 +2518,7 @@ def main():
     check("sổ tránh-trùng và phép so cắt cùng độ dài", t_so_trung_tieu_de_phai_cung_do_dai)
     check("mỗi kênh Kling có mặt ở cả hồ sơ + brand", t_kenh_kling_dong_bo_ba_noi)
     check("đề bài Kling: Python khớp web từng trường", t_lich_kling_python_khop_web)
+    check("khuôn hình đổi từng tập + khớp web", t_khuon_hinh_doi_tung_tap_va_khop_web)
     check("avatar: chữ và số không bị đường tròn cắt", t_avatar_khong_bi_cat_tron)
     check("biểu tượng đọc được trên nền của chính nó", t_bieu_tuong_doc_duoc_tren_nen_cua_no)
     check("bộ chấm Kling chặn đúng điểm yếu của Kling", t_kling_chan_dung_diem_yeu)
@@ -6205,6 +6206,66 @@ def t_lich_kling_python_khop_web():
                     lech.append(f"{k['ten']} tập {so} trường {c}")
                     break
     assert not lech, f"{len(lech)} đề bài lệch giữa Python và web: {lech[:4]}"
+
+
+def t_khuon_hinh_doi_tung_tap_va_khop_web():
+    """KHUÔN HÌNH PHẢI ĐỔI TỪNG TẬP, KHÔNG LẶP LIỀN KỀ, VÀ WEB TÍNH RA ĐÚNG NHƯ PYTHON.
+
+    2/9 — `_bat_buoc` từng ghi cứng "Camera locked off at standing eye level, wide." vào MỌI
+    prompt. Đo trên sáu bản thảo thật: 6/6 hook mở bằng "static eye-level wide shot" — ba mươi
+    kênh, mọi tập, một khuôn hình. Đây là thứ người xem thấy TRƯỚC cả nội dung, và là chữ
+    "cảnh" trong câu luật YouTube về nội dung hàng loạt.
+
+    Ba chốt, vì bản vá này có ba chỗ hỏng được:
+      1. lặp liền kề — bản đầu nhét khuôn hình thành trục thứ tám của bộ lịch, và vì nó thành
+         CHỮ SỐ CAO NHẤT nên 144/199 tập liền nhau trùng khuôn dù tổng thể vẫn đều.
+      2. bước ghi cứng — kênh có `khuon_cam` còn 6 khuôn thì gcd(3,6)=3, bước 3 chỉ đi qua HAI ô.
+      3. web lệch — khuôn prompt web dựng một lần cho cả kênh, không đục ô trống thì mọi tập
+         sinh từ trình duyệt đều mang khuôn hình của tập 0.
+    """
+    import sys as _s, os as _o, json as _j
+    goc = _o.path.dirname(_o.path.abspath(__file__))
+    _s.path.insert(0, goc)
+    import kling_kenh as KK
+    for ten in KK.KENH:
+        ds = [KK._lich(ten, so)["khuon_hinh"] for so in range(60)]
+        lap = [i for i, (a, b) in enumerate(zip(ds, ds[1:])) if a == b]
+        assert not lap, f"{ten}: khuôn hình lặp liền kề ở tập {lap[:3]}"
+        n = len(KK._khuon_kenh(KK.ho_so(ten)))
+        assert len(set(ds)) == n, f"{ten}: chỉ dùng {len(set(ds))}/{n} khuôn trong 60 tập"
+    # prompt phải mang ĐÚNG câu máy của lịch, và đề bài phải nói cùng khuôn ấy
+    import re as _r
+    mau = {"hook": "x", "payoff": "y", "room": None,
+           "lines": [{"who": "a", "say": "He's here."}]}
+    for ten in list(KK.KENH)[:6]:
+        ph = next(iter(KK.ho_so(ten)["phong"]))
+        for so in (0, 1, 2, 3):
+            p = KK.prompt(ten, dict(mau, room=ph), 6, so=so)
+            assert KK._lich(ten, so)["may"] in p, f"{ten} tập {so}: prompt thiếu câu máy của lịch"
+            m = _r.search(r"EXACTLY this framing[^:]*: ([^.]+)\.", KK._sys(ten, 6, so))
+            assert m and m.group(1) == KK._lich(ten, so)["khuon_hinh"], \
+                f"{ten} tập {so}: đề bài và prompt nói hai khuôn khác nhau"
+    # web: chạy ĐÚNG đoạn JS của dashboard trên ĐÚNG dữ liệu vừa xuất
+    d = _o.path.join(goc, "..", "MM0-AutoPublisher", "dashboard")
+    if not _o.path.isdir(_o.path.join(d, "kling")):
+        return
+    idx = _j.load(open(_o.path.join(d, "kling", "index.json")))
+    for k in idx["kenh"]:
+        f = _o.path.join(d, "kling", k["slug"] + ".json")
+        if not _o.path.exists(f):
+            continue
+        LI = _j.load(open(f))["lich"]
+        KH, b = LI.get("khuon_hinh") or [], LI.get("khuon_buoc") or 3
+        assert KH, f"{k['ten']}: web thiếu bảng khuôn hình"
+        for so in (0, 1, 5, 11):
+            web = KH[((LI.get("goc", 0) + so * b) % len(KH) + len(KH)) % len(KH)][1]
+            assert web == KK._lich(k["ten"], so)["may"], \
+                f"{k['ten']} tập {so}: web và Python ra hai câu máy khác nhau"
+    # khuôn web phải còn Ô TRỐNG, không phải câu máy đã nướng cứng
+    f = _o.path.join(d, "kling", idx["kenh"][0]["slug"] + ".json")
+    kh = _j.load(open(f))["khuon"]
+    than = kh[list(kh)[0]]["than"][0]
+    assert "@@MAY@@" in than, "khuôn web nướng cứng câu máy — mọi tập sẽ mang khuôn của tập 0"
 
 def t_kenh_kling_dong_bo_ba_noi():
     """MỖI KÊNH KLING PHẢI CÓ MẶT Ở CẢ BA NƠI: hồ sơ · brand · dữ liệu web.
