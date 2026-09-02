@@ -8124,3 +8124,15 @@ báo *"không dùng được"* — đọc y hệt hạn mức cạn, nên chẩn
 
 **Luật.** Thứ từ ba bước trở lên cùng cần thì nó là **bước riêng**, không phải sản phẩm phụ của
 bước đầu tiên tình cờ cần nó.
+
+**7dd lần thứ ba, cùng ngày — dashboard.** `Nhật ký gần đây` làm y hệt:
+
+```js
+const ds = s.docs.sort(theo_thoi_gian).slice(0,20);   // cắt 20 job mới nhất
+        ... rồi mới lọc kênh đang dùng
+```
+
+20 job mới nhất mà toàn kênh đã nghỉ thì nhật ký ra **rỗng**, trong khi job của 18 kênh nằm
+ngay dưới lằn cắt. Ba chỗ khác nhau trong một ngày, cùng một hình dạng: **phép cắt đặt trước
+phép lọc**. Câu hỏi phải hỏi mỗi khi thấy `limit` / `slice` / `[:n]`: *cái mình muốn giữ có
+chắc nằm trong n phần tử đầu không?* Nếu không chắc thì **lọc trước, cắt sau**.

@@ -2544,6 +2544,10 @@ KENH: dict[str, dict] = {
             "thủ tục hành chính cấp phường."
         ),
         "ty_le": "9:16",
+        "luat_the_gioi": (
+            "Magic exists and never resolves the scene — no spell, potion or blade ends the argument; a rule, a form or a fee does.",
+            "Nobody swings a weapon at anybody. No monster is ever on screen; beasts exist only as paperwork about beasts.",
+        ),
         "nhan_vat": {
             "Bram": (
                 "Bram: 44-year-old man, balding with a neat grey fringe, ink-stained tunic under a "
@@ -2669,6 +2673,10 @@ KENH: dict[str, dict] = {
             "bé xíu mà không ai được phép vứt đi."
         ),
         "ty_le": "9:16",
+        "luat_the_gioi": (
+            "Nothing falls. A released object drifts slowly in a straight line until something stops it, and liquid balls up instead of spreading.",
+            "No emergency ever occurs — no breach, no fire, no alarm, no medical incident. The only scarcity is supplies and the only clock is a resupply schedule.",
+        ),
         "mo_cam": ("a liquid is spreading", "smoke or steam"),
         "nhan_vat": {
             "Vega": (
@@ -2794,6 +2802,10 @@ KENH: dict[str, dict] = {
             "không hề biết họ ở đó."
         ),
         "ty_le": "9:16",
+        "luat_the_gioi": (
+            "Trish cannot see, hear or feel the three ghosts. She never speaks to them, never answers them, and never reacts to anything they say — if she appears to respond, she is responding to the house.",
+            "The ghosts cannot be heard by the living and can only move small light objects, and only with visible effort. Nothing frightening happens; the house is cozy.",
+        ),
         "nhan_vat": {
             "Aldous": (
                 "Aldous: man who died at 58 in 1893, stiff collar, black frock coat, waistcoat with "
@@ -2923,6 +2935,10 @@ KENH: dict[str, dict] = {
             "người lớn mà chúng nghe lỏm được. Người không bao giờ nói."
         ),
         "ty_le": "9:16",
+        "luat_the_gioi": (
+            "The dogs speak only to each other. Humans are present but never speak on camera, are never in focus, and are cropped by the frame.",
+            "Dogs have no hands. Anything that needs fingers either never happens or was already done by a human off screen.",
+        ),
         "khuon_cam": ("top-down", "high angle"),
         "mo_cam": ("smoke or steam",),
         "nhan_vat": {
@@ -3050,6 +3066,10 @@ KENH: dict[str, dict] = {
             "Không ai rút súng; vũ khí ở đây là cuốn sổ nợ."
         ),
         "ty_le": "9:16",
+        "luat_the_gioi": (
+            "It is 1884: no electricity, no telephone, no engine, no photograph in colour, no plastic. Light comes from daylight or an oil lamp.",
+            "No weapon is ever drawn and nobody is hurt. Disputes end at the ledger, the scale or the posted notice.",
+        ),
         "nhan_vat": {
             "Prudence": (
                 "Prudence: 52-year-old woman, greying hair pinned tight, high-collared grey dress "
@@ -3172,6 +3192,10 @@ KENH: dict[str, dict] = {
             "loạn tuyệt đối, và chuyện thì luôn vô hại."
         ),
         "ty_le": "9:16",
+        "luat_the_gioi": (
+            "The caller is never seen — only heard, thin and clipped, through a headset.",
+            "Nothing dangerous, violent, medical or genuinely urgent ever happens. Every call turns out to be harmless: an animal, a locked car, a smell, a neighbour, a delivery.",
+        ),
         "nhan_vat": {
             "Roz": (
                 "Roz: 54-year-old woman, short greying bob, cardigan over a polo, reading glasses "
@@ -3298,6 +3322,10 @@ KENH: dict[str, dict] = {
             "toàn bộ kỹ năng ấy ra dùng cho cái tủ lạnh chung."
         ),
         "ty_le": "9:16",
+        "luat_the_gioi": (
+            "The alarm never sounds and the crew never leaves the building. No fire, rescue, injury or emergency is shown or described.",
+            "Rank is real everywhere except the kitchen, where whoever is cooking decides.",
+        ),
         "nhan_vat": {
             "Vaughn": (
                 "Vaughn: 46-year-old woman, dark hair in a tight low bun, navy job shirt with a "
@@ -3422,6 +3450,10 @@ KENH: dict[str, dict] = {
             "đô, và tang vật luôn nói ngược lại chủ của nó."
         ),
         "ty_le": "9:16",
+        "luat_the_gioi": (
+            "Nothing criminal is ever at issue and nothing at stake exceeds a repair bill. Dot and Vern are the two sides of the dispute; Judge Ottoline and Reyes never take a side.",
+            "The turn comes from a physical exhibit that proves the opposite of what its owner believes.",
+        ),
         "mo_cam": ("smoke or steam", "a liquid is spreading"),
         "nhan_vat": {
             "Judge Ottoline": (
@@ -3552,6 +3584,10 @@ KENH: dict[str, dict] = {
             "ruy băng, và cái luật ai cũng viện ra thì chưa từng tồn tại."
         ),
         "ty_le": "9:16",
+        "luat_the_gioi": (
+            "Always outdoors and always daylight. No interior scene, no night.",
+            "The prize is worth nothing and the record is worth everything; everybody cites a rule and nobody has read the rulebook.",
+        ),
         "mo_cam": ("a liquid is spreading",),
         "nhan_vat": {
             "Darlene": (
@@ -3676,6 +3712,10 @@ KENH: dict[str, dict] = {
             "phàn nàn đều bị đáp lại bằng nhiều nhiệt tình hơn."
         ),
         "ty_le": "9:16",
+        "luat_the_gioi": (
+            "The ship is calm and nothing goes wrong with it — no storm, no illness, no emergency, no port. The horizon is identical in every direction.",
+            "Nobody can leave, and every complaint is answered with more hospitality, never less.",
+        ),
         "mo_cam": ("a liquid is spreading",),
         "nhan_vat": {
             "Rhonda": (
@@ -5245,6 +5285,18 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         # ai nói ra; hài quán đêm sống bằng sự mệt mỏi; hài phòng gym sống bằng cái tôi va vào
         # vật lý. Đưa chung một luật cho cả ba là cách chắc chắn để cả ba đều nhạt.
         f"HOW COMEDY WORKS ON THIS CHANNEL — this is the engine, not a mood:\n{hs['hai']}\n\n"
+        # LUẬT VẬT LÝ CỦA THẾ GIỚI NÀY. 2/9 — Đọc một bản thảo THE HAUNTING đã sạch mọi cổng và
+        # đạt 90/100: Trish (người sống, KHÔNG nhìn thấy ma) đang đối thoại tay đôi với Ivy (ma).
+        # Tiền đề của kênh bị phá ngay ở dòng thoại đầu, và không thước nào bắt — `cham()` đo tay
+        # nghề, `cham100` đo cấu trúc, cả hai đều không biết thế giới này vận hành thế nào.
+        #
+        # `hai` có nói điều đó, nhưng nói như một lời tả cơ chế hài. Ở đây nó phải đứng thành
+        # LUẬT, cùng chỗ với các giới hạn cứng, vì nó là luật vật lý chứ không phải gợi ý phong
+        # cách. Đặt TRƯỚC đề bài để mọi thứ sau đó đọc trong đúng thế giới.
+        + ("THE PHYSICAL LAWS OF THIS WORLD — these are not style notes. Breaking one of them "
+           "breaks the premise of the show, and no joke is worth that:\n"
+           + "".join(f"  · {x}\n" for x in hs["luat_the_gioi"]) + "\n"
+           if hs.get("luat_the_gioi") else "")
         + (de_bai(kenh, so) if so >= 0 else "")
         # Khuôn kể riêng cho thời lượng này. Đặt NGAY SAU cơ chế hài và TRƯỚC mọi giới hạn con
         # số, vì nó quyết định LOẠI chuyện — còn các con số chỉ quyết định kích thước.

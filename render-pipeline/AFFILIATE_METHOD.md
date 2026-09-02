@@ -181,6 +181,9 @@ CREATE TABLE aff_don (          -- đơn kéo về từ API mạng
 Đây là quyết định kỹ thuật quan trọng nhất của cả pipeline. **Mọi mạng đều cho gắn subid**
 (Accesstrade `utm_content`/`sub1`, Involve Asia Sub IDs, Shopee/TikTok subid, Hotmart `src`).
 
+> ⚠ **BẢN NÀY ĐÃ BỊ SỐ ĐO BÁC — xem §4.5.2.** Shopee chỉ nhận a-z A-Z 0-9, không nhận dấu
+> gạch dưới, và cho 5 trường riêng thay vì một chuỗi ghép. Giữ lại đây để thấy chỗ đã sai.
+
 ```
 subid = <kenh>_<tap>_<nentang>_<vitri>
 ví dụ  dogpark_041_yt_desc1
@@ -209,6 +212,77 @@ Bốn trường ấy đủ để trả lời **mọi** câu hỏi vận hành m�
 | **Involve Asia** | API Key + Secret → **token hết hạn sau 2 giờ** (phải tự làm mới trong client) · Deeplink Generator · pull từng transaction + trạng thái |
 | **Hotmart** | Hotlink sinh trong dashboard; có API bán hàng để đối soát |
 | TikTok Shop / Shopee | link sinh trong app/dashboard — **phần này chưa auto hoàn toàn được**, ghi ra để không đi tìm |
+
+---
+
+## 4.5 ĐO TRÊN DASHBOARD THẬT — Shopee Affiliate VN, 2/9/2026
+
+Soi tận tay tài khoản đã duyệt. Đây là **số đo**, không phải tài liệu bên thứ ba — mọi chỗ dưới
+đây thay thế phần phỏng đoán ở §1.1 và §4.3.
+
+### 4.5.1 Sáu điều đo được
+
+| # | Đo được | Hệ quả |
+|---|---|---|
+| **a** | **Không có nút đổi nước.** Trang ghi cứng *"…trên Shopee **Vietnam**"*; biểu tượng quả cầu ở góc chỉ là **múi giờ UTC+0700** | Một tài khoản = **một nước**. Muốn ID/TH/PH/MY phải đăng ký riêng ở `affiliate.shopee.co.id`, `.co.th`, `.ph`, `.com.my` |
+| **b** | Dán `https://shopee.co.id/` rồi bấm "Lấy link": **không sinh ra một lệnh gọi API nào** — chỉ 2 lệnh `monitor-report/reportLogs`. Web **chặn ngay tại trình duyệt** | Không có mẹo nào lách được. Link nước ngoài không phải "bị từ chối", nó **không bao giờ được gửi đi** |
+| **c** | Đối chứng `https://shopee.vn/` → hiện ngay popup *"Link của Custom Link"* với **link rút gọn** `https://s.shopee.vn/<mã>` | Đây là hình dạng "thành công". Dùng làm mốc so cho mọi phép thử sau |
+| **d** | **Link trả về là link RÚT GỌN**, sub_id bị nén vào trong mã — không nhìn thấy trong URL | **Không ghép link bằng chuỗi được.** Mỗi link phải đi qua một lượt chuyển đổi thật. Đây là chỗ giới hạn tốc độ của cả pipeline |
+| **e** | **5 ô Sub_id riêng** (Sub_id1…Sub_id5), chỉ nhận **a-z A-Z 0-9** | Thiết kế `kenh_tap_nentang_vitri` ở §4.3 **SAI** — dấu gạch dưới không hợp lệ. Xem 4.5.2 |
+| **f** | Cảnh báo đỏ thường trực: *"Vui lòng cập nhật **Thiết lập thanh toán** để nhận được hoa hồng"* | **Hoa hồng đang chạy sẽ không về tài khoản nào.** Việc phải làm trước mọi việc khác |
+
+### 4.5.2 SUBID — sửa lại theo đúng thứ đo được
+
+Shopee cho **5 trường riêng biệt**, tốt hơn hẳn một chuỗi ghép. Bỏ dấu gạch dưới:
+
+| Trường | Giá trị | Ví dụ |
+|---|---|---|
+| `Sub_id1` | kênh | `dogpark` |
+| `Sub_id2` | số tập (3 chữ số) | `041` |
+| `Sub_id3` | nền tảng | `yt` · `fb` · `ig` · `tt` |
+| `Sub_id4` | vị trí link | `desc1` · `desc2` · `cmt` · `bio` |
+| `Sub_id5` | đợt / ngày | `20260902` |
+
+> **Đã thử chạy thật** với bộ `dogpark / 041 / yt / desc1` → chuyển đổi thành công. Cơ chế subid
+> hoạt động đúng như thiết kế, chỉ khác cách đóng gói.
+>
+> **Luật:** mọi mạng đều có bộ ký tự riêng cho subid. Ghép chuỗi bằng ký tự mạng không nhận là
+> lỗi **âm thầm** — link vẫn ra, subid bị cắt hoặc bỏ, và số liệu biến mất mà không báo gì. Bộ
+> ký tự an toàn chung: **chỉ chữ và số**.
+
+### 4.5.3 Bản đồ tính năng — cái gì auto được, cái gì không
+
+| Mục trong dashboard | Dùng vào đâu | Auto được? |
+|---|---|---|
+| **Custom Link** → tab *"Đăng tải file Excel để Chuyển đổi Liên kết"* | Chuyển đổi **hàng loạt** bằng file Excel | ⚠ **Bán tự động** — đường tốt nhất hiện có. Pipeline xuất Excel, anh tải lên, tải kết quả về |
+| Custom Link → tab thường | Tối đa **5 link/lượt** | Tay |
+| **Product Feed** | Kho sản phẩm, *"tự động cập nhật mỗi ngày"* | ✅ nếu có feed — **tài khoản này đang trống** (`Không có dữ liệu`), phải mở feed trước |
+| **Báo cáo click** | Cột: Click id · Thời gian · **Khu vực Click** · **Sub_id** · Người giới thiệu. Có lọc theo Sub_id + nút **Xuất dữ liệu** | ✅ export → `aff_thu.py` đọc |
+| **Báo cáo chuyển đổi** | Đơn + hoa hồng theo subid | ✅ export |
+| Hoa hồng Shopee / Xtra / Sản phẩm · Ưu đãi độc quyền | Tra mức hoa hồng từng loại | tay |
+| Chiến dịch liên kết | Chiến dịch hoa hồng cao theo đợt | tay |
+
+> **Khác biệt lớn với Accesstrade:** Shopee VN **không có API publisher công khai**. Accesstrade
+> có (`docs.accesstrade.vn`). Nên trong bộ VN/SEA, **Accesstrade là trục tự động, Shopee là trục
+> tay/bán tay** — và điều đó quyết định kênh nào rải link nào, chứ không phải mức hoa hồng.
+
+### 4.5.4 Trả lời thẳng: lấy link cho từng nước thế nào
+
+```
+Việt Nam      → affiliate.shopee.vn        (tài khoản này — ĐANG CÓ)
+Indonesia     → affiliate.shopee.co.id     ) mỗi nước một lần đăng ký,
+Thái Lan      → affiliate.shopee.co.th     ) một hồ sơ, một hệ thanh toán,
+Philippines   → affiliate.shopee.ph        ) một dashboard riêng
+Malaysia      → affiliate.shopee.com.my    )
+Brazil        → affiliate.shopee.com.br    ) ⚠ chưa kiểm — nhiều nước đòi cư trú/bank nội địa
+```
+
+Mỗi nước còn đòi **kênh nội dung bằng tiếng nước đó** để duyệt. Nên phủ 5 nước SEA bằng Shopee
+là **5 lần** làm lại từ đầu.
+
+**Đường đỡ tốn hơn cho nhiều nước:** **Involve Asia** — một tài khoản, một API, gom nhiều nước
+và nhiều sàn. Đây mới là lý do chọn Involve làm trục SEA, không phải hoa hồng.
+
 
 ---
 
