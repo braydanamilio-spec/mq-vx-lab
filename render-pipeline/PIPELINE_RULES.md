@@ -8083,3 +8083,44 @@ cạn vòng mà chưa từng sạch rơi về `cuoi` = lần viết gần nhất
 nhánh điểm.
 
 **Chữa.** Giữ thêm `_it` = bản ít lỗi nhất.
+
+### 7dd — Trần đặt trên số ĐỌC trong khi thứ cần chặn là số XOÁ  (2/9/2026)
+
+**Triệu chứng.** Anh: *"nhớ dọn hết các tiến trình channel cũ đã xoá."* Lệnh dọn chạy xanh
+nhiều lượt, log in `ĐÃ DỌN 0 job`, mà bảng "Tiến trình theo kênh" vẫn liệt kê 50 kênh đã nghỉ.
+
+**Gốc rễ.** Thứ tự hai phép:
+
+```python
+.where("owner","==",owner).limit(400)      # lấy 400 bản ghi ĐẦU TIÊN
+    if _ten(j) in giu: continue            # rồi MỚI lọc
+```
+
+Lọc nằm sau giới hạn. 400 bản ghi đầu toàn kênh đang dùng thì lượt ấy xoá đúng 0 — và lượt
+sau lấy lại đúng 400 bản ghi ấy. Không tiến được một bước nào, mãi mãi.
+
+Trần được đặt trên số **đọc**, trong khi thứ cần chặn là số **xoá**. Hai đại lượng ấy chỉ bằng
+nhau khi mọi bản ghi đọc lên đều là rác — đúng cái điều kiện thôi đúng kể từ lúc 18 kênh mới
+bắt đầu sinh bản ghi. Cũng vì thế `if n_j >= TRAN` không bao giờ đúng, nên không có một dòng
+log nào nói rằng còn sót.
+
+**Họ lỗi.** *Cái bẩn nằm ngoài phép lọc* — cùng họ với `dem_tat_ca` bỏ sót dòng `channel` NULL
+(7cx). Ở đây nó nằm ngoài phép **phân trang**: mỗi lượt lại soi đúng một chỗ.
+
+**Sửa.** Phân trang bằng `start_after(<snapshot cuối trang>)` nên con trỏ luôn tiến; trần đặt
+trên cả số xoá lẫn số đọc, và cả hai đường ra đều in ra số thật.
+
+Con trỏ phải là chính **snapshot**, không phải `{"__name__": id}` tự dựng: tự dựng là đoán cách
+client mã hoá khoá tài liệu, đoán sai thì phân trang lặng lẽ quay về đầu và vòng lặp xoá đi
+xoá lại một trang.
+
+### 7de — Tệp khoá là sản phẩm phụ của một bước không liên quan  (2/9/2026)
+
+`/tmp/sa.json` được ghi **bên trong** bước "Đẩy video vào hàng đợi đăng", trong khi hai bước
+khác (dọn bản ghi, đối chiếu kho) khai `GOOGLE_APPLICATION_CREDENTIALS` trỏ vào chính tệp ấy.
+
+Bước đẩy hỏng, bị bỏ qua, hay đổi chỗ là hai bước kia mất khoá. Và mất khoá thì Firestore chỉ
+báo *"không dùng được"* — đọc y hệt hạn mức cạn, nên chẩn đoán sẽ đi thẳng sang hướng hạn mức.
+
+**Luật.** Thứ từ ba bước trở lên cùng cần thì nó là **bước riêng**, không phải sản phẩm phụ của
+bước đầu tiên tình cờ cần nó.
