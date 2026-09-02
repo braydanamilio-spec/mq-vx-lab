@@ -2547,6 +2547,14 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
              "nenTrang": mk["nen"], "chuTrang": mk["chu"],
              "dai": dai, "doc": doc}
     _ = (hook, hook_phu)   # thẻ hook đã bỏ theo yêu cầu; giữ biến để bộ sinh không phải sửa
+    # Xả sổ sức khoẻ khoá của CẢ BA NHÀ (cf ở `nen_gt`, gemini/groq ở `key_manager`) — đặt ở đây
+    # vì khâu VIẾT KỊCH BẢN dùng gemini/groq mà không đi qua `sinh_tap`, nên nếu chỉ xả trong ấy
+    # thì 173 khoá của hai nhà kia vẫn không bao giờ được ghi.
+    try:
+        import xoay_key as _XK
+        _XK.ghi_trang_thai(os.environ.get("OWNER_UID", ""))
+    except Exception:
+        pass
     pj = os.path.join(GOC, "out", f"v9_{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
     io.open(pj, "w", encoding="utf-8").write(json.dumps(props, ensure_ascii=False))

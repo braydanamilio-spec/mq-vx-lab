@@ -25,6 +25,27 @@ def _count(k):
         _REQ[kid] = _REQ.get(kid, 0) + 1
 
 
+def _so(k, song: bool, ly_do: str = "", nghi_den: str = "") -> None:
+    """Ghi sức khoẻ khoá Gemini/Groq vào CÙNG sổ với khoá CF (`xoay_key._QUAN_SAT`).
+
+    ── VÌ SAO  (2/9/2026) ──────────────────────────────────────────────────────────────────
+    Anh: *"mấy cái đấy cả tuần nay nó đứng yên như thế rồi."* Đúng — và bộ ghi làm sáng nay chỉ
+    phủ **khoá CF**, vì nó nằm trong `goi_xoay` mà hàm ấy lọc `cf:`. Gemini và Groq xoay ở tệp
+    này, nên 173 khoá của hai nhà ấy vẫn không ai ghi lại gì.
+
+    Vá một nhánh, để nguyên nhánh song song — lần thứ tư trong hai ngày. Nay cả ba nhà ghi vào
+    một sổ, và sổ ấy xả cùng một lô.
+
+    Đặt ở `_ok`/`_cool` chứ không ở từng vòng lặp: hai hàm ấy là điểm nút mà **cả tám** vòng
+    trong tệp này đều đi qua. Chép lời ghi vào tám chỗ là tự hẹn ngày quên một chỗ.
+    """
+    try:
+        import xoay_key as _XK
+        _XK._ghi_nhan(str(k.get("id") or ""), str(k.get("key") or ""), song, ly_do, nghi_den)
+    except Exception:
+        pass
+
+
 def flush_requests() -> dict:
     """Lấy (và xóa) bảng đếm request/key trong tiến trình -> caller ghi vào Firestore req_today."""
     global _REQ
@@ -153,6 +174,7 @@ def write_story(channel: str, keys: list[dict], seed: str,
     """Viết 1 data-story cho kênh: bám key sticky, đổi key khi limit, hạ model nếu cần.
     on_limit(key_id): key bị rate-limit -> cho NGHỈ. on_ok(key_id): key viết OK -> đánh dấu SỐNG (khỏi health-check riêng)."""
     def _ok(k, r):
+        _so(k, True)                      # gọi được = sống; ghi ở đây phủ mọi vòng trong tệp
         if on_ok and k.get("id"):
             try: on_ok(k["id"])
             except Exception: pass
@@ -167,6 +189,10 @@ def write_story(channel: str, keys: list[dict], seed: str,
         if not k.get("id"):
             return
         low = str(exc).lower()
+        # CHẾT HẲN (403/denied) mới là chết. 429/cạn hạn mức vẫn là SỐNG — mai hồi. Ghi nhầm ở
+        # đây là đẩy hàng trăm khoá lành vào cột "chết" rồi mai đi thay chúng.
+        _so(k, not any(t in low for t in CHET_HAN),
+            str(exc)[:80] if any(t in low for t in CHET_HAN) else "hết hạn mức tạm — sẽ hồi")
         if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")
@@ -232,6 +258,7 @@ def write_guess(channel: str, keys: list[dict], category: str, n_rounds: int = 3
                 avoid: list = None, on_limit=None, on_ok=None) -> dict:
     """Sinh bộ câu đố GUESS — bám key sticky, đổi key khi limit (cùng cơ chế write_story)."""
     def _ok(k, r):
+        _so(k, True)                      # gọi được = sống; ghi ở đây phủ mọi vòng trong tệp
         if on_ok and k.get("id"):
             try: on_ok(k["id"])
             except Exception: pass
@@ -244,6 +271,10 @@ def write_guess(channel: str, keys: list[dict], category: str, n_rounds: int = 3
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
+        # CHẾT HẲN (403/denied) mới là chết. 429/cạn hạn mức vẫn là SỐNG — mai hồi. Ghi nhầm ở
+        # đây là đẩy hàng trăm khoá lành vào cột "chết" rồi mai đi thay chúng.
+        _so(k, not any(t in low for t in CHET_HAN),
+            str(exc)[:80] if any(t in low for t in CHET_HAN) else "hết hạn mức tạm — sẽ hồi")
         if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
@@ -298,6 +329,7 @@ def write_mapped(channel: str, keys: list[dict], niche: str, tier: str = "normal
                  avoid: list = None, on_limit=None, on_ok=None) -> dict:
     """Sinh câu chuyện MAPPED — bám key sticky, đổi key khi limit (cùng cơ chế write_story)."""
     def _ok(k, r):
+        _so(k, True)                      # gọi được = sống; ghi ở đây phủ mọi vòng trong tệp
         if on_ok and k.get("id"):
             try: on_ok(k["id"])
             except Exception: pass
@@ -309,6 +341,10 @@ def write_mapped(channel: str, keys: list[dict], niche: str, tier: str = "normal
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
+        # CHẾT HẲN (403/denied) mới là chết. 429/cạn hạn mức vẫn là SỐNG — mai hồi. Ghi nhầm ở
+        # đây là đẩy hàng trăm khoá lành vào cột "chết" rồi mai đi thay chúng.
+        _so(k, not any(t in low for t in CHET_HAN),
+            str(exc)[:80] if any(t in low for t in CHET_HAN) else "hết hạn mức tạm — sẽ hồi")
         if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
@@ -360,6 +396,7 @@ def write_ranked(channel: str, keys: list[dict], niche: str, tier: str = "normal
                  avoid: list = None, on_limit=None, on_ok=None) -> dict:
     """Sinh tier list RANKED — bám key sticky, đổi key khi limit."""
     def _ok(k, r):
+        _so(k, True)                      # gọi được = sống; ghi ở đây phủ mọi vòng trong tệp
         if on_ok and k.get("id"):
             try: on_ok(k["id"])
             except Exception: pass
@@ -371,6 +408,10 @@ def write_ranked(channel: str, keys: list[dict], niche: str, tier: str = "normal
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
+        # CHẾT HẲN (403/denied) mới là chết. 429/cạn hạn mức vẫn là SỐNG — mai hồi. Ghi nhầm ở
+        # đây là đẩy hàng trăm khoá lành vào cột "chết" rồi mai đi thay chúng.
+        _so(k, not any(t in low for t in CHET_HAN),
+            str(exc)[:80] if any(t in low for t in CHET_HAN) else "hết hạn mức tạm — sẽ hồi")
         if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
@@ -422,6 +463,7 @@ def write_scaled(channel: str, keys: list[dict], niche: str, tier: str = "normal
                  avoid: list = None, on_limit=None, on_ok=None) -> dict:
     """Sinh so sánh kích thước SCALED — bám key sticky, đổi key khi limit."""
     def _ok(k, r):
+        _so(k, True)                      # gọi được = sống; ghi ở đây phủ mọi vòng trong tệp
         if on_ok and k.get("id"):
             try: on_ok(k["id"])
             except Exception: pass
@@ -433,6 +475,10 @@ def write_scaled(channel: str, keys: list[dict], niche: str, tier: str = "normal
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
+        # CHẾT HẲN (403/denied) mới là chết. 429/cạn hạn mức vẫn là SỐNG — mai hồi. Ghi nhầm ở
+        # đây là đẩy hàng trăm khoá lành vào cột "chết" rồi mai đi thay chúng.
+        _so(k, not any(t in low for t in CHET_HAN),
+            str(exc)[:80] if any(t in low for t in CHET_HAN) else "hết hạn mức tạm — sẽ hồi")
         if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
@@ -484,6 +530,7 @@ def write_thennow(channel: str, keys: list[dict], niche: str, tier: str = "norma
                   avoid: list = None, on_limit=None, on_ok=None) -> dict:
     """Sinh so sánh XƯA/NAY — bám key sticky, đổi key khi limit."""
     def _ok(k, r):
+        _so(k, True)                      # gọi được = sống; ghi ở đây phủ mọi vòng trong tệp
         if on_ok and k.get("id"):
             try: on_ok(k["id"])
             except Exception: pass
@@ -495,6 +542,10 @@ def write_thennow(channel: str, keys: list[dict], niche: str, tier: str = "norma
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
+        # CHẾT HẲN (403/denied) mới là chết. 429/cạn hạn mức vẫn là SỐNG — mai hồi. Ghi nhầm ở
+        # đây là đẩy hàng trăm khoá lành vào cột "chết" rồi mai đi thay chúng.
+        _so(k, not any(t in low for t in CHET_HAN),
+            str(exc)[:80] if any(t in low for t in CHET_HAN) else "hết hạn mức tạm — sẽ hồi")
         if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
@@ -548,6 +599,7 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
     """Sinh kịch bản TÀI LIỆU (Wave 2) — bám key sticky, đổi key khi limit.
     speculative=True (Wave 5): dùng DOC_SYS_SPECULATIVE (img_query không bó buộc phải tìm ảnh CC0 thật)."""
     def _ok(k, r):
+        _so(k, True)                      # gọi được = sống; ghi ở đây phủ mọi vòng trong tệp
         if on_ok and k.get("id"):
             try: on_ok(k["id"])
             except Exception: pass
@@ -559,6 +611,10 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
+        # CHẾT HẲN (403/denied) mới là chết. 429/cạn hạn mức vẫn là SỐNG — mai hồi. Ghi nhầm ở
+        # đây là đẩy hàng trăm khoá lành vào cột "chết" rồi mai đi thay chúng.
+        _so(k, not any(t in low for t in CHET_HAN),
+            str(exc)[:80] if any(t in low for t in CHET_HAN) else "hết hạn mức tạm — sẽ hồi")
         if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")   # CHẾT VĨNH VIỄN -> loại khỏi vòng xoay
@@ -615,6 +671,7 @@ def write_doc(channel: str, keys: list[dict], niche: str, style: str = "awe, cin
 def _write_wave4(fn_name, label, channel, keys, niche, tier, avoid, on_limit, on_ok):
     """Dùng CHUNG cho SWARM/PULSE/CLOCKWORK/LONGSHOT (Wave 4) — cùng khuôn write_scaled, chỉ khác hàm sinh."""
     def _ok(k, r):
+        _so(k, True)                      # gọi được = sống; ghi ở đây phủ mọi vòng trong tệp
         if on_ok and k.get("id"):
             try: on_ok(k["id"])
             except Exception: pass
@@ -627,6 +684,10 @@ def _write_wave4(fn_name, label, channel, keys, niche, tier, avoid, on_limit, on
     def _cool(k, exc):
         if not k.get("id"): return
         low = str(exc).lower()
+        # CHẾT HẲN (403/denied) mới là chết. 429/cạn hạn mức vẫn là SỐNG — mai hồi. Ghi nhầm ở
+        # đây là đẩy hàng trăm khoá lành vào cột "chết" rồi mai đi thay chúng.
+        _so(k, not any(t in low for t in CHET_HAN),
+            str(exc)[:80] if any(t in low for t in CHET_HAN) else "hết hạn mức tạm — sẽ hồi")
         if any(s in low for s in CHET_HAN):
             try:
                 import firestore_bridge as _FB; _FB.mark_key_alive(k["id"], False, "403 project bị khoá/denied — cần THAY key", kind="permanent")

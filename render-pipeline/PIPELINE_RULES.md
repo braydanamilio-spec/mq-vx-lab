@@ -8632,3 +8632,33 @@ vẽ ngon — họ lỗi *"cờ bật thì có người bật, tắt thì không
 khoá đo được từ LƯỢT DÙNG THẬT**. Biết con số cuối thì người đọc không bấm "kiểm ngay" nữa.
 Kèm một câu: *khoá cạn tự hồi lúc 00:00 UTC, không cần thay* — thiếu câu ấy thì thấy 97 khoá CF
 nằm cột 😴 là người ta đi mua khoá mới.
+
+### 7ds — Hai lỗi cùng một gốc: MỘT màn hình nói hai con số, và bộ ghi chỉ phủ MỘT nhà  (2/9/2026)
+
+**(a) "Video trong kho: 142 ✓ kho thật" ngay trên "✅ Đã có video (0)".**
+
+Hai ô đếm hai nguồn: ô kho đếm **tệp thật trên Drive** (từ `kiem_kho`, vừa chạy được sau 7df),
+còn bảng kế hoạch đếm **bản ghi job** — mà bản ghi rỗng vì lượt render 12:41 chạy bằng mã cũ
+(lệnh `ghi_job` Worker không nhận, HTTP 500). Video có thật; chỉ là không ai ghi sổ.
+
+`__chStats` (đếm theo kênh từ D1, cùng họ nguồn với ô kho) đã có sẵn trên trang và tự làm mới
+mỗi 5 phút — chỉ là bảng kế hoạch không dùng. Nay lấy `Math.max(bản ghi, kho thật)`.
+
+**Luật (lần thứ ba trong ngày).** Chỗ người dùng nhìn phải dùng **công thức đầy đủ nhất**, không
+phải công thức ngắn nhất. Và: *một màn hình không được nói hai con số ngược nhau* — nếu nói, thì
+lỗi không nằm ở con số mà ở chỗ có hai nguồn không ai đối chiếu.
+
+**(b) Bộ ghi sức khoẻ khoá chỉ phủ CF.**
+
+Anh: *"mấy cái đấy cả tuần nay nó đứng yên như thế rồi."* Bộ ghi làm sáng nay (7dp) nằm trong
+`goi_xoay`, mà hàm ấy **lọc `cf:`**. Gemini và Groq xoay ở `key_manager.py`, nên **173/295 khoá**
+vẫn không ai ghi lại gì — con số "⚪ 241 chưa kiểm" vì thế không thể tự tụt.
+
+Vá một nhánh, để nguyên nhánh song song — **lần thứ tư trong hai ngày**.
+
+Và `key_manager.py` có **tám bản sao giống hệt** của `_ok`/`_cool`. Chép lời ghi vào tám chỗ là
+tự hẹn ngày quên một chỗ; nên ghi vào một hàm `_so()` rồi gọi từ cả tám — đó cũng là lý do chọn
+`_ok`/`_cool` làm điểm nút thay vì từng vòng lặp.
+
+**Chi tiết quan trọng:** `_cool` bắt cả 403-denied lẫn 429-cạn-hạn-mức. Chỉ 403 mới là chết; ghi
+nhầm 429 thành chết là đẩy hàng trăm khoá lành vào cột "chết" rồi mai đi thay chúng.
