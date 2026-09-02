@@ -1197,3 +1197,100 @@ vi phạm**. Nếu không làm được thế thì nó không phải ràng buộ
 Thứ tự đã đi, và là thứ tự đúng: đọc bản thảo → thấy lỗi → **cấp luật bằng lời** → đo → luật
 không ăn → **chữa ở thiết kế + một cổng rẻ nhất có thể**. Ba bước đầu không bỏ được: nhảy thẳng
 vào cổng thì không biết cổng có cần thiết không.
+
+---
+
+## 15. LUẬT RÚT TỪ NGÀY 2/9 — MỘT HỌ LỖI, SÁU LẦN, TRONG MỘT NGÀY
+
+Ngày này không có sáu lỗi khác nhau. Nó có **một** lỗi, mặc sáu bộ quần áo. Ghi ra để lần sau
+nhận mặt nó ở bộ thứ bảy.
+
+### 15.1 Phép CẮT đặt trước phép LỌC
+
+Ba chỗ, ba tệp, cùng một hình dạng:
+
+```python
+.where("owner","==",owner).limit(400)        # lấy 400 bản ghi đầu
+    if _ten(j) in giu: continue              # rồi MỚI lọc kênh cũ
+```
+```js
+const ds = s.docs.sort(theo_thoi_gian).slice(0,20);   // cắt 20 dòng nhật ký
+        ... rồi mới lọc kênh đang dùng
+```
+
+400 bản ghi đầu toàn kênh đang dùng thì lượt dọn xoá đúng **0** — và lượt sau lấy lại đúng 400
+bản ghi ấy, mãi mãi. 20 job mới nhất toàn kênh đã nghỉ thì nhật ký ra **rỗng**, trong khi job
+của 18 kênh nằm ngay dưới lằn cắt.
+
+Ở chỗ dọn, cái trần còn đặt **sai đại lượng**: trần trên số ĐỌC, trong khi thứ cần chặn là số
+XOÁ. Hai đại lượng ấy chỉ bằng nhau khi mọi bản ghi đọc lên đều là rác — đúng cái điều kiện thôi
+đúng kể từ lúc kênh mới bắt đầu sinh bản ghi.
+
+**Luật.** Mỗi khi viết `limit` / `slice` / `[:n]`, hỏi: *cái mình muốn giữ có chắc nằm trong n
+phần tử đầu không?* Không chắc thì **lọc trước, cắt sau**. Và trần phải đặt trên **đại lượng
+mình muốn chặn**, không phải đại lượng dễ đếm.
+
+### 15.2 Bằng chứng luôn tồn tại — ta ném nó đi trước khi ai kịp đọc
+
+Bốn chỗ trong ngày, cùng một hành vi:
+
+| chỗ | cách ném bằng chứng đi | hậu quả đo được |
+|---|---|---|
+| `kiem_kho.py` | chết `ModuleNotFoundError` sau `\|\| true` | bước DUY NHẤT đếm tệp thật trên Drive chưa từng chạy, nhiều ngày |
+| `day_kho.day_mot` | `capture_output=True` rồi vứt `stdout` | 18/18 luồng báo ✅ mà không kho nào có bản ghi |
+| `_kho_tu_kv` | `except: pass` nuốt `NameError` | đường cứu hồ kho chết câm từ 31/8, mà vẫn in ra dòng "đã lấy 100 tài khoản" |
+| `don_drive_kenh` (của chính tôi) | in `0 file` không kèm mẫu số | "kho sạch" và "chưa soi được gì" ra cùng một dòng chữ |
+
+Cái cuối đắt nhất về mặt bài học: tôi vừa sửa ba cái trên xong thì viết lại đúng nó vào script
+mới của mình, trong cùng một buổi.
+
+**Luật.** Mọi con số 0 phải đi kèm **mẫu số**. `0` một mình luôn có hai nghĩa ngược nhau —
+"đã tìm, không có" và "chưa tìm được" — và hai nghĩa ấy dẫn tới hai hành động khác hẳn nhau.
+`soi 12.480 file trong 100/100 kho · xoá 0` là một câu; `soi 0 file trong 0/100 kho · xoá 0`
+là một câu hoàn toàn khác.
+
+### 15.3 Mã thoát trả lời "có nổ không", không trả lời "có làm được việc không"
+
+`day_kho` tính `ok = (returncode == 0)`. Một lượt đẩy **không sinh ra tệp nào trên Drive** vẫn
+thoát 0, và cả 18 luồng in `✅ 2/2 video vào hàng đợi đăng` trong khi D1 có 0 bản ghi.
+
+Ở mắt xích **giao hàng**, câu hỏi đúng không phải "tiến trình có chết không" mà "có tệp nào ra
+đời không". Nay: thoát 0 mà không có dòng `Drive file id:` thì tính là HỎNG — lượt đỏ khiến bốn
+mốc cron tự thử lại, đó mới là tự động thật.
+
+**Luật.** Bước nào có sản phẩm đầu ra thì cổng của nó phải kiểm **sản phẩm**, không kiểm mã thoát.
+
+### 15.4 Tệp phụ thuộc phải tìm bằng ĐƯỜNG MẶC ĐỊNH, biến môi trường chỉ để ghi đè
+
+`kiem_kho.py` nạp `storage` chỉ qua `AUTOPUBLISHER_SRC`. Không workflow nào đặt biến ấy. Biến
+thiếu thì **im**; đường mặc định sai thì **báo**. `day_kho.py` ngay cạnh làm đúng (`../_autopublisher`)
+và chạy tốt suốt.
+
+Cùng dạng: `/tmp/sa.json` được ghi bên trong bước "Đẩy video", trong khi hai bước khác trỏ vào
+chính tệp ấy — tức phụ thuộc vào tác dụng phụ của một bước không liên quan. **Thứ từ ba bước
+trở lên cùng cần thì nó là bước riêng.**
+
+### 15.5 Đọc client cũ trước khi viết client mới — lần thứ ba
+
+`Drive(acc)` trông hoàn toàn hợp lý. `Drive.__init__(self, service=None)` — nó sẽ coi cái dict
+hồ sơ kho là `service` và chết ở lệnh gọi ĐẦU TIÊN, tức sau khi đã quét xong cả kho. `wipe_queue.py`
+ngay cạnh đã dùng `storage.account_drive(acc)` từ 23/8.
+
+**Luật.** Trước khi viết một lối gọi mới tới hệ đã có lối gọi, `grep` xem lối cũ làm thế nào.
+Chú thích trong client cũ là những lần đã trả giá.
+
+### 15.6 Cổng an toàn cho lệnh XOÁ: chỉ xoá khi CHỨNG MINH được
+
+`don_drive_kenh.py` xoá file Drive của kênh đã nghỉ. Bằng chứng duy nhất được chấp nhận là
+trường `channel` trong sidecar `.json` của chính video ấy:
+
+```
+sidecar đọc được · channel không có trong channels.yaml   -> xoá
+sidecar đọc được · channel có trong channels.yaml         -> giữ
+không có sidecar / đọc hỏng / thiếu trường                -> GIỮ, và báo ra
+```
+
+Dòng thứ ba là dòng quan trọng nhất: **không biết ≠ đã nghỉ**. Đoán theo tiền tố tên tệp
+(`v3_`/`v5_`/`v9_`) nghe rất hợp lý và sẽ sai đúng một lần — lần ấy là xoá vĩnh viễn một video
+đang chạy. Và như mọi lệnh dọn: **danh sách giữ lại rỗng thì DỪNG**, vì "không kênh nào được
+giữ" đọc ra y hệt "xoá sạch".
