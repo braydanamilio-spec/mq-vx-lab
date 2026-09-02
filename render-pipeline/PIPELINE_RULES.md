@@ -8247,3 +8247,63 @@ Trước đó, lượt chạy với vòng lặp CHẾT: **6/16 tập còn lỗi*
   cổng đáng ship; nếu nó làm cạn thêm thì phải hạ cấp xuống `don()` hoặc `cham100`.
 - `sd` co từ 4,3 xuống 2,2: đầu ra **ổn định hơn**, và đó là thứ đáng giá hơn trung bình ở một
   dây chuyền chạy hàng nghìn tập.
+
+### 7dh — 144 lượt chạy/ngày cùng đọc Firestore, không lượt nào nhường ai  (2/9/2026)
+
+**Triệu chứng.** Anh: *"sao cứ cạn quota trong khi anh chưa làm gì."* Và cùng lúc, log in
+`🌐 TOÀN HỆ hôm nay: ĐỌC 0/50.000 (0%)` **ngay cạnh** dòng `ResourceExhausted: 429`.
+
+**Gốc rễ.** Repo có **sáu workflow theo cron**, phần lớn mỗi giờ: publish YouTube · publish
+FB/IG · stats · cleanup · thumbnail · trend scout. Khoảng **144 lượt chạy mỗi ngày**. Không lượt
+nào đi qua `con_ngan_sach()`, và — vế độc hơn — **không lượt nào ghi vào sổ**.
+
+Hai hậu quả, và cái thứ hai mới là cái làm mất cả buổi chẩn đoán:
+
+1. Việc phụ (thống kê, dọn dẹp, thumbnail) tiêu chung hạn mức với việc thiết yếu (đẩy video,
+   đăng bài), không ai nhường ai.
+2. Sổ **không thấy** phần chúng tiêu, nên đồng hồ báo bình xăng đầy trong lúc xe đã chết máy.
+
+**Một cổng canh mà không đếm đúng thứ nó canh thì không phải cổng canh.**
+
+**Sửa.** `MM0-AutoPublisher/src/ngan_sach.py` — cùng con số, cùng sổ D1 với
+`firestore_bridge.con_ngan_sach`, để hai repo không bao giờ nói hai câu khác nhau về cùng một
+hạn mức. Gắn cổng vào bốn việc phụ chạy mỗi giờ; publish và render vẫn là việc thiết yếu.
+
+**Hai lỗi tự gây ra trong lúc làm cổng này, cả hai đều là bài học vừa viết sáng nay:**
+
+- `_sol()` viết `r = ... or {}` rồi `return {"doc": int(r.get("doc") or 0), …}` — nên lệnh gọi
+  **hỏng** cũng trả về một dict hợp lệ ghi `doc=0`, tức *"không hỏi được"* biến thành *"chưa tiêu
+  gì"*. Nhánh phòng thủ ngay dưới không bao giờ chạy, và bức tường **mở toang đúng lúc nó cần
+  đóng nhất**. Đúng luật 15.2 (*mọi con số 0 phải đi kèm mẫu số*) — viết ra buổi sáng, vi phạm
+  ở tệp tiếp theo.
+- `except ImportError` bọc cả `nap_nen_ngan_sach`. Mồi sổ hỏng thì ngoại lệ ném ra ngoài và
+  **giết một việc vốn đang chạy tốt** — cổng canh trở thành thứ gây hỏng, đúng điều nó sinh ra
+  để ngăn.
+
+### 7di — Cron của một workflow có thể KHÔNG BAO GIỜ nổ, dù ba điều kiện đều đủ  (2/9/2026)
+
+**Triệu chứng.** Anh: *"mẹ sao 10h rồi ko làm gì."* `render_giai_thich_18.yml` có bốn mốc
+08:20–11:20 UTC. Cả bốn đã qua. Không mốc nào nổ. Lượt render cuối là 01:40 (bấm tay).
+
+**Đo.** Hỏi API theo id workflow: **mọi lượt từ lúc tạo đều là `workflow_dispatch`** — cron ấy
+chưa từng nổ một lần nào. Trong khi ba điều kiện của luật §10.2 đều ĐỦ:
+
+| kiểm | kết quả |
+|---|---|
+| workflow `state` | `active` |
+| `cron` có trên `main` | có, đủ 4 mốc, YAML parse ra đúng `on.schedule` |
+| workflow khác cùng repo có nổ không | có — Publish, Stats, Cleanup, Guardian nổ đều tới 11:44 |
+
+Nên đây **không phải lỗi cấu hình để đi sửa**. Đây là hạ tầng cron của repo bỏ tick, ở mức 100%
+cho riêng workflow này. §10.2 đã ghi rằng cron repo này không đáng tin; hôm nay là ca cực đoan
+của chính nó.
+
+**Sửa — không sửa thứ mình không điều khiển, nhưng đừng phụ thuộc vào nó.** `health_guardian.yml`
+nổ đều mỗi giờ, nên nó làm mốc thay: 20h qua chưa có lượt nào **dựng thật** thì tự bấm.
+
+Hai chi tiết bắt buộc, cả hai đều là bẫy đã biết:
+
+1. **PAT, không phải `GITHUB_TOKEN`.** GitHub cố ý chặn: lượt do `GITHUB_TOKEN` kích sẽ không
+   tạo workflow run mới. Lệnh vẫn trả 204 như thành công — lại một cái "xanh mà không làm gì".
+2. **Bấm xong phải ĐẾM LẠI `total_count`.** Không đếm lại thì ta có một cái canh gác luôn báo đã
+   canh, và hỏng y hệt kiểu cron im lặng mà nó sinh ra để chữa.

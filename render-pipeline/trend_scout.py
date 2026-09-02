@@ -72,6 +72,30 @@ def summarize(titles: list[str], api_key: str) -> str:
 
 
 def main():
+    # ── TƯỜNG HẠN MỨC: VIỆC PHỤ NHƯỜNG VIỆC THIẾT YẾU  (2/9/2026) ────────────────────────
+    # Anh: *"đừng để Firestore làm ảnh hưởng hệ thống một lần nào nữa."* Sáu workflow cron chạy
+    # mỗi giờ (~144 lượt/ngày) cùng đọc Firestore mà không cái nào nhường cái nào. Bước này
+    # hoãn được: không chạy thì chỉ thiếu vài con số trên màn hình, còn hạn mức bị nó tiêu thì
+    # đường ĐẨY VIDEO mất chỗ — và mất chỗ ở đó là mất cả lượt render đã dựng xong.
+    # `nap_nen_ngan_sach` chỉ là mồi sổ — nó hỏng không có nghĩa là phải dừng, nên bắt riêng.
+    # Gộp chung vào một `except ImportError` như bản đầu thì một lỗi mồi sổ sẽ ném ra ngoài và
+    # GIẾT một việc vốn đang chạy tốt: cổng canh trở thành thứ gây hỏng, đúng điều nó sinh ra
+    # để ngăn.
+    try:
+        import firestore_bridge as _FB
+    except Exception:
+        _FB = None
+    if _FB is not None:
+        try:
+            _FB.nap_nen_ngan_sach(os.environ.get("OWNER_UID", ""))
+        except Exception as _e:
+            print(f"   ⚠ không mồi được sổ ngân sách ({str(_e)[:60]}) — vẫn hỏi tường")
+        if not _FB.con_ngan_sach("doc"):
+            print("⏹ hoãn — ngân sách Firestore đã qua mức việc-phụ (70%).")
+            print(f"   {_FB.bao_ngan_sach()}")
+            print("   Việc này không mất dữ liệu khi hoãn; lượt sau hạn mức hồi là chạy.")
+            return 0
+
     dry = "--dry-run" in sys.argv
     if not OWNER:
         sys.exit("❌ Thiếu OWNER_UID.")
