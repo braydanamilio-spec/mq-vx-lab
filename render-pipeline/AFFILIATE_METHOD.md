@@ -355,6 +355,89 @@ và disclosure nằm ngay dòng đầu bình luận ghim. Video dài (8–11 ph�
 
 ---
 
+## 5.5 FACEBOOK AFFILIATE PARTNERSHIPS — thứ anh nhìn thấy dưới video, và nó phá hai kết luận cũ
+
+Anh quan sát: *"gắn link sản phẩm trong video FB, khi xem thấy dưới bài viết"*. Đó **không phải
+link dán vào caption** — đó là **banner sản phẩm gắn thẳng vào video**, một sản phẩm khác hẳn.
+
+### 5.5.1 Nó là gì
+
+Meta công bố **Facebook Affiliate Partnerships** (Shoptalk, 24/3/2026). Việt Nam đã bật từ
+**22/10/2025**. Cơ chế: nối tài khoản affiliate của sàn vào Facebook, rồi **gắn sản phẩm** vào
+bài/Reel — Facebook tự dựng **banner sản phẩm ở góc dưới trái video và trên đầu khu bình luận**.
+
+**Tám thị trường có Shopee:** Việt Nam · Singapore · Malaysia · Thái Lan · Đài Loan · Indonesia
+· Philippines · **Brazil**. Amazon ở Mỹ. **Mercado Libre sắp có ở Brazil VÀ Mexico**; Temu, eBay ở Mỹ.
+
+### 5.5.2 Nó phá hai kết luận em viết ở §0 — phải sửa
+
+| Kết luận cũ | Vì sao nay sai |
+|---|---|
+| **§0.2** *"Mercado Libre México gần như đóng với người nước ngoài"* | Meta đang đưa **Mercado Libre vào Brazil và Mexico** qua đường Facebook. Cửa vào không còn là Mercado Pago + duyệt tay, mà là **tài khoản Facebook**. ⚠ chưa mở, chưa xác nhận điều kiện |
+| **§5.2** *"đường chính trên FB là link ở bình luận đầu"* | Sai **hai lần**: (1) mẹo bình luận có thể đã bị Meta One bịt (xem 5.5.5); (2) có đường tốt hơn hẳn — banner sản phẩm **được miễn hạn mức link** |
+
+Và nó vá luôn một chỗ đau ở §4.5: Shopee VN **không có API sinh link**, nhưng đường này
+**không cần sinh link** — chọn sản phẩm ngay trong Facebook.
+
+### 5.5.3 Điều kiện + cách nối (đo từ tài liệu Shopee VN và Meta)
+
+**Điều kiện:** ≥18 tuổi · có **Trang Facebook HOẶC hồ sơ chế độ chuyên nghiệp** · tuân thủ luật
+kiếm tiền · **đã có tài khoản Shopee Affiliate được duyệt** (anh đã có — xem §4.5).
+
+```
+App Facebook  ->  Menu  ->  Kiếm tiền (Monetization)
+              ->  Affiliate Partnerships  ->  Shopee Affiliates
+              ->  xác nhận  ->  chuyển sang app Shopee  ->  đăng nhập TK affiliate
+              ->  xác nhận nối  ->  quay lại Facebook
+```
+
+**Gắn sản phẩm:** cùng đường trên → tab *Discover* hoặc ô tìm kiếm → chọn sản phẩm →
+**Add to New Reel** / **Add to New Post**.
+
+> **Chỉ làm được trên APP ĐIỆN THOẠI.** Không có đường web. Đây là ràng buộc thật cho khâu tự
+> động — xem 5.5.4.
+
+### 5.5.4 Đường cứu cho tự động hoá: dán link, Facebook TỰ nhận ra
+
+Tài liệu Shopee ghi: **dán link affiliate vào khung soạn bài thì Facebook tự phát hiện** và dựng
+banner. Đây là mắt xích giữ cho pipeline vẫn chạy được:
+
+```
+aff_chen.py  ->  sinh link s.shopee.vn (kèm 5 sub_id, §4.5.2)
+             ->  bộ đăng dán link vào khung soạn bài
+             ->  Facebook TỰ đổi thành banner sản phẩm
+             ->  không tốn hạn mức link · không bị phạt reach · người xem không rời app
+```
+
+⚠ **Chưa kiểm chứng bằng tay.** Phải thử một bài thật rồi nhìn xem banner có hiện không — nếu
+không hiện thì link ấy là **link ngoài bình thường** và ăn trọn hình phạt reach. Đây là phép thử
+đáng làm sớm nhất trong cả kế hoạch, vì nó quyết định FB tự động được hay phải bấm tay.
+
+### 5.5.5 Ràng buộc phải mã hoá vào `aff_gan.py`
+
+| Ràng buộc | Nguồn | Hệ quả |
+|---|---|---|
+| **Mỗi bài chỉ gắn ĐƯỢC MỘT sản phẩm** | báo VN dẫn Shopee | `aff_gan` trả **1 offer** cho FB, không phải 2–3 như YouTube |
+| Instagram Reel gắn tới 30 sản phẩm | tài liệu Meta | IG và FB **khác luật** — đừng dùng chung cấu hình |
+| Banner nằm ở góc dưới trái video | Shopee VN | Khung hình phải **chừa góc dưới trái** — nếu không banner đè lên phụ đề. Ảnh hưởng thẳng tới `KichComic.tsx` / bố cục Kling |
+| Được miễn hạn mức link Meta One | bảng gói Meta One | Đây là **lý do chính** chọn đường này |
+
+> Dòng thứ ba là thứ dễ bỏ sót nhất và đắt nhất: **banner của nền tảng đè lên hình của mình.**
+> Cùng họ lỗi §12.12 (*dấu hiệu nghiệp dư*) — người xem không biết vì sao xấu, chỉ thấy xấu.
+
+### 5.5.6 Chưa xác minh — đừng tin cho tới khi mở app
+
+| Chỗ | Vì sao chưa chắc |
+|---|---|
+| Dán link có tự thành banner không | tài liệu Shopee MY ghi có; **chưa thử tay** |
+| Một tài khoản FB nối được **mấy** tài khoản Shopee (đa quốc gia)? | không tài liệu nào nói. Nếu nối được nhiều nước thì §4.5.4 (mỗi nước một lần đăng ký) **đỡ đau hẳn** |
+| Quy kết 7 ngày · ngưỡng rút 25 USD · giữ 30 ngày chống hoàn hàng · thưởng 1% | **một blog bên thứ ba**, không phải Meta. Phải đọc trong Affiliate Hub |
+| Trang (Page) có dùng được không, hay chỉ hồ sơ cá nhân chế độ chuyên nghiệp | Shopee VN ghi *"Trang HOẶC hồ sơ chuyên nghiệp"* — nhưng chưa thấy Page chạy thật |
+| Mercado Libre BR/MX bao giờ mở, điều kiện gì | Meta ghi *"trong các tháng tới"* |
+
+
+---
+
 ## 6. TUÂN THỦ — bốn thứ làm mất tài khoản nhanh nhất
 
 1. **Tự bấm link của mình / nhờ người bấm.** Mọi mạng phát hiện được bằng IP + device. Khoá vĩnh viễn, mất luôn hoa hồng đang treo.

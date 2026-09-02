@@ -1188,6 +1188,7 @@ KENH: dict[str, dict] = {
         "ten": "HOUSE RULES",
         "mo_ta": "Sitcom hoạt hình gia đình Mỹ ngoại ô — bố tự tin sai, mẹ tỉnh khô, con nhanh mồm.",
         "ty_le": "9:16",
+        "khong_thoai": ("Buddy",),
 
         # Giữ NGUYÊN VĂN từ bộ 500 prompt anh đang có. Đổi một chữ ở đây là 500 tập cũ lệch khỏi
         # tập mới — cái giá cao hơn nhiều so với bất kỳ cải tiến câu chữ nào.
@@ -2802,9 +2803,10 @@ KENH: dict[str, dict] = {
             "không hề biết họ ở đó."
         ),
         "ty_le": "9:16",
+        "khong_thoai": ("Trish",),
         "luat_the_gioi": (
-            "Trish cannot see, hear or feel the three ghosts. She never speaks to them, never answers them, and never reacts to anything they say — if she appears to respond, she is responding to the house.",
-            "The ghosts cannot be heard by the living and can only move small light objects, and only with visible effort. Nothing frightening happens; the house is cozy.",
+            "Trish never speaks — not one line, ever. She cannot see, hear or feel the three ghosts, so every spoken line in the script belongs to Aldous, Ivy or Bunny, and none of them is addressed to her. She acts on her own wrong conclusion, alone.",
+            "The ghosts cannot be heard by the living and can only move small light objects, and only with visible effort — a ghost can never lift, push or drag a heavy thing.",
         ),
         "nhan_vat": {
             "Aldous": (
@@ -2824,8 +2826,9 @@ KENH: dict[str, dict] = {
             ),
             "Trish": (
                 "Trish: living 36-year-old woman, messy ponytail, oversized cardigan over a tee, "
-                "sweatpants, thick socks, fully solid; the tenant, cheerfully unaware, explains "
-                "every ghostly event as a plumbing issue."
+                "sweatpants, thick socks, fully solid; the tenant. She never speaks on camera — "
+                "she hums, sighs, shrugs and gets on with it, and every ghostly event reads to "
+                "her as a house fault she is mildly annoyed by."
             ),
         },
         "nha": (
@@ -2882,7 +2885,8 @@ KENH: dict[str, dict] = {
         "dien": (
             "Aldous states the rules of haunting with total authority and is wrong; Ivy watches the "
             "outcome arrive and declines to warn anyone; Bunny is thrilled by ordinary appliances; "
-            "Trish never sees a ghost and calmly diagnoses everything as a house problem"
+            "Trish is silent throughout and acts on her own wrong conclusion — the three ghosts "
+            "commentate on a woman who cannot hear a word of it"
         ),
         "hai": (
             "Three dead people cannot touch anything reliably and one living person cannot see "
@@ -4513,8 +4517,19 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
         say = str(ln.get("say") or "").strip()
         if who not in vai:
             e.append(f"lượt {i}: nhân vật {who!r} không có trong dàn khoá ({', '.join(hs['vai'])})")
-        if who == "Buddy" and say:
-            e.append("Buddy là mèo — không được có thoại, chỉ biểu cảm và hành động")
+        # 2/9 — Trước đây chỗ này là `if who == "Buddy"`: luật của MỘT kênh chép cứng vào thước
+        # dùng chung. Nâng thành khai báo, vì kênh thứ hai vừa cần đúng cơ chế ấy. THE HAUNTING
+        # có Trish — người sống KHÔNG nhìn thấy ma; cấp cho cô một lượt thoại là biến cảnh thành
+        # đối thoại tay đôi, tức phá tiền đề ngay ở dòng đầu.
+        #
+        # Đã thử cấp luật BẰNG LỜI trước (khối `luat_the_gioi`, mở đầu "these are not style
+        # notes") và đo: 2/2 bản thảo vẫn cho Trish nói và cho ma nhấc tủ lạnh. Luật bằng lời
+        # không đủ cho một ràng buộc tuyệt đối — phải là một im lặng CƯỠNG CHẾ ĐƯỢC. Cổng này
+        # rẻ nhất có thể (một phép `in`), không mơ hồ, và không thể bắt oan: hoặc nhân vật ấy
+        # có thoại, hoặc không.
+        if who in (hs.get("khong_thoai") or ()) and say:
+            e.append(f"{who} không bao giờ có thoại trên kênh này — chỉ biểu cảm và hành động. "
+                     f"Nhân vật ấy là bối cảnh sống, không phải người đối thoại")
         n = len(say.split())
         tong_tu += n
         # "Mike toast is burnt" / "I'll fix it butter" — AI bị ép ≤9 từ nên cắt cụt thành chuỗi

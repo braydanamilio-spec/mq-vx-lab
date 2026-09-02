@@ -1173,3 +1173,27 @@ luận "AI không nghe lời", đi xem câu ấy đang nằm ở đâu trong l�
 
 Và làm theo đúng thứ tự: **cấp luật bằng đề bài trước, đo, rồi mới tính chuyện làm cổng** — thêm
 cổng là tiêu ngân sách vòng viết lại, và ngân sách ấy vừa mới được cứu sống ở 14.8.
+
+### 14.12 Luật bằng lời không cưỡng chế được điều tuyệt đối — đo rồi mới biết
+
+Sau 14.11 em cấp luật thế giới bằng một khối riêng trong lệnh hệ thống, mở đầu bằng *"these are
+not style notes"*. Đo lại: **2/2 bản thảo vẫn cho Trish nói và vẫn cho ma nhấc tủ lạnh.**
+
+Đây là kết quả đáng giá, vì nó bác đúng giả thuyết em vừa đặt ở 14.11. Câu luật ở đúng chỗ vẫn
+chưa đủ khi ràng buộc là **tuyệt đối** (không bao giờ, không ngoại lệ) — mô hình đọc "không bao
+giờ" như "hiếm khi".
+
+Chữa ở **gốc thiết kế**, không ở lời dặn: Trish **không có thoại**, giống hệt cách DOG PARK xử
+lý con người (họ là thời tiết). Ràng buộc tuyệt đối biến thành một im lặng cưỡng chế được bằng
+một phép `in`, không mơ hồ, không thể bắt oan.
+
+Và cơ chế ấy **đã tồn tại trong repo** — chép cứng: `if who == "Buddy"` (con mèo của HOUSE
+RULES). Đúng luật 13.1: trước khi viết cơ chế mới, đi tìm cái đang có. Nay là `khong_thoai`, một
+trường khai báo, hai kênh dùng chung.
+
+**Luật:** khi một ràng buộc là *tuyệt đối*, đừng viết nó thành câu — hãy làm cho nó **không thể
+vi phạm**. Nếu không làm được thế thì nó không phải ràng buộc tuyệt đối, và đừng viết "never".
+
+Thứ tự đã đi, và là thứ tự đúng: đọc bản thảo → thấy lỗi → **cấp luật bằng lời** → đo → luật
+không ăn → **chữa ở thiết kế + một cổng rẻ nhất có thể**. Ba bước đầu không bỏ được: nhảy thẳng
+vào cổng thì không biết cổng có cần thiết không.
