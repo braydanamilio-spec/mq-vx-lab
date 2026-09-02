@@ -474,6 +474,11 @@ KENH: dict[str, dict] = {
                 "long white pectoral fins scalloped along the front edge, knobbly tubercles on the "
                 "head, barnacle clusters on the chin and fluke edges."
             ),
+            "blue whale": (
+                "An adult blue whale: enormous slate-blue body mottled with paler grey, a very "
+                "small dorsal fin set far back near the tail, a broad flat U-shaped head with one "
+                "ridge down the middle, long throat grooves running the length of the belly."
+            ),
             "humpback calf": (
                 "A humpback calf: same shape at one third the length, skin smoother and paler, "
                 "always riding just above and behind its mother's head."
@@ -504,6 +509,19 @@ KENH: dict[str, dict] = {
                     "drifting through a shaft of light so the white fins glow",
                     "opening the mouth wide and letting the throat expand, water pouring out through baleen",
                     "moving past the camera so slowly that the body takes the whole shot to cross",
+                ),
+            },
+            "blue whale": {
+                "duoi": (
+                    "moving through the frame so slowly that the head enters before the tail arrives",
+                    "hanging almost still with the throat grooves relaxed and flat",
+                    "turning very gradually so the pale mottling catches the light along its flank",
+                    "rising toward the surface with the small dorsal fin appearing last",
+                    "gliding past a cloud of krill without opening its mouth",
+                ),
+                "mep": (
+                    "exhaling a single column of spray that goes far higher than seems possible",
+                    "showing a long stretch of back at the surface with the blowhole closing",
                 ),
             },
             "humpback calf": {
@@ -1633,6 +1651,46 @@ def tap_ke(kenh: str) -> int:
     return max(da) + 1 if da else 0
 
 
+def xuat_web(dich: str, so_tap: int = 60) -> tuple:
+    """Xuất cho dashboard: prompt DỰNG SẴN, không xuất khuôn để trình duyệt tự ghép.
+
+    2/9 — Bộ Kling hài xuất KHUÔN rồi để JS ghép, và cái giá của lựa chọn ấy là ba lỗi lệch
+    Python↔JS phải đi truy: trục thứ bảy, trục khuôn hình, và trần số vai. Mỗi lần lệch đều sai
+    ĐÚNG MỘT TRƯỜNG nên trông như "gần đúng" chứ không như hỏng.
+
+    Bộ này không cần chịu giá ấy. Prompt ở đây tất định hoàn toàn — không có AI, không có ô
+    trống nào phụ thuộc thứ người dùng gõ — nên xuất thẳng chuỗi cuối cùng. Trình duyệt chỉ còn
+    việc HIỆN, và không còn chỗ nào để hai bên lệch nhau.
+
+    Giá phải trả là dung lượng: 10 kênh × 60 tập × 3 độ dài ≈ 4 MB. Nằm trên Hosting (không phải
+    Firestore), và trình duyệt chỉ tải tệp của kênh đang xem.
+    """
+    os.makedirs(dich, exist_ok=True)
+    muc, tong = [], 0
+    for i, (ten, c) in enumerate(KENH.items(), 1):
+        slug = re.sub(r"[^a-z0-9]+", "-", ten.lower()).strip("-")
+        tap = []
+        for so in range(so_tap):
+            x = lich(ten, so)
+            tap.append({
+                "so": so, "loai": x["loai"], "hanh_vi": x["hanh_vi"], "khuon": x["khuon"],
+                "anh_sang": x["anh_sang"], "thoi_tiet": x["thoi_tiet"],
+                "prompt": {str(g): prompt(ten, so, g) for g in GIAY_CHUAN},
+            })
+        d = {"ten": ten, "slug": slug, "so_tt": i, "mo_ta": c["mo_ta"], "hook": c["hook"],
+             "the_gioi": c["the_gioi"], "loai": list(c["loai"]), "giay": list(GIAY_CHUAN),
+             "khong_gian": lich(ten, 0)["_khong_gian"], "tap": tap}
+        b = json.dumps(d, ensure_ascii=False)
+        io.open(os.path.join(dich, slug + ".json"), "w", encoding="utf-8").write(b)
+        tong += len(b.encode())
+        muc.append({"ten": ten, "slug": slug, "so_tt": i, "mo_ta": c["mo_ta"],
+                    "loai": list(c["loai"]), "so_tap": so_tap})
+    io.open(os.path.join(dich, "index.json"), "w", encoding="utf-8").write(
+        json.dumps({"kenh": muc, "giay": list(GIAY_CHUAN), "giay_uu_tien": list(GIAY_UU_TIEN),
+                    "ky_tu_max": KY_TU_MAX}, ensure_ascii=False))
+    return len(muc), tong
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Mười kênh thiên nhiên — prompt Kling 8–10 giây.")
     ap.add_argument("--kenh")
@@ -1642,11 +1700,18 @@ def main() -> int:
     ap.add_argument("--giay", type=float, default=8, choices=[float(g) for g in GIAY_CHUAN])
     ap.add_argument("--liet-ke", action="store_true")
     ap.add_argument("--kiem", action="store_true", help="chạy mọi cổng trên 10 kênh")
+    ap.add_argument("--xuat-web", help="xuất prompt dựng sẵn cho dashboard")
+    ap.add_argument("--so-tap", type=int, default=60, help="số tập xuất mỗi kênh")
     a = ap.parse_args()
 
     if a.liet_ke:
         for i, (k, c) in enumerate(KENH.items(), 1):
             print(f"{i:02d} · {k:<14} {c['mo_ta']}")
+        return 0
+
+    if a.xuat_web:
+        n, b = xuat_web(a.xuat_web, a.so_tap)
+        print(f"  ✅ xuất {n} kênh × {a.so_tap} tập · {b / 1048576:.1f} MB → {a.xuat_web}")
         return 0
 
     if a.kiem:

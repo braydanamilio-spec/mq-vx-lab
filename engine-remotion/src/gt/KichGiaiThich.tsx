@@ -363,7 +363,23 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
         backgroundSize: `${Math.round(W * 0.13)}px ${Math.round(W * 0.13)}px`,
       }} />
 
-      <PhuDe tu={tu} t={t} W={W} H={H} mau={mau} />
+      {/* ── THẺ CHỮ THÌ TẮT PHỤ ĐỀ — MỘT CÂU, KHÔNG PHẢI HAI  (2/9/2026) ─────────────────
+          Anh: *"sao nhàm chán chất lượng kém thế, hơi rối."* Trích khung ra nhìn thì thấy ngay:
+          khuôn `the_chu` vẽ nguyên câu lời kể thành thẻ chữ GIỮA khung, rồi phụ đề vẽ **đúng
+          câu ấy** lần nữa ở dưới. Cùng một câu, hai chỗ, hai cỡ chữ — đó là cái "rối".
+
+          Không phải lỗi ngẫu nhiên mà là hệ quả của thiết kế: `_n("the_chu", "<lời>", the="<lời>")`
+          — chữ trên thẻ CHÍNH LÀ câu lời kể, chỉ thêm dấu ngắt dòng.
+
+          CLAUDE.md §12.12 đã liệt kê đúng điều này trong danh sách "dấu hiệu nghiệp dư": *"thẻ
+          chữ giữ 3 giây ở cú chốt → đóng bằng cảnh, câu chốt để phụ đề nói"*. Tôi viết ra luật
+          ấy rồi để engine vi phạm nó ở mọi tập.
+
+          Tắt PHỤ ĐỀ chứ không bỏ thẻ chữ: thẻ chữ là khuôn hình có chủ đích (chữ lớn, ngắt dòng
+          theo nhịp), phụ đề chỉ là bản chép lại. Giữ cái được thiết kế, bỏ cái lặp. */}
+      {String((N as any)?.khuon || "") === "the_chu"
+        ? null
+        : <PhuDe tu={tu} t={t} W={W} H={H} mau={mau} />}
 
       {/* ══ ĐÃ BỎ DẢI TÊN KÊNH (1/9/2026) ══════════════════════════════════════════════
           Đóng dấu tên kênh lên MỌI khung là thói quen của kênh nhỏ — nó lấy mất 5% chiều cao

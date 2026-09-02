@@ -259,7 +259,7 @@ jobs:
             echo "══ [$MA] vòng $VONG — còn $CON phút ══"
 
             python bao_chay.py --kenh "$MA" --loai long --trang_thai rendering || true
-            python giai_thich.py --kenh "$MA" --long --chuong 10 || true
+            python giai_thich.py --kenh "$MA" --long --ngang --chuong 10 || true   # --ngang: nói rõ 16:9, dù mã đã tự ép
             python bao_chay.py --kenh "$MA" --loai long --trang_thai done || true
 
             python bao_chay.py --kenh "$MA" --loai short --trang_thai rendering || true

@@ -2601,6 +2601,23 @@ def main() -> int:
     ap.add_argument("--short-tu-long", type=int, default=-1, metavar="N",
                     help="dựng N short 9:16 từ kịch bản N chương đầu của bản dài")
     a = ap.parse_args()
+    # ── BẢN DÀI LUÔN LÀ 16:9  (2/9/2026) ────────────────────────────────────────────────────
+    # Anh gửi khung hình: bản dài ra **9:16 dọc**, hai mép đen, chữ tràn.
+    #
+    # Gốc rễ: `--long` và `--ngang` là HAI cờ ĐỘC LẬP, và `doc=not a.ngang`. Nên gọi
+    # `--long --chuong 10` mà quên `--ngang` là dựng nội dung dài bằng composition DỌC
+    # (`GiaiThichDoc`) — đúng cú pháp, chạy trót lọt, không một dòng lỗi nào. Workflow đã gọi
+    # thiếu như thế suốt.
+    #
+    # Sửa ở GỐC chứ không vá workflow: bản dài là chỗ bật quảng cáo giữa video trên YouTube,
+    # nó **không có** phiên bản dọc. Một cờ mà mọi người gọi đều phải nhớ kèm cờ thứ hai thì
+    # sớm muộn có người quên — nên để mặc định tự đúng, và chỉ ai thật sự muốn dọc mới phải nói.
+    #
+    # Cùng họ lỗi "một kích thước chịu hai ràng buộc mà công thức chỉ mã hoá một" (§6): ở đây
+    # `doc` bị quyết định bởi MỘT cờ, trong khi nó phụ thuộc CẢ `--long`.
+    if a.long and not a.ngang:
+        a.ngang = True
+        print("   ↔ bản dài -> ép 16:9 (bản dài không có phiên bản dọc)")
     ds = [x.strip() for x in a.kenh.split(",") if x.strip()] or [k["ma"] for k in KENH]
     if a.short_tu_long > 0:
         ra = [v for de in ds for c in range(a.short_tu_long)

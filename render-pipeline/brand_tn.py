@@ -173,8 +173,29 @@ def xuat(dich: str = RA) -> int:
     return n
 
 
+def xuat_web(dich: str) -> tuple:
+    """Ảnh xem trước cho dashboard — WebP nhỏ, vì đây là thứ tải mỗi lần mở trang.
+
+    Bài học đã ghi trong chính `index.html`: brand kit đầy đủ mà đặt lên trang thì sáu lượt mở
+    là hết hạn mức Hosting 360 MB/ngày của gói free — brand kit làm sập chính cái dashboard nó
+    nằm trong. Nên trang chỉ nhận bản 320px; tệp đem đăng kênh vẫn nằm ở out/brand_tn.
+    """
+    os.makedirs(dich, exist_ok=True)
+    n = tong = 0
+    for i, ten in enumerate(BRAND, 1):
+        slug = ten.lower().replace(" ", "-")
+        f = os.path.join(dich, f"{i:02d}-{slug}_avatar.webp")
+        im = avatar(ten, i, 1080).resize((320, 320))
+        im.save(f, "WEBP", quality=82, method=6)
+        n += 1
+        tong += os.path.getsize(f)
+    return n, tong
+
+
 if __name__ == "__main__":
     print("  bóng ngoài 48px :", kiem_bong() or "✅ không cặp nào trùng")
     print("  chữ lọt vòng cắt:", kiem_tron() or "✅ không kênh nào bị cắt")
     print("  tương phản ≥ 3.0:", kiem_tuong_phan() or "✅ mọi biểu tượng đọc được")
     print(f"  ✅ {xuat()} ảnh → {RA}")
+    _n, _b = xuat_web(os.path.join(GOC, "..", "MM0-AutoPublisher", "dashboard", "brand_tn"))
+    print(f"  ✅ {_n} ảnh xem trước · {_b / 1024:.0f} KB → dashboard/brand_tn")

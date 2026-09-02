@@ -8699,3 +8699,35 @@ ngồi không 68 phút chờ luồng 89 phút, rồi cả lượt đóng. 18 lu�
 **Luật.** Khi sản lượng đứng im ở một con số tròn trịa, hỏi *"con số này do hạ tầng chặn hay do
 mình tự đặt?"* — ở đây cả ba chỗ chặn đều do mình đặt, và hai trong ba là cổng an toàn viết cho
 một chế độ chạy đã không còn đúng nữa.
+
+### 7du — Trích khung ra nhìn: hai lỗi thật, không cái nào là "thiếu ảnh AI"  (2/9/2026)
+
+Anh gửi khung hình: bản dài ra 9:16, nội dung "nhàm chán, rối, ảnh xấu". Tôi suýt đi sửa khâu
+vẽ ảnh. Trích khung ra nhìn (§1) thì cả hai lỗi thật đều nằm chỗ khác.
+
+**(a) Bản dài dựng bằng composition DỌC.**
+
+`--long` và `--ngang` là **hai cờ độc lập**, và `doc = not a.ngang`. Nên `--long --chuong 10` mà
+quên `--ngang` là dựng nội dung dài bằng `GiaiThichDoc` (9:16) — đúng cú pháp, chạy trót lọt,
+**không một dòng lỗi nào**. Workflow gọi thiếu như thế suốt.
+
+Sửa ở **gốc**, không vá workflow: bản dài là chỗ bật quảng cáo giữa video trên YouTube, nó
+không có phiên bản dọc. *Một cờ mà mọi người gọi đều phải nhớ kèm cờ thứ hai thì sớm muộn có
+người quên* — để mặc định tự đúng, ai thật sự muốn dọc mới phải nói.
+
+**(b) Thẻ chữ và phụ đề nói CÙNG một câu.**
+
+Khung trích ra: câu *"Decibels do not add up the way you think."* hiện **hai lần** — thẻ chữ
+giữa khung, phụ đề to phía dưới. Đó là cái "rối".
+
+Hệ quả của thiết kế, không phải lỗi ngẫu nhiên: `_n("the_chu", "<lời>", the="<lời>")` — chữ
+trên thẻ chính là câu lời kể. Và CLAUDE.md §12.12 đã liệt kê đúng điều này trong danh sách dấu
+hiệu nghiệp dư: *"thẻ chữ giữ 3 giây ở cú chốt → đóng bằng cảnh, câu chốt để phụ đề nói"*. Tôi
+viết ra luật ấy rồi để engine vi phạm ở mọi tập.
+
+**Và một số đo bác bỏ giả định của chính tôi:** khung thứ hai trích ra là biểu đồ cột sạch, chữ
+rõ, đúng thương hiệu — **engine vẽ đẹp được**. Nên "ảnh xấu" không phải vấn đề của tầng vẽ; nó
+là vấn đề của vài khuôn cụ thể. Nếu tin ấn tượng ban đầu thì đã đi làm lại cả tầng đồ hoạ.
+
+**Luật (§1, trả giá lần nữa).** Khi anh nói "xấu quá", việc đầu tiên KHÔNG phải mở code — mà là
+`ffmpeg -ss … -frames:v 1` rồi **nhìn**. Hôm nay hai khung ảnh đã đổi hẳn hướng sửa.
