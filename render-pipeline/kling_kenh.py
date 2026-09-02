@@ -5680,6 +5680,19 @@ def luu(kenh: str, tap: dict, giay: float, so: int,
     # Ghi kèm ĐỒ VẬT của tập: tập sau muốn gọi lại tập này thì phải biết tập này nói về cái gì.
     # Không suy ngược từ văn kể được — một tập nhắc năm danh từ, chỉ một trong đó là chủ đề.
     tap = dict(tap, _kenh=kenh, _giay=giay, _so=so, _dao_cu=_lich(kenh, so)["dao_cu"])
+    # DẤU CHẤT LƯỢNG ĐÓNG VÀO CHÍNH TỆP. `sinh_tap` cạn vòng thì trả bản tốt nhất kèm lỗi còn
+    # sót, và nói ra điều đó — nhưng nói ra STDOUT. Ba ngày sau anh mở PROMPT.txt để dán vào
+    # Kling thì không còn gì cho biết bản này đã đạt hay là bản vớt. Đúng họ lỗi 10.1: hỏng mà
+    # không để lại dấu thì trông y hệt bình thường. Nên đóng dấu vào tệp, không vào màn hình.
+    try:
+        import cham100 as _C
+        _d, _ = _C.cham100(tap, giay, ho_so(kenh), pr)
+        tap["_diem"] = sum(_d.values())
+    except Exception:
+        tap["_diem"] = None
+    tap["_con_loi"] = cham(tap, kenh, giay, so)
+    if tap["_con_loi"]:
+        print(f"   ⚠️ BẢN VỚT — còn {len(tap['_con_loi'])} lỗi, đã ghi vào tap.json (_con_loi)")
     io.open(os.path.join(tm, "tap.json"), "w", encoding="utf-8").write(
         json.dumps(tap, ensure_ascii=False, indent=2))
     io.open(os.path.join(tm, "PROMPT.txt"), "w", encoding="utf-8").write(pr)
