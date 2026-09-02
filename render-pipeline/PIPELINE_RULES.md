@@ -8041,3 +8041,45 @@ kênh đang có (2,61–10,98). Biểu tượng gần như biến mất trong da
 
 **Họ lỗi.** *Thước chết theo thứ nó phải chấm.* Một tập thiếu khối phải được **chấm thấp**,
 không được làm sập bộ sinh — 10.1: hỏng mà không để lại tệp nào thì trông y hệt chưa từng chạy.
+
+---
+
+## 8k49 — `lan` đếm cả vòng viết lẫn vòng đổi khoá: vòng viết lại chết âm thầm
+
+**Triệu chứng.** Kịch bản chất lượng lên xuống thất thường; 6/16 tập trả về kèm lỗi. Log:
+`↻ vòng 99` rồi `⚠️ 12 vòng chưa sạch`.
+
+**Gốc rễ.** `for lan in range(1, VONG_VIET + len(ho) + 1)` — một biến cho hai ngân sách. Mỗi
+khoá 429 `continue` tiêu một `lan` mà không viết chữ nào; ~100 khoá Cloudflare cạn hạn mức mỗi
+ngày nên `lan` đã 99 lúc bản nháp đầu tiên ra đời, và `if lan >= VONG_VIET: break` bắn ngay.
+
+**Họ lỗi.** *Gộp hai ngân sách khác bản chất vào một bộ đếm.* Dấu hiệu nhận ra: **câu log tự
+mâu thuẫn** — hai con số nói về hai thứ khác nhau mà mang cùng một tên.
+
+**Chữa.** Biến `viet` riêng, chỉ tăng khi thật sự có một bản nháp được chấm.
+
+---
+
+## 8k50 — Câu máy quay ghi cứng: 30 kênh, mọi tập, một khuôn hình
+
+**Triệu chứng.** 6/6 bản thảo mở bằng "static eye-level wide shot".
+
+**Gốc rễ.** `_bat_buoc` ghi cứng một câu máy; đề bài liệt kê ba lựa chọn và AI luôn lấy cái đầu.
+
+**Chữa.** `KHUON_HINH` tám khuôn tĩnh + `_khuon_hinh(kenh, so)` vòng quay riêng; đề bài và
+prompt cấp CÙNG một khuôn; `@@MAY@@` là ô trống trong khuôn web.
+
+**Ba lỗi con khi làm:** trục thứ tám lặp liền kề 144/199 (chữ số cao nhất đổi chậm nhất) · bước
+ghi cứng 3 không nguyên tố cùng nhau với 6 · khuôn web nướng cứng câu máy của tập 0.
+
+---
+
+## 8k51 — `_tot` chỉ giữ bản SẠCH, nên nhánh "không bản nào sạch" vẫn trả bản cuối
+
+**Gốc rễ.** `cham100` chỉ chạy khi `not loi`, nên `_tot` không bao giờ nhận bản có lỗi. Nhánh
+cạn vòng mà chưa từng sạch rơi về `cuoi` = lần viết gần nhất.
+
+**Họ lỗi.** Luật 6 — *vá một nhánh, để nguyên nhánh song song*. Bản vá 13.24 đúng và chỉ áp vào
+nhánh điểm.
+
+**Chữa.** Giữ thêm `_it` = bản ít lỗi nhất.
