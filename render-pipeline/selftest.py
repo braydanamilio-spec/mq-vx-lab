@@ -2516,6 +2516,8 @@ def main():
     check("tài sản kênh dùng phải có trong git (không chỉ ở máy)", t_tai_san_kenh_dung_phai_co_trong_git)
     check("đặt tiêu đề chịu được mọi hình dạng story", t_dat_tieu_de_chiu_duoc_moi_hinh_dang)
     check("sổ tránh-trùng và phép so cắt cùng độ dài", t_so_trung_tieu_de_phai_cung_do_dai)
+    check("bộ thiên nhiên: prompt + hàng rào + đa dạng", t_bo_thien_nhien_lanh)
+    check("brand thiên nhiên qua đủ ba cổng", t_brand_thien_nhien_doc_duoc)
     check("mỗi kênh Kling có mặt ở cả hồ sơ + brand", t_kenh_kling_dong_bo_ba_noi)
     check("đề bài Kling: Python khớp web từng trường", t_lich_kling_python_khop_web)
     check("khuôn hình đổi từng tập + khớp web", t_khuon_hinh_doi_tung_tap_va_khop_web)
@@ -6266,6 +6268,47 @@ def t_khuon_hinh_doi_tung_tap_va_khop_web():
     kh = _j.load(open(f))["khuon"]
     than = kh[list(kh)[0]]["than"][0]
     assert "@@MAY@@" in than, "khuôn web nướng cứng câu máy — mọi tập sẽ mang khuôn của tập 0"
+
+
+def t_bo_thien_nhien_lanh():
+    """BỘ THIÊN NHIÊN: mọi prompt lọt trần, hàng rào nguyên, không cặp kênh nào trùng.
+
+    2/9 — Bộ thứ năm (mười kênh động vật, short 8–10 giây một cú máy, không lời). Nó KHÔNG dùng
+    engine của bộ hài, nên phải có chốt riêng — nếu không thì một bản sửa ở `kling_kenh.py` làm
+    hỏng nó mà không ai biết, và ngược lại.
+
+    Ba thứ được canh, đúng ba thứ đã trả giá ở bốn bộ trước:
+      · prompt vượt trần 2.500 -> Kling cắt đuôi và mất hàng rào DO NOT (luật 13.1)
+      · hàng rào không kết đúng câu chốt -> đã bị xô lệch
+      · hai kênh chung quá nhiều chữ / chung loài / chung hành vi (luật chính sách 13.17)
+    """
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import thien_nhien as TN
+    loi = []
+    for k in TN.KENH:
+        for so in (0, 1, 7, 41):
+            for g in TN.GIAY_CHUAN:
+                loi += [f"{k} tập {so} {g}s: {x}" for x in TN.cham(k, so, g)]
+    assert not loi, f"{len(loi)} lỗi prompt, ví dụ: {loi[:3]}"
+    xau = TN.kiem_da_dang()
+    assert not xau, f"{len(xau)} cặp kênh trùng: {xau[:3]}"
+
+
+def t_brand_thien_nhien_doc_duoc():
+    """BRAND KIT THIÊN NHIÊN đi qua ĐÚNG BA CỔNG mà bộ hài đã trả giá để có.
+
+    Không chép phép đo sang tệp mới — `brand_tn` gọi thẳng `brand_kling` với bảng dữ liệu của
+    mình. Chép là tạo nguồn sự thật thứ hai (luật 13.5), và nguồn thứ hai luôn là nguồn lệch.
+    """
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import brand_tn as BT
+    import thien_nhien as TN
+    assert list(BT.BRAND) == list(TN.KENH), "BRAND và KENH lệch nhau -> số trên avatar sai"
+    assert not BT.kiem_bong(), f"biểu tượng trùng bóng ngoài: {BT.kiem_bong()[:2]}"
+    assert not BT.kiem_tron(), f"chữ avatar bị đường tròn cắt: {BT.kiem_tron()[:2]}"
+    assert not BT.kiem_tuong_phan(), f"biểu tượng chìm vào nền: {BT.kiem_tuong_phan()[:2]}"
 
 def t_kenh_kling_dong_bo_ba_noi():
     """MỖI KÊNH KLING PHẢI CÓ MẶT Ở CẢ BA NƠI: hồ sơ · brand · dữ liệu web.

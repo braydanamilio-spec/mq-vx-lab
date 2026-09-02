@@ -120,8 +120,15 @@ CAM_CHU = re.compile(
 CAM_NGUOI = re.compile(
     r"\b(person|people|human\w*|man|woman|child\w*|hand\w*|finger\w*|face of a|diver\w*|"
     r"photographer\w*|researcher\w*|crew|boat\w*|ship\w*|kayak\w*|drone\w*)\b", re.I)
+# BA LẦN CÙNG MỘT LỖI BIỂU THỨC trong một buổi, nên ghi thẳng ở đây:
+#   `rip\w* (apart|open)` nuốt "ripple Open"   ·  `grin\w*` nuốt "grinding"
+#   `hand\w*` nuốt "a hand's width" / "a hand deep"
+# Một GỐC TỪ NGẮN cộng `\w*` là một cái bẫy: nó nuốt những từ không cùng nghĩa mà chỉ tình cờ
+# cùng bốn chữ cái đầu. Với gốc dưới năm ký tự, phải liệt kê các dạng thật (grins/grinned/
+# grinning) thay vì dùng `\w*`. Cùng họ với 13.22: một chữ có hai nghĩa là chữ không làm cổng
+# được — ở đây là hai chữ KHÁC NHAU tình cờ chung phần đầu.
 CAM_NHAN_HOA = re.compile(
-    r"\b(smil\w*|grin\w*|laugh\w*|wink\w*|wav\w* (?:hello|goodbye)|wearing|dressed|hat|scarf|"
+    r"\b(smil\w*|grins?|grinned|grinning|laugh\w*|wink\w*|wav\w* (?:hello|goodbye)|wearing|dressed|hat|scarf|"
     r"glasses|shoes|talk\w*|speak\w*|say\w*|sings? a|dance\w* like|hugs?|waves? at)\b", re.I)
 GHIM_MAY = ("locked", "static", "fixed camera", "tripod", "telephoto", "macro", "wide shot",
             "close shot", "underwater housing", "low angle", "eye level", "high angle")
@@ -736,7 +743,7 @@ KENH: dict[str, dict] = {
         ),
         "thoi_tiet": (
             "heavy dew turning every grass blade into a line of beads",
-            "ground mist a hand deep, burning off in patches",
+            "ground mist thirty centimetres deep, burning off in patches",
             "still warm air with insects hanging in the light",
             "a light shower just finished, everything wet and dripping",
             "no wind at all, the grass completely upright",

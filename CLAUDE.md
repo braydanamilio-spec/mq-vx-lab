@@ -111,6 +111,7 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 | **30 kênh Kling — hồ sơ + thước** | `render-pipeline/kling_kenh.py` — hồ sơ 30 kênh (20 đời thường + 10 cỗ máy hài khác nhau, xem §14.1), bộ lịch 7 trục, `_mo_kenh()` lọc nhịp mở theo thế giới, thước `cham()`, ghép prompt theo ngân sách 2.500 ký tự |
 | **30 kênh Kling — cổng** | `cham100.py` (thang 100 điểm, sàn 95) · `kiem_da_dang.py` (cổng chính sách: đo 435 cặp kênh) · `brand_kling.py` (brand kit vẽ bằng code + ba cổng: `kiem_bong()` bóng ngoài · `kiem_tron()` chữ lọt đường cắt tròn · `kiem_tuong_phan()` biểu tượng đọc được) · `selftest.py` (đề bài Python khớp web từng trường) |
 | **20 kênh Kling — đưa clip về** | `kling_dong_bo.py` (gán clip tải về vào đúng tập, ép 1080×1920, viết bài đăng) |
+| **10 kênh thiên nhiên — hồ sơ + cổng** | `render-pipeline/thien_nhien.py` (10 thế giới, bộ lịch 5 trục, 7 cổng: máu me · chữ · người · nhân hoá · trôi máy · động tác hỗn loạn · ngân sách) · `brand_tn.py` (brand kit, gọi thẳng ba cổng của `brand_kling`) |
 | Cách dùng bộ Kling | `render-pipeline/KLING_CACH_DUNG.md` |
 | Phân tích video tham chiếu | `render-pipeline/PHAN_TICH_GIAI_THICH.md` |
 | Bản hài cũ (giữ để đối chiếu) | `render-pipeline/kich_hai.py` · `src/v4/KichHai.tsx` — vẫn là nơi giữ `KHO` 40 mẩu viết tay, `doc_hai_giong`, `lam_thumb` |
@@ -123,13 +124,14 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 | **Comic (hài)** | 10 | `kich_comic.py` · `kich_comic_long.py` · `sieu_du_lieu.py` | `render_hai.yml` | 10 (mỗi kênh một luồng) |
 | **Phân tích** | 56 | `kich_v2.py` · `kich_v2_long.py` | `render_phan_tich_18.yml` | 18 (chia xen kẽ) |
 | **Kling (hài, AI video)** | 30 | `kling_kenh.py` · `kling_dong_bo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
+| **Thiên nhiên (Kling, short 8–10s)** | 10 | `thien_nhien.py` · `kling_lo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
 | Thế hệ 1 (cũ) | ~50 | `datastory_ci.py` | `render_cron.yml` | cron TẮT |
 
 Bộ Kling khác ba bộ kia ở một chỗ quyết định: **nó không dựng video trên Actions**. Python chỉ
 viết kịch bản và ghép prompt; phần tốn tiền là anh dán vào Kling web. Nên mọi tối ưu ở bộ này
 phải hỏi *"cái này có làm giảm số lượt gọi Kling không"* trước khi hỏi nó có đẹp hơn không.
 
-Bốn hệ này **không dùng chung engine, không dùng chung workflow**. Trộn chúng là cách chắc chắn
+Năm hệ này **không dùng chung engine, không dùng chung workflow**. Trộn chúng là cách chắc chắn
 để một bản sửa ở bộ này làm hỏng bộ kia.
 
 ### 10.1 Chia luồng theo TRẦN THỜI GIAN THẬT, không theo cảm giác
@@ -1389,3 +1391,102 @@ Và hai con số đáng giá hơn cả trung bình:
 - **vòng/tập 10,4 → 7,4** — giảm 29% lượt gọi AI cho mỗi tập. Bản sửa vừa làm chất lượng lên vừa
   làm chi phí xuống, và đó là dấu hiệu đáng tin nhất rằng ta sửa đúng gốc chứ không siết thêm
   cổng: siết cổng luôn làm số vòng TĂNG.
+
+---
+
+## 15. BỘ THỨ NĂM — MƯỜI KÊNH THIÊN NHIÊN (2/9/2026)
+
+Short 8–10 giây, **một cú máy**, **không lời đọc**. Một lượt Kling mỗi video — cùng kinh tế với
+bộ hài, và anh chốt như vậy sau khi em nêu ba mức chi phí (1 lượt · 7 lượt · 60–120 lượt).
+
+### 15.1 Vì sao thiên nhiên là thứ HỢP KLING NHẤT trong cả năm bộ
+
+`kling_studio.py` đã ghi ra từ lần thử thật 09/08, và nó là lý do kỹ thuật để làm bộ này:
+
+```
+mạnh : một chủ thể rõ · một hành động rõ · khí quyển, ánh sáng, chuyển động chậm · ĐỘNG VẬT
+yếu  : chữ đọc được · mặt người cận cảnh · bàn tay · thoại/khớp miệng · đám đông nhanh
+```
+
+Bộ thiên nhiên **không chạm vào một chỗ yếu nào**. Bộ hài thì phải sống chung với "thoại" và
+"mặt người" suốt. Đây là lập luận từ số đo đã có, không phải từ đề tài đang hot.
+
+Và vì cùng lý do ấy, ý tưởng **THE MURMUR** (đàn sáo đá cuộn xoáy) bị **cắt** dù nó mạnh nhất về
+hình: một đàn chim cuộn xoáy CHÍNH LÀ "đám đông chuyển động nhanh". Ghi lại để nếu clip đầu tiên
+cho thấy Kling dựng nổi khối đông thì mở lại — lúc ấy đã có bằng chứng thay vì đoán.
+
+### 15.2 Trong prompt text-to-video, một PHÉP SO SÁNH là một yêu cầu vẽ
+
+Cổng "không có người trong khung" bắt bốn chỗ, và cả bốn là văn của chính em:
+
+| câu | chữ vướng |
+|---|---|
+| *"Weather that would knock **a person** down"* | person |
+| *"upright stance as tall as **a child**"* | child |
+| *"riding the **face of a** green wave"* | face of a |
+| *"drinking … and **pulling back** at the cold"* | pull back (cú máy) |
+
+Phản xạ đầu tiên là nới cổng. Sai. **Mô hình đọc theo nghĩa đen**: "cao bằng một đứa trẻ" là một
+cơ hội thật để nó vẽ ra một đứa trẻ đứng cạnh con chim cánh cụt. Cổng đúng, văn em sai.
+
+**Luật:** trong prompt gửi mô hình sinh ảnh/video, **đừng ví von**. Mọi danh từ viết ra đều có
+thể xuất hiện trong khung. Tả kích thước bằng số đo, đừng bằng vật so sánh.
+
+### 15.3 Gốc từ ngắn cộng `\w*` là một cái bẫy — ba lần trong một buổi
+
+| biểu thức | nuốt nhầm |
+|---|---|
+| `rip\w* (apart\|open)` | *"not one **ripple**. **Open** the mouth…"* |
+| `grin\w*` | *"brash ice **grinding** together"* |
+| `hand\w*` | *"a **hand's** width above the water"* |
+
+Với gốc dưới năm ký tự phải **liệt kê các dạng thật** (`grins/grinned/grinning`) thay vì `\w*`.
+Cùng họ 13.22, chỉ khác: ở đó là một chữ hai nghĩa, ở đây là hai chữ khác nhau tình cờ chung
+phần đầu.
+
+Và cái đầu tiên còn dạy thêm một điều riêng: nó khớp **qua chỗ nối giữa hai trường**. Em nối các
+trường bằng dấu cách để quét, nên đuôi trường này dính đầu trường kia sinh ra một cụm **không
+tồn tại ở trường nào cả**. **Đo một phép nối là đo một văn bản không ai viết ra** — nối bằng dấu
+xuống dòng, đừng bằng dấu cách.
+
+### 15.4 Áp `mo_cam` cho một trục rồi quên hai trục song song
+
+Em áp cơ chế "thế giới này diễn được gì" (14.2) cho trục **khuôn hình** ngay từ đầu, rồi để
+nguyên trục **ánh sáng** và **thời tiết**. Kết quả, prompt của TUSK (dưới trần băng) ra:
+
+> *"The light is storm light: dark sky, one bright band on **the horizon**. The conditions are
+> heavy slow **swell**."*
+
+Dưới băng không có bầu trời, không có chân trời, không có sóng lừng. Đúng họ lỗi số 6: **vá một
+nhánh, để nguyên nhánh song song**.
+
+Và một chỗ thứ ba cùng dạng: câu ống kính là một **hằng số** tele, nên nó đứng ngay cạnh
+*"camera locked underwater at depth"* — hai lệnh trái nhau trong cùng một prompt. Ống kính phải
+**theo khuôn hình**, không phải một hằng số.
+
+**Luật:** khi thêm cơ chế "ngữ cảnh này cho phép gì", đi soát **mọi trục** cùng lúc. Sửa một
+trục rồi dừng là cách chắc chắn để cùng một lỗi quay lại ở trục bên cạnh, và lần sau nó khó thấy
+hơn vì "chỗ đó đã sửa rồi".
+
+### 15.5 Cổng bóng ngoài chứng minh mười cái KHÁC NHAU, không chứng minh cái nào ĐỌC ĐƯỢC
+
+`kiem_bong` xanh cả mười. Nhìn ở 48px thì **năm cái hỏng**: vây cá voi sát thủ thành ngọn núi,
+đuôi cá voi thành chữ Y rồi thành con bướm, chim cánh cụt thành ổ khoá, sóng thành mặt trời mọc,
+dấu móng thành hai chiếc lá.
+
+Cổng đo **khoảng cách giữa các bóng**, và mười hình vô nghĩa khác nhau vẫn cách xa nhau. Không
+có thước nào đo được "hình này gợi ra đúng con vật ấy" — chỗ đó vẫn phải nhìn.
+
+Ba lần vẽ lại mới xong, và mỗi lần đều học một điều cụ thể: vây nhận ra nhờ **mép sau cong**,
+không nhờ nó nhọn · đuôi cá voi nhận ra nhờ **bề ngang**, thêm cuống là thành con bướm · dấu móng
+nhận ra nhờ **mép trong thẳng, mép ngoài cong**, hai mép cùng cong thì thành lá.
+
+### 15.6 Ba ràng buộc cứng của ngách này, và cả ba đều có cổng
+
+1. **Không bao giờ trình bày như tư liệu thật.** Đây là cảnh dựng bằng AI, và kênh nói rõ ở mô
+   tả. Trình bày cảnh AI như tư liệu động vật thật là khai man, và cũng là dạng bị gỡ nhanh nhất
+   trong ngách này.
+2. **Săn mồi được, máu me thì không.** Cho xem khoảnh khắc lao tới, không cho xem hậu quả —
+   `CAM_MAU` chặn ở khâu viết, và mọi `luat` của mười kênh đều nói lại điều đó.
+3. **Một chủ thể, một hành động, máy ghim cứng.** `CAM_TROI` chặn mọi từ chỉ chuyển động máy,
+   `CAM_NHANH` chặn động tác nhanh–hỗn loạn (chỗ Kling vẽ sai giải phẫu).
