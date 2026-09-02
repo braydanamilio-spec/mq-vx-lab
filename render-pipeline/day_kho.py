@@ -79,15 +79,38 @@ def day_mot(mp4: str, thu_publish: str, biet: set, that: bool) -> bool:
     # cơ chế không quan sát được thì cũng như không có: không ai biết nó lệch cho tới khi một
     # kho đầy và cả mẻ hỏng.
     import re as _re
+    out = r.stdout or ""
+    _m = _re.search(r"\[kho:([^\]]+)\]", out)
+    _id = _re.search(r"Drive file id:\s*(\S+)", out)
+
+    # ── THOÁT 0 MÀ KHÔNG CÓ MÃ TỆP DRIVE THÌ KHÔNG PHẢI THÀNH CÔNG  (2/9/2026) ──────────────
+    # Anh: *"sao hôm nay vẫn 0 videos."* Lượt 33577092728: cả 18 luồng in `✅ 2/2 video vào hàng
+    # đợi đăng`, mà D1 KHÔNG có một bản ghi nào và Firestore cũng không. Đọc log không cách nào
+    # biết video có lên Drive thật hay không — vì hàm này `capture_output=True` rồi **vứt toàn bộ
+    # đầu ra của `enqueue.py` đi**, chỉ giữ mã thoát.
+    #
+    # Bằng chứng luôn tồn tại, chỉ là ta ném nó đi trước khi ai kịp đọc — đúng cái đã làm mất nửa
+    # ngày ở `kiem_kho` (chết câm sau `|| true`) và ở `_kho_tu_kv` (NameError bị `except: pass`
+    # nuốt). Nay hai việc:
+    #   1. Mã thoát 0 mà KHÔNG có dòng `Drive file id:` -> coi là HỎNG. Một lượt đẩy không sinh ra
+    #      tệp nào trên Drive thì nó không thành công, dù nó thoát êm.
+    #   2. In lại mọi dòng ⚠️/❌ mà `enqueue.py` đã nói. Nó biết chuyện gì hỏng; chỉ là trước đây
+    #      không ai nghe.
+    if ok and not _id:
+        ok = False
+        loi_them = " — thoát 0 nhưng KHÔNG có mã tệp Drive (không có gì lên kho)"
+    else:
+        loi_them = ""
     _kho = ""
-    if ok:
-        _m = _re.search(r"\[kho:([^\]]+)\]", r.stdout or "")
-        _id = _re.search(r"Drive file id:\s*(\S+)", r.stdout or "")
-        _kho = (f"  → kho {_m.group(1)}" if _m else "")
-        if _id:
-            _kho += f" · {_id.group(1)[:16]}"
-    print(f"   {'✅' if ok else '❌'} {kenh:18s} {os.path.basename(mp4)}{_kho}"
-          f"{'' if ok else ' — ' + (r.stderr or r.stdout or '')[-160:]}")
+    if _m:
+        _kho = f"  → kho {_m.group(1)}"
+    if _id:
+        _kho += f" · {_id.group(1)[:16]}"
+    print(f"   {'✅' if ok else '❌'} {kenh:18s} {os.path.basename(mp4)}{_kho}{loi_them}"
+          f"{'' if ok else ' — ' + (r.stderr or out or '')[-160:]}")
+    for d in out.splitlines():
+        if d.lstrip().startswith(("⚠️", "❌", "🆘")):
+            print(f"        · {d.strip()[:150]}")
     return ok
 
 

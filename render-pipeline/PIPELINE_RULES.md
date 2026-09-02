@@ -8155,3 +8155,27 @@ mặc định `../_autopublisher`, không đòi biến môi trường nào.
 
 **Luật.** Một tệp phụ thuộc thì tìm bằng **đường mặc định**, biến môi trường chỉ để ghi đè.
 Biến thiếu thì im; đường mặc định sai thì báo.
+
+### 7dg — Thoát 0 mà không sinh ra tệp nào vẫn được tính là thành công  (2/9/2026)
+
+**Triệu chứng.** Anh: *"sao hôm nay vẫn 0 videos."* Lượt 33577092728: **18/18 luồng** in
+`✅ 2/2 video vào hàng đợi đăng`. D1 có **0** bản ghi. Firestore `render_jobs` bản ghi mới nhất
+là **18/8** — tức không kho nào biết đến 36 video của hôm nay.
+
+**Gốc rễ (hai lớp).**
+
+1. `day_kho.day_mot` chạy `enqueue.py` với `capture_output=True` rồi **vứt toàn bộ đầu ra**, chỉ
+   giữ mã thoát. `enqueue.py` in `Drive file id: …` khi lên kho được và in `⚠️ Ghi bản ghi D1 lỗi
+   …` khi không ghi được sổ — cả hai đều bị ném đi trước khi ai kịp đọc. Nên nhìn từ log, "đã lên
+   Drive" và "thoát êm mà chẳng làm gì" **trông y hệt nhau**.
+2. `ok = (returncode == 0)`. Một lượt đẩy không sinh ra tệp nào trên Drive thì nó **không thành
+   công**, dù nó thoát êm. Mã thoát trả lời *"có nổ không"*, không trả lời *"có làm được việc
+   không"* — và ở mắt xích giao hàng, câu thứ hai mới là câu cần hỏi.
+
+**Họ lỗi.** *Bằng chứng luôn tồn tại, chỉ là ta ném nó đi trước khi ai kịp đọc.* Cùng ngày, cùng
+hình dạng, ba chỗ: `kiem_kho` chết câm sau `|| true` (7df) · `_kho_tu_kv` nuốt `NameError` bằng
+`except: pass` · và đây.
+
+**Sửa.** Thoát 0 mà không có dòng `Drive file id:` thì tính là HỎNG (lượt đỏ → bốn mốc cron tự
+thử lại). Và in lại mọi dòng `⚠️/❌/🆘` mà `enqueue.py` đã nói — nó vẫn luôn biết chuyện gì
+hỏng; chỉ là không ai nghe.
