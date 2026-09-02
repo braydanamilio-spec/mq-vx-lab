@@ -1,0 +1,95 @@
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# LÀM LẠI TỪ ĐẦU — dọn sạch kho video rồi dựng lại  (2/9/2026)
+#
+# Anh: *"dọn xoá hết rồi làm lại chuẩn chỉnh cho anh nha."*
+#
+# ── VÌ SAO PHẢI LÀ WORKFLOW RIÊNG, CÓ CHỮ XÁC NHẬN ──────────────────────────────────────
+# Đây là lệnh phá huỷ duy nhất trong repo đụng vào video của các kênh ĐANG CHẠY. Mọi lệnh dọn
+# khác đều chỉ đụng kênh đã nghỉ và tự dừng khi danh sách giữ lại rỗng. Cái này thì ngược lại:
+# nó cố ý xoá đúng thứ đang dùng. Nên nó phải:
+#   · nằm riêng, không bao giờ chạy chung với lượt dọn thường ngày;
+#   · đòi gõ đúng chữ `LAM-LAI` — bấm nhầm nút không đủ để mất dữ liệu;
+#   · KHÔNG có `schedule:` — không đời nào để nó tự nổ.
+#
+# ── THÙNG RÁC, KHÔNG XOÁ VĨNH VIỄN ──────────────────────────────────────────────────────
+# `wipe_queue.py` mặc định `trashed=true`: file nằm thùng rác Drive 30 ngày, còn kéo lại được.
+# Muốn thu hồi dung lượng ngay thì bấm "🧹 Đổ thùng rác" trên dashboard — một hành động RIÊNG,
+# do anh quyết, sau khi đã nhìn thấy kho mới ổn.
+#
+# ── VÀ PHẢI XOÁ CẢ BẢN GHI ──────────────────────────────────────────────────────────────
+# Hôm nay đã trả giá đúng chỗ này theo chiều ngược lại: video có thật mà sổ rỗng nên màn hình
+# báo 0. Giờ nếu xoá file mà để nguyên 93 bản ghi thì màn hình sẽ báo có video trong khi kho
+# trống — cùng một lỗi, chiều ngược lại. Hai kho phải đi cùng nhau.
+# ══════════════════════════════════════════════════════════════════════════════════════════
+name: Làm lại từ đầu (dọn kho video + bản ghi)
+
+on:
+  workflow_dispatch:
+    inputs:
+      xac_nhan:
+        description: "Gõ đúng LAM-LAI để xác nhận xoá kho video của 18 kênh"
+        required: true
+        default: ""
+
+jobs:
+  lam_lai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Chặn nếu gõ sai chữ xác nhận
+        run: |
+          if [ "${{ github.event.inputs.xac_nhan }}" != "LAM-LAI" ]; then
+            echo "❌ Chưa xác nhận đúng. Gõ LAM-LAI vào ô xác nhận."
+            exit 1
+          fi
+          echo "✅ đã xác nhận"
+
+      - uses: actions/checkout@v4
+      - name: Checkout repo đăng bài
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Cài đặt
+        run: |
+          pip install --quiet 'google-api-python-client>=2.120,<3' 'google-auth>=2.29,<3' \
+            'google-cloud-firestore>=2.27,<2.29' 'google-api-core>=2.30,<2.35' 'PyYAML>=6.0,<7'
+      - name: Khoá dịch vụ
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+
+      - name: Đếm trước khi dọn (để biết đã xoá đúng bao nhiêu)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: cd _autopublisher && python src/wipe_queue.py --dry-run --scope store
+
+      - name: Bỏ video vào thùng rác Drive (còn cứu được 30 ngày)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: cd _autopublisher && python src/wipe_queue.py --scope store
+
+      - name: Xoá bản ghi job của 18 kênh (hai kho phải đi cùng nhau)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: |
+          cd render-pipeline
+          python - <<'PY'
+          import os, sys
+          sys.path.insert(0, ".")
+          import hot_db as H, giai_thich as G
+          ma = [k["ma"].upper() for k in G.KENH]
+          owner = os.environ.get("OWNER_UID", "")
+          r = H.goi("don_job_kenh", {"owner": owner, "kenh": ma}, timeout=90) or {}
+          print(f"   ✓ D1 xoá {r.get('xoa', 0)} bản ghi của 18 kênh · còn {r.get('con_lai', '?')}")
+          PY
