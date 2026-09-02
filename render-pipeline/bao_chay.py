@@ -46,10 +46,18 @@ def bao(kenh: str, loai: str, trang_thai: str, buoc: str = "") -> bool:
     # `ghi_job` có ON CONFLICT DO UPDATE nên cùng id sẽ ghi đè. Không dùng id ngẫu nhiên: bảng
     # D1 chỉ tăng, và mỗi lượt render sẽ để lại ba dòng rác thay vì một.
     ma = f"gt-{kenh.lower()}-{loai}-{at[:10]}"
-    r = H.goi("ghi_job", {
-        "id": ma, "owner": owner, "channel": kenh.upper(), "vtype": loai,
-        "status": trang_thai, "step": buoc or trang_thai, "queued": False, "at": at})
-    return bool(r)
+    # ── ĐI QUA `ghi_job()` + `xa_het()`, KHÔNG GỌI LỆNH `ghi_job` TRỰC TIẾP  (2/9/2026) ─────
+    # `hot_db` KHÔNG có lệnh `ghi_job`; danh sách lệnh nó dùng chỉ có `ghi_job_loat` (một LÔ).
+    # `enqueue.py` gọi thẳng tên ấy và ăn `HTTP 500`, làm mất sạch bản ghi — màn hình hiện 0 dù
+    # video đã lên Drive. Tệp này gọi CÙNG một tên, nên nó mang sẵn cùng quả bom.
+    #
+    # Triệu chứng đo được: 2 luồng đang render thật mà ô "⚙️ Đang chạy" hiện **0**.
+    #
+    # `xa_het()` là thứ viết ra đúng cho tiến trình ngắn: *"Gọi cuối luồng — thiếu bước này là
+    # MẤT các lượt ghi cuối."* Bộ đệm sinh ra cho tiến trình sống lâu; tệp này sống vài giây.
+    H.ghi_job(owner=owner, jid=ma, channel=kenh.upper(), vtype=loai,
+              status=trang_thai, step=buoc or trang_thai, queued=False, at=at)
+    return bool(H.xa_het())
 
 
 def main() -> int:

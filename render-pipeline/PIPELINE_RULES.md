@@ -8509,3 +8509,24 @@ khi không còn tệp mới.
 **Và một cảnh báo cho chính tôi:** đổi phạm vi đo là cách dễ nhất để biến một cổng đỏ thành xanh
 mà không sửa gì. Chỉ hợp lệ khi phạm vi cũ thật sự đã nghỉ — ở đây `render_cron.yml` (v3) đã tắt
 cron, và điều đó phải kiểm được, không phải tin.
+
+### 7do — Hai chỗ tính cùng một đại lượng bằng hai công thức  (2/9/2026)
+
+**Triệu chứng.** Đối chiếu từng ô với sự thật: **2 luồng đang render thật**, ô `⚙️ Đang chạy` hiện
+**0**.
+
+**Gốc rễ, hai tầng.**
+
+1. **Ô người dùng nhìn bỏ qua lưới an toàn.** `__rsPipeState` ngay bên trên đã lấy `Math.max` của
+   BA nguồn (sổ job Firestore · nhịp sống · D1) — có chú thích giải thích đúng lý do: *"failover
+   làm một nguồn mù, nguồn kia cứu"*. Nhưng ô tổng lại lấy **riêng** số D1. Tức lưới an toàn được
+   dựng xong rồi bị đi vòng qua, ngay trong cùng một tệp, cách nhau ba trăm dòng.
+
+2. **`bao_chay.py` mang sẵn quả bom của `enqueue`.** Nó gọi `goi("ghi_job", …)` — cái tên mà
+   `hot_db` **không có** (chỉ có `ghi_job_loat`) và đã trả `HTTP 500` ở `enqueue`. Cùng một lỗi,
+   hai tệp; tôi sửa một tệp và để nguyên tệp kia. Đúng họ *"vá một nhánh, để nguyên nhánh song
+   song"* — lần thứ ba trong hai ngày.
+
+**Luật.** Khi sửa một lời gọi sai, `grep` xem còn tệp nào gọi y hệt. Và: **hai chỗ tính cùng một
+đại lượng bằng hai công thức là chỗ sớm muộn nói hai con số** — chỗ nào người dùng nhìn thì chỗ
+ấy phải dùng công thức đầy đủ nhất, không phải công thức ngắn nhất.
