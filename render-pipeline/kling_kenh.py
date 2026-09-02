@@ -5458,7 +5458,23 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
     _it = {"n": 10 ** 9, "tap": None, "loi": []}
     # Số vòng phải đủ để vừa viết lại kịch bản vừa duyệt hồ key. Trước đây dừng ở MAX_TRIES nên
     # gặp năm key hỏng liên tiếp là bỏ cuộc trong khi hồ còn 290 key chưa thử.
-    for lan in range(1, VONG_VIET + len(ho) + 1):
+    # 2/9 — HAI NGÂN SÁCH, HAI BỘ ĐẾM. Bản trước dùng CHUNG một biến `lan` cho cả "viết lại"
+    # lẫn "duyệt hồ key", với vòng lặp `range(1, VONG_VIET + len(ho) + 1)`. Nghe hợp lý, và nó
+    # giết hẳn cơ chế viết lại:
+    #
+    #   mỗi khoá 429 làm `continue` — tiêu một `lan` mà KHÔNG viết được chữ nào. Hồ có 295 khoá
+    #   và khoảng một trăm khoá Cloudflare cạn hạn mức mỗi ngày, nên tới lúc AI thật sự viết
+    #   được bản đầu tiên thì `lan` đã là 99. Câu `if lan >= VONG_VIET: break` bắn ngay lập tức.
+    #
+    # Đo được: log in ra "↻ vòng 99" rồi "12 vòng chưa sạch" — tức mười hai vòng viết lại chỉ
+    # còn trên giấy, thực tế là MỘT bản nháp, lấy hay bỏ. Đó là lý do 6/16 tập trả về kèm lỗi
+    # và vì sao chất lượng lên xuống thất thường: không có vòng nào để sửa cả.
+    #
+    # Họ lỗi: *gộp hai ngân sách khác bản chất vào một bộ đếm*. Bản vá sinh ra nó cũng đúng ở
+    # thời của nó (trước đó dừng ở MAX_TRIES nên năm khoá hỏng liên tiếp là bỏ cuộc) — chữa một
+    # đầu, mở ra đầu kia.
+    viet = 0                                    # số bản nháp THẬT SỰ đã chấm
+    for lan in range(1, VONG_VIET + len(ho) + 8):
         p = goc + (f"\n\nYour previous attempt was rejected for: {fb}\nFix every point." if fb else "")
         try:
             resp = model.generate_content(
@@ -5484,18 +5500,20 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
                 model = _model()
                 fb = ""
                 continue
-            if CB._loi_tam_thoi(low) and lan < VONG_VIET:
+            if CB._loi_tam_thoi(low) and viet < VONG_VIET:
                 CB._tam_nghi(lan); fb = ""; continue
             raise
         try:
             d = CB._extract_json(resp.text)
         except Exception as ex:
+            viet += 1                          # tiêu một lượt gọi AI thật -> tính vào ngân sách
             fb = f"JSON lỗi ({ex})."; continue
         d = don(d, kenh)
         if phong:
             d["room"] = phong           # ép cứng: phòng do lịch luân phiên quyết, không do AI
         if lat:
             d["lat"] = lat
+        viet += 1
         loi = cham(d, kenh, giay, so)
         if lat and lat.split()[0] not in str(d.get("payoff") or ""):
             loi.append(f"cú lật phải do {lat} thực hiện — payoff không nhắc tới {lat}")
@@ -5533,15 +5551,15 @@ def sinh_tap(kenh: str, y_tuong: str, giay: float = 8, api_key: str = None,
         if loi and len(loi) < _it["n"]:
             _it = {"n": len(loi), "tap": json.loads(json.dumps(d)), "loi": list(loi)}
         if loi:
-            _so_biet.append({"vong": lan, "loi": loi[:8]})
+            _so_biet.append({"vong": viet, "loi": loi[:8]})
             fb = "; ".join(loi[:6])
-            print(f"   ↻ vòng {lan}: {fb[:110]}")
-            if lan >= VONG_VIET:
+            print(f"   ↻ vòng {viet}: {fb[:110]}")
+            if viet >= VONG_VIET:
                 break          # AI viết mãi không đạt thì đổi key không cứu được — dừng, trả bản cuối
             continue
-        print(f"   ✅ đạt vòng {lan}: {d.get('title')!r} · "
+        print(f"   ✅ đạt vòng {viet}: {d.get('title')!r} · "
               f"{sum(len(str((l or {}).get('say') or '').split()) for l in d.get('lines') or [])} từ thoại")
-        d["_bien_tap"] = {"nhan_o_vong": lan, "so_vong_tu_choi": len(_so_biet),
+        d["_bien_tap"] = {"nhan_o_vong": viet, "so_vong_tu_choi": len(_so_biet),
                           "da_tu_choi": _so_biet}
         return d
     if _tot["tap"] is not None and _tot["diem"] > 0:

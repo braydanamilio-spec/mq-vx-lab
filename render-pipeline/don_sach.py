@@ -205,31 +205,6 @@ def _don_mo_coi(H, owner: str) -> int:
     return n
 
 
-    try:
-        ds = goi("dem_tat_ca", {"owner": owner})
-    except Exception as e:
-        print(f"   ⚠ không hỏi được D1: {str(e)[:90]}")
-        return 0
-    # `dem_tat_ca` trả `{rows: [{channel, vtype, n}]}` — đọc đúng khoá `rows`, không đoán.
-    co = sorted({str(x.get("channel") or "").upper()
-                 for x in (ds.get("rows") or []) if x.get("channel")})
-    cu = [c for c in co if c and c not in giu]
-    print(f"   D1: {len(co)} kênh có bản ghi · {len(cu)} kênh ngoài danh sách giữ lại")
-    if not cu:
-        print("   ✅ D1 đã sạch")
-        return 0
-    print(f"   sẽ dọn: {', '.join(cu[:10])}" + (" …" if len(cu) > 10 else ""))
-    if not that:
-        return 0
-    try:
-        r = goi("don_job_kenh", {"owner": owner, "kenh": cu})
-        print(f"   ✓ D1 xoá {r.get('xoa', 0)} bản ghi · còn lại {r.get('con_lai', '?')}")
-        return int(r.get("xoa", 0))
-    except Exception as e:
-        print(f"   ⚠ dọn D1 hỏng: {str(e)[:90]}")
-        return 0
-
-
 def don(that: bool = False, owner: str = "") -> int:
     giu = giu_lai()
     if not giu:
@@ -317,17 +292,60 @@ def don(that: bool = False, owner: str = "") -> int:
     # Đặt trần 400/lượt: bước này chạy MỖI NGÀY trong luồng render, nên kho tồn sẽ cạn dần sau
     # vài ngày mà không lượt nào bùng. Dọn chậm mà đều tốt hơn dọn hết một lần rồi làm nghẽn
     # cả hệ trong ngày ấy — nhất là khi thứ người dùng NHÌN (D1) đã sạch ngay từ đầu.
-    TRAN = 400
+    # ── XOÁ THEO TRANG, TRẦN ĐẶT TRÊN SỐ XOÁ CHỨ KHÔNG PHẢI SỐ ĐỌC  (2/9/2026) ────────────
+    # Anh: *"nhớ dọn hết các tiến trình channel cũ đã xoá."* Bản trước KHÔNG dọn hết được, và
+    # lý do không phải hạn mức — là lỗi logic:
+    #
+    #     .where("owner","==",owner).limit(400)      ← lấy 400 bản ghi ĐẦU TIÊN
+    #     ... rồi mới lọc `if _ten(j) in giu: continue`
+    #
+    # Phép lọc nằm SAU phép giới hạn. Nên nếu 400 bản ghi đầu tình cờ toàn kênh đang dùng thì
+    # vòng này xoá đúng **0** — và lượt sau lấy lại đúng 400 bản ghi ấy, mãi mãi. Trần đặt trên
+    # số ĐỌC, trong khi thứ cần chặn là số XOÁ; hai đại lượng ấy chỉ bằng nhau khi mọi bản ghi
+    # đọc lên đều là rác, tức đúng cái điều kiện không bao giờ có sau khi 18 kênh mới chạy.
+    #
+    # Cùng họ lỗi với `dem_tat_ca` bỏ sót dòng `channel` NULL: **cái bẩn nằm ngoài phép lọc.**
+    # Ở đây nó nằm ngoài phép PHÂN TRANG — mỗi lượt lại soi đúng một chỗ.
+    #
+    # Bản này phân trang bằng `start_after` theo id tài liệu (`__name__` luôn có, không phụ thuộc
+    # trường nào), nên con trỏ LUÔN tiến; kênh đang dùng bị bỏ qua chứ không chặn đường. Trần
+    # đặt hai chỗ: số xoá (để một lượt không tiêu hết hạn mức GHI) và số đọc (để không quét vô
+    # tận khi kho toàn kênh đang dùng).
+    TRAN_XOA, TRAN_DOC, TRANG = 1500, 6000, 300
     import firestore_bridge as _FB
-    for d in _FB._stream_at(
-            db.collection("render_jobs").where("owner", "==", owner).limit(TRAN)):
-        j = d.to_dict() or {}
-        if _ten(j) in giu or any(x in _ten(j) for x in CAM_DUNG):
-            continue
-        d.reference.delete()
-        n_j += 1
-    if n_j >= TRAN:
-        print(f"   ℹ đã xoá {n_j} bản ghi (trần {TRAN}/lượt) — phần còn lại dọn tiếp ở lượt sau")
+    # Con trỏ là chính SNAPSHOT cuối trang trước, không phải một dict tự dựng: client tự rút giá
+    # trị cho đúng các trường đang sắp xếp. Tự dựng `{"__name__": id}` là đoán cách client mã
+    # hoá khoá tài liệu — đoán đúng thì chạy, đoán sai thì phân trang lặng lẽ quay về đầu và
+    # vòng lặp xoá đi xoá lại một trang. Đúng họ "mượn giá trị cho việc nó không sinh ra để làm".
+    moc, doc = None, 0
+    lo, n_lo = db.batch(), 0          # xoá theo lô: cùng số lượt ghi, ít vòng mạng hơn nhiều
+    while n_j < TRAN_XOA and doc < TRAN_DOC:
+        q = db.collection("render_jobs").where("owner", "==", owner).order_by("__name__")
+        if moc is not None:
+            q = q.start_after(moc)
+        lot = list(_FB._stream_at(q.limit(TRANG)))
+        if not lot:
+            break                     # hết kho — đây là lối ra "đã sạch"
+        doc += len(lot)
+        moc = lot[-1]
+        for d in lot:
+            j = d.to_dict() or {}
+            if _ten(j) in giu or any(x in _ten(j) for x in CAM_DUNG):
+                continue
+            lo.delete(d.reference)
+            n_j += 1
+            n_lo += 1
+            if n_lo >= 400:           # trần một lô của Firestore là 500
+                lo.commit(); lo, n_lo = db.batch(), 0
+        if len(lot) < TRANG:
+            break
+    if n_lo:
+        lo.commit()
+    if n_j >= TRAN_XOA or doc >= TRAN_DOC:
+        print(f"   ℹ xoá {n_j} bản ghi sau khi soi {doc} (trần {TRAN_XOA} xoá/{TRAN_DOC} đọc)"
+              f" — phần còn lại dọn tiếp ở lượt sau")
+    else:
+        print(f"   ✓ soi hết {doc} bản ghi · xoá {n_j} · không còn bản ghi kênh cũ nào")
 
     # Sổ đếm: đặt lại theo số THẬT còn lại, không để nguyên con số cũ.
     # Đây chính là chỗ đã sinh ra con số "2088" đứng lì trên dashboard sau khi anh dọn kho —
