@@ -355,85 +355,144 @@ và disclosure nằm ngay dòng đầu bình luận ghim. Video dài (8–11 ph�
 
 ---
 
-## 5.5 FACEBOOK AFFILIATE PARTNERSHIPS — thứ anh nhìn thấy dưới video, và nó phá hai kết luận cũ
+## 5.5 FACEBOOK AFFILIATE PARTNERSHIPS — đọc từ TÀI LIỆU GỐC của Meta (2/9/2026)
 
 Anh quan sát: *"gắn link sản phẩm trong video FB, khi xem thấy dưới bài viết"*. Đó **không phải
-link dán vào caption** — đó là **banner sản phẩm gắn thẳng vào video**, một sản phẩm khác hẳn.
+link dán vào caption** — đó là **biểu ngữ sản phẩm** do Facebook dựng.
 
-### 5.5.1 Nó là gì
+Toàn bộ mục này đọc từ **Trung tâm trợ giúp doanh nghiệp của Meta** (bản tiếng Việt), không phải
+blog. Hai trang gốc:
+`facebook.com/business/help/1992786667924029` (điều kiện) ·
+`facebook.com/business/help/1947397312436633` (cách làm + giới hạn).
 
-Meta công bố **Facebook Affiliate Partnerships** (Shoptalk, 24/3/2026). Việt Nam đã bật từ
-**22/10/2025**. Cơ chế: nối tài khoản affiliate của sàn vào Facebook, rồi **gắn sản phẩm** vào
-bài/Reel — Facebook tự dựng **banner sản phẩm ở góc dưới trái video và trên đầu khu bình luận**.
+### 5.5.1 HAI CHỖ EM ĐÃ NÓI SAI — sửa lại
 
-**Tám thị trường có Shopee:** Việt Nam · Singapore · Malaysia · Thái Lan · Đài Loan · Indonesia
-· Philippines · **Brazil**. Amazon ở Mỹ. **Mercado Libre sắp có ở Brazil VÀ Mexico**; Temu, eBay ở Mỹ.
-
-### 5.5.2 Nó phá hai kết luận em viết ở §0 — phải sửa
-
-| Kết luận cũ | Vì sao nay sai |
+| Em từng nói | Tài liệu gốc |
 |---|---|
-| **§0.2** *"Mercado Libre México gần như đóng với người nước ngoài"* | Meta đang đưa **Mercado Libre vào Brazil và Mexico** qua đường Facebook. Cửa vào không còn là Mercado Pago + duyệt tay, mà là **tài khoản Facebook**. ⚠ chưa mở, chưa xác nhận điều kiện |
-| **§5.2** *"đường chính trên FB là link ở bình luận đầu"* | Sai **hai lần**: (1) mẹo bình luận có thể đã bị Meta One bịt (xem 5.5.5); (2) có đường tốt hơn hẳn — banner sản phẩm **được miễn hạn mức link** |
+| *"Chỉ làm được trên app điện thoại"* | **SAI.** Có đường máy tính: Trang Facebook → **Công cụ chuyên nghiệp → Kiếm tiền → Đối tác liên kết** |
+| *"Meta mở cửa Mexico qua Mercado Libre, nên §0.2 sai"* | **SAI — §0.2 vẫn đúng.** Mercado Libre đòi **cư trú tại Brazil hoặc Mexico**. Meta không mở cửa nào cả, nó chỉ đổi chỗ đứng của cùng một cánh cửa đóng |
 
-Và nó vá luôn một chỗ đau ở §4.5: Shopee VN **không có API sinh link**, nhưng đường này
-**không cần sinh link** — chọn sản phẩm ngay trong Facebook.
+### 5.5.2 ĐIỀU KIỆN — theo từng sàn (số đo, không phải phỏng đoán)
 
-### 5.5.3 Điều kiện + cách nối (đo từ tài liệu Shopee VN và Meta)
+**Chung cho mọi sàn:** có **Trang Facebook HOẶC trang cá nhân chuyên nghiệp** · ≥18 tuổi (nếu là
+Trang thì **MỌI quản trị viên** phải >18 và cư trú ở quốc gia đủ điều kiện) · tuân thủ Chính sách
+kiếm tiền từ nội dung + Chính sách kiếm tiền dành cho đối tác.
 
-**Điều kiện:** ≥18 tuổi · có **Trang Facebook HOẶC hồ sơ chế độ chuyên nghiệp** · tuân thủ luật
-kiếm tiền · **đã có tài khoản Shopee Affiliate được duyệt** (anh đã có — xem §4.5).
+> **Meta KHÔNG trả tiền cho anh.** Nguyên văn: *"Đối tác liên kết của chúng tôi sẽ thanh toán cho
+> bạn. Meta sẽ không thanh toán cho người sáng tạo nội dung."* Tiền vẫn về qua Shopee → nên
+> **§4.5.1(f) vẫn là việc gấp nhất**: chưa Thiết lập thanh toán thì vẫn không nhận được đồng nào.
 
-```
-App Facebook  ->  Menu  ->  Kiếm tiền (Monetization)
-              ->  Affiliate Partnerships  ->  Shopee Affiliates
-              ->  xác nhận  ->  chuyển sang app Shopee  ->  đăng nhập TK affiliate
-              ->  xác nhận nối  ->  quay lại Facebook
-```
+| Sàn | Cư trú | Follower tối thiểu | **Nối được mấy Trang?** |
+|---|---|---|---|
+| **Shopee** | SG · MY · TH · TW · ID · **VN** · PH · BR | **KHÔNG YÊU CẦU** (trừ Brazil: >1.000) | **NHIỀU Trang / một tài khoản** ⭐ |
+| **Lazada** | SG · MY · TH · ID · **VN** · PH | **KHÔNG YÊU CẦU** | chỉ **MỘT** Trang |
+| Amazon | Hoa Kỳ | >5.000 | một |
+| Mercado Libre | **Brazil hoặc Mexico** | >1.000 | nhiều |
+| Temu · eBay | Hoa Kỳ | >1.000 | một |
+| Flipkart · Myntra | Ấn Độ | ≥2.000 | Flipkart nhiều · Myntra một |
 
-**Gắn sản phẩm:** cùng đường trên → tab *Discover* hoặc ô tìm kiếm → chọn sản phẩm →
-**Add to New Reel** / **Add to New Post**.
+**Hai dòng đầu là toàn bộ giá trị của phát hiện này:**
 
-> **Chỉ làm được trên APP ĐIỆN THOẠI.** Không có đường web. Đây là ràng buộc thật cho khâu tự
-> động — xem 5.5.4.
+1. **Shopee VN không yêu cầu follower.** Anh đã có tài khoản affiliate được duyệt (§4.5) → **đủ
+   điều kiện ngay hôm nay**, không phải nuôi kênh chờ mốc nào.
+2. **Shopee cho nối NHIỀU Trang Facebook vào MỘT tài khoản affiliate.** Đây là điều quan trọng
+   nhất cho quy mô của mình: **30 fanpage cho 30 kênh, tất cả chung một tài khoản Shopee** — một
+   hồ sơ, một hệ thanh toán, một chỗ đối soát. Lazada thì không (một Trang), nên Lazada chỉ làm
+   trục phụ.
 
-### 5.5.4 Đường cứu cho tự động hoá: dán link, Facebook TỰ nhận ra
+### 5.5.3 GIỚI HẠN — chín ràng buộc, và ba cái phá thẳng dây chuyền đang có
 
-Tài liệu Shopee ghi: **dán link affiliate vào khung soạn bài thì Facebook tự phát hiện** và dựng
-banner. Đây là mắt xích giữ cho pipeline vẫn chạy được:
+Biểu ngữ **chỉ xuất hiện** khi thoả đủ:
 
-```
-aff_chen.py  ->  sinh link s.shopee.vn (kèm 5 sub_id, §4.5.2)
-             ->  bộ đăng dán link vào khung soạn bài
-             ->  Facebook TỰ đổi thành banner sản phẩm
-             ->  không tốn hạn mức link · không bị phạt reach · người xem không rời app
-```
-
-⚠ **Chưa kiểm chứng bằng tay.** Phải thử một bài thật rồi nhìn xem banner có hiện không — nếu
-không hiện thì link ấy là **link ngoài bình thường** và ăn trọn hình phạt reach. Đây là phép thử
-đáng làm sớm nhất trong cả kế hoạch, vì nó quyết định FB tự động được hay phải bấm tay.
-
-### 5.5.5 Ràng buộc phải mã hoá vào `aff_gan.py`
-
-| Ràng buộc | Nguồn | Hệ quả |
+| # | Ràng buộc | Ảnh hưởng |
 |---|---|---|
-| **Mỗi bài chỉ gắn ĐƯỢC MỘT sản phẩm** | báo VN dẫn Shopee | `aff_gan` trả **1 offer** cho FB, không phải 2–3 như YouTube |
-| Instagram Reel gắn tới 30 sản phẩm | tài liệu Meta | IG và FB **khác luật** — đừng dùng chung cấu hình |
-| Banner nằm ở góc dưới trái video | Shopee VN | Khung hình phải **chừa góc dưới trái** — nếu không banner đè lên phụ đề. Ảnh hưởng thẳng tới `KichComic.tsx` / bố cục Kling |
-| Được miễn hạn mức link Meta One | bảng gói Meta One | Đây là **lý do chính** chọn đường này |
+| 1 | **Mỗi bài/thước phim chỉ được MỘT liên kết** | `aff_gan` trả **1 offer** cho FB |
+| 2 | Link phải tới **một sản phẩm**; link cửa hàng/bộ sưu tập **không đủ điều kiện** | Không dán link trang chủ Shopee |
+| 3 | **KHÔNG được dùng công cụ RÚT NGẮN LIÊN KẾT** | 🔴 **phá hai thứ cùng lúc — xem 5.5.4** |
+| 4 | **Thước phim phải DÀI HƠN 10 GIÂY** | 🔴 **clip Kling 5–8 giây KHÔNG đủ điều kiện** |
+| 5 | **Người xem phải ở CÙNG QUỐC GIA với người sáng tạo** | 🔴 **giết hẳn đường bán xuyên biên giới** |
+| 6 | Phải **đăng trực tiếp lên Facebook** — bài chéo từ Instagram hoặc Edits không có biểu ngữ | Bộ đăng phải đăng riêng cho FB, không cross-post |
+| 7 | Không hỗ trợ trong **Nhóm** và **Video trực tiếp** | Bỏ hẳn hướng rải vào group |
+| 8 | Sản phẩm phải **xuất hiện trong nội dung hoặc được nói rõ** | Nội dung phải THẬT SỰ nói về sản phẩm |
+| 9 | Sản phẩm phải **còn hàng** — hết hàng thì biểu ngữ **bị gỡ** | Cần cổng kiểm còn hàng định kỳ |
 
-> Dòng thứ ba là thứ dễ bỏ sót nhất và đắt nhất: **banner của nền tảng đè lên hình của mình.**
-> Cùng họ lỗi §12.12 (*dấu hiệu nghiệp dư*) — người xem không biết vì sao xấu, chỉ thấy xấu.
+Biểu ngữ chỉ hiện với **người xem dùng điện thoại**, ở thước phim và **trên đầu phần bình luận**.
+Nội dung đủ điều kiện mang nhãn **"Đủ điều kiện nhận hoa hồng"** — đây là **cách kiểm bằng mắt**
+xem một bài có ăn hoa hồng không.
 
-### 5.5.6 Chưa xác minh — đừng tin cho tới khi mở app
+### 5.5.4 Ràng buộc #3 phá kiến trúc link — hai nền tảng cần hai loại link NGƯỢC NHAU
 
-| Chỗ | Vì sao chưa chắc |
+Đây là va chạm trực diện giữa hai thứ **cùng đo được trong hôm nay**:
+
+| Đo được | Ở đâu |
 |---|---|
-| Dán link có tự thành banner không | tài liệu Shopee MY ghi có; **chưa thử tay** |
-| Một tài khoản FB nối được **mấy** tài khoản Shopee (đa quốc gia)? | không tài liệu nào nói. Nếu nối được nhiều nước thì §4.5.4 (mỗi nước một lần đăng ký) **đỡ đau hẳn** |
-| Quy kết 7 ngày · ngưỡng rút 25 USD · giữ 30 ngày chống hoàn hàng · thưởng 1% | **một blog bên thứ ba**, không phải Meta. Phải đọc trong Affiliate Hub |
-| Trang (Page) có dùng được không, hay chỉ hồ sơ cá nhân chế độ chuyên nghiệp | Shopee VN ghi *"Trang HOẶC hồ sơ chuyên nghiệp"* — nhưng chưa thấy Page chạy thật |
-| Mercado Libre BR/MX bao giờ mở, điều kiện gì | Meta ghi *"trong các tháng tới"* |
+| Shopee Custom Link **chỉ trả link RÚT GỌN** `s.shopee.vn/<mã>` | §4.5.1(d) |
+| Facebook **không nhận link rút gọn** | tài liệu Meta |
+
+⇒ **Link sinh từ Custom Link của Shopee sẽ KHÔNG ra biểu ngữ trên Facebook.** Và tệ hơn: **tầng
+chuyển hướng `go.<domain>` ở §4.2 cũng là một công cụ rút gọn** — cũng bị loại.
+
+Nên phải tách hẳn hai đường, không dùng chung:
+
+| | YouTube · mô tả | Facebook · biểu ngữ |
+|---|---|---|
+| Loại link | **`go.<domain>/<slug>`** — bắt buộc, vì phải đổi được đích cho video đã đăng | **link sản phẩm trực tiếp**, không rút gọn |
+| Sinh bằng | `aff_chen.py` | **chọn sản phẩm trong Facebook** (Đối tác liên kết) |
+| Đo bằng | `aff_click` của mình + subid | **Affiliate Hub của Facebook** |
+
+> **Họ lỗi §12.5 lần nữa:** *một câu luật đúng ở ngữ cảnh sinh ra nó, sai ở ngữ cảnh mới.* Tầng
+> chuyển hướng là bắt buộc cho YouTube (§4.1) và **bị cấm** cho biểu ngữ Facebook. Dùng lại mà
+> không hỏi là sai — và cái sai này **không báo lỗi**: bài vẫn đăng, chỉ là không bao giờ có
+> biểu ngữ, tức mất hoa hồng mà trông như bình thường.
+
+### 5.5.5 Ràng buộc #4 và #5 — hai cái phá dây chuyền Kling
+
+**#4 — thước phim phải >10 giây.** CLAUDE.md §13.27 ghi rõ mình ưu tiên clip **5–6 giây** vì Kling
+tính tiền theo lượt gọi. Những clip ấy **không đủ điều kiện nhận biểu ngữ**. Muốn tiền affiliate
+trên FB thì phải dựng bản **>10 giây** — tức ghép nhiều clip, đúng thứ §13.16 đã ghi là *"không
+sửa được bằng prompt, cần khâu dựng ghép nhiều clip"*. Nay nó có thêm một lý do tiền bạc.
+
+**#5 — người xem phải cùng quốc gia với người sáng tạo.** Đây là ràng buộc đắt nhất:
+
+- Kênh của mình là **tiếng Anh, khán giả Mỹ**. Người sáng tạo cư trú **Việt Nam**. ⇒ biểu ngữ
+  Shopee VN **chỉ hiện với người xem ở Việt Nam** — gần như không ai trong tệp khán giả hiện tại.
+- Và nó **đóng lại** ý tưởng "ở Việt Nam bán hàng Brazil/Mexico qua Facebook". Không phải khó —
+  là **không hiển thị**.
+
+⇒ Muốn dùng đường này thì phải có **kênh tiếng Việt, khán giả Việt Nam**. Đó chính là **Đường B**
+ở §10, và phát hiện này làm Đường B **rẻ hơn hẳn** (không cần follower, nối được 30 Trang) đồng
+thời **đóng chặt** phần LATAM.
+
+### 5.5.6 Cách làm — ba đường
+
+```
+A. MÁY TÍNH  (dùng cho pipeline)
+   Trang Facebook  ->  Công cụ chuyên nghiệp  ->  Kiếm tiền (bài viết / thước phim)
+   ->  Đối tác liên kết  ->  tìm hoặc Chọn sản phẩm  ->  Tạo bài viết
+   ->  Thêm vào bài viết mới / thước phim mới  ->  soạn  ->  Tiếp
+   ->  chọn "Kiếm tiền" để XÁC MINH link đã được thêm  ->  Đăng
+
+B. ĐIỆN THOẠI
+   Feed  ->  dấu + góc trên phải  ->  Thước phim  ->  thêm video  ->  Tiếp
+   ->  Thêm sản phẩm  ->  Thêm sản phẩm liên kết tiếp thị  ->  tìm URL / lướt  ->  Thêm
+
+C. DÁN LINK CÓ SẴN
+   Dán link sản phẩm vào chú thích hoặc bình luận  ->  Facebook tự phát hiện, tự thêm biểu ngữ
+   ⚠ PHẢI là link tới MỘT sản phẩm, và KHÔNG được rút gọn (xem 5.5.4)
+```
+
+**Nối tài khoản Shopee (làm một lần):**
+`App Facebook → Menu → Kiếm tiền → Affiliate Partnerships → Shopee Affiliates → xác nhận →
+chuyển sang app Shopee → đăng nhập tài khoản affiliate → xác nhận → quay lại Facebook`
+
+### 5.5.7 Còn chưa đo được
+
+| Chỗ | Vì sao |
+|---|---|
+| Link sản phẩm Shopee **không rút gọn** kèm tham số affiliate trông thế nào | Custom Link chỉ trả bản rút gọn. Phải tìm đường lấy link dài — hoặc chấp nhận chỉ dùng bộ chọn sản phẩm trong Facebook |
+| Có giới hạn **số bài/ngày** không | Meta **không nêu con số nào**. Nhưng thuật toán vẫn gắn cờ spam nếu đăng dày với nội dung lặp — tức giới hạn thật là **luật chống spam**, không phải một con số |
+| Biểu ngữ có bị trừ vào hạn mức link Meta One không | bảng gói ghi *"Facebook affiliate links"* được miễn; **chưa thấy Meta xác nhận thẳng** |
+| Hoa hồng · cửa sổ quy kết · ngưỡng rút | Meta không nêu; **do Shopee đặt**, đọc trong Affiliate Hub |
 
 
 ---

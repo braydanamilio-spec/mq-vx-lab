@@ -4668,7 +4668,11 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
     # Ghép thử prompt của CHÍNH tập này rồi đo. Chính xác tuyệt đối, và câu báo lỗi nói được
     # cách sửa nào rẻ hơn: bớt một người thường rẻ hơn cắt hook.
     try:
-        _p = prompt(kenh, d, giay)
+        # 2/9 — Phải truyền `so`: từ khi khuôn hình vào lịch, câu máy quay đổi theo tập và độ
+        # dài của nó chênh nhau tới 35 ký tự giữa khuôn ngắn nhất và dài nhất. Đo bằng khuôn của
+        # tập 0 rồi giao đi bản của tập 27 là đo một vật khác vật sắp giao — đúng họ lỗi đã trả
+        # giá sáu lần ở `VAN_KE_MAX` (13.7): đo mô hình thay vì đo vật thật.
+        _p = prompt(kenh, d, giay, so=so)
         if len(_p) > KY_TU_MAX or not _p.rstrip().endswith("seconds."):
             _co = len([t for t in hs["vai"] if t in " ".join(str(d.get(k) or "") for k in
                        ("hook", "setup", "escalate", "payoff"))
@@ -5269,6 +5273,22 @@ def de_bai(kenh: str, so: int) -> str:
         f"  · {x['gay']} caused it (and does not admit it)\n"
         f"  · {x['lat']} delivers the reversal, and delivers it THIS way — not the way that "
         f"comes to mind first: {HO_LAT_TA.get(x['co_che'], x['co_che'])}\n"
+        # 2/9 — CẤM THẲNG HỌ ĐÃ MÒN, bằng ví dụ chứ không bằng khái niệm.
+        #
+        # Đo trên 12 tập sau khi vòng viết lại được cứu sống: 0/12 tập còn lỗi thước, TB 94,2 —
+        # nhưng trục "cú lật · cơ chế mới" chiếm **48 trên 53** lượt bị trừ điểm, bỏ xa trục thứ
+        # hai (5 lượt). Đọc bản thảo thì thấy đúng một khuôn lặp lại: *"X nhấc Y lên, lộ ra Z"*.
+        #
+        # Đề bài ĐÃ cấp một cơ chế khác và AI vẫn quay về khuôn ấy. Vì lệnh dặn là một khái niệm
+        # trừu tượng ("a third character had already quietly solved it"), còn thói quen là một
+        # hình cụ thể. Khái niệm không đủ sức đẩy một hình ra khỏi đầu — phải nêu đích danh cái
+        # hình bị cấm. Cùng bài học 13.2: cổng đo một TỪ thì lệnh dặn phải liệt kê chính từ ấy.
+        + (f"  · BANNED ENDING for this episode: do NOT end on someone lifting, moving or pulling "
+           f"back an object to reveal what was under it. That single shape is the most worn ending "
+           f"on this channel and it is not the mechanism you were given above. If your payoff "
+           f"contains the words 'lifts', 'moves aside' or 'reveals', you have written the banned "
+           f"ending — write a different one.\n"
+           if x["co_che"] != "nhấc-lộ-vô-hại" else "")
         + (lambda g: (
             f"  · CALLBACK — this channel remembers. Somewhere in this episode, refer to what "
             f"happened in the earlier episode \"{g['title']}\" — "
@@ -5977,8 +5997,13 @@ def _ngan_sach_khuon(khuon: dict, hs: dict, giay: float, ph: str) -> int:
 
     def ghep(tong: int) -> int:
         def dien(t: str, muc: int = 0) -> str:
+            # 2/9 — `@@MAY@@` phải điền câu máy DÀI NHẤT, không để nguyên ô trống. Ô trống là
+            # 7 ký tự còn câu máy thật là 73–149, nên đo bằng ô trống là hụt tới 142 ký tự và
+            # web sẽ được cấp một ngân sách nó không có. Lấy bản dài nhất vì đây là phép đo ca
+            # XẤU NHẤT — cùng lý do hàm này đã lấy phòng có mô tả dài nhất.
             t = (t.replace("@@CAST@@", cast_m[muc]).replace("@@CASTNAMES@@", ten)
                   .replace("@@ROOMDESC@@", hs["phong"][ph]).replace("@@ROOM@@", ph)
+                  .replace("@@MAY@@", max((k[1] for k in _khuon_kenh(hs)), key=len))
                   .replace("@@TITLE@@", "An Episode Title Here"))
             for k, v in VAN_KE_CHIA.items():
                 t = t.replace("@@%s@@" % k.upper(), "w" * (tong * v // ty))
