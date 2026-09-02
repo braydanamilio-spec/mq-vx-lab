@@ -1148,3 +1148,28 @@ sạch" — 4/6 tập của lượt đo — vẫn trả bản viết **sau cùng
 theo vòng. Nay giữ thêm `_it` = bản ít lỗi nhất.
 
 Đúng họ lỗi số 6: *vá một nhánh, để nguyên nhánh song song*.
+
+### 14.11 Luật vật lý của thế giới phải đứng thành LUẬT, không nằm trong câu tả cơ chế hài
+
+Đọc một bản thảo THE HAUNTING đã **sạch mọi cổng** và đạt 90/100:
+
+> Trish: *It's stuck again, can't move!* · Ivy: *Just unplug.*
+
+Trish là người sống và **không nhìn thấy ma**; Ivy là ma. Tiền đề của kênh bị phá ngay ở dòng
+thoại đầu tiên. Không thước nào bắt: `cham()` đo tay nghề, `cham100` đo cấu trúc, và cả hai đều
+không biết thế giới này vận hành ra sao.
+
+Điều ấy CÓ nằm trong `hai` — nhưng nằm như một câu *tả cơ chế hài*, giữa những câu về status và
+leo thang. Mô hình đọc nó như gợi ý phong cách, vì nó được đặt ở chỗ dành cho gợi ý phong cách.
+
+`luat_the_gioi`: khối riêng, đặt ngay sau cơ chế hài và **trước** đề bài, mở đầu bằng *"these
+are not style notes"*. Mười kênh mới đều có: ORBIT SHIFT *"nothing falls"* · DOG PARK *"dogs
+have no hands"* · SALOON 1884 *"no electricity, no telephone"* · ENGINE 12 *"the alarm never
+sounds"* · DISPATCH *"the caller is never seen"*.
+
+**Luật:** một ràng buộc chỉ được tuân thủ ở mức tương ứng với **chỗ nó được đặt**. Cùng một câu,
+để trong đoạn tả phong cách thì thành gợi ý, để trong khối luật thì thành luật. Trước khi kết
+luận "AI không nghe lời", đi xem câu ấy đang nằm ở đâu trong lệnh hệ thống.
+
+Và làm theo đúng thứ tự: **cấp luật bằng đề bài trước, đo, rồi mới tính chuyện làm cổng** — thêm
+cổng là tiêu ngân sách vòng viết lại, và ngân sách ấy vừa mới được cứu sống ở 14.8.
