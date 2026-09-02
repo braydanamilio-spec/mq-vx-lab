@@ -8307,3 +8307,46 @@ Hai chi tiết bắt buộc, cả hai đều là bẫy đã biết:
    tạo workflow run mới. Lệnh vẫn trả 204 như thành công — lại một cái "xanh mà không làm gì".
 2. **Bấm xong phải ĐẾM LẠI `total_count`.** Không đếm lại thì ta có một cái canh gác luôn báo đã
    canh, và hỏng y hệt kiểu cron im lặng mà nó sinh ra để chữa.
+
+### 7dj — ĐO ĐƯỢC thủ phạm cạn Firestore: một script, 78.000 lượt đọc/ngày  (2/9/2026)
+
+**Cách đo.** Thôi đoán, mở thẳng bảng Usage của Firebase (nguồn sự thật, không phải sổ của mình):
+
+| | 24h qua |
+|---|---|
+| Reads | **59.000** (trần 50.000) |
+| Writes | **373** |
+| Đỉnh MỘT giờ | **13.561** |
+| Snapshot listener · kết nối | 20 · 4 |
+
+**Đọc gấp 158 lần ghi** là chữ ký của quét trọn collection — không phải của dây chuyền làm việc.
+Và 4 kết nối đồng thời loại bỏ giả thuyết "dashboard mở nhiều tab".
+
+**Thủ phạm.** `cleanup.yml` có mốc `20 */2 * * *` — **mỗi 2 giờ, 12 lượt/ngày** — chạy
+`don_trung_tieu_de.py`:
+
+```python
+for d in FB._stream_at(db.collection("render_jobs").where("owner","==",a.owner), 180):
+    if str(x.get("status") or "") != "done":
+        continue          # ← lọc SAU KHI đã trả tiền cho tài liệu
+```
+
+`180` là **timeout**, không phải giới hạn. Nên nó kéo trọn collection về rồi mới bỏ phần không
+cần. ~6.500 tài liệu × 12 lượt ≈ **78.000 lượt đọc/ngày**, một mình nó, trên trần 50.000.
+
+**Ba lỗi chồng lên nhau, mỗi cái đủ để gây hại:**
+
+1. **Lọc ở máy khách thay vì máy chủ.** Tiền trả cho cả phần bị bỏ ngay dòng sau.
+2. **Nhịp chạy không khớp việc.** Gộp tiêu đề trùng không cần 12 lần/ngày; một lần là đủ.
+3. **Không có tường ngân sách.** Một việc phụ được phép tiêu hết ngân sách của việc thiết yếu.
+
+**Sửa cả ba** — và đặt mốc mới sau 07:00 UTC để nó tiêu vào ngân sách mới, không tiêu nốt của
+hôm trước.
+
+**Luật.** Một con số `180` không có đơn vị trong lời gọi là chỗ phải dừng lại đọc chữ ký hàm.
+Ở đây nó đọc y hệt một giới hạn, và chính vì đọc rất giống giới hạn nên không ai kiểm — cùng họ
+với `KY_TU_MAX = 3000` mà đơn vị thật là ký tự chứ không phải từ (13.1).
+
+**Và luật về CÁCH ĐO:** khi sổ của mình nói `0/50.000` còn hệ thật trả `429`, đừng đi sửa sổ —
+**mở bảng đo của nhà cung cấp**. Sổ của mình chỉ thấy phần mình đã dạy nó đếm; bảng của họ thấy
+tất cả. Tôi đã mất nhiều giờ hôm nay đoán quanh cái sổ mù.

@@ -150,6 +150,23 @@ def _danh_dau_d1(owner: str, moc: str, lo_toi_da: int = 40) -> int:
 
 
 def main() -> int:
+    # ── TƯỜNG HẠN MỨC  (2/9/2026) ────────────────────────────────────────────────────────
+    # Gộp tiêu đề trùng là việc PHỤ: hoãn nó thì chỉ còn vài tiêu đề trùng trên màn hình, còn
+    # hạn mức nó tiêu thì đường ĐẨY VIDEO mất chỗ — mất chỗ ở đó là mất cả lượt render.
+    try:
+        import firestore_bridge as _FB0
+    except Exception:
+        _FB0 = None
+    if _FB0 is not None:
+        try:
+            _FB0.nap_nen_ngan_sach(os.environ.get("OWNER_UID", ""))
+        except Exception:
+            pass
+        if not _FB0.con_ngan_sach("doc"):
+            print("⏹ hoãn gộp tiêu đề trùng — ngân sách Firestore đã qua mức việc-phụ (70%).")
+            print(f"   {_FB0.bao_ngan_sach()}")
+            return 0
+
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--that", action="store_true", help="ghi thật (mặc định chỉ đếm)")
@@ -177,7 +194,27 @@ def main() -> int:
 
     nhom = defaultdict(list)
     tong = 0
-    for d in FB._stream_at(db.collection("render_jobs").where("owner", "==", a.owner), 180):
+    # ── LỌC Ở MÁY CHỦ, ĐỪNG LỌC SAU KHI ĐÃ TRẢ TIỀN  (2/9/2026) ─────────────────────────
+    # Đây là thủ phạm chính của "suốt ngày cạn Firestore", đo từ bảng Usage của Firebase:
+    # 59.000 lượt đọc/24h trên trần 50.000, đỉnh **13.561 lượt trong MỘT giờ**, trong khi cả
+    # ngày chỉ có 373 lượt ghi. Đọc gấp 158 lần ghi là dấu hiệu của quét trọn collection.
+    #
+    # Câu cũ: `db.collection("render_jobs").where("owner","==",a.owner)` — `180` là **timeout**,
+    # không phải giới hạn, nên nó kéo TRỌN collection về rồi mới `if status != "done": continue`.
+    # Tiền đã trả cho mọi tài liệu, kể cả tài liệu bị bỏ ngay dòng sau. Và `cleanup.yml` gọi nó
+    # **mỗi 2 giờ** — 12 lượt/ngày × ~6.500 tài liệu ≈ 78.000 lượt đọc/ngày, một mình nó.
+    #
+    # Đẩy phép lọc xuống máy chủ. Cần chỉ mục ghép (owner+status); chưa có thì Firestore ném
+    # FailedPrecondition, nên có đường lui về câu cũ — thà chậm còn hơn chết.
+    _q = db.collection("render_jobs").where("owner", "==", a.owner)
+    try:
+        _ds = list(FB._stream_at(_q.where("status", "==", "done"), 180))
+        print(f"   ✓ lọc ở máy chủ: {len(_ds)} bản ghi `done` (không kéo về phần bỏ đi)")
+    except Exception as _e:
+        print(f"   ⚠ chưa có chỉ mục ghép (owner+status): {str(_e)[:70]}")
+        print("     -> rơi về quét đủ. Tạo chỉ mục để cắt phần lớn lượt đọc.")
+        _ds = list(FB._stream_at(_q, 180))
+    for d in _ds:
         x = d.to_dict() or {}
         if str(x.get("status") or "") != "done":
             continue

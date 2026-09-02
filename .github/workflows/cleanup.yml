@@ -12,7 +12,12 @@ on:
     # Mỗi giờ chờ là thêm một loạt video dưới chuẩn lên kênh.
     # Việc đánh dấu chỉ ĐỌC job rồi ghi hai trường, không đụng Drive, nên chạy dày được. Còn việc
     # dọn kho _POSTED thì vẫn giữ MỘT lần/ngày: nó xoá tệp thật, không có lý do gì phải chạy dày.
-    - cron: "20 */2 * * *"
+    # 2/9 — TỪ 12 LƯỢT/NGÀY XUỐNG 1. Mốc cũ `20 */2 * * *` chạy `don_trung_tieu_de.py` mỗi
+    # 2 giờ, mà script ấy quét TRỌN `render_jobs`: ~6.500 tài liệu × 12 lượt ≈ 78.000 lượt đọc
+    # mỗi ngày trên trần 50.000. Đo từ bảng Usage: 59K đọc/24h, đỉnh 13.561 trong một giờ, mà
+    # cả ngày chỉ 373 lượt ghi. Gộp tiêu đề trùng không cần 12 lần/ngày — một lần là đủ, và đặt
+    # sau mốc hồi hạn mức (07:00 UTC) để nó tiêu vào ngân sách mới, không tiêu nốt của hôm trước.
+    - cron: "20 12 * * *"
   workflow_dispatch:
     inputs:
       dry_run: { description: "Chạy thử (không xoá)", type: boolean, default: false }
