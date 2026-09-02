@@ -1615,10 +1615,29 @@ def luu(kenh: str, so: int, giay: float = 8) -> str:
     return tm
 
 
+def tap_ke(kenh: str) -> int:
+    """Số tập kế tiếp CHƯA sinh của kênh này.
+
+    2/9 — `--so` là tham số tay, và vì bộ lịch tất định nên sinh lại cùng một `--so` cho ra
+    ĐÚNG cùng một prompt, ghi đè lặng lẽ lên thư mục cũ. Anh dán nó vào Kling và trả tiền cho
+    một lượt sinh ra đúng cái clip đã có. Không có gì báo, vì về mặt kỹ thuật không có gì hỏng.
+
+    Đây là dạng lỗi tốn tiền thật mà mọi cổng đều xanh — cùng họ với 12.8. Chữa bằng cách để
+    máy đếm, thay vì để người nhớ.
+    """
+    slug = re.sub(r"[^a-z0-9]+", "-", kenh.lower()).strip("-")
+    d = os.path.join(KHO, slug)
+    if not os.path.isdir(d):
+        return 0
+    da = [int(x) for x in os.listdir(d) if x.isdigit()]
+    return max(da) + 1 if da else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Mười kênh thiên nhiên — prompt Kling 8–10 giây.")
     ap.add_argument("--kenh")
-    ap.add_argument("--so", type=int, default=0)
+    ap.add_argument("--so", type=int, default=None,
+                    help="số tập; bỏ trống = tự lấy tập kế tiếp chưa sinh")
     ap.add_argument("--sl", type=int, default=1, help="sinh mấy tập liên tiếp")
     ap.add_argument("--giay", type=float, default=8, choices=[float(g) for g in GIAY_CHUAN])
     ap.add_argument("--liet-ke", action="store_true")
@@ -1646,9 +1665,15 @@ def main() -> int:
 
     if not a.kenh:
         ap.error("cần --kenh (hoặc --liet-ke / --kiem)")
+    so = a.so if a.so is not None else tap_ke(a.kenh)
     for i in range(a.sl):
-        tm = luu(a.kenh, a.so + i, a.giay)
-        print(f"  ✅ {a.kenh} tập {a.so + i} → {tm}")
+        d = os.path.join(KHO, re.sub(r"[^a-z0-9]+", "-", a.kenh.lower()).strip("-"),
+                         f"{so + i:03d}")
+        if a.so is not None and os.path.isdir(d):
+            print(f"  ⚠️ {a.kenh} tập {so + i} ĐÃ SINH RỒI ({d}) — prompt sẽ y hệt bản cũ. "
+                  f"Bỏ --so để lấy tập kế tiếp.")
+        tm = luu(a.kenh, so + i, a.giay)
+        print(f"  ✅ {a.kenh} tập {so + i} → {tm}")
     return 0
 
 

@@ -2518,6 +2518,7 @@ def main():
     check("sổ tránh-trùng và phép so cắt cùng độ dài", t_so_trung_tieu_de_phai_cung_do_dai)
     check("bộ thiên nhiên: prompt + hàng rào + đa dạng", t_bo_thien_nhien_lanh)
     check("brand thiên nhiên qua đủ ba cổng", t_brand_thien_nhien_doc_duoc)
+    check("thiên nhiên: có đường giao hàng + khai báo AI", t_tn_giao_hang_khai_bao_ai)
     check("mỗi kênh Kling có mặt ở cả hồ sơ + brand", t_kenh_kling_dong_bo_ba_noi)
     check("đề bài Kling: Python khớp web từng trường", t_lich_kling_python_khop_web)
     check("khuôn hình đổi từng tập + khớp web", t_khuon_hinh_doi_tung_tap_va_khop_web)
@@ -6269,6 +6270,33 @@ def t_khuon_hinh_doi_tung_tap_va_khop_web():
     than = kh[list(kh)[0]]["than"][0]
     assert "@@MAY@@" in than, "khuôn web nướng cứng câu máy — mọi tập sẽ mang khuôn của tập 0"
 
+
+
+def t_tn_giao_hang_khai_bao_ai():
+    """BỘ THIÊN NHIÊN PHẢI CÓ ĐƯỜNG GIAO HÀNG, VÀ BÀI ĐĂNG PHẢI KHAI BÁO LÀ CẢNH AI.
+
+    2/9 — `thien_nhien.py` dừng ở PROMPT. `kling_dong_bo.py` import cứng `kling_kenh`, nên đưa
+    một tập thiên nhiên vào là nổ ngay: `RuntimeError: chưa có kênh 'ICE BEAR'`. Một dây chuyền
+    kết thúc ở nửa đường trông y hệt một dây chuyền hoàn chỉnh, cho tới lúc có clip trong tay.
+
+    Và chốt thứ hai quan trọng hơn: câu khai báo "đây không phải tư liệu thật" phải có ở CẢ BA
+    nền tảng. Đó là ràng buộc cứng số một của ngách này — trình bày cảnh AI như tư liệu động vật
+    thật vừa là khai man vừa là dạng bị gỡ nhanh nhất.
+    """
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import tn_dong_bo as TD
+    import thien_nhien as TN
+    for ten in TN.KENH:
+        x = TN.lich(ten, 0)
+        bai = TD.viet_bai({"kenh": ten, "loai": x["loai"], "hanh_vi": x["hanh_vi"], "giay": 8})
+        e = TD.kiem_bai(bai)
+        assert not e, f"{ten}: {e}"
+    # thử ngược: bỏ khai báo ở một nền tảng thì cổng PHẢI kêu (luật 13.11)
+    x = TN.lich("ICE BEAR", 0)
+    bai = TD.viet_bai({"kenh": "ICE BEAR", "loai": x["loai"], "hanh_vi": x["hanh_vi"], "giay": 8})
+    bai["facebook"]["text"] = "no disclosure"
+    assert TD.kiem_bai(bai), "cổng khai báo AI không bắt được khi thiếu — cổng chết"
 
 def t_bo_thien_nhien_lanh():
     """BỘ THIÊN NHIÊN: mọi prompt lọt trần, hàng rào nguyên, không cặp kênh nào trùng.

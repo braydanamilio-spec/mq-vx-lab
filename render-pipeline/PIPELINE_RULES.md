@@ -8558,3 +8558,29 @@ và đi qua bức tường ngân sách vì đây là việc phụ.
 
 **Luật.** Trước khi viết một bộ dò sức khoẻ, hỏi: *"đường chạy thật đã chạm vào thứ này chưa?"*
 Nếu rồi thì việc cần làm là **ghi lại**, không phải **hỏi lại**.
+
+### 7dq — Nút "kiểm khoá" gọi lại cả 295 khoá mỗi lần bấm  (2/9/2026)
+
+Anh: *"xem phần check live api key ổn ko, tối ưu quota token khi check chưa."*
+
+**Hai điều bộ kiểm VỐN ĐÃ đúng** — ghi ra để phiên sau đừng "sửa" hỏng:
+
+1. Nó gọi endpoint **liệt kê model** (`/v1beta/models` của Gemini, `/v1/models` của Groq), không
+   sinh chữ. **Không tốn một token nào.** Đây đã là cách kiểm rẻ nhất có thể.
+2. Gặp `429`/quota nó vẫn ghi `alive:true`; chỉ `403/401` mới coi là chết. **Cạn hạn mức không
+   phải chết** — và đó là lý do đo hôm nay ra **0/295 khoá bị đánh chết oan** (gemini 54 sống ·
+   36 chưa kiểm · 0 chết). Chú thích trong mã còn ghi lại một lần đã giết oan khoá `nara:`/`dvids:`
+   vì chúng rơi xuống nhánh Gemini và Google trả 403.
+
+**Hai chỗ thật sự phí:**
+
+| | trước | sau |
+|---|---|---|
+| phạm vi mỗi lần bấm | **cả 295 khoá**, kể cả khoá vừa kiểm 10 phút trước | chỉ khoá cũ hơn 6h (giữ Shift để ép kiểm tất cả) |
+| ghi Firestore | `setDoc` × 295, tuần tự | gom **lô 400** |
+| thời gian | ~5,4 phút (giãn 1,1 s/khoá) | theo số khoá thật sự cần kiểm |
+
+**Và đòn bẩy lớn nhất không nằm ở nút này.** Từ 2/9 dây chuyền render tự ghi sức khoẻ khoá **từ
+lượt dùng thật** (7dp), nên phần lớn khoá luôn "còn mới" và nút này gần như không còn việc. Câu
+hỏi đúng khi thấy một bộ dò: *"đường chạy thật đã chạm vào thứ này chưa?"* — rồi thì **ghi lại**,
+đừng **hỏi lại**.
