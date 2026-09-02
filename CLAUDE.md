@@ -1330,3 +1330,33 @@ Thêm dòng cấm họ cú lật đã mòn, đo lại đúng 12 tập ấy:
 **Luật:** trước khi sửa, chọn sẵn **đại lượng sẽ dùng để phán quyết**, và chọn đại lượng có
 NHIỀU sự kiện nhất mà bản sửa nhắm vào. Đọc trung bình của một mẫu nhỏ là cách chắc chắn để kể
 một câu chuyện nghe hợp lý về nhiễu.
+
+### 14.15 Lệnh dặn tự mâu thuẫn theo chiều NGƯỢC với 13.2 — cấm một TỪ mà việc hợp lệ cũng dùng
+
+Luật 13.2 dạy: cổng đo một TỪ thì lệnh dặn phải liệt kê chính từ ấy. Em áp nó vào dòng cấm họ cú
+lật đã mòn, và liệt kê `lifts · moves aside · reveals`.
+
+Sai ở chữ cuối. `reveals` là chữ của **ba cơ chế hợp lệ** — `thủ-phạm-lộ-diện`,
+`vật-hoá-ra-là-khác`, `người-thứ-ba-đã-xong`. Đọc bản thảo thì thấy AI đổi đúng **hình** nhưng
+vẫn giữ chữ ấy, nên nó vừa làm đúng vừa "vi phạm" một điều em vừa cấm.
+
+**Luật:** 13.2 chỉ đúng khi cái bị cấm là một **từ**. Khi cái bị cấm là một **hình**, hãy tả cái
+hình ấy và **đừng liệt kê từ nào** — vì bất kỳ từ nào đủ phổ biến để nhận diện cái hình cũng đủ
+phổ biến để xuất hiện trong việc hợp lệ. Cùng họ với 13.22 (*một chữ có hai nghĩa vật lý là chữ
+không dùng làm cổng được*), chỉ khác là ở lệnh dặn thay vì ở cổng.
+
+### 14.16 Một luật đúng bị thực thi bằng cách rẻ nhất
+
+Luật *"phải có ít nhất một lượng chính xác"* (13.3) là luật tốt: con số làm người xem **cảm
+được** quy mô. Đọc bản thảo thì thấy nó đang được thoả thế này:
+
+> *"Pickle's **nine** chewed rubber paw prints stain the grass"*
+> *"Mercy's smudged boot prints, **three** dark spots, on the margins"*
+
+Con số gắn vào **vết**, **đốm**, **dấu** — những thứ không đếm được bằng mắt trong một khung
+hình. Luật được thoả về mặt chữ và **mất hoàn toàn tác dụng** về mặt người xem, lại còn làm câu
+văn kỳ quặc.
+
+**Luật:** khi viết một ràng buộc, đừng chỉ nói *phải có gì* — nói luôn **nó được phép đếm cái
+gì**. Mọi ràng buộc đều sẽ được thoả bằng cách rẻ nhất mà câu chữ cho phép; chỗ hở nằm ở phần
+mình không viết ra, không ở phần mình viết.

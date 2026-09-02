@@ -5301,11 +5301,15 @@ def de_bai(kenh: str, so: int) -> str:
         # trừu tượng ("a third character had already quietly solved it"), còn thói quen là một
         # hình cụ thể. Khái niệm không đủ sức đẩy một hình ra khỏi đầu — phải nêu đích danh cái
         # hình bị cấm. Cùng bài học 13.2: cổng đo một TỪ thì lệnh dặn phải liệt kê chính từ ấy.
-        + (f"  · BANNED ENDING for this episode: do NOT end on someone lifting, moving or pulling "
-           f"back an object to reveal what was under it. That single shape is the most worn ending "
-           f"on this channel and it is not the mechanism you were given above. If your payoff "
-           f"contains the words 'lifts', 'moves aside' or 'reveals', you have written the banned "
-           f"ending — write a different one.\n"
+        # Bản đầu của dòng này liệt kê cả chữ `reveals` là dấu hiệu của họ bị cấm. Sai: `reveals`
+        # là chữ của BA cơ chế hợp lệ (thủ-phạm-lộ-diện · vật-hoá-ra-là-khác · người-thứ-ba-đã-
+        # xong). Đọc bản thảo thì thấy AI đổi đúng HÌNH nhưng vẫn giữ chữ ấy — tức lệnh dặn tự
+        # mâu thuẫn, y hệt lỗi 13.2 nhưng ở chiều ngược lại: cấm một TỪ mà việc hợp lệ cũng dùng.
+        # Nay chỉ cấm HÀNH ĐỘNG (nhấc/gạt/kéo một vật lên), không cấm chữ.
+        + (f"  · BANNED ENDING for this episode: the payoff must not be a character lifting, "
+           f"moving aside or pulling back an object so that what was under it becomes visible. "
+           f"That one shape is the most worn ending on this channel, and it is not the mechanism "
+           f"you were given above. Nobody picks anything up at the end of this episode.\n"
            if x["co_che"] != "nhấc-lộ-vô-hại" else "")
         + (lambda g: (
             f"  · CALLBACK — this channel remembers. Somewhere in this episode, refer to what "
@@ -5385,9 +5389,16 @@ def _sys(kenh: str, giay: float, so: int = -1) -> str:
         # Đo trên lượt sinh thật: cổng "lượng chính xác" là chốt chặn số một, dính 3/3 ca hỏng.
         # Nó vốn nằm ở khối "WHAT MAKES THESE WORK IN AMERICA" — phần lời khuyên. Chuyển lên
         # khối GIỚI HẠN CỨNG, nơi AI tuân thủ chặt nhất, vì nó LÀ một giới hạn cứng.
+        # 2/9 — Đọc bản thảo: *"Pickle's nine chewed rubber paw prints stain the grass"* và
+        # *"Mercy's smudged boot prints, three dark spots, on the margins"*. Luật được thoả bằng
+        # cách rẻ nhất: gắn một con số vào danh từ gần nhất, kể cả danh từ không đếm được bằng
+        # mắt. Con số ấy không làm người xem CẢM được gì — mà đó mới là lý do luật này tồn tại.
+        # Nên phải nói rõ con số được phép đếm CÁI GÌ.
         f"  · at least ONE exact quantity somewhere in the script — a number, an amount of "
-        f"money, a day name, or a count. It can live in the opening image ('nine jars', 'eleven "
-        f"packages', 'forty tools') and does not have to be spoken. A short with no number in "
+        f"money, a day name, or a count. It must count whole physical objects a viewer could "
+        f"point at and tally ('nine jars', 'eleven packages', 'forty tools') — never marks, "
+        f"stains, prints, smells, sounds or feelings, which cannot be counted on screen. It can "
+        f"live in the opening image and does not have to be spoken. A short with no number in "
         f"it reads as a sketch of a joke rather than a joke\n"
         + (f"  · 'escalate' MUST contain one of these words, literally: again, another, "
            f"further, more, bigger, deeper, harder, higher, a second, one more, the whole, "
