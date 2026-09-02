@@ -1076,3 +1076,75 @@ Bốn chỗ trong `cham100` dùng `tap["payoff"]` trong khi mọi chỗ khác d�
 khối chốt làm cả thước nổ `KeyError`, mà thước nổ thì `sinh_tap` **mất luôn bản đang giữ** —
 hỏng mà không để lại gì, đúng họ lỗi 10.1. Thước phải **chấm điểm thấp** cho một tập thiếu
 khối, không được chết theo nó.
+
+### 14.8 Hai ngân sách khác bản chất gộp vào MỘT bộ đếm — vòng viết lại chết mà log vẫn đẹp
+
+Lỗi lớn nhất của ngày, và nó ẩn sau một con số trông rất bình thường.
+
+`sinh_tap` đếm vòng bằng `for lan in range(1, VONG_VIET + len(ho) + 1)`. Một biến `lan` phục vụ
+**hai** việc: đếm lần viết lại (ngân sách 12) và đếm lần duyệt hồ khoá (ngân sách 295). Mỗi khoá
+trả 429 làm `continue` — **tiêu một `lan` mà không viết được chữ nào**. Hồ có ~100 khoá
+Cloudflare cạn hạn mức mỗi ngày, nên tới lúc AI viết được bản nháp ĐẦU TIÊN thì `lan` đã là 99,
+và câu `if lan >= VONG_VIET: break` bắn ngay lập tức.
+
+```
+   🔑 đổi key (76/295): 429 rate limit daily
+   ↻ vòng 99: không có một lượng chính xác nào…
+   ⚠️ 12 vòng chưa sạch — trả bản cuối kèm 2 điểm sửa tay
+```
+
+Mười hai vòng viết lại chỉ còn **trên giấy**. Thực tế: một bản nháp, lấy hay bỏ. Đo được
+10/16 tập "sạch ở vòng 1" và 6/16 trả về kèm lỗi — trông như "AI viết khá, thỉnh thoảng hụt",
+mà thật ra là **không có vòng sửa nào tồn tại**.
+
+Đây là lý do gốc của mọi thứ đã đi chữa ở tầng trên: sàn 95 điểm, mười hai vòng, thang một trăm
+điểm, cổng nới rộng — tất cả đều giả định có một vòng lặp sửa bài. Không có nó thì chúng chỉ là
+bộ lọc một lần.
+
+**Họ lỗi:** *gộp hai ngân sách khác bản chất vào một bộ đếm.* Và bản vá sinh ra nó cũng đúng ở
+thời của nó — trước đó dừng ở `MAX_TRIES` nên năm khoá hỏng liên tiếp là bỏ cuộc. Chữa một đầu,
+mở ra đầu kia. Chỗ nhận ra: **câu log tự mâu thuẫn** — "vòng 99" đứng cạnh "12 vòng chưa sạch".
+Hai con số nói về hai thứ khác nhau mà mang cùng một tên.
+
+**Luật:** một biến đếm chỉ được đại diện cho MỘT thứ. Khi thấy `A + B` trong một cận vòng lặp,
+hỏi ngay: hai thứ ấy có tiêu cùng một tài nguyên không? Ở đây là không — đổi khoá không tốn
+lượt viết, và lượt viết không tốn khoá.
+
+### 14.9 Khuôn hình: đa dạng phải nằm ở thứ người xem NHÌN THẤY
+
+Bộ lịch bảy trục đổi rất giỏi *chuyện*, nhưng `_bat_buoc` **ghi cứng** `"Camera locked off at
+standing eye level, wide."` vào mọi prompt của mọi kênh, còn đề bài thì liệt kê ba lựa chọn và
+AI luôn lấy cái đầu. Đo: **6/6 bản thảo mở bằng cùng một câu**. Ba mươi kênh, mọi tập, một khuôn
+hình — đúng chữ *"cảnh"* trong câu luật YouTube về nội dung hàng loạt.
+
+`KHUON_HINH`: tám khuôn **tĩnh**. Biến thể ở CHIỀU CAO · KHOẢNG CÁCH · TIỀN CẢNH, không ở chuyển
+động — hàng rào cấm pan/zoom/dolly/drone và cấm thế là đúng.
+
+Ba lỗi tự gây ra trong lúc làm, cả ba chỉ đo mới thấy:
+
+| lỗi | số đo | vì sao |
+|---|---|---|
+| nhét thành trục thứ tám của bộ lịch | **144/199** tập liền nhau trùng khuôn | trục thêm sau cùng là **chữ số cao nhất**, đi thành vệt dài — dù tổng thể vẫn dùng đều 28 lượt/khuôn |
+| ghi cứng bước 3 | kênh còn 6 khuôn chỉ dùng **2** | `gcd(3,6)=3`. Luật 13.6: hằng số sống lâu hơn ngữ cảnh |
+| khuôn web dựng một lần cho cả kênh | mọi tập từ web mang khuôn của tập 0 | câu máy bị nướng cứng vào khuôn — đúng cái lặp vừa chữa, ở phía web |
+
+Cái đầu quan trọng nhất về mặt phương pháp: **"cả tám khuôn có được dùng đều không" không phải
+thứ người xem cảm được**; thứ họ cảm được là "hai tập liền nhau có trông khác nhau không". Chọn
+sai đại lượng thì số đo đẹp mà sản phẩm vẫn lặp.
+
+Và một quyết định **bỏ bớt**: khuôn `top-down` bị loại khỏi bảng, vì trong khung dọc 9:16 nhìn
+thẳng từ trên xuống thì không còn mặt người — mà cả bộ chạy bằng thoại có lip sync. Một khuôn
+hình đẹp mà phá cơ chế chính của sản phẩm thì không phải đa dạng.
+
+`khuon_cam` cho ba kênh khoá chiều cao máy ngay trong bản sắc (DOG PARK *"camera sits at dog
+height"*, PET HOUSE *"knee height"*, ROAD TRIP *"fixed camera on the dashboard"*). **Không nới
+câu `style` của chúng** — nới thì mất bản sắc để lấy một khuôn hình, đổi sai chiều.
+
+### 14.10 "Trả bản tốt nhất" đã sửa ở nhánh điểm, còn nguyên ở nhánh LỖI
+
+Luật 13.24 dạy trả bản tốt nhất thay vì bản cuối, và `_tot` làm đúng thế. Nhưng `_tot` chỉ nhận
+những bản **đã qua `cham()`** (vì `cham100` chỉ chạy khi `not loi`). Nên nhánh "không bản nào
+sạch" — 4/6 tập của lượt đo — vẫn trả bản viết **sau cùng**, trong khi số lỗi không giảm đều
+theo vòng. Nay giữ thêm `_it` = bản ít lỗi nhất.
+
+Đúng họ lỗi số 6: *vá một nhánh, để nguyên nhánh song song*.

@@ -144,6 +144,33 @@ jobs:
           python kiem_nhip.py      # nhịp cắt theo chuẩn đo từ hai video tham chiếu
           python kiem_workflow.py  # workflow gói đúng sản phẩm
 
+      # ── KHOÁ DỊCH VỤ: GHI MỘT LẦN, SỚM, Ở BƯỚC CỦA RIÊNG NÓ  (2/9/2026) ────────────────
+      # `/tmp/sa.json` trước đây được ghi bên trong bước "Đẩy video vào hàng đợi đăng", trong
+      # khi HAI bước khác (dọn bản ghi, đối chiếu kho) khai `GOOGLE_APPLICATION_CREDENTIALS`
+      # trỏ vào chính tệp ấy. Tức chúng phụ thuộc vào một tác dụng phụ của một bước không liên
+      # quan: bước đẩy hỏng hay bị bỏ qua là hai bước kia mất khoá — và mất khoá thì Firestore
+      # chỉ báo "không dùng được", đọc y hệt hạn mức cạn. Một thứ ba bước cùng cần thì nó là
+      # bước riêng, không phải sản phẩm phụ của bước đầu tiên tình cờ cần nó.
+      - name: Khoá dịch vụ
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+
+      # DỌN BẢN GHI CỦA KÊNH ĐÃ NGHỈ Ở CẢ HAI KHO.
+      # Anh gửi ảnh ô xổ "Tất cả kênh (2088)" vẫn liệt kê đủ 50 kênh cũ kèm số đếm, dù
+      # `render_channels` bên Firestore chỉ còn 18 kênh mới. Vì ô xổ và số đếm đọc bảng
+      # `render_job` bên **D1** — một kho khác. Chính mã worker đã ghi: *"hai kho dữ liệu song
+      # song thì lệnh dọn phải đụng cả hai"*, và tôi đã dọn một kho rồi báo xong.
+      # Danh sách giữ lại vẫn đọc từ `channels.yaml`, không chép tay.
+      - name: Dọn bản ghi kênh đã nghỉ (Firestore + D1)
+        if: matrix.luong == 1
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          CHANNELS_YAML: ${{ github.workspace }}/_autopublisher/config/channels.yaml
+        run: cd render-pipeline && python don_sach.py --that --owner "$OWNER_UID" || true
+
+
       - name: Luồng ${{ matrix.luong }} — kênh phụ trách
         id: k
         run: |
@@ -227,7 +254,7 @@ jobs:
           OWNER_UID: ${{ secrets.OWNER_UID }}
           HOT_KEY: ${{ secrets.HOT_KEY }}
         run: |
-          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+          # khoá dịch vụ đã ghi ở bước "Khoá dịch vụ" phía trên — một nguồn duy nhất
           # GHIM PHIÊN BẢN Ở CẢ HAI NHÁNH. Nhánh dự phòng cũ cài BẢN MỚI NHẤT, và
           # `2>/dev/null` nuốt luôn lý do requirements.txt hỏng. Chính cái đó đã đưa vào
           # một bản `google-cloud-firestore` khác pin, làm `.where()` truyền vị trí đổi
@@ -265,22 +292,6 @@ jobs:
       # — con số đúng theo nghĩa "số lượt render từng thành công", sai với thứ anh muốn biết.
       # Đặt ở đây thì mỗi ngày một lần con số tự đúng lại, không phải vá tay lần nào nữa.
       # `|| true`: đối chiếu hỏng không được phép làm hỏng lượt render đã xong.
-      # DỌN BẢN GHI CỦA KÊNH ĐÃ NGHỈ Ở CẢ HAI KHO.
-      # Anh gửi ảnh ô xổ "Tất cả kênh (2088)" vẫn liệt kê đủ 50 kênh cũ kèm số đếm, dù
-      # `render_channels` bên Firestore chỉ còn 18 kênh mới. Vì ô xổ và số đếm đọc bảng
-      # `render_job` bên **D1** — một kho khác. Chính mã worker đã ghi: *"hai kho dữ liệu song
-      # song thì lệnh dọn phải đụng cả hai"*, và tôi đã dọn một kho rồi báo xong.
-      # Danh sách giữ lại vẫn đọc từ `channels.yaml`, không chép tay.
-      - name: Dọn bản ghi kênh đã nghỉ (Firestore + D1)
-        if: matrix.luong == 1
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          OWNER_UID: ${{ secrets.OWNER_UID }}
-          HOT_KEY: ${{ secrets.HOT_KEY }}
-          CHANNELS_YAML: ${{ github.workspace }}/_autopublisher/config/channels.yaml
-        run: cd render-pipeline && python don_sach.py --that --owner "$OWNER_UID" || true
-
       - name: Đối chiếu số kho với Drive (số thật, không đếm bản ghi)
         # CHỈ LUỒNG 1. Bước này đi hết mọi kho Drive; chạy ở cả 18 luồng song song là quét
         # Drive 18 lượt cho cùng một kết quả — vừa phí vừa dễ chạm trần API.
