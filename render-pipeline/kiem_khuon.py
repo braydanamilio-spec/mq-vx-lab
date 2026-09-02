@@ -46,18 +46,44 @@ def khuon(cau: str) -> str:
     return " ".join(t.split()).lower()
 
 
+# Mỗi thế hệ giữ lời kể ở một chỗ khác nhau. Bảng này là nơi DUY NHẤT biết điều đó.
+THE_HE = (
+    ("v9_*.json", "nhip", "loi"),    # 18 kênh giải thích — thế hệ ĐANG CHẠY
+    ("v3_*.json", "canh", "nar"),    # thế hệ cũ, giữ để đối chiếu
+)
+
+
 def doc_kho(thu_muc: str = "out") -> list:
-    ra = []
-    for f in sorted(glob.glob(os.path.join(thu_muc, "v3_*.json"))):
-        try:
-            d = json.load(io.open(f, encoding="utf-8"))
-        except Exception:
-            continue
-        for c in (d.get("canh") or []):
-            t = " ".join(str(c.get("nar") or "").split())
-            if t:
-                ra.append((os.path.basename(f), t))
-    return ra
+    """Đọc lời kể của THẾ HỆ ĐANG CHẠY. Không có thì mới lùi về thế hệ cũ.
+
+    ── VÌ SAO SỬA  (2/9/2026) ──────────────────────────────────────────────────────────────
+    Bản trước ghim cứng `v3_*.json` — tệp của thế hệ **đã nghỉ**. Nên cổng chấm trượt (`một khuôn
+    dùng 7 lần`) trên nội dung không còn ai dựng, trong khi 18 kênh đang chạy sinh ra `v9_*.json`
+    và **chưa từng được đo một câu nào**.
+
+    Hai cái hại, và cái thứ hai nặng hơn:
+      1. Nó không canh thứ cần canh.
+      2. Nó đỏ VĨNH VIỄN vì một việc đã nghỉ — mà một dòng đỏ vĩnh viễn làm chìm lỗi thật nằm
+         cạnh nó. Đúng luật 13.2: cổng cầm danh sách chép tay là cổng che lỗi thật.
+
+    Nay cổng **tự tìm phạm vi**: có tệp của thế hệ mới thì đo thế hệ mới.
+    """
+    for mau, khoa_ds, khoa_loi in THE_HE:
+        ds = sorted(glob.glob(os.path.join(thu_muc, mau)))
+        ra = []
+        for f in ds:
+            try:
+                d = json.load(io.open(f, encoding="utf-8"))
+            except Exception:
+                continue
+            for c in (d.get(khoa_ds) or []):
+                t = " ".join(str(c.get(khoa_loi) or "").split())
+                if t:
+                    ra.append((os.path.basename(f), t))
+        if ra:
+            print(f"  (đo thế hệ `{mau}` — {len(ds)} tệp, {len(ra)} câu)")
+            return ra
+    return []
 
 
 def cham_tap(cau_moi: list, kho: list) -> list:

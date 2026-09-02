@@ -8486,3 +8486,26 @@ lệnh vẽ hỏng, mà chết CHẬM nên đọc ra như sự cố hạ tầng.
 
 **Luật.** *Cạn hồ là trạng thái của CẢ TIẾN TRÌNH, không phải của một lời gọi.* Biết rồi thì đi
 thẳng xuống tầng không gọi mạng, đừng hỏi lại từng cảnh một.
+
+### 7dn — Cổng khuôn lời đo nội dung của thế hệ ĐÃ NGHỈ  (2/9/2026)
+
+**Triệu chứng.** `kiem_khuon` đỏ: *"một khuôn dùng 7 lần — đã thành công thức"*, kèm cảnh báo về
+`templated storylines` của YouTube. Nghe rất đáng sợ và rất đúng trọng tâm.
+
+**Nhưng nó đo nhầm tệp.** `doc_kho()` ghim cứng `out/v3_*.json` — thế hệ cũ, cron đã tắt. 18 kênh
+đang chạy sinh ra `v9_*.json` và **chưa từng được đo một câu nào**.
+
+Đo lại đúng thế hệ: **khuôn nặng nhất ×2** (trần 3), đa dạng 76% — **đạt**.
+
+**Hai cái hại, cái thứ hai nặng hơn:**
+1. Nó không canh thứ cần canh.
+2. Nó đỏ **vĩnh viễn** vì một việc đã nghỉ — và một dòng đỏ vĩnh viễn làm chìm lỗi thật nằm cạnh.
+   Hôm nay chạy 20 cổng ra 2 đỏ; nếu cả hai đều là đỏ giả thì lần sau sẽ không ai đọc bảng này nữa.
+
+**Luật (13.2, lặp lại lần thứ sáu).** *Cổng phải TỰ TÌM phạm vi của nó.* Nay bảng `THE_HE` là nơi
+duy nhất biết mỗi thế hệ giữ lời kể ở khoá nào; cổng đo thế hệ mới trước, chỉ lùi về thế hệ cũ
+khi không còn tệp mới.
+
+**Và một cảnh báo cho chính tôi:** đổi phạm vi đo là cách dễ nhất để biến một cổng đỏ thành xanh
+mà không sửa gì. Chỉ hợp lệ khi phạm vi cũ thật sự đã nghỉ — ở đây `render_cron.yml` (v3) đã tắt
+cron, và điều đó phải kiểm được, không phải tin.
