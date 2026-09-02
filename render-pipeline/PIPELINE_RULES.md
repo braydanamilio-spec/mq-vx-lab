@@ -8662,3 +8662,40 @@ tự hẹn ngày quên một chỗ; nên ghi vào một hàm `_so()` rồi gọi
 
 **Chi tiết quan trọng:** `_cool` bắt cả 403-denied lẫn 429-cạn-hạn-mức. Chỉ 403 mới là chết; ghi
 nhầm 429 thành chết là đẩy hàng trăm khoá lành vào cột "chết" rồi mai đi thay chúng.
+
+### 7dt — 36 video/ngày không phải trần hạ tầng, mà là trần THIẾT KẾ  (2/9/2026)
+
+Anh: *"tối ưu 18 luồng hoạt động liên tục song song, luồng nào xong thì render tiếp ko đợi
+nhau"* · *"ngày phải hàng nghìn videos ko phải 36"*.
+
+**Đo trước khi đổi.** Ba con số quyết định, và cả ba đều bác bỏ giả định "hết hạn mức":
+
+| | |
+|---|---|
+| repo | **public** ⇒ phút Actions **không giới hạn** |
+| trần thật | 20 job đồng thời (đang dùng 18) · 6 giờ mỗi job |
+| một tập (1 short + 1 long) | nhanh **21p** · trung vị **46p** · chậm **89p** |
+
+Tức chỗ lãng phí **không phải hạn mức** — mà là **thời gian rảnh của luồng nhanh**: luồng 21 phút
+ngồi không 68 phút chờ luồng 89 phút, rồi cả lượt đóng. 18 luồng × 2 video = 36, hết ngày.
+
+**Ba thứ cùng khoá sản lượng, sửa một cái không đủ:**
+
+1. **Mỗi luồng dựng đúng một tập rồi kết thúc.** → vòng lặp tới hết ngân sách giờ của chính nó.
+2. **Trần job 90 phút**, vừa đủ một tập. → 330 phút (trần cứng GitHub là 6h).
+3. **Cổng chống trùng cửa sổ 20 giờ.** Nó sinh ra để chặn bốn mốc cron cùng nổ; với sản lượng
+   một tập/ngày thì đúng. Nhưng khi lượt chạy ~4,75 giờ thì **chính cổng chống trùng trở thành
+   trần sản lượng** — nó chặn ba lượt kế tiếp. → 5 giờ, và bốn mốc cron rải đều 24h thay vì
+   dồn trong bốn giờ.
+
+**Hai ràng buộc cứng khi làm vòng lặp, cả hai từ bài học cũ:**
+
+- **Đẩy Drive sau TỪNG tập, không dồn tới cuối.** §10.1: job bị huỷ vì quá giờ thì
+  `upload-artifact` không chạy — mất luôn video đã dựng xong. Đẩy từng tập thì runner bị cắt
+  giữa chừng vẫn không mất gì.
+- **Chỉ mở vòng mới khi còn đủ giờ cho TRỌN vòng.** Bắt đầu một bản dài 44 phút khi còn 20 phút
+  là chắc chắn mất công dựng. Kiểm **trước** mỗi vòng, không kiểm sau.
+
+**Luật.** Khi sản lượng đứng im ở một con số tròn trịa, hỏi *"con số này do hạ tầng chặn hay do
+mình tự đặt?"* — ở đây cả ba chỗ chặn đều do mình đặt, và hai trong ba là cổng an toàn viết cho
+một chế độ chạy đã không còn đúng nữa.

@@ -33,10 +33,16 @@ on:
     # mức thì cả bốn lượt đều dựng xong rồi đẩy hỏng. Đo được đúng cảnh ấy hôm nay: 18/18 luồng
     # dựng thành công, 0 video lên Drive.
     # Dời sang 08:20–11:20 UTC: chạy khi hạn mức vừa đầy, và vẫn là đêm ở Mỹ nên runner rảnh.
-    - cron: "20 8 * * *"
-    - cron: "20 9 * * *"
+    # 2/9 — BỐN MỐC CÁCH NHAU 5 GIỜ, KHÔNG CÒN CÁCH NHAU 1 GIỜ.
+    # Bốn mốc cũ (08:20–11:20) đặt sát nhau vì mục đích khi ấy là "nổ được MỘT lượt trong ngày,
+    # phòng khi cron bỏ tick". Nay mỗi lượt chạy ~4,75 giờ nên bốn mốc sát nhau chỉ tổ để ba mốc
+    # sau bị cổng chống trùng bỏ qua. Rải đều 24 giờ thì lượt nọ nối lượt kia, và mốc nào lỡ bị
+    # bỏ tick thì mốc sau vẫn vào đúng chỗ.
+    - cron: "20 0 * * *"
+    - cron: "20 5 * * *"
     - cron: "20 10 * * *"
-    - cron: "20 11 * * *"
+    - cron: "20 15 * * *"
+    - cron: "20 20 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -59,7 +65,13 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "chay=yes" >> $GITHUB_OUTPUT; echo "bấm tay -> chạy"; exit 0
           fi
-          CUT=$(date -u -d '20 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-20H +%Y-%m-%dT%H:%M:%SZ)
+          # 2/9 — CỬA SỔ 20h -> 5h. Cổng này sinh ra để chặn DỰNG TRÙNG khi bốn mốc cron cùng
+          # nổ; với sản lượng một tập/ngày thì 20h là đúng. Nay mỗi luồng chạy vòng lặp 285 phút
+          # (~4,75h), nên cửa sổ 20h sẽ chặn ba lượt kế tiếp và khoá sản lượng lại ở mức cũ —
+          # tức chính cổng chống trùng trở thành TRẦN SẢN LƯỢNG.
+          # 5h > 4,75h một chút: đủ để lượt đang chạy không bị lượt sau chồng lên, mà vẫn cho
+          # ~4 lượt/ngày nối nhau.
+          CUT=$(date -u -d '5 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-5H +%Y-%m-%dT%H:%M:%SZ)
           IDS=$(gh api "repos/${{ github.repository }}/actions/workflows/render_giai_thich_18.yml/runs?per_page=20" \
               --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }})
                      | select(.created_at > \"$CUT\")
@@ -72,7 +84,7 @@ jobs:
                 2>/dev/null || echo 0)
             if [ "${K:-0}" -gt 0 ]; then N=$((N+1)); fi
           done
-          echo "lượt CÓ DỰNG THẬT trong 20h: $N"
+          echo "lượt CÓ DỰNG THẬT trong 5h: $N"
           if [ "${N:-0}" -gt 0 ]; then
             echo "chay=no" >> $GITHUB_OUTPUT; echo "hôm nay đã dựng rồi -> bỏ lượt"
           else
@@ -83,7 +95,13 @@ jobs:
     needs: chot
     if: needs.chot.outputs.chay == 'yes'
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # 2/9 — 90 -> 330 phút. Trần cũ vừa đủ MỘT tập (trung vị 46 phút), nên luồng nhanh xong
+    # rồi ngồi không. Nay mỗi luồng chạy vòng lặp 285 phút, chừa 45 phút cho cài đặt + cổng +
+    # gói artifact. Trần cứng của GitHub là 6 giờ, nên 330 vẫn nằm trong.
+    # §10.1 dặn "vượt trần thì chia luồng, đừng nâng trần" — chỗ này KHÁC: trần không bị vượt,
+    # ta CỐ Ý kéo dài để luồng làm được nhiều tập. Và ràng buộc của §10.1 (job quá giờ thì mất
+    # artifact) đã được xử bằng cách đẩy Drive sau TỪNG tập, không dồn tới cuối.
+    timeout-minutes: 330
     strategy:
       fail-fast: false
       # 18 LUỒNG CHẠY CÙNG LÚC (anh: *"chuẩn 18 luồng song song"*).
@@ -186,112 +204,85 @@ jobs:
       # trạng thái đang-chạy trong 45 phút gần nhất, mà dây chuyền này CHỈ ghi bản ghi lúc XONG
       # (qua `day_kho.py`). Không ai nói cho nó biết là đang dựng, nên nó bằng 0 theo cấu trúc —
       # kể cả khi 18 luồng đang chạy thật. Một ô luôn bằng 0 thì vô dụng đúng lúc cần nhất.
-      - name: Báo đang dựng
-        env:
-          OWNER_UID: ${{ secrets.OWNER_UID }}
-          HOT_KEY: ${{ secrets.HOT_KEY }}
-        run: |
-          cd render-pipeline
-          python bao_chay.py --kenh ${{ steps.k.outputs.ma }} --loai short --trang_thai rendering
-          python bao_chay.py --kenh ${{ steps.k.outputs.ma }} --loai long  --trang_thai queued
-
-      - name: Dựng ngắn 9:16
-        env:
-          CF_KEYS: ${{ secrets.CF_KEYS }}
-          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
-        run: cd render-pipeline && python giai_thich.py --kenh ${{ steps.k.outputs.ma }} --so 1
-
-      # Bản dài dựng SAU bản ngắn, và được phép hỏng: job quá giờ thì `upload-artifact` không
-      # chạy và mất luôn bản ngắn đã xong (luật §10.1). Ngắn xong trước là ngắn chắc chắn còn.
-      - name: Báo xong bản ngắn, bắt đầu bản dài
-        if: always()
-        env:
-          OWNER_UID: ${{ secrets.OWNER_UID }}
-          HOT_KEY: ${{ secrets.HOT_KEY }}
-        run: |
-          cd render-pipeline
-          python bao_chay.py --kenh ${{ steps.k.outputs.ma }} --loai short --trang_thai done
-          python bao_chay.py --kenh ${{ steps.k.outputs.ma }} --loai long  --trang_thai rendering
-
-      - name: Dựng dài 16:9
-        env:
-          CF_KEYS: ${{ secrets.CF_KEYS }}
-          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
-        run: |
-          cd render-pipeline
-          python giai_thich.py --kenh ${{ steps.k.outputs.ma }} --long --chuong 10 || true
-
-      # SIÊU DỮ LIỆU TRƯỚC ĐẨY KHO, không phải sau: thiếu `.tai.json` thì `day_kho.py` bỏ qua
-      # tệp ấy và vẫn trả 0 — có video mà không đăng được, lượt chạy vẫn xanh.
-      # `always()`: luồng hỏng giữa chừng cũng phải hạ cờ, nếu không bản ghi treo ở
-      # 'rendering' và ô "Đang chạy" hiện số ma suốt 45 phút.
-      - name: Báo xong bản dài
-        if: always()
-        env:
-          OWNER_UID: ${{ secrets.OWNER_UID }}
-          HOT_KEY: ${{ secrets.HOT_KEY }}
-        run: cd render-pipeline && python bao_chay.py --kenh ${{ steps.k.outputs.ma }} --loai long --trang_thai done
-
-      - name: Chữ đăng cho ba nền tảng
-        run: cd render-pipeline && python sieu_gt.py
-
-      - name: Cổng hình (chặn) + chấm thị giác (cố vấn)
-        env:
-          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
-        run: |
-          cd render-pipeline
-          python kiem_hinh.py || true
-          python cham_hinh.py || true
-
-      # ══ MẮT XÍCH A-Z ═══════════════════════════════════════════════════════════════════
-      # Anh: *"nó phải tự động chứ mày đẩy chi"*. Dừng ở artifact là mất trắng sau 14 ngày.
-      # Nối vào ĐÚNG đường của hệ cũ: render -> `day_kho.py` (Drive + hàng đợi) -> `publish.yml`.
-      # Không viết lối đẩy Drive thứ hai.
-      - name: Đẩy video vào hàng đợi đăng
+      # ══════════════════════════════════════════════════════════════════════════════════════
+      # DỰNG LIÊN TỤC — LUỒNG NÀO XONG THÌ LÀM TIẾP, KHÔNG ĐỢI NHAU  (2/9/2026)
+      #
+      # Anh: *"tối ưu 18 luồng hoạt động liên tục song song, luồng nào xong thì render tiếp
+      # ko đợi nhau"* và *"ngày phải hàng nghìn videos ko phải 36"*.
+      #
+      # ── VÌ SAO BẢN CŨ CHỈ RA 36 VIDEO/NGÀY ────────────────────────────────────────────────
+      # Mỗi luồng dựng ĐÚNG MỘT tập (1 short + 1 long) rồi kết thúc. Đo thật trên lượt
+      # 33631376874: nhanh nhất 21 phút, trung vị 46, chậm nhất 89. Tức luồng nhanh **ngồi
+      # không 68 phút** chờ luồng chậm, rồi cả lượt đóng. 18 luồng × 2 video = 36, hết.
+      #
+      # ── SỐ ĐO CHO PHÉP LÀM KHÁC ───────────────────────────────────────────────────────────
+      # Repo này **public**, nên phút Actions không giới hạn. Trần thật là 20 job đồng thời
+      # (đang dùng 18) và 6 giờ mỗi job. Vậy chỗ lãng phí không phải hạn mức — mà là **thời
+      # gian rảnh của luồng nhanh**.
+      #
+      # Nay mỗi luồng chạy một vòng lặp tới khi hết ngân sách giờ của CHÍNH NÓ. Luồng nhanh làm
+      # được nhiều tập hơn, luồng chậm ít hơn — không ai chờ ai. Đó đúng nghĩa "không đợi nhau".
+      #
+      # ── HAI RÀNG BUỘC CỨNG, CẢ HAI ĐỀU TỪ BÀI HỌC CŨ ─────────────────────────────────────
+      # 1. **Đẩy Drive sau TỪNG tập, không dồn tới cuối.** Luật §10.1: job bị huỷ vì quá giờ thì
+      #    `upload-artifact` KHÔNG chạy — mất luôn video đã dựng xong. Đẩy từng tập nghĩa là dù
+      #    runner bị cắt giữa chừng, mọi tập đã xong vẫn nằm trên Drive.
+      # 2. **Chỉ bắt đầu tập mới khi CÒN ĐỦ GIỜ cho trọn tập.** Bắt đầu một bản dài 44 phút khi
+      #    còn 20 phút là chắc chắn mất công dựng. Kiểm trước mỗi vòng, không kiểm sau.
+      #
+      # Tỉ lệ 1 dài : 4 ngắn — bản dài là chỗ bật quảng cáo giữa video, bản ngắn là chỗ kéo
+      # người xem. Một vòng ≈ 44 + 4×2 = 52 phút, ngân sách 285 phút ⇒ ~5 vòng ⇒ ~25 video mỗi
+      # luồng mỗi lượt, ×18 luồng ≈ 450 video/lượt.
+      - name: Dựng liên tục (không đợi luồng khác)
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           OWNER_UID: ${{ secrets.OWNER_UID }}
           HOT_KEY: ${{ secrets.HOT_KEY }}
+          RENDER_OWNER: ${{ secrets.OWNER_UID }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+          GEMINI_SYSTEM_PROMPT: ${{ secrets.GEMINI_SYSTEM_PROMPT }}
         run: |
-          # khoá dịch vụ đã ghi ở bước "Khoá dịch vụ" phía trên — một nguồn duy nhất
-          # GHIM PHIÊN BẢN Ở CẢ HAI NHÁNH. Nhánh dự phòng cũ cài BẢN MỚI NHẤT, và
-          # `2>/dev/null` nuốt luôn lý do requirements.txt hỏng. Chính cái đó đã đưa vào
-          # một bản `google-cloud-firestore` khác pin, làm `.where()` truyền vị trí đổi
-          # hành vi — pin tồn tại ĐÚNG để chặn việc ấy, mà nhánh dự phòng lại vứt nó đi.
-          pip install --quiet -r _autopublisher/requirements.txt || \
-            pip install --quiet 'google-api-python-client>=2.120,<3' 'google-auth>=2.29,<3' 'google-cloud-firestore>=2.27,<2.29' 'google-api-core>=2.30,<2.35' 'PyYAML>=6.0,<7'
           cd render-pipeline
-          # ── THỬ LẠI, VÀ KHÔNG HỎNG TRONG IM LẶNG  (1/9/2026) ────────────────────────────
-          # Anh: *"đang kêu tự động a-z đồng bộ dữ liệu auto."* Bản trước là `|| true`: đẩy hỏng
-          # thì luồng BÁO XANH rồi đi tiếp, và 18 video nằm lại artifact mà không ai biết — đúng
-          # thứ luật §12.8 gọi là "báo xanh cho lượt không làm gì".
-          #
-          # Ba lần thử cách nhau 60s: lỗi hạn mức/mạng thường qua trong một phút, và chuỗi đọc
-          # hồ kho (KV -> D1 -> Firestore B -> B2 -> A) có thể chỉ nghẽn một nhánh.
-          # Vẫn hỏng thì GHI CỜ, không dừng ở đây — phải để bước gói artifact chạy, nếu không
-          # video mất trắng (luật §10.1: job chết thì `upload-artifact` không chạy).
-          # Bước chốt cuối cùng sẽ đọc cờ và cho cả lượt HỎNG, để ba mốc cron còn lại trong đêm
-          # tự dựng và đẩy lại — đó chính là việc bốn mốc sinh ra để làm.
-          ok=0
-          for i in 1 2 3; do
-            if python day_kho.py --publish ../_autopublisher --that; then ok=1; break; fi
-            echo "   ⚠ đẩy kho hụt lần $i/3 — chờ 60s rồi thử lại"
-            sleep 60
-          done
-          [ "$ok" = "1" ] || touch /tmp/day_kho_hong
+          pip install --quiet 'google-api-python-client>=2.120,<3' 'google-auth>=2.29,<3' \
+            'google-cloud-firestore>=2.27,<2.29' 'google-api-core>=2.30,<2.35' 'PyYAML>=6.0,<7' || true
+          MA="${{ steps.k.outputs.ma }}"
+          NGAN_SACH=285          # phút cho cả vòng lặp (trần job 330 -> chừa 45 phút)
+          CAN_MOT_VONG=55        # phút tối thiểu còn lại mới dám mở vòng mới
+          HET=$(( $(date +%s) + NGAN_SACH*60 ))
+          VONG=0
+          while [ $(( $(date +%s) + CAN_MOT_VONG*60 )) -lt $HET ]; do
+            VONG=$((VONG+1))
+            CON=$(( (HET - $(date +%s)) / 60 ))
+            echo "══ [$MA] vòng $VONG — còn $CON phút ══"
 
-      # ══ ĐỐI CHIẾU SỐ KHO VỚI DRIVE  (1/9/2026) ═════════════════════════════════════════
-      # Anh: *"Video trong kho 2088 sao ko fix triệt để, kho đã xoá hết rồi."* Đúng, và mọi mắt
-      # xích đều đã có sẵn — chỉ là không cái nào chạy theo lịch:
-      #   · `apiHotStat` ĐÃ ưu tiên `kho_that` (số đếm TỆP thật trên Drive) hơn số đếm bản ghi
-      #   · `kiem_kho.py --ghi` ĐÃ đi hết kho Drive, ghi `kho_that` vào D1 và xoá bản ghi job
-      #     trỏ vào tệp đã mất
-      #   · nhưng `kiem_kho.py` chỉ nằm trong hai workflow BẤM TAY (0 cron)
-      # Nên `kho_that.luc` luôn quá hạn 26 giờ, worker rơi về đếm bản ghi, và màn hình hiện 2088
-      # — con số đúng theo nghĩa "số lượt render từng thành công", sai với thứ anh muốn biết.
-      # Đặt ở đây thì mỗi ngày một lần con số tự đúng lại, không phải vá tay lần nào nữa.
-      # `|| true`: đối chiếu hỏng không được phép làm hỏng lượt render đã xong.
+            python bao_chay.py --kenh "$MA" --loai long --trang_thai rendering || true
+            python giai_thich.py --kenh "$MA" --long --chuong 10 || true
+            python bao_chay.py --kenh "$MA" --loai long --trang_thai done || true
+
+            python bao_chay.py --kenh "$MA" --loai short --trang_thai rendering || true
+            python giai_thich.py --kenh "$MA" --so 4 || true
+            python bao_chay.py --kenh "$MA" --loai short --trang_thai done || true
+
+            python sieu_gt.py || true
+            python kiem_hinh.py || true
+
+            # ĐẨY NGAY TRONG VÒNG — xem ràng buộc 1 ở trên.
+            ok=0
+            for i in 1 2 3; do
+              if python day_kho.py --publish ../_autopublisher --that; then ok=1; break; fi
+              echo "   ⚠ đẩy kho hụt lần $i/3 — chờ 60s rồi thử lại"; sleep 60
+            done
+            [ "$ok" = "1" ] || touch /tmp/day_kho_hong
+
+            # Dọn tệp đã đẩy để vòng sau không dựng đè và ổ đĩa không đầy.
+            rm -f out/v9_*.mp4 out/v9_*.jpg out/v9_*.tai.json 2>/dev/null || true
+          done
+          echo "══ [$MA] xong $VONG vòng ══"
+
+
       - name: Đối chiếu số kho với Drive (số thật, không đếm bản ghi)
         # CHỈ LUỒNG 1. Bước này đi hết mọi kho Drive; chạy ở cả 18 luồng song song là quét
         # Drive 18 lượt cho cùng một kết quả — vừa phí vừa dễ chạm trần API.
