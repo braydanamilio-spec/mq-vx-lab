@@ -207,8 +207,89 @@ def _the(x: str) -> str:
     return ("#" + x.lower()) if x else ""
 
 
+# ── ẢNH BÌA ─────────────────────────────────────────────────────────────────────────────────
+def lam_bia(tm: str, tap: dict, video: str) -> str:
+    """Ảnh bìa 1280×720 cho một tập Kling. Trả đường dẫn, hoặc "" nếu hỏng.
+
+    VÌ SAO PHẢI TỰ LÀM, KHÔNG ĐỂ DÂY CHUYỀN TỰ CẮT
+    ----------------------------------------------
+    `run_render._make_thumb()` cắt khung ở **62% thời lượng**. Với video dài của bộ phân tích
+    thì đó là chỗ đẹp. Với short Kling thì đó là chỗ TỆ NHẤT: theo chính `nhip()`, cú lật của
+    clip 5–6 giây bắt đầu từ 33–34%. Nên **mọi ảnh bìa của clip 5s và 6s đang lộ luôn câu chốt**
+    — mà 5–6 giây chính là vùng ưu tiên vì Kling tính tiền theo lượt.
+
+    Không có lỗi nào báo ra: ảnh vẫn đúng cỡ, vẫn lên YouTube, chỉ là nó kể trước cái kết.
+
+    Bìa này lấy khung ở giữa NHỊP HOOK — đúng cái hình sai trái được thiết kế để chặn ngón tay
+    người xem, và là hình duy nhất trong clip không tiết lộ gì.
+    """
+    try:
+        from PIL import Image, ImageDraw, ImageFilter
+        import kling_kenh as KK
+        import brand_kling as BK
+    except Exception:
+        return ""
+    try:
+        kenh = tap.get("_kenh") or "HOUSE RULES"
+        giay = float(tap.get("_giay") or 8)
+        n = KK.nhip(giay)
+        h = next((x for x in n if x[2] == "hook"), n[0])
+        at = max(0.15, h[0] + (h[1] - h[0]) * 0.6)      # giữa nhịp hook
+
+        tam = os.path.join(tm, "_bia_khung.jpg")
+        vf = ("split[a][b];"
+              "[a]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,boxblur=20:2[bg];"
+              "[b]scale=1280:720:force_original_aspect_ratio=decrease[fg];"
+              "[bg][fg]overlay=(W-w)/2:(H-h)/2")
+        _chay(["ffmpeg", "-y", "-v", "error", "-ss", f"{at:.2f}", "-i", video,
+               "-frames:v", "1", "-filter_complex", vf, tam], 120)
+        if not os.path.exists(tam):
+            return ""
+
+        im = Image.open(tam).convert("RGB")
+        d = ImageDraw.Draw(im, "RGBA")
+        W, H = im.size
+        b = BK.BRAND.get(kenh)
+        if b:
+            c1 = BK._rgb(b["chinh"])
+            # Dải thương hiệu mỏng dưới đáy + biểu tượng góc: đủ để nhận ra kênh ở cỡ nhỏ, không
+            # đủ to để che hình. Dải tên kênh dưới MỌI khung là dấu hiệu nghiệp dư (luật 12.12) —
+            # nhưng ở ảnh BÌA thì nhận diện kênh là việc chính đáng, khác với ở trong video.
+            d.rectangle([0, H - 14, W, H], fill=c1)
+            # Đĩa tối mờ SAU biểu tượng. Không có nó thì biểu tượng màu thương hiệu tàng hình
+            # ngay khi khung hình tình cờ cùng tông — và với hai mươi kênh, sớm muộn sẽ có tập
+            # rơi đúng vào tông ấy. Đĩa tối cũng là cách mọi hãng đặt logo lên hình bất kỳ.
+            d.ellipse([W - 132, 12, W - 12, 132], fill=(0, 0, 0, 105))
+            BK.bieu_tuong(d, b["bt"], W - 72, 72, 38, c1 + (255,), (0, 0, 0, 0), (0, 0, 0, 0))
+
+        # Tiêu đề: chữ trắng + BÓNG MỀM, không viền trắng (luật 12.12 — không hãng phim nào
+        # viền chữ). Đặt ở một phần ba dưới, nơi hình thường trống nhất.
+        t = str(tap.get("title") or "").upper()
+        if t:
+            fo = BK._vua(d, t, int(W * .86), 92)
+            tw, th = BK._rong(d, t, fo)
+            x, y = (W - tw) // 2, int(H * .70)
+            # BÓNG MỀM thật, bằng một lớp riêng đem làm mờ. Bản đầu vẽ ba bản chữ lệch nhau vài
+            # điểm ảnh — ra một cái bóng CỨNG có bậc, đúng dấu hiệu nghiệp dư ở luật 12.12
+            # ("đổ bóng cứng lệch"). Bóng mềm phải là bóng mờ, không phải bản sao dịch chỗ.
+            bong = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            ImageDraw.Draw(bong).text((x, y + 6), t, font=fo, fill=(0, 0, 0, 190))
+            bong = bong.filter(ImageFilter.GaussianBlur(11))
+            im.paste(Image.new("RGB", (W, H), (0, 0, 0)), (0, 0), bong)
+            d = ImageDraw.Draw(im, "RGBA")
+            d.text((x, y), t, font=fo, fill=(252, 250, 246))
+
+        dest = os.path.join(tm, "bia.jpg")
+        im.save(dest, quality=88)
+        os.remove(tam)
+        return dest
+    except Exception as e:
+        print("   ⚠️ ảnh bìa lỗi:", str(e)[:70])
+        return ""
+
+
 # ── ĐẨY KHO ─────────────────────────────────────────────────────────────────────────────────
-def day_kho(tm: str, kenh_dang: str, video: str, bai: dict, tap: dict) -> bool:
+def day_kho(tm: str, kenh_dang: str, video: str, bai: dict, tap: dict, bia: str = "") -> bool:
     """Đẩy vào Drive _QUEUE qua ĐÚNG cửa mà 50 kênh kia đi — khâu đăng không cần biết video này
     do Kling làm hay do Remotion làm."""
     sys.path.insert(0, HERE)
@@ -230,6 +311,10 @@ def day_kho(tm: str, kenh_dang: str, video: str, bai: dict, tap: dict) -> bool:
         # bản YouTube dán sang cả ba chỗ.
         "posts": {k: bai.get(k) for k in ("youtube", "facebook", "instagram")},
     }
+    # Ảnh bìa TỰ LÀM. Không truyền thì `run_render` lùi về `_make_thumb()` cắt ở 62% thời lượng
+    # — đúng vào cú lật của clip 5–6 giây, tức bìa kể trước cái kết.
+    if bia and os.path.exists(bia):
+        story["_thumb"] = bia
     eq = R.enqueue_drive(kenh_dang, video, story, "short")
     return bool(eq and eq.get("id"))
 
@@ -302,9 +387,15 @@ def mot_tap(tm: str, kenh_dang: str = "", keys=None) -> str:
     print(f"   📝 {ten}: {(bai.get('youtube') or {}).get('title')!r}{moc}")
 
     if not kenh_dang:
-        print(f"      ✅ video + bài đăng xong (chưa đẩy kho — thiếu --kenh-dang)")
+        print(f"      ✅ video + bài đăng + ảnh bìa xong (chưa đẩy kho — thiếu --kenh-dang)")
         return "xong"
-    if day_kho(tm, kenh_dang, v, bai, tap):
+    bia = os.path.join(tm, "bia.jpg")
+    if not os.path.exists(bia):
+        bia = lam_bia(tm, tap, v)
+    if bia:
+        print(f"      🖼  ảnh bìa: khung ở nhịp hook (không lộ cú lật)")
+
+    if day_kho(tm, kenh_dang, v, bai, tap, bia):
         io.open(os.path.join(tm, ".da_day"), "w").write("1")
         print(f"      📤 đã vào kho — khâu đăng tự lấy như 50 kênh kia")
         return "day"

@@ -938,3 +938,34 @@ nguyên nhân — mà phần lớn các bước ấy là **nhiễu ngẫu nhiên
 Nếu chênh lệch nhỏ hơn khoảng tin cậy thì không có gì để giải thích — và mọi câu giải thích viết
 ra lúc ấy đều là chuyện bịa nghe hợp lý. Với cỡ mẫu nhỏ và chi phí mỗi mẫu cao, hãy đo bằng
 **biến đếm được** (đạt/không đạt, cạn/không cạn) thay vì bằng trung bình.
+
+### 13.27 Ảnh bìa cắt ở 62% thời lượng — với short thì đó là chỗ LỘ CÚ LẬT
+
+`run_render._make_thumb()` trích khung ở **62% thời lượng**. Với video dài của bộ phân tích đó là
+chỗ đẹp (lúc biểu đồ đã cao, số đã lớn). Với short Kling thì đó là chỗ **tệ nhất**:
+
+| độ dài | cú lật bắt đầu | khung 62% rơi vào |
+|---|---|---|
+| **5s** | 34% | **cú lật — lộ** |
+| **6s** | 33% | **cú lật — lộ** |
+| 7–8s | 67–69% | phần dựng |
+
+Và 5–6 giây chính là **vùng ưu tiên** vì Kling tính tiền theo lượt. Nên phần lớn ảnh bìa của bộ
+này đang kể trước cái kết — mà **không có lỗi nào báo ra**: ảnh vẫn đúng cỡ, vẫn lên YouTube,
+chỉ là nó làm hỏng đúng thứ nó sinh ra để bán.
+
+`kling_dong_bo.lam_bia()` lấy khung ở **giữa nhịp hook** — đúng cái hình sai trái được thiết kế
+để chặn ngón tay người xem, và là hình duy nhất trong clip không tiết lộ gì.
+
+**Họ lỗi:** *một hàm dùng chung mang theo giả định của bộ sinh ra nó.* `_make_thumb` đúng cho
+video dài, và sai cho short vì cấu trúc nhịp của hai bộ ngược nhau — video dài dồn thông tin về
+cuối, short dồn cú lật về cuối. Cùng con số 62%, hai ý nghĩa trái ngược.
+
+Và hai lỗi tự gây ra khi vẽ bìa, cả hai đều chỉ thấy khi **nhìn ảnh**, không thấy khi đọc mã:
+
+- **biểu tượng thương hiệu tàng hình** khi khung hình tình cờ cùng tông với màu kênh. Với hai
+  mươi kênh thì sớm muộn sẽ có tập rơi đúng vào tông ấy. Chữa: đĩa tối mờ đặt sau biểu tượng —
+  cách mọi hãng đặt logo lên một khung hình bất kỳ.
+- **bóng chữ là bóng CỨNG có bậc**: tôi vẽ ba bản chữ lệch nhau vài điểm ảnh và gọi đó là bóng
+  mềm. Bóng mềm phải là một lớp riêng đem **làm mờ**, không phải bản sao dịch chỗ. Đây đúng dấu
+  hiệu nghiệp dư đã liệt kê ở 12.12 — tôi viết ra luật ấy rồi vi phạm nó trong cùng một buổi.
