@@ -1490,3 +1490,65 @@ nhận ra nhờ **mép trong thẳng, mép ngoài cong**, hai mép cùng cong th
    `CAM_MAU` chặn ở khâu viết, và mọi `luat` của mười kênh đều nói lại điều đó.
 3. **Một chủ thể, một hành động, máy ghim cứng.** `CAM_TROI` chặn mọi từ chỉ chuyển động máy,
    `CAM_NHANH` chặn động tác nhanh–hỗn loạn (chỗ Kling vẽ sai giải phẫu).
+
+### 15.7 SÁU LẦN cùng một họ lỗi trong một tệp — và lần thứ sáu mới nhận ra quy luật
+
+Chạy thật rồi **đọc tay** 30 tập, phát hiện bộ lịch ghép sai ở **sáu chỗ khác nhau**, tất cả là
+một câu hỏi duy nhất chưa hỏi: *"trục A có được phép ghép với trục B không?"*
+
+| # | ghép sai | ví dụ đọc ra |
+|---|---|---|
+| 1 | khuôn hình × thế giới | biển sâu nhận "mép vách nhìn xuống" |
+| 2 | ánh sáng × thế giới | dưới trần băng nhận "bầu trời bão, một dải sáng ở **chân trời**" |
+| 3 | thời tiết × thế giới | đàn cánh cụt trên băng liền bờ nhận "**sóng lừng**" |
+| 4 | **loài × hành vi** | chim hải âu *"cho con nằm trên lưng"* · cá tuyết *"giao ngà với con đực khác"* · chuột đồng *"bay tới bằng đôi cánh không tiếng"* |
+| 5 | khuôn hình × hành vi | "dưới nước nhìn lên" + "trượt xuống sống băng"; "cận cực đại" + "lao lên khỏi mặt nước" |
+| 6 | khuôn hình × ánh sáng | "ngược sáng vào mặt trời thấp" + "nắng gắt trên đỉnh" |
+
+Cái thứ **4** là nặng nhất: đo tay khoảng **một phần ba** số tập vô nghĩa về mặt sinh học. Và
+không cổng nào bắt được — `cham()` đo chữ, không đo sinh học.
+
+**Ba cách chữa, và chọn đúng cách mới quan trọng:**
+
+- 1·2·3 chữa bằng **danh sách loại trừ** (`khuon_cam`, `anh_sang_cam`, `thoi_tiet_cam`) — đúng,
+  vì cái bị cấm là một tập con của MỘT trục.
+- 4 thì danh sách loại trừ là **sai công cụ**: cái hợp lệ ở đây là một **quan hệ** giữa hai
+  trục, không phải bộ lọc trên một trục. Nên hành vi gắn thẳng vào loài và hai trục nhập làm
+  một — cặp sai **không còn tồn tại để mà lọc**.
+- 6 chữa bằng cách **để khuôn hình GIỮ ánh sáng của nó** và bỏ hẳn câu ánh sáng, thay vì thêm
+  bảng loại trừ thứ tư.
+
+**Luật:** khi bộ lịch có N trục, số cặp cần hỏi là N(N−1)/2 — với 5 trục là 10 câu hỏi. Hỏi hết
+MỘT LẦN lúc thiết kế rẻ hơn nhiều so với sáu lần vá. Và khi phát hiện cặp sai, hỏi tiếp: *cái
+hợp lệ ở đây là một TẬP CON hay một QUAN HỆ?* Tập con thì lọc; quan hệ thì **hợp nhất hai trục**.
+
+### 15.8 Hai công thức bước đi đều hỏng — thôi tìm công thức, đi đo
+
+Bộ lịch cần hai thứ cùng lúc: **chu kỳ dài** (bộ trục không lặp lại sớm) và **không lặp liền
+kề** (hai tập cạnh nhau trông khác nhau). Ba lần thử:
+
+| cách | chu kỳ | lặp liền kề |
+|---|---|---|
+| bước lớn cố định (1.000.003) | dài ✅ | khuôn hình lặp **21/199** ❌ |
+| mỗi trục một vòng quay riêng | **84/200 bộ** ❌ (bẫy `lcm`, luật 13.13) | 0 ✅ |
+| bước ≈ P/φ (tỉ lệ vàng) | dài ✅ | ánh sáng lặp **107/199** ❌ |
+| **duyệt vài chục bước, ĐẾM, lấy ít nhất** | dài ✅ | **0 trên mọi trục** ✅ |
+
+Không có công thức nào đúng cho mọi hình dạng `truc`, vì "đổi đều" là tính chất của **từng chữ
+số**, không phải của dãy. P ở đây chỉ vài nghìn nên duyệt 60 ứng viên tốn vài mili giây.
+
+**Luật:** khi một tham số có thể **đo trực tiếp thứ mình cần**, đừng đi tìm công thức cho nó.
+Bảy vòng đoán công thức đắt hơn nhiều so với một vòng lặp `for` chấm điểm.
+
+### 15.9 Bài kiểm ngược hỏng vì con trỏ, và nó báo "cổng chết"
+
+Bộ thử ngược bảy cổng báo **7/7 KHÔNG BẮT** sau khi em đổi cấu trúc dữ liệu. Suýt đi sửa bảy
+cổng đang lành. Thật ra bài kiểm hỏng hai chỗ:
+
+- `K = T.KENH["ICE BEAR"]` lấy trước vòng lặp, còn hàm khôi phục `clear()/update()` thay **object
+  mới** vào — từ lượt thứ hai, mọi phép phá đi vào một object đã rời khỏi bảng.
+- Chỉ soi tập 0. Sau khi đổi cấu trúc, tập 0 có thể chọn một loài khác, nên hành vi bị phá không
+  được chọn.
+
+Đúng luật 13.15: **trước khi kết luận hạ tầng hỏng, kiểm lại bài kiểm của mình** — và ở đây "hạ
+tầng" là chính bảy cổng vừa viết xong.

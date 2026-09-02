@@ -8407,3 +8407,49 @@ không làm log ồn.
 **Họ lỗi (lần thứ năm trong hai ngày).** *Bằng chứng luôn tồn tại, ta ném nó đi trước khi ai kịp
 đọc.* Danh sách tới nay: `kiem_kho` chết câm sau `|| true` · `day_kho` vứt `stdout` của `enqueue`
 · `_kho_tu_kv` nuốt `NameError` · `don_drive_kenh` in `0` không mẫu số · và đây.
+
+---
+
+## 8k56 — Bộ lịch thiên nhiên: SÁU cặp trục ghép sai, một câu hỏi chưa hỏi
+
+**Triệu chứng.** Đọc tay 30 tập: ~1/3 vô nghĩa. Chim hải âu "cho con nằm trên lưng", cá tuyết
+"giao ngà với con đực khác", chuột đồng "bay tới bằng đôi cánh không tiếng"; dưới trần băng có
+"bầu trời bão"; "ngược sáng vào mặt trời thấp" kèm "nắng gắt trên đỉnh".
+
+**Gốc rễ.** Mọi trục được coi là độc lập. Sáu cặp thực ra không độc lập.
+
+**Chữa.** Ba cặp bằng danh sách loại trừ; **loài × hành vi** bằng cách hợp nhất hai trục (hành
+vi gắn vào loài) vì cái hợp lệ là một QUAN HỆ chứ không phải tập con; **khuôn × ánh sáng** bằng
+cách để khuôn giữ ánh sáng của nó.
+
+**Luật.** N trục thì có N(N−1)/2 cặp phải hỏi. Hỏi hết một lần lúc thiết kế.
+
+---
+
+## 8k57 — Không có công thức bước đi nào đúng: đo rồi chọn
+
+Bước cố định -> chữ số cao đổi chậm. Vòng quay riêng từng trục -> bẫy `lcm` (84/200 bộ). Bước
+tỉ lệ vàng -> chữ số giữa đổi kém (ánh sáng lặp 107/199). Duyệt 60 ứng viên và đếm lặp liền kề
+-> 0 trên mọi trục, chu kỳ vẫn đầy đủ. Vài mili giây, chạy một lần mỗi kênh.
+
+---
+
+## 8k58 — Khối không vẽ được thì đừng đưa vào prompt sinh video
+
+`SOUND OF THE PLACE` và `WHY THIS SHOT HOLDS A VIEWER` chiếm ~300 ký tự ngân sách để nói với
+Kling những điều nó không làm gì được — và một câu tả âm thanh còn có thể khiến nó vẽ nguồn phát
+ra tiếng ấy. Bỏ khỏi prompt, giữ trong `tap.json` cho khâu dựng.
+
+Chỗ ấy đổi lấy khối **OVER THE N SECONDS** (khung đầu đã ở giữa hành động; cao trào ở hai phần
+ba; mấy giây cuối là sự tĩnh lặng) — thứ Kling vẽ được, và là thứ ngăn clip ra gần như tĩnh.
+
+---
+
+## 8k59 — `LENS` bị rớt khỏi kho tuỳ chọn vì `LOOK` xếp trước
+
+Câu ống kính là thứ quyết định "trông như phim quay thật", mà nó nằm trong phần chèn-được-thì-
+chèn và bị `LOOK` ăn hết chỗ. Nay là khối bắt buộc; bù lại cắt văn tay nghề (những câu nói lại
+điều hàng rào DO NOT đã cấm).
+
+Và `ong_kinh()` sai ba lần vì thiếu chiều: một hằng số cho mọi cảnh -> theo khuôn hình -> theo
+khuôn hình VÀ môi trường. Mỗi lần thiếu một chiều là sai ở đúng chỗ chiều ấy quyết định.

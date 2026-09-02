@@ -196,6 +196,14 @@ KHUON_MOI_TRUONG = {
     "macro detail":                 ("tren", "mep", "duoi"),   # thêm ràng buộc MACRO_OK bên dưới
 }
 
+# Khuôn hình nào TỰ QUY ĐỊNH ánh sáng thì khối LIGHT không được nói thêm.
+#
+# 2/9 — "backlit silhouette" đã ghi trong câu máy là *"locked shot into a low sun"*, rồi khối
+# LIGHT nói tiếp *"hard high sun, small black shadows directly under everything"*. Hai lệnh trái
+# nhau, và Kling sẽ chọn một bên. Chữa bằng cách để khuôn hình GIỮ ánh sáng của nó, thay vì thêm
+# một bảng loại trừ nữa — đây đã là lần thứ sáu cùng một họ lỗi trong tệp này.
+KHUON_TU_SANG = frozenset({"backlit silhouette"})
+
 # ── TRỤC ÁNH SÁNG ─────────────────────────────────────────────────────────────────────────
 ANH_SANG = (
     "low dawn sun raking across everything, long blue shadows",
@@ -351,6 +359,12 @@ KENH: dict[str, dict] = {
             "visible in the first second. The viewer stops to work out who is deciding."
         ),
         "thoi_tiet_cam": ("loose pack ice",),
+        "anh_sang_duoi": (
+            "green water with the surface a bright ceiling above",
+            "shafts of light coming down through the surface in visible columns",
+            "flat green gloom with visibility only a few metres",
+            "bright surface light scattered by a thin layer of plankton",
+        ),
         "the_gioi": (
             "Cold coastal water off a steep dark shore: deep green-black sea, kelp on the rocks, "
             "low grey cloud sitting on the headlands, the surface breaking over hidden reefs."
@@ -444,6 +458,12 @@ KENH: dict[str, dict] = {
             "does not compute."
         ),
         "thoi_tiet_cam": ("loose pack ice", "driving snow", "frost smoke"),
+        "anh_sang_duoi": (
+            "deep blue falling away to black below, the surface a distant bright plane",
+            "shafts of sunlight cutting down through the water in visible columns",
+            "even blue light with no direction to it at all",
+            "the surface above lit and everything beneath it in shadow",
+        ),
         "the_gioi": (
             "Open ocean far from any coast: deep blue water going black underneath, a horizon with "
             "nothing on it, long ocean swell, and clouds of krill hanging in the upper water."
@@ -722,6 +742,12 @@ KENH: dict[str, dict] = {
             "place. The viewer stops because the collision is obviously coming."
         ),
         "thoi_tiet_cam": ("loose pack ice", "frost smoke"),
+        "anh_sang_duoi": (
+            "green water full of suspended sand stirred up by the surge",
+            "sunlight broken into moving nets of light on the rock below",
+            "flat green light with kelp shadows moving across everything",
+            "the surface churning white above and broken light beneath it",
+        ),
         "the_gioi": (
             "A black volcanic rock shelf on a cold Pacific coast: kelp beds combing back and forth "
             "in the surge, white water breaking over the outer rocks, spray hanging in the air, "
@@ -1262,7 +1288,7 @@ def khuon_kenh(hs: dict) -> tuple:
     return con
 
 
-def as_kenh(hs: dict) -> tuple:
+def as_kenh(hs: dict, moi_truong: str = "tren") -> tuple:
     """Trạng thái ÁNH SÁNG mà thế giới này có thật.
 
     2/9 — Bản đầu dùng chung một danh sách cho cả mười kênh, và TUSK (dưới băng) nhận được
@@ -1270,6 +1296,11 @@ def as_kenh(hs: dict) -> tuple:
     trời và không có đường chân trời. Em đã áp `khuon_cam` cho trục khuôn hình rồi quên hai
     trục còn lại — đúng họ lỗi 6: *vá một nhánh, để nguyên nhánh song song*.
     """
+    # Ánh sáng mặt nước KHÔNG dùng được cho cảnh chìm: "nắng gắt trên đỉnh, bóng đen nhỏ ngay
+    # dưới mọi vật" là câu của một thế giới có mặt đất. Ba kênh dùng bảng chung mà vẫn có cảnh
+    # dưới nước phải khai riêng bảng chìm.
+    if moi_truong == "duoi" and hs.get("anh_sang_duoi"):
+        return tuple(hs["anh_sang_duoi"])
     if hs.get("anh_sang"):
         return tuple(hs["anh_sang"])
     cam = hs.get("anh_sang_cam") or ()
@@ -1335,7 +1366,8 @@ def lich(kenh: str, so: int) -> dict:
     """
     hs = ho_so(kenh)
     kh = khuon_kenh(hs)
-    AS, TT, CAP = as_kenh(hs), tt_kenh(hs), cap_loai(hs)
+    TT, CAP = tt_kenh(hs), cap_loai(hs)
+    AS = as_kenh(hs)
     from math import gcd
     # KHÔNG gán mỗi trục một vòng quay riêng. Đã thử và đó là bẫy `lcm` của luật 13.13 mặc áo
     # khác: mỗi trục nhìn riêng thì trải đều và không lặp liền kề, nhưng BỘ BỐN lặp lại sau
@@ -1364,11 +1396,14 @@ def lich(kenh: str, so: int) -> dict:
     if not hop:
         hop = tuple(k for k in kh if mt in KHUON_MOI_TRUONG.get(k[0], ("tren",))) or kh
     kh, i_kh = hop, i_kh % len(hop)
+    AS = as_kenh(hs, mt)                       # bảng ánh sáng phụ thuộc MÔI TRƯỜNG của hành vi
+    i_as %= len(AS)
     return {
         "loai": loai, "ta_loai": hs["loai"][loai],
         "hanh_vi": hv,
         "khuon": kh[i_kh][0], "may": kh[i_kh][1], "moi_truong": mt,
-        "anh_sang": AS[i_as], "thoi_tiet": TT[i_tt],
+        "anh_sang": "" if kh[i_kh][0] in KHUON_TU_SANG else AS[i_as],
+        "thoi_tiet": TT[i_tt],
         "_khong_gian": P,
     }
 
@@ -1406,8 +1441,9 @@ def prompt(kenh: str, so: int, giay: float = 8) -> str:
         f"{x['may']}",
         SAN_CHUYEN_DONG,
         "",
-        "LIGHT AND WEATHER:",
-        f"The light is {x['anh_sang']}. The conditions are {x['thoi_tiet']}.",
+        ("LIGHT AND WEATHER:" if x["anh_sang"] else "CONDITIONS:"),
+        (f"The light is {x['anh_sang']}. The conditions are {x['thoi_tiet']}."
+         if x["anh_sang"] else f"The conditions are {x['thoi_tiet']}."),
         "",
         "TREATMENT:",
         SAN_THAT,
