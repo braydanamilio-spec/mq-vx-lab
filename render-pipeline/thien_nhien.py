@@ -65,33 +65,34 @@ GIAY_UU_TIEN = (8, 10)
 # depth, level with the animal". Hai lệnh trái nhau trong cùng một prompt, và Kling sẽ chọn một
 # bên. Đúng họ lỗi 12.5: một câu luật đúng ở ngữ cảnh sinh ra nó, sai ở ngữ cảnh mới.
 ONG_KINH = {
-    "xa": ("Shot on a long telephoto lens from a great distance, the way real wildlife is filmed: "
-           "shallow depth of field, the animal sharp and the background dissolved into soft bands "
-           "of colour. Natural light only, no film-LUT grading, no added lens flare."),
-    "nuoc": ("Shot on a wide lens in an underwater housing, close to the subject because water "
-             "eats contrast over distance: natural light from the surface only, visible particles "
-             "in the water, no artificial lamp, no colour correction that removes the blue."),
-    "macro": ("Shot on a macro lens very close to the subject: depth of field only a few "
-              "millimetres deep, so one detail is sharp and everything a centimetre behind it is "
-              "already soft. Natural light only."),
+    "xa": ("Long telephoto from a great distance, the way real wildlife is filmed: shallow depth of "
+           "field, the animal sharp, the background dissolved into soft bands of colour."),
+    "nuoc": ("Wide lens in an underwater housing, close to the subject because water eats contrast "
+             "over distance: surface light only, visible particles, no artificial lamp."),
+    "macro": ("Macro lens very close in: depth of field a few millimetres deep, so one detail is "
+              "sharp and everything just behind it is already soft."),
 }
 
 
-def ong_kinh(khuon: str) -> str:
-    if khuon.startswith("underwater") or khuon.startswith("split level"):
-        return ONG_KINH["nuoc"]
+def ong_kinh(khuon: str, moi_truong: str = "tren") -> str:
+    """Ống kính theo KHUÔN HÌNH *và* MÔI TRƯỜNG.
+
+    2/9 — Bản trước chỉ nhìn tên khuôn, nên khuôn "extreme slow motion" ở dưới băng vẫn nhận câu
+    "long telephoto from a great distance" — không ai quay tele dưới nước. Đây là lần thứ ba câu
+    ống kính sai vì thiếu ngữ cảnh (lần một: một hằng số cho mọi cảnh; lần hai: theo khuôn nhưng
+    quên môi trường). Cứ mỗi lần thiếu một chiều là lại sai ở đúng chỗ chiều ấy quyết định.
+    """
     if khuon.startswith("macro"):
         return ONG_KINH["macro"]
+    if moi_truong == "duoi" or khuon.startswith("underwater") or khuon.startswith("split level"):
+        return ONG_KINH["nuoc"]
     return ONG_KINH["xa"]
 SAN_CHUYEN_DONG = (
-    "One continuous locked shot. The camera does not pan, tilt, zoom, dolly, orbit or fly. If the "
-    "animal leaves the frame, the frame stays where it is."
+    "One continuous locked shot. If the animal leaves the frame, the frame stays where it is."
 )
 SAN_THAT = (
-    "Photoreal, documentary-grade. Correct anatomy for the species: right number of limbs, right "
-    "joints, right eye placement, fur or feathers lying the way they lie on a real animal. No "
-    "anthropomorphism: the animal never wears anything, never stands like a person, never makes "
-    "a human expression."
+    "Photoreal, documentary-grade. Anatomy exactly right for the species: limb count, joints, eye "
+    "placement, and fur or feathers lying the way they lie on a live animal."
 )
 
 # ── HÀNG RÀO DO NOT — khối cuối của mọi prompt, không bao giờ được cắt ─────────────────────
@@ -136,7 +137,7 @@ GHIM_MAY = ("locked", "static", "fixed camera", "tripod", "telephoto", "macro", 
 # đừng tiêu một lượt sinh clip cho một prompt tự mâu thuẫn với hàng rào của chính nó.
 CAM_TROI = re.compile(
     r"\b(pan\w*|tilt\w*|zoom\w*|dolly\w*|track\w+ shot|orbit\w*|fly\w*(?:over|ing) (?:over|across)|"
-    r"drone shot|aerial|crane shot|handheld|steadicam|push\w* in|pull\w* back|follow\w* the)\b", re.I)
+    r"drone shot|aerial|crane shot|handheld|steadicam|push\w* in|pull\w* back|camera follows?)\b", re.I)
 # Giải phẫu hỏng: Kling vẽ sai khi con vật cử động NHANH và PHỨC TẠP. Đo được ở bộ hài rằng cấm
 # một khái niệm phải bằng biểu thức; ở đây khái niệm là "nhiều thứ cùng động rất nhanh".
 CAM_NHANH = re.compile(
@@ -180,6 +181,21 @@ KHUON = (
      "fur, breath condensing — filling the whole frame."),
 )
 
+# KHUÔN HÌNH quay được ở MÔI TRƯỜNG nào. Bảng này là thứ ngăn "máy đặt dưới nước nhìn lên" ghép
+# với "trượt xuống sống băng", và "cận cực đại" ghép với "lao lên khỏi mặt nước".
+KHUON_MOI_TRUONG = {
+    "long lens full body":          ("tren", "mep"),
+    "long lens tight":              ("tren", "mep"),
+    "ground level low angle":       ("tren", "mep"),
+    "split level half under water": ("mep",),
+    "underwater looking up":        ("duoi",),
+    "underwater side on":           ("duoi",),
+    "extreme slow motion":          ("tren", "mep", "duoi"),   # cỡ nào cũng được, chỉ đổi tốc độ
+    "backlit silhouette":           ("tren", "mep"),
+    "cliff edge looking down":      ("tren", "mep"),
+    "macro detail":                 ("tren", "mep", "duoi"),   # thêm ràng buộc MACRO_OK bên dưới
+}
+
 # ── TRỤC ÁNH SÁNG ─────────────────────────────────────────────────────────────────────────
 ANH_SANG = (
     "low dawn sun raking across everything, long blue shadows",
@@ -203,6 +219,33 @@ THOI_TIET = (
     "still freezing air with frost smoke lifting off open water",
     "wind tearing spray off the tops of the waves",
 )
+
+# Hành vi CHẬM / TĨNH — chỉ những hành vi này mới quay được bằng khuôn cận cực đại.
+# Tách riêng khỏi trục môi trường vì đây là hai thuộc tính khác nhau: môi trường quyết
+# định máy đặt ở đâu, còn chậm/nhanh quyết định cỡ ảnh nào đọc được. Một cú lao lên khỏi
+# mặt nước không thể quay macro, dù nó ở đúng môi trường.
+MACRO_OK = frozenset({
+    "changing the shape of its melon forehead while hanging still",
+    "crouched motionless in a form pressed into grass with its ears flat along its back",
+    "flushing dark red to translucent pale and back",
+    "hanging perfectly still with tentacles spread in a wide net",
+    "hanging still with a row of tiny blue lights along its underside",
+    "holding still on the rock with its head turned to the sea",
+    "lifting its head as spray lands on it and putting it down again",
+    "lifting its head slowly and lowering it again",
+    "lying on the ice with its body curved into a banana shape",
+    "lying still on a boulder while water runs past on both sides",
+    "raising its head and holding a scent on the wind",
+    "sitting down in blowing snow and curling its tail over its feet",
+    "sitting on a post and turning the white face toward the camera",
+    "sleeping curled with its nose tucked under a paw while snow settles on it",
+    "standing at the edge of the rock in the spray without moving",
+    "standing unsteady in wind with its down lifting in patches",
+    "standing upright with its feathers flattened by the wind",
+    "tucking the bill under a wing while the feathers are flattened by wind",
+    "turning a single huge black eye toward the camera",
+    "washing its face with both forepaws",
+})
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
 # MƯỜI KÊNH. Mỗi kênh = MỘT THẾ GIỚI (bản sắc hình) × MỘT CƠ CHẾ HOOK (lý do không lướt qua).
@@ -243,20 +286,49 @@ KENH: dict[str, dict] = {
                 "almost as long as its body, following at a distance."
             ),
         },
-        "hanh_vi": (
-            "waiting motionless beside a breathing hole in the ice",
-            "swimming between two floes with only the head above water",
-            "shaking a whole coat of water off in one violent shudder",
-            "testing thin ice with one forepaw before putting weight on it",
-            "lying flat and pushing itself forward across the ice on its belly",
-            "raising its head and holding a scent on the wind",
-            "climbing out of black water onto a floe edge",
-            "walking a straight line across a floe toward something out of frame",
-            "sliding down a pressure ridge on its side",
-            "digging at compacted snow with both forepaws",
-            "standing up on its hind legs to see further",
-            "sleeping curled with its nose tucked under a paw while snow settles on it",
-        ),
+        "hanh_vi": {
+            "polar bear": {
+                "tren": (
+                    "waiting motionless beside a breathing hole in the ice",
+                    "shaking a whole coat of water off in one violent shudder",
+                    "testing thin ice with one forepaw before putting weight on it",
+                    "lying flat and pushing itself forward across the ice on its belly",
+                    "walking a straight line across a floe toward something out of frame",
+                    "standing up on its hind legs to see further",
+                    "digging at compacted snow with both forepaws",
+                    "raising its head and holding a scent on the wind",
+                    "sleeping curled with its nose tucked under a paw while snow settles on it",
+                ),
+                "mep": (
+                    "swimming between two floes with only the head above water",
+                    "climbing out of black water onto a floe edge",
+                ),
+            },
+            "bear cub": {
+                "tren": (
+                    "sliding down a pressure ridge on its side",
+                    "following in a much larger set of tracks and stepping into each print",
+                    "standing up on its hind legs and immediately overbalancing",
+                    "pressing itself against a much larger body that is out of frame",
+                ),
+            },
+            "ringed seal": {
+                "tren": (
+                    "hauling out beside a breathing hole and lifting its head every few seconds",
+                    "lying on the ice with its body curved into a banana shape",
+                ),
+                "mep": (
+                    "slipping into a hole in the ice in one movement and vanishing",
+                ),
+            },
+            "arctic fox": {
+                "tren": (
+                    "trotting along a line of bear tracks with its tail streaming behind",
+                    "digging into a snowdrift until only its hindquarters show",
+                    "sitting down in blowing snow and curling its tail over its feet",
+                ),
+            },
+        },
         "khuon_cam": ("underwater side on", "cliff edge looking down"),
         "style": (
             "Almost no colour: white, off-white, and one black shape. The only saturation in the "
@@ -301,20 +373,54 @@ KENH: dict[str, dict] = {
                 "external ears, on a rock at the edge of the water."
             ),
         },
-        "hanh_vi": (
-            "surfacing in perfect line abreast, all blows firing at once",
-            "spy-hopping straight up, holding, and sliding back down without a splash",
-            "turning as one body when the lead animal turns",
-            "swimming inverted just under the surface showing the white belly",
-            "slapping the surface once with the tail fluke",
-            "moving in single file along the edge of a kelp bed",
-            "one animal breaking formation and circling wide",
-            "rising through a shaft of light with the pod behind it in silhouette",
-            "pushing a bow wave ahead of a calf so the calf is carried",
-            "hanging vertical and motionless in the water column",
-            "breaching clear of the water and landing on one side",
-            "passing directly beneath the camera, one after another, in order",
-        ),
+        "hanh_vi": {
+            "orca bull": {
+                "tren": (
+                    "surfacing so the tall dorsal fin rises first and goes under last",
+                    "slapping the surface once with the tail fluke",
+                ),
+                "mep": (
+                    "spy-hopping straight up, holding, and sliding back down without a splash",
+                    "breaching clear of the water and landing on one side",
+                ),
+                "duoi": (
+                    "hanging vertical and motionless in the water column",
+                    "swimming inverted just under the surface showing the white belly",
+                    "rising through a shaft of light with the rest of the pod behind it in silhouette",
+                ),
+            },
+            "orca female": {
+                "tren": (
+                    "turning as one body at the same instant as the animals beside it",
+                    "moving in single file along the edge of a kelp bed",
+                    "breaking formation and circling wide",
+                    "pushing a bow wave ahead of a calf so the calf is carried",
+                    "surfacing in line abreast so the blows fire at once",
+                ),
+                "duoi": (
+                    "passing directly beneath the camera with others following in order",
+                ),
+            },
+            "orca calf": {
+                "tren": (
+                    "copying an adult spy-hop and getting the timing wrong",
+                    "surfacing a half-beat after the animal beside it",
+                ),
+                "duoi": (
+                    "swimming in the pressure wave beside a much larger flank",
+                    "rolling completely over and righting itself",
+                ),
+            },
+            "sea lion": {
+                "tren": (
+                    "watching from a rock as dark shapes pass offshore",
+                    "holding still on the rock with its head turned to the sea",
+                ),
+                "mep": (
+                    "slipping off a rock into the water and disappearing",
+                ),
+            },
+        },
         "khuon_cam": ("ground level low angle", "macro detail"),
         "style": (
             "Hard black against hard white, in a world of deep green. No warm tones anywhere. "
@@ -361,20 +467,53 @@ KENH: dict[str, dict] = {
                 "water, tiny against everything else in frame."
             ),
         },
-        "hanh_vi": (
-            "rising slowly from below with the mouth closed and the throat pleats flat",
-            "hanging motionless head-down in the water column",
-            "lifting one enormous pectoral fin clear of the surface and holding it there",
-            "rolling slowly onto its side so one eye comes above the water",
-            "lifting the fluke straight up and sliding under without a ripple",
-            "cruising just below the surface with the blowhole breaking every few seconds",
-            "drifting through a shaft of light so the white fins glow",
-            "opening the mouth wide and letting the throat expand, water pouring out through baleen",
-            "surfacing directly beneath a small school of fish that scatters",
-            "moving past the camera so slowly that the body takes the whole shot to cross",
-            "exhaling a column of spray straight up in still air",
-            "resting at the surface with the calf lying across its back",
-        ),
+        "hanh_vi": {
+            "humpback": {
+                "tren": (
+                    "lifting one enormous pectoral fin clear of the surface and holding it there",
+                    "exhaling a column of spray straight up in still air",
+                ),
+                "mep": (
+                    "rolling slowly onto its side so one eye comes above the water",
+                    "lifting the fluke straight up and sliding under without a ripple",
+                    "cruising just below the surface with the blowhole breaking every few seconds",
+                ),
+                "duoi": (
+                    "rising slowly from below with the mouth closed and the throat pleats flat",
+                    "hanging motionless head-down in the water column",
+                    "drifting through a shaft of light so the white fins glow",
+                    "opening the mouth wide and letting the throat expand, water pouring out through baleen",
+                    "moving past the camera so slowly that the body takes the whole shot to cross",
+                ),
+            },
+            "humpback calf": {
+                "tren": (
+                    "lifting its whole head clear of the water and dropping back",
+                ),
+                "mep": (
+                    "resting at the surface with a much larger body directly beneath it",
+                ),
+                "duoi": (
+                    "riding just above and behind a much larger head",
+                    "rolling upside down against an adult flank",
+                ),
+            },
+            "sardine school": {
+                "duoi": (
+                    "turning together so the whole shape flashes from silver to dark",
+                    "opening a clean hole as something large passes through",
+                    "compressing into a tight ball and holding it",
+                ),
+            },
+            "shearwater": {
+                "tren": (
+                    "gliding a few centimetres above the swell on stiff wings",
+                ),
+                "mep": (
+                    "landing on the water and sitting low among the swell",
+                ),
+            },
+        },
         "khuon_cam": ("ground level low angle", "cliff edge looking down"),
         "style": (
             "Deep saturated blue that gets darker toward the bottom of every frame. The whale is "
@@ -396,7 +535,9 @@ KENH: dict[str, dict] = {
             "viewer stops to find the odd one, and by then they have watched three seconds."
         ),
         "anh_sang_cam": ("through the water",),
-        "thoi_tiet_cam": ("rain stippling",),
+        # Đàn ở trên BĂNG LIỀN BỜ, không có mặt nước hở trong khung: sóng lừng, bọt sóng và
+        # "mặt nước phẳng như gương" đều là trạng thái của một thế giới khác.
+        "thoi_tiet_cam": ("rain stippling", "heavy slow swell", "tearing spray", "like glass"),
         "the_gioi": (
             "A colony on Antarctic sea ice at the foot of a glacier front: dirty trodden snow, "
             "hard blue ice cliffs behind, a long worn path between the colony and the water's "
@@ -421,20 +562,45 @@ KENH: dict[str, dict] = {
                 "at the edge of the colony watching."
             ),
         },
-        "hanh_vi": (
-            "leaning into a wind that flattens the feathers along one whole side",
-            "shuffling forward inside a tight huddle so the outside birds rotate inward",
-            "tobogganing on its belly across ice, pushing with both feet",
-            "standing at the ice edge looking down at the water without going in",
-            "porpoising out of the water and landing on its feet on the ice",
-            "walking a single-file line worn into the snow by thousands of feet",
-            "bowing and stretching the neck straight up in one slow movement",
-            "sheltering a chick on its feet under a fold of belly skin",
-            "shaking snow out of its feathers in one whole-body shiver",
-            "sliding down a slope out of control and stopping against another bird",
-            "standing completely still while blowing snow streams past it",
-            "stepping over a sleeping bird and continuing without pausing",
-        ),
+        "hanh_vi": {
+            "emperor penguin": {
+                "tren": (
+                    "leaning into a wind that flattens the feathers along one whole side",
+                    "shuffling forward inside a tight huddle so the outside birds rotate inward",
+                    "tobogganing on its belly across ice, pushing with both feet",
+                    "standing at the ice edge looking down at the water without going in",
+                    "walking a single-file line worn into the snow by thousands of feet",
+                    "bowing and stretching the neck straight up in one slow movement",
+                    "sheltering a chick on its feet under a fold of belly skin",
+                    "standing completely still while blowing snow streams past it",
+                ),
+                "mep": (
+                    "porpoising out of the water and landing on its feet on the ice",
+                ),
+            },
+            "emperor chick": {
+                "tren": (
+                    "standing unsteady in wind with its down lifting in patches",
+                    "pushing its head into an adult belly fold",
+                    "sitting down abruptly on the ice",
+                    "shivering with both flippers held out from the body",
+                ),
+            },
+            "adelie penguin": {
+                "tren": (
+                    "walking with a pronounced side-to-side roll",
+                    "sliding down a slope out of control and stopping against another bird",
+                    "shaking snow out of its feathers in one whole-body shiver",
+                    "stepping over a sleeping bird and continuing without pausing",
+                ),
+            },
+            "skua": {
+                "tren": (
+                    "standing at the edge of the colony with its head turned",
+                    "taking off into the wind from a standing start",
+                ),
+            },
+        },
         "khuon_cam": ("underwater side on",),
         "style": (
             "White ground, white sky, and a crowd of black-and-white bodies with two small warm "
@@ -495,20 +661,45 @@ KENH: dict[str, dict] = {
                 "the ice ceiling."
             ),
         },
-        "hanh_vi": (
-            "rising slowly toward a breathing hole with the tusk leading",
-            "hanging vertically in the water column, tusk pointing straight up",
-            "crossing tusks slowly with another male, the two shapes making an X",
-            "swimming upside down under the ice ceiling",
-            "surfacing into a narrow lead so only the tusk and forehead appear",
-            "moving through a shaft of light so the spiral on the tusk becomes visible",
-            "drifting motionless while a cloud of small fish parts around it",
-            "pressing the top of its head against the underside of the ice",
-            "turning on its side and looking directly at the camera with one eye",
-            "gliding past below with the whole body in silhouette against the bright ice",
-            "exhaling under water so a single silver dome of air rolls along the ice above",
-            "swimming in a tight group where all the tusks point the same way",
-        ),
+        "hanh_vi": {
+            "narwhal bull": {
+                "mep": (
+                    "surfacing into a narrow lead so only the tusk and forehead appear",
+                ),
+                "duoi": (
+                    "rising slowly toward a breathing hole with the tusk leading",
+                    "hanging vertically in the water column, tusk pointing straight up",
+                    "crossing tusks slowly with another male, the two shapes making an X",
+                    "swimming upside down under the ice ceiling",
+                    "moving through a shaft of light so the spiral on the tusk becomes visible",
+                    "turning on its side and looking directly at the camera with one eye",
+                    "exhaling under water so a single silver dome of air rolls along the ice above",
+                ),
+            },
+            "narwhal female": {
+                "duoi": (
+                    "gliding past below with the whole body in silhouette against the bright ice",
+                    "pressing the top of its head against the underside of the ice",
+                    "drifting motionless while a cloud of small fish parts around it",
+                    "swimming in a tight group where all the bodies point the same way",
+                ),
+            },
+            "beluga": {
+                "tren": (
+                    "changing the shape of its melon forehead while hanging still",
+                    "turning its head to follow the camera",
+                ),
+                "duoi": (
+                    "rising into a pool of light under a breathing hole",
+                ),
+            },
+            "arctic cod": {
+                "duoi": (
+                    "gathered in a loose cloud directly under the ice ceiling",
+                    "parting into two streams around something much larger",
+                ),
+            },
+        },
         "khuon_cam": ("ground level low angle", "backlit silhouette", "cliff edge looking down"),
         "style": (
             "A ceiling instead of a sky: every frame has white ice above and dark water below, and "
@@ -554,20 +745,47 @@ KENH: dict[str, dict] = {
                 "edge of the rock in the spray."
             ),
         },
-        "hanh_vi": (
-            "bracing flat against the rock as a wave washes completely over it",
-            "launching off a ledge into a rising swell",
-            "riding the steep front of a green wave just under the surface",
-            "hauling out by timing one surge and heaving up in a single movement",
-            "sleeping stacked against a dozen other bodies, all rising and falling together",
-            "throwing the head back and holding the mouth open with no sound in frame",
-            "sliding backwards down wet rock and recovering",
-            "porpoising through a kelp bed with the fronds parting",
-            "hanging vertically in the surge with only the nose above water",
-            "shaking the whole head so water flies off the whiskers",
-            "pushing through the crowd to a specific spot and settling exactly there",
-            "floating on its back at the surface with both fore-flippers in the air",
-        ),
+        "hanh_vi": {
+            "sea lion bull": {
+                "tren": (
+                    "throwing the head back and holding the mouth open with no sound in frame",
+                    "sliding backwards down wet rock and recovering",
+                    "pushing through the crowd to a specific spot and settling exactly there",
+                ),
+                "mep": (
+                    "bracing flat against the rock as a wave washes completely over it",
+                    "launching off a ledge into a rising swell",
+                    "hauling out by timing one surge and heaving up in a single movement",
+                    "hanging vertically in the surge with only the nose above water",
+                ),
+                "duoi": (
+                    "riding the steep front of a green wave just under the surface",
+                ),
+            },
+            "sea lion pup": {
+                "tren": (
+                    "hopping awkwardly on its front flippers across wet rock",
+                    "sleeping stacked against a dozen other bodies, all rising and falling together",
+                    "shaking the whole head so water flies off the whiskers",
+                    "slipping off a low ledge and climbing straight back",
+                ),
+            },
+            "harbour seal": {
+                "tren": (
+                    "moving up the rock like a caterpillar in a series of humps",
+                    "lying still on a boulder while water runs past on both sides",
+                ),
+                "mep": (
+                    "floating on its back at the surface with both fore-flippers in the air",
+                ),
+            },
+            "kelp gull": {
+                "tren": (
+                    "standing at the edge of the rock in the spray without moving",
+                    "opening its wings once and closing them again",
+                ),
+            },
+        },
         "khuon_cam": ("underwater looking up",),
         "style": (
             "Wet black rock, white water and one band of kelp green — a hard three-colour world. "
@@ -625,20 +843,42 @@ KENH: dict[str, dict] = {
                 "underside of the body."
             ),
         },
-        "hanh_vi": (
-            "pulsing once and gliding forward on the momentum",
-            "running a wave of blue light from one end of the body to the other",
-            "hanging perfectly still with tentacles spread in a wide net",
-            "flushing dark red to translucent pale and back",
-            "retracting every arm at once into a tight point",
-            "drifting upward through falling marine snow",
-            "turning a single huge black eye toward the camera",
-            "opening a bell wide and closing it in one slow contraction",
-            "trailing a filament twice the length of its own body behind it",
-            "rotating slowly on its own axis with no visible effort",
-            "releasing a small cloud of blue light and moving away from it",
-            "unfolding from a compact shape into a long chain",
-        ),
+        "hanh_vi": {
+            "siphonophore": {
+                "duoi": (
+                    "pulsing once and gliding forward on the momentum",
+                    "running a wave of blue light from one end of the body to the other",
+                    "unfolding from a compact shape into a long chain",
+                    "trailing a filament twice the length of its own body behind it",
+                    "contracting the whole chain in one movement",
+                ),
+            },
+            "jellyfish": {
+                "duoi": (
+                    "opening a bell wide and closing it in one slow contraction",
+                    "rotating slowly on its own axis with no visible effort",
+                    "drifting upward through falling marine snow",
+                    "running rings of light around the rim of the bell",
+                    "hanging perfectly still with tentacles spread in a wide net",
+                ),
+            },
+            "squid": {
+                "duoi": (
+                    "retracting every arm at once into a tight point",
+                    "holding two long tentacles out ahead and drawing them back",
+                    "releasing a small cloud of blue light and moving away from it",
+                    "flushing dark red to translucent pale and back",
+                    "turning a single huge black eye toward the camera",
+                ),
+            },
+            "lanternfish": {
+                "duoi": (
+                    "turning so the row of lights goes out of view one by one",
+                    "drifting upward through falling marine snow",
+                    "hanging still with a row of tiny blue lights along its underside",
+                ),
+            },
+        },
         "khuon_cam": ("long lens full body", "ground level low angle", "backlit silhouette",
                       "cliff edge looking down", "split level half under water"),
         "style": (
@@ -698,20 +938,43 @@ KENH: dict[str, dict] = {
                 "tail, sitting up on its hind legs in grass."
             ),
         },
-        "hanh_vi": (
-            "flying straight toward the camera on completely silent wings and passing overhead",
-            "hovering in one place with the head absolutely still while the body works",
-            "turning its head far past its shoulder without moving its body",
-            "standing motionless with one forepaw lifted, ears rotating independently",
-            "pouncing straight up and coming down nose first into deep grass",
-            "walking a fence line with the head down, following one line of scent",
-            "freezing mid-step as something changes in the dark",
-            "sitting up on the hind legs to listen with both ears forward",
-            "shaking dew off in one shudder that runs from nose to tail",
-            "digging quickly at the base of a tussock with both forepaws",
-            "carrying a bundle of dry grass in its mouth across open ground",
-            "stepping out of a hedge shadow into moonlight and stopping there",
-        ),
+        "hanh_vi": {
+            "barn owl": {
+                "tren": (
+                    "flying straight toward the camera on completely silent wings and passing overhead",
+                    "hovering in one place with the head absolutely still while the body works",
+                    "turning its head far past its shoulder without moving its body",
+                    "dropping feet-first into deep grass",
+                    "landing on a fence post and folding its wings in one movement",
+                    "quartering low along a field edge with the head down",
+                    "sitting on a post and turning the white face toward the camera",
+                ),
+            },
+            "red fox": {
+                "tren": (
+                    "standing motionless with one forepaw lifted, ears rotating independently",
+                    "pouncing straight up and coming down nose first into deep grass",
+                    "walking a fence line with the head down, following one line of scent",
+                    "freezing mid-step as something changes in the dark",
+                    "stepping out of a hedge shadow into moonlight and stopping there",
+                ),
+            },
+            "badger": {
+                "tren": (
+                    "digging quickly at the base of a tussock with both forepaws",
+                    "walking a well-worn path with the head low",
+                    "shaking dew off in one shudder that runs from nose to tail",
+                    "carrying a bundle of dry grass in its mouth across open ground",
+                ),
+            },
+            "field mouse": {
+                "tren": (
+                    "sitting up on the hind legs to listen with both ears forward",
+                    "freezing completely flat in short grass",
+                    "running a short distance and stopping dead",
+                ),
+            },
+        },
         "khuon_cam": ("underwater looking up", "underwater side on", "split level half under water",
                       "cliff edge looking down"),
         "style": (
@@ -771,20 +1034,41 @@ KENH: dict[str, dict] = {
                 "muzzle, blue-grey eyes, unsteady on wide-set paws."
             ),
         },
-        "hanh_vi": (
-            "standing for the first time and immediately folding back down",
-            "taking three steps and stopping to work out what happened",
-            "lying flat and motionless in grass while something passes nearby",
-            "being groomed by an adult that is entirely out of frame except one muzzle",
-            "shaking its head hard enough to overbalance",
-            "stretching one back leg out behind it and holding it there",
-            "following an adult's legs closely and losing the line",
-            "drinking at the very edge of shallow water and flinching at the cold",
-            "yawning enormously with its whole face",
-            "pushing its head into long grass until only the hindquarters show",
-            "falling asleep sitting upright and slowly tipping sideways",
-            "trying to jump a small obstacle and clearing it by too much",
-        ),
+        "hanh_vi": {
+            "fawn": {
+                "tren": (
+                    "standing for the first time and immediately folding back down",
+                    "lying flat and motionless in grass while something passes nearby",
+                    "taking three steps and stopping to work out what happened",
+                    "stretching one back leg out behind it and holding it there",
+                    "pushing its head into long grass until only the hindquarters show",
+                ),
+            },
+            "cygnet": {
+                "tren": (
+                    "riding low in shallow water and paddling with feet far too big for the body",
+                    "being groomed by an adult that is entirely out of frame except one bill",
+                    "drinking at the very edge of shallow water and flinching at the cold",
+                    "climbing onto a bank and slipping back once",
+                ),
+            },
+            "leveret": {
+                "tren": (
+                    "crouched motionless in a form pressed into grass with its ears flat along its back",
+                    "lifting its head slowly and lowering it again",
+                    "washing its face with both forepaws",
+                ),
+            },
+            "fox cub": {
+                "tren": (
+                    "falling asleep sitting upright and slowly tipping sideways",
+                    "shaking its head hard enough to overbalance",
+                    "trying to jump a small obstacle and clearing it by far too much",
+                    "yawning enormously with its whole face",
+                    "following a set of adult legs closely and losing the line",
+                ),
+            },
+        },
         "khuon_cam": ("underwater looking up", "underwater side on", "split level half under water",
                       "cliff edge looking down"),
         "style": (
@@ -847,20 +1131,41 @@ KENH: dict[str, dict] = {
                 "tail, holding position in the wind."
             ),
         },
-        "hanh_vi": (
-            "holding a fixed position in a gale by adjusting the wings a few centimetres",
-            "landing on a ledge in a crosswind and stopping dead on the spot",
-            "facing directly into driving rain without closing its eyes",
-            "sheltering in a rock crevice while spray blows over the top of it",
-            "opening the wings once in the wind and being lifted straight up",
-            "walking up a wet rock slope against water running down it",
-            "shaking a whole coat of rain off in one movement and being soaked again",
-            "standing on the very edge of a cliff with the wind pushing from behind",
-            "tucking the bill under a wing while the feathers are flattened by wind",
-            "watching a wave break below and not reacting to it at all",
-            "gripping wet rock with its feet as a gust hits",
-            "gliding along a cliff face in perfect control while everything around it is chaos",
-        ),
+        "hanh_vi": {
+            "gannet": {
+                "tren": (
+                    "holding a fixed position in a gale by adjusting the wings a few centimetres",
+                    "landing on a ledge in a crosswind and stopping dead on the spot",
+                    "facing directly into driving rain without closing its eyes",
+                    "opening the wings once in the wind and being lifted straight up",
+                    "gliding along a cliff face in perfect control while everything around it is chaos",
+                    "standing on the very edge of a cliff with the wind pushing from behind",
+                    "shaking a whole coat of rain off in one movement and being soaked again",
+                ),
+            },
+            "puffin": {
+                "tren": (
+                    "sheltering in a rock crevice while spray blows over the top of it",
+                    "walking up a wet rock slope against water running down it",
+                    "gripping wet rock with its feet as a gust hits",
+                    "standing upright with its feathers flattened by the wind",
+                ),
+            },
+            "grey seal": {
+                "tren": (
+                    "lying on a boulder beach while waves run past on both sides",
+                    "hauling further up the beach between waves",
+                    "lifting its head as spray lands on it and putting it down again",
+                ),
+            },
+            "raven": {
+                "tren": (
+                    "holding position in the wind above the clifftop",
+                    "watching a wave break below and not reacting to it at all",
+                    "tucking the bill under a wing while the feathers are flattened by wind",
+                ),
+            },
+        },
         "khuon_cam": ("underwater side on", "macro detail"),
         "style": (
             "Grey on grey with one clean white bird in it. Rain is visible as streaks across the "
@@ -887,6 +1192,17 @@ def ho_so(kenh: str) -> dict:
     return k
 
 
+def _nho(f):
+    """Nhớ kết quả theo tham số — `_buoc_toi_uu` duyệt vài trăm bước, chỉ nên chạy một lần/kênh."""
+    kho = {}
+
+    def g(*a):
+        if a not in kho:
+            kho[a] = f(*a)
+        return kho[a]
+    return g
+
+
 def _bam(t: str) -> int:
     """Băm tường minh. `hash()` của Python đổi theo từng lần chạy (PYTHONHASHSEED), nên dùng nó
     để lệch pha thì hai môi trường ra hai lịch khác nhau — bài học 13.13 của bộ hài."""
@@ -895,6 +1211,41 @@ def _bam(t: str) -> int:
         h = ((h ^ ord(c)) * 16777619) & 0xFFFFFFFF
     return h
 
+
+
+@_nho
+def _buoc_toi_uu(P: int, truc: tuple) -> int:
+    """Bước đi trên không gian tích, CHỌN BẰNG CÁCH ĐO chứ không bằng công thức.
+
+    2/9 — Đã thử hai công thức và cả hai đều hỏng ở một chỗ khác nhau:
+
+      · bước lớn cố định (1.000.003)  -> chữ số CAO đổi quá chậm: khuôn hình lặp liền kề
+      · bước ≈ P/φ (tỉ lệ vàng)       -> chữ số GIỮA đổi kém: ánh sáng lặp 107/199 tập
+
+    Không có một công thức nào đúng cho mọi hình dạng `truc`, vì "đổi đều" ở đây là một tính
+    chất của TỪNG chữ số, không phải của dãy. Nên thôi tìm công thức: duyệt vài chục bước
+    nguyên tố cùng nhau với P, ĐẾM số lần lặp liền kề trên cả bốn trục, lấy bước ít nhất.
+
+    P ở đây chỉ vài nghìn nên phép duyệt này tốn vài mili giây, và nó chạy đúng một lần mỗi
+    kênh nhờ `_nho`. Đo trực tiếp thứ mình cần rẻ hơn nhiều so với bảy vòng đoán công thức.
+    """
+    from math import gcd
+    N = min(200, P)
+    ung = [b for b in range(max(2, P // 12), P) if gcd(b, P) == 1][:400]
+    tot, diem_tot = ung[0] if ung else 1, 10 ** 9
+    for b in ung[::max(1, len(ung) // 60)]:
+        truoc, diem = None, 0
+        for i in range(N):
+            n, ra = (i * b) % P, []
+            for x in truc:
+                ra.append(n % x)
+                n //= x
+            if truoc:
+                diem += sum(1 for u, v in zip(truoc, ra) if u == v)
+            truoc = ra
+        if diem < diem_tot:
+            tot, diem_tot = b, diem
+    return tot
 
 def khuon_kenh(hs: dict) -> tuple:
     """Khuôn hình mà thế giới này DIỄN ĐƯỢC.
@@ -939,11 +1290,35 @@ def tt_kenh(hs: dict) -> tuple:
     return con
 
 
+def cap_loai(hs: dict) -> tuple:
+    """Mọi cặp (loài, hành vi) HỢP LỆ của kênh này.
+
+    2/9 — Bản đầu để LOÀI và HÀNH VI là hai trục độc lập của bộ lịch. Chạy thật rồi đọc tay 30
+    cặp: khoảng một phần ba là vô nghĩa — chim hải âu *"cho con nằm trên lưng"*, đàn cá mòi
+    *"dựng đuôi cá voi lên"*, cá tuyết *"giao ngà với con đực khác"*, chuột đồng *"bay tới bằng
+    đôi cánh không tiếng"*. Không cổng nào bắt: `cham()` đo chữ, không đo sinh học.
+
+    Đây là lần thứ BA cùng một họ lỗi trong bộ này (khuôn hình, rồi ánh sáng/thời tiết, giờ là
+    hành vi): *bộ lịch cấp cho một ngữ cảnh thứ ngữ cảnh ấy không diễn được*. Hai lần trước em
+    chữa bằng DANH SÁCH LOẠI TRỪ. Lần này danh sách loại trừ là sai công cụ — cái hợp lệ ở đây
+    là một QUAN HỆ giữa hai trục, không phải một bộ lọc trên một trục.
+
+    Nên hành vi được gắn thẳng vào loài, và hai trục nhập làm một. Cặp sai không còn tồn tại để
+    mà lọc — đúng luật 14.12: ràng buộc tuyệt đối thì làm cho nó KHÔNG THỂ vi phạm, đừng viết
+    thành lời dặn rồi đi canh.
+
+    Loài chủ của kênh có nhiều hành vi nhất, nên nó tự chiếm phần lớn số tập mà không cần thêm
+    một cơ chế cân trọng số nào.
+    """
+    return tuple((lo, hv, m)
+                 for lo, bo in hs["hanh_vi"].items()
+                 for m, ds in bo.items() for hv in ds)
+
+
 def _truc(hs: dict) -> list:
     """Độ dài từng trục. MỘT nguồn duy nhất — bài học 13.x: danh sách trục viết ở ba nơi thì sớm
     muộn lệch, và lệch một trường thì nhìn như 'gần đúng'."""
-    return [len(hs["loai"]), len(hs["hanh_vi"]), len(khuon_kenh(hs)),
-            len(as_kenh(hs)), len(tt_kenh(hs))]
+    return [len(cap_loai(hs)), len(khuon_kenh(hs)), len(as_kenh(hs)), len(tt_kenh(hs))]
 
 
 def lich(kenh: str, so: int) -> dict:
@@ -960,33 +1335,41 @@ def lich(kenh: str, so: int) -> dict:
     """
     hs = ho_so(kenh)
     kh = khuon_kenh(hs)
-    AS, TT = as_kenh(hs), tt_kenh(hs)
-    truc = [len(hs["loai"]), len(hs["hanh_vi"]), len(AS), len(TT)]
+    AS, TT, CAP = as_kenh(hs), tt_kenh(hs), cap_loai(hs)
+    from math import gcd
+    # KHÔNG gán mỗi trục một vòng quay riêng. Đã thử và đó là bẫy `lcm` của luật 13.13 mặc áo
+    # khác: mỗi trục nhìn riêng thì trải đều và không lặp liền kề, nhưng BỘ BỐN lặp lại sau
+    # `lcm(các độ dài)` — đo được ICE BEAR chỉ có 84 bộ khác nhau trong 200 tập.
+    #
+    # Vẫn đánh số thẳng trên không gian TÍCH, và chữa lỗi "chữ số cao đổi chậm" bằng BƯỚC, không
+    # bằng cách tách trục: bước ≈ P/φ (tỉ lệ vàng) là bước rải đều nhất trên một vòng tròn — định
+    # lý ba khoảng cách — nên mọi chữ số đều đổi, kể cả chữ số cao nhất.
+    truc = [len(CAP), len(kh), len(AS), len(TT)]
     P = 1
     for x in truc:
         P *= x
-    goc = _bam(hs["ten"]) % P
-    buoc = 1000003                                  # lớn, lẻ, không chia hết cho 3 hay 5
-    from math import gcd
-    while gcd(buoc, P) != 1:
-        buoc += 2
-    n = (goc + so * buoc) % P
+    buoc = _buoc_toi_uu(P, tuple(truc))
+    n = (_bam(hs["ten"]) % P + so * buoc) % P
     ra, chi = [], n
     for x in truc:
         ra.append(chi % x)
         chi //= x
-    i_lo, i_hv, i_as, i_tt = ra
-    bk = 3
-    while gcd(bk, len(kh)) != 1:
-        bk += 1
-    i_kh = (_bam(hs["ten"] + "khuon") + so * bk) % len(kh)
-    loai = list(hs["loai"])[i_lo]
+    i_cap, i_kh, i_as, i_tt = ra
+    loai, hv, mt = CAP[i_cap]
+    # Khuôn hình phải quay được MÔI TRƯỜNG của hành vi này, và khuôn cận cực đại chỉ dùng cho
+    # hành vi chậm. Lọc rồi ánh xạ chỉ số vào danh sách còn lại — giữ nguyên chu kỳ P.
+    hop = tuple(k for k in kh
+                if mt in KHUON_MOI_TRUONG.get(k[0], ("tren",))
+                and (k[0] != "macro detail" or hv in MACRO_OK))
+    if not hop:
+        hop = tuple(k for k in kh if mt in KHUON_MOI_TRUONG.get(k[0], ("tren",))) or kh
+    kh, i_kh = hop, i_kh % len(hop)
     return {
         "loai": loai, "ta_loai": hs["loai"][loai],
-        "hanh_vi": hs["hanh_vi"][i_hv],
-        "khuon": kh[i_kh][0], "may": kh[i_kh][1],
+        "hanh_vi": hv,
+        "khuon": kh[i_kh][0], "may": kh[i_kh][1], "moi_truong": mt,
         "anh_sang": AS[i_as], "thoi_tiet": TT[i_tt],
-        "_khong_gian": P * len(kh),
+        "_khong_gian": P,
     }
 
 
@@ -1009,7 +1392,10 @@ def prompt(kenh: str, so: int, giay: float = 8) -> str:
         f"{hs['ten']} — photoreal wildlife shot, vertical 9:16, exactly {g} seconds, one "
         f"continuous take.",
         "",
-        "SUBJECT — exactly one animal is the subject and nothing else is:",
+        # Tiêu đề cũ là "exactly one animal is the subject" — nhưng một số hành vi có sẵn con
+        # thứ hai CÙNG LOÀI ("crossing tusks with another male"), nên tiêu đề ấy mâu thuẫn với
+        # chính dòng ngay dưới nó. Điều thật sự cần khoá là KHÔNG CÓ LOÀI THỨ HAI.
+        "SUBJECT — this is the only kind of animal in the frame:",
         f"{x['ta_loai']}",
         f"It is {x['hanh_vi']}.",
         "",
@@ -1025,16 +1411,37 @@ def prompt(kenh: str, so: int, giay: float = 8) -> str:
         "",
         "TREATMENT:",
         SAN_THAT,
+        "",
+        # LENS là khối BẮT BUỘC, không phải khối tả thêm. Đo được nó bị rớt khỏi kho tuỳ chọn
+        # vì `LOOK` xếp trước và ăn hết chỗ — mà câu ống kính mới là thứ quyết định clip có
+        # "trông như phim quay thật" hay không. Cùng bài học 12.x của bộ giải thích: khối giữ
+        # BẢN CHẤT phải ngang hàng khối khoá nhân vật, không nằm trong phần chèn được thì chèn.
+        "LENS:",
+        ong_kinh(x["khuon"], x["moi_truong"]),
+        "",
+        f"OVER THE {g} SECONDS:",
+        # 2/9 — Bản đầu nói con vật ĐANG LÀM GÌ nhưng không nói tám giây ấy DIỄN RA THẾ NÀO, và
+        # Kling xử lý chỗ trống ấy theo cách rẻ nhất: một clip gần như tĩnh. Với short không lời
+        # thì tĩnh là chết — không có giọng nào giữ người xem qua giây thứ ba.
+        #
+        # Khối này cũng là chỗ đặt HOOK. Bài học đã có sẵn trong `kling_studio.py`: "Shot 1 IS
+        # the hook — no setup shot, no establishing shot." Khung ĐẦU TIÊN phải đã ở giữa hành
+        # động; không có nhịp dựng cảnh nào cả, vì clip chỉ dài tám giây.
+        "The first frame is already mid-action — no establishing beat, no lead-in. The movement builds "
+        "through the middle, resolves about two thirds through, and the last seconds are the "
+        "stillness after it. Nothing else enters the frame.",
     ]
     rao = [RAO[0]] + list(RAO[1:-1]) + [CAU_CHOT_RAO.format(g=g)]
 
     # KHO TUỲ CHỌN — chèn tới đâu ngân sách cho phép, theo thứ tự giá trị giảm dần.
-    kho = [
-        ["LOOK:", hs["style"]],
-        ["LENS:", ong_kinh(x["khuon"])],
-        ["SOUND OF THE PLACE (for reference only, not rendered):", hs["am"]],
-        ["WHY THIS SHOT HOLDS A VIEWER:", hs["hook"]],
-    ]
+    # KHO TUỲ CHỌN chỉ chứa thứ Kling VẼ ĐƯỢC.
+    #
+    # Bản đầu nhét cả `am` (thiết kế âm thanh) và `hook` (lý do giữ chân người xem) vào đây. Cả
+    # hai đều sai chỗ: Kling không dựng tiếng, và "vì sao cảnh này giữ chân" là lý lẽ đạo diễn,
+    # không phải thứ vẽ ra được. Chúng chiếm ~300 ký tự ngân sách để nói với mô hình những điều
+    # nó không làm gì được — và tệ hơn, một câu tả âm thanh có thể khiến nó vẽ nguồn phát ra
+    # tiếng ấy. `am` và `hook` vẫn được ghi vào `tap.json` cho khâu dựng và khâu viết bài đăng.
+    kho = [["LOOK:", hs["style"]]]
 
     lo, ra = "\n".join(bb), "\n".join(rao)
     con = KY_TU_MAX - len(lo) - len(ra) - 2
@@ -1047,7 +1454,7 @@ def prompt(kenh: str, so: int, giay: float = 8) -> str:
     if len(lo) + len(ra) + 2 > KY_TU_MAX:
         raise RuntimeError(f"khối bắt buộc của {kenh} đã {len(lo) + len(ra) + 2} ký tự — "
                            f"viết ngắn `the_gioi` hoặc mô tả loài lại")
-    return lo + "\n\n" + "".join(t + "\n\n" for t in them) + ra
+    return lo + "\n\n" + "".join(t + "\n\n" for t in them) + ra + "\n"
 
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
@@ -1165,7 +1572,8 @@ def luu(kenh: str, so: int, giay: float = 8) -> str:
     os.makedirs(os.path.join(tm, "clips"), exist_ok=True)
     x = lich(kenh, so)
     io.open(os.path.join(tm, "PROMPT.txt"), "w", encoding="utf-8").write(prompt(kenh, so, giay))
-    json.dump({"kenh": kenh, "so": so, "giay": giay, **x},
+    json.dump({"kenh": kenh, "so": so, "giay": giay, **x,
+               "am": ho_so(kenh)["am"], "hook": ho_so(kenh)["hook"]},
               io.open(os.path.join(tm, "tap.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
     return tm

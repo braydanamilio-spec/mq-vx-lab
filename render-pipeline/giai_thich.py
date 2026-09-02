@@ -2510,8 +2510,19 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             _na = nen_gt.sinh_tap(ma, idx, nhip, _ks, doc=doc,
                                   mau_chu=_mk.get("chu", ""), mau_nen=_mk.get("nen", ""))
             _cn = sum(1 for x in nhip if x.get("ve"))
+            # NÓI RÕ VÌ SAO THIẾU, KHÔNG CHỈ NÓI THIẾU BAO NHIÊU  (2/9/2026)
+            # "vẽ 6/42" một mình không hành động được: 36 cảnh thiếu vì cạn hạn mức thì phải đi
+            # thêm khoá CF; vì prompt bị chặn NSFW thì phải sửa chữ; vì bốn lượt vẽ đều hỏng thì
+            # phải xem mạng hay mô hình. Ba nguyên nhân, ba việc khác hẳn nhau — mà con số gộp
+            # lại không phân biệt được cái nào, nên nó dẫn người đọc đi sai hướng.
+            _ly = []
+            for _t, _n in (("cạn hạn mức", "_can"), ("4 lượt đều hỏng", "_het")):
+                _v = getattr(nen_gt.sinh, _n, 0)
+                if _v:
+                    _ly.append(f"{_t} {_v}")
             print(f"   🎨 vẽ {_na}/{_cn} cảnh bằng CF"
-                  + ("" if _na == _cn else "  (số còn lại dùng nền vẽ bằng code)"))
+                  + ("" if _na == _cn else "  (số còn lại dùng nền vẽ bằng code"
+                     + (" — " + " · ".join(_ly) if _ly else "") + ")"))
         else:
             print("   ⚠ không có khoá CF — toàn bộ dùng nền vẽ bằng code")
     except Exception as e:

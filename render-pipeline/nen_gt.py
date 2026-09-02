@@ -455,8 +455,21 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
         try:
             ok, _tk = goi_xoay(keys, _thu, hat=hat0 + lan)
         except CanThat:
+            # ── CẠN HẠN MỨC PHẢI NÓI RA, VÀ NÓI MỘT LẦN  (2/9/2026) ─────────────────────
+            # Đo trên lượt 33631376874: bản dài vẽ được **6/42 cảnh**, tức 36 cảnh rơi về nền
+            # vẽ bằng code — mà log chỉ có 8 dòng lỗi. 36 ảnh biến mất KHÔNG để lại một dòng
+            # nào, vì cả ba nhánh thoát của hàm này đều `return ""` trong im lặng.
+            #
+            # Hậu quả không phải "thiếu log": chất lượng tập tụt hẳn (chấm 78/100 và 84/100
+            # trên sàn 90) mà không ai biết vì sao, nên người đọc đi tìm lỗi ở khâu dựng —
+            # trong khi lỗi nằm ở khâu vẽ, và nằm ở một chỗ không nói gì.
+            sinh._can = getattr(sinh, "_can", 0) + 1
+            if sinh._can == 1:
+                print(f"     🪫 nhịp {i}: CF cạn hạn mức — từ đây các cảnh còn lại dùng nền "
+                      f"vẽ bằng code (sẽ đếm tổng ở cuối tập)")
             return ""
         if not ok:
+            sinh._hong = getattr(sinh, "_hong", 0) + 1
             continue
 
         # CỔNG NHẤT QUÁN — ảnh phải cùng thế giới với ảnh đầu tiên của tập.
@@ -493,6 +506,10 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
                 print(f"     ⚠ CỔNG CHỮ TẮT ({type(e).__name__}: {str(e)[:60]}) — "
                       f"ảnh có chữ bịa sẽ lọt qua")
         return rel
+    # BỐN LƯỢT ĐỀU HỎNG — cũng phải nói. Đây là nhánh im lặng thứ hai: nhịp này mất cảnh mà
+    # không có dấu vết nào, nên nhìn từ log nó y hệt một nhịp chưa từng được yêu cầu vẽ.
+    sinh._het = getattr(sinh, "_het", 0) + 1
+    print(f"     ✗ nhịp {i}: 4 lượt vẽ đều hỏng — dùng nền vẽ bằng code")
     return ""
 
 
@@ -504,6 +521,11 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
     song thì nhiều luồng cùng đâm vào một khoá đã 429 và cả mẻ hỏng theo. Chậm hơn nhưng đúng.
     """
     gu = GU_KENH.get(KENH_GU.get(ma, "que"), GU)
+    # Đặt lại bộ đếm lý do MỖI TẬP — không đặt lại thì con số cộng dồn qua cả short lẫn long
+    # và bản tổng kết nói về một tập khác với tập đang chạy.
+    for _t in ("_can", "_hong", "_het"):
+        if hasattr(sinh, _t):
+            delattr(sinh, _t)
     n = 0
     moc = None      # mốc chất ảnh của tập — đặt bằng TRUNG VỊ ba ảnh đầu (xem dưới)
     _mau = []       # ba số đo đầu, để lấy trung vị

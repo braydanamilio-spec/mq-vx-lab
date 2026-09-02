@@ -8375,3 +8375,35 @@ xem client ấy làm gì. Ở đây câu trả lời nằm ngay trong cùng tệ
 đúng. Hai chỗ dùng cùng một lệnh, một chỗ chạy một chỗ 500 — khác biệt duy nhất là `enqueue` gửi
 thêm trường `title`. Hai kết quả khác nhau từ cùng một lệnh là chỗ phải dừng lại đối chiếu tham
 số, không phải chỗ để đoán.
+
+### 7dl — 36 ảnh biến mất không để lại một dòng log nào  (2/9/2026)
+
+**Triệu chứng.** Cổng chấm cho `v9_hiddenfee_0000.mp4` **78/100** và bản dài **84/100**, sàn 90.
+Log ghi `🎨 vẽ 6/42 cảnh bằng CF` — tức **36 cảnh** rơi về nền vẽ bằng code. Nhưng cả log chỉ có
+**8 dòng lỗi** liên quan tới ảnh.
+
+**Gốc rễ.** `nen_gt.sinh()` có **ba** nhánh `return ""`, cả ba đều im lặng:
+
+| nhánh | nghĩa | việc phải làm nếu biết |
+|---|---|---|
+| `except CanThat` | CF cạn hạn mức | thêm khoá CF |
+| sau 4 lượt vẽ đều hỏng | mạng/mô hình | xem mạng, xem model |
+| `if not ve` | nhịp không có prompt | sửa khâu viết |
+
+Ba nguyên nhân, **ba việc khác hẳn nhau**. Con số gộp `6/42` không phân biệt được cái nào, nên
+nó dẫn người đọc đi sai hướng — tôi suýt đi sửa khâu dựng trong khi lỗi nằm ở khâu vẽ.
+
+**Và tệ hơn "thiếu log":** chất lượng tập tụt hẳn mà không có dấu vết nào. Một nhịp mất ảnh nhìn
+từ log y hệt một nhịp chưa từng được yêu cầu vẽ.
+
+**Sửa.** Cả ba nhánh đều nói. Cạn hạn mức chỉ nói MỘT lần rồi đếm (báo mỗi cảnh thì 36 dòng
+giống nhau lại thành nhiễu, mà nhiễu cũng là một kiểu im lặng). Dòng tổng kết cuối tập ghi rõ
+**vì sao thiếu**, không chỉ thiếu bao nhiêu.
+
+**Kèm theo:** `Input prompt contains NSFW content` mà không in prompt thì không sửa được chữ nào
+— bộ lọc bị kích bởi MỘT từ và ta không biết từ nào. Nay in prompt **chỉ khi bị chặn**, nên
+không làm log ồn.
+
+**Họ lỗi (lần thứ năm trong hai ngày).** *Bằng chứng luôn tồn tại, ta ném nó đi trước khi ai kịp
+đọc.* Danh sách tới nay: `kiem_kho` chết câm sau `|| true` · `day_kho` vứt `stdout` của `enqueue`
+· `_kho_tu_kv` nuốt `NameError` · `don_drive_kenh` in `0` không mẫu số · và đây.

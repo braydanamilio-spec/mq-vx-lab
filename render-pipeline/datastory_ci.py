@@ -547,7 +547,23 @@ def _cf_flux_image(prompt, dest, key, style=None, seed=None, kt=None) -> bool:
             _loai = ("hết neuron trong ngày" if ("4006" in detail or "neuron" in detail.lower())
                      else "gọi quá nhanh (rate-limit) HOẶC hết neuron — xem ảnh kế có sinh được không")
             raise RuntimeError(f"CF 429 [{_loai}]: {detail}")
-        print(f"   ⚠️ CF FLUX HTTP {e.code}: {detail[:90]}")
+        # ── LỖI PHẢI ĐI KÈM ĐẦU VÀO GÂY RA NÓ  (2/9/2026) ──────────────────────────────
+        # `Input prompt contains NSFW content` mà không in prompt thì không sửa được chữ nào:
+        # bộ lọc của Cloudflare bị kích bởi MỘT từ, và ta không biết từ nào. Đo trên lượt
+        # 33631376874: 4 lần bị chặn, 4 cảnh mất ảnh, và log không có manh mối nào để lần.
+        #
+        # In prompt khi bị chặn — chỉ khi bị chặn, nên không làm log ồn. Đây là cùng bài học
+        # với `day_kho` vứt đầu ra của `enqueue`: bằng chứng vẫn luôn ở đó, ta ném nó đi trước
+        # khi ai kịp đọc.
+        if "nsfw" in detail.lower():
+            _p = ""
+            try:
+                _p = str(prompt)
+            except Exception:
+                pass
+            print(f"   ⚠️ CF FLUX chặn NSFW — prompt bị chặn: {_p[:220]}")
+        else:
+            print(f"   ⚠️ CF FLUX HTTP {e.code}: {detail[:90]}")
         return False
     b64 = ((out.get("result") or {}).get("image")) or ""
     if not b64:
