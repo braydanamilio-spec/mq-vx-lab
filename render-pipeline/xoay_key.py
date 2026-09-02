@@ -54,12 +54,24 @@ class CanThat(Exception):
 _QUAN_SAT: dict = {}
 
 
-def _ghi_nhan(kid: str, s: str, song: bool, ly_do: str = "") -> None:
+def _moc_hoi_cf() -> str:
+    """Mốc hồi neuron của Cloudflare: 00:00 UTC ngày hôm sau.
+
+    Viết ra thành hàm chứ không rải hằng số: mốc hồi là thuộc tính của NHÀ CUNG CẤP, và một hằng
+    số chép rải rác là cách chắc chắn để hôm nào họ đổi thì ta sửa được ba chỗ, quên chỗ thứ tư.
+    """
+    import datetime
+    n = datetime.datetime.now(datetime.timezone.utc)
+    return (n.replace(hour=0, minute=0, second=0, microsecond=0)
+            + datetime.timedelta(days=1)).isoformat()
+
+
+def _ghi_nhan(kid: str, s: str, song: bool, ly_do: str = "", nghi_den: str = "") -> None:
     if not kid:
         return
     import datetime
     _QUAN_SAT[kid] = {"alive": bool(song), "last4": str(s)[-4:],
-                      "ly_do": ly_do[:80],
+                      "ly_do": ly_do[:80], "nghi_den": nghi_den,
                       "at": datetime.datetime.now(datetime.timezone.utc).isoformat()}
 
 
@@ -109,7 +121,13 @@ def goi_xoay(keys, ham, hat: int = 0, nghi_ratelimit: float = 1.2, giua_lan: flo
                 # CẠN NGÀY ≠ CHẾT. Khoá này mai lại dùng được, nên đánh dấu là còn sống nhưng
                 # đang nghỉ — ghi `alive=False` ở đây là đẩy 97 khoá tốt vào cột "chết", rồi
                 # sáng mai người đọc đi thay 97 khoá không hỏng.
-                _ghi_nhan(kid, k, True, "cạn neuron ngày (4006) — mai hồi")
+                # Ghi `nghi_den` = mốc hồi neuron. Dashboard ĐÃ có sẵn trạng thái 😴 "Đang nghỉ"
+                # đọc từ `cooling_until`, nên chỉ cần điền đúng trường ấy là anh nhìn ra ngay
+                # "hôm nay cạn" — không phải sửa một dòng nào bên web.
+                # Nếu chỉ ghi `alive=True` thì khoá hiện 🟢 Sống, đúng về mặt "mai còn dùng được"
+                # nhưng SAI về mặt thứ anh cần biết lúc này: hôm nay nó không vẽ được nữa.
+                _ghi_nhan(kid, k, True, "cạn neuron ngày (4006) — hồi lúc 00:00 UTC",
+                          _moc_hoi_cf())
             elif "429" in t:
                 so_429 += 1
                 _ghi_nhan(kid, k, True, "gọi quá nhanh (429) — nghỉ rồi đi tiếp")
@@ -173,17 +191,23 @@ def ghi_trang_thai(owner: str = "") -> int:
             return 0
         lo, n = db.batch(), 0
         for kid, v in list(_QUAN_SAT.items()):
+            # `cooling_until` rỗng khi khoá gọi được -> XOÁ trạng thái nghỉ cũ. Không ghi đè
+            # bằng chuỗi rỗng thì một khoá từng cạn hôm qua sẽ nằm mãi ở cột 😴, kể cả khi hôm
+            # nay nó vẽ ngon — đúng họ lỗi "cờ bật thì có người bật, tắt thì không ai tắt".
             lo.set(db.collection("gemini_keys").document(kid),
                    {"alive": v["alive"], "last_checked": v["at"],
+                    "cooling_until": v.get("nghi_den") or "",
                     "dead_reason": "" if v["alive"] else v["ly_do"],
                     "ghi_chu": v["ly_do"], "nguon_kiem": "dùng thật"}, merge=True)
             n += 1
             if n % 400 == 0:
                 lo.commit(); lo = db.batch()
         lo.commit()
-        song = sum(1 for v in _QUAN_SAT.values() if v["alive"])
-        print(f"   🗝 ghi sổ trạng thái {n} khoá từ LƯỢT DÙNG THẬT "
-              f"({song} còn dùng được · {n - song} hỏng) — không tốn lượt gọi dò nào")
+        nghi = sum(1 for v in _QUAN_SAT.values() if v.get("nghi_den"))
+        song = sum(1 for v in _QUAN_SAT.values() if v["alive"]) - nghi
+        print(f"   🗝 ghi sổ trạng thái {n} khoá từ LƯỢT DÙNG THẬT — "
+              f"🟢 {song} sống · 😴 {nghi} cạn hôm nay · 🔴 {n - song - nghi} hỏng "
+              f"(không tốn lượt gọi dò nào)")
         _QUAN_SAT.clear()
         return n
     except Exception as e:

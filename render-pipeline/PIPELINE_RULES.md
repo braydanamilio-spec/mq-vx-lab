@@ -8607,3 +8607,28 @@ bài đăng viết bằng code (không gọi AI) · cổng bắt buộc câu kha
 
 Bộ lịch tất định nên cùng `--so` cho ra cùng prompt và ghi đè lặng lẽ. Chữa: `tap_ke()` đếm tập
 kế tiếp, `--so` thành tuỳ chọn, ép `--so` vào thư mục đã có thì cảnh báo.
+
+### 7dr — Ghi `alive=True` cho khoá cạn hạn mức là ĐÚNG, nhưng chưa đủ để nhìn  (2/9/2026)
+
+Anh: *"nhớ cập nhật lên trang web để a biết tình trạng."*
+
+`ghi_trang_thai` ghi khoá cạn neuron là `alive=True` — đúng, vì mai nó lại dùng được, và ghi
+`False` là đẩy 97 khoá tốt vào cột "chết" để sáng mai đi thay 97 khoá không hỏng.
+
+**Nhưng trên màn hình nó hiện 🟢 Sống** — đúng về "mai còn dùng được", **sai về thứ anh cần biết
+lúc này**: hôm nay nó không vẽ được nữa. Một trạng thái đúng về mặt dữ liệu vẫn có thể trả lời
+sai câu hỏi người xem đang hỏi.
+
+**Sửa mà không đụng gì bên web:** dashboard ĐÃ có sẵn trạng thái 😴 *Đang nghỉ* đọc từ
+`cooling_until`. Chỉ cần dây chuyền điền đúng trường ấy = mốc hồi neuron (00:00 UTC hôm sau).
+Đây lại là luật 13.1: *cơ chế đã có sẵn, thiếu cái gọi nó*.
+
+**Và một bẫy phải chặn ngay:** khi khoá gọi được thì phải ghi `cooling_until: ""` để **xoá**
+trạng thái nghỉ cũ. Không ghi đè thì một khoá cạn hôm qua nằm mãi ở cột 😴 kể cả khi hôm nay nó
+vẽ ngon — họ lỗi *"cờ bật thì có người bật, tắt thì không ai tắt"*.
+
+**Dòng tóm tắt trên trang** nói ba thứ, và thứ ba mới là thứ tiết kiệm quota:
+`🗝 N khoá · 🟢 sống · 😴 cạn hôm nay · 🔴 hỏng · ⚪ chưa kiểm` — cập nhật lúc nào — **bao nhiêu
+khoá đo được từ LƯỢT DÙNG THẬT**. Biết con số cuối thì người đọc không bấm "kiểm ngay" nữa.
+Kèm một câu: *khoá cạn tự hồi lúc 00:00 UTC, không cần thay* — thiếu câu ấy thì thấy 97 khoá CF
+nằm cột 😴 là người ta đi mua khoá mới.
