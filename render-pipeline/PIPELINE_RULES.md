@@ -8218,3 +8218,26 @@ Hai chỗ, cùng hậu quả: khuôn web tràn 2500 → hàng rào DO NOT bị c
 
 **Chỉ lộ ra khi chạy CHÍNH đoạn JS của dashboard bằng `node` trên CHÍNH dữ liệu vừa xuất**
 (luật 13.10): 4/240 khuôn tràn → sau khi khớp trần: 0/240, dài nhất 2483.
+
+---
+
+## 8k55 — Bảng đo ba lượt, 12 tập mỗi lượt, cùng bộ việc
+
+| lượt | TB | sd | ≥95 | còn lỗi | nhận sạch | trừ trục cú lật | bị cắt câu |
+|---|---|---|---|---|---|---|---|
+| **A** vòng lặp sống (8k49) | 94,2 | 4,3 | 7/12 | 0/12 | 3/12 | 48 | 4 |
+| **B** + cấm họ mòn (8k50) | 96,3 | 2,3 | 10/12 | 1/12 | 4/12 | **29** | 3 |
+| **C** + cổng cắt câu (8k52) | 96,8 | 2,2 | 11/12 | 0/12 | **5/12** | 29 | **1** |
+
+Trước đó, lượt chạy với vòng lặp CHẾT: **6/16 tập còn lỗi**, TB ~89.
+
+**Đọc bảng cho đúng:**
+
+- **A → C chênh TB 2,6 · KTC95 ±2,7 → NẰM TRONG NHIỄU.** Không được nói "điểm đã lên".
+- Thứ vượt nhiễu là **đếm sự kiện**: lượt trừ trục cú lật 48 → 29 (Poisson ±7), và số tập bị cắt
+  câu 4 → 1.
+- **Kiểm bắt buộc theo 13.23** — cổng mới có nuốt ngân sách vòng viết lại không? Không: *nhận
+  sạch* tăng 3 → 4 → 5 và *còn lỗi* giữ 0. Một cổng vừa bắt được lỗi vừa không làm cạn vòng là
+  cổng đáng ship; nếu nó làm cạn thêm thì phải hạ cấp xuống `don()` hoặc `cham100`.
+- `sd` co từ 4,3 xuống 2,2: đầu ra **ổn định hơn**, và đó là thứ đáng giá hơn trung bình ở một
+  dây chuyền chạy hàng nghìn tập.
