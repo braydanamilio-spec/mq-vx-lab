@@ -8731,3 +8731,25 @@ là vấn đề của vài khuôn cụ thể. Nếu tin ấn tượng ban đầu
 
 **Luật (§1, trả giá lần nữa).** Khi anh nói "xấu quá", việc đầu tiên KHÔNG phải mở code — mà là
 `ffmpeg -ss … -frames:v 1` rồi **nhìn**. Hôm nay hai khung ảnh đã đổi hẳn hướng sửa.
+
+### 7dv — Che khuất không phải lúc nào cũng chữa bằng dải mờ  (2/9/2026)
+
+Anh: *"nhớ tránh tràn hay che khuất."* Khung mở đầu: số "124" đọc tốt, dòng *"a jet at takeoff"*
+đọc rất khó.
+
+**Chẩn đoán sai lần một.** Tôi tưởng dải mờ yếu, đo ra đúng là yếu (tại `y=0.37·H` chỉ còn
+~0.17 vì hằng số `0.62` đặt cho bố cục cũ), nên siết dải lên. **Vẫn khó đọc.**
+
+**Phóng to khung mới thấy nguyên nhân thật:** nền có các **tia đen** toả ra, và chúng nằm
+**TRÊN** dải mờ. Dải mờ làm nền tối đi — đúng việc của nó — nhưng nét đen đi xuyên qua chữ
+trắng thì tối thêm nữa cũng không tách được hai thứ ra.
+
+**Chữa đúng chỗ:** quầng mềm **rộng, không lệch** quanh chữ (`drop-shadow(0 0 1.6%H #000000ee)`)
+cộng một bóng đổ nhẹ. Quầng tách chữ khỏi **mọi thứ** phía sau, kể cả nét đen đè lên.
+
+Và **không** dùng viền `paintOrder="stroke"`: §12.12 xếp viền quanh chữ vào danh sách dấu hiệu
+nghiệp dư — *"không hãng phim nào viền chữ"*.
+
+**Luật.** *Tối nền lên* chỉ chữa được che khuất do nền SÁNG. Che khuất do một nét ĐẬM cắt ngang
+thì phải tách bằng quầng quanh chính chữ. Hai nguyên nhân khác nhau, hai cách chữa khác nhau —
+và cách phân biệt là **phóng to khung ra nhìn**, không phải đọc lại công thức.

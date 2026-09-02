@@ -325,15 +325,29 @@ export const SoLieu: React.FC<{
               style={{ filter: tren_anh
                 ? `drop-shadow(0 ${H * 0.004}px ${H * 0.012}px #000000cc)`
                 : `drop-shadow(0 ${H * 0.003}px ${H * 0.008}px #00000033)` }}>{soHien}</text>
+        {/* 2/9 — BÓNG MỀM RỘNG, KHÔNG PHẢI BÓNG MỎNG.
+            Anh: *"nhớ tránh tràn hay che khuất."* Phóng to khung mở đầu: số "124" đọc tốt, còn
+            dòng "a jet at takeoff" bị **các tia đen của nền cắt ngang qua chữ**. Dải mờ đã làm
+            đúng việc (nền tối đi), nhưng tia đen nằm TRÊN dải mờ, nên chữ trắng vẫn bị xé.
+
+            Bóng cũ `0 0.3% 0.9% #00000099` quá mỏng để tách chữ khỏi một nét đen đi xuyên qua
+            nó. Nay hai lớp: một quầng RỘNG không lệch (tách chữ khỏi mọi thứ phía sau) cộng một
+            bóng đổ nhẹ (giữ cảm giác nổi khối).
+
+            KHÔNG dùng viền `paintOrder="stroke"` — §12.12 xếp viền quanh chữ vào danh sách dấu
+            hiệu nghiệp dư: *"không hãng phim nào viền chữ"*. Quầng mềm làm đúng việc ấy mà
+            không để lại đường viền cứng. */}
         {don ? <text x="0" y={cs * 0.42} textAnchor="middle" fontFamily={F} fontWeight={800}
                      fontSize={cd} fill={tren_anh ? "#F2EFE9" : chuHopNen(mau, nen)} letterSpacing={2}
-                     style={{ filter: `drop-shadow(0 ${H*0.003}px ${H*0.009}px #00000099)` }}
+                     style={{ filter: tren_anh
+                       ? `drop-shadow(0 0 ${H * 0.016}px #000000ee) drop-shadow(0 ${H*0.004}px ${H*0.010}px #000000cc)`
+                       : `drop-shadow(0 ${H*0.003}px ${H*0.009}px #00000099)` }}
                      >{don.toUpperCase()}</text> : null}
       </g>
       {chu ? <text x={W / 2} y={H * yChu} textAnchor="middle" fontFamily={F} fontWeight={700}
                    fontSize={Math.min(H * 0.042, (W * 0.90 / Math.max(1, chu.length)) * 1.45)}
                    fill={tren_anh ? "#EDE9E1" : chuHopNen("#3A342C", nen)}
-                   style={tren_anh ? { filter: `drop-shadow(0 ${H * 0.003}px ${H * 0.010}px #000000cc)` }
+                   style={tren_anh ? { filter: `drop-shadow(0 0 ${H * 0.015}px #000000ee) drop-shadow(0 ${H * 0.004}px ${H * 0.011}px #000000cc)` }
                                    : undefined}>{chu}</text> : null}
     </g>
   );
