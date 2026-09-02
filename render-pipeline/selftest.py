@@ -2516,6 +2516,10 @@ def main():
     check("tài sản kênh dùng phải có trong git (không chỉ ở máy)", t_tai_san_kenh_dung_phai_co_trong_git)
     check("đặt tiêu đề chịu được mọi hình dạng story", t_dat_tieu_de_chiu_duoc_moi_hinh_dang)
     check("sổ tránh-trùng và phép so cắt cùng độ dài", t_so_trung_tieu_de_phai_cung_do_dai)
+    check("mỗi kênh Kling có mặt ở cả hồ sơ + brand", t_kenh_kling_dong_bo_ba_noi)
+    check("đề bài Kling: Python khớp web từng trường", t_lich_kling_python_khop_web)
+    check("avatar: chữ và số không bị đường tròn cắt", t_avatar_khong_bi_cat_tron)
+    check("biểu tượng đọc được trên nền của chính nó", t_bieu_tuong_doc_duoc_tren_nen_cua_no)
     check("bộ chấm Kling chặn đúng điểm yếu của Kling", t_kling_chan_dung_diem_yeu)
     check("Kling thiếu cảnh phải chặn trước khi ghép", t_kling_thieu_canh_phai_chan_truoc_khi_ghep)
     check("kling_shots: chỗ ghi và chỗ đọc cùng project", t_kling_shots_ghi_doc_cung_mot_project)
@@ -6155,6 +6159,105 @@ def t_so_trung_tieu_de_phai_cung_do_dai():
     assert not T._tieu_de_da_lam("Joshua Kushner: 525K — Most-read on Wikipedia — Aug 12, 2026",
                                  [day[:T._DAI_SO]]), "cắt quá tay -> hai đề tài khác bị coi là một"
 
+
+
+
+def t_lich_kling_python_khop_web():
+    """ĐỀ BÀI PYTHON SINH VÀ ĐỀ BÀI TRÌNH DUYỆT SINH PHẢI GIỐNG HỆT NHAU.
+
+    2/9 — Thêm trục "kiểu mở kênh này diễn được" (`_mo_kenh`) làm ĐỘ DÀI một trục đổi theo
+    kênh. Nếu bản xuất web vẫn gửi `KIEU_MO` đầy đủ trong khi `_do_truc` đã đếm bản đã lọc thì
+    hai bên giải mã cùng một con số ra hai bộ chỉ số khác nhau — và lệch kiểu ấy KHÔNG nhìn ra
+    được: sáu trục kia vẫn khớp hoàn hảo, chỉ một trường sai. Đã xảy ra đúng như vậy hôm 1/9
+    khi thêm trục thứ bảy: 280/280 đề bài sai đúng một trường.
+
+    Chốt này dựng lại phép tính của trình duyệt TỪ CHÍNH TỆP ĐÃ XUẤT rồi so với `_lich()`.
+    """
+    import sys as _s, os as _o, json as _j
+    goc = _o.path.dirname(_o.path.abspath(__file__))
+    _s.path.insert(0, goc)
+    import kling_kenh as KK
+    d = _o.path.join(goc, "..", "MM0-AutoPublisher", "dashboard", "kling")
+    if not _o.path.isdir(d):
+        return                                  # chưa xuất web thì không có gì để so
+    m = _j.load(open(_o.path.join(d, "index.json")))
+    lech = []
+    for k in m["kenh"]:
+        f = _o.path.join(d, k["slug"] + ".json")
+        if not _o.path.exists(f):
+            lech.append(f"{k['ten']}: thiếu tệp"); continue
+        LI = _j.load(open(f))["lich"]
+        P = 1
+        for t in LI["truc"]:
+            P *= t
+        for so in (0, 1, 7, 39):
+            x, ix = (LI["goc"] % P + so * LI["buoc"]) % P, []
+            for t in LI["truc"]:
+                ix.append(x % t); x //= t
+            vai = LI["vai"]; gay = vai[ix[4]]
+            con = [v for v in vai if v != gay] or vai
+            web = {"phong": LI["phong"][ix[0]], "dao_cu": LI["dao_cu"][ix[1]],
+                   "ap_luc": LI["ap_luc"][ix[2]], "kieu_mo": LI["kieu_mo"][ix[3]],
+                   "gay": gay, "lat": con[ix[5] % len(con)]}
+            py = KK._lich(k["ten"], so)
+            for c in web:
+                if web[c] != py[c]:
+                    lech.append(f"{k['ten']} tập {so} trường {c}")
+                    break
+    assert not lech, f"{len(lech)} đề bài lệch giữa Python và web: {lech[:4]}"
+
+def t_kenh_kling_dong_bo_ba_noi():
+    """MỖI KÊNH KLING PHẢI CÓ MẶT Ở CẢ BA NƠI: hồ sơ · brand · dữ liệu web.
+
+    2/9 — Thêm mười kênh mới phải sửa hai tệp ở hai chỗ khác nhau (`KENH` trong kling_kenh.py và
+    `BRAND` trong brand_kling.py). Thiếu một bên thì KHÔNG có lỗi nào nổ: brand_kling chỉ lặp
+    `BRAND` nên nó lặng lẽ bỏ qua kênh chưa khai, và dashboard đọc index.json nên kênh ấy hiện
+    ra trong dropdown mà không có avatar. Đúng họ lỗi "hai danh sách viết ở hai nơi".
+    """
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import kling_kenh as KK
+    import brand_kling as BK
+    thieu_brand = [k for k in KK.KENH if k not in BK.BRAND]
+    thua_brand = [k for k in BK.BRAND if k not in KK.KENH]
+    assert not thieu_brand, f"kênh có hồ sơ mà thiếu brand: {thieu_brand}"
+    assert not thua_brand, f"brand có mà không có hồ sơ: {thua_brand}"
+    # thứ tự phải khớp: số thứ tự trên avatar lấy theo vị trí, dropdown lấy theo index.json
+    assert list(KK.KENH) == list(BK.BRAND), "thứ tự KENH và BRAND lệch nhau -> số trên avatar sai"
+
+
+def t_avatar_khong_bi_cat_tron():
+    """CHỮ VÀ SỐ TRÊN AVATAR PHẢI NẰM TRONG ĐƯỜNG TRÒN NỀN TẢNG SẼ CẮT.
+
+    2/9 — YouTube, Facebook và Instagram đều cắt avatar thành hình tròn. Bản trước đặt dải tên
+    sát đáy và huy hiệu số ở góc khung vuông: đo được 20/20 kênh bị cắt ngang chữ, và huy hiệu
+    số nằm HOÀN TOÀN ngoài vòng nên không nền tảng nào hiển thị nó.
+
+    Đây là lần thứ hai cùng một lỗi ở cùng một hàm: bản vá trước chỉ bỏ vòng tròn TÔI vẽ, không
+    làm gì được vòng tròn HỌ cắt. Nên chốt này đo trên ảnh thật, không đọc mã.
+    """
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import brand_kling as BK
+    xau = BK.kiem_tron()
+    assert not xau, f"{len(xau)} kênh có chữ ngoài vòng tròn: {[t for _, t in xau[:5]]}"
+
+
+def t_bieu_tuong_doc_duoc_tren_nen_cua_no():
+    """BIỂU TƯỢNG PHẢI TƯƠNG PHẢN ĐỦ VỚI NỀN CỦA CHÍNH KÊNH ẤY.
+
+    2/9 — Mười kênh mới lần đầu lấy màu KHÔNG KHÍ của bộ phim làm màu dấu hiệu (đỏ huy hiệu, đỏ
+    tiết). SMALL CLAIMS đo được 1,74 và QUEST BOARD 2,06 — thấp hơn mọi kênh đang có, và nhìn
+    lưới avatar thì hai biểu tượng ấy gần như biến mất. Cùng họ lỗi với `k["mau"]`: mượn một giá
+    trị cho việc nó không sinh ra để làm.
+
+    BAGGAGE CLAIM (2,61) có từ trước bản này và được nêu riêng, không sửa lén.
+    """
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    import brand_kling as BK
+    xau = [t for _, t, _c, _n in BK.kiem_tuong_phan(3.0) if t != "BAGGAGE CLAIM"]
+    assert not xau, f"biểu tượng chìm vào nền: {xau}"
 
 def t_kling_chan_dung_diem_yeu():
     """BỘ CHẤM KLING PHẢI CHẶN ĐÚNG NHỮNG THỨ KLING LÀM HỎNG.

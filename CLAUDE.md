@@ -108,8 +108,8 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 | Kho kịch bản tích luỹ | `render-pipeline/kho_comic.json` |
 | **10 kênh giải thích — engine** | `engine-remotion/src/gt/KichGiaiThich.tsx` (dựng cảnh) · `Khuon.tsx` (8 khuôn: chia đôi · số liệu · trục · kính lúp · dải chữ · đếm · thẻ chữ · chart) |
 | **10 kênh giải thích — pipeline** | `render-pipeline/giai_thich.py` (kịch bản + dựng) · `nen_gt.py` (CF vẽ cảnh, khoá nhân vật, cổng phong cách) · `to_mau.py` (chỉnh màu) · `kiem_nhip.py` (cổng nhịp cắt) |
-| **20 kênh Kling — hồ sơ + thước** | `render-pipeline/kling_kenh.py` — hồ sơ 20 kênh, bộ lịch 7 trục, thước `cham()`, ghép prompt theo ngân sách 2.500 ký tự |
-| **20 kênh Kling — cổng** | `cham100.py` (thang 100 điểm, sàn 90) · `kiem_da_dang.py` (cổng chính sách: đo 190 cặp kênh) · `brand_kling.py` (brand kit vẽ bằng code + cổng bóng ngoài) |
+| **30 kênh Kling — hồ sơ + thước** | `render-pipeline/kling_kenh.py` — hồ sơ 30 kênh (20 đời thường + 10 cỗ máy hài khác nhau, xem §14.1), bộ lịch 7 trục, `_mo_kenh()` lọc nhịp mở theo thế giới, thước `cham()`, ghép prompt theo ngân sách 2.500 ký tự |
+| **30 kênh Kling — cổng** | `cham100.py` (thang 100 điểm, sàn 95) · `kiem_da_dang.py` (cổng chính sách: đo 435 cặp kênh) · `brand_kling.py` (brand kit vẽ bằng code + ba cổng: `kiem_bong()` bóng ngoài · `kiem_tron()` chữ lọt đường cắt tròn · `kiem_tuong_phan()` biểu tượng đọc được) · `selftest.py` (đề bài Python khớp web từng trường) |
 | **20 kênh Kling — đưa clip về** | `kling_dong_bo.py` (gán clip tải về vào đúng tập, ép 1080×1920, viết bài đăng) |
 | Cách dùng bộ Kling | `render-pipeline/KLING_CACH_DUNG.md` |
 | Phân tích video tham chiếu | `render-pipeline/PHAN_TICH_GIAI_THICH.md` |
@@ -122,7 +122,7 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 |---|---|---|---|---|
 | **Comic (hài)** | 10 | `kich_comic.py` · `kich_comic_long.py` · `sieu_du_lieu.py` | `render_hai.yml` | 10 (mỗi kênh một luồng) |
 | **Phân tích** | 56 | `kich_v2.py` · `kich_v2_long.py` | `render_phan_tich_18.yml` | 18 (chia xen kẽ) |
-| **Kling (hài, AI video)** | 20 | `kling_kenh.py` · `kling_dong_bo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
+| **Kling (hài, AI video)** | 30 | `kling_kenh.py` · `kling_dong_bo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
 | Thế hệ 1 (cũ) | ~50 | `datastory_ci.py` | `render_cron.yml` | cron TẮT |
 
 Bộ Kling khác ba bộ kia ở một chỗ quyết định: **nó không dựng video trên Actions**. Python chỉ
@@ -969,3 +969,110 @@ Và hai lỗi tự gây ra khi vẽ bìa, cả hai đều chỉ thấy khi **nh�
 - **bóng chữ là bóng CỨNG có bậc**: tôi vẽ ba bản chữ lệch nhau vài điểm ảnh và gọi đó là bóng
   mềm. Bóng mềm phải là một lớp riêng đem **làm mờ**, không phải bản sao dịch chỗ. Đây đúng dấu
   hiệu nghiệp dư đã liệt kê ở 12.12 — tôi viết ra luật ấy rồi vi phạm nó trong cùng một buổi.
+
+---
+
+## 14. LUẬT RÚT TỪ NGÀY 2/9 — MỞ RỘNG 20 → 30 KÊNH KLING
+
+### 14.1 Thêm mười cái GIỐNG NHAU không phải là mở rộng
+
+Hai mươi kênh Kling đầu đều là **một** thể loại: nơi chốn Mỹ đời thường có thật · dàn người ·
+đồ vật gây mâu thuẫn · thoại hiện đại. `kiem_da_dang.py` đo chữ giữa từng cặp và xanh — nhưng
+nó **không đo hạng mục**. Cổng xanh với hai mươi bản của cùng một cỗ máy hài, và sẽ xanh y hệt
+với năm mươi bản.
+
+Nên mười kênh mới là **mười CỖ MÁY HÀI khác nhau**, không phải mười căn phòng khác nhau:
+
+| | kênh | cỗ máy |
+|---|---|---|
+| 21 | QUEST BOARD | thế giới sử thi vận hành bằng thủ tục hành chính |
+| 22 | ORBIT SHIFT | không gian khổng lồ, bất bình tí hon, không vứt được gì đi |
+| 23 | THE HAUNTING | ba người chết cố gửi tin, một người sống hiểu thành hỏng ống nước |
+| 24 | DOG PARK | chuyện người lớn nghe lỏm qua tai chó, ráp lại bằng logic chó |
+| 25 | SALOON 1884 | huyền thoại biên giới thua cuốn sổ nợ (không ai rút súng) |
+| 26 | DISPATCH | bình tĩnh tuyệt đối trả lời hoảng loạn tuyệt đối, việc luôn vô hại |
+| 27 | ENGINE 12 | kỷ luật cứu hoả đem áp cho cái tủ lạnh chung, chuông không bao giờ reo |
+| 28 | SMALL CLAIMS | toàn bộ nghi thức tư pháp xử vụ sáu mươi đô, tang vật nói ngược chủ |
+| 29 | COUNTY FAIR | năm mươi năm thứ bậc làng nén vào một cuối tuần tranh ruy băng |
+| 30 | THE CRUISE | niềm vui bắt buộc trên con tàu không ai rời được |
+
+Đo sau khi thêm: 435 cặp, trục `hai` cao nhất **0,15** trên trần 0,30 — tức mười cỗ máy mới kéo
+mức trùng xuống chứ không đẩy lên.
+
+### 14.2 Bộ lịch phát cho một kênh nhịp mà thế giới ấy KHÔNG DIỄN ĐƯỢC
+
+DOG PARK nhận đề *"khói hoặc hơi bốc lên từ thứ lẽ ra không được bốc khói"*. Công viên chó
+ngoài trời không có gì bốc khói được. Đề bài nói rõ bảy trục là **cố định**, nên AI làm đúng
+thứ được bảo: một cái ghế nhựa cháy âm ỉ giữa bãi cỏ. Vô nghĩa hoàn toàn — và:
+
+- `cham()` **không bắt** (nó đo tay nghề, không đo vật lý của thế giới)
+- `cham100` chấm **91/100**
+
+Đúng luật 12.5: `KIEU_MO` viết cho hai mươi thế giới trong nhà. Chữa không phải bằng cách dặn
+AI "đừng vô lý" — đề bài đã nói bảy trục cố định, dặn thêm chỉ tạo mâu thuẫn. Chữa bằng cách
+**đừng phát nhịp ấy cho kênh ấy**: `mo_cam` trong hồ sơ kênh, lọc ở đúng một chỗ `_mo_kenh()`.
+
+Và trong lúc sửa, mắc thêm một lỗi kinh điển: `("smoke or steam")` **là chuỗi**, không phải
+tuple. Rồi câu dự phòng `... or KIEU_MO` **che mất** — lọc sạch trơn thì lặng lẽ trả về đủ 16 và
+cổng báo "16/16, không sao". Nay lọc sạch trơn thì **nổ**, vì nó luôn luôn là lỗi viết sai.
+
+### 14.3 Dàn vai phải chứa được XUNG ĐỘT của chính kênh ấy
+
+SMALL CLAIMS bản đầu có bốn vai: thẩm phán · chấp hành viên · lục sự · một ông hưu trí ngồi
+xem. Cả bốn đều là **người của toà**. Kênh nói về tranh chấp giữa hai người — mà không có hai
+người ấy trong dàn. Bộ lịch cấp "Fern gây ra chuyện", AI làm đúng: **lục sự kiện chấp hành
+viên đòi sáu mươi đô**. Điểm: 91/100.
+
+Câu hỏi phải hỏi khi viết một kênh mới: *"đọc `hai` lên, dàn vai này có đủ người để diễn cái
+xung đột ấy không?"* Toà cần **nguyên đơn và bị đơn**. Nay là: thẩm phán · chấp hành viên ·
+**Dot và Vern** — hai nhà hàng xóm bốn mươi năm, tuần nào cũng ra toà vì chuyện mới.
+
+### 14.4 Avatar bị cắt TRÒN — và bản vá lần trước chỉ bỏ vòng tròn TÔI vẽ
+
+Chú thích trong `avatar()` ghi rõ đã sửa lỗi "vòng tròn cắt ngang chữ" bằng cách **bỏ vòng
+tròn**. Nhưng YouTube, Facebook và Instagram đều **tự cắt avatar thành hình tròn** — bỏ vòng
+tròn của mình không làm vòng tròn của họ biến mất. Ghép lưới rồi vẽ đè đường cắt tròn lên:
+
+- dải tên bị cắt ngang **giữa dòng chữ** — đo được **20/20** kênh dựng bằng bố cục cũ
+- huy hiệu số ở góc khung vuông cách tâm 0,57·W, ngoài bán kính 0,5·W → **không nền tảng nào
+  từng hiển thị nó**
+
+Khung an toàn không phải hình vuông W×W mà là **đường tròn nội tiếp**, và bề ngang cho phép
+**đổi theo độ cao**: nửa dây cung = √(R² − d²). Khối chữ phải neo theo **đáy** của nó, vì chỗ
+hẹp nhất là dòng dưới cùng.
+
+Cổng `kiem_tron()` đo trên **ảnh thật**, không đọc mã: đếm pixel màu nền nằm ngoài đường tròn
+trong vùng dải màu. Calibrate ngược trên bố cục cũ → bắt 20/20; bố cục mới → 0/30.
+
+### 14.5 `chinh` là màu của DẤU HIỆU, không phải màu của bộ phim
+
+Mười kênh mới lần đầu lấy màu **không khí** làm màu thương hiệu: đỏ huy hiệu cho sảnh hội mạo
+hiểm, đỏ tiết cho phòng xử. Đúng cho một khung phim. Sai cho một hình tròn 48 điểm ảnh trong
+danh sách đăng ký:
+
+| | tương phản biểu tượng/nền |
+|---|---|
+| SMALL CLAIMS `#7B2233` | **1,74** |
+| QUEST BOARD `#8C2F39` | **2,06** |
+| hai mươi kênh đang có | 2,61 – 10,98 |
+
+Thấp hơn **mọi** kênh đang có, và nhìn lưới avatar thì hai biểu tượng ấy gần như biến mất. Cùng
+họ lỗi với `k["mau"]` ở luật số 6 và với biểu tượng tàng hình trên ảnh bìa (13.27): *mượn một
+giá trị cho việc nó không sinh ra để làm*. Bảng màu phim để ở `phu`; `chinh` phải đọc được.
+Cổng `kiem_tuong_phan()` sàn 3,0.
+
+### 14.6 Điểm 91 và bản thảo vô nghĩa cùng tồn tại được
+
+Ba lỗi ở 14.2 · 14.3 và một cú chốt không có cú lật đều **đi qua** thang 100 điểm với 91–94.
+Không phải thang điểm hỏng — nó đo tay nghề viết, và tay nghề viết ở cả ba bản thảo ấy đều
+đúng. Cái sai nằm ở tầng **thế giới có diễn được không**, tầng mà chưa thước nào đo.
+
+Nên khi mở một kênh mới: **đọc tận mắt ít nhất ba bản thảo**, không nhìn điểm. Điểm chỉ đủ để
+so kênh mới với kênh cũ, không đủ để duyệt một kênh mới.
+
+### 14.7 `cham100` tra thẳng `tap["payoff"]` — thước sập theo kịch bản hỏng
+
+Bốn chỗ trong `cham100` dùng `tap["payoff"]` trong khi mọi chỗ khác dùng `.get`. Một tập thiếu
+khối chốt làm cả thước nổ `KeyError`, mà thước nổ thì `sinh_tap` **mất luôn bản đang giữ** —
+hỏng mà không để lại gì, đúng họ lỗi 10.1. Thước phải **chấm điểm thấp** cho một tập thiếu
+khối, không được chết theo nó.

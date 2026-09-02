@@ -2494,6 +2494,1267 @@ KENH: dict[str, dict] = {
             "all along."
         ),
     },
+    # ────────────────────────── 21 · QUEST BOARD ──────────────────────────
+    "QUEST BOARD": {
+        "ten": "QUEST BOARD",
+        "mo_ta": (
+            "Hài giả tưởng kiếm-và-phép — sảnh hội mạo hiểm giả, nơi ngôn ngữ sử thi va vào "
+            "thủ tục hành chính cấp phường."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Bram": (
+                "Bram: 44-year-old man, balding with a neat grey fringe, ink-stained tunic under a "
+                "leather apron, wool trousers, worn boots; guild clerk, treats prophecy as paperwork."
+            ),
+            "Sir Cassel": (
+                "Sir Cassel: 33-year-old man, square jaw, dented breastplate over a red gambeson, "
+                "green cloak, steel boots; loudly heroic, confidently wrong about every rule."
+            ),
+            "Nell": (
+                "Nell: 21-year-old woman, short copper braid, patched ranger's leathers, quiver "
+                "strap, soft brown boots; fast, literal, reads every notice all the way down."
+            ),
+            "Odwin": (
+                "Odwin: 71-year-old man, long white beard, faded blue robe with burnt cuffs, "
+                "sandals; a tired wizard who has filed this same form eleven times."
+            ),
+        },
+        "nha": (
+            "The hall of a small adventurers' guild in a stone market town: a great cork quest "
+            "board covered in overlapping notices, a clerk's counter with a ledger on a chain, "
+            "a low fire, and a rack of dented gear by the door. Keep the exact same layout, "
+            "colors, furniture shapes and camera geography in every episode. Never redesign or "
+            "recolor the guild hall."
+        ),
+        "phong": {
+            "quest board": (
+                "Quest Board: a great cork board on the stone wall layered three notices deep, a "
+                "stub of chalk on a string, a stool nobody moves."
+            ),
+            "clerk counter": (
+                "Clerk Counter: a scarred oak counter, a ledger chained to a ring, a bell with a "
+                "crack in it, a wooden filing rack behind."
+            ),
+            "gear rack": (
+                "Gear Rack: a wall rack of dented shields and mismatched spears, a barrel of walking "
+                "staves, a mud scraper by the door."
+            ),
+            "hearth side": (
+                "Hearth Side: a low stone fireplace, two long benches, a drying rack of wet cloaks, "
+                "a kettle on a hook."
+            ),
+            "stores room": (
+                "Stores Room: shelves of rope, lamp oil and dried rations, a locked cabinet, a slate "
+                "with a running tally."
+            ),
+            "map alcove": (
+                "Map Alcove: a curtained nook with a painted regional map, three pins in it, a "
+                "candle stub, a stool."
+            ),
+            "guild yard": (
+                "Guild Yard: a cobbled yard behind the hall, a practice post wrapped in rope, a "
+                "water trough, a cart with one wheel off."
+            ),
+        },
+        "style": (
+            "Storybook fantasy in warm ink and gouache: soot-darkened stone, oak brown, and one "
+            "heraldic red on cloth and wax seals. Torch and hearth are the only light sources, so "
+            "faces are lit from below and the corners hold real dark. Line is a woodcut nib that "
+            "goes thick on the underside of everything. Costume shapes are big and flat; armour "
+            "reads as a silhouette, never as chrome.. hand-drawn 2D animation on twos, held key "
+            "poses with snappy transitions between them, tapered ink line that thickens on the "
+            "shadow side, appealing readable silhouettes, generous squash and stretch on the face "
+            "only"
+        ),
+        "audio": (
+            "Voices for {vai} in plain modern American speech even while the words are archaic — "
+            "the joke dies the moment anyone does a British accent. Room tone is a crackling "
+            "hearth, a chained ledger scraping, boots on stone. Precise lip sync."
+        ),
+        "dien": (
+            "Bram treats prophecy as paperwork and never raises his voice; Sir Cassel declaims "
+            "everything and is confidently wrong; Nell reads the small print aloud; Odwin is "
+            "exhausted by procedure he could end with one spell"
+        ),
+        "hai": (
+            "An epic world run on municipal admin. Every heroic impulse hits a form, a fee, a "
+            "posting window, or a rule about who may take which notice. Nobody swings a weapon "
+            "and nothing supernatural resolves the scene — magic exists and is useless against "
+            "policy. Rank inside the guild has no bearing on who wins; the clerk outranks the "
+            "knight because the clerk has the ledger. Grandeur inflates for six seconds and is "
+            "then punctured by one flat administrative sentence."
+        ),
+        "dao_cu": (
+            "a quest notice pinned over another notice",
+            "the chained ledger",
+            "a cracked bell on the counter",
+            "a bounty posting with the reward crossed out",
+            "the guild seal",
+            "a dented shield nobody claims",
+            "a stub of chalk on a string",
+            "the last lamp oil flask",
+            "a rolled map with a torn corner",
+            "the requisition slip",
+            "a sword with a bent tip",
+            "the stores cabinet key",
+            "a wax stamp gone soft",
+            "the practice post rope",
+            "a bag of copper coins",
+            "the drying rack of wet cloaks",
+            "a quill with a split nib",
+            "the posting window sign",
+            "a healing draught past its date",
+            "the cart with one wheel off",
+            "a helmet that fits nobody",
+            "the tally slate",
+            "a lantern with no wick",
+            "the notice board pin box",
+        ),
+        "mach": (
+            "Sword-and-sorcery errands strangled by clerical rules: who is licensed to take a "
+            "posting, what counts as proof of a slain beast, why a reward was reduced, which "
+            "form releases the good rope. A grand quest is announced, meets one procedural "
+            "obstacle, inflates for six seconds, and ends on a reversal where the paperwork was "
+            "right and the hero was not."
+        ),
+    },
+    # ────────────────────────── 22 · ORBIT SHIFT ──────────────────────────
+    "ORBIT SHIFT": {
+        "ten": "ORBIT SHIFT",
+        "mo_ta": (
+            "Hài trạm không gian — bốn người bảo trì một cỗ máy khổng lồ, cãi nhau về những thứ "
+            "bé xíu mà không ai được phép vứt đi."
+        ),
+        "ty_le": "9:16",
+        "mo_cam": ("a liquid is spreading", "smoke or steam"),
+        "nhan_vat": {
+            "Vega": (
+                "Vega: 45-year-old woman, black hair shaved at one side, navy flight coverall with "
+                "rolled sleeves, soft-soled boots; station chief, dry, signs everything twice."
+            ),
+            "Popper": (
+                "Popper: 34-year-old man, stocky, orange maintenance coverall tied at the waist over "
+                "a grey thermal, tool harness; confidently wrong about every system he services."
+            ),
+            "Iris": (
+                "Iris: 26-year-old woman, tight dark curls under a headband, pale grey coverall a "
+                "size too big, gloves clipped at the hip; literal, quotes the manual verbatim."
+            ),
+            "Gus": (
+                "Gus: 63-year-old man, heavy grey moustache, faded green cargo vest over a coverall, "
+                "magnetic boots; cargo handler, deadpan, has been up here longer than the module."
+            ),
+        },
+        "nha": (
+            "The crew module of a working orbital station: a galley bolted to one wall, padded "
+            "handrails everywhere, cable looms taped along the ceiling, and one round window "
+            "showing the same slow curve of Earth. Keep the exact same layout, colors, furniture "
+            "shapes and camera geography in every episode. Never redesign or recolor the station."
+        ),
+        "phong": {
+            "galley": (
+                "Galley: a wall of labelled food pouches, a water dispenser with a drip tray, a "
+                "fold-down table with foot loops, a taped rota sheet."
+            ),
+            "maintenance bay": (
+                "Maintenance Bay: an open floor panel, a tool board with every outline drawn on it, "
+                "a bin of spare seals, a cable loom taped overhead."
+            ),
+            "cupola": (
+                "Cupola: a round window in a padded alcove, one grab rail, a clipboard velcroed "
+                "beside it, a smudge nobody will admit to."
+            ),
+            "cargo ring": (
+                "Cargo Ring: stacked cargo bags strapped in rows, a manifest screen, a netted "
+                "overflow pocket, a hand pallet clamp."
+            ),
+            "sleep pods": (
+                "Sleep Pods: four padded alcoves with curtains, personal netting pockets, a strip "
+                "light above each, one curtain that never closes fully."
+            ),
+            "comms nook": (
+                "Comms Nook: a narrow station with a headset on a hook, a paper log, a delay clock, "
+                "a bracketed seat."
+            ),
+            "airlock corridor": (
+                "Airlock Corridor: a tunnel of padded handrails, a heavy round hatch at the end, "
+                "suit racks on both sides, a hazard stripe on the floor."
+            ),
+        },
+        "style": (
+            "Utility sci-fi with no chrome: everything is padded fabric, velcro loops, printed "
+            "labels and cable ties. Palette is dishwater grey, coverall orange, and the cold blue "
+            "wash off the window that is the only cool light in frame. Ruler-straight thin line "
+            "on all hardware, softer line on people, so the crew reads warm inside a hard box. "
+            "Objects drift a hand's width when released and nothing ever falls.. hand-drawn 2D "
+            "animation on twos, held key poses with snappy transitions between them, tapered ink "
+            "line that thickens on the shadow side, appealing readable silhouettes, generous "
+            "squash and stretch on the face only"
+        ),
+        "audio": (
+            "Voices for {vai} kept low and close because the module is small and sound has nowhere "
+            "to go. Constant fan hum, velcro tearing, a distant pump cycling, one soft alarm chime "
+            "that means nothing urgent. Precise lip sync."
+        ),
+        "dien": (
+            "Vega signs everything twice and lets silence do the work; Popper services systems he "
+            "does not understand; Iris quotes the manual verbatim at the worst moment; Gus has "
+            "seen this exact failure before and says so afterwards"
+        ),
+        "hai": (
+            "Enormous surroundings, microscopic grievances. Nothing can be thrown away, replaced, "
+            "walked off, or bought — so a lost item is permanent and a shared supply is politics. "
+            "Distance is a punchline: the nearest replacement is a launch window away. Weightless "
+            "objects do half the acting, drifting into shot at the wrong moment. No emergency ever "
+            "happens; the tension is entirely bureaucratic scarcity, and the crew member with the "
+            "smallest job turns out to control the resource everyone needs."
+        ),
+        "dao_cu": (
+            "the last coffee pouch",
+            "a floating bolt nobody can catch",
+            "the tool board with one outline empty",
+            "a roll of grey tape",
+            "the water dispenser drip tray",
+            "somebody's spare glove",
+            "the rota sheet taped to the wall",
+            "a spare seal from the wrong bin",
+            "the manifest screen",
+            "a personal item smuggled up in cargo",
+            "the curtain that will not close",
+            "a torque driver set to the wrong number",
+            "the delay clock",
+            "a food pouch with a peeled label",
+            "the smudge on the window",
+            "a velcro strip losing its grip",
+            "the last clean towel",
+            "a cable tie cut too short",
+            "the shared toothpaste",
+            "a hatch checklist card",
+            "the overflow netting pocket",
+            "a pen that will not write",
+            "the spare filter",
+            "a headset with one dead ear",
+        ),
+        "mach": (
+            "Orbital housekeeping friction blown one size too big: a consumable running out, a "
+            "tool returned to the wrong outline, a rota nobody follows, an object that drifted "
+            "somewhere unreachable. One small shortage escalates for six seconds and lands on a "
+            "reversal where the crew member with the least technical job controls the thing "
+            "everyone actually needs."
+        ),
+    },
+    # ────────────────────────── 23 · THE HAUNTING ──────────────────────────
+    "THE HAUNTING": {
+        "ten": "THE HAUNTING",
+        "mo_ta": (
+            "Sitcom ma nhà Mỹ — ba hồn ma từ ba thời khác nhau và một người thuê nhà còn sống "
+            "không hề biết họ ở đó."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Aldous": (
+                "Aldous: man who died at 58 in 1893, stiff collar, black frock coat, waistcoat with "
+                "a watch chain, buttoned shoes, faintly translucent; certain he knows the rules of "
+                "haunting and wrong about all of them."
+            ),
+            "Ivy": (
+                "Ivy: woman who died at 41 in 1974, feathered brown hair, mustard turtleneck, wide "
+                "corduroy flares, platform shoes, faintly translucent; dry, sees every outcome "
+                "coming and says nothing."
+            ),
+            "Bunny": (
+                "Bunny: woman who died at 29 in 1926, finger-waved bob, dropped-waist beaded dress, "
+                "long strand of pearls, T-strap shoes, faintly translucent; delighted by everything "
+                "modern and understands none of it."
+            ),
+            "Trish": (
+                "Trish: living 36-year-old woman, messy ponytail, oversized cardigan over a tee, "
+                "sweatpants, thick socks, fully solid; the tenant, cheerfully unaware, explains "
+                "every ghostly event as a plumbing issue."
+            ),
+        },
+        "nha": (
+            "A narrow three-storey rental house in an old American town: dark wainscoting, a "
+            "steep back staircase, radiators that clank, and a front parlor the living tenant has "
+            "filled with flat-pack furniture. Keep the exact same layout, colors, furniture shapes "
+            "and camera geography in every episode. Never redesign or recolor the house."
+        ),
+        "phong": {
+            "front parlor": (
+                "Front Parlor: dark wainscoting under fresh white paint, a flat-pack sofa, a clanking "
+                "radiator, a bay window with mismatched curtains."
+            ),
+            "back staircase": (
+                "Back Staircase: a steep narrow flight with a worn runner, a bare bulb on a cord, a "
+                "door at the top that swings on its own."
+            ),
+            "cellar": (
+                "Cellar: a low stone room, a furnace with an access panel, shelves of paint cans, a "
+                "single pull-chain light."
+            ),
+            "upper hall": (
+                "Upper Hall: a corridor with four doors, a runner rug, a hall table with a lamp, a "
+                "square of wallpaper that never matched."
+            ),
+            "attic room": (
+                "Attic Room: sloped ceiling, boxes under a dust sheet, a small round window, a "
+                "trunk with the lid propped."
+            ),
+            "kitchen nook": (
+                "Kitchen Nook: an old porcelain sink, a modern fridge shoved into an alcove built "
+                "for an icebox, a wall clock, a two-seat table."
+            ),
+            "side porch": (
+                "Side Porch: a screened porch with peeling paint, a hanging chair, a stack of "
+                "unopened deliveries, a bulb with moths."
+            ),
+        },
+        "style": (
+            "Muted heritage palette — dusty rose, cellar brown, sun-faded olive — with the living "
+            "tenant and her modern belongings in clean saturated color so she pops against her own "
+            "house. Ghosts are drawn with the same solid ink line as everyone else, only at "
+            "seventy percent opacity with no glow and no cliché mist. Light is late afternoon "
+            "through old glass, dust visible in the beam.. hand-drawn 2D animation on twos, held "
+            "key poses with snappy transitions between them, tapered ink line that thickens on the "
+            "shadow side, appealing readable silhouettes, generous squash and stretch on the face "
+            "only"
+        ),
+        "audio": (
+            "Voices for {vai} in three different American eras of slang, all at normal indoor "
+            "volume — no whispering, no echo, no spooky processing. House sounds carry the scares "
+            "instead: knocking pipes, a settling floor, a radiator, a screen door. Precise lip sync."
+        ),
+        "dien": (
+            "Aldous states the rules of haunting with total authority and is wrong; Ivy watches the "
+            "outcome arrive and declines to warn anyone; Bunny is thrilled by ordinary appliances; "
+            "Trish never sees a ghost and calmly diagnoses everything as a house problem"
+        ),
+        "hai": (
+            "Three dead people cannot touch anything reliably and one living person cannot see "
+            "them, so all effort is spent and nothing is ever received. The living tenant "
+            "reinterprets every attempted message as a maintenance fault and is satisfied by her "
+            "own explanation. Nothing frightening occurs — the house is cozy and the ghosts are "
+            "roommates with a scheduling problem. Conflict comes from three eras disagreeing about "
+            "manners, and the era with the least social standing turns out to have the correct "
+            "read on modern life."
+        ),
+        "dao_cu": (
+            "a thermostat that moves by itself",
+            "the radiator that knocks",
+            "a flat-pack chair assembled wrong",
+            "the door at the top of the stairs",
+            "a smart speaker taking orders from nobody",
+            "the cellar pull chain",
+            "a stack of unopened deliveries",
+            "the wallpaper square that never matched",
+            "a trunk in the attic",
+            "the hall lamp with a loose bulb",
+            "a moth at the porch light",
+            "the fridge in the icebox alcove",
+            "a candle Trish keeps relighting",
+            "the runner rug that bunches",
+            "a phone left face up on the table",
+            "the wall clock running slow",
+            "an air freshener plugged in",
+            "the screen door latch",
+            "a robot vacuum",
+            "the paint cans on the cellar shelf",
+            "a window that will not stay open",
+            "the dust sheet over the boxes",
+            "a package addressed to a previous owner",
+            "the pull cord on the attic light",
+        ),
+        "mach": (
+            "Domestic friction between the dead and the living in one shared house: a message "
+            "nobody receives, an object moved and then explained away, three centuries of manners "
+            "colliding over a modern appliance. One small haunting attempt escalates for six "
+            "seconds and lands on a reversal where the living tenant's mundane explanation is "
+            "somehow more useful than the truth."
+        ),
+    },
+    # ────────────────────────── 24 · DOG PARK ──────────────────────────
+    "DOG PARK": {
+        "ten": "DOG PARK",
+        "mo_ta": (
+            "Hài công viên chó Mỹ — chó nói chuyện với nhau bằng logic chó về những vấn đề của "
+            "người lớn mà chúng nghe lỏm được. Người không bao giờ nói."
+        ),
+        "ty_le": "9:16",
+        "mo_cam": ("smoke or steam",),
+        "nhan_vat": {
+            "Meatball": (
+                "Meatball: 6-year-old male English bulldog, thick brindle body, heavy jowls, wide "
+                "stance, red collar with a bent tag; confidently wrong, states rumours as facts."
+            ),
+            "Noodle": (
+                "Noodle: 3-year-old female whippet, fawn coat, deep chest, thin legs, sky-blue "
+                "harness; anxious, fast, narrates her own worries out loud."
+            ),
+            "Bear": (
+                "Bear: 11-year-old male German shepherd, greying muzzle, thick black-and-tan coat, "
+                "worn leather collar; deadpan veteran, moves once per scene and it counts."
+            ),
+            "Pickle": (
+                "Pickle: 4-year-old male dachshund, smooth black-and-tan, very long body, green "
+                "sweater vest; literal, says the part everyone else is avoiding."
+            ),
+        },
+        "nha": (
+            "A fenced municipal dog park in an American suburb: a double gate, a gravel loop, one "
+            "big shade tree, a row of benches where silent owners sit looking at phones. Keep the "
+            "exact same layout, colors, furniture shapes and camera geography in every episode. "
+            "Never redesign or recolor the park."
+        ),
+        "phong": {
+            "double gate": (
+                "Double Gate: two chain-link gates forming a holding pen, a leash hook, a laminated "
+                "rules sign zip-tied to the mesh, a worn dirt patch."
+            ),
+            "big dog side": (
+                "Big Dog Side: open grass worn to dirt in the middle, a tipped agility ramp, a "
+                "chewed traffic cone, chain-link on three sides."
+            ),
+            "water bowls": (
+                "Water Bowls: a low spigot over a concrete pad, three mismatched communal bowls, a "
+                "permanent muddy ring."
+            ),
+            "shade tree": (
+                "Shade Tree: one wide oak with exposed roots, a bare patch under it, a plastic chair "
+                "somebody left, dappled light."
+            ),
+            "bench row": (
+                "Bench Row: four green metal benches facing the grass, a trash can with a bag "
+                "dispenser, silent owners looking down at phones."
+            ),
+            "mulch pit": (
+                "Mulch Pit: a low corner filled with wood chips, a half-buried tennis ball, a "
+                "drainage grate, a fence post leaning."
+            ),
+            "gravel loop": (
+                "Gravel Loop: a walking path of pale gravel around the perimeter, a distance marker "
+                "post, a puddle that never dries."
+            ),
+        },
+        "style": (
+            "Naturalistic dog anatomy played straight — real breed proportions, real gait, no "
+            "clothes beyond a collar or harness, and expression carried by ears, brow and tail "
+            "rather than by human faces. Palette is dry-grass gold, chain-link grey and one bright "
+            "collar per dog. Camera sits at dog height, so human owners are cropped at the knee "
+            "and never in focus.. hand-drawn 2D animation on twos, held key poses with snappy "
+            "transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Voices for {vai} are ordinary adult American voices at conversational volume, never "
+            "cutesy and never pitched up — the comedy dies instantly if they sound like a "
+            "children's cartoon. Humans are audible only as unintelligible distant murmur. "
+            "Ambience is wind in chain-link, a tennis ball bouncing, a far-off leaf blower. "
+            "Precise lip sync."
+        ),
+        "dien": (
+            "Meatball states rumours as facts with total authority; Noodle narrates her own anxiety "
+            "in real time; Bear moves once per scene and it lands; Pickle names the thing everyone "
+            "is avoiding"
+        ),
+        "hai": (
+            "Adults' problems overheard through a dog's ear and reassembled with dog logic — "
+            "mortgages, group chats, dating, dentist appointments, all half-understood and "
+            "confidently rebuilt into something almost right. Humans are weather: they exist, they "
+            "affect everything, they cannot be reasoned with, and they never speak on camera. "
+            "Precedence is the only law and it is set by who arrived first today. The dog with the "
+            "shortest legs consistently has the most accurate information."
+        ),
+        "dao_cu": (
+            "a tennis ball nobody owns",
+            "the laminated rules sign",
+            "a chewed traffic cone",
+            "the communal water bowl",
+            "a dropped glove under a bench",
+            "the leash hook by the gate",
+            "a squeaky toy with the squeak gone",
+            "the trash can bag dispenser",
+            "a stick too long for the gate",
+            "the half-buried ball in the mulch",
+            "a treat pouch clipped to a human hip",
+            "the puddle that never dries",
+            "a tipped agility ramp",
+            "the plastic chair under the tree",
+            "a harness clipped one hole too tight",
+            "the drainage grate",
+            "a shed collar tag",
+            "the leaning fence post",
+            "a frisbee stuck on the fence top",
+            "the distance marker post",
+            "a folded blanket on a bench",
+            "the muddy ring at the spigot",
+            "a new dog on the other side of the gate",
+            "the bare patch under the oak",
+        ),
+        "mach": (
+            "Dog park social order blown one size too big: who owns a ball, who arrived first, "
+            "what the new dog is really like, what a human conversation overheard from knee height "
+            "actually meant. One small territorial or informational dispute escalates for six "
+            "seconds and lands on a reversal where the smallest dog turns out to have heard it "
+            "correctly."
+        ),
+    },
+    # ────────────────────────── 25 · SALOON 1884 ──────────────────────────
+    "SALOON 1884": {
+        "ten": "SALOON 1884",
+        "mo_ta": (
+            "Hài miền Tây Mỹ 1884 — huyền thoại biên giới đụng sổ sách của một thị trấn nhỏ. "
+            "Không ai rút súng; vũ khí ở đây là cuốn sổ nợ."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Prudence": (
+                "Prudence: 52-year-old woman, greying hair pinned tight, high-collared grey dress "
+                "with sleeve garters, apron, boots; owns the saloon, deadpan, keeps the ledger."
+            ),
+            "Cal": (
+                "Cal: 31-year-old man, thin moustache, dusty tan vest over a collarless shirt, "
+                "kerchief, deputy's badge worn crooked; loud, confidently wrong about the law."
+            ),
+            "Mercy": (
+                "Mercy: 44-year-old woman, dark hair in a loose knot, plum dress with rolled "
+                "sleeves, fingerless gloves; plays the piano, dry, misses nothing."
+            ),
+            "Hollis": (
+                "Hollis: 70-year-old man, huge white beard, patched canvas coat, suspenders, boots "
+                "worn through; old prospector, has an opinion about every year since 1849."
+            ),
+        },
+        "nha": (
+            "The Gilded Hen, a plank-built saloon on the single street of a small western town in "
+            "1884: a long bar with a brass rail, six round tables, an upright piano against the "
+            "wall, and a wide doorway onto the dusty boardwalk. Keep the exact same layout, "
+            "colors, furniture shapes and camera geography in every episode. Never redesign or "
+            "recolor the saloon."
+        ),
+        "phong": {
+            "saloon floor": (
+                "Saloon Floor: six round tables with bentwood chairs, sawdust on plank boards, an "
+                "iron chandelier of oil lamps, a mounted hen figure over the door."
+            ),
+            "long bar": (
+                "Long Bar: a polished plank bar with a brass foot rail, a cracked mirror behind, "
+                "rows of bottles, a ledger under the counter."
+            ),
+            "card table": (
+                "Card Table: a green baize table in the corner, four chairs, a lamp low over it, a "
+                "chalk tally on the wall beside."
+            ),
+            "piano corner": (
+                "Piano Corner: an upright piano with two ivory keys missing, a stool with a bad leg, "
+                "sheet music weighted with a horseshoe."
+            ),
+            "back store": (
+                "Back Store: crates and barrels stacked to the ceiling, a strongbox on a shelf, a "
+                "hanging scale, a narrow window high up."
+            ),
+            "boardwalk": (
+                "Boardwalk: a raised plank walkway outside, a hitching rail, a water trough, a "
+                "posted notice board with curled paper."
+            ),
+            "side room": (
+                "Side Room: a small room with a stove, a washstand, a folding cot, a coat hook with "
+                "three hats on it."
+            ),
+        },
+        "style": (
+            "Sun-bleached western palette: dust ochre, plank grey, and one deep saloon red on the "
+            "curtains and baize. Hard midday light through the doorway throws long shadows across "
+            "the floor, while the interior stays warm and dim from oil lamps. Line is a dry "
+            "brush that breaks up on wood grain. Wide costume silhouettes — hats and coats read "
+            "first, faces second.. hand-drawn 2D animation on twos, held key poses with snappy "
+            "transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Voices for {vai} in plain flat western American speech, unhurried, with the period "
+            "carried by vocabulary rather than by a put-on drawl. Room tone is plank floors, a "
+            "mistuned piano, wind against clapboard, a horse outside. Precise lip sync."
+        ),
+        "dien": (
+            "Prudence keeps the ledger and settles matters with one line; Cal wears the badge "
+            "crooked and cites laws that do not exist; Mercy plays through the argument and "
+            "comments once; Hollis dates every grievance to a specific year"
+        ),
+        "hai": (
+            "Frontier legend versus small-town accounting. Every man in the room believes he is in "
+            "a story and every woman in the room is keeping the books. No weapon is ever drawn, no "
+            "one is hurt, and nothing is settled by force — disputes end at the ledger, the scale, "
+            "or the posted notice. Reputation is currency and it is auditable. The person who "
+            "remembers the exact figure defeats the person telling the better story."
+        ),
+        "dao_cu": (
+            "the ledger under the bar",
+            "a chalk tally on the wall",
+            "the cracked mirror behind the bar",
+            "a hand of cards face down",
+            "the hanging scale in the back store",
+            "a deputy's badge worn crooked",
+            "the piano with two keys missing",
+            "a posted notice curling off the board",
+            "the strongbox on the shelf",
+            "a coin bitten to test it",
+            "the water trough outside",
+            "a hat on the wrong hook",
+            "the last bottle on the top shelf",
+            "a horseshoe used as a paperweight",
+            "the sawdust on the floor",
+            "a claim map folded to nothing",
+            "the stool with a bad leg",
+            "a bar tab written on a card",
+            "the brass foot rail",
+            "a pocket watch on a chain",
+            "the sheet music nobody can read",
+            "a barrel with the lid pried",
+            "the oil lamp chandelier crank",
+            "a boot left by the stove",
+        ),
+        "mach": (
+            "1884 saloon friction blown one size too big: an unpaid tab, a claim that overlaps "
+            "another, who gets the corner table, whether a notice was posted the required number "
+            "of days. One tall tale meets one recorded figure, inflates for six seconds, and lands "
+            "on a reversal where the ledger settles what the legend could not."
+        ),
+    },
+    # ────────────────────────── 26 · DISPATCH ──────────────────────────
+    "DISPATCH": {
+        "ten": "DISPATCH",
+        "mo_ta": (
+            "Hài tổng đài cấp cứu Mỹ ca đêm — điều phối viên bình tĩnh tuyệt đối, người gọi hoảng "
+            "loạn tuyệt đối, và chuyện thì luôn vô hại."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Roz": (
+                "Roz: 54-year-old woman, short greying bob, cardigan over a polo, reading glasses "
+                "on a beaded chain, headset; twenty years on the console, deadpan, unmovable."
+            ),
+            "Ansel": (
+                "Ansel: 25-year-old man, close-cropped hair, pressed polo tucked in, lanyard with "
+                "a fresh badge, headset; six weeks in, literal, follows the script exactly."
+            ),
+            "Fitz": (
+                "Fitz: 43-year-old man, gelled hair, short-sleeve dress shirt with a tie, clipboard, "
+                "no headset; shift supervisor, confidently wrong, quotes policy he misremembers."
+            ),
+            "Bernadette": (
+                "Bernadette: 61-year-old woman, silver hair in a clip, fleece vest over a "
+                "turtleneck, slippers under the desk, headset; works nights only, has heard "
+                "everything twice."
+            ),
+        },
+        "nha": (
+            "The floor of a county emergency dispatch centre at night: four consoles in a curved "
+            "row facing a wall map, every screen the only light in the room, a supervisor desk "
+            "behind. Keep the exact same layout, colors, furniture shapes and camera geography in "
+            "every episode. Never redesign or recolor the centre."
+        ),
+        "phong": {
+            "console row": (
+                "Console Row: four rolling chairs at a curved desk of screens and keypads, headset "
+                "hooks, a shared snack tin, sticky notes along the monitor bezels."
+            ),
+            "supervisor desk": (
+                "Supervisor Desk: a raised desk at the back with a clipboard stand, a printed "
+                "schedule, a laminated policy binder, one lamp."
+            ),
+            "map wall": (
+                "Map Wall: a county map under glass with grease pencil marks, a clock set to a "
+                "different time zone, a fire-district overlay taped at one corner."
+            ),
+            "radio bay": (
+                "Radio Bay: a rack of base radios with labelled channel knobs, a spare handset on a "
+                "coiled cord, a log sheet on a clipboard."
+            ),
+            "quiet room": (
+                "Quiet Room: a small windowless room with two soft chairs, a box of tissues, a "
+                "single lamp, a poster nobody reads."
+            ),
+            "back corridor": (
+                "Back Corridor: a grey hallway with a vending machine, a bulletin board of union "
+                "notices, a water cooler, a heavy door at the end."
+            ),
+            "parking deck": (
+                "Parking Deck: a covered concrete deck, four cars, a sodium light, a metal door "
+                "propped with a brick."
+            ),
+        },
+        "style": (
+            "Everything lit by screens: faces washed in cool console blue with warm amber only "
+            "from the one supervisor lamp, so the room reads as a submarine at night. Palette is "
+            "monitor blue, government beige and amber. Line is fine and even on the hardware and "
+            "looser on people. Held wide shots — the camera almost never cuts closer, because the "
+            "comedy is stillness against panic.. hand-drawn 2D animation on twos, held key poses "
+            "with snappy transitions between them, tapered ink line that thickens on the shadow "
+            "side, appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Voices for {vai} are flat, slow and procedural no matter what is being said; the "
+            "caller's voice arrives thin and clipped through a headset, always faster and louder "
+            "than the room. Ambience is keyboard clatter, a radio squelch, a chair caster, HVAC. "
+            "Precise lip sync."
+        ),
+        "dien": (
+            "Roz never changes pitch and never repeats herself; Ansel reads the script line aloud "
+            "including the bracketed instruction; Fitz misremembers policy with total confidence; "
+            "Bernadette identifies the caller before they finish the address"
+        ),
+        "hai": (
+            "Absolute calm answering absolute panic. Every call is harmless and every caller is "
+            "certain it is not — a raccoon, a locked car, a neighbour's sprinkler, a smell, a "
+            "delivery driver who will not leave. Nothing violent, injured, medical or genuinely "
+            "dangerous is ever depicted or described, and no one is ever in real distress; the "
+            "gap between the caller's alarm and the actual facts is the entire mechanism. "
+            "Procedure is sacred and slower than the emergency deserves. The rookie following the "
+            "script word for word arrives at the right answer before the veteran's instinct does."
+        ),
+        "dao_cu": (
+            "the shared snack tin",
+            "a sticky note on a monitor bezel",
+            "the grease pencil on the map glass",
+            "a headset with the foam gone",
+            "the laminated policy binder",
+            "a chair with one bad caster",
+            "the clock set to a different zone",
+            "a call script card",
+            "the vending machine that takes cards only",
+            "a printed schedule with one name circled",
+            "the spare handset on a coiled cord",
+            "somebody's labelled food container",
+            "the log sheet clipboard",
+            "a space heater under a desk",
+            "the propped metal door",
+            "a channel knob turned the wrong way",
+            "the tissue box in the quiet room",
+            "a lanyard with a new badge",
+            "the union notice on the board",
+            "a coffee gone cold at the console",
+            "the desk fan pointed at nobody",
+            "a pen chained to the supervisor desk",
+            "the fire-district overlay taped at one corner",
+            "a phone charging on the map ledge",
+        ),
+        "mach": (
+            "Night-shift dispatch friction blown one size too big: a caller who buries the "
+            "important detail, a policy nobody can find in the binder, a channel left on the wrong "
+            "setting, a snack tin raided between shifts. One harmless call escalates for six "
+            "seconds against total procedural calm and lands on a reversal where the script the "
+            "rookie read aloud was right all along."
+        ),
+    },
+    # ────────────────────────── 27 · ENGINE 12 ──────────────────────────
+    "ENGINE 12": {
+        "ten": "ENGINE 12",
+        "mo_ta": (
+            "Hài trạm cứu hoả Mỹ giữa hai chuyến — bốn người được huấn luyện cho thảm hoạ, đem "
+            "toàn bộ kỹ năng ấy ra dùng cho cái tủ lạnh chung."
+        ),
+        "ty_le": "9:16",
+        "nhan_vat": {
+            "Vaughn": (
+                "Vaughn: 46-year-old woman, dark hair in a tight low bun, navy job shirt with a "
+                "lieutenant's collar bar, work pants, black boots; deadpan, decides fast."
+            ),
+            "Bricks": (
+                "Bricks: 35-year-old man, thick neck, department tee stretched at the collar, "
+                "suspenders hanging at the waist, boots; confidently wrong, volunteers first."
+            ),
+            "Talia": (
+                "Talia: 28-year-old woman, braided black hair, job shirt with sleeves pushed up, "
+                "gloves in a back pocket, boots; fastest in the house, literal, no filter."
+            ),
+            "Marlow": (
+                "Marlow: 58-year-old man, grey brush cut, apron over a department tee, work pants, "
+                "boots; cooks for the house and rules it through the menu."
+            ),
+        },
+        "nha": (
+            "A two-bay city firehouse from the 1930s: a red engine nose in the apparatus bay, a "
+            "brass pole through the ceiling, a long kitchen table that is the real centre of the "
+            "building, and gear racked in numbered slots. Keep the exact same layout, colors, "
+            "furniture shapes and camera geography in every episode. Never redesign or recolor the "
+            "firehouse."
+        ),
+        "phong": {
+            "apparatus bay": (
+                "Apparatus Bay: the red engine nose under fluorescent tubes, a painted floor grid, "
+                "coiled hose on racks, a roll-up door with square windows."
+            ),
+            "house kitchen": (
+                "House Kitchen: a long table with ten mismatched chairs, a commercial range, a "
+                "chore wheel on the fridge, a chalkboard with the meal count."
+            ),
+            "bunk room": (
+                "Bunk Room: six beds in a row with footlockers, a fan on a stand, a window with "
+                "blinds half down, boots set out beside each bed."
+            ),
+            "watch desk": (
+                "Watch Desk: a desk by the door with a radio speaker on the wall, a logbook, a wall "
+                "of hooks, a station phone."
+            ),
+            "gear racks": (
+                "Gear Racks: numbered slots of turnout coats and helmets, boots standing open under "
+                "each, a spare-air cabinet."
+            ),
+            "the pole": (
+                "The Pole: a brass pole through a padded floor hole, a rail around the opening "
+                "upstairs, a rubber mat below."
+            ),
+            "back apron": (
+                "Back Apron: the concrete slab behind the house, a hose drying rack, a folding "
+                "chair, a basketball hoop with a bent rim."
+            ),
+        },
+        "style": (
+            "Institutional daylight in a building older than everyone in it: painted brick, "
+            "worn-through floor paint, and one fire-engine red that dominates any frame it enters. "
+            "Palette is brick red, department navy and equipment yellow. Heavy solid line on gear "
+            "and apparatus, so the equipment always looks more serious than the argument. Frames "
+            "are wide and symmetrical, like the building is standing at attention.. hand-drawn 2D "
+            "animation on twos, held key poses with snappy transitions between them, tapered ink "
+            "line that thickens on the shadow side, appealing readable silhouettes, generous "
+            "squash and stretch on the face only"
+        ),
+        "audio": (
+            "Voices for {vai} are loud, overlapping and comfortable — people who live together on "
+            "shift. Ambience is a radio speaker murmuring on the wall, boots on concrete, a "
+            "commercial range hood, a bay door rolling. The tones never sound. Precise lip sync."
+        ),
+        "dien": (
+            "Vaughn decides in one sentence and does not revisit it; Bricks volunteers before "
+            "hearing the question; Talia says the true thing at the wrong moment; Marlow controls "
+            "the house through what he is willing to cook"
+        ),
+        "hai": (
+            "People trained for catastrophe with nothing to apply it to, so full incident "
+            "discipline gets deployed against a chore wheel. Rank is real and it stops at the "
+            "kitchen door, where the cook outranks the officer. An alarm could sound at any second "
+            "and never does — that unspent readiness is the pressure in every scene. No fire, "
+            "injury, rescue or emergency is ever shown or described. Whoever is holding the spatula "
+            "wins the argument regardless of who is right."
+        ),
+        "dao_cu": (
+            "the chore wheel on the fridge",
+            "a labelled container in the house fridge",
+            "the last clean coffee mug",
+            "a helmet in the wrong numbered slot",
+            "the chalkboard meal count",
+            "somebody's boots left in the bay",
+            "the recliner everyone wants",
+            "a hose left on the drying rack",
+            "the station phone",
+            "a grocery receipt for the house fund",
+            "the logbook at the watch desk",
+            "a fan aimed at one bed",
+            "the basketball hoop with a bent rim",
+            "a spare-air cabinet key",
+            "the good knife in the kitchen",
+            "a folding chair on the back apron",
+            "the painted floor grid line",
+            "a department tee that shrank",
+            "the roll-up door remote",
+            "a footlocker that will not shut",
+            "the radio speaker volume knob",
+            "a pan nobody will scrub",
+            "the sign taped over the microwave",
+            "a nozzle set aside for repair",
+        ),
+        "mach": (
+            "Firehouse living friction blown one size too big: the house fund, the chore wheel, "
+            "the recliner, gear returned to the wrong slot, what is being cooked and who said they "
+            "would eat it. One domestic dispute is prosecuted with full incident discipline for "
+            "six seconds and lands on a reversal where the cook settles it by changing the menu."
+        ),
+    },
+    # ────────────────────────── 28 · SMALL CLAIMS ──────────────────────────
+    "SMALL CLAIMS": {
+        "ten": "SMALL CLAIMS",
+        "mo_ta": (
+            "Hài toà tiểu tụng Mỹ — toàn bộ nghi thức tư pháp đem xử một vụ tranh chấp sáu mươi "
+            "đô, và tang vật luôn nói ngược lại chủ của nó."
+        ),
+        "ty_le": "9:16",
+        "mo_cam": ("smoke or steam", "a liquid is spreading"),
+        "nhan_vat": {
+            "Judge Ottoline": (
+                "Judge Ottoline: 63-year-old woman, silver hair cut short, black judicial robe over "
+                "a collared blouse, reading glasses pushed up; dry, has heard this exact dispute "
+                "before."
+            ),
+            "Reyes": (
+                "Reyes: 47-year-old man, buzzed hair, tan uniform shirt with a patch, duty belt "
+                "with nothing dangerous on it, polished shoes; court officer, deadpan, reads every "
+                "exhibit label out loud exactly as written."
+            ),
+            "Dot": (
+                "Dot: 68-year-old woman, tight grey curls, quilted vest over a turtleneck, elastic "
+                "slacks, orthopedic shoes, accordion folder of receipts; sues her neighbour about "
+                "something new every week and has never lost."
+            ),
+            "Vern": (
+                "Vern: 71-year-old man, veterans cap, plaid shirt buttoned to the top, work pants "
+                "held by a belt and suspenders both, one printed photo in a plastic sleeve; Dot's "
+                "neighbour of forty years, confidently wrong, brings the wrong evidence."
+            ),
+        },
+        "nha": (
+            "A small county small-claims courtroom in an American town: a low bench, two plain "
+            "tables facing it, four rows of gallery seating, a flag on a stand and a wall clock "
+            "that runs two minutes fast. Keep the exact same layout, colors, furniture shapes and "
+            "camera geography in every episode. Never redesign or recolor the courtroom."
+        ),
+        "phong": {
+            "the bench": (
+                "The Bench: a low varnished bench on a single step, a nameplate, a water glass, a "
+                "gavel that is never used, a flag on a stand behind."
+            ),
+            "plaintiff table": (
+                "Plaintiff Table: a plain table with two chairs, a manila folder squared to the "
+                "edge, a plastic bag of evidence, a microphone that does not work."
+            ),
+            "defendant table": (
+                "Defendant Table: an identical plain table, one chair pulled out, printed photos "
+                "spread unevenly, a phone face down."
+            ),
+            "gallery row": (
+                "Gallery Row: four rows of hinged wooden seats, a swinging half-gate at the front, "
+                "a radiator under the window, one seat that squeaks."
+            ),
+            "clerk desk": (
+                "Clerk Desk: a side desk stacked with folders, a date stamp, an exhibit box, a "
+                "wheeled cart of case files."
+            ),
+            "side corridor": (
+                "Side Corridor: a marble hallway with a bench against the wall, a bulletin case of "
+                "notices, a drinking fountain, heavy doors."
+            ),
+            "courthouse steps": (
+                "Courthouse Steps: wide stone steps outside, a metal handrail, a cigarette urn, a "
+                "parking meter at the curb."
+            ),
+        },
+        "style": (
+            "Municipal solemnity in cheap materials: fake wood veneer, drop ceiling, fluorescent "
+            "panels and a marble corridor that promises more than the room delivers. Palette is "
+            "veneer brown, institutional cream and one deep oxblood on the bench and the flag. "
+            "Compositions are rigidly symmetrical and shot flat on, so any object placed on a "
+            "table becomes the most important thing in frame.. hand-drawn 2D animation on twos, "
+            "held key poses with snappy transitions between them, tapered ink line that thickens "
+            "on the shadow side, appealing readable silhouettes, generous squash and stretch on "
+            "the face only"
+        ),
+        "audio": (
+            "Voices for {vai} in full courtroom register applied to trivia — formal address, "
+            "titles, complete sentences, spoken about a lawnmower. Room tone is a wall clock, a "
+            "squeaking gallery seat, a date stamp, a radiator. Precise lip sync."
+        ),
+        "dien": (
+            "Judge Ottoline lets a silence run until someone fills it badly; Reyes reads every "
+            "exhibit label out loud exactly as written; Dot arrives with a folder and a date for "
+            "everything; Vern brings one photograph and it never shows what he says it shows"
+        ),
+        "hai": (
+            "Full judicial ceremony applied to a dispute worth sixty dollars. Nobody swears, "
+            "nobody is a criminal, nothing at stake exceeds a repair bill — and everyone treats it "
+            "as a landmark case. The turn is always physical evidence: an object is entered as an "
+            "exhibit, examined, and proves the opposite of what the person who brought it "
+            "believes. Formal language is the weapon and it wounds only the person using it. "
+            "The same two neighbours are back every week over something new, and forty years of "
+            "grievance is being litigated sixty dollars at a time."
+        ),
+        "dao_cu": (
+            "an exhibit in a clear plastic bag",
+            "a printed photo held up backwards",
+            "the gavel that is never used",
+            "a receipt faded to nothing",
+            "the date stamp on the clerk desk",
+            "a text message read aloud in full",
+            "the microphone that does not work",
+            "a manila folder squared to the table edge",
+            "the wall clock two minutes fast",
+            "a broken part brought in a shoebox",
+            "the swinging half-gate",
+            "a handwritten agreement on a napkin",
+            "the water glass on the bench",
+            "a tape measure entered as evidence",
+            "the exhibit box",
+            "a security still printed too small",
+            "the seat that squeaks",
+            "a thermos in the gallery",
+            "the wheeled cart of case files",
+            "a parking meter outside",
+            "the bulletin case of notices",
+            "a signed estimate from a cousin",
+            "the drinking fountain in the corridor",
+            "a countersuit filed the same morning",
+        ),
+        "mach": (
+            "Small-claims disputes between ordinary Americans blown one size too big: a fence "
+            "repair, a borrowed appliance returned broken, a deposit withheld, a shared driveway, "
+            "a dog-walking arrangement gone wrong. Formal procedure inflates a trivial matter for "
+            "six seconds and lands on a reversal where the exhibit proves the opposite of what its "
+            "owner claimed."
+        ),
+    },
+    # ────────────────────────── 29 · COUNTY FAIR ──────────────────────────
+    "COUNTY FAIR": {
+        "ten": "COUNTY FAIR",
+        "mo_ta": (
+            "Hài hội chợ hạt Mỹ — năm mươi năm thứ bậc địa phương nén vào một cuối tuần tranh "
+            "ruy băng, và cái luật ai cũng viện ra thì chưa từng tồn tại."
+        ),
+        "ty_le": "9:16",
+        "mo_cam": ("a liquid is spreading",),
+        "nhan_vat": {
+            "Darlene": (
+                "Darlene: 57-year-old woman, teased blonde hair, denim shirt with pearl snaps, "
+                "apron with a judging pin, jeans, boots; runs the pie tent, deadpan, final word."
+            ),
+            "Buck": (
+                "Buck: 64-year-old man, seed-company cap, plaid shirt tucked in, big belt buckle, "
+                "work jeans, boots; livestock side, confidently wrong, cites tradition."
+            ),
+            "Sissy": (
+                "Sissy: 36-year-old woman, dark ponytail through a cap, ride-operator vest over a "
+                "tank top, jeans, sneakers; dry, has watched everything from the ride platform."
+            ),
+            "Griff": (
+                "Griff: 20-year-old man, ag-college hoodie, muddy work boots, a show halter over "
+                "his shoulder; earnest, literal, actually read the rulebook."
+            ),
+        },
+        "nha": (
+            "The grounds of a county fair in the American Midwest on the last weekend of summer: "
+            "a striped pie tent, an open livestock barn, a short midway of rides, and a grandstand "
+            "at the far end. Keep the exact same layout, colors, staging furniture and camera "
+            "geography in every episode. Never redesign or recolor the fairgrounds."
+        ),
+        "phong": {
+            "pie tent": (
+                "Pie Tent: a striped canvas tent over folding tables, entries on paper plates with "
+                "numbered cards, a ribbon box, a box fan in the corner."
+            ),
+            "livestock barn": (
+                "Livestock Barn: an open pole barn with straw underfoot, numbered pens, a wash rack, "
+                "a chalkboard of class times."
+            ),
+            "midway": (
+                "Midway: a short row of rides and game booths, strings of bulbs, trampled grass, a "
+                "prize wall of stuffed animals."
+            ),
+            "grandstand": (
+                "Grandstand: raked metal bleachers facing a dirt track, a rail at the front, a PA "
+                "horn on a pole, a shade awning at one end."
+            ),
+            "ticket booth": (
+                "Ticket Booth: a small wooden booth with a sliding window, a hand-lettered price "
+                "board, a roll of tickets, a cash box."
+            ),
+            "food row": (
+                "Food Row: a line of trailers with awnings, a funnel cake window, picnic tables "
+                "with wobbling legs, a trash barrel."
+            ),
+            "judging table": (
+                "Judging Table: a long table under an awning, score sheets on clipboards, a water "
+                "pitcher, a stack of unearned ribbons."
+            ),
+        },
+        "style": (
+            "Late-summer heartland light: gold hour that flatters everything, dust hanging in it, "
+            "and long shadows across trampled grass. Palette is corn gold, county-fair red and "
+            "white stripe, and the cool blue of dusk arriving at the edges. Bulbs on strings are "
+            "practical light sources drawn as visible dots. Broad wholesome shapes and generous "
+            "silhouettes — nothing sleek anywhere in frame.. hand-drawn 2D animation on twos, held "
+            "key poses with snappy transitions between them, tapered ink line that thickens on the "
+            "shadow side, appealing readable silhouettes, generous squash and stretch on the face "
+            "only"
+        ),
+        "audio": (
+            "Voices for {vai} in warm rural American speech that gets very precise the moment a "
+            "rule is quoted. Ambience is a PA horn, a ride motor, a generator, distant animals, "
+            "a box fan. Precise lip sync."
+        ),
+        "dien": (
+            "Darlene delivers the verdict and does not explain it; Buck cites a tradition that "
+            "predates him; Sissy comments once from the ride platform; Griff has actually read the "
+            "rulebook and quotes the page"
+        ),
+        "hai": (
+            "Fifty years of local hierarchy compressed into one weekend of ribbons. A person's "
+            "standing is a list of years and categories, recited from memory, and any challenge to "
+            "it is a challenge to a family. Everyone appeals to a rule; nobody has read the "
+            "rulebook. The prize is worth nothing and the record is worth everything. When the "
+            "page is finally read aloud, the rule everybody cited turns out never to have been "
+            "written down."
+        ),
+        "dao_cu": (
+            "a blue ribbon from a previous year",
+            "the numbered entry card on a paper plate",
+            "a rulebook nobody has opened",
+            "the ribbon box under the table",
+            "a pie with one slice already taken",
+            "the chalkboard of class times",
+            "a show halter over a shoulder",
+            "the roll of ride tickets",
+            "a prize wall stuffed animal",
+            "the box fan in the tent",
+            "a score sheet on a clipboard",
+            "the hand-lettered price board",
+            "a cooler somebody carried in",
+            "the wash rack hose",
+            "a folding chair saving a seat",
+            "the PA horn on the pole",
+            "a funnel cake gone cold",
+            "the picnic table with a short leg",
+            "a seed-company cap",
+            "the cash box at the booth",
+            "a sample cup on the judging table",
+            "the trash barrel by food row",
+            "a hand stamp fading off a wrist",
+            "the water pitcher under the awning",
+        ),
+        "mach": (
+            "County fair status friction blown one size too big: a category somebody entered for "
+            "the wrong reason, a ribbon awarded in a disputed year, a saved seat, an entry that "
+            "arrived after the window. One challenge to local standing escalates for six seconds "
+            "and lands on a reversal where the rule everyone cited was never in the rulebook."
+        ),
+    },
+    # ────────────────────────── 30 · THE CRUISE ──────────────────────────
+    "THE CRUISE": {
+        "ten": "THE CRUISE",
+        "mo_ta": (
+            "Hài du thuyền Mỹ — niềm vui bắt buộc trên một con tàu không ai rời được, và mọi lời "
+            "phàn nàn đều bị đáp lại bằng nhiều nhiệt tình hơn."
+        ),
+        "ty_le": "9:16",
+        "mo_cam": ("a liquid is spreading",),
+        "nhan_vat": {
+            "Rhonda": (
+                "Rhonda: 42-year-old woman, blonde bob under a white uniform cap, white polo with "
+                "gold epaulettes, navy skirt, white sneakers, headset mic; cruise director, "
+                "relentlessly upbeat, never breaks."
+            ),
+            "Milos": (
+                "Milos: 33-year-old man, dark hair combed flat, white steward jacket buttoned to "
+                "the collar, black trousers, folded towel over one arm; deadpan, sees everything, "
+                "says almost nothing."
+            ),
+            "Gail": (
+                "Gail: 66-year-old woman, sun visor over short grey hair, floral cover-up, capri "
+                "pants, water shoes, lanyard with a room card; a passenger with one grievance she "
+                "will fully develop."
+            ),
+            "Trip": (
+                "Trip: 37-year-old man, sunburn line at the collar, unbuttoned camp shirt over a "
+                "tank, board shorts, flip-flops, drink package wristband; confidently wrong about "
+                "how the ship works."
+            ),
+        },
+        "nha": (
+            "The upper decks of a mid-size cruise ship at sea: a pool deck with rows of loungers, "
+            "a buffet under heat lamps, a promenade that runs the length of the ship, and the same "
+            "empty horizon in every direction. Keep the exact same layout, colors, staging "
+            "furniture and camera geography in every episode. Never redesign or recolor the ship."
+        ),
+        "phong": {
+            "pool deck": (
+                "Pool Deck: a small pool with a rope divider, rows of white loungers packed close, a "
+                "towel bin, a stage with a speaker on a pole."
+            ),
+            "buffet line": (
+                "Buffet Line: steel counters under heat lamps, sneeze guards, tongs on rests, a "
+                "tray rail, a hand-sanitiser station at the entrance."
+            ),
+            "promenade": (
+                "Promenade: a covered walkway of teak-look decking along the hull, a white rail, "
+                "lifeboats overhead, evenly spaced deck chairs."
+            ),
+            "atrium": (
+                "Atrium: a multi-deck open space with a glass elevator, a curved staircase, a grand "
+                "piano nobody plays, a photo backdrop."
+            ),
+            "muster station": (
+                "Muster Station: a numbered wall sign, a rack of vests, a bulkhead door, a taped "
+                "line on the deck."
+            ),
+            "cabin corridor": (
+                "Cabin Corridor: a long narrow hallway of identical doors, patterned carpet, "
+                "handrails on both walls, a service cart parked halfway."
+            ),
+            "aft rail": (
+                "Aft Rail: the back rail above the wake, two deck chairs, an ashtray stand, the "
+                "ship's name on the transom below."
+            ),
+        },
+        "style": (
+            "Aggressive brochure brightness: white ship, chlorine turquoise, and a sky with no "
+            "clouds — everything overexposed and cheerful in a way that becomes oppressive by the "
+            "third second. Palette is hull white, pool turquoise and hospitality gold on trim and "
+            "epaulettes. Hard noon light straight down, so shadows are small dark pools under "
+            "everyone. Repeating geometry — identical loungers, identical doors — used to make "
+            "the ship feel endless.. hand-drawn 2D animation on twos, held key poses with snappy "
+            "transitions between them, tapered ink line that thickens on the shadow side, "
+            "appealing readable silhouettes, generous squash and stretch on the face only"
+        ),
+        "audio": (
+            "Voices for {vai} split two ways — staff at permanent event-host brightness with a "
+            "slight amplification, passengers flat and tired. Ambience is a steel-drum track from "
+            "a deck speaker, a public-address chime, water slapping the hull, a blender. Precise "
+            "lip sync."
+        ),
+        "dien": (
+            "Rhonda answers every complaint with a bigger activity and never drops the smile; "
+            "Milos observes and delivers one line at the end; Gail develops a single grievance to "
+            "its full length; Trip explains the ship incorrectly to people who work on it"
+        ),
+        "hai": (
+            "Mandatory enjoyment aboard a vessel nobody can walk away from. Complaint is met with "
+            "escalating hospitality until the complainant surrenders. Deck number is social class "
+            "and everyone knows theirs. The horizon is identical in all directions, so time is "
+            "measured only by the activity schedule, which is relentless. No danger, weather or "
+            "sickness ever occurs. The thing the passengers keep demanding be removed turns out to "
+            "be the only reason the trip is bearable."
+        ),
+        "dao_cu": (
+            "a lounger reserved with a towel at dawn",
+            "the activity schedule slipped under the door",
+            "a drink package wristband",
+            "the rope divider in the pool",
+            "a room card that stopped working",
+            "the tongs at the buffet",
+            "a sun visor from the gift shop",
+            "the deck speaker on a pole",
+            "a folded towel animal",
+            "the hand-sanitiser station",
+            "a lanyard with three lanyards on it",
+            "the grand piano nobody plays",
+            "a service cart parked halfway",
+            "the photo backdrop",
+            "a paper cup of soft ice cream",
+            "the muster station vest rack",
+            "a deck chair with a broken slat",
+            "the ashtray stand at the aft rail",
+            "a bingo card",
+            "the elevator that stops at every deck",
+            "a bill slipped under the cabin door",
+            "the heat lamp over an empty tray",
+            "a hat that blew off",
+            "the ship's daily newsletter",
+        ),
+        "mach": (
+            "Cruise ship friction blown one size too big: a lounger claimed with a towel before "
+            "sunrise, a schedule conflict, a charge nobody recognises, a deck rule enforced "
+            "unevenly. One passenger grievance meets escalating mandatory hospitality for six "
+            "seconds and lands on a reversal where the thing being complained about is holding the "
+            "whole trip together."
+        ),
+    },
 }
 
 
@@ -2541,9 +3802,36 @@ def _lich(kenh: str, so: int) -> dict:
     con = [v for v in vai if v != gay] or vai
     lat = con[i_lat % len(con)]
     return {"phong": phong[i_ph], "dao_cu": do[i_do], "ap_luc": AP_LUC[i_ap],
-            "kieu_mo": KIEU_MO[i_mo], "gay": gay, "lat": lat, "co_che": ho_ten[i_co],
+            "kieu_mo": _mo_kenh(hs)[i_mo], "gay": gay, "lat": lat, "co_che": ho_ten[i_co],
             "_khong_gian": P}
 
+
+
+def _mo_kenh(hs: dict) -> tuple:
+    """Những KIỂU MỞ MÀN mà thế giới của kênh này THỰC SỰ diễn được.
+
+    2/9 — Lượt sinh thử đầu tiên của mười kênh mới: DOG PARK nhận đề "khói hoặc hơi bốc lên từ
+    thứ lẽ ra không được bốc khói". Một công viên chó ngoài trời không có gì bốc khói được, nên
+    AI làm đúng thứ được bảo và ra một cái ghế nhựa đang cháy âm ỉ giữa bãi cỏ — vô nghĩa, mà
+    `cham()` không bắt (nó đo tay nghề, không đo vật lý) và `cham100` chấm 91.
+
+    Đây đúng luật 12.5: `KIEU_MO` viết cho hai mươi thế giới trong nhà, đem sang thế giới mới
+    thì có nhịp không diễn nổi. Cách chữa không phải dặn AI "đừng vô lý" — đề bài nói rõ bảy
+    trục là CỐ ĐỊNH, nên dặn thêm chỉ tạo mâu thuẫn. Cách chữa là ĐỪNG PHÁT nhịp ấy cho kênh ấy.
+
+    `mo_cam` là danh sách mẩu chữ; kiểu mở nào chứa một mẩu thì kênh này không nhận. Trục ngắn
+    lại thì `_do_truc` cũng ngắn theo — nên phải lọc ở ĐÚNG một chỗ và để mọi nơi khác gọi nó,
+    không thì Python và web lại lệch trục như lần trước.
+    """
+    cam = hs.get("mo_cam") or ()
+    if isinstance(cam, str):        # `("x")` là CHUỖI, không phải tuple — đã mắc đúng một lần,
+        cam = (cam,)                # và `or KIEU_MO` dưới kia che mất, nên bắt luôn ở đây.
+    if not cam:
+        return KIEU_MO
+    con = tuple(m for m in KIEU_MO if not any(c in m for c in cam))
+    if not con:                     # lọc sạch trơn = `mo_cam` viết sai, không phải ý muốn thật
+        raise SystemExit(f"❌ mo_cam {cam!r} lọc hết KIEU_MO — viết sai mẩu chữ?")
+    return con
 
 def _do_truc(hs: dict) -> list:
     """Độ dài từng trục của bộ lịch. MỘT nguồn duy nhất.
@@ -2553,7 +3841,7 @@ def _do_truc(hs: dict) -> list:
     theo bảy, và 280/280 đề bài lệch ĐÚNG MỘT TRƯỜNG. Sáu trục kia khớp hoàn hảo, nên nhìn
     thoáng qua nó giống "gần đúng" chứ không giống hỏng.
     """
-    return [len(hs["phong"]), len(hs.get("dao_cu") or [1]), len(AP_LUC), len(KIEU_MO),
+    return [len(hs["phong"]), len(hs.get("dao_cu") or [1]), len(AP_LUC), len(_mo_kenh(hs)),
             len(hs["vai"]), max(1, len(hs["vai"]) - 1), len(HO_LAT)]
 
 
@@ -4670,7 +5958,7 @@ def xuat_web(thu_muc: str) -> list[str]:
                 "truc": _do_truc(hs),
                 "buoc": _buoc_lich(ten), "goc": _goc_lich(ten),
                 "phong": list(hs["phong"]), "dao_cu": list(hs.get("dao_cu") or []),
-                "ap_luc": list(AP_LUC), "kieu_mo": list(KIEU_MO), "vai": list(hs["vai"]),
+                "ap_luc": list(AP_LUC), "kieu_mo": list(_mo_kenh(hs)), "vai": list(hs["vai"]),
                 # Thứ tự họ cú lật phải lấy TỪ CHÍNH `HO_LAT` — bảng mà `_lich()` dùng — chứ
                 # không từ `HO_LAT_TA`. Hai từ điển có cùng mười khoá nhưng khác thứ tự chèn,
                 # và Python giữ thứ tự chèn: đọc nhầm bảng thì hai bên lệch trục thứ bảy trong

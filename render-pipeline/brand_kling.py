@@ -82,6 +82,26 @@ BRAND = {
                            khau_hieu="THE RANGER DID SAY"),
     "THE LAUNDROMAT": dict(chinh="#F2D024", phu="#4FB3C9", nen="#1D1E20", bt="washer",
                            khau_hieu="THAT ONE EATS QUARTERS"),
+    "QUEST BOARD":  dict(chinh="#D9A441", phu="#8C2F39", nen="#241C18", bt="sword",
+                         khau_hieu="THAT POSTING IS SPOKEN FOR"),
+    "ORBIT SHIFT":  dict(chinh="#5BD1E6", phu="#F26B21", nen="#191C21", bt="sat",
+                         khau_hieu="IT IS NOT COMING BACK"),
+    "THE HAUNTING": dict(chinh="#9AA9C7", phu="#C77DA6", nen="#1F1D26", bt="ghost",
+                         khau_hieu="SHE THINKS IT IS THE PIPES"),
+    "DOG PARK":     dict(chinh="#8FBF3F", phu="#C8792E", nen="#20241A", bt="bone",
+                         khau_hieu="I WAS HERE FIRST"),
+    "SALOON 1884":  dict(chinh="#B5651D", phu="#EDD9B0", nen="#2A211A", bt="boot",
+                         khau_hieu="IT IS IN THE LEDGER"),
+    "DISPATCH":     dict(chinh="#6E7CF0", phu="#FFC24B", nen="#12161F", bt="headset",
+                         khau_hieu="STAY ON THE LINE WITH ME"),
+    "ENGINE 12":    dict(chinh="#E63946", phu="#F5D547", nen="#1A1D22", bt="hydrant",
+                         khau_hieu="WHOSE IS THIS IN THE FRIDGE"),
+    "SMALL CLAIMS": dict(chinh="#C8A24A", phu="#7B2233", nen="#20191A", bt="gavel",
+                         khau_hieu="MARK IT AS EXHIBIT A"),
+    "COUNTY FAIR":  dict(chinh="#F0C230", phu="#B33A3A", nen="#1E2118", bt="ribbon",
+                         khau_hieu="THAT IS NOT IN THE RULEBOOK"),
+    "THE CRUISE":   dict(chinh="#0FA3B1", phu="#F5E6C8", nen="#14212B", bt="anchor",
+                         khau_hieu="THAT TOWEL WAS THERE AT SIX"),
 }
 
 
@@ -257,9 +277,183 @@ def bieu_tuong(d: ImageDraw.ImageDraw, ten: str, cx: int, cy: int, r: int, c1, c
                             radius=r * .10, fill=c1)
         d.ellipse([cx - r * .40, cy - r * .26, cx + r * .40, cy + r * .54], fill=c_nen_bt)
         d.rectangle([cx - r * .58, cy - r * .58, cx - r * .18, cy - r * .44], fill=c_nen_bt)
+    elif ten == "sword":                      # kiếm — lưỡi DÀI chiếm hai phần ba chiều cao,
+        # chắn ngang hẹp hơn lưỡi là dài, chuôi có núm nhô RA (không khoét vào, khoét thì mất).
+        d.polygon([(cx, cy - r * .96), (cx + r * .20, cy - r * .60), (cx + r * .20, cy + r * .18),
+                   (cx - r * .20, cy + r * .18), (cx - r * .20, cy - r * .60)], fill=c1)
+        d.rounded_rectangle([cx - r * .66, cy + r * .18, cx + r * .66, cy + r * .38],
+                            radius=r * .08, fill=c1)
+        d.rectangle([cx - r * .13, cy + r * .38, cx + r * .13, cy + r * .74], fill=c1)
+        d.ellipse([cx - r * .26, cy + r * .66, cx + r * .26, cy + r * .96], fill=c1)
+    elif ten == "sat":                        # vệ tinh — thân hẹp, hai tấm pin TÁCH HẲN ra bằng
+        # một quãng nền. Bản đầu để panel dính vào thân nên ở 48px nó đọc thành một cục tạ.
+        d.rounded_rectangle([cx - r * .22, cy - r * .44, cx + r * .22, cy + r * .44],
+                            radius=r * .07, fill=c1)
+        for sx in (-1, 1):
+            _a, _b = sorted((cx + sx * r * .22, cx + sx * r * .46))
+            d.rectangle([_a, cy - r * .06, _b, cy + r * .06], fill=c1)          # cần nối mảnh
+            _a, _b = sorted((cx + sx * r * .46, cx + sx * r * .96))
+            d.rectangle([_a, cy - r * .40, _b, cy + r * .40], fill=c1)          # tấm pin
+            d.rectangle([_a, cy - r * .05, _b, cy + r * .05], fill=c_nen_bt)    # rãnh giữa tấm
+        d.rectangle([cx - r * .05, cy - r * .78, cx + r * .05, cy - r * .44], fill=c1)
+        d.ellipse([cx - r * .17, cy - r * .98, cx + r * .17, cy - r * .66], fill=c1)
+    elif ten == "ghost":                      # ma — vòm trên + ba múi dưới, hai mắt khoét
+        d.pieslice([cx - r * .62, cy - r * .84, cx + r * .62, cy + r * .40], 180, 360, fill=c1)
+        d.rectangle([cx - r * .62, cy - r * .22, cx + r * .62, cy + r * .42], fill=c1)
+        for dx in (-.41, 0, .41):
+            d.pieslice([cx + r * dx - r * .21, cy + r * .20, cx + r * dx + r * .21, cy + r * .64],
+                       0, 180, fill=c1)
+        for dx in (-.22, .22):
+            d.ellipse([cx + r * dx - r * .12, cy - r * .38, cx + r * dx + r * .12, cy - r * .08],
+                      fill=c_nen_bt)
+    elif ten == "bone":                       # khúc xương — thân ngang + hai cặp bướu hai đầu
+        d.rounded_rectangle([cx - r * .58, cy - r * .17, cx + r * .58, cy + r * .17],
+                            radius=r * .10, fill=c1)
+        for sx in (-1, 1):
+            for sy in (-1, 1):
+                d.ellipse([cx + sx * r * .62 - r * .27, cy + sy * r * .27 - r * .27,
+                           cx + sx * r * .62 + r * .27, cy + sy * r * .27 + r * .27], fill=c1)
+    elif ten == "boot":                        # ủng cao bồi — ống đứng + mũi chìa + gót
+        d.polygon([(cx - r * .40, cy - r * .82), (cx + r * .16, cy - r * .82),
+                   (cx + r * .16, cy + r * .22), (cx - r * .40, cy + r * .22)], fill=c1)
+        d.polygon([(cx - r * .40, cy + r * .22), (cx + r * .16, cy + r * .22),
+                   (cx + r * .84, cy + r * .46), (cx + r * .84, cy + r * .64),
+                   (cx - r * .40, cy + r * .64)], fill=c1)
+        d.rectangle([cx - r * .40, cy + r * .64, cx - r * .04, cy + r * .90], fill=c1)
+        d.rectangle([cx - r * .40, cy - r * .48, cx + r * .16, cy - r * .32], fill=c2)
+    elif ten == "headset":                     # tai nghe — vành cung dày + hai chụp tai
+        d.arc([cx - r * .70, cy - r * .78, cx + r * .70, cy + r * .34], 180, 360,
+              fill=c1, width=int(max(2, r * .20)))
+        for sx in (-1, 1):
+            d.rounded_rectangle([cx + sx * r * .70 - r * .21, cy - r * .30,
+                                 cx + sx * r * .70 + r * .21, cy + r * .34],
+                                radius=r * .10, fill=c1)
+        d.rounded_rectangle([cx - r * .04, cy + r * .18, cx + r * .58, cy + r * .32],
+                            radius=r * .07, fill=c2)
+    elif ten == "hydrant":                     # trụ nước cứu hoả — thân + nắp chóp + hai vòi bên
+        d.ellipse([cx - r * .28, cy - r * .92, cx + r * .28, cy - r * .56], fill=c1)
+        d.rectangle([cx - r * .10, cy - r * .70, cx + r * .10, cy - r * .52], fill=c1)
+        d.rounded_rectangle([cx - r * .34, cy - r * .56, cx + r * .34, cy + r * .58],
+                            radius=r * .14, fill=c1)
+        for sx in (-1, 1):
+            d.rounded_rectangle([cx + sx * r * .58 - r * .22, cy - r * .28,
+                                 cx + sx * r * .58 + r * .22, cy + r * .02],
+                                radius=r * .07, fill=c1)
+        d.rectangle([cx - r * .62, cy + r * .58, cx + r * .62, cy + r * .82], fill=c1)
+        d.rectangle([cx - r * .34, cy - r * .22, cx + r * .34, cy - r * .06], fill=c2)
+    elif ten == "gavel":                       # búa toà. Vẽ THẲNG ĐỨNG thì ở 48px nó đọc thành
+        # chữ I hoặc quả tạ — đã thử hai lần. Búa toà chỉ nhận ra được khi ĐẦU BÚA NGHIÊNG và
+        # cán đâm chéo xuống: đó là hình người ta thực sự nhớ.
+        import math as _m
+        a = _m.radians(-32)
+        ux, uy = _m.cos(a), _m.sin(a)          # trục đầu búa
+        vx, vy = -uy, ux                       # trục cán, vuông góc
+        hx, hy = cx - r * .16, cy - r * .40    # tâm đầu búa
+        L, T = r * .56, r * .25                # nửa dài · nửa dày của đầu búa
+        d.polygon([(hx + ux * L + vx * T, hy + uy * L + vy * T),
+                   (hx + ux * L - vx * T, hy + uy * L - vy * T),
+                   (hx - ux * L - vx * T, hy - uy * L - vy * T),
+                   (hx - ux * L + vx * T, hy - uy * L + vy * T)], fill=c1)
+        d.line([(hx, hy), (hx + vx * r * 1.06, hy + vy * r * 1.06)],
+               fill=c1, width=int(max(2, r * .21)))
+        d.rounded_rectangle([cx - r * .86, cy + r * .62, cx + r * .34, cy + r * .92],
+                            radius=r * .10, fill=c1)
+    elif ten == "ribbon":                      # ruy băng giải — hoa thị tròn + hai dải đuôi
+        d.polygon([(cx - r * .36, cy + r * .12), (cx - r * .10, cy + r * .12),
+                   (cx - r * .16, cy + r * .92), (cx - r * .46, cy + r * .62)], fill=c1)
+        d.polygon([(cx + r * .36, cy + r * .12), (cx + r * .10, cy + r * .12),
+                   (cx + r * .16, cy + r * .92), (cx + r * .46, cy + r * .62)], fill=c1)
+        for a in range(0, 360, 45):
+            import math as _m
+            ax, ay = cx + r * .46 * _m.cos(_m.radians(a)), cy - r * .22 + r * .46 * _m.sin(_m.radians(a))
+            d.ellipse([ax - r * .21, ay - r * .21, ax + r * .21, ay + r * .21], fill=c1)
+        d.ellipse([cx - r * .40, cy - r * .62, cx + r * .40, cy + r * .18], fill=c1)
+        d.ellipse([cx - r * .17, cy - r * .39, cx + r * .17, cy - r * .05], fill=c_nen_bt)
+    elif ten == "anchor":                      # mỏ neo — khuyên + thân + ngang + hai càng cong
+        d.ellipse([cx - r * .21, cy - r * .90, cx + r * .21, cy - r * .48], fill=c1)
+        d.ellipse([cx - r * .10, cy - r * .79, cx + r * .10, cy - r * .59], fill=c_nen_bt)
+        d.rectangle([cx - r * .11, cy - r * .62, cx + r * .11, cy + r * .72], fill=c1)
+        d.rounded_rectangle([cx - r * .52, cy - r * .40, cx + r * .52, cy - r * .24],
+                            radius=r * .06, fill=c1)
+        d.arc([cx - r * .82, cy - r * .06, cx + r * .82, cy + r * .86], 0, 180,
+              fill=c1, width=int(max(2, r * .19)))
+        for sx in (-1, 1):
+            d.polygon([(cx + sx * r * .82, cy + r * .26), (cx + sx * r * .58, cy + r * .48),
+                       (cx + sx * r * .94, cy + r * .54)], fill=c1)
     else:
         d.ellipse([cx - r * .7, cy - r * .7, cx + r * .7, cy + r * .7], fill=c1)
 
+
+
+def _sang(h: str) -> float:
+    """Độ sáng tương đối WCAG của một mã màu."""
+    h = h.lstrip("#")
+    c = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+    c = [x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4 for x in c]
+    return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]
+
+
+def kiem_tuong_phan(san: float = 3.0) -> list:
+    """Kênh nào có biểu tượng không đủ tương phản với nền của chính nó.
+
+    2/9 — Mười kênh mới lần đầu dùng màu KHÔNG KHÍ của bộ phim làm màu dấu hiệu: đỏ huy hiệu
+    cho sảnh hội mạo hiểm, đỏ tiết cho phòng xử. Đúng cho một khung phim, sai cho một hình
+    tròn 48 điểm ảnh trong danh sách đăng ký — SMALL CLAIMS đo được 1,74 và QUEST BOARD 2,06,
+    thấp hơn mọi kênh đang có. Nhìn lưới avatar thì thấy ngay: hai biểu tượng ấy gần như biến
+    mất.
+
+    Cùng họ lỗi với `k["mau"]` ở luật số 6 và với biểu tượng tàng hình trên ảnh bìa (13.27):
+    *mượn một giá trị cho việc nó không sinh ra để làm*. `chinh` là màu của DẤU HIỆU, không
+    phải màu của bộ phim; nếu chúng phải khác nhau thì để bảng màu phim ở `phu`.
+
+    Sàn 3,0 lấy từ số đo thật: hai mươi kênh đầu nằm trong khoảng 2,61–10,98. Sàn đặt ngay
+    trên đuôi dưới ấy, nên nó bắt được cái mới mà không tự nhận là đã sửa cái cũ.
+    """
+    e = []
+    for t, b in BRAND.items():
+        la, lb = _sang(b["chinh"]), _sang(b["nen"])
+        hi, lo = max(la, lb), min(la, lb)
+        g = (hi + .05) / (lo + .05)
+        if g < san:
+            e.append((round(g, 2), t, b["chinh"], b["nen"]))
+    return sorted(e)
+
+
+def kiem_tron(nguong: int = 40) -> list:
+    """Kênh nào có CHỮ hoặc SỐ trên avatar rơi ra ngoài đường tròn nền tảng sẽ cắt.
+
+    2/9 — Không thay được bằng mắt: nới mép từ 0,965 xuống 0,90 mà lưới nhìn *y hệt*, vì cỡ
+    chữ đang bị chặn bởi CHIỀU CAO dải chứ không bởi bề ngang, nên trần ngang mới không hề
+    ràng buộc. Đúng luật §1: khi con số và con mắt bất đồng thì đo pixel.
+
+    Cách đo: dựng avatar, lấy mọi pixel NGOÀI đường tròn nội tiếp, đếm pixel nào mang màu nền
+    (`nen`) trong khi nằm trong DẢI MÀU đáy — vì trong dải, màu nền chỉ xuất hiện ở nét chữ.
+    Cùng phép ấy cho huy hiệu số ở nửa trên.
+    """
+    from PIL import Image
+    ra = []
+    for t, b in BRAND.items():
+        im = avatar(t, 1, 400).convert("RGB")
+        W = 400
+        R = W / 2
+        cn = _rgb(b["nen"])
+        px = im.load()
+        day = int(W * .30)
+        ngoai = 0
+        for y in range(W):
+            dy = y - R
+            for x in range(W):
+                dx = x - R
+                if dx * dx + dy * dy <= R * R:
+                    continue
+                if y < W - day:              # nửa trên: chỉ quan tâm huy hiệu số
+                    continue
+                r, g, bl = px[x, y]
+                if abs(r - cn[0]) + abs(g - cn[1]) + abs(bl - cn[2]) < 60:
+                    ngoai += 1
+        if ngoai > nguong:
+            ra.append((ngoai, t))
+    return sorted(ra, reverse=True)
 
 def _hat(im: Image.Image, muc: float = 5.0) -> Image.Image:
     """Hạt nhiễu rất nhẹ phủ toàn khung. Không phải trang trí: nó phủ lên CẢ nền phẳng lẫn khối
@@ -290,7 +484,7 @@ def _vien(im: Image.Image, muc: float = 0.30) -> Image.Image:
 
 # ── DỰNG TỪNG CỠ ────────────────────────────────────────────────────────────────────────────
 def avatar(ten: str, so: int, W: int = 1080) -> Image.Image:
-    """Bố cục: biểu tượng lớn ở trên, DẢI MÀU đặc ở dưới mang tên kênh, số ở góc.
+    """Bố cục: biểu tượng lớn ở trên, DẢI MÀU đặc ở dưới mang tên kênh, số trong vòng an toàn.
 
     Bản đầu vẽ một vòng tròn viền rồi đặt cả biểu tượng lẫn tên BÊN TRONG. Soi lưới mười avatar
     thì thấy ba lỗi mà cổng số không bắt được cái nào:
@@ -300,48 +494,60 @@ def avatar(ten: str, so: int, W: int = 1080) -> Image.Image:
     Gốc chung: vòng tròn ăn mất bề ngang, mà tôi lại giới hạn chữ theo bề ngang KHUNG VUÔNG
     (0,80·W) chứ không theo đường kính TRONG của vòng. Ba lỗi, một nguyên nhân.
 
-    Bản này bỏ hẳn vòng tròn. Dải màu đặc ở đáy cho chữ tối trên nền sáng — tương phản cao nhất
-    có thể, và ở 48px (cỡ thật trong danh sách đăng ký YouTube) thì dải màu chính là thứ nhận
-    diện, không phải chữ.
+    2/9 — VÀ CÙNG MỘT LỖI ẤY LẦN THỨ HAI, vì bản vá trên chỉ bỏ vòng tròn TÔI VẼ. YouTube,
+    Facebook và Instagram đều tự cắt avatar thành hình tròn; bỏ vòng tròn của mình không làm
+    vòng tròn của họ biến mất. Ghép lưới rồi vẽ đè đường cắt tròn lên thì thấy:
+      · dải tên bị cắt ngang GIỮA dòng chữ — 30/30 kênh
+      · huy hiệu số ở góc nằm HOÀN TOÀN ngoài đường tròn, tức không bao giờ hiện ra
+    Nên khung an toàn không phải hình vuông W×W mà là ĐƯỜNG TRÒN NỘI TIẾP. Bề ngang cho phép
+    ở mỗi độ cao là dây cung tại độ cao ấy, không phải một hằng số:  nửa dây = √(R² − d²).
+    Dải màu vẫn tràn hết bề ngang (bị cắt cong trông vẫn đúng) — chỉ CHỮ và SỐ phải vào trong.
     """
     b = BRAND[ten]
     c_nen, c1, c2 = _rgb(b["nen"]), _rgb(b["chinh"]), _rgb(b["phu"])
     im = Image.new("RGB", (W, W), c_nen)
     d = ImageDraw.Draw(im)
+    R = W / 2
 
-    day = int(W * .30)                      # dải màu đáy
+    def _day_cung(y: float, le: float = 0.90) -> int:
+        """Bề ngang dùng được của đường tròn nội tiếp tại độ cao `y`, chừa một mép nhỏ."""
+        dd = abs(y - R)
+        return int(2 * (R * R - dd * dd) ** .5 * le) if dd < R else 0
+
+    day = int(W * .30)                      # dải màu đáy — vẫn tràn hết bề ngang
     d.rectangle([0, W - day, W, W], fill=c1)
     bieu_tuong(d, b["bt"], W // 2, int((W - day) * .50), int(W * .215), c1, c_nen)
 
-    # Tên kênh trong dải: một dòng nếu vừa, hai dòng nếu không. Giới hạn theo bề ngang DẢI,
-    # tức đúng chỗ chữ thật sự nằm.
-    tran = int(W * .88)
-    f1 = _vua(d, ten, tran, int(day * .52))
+    # Khối chữ neo theo ĐÁY của nó, không căn giữa dải: chỗ hẹp nhất là dòng dưới cùng, nên
+    # đáy khối là thứ quyết định cỡ chữ. Căn giữa dải thì dòng dưới luôn thò ra ngoài cung.
+    y_day = int(W * .875)                   # đáy khối chữ
+    tran = _day_cung(y_day)
+    f1 = _vua(d, ten, tran, int(day * .46))
     if _rong(d, ten, f1)[0] <= tran and len(ten) <= 12:
         dong = [ten]
     else:
         tu = ten.split()
         dong = [tu[0], " ".join(tu[1:])] if len(tu) > 1 else [ten]
-    fs = [_vua(d, t, tran, int(day * (.52 if len(dong) == 1 else .40))) for t in dong]
+    fs = [_vua(d, t, tran, int(day * (.46 if len(dong) == 1 else .34))) for t in dong]
     hs = [_rong(d, t, fo)[1] for t, fo in zip(dong, fs)]
-    tong = sum(hs) + int(day * .06) * (len(dong) - 1)
-    y = W - day + (day - tong) // 2 - int(day * .06)
+    khe = int(day * .06)
+    tong = sum(hs) + khe * (len(dong) - 1)
+    y = y_day - tong
     for t, fo, h in zip(dong, fs, hs):
         w, _ = _rong(d, t, fo)
         d.text(((W - w) // 2, y), t, font=fo, fill=c_nen)
-        y += h + int(day * .06)
+        y += h + khe
 
-    # Số ở GÓC TRÊN TRÁI — xa mọi chữ, nên không bao giờ đè được lên cái gì.
+    # Số: kéo vào trong đường tròn. Ở góc khung vuông nó cách tâm 0,57·W — ngoài bán kính 0,5·W,
+    # nên bản cũ vẽ một huy hiệu mà không nền tảng nào hiển thị.
     r = int(W * .052)
-    d.ellipse([int(W * .045), int(W * .045), int(W * .045) + r * 2, int(W * .045) + r * 2],
-              fill=c1)
+    cxn, cyn = int(W * .245), int(W * .205)
+    d.ellipse([cxn - r, cyn - r, cxn + r, cyn + r], fill=c1)
     fn = font(int(r * 1.15))
     sn = f"{so:02d}"
     wn, hn = _rong(d, sn, fn)
-    d.text((int(W * .045) + r - wn // 2, int(W * .045) + r - hn // 2 - int(r * .16)),
-           sn, font=fn, fill=c_nen)
+    d.text((cxn - wn // 2, cyn - hn // 2 - int(r * .16)), sn, font=fn, fill=c_nen)
     return _vien(_hat(im), 0.22)
-
 
 def banner(ten: str, so: int, W: int = 2560, H: int = 1440) -> Image.Image:
     """Ảnh bìa YouTube. Chữ phải nằm trong ô an toàn 1546×423 GIỮA khung — ngoài ô đó thì mobile

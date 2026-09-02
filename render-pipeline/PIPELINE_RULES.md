@@ -7942,3 +7942,102 @@ Kling tính tiền theo lượt, nên độ dài là chuyện chi phí trước 
 - **10–15s** — mỗi giây thêm là tiền thêm mà số đo không hứa thêm gì: vùng tối ưu đo được của hài
   short là **18–28 giây**, quá xa 15. Nên 10–15 nằm đúng khoảng *"không rẻ nữa mà chưa đủ dài để
   hơn"* — khoảng tệ nhất trong ba khoảng.
+
+---
+
+## 8k42 — Ảnh bìa cắt ở 62% thời lượng: với short đó là chỗ LỘ CÚ LẬT
+
+**Triệu chứng.** Mọi ảnh bìa của bộ Kling đều kể trước cái kết. Không lỗi nào báo ra: ảnh đúng
+cỡ, đúng định dạng, lên YouTube bình thường.
+
+**Gốc rễ.** `run_render._make_thumb()` trích khung ở 62% thời lượng — đúng cho video dài của bộ
+phân tích (dồn thông tin về cuối), sai cho short (dồn CÚ LẬT về cuối). Clip 5s có cú lật từ
+34%, clip 6s từ 33%; 5–6 giây là vùng ưu tiên vì Kling tính tiền theo lượt.
+
+**Họ lỗi.** *Một hàm dùng chung mang theo giả định của bộ sinh ra nó.* Cùng con số 62%, hai ý
+nghĩa trái ngược ở hai bộ.
+
+**Chữa.** `kling_dong_bo.lam_bia()` lấy khung ở giữa nhịp `hook`.
+
+---
+
+## 8k43 — Bộ lịch phát nhịp mà thế giới của kênh không diễn được
+
+**Triệu chứng.** DOG PARK ra một cái ghế nhựa cháy âm ỉ giữa công viên chó. `cham()` 0 lỗi,
+`cham100` 91/100.
+
+**Gốc rễ.** `KIEU_MO` có "khói hoặc hơi bốc lên từ thứ lẽ ra không được bốc khói" — viết cho 20
+thế giới trong nhà. Đề bài tuyên bố bảy trục là CỐ ĐỊNH, nên AI làm đúng thứ được bảo.
+
+**Họ lỗi.** Luật 12.5 — *một câu luật đúng trong ngữ cảnh nó sinh ra, sai ở ngữ cảnh mới*.
+
+**Chữa.** `mo_cam` trong hồ sơ kênh + `_mo_kenh()` lọc ở đúng một chỗ (`_do_truc`, `_lich` và
+bản xuất web đều gọi nó — ba chỗ đọc một nguồn).
+
+---
+
+## 8k44 — `("x")` là chuỗi, và câu dự phòng che mất
+
+**Triệu chứng.** Khai `mo_cam` cho 5 kênh, chỉ 2 kênh có tác dụng. Cổng báo "16/16 kiểu mở, bình
+thường".
+
+**Gốc rễ.** Tuple một phần tử thiếu dấu phẩy → chuỗi → `any(c in m for c in cam)` duyệt từng KÝ
+TỰ → mọi kiểu mở đều bị loại → câu `... or KIEU_MO` lặng lẽ trả về đủ 16.
+
+**Họ lỗi.** *Câu dự phòng biến một lỗi cấu hình thành một hành vi hợp lệ.* Cùng họ với 12.8 (cổng
+đếm lượt success tự làm mới dấu xanh).
+
+**Chữa.** Nhận cả chuỗi lẫn tuple; và lọc sạch trơn thì **nổ**, vì nó luôn là lỗi viết sai.
+
+---
+
+## 8k45 — Dàn vai không chứa được xung đột của chính kênh ấy
+
+**Triệu chứng.** SMALL CLAIMS: lục sự kiện chấp hành viên đòi 60 đô. 91/100.
+
+**Gốc rễ.** Bốn vai đều là người của toà. Kênh nói về tranh chấp giữa hai người mà không có hai
+người ấy trong dàn; bộ lịch cấp "ai gây ra" từ dàn vai, nên nó cấp một nhân viên toà.
+
+**Họ lỗi.** *Hồ sơ kênh mô tả một cỗ máy mà không cấp đủ bộ phận cho nó chạy.*
+
+**Chữa.** Đọc `hai` lên và hỏi: dàn vai này có đủ người để diễn xung đột ấy không.
+
+---
+
+## 8k46 — Avatar bị nền tảng cắt TRÒN; bản vá trước chỉ bỏ vòng tròn mình vẽ
+
+**Triệu chứng.** 20/20 kênh có dải tên bị cắt ngang giữa chữ; huy hiệu số ở góc chưa từng hiển
+thị trên bất kỳ nền tảng nào.
+
+**Gốc rễ.** Khung an toàn được coi là hình vuông W×W. Thật ra là **đường tròn nội tiếp**, và bề
+ngang dùng được đổi theo độ cao: nửa dây cung = √(R² − d²).
+
+**Họ lỗi.** *Sửa vòng thứ hai cùng một triệu chứng vì lần đầu chỉ chạm vào bản sao của nguyên
+nhân* (vòng tròn mình vẽ), không chạm vào nguyên nhân (vòng tròn họ cắt).
+
+**Chữa.** Neo khối chữ theo ĐÁY; cổng `kiem_tron()` đo trên ảnh thật, calibrate ngược trên bố
+cục cũ (bắt 20/20) trước khi dùng làm cổng.
+
+---
+
+## 8k47 — Màu thương hiệu lấy từ bảng màu bộ phim
+
+**Triệu chứng.** SMALL CLAIMS 1,74 và QUEST BOARD 2,06 tương phản biểu tượng/nền — thấp hơn mọi
+kênh đang có (2,61–10,98). Biểu tượng gần như biến mất trong danh sách đăng ký.
+
+**Họ lỗi.** *Mượn một giá trị cho việc nó không sinh ra để làm* — cùng họ với `k["mau"]` (luật
+6) và biểu tượng tàng hình trên ảnh bìa (13.27).
+
+**Chữa.** `chinh` = màu dấu hiệu; bảng màu phim để ở `phu`. Cổng `kiem_tuong_phan()` sàn 3,0.
+`BAGGAGE CLAIM` 2,61 có từ trước và được nêu riêng, không sửa lén.
+
+---
+
+## 8k48 — `cham100` tra thẳng `tap["payoff"]`
+
+**Triệu chứng.** `KeyError: 'payoff'` giết cả lượt sinh, mất luôn bản đang giữ.
+
+**Gốc rễ.** Bốn chỗ dùng `tap["payoff"]` trong khi mọi chỗ khác dùng `.get`.
+
+**Họ lỗi.** *Thước chết theo thứ nó phải chấm.* Một tập thiếu khối phải được **chấm thấp**,
+không được làm sập bộ sinh — 10.1: hỏng mà không để lại tệp nào thì trông y hệt chưa từng chạy.

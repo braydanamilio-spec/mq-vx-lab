@@ -38,6 +38,17 @@ CAM_DO = ("island","dishwasher","staircase","stairs","fireplace","balcony","pool
 DONG_NGHIA = {"fridge": "refrigerator", "sofa": "couch", "icebox": "refrigerator"}
 
 
+
+def _po(tap: dict) -> str:
+    """Khối chốt của một tập — chuỗi rỗng nếu thiếu, KHÔNG nổ.
+
+    2/9 — `cham100` tra thẳng `tap["payoff"]` ở bốn chỗ trong khi mọi chỗ khác dùng `.get`. Một
+    tập thiếu khối chốt làm cả thước sập bằng KeyError, mà thước sập thì `sinh_tap` mất luôn
+    bản đang giữ — hỏng không để lại gì, đúng họ lỗi 10.1. Thước phải CHẤM ĐIỂM THẤP cho một
+    tập thiếu khối, không phải chết theo nó.
+    """
+    return str(tap.get("payoff") or "")
+
 def cham100(tap, giay, hs, prompt_txt, kho=(), co_che_giao=""):
     """kho = danh sách tap đã có, để đo trùng CƠ CHẾ chứ không trùng danh từ."""
     d, ghi = {}, {}
@@ -48,7 +59,7 @@ def cham100(tap, giay, hs, prompt_txt, kho=(), co_che_giao=""):
     ca = (ke + " " + thoai)
 
     # 1 · HOOK — khung đầu phải SAI TRÁI, ghim máy, không lời
-    h = tap["hook"]; p1 = 0
+    h = tap.get("hook") or ""; p1 = 0
     p1 += 4 if len(h.split()) >= 12 else (2 if len(h.split()) >= 10 else 0)
     p1 += 3 if re.search(SAI_TRAI, h, re.I) else 0
     p1 += 2 if re.search(GHIM, h + " " + str(tap.get("setup") or ""), re.I) else 0
@@ -74,12 +85,12 @@ def cham100(tap, giay, hs, prompt_txt, kho=(), co_che_giao=""):
     else:
         p2 += 5 if lan <= max(2, len(kho) // 8) else (2 if lan <= len(kho) // 3 else 0)
     p2 += 3 if ho != "nhấc-lộ-vô-hại" else 0          # họ đã mòn 18/30 lần
-    p2 += 2 if re.search(DAO_NGOI, tap["payoff"], re.I) else 0
+    p2 += 2 if re.search(DAO_NGOI, _po(tap), re.I) else 0
     # Cơ chế ĐƯỢC GIAO: chấm, không chặn. Chuyển từ `cham()` sang đây sau khi đo được nó là
     # chốt chặn lớn nhất (7/26 lỗi tồn sau tám vòng) — nó nuốt hết ngân sách vòng viết lại nên
     # các trục khác không còn lượt để sửa. Ở đây nó vẫn có răng: mất điểm thì tụt dưới sàn 90.
     if co_che_giao:
-        p2 = min(10, p2) if re.search(HO_LAT.get(co_che_giao, r"$^"), tap["payoff"], re.I) \
+        p2 = min(10, p2) if re.search(HO_LAT.get(co_che_giao, r"$^"), _po(tap), re.I) \
             else max(0, p2 - 4)
         ghi["2"] = ghi.get("2", "") + f" · giao {co_che_giao}"
     d["2. Cú lật — cơ chế mới, không lặp kho"] = p2
@@ -115,7 +126,7 @@ def cham100(tap, giay, hs, prompt_txt, kho=(), co_che_giao=""):
     d["6. Dàn ≤4 mặt, góc máy ghim"] = p6
 
     # 7 · PHÒNG — mọi đồ cố định phải có trong khoá phòng
-    ta = hs["phong"].get(tap["room"], "").lower()
+    ta = hs["phong"].get(tap.get("room") or "", "").lower()
     _ca = ca.lower()
     for _a, _b in DONG_NGHIA.items():
         _ca = re.sub(r"\b" + _a + r"\b", _b, _ca)
@@ -126,8 +137,8 @@ def cham100(tap, giay, hs, prompt_txt, kho=(), co_che_giao=""):
     # 8 · CHỐT & VÒNG LẶP
     p8 = 0
     p8 += 4 if CAU_GIU_HINH.lower() in prompt_txt.lower() else 0
-    p8 += 3 if not re.search(r"\b(walks? away|fade|smiles? at each other|everyone laughs)\b", tap["payoff"], re.I) else 0
-    p8 += 3 if '"' not in tap["payoff"] else 0        # cú chốt bằng HÌNH, không bằng lời giải thích
+    p8 += 3 if not re.search(r"\b(walks? away|fade|smiles? at each other|everyone laughs)\b", _po(tap), re.I) else 0
+    p8 += 3 if '"' not in _po(tap) else 0        # cú chốt bằng HÌNH, không bằng lời giải thích
     d["8. Kết đúng trên cú chốt, ghép vòng được"] = p8
 
     # 9 · AN TOÀN RENDER
