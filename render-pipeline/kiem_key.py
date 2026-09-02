@@ -54,12 +54,33 @@ def _ho() -> dict[str, list]:
     return ra
 
 
+# Lý do hỏng của khoá đầu tiên mỗi nhà — để "0/8" không còn là một con số câm.
+_VI_SAO: dict = {}
+
+
 def _song(k) -> bool:
+    """Thử MỘT khoá. Ghi lại lý do hỏng — `0/8` mà không có lý do thì không hành động được.
+
+    ── VÌ SAO PHẢI GHI LÝ DO  (2/9/2026) ───────────────────────────────────────────────────
+    Cổng này báo `cf 0/8 = 0%` kèm gợi ý *"kiểm model có còn mở không…"* — tức nó biết mình
+    không biết, mà vẫn vứt bằng chứng đi bằng `except Exception: return False`.
+
+    Và con số ấy nói SAI về mức độ: `_genai` phân nhánh `cf:` sang `_CfShim`, là mô hình **chữ**
+    của Cloudflare. FLUX (vẽ ảnh) đi đường khác hẳn — `_cf_flux_image` — và log CI cùng ngày
+    chứng minh nó CHẠY: `⛅ CF •••5032 hoạt động`, vẽ được ảnh thật, thậm chí trả cả lỗi NSFW.
+    Nên "cf 0%" đọc ra là "khoá CF chết", trong khi sự thật là "mô hình CHỮ của CF không gọi
+    được, mô hình ẢNH vẫn tốt".
+
+    Một dòng đỏ vĩnh viễn và nói sai chuyện làm chìm lỗi thật nằm cạnh nó — đúng luật 13.2.
+    """
     try:
         import content_brain as CB
         CB._genai(k).GenerativeModel(CB.MODEL).generate_content("Reply: OK")
         return True
-    except Exception:
+    except Exception as e:
+        nha = ("cf" if str(k).startswith("cf:")
+               else "groq" if str(k).startswith("gsk_") else "gemini")
+        _VI_SAO.setdefault(nha, f"{type(e).__name__}: {str(e)[:150]}")
         return False
 
 
@@ -94,6 +115,9 @@ def main() -> int:
         print()
         for x in xau:
             print(f"  ❌ {x}")
+            _n = x.split(":")[0]
+            if _VI_SAO.get(_n):
+                print(f"       lý do (khoá đầu hỏng): {_VI_SAO[_n]}")
         print("     → kiểm: model đang gọi có còn mở với khoá ấy không · hồ khoá có bị lọc "
               "nhầm định dạng không · nhà cung cấp có đổi tên model không")
         return 1

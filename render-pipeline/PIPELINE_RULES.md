@@ -8453,3 +8453,36 @@ chèn và bị `LOOK` ăn hết chỗ. Nay là khối bắt buộc; bù lại c�
 
 Và `ong_kinh()` sai ba lần vì thiếu chiều: một hằng số cho mọi cảnh -> theo khuôn hình -> theo
 khuôn hình VÀ môi trường. Mỗi lần thiếu một chiều là sai ở đúng chỗ chiều ấy quyết định.
+
+### 7dm — Cổng khoá bảo "CF chết" trong khi CF chỉ CẠN, và bắt oan bằng chính thiết kế  (2/9/2026)
+
+Anh: *"check hết lỗi tiềm ẩn toàn dự án chưa."* Chạy đủ 20 cổng: 18 xanh, 2 đỏ. Cả hai đều dạy
+một bài học.
+
+**(a) `kiem_key`: `cf 0/8 = 0%` — con số câm và nói sai chuyện.**
+
+`_song()` thử mọi khoá bằng `CB._genai(k).GenerativeModel(...).generate_content("Reply: OK")`,
+rồi `except Exception: return False`. Ba tầng sai chồng nhau:
+
+1. **Vứt bằng chứng.** `0/8` kèm gợi ý *"kiểm model có còn mở không…"* — cổng biết mình không
+   biết, mà vẫn ném lý do đi. In lý do ra thì lộ ngay: `429 … you have used up your daily free
+   allocation of 10,000 neurons`.
+2. **Nói sai mức độ.** `_genai` phân nhánh `cf:` sang `_CfShim` — mô hình **CHỮ**. FLUX (vẽ ảnh)
+   đi đường khác hẳn (`_cf_flux_image`), và log CI cùng ngày chứng minh nó chạy. Nên "cf 0%"
+   đọc ra là *"khoá CF chết"*, sự thật là *"tài khoản cạn neuron"* — hai kết luận dẫn tới hai
+   việc khác hẳn nhau (đi xin khoá mới / chờ reset hoặc giảm số ảnh).
+3. **Nhãn sai làm chìm lỗi thật.** `gemini 1/8 = 12%` ở lượt đo đầu, đo lại ra **6/8 = 75%** —
+   con số đầu là nhất thời. Nếu tin nó, phiên sau sẽ đi "sửa" hồ khoá Gemini vốn không hỏng.
+
+**(b) Số đo quyết định: 30/30 khoá CF lấy mẫu đều cạn — cả hồ 97 tài khoản hết neuron.**
+
+Đây mới là câu trả lời cho *"vì sao video chỉ 78/100"*: bản dài vẽ được **6/42** cảnh vì không
+còn neuron, chứ không phải vì prompt hay vì cổng phong cách.
+
+**Và cái đắt hơn:** `except CanThat: return ""` chỉ thoát MỘT cảnh. Cảnh sau lại gọi `goi_xoay`,
+lại xoay hết 97 khoá chết, mỗi khoá một vòng mạng — nhân 36 cảnh còn lại là hàng nghìn lượt gọi
+vô ích, và nhìn từ ngoài **y hệt "mạng chậm"**. Đúng bẫy CLAUDE.md 12.1: một nguyên nhân làm mọi
+lệnh vẽ hỏng, mà chết CHẬM nên đọc ra như sự cố hạ tầng.
+
+**Luật.** *Cạn hồ là trạng thái của CẢ TIẾN TRÌNH, không phải của một lời gọi.* Biết rồi thì đi
+thẳng xuống tầng không gọi mạng, đừng hỏi lại từng cảnh một.

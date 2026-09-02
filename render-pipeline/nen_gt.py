@@ -428,6 +428,21 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
         return rel
     if not ve:
         return ""
+    # ── HỒ CẠN RỒI THÌ ĐỪNG GÕ CỬA TỪNG KHOÁ CHẾT NỮA  (2/9/2026) ───────────────────────────
+    # Đo hôm nay: **30/30 khoá CF lấy mẫu đều trả `429 … used up your daily free allocation of
+    # 10,000 neurons`** — cả hồ 97 tài khoản đã cạn. Đó chính là lý do bản dài chỉ vẽ được 6/42
+    # cảnh, và là lý do cổng chấm cho 78/100.
+    #
+    # Nhưng cái đắt hơn nằm ở chỗ khác: `CanThat` chỉ thoát MỘT cảnh. Cảnh sau lại gọi
+    # `goi_xoay`, lại xoay hết 97 khoá chết, mỗi khoá một vòng mạng — nhân với 36 cảnh còn lại
+    # là hàng nghìn lượt gọi vô ích, và nhìn từ ngoài y hệt "mạng chậm". Đây đúng cái bẫy đã ghi
+    # ở CLAUDE.md 12.1: một lỗi làm mọi lệnh vẽ hỏng, mà chết CHẬM nên đọc ra như sự cố mạng.
+    #
+    # Cạn hồ là trạng thái của CẢ TIẾN TRÌNH, không phải của một cảnh. Biết rồi thì đi thẳng
+    # xuống tầng nền vẽ bằng code — tầng ấy không gọi mạng nên không bao giờ hỏng.
+    if getattr(sinh, "_can", 0):
+        sinh._can += 1
+        return ""
 
     import datastory_ci as DS
     from xoay_key import goi_xoay, CanThat
