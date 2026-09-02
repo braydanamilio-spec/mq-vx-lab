@@ -8350,3 +8350,28 @@ với `KY_TU_MAX = 3000` mà đơn vị thật là ký tự chứ không phải 
 **Và luật về CÁCH ĐO:** khi sổ của mình nói `0/50.000` còn hệ thật trả `429`, đừng đi sửa sổ —
 **mở bảng đo của nhà cung cấp**. Sổ của mình chỉ thấy phần mình đã dạy nó đếm; bảng của họ thấy
 tất cả. Tôi đã mất nhiều giờ hôm nay đoán quanh cái sổ mù.
+
+### 7dk — Né bộ đệm bằng cách gọi một tên lệnh Worker không nhận  (2/9/2026)
+
+**Triệu chứng.** Video lên Drive thật (`✅ HIDDENFEE → kho AIZAMAHIYAH · 1HYRN4lvRvUH91Lq`) mà
+dashboard vẫn 0. Log lượt 33631376874: `⚠️ D1 hụt (1 lần): HTTP Error 500`.
+
+**Gốc rễ.** `enqueue.py` gọi thẳng `goi("ghi_job", {...})` để né bộ đệm của `hot_db.ghi_job` (bản
+vá trước đó đúng về mặt chẩn đoán: tiến trình con sống vài giây, đệm chưa xả là mất bản ghi).
+Nhưng `hot_db` **không có lệnh `ghi_job`** — danh sách lệnh nó dùng chỉ có **`ghi_job_loat`**
+(một LÔ, không phải một dòng).
+
+Tôi né được bộ đệm và đổi lấy một tên lệnh Worker không nhận. Chữa một đầu, mở ra đầu kia —
+đúng họ lỗi 14.8.
+
+**Sửa.** `hot_db` đã có sẵn đúng cặp cần dùng: `ghi_job()` xếp vào đệm, `xa_het()` xả ngay. Chú
+thích của `xa_het` viết ra chính xác cho tình huống này: *"Gọi cuối luồng — thiếu bước này là MẤT
+các lượt ghi cuối."*
+
+**Luật (lần thứ tư trong hai ngày).** Trước khi viết một lối gọi mới tới hệ đã có client, `grep`
+xem client ấy làm gì. Ở đây câu trả lời nằm ngay trong cùng tệp, cách mười dòng.
+
+**Và một dấu hiệu để nhận ra sớm:** `bao_chay.py` gọi CÙNG lệnh `ghi_job` mà ô "Đang chạy" vẫn
+đúng. Hai chỗ dùng cùng một lệnh, một chỗ chạy một chỗ 500 — khác biệt duy nhất là `enqueue` gửi
+thêm trường `title`. Hai kết quả khác nhau từ cùng một lệnh là chỗ phải dừng lại đối chiếu tham
+số, không phải chỗ để đoán.
