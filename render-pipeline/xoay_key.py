@@ -37,12 +37,45 @@ class CanThat(Exception):
     """Cạn hạn mức THẬT: mọi khoá đều trả mã 4006 (hết neuron ngày)."""
 
 
+# ── SỔ TRẠNG THÁI KHOÁ, GHI LÚC DÙNG THẬT  (2/9/2026) ───────────────────────────────────────
+# Anh: *"sao a thấy ko thấy tình trạng, sao ko spam mà cập nhật và tiết kiệm quota, có thể lúc
+# dùng mình lưu tình trạng lại."* — đúng, và đây là cách rẻ nhất có thể:
+#
+# Dây chuyền GỌI các khoá này hàng nghìn lượt mỗi ngày. **Mỗi lượt gọi thật đã là một phép đo
+# sức khoẻ miễn phí.** Đi dò riêng là trả tiền lần thứ hai cho thông tin mình vừa có — và đó
+# đúng là thứ nút "kiểm tất cả khoá" trên dashboard đang làm: gọi lại 295 khoá, tốn hạn mức của
+# cả nhà cung cấp lẫn Firestore, để biết điều dây chuyền đã biết.
+#
+# `goi_xoay` vốn ĐÃ phân loại từng khoá (4006 = cạn ngày · 429 = gọi nhanh · khác) — rồi vứt đi,
+# chỉ giữ mấy con số tổng. Nay giữ lại theo `id`, và ghi một lượt ở cuối tập.
+#
+# KHÔNG BAO GIỜ lưu chuỗi khoá. Chỉ lưu `id` (doc id sẵn có) và bốn ký tự cuối để người đọc
+# nhận ra — đúng luật đã đặt: khoá không được in ra, không được ghi xuống.
+_QUAN_SAT: dict = {}
+
+
+def _ghi_nhan(kid: str, s: str, song: bool, ly_do: str = "") -> None:
+    if not kid:
+        return
+    import datetime
+    _QUAN_SAT[kid] = {"alive": bool(song), "last4": str(s)[-4:],
+                      "ly_do": ly_do[:80],
+                      "at": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+
+
 def loc_cf(keys) -> list:
+    """Trả danh sách (chuỗi_khoá, id). Bản trước chỉ trả chuỗi, nên `goi_xoay` biết khoá nào
+    hỏng mà KHÔNG biết nó là bản ghi nào — thông tin sức khoẻ vì thế không ghi lại được."""
     ra = []
     for k in keys or []:
-        s = k if isinstance(k, str) else (k.get("key", "") if isinstance(k, dict) else "")
+        if isinstance(k, str):
+            s, kid = k, ""
+        elif isinstance(k, dict):
+            s, kid = k.get("key", ""), str(k.get("id", "") or "")
+        else:
+            continue
         if s.startswith("cf:"):
-            ra.append(s)
+            ra.append((s, kid))
     return ra
 
 
@@ -61,21 +94,29 @@ def goi_xoay(keys, ham, hat: int = 0, nghi_ratelimit: float = 1.2, giua_lan: flo
     so_4006 = so_429 = so_khac = 0
 
     for i in range(len(cf)):
-        k = cf[(dau + i) % len(cf)]
+        k, kid = cf[(dau + i) % len(cf)]
         try:
             r = ham(k)
             if r:
+                _ghi_nhan(kid, k, True)
                 return r, {"da_thu": i + 1, "cf": len(cf), "4006": so_4006, "429": so_429}
             so_khac += 1
+            _ghi_nhan(kid, k, False, "gọi được nhưng không ra kết quả")
         except Exception as e:
             t = str(e)
             if "4006" in t or "neuron" in t.lower():
                 so_4006 += 1
+                # CẠN NGÀY ≠ CHẾT. Khoá này mai lại dùng được, nên đánh dấu là còn sống nhưng
+                # đang nghỉ — ghi `alive=False` ở đây là đẩy 97 khoá tốt vào cột "chết", rồi
+                # sáng mai người đọc đi thay 97 khoá không hỏng.
+                _ghi_nhan(kid, k, True, "cạn neuron ngày (4006) — mai hồi")
             elif "429" in t:
                 so_429 += 1
+                _ghi_nhan(kid, k, True, "gọi quá nhanh (429) — nghỉ rồi đi tiếp")
                 time.sleep(nghi_ratelimit)     # rate-limit theo phút: nghỉ rồi đi tiếp
             else:
                 so_khac += 1
+                _ghi_nhan(kid, k, False, f"{type(e).__name__}: {t[:60]}")
         time.sleep(giua_lan)
 
     tk = {"da_thu": len(cf), "cf": len(cf), "4006": so_4006, "429": so_429, "khac": so_khac}
@@ -92,3 +133,59 @@ def bao_cao(tk: dict) -> str:
         return f"xong sau {tk['da_thu']}/{tk['cf']} khoá"
     return (f"thử hết {tk['cf']} khoá · {tk.get('4006', 0)} cạn ngày · "
             f"{tk.get('429', 0)} rate-limit · {tk.get('khac', 0)} lỗi khác")
+
+
+def ghi_trang_thai(owner: str = "") -> int:
+    """Ghi trạng thái QUAN SÁT ĐƯỢC của các khoá vào đúng doc mà dashboard đang đọc.
+
+    ── VÌ SAO GHI Ở ĐÂY, KHÔNG ĐI DÒ  (2/9/2026) ───────────────────────────────────────────
+    Anh: *"sao ko spam mà cập nhật và tiết kiệm quota, có thể lúc dùng mình lưu tình trạng lại."*
+
+    Ảnh chụp dashboard: **295 khoá · 241 "Chưa kiểm"**. Nút "kiểm tất cả" hiện có gọi lại đủ 295
+    khoá — tốn hạn mức của cả nhà cung cấp lẫn Firestore — để biết đúng thứ dây chuyền vừa biết
+    xong. Mỗi lượt gọi thật ĐÃ LÀ một phép đo sức khoẻ miễn phí; đi dò là trả tiền lần thứ hai.
+
+    ── HAI QUYẾT ĐỊNH QUAN TRỌNG ──────────────────────────────────────────────────────────
+    1. **Cạn neuron ngày KHÔNG phải chết.** Khoá 4006 mai lại dùng được, nên nó ghi `alive=True`
+       kèm lý do. Ghi `alive=False` ở đây là đẩy 97 khoá tốt vào cột "chết", và sáng mai người
+       đọc đi thay 97 khoá không hỏng — cổng bắt oan còn tệ hơn cổng không bắt.
+    2. **Không bao giờ lưu chuỗi khoá.** Chỉ `id` (doc id sẵn có) và 4 ký tự cuối.
+
+    Chi phí: ~100 lượt GHI mỗi lượt render, trên trần 20.000/ngày (hôm nay mới dùng 373). Ghi
+    theo LÔ nên chỉ vài vòng mạng. Đây là việc phụ nên đi qua bức tường ngân sách.
+    """
+    if not _QUAN_SAT:
+        return 0
+    try:
+        import firestore_bridge as FB
+    except Exception:
+        return 0
+    try:
+        FB.nap_nen_ngan_sach(owner)
+    except Exception:
+        pass
+    if not FB.con_ngan_sach("ghi"):
+        print(f"   ⏹ hoãn ghi sổ trạng thái khoá ({len(_QUAN_SAT)} khoá) — ngân sách GHI đã qua 70%")
+        return 0
+    try:
+        db = FB._db_meta()
+        if db is None:
+            return 0
+        lo, n = db.batch(), 0
+        for kid, v in list(_QUAN_SAT.items()):
+            lo.set(db.collection("gemini_keys").document(kid),
+                   {"alive": v["alive"], "last_checked": v["at"],
+                    "dead_reason": "" if v["alive"] else v["ly_do"],
+                    "ghi_chu": v["ly_do"], "nguon_kiem": "dùng thật"}, merge=True)
+            n += 1
+            if n % 400 == 0:
+                lo.commit(); lo = db.batch()
+        lo.commit()
+        song = sum(1 for v in _QUAN_SAT.values() if v["alive"])
+        print(f"   🗝 ghi sổ trạng thái {n} khoá từ LƯỢT DÙNG THẬT "
+              f"({song} còn dùng được · {n - song} hỏng) — không tốn lượt gọi dò nào")
+        _QUAN_SAT.clear()
+        return n
+    except Exception as e:
+        print(f"   ⚠ ghi sổ trạng thái khoá hụt: {str(e)[:80]}")
+        return 0

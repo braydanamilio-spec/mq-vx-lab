@@ -595,4 +595,11 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
             rel2 = sinh(ma, idx, i, ve, keys, nhip[i].get("tam_trang", ""), gu, doc, moc)
             if rel2:
                 nhip[i]["nenAnh"] = rel2
+    # Ghi sổ sức khoẻ khoá TỪ LƯỢT DÙNG THẬT — xem `xoay_key.ghi_trang_thai`.
+    # Đặt ở cuối tập, không đặt sau mỗi ảnh: mỗi tập một lượt ghi lô thay vì hàng trăm.
+    try:
+        import xoay_key as _XK
+        _XK.ghi_trang_thai(os.environ.get("OWNER_UID", ""))
+    except Exception:
+        pass
     return n

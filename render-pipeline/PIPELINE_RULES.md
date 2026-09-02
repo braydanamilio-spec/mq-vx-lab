@@ -8530,3 +8530,31 @@ cron, và điều đó phải kiểm được, không phải tin.
 **Luật.** Khi sửa một lời gọi sai, `grep` xem còn tệp nào gọi y hệt. Và: **hai chỗ tính cùng một
 đại lượng bằng hai công thức là chỗ sớm muộn nói hai con số** — chỗ nào người dùng nhìn thì chỗ
 ấy phải dùng công thức đầy đủ nhất, không phải công thức ngắn nhất.
+
+### 7dp — 241/295 khoá "Chưa kiểm", trong khi dây chuyền vừa gọi chúng hàng nghìn lượt  (2/9/2026)
+
+Anh: *"sao ko spam mà cập nhật và tiết kiệm quota, có thể lúc dùng mình lưu tình trạng lại."*
+
+**Số đo.** Dashboard: **295 khoá · 54 sống · 241 "Chưa kiểm"**. Nút "kiểm tất cả khoá" gọi lại đủ
+295 khoá — tốn hạn mức của cả nhà cung cấp lẫn Firestore — để biết đúng thứ dây chuyền vừa biết
+xong. **Mỗi lượt gọi thật đã là một phép đo sức khoẻ miễn phí; đi dò là trả tiền lần thứ hai.**
+
+**Và bằng chứng vẫn luôn ở đó:** `goi_xoay` ĐÃ phân loại từng khoá (`4006` cạn ngày · `429` gọi
+nhanh · khác), rồi **vứt đi**, chỉ giữ mấy con số tổng. Cùng họ lỗi thứ sáu trong hai ngày.
+
+**Sửa.** `loc_cf` trả kèm `id` (bản trước chỉ trả chuỗi, nên `goi_xoay` biết khoá nào hỏng mà
+không biết nó là bản ghi nào). `goi_xoay` ghi quan sát vào `_QUAN_SAT`; cuối mỗi tập ghi một lô
+vào đúng doc `gemini_keys/{id}` mà dashboard đang đọc — **không phải sửa gì bên web**.
+
+**Hai quyết định quan trọng:**
+
+1. **Cạn neuron ngày KHÔNG phải chết.** Khoá `4006` mai lại dùng được, nên ghi `alive=True` kèm
+   lý do. Ghi `alive=False` là đẩy 97 khoá tốt vào cột "chết", và sáng mai người đọc đi thay 97
+   khoá không hỏng — cổng bắt oan còn tệ hơn cổng không bắt (13.8).
+2. **Không bao giờ lưu chuỗi khoá.** Chỉ `id` và 4 ký tự cuối.
+
+Chi phí: ~100 lượt GHI mỗi lượt render trên trần 20.000/ngày (hôm nay dùng 373), ghi theo lô,
+và đi qua bức tường ngân sách vì đây là việc phụ.
+
+**Luật.** Trước khi viết một bộ dò sức khoẻ, hỏi: *"đường chạy thật đã chạm vào thứ này chưa?"*
+Nếu rồi thì việc cần làm là **ghi lại**, không phải **hỏi lại**.
