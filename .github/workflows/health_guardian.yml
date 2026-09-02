@@ -28,6 +28,61 @@ jobs:
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
           echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+      # ── CANH CRON RENDER: NỔ THAY KHI MỐC CỦA NÓ KHÔNG NỔ  (2/9/2026) ───────────────────
+      # Anh: *"mẹ sao 10h rồi ko làm gì."* Đo được: `render_giai_thich_18.yml` có bốn mốc
+      # 08:20–11:20 UTC, cả bốn đã qua, **không mốc nào nổ**. Hỏi API theo id workflow thì MỌI
+      # lượt của nó từ lúc tạo đều là `workflow_dispatch` — cron ấy chưa từng nổ một lần nào.
+      #
+      # Ba điều kiện của luật §10.2 đều ĐỦ: workflow `active` · cron có trên `main` · workflow
+      # khác cùng repo vẫn nổ đều (Publish, Stats, Cleanup, chính Guardian này). Nên đây không
+      # phải lỗi cấu hình để đi sửa — đây là hạ tầng cron của repo bỏ tick, ở mức 100%.
+      #
+      # Không sửa được thứ mình không điều khiển, nhưng KHÔNG ĐƯỢC phụ thuộc vào nó. Guardian nổ
+      # đều mỗi giờ nên nó làm mốc thay: hỏi 20h qua có lượt render nào DỰNG THẬT chưa, chưa thì
+      # tự bấm.
+      #
+      # "DỰNG THẬT", không phải "kết luận success" — buglog 7bv: một lượt bị cổng `chot` bỏ qua
+      # cũng kết thúc `success` (job `dung` chỉ `skipped`, mà `skipped` không làm hỏng lượt), nên
+      # đếm `success` là mỗi lượt bỏ qua lại làm mới dấu thành công và cửa sổ không bao giờ trôi.
+      - name: Canh cron render (nổ thay khi mốc của nó không nổ)
+        env:
+          # PAT, KHÔNG phải GITHUB_TOKEN. GitHub cố ý chặn: lượt chạy do `GITHUB_TOKEN` kích sẽ
+          # KHÔNG tạo workflow run mới (luật chống đệ quy). Dùng nó ở đây thì lệnh trả 204 như
+          # thành công mà chẳng có lượt nào sinh ra — tức lại một cái "xanh mà không làm gì",
+          # đúng họ lỗi đã tốn cả ngày hôm qua. Nên phải là PAT, và phải KIỂM LẠI sau khi bấm.
+          GH_TOKEN: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+        run: |
+          WF="render_giai_thich_18.yml"
+          MOC=$(python3 -c "import datetime;print((datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(hours=20)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
+          IDS=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?per_page=20" \
+                  --jq ".workflow_runs[] | select(.created_at > \"$MOC\") | .id" || echo "")
+          THAT=0
+          for id in $IDS; do
+            n=$(gh api "repos/${{ github.repository }}/actions/runs/$id/jobs?per_page=100" \
+                  --jq '[.jobs[] | select(.name|startswith("dung")) | select(.conclusion != null and .conclusion != "skipped")] | length' || echo 0)
+            THAT=$((THAT + n))
+          done
+          echo "   20h qua: $THAT job dựng THẬT (không tính job bị cổng bỏ qua)"
+          if [ "$THAT" -gt 0 ]; then
+            echo "   ✅ render đã chạy trong cửa sổ — không cần bấm thay"
+          else
+            echo "   ⏰ 20h không có lượt dựng nào — bấm thay cho cron"
+            TRUOC=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?per_page=1" --jq '.total_count' || echo 0)
+            gh workflow run "$WF" --repo "${{ github.repository }}" || echo "   ❌ lệnh bấm hỏng"
+            sleep 25
+            SAU=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?per_page=1" --jq '.total_count' || echo 0)
+            # BẤM XONG PHẢI ĐẾM LẠI. `gh workflow run` trả 204 kể cả khi lượt không hề sinh ra
+            # (token sai loại là đúng cảnh ấy). Không đếm lại thì ta có một cái canh gác luôn báo
+            # đã canh, và hỏng y hệt kiểu cron im lặng mà nó sinh ra để chữa.
+            if [ "$SAU" -gt "$TRUOC" ]; then
+              echo "   ✅ đã sinh lượt render mới ($TRUOC -> $SAU)"
+            else
+              echo "   ❌ BẤM XONG KHÔNG CÓ LƯỢT NÀO SINH RA ($TRUOC -> $SAU)."
+              echo "      Nhiều khả năng AUTOPUBLISHER_TOKEN thiếu quyền workflow trên repo này."
+              exit 1
+            fi
+          fi
+
       - name: Health check + tự chữa
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
