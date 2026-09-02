@@ -1360,3 +1360,32 @@ văn kỳ quặc.
 **Luật:** khi viết một ràng buộc, đừng chỉ nói *phải có gì* — nói luôn **nó được phép đếm cái
 gì**. Mọi ràng buộc đều sẽ được thoả bằng cách rẻ nhất mà câu chữ cho phép; chỗ hở nằm ở phần
 mình không viết ra, không ở phần mình viết.
+
+### 14.17 Từng bước nằm trong nhiễu, cộng dồn thì vượt — và đó không phải mâu thuẫn
+
+Bốn lượt đo, mỗi lượt 12 tập, cùng bộ việc:
+
+| | TB | sd | ≥95 | nhận sạch | vòng/tập |
+|---|---|---|---|---|---|
+| A · vòng lặp sống | 94,2 | 4,3 | 7/12 | 3/12 | 10,4 |
+| B · + cấm họ mòn | 96,3 | 2,3 | 10/12 | 4/12 | 9,0 |
+| C · + cổng cắt câu | 96,8 | 2,2 | 11/12 | 5/12 | 8,3 |
+| D · + vá 2 chỗ hở lệnh dặn | **97,5** | **1,2** | **12/12** | **7/12** | **7,4** |
+
+A→B chênh 2,2 (KTC95 ±2,8) và A→C chênh 2,6 (±2,7) — **cả hai nằm trong nhiễu**. Dừng ở đó mà
+tuyên bố "đã cải thiện" là kể chuyện về nhiễu, đúng lỗi 13.26.
+
+A→D chênh 3,3 (±2,5) — **vượt**. Và biến đếm rõ hơn nhiều: **≥95 điểm 7/12 → 12/12, Fisher hai
+phía p = 0,037**.
+
+Không mâu thuẫn: mỗi bản sửa nhỏ hơn ngưỡng phân giải của một mẫu 12, nhưng chúng cộng lại. Điều
+kiện để câu này hợp lệ: **phép so đầu–cuối phải được định trước**, không phải chọn ra cặp đẹp
+nhất trong sáu cặp — chọn hậu nghiệm thì `p` mất nghĩa.
+
+Và hai con số đáng giá hơn cả trung bình:
+
+- **sd 4,3 → 1,2** — đầu ra ổn định. Ở dây chuyền chạy hàng nghìn tập, phương sai mới là thứ
+  quyết định, không phải trung bình.
+- **vòng/tập 10,4 → 7,4** — giảm 29% lượt gọi AI cho mỗi tập. Bản sửa vừa làm chất lượng lên vừa
+  làm chi phí xuống, và đó là dấu hiệu đáng tin nhất rằng ta sửa đúng gốc chứ không siết thêm
+  cổng: siết cổng luôn làm số vòng TĂNG.

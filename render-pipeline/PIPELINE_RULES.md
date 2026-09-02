@@ -8223,19 +8223,25 @@ Hai chỗ, cùng hậu quả: khuôn web tràn 2500 → hàng rào DO NOT bị c
 
 ## 8k55 — Bảng đo ba lượt, 12 tập mỗi lượt, cùng bộ việc
 
-| lượt | TB | sd | ≥95 | còn lỗi | nhận sạch | trừ trục cú lật | bị cắt câu |
+| lượt | TB | sd | ≥95 | còn lỗi | nhận sạch | vòng/tập | bị cắt câu |
 |---|---|---|---|---|---|---|---|
-| **A** vòng lặp sống (8k49) | 94,2 | 4,3 | 7/12 | 0/12 | 3/12 | 48 | 4 |
-| **B** + cấm họ mòn (8k50) | 96,3 | 2,3 | 10/12 | 1/12 | 4/12 | **29** | 3 |
-| **C** + cổng cắt câu (8k52) | 96,8 | 2,2 | 11/12 | 0/12 | **5/12** | 29 | **1** |
+| **A** vòng lặp sống (8k49) | 94,2 | 4,3 | 7/12 | 0/12 | 3/12 | 10,4 | 4 |
+| **B** + cấm họ mòn (8k50) | 96,3 | 2,3 | 10/12 | 1/12 | 4/12 | 9,0 | 3 |
+| **C** + cổng cắt câu (8k52) | 96,8 | 2,2 | 11/12 | 0/12 | 5/12 | 8,3 | **1** |
+| **D** + vá 2 chỗ hở lệnh dặn | **97,5** | **1,2** | **12/12** | 0/12 | **7/12** | **7,4** | 1 |
 
 Trước đó, lượt chạy với vòng lặp CHẾT: **6/16 tập còn lỗi**, TB ~89.
 
 **Đọc bảng cho đúng:**
 
-- **A → C chênh TB 2,6 · KTC95 ±2,7 → NẰM TRONG NHIỄU.** Không được nói "điểm đã lên".
-- Thứ vượt nhiễu là **đếm sự kiện**: lượt trừ trục cú lật 48 → 29 (Poisson ±7), và số tập bị cắt
-  câu 4 → 1.
+- **Từng bước một thì nằm trong nhiễu**: A→B chênh 2,2 (KTC95 ±2,8), A→C chênh 2,6 (±2,7). Nếu
+  dừng ở đó và tuyên bố "đã cải thiện" thì đó là kể chuyện về nhiễu.
+- **Cộng dồn A → D thì vượt**: chênh TB 3,3 · KTC95 ±2,5. Và biến đếm còn rõ hơn: **≥95 điểm
+  7/12 → 12/12, Fisher hai phía p = 0,037**. Đây là phép so ĐẦU–CUỐI định sẵn từ trước, không
+  phải chọn ra cặp đẹp nhất trong sáu cặp — chọn hậu nghiệm thì p mất nghĩa.
+- Hai con số đáng giá hơn cả trung bình: **sd 4,3 → 1,2** (đầu ra ổn định, thứ quyết định khi
+  chạy hàng nghìn tập) và **vòng/tập 10,4 → 7,4** (giảm 29% lượt gọi AI cho mỗi tập — cùng lúc
+  vừa tốt hơn vừa rẻ hơn).
 - **Kiểm bắt buộc theo 13.23** — cổng mới có nuốt ngân sách vòng viết lại không? Không: *nhận
   sạch* tăng 3 → 4 → 5 và *còn lỗi* giữ 0. Một cổng vừa bắt được lỗi vừa không làm cạn vòng là
   cổng đáng ship; nếu nó làm cạn thêm thì phải hạ cấp xuống `don()` hoặc `cham100`.
