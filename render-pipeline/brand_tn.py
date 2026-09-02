@@ -43,6 +43,10 @@ BRAND = {
                          khau_hieu="THE FIRST HOUR"),
     "STORM COAST":  dict(chinh="#E8EDF2", phu="#5A8FC7", nen="#141A1F", bt="gale",
                          khau_hieu="IT STANDS IN IT"),
+    "ICE AGE":      dict(chinh="#D9A05B", phu="#E8E4DA", nen="#1E1A16", bt="mammoth",
+                         khau_hieu="IT WAS REALLY HERE"),
+    "DEEP TIME":    dict(chinh="#8FC46B", phu="#D9C9A3", nen="#12180F", bt="track",
+                         khau_hieu="AN ANIMAL, NOT A MONSTER"),
 }
 
 
@@ -127,6 +131,40 @@ def bieu_tuong(d: ImageDraw.ImageDraw, ten: str, cx: int, cy: int, r: int, c1, c
                                  cy + r * y + r * .13], radius=r * .13, fill=c1)
             d.arc([cx + r * w * .30, cy + r * y - r * .34, cx + r * w * .92, cy + r * y + r * .34],
                   270, 90, fill=c1, width=max(2, int(r * .26)))
+    elif ten == "mammoth":                     # voi ma mút.
+        # Hai bản trước hỏng vì vẽ ngà bằng `arc` (rời khỏi thân ở 48px), rồi bằng đa giác THẲNG
+        # song song xuống dưới (đọc thành ba cái chân — con nhện). Thứ tách ma mút khỏi mọi con
+        # vật khác là CẶP NGÀ CONG VÀO NHAU thành một cái nôi, tip chỉ lên. Nên vẽ đúng nó: hai
+        # cung DÀY, sinh điểm dọc theo cung rồi đổ đầy — không dùng nét, và không dùng đường thẳng.
+        import math as _m
+        d.ellipse([cx - r * .46, cy - r * .92, cx + r * .46, cy - r * .06], fill=c1)
+        d.polygon([(cx - r * .15, cy - r * .20), (cx + r * .15, cy - r * .20),
+                   (cx + r * .09, cy + r * .40), (cx - r * .09, cy + r * .40)], fill=c1)
+        for sx in (-1, 1):
+            ngoai, trong = [], []
+            for k in range(13):
+                a = _m.radians(-72 + k * 13)          # quét từ dưới lên, cong vào trong
+                ngoai.append((cx + sx * (r * .30 + r * .62 * _m.cos(a)), cy + r * .34 - r * .62 * _m.sin(a)))
+                trong.append((cx + sx * (r * .30 + r * .40 * _m.cos(a)), cy + r * .34 - r * .40 * _m.sin(a)))
+            d.polygon(ngoai + trong[::-1], fill=c1)
+    elif ten == "track":                       # dấu chân ba ngón của theropod.
+        # Bản đầu: ngón toè rộng từ một đệm tròn to -> quả cầu lông. Bản hai: ngón CHỤM vào một
+        # điểm dưới -> mũi tên. Dấu chân thật: ba ngón HẸP, TÁCH RỜI nhau, mọc LÊN từ một đệm
+        # nhỏ ở dưới, ngón giữa dài hơn hẳn — tách rời mới là chỗ mắt đọc ra "ba ngón".
+        import math as _m
+
+        def _ngon(goc, dai, day):
+            a = _m.radians(goc)
+            ux, uy = _m.sin(a), -_m.cos(a)
+            x0, y0 = cx + ux * r * .22, cy + r * .46 + uy * r * .22
+            x1, y1 = cx + ux * r * dai, cy + r * .46 + uy * r * dai
+            px, py = -uy * r * day, ux * r * day
+            d.polygon([(x0 + px, y0 + py), (x1 + px * .28, y1 + py * .28),
+                       (x1 - px * .28, y1 - py * .28), (x0 - px, y0 - py)], fill=c1)
+        _ngon(-46, 1.02, .15)
+        _ngon(0, 1.24, .16)
+        _ngon(46, 1.02, .15)
+        d.ellipse([cx - r * .24, cy + r * .38, cx + r * .24, cy + r * .90], fill=c1)
     else:
         d.ellipse([cx - r * .7, cy - r * .7, cx + r * .7, cy + r * .7], fill=c1)
 

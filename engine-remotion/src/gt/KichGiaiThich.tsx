@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
-import { ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart } from "./Khuon";
+import { ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong } from "./Khuon";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    PHIM GIẢI THÍCH — bảy khuôn hình, nhịp cắt 2,1 giây  (1/9/2026)
@@ -236,6 +236,34 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                         height: H - sanY, background: _samMau(nenTrang, 0.22) }} />
           <div style={{ position: "absolute", left: 0, right: 0, top: sanY,
                         height: Math.max(3, H * 0.004), background: "#00000022" }} />
+
+          {/* ── VẬT ĐANG NÓI TỚI, VẼ BẰNG CODE  (2/9/2026) ────────────────────────────────
+              Anh gửi khung toàn nền trơn: *"hình ảnh còn xấu kém"*. Đo được `canh` có **30
+              nhịp, 0 nhịp có biểu tượng** — thiết kế giả định luôn có ảnh AI. Hôm CF còn
+              neuron thì 29/30 có ảnh nên không ai thấy; hôm cạn thì cả 30 rơi xuống gradient.
+
+              Đúng luật §7 (bốn tầng nền): *tầng cuối không gọi mạng nên không bao giờ hỏng* —
+              mà `canh` thiếu đúng tầng ấy. Nay dây chuyền cấp `bt` từ chính lời của nhịp
+              (`giai_thich._bt_canh`), và ở đây vẽ vật ấy TO, mờ, đứng trên đường chân trời.
+
+              Ba lựa chọn có chủ đích:
+                · **mờ 0.16** — nó là NỀN, không được tranh chỗ với số liệu và phụ đề đè lên.
+                · **đặt trên sàn**, không lơ lửng giữa khung: có đường chân trời rồi thì vật
+                  phải đứng trên nó, nếu không mắt đọc ra hai lớp rời nhau.
+                · **không có `bt` thì không vẽ gì** — câu trừu tượng ("Nothing happens.") mà
+                  gắn một cái ô tô là nói một điều SAI, tệ hơn nền trống (§12.5). */}
+          {N.bt ? (
+            <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: H,
+                          display: "flex", alignItems: "flex-end", justifyContent: "center",
+                          paddingBottom: H - sanY, opacity: 0.16 }}>
+              <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
+                   style={{ position: "absolute", left: 0, top: 0 }}>
+                <g transform={`translate(${W / 2} ${sanY - Math.min(H * 0.17, W * 0.19)})`}>
+                  <BieuTuong ten={N.bt} s={Math.min(H * 0.34, W * 0.38)} />
+                </g>
+              </svg>
+            </div>
+          ) : null}
         </AbsoluteFill>
       )}
     </>

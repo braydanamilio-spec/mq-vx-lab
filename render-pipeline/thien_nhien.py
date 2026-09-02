@@ -1404,7 +1404,7 @@ KENH: dict[str, dict] = {
             ),
             "giant deer": (
                 "A giant deer: a tall pale-brown stag carrying antlers wider than its own body, "
-                "flat and palmate like two open hands, with a dark line down the spine."
+                "flat and palmate and broader than the animal's own body, a dark line down the spine."
             ),
         },
         "hanh_vi": {
@@ -1496,8 +1496,8 @@ KENH: dict[str, dict] = {
             ),
             "feathered theropod": (
                 "A small feathered theropod the size of a large bird: a full covering of "
-                "brown-and-cream barred feathers, long stiff tail feathers, three-fingered "
-                "feathered arms held folded, and a slender toothed muzzle."
+                "brown-and-cream barred feathers, long stiff tail feathers, short feathered arms "
+                "folded in against the body, and a slender toothed muzzle."
             ),
             "hadrosaur": (
                 "A hadrosaur: a heavy body on four legs with a broad duck-like flattened muzzle, "
@@ -1506,8 +1506,8 @@ KENH: dict[str, dict] = {
             ),
             "pterosaur": (
                 "A pterosaur: a long thin skull with a bony crest, a fuzzy coat of fine "
-                "filaments over the body, and enormous membrane wings stretched from a single "
-                "very long finger on each hand."
+                "filaments over the body, and enormous membrane wings, each one stretched along a "
+                "single immensely elongated wing-bone."
             ),
         },
         "hanh_vi": {
@@ -1533,7 +1533,7 @@ KENH: dict[str, dict] = {
                     "picking its way along wet sand leaving a line of three-toed prints",
                     "fluffing every feather out at once and flattening them again",
                     "cocking its head to one side and holding it there",
-                    "stretching one feathered arm and one leg out on the same side",
+                    "stretching one wing and one leg out on the same side",
                 ),
             },
             "hadrosaur": {
@@ -1554,9 +1554,9 @@ KENH: dict[str, dict] = {
         "style": (
             "Wet, green and quiet — the opposite of every dinosaur film ever made. Palette is "
             "river-silt grey, horsetail green and the warm sand of the banks. Light is soft "
-            "morning haze coming through mist off the water, never hard, never orange, never "
-            "lit from below. The animals are drawn as animals: dull, practical colours, skin "
-            "that looks like it has weather on it."
+            "morning haze coming down through mist off the water, always from above and from "
+            "the side. The animals are drawn as animals: dull, practical colours, skin that "
+            "looks like it has weather on it."
         ),
         "am": "running shallow water, insects, wind in horsetails, one distant low call",
         "luat": (

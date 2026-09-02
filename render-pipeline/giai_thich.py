@@ -2408,6 +2408,56 @@ def short_tu_long(ma: str, idx: int, chuong: int) -> str:
     return mot_tap(ma, idx + chuong, doc=True, long=False)
 
 
+# ── BIỂU TƯỢNG DỰ PHÒNG CHO KHUÔN `canh`  (2/9/2026) ────────────────────────────────────────
+# Anh gửi khung hình toàn nền trơn. Đo: `canh` có **30 nhịp, 0 nhịp có biểu tượng** — vì thiết
+# kế giả định luôn có ảnh AI. Hôm CF còn neuron thì 29/30 có ảnh nên không ai thấy; hôm cạn thì
+# cả 30 rơi xuống gradient rỗng. Đúng luật §7: *tầng cuối không gọi mạng thì không bao giờ hỏng*
+# — mà `canh` thiếu đúng tầng ấy.
+#
+# KHÔNG dùng `NenQue`: nó chỉ có 10 nơi chốn sinh hoạt (bếp · phòng khách · sân vườn) lấy từ bộ
+# truyện tranh. Đặt bếp sau một câu về động cơ phản lực là đúng lỗi §12.5, và chú thích trong
+# engine đã cảnh báo: *"nền ấy nói một điều SAI về nội dung câu, tệ hơn hẳn nền trống"*.
+#
+# Nên vẽ **chính vật đang nói tới**, lấy từ lời của nhịp. Bảng dưới chỉ chứa những từ mà biểu
+# tượng tương ứng CÓ THẬT trong engine (`kiem_hinhve.py` canh chuyện đó).
+#
+# **Không khớp thì để TRỐNG.** Đoán bừa một biểu tượng sai còn tệ hơn nền trơn: nền trơn không
+# nói gì, biểu tượng sai nói một điều SAI. Cùng luật với `don_drive_kenh`: không biết thì đừng ghi.
+_BT_TU = (
+    ("may_bay",   ("jet", "plane", "aircraft", "flight", "airline", "takeoff")),
+    ("xe_buyt",   ("bus", "transit", "commute")),
+    ("xe",        ("car", "drive", "driving", "truck", "traffic", "engine", "highway")),
+    ("trai_dat",  ("earth", "planet", "world", "globe", "orbit", "equator")),
+    ("mat_trang", ("moon", "lunar")),
+    ("mat_troi",  ("sun", "solar", "sunlight", "daylight")),
+    ("tien",      ("dollar", "money", "cost", "price", "salary", "wage", "paid", "rent", "fee")),
+    ("dong_ho",   ("hour", "minute", "second", "clock", "time", "day", "week", "year")),
+    ("nha",       ("house", "home", "building", "apartment", "roof", "room")),
+    ("nguyen_tu", ("atom", "molecule", "particle", "nuclear")),
+    ("te_bao",    ("cell", "blood", "body", "heart", "brain", "lung")),
+    ("vi_khuan",  ("bacteria", "germ", "virus", "microbe")),
+    ("ca_voi",    ("whale", "ocean", "sea", "shark")),
+    ("huou",      ("giraffe", "animal", "elephant")),
+    ("meo",       ("cat", "dog", "pet")),
+    ("cay",       ("tree", "forest", "wood", "leaf", "plant")),
+    ("lua",       ("fire", "burn", "flame", "heat", "hot")),
+    ("coc",       ("cup", "coffee", "water", "drink", "glass")),
+    ("giuong",    ("bed", "sleep", "asleep", "night")),
+    ("dien_thoai", ("phone", "screen", "app", "text", "call")),
+    ("nguoi",     ("you", "person", "people", "human", "walk", "step", "hand", "ear", "eye")),
+)
+
+
+def _bt_canh(loi: str, ve: str = "") -> str:
+    """Biểu tượng cho một nhịp `canh` — lấy từ CHÍNH lời của nhịp. Không chắc thì trả ""."""
+    t = f" {str(loi or '')} {str(ve or '')} ".lower()
+    for bt, tu in _BT_TU:
+        for w in tu:
+            if f" {w} " in t or f" {w}s " in t or f" {w}." in t or f" {w}," in t:
+                return bt
+    return ""
+
+
 def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             so_chuong: int = 10) -> str:
     k = next((x for x in KENH if x["ma"] == ma), None)
@@ -2422,6 +2472,13 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
         tieu, hook, hook_phu, nhip = BO_SINH[k["sinh"]](vi_tri_short(ma, idx))
         # Ngữ pháp riêng của kênh, biến thể xoay theo số tập — xem `GU_KENH`.
         nhip = doi_loi(ap_gu(ma, idx, nhip), idx)
+        # Cấp biểu tượng dự phòng cho `canh` — xem `_bt_canh`. Chỉ cấp khi nhịp CHƯA có, nên
+        # không bao giờ đè lên biểu tượng đã chọn tay trong khuôn kịch bản.
+        for _x in nhip:
+            if (_x.get("khuon") or "") == "canh" and not _x.get("bt"):
+                _b = _bt_canh(_x.get("loi") or "", _x.get("ve") or "")
+                if _b:
+                    _x["bt"] = _b
     # Nhịp 0 = HOOK. Chèn ở đây chứ không viết vào từng bộ sinh: hook là quy tắc chung của cả
     # bộ phim, không phải nội dung riêng của một kênh — viết mười chỗ là mười chỗ để lệch nhau.
     # CHỈ chèn khung số liệu khi THẬT SỰ CÓ SỐ. Bốn kênh (whatif · dayinlife · wheregoes ·
