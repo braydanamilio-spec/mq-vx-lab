@@ -140,6 +140,14 @@ CAM_TROI = re.compile(
     r"drone shot|aerial|crane shot|handheld|steadicam|push\w* in|pull\w* back|camera follows?)\b", re.I)
 # Giải phẫu hỏng: Kling vẽ sai khi con vật cử động NHANH và PHỨC TẠP. Đo được ở bộ hài rằng cấm
 # một khái niệm phải bằng biểu thức; ở đây khái niệm là "nhiều thứ cùng động rất nhanh".
+# Tạo hình KIỂU PHIM. Ngách tiền sử hỏng ở đúng chỗ này: mô hình đã học hàng triệu khung phim
+# khủng long, nên không ghim thì nó vẽ ra một con quái vật gầm vào ống kính chứ không phải một
+# con vật đang uống nước. Ngoài chuyện xấu, nó còn là rủi ro bản quyền — tạo hình của một hãng
+# phim là tài sản của hãng ấy.
+CAM_PHIM = re.compile(
+    r"\b(jurassic|godzilla|king kong|cinematic|movie|film[- ]?like|blockbuster|epic shot|"
+    r"roar\w*|rearing up|menacing|terrifying|monster|creature feature|dramatic lighting|"
+    r"lit from below|slow[- ]motion menace)\b", re.I)
 CAM_NHANH = re.compile(
     r"\b(sprint\w*|dash\w*|scrambl\w*|thrash\w*|flail\w*|writh\w*|somersault\w*|barrel roll|"
     r"frantic\w*|chaotic\w*|swarm\w* over|tumbl\w* over each other)\b", re.I)
@@ -233,6 +241,11 @@ THOI_TIET = (
 # định máy đặt ở đâu, còn chậm/nhanh quyết định cỡ ảnh nào đọc được. Một cú lao lên khỏi
 # mặt nước không thể quay macro, dù nó ở đúng môi trường.
 MACRO_OK = frozenset({
+    "blowing air into its fur so the coat lifts and fluffs around the face",
+    "hovering just above the seabed with the fins moving very slowly",
+    "standing at the edge of the trees with both eyes returning the light",
+    "sitting still on the bank with water beading on the down",
+
     "changing the shape of its melon forehead while hanging still",
     "crouched motionless in a form pressed into grass with its ears flat along its back",
     "flushing dark red to translucent pale and back",
@@ -370,6 +383,10 @@ KENH: dict[str, dict] = {
             "low grey cloud sitting on the headlands, the surface breaking over hidden reefs."
         ),
         "loai": {
+            "pacific white-sided dolphin": (
+                "A Pacific white-sided dolphin: sharply hooked dorsal fin, dark grey back, pale grey flank "
+                "stripes sweeping back like brushstrokes, white belly, short blunt beak."
+            ),
             "orca bull": (
                 "An adult male orca: glossy black back, sharp white eye patch, white chin and "
                 "belly, grey saddle behind the fin, dorsal fin nearly two metres tall and straight."
@@ -388,6 +405,17 @@ KENH: dict[str, dict] = {
             ),
         },
         "hanh_vi": {
+            "pacific white-sided dolphin": {
+                "mep": (
+                    "leaping clear in a low flat arc and re-entering without a splash",
+                    "surfacing in a fast line so the fins break the water one after another",
+                ),
+                "duoi": (
+                    "riding the pressure wave off a much larger flank",
+                    "turning in unison with a dozen others so the pale flank stripes all flash at once",
+                    "swimming upside down just beneath the silver of the surface",
+                ),
+            },
             "orca bull": {
                 "tren": (
                     "surfacing so the tall dorsal fin rises first and goes under last",
@@ -469,6 +497,16 @@ KENH: dict[str, dict] = {
             "nothing on it, long ocean swell, and clouds of krill hanging in the upper water."
         ),
         "loai": {
+            "sperm whale": (
+                "A sperm whale: a vast squared-off blunt head taking up a third of the whole "
+                "body, dark wrinkled grey skin like old bark, a narrow underslung jaw, one "
+                "blowhole set to the left at the very front, and a low ridge instead of a fin."
+            ),
+            "whale shark": (
+                "A whale shark: an enormous flattened head, a wide straight mouth right across the front, "
+                "dark blue-grey skin patterned with a grid of white spots and pale stripes, five long "
+                "gill slits."
+            ),
             "humpback": (
                 "An adult humpback whale: dark grey-black back, white grooved throat pleats, very "
                 "long white pectoral fins scalloped along the front edge, knobbly tubercles on the "
@@ -493,6 +531,28 @@ KENH: dict[str, dict] = {
             ),
         },
         "hanh_vi": {
+            "sperm whale": {
+                "duoi": (
+                    "hanging completely vertical and motionless, head up, fast asleep",
+                    "turning its enormous squared head slowly toward the camera",
+                    "sinking tail-first into the dark without moving a muscle",
+                    "gliding past with the wrinkled skin catching the light like old bark",
+                ),
+                "mep": (
+                    "blowing a low bushy spout angled forward and to the left",
+                    "lifting the broad triangular fluke straight up before a long dive",
+                ),
+            },
+            "whale shark": {
+                "mep": (
+                    "swimming just under the surface with the tip of the dorsal fin cutting the water",
+                ),
+                "duoi": (
+                    "cruising forward with the mouth held wide open and the gill slits pulsing",
+                    "turning slowly so the grid of white spots wraps around the body",
+                    "rising through a shaft of light with small fish holding station under its chin",
+                ),
+            },
             "humpback": {
                 "tren": (
                     "lifting one enormous pectoral fin clear of the surface and holding it there",
@@ -582,6 +642,10 @@ KENH: dict[str, dict] = {
             "edge, and wind that never stops."
         ),
         "loai": {
+            "gentoo penguin": (
+                "A gentoo penguin: black back, white front, a bright orange bill and orange feet, and a "
+                "clean white patch above each eye meeting across the crown."
+            ),
             "emperor penguin": (
                 "An adult emperor penguin: black head and back, white belly, a bright yellow-orange "
                 "flash on each side of the neck fading into pale yellow on the chest, dense feather "
@@ -601,6 +665,14 @@ KENH: dict[str, dict] = {
             ),
         },
         "hanh_vi": {
+            "gentoo penguin": {
+                "tren": (
+                    "running downhill with both flippers held out for balance",
+                    "picking up a small stone and carrying it away in its bill",
+                    "standing with the orange feet planted wide against the wind",
+                    "stretching one flipper and one foot straight out behind at the same time",
+                ),
+            },
             "emperor penguin": {
                 "tren": (
                     "leaning into a wind that flattens the feathers along one whole side",
@@ -681,6 +753,10 @@ KENH: dict[str, dict] = {
             "silence."
         ),
         "loai": {
+            "walrus": (
+                "An adult walrus: a vast wrinkled cinnamon-brown body, thick folds at the neck, a broad "
+                "muzzle of stiff whiskers, and two long ivory tusks hanging straight down."
+            ),
             "narwhal bull": (
                 "An adult male narwhal: mottled grey-and-cream body with no dorsal fin, small "
                 "rounded head, and one long straight spiral tusk projecting forward from the upper "
@@ -700,6 +776,17 @@ KENH: dict[str, dict] = {
             ),
         },
         "hanh_vi": {
+            "walrus": {
+                "mep": (
+                    "hooking both tusks over the edge of the ice and hauling its weight upward",
+                    "breathing out at a breathing hole so the whiskers scatter the spray",
+                ),
+                "duoi": (
+                    "hanging vertically in the water with both tusks pointing down into the dark",
+                    "sweeping the seabed with its whiskers and lifting a slow cloud of silt",
+                    "rising toward a hole in the ice with the tusks leading",
+                ),
+            },
             "narwhal bull": {
                 "mep": (
                     "surfacing into a narrow lead so only the tusk and forehead appear",
@@ -772,6 +859,10 @@ KENH: dict[str, dict] = {
             "and green swell rising against the ledge."
         ),
         "loai": {
+            "sea otter": (
+                "A sea otter: dense chocolate fur holding silver air bubbles, a pale grizzled face, small "
+                "round ears, a thick tapered tail, floating high on its back."
+            ),
             "sea lion bull": (
                 "A bull Steller sea lion: massive, pale tawny, a thick muscular neck with a mane "
                 "of coarser fur, blunt heavy head, small rolled external ears."
@@ -790,6 +881,20 @@ KENH: dict[str, dict] = {
             ),
         },
         "hanh_vi": {
+            "sea otter": {
+                "tren": (
+                    "hauled out on a rock working the fur of its chest with both forepaws",
+                    "blowing air into its fur so the coat lifts and fluffs around the face",
+                ),
+                "mep": (
+                    "floating on its back with a stone balanced on its chest",
+                    "rolling over once in the water and coming up facing the other way",
+                    "wrapping itself in a strand of kelp and going completely still",
+                ),
+                "duoi": (
+                    "diving straight down and vanishing into the kelp",
+                ),
+            },
             "sea lion bull": {
                 "tren": (
                     "throwing the head back and holding the mouth open with no sound in frame",
@@ -870,6 +975,10 @@ KENH: dict[str, dict] = {
             "frame, and the only light is light the animals make."
         ),
         "loai": {
+            "dumbo octopus": (
+                "A dumbo octopus: a soft pale-pink body the shape of a small bell, two rounded fins standing "
+                "out from the head like ears, short webbed arms held together underneath."
+            ),
             "siphonophore": (
                 "A siphonophore: a chain of translucent bells and tendrils many metres long, "
                 "pulsing along its length, faintly blue where it lights."
@@ -888,6 +997,14 @@ KENH: dict[str, dict] = {
             ),
         },
         "hanh_vi": {
+            "dumbo octopus": {
+                "duoi": (
+                    "flapping both ear-like fins once and drifting forward on it",
+                    "spreading the webbed arms into a wide umbrella and closing them again",
+                    "hovering just above the seabed with the fins moving very slowly",
+                    "turning on the spot with only one fin beating",
+                ),
+            },
             "siphonophore": {
                 "duoi": (
                     "pulsing once and gliding forward on the momentum",
@@ -965,6 +1082,10 @@ KENH: dict[str, dict] = {
             "low enough to throw long shadows."
         ),
         "loai": {
+            "roe deer": (
+                "A roe deer: small and neat, grey-brown winter coat, a white patch on the rump, short "
+                "upright ears, and large dark eyes that throw back a flat coin of light."
+            ),
             "barn owl": (
                 "A barn owl: white heart-shaped face, dark eyes, golden-buff back flecked with "
                 "grey, pure white underside, long legs trailing behind in flight."
@@ -983,6 +1104,14 @@ KENH: dict[str, dict] = {
             ),
         },
         "hanh_vi": {
+            "roe deer": {
+                "tren": (
+                    "standing at the edge of the trees with both eyes returning the light",
+                    "lifting its head and holding completely still",
+                    "stepping into the open and stopping mid-stride",
+                    "turning its ears independently while the body stays motionless",
+                ),
+            },
             "barn owl": {
                 "tren": (
                     "flying straight toward the camera on completely silent wings and passing overhead",
@@ -1061,6 +1190,10 @@ KENH: dict[str, dict] = {
             "morning with no wind."
         ),
         "loai": {
+            "duckling": (
+                "A mallard duckling: soft yellow and dark brown down in a neat pattern, a small flat bill, "
+                "oversized dark feet, riding very high on the water."
+            ),
             "fawn": (
                 "A newborn roe deer fawn: rust-red coat covered in rows of white spots, enormous "
                 "dark eyes, ears too large for its head, legs folded under it in the grass."
@@ -1079,6 +1212,14 @@ KENH: dict[str, dict] = {
             ),
         },
         "hanh_vi": {
+            "duckling": {
+                "tren": (
+                    "paddling hard to keep up and falling behind anyway",
+                    "climbing onto a floating leaf and sinking it",
+                    "shaking its whole body and almost tipping over",
+                    "sitting still on the bank with water beading on the down",
+                ),
+            },
             "fawn": {
                 "tren": (
                     "standing for the first time and immediately folding back down",
@@ -1221,6 +1362,210 @@ KENH: dict[str, dict] = {
             "Nothing is blown away, drowned, dashed against rocks or killed. This is endurance, "
             "not disaster.",
             "No shipwreck, no rescue, no human structure other than bare rock.",
+        ),
+    },
+
+    "ICE AGE": {
+        "ten": "ICE AGE",
+        "mo_ta": "Voi ma mút và thảo nguyên băng hà — quay như phóng sự, về những con vật đã biến mất.",
+        "hook": (
+            "An animal everyone knows is gone, filmed exactly the way a wildlife crew would film "
+            "one that is not. The viewer stops because the shot behaves like real footage of an "
+            "impossible thing."
+        ),
+        "the_gioi": (
+            "The mammoth steppe in late winter: dry frozen grassland running flat to the horizon, "
+            "wind-packed snow lying in long ribbons between the tussocks, no trees anywhere, and "
+            "a sun that never climbs far above the ground."
+        ),
+        "anh_sang_cam": ("through the water",),
+        "thoi_tiet_cam": ("heavy slow swell", "tearing spray", "like glass", "loose pack ice",
+                          "frost smoke"),
+        "khuon_cam": ("underwater looking up", "underwater side on", "split level half under water",
+                      "cliff edge looking down"),
+        "loai": {
+            "woolly mammoth": (
+                "A woolly mammoth: a high domed head and a fatty hump behind it, a coat of coarse "
+                "dark-ginger guard hair hanging almost to the ground over dense underwool, small "
+                "furred ears, and two long tusks curving inward and crossing near the tips."
+            ),
+            "mammoth calf": (
+                "A woolly mammoth calf: chest-high to an adult, woolly all over with a paler "
+                "ginger coat, a short trunk it does not yet control, and tusks barely showing."
+            ),
+            "woolly rhinoceros": (
+                "A woolly rhinoceros: a long low body under a thick brown coat, a broad flat front "
+                "horn worn to a blade by sweeping snow, a smaller second horn behind it, and a "
+                "heavy head carried close to the ground."
+            ),
+            "cave lion": (
+                "A cave lion: larger and longer-legged than a modern lion, sandy-grey coat with "
+                "faint pale stripes on the flanks, and no mane at all — only a slight ruff."
+            ),
+            "giant deer": (
+                "A giant deer: a tall pale-brown stag carrying antlers wider than its own body, "
+                "flat and palmate like two open hands, with a dark line down the spine."
+            ),
+        },
+        "hanh_vi": {
+            "woolly mammoth": {
+                "tren": (
+                    "sweeping snow aside with one tusk to reach the grass underneath",
+                    "standing broadside with the whole coat streaming sideways in the wind",
+                    "raising the trunk straight up and holding a scent on the air",
+                    "walking a worn trail with the head swinging in time with each step",
+                    "curling the trunk around a tussock and pulling it free",
+                    "standing completely still while snow builds along the top of its back",
+                    "rubbing one flank slowly against a boulder",
+                    "lifting one front foot and setting it down in exactly the same place",
+                ),
+            },
+            "mammoth calf": {
+                "tren": (
+                    "walking underneath an adult body and staying inside its shadow",
+                    "trying to use its short trunk on a tussock and giving up",
+                    "running a few steps and stopping to look back",
+                ),
+            },
+            "woolly rhinoceros": {
+                "tren": (
+                    "sweeping the front horn side to side to clear snow off the grass",
+                    "standing with the head lowered and steam rising from its nostrils",
+                    "turning its whole body to face the wind",
+                ),
+            },
+            "cave lion": {
+                "tren": (
+                    "lying flat in dry grass with only the ears above the seed heads",
+                    "walking a straight line across open ground without hurrying",
+                    "stopping mid-step with one forepaw still raised",
+                ),
+            },
+            "giant deer": {
+                "tren": (
+                    "turning its head so the full width of the antlers crosses the frame",
+                    "standing on a low rise outlined against a pale sky",
+                    "lowering the antlers slowly to reach the grass",
+                ),
+            },
+        },
+        "style": (
+            "Dust and low sun: everything is ochre, bone-white and cold grey, and the light comes "
+            "in almost horizontally so every animal is rimmed and the ground goes dark. Air is "
+            "full of blown snow and grass seed, which softens distance to nothing. Nothing in "
+            "this world is green and nothing is bright."
+        ),
+        "am": "constant wind over dry grass, coarse hair moving, deep footfalls, distant rumble",
+        "luat": (
+            "Filmed as real wildlife footage, never as a museum reconstruction and never as a "
+            "creature from a film. No dramatic lighting, no slow-motion roar, no monster staging.",
+            "No people, no spears, no cave art, no fire, no hunt. This world has no humans in it "
+            "at all.",
+            "Nothing is killed, injured or eaten on screen.",
+        ),
+    },
+
+    "DEEP TIME": {
+        "ten": "DEEP TIME",
+        "mo_ta": "Khủng long quay bằng ống kính phóng sự — không phải quái vật phim, mà là động vật.",
+        "hook": (
+            "A wildlife shot of an animal that has been extinct for sixty-six million years, held "
+            "on a locked lens like any other. The viewer stops because it is filmed calmly, and "
+            "calm is the last thing they expect."
+        ),
+        "the_gioi": (
+            "A Late Cretaceous floodplain in the wet season: braided river channels between banks "
+            "of horsetails, low broad-leaved conifers and ginkgo standing back from the water, "
+            "wet sand tracked over everywhere, and mist lifting off the shallows at dawn."
+        ),
+        "anh_sang_cam": ("through the water", "polar twilight"),
+        "thoi_tiet_cam": ("loose pack ice", "driving snow", "frost smoke", "tearing spray"),
+        "khuon_cam": ("underwater looking up", "underwater side on", "split level half under water",
+                      "cliff edge looking down"),
+        "loai": {
+            "tyrannosaur": (
+                "A large tyrannosaur: a deep narrow skull with small forward-facing eyes, a "
+                "muscular neck, a coat of coarse dark filaments along the neck and back fading to "
+                "bare pebbled skin on the flanks, two short powerful arms held close to the chest, "
+                "and a thick tail carried level with the spine."
+            ),
+            "sauropod": (
+                "A sauropod: a very long neck held almost horizontal, a tiny blunt head, a barrel "
+                "body on four columnar legs, pale grey skin with darker mottling along the back, "
+                "and a tail as long as the neck held clear of the ground."
+            ),
+            "feathered theropod": (
+                "A small feathered theropod the size of a large bird: a full covering of "
+                "brown-and-cream barred feathers, long stiff tail feathers, three-fingered "
+                "feathered arms held folded, and a slender toothed muzzle."
+            ),
+            "hadrosaur": (
+                "A hadrosaur: a heavy body on four legs with a broad duck-like flattened muzzle, "
+                "a hollow crest curving back from the head, olive-brown skin patterned in fine "
+                "pebbled scales, and a deep tail."
+            ),
+            "pterosaur": (
+                "A pterosaur: a long thin skull with a bony crest, a fuzzy coat of fine "
+                "filaments over the body, and enormous membrane wings stretched from a single "
+                "very long finger on each hand."
+            ),
+        },
+        "hanh_vi": {
+            "tyrannosaur": {
+                "tren": (
+                    "standing in shallow water and lowering its head to drink",
+                    "walking a sandbank with the tail held perfectly level and still",
+                    "turning its head to bring one eye to bear on something out of frame",
+                    "shaking the filaments along its neck the way a bird shakes its feathers",
+                    "resting on its haunches with the head lowered and eyes half closed",
+                ),
+            },
+            "sauropod": {
+                "tren": (
+                    "sweeping the small head slowly along a bank of horsetails while feeding",
+                    "walking through shallow water so the whole body reflects underneath it",
+                    "lifting the neck to full height and holding it there",
+                    "standing still while the long tail drifts slowly to one side",
+                ),
+            },
+            "feathered theropod": {
+                "tren": (
+                    "picking its way along wet sand leaving a line of three-toed prints",
+                    "fluffing every feather out at once and flattening them again",
+                    "cocking its head to one side and holding it there",
+                    "stretching one feathered arm and one leg out on the same side",
+                ),
+            },
+            "hadrosaur": {
+                "tren": (
+                    "grazing at the water's edge with the flat muzzle skimming the surface",
+                    "raising its head and holding still with the crest against the sky",
+                    "moving through mist with only the crest and back showing",
+                ),
+            },
+            "pterosaur": {
+                "tren": (
+                    "standing folded on all fours on a sandbank with the wings tucked away",
+                    "opening both wings once to their full span and closing them",
+                    "walking on its wing-knuckles and hind feet along the shallows",
+                ),
+            },
+        },
+        "style": (
+            "Wet, green and quiet — the opposite of every dinosaur film ever made. Palette is "
+            "river-silt grey, horsetail green and the warm sand of the banks. Light is soft "
+            "morning haze coming through mist off the water, never hard, never orange, never "
+            "lit from below. The animals are drawn as animals: dull, practical colours, skin "
+            "that looks like it has weather on it."
+        ),
+        "am": "running shallow water, insects, wind in horsetails, one distant low call",
+        "luat": (
+            "Filmed as real wildlife footage. This is an animal, not a monster: no roaring at "
+            "camera, no rearing, no film-franchise design, no dramatic under-lighting, no "
+            "slow-motion menace.",
+            "No people, no vehicles, no fences, no amber, no laboratory — nothing that belongs to "
+            "a film about dinosaurs.",
+            "No hunt, no chase, no kill, no blood. The animals are doing ordinary things.",
         ),
     },
 }
@@ -1547,8 +1892,17 @@ def cham(kenh: str, so: int, giay: float = 8) -> list[str]:
     # `'ripple Open'` — cụm ấy không tồn tại ở trường nào cả, nó sinh ra từ ĐUÔI trường "not one
     # ripple" dính vào ĐẦU trường "Open the mouth wide". Đo một phép nối là đo một văn bản không
     # ai viết ra; mọi biểu thức nhiều từ đều có thể nổ ở đúng chỗ ghép.
+    # SOI ĐÚNG THỨ SẼ GIAO ĐI, không hơn.
+    #
+    # 2/9 — Bản trước soi cả `hook`. Nhưng `hook` đã bị bỏ khỏi prompt (nó là lý lẽ đạo diễn,
+    # Kling không vẽ được), nên soi nó là soi văn bản không bao giờ tới tay mô hình — và nó bắt
+    # oan ngay: câu hook của ICE AGE có chữ *"a wildlife crew"*, cổng "không có người trong
+    # khung" nổ 246 lần cho một câu không ai gửi đi.
+    #
+    # Luật: khi bỏ một khối khỏi prompt, đi bỏ nó khỏi phạm vi cổng luôn. Cổng soi rộng hơn thứ
+    # giao đi là một cỗ máy bắt oan đang chờ dữ liệu đúng để chặn.
     mo_ta = "\n · ".join([x["ta_loai"], x["hanh_vi"], hs2["the_gioi"],
-                          x["may"], x["anh_sang"], x["thoi_tiet"], hs2["style"], hs2["hook"]])
+                          x["may"], x["anh_sang"], x["thoi_tiet"], hs2["style"]])
     for rx, ly in ((CAM_MAU, "máu me / xác / vết thương — YouTube phạt mạnh ngách này, và cú vồ "
                              "chỉ được BẮT ĐẦU, không được kết thúc trên hình"),
                    (CAM_CHU, "chữ trong khung — Kling vẽ chữ ra ký tự loằng ngoằng, đây là chỗ "
@@ -1559,6 +1913,10 @@ def cham(kenh: str, so: int, giay: float = 8) -> list[str]:
                                   "trông như phim tư liệu thật"),
                    (CAM_TROI, "máy chuyển động — chính hàng rào của prompt này đã cấm nó, nên "
                               "viết vào là tự mâu thuẫn và Kling sẽ chọn một bên"),
+                   (CAM_PHIM, "tạo hình kiểu PHIM — mô hình đã học hàng triệu khung phim quái "
+                              "vật, nên chữ này kéo nó về đúng chỗ ấy. Đây là động vật đang "
+                              "sống, không phải quái vật; và tạo hình hãng phim là tài sản của "
+                              "hãng ấy"),
                    (CAM_NHANH, "chuyển động nhanh và hỗn loạn — đây là chỗ Kling vẽ sai giải "
                                "phẫu (thừa chi, cơ thể biến dạng)")):
         m = rx.search(mo_ta)

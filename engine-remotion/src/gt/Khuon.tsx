@@ -288,12 +288,26 @@ export const SoLieu: React.FC<{
         <>
           <defs>
             <linearGradient id={`sl${Math.round(W)}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0B0E14" stopOpacity={0.80} />
-              <stop offset="62%" stopColor="#0B0E14" stopOpacity={0.34} />
+              {/* 2/9 — DẢI MỜ TẮT TRƯỚC CHỖ CÓ CHỮ.
+                  Anh: *"nhớ tránh tràn hay che khuất."* Trích khung ra nhìn: dòng chú thích
+                  "a jet at takeoff" đè lên mũi máy bay TRẮNG, gần như đọc không ra.
+
+                  Đo trên chính công thức cũ: chú thích đặt ở `y = 0.37·H`, dải mờ cao `0.46·H`
+                  và đã giảm từ 0.34 (ở 62%) xuống 0 — tại 0.37·H độ đậm chỉ còn **~0.17**.
+                  Dải CÓ tồn tại, nhưng nó tắt TRƯỚC chỗ cần nó nhất.
+
+                  Họ lỗi quen: hằng số 0.62 đặt cho bố cục cũ, còn chỗ đặt chữ đã đổi sang 0.37
+                  mà không ai soát lại dải mờ nuôi nó (§13.6 — hằng số sống lâu hơn ngữ cảnh).
+
+                  Nay giữ ≥0.55 qua hết vùng chữ rồi mới tan, cao 0.54·H. Vẫn là dải MỜ DẦN nên
+                  không cắt ngang qua hình — chỉ là phủ đủ chỗ chữ thật sự đứng. */}
+              <stop offset="0%" stopColor="#0B0E14" stopOpacity={0.86} />
+              <stop offset="58%" stopColor="#0B0E14" stopOpacity={0.62} />
+              <stop offset="80%" stopColor="#0B0E14" stopOpacity={0.30} />
               <stop offset="100%" stopColor="#0B0E14" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <rect x={0} y={0} width={W} height={H * (ngang ? 0.40 : 0.46)}
+          <rect x={0} y={0} width={W} height={H * (ngang ? 0.48 : 0.54)}
                 fill={`url(#sl${Math.round(W)})`} />
         </>
       ) : null}
