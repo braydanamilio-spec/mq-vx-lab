@@ -238,11 +238,16 @@ KHUON_HINH = (
     ("static over-the-shoulder shot",
      "Camera locked off just behind one character's shoulder at eye level, the rest of the room "
      "beyond them."),
-    ("static top-down shot",
-     "Camera locked off directly above, looking straight down on the floor and everything on it."),
+    # Bản đầu chỗ này là "static top-down shot". Bỏ, vì trong khung dọc 9:16 nhìn thẳng từ trên
+    # xuống thì KHÔNG CÒN MẶT NGƯỜI — mà cả bộ chạy bằng thoại có lip sync ("Precise lip sync"
+    # nằm trong sàn tiếng của mọi kênh). Một khuôn hình đẹp mà phá cơ chế chính của sản phẩm thì
+    # không phải đa dạng, nó là tự bắn vào chân.
+    ("static three-quarter angle wide shot",
+     "Camera locked off at eye level but turned to a three-quarter angle on the room, so two "
+     "walls are visible and figures stand at an angle to camera."),
     ("static eye-level wide shot from behind",
-     "Camera locked off at eye level, wide, from behind the group — faces turn into frame to "
-     "speak."),
+     "Camera locked off at eye level, wide, slightly behind and to one side of the group — every "
+     "character who speaks is turned enough that the face reads."),
 )
 
 GHIM_MAY = ("static", "eye-level", "eye level", "low angle", "high angle", "wide shot",

@@ -104,6 +104,17 @@ jobs:
               print(f"  TỔNG HỢP  : lỗi {type(e).__name__}: {str(e)[:90]}")
           PYEOF
 
+      # ── BẬT ĐĂNG TỰ ĐỘNG CHO 18 KÊNH (ghi D1, không đụng Firestore) ────────────────────
+      # Anh: *"cứ setup tự động đầy đủ, sau gắn channel vô là nó tự động ăn khớp"*.
+      # Idempotent: chạy lại chỉ ghi đè cùng một cấu hình, không đẻ thêm gì.
+      # Chốt an toàn giữ nguyên — kênh chưa nối YouTube thì `auto_enqueue` bỏ qua và in lý do,
+      # nên bật sẵn không làm đăng nhầm; nó chỉ khiến kênh sẵn sàng đúng lúc anh nối xong.
+      - name: Bật đăng tự động cho 18 kênh
+        env:
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: cd render-pipeline && python bat_dang.py --that
+
       - name: Đối chiếu số kho với Drive
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
