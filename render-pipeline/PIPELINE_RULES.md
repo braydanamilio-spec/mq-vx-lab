@@ -8584,3 +8584,26 @@ Anh: *"xem phần check live api key ổn ko, tối ưu quota token khi check ch
 lượt dùng thật** (7dp), nên phần lớn khoá luôn "còn mới" và nút này gần như không còn việc. Câu
 hỏi đúng khi thấy một bộ dò: *"đường chạy thật đã chạm vào thứ này chưa?"* — rồi thì **ghi lại**,
 đừng **hỏi lại**.
+
+---
+
+## 8k60 — Bộ thiên nhiên không có đường giao hàng
+
+**Triệu chứng.** Sinh prompt xong, tải clip về, và không có gì đưa nó thành video đăng được.
+`kling_dong_bo.py` import cứng `kling_kenh` -> `RuntimeError: chưa có kênh 'ICE BEAR'`.
+
+**Họ lỗi.** *Một dây chuyền kết thúc ở nửa đường trông y hệt một dây chuyền hoàn chỉnh.* Em đã
+báo "cắm vào kling_lo" — đúng về ý định, sai về sự thật.
+
+**Chữa.** `tn_dong_bo.py`, và chạy ĐẦU TỚI CUỐI bằng một clip màu dựng bằng `ffmpeg lavfi`
+trước khi nói là xong.
+
+**Ba chỗ cố ý khác bộ hài:** bìa ở 66% (không phải nhịp hook — bộ này không có cú lật để lộ) ·
+bài đăng viết bằng code (không gọi AI) · cổng bắt buộc câu khai báo cảnh AI ở cả ba nền tảng.
+
+---
+
+## 8k61 — Tất định + `--so` bằng tay = sinh trùng, tốn tiền Kling thật, không có gì báo
+
+Bộ lịch tất định nên cùng `--so` cho ra cùng prompt và ghi đè lặng lẽ. Chữa: `tap_ke()` đếm tập
+kế tiếp, `--so` thành tuỳ chọn, ép `--so` vào thư mục đã có thì cảnh báo.

@@ -111,7 +111,7 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 | **30 kênh Kling — hồ sơ + thước** | `render-pipeline/kling_kenh.py` — hồ sơ 30 kênh (20 đời thường + 10 cỗ máy hài khác nhau, xem §14.1), bộ lịch 7 trục, `_mo_kenh()` lọc nhịp mở theo thế giới, thước `cham()`, ghép prompt theo ngân sách 2.500 ký tự |
 | **30 kênh Kling — cổng** | `cham100.py` (thang 100 điểm, sàn 95) · `kiem_da_dang.py` (cổng chính sách: đo 435 cặp kênh) · `brand_kling.py` (brand kit vẽ bằng code + ba cổng: `kiem_bong()` bóng ngoài · `kiem_tron()` chữ lọt đường cắt tròn · `kiem_tuong_phan()` biểu tượng đọc được) · `selftest.py` (đề bài Python khớp web từng trường) |
 | **20 kênh Kling — đưa clip về** | `kling_dong_bo.py` (gán clip tải về vào đúng tập, ép 1080×1920, viết bài đăng) |
-| **10 kênh thiên nhiên — hồ sơ + cổng** | `render-pipeline/thien_nhien.py` (10 thế giới, bộ lịch 5 trục, 7 cổng: máu me · chữ · người · nhân hoá · trôi máy · động tác hỗn loạn · ngân sách) · `brand_tn.py` (brand kit, gọi thẳng ba cổng của `brand_kling`) |
+| **10 kênh thiên nhiên** | `render-pipeline/thien_nhien.py` (10 thế giới, bộ lịch 4 trục + khuôn hình theo môi trường, 7 cổng: máu me · chữ · người · nhân hoá · trôi máy · động tác hỗn loạn · ngân sách) · `tn_dong_bo.py` (clip → video → bài → bìa 66% → đẩy kho, cổng khai báo AI) · `brand_tn.py` (brand kit, gọi thẳng ba cổng của `brand_kling`) |
 | Cách dùng bộ Kling | `render-pipeline/KLING_CACH_DUNG.md` |
 | Phân tích video tham chiếu | `render-pipeline/PHAN_TICH_GIAI_THICH.md` |
 | Bản hài cũ (giữ để đối chiếu) | `render-pipeline/kich_hai.py` · `src/v4/KichHai.tsx` — vẫn là nơi giữ `KHO` 40 mẩu viết tay, `doc_hai_giong`, `lam_thumb` |
@@ -124,7 +124,7 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 | **Comic (hài)** | 10 | `kich_comic.py` · `kich_comic_long.py` · `sieu_du_lieu.py` | `render_hai.yml` | 10 (mỗi kênh một luồng) |
 | **Phân tích** | 56 | `kich_v2.py` · `kich_v2_long.py` | `render_phan_tich_18.yml` | 18 (chia xen kẽ) |
 | **Kling (hài, AI video)** | 30 | `kling_kenh.py` · `kling_dong_bo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
-| **Thiên nhiên (Kling, short 8–10s)** | 10 | `thien_nhien.py` · `kling_lo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
+| **Thiên nhiên (Kling, short 8–10s)** | 10 | `thien_nhien.py` · `tn_dong_bo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
 | Thế hệ 1 (cũ) | ~50 | `datastory_ci.py` | `render_cron.yml` | cron TẮT |
 
 Bộ Kling khác ba bộ kia ở một chỗ quyết định: **nó không dựng video trên Actions**. Python chỉ
@@ -1552,3 +1552,39 @@ cổng đang lành. Thật ra bài kiểm hỏng hai chỗ:
 
 Đúng luật 13.15: **trước khi kết luận hạ tầng hỏng, kiểm lại bài kiểm của mình** — và ở đây "hạ
 tầng" là chính bảy cổng vừa viết xong.
+
+### 15.10 Một dây chuyền kết thúc ở nửa đường trông y hệt một dây chuyền hoàn chỉnh
+
+Bộ thiên nhiên dừng ở **prompt**. Sau khi anh dán vào Kling và tải clip về thì **không có gì đưa
+nó đi tiếp** — `kling_dong_bo.py` import cứng `kling_kenh` nên nổ ngay ở dòng đầu:
+
+```
+KK.ho_so("ICE BEAR")  ->  RuntimeError: chưa có kênh 'ICE BEAR'
+```
+
+Em đã nói "cắm vào `kling_lo`" trong bản giao đầu — và nó **không hề cắm**. Câu ấy đúng về ý
+định, sai về sự thật, và loại sai ấy chỉ lộ ra khi có clip thật trong tay.
+
+**Luật:** khi giao một dây chuyền, chạy **đầu tới cuối bằng dữ liệu giả** trước khi nói nó xong.
+Ở đây chỉ cần một clip màu 8 giây dựng bằng `ffmpeg lavfi` — mất một phút, và nó là khác biệt
+giữa "đã cắm" và "tưởng là đã cắm".
+
+`tn_dong_bo.py` khác `kling_dong_bo.py` ở đúng ba chỗ, và cả ba là lý do không dùng chung tệp:
+
+| | bộ hài | bộ thiên nhiên |
+|---|---|---|
+| ảnh bìa | giữa nhịp **hook** (62% rơi trúng cú lật, lộ kết) | **66%** — prompt đặt hàng *"resolves about two thirds through"*, nên đó là ĐỈNH, không phải thứ phải giấu |
+| bài đăng | gọi AI (tiêu đề phải bắt cú đùa) | **viết bằng code** — loài + hành vi + nơi chốn đã nằm sẵn trong `tap.json`, gọi AI là tiêu một lượt để lấy về thứ đang cầm |
+| khai báo | không cần | **bắt buộc ở cả ba nền tảng**, có cổng, đã thử ngược |
+
+### 15.11 Tất định + tham số tay = sinh trùng mà không có gì báo
+
+`--so` là tham số tay và bộ lịch tất định, nên chạy lại cùng một `--so` cho ra **đúng cùng một
+prompt**, ghi đè lặng lẽ. Anh dán nó vào Kling và **trả tiền cho một lượt sinh ra cái đã có**.
+
+Không cổng nào kêu, vì về mặt kỹ thuật không có gì hỏng. Cùng họ 12.8: hỏng mà vẫn báo xanh —
+chỉ khác là ở đây cái mất là **tiền thật**, không phải một tệp.
+
+**Chữa:** `tap_ke()` để MÁY đếm tập kế tiếp, `--so` thành tuỳ chọn, và ép `--so` vào một thư mục
+đã có thì in cảnh báo. **Luật:** hễ một hệ vừa tất định vừa nhận số thứ tự bằng tay thì nó sẽ
+sinh trùng — hãy để máy đếm.
