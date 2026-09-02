@@ -111,7 +111,7 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 | **30 kênh Kling — hồ sơ + thước** | `render-pipeline/kling_kenh.py` — hồ sơ 30 kênh (20 đời thường + 10 cỗ máy hài khác nhau, xem §14.1), bộ lịch 7 trục, `_mo_kenh()` lọc nhịp mở theo thế giới, thước `cham()`, ghép prompt theo ngân sách 2.500 ký tự |
 | **30 kênh Kling — cổng** | `cham100.py` (thang 100 điểm, sàn 95) · `kiem_da_dang.py` (cổng chính sách: đo 435 cặp kênh) · `brand_kling.py` (brand kit vẽ bằng code + ba cổng: `kiem_bong()` bóng ngoài · `kiem_tron()` chữ lọt đường cắt tròn · `kiem_tuong_phan()` biểu tượng đọc được) · `selftest.py` (đề bài Python khớp web từng trường) |
 | **20 kênh Kling — đưa clip về** | `kling_dong_bo.py` (gán clip tải về vào đúng tập, ép 1080×1920, viết bài đăng) |
-| **10 kênh thiên nhiên** | `render-pipeline/thien_nhien.py` (10 thế giới, bộ lịch 4 trục + khuôn hình theo môi trường, 7 cổng: máu me · chữ · người · nhân hoá · trôi máy · động tác hỗn loạn · ngân sách) · `tn_dong_bo.py` (clip → video → bài → bìa 66% → đẩy kho, cổng khai báo AI) · `brand_tn.py` (brand kit, gọi thẳng ba cổng của `brand_kling`) |
+| **12 kênh thiên nhiên** | `render-pipeline/thien_nhien.py` (10 thế giới, bộ lịch 4 trục + khuôn hình theo môi trường, 7 cổng: máu me · chữ · người · nhân hoá · trôi máy · động tác hỗn loạn · ngân sách) · `tn_dong_bo.py` (clip → video → bài → bìa 66% → đẩy kho, cổng khai báo AI) · `brand_tn.py` (brand kit, gọi thẳng ba cổng của `brand_kling`) |
 | Cách dùng bộ Kling | `render-pipeline/KLING_CACH_DUNG.md` |
 | Phân tích video tham chiếu | `render-pipeline/PHAN_TICH_GIAI_THICH.md` |
 | Bản hài cũ (giữ để đối chiếu) | `render-pipeline/kich_hai.py` · `src/v4/KichHai.tsx` — vẫn là nơi giữ `KHO` 40 mẩu viết tay, `doc_hai_giong`, `lam_thumb` |
@@ -124,7 +124,7 @@ Tầng cuối không gọi API nên không bao giờ hỏng.
 | **Comic (hài)** | 10 | `kich_comic.py` · `kich_comic_long.py` · `sieu_du_lieu.py` | `render_hai.yml` | 10 (mỗi kênh một luồng) |
 | **Phân tích** | 56 | `kich_v2.py` · `kich_v2_long.py` | `render_phan_tich_18.yml` | 18 (chia xen kẽ) |
 | **Kling (hài, AI video)** | 30 | `kling_kenh.py` · `kling_dong_bo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
-| **Thiên nhiên (Kling, short 8–10s)** | 10 | `thien_nhien.py` · `tn_dong_bo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
+| **Thiên nhiên (Kling, short 8–10s)** | 12 | `thien_nhien.py` · `tn_dong_bo.py` | **KHÔNG có** — anh dán prompt vào Kling web rồi tải clip về | tay |
 | Thế hệ 1 (cũ) | ~50 | `datastory_ci.py` | `render_cron.yml` | cron TẮT |
 
 Bộ Kling khác ba bộ kia ở một chỗ quyết định: **nó không dựng video trên Actions**. Python chỉ
@@ -1588,3 +1588,63 @@ chỉ khác là ở đây cái mất là **tiền thật**, không phải một 
 **Chữa:** `tap_ke()` để MÁY đếm tập kế tiếp, `--so` thành tuỳ chọn, và ép `--so` vào một thư mục
 đã có thì in cảnh báo. **Luật:** hễ một hệ vừa tất định vừa nhận số thứ tự bằng tay thì nó sẽ
 sinh trùng — hãy để máy đếm.
+
+### 15.12 Viết ra một trường rồi không bao giờ đọc nó — im lặng cả hai phía
+
+Trường `luat` (luật vật lý của thế giới) được soạn cho **cả mười hai kênh** và **đọc 0 lần**:
+`grep 'hs\["luat"\]'` không ra dòng nào. Bộ hài đưa luật thế giới vào lệnh hệ thống cho AI
+(14.11); bộ này **không có AI**, nên chỗ duy nhất nó tồn tại được là chính prompt — và em quên
+nối.
+
+Bỏ quên một trường dữ liệu trông **y hệt** như chưa từng viết nó. Không có lỗi, không có cảnh
+báo, và bản thân dữ liệu đọc lên vẫn rất thuyết phục.
+
+**Cách nhận ra rẻ nhất:** với mỗi trường trong hồ sơ, `grep` xem có chỗ nào ĐỌC nó không. Trường
+chỉ được ghi mà không được đọc là trường chưa tồn tại.
+
+Và khi nối vào thì lộ tiếp một điều: `luat` của hai kênh tiền sử **nói lại** thứ hàng rào DO NOT
+đã cấm ("no people", "no blood"). Nói hai lần tốn ngân sách và không thêm gì. **Mỗi ràng buộc
+chỉ được sống ở đúng một chỗ.**
+
+### 15.13 Ước lượng ca xấu nhất bằng công thức — lệch 140 ký tự, cắt mò ba lượt
+
+Sau khi thêm khối `RULES OF THIS WORLD`, prompt tràn trần. Em ước lượng ca xấu nhất bằng "dài
+nhất của từng trục cộng lại + một hằng số dự phòng", ra 2.385 với 115 dư — trong khi bản dựng
+thật báo **2.527**. Lệch 140, và em đi cắt mò ba lượt liền, lượt nào cũng thấy con số mới vì
+mỗi lần một tổ hợp KHÁC trở thành xấu nhất.
+
+Đúng lỗi 13.7 lần nữa: **đo mô hình thay vì đo vật thật**.
+
+Chữa bằng `ca_xau_nhat(kenh)` — **duyệt hết** mọi tổ hợp (loài × hành vi × khuôn × sáng × tiết ×
+độ dài) và trả về số dài nhất cùng tổ hợp gây ra nó. Không gian một kênh chỉ vài nghìn nên duyệt
+hết mất mili giây.
+
+Và nó thành **cổng design-time** trong selftest: thêm một kênh viết quá dài thì hỏng NGAY LÚC
+THÊM, không phải ở tập số 47 sáu tháng sau.
+
+Một chi tiết đắt: tổ hợp xấu nhất hoá ra là hành vi *"shaking the filaments along its neck **the
+way a bird shakes its feathers**"* — vừa dài nhất vừa chứa một **phép ví von**, thứ luật 15.2 đã
+cấm. Cắt nó sửa cả hai lỗi bằng một nhát. Chỗ dài nhất thường cũng là chỗ viết lỏng nhất.
+
+### 15.14 Hai kênh tiền sử — vì sao là KÊNH RIÊNG, không phải loài thêm vào
+
+Anh nêu ý voi ma mút và khủng long. Nhét chúng vào ICE BEAR hay BLUE GIANT là hỏng: khác thế
+giới, khác ánh sáng, khác cả lời hứa với người xem. Nên **41 · ICE AGE** và **42 · DEEP TIME**.
+
+Ba điều làm ngách này khác hẳn mười kênh kia:
+
+1. **Căng thẳng "khai báo cảnh AI" biến mất, và thành điểm cộng.** Với gấu Bắc Cực, cảnh AI phải
+   nói rõ là AI để khỏi khai man. Với voi ma mút thì AI là cách **duy nhất** có hình — không ai
+   hiểu nhầm, và người xem tới vì đúng điều đó.
+2. **Không có "giải phẫu đúng loài" để mà neo vào.** Câu `SAN_THAT` chung nói *"anatomy exactly
+   right for the species"* — với con vật tuyệt chủng thì câu ấy rỗng, và chỗ rỗng ấy mô hình lấp
+   bằng thứ nó thuộc nhất: **thiết kế phim**. Nên hai kênh này khai `treatment` riêng, neo vào
+   **phục dựng cổ sinh học**.
+3. **Cổng mới `CAM_PHIM`.** Mô hình đã học hàng triệu khung phim khủng long, nên không ghim thì
+   nó vẽ một con quái vật gầm vào ống kính. Ngoài chuyện xấu, tạo hình của một hãng phim là tài
+   sản của hãng ấy. Cổng chặn `jurassic · cinematic · roar · rearing · menacing · lit from below`
+   — đã thử ngược cả bốn.
+
+Và `style` của DEEP TIME cố ý đi ngược mọi phim khủng long: **ướt, xanh, yên tĩnh**, ánh sáng
+sương buổi sáng từ trên xuống. Đó chính là hook — người xem dừng lại vì nó được quay **bình
+tĩnh**, thứ cuối cùng họ chờ đợi ở một con khủng long.

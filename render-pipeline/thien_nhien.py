@@ -358,9 +358,8 @@ KENH: dict[str, dict] = {
         ),
         "am": "wind over flat ice, ice creaking, water lapping in a lead, breath",
         "luat": (
-            "The bear is never violent on screen and never catches anything. Whatever it is "
-            "hunting stays out of frame.",
-            "There is no land, no vegetation, no building and no vessel anywhere in this world.",
+            "The bear never catches anything; whatever it is hunting stays out of frame.",
+            "No land, no vegetation, no structure anywhere in this world.",
         ),
     },
 
@@ -471,9 +470,8 @@ KENH: dict[str, dict] = {
         ),
         "am": "blows, water sheeting off a fin, distant clicks and whistles, swell on rock",
         "luat": (
-            "No hunt is ever completed on screen. Prey animals may appear, but the moment of "
-            "contact is never shown.",
-            "The pod is never in distress, never stranded, never entangled.",
+            "Prey may appear, but the moment of contact is never shown.",
+            "The pod is never stranded, entangled or in distress.",
         ),
     },
 
@@ -620,8 +618,8 @@ KENH: dict[str, dict] = {
         ),
         "am": "low distant song, water moving over a huge body, one blow, deep pressure hum",
         "luat": (
-            "There is never a boat, a diver, a net or a rope in this world.",
-            "The whale is never beached, never entangled, never injured.",
+            "No net, no rope, no entanglement; the whale is never beached.",
+            "There is no floor and no coastline — only open water.",
         ),
     },
 
@@ -720,8 +718,7 @@ KENH: dict[str, dict] = {
         ),
         "am": "constant wind, thousands of calls layered into a wash, feet on hard snow",
         "luat": (
-            "No chick is ever shown in distress, taken, or alone in danger. The skua watches and "
-            "nothing more.",
+            "No chick is ever alone in danger; the skua only ever watches.",
             "Nothing dies on screen and no body is ever in frame.",
         ),
     },
@@ -833,9 +830,8 @@ KENH: dict[str, dict] = {
         ),
         "am": "muffled under-ice tone, ice groaning, a distant series of clicks, one blow at a hole",
         "luat": (
-            "The tusk is a straight left-side spiral and never glows, never bends, never doubles "
-            "except on the rare two-tusked bull, and never touches the camera.",
-            "No hunt, no predator, no blood, no ice collapse. This world is calm.",
+            "The tusk is a straight left-side spiral: it never glows, never bends, and never doubles except on the rare two-tusked bull.",
+            "No predator and no ice collapse. This world is calm.",
         ),
     },
 
@@ -943,8 +939,8 @@ KENH: dict[str, dict] = {
         ),
         "am": "surf on rock, water draining off stone, barks layered at distance, gulls",
         "luat": (
-            "No predator ever arrives. No animal is ever struck by a rock or crushed.",
-            "The sea is powerful but nothing is ever in real danger on screen.",
+            "No predator ever arrives; nothing is crushed against the rock.",
+            "The sea is powerful, but nothing is ever in real danger on screen.",
         ),
     },
 
@@ -1049,9 +1045,8 @@ KENH: dict[str, dict] = {
         ),
         "am": "deep pressure silence, one low sustained tone, a faint tick of falling particles",
         "luat": (
-            "There is never a submersible, a light rig, a cable or a diver in frame — the light "
-            "always comes from the animal itself.",
-            "Nothing is eaten on screen. No blood, and no gore of any kind at this depth.",
+            "The light always comes from the animal itself — no submersible, no light rig, no cable, no beam from off screen.",
+            "Nothing is eaten at this depth.",
         ),
     },
 
@@ -1157,8 +1152,7 @@ KENH: dict[str, dict] = {
         ),
         "am": "still night air, one distant call, grass moving, a wingbeat that makes no sound",
         "luat": (
-            "The strike is never completed. The hunter may dive, pounce or freeze; the prey is "
-            "never taken on screen and is often not in frame at all.",
+            "The strike is never completed: the hunter may dive, pounce or freeze, and the prey is usually not in frame at all.",
             "No infrared green wash and no thermal false-colour — this is moonlight, filmed.",
         ),
     },
@@ -1263,10 +1257,8 @@ KENH: dict[str, dict] = {
         ),
         "am": "dawn birdsong at a distance, grass moving, one small call, insects",
         "luat": (
-            "No predator, no threat, no separation, no death. Nothing bad happens in this world "
-            "and nothing is implied.",
-            "The adult is never fully in frame — this channel is about the young animal alone in "
-            "the picture.",
+            "No predator, no threat, no separation. Nothing bad happens here and nothing is implied.",
+            "The adult is never fully in frame — only a muzzle, a bill or a set of legs.",
         ),
     },
 
@@ -1359,9 +1351,8 @@ KENH: dict[str, dict] = {
         ),
         "am": "wind over rock, rain on stone, surf detonating below, one call cutting through",
         "luat": (
-            "Nothing is blown away, drowned, dashed against rocks or killed. This is endurance, "
-            "not disaster.",
-            "No shipwreck, no rescue, no human structure other than bare rock.",
+            "Nothing is blown away, drowned or dashed against the rocks. This is endurance, not disaster.",
+            "No wreck and no structure — only bare rock.",
         ),
     },
 
@@ -1383,11 +1374,15 @@ KENH: dict[str, dict] = {
                           "frost smoke"),
         "khuon_cam": ("underwater looking up", "underwater side on", "split level half under water",
                       "cliff edge looking down"),
+        "treatment": (
+            "Photoreal, documentary-grade. Anatomy follows current palaeontological reconstruction, "
+            "with coat, hair and body mass the way a living animal carries them."
+        ),
         "loai": {
             "woolly mammoth": (
-                "A woolly mammoth: a high domed head and a fatty hump behind it, a coat of coarse "
-                "dark-ginger guard hair hanging almost to the ground over dense underwool, small "
-                "furred ears, and two long tusks curving inward and crossing near the tips."
+                "A woolly mammoth: a high domed head with a fatty hump behind it, coarse dark-ginger "
+                "guard hair hanging almost to the ground, small furred ears, and two long tusks "
+                "curving inward and crossing near the tips."
             ),
             "mammoth calf": (
                 "A woolly mammoth calf: chest-high to an adult, woolly all over with a paler "
@@ -1457,11 +1452,8 @@ KENH: dict[str, dict] = {
         ),
         "am": "constant wind over dry grass, coarse hair moving, deep footfalls, distant rumble",
         "luat": (
-            "Filmed as real wildlife footage, never as a museum reconstruction and never as a "
-            "creature from a film. No dramatic lighting, no slow-motion roar, no monster staging.",
-            "No people, no spears, no cave art, no fire, no hunt. This world has no humans in it "
-            "at all.",
-            "Nothing is killed, injured or eaten on screen.",
+            "Filmed as real wildlife footage, never as a museum reconstruction and never as a creature from a film.",
+            "No spears, no cave art, no fire — this world has no humans in it at all.",
         ),
     },
 
@@ -1475,24 +1467,28 @@ KENH: dict[str, dict] = {
         ),
         "the_gioi": (
             "A Late Cretaceous floodplain in the wet season: braided river channels between banks "
-            "of horsetails, low broad-leaved conifers and ginkgo standing back from the water, "
-            "wet sand tracked over everywhere, and mist lifting off the shallows at dawn."
+            "of horsetails, low conifers and ginkgo standing back from the water, wet tracked "
+            "sand, and mist lifting off the shallows at dawn."
         ),
         "anh_sang_cam": ("through the water", "polar twilight"),
         "thoi_tiet_cam": ("loose pack ice", "driving snow", "frost smoke", "tearing spray"),
         "khuon_cam": ("underwater looking up", "underwater side on", "split level half under water",
                       "cliff edge looking down"),
+        "treatment": (
+            "Photoreal, documentary-grade. Anatomy follows current palaeontological reconstruction — "
+            "feathers where the evidence says feathers, skin that has weather on it — and never "
+            "the design language of a film."
+        ),
         "loai": {
             "tyrannosaur": (
-                "A large tyrannosaur: a deep narrow skull with small forward-facing eyes, a "
-                "muscular neck, a coat of coarse dark filaments along the neck and back fading to "
-                "bare pebbled skin on the flanks, two short powerful arms held close to the chest, "
-                "and a thick tail carried level with the spine."
+                "A large tyrannosaur: a deep narrow skull with small forward-facing eyes, coarse dark "
+                "filaments along the neck and back fading to bare pebbled skin on the flanks, short "
+                "arms held close to the chest, tail level with the spine."
             ),
             "sauropod": (
-                "A sauropod: a very long neck held almost horizontal, a tiny blunt head, a barrel "
-                "body on four columnar legs, pale grey skin with darker mottling along the back, "
-                "and a tail as long as the neck held clear of the ground."
+                "A sauropod: a very long neck held almost horizontal, a tiny blunt head, a barrel body "
+                "on four columnar legs, pale grey mottled skin, tail as long as the neck and clear "
+                "of the ground."
             ),
             "feathered theropod": (
                 "A small feathered theropod the size of a large bird: a full covering of "
@@ -1516,7 +1512,7 @@ KENH: dict[str, dict] = {
                     "standing in shallow water and lowering its head to drink",
                     "walking a sandbank with the tail held perfectly level and still",
                     "turning its head to bring one eye to bear on something out of frame",
-                    "shaking the filaments along its neck the way a bird shakes its feathers",
+                    "shaking the filaments along its neck out and flattening them again",
                     "resting on its haunches with the head lowered and eyes half closed",
                 ),
             },
@@ -1560,12 +1556,8 @@ KENH: dict[str, dict] = {
         ),
         "am": "running shallow water, insects, wind in horsetails, one distant low call",
         "luat": (
-            "Filmed as real wildlife footage. This is an animal, not a monster: no roaring at "
-            "camera, no rearing, no film-franchise design, no dramatic under-lighting, no "
-            "slow-motion menace.",
-            "No people, no vehicles, no fences, no amber, no laboratory — nothing that belongs to "
-            "a film about dinosaurs.",
-            "No hunt, no chase, no kill, no blood. The animals are doing ordinary things.",
+            "An animal, not a monster: it never roars at camera and never rears up.",
+            "No amber, no fences, no laboratory, nothing belonging to a film about dinosaurs.",
         ),
     },
 }
@@ -1783,10 +1775,13 @@ def prompt(kenh: str, so: int, giay: float = 8) -> str:
     """
     hs = ho_so(kenh)
     x = lich(kenh, so)
-    g = f"{float(giay):g}"
+    return _ghep(hs, x, giay)
 
-    # BẮT BUỘC — không khối nào ở đây được cắt.
-    bb = [
+
+def _bat_buoc(hs: dict, x: dict, giay: float) -> list:
+    """Các khối KHÔNG BAO GIỜ được cắt. Tách ra để đo trực tiếp được — xem `ca_xau_nhat`."""
+    g = f"{float(giay):g}"
+    return [
         f"{hs['ten']} — photoreal wildlife shot, vertical 9:16, exactly {g} seconds, one "
         f"continuous take.",
         "",
@@ -1809,7 +1804,11 @@ def prompt(kenh: str, so: int, giay: float = 8) -> str:
          if x["anh_sang"] else f"The conditions are {x['thoi_tiet']}."),
         "",
         "TREATMENT:",
-        SAN_THAT,
+        # Kênh được KHAI RIÊNG câu này khi câu chung không đúng với nó. `SAN_THAT` nói "anatomy
+        # exactly right for the species" — với một con vật tuyệt chủng thì câu ấy vô nghĩa: không
+        # có mẫu thật để mà đúng, và chỗ trống ấy mô hình lấp bằng thứ nó thuộc nhất, tức thiết
+        # kế phim. Nên hai kênh tiền sử neo vào phục dựng cổ sinh học, không vào "loài".
+        hs.get("treatment") or SAN_THAT,
         "",
         # LENS là khối BẮT BUỘC, không phải khối tả thêm. Đo được nó bị rớt khỏi kho tuỳ chọn
         # vì `LOOK` xếp trước và ăn hết chỗ — mà câu ống kính mới là thứ quyết định clip có
@@ -1817,6 +1816,19 @@ def prompt(kenh: str, so: int, giay: float = 8) -> str:
         # BẢN CHẤT phải ngang hàng khối khoá nhân vật, không nằm trong phần chèn được thì chèn.
         "LENS:",
         ong_kinh(x["khuon"], x["moi_truong"]),
+        "",
+        # LUẬT CỦA THẾ GIỚI NÀY — khối BẮT BUỘC.
+        #
+        # 2/9 — Trường `luat` được viết cho cả mười hai kênh và ĐỌC 0 LẦN: em soạn nó rồi không
+        # bao giờ nối vào prompt. Bộ hài đưa luật thế giới vào lệnh hệ thống cho AI (14.11), còn
+        # bộ này KHÔNG CÓ AI — nên chỗ duy nhất nó có thể tồn tại là chính prompt gửi Kling. Bỏ
+        # quên một trường dữ liệu trông y hệt như chưa từng viết nó, và cả hai đều im lặng.
+        #
+        # Đặt BẮT BUỘC chứ không để vào kho tuỳ chọn: đây là ràng buộc ĐÚNG/SAI (gấu không bao
+        # giờ bắt được con mồi trên hình; thế giới này không có người; khủng long là con vật chứ
+        # không phải quái vật phim), còn `LOOK` chỉ là thẩm mỹ. Khi hết chỗ thì thẩm mỹ nhường.
+        "RULES OF THIS WORLD:",
+    ] + [f"- {t}" for t in hs.get("luat", ())] + [
         "",
         f"OVER THE {g} SECONDS:",
         # 2/9 — Bản đầu nói con vật ĐANG LÀM GÌ nhưng không nói tám giây ấy DIỄN RA THẾ NÀO, và
@@ -1830,6 +1842,11 @@ def prompt(kenh: str, so: int, giay: float = 8) -> str:
         "through the middle, resolves about two thirds through, and the last seconds are the "
         "stillness after it. Nothing else enters the frame.",
     ]
+
+
+def _ghep(hs: dict, x: dict, giay: float) -> str:
+    g = f"{float(giay):g}"
+    bb = _bat_buoc(hs, x, giay)
     rao = [RAO[0]] + list(RAO[1:-1]) + [CAU_CHOT_RAO.format(g=g)]
 
     # KHO TUỲ CHỌN — chèn tới đâu ngân sách cho phép, theo thứ tự giá trị giảm dần.
@@ -1851,10 +1868,42 @@ def prompt(kenh: str, so: int, giay: float = 8) -> str:
             them.append(t)
             con -= len(t) + 3
     if len(lo) + len(ra) + 2 > KY_TU_MAX:
-        raise RuntimeError(f"khối bắt buộc của {kenh} đã {len(lo) + len(ra) + 2} ký tự — "
-                           f"viết ngắn `the_gioi` hoặc mô tả loài lại")
+        raise RuntimeError(f"khối bắt buộc của {hs['ten']} đã {len(lo) + len(ra) + 2} ký tự — "
+                           f"viết ngắn `the_gioi`, `luat` hoặc mô tả loài lại")
     return lo + "\n\n" + "".join(t + "\n\n" for t in them) + ra + "\n"
 
+
+
+def ca_xau_nhat(kenh: str) -> tuple:
+    """Tổ hợp DÀI NHẤT mà kênh này có thể sinh ra, đo bằng cách DUYỆT HẾT.
+
+    2/9 — Em ước lượng ca xấu nhất bằng công thức (dài nhất của từng trục cộng lại cộng một hằng
+    số dự phòng) và lệch 140 ký tự, rồi đi cắt mò từng nhát ba lượt liền. Đúng lỗi 13.7: đo mô
+    hình thay vì đo vật thật.
+
+    Không gian tổ hợp của một kênh chỉ vài nghìn, duyệt hết mất mili giây. Và đây là phép đo
+    DESIGN-TIME: nó bắt được kênh viết quá dài NGAY LÚC THÊM KÊNH, thay vì để nó nổ vào một tập
+    số 47 nào đó sáu tháng sau.
+    """
+    hs = ho_so(kenh)
+    dai, xau = -1, None
+    for lo, hv, mt in cap_loai(hs):
+        hop = [k for k in khuon_kenh(hs)
+               if mt in KHUON_MOI_TRUONG.get(k[0], ("tren",))
+               and (k[0] != "macro detail" or hv in MACRO_OK)] or list(khuon_kenh(hs))
+        for kh in hop:
+            for a in ([""] if kh[0] in KHUON_TU_SANG else as_kenh(hs, mt)):
+                for t in tt_kenh(hs):
+                    for g in GIAY_CHUAN:
+                        x = {"loai": lo, "ta_loai": hs["loai"][lo], "hanh_vi": hv,
+                             "khuon": kh[0], "may": kh[1], "moi_truong": mt,
+                             "anh_sang": a, "thoi_tiet": t}
+                        bb = _bat_buoc(hs, x, g)
+                        n = len("\n".join(bb)) + len("\n".join(
+                            [RAO[0]] + list(RAO[1:-1]) + [CAU_CHOT_RAO.format(g=f"{g:g}")])) + 2
+                        if n > dai:
+                            dai, xau = n, (lo, hv, kh[0], g)
+    return dai, xau
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
 # CỔNG — chấm CHÍNH prompt sắp giao đi, không chấm một đường song song
