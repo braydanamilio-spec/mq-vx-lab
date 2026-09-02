@@ -79,9 +79,33 @@ def main() -> int:
         print("❌ thiếu RENDER_OWNER")
         return 1
 
-    src = os.environ.get("AUTOPUBLISHER_SRC")
-    if src and src not in sys.path:
+    # ── TÌM `storage` BẰNG ĐƯỜNG MẶC ĐỊNH, KHÔNG CHỜ MỘT BIẾN AI CŨNG QUÊN ĐẶT  (2/9/2026) ──
+    # Bản trước chỉ đọc `AUTOPUBLISHER_SRC`. Không workflow nào đặt biến ấy, nên bước "Đối chiếu
+    # số kho với Drive" chết ngay dòng `import storage` với `ModuleNotFoundError` — ở CẢ 18 lượt,
+    # suốt nhiều ngày. Không ai thấy, vì bước ấy chạy sau `|| true`.
+    #
+    # Hậu quả không phải "thiếu một báo cáo": đây ĐÚNG là bước duy nhất đếm tệp THẬT trên Drive.
+    # Nó chết nghĩa là ô "Video trong kho" mãi mãi đọc `~ bản ghi` thay vì `✓ kho thật` — tức là
+    # đúng con số anh bảo sai. Cái sinh ra con số 2088 không phải phép đếm, mà là phép đếm này
+    # không bao giờ chạy để sửa nó.
+    #
+    # `day_kho.py` ngay cạnh đã có đường mặc định `../_autopublisher` và chạy tốt. Chép cách làm
+    # đó chứ đừng đòi một biến môi trường: biến thiếu thì im, đường mặc định sai thì báo.
+    _goc = os.path.dirname(os.path.abspath(__file__))
+    src = os.environ.get("AUTOPUBLISHER_SRC") or ""
+    if not src or not os.path.exists(os.path.join(src, "storage.py")):
+        for ung in (os.path.join(_goc, "..", "_autopublisher", "src"),
+                    os.path.join(_goc, "..", "MM0-AutoPublisher", "src")):
+            if os.path.exists(os.path.join(ung, "storage.py")):
+                src = os.path.abspath(ung)
+                break
+    if not src:
+        print("❌ không tìm thấy `storage.py` của repo đăng bài — bỏ bước đối chiếu Drive.")
+        print("   Đã tìm: $AUTOPUBLISHER_SRC · ../_autopublisher/src · ../MM0-AutoPublisher/src")
+        return 1
+    if src not in sys.path:
         sys.path.insert(0, src)
+    print(f"   📦 storage: {src}")
     import storage as ST
     import firestore_bridge as FB
 

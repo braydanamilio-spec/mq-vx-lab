@@ -8136,3 +8136,22 @@ const ds = s.docs.sort(theo_thoi_gian).slice(0,20);   // cắt 20 job mới nh�
 ngay dưới lằn cắt. Ba chỗ khác nhau trong một ngày, cùng một hình dạng: **phép cắt đặt trước
 phép lọc**. Câu hỏi phải hỏi mỗi khi thấy `limit` / `slice` / `[:n]`: *cái mình muốn giữ có
 chắc nằm trong n phần tử đầu không?* Nếu không chắc thì **lọc trước, cắt sau**.
+
+### 7df — Bước đếm-tệp-thật chưa từng chạy một lần nào  (2/9/2026)
+
+**Triệu chứng.** Ô "Video trong kho" luôn ghi nguồn `~ bản ghi`, không bao giờ `✓ kho thật`.
+
+**Gốc rễ.** `kiem_kho.py` — bước DUY NHẤT đếm tệp thật trên Drive — nạp `storage` chỉ qua biến
+`AUTOPUBLISHER_SRC`. **Không workflow nào đặt biến ấy.** Nên bước "Đối chiếu số kho với Drive"
+chết ngay dòng `import storage` với `ModuleNotFoundError`, ở cả 18 lượt, suốt nhiều ngày — sau
+một `|| true`, nên không lượt nào báo đỏ.
+
+Hậu quả không phải "thiếu một báo cáo". Đây chính là chỗ sinh ra con số 2088 mà anh bảo sai:
+con số ấy sai không phải vì phép đếm sai, mà vì **phép đếm đúng không bao giờ chạy để sửa nó**.
+
+**Họ lỗi.** *Rơi về mặc định trong im lặng* — nhưng ở dạng nặng nhất: mặc định ở đây là "không
+chạy gì cả", và lớp `|| true` biến nó thành vô hình. `day_kho.py` ngay cạnh làm đúng: có đường
+mặc định `../_autopublisher`, không đòi biến môi trường nào.
+
+**Luật.** Một tệp phụ thuộc thì tìm bằng **đường mặc định**, biến môi trường chỉ để ghi đè.
+Biến thiếu thì im; đường mặc định sai thì báo.
