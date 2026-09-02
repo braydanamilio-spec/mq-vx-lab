@@ -8179,3 +8179,42 @@ hình dạng, ba chỗ: `kiem_kho` chết câm sau `|| true` (7df) · `_kho_tu_k
 **Sửa.** Thoát 0 mà không có dòng `Drive file id:` thì tính là HỎNG (lượt đỏ → bốn mốc cron tự
 thử lại). Và in lại mọi dòng `⚠️/❌/🆘` mà `enqueue.py` đã nói — nó vẫn luôn biết chuyện gì
 hỏng; chỉ là không ai nghe.
+
+---
+
+## 8k52 — Cổng đo sau khi `prompt()` đã tự cắt: luôn xanh
+
+**Triệu chứng.** 3–4 tập mỗi lượt in `⚠️ văn kể quá dài, đã cắt bớt câu` ra stderr, trong khi
+`cham()` báo 0 lỗi.
+
+**Gốc rễ.** `cham()` đo `len(prompt(...)) > KY_TU_MAX`, nhưng `prompt()` cắt bớt câu trước khi
+trả về, nên giá trị đo luôn ≤ trần.
+
+**Họ lỗi.** 12.8 biến thể: không phải cổng hỏng, mà là **cổng đo sau khi thứ cần bắt đã tự sửa**.
+Dấu hiệu: hai kênh thông tin nói ngược nhau (stderr kêu, thước im) — giống hệt 8k49.
+
+**Chữa.** `prompt()` khai báo `_DA_CAT`; `cham()` đọc cờ. Thử ngược: văn kể dài → bắt; văn kể
+ngắn → tha.
+
+---
+
+## 8k53 — Cổng đo prompt không truyền `so` sau khi khuôn hình vào lịch
+
+**Gốc rễ.** Câu máy quay đổi theo tập từ bản khuôn hình; ngắn nhất 73 ký tự, dài nhất 149. Cổng
+gọi `prompt(kenh, d, giay)` (mặc định `so=0`) rồi bản giao đi dùng khuôn của tập thật.
+
+**Họ lỗi.** 13.7 — đo mô hình thay vì đo vật thật.
+
+---
+
+## 8k54 — `_ngan_sach_khuon` đo ô trống thay cho câu máy; web dùng 5 vai còn Python tính 4
+
+Hai chỗ, cùng hậu quả: khuôn web tràn 2500 → hàng rào DO NOT bị cắt, không có gì báo.
+
+- `@@MAY@@` là 7 ký tự, câu máy thật là 73–149 → ngân sách hụt tới 142. Chữa: điền câu DÀI NHẤT
+  (phép đo ca xấu nhất, cùng lý do hàm này vốn lấy phòng có mô tả dài nhất).
+- JS: `_dan = _comat.length ? _comat : Object.keys(K.vai)` → 5 vai cho PET HOUSE và HOUSE RULES,
+  trong khi `_ngan_sach_khuon` cắt theo `VAI_TOI_DA = 4`.
+
+**Chỉ lộ ra khi chạy CHÍNH đoạn JS của dashboard bằng `node` trên CHÍNH dữ liệu vừa xuất**
+(luật 13.10): 4/240 khuôn tràn → sau khi khớp trần: 0/240, dài nhất 2483.

@@ -1294,3 +1294,39 @@ Dòng thứ ba là dòng quan trọng nhất: **không biết ≠ đã nghỉ**.
 (`v3_`/`v5_`/`v9_`) nghe rất hợp lý và sẽ sai đúng một lần — lần ấy là xoá vĩnh viễn một video
 đang chạy. Và như mọi lệnh dọn: **danh sách giữ lại rỗng thì DỪNG**, vì "không kênh nào được
 giữ" đọc ra y hệt "xoá sạch".
+
+### 14.13 Cổng đo một giá trị mà chính thứ bị đo đã lặng lẽ sửa xong
+
+`cham()` đo `len(prompt(...)) > KY_TU_MAX`. Nó **không bao giờ nổ** — vì tới lúc nó đo thì
+`prompt()` đã tự cắt bớt câu và trả về một chuỗi vừa khít trần. Đo được **3–4 tập mỗi lượt chạy**
+in cảnh báo ra `stderr` trong khi thước báo SẠCH.
+
+Cái mất là thật: cắt câu ở khâu ghép nghĩa là **một mệnh đề của kịch bản biến mất khỏi bản giao
+đi**, và không ai duyệt việc bỏ mệnh đề nào.
+
+**Họ lỗi:** 12.8 — *hỏng mà vẫn báo xanh*. Nhưng biến thể khó thấy hơn: không phải cổng hỏng, mà
+là **cổng đo sau khi thứ cần bắt đã được tự sửa**. Dấu hiệu nhận ra giống hệt 14.8: **hai kênh
+thông tin nói ngược nhau** — `stderr` kêu, thước im.
+
+**Chữa:** `prompt()` ghi lại rằng nó đã phải cắt (`_DA_CAT`), `cham()` đọc cờ ấy.
+
+**Luật:** khi một hàm vừa ĐO vừa TỰ SỬA, cổng đặt sau nó luôn xanh. Hoặc tách sửa ra khỏi đo,
+hoặc bắt hàm ấy **khai báo** là nó đã sửa gì.
+
+### 14.14 Đo hiệu quả của một bản sửa: chọn đại lượng trước, đừng đọc trung bình
+
+Thêm dòng cấm họ cú lật đã mòn, đo lại đúng 12 tập ấy:
+
+| | trước | sau | kết luận |
+|---|---|---|---|
+| TB điểm | 94,2 | 96,3 | chênh 2,2 · **KTC95 của chênh ±2,8** → nằm trong nhiễu |
+| ≥95 điểm | 7/12 | 10/12 | gợi ý, chưa đủ mẫu |
+| **lượt trừ điểm trục cú lật** | **48** | **29** | giảm 19 · sai số Poisson ±7 → **vượt nhiễu** |
+
+Đúng luật 13.26: với n = 12 và sd ≈ 4, trung bình **không** phân biệt được hai lượt. Thứ dùng
+được là **đếm sự kiện** — và ở đây đếm được nhiều sự kiện (48) nên nó có sức phân giải, trong khi
+đếm tập (12) thì không.
+
+**Luật:** trước khi sửa, chọn sẵn **đại lượng sẽ dùng để phán quyết**, và chọn đại lượng có
+NHIỀU sự kiện nhất mà bản sửa nhắm vào. Đọc trung bình của một mẫu nhỏ là cách chắc chắn để kể
+một câu chuyện nghe hợp lý về nhiễu.

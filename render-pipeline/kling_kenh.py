@@ -168,6 +168,17 @@ VAI_TOI_DA = 4             # quá 4 người trong khung thì Kling chia ngân s
 # trần thật. Bản `day=True` sinh ra đúng 16.834 ký tự và không bao giờ tới được Kling nguyên vẹn.
 KY_TU_MIN, KY_TU_MAX = 2000, 2500
 _CAM_TU_LOAT: list = []    # từ đã mòn trong loạt đang chạy; `main` nạp, `cham` đọc
+
+# Cờ "prompt() vừa phải CẮT văn kể để giữ hàng rào".
+#
+# 2/9 — Cổng trong `cham()` đo `len(prompt(...)) > KY_TU_MAX` và nó KHÔNG BAO GIỜ nổ, vì tới lúc
+# nó đo thì `prompt()` đã tự cắt bớt câu và trả về một chuỗi vừa khít trần. Cổng đang đo một giá
+# trị mà chính thứ bị đo đã lặng lẽ sửa xong. Đo được 3–4 tập mỗi lượt chạy in cảnh báo ra
+# stderr trong khi thước báo SẠCH.
+#
+# Đây đúng họ lỗi 12.8: hỏng mà vẫn báo xanh. Và cái mất là thật — cắt câu ở khâu ghép nghĩa là
+# một mệnh đề của kịch bản biến mất khỏi bản giao đi, không ai duyệt việc bỏ mệnh đề nào.
+_DA_CAT = {"co": False}
 # Chữ thuộc về khuôn prompt hoặc về căn nhà thì lặp là ĐÚNG — cấm chúng là cấm nhầm.
 _BO_QUA = {"static", "shot", "level", "wide", "kitchen", "living", "backyard", "garage", "porch",
            "front", "table", "floor", "wooden", "camera", "counter", "couch", "coffee", "house",
@@ -4673,6 +4684,11 @@ def cham(d: dict, kenh: str, giay: float, so: int = -1) -> list[str]:
         # tập 0 rồi giao đi bản của tập 27 là đo một vật khác vật sắp giao — đúng họ lỗi đã trả
         # giá sáu lần ở `VAN_KE_MAX` (13.7): đo mô hình thay vì đo vật thật.
         _p = prompt(kenh, d, giay, so=so)
+        if _DA_CAT["co"]:
+            _tong = sum(len(str(d.get(k) or "")) for k in ("hook", "setup", "escalate", "payoff"))
+            e.append(f"văn kể {_tong} ký tự — dài tới mức khâu ghép phải CẮT bớt câu mới giữ nổi "
+                     f"hàng rào DO NOT. Một mệnh đề của kịch bản sẽ biến mất khỏi bản giao đi. "
+                     f"Viết ngắn lại, hoặc bớt một nhân vật (mỗi vai tốn ~150 ký tự khoá hình)")
         if len(_p) > KY_TU_MAX or not _p.rstrip().endswith("seconds."):
             _co = len([t for t in hs["vai"] if t in " ".join(str(d.get(k) or "") for k in
                        ("hook", "setup", "escalate", "payoff"))
@@ -4865,6 +4881,7 @@ def prompt(kenh: str, tap: dict, giay: float, so: int = 0, bien: int = 1,
     # nào — đo được 0/328 khuôn có nổi một khối tả thêm. Một thân nén nhẹ CỘNG bốn khối chỉ đạo
     # đáng giá hơn hẳn một thân đầy đủ đứng trơ. Nên thử cả bốn mức và lấy mức chèn được NHIỀU
     # khối nhất; hoà thì lấy mức ít nén hơn.
+    _DA_CAT["co"] = False
     _kho = _kho_tuy_chon(kenh, tap, giay)
     tot, best = -1, None
     for muc in (0, 1, 2, 3):
@@ -4889,6 +4906,7 @@ def prompt(kenh: str, tap: dict, giay: float, so: int = 0, bien: int = 1,
     # khâu viết. Nhưng nếu một kịch bản cũ lọt qua, KHÔNG được trả về bản tràn: Kling sẽ cắt
     # đuôi và mất hàng rào. Cắt bớt VĂN KỂ ở ranh giới câu, và nói ra là đã cắt.
     if len(lo) + len(ra) + 2 > tran:
+        _DA_CAT["co"] = True
         tap = dict(tap)
         for _ in range(40):
             k = max(("hook", "setup", "escalate", "payoff"),
