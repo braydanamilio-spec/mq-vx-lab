@@ -115,6 +115,23 @@ jobs:
           HOT_KEY: ${{ secrets.HOT_KEY }}
         run: cd render-pipeline && python bat_dang.py --that
 
+      # ── XOÁ FILE DRIVE CỦA KÊNH ĐÃ NGHỈ  (2/9/2026) ────────────────────────────────────
+      # Anh: *"rác channel cũ vẫn còn chưa xoá dứt điểm"* — và chọn mức xoá cả file Drive.
+      # Dọn bản ghi làm dashboard sạch, nhưng file video kênh cũ vẫn nằm trên Drive và vẫn ăn
+      # dung lượng của chính những kho mà 18 kênh đang đẩy vào.
+      #
+      # Script chỉ xoá khi CHỨNG MINH được: đọc `channel` trong sidecar .json của từng video.
+      # Không có sidecar / đọc hỏng -> GIỮ và báo ra. Không biết ≠ đã nghỉ; đoán theo tiền tố
+      # tên tệp sẽ sai đúng một lần, và lần ấy là xoá vĩnh viễn một video đang chạy.
+      - name: Xoá file Drive của kênh đã nghỉ
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          CHANNELS_YAML: ${{ github.workspace }}/_autopublisher/config/channels.yaml
+        run: cd _autopublisher && python src/don_drive_kenh.py --that
+
       - name: Đối chiếu số kho với Drive
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
