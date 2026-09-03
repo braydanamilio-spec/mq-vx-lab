@@ -250,12 +250,31 @@ export const SoLieu: React.FC<{
      Màu chữ cũng phải theo nền: `#3A342C` đậm chỉ đúng trên nền sạch. */
   /* Trên ảnh thì chú thích phải nằm TRONG dải mờ (dải phủ tới 0,46), không nằm ở mép nó:
      soi khung hook `survive`, dòng chữ rơi đúng chỗ dải đã tan hết nên chìm vào trời sáng. */
-  const yChu = ngang ? 0.33 : (tren_anh ? 0.37 : 0.44);   // chỗ đặt dòng chú thích
+  /* ── CHÚ THÍCH PHẢI ĐI THEO KHỐI SỐ, KHÔNG ĐỨNG Ở PHÂN SỐ CỐ ĐỊNH  (3/9/2026) ──────────
+     Anh soi khung REAL COST: `30,258 / DOLLARS IN 10 YEARS` và `assuming a 7% annual return`
+     **chồng lên nhau**, đọc ra một mớ.
+
+     Đo bằng chính công thức: khối số đặt ở `yCao = 0.26 × (bo===2 ? 1.18 : 1)`, tức nó **dịch
+     theo biến thể bố cục** `bo`. Còn `yChu` là **0.37 cố định**. Với `bo === 2`:
+
+         số      y = 0.307·H = 589
+         đơn vị  y = 589 + cs·0.56 = 701
+         chú thích y = 0.37·H     = 710      ← cách nhau 9px
+
+     Hai giá trị cùng mô tả MỘT chồng chữ mà chỉ một cái biết về `bo`. Đúng họ lỗi đã trả giá
+     nhiều lần: *hằng số không đi theo thứ nó nuôi* (§13.6) — và nó không báo lỗi, chỉ làm chữ
+     đè nhau ở đúng một trong ba biến thể, nên rất dễ lọt.
+
+     Nay tính TỪ đáy khối số: chú thích luôn nằm dưới dòng đơn vị một khoảng bằng 0,5 cỡ số,
+     dù `bo` là gì. `yChuMin` giữ sàn để trên bản ngang chữ không leo quá cao. */
+  const yChuMin = ngang ? 0.33 : (tren_anh ? 0.37 : 0.44);
   const q = Math.min(1, p / 0.28);
   /* Cùng lỗi với `ChiaDoi`, và thêm một lỗi nữa: biểu tượng đặt ở `H*0.62` còn con số ở
      `H*0.30` với cỡ `H*0.20` — hai lớp cùng chọn chỗ theo H mà không biết nhau, nên số "9"
      nằm đè lên cái biểu tượng. Nay biểu tượng bám ĐÁY khung và số bám ĐỈNH, không gặp nhau. */
   const cs = Math.min(H * cCao, (W * 0.88 / Math.max(1, so.length)) * 1.65);
+  // đáy dòng đơn vị = yCao·H + cs·0.56 ; chừa thêm 0,5·cs rồi mới đặt chú thích
+  const yChu = Math.max(yChuMin, (H * yCao + cs * 0.56 + cs * 0.50) / H);
   /* SỐ ĐẾM LÊN — anh: *"số liệu động animation là đẹp hay."*
      Không phải hiệu ứng cho vui: con số nhảy dần làm người xem CẢM được độ lớn, còn con số
      hiện sẵn thì chỉ được đọc. Với kênh mà cả nội dung là những con số thì đây là chỗ đắt nhất.
