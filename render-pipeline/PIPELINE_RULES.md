@@ -8819,3 +8819,40 @@ hai bắt đầu trước khi người ta kịp quyết định lướt đi.
 
 Nên nó **không chạy** ở tập mẫu hôm nay — cảnh cuối đã có ảnh riêng. Đúng thiết kế: cơ chế này
 sinh ra để cứu đúng lúc CF cạn, khi cảnh cuối trống và cái kết yếu nhất.
+
+### 7dz — Bốn tầng dự phòng đều là tầng MẠNG, nên cùng hỏng một lúc  (3/9/2026)
+
+Anh: *"suốt ngày mày đổ tại firebase, kêu fix triệt để mà."* Đúng. Bằng chứng để truy tận gốc đã
+nằm trong log đêm qua, tôi chưa truy:
+
+```
+❌ có 5 tệp nhưng KHÔNG đẩy được tệp nào
+🆘 KHO LẤY TỪ KV CỦA WORKER: 100 tài khoản   ← in 35 lần
+⚠️ D1 hụt: HTTP Error 500                    ← in 35 lần
+```
+
+**35 lần KV thành công trên ~40 lượt `enqueue`, và đúng 5 lượt không có KV là 5 tệp mất.** Tức
+KV **hỏng ngắt quãng** (Worker 500), không chết hẳn. Mà `enqueue` là tiến trình con sống vài
+giây: `_POOL_CACHE` trong RAM chết theo nó, nên **mỗi video lại đi hỏi mạng từ đầu** và lại có
+cơ hội trúng đúng lúc Worker nấc.
+
+**Gốc rễ thật, và nó không phải Firebase:** bốn tầng dự phòng (KV → D1 → Firestore B → A) **đều
+là tầng MẠNG**. Xếp thêm tầng mạng thứ năm cũng không đổi bản chất — bốn thứ cùng phụ thuộc
+mạng thì có lúc cùng hỏng. Tầng cứu phải **khác bản chất**.
+
+**Sửa: tầng thứ năm là ĐĨA của runner** — không hạn mức, không 429, không rate-limit. Một lần
+đọc được trong lượt chạy là mọi tiến trình con sau đó dùng lại, kể cả khi Worker và Firestore
+cùng chết. Đúng nguyên tắc §7: *tầng cuối không gọi mạng nên không bao giờ hỏng.*
+
+**Và một lỗi tôi tự gây ra trong chính bản vá này** — đáng ghi hơn cả bản vá:
+
+`_pool_ra_dia` viết `io.open(...)` trong khi `storage.py` **không `import io`**. NameError, và
+`except Exception: pass` nuốt trọn. Đệm đĩa **chưa từng ghi được một dòng nào**, mà nhìn từ ngoài
+y hệt *"đệm hoạt động, chỉ là chưa có dữ liệu"*.
+
+Đây đúng họ lỗi đã tốn hai ngày ở `_kho_tu_kv` (thiếu `import time`, `except: pass` nuốt), và tôi
+viết lại nó **trong đúng bản vá dựng ra để chống nó**. Chỉ lộ ra vì tôi thử vòng đời ghi→đọc
+ngay sau khi viết. Nay `except` kêu một lần thay vì im.
+
+**Luật.** Mọi `except: pass` quanh một cơ chế CỨU đều là một cái bẫy: cơ chế ấy chỉ chạy lúc mọi
+thứ khác đã hỏng, nên nếu nó cũng hỏng thì không ai còn ở đó để nghe. **Đường cứu phải ồn ào.**
