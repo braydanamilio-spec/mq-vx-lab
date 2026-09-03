@@ -2239,3 +2239,100 @@ kho B2), bốn chỗ còn lại chỉ bọc `toastMsg`. Nên chỉ MỘT chỗ c
 
 **Luật:** đừng đi dọn cả 171 chỗ để lấy churn (§13.22). Sửa đúng những chỗ làm một con số nói
 dối — số còn lại bọc chuyện hiển thị và im lặng ở đó không hại ai.
+
+## 16. LUẬT RÚT TỪ ĐÊM 3/9 — CỔNG SAI, KHÔNG PHẢI SẢN PHẨM SAI
+
+Đêm này có bốn lần **cổng báo đỏ mà sản phẩm không hỏng**. Cả bốn đều suýt làm tôi đi sửa thứ
+không hỏng. Ghi lại vì đây là dạng lãng phí khó thấy nhất: nó trông y hệt công việc chính đáng.
+
+### 16.1 Cổng lấy mẫu ở mốc CỐ ĐỊNH, rơi trúng chỗ không có thứ cần đo
+
+`kiem_hinh` chấm bản dài 84/100 vì *"tương phản phụ đề 2,6:1"*. Nhưng đo TỪNG NHỊP thì 0/21
+nhịp hỏng. Hai phép đo bất đồng — và luật §13.4 nói phải xem cái đang bị chấm trước khi tin bên
+nào.
+
+Nó lấy 6 khung ở mốc chia đều `DAI*k/7`:
+
+```
+  55,0s  canh      4,62:1 ✅        219,8s  so_lieu   6,13:1 ✅
+ 109,9s  chia_doi  6,76:1 ✅        274,8s  the_chu   1,75:1 ❌
+ 164,9s  the_chu   1,75:1 ❌        329,7s  chart     5,71:1 ✅
+```
+
+**2/6 khung rơi trúng nhịp `the_chu`, mà engine TẮT phụ đề ở đó theo thiết kế** — chính tôi tắt
+nó hôm 1/9 theo §12.12. Vùng phụ đề của khung không có chữ chỉ toàn nền, nên hai phân vị gần
+nhau và tỉ số ra 1,75:1. Hai khung như thế kéo trung bình từ ~5,8 xuống 3,8.
+
+**Cổng đang phạt một QUYẾT ĐỊNH THIẾT KẾ như thể nó là lỗi.**
+
+**Luật:** cổng lấy mẫu theo thời gian phải lấy ở nơi thứ cần đo THẬT SỰ CÓ MẶT. Đọc danh sách
+nhịp nằm cạnh video, đừng chia đều thời lượng.
+
+### 16.2 Cổng gộp mẫu, một video dài lấn át
+
+`kiem_khuon` đo *"khuôn lời giữa các VIDEO"* nhưng gộp mọi câu của mọi tệp rồi đếm. Một bản dài
+202 nhịp chiếm **72% mẫu**, nên một câu dẫn lặp 7 lần trong 31 chương của CÙNG MỘT video bị đếm
+y như 7 kênh khác nhau cùng đọc nó.
+
+Hai chuyện khác hẳn: cái đầu là điệp khúc của một chương trình (§13.18 — kênh nào cũng là một
+*chương trình*), cái sau mới là "templated storylines".
+
+Sửa: khử trùng TRONG từng video trước, rồi đếm số VIDEO — mỗi video góp tối đa một phiếu.
+Trước 49% đa dạng ×12 (đỏ) → sau 95% ×2 (xanh), và hai video dùng chung ấy là bản ngắn + bản
+dài của cùng một kênh.
+
+**Luật:** khi một cổng đo *"giữa các X"*, mỗi X phải góp đúng một phiếu. Gộp mẫu thô là để cho
+X lớn nhất quyết định hộ.
+
+### 16.3 Sửa vòng thứ ba mà vẫn cùng họ lỗi thì thứ sai là CÁCH TIẾP CẬN
+
+Đặt chữ hook lên ảnh bìa, ba lần đều ĐÈ lên đồ hoạ:
+
+| lần | cách | kết quả |
+|---|---|---|
+| 1 | chỗ cố định `0,10·H` | đè con số nền "2.7x" |
+| 2 | đo 3 dải ở 64×48 | đè "0 plants / 200+" — nét chữ mảnh bị nhoè ở cỡ thô |
+| 3 | đo 5 dải ở 192×144 | đè cả ba kênh thử |
+
+Đến lần thứ ba thì câu hỏi đúng không còn là *"đặt chữ ở đâu"* mà là **"có cần lớp chữ thứ hai
+không"**. Khung đỉnh của bộ giải thích ĐÃ mang thông điệp bằng chính đồ hoạ của nó — `2.7x
+BIGGER`, `60 dB / 140 dB`. Bỏ lớp chữ đè thì cả ba lỗi biến mất.
+
+Đúng §2, và lần này §2 áp cho chính quá trình sửa: *sửa vòng thứ ba mà vẫn cùng một họ lỗi thì
+dừng lại, đi tìm thứ cả ba cùng dùng*.
+
+### 16.4 Vẽ lại bằng CÙNG một prompt là không vẽ lại
+
+Cổng chất vẽ cho vẽ lại ba lần, chú thích ghi *"đổi seed rồi vẽ lại là gần như chắc chắn thoát"*.
+Nhưng `_thu` gọi `_prompt(...)` y hệt mỗi lần, và biến `seed` tính ra rồi **không dùng vào đâu**
+— §12.1 đã đo rằng FLUX schnell trả HTTP 400 khi có `seed`.
+
+Đo: nhịp trượt cho ra **0,18 cả ba lần**. Ba lượt vẽ lại là ba lượt tiêu neuron cho một kết quả.
+
+**Luật:** một vòng thử lại phải đổi ĐẦU VÀO. Thử lại y nguyên chỉ đúng khi lỗi là ngẫu nhiên
+(mạng), không đúng khi lỗi là tất định (prompt).
+
+### 16.5 Ghim phiên bản: tệp có mặt mà thiếu đúng mục quan trọng nhất
+
+2/18 luồng chết ở bước cài với `ResolutionImpossible` cho `edge-tts`, trong khi 16 luồng cùng
+bước ấy chạy được — tức lỗi MẠNG, không phải xung đột thật. Vì `edge-tts` không được ghim, pip
+phải lùi qua ~30 phiên bản, và mỗi lần lùi là một vòng mạng.
+
+`constraints.txt` sinh ra CHÍNH ĐỂ chống chuyện này (ghi chú 24/8 của nó kể sự cố gương B→B2
+hỏng 16 tiếng) — mà nó bỏ sót thư viện được cài **nhiều nhất** trong repo.
+
+Cùng họ §13.2: tệp có mặt, đọc lên rất thuyết phục, và thiếu đúng mục quan trọng nhất.
+
+**Luật:** hỏng ở bước CÀI là hỏng ở mắt xích đầu tiên — cả luồng mất trọn. Đó là chỗ đắt nhất
+để hỏng, nên nó phải là chỗ ĐƯỢC BẢO VỆ NHẤT: ghim phiên bản, thử lại, và kiểm bằng `import`
+chứ không bằng mã thoát của pip.
+
+### 16.6 Trường được GHI mà không ai ĐỌC — hai cái trong một ngày
+
+| trường | ghi ở | đọc ở | hậu quả |
+|---|---|---|---|
+| `dinh` | 87 chỗ | **không đâu** | ảnh bìa lấy khung cuối video thay vì nhịp đỉnh |
+| `the` (thẻ chữ) | mọi bộ sinh | engine | `doi_loi` xoay `loi` mà `the` đứng yên -> 31/63 thẻ hiện đúng một câu |
+
+Cách nhận ra rẻ nhất, đã dùng đêm nay: liệt kê mọi trường CÓ trong nhịp, liệt kê mọi trường
+engine ĐỌC (`grep "N\.\w+"`), rồi lấy hiệu hai tập. Bốn phút, ra ngay hai trường chết.
