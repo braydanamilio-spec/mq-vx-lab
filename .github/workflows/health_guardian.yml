@@ -53,7 +53,26 @@ jobs:
           GH_TOKEN: ${{ secrets.AUTOPUBLISHER_TOKEN }}
         run: |
           WF="render_giai_thich_18.yml"
-          MOC=$(python3 -c "import datetime;print((datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(hours=20)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
+          # ── CỬA SỔ 20h -> 5h  (3/9/2026) ────────────────────────────────────────────────
+          # Anh: *"sao ko có render nào chạy mà để nguyên, bấm thủ công cho nó chạy."*
+          #
+          # Cơ chế bấm-thay CÓ chạy, nhưng nó hỏi sai câu: *"20 giờ qua có lượt dựng nào chưa?"*
+          # Con số 20h là di sản của thời sản xuất **một lượt mỗi ngày**. Từ 2/9 mỗi luồng lặp
+          # 4,75 giờ và cổng chống trùng cũng hạ xuống 5h — nên Guardian luôn thấy "54 job dựng
+          # thật trong 20h", kết luận "không cần bấm", trong khi hệ đã đứng im nhiều giờ.
+          #
+          # Hằng số sống lâu hơn ngữ cảnh sinh ra nó (§13.6): tôi hạ nhịp sản xuất hôm qua mà
+          # quên soát lại cái canh gác nuôi bằng nhịp ấy.
+          #
+          # Nay 5h, khớp đúng cổng chống trùng: hết 5h không có lượt dựng nào thì bấm.
+          MOC=$(python3 -c "import datetime;print((datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(hours=5)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
+          # ĐANG CHẠY thì đừng bấm: nhóm `concurrency` sẽ huỷ lượt mới hoặc bắt nó xếp hàng, và
+          # cả hai đều tệ hơn là để lượt đang chạy làm nốt.
+          DANG=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?status=in_progress&per_page=1" --jq '.total_count' 2>/dev/null || echo 0)
+          if [ "${DANG:-0}" != "0" ]; then
+            echo "   ▶ đang có lượt render chạy — không bấm thêm"
+            exit 0
+          fi
           IDS=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?per_page=20" \
                   --jq ".workflow_runs[] | select(.created_at > \"$MOC\") | .id" || echo "")
           THAT=0
@@ -62,11 +81,11 @@ jobs:
                   --jq '[.jobs[] | select(.name|startswith("dung")) | select(.conclusion != null and .conclusion != "skipped")] | length' || echo 0)
             THAT=$((THAT + n))
           done
-          echo "   20h qua: $THAT job dựng THẬT (không tính job bị cổng bỏ qua)"
+          echo "   5h qua: $THAT job dựng THẬT (không tính job bị cổng bỏ qua)"
           if [ "$THAT" -gt 0 ]; then
             echo "   ✅ render đã chạy trong cửa sổ — không cần bấm thay"
           else
-            echo "   ⏰ 20h không có lượt dựng nào — bấm thay cho cron"
+            echo "   ⏰ 5h không có lượt dựng nào — bấm thay cho cron"
             TRUOC=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?per_page=1" --jq '.total_count' || echo 0)
             gh workflow run "$WF" --repo "${{ github.repository }}" || echo "   ❌ lệnh bấm hỏng"
             sleep 25
