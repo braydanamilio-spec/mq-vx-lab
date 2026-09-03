@@ -2545,6 +2545,7 @@ def main():
     check("bản dài đủ dài để bật quảng cáo giữa video", t_ban_dai_du_dai)
     check("không `const` nào bị dùng trước khai báo (vùng chết tạm thời)", t_khong_tdz)
     check("cổng hình lấy khung ở nhịp CÓ phụ đề", t_kiem_hinh_lay_dung_khung)
+    check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
@@ -7100,6 +7101,35 @@ def t_khong_lap_loi_gan():
     tho3 = [{"khuon": "the_chu", "loi": "How loud is a jet.", "the": "3.|How loud is a jet"}]
     G._dong_bo_the(tho3)
     assert tho3[0]["the"].startswith("3."), "đụng vào thẻ chương — số chương phải giữ nguyên"
+
+
+def t_kiem_khuon_dem_theo_video():
+    """`kiem_khuon` đo khuôn lời GIỮA CÁC VIDEO — nên mỗi video góp tối đa một phiếu mỗi khuôn.
+
+    Bản cũ gộp mọi câu rồi đếm, nên MỘT bản dài 202 nhịp chiếm **72% mẫu** và một câu dẫn lặp 7
+    lần trong 31 chương của cùng một video bị đếm y như 7 kênh khác nhau cùng đọc nó. Hai chuyện
+    khác hẳn: cái đầu là điệp khúc của một chương trình, cái sau mới là "templated storylines".
+
+    Lặp NỘI BỘ một video đã có cổng riêng (`t_khong_lap_loi_gan`, đo khoảng cách giữa hai lần
+    đọc — thứ người xem cảm được).
+    """
+    import io as _io
+    import os as _o
+
+    g = _o.path.dirname(_o.path.abspath(__file__))
+    src = _io.open(_o.path.join(g, "kiem_khuon.py"), encoding="utf-8").read()
+    assert "_theo_video" in src, "cổng vẫn gộp mọi câu — một video dài sẽ lấn át mẫu"
+
+    # Thử NGƯỢC bằng dữ liệu giả: một video lặp 50 lần chỉ được tính MỘT.
+    import collections as _c
+    import kiem_khuon as KK
+    kho = [("a.json", "Put them side by side.")] * 50 + [("b.json", "Put them side by side.")]
+    tv = {}
+    for f, t in kho:
+        tv.setdefault(f, set()).add(KK.khuon(t))
+    dem = _c.Counter(k for ks in tv.values() for k in ks)
+    assert dem.most_common(1)[0][1] == 2, \
+        f"đếm sai: một video lặp 50 lần phải tính 1 phiếu, ra {dem.most_common(1)[0][1]}"
 
 
 def t_kiem_hinh_lay_dung_khung():

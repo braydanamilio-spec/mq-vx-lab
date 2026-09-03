@@ -103,11 +103,28 @@ def main() -> int:
     kho = doc_kho()
     if not kho:
         print("  ⚠️ kho rỗng"); return 0
-    dem = collections.Counter(khuon(t) for _, t in kho)
+    # ── ĐẾM SỐ VIDEO DÙNG MỖI KHUÔN, KHÔNG ĐẾM SỐ CÂU  (3/9/2026) ──────────────────────
+    # Cổng này sinh ra để đo *"khuôn lời giữa các VIDEO"* — tức bao nhiêu video khác nhau cùng
+    # đọc một khuôn câu. Nhưng nó gộp mọi câu của mọi tệp rồi đếm, nên MỘT video dài lấn át.
+    #
+    # Đo được: bản dài HOW LOUD có 202 nhịp trên tổng 280 câu = **72% mẫu**. Một câu dẫn xuất
+    # hiện 7 lần trong 31 chương của cùng MỘT video bị đếm y như 7 kênh khác nhau cùng đọc nó —
+    # hai chuyện hoàn toàn khác nhau. Cái đầu là điệp khúc của một chương trình; cái sau mới là
+    # thứ chính sách gọi là "templated storylines".
+    #
+    # Nay khử trùng TRONG từng video trước, rồi đếm số VIDEO. Mỗi video góp nhiều nhất một
+    # phiếu cho mỗi khuôn, nên video dài không còn quyền bỏ phiếu gấp hai trăm lần.
+    # Lặp NỘI BỘ một video đã có cổng riêng: `t_khong_lap_loi_gan` đo khoảng cách giữa hai lần
+    # đọc, thứ người xem thật sự cảm được.
+    _theo_video = {}
+    for f, t in kho:
+        _theo_video.setdefault(f, set()).add(khuon(t))
+    dem = collections.Counter(k for ks in _theo_video.values() for k in ks)
     tong = sum(dem.values())
     da_dang = len(dem) / max(1, tong)
     nang = dem.most_common(1)[0][1] if dem else 0
-    print(f"\n  KHUÔN LỜI — {tong} câu trong {len({f for f, _ in kho})} video\n")
+    print(f"\n  KHUÔN LỜI — {tong} khuôn-video trong {len(_theo_video)} video "
+          f"(mỗi video góp tối đa 1 phiếu cho mỗi khuôn)\n")
     for k, v in dem.most_common(6):
         if v > 1:
             print(f"   ×{v:3}  {k[:84]}")
@@ -117,7 +134,7 @@ def main() -> int:
     if da_dang < DA_DANG_TOI_THIEU:
         xau.append(f"độ đa dạng {da_dang:.0%} dưới ngưỡng")
     if nang > KHUON_TOI_DA:
-        xau.append(f"một khuôn dùng {nang} lần — đã thành công thức")
+        xau.append(f"một khuôn dùng ở {nang} VIDEO khác nhau — đã thành công thức")
     if xau:
         print(f"  ❌ {' · '.join(xau)}")
         print("     Đây là thứ chính sách gọi là 'templated storylines'. Cần thêm CÁCH KỂ, "
