@@ -306,6 +306,65 @@ SAN_PHANG = 0.26
 NGUONG_LECH = 0.35
 
 
+def do_mau(tep: str, o: int = 4) -> list:
+    """Bảng màu của một ảnh — histogram RGB thô, chuẩn hoá. Dùng để đo "cùng một thế giới".
+
+    ── VÌ SAO THÊM PHÉP ĐO NÀY  (3/9/2026) ─────────────────────────────────────────────────
+    Cổng nhất quán đang dùng `do_phang`, và nó báo *"chất vẽ lệch 0,61 trong một tập"* ở gần như
+    mọi tập. Ghép hai ảnh bị chấm lệch nhất của cùng một tập rồi NHÌN: chúng cùng một thế giới —
+    nét mực dày, phẳng, bảng màu đen/trắng/đỏ. Chênh 0,38 vs 0,56 đến từ **mật độ chi tiết**
+    (chiếc máy bay có hàng chục tia toả), không từ phong cách.
+
+    Đây đúng luật 12.3 đã trả giá một lần: *thước lẫn lộn PHONG CÁCH PHẲNG với BỐ CỤC ĐƠN GIẢN*.
+    Tôi đọc lại luật ấy hôm nay và vẫn suýt đi siết ngưỡng.
+
+    Thứ người xem thật sự cảm được khi nói "hai ảnh này không cùng một bộ" là **bảng màu**, không
+    phải mật độ nét. Hai ảnh cùng kênh dùng chung đen/trắng/đỏ thì trông cùng bộ, dù một tấm
+    nhiều chi tiết hơn tấm kia gấp mười lần.
+
+    Cùng họ với bài học 13.5 ở bộ Kling: *đo CHUỖI khi thứ cần đo là NỘI DUNG* — ở đây là đo
+    MẬT ĐỘ khi thứ cần đo là MÀU.
+
+    ── VÀ ĐÂY LÀ CHỖ PHẢI ĐỌC TRƯỚC KHI DÙNG NÓ LÀM CỔNG: **ĐỪNG.**  ────────────────────────
+    Hai ảnh đầu tiên tôi thử cho kết quả rất đẹp — cùng tập **0,18**, khác kênh **0,81**, tách
+    gấp bốn lần rưỡi. Tôi suýt ship ngay.
+
+    Đo trên TOÀN BỘ 14 kênh (74 cặp cùng kênh · 91 cặp khác kênh):
+
+        cùng kênh : trung vị 0,46 · max 0,97
+        khác kênh : trung vị 0,49 · min 0,04
+        khoảng trống giữa hai nhóm: **−0,93** — chồng lấn hoàn toàn
+
+    Cặp 0,18/0,81 chỉ là một cặp may. Đúng bẫy 12.3: *calibrate ở hai đầu cực chỉ chứng minh
+    thước tách được hai đầu; cổng sống ở khoảng giữa.*
+
+    Nên hàm này giữ lại để CHẨN ĐOÁN (so hai ảnh cụ thể khi đang soi tay), **không dùng làm
+    cổng**. Ghi ra đây theo luật 13.22 — *"chưa đo được" là một kết luận hợp lệ, và nó ngăn
+    phiên sau đi làm lại đúng cái cổng đã bị bác.*
+    """
+    try:
+        from PIL import Image
+    except Exception:
+        return []
+    try:
+        im = Image.open(tep).convert("RGB").resize((64, 64))
+    except Exception:
+        return []
+    n = 256 // o
+    h = [0] * (o * o * o)
+    for r, g, b in im.getdata():
+        h[(r // n) * o * o + (g // n) * o + (b // n)] += 1
+    t = sum(h) or 1
+    return [x / t for x in h]
+
+
+def lech_mau(a: list, b: list) -> float:
+    """Khoảng cách hai bảng màu, 0 = giống hệt, 1 = không chung màu nào."""
+    if not a or not b or len(a) != len(b):
+        return 0.0
+    return 1.0 - sum(min(x, y) for x, y in zip(a, b))
+
+
 def do_phang(tep: str):
     """Độ 'phẳng' của ảnh: 0 = ảnh chụp thật, 1 = hình vẽ phẳng. None nếu không đo được.
 

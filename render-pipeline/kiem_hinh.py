@@ -103,12 +103,27 @@ def truoc(props: dict) -> tuple:
             # cùng một thước (§12.3 là lần đầu).
             # Thứ thước này thật sự bắt được là ảnh NGẢ ẢNH CHỤP, và việc ấy do sàn tuyệt đối
             # `SAN_PHANG` làm. Phép so tương đối chỉ nên chặn lệch LỚN.
+            # ── NỚI 0,60 -> 0,80 VÀ ĐỔI GIỌNG BÁO  (3/9/2026) ──────────────────────────
+            # Cảnh báo "chất vẽ lệch 0,61" nổ ở gần như MỌI tập. Ghép hai ảnh bị chấm lệch nhất
+            # của cùng một tập rồi NHÌN: cùng một thế giới — nét mực dày, phẳng, chung bảng màu.
+            # Chênh 0,38 vs 0,56 đến từ **mật độ chi tiết** (máy bay có hàng chục tia toả), không
+            # từ phong cách. Đúng luật 12.3: thước lẫn lộn PHONG CÁCH PHẲNG với BỐ CỤC ĐƠN GIẢN.
+            #
+            # Tôi đã thử thay bằng phép đo BẢNG MÀU — nghe đúng hơn hẳn, và hai ảnh đầu cho kết
+            # quả rất đẹp (cùng tập 0,18 · khác kênh 0,81). Đo trên toàn bộ 14 kênh thì **chồng
+            # lấn hoàn toàn** (cùng kênh 0,46 · khác kênh 0,49). Nên chưa có phép đo nào đủ chín
+            # để làm cổng ở đây — ghi lại theo 13.22 thay vì ship một cổng tệ rồi tin là xong.
+            #
+            # Trong lúc chưa đo được: nới ngưỡng để thôi kêu oan, và **nói rõ đây là nghi ngờ**
+            # chứ không phải lỗi. Một cảnh báo nổ ở mọi tập là một cảnh báo không ai đọc nữa —
+            # và nó kéo theo cả những cảnh báo THẬT nằm cạnh (13.2).
             lech = max(v) - min(v)
-            if lech <= 0.60:
+            if lech <= 0.80:
                 diem += 15
             else:
-                bao.append(f"chất vẽ lệch {lech:.2f} trong một tập (cho phép 0,60)")
-                diem += max(0, int(15 - (lech - 0.60) * 30))
+                bao.append(f"nghi lệch chất vẽ {lech:.2f} (>0,80) — SOI TAY, thước này lẫn "
+                           f"phong cách với mật độ chi tiết")
+                diem += max(0, int(15 - (lech - 0.80) * 30))
         else:
             diem += 15
     except Exception:

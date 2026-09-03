@@ -8927,3 +8927,36 @@ trước bản vá) **vẫn bị bắt**. Con số 0 lỗi chỉ có nghĩa khi 
 
 **Sửa kèm:** dòng đơn vị đặt ở `y = cs*0.42` — đè sát chân số khi `so` là **chữ** (`"PROBABLY"`)
 chứ không phải số. Hằng số ấy đúng cho chữ số, sai cho chữ cái; đẩy xuống `0.56`.
+
+### 7ed — Phép đo bảng màu: đo xong và QUYẾT ĐỊNH KHÔNG LÀM CỔNG  (3/9/2026)
+
+Cảnh báo *"chất vẽ lệch 0,61 trong một tập"* nổ ở gần như **mọi tập**. Ghép hai ảnh bị chấm lệch
+nhất của cùng một tập rồi **nhìn**: cùng một thế giới — nét mực dày, phẳng, chung bảng đen/trắng/
+đỏ. Chênh 0,38 vs 0,56 đến từ **mật độ chi tiết** (chiếc máy bay có hàng chục tia toả), không từ
+phong cách. Đúng luật 12.3, và tôi đọc lại chính luật ấy hôm nay rồi vẫn suýt đi siết ngưỡng.
+
+**Thử thay bằng phép đo BẢNG MÀU** — nghe đúng hơn hẳn: thứ người xem cảm được khi nói *"hai ảnh
+này không cùng một bộ"* là màu, không phải mật độ nét. Hai ảnh đầu cho kết quả rất đẹp:
+
+```
+cùng tập  0,18     khác kênh  0,81     → tách gấp 4,5 lần
+```
+
+Suýt ship ngay. Đo trên **toàn bộ 14 kênh** (74 cặp cùng kênh · 91 cặp khác kênh):
+
+```
+cùng kênh : trung vị 0,46 · max 0,97
+khác kênh : trung vị 0,49 · min 0,04
+khoảng trống: −0,93   → CHỒNG LẤN HOÀN TOÀN
+```
+
+Cặp 0,18/0,81 chỉ là **một cặp may**. Đúng bẫy 12.3: *calibrate ở hai đầu cực chỉ chứng minh
+thước tách được hai đầu; cổng sống ở khoảng giữa.*
+
+**Kết luận: không ship cổng nào ở đây** — và đó là một kết quả hợp lệ (13.22). `do_mau` giữ lại
+để chẩn đoán tay, có chú thích cấm dùng làm cổng, để phiên sau không đi làm lại đúng cái đã bị bác.
+
+**Trong lúc chưa đo được:** nới ngưỡng `do_phang` 0,60 → 0,80 và đổi giọng thành *"nghi lệch —
+SOI TAY"*. Một cảnh báo nổ ở mọi tập là cảnh báo **không ai đọc nữa**, và nó kéo chìm những cảnh
+báo THẬT nằm cạnh (13.2). Sau khi nới: **10/10 tệp 100/100**, bảng báo sạch, cảnh báo còn lại
+đều là cảnh báo thật.
