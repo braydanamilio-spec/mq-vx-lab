@@ -2182,3 +2182,60 @@ Dấu mốc để ở tệp `/tmp` chứ không phải biến module, vì mỗi 
 | Lệch pha câu nối theo kênh | `giai_thich._loi` · `_lech_kenh` |
 | Gu bố cục số liệu / biểu đồ từng kênh | `giai_thich.GU_SO` · `GU_CHART` |
 | 6 biến thể mỗi câu | `giai_thich.BIEN_THE_THEM` |
+
+### 15.25 Ba lỗi "đúng ý, sai chỗ" — cùng một hình dạng
+
+Ba lỗi tìm được cuối ngày, và cả ba đều là **cơ chế đúng gắn vào chỗ sai**. Không cái nào có
+lỗi báo, và cả ba đều đọc rất hợp lý khi xem mã.
+
+| lỗi | gắn ở đâu | phải ở đâu |
+|---|---|---|
+| `cham_kich_ban.py` | `render_phan_tich_18.yml` (bộ phân tích, không dựng `v9_*`) | `render_giai_thich_18.yml` |
+| câu cảnh trong prompt | vị trí thứ BA, sau khối phong cách 844 ký tự | vị trí ĐẦU |
+| tiêu đề YouTube | ghép `tên kênh + "?"` | hook của chính TẬP |
+
+Cái đầu tệ nhất về mặt phương pháp: **bài selftest tôi viết để canh đúng chuyện "viết ra rồi để
+đấy" lại đi kiểm sai tệp.** Nên nó báo xanh trong khi thước chưa bao giờ chạy trên luồng thật.
+Cổng canh sai tệp thì nó canh sai cả việc — và nó còn nguy hơn không có cổng, vì nó tạo cảm giác
+đã được kiểm.
+
+Cái thứ hai đắt nhất về sản phẩm: docstring của `_prompt` viết *"chủ thể trước, rồi luật bố cục,
+rồi phong cách. Mô hình khuếch tán đọc phần đầu nặng ký hơn"* — và mã làm **ngược lại**. Hậu quả
+đo được: kênh SURVIVE (Kỷ Băng Hà) có prompt cảnh đúng *"a lone person in a frozen tundra"* mà cả
+bốn ảnh ra một căn phòng hiện đại có đồng hồ treo tường.
+
+**Luật:** khi chú thích và mã nói hai điều khác nhau, đừng tin cái nào — ĐO. Và mỗi lần gắn một
+cơ chế vào workflow, mở chính tệp workflow ấy ra đọc, đừng tin tên tệp.
+
+### 15.26 Vẽ lại bằng CÙNG một prompt là không vẽ lại
+
+Cổng chất vẽ cho phép vẽ lại ba lần, và chú thích ghi *"đổi seed rồi vẽ lại là gần như chắc chắn
+thoát"*. Nhưng `_thu` gọi `_prompt(...)` y hệt mỗi lần, và biến `seed` tính ra rồi **không dùng
+vào đâu** — vì §12.1 đã đo rằng FLUX schnell trả HTTP 400 khi có `seed`.
+
+Nên "vẽ lại bằng seed khác" **chưa bao giờ tồn tại**: cùng prompt ra cùng ảnh. Đo được nhịp trượt
+cho ra **0,18 cả ba lần**. Ba lượt vẽ lại là ba lượt tiêu neuron cho đúng một kết quả.
+
+Nay mỗi lần cổng đánh trượt thì **siết chính prompt** theo hướng cổng đang đo (`SIET`, ba mức,
+đặt ở đầu prompt). Đo sau khi sửa: `[0.18, 0.48, 0.74, 0.83]` → `[0.50, 0.53, 0.56, 0.86]`.
+
+Và bản đầu của bảng siết viết *"on a blank white page"* — FLUX làm đúng, ra một TRANG TRẮNG, rồi
+cổng `kiem_chelap` bắt 8 nhịp có nền sáng TB 237 (trần 150): chữ trắng đè nền trắng. **Siết chất
+vẽ và giữ nền có màu là hai việc; câu siết phải làm việc thứ nhất mà không phá việc thứ hai.**
+
+### 15.27 `catch(e){}` rỗng làm một con số nói dối
+
+Dashboard hiện *"⚙️ Đang làm (18)"* cạnh *"✅ Đã có video (0)"*, trong khi log luồng render cùng
+ngày ghi *"5/5 video vào hàng đợi đăng"* bảy vòng liền.
+
+Công thức đã đúng: `d = max(bản ghi job, __chStats)`. Nhưng cả hai nguồn cùng rỗng khi lượt đọc
+`render_stats/{owner}` hỏng — và Firestore ăn 429 suốt buổi. Chỗ hỏng thật là `}catch(e){}` RỖNG
+bọc lượt đọc ấy: màn hình nói *"không có video nào"* trong khi sự thật là *"tôi không đọc được
+sổ"*. Hai điều dẫn tới hai hành động hoàn toàn khác nhau.
+
+Quét toàn dashboard: **171 chỗ `catch(x){}` rỗng**, nhưng chỉ **6 chỗ** bọc một lượt ĐỌC rồi gán
+biến hiển thị. Đọc tay cả sáu: ô kho tổng đã có phòng thủ (ghi `__cntAt=0` để thử lại và lật sang
+kho B2), bốn chỗ còn lại chỉ bọc `toastMsg`. Nên chỉ MỘT chỗ cần sửa.
+
+**Luật:** đừng đi dọn cả 171 chỗ để lấy churn (§13.22). Sửa đúng những chỗ làm một con số nói
+dối — số còn lại bọc chuyện hiển thị và im lặng ở đó không hại ai.
