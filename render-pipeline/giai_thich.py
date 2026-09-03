@@ -2875,6 +2875,58 @@ def _ho_cau() -> dict:
     return _HO_CAU
 
 
+def _dong_bo_the(nhip: list) -> list:
+    """Thẻ chữ phải hiện ĐÚNG câu mà lời đọc nói.  (3/9/2026)
+
+    ── ĐO LÚC PHÁT HIỆN ───────────────────────────────────────────────────────────────────
+    Soi lưới bản dài HOW LOUD (31 chương): **31/63 thẻ chữ hiện đúng một câu** —
+    *"Decibels do not add up the way you think."* — và khung 1, 3, 7 trong chín khung lấy mẫu
+    đều là nó. Bố cục thẻ đã đổi theo `GU_KHUON`, nhưng CHỮ thì không.
+
+    Gốc: bộ sinh khai `_n("the_chu", <lời>, the=<chữ hiện>)` — **hai trường viết tay riêng**.
+    `doi_loi` xoay `loi` theo từng chương (6 biến thể) nhưng `the` ghi cứng nên nó đứng yên.
+    Người xem ĐỌC `the`, nên họ đọc lại đúng một câu 31 lần trong bảy phút.
+
+    Chữa: khi `the` và `loi` thuộc CÙNG một họ biến thể — tức chúng vốn là một câu, chỉ khác dấu
+    ngắt dòng — thì dựng lại `the` từ `loi`. Nhờ đó `the` tự thừa hưởng mọi biến thể mà `doi_loi`
+    và `_tranh_lap_gan` đã chọn, không cần cơ chế thứ hai.
+
+    KHÔNG đụng thẻ có số chương (`"3.|Tiêu đề"`): đó là hai dòng nội dung KHÁC nhau, không phải
+    một câu bị ngắt. Nhận ra bằng dòng đầu là một chữ số.
+    """
+    ho = _ho_cau()
+    for n in nhip:
+        if (n.get("khuon") or "") != "the_chu":
+            continue
+        t = str(n.get("the") or "").strip()
+        l = str(n.get("loi") or "").strip()
+        if not t or not l:
+            continue
+        if t.split("|")[0].rstrip(".").strip().isdigit():
+            continue                       # thẻ chương: số + tiêu đề, để nguyên
+        phang = t.replace("|", " ").split()
+        if phang == l.split():
+            continue                       # đã khớp
+        hoT = ho.get(" ".join(phang))
+        if hoT and l in hoT:
+            n["the"] = _ngat_the(l)        # cùng họ -> dựng lại từ lời đọc
+    return nhip
+
+
+def _ngat_the(cau: str) -> str:
+    """Chèn dấu `|` (ngắt dòng của thẻ chữ) vào giữa câu, ở ranh giới TỪ.
+
+    Thẻ chữ khai `the="Decibels do not add up|the way you think."` — cùng câu với `loi`, chỉ
+    thêm một dấu ngắt. Khi bộ khử lặp đổi `loi` sang biến thể khác thì `the` phải dựng lại từ
+    câu mới, nếu không hai trường nói hai câu khác nhau.
+    """
+    tu = str(cau or "").split()
+    if len(tu) < 4:
+        return str(cau or "")
+    k = (len(tu) + 1) // 2
+    return " ".join(tu[:k]) + "|" + " ".join(tu[k:])
+
+
 def _tranh_lap_gan(nhip: list, ma: str = "") -> list:
     """Không đọc lại CÙNG MỘT CÂU trong vòng `GAN_NHAT` nhịp.  (3/9/2026)
 
@@ -2929,7 +2981,7 @@ def _tranh_lap_gan(nhip: list, ma: str = "") -> list:
             lan_cuoi[thay] = j
         else:
             lan_cuoi[l] = j
-    return nhip
+    return _dong_bo_the(nhip)
 
 
 def _rai_chart(ma: str, nhip: list, idx: int = 0) -> list:

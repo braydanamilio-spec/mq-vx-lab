@@ -7065,10 +7065,40 @@ def t_khong_lap_loi_gan():
                 cuoi[l] = j
     assert len(xau) <= 2, f"{len(xau)} ca đọc lại quá gần: " + "; ".join(xau[:4])
 
+    # ── THẺ CHỮ: SOI TRƯỜNG `the`, KHÔNG CHỈ `loi` ─────────────────────────────────────
+    # Khuôn `the_chu` hiện trường `the` lên giữa khung — đó là thứ mắt ĐỌC, và bộ sinh khai nó
+    # RIÊNG với `loi`. Đo lúc phát hiện: bản dài HOW LOUD có **31/63 thẻ hiện đúng một câu**,
+    # trong khi `loi` đã được `doi_loi` xoay đủ 6 biến thể. Bố cục đổi, chữ không đổi.
+    # Bỏ qua thẻ chương (`"3.|Tiêu đề"`) — hai dòng nội dung khác nhau, không phải một câu.
+    xau2 = []
+    for k in G.KENH:
+        nh = G.kich_ban(k["ma"], 0, long=True, so_chuong=40)[4]
+        cuoi = {}
+        for j, n in enumerate(nh):
+            if (n.get("khuon") or "") != "the_chu":
+                continue
+            t = str(n.get("the") or n.get("loi") or "").strip()
+            if not t or t.split("|")[0].rstrip(".").strip().isdigit():
+                continue
+            if j - cuoi.get(t, -999) < G.GAN_NHAT:
+                xau2.append(f'{k["ma"]}: thẻ «{t[:34]}» cách {j - cuoi[t]} nhịp')
+            cuoi[t] = j
+    assert not xau2, "thẻ chữ hiện lại cùng một câu quá gần: " + "; ".join(xau2[:3])
+
     # Thử NGƯỢC: bộ khử phải thật sự đổi câu, nếu không cổng này canh một hàm chết.
     tho = [{"khuon": "canh", "loi": "No breaks."} for _ in range(4)]
     G._tranh_lap_gan(tho)
     assert len({n["loi"] for n in tho}) >= 3, "_tranh_lap_gan không đổi câu lặp"
+
+    # Và bộ đồng bộ `the` phải thật sự dựng lại chữ theo lời đọc.
+    tho2 = [{"khuon": "the_chu", "loi": "No rest.", "the": "No breaks."}]
+    G._dong_bo_the(tho2)
+    assert tho2[0]["the"].replace("|", " ") == "No rest.", \
+        f'_dong_bo_the không đồng bộ: {tho2[0]["the"]!r}'
+    # KHÔNG được đụng thẻ chương
+    tho3 = [{"khuon": "the_chu", "loi": "How loud is a jet.", "the": "3.|How loud is a jet"}]
+    G._dong_bo_the(tho3)
+    assert tho3[0]["the"].startswith("3."), "đụng vào thẻ chương — số chương phải giữ nguyên"
 
 
 def t_khong_tdz():
