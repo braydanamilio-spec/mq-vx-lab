@@ -1701,3 +1701,33 @@ hiện vì **đếm số hành vi trước và sau** rồi thấy con số KHÔN
 
 Cổng mới quét bằng `ast`, không bằng cách nạp module — nạp module thì khoá trùng đã bị nuốt mất,
 tức **đúng thứ cần bắt không còn ở đó để mà bắt**. Quét cả bốn tệp hồ sơ: sạch.
+
+### 15.18 `git add -A` trên thư mục dùng chung — em commit bản đang sửa dở của cửa sổ kia
+
+Anh dặn từ đầu: *"nhớ ko xung đột với phần khác e nha, a cũng đang làm việc dự án trên cửa sổ
+khác"*. Em vẫn dùng `git add -A render-pipeline` và **quét luôn `nen_gt.py` đang sửa dở của cửa
+sổ kia** vào commit của mình. Đây là lỗi của em, không phải của cửa sổ kia.
+
+Hậu quả cụ thể: `selftest` báo đỏ ở `nen_gt.py:563` giữa lúc em đang giao việc, và nhìn từ ngoài
+thì nó **trông như em vừa làm hỏng cái gì đó**.
+
+**Luật:** ở repo có nhiều cửa sổ cùng làm, **`git add` phải nêu ĐÍCH DANH tệp**, không bao giờ
+`-A` trên cả thư mục. Trước khi commit, `git status --short` và đọc từng dòng: dòng nào không
+phải việc mình vừa làm thì để nguyên đó.
+
+### 15.19 Và dòng đỏ ấy là một cổng BẮT OAN — đúng họ lỗi mình vừa viết ba lần
+
+Dòng bị chặn:
+
+```python
+_tran = int(os.environ.get("TRAN_ANH_LUONG", "120") or 120)
+```
+
+Cổng quét AST tìm `environ.get(K, "mđ")` hai tham số — và dạng trên **đã an toàn**: biến rỗng làm
+`.get` trả `""` (falsy), `or 120` đỡ lấy. Cổng chỉ nhìn lời gọi mà **không nhìn ra ngoài nó**.
+
+Chữa bằng cách thu thập trước mọi nhánh không-phải-cuối của một `BoolOp Or` rồi bỏ qua chúng.
+Thử ngược đủ hai chiều: dạng có `or` → tha; dạng trần → vẫn bắt.
+
+**Vì sao phải chữa chứ không bỏ qua:** luật 13.2 đã trả giá cho đúng chuyện này — ba dòng đỏ giả
+khiến một lỗi THẬT nằm cạnh chúng bị chìm. Một cổng đỏ vĩnh viễn không phiền, nó **che**.

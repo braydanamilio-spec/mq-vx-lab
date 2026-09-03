@@ -3490,11 +3490,23 @@ def t_bien_moi_truong_rong_khong_pha_mac_dinh():
             t = _ast.parse(io.open(p, encoding="utf-8").read())
         except Exception:
             continue
+        # 3/9 — Cổng này BẮT OAN `os.environ.get("K", "120") or 120`: dạng ấy ĐÃ AN TOÀN, vì
+        # biến rỗng làm `.get` trả "" (falsy) và `or` đỡ lấy. Cổng chỉ khớp lời gọi hai tham số
+        # mà không nhìn ra ngoài nó, nên nó báo đỏ cho mã đúng.
+        #
+        # Một cổng đỏ vĩnh viễn không chỉ phiền: luật 13.2 đã trả giá cho đúng chuyện này — ba
+        # dòng đỏ giả khiến một lỗi THẬT nằm cạnh chúng bị chìm. Nên phải chữa, không phải bỏ qua.
+        an_toan = set()
+        for n in _ast.walk(t):
+            if isinstance(n, _ast.BoolOp) and isinstance(n.op, _ast.Or):
+                for v in n.values[:-1]:
+                    an_toan.add(id(v))
         for n in _ast.walk(t):
             if isinstance(n, _ast.Call) and getattr(n.func, "attr", "") == "get" \
                     and getattr(getattr(n.func, "value", None), "attr", "") == "environ" \
                     and len(n.args) == 2 and isinstance(n.args[1], _ast.Constant) \
-                    and isinstance(n.args[1].value, str) and n.args[1].value.strip():
+                    and isinstance(n.args[1].value, str) and n.args[1].value.strip() \
+                    and id(n) not in an_toan:
                 xau.append(f"{os.path.basename(p)}:{n.lineno}")
     assert not xau, ("dùng `environ.get(K, 'mđ')` — biến rỗng sẽ phá mặc định. Đổi sang "
                      "`environ.get(K) or 'mđ'`:\n   " + "\n   ".join(xau))
