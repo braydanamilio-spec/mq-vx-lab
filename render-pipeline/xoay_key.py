@@ -189,8 +189,43 @@ def ghi_trang_thai(owner: str = "") -> int:
         db = FB._db_meta()
         if db is None:
             return 0
-        lo, n = db.batch(), 0
+        # ── KHỚP THEO 4 KÝ TỰ CUỐI, KHÔNG THEO `id`  (3/9/2026) ──────────────────────────
+        # Dashboard hiện `⚪ 97 chưa kiểm` cho CF trong khi tôi vừa đo cả 97 đều cạn — và
+        # `nguon_kiem="dùng thật"` đếm được **0**. Tức bộ ghi này chưa ghi nổi một dòng nào.
+        #
+        # Gốc: khoá của dây chuyền có trường `id`, nhưng giá trị là **`local3`** — id tự sinh
+        # khi đọc tệp khoá cục bộ / biến môi trường, KHÔNG phải doc id của Firestore. Nên nó
+        # ghi vào `gemini_keys/local3`, một tài liệu chẳng ứng với khoá nào, còn dashboard đọc
+        # doc thật nên không bao giờ thấy.
+        #
+        # Có `id` nên nhìn qua thì tưởng đúng — đây là kiểu lỗi tệ nhất: **trường tồn tại,
+        # kiểu dữ liệu đúng, chỉ sai HỆ QUY CHIẾU.** Cùng họ với "chép hằng số sang hệ quy
+        # chiếu khác" (§6): không có gì báo lỗi, chỉ có dữ liệu đi lạc chỗ.
+        #
+        # Khớp theo `last4` — chính thứ dashboard hiển thị và chắc chắn có ở cả hai phía. Tốn
+        # MỘT truy vấn cho cả lượt chạy (đệm theo tiến trình), đổi lấy việc cơ chế thật sự chạy.
+        if not hasattr(ghi_trang_thai, "_ban_do"):
+            bd = {}
+            try:
+                for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
+                    x = d.to_dict() or {}
+                    l4 = str(x.get("last4") or "")[-4:]
+                    if l4:
+                        bd[l4] = d.id
+            except Exception as e:
+                print(f"   ⚠ không dựng được bản đồ khoá ({str(e)[:60]}) — bỏ ghi sổ lượt này")
+            ghi_trang_thai._ban_do = bd
+            print(f"   🗺 bản đồ khoá: {len(bd)} doc khớp theo 4 ký tự cuối")
+        _bd = ghi_trang_thai._ban_do
+        if not _bd:
+            return 0
+        lo, n, _lac = db.batch(), 0, 0
         for kid, v in list(_QUAN_SAT.items()):
+            _doc = _bd.get(str(v.get("last4") or "")[-4:])
+            if not _doc:
+                _lac += 1
+                continue
+            kid = _doc
             # `cooling_until` rỗng khi khoá gọi được -> XOÁ trạng thái nghỉ cũ. Không ghi đè
             # bằng chuỗi rỗng thì một khoá từng cạn hôm qua sẽ nằm mãi ở cột 😴, kể cả khi hôm
             # nay nó vẽ ngon — đúng họ lỗi "cờ bật thì có người bật, tắt thì không ai tắt".
@@ -203,6 +238,8 @@ def ghi_trang_thai(owner: str = "") -> int:
             if n % 400 == 0:
                 lo.commit(); lo = db.batch()
         lo.commit()
+        if _lac:
+            print(f"   ⚠ {_lac} khoá không tìm được doc khớp 4 ký tự cuối — bỏ qua")
         nghi = sum(1 for v in _QUAN_SAT.values() if v.get("nghi_den"))
         song = sum(1 for v in _QUAN_SAT.values() if v["alive"]) - nghi
         print(f"   🗝 ghi sổ trạng thái {n} khoá từ LƯỢT DÙNG THẬT — "

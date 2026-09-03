@@ -9072,3 +9072,25 @@ tập sau mất ảnh một cách ngẫu nhiên.
 
 **Luật.** Khi một tài nguyên cạn, đừng hỏi *"sao ít thế"* — hỏi *"nhu cầu đã tăng bao nhiêu lần,
 và do thay đổi nào"*. Ở đây nguồn cung không đổi suốt; chỉ nhu cầu nhân 17.
+
+### 7ei — Trường tồn tại, kiểu đúng, sai HỆ QUY CHIẾU  (3/9/2026)
+
+Anh: *"check được đúng tình trạng key api chưa."* Mở Chrome đếm: CF hiện **97 "chưa kiểm"** trong
+khi tôi vừa đo cả 97 đều cạn, và `nguon_kiem="dùng thật"` đếm được **0**. Bộ ghi sức khoẻ khoá
+làm hôm qua **chưa ghi nổi một dòng nào**.
+
+**Gốc.** Khoá của dây chuyền CÓ trường `id` — nên nhìn qua thì đúng. Nhưng giá trị là **`local3`**:
+id tự sinh khi đọc tệp khoá cục bộ / biến môi trường, **không phải doc id của Firestore**. Bộ ghi
+vì thế ghi vào `gemini_keys/local3` — một tài liệu chẳng ứng với khoá nào — còn dashboard đọc doc
+thật nên không bao giờ thấy.
+
+Đây là kiểu lỗi tệ nhất để phát hiện: **trường tồn tại, kiểu dữ liệu đúng, chỉ sai hệ quy chiếu.**
+Không có gì báo lỗi, không có ngoại lệ nào, chỉ có dữ liệu đi lạc chỗ. Cùng họ với *chép hằng số
+sang hệ quy chiếu khác* (§6) — `545/−437/119` đúng ở `KichHai`, sai ở `KichComic`.
+
+**Sửa.** Khớp theo `last4` — chính thứ dashboard hiển thị và chắc chắn có ở cả hai phía. Tốn MỘT
+truy vấn cho cả lượt chạy (đệm theo tiến trình), đổi lấy việc cơ chế thật sự chạy. Và in ra số
+khoá **không khớp được**, để lần sau lệch hệ quy chiếu thì lộ ngay thay vì im.
+
+**Luật.** Khi hai hệ trao đổi định danh, hỏi *"id này do AI cấp, và bên kia có dùng cùng loại
+id không?"* — sự tồn tại của trường `id` không chứng minh hai bên nói cùng một thứ.
