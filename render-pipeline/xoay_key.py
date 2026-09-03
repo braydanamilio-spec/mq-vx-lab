@@ -28,6 +28,7 @@ khoảng 16.000 ảnh/ngày, và ảnh NGAY SAU đó vẫn sinh thành công.
 
 Mọi chỗ gọi ảnh CF đều phải đi qua đây, kể cả trong GitHub Actions.
 """
+import io
 import os
 import time
 import random
@@ -174,6 +175,36 @@ def ghi_trang_thai(owner: str = "") -> int:
     """
     if not _QUAN_SAT:
         return 0
+    # ── MỖI LƯỢT CHẠY GHI MỘT LẦN, KHÔNG PHẢI MỖI TẬP  (3/9/2026) ─────────────────────────
+    # Chú thích ngay dưới ước tính *"~100 lượt GHI mỗi lượt render"*. Con số ấy đúng cho MỘT
+    # lần gọi — và hàm này được gọi trong `mot_tap`, tức **mỗi tập một lần**. Một luồng dựng
+    # ~45 tập, mười tám luồng chạy song song:
+    #
+    #     45 tập × 18 luồng × ~100 ghi  =  ~81.000 lượt GHI   (trần free: 20.000/ngày)
+    #     45 tập × 18 luồng × 295 đọc   = ~239.000 lượt ĐỌC   (trần free: 50.000/ngày)
+    #
+    # Đo được trong log lượt 07:09 hôm nay: `⚠ ghi sổ trạng thái khoá hụt: 429 Quota exceeded`
+    # lặp lại liên tục — và hậu quả nhìn thấy trên dashboard là **241/295 khoá "chưa kiểm",
+    # cập nhật gần nhất 13 ngày trước**. Bộ ghi chạy đều mà không ghi nổi một dòng.
+    #
+    # Đây đúng luật §13.7: *ngân sách hạn mức là tài nguyên DÙNG CHUNG*, và "số nhỏ" không phải
+    # bảo vệ — 100 lượt nghe an toàn cho một lần, tám trăm lần thì vượt trần bốn lần.
+    #
+    # Trạng thái khoá là ảnh chụp SỨC KHOẺ, không phải nhật ký: ghi một lần mỗi 30 phút là đủ
+    # để dashboard nói đúng, và nó cắt 810 lần gọi xuống còn ~2 lần mỗi luồng.
+    # Dấu mốc để ở tệp `/tmp` nên nó chặn được CẢ khi mỗi tập là một tiến trình riêng — biến
+    # module không sống qua ranh giới tiến trình, đó là lý do không dùng biến.
+    import time as _t
+    _dau = "/tmp/mm0_ghi_khoa_lan_cuoi"
+    try:
+        if _t.time() - os.path.getmtime(_dau) < 1800:
+            return 0
+    except OSError:
+        pass
+    try:
+        io.open(_dau, "w").write(str(int(_t.time())))
+    except Exception:
+        pass
     try:
         import firestore_bridge as FB
     except Exception:
