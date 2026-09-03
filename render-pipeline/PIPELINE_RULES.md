@@ -9040,3 +9040,35 @@ nét nên không tạo mảng tối) → **100/100**.
 
 **Luật.** Mỗi lần gỡ một thứ xấu-nhưng-có-công-dụng, hỏi ngay *"nó đang gánh việc gì, và ai gánh
 thay?"* — rồi **đo**, đừng nhìn.
+
+### 7eh — 97 key không ít; nhu cầu tăng 17 lần mới là vấn đề  (3/9/2026)
+
+Anh: *"nhiều key thế sao cạn vậy, tìm nguyên nhân."*
+
+**Đo, ba con số:**
+
+```
+sức hồ       : 97 tài khoản × 10.000 neuron ÷ 58 = 16.724 ảnh/ngày
+tỉ lệ vẽ lại : 19 lượt trên ~812 nhịp = 2,3%  (hệ số 1,02×)
+nhu cầu thật : 18 luồng × 14 vòng × 58 nhịp × 1,02 = 14.900 ảnh = 89% sức hồ
+```
+
+**Và tôi đã đoán sai một lần ngay giữa việc này.** Tôi nói vòng thử lại "tối đa 4 lượt/cảnh" đẩy
+nhu cầu lên **349%**. Đếm log thật thì tỉ lệ vẽ lại chỉ **2,3%** — con số 349% là **kịch bản tệ
+nhất trên giấy**, không phải thực tế. Nếu tin nó thì đã đi siết vòng thử lại, tức sửa thứ chiếm
+2% trong khi thứ chiếm 89% đứng yên.
+
+**Nguyên nhân thật là số VÒNG LẶP** — và nó là do chính bản vá hôm qua: trước khi có vòng lặp
+liên tục, nhu cầu là 828 ảnh = **4%**. Vòng lặp làm sản lượng nhảy **36 → 872 video** và nhu cầu
+ảnh nhảy **4% → 89%**. *Sản lượng và ảnh AI đánh nhau trực tiếp* — điều tôi không nói đủ rõ khi
+làm vòng lặp.
+
+**Chặn ở chỗ trả giá rẻ nhất:** giới hạn **số ảnh mỗi luồng** (`TRAN_ANH_LUONG=120`), không giảm
+số video. Tập đầu của luồng có ảnh AI đầy đủ, tập sau dùng lớp vẽ bằng code — vẫn ra video, vẫn
+giao được, chỉ khác chất. Đó là **đánh đổi có kiểm soát**, thay vì để hồ cạn giữa chừng rồi mọi
+tập sau mất ảnh một cách ngẫu nhiên.
+
+`120 × 18 luồng × 4 lượt/ngày = 8.640 ảnh = 51% sức hồ.`
+
+**Luật.** Khi một tài nguyên cạn, đừng hỏi *"sao ít thế"* — hỏi *"nhu cầu đã tăng bao nhiêu lần,
+và do thay đổi nào"*. Ở đây nguồn cung không đổi suốt; chỉ nhu cầu nhân 17.

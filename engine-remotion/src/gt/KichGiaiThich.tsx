@@ -122,7 +122,38 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string 
 
      Quầng chữ: bốn lớp bóng KHÔNG LỆCH bám sát nét, bán kính nhỏ. Không dùng viền
      `paintOrder="stroke"` — §12.12: *không hãng phim nào viền chữ.* */
-  const fs = H * 0.036;
+  /* ── CỠ CHỮ THEO CẠNH NGẮN, KHÔNG THEO CHIỀU CAO  (3/9/2026) ────────────────────────────
+     Anh: *"long cũng chuẩn ko lỗi nha."* Dựng bản dài 16:9 rồi soi: phụ đề **nhỏ li ti**.
+
+     Đo bằng chính công thức. `fs = H · 0,036`:
+         dọc  9:16  → H=1920 ⇒ 69px trên khung rộng 1080  = 6,4% bề ngang
+         ngang 16:9 → H=1080 ⇒ 39px trên khung rộng 1920  = **2,0% bề ngang**
+     Cùng một hằng số, hai kết quả lệch nhau **hơn ba lần** về mặt thị giác.
+
+     Vì chữ được đọc theo BỀ NGANG dòng, không theo chiều cao khung. Neo vào `H` chỉ đúng ở khổ
+     dọc — nơi H là cạnh dài. Sang khổ ngang thì H thành cạnh NGẮN và chữ teo lại.
+
+     Đúng họ lỗi đã trả giá nhiều lần: *chép hằng số sang hệ quy chiếu khác* (§6). Không báo lỗi,
+     chỉ làm chữ bé — nên chỉ lộ khi có người ngồi xem bản dài.
+
+     Neo vào `min(W,H)` thì một hằng số đúng cho cả hai khổ. */
+  /* ── SỬA LẠI: NEO VÀO CHIỀU CAO, KHÔNG PHẢI CẠNH NGẮN  (3/9/2026, sửa trong cùng lượt) ──
+     Bản vá đầu của tôi neo cỡ chữ vào `min(W,H)` vì thấy phụ đề bản dài "nhỏ li ti" trong lưới
+     khung. Kiểm lại bằng con số thì tôi sai:
+
+         fs = H · 0,036  →  dọc 3,6% chiều cao · ngang 3,6% chiều cao   ← ĐÃ bằng nhau
+         fs = min(W,H) · 0,045 → dọc 2,6% chiều cao · ngang 4,5%        ← làm DỌC bé đi
+
+     Chuẩn phụ đề đo theo **chiều cao khung** (4–5%), không theo bề ngang — vì màn hình nào cũng
+     scale theo chiều cao. Cảm giác "nhỏ" của tôi đến từ chỗ khác: khi ghép lưới, khung NGANG bị
+     thu nhỏ nhiều hơn khung dọc để vừa cùng một bề rộng.
+
+     Tức tôi suýt sửa một thứ không hỏng, và bản vá ấy sẽ làm hỏng khổ dọc — nơi 90% video nằm.
+     Đúng luật §13.4: *khi con số và con mắt bất đồng, đo cái đang bị chấm rồi mới quyết bên nào
+     sai.* Ở đây con mắt sai vì nó nhìn qua một phép thu nhỏ không đều.
+
+     Giữ neo `H`, chỉ nâng 0,036 → 0,042 (3,6% → 4,2% chiều cao) cho vào giữa dải chuẩn 4–5%. */
+  const fs = H * 0.042;
   return (
     <>
       <div style={{

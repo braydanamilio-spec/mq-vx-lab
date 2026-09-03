@@ -536,9 +536,38 @@ export const Dem: React.FC<{
 export const TheChu: React.FC<{ W: number; H: number; chu: string; p: number; mau: string }> =
 ({ W, H, chu, p, mau }) => {
   const q = Math.min(1, p / 0.2);
-  const dong = chu.split("|");
+  /* ── XUỐNG DÒNG THAY VÌ THU NHỎ  (3/9/2026) ────────────────────────────────────────────
+     Anh: *"long cũng chuẩn ko lỗi nha."* Soi bản dài: thẻ chương là **khối màu trơn với chữ bé
+     tí** ở giữa. 11/50 nhịp của bản dài là thẻ chữ — 22% thời lượng trông như một tấm bìa rỗng.
+
+     Đo bằng chính công thức: `fs = min(H·0,115, (W·0,74/dai)·1,62)`. Câu chương *"Could you
+     survive a night in a cave"* dài **34 ký tự**, nên nhánh thứ hai thắng:
+
+         min(1080·0,115, (1920·0,74/34)·1,62) = min(124, 67) = **67px** = 3,5% chiều cao
+
+     Bằng đúng cỡ phụ đề. Một thẻ TUYÊN BỐ mà bé bằng phụ đề thì nó không còn là tuyên bố.
+
+     Gốc: công thức chỉ có MỘT cách xử lý câu dài — **thu nhỏ chữ**. Nhưng câu dài thì cách đúng
+     là **xuống dòng**, giữ nguyên cỡ. Đây là họ lỗi quen: *một kích thước chịu hai ràng buộc mà
+     công thức chỉ mã hoá một* (§6) — ở đây là "vừa bề ngang" và "đủ to để đọc là tuyên bố".
+
+     Nay tự ngắt dòng ở ranh giới TỪ với trần ~16 ký tự/dòng, rồi mới tính cỡ. Chữ giữ được
+     tầm vóc, và câu dài chỉ tốn thêm một dòng. */
+  const _ngat = (t: string, max = 16): string[] => {
+    const tu = t.trim().split(/\s+/);
+    const ra: string[] = [];
+    let d = "";
+    for (const w of tu) {
+      if (!d) { d = w; continue; }
+      if ((d + " " + w).length <= max) d += " " + w;
+      else { ra.push(d); d = w; }
+    }
+    if (d) ra.push(d);
+    return ra.length ? ra : [t];
+  };
+  const dong = chu.split("|").flatMap((d) => _ngat(d));
   const dai = Math.max(...dong.map((d) => d.length), 1);
-  const fs = Math.min(H * 0.115, (W * 0.74 / dai) * 1.62);
+  const fs = Math.min(H * 0.135, (W * 0.80 / dai) * 1.62, H * 0.86 / (dong.length * 1.2));
   /* 1/9 — DỰNG LẠI. Bản trước là một HỘP TRẮNG BO GÓC, chữ `Georgia, serif`, gạch chân màu ở
      đáy. Ba thứ ấy đều lạc: cả bộ phim dùng một phông sans đậm, và §12.12 xếp "hộp bo góc" cùng
      "gạch chân màu" vào danh sách dấu hiệu nghiệp dư — người xem đọc ra trong nửa giây.

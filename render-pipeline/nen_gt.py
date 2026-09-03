@@ -543,6 +543,30 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
     if getattr(sinh, "_can", 0):
         sinh._can += 1
         return ""
+    # ── TRẦN ẢNH AI MỖI LUỒNG MỖI LƯỢT  (3/9/2026) ─────────────────────────────────────────
+    # Anh: *"nhiều key thế sao cạn vậy, tìm nguyên nhân."* Đo xong thì thủ phạm là **số vòng
+    # lặp**, không phải số key và cũng không phải vòng thử lại:
+    #
+    #     sức hồ        : 97 tài khoản × 10.000 neuron ÷ 58 = 16.724 ảnh/ngày
+    #     tỉ lệ vẽ lại  : 19 lượt trên ~812 nhịp = **2,3%** (hệ số 1,02× — không đáng kể)
+    #     nhu cầu thật  : 18 luồng × 14 vòng × 58 nhịp × 1,02 = **14.900 ảnh = 89% sức hồ**
+    #
+    # Trước khi có vòng lặp liên tục thì nhu cầu là 828 ảnh = **4%**. Vòng lặp làm sản lượng
+    # nhảy 36 → 872 video, và nhu cầu ảnh nhảy 4% → 89%. Sản lượng và ảnh AI đánh nhau trực tiếp.
+    #
+    # Chặn ở đâu cũng phải trả giá, nên chọn chỗ trả giá RẺ NHẤT: giới hạn **số ảnh mỗi luồng**,
+    # không giảm số video. Tập đầu của luồng có ảnh AI đầy đủ; tập sau dùng lớp vẽ bằng code —
+    # vẫn ra video, vẫn giao được, chỉ khác chất. Đó là đánh đổi có kiểm soát, thay vì để hồ cạn
+    # giữa chừng rồi MỌI tập sau đó mất ảnh một cách ngẫu nhiên.
+    #
+    # 120 ảnh/luồng/lượt × 18 luồng × 4 lượt/ngày = 8.640 ảnh = 52% sức hồ, còn biên cho việc khác.
+    _tran = int(os.environ.get("TRAN_ANH_LUONG", "120") or 120)
+    if _tran > 0 and getattr(sinh, "_da_ve", 0) >= _tran:
+        if getattr(sinh, "_da_ve", 0) == _tran:
+            sinh._da_ve += 1        # +1 để câu này chỉ in một lần
+            print(f"     🎚 đã vẽ {_tran} ảnh AI trong lượt này — các cảnh sau dùng lớp vẽ bằng "
+                  f"code để giữ hạn mức cho những luồng còn lại (đặt TRAN_ANH_LUONG để đổi)")
+        return ""
 
     import datastory_ci as DS
     from xoay_key import goi_xoay, CanThat
@@ -620,6 +644,7 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
                 sinh._da_bao = True
                 print(f"     ⚠ CỔNG CHỮ TẮT ({type(e).__name__}: {str(e)[:60]}) — "
                       f"ảnh có chữ bịa sẽ lọt qua")
+        sinh._da_ve = getattr(sinh, "_da_ve", 0) + 1
         return rel
     # BỐN LƯỢT ĐỀU HỎNG — cũng phải nói. Đây là nhánh im lặng thứ hai: nhịp này mất cảnh mà
     # không có dấu vết nào, nên nhìn từ log nó y hệt một nhịp chưa từng được yêu cầu vẽ.

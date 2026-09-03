@@ -47,6 +47,10 @@ BRAND = {
                          khau_hieu="IT WAS REALLY HERE"),
     "DEEP TIME":    dict(chinh="#8FC46B", phu="#D9C9A3", nen="#12180F", bt="track",
                          khau_hieu="AN ANIMAL, NOT A MONSTER"),
+    "REEF WALL":    dict(chinh="#FF8A4C", phu="#3FD0E0", nen="#07202E", bt="manta",
+                         khau_hieu="NOTHING HERE MOVES LIKE AN ANIMAL"),
+    "GHOST MOUNTAIN": dict(chinh="#CFD8E0", phu="#8A9BA8", nen="#1A1E22", bt="paw",
+                           khau_hieu="YOU WERE LOOKING RIGHT AT IT"),
 }
 
 
@@ -165,6 +169,27 @@ def bieu_tuong(d: ImageDraw.ImageDraw, ten: str, cx: int, cy: int, r: int, c1, c
         _ngon(0, 1.24, .16)
         _ngon(46, 1.02, .15)
         d.ellipse([cx - r * .24, cy + r * .38, cx + r * .24, cy + r * .90], fill=c1)
+    elif ten == "manta":                       # cá đuối manta nhìn từ trên. Bản đầu để hai vây
+        # đầu dài quá -> đọc thành RÂU côn trùng. Vây đầu thật ngắn và cụp; thứ nhận ra manta là
+        # ĐÔI CÁNH RỘNG CONG NGƯỢC RA SAU, nên cánh phải cong chứ không phải hình thoi nhọn.
+        d.polygon([(cx, cy - r * .40),
+                   (cx + r * .46, cy - r * .34), (cx + r * .96, cy + r * .06),
+                   (cx + r * .62, cy + r * .16), (cx + r * .30, cy + r * .44),
+                   (cx, cy + r * .34),
+                   (cx - r * .30, cy + r * .44), (cx - r * .62, cy + r * .16),
+                   (cx - r * .96, cy + r * .06), (cx - r * .46, cy - r * .34)], fill=c1)
+        for sx in (-1, 1):
+            d.polygon([(cx + sx * r * .30, cy - r * .38), (cx + sx * r * .34, cy - r * .70),
+                       (cx + sx * r * .14, cy - r * .66), (cx + sx * r * .10, cy - r * .36)],
+                      fill=c1)
+        d.polygon([(cx - r * .08, cy + r * .30), (cx + r * .08, cy + r * .30),
+                   (cx + r * .03, cy + r * .94), (cx - r * .03, cy + r * .94)], fill=c1)
+    elif ten == "paw":                         # dấu chân mèo lớn — đệm TO ở dưới, bốn ngón TRÒN
+        # ở trên. Khác hẳn `track` (ba ngón nhọn của chim) ở chỗ tròn và ở số lượng.
+        d.ellipse([cx - r * .50, cy + r * .04, cx + r * .50, cy + r * .86], fill=c1)
+        for dx, dy, rr in ((-.62, -.30, .23), (-.22, -.60, .25), (.22, -.60, .25), (.62, -.30, .23)):
+            d.ellipse([cx + r * dx - r * rr, cy + r * dy - r * rr,
+                       cx + r * dx + r * rr, cy + r * dy + r * rr], fill=c1)
     else:
         d.ellipse([cx - r * .7, cy - r * .7, cx + r * .7, cy + r * .7], fill=c1)
 

@@ -1607,6 +1607,210 @@ KENH: dict[str, dict] = {
             "No amber, no fences, no laboratory, nothing belonging to a film about dinosaurs.",
         ),
     },
+
+    "REEF WALL": {
+        "ten": "REEF WALL",
+        "mo_ta": "Vách san hô đổ xuống vực xanh — thế giới nhiều màu nhất và kỳ lạ nhất của bộ.",
+        "hook": (
+            "Colour that looks turned up too far, on an animal that does not move like an animal. "
+            "The viewer stops because nothing in the frame behaves the way they expect."
+        ),
+        "the_gioi": (
+            "An Indo-Pacific reef where the shallow terrace ends and the wall drops away: coral "
+            "heads and sea fans on the rim, clouds of small fish above it, open blue going down "
+            "to black."
+        ),
+        "anh_sang": (
+            "shafts of sunlight cutting down through the surface in visible moving columns",
+            "flat blue light with the wall bright and the drop-off behind it going black",
+            "bright surface silver directly overhead and everything below in shade",
+            "even blue-green light with no direction to it at all",
+            "a moving net of light rippling across the coral from the surface above",
+        ),
+        "thoi_tiet": (
+            "a slow current bending every sea fan the same way",
+            "water so clear the drop-off is visible for thirty metres",
+            "a haze of suspended plankton softening everything past a few metres",
+            "still water with nothing moving but the animal",
+            "a fast current with small fish holding into it and not advancing",
+        ),
+        "khuon_cam": ("cliff edge looking down", "ground level low angle"),
+        "loai": {
+            "manta ray": (
+                "A giant manta ray: a flat diamond body wider than it is long, dark above with a white "
+                "underside marked in dark blotches, two horn-like cephalic fins rolled at the "
+                "front of the head, and a thin whip tail."
+            ),
+            "day octopus": (
+                "A day octopus: a soft bulbous mantle and eight arms lined with suckers, skin "
+                "that runs waves of colour and texture from smooth pale to knobbled red-brown."
+            ),
+            "mantis shrimp": (
+                "A peacock mantis shrimp: a segmented body in enamel green and orange with blue "
+                "leg bands, two stalked eyes that move independently, and two folded club arms "
+                "held under the head."
+            ),
+            "cuttlefish": (
+                "A cuttlefish: a broad flat mantle fringed by a rippling skirt of fin, W-shaped "
+                "pupils, and skin running bands of colour along its length."
+            ),
+            "whitetip reef shark": (
+                "A whitetip reef shark: a slender grey body, blunt broad head, small eyes, and "
+                "clean white tips on the first dorsal fin and the upper tail lobe."
+            ),
+        },
+        "hanh_vi": {
+            "manta ray": {
+                "duoi": (
+                    "flying past on one slow beat of both wings and gliding",
+                    "turning on its side so the whole white underside faces the camera",
+                    "unrolling both cephalic fins forward into flat paddles",
+                    "banking in a slow barrel turn without beating the wings once",
+                    "coming out of the blue and passing directly overhead",
+                ),
+                "mep": (
+                    "rising until the wingtips break the surface and sinking again",
+                ),
+            },
+            "day octopus": {
+                "duoi": (
+                    "running a wave of colour and texture down the whole body at once",
+                    "pouring itself into a hole far too small for it",
+                    "spreading all eight arms flat over a coral head like a net",
+                    "lifting one arm and feeling along a crack with the tip only",
+                    "going from smooth pale to knobbled red-brown and back",
+                ),
+            },
+            "mantis shrimp": {
+                "duoi": (
+                    "unfolding one club arm in a strike too fast for the eye to follow",
+                    "moving both stalked eyes in different directions at the same time",
+                    "backing into a burrow with only the eyes left showing",
+                    "walking along the coral with the club arms folded under the head",
+                ),
+            },
+            "cuttlefish": {
+                "duoi": (
+                    "running bands of colour along the mantle in slow pulses",
+                    "hovering in one place on nothing but the rippling fin",
+                    "changing skin texture from smooth to spiked and back",
+                    "turning to face the camera so both W-shaped pupils line up",
+                ),
+            },
+            "whitetip reef shark": {
+                "duoi": (
+                    "cruising along the wall without moving anything but the tail",
+                    "resting motionless on the sand with the gills working",
+                    "turning tightly around a coral head and continuing",
+                ),
+            },
+        },
+        "style": (
+            "The most saturated world of the whole set, and deliberately so: coral orange, enamel "
+            "green, and a blue that goes from turquoise at the top of frame to near-black at the "
+            "bottom. Light comes only from the surface, so everything has a bright top edge and a "
+            "dark underside."
+        ),
+        "am": "the click and crackle of a living reef, surge over coral, one distant boat-free hum",
+        "luat": (
+            "No net, no line, no anchor, no bleached dead coral. This reef is alive.",
+            "The mantis shrimp strike may start; what it strikes is never in frame.",
+        ),
+    },
+
+    "GHOST MOUNTAIN": {
+        "ten": "GHOST MOUNTAIN",
+        "mo_ta": "Báo tuyết Himalaya — con vật hiếm tới mức chỉ riêng việc quay được nó đã là sự kiện.",
+        "hook": (
+            "An empty grey slope, and then part of it moves. The viewer stops because they were "
+            "looking straight at the animal and did not see it."
+        ),
+        "the_gioi": (
+            "High Himalayan country above the tree line in winter: grey shattered rock and scree, "
+            "old snow only in the shadowed gullies, huge distance, and no vegetation at all."
+        ),
+        "anh_sang_cam": ("through the water",),
+        "thoi_tiet_cam": ("heavy slow swell", "tearing spray", "like glass", "loose pack ice",
+                          "rain stippling"),
+        "khuon_cam": ("underwater looking up", "underwater side on", "split level half under water",
+                      "high-speed water impact"),
+        "loai": {
+            "snow leopard": (
+                "A snow leopard: smoky grey-white fur in dark rosettes, a very wide short muzzle, "
+                "pale green eyes, enormous paws, and a tail almost as long as the body carried in "
+                "a low curve."
+            ),
+            "blue sheep": (
+                "A bharal, or blue sheep: a compact slate-grey body with a black flank stripe, short "
+                "curved horns sweeping out and back, on rock the same colour as itself."
+            ),
+            "bearded vulture": (
+                "A bearded vulture: a rust-orange head and underside, slate wings spanning nearly "
+                "three metres, a wedge tail, and a black mask across the eyes."
+            ),
+            "tibetan fox": (
+                "A Tibetan fox: a distinctly square-looking head with narrow eyes, sandy body, "
+                "grey flank band, and a very thick brush."
+            ),
+            "pika": (
+                "A pika: a round palm-sized body with no visible tail, short round ears, and a "
+                "blunt face, sitting upright on a rock."
+            ),
+        },
+        "hanh_vi": {
+            "snow leopard": {
+                "tren": (
+                    "lying against rock of exactly its own colour and only the tail tip moving",
+                    "walking a narrow ledge placing each paw in line with the last",
+                    "stopping mid-step with one forepaw raised and the ears turned forward",
+                    "wrapping the long tail across its own face and lying still",
+                    "descending a scree slope in a controlled slide",
+                    "turning its head to look directly back over its shoulder",
+                    "crouching flat behind a boulder with only the top of the head showing",
+                    "leaping a gap between two rock ledges and landing without a sound",
+                ),
+            },
+            "blue sheep": {
+                "tren": (
+                    "standing on a ledge no wider than its own hooves",
+                    "lifting its head from feeding and holding completely still",
+                    "moving across a near-vertical face without hurrying",
+                ),
+            },
+            "bearded vulture": {
+                "tren": (
+                    "holding position on a ridge updraft without one wingbeat",
+                    "landing on a rock spur and folding the huge wings away",
+                    "turning its head so the black eye mask faces the camera",
+                ),
+            },
+            "tibetan fox": {
+                "tren": (
+                    "standing motionless with the square head turned to one side",
+                    "trotting along a scree line with the brush held straight out",
+                    "pouncing straight down into loose stones",
+                ),
+            },
+            "pika": {
+                "tren": (
+                    "sitting upright on a rock with a mouthful of dry grass",
+                    "freezing flat against stone as a shadow crosses",
+                    "carrying a bundle of grass into a gap in the rocks",
+                ),
+            },
+        },
+        "style": (
+            "Grey on grey on grey, and that is the point: rock, fur and old snow are all within "
+            "one tone of each other, so the animal has to be found rather than seen. The only "
+            "colour is the rust of a vulture's head and the pale green of an eye. Hard thin "
+            "high-altitude light with very dark shadow."
+        ),
+        "am": "thin wind over stone, loose scree shifting, one distant call, deep silence",
+        "luat": (
+            "Camouflage is the subject: the animal is always partly hidden by rock of its own colour "
+            "and never stands clear of its background.",
+        ),
+    },
 }
 
 
