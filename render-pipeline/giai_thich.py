@@ -960,8 +960,13 @@ def sinh_howlong(i):
               "a grey overcast plain, the footprint trail vanishing to the far horizon behind",
               "cracked pale ground, wind-blown dust",
               "cold flat overcast light, desaturated grey-brown palette")),
-    _n("so_lieu", "You arrive.", so=sb, don=ub, chu=f"walking non-stop to {ten}",
-       bt="nguoi", dinh=True, tam_trang="ngay",
+    # `canh`, KHÔNG `so_lieu`.  (3/9/2026)
+    # Nhịp này và nhịp "On foot." ngay sau đó cùng hiện **8.8** — hai khối số liền nhau nói
+    # đúng một con số, và người xem thấy màn hình đứng yên qua hai nhịp. Con số đã được nói ở
+    # nhịp trước rồi; chỗ này là CÚ ĐẾN NƠI, tức một khoảnh khắc, không phải một số liệu.
+    # Đổi sang cảnh thì vừa hết trùng số vừa đúng nghĩa — và prompt ảnh vốn đã viết cho một
+    # cảnh ("arms raised in triumph"), nên chính khuôn cũ mới là chỗ sai.
+    _n("canh", "You arrive.", dinh=True, tam_trang="ngay",
        ve=_ve("a small weary human figure with arms raised in triumph",
               "standing still at the end of a very long walk",
               "worn out but joyful, head thrown back",
@@ -2766,8 +2771,21 @@ def _nhan(t: str, toi_da: int = 11) -> str:
     return con[:toi_da]
 
 
-def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
-            so_chuong: int = 10) -> str:
+def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
+    """Danh sách nhịp HOÀN CHỈNH của một tập — gồm cả nhịp hook và ba lượt rải bố cục.
+
+    ── VÌ SAO TÁCH RA  (3/9/2026) ──────────────────────────────────────────────────────────
+    `cham_kich_ban.py` cần đúng danh sách mà `mot_tap` sắp dựng. Bản đầu của thước gọi thẳng
+    `BO_SINH[ma](i)` cho tiện — và chấm SAI: nhịp hook được chèn ở `mot_tap`, sau khi bộ sinh
+    đã trả về, nên thước thấy 17/18 kênh "hook không có số" trong khi hook thật luôn có số.
+
+    Một phép đo đọc từ nguồn khác nguồn mà sản phẩm dùng thì nó đo một sản phẩm không tồn tại.
+    Đúng luật 13.15 (*bài kiểm phải gọi bằng đúng đường mà mã thật gọi*) và đúng điều anh dặn
+    hôm nay: *"cơ chế lưu thông minh để ko chồng chéo, lẫn lộn hay lỗi"*.
+
+    Trả `(k, tiêu đề, hook, hook phụ, nhịp, mục lục)`. Không đọc tiếng, không vẽ ảnh, không
+    dựng — nên gọi được từ cổng và từ thước mà không tốn một lượt API nào.
+    """
     k = next((x for x in KENH if x["ma"] == ma), None)
     if not k:
         print(f"❌ không có kênh {ma}")
@@ -2843,8 +2861,35 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             **({"ve": _ve} if _ve else {}), **({"bt": _bt} if _bt else {}),
         })
     elif HOOK_LOI.get(ma) and nhip:
-        nhip[0]["loi"] = _cau_hook(hook, HOOK_LOI[ma])
+        # ── NHÁNH KHÔNG CÓ SỐ: MÂU THUẪN ĐỨNG TRƯỚC  (3/9/2026) ────────────────────────────
+        # Nhánh trên (`if`) là hook kiểu khối số — con số chiếm một phần năm chiều cao khung và
+        # tự nó là cái móc giữ chân. Nhánh này KHÔNG có số: bốn kênh trả lời định tính (whatif ·
+        # dayinlife · wheregoes · therules) mở đầu bằng một câu hỏi trơn, tức ba giây đầu không
+        # có gì để người xem ở lại. Số đo công bố (§13.16): quyết định lướt xảy ra trong ~400ms.
+        #
+        # `HOOK_LOI` của đúng bốn kênh ấy đã là những câu mạnh — *"You would quit by noon."* ·
+        # *"You think it gets reused."* — và `_cau_hook` đang VỨT chúng đi để lấy câu hỏi tiêu đề.
+        # Một câu hay viết sẵn mà không bao giờ được dùng thì cũng như chưa viết.
+        #
+        # ĐÃ THỬ SỬA TRONG `_cau_hook` và SAI: hàm ấy không thấy trường `so`, nên nó nối thêm
+        # mâu thuẫn vào cả những kênh vốn đã có số — hook dài quá 8 chữ và điểm trung bình
+        # TỤT 96,9 -> 94,7. Đúng luật 13.23: đo bằng ĐIỂM CUỐI, không bằng số lỗi sửa được.
+        # Sửa ở đây thì phạm vi chính xác bằng đúng tập hợp cần sửa.
+        _m = HOOK_LOI[ma].strip().rstrip(".")
+        _c = _cau_hook(hook, HOOK_LOI[ma])
+        _gh = f"{_m}. {_c}"
+        # Trần 11 chữ ~ 4 giây đọc. Quá dài thì lấy MỖI mâu thuẫn: thà mất chủ đề ở giây đầu
+        # còn hơn mất người xem ở giây đầu — chủ đề còn cả tập để nói.
+        nhip[0]["loi"] = _gh if len(_gh.split()) <= 11 else f"{_m}."
         nhip[0]["dinh"] = True
+    return k, tieu, hook, hook_phu, nhip, muc
+
+
+def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
+            so_chuong: int = 10) -> str:
+    k, tieu, hook, hook_phu, nhip, muc = kich_ban(ma, idx, long, so_chuong)
+    if not k:
+        return ""
     slug = f"{ma}_{idx:04d}" + ("_long" if long else "")
     print(f"\n▶ {k['ten']} · {tieu}", flush=True)
 

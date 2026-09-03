@@ -2540,6 +2540,7 @@ def main():
     check("nhịp so sánh không có hai vế bằng nhau", t_chia_doi_hai_ve_khac_nhau)
     check("biểu đồ không vẽ trục toàn số 0 hoặc trục phẳng", t_chart_co_so_that)
     check("gu hình mỗi kênh một bộ, không lặp biểu tượng liền kề", t_gu_hinh_khac_nhau)
+    check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -6950,6 +6951,45 @@ def t_nghiem_thu_bat_duoc_loi_that():
     if _o.path.exists(wf):
         assert "nghiem_thu.py" in io.open(wf, encoding="utf-8").read(), \
             "bài nghiệm thu không được gọi trong workflow -> viết ra rồi để đấy"
+
+
+def t_cham_kich_ban():
+    """Thang chấm kịch bản phải (a) chấm được, (b) bắt được lỗi thật, (c) ĐƯỢC GỌI ở workflow.
+
+    (c) là phần hay bị quên nhất: §13.1 đếm được bảy lần trong một ngày mà cơ chế đã tồn tại
+    trong repo và chỉ thiếu một thứ GỌI nó. Một thước không ai chạy thì bằng không có thước.
+    """
+    import os as _o
+
+    import giai_thich as G
+    import cham_kich_ban as C
+
+    nh = G.kich_ban("howbig", 0)[4]
+    r = C.cham(nh)
+    assert 0 <= r["diem"] <= 100, f"điểm ngoài thang: {r['diem']}"
+    assert r["diem"] >= 90, f"kịch bản thật chỉ {r['diem']}/100 — thước hoặc kịch bản có vấn đề"
+
+    # Thử NGƯỢC — mỗi trục phải bắt được lỗi của chính nó, nếu không nó là một cổng chết (§13.11).
+    xau = [{"khuon": "the_chu", "loi": "This is an extremely long opening line that nobody will "
+                                       "ever sit through because it says nothing at all"},
+           {"khuon": "so_lieu", "loi": "It is very expensive and a lot of km", "so": "5"},
+           {"khuon": "so_lieu", "loi": "Also so much money", "so": "5"},
+           {"khuon": "the_chu", "loi": "The end."}]
+    rx = C.cham(xau)
+    assert rx["diem"] < 55, f"kịch bản cố tình hỏng vẫn được {rx['diem']}/100 — thước không bắt"
+    for t in ("hook", "cu_the", "don_vi_my", "ket_bang_canh", "khong_lap_khuon"):
+        assert rx["truc"][t] < C.TRAN[t], f"trục {t} không phản ứng với lỗi của chính nó"
+
+    # Thước phải đọc CÙNG nguồn mà `mot_tap` dựng, không gọi thẳng `BO_SINH` (§13.15).
+    src = io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)),
+                               "cham_kich_ban.py"), encoding="utf-8").read()
+    assert "kich_ban(" in src, "thước không gọi `kich_ban` -> đang chấm một danh sách khác"
+
+    G0 = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
+    wf = _o.path.join(G0, ".github", "workflows", "render_phan_tich_18.yml")
+    if _o.path.exists(wf):
+        assert "cham_kich_ban.py" in io.open(wf, encoding="utf-8").read(), \
+            "thang chấm kịch bản không được gọi trong workflow -> viết ra rồi để đấy"
 
 
 def t_gu_hinh_khac_nhau():
