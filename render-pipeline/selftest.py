@@ -2516,6 +2516,7 @@ def main():
     check("tài sản kênh dùng phải có trong git (không chỉ ở máy)", t_tai_san_kenh_dung_phai_co_trong_git)
     check("đặt tiêu đề chịu được mọi hình dạng story", t_dat_tieu_de_chiu_duoc_moi_hinh_dang)
     check("sổ tránh-trùng và phép so cắt cùng độ dài", t_so_trung_tieu_de_phai_cung_do_dai)
+    check("hồ sơ kênh: không dict nào có khoá trùng", t_khong_khoa_trung_trong_ho_so)
     check("bộ thiên nhiên: prompt + hàng rào + đa dạng", t_bo_thien_nhien_lanh)
     check("brand thiên nhiên qua đủ ba cổng", t_brand_thien_nhien_doc_duoc)
     check("thiên nhiên: có đường giao hàng + khai báo AI", t_tn_giao_hang_khai_bao_ai)
@@ -6297,6 +6298,37 @@ def t_tn_giao_hang_khai_bao_ai():
     bai = TD.viet_bai({"kenh": "ICE BEAR", "loai": x["loai"], "hanh_vi": x["hanh_vi"], "giay": 8})
     bai["facebook"]["text"] = "no disclosure"
     assert TD.kiem_bai(bai), "cổng khai báo AI không bắt được khi thiếu — cổng chết"
+
+
+def t_khong_khoa_trung_trong_ho_so():
+    """KHÔNG DICT NÀO TRONG HỒ SƠ KÊNH ĐƯỢC CÓ KHOÁ TRÙNG.
+
+    3/9 — Chèn thêm hành vi cho một loài, và bộ chèn tạo một khoá `"mep"` THỨ HAI trong khi loài
+    ấy đã có `"mep"` ở dưới. Python **lấy khoá sau và vứt khoá trước, không báo một chữ nào** —
+    hai hành vi mới biến mất trong khi tệp nguồn đọc lên vẫn thấy chúng nằm đó.
+
+    Đây là dạng lỗi tệ nhất: mã đúng cú pháp, tệp trông đúng, thước xanh, và dữ liệu thì mất.
+    Em chỉ phát hiện vì đếm số hành vi trước/sau và thấy con số KHÔNG TĂNG.
+
+    Quét bằng `ast` chứ không bằng cách nạp module — nạp module thì khoá trùng đã bị nuốt mất
+    rồi, tức đúng thứ cần bắt không còn ở đó để mà bắt.
+    """
+    import ast as _a, io as _io, os as _o
+    goc = _o.path.dirname(_o.path.abspath(__file__))
+    for ten in ("thien_nhien.py", "kling_kenh.py", "brand_tn.py", "brand_kling.py"):
+        f = _o.path.join(goc, ten)
+        if not _o.path.exists(f):
+            continue
+        cay = _a.parse(_io.open(f, encoding="utf-8").read())
+        xau = []
+        for n in _a.walk(cay):
+            if isinstance(n, _a.Dict):
+                ks = [k.value for k in n.keys
+                      if isinstance(k, _a.Constant) and isinstance(k.value, str)]
+                d = sorted({k for k in ks if ks.count(k) > 1})
+                if d:
+                    xau.append((ten, n.lineno, d))
+        assert not xau, f"khoá trùng (Python nuốt im lặng): {xau[:4]}"
 
 def t_bo_thien_nhien_lanh():
     """BỘ THIÊN NHIÊN: mọi prompt lọt trần, hàng rào nguyên, không cặp kênh nào trùng.

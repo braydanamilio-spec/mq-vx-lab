@@ -1040,8 +1040,8 @@ def sinh_howbig(i):
               "a simple flat ground strip, a tiny human silhouette for scale at the far left",
               "even soft daylight, muted palette, strong sense of scale")),
     _n("chart", _loi("so_sanh", i), don="feet",
-       cot=[{"nhan": nho[0].replace("a ", "")[:9], "v": nho[1]},
-            {"nhan": lon[0].replace("a ", "").replace("the ", "")[:9], "v": lon[1]}], dinh=True),
+       cot=[{"nhan": _nhan(nho[0]), "v": nho[1]},
+            {"nhan": _nhan(lon[0]), "v": lon[1]}], dinh=True),
     _n("canh", "Your brain was wrong.", dinh=True,
        ve=_ve("a simplified human silhouette standing very small",
               "looking up at an enormous object towering over the whole frame",
@@ -1736,7 +1736,7 @@ def sinh_speedof(i):
               "the walking figure sharp, the streak smeared across the frame",
               "even soft light, restrained palette")),
     _n("chart", _loi("so_sanh", i), don="mph",
-       cot=[{"nhan": "walk", "v": 3}, {"nhan": ten.split()[-1][:9], "v": kmh},
+       cot=[{"nhan": "walk", "v": 3}, {"nhan": _nhan(ten.split()[-1]), "v": kmh},
             {"nhan": "jet", "v": 560}], dinh=True),
     _n("canh", "You never had a chance.", dinh=True,
        ve=_ve("one ordinary person standing still, seen from behind",
@@ -1772,7 +1772,7 @@ def sinh_odds(i):
               "a plain room dwarfed by the calendar", "one tiny figure at the base",
               "restrained palette")),
     _n("chart", "Next to things you fear.", don="1 in N",
-       cot=[{"nhan": "lightning", "v": 1222000}, {"nhan": ten.split()[0][:9], "v": N}], dinh=True),
+       cot=[{"nhan": "lightning", "v": 1222000}, {"nhan": _nhan(ten.split()[0]), "v": N}], dinh=True),
     _n("canh", "Somebody still wins.", dinh=True,
        ve=_ve("one small figure holding a ticket, arms half raised",
               "standing alone in an enormous empty stadium", "quietly stunned",
@@ -1792,7 +1792,7 @@ def sinh_hiddenfee(i):
     _n("the_chu", "Almost none of it goes where you think.",
        the="Almost none of it|goes where you think."),
     _n("chart", "Here is the split.", don="percent of the price",
-       cot=[{"nhan": x[0].split()[-1][:9], "v": x[1]} for x in phan], dinh=True),
+       cot=[{"nhan": _nhan(x[0].split()[-1]), "v": x[1]} for x in phan], dinh=True),
     _n("so_lieu", "The biggest slice.", so=f"{lon[1]}%", don=lon[0], bt="tien", dinh=True,
        ve=_ve("a large pie chart drawn flat on a plain wall, one slice much bigger",
               "one slice clearly dominating", "", "a clean plain wall",
@@ -1855,7 +1855,7 @@ def sinh_howloud(i):
        bt=bt, dinh=True),
     _n("chart", _loi("so_sanh", i), don="decibels",
        cot=[{"nhan": "whisper", "v": 30}, {"nhan": "talking", "v": 60},
-            {"nhan": ten.split()[-1][:9], "v": db}], dinh=True),
+            {"nhan": _nhan(ten.split()[-1]), "v": db}], dinh=True),
     _n("canh", "Your ears do the maths for you.", dinh=True,
        ve=_ve("one person covering their ears", "flinching away from a loud source",
               "wincing", "a plain backdrop", "sound waves in the near foreground",
@@ -1880,8 +1880,8 @@ def sinh_whatweighs(i):
               "a plain backdrop, the scale filling the frame",
               "flat ground beneath the scale", "bright palette")),
     _n("chart", _loi("so_sanh", i), don="pounds",
-       cot=[{"nhan": nho[0].split()[-1][:9], "v": nho[1]},
-            {"nhan": lon[0].split()[-1][:9], "v": lon[1]}], dinh=True),
+       cot=[{"nhan": _nhan(nho[0].split()[-1]), "v": nho[1]},
+            {"nhan": _nhan(lon[0].split()[-1]), "v": lon[1]}], dinh=True),
     _n("canh", "You guessed wrong. Everyone does.", dinh=True,
        ve=_ve("one person straining to lift something far too heavy",
               "heaving with both arms, feet planted", "red-faced, struggling",
@@ -1952,7 +1952,7 @@ def sinh_howhot(i):
        chu="the same temperature, other scale", bt=bt),
     _n("chart", _loi("so_sanh", i), don="degrees fahrenheit",
        cot=[{"nhan": "room", "v": 70}, {"nhan": "boiling", "v": 212},
-            {"nhan": ten.split()[-1][:9], "v": f}], dinh=True),
+            {"nhan": _nhan(ten.split()[-1]), "v": f}], dinh=True),
     _n("canh", "We live in a very thin band.", dinh=True,
        ve=_ve("one small figure standing between an icy side and a burning side",
               "arms out, balancing between the two", "wary",
@@ -2372,7 +2372,7 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
         t2, _h2, hp2, _n2 = bo(vi_tri_long(ma, idx, c))
         v = "".join(ch for ch in (hp2.split()[0] if hp2 else "0") if ch.isdigit() or ch == ".")
         try:
-            cot.append({"nhan": t2.split()[-1][:9], "v": float(v or 0)})
+            cot.append({"nhan": _nhan(t2.split()[-1]), "v": float(v or 0)})
         except ValueError:
             pass
     if len(cot) >= 2:
@@ -2456,6 +2456,28 @@ def _bt_canh(loi: str, ve: str = "") -> str:
             if f" {w} " in t or f" {w}s " in t or f" {w}." in t or f" {w}," in t:
                 return bt
     return ""
+
+
+# ── NHÃN CỘT: CẮT THEO TỪ, KHÔNG CẮT GIỮA CHỮ  (3/9/2026) ───────────────────────────────────
+# Anh soi khung HOW BIG: nhãn biểu đồ hiện **"school bu"** và **"blue whal"** — cụt ngang giữa
+# chữ, đọc ra như lỗi phần mềm.
+#
+# Gốc: `[:9]` rải ở **9 chỗ** trong tệp này. Con số 9 chọn để nhãn không tràn cột — đúng mục
+# đích, sai cách: nó cắt theo KÝ TỰ nên rơi vào giữa một từ. "school bus" 10 ký tự chỉ thừa 1,
+# mà thành "school bu".
+#
+# Cắt theo TỪ: giữ nguyên nếu vừa, không thì bỏ bớt từ đầu (thường là mạo từ / bổ ngữ) và giữ
+# từ CUỐI — vì từ cuối mới là danh từ chính ("bus", "whale"). Không bao giờ để lại một từ cụt.
+def _nhan(t: str, toi_da: int = 11) -> str:
+    t = str(t or "").replace("a ", "", 1).replace("the ", "", 1).strip()
+    if len(t) <= toi_da:
+        return t
+    tu = t.split()
+    while len(tu) > 1 and len(" ".join(tu)) > toi_da:
+        tu.pop(0)                 # bỏ từ ĐẦU, giữ danh từ chính ở cuối
+    con = " ".join(tu)
+    # Một từ vẫn quá dài thì đành cắt, nhưng cắt ở ranh giới ký tự cuối cùng còn đọc được.
+    return con if len(con) <= toi_da else con[:toi_da]
 
 
 def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,

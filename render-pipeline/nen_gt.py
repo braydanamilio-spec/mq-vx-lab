@@ -138,11 +138,43 @@ def _luat(ve: str, doc: bool = False) -> str:
 # "background:", "foreground:", "warm light from the left, long soft shadows" — đó là cách người
 # ta tả một BỨC ẢNH. Mô hình đọc xong thì vẽ ra một bức ảnh. Muốn cartoon thì phải nói bằng ngôn
 # ngữ của tranh vẽ: mảng màu phẳng, nét viền đen dày, không chuyển sắc, không kết cấu bề mặt.
+# ── PHONG CÁCH VẼ — VIẾT LẠI THEO SÁU ẢNH THAM CHIẾU ANH GỬI  (3/9/2026) ────────────────────
+# Anh: *"template nền màu tối xấu, ảnh generate sinh ra cũng tối xấu… loại ảnh CF tạo đẹp mà em
+# chưa tận dụng được, đang viết prompt chưa chuẩn."*
+#
+# Đối chiếu prompt cũ với ảnh anh gửi thì thấy **hai câu đang chống lại chính thứ anh muốn**:
+#
+#   "no gradients, no texture"  →  ảnh anh gửi CÓ đổ bóng mềm (ghế sofa, quầng đèn bàn), trời
+#                                  chuyển màu, lông thú có nét. Cấm gradient là ép mô hình vẽ
+#                                  clipart phẳng — đúng thứ trông rẻ tiền khi đứng cạnh cảnh thật.
+#   "bright saturated palette"  →  nói về ĐỘ RỰC của màu, KHÔNG nói nền phải SÁNG. Mô hình vì thế
+#                                  tự do chọn nền tối, và nó chọn tối thật.
+#
+# Và prompt cũ **không có câu nào về bối cảnh**, nên ra khung rỗng. Sáu ảnh tham chiếu thì ngược
+# lại: kín chi tiết — cửa sổ có mây, đồng hồ tường, chậu cây, sạp chợ, lạc đà, đống rơm.
+#
+# Ba mệnh lệnh mới, mỗi câu chữa đúng một lỗi đo được:
+#   1. NỀN LUÔN SÁNG VÀ ẤM — nói thẳng, kèm ví dụ màu, và cấm nền tối bằng tên.
+#   2. CÓ ĐỔ BÓNG MỀM — nhưng vẫn cấm chất ẢNH CHỤP (§12.6: tả theo lối ảnh chụp thì ra ảnh chụp).
+#   3. BỐI CẢNH VẼ ĐẦY — liệt kê loại đồ vật, vì "chi tiết" là chữ trừu tượng còn "đồng hồ tường,
+#      chậu cây, cửa sổ" thì mô hình vẽ được (§13.2: cổng đo một TỪ thì lệnh dặn phải liệt kê từ).
 GU_CARTOON = (
-    "flat 2D cartoon illustration, thick uniform black outlines, large areas of solid flat "
-    "colour, no gradients, no texture, crisp vector edges, bright saturated palette, "
-    "stick-figure people with plain round white heads, two dot eyes, a simple line mouth and "
-    "thin black limbs, modern animated explainer look, not photorealistic, not 3D"
+    "hand-drawn 2D cartoon illustration in the style of a modern animated explainer video, "
+    "thick confident black ink outlines of even weight, "
+    "stick-figure people with plain round white heads, two dot eyes, simple line mouth, "
+    "expressive eyebrows and thin black limbs, "
+    # ── nền phải SÁNG: đây là câu chữa lỗi "ảnh ra tối" ──────────────────────────────────
+    "the background is always LIGHT, warm and airy — pale sky blue, soft daylight, warm sand, "
+    "cream or light wood interior; never a dark background, never black, never night-dark, "
+    "never a moody or desaturated palette, "
+    # ── cho phép đổ bóng mềm, nhưng vẫn cấm chất ảnh chụp ────────────────────────────────
+    "flat cheerful colours with gentle soft shading and simple soft cast shadows to give volume, "
+    "no photographic texture, no lens blur, no realistic lighting, "
+    # ── bối cảnh phải vẽ đầy, liệt kê vật cụ thể ─────────────────────────────────────────
+    "the scene is fully drawn with a recognisable setting and everyday props — windows with sky, "
+    "a wall clock, a potted plant, lamps, furniture, market stalls, trees — the frame is never "
+    "mostly empty, "
+    "clean and cheerful, not photorealistic, not 3D, no text anywhere"
 )
 # Neo bối cảnh Mỹ — chỉ giữ những vật CHỈ CÓ Ở MỸ và mô hình vẽ được. "Cảm giác Mỹ" thì nó
 # không vẽ được; "hòm thư trên cột cắm ở lề" thì vẽ được.
@@ -460,7 +492,16 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
         if not x:
             continue
         thu = (ra + " " + x).strip()
-        if len(thu) > 2048:
+        # ── TRỪ LỚP BỌC MÀ `_cf_flux_image` THÊM VÀO  (3/9/2026) ────────────────────────
+        # Trần 2048 là của chuỗi **gửi đi**, không phải của chuỗi hàm này ghép ra. `_cf_flux_image`
+        # còn bọc thêm `"Absolutely no text… A <style> of: {prompt}. Textless image."` — **159 ký
+        # tự**. Nên chốt ở 2048 là chốt sai chuỗi: prompt 1989 ký tự lọt cổng rồi bị CF trả
+        # `HTTP 400 Length of '/prompt' must be <= 2048`, đúng lúc vừa viết lại phong cách.
+        #
+        # Cùng bài học 13.7: *cổng phải nhận CHÍNH thứ sắp giao đi và ghép bằng CHÍNH phép ghép
+        # mà bên kia sẽ chạy* — không mô hình hoá lại. Ở đây tôi chốt trên bản nháp, còn bên kia
+        # gửi bản đã bọc.
+        if len(thu) > 2048 - 175:      # 159 lớp bọc + 16 đệm cho `style` dài hơn
             break                  # cắt từ đuôi: vế càng sau càng ít quan trọng
         ra = thu
     return ra

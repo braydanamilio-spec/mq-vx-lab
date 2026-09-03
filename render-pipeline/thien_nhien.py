@@ -65,8 +65,12 @@ GIAY_UU_TIEN = (8, 10)
 # depth, level with the animal". Hai lệnh trái nhau trong cùng một prompt, và Kling sẽ chọn một
 # bên. Đúng họ lỗi 12.5: một câu luật đúng ở ngữ cảnh sinh ra nó, sai ở ngữ cảnh mới.
 ONG_KINH = {
+    # "tách tông" là thứ quyết định ảnh có đọc được ở cỡ ảnh bìa hay không: con vật phải sáng hơn
+    # hoặc tối hơn hẳn nền, chứ không chìm vào nó. Đây là điều mọi nhà quay thiên nhiên làm trước
+    # khi bấm máy, và là điều ảnh AI hay bỏ sót nhất.
     "xa": ("Long telephoto from a great distance, the way real wildlife is filmed: shallow depth of "
-           "field, the animal sharp, the background dissolved into soft bands of colour."),
+           "field, the animal sharp and clearly separated in tone from a background dissolved to "
+           "soft bands of colour."),
     "nuoc": ("Wide lens in an underwater housing, close to the subject because water eats contrast "
              "over distance: surface light only, visible particles, no artificial lamp."),
     "macro": ("Macro lens very close in: depth of field a few millimetres deep, so one detail is "
@@ -90,20 +94,32 @@ def ong_kinh(khuon: str, moi_truong: str = "tren") -> str:
 SAN_CHUYEN_DONG = (
     "One continuous locked shot. If the animal leaves the frame, the frame stays where it is."
 )
+# SÀN THẬT — ba thứ được thêm ở đây là quy ước nghề chuẩn của dòng phim thiên nhiên, và cả ba
+# đều là thứ Kling VẼ ĐƯỢC (khác với "4K", một chữ không làm gì cả):
+#
+#   · ĐỘ PHÂN GIẢI CẢM ĐƯỢC — thứ người ta thật sự thấy khi nói "4K" không phải con số pixel mà
+#     là *sợi lông tách khỏi sợi lông, giọt nước tách khỏi giọt nước*. Tả cái ấy thì mô hình vẽ
+#     ra nó; viết "4K" thì nó không có gì để vẽ.
+#   · CATCHLIGHT — một chấm sáng trong mắt. Đây là chi tiết được dạy nhiều nhất trong ảnh động
+#     vật, vì mắt không có catchlight đọc ra là mắt CHẾT, và đó chính là chỗ ảnh AI lộ ra ngay.
+#   · DẢI TƯƠNG PHẢN — chỗ sáng nhất và tối nhất đều còn chi tiết. Cháy trắng hay bệt đen là dấu
+#     hiệu rẻ tiền nhất, và nó xảy ra đúng ở bọt nước và lông tối — hai thứ bộ này quay suốt.
 SAN_THAT = (
-    "Photoreal, documentary-grade. Anatomy exactly right for the species: limb count, joints, eye "
-    "placement, and fur or feathers lying the way they lie on a live animal."
+    "Photoreal, documentary-grade, resolved finely enough that single hairs, feather barbs and "
+    "water droplets separate. A live catchlight in the eye. Nothing clips: the brightest spray "
+    "and the darkest fur both keep detail. Anatomy exactly right for the species."
 )
 
 # ── HÀNG RÀO DO NOT — khối cuối của mọi prompt, không bao giờ được cắt ─────────────────────
+# Hàng rào viết ĐẶC. Mỗi chữ ở đây tốn chỗ của tầng chất lượng, nên câu nào nói lại điều câu
+# khác đã nói thì cắt — "no cartoon styling" trùng với "photoreal" ở SAN_THAT.
 RAO = (
     "DO NOT:",
-    "No text, letters, numbers, captions, watermarks, logos or signage anywhere in the frame.",
-    "No people, no human faces, no hands, no boats, no buildings, no vehicles unless named above.",
-    "No camera movement of any kind: no pan, tilt, zoom, dolly, handheld, drone or orbit.",
-    "No blood, no wounds, no torn flesh, no carcass, no visible kill. The strike may begin; it "
-    "never lands on screen.",
-    "No cartoon styling, no CGI sheen, no plastic fur, no glowing eyes, no invented species.",
+    "No text, captions, watermarks, logos or signage anywhere in frame.",
+    "No people, faces, hands, boats, buildings or vehicles unless named above.",
+    "No camera movement: no pan, tilt, zoom, dolly, handheld, drone or orbit.",
+    "No blood, wounds, carcass or visible kill. A strike may begin; it never lands on screen.",
+    "No CGI sheen, no plastic fur, no glowing eyes, no invented species.",
     "No cuts. This is ONE unbroken shot of exactly {g} seconds.",
 )
 CAU_CHOT_RAO = "No cuts. This is ONE unbroken shot of exactly {g} seconds."
@@ -175,9 +191,18 @@ KHUON = (
     ("underwater side on",
      "Camera locked underwater at depth, level with the animal, blue falling away to black behind "
      "it."),
+    # Slow motion là ĐÒN BẨY LỚN NHẤT của ngách này và bản trước tả nó quá nhạt. Thứ làm cảnh
+    # quay tốc độ cao đẹp không phải là "chậm" — mà là mỗi giọt nước TÁCH RỜI và treo lơ lửng,
+    # và cơ dưới da đọc được. Tả cái ấy thì mô hình vẽ ra nó.
     ("extreme slow motion",
-     "Locked shot at very high frame rate so one single movement unfolds slowly, every droplet "
-     "and every muscle readable."),
+     "Locked shot at around a thousand frames a second: one movement stretched so far that every "
+     "droplet hangs separately in the air and the muscle moves visibly under the skin."),
+    # CÚ CHẠM MẶT NƯỚC — hình đắt nhất của dòng phim này: khoảnh khắc xuyên qua mặt nước, vương
+    # miện bọt dựng lên. Nó là chỗ tốc độ cao trả công nhiều nhất, nên cho nó một khuôn riêng
+    # thay vì để lẫn vào "slow motion" chung.
+    ("high-speed water impact",
+     "Locked shot at very high frame rate on the instant the animal breaks the surface: the crown "
+     "of the splash standing up, individual droplets frozen in the air around it."),
     ("backlit silhouette",
      "Locked shot into a low sun, the animal a clean black silhouette, breath and spray lit like "
      "smoke."),
@@ -199,6 +224,7 @@ KHUON_MOI_TRUONG = {
     "underwater looking up":        ("duoi",),
     "underwater side on":           ("duoi",),
     "extreme slow motion":          ("tren", "mep", "duoi"),   # cỡ nào cũng được, chỉ đổi tốc độ
+    "high-speed water impact":      ("mep",),                  # chỉ có nghĩa ở ranh giới nước
     "backlit silhouette":           ("tren", "mep"),
     "cliff edge looking down":      ("tren", "mep"),
     "macro detail":                 ("tren", "mep", "duoi"),   # thêm ràng buộc MACRO_OK bên dưới
@@ -322,6 +348,7 @@ KENH: dict[str, dict] = {
                 ),
                 "mep": (
                     "swimming between two floes with only the head above water",
+                    "surging up out of a lead nose-first with water sheeting off the head",
                     "climbing out of black water onto a floe edge",
                 ),
             },
@@ -421,6 +448,7 @@ KENH: dict[str, dict] = {
                     "slapping the surface once with the tail fluke",
                 ),
                 "mep": (
+                    "driving up through the surface so the whole body clears before it turns over",
                     "spy-hopping straight up, holding, and sliding back down without a splash",
                     "breaching clear of the water and landing on one side",
                 ),
@@ -684,6 +712,7 @@ KENH: dict[str, dict] = {
                 ),
                 "mep": (
                     "porpoising out of the water and landing on its feet on the ice",
+                    "coming up out of a hole in the ice and landing on its feet in one movement",
                 ),
             },
             "emperor chick": {
@@ -898,6 +927,7 @@ KENH: dict[str, dict] = {
                     "pushing through the crowd to a specific spot and settling exactly there",
                 ),
                 "mep": (
+                    "coming clear of a wave face and re-entering head-first without a splash",
                     "bracing flat against the rock as a wave washes completely over it",
                     "launching off a ledge into a rising swell",
                     "hauling out by timing one surge and heaving up in a single movement",
@@ -1310,6 +1340,10 @@ KENH: dict[str, dict] = {
         },
         "hanh_vi": {
             "gannet": {
+                "mep": (
+                    "folding both wings hard back and entering the water like a thrown spear",
+                    "coming back up through the surface with the wings still folded flat",
+                ),
                 "tren": (
                     "holding a fixed position in a gale by adjusting the wings a few centimetres",
                     "landing on a ledge in a crosswind and stopping dead on the spot",
@@ -1533,6 +1567,9 @@ KENH: dict[str, dict] = {
                 ),
             },
             "hadrosaur": {
+                "mep": (
+                    "lowering the flat muzzle through the surface and lifting it streaming",
+                ),
                 "tren": (
                     "grazing at the water's edge with the flat muzzle skimming the surface",
                     "raising its head and holding still with the crest against the sky",

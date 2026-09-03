@@ -106,7 +106,19 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string 
   return (
     <>
       <div style={{
-        position: "absolute", left: 0, right: 0, bottom: 0, height: H * 0.34,
+          /* 3/9 — DẢI ĐÁY TỪ 34% XUỐNG 20%, ĐẬM NHẤT TỪ 0,88 XUỐNG 0,62.
+             Anh gửi khung: đáy là một **bức tường đen** nuốt cả chân nhân vật — "tối, có bóng
+             đen rất xấu, chưa điện ảnh".
+
+             Lý luận cũ đúng đích nhưng sai cách: nó tính độ đậm từ trường hợp xấu nhất (chữ
+             trắng trên nền TRẮNG tuyệt đối) rồi ép riêng cái dải phải tự đạt 6,1:1. Kết quả là
+             34% chiều cao khung bị phủ 88% đen — **đổi cả bức ảnh lấy một dòng chữ**.
+
+             Tương phản không nhất thiết phải do DẢI gánh. §12.12 nói rõ cách đúng: *chữ trắng +
+             bóng mềm rộng*. Quầng bám sát chữ cho tương phản CỤC BỘ đúng chỗ cần, không tốn một
+             milimét ảnh nào — y như đã làm cho `SoLieu` và đã đo là đọc tốt. Nay quầng chữ được
+             siết thêm để gánh phần dải vừa nhả ra. */
+          position: "absolute", left: 0, right: 0, bottom: 0, height: H * 0.20,
         /* 1/9 — ĐO LẠI SAU KHI BỎ HỘP ĐEN: tương phản chữ/nền chỉ còn 2,8:1, dưới chuẩn
            WCAG AA 4,5:1. Bỏ hộp đen làm hình đẹp hơn thật, nhưng tôi đổi lấy điều đó mà KHÔNG
            ĐO — và cái mất là chữ khó đọc, đúng thứ phụ đề sinh ra để giải quyết.
@@ -117,7 +129,7 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string 
         // Mốc cũ `C4` (alpha 0,77) chỉ được 3,7:1 — dưới chuẩn WCAG AA, và đúng con số đo được
         // trên tập `howlong_0001` (2,8:1) vì nền tập ấy gần trắng. `E0` (alpha 0,88) cho 6,1:1,
         // đủ biên cho mọi ảnh nền mà không làm đáy khung thành một vệt đen.
-        background: "linear-gradient(180deg,#00000000 0%,#000000A8 38%,#000000E0 100%)",
+        background: "linear-gradient(180deg,#00000000 0%,#0000004D 42%,#0000009E 100%)",
         pointerEvents: "none",
       }} />
       <div style={{
@@ -125,7 +137,7 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string 
         display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0 0.30em",
         fontFamily: F, fontWeight: 700, fontSize: fs, lineHeight: 1.25,
         textAlign: "center", letterSpacing: "-0.01em",
-        textShadow: `0 ${H * 0.004}px ${H * 0.012}px #000000ee, 0 0 ${H * 0.030}px #000000cc`,
+        textShadow: `0 0 ${H * 0.010}px #000000ff, 0 0 ${H * 0.026}px #000000ee, 0 ${H * 0.004}px ${H * 0.014}px #000000dd`,
         pointerEvents: "none",
       }}>
         {cua.map((w, k) => (
@@ -255,11 +267,19 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
           {N.bt ? (
             <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: H,
                           display: "flex", alignItems: "flex-end", justifyContent: "center",
-                          paddingBottom: H - sanY, opacity: 0.16 }}>
+                          /* 3/9 — 0.16 -> 0.34. Anh soi khung HOW BIG: nhịp không có ảnh AI
+                             hiện ra gần như TRỐNG TRƠN — người que xám nhạt trên nền xám, nhìn
+                             ra như hỏng chứ không như một lựa chọn.
+                             0.16 chọn để "không tranh chỗ với số liệu đè lên". Nhưng ở nhịp
+                             `canh` thì KHÔNG có số liệu đè lên — chỉ có phụ đề ở đáy khung.
+                             Một con số chọn cho tình huống A đem dùng cho tình huống B: mờ tới
+                             mức ấy chỉ đúng khi có lớp khác phủ lên, còn ở đây nó là lớp DUY
+                             NHẤT, và một lớp duy nhất thì phải nhìn thấy được. */
+                          paddingBottom: H - sanY, opacity: 0.34 }}>
               <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
                    style={{ position: "absolute", left: 0, top: 0 }}>
                 <g transform={`translate(${W / 2} ${sanY - Math.min(H * 0.17, W * 0.19)})`}>
-                  <BieuTuong ten={N.bt} s={Math.min(H * 0.34, W * 0.38)} />
+                  <BieuTuong ten={N.bt} s={Math.min(H * 0.42, W * 0.48)} />
                 </g>
               </svg>
             </div>
