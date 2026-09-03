@@ -2546,6 +2546,9 @@ def main():
     check("không `const` nào bị dùng trước khai báo (vùng chết tạm thời)", t_khong_tdz)
     check("cổng hình lấy khung ở nhịp CÓ phụ đề", t_kiem_hinh_lay_dung_khung)
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
+    check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
+    check("sổ trạng thái khoá có chốt chặn theo thời gian", t_ghi_khoa_co_chot)
+    check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
@@ -7101,6 +7104,81 @@ def t_khong_lap_loi_gan():
     tho3 = [{"khuon": "the_chu", "loi": "How loud is a jet.", "the": "3.|How loud is a jet"}]
     G._dong_bo_the(tho3)
     assert tho3[0]["the"].startswith("3."), "đụng vào thẻ chương — số chương phải giữ nguyên"
+
+
+def t_prompt_canh_dung_dau():
+    """Câu tả CẢNH phải đứng ĐẦU prompt, trước khối phong cách.
+
+    Docstring của `_prompt` viết đúng điều này, còn mã thì làm ngược lại: khối phong cách 844 ký
+    tự ở `phan[0]`, câu cảnh xuống vị trí thứ ba. Hậu quả đo được: kênh SURVIVE (Kỷ Băng Hà) có
+    prompt cảnh đúng *"a lone person in a frozen tundra"* mà **cả bốn ảnh ra một căn phòng hiện
+    đại có đồng hồ treo tường** — mô hình khuếch tán đọc phần đầu nặng ký hơn.
+
+    Không có lỗi nào báo, và chú thích đọc lên vẫn rất hợp lý. Cổng này canh đúng khoảng cách
+    giữa lời nói và việc làm.
+    """
+    import nen_gt as N
+
+    _ve = "a lone person standing in a frozen tundra under heavy grey sky"
+    p = N._prompt(_ve, "lanh", N.GU_CARTOON, "survive")
+    i_canh = p.find("frozen tundra")
+    i_gu = p.find("hand-drawn 2D cartoon illustration")
+    assert i_canh >= 0, "câu cảnh biến mất khỏi prompt"
+    assert i_canh < 200, f"câu cảnh nằm ở ký tự {i_canh} — phải ở đầu prompt"
+    if i_gu >= 0:
+        assert i_canh < i_gu, "khối phong cách đứng TRƯỚC câu cảnh — ảnh sẽ theo phong cách, bỏ cảnh"
+    # Và câu siết KHÔNG được đẩy nền về phía trắng: chữ trắng trên nền trắng thì tàng hình.
+    for c in N.SIET:
+        assert "white paper" not in c and "white page" not in c, \
+            f"câu siết đẩy nền về TRẮNG: {c[:60]}"
+
+
+def t_ghi_khoa_co_chot():
+    """`ghi_trang_thai` phải có chốt chặn theo thời gian, không ghi mỗi tập.
+
+    Nó được gọi trong `mot_tap`, tức mỗi TẬP một lần. Đo: 45 tập × 18 luồng × ~100 ghi =
+    ~81.000 lượt GHI trên trần free 20.000/ngày, và ~239.000 lượt ĐỌC trên trần 50.000. Đây là
+    gốc của mọi thứ Firestore hỏng hôm nay — dashboard hiện 241/295 khoá 'chưa kiểm, 13 ngày
+    trước' trong khi bộ ghi vẫn chạy đều và ăn 429 mỗi lượt.
+    """
+    import io as _io
+    import os as _o
+
+    g = _o.path.dirname(_o.path.abspath(__file__))
+    src = _io.open(_o.path.join(g, "xoay_key.py"), encoding="utf-8").read()
+    i = src.find("def ghi_trang_thai")
+    assert i > 0, "không tìm thấy ghi_trang_thai"
+    than = src[i:i + 4000]
+    assert "getmtime" in than or "time.time" in than or "_t.time" in than, \
+        "ghi_trang_thai không còn chốt chặn thời gian -> sẽ ghi mỗi tập và cạn hạn mức"
+    assert "/tmp/" in than, \
+        "chốt chặn dùng biến module thay vì tệp -> không sống qua ranh giới tiến trình"
+
+
+def t_bia_lay_nhip_dinh():
+    """Ảnh bìa phải lấy mốc nhịp ĐỈNH, không lấy khung cuối video.
+
+    `lam_thumb` mặc định trích ở 1,2 giây trước khi hết — đúng cho bộ comic (cú chốt nằm ở cuối)
+    và sai cho bộ giải thích: nhịp cuối là cảnh đóng. Trường `dinh` đánh dấu đúng nhịp cần lấy,
+    và trước 3/9 nó được ghi ở 87 chỗ mà KHÔNG AI ĐỌC.
+    """
+    import io as _io
+    import os as _o
+
+    g = _o.path.dirname(_o.path.abspath(__file__))
+    gt = _io.open(_o.path.join(g, "giai_thich.py"), encoding="utf-8").read()
+    assert "giay=_moc" in gt or "giay=" in gt.split("lam_thumb(")[1][:200], \
+        "giai_thich không truyền mốc thời gian cho lam_thumb -> bìa lấy khung cuối"
+    assert 'n.get("dinh")' in gt, "không còn đọc trường `dinh` -> nó lại thành trường chết"
+
+    # Soi đúng CHỮ KÝ hàm, không soi cả docstring: bản đầu quét 400 ký tự sau `def` nên chữ
+    # `giay` trong chú thích vẫn khớp, và cổng không bắt được khi tham số bị bỏ (thử ngược ra
+    # "KHÔNG BẮT"). Một cổng chưa thử ngược là cổng chưa biết có hoạt động không (§13.11).
+    kh = _io.open(_o.path.join(g, "kich_hai.py"), encoding="utf-8").read()
+    i = kh.find("def lam_thumb")
+    assert i > 0
+    _ky = kh[i:kh.index("->", i)] if "->" in kh[i:i + 400] else kh[i:i + 400]
+    assert "giay" in _ky, "lam_thumb không nhận tham số mốc thời gian trong chữ ký"
 
 
 def t_kiem_khuon_dem_theo_video():
