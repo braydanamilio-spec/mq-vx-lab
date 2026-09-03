@@ -8784,3 +8784,38 @@ nên vòng sau gần như chắc chắn hỏng y hệt. Dựng tiếp là **đ�
 **Luật.** Một vòng lặp sản xuất phải kiểm **đầu ra có tới đích không**, không chỉ kiểm còn tài
 nguyên để chạy tiếp. Điều kiện dừng đúng không phải *"hết giờ"* mà là *"hết giờ HOẶC sản phẩm
 không giao được"*.
+
+### 7dx — Đo trước khi sửa nhịp: nó đã đạt rồi  (3/9/2026)
+
+Anh: *"mỗi cảnh 1–2s"*. Tôi định đi siết khâu viết cho câu ngắn lại. Đo 88 nhịp của 20 tập trước:
+
+| | đo được | đích |
+|---|---|---|
+| thời lượng cảnh | **trung vị 1,61 s** | 1–2 s ✅ |
+| độ dài câu | trung vị **5 chữ** | 5–8 chữ ✅ |
+| câu quá 8 chữ | 2/88 = **2%** | — |
+
+**Đã đạt.** Con số "2,2 s" tôi báo trước đó là của **một tập mẫu**, không phải toàn bộ — lấy một
+mẫu rồi nói về cả tập hợp, đúng lỗi cỡ mẫu ở 13.26.
+
+Nếu tin con số ấy thì đã đi siết khâu viết, làm câu ngắn đi nữa, và **phá một thứ đang đúng**.
+
+**Luật.** Trước khi sửa một chỉ số, đo nó trên **toàn bộ dữ liệu**, không trên mẫu vừa nhìn thấy.
+
+### 7dy — Kết vòng về hình mở đầu, và ba điều kiện để KHÔNG làm  (3/9/2026)
+
+Anh: *"mở đầu kết thúc nhàm chán tẻ nhạt."* Trích ba khung cuối: cùng một hình, người đứng yên,
+video hết lửng lơ — không có cú đóng.
+
+Đòn bẩy duy nhất ở đây không tốn thêm lượt gọi API nào đã nằm sẵn trong luật 13.16: *"rewatch là
+tín hiệu nặng nhất của TikTok → kết ghép vòng được"*. Cho cảnh cuối dùng **lại hình mở đầu** thì
+khi video tự phát lại, khung cuối nối liền khung đầu — mắt không thấy chỗ nối, và lượt xem thứ
+hai bắt đầu trước khi người ta kịp quyết định lướt đi.
+
+**Ba điều kiện, thiếu một là không làm** — vòng ghép sai còn tệ hơn không ghép:
+- cảnh cuối phải **chưa có ảnh riêng** (không cướp hình của nó);
+- cảnh đầu phải **có ảnh** (không thì chẳng có gì để vòng về);
+- tập phải **≥4 nhịp** (ngắn quá thì đầu và cuối kề nhau, ghép vòng chỉ trông như ảnh lặp).
+
+Nên nó **không chạy** ở tập mẫu hôm nay — cảnh cuối đã có ảnh riêng. Đúng thiết kế: cơ chế này
+sinh ra để cứu đúng lúc CF cạn, khi cảnh cuối trống và cái kết yếu nhất.

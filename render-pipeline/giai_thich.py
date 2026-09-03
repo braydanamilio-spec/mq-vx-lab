@@ -2577,6 +2577,28 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
                 _v = getattr(nen_gt.sinh, _n, 0)
                 if _v:
                     _ly.append(f"{_t} {_v}")
+            # ── KẾT VÒNG VỀ HÌNH MỞ ĐẦU  (3/9/2026) ──────────────────────────────────────
+            # Anh: *"mở đầu kết thúc nhàm chán tẻ nhạt."* Trích ba khung cuối của tập mẫu: cùng
+            # một hình, người đứng yên, rồi video hết một cách lửng lơ — không có cú đóng.
+            #
+            # Luật 13.16 của chính dự án đã chỉ ra đòn bẩy, và nó là đòn bẩy DUY NHẤT ở đây
+            # không tốn thêm một lượt gọi API nào: *"rewatch là tín hiệu nặng nhất của TikTok →
+            # kết ghép vòng được"*. Cho cảnh cuối dùng LẠI hình của cảnh mở đầu thì khi video
+            # tự phát lại, khung cuối và khung đầu nối liền — mắt không thấy chỗ nối, và lượt
+            # xem thứ hai bắt đầu trước khi người ta kịp quyết định lướt đi.
+            #
+            # Ba điều kiện, thiếu một là KHÔNG làm — vòng ghép sai còn tệ hơn không ghép:
+            #   · cảnh cuối phải CHƯA có ảnh riêng (không cướp hình của nó);
+            #   · cảnh đầu phải CÓ ảnh (không thì chẳng có gì để vòng về);
+            #   · phải có ít nhất 4 nhịp (tập quá ngắn thì đầu và cuối kề nhau, ghép vòng chỉ
+            #     làm nó trông như một ảnh lặp hai lần).
+            if len(nhip) >= 4:
+                _dau = next((x for x in nhip if x.get("nenAnh")), None)
+                _cuoi = nhip[-1]
+                if _dau is not None and not _cuoi.get("nenAnh") and _dau is not _cuoi:
+                    _cuoi["nenAnh"] = _dau["nenAnh"]
+                    print("   ↩ kết vòng: cảnh cuối dùng lại hình mở đầu (ghép liền khi phát lại)")
+
             print(f"   🎨 vẽ {_na}/{_cn} cảnh bằng CF"
                   + ("" if _na == _cn else "  (số còn lại dùng nền vẽ bằng code"
                      + (" — " + " · ".join(_ly) if _ly else "") + ")"))
