@@ -314,6 +314,7 @@ KENH: dict[str, dict] = {
 
     "ICE BEAR": {
         "ten": "ICE BEAR",
+        "nhom": "Băng & tuyết",
         "mo_ta": "Gấu Bắc Cực trên băng trôi — cuộc săn dài trong im lặng trắng.",
         "hook": (
             "A single dark animal in an enormous white nothing, doing something with total "
@@ -402,6 +403,7 @@ KENH: dict[str, dict] = {
 
     "THE POD": {
         "ten": "THE POD",
+        "nhom": "Đại dương lớn",
         "mo_ta": "Cá voi sát thủ — nhiều cái đầu cùng nghĩ một điều, thấy được bằng mắt.",
         "hook": (
             "Several animals move as if one mind is running all of them, and the coordination is "
@@ -515,6 +517,7 @@ KENH: dict[str, dict] = {
 
     "BLUE GIANT": {
         "ten": "BLUE GIANT",
+        "nhom": "Đại dương lớn",
         "mo_ta": "Cá voi lưng gù — kênh về KÍCH THƯỚC: một cơ thể lớn tới mức khó tin.",
         "hook": (
             "Something impossibly large moves slowly through the frame, and there is always a "
@@ -663,6 +666,7 @@ KENH: dict[str, dict] = {
 
     "PENGUIN ROAD": {
         "ten": "PENGUIN ROAD",
+        "nhom": "Băng & tuyết",
         "mo_ta": "Chim cánh cụt Nam Cực — hàng nghìn cơ thể giống hệt nhau chịu cái lạnh cùng nhau.",
         "hook": (
             "A crowd of identical bodies where exactly one is doing something different. The "
@@ -764,6 +768,7 @@ KENH: dict[str, dict] = {
 
     "TUSK": {
         "ten": "TUSK",
+        "nhom": "Băng & tuyết",
         "mo_ta": "Kỳ lân biển dưới băng Bắc Cực — con vật huyền thoại, quay như thật.",
         "hook": (
             "An animal that looks invented is moving in a real place, filmed like real footage. "
@@ -876,6 +881,7 @@ KENH: dict[str, dict] = {
 
     "SEAL ROCK": {
         "ten": "SEAL ROCK",
+        "nhom": "Đại dương lớn",
         "mo_ta": "Sư tử biển và hải cẩu ở mép sóng — nơi đất liền kết thúc và mọi thứ tranh nhau.",
         "hook": (
             "A crowded ledge and a wall of white water arriving, and one animal is in the wrong "
@@ -986,6 +992,7 @@ KENH: dict[str, dict] = {
 
     "DEEP DARK": {
         "ten": "DEEP DARK",
+        "nhom": "Tối & kỳ lạ",
         "mo_ta": "Biển sâu — những thứ trông như không thể có thật, và có thật.",
         "hook": (
             "Pure black, and then one living thing lights itself up. The viewer stops because "
@@ -1092,6 +1099,7 @@ KENH: dict[str, dict] = {
 
     "NIGHT EYES": {
         "ten": "NIGHT EYES",
+        "nhom": "Tối & kỳ lạ",
         "mo_ta": "Thợ săn ban đêm — thế giới mà mắt người không nhìn thấy.",
         "hook": (
             "Near-total darkness with two points of reflected light in it, and the light is "
@@ -1199,6 +1207,7 @@ KENH: dict[str, dict] = {
 
     "FIRST LIGHT": {
         "ten": "FIRST LIGHT",
+        "nhom": "Ấm & đẹp",
         "mo_ta": "Những giờ đầu tiên của một sinh vật vừa ra đời — sự mong manh.",
         "hook": (
             "Something very new and very unsteady is trying to do one basic thing for the first "
@@ -1318,6 +1327,7 @@ KENH: dict[str, dict] = {
 
     "STORM COAST": {
         "ten": "STORM COAST",
+        "nhom": "Khắc nghiệt",
         "mo_ta": "Động vật đối mặt thời tiết dữ — sức chịu đựng, không phải thảm hoạ.",
         "hook": (
             "Weather violent enough to flatten anything standing in it, and an animal standing in it "
@@ -1402,6 +1412,7 @@ KENH: dict[str, dict] = {
 
     "ICE AGE": {
         "ten": "ICE AGE",
+        "nhom": "Băng & tuyết",
         "mo_ta": "Voi ma mút và thảo nguyên băng hà — quay như phóng sự, về những con vật đã biến mất.",
         "hook": (
             "An animal everyone knows is gone, filmed exactly the way a wildlife crew would film "
@@ -1503,6 +1514,7 @@ KENH: dict[str, dict] = {
 
     "DEEP TIME": {
         "ten": "DEEP TIME",
+        "nhom": "Không còn tồn tại",
         "mo_ta": "Khủng long quay bằng ống kính phóng sự — không phải quái vật phim, mà là động vật.",
         "hook": (
             "A wildlife shot of an animal that has been extinct for sixty-six million years, held "
@@ -1610,6 +1622,7 @@ KENH: dict[str, dict] = {
 
     "REEF WALL": {
         "ten": "REEF WALL",
+        "nhom": "Tối & kỳ lạ",
         "mo_ta": "Vách san hô đổ xuống vực xanh — thế giới nhiều màu nhất và kỳ lạ nhất của bộ.",
         "hook": (
             "Colour that looks turned up too far, on an animal that does not move like an animal. "
@@ -1720,6 +1733,7 @@ KENH: dict[str, dict] = {
 
     "GHOST MOUNTAIN": {
         "ten": "GHOST MOUNTAIN",
+        "nhom": "Khắc nghiệt",
         "mo_ta": "Báo tuyết Himalaya — con vật hiếm tới mức chỉ riêng việc quay được nó đã là sự kiện.",
         "hook": (
             "An empty grey slope, and then part of it moves. The viewer stops because they were "
@@ -1809,6 +1823,128 @@ KENH: dict[str, dict] = {
         "luat": (
             "Camouflage is the subject: the animal is always partly hidden by rock of its own colour "
             "and never stands clear of its background.",
+        ),
+    },
+
+    "DUST AND GOLD": {
+        "ten": "DUST AND GOLD",
+        "nhom": "Ấm & đẹp",
+        "mo_ta": "Thảo nguyên châu Phi hai đầu ngày — con vật nguy hiểm nhất đồng cỏ, nằm không làm gì, trong thứ ánh sáng đẹp nhất trái đất.",
+        "hook": (
+            "The light stops the viewer first — gold, low, full of dust — and only then do they "
+            "work out what is lying in it."
+        ),
+        "the_gioi": (
+            "East African savanna at the end of the dry season: grass burnt to pale gold, single "
+            "flat-topped acacias standing far apart, dust hanging in the air at knee height, and "
+            "low blue hills a long way off."
+        ),
+        "anh_sang": (
+            "low sun almost on the horizon, everything rimmed in gold and the ground in shadow",
+            "hard midday sun with heat shimmer rising off the grass",
+            "backlight through hanging dust so the air itself glows",
+            "the last orange minutes before the sun goes, colour draining fast",
+            "flat grey light under high cloud, the gold gone out of everything",
+        ),
+        "thoi_tiet": (
+            "still hot air with dust hanging where something walked",
+            "a dry wind combing the grass all one way",
+            "a dust devil turning slowly a long way off",
+            "the first fat drops of rain darkening the dust",
+            "completely still air with insects hanging in the light",
+        ),
+        "khuon_cam": ("underwater looking up", "underwater side on", "split level half under water",
+                      "high-speed water impact", "cliff edge looking down"),
+        "loai": {
+            "lion": (
+                "An adult male lion: heavy tawny body, a full dark mane thickening down the neck "
+                "and chest, amber eyes, a black tuft on the tail."
+            ),
+            "lioness": (
+                "A lioness: lean sand-coloured body with no mane, a longer flatter head, dark "
+                "backs to the ears, and a black tail tuft."
+            ),
+            "lion cub": (
+                "A lion cub of a few months: soft fur still showing faint rosettes on the legs, "
+                "round head far too big for the body, blue-grey eyes."
+            ),
+            "elephant": (
+                "An African elephant: enormous ears shaped like the continent, a heavily creased "
+                "grey hide caked pale with dust, and a trunk ending in two small grasping tips."
+            ),
+            "giraffe": (
+                "A giraffe: a very long neck carried at an angle, a coat of dark jagged patches "
+                "on cream, two skin-covered horns, and a long dark tongue."
+            ),
+            "zebra": (
+                "A plains zebra: black and white stripes broadening on the hindquarters, a stiff "
+                "upright mane, and a rounded muzzle."
+            ),
+        },
+        "hanh_vi": {
+            "lion": {
+                "tren": (
+                    "lying flat on its side in short grass, asleep, one paw twitching",
+                    "walking straight toward the camera through hanging dust without hurrying",
+                    "raising its head from the grass so the whole mane catches the low sun",
+                    "yawning enormously and settling back down",
+                    "standing on a low termite mound looking out over the grass",
+                    "shaking the mane once so dust flies off it",
+                    "rolling onto its back with all four legs in the air",
+                ),
+            },
+            "lioness": {
+                "tren": (
+                    "lying with her chin flat on the ground and only the eyes moving",
+                    "walking a worn game trail with the shoulder blades rising in turn",
+                    "crouching in grass exactly her own colour with the ears laid back",
+                    "lifting her head and holding a scent on the wind",
+                    "stepping over a sleeping body without touching it",
+                ),
+            },
+            "lion cub": {
+                "tren": (
+                    "climbing onto a sleeping adult and sliding off the other side",
+                    "pouncing on a tail tip that keeps moving",
+                    "sitting down abruptly and falling over backwards",
+                    "following in single file and stopping to look at nothing",
+                ),
+            },
+            "elephant": {
+                "tren": (
+                    "throwing dust over its own back with the trunk, again and again",
+                    "walking with the whole herd out of frame so only one body crosses",
+                    "curling the trunk around a branch and pulling it down",
+                    "standing completely still with the ears fanning slowly",
+                    "moving through a dust cloud so only the top of the back shows",
+                ),
+            },
+            "giraffe": {
+                "tren": (
+                    "splaying both front legs wide to reach the ground",
+                    "reaching into the crown of an acacia with the tongue out",
+                    "walking with the neck swinging in time with each stride",
+                    "standing motionless against the sky at the very edge of frame",
+                ),
+            },
+            "zebra": {
+                "tren": (
+                    "standing head to tail with another so the stripes merge into one shape",
+                    "rolling in a dust bath and coming up grey instead of white",
+                    "lifting its head from grazing with the ears turned forward",
+                    "walking in single file along a trail worn into the dust",
+                ),
+            },
+        },
+        "style": (
+            "Gold and dust and nothing else: pale burnt grass, dark rimmed animals, and air thick "
+            "enough to see. Long lens compression stacks the acacias flat behind the subject. "
+            "Every frame has the sun low and behind, so edges glow and the ground goes dark."
+        ),
+        "am": "cicadas at full volume, dry stalks hissing, a lion contact call carrying kilometres",
+        "luat": (
+            "No hunt, no chase, no kill. These animals are resting, walking or feeding.",
+            "No vehicle, no road, no fence, no building anywhere on this plain.",
         ),
     },
 }
@@ -2342,7 +2478,7 @@ def xuat_web(dich: str, so_tap: int = 60) -> tuple:
         io.open(os.path.join(dich, slug + ".json"), "w", encoding="utf-8").write(b)
         tong += len(b.encode())
         muc.append({"ten": ten, "slug": slug, "so_tt": i, "mo_ta": c["mo_ta"],
-                    "loai": list(c["loai"]), "so_tap": so_tap})
+                    "nhom": c.get("nhom", ""), "loai": list(c["loai"]), "so_tap": so_tap})
     io.open(os.path.join(dich, "index.json"), "w", encoding="utf-8").write(
         json.dumps({"kenh": muc, "giay": list(GIAY_CHUAN), "giay_uu_tien": list(GIAY_UU_TIEN),
                     "ky_tu_max": KY_TU_MAX}, ensure_ascii=False))

@@ -51,6 +51,8 @@ BRAND = {
                          khau_hieu="NOTHING HERE MOVES LIKE AN ANIMAL"),
     "GHOST MOUNTAIN": dict(chinh="#CFD8E0", phu="#8A9BA8", nen="#1A1E22", bt="paw",
                            khau_hieu="YOU WERE LOOKING RIGHT AT IT"),
+    "DUST AND GOLD": dict(chinh="#F0B84C", phu="#E0663A", nen="#231A12", bt="acacia",
+                          khau_hieu="THE LIGHT GETS YOU FIRST"),
 }
 
 
@@ -190,6 +192,21 @@ def bieu_tuong(d: ImageDraw.ImageDraw, ten: str, cx: int, cy: int, r: int, c1, c
         for dx, dy, rr in ((-.62, -.30, .23), (-.22, -.60, .25), (.22, -.60, .25), (.62, -.30, .23)):
             d.ellipse([cx + r * dx - r * rr, cy + r * dy - r * rr,
                        cx + r * dx + r * rr, cy + r * dy + r * rr], fill=c1)
+    elif ten == "acacia":                      # cây keo tán BẰNG — bóng nhận ra thảo nguyên châu
+        # Phi trong nửa giây, và không con vật nào trong bộ có bóng gần giống nó. Tán phải PHẲNG
+        # và RỘNG: vẽ tán tròn là thành một cái cây bất kỳ.
+        d.polygon([(cx - r * .96, cy - r * .30), (cx + r * .96, cy - r * .30),
+                   (cx + r * .60, cy - r * .58), (cx - r * .60, cy - r * .58)], fill=c1)
+        d.polygon([(cx - r * .58, cy - r * .56), (cx + r * .58, cy - r * .56),
+                   (cx + r * .16, cy - r * .82), (cx - r * .16, cy - r * .82)], fill=c1)
+        d.polygon([(cx - r * .09, cy - r * .30), (cx + r * .09, cy - r * .30),
+                   (cx + r * .16, cy + r * .62), (cx - r * .16, cy + r * .62)], fill=c1)
+        for sx in (-1, 1):
+            d.polygon([(cx + sx * r * .08, cy + r * .04), (cx + sx * r * .46, cy + r * .44),
+                       (cx + sx * r * .30, cy + r * .52), (cx + sx * r * .06, cy + r * .26)],
+                      fill=c1)
+        d.rounded_rectangle([cx - r * .92, cy + r * .62, cx + r * .92, cy + r * .82],
+                            radius=r * .10, fill=c1)
     else:
         d.ellipse([cx - r * .7, cy - r * .7, cx + r * .7, cy + r * .7], fill=c1)
 

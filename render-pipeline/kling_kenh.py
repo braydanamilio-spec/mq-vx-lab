@@ -433,6 +433,7 @@ KENH: dict[str, dict] = {
         "ten": "BREAK ROOM",
         "mo_ta": "Hài công sở Mỹ — phòng nghỉ nhân viên, nơi mọi mâu thuẫn nhỏ của văn phòng nổ ra quanh cái tủ lạnh chung.",
         "ty_le": "9:16",
+        "nhom": "Công sở & dịch vụ",
         "nhan_vat": {
             "Dave": "Dave: 38-year-old man, thinning blond hair, wrinkled blue dress shirt, loose tie, khaki pants, brown shoes; confidently wrong, takes credit, never reads emails.",
             "Priya": "Priya: 34-year-old woman, black hair in a low bun, dark green blazer, grey trousers, flat black shoes; dry, unimpressed, keeps receipts of everything.",
@@ -519,6 +520,7 @@ KENH: dict[str, dict] = {
         "ten": "DINER SHIFT",
         "mo_ta": "Hài quán ăn đêm Mỹ — bồi bàn kỳ cựu, bếp trưởng nóng tính và những vị khách lúc hai giờ sáng.",
         "ty_le": "9:16",
+        "nhom": "Công sở & dịch vụ",
         "nhan_vat": {
             "Rosa": "Rosa: 46-year-old woman, dark hair in a ponytail, pale blue waitress dress, white apron, worn white shoes; deadpan veteran, unshockable, carries four plates at once.",
             "Chef Nick": "Chef Nick: 51-year-old man, heavy build, white t-shirt, stained apron, backwards cap, black clogs; confidently wrong, defends every recipe he ever invented.",
@@ -604,6 +606,7 @@ KENH: dict[str, dict] = {
         "ten": "GYM FLOOR",
         "mo_ta": "Hài phòng gym Mỹ — huấn luyện viên tự tin, người mới lóng ngóng và ông chú tập ở đây từ thời máy còn mới.",
         "ty_le": "9:16",
+        "nhom": "Nơi công cộng",
         "nhan_vat": {
             "Brad": "Brad: 31-year-old man, muscular, short blond hair, tight grey tank top, black shorts, white trainers; confidently wrong, gives advice nobody asked for.",
             "Nia": "Nia: 28-year-old woman, dark curly hair in a headband, purple sports top, black leggings, teal trainers; dry, unimpressed, lifts more than Brad.",
@@ -688,6 +691,7 @@ KENH: dict[str, dict] = {
         "ten": "DORM 204",
         "mo_ta": "Hài ký túc xá đại học Mỹ — bốn bạn cùng phòng, một cái tủ lạnh mini và không ai chịu rửa bát.",
         "ty_le": "9:16",
+        "nhom": "Nhà & hàng xóm",
         "nhan_vat": {
             "Jess": "Jess: 20-year-old woman, shoulder-length brown hair, oversized university sweatshirt, joggers, fluffy slippers; dry, unimpressed, runs on four hours of sleep.",
             "Marcus": "Marcus: 19-year-old man, short black hair, red basketball jersey, grey shorts, high-top sneakers; confidently wrong, has a theory about everything.",
@@ -772,6 +776,7 @@ KENH: dict[str, dict] = {
         "ten": "GARAGE HOURS",
         "mo_ta": "Hài gara sửa xe Mỹ — thợ già, thợ trẻ và những vị khách nghĩ mình biết xe hơn thợ.",
         "ty_le": "9:16",
+        "nhom": "Công sở & dịch vụ",
         "nhan_vat": {
             "Hank": "Hank: 57-year-old man, grey moustache, navy work shirt with a name patch, dark jeans, oil-stained boots; deadpan veteran, diagnoses by sound.",
             "Rico": "Rico: 26-year-old man, black hair, red bandana, grey coveralls tied at the waist, black boots; fast and literal, learns by breaking things.",
@@ -856,6 +861,7 @@ KENH: dict[str, dict] = {
         "ten": "FENCE LINE",
         "mo_ta": "Hài hàng xóm Mỹ — hai nhà, một hàng rào, và một cuộc chiến lịch sự kéo dài nhiều năm.",
         "ty_le": "9:16",
+        "nhom": "Nhà & hàng xóm",
         "nhan_vat": {
             "Ron": "Ron: 54-year-old man, neat grey hair, tucked-in white polo shirt, pressed beige shorts, white socks with sandals; anxious over-preparer, owns a measuring tape for the lawn.",
             "Deb": "Deb: 50-year-old woman, curly blonde hair, oversized tie-dye shirt, denim shorts, gardening clogs; dry and unimpressed, mows once a season on purpose.",
@@ -941,6 +947,7 @@ KENH: dict[str, dict] = {
         "ten": "FRONT DESK",
         "mo_ta": "Hài quầy lễ tân phòng khám Mỹ — nơi mọi thủ tục vô lý gặp mọi bệnh nhân sốt ruột.",
         "ty_le": "9:16",
+        "nhom": "Công sở & dịch vụ",
         "nhan_vat": {
             "Carla": "Carla: 43-year-old woman, dark hair in a clip, teal scrubs, ID badge on a lanyard, white shoes; deadpan veteran, has heard every excuse.",
             "Trent": "Trent: 27-year-old man, neat brown hair, blue scrubs, navy fleece vest, grey sneakers; anxious over-preparer, follows the form to the letter.",
@@ -1026,6 +1033,7 @@ KENH: dict[str, dict] = {
         "ten": "ROAD TRIP",
         "mo_ta": "Hài trong xe Mỹ — bốn người, một chuyến đi dài, và không ai chịu nhường quyền chỉnh nhạc.",
         "ty_le": "9:16",
+        "nhom": "Nơi công cộng",
         "khuon_cam": ("top-down", "high angle", "from behind"),
         "nhan_vat": {
             "Ted": "Ted: 47-year-old man, receding brown hair, blue polo shirt, cargo shorts, driving sandals; confidently wrong, refuses to stop for directions or for anything.",
@@ -1111,6 +1119,7 @@ KENH: dict[str, dict] = {
         "ten": "PET HOUSE",
         "mo_ta": "Hài nhà nhiều thú cưng Mỹ — hai con vật cạnh tranh, một con chuột lang quan sát, và hai người chủ không hiểu gì.",
         "ty_le": "9:16",
+        "nhom": "Nhà & hàng xóm",
         "khuon_cam": ("top-down", "high angle"),
         "nhan_vat": {
             "Duke": "Duke: large brown dog, floppy ears, red collar, expressive eyebrows; confidently wrong, believes every plan will work.",
@@ -1199,6 +1208,7 @@ KENH: dict[str, dict] = {
         "ten": "HOUSE RULES",
         "mo_ta": "Sitcom hoạt hình gia đình Mỹ ngoại ô — bố tự tin sai, mẹ tỉnh khô, con nhanh mồm.",
         "ty_le": "9:16",
+        "nhom": "Nhà & hàng xóm",
         "khong_thoai": ("Buddy",),
 
         # Giữ NGUYÊN VĂN từ bộ 500 prompt anh đang có. Đổi một chữ ở đây là 500 tập cũ lệch khỏi
@@ -1329,6 +1339,7 @@ KENH: dict[str, dict] = {
             "xuất hiện lúc ấy."
         ),
         "ty_le": "9:16",
+        "nhom": "Công sở & dịch vụ",
         "nhan_vat": {
             "Dez": (
                 "Dez: 27-year-old man, short black twists, red store polo over a grey hoodie, black "
@@ -1453,6 +1464,7 @@ KENH: dict[str, dict] = {
             "và của con người cùng lộ ra."
         ),
         "ty_le": "9:16",
+        "nhom": "Công sở & dịch vụ",
         "nhan_vat": {
             "Brenda": (
                 "Brenda: 45-year-old woman, blonde bob, teal blazer over a white blouse, cream "
@@ -1577,6 +1589,7 @@ KENH: dict[str, dict] = {
             "một siêu thị."
         ),
         "ty_le": "9:16",
+        "nhom": "Công sở & dịch vụ",
         "nhan_vat": {
             "Tay": (
                 "Tay: 24-year-old man, short dreads, green store apron over a black tee, jeans, black "
@@ -1700,6 +1713,7 @@ KENH: dict[str, dict] = {
             "huynh trong một hàng xe."
         ),
         "ty_le": "9:16",
+        "nhom": "Nơi công cộng",
         "nhan_vat": {
             "Todd": (
                 "Todd: 41-year-old man, receding brown hair, quarter-zip fleece over a polo, cargo "
@@ -1821,6 +1835,7 @@ KENH: dict[str, dict] = {
             "qua cửa."
         ),
         "ty_le": "9:16",
+        "nhom": "Nhà & hàng xóm",
         "nhan_vat": {
             "Big Ray": (
                 "Big Ray: 44-year-old man, heavy build, shaved head, grey moving-company tee, work "
@@ -1944,6 +1959,7 @@ KENH: dict[str, dict] = {
             "cắt tóc."
         ),
         "ty_le": "9:16",
+        "nhom": "Công sở & dịch vụ",
         "nhan_vat": {
             "Roxie": (
                 "Roxie: 48-year-old woman, platinum blonde with dark roots on purpose, black smock "
@@ -2067,6 +2083,7 @@ KENH: dict[str, dict] = {
             "văn của cả bãi."
         ),
         "ty_le": "9:16",
+        "nhom": "Nơi công cộng",
         "nhan_vat": {
             "Bull": (
                 "Bull: 50-year-old man, heavy build, team jersey over a long-sleeve tee, cargo "
@@ -2188,6 +2205,7 @@ KENH: dict[str, dict] = {
             "nhường."
         ),
         "ty_le": "9:16",
+        "nhom": "Nơi công cộng",
         "nhan_vat": {
             "Renata": (
                 "Renata: 40-year-old woman, dark hair in a tight bun, navy gate-agent blazer, grey "
@@ -2310,6 +2328,7 @@ KENH: dict[str, dict] = {
             "Hài khu cắm trại Mỹ — lều, xe RV, và một cái bãi đất mà ai cũng nghĩ là của mình."
         ),
         "ty_le": "9:16",
+        "nhom": "Nơi công cộng",
         "nhan_vat": {
             "Chip": (
                 "Chip: 46-year-old man, sunburned, wide-brim hat, khaki fishing shirt, cargo shorts, "
@@ -2434,6 +2453,7 @@ KENH: dict[str, dict] = {
             "vào đồ người khác."
         ),
         "ty_le": "9:16",
+        "nhom": "Nhà & hàng xóm",
         "nhan_vat": {
             "Yolanda": (
                 "Yolanda: 55-year-old woman, hair wrapped in a bright scarf, denim jacket over a work "
@@ -2556,6 +2576,7 @@ KENH: dict[str, dict] = {
             "thủ tục hành chính cấp phường."
         ),
         "ty_le": "9:16",
+        "nhom": "Thế giới khác",
         "luat_the_gioi": (
             "Magic exists and never resolves the scene — no spell, potion or blade ends the argument; a rule, a form or a fee does.",
             "Nobody swings a weapon at anybody. No monster is ever on screen; beasts exist only as paperwork about beasts.",
@@ -2685,6 +2706,7 @@ KENH: dict[str, dict] = {
             "bé xíu mà không ai được phép vứt đi."
         ),
         "ty_le": "9:16",
+        "nhom": "Thế giới khác",
         "luat_the_gioi": (
             "Nothing falls. A released object drifts slowly in a straight line until something stops it, and liquid balls up instead of spreading.",
             "No emergency ever occurs — no breach, no fire, no alarm, no medical incident. The only scarcity is supplies and the only clock is a resupply schedule.",
@@ -2814,6 +2836,7 @@ KENH: dict[str, dict] = {
             "không hề biết họ ở đó."
         ),
         "ty_le": "9:16",
+        "nhom": "Thế giới khác",
         "khong_thoai": ("Trish",),
         "luat_the_gioi": (
             "Trish never speaks — not one line, ever. She cannot see, hear or feel the three ghosts, so every spoken line in the script belongs to Aldous, Ivy or Bunny, and none of them is addressed to her. She acts on her own wrong conclusion, alone.",
@@ -2950,6 +2973,7 @@ KENH: dict[str, dict] = {
             "người lớn mà chúng nghe lỏm được. Người không bao giờ nói."
         ),
         "ty_le": "9:16",
+        "nhom": "Góc nhìn lạ",
         "luat_the_gioi": (
             "The dogs speak only to each other. Humans are present but never speak on camera, are never in focus, and are cropped by the frame.",
             "Dogs have no hands. Anything that needs fingers either never happens or was already done by a human off screen.",
@@ -3081,6 +3105,7 @@ KENH: dict[str, dict] = {
             "Không ai rút súng; vũ khí ở đây là cuốn sổ nợ."
         ),
         "ty_le": "9:16",
+        "nhom": "Thế giới khác",
         "luat_the_gioi": (
             "It is 1884: no electricity, no telephone, no engine, no photograph in colour, no plastic. Light comes from daylight or an oil lamp.",
             "No weapon is ever drawn and nobody is hurt. Disputes end at the ledger, the scale or the posted notice.",
@@ -3207,6 +3232,7 @@ KENH: dict[str, dict] = {
             "loạn tuyệt đối, và chuyện thì luôn vô hại."
         ),
         "ty_le": "9:16",
+        "nhom": "Nghề kỷ luật cao",
         "luat_the_gioi": (
             "The caller is never seen — only heard, thin and clipped, through a headset.",
             "Nothing dangerous, violent, medical or genuinely urgent ever happens. Every call turns out to be harmless: an animal, a locked car, a smell, a neighbour, a delivery.",
@@ -3337,6 +3363,7 @@ KENH: dict[str, dict] = {
             "toàn bộ kỹ năng ấy ra dùng cho cái tủ lạnh chung."
         ),
         "ty_le": "9:16",
+        "nhom": "Nghề kỷ luật cao",
         "luat_the_gioi": (
             "The alarm never sounds and the crew never leaves the building. No fire, rescue, injury or emergency is shown or described.",
             "Rank is real everywhere except the kitchen, where whoever is cooking decides.",
@@ -3465,6 +3492,7 @@ KENH: dict[str, dict] = {
             "đô, và tang vật luôn nói ngược lại chủ của nó."
         ),
         "ty_le": "9:16",
+        "nhom": "Nghề kỷ luật cao",
         "luat_the_gioi": (
             "Nothing criminal is ever at issue and nothing at stake exceeds a repair bill. Dot and Vern are the two sides of the dispute; Judge Ottoline and Reyes never take a side.",
             "The turn comes from a physical exhibit that proves the opposite of what its owner believes.",
@@ -3599,6 +3627,7 @@ KENH: dict[str, dict] = {
             "ruy băng, và cái luật ai cũng viện ra thì chưa từng tồn tại."
         ),
         "ty_le": "9:16",
+        "nhom": "Nơi công cộng",
         "luat_the_gioi": (
             "Always outdoors and always daylight. No interior scene, no night.",
             "The prize is worth nothing and the record is worth everything; everybody cites a rule and nobody has read the rulebook.",
@@ -3727,6 +3756,7 @@ KENH: dict[str, dict] = {
             "phàn nàn đều bị đáp lại bằng nhiều nhiệt tình hơn."
         ),
         "ty_le": "9:16",
+        "nhom": "Nơi công cộng",
         "luat_the_gioi": (
             "The ship is calm and nothing goes wrong with it — no storm, no illness, no emergency, no port. The horizon is identical in every direction.",
             "Nobody can leave, and every complaint is answered with more hospitality, never less.",
@@ -6262,7 +6292,7 @@ def xuat_web(thu_muc: str) -> list[str]:
         ra.append(f)
     # mục lục nhẹ để web nạp danh sách kênh mà không phải tải hết
     io.open(os.path.join(thu_muc, "index.json"), "w", encoding="utf-8").write(json.dumps(
-        {"kenh": [{"ten": t, "slug": _slug(t), "mo_ta": k["mo_ta"],
+        {"kenh": [{"ten": t, "slug": _slug(t), "mo_ta": k["mo_ta"], "nhom": k.get("nhom", ""),
                    "vai": list(ho_so(t)["vai"]), "phong": list(ho_so(t)["phong"])}
                   for t, k in KENH.items()],
          "giay": list(GIAY_CHUAN),
