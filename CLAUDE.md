@@ -1731,3 +1731,32 @@ Thử ngược đủ hai chiều: dạng có `or` → tha; dạng trần → v�
 
 **Vì sao phải chữa chứ không bỏ qua:** luật 13.2 đã trả giá cho đúng chuyện này — ba dòng đỏ giả
 khiến một lỗi THẬT nằm cạnh chúng bị chìm. Một cổng đỏ vĩnh viễn không phiền, nó **che**.
+
+### 15.20 Cổng kiểm hằng số bằng CHÍNH hằng số ấy — luôn xanh
+
+`kiem_bai` so bài đăng với `_KHAI_BAO` (câu khai báo cảnh AI). Thử ngược: đổi `_KHAI_BAO` thành
+`"x"` thì `viet_bai` ghi `"x"` và `kiem_bai` tìm `"x"` — **xanh**. Cổng bắt được việc BỎ câu ở
+một nền tảng, nhưng không bắt được việc **làm rỗng chính câu ấy**.
+
+Đây là ràng buộc cứng số một của ngách (§15.6), nên phải canh ở **cả hai tầng**: bài đăng có
+mang câu không, VÀ câu ấy có còn nói đúng điều nó sinh ra để nói không.
+
+**Luật:** khi một cổng so A với B mà A và B cùng đọc **một nguồn**, cổng ấy chỉ chứng minh A và
+B nhất quán — không chứng minh gì về nội dung. Cùng họ với 12.4 (*cổng tự chuẩn hoá theo mẫu đầu
+tiên: nhất quán quanh một mốc SAI vẫn sai*).
+
+Và cổng vừa viết **bắt oan ngay lần chạy đầu**: `_t.split()` cho ra `"ai."` **kèm dấu chấm**, nên
+`"ai" in split()` trượt chính câu thật. Dấu câu dính vào từ là chỗ mọi phép so theo `split()`
+gãy — dùng ranh giới từ `\bai\b`, đừng dùng phép tách theo dấu cách.
+
+### 15.21 Tám phép kiểm chạy tay một lần không phải tám cổng
+
+Quét lỗi tiềm ẩn xong, tám phép đều sạch. Nhưng phép kiểm chạy một lần chỉ chứng minh **hiện tại
+lành**, không ngăn được lần sửa sau — và **hai trong tám cái ấy đã từng bắt lỗi thật trong lúc
+dựng** (`seabird` không có trong mô tả *"A shearwater"*; `blue sheep` không có trong *"A
+bharal"*), mà cả hai lần em đều sửa tay rồi đi tiếp, tức để nguyên cái bẫy cho lần thêm loài sau.
+
+Nay là một chốt `selftest`, và thử ngược đủ tám. Một phép trong đó lộ ra hệ có **bảo vệ hai
+tầng**: `khuon_kenh` ném `RuntimeError` khi lọc còn dưới bốn khuôn, trước cả khi chốt kịp so.
+Bài kiểm của em ban đầu chỉ bắt `AssertionError` nên báo "cổng chết" — lần thứ hai trong phiên
+bài kiểm sai chứ không phải cổng sai (13.15).

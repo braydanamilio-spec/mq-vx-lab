@@ -159,6 +159,21 @@ def kiem_bai(bai: dict) -> list[str]:
     thuận là một cổng chưa biết có hoạt động không (luật 13.11).
     """
     e = []
+    # 3/9 — CHÍNH HẰNG SỐ phải còn nói đúng điều nó sinh ra để nói.
+    #
+    # Bản trước chỉ so bài đăng với `_KHAI_BAO`, tức so hằng số với CHÍNH NÓ: đổi `_KHAI_BAO`
+    # thành "x" thì `viet_bai` ghi "x" và `kiem_bai` tìm "x" — xanh. Thử ngược mới lộ ra: cổng
+    # bắt được việc BỎ câu ở một nền tảng, nhưng không bắt được việc LÀM RỖNG chính câu ấy.
+    #
+    # Đây là ràng buộc cứng số một của ngách (§15.6), nên nó phải được canh ở cả hai tầng.
+    # `_t.split()` cho ra "ai." KÈM DẤU CHẤM, nên phép `"ai" in split()` trượt chính câu thật —
+    # cổng vừa viết đã bắt oan ngay lần chạy đầu. Dùng ranh giới TỪ, đừng dùng phép tách theo
+    # dấu cách: dấu câu dính vào từ là chỗ mọi phép so theo `split()` gãy.
+    _t = _KHAI_BAO.lower()
+    if len(_KHAI_BAO) < 40 or not re.search(r"\bai\b", _t) or not any(
+            x in _t for x in ("not documentary", "not real", "not footage")):
+        e.append("câu khai báo `_KHAI_BAO` không còn nói rõ đây là cảnh dựng bằng AI và không "
+                 "phải tư liệu thật — đó là ràng buộc cứng của ngách này, không phải câu trang trí")
     for nen, khoa in (("youtube", "description"), ("facebook", "text"), ("instagram", "caption")):
         if _KHAI_BAO not in (bai.get(nen) or {}).get(khoa, ""):
             e.append(f"{nen}: thiếu câu khai báo cảnh dựng bằng AI — đây là ràng buộc cứng của "

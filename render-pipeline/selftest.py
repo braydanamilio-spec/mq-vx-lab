@@ -2517,6 +2517,7 @@ def main():
     check("đặt tiêu đề chịu được mọi hình dạng story", t_dat_tieu_de_chiu_duoc_moi_hinh_dang)
     check("sổ tránh-trùng và phép so cắt cùng độ dài", t_so_trung_tieu_de_phai_cung_do_dai)
     check("hồ sơ kênh: không dict nào có khoá trùng", t_khong_khoa_trung_trong_ho_so)
+    check("thiên nhiên: hồ sơ toàn vẹn (8 phép)", t_tn_ho_so_toan_ven)
     check("bộ thiên nhiên: prompt + hàng rào + đa dạng", t_bo_thien_nhien_lanh)
     check("brand thiên nhiên qua đủ ba cổng", t_brand_thien_nhien_doc_duoc)
     check("thiên nhiên: có đường giao hàng + khai báo AI", t_tn_giao_hang_khai_bao_ai)
@@ -6311,6 +6312,80 @@ def t_tn_giao_hang_khai_bao_ai():
     bai["facebook"]["text"] = "no disclosure"
     assert TD.kiem_bai(bai), "cổng khai báo AI không bắt được khi thiếu — cổng chết"
 
+
+
+def t_tn_ho_so_toan_ven():
+    """TÁM PHÉP KIỂM TOÀN VẸN CHO HỒ SƠ 14 KÊNH THIÊN NHIÊN.
+
+    3/9 — Cả tám phép này em đã chạy TAY một lần rồi thấy sạch. Nhưng một phép kiểm chạy một lần
+    không phải cổng: nó chứng minh hiện tại lành, không ngăn được lần sửa sau. Ba trong tám cái
+    dưới đây đã từng BẮT ĐƯỢC lỗi thật trong lúc dựng — nhãn `seabird` không có trong mô tả
+    "A shearwater", nhãn `blue sheep` không có trong mô tả "A bharal" — và cả hai lần em sửa tay
+    rồi đi tiếp, tức để nguyên cái bẫy cho lần thêm loài tiếp theo.
+    """
+    import sys as _s, os as _o, re as _re
+    goc = _o.path.dirname(_o.path.abspath(__file__))
+    _s.path.insert(0, goc)
+    import thien_nhien as TN
+    import brand_tn as BT
+    import tn_dong_bo as TD
+
+    # 1. Nhãn loài phải có mặt trong chính mô tả của nó — nếu không, cổng "prompt nêu đúng loài"
+    #    sẽ chặn mọi tập của loài ấy, và chặn ở khâu SINH chứ không ở khâu THÊM.
+    xau = [(k, l) for k, c in TN.KENH.items() for l, v in c["loai"].items()
+           if [t for t in _re.findall(r"[a-z]+", l.lower()) if len(t) >= 4]
+           and not any(t in v.lower()
+                       for t in _re.findall(r"[a-z]+", l.lower()) if len(t) >= 4)]
+    assert not xau, f"nhãn loài không xuất hiện trong mô tả của nó: {xau[:3]}"
+
+    # 2. `MACRO_OK` là một danh sách CHUỖI rời — sửa câu hành vi mà quên sửa ở đây thì mục ấy
+    #    thành mồ côi và khuôn cận cực đại lặng lẽ không bao giờ được chọn cho loài đó.
+    tat = {h for c in TN.KENH.values() for b in c["hanh_vi"].values()
+           for d in b.values() for h in d}
+    assert not (TN.MACRO_OK - tat), f"MACRO_OK mồ côi: {sorted(TN.MACRO_OK - tat)[:3]}"
+
+    # 3. Slug quyết định tên thư mục và tên tệp web — đụng nhau là hai kênh ghi đè nhau.
+    sl = [_re.sub(r"[^a-z0-9]+", "-", k.lower()).strip("-") for k in TN.KENH]
+    assert len(set(sl)) == len(sl), "slug kênh đụng nhau"
+
+    # 4. Khuôn hình thiếu trong `KHUON_MOI_TRUONG` sẽ mặc định về ("tren",) — im lặng, và sai
+    #    ngay ở kênh dưới nước.
+    thieu = [a for a, _ in TN.KHUON if a not in TN.KHUON_MOI_TRUONG]
+    assert not thieu, f"khuôn hình thiếu bảng môi trường: {thieu}"
+
+    # 5. `*_cam` viết sai mẩu chữ có thể lọc gần sạch mà vẫn còn 1–2 mục, tức không nổ nhưng
+    #    kênh mất gần hết biến thể. Đòi sàn tối thiểu.
+    ngheo = [k for k, c in TN.KENH.items()
+             if len(TN.khuon_kenh(c)) < 4 or len(TN.as_kenh(c)) < 3 or len(TN.tt_kenh(c)) < 3]
+    assert not ngheo, f"kênh bị lọc quá tay: {ngheo}"
+
+    # 6. Biểu tượng không có nhánh vẽ riêng sẽ rơi vào `else` — một hình TRÒN, và cổng bóng
+    #    ngoài sẽ báo trùng ngay... trừ khi chỉ có đúng một cái, lúc ấy nó im lặng.
+    src = open(_o.path.join(goc, "brand_tn.py"), encoding="utf-8").read()
+    thieu_bt = [b["bt"] for b in BT.BRAND.values() if f'ten == "{b["bt"]}"' not in src]
+    assert not thieu_bt, f"biểu tượng không có nét vẽ riêng: {thieu_bt}"
+
+    # 7. Bài đăng dựng được cho MỌI kênh và luôn mang câu khai báo AI.
+    xau = []
+    for k in TN.KENH:
+        x = TN.lich(k, 0)
+        e = TD.kiem_bai(TD.viet_bai({"kenh": k, "loai": x["loai"],
+                                     "hanh_vi": x["hanh_vi"], "giay": 8}))
+        if e:
+            xau.append((k, e[0][:40]))
+    assert not xau, f"bài đăng chưa đạt: {xau[:2]}"
+
+    # 8. Panel web KHÔNG được chạm Firestore. Anh dặn tiết kiệm hạn mức, và cách chắc chắn nhất
+    #    là không có lệnh nào để mà tốn — nên canh bằng cổng, không bằng lời hứa.
+    d = _o.path.join(goc, "..", "MM0-AutoPublisher", "dashboard", "index.html")
+    if _o.path.exists(d):
+        h = open(d, encoding="utf-8").read()
+        i, j = h.find("const _tnCache = {}"), h.find("window.klingChep = async")
+        if i > 0 and j > i:
+            khoi = h[i:j]
+            cam = [x for x in ("getDoc", "setDoc", "addDoc", "deleteDoc", "collection(",
+                               "onSnapshot", "gdocGate", "_appFor") if x in khoi]
+            assert not cam, f"panel thiên nhiên chạm Firestore: {cam}"
 
 def t_khong_khoa_trung_trong_ho_so():
     """KHÔNG DICT NÀO TRONG HỒ SƠ KÊNH ĐƯỢC CÓ KHOÁ TRÙNG.
