@@ -1851,3 +1851,32 @@ Không có cờ nào trong tệp nói nó dựng bằng engine nào — thứ ph
 
 `don_video_cu.py --truoc <ISO>` dọn theo mốc, mặc định **bỏ thùng rác** chứ không xoá hẳn: mốc
 thời gian là bằng chứng gián tiếp, nên phải để đường lùi.
+
+### 15.22 Đường CLI có sổ, đường WEB thì không — mà anh dùng đường web
+
+`thien_nhien.tap_ke()` đếm tập kế tiếp chưa sinh và cảnh báo khi ép `--so` vào thư mục đã có
+(15.11). Nhưng nó chỉ canh **đường CLI**. Panel web — thứ anh thật sự dùng để chép prompt — không
+có gì: bộ lịch tất định nên chép lại tập 5 cho ra **đúng cùng một prompt**, và anh trả tiền Kling
+cho thứ đã có trong tay.
+
+Bộ hài không có lỗ này vì nó đã có sổ vân tay trên Firestore và tự tăng số tập. Em dựng sổ cho bộ
+thiên nhiên nhưng chỉ dựng ở **một nửa đường**.
+
+**Luật:** khi một cơ chế bảo vệ có hai lối vào (CLI và web), hỏi thẳng *"lối nào anh thật sự
+dùng?"* — và bảo vệ lối ấy trước. Cơ chế đặt ở lối không ai đi là cơ chế không tồn tại.
+
+Sổ ghi bằng `localStorage`, **không** Firestore: anh dặn tiết kiệm hạn mức và sổ này chỉ cần đúng
+trên máy đang ngồi. Đánh đổi nói rõ ra: **dùng máy khác thì sổ không theo**.
+
+### 15.23 Ghi sổ chỉ ở nhánh THÀNH CÔNG — sổ hụt đúng lúc cần nhất
+
+Bản đầu ghi sổ trong `try { clipboard.writeText(); ghi() }`. Nhánh `catch` (bôi đen để anh bấm
+Cmd+C) **không ghi** — trong khi đó cũng là một lần chép thật: trình duyệt từ chối `clipboard` khi
+thiếu quyền hoặc khi trang không chạy trên https, và lúc ấy anh vẫn dán vào Kling y như thường.
+
+Nghĩa là sổ hụt **đúng ở những lần trình duyệt khó tính nhất** — cùng họ với 12.8: hỏng mà vẫn
+báo xanh, chỉ khác là ở đây "xanh" nghĩa là sổ nói anh chưa làm tập ấy.
+
+Và em chỉ thấy nó vì **bài kiểm của em rơi vào nhánh catch**: Node không cho ghi đè `navigator`.
+Một bài kiểm sai lại chỉ ra một lỗi thật — nhưng chỉ khi mình đi truy tại sao nó sai, thay vì
+sửa cho nó xanh.
