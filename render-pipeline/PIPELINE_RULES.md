@@ -8856,3 +8856,41 @@ ngay sau khi viết. Nay `except` kêu một lần thay vì im.
 
 **Luật.** Mọi `except: pass` quanh một cơ chế CỨU đều là một cái bẫy: cơ chế ấy chỉ chạy lúc mọi
 thứ khác đã hỏng, nên nếu nó cũng hỏng thì không ai còn ở đó để nghe. **Đường cứu phải ồn ào.**
+
+### 7ea — "Đọc cạn" suy ra "ghi cạn": một suy luận sai LOẠI, và nó khoá câm sổ khoá  (3/9/2026)
+
+Anh: *"trạng thái key api vẫn đứng yên, không có cập nhật nào."*
+
+**Gốc rễ.** Khi không đọc được sổ ngân sách, `nap_nen_ngan_sach` đặt **cùng một tỉ lệ** cho cả
+`nen_doc` và `nen_ghi`:
+
+```python
+ti = 1.0 if chac else 0.85
+_NGAN_SACH["nen_doc"] = TRAN_DOC_NGAY * ti
+_NGAN_SACH["nen_ghi"] = TRAN_GHI_NGAY * ti      # ← sai loại
+```
+
+Firestore có **hai hạn mức riêng biệt**: 50.000 đọc · 20.000 ghi. Cạn cái này **không nói gì**
+về cái kia. Số đo từ bảng Usage của Firebase hôm 2/9: **59.000 lượt đọc (đã vượt trần)** trong
+khi chỉ **373 lượt ghi = 1,9%**. Suy từ *đọc cạn* ra *ghi cạn 100%* sai gần như trọn vẹn.
+
+**Cái giá.** Mọi việc GHI phi-thiết-yếu bị phanh — gồm cả **sổ trạng thái khoá**. Nên dashboard
+hiện `⚪ 241 chưa kiểm` **đứng yên nhiều ngày**, dù dây chuyền đã đo sức khoẻ khoá xong xuôi và
+chỉ chờ ghi ~100 dòng. Cơ chế làm đúng việc của nó rồi bị một cái phanh sai loại chặn ở bước cuối.
+
+**Sửa.** Khi chỉ ĐỌC hỏng thì giả định ghi ở **35%** — đủ để phanh vẫn siết nếu thật sự đang tiêu
+nhiều, nhưng không tự khoá những lượt ghi rẻ và quan trọng. Nếu chính lệnh GHI trả 429 thì tầng
+khác vẫn chặn, nên chỗ này không phải lưới an toàn duy nhất.
+
+**Luật.** Một phanh an toàn suy diễn từ tín hiệu của **tài nguyên khác** thì nó không còn là phanh
+— nó là một điều đoán mặc áo phanh. Hỏi: *tín hiệu tôi đang có đo đúng thứ tôi đang chặn không?*
+
+### 7eb — Ô "kho thật" chỉ cập nhật ở CUỐI luồng, nên đứng yên suốt lúc đang chạy  (3/9/2026)
+
+Anh: *"web ko hiện số liệu videos nào cả."* Ô `✅ Video trong kho: 0 ✓ kho thật` đúng ở thời
+điểm nó được ghi, và **sai với hiện tại**: `kiem_kho --ghi` (bước đếm tệp Drive thật) chỉ chạy ở
+**cuối luồng 1**. Lượt render chạy 4,75 giờ, nên suốt 4,75 giờ ấy con số đứng nguyên ở giá trị
+ghi lần trước — vừa đúng lúc anh nhìn nhiều nhất.
+
+Nhãn `✓ kho thật` còn làm nó đáng tin hơn mức đáng: người đọc hiểu là "đếm thật, mới", trong khi
+nó chỉ nói "đếm thật", không nói "mới".

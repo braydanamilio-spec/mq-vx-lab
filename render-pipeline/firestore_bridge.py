@@ -235,10 +235,28 @@ def nap_nen_ngan_sach(owner: str) -> None:
             chac = "429" in loi or "Quota exceeded" in loi or "RESOURCE_EXHAUSTED" in loi
             ti = 1.0 if chac else 0.85
             _NGAN_SACH["nen_doc"] = TRAN_DOC_NGAY * ti
-            _NGAN_SACH["nen_ghi"] = TRAN_GHI_NGAY * ti
+            # ── ĐỌC CẠN KHÔNG CÓ NGHĨA LÀ GHI CẠN  (3/9/2026) ──────────────────────────
+            # Bản trước đặt `nen_ghi` bằng CÙNG tỉ lệ với `nen_doc`. Đó là một suy luận sai
+            # LOẠI: Firestore có **hai hạn mức riêng biệt** (50.000 đọc · 20.000 ghi), cạn cái
+            # này không nói gì về cái kia.
+            #
+            # Số đo hôm qua từ bảng Usage của Firebase: **59.000 lượt đọc (đã vượt trần) trong
+            # khi chỉ 373 lượt GHI — tức 1,9%**. Suy từ "đọc cạn" ra "ghi cạn 100%" là sai gần
+            # như trọn vẹn.
+            #
+            # Cái giá không nhỏ: mọi việc GHI phi-thiết-yếu bị phanh, gồm cả **sổ trạng thái
+            # khoá** — nên anh nhìn dashboard thấy "241 chưa kiểm" đứng yên suốt, dù dây chuyền
+            # đã đo sức khoẻ khoá xong xuôi và chỉ chờ ghi ~100 dòng.
+            #
+            # Nay khi chỉ ĐỌC hỏng: giả định ghi ở mức **35%** — đủ để phanh vẫn siết nếu thật
+            # sự đang tiêu nhiều, nhưng không tự khoá những lượt ghi rẻ và quan trọng. Nếu chính
+            # lệnh GHI trả 429 thì `con_ngan_sach` vẫn chặn ở tầng khác, nên chỗ này không phải
+            # là lưới an toàn duy nhất.
+            _NGAN_SACH["nen_ghi"] = TRAN_GHI_NGAY * (0.35 if chac else 0.30)
             print(f"   🛡️ KHÔNG đo được sổ ngân sách ({loi}) — "
-                  + ("429 nghĩa là ĐÃ chạm trần" if chac else "coi như đã tiêu 85%")
-                  + ", phanh sẽ siết. Đo không được thì giả định CẠN, không giả định đầy.")
+                  + ("429 nghĩa là ĐỌC đã chạm trần" if chac else "coi như ĐỌC đã tiêu 85%")
+                  + f"; GHI giả định {int(35 if chac else 30)}% (hai hạn mức riêng, cạn đọc "
+                    "không nói gì về ghi).")
             return
         print(f"   ⚠️ sổ Firestore lỗi ({loi}) — dùng số D1 (đọc {max(r,0):,} · ghi {max(w,0):,})")
     _NGAN_SACH["nen_doc"] = float(max(r, 0))
