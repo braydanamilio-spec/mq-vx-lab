@@ -102,46 +102,44 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string 
      Cách phim làm: chữ trắng, đổ bóng MỀM và RỘNG. Bóng mềm tách chữ khỏi mọi nền mà không tạo
      ra hình khối nào — mắt không thấy có gì được thêm vào, chỉ thấy chữ đọc được.
      Cộng thêm một dải tối RẤT NHẸ chuyển dần ở đáy khung, không có cạnh. */
-  const fs = H * 0.044;
+  /* ── PHỤ ĐỀ KARAOKE CHÁY: BỎ DẢI ĐEN, TỪ ĐANG NÓI TÔ VÀNG  (3/9/2026) ──────────────────
+     Anh: *"làm sub cháy, karaoke, ko làm bóng mờ đen thế nha xấu, chữ karaoke màu vàng chạy khi
+     nói, font đẹp, ko to quá che khuất."*
+
+     Ba thay đổi, mỗi cái chữa một điều anh nêu:
+
+     1. **Bỏ HẲN dải tối ở đáy.** Nó từng cao 34% khung, hạ xuống 20% vẫn là một mảng tối nằm
+        chình ình. Tương phản nay do quầng bám sát chữ gánh trọn — thứ đã đo là đủ ở `SoLieu`.
+        Không còn milimét ảnh nào bị che.
+
+     2. **Chữ nhỏ lại 0,044 → 0,036** (−18%). Phụ đề là thứ đọc lướt, không phải tiêu đề; to quá
+        thì nó chiếm chỗ của hình, đúng chỗ anh nói "che khuất nhiều".
+
+     3. **Từ đang nói tô VÀNG.** Trước tô bằng màu kênh — mà kênh tối (`howloud` đỏ #C2352E) phải
+        làm sáng lên mới đọc được, và mỗi kênh ra một sắc khác nhau. Vàng #FFD400 đọc tốt trên
+        MỌI nền và là quy ước karaoke ai cũng nhận ra ngay. Một quy ước sẵn có luôn thắng một
+        sắc thương hiệu mà người xem phải học.
+
+     Quầng chữ: bốn lớp bóng KHÔNG LỆCH bám sát nét, bán kính nhỏ. Không dùng viền
+     `paintOrder="stroke"` — §12.12: *không hãng phim nào viền chữ.* */
+  const fs = H * 0.036;
   return (
     <>
-      <div style={{
-          /* 3/9 — DẢI ĐÁY TỪ 34% XUỐNG 20%, ĐẬM NHẤT TỪ 0,88 XUỐNG 0,62.
-             Anh gửi khung: đáy là một **bức tường đen** nuốt cả chân nhân vật — "tối, có bóng
-             đen rất xấu, chưa điện ảnh".
-
-             Lý luận cũ đúng đích nhưng sai cách: nó tính độ đậm từ trường hợp xấu nhất (chữ
-             trắng trên nền TRẮNG tuyệt đối) rồi ép riêng cái dải phải tự đạt 6,1:1. Kết quả là
-             34% chiều cao khung bị phủ 88% đen — **đổi cả bức ảnh lấy một dòng chữ**.
-
-             Tương phản không nhất thiết phải do DẢI gánh. §12.12 nói rõ cách đúng: *chữ trắng +
-             bóng mềm rộng*. Quầng bám sát chữ cho tương phản CỤC BỘ đúng chỗ cần, không tốn một
-             milimét ảnh nào — y như đã làm cho `SoLieu` và đã đo là đọc tốt. Nay quầng chữ được
-             siết thêm để gánh phần dải vừa nhả ra. */
-          position: "absolute", left: 0, right: 0, bottom: 0, height: H * 0.20,
-        /* 1/9 — ĐO LẠI SAU KHI BỎ HỘP ĐEN: tương phản chữ/nền chỉ còn 2,8:1, dưới chuẩn
-           WCAG AA 4,5:1. Bỏ hộp đen làm hình đẹp hơn thật, nhưng tôi đổi lấy điều đó mà KHÔNG
-           ĐO — và cái mất là chữ khó đọc, đúng thứ phụ đề sinh ra để giải quyết.
-           Nay dải tối đậm hơn hẳn và cao hơn, nhưng vẫn CHUYỂN DẦN không có cạnh — giữ được
-           vẻ không-phải-hộp mà vẫn qua chuẩn. */
-        // ĐỘ ĐẬM TÍNH TỪ TRƯỜNG HỢP XẤU NHẤT, không chọn bằng mắt. Nền sáng nhất có thể là
-        // trắng tuyệt đối; chữ trắng trên lớp phủ đen alpha a cho tương phản 1,05/((1−a)+0,05).
-        // Mốc cũ `C4` (alpha 0,77) chỉ được 3,7:1 — dưới chuẩn WCAG AA, và đúng con số đo được
-        // trên tập `howlong_0001` (2,8:1) vì nền tập ấy gần trắng. `E0` (alpha 0,88) cho 6,1:1,
-        // đủ biên cho mọi ảnh nền mà không làm đáy khung thành một vệt đen.
-        background: "linear-gradient(180deg,#00000000 0%,#0000004D 42%,#0000009E 100%)",
-        pointerEvents: "none",
-      }} />
       <div style={{
         position: "absolute", left: W * 0.08, right: W * 0.08, bottom: H * 0.075,
         display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0 0.30em",
         fontFamily: F, fontWeight: 700, fontSize: fs, lineHeight: 1.25,
         textAlign: "center", letterSpacing: "-0.01em",
-        textShadow: `0 0 ${H * 0.010}px #000000ff, 0 0 ${H * 0.026}px #000000ee, 0 ${H * 0.004}px ${H * 0.014}px #000000dd`,
+        /* 3/9 — SIẾT QUẦNG SAU KHI ĐO. Bỏ dải đen xong, cổng `kiem_hinh` báo tương phản phụ đề
+             **4,2:1 < 4,5:1** — sát chuẩn nhưng dưới chuẩn. Đây đúng cái đã xảy ra hồi 1/9 khi bỏ
+             hộp đen: hình đẹp hơn thật, nhưng đổi lấy chữ khó đọc mà KHÔNG ĐO.
+             Lần này có cổng nên biết ngay. Bù bằng quầng dày hơn — vẫn bám sát nét nên không tạo
+             mảng tối, chỉ tăng tương phản đúng chỗ chữ đứng. */
+          textShadow: `0 0 ${H * 0.006}px #000000ff, 0 0 ${H * 0.013}px #000000ff, 0 0 ${H * 0.024}px #000000ee, 0 0 ${H * 0.038}px #000000aa, 0 ${H * 0.003}px ${H * 0.009}px #000000ee`,
         pointerEvents: "none",
       }}>
         {cua.map((w, k) => (
-          <span key={k} style={{ color: a + k === i ? mauNhan : "#FFFFFF" }}>{w.w}</span>
+          <span key={k} style={{ color: a + k === i ? "#FFD400" : "#FFFFFF" }}>{w.w}</span>
         ))}
       </div>
     </>

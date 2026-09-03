@@ -9014,3 +9014,29 @@ Bỏ lớp lạnh, một lớp ấm `soft-light` 10%: độ ấm `R−B` từ **
 
 **Luật.** Hai hiệu ứng ngược chiều chồng lên nhau thì phần ĐẸP triệt tiêu còn phần THIỆT cộng
 dồn. Trước khi thêm lớp thứ hai, đo xem lớp thứ nhất đã làm được gì.
+
+### 7eg — Phụ đề karaoke: bỏ dải đen, và cổng bắt ngay cái giá phải trả  (3/9/2026)
+
+Anh: *"làm sub cháy, karaoke, ko làm bóng mờ đen thế nha xấu, chữ karaoke màu vàng chạy khi nói,
+font đẹp, ko to quá che khuất."*
+
+Ba thay đổi: **bỏ hẳn** dải tối ở đáy · chữ **0,044 → 0,036** (−18%) · từ đang nói tô **vàng
+`#FFD400`** thay vì màu kênh.
+
+**Vì sao vàng chứ không phải màu kênh:** màu kênh có kênh tối (`howloud` đỏ `#C2352E` đo 3,2:1)
+nên phải làm sáng lên mới đọc được, và mỗi kênh ra một sắc khác nhau — người xem phải *học* rằng
+sắc ấy nghĩa là "đang nói". Vàng là **quy ước karaoke** ai cũng nhận ra tức thì. *Một quy ước sẵn
+có luôn thắng một sắc thương hiệu mà người xem phải học.*
+
+**Và đây là chỗ cổng chứng minh giá trị của nó.** Bỏ dải xong, `kiem_hinh` báo ngay:
+
+```
+tương phản phụ đề 4.2:1 < 4,5:1 (chuẩn WCAG AA) — chữ khó đọc
+```
+
+Đúng **cái đã xảy ra hồi 1/9** khi bỏ hộp đen: hình đẹp hơn thật, nhưng đổi lấy chữ khó đọc **mà
+không đo**, và mãi sau mới phát hiện. Lần này biết trong một lượt dựng. Siết quầng (vẫn bám sát
+nét nên không tạo mảng tối) → **100/100**.
+
+**Luật.** Mỗi lần gỡ một thứ xấu-nhưng-có-công-dụng, hỏi ngay *"nó đang gánh việc gì, và ai gánh
+thay?"* — rồi **đo**, đừng nhìn.
