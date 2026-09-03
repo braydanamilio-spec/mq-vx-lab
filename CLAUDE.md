@@ -1880,3 +1880,174 @@ báo xanh, chỉ khác là ở đây "xanh" nghĩa là sổ nói anh chưa làm 
 Và em chỉ thấy nó vì **bài kiểm của em rơi vào nhánh catch**: Node không cho ghi đè `navigator`.
 Một bài kiểm sai lại chỉ ra một lỗi thật — nhưng chỉ khi mình đi truy tại sao nó sai, thay vì
 sửa cho nó xanh.
+
+---
+
+## 15. LUẬT RÚT TỪ NGÀY 3/9 — TEMPLATE ĐA DẠNG & THANG CHẤM KỊCH BẢN
+
+Anh gửi hai khung và nói một câu đắt hơn mọi báo lỗi trong ngày: *"2 loại này a thấy xấu nhàm
+chán mà nó cứ lặp đi lặp lại cùng 1 motip hoài."*
+
+### 15.1 Làm ĐẸP HƠN không phải là làm KHÁC ĐI
+
+Buổi sáng em thêm bóng đổ, tấm nền mờ, pha màu phòng theo màu thương hiệu — mọi thứ đều đúng và
+khung nào cũng khá hơn khung cũ. Chiều anh soi và vẫn nói **nhàm chán**, vì cả 12 thẻ chương
+trong một bản dài vẫn là **một bố cục**: khối màu trơn, chữ trắng, canh giữa.
+
+Đo được: bản dài có 10 thẻ chương + thẻ mở + thẻ chốt ≈ **22% thời lượng** là đúng một hình.
+
+**Người xem nhận ra BỐ CỤC, không nhận ra sắc độ.** Sáu biến thể màu của cùng một bố cục vẫn
+đọc ra một mô-típ; hai bố cục khác nhau ở *trọng tâm nằm đâu · nền chiếm bao nhiêu · chữ canh
+bên nào* thì đọc ra hai thứ. Đây là lý do mọi cải tiến sắc độ của buổi sáng không giải quyết
+được lời phê.
+
+### 15.2 Đa dạng và bản sắc là HAI trục, phải giải cùng lúc
+
+Nếu mọi kênh rút từ cả sáu bố cục thì có ĐA DẠNG mà không có BẢN SẮC — hai video của hai kênh
+khác nhau vẫn thấy cùng một bộ bài. Nên mỗi kênh chỉ dùng **ba trong sáu** (`GU_KHUON`), **hai
+trong ba** khuôn so sánh (`GU_SS`), **năm biểu tượng riêng** (`GU_HINH`, giao nhau tối đa 3/5).
+
+Cùng nguyên tắc với `kiem_da_dang.py` của bộ Kling: cắt phần **tay nghề chung** ra trước, rồi
+đo phần còn lại.
+
+### 15.3 Nơi CHỌN và nơi biết BẢN SẮC phải là một
+
+Bản trước engine tự tính `bo = hat + round(N.s * 3)`. Chỗ chọn bố cục ở engine, chỗ biết bản
+sắc kênh ở Python. Sửa bảng gu mà engine vẫn dựng theo công thức cũ — **không lỗi nào báo**.
+
+Nay Python quyết và **ghi vào nhịp** (`bo_the` · `bo_ss` · `bt`); engine chỉ đọc. Ba hệ quả:
+con số nằm trong `.json` nên dựng lại tập cũ ra đúng hình cũ · đọc `.json` là biết ngay · thêm
+bố cục mới chỉ sửa hai chỗ.
+
+**Luật:** khi một quyết định cần biết hai thứ ở hai tệp, đưa quyết định về nơi biết thứ khó
+truyền đi hơn, rồi TRUYỀN KẾT QUẢ. Đừng tính lại ở đầu kia.
+
+### 15.4 Cơ chế đã có mà chưa ai gọi — lần thứ tám
+
+`_bt_canh` viết xong hôm trước, có bảng 21 nhóm từ, có chú thích cẩn thận, và **chưa bao giờ
+được gọi**: nhịp `canh` không hề có trường `bt`. Soi lưới ra 3/6 khung chỉ có tường, sàn và một
+dòng phụ đề — và suốt hai vòng sửa em đi chỉnh **độ mờ và bóng đổ của một hình chưa từng được
+vẽ**.
+
+Dấu hiệu nhận ra sớm: đang tinh chỉnh tham số của một thứ mà **chưa lần nào thấy nó trên khung**.
+Trước khi chỉnh, `grep` xem hàm ấy có chỗ gọi không.
+
+### 15.5 Một phép đo đọc SAI NGUỒN thì nó đo một sản phẩm không tồn tại
+
+`cham_kich_ban` bản đầu gọi thẳng `BO_SINH[ma](i)` cho tiện. Nhịp hook được chèn ở `mot_tap`,
+sau khi bộ sinh trả về — nên thước báo **17/18 kênh "hook không có số"** trong khi hook thật
+luôn có số chiếm một phần năm chiều cao khung.
+
+Chữa bằng cách tách `kich_ban()` làm **nguồn duy nhất** cho cả `mot_tap` lẫn thước. Cùng luật
+13.15 (*bài kiểm phải gọi bằng đúng đường mà mã thật gọi*), lần này ở phía dữ liệu.
+
+Và một biến thể nhỏ hơn của cùng lỗi: trục hook chỉ soi LỜI ĐỌC, trong khi con số của hook nằm
+ở trường `so` và **hiện to giữa khung**. Thước phải nhìn đúng thứ người xem nhìn. Sửa: 94,4 → 96,9.
+
+### 15.6 Cổng bắt oan lần này núp sau một con số nghe rất hợp lý
+
+Trục *"ba nhịp liền cùng một khuôn dựng"* nghe hiển nhiên đúng. Đọc tay các ca nó bắt thì **hai
+phần ba là oan**, và oan theo hai kiểu:
+
+- ba nhịp `canh` liền = ba CẢNH khác nhau, mỗi cảnh một hình — khuôn giống nhau nhưng người xem
+  thấy ba bức hình khác nhau
+- `howlong` nhịp 10–12 (`so_lieu` ×3 cho đi bộ · ô tô · máy bay) là đúng **quy tắc B** của chính
+  bộ này: *mệnh đề song song thì khung hình song song*. Phạt nó là phạt thứ bộ luật yêu cầu.
+
+Ca hỏng THẬT nằm ngay cạnh: nhịp 9 và 10 cùng hiện **8.8**. Hai khối số liền nhau nói đúng một
+con số — đó mới là chỗ màn hình đứng yên. Đổi trục sang **đo lặp SỐ**: 98,3 → 99,4.
+
+**Luật:** một trục chấm nghe hiển nhiên đúng vẫn phải đọc tay các ca nó bắt trước khi tin. Và
+khi hai luật trong cùng bộ nói ngược nhau (§12.11B khuyến khích khung song song, trục này phạt
+khung song song) thì **một trong hai đang sai** — không phải cả hai cùng đúng ở ngữ cảnh khác nhau.
+
+### 15.7 Sửa đúng vẫn có thể làm giảm điểm — đo bằng ĐIỂM CUỐI (nhắc lại §13.23)
+
+Bốn kênh định tính mở đầu bằng câu hỏi trơn, không số không mâu thuẫn. Em sửa trong `_cau_hook`
+để ghép mâu thuẫn vào trước. Đúng ý, sai chỗ: hàm ấy **không thấy trường `so`**, nên nó nối
+thêm chữ vào cả những kênh vốn đã có số — hook dài quá 8 chữ, và điểm **tụt 96,9 → 94,7**.
+
+Lùi lại, sửa ở nhánh `elif` của `mot_tap` — nhánh ấy theo định nghĩa là nhánh không có số, tức
+phạm vi bằng đúng tập hợp cần sửa. → 98,3.
+
+**Luật:** đặt bản sửa ở nơi biết đủ thông tin để nó chỉ chạm vào đúng thứ cần chạm.
+
+### 15.8 Danh sách từ không đo được một khái niệm (nhắc lại §13.9, phía chấm điểm)
+
+Phép đo "hook có mâu thuẫn không" bản đầu liệt kê tám từ. Đọc tay 18 hook thật thì nó chấm trượt
+*"You would quit by noon."* và *"You think it gets reused."* — hai hook **mạnh nhất** cả bộ.
+
+Nguyên tắc thật viết được thành biểu thức: hook giữ chân khi nó **phủ định một điều người xem
+đang tin** HOẶC **nói thẳng về chính người xem**. Ba nhóm: phủ định · đảo chiều · ngôi thứ hai
+kèm động từ. Danh sách hết cần dài.
+
+### 15.9 Nét rỗng chết khi thu nhỏ — ràng buộc của BỐ CỤC, không phải sở thích vẽ
+
+Bố cục so sánh theo tỉ lệ thu biểu tượng xuống 34%. Con hươu vẽ bằng ba đường **không tô** ra
+một cái móc câu. Độ dày nét không co theo hình; **khối đặc thì co bao nhiêu vẫn giữ bóng dáng**.
+
+Cùng họ với §14.4 (kiểm bằng mắt ở CỠ THẬT): một hình chỉ đúng ở cỡ nó được vẽ ra không phải
+một hình đúng.
+
+### 15.10 Khoảng cách hai dòng chữ phải suy từ CHIỀU CAO CHỮ
+
+Đặt tay nhãn ở `san + 0,075·H` và số ở `san + 0,150·H` — nghe như cách nhau đủ. Nhưng số cao tới
+`0,082·H` nên đỉnh nó (0,150 − 0,082 = 0,068) nằm **trên** chân nhãn (0,075). Hai dòng đè nhau,
+và chỉ soi khung mới thấy.
+
+Đây là lần thứ **ba** cùng một lỗi trong hai ngày (§`SoLieu` chú thích · §thẻ chương · §bố cục
+tỉ lệ). **Hai phân số cố định đặt cạnh nhau không mã hoá được quan hệ "dòng này nằm dưới dòng
+kia"** — quan hệ ấy phải tính từ cỡ chữ thật.
+
+### 15.11 Một chữ số đứng một mình là một vết bẩn, không phải một nhãn
+
+Số chương ở cỡ `0,042·H` soi ra một vết nhỏ khó hiểu. Phóng lên `0,072·H` ra một vết bẩn **to
+hơn**. Vấn đề không phải CỠ mà là **NGHĨA**: một chữ số đứng một mình không nói nó là số gì, nên
+mắt bỏ qua nó. `CHAPTER 2` giãn chữ đọc ra ngay là một nhãn, và ở cỡ nhỏ vẫn đúng vai — vì vai
+của nó là NHÃN, không phải tiêu đề.
+
+**Luật:** khi phóng to một phần tử hai lần mà nó vẫn không đọc được, thứ sai là VAI của nó,
+không phải kích thước.
+
+### 15.12 Phép đo không phân biệt được "không có gì" với "tôi không nhìn thấy"
+
+`health_guardian` báo *"KHÔNG có video nào xong trong 12h qua"* và cho cả workflow HỎNG. Gốc:
+
+```
+guardian hỏi   render_jobs  owner ASC · status ASC · created_at DESCENDING
+index đã khai  render_jobs  owner ASC · status ASC · created_at ASCENDING
+```
+
+Lệch đúng một chữ. Firestore không phục vụ được, nên MỖI GIỜ nó rơi xuống `q.limit(200)` **không
+sắp xếp** — 4.800 lượt đọc/ngày cho câu hỏi chỉ cần 20 — rồi kết luận từ 200 tài liệu ngẫu nhiên.
+
+Đây là §12.8 lật ngược: ở đó phép đo báo XANH nhầm, ở đây báo ĐỎ nhầm. **Báo đỏ nhầm cũng đắt —
+nó dạy người ta bỏ qua báo động.** Nay nhánh dự phòng nói rõ *"không kết luận được và vì sao"*
+rồi fail-open.
+
+**Luật:** mọi đường DỰ PHÒNG của một phép đo phải tự khai rằng nó là đường dự phòng, và **không
+được phép kết luận**. Đường dự phòng sinh ra để giữ luồng chạy, không phải để trả lời câu hỏi.
+
+### 15.13 Biểu đồ có thể "hỏng" theo hai trạng thái, và phép kiểm thứ nhất không thấy trạng thái thứ hai
+
+Nhịp tổng hợp của 5/18 kênh ra **bốn cột số 0** (kênh trả lời định tính, hook phụ không có số).
+Thêm phép kiểm "có số hay không" thì kênh ODDS vẫn hỏng: nó viết mọi hook phụ theo khuôn
+`1 IN N` nên cạo ra **bốn cột đều bằng 1** — trục phẳng lì. Cùng một lỗi, trạng thái khác.
+
+**Luật:** sau khi vá một trạng thái hỏng, hỏi *"còn cách nào khác để thứ này vô nghĩa không?"*
+Ở đây: rỗng · toàn 0 · toàn bằng nhau — ba trạng thái, một phép kiểm chỉ bắt một.
+
+Và ba lỗi cạo số, cả ba trông như con số hợp lý nên không ai nghi:
+- `11 MONTHS` → **11 triệu** (chữ M của MONTHS thành hệ số)
+- `700,000x` → **70.000** (regex **lùi** để né chữ `x` — regex không thất bại, nó lùi)
+- `-320°F` → **320** (mất dấu âm, chương lạnh nhất thành nóng nhất)
+
+### 15.14 Bản đồ tệp bổ sung
+
+| Việc | Tệp |
+|---|---|
+| Bàn giao template + "đừng làm lại" | `render-pipeline/BAN_GIAO_TEMPLATE.md` |
+| Thang chấm kịch bản (8 trục, 99,4/100) | `render-pipeline/cham_kich_ban.py` |
+| Nguồn duy nhất cho danh sách nhịp | `giai_thich.kich_ban()` |
+| Gu template từng kênh | `giai_thich.GU_KHUON` · `GU_SS` · `GU_HINH` |
+| Mặt sàn dùng chung + 6 bố cục thẻ + 3 bố cục so sánh | `engine-remotion/src/gt/Khuon.tsx` |
