@@ -290,14 +290,28 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                      `hat` thì mọi cảnh trong CÙNG một tập đứng đúng một chỗ, và một tập tám
                      phút có mười tám cảnh chồng khít lên nhau. Đúng luật 14.9: đa dạng phải
                      nằm ở thứ người xem NHÌN THẤY, mà thứ họ thấy là hai cảnh liền nhau. */
-                  const cx = W * [0.5, 0.38, 0.62, 0.5, 0.42, 0.58][
-                    Math.abs(hat + Math.round(N.s * 7)) % 6];
+                  const kv = Math.abs(hat + Math.round(N.s * 7)) % 6;
+                  const cx = W * [0.5, 0.38, 0.62, 0.5, 0.42, 0.58][kv];
+                  /* ── CỠ KHUNG: XA · VỪA · GẦN  (3/9/2026) ────────────────────────────────
+                     `canh` chiếm **35% tổng số nhịp** — nhiều nhất trong bộ. Trước bản này mọi
+                     cảnh vẽ chủ thể ở ĐÚNG MỘT CỠ (`s0`), chỉ đổi chỗ đứng. Xem một tập tám
+                     phút thì mười tám cảnh có cùng khoảng cách máy, và mắt đọc ra "một cú máy
+                     duy nhất" dù vật vẽ khác nhau.
+                     Nghề dựng phim gọi đây là cỡ cảnh, và nó là thứ tách một chuỗi cảnh khỏi
+                     một chuỗi hình dán. Ba cỡ, xoay cùng nhịp với vị trí:
+                       xa   0,74  vật nhỏ giữa không gian — dùng cho câu nói về quy mô
+                       vừa  1,00  cỡ gốc
+                       gần  1,26  vật tràn khung — dùng cho câu nói về chi tiết
+                     Chủ thể to hơn thì phải HẠ xuống để chân vẫn chạm sàn, nếu không nó lơ
+                     lửng — đó là lý do `sanY` nhân theo cùng hệ số. */
+                  const cz = [1.0, 0.74, 1.26, 0.86, 1.14, 1.0][kv];
+                  const sz = s0 * cz;
                   return (
                     <>
-                      <ellipse cx={cx} cy={sanY + s0 * 0.03} rx={s0 * 0.34} ry={s0 * 0.055}
+                      <ellipse cx={cx} cy={sanY + sz * 0.03} rx={sz * 0.34} ry={sz * 0.055}
                                fill="#000000" opacity={0.13} />
-                      <g transform={`translate(${cx} ${sanY - s0 * 0.5})`}>
-                        <BieuTuong ten={N.bt} s={s0} />
+                      <g transform={`translate(${cx} ${sanY - sz * 0.5})`}>
+                        <BieuTuong ten={N.bt} s={sz} />
                       </g>
                     </>
                   );

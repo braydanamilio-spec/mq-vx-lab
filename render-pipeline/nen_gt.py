@@ -158,6 +158,44 @@ def _luat(ve: str, doc: bool = False) -> str:
 #   2. CÓ ĐỔ BÓNG MỀM — nhưng vẫn cấm chất ẢNH CHỤP (§12.6: tả theo lối ảnh chụp thì ra ảnh chụp).
 #   3. BỐI CẢNH VẼ ĐẦY — liệt kê loại đồ vật, vì "chi tiết" là chữ trừu tượng còn "đồng hồ tường,
 #      chậu cây, cửa sổ" thì mô hình vẽ được (§13.2: cổng đo một TỪ thì lệnh dặn phải liệt kê từ).
+# ── KẸP PHONG CÁCH NGẮN, ĐẶT NGAY SAU CÂU CẢNH  (3/9/2026) ─────────────────────────────────
+# Dời câu cảnh lên đầu prompt thì ảnh khớp lời hẳn — nhưng khối phong cách 844 ký tự lùi xuống
+# cuối và mất trọng số: một nhịp của SURVIVE ra chất ẢNH CHỤP (độ phẳng 0,17 so mốc 0,65 của cả
+# tập), vẽ lại ba lần vẫn thế.
+#
+# Hai yêu cầu đánh nhau: cảnh phải đứng đầu để ảnh đúng nội dung, phong cách phải đứng gần đầu
+# để ảnh đúng chất. Giải bằng cách TÁCH: sáu chữ cốt lõi kẹp ngay sau cảnh (vẫn ở vùng trọng số
+# cao), khối chi tiết để sau. Không phải thêm chữ — là xếp lại thứ tự cùng một lượng chữ.
+# ── CÂU SIẾT CHẤT VẼ, DÙNG KHI CỔNG ĐÁNH TRƯỢT  (3/9/2026) ─────────────────────────────────
+# Cổng `do_phang` bắt được ảnh ngả chất ảnh chụp và cho vẽ lại tới ba lần — nhưng `_thu` gọi
+# `_prompt(...)` Y HỆT mỗi lần, và FLUX schnell KHÔNG nhận `seed` (§12.1, đã trả giá bằng HTTP
+# 400 trên mọi lệnh vẽ). Nên "vẽ lại bằng seed khác" chưa bao giờ tồn tại: cùng prompt ra cùng
+# ảnh, ba lượt vẽ lại là ba lượt tiêu neuron cho đúng một kết quả.
+#
+# Đo được ở SURVIVE: hai nhịp CHỈ CÓ VẬT ("raw wild roots and berries" · "unfamiliar wild plants
+# and exposed roots") ra ảnh chụp thật với độ phẳng 0,48 và 0,18 trong khi cả tập ở 0,71–0,83.
+# Vẽ lại ba lần: **0,18 cả ba lần**. Không phải may rủi — chính prompt kéo nó đi (§12.6).
+#
+# Nên mỗi lần trượt thì SIẾT prompt theo hướng cổng đang đo. Đặt ở ĐẦU prompt vì đó là vùng
+# trọng số cao nhất, và nói bằng khẳng định dương chứ không phải câu cấm — FLUX không có
+# negative prompt, mọi danh từ viết ra đều là thứ SẼ xuất hiện.
+SIET = (
+    "children's picture-book illustration, drawn with a felt-tip pen on white paper",
+    "simple flat vector clip art, solid colour fills, no shading at all",
+    "a plain line drawing on a blank white page, three flat colours only",
+)
+
+KEP_GU = ("flat 2D cartoon illustration, thick black ink outlines, "
+          "stick-figure people with plain round white heads, "
+          # ── VẬT cũng cần neo, không chỉ NGƯỜI  (3/9/2026) ─────────────────────────────
+          # Sau khi kẹp phong cách, hai nhịp CÓ NGƯỜI ra đúng chất (độ phẳng 0,79 và 0,74)
+          # còn hai nhịp CHỈ CÓ VẬT vẫn ngả ảnh chụp (0,51 và 0,18): "raw wild roots and
+          # berries" · "unfamiliar wild plants and exposed roots".
+          # Vì câu kẹp chỉ tả tạo hình NGƯỜI — cảnh không người thì nó không neo được gì, và
+          # chủ thể tự nó gợi ảnh chụp thực vật (§12.6). Thêm một vế cho vật.
+          "every object drawn as simple flat shapes with the same thick outlines, "
+          "no photographic texture, no realistic lighting, no depth of field")
+
 GU_CARTOON = (
     "hand-drawn 2D cartoon illustration in the style of a modern animated explainer video, "
     "thick confident black ink outlines of even weight, "
@@ -170,10 +208,28 @@ GU_CARTOON = (
     # ── cho phép đổ bóng mềm, nhưng vẫn cấm chất ảnh chụp ────────────────────────────────
     "flat cheerful colours with gentle soft shading and simple soft cast shadows to give volume, "
     "no photographic texture, no lens blur, no realistic lighting, "
-    # ── bối cảnh phải vẽ đầy, liệt kê vật cụ thể ─────────────────────────────────────────
-    "the scene is fully drawn with a recognisable setting and everyday props — windows with sky, "
-    "a wall clock, a potted plant, lamps, furniture, market stalls, trees — the frame is never "
-    "mostly empty, "
+    # ── BỎ DANH SÁCH ĐỒ VẬT  (3/9/2026) ──────────────────────────────────────────────────
+    # Sáng nay em viết câu này để chữa lỗi "khung trống, nền tối", và liệt kê thẳng đồ vật:
+    # *"windows with sky, a wall clock, a potted plant, lamps, furniture, market stalls, trees
+    # — the frame is never mostly empty"*.
+    #
+    # Chiều soi ảnh mới sinh của kênh SURVIVE (Kỷ Băng Hà): prompt cảnh viết đúng *"a lone
+    # modern person in a frozen tundra under heavy grey sky, bare and endless"* — và **cả bốn
+    # ảnh ra một căn phòng hiện đại sáng sủa có đồng hồ treo tường và chậu cây**. FLUX làm đúng
+    # thứ được bảo: câu phong cách LIỆT KÊ đồ vật, còn câu cảnh chỉ MÔ TẢ, nên đồ vật thắng.
+    #
+    # Đây đúng §12.5 và đúng cái bẫy `SAN_NEN` kê tủ kệ vào sa mạc — em viết lại luật ấy trong
+    # CLAUDE.md rồi vi phạm nó trong cùng một ngày, ở cùng một dạng.
+    #
+    # Hai câu cấm cũng đánh nhau với chính nội dung: *"the frame is never mostly empty"* mâu
+    # thuẫn trực tiếp với "một người nhỏ bé giữa vùng băng trống trải" — mà đó CHÍNH LÀ bố cục
+    # câu ấy cần.
+    #
+    # Nay chỉ nói YÊU CẦU (vẽ đầy, có bối cảnh nhận ra được) và nói rõ bối cảnh do CÂU CẢNH
+    # quyết định. Không tên đồ vật nào — mọi danh từ viết ra đều có thể xuất hiện trong khung
+    # (§15.2, bộ thiên nhiên đã trả giá cho đúng điều này).
+    "the setting is exactly the place named in the scene description and nothing else, "
+    "drawn completely with its own props and depth, not a blank backdrop, "
     "clean and cheerful, not photorealistic, not 3D, no text anywhere"
 )
 # Neo bối cảnh Mỹ — chỉ giữ những vật CHỈ CÓ Ở MỸ và mô hình vẽ được. "Cảm giác Mỹ" thì nó
@@ -441,7 +497,8 @@ def _sac_thai(ma: str) -> str:
         return ""
 
 
-def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool = False) -> str:
+def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool = False,
+            siet: int = 0) -> str:
     """Ghép prompt cho MỘT nhịp.
 
     Thứ tự có chủ đích: chủ thể trước, rồi luật bố cục, rồi phong cách, rồi bề mặt sạch.
@@ -467,9 +524,33 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
     # PHONG CÁCH ĐẶT Ở ĐẦU. Mô hình khuếch tán đọc phần đầu nặng ký hơn hẳn — đã học điều này
     # hai lần trong hôm nay (câu cấm chữ, và câu ép sàn). Để phong cách ở cuối câu là để nó bị
     # át bởi phần mô tả cảnh, và đó là lý do cùng một kênh ra ảnh lúc vector phẳng lúc ảnh chụp.
+    # ── CẢNH ĐỨNG TRƯỚC, PHONG CÁCH ĐỨNG SAU  (3/9/2026) ─────────────────────────────────
+    # Chú thích của chính hàm này viết: *"chủ thể trước, rồi luật bố cục, rồi phong cách. Mô
+    # hình khuếch tán đọc phần đầu nặng ký hơn — nên thứ quan trọng nhất (cảnh đang nói tới)
+    # phải đứng đầu, không đứng cuối."*
+    #
+    # **Mã làm NGƯỢC LẠI**: `phan[0]` là phong cách (844 ký tự), câu cảnh nằm ở vị trí thứ ba.
+    # Chú thích mô tả ý định, mã thực hiện điều khác — và không ai thấy vì cả hai đều đọc hợp lý.
+    #
+    # Hậu quả đo được: kênh SURVIVE (Kỷ Băng Hà) có prompt cảnh đúng *"a lone modern person in
+    # a frozen tundra, bare and endless"* mà **cả bốn ảnh ra một căn phòng hiện đại**. Câu phong
+    # cách dài gấp bốn lần câu cảnh và đứng trước nó, nên nó thắng.
+    #
+    # Nay đúng như chú thích: cảnh trước, khoá nhân vật, rồi phong cách. Neo phong cách vẫn dán
+    # ngay trước chủ thể ("a flat cartoon drawing of …") nên chủ thể gợi-ảnh-chụp vẫn bị ghìm —
+    # đó là hai việc khác nhau và cả hai đều cần.
     phan = [
-        ((gu or GU) + ", " + _sac_thai(ma)).rstrip(", ") + ".",   # 1. phong cách + sắc thái riêng
+        # ── SIẾT DẦN THEO LẦN THỬ  (3/9/2026) ────────────────────────────────────────────
+        # `siet` là số lần cổng chất vẽ đã đánh trượt ảnh này. Xem chú thích ở `sinh()`: vẽ lại
+        # bằng CÙNG một prompt là vô nghĩa vì FLUX schnell không nhận `seed`. Mỗi lần trượt thì
+        # đổi chính prompt, và đổi theo hướng cổng đang đo — nói mạnh hơn về CHẤT VẼ.
+        # `siet - 1`: lần trượt THỨ NHẤT dùng câu siết thứ nhất. Viết `min(siet, …)` là hụt
+        # một bậc — câu nhẹ nhất không bao giờ được dùng, và ảnh nhảy thẳng sang mức siết mạnh.
+        (SIET[min(siet - 1, len(SIET) - 1)] + ", ") if siet else "",
+        "a flat cartoon drawing of " + ve + mt + ",",             # 1. CHÍNH CẢNH — đứng đầu
+        KEP_GU + ",",              # 1b. kẹp phong cách ngắn — xem `KEP_GU`
         _khoa(ma, ve).rstrip(),    # 2. khoá nhân vật (rỗng nếu cảnh không có người)
+        ((gu or GU) + ", " + _sac_thai(ma)).rstrip(", ") + ".",   # 3. phong cách + sắc thái riêng
         # 3. chính cảnh của nhịp này — CÓ NEO PHONG CÁCH DÁN NGAY TRƯỚC CHỦ THỂ.
         #
         # Đặt phong cách ở đầu câu (mục 1) là chưa đủ với những chủ thể tự nó gợi ẢNH CHỤP:
@@ -481,7 +562,6 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
         # FLUX không có negative prompt (§12.1), nên không thể dặn "đừng vẽ ảnh chụp" — mọi danh
         # từ viết ra đều là thứ SẼ xuất hiện. Cách còn lại là khẳng định dương, và dán ngay cạnh
         # chủ thể chứ không để cách xa mười lăm chữ ở đầu câu.
-        "a flat cartoon drawing of " + ve + mt + ",",
         khung + ",",               # 4. chừa chỗ cho chữ
         _luat(ve, doc) + ",",      # 5. luật sàn
         GU_USA + ",",              # 6. neo bối cảnh Mỹ
@@ -584,11 +664,12 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
     # chắn thoát — và rẻ, vì ảnh chỉ tốn 58 neuron. Ba lần vẫn dính thì mới chịu.
     # BỐN LẦN THỬ, nhận ở lần thứ tư. `range(3)` + `lan < 3` là hụt một: điều kiện luôn đúng
     # nên ảnh lệch bị xoá ở CẢ lần cuối, và nhịp ấy mất hẳn cảnh — tệ hơn một ảnh hơi khác chất.
+    # `_siet` đếm số lần cổng CHẤT VẼ đánh trượt — khác với `lan` (đếm mọi loại thất bại, kể
+    # cả mạng hỏng). Chỉ siết prompt khi trượt vì chất vẽ; mạng hỏng thì prompt không có tội.
+    _siet = 0
     for lan in range(4):
-        seed = (hat0 + lan * 104729) % 4294967295
-
-        def _thu(kk):
-            return DS._cf_flux_image(_prompt(ve, tam_trang, gu, ma, doc), dest, kk) and \
+        def _thu(kk, _s=_siet):
+            return DS._cf_flux_image(_prompt(ve, tam_trang, gu, ma, doc, siet=_s), dest, kk) and \
                 os.path.getsize(dest) > 20000
 
         try:
@@ -620,7 +701,8 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
         if _xau:
             if lan < 3:
                 os.remove(dest)
-                continue          # -> vẽ lại
+                _siet += 1        # -> vẽ lại VỚI PROMPT SIẾT HƠN, xem `SIET`
+                continue
             # Lần cuối thì NHẬN — nền vẽ bằng code còn lệch xa hơn một ảnh hơi khác chất.
             # Nhưng phải NÓI RA. Bản trước nhận trong im lặng, nên một tập có ảnh lạc phong cách
             # trông y hệt một tập sạch, và chỉ lộ ra ở cổng chấm sau khi đã dựng xong cả video.
@@ -635,7 +717,7 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
             from kich_hai import _co_chu
             if _co_chu(dest) is True:
                 os.remove(dest)
-                continue          # -> vẽ lại bằng seed khác
+                continue          # -> vẽ lại (prompt đổi nếu đã trượt chất vẽ)
         except Exception as e:
             # NÓI RA khi cổng tắt. Một cổng hỏng mà im lặng còn tệ hơn không có cổng: nó cho
             # cả mẻ đi qua kèm cảm giác đã được kiểm. Chỉ báo MỘT lần mỗi lần chạy — báo mỗi
