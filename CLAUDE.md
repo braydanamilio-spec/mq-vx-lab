@@ -1648,3 +1648,56 @@ Ba điều làm ngách này khác hẳn mười kênh kia:
 Và `style` của DEEP TIME cố ý đi ngược mọi phim khủng long: **ướt, xanh, yên tĩnh**, ánh sáng
 sương buổi sáng từ trên xuống. Đó chính là hook — người xem dừng lại vì nó được quay **bình
 tĩnh**, thứ cuối cùng họ chờ đợi ở một con khủng long.
+
+### 15.15 Tra CỨU thật thay vì suy đoán — bốn thứ tầng tay nghề đang thiếu
+
+Anh nhắc là em mở browser tra được, và đúng. Ba nguồn đọc được (CineD về Planet Earth II · BBC
+Earth về quay tốc độ cao · các bài về bố cục ảnh động vật), rút ra bốn thứ **không có** trong hệ:
+
+| thiếu | vì sao nó quan trọng | đã thêm vào đâu |
+|---|---|---|
+| **catchlight trong mắt** | mắt không có chấm sáng đọc ra là mắt CHẾT — và đó đúng là chỗ ảnh AI lộ ra ngay | `SAN_THAT` |
+| **độ phân giải CẢM ĐƯỢC** | thứ người ta thấy khi nói "4K" không phải số pixel mà là *sợi lông tách khỏi sợi lông* | `SAN_THAT` |
+| **lead room** — chừa chỗ TRƯỚC mặt con vật | nguyên tắc "frame for where the story is going"; đây là thứ tách khung ĐƯỢC BỐ CỤC khỏi khung có con vật ở giữa | khuôn `long lens tight` |
+| **khuôn CHÂN DUNG** | nghề tách "character shot" (con vật LÀ AI) khỏi "action shot" (nó ĐANG LÀM GÌ). Mười khuôn cũ đều là action | khuôn mới `eye-level portrait` |
+
+Và một con số được **sửa cho có nguồn**: slow motion em viết "khoảng một nghìn hình/giây" —
+tự đoán. BBC Earth công bố **500 hình/giây** là *"the perfect speed"*. Đúng luật 13.1: giới hạn
+phải có đơn vị và nguồn, không phải một con số nghe hợp lý.
+
+Cũng nhờ tra mà biết luật của NIGHT EYES đang **đúng**: BBC dùng ba cách quay đêm (hồng ngoại ·
+nhiệt · cảm biến siêu nhạy), và cách thứ ba cho hình màu tự nhiên — đúng thứ kênh này đang khoá.
+Nay viết thành câu KHẲNG ĐỊNH thay vì câu cấm.
+
+**Luật:** khi có thể tra, đừng suy. Bốn thứ trên đều là quy ước nghề công khai, và không cái nào
+em nghĩ ra được bằng cách ngồi suy từ nguyên tắc chung.
+
+### 15.16 "4K" trong prompt không làm ra 4K — đòn bẩy thật nằm ở khâu upload
+
+Anh dặn chất lượng 4K. Viết chữ "4K" vào prompt **không làm gì cả**: độ phân giải là thiết lập
+sinh của Kling, không phải một từ trong câu. Nói với mô hình một con số nó không điều khiển được
+là tốn ký tự để lấy về không gì.
+
+Hai đòn bẩy THẬT, và đã làm cả hai:
+
+1. **Tả cái mà 4K TRÔNG NHƯ THẾ** — sợi lông tách rời, giọt nước tách rời, dải tương phản không
+   cháy. Mô hình vẽ được những thứ ấy; nó không vẽ được "2160 pixel".
+2. **Nâng cỡ lên 2160×3840 TRƯỚC KHI UPLOAD.** YouTube cấp codec và bitrate cao hơn hẳn cho tệp
+   ≥1440p, nên cùng một khung hình, bản nâng cỡ giữ được nhiều chi tiết hơn **sau khi YouTube
+   nén lại** — mà chi tiết chính là thứ ngách này bán. Dùng `lanczos` chứ không phải bicubic
+   mặc định: ở tỉ lệ 2× nó giữ nét lông và bọt nước.
+
+Và gọi đúng tên trong mã: đây là **nâng cỡ**, không phải 4K gốc. Ghi sai tên một thứ trong mã là
+cách chắc chắn để phiên sau tin nhầm.
+
+### 15.17 Khoá dict trùng — Python nuốt im lặng, và thước vẫn xanh
+
+Chèn thêm hành vi cho hai loài, bộ chèn tạo khoá `"mep"` THỨ HAI trong khi loài ấy đã có `"mep"`
+ở dưới. **Python lấy khoá sau, vứt khoá trước, không báo một chữ nào.** Hai hành vi mới biến mất
+trong khi tệp nguồn đọc lên vẫn thấy chúng nằm nguyên đó.
+
+Dạng tệ nhất: mã đúng cú pháp · tệp trông đúng · mọi cổng xanh · dữ liệu thì mất. Em chỉ phát
+hiện vì **đếm số hành vi trước và sau** rồi thấy con số KHÔNG TĂNG.
+
+Cổng mới quét bằng `ast`, không bằng cách nạp module — nạp module thì khoá trùng đã bị nuốt mất,
+tức **đúng thứ cần bắt không còn ở đó để mà bắt**. Quét cả bốn tệp hồ sơ: sạch.

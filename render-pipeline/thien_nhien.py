@@ -177,8 +177,14 @@ KHUON = (
      "Locked telephoto shot from far away, the whole animal small inside a vast empty frame, "
      "background compressed into flat bands."),
     ("long lens tight",
-     "Locked long-lens shot filling the frame with the animal's head and shoulders, everything "
-     "behind it dissolved to soft colour."),
+     "Locked long-lens shot filling the frame with the animal's head and shoulders, framed with "
+     "open space in front of the face and none behind it, everything beyond dissolved to colour."),
+    # KHUÔN NHÂN VẬT. Bộ luật quay thiên nhiên tách "character shot" khỏi "action shot": một cái
+    # cho biết con vật LÀ AI, cái kia cho biết nó ĐANG LÀM GÌ. Mười khuôn cũ đều là action; thiếu
+    # hẳn khuôn chân dung, mà đó lại là khuôn giữ người xem lâu nhất vì nó có GIAO TIẾP MẮT.
+    ("eye-level portrait",
+     "Locked shot exactly at the animal's own eye level, close, held still: the eye sharp with a "
+     "catchlight in it, the background a single dark tone so nothing competes with the face."),
     ("ground level low angle",
      "Camera locked at ground level, lens almost touching the surface, the animal rising huge "
      "against the sky."),
@@ -195,7 +201,10 @@ KHUON = (
     # quay tốc độ cao đẹp không phải là "chậm" — mà là mỗi giọt nước TÁCH RỜI và treo lơ lửng,
     # và cơ dưới da đọc được. Tả cái ấy thì mô hình vẽ ra nó.
     ("extreme slow motion",
-     "Locked shot at around a thousand frames a second: one movement stretched so far that every "
+     # 500 hình/giây là con số BBC Earth công bố ("the perfect speed" cho những thứ chỉ thấy được
+    # khi làm chậm). Bản trước em ghi "một nghìn" — tự đoán. Con số có nguồn thì viết con số
+    # có nguồn, đúng luật 13.1: giới hạn phải có ĐƠN VỊ và NGUỒN.
+    "Locked shot at five hundred frames a second: one movement stretched so far that every "
      "droplet hangs separately in the air and the muscle moves visibly under the skin."),
     # CÚ CHẠM MẶT NƯỚC — hình đắt nhất của dòng phim này: khoảnh khắc xuyên qua mặt nước, vương
     # miện bọt dựng lên. Nó là chỗ tốc độ cao trả công nhiều nhất, nên cho nó một khuôn riêng
@@ -219,6 +228,7 @@ KHUON = (
 KHUON_MOI_TRUONG = {
     "long lens full body":          ("tren", "mep"),
     "long lens tight":              ("tren", "mep"),
+    "eye-level portrait":           ("tren", "mep", "duoi"),
     "ground level low angle":       ("tren", "mep"),
     "split level half under water": ("mep",),
     "underwater looking up":        ("duoi",),
@@ -1183,7 +1193,7 @@ KENH: dict[str, dict] = {
         "am": "still night air, one distant call, grass moving, a wingbeat that makes no sound",
         "luat": (
             "The strike is never completed: the hunter may dive, pounce or freeze, and the prey is usually not in frame at all.",
-            "No infrared green wash and no thermal false-colour — this is moonlight, filmed.",
+            "A very sensitive sensor in real moonlight: natural colour, not infrared, not thermal.",
         ),
     },
 

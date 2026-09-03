@@ -85,10 +85,21 @@ def dung_video(tm: str) -> str:
         print(f"   ⚠️ {os.path.basename(tm)}: có {len(cs)} clip, bộ này mỗi tập MỘT clip — "
               f"dùng clip đầu, mấy cái sau bỏ qua")
     ra = os.path.join(tm, "video.mp4")
+    # NÂNG CỠ LÊN 2160×3840 TRƯỚC KHI UPLOAD — và gọi đúng tên: đây là NÂNG CỠ, không phải 4K
+    # gốc. Viết "4K" vào prompt không làm Kling xuất 4K; độ phân giải là thiết lập sinh, không
+    # phải một chữ.
+    #
+    # Nhưng đòn bẩy này CÓ THẬT và nằm ở phía YouTube: nó cấp codec và bitrate cao hơn hẳn cho
+    # tệp ≥1440p (VP9/AV1 thay vì H.264 ở bậc thấp). Cùng một khung hình, bản nâng cỡ giữ được
+    # nhiều chi tiết hơn sau khi YouTube nén lại — mà chi tiết chính là thứ ngách này bán.
+    #
+    # `lanczos` chứ không phải bicubic mặc định: ở tỉ lệ 2× nó giữ nét lông và bọt nước, thứ
+    # bicubic làm nhoè. Và `crf 18` vì bản nâng cỡ phải nuôi bộ nén của YouTube, không phải để
+    # xem trực tiếp.
     r = _chay(["ffmpeg", "-y", "-loglevel", "error", "-i", cs[0], "-vf",
                "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-               "fps=30,format=yuv420p",
-               "-c:v", "libx264", "-crf", "20", "-preset", "medium",
+               "scale=2160:3840:flags=lanczos,fps=30,format=yuv420p",
+               "-c:v", "libx264", "-crf", "18", "-preset", "slow",
                "-an", "-movflags", "+faststart", ra])
     return ra if r.returncode == 0 and os.path.exists(ra) else ""
 
