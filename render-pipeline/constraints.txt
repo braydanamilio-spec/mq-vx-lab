@@ -10,6 +10,22 @@
 #
 # Nguyên tắc chọn số: sàn = phiên bản đã chạy qua toàn bộ selftest tại máy phát triển;
 # trần = chặn nhảy MAJOR (thay đổi phá vỡ). Patch trong khoảng vẫn được cập nhật để nhận vá bảo mật.
+# ── GHIM `edge-tts`  (3/9/2026) ────────────────────────────────────────────────────────────
+# Lượt 33766919199: **2/18 luồng chết ngay ở bước cài** với
+#   ERROR: Cannot install edge-tts==2.2.2, ==3.0.0, … (liệt kê ~30 phiên bản)
+#   ERROR: ResolutionImpossible
+# Mười sáu luồng còn lại cùng bước cài ấy chạy được — tức KHÔNG TẤT ĐỊNH. Vì `edge-tts` không
+# được ghim, pip phải LÙI qua toàn bộ lịch sử phiên bản để tìm bộ tương thích, và mỗi lần lùi là
+# một vòng mạng; gặp lúc PyPI chậm hoặc một dep nhả bản mới là nó bỏ cuộc.
+#
+# Chính tệp này sinh ra để chống đúng chuyện ấy (xem ghi chú 24/8 phía dưới), mà lại bỏ sót thư
+# viện được cài NHIỀU NHẤT trong repo. Ghim thì pip lấy đúng một phiên bản, không lùi, không có
+# cơ hội hỏng vì mạng.
+#
+# 7.2.8 là phiên bản đang chạy ở máy phát triển và đã qua toàn bộ selftest. Trần <8 chặn nhảy
+# MAJOR, đúng nguyên tắc chọn số ghi ở cuối tệp.
+edge-tts>=7.2,<8
+
 google-cloud-firestore>=2.27,<2.29
 google-api-core>=2.30,<2.35
 grpcio>=1.70,<2

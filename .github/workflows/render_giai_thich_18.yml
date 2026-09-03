@@ -141,7 +141,17 @@ jobs:
           sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
             libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 \
             libasound2t64 libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg
-          pip install --quiet -c render-pipeline/constraints.txt edge-tts pyyaml requests
+          # THỬ LẠI BA LẦN. Bước cài là mắt xích đầu tiên: hỏng ở đây thì cả luồng mất
+          # trọn, không dựng được video nào. Đo lượt 33766919199: 2/18 luồng chết vì
+          # `ResolutionImpossible` trong khi 16 luồng cùng bước ấy chạy được — tức lỗi MẠNG,
+          # và lỗi mạng thì thử lại là cách chữa đúng. Ghim phiên bản (constraints.txt) cắt
+          # phần lớn nguyên nhân; thử lại lo nốt phần còn lại.
+          for _i in 1 2 3; do
+            pip install --quiet -c render-pipeline/constraints.txt edge-tts pyyaml requests && break
+            echo "  ⚠ cài lần $_i hỏng — thử lại sau 20 giây"
+            sleep 20
+          done
+          python -c "import edge_tts" || { echo "❌ không cài được edge-tts sau 3 lần"; exit 1; }
           pip install --quiet pillow
           # `google-generativeai` chỉ cần cho khoá `AIza` (hồ có 1 khoá loại này, và nó là
           # khoá ĐỌC CHỮ tốt nhất cho cổng `_co_chu`). Thiếu nó không còn giết lượt dựng
