@@ -1485,8 +1485,18 @@ def _giay_wav(w: str) -> float:
 #
 # Chữ đặt Ở NỬA TRÊN, vì nửa dưới là chỗ mặt nhân vật. Và có nền tối mờ sau chữ: chữ trắng viền
 # đen trên khung sáng vẫn khó đọc ở cỡ thumbnail trong danh sách đề xuất.
-def lam_thumb(video: str, hook: str, ten_kenh: str, mau: str, dest: str) -> bool:
-    """Trích khung cận cảnh của video rồi đặt chữ hook lên. Trả True nếu xong."""
+def lam_thumb(video: str, hook: str, ten_kenh: str, mau: str, dest: str,
+              giay: float = 0.0) -> bool:
+    """Trích khung cận cảnh của video rồi đặt chữ hook lên. Trả True nếu xong.
+
+    `giay` — mốc thời gian CỤ THỂ để trích. 0 thì giữ hành vi cũ (1,2 giây trước khi hết).
+
+    ── VÌ SAO THÊM THAM SỐ THAY VÌ ĐỔI MẶC ĐỊNH  (3/9/2026) ───────────────────────────────
+    Hàm này dùng chung với bộ COMIC, nơi "1,2 giây trước khi hết" là đúng: cú chốt của một mẩu
+    hài nằm ở cuối. Bộ GIẢI THÍCH thì ngược — nhịp cuối là cảnh đóng, còn khung đáng làm bìa là
+    nhịp có CON SỐ lớn. Đổi mặc định là mang giả định của bộ này áp cho bộ kia, đúng họ lỗi
+    §13.27 (`_make_thumb` cắt ở 62% — đúng cho video dài, sai cho short vì cấu trúc nhịp ngược).
+    Nên: chỗ gọi nào biết mốc tốt thì truyền vào; không biết thì hành vi cũ giữ nguyên."""
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
@@ -1505,8 +1515,20 @@ def lam_thumb(video: str, hook: str, ten_kenh: str, mau: str, dest: str) -> bool
     # thêm ở đáy đè chồng lên đúng thẻ phụ đề — hai lớp chữ chồng nhau, không đọc được lớp nào.
     # Nhịp đuôi (2,2 giây sau câu chốt) không còn phụ đề nào, mà cỡ máy vẫn là cỡ CẬN và nét mặt
     # người nghe đang ở đỉnh phản ứng — đúng khung đẹp nhất của cả video.
-    subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{max(0.5, dur - 1.2):.2f}", "-i", video,
-                    "-vframes", "1", tam], capture_output=True, timeout=120)
+    # ── MỐC GIỮA VIDEO THÌ PHẢI CẮT DẢI PHỤ ĐỀ  (3/9/2026) ─────────────────────────────
+    # Chú thích ngay trên đã ghi lý do chọn khung ĐUÔI: khung giữa phim CÓ SẴN phụ đề, và tên
+    # kênh đặt ở đáy đè chồng lên đúng thẻ phụ đề — hai lớp chữ chồng nhau.
+    # Bộ giải thích cần khung GIỮA (nhịp đỉnh có con số), nên nó mang lại đúng vấn đề ấy. Chữa
+    # bằng cách CẮT dải phụ đề khỏi khung trước khi ghép chữ — chỉ cắt khi chỗ gọi truyền mốc,
+    # để khung đuôi của bộ comic giữ nguyên trọn vẹn.
+    _giua = bool(giay and 0.3 < giay < dur - 0.3)
+    _moc = giay if _giua else max(0.5, dur - 1.2)
+    # 0,82 chứ không 0,84: soi bìa HOW LOUD thấy một SỢI phụ đề còn sót ngay dưới dải tên
+    # kênh. Dải phụ đề của engine cao tới 0,18·H ở khung ngang; cắt 0,84 để lại đúng phần chân
+    # chữ. Cắt sâu thêm 2% không mất gì — vùng ấy là sàn của căn phòng.
+    _vf = ["-vf", "crop=iw:ih*0.82:0:0"] if _giua else []
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{_moc:.2f}", "-i", video]
+                   + _vf + ["-vframes", "1", tam], capture_output=True, timeout=120)
     if not os.path.exists(tam):
         return False
     im = Image.open(tam).convert("RGB")
@@ -1541,14 +1563,63 @@ def lam_thumb(video: str, hook: str, ten_kenh: str, mau: str, dest: str) -> bool
         dong.append(hien)
     dong = dong[:3]
 
-    y = int(H * 0.10)
     cao = int(cs * 1.18)
-    d.rectangle([0, y - int(cs * 0.5), W, y + cao * len(dong) + int(cs * 0.3)], fill=(12, 14, 20, 165))
-    for ln in dong:
-        w = d.textlength(ln, font=ft)
-        x = (W - w) / 2
-        d.text((x, y), ln, font=ft, fill="#FFFFFF", stroke_width=max(6, cs // 9), stroke_fill="#12131A")
-        y += cao
+    # ── KHUNG ĐỈNH ĐÃ TỰ NÓI RỒI — BỘ GIẢI THÍCH KHÔNG ĐÈ THÊM CHỮ  (3/9/2026) ──────────
+    # Ba lần thử đặt chữ hook lên khung đỉnh, ba lần nó ĐÈ lên đồ hoạ:
+    #   · chỗ cố định `0.10·H`  -> đè con số nền "2.7x"
+    #   · đo 3 dải ở 64×48      -> đè "0 plants / 200+" (nét chữ mảnh bị nhoè ở cỡ thô)
+    #   · đo 5 dải ở 192×144    -> đè cả ba kênh thử
+    #
+    # Đến lần thứ ba thì câu hỏi đúng không còn là "đặt chữ ở đâu" mà là **"có cần lớp chữ thứ
+    # hai không"**. Khung đỉnh của bộ giải thích ĐÃ mang thông điệp bằng chính đồ hoạ của nó —
+    # `2.7x BIGGER`, `60 dB / 140 dB`, `YOU / THEM`. Đặt tiêu đề tập đè lên đó là nói hai lần và
+    # che mất lần thứ nhất.
+    #
+    # Đây đúng §2: sửa vòng thứ ba mà vẫn cùng một họ lỗi thì dừng lại, đi tìm thứ cả ba cùng
+    # dùng. Thứ ấy là lớp chữ đè — bỏ nó đi thì cả ba lỗi biến mất.
+    #
+    # Giữ dải nhận diện kênh ở đáy (đó là brand, không phải nội dung), và giữ nguyên đường comic
+    # — bìa comic là một khung phim không có chữ, nó CẦN lớp chữ này.
+    y = int(H * 0.10)
+    if _giua:
+        dong = []
+    # ── HỘP ĐEN VÀ VIỀN CỨNG LÀ HAI DẤU HIỆU §12.12 CẤM  (3/9/2026) ────────────────────
+    # `rectangle(fill=(12,14,20,165))` là "hộp đen bo góc quanh chữ", và
+    # `stroke_width=…, stroke_fill="#12131A"` là "viền quanh chữ" — §12.12 xếp cả hai vào danh
+    # sách người xem đọc ra "nghiệp dư" trong nửa giây, và ghi rõ cách chữa: **bóng mềm rộng**.
+    # Anh cũng đã nói thẳng: *"ko làm bóng mờ đen thế nha xấu"*.
+    #
+    # Chỉ đổi ở đường có `giay` (bộ giải thích). Bộ comic dùng chung hàm này và bìa của nó đang
+    # được duyệt — đổi cả hai là mang một quyết định của bộ này áp cho bộ kia mà không ai xem
+    # lại (§12.5). Ghi ra đây rằng bìa comic vẫn còn hai dấu hiệu ấy, để phiên sau xử lý riêng.
+    if _giua:
+        try:
+            from PIL import ImageFilter
+            _bong = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            _db = ImageDraw.Draw(_bong)
+            _y = y
+            for ln in dong:
+                _w = _db.textlength(ln, font=ft)
+                _db.text(((W - _w) / 2, _y), ln, font=ft, fill=(8, 9, 14, 210))
+                _y += cao
+            # `im` là RGB (dòng ~1531) nên `alpha_composite` không dùng được — dán qua MẶT NẠ
+            # alpha của lớp bóng. Nếu không thì nó ném `ValueError: image has no alpha channel`
+            # và cả bìa mất chữ, mà `except` phía dưới sẽ nuốt im lặng.
+            _mo = _bong.filter(ImageFilter.GaussianBlur(max(6, cs // 6)))
+            im.paste(Image.new("RGB", (W, H), (8, 9, 14)), (0, 0), _mo.split()[3])
+        except Exception:
+            pass                      # thiếu ImageFilter thì chữ vẫn vẽ, chỉ không có bóng
+        for ln in dong:
+            w = d.textlength(ln, font=ft)
+            d.text(((W - w) / 2, y), ln, font=ft, fill="#FFFFFF")
+            y += cao
+    else:
+        d.rectangle([0, y - int(cs * 0.5), W, y + cao * len(dong) + int(cs * 0.3)], fill=(12, 14, 20, 165))
+        for ln in dong:
+            w = d.textlength(ln, font=ft)
+            x = (W - w) / 2
+            d.text((x, y), ln, font=ft, fill="#FFFFFF", stroke_width=max(6, cs // 9), stroke_fill="#12131A")
+            y += cao
 
     # DẢI NHẬN DIỆN KÊNH Ở ĐÁY.
     # Bản đầu chỉ viết tên kênh bằng chữ nhỏ mang màu kênh, đặt lên giữa áo nhân vật — chữ chìm

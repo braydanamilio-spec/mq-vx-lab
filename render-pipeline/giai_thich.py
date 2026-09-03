@@ -2625,6 +2625,7 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
                           "flat empty ground", "bright cheerful palette")))
 
     # ── CÁC CHƯƠNG ──────────────────────────────────────────────────────────────────────
+    _phat_the = 0          # đếm LƯỢT PHÁT thẻ tuyên bố — xem chú thích trong vòng lặp
     for c in range(so_chuong):
         tieu, _h, _hp, nc = bo(vi_tri_long(ma, idx, c))
         nc = doi_loi(ap_gu(ma, idx + c, nc), idx + c)   # mỗi chương một biến thể
@@ -2633,6 +2634,39 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
         muc.append((len(nhip), tieu))
         # thẻ chương: dùng chính khuôn thẻ chữ, nhưng NGẮN — nó là mốc, không phải nội dung
         nhip.append(_n("the_chu", tieu + ".", the=f"{c+1}.|{tieu}"))
+        # ── THẺ TUYÊN BỐ PHÁT THƯA RA  (3/9/2026) ────────────────────────────────────────
+        # Mỗi bộ sinh phát một thẻ chữ mang LUẬN ĐỀ của kênh ("Decibels do not add up the way
+        # you think.") trong MỖI chương. Với bản dài 31 chương thì người xem đọc lại nó 31 lần
+        # trong bảy phút — đo được 63 thẻ chữ mà chỉ 33 nội dung khác nhau.
+        #
+        # `_dong_bo_the` đã kéo nó theo 6 biến thể của `doi_loi`, nhưng 31 chương chia cho 6
+        # biến thể vẫn là 5 lần mỗi câu. Đây là sàn số học — không sửa được bằng cách thêm biến
+        # thể, chỉ sửa được bằng cách phát THƯA.
+        #
+        # Luận đề là thứ nói MỘT LẦN rồi để người xem mang theo cả tập; nhắc lại mỗi chương làm
+        # nó mất trọng lượng. Giữ ở chương 1 và cứ ba chương một lần — vừa đủ để người vào giữa
+        # video vẫn bắt được, vừa không thành điệp khúc.
+        #
+        # Nhận ra thẻ tuyên bố bằng cách loại trừ: thẻ CHƯƠNG có dòng đầu là số (`"3.|Tiêu đề"`).
+        def _la_the_chuong(x):
+            return str(x.get("the") or "").split("|")[0].rstrip(".").strip().isdigit()
+
+        if c % 3 != 0:
+            nc = [x for x in nc
+                  if (x.get("khuon") or "") != "the_chu" or _la_the_chuong(x)]
+        else:
+            # ── BIẾN THỂ THEO LƯỢT PHÁT, KHÔNG THEO SỐ CHƯƠNG  (3/9/2026) ────────────────
+            # `doi_loi` chọn biến thể bằng `(idx + c) % 6`. Sau khi lọc, thẻ tuyên bố chỉ phát ở
+            # các chương c ≡ 0 (mod 3) — nên chỉ số biến thể cũng chỉ nhận các giá trị ≡ 0 hoặc
+            # 3 (mod 6): **2 trong 6 biến thể được dùng, bốn cái còn lại không bao giờ**.
+            # `gcd(3, 6) = 3` — đúng cái bẫy modulo đã trả giá ở bộ Kling (§13.13).
+            # Đánh số theo LƯỢT PHÁT thì mọi biến thể đều tới lượt.
+            for x in nc:
+                if (x.get("khuon") or "") == "the_chu" and not _la_the_chuong(x):
+                    _ho = _ho_cau().get(str(x.get("loi") or "").strip())
+                    if _ho:
+                        x["loi"] = _ho[(idx + _phat_the) % len(_ho)]
+            _phat_the += 1
         nhip.extend(nc)
 
     # ── TỔNG HỢP ────────────────────────────────────────────────────────────────────────
@@ -3506,7 +3540,25 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             print(f"      {d.strip()[:190]}")
         return ""
     am = chuan(out)
-    lam_thumb(out, tieu, k["ten"], k["mau"], os.path.join(GOC, "out", f"v9_{slug}.jpg"))
+    # ── ẢNH BÌA LẤY NHỊP ĐỈNH, KHÔNG LẤY GẦN CUỐI  (3/9/2026) ────────────────────────────
+    # `lam_thumb` mặc định trích khung ở **1,2 giây trước khi hết video** — đúng cho bộ comic
+    # (cú chốt nằm ở cuối) và SAI cho bộ giải thích: nhịp cuối là cảnh đóng, còn khung đáng làm
+    # bìa là nhịp có CON SỐ lớn giữa khung.
+    #
+    # Trường `dinh` đánh dấu đúng những nhịp ấy — 87 chỗ trong mã đặt `dinh=True`, và **không ai
+    # đọc nó**. Đúng họ lỗi §15.12: viết ra một trường rồi không bao giờ đọc, im lặng cả hai phía.
+    # Nay nó làm việc nó sinh ra để làm.
+    #
+    # Ưu tiên nhịp đỉnh CÓ SỐ (`so_lieu`/`chia_doi`) vì con số là thứ bán được cú click; không
+    # có thì lấy nhịp đỉnh nào cũng được; không có nữa thì rơi về hành vi cũ.
+    _dinh = [n for n in nhip if n.get("dinh") and n.get("s") is not None]
+    _uu = [n for n in _dinh if (n.get("khuon") or "") in ("so_lieu", "chia_doi")] or _dinh
+    _moc = 0.0
+    if _uu:
+        _n0 = _uu[len(_uu) // 2]          # nhịp đỉnh ở GIỮA tập: đã vào mạch, chưa lộ kết
+        _moc = float(_n0["s"]) + (float(_n0["e"]) - float(_n0["s"])) * 0.62
+    lam_thumb(out, tieu, k["ten"], k["mau"], os.path.join(GOC, "out", f"v9_{slug}.jpg"),
+              giay=_moc)
 
     d = [round(n["e"] - n["s"], 2) for n in nhip]
     d.sort()
