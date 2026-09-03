@@ -132,6 +132,129 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string }> =
 /* ── KHUÔN 2: CHIA ĐÔI ────────────────────────────────────────────────────────────────────
    Vạch dọc, hai nhãn hoa ở trên, hai biểu tượng, hai con số. Nhãn viết HOA và đặt SÁT TRÊN —
    người xem đọc nhãn trước, nhìn hình sau; ngược lại thì phải đoán mình đang so cái gì. */
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   NỀN PHÒNG — bề mặt dùng chung cho MỌI khuôn vẽ bằng code  (3/9/2026)
+
+   Anh: *"lớp đồ hoạ vẽ bằng code là chỗ lệch duy nhất còn lại… làm template đẹp để các kênh
+   dùng cho đa dạng, không nhàm chán trùng lặp, xứng với clip top đầu thế giới."*
+
+   ── VẤN ĐỀ ĐO ĐƯỢC ──────────────────────────────────────────────────────────────────────
+   Mọi khuôn code (`ChiaDoi`, `Chart`, `Truc`, `Dem`, `SoLieu` không ảnh) đặt trên
+   `<AbsoluteFill background: nenTrang />` — **một màu phẳng duy nhất**. Ảnh AI thì có tường ấm,
+   sàn gỗ, cửa sổ, chậu cây, bóng đổ mềm. Hai thứ đứng cạnh nhau trong một video là lộ ngay.
+
+   Và nó quan trọng gấp đôi: bản dài ngày 3/9 vẽ được **0/32 cảnh AI** vì CF cạn — lúc ấy lớp
+   này là thứ DUY NHẤT người xem thấy.
+
+   ── THIẾT KẾ ────────────────────────────────────────────────────────────────────────────
+   Cùng ngôn ngữ với ảnh AI, dựng từ ba lớp mà ảnh mẫu nào cũng có:
+
+     1. TƯỜNG   — chuyển màu ấm dịu, sáng ở trên
+     2. QUẦNG SÁNG — một nguồn sáng lệch tâm, giả cửa sổ; đây là thứ tạo "chiều sâu" mà nền
+                     phẳng không bao giờ có
+     3. SÀN     — sẫm hơn tường, ngăn bằng một đường mảnh; mắt đọc ra mặt phẳng đứng được
+
+   ── ĐA DẠNG: SÁU KIỂU PHÒNG, CHỌN THEO `hat` ───────────────────────────────────────────
+   `hat` đã được tính theo (kênh, số tập) và truyền sẵn vào engine. Nên hai tập liền nhau của
+   cùng một kênh ra hai phòng khác nhau, và hai kênh khác nhau cũng khác — **không tốn một lượt
+   gọi API nào**.
+
+   Đây đúng cách bộ truyện tranh đã làm và đã chứng minh (§9, `NoiChon.tsx`): đa dạng sinh ra từ
+   TỔ HỢP dựng bằng code, không từ việc gọi thêm ảnh.
+
+   ── VÌ SAO KHÔNG VẼ ĐỒ ĐẠC CHI TIẾT ────────────────────────────────────────────────────
+   Vì lớp này luôn có đồ hoạ đè lên (biểu đồ, số lớn, hai cột so sánh). Nền có bàn ghế chi tiết
+   sẽ đánh nhau với chúng — đúng lỗi "che khuất" đã sửa cả ngày. Nền chỉ cần **nói rằng đây là
+   một không gian**, không cần kể nó là phòng gì.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* Làm sáng / làm sẫm một mã màu — dùng dựng bảng màu phòng từ đúng màu nền của kênh. */
+const _pha = (h: string, t: number): string => {
+  const m = /^#([0-9a-f]{6})$/i.exec((h || "").trim());
+  if (!m) return h;
+  return "#" + [0, 2, 4].map((i) => {
+    const v = parseInt(m[1].slice(i, i + 2), 16);
+    const r = t >= 0 ? v + (255 - v) * t : v * (1 + t);
+    return Math.max(0, Math.min(255, Math.round(r))).toString(16).padStart(2, "0");
+  }).join("");
+};
+
+/* Trộn hai mã màu theo tỉ lệ — dùng cho tường/sàn của `NenPhong`, xem chú thích tại chỗ. */
+const _tron = (a: string, b: string, t: number): string => {
+  const ma = /^#([0-9a-f]{6})$/i.exec((a || "").trim());
+  const mb = /^#([0-9a-f]{6})$/i.exec((b || "").trim());
+  if (!ma || !mb) return a;
+  return "#" + [0, 2, 4].map((i) => {
+    const va = parseInt(ma[1].slice(i, i + 2), 16);
+    const vb = parseInt(mb[1].slice(i, i + 2), 16);
+    return Math.round(va + (vb - va) * t).toString(16).padStart(2, "0");
+  }).join("");
+};
+
+export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string; hat?: number }> =
+({ W, H, nen, mau, hat = 0 }) => {
+  const k = Math.abs(hat) % 6;
+  const yS = H * (k === 1 ? 0.80 : k === 4 ? 0.66 : 0.73);      // đường chân trời đổi theo kiểu
+  const xS = W * (k === 2 ? 0.24 : k === 5 ? 0.78 : 0.50);      // nguồn sáng lệch trái/phải/giữa
+  /* 3/9 — PHA THEO MÀU THƯƠNG HIỆU, KHÔNG CHỈ THEO `nen`.
+     Bản đầu dựng phòng từ `nen` của kênh. Đo bảng màu thật thì `nen` của MỌI kênh đều gần
+     trắng — `#E8E9E6` · `#F2F0EA` · `#EEF1F3` · `#EDEEF2` — nên tường và sàn pha ra vẫn trắng,
+     và căn phòng đọc ra y hệt nền phẳng cũ.
+
+     Ảnh AI tham chiếu thì có màu THẬT: tường kem ấm, sàn gỗ, cát vàng. Nên pha `nen` về phía
+     `mau` (màu thương hiệu) một lượng nhỏ: đủ để phòng có sắc, vẫn đủ sáng để chữ trắng và đồ
+     hoạ đè lên đọc được. Sàn pha đậm hơn tường, vì trong ảnh thật sàn luôn sẫm hơn tường.
+
+     Đây là chỗ dễ sai theo hướng ngược lại: pha mạnh thì phòng thành một khối màu và nuốt đồ
+     hoạ. 0,12 / 0,26 là mức giữ được cả hai. */
+  const tuong = _pha(_tron(nen, mau, 0.10), 0.18);
+  const tuongD = _pha(_tron(nen, mau, 0.14), -0.02);
+  const san = _pha(_tron(nen, mau, 0.22), k === 3 ? -0.26 : -0.16);
+  const sanD = _pha(_tron(nen, mau, 0.26), -0.34);
+  const vach = _pha(mau, -0.55);
+  const id = `np${Math.round(W)}_${k}`;
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute", inset: 0 }}>
+      <defs>
+        <linearGradient id={`${id}t`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={tuong} /><stop offset="1" stopColor={tuongD} />
+        </linearGradient>
+        <linearGradient id={`${id}s`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={san} /><stop offset="1" stopColor={sanD} />
+        </linearGradient>
+        <radialGradient id={`${id}g`} cx="50%" cy="50%" r="50%">
+          <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.55} />
+          <stop offset="0.55" stopColor="#FFFFFF" stopOpacity={0.16} />
+          <stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
+        </radialGradient>
+      </defs>
+
+      <rect x={0} y={0} width={W} height={yS} fill={`url(#${id}t)`} />
+      {/* quầng sáng — thứ tạo chiều sâu mà nền phẳng không có */}
+      <ellipse cx={xS} cy={yS * 0.52} rx={W * 0.62} ry={yS * 0.86} fill={`url(#${id}g)`} />
+
+      {/* kiểu 0 và 5: khung cửa sổ gợi ý, chỉ hai nét — đủ nói "trong nhà, có ánh sáng ngoài" */}
+      {(k === 0 || k === 5) ? (
+        <g stroke={vach} strokeWidth={Math.max(2, H * 0.0035)} fill="none" opacity={0.30}>
+          <rect x={xS - W * 0.20} y={yS * 0.13} width={W * 0.40} height={yS * 0.52} rx={H * 0.012} />
+          <line x1={xS} y1={yS * 0.13} x2={xS} y2={yS * 0.65} />
+        </g>
+      ) : null}
+
+      {/* kiểu 2: đường gờ tường ngang — nhịp thị giác, không phải đồ đạc */}
+      {k === 2 ? (
+        <rect x={0} y={yS * 0.70} width={W} height={Math.max(2, H * 0.004)} fill={vach} opacity={0.22} />
+      ) : null}
+
+      <rect x={0} y={yS} width={W} height={H - yS} fill={`url(#${id}s)`} />
+      <rect x={0} y={yS} width={W} height={Math.max(2, H * 0.0035)} fill={vach} opacity={0.34} />
+
+      {/* bóng tiếp đất mềm ngay dưới chân trời — đồ hoạ đè lên sẽ như đứng trên sàn, không lơ lửng */}
+      <ellipse cx={W / 2} cy={yS + H * 0.012} rx={W * 0.40} ry={H * 0.022} fill="#000000" opacity={0.07} />
+    </svg>
+  );
+};
+
 export const ChiaDoi: React.FC<{
   W: number; H: number; trai: any; phai: any; mau: string; p: number;
 }> = ({ W, H, trai, phai, mau, p }) => {

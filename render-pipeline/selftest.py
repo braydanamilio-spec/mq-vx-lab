@@ -2537,6 +2537,8 @@ def main():
     check("mọi dạng short đều ghi nguồn (vẽ, không chỉ nhập)", t_moi_dang_short_deu_ghi_nguon)
     check("chống trùng kiểm đúng chuỗi sẽ đi ra", t_chong_trung_kiem_dung_chuoi_di_ra)
     check("bài nghiệm thu bắt được đúng lỗi đã lọt", t_nghiem_thu_bat_duoc_loi_that)
+    check("nhịp so sánh không có hai vế bằng nhau", t_chia_doi_hai_ve_khac_nhau)
+    check("biểu đồ không vẽ trục toàn số 0 hoặc trục phẳng", t_chart_co_so_that)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -6947,6 +6949,57 @@ def t_nghiem_thu_bat_duoc_loi_that():
     if _o.path.exists(wf):
         assert "nghiem_thu.py" in io.open(wf, encoding="utf-8").read(), \
             "bài nghiệm thu không được gọi trong workflow -> viết ra rồi để đấy"
+
+
+def t_chia_doi_hai_ve_khac_nhau():
+    """Nhịp `chia_doi` đặt hai vế cạnh nhau để so — hai vế bằng nhau thì nó không so gì cả.
+
+    Xảy ra khi mốc so sánh ghi cứng trong bộ sinh TRÙNG với mục mà bộ lịch phát cho chương ấy:
+        NORMAL TALKING 60 dB  |  A NORMAL CONVERSATION 60 dB
+    Không có lỗi nào báo — nhịp vẫn dựng, vẫn đúng cỡ, vẫn có lời đọc. Chỉ soi khung mới thấy.
+    Đo lúc phát hiện: 2/108. Chữa bằng `giai_thich._moc_khac`.
+
+    Thử NGƯỢC ở cuối: `_moc_khac` phải thật sự đổi mốc, nếu không cổng này canh một hàm chết.
+    """
+    import giai_thich as G
+    xau = []
+    for k in G.KENH:
+        for i in range(8):
+            for n in G.BO_SINH[k["ma"]](i)[3]:
+                if n.get("khuon") != "chia_doi":
+                    continue
+                t, p = n.get("trai") or {}, n.get("phai") or {}
+                if str(t.get("so", "")).strip() == str(p.get("so", "")).strip():
+                    xau.append(f'{k["ma"]}: {t.get("nhan")} = {p.get("nhan")} = {t.get("so")}')
+    assert not xau, "nhịp so sánh có hai vế bằng nhau: " + "; ".join(xau[:3])
+
+    assert G._moc_khac([{"nhan": "a", "so": "60 dB"}, {"nhan": "b", "so": "30 dB"}],
+                       "60 dB")["nhan"] == "b", "_moc_khac không đổi mốc khi trùng"
+
+
+def t_chart_co_so_that():
+    """Biểu đồ phải có ít nhất hai giá trị KHÁC NHAU — trục toàn 0 hoặc trục phẳng không so gì.
+
+    Bản đầu cạo số từ chữ số của TỪ ĐẦU trong hook phụ. 5/18 kênh trả lời định tính ("PROBABLY
+    NOT", hoặc rỗng) nên nhịp tổng hợp của chúng ra bốn cột `0.0`; kênh ODDS viết mọi hook phụ
+    theo khuôn "1 IN N" nên ra bốn cột đều bằng 1. Cả hai đều dựng êm.
+    """
+    import giai_thich as G
+    xau = []
+    for k in G.KENH:
+        for i in range(4):
+            for n in G.BO_SINH[k["ma"]](i)[3]:
+                if n.get("khuon") != "chart":
+                    continue
+                v = [float(c.get("v", 0) or 0) for c in (n.get("cot") or [])]
+                if len(v) < 2 or len({round(x, 6) for x in v}) < 2:
+                    xau.append(f'{k["ma"]}: {v}')
+    assert not xau, "biểu đồ không so được gì: " + "; ".join(xau[:3])
+
+    assert G._so_hook("PROBABLY NOT") is None, "_so_hook phải trả None khi câu không có số"
+    assert G._so_hook("11 MONTHS") == 11, "chữ M của MONTHS bị đọc thành hệ số triệu"
+    assert G._so_hook("700,000x SMALLER") == 700000, "regex lùi khi gặp chữ sau số"
+    assert G._so_hook("1 IN 36") == 36, "khuôn 1-in-N phải lấy N"
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
-import { ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong } from "./Khuon";
+import { ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong } from "./Khuon";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    PHIM GIẢI THÍCH — bảy khuôn hình, nhịp cắt 2,1 giây  (1/9/2026)
@@ -263,57 +263,48 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
            Dựng nền trơn có đường chân trời, không dựng phòng ốc. Bản đầu mặc định về
            "phong_khach", nên một câu về tốc độ ánh sáng lại diễn trong phòng khách có sofa —
            nền ấy nói một điều SAI về nội dung câu, tệ hơn hẳn nền trống. */
-        <AbsoluteFill>
-          <div style={{ position: "absolute", inset: 0,
-                        /* Đáy pha màu CHỮ (nâu ấm) nên khi dải phụ đề đen phủ lên, hai lớp cộng lại
-                           ra một vệt NÂU BÙN — thấy rõ ở khung đầu `howmuch`. Nền không-ảnh phải
-                           trung tính lạnh, để dải phụ đề đọc ra là bóng chứ không ra mảng màu lạ. */
-                        background: `linear-gradient(180deg,${nenTrang},#C9C6C0)` }} />
-                        /* MÀU SÀN TỪ BẢNG MÀU KÊNH, không phải hằng nâu dùng chung: `#CDBE9F`
-                           đúng với một kênh, sai với mười bảy kênh kia, và dưới dải phụ đề
-                           đen nó cộng thành vệt BÙN (soi khung đầu `howmuch`). Sàn chỉ cần
-                           SẪM HƠN tường để mắt đọc ra mặt phẳng. */
-          <div style={{ position: "absolute", left: 0, right: 0, top: sanY,
-                        height: H - sanY, background: _samMau(nenTrang, 0.22) }} />
-          <div style={{ position: "absolute", left: 0, right: 0, top: sanY,
-                        height: Math.max(3, H * 0.004), background: "#00000022" }} />
-
-          {/* ── VẬT ĐANG NÓI TỚI, VẼ BẰNG CODE  (2/9/2026) ────────────────────────────────
-              Anh gửi khung toàn nền trơn: *"hình ảnh còn xấu kém"*. Đo được `canh` có **30
-              nhịp, 0 nhịp có biểu tượng** — thiết kế giả định luôn có ảnh AI. Hôm CF còn
-              neuron thì 29/30 có ảnh nên không ai thấy; hôm cạn thì cả 30 rơi xuống gradient.
-
-              Đúng luật §7 (bốn tầng nền): *tầng cuối không gọi mạng nên không bao giờ hỏng* —
-              mà `canh` thiếu đúng tầng ấy. Nay dây chuyền cấp `bt` từ chính lời của nhịp
-              (`giai_thich._bt_canh`), và ở đây vẽ vật ấy TO, mờ, đứng trên đường chân trời.
-
-              Ba lựa chọn có chủ đích:
-                · **mờ 0.16** — nó là NỀN, không được tranh chỗ với số liệu và phụ đề đè lên.
-                · **đặt trên sàn**, không lơ lửng giữa khung: có đường chân trời rồi thì vật
-                  phải đứng trên nó, nếu không mắt đọc ra hai lớp rời nhau.
-                · **không có `bt` thì không vẽ gì** — câu trừu tượng ("Nothing happens.") mà
-                  gắn một cái ô tô là nói một điều SAI, tệ hơn nền trống (§12.5). */}
-          {N.bt ? (
-            <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: H,
-                          display: "flex", alignItems: "flex-end", justifyContent: "center",
-                          /* 3/9 — 0.16 -> 0.34. Anh soi khung HOW BIG: nhịp không có ảnh AI
-                             hiện ra gần như TRỐNG TRƠN — người que xám nhạt trên nền xám, nhìn
-                             ra như hỏng chứ không như một lựa chọn.
-                             0.16 chọn để "không tranh chỗ với số liệu đè lên". Nhưng ở nhịp
-                             `canh` thì KHÔNG có số liệu đè lên — chỉ có phụ đề ở đáy khung.
-                             Một con số chọn cho tình huống A đem dùng cho tình huống B: mờ tới
-                             mức ấy chỉ đúng khi có lớp khác phủ lên, còn ở đây nó là lớp DUY
-                             NHẤT, và một lớp duy nhất thì phải nhìn thấy được. */
-                          paddingBottom: H - sanY, opacity: 0.34 }}>
+          <AbsoluteFill>
+            {/* 3/9 — DÙNG CHUNG `NenPhong` VỚI MỌI KHUÔN CODE.
+                Nhánh này từng tự vẽ gradient + sàn riêng, nên một video có thể có HAI kiểu nền
+                khác nhau: nhịp `canh` không ảnh dùng gradient này, còn `chart`/`chia_doi` dùng
+                nền phẳng. Hai nền khác nhau trong cùng một tập là chỗ mắt đọc ra "chắp vá".
+                Nay cả hai đi qua cùng một bề mặt — cùng tường, cùng sàn, cùng quầng sáng, và
+                cùng đổi kiểu theo `hat` nên vẫn đa dạng giữa các tập. */}
+            <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />
+            {/* CHỦ THỂ CỦA KHUNG — vẽ ĐẶC, không mờ.  (3/9/2026)
+                Bản trước để `opacity: 0.34` với lý do "thuộc về căn phòng, không lơ lửng như
+                hình dán". Lý do ấy đúng khi vật là thứ PHỤ đứng sau một ảnh hoặc một khối số.
+                Ở nhánh này thì không có gì khác trong khung — phụ đề nằm hẳn dưới đáy — nên vật
+                mờ 0,34 không đọc ra "thuộc về phòng", nó đọc ra "khung trống có vệt xám".
+                Soi lưới bản dài SURVIVE: 3/6 khung rơi đúng vào cảnh ấy.
+                Thứ làm vật thuộc về căn phòng không phải độ mờ mà là **bóng đổ chân** — nên vẽ
+                bóng ellipse trên sàn, và vẽ vật đặc ở trên. */}
+            {N.bt ? (
               <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
                    style={{ position: "absolute", left: 0, top: 0 }}>
-                <g transform={`translate(${W / 2} ${sanY - Math.min(H * 0.17, W * 0.19)})`}>
-                  <BieuTuong ten={N.bt} s={Math.min(H * 0.42, W * 0.48)} />
-                </g>
+                {(() => {
+                  const s0 = Math.min(H * 0.42, W * 0.48);
+                  /* Lệch trái/giữa/phải theo `hat` — chủ thể đứng chính giữa ở MỌI tập là dấu
+                     hiệu khuôn mẫu rõ nhất, đúng thứ luật YouTube gọi là "bố cục giống nhau". */
+                  /* Đổi theo `hat` (tập) VÀ theo mốc vào của chính nhịp (`N.s`) — chỉ theo
+                     `hat` thì mọi cảnh trong CÙNG một tập đứng đúng một chỗ, và một tập tám
+                     phút có mười tám cảnh chồng khít lên nhau. Đúng luật 14.9: đa dạng phải
+                     nằm ở thứ người xem NHÌN THẤY, mà thứ họ thấy là hai cảnh liền nhau. */
+                  const cx = W * [0.5, 0.38, 0.62, 0.5, 0.42, 0.58][
+                    Math.abs(hat + Math.round(N.s * 7)) % 6];
+                  return (
+                    <>
+                      <ellipse cx={cx} cy={sanY + s0 * 0.03} rx={s0 * 0.34} ry={s0 * 0.055}
+                               fill="#000000" opacity={0.13} />
+                      <g transform={`translate(${cx} ${sanY - s0 * 0.5})`}>
+                        <BieuTuong ten={N.bt} s={s0} />
+                      </g>
+                    </>
+                  );
+                })()}
               </svg>
-            </div>
-          ) : null}
-        </AbsoluteFill>
+            ) : null}
+          </AbsoluteFill>
       )}
     </>
   );
@@ -321,7 +312,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
   const than = () => {
     switch (N.khuon) {
       case "chia_doi":
-        return { nen: <AbsoluteFill style={{ background: nenTrang }} />,
+        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
                  lop: <ChiaDoi W={W} H={H * 0.80} trai={N.trai || {}} phai={N.phai || {}} mau={mau} p={p} /> };
       case "so_lieu":
         return { nen: Nen,
@@ -337,7 +328,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                    {N.dai_chu ? <DaiChu W={W} H={H * 0.80} chu={N.dai_chu} p={p} /> : null}
                  </g> };
       case "truc":
-        return { nen: <AbsoluteFill style={{ background: nenTrang }} />,
+        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
                  lop: <Truc W={W} H={H * 0.80} moc={N.moc || []} vt={N.vt ?? -1} mau={mau} p={p} /> };
       case "kinh_lup":
         return { nen: Nen,
@@ -359,11 +350,11 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                  lop: <Dem W={W} H={H * 0.80} n={N.n || 4} ngay={N.ngay !== false}
                            chu={N.chu || ""} p={p} mau={mau} /> };
       case "chart":
-        return { nen: <AbsoluteFill style={{ background: nenTrang }} />,
+        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
                  lop: <Chart W={W} H={H * 0.80} cot={N.cot || []} don={N.don || ""}
                              mau={mau} mauPhu={mauPhu} p={p} /> };
       case "the_chu":
-        return { nen: <AbsoluteFill style={{ background: nenTrang }} />,
+        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
                  lop: <TheChu W={W} H={H * 0.80} chu={N.the || N.loi} p={p} mau={mau} /> };
       case "anh":
         return { nen: N.tep ? (

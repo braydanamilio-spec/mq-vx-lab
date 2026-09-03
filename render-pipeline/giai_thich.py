@@ -260,7 +260,7 @@ AM_THANH = [                                        # (thứ, decibel)
     # ── NỐI THÊM 1/9. Decibel là thang LOG — chính điều làm kênh này đáng xem.
     ("a chainsaw",                      110,  "cay"),
     ("a subway train arriving",         100,  "xe_buyt"),
-    ("a lawn mower",                     90,  "nha"),
+    ("a lawn mower",                     90,  "hop"),
     ("city traffic from the sidewalk",   85,  "xe"),
     ("a dishwasher",                     60,  "hop"),
     ("a quiet library",                  40,  "giay"),
@@ -269,7 +269,7 @@ AM_THANH = [                                        # (thứ, decibel)
     ("a gunshot",                       165,  "lua"),
     ("an ambulance siren up close",     120,  "xe"),
     ("a crying baby",                   110,  "nguoi"),
-    ("a hair dryer",                     90,  "nha"),
+    ("a hair dryer",                     90,  "hop"),
     ("a normal conversation",            60,  "nguoi"),
     # ── ĐỢT 2 (1/9): cần n ≥ 24 để nửa dành cho bản dài đủ 10 chương mà không tự lặp.
     ("a whisper at arm's length",        20,  "nguoi"),
@@ -281,11 +281,11 @@ AM_THANH = [                                        # (thứ, decibel)
     ("a busy restaurant",                80,  "hop"),
     ("a motorcycle passing",             95,  "xe"),
     ("a rock concert front row",        115,  "nguoi"),
-    ("a jackhammer",                    100,  "nha"),
+    ("a jackhammer",                    100,  "hop"),
     ("thunder directly overhead",       120,  "lua"),
     ("a balloon popping by your ear",   157,  "hop"),
     ("a car horn at ten feet",          110,  "xe"),
-    ("a school cafeteria at lunch",      85,  "xe_buyt"),
+    ("a school cafeteria at lunch",      85,  "nguoi"),
 ]
 KHOI_LUONG = [                                      # (thứ, pound) — mạnh nhất trước
     ("a school bus", 24000, "xe_buyt"), ("a small car", 2900, "xe"),
@@ -876,6 +876,18 @@ def _n(khuon, loi, **kw):
     # nhưng vẫn phải là nơi hợp với câu, nên bên dưới có cổng `kiem_boi_canh.py` soát lại.
     if khuon in ("canh", "nhom", "kinh_lup") and not d.get("noi"):
         d["noi"] = _noi(loi)
+    # ── GẮN VẬT VẼ BẰNG CODE  (3/9/2026) ───────────────────────────────────────────────────
+    # `_bt_canh` viết xong từ hôm qua và **chưa bao giờ được gọi** — nên trường `bt` không hề
+    # tồn tại trong nhịp `canh`, và engine rơi vào nhánh "không có gì để vẽ". Soi lưới bản dài
+    # SURVIVE: 3/6 khung chỉ có tường, sàn và một dòng phụ đề.
+    #
+    # Đây đúng luật 13.1 ở dạng nặng nhất: cơ chế đã có sẵn, thiếu đúng một thứ GỌI nó. Suốt
+    # hai vòng sửa tôi đi chỉnh độ mờ và bóng đổ của một hình chưa từng được vẽ.
+    #
+    # Gắn ở `_n` vì đây là chỗ hẹp duy nhất mọi nhịp cảnh đi qua — hơn sáu mươi chỗ gọi ở mười
+    # tám bộ sinh đều dùng nó. Chỗ gọi nói rõ `bt` thì tôn trọng, y như `noi`.
+    if khuon == "canh" and not d.get("bt"):
+        d["bt"] = _bt_canh(loi, d.get("ve", ""))
     return d
 
 
@@ -1736,7 +1748,7 @@ def sinh_speedof(i):
               "the walking figure sharp, the streak smeared across the frame",
               "even soft light, restrained palette")),
     _n("chart", _loi("so_sanh", i), don="mph",
-       cot=[{"nhan": "walk", "v": 3}, {"nhan": _nhan(ten.split()[-1]), "v": kmh},
+       cot=[{"nhan": "walk", "v": 3}, {"nhan": _nhan(_danh_tu(ten)), "v": kmh},
             {"nhan": "jet", "v": 560}], dinh=True),
     _n("canh", "You never had a chance.", dinh=True,
        ve=_ve("one ordinary person standing still, seen from behind",
@@ -1772,7 +1784,11 @@ def sinh_odds(i):
               "a plain room dwarfed by the calendar", "one tiny figure at the base",
               "restrained palette")),
     _n("chart", "Next to things you fear.", don="1 in N",
-       cot=[{"nhan": "lightning", "v": 1222000}, {"nhan": _nhan(ten.split()[0]), "v": N}], dinh=True),
+       # Mốc so sánh phải khác chính mục của chương — khi bộ lịch phát trúng chương "lightning"
+       # thì hai cột bằng nhau và trục phẳng lì. Cùng gốc với `_moc_khac` ở `chia_doi`.
+       cot=[_moc_khac([{"nhan": "lightning", "v": 1222000, "so": 1222000},
+                       {"nhan": "a shark bite", "v": 3748067, "so": 3748067}], N),
+            {"nhan": _nhan(ten.split()[0]), "v": N}], dinh=True),
     _n("canh", "Somebody still wins.", dinh=True,
        ve=_ve("one small figure holding a ticket, arms half raised",
               "standing alone in an enormous empty stadium", "quietly stunned",
@@ -1849,13 +1865,14 @@ def sinh_howloud(i):
     _n("the_chu", "Decibels do not add up the way you think.",
        the="Decibels do not add up|the way you think."),
     _n("chia_doi", "Ten more is ten times more.",
-       trai={"nhan": "normal talking", "bt": "nguoi", "so": "60 dB"},
+       trai=_moc_khac([{"nhan": "normal talking", "bt": "nguoi", "so": "60 dB"},
+                       {"nhan": "a whisper", "bt": "nguoi", "so": "30 dB"}], f"{db} dB"),
        phai={"nhan": ten, "bt": bt, "so": f"{db} dB"}, dinh=True),
     _n("so_lieu", _loi("gap", i), so=f"{lan:,.0f}x", don="the energy of talking",
        bt=bt, dinh=True),
     _n("chart", _loi("so_sanh", i), don="decibels",
        cot=[{"nhan": "whisper", "v": 30}, {"nhan": "talking", "v": 60},
-            {"nhan": _nhan(ten.split()[-1]), "v": db}], dinh=True),
+            {"nhan": _nhan(_danh_tu(ten)), "v": db}], dinh=True),
     _n("canh", "Your ears do the maths for you.", dinh=True,
        ve=_ve("one person covering their ears", "flinching away from a loud source",
               "wincing", "a plain backdrop", "sound waves in the near foreground",
@@ -1944,7 +1961,8 @@ def sinh_howhot(i):
               "radiating heat", "", "a plain backdrop", "the source sharp and central",
               "warm high-contrast palette")),
     _n("chia_doi", "Next to a warm room.",
-       trai={"nhan": "a warm room", "bt": "nha", "so": "70°F"},
+       trai=_moc_khac([{"nhan": "a warm room", "bt": "nha", "so": "70°F"},
+                       {"nhan": "a fridge", "bt": "hop", "so": "38°F"}], f"{f:,}°F"),
        phai={"nhan": ten, "bt": bt, "so": f"{f:,}°F"}, dinh=True),
     _n("the_chu", "Your body has a very narrow window.",
        the="Your body has|a very narrow window."),
@@ -1952,7 +1970,7 @@ def sinh_howhot(i):
        chu="the same temperature, other scale", bt=bt),
     _n("chart", _loi("so_sanh", i), don="degrees fahrenheit",
        cot=[{"nhan": "room", "v": 70}, {"nhan": "boiling", "v": 212},
-            {"nhan": _nhan(ten.split()[-1]), "v": f}], dinh=True),
+            {"nhan": _nhan(_danh_tu(ten)), "v": f}], dinh=True),
     _n("canh", "We live in a very thin band.", dinh=True,
        ve=_ve("one small figure standing between an icy side and a burning side",
               "arms out, balancing between the two", "wary",
@@ -2368,15 +2386,30 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
     # Chỉ bản dài mới làm được: đặt cả mười chương cạnh nhau trên một trục. Đây là lý do người
     # xem ngồi hết 8 phút thay vì xem một bản ngắn.
     cot = []
+    ten_ch = []
     for c in range(min(so_chuong, 6)):
         t2, _h2, hp2, _n2 = bo(vi_tri_long(ma, idx, c))
-        v = "".join(ch for ch in (hp2.split()[0] if hp2 else "0") if ch.isdigit() or ch == ".")
-        try:
-            cot.append({"nhan": _nhan(t2.split()[-1]), "v": float(v or 0)})
-        except ValueError:
-            pass
-    if len(cot) >= 2:
+        ten_ch.append(_nhan(_danh_tu(t2)))
+        v = _so_hook(hp2)
+        if v is not None:
+            cot.append({"nhan": _nhan(_danh_tu(t2)), "v": v})
+    # ── BIỂU ĐỒ CHỈ VẼ KHI CÓ SỐ THẬT  (3/9/2026) ──────────────────────────────────────────
+    # Bản đầu cạo số bằng `"".join(ch for ch in hp2.split()[0] if ch.isdigit())`. Đo trên cả 18
+    # kênh: **5 kênh** (whatif · survive · dayinlife · wheregoes · therules) không có một con số
+    # nào trong hook phụ — chúng trả lời ĐỊNH TÍNH ("PROBABLY NOT", hoặc rỗng). Nên nhịp tổng
+    # hợp của chúng ra bốn cột `0.0`, và soi khung thì đó là một trục trống có bốn cái nhãn.
+    #
+    # Không có gì báo lỗi: `float("") or 0` chạy êm, biểu đồ vẫn dựng, video vẫn ra.
+    #
+    # Không cạo mạnh hơn để chữa — năm kênh ấy THẬT SỰ không có đại lượng để so. Thứ đúng là
+    # đổi sang thẻ chữ liệt kê các chương: vẫn là nhịp tổng hợp, và nói thật.
+    # Mọi cột bằng nhau cũng là biểu đồ vô nghĩa — trục phẳng lì thì không so được gì. Đây là
+    # trạng thái THỨ HAI của cùng một lỗi, và nó không lộ ra ở phép kiểm "có số hay không".
+    if len(cot) >= 2 and len({round(c["v"], 6) for c in cot}) >= 2:
         nhip.append(_n("chart", "Here they all are, side by side.", don="compared", cot=cot, dinh=True))
+    elif len(ten_ch) >= 2:
+        nhip.append(_n("the_chu", "Here they all are, side by side.",
+                       chu=" · ".join(ten_ch[:4]), dinh=True))
     nhip.append(_n("canh", "That is the whole picture.", dinh=True,
                    ve=_ve("one simple cartoon figure seen from behind, small in the frame",
                           "looking out over a wide open view",
@@ -2448,6 +2481,90 @@ _BT_TU = (
 )
 
 
+def _moc_khac(cac, so):
+    """Mốc so sánh phải KHÁC mục đang nói tới.  (3/9/2026)
+
+    `chia_doi` đặt mục của chương cạnh một mốc quen thuộc để người xem có cảm giác về con số.
+    Mốc ấy ghi cứng trong bộ sinh — và bảng dữ liệu của chính kênh ấy CŨNG chứa mốc đó. Nên khi
+    bộ lịch phát trúng chương *"a normal conversation"*, nhịp so sánh ra:
+
+        NORMAL TALKING  60 dB   |   A NORMAL CONVERSATION  60 dB
+
+    Hai vế bằng nhau thì nhịp so sánh không so gì cả — nhưng nó vẫn dựng, vẫn đúng cỡ, vẫn có
+    lời đọc. Đo trên 18 kênh × 6 tập: 2/108 nhịp `chia_doi` rơi vào trạng thái này. Hiếm, và
+    khi xảy ra thì hỏng trọn một nhịp giữa video.
+
+    Nhận `cac` là danh sách mốc xếp theo thứ tự ưu tiên, trả mốc đầu tiên có giá trị khác `so`.
+    """
+    for m in cac:
+        if str(m.get("so", "")).strip() != str(so or "").strip():
+            return m
+    return cac[-1]
+
+
+_GIOI = ("at", "of", "in", "on", "from", "with", "for", "by", "to", "up", "over", "near")
+
+
+def _danh_tu(s: str) -> str:
+    """Danh từ chính của một cụm — dùng làm NHÃN cột và nhãn vế so sánh.  (3/9/2026)
+
+    Bản đầu lấy `s.split()[-1]`. Soi lưới HOW LOUD: cột của chương *"How loud is a whisper at
+    arm's length"* mang nhãn **`length`**, và cột *"a normal conversation"* bị `_nhan` cắt cụt
+    thành **`conversatio`**. Người xem đọc trục ra "length" thì không biết cột ấy nói về cái gì.
+
+    Từ cuối chỉ đúng khi cụm không có bổ ngữ. Có giới từ thì phần mang nghĩa nằm TRƯỚC nó:
+        "a whisper at arm's length" -> whisper        "a jet at takeoff" -> jet
+        "a normal conversation"     -> conversation   "a hair dryer"     -> dryer
+    """
+    import re as _re
+    t = _re.sub(r"^(a|an|the)\s+", "", str(s or "").strip(), flags=_re.I).split()
+    for j, w in enumerate(t):
+        if w.lower() in _GIOI and j > 0:
+            t = t[:j]
+            break
+    return t[-1] if t else str(s or "")
+
+
+_HE = {"k": 1e3, "m": 1e6, "bn": 1e9, "b": 1e9, "tn": 1e12}
+
+
+def _so_hook(hp: str):
+    """Số thật trong một hook phụ, hoặc None nếu câu ấy không có đại lượng nào.
+
+    Bản đầu chỉ lấy chữ số của TỪ ĐẦU TIÊN. Ba chỗ hỏng, cả ba chỉ thấy khi đọc dữ liệu thật:
+      · `$227K OVER 30 YEARS` -> 227, còn chương khác `$1.2M` -> 1.2 — hai cột cạnh nhau lệch
+        nhau một nghìn lần mà trục vẫn vẽ như thường
+      · `-320°F` -> 320, mất dấu âm, nên chương lạnh nhất thành chương nóng nhất
+      · `PROBABLY NOT` -> "" -> 0.0, một cột trống không ai biết là trống
+
+    Trả None (không phải 0) khi không có số, để chỗ gọi phân biệt được *"giá trị bằng không"*
+    với *"không có giá trị"* — hai thứ này lẫn vào nhau chính là gốc của bốn cột 0 ở trên.
+    """
+    import re as _re
+    t = str(hp or "")
+    # `1 IN 36` — đại lượng là 36, không phải 1. Kênh ODDS viết mọi hook phụ theo khuôn ấy, nên
+    # cạo từ trái sang cho ra bốn cột đều bằng 1: một biểu đồ phẳng lì mà không có lỗi nào báo.
+    _o = _re.search(r"\b1\s+in\s+([\d][\d,\.]*)", t, _re.I)
+    if _o:
+        t = _o.group(1)
+    # `(?![A-Za-z])` — hệ số phải đứng ở BIÊN TỪ. Thiếu nó thì chữ M của `11 MONTHS` thành hệ
+    # số triệu và cột ấy cao gấp một triệu lần các cột kia. Đúng họ lỗi "một danh sách chuỗi con
+    # không bắt được ngôn ngữ" (13.20).
+    #
+    # Dấu chặn phải nằm TRONG nhóm hệ số, không nằm sau cả cụm: đặt sau cụm thì `700,000x` bị
+    # regex lùi lại thành `700,00` để né chữ `x`, và trả về 70.000 — sai một bậc mười mà vẫn là
+    # một con số trông hợp lý. Đây là kiểu hỏng tệ nhất của regex: nó không thất bại, nó lùi.
+    m = _re.search(r"(-?)\s*\$?\s*([\d][\d,\.]*)\s*(?:([kK]|[mM]|[bB][nN]?|[tT][nN])(?![A-Za-z]))?", t)
+    if not m:
+        return None
+    try:
+        v = float(m.group(2).replace(",", ""))
+    except ValueError:
+        return None
+    v *= _HE.get((m.group(3) or "").lower(), 1.0)
+    return -v if m.group(1) else v
+
+
 def _bt_canh(loi: str, ve: str = "") -> str:
     """Biểu tượng cho một nhịp `canh` — lấy từ CHÍNH lời của nhịp. Không chắc thì trả ""."""
     t = f" {str(loi or '')} {str(ve or '')} ".lower()
@@ -2455,7 +2572,21 @@ def _bt_canh(loi: str, ve: str = "") -> str:
         for w in tu:
             if f" {w} " in t or f" {w}s " in t or f" {w}." in t or f" {w}," in t:
                 return bt
-    return ""
+    # ── KHÔNG KHỚP TỪ NÀO -> VẼ NGƯỜI  (3/9/2026) ──────────────────────────────────────────
+    # Bản đầu trả "" với lý do *"không biết ≠ đoán bừa"*. Lý do ấy đúng với ĐỒ VẬT: gắn một cái
+    # ô tô vào câu nói về vũ trụ là nói một điều SAI, tệ hơn nền trống.
+    #
+    # Nhưng NGƯỜI thì khác hẳn về bản chất. Soi sáu ảnh tham chiếu anh gửi: **cả sáu đều có
+    # người** — người ngồi cạnh lửa, người ở bàn làm việc, người đổi hàng ngoài chợ. Người là
+    # thứ mọi cảnh giải thích đều có quyền có, vì lời kể luôn nói VỚI ai đó hoặc VỀ ai đó. Nó
+    # không khẳng định điều gì sai về nội dung câu.
+    #
+    # Đo hậu quả của việc trả "": bản dài SURVIVE có 3/6 khung soi ra **trống trơn người** —
+    # chỉ căn phòng và một dòng phụ đề. Một khung không có ai đứng trong đó thì không phải cảnh,
+    # nó là tấm nền.
+    #
+    # Nên: đồ vật vẫn phải khớp từ mới vẽ; còn NGƯỜI là mặc định an toàn.
+    return "nguoi"
 
 
 # ── NHÃN CỘT: CẮT THEO TỪ, KHÔNG CẮT GIỮA CHỮ  (3/9/2026) ───────────────────────────────────
@@ -2476,8 +2607,17 @@ def _nhan(t: str, toi_da: int = 11) -> str:
     while len(tu) > 1 and len(" ".join(tu)) > toi_da:
         tu.pop(0)                 # bỏ từ ĐẦU, giữ danh từ chính ở cuối
     con = " ".join(tu)
-    # Một từ vẫn quá dài thì đành cắt, nhưng cắt ở ranh giới ký tự cuối cùng còn đọc được.
-    return con if len(con) <= toi_da else con[:toi_da]
+    # MỘT TỪ ĐƠN THÌ KHÔNG CẮT.  (3/9/2026)
+    # Bản trước cắt cứng ở `toi_da`, nên nhãn cột `conversation` (12 ký tự) hiện ra là
+    # **`conversatio`** — soi lưới HOW LOUD thấy ngay. Một nhãn cụt đọc ra "lỗi phần mềm", tệ
+    # hơn hẳn một nhãn dài hơn ba ký tự so với dự tính.
+    #
+    # Cắt chỉ có nghĩa khi còn RANH GIỚI để cắt. Nhiều từ thì bỏ bớt từ (vòng lặp trên đã làm);
+    # một từ thì giữ nguyên — chỗ vẽ nhãn tự co cỡ chữ được, mà chữ cụt thì không cứu được.
+    # Chốt chặn 22 ký tự để một chuỗi bất thường không phá bố cục.
+    if len(con) <= toi_da or " " not in con:
+        return con[:22]
+    return con[:toi_da]
 
 
 def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
