@@ -133,12 +133,50 @@ vì không thấy nhịp hook.
 
 ---
 
+## 7b. HỆ BỐ CỤC ĐẦY ĐỦ — trạng thái hiện tại
+
+| khuôn | % nhịp | số bố cục | bảng gu | trường ghi vào nhịp |
+|---|---|---|---|---|
+| `canh` | 35% | phòng ×6 · biểu tượng ×5/kênh · vị trí theo nhịp | `GU_HINH` | `bt` |
+| `so_lieu` | 29% | **4** (giữa · canh trái · dải màu · số làm nền) | `GU_SO` | `kieu_so` |
+| `chia_doi` | 12% | **3** (hai cột · trên/dưới · theo tỉ lệ) | `GU_SS` | `bo_ss` |
+| `the_chu` | 7% | **6** | `GU_KHUON` | `bo_the` |
+| `chart` | 7% | **3** (cột đứng · cột ngang · chấm–gậy) | `GU_CHART` | `kieu_chart` |
+| `dem` | 4% | lưới tự chia theo tỉ lệ khung | — | — |
+| `truc` | <1% | 2 (ngang ở 16:9 · **đứng** ở 9:16) | — | — |
+| `kinh_lup` | <1% | 1 (+ nhánh không ảnh vẽ biểu tượng trong ống kính) | — | `bt` |
+
+**Luật thêm bố cục mới** — bốn bước, thiếu bước nào cũng im lặng hỏng:
+1. thêm nhánh trong component, dùng `kieu`/`bo` đã có
+2. thêm vào bảng `GU_*` cho **mọi** kênh (cổng `t_moi_nhip_co_bo_cuc` bắt nếu thiếu)
+3. `_rai_*` ghi vào nhịp — **sau** mọi lượt chèn nhịp, nếu không nhịp hook không có bố cục
+4. chạy `kiem_tdz.py` — chèn khối mới giữa hai khai báo là cách chắc chắn tạo vùng chết tạm thời
+
+**Ràng buộc của bố cục theo tỉ lệ:** biểu tượng dùng ở đó phải là **khối đặc**. Nét rỗng mất
+chữ tín khi thu nhỏ vì độ dày nét không co theo hình.
+
+## 7c. CHỐNG LẶP LỜI — ba tầng
+
+```
+BIEN_THE            6 lựa chọn/câu   -> doi_loi() xoay theo chương
+_loi + _lech_kenh   lệch pha/kênh    -> hai kênh không cùng câu ở cùng chỉ số
+_tranh_lap_gan      quét cuối cùng   -> không đọc lại trong 12 nhịp (~25 giây)
+```
+
+Đo bằng **khoảng cách giữa hai lần đọc**, không bằng tổng số lặp — tổng số lặp có sàn số học
+(10 chương / 6 biến thể = 40%) nên nó không phân biệt được tốt với xấu.
+
+Cổng: `t_khong_lap_loi_gan` (cho phép ≤2 ca; `howlong` có 165 nhịp/tập nên còn 1 ca ở 27 giây).
+
 ## 8. VIỆC CÒN LẠI
 
 1. **Deploy index Firestore** (cần anh, repo không có token):
    `cd MM0-AutoPublisher/dashboard && firebase deploy --only firestore:indexes`
    Thiếu nó thì `health_guardian` mỗi giờ quét 200 tài liệu không sắp xếp = 4.800 lượt/ngày.
 2. **Nối kênh YouTube/Facebook/Instagram** — hạ tầng đăng đã sẵn, chờ tài khoản.
-3. **Ba khuôn chưa nâng cấp**: `Truc` · `KinhLup` · `Dem` — mỗi khuôn hiện chỉ có một bố cục.
-   Làm theo đúng khuôn mẫu ở mục 1: thêm bảng `GU_*`, ghi vào nhịp, engine đọc.
+3. **`KinhLup` và `Dem` vẫn một bố cục** — `Truc` đã có biến thể đứng cho khung dọc. Làm theo
+   khuôn mẫu bốn bước ở mục 7b.
 4. **Cổng biểu tượng khối đặc** — mục 4 hiện chỉ kiểm bằng mắt.
+5. **Vài kênh có bản dài quá ngắn**: WHATWEIGHS 65 nhịp (~2,3 phút) trong khi HOWLONG 165 nhịp.
+   Bản dài dưới 5 phút không bật được quảng cáo giữa video — đo `len(kich_ban(..., long=True))`
+   cho cả 18 kênh trước khi quyết cách chữa.

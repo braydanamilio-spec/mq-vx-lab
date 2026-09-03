@@ -2051,3 +2051,134 @@ Và ba lỗi cạo số, cả ba trông như con số hợp lý nên không ai n
 | Nguồn duy nhất cho danh sách nhịp | `giai_thich.kich_ban()` |
 | Gu template từng kênh | `giai_thich.GU_KHUON` · `GU_SS` · `GU_HINH` |
 | Mặt sàn dùng chung + 6 bố cục thẻ + 3 bố cục so sánh | `engine-remotion/src/gt/Khuon.tsx` |
+
+### 15.15 Lời lặp trong bản dài — và bài học về CHỌN ĐẠI LƯỢNG ĐO
+
+Soi bản dài ODDS: cả tập là **bốn cảnh lặp vòng**, lời lặp nguyên văn. Đo cả 18 kênh:
+**40–58% số câu là lặp**.
+
+Nhưng con số ấy **đo sai đại lượng**. Với 10 chương và 6 biến thể thì 40% lặp là *sàn số học* —
+không cách nào xuống thấp hơn. Thứ người xem cảm được là **khoảng cách giữa hai lần đọc cùng một
+câu**. Đo lại bằng đại lượng ấy: 7/18 kênh có câu đọc lại trong vòng 30 giây, gần nhất **6,0
+giây**. Đó mới là con số hành động được, và nó chỉ ra ba gốc hoàn toàn khác nhau:
+
+| gốc | biểu hiện |
+|---|---|
+| `sinh_whatweighs` gọi `_loi("so_sanh", i)` **hai lần** trong một chương | hai nhịp cách nhau 3 nhịp đọc y hệt — 12 ca/tập |
+| nhịp hook đọc TIÊU ĐỀ TẬP, thẻ chương 1 đọc lại | cách nhau 7 giây |
+| `BIEN_THE` chỉ 3 lựa chọn, `doi_loi` lấy `idx % 3` cho 10 chương | mỗi biến thể dùng 3–4 lần |
+
+Cái thứ ba đáng ghi riêng: **cơ chế chạy đúng, hồ quá nhỏ so với số lần rút.** Không có gì hỏng
+để mà sửa — chỉ có một con số cần lớn hơn. Nâng 3 → 6 lựa chọn cho cả 115 mục.
+
+Kết quả: **27 ca → 1 ca** trên cả 18 kênh, cả short lẫn long.
+
+### 15.16 Máy sửa được thì máy sửa — `_tranh_lap_gan`
+
+Ba gốc khác nhau ở ba chỗ khác nhau. Đuổi từng cái thì hôm nay sạch và tái diễn khi thêm kênh.
+Nên chữa ở **tầng chung**: quét một lượt sau khi mọi nhịp đã ghép, câu nào lặp trong 12 nhịp
+(~25 giây) thì đổi sang biến thể khác **cùng họ**.
+
+Đây là lỗi **máy sửa được** — hại của nó là tai nghe thấy lặp, không phải hình hỏng — nên nó
+thuộc về `don()`, không thuộc về một cổng chặn (§13.23, ba nấc). Và khi không đổi được (câu
+không có họ biến thể) thì **giữ nguyên**: đoán bừa một câu khác nghĩa còn tệ hơn lặp.
+
+### 15.17 `_loi(vai, i)` không biết kênh nào đang gọi
+
+Cổng `kiem_khuon` báo "Put them side by side." xuất hiện **7 lần** trên 21 video. Không phải
+một kênh lặp — **bảy kênh khác nhau** cùng đọc một câu, vì `ds[i % len(ds)]` chỉ nhìn chỉ số
+chương. Hai kênh dựng chương thứ ba thì cùng lấy câu thứ ba.
+
+Đúng trục *"kịch bản"* mà chính sách YouTube nêu tên (§13.17), và đo được. Chữa bằng lệch pha
+theo băm mã kênh: cùng hồ, mỗi kênh bắt đầu ở một chỗ. Đa dạng khuôn câu 72% → **100%**.
+
+Băm phải viết **tường minh**, không dùng `hash()` của Python — `PYTHONHASHSEED` ngẫu nhiên nên
+máy anh và runner ra hai lịch khác nhau (§13.13, đã trả giá ở bộ Kling).
+
+### 15.18 `esbuild` xanh KHÔNG có nghĩa là CHẠY được — vùng chết tạm thời
+
+§12.2 dạy *"`tsc --noEmit` xanh không có nghĩa là build được"*. Hôm nay gặp chiều ngược lại:
+**build được không có nghĩa là chạy được.**
+
+Chèn một khối mới vào giữa hai khai báo trong `Chart`, và khối ấy dùng `const bo` khai ở dưới.
+JavaScript có *vùng chết tạm thời*: đọc một `const` trước dòng khai báo ném `ReferenceError`
+**lúc chạy**. `esbuild` xanh, `tsc` xanh. Chỉ nổ khi biểu đồ rơi đúng kiểu 1/2 — tức **ẩn sau
+một nhánh dữ liệu**, nên cả cổng render một khung cũng không thấy (§5).
+
+Sinh ra `kiem_tdz.py`, gắn vào selftest + workflow.
+
+Và cổng ấy **bắt oan 2 ca ở lần chạy đầu**: `b` là tham số lambda che tên; `cs` khai hai lần ở
+hai hàm con. Đọc tay rồi siết theo nguyên tắc **"mơ hồ thì không phán"** — bỏ sót một ca còn hơn
+tố oan một ca, vì cổng chỉ có giá trị khi mọi dòng đỏ của nó đều là lỗi thật (§13.8).
+
+### 15.19 Mọi lượt RẢI phải chạy sau MỌI lượt CHÈN nhịp
+
+Nhịp hook được `insert(0, …)`. Lỗi này cắn **hai lần trong một ngày**:
+- `_bt_canh` gắn ở `_n` → hook không bao giờ có `bt`
+- các lượt `_rai_*` chạy trước khối hook → `kieu_so` của **30/30** nhịp hook là `None`
+
+Cả hai lần đều không có lỗi nào báo: engine đọc `N.kieu_so ?? 0` nên nó im lặng dùng mặc định,
+và nhìn từ ngoài chỉ là *"tập nào hook cũng giống nhau"* — tức nhịp QUAN TRỌNG NHẤT của cả tập
+là nhịp duy nhất không có bản sắc.
+
+Nay có cổng `t_moi_nhip_co_bo_cuc`: mọi nhịp thuộc khuôn có nhiều bố cục đều phải được gán.
+
+### 15.20 Sàn tồn tại để "bé" không bị đọc thành "thiếu" — nên nó phải NHÌN THẤY ĐƯỢC
+
+Cột ngang chép hằng sàn `W*0.006` từ cột đứng. Ở cột đứng, bề rộng cột đã đủ để mắt thấy có một
+cái cột dù nó thấp. Ở cột ngang, 6px là một vạch không ai nhận ra — soi biểu đồ ODDS (36 cạnh
+36 triệu) thấy hai cột nhỏ nhất **biến mất hẳn**.
+
+Sàn tồn tại đúng để tránh việc người xem đọc "thiếu cột" thay vì "cột này bé đến thế". Một cái
+sàn không đủ để nhìn thấy thì nó không làm được việc nó sinh ra để làm.
+
+### 15.21 Đầu ngữ ĐO LƯỜNG: chủ thể nằm SAU giới từ
+
+`_danh_tu` cắt ở giới từ đầu tiên, nên *"The odds **of** rolling snake eyes"* chỉ còn `odds` —
+và cả sáu cột của biểu đồ tổng hợp ODDS mang **cùng một nhãn**. Cùng lỗi ở REAL COST
+(*"The real cost of…"* → `cost`).
+
+`odds` · `cost` · `chance` · `number` là **đầu ngữ đo lường**, không phải chủ thể. Luật "danh từ
+chính nằm trước giới từ" đúng với *"a jet at takeoff"* và sai với *"the odds of X"* — và nhận ra
+được bằng chính danh sách đầu ngữ ấy.
+
+Sau khi sửa: `snake eyes · flight · royal flush · parachute · PIN · edge-up`.
+
+### 15.22 Khi một hình sửa hai lần vẫn không đọc ra, thứ sai là CÁCH VẼ
+
+Khung cửa sổ của `NenPhong` đọc ra **một hình chữ nhật rỗng** nằm sau biểu đồ. Sửa hai lần đều
+không ăn: làm mờ 0,30 → 0,15, đẩy về góc đối diện nguồn sáng — soi lại vẫn ra cái hộp.
+
+Vấn đề không phải độ mờ hay vị trí mà là **CHẤT**: trong tranh phẳng, cửa sổ nhận ra được nhờ
+**mảng sáng khác màu tường**, không nhờ đường bao. Mọi ảnh tham chiếu đều vẽ thế.
+
+Cùng bài học với con hươu (§15.9 — nét rỗng chết khi thu nhỏ) và số chương (§15.11 — phóng to
+hai lần vẫn không đọc được thì thứ sai là VAI của nó).
+
+### 15.23 Gốc của cạn quota Firestore: một hàm gọi mỗi TẬP thay vì mỗi LƯỢT CHẠY
+
+Dashboard: **241/295 khoá "chưa kiểm", cập nhật gần nhất 13 ngày trước**. Bộ ghi vẫn chạy mỗi
+lượt và log lặp liên tục `429 Quota exceeded`.
+
+`ghi_trang_thai` được gọi trong `mot_tap`, tức **mỗi tập một lần**:
+
+```
+45 tập × 18 luồng × ~100 ghi  =  ~81.000 lượt GHI   (trần free 20.000/ngày)
+45 tập × 18 luồng × 295 đọc   = ~239.000 lượt ĐỌC   (trần free 50.000/ngày)
+```
+
+Chú thích của chính hàm ấy ước tính *"~100 lượt GHI mỗi lượt render"* — đúng cho MỘT lần gọi.
+Đây là §13.7 ở dạng thuần nhất: **"số nhỏ" không phải bảo vệ.**
+
+Trạng thái khoá là **ảnh chụp sức khoẻ, không phải nhật ký** — ghi một lần mỗi 30 phút là đủ.
+Dấu mốc để ở tệp `/tmp` chứ không phải biến module, vì mỗi tập có thể là một tiến trình riêng.
+
+### 15.24 Bản đồ tệp bổ sung (đợt hai)
+
+| Việc | Tệp |
+|---|---|
+| Cổng vùng chết tạm thời (`const` dùng trước khai báo) | `render-pipeline/kiem_tdz.py` |
+| Khử lặp lời gần + họ biến thể | `giai_thich._tranh_lap_gan` · `_ho_cau` |
+| Lệch pha câu nối theo kênh | `giai_thich._loi` · `_lech_kenh` |
+| Gu bố cục số liệu / biểu đồ từng kênh | `giai_thich.GU_SO` · `GU_CHART` |
+| 6 biến thể mỗi câu | `giai_thich.BIEN_THE_THEM` |
