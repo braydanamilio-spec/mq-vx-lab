@@ -2579,6 +2579,62 @@ GU_SS = {
 }
 
 
+# Khuôn SỐ LIỆU có bốn bố cục (xem `SoLieu` trong Khuon.tsx). Nó chiếm **29% tổng số nhịp** —
+# nhiều thứ hai sau `canh` — nên đây là chỗ đa dạng đáng giá nhất trong cả bộ.
+#   0 giữa · 1 canh trái · 2 dải màu · 3 số làm nền
+# Mỗi kênh dùng HAI, chọn theo tính cách: kênh về tiền và về con số lớn hợp kiểu 0/2 (con số là
+# nhân vật chính); kênh kể chuyện hợp kiểu 1/3 (hình là nhân vật chính).
+GU_SO = {
+    "howlong":    (0, 1), "howbig":     (3, 0), "realcost":   (2, 0), "howmuch":    (0, 2),
+    "whatif":     (1, 3), "survive":    (3, 1), "dayinlife":  (1, 0), "wheregoes":  (1, 2),
+    "therules":   (3, 1), "speedof":    (0, 3), "odds":       (2, 1), "hiddenfee":  (2, 0),
+    "yearsof":    (1, 2), "howloud":    (0, 2), "whatweighs": (3, 0), "rightnow":   (1, 3),
+    "howhot":     (2, 3), "smallest":   (3, 2),
+}
+
+
+# Khuôn BIỂU ĐỒ có ba bố cục (xem `Chart` trong Khuon.tsx). Nó chỉ chiếm 7% số nhịp nhưng đứng
+# ở vị trí đắt nhất — nhịp CHỐT, chỗ người xem thấy toàn cảnh sau khi đã nghe từng phần.
+#   0 cột đứng · 1 cột ngang (nhãn dài thoải mái) · 2 chấm–gậy (đọc nhanh ở khung điện thoại)
+# Engine tự ép về kiểu 1 khi nhãn quá dài cho cột đứng: bố cục phục vụ dữ liệu, không ngược lại.
+GU_CHART = {
+    "howlong":    (1, 0), "howbig":     (0, 2), "realcost":   (0, 1), "howmuch":    (2, 0),
+    "whatif":     (1, 2), "survive":    (2, 1), "dayinlife":  (1, 2), "wheregoes":  (1, 0),
+    "therules":   (2, 1), "speedof":    (0, 2), "odds":       (1, 2), "hiddenfee":  (2, 0),
+    "yearsof":    (0, 1), "howloud":    (0, 2), "whatweighs": (2, 1), "rightnow":   (1, 0),
+    "howhot":     (0, 1), "smallest":   (2, 0),
+}
+
+
+def _rai_chart(ma: str, nhip: list, idx: int = 0) -> list:
+    """Gán bố cục cho từng nhịp biểu đồ, xoay trong hai bố cục của kênh."""
+    bo = GU_CHART.get(ma) or (0, 1)
+    d = 0
+    for n in nhip:
+        if (n.get("khuon") or "") != "chart":
+            continue
+        n["kieu_chart"] = bo[(idx + d) % len(bo)]
+        d += 1
+    return nhip
+
+
+def _rai_so(ma: str, nhip: list, idx: int = 0) -> list:
+    """Gán bố cục cho từng nhịp số liệu, xoay trong hai bố cục của kênh.
+
+    Nhịp HOOK (nhịp 0) luôn lấy bố cục ĐẦU của kênh, không xoay: ba giây đầu là chỗ người xem
+    nhận ra kênh, nên nó phải giống nhau qua mọi tập. Đa dạng ở đây đổi lấy nhận diện — sai
+    chiều.
+    """
+    bo = GU_SO.get(ma) or (0, 1)
+    d = 0
+    for j, n in enumerate(nhip):
+        if (n.get("khuon") or "") != "so_lieu":
+            continue
+        n["kieu_so"] = bo[0] if j == 0 else bo[(idx + d) % len(bo)]
+        d += 1
+    return nhip
+
+
 def _rai_ss(ma: str, nhip: list, idx: int = 0) -> list:
     """Gán bố cục cho từng nhịp so sánh, xoay trong hai bố cục của kênh."""
     bo = GU_SS.get(ma) or (0, 1)
@@ -2808,12 +2864,6 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
                 _b = _bt_canh(_x.get("loi") or "", _x.get("ve") or "")
                 if _b:
                     _x["bt"] = _b
-    # Rải hình: một chỗ hẹp duy nhất cho CẢ short và long — xem `_rai_hinh`. Đặt sau khi hai
-    # nhánh đã gộp lại, vì đặt trong từng nhánh là hai chỗ để lệch nhau.
-    nhip = _rai_hinh(ma, nhip, idx)
-    nhip = _rai_khuon(ma, nhip, idx)
-    nhip = _rai_ss(ma, nhip, idx)
-
     # Nhịp 0 = HOOK. Chèn ở đây chứ không viết vào từng bộ sinh: hook là quy tắc chung của cả
     # bộ phim, không phải nội dung riêng của một kênh — viết mười chỗ là mười chỗ để lệch nhau.
     # CHỈ chèn khung số liệu khi THẬT SỰ CÓ SỐ. Bốn kênh (whatif · dayinlife · wheregoes ·
@@ -2885,6 +2935,22 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
         # còn hơn mất người xem ở giây đầu — chủ đề còn cả tập để nói.
         nhip[0]["loi"] = _gh if len(_gh.split()) <= 11 else f"{_m}."
         nhip[0]["dinh"] = True
+    # ── RẢI BỐ CỤC — SAU KHI ĐÃ CHÈN HOOK  (3/9/2026) ──────────────────────────────────────
+    # Một chỗ hẹp duy nhất cho CẢ short và long; đặt trong từng nhánh là hai chỗ để lệch nhau.
+    #
+    # Và phải đặt SAU khối hook, không trước. Nhịp hook được `insert(0, …)` ở ngay trên, nên nếu
+    # rải trước thì nhịp quan trọng NHẤT của cả tập — ba giây đầu — là nhịp duy nhất không có bố
+    # cục, và engine rơi về mặc định. Đo được: `kieu_so=None` ở 30/30 nhịp hook.
+    #
+    # Đây là lần thứ HAI trong ngày cùng một lỗi thứ tự (lần đầu: `_bt_canh` gắn ở `_n` nên hook
+    # không có `bt`). Quy luật rút ra: **mọi lượt rải phải chạy sau MỌI lượt chèn nhịp**, vì nhịp
+    # chèn sau không đi qua thứ đã chạy trước.
+    nhip = _rai_hinh(ma, nhip, idx)
+    nhip = _rai_khuon(ma, nhip, idx)
+    nhip = _rai_ss(ma, nhip, idx)
+    nhip = _rai_so(ma, nhip, idx)
+    nhip = _rai_chart(ma, nhip, idx)
+
     return k, tieu, hook, hook_phu, nhip, muc
 
 

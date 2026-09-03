@@ -327,7 +327,9 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                        phải để đứng cạnh ảnh. */}
                    <SoLieu W={W} H={H * 0.80} so={N.so || ""} don={N.don || ""} chu={N.chu || ""}
                            bt={N.nenAnh ? "" : (N.bt || "")} mau={mau} p={p}
-                           tren_anh={!!N.nenAnh} nen={nenTrang} bo={hat % 3} />
+                           tren_anh={!!N.nenAnh} nen={nenTrang} bo={hat % 3}
+                           /* `kieu_so` do Python quyết — xem `GU_SO`. Engine chỉ đọc. */
+                           kieu={N.kieu_so ?? 0} />
                    {N.dai_chu ? <DaiChu W={W} H={H * 0.80} chu={N.dai_chu} p={p} /> : null}
                  </g> };
       case "truc":
@@ -356,7 +358,9 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
       case "chart":
         return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
                  lop: <Chart W={W} H={H * 0.80} cot={N.cot || []} don={N.don || ""}
-                             mau={mau} mauPhu={mauPhu} p={p} nen={nenTrang} hat={hat} /> };
+                             mau={mau} mauPhu={mauPhu} p={p} nen={nenTrang} hat={hat}
+                             /* `kieu_chart` do Python quyết — xem `GU_CHART`. */
+                             kieu={N.kieu_chart ?? 0} /> };
       case "the_chu":
         return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
                  lop: <TheChu W={W} H={H * 0.80} chu={N.the || N.loi} p={p} mau={mau}

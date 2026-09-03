@@ -158,7 +158,10 @@ jobs:
           python kiem_trung.py     # đủ tập phân biệt · long không đụng short · long không tự lặp
           python kiem_hinhve.py    # mọi biểu tượng được gán phải có trong engine
           python kiem_kenh.py      # 8 bảng phủ đủ 18 kênh · 8 trục nhận diện không trùng
-          python kiem_nen.py       # ba mệnh lệnh cho mọi prompt vẽ nền
+          python kiem_nen.py
+          # Vùng chết tạm thời: `const` dùng trước khai báo. esbuild và tsc đều XANH, chỉ nổ
+          # lúc render và chỉ ở nhánh dữ liệu chạm tới nó — xem đầu `kiem_tdz.py`.
+          python kiem_tdz.py       # ba mệnh lệnh cho mọi prompt vẽ nền
           python kiem_nhip.py      # nhịp cắt theo chuẩn đo từ hai video tham chiếu
           python kiem_workflow.py  # workflow gói đúng sản phẩm
 

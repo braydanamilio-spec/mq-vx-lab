@@ -2540,6 +2540,8 @@ def main():
     check("nhịp so sánh không có hai vế bằng nhau", t_chia_doi_hai_ve_khac_nhau)
     check("biểu đồ không vẽ trục toàn số 0 hoặc trục phẳng", t_chart_co_so_that)
     check("gu hình mỗi kênh một bộ, không lặp biểu tượng liền kề", t_gu_hinh_khac_nhau)
+    check("mọi nhịp có khuôn đổi bố cục đều ĐƯỢC GÁN bố cục", t_moi_nhip_co_bo_cuc)
+    check("không `const` nào bị dùng trước khai báo (vùng chết tạm thời)", t_khong_tdz)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
@@ -6990,6 +6992,61 @@ def t_cham_kich_ban():
     if _o.path.exists(wf):
         assert "cham_kich_ban.py" in io.open(wf, encoding="utf-8").read(), \
             "thang chấm kịch bản không được gọi trong workflow -> viết ra rồi để đấy"
+
+
+def t_khong_tdz():
+    """`const` dùng trước khai báo — `esbuild` và `tsc` đều xanh, chỉ nổ LÚC RENDER.
+
+    Xảy ra khi chèn một khối mới vào giữa hai khai báo trong một component dài. Lỗi nằm sau một
+    nhánh dữ liệu (chỉ biểu đồ kiểu 1/2 mới chạm tới `bo`), nên cả cổng render một khung cũng
+    không thấy — đúng §5: *cổng render một khung không chứng minh được gì ngoài khung ấy*.
+    """
+    import os as _o
+    import subprocess as _sp
+    import sys as _s
+    g = _o.path.dirname(_o.path.abspath(__file__))
+    r = _sp.run([_s.executable, _o.path.join(g, "kiem_tdz.py")],
+                capture_output=True, text=True, cwd=g)
+    assert r.returncode == 0, "kiem_tdz báo lỗi:\n" + (r.stdout or r.stderr)[:400]
+
+
+def t_moi_nhip_co_bo_cuc():
+    import os as _o
+    """Không nhịp nào của khuôn có nhiều bố cục được phép thiếu trường bố cục.
+
+    ── LỖI NÀY CẮN HAI LẦN TRONG MỘT NGÀY ──────────────────────────────────────────────────
+    Nhịp HOOK được `insert(0, …)` trong `kich_ban`. Lần đầu: `_bt_canh` gắn ở `_n` nên hook
+    không bao giờ có `bt`. Lần hai: các lượt `_rai_*` chạy TRƯỚC khối hook nên `kieu_so` của
+    30/30 nhịp hook là `None` — tức nhịp QUAN TRỌNG NHẤT của cả tập, ba giây đầu, là nhịp duy
+    nhất rơi về bố cục mặc định.
+
+    Cả hai lần đều KHÔNG có lỗi nào báo: engine đọc `N.kieu_so ?? 0` nên nó im lặng dùng mặc
+    định, và nhìn từ ngoài chỉ là "tập nào hook cũng giống nhau".
+
+    Quy luật rút ra: **mọi lượt rải phải chạy sau MỌI lượt chèn nhịp.** Cổng này canh chính điều
+    ấy — nó bắt được bất kỳ nhịp nào được chèn sau lượt rải, kể cả nhịp thêm sau này.
+    """
+    import giai_thich as G
+
+    can = {"so_lieu": "kieu_so", "the_chu": "bo_the", "chia_doi": "bo_ss"}
+    thieu = []
+    for k in G.KENH:
+        for i in range(3):
+            for j, n in enumerate(G.kich_ban(k["ma"], i)[4]):
+                truong = can.get(n.get("khuon") or "")
+                if truong and n.get(truong) is None:
+                    thieu.append(f'{k["ma"]} tập {i} nhịp {j} ({n.get("khuon")}) thiếu {truong}')
+    assert not thieu, "nhịp thiếu bố cục: " + "; ".join(thieu[:4])
+
+    # Và mọi bố cục phải THẬT SỰ được dùng — bảng gu có 6 kiểu thẻ mà chỉ dùng 2 thì thừa 4.
+    import collections as _c
+    dung = _c.Counter()
+    for k in G.KENH:
+        for i in range(3):
+            for n in G.kich_ban(k["ma"], i)[4]:
+                if (n.get("khuon") or "") == "the_chu":
+                    dung[n.get("bo_the")] += 1
+    assert len(dung) >= 6, f"chỉ {len(dung)}/6 bố cục thẻ chữ được dùng -> bảng gu thừa"
 
 
 def t_gu_hinh_khac_nhau():

@@ -509,8 +509,8 @@ export const chuHopNen = (uu: string, nen: string, dam = "#2C2722", nhat = "#F4F
 
 export const SoLieu: React.FC<{
   W: number; H: number; so: string; don: string; chu: string; bt: string; mau: string; p: number;
-  tren_anh?: boolean; nen?: string; bo?: number;
-}> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false, nen = "#EFE7D6", bo = 0 }) => {
+  tren_anh?: boolean; nen?: string; bo?: number; kieu?: number;
+}> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false, nen = "#EFE7D6", bo = 0, kieu = 0 }) => {
   /* ── BỐ CỤC PHẢI ĐỔI THEO HƯỚNG KHUNG ────────────────────────────────────────────────
      Anh: *"bản 16:9 đang bị che khuất."* Đúng, và gốc rễ là mọi vị trí ở đây tính theo `H`.
      Khung dọc cao 1920 nên `H*0.20` cho chữ số là vừa; khung ngang chỉ cao 1080 nên cùng công
@@ -557,9 +557,36 @@ export const SoLieu: React.FC<{
   /* Cùng lỗi với `ChiaDoi`, và thêm một lỗi nữa: biểu tượng đặt ở `H*0.62` còn con số ở
      `H*0.30` với cỡ `H*0.20` — hai lớp cùng chọn chỗ theo H mà không biết nhau, nên số "9"
      nằm đè lên cái biểu tượng. Nay biểu tượng bám ĐÁY khung và số bám ĐỈNH, không gặp nhau. */
-  const cs = Math.min(H * cCao, (W * 0.88 / Math.max(1, so.length)) * 1.65);
+  /* ── BỐN BỐ CỤC, KHÔNG PHẢI BA LẦN DỊCH CHỖ  (3/9/2026) ────────────────────────────────
+     Đo phân bố khuôn trên 18 kênh × 3 tập: `so_lieu` chiếm **29% tổng số nhịp** — gần một phần
+     ba mọi video là khuôn này. Nó là khuôn xuất hiện nhiều nhất sau `canh`.
+
+     Ba biến thể `bo` đang có chỉ đổi CỠ và CHỖ ĐẶT của cùng một bố cục: số ở giữa trên, đơn vị
+     dưới số, hình dưới nữa. Người xem nhận ra BỐ CỤC (§15.1) — ba lần dịch chỗ vẫn đọc ra một
+     mô-típ, đúng lời anh phê về thẻ chương.
+
+       0  giữa           số canh giữa, hình bên dưới — mạnh nhất, mặc định
+       1  canh trái      số canh trái, hình dạt sang phải — khuôn tạp chí; dùng được CẢ trên ảnh
+       2  dải màu        số nằm trong dải màu kênh vắt ngang, hình đứng trên sàn bên dưới
+       3  số làm nền     số khổng lồ mờ phía sau, hình đứng trước — trọng tâm là HÌNH, không số
+
+     Kiểu 2 và 3 đổi hẳn nền nên chỉ dùng khi KHÔNG có ảnh; trên ảnh chúng sẽ đánh nhau với bức
+     hình và với dải mờ. Kiểu 1 an toàn trên ảnh vì dải mờ vốn phủ hết bề ngang.
+     Cấp một bố cục cho ngữ cảnh không đỡ nổi nó là cách chắc chắn ra khung hỏng — cùng bài học
+     với biểu đồ bốn cột số 0. */
+  const kA = tren_anh ? (Math.abs(kieu) % 4 === 1 ? 1 : 0) : (Math.abs(kieu) % 4);
+  // Canh trái chỉ có 0,80·W cho chữ số (chừa chỗ cho hình bên phải); giữa thì được 0,88·W.
+  const beNgang = kA === 1 ? 0.62 : kA === 3 ? 0.96 : 0.88;
+  const cs = Math.min(H * cCao * (kA === 3 ? 1.35 : 1), (W * beNgang / Math.max(1, so.length)) * 1.65);
   // đáy dòng đơn vị = yCao·H + cs·0.56 ; chừa thêm 0,5·cs rồi mới đặt chú thích
-  const yChu = Math.max(yChuMin, (H * yCao + cs * 0.56 + cs * 0.50) / H);
+  /* `cd` khai sau `yChu` trong bản cũ, nên `yChu` không thể cộng nó vào và đành dùng `cs*0.56`
+     — chính con số vừa sai ở dòng đơn vị. Nâng khai báo `cd` lên đây để CẢ HAI chỗ dùng cùng
+     một công thức; hai chỗ tính khoảng cách cho cùng một chồng chữ mà dùng hai công thức khác
+     nhau thì sớm muộn chúng lệch nhau (§15.10, lần thứ tư). */
+  const cd = Math.min(H * 0.055, (W * 0.80 / Math.max(1, (don || "").length)) * 1.7);
+  const yDon = cs * 0.22 + cd * 1.05;                    // chân dòng đơn vị, so với chân số
+  const cChu = Math.min(H * 0.042, (W * 0.90 / Math.max(1, (chu || "").length)) * 1.45);
+  const yChu = Math.max(yChuMin, (H * yCao + yDon + cChu * 1.15) / H);
   /* SỐ ĐẾM LÊN — anh: *"số liệu động animation là đẹp hay."*
      Không phải hiệu ứng cho vui: con số nhảy dần làm người xem CẢM được độ lớn, còn con số
      hiện sẵn thì chỉ được đọc. Với kênh mà cả nội dung là những con số thì đây là chỗ đắt nhất.
@@ -575,7 +602,6 @@ export const SoLieu: React.FC<{
     });
   };
   const soHien = dem(so, Math.min(1, p / 0.42));
-  const cd = Math.min(H * 0.055, (W * 0.80 / Math.max(1, (don || "").length)) * 1.7);
   return (
     <g>
       {/* 1/9 — DẢI NỀN KHI CHỮ ĐÈ LÊN ẢNH.
@@ -635,17 +661,37 @@ export const SoLieu: React.FC<{
                 fill={`url(#sl${Math.round(W)})`} />
         </>
       ) : null}
-      {bt ? <g transform={`translate(${W / 2} ${H * (ngang ? 0.62 : tren_anh ? 0.70 : 0.64)})`} opacity={tren_anh ? 0.92 : 1}>
+      {/* Kiểu 2 — DẢI MÀU ôm lấy khối số. Căn phòng vẫn thấy trên và dưới dải, nên khuôn này
+          là chỗ nghỉ mắt giữa những khuôn tràn nền. */}
+      {kA === 2 ? (
+        <rect x={0} y={H * (yCao - (ngang ? 0.15 : 0.12))} width={W}
+              height={H * (ngang ? 0.30 : 0.25)} fill={mau}
+              opacity={0.94 * Math.min(1, p / 0.3)} />
+      ) : null}
+      {/* Kiểu 3 — SỐ LÀM NỀN: chữ số chiếm gần hết khung ở độ mờ thấp, HÌNH đứng trước và là
+          thứ mắt đọc trước. Đảo hẳn thứ bậc so với ba kiểu kia, nên nó là biến thể khác nhất. */}
+      {kA === 3 ? (
+        <text x={W / 2} y={H * (ngang ? 0.58 : 0.52)} textAnchor="middle" fontFamily={F}
+              fontWeight={900} fontSize={cs * 1.55} fill={mau} opacity={0.16 * q}>{soHien}</text>
+      ) : null}
+      {bt ? <g transform={`translate(${kA === 1 ? W * 0.76 : W / 2} ${H * (ngang ? 0.62 : tren_anh ? 0.70 : 0.64)})`} opacity={tren_anh ? 0.92 : 1}>
         {/* CỠ BIỂU TƯỢNG THEO VAI TRÒ, không một cỡ cho hai vai trò khác nhau.
             Trên ảnh, biểu tượng chỉ là phụ chú -> nhỏ là đúng. KHÔNG có ảnh thì biểu tượng LÀ
             hình của cả khung, và cỡ 0,30 cho ra khung 60% trống (soi `howmuch` nhịp 0). Ảnh
             tham chiếu anh gửi đều có chủ thể chiếm quá nửa khung. */}
+        {/* Bố cục canh trái đẩy hình sang x = 0,76·W, nên bề ngang còn lại chỉ 0,48·W. Giữ cỡ
+            0,66·W thì hình TRÀN khỏi mép phải — soi khung WHAT IF thấy cái hộp bị cắt đôi.
+            Cỡ biểu tượng phải theo CHỖ NÓ ĐỨNG, không phải theo cả khung. */}
         <BieuTuong ten={bt} s={tren_anh ? Math.min(H * 0.26, W * 0.28)
-                                        : Math.min(H * 0.40, W * 0.66)} /></g> : null}
-      <g transform={`translate(${W / 2} ${H * yCao}) scale(${0.86 + q * 0.14})`} opacity={q}>
-        <text x="0" y="0" textAnchor="middle" fontFamily={F} fontWeight={900}
+                              : (kA === 1 ? Math.min(H * 0.32, W * 0.42)
+                                          : Math.min(H * 0.40, W * 0.66))} /></g> : null}
+      {/* Kiểu 3 vẽ số ở lớp NỀN phía trên rồi, nên ở đây bỏ khối số đi — vẽ hai lần thì con
+          số đậm chồng lên chính bóng mờ của nó. */}
+      <g transform={`translate(${kA === 1 ? W * 0.08 : W / 2} ${H * yCao}) scale(${0.86 + q * 0.14})`}
+         opacity={kA === 3 ? 0 : q}>
+        <text x="0" y="0" textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F} fontWeight={900}
               fontSize={cs}
-              fill={tren_anh ? "#FFFFFF" : "#2C2722"}
+              fill={tren_anh ? "#FFFFFF" : (kA === 2 ? chuHopNen("#FFFFFF", mau) : "#2C2722")}
               style={{ filter: tren_anh
                 ? `drop-shadow(0 ${H * 0.004}px ${H * 0.012}px #000000cc)`
                 : `drop-shadow(0 ${H * 0.003}px ${H * 0.008}px #00000033)` }}>{soHien}</text>
@@ -661,15 +707,27 @@ export const SoLieu: React.FC<{
             KHÔNG dùng viền `paintOrder="stroke"` — §12.12 xếp viền quanh chữ vào danh sách dấu
             hiệu nghiệp dư: *"không hãng phim nào viền chữ"*. Quầng mềm làm đúng việc ấy mà
             không để lại đường viền cứng. */}
-        {don ? <text x="0" y={cs * 0.56} textAnchor="middle" fontFamily={F} fontWeight={800}
-                     fontSize={cd} fill={tren_anh ? "#F2EFE9" : chuHopNen(mau, nen)} letterSpacing={2}
+        {/* ── KHOẢNG CÁCH PHẢI CỘNG CỠ CỦA CHÍNH DÒNG DƯỚI  (3/9/2026) ─────────────────────
+            `cs * 0.56` chỉ tính theo cỡ CON SỐ. Ở bố cục canh trái, bề ngang cho chữ số hẹp hơn
+            (0,62·W thay vì 0,88·W) nên số dài làm `cs` co lại còn ~85px, trong khi dòng đơn vị
+            `cd` vẫn ~69px — đỉnh nó ở 0,56·85 − 69 = **−21px**, tức NẰM TRÊN chân con số.
+            Soi khung WHAT IF: `8,000,000,000` và `PEOPLE` đè lên nhau.
+
+            Đây là lần thứ TƯ cùng một lỗi (§15.10): hai dòng chữ đặt cạnh nhau bằng một phân số
+            của dòng TRÊN, mà quan hệ "dòng này nằm dưới dòng kia" cần cỡ của CẢ HAI. Nay cộng
+            `cd` vào, nên công thức đúng ở mọi tổ hợp cỡ. */}
+        {don ? <text x="0" y={yDon} textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F} fontWeight={800}
+                     fontSize={cd}
+                     fill={tren_anh ? "#F2EFE9" : (kA === 2 ? chuHopNen("#F2EFE9", mau) : chuHopNen(mau, nen))}
+                     letterSpacing={2}
                      style={{ filter: tren_anh
                        ? `drop-shadow(0 0 ${H * 0.016}px #000000ee) drop-shadow(0 ${H*0.004}px ${H*0.010}px #000000cc)`
                        : `drop-shadow(0 ${H*0.003}px ${H*0.009}px #00000099)` }}
                      >{don.toUpperCase()}</text> : null}
       </g>
-      {chu ? <text x={W / 2} y={H * yChu} textAnchor="middle" fontFamily={F} fontWeight={700}
-                   fontSize={Math.min(H * 0.042, (W * 0.90 / Math.max(1, chu.length)) * 1.45)}
+      {chu ? <text x={kA === 1 ? W * 0.08 : W / 2} y={H * yChu}
+                   textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F} fontWeight={700}
+                   fontSize={cChu}
                    fill={tren_anh ? "#EDE9E1" : chuHopNen("#3A342C", nen)}
                    style={tren_anh ? { filter: `drop-shadow(0 0 ${H * 0.015}px #000000ee) drop-shadow(0 ${H * 0.004}px ${H * 0.011}px #000000cc)` }
                                    : undefined}>{chu}</text> : null}
@@ -1159,8 +1217,8 @@ const _bac = (v: number): string => {
    `hat` đổi bo góc và độ đậm lưới theo TẬP, để hai tập liền nhau không ra một tấm ảnh. */
 export const Chart: React.FC<{
   W: number; H: number; cot: { nhan: string; v: number }[]; don: string;
-  mau: string; mauPhu: string; p: number; nen?: string; hat?: number;
-}> = ({ W, H, cot, don, mau, mauPhu, p, nen = "#F2F0EA", hat = 0 }) => {
+  mau: string; mauPhu: string; p: number; nen?: string; hat?: number; kieu?: number;
+}> = ({ W, H, cot, don, mau, mauPhu, p, nen = "#F2F0EA", hat = 0, kieu = 0 }) => {
   if (!cot.length) return null;
   const max = Math.max(...cot.map((c) => Math.abs(c.v)), 1);
   const dinh = cot.reduce((a, b) => (Math.abs(b.v) > Math.abs(a.v) ? b : a), cot[0]);
@@ -1171,7 +1229,100 @@ export const Chart: React.FC<{
   const cn = Math.min(H * 0.038, (b * 0.92 / Math.max(...cot.map((c) => c.nhan.length), 1)) * 1.6);
   const kk = Math.abs(hat) % 3;
   const nhat = _pha(_tron(nen, mau, 0.34), -0.10);   // cột phụ: cùng bảng màu, chỉ nhạt hơn
+  /* `bo` phải khai TRƯỚC nhánh cột ngang bên dưới. Bản đầu để nó ở dưới, và vì `const` có
+     vùng chết tạm thời nên mọi biểu đồ kiểu 1/2 sẽ ném `ReferenceError` NGAY LÚC CHẠY — trong
+     khi `esbuild` vẫn xanh, đúng bài học §12.2: bộ kiểm cú pháp không phải bộ dựng. */
   const bo = W * (kk === 1 ? 0.002 : kk === 2 ? 0.012 : 0.006);
+
+  /* ── BA BỐ CỤC BIỂU ĐỒ  (3/9/2026) ──────────────────────────────────────────────────────
+     Biểu đồ là nhịp CHỐT của gần như mọi kênh — chỗ người xem thấy toàn cảnh sau khi đã nghe
+     từng phần. Nó chỉ chiếm 7% số nhịp nhưng đứng ở vị trí đắt nhất, và trước bản này mọi kênh
+     mọi tập đều dùng đúng một hình: cột đứng, nhãn nằm dưới.
+
+       0  CỘT ĐỨNG   — mặc định; mạnh khi nhãn ngắn và số ít
+       1  CỘT NGANG  — nhãn nằm BÊN TRÁI nên chữ dài bao nhiêu cũng đủ chỗ; đây là lý do thật
+                       để có nó, và cũng là bố cục hợp khung dọc 9:16 hơn hẳn
+       2  CHẤM–GẬY   — một đường mảnh và một chấm đặc; ở khung điện thoại nó đọc nhanh hơn cột
+                       vì mắt so VỊ TRÍ CHẤM thay vì so diện tích khối
+
+     Cột ngang tự nhận việc khi nhãn dài: đo bề rộng nhãn dài nhất, quá ngưỡng thì ép về kiểu 1
+     dù kênh khai kiểu khác. Bố cục là thứ phục vụ dữ liệu, không phải ngược lại. */
+  const nhanDai = Math.max(...cot.map((c) => (c.nhan || "").length), 1);
+  let kC = Math.abs(kieu) % 3;
+  if (nhanDai * cot.length > 34 && kC === 0) kC = 1;   // nhãn không đủ chỗ ở cột đứng
+
+  if (kC === 1 || kC === 2) {
+    const xNhan = W * 0.30, x0 = W * 0.34;
+    /* ── CHỪA CHỖ CHO THỨ VẼ SAU ĐẦU GẬY  (3/9/2026) ────────────────────────────────────
+       `x1 = W*0.94` là chỗ đầu cột NGANG dừng lại — đúng cho cột, vì cột hết là hết. Chấm–gậy
+       thì sau đầu gậy còn MỘT CHẤM (bán kính) và MỘT CON SỐ. Soi khung HOW MUCH: chấm của
+       `billion` và số của nó chạy hẳn ra ngoài mép phải.
+       Chép một hằng số sang bố cục khác mà không hỏi *"câu này còn đúng ở ngữ cảnh mới không"*
+       — §12.5, lần thứ hai trong hàm này.
+
+       ── VÀ TRẦN CHIỀU CAO MỖI DÒNG ──────────────────────────────────────────────────────
+       Chia đều 0,62·H cho 2 dòng cho ra mỗi dòng 0,31·H, tức chấm bán kính 0,065·H — to bằng
+       một nắm tay, và hai dòng cách nhau gần một phần ba khung. Số dòng ít thì phải THU LẠI và
+       căn giữa, không phải giãn ra cho đầy. */
+    const oCao = Math.min((H * 0.62) / Math.max(1, cot.length), H * 0.17);
+    const rCham0 = oCao * 0.21;
+    const x1 = kC === 2 ? W * 0.94 - rCham0 - W * 0.13 : W * 0.94;
+    /* Căn khối vào GIỮA vùng vẽ, không dồn lên đầu một dải cố định. Với hai dòng thì công
+       thức cũ đặt tâm khối ở 0,45·H — soi khung thấy đồ hoạ nằm hẳn nửa trên và nửa dưới trống
+       trơn. Vùng vẽ đã trừ dải phụ đề rồi nên tâm của nó chính là tâm thị giác. */
+    const yTop = Math.max(H * 0.14, H * 0.50 - (oCao * cot.length) / 2);
+    const cN = Math.min(H * 0.040, oCao * 0.40, (xNhan * 0.88 / nhanDai) * 1.55);
+    return (
+      <g>
+        {don ? (
+          <text x={W / 2} y={H * 0.075} textAnchor="middle" fontFamily={F} fontWeight={800}
+                fontSize={Math.min(H * 0.042, (W * 0.8 / Math.max(1, don.length)) * 1.7)}
+                fill={mauPhu} letterSpacing={2}>{don.toUpperCase()}</text>
+        ) : null}
+        {cot.map((c, i) => {
+          const qi = Math.max(0, Math.min(1, (q - i * 0.06) / 0.55));
+          const y = yTop + oCao * (i + 0.5);
+          /* SÀN CHIỀU DÀI phải đủ để CHẤM tách khỏi trục.  (3/9/2026)
+             Soi khung HOW MUCH (million 1e6 cạnh billion 1e9): tỉ lệ 1/1000 nên gậy dài
+             0,1% — chấm nằm chồng lên vạch trục và lên cả nhãn bên trái, còn số `1M` rơi vào
+             giữa chấm. Ba thứ chồng nhau ở đúng một chỗ.
+             Sàn cũ `W*0,006` (6px) viết cho CỘT, nơi bề rộng cột che phần lệch. Chấm–gậy cần
+             sàn bằng ít nhất một đường kính chấm cộng khoảng thở — chép hằng số sang bố cục
+             khác là lỗi §6 quen thuộc. */
+          const rCham = rCham0;
+          const dai = Math.max((x1 - x0) * (Math.abs(c.v) / max),
+                               kC === 2 ? rCham * 2.4 : W * 0.006) * qi;
+          const la = c === dinh;
+          const cS = Math.min(oCao * 0.44, H * 0.040);
+          return (
+            <g key={i}>
+              <text x={xNhan - W * 0.015} y={y + cN * 0.34} textAnchor="end" fontFamily={F} fontWeight={800}
+                    fontSize={cN} fill="#3A342C">{c.nhan}</text>
+              {kC === 1 ? (
+                <rect x={x0} y={y - oCao * 0.28} width={dai} height={oCao * 0.56} rx={bo}
+                      fill={la ? mau : nhat} stroke="#2C2722" strokeWidth={Math.max(2, H * 0.003)} />
+              ) : (
+                <>
+                  <line x1={x0} y1={y} x2={x0 + dai} y2={y}
+                        stroke={la ? mau : nhat} strokeWidth={Math.max(3, oCao * 0.10)}
+                        strokeLinecap="round" />
+                  <circle cx={x0 + dai} cy={y} r={rCham}
+                          fill={la ? mau : nhat} stroke="#2C2722" strokeWidth={Math.max(2, H * 0.003)} />
+                </>
+              )}
+              {/* Số phải đứng SAU chấm, không phải sau đầu gậy — nếu không nó nằm trong chấm. */}
+              <text x={x0 + dai + (kC === 2 ? rCham : 0) + W * 0.018} y={y + cS * 0.34}
+                    fontFamily={F} fontWeight={900}
+                    fontSize={cS} fill={la ? mau : _pha(mau, -0.34)} opacity={qi}>{_bac(c.v * qi)}</text>
+            </g>
+          );
+        })}
+        <line x1={x0} y1={yTop} x2={x0} y2={yTop + oCao * cot.length}
+              stroke={_pha(nen, -0.30)} strokeWidth={Math.max(2, H * 0.003)} />
+      </g>
+    );
+  }
+
   return (
     <g>
       {/* Ba đường lưới, đặt SAU cột nên không cắt ngang mặt cột. */}
