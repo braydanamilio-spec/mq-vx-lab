@@ -54,9 +54,28 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string }> =
       q ${-k(0.20)} ${-k(0.04)} ${-k(0.26)} ${-k(0.16)} Z`, "#3E6E93")}
       {P(`M ${-k(0.46)} 0 l ${-k(0.14)} ${-k(0.16)} l ${-k(0.02)} ${k(0.32)} Z`, "#3E6E93")}
       <circle cx={k(0.22)} cy={-k(0.06)} r={k(0.035)} fill="#2C2722" /></g>;
-    case "huou": return <g>{P(`M ${-k(0.06)} ${k(0.42)} v ${-k(0.34)} h ${k(0.26)} v ${k(0.34)}`, "none")}
-      {P(`M ${-k(0.06)} ${k(0.08)} q ${-k(0.02)} ${-k(0.34)} ${k(0.16)} ${-k(0.44)}`, "none", 1.4)}
-      {P(`M ${k(0.10)} ${-k(0.36)} l ${k(0.16)} ${-k(0.06)} l ${-k(0.04)} ${k(0.16)} Z`, "#D9A441")}</g>;
+    /* HƯƠU CAO CỔ — HÌNH KHỐI ĐẶC, KHÔNG PHẢI NÉT RỖNG.  (3/9/2026)
+       Bản trước vẽ bằng ba đường nét không tô: thân là một khung chữ nhật hở, cổ là một đường
+       cong, đầu là một tam giác. Ở cỡ đầy đủ còn đoán ra; ở bố cục SO SÁNH THEO TỈ LỆ vế nhỏ
+       chỉ còn 34% cỡ, và soi khung HOW BIG (hươu 18 ft cạnh cây đỏ 350 ft) thì nó ra một cái
+       móc câu — không ai đọc ra con hươu.
+       Nét rỗng mất chữ tín khi thu nhỏ vì độ dày nét không co theo hình; **hình khối đặc thì
+       co bao nhiêu vẫn giữ được bóng dáng**. Mọi biểu tượng dùng ở bố cục tỉ lệ phải là khối
+       đặc — đó là ràng buộc của bố cục, không phải sở thích vẽ. */
+    case "huou": return <g>
+      <rect x={-k(0.20)} y={k(0.02)} width={k(0.40)} height={k(0.26)} rx={k(0.07)}
+            fill="#D9A441" stroke={mau} strokeWidth={n} />
+      {P(`M ${k(0.04)} ${k(0.06)} L ${k(0.20)} ${-k(0.40)} L ${k(0.34)} ${-k(0.36)} L ${k(0.17)} ${k(0.10)} Z`, "#D9A441")}
+      {P(`M ${k(0.18)} ${-k(0.40)} L ${k(0.42)} ${-k(0.46)} L ${k(0.44)} ${-k(0.32)} L ${k(0.30)} ${-k(0.31)} Z`, "#D9A441")}
+      {P(`M ${k(0.24)} ${-k(0.47)} l ${k(0.01)} ${-k(0.07)}`, "none", 1.2)}
+      {P(`M ${k(0.33)} ${-k(0.49)} l ${k(0.01)} ${-k(0.07)}`, "none", 1.2)}
+      {[-0.14, 0.02].map((dx) => (
+        <rect key={dx} x={k(dx)} y={k(0.26)} width={k(0.055)} height={k(0.20)}
+              fill="#D9A441" stroke={mau} strokeWidth={n} />
+      ))}
+      {[[-0.10, 0.08], [0.06, 0.14], [-0.02, 0.16]].map((q, qi) => (
+        <circle key={qi} cx={k(q[0])} cy={k(q[1])} r={k(0.035)} fill="#8A5A2E" />
+      ))}</g>;
     case "meo": return <g><circle cx="0" cy={k(0.06)} r={k(0.30)} fill="#C98A4B" stroke={mau} strokeWidth={n} />
       {P(`M ${-k(0.26)} ${-k(0.14)} l ${-k(0.04)} ${-k(0.22)} l ${k(0.20)} ${k(0.10)} Z`, "#C98A4B")}
       {P(`M ${k(0.26)} ${-k(0.14)} l ${k(0.04)} ${-k(0.22)} l ${-k(0.20)} ${k(0.10)} Z`, "#C98A4B")}
@@ -310,6 +329,127 @@ export const ChiaDoi: React.FC<{
     );
   };
   const kk = Math.abs(hat) % 3;
+
+  /* ── BA BỐ CỤC SO SÁNH  (3/9/2026) ──────────────────────────────────────────────────────
+     Anh: *"2 loại này a thấy xấu nhàm chán mà nó cứ lặp đi lặp lại cùng 1 motip hoài."* Khuôn
+     so sánh là loại thứ hai. Trước bản này nó luôn là: hai cột, một vạch đứt ở giữa, nhãn trên
+     — hình đúng nhưng mọi tập của mọi kênh đều đúng một hình ấy.
+
+       0  hai cột, vạch đứt         — bố cục gốc, mạnh và rõ, giữ làm mặc định
+       1  trên/dưới                 — vạch nằm ngang; ở khung dọc 9:16 đây mới là bố cục tự
+                                      nhiên, vì hai vế được cả bề ngang thay vì nửa
+       2  THEO TỈ LỆ                — hai hình đứng chung một mặt sàn, CỠ TỈ LỆ VỚI SỐ, không
+                                      có vạch ngăn. Đây là bố cục nói được điều mà hai cột bằng
+                                      nhau không nói: sự chênh lệch thành thứ NHÌN THẤY được,
+                                      không phải thứ đọc ra từ hai con số.
+
+     Bố cục 2 cần số đọc được ở CẢ HAI vế và hai số phải khác nhau — không thì nó rơi về 0.
+     Cấp một bố cục cho dữ liệu không đỡ nổi nó là cách chắc chắn để ra một khung vô nghĩa
+     (đúng bài học biểu đồ bốn cột số 0 sáng nay). */
+  const _num = (t: string): number | null => {
+    const m = /(-?)\s*\$?\s*([\d][\d,\.]*)\s*([kK]|[mM]|[bB][nN]?)?(?![A-Za-z])/.exec(String(t || ""));
+    if (!m) return null;
+    const v = parseFloat(m[2].replace(/,/g, ""));
+    if (!isFinite(v)) return null;
+    const he: any = { k: 1e3, m: 1e6, b: 1e9, bn: 1e9 };
+    return (m[1] ? -1 : 1) * v * (he[(m[3] || "").toLowerCase()] || 1);
+  };
+  const vT = _num(trai.so), vP = _num(phai.so);
+  let k3 = Math.abs(hat) % 3;
+  if (k3 === 2 && !(vT !== null && vP !== null && Math.abs(vT) !== Math.abs(vP)
+                    && Math.abs(vT) > 0 && Math.abs(vP) > 0)) k3 = 0;
+
+  if (k3 === 2) {
+    const mx = Math.max(Math.abs(vT as number), Math.abs(vP as number));
+    /* CĂN BẬC HAI, không tuyến tính: mắt so DIỆN TÍCH chứ không so chiều cao, nên tỉ lệ thẳng
+       làm vế nhỏ biến mất khi chênh nhau trăm lần. Sàn 0,26 để vế nhỏ còn nhận ra được là cái
+       gì — dưới mức ấy nó thành một chấm và người xem đọc ra "thiếu hình". */
+    /* SÀN 0,34 chứ không 0,26. Soi khung HOW BIG (hươu 18 ft cạnh cây đỏ 350 ft): tỉ lệ căn
+       bậc hai cho 0,23 nên rơi về sàn 0,26, và ở cỡ ấy con hươu ra một sợi không nhận ra là con
+       gì. Sàn tồn tại để vế nhỏ còn ĐỌC ĐƯỢC là cái gì — 0,26 chưa đủ cho việc ấy.
+       Đây vẫn là đánh đổi có ý thức: sàn càng cao thì chênh lệch càng bị nói dối bớt. 0,34 là
+       mức thấp nhất mà biểu tượng còn nhận ra được ở khung điện thoại. */
+    const co = (v: number) => Math.max(0.34, Math.sqrt(Math.abs(v) / mx));
+    const sMax = Math.min(H * 0.46, W * 0.30);
+    /* 0,60 chứ không 0,66: khối nhãn+số chiếm tới `san + 0,19·H`, và ở 0,66 nó rơi đúng vào
+       đường chân trời của `NenPhong` (0,73·H khung đầy) — chữ nằm vắt ngang chỗ tường đổi sang
+       sàn, nửa trên một nền nửa dưới một nền khác. Mặt sàn của bố cục này phải nằm CAO HƠN mặt
+       sàn của căn phòng, không trùng nó. */
+    const san = H * 0.60;
+    const ve = (d: any, v: number, x: number, tre: number) => {
+      const qq = Math.max(0, Math.min(1, (p - tre) / 0.3));
+      const sz = sMax * co(v) * (0.90 + qq * 0.10);
+      return (
+        <g opacity={qq}>
+          <ellipse cx={x} cy={san + sz * 0.035} rx={sz * 0.40} ry={H * 0.014}
+                   fill="#000000" opacity={0.13} />
+          <g transform={`translate(${x} ${san - sz * 0.5})`}><BieuTuong ten={d.bt || ""} s={sz} /></g>
+          {/* KHOẢNG CÁCH TÍNH TỪ CỠ CHỮ, KHÔNG TỪ MỘT PHÂN SỐ CỐ ĐỊNH.
+              Bản đầu đặt nhãn ở `san + 0,075·H` và số ở `san + 0,150·H` — nghe như cách nhau
+              đủ, nhưng số cao tới 0,082·H nên đỉnh nó (0,150 − 0,082 = 0,068) nằm TRÊN chân
+              nhãn (0,075). Hai dòng đè nhau, và chỉ soi khung mới thấy.
+              Đúng họ lỗi đã trả giá ở `SoLieu` sáng nay: khoảng cách giữa hai dòng chữ phải
+              suy ra từ CHIỀU CAO CHỮ, không phải từ hai phân số đặt tay cạnh nhau. */}
+          {(() => {
+            const cN = Math.min(H * 0.046, (W * 0.40 / Math.max(1, (d.nhan || "").length)) * 1.5);
+            const cS = Math.min(H * 0.078, (W * 0.42 / Math.max(1, (d.so || "").length)) * 1.55);
+            const yN = san + H * 0.070 + cN;
+            return (
+              <>
+                <text x={x} y={yN} textAnchor="middle" fontFamily={F} fontWeight={900}
+                      fontSize={cN} fill="#2C2722" letterSpacing={1}>{(d.nhan || "").toUpperCase()}</text>
+                <text x={x} y={yN + cS * 1.18} textAnchor="middle" fontFamily={F} fontWeight={900}
+                      fontSize={cS} fill={mau}>{d.so}</text>
+              </>
+            );
+          })()}
+        </g>
+      );
+    };
+    return (
+      <g>
+        <line x1={W * 0.05} y1={san} x2={W * 0.95} y2={san}
+              stroke={_pha(nen, -0.30)} strokeWidth={Math.max(2, H * 0.003)} />
+        {ve(trai, vT as number, W * 0.27, 0)}
+        {ve(phai, vP as number, W * 0.73, 0.16)}
+      </g>
+    );
+  }
+
+  if (k3 === 1) {
+    /* TRÊN / DƯỚI — vạch nằm ngang. Mỗi vế được CẢ bề ngang, nên nhãn dài và số dài không còn
+       phải thu nhỏ; đây là lý do thật để có bố cục này, không chỉ để đổi hình. */
+    const ngan = (d: any, y: number, tre: number) => {
+      const qq = Math.max(0, Math.min(1, (p - tre) / 0.3));
+      const sz = Math.min(H * 0.20, W * 0.15);
+      return (
+        <g opacity={qq}>
+          <text x={W * 0.09} y={y + H * 0.015} fontFamily={F} fontWeight={900}
+                fontSize={Math.min(H * 0.052, (W * 0.34 / Math.max(1, (d.nhan || "").length)) * 1.5)}
+                fill="#2C2722" letterSpacing={1}>{(d.nhan || "").toUpperCase()}</text>
+          <g transform={`translate(${W * 0.50} ${y})`}><BieuTuong ten={d.bt || ""} s={sz} /></g>
+          <text x={W * 0.91} y={y + H * 0.030} textAnchor="end" fontFamily={F} fontWeight={900}
+                fontSize={Math.min(H * 0.095, (W * 0.34 / Math.max(1, (d.so || "").length)) * 1.55)}
+                fill={mau}>{d.so}</text>
+        </g>
+      );
+    };
+    return (
+      <g>
+        {[0, 1].map((j) => (
+          <rect key={`h${j}`} x={W * 0.03} y={H * (j ? 0.505 : 0.075)} width={W * 0.94} height={H * 0.40}
+                rx={W * 0.010} fill={_tron(nen, mau, j ? 0.13 : 0.05)}
+                opacity={0.86 * Math.min(1, p / 0.35)} />
+        ))}
+        {ngan(trai, H * 0.275, 0)}
+        <line x1={W * 0.09} y1={H * 0.4875} x2={W * (0.09 + 0.82 * Math.min(1, p / 0.5))} y2={H * 0.4875}
+              stroke="#2C2722" strokeWidth={Math.max(3, H * 0.005)}
+              strokeDasharray={`${H * 0.03} ${H * 0.022}`} />
+        {ngan(phai, H * 0.705, 0.16)}
+      </g>
+    );
+  }
+
   return (
     <g>
       {/* HAI TẤM NỀN MỜ dựng cấu trúc cho khuôn so sánh.  (3/9/2026)

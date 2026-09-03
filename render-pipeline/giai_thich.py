@@ -2557,6 +2557,32 @@ GU_KHUON = {
 }
 
 
+# Khuôn SO SÁNH có ba bố cục (xem `ChiaDoi` trong Khuon.tsx). Mỗi kênh dùng HAI — cùng lý do
+# với `GU_KHUON`: đủ đa dạng trong một video, vẫn nhận ra được kênh.
+#   0 hai cột + vạch đứt · 1 trên/dưới (nhãn dài thoải mái) · 2 theo TỈ LỆ (chênh lệch thành
+#   thứ nhìn thấy được). Bố cục 2 tự rơi về 0 khi hai vế không có số đọc được — cấp một bố cục
+#   cho dữ liệu không đỡ nổi nó là cách chắc chắn để ra khung vô nghĩa.
+GU_SS = {
+    "howlong":    (0, 1), "howbig":     (2, 0), "realcost":   (2, 1), "howmuch":    (2, 0),
+    "whatif":     (1, 0), "survive":    (0, 1), "dayinlife":  (1, 0), "wheregoes":  (1, 2),
+    "therules":   (1, 0), "speedof":    (2, 1), "odds":       (2, 0), "hiddenfee":  (0, 2),
+    "yearsof":    (1, 2), "howloud":    (0, 2), "whatweighs": (2, 1), "rightnow":   (0, 1),
+    "howhot":     (2, 0), "smallest":   (2, 1),
+}
+
+
+def _rai_ss(ma: str, nhip: list, idx: int = 0) -> list:
+    """Gán bố cục cho từng nhịp so sánh, xoay trong hai bố cục của kênh."""
+    bo = GU_SS.get(ma) or (0, 1)
+    d = 0
+    for n in nhip:
+        if (n.get("khuon") or "") != "chia_doi":
+            continue
+        n["bo_ss"] = bo[(idx + d) % len(bo)]
+        d += 1
+    return nhip
+
+
 def _rai_khuon(ma: str, nhip: list, idx: int = 0) -> list:
     """Gán bố cục thẻ chữ cho từng nhịp, xoay trong BA bố cục của kênh.
 
@@ -2765,6 +2791,7 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
     # nhánh đã gộp lại, vì đặt trong từng nhánh là hai chỗ để lệch nhau.
     nhip = _rai_hinh(ma, nhip, idx)
     nhip = _rai_khuon(ma, nhip, idx)
+    nhip = _rai_ss(ma, nhip, idx)
 
     # Nhịp 0 = HOOK. Chèn ở đây chứ không viết vào từng bộ sinh: hook là quy tắc chung của cả
     # bộ phim, không phải nội dung riêng của một kênh — viết mười chỗ là mười chỗ để lệch nhau.

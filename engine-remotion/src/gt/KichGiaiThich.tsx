@@ -314,7 +314,9 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
       case "chia_doi":
         return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
                  lop: <ChiaDoi W={W} H={H * 0.80} trai={N.trai || {}} phai={N.phai || {}} mau={mau} p={p}
-                               nen={nenTrang} hat={hat} /> };
+                               nen={nenTrang}
+                               /* `bo_ss` do Python quyết — cùng lý do với `bo_the`. */
+                               hat={N.bo_ss ?? hat} /> };
       case "so_lieu":
         return { nen: Nen,
                  lop: <g>
