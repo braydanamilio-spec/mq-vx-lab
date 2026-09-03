@@ -503,14 +503,46 @@ LOI_MAU = {
 }
 
 
+# Kênh đang được dựng — `_loi` đọc để lệch pha câu nối. Đặt ở `kich_ban` và `sinh_long`, hai
+# chỗ duy nhất gọi bộ sinh. Xem chú thích trong `_loi`.
+_MA_HIEN = ""
+
+
+def _lech_kenh(ma: str) -> int:
+    """Băm mã kênh ra một số nguyên ỔN ĐỊNH.
+
+    KHÔNG dùng `hash()` của Python: nó đổi theo từng lần chạy vì `PYTHONHASHSEED` ngẫu nhiên,
+    nên máy anh và runner sẽ cho hai lịch khác nhau — cùng một tập dựng lại ra lời khác. Đã trả
+    giá cho đúng chuyện này ở bộ Kling (§13.13).
+    """
+    n = 0
+    for c in str(ma or ""):
+        n = (n * 31 + ord(c)) % 100003
+    return n
+
+
 def _loi(vai: str, i: int, rieng: str = "") -> str:
-    """Câu nối theo VAI TRÒ, xoay theo số tập. `rieng` khác rỗng thì dùng nó (câu riêng của kênh)."""
+    """Câu nối theo VAI TRÒ, xoay theo số tập VÀ theo kênh.
+
+    ── VÌ SAO PHẢI LỆCH THEO KÊNH  (3/9/2026) ─────────────────────────────────────────────
+    Cổng `kiem_khuon` đo trên 21 video của nhiều kênh: câu "Put them side by side." xuất hiện
+    **7 lần**, "We are going to answer it properly." 5 lần. Không phải một kênh lặp — mà là BẢY
+    KÊNH KHÁC NHAU cùng đọc một câu, vì `ds[i % len(ds)]` chỉ nhìn chỉ số chương. Hai kênh dựng
+    chương thứ 3 thì cùng lấy câu thứ 3.
+
+    Đây đúng trục *"kịch bản"* mà chính sách YouTube nêu tên (§13.17): các kênh dùng chung một
+    bộ câu nối thì đọc ra một xưởng. Và nó là thứ đo được, không phải cảm giác.
+
+    Lệch pha bằng băm mã kênh: cùng một hồ 5 câu nhưng mỗi kênh bắt đầu ở một chỗ khác, nên
+    xác suất hai kênh trùng câu ở cùng chỉ số giảm năm lần. Tất định nên dựng lại vẫn ra đúng
+    lời cũ.
+    """
     if rieng:
         return rieng
     ds = LOI_MAU.get(vai)
     if not ds:
         return ""
-    return ds[i % len(ds)]
+    return ds[(i + _lech_kenh(_MA_HIEN)) % len(ds)]
 
 
 def _khu(ds: list) -> list:
@@ -2514,6 +2546,8 @@ def ap_gu(ma: str, idx: int, nhip: list) -> list:
 def sinh_long(ma: str, idx: int, so_chuong: int = 10):
     k = next(x for x in KENH if x["ma"] == ma)
     bo = BO_SINH[k["sinh"]]
+    global _MA_HIEN
+    _MA_HIEN = ma            # `_loi` đọc để lệch pha câu nối theo kênh
     nhip, muc = [], []
 
     # ── MỞ ĐẦU ──────────────────────────────────────────────────────────────────────────
@@ -3107,6 +3141,8 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
         tieu, hook, hook_phu, nhip, muc = sinh_long(ma, idx, so_chuong)
     else:
         # Short lấy vị trí CHẴN, bản dài lấy vị trí LẺ — xem `vi_tri_short`/`vi_tri_long`.
+        global _MA_HIEN
+        _MA_HIEN = ma        # xem `_loi`
         tieu, hook, hook_phu, nhip = BO_SINH[k["sinh"]](vi_tri_short(ma, idx))
         # Ngữ pháp riêng của kênh, biến thể xoay theo số tập — xem `GU_KENH`.
         nhip = doi_loi(ap_gu(ma, idx, nhip), idx)
