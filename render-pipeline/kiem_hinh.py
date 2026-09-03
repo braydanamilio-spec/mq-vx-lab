@@ -220,6 +220,30 @@ def sau(mp4: str, la_short: bool = True) -> tuple:
     else:
         diem += 20
 
+    # ── 5b. KHỚP LỜI–TIẾNG  (3/9/2026) ────────────────────────────────────────────────
+    # Phụ đề karaoke tô từng từ theo mốc trong `tu`. Nếu mốc lệch khỏi tiếng đọc thì chữ
+    # sáng lên trước hoặc sau lời — lỗi này người xem thấy ngay trong hai giây, mà không cổng
+    # nào canh.
+    # Đo: mốc kết thúc của từ CUỐI so với độ dài tệp tiếng. Đo được trên 7 video thật: lệch
+    # 0,06–0,24 giây, tức khớp. Trần 2 giây vì `edge-tts` có đuôi im lặng ngắn ở cuối tệp.
+    try:
+        _pj = mp4[:-4] + ".json"
+        _d = json.load(io.open(_pj, encoding="utf-8"))
+        _tu = _d.get("tu") or []
+        _mp3 = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "engine-remotion", "public", _d.get("voMp3") or "")
+        if _tu and os.path.exists(_mp3):
+            _cuoi = max(float(w.get("t", 0)) + float(w.get("d", 0)) for w in _tu)
+            _r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                                 "-of", "csv=p=0", _mp3], capture_output=True, text=True)
+            _dur = float((_r.stdout or "0").strip() or 0)
+            if _dur > 0 and abs(_cuoi - _dur) > 2.0:
+                bao.append(f"phụ đề lệch tiếng {abs(_cuoi - _dur):.1f}s — chữ sáng không đúng lời")
+            else:
+                diem += 0      # khớp: không cộng điểm, chỉ không trừ
+    except Exception:
+        pass                   # thiếu tệp nhịp hoặc tiếng thì bỏ qua, không tố oan
+
     # 6. ĐÃ BỎ phép đo "tràn mép" bằng pixel — nó TỐ OAN.
     # Đo thử: 52,5% điểm ảnh ở mép là cực sáng, nhưng chỉ vì ảnh nền là sa mạc màu kem
     # (sáng trung bình 216). Phép đo bắn vào MỌI ảnh tràn viền, tức mọi cảnh của bộ này.
