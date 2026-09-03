@@ -903,11 +903,19 @@ export const KinhLup: React.FC<{
           Đúng họ lỗi *vá một nhánh, để nguyên nhánh song song* — bản vá cũ chỉ chữa nhánh CÓ
           ảnh. Nhánh không ảnh cần một thứ khác hẳn: vẽ chính vật đang nói tới vào trong ống
           kính. Kính lúp phóng to một biểu tượng vẫn đúng nghĩa "nhìn kỹ vào chi tiết". */}
-      <circle cx={cx} cy={cy} r={r} fill={con ? "#FFFFFF" : _pha(mau, 0.86)} />
+      {/* ── ỐNG KÍNH SOI CHÍNH VẬT, KHÔNG SOI MỘT LÁT ẢNH  (3/9/2026) ────────────────────
+          Bản trước ưu tiên `con` (ảnh nền) và chỉ vẽ biểu tượng khi không có ảnh. Nhưng phóng
+          to 2,2 lần một mảng bất kỳ của bức ảnh thì phần lớn trường hợp rơi vào nền trống —
+          soi khung THE RULES ba lần đều ra **một đĩa trắng tinh**, kể cả sau khi dời điểm soi
+          về giữa khung.
+          Việc của kính lúp là nói *"nhìn kỹ vào THỨ NÀY"*. Một biểu tượng sạch nói điều ấy rõ
+          hơn hẳn một lát ảnh phóng to — và nó không bao giờ rỗng. Nên đảo thứ tự ưu tiên:
+          có `bt` thì vẽ `bt`; không có mới phóng ảnh. */}
+      <circle cx={cx} cy={cy} r={r} fill={bt ? _pha(mau, 0.86) : "#FFFFFF"} />
       <g clipPath="url(#lup)">
-        {con
-          ? <g transform={`translate(${cx - x * 2.2} ${cy - y * 2.2}) scale(2.2)`}>{con}</g>
-          : (bt ? <g transform={`translate(${cx} ${cy})`}><BieuTuong ten={bt} s={r * 1.35} /></g> : null)}
+        {bt
+          ? <g transform={`translate(${cx} ${cy})`}><BieuTuong ten={bt} s={r * 1.35} /></g>
+          : (con ? <g transform={`translate(${cx - x * 2.2} ${cy - y * 2.2}) scale(2.2)`}>{con}</g> : null)}
       </g>
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="#2C2722" strokeWidth={Math.max(4, H * 0.010)} />
       <line x1={x} y1={y} x2={cx - r * 0.7} y2={cy + r * 0.7} stroke="#2C2722"

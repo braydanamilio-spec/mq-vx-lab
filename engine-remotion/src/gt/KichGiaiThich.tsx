@@ -329,7 +329,14 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                      Chủ thể to hơn thì phải HẠ xuống để chân vẫn chạm sàn, nếu không nó lơ
                      lửng — đó là lý do `sanY` nhân theo cùng hệ số. */
                   const cz = [1.0, 0.74, 1.26, 0.86, 1.14, 1.0][kv];
-                  const sz = s0 * cz;
+                  /* CHỦ THỂ KHÔNG ĐƯỢC CHẠM DẢI PHỤ ĐỀ.  (3/9/2026)
+                     Cỡ cảnh 1,26× làm hình tràn xuống vùng chữ — soi lưới thấy tay của hình
+                     người cắt ngang câu phụ đề ở HOW MUCH, và con vi-rút của SMALLEST cũng
+                     chạm mép chữ. Cỡ cảnh là thứ tốt, nhưng nó phải chịu thêm một ràng buộc mà
+                     công thức chưa mã hoá: **chiều cao còn lại phía trên dải phụ đề**.
+                     Đúng họ lỗi §6 — một kích thước chịu hai ràng buộc mà công thức chỉ có một. */
+                  const traTren = sanY - H * 0.02;          // khoảng trống từ đỉnh khung tới sàn
+                  const sz = Math.min(s0 * cz, traTren * 1.92);
                   return (
                     <>
                       <ellipse cx={cx} cy={sanY + sz * 0.03} rx={sz * 0.34} ry={sz * 0.055}
@@ -375,7 +382,11 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                  lop: <Truc W={W} H={H * 0.80} moc={N.moc || []} vt={N.vt ?? -1} mau={mau} p={p} /> };
       case "kinh_lup":
         return { nen: Nen,
-                 lop: <KinhLup W={W} H={H * 0.80} x={W * (N.x ?? 0.34)} y={H * 0.80 * (N.y ?? 0.5)}
+                 /* Điểm soi mặc định 0,34/0,50 là một chỗ TUỲ TIỆN — soi khung THE RULES
+                    thấy ống kính phóng to đúng một mảng giấy trắng, đọc ra cái đĩa rỗng. Ảnh
+                    của bộ này luôn đặt chủ thể ở giữa khung (luật `SAN_NEN`: *open space in
+                    the centre*), nên giữa khung là chỗ đúng để soi. */
+                 lop: <KinhLup W={W} H={H * 0.80} x={W * (N.x ?? 0.50)} y={H * 0.80 * (N.y ?? 0.44)}
                                nhan={N.nhan || ""} mau={mau} p={p}
                                bt={N.bt || ""}
                                con={N.nenAnh ? (
