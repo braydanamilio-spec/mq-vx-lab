@@ -257,7 +257,8 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
 
 export const ChiaDoi: React.FC<{
   W: number; H: number; trai: any; phai: any; mau: string; p: number;
-}> = ({ W, H, trai, phai, mau, p }) => {
+  nen?: string; hat?: number;
+}> = ({ W, H, trai, phai, mau, p, nen = "#F2F0EA", hat = 0 }) => {
   /* CỠ CHỮ PHẢI CHỊU CẢ HAI RÀNG BUỘC.
      Bản đầu tính cỡ chữ chỉ theo CHIỀU CAO khung (`H*0.105`). Trên khung ngang 16:9 thì vừa;
      trên khung dọc 9:16 mỗi cột chỉ rộng 540px mà cỡ chữ vẫn là 202px, nên "1.08 billion km/h"
@@ -284,6 +285,13 @@ export const ChiaDoi: React.FC<{
     const q = Math.max(0, Math.min(1, (p - tre) / 0.3));
     return (
       <g opacity={q} transform={`translate(${x} 0)`}>
+        {/* BÓNG TIẾP ĐẤT dưới biểu tượng.  (3/9/2026)
+            Không có nó thì hai biểu tượng lơ lửng giữa khung như hai hình dán, và khuôn này
+            đọc ra "slide thuyết trình" thay vì "một cảnh". Cùng thứ đã thêm cho chủ thể ở
+            `KichGiaiThich` và cho cột ở `Chart` — một khung có mặt sàn thì MỌI vật đứng trên
+            sàn ấy phải để lại bóng, thiếu một vật là mắt đọc ra ngay. */}
+        <ellipse cx="0" cy={H * 0.60} rx={H * 0.115} ry={H * 0.020}
+                 fill="#000000" opacity={0.13} />
         <text x="0" y={H * 0.20} textAnchor="middle" fontFamily={F} fontWeight={900}
               fontSize={cNhan} fill="#2C2722"
               letterSpacing={1}>{(d.nhan || "").toUpperCase()}</text>
@@ -301,8 +309,22 @@ export const ChiaDoi: React.FC<{
       </g>
     );
   };
+  const kk = Math.abs(hat) % 3;
   return (
     <g>
+      {/* HAI TẤM NỀN MỜ dựng cấu trúc cho khuôn so sánh.  (3/9/2026)
+          Bản trước chỉ có một vạch đứt giữa khung: hai vế trôi trên cùng một mặt phẳng, và mắt
+          phải TỰ gom "nhãn + hình + số" thành một nhóm. Hai tấm nền làm việc gom ấy hộ mắt —
+          đây là thứ mọi bảng so sánh chuyên nghiệp đều có, và nó không tốn thêm một chữ nào.
+          Vế phải đậm hơn một chút vì nó là vế bất ngờ, vế mà lời kể dẫn tới.
+          `hat` đổi bo góc và độ đậm theo TẬP để hai tập liền nhau không ra một tấm ảnh. */}
+      {[0, 1].map((j) => (
+        <rect key={`p${j}`} x={W * (j ? 0.515 : 0.025)} y={H * 0.075}
+              width={W * 0.46} height={H * 0.79}
+              rx={W * (kk === 1 ? 0.004 : kk === 2 ? 0.022 : 0.013)}
+              fill={_tron(nen, mau, j ? 0.13 : 0.05)}
+              opacity={(kk === 2 ? 0.62 : 0.86) * Math.min(1, p / 0.35)} />
+      ))}
       {ben(trai, W * 0.25, 0)}
       {/* Vạch giữa VẼ DẦN từ trên xuống: mắt bám theo nét đang chạy, nên nó dẫn người xem sang
           vế thứ hai đúng lúc lời kể nói tới vế thứ hai. */}
@@ -449,10 +471,24 @@ export const SoLieu: React.FC<{
                   Ở mức cũ (0.62 ở 58%) thì trên nền 230 chỉ còn xám ~126, tương phản ~3:1 với
                   chữ trắng: dưới chuẩn đọc được.
                   Nay giữ ≥0.72 qua hết vùng chữ. Trên nền 230 cho ra ~64 — tương phản ~7:1. */}
-              <stop offset="0%" stopColor="#0B0E14" stopOpacity={0.90} />
-              <stop offset="62%" stopColor="#0B0E14" stopOpacity={0.72} />
-              <stop offset="84%" stopColor="#0B0E14" stopOpacity={0.34} />
-              <stop offset="100%" stopColor="#0B0E14" stopOpacity={0} />
+              {/* 3/9 — BỎ MÀU ĐEN, DÙNG MÀU THƯƠNG HIỆU ĐẬM.
+                  Anh soi bản short REAL COST: *"ko làm bóng mờ đen thế nha xấu"*. Đúng — dải
+                  `#0B0E14` là một màu KHÔNG có mặt ở đâu khác trong khung, nên nó đọc ra một
+                  tấm kính khói dán lên ảnh, không đọc ra một phần của bức hình.
+                  Em đã bỏ dải ấy ở phụ đề hôm qua nhưng để nguyên ở đây — đúng họ lỗi *vá một
+                  nhánh, để nguyên nhánh song song*, lần thứ bảy trong tuần.
+
+                  Thay bằng chính màu kênh làm đậm. Cùng độ tối (nên tương phản giữ nguyên,
+                  cổng `kiem_chelap` vẫn qua) nhưng mắt đọc nó ra "chỉnh màu điện ảnh" chứ
+                  không ra "bóng đen" — vì nó nằm trong bảng màu đã có mặt ở con số, ở cột
+                  biểu đồ, ở thẻ chương.
+
+                  Và tan sớm hơn (kết thúc ở 88% thay vì 100%) để nửa dưới bức ảnh sáng nguyên
+                  vẹn — chỗ có mặt người, thứ anh muốn nhìn rõ nhất. */}
+              <stop offset="0%" stopColor={_pha(mau, -0.62)} stopOpacity={0.88} />
+              <stop offset="62%" stopColor={_pha(mau, -0.62)} stopOpacity={0.70} />
+              <stop offset="88%" stopColor={_pha(mau, -0.55)} stopOpacity={0.24} />
+              <stop offset="100%" stopColor={_pha(mau, -0.55)} stopOpacity={0} />
             </linearGradient>
           </defs>
           <rect x={0} y={0} width={W} height={H * (ngang ? 0.48 : 0.54)}
@@ -739,10 +775,23 @@ const _bac = (v: number): string => {
   return Math.round(v).toLocaleString();
 };
 
+/* ── BIỂU ĐỒ CỘT  (nâng cấp 3/9/2026) ───────────────────────────────────────────────────────
+   Soi lưới HOW LOUD: trục đúng, số đúng, mà đọc ra "bảng tính", không đọc ra "một cảnh phim".
+   Ba thứ thiếu, cả ba là thứ mọi kênh đầu bảng đều có:
+
+   · **cột không nổi bật vẽ bằng xám chết `#B8B2A6`** — một màu không có mặt ở đâu khác trong
+     khung. Nay pha từ chính màu thương hiệu: cùng một bảng màu, chỉ nhạt đi. Đây đúng lỗi
+     "mượn một giá trị cho việc nó không sinh ra để làm" ở luật số 6, phiên bản màu sắc.
+   · **không có đường lưới** — mắt không ước lượng được cột thứ ba bằng bao nhiêu phần cột đầu.
+     Ba đường mảnh là đủ; nhiều hơn thì thành giấy kẻ ô.
+   · **cột không chạm sàn** — không có bóng tiếp đất nên nó dán lên phòng chứ không đứng trong
+     phòng. Cùng thứ đã sửa cho chủ thể ở `KichGiaiThich`.
+
+   `hat` đổi bo góc và độ đậm lưới theo TẬP, để hai tập liền nhau không ra một tấm ảnh. */
 export const Chart: React.FC<{
   W: number; H: number; cot: { nhan: string; v: number }[]; don: string;
-  mau: string; mauPhu: string; p: number;
-}> = ({ W, H, cot, don, mau, mauPhu, p }) => {
+  mau: string; mauPhu: string; p: number; nen?: string; hat?: number;
+}> = ({ W, H, cot, don, mau, mauPhu, p, nen = "#F2F0EA", hat = 0 }) => {
   if (!cot.length) return null;
   const max = Math.max(...cot.map((c) => Math.abs(c.v)), 1);
   const dinh = cot.reduce((a, b) => (Math.abs(b.v) > Math.abs(a.v) ? b : a), cot[0]);
@@ -751,8 +800,17 @@ export const Chart: React.FC<{
   const x0 = W * 0.07;
   const q = Math.min(1, p / 0.5);
   const cn = Math.min(H * 0.038, (b * 0.92 / Math.max(...cot.map((c) => c.nhan.length), 1)) * 1.6);
+  const kk = Math.abs(hat) % 3;
+  const nhat = _pha(_tron(nen, mau, 0.34), -0.10);   // cột phụ: cùng bảng màu, chỉ nhạt hơn
+  const bo = W * (kk === 1 ? 0.002 : kk === 2 ? 0.012 : 0.006);
   return (
     <g>
+      {/* Ba đường lưới, đặt SAU cột nên không cắt ngang mặt cột. */}
+      {[0.25, 0.5, 0.75].map((f, i) => (
+        <line key={`l${i}`} x1={x0} y1={yDay - cao * f} x2={x0 + b * cot.length} y2={yDay - cao * f}
+              stroke={_pha(nen, -0.24)} strokeWidth={Math.max(1, H * 0.0016)}
+              opacity={(kk === 2 ? 0.5 : 0.8) * q} />
+      ))}
       {cot.map((c, i) => {
         // Mỗi cột mọc lệch pha 0,06 -> mắt đọc được THỨ TỰ, không thấy cả rừng bật lên cùng lúc.
         const qi = Math.max(0, Math.min(1, (q - i * 0.06) / 0.55));
@@ -767,10 +825,12 @@ export const Chart: React.FC<{
         const cs = Math.min(H * 0.042, (w / Math.max(2, `${Math.round(so)}`.length)) * 1.5);
         return (
           <g key={i}>
-            <rect x={x} y={yDay - h} width={w} height={h} rx={W * 0.006}
-                  fill={la ? mau : "#B8B2A6"} stroke="#2C2722" strokeWidth={Math.max(2, H * 0.004)} />
+            <ellipse cx={x + w / 2} cy={yDay + H * 0.008} rx={w * 0.54} ry={H * 0.009}
+                     fill="#000000" opacity={0.15 * qi} />
+            <rect x={x} y={yDay - h} width={w} height={h} rx={bo}
+                  fill={la ? mau : nhat} stroke="#2C2722" strokeWidth={Math.max(2, H * 0.004)} />
             <text x={x + w / 2} y={yDay - h - H * 0.018} textAnchor="middle" fontFamily={F}
-                  fontWeight={900} fontSize={cs} fill={la ? mau : "#5A544C"} opacity={qi}>
+                  fontWeight={900} fontSize={cs} fill={la ? mau : _pha(mau, -0.34)} opacity={qi}>
               {_bac(so)}
             </text>
             <text x={x + w / 2} y={yDay + H * 0.055} textAnchor="middle" fontFamily={F}

@@ -313,7 +313,8 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
     switch (N.khuon) {
       case "chia_doi":
         return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
-                 lop: <ChiaDoi W={W} H={H * 0.80} trai={N.trai || {}} phai={N.phai || {}} mau={mau} p={p} /> };
+                 lop: <ChiaDoi W={W} H={H * 0.80} trai={N.trai || {}} phai={N.phai || {}} mau={mau} p={p}
+                               nen={nenTrang} hat={hat} /> };
       case "so_lieu":
         return { nen: Nen,
                  lop: <g>
@@ -352,7 +353,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
       case "chart":
         return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
                  lop: <Chart W={W} H={H * 0.80} cot={N.cot || []} don={N.don || ""}
-                             mau={mau} mauPhu={mauPhu} p={p} /> };
+                             mau={mau} mauPhu={mauPhu} p={p} nen={nenTrang} hat={hat} /> };
       case "the_chu":
         return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
                  lop: <TheChu W={W} H={H * 0.80} chu={N.the || N.loi} p={p} mau={mau} /> };
