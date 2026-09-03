@@ -458,11 +458,29 @@ def vi_tri_short(ma: str, idx: int) -> int:
 
 
 def vi_tri_long(ma: str, idx: int, chuong: int) -> int:
-    """Chỉ số nội dung cho chương `chuong` của bản dài — luôn ở NỬA SAU."""
+    """Chỉ số nội dung cho chương `chuong` của bản dài — ƯU TIÊN nửa sau, tràn sang nửa đầu khi hết.
+
+    ── VÌ SAO ĐỔI  (3/9/2026) ─────────────────────────────────────────────────────────────
+    Bản cũ khoá cứng ở nửa sau (`nua + (… % con)`), để bản dài và bản ngắn không đụng chủ đề
+    nhau. Ý định đúng, nhưng nó đặt một TRẦN mà không ai đo: bảng 24 mục thì bản dài chỉ dùng
+    được 12, tức tối đa 12 chương.
+
+    Đo thời lượng thật cả 18 kênh: **2,4 – 5,0 phút**, và ngay cả khi xin hết trần cũng chỉ
+    3,4 – 5,0 phút cho 15/18 kênh. Mốc YouTube cho phép quảng cáo GIỮA video là **8 phút** — bộ
+    comic đã làm 8–11 phút đúng vì lý do ấy (§11), bộ giải thích thì chưa ai đo.
+
+    Nay quay vòng trên TOÀN bảng nhưng vẫn BẮT ĐẦU ở nửa sau. Với `chuong < con` kết quả y hệt
+    bản cũ — nên mọi tập đã dựng vẫn ra đúng nội dung cũ. Chỉ khi cần nhiều chương hơn nửa bảng
+    thì nó mới mượn sang nửa đầu.
+
+    Đánh đổi nói rõ: chương thứ 13 trở đi CÓ THỂ trùng chủ đề với một bản ngắn của cùng kênh.
+    Chấp nhận được, vì bản dài vốn là bản TỔNG HỢP nhiều câu hỏi — người xem bản dài gặp lại một
+    câu hỏi đã xem ở short thì đó là ôn lại, không phải lặp. Còn video 3 phút thì mất hẳn một
+    dòng doanh thu.
+    """
     n = khong_gian(ma)
     nua = max(1, n // 2)
-    con = max(1, n - nua)
-    return nua + ((idx * 40 + chuong) % con)
+    return (nua + idx * 40 + chuong) % max(1, n)
 
 
 # ══ BIẾN THỂ LỜI KỂ  (1/9/2026) ═════════════════════════════════════════════════════════════
@@ -2543,6 +2561,51 @@ def ap_gu(ma: str, idx: int, nhip: list) -> list:
     return nhip
 
 
+def so_chuong_toi_da(ma: str, tran: int = 40) -> int:
+    """Số chương LỚN NHẤT mà kênh này còn ra chủ đề khác nhau.
+
+    ── VÌ SAO CẦN  (3/9/2026) ─────────────────────────────────────────────────────────────
+    Workflow gọi `--chuong 10` cho mọi kênh. Đo thời lượng thật của cả 18 kênh: **2,4 – 5,0
+    phút**, không kênh nào chạm mốc **8 phút** — mốc YouTube cho phép chèn quảng cáo GIỮA video.
+    Bộ comic đã làm 8–11 phút đúng vì lý do ấy (§11); bộ giải thích thì chưa ai đo.
+
+    Nhưng không thể nâng đồng loạt: bảng dữ liệu mỗi kênh một cỡ (13–33 mục), và `vi_tri_long`
+    quay vòng khi hết mục — nâng quá trần thì chương sau lặp lại chủ đề chương trước, tức đổi
+    một lỗi (video ngắn) lấy một lỗi nặng hơn (video lặp).
+
+    Nên ĐO thay vì đoán: chạy bộ sinh cho tới khi tiêu đề trùng, lấy số chương ngay trước đó.
+    Rẻ — bộ sinh không gọi mạng, không đọc tiếng, không vẽ ảnh.
+    """
+    bo = BO_SINH.get(next((k["sinh"] for k in KENH if k["ma"] == ma), ""), None)
+    if not bo:
+        return 10
+    da, giay = [], 0.0
+    for c in range(tran):
+        try:
+            t, _h, _hp, nc = bo(vi_tri_long(ma, 0, c))
+        except Exception:
+            break
+        if t in da:
+            break
+        da.append(t)
+        # Ước thời lượng ngay tại đây: giọng đọc Mỹ ~2,8 chữ/giây (cùng con số `kiem_nhip` dùng),
+        # cộng 0,35s khoảng nghỉ mỗi nhịp. Cộng thêm thẻ chương của chương ấy.
+        giay += sum(max(1.0, len(str(x.get("loi") or "").split()) / 2.8) + 0.35 for x in nc) + 2.2
+        # ── TRẦN THỜI LƯỢNG, KHÔNG CHỈ TRẦN NỘI DUNG  (3/9/2026) ──────────────────────────
+        # Bỏ khoá nửa bảng thì HOW BIG ra 12,7 phút và HOW LONG 11,7. Vượt mốc 8 phút là tốt,
+        # nhưng §10.1 dặn đo TRẦN THỜI GIAN: bản dài 9 phút mất ~50 phút dựng trên runner, nên
+        # 12,7 phút là ~70 phút — và job có trần 330 phút cho NHIỀU vòng.
+        # Dừng ở ~10 phút: trên mốc quảng cáo giữa video một khoảng an toàn, mà vẫn còn chỗ cho
+        # bốn năm vòng dựng mỗi lượt chạy. Dài hơn nữa đổi số lượng lấy độ dài, không đáng.
+        # 520 chứ không 600: ước lượng ở đây đọc `nc` THÔ từ bộ sinh, chưa có nhịp hook, chưa
+        # qua `ap_gu`/`doi_loi` (biến thể dài ngắn khác nhau) và chưa có nhịp mở/chốt của
+        # `sinh_long`. Đo thực tế: đặt 600 thì bản giao ra 11,2 phút. Chênh ~12%, và cách chữa
+        # đúng là hiệu chỉnh HẰNG theo số đo thật, không phải tin vào mô hình (§13.7).
+        if giay >= 520:
+            break
+    return max(6, len(da))
+
+
 def sinh_long(ma: str, idx: int, so_chuong: int = 10):
     k = next(x for x in KENH if x["ma"] == ma)
     bo = BO_SINH[k["sinh"]]
@@ -3138,6 +3201,13 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
         return ""
     muc = []
     if long:
+        # Kẹp theo trần THẬT của kênh — xem `so_chuong_toi_da`. Chỗ gọi xin bao nhiêu cũng
+        # được; vượt trần thì chương sau lặp chủ đề chương trước, đổi một lỗi lấy một lỗi nặng
+        # hơn. Kẹp ở đây chứ không ở workflow: workflow không biết bảng dữ liệu kênh nào lớn.
+        _tran = so_chuong_toi_da(ma)
+        if so_chuong > _tran:
+            print(f"   ⓘ {ma}: xin {so_chuong} chương, kho chỉ đủ {_tran} — dựng {_tran}")
+            so_chuong = _tran
         tieu, hook, hook_phu, nhip, muc = sinh_long(ma, idx, so_chuong)
     else:
         # Short lấy vị trí CHẴN, bản dài lấy vị trí LẺ — xem `vi_tri_short`/`vi_tri_long`.

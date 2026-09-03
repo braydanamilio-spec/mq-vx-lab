@@ -262,7 +262,17 @@ jobs:
             echo "══ [$MA] vòng $VONG — còn $CON phút ══"
 
             python bao_chay.py --kenh "$MA" --loai long --trang_thai rendering || true
-            python giai_thich.py --kenh "$MA" --long --ngang --chuong 10 || true   # --ngang: nói rõ 16:9, dù mã đã tự ép
+            # ── XIN 40 CHƯƠNG, MÃ TỰ KẸP THEO TRẦN TỪNG KÊNH  (3/9/2026) ──────────────────
+            # `--chuong 10` cho MỌI kênh. Đo thời lượng thật cả 18 kênh: **2,4 – 5,0 phút**,
+            # không kênh nào chạm mốc **8 phút** — mốc YouTube cho phép quảng cáo GIỮA video.
+            # Bộ comic đã làm 8–11 phút đúng vì lý do ấy (§11); bộ này chưa ai đo.
+            #
+            # Không nâng thành một con số cứng khác: bảng dữ liệu mỗi kênh một cỡ (13–33 mục),
+            # nâng quá trần thì chương sau lặp chủ đề chương trước — đổi một lỗi lấy một lỗi
+            # nặng hơn. Nên xin nhiều, và `so_chuong_toi_da()` kẹp theo CẢ hai ràng buộc: kho
+            # nội dung còn khác nhau, và thời lượng chưa quá ~10 phút.
+            # Sau khi sửa: 10/18 kênh ≥8 phút, trung bình 8,3 phút, dài nhất 9,8.
+            python giai_thich.py --kenh "$MA" --long --ngang --chuong 40 || true   # --ngang: nói rõ 16:9, dù mã đã tự ép
             python bao_chay.py --kenh "$MA" --loai long --trang_thai done || true
 
             python bao_chay.py --kenh "$MA" --loai short --trang_thai rendering || true

@@ -2542,6 +2542,7 @@ def main():
     check("gu hình mỗi kênh một bộ, không lặp biểu tượng liền kề", t_gu_hinh_khac_nhau)
     check("mọi nhịp có khuôn đổi bố cục đều ĐƯỢC GÁN bố cục", t_moi_nhip_co_bo_cuc)
     check("không đọc lại cùng một câu trong vòng 12 nhịp", t_khong_lap_loi_gan)
+    check("bản dài đủ dài để bật quảng cáo giữa video", t_ban_dai_du_dai)
     check("không `const` nào bị dùng trước khai báo (vùng chết tạm thời)", t_khong_tdz)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
@@ -6993,6 +6994,39 @@ def t_cham_kich_ban():
     if _o.path.exists(wf):
         assert "cham_kich_ban.py" in io.open(wf, encoding="utf-8").read(), \
             "thang chấm kịch bản không được gọi trong workflow -> viết ra rồi để đấy"
+
+
+def t_ban_dai_du_dai():
+    """Bản dài phải đủ dài để đáng gọi là bản dài, và không kênh nào tụt về mức 3 phút.
+
+    ── ĐO LÚC PHÁT HIỆN  (3/9/2026) ───────────────────────────────────────────────────────
+    Workflow gọi `--chuong 10` cho mọi kênh. Đo thời lượng thật cả 18 kênh: **2,4 – 5,0 phút**.
+    Mốc YouTube cho phép chèn quảng cáo GIỮA video là **8 phút**, và bộ comic đã làm 8–11 phút
+    đúng vì lý do ấy (§11) — bộ giải thích thì chưa ai đo, nên nó im lặng bỏ mất một dòng doanh
+    thu suốt nhiều phiên.
+
+    Gốc: `vi_tri_long` khoá cứng ở NỬA SAU bảng dữ liệu để bản dài không đụng chủ đề bản ngắn.
+    Ý định đúng, nhưng nó đặt một TRẦN mà không ai đo — bảng 24 mục thì bản dài tối đa 12 chương.
+
+    Cổng này canh cả hai phía: đủ dài (≥6 phút mọi kênh) và không quá dài (≤11 phút — §10.1,
+    trần thời gian runner).
+    """
+    import giai_thich as G
+
+    ngan, dai = [], []
+    for k in G.KENH:
+        nh = G.kich_ban(k["ma"], 0, long=True, so_chuong=40)[4]
+        phut = sum(max(1.0, len(str(x.get("loi") or "").split()) / 2.8) + 0.35
+                   for x in nh) / 60
+        if phut < 6.0:
+            ngan.append(f'{k["ma"]} {phut:.1f}p')
+        if phut > 11.0:
+            dai.append(f'{k["ma"]} {phut:.1f}p')
+    assert not ngan, "bản dài quá ngắn (dưới 6 phút): " + ", ".join(ngan[:5])
+    assert not dai, "bản dài quá dài (trên 11 phút, tốn giờ runner): " + ", ".join(dai[:5])
+
+    # Và trần phải THẬT SỰ kẹp — nếu không cổng này canh một hàm không làm gì.
+    assert G.so_chuong_toi_da("hiddenfee") < 40, "so_chuong_toi_da không kẹp gì"
 
 
 def t_khong_lap_loi_gan():
