@@ -33,6 +33,37 @@ TU_VIET = re.compile(r'for\s+\w+\s+in\s+\w*keys?\w*\s*:', re.I)
 GOI_ANH = re.compile(r'_cf_flux_image|flux-1-schnell')
 
 
+def _trong_canthat(noi_dung: str, so_dong: int, nhin_lui: int = 24) -> bool:
+    """True nếu dòng `so_dong` nằm TRONG một khối `except CanThat:`.
+
+    ── CỔNG NÀY TỪNG BẮT OAN CHÍNH THỨ NÓ YÊU CẦU  (3/9/2026) ──────────────────────────────
+    `nen_gt.py:607` in *"CF cạn hạn mức"* và bị cổng chặn. Nhưng câu ấy nằm NGAY TRONG
+    `except CanThat:` — tức đúng điều kiện mà chính cổng này đòi hỏi: *chỉ được nói 'cạn' khi
+    `goi_xoay` ném `CanThat`*.
+
+    Cổng quét CHUỖI trên từng dòng nên nó không thấy dòng ấy đứng ở đâu. Kết quả: mã ĐÚNG bị
+    tố, và người đọc log học cách bỏ qua cổng — đúng cái §13.8 gọi là *cổng bắt oan còn tệ hơn
+    cổng không bắt*, và chính chú thích ở `main()` đã cảnh báo về cùng cái bẫy này ở lần chạy
+    đầu (31/8) rồi vẫn tái diễn ở một trục khác.
+
+    Nhìn lui 24 dòng: đủ cho một khối `except` có chú thích dài (khối ở `nen_gt` dài 11 dòng),
+    và dừng ngay khi gặp một `except`/`def`/`class` khác — không thì nó sẽ nhận vơ cả những
+    dòng nằm ngoài khối.
+    """
+    dong = noi_dung.split("\n")
+    for j in range(so_dong - 2, max(-1, so_dong - 2 - nhin_lui), -1):
+        if j < 0 or j >= len(dong):
+            break
+        t = dong[j].strip()
+        if t.startswith("except CanThat"):
+            return True
+        # Ranh giới: gặp một khối khác thì dòng đang xét không thuộc `except CanThat`.
+        if t.startswith(("def ", "class ", "try:")) or (
+                t.startswith("except ") and "CanThat" not in t):
+            return False
+    return False
+
+
 def main() -> int:
     # 31/8 — lượt chạy đầu của cổng này tố oan hai chỗ trong `firestore_bridge.py`: chúng nói
     # về Firestore cạn hạn mức, một chuyện có thật và đo được, không liên quan tới Cloudflare.
@@ -49,7 +80,7 @@ def main() -> int:
         for i, dong in enumerate(d.split("\n"), 1):
             if dong.lstrip().startswith("#"):
                 continue
-            if KHANG_DINH.search(dong):
+            if KHANG_DINH.search(dong) and not _trong_canthat(d, i):
                 loi.append((t, i, "khẳng định cạn quota trong thông điệp", dong.strip()[:70]))
             if TU_VIET.search(dong) and "goi_xoay" not in d:
                 # chỉ tính là lỗi nếu TRONG vòng lặp ấy có gọi hàm sinh ảnh

@@ -266,7 +266,16 @@ jobs:
             python giai_thich.py --kenh "$MA" --so 4 || true
             python bao_chay.py --kenh "$MA" --loai short --trang_thai done || true
 
-            python sieu_gt.py || true
+            # ── `sieu_gt.py` KHÔNG ĐƯỢC NUỐT LỖI  (3/9/2026) ──────────────────────────────
+            # Cổng `kiem_az.py` bắt: `|| true` ở đây là nuốt lỗi ở MẮT XÍCH XUNG YẾU.
+            # `.tai.json` là thứ `day_kho.py` đòi để đẩy — thiếu nó thì video dựng xong nằm
+            # lại VĨNH VIỄN và lượt vẫn XANH. Đúng luật §13.3: `|| true` chỉ được dùng ở bước
+            # mà hỏng cũng không mất dữ liệu; ở mắt xích cuối phải ghi cờ rồi cho lượt HỎNG,
+            # vì lượt đỏ khiến mốc cron sau tự thử lại — đó mới là tự động thật.
+            #
+            # Không dùng `set -e` cứng: bước này nằm giữa vòng lặp nhiều kênh, chết ngay thì
+            # mất luôn các kênh sau. Ghi cờ, chạy tiếp, và cuối job đọc cờ.
+            python sieu_gt.py || touch /tmp/mm0_sieu_gt_hong
             python kiem_hinh.py || true
             # Cổng che khuất: soi đúng nhịp có CHỮ TRẮNG đè lên ảnh (khuôn `so_lieu` có `nenAnh`),
             # đo độ sáng nền dưới chữ. Cố vấn (`|| true`) chứ không chặn — nó mới hiệu chỉnh trên
@@ -351,4 +360,11 @@ jobs:
             exit 1
           fi
           echo "✅ không còn tệp nào chưa giao — mọi video đã lên Drive."
+          # Cờ `sieu_gt` hỏng: video có thể đã lên Drive nhưng KHÔNG có chữ đăng, tức không
+          # đăng được. Cho lượt HỎNG để mốc cron sau dựng lại chữ đăng.
+          if [ -f /tmp/mm0_sieu_gt_hong ]; then
+            echo "❌ sieu_gt.py hỏng ở ít nhất một kênh — thiếu .tai.json thì video không đăng được."
+            rm -f /tmp/mm0_sieu_gt_hong
+            exit 1
+          fi
           echo "✅ video đã lên kho"
