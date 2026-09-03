@@ -11,7 +11,11 @@ name: MM0 Thumbnail Requests (tạo lại theo yêu cầu từ dashboard)
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    # 3/9 — TỪ 48 LƯỢT/NGÀY XUỐNG 12. Đây là hàng đợi "tạo lại thumbnail theo yêu cầu từ
+    # dashboard" — anh bấm vài lần một tuần, không phải mỗi nửa giờ. 48 lượt/ngày để phục vụ
+    # một nút bấm thi thoảng là đổi hạn mức lấy độ trễ mà không ai cần.
+    # Mỗi 2 giờ: yêu cầu chậm nhất 2 tiếng được xử, còn hạn mức tiết kiệm 75%.
+    - cron: "20 */2 * * *"
   workflow_dispatch:
 
 concurrency: { group: mm0-thumb-requests, cancel-in-progress: false }

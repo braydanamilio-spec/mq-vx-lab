@@ -8960,3 +8960,32 @@ thước tách được hai đầu; cổng sống ở khoảng giữa.*
 SOI TAY"*. Một cảnh báo nổ ở mọi tập là cảnh báo **không ai đọc nữa**, và nó kéo chìm những cảnh
 báo THẬT nằm cạnh (13.2). Sau khi nới: **10/10 tệp 100/100**, bảng báo sạch, cảnh báo còn lại
 đều là cảnh báo thật.
+
+### 7ee — 168 lượt chạy/ngày đọc Firestore cho một việc chắc chắn không có gì để làm  (3/9/2026)
+
+Anh: *"ngày nào firebase cũng lỗi cạn thì làm ăn gì."* Đúng, và sau khi vá `don_trung_tieu_de`
+(12→1 lượt/ngày) mà reads chỉ xuống 59K→54K, tôi mới đi liệt kê **toàn bộ cron** thay vì đoán:
+
+| workflow | nhịp | lượt/ngày |
+|---|---|---|
+| `publish.yml` | `*/30` | **48** |
+| `publish_social.yml` | `15,45` | **48** |
+| `thumb_requests.yml` | `*/30` | **48** |
+| `health_guardian.yml` | mỗi giờ | 24 |
+
+**168 lượt/ngày.** Mỗi lượt `publish` đọc **trọn collection `connections`** (~100–200 doc) ngay
+ở dòng đầu của `process_users` ⇒ ~7.200 lượt đọc/ngày cho một workflow — **và chưa kênh nào nối
+YouTube**, nên toàn bộ số ấy tiêu cho một việc chắc chắn không có gì để làm.
+
+**Sửa — hỏi tầng RẺ trước:** `yt_kenh_doi` bên D1 trả danh sách kênh đang chờ đăng mà không đụng
+Firestore. Rỗng thì thoát ngay, chưa đọc một doc nào.
+
+Khác với hồ kho ở một điểm đáng ghi: ở hồ kho, tầng rẻ **thay thế** tầng đắt. Ở đây nó không thay
+được — nó chỉ trả lời câu *"có đáng hỏi tầng đắt không"*. Hai vai khác nhau, và vai thứ hai rẻ
+hơn nhiều vì chỉ cần một con số.
+
+Và `thumb_requests` hạ từ 48 xuống 12 lượt/ngày: đây là hàng đợi phục vụ **một nút bấm thi
+thoảng** trên dashboard. 48 lượt/ngày cho nó là đổi hạn mức lấy độ trễ mà không ai cần.
+
+**Luật.** Trước khi tối ưu một truy vấn, đếm xem **nó được gọi bao nhiêu lần**. Một truy vấn
+150 doc là rẻ; nhân 48 lượt/ngày × 2 workflow thì nó là khoản chi lớn nhất của cả hệ.
