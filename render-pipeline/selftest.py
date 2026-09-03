@@ -7240,6 +7240,17 @@ def t_bia_lay_nhip_dinh():
     _ky = kh[i:kh.index("->", i)] if "->" in kh[i:i + 400] else kh[i:i + 400]
     assert "giay" in _ky, "lam_thumb không nhận tham số mốc thời gian trong chữ ký"
 
+    # ── ĐƯỜNG COMIC PHẢI GIỮ NGUYÊN ────────────────────────────────────────────────────
+    # `lam_thumb` dùng chung với bộ COMIC, nơi bìa đang được duyệt. Mọi thay đổi của bộ giải
+    # thích (cắt dải phụ đề · bóng mềm · bỏ lớp chữ đè) phải nằm sau `_giua`, và `_giua` chỉ
+    # bật khi chỗ gọi truyền `giay` — chỉ `giai_thich` truyền. Đổi mặc định là mang quyết định
+    # của bộ này áp cho bộ kia mà không ai xem lại (§12.5).
+    _than = kh[i:kh.find("\ndef ", i + 10)]
+    assert "giay and 0.3 < giay" in _than, "`_giua` không còn phụ thuộc tham số `giay`"
+    _j = _than.rfind("else:")
+    assert _j > 0 and "rectangle" in _than[_j:] and "stroke_width" in _than[_j:], \
+        "nhánh comic mất hộp nền/viền chữ — bộ comic sẽ đổi hình mà không ai duyệt"
+
 
 def t_kiem_khuon_dem_theo_video():
     """`kiem_khuon` đo khuôn lời GIỮA CÁC VIDEO — nên mỗi video góp tối đa một phiếu mỗi khuôn.
