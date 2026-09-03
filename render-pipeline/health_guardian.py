@@ -84,14 +84,38 @@ def check_alive() -> bool:
         # ích (đã cạn quota 2 lần trong tháng). Sắp theo created_at GIẢM DẦN + limit -> chỉ đọc vài chục doc
         # GẦN NHẤT là đủ kết luận đúng. Thiếu composite index (owner+status+order by created_at) -> fallback
         # limit thô (giống top_titles() đã làm) — vẫn giới hạn được số đọc, không đọc cả collection nữa.
+        # ── ĐƯỜNG DỰ PHÒNG KHÔNG ĐƯỢC PHÉP BÁO ĐỘNG  (3/9/2026) ────────────────────────────
+        # Lượt 09:40 hôm nay báo *"KHÔNG có video nào xong trong 12h qua"* và cho cả workflow
+        # HỎNG. Nhưng ngay phía trên trong cùng log: *"Firestore HẾT HẠN MỨC ĐỌC -> dùng config
+        # đệm"*. Guardian không đọc được dữ liệu, và nó kết luận như thể đã đọc được.
+        #
+        # Cụ thể hơn: nhánh `order_by` cần composite index (owner + status + created_at). Thiếu
+        # index thì nó rơi xuống `q.limit(200)` **KHÔNG SẮP XẾP** — tức đọc 200 tài liệu BẤT KỲ
+        # trong hàng nghìn, rồi hỏi "có cái nào mới không". Không có cái nào mới trong 200 tài
+        # liệu ngẫu nhiên KHÔNG chứng minh được điều gì.
+        #
+        # Đây đúng họ lỗi §12.8: một phép đo không phân biệt được *"không có gì"* với *"tôi
+        # không nhìn thấy"*, và nghiêng về phía kết luận sai. Ở đó nó báo XANH nhầm; ở đây nó
+        # báo ĐỎ nhầm — cùng một gốc, và báo đỏ nhầm cũng đắt: nó dạy người ta bỏ qua báo động.
+        sap_duoc = True
         try:
             from google.cloud.firestore_v1 import Query
             docs = list(q.order_by("created_at", direction=Query.DESCENDING).limit(20).stream())
-        except Exception:
+        except Exception as _e:
+            sap_duoc = False
+            print(f"   ⚠️ không sắp được theo created_at ({str(_e)[:70]}) — thiếu composite index")
             docs = list(q.limit(200).stream())
         recent = [d for d in docs if (d.to_dict() or {}).get("created_at", "") >= cutoff]
         if recent:
             print(f"   ✅ {len(recent)} video 'done' trong {SILENT_HOURS}h qua -> hệ thống sống khoẻ.")
+            return True
+        if not sap_duoc:
+            # KHÔNG kết luận. Nói rõ vì sao không kết luận được — im lặng ở đây lại thành một
+            # dạng nói dối khác.
+            print(f"   ⚠️ KHÔNG KẾT LUẬN ĐƯỢC: chỉ soi được {len(docs)} tài liệu KHÔNG sắp xếp "
+                  f"trong toàn bộ lịch sử job. 'Không thấy cái nào mới' ở đây không có nghĩa là "
+                  f"'không có cái nào mới'. Tạo composite index (owner+status+created_at) thì "
+                  f"phép đo này mới dùng được -> fail-open, không báo động.")
             return True
         print(f"   ❌ KHÔNG có video nào xong trong {SILENT_HOURS}h qua dù render đang BẬT — có thể có lỗi hệ thống thật.")
         return False
