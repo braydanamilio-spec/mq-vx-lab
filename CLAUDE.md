@@ -1760,3 +1760,94 @@ Nay là một chốt `selftest`, và thử ngược đủ tám. Một phép tron
 tầng**: `khuon_kenh` ném `RuntimeError` khi lọc còn dưới bốn khuôn, trước cả khi chốt kịp so.
 Bài kiểm của em ban đầu chỉ bắt `AssertionError` nên báo "cổng chết" — lần thứ hai trong phiên
 bài kiểm sai chứ không phải cổng sai (13.15).
+
+---
+
+## 16. LUẬT RÚT TỪ NGÀY 3/9 — BỘ GIẢI THÍCH, VÒNG NÂNG CHẤT LƯỢNG
+
+Ngày này anh chê "vẫn xấu" bốn lần liên tiếp trong khi cổng chấm cho **100/100**. Cả bốn lần anh
+đều đúng. Đó là bài học lớn nhất của ngày.
+
+### 16.1 Điểm cổng và "đẹp" là hai đại lượng khác nhau
+
+`kiem_hinh` in ra đúng câu này ở mỗi lượt: *"Điểm này chỉ nói 'không dính tám lỗi đã biết', KHÔNG
+nói 'đẹp'."* Tôi đọc câu ấy hàng chục lần rồi vẫn báo cáo "100/100" như thể nó là chất lượng.
+
+Khi anh nói xấu mà cổng nói đẹp, **cổng đang đo thiếu**, không phải anh khó tính. Việc cần làm là
+**trích khung ra nhìn** rồi thêm thứ chưa đo, không phải giải thích rằng điểm đã cao.
+
+### 16.2 Prompt cấm đúng thứ mình muốn
+
+Ảnh ra tối và phẳng. Đọc lại prompt thì thấy hai câu **chống lại** chính ảnh tham chiếu anh gửi:
+
+- `"no gradients, no texture"` — trong khi ảnh mẫu **có** đổ bóng mềm, trời chuyển màu, lông thú
+  có nét. Cấm gradient là ép mô hình vẽ clipart phẳng.
+- `"bright saturated palette"` — nói về **độ rực của màu**, không nói **nền phải sáng**. Mô hình
+  vì thế tự do chọn nền tối, và nó chọn tối.
+
+Và prompt **không có câu nào về bối cảnh** nên ra khung rỗng. Chữa bằng cách **liệt kê tên đồ
+vật** (*cửa sổ có trời, đồng hồ tường, chậu cây, sạp chợ*) — "chi tiết" là chữ trừu tượng, tên đồ
+vật thì mô hình vẽ được.
+
+**Luật.** Khi ảnh ra không giống thứ mình muốn, **đọc lại prompt như thể mình là mô hình**: nó
+đang được BẢO làm gì, chứ không phải mình MUỐN gì.
+
+### 16.3 Cổng chặn độ dài phải đo chuỗi SẮP GỬI, không đo bản nháp
+
+Viết prompt mới xong, CF trả `HTTP 400 Length of '/prompt' must be <= 2048`. Chốt chặn cắt ở 2048
+— nhưng `_cf_flux_image` còn bọc thêm `"Absolutely no text… A <style> of: … Textless image."` =
+**159 ký tự**. Chốt trên bản nháp, gửi bản đã bọc.
+
+Cùng luật 13.7 (`_ngan_sach_khuon` phải nhận chính khuôn sắp giao đi).
+
+### 16.4 Hai hiệu ứng ngược chiều: phần đẹp triệt tiêu, phần thiệt cộng dồn
+
+Thêm lớp chỉnh màu "sáng ấm / tối lạnh": ấm 6% + lạnh 5%. Đo khung thật: **R=130 G=130 B=129** —
+không ấm lên chút nào, nhưng vẫn hạ độ sáng và độ trong. Bỏ lớp lạnh, một lớp ấm: **+1,0 → +2,6**.
+
+### 16.5 Cạn tài nguyên: hỏi "nhu cầu tăng mấy lần", không hỏi "sao ít thế"
+
+97 tài khoản CF cạn sạch. Nguồn cung không đổi suốt — **nhu cầu nhân 17 lần**:
+
+```
+trước vòng lặp liên tục : 18 luồng × 1 vòng × 46 nhịp =    828 ảnh =  4% sức hồ
+sau                     : 18 luồng × 14 vòng × 58 nhịp = 14.900 ảnh = 89%
+```
+
+Và tôi **đoán sai một lần ngay giữa việc này**: nói vòng thử lại "tối đa 4 lượt/cảnh" đẩy lên
+349%. Đếm log thật: tỉ lệ vẽ lại **2,3%**, hệ số 1,02×. Nếu tin con số 349% thì đã đi sửa thứ
+chiếm 2% trong khi thứ chiếm 89% đứng yên.
+
+**Chặn ở chỗ trả giá rẻ nhất**: trần ảnh mỗi luồng, không giảm số video. Tập đầu có ảnh AI đầy
+đủ, tập sau dùng lớp vẽ code — **đánh đổi có kiểm soát** thay vì để hồ cạn giữa chừng rồi mọi tập
+sau mất ảnh ngẫu nhiên.
+
+### 16.6 Trường tồn tại, kiểu đúng, sai HỆ QUY CHIẾU
+
+Sổ trạng thái khoá ghi theo `k["id"]` — trường CÓ, kiểu chuỗi, nhìn qua thì đúng. Nhưng giá trị
+là `local3`: id tự sinh khi đọc tệp khoá, **không phải doc id Firestore**. Nó ghi vào
+`gemini_keys/local3` suốt, dashboard đọc doc thật nên không bao giờ thấy — **không một ngoại lệ
+nào được ném**.
+
+**Luật.** Khi hai hệ trao đổi định danh, hỏi *"id này do AI cấp, và bên kia có dùng cùng loại id
+không?"* Sự tồn tại của trường `id` không chứng minh hai bên nói cùng một thứ.
+
+### 16.7 Mở hết công suất TRƯỚC khi chốt chất lượng
+
+Ngày 2/9 tôi dựng vòng lặp liên tục theo yêu cầu "hàng nghìn video/ngày". Kết quả: hệ tiêu **hết
+sạch 97 tài khoản CF** để làm ra **~1.280 video mà anh không dùng được** — vì chúng mang engine
+chưa vá.
+
+§4 của chính tệp này đã viết: *pilot một kênh, anh duyệt, rồi mới nhân ra mười.* Tôi làm ngược,
+và cái giá là một ngày hạn mức cộng một ngày runner.
+
+**Luật.** Trước khi nhân sản lượng lên, hỏi: *"đã có MỘT sản phẩm được duyệt chưa?"* Nếu chưa thì
+nhân lên chỉ là nhân bản thứ chưa ai gật đầu.
+
+### 16.8 Xoá sạch khi dây chuyền đang chạy = giết thứ vừa làm ra
+
+Anh bảo "dọn kho cũ rồi render lại". Nhưng lượt render đang chạy **đã đẩy video mới lên cùng kho**.
+Không có cờ nào trong tệp nói nó dựng bằng engine nào — thứ phân biệt được là **giờ tạo**.
+
+`don_video_cu.py --truoc <ISO>` dọn theo mốc, mặc định **bỏ thùng rác** chứ không xoá hẳn: mốc
+thời gian là bằng chứng gián tiếp, nên phải để đường lùi.

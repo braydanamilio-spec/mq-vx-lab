@@ -30,6 +30,10 @@ on:
         description: "Gõ đúng LAM-LAI để xác nhận xoá kho video của 18 kênh"
         required: true
         default: ""
+      truoc:
+        description: "CHỈ dọn tệp tạo TRƯỚC mốc này (ISO, vd 2026-09-03T07:00:00Z). Để trống = xoá SẠCH."
+        required: false
+        default: ""
 
 jobs:
   lam_lai:
@@ -74,7 +78,15 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           OWNER_UID: ${{ secrets.OWNER_UID }}
           HOT_KEY: ${{ secrets.HOT_KEY }}
-        run: cd _autopublisher && python src/wipe_queue.py --scope store
+        run: |
+          cd _autopublisher
+          if [ -n "${{ github.event.inputs.truoc }}" ]; then
+            # DỌN THEO MỐC: giữ lại video dựng bằng engine mới. Xem chú thích trong
+            # `don_video_cu.py` — xoá sạch khi lượt render đang chạy là giết luôn thứ vừa làm ra.
+            python src/don_video_cu.py --truoc "${{ github.event.inputs.truoc }}" --that
+          else
+            python src/wipe_queue.py --scope store
+          fi
 
       - name: Xoá bản ghi job của 18 kênh (hai kho phải đi cùng nhau)
         env:
