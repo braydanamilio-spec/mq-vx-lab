@@ -2549,6 +2549,7 @@ def main():
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
     check("sổ trạng thái khoá có chốt chặn theo thời gian", t_ghi_khoa_co_chot)
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
+    check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
@@ -7104,6 +7105,44 @@ def t_khong_lap_loi_gan():
     tho3 = [{"khuon": "the_chu", "loi": "How loud is a jet.", "the": "3.|How loud is a jet"}]
     G._dong_bo_the(tho3)
     assert tho3[0]["the"].startswith("3."), "đụng vào thẻ chương — số chương phải giữ nguyên"
+
+
+def t_gu_bo_cuc_rieng():
+    """Mỗi kênh phải có bộ gu bố cục RIÊNG — và không cặp nào giống quá 3/5 trục.
+
+    ── VÌ SAO ─────────────────────────────────────────────────────────────────────────────
+    Năm bảng gu (`GU_KHUON` · `GU_SS` · `GU_SO` · `GU_CHART` · `GU_HINH`) là thứ tách "đa dạng"
+    khỏi "bản sắc". Nếu mọi kênh rút từ cùng một bộ thì có đa dạng TRONG một video mà không có
+    bản sắc GIỮA các kênh — xem hai video của hai kênh vẫn thấy cùng một bộ bài (§15.2).
+
+    Đây cũng là trục mà chính sách YouTube nêu tên: *bố cục · cảnh* giống nhau hàng loạt
+    (§13.17). Và người viết nhớ được ba kênh, không nhớ mười tám — nên phải đo.
+
+    Trần 3/5: có 4-6 bố cục cho mỗi khuôn và 18 kênh, nên trùng một phần là không tránh khỏi.
+    Trùng 4/5 thì hai kênh gần như cùng một bộ bài.
+    """
+    import itertools as _it
+    import giai_thich as G
+
+    def bo(m):
+        return (frozenset(G.GU_KHUON[m]), frozenset(G.GU_SS[m]), frozenset(G.GU_SO[m]),
+                frozenset(G.GU_CHART[m]), frozenset(G.GU_HINH[m]))
+
+    ms = [k["ma"] for k in G.KENH]
+    for b in (G.GU_KHUON, G.GU_SS, G.GU_SO, G.GU_CHART, G.GU_HINH):
+        thieu = [m for m in ms if m not in b]
+        assert not thieu, f"kênh thiếu bảng gu: {thieu[:4]} -> chúng rơi về bộ mặc định chung"
+
+    hs = {}
+    for m in ms:
+        h = bo(m)
+        assert h not in hs, f"{m} và {hs[h]} có bộ gu TRÙNG HOÀN TOÀN"
+        hs[h] = m
+
+    qua = [(a, b) for a, b in _it.combinations(ms, 2)
+           if sum(1 for x, y in zip(bo(a), bo(b)) if x == y) > 3]
+    assert not qua, ("cặp kênh giống quá 3/5 trục gu: "
+                     + "; ".join(f"{a}/{b}" for a, b in qua[:3]))
 
 
 def t_prompt_canh_dung_dau():
