@@ -3410,7 +3410,15 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
              # không bao giờ nhận, nên mọi tập của một kênh dựng y hệt nhau. Cùng họ lỗi
              # "tính rồi không dùng" đã vấp ở `mauChu`.
              "hat": hat,
-             "tieuDe": k["ten"], "handle": "@" + ma + "usa",
+             "tieuDe": k["ten"],
+        # HOOK CỦA CHÍNH TẬP — `sieu_gt.py` dùng làm tiêu đề YouTube.  (3/9/2026)
+        # Trước bản này `sieu_gt` ghép `f"{tên kênh}? {con số}"`. Nhưng 7/18 tên kênh KHÔNG phải
+        # câu hỏi ("A DAY IN THE LIFE OF" · "THE RULES NOBODY READS" · "YEARS OF YOUR LIFE"),
+        # nên tiêu đề ra **"A DAY IN THE LIFE OF? 19 miles"** — thiếu chủ thể, dấu hỏi lửng.
+        # Hook của tập vốn đã là một tiêu đề đúng ngữ pháp VÀ cụ thể hơn cho tìm kiếm
+        # ("A DAY IN THE LIFE OF A ROMAN SOLDIER"), nên nó là thứ đúng để dùng — chỉ là props
+        # chưa bao giờ mang nó sang.
+        "hookTap": hook, "handle": "@" + ma + "usa",
              "mau": mk["mau"], "mauPhu": mk["phu"],
              "nenTrang": mk["nen"], "chuTrang": mk["chu"],
              "dai": dai, "doc": doc}

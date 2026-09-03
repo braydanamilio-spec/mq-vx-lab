@@ -65,7 +65,35 @@ def _lam(mp4: str) -> dict:
 
     # Tiêu đề YouTube: TÊN KÊNH đứng trước làm câu hỏi, con số đứng sau làm lời hứa. Short thêm
     # `#shorts` vì YouTube phân loại bằng thẻ ấy, không bằng tỉ lệ khung.
-    tieu_yt = f"{ten}? {chot}" + ("" if long else " #shorts")
+    # ── TIÊU ĐỀ LẤY HOOK CỦA TẬP, KHÔNG GHÉP TÊN KÊNH + "?"  (3/9/2026) ──────────────────
+    # Bản cũ: `f"{ten}? {chot}"`. Nó giả định TÊN KÊNH là một câu hỏi — đúng với 11/18 kênh
+    # ("HOW BIG IS IT REALLY?") và SAI với 7 kênh còn lại. Đo trên tệp thật:
+    #     A DAY IN THE LIFE OF? 19 miles      <- thiếu chủ thể, dấu hỏi lửng
+    #     THE RULES NOBODY READS? …           <- không phải câu hỏi
+    #     YEARS OF YOUR LIFE? 26 YEARS        <- đọc ra một câu cụt
+    # Không có lỗi nào báo: tiêu đề vẫn đủ ký tự, vẫn đăng được, chỉ là nó đọc ra như máy sinh.
+    #
+    # `hookTap` là hook của CHÍNH tập — đã là một tiêu đề đúng ngữ pháp và cụ thể hơn cho tìm
+    # kiếm ("A DAY IN THE LIFE OF A ROMAN SOLDIER" thay vì tên kênh chung). Rơi về cách cũ khi
+    # props chưa có trường ấy (tập dựng bằng mã cũ), nhưng bỏ dấu "?" nếu tên không phải câu hỏi.
+    _hook = str(p.get("hookTap") or "").strip()
+    if _hook:
+        # Dấu phân cách khi hook KHÔNG kết thúc bằng dấu hỏi: "HOW LONG YOU SPEND SLEEPING
+        # 26 YEARS" đọc ra một câu chạy dài, còn "… — 26 YEARS" thì con số đứng thành lời hứa
+        # riêng. Hook có dấu "?" thì tự nó đã ngắt, thêm gạch nữa là thừa.
+        _nga = "" if (not chot or _hook.rstrip().endswith("?")) else " —"
+        _dau = f"{_hook}{_nga} {chot}".strip()
+    else:
+        _hoi = ten.split()[0].upper() in ("HOW", "WHAT", "WHY", "WHERE", "WHO", "COULD",
+                                          "CAN", "IS", "ARE", "DO", "DOES", "WOULD", "WILL")
+        _dau = f"{ten}{'?' if _hoi else ''} {chot}".strip()
+    # Trần 100 ký tự của YouTube — cắt ở ranh giới TỪ, và cắt phần ĐUÔI (con số) trước, vì hook
+    # là thứ người ta đọc. `#shorts` phải còn nguyên: YouTube phân loại bằng thẻ ấy.
+    _duoi = "" if long else " #shorts"
+    _tran = 100 - len(_duoi)
+    if len(_dau) > _tran:
+        _dau = _dau[:_tran].rsplit(" ", 1)[0]
+    tieu_yt = _dau + _duoi
     # Facebook: dòng đầu là câu hook, không phải tên kênh — bảng tin cắt sau ~80 ký tự.
     tieu_fb = loi[0] if loi else ten
     the = [w.lower() for w in ten.split() if len(w) > 2][:4]
