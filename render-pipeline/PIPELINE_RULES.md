@@ -8753,3 +8753,34 @@ nghiệp dư — *"không hãng phim nào viền chữ"*.
 **Luật.** *Tối nền lên* chỉ chữa được che khuất do nền SÁNG. Che khuất do một nét ĐẬM cắt ngang
 thì phải tách bằng quầng quanh chính chữ. Hai nguyên nhân khác nhau, hai cách chữa khác nhau —
 và cách phân biệt là **phóng to khung ra nhìn**, không phải đọc lại công thức.
+
+### 7dw — Vòng lặp dựng 8 vòng trong khi 0 tệp giao được  (3/9/2026)
+
+Anh: *"dao dừng 9h trước rồi kêu canh làm cả đêm cho a mà."* Đêm ấy lượt render 33653662743
+chạy và **hỏng**. Đọc log luồng HOWLONG:
+
+```
+❌ HOWLONG v9_howlong_0000.mp4 — ' keyword argument instead.
+❌ Không lấy được danh sách kho Drive. chưa set HOWLONG_DRIVE_FOLDER_ID.
+… (lặp cho 0000_long, 0001, 0002, 0003)
+══ [howlong] xong 8 vòng ══
+```
+
+**Hai lỗi, và cái thứ hai đắt hơn nhiều.**
+
+**(a) Dòng báo lỗi in 160 ký tự CUỐI của stderr.** Đuôi stderr là một `UserWarning` vô hại
+(*"…Prefer using the 'filter' keyword argument instead."*), nên log đọc ra như câu trên: không
+nói gì cả, trong khi lỗi thật nằm ở **đầu** stderr. **Đuôi là chỗ tệ nhất để cắt — cảnh báo bao
+giờ cũng in sau lỗi.** Nay in dòng lỗi đầu tiên, bỏ qua các dòng cảnh báo.
+
+**(b) Vòng lặp dựng tiếp dù không giao được gì.** Luồng chạy đủ **8 vòng ≈ 40 video**, tiêu gần
+5 giờ runner, và đẩy được **0**. Vòng lặp mới thêm hôm qua chỉ kiểm *"còn đủ giờ không"*, không
+kiểm *"tập vừa rồi có giao được không"*.
+
+Đẩy hỏng là lỗi của **hạ tầng** (hồ kho, hạn mức, Worker 500), không phải của tập đang dựng —
+nên vòng sau gần như chắc chắn hỏng y hệt. Dựng tiếp là **đốt giờ để tạo ra thứ không giao
+được**. Nay: đẩy hỏng sau 3 lần thử thì **dừng vòng lặp**, để lượt đỏ và mốc cron sau tự thử lại.
+
+**Luật.** Một vòng lặp sản xuất phải kiểm **đầu ra có tới đích không**, không chỉ kiểm còn tài
+nguyên để chạy tiếp. Điều kiện dừng đúng không phải *"hết giờ"* mà là *"hết giờ HOẶC sản phẩm
+không giao được"*.

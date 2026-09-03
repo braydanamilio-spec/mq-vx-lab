@@ -275,7 +275,24 @@ jobs:
               if python day_kho.py --publish ../_autopublisher --that; then ok=1; break; fi
               echo "   ⚠ đẩy kho hụt lần $i/3 — chờ 60s rồi thử lại"; sleep 60
             done
-            [ "$ok" = "1" ] || touch /tmp/day_kho_hong
+            if [ "$ok" != "1" ]; then
+              touch /tmp/day_kho_hong
+              # ── ĐẨY HỎNG THÌ DỪNG VÒNG LẶP NGAY, ĐỪNG DỰNG TIẾP  (3/9/2026) ──────────────
+              # Đêm 2/9 luồng HOWLONG chạy đủ **8 vòng (~40 video)** trong khi **không đẩy được
+              # tệp nào** — hồ kho đọc rỗng vì Firestore 429 và Worker trả HTTP 500. Vòng lặp cứ
+              # thế dựng tiếp, tiêu gần 5 giờ runner, rồi cả lượt đỏ và mất trắng.
+              #
+              # Đẩy hỏng là lỗi của HẠ TẦNG (hồ kho, mạng, hạn mức), không phải của tập đang
+              # dựng. Nên vòng sau gần như chắc chắn hỏng y hệt: dựng tiếp là **đốt giờ để tạo
+              # ra thứ không giao được**. Dừng sớm thì lượt đỏ ngay, và bốn mốc cron sau tự thử
+              # lại — đó mới là tự động thật (§13.9).
+              #
+              # Chỉ dừng khi ĐÃ thử lại đủ 3 lần ở trên, nên đây không phải phản ứng với một
+              # trục trặc thoáng qua.
+              echo "   ⛔ [$MA] đẩy kho hỏng sau 3 lần thử — DỪNG vòng lặp, không dựng thêm"
+              echo "      (dựng tiếp cũng không giao được; để lượt đỏ cho mốc cron sau thử lại)"
+              break
+            fi
 
             # Dọn tệp đã đẩy để vòng sau không dựng đè và ổ đĩa không đầy.
             rm -f out/v9_*.mp4 out/v9_*.jpg out/v9_*.tai.json 2>/dev/null || true

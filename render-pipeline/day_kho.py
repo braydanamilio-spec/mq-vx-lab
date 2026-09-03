@@ -106,8 +106,23 @@ def day_mot(mp4: str, thu_publish: str, biet: set, that: bool) -> bool:
         _kho = f"  → kho {_m.group(1)}"
     if _id:
         _kho += f" · {_id.group(1)[:16]}"
+    # ── IN DÒNG LỖI ĐẦU TIÊN, KHÔNG PHẢI 160 KÝ TỰ CUỐI  (3/9/2026) ────────────────────────
+    # Đêm qua mất một lượt dựng vì chẩn đoán chậm, và lý do là chính dòng này: nó in
+    # `[-160:]` của stderr, mà đuôi stderr là một **UserWarning** vô hại
+    # (*"…Prefer using the 'filter' keyword argument instead."*). Log vì thế đọc ra như:
+    #     ❌ HOWLONG  v9_howlong_0000.mp4 — ' keyword argument instead.
+    # Câu ấy không nói gì cả, trong khi lỗi thật nằm ở đầu stderr.
+    #
+    # Đuôi là chỗ TỆ NHẤT để cắt: cảnh báo bao giờ cũng in sau lỗi.
+    _err = (r.stderr or "") + "\n" + (out or "")
+    _dong = [d.strip() for d in _err.splitlines()
+             if d.strip() and not d.strip().startswith(("Warning", "  ", "/"))
+             and "Warning" not in d and "warnings.warn" not in d]
+    _ly = next((d for d in _dong if d.startswith(("❌", "⚠️", "Traceback", "Error"))), "")
+    if not _ly:
+        _ly = _dong[0] if _dong else (r.stderr or out or "")[:160]
     print(f"   {'✅' if ok else '❌'} {kenh:18s} {os.path.basename(mp4)}{_kho}{loi_them}"
-          f"{'' if ok else ' — ' + (r.stderr or out or '')[-160:]}")
+          f"{'' if ok else ' — ' + _ly[:180]}")
     for d in out.splitlines():
         if d.lstrip().startswith(("⚠️", "❌", "🆘")):
             print(f"        · {d.strip()[:150]}")
