@@ -178,10 +178,6 @@ jobs:
           python kiem_bien.py
           python kiem_kieu.py
           python kiem_song_song.py
-          # Thang chấm KỊCH BẢN — cố vấn, không chặn (nấc 2 trong ba nấc, xem đầu tệp
-          # `cham_kich_ban.py`). In ra để mỗi lượt chạy đều có số đối chiếu: không có số thì
-          # mọi cải tiến sau này đều là đoán. Chạy trước bước dựng nên không tốn gì.
-          python cham_kich_ban.py --tap 2 || true
           python kiem_giao.py || true   # video nào thiếu chữ đăng: cảnh báo
           python kiem_az.py || true   # A-Z: cảnh báo ở workflow không có bước đẩy kho
 

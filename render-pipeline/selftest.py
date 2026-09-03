@@ -6990,10 +6990,13 @@ def t_cham_kich_ban():
     assert "kich_ban(" in src, "thước không gọi `kich_ban` -> đang chấm một danh sách khác"
 
     G0 = _o.path.dirname(_o.path.dirname(_o.path.abspath(__file__)))
-    wf = _o.path.join(G0, ".github", "workflows", "render_phan_tich_18.yml")
-    if _o.path.exists(wf):
-        assert "cham_kich_ban.py" in io.open(wf, encoding="utf-8").read(), \
-            "thang chấm kịch bản không được gọi trong workflow -> viết ra rồi để đấy"
+    # ĐÚNG WORKFLOW của bộ giải thích. Bản đầu kiểm `render_phan_tich_18.yml` — bộ PHÂN TÍCH
+    # thế hệ 2 — nên nó báo xanh trong khi thước chưa bao giờ chạy trên luồng dựng `v9_*`.
+    # Một cổng canh sai tệp thì nó canh sai cả việc (§13.2: cổng cầm danh sách sai = cổng che lỗi).
+    wf = _o.path.join(G0, ".github", "workflows", "render_giai_thich_18.yml")
+    assert _o.path.exists(wf), "không tìm thấy workflow của bộ giải thích"
+    assert "cham_kich_ban.py" in io.open(wf, encoding="utf-8").read(), \
+        "thang chấm kịch bản không được gọi trong workflow giải thích -> viết ra rồi để đấy"
 
 
 def t_ban_dai_du_dai():

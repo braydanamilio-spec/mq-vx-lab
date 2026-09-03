@@ -161,7 +161,15 @@ jobs:
           python kiem_nen.py
           # Vùng chết tạm thời: `const` dùng trước khai báo. esbuild và tsc đều XANH, chỉ nổ
           # lúc render và chỉ ở nhánh dữ liệu chạm tới nó — xem đầu `kiem_tdz.py`.
-          python kiem_tdz.py       # ba mệnh lệnh cho mọi prompt vẽ nền
+          python kiem_tdz.py
+          # Thang chấm KỊCH BẢN — cố vấn, không chặn (nấc 2, xem đầu `cham_kich_ban.py`). In ra
+          # để mỗi lượt đều có số đối chiếu: không có số thì mọi cải tiến sau này đều là đoán.
+          #
+          # GẮN ĐÚNG WORKFLOW: bản đầu tôi gắn vào `render_phan_tich_18.yml` — bộ PHÂN TÍCH thế
+          # hệ 2, không phải bộ giải thích. Bộ giải thích chạy chính tệp này. Thước nằm ở luồng
+          # không dựng `v9_*` thì nó chấm một thứ nó không sinh ra, tức chưa bao giờ chạy thật —
+          # và selftest của tôi lại kiểm đúng tệp sai nên nó vẫn báo xanh (§13.1).
+          python cham_kich_ban.py --tap 2 || true       # ba mệnh lệnh cho mọi prompt vẽ nền
           python kiem_nhip.py      # nhịp cắt theo chuẩn đo từ hai video tham chiếu
           python kiem_workflow.py  # workflow gói đúng sản phẩm
 
