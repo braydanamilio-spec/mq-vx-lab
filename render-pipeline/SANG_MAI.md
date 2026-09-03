@@ -1,5 +1,19 @@
 # SÁNG MAI ĐỌC CÁI NÀY — phiên đêm 3/9/2026
 
+## Đã đo tận nơi, không suy đoán
+
+| trục | kết quả |
+|---|---|
+| 18 video dựng lại bằng mã cuối | **18/18** hình 1080×1920 · tiếng aac · không tệp hỏng |
+| cổng chấm hình | **18/18 ≥90/100**, phần lớn 100 |
+| khuôn lời giữa các video | **95% đa dạng**, khuôn nặng nhất ×3 (trần 3) |
+| âm lượng | **−14,0 … −14,9 LUFS**, đỉnh −1,2 … −1,5 dBTP (chuẩn YouTube −14, đỉnh ≤0) |
+| khớp lời–tiếng (phụ đề karaoke) | lệch **0,06–0,24 giây** |
+| tương phản phụ đề | **5,2–12,4:1** (chuẩn WCAG 4,5) |
+| Firestore hôm nay | **ĐỌC 0/50.000 · GHI 0/20.000** |
+| 18 ảnh bìa | soi bằng mắt: số lớn đọc được, không hộp đen, không phụ đề sót |
+| bìa bộ COMIC | **giữ nguyên byte** — mọi thay đổi nằm sau `_giua`, có cổng khẳng định |
+
 ## Trạng thái lúc bàn giao
 
 | | |
