@@ -73,8 +73,9 @@ export const calcGT = async ({ props }: { props: PropsGT }) => ({
    Từ đang đọc đổi màu. Không phải trang trí: mắt bám được dòng chữ khi tiếng tắt, và đây đúng
    là thứ video tham chiếu thiếu.
    Chỉ hiện CỬA SỔ 7 từ quanh từ đang đọc — hiện cả câu dài thì chữ phải nhỏ lại và mất tác dụng. */
-const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string }> =
-({ tu, t, W, H, mau }) => {
+const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string;
+                        sangNen?: number }> =
+({ tu, t, W, H, mau, sangNen = -1 }) => {
   /* Tính TRONG `PhuDe`, không tính ở component cha: chỗ dùng nằm trong hàm này, và khai ở ngoài
      thì render ném `ReferenceError: mauNhan is not defined` — cùng họ lỗi vùng phạm vi đã vấp
      với `_samMau` nửa giờ trước. Biến phải khai trong phạm vi nhìn thấy nó. */
@@ -166,12 +167,35 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string 
              hộp đen: hình đẹp hơn thật, nhưng đổi lấy chữ khó đọc mà KHÔNG ĐO.
              Lần này có cổng nên biết ngay. Bù bằng quầng dày hơn — vẫn bám sát nét nên không tạo
              mảng tối, chỉ tăng tương phản đúng chỗ chữ đứng. */
-          textShadow: `0 0 ${H * 0.006}px #000000ff, 0 0 ${H * 0.013}px #000000ff, 0 0 ${H * 0.024}px #000000ee, 0 0 ${H * 0.038}px #000000aa, 0 ${H * 0.003}px ${H * 0.009}px #000000ee`,
+        /* Quầng phải NGƯỢC sắc với mực: chữ đậm trên nền sáng cần quầng SÁNG để tách, quầng
+           đen quanh chữ đen thì không tách được gì. */
+        textShadow: (Number(sangNen ?? -1) >= 170)
+          ? `0 0 ${H * 0.006}px #FFFFFFff, 0 0 ${H * 0.014}px #FFFFFFff, 0 0 ${H * 0.026}px #FFFFFFee, 0 0 ${H * 0.040}px #FFFFFFaa`
+          : `0 0 ${H * 0.006}px #000000ff, 0 0 ${H * 0.013}px #000000ff, 0 0 ${H * 0.024}px #000000ee, 0 0 ${H * 0.038}px #000000aa, 0 ${H * 0.003}px ${H * 0.009}px #000000ee`,
         pointerEvents: "none",
       }}>
-        {cua.map((w, k) => (
-          <span key={k} style={{ color: a + k === i ? "#FFD400" : "#FFFFFF" }}>{w.w}</span>
-        ))}
+        {/* ── NỀN SÁNG THÌ ĐỔI MỰC, KHÔNG ĐẮP THÊM TẤM CHE  (3/9/2026) ─────────────────────
+            Quầng đen đã siết một lần và vẫn không đủ với ảnh SÁNG: đo dải đáy của bốn ảnh
+            SURVIVE ra **212–231**, tức chữ trắng chỉ đạt **1,9–2,0:1** trên chuẩn 4,5.
+            Quầng không cứu được chênh lệch nền ấy — nó viền nét chứ không đổi nền.
+
+            Anh đã bảo bỏ tấm che đen, nên cách còn lại là ĐỔI MỰC: nền sáng thì chữ đậm. Độ
+            sáng dải đáy do `nen_gt.sang_day` đo ngay lúc sinh ảnh và ghi vào nhịp (`sangDay`) —
+            engine chỉ đọc, không đo lại. Cùng nguyên tắc `bo_the`/`kieu_so`: nơi BIẾT thì
+            quyết rồi truyền kết quả.
+
+            Ngưỡng 170: trên mức ấy chữ trắng không thể đạt 4,5:1 dù quầng dày bao nhiêu.
+            Từ đang đọc giữ màu vàng khi nền tối, và chuyển sang cam đậm khi nền sáng — vẫn là
+            tín hiệu "từ này đang được đọc", chỉ đổi sắc để còn đọc được. */}
+        {(() => {
+          const sd = Number(sangNen ?? -1);
+          const sang = sd >= 170;                       // nền dưới phụ đề quá sáng
+          const mucThuong = sang ? "#14161C" : "#FFFFFF";
+          const mucDoc = sang ? "#8A4B00" : "#FFD400";
+          return cua.map((w, k) => (
+            <span key={k} style={{ color: a + k === i ? mucDoc : mucThuong }}>{w.w}</span>
+          ));
+        })()}
       </div>
     </>
   );
@@ -511,7 +535,11 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
           theo nhịp), phụ đề chỉ là bản chép lại. Giữ cái được thiết kế, bỏ cái lặp. */}
       {String((N as any)?.khuon || "") === "the_chu"
         ? null
-        : <PhuDe tu={tu} t={t} W={W} H={H} mau={mau} />}
+        : <PhuDe tu={tu} t={t} W={W} H={H} mau={mau}
+                  /* Độ sáng dải đáy của ẢNH nhịp này — `nen_gt.sang_day` đo lúc sinh và ghi
+                     vào nhịp. Nhịp không có ảnh thì -1, và `PhuDe` giữ mực trắng vì sàn phòng
+                     đã được làm sẫm ở mép dưới. */
+                  sangNen={Number((N as any)?.sangDay ?? -1)} />}
 
       {/* ══ ĐÃ BỎ DẢI TÊN KÊNH (1/9/2026) ══════════════════════════════════════════════
           Đóng dấu tên kênh lên MỌI khung là thói quen của kênh nhỏ — nó lấy mất 5% chiều cao

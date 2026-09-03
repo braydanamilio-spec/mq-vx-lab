@@ -229,7 +229,22 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
   const tuong = _pha(_tron(nen, mau, 0.10), 0.18);
   const tuongD = _pha(_tron(nen, mau, 0.14), -0.02);
   const san = _pha(_tron(nen, mau, 0.22), k === 3 ? -0.26 : -0.16);
+  /* ── MÉP SÀN PHẢI ĐỦ SẪM CHO CHỮ TRẮNG ĐỌC ĐƯỢC  (3/9/2026) ─────────────────────────────
+     Cổng `kiem_hinh` chấm bản dài HOW LOUD 84/100 với lý do *"tương phản phụ đề 2.6:1 < 4,5:1
+     (chuẩn WCAG AA)"*. Đo pixel dải phụ đề ở năm mốc: sáng TB **133–184**, tương phản với chữ
+     trắng **2,0–3,7:1** — dưới chuẩn ở MỌI mốc.
+
+     Anh đã bảo bỏ tấm che đen (*"ko làm bóng mờ đen thế nha xấu"*), nên không đắp lại một lớp
+     phủ. Thứ đúng là làm chính SÀN sẫm dần về mép dưới — sàn thật của một căn phòng vẫn sẫm ở
+     mép gần, nên nó đọc ra bóng sàn chứ không ra tấm kính.
+
+     Để đạt 4,5:1 với chữ trắng thì nền phải xuống dưới ~118/255. `-0.34` cho ra 133–184; cần
+     sẫm hơn nữa ở ĐÁY, nên thêm một chặng thứ ba trong dải chuyển chỉ ở 18% cuối — phần trên
+     của sàn giữ nguyên độ sáng để căn phòng không tối đi. */
   const sanD = _pha(_tron(nen, mau, 0.26), -0.34);
+  // -0,70 và chặng bắt đầu ở 0,55: đo lần đầu (-0,62 / 0,62) cho 4,31–5,44:1, tức một
+  // trong ba mốc vẫn hụt chuẩn 4,5. Hiệu chỉnh theo SỐ ĐO, không theo cảm giác (§13.7).
+  const sanDay = _pha(_tron(nen, mau, 0.34), -0.70);
   const vach = _pha(mau, -0.55);
   const id = `np${Math.round(W)}_${k}`;
   return (
@@ -239,7 +254,9 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
           <stop offset="0" stopColor={tuong} /><stop offset="1" stopColor={tuongD} />
         </linearGradient>
         <linearGradient id={`${id}s`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={san} /><stop offset="1" stopColor={sanD} />
+          <stop offset="0" stopColor={san} />
+          <stop offset="0.55" stopColor={sanD} />
+          <stop offset="1" stopColor={sanDay} />
         </linearGradient>
         <radialGradient id={`${id}g`} cx="50%" cy="50%" r="50%">
           <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.55} />

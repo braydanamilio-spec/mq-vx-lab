@@ -463,6 +463,30 @@ def lech_mau(a: list, b: list) -> float:
     return 1.0 - sum(min(x, y) for x, y in zip(a, b))
 
 
+def sang_day(tep: str) -> int:
+    """Độ sáng trung bình của DẢI ĐÁY ảnh — chỗ phụ đề sẽ đè lên. 0-255, -1 nếu đọc hỏng.
+
+    ── VÌ SAO CẦN  (3/9/2026) ─────────────────────────────────────────────────────────────
+    Cổng `kiem_hinh` chấm bản dài 84/100 vì *"tương phản phụ đề 2.6:1 < 4,5:1"*. Đo pixel: dải
+    phụ đề của những nhịp CÓ ẢNH sáng tới 181–187, tức chữ trắng chỉ đạt **1,9–2,0:1**.
+
+    Anh đã bảo bỏ tấm che đen, nên không đắp lại một lớp phủ. Thứ đúng là **đổi màu chữ theo
+    nền** — nền sáng thì dùng mực đậm. Nhưng engine không đo được ảnh lúc dựng, còn ở đây thì
+    ảnh đang mở sẵn trong tay. Đo một lần, ghi vào nhịp, engine chỉ đọc.
+
+    Cùng nguyên tắc với `bo_the`/`kieu_so`: nơi BIẾT thì quyết, rồi truyền kết quả (§15.3).
+    """
+    try:
+        from PIL import Image
+        im = Image.open(tep).convert("L")
+        W, H = im.size
+        dai = im.crop((int(W * 0.15), int(H * 0.86), int(W * 0.85), int(H * 0.97)))
+        px = list(dai.getdata())
+        return int(sum(px) / max(1, len(px)))
+    except Exception:
+        return -1
+
+
 def do_phang(tep: str):
     """Độ 'phẳng' của ảnh: 0 = ảnh chụp thật, 1 = hình vẽ phẳng. None nếu không đo được.
 
@@ -769,6 +793,10 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
         rel = sinh(ma, idx, i, ve, keys, x.get("tam_trang", ""), gu, doc, moc)
         if rel:
             x["nenAnh"] = rel
+            # Đo ngay lúc ảnh còn trong tay — xem `sang_day`. Engine đọc để chọn màu phụ đề.
+            _sd = sang_day(os.path.join(THU, os.path.basename(rel)))
+            if _sd >= 0:
+                x["sangDay"] = _sd
             n += 1
             duong = os.path.join(THU, os.path.basename(rel))
             # MỐC = TRUNG VỊ BA ẢNH ĐẦU, không phải ảnh đầu tiên.
@@ -812,6 +840,9 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
             rel2 = sinh(ma, idx, i, ve, keys, nhip[i].get("tam_trang", ""), gu, doc, moc)
             if rel2:
                 nhip[i]["nenAnh"] = rel2
+                _sd2 = sang_day(os.path.join(THU, os.path.basename(rel2)))
+                if _sd2 >= 0:
+                    nhip[i]["sangDay"] = _sd2
     # Ghi sổ sức khoẻ khoá TỪ LƯỢT DÙNG THẬT — xem `xoay_key.ghi_trang_thai`.
     # Đặt ở cuối tập, không đặt sau mỗi ảnh: mỗi tập một lượt ghi lô thay vì hàng trăm.
     try:
