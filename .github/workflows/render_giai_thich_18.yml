@@ -276,7 +276,6 @@ jobs:
               echo "   ⚠ đẩy kho hụt lần $i/3 — chờ 60s rồi thử lại"; sleep 60
             done
             if [ "$ok" != "1" ]; then
-              touch /tmp/day_kho_hong
               # ── ĐẨY HỎNG THÌ DỪNG VÒNG LẶP NGAY, ĐỪNG DỰNG TIẾP  (3/9/2026) ──────────────
               # Đêm 2/9 luồng HOWLONG chạy đủ **8 vòng (~40 video)** trong khi **không đẩy được
               # tệp nào** — hồ kho đọc rỗng vì Firestore 429 và Worker trả HTTP 500. Vòng lặp cứ
@@ -330,10 +329,22 @@ jobs:
       - name: Chốt — video đã lên kho chưa
         if: always()
         run: |
-          if [ -f /tmp/day_kho_hong ]; then
-            echo "❌ dựng xong nhưng KHÔNG đẩy được lên Drive sau 3 lần thử."
-            echo "   Video vẫn nằm trong artifact của lượt này (giữ 14 ngày)."
-            echo "   Mốc cron kế tiếp trong đêm sẽ dựng và đẩy lại — không cần bấm tay."
+          # ── ĐO TỆP CÒN SÓT, KHÔNG ĐO CỜ DÍNH  (3/9/2026) ─────────────────────────────────
+          # Lượt 33691571658: **18/18 luồng báo hỏng** trong khi Drive nhận **872 video**. Luồng
+          # ODDS chạy 14 vòng, đẩy thành công hàng loạt — mà vẫn đỏ.
+          #
+          # Vì cổng cũ đo một CỜ DÍNH: `touch /tmp/day_kho_hong` ở vòng nào hụt thì cờ nằm đó
+          # mãi, 13 vòng thành công sau không xoá được nó. Một trục trặc thoáng qua ở vòng 2 làm
+          # cả luồng đỏ, và cả lượt đỏ.
+          #
+          # Cờ trả lời *"đã từng hụt lần nào chưa"*. Câu cần hỏi là *"còn tệp nào chưa giao
+          # không"* — và câu ấy đo được trực tiếp: vòng lặp XOÁ tệp ngay sau khi đẩy xong, nên
+          # tệp còn nằm trong `out/` chính là tệp chưa giao. Đo vật thật, không đo dấu vết.
+          CON=$(ls render-pipeline/out/v9_*.mp4 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$CON" != "0" ]; then
+            echo "❌ còn $CON tệp CHƯA đẩy được lên Drive — để lượt ĐỎ cho mốc cron sau thử lại."
+            ls render-pipeline/out/v9_*.mp4 2>/dev/null | head -5 | sed 's/^/     /'
             exit 1
           fi
+          echo "✅ không còn tệp nào chưa giao — mọi video đã lên Drive."
           echo "✅ video đã lên kho"
