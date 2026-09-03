@@ -680,30 +680,86 @@ export const SoLieu: React.FC<{
 /* ── KHUÔN 4: TRỤC ────────────────────────────────────────────────────────────────────────
    Trục thời gian hoặc trục khoảng cách. Mũi tên chạy DẦN theo `p`, và cái chấm sáng dừng ở
    đúng chỗ lời kể đang nói. Không có cái chấm ấy thì trục chỉ là hình trang trí. */
+/* ── TRỤC — NẰM NGANG Ở 16:9, ĐỨNG Ở 9:16  (nâng cấp 3/9/2026) ─────────────────────────────
+   Soi khung WHERE GOES bản dọc: bốn mốc `bin · truck · sorting · end` với cỡ chữ ghi cứng
+   `H·0,055`. Ở khung dọc, `H` của vùng vẽ là 1536 nên mỗi nhãn cao 84px và rộng tới ~340px,
+   trong khi bề ngang chia đều chỉ cho mỗi mốc 270px. Kết quả: **`truck` và `sorting` dính vào
+   nhau thành `trucksorting`**, và trục nằm ở một phần ba trên với 60% khung trống bên dưới.
+
+   Hai lỗi, một gốc: **cỡ chữ tính theo `H` trong khi chỗ chứa nó là `W`.** Đúng họ lỗi *một
+   kích thước chịu hai ràng buộc mà công thức chỉ mã hoá một* (§6) — lần thứ tư trong tệp này.
+
+   Chữa hai tầng, vì hai tầng giải hai việc khác nhau:
+     · cỡ chữ luôn phải chịu CẢ chiều cao lẫn bề rộng cột
+     · khung DỌC thì xoay trục thành ĐỨNG — mỗi mốc được cả bề ngang, và trục dùng đúng cái
+       chiều mà khung dọc đang thừa. Không phải để đổi hình cho vui: nó là hướng tự nhiên của
+       một dòng thời gian trên điện thoại. */
 export const Truc: React.FC<{
   W: number; H: number; moc: { nhan: string; phu?: string }[]; vt: number; mau: string; p: number;
 }> = ({ W, H, moc, vt, mau, p }) => {
-  const x0 = W * 0.10, x1 = W * 0.90, y = H * 0.52;
-    /* Trục hiện xong trong 35% thời lượng cảnh, không phải 55%. Ở nhịp 1,6 giây thì 55% là
+  /* Trục hiện xong trong 35% thời lượng cảnh, không phải 55%. Ở nhịp 1,6 giây thì 55% là
      0,9 giây — cảnh gần hết mà trục mới vẽ xong, người xem không kịp đọc mốc cuối. */
   const ch = Math.min(1, p / 0.35);
-  const n = Math.max(3, H * 0.007);
+  const n = Math.max(3, Math.min(W, H) * 0.007);
+  const doc = H > W * 1.2;
+  const so = Math.max(1, moc.length);
+
+  if (doc) {
+    const y0 = H * 0.10, y1 = H * 0.80, x = W * 0.26;
+    const oCao = (y1 - y0) / Math.max(1, so - 1 || 1);
+    const cN = (t: string) => Math.min(H * 0.042, oCao * 0.52,
+                                       (W * 0.62 / Math.max(1, t.length)) * 1.55);
+    return (
+      <g>
+        <line x1={x} y1={y0} x2={x} y2={y0 + (y1 - y0) * ch} stroke="#2C2722" strokeWidth={n} />
+        <path d={`M ${x} ${y0 + (y1 - y0) * ch} l ${-W * 0.022} ${-W * 0.014} l ${W * 0.044} 0 Z`}
+              fill="#2C2722" opacity={ch > 0.96 ? 1 : 0}
+              transform={`rotate(180 ${x} ${y0 + (y1 - y0) * ch})`} />
+        {moc.map((m, i) => {
+          const f = so === 1 ? 0.5 : i / (so - 1);
+          const y = y0 + (y1 - y0) * f;
+          const c = cN(m.nhan || "");
+          return (
+            <g key={i} opacity={ch >= f - 0.02 ? 1 : 0}>
+              <line x1={x - W * 0.030} y1={y} x2={x + W * 0.030} y2={y}
+                    stroke="#2C2722" strokeWidth={n * 0.8} />
+              <text x={x + W * 0.055} y={y + c * 0.34} fontFamily={F} fontWeight={900}
+                    fontSize={c} fill="#2C2722">{m.nhan}</text>
+              {m.phu ? (
+                <text x={x + W * 0.055} y={y + c * 1.34} fontFamily={F} fontWeight={700}
+                      fontSize={c * 0.66} fill="#5A544C">{m.phu}</text>
+              ) : null}
+            </g>
+          );
+        })}
+        {vt >= 0 ? (
+          <circle cx={x} cy={y0 + (y1 - y0) * vt} r={W * 0.026 * (1 + 0.18 * Math.sin(p * 12))}
+                  fill={mau} stroke="#FFFFFF" strokeWidth={n} />
+        ) : null}
+      </g>
+    );
+  }
+
+  const x0 = W * 0.10, x1 = W * 0.90, y = H * 0.52;
+  const oRong = (x1 - x0) / Math.max(1, so);
   return (
     <g>
       <line x1={x0} y1={y} x2={x0 + (x1 - x0) * ch} y2={y} stroke="#2C2722" strokeWidth={n} />
       <path d={`M ${x0 + (x1 - x0) * ch} ${y} l ${-H * 0.028} ${-H * 0.018} l 0 ${H * 0.036} Z`}
             fill="#2C2722" opacity={ch > 0.96 ? 1 : 0} />
       {moc.map((m, i) => {
-        const fx = moc.length === 1 ? 0.5 : i / (moc.length - 1);
+        const fx = so === 1 ? 0.5 : i / (so - 1);
         const x = x0 + (x1 - x0) * fx;
         const hien = ch >= fx - 0.02;
+        // Cỡ chữ chịu CẢ hai ràng buộc: cao theo H, rộng theo ô mà mốc này được chia.
+        const c = Math.min(H * 0.055, (oRong * 0.94 / Math.max(1, (m.nhan || "").length)) * 1.6);
         return (
           <g key={i} opacity={hien ? 1 : 0}>
             <line x1={x} y1={y - H * 0.035} x2={x} y2={y + H * 0.035} stroke="#2C2722" strokeWidth={n * 0.8} />
             <text x={x} y={y - H * 0.065} textAnchor="middle" fontFamily={F} fontWeight={900}
-                  fontSize={H * 0.055} fill="#2C2722">{m.nhan}</text>
+                  fontSize={c} fill="#2C2722">{m.nhan}</text>
             {m.phu ? <text x={x} y={y + H * 0.10} textAnchor="middle" fontFamily={F} fontWeight={700}
-                           fontSize={H * 0.036} fill="#5A544C">{m.phu}</text> : null}
+                           fontSize={c * 0.66} fill="#5A544C">{m.phu}</text> : null}
           </g>
         );
       })}
@@ -715,13 +771,10 @@ export const Truc: React.FC<{
   );
 };
 
-/* ── KHUÔN 5: KÍNH LÚP ────────────────────────────────────────────────────────────────────
-   Vòng tròn phóng to một chi tiết + đường chỉ tới tên gọi. Khuôn này làm một việc mà lời nói
-   không làm được: chỉ ĐÍCH XÁC vào chỗ đang nói. */
 export const KinhLup: React.FC<{
   W: number; H: number; x: number; y: number; nhan: string; mau: string; p: number;
-  con: React.ReactNode;
-}> = ({ W, H, x, y, nhan, mau, p, con }) => {
+  con: React.ReactNode; bt?: string;
+}> = ({ W, H, x, y, nhan, mau, p, con, bt = "" }) => {
   /* 1/9 — KÍNH LÚP ĐANG PHÓNG TO CHỖ TRỐNG.
      Lúc bỏ nhân vật vector, tôi truyền `con={null}` vào đây rồi quên nối ảnh nền vào thay.
      Soi khung kênh THE RULES: vòng tròn trắng tinh, không phóng gì cả.
@@ -732,9 +785,19 @@ export const KinhLup: React.FC<{
   return (
     <g>
       <defs><clipPath id="lup"><circle cx={cx} cy={cy} r={r} /></clipPath></defs>
-      <circle cx={cx} cy={cy} r={r} fill="#FFFFFF" />
+      {/* 3/9 — KHÔNG CÓ GÌ ĐỂ PHÓNG THÌ VẼ BIỂU TƯỢNG, ĐỪNG VẼ ĐĨA TRẮNG.
+          Chú thích 1/9 ngay trên đã ghi đúng bệnh ("kính lúp đang phóng to chỗ trống") và chữa
+          bằng cách nối ảnh nền vào `con`. Nhưng khi CẠN hồ ảnh CF thì `con` lại là `null`, và
+          bệnh cũ quay lại y nguyên: soi khung THE RULES bản dọc ra một **đĩa trắng tinh** to
+          bằng một phần ba khung.
+          Đúng họ lỗi *vá một nhánh, để nguyên nhánh song song* — bản vá cũ chỉ chữa nhánh CÓ
+          ảnh. Nhánh không ảnh cần một thứ khác hẳn: vẽ chính vật đang nói tới vào trong ống
+          kính. Kính lúp phóng to một biểu tượng vẫn đúng nghĩa "nhìn kỹ vào chi tiết". */}
+      <circle cx={cx} cy={cy} r={r} fill={con ? "#FFFFFF" : _pha(mau, 0.86)} />
       <g clipPath="url(#lup)">
-        <g transform={`translate(${cx - x * 2.2} ${cy - y * 2.2}) scale(2.2)`}>{con}</g>
+        {con
+          ? <g transform={`translate(${cx - x * 2.2} ${cy - y * 2.2}) scale(2.2)`}>{con}</g>
+          : (bt ? <g transform={`translate(${cx} ${cy})`}><BieuTuong ten={bt} s={r * 1.35} /></g> : null)}
       </g>
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="#2C2722" strokeWidth={Math.max(4, H * 0.010)} />
       <line x1={x} y1={y} x2={cx - r * 0.7} y2={cy + r * 0.7} stroke="#2C2722"
@@ -786,22 +849,45 @@ export const DaiChu: React.FC<{ W: number; H: number; chu: string; p: number }> 
    bằng chữ, và cảm giác mới là thứ ở lại sau khi video hết.
    Giới hạn 20 biểu tượng: hơn nữa thì mắt thôi đếm và chuyển sang ước lượng — mất đúng thứ
    khuôn này sinh ra để làm. */
+/* ── ĐẾM VẬT — LƯỚI LẤP KHUNG, KHÔNG PHẢI MỘT HÀNG  (nâng cấp 3/9/2026) ────────────────────
+   Quy tắc C (§12.11): *thời gian trôi vẽ bằng SỐ LƯỢNG biểu tượng để người xem ĐẾM*. Muốn đếm
+   được thì biểu tượng phải đủ to để nhìn ra là cái gì.
+
+   Bản cũ xếp tất cả trên MỘT HÀNG với `r = min(H·0,052, W·0,90/n/2,3)`. Ở khung dọc 9:16, mười
+   tám biểu tượng chia bề ngang 1080 cho ra bán kính **26px** — soi khung YEARS OF thấy một dải
+   mặt trời tí xíu nén ở đỉnh khung, và **90% khung còn lại TRỐNG**. Không ai đếm được, và cũng
+   không ai nhận ra đó là mặt trời.
+
+   Gốc: một hàng thì số lượng chỉ ăn vào BỀ NGANG, trong khi khung dọc thừa CHIỀU CAO. Lưới
+   dùng được cả hai chiều, nên cùng số biểu tượng mà bán kính lớn gấp ba.
+
+   Bỏ luôn dải trắng `#FFFFFF` phía sau: §12.12 xếp "dải nền dưới mọi khung" vào danh sách dấu
+   hiệu nghiệp dư, và ở đây nó còn cắt ngang căn phòng thành hai mảnh. */
 export const Dem: React.FC<{
   W: number; H: number; n: number; ngay: boolean; chu: string; p: number; mau: string;
 }> = ({ W, H, n, ngay, chu, p, mau }) => {
   const so = Math.max(1, Math.min(20, n));
   const hien = Math.max(1, Math.round(so * Math.min(1, p / 0.55)));
-  const r = Math.min(H * 0.052, (W * 0.90) / so / 2.3);
-  const b = W * 0.90 / so;
-  const x0 = W * 0.05 + b / 2;
+  /* Số CỘT chọn sao cho ô gần vuông: `cot = round(sqrt(so · W / vùng cao))`. Không ghi cứng,
+     vì cùng một `so` phải ra lưới khác nhau ở 16:9 và 9:16 — đúng chỗ bản cũ sai. */
+  const vung = { x: W * 0.08, y: H * 0.10, w: W * 0.84, h: H * 0.62 };
+  const cot = Math.max(1, Math.min(so, Math.round(Math.sqrt(so * vung.w / Math.max(1, vung.h)))));
+  const hang = Math.ceil(so / cot);
+  const bw = vung.w / cot, bh = vung.h / hang;
+  const r = Math.min(bw, bh) * 0.40;
   return (
     <g>
-      <rect x="0" y={H * 0.06} width={W} height={r * 2.9} fill="#FFFFFF" opacity={0.88} />
       {Array.from({ length: so }).map((_, i) => {
-        const x = x0 + b * i, y = H * 0.06 + r * 1.45;
+        const c = i % cot, h = Math.floor(i / cot);
+        // Hàng cuối thiếu ô thì căn giữa, không để lệch trái — lệch trái đọc ra "bị cắt mất".
+        const trong = h === hang - 1 ? (cot * hang - so) : 0;
+        const x = vung.x + bw * (c + 0.5) + trong * bw * 0.5;
+        const y = vung.y + bh * (h + 0.5);
         const dem = ngay ? i % 2 === 1 : false;
         return (
           <g key={i} opacity={i < hien ? 1 : 0.13}>
+            <ellipse cx={x} cy={y + r * 1.18} rx={r * 0.62} ry={r * 0.13}
+                     fill="#000000" opacity={0.10} />
             {dem ? (
               <path d={`M ${x + r * 0.34} ${y - r * 0.86} a ${r * 0.86} ${r * 0.86} 0 1 0 0 ${r * 1.72}
                         a ${r * 0.68} ${r * 0.68} 0 1 1 0 ${-r * 1.72} Z`} fill="#8E9BB0" />
@@ -818,9 +904,10 @@ export const Dem: React.FC<{
         );
       })}
       {chu ? (
-        <text x={W / 2} y={H * 0.06 + r * 3.9} textAnchor="middle" fontFamily={F} fontWeight={800}
-              fontSize={Math.min(H * 0.040, (W * 0.8 / Math.max(1, chu.length)) * 1.7)}
-              fill={mau}>{chu}</text>
+        <text x={W / 2} y={vung.y + vung.h + H * 0.075} textAnchor="middle" fontFamily={F}
+              fontWeight={900}
+              fontSize={Math.min(H * 0.055, (W * 0.84 / Math.max(1, chu.length)) * 1.6)}
+              fill={mau} letterSpacing={1}>{chu}</text>
       ) : null}
     </g>
   );

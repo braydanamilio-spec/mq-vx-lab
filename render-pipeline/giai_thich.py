@@ -886,7 +886,10 @@ def _n(khuon, loi, **kw):
     #
     # Gắn ở `_n` vì đây là chỗ hẹp duy nhất mọi nhịp cảnh đi qua — hơn sáu mươi chỗ gọi ở mười
     # tám bộ sinh đều dùng nó. Chỗ gọi nói rõ `bt` thì tôn trọng, y như `noi`.
-    if khuon == "canh" and not d.get("bt"):
+    # `kinh_lup` cũng cần: khi cạn hồ ảnh CF thì ống kính không có gì để phóng và engine vẽ ra
+    # một ĐĨA TRẮNG to bằng một phần ba khung (soi khung THE RULES bản dọc). Biểu tượng làm
+    # tầng dự phòng — kính lúp phóng to một vật vẫn đúng nghĩa "nhìn kỹ vào chi tiết".
+    if khuon in ("canh", "kinh_lup") and not d.get("bt"):
         d["bt"] = _bt_canh(loi, d.get("ve", ""))
     return d
 
@@ -2618,7 +2621,7 @@ def _rai_hinh(ma: str, nhip: list, idx: int = 0) -> list:
     bo = GU_HINH.get(ma) or ("nguoi", "nha", "dong_ho", "hop", "giay")
     truoc = ""
     for j, n in enumerate(nhip):
-        if (n.get("khuon") or "") != "canh":
+        if (n.get("khuon") or "") not in ("canh", "kinh_lup"):
             continue
         b = n.get("bt") or ""
         if b and b == truoc:

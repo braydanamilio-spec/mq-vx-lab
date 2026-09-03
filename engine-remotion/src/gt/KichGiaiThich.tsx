@@ -337,6 +337,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
         return { nen: Nen,
                  lop: <KinhLup W={W} H={H * 0.80} x={W * (N.x ?? 0.34)} y={H * 0.80 * (N.y ?? 0.5)}
                                nhan={N.nhan || ""} mau={mau} p={p}
+                               bt={N.bt || ""}
                                con={N.nenAnh ? (
                                  <image href={staticFile(N.nenAnh)} x={0} y={0}
                                         width={W} height={H * 0.80}

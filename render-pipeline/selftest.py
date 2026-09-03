@@ -7014,8 +7014,11 @@ def t_gu_hinh_khac_nhau():
         for i in range(4):
             nh = G._rai_hinh(k["ma"], G.BO_SINH[k["ma"]](i)[3], i)
             truoc = ""
+            # PHẠM VI phải khớp `_rai_hinh` — cả `canh` lẫn `kinh_lup` đều vẽ biểu tượng.
+            # Cổng đi qua ít khuôn hơn hàm thì nó thấy "nha, nha liền nhau" ở hai nhịp thật ra
+            # có một nhịp kính lúp xen giữa. Cổng và hàm lệch phạm vi thì cổng báo lỗi giả.
             for n in nh:
-                if (n.get("khuon") or "") != "canh":
+                if (n.get("khuon") or "") not in ("canh", "kinh_lup"):
                     continue
                 b = n.get("bt") or ""
                 if b and b == truoc:
