@@ -252,13 +252,37 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
       {/* quầng sáng — thứ tạo chiều sâu mà nền phẳng không có */}
       <ellipse cx={xS} cy={yS * 0.52} rx={W * 0.62} ry={yS * 0.86} fill={`url(#${id}g)`} />
 
-      {/* kiểu 0 và 5: khung cửa sổ gợi ý, chỉ hai nét — đủ nói "trong nhà, có ánh sáng ngoài" */}
-      {(k === 0 || k === 5) ? (
-        <g stroke={vach} strokeWidth={Math.max(2, H * 0.0035)} fill="none" opacity={0.30}>
-          <rect x={xS - W * 0.20} y={yS * 0.13} width={W * 0.40} height={yS * 0.52} rx={H * 0.012} />
-          <line x1={xS} y1={yS * 0.13} x2={xS} y2={yS * 0.65} />
-        </g>
-      ) : null}
+      {/* ── KHUNG CỬA SỔ PHẢI Ở SAU, KHÔNG Ở GIỮA  (3/9/2026) ─────────────────────────────
+          Bản đầu vẽ khung cửa rộng 0,40·W đặt ngay tại nguồn sáng `xS`, độ mờ 0,30. Với nhịp
+          `canh` (một chủ thể đứng giữa) thì nó đọc đúng là cửa sổ. Nhưng `NenPhong` là mặt sàn
+          DÙNG CHUNG, nên nó cũng nằm dưới biểu đồ và khuôn so sánh — và ở đó soi lưới thấy
+          **một hình chữ nhật rỗng lơ lửng** ôm lấy cột hoặc ôm lấy biểu tượng, đọc ra một cái
+          hộp vô nghĩa chứ không ra cửa sổ.
+          Đúng họ lỗi §12.5: một chi tiết đúng trong ngữ cảnh nó sinh ra, sai ở ngữ cảnh mới.
+          Chữa: đẩy về GÓC đối diện nguồn sáng và làm mờ hẳn — đủ nói "trong nhà có ánh sáng
+          ngoài", không đủ tranh chỗ với bất cứ thứ gì vẽ đè lên. */}
+      {(k === 0 || k === 5) ? (() => {
+        const xC = xS < W * 0.5 ? W * 0.62 : W * 0.08;   // luôn ở phía ĐỐI DIỆN quầng sáng
+        const wC = W * 0.30, hC = yS * 0.34, yC = yS * 0.09;
+        return (
+          <g opacity={0.55}>
+            {/* MẢNG SÁNG, KHÔNG PHẢI KHUNG VIỀN.
+                Hai bản trước vẽ cửa sổ bằng nét viền rỗng. Soi lưới ba lần đều đọc ra **một
+                hình chữ nhật trống** nằm sau đồ hoạ, không đọc ra cửa sổ — kể cả sau khi làm
+                mờ và đẩy về góc. Vấn đề không phải độ mờ hay vị trí mà là CHẤT: trong tranh
+                phẳng, cửa sổ nhận ra được nhờ mảng sáng KHÁC MÀU TƯỜNG, không nhờ đường bao.
+                Mọi ảnh tham chiếu anh gửi đều vẽ cửa sổ như thế.
+                Cùng bài học với con hươu (§15.9) và với số chương (§15.11): khi một hình sửa
+                hai lần vẫn không đọc ra, thứ sai là CÁCH VẼ nó, không phải tham số. */}
+            <rect x={xC} y={yC} width={wC} height={hC} rx={H * 0.008}
+                  fill={_pha(tuong, 0.30)} />
+            <line x1={xC + wC / 2} y1={yC} x2={xC + wC / 2} y2={yC + hC}
+                  stroke={_pha(tuong, -0.10)} strokeWidth={Math.max(2, H * 0.004)} />
+            <line x1={xC} y1={yC + hC * 0.5} x2={xC + wC} y2={yC + hC * 0.5}
+                  stroke={_pha(tuong, -0.10)} strokeWidth={Math.max(2, H * 0.004)} />
+          </g>
+        );
+      })() : null}
 
       {/* kiểu 2: đường gờ tường ngang — nhịp thị giác, không phải đồ đạc */}
       {k === 2 ? (
@@ -672,7 +696,13 @@ export const SoLieu: React.FC<{
           thứ mắt đọc trước. Đảo hẳn thứ bậc so với ba kiểu kia, nên nó là biến thể khác nhất. */}
       {kA === 3 ? (
         <text x={W / 2} y={H * (ngang ? 0.58 : 0.52)} textAnchor="middle" fontFamily={F}
-              fontWeight={900} fontSize={cs * 1.55} fill={mau} opacity={0.16 * q}>{soHien}</text>
+              fontWeight={900}
+              /* Số nền phải VỪA KHUNG. `cs*1,55` bỏ qua bề ngang, nên `100` của SPEED OF và
+                 `360,000,000` của RIGHT NOW đều bị cắt mất mép phải — soi lưới thấy ngay.
+                 `cs` vốn đã chịu ràng buộc bề ngang ở `beNgang`, nhưng nhân 1,55 thì phá mất
+                 ràng buộc ấy. Ràng buộc phải áp SAU mọi phép nhân, không phải trước. */
+              fontSize={Math.min(cs * 1.55, (W * 0.98 / Math.max(1, soHien.length)) * 1.62)}
+              fill={mau} opacity={0.16 * q}>{soHien}</text>
       ) : null}
       {bt ? <g transform={`translate(${kA === 1 ? W * 0.76 : W / 2} ${H * (ngang ? 0.62 : tren_anh ? 0.70 : 0.64)})`} opacity={tren_anh ? 0.92 : 1}>
         {/* CỠ BIỂU TƯỢNG THEO VAI TRÒ, không một cỡ cho hai vai trò khác nhau.
