@@ -160,7 +160,35 @@ def sau(mp4: str, la_short: bool = True) -> tuple:
 
     import tempfile
     tam = tempfile.mkdtemp()
+    # ── LẤY KHUNG Ở NHỊP CÓ PHỤ ĐỀ, KHÔNG Ở MỐC CỐ ĐỊNH  (3/9/2026) ─────────────────────
+    # Mốc `DAI*k/7` là điểm CHIA ĐỀU thời lượng, nên nó rơi vào bất cứ nhịp nào. Đo trên bản
+    # dài HOW LOUD: **2/6 khung rơi trúng nhịp `the_chu`**, mà engine TẮT phụ đề ở đó theo
+    # thiết kế (§12.12: thẻ chữ là khuôn hình có chủ đích, phụ đề chỉ là bản chép lại).
+    #
+    # Vùng phụ đề của một khung không có chữ chỉ toàn nền, nên phân vị 97% và 20% gần nhau và
+    # tỉ số ra **1,75:1**. Hai khung như thế kéo trung bình từ ~5,8 xuống 3,8 — cổng báo "chữ
+    # khó đọc" trong khi bốn khung CÓ chữ đều đạt 4,62–6,76:1.
+    #
+    # Cổng đang phạt một QUYẾT ĐỊNH THIẾT KẾ như thể nó là lỗi. Đúng §13.8: cổng bắt oan còn tệ
+    # hơn cổng không bắt — nó ép người ta đi sửa thứ không hỏng.
+    #
+    # Chữa bằng cách đọc chính danh sách nhịp nằm cạnh video: chỉ lấy khung ở nhịp SẼ có phụ đề.
+    # Không có tệp nhịp thì giữ cách cũ — cổng vẫn chạy được trên video của bộ khác.
     moc = [DAI * k / 7 for k in range(1, 7)]
+    try:
+        _pj = mp4[:-4] + ".json"
+        _nh = json.load(io.open(_pj, encoding="utf-8")).get("nhip") or []
+        _co = [n for n in _nh
+               if (n.get("khuon") or "") != "the_chu" and str(n.get("loi") or "").strip()
+               and n.get("s") is not None and n.get("e") is not None]
+        if len(_co) >= 6:
+            _b = len(_co) / 6.0
+            moc = [float(_co[min(len(_co) - 1, int(_b * (k + 0.5)))]["s"])
+                   + (float(_co[min(len(_co) - 1, int(_b * (k + 0.5)))]["e"])
+                      - float(_co[min(len(_co) - 1, int(_b * (k + 0.5)))]["s"])) * 0.55
+                   for k in range(6)]
+    except Exception:
+        pass
     khung = []
     for i, t in enumerate(moc):
         p = os.path.join(tam, f"{i}.png")

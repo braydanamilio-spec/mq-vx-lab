@@ -2544,6 +2544,7 @@ def main():
     check("không đọc lại cùng một câu trong vòng 12 nhịp", t_khong_lap_loi_gan)
     check("bản dài đủ dài để bật quảng cáo giữa video", t_ban_dai_du_dai)
     check("không `const` nào bị dùng trước khai báo (vùng chết tạm thời)", t_khong_tdz)
+    check("cổng hình lấy khung ở nhịp CÓ phụ đề", t_kiem_hinh_lay_dung_khung)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
@@ -7099,6 +7100,42 @@ def t_khong_lap_loi_gan():
     tho3 = [{"khuon": "the_chu", "loi": "How loud is a jet.", "the": "3.|How loud is a jet"}]
     G._dong_bo_the(tho3)
     assert tho3[0]["the"].startswith("3."), "đụng vào thẻ chương — số chương phải giữ nguyên"
+
+
+def t_kiem_hinh_lay_dung_khung():
+    """Cổng `kiem_hinh` chỉ được đo tương phản phụ đề ở nhịp THẬT SỰ CÓ phụ đề.
+
+    ── VÌ SAO ─────────────────────────────────────────────────────────────────────────────
+    Nó lấy khung ở mốc chia đều `DAI*k/7`, nên khung rơi vào bất cứ nhịp nào. Đo trên bản dài
+    HOW LOUD: **2/6 khung rơi trúng `the_chu`**, mà engine TẮT phụ đề ở đó theo thiết kế. Vùng
+    phụ đề khi ấy chỉ toàn nền -> tỉ số **1,75:1**, kéo trung bình từ ~5,8 xuống 3,8 và cổng
+    báo "chữ khó đọc" trong khi bốn khung có chữ đều đạt 4,62–6,76:1.
+
+    Cổng phạt một QUYẾT ĐỊNH THIẾT KẾ như thể nó là lỗi (§13.8).
+    """
+    import io as _io
+    import json as _json
+    import os as _o
+    import re as _re
+
+    g = _o.path.dirname(_o.path.abspath(__file__))
+    src = _io.open(_o.path.join(g, "kiem_hinh.py"), encoding="utf-8").read()
+    assert 'the_chu' in src, "cổng không còn loại nhịp thẻ chữ ra khỏi phép đo"
+
+    # Thử THẬT trên một tệp nhịp có sẵn: mốc chọn ra không được rơi vào `the_chu`.
+    ra = sorted(_o.path.join(g, "out", f) for f in _o.listdir(_o.path.join(g, "out"))
+                if _re.match(r"v9_.*\.json$", f)) if _o.path.isdir(_o.path.join(g, "out")) else []
+    for tep in ra[:3]:
+        nh = (_json.load(_io.open(tep, encoding="utf-8")).get("nhip") or [])
+        co = [n for n in nh if (n.get("khuon") or "") != "the_chu"
+              and str(n.get("loi") or "").strip() and n.get("s") is not None]
+        if len(co) < 6:
+            continue
+        b = len(co) / 6.0
+        for k in range(6):
+            n0 = co[min(len(co) - 1, int(b * (k + 0.5)))]
+            assert (n0.get("khuon") or "") != "the_chu", \
+                f"{_o.path.basename(tep)}: mốc {k} vẫn rơi vào thẻ chữ"
 
 
 def t_khong_tdz():
