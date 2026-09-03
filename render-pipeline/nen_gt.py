@@ -179,10 +179,20 @@ def _luat(ve: str, doc: bool = False) -> str:
 # Nên mỗi lần trượt thì SIẾT prompt theo hướng cổng đang đo. Đặt ở ĐẦU prompt vì đó là vùng
 # trọng số cao nhất, và nói bằng khẳng định dương chứ không phải câu cấm — FLUX không có
 # negative prompt, mọi danh từ viết ra đều là thứ SẼ xuất hiện.
+# ── CÂU SIẾT KHÔNG ĐƯỢC ĐẨY VỀ PHÍA TRẮNG  (3/9/2026, cùng ngày) ───────────────────────────
+# Bản đầu của bảng này viết "on white paper" và "on a blank white page". FLUX làm đúng: ra một
+# TRANG TRẮNG. Cổng `kiem_chelap` bắt ngay ở bản dài HOW LOUD — 8 nhịp có nền **sáng TB 237,
+# 99% điểm sáng** (trần 150 và 35%), tức chữ trắng đè lên nền trắng và tàng hình.
+#
+# Siết chất vẽ và giữ nền có màu là HAI việc, và câu siết phải làm việc thứ nhất mà không phá
+# việc thứ hai. Nay mọi mức đều khẳng định NỀN CÓ MÀU — cùng họ lỗi với dải mờ màu đen: chữa
+# một trục thì đừng phá trục bên cạnh.
 SIET = (
-    "children's picture-book illustration, drawn with a felt-tip pen on white paper",
-    "simple flat vector clip art, solid colour fills, no shading at all",
-    "a plain line drawing on a blank white page, three flat colours only",
+    "children's picture-book illustration, felt-tip pen line work, flat filled colours",
+    "simple flat vector clip art, solid colour fills, no shading at all, "
+    "the background is one solid mid-tone colour",
+    "bold poster-style flat illustration, three flat colours only, "
+    "the background is a single saturated colour filling the whole frame",
 )
 
 KEP_GU = ("flat 2D cartoon illustration, thick black ink outlines, "
