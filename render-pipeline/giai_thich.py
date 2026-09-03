@@ -495,29 +495,67 @@ def vi_tri_long(ma: str, idx: int, chuong: int) -> int:
 # Vì sao xoay theo `i` chứ không ngẫu nhiên: tất định — cùng một tập luôn ra cùng một lời, ở máy
 # và trên runner như nhau. Ngẫu nhiên thì hai lần dựng cùng một tập ra hai video khác nhau, và
 # mọi cổng so sánh trước/sau đều mất nghĩa.
+# ── HỒ CÂU NỐI: 5 -> 8 CÂU MỖI VAI  (3/9/2026) ─────────────────────────────────────────────
+# Cổng `kiem_khuon` (sau khi sửa để đếm theo VIDEO) bắt: "Set one against the other." dùng ở
+# **4 kênh khác nhau** — howloud · howhot · howbig · whatweighs.
+#
+# Nhưng đó là SỐ HỌC, không phải lỗi cơ chế: hồ 5 câu chia cho 18 kênh thì trung bình 3,6
+# kênh/câu, nên trần 3 của cổng CHẶT HƠN mức hồ cho phép. `_lech_kenh` đã lệch pha đúng — nó
+# không thể tạo ra sự khác biệt mà hồ không có.
+#
+# Nới HỒ chứ không nới CỔNG: 8 câu -> trần lý thuyết ceil(18/8) = 3, vừa khít yêu cầu.
+# Cùng bài học với `BIEN_THE` 3 -> 6 sáng nay: **cơ chế chạy đúng, hồ quá nhỏ so với số lần rút**
+# — không có gì hỏng để sửa, chỉ có một con số cần lớn hơn.
 LOI_MAU = {
     "mo": ["Here is the number.", "Start with the number.", "This is where it starts.",
-           "Look at this first.", "One number, to begin."],
+           "Look at this first.", "One number, to begin.",
+           "Begin with the figure.", "The number first.", "Here is where it opens."],
     "so": ["Here is the number.", "That is the figure.", "This is what it comes to.",
-           "The number lands here.", "Here is what it actually is."],
+           "The number lands here.", "Here is what it actually is.",
+           "That is the total.", "Here is the count.", "This is the answer."],
     # TRUNG TÍNH VỀ MIỀN. "That is the real distance" nghe hay, nhưng kênh duy nhất dùng vai
     # `gap` là `howloud` — đo DECIBEL. Soi khung ra "100,000x — THE REAL DISTANCE" trên một kênh
     # âm thanh. Câu nối dùng chung thì không được mang danh từ của một miền cụ thể (khoảng cách,
     # cân nặng, tiền); nó phải nói về QUAN HỆ giữa hai số, thứ đúng ở mọi kênh.
     "gap": ["So this is the real gap.", "That is the true difference.", "Here is the real gap.",
-            "The difference is this big.", "That is what separates them."],
+            "The difference is this big.", "That is what separates them.",
+           "That is how far apart they are.", "Here is the distance between them.", "The gap is that wide."],
     "so_sanh": ["Put them side by side.", "Line them up.", "Now compare them.",
-                "Set one against the other.", "Two things, one scale."],
+                "Set one against the other.", "Two things, one scale.",
+           "Hold them next to each other.", "One beside the other.", "See them together."],
     "bat_ngo": ["That is not what most people guess.", "Almost nobody guesses this.",
                 "Most people are far off.", "The guess is usually wrong.",
-                "It rarely feels like that."],
+                "It rarely feels like that.",
+           "Nobody sees that coming.", "That is not the number people expect.", "It catches everyone out."],
     "chot": ["Now you know.", "That is the whole answer.", "That is the number to keep.",
-             "Remember that one.", "That is what it really is."],
+             "Remember that one.", "That is what it really is.",
+           "That is the figure to keep.", "Hold on to that one.", "That is the takeaway."],
+    # ── BA CÂU KHUNG CỦA FORMAT  (3/9/2026) ────────────────────────────────────────────
+    # Ba câu này viết cứng trong `sinh_long`, nên **cả 18 kênh cùng nói y hệt** — đo được ×18
+    # mỗi câu. Câu "vao" là câu THỨ HAI người xem nghe trong mọi video của mọi kênh.
+    #
+    # Chúng là khung chung của format, không phải nội dung riêng kênh (§13.4: cắt phần tay nghề
+    # chung ra trước khi đo). Nhưng khung chung nói y hệt nhau ở 18 kênh thì đọc ra một xưởng,
+    # và đó chính là trục "kịch bản" chính sách nêu tên. Cho chúng đi qua `_loi` để lệch pha
+    # theo kênh — cùng cơ chế, không thêm gì mới.
+    "vao": ["We are going to answer it properly.", "Let us do this properly.",
+            "So let us actually work it out.", "Here is the honest version.",
+            "Let us put a real number on it.", "Time to do the arithmetic.",
+            "So we measured it.", "Let us settle this."],
+    "tong": ["Here they all are, side by side.", "All of them on one scale.",
+             "Every one of them, together.", "The whole set at once.",
+             "Now all of them together.", "Here is the full picture.",
+             "All of it on one chart.", "Everything, lined up."],
+    "ket": ["That is the whole picture.", "That is all of it.",
+            "Now you have seen the whole thing.", "That is the full answer.",
+            "And that is the shape of it.", "That is everything.",
+            "So now you know the whole of it.", "That is where it lands."],
     "than": ["Your brain does not work in these numbers.",
              "We are bad at numbers this size.",
              "Nothing in daily life prepares you for this.",
              "The scale does not fit in your head.",
-             "This is where intuition gives up."],
+             "This is where intuition gives up.",
+           "Your head has no scale for this.", "Numbers this size stop meaning anything.", "Intuition has nothing to offer here."],
 }
 
 
@@ -2601,7 +2639,11 @@ def so_chuong_toi_da(ma: str, tran: int = 40) -> int:
         # qua `ap_gu`/`doi_loi` (biến thể dài ngắn khác nhau) và chưa có nhịp mở/chốt của
         # `sinh_long`. Đo thực tế: đặt 600 thì bản giao ra 11,2 phút. Chênh ~12%, và cách chữa
         # đúng là hiệu chỉnh HẰNG theo số đo thật, không phải tin vào mô hình (§13.7).
-        if giay >= 520:
+        # 560, hiệu chỉnh lần hai. 520 cho ra 5,99–9,79 phút và `hiddenfee` rơi đúng SÀN 6
+        # phút của cổng — sát ngưỡng thì một thay đổi nhỏ ở lời (thêm ba câu khung vào `LOI_MAU`)
+        # cũng đủ đẩy nó xuống dưới. Đặt hằng sát ngưỡng là để cổng nổ vì nhiễu.
+        # Đây là lần thứ hai hằng này phải hiệu chỉnh theo SỐ ĐO chứ không theo mô hình (§13.7).
+        if giay >= 560:
             break
     return max(6, len(da))
 
@@ -2617,7 +2659,7 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
     tieu0, hook0, hp0, _n0 = bo(vi_tri_long(ma, idx, 0))
     nhip.append(_n("the_chu", HOOK_LOI.get(ma, "Here is the question."),
                    the=HOOK_LOI.get(ma, "").replace(". ", ".|"), dinh=True))
-    nhip.append(_n("canh", "We are going to answer it properly.", dinh=True,
+    nhip.append(_n("canh", _loi("vao", idx), dinh=True,
                    ve=_ve("one simple cartoon figure standing alone at the centre",
                           "looking straight ahead, about to begin",
                           "calm and curious",
@@ -2693,11 +2735,11 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
     # Mọi cột bằng nhau cũng là biểu đồ vô nghĩa — trục phẳng lì thì không so được gì. Đây là
     # trạng thái THỨ HAI của cùng một lỗi, và nó không lộ ra ở phép kiểm "có số hay không".
     if len(cot) >= 2 and len({round(c["v"], 6) for c in cot}) >= 2:
-        nhip.append(_n("chart", "Here they all are, side by side.", don="compared", cot=cot, dinh=True))
+        nhip.append(_n("chart", _loi("tong", idx), don="compared", cot=cot, dinh=True))
     elif len(ten_ch) >= 2:
-        nhip.append(_n("the_chu", "Here they all are, side by side.",
+        nhip.append(_n("the_chu", _loi("tong", idx),
                        chu=" · ".join(ten_ch[:4]), dinh=True))
-    nhip.append(_n("canh", "That is the whole picture.", dinh=True,
+    nhip.append(_n("canh", _loi("ket", idx), dinh=True,
                    ve=_ve("one simple cartoon figure seen from behind, small in the frame",
                           "looking out over a wide open view",
                           "quietly satisfied",

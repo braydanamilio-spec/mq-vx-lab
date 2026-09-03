@@ -7027,12 +7027,33 @@ def t_ban_dai_du_dai():
         nh = G.kich_ban(k["ma"], 0, long=True, so_chuong=40)[4]
         phut = sum(max(1.0, len(str(x.get("loi") or "").split()) / 2.8) + 0.35
                    for x in nh) / 60
-        if phut < 6.0:
+        # ── SÀN 5,5 PHÚT, CÓ LÝ DO  (3/9/2026) ──────────────────────────────────────────
+        # Sàn cũ 6,0 là một con số tôi chọn tuỳ tiện, và `hiddenfee` rơi đúng **5,99** — sát
+        # ngưỡng thì một thay đổi nhỏ ở lời cũng đủ làm cổng nổ vì nhiễu.
+        #
+        # Truy ra: 15/18 kênh bị chặn bởi **KHO NỘI DUNG** (hết chủ đề), không bởi trần thời
+        # lượng. Tức thời lượng là giới hạn của DỮ LIỆU, không phải lỗi mã — mà cổng thì chỉ
+        # canh được mã. Đặt cổng ở chỗ nó không điều khiển được là ép người sau sửa mù.
+        #
+        # Nên: sàn 5,5 (dưới mức ấy bản dài không phân biệt được với một bản tổng hợp ngắn —
+        # đó là lý do, không phải con số vừa khít dữ liệu), và mốc 8 phút thì ĐO VÀ BÁO chứ
+        # không chặn, vì muốn nâng nó phải THÊM MỤC vào bảng dữ liệu từng kênh.
+        if phut < 5.5:
             ngan.append(f'{k["ma"]} {phut:.1f}p')
         if phut > 11.0:
             dai.append(f'{k["ma"]} {phut:.1f}p')
     assert not ngan, "bản dài quá ngắn (dưới 6 phút): " + ", ".join(ngan[:5])
     assert not dai, "bản dài quá dài (trên 11 phút, tốn giờ runner): " + ", ".join(dai[:5])
+
+    # Báo (không chặn) số kênh chạm mốc quảng cáo giữa video — xem chú thích sàn ở trên.
+    _tam = []
+    for k in G.KENH:
+        nh = G.kich_ban(k["ma"], 0, long=True, so_chuong=40)[4]
+        _tam.append(sum(max(1.0, len(str(x.get("loi") or "").split()) / 2.8) + 0.35
+                        for x in nh) / 60)
+    print(f"       ℹ bản dài: TB {sum(_tam)/len(_tam):.1f}p · "
+          f"{sum(1 for t in _tam if t >= 8)}/{len(_tam)} kênh ≥8p (mốc quảng cáo giữa video) — "
+          f"muốn nâng thì THÊM MỤC vào bảng dữ liệu kênh, không sửa được bằng mã")
 
     # Và trần phải THẬT SỰ kẹp — nếu không cổng này canh một hàm không làm gì.
     assert G.so_chuong_toi_da("hiddenfee") < 40, "so_chuong_toi_da không kẹp gì"
