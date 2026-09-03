@@ -55,6 +55,25 @@ sổ, thay vì hiện `0` như thể chưa có video nào.
 6. **Bốn cổng mới**, tất cả có thử ngược: prompt cảnh đứng đầu · sổ khoá có chốt thời gian ·
    ảnh bìa lấy nhịp đỉnh · mỗi kênh một bộ gu riêng (18/18 khác nhau hoàn toàn).
 
+## Đã đo và quyết định KHÔNG làm cổng — đừng làm lại
+
+**Thang chấm kịch bản đã thành TRẦN.** Đo phân bố trên 72 tập: `96:1 · 97:14 · 100:57`, độ lệch
+chuẩn 1,25. **57/72 tập đạt đúng 100** — tám trục không còn phân biệt được chất lượng nữa. Nó
+vẫn có ích như hàng rào chống hồi quy, nhưng đừng đọc con số 99,5 như một thước chất lượng
+(§13.24: khi kết quả dồn cục ngay trên ngưỡng thì ngưỡng đang là trần, không phải sàn).
+
+**Đã thử thêm một trục: "đa dạng từ mở đầu câu".** Đo được 11% từ mở đầu khác nhau, một từ mở
+tới 45 câu — nghe rất tệ. Nhưng **đọc tay** thì 45 câu "Now" của WHAT IF đi thành BỘ BA:
+
+    Now ten people. → Now a hundred. → Now everyone.
+
+Đó là chuỗi leo thang có chủ đích, đúng **quy tắc B** (§12.11: mệnh đề song song thì khung hình
+song song) — và chính từ mở đầu lặp mới làm nó đọc ra một sự leo thang. Làm cổng ở đây là phạt
+đúng thứ bộ luật yêu cầu, y như trục "ba nhịp cùng khuôn" đã bị bác hôm nay.
+
+Muốn làm trục này thì phải tách được **leo thang có chủ đích** khỏi **lặp vô ý** — em chưa đo
+được cách tách, nên không ship.
+
 ## Một điều CHƯA đo được — đừng sửa mù
 
 Ống kính của THE RULES hiện cái **đồng hồ** cho câu *"It is written right here"* — đáng lẽ là tờ
