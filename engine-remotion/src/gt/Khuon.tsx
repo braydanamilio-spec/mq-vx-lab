@@ -692,8 +692,9 @@ export const Dem: React.FC<{
    Chỗ ấy trong lời kể là chỗ NGƯỜI KỂ ĐƯA RA NHẬN ĐỊNH, không còn mô tả nữa. Cố vẽ minh hoạ
    cho một nhận định thì hình sẽ nói một điều cụ thể mà câu không nói — tức là hình đang bịa.
    Bỏ hẳn hình đi mới đúng, và cú dừng hình ấy cũng là một nhịp nghỉ cho tai. */
-export const TheChu: React.FC<{ W: number; H: number; chu: string; p: number; mau: string }> =
-({ W, H, chu, p, mau }) => {
+export const TheChu: React.FC<{
+  W: number; H: number; chu: string; p: number; mau: string; nen?: string; bo?: number;
+}> = ({ W, H, chu, p, mau, nen = "#F2F0EA", bo = 0 }) => {
   const q = Math.min(1, p / 0.2);
   /* ── XUỐNG DÒNG THAY VÌ THU NHỎ  (3/9/2026) ────────────────────────────────────────────
      Anh: *"long cũng chuẩn ko lỗi nha."* Soi bản dài: thẻ chương là **khối màu trơn với chữ bé
@@ -735,10 +736,151 @@ export const TheChu: React.FC<{ W: number; H: number; chu: string; p: number; ma
      Màu chữ chọn bằng đo tương phản, vì màu kênh mỗi kênh một độ sáng. */
   const nenThe = mau;
   const chuThe = chuHopNen("#FFFFFF", nenThe);
+
+  /* ── SÁU BỐ CỤC, KHÔNG MỘT  (3/9/2026) ──────────────────────────────────────────────────
+     Anh gửi hai khung và nói: *"2 loại này a thấy xấu nhàm chán mà nó cứ lặp đi lặp lại cùng
+     1 motip hoài."* Đúng, và đây là lời phê nặng hơn mọi lỗi kỹ thuật hôm nay.
+
+     Một bản dài có **10 thẻ chương**, cộng thẻ mở và thẻ chốt — tức khoảng 22% thời lượng là
+     khuôn này. Trước bản này cả 12 lần đều là MỘT hình: khối màu trơn, chữ trắng, canh giữa.
+     Bóng đổ với tấm nền em thêm sáng nay làm nó đẹp hơn nhưng **không đổi mô-típ** — người xem
+     vẫn thấy đúng một tấm bìa lặp mười hai lần.
+
+     Sáu bố cục dưới đây khác nhau ở thứ mắt đọc TRƯỚC chữ: **trọng tâm nằm đâu, nền chiếm bao
+     nhiêu, chữ canh bên nào**. Đổi màu hay đổi phông không giải quyết được gì — người xem nhận
+     ra bố cục, không nhận ra sắc độ.
+
+     `bo` truyền vào là `hạt + chỉ số nhịp`, KHÔNG phải `hạt` của tập: chỉ theo tập thì mười
+     thẻ trong CÙNG một video vẫn giống hệt nhau — đúng cái vừa bị phê. (Luật 14.9.)
+
+     Số chương tách khỏi tiêu đề để ba bố cục dùng nó làm phần tử hình: chữ số cỡ lớn là hình
+     khối mạnh nhất có sẵn mà không tốn một lượt vẽ nào. */
+  const co_so = /^\s*\d+\.?\s*$/.test((chu.split("|")[0] || ""));
+  const soCh = co_so ? chu.split("|")[0].trim().replace(/\.$/, "") : "";
+  const dongT = co_so ? chu.split("|").slice(1).flatMap((d) => _ngat(d)) : dong;
+  const daiT = Math.max(...dongT.map((d) => d.length), 1);
+  const k6 = Math.abs(bo) % 6;
+  const vao = 0.97 + q * 0.03;
+  const chuSang = chuHopNen("#FFFFFF", mau);
+  const chuToi = chuHopNen("#2C2722", nen);
+
+  /* Cỡ chữ tính lại theo BỀ NGANG THẬT mỗi bố cục cho phép — bố cục canh trái chỉ có 0,80·W,
+     bố cục có đĩa số chỉ còn 0,62·W. Dùng chung một cỡ thì bố cục hẹp sẽ tràn. */
+  const coChu = (rong: number, sodong: number) =>
+    Math.min(H * 0.135, (W * rong / daiT) * 1.62, (H * 0.80) / (sodong * 1.2));
+
+  const khoi = (x: number, y: number, neo: "middle" | "start", fsz: number, mauChu: string) => (
+    <g transform={`translate(${x} ${y}) scale(${vao})`}>
+      {dongT.map((d, i) => (
+        <text key={i} x="0" y={(i - (dongT.length - 1) / 2) * fsz * 1.16 + fsz * 0.34}
+              textAnchor={neo} fontFamily={F} fontWeight={900}
+              fontSize={fsz} fill={mauChu} letterSpacing={fsz * 0.005}>{d.trim()}</text>
+      ))}
+    </g>
+  );
+
+  if (k6 === 1 && soCh) {
+    /* SỐ KHỔNG LỒ LÀM NỀN — chữ số cao gần hết khung, mờ, lệch phải; tiêu đề canh trái đè lên.
+       Đây là bố cục tạp chí: một phần tử rất lớn rất nhạt giữ khung, chữ nhỏ hơn cầm nội dung. */
+    const fsz = coChu(0.78, dongT.length);
+    return (
+      <g opacity={q}>
+        <rect x={0} y={0} width={W} height={H} fill={mau} />
+        <text x={W * 0.99} y={H * 0.98} textAnchor="end" fontFamily={F} fontWeight={900}
+              fontSize={H * 1.28} fill={chuSang} opacity={0.13}>{soCh}</text>
+        {khoi(W * 0.08, H * 0.5, "start", fsz, chuSang)}
+      </g>
+    );
+  }
+  if (k6 === 2) {
+    /* DẢI MÀU GIỮA KHUNG — căn phòng vẫn thấy ở trên và dưới, nên thẻ không cắt đứt mạch phim.
+       Đây là bố cục duy nhất giữ được bối cảnh, nên nó là chỗ nghỉ mắt giữa các thẻ tràn màu. */
+    const cao = H * 0.46, y0 = (H - cao) / 2;
+    /* SỐ NẰM TRONG DẢI, KHÔNG ĐỨNG NGOÀI.  Bản đầu đặt nó phía trên mép dải ở cỡ 0,075·H —
+       soi khung ra một chữ số bé xíu lửng lơ, đọc như vết bẩn chứ không như số chương. Số
+       chương là phần tử hình, nên nó phải có KHỐI LƯỢNG: đưa vào trong dải, cỡ gần nửa chiều
+       cao dải, và chữ tiêu đề lùi sang phải nhường chỗ. */
+    const rSo = soCh ? W * 0.155 : 0;
+    const fsz = Math.min(coChu(soCh ? 0.68 : 0.84, dongT.length), (cao * 0.80) / (dongT.length * 1.2));
+    return (
+      <g opacity={q}>
+        <rect x={0} y={y0} width={W} height={cao} fill={mau} />
+        {soCh ? (
+          <>
+            <text x={W * 0.055} y={y0 + cao * 0.5 + cao * 0.22} fontFamily={F} fontWeight={900}
+                  fontSize={cao * 0.62} fill={chuSang} opacity={0.42}>{soCh}</text>
+            <line x1={rSo} y1={y0 + cao * 0.20} x2={rSo} y2={y0 + cao * 0.80}
+                  stroke={chuSang} strokeWidth={Math.max(2, W * 0.0016)} opacity={0.42} />
+          </>
+        ) : null}
+        {khoi(rSo + (W - rSo) / 2, y0 + cao / 2, "middle", fsz, chuSang)}
+      </g>
+    );
+  }
+  if (k6 === 3) {
+    /* NỀN SÁNG, LUẬT MÀU DÀY — chữ mực đậm trên nền phòng, một vạch màu dày phía trên.
+       Nhẹ nhất trong sáu bố cục; đặt xen giữa các thẻ tràn màu thì cả loạt bớt nặng. */
+    const fsz = coChu(0.82, dongT.length);
+    const yT = H * 0.52;
+    return (
+      <g opacity={q}>
+        <rect x={0} y={0} width={W} height={H} fill={nen} />
+        <rect x={W * 0.09} y={yT - fsz * (dongT.length * 0.62) - H * 0.085}
+              width={W * 0.20 * Math.min(1, q * 1.6)} height={H * 0.017} fill={mau} />
+        {/* EYEBROW CÓ CHỮ, KHÔNG PHẢI MỘT CHỮ SỐ TRẦN.
+            Thử hai lần: cỡ 0,042·H rồi 0,072·H — cả hai lần soi khung đều ra một vết nhỏ khó
+            hiểu bên trên vạch màu. Vấn đề không phải CỠ mà là NGHĨA: một chữ số đứng một mình
+            không nói nó là số gì, nên mắt bỏ qua nó như một vết bẩn. Phóng to chỉ làm vết bẩn
+            to hơn.
+            `CHAPTER 2` giãn chữ là khuôn eyebrow của báo in — đọc ra ngay là một nhãn, và ở cỡ
+            nhỏ vẫn đúng vai vì vai của nó là NHÃN, không phải tiêu đề. */}
+        {soCh ? (
+          <text x={W * 0.09} y={yT - fsz * (dongT.length * 0.62) - H * 0.034}
+                fontFamily={F} fontWeight={900} fontSize={H * 0.040}
+                fill={mau} letterSpacing={H * 0.010}>{`CHAPTER ${soCh}`}</text>
+        ) : null}
+        {khoi(W * 0.09, yT, "start", fsz, chuToi)}
+      </g>
+    );
+  }
+  if (k6 === 4) {
+    /* NÊM CHÉO — mảng màu cắt chéo từ đáy trái. Đường chéo là thứ duy nhất trong cả bộ khuôn
+       không nằm ngang hay dọc, nên nó phá nhịp mạnh nhất. Dùng thưa. */
+    const fsz = coChu(0.72, dongT.length);
+    return (
+      <g opacity={q}>
+        <rect x={0} y={0} width={W} height={H} fill={nen} />
+        <path d={`M 0 ${H * 0.16} L ${W} ${H * -0.06} L ${W} ${H} L 0 ${H} Z`} fill={mau} />
+        {soCh ? (
+          <text x={W * 0.08} y={H * 0.40} fontFamily={F} fontWeight={900}
+                fontSize={H * 0.085} fill={chuSang} opacity={0.55}>{soCh}</text>
+        ) : null}
+        {khoi(W * 0.08, H * 0.64, "start", fsz, chuSang)}
+      </g>
+    );
+  }
+  if (k6 === 5 && soCh) {
+    /* ĐĨA SỐ BÊN TRÁI — số trong một đĩa màu lớn, tiêu đề canh trái bên phải trên nền sáng.
+       Bố cục "chương sách": mắt đọc số trước, rồi mới sang chữ. */
+    const r = Math.min(H * 0.26, W * 0.17);
+    const cx = W * 0.20, cy = H * 0.5;
+    const fsz = Math.min(coChu(0.58, dongT.length), H * 0.11);
+    return (
+      <g opacity={q}>
+        <rect x={0} y={0} width={W} height={H} fill={nen} />
+        <circle cx={cx} cy={cy} r={r * (0.9 + q * 0.1)} fill={mau} />
+        <text x={cx} y={cy + r * 0.36} textAnchor="middle" fontFamily={F} fontWeight={900}
+              fontSize={r * 1.05} fill={chuSang}>{soCh}</text>
+        {khoi(cx + r * 1.30, cy, "start", fsz, chuToi)}
+      </g>
+    );
+  }
+  /* BỐ CỤC GỐC — tràn màu, chữ canh giữa. Vẫn là bố cục mạnh nhất, nên nó giữ chỗ mặc định
+     và là chỗ rơi về khi một bố cục cần số mà thẻ ấy không có số (thẻ tuyên bố giữa phim). */
   return (
     <g opacity={q}>
       <rect x={0} y={0} width={W} height={H} fill={nenThe} />
-      <g transform={`translate(${W / 2} ${H / 2}) scale(${0.97 + q * 0.03})`}>
+      <g transform={`translate(${W / 2} ${H / 2}) scale(${vao})`}>
         {dong.map((d, i) => (
           <text key={i} x="0" y={(i - (dong.length - 1) / 2) * fs * 1.16 + fs * 0.34}
                 textAnchor="middle" fontFamily={F} fontWeight={900}

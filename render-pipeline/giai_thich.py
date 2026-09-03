@@ -2481,6 +2481,126 @@ _BT_TU = (
 )
 
 
+# ── GU HÌNH RIÊNG TỪNG KÊNH  (3/9/2026) ─────────────────────────────────────────────────────
+# Anh: *"các channel nên có gu style chất nha e"* và *"nó cứ lặp đi lặp lại cùng 1 motip hoài"*.
+#
+# Đo trên 18 kênh × 4 tập: **41/196 nhịp cảnh dùng lại đúng biểu tượng của nhịp ngay trước**, và
+# mỗi kênh bị MỘT biểu tượng chiếm sóng (`dayinlife` ra cái đồng hồ 8 lần, `howmuch` ra hình
+# người 11 lần). Soi lưới DAY IN LIFE: 3/9 khung là cùng một cái đồng hồ trong cùng một căn
+# phòng. Người xem không đọc ra "kênh về thời gian", họ đọc ra "video bị lỗi".
+#
+# Gốc: `_bt_canh` không khớp từ nào thì trả `nguoi`, và khớp thì trả đúng một biểu tượng cho mọi
+# lần gặp từ ấy. Không có tầng nào biết tới NHỊP TRƯỚC, nên không có gì ngăn lặp.
+#
+# Bảng này làm hai việc cùng lúc:
+#   1. cho mỗi kênh một BỘ TỪ VỰNG HÌNH riêng — phần tử đầu là biểu tượng chữ ký của kênh
+#   2. cho `_rai_hinh` chỗ để chọn khi phải tránh lặp, thay vì chọn bừa
+#
+# Các bộ cố ý ÍT GIAO NHAU: đây chính là trục "cảnh" mà chính sách YouTube nêu tên (§13.17), và
+# nó là thứ đo được — không phải cảm giác.
+GU_HINH = {
+    "howlong":    ("nguoi", "may_bay", "dong_ho", "xe", "trai_dat"),
+    "howbig":     ("ca_voi", "xe_buyt", "nha", "huou", "nguoi"),
+    "realcost":   ("tien", "coc", "nha", "giay", "dien_thoai"),
+    "howmuch":    ("hop", "tien", "coc", "giay", "nguoi"),
+    "whatif":     ("trai_dat", "mat_troi", "lua", "mat_trang", "nguoi"),
+    "survive":    ("lua", "cay", "mat_trang", "hop", "nguoi"),
+    "dayinlife":  ("dong_ho", "giuong", "coc", "giay", "nguoi"),
+    "wheregoes":  ("hop", "xe", "nha", "giay", "cay"),
+    "therules":   ("giay", "nha", "dong_ho", "hop", "nguoi"),
+    "speedof":    ("may_bay", "xe", "nguyen_tu", "mat_troi", "trai_dat"),
+    "odds":       ("giay", "tien", "dong_ho", "lua", "nguoi"),
+    "hiddenfee":  ("tien", "giay", "dien_thoai", "xe", "hop"),
+    "yearsof":    ("cay", "mat_trang", "giuong", "coc", "nguoi"),
+    "howloud":    ("dan_piano", "xe", "may_bay", "hop", "nguoi"),
+    "whatweighs": ("ca_voi", "xe", "huou", "hop", "nguoi"),
+    "rightnow":   ("trai_dat", "dien_thoai", "dong_ho", "xe_buyt", "nguoi"),
+    "howhot":     ("lua", "mat_troi", "coc", "nha", "hop"),
+    "smallest":   ("te_bao", "vi_khuan", "nguyen_tu", "meo", "nguoi"),
+}
+
+
+# ── GU BỐ CỤC RIÊNG TỪNG KÊNH  (3/9/2026) ───────────────────────────────────────────────────
+# Anh: *"nhớ tận dụng dùng cho từng channel 1 sau này nha và cơ chế lưu thông minh để ko chồng
+# chéo, lẫn lộn hay lỗi"* · *"các channel nên có gu style chất"*.
+#
+# `TheChu` có sáu bố cục. Nếu mọi kênh đều rút từ cả sáu thì có ĐA DẠNG nhưng không có BẢN SẮC —
+# xem hai video của hai kênh khác nhau vẫn thấy cùng một bộ bài. Nên mỗi kênh chỉ dùng BA, và
+# ba ấy chọn theo tính cách kênh:
+#
+#     0 tràn màu, chữ giữa      — mạnh nhất, dùng cho kênh gây sốc
+#     1 số khổng lồ làm nền     — tạp chí, dùng cho kênh về con số
+#     2 dải màu giữa khung      — giữ được bối cảnh, nhẹ nhàng
+#     3 nền sáng, luật màu dày  — nhẹ nhất, kênh giải thích điềm đạm
+#     4 nêm chéo                — phá nhịp, kênh có tiết tấu nhanh
+#     5 đĩa số bên trái         — "chương sách", kênh kể theo trình tự
+#
+# ── VÌ SAO LƯU VÀO NHỊP, KHÔNG SUY RA Ở ENGINE ─────────────────────────────────────────────
+# Bản trước engine tự tính `bo = hat + round(N.s * 3)`. Nghĩa là chỗ CHỌN bố cục nằm ở engine
+# còn chỗ biết BẢN SẮC KÊNH nằm ở Python — hai nơi, và không nơi nào thấy được nơi kia. Đúng
+# họ lỗi "hai nguồn sự thật cho một thứ" (§13.5): sửa bảng gu ở Python mà engine vẫn dựng theo
+# công thức cũ, không có lỗi nào báo.
+#
+# Nay Python quyết định và GHI vào `nhip["bo_the"]`. Engine chỉ đọc. Con số ấy nằm trong tệp
+# `.json` của tập nên dựng lại tập cũ ra đúng hình cũ — không có chuyện cùng một kịch bản ra
+# hai bố cục ở hai lần dựng.
+GU_KHUON = {
+    "howlong":    (2, 5, 3),   "howbig":     (0, 1, 4),
+    "realcost":   (1, 0, 3),   "howmuch":    (1, 2, 5),
+    "whatif":     (4, 0, 2),   "survive":    (0, 4, 1),
+    "dayinlife":  (5, 2, 3),   "wheregoes":  (3, 5, 0),
+    "therules":   (3, 2, 1),   "speedof":    (4, 1, 0),
+    "odds":       (1, 4, 5),   "hiddenfee":  (0, 3, 1),
+    "yearsof":    (5, 3, 2),   "howloud":    (0, 2, 4),
+    "whatweighs": (1, 5, 4),   "rightnow":   (4, 3, 0),
+    "howhot":     (0, 1, 2),   "smallest":   (2, 4, 5),
+}
+
+
+def _rai_khuon(ma: str, nhip: list, idx: int = 0) -> list:
+    """Gán bố cục thẻ chữ cho từng nhịp, xoay trong BA bố cục của kênh.
+
+    Xoay theo thứ tự xuất hiện chứ không theo mốc thời gian: một bản dài có mười thẻ chương, và
+    chúng phải lần lượt đổi bố cục. Cộng `idx` để hai TẬP của cùng kênh không mở đầu bằng cùng
+    một bố cục — thiếu nó thì tập nào cũng "thẻ mở kiểu 5, chương 1 kiểu 2, chương 2 kiểu 3".
+    """
+    bo = GU_KHUON.get(ma) or (0, 2, 3)
+    d = 0
+    for n in nhip:
+        if (n.get("khuon") or "") != "the_chu":
+            continue
+        n["bo_the"] = bo[(idx + d) % len(bo)]
+        d += 1
+    return nhip
+
+
+def _rai_hinh(ma: str, nhip: list, idx: int = 0) -> list:
+    """Không nhịp cảnh nào dùng lại biểu tượng của nhịp ngay trước.
+
+    Chỉ đụng vào nhịp bị TRÙNG — biểu tượng khớp đúng từ ("a jet" -> máy bay) luôn được giữ, vì
+    hình đúng nghĩa quan trọng hơn hình đa dạng. Chỉ khi hai nhịp liền nhau ra cùng một hình
+    thì nhịp sau mới đổi sang biểu tượng khác trong bộ của kênh.
+
+    `idx` xoay điểm bắt đầu nên hai TẬP của cùng một kênh cũng không rơi vào cùng một chuỗi
+    thay thế — không có nó thì tập nào cũng "đồng hồ, giường, đồng hồ, giường".
+    """
+    bo = GU_HINH.get(ma) or ("nguoi", "nha", "dong_ho", "hop", "giay")
+    truoc = ""
+    for j, n in enumerate(nhip):
+        if (n.get("khuon") or "") != "canh":
+            continue
+        b = n.get("bt") or ""
+        if b and b == truoc:
+            for t in range(len(bo)):
+                c = bo[(idx + j + t) % len(bo)]
+                if c != truoc:
+                    b = c
+                    break
+            n["bt"] = b
+        truoc = b
+    return nhip
+
+
 def _moc_khac(cac, so):
     """Mốc so sánh phải KHÁC mục đang nói tới.  (3/9/2026)
 
@@ -2641,6 +2761,11 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
                 _b = _bt_canh(_x.get("loi") or "", _x.get("ve") or "")
                 if _b:
                     _x["bt"] = _b
+    # Rải hình: một chỗ hẹp duy nhất cho CẢ short và long — xem `_rai_hinh`. Đặt sau khi hai
+    # nhánh đã gộp lại, vì đặt trong từng nhánh là hai chỗ để lệch nhau.
+    nhip = _rai_hinh(ma, nhip, idx)
+    nhip = _rai_khuon(ma, nhip, idx)
+
     # Nhịp 0 = HOOK. Chèn ở đây chứ không viết vào từng bộ sinh: hook là quy tắc chung của cả
     # bộ phim, không phải nội dung riêng của một kênh — viết mười chỗ là mười chỗ để lệch nhau.
     # CHỈ chèn khung số liệu khi THẬT SỰ CÓ SỐ. Bốn kênh (whatif · dayinlife · wheregoes ·

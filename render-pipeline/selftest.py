@@ -2539,6 +2539,7 @@ def main():
     check("bài nghiệm thu bắt được đúng lỗi đã lọt", t_nghiem_thu_bat_duoc_loi_that)
     check("nhịp so sánh không có hai vế bằng nhau", t_chia_doi_hai_ve_khac_nhau)
     check("biểu đồ không vẽ trục toàn số 0 hoặc trục phẳng", t_chart_co_so_that)
+    check("gu hình mỗi kênh một bộ, không lặp biểu tượng liền kề", t_gu_hinh_khac_nhau)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)
@@ -6949,6 +6950,50 @@ def t_nghiem_thu_bat_duoc_loi_that():
     if _o.path.exists(wf):
         assert "nghiem_thu.py" in io.open(wf, encoding="utf-8").read(), \
             "bài nghiệm thu không được gọi trong workflow -> viết ra rồi để đấy"
+
+
+def t_gu_hinh_khac_nhau():
+    """Hai trục cùng lúc: KHÔNG lặp biểu tượng ở nhịp liền kề, và bộ gu hình phải khác nhau.
+
+    Đo lúc phát hiện: 41/196 nhịp cảnh dùng lại đúng biểu tượng của nhịp ngay trước, và mỗi kênh
+    bị một biểu tượng chiếm sóng (`dayinlife` ra cái đồng hồ 8 lần trong 4 tập). Anh soi khung
+    và gọi đúng tên: *"nó cứ lặp đi lặp lại cùng 1 motip hoài"*.
+
+    Trần giao nhau 3/5: có 24 biểu tượng cho 18 kênh × 5 chỗ nên trùng là không tránh khỏi, và
+    trùng 3 là chấp nhận được. Trùng 4/5 thì hai kênh dùng gần như cùng một từ vựng hình — đúng
+    trục "cảnh" mà chính sách YouTube nêu tên (§13.17).
+    """
+    import itertools as _it
+    import giai_thich as G
+
+    for m in [k["ma"] for k in G.KENH]:
+        assert m in G.GU_HINH, f"kênh {m} chưa có bộ gu hình -> rơi về bộ mặc định chung"
+
+    xau = []
+    for k in G.KENH:
+        for i in range(4):
+            nh = G._rai_hinh(k["ma"], G.BO_SINH[k["ma"]](i)[3], i)
+            truoc = ""
+            for n in nh:
+                if (n.get("khuon") or "") != "canh":
+                    continue
+                b = n.get("bt") or ""
+                if b and b == truoc:
+                    xau.append(f'{k["ma"]} tập {i}: {b} hai nhịp liền')
+                truoc = b
+    assert not xau, "lặp biểu tượng liền kề: " + "; ".join(xau[:3])
+
+    qua = [(a, b, sorted(set(G.GU_HINH[a]) & set(G.GU_HINH[b])))
+           for a, b in _it.combinations(G.GU_HINH, 2)
+           if len(set(G.GU_HINH[a]) & set(G.GU_HINH[b])) > 3]
+    assert not qua, "bộ gu hình trùng quá 3/5: " + "; ".join(f"{a}/{b} {c}" for a, b, c in qua[:3])
+
+    # Thử ngược: bỏ chống lặp đi thì phải CÓ lặp, nếu không cổng này canh một cơ chế không cần.
+    tho = G.BO_SINH["dayinlife"](0)[3]
+    lap = sum(1 for j, n in enumerate(tho[1:], 1)
+              if (n.get("khuon") == "canh" and tho[j - 1].get("khuon") == "canh"
+                  and n.get("bt") and n.get("bt") == tho[j - 1].get("bt")))
+    assert lap > 0, "dữ liệu thô không còn lặp -> cổng chống lặp đang canh một việc đã hết"
 
 
 def t_chia_doi_hai_ve_khac_nhau():

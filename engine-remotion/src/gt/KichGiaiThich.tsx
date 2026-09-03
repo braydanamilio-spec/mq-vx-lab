@@ -356,7 +356,12 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                              mau={mau} mauPhu={mauPhu} p={p} nen={nenTrang} hat={hat} /> };
       case "the_chu":
         return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
-                 lop: <TheChu W={W} H={H * 0.80} chu={N.the || N.loi} p={p} mau={mau} /> };
+                 lop: <TheChu W={W} H={H * 0.80} chu={N.the || N.loi} p={p} mau={mau}
+                              nen={nenTrang}
+                              /* `bo_the` do Python quyết và ghi vào nhịp — xem `GU_KHUON`.
+                                 Engine KHÔNG tự suy ra: chọn ở hai nơi là hai nơi để lệch nhau,
+                                 và lệch kiểu ấy không báo lỗi, chỉ dựng ra bố cục khác. */
+                              bo={N.bo_the ?? hat} /> };
       case "anh":
         return { nen: N.tep ? (
           <Img src={staticFile(N.tep)} style={{ position: "absolute", inset: 0, width: W, height: H,
