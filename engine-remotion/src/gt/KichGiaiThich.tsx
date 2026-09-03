@@ -398,9 +398,46 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
             · vignette: tối nhẹ bốn góc, dẫn mắt vào giữa — mọi ống kính thật đều có
             · grain: hạt mịn, phá cái "sạch bong" của ảnh máy sinh ra
           Cả hai phải RẤT NHẸ. Thấy được là hỏng; nhiệm vụ của chúng là không ai nhận ra. */}
+      {/* ── LỚP CHỈNH MÀU PHỦ TOÀN KHUNG  (3/9/2026) ──────────────────────────────────────
+          Anh: *"tông màu ảnh vẫn hơi xấu và chưa điện ảnh bắt mắt."*
+
+          Bộ `to_mau` hiện có chỉnh TỪNG ẢNH AI — nên nó không chạm được vào đồ hoạ vẽ bằng code
+          (biểu đồ, thẻ số, chia đôi). Đó chính là lý do hai loại vẫn đọc ra hai thế giới: chúng
+          chưa bao giờ đi qua cùng một bề mặt.
+
+          §12.12 đã chỉ đúng cách: *vignette + grain rất nhẹ phủ TOÀN khung, vì nó phủ lên cả ảnh
+          lẫn đồ hoạ code nên hai thứ khác bản chất mới chung một bề mặt.* Lớp này làm nốt phần
+          MÀU của ý ấy — grain và vignette đã có, còn thiếu tông màu.
+
+          Hai lớp, cố ý rất nhẹ:
+            · `overlay` ấm ở 6% — kéo vùng sáng ngả vàng nhẹ, cho cảm giác nắng thay vì đèn huỳnh
+              quang. Đây là thứ mắt đọc ra là "điện ảnh".
+            · `soft-light` lạnh ở 5% — hạ vùng tối về phía xanh lam. Sáng ấm / tối lạnh là công
+              thức phân tách tông cơ bản nhất, và nó rẻ vì chỉ là hai lớp phủ.
+
+          Không dùng số lớn hơn: đây là bộ giải thích, không phải phim hành động. §13.4 ghi lại
+          một lần tôi tưởng chỉnh màu là đòn bẩy lớn rồi ghép trước/sau thấy gần như không khác —
+          nên lần này đặt nhẹ và để nó cộng dồn với grain + vignette, không kỳ vọng nó tự gánh. */}
+      {/* ── ĐO RỒI BỎ LỚP LẠNH  (3/9/2026) ────────────────────────────────────────────────
+          Bản đầu có HAI lớp: ấm `overlay` 6% + lạnh `soft-light` 5%, theo công thức "sáng ấm /
+          tối lạnh". Đo trên khung thật sau khi dựng:
+
+              R = 130 · G = 130 · B = 129      → **không ấm lên một chút nào**
+
+          Hai lớp **triệt tiêu nhau**: cái này kéo vàng, cái kia kéo lam, kết quả là trung tính —
+          nhưng vẫn hạ độ sáng và độ trong. Tức nó chỉ để lại phần THIỆT của cả hai.
+
+          §13.4 đã ghi đúng bẫy này một lần: *"tuyên bố chỉnh màu là đòn bẩy lớn nhất; làm xong,
+          ghép trước/sau thì gần như không thấy khác biệt"*. Lần ấy là vô hại, lần này là có hại.
+
+          Bỏ lớp lạnh, giữ một lớp ấm đủ để ĐO ĐƯỢC. Một lớp làm được việc hơn hai lớp cãi nhau. */}
+      <AbsoluteFill style={{
+        pointerEvents: "none", opacity: 0.10, mixBlendMode: "soft-light",
+        background: "linear-gradient(180deg,#FFE0B2 0%,#FFCB8F 60%,#FFBE7A 100%)",
+      }} />
       <AbsoluteFill style={{
         pointerEvents: "none",
-        background: `radial-gradient(120% 78% at 50% 46%, #00000000 52%, #00000055 100%)`,
+        background: `radial-gradient(120% 78% at 50% 46%, #00000000 52%, #00000048 100%)`,
       }} />
       <AbsoluteFill style={{
         pointerEvents: "none", opacity: 0.05, mixBlendMode: "overlay",

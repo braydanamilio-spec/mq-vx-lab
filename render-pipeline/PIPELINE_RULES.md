@@ -8989,3 +8989,28 @@ thoảng** trên dashboard. 48 lượt/ngày cho nó là đổi hạn mức lấ
 
 **Luật.** Trước khi tối ưu một truy vấn, đếm xem **nó được gọi bao nhiêu lần**. Một truy vấn
 150 doc là rẻ; nhân 48 lượt/ngày × 2 workflow thì nó là khoản chi lớn nhất của cả hệ.
+
+### 7ef — Hai lớp chỉnh màu triệt tiêu nhau, chỉ để lại phần thiệt  (3/9/2026)
+
+Anh: *"tông màu ảnh vẫn hơi xấu và chưa điện ảnh bắt mắt."*
+
+Thêm lớp chỉnh màu phủ **toàn khung** là đúng hướng: `to_mau` hiện có chỉnh **từng ảnh AI**, nên
+không chạm được đồ hoạ vẽ bằng code — và đó chính là lý do hai loại vẫn đọc ra hai thế giới,
+chúng chưa bao giờ đi qua cùng một bề mặt. §12.12 đã chỉ đúng cách với grain và vignette; lớp
+này làm nốt phần MÀU.
+
+**Nhưng bản đầu dùng HAI lớp** theo công thức "sáng ấm / tối lạnh": ấm `overlay` 6% + lạnh
+`soft-light` 5%. Đo trên khung thật sau khi dựng:
+
+```
+R = 130 · G = 130 · B = 129     → không ấm lên một chút nào
+```
+
+Hai lớp **triệt tiêu nhau**: cái kéo vàng, cái kéo lam, kết quả trung tính — nhưng vẫn hạ độ
+sáng và độ trong. Nó chỉ để lại **phần thiệt của cả hai**.
+
+Bỏ lớp lạnh, một lớp ấm `soft-light` 10%: độ ấm `R−B` từ **+1,0 lên +2,6**, độ sáng giữ nguyên
+131. Nhẹ, nhưng đo được — và §13.4 đã dặn đừng kỳ vọng chỉnh màu là đòn bẩy lớn ở bộ này.
+
+**Luật.** Hai hiệu ứng ngược chiều chồng lên nhau thì phần ĐẸP triệt tiêu còn phần THIỆT cộng
+dồn. Trước khi thêm lớp thứ hai, đo xem lớp thứ nhất đã làm được gì.
