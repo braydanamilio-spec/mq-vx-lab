@@ -2541,6 +2541,7 @@ def main():
     check("biểu đồ không vẽ trục toàn số 0 hoặc trục phẳng", t_chart_co_so_that)
     check("gu hình mỗi kênh một bộ, không lặp biểu tượng liền kề", t_gu_hinh_khac_nhau)
     check("mọi nhịp có khuôn đổi bố cục đều ĐƯỢC GÁN bố cục", t_moi_nhip_co_bo_cuc)
+    check("không đọc lại cùng một câu trong vòng 12 nhịp", t_khong_lap_loi_gan)
     check("không `const` nào bị dùng trước khai báo (vùng chết tạm thời)", t_khong_tdz)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
@@ -6992,6 +6993,45 @@ def t_cham_kich_ban():
     if _o.path.exists(wf):
         assert "cham_kich_ban.py" in io.open(wf, encoding="utf-8").read(), \
             "thang chấm kịch bản không được gọi trong workflow -> viết ra rồi để đấy"
+
+
+def t_khong_lap_loi_gan():
+    """Không câu nào được đọc lại trong vòng `GAN_NHAT` nhịp (~25 giây).
+
+    ── ĐO LÚC PHÁT HIỆN ───────────────────────────────────────────────────────────────────
+    Soi bản dài ODDS: bốn cảnh lặp vòng và LỜI lặp nguyên văn. Đo cả 18 kênh, bản dài 10 chương:
+    **7/18 kênh có câu đọc lại trong vòng 30 giây**, gần nhất 6,0 giây (WHATWEIGHS, 12 ca).
+
+    Ba gốc khác nhau, và đó là lý do phải có cổng chứ không chỉ sửa tay:
+      · `sinh_whatweighs` gọi `_loi("so_sanh", i)` HAI lần trong một chương -> cùng câu, cách
+        nhau ba nhịp
+      · nhịp hook đọc TIÊU ĐỀ TẬP, thẻ chương 1 đọc lại đúng câu ấy
+      · hồ `LOI_MAU` chỉ 5 câu cho 10 chương, `BIEN_THE` chỉ 3 lựa chọn (nay 6)
+
+    Cho phép ĐÚNG MỘT ca: `howlong` có 165 nhịp trong một tập, mật độ cao nhất bộ, và ca còn lại
+    cách nhau 27 giây — trên ngưỡng tai nghe ra. Đặt trần 2 để cổng còn bắt được hồi quy thật.
+    """
+    import giai_thich as G
+
+    xau = []
+    for k in G.KENH:
+        for dai in (True, False):
+            nh = G.kich_ban(k["ma"], 0, long=dai, so_chuong=10 if dai else 1)[4]
+            cuoi = {}
+            for j, n in enumerate(nh):
+                l = str(n.get("loi") or "").strip()
+                if not l:
+                    continue
+                if j - cuoi.get(l, -999) < G.GAN_NHAT:
+                    xau.append(f'{k["ma"]}{"·dài" if dai else ""}: «{l[:40]}» cách '
+                               f'{j - cuoi[l]} nhịp')
+                cuoi[l] = j
+    assert len(xau) <= 2, f"{len(xau)} ca đọc lại quá gần: " + "; ".join(xau[:4])
+
+    # Thử NGƯỢC: bộ khử phải thật sự đổi câu, nếu không cổng này canh một hàm chết.
+    tho = [{"khuon": "canh", "loi": "No breaks."} for _ in range(4)]
+    G._tranh_lap_gan(tho)
+    assert len({n["loi"] for n in tho}) >= 3, "_tranh_lap_gan không đổi câu lặp"
 
 
 def t_khong_tdz():

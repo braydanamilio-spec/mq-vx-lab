@@ -576,6 +576,10 @@ export const SoLieu: React.FC<{
 
      Nay tính TỪ đáy khối số: chú thích luôn nằm dưới dòng đơn vị một khoảng bằng 0,5 cỡ số,
      dù `bo` là gì. `yChuMin` giữ sàn để trên bản ngang chữ không leo quá cao. */
+  /* Bố cục DẢI MÀU: chú thích phải nằm HẲN DƯỚI dải, không nửa trong nửa ngoài. Dải cao
+     0,25·H (0,30 ở khung ngang) và tâm ở `yCao`, nên mép dưới ở `yCao + 0,13`. Soi khung ODDS:
+     dòng "trying once every day" rơi đúng mép dải — nửa trên nằm trên nền màu kênh, nửa dưới
+     trên nền phòng, và cả hai nửa đều khó đọc vì màu chữ chỉ chọn được cho MỘT nền. */
   const yChuMin = ngang ? 0.33 : (tren_anh ? 0.37 : 0.44);
   const q = Math.min(1, p / 0.28);
   /* Cùng lỗi với `ChiaDoi`, và thêm một lỗi nữa: biểu tượng đặt ở `H*0.62` còn con số ở
@@ -610,7 +614,8 @@ export const SoLieu: React.FC<{
   const cd = Math.min(H * 0.055, (W * 0.80 / Math.max(1, (don || "").length)) * 1.7);
   const yDon = cs * 0.22 + cd * 1.05;                    // chân dòng đơn vị, so với chân số
   const cChu = Math.min(H * 0.042, (W * 0.90 / Math.max(1, (chu || "").length)) * 1.45);
-  const yChu = Math.max(yChuMin, (H * yCao + yDon + cChu * 1.15) / H);
+  const yChu = Math.max(kA === 2 ? yCao + (ngang ? 0.16 : 0.14) + cChu / H : yChuMin,
+                        (H * yCao + yDon + cChu * 1.15) / H);
   /* SỐ ĐẾM LÊN — anh: *"số liệu động animation là đẹp hay."*
      Không phải hiệu ứng cho vui: con số nhảy dần làm người xem CẢM được độ lớn, còn con số
      hiện sẵn thì chỉ được đọc. Với kênh mà cả nội dung là những con số thì đây là chỗ đắt nhất.
@@ -1320,8 +1325,13 @@ export const Chart: React.FC<{
              sàn bằng ít nhất một đường kính chấm cộng khoảng thở — chép hằng số sang bố cục
              khác là lỗi §6 quen thuộc. */
           const rCham = rCham0;
+          /* Sàn `W*0,006` (6px) chép từ bố cục CỘT ĐỨNG, nơi bề rộng cột đã đủ để mắt thấy
+             có một cái cột. Ở cột NGANG thì 6px là một vạch không ai nhận ra — soi biểu đồ
+             ODDS (36 cạnh 36 triệu) thấy hai cột nhỏ nhất biến mất hẳn, và người xem đọc ra
+             "thiếu cột" chứ không đọc ra "cột này bé đến thế". Sàn tồn tại đúng để tránh cách
+             đọc ấy, nên nó phải đủ lớn để NHÌN THẤY. */
           const dai = Math.max((x1 - x0) * (Math.abs(c.v) / max),
-                               kC === 2 ? rCham * 2.4 : W * 0.006) * qi;
+                               kC === 2 ? rCham * 2.4 : W * 0.018) * qi;
           const la = c === dinh;
           const cS = Math.min(oCao * 0.44, H * 0.040);
           return (

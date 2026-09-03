@@ -1904,7 +1904,14 @@ def sinh_whatweighs(i):
               f"{nho[0]} piled high on the other side", "",
               "a plain backdrop, the scale filling the frame",
               "flat ground beneath the scale", "bright palette")),
-    _n("chart", _loi("so_sanh", i), don="pounds",
+    # `i + 3`, KHÔNG phải `i`.  (3/9/2026)
+    # Chương này gọi `_loi("so_sanh", i)` HAI lần — một cho nhịp so sánh, một cho nhịp biểu đồ.
+    # Cùng vai + cùng chỉ số = **cùng một câu**, và hai nhịp ấy cách nhau ba nhịp (~7 giây), nên
+    # người xem nghe đúng một câu hai lần trong bảy giây. Soi bản dài WHATWEIGHS: 12 lần như thế
+    # trong một tập, khoảng cách gần nhất 6,0 giây.
+    # Không cổng nào bắt: `kiem_khuon` đo khuôn CÂU trên toàn tập, `cham_kich_ban` đo lặp SỐ.
+    # Lệch 3 vì hồ `LOI_MAU` có 5 câu — lệch 1 hay 2 vẫn có thể đụng câu của chương kế bên.
+    _n("chart", _loi("so_sanh", i + 3), don="pounds",
        cot=[{"nhan": _nhan(nho[0].split()[-1]), "v": nho[1]},
             {"nhan": _nhan(lon[0].split()[-1]), "v": lon[1]}], dinh=True),
     _n("canh", "You guessed wrong. Everyone does.", dinh=True,
@@ -2288,6 +2295,147 @@ BIEN_THE = {
 }
 
 
+# ── BA BIẾN THỂ NỮA CHO MỖI CÂU: 3 -> 6 LỰA CHỌN  (3/9/2026) ────────────────────────────────
+# Anh: *"nó cứ lặp đi lặp lại cùng 1 motip hoài"* — và soi bản dài thì lời còn lặp nặng hơn hình.
+#
+# Đo trên cả 18 kênh, bản dài 10 chương: **40–58% số câu là LẶP NGUYÊN VĂN**. Kênh ODDS có câu
+# xuất hiện đúng 4 lần trong một tập.
+#
+# Gốc là số học, không phải thiếu cơ chế: `doi_loi` chọn `ds[idx % len(ds)]` với `ds` gồm câu
+# gốc + 2 biến thể = **3 lựa chọn**, và nó được gọi với `idx + c` cho từng chương. Mười chương
+# chia cho ba lựa chọn thì mỗi biến thể phải dùng 3–4 lần. Cơ chế chạy đúng; cái sai là HỒ quá
+# nhỏ so với số lần rút.
+#
+# Nâng lên 6 lựa chọn thì 10 chương chia cho 6 — mỗi biến thể ~1,7 lần, và ba câu liền nhau
+# không còn giống nhau. Đây là cách rẻ nhất: không đụng cơ chế, không thêm lượt gọi AI nào.
+#
+# Giọng giữ nguyên: câu ngắn, khẳng định, tiếng Anh Mỹ, 2–7 chữ. Câu dài hơn thì cảnh phải giữ
+# lâu hơn, và §12.11 đã đo rằng nhịp cắt là việc của khâu VIẾT.
+BIEN_THE_THEM = {
+
+"You walk. Light does not.": ("Light travels. You walk.", "One of you is walking.", "Light does not take steps."),
+"Nobody has ever done this.": ("Nobody has made this trip.", "It has never been attempted.", "No record of anyone doing it."),
+"So start walking.": ("So take the first step.", "So get moving.", "Start walking, then."),
+"No breaks.": ("No breaks at all.", "Never stopping.", "Straight through."),
+"No sleep.": ("No sleep either.", "Awake the whole way.", "Zero sleep."),
+"Days go by.": ("Days keep passing.", "The days add up.", "Time keeps moving."),
+"And they keep going.": ("And it continues.", "And there are more.", "And more after that."),
+"You arrive.": ("You make it.", "The walk ends.", "You are there."),
+"On foot.": ("Walking it.", "Step by step.", "On your own two feet."),
+"By car.": ("Behind the wheel.", "In a car instead.", "On the road."),
+"By jet.": ("On a jet.", "By air.", "In a plane instead."),
+"Side by side.": ("All of them at once.", "Together on one scale.", "Compared directly."),
+"Light wins.": ("Light finishes first.", "Light has already arrived.", "Not close."),
+"Two things. One question.": ("Two objects, one scale.", "Two of them, side by side.", "A pair to compare."),
+"Numbers alone mean nothing.": ("A number by itself is empty.", "Numbers need a comparison.", "On its own, it means nothing."),
+"So here is the ratio.": ("So this is the difference.", "Here is how much bigger.", "That is the gap."),
+"That is the other one.": ("Here is the second.", "And that is the other.", "The other one, for scale."),
+"Your brain was wrong.": ("Your instinct missed it.", "That is not what you expected.", "Your estimate was off."),
+"It feels like nothing.": ("It feels harmless.", "It hardly feels like spending.", "It does not feel like much."),
+"One purchase.": ("One item.", "A single purchase.", "One transaction."),
+"But you do not buy it once.": ("But it repeats.", "But it is every day.", "But once is not how it works."),
+"That is one year.": ("That is twelve months.", "One year of it.", "A single year."),
+"Now leave it alone.": ("Now leave it there.", "Now do nothing with it.", "Now just wait."),
+"Ten years of the same habit.": ("Ten years, unchanged.", "The same habit for ten years.", "Ten years of exactly this."),
+"Invested instead.": ("Invested, not spent.", "Sent somewhere else.", "Kept working for you."),
+"Keep going.": ("Keep it running.", "Give it longer.", "Now stretch it out."),
+"Thirty years.": ("Thirty years of it.", "Three decades in.", "Now thirty years."),
+"The habit, or the number.": ("The habit against that number.", "One of the two.", "Habit on one side, number on the other."),
+"Nobody says stop. Just look.": ("No one is telling you to quit.", "This is arithmetic, not advice.", "Just look at the number."),
+"Two words. One letter apart.": ("One letter separates them.", "Almost the same word.", "A single letter apart."),
+"Count a million seconds.": ("Count to a million.", "A million seconds, counted.", "Start at one, go to a million."),
+"That is a normal trip.": ("That is a short break.", "About two weeks.", "A normal vacation."),
+"Now count a billion.": ("Now a billion.", "Now the larger one.", "Same count, bigger number."),
+"Same scale. Look again.": ("One scale for both.", "Now look again.", "Same axis, both numbers."),
+"One is a trip. One is a life.": ("One is a vacation. One is a lifetime.", "One fits in a year. One does not.", "One you could sit through. One you could not."),
+"One person does it.": ("It starts with one.", "One person, alone.", "A single person does it."),
+"Nothing happens.": ("Nothing changes.", "No difference at all.", "Nothing moves."),
+"Now ten people.": ("Now ten of them.", "Add nine more.", "Ten at once."),
+"Now a hundred.": ("Now one hundred.", "A hundred at once.", "Ten times more."),
+"Now everyone.": ("Now all of them.", "Everyone, together.", "All eight billion."),
+"One, against all of us.": ("One against everyone.", "From one to all.", "One person, then every person."),
+"Small things do not stay small.": ("Small does not stay small at scale.", "Scale changes everything.", "Multiply it and it is not small."),
+"You. Dropped here.": ("You, out here.", "Here you are, alone.", "You land here."),
+"You need this much.": ("This is the minimum.", "That is what it takes.", "Here is what you need."),
+"Nothing here has a label.": ("Nothing is marked.", "There are no instructions.", "No signs, no labels."),
+"What you know. What they knew.": ("Yours against theirs.", "Two sets of knowledge.", "What you have, and what they had."),
+"That was not instinct.": ("Instinct did not do that.", "That was not born in.", "Nobody is born knowing it."),
+"It was training.": ("It was practice.", "Someone taught them.", "Years of learning."),
+"Count the days you last.": ("Count how many days.", "Count them off.", "How many days do you get."),
+"You would last a week.": ("Roughly a week.", "A week is the answer.", "Seven days, give or take."),
+"The day starts before light.": ("It begins in the dark.", "Before sunrise.", "The day opens before dawn."),
+"Up before light.": ("Awake before sunrise.", "On your feet in the dark.", "Up while it is still dark."),
+"Working through noon.": ("Still going at midday.", "No break at noon.", "Right through the middle of the day."),
+"Still going at dusk.": ("Still at it after sunset.", "And still going when the light goes.", "Working past dark."),
+"That is the daily distance.": ("That is one day of it.", "That is a single day's work.", "One day, measured."),
+"Their day, and yours.": ("Theirs next to yours.", "Two days, compared.", "Your day against theirs."),
+"Then they do it again.": ("And again the next day.", "Then it repeats.", "Tomorrow, the same."),
+"Every day. For life.": ("Every day, for good.", "For the rest of it.", "No end to it."),
+"You put it in the bin.": ("It goes in the recycling.", "You throw it in.", "Into the bin it goes."),
+"You stop thinking about it.": ("And that is the last you think of it.", "Then you forget it.", "Your part is over."),
+"It has four more stops.": ("There are four stops left.", "Four more places to go.", "The trip is not over."),
+"First the truck.": ("The truck first.", "It starts with the truck.", "Stop one: the truck."),
+"Then the sorting line.": ("Next, the sorting line.", "Then it gets sorted.", "Stop two: sorting."),
+"Most of it stops here.": ("This is the end for most of it.", "Most never goes further.", "Most of it ends right here."),
+"What you think happens, and what does.": ("Your version, and the real one.", "What you pictured, and what happens.", "Two versions of the same trip."),
+"Nobody told you. Now you know.": ("No one explains this part.", "Now you have seen it.", "Nobody mentions this."),
+"You own it. You paid for it.": ("It is yours. You paid.", "You bought it.", "Paid for, and yours."),
+"There is still a rule.": ("A rule applies anyway.", "There is a rule regardless.", "It is still covered by a rule."),
+"It is written right here.": ("Here it is, written.", "It is in the text.", "Right there in writing."),
+"What you assumed, and what it says.": ("Your assumption against the wording.", "What you believed, and what is written.", "Two readings of the same thing."),
+
+"Then the letter arrives.": ("Then a letter shows up.", "Until the letter comes.", "Then something arrives in the mail."),
+"Nobody reads it until it matters.": ("Nobody reads it until they have to.", "It sits unread until it counts.", "You read it the day it matters."),
+"It happens too fast to see.": ("Too fast for your eyes.", "It is over before you see it.", "You cannot see it happen."),
+"So here is the number.": ("So this is the speed.", "Here is what it actually is.", "This is the figure."),
+"Next to you, walking.": ("Next to a person walking.", "Against walking pace.", "Compared to you on foot."),
+"That is the multiple.": ("That is how many times over.", "That is the factor.", "That is the gap between them."),
+"You never had a chance.": ("You were never going to.", "It was never close.", "There was no contest."),
+"These are the real odds.": ("Here are the actual odds.", "This is what it really is.", "The true number."),
+"Numbers that big mean nothing.": ("A number that size is meaningless.", "Too big to picture.", "Your brain cannot hold that number."),
+"So try it once a day.": ("So do it every day.", "One try, every day.", "Once a day, every day."),
+"You would need this long.": ("This is how long it takes.", "That is the wait.", "Here is how long."),
+"Next to things you fear.": ("Against the things that scare you.", "Compared to what you worry about.", "Next to your actual fears."),
+"Somebody still wins.": ("Someone does win.", "And yet someone wins.", "It happens to somebody."),
+"You pay this.": ("This is what you hand over.", "Here is what you pay.", "That is the price on the label."),
+"Almost none of it goes where you think.": ("Very little goes where you assume.", "Almost none of it lands there.", "Hardly any of it goes there."),
+"Here is the split.": ("This is where it goes.", "Here is the breakdown.", "The split looks like this."),
+"The biggest slice.": ("The largest share.", "Most of it.", "The biggest piece by far."),
+"What you assumed, and what it is.": ("Your guess against the real split.", "What you pictured, and the truth.", "Assumption versus reality."),
+"Now you can see the price.": ("Now the real price is visible.", "Now you know what you paid for.", "That is the actual cost."),
+"It is a few hours a day.": ("Only a few hours daily.", "A couple of hours a day.", "Just hours, each day."),
+"That is today.": ("That is one day.", "That is a single day of it.", "Today alone."),
+"Now add up a whole life.": ("Now stretch it across a lifetime.", "Now do the whole life.", "Add up every year."),
+"Day after day after day.": ("Every single day.", "Repeated for decades.", "Over and over."),
+"Across seventy-nine years.": ("Over a full lifetime.", "Across the whole life.", "Seventy-nine years of it."),
+"Against one whole life.": ("Against a lifetime.", "Compared to a life.", "Next to everything you get."),
+"Nobody adds it up.": ("Nobody ever totals it.", "No one does this sum.", "The total goes uncounted."),
+"Decibels do not add up the way you think.": ("Decibels do not work like normal numbers.", "The scale is not what you assume.", "Adding decibels is not adding."),
+"Ten more is ten times more.": ("Add ten, multiply by ten.", "Ten more decibels is ten times the energy.", "Ten up means ten times."),
+"Your ears do the maths for you.": ("Your ears compress it.", "Your ears hide the scale.", "Your ears round it off."),
+"Weight is the sense we are worst at.": ("We judge weight worst of all.", "Weight is where our guesses fail.", "Nothing fools us like weight."),
+"You guessed wrong. Everyone does.": ("Almost nobody gets this right.", "Your guess was off. So is everyone's.", "Everyone misses this one."),
+"Right now, while you watch this.": ("At this exact moment.", "While this is playing.", "Right now, as you watch."),
+"This many people are too.": ("So are this many others.", "This many, at the same time.", "And this many people with you."),
+"You, and all of them.": ("You are one of them.", "You, plus everyone else.", "All of you at once."),
+"Nothing you do is only yours.": ("You are never doing it alone.", "Nothing here is only yours.", "Millions are doing it with you."),
+"That is the whole point.": ("That is the point.", "That is what this shows.", "That is the takeaway."),
+"Next to a warm room.": ("Against room temperature.", "Compared to a warm room.", "Next to where you are sitting."),
+"Your body has a very narrow window.": ("Your body works in a narrow band.", "The safe range is tiny.", "You survive in a thin slice of it."),
+"Outside it, minutes matter.": ("Past that, minutes count.", "Outside that range, time is short.", "Beyond it, you have minutes."),
+"We live in a very thin band.": ("Our range is a sliver.", "We only work in a narrow strip.", "That thin band is all we get."),
+"Start with something you can see.": ("Begin with something visible.", "Start where your eyes still work.", "Start with something in view."),
+"Now go smaller.": ("Now smaller again.", "Keep shrinking it.", "Now down another step."),
+"Your eyes stop long before this.": ("Your eyes gave up long ago.", "This is far past what you can see.", "Sight ended well before here."),
+"Both, at true scale.": ("Both on the real scale.", "Side by side, honestly scaled.", "True scale, both of them."),
+"Everything you are is built from that.": ("You are made of these.", "All of it starts there.", "That is what you are built from.")
+}
+
+for _k, _v in BIEN_THE_THEM.items():
+    if _k in BIEN_THE:
+        BIEN_THE[_k] = tuple(BIEN_THE[_k]) + tuple(_v)
+
+
 def doi_loi(nhip: list, idx: int) -> list:
     """Thay lời kể bằng biến thể của tập `idx`. Câu không có trong bảng thì giữ nguyên.
 
@@ -2606,6 +2754,87 @@ GU_CHART = {
 }
 
 
+# Khoảng cách tối thiểu giữa hai lần đọc CÙNG MỘT CÂU, tính bằng số nhịp. 12 nhịp ≈ 25 giây ở
+# nhịp cắt trung vị 1,7s — dưới mức ấy tai nhận ra ngay là lặp; trên mức ấy nó đọc ra như một
+# câu dẫn quen thuộc của kênh, tức là bản sắc chứ không phải lỗi.
+GAN_NHAT = 12
+
+_HO_CAU = None
+
+
+def _ho_cau() -> dict:
+    """Bản đồ NGƯỢC: mỗi câu -> cả họ biến thể của nó (gồm câu gốc).
+
+    Sau khi `doi_loi` thay câu, thứ nằm trong nhịp là một BIẾN THỂ, không phải khoá của
+    `BIEN_THE`. Muốn đổi nó sang biến thể khác thì phải tra ngược được về họ.
+    """
+    global _HO_CAU
+    if _HO_CAU is None:
+        _HO_CAU = {}
+        for goc, bt in BIEN_THE.items():
+            ho = [goc] + list(bt)
+            for c in ho:
+                _HO_CAU[c] = ho
+    return _HO_CAU
+
+
+def _tranh_lap_gan(nhip: list, ma: str = "") -> list:
+    """Không đọc lại CÙNG MỘT CÂU trong vòng `GAN_NHAT` nhịp.  (3/9/2026)
+
+    ── VÌ SAO CẦN  ────────────────────────────────────────────────────────────────────────
+    Soi bản dài ODDS: bốn cảnh lặp vòng và lời lặp nguyên văn. Đo trên 18 kênh, bản dài 10
+    chương: **7/18 kênh có câu đọc lại trong vòng 30 giây**, gần nhất là 6 giây.
+
+    Nguyên nhân khác nhau ở từng kênh — cùng vai gọi hai lần trong một chương, tiêu đề chương
+    trùng lời một nhịp, hồ `LOI_MAU` chỉ 5 câu cho 10 chương. Đuổi từng cái thì sửa được hôm nay
+    và tái diễn khi thêm kênh mới.
+
+    Nên chữa ở TẦNG CHUNG, sau khi mọi nhịp đã ghép xong: quét một lượt, câu nào lặp gần thì đổi
+    sang một biến thể khác trong CÙNG HỌ mà chưa dùng gần đây. Đây là lỗi **máy sửa được** — hại
+    của nó là tai nghe thấy lặp, không phải hình hỏng — nên nó thuộc về `don()`, không thuộc về
+    một cổng chặn (§13.23, ba nấc).
+
+    Không đổi được (câu không có họ biến thể) thì GIỮ NGUYÊN và để cổng báo. Đoán bừa một câu
+    khác nghĩa còn tệ hơn lặp.
+    """
+    # ── HOOK KHÔNG ĐƯỢC TRÙNG THẺ CHƯƠNG ĐẦU  (3/9/2026) ───────────────────────────────
+    # Bản dài: nhịp hook đọc TIÊU ĐỀ TẬP, rồi thẻ chương 1 đọc lại đúng câu ấy 7 giây sau —
+    # vì chương đầu của bản dài chính là chủ đề của hook. Soi ODDS thấy rõ.
+    #
+    # Chữa ở HOOK chứ không ở thẻ chương: thẻ chương phải nói tên chương (đó là việc của nó),
+    # còn hook thì có sẵn một câu mạnh hơn tiêu đề — chính `HOOK_LOI`, câu mâu thuẫn. Đổi ở đây
+    # vừa hết trùng vừa làm ba giây đầu mạnh lên (§13.16: thứ chặn ngón tay là điều SAI TRÁI
+    # sẵn, không phải một cái tên).
+    if ma and len(nhip) > 1:
+        _h = str(nhip[0].get("loi") or "").strip()
+        _m = (HOOK_LOI.get(ma) or "").strip()
+        if _h and _m and _h != _m:
+            for _x in nhip[1:GAN_NHAT]:
+                if str(_x.get("loi") or "").strip() == _h:
+                    nhip[0]["loi"] = _m
+                    break
+    ho = _ho_cau()
+    lan_cuoi = {}
+    for j, n in enumerate(nhip):
+        l = str(n.get("loi") or "").strip()
+        if not l:
+            continue
+        if j - lan_cuoi.get(l, -999) >= GAN_NHAT:
+            lan_cuoi[l] = j
+            continue
+        thay = ""
+        for c in ho.get(l, []):
+            if c != l and j - lan_cuoi.get(c, -999) >= GAN_NHAT:
+                thay = c
+                break
+        if thay:
+            n["loi"] = thay
+            lan_cuoi[thay] = j
+        else:
+            lan_cuoi[l] = j
+    return nhip
+
+
 def _rai_chart(ma: str, nhip: list, idx: int = 0) -> list:
     """Gán bố cục cho từng nhịp biểu đồ, xoay trong hai bố cục của kênh."""
     bo = GU_CHART.get(ma) or (0, 1)
@@ -2712,6 +2941,12 @@ def _moc_khac(cac, so):
     return cac[-1]
 
 
+# Đầu ngữ ĐO LƯỜNG: khi cụm bắt đầu bằng một trong những từ này rồi tới "of", chủ thể nằm SAU
+# giới từ, không nằm trước. Xem chú thích trong `_danh_tu`.
+_DAU_NGU = ("odds", "chance", "chances", "risk", "cost", "price", "number", "amount",
+            "value", "share", "rate", "level", "size", "weight", "speed", "length",
+            "height", "surface", "depth", "total")
+
 _GIOI = ("at", "of", "in", "on", "from", "with", "for", "by", "to", "up", "over", "near")
 
 
@@ -2730,6 +2965,24 @@ def _danh_tu(s: str) -> str:
     t = _re.sub(r"^(a|an|the)\s+", "", str(s or "").strip(), flags=_re.I).split()
     for j, w in enumerate(t):
         if w.lower() in _GIOI and j > 0:
+            # ── ĐẦU NGỮ CHUNG THÌ LẤY PHẦN SAU "OF"  (3/9/2026) ──────────────────────────
+            # "The odds of rolling snake eyes" cắt ở "of" cho ra **`odds`**, và cả sáu chương
+            # của kênh ODDS đều bắt đầu bằng "The odds of…" nên biểu đồ tổng hợp ra SÁU CỘT
+            # cùng nhãn `odds`. Soi khung thấy ngay: một trục sáu nhãn giống hệt nhau.
+            # Cùng lỗi ở REAL COST ("The real cost of…" -> `cost`).
+            #
+            # `odds` · `cost` · `chance` là ĐẦU NGỮ ĐO LƯỜNG, không phải chủ thể — chủ thể nằm
+            # sau "of". Đây là chỗ luật "danh từ chính nằm TRƯỚC giới từ" không còn đúng, và
+            # nhận ra được bằng chính danh sách đầu ngữ ấy.
+            if t[:j] and t[j - 1].lower() in _DAU_NGU and w.lower() == "of":
+                sau = [x for x in t[j + 1:]
+                       if x.lower() not in ("a", "an", "the", "your", "my", "its", "their")]
+                # Bỏ đuôi động từ (-ing/-ed) từ phải sang: "your flight being cancelled" ->
+                # `flight`; "rolling snake eyes" giữ nguyên vì `eyes` không phải đuôi động từ.
+                while len(sau) > 1 and _re.search(r"(ing|ed)$", sau[-1], _re.I):
+                    sau = sau[:-1]
+                if sau:
+                    return " ".join(sau[-2:]) if len(" ".join(sau[-2:])) <= 15 else sau[-1]
             t = t[:j]
             break
     return t[-1] if t else str(s or "")
@@ -2950,6 +3203,8 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     nhip = _rai_ss(ma, nhip, idx)
     nhip = _rai_so(ma, nhip, idx)
     nhip = _rai_chart(ma, nhip, idx)
+    # Khử lặp gần — chạy SAU mọi lượt rải và sau khối hook, vì nó đọc thứ tự cuối cùng.
+    nhip = _tranh_lap_gan(nhip, ma)
 
     return k, tieu, hook, hook_phu, nhip, muc
 
