@@ -8894,3 +8894,36 @@ ghi lần trước — vừa đúng lúc anh nhìn nhiều nhất.
 
 Nhãn `✓ kho thật` còn làm nó đáng tin hơn mức đáng: người đọc hiểu là "đếm thật, mới", trong khi
 nó chỉ nói "đếm thật", không nói "mới".
+
+### 7ec — Cổng che khuất: ba lần suýt ship một cỗ máy bắt oan  (3/9/2026)
+
+Anh: *"nhớ tránh tràn hay che khuất."* Sửa tay xong phải có cổng, không thì lần sau lại lọt — và
+lọt **im lặng**, vì `kiem_hinh` cho đúng khung ấy **99/100**.
+
+**Ba vòng, mỗi vòng một bài học:**
+
+| vòng | cổng bắt | nhìn khung ra gì | sửa |
+|---|---|---|---|
+| 1 | **10/10 tệp** | khung nền sáng của `chart`/`chia_doi` có chữ **ĐEN** — sáng ở đó là ĐÚNG | chỉ soi nhịp có chữ TRẮNG trên ảnh |
+| 2 | **10/10 tệp** | khung bị bắt là nhịp `canh` — chỉ có ảnh + phụ đề, mà phụ đề có nền tối riêng | thu về đúng khuôn `so_lieu` |
+| 3 | **9/10 tệp** | **bắt đúng**: `so_lieu` của SURVIVE có chữ "NOT" xám đè sát chân số và câu hỏi xám trên nền sáng | siết dải mờ + hạ dòng đơn vị |
+
+Vòng 1 và 2, nếu chỉ nhìn con số *"bắt 10/10"* thì kết luận sẽ là **"video hỏng hết"** — trong khi
+thứ hỏng là **cái thước**. Luật 13.22 cứu đúng chỗ này: *một cổng chỉ đáng ship khi đọc tay các
+ca nó bắt và thấy chúng thật sự hỏng.*
+
+**Hiệu chỉnh phải lấy số từ ca THẬT, hai đầu đều nhìn tận mắt:**
+
+```
+HỎNG (chữ chìm)  : sáng TB 177–189 · điểm sáng 50–55%
+TỐT  (đọc rõ)    : sáng TB 126     · điểm sáng 24%
+ngưỡng           : 150 / 35%   ← giữa hai mốc, nghiêng về phía cho qua
+```
+
+Bản đầu đặt 125/22% theo **suy đoán** và nó bắt cả khung tốt — đúng lỗi 13.3.
+
+**Phép thử hai chiều (13.11):** sau khi siết dải mờ, tập dựng lại **đạt**, còn 6/10 tập cũ (dựng
+trước bản vá) **vẫn bị bắt**. Con số 0 lỗi chỉ có nghĩa khi cổng chứng minh được nó bắt được thật.
+
+**Sửa kèm:** dòng đơn vị đặt ở `y = cs*0.42` — đè sát chân số khi `so` là **chữ** (`"PROBABLY"`)
+chứ không phải số. Hằng số ấy đúng cho chữ số, sai cho chữ cái; đẩy xuống `0.56`.

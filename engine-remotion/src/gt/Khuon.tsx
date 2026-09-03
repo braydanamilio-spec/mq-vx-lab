@@ -301,9 +301,15 @@ export const SoLieu: React.FC<{
 
                   Nay giữ ≥0.55 qua hết vùng chữ rồi mới tan, cao 0.54·H. Vẫn là dải MỜ DẦN nên
                   không cắt ngang qua hình — chỉ là phủ đủ chỗ chữ thật sự đứng. */}
-              <stop offset="0%" stopColor="#0B0E14" stopOpacity={0.86} />
-              <stop offset="58%" stopColor="#0B0E14" stopOpacity={0.62} />
-              <stop offset="80%" stopColor="#0B0E14" stopOpacity={0.30} />
+              {/* 3/9 — SIẾT LẦN HAI, SAU KHI ĐO TRÊN ẢNH SÁNG.
+                  Cổng `kiem_chelap` bắt được ca thật: khung `so_lieu` của SURVIVE có nền
+                  **sáng TB 177–189, 50–55% điểm ảnh sáng** — chữ trắng gần như chìm.
+                  Ở mức cũ (0.62 ở 58%) thì trên nền 230 chỉ còn xám ~126, tương phản ~3:1 với
+                  chữ trắng: dưới chuẩn đọc được.
+                  Nay giữ ≥0.72 qua hết vùng chữ. Trên nền 230 cho ra ~64 — tương phản ~7:1. */}
+              <stop offset="0%" stopColor="#0B0E14" stopOpacity={0.90} />
+              <stop offset="62%" stopColor="#0B0E14" stopOpacity={0.72} />
+              <stop offset="84%" stopColor="#0B0E14" stopOpacity={0.34} />
               <stop offset="100%" stopColor="#0B0E14" stopOpacity={0} />
             </linearGradient>
           </defs>
@@ -337,7 +343,7 @@ export const SoLieu: React.FC<{
             KHÔNG dùng viền `paintOrder="stroke"` — §12.12 xếp viền quanh chữ vào danh sách dấu
             hiệu nghiệp dư: *"không hãng phim nào viền chữ"*. Quầng mềm làm đúng việc ấy mà
             không để lại đường viền cứng. */}
-        {don ? <text x="0" y={cs * 0.42} textAnchor="middle" fontFamily={F} fontWeight={800}
+        {don ? <text x="0" y={cs * 0.56} textAnchor="middle" fontFamily={F} fontWeight={800}
                      fontSize={cd} fill={tren_anh ? "#F2EFE9" : chuHopNen(mau, nen)} letterSpacing={2}
                      style={{ filter: tren_anh
                        ? `drop-shadow(0 0 ${H * 0.016}px #000000ee) drop-shadow(0 ${H*0.004}px ${H*0.010}px #000000cc)`
