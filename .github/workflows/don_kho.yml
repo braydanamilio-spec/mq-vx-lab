@@ -139,6 +139,11 @@ jobs:
       # Bước này chạy một lượt, đọc `channel` trong sidecar của từng video (không đoán theo tên
       # tệp), và ghi theo đúng id ổn định của `enqueue` nên chạy lại chỉ ghi đè chính nó.
       - name: Dựng lại sổ từ Drive
+        # Trần RIÊNG cho bước này. Ngày 3/9 nó ăn 18 phút trong job có trần 20, nên bước đối
+        # chiếu cuối không bao giờ chạy và cả lượt hiện ra "cancelled" — che mất việc dọn
+        # Firestore đã xong sạch ngay ở bước đầu. Bước chậm phải chết một mình, không kéo theo
+        # cả job: một lượt "có một bước đỏ" đọc ra đúng hiện trạng, "cancelled" thì không.
+        timeout-minutes: 8
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
