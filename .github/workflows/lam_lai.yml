@@ -38,7 +38,11 @@ on:
 jobs:
   lam_lai:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # 45 -> 180. Lượt đầu bị HUỶ đúng ở mốc 45 phút khi đang bỏ thùng rác. Gộp lệnh
+    # (`Drive.trash_lo`) đã cắt phần ấy ~100 lần, nhưng phần QUÉT vẫn phải đi hết 100 kho
+    # theo chiều sâu — và một lượt dọn bị cắt giữa chừng thì lần sau lại quét lại từ đầu,
+    # tức việc dọn không bao giờ tới đích. Trần rộng để nó xong TRỌN trong một lượt.
+    timeout-minutes: 180
     steps:
       - name: Chặn nếu gõ sai chữ xác nhận
         run: |
