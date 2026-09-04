@@ -208,8 +208,22 @@ def sau(mp4: str, la_short: bool = True) -> tuple:
         if not px:
             continue
         sg = sorted(_sang(c) for c in px)
-        hi, lo = sg[int(len(sg) * 0.97)], sg[int(len(sg) * 0.20)]
-        ts.append((hi + 0.05) / (lo + 0.05))
+        # ── PHÉP ĐO PHẢI ĐÚNG CHO CẢ HAI CHIỀU MỰC  (4/9/2026) ─────────────────────────
+        # Bản cũ lấy `p97` làm CHỮ và `p20` làm NỀN — đúng khi chữ TRẮNG trên nền tối. Nhưng
+        # engine nay đổi sang mực TỐI khi nền sáng (nền >= 117), và lúc ấy cả hai mốc đều rơi
+        # vào NỀN: chữ chỉ chiếm ~10% dải nên `p20` không chạm tới nó. Cổng khi đó đo độ
+        # chênh của nền, không đo tương phản chữ.
+        #
+        # Đo được: khung `dem` của bản dài cho **1,4:1** trong khi nhìn bằng mắt chữ đen trên
+        # nền be đọc rõ ràng. Và tệ hơn — điểm TỤT khi mực được chọn ĐÚNG hơn (90 -> 87), tức
+        # cổng đang thưởng cho lựa chọn sai. Một cổng như thế dẫn người sửa đi ngược.
+        #
+        # Nay thử cả hai giả thuyết và lấy cái lớn hơn: chữ sáng thì nó nằm ở đầu SÁNG, chữ
+        # tối thì nằm ở đầu TỐI. Giả thuyết nào đúng thì tỉ số của nó là tỉ số thật.
+        _p = lambda q: sg[min(len(sg) - 1, int(len(sg) * q))]
+        tp_trang = (_p(0.97) + 0.05) / (_p(0.20) + 0.05)   # chữ SÁNG trên nền tối
+        tp_toi = (_p(0.80) + 0.05) / (_p(0.03) + 0.05)     # chữ TỐI trên nền sáng
+        ts.append(max(tp_trang, tp_toi))
     if ts:
         tb = sum(ts) / len(ts)
         if tb >= 4.5:

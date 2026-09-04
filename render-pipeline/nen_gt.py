@@ -75,13 +75,24 @@ from kich_hai import SAN_NEN                                   # noqa: E402
 #
 # Viết bằng ngôn ngữ TRANH VẼ, không phải ngôn ngữ ảnh chụp — nói "khoảng trời phẳng", "mặt sàn
 # phẳng", chứ không nói "khoảng âm" hay "vùng an toàn" (mô hình không hiểu hai chữ ấy).
-CHUA_CHO = ("the top third is empty plain sky or flat wall with nothing drawn in it, the "
-            "bottom fifth is empty flat ground with nothing in it, everything important sits "
-            "in the middle band")
+# Nén còn một nửa (4/9): ba ý giữ nguyên, bỏ chữ thừa. Ngân sách prompt là 1.873 ký tự và
+# câu này thuộc nhóm dài nhất — mỗi ký tự ở đây đổi bằng một ký tự của luật khác bị cắt.
+# Nén còn một nửa (4/9): ba ý giữ nguyên, bỏ chữ thừa. Ngân sách prompt là 1.873 ký tự,
+# và mỗi ký tự tiết kiệm ở đây là một ký tự cho luật khác — cụ thể là bảng màu kênh.
+CHUA_CHO = ("top third empty sky or wall, bottom fifth empty ground, "
+            "everything important in the middle band")
 
+# ── ẢNH PHẢI TRÀN KHUNG CHỮ NHẬT  (4/9/2026) ───────────────────────────────────────────────
+# Anh gửi khung DAY IN LIFE: cả minh hoạ nằm gọn trong MỘT HÌNH TRÒN, bốn góc trắng trơn — mô
+# hình dựng nó như một cái huy hiệu dán lên nền trắng, nên khung mất gần một phần ba diện tích
+# và bối cảnh bị cắt cụt. Đúng chỗ anh nói "không rõ bối cảnh".
+# Không câu nào trong prompt nói về RÌA khung; thứ không viết ra thì mô hình tự chọn (§15.2),
+# và kho ảnh minh hoạ đầy icon dạng huy hiệu nên nó hay chọn hình tròn.
+TRAN_KHUNG = ("the picture fills the whole rectangular frame edge to edge, no circular "
+              "vignette, no round badge, no border, ")
 KHUNG_DOC = ("tall vertical composition, subject centred, nothing important in the outer "
-             "quarter left or right, " + CHUA_CHO)
-KHUNG_NGANG = ("wide horizontal composition, subject centred, " + CHUA_CHO)
+             "quarter left or right, " + TRAN_KHUNG + CHUA_CHO)
+KHUNG_NGANG = ("wide horizontal composition, subject centred, " + TRAN_KHUNG + CHUA_CHO)
 
 SAN_NGOAI = ("wide shot, camera at standing eye level, "
              "the ground fills the entire bottom third of the frame as one continuous "
@@ -101,157 +112,67 @@ SAN_DOC = ("camera at standing eye level, the ground runs across the lower part 
 SAN_DOC_NGOAI = SAN_DOC + ", open outdoor scene, no interior, no walls, no ceiling"
 
 
+# ── LUẬT SÀN BẢN GỌN CHO BỘ GIẢI THÍCH  (4/9/2026) ─────────────────────────────────────────
+# `SAN_NEN` nhập từ `kich_hai` (bộ truyện tranh) dài 295 ký tự. KHÔNG sửa tệp ấy — hai bộ
+# không dùng chung engine và sửa chéo là cách chắc chắn làm hỏng bộ kia (§10). Viết bản gọn
+# riêng ở đây, giữ đủ BA MỆNH LỆNH bắt buộc của §7 mà `kiem_nen.py` canh:
+#   1. wide shot ngang tầm mắt   2. sàn chạy hết bề ngang ở dải dưới   3. giữa khung trống
+GON_TRONG = ("wide shot at standing eye level, floor runs unbroken across the bottom third "
+             "from edge to edge, furniture pushed to the left and right edges, centre of the "
+             "frame is empty walkable floor")
+GON_NGOAI = ("wide shot at standing eye level, ground runs unbroken across the bottom third "
+             "from edge to edge, scenery pushed to the left and right edges, centre of the "
+             "frame is open empty ground, no walls, no ceiling")
+
+
 def _luat(ve: str, doc: bool = False) -> str:
-    """Chọn luật bố cục theo CẢNH và theo HƯỚNG KHUNG.
-
-    Hai trục, không phải một:
-      · trong nhà / ngoài trời — quyết định có được nhắc chữ `furniture` hay không;
-      · dọc / ngang — quyết định thứ quan trọng được đứng ở đâu để sống sót qua phép cắt.
-    Bản dọc KHÔNG được dồn đồ ra hai mép (mép bị cắt), nên chuyển sang xếp chồng theo chiều cao.
-    """
     ngoai = bool(_NGOAI.search(ve or ""))
-    if doc:
-        return SAN_DOC_NGOAI if ngoai else SAN_DOC
-    return SAN_NGOAI if ngoai else SAN_NEN
+    return GON_NGOAI if ngoai else GON_TRONG
 
-# Khoá phong cách — dựng theo đúng thứ đo được ở hai video tham chiếu (mục 6-7 của
-# PHAN_TICH_GIAI_THICH.md): nét đen dày đều, màu phẳng tươi, người que đầu tròn trắng, và nền
-# CÓ CHIỀU SÂU ba lớp (trời -> núi xa -> tiền cảnh) chứ không phải tường phẳng.
-# Anh: *"người que xấu thì có thể vẽ người thật hay dạng khác, sao cho phù hợp USA đẹp và hợp
-# niche."* Nên phong cách là MỘT KHOÁ RIÊNG CHO TỪNG KÊNH, không ép một kiểu cho cả mười.
-# Người que hợp kênh khoa học vui; kênh tài chính thì hình phẳng kiểu tạp chí đọc "đáng tin"
-# hơn hẳn; kênh lịch sử thì tranh vẽ tay ấm màu. Chọn sai phong cách là kênh mất uy trước khi
-# nói được câu nào — và uy tín là thứ quyết định RPM ở mấy niche này.
-# ══ MỘT PHONG CÁCH DUY NHẤT: CARTOON PHẲNG ══════════════════════════════════════════════════
-# Anh gửi hai khung tham chiếu và nói: *"vẽ kiểu thật xấu thì e vẽ kiểu cartoon xem sao."*
-#
-# Đúng, và nó khớp chính xác với số đo của tôi: ảnh mang chất ảnh chụp đo độ phẳng 0,13–0,20 và
-# trông tệ; ảnh phẳng đo 0,85–0,91 và trông đẹp. Hai khung anh gửi (người que trên ghế sofa xanh
-# lá · người que ở cửa nhà vàng) thuộc đúng nhóm sau.
-#
-# BỎ HẲN NĂM PHONG CÁCH. Bản trước tôi gán mỗi niche một phong cách — nghe hợp lý, nhưng thực
-# tế là hai trong năm phong cách ấy (`tranh`, `kich`) YÊU CẦU chất ảnh thật, tức tôi tự tay đặt
-# hàng đúng thứ trông tệ. Mười kênh phân biệt nhau bằng BẢNG MÀU (đã có, xem `MAU_KENH`), không
-# cần phân biệt bằng chất vẽ.
-#
-# VÀ BỎ NGÔN NGỮ MÔ TẢ ẢNH CHỤP. Đây là chỗ tôi đã nhận ra mà chưa sửa: prompt sáu tầng có
-# "background:", "foreground:", "warm light from the left, long soft shadows" — đó là cách người
-# ta tả một BỨC ẢNH. Mô hình đọc xong thì vẽ ra một bức ảnh. Muốn cartoon thì phải nói bằng ngôn
-# ngữ của tranh vẽ: mảng màu phẳng, nét viền đen dày, không chuyển sắc, không kết cấu bề mặt.
-# ── PHONG CÁCH VẼ — VIẾT LẠI THEO SÁU ẢNH THAM CHIẾU ANH GỬI  (3/9/2026) ────────────────────
-# Anh: *"template nền màu tối xấu, ảnh generate sinh ra cũng tối xấu… loại ảnh CF tạo đẹp mà em
-# chưa tận dụng được, đang viết prompt chưa chuẩn."*
-#
-# Đối chiếu prompt cũ với ảnh anh gửi thì thấy **hai câu đang chống lại chính thứ anh muốn**:
-#
-#   "no gradients, no texture"  →  ảnh anh gửi CÓ đổ bóng mềm (ghế sofa, quầng đèn bàn), trời
-#                                  chuyển màu, lông thú có nét. Cấm gradient là ép mô hình vẽ
-#                                  clipart phẳng — đúng thứ trông rẻ tiền khi đứng cạnh cảnh thật.
-#   "bright saturated palette"  →  nói về ĐỘ RỰC của màu, KHÔNG nói nền phải SÁNG. Mô hình vì thế
-#                                  tự do chọn nền tối, và nó chọn tối thật.
-#
-# Và prompt cũ **không có câu nào về bối cảnh**, nên ra khung rỗng. Sáu ảnh tham chiếu thì ngược
-# lại: kín chi tiết — cửa sổ có mây, đồng hồ tường, chậu cây, sạp chợ, lạc đà, đống rơm.
-#
-# Ba mệnh lệnh mới, mỗi câu chữa đúng một lỗi đo được:
-#   1. NỀN LUÔN SÁNG VÀ ẤM — nói thẳng, kèm ví dụ màu, và cấm nền tối bằng tên.
-#   2. CÓ ĐỔ BÓNG MỀM — nhưng vẫn cấm chất ẢNH CHỤP (§12.6: tả theo lối ảnh chụp thì ra ảnh chụp).
-#   3. BỐI CẢNH VẼ ĐẦY — liệt kê loại đồ vật, vì "chi tiết" là chữ trừu tượng còn "đồng hồ tường,
-#      chậu cây, cửa sổ" thì mô hình vẽ được (§13.2: cổng đo một TỪ thì lệnh dặn phải liệt kê từ).
-# ── KẸP PHONG CÁCH NGẮN, ĐẶT NGAY SAU CÂU CẢNH  (3/9/2026) ─────────────────────────────────
-# Dời câu cảnh lên đầu prompt thì ảnh khớp lời hẳn — nhưng khối phong cách 844 ký tự lùi xuống
-# cuối và mất trọng số: một nhịp của SURVIVE ra chất ẢNH CHỤP (độ phẳng 0,17 so mốc 0,65 của cả
-# tập), vẽ lại ba lần vẫn thế.
-#
-# Hai yêu cầu đánh nhau: cảnh phải đứng đầu để ảnh đúng nội dung, phong cách phải đứng gần đầu
-# để ảnh đúng chất. Giải bằng cách TÁCH: sáu chữ cốt lõi kẹp ngay sau cảnh (vẫn ở vùng trọng số
-# cao), khối chi tiết để sau. Không phải thêm chữ — là xếp lại thứ tự cùng một lượng chữ.
-# ── CÂU SIẾT CHẤT VẼ, DÙNG KHI CỔNG ĐÁNH TRƯỢT  (3/9/2026) ─────────────────────────────────
-# Cổng `do_phang` bắt được ảnh ngả chất ảnh chụp và cho vẽ lại tới ba lần — nhưng `_thu` gọi
-# `_prompt(...)` Y HỆT mỗi lần, và FLUX schnell KHÔNG nhận `seed` (§12.1, đã trả giá bằng HTTP
-# 400 trên mọi lệnh vẽ). Nên "vẽ lại bằng seed khác" chưa bao giờ tồn tại: cùng prompt ra cùng
-# ảnh, ba lượt vẽ lại là ba lượt tiêu neuron cho đúng một kết quả.
-#
-# Đo được ở SURVIVE: hai nhịp CHỈ CÓ VẬT ("raw wild roots and berries" · "unfamiliar wild plants
-# and exposed roots") ra ảnh chụp thật với độ phẳng 0,48 và 0,18 trong khi cả tập ở 0,71–0,83.
-# Vẽ lại ba lần: **0,18 cả ba lần**. Không phải may rủi — chính prompt kéo nó đi (§12.6).
-#
-# Nên mỗi lần trượt thì SIẾT prompt theo hướng cổng đang đo. Đặt ở ĐẦU prompt vì đó là vùng
-# trọng số cao nhất, và nói bằng khẳng định dương chứ không phải câu cấm — FLUX không có
-# negative prompt, mọi danh từ viết ra đều là thứ SẼ xuất hiện.
-# ── CÂU SIẾT KHÔNG ĐƯỢC ĐẨY VỀ PHÍA TRẮNG  (3/9/2026, cùng ngày) ───────────────────────────
-# Bản đầu của bảng này viết "on white paper" và "on a blank white page". FLUX làm đúng: ra một
-# TRANG TRẮNG. Cổng `kiem_chelap` bắt ngay ở bản dài HOW LOUD — 8 nhịp có nền **sáng TB 237,
-# 99% điểm sáng** (trần 150 và 35%), tức chữ trắng đè lên nền trắng và tàng hình.
-#
-# Siết chất vẽ và giữ nền có màu là HAI việc, và câu siết phải làm việc thứ nhất mà không phá
-# việc thứ hai. Nay mọi mức đều khẳng định NỀN CÓ MÀU — cùng họ lỗi với dải mờ màu đen: chữa
-# một trục thì đừng phá trục bên cạnh.
-# Mỗi mức siết nay khẳng định CẢ HAI: chất vẽ phẳng VÀ nền sáng. Bản cũ chỉ nói về chất
-# vẽ, nên một ảnh bị đánh trượt vì quá tối được vẽ lại bằng một câu không hề nhắc tới độ
-# sáng — tức vẽ lại mà không đổi thứ đang hỏng (§16.4: một vòng thử lại phải đổi ĐẦU VÀO).
-SIET = (
-    "children's picture-book illustration, felt-tip pen line work, flat filled colours, "
-    "bright daylight scene on a light background",
-    "simple flat vector clip art, solid colour fills, no shading at all, "
-    "the background is one solid LIGHT mid-tone colour, bright overall",
-    "bold poster-style flat illustration, three flat colours only, "
-    "the background is a single light saturated colour filling the whole frame, "
-    "high key, nothing dark",
-)
 
-KEP_GU = ("flat 2D cartoon illustration, thick black ink outlines, "
-          "stick-figure people with plain round white heads, "
-          # ── VẬT cũng cần neo, không chỉ NGƯỜI  (3/9/2026) ─────────────────────────────
-          # Sau khi kẹp phong cách, hai nhịp CÓ NGƯỜI ra đúng chất (độ phẳng 0,79 và 0,74)
-          # còn hai nhịp CHỈ CÓ VẬT vẫn ngả ảnh chụp (0,51 và 0,18): "raw wild roots and
-          # berries" · "unfamiliar wild plants and exposed roots".
-          # Vì câu kẹp chỉ tả tạo hình NGƯỜI — cảnh không người thì nó không neo được gì, và
-          # chủ thể tự nó gợi ảnh chụp thực vật (§12.6). Thêm một vế cho vật.
-          "every object drawn as simple flat shapes with the same thick outlines, "
-          "no photographic texture, no realistic lighting, no depth of field")
+# ══ KẸP PHONG CÁCH — KHỐI ĐỨNG NGAY SAU CHỦ THỂ, CHƯA BAO GIỜ BỊ CẮT ═══════════════════════
+# Mười một mệnh lệnh, viết chặt. Ngân sách prompt là 1.873 ký tự và tổng các phần từng lên
+# 2.175 — mỗi ký tự thừa ở đây đẩy một luật khác ra khỏi câu, và thứ bị đẩy ra là BẢNG MÀU
+# KÊNH (mất ở 203/252 prompt).
+#
+# Câu về ĐẦU viết theo lối ĐỒNG NHẤT ("each head IS a plain white oval"), không theo lối
+# thêm vào: bản cũ "stick-figure people with plain round white heads" đứng cạnh một chủ thể
+# đã tả kỹ thì mô hình đọc ra HAI vật và vẽ một hình bầu dục trắng dán đè lên mặt đã vẽ —
+# đúng khung anh gửi.
+KEP_GU = (
+    "flat 2D cartoon illustration, thick black ink outlines, "
+    "each head IS a plain white oval: two dot eyes, one short mouth line, no nose, "
+    "no shading; hair always drawn, also from behind, never a bare oval; "
+    "objects are simple flat shapes with the same outlines; "
+    "no photo texture, no lens blur, not 3D; "
+    "modern animated explainer style, gentle soft shading for volume; "
+    "background always LIGHT and warm, never dark or desaturated; "
+    "the setting is exactly the place named above, drawn with its own props, "
+    "never a blank backdrop; an everyday American setting")
 
+
+# ── GIỮ PHẦN `KEP_GU` CHƯA NÓI, BỎ PHẦN LẶP  (4/9/2026) ───────────────────────────────────
+# Khối này từng dài 1.065 ký tự và phần lớn lặp lại `KEP_GU` (nét mực đậm · không ảnh chụp ·
+# không lấy nét nông · không 3D · không chữ). Trần prompt là 2.048 và phép ghép cắt từ đuôi,
+# nên một khối lặp dài chính là thứ đẩy các luật ngắn ra khỏi câu.
+#
+# Giữ lại ĐÚNG BỐN điều `KEP_GU` không nói, và mỗi điều đều là một lỗi đã trả giá:
+#   1. neo thể loại  — "phim giải thích hoạt hoạ", để nó không trôi sang tranh minh hoạ sách
+#   2. NỀN PHẢI SÁNG — câu chữa lỗi "ảnh ra tối" (§16.2), mất nó là ảnh tối trở lại
+#   3. có khối, có bóng mềm nhẹ — thiếu thì hình phẳng lì như clipart
+#   4. BỐI CẢNH ĐÚNG NƠI được tả và vẽ đủ đạo cụ — đây chính là "không rõ bối cảnh"
 GU_CARTOON = (
-    "hand-drawn 2D cartoon illustration in the style of a modern animated explainer video, "
-    "thick confident black ink outlines of even weight, "
-    "stick-figure people with plain round white heads, two dot eyes, simple line mouth, "
-    "expressive eyebrows and thin black limbs, "
-    # ── nền phải SÁNG: đây là câu chữa lỗi "ảnh ra tối" ──────────────────────────────────
-    "the background is always LIGHT, warm and airy — pale sky blue, soft daylight, warm sand, "
-    "cream or light wood interior; never a dark background, never black, never night-dark, "
+    "in the style of a modern animated explainer video, "
+    "the background is always LIGHT, warm and airy — never dark, never night-dark, "
     "never a moody or desaturated palette, "
-    # ── cho phép đổ bóng mềm, nhưng vẫn cấm chất ảnh chụp ────────────────────────────────
-    "flat cheerful colours with gentle soft shading and simple soft cast shadows to give volume, "
-    "no photographic texture, no lens blur, no realistic lighting, "
-    # ── BỎ DANH SÁCH ĐỒ VẬT  (3/9/2026) ──────────────────────────────────────────────────
-    # Sáng nay em viết câu này để chữa lỗi "khung trống, nền tối", và liệt kê thẳng đồ vật:
-    # *"windows with sky, a wall clock, a potted plant, lamps, furniture, market stalls, trees
-    # — the frame is never mostly empty"*.
-    #
-    # Chiều soi ảnh mới sinh của kênh SURVIVE (Kỷ Băng Hà): prompt cảnh viết đúng *"a lone
-    # modern person in a frozen tundra under heavy grey sky, bare and endless"* — và **cả bốn
-    # ảnh ra một căn phòng hiện đại sáng sủa có đồng hồ treo tường và chậu cây**. FLUX làm đúng
-    # thứ được bảo: câu phong cách LIỆT KÊ đồ vật, còn câu cảnh chỉ MÔ TẢ, nên đồ vật thắng.
-    #
-    # Đây đúng §12.5 và đúng cái bẫy `SAN_NEN` kê tủ kệ vào sa mạc — em viết lại luật ấy trong
-    # CLAUDE.md rồi vi phạm nó trong cùng một ngày, ở cùng một dạng.
-    #
-    # Hai câu cấm cũng đánh nhau với chính nội dung: *"the frame is never mostly empty"* mâu
-    # thuẫn trực tiếp với "một người nhỏ bé giữa vùng băng trống trải" — mà đó CHÍNH LÀ bố cục
-    # câu ấy cần.
-    #
-    # Nay chỉ nói YÊU CẦU (vẽ đầy, có bối cảnh nhận ra được) và nói rõ bối cảnh do CÂU CẢNH
-    # quyết định. Không tên đồ vật nào — mọi danh từ viết ra đều có thể xuất hiện trong khung
-    # (§15.2, bộ thiên nhiên đã trả giá cho đúng điều này).
-    "the setting is exactly the place named in the scene description and nothing else, "
-    "drawn completely with its own props and depth, not a blank backdrop, "
-    "clean and cheerful, not photorealistic, not 3D, no text anywhere"
+    "flat cheerful colours with gentle soft shading for volume, "
+    "the setting is exactly the place named above, drawn out with its own props, "
+    "never a blank backdrop"
 )
 # Neo bối cảnh Mỹ — chỉ giữ những vật CHỈ CÓ Ở MỸ và mô hình vẽ được. "Cảm giác Mỹ" thì nó
 # không vẽ được; "hòm thư trên cột cắm ở lề" thì vẽ được.
-GU_USA = ("set in the United States: clapboard suburban houses with a front porch, a mailbox "
-          "on a post at the curb, wide two-lane roads, American kitchen with an island; "
-          "people in t-shirt or hoodie, jeans and sneakers")
+GU_USA = ("an everyday American setting — US road signs, US buildings, US clothing, "
+          "nothing European or Asian")
 GU_KENH = {k: GU_CARTOON for k in
            ("que", "phang", "tranh", "kich", "iso")}
 # Cả 18 kênh dùng CHUNG phong cách cartoon phẳng; phân biệt bằng bảng màu, giọng đọc và sắc
@@ -310,9 +231,9 @@ KHOA_VAI = {
     # ra prompt vừa "a night-shift nurse" vừa "a man in a linen tunic".
     # Thứ cần giữ nguyên qua các khung là NÉT VẼ và KHUÔN MẶT, không phải danh tính — danh
     # tính đã nằm sẵn ở câu cảnh và đổi theo tập là đúng ý đồ của kênh.
-    "dayinlife": "drawn with a plain oval face, two simple dot eyes, one thin mouth line, "
-                 "thick black outline and no shading on the face — same face, same line "
-                 "weight in every shot",
+    # Chỉ nói phần khoá THÊM VÀO. Tạo hình mặt đã do `MOI_MAT` lo — nhắc lại là tiêu ký tự
+    # của trần prompt để mua về đúng thứ đã có.
+    "dayinlife": "the same person, same face and same hair in every shot of this episode",
     # 8 kênh bổ sung — mỗi khoá là MỘT silhouette + MỘT màu đặc + MỘT phụ kiện, không tả mặt.
     # Đây là ba quy tắc đã rút ra: mô hình tái tạo hình khối đơn giản rất đáng tin, tái tạo
     # khuôn mặt tinh tế rất tệ.
@@ -635,6 +556,75 @@ def do_phang(tep: str):
         return None
 
 
+# ══ BẢNG MÀU KÊNH PHẢI ĐI VÀO PROMPT  (4/9/2026) ═══════════════════════════════════════════
+# Anh: *"phối màu bố cục hình ảnh xấu."* Soi một tập DAY IN LIFE: bốn khung ảnh AI ra **xanh
+# lạnh bệnh viện**, hai khung vẽ bằng code ra **be ấm** — hai thế giới trong mười hai giây.
+#
+# Gốc: mỗi kênh CÓ SẴN bảng bốn màu (`MAU_KENH`), lớp vẽ code dùng nó, còn prompt ảnh thì
+# **chưa bao giờ nói ra nó**. Câu duy nhất về màu là "nền phải sáng và ấm" — một lời khuyên,
+# không phải một bảng màu. Nên mỗi ảnh tự chọn, và hai lớp không có lý do gì trùng nhau.
+#
+# §12.10 đã đo và ghi: *lệch phong cách giữa các ảnh là đòn bẩy lớn nhất, và chỉnh màu
+# KHÔNG cứu được nó*. Đúng — chỉnh màu sau khi vẽ chỉ kéo được vài phần trăm. Thứ ăn thua là
+# nói bảng màu TRƯỚC khi vẽ.
+#
+# Mô hình không đọc mã hex, nên đổi sang TÊN MÀU: sắc độ + độ sáng + độ bão hoà -> một cụm
+# tiếng Anh ("warm sand", "deep rust orange", "slate blue").
+def _ten_mau(hex_: str) -> str:
+    """Mã hex -> một cụm màu tiếng Anh. Mô hình không đọc hex.
+
+    Chia theo CẢ BA chiều, không chỉ sắc độ: bản đầu chỉ chia theo hue nên `#F0E7D6` (kem),
+    `#8A6134` (nâu) và `#D9622B` (cam gạch) cùng ra "rust orange" — ba kênh khác nhau nhận
+    một câu màu giống hệt, tức mất đúng thứ bảng màu sinh ra để giữ: bản sắc kênh.
+    Nâu CHÍNH LÀ cam tối và ít bão hoà, nên phải đọc độ sáng mới tách được."""
+    h = (hex_ or "").lstrip("#")
+    if len(h) != 6:
+        return ""
+    r, g, b = (int(h[k:k + 2], 16) / 255 for k in (0, 2, 4))
+    mx, mn = max(r, g, b), min(r, g, b)
+    l, d = (mx + mn) / 2, mx - mn
+    sat = 0 if d == 0 else d / (1 - abs(2 * l - 1) + 1e-6)
+    if d < 0.05 or sat < 0.10:
+        return ("soft white" if l > 0.88 else "warm off-white" if l > 0.74 else
+                "light warm grey" if l > 0.55 else "mid grey" if l > 0.32 else "charcoal")
+    hu = (((g - b) / d) % 6 if mx == r else (b - r) / d + 2 if mx == g else (r - g) / d + 4) * 60
+    if hu < 16 or hu >= 345:
+        ten = "brick red" if l < 0.45 else "coral red"
+    elif hu < 34:
+        ten = "chocolate brown" if l < 0.40 else "burnt orange" if l < 0.62 else "peach"
+    elif hu < 48:
+        ten = "warm brown" if l < 0.42 else "tan" if l < 0.68 else "warm cream"
+    elif hu < 62:
+        ten = "olive brown" if l < 0.45 else "golden amber" if l < 0.70 else "pale straw"
+    elif hu < 90:
+        ten = "moss green" if l < 0.50 else "sage green"
+    elif hu < 165:
+        ten = "forest green" if l < 0.45 else "muted green"
+    elif hu < 200:
+        ten = "deep teal" if l < 0.45 else "soft teal"
+    elif hu < 245:
+        ten = "steel blue" if l < 0.52 else "pale sky blue"
+    elif hu < 290:
+        ten = "indigo" if l < 0.50 else "lavender"
+    else:
+        ten = "plum" if l < 0.50 else "dusty pink"
+    return ten
+
+
+def _bang_mau(ma: str) -> str:
+    """Câu khoá bảng màu của kênh — ba màu, gọi bằng tên."""
+    try:
+        from giai_thich import MAU_KENH
+        m = MAU_KENH.get(ma) or {}
+    except Exception:
+        return ""
+    nen, chinh, phu = (_ten_mau(m.get(k, "")) for k in ("nen", "mau", "phu"))
+    if not (nen and chinh):
+        return ""
+    return (f"limited palette: {nen} background, {chinh} as the main colour"
+            + (f", {phu} as the only accent" if phu else "") + ", no other hues")
+
+
 def _sac_thai(ma: str) -> str:
     """Sắc thái vẽ riêng của kênh — vẫn trong khuôn 'cartoon phẳng', chỉ khác nét.
 
@@ -702,7 +692,6 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
         "a flat cartoon drawing of " + ve + mt + ",",             # 1. CHÍNH CẢNH — đứng đầu
         KEP_GU + ",",              # 1b. kẹp phong cách ngắn — xem `KEP_GU`
         _khoa(ma, ve).rstrip(),    # 2. khoá nhân vật (rỗng nếu cảnh không có người)
-        ((gu or GU) + ", " + _sac_thai(ma)).rstrip(", ") + ".",   # 3. phong cách + sắc thái riêng
         # 3. chính cảnh của nhịp này — CÓ NEO PHONG CÁCH DÁN NGAY TRƯỚC CHỦ THỂ.
         #
         # Đặt phong cách ở đầu câu (mục 1) là chưa đủ với những chủ thể tự nó gợi ẢNH CHỤP:
@@ -714,10 +703,29 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
         # FLUX không có negative prompt (§12.1), nên không thể dặn "đừng vẽ ảnh chụp" — mọi danh
         # từ viết ra đều là thứ SẼ xuất hiện. Cách còn lại là khẳng định dương, và dán ngay cạnh
         # chủ thể chứ không để cách xa mười lăm chữ ở đầu câu.
-        khung + ",",               # 4. chừa chỗ cho chữ
-        _luat(ve, doc) + ",",      # 5. luật sàn
-        GU_USA + ",",              # 6. neo bối cảnh Mỹ
-        SACH,                      # 7. bề mặt sạch
+        # ── THỨ TỰ = ĐỘ QUAN TRỌNG, VÌ PHÉP CẮT ĂN TỪ ĐUÔI  (4/9/2026) ────────────────
+        # Vòng ghép dưới đây cắt từ đuôi khi chạm trần 2.048. Nên thứ tự phải xếp theo ĐỘ
+        # QUAN TRỌNG — và bản cũ vi phạm chính nguyên tắc của nó: khối phong cách dài 1.065
+        # ký tự đứng TRƯỚC bốn luật ngắn mà quan trọng hơn.
+        #
+        # Đo được sau khi thêm vài chục ký tự vào câu tả mặt: prompt bị cắt mất `GU_USA` và
+        # `SACH`. `SACH` là câu cấm chữ — thứ chặn đúng lỗi ảnh vẽ ra tấm vé ghi "LICKET"
+        # (§12.7: chữ mô hình bịa là dấu hiệu nghiệp dư người xem đọc ra trong nửa giây).
+        # Một câu 47 ký tự bị hi sinh cho một khối 1.065 ký tự mà `KEP_GU` đã kẹp phần lớn.
+        #
+        # Nay: mọi luật NGẮN đứng trước, khối phong cách dài đứng cuối — nếu phải cắt thì cắt
+        # đúng thứ đã có bản rút gọn ở `KEP_GU`.
+        SACH + ",",                # 4. bề mặt sạch — câu CẤM CHỮ, ngắn và không được mất
+        khung + ",",               # 5. luật khung: chừa chỗ cho chữ + cấm bố cục tròn
+        _luat(ve, doc) + ",",      # 6. luật sàn — ba mệnh lệnh bắt buộc (§7)
+        _bang_mau(ma) + ",",      # 7. BẢNG MÀU KÊNH — xem `_bang_mau`
+        _sac_thai(ma) + ",",       # 8. sắc thái riêng của kênh
+        # ── MỘT LUẬT LUÔN BỊ CẮT LÀ MỘT LUẬT KHÔNG TỒN TẠI  (4/9/2026) ────────────────
+        # Neo bối cảnh Mỹ từng là mục cuối. Đo trên 168 prompt của 18 kênh: **153 cái bị
+        # cắt mất nó** — tức nó gần như chưa bao giờ được gửi đi, trong khi vẫn chiếm chỗ
+        # trong danh sách và làm người đọc tưởng nó đang có tác dụng.
+        # Nay ba chữ "an everyday American setting" nằm trong `KEP_GU` — khối đứng ngay sau
+        # chủ thể và chưa bao giờ bị cắt. Rẻ hơn 80 ký tự và thật sự tới nơi.
     ]
     ra = ""
     for x in phan:

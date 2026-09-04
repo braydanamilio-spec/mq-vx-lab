@@ -171,7 +171,7 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string;
              mảng tối, chỉ tăng tương phản đúng chỗ chữ đứng. */
         /* Quầng phải NGƯỢC sắc với mực: chữ đậm trên nền sáng cần quầng SÁNG để tách, quầng
            đen quanh chữ đen thì không tách được gì. */
-        textShadow: (Number(sangNen ?? -1) >= 170)
+        textShadow: (Number(sangNen ?? -1) >= 117)
           ? `0 0 ${H * 0.006}px #FFFFFFff, 0 0 ${H * 0.014}px #FFFFFFff, 0 0 ${H * 0.026}px #FFFFFFee, 0 0 ${H * 0.040}px #FFFFFFaa`
           : `0 0 ${H * 0.006}px #000000ff, 0 0 ${H * 0.013}px #000000ff, 0 0 ${H * 0.024}px #000000ee, 0 0 ${H * 0.038}px #000000aa, 0 ${H * 0.003}px ${H * 0.009}px #000000ee`,
         pointerEvents: "none",
@@ -186,12 +186,24 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string;
             engine chỉ đọc, không đo lại. Cùng nguyên tắc `bo_the`/`kieu_so`: nơi BIẾT thì
             quyết rồi truyền kết quả.
 
-            Ngưỡng 170: trên mức ấy chữ trắng không thể đạt 4,5:1 dù quầng dày bao nhiêu.
+            ── NGƯỠNG 170 SAI THEO CHÍNH CÔNG THỨC CỦA CỔNG  (4/9/2026) ──────────────────
+            Cổng đo tương phản bằng `(sáng+5)/(tối+5)` trên thang xám. Giải ngược ra ngưỡng:
+
+                chữ TRẮNG (243) đạt 4,5:1 khi nền  <=  50
+                chữ TỐI  (#14161C ≈ 22) đạt 4,5:1 khi nền >= 117
+
+            Tức 170 quá cao: mọi nền trong khoảng **117–170** đáng lẽ dùng mực TỐI thì lại
+            nhận mực trắng. Đo trên bản dài `howlong`: nền dưới chữ 140 · 142 · 156 · 158 —
+            nằm trọn trong khoảng ấy, và cho ra **1,4–1,7:1** thay vì 5,4–6,0:1.
+
+            Con số 170 chưa bao giờ được tính, nó được đặt. Nay lấy từ công thức: 117.
+            (Khoảng 50–117 thì KHÔNG mực nào đạt 4,5:1 — ở đó chọn mực trắng vì nó khá hơn,
+            và ghi ra đây rằng vùng ấy chưa giải được thay vì giả vờ là đã.)
             Từ đang đọc giữ màu vàng khi nền tối, và chuyển sang cam đậm khi nền sáng — vẫn là
             tín hiệu "từ này đang được đọc", chỉ đổi sắc để còn đọc được. */}
         {(() => {
           const sd = Number(sangNen ?? -1);
-          const sang = sd >= 170;                       // nền dưới phụ đề quá sáng
+          const sang = sd >= 117;   // >= 117 thì mực TỐI đạt 4,5:1 — xem dẫn giải ở trên
           const mucThuong = sang ? "#14161C" : "#FFFFFF";
           const mucDoc = sang ? "#8A4B00" : "#FFD400";
           return cua.map((w, k) => (
@@ -684,9 +696,19 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                   /* Cảnh vẽ code cũng phải khai độ sáng đáy, không chỉ ảnh CF — nếu
                      không thì nhánh "nền sáng thì đổi mực" của `PhuDe` không bao giờ
                      chạy cho chúng, và ta lại phải làm tối sàn để cứu chữ. */
+                  /* ── NHỊP KHÔNG CÓ ẢNH CŨNG PHẢI KHAI ĐỘ SÁNG  (4/9/2026) ──────────
+                     Nhánh cũ chỉ biết hai loại nền: ảnh CF (`sangDay` đo lúc sinh) và cảnh
+                     vẽ code (`sangDayCanh`). Nhịp `dem` · `nhom` · `chart` dùng `NenPhong`
+                     thì rơi vào `-1` = "không biết", và `PhuDe` mặc định mực TRẮNG.
+                     Đo trên bản dài: đúng hai nhịp `dem` ấy có nền 140 và 142 — mực trắng
+                     cho 1,4:1 trong khi mực tối cho 5,4:1. Không biết thì đoán, và đoán sai.
+                     `NenPhong` pha sàn từ cùng `nen`+`mau`, nên `sangDayCanh` với nơi chốn
+                     rỗng trả đúng độ sáng đáy của nó. */
                   sangNen={N.canh_ve
                     ? sangDayCanh(N.canh_ve, nenTrang, mau, mauPhu)
-                    : Number((N as any)?.sangDay ?? -1)} />}
+                    : N.nenAnh
+                      ? Number((N as any)?.sangDay ?? -1)
+                      : sangDayCanh("", nenTrang, mau, mauPhu)} />}
 
       {/* ══ ĐÃ BỎ DẢI TÊN KÊNH (1/9/2026) ══════════════════════════════════════════════
           Đóng dấu tên kênh lên MỌI khung là thói quen của kênh nhỏ — nó lấy mất 5% chiều cao
