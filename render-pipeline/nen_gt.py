@@ -91,7 +91,7 @@ SAN_NGOAI = ("wide shot, camera at standing eye level, "
 
 _NGOAI = re.compile(
     r"\b(desert|tundra|plain|field|sky|outdoor|street|road|highway|forest|valley|coast|"
-    r"beach|mountain|snow|lawn|yard|driveway|kerb|curb|sidewalk|space|moon|planet|stars|"
+    r"beach|mountain|snow|lawn|yard|driveway|curb|curb|sidewalk|space|moon|planet|stars|"
     r"horizon|open ground|savanna|wilderness|dunes)\b", re.I)
 
 
@@ -245,7 +245,7 @@ GU_CARTOON = (
 # Neo bối cảnh Mỹ — chỉ giữ những vật CHỈ CÓ Ở MỸ và mô hình vẽ được. "Cảm giác Mỹ" thì nó
 # không vẽ được; "hòm thư trên cột cắm ở lề" thì vẽ được.
 GU_USA = ("set in the United States: clapboard suburban houses with a front porch, a mailbox "
-          "on a post at the kerb, wide two-lane roads, American kitchen with an island; "
+          "on a post at the curb, wide two-lane roads, American kitchen with an island; "
           "people in t-shirt or hoodie, jeans and sneakers")
 GU_KENH = {k: GU_CARTOON for k in
            ("que", "phang", "tranh", "kich", "iso")}
