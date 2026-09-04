@@ -3375,7 +3375,7 @@ def _tu_the(loi: str, j: int) -> int:
     return (j % 4) + 1 if j else 0      # nhịp hook giữ tư thế trung tính
 
 
-def _rai_tu_the(nhip: list) -> list:
+def _rai_tu_the(nhip: list, ma_kenh: str = "") -> list:
     """Gán `tu` cho mọi nhịp vẽ nhân vật, và không để hai nhịp liền nhau trùng tư thế."""
     # PHẠM VI PHẢI KHỚP CHỖ NHÂN VẬT THẬT SỰ ĐƯỢC VẼ TOÀN KHUNG: `canh` · `nhom` ·
     # `kinh_lup`. Bản đầu xét mọi nhịp có `bt="nguoi"`, kể cả `so_lieu` — mà `so_lieu` vẽ
@@ -3403,6 +3403,13 @@ def _rai_tu_the(nhip: list) -> list:
             # tư thế không đổi thứ đang được vẽ, nên nó không bao giờ làm sai nghĩa câu.
             t = (t + 1) % 5
         n["tu"] = t
+        # ── DÀN NHÂN VẬT, KHÔNG PHẢI MỘT NGƯỜI  (4/9/2026) ──────────────────────────────
+        # Anh: *"lặp đi lặp lại 1 nhân vật, nhàm chán, không ra đâu cả"*. Tư thế thôi chưa
+        # đủ — bốn ảnh anh gửi có nhiều người KHÁC NHAU (tóc bù, tóc tết bím, có râu), cùng
+        # một khuôn mặt trắng nhưng khác tóc khác áo.
+        # Đổi theo NHỊP, không theo tập: người xem so hai khung liền nhau, không so hai tập
+        # (§14.9). Lệch pha theo kênh để hai kênh không ra cùng thứ tự dàn diễn viên.
+        n["nv"] = (j + _lech_kenh(ma_kenh)) % 4 if ma_kenh else j % 4
         truoc = t
     return nhip
 
@@ -4128,7 +4135,7 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     nhip = _rai_kinh_lup(ma, nhip, idx)
     # SAU MỌI LƯỢT CHÈN, xem §15.19 — lượt RẢI phải chạy sau lượt CHÈN, nếu không thì
     # nhịp hook (chèn ở `insert(0, …)`) không bao giờ được gán.
-    nhip = _rai_tu_the(nhip)
+    nhip = _rai_tu_the(nhip, ma)
     nhip = _rai_ss(ma, nhip, idx)
     nhip = _rai_so(ma, nhip, idx)
     nhip = _rai_chart(ma, nhip, idx)

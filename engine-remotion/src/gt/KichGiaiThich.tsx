@@ -364,7 +364,15 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
            nền phẳng. Hai nền khác nhau trong cùng một tập là chỗ mắt đọc ra "chắp vá".
            Nay cả hai đi qua cùng một bề mặt — cùng tường, cùng sàn, cùng quầng sáng, và
            cùng đổi kiểu theo `hat` nên vẫn đa dạng giữa các tập. */
-            <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />
+            <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat}
+                  /* Tắt cửa sổ khi khung đã có chủ thể toàn khung. Anh: *"bối cảnh sau không
+                      liên quan và làm chồng chéo"*. Đúng: `NenPhong` vẽ một CĂN PHÒNG CHUNG
+                      sau 222/264 nhịp `canh` — những nhịp không có nơi chốn nào cả — nên cái
+                      cửa sổ ấy không nói gì về câu đang kể, mà lại đứng đúng chỗ chủ thể
+                      đứng. Một bối cảnh không liên quan thì không phải bối cảnh, nó là nhiễu:
+                      bỏ đi vừa hết chồng chéo vừa hết vô can, một nhát hai lỗi. */
+                  anCua={!!btVe}
+                />
           )}
             {/* CHỦ THỂ CỦA KHUNG — vẽ ĐẶC, không mờ.  (3/9/2026)
                 Bản trước để `opacity: 0.34` với lý do "thuộc về căn phòng, không lơ lửng như
@@ -462,7 +470,17 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                      ngang không tràn khung. Với hình người, trần ngang thôi chặn — đúng
                      như nó phải thế, vì nhân vật là hình cao. */
                   const tl = tiLe(btVe);
-                  const caoDuoc = Math.min(traTren - H * 0.04, H * 0.62);
+                  /* 0,45 chứ không phải 0,62  (4/9, sau khi anh soi bản 60%).
+                     Em đo ảnh tham khảo ra "nhân vật chiếm 55–65% khung" rồi chỉnh thẳng
+                     tới đó — và anh nói *"to chà bá vô, không hợp"*. Anh đúng, và chỗ em
+                     đọc sai là NGỮ CẢNH của con số ấy: trong ảnh tham khảo nhân vật to vì
+                     nó ngồi trong một CĂN PHÒNG ĐẦY ĐỦ — sofa, đèn, chậu cây, sàn gỗ — nên
+                     khung vẫn cân. Bản mình chỉ có tường trơn với một cửa sổ, nên cùng tỉ
+                     lệ ấy đọc ra một hình dán khổng lồ giữa nền trống.
+                     Đúng §12.5 lần nữa: một con số đúng ở ngữ cảnh nó được đo, sai ở ngữ
+                     cảnh mới. Chép tỉ lệ mà không chép mật độ bối cảnh là chép nửa vời.
+                     0,45 là mức nhân vật vẫn đọc ra nhân vật mà khung còn thở. */
+                  const caoDuoc = Math.min(traTren - H * 0.04, H * 0.45);
                   const sz = Math.min(caoDuoc / tl.cao, (W * 0.90) / tl.rong, s0 * cz * 2)
                              * coHinh(btVe);
                   /* ── QUY TẮC D: CẢNH SAU KẾ THỪA CẢNH TRƯỚC  (4/9/2026) ──────────────
@@ -530,7 +548,8 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                       <g transform={`translate(${cx} ${sanY - sz * DAY_HINH})`}>
                         {/* `tu` do Python quyết theo chính lời của nhịp — xem `_rai_tu_the`.
                             Engine chỉ đọc, đúng nguyên tắc §15.3. */}
-                        <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0} />
+                        <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
+                                   nv={(N as any)?.nv ?? 0} />
                       </g>
                     </>
                   );

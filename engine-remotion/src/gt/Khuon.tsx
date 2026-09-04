@@ -27,8 +27,13 @@ const F = "Poppins, Arial Black, sans-serif";
 
 /* Biểu tượng vẽ bằng code. Cố ý ít và thô: mỗi cái phải đọc được ở 1/6 chiều ngang khung trên
    màn hình điện thoại, nên chi tiết nhiều chỉ thành vết bẩn. */
-export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: number }> =
-({ ten, s, mau = "#2C2722", tu = 0 }) => {
+/* Bốn màu áo cho dàn nhân vật. Không lấy màu thương hiệu: màu ấy đã dùng cho đồ hoạ và
+   con số, nên nhân vật mặc nó thì người và biểu đồ đọc ra cùng một lớp. Bốn tông trung
+   tính đủ khác nhau ở cỡ nhỏ, và đều đủ sẫm để đường nét đen trên nền sáng vẫn nổi. */
+const AO = ["#46505C", "#6E5A4A", "#4A6157", "#5B5470"];
+
+export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: number; nv?: number }> =
+({ ten, s, mau = "#2C2722", tu = 0, nv = 0 }) => {
   const k = (v: number) => v * s;
   const n = Math.max(2, s * 0.055);
   const P = (d: string, f = "none", w = 1) => (
@@ -157,7 +162,7 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
       return (<g>
         {/* ÁO vẽ TRƯỚC đầu, để cổ áo chui xuống dưới cằm chứ không cắt ngang mặt */}
         {N(`M ${-k(0.105)} ${vaiY} Q 0 ${vaiY - k(0.030)} ${k(0.105)} ${vaiY}
-            L ${k(0.092)} ${k(0.16)} L ${-k(0.092)} ${k(0.16)} Z`, "#46505C")}
+            L ${k(0.092)} ${k(0.16)} L ${-k(0.092)} ${k(0.16)} Z`, AO[nv % AO.length])}
         {/* ── NĂM TƯ THẾ, KHÔNG PHẢI MỘT  (4/9/2026) ─────────────────────────────────────
             Sau khi buộc đồ vật phải lấy từ LỜI, `nguoi` chiếm 64% nhịp `canh` — và bốn nhịp
             người liên tiếp với MỘT tư thế đứng, MỘT nụ cười là đúng lời anh phê *"lặp đi lặp
@@ -200,6 +205,28 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
             vật thay vì sơ đồ người. */}
         <circle cx="0" cy={-k(0.285)} r={k(0.150)} fill="#FFFFFF"
                 stroke={mau} strokeWidth={k(0.019)} />
+        {/* ── TÓC: BỐN KIỂU  (4/9/2026) ───────────────────────────────────────────────────
+            Anh: *"lặp đi lặp lại 1 nhân vật, nhàm chán, không ra đâu cả"*. Tư thế thôi chưa
+            đủ — bốn ảnh anh gửi có NHIỀU NGƯỜI KHÁC NHAU: người tóc bù, người tóc dài tết
+            bím, người có râu. Cùng một khuôn mặt trắng, cái tách họ ra là TÓC và MÀU ÁO.
+            Vẽ SAU vòng đầu để tóc đè lên đường viền trên, đúng cách ảnh tham chiếu làm —
+            tóc mọc ra ngoài khối đầu chứ không nằm gọn bên trong. */}
+        {nv % 4 === 1 ? (
+          <path d={`M ${-k(0.150)} ${-k(0.300)} q ${k(0.030)} ${-k(0.140)} ${k(0.150)} ${-k(0.148)}
+                    q ${k(0.122)} ${k(0.008)} ${k(0.150)} ${k(0.148)}
+                    q ${-k(0.060)} ${-k(0.060)} ${-k(0.150)} ${-k(0.052)}
+                    q ${-k(0.092)} ${-k(0.008)} ${-k(0.150)} ${k(0.052)} Z`} fill={mau} />
+        ) : nv % 4 === 2 ? (
+          <path d={`M ${-k(0.152)} ${-k(0.270)} q ${-k(0.010)} ${-k(0.190)} ${k(0.152)} ${-k(0.178)}
+                    q ${k(0.162)} ${-k(0.012)} ${k(0.152)} ${k(0.178)}
+                    l ${-k(0.038)} ${k(0.010)} q ${k(0.006)} ${-k(0.128)} ${-k(0.114)} ${-k(0.126)}
+                    q ${-k(0.120)} ${-k(0.002)} ${-k(0.114)} ${k(0.126)} Z`} fill={mau} />
+        ) : nv % 4 === 3 ? (
+          <path d={`M ${-k(0.148)} ${-k(0.296)} q ${k(0.040)} ${-k(0.132)} ${k(0.148)} ${-k(0.140)}
+                    q ${k(0.108)} ${k(0.008)} ${k(0.148)} ${k(0.140)}
+                    l ${-k(0.052)} ${k(0.016)} q ${-k(0.030)} ${-k(0.072)} ${-k(0.096)} ${-k(0.070)}
+                    q ${-k(0.066)} ${k(0.002)} ${-k(0.096)} ${k(0.070)} Z`} fill={mau} />
+        ) : null}
         <ellipse cx={-k(0.050)} cy={-k(0.295)} rx={k(0.019)} ry={k(0.026)} fill={mau} />
         <ellipse cx={k(0.050)} cy={-k(0.295)} rx={k(0.019)} ry={k(0.026)} fill={mau} />
         {/* LÔNG MÀY + MIỆNG THEO TƯ THẾ. Ảnh tham khảo: người ngồi viết có lông mày XUÔI và
@@ -434,8 +461,8 @@ export const _emChu = (s: string): number => {
 };
 
 export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string;
-                                  hat?: number; anTroi?: boolean }> =
-({ W, H, nen, mau, hat = 0, anTroi = false }) => {
+                                  hat?: number; anTroi?: boolean; anCua?: boolean }> =
+({ W, H, nen, mau, hat = 0, anTroi = false, anCua = false }) => {
   const k = Math.abs(hat) % 6;
   const yS = chanTroi(H, hat);            // nguồn sự thật duy nhất — xem `chanTroi`
   const xS = W * (k === 2 ? 0.24 : k === 5 ? 0.78 : 0.50);      // nguồn sáng lệch trái/phải/giữa
@@ -505,7 +532,11 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
           Đúng họ lỗi §12.5: một chi tiết đúng trong ngữ cảnh nó sinh ra, sai ở ngữ cảnh mới.
           Chữa: đẩy về GÓC đối diện nguồn sáng và làm mờ hẳn — đủ nói "trong nhà có ánh sáng
           ngoài", không đủ tranh chỗ với bất cứ thứ gì vẽ đè lên. */}
-      {(k === 0 || k === 5) ? (() => {
+      {/* `!anCua`: khung đã có chủ thể toàn khung thì BỎ HẲN cửa sổ. Bản trước chỉ đẩy nó
+          về góc và làm mờ — vẫn còn một hình chữ nhật đứng sau nhân vật, và nó không nói gì
+          về câu đang kể vì `NenPhong` chạy cho 222/264 nhịp `canh` KHÔNG có nơi chốn nào.
+          Một bối cảnh không liên quan thì không phải bối cảnh, nó là nhiễu. */}
+      {(!anCua && (k === 0 || k === 5)) ? (() => {
         const xC = xS < W * 0.5 ? W * 0.62 : W * 0.08;   // luôn ở phía ĐỐI DIỆN quầng sáng
         const wC = W * 0.30, hC = yS * 0.34, yC = yS * 0.09;
         return (
