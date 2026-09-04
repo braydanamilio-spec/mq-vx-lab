@@ -2570,6 +2570,8 @@ def main():
     check("cổng hình lấy khung ở nhịp CÓ phụ đề", t_kiem_hinh_lay_dung_khung)
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
+    check("tiêu đề/hook/prompt phải đúng ngữ pháp tiếng Anh", t_tieu_de_dung_ngu_phap)
+    check("tiêu đề so sánh: hai vế viết hoa đối xứng", t_tieu_de_viet_hoa_doi_xung)
     check("trần ảnh CF phải đếm ở TỆP (vòng while chạy mỗi tập một tiến trình)",
           t_tran_anh_song_qua_tien_trinh)
     check("prompt ảnh: chốt độ dài không cắt mất luật sàn / bảng màu",
@@ -7288,6 +7290,82 @@ def t_tran_anh_song_qua_tien_trinh():
         else:
             os.environ["GITHUB_RUN_ID"] = goc
         importlib.reload(N)
+
+
+def t_tieu_de_dung_ngu_phap():
+    """Tiêu đề · hook · câu đọc · prompt ảnh phải là tiếng Anh ĐỌC ĐƯỢC.
+
+    `QUANG_DUONG` trộn bốn loại ngữ pháp (điểm đến · tuyến A-B · vòng quanh · một chặng) mà
+    bốn khuôn câu đều ghép `f"… to {ten}"` như thể chỉ có một loại. Đo trên 22 mục: **13 mục
+    (59%)** ra câu sai, và cùng chuỗi ấy đi thẳng vào TIÊU ĐỀ YOUTUBE:
+
+        "Walking to all the way around Saturn"
+        "The distance to New York to Los Angeles."
+        "New York to Los Angeles hanging huge and pale in a deep open sky"   <- prompt FLUX
+
+    Câu cuối không sai ngữ pháp, nó VÔ NGHĨA — và mô hình vẽ theo đúng thứ vô nghĩa ấy.
+
+    Cổng quét dạng câu hỏng thay vì so với một danh sách mẫu: danh sách mẫu sẽ trượt ngay khi
+    ai thêm mục thứ 23 (§13.9 — danh sách ngoại lệ là danh sách vô hạn).
+    """
+    import re
+    import giai_thich as G
+    xau = [
+        (re.compile(r"\bto all the way\b", re.I),        "'to all the way …'"),
+        # HẸP: chỉ bắt "to" thứ hai NGAY TRONG cụm quãng đường, không bắt "to" của mệnh đề.
+        # Bản đầu viết `to \w+ … to` và tố oan "HOW LONG TO WALK TO THE MOON?" — hai chữ
+        # "to" ấy có hai vai khác nhau (chỉ mục đích và chỉ đích đến), đều đúng. 28 dòng đỏ
+        # giả, đúng cái làm lỗi thật nằm cạnh bị chìm (§13.2).
+        (re.compile(r"\b(?:distance|Walking)\s+to\s+[\w' ]+?\s+to\s", re.I),
+         "cụm quãng đường có hai chữ 'to'"),
+        (re.compile(r"\bdistance to a (?:marathon|cross|year)\b", re.I), "'distance to' + một chặng"),
+        (re.compile(r"\b(?:distance|length|height) of the (?:length|height)\b", re.I),
+         "danh từ đo lường lặp"),
+    ]
+    loi = []
+    for k in G.KENH:
+        for i in range(12):
+            try:
+                r = G.kich_ban(k["ma"], i)
+            except Exception:
+                continue
+            chu = [x for x in r if isinstance(x, str)]
+            # cả lời đọc lẫn câu tả cảnh gửi cho mô hình vẽ
+            for n in (r[4] if len(r) > 4 and isinstance(r[4], list) else []):
+                chu.append(str(n.get("loi") or ""))
+                chu.append(str(n.get("ve") or ""))
+            for t in chu:
+                for rx, ten in xau:
+                    if rx.search(t):
+                        loi.append((k["ma"], i, ten, t[:70]))
+    assert not loi, f"{len(loi)} câu sai ngữ pháp, ví dụ: {loi[:3]}"
+
+
+def t_tieu_de_viet_hoa_doi_xung():
+    """Khuôn tiêu đề so sánh không được `.title()` một vế mà để nguyên vế kia.
+
+    Bốn kênh dùng `f"{lon[0].title()} vs {nho[0]}"`, nên ra *"A School Bus vs a giraffe"* —
+    hai vế cùng vai, một vế Title Case, một vế chữ thường. 14 kênh còn lại đều dùng câu
+    thường, nên bốn kênh này đọc ra ngay là chữ máy ghép.
+
+    ── VÌ SAO SOI MÃ, KHÔNG SOI ĐẦU RA ────────────────────────────────────────────────────
+    Bản đầu của cổng đo trên tiêu đề đã sinh: "vế A có chữ hoa giữa cụm mà vế B không thì
+    báo". Nó tố oan ngay *"A Boeing 747 vs an adult human"* và *"The Statue of Liberty vs a
+    football field"* — hai vế viết hoa khác nhau vì một bên là TÊN RIÊNG, hoàn toàn đúng.
+
+    Không có cách đáng tin nào nhận ra tên riêng từ chuỗi đầu ra, nên phép đo ấy sẽ bắt oan
+    mãi. Lỗi thật không nằm ở đầu ra mà ở KHUÔN CÂU, và khuôn câu thì đọc chính xác được.
+    §13.8: cổng bắt oan ép người ta tắt nó đi, tức tệ hơn không có cổng.
+    """
+    import os
+    import re
+    import giai_thich as G
+    src = io.open(os.path.abspath(G.__file__), encoding="utf-8").read()
+    ma = re.sub(r"(?m)^\s*#.*$", "", src)          # bỏ chú thích (kiem_nen._doc_ma)
+    xau = re.findall(r"\{[\w\[\]']+\.title\(\)\}\s*(?:vs|versus)\s*\{[^}]+\}", ma)
+    assert not xau, (
+        f"khuôn tiêu đề `.title()` một vế, để nguyên vế kia: {xau[:3]} — "
+        "dùng `_hoa()` (viết hoa đúng chữ đầu câu) cho cả cụm")
 
 
 def t_prompt_khong_cat_mat_luat():

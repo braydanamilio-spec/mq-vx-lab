@@ -62,33 +62,70 @@ XE_MPH = 60.0
 MAY_BAY_MPH = 560.0
 AS_MPS = 186282.0          # tốc độ ánh sáng, dặm mỗi giây
 
+# ══ QUÃNG ĐƯỜNG — MỖI MỤC MANG THEO LOẠI NGỮ PHÁP CỦA NÓ  (4/9/2026) ═══════════════════════
+# Bảng cũ chỉ có tên, và BỐN khuôn câu đều ghép `f"… {ten}"` như thể mọi mục cùng một loại.
+# Chúng không cùng loại, và đo trên 22 mục thì **13 mục (59%)** ra câu sai:
+#
+#     "The distance to all the way around Saturn."      <- câu đọc
+#     "Walking to all the way around Saturn"            <- TIÊU ĐỀ YOUTUBE
+#     "HOW LONG TO WALK TO ALL THE WAY AROUND SATURN?"  <- chữ hook trên khung
+#     "New York to Los Angeles hanging huge and pale in a deep open sky"   <- prompt gửi FLUX
+#
+# Câu cuối là nặng nhất: nó không sai ngữ pháp mà VÔ NGHĨA, và nó là thứ mô hình vẽ theo.
+#
+# §12.5 đúng từng chữ — một câu luật đúng trong ngữ cảnh sinh ra nó (bảng ban đầu 10 mục, hầu
+# hết là điểm đến thiên thể), sai ở ngữ cảnh mới (nối thêm 12 mục gồm tuyến đường và quãng
+# đường). Và §13.9: chữa bằng DANH SÁCH NGOẠI LỆ thì danh sách ấy vô hạn — mỗi mục thêm sau
+# lại là một ngoại lệ mới. Nên loại ngữ pháp phải là MỘT TRƯỜNG của chính dữ liệu.
+#
+#   den    điểm đến   -> "to X"     · "Walking to the Moon"
+#   tuyen  A đến B    -> "from X"   · "Walking from New York to Los Angeles"
+#   vong   vòng quanh -> "X"        · "Walking all the way around Saturn"
+#   vat    một chặng  -> "of X"     · "Walking the Appalachian Trail"
+#
+# Trường thứ năm `troi` là TÊN VẬT TREO TRÊN TRỜI, dùng cho câu tả cảnh. Rỗng thì cảnh dùng
+# khuôn trung tính. Không suy ra từ `bt` vì `trai_dat` là biểu tượng quả cầu dùng chung — nó
+# đứng cho cả Sao Hoả, Sao Thổ lẫn rãnh Mariana, nên suy từ nó là đoán.
+#
+# Hai mục được ĐỔI TÊN thay vì thêm ngoại lệ, vì tên cũ đã chứa sẵn một danh từ đo lường nên
+# mọi khuôn câu đều ra chữ lặp ("The distance of the length of the Mississippi"):
+#   "the length of the Mississippi"  -> "the Mississippi River"
+#   "the height of a passenger jet"  -> "jet cruising altitude"
 QUANG_DUONG = [                                  # dặm
-    ("the Moon",                       238900,    "mat_trang"),
-    ("the Sun",                      92960000,    "mat_troi"),
-    ("Mars at its closest",          33900000,    "trai_dat"),
-    ("all the way around the Earth",    24901,    "trai_dat"),
-    ("New York to Los Angeles",          2445,    "xe"),
-    ("the bottom of the Mariana Trench",  6.8,    "trai_dat"),
-    ("the top of Mount Everest",          5.5,    "trai_dat"),
-    ("New York to London",               3459,    "may_bay"),
-    ("the length of the Mississippi",    2340,    "trai_dat"),
-    ("all the way around Saturn",       235298,   "trai_dat"),
+    ("the Moon",                       238900,    "mat_trang", "den",   "the Moon"),
+    ("the Sun",                      92960000,    "mat_troi",  "den",   "the Sun"),
+    ("Mars at its closest",          33900000,    "trai_dat",  "den",   "Mars"),
+    ("all the way around the Earth",    24901,    "trai_dat",  "vong",  "the Earth"),
+    ("New York to Los Angeles",          2445,    "xe",        "tuyen", ""),
+    ("the bottom of the Mariana Trench",  6.8,    "trai_dat",  "den",   ""),
+    ("the top of Mount Everest",          5.5,    "trai_dat",  "den",   ""),
+    ("New York to London",               3459,    "may_bay",   "tuyen", ""),
+    ("the Mississippi River",            2340,    "trai_dat",  "vat",   ""),
+    ("all the way around Saturn",      235298,    "trai_dat",  "vong",  "Saturn"),
     # ── NỐI THÊM 1/9 ────────────────────────────────────────────────────────────────────
     # Bảng cũ 10 mục, mà bộ sinh lấy `ds[i % n]` -> kênh lặp y hệt từ tập 10. Đo được cả 18
     # kênh lặp trong vòng 1-21 tập. Mọi khoảng cách bằng DẶM (§12.13: kênh Mỹ, đơn vị Mỹ).
-    ("the International Space Station",   254,      "trai_dat"),
-    ("Miami to Seattle",                 2734,      "may_bay"),
-    ("the edge of space",                  62,      "may_bay"),
-    ("a cross-country road trip",        3000,      "xe"),
-    ("Chicago to Denver",                 920,      "xe"),
-    ("the Moon and back",              477800,      "mat_trang"),
-    ("a year of the average commute",    4700,      "xe"),
-    ("the Appalachian Trail",            2190,      "cay"),
-    ("Alaska to Florida",                4400,      "xe_buyt"),
-    ("the height of a passenger jet",       7,      "may_bay"),
-    ("Boston to Miami",                  1500,      "xe"),
-    ("a marathon",                         26,      "nguoi"),
+    ("the International Space Station",   254,     "trai_dat", "den",   ""),
+    ("Miami to Seattle",                 2734,     "may_bay",  "tuyen", ""),
+    ("the edge of space",                  62,     "may_bay",  "den",   ""),
+    ("a cross-country road trip",        3000,     "xe",       "vat",   ""),
+    ("Chicago to Denver",                 920,     "xe",       "tuyen", ""),
+    ("the Moon and back",              477800,     "mat_trang","den",   "the Moon"),
+    ("a year of the average commute",    4700,     "xe",       "vat",   ""),
+    ("the Appalachian Trail",            2190,     "cay",      "vat",   ""),
+    ("Alaska to Florida",                4400,     "xe_buyt",  "tuyen", ""),
+    ("jet cruising altitude",               7,     "may_bay",  "den",   ""),
+    ("Boston to Miami",                  1500,     "xe",       "tuyen", ""),
+    ("a marathon",                         26,     "nguoi",    "vat",   ""),
 ]
+
+# Giới từ theo loại: (cho câu "Walking …" và chữ hook, cho câu "The distance …").
+# Hai cột vì chúng KHÁC NHAU ở `vat`: "Walking the Appalachian Trail" nhưng "The distance OF
+# the Appalachian Trail" — dùng chung một giới từ là ra một trong hai câu sai.
+GIOI_TU = {"den":   ("to ",   "to "),
+           "tuyen": ("from ", "from "),
+           "vong":  ("",      ""),
+           "vat":   ("",      "of ")}
 
 CO_LON = [                                       # feet
     ("a blue whale",           98.0, "ft", "ca_voi"),
@@ -613,6 +650,21 @@ def _khu(ds: list) -> list:
     return ra
 
 
+def _hoa(t: str) -> str:
+    """Viết hoa ĐÚNG CHỮ CÁI ĐẦU, giữ nguyên phần sau.
+
+    Bốn kênh so sánh dùng `lon[0].title()` cho vế đầu và để nguyên vế sau, nên tiêu đề ra
+    không đối xứng: *"A School Bus vs a giraffe"* · *"A Red Blood Cell vs a bacterium"*.
+    Hai vế cùng vai mà một vế Title Case, một vế chữ thường — người xem đọc ra ngay là chữ
+    do máy ghép, và 14 kênh còn lại đều đang dùng câu thường (*"The real cost of a $6
+    coffee"* · *"How loud is a jet at takeoff"*).
+
+    Không dùng `.capitalize()`: nó HẠ chữ hoa ở phần sau, nên *"New York to London"* thành
+    *"New york to london"*. Không dùng `.title()`: nó nâng mọi từ, kể cả mạo từ.
+    """
+    return (t[:1].upper() + t[1:]) if t else t
+
+
 def _lay(ds: list, i: int):
     """Mục thứ `i` của bảng, sau khi đã khử trùng. Chu kỳ = số mục PHÂN BIỆT."""
     d = _khu(ds)
@@ -985,23 +1037,30 @@ def sinh_howlong(i):
     Nên trường `ve` đứng ngay cạnh `loi`: người viết nhịp là người biết nhịp ấy đang nói gì,
     nên cũng là người duy nhất viết đúng được prompt cho nó. Tách hai việc ra hai chỗ là cách
     chắc chắn để hình lệch lời — đúng cái đã xảy ra khi tôi để `noi` cho một bảng regex đoán."""
-    ten, km, bt = _lay(QUANG_DUONG, i)
+    ten, km, bt, kieu, troi = _lay(QUANG_DUONG, i)
+    # `gt_de` cho tiêu đề và chữ hook, `gt_kc` cho câu đọc — xem `GIOI_TU`, hai cột khác nhau.
+    gt_de, gt_kc = GIOI_TU.get(kieu, ("to ", "to "))
     gio_b = km / DI_BO_MPH
     sb, ub = _lau(gio_b)
     sc, uc = _lau(km / XE_MPH)
     sm, um = _lau(km / MAY_BAY_MPH)
     sa, ua = _lau(km / AS_MPS / 3600)
     ngay = max(1, min(20, int(gio_b / 24)))
-    return (f"Walking to {ten}",
-            f"HOW LONG TO WALK TO {ten.upper()}?", f"{sb} {ub.upper()}",
+    return (f"Walking {gt_de}{ten}",
+            f"HOW LONG TO WALK {gt_de.upper()}{ten.upper()}?", f"{sb} {ub.upper()}",
             [
     _n("chia_doi", "You walk. Light does not.",
        trai={"nhan": "you", "bt": "nguoi", "so": "3 mph"},
        phai={"nhan": "light", "bt": "trai_dat", "so": "670 mn mph"}, dinh=True),
-    _n("so_lieu", f"The distance to {ten}.", so=f"{km:,.0f}", don="miles", bt=bt, dinh=True,
+    _n("so_lieu", f"The distance {gt_kc}{ten}.", so=f"{km:,.0f}", don="miles", bt=bt, dinh=True,
        ve=_ve(f"a tiny lone human figure standing alone on a vast empty plain, simple worn clothing",
               "head tilted back, gazing up at the sky", "small and awed against the emptiness",
-              f"{ten} hanging huge and pale in a deep open sky, low flat horizon line",
+              # CHỈ TẢ VẬT TRÊN TRỜI KHI CÓ VẬT TRÊN TRỜI. Bản trước nhét thẳng `ten` vào,
+              # nên FLUX nhận "New York to Los Angeles hanging huge and pale in a deep open
+              # sky" — không sai ngữ pháp, chỉ vô nghĩa, và mô hình vẽ theo đúng thứ vô nghĩa
+              # ấy. §15.2: mọi danh từ viết ra đều có thể hiện trong khung.
+              (f"{troi} hanging huge and pale in a deep open sky, low flat horizon line"
+               if troi else "a long empty road running straight to a far flat horizon"),
               "cracked dry earth with a few scattered pebbles",
               "clear cool daylight from high behind, long soft shadow stretching toward camera"),
        tam_trang="ngay"),
@@ -1105,7 +1164,7 @@ def sinh_howbig(i):
     lon, nho = (a, b) if a[1] >= b[1] else (b, a)
     lan = lon[1] / nho[1]
     xep = int(round(lan))
-    return (f"{lon[0].title()} vs {nho[0]}",
+    return (f"{_hoa(lon[0])} vs {nho[0]}",
             f"HOW BIG IS {lon[0].upper()} REALLY?", f"{lan:.0f}x BIGGER",
             [
     _n("chia_doi", "Two things. One question.",
@@ -1260,7 +1319,7 @@ def sinh_howmuch(i):
     nho, vn, lon, vl, don, bt = _lay(MOC_LON, i)
     s1, u1 = _lau(vn / 3600)
     s2, u2 = _lau(vl / 3600)
-    return (f"{nho.title()} versus {lon}",
+    return (f"{_hoa(nho)} versus {lon}",
             f"{lon.upper()} IS NOT A BIG {nho.upper().replace('A ', '')}", f"{s2} {u2.upper()}",
             [
     _n("chia_doi", "Two words. One letter apart.",
@@ -1971,7 +2030,7 @@ def sinh_whatweighs(i):
     a, b = _cap(KHOI_LUONG, i)
     lon, nho = (a, b) if a[1] >= b[1] else (b, a)
     lan = lon[1] / nho[1]
-    return (f"{lon[0].title()} vs {nho[0]}", f"HOW HEAVY IS {lon[0].upper()}", f"{lon[1]:,} POUNDS",
+    return (f"{_hoa(lon[0])} vs {nho[0]}", f"HOW HEAVY IS {lon[0].upper()}", f"{lon[1]:,} POUNDS",
             [
     _n("chia_doi", _loi("so_sanh", i),
        trai={"nhan": nho[0], "bt": nho[2], "so": f"{nho[1]:,} lb"},
@@ -2085,7 +2144,7 @@ def sinh_smallest(i):
     a, b = _cap(CUC_NHO, i)
     lon, nho = (a, b) if a[1] >= b[1] else (b, a)
     lan = lon[1] / nho[1]
-    return (f"{lon[0].title()} vs {nho[0]}", f"HOW SMALL IS {nho[0].upper()}",
+    return (f"{_hoa(lon[0])} vs {nho[0]}", f"HOW SMALL IS {nho[0].upper()}",
             f"{lan:,.0f}x SMALLER",
             [
     _n("canh", "Start with something you can see.", dinh=True,
