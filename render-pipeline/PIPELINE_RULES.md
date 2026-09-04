@@ -9150,3 +9150,70 @@ ra khỏi câu?"* — ngân sách prompt là trò chơi tổng bằng không.
 `t_prompt_khong_viet_nghich` · `t_prompt_khong_noi_nguoc_ve_giua_khung`. Cả ba thử ngược đủ hai
 chiều VÀ đủ hai nhánh trong/ngoài nhà — bản đầu chỉ có cảnh vỉa hè, tức nhánh trong nhà chưa
 từng được soi.
+
+---
+
+## 9k2 — 4/9/2026 · GUARDIAN ĐỌC 200 TÀI LIỆU MỖI GIỜ RỒI VỨT KẾT QUẢ ĐI
+
+**Triệu chứng.** Anh hỏi *"không render từ chiều giờ mà hạn mức Firebase có ổn không, hay còn
+thủ phạm nào đang ăn"*.
+
+**Đo.** Chỉ 5 lượt workflow từ 09:00 UTC, nên Actions không phải thủ phạm. Đọc log lượt
+`health_guardian` gần nhất (33858866081):
+
+```
+⚠️ không sắp được theo created_at (400 The query requires an index…) — thiếu composite index
+⚠️ KHÔNG KẾT LUẬN ĐƯỢC: chỉ soi được 200 tài liệu KHÔNG sắp xếp…
+```
+
+**Gốc rễ — HAI tầng.**
+
+1. Index `render_jobs: owner + status + created_at DESCENDING` **CÓ** trong
+   `dashboard/firestore.indexes.json` nhưng **chưa được triển khai**. *Khai một index không
+   phải là có nó*, và đây là chỗ dễ tin nhầm nhất vì tệp đọc lên rất thuyết phục.
+2. Bản vá §15.12 đúng ở chỗ ngừng **KẾT LUẬN** từ 200 tài liệu không sắp xếp — nhưng nó vẫn
+   **ĐỌC** chúng. Guardian chạy mỗi giờ ⇒ **4.800 lượt đọc/ngày, ~10% hạn mức free, đổi lấy
+   một kết quả bị vứt ngay dòng sau.**
+
+**Họ lỗi.** *Vá đúng một nửa*: sửa phần KẾT LUẬN, để nguyên phần TIÊU TỐN. Khi một nhánh dự
+phòng không trả lời được câu hỏi thì nó không nên trả tiền cho câu trả lời — bỏ hẳn phép đọc,
+vẫn fail-open như cũ.
+
+**Phát hiện kèm.** Guardian còn **tự bấm `gh workflow run render_giai_thich_18.yml` mỗi giờ**
+khi thấy 5h không có lượt dựng. Nghĩa là "tắt cron" chưa đủ để dừng render — có một cửa thứ
+hai. Hiện nó vô hại vì workflow đang `disabled_manually`, nhưng phải biết trước khi bật lại.
+
+**Cổng:** `selftest.t_guardian_khong_doc_bua` — cấm `q.limit(200).stream()` ở nhánh ấy, và đòi
+MỌI `.stream()` phải đứng sau một `.limit(`. Thử ngược đủ hai chiều.
+
+---
+
+## 9k3 — BYTECODE CŨ THẮNG MÃ NGUỒN, VÀ XOÁ `__pycache__` KHÔNG CHỮA ĐƯỢC
+
+**Triệu chứng.** `ast.literal_eval` đọc tệp ra `survive=(3,3)`; `import giai_thich` trong
+**cùng một tiến trình, cùng một tệp, cùng một sha1** trả `(0,1)`. Đúng một khoá lệch, và lệch
+đúng giá trị mà một bài **thử ngược** đã ghi tạm rồi khôi phục.
+
+**Gốc rễ.** macOS giữ một bộ đệm bytecode **ngoài cây dự án**:
+
+```
+~/Library/Caches/com.apple.python/<đường dẫn tuyệt đối>/giai_thich.cpython-39.pyc
+```
+
+`rm -rf __pycache__` không chạm tới nó. Và Python coi pyc là còn mới khi **mtime + kích thước**
+khớp — bài thử ngược của em chỉ đổi vài CHỮ SỐ nên kích thước không đổi, và khôi phục trong
+cùng một giây nên mtime cũng không phân biệt được. Bytecode biên dịch từ bản PHÁ thắng mã
+nguồn đã lành.
+
+**Vì sao đắt.** Nó làm mọi phép đo nói dối theo hướng khó tin nhất: tệp đúng, git sạch, AST
+đúng, mà chương trình chạy sai. Em đã đi qua bảy vòng chẩn đoán — nghi cache, nghi tệp trùng,
+nghi `import *`, nghi module khác sửa — trước khi tìm ra.
+
+**Luật.** Bài thử ngược nào ghi đè một `.py` rồi khôi phục thì **phải xoá bytecode ở CẢ HAI
+chỗ**, hoặc đổi độ dài tệp khi ghi bản phá (thêm một dòng trống) để kích thước khác đi. Và khi
+mã nguồn với thời gian chạy bất đồng mà mọi thứ khác đều đúng, **nghi bytecode trước khi nghi
+logic**:
+
+```bash
+find ~/Library/Caches/com.apple.python -name "<ten>*.pyc" -delete
+```

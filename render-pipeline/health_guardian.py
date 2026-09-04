@@ -49,7 +49,11 @@ def heal_stale_jobs() -> int:
         # STALE_HOURS(6h). Nhờ vậy dashboard không còn hiện "Đang làm (39)" hàng giờ trong khi thực tế
         # chẳng có gì chạy (đúng thứ gây hiểu lầm 20/8). Job CŨ chưa có updated_at -> vẫn theo mốc 6h.
         beat_cut = (_now() - timedelta(minutes=STALE_BEAT_MIN)).isoformat()
-        q = db.collection("render_jobs").where("owner", "==", OWNER).where("status", "in", list(active))
+        # TRẦN: vòng này quét job ĐANG hoạt động nên bình thường chỉ vài chục dòng — nhưng
+        # "bình thường" không phải bảo vệ (§13.7). Một đợt job kẹt trạng thái là một đợt
+        # đọc không trần, và nó xảy ra đúng lúc hệ đang hỏng, tức lúc hạn mức quý nhất.
+        q = (db.collection("render_jobs").where("owner", "==", OWNER)
+               .where("status", "in", list(active)).limit(400))
         for d in q.stream():
             job = d.to_dict() or {}
             beat = job.get("updated_at")
@@ -103,8 +107,21 @@ def check_alive() -> bool:
             docs = list(q.order_by("created_at", direction=Query.DESCENDING).limit(20).stream())
         except Exception as _e:
             sap_duoc = False
+            # ── KHÔNG ĐỌC 200 TÀI LIỆU RỒI VỨT ĐI  (4/9/2026) ────────────────────────────
+            # Bản trước rơi xuống `q.limit(200).stream()`. Bản vá §15.12 đúng ở chỗ NGỪNG KẾT
+            # LUẬN từ 200 tài liệu không sắp xếp — nhưng nó vẫn ĐỌC chúng. Tức mỗi giờ tiêu
+            # 200 lượt đọc để lấy về một kết quả mà chính đoạn dưới tuyên bố là không dùng
+            # được: **4.800 lượt/ngày, gần 10% hạn mức free, đổi lấy không gì cả.**
+            #
+            # Đo bằng log guardian thật (lượt 33858866081): Firestore trả `400 The query
+            # requires an index`. Index `owner+status+created_at DESCENDING` CÓ trong
+            # `dashboard/firestore.indexes.json` nhưng CHƯA ĐƯỢC TRIỂN KHAI — khai một index
+            # không phải là có nó, và đây là chỗ dễ tin nhầm nhất vì tệp đọc lên rất thuyết phục.
+            #
+            # Chữa đúng chỗ: thiếu index thì phép đo này KHÔNG TỒN TẠI, nên đừng trả tiền cho
+            # nó. Vẫn fail-open như cũ, chỉ khác là không tốn gì.
             print(f"   ⚠️ không sắp được theo created_at ({str(_e)[:70]}) — thiếu composite index")
-            docs = list(q.limit(200).stream())
+            docs = []
         recent = [d for d in docs if (d.to_dict() or {}).get("created_at", "") >= cutoff]
         if recent:
             print(f"   ✅ {len(recent)} video 'done' trong {SILENT_HOURS}h qua -> hệ thống sống khoẻ.")
@@ -112,10 +129,12 @@ def check_alive() -> bool:
         if not sap_duoc:
             # KHÔNG kết luận. Nói rõ vì sao không kết luận được — im lặng ở đây lại thành một
             # dạng nói dối khác.
-            print(f"   ⚠️ KHÔNG KẾT LUẬN ĐƯỢC: chỉ soi được {len(docs)} tài liệu KHÔNG sắp xếp "
-                  f"trong toàn bộ lịch sử job. 'Không thấy cái nào mới' ở đây không có nghĩa là "
-                  f"'không có cái nào mới'. Tạo composite index (owner+status+created_at) thì "
-                  f"phép đo này mới dùng được -> fail-open, không báo động.")
+            print("   ⚠️ KHÔNG KẾT LUẬN ĐƯỢC: thiếu composite index nên không sắp được theo "
+                  "thời gian. Đọc bừa 200 tài liệu cũng không trả lời được câu hỏi, nên KHÔNG "
+                  "đọc — tiết kiệm 200 lượt/giờ = 4.800 lượt/ngày. Triển khai index "
+                  "(owner + status + created_at DESC) đã khai sẵn trong "
+                  "dashboard/firestore.indexes.json thì phép đo này mới dùng được. "
+                  "-> fail-open, không báo động.")
             return True
         print(f"   ❌ KHÔNG có video nào xong trong {SILENT_HOURS}h qua dù render đang BẬT — có thể có lỗi hệ thống thật.")
         return False

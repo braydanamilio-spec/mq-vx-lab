@@ -2571,6 +2571,8 @@ def main():
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
     check("mỗi kênh một dấu ấn riêng, không kênh nào trùng", t_dau_an_kenh_duy_nhat)
+    check("guardian không đọc bừa Firestore ở nhánh không kết luận được",
+          t_guardian_khong_doc_bua)
     check("tiêu đề/hook/prompt phải đúng ngữ pháp tiếng Anh", t_tieu_de_dung_ngu_phap)
     check("nhịp truc: đủ 3 mốc, không mốc nào trùng", t_truc_du_moc_va_khong_trung)
     check("tiêu đề so sánh: hai vế viết hoa đối xứng", t_tieu_de_viet_hoa_doi_xung)
@@ -7326,6 +7328,41 @@ def t_truc_du_moc_va_khong_trung():
                 if len(set(ky)) != len(ky):
                     loi.append((k["ma"], idx, f"mốc trùng: {ky}"))
     assert not loi, f"{len(loi)} nhịp truc hỏng: {loi[:3]}"
+
+
+def t_guardian_khong_doc_bua():
+    """Guardian không được ĐỌC tài liệu ở nhánh mà chính nó tuyên bố là không kết luận được.
+
+    Đo bằng log lượt guardian thật (33858866081): Firestore trả `400 The query requires an
+    index` — index `owner+status+created_at DESCENDING` CÓ trong
+    `dashboard/firestore.indexes.json` nhưng CHƯA ĐƯỢC TRIỂN KHAI.
+
+    Bản trước rơi xuống `q.limit(200).stream()`. Bản vá §15.12 đúng ở chỗ ngừng KẾT LUẬN từ
+    200 tài liệu không sắp xếp — nhưng nó vẫn ĐỌC chúng. Guardian chạy mỗi giờ, nên đó là
+    **4.800 lượt đọc/ngày, gần 10% hạn mức free, đổi lấy một kết quả bị vứt đi ngay dòng sau.**
+
+    Cùng họ lỗi với `don_sach` (§13.7): mỗi công cụ đụng tài nguyên có hạn phải hỏi *"cái này
+    tiêu bao nhiêu, và đổi lấy gì"*. Ở đây vế thứ hai là KHÔNG GÌ.
+
+    Và mọi vòng quét Firestore phải có trần — kể cả vòng "bình thường chỉ vài chục dòng", vì
+    "bình thường" không phải bảo vệ: một đợt job kẹt trạng thái là một đợt đọc không trần,
+    đúng lúc hệ đang hỏng tức lúc hạn mức quý nhất.
+    """
+    import os
+    import re
+    goc = os.path.dirname(os.path.abspath(__file__))
+    src = io.open(os.path.join(goc, "health_guardian.py"), encoding="utf-8").read()
+    ma = re.sub(r"(?m)^\s*#.*$", "", src)          # bỏ chú thích (kiem_nen._doc_ma)
+    assert "q.limit(200).stream()" not in ma, (
+        "guardian còn đọc 200 tài liệu ở nhánh thiếu index — kết quả bị vứt ngay dòng sau, "
+        "tức 4.800 lượt đọc/ngày cho không gì")
+    # Mọi `.stream()` phải đứng sau một `.limit(`.
+    for m in re.finditer(r"[\w\)\]]+\.stream\(\)", ma):
+        dau = ma.rfind("\n", 0, m.start())
+        dong = ma[max(0, dau):m.end()]
+        # nhìn cả câu lệnh nhiều dòng: lùi tối đa 6 dòng để bắt truy vấn viết vắt dòng
+        khoi = ma[max(0, ma.rfind("\n", 0, max(0, dau - 400))):m.end()]
+        assert "limit(" in khoi, f"`.stream()` không có trần: ...{dong.strip()[-90:]}"
 
 
 def t_dau_an_kenh_duy_nhat():
