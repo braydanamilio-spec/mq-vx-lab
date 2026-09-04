@@ -997,9 +997,26 @@ export const SoLieu: React.FC<{
      hình và với dải mờ. Kiểu 1 an toàn trên ảnh vì dải mờ vốn phủ hết bề ngang.
      Cấp một bố cục cho ngữ cảnh không đỡ nổi nó là cách chắc chắn ra khung hỏng — cùng bài học
      với biểu đồ bốn cột số 0. */
-  const kA = tren_anh ? (Math.abs(kieu) % 4 === 1 ? 1 : 0) : (Math.abs(kieu) % 4);
+  /* ── SÁU BỐ CỤC, KHÔNG PHẢI BỐN  (4/9/2026) ────────────────────────────────────────
+     `so_lieu` chiếm **31% tổng số nhịp** — khuôn xuất hiện nhiều nhất, nên mỗi bố cục thêm
+     vào đây đổi được nhiều khung hơn bất cứ trục nào khác. Bốn bố cục cũ đều đặt con số ở
+     NỬA TRÊN và hình ở nửa dưới; đổi cỡ với đổi chỗ trong cùng một sơ đồ vẫn đọc ra một
+     mô-típ (§15.1: người xem nhận ra BỐ CỤC, không nhận ra sắc độ).
+     Hai bố cục mới đảo hẳn trọng tâm khung:
+       4  HÌNH TRÊN, SỐ DƯỚI — hình lớn chiếm phần trên, con số thành dòng chân đế. Trọng
+          tâm rơi xuống dưới, ngược hẳn bốn kiểu kia.
+       5  KHỐI GÓC — con số nằm trong một khối màu đặc ở góc trên-trái, hình chiếm phần còn
+          lại. Bố cục lệch tâm kiểu áp phích, khác hẳn mọi kiểu canh giữa.
+     `% 6` chứ không `% 4`; nhánh `tren_anh` giữ nguyên hai lựa chọn an toàn vì trên ảnh AI
+     thì khối màu đặc và số nền đều tranh chấp với bức ảnh. */
+  const kA = tren_anh ? (Math.abs(kieu) % 6 === 1 ? 1 : 0) : (Math.abs(kieu) % 6);
+  /* Hai kiểu mới đặt khối số ở chỗ KHÁC HẲN, không chỉ khác nền — nếu chúng vẫn nằm
+     đúng chỗ cũ thì thêm bố cục mà không thêm bố cục nào.
+       4  số xuống CHÂN khung, nhường phần trên cho hình
+       5  số nằm trong khối góc trên-trái, cao hơn mặc định một chút */
+  const yA = kA === 4 ? (ngang ? 0.80 : 0.72) : kA === 5 ? (ngang ? 0.16 : 0.22) : yCao;
   // Canh trái chỉ có 0,80·W cho chữ số (chừa chỗ cho hình bên phải); giữa thì được 0,88·W.
-  const beNgang = kA === 1 ? 0.62 : kA === 3 ? 0.96 : 0.88;
+  const beNgang = kA === 1 ? 0.62 : kA === 3 ? 0.96 : kA === 5 ? 0.52 : 0.88;
   const cs = Math.min(H * cCao * (kA === 3 ? 1.35 : 1), (W * beNgang) / _emChu(so));
   // đáy dòng đơn vị = yCao·H + cs·0.56 ; chừa thêm 0,5·cs rồi mới đặt chú thích
   /* `cd` khai sau `yChu` trong bản cũ, nên `yChu` không thể cộng nó vào và đành dùng `cs*0.56`
@@ -1106,6 +1123,17 @@ export const SoLieu: React.FC<{
       })() : null}
       {/* Kiểu 3 — SỐ LÀM NỀN: chữ số chiếm gần hết khung ở độ mờ thấp, HÌNH đứng trước và là
           thứ mắt đọc trước. Đảo hẳn thứ bậc so với ba kiểu kia, nên nó là biến thể khác nhất. */}
+      {/* Kiểu 5 — KHỐI GÓC: con số trong một khối màu đặc lệch trên-trái, hình chiếm phần
+          còn lại. Khối phải ĐỦ RỘNG cho chuỗi số dài nhất, nên bề ngang suy từ `_emChu` chứ
+          không phải một phân số cố định — số "360,000,000" và số "8" cần hai khối khác nhau,
+          và một hằng số phục vụ cả hai thì hoặc tràn hoặc thừa (§15.10). */}
+      {kA === 5 ? (() => {
+        const w5 = Math.min(W * 0.72, _emChu(soHien) * cs + W * 0.10);
+        const h5 = H * (ngang ? 0.30 : 0.26);
+        return <rect x={0} y={H * (yCao - (ngang ? 0.16 : 0.14))} width={w5} height={h5}
+                     fill={mau} opacity={0.94 * Math.min(1, p / 0.3)}
+                     rx={Math.min(W, H) * 0.012} />;
+      })() : null}
       {kA === 3 ? (
         <text x={W / 2} y={H * (ngang ? 0.58 : 0.52)} textAnchor="middle" fontFamily={F()}
               fontWeight={900}
@@ -1139,7 +1167,7 @@ export const SoLieu: React.FC<{
           Nay `KichGiaiThich` truyền THẲNG mặt sàn (đã quy đổi về hệ của khuôn này) và biểu
           tượng neo ĐÁY vào đó. Thiếu `san` thì giữ nguyên nếp cũ — khuôn này còn dùng ở chỗ
           không có mặt đất. */}
-      {bt ? <g transform={`translate(${kA === 1 ? W * 0.76 : W / 2} ${
+      {bt ? <g transform={`translate(${kA === 1 ? W * 0.76 : kA === 5 ? W * 0.62 : W / 2} ${
               san > 0 ? san - (tren_anh ? Math.min(H * 0.26, W * 0.28)
                                : (kA === 1 ? Math.min(H * 0.32, W * 0.42)
                                            : Math.min(H * 0.40, W * 0.66))) * DAY_HINH
@@ -1157,9 +1185,9 @@ export const SoLieu: React.FC<{
                                           : Math.min(H * 0.40, W * 0.66))) * coHinh(bt)} /></g> : null}
       {/* Kiểu 3 vẽ số ở lớp NỀN phía trên rồi, nên ở đây bỏ khối số đi — vẽ hai lần thì con
           số đậm chồng lên chính bóng mờ của nó. */}
-      <g transform={`translate(${kA === 1 ? W * 0.08 : W / 2} ${H * yCao}) scale(${0.86 + q * 0.14})`}
+      <g transform={`translate(${kA === 1 || kA === 5 ? W * 0.08 : W / 2} ${H * yA}) scale(${0.86 + q * 0.14})`}
          opacity={kA === 3 ? 0 : q}>
-        <text x="0" y="0" textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F()} fontWeight={900}
+        <text x="0" y="0" textAnchor={kA === 1 || kA === 5 ? "start" : "middle"} fontFamily={F()} fontWeight={900}
               fontSize={cs}
               fill={tren_anh ? "#FFFFFF" : (kA === 2 ? chuHopNen("#FFFFFF", mau) : "#2C2722")}
               style={{ filter: tren_anh

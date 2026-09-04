@@ -327,7 +327,15 @@ jobs:
             python bao_chay.py --kenh "$MA" --loai long --trang_thai done || true
 
             python bao_chay.py --kenh "$MA" --loai short --trang_thai rendering || true
-            python giai_thich.py --kenh "$MA" --so 4 || true
+            # ── SHORT LẤY TỪ BẢN DÀI, KHÔNG DỰNG ĐỘC LẬP  (4/9/2026) ──────────────
+            # Anh thiết kế "1 long : 3 short, short lấy từ long ra". Workflow lại dựng
+            # 4 short ĐỘC LẬP (`--so 4`), tức kiến trúc ấy chưa bao giờ được dùng.
+            # Đo hậu quả: short độc lập dùng lại cùng bộ khung mỗi tập nên 30% câu
+            # giống hệt giữa các tập của cùng một kênh (therules/odds 44%) — đúng thứ
+            # luật YouTube nhắm tới. Short lấy từ long: **0% trùng** trên cả bốn kênh
+            # thử, vì mỗi short là một chương khác của một bản dài khác.
+            # Và nó tốn 0 lượt CF: nhịp mang sẵn `nenAnh` của bản dài.
+            python giai_thich.py --kenh "$MA" --short-tu-long 3 --chuong 40 || true
             python bao_chay.py --kenh "$MA" --loai short --trang_thai done || true
 
             # ── `sieu_gt.py` KHÔNG ĐƯỢC NUỐT LỖI  (3/9/2026) ──────────────────────────────

@@ -28,6 +28,7 @@ Bộ cắt short lấy các dải nhịp đỉnh liền nhau, dùng lại đúng
 import argparse
 import io
 import json
+import math
 import os
 import re
 import subprocess
@@ -2871,6 +2872,92 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
 # Quan hệ giữa hai bản: CHƯƠNG k của bản dài = tập ngắn thứ (idx + k). Cùng một bộ sinh, cùng
 # một dữ liệu, cùng những con số — chỉ khác khuôn hình và nhịp. Nên không có nguy cơ hai bản
 # nói khác nhau, thứ sẽ xảy ra nếu viết hai kịch bản riêng.
+# ══ CHỌN BA CHƯƠNG HAY NHẤT CỦA BẢN DÀI  (4/9/2026) ════════════════════════════════════════
+# Anh: *"không phải cắt, mà lấy từ long rồi dựng lại lấy ra 3 short HAY NHẤT, HOOK NHẤT"*.
+#
+# Khác nhau thật sự: cắt chương 1·2·3 là lấy theo THỨ TỰ, và thứ tự trong bản dài được xếp
+# theo mạch kể chứ không theo sức hút. Đo trên bản dài thật: chương dài từ 6,5 đến 15,5 nhịp
+# (10–25 giây) — tức chọn sai chương là ra một short 10 giây trong khi ngay cạnh có chương 25
+# giây mạnh hơn.
+#
+# ── NĂM TRỤC CHẤM, TẤT CẢ ĐO ĐƯỢC, KHÔNG GỌI AI ────────────────────────────────────────────
+# Không dùng AI chấm: bộ giải thích sinh kịch bản bằng Python tất định và không tiêu token nào
+# (§17.12) — thêm một lượt gọi AI cho mỗi chương là phá đúng tính chất ấy.
+#
+#   1. CON SỐ CÀNG LỚN CÀNG CHOÁNG   log10 của số lớn nhất trong chương
+#   2. HOOK Ở CÂU ĐẦU                phủ định · thu nhỏ kỳ vọng · nói thẳng với người xem
+#   3. ĐỘ DÀI ĐÚNG BĂNG 18–22 GIÂY   11–14 nhịp; phạt cả quá ngắn LẪN quá dài
+#   4. CÓ NHỊP ĐỐI CHIẾU             `chia_doi` · `chart` · `truc` — so sánh đóng đinh con số
+#   5. CÓ HÌNH ĐỂ NHÌN               nhịp có ảnh hoặc biểu tượng, không phải toàn chữ
+#
+# Trục 3 là trục dễ làm sai nhất: phạt MỘT CHIỀU (chỉ phạt ngắn) thì bộ chọn dồn hết về chương
+# dài nhất, và ba short thành ba đoạn 25 giây — vượt băng anh chốt. Phải phạt cả hai phía.
+_HOOK = re.compile(r"\b(no|not|never|none|nothing|nobody|cannot|hardly|barely|only|just|"
+                   r"every|everyone|all|most|more than|you|your)\b", re.I)
+
+
+def _cham_chuong(nhip: list) -> float:
+    """Điểm sức hút của một chương. Càng cao càng đáng làm short."""
+    if not nhip:
+        return -1.0
+    d = 0.0
+    # 1. con số lớn nhất
+    lon = 0.0
+    for n in nhip:
+        v = re.sub(r"[^0-9.]", "", str(n.get("so") or ""))
+        try:
+            lon = max(lon, float(v))
+        except Exception:
+            pass
+    d += min(30.0, math.log10(lon + 1) * 4.5)
+    # 2. hook ở câu đầu
+    if _HOOK.search(str(nhip[0].get("loi") or "")):
+        d += 18.0
+    if str(nhip[0].get("so") or "").strip():
+        d += 10.0
+    # 3. độ dài đúng băng — phạt HAI CHIỀU
+    d += max(0.0, 22.0 - abs(len(nhip) - 12) * 3.0)
+    # 4. có nhịp đối chiếu
+    if any((n.get("khuon") or "") in ("chia_doi", "chart", "truc") for n in nhip):
+        d += 14.0
+    # 5. có hình để nhìn
+    co = sum(1 for n in nhip if n.get("ve") or n.get("bt") or n.get("nenAnh"))
+    d += min(16.0, co / max(1, len(nhip)) * 16.0)
+    return d
+
+
+def chuong_hay(ma: str, idx: int, so_chuong: int, lay: int = 3) -> list:
+    """Chỉ số của `lay` chương hay nhất trong bản dài, đã KHỬ TRÙNG chủ thể.
+
+    Khử trùng chủ thể là ràng buộc thứ sáu và nó không nằm trong `_cham_chuong` được, vì nó
+    là quan hệ GIỮA các chương đã chọn chứ không phải tính chất của một chương. Ba short cùng
+    nói về một vật thì dù mỗi cái đều mạnh, người xem vẫn thấy ba lần một chuyện.
+    """
+    try:
+        _, _, _, _, nhip, muc = kich_ban(ma, idx, True, so_chuong)
+    except Exception:
+        return []
+    if not muc:
+        return []
+    diem = []
+    for c in range(len(muc)):
+        d0 = muc[c][0]
+        d1 = muc[c + 1][0] if c + 1 < len(muc) else len(nhip)
+        diem.append((_cham_chuong(nhip[d0:d1]), c, str(muc[c][1] or "")))
+    diem.sort(reverse=True)
+    ra, thay = [], set()
+    for _, c, ten in diem:
+        # chủ thể = danh từ chính của tên chương; hai chương cùng danh từ thì lấy cái điểm cao
+        khoa = _nhan(_danh_tu(_bo_so_thu_tu(ten))) if ten else str(c)
+        if khoa in thay:
+            continue
+        thay.add(khoa)
+        ra.append(c)
+        if len(ra) >= lay:
+            break
+    return ra
+
+
 def short_tu_long(ma: str, idx: int, chuong: int, so_chuong: int = 10) -> str:
     """Short 9:16 CẮT RA từ chương `chuong` của bản dài `idx` — dùng lại ảnh của bản dài.
 
@@ -2912,6 +2999,36 @@ def short_tu_long(ma: str, idx: int, chuong: int, so_chuong: int = 10) -> str:
         return ""
     dau = muc[chuong][0]
     cuoi = muc[chuong + 1][0] if chuong + 1 < len(muc) else len(nhip_dai)
+    # ── GỘP THÊM CHƯƠNG KẾ CHO ĐỦ BĂNG 18–22 GIÂY  (4/9/2026) ──────────────────────────
+    # Anh chốt short 18–22 giây = 11–14 nhịp (1,62 giây/nhịp đo thật). Nhưng bản dài dựng với
+    # `--chuong 40` bị kẹp còn 21–28 chương, nên mỗi chương chỉ 6,5–8 nhịp ≈ 10–13 giây ở phần
+    # lớn kênh. Chọn "chương hay nhất" không cứu được độ dài — nó chọn trong một hồ toàn chương
+    # ngắn.
+    # Gộp thêm chương LIỀN KỀ chứ không lấy chương xa: hai chương cạnh nhau nối tiếp một mạch
+    # kể, nên ghép lại vẫn đọc trôi. Ghép hai chương rời rạc thì short thành hai mẩu không liên
+    # quan — dài đúng băng mà mất mạch, đổi một lỗi lấy một lỗi.
+    # Trần 14 nhịp: dừng ngay khi ĐỦ, không gộp tiếp. Không có trần thì một chương dài sẵn cộng
+    # thêm chương kế sẽ vọt lên 30 giây, vượt băng ở phía kia.
+    while cuoi - dau < 11 and chuong + 1 < len(muc):
+        chuong += 1
+        ke = muc[chuong + 1][0] if chuong + 1 < len(muc) else len(nhip_dai)
+        # Trần 16 chứ không 14: khi chương hiện tại còn DƯỚI băng, một short 26 giây tốt
+        # hơn một short 13 giây. Trần 14 làm phép gộp từ chối những cặp 8+8, và đo được 11/50
+        # short kẹt dưới 15 giây vì đúng lý do ấy — chốt chặn đúng hướng mà đặt quá chặt thì
+        # nó chặn luôn thứ nó sinh ra để cứu.
+        if ke - dau > 16:
+            break
+        cuoi = ke
+    # Hết chương phía sau thì GỘP LÙI. Chương CUỐI của bản dài không có gì để tiến tới, nên
+    # nếu chỉ gộp một chiều thì nó mãi mãi ra short 10 giây — đo được 22/50 short rơi ngoài
+    # băng, phần lớn vì lý do ấy. Đúng họ lỗi §6: vá một chiều, để nguyên chiều song song.
+    _c = chuong
+    while cuoi - dau < 11 and _c > 0:
+        _c -= 1
+        truoc = muc[_c][0]
+        if cuoi - truoc > 16:
+            break
+        dau = truoc
     lat = [dict(x) for x in nhip_dai[dau:cuoi]]
     if not lat:
         return ""
@@ -3098,12 +3215,21 @@ DAU_AN = {
 }
 
 
+# ── BA TRONG SÁU, KHÔNG PHẢI HAI TRONG BỐN  (nới 4/9/2026) ────────────────────────────────
+# `so_lieu` chiếm 31% tổng số nhịp — khuôn nhiều nhất, nên mỗi lựa chọn thêm ở đây đổi nhiều
+# khung hơn bất cứ trục nào khác. Engine nay có SÁU bố cục (thêm "hình trên số dưới" và "khối
+# góc" — hai bố cục đảo hẳn trọng tâm khung, không phải đổi cỡ trong cùng một sơ đồ).
+#
+# Mỗi kênh dùng BA: tổ hợp so_lieu của một kênh đi từ 2×3 = 6 lên 3×3 = 9 (+50%), mà ba trên
+# sáu vẫn đủ hẹp để hai kênh không đọc ra cùng một bộ bài (§15.2 — đa dạng và bản sắc là hai
+# trục, phải giải cùng lúc).
+# Bộ ba chọn sao cho hai kênh bất kỳ KHÔNG trùng cả ba: `selftest` canh điều đó.
 GU_SO = {
-    "howlong":    (0, 1), "howbig":     (3, 0), "realcost":   (2, 0), "howmuch":    (0, 2),
-    "whatif":     (1, 3), "survive":    (3, 1), "dayinlife":  (1, 0), "wheregoes":  (1, 2),
-    "therules":   (3, 1), "speedof":    (0, 3), "odds":       (2, 1), "hiddenfee":  (2, 0),
-    "yearsof":    (1, 2), "howloud":    (0, 2), "whatweighs": (3, 0), "rightnow":   (1, 3),
-    "howhot":     (2, 3), "smallest":   (3, 2),
+    "howlong":     (0, 1, 2), "howbig":      (0, 3, 4), "realcost":    (1, 3, 5), "howmuch":     (0, 1, 3),
+    "whatif":      (0, 3, 5), "survive":     (1, 4, 5), "dayinlife":   (0, 1, 4), "wheregoes":   (0, 4, 5),
+    "therules":    (2, 3, 4), "speedof":     (0, 1, 5), "odds":        (1, 2, 3), "hiddenfee":   (2, 3, 5),
+    "yearsof":     (0, 2, 3), "howloud":     (1, 2, 4), "whatweighs":  (2, 4, 5), "rightnow":    (0, 2, 4),
+    "howhot":      (1, 2, 5), "smallest":    (3, 4, 5),
 }
 
 
@@ -3479,6 +3605,188 @@ def _tu_the(loi: str, j: int) -> int:
             if w in t:
                 return tu
     return (j % 4) + 1 if j else 0      # nhịp hook giữ tư thế trung tính
+
+
+# ══ SHORT PHẢI ĐỦ Ý — HAI NHỊP THÊM CHO KÊNH MỎNG  (4/9/2026) ══════════════════════════════
+# Anh: *"làm short phải đủ ý, không làm quá ngắn, và phải hook hay"*.
+#
+# Đo 18 kênh: **10 kênh ra short dưới 12 giây**, tám kênh đúng 6 nhịp ≈ 10 giây. Sáu nhịp vẫn
+# là một vòng trọn vẹn (hook → khẳng định → dựng → số → so sánh → chốt) nhưng NÉN: người xem
+# nhận con số mà không kịp CẢM nó, và không có gì để mang đi.
+#
+# Hai nhịp thiếu, và cả hai đều là thứ ngách này sống bằng:
+#   · QUY ĐỔI — con số về thứ người xem cảm được (§12.13). "1 trong 292 triệu" không cảm được;
+#     "mua mỗi ngày, tám nghìn năm" thì cảm được.
+#   · HỆ QUẢ — nó đổi gì cho người xem. Không có nhịp này thì short kết thúc ở một dữ kiện,
+#     và dữ kiện không giữ chân ai.
+#
+# ── VÌ SAO VIẾT TAY TỪNG KÊNH, KHÔNG SINH TỰ ĐỘNG ─────────────────────────────────────────
+# Một phép ghép tự động chỉ dùng được thứ có trong nhịp (con số, đơn vị), và nó sẽ đẻ ra câu
+# đúng ngữ pháp mà rỗng nghĩa — tức ĐỘN cho dài, đúng cái anh dặn tránh. Mỗi kênh nói một
+# chuyện khác nhau nên câu quy đổi và câu hệ quả phải khác nhau. Hai câu mỗi kênh là ít, và
+# chúng là NỘI DUNG chứ không phải khuôn.
+#
+# ── VÌ SAO CHÈN TRƯỚC NHỊP CHỐT ───────────────────────────────────────────────────────────
+# Nhịp cuối là câu đóng; nối thêm vào sau nó là đóng hai lần. Chèn ở vị trí -1 giữ nguyên cú
+# chốt mà vẫn kéo dài phần thân.
+THEM_NHIP: dict[str, tuple[str, str, str]] = {
+    # BA câu cho mỗi kênh, theo đúng ba vai:
+    #   [0] QUY ĐỔI  — con số về thứ người xem CẢM được (§12.13)
+    #   [1] ĐỜI SỐNG — nó chạm vào ngày thường của người xem ở đâu
+    #   [2] HỆ QUẢ   — nó đổi gì; câu này phải MANG ĐI ĐƯỢC, không phải một dữ kiện nữa
+    # Viết tay từng kênh: ghép tự động chỉ dùng được con số trong nhịp, và sẽ ra câu đúng ngữ
+    # pháp mà rỗng nghĩa — tức ĐỘN cho dài, đúng cái phải tránh.
+    "odds":       ("Every day for eight thousand years.",
+                   "A whole life of tickets is one blink of that.",
+                   "The ticket is the price of the daydream."),
+    "howloud":    ("Three steps back halves it.",
+                   "Your commute sits above the safe line most days.",
+                   "Distance is the only free protection."),
+    "therules":   ("The line is on a map you never saw.",
+                   "It decides your fence, your trees, your driveway.",
+                   "Ask before you build, not after."),
+    "hiddenfee":  ("Under a tenth of it is the thing itself.",
+                   "The rest is rent, wages, cards and waste.",
+                   "You are paying for the trip, not the cup."),
+    "howhot":     ("Hot enough to boil it away in a second.",
+                   "Nothing you own would arrive as a solid.",
+                   "Heat that high stops being a temperature."),
+    "rightnow":   ("More than the country you live in.",
+                   "All of it happening while you hold this phone.",
+                   "You are never the only one awake."),
+    "smallest":   ("Line up a billion and you reach a finger.",
+                   "Everything you touch is mostly this and space.",
+                   "Scale is where intuition quits."),
+    "whatweighs": ("It would take a hundred people to lift.",
+                   "You carry a version of this every grocery run.",
+                   "Weight is not size, and never was."),
+    "speedof":    ("Blink and it has already passed you.",
+                   "Every drive home is a slow version of this.",
+                   "Your eyes were never fast enough."),
+    "whatif":     ("One person changes nothing measurable.",
+                   "Ten thousand doing it is a different number.",
+                   "Everyone is the only unit that moves it."),
+    "dayinlife":  ("Sixteen hours before the light came back.",
+                   "No weekend, no notice, no way out of it.",
+                   "The job was the whole life, not part of it."),
+    "howmuch":    ("A million seconds is eleven days.",
+                   "A billion is thirty-one years of them.",
+                   "The word changes by three letters. The gap does not."),
+    "wheregoes":  ("Most of it never becomes what you pictured.",
+                   "The bin is a sorting problem, not an ending.",
+                   "Where it goes depends on what you did first."),
+    "yearsof":    ("That is years you will not get a second time.",
+                   "It happens in minutes you never noticed spending.",
+                   "Small daily numbers are the only ones that compound."),
+    "howbig":     ("Stand it up and it clears the tree line.",
+                   "You have walked past something this size and not looked.",
+                   "Size stops registering once it leaves human scale."),
+    "survive":    ("The first night is the one that decides it.",
+                   "No fire, no shelter, no second attempt.",
+                   "Preparation is the whole of the answer."),
+}
+SAN_NHIP = 11         # 11 nhịp × 1,62 giây đo được ≈ 18 giây — xem `t_short_du_y_va_hook`
+
+
+# ══ HAI NHỊP ĐỔI THEO TẬP — LẤY TỪ CHÍNH BẢNG DỮ LIỆU CỦA KÊNH  (4/9/2026) ═════════════════
+# Anh chốt short 18–22 giây, tức ≥11 nhịp (1,62 giây/nhịp đo thật). Ba nhịp viết tay đưa được
+# lên 9. Hai nhịp cuối KHÔNG được viết cố định nữa, và đây là lý do đo được:
+#
+#   tỉ lệ câu GIỐNG HỆT giữa 4 tập của cùng một kênh, hiện tại : 30%  (therules/odds 44%)
+#   nếu thêm 2 nhịp hằng số nữa (5/11 nhịp là hằng)            : ~48%
+#
+# Gần một nửa mỗi tập giống hệt tập trước là đúng thứ luật YouTube nhắm tới — *"các video của
+# CHÍNH BẠN giống hệt nhau"* (§13.18). Làm dài bằng cách lặp là đổi một vấn đề lấy một vấn đề
+# nặng hơn.
+#
+# Nên hai nhịp cuối lấy MỘT MỤC KHÁC trong chính bảng của kênh — mục ấy đổi theo `idx`, nên
+# câu đổi theo tập mà vẫn là dữ liệu thật, không phải câu độn. `_cap()` đã đi hết n·(n−1) tổ
+# hợp nên hai mục không bao giờ trùng nhau và chuỗi không lặp sớm.
+BANG_KENH: dict[str, tuple] = {
+    #  kênh        bảng          đơn vị hiện ra          mẫu câu đối chiếu
+    "odds":       ("XAC_SUAT",  "1 in {v:,}",  "Next to {t}."),
+    "howloud":    ("AM_THANH",  "{v} dB",      "Now put {t} beside it."),
+    "whatweighs": ("KHOI_LUONG","{v:,} lb",    "Against {t}."),
+    "howhot":     ("NHIET_DO",  "{v:,}°F",     "Now {t}."),
+    "smallest":   ("CUC_NHO",   "",            "Beside {t}."),
+    "howbig":     ("CO_LON",    "{v:,.0f} ft", "Next to {t}."),
+    "yearsof":    ("DOI_NGUOI", "{v} hrs/day", "And {t}."),
+    "howlong":    ("QUANG_DUONG","{v:,} mi",   "Or {t}."),
+    "hiddenfee":  ("PHI_AN",    "${v:,.0f}",   "Same story with {t}."),
+    "realcost":   ("THOI_QUEN", "${v:,.0f}",   "Or {t}."),
+}
+
+
+def _hai_nhip_du_lieu(ma: str, idx: int, bt: str) -> list:
+    """Hai nhịp đối chiếu lấy từ bảng của kênh — ĐỔI THEO TẬP, không phải câu cố định."""
+    cau = BANG_KENH.get(ma)
+    if not cau:
+        # ── KÊNH KHÔNG CÓ BẢNG MÔ-ĐUN: LẤY CHỦ THỂ CỦA MỘT TẬP KHÁC  (4/9/2026) ────────
+        # Tám kênh (`rightnow`, `therules`, `speedof`, `whatif`, `dayinlife`, `wheregoes`,
+        # `survive`, `howmuch`) giữ danh sách nội dung CỤC BỘ trong hàm sinh, không phải bảng
+        # mô-đun — nên `BANG_KENH` với tới không được. Nâng chúng lên mô-đun là tám lượt sửa
+        # cơ học vào tám hàm, mỗi lượt một cơ hội gãy.
+        # Không cần: chính hàm sinh đã trả về TIÊU ĐỀ của mỗi tập, và tiêu đề là tên chủ thể
+        # của tập ấy. Lấy tiêu đề của một tập KHÁC làm vế đối chiếu cho ra đúng thứ bảng dữ
+        # liệu cho — một chủ thể thật của kênh, đổi theo `idx`.
+        # Lấy TÊN chứ không lấy cả nhịp: bê nguyên một nhịp sang thì tập này chứa một câu mà
+        # tập kia cũng có, tức tự đẩy tỉ lệ trùng lên — đúng cái đang tránh.
+        try:
+            khac = BO_SINH[ma](idx + 7)[0]
+        except Exception:
+            return []
+        khac = re.sub(r"^(The |A |An |How |What |Where |Could you |Years of )", "", str(khac)).strip()
+        if not khac:
+            return []
+        return [
+            _n("so_lieu", f"Now put {khac} beside it.", so="", don="", bt=bt, dinh=True),
+            # Khuôn TỰ VẼ, không mượn biểu tượng: mượn thì hai nhịp liền nhau cùng hình,
+            # và `_rai_hinh` cố ý giữ hình trùng thay vì gán hình sai nên không ai dọn hộ.
+            _n("the_chu", "Same scale, different thing.",
+               the="Same scale,|different thing."),
+        ]
+    ten_bang, khuon_so, khuon_cau = cau
+    bang = globals().get(ten_bang) or []
+    if len(bang) < 4:
+        return []
+    # Lấy mục CÁCH XA mục chính của tập này, để hai con số đủ khác nhau mà đáng so.
+    a, b = _cap(bang, idx + 7)
+    ten, gt = str(b[0]), b[1]
+    try:
+        so = khuon_so.format(v=gt) if khuon_so else ""
+    except Exception:
+        so = ""
+    return [
+        _n("so_lieu", khuon_cau.format(t=ten), so=so, don="", bt=bt, dinh=True),
+        _n("the_chu", "Same scale, different thing.",
+           the="Same scale,|different thing."),
+    ]
+
+
+def _day_du_y(ma: str, nhip: list, idx: int = 0) -> list:
+    """Chèn nhịp quy đổi + hệ quả cho kênh mỏng. Không đụng kênh đã đủ dài."""
+    them = THEM_NHIP.get(ma)
+    if not them or len(nhip) >= SAN_NHIP or len(nhip) < 3:
+        return nhip
+    quy, doi, he = them
+    # Mượn biểu tượng của nhịp áp chót để hai nhịp mới thuộc về cùng một cảnh, không nhảy
+    # sang một thế giới khác ngay trước cú chốt.
+    bt = next((n.get("bt") for n in reversed(nhip[:-1]) if n.get("bt")), "nguoi")
+    moi = [
+        _n("so_lieu", quy, so=(nhip[0].get("so") or ""), don=(nhip[0].get("don") or ""),
+           bt=bt, dinh=True),
+        # Hình lấy từ CHÍNH câu này, không mượn của nhịp trước. Mượn thì hai nhịp liền
+        # nhau cùng hình, và `_rai_hinh` cố ý GIỮ hình trùng thay vì gán một hình sai
+        # (đúng luật "lặp một hình đúng còn hơn thay bằng hình sai") — nên trùng ở đây
+        # không ai dọn hộ. Câu không khớp danh từ nào thì ra `nguoi`, mà `nguoi` được
+        # phép lặp vì nó phân biệt bằng TƯ THẾ.
+        _n("canh", doi, bt=_bt_canh(doi)),
+    ]
+    # Hai nhịp dữ liệu chèn GIỮA phần viết tay và câu hệ quả: chúng là bằng chứng, và bằng
+    # chứng phải đứng trước kết luận.
+    moi += _hai_nhip_du_lieu(ma, idx, bt)
+    moi.append(_n("the_chu", he, the=he.replace(". ", ".|")))
+    return nhip[:-1] + moi + nhip[-1:]
 
 
 def _rai_tu_the(nhip: list, ma_kenh: str = "") -> list:
@@ -4278,6 +4586,14 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     # Đây là lần thứ HAI trong ngày cùng một lỗi thứ tự (lần đầu: `_bt_canh` gắn ở `_n` nên hook
     # không có `bt`). Quy luật rút ra: **mọi lượt rải phải chạy sau MỌI lượt chèn nhịp**, vì nhịp
     # chèn sau không đi qua thứ đã chạy trước.
+    # CHÈN TRƯỚC MỌI LƯỢT RẢI (§15.19). Chèn sau thì nhịp mới không được gán bố cục —
+    # cổng `t_moi_nhip_co_bo_cuc` bắt đúng chuyện ấy ngay lượt chạy đầu: nhịp `the_chu`
+    # vừa thêm thiếu `bo_the`, và engine sẽ lặng lẽ dùng bố cục mặc định.
+    nhip = _day_du_y(ma, nhip, idx)
+    # KHỬ TRÙNG HÌNH SAU KHI CHÈN, không trước. `_day_du_y` mượn biểu tượng của nhịp áp
+    # chót cho ba nhịp mới, nên chèn xong là có hai ba nhịp liền cùng hình — cổng
+    # `t_gu_hinh_khac_nhau` bắt đúng chuyện ấy ngay lượt chạy đầu.
+    # §15.19 lần thứ ba trong ngày: MỌI lượt rải phải chạy SAU mọi lượt chèn nhịp.
     nhip = _rai_hinh(ma, nhip, idx)
     nhip = _rai_khuon(ma, nhip, idx)
     nhip = _rai_truc(ma, nhip, idx)
@@ -4642,8 +4958,17 @@ def main() -> int:
         return a.tu if a.tu >= 0 else tap_ke(de)
 
     if a.short_tu_long > 0:
-        ra = [v for de in ds for c in range(a.short_tu_long)
-              if (v := short_tu_long(de, _goc(de), c))]
+        # BA CHƯƠNG HAY NHẤT, không phải ba chương ĐẦU. Thứ tự trong bản dài xếp theo mạch
+        # kể chứ không theo sức hút, và chương dài từ 6,5 đến 15,5 nhịp — lấy theo thứ tự là
+        # bỏ qua chương mạnh hơn nằm ngay cạnh. Xem `chuong_hay`.
+        ra = []
+        for de in ds:
+            g = _goc(de)
+            for c in (chuong_hay(de, g, a.chuong, a.short_tu_long)
+                      or list(range(a.short_tu_long))):
+                v = short_tu_long(de, g, c, a.chuong)
+                if v:
+                    ra.append(v)
     else:
         ra = []
         for de in ds:

@@ -2572,6 +2572,7 @@ def main():
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
     check("short cắt từ long phải dùng lại ảnh, không gọi CF mới",
           t_short_cat_tu_long_khong_goi_cf)
+    check("short đủ ý (>=8 nhịp) và nhịp đầu là HOOK", t_short_du_y_va_hook)
     check("mỗi kênh một dấu ấn riêng, không kênh nào trùng", t_dau_an_kenh_duy_nhat)
     check("guardian không đọc bừa Firestore ở nhánh không kết luận được",
           t_guardian_khong_doc_bua)
@@ -7449,6 +7450,52 @@ def t_short_cat_tu_long_khong_goi_cf():
     mt = _ma_that(ham["mot_tap"])
     assert re.search(r"_na = 0 if \(san or|_na = 0 if san or", mt), (
         "mot_tap còn gọi nen_gt.sinh_tap cho kịch bản cắt sẵn — short sẽ tự đặt hàng CF")
+
+
+def t_short_du_y_va_hook():
+    """Short phải ĐỦ Ý (≥8 nhịp) và nhịp đầu phải là HOOK, không phải câu dẫn.
+
+    Anh: *"làm short phải đủ ý, không làm quá ngắn, và phải hook hay"*.
+
+    Đo trước khi sửa: **10/18 kênh ra short dưới 12 giây**, tám kênh đúng 6 nhịp ≈ 10 giây.
+    Sáu nhịp vẫn là một vòng trọn vẹn nhưng NÉN — người xem nhận con số mà không kịp CẢM nó.
+    Thiếu đúng hai thứ ngách này sống bằng: quy đổi về thứ cảm được (§12.13) và hệ quả.
+
+    HOOK: nhịp 0 phải mang một trong hai thứ giữ được ngón tay người xem — một CON SỐ, hoặc
+    một câu PHỦ ĐỊNH điều người xem đang tin (§15.8: hook giữ chân khi nó phủ định một niềm
+    tin, hoặc nói thẳng về chính người xem). Một câu dẫn trơn ở nhịp 0 là ba giây đầu bỏ phí,
+    và ba giây đầu quyết định người xem có lướt hay không.
+    """
+    import re
+    import giai_thich as G
+    ngan, yeu = [], []
+    # ── BA HỌ TỪ, KHÔNG PHẢI MỘT DANH SÁCH  (siết sau khi bắt oan) ─────────────────────
+    # Bản đầu chỉ có họ PHỦ ĐỊNH và trượt ngay `whatif`: *"One person changes nothing."* —
+    # `\bnot\b` không khớp bên trong "nothing". Đó là một hook MẠNH (nó phủ định đúng điều
+    # người xem đang tin) bị chấm là yếu, tức cổng ép sửa một thứ vốn đúng (§13.8).
+    # §15.8 đã viết ra nguyên tắc thật: hook giữ chân khi nó PHỦ ĐỊNH một niềm tin, ĐẢO CHIỀU
+    # một kỳ vọng, hoặc nói THẲNG VỚI người xem. Ba họ ấy viết được thành biểu thức; liệt kê
+    # ví dụ thì danh sách vô hạn (§13.9).
+    PHU = re.compile(
+        r"\b(no|not|never|none|nothing|nobody|no one|cannot|"          # phủ định
+        r"nowhere|hardly|barely|only|just|less|fewer|"                  # thu nhỏ kỳ vọng
+        r"every|everyone|all|most|more than|"                           # đảo chiều quy mô
+        r"you|your|yours)\b", re.I)
+    for k in G.KENH:
+        for i in range(4):
+            try:
+                _, _, hook, _, nhip, _ = G.kich_ban(k["ma"], i)
+            except Exception:
+                continue
+            if len(nhip) < G.SAN_NHIP:
+                ngan.append((k["ma"], i, len(nhip)))
+            n0 = nhip[0] if nhip else {}
+            co_so = bool(str(n0.get("so") or "").strip())
+            loi = str(n0.get("loi") or "")
+            if not co_so and not PHU.search(loi):
+                yeu.append((k["ma"], i, loi[:40]))
+    assert not ngan, f"short dưới {G.SAN_NHIP} nhịp (chưa đủ ý): {ngan[:4]}"
+    assert not yeu, f"nhịp 0 không có SỐ và không PHỦ ĐỊNH gì — hook yếu: {yeu[:4]}"
 
 
 def t_dau_an_kenh_duy_nhat():
