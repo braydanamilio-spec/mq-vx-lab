@@ -1095,8 +1095,15 @@ export const Dem: React.FC<{
         const dem = ngay ? i % 2 === 1 : false;
         return (
           <g key={i} opacity={i < hien ? 1 : 0.13}>
-            <ellipse cx={x} cy={y + r * 1.18} rx={r * 0.62} ry={r * 0.13}
-                     fill="#000000" opacity={0.10} />
+            {/* ── KHÔNG có bóng tiếp đất ở đây  (bỏ 4/9/2026) ────────────────────────
+                Luật "một khung có mặt sàn thì MỌI vật đứng trên sàn ấy phải để lại bóng"
+                là luật đúng — và nó nói về vật ĐỨNG TRÊN SÀN. Lưới đếm này lơ lửng giữa
+                khung theo hàng cột, nên một ellipse mờ ngay dưới mỗi biểu tượng đọc ra
+                "hình dán đang bay", tức nó nói SAI đúng cái điều nó sinh ra để nói.
+                Soi khung DAY IN LIFE thấy ngay: sáu mặt trời xếp lưới, mỗi cái một vệt
+                bóng treo giữa trời.
+                Đúng §12.5 — một luật đúng ở ngữ cảnh nó sinh ra, sai ở ngữ cảnh mới. Lưới
+                đếm là một SƠ ĐỒ, không phải một cảnh; sơ đồ không có mặt sàn để mà đổ bóng. */}
             {dem ? (
               <path d={`M ${x + r * 0.34} ${y - r * 0.86} a ${r * 0.86} ${r * 0.86} 0 1 0 0 ${r * 1.72}
                         a ${r * 0.68} ${r * 0.68} 0 1 1 0 ${-r * 1.72} Z`} fill="#8E9BB0" />

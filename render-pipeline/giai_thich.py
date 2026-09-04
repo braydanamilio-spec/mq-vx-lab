@@ -3347,7 +3347,15 @@ NOI_KENH: dict[str, tuple[str, ...]] = {
 }
 
 # Khuôn có đồ hoạ phủ khung — nền chỉ là bối cảnh, không cần ảnh AI.
-KHUON_PHU = ("so_lieu", "dem", "nhom", "kinh_lup")
+#
+# Chia làm HAI nhóm, và ranh giới là *"khung này là một CẢNH hay một SƠ ĐỒ?"*:
+#   · `so_lieu` · `nhom`  -> một cảnh có con số đặt lên. Nơi chốn giúp câu chuyện.
+#   · `dem` · `kinh_lup`  -> một SƠ ĐỒ. Lưới biểu tượng đếm hoặc vòng kính lúp đã chiếm
+#     gần hết khung, và một nơi chốn phía sau chỉ làm nhiễu — soi khung DAY IN LIFE thấy
+#     sáu mặt trời xếp lưới đè lên rèm văn phòng, hai lớp cùng đòi mắt người xem.
+# Nhóm sau vẫn KHÔNG gọi CF (vẫn bỏ `ve`), nhưng nhận nền phẳng `NenPhong` thay vì cảnh.
+KHUON_PHU = ("so_lieu", "nhom")
+KHUON_SO_DO = ("dem", "kinh_lup")
 
 # Cứ N nhịp `canh` thì một nhịp vẽ bằng code. 3 cho ra 24% CF; đổi số này là đổi thẳng
 # tỉ lệ, nên nó là NÚT VẶN duy nhất của chính sách — đừng rải điều kiện ra nhiều chỗ.
@@ -3365,6 +3373,10 @@ def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
     dem_canh = 0
     for i, n in enumerate(nhip):
         kh = n.get("khuon") or ""
+        if kh in KHUON_SO_DO:
+            # Sơ đồ: bỏ ảnh CF, KHÔNG gán nơi chốn -> engine rơi về nền phẳng `NenPhong`.
+            n.pop("ve", None)
+            continue
         lay = False
         if kh in KHUON_PHU:
             lay = True

@@ -279,6 +279,21 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
      244 nhát cắt. Nên không thêm mờ chồng; cái làm nó mượt là NHỊP đều, không phải hiệu ứng. */
   const kb = 1.0 + p * 0.016;
 
+  /* ── MỘT CHỖ QUYẾT ĐỊNH CÓ VẼ BIỂU TƯỢNG CHỦ THỂ HAY KHÔNG  (4/9/2026) ─────────────────
+     Anh soi khung và nói *"người sao lơ lửng lỗi và xấu quá"*. Đúng, và bằng chứng ngay
+     trong khung DAY IN LIFE: người que ĐỨNG TRÊN NÓC GIÁ KHO. Biểu tượng chủ thể là một
+     lớp đè, đặt ở đường chân trời, và nó KHÔNG BIẾT phía sau có gì — nên hễ cảnh có vật
+     cao ngang chân trời (giá kho, bàn, toà nhà) thì nhân vật đứng lên đầu vật ấy.
+
+     Mã đã có sẵn đúng luật cho chuyện này ở dòng ngay trên: *"không vẽ biểu tượng khi đã
+     có ảnh"* — vì ảnh AI đã vẽ chủ thể rồi, vẽ thêm là hai chủ thể trong một khung. Cảnh
+     vẽ bằng code cũng là một nền CÓ NỘI DUNG, nên nó thuộc cùng luật ấy. Bản đầu của em
+     bỏ sót vế thứ hai: đúng họ lỗi số 6 — vá một nhánh, để nguyên nhánh song song.
+
+     Đặt ở MỘT biến thay vì ba điều kiện rời, vì ba chỗ vẽ biểu tượng (nền · `SoLieu` ·
+     `KinhLup`) từng lệch nhau đúng theo kiểu ấy. */
+  const btVe = (N.nenAnh || N.canh_ve) ? "" : (N.bt || "");
+
   const Nen = (
     <>
       {N.nenAnh ? (
@@ -336,7 +351,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                 Cổng đã có ở `SoLieu` chỉ chặn *ảnh + biểu tượng*, không chặn *biểu tượng +
                 biểu tượng* — đúng họ "vá một nhánh, để nguyên nhánh song song".
                 Nhường cho lớp trên: nó biết bố cục nên đặt đúng chỗ hơn. */}
-            {N.bt && String((N as any)?.khuon || "") !== "so_lieu" ? (
+            {btVe && String((N as any)?.khuon || "") !== "so_lieu" ? (
               <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
                    style={{ position: "absolute", left: 0, top: 0 }}>
                 {(() => {
@@ -396,7 +411,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                       <ellipse cx={cx} cy={sanY + sz * 0.03} rx={sz * 0.34} ry={sz * 0.055}
                                fill="#000000" opacity={0.13} />
                       <g transform={`translate(${cx} ${sanY - sz * 0.5})`}>
-                        <BieuTuong ten={N.bt} s={sz} />
+                        <BieuTuong ten={btVe} s={sz} />
                       </g>
                     </>
                   );
@@ -429,7 +444,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                        và nói khác nhau. Biểu tượng sinh ra để THAY ảnh khi không có ảnh, không
                        phải để đứng cạnh ảnh. */}
                    <SoLieu W={W} H={H * 0.80} so={N.so || ""} don={N.don || ""} chu={N.chu || ""}
-                           bt={N.nenAnh ? "" : (N.bt || "")} mau={mau} p={p}
+                           bt={btVe} mau={mau} p={p}
                            tren_anh={!!N.nenAnh} nen={nenTrang}
                            /* `bo` là trục bố cục THỨ HAI của `SoLieu` (đổi cỡ và chỗ đặt khối
                               số). Bản cũ tính ngay tại đây bằng `hat % 3` — tức engine tự
@@ -454,7 +469,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                     the centre*), nên giữa khung là chỗ đúng để soi. */
                  lop: <KinhLup W={W} H={H * 0.80} x={W * (N.x ?? 0.50)} y={H * 0.80 * (N.y ?? 0.44)}
                                nhan={N.nhan || ""} mau={mau} p={p}
-                               bt={N.bt || ""}
+                               bt={btVe}
                                con={N.nenAnh ? (
                                  <image href={staticFile(N.nenAnh)} x={0} y={0}
                                         width={W} height={H * 0.80}

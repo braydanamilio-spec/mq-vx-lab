@@ -85,6 +85,20 @@ const _rang_cua = (W: number, y0: number, cao: number, day: number,
   return b.join(" ");
 };
 
+/* ── VIỀN NÉT CHO VẬT TIỀN CẢNH  (4/9/2026, theo ảnh tham chiếu anh gửi) ────────────────
+   Ảnh tham chiếu vẽ VIỀN quanh mọi vật ở tiền cảnh — bàn, chậu cây, cửa sổ, tảng đá — và
+   đó là thứ tách "tranh vẽ tay" khỏi "khối màu ghép bằng code". Không có viền thì hai mảng
+   màu gần nhau nhoè vào nhau và cảnh đọc ra phẳng lì.
+
+   Nhưng CHỈ tiền cảnh. Viền cả dải xa nữa thì khung thành một bức tranh tô màu: trong
+   tranh phẳng, chiều sâu làm bằng việc vật ở xa MẤT DẦN chi tiết, và viền là chi tiết.
+   Đây là chỗ dễ làm quá tay — viền thêm luôn trông "kỹ hơn" ở một hình đứng một mình, và
+   làm hỏng lớp lang khi nhìn cả khung.
+
+   Mực lấy từ chính bảng màu (nấc sẫm nhất, sẫm thêm) chứ không dùng đen tuyệt đối: đen
+   thuần trên một cảnh sa mạc ấm đọc ra vết cắt dán. */
+const _muc = (c: Bang) => _pha(c.nhan, -0.45);
+
 /** Bóng tiếp đất — MỌI vật đứng trên sàn đều phải có, không trừ vật nào (ràng buộc 3). */
 const Bong: React.FC<{ x: number; y: number; r: number }> = ({ x, y, r }) => (
   <ellipse cx={x} cy={y} rx={r} ry={r * 0.17} fill="#000000" opacity={0.13} />
@@ -219,7 +233,7 @@ const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
       {[0.46, 0.60].map((x, i) => (
         <g key={`b${i}`}>
           <rect x={W * x} y={san - H * 0.17} width={W * 0.11} height={H * 0.17}
-                rx={W * 0.05} fill={c.gan} />
+                rx={W * 0.05} fill={c.gan} stroke={_muc(c)} strokeWidth={W * 0.005} />
           <Bong x={W * (x + 0.055)} y={san} r={W * 0.075} />
         </g>
       ))}
@@ -308,7 +322,8 @@ const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
         return (<g key={i}>
           <rect x={W * x - W * 0.008} y={san - s * 0.55} width={W * 0.016} height={s * 0.55}
                 fill={c.nhan} />
-          <ellipse cx={W * x} cy={san - s * 0.72} rx={s * 0.42} ry={s * 0.38} fill={c.gan} />
+          <ellipse cx={W * x} cy={san - s * 0.72} rx={s * 0.42} ry={s * 0.38} fill={c.gan}
+                   stroke={_muc(c)} strokeWidth={W * 0.005} />
           <Bong x={W * x} y={san} r={s * 0.40} />
         </g>);
       })}
@@ -327,7 +342,7 @@ const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
         <g key={`d${i}`}>
           <path d={`M ${W * (x - 0.07)} ${san} L ${W * (x - 0.02)} ${san - H * (0.07 + r[i] * 0.05)}
                     L ${W * (x + 0.03)} ${san - H * 0.03} L ${W * (x + 0.08)} ${san} Z`}
-                fill={c.gan} />
+                fill={c.gan} stroke={_muc(c)} strokeWidth={W * 0.005} strokeLinejoin="round" />
           <Bong x={W * x} y={san} r={W * 0.075} />
         </g>
       ))}
@@ -383,7 +398,8 @@ const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
           <path d={`M ${W * x} ${san}
                     L ${W * (x + w * 0.30)} ${san - H * h}
                     L ${W * (x + w * 0.64)} ${san - H * h * 0.82}
-                    L ${W * (x + w)} ${san} Z`} fill={c.nhan} />
+                    L ${W * (x + w)} ${san} Z`} fill={c.nhan}
+                stroke={_muc(c)} strokeWidth={W * 0.005} strokeLinejoin="round" />
           <path d={`M ${W * (x + w * 0.30)} ${san - H * h}
                     L ${W * (x + w * 0.64)} ${san - H * h * 0.82}
                     L ${W * (x + w * 0.58)} ${san} L ${W * (x + w * 0.36)} ${san} Z`}
@@ -403,13 +419,15 @@ const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
       ))}
       {[0.14, 0.56].map((x, i) => (
         <g key={`b${i}`}>
-          <rect x={W * x} y={san - H * 0.115} width={W * 0.30} height={H * 0.020} fill={c.gan} />
+          <rect x={W * x} y={san - H * 0.115} width={W * 0.30} height={H * 0.020} fill={c.gan}
+                stroke={_muc(c)} strokeWidth={W * 0.004} />
           <rect x={W * (x + 0.02)} y={san - H * 0.095} width={W * 0.016} height={H * 0.095}
                 fill={c.giua} />
           <rect x={W * (x + 0.26)} y={san - H * 0.095} width={W * 0.016} height={H * 0.095}
                 fill={c.giua} />
           <rect x={W * (x + 0.09)} y={san - H * (0.20 + r[i] * 0.02)} width={W * 0.13}
-                height={H * 0.085} rx={W * 0.006} fill={c.nhan} />
+                height={H * 0.085} rx={W * 0.006} fill={c.nhan}
+                stroke={_muc(c)} strokeWidth={W * 0.004} />
           <Bong x={W * (x + 0.15)} y={san} r={W * 0.16} />
         </g>
       ))}
