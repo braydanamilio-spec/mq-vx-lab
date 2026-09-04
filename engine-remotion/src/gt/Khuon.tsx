@@ -596,9 +596,22 @@ export const ChiaDoi: React.FC<{
       const sz = sMax * co(v) * (0.90 + qq * 0.10);
       return (
         <g opacity={qq}>
-          <ellipse cx={x} cy={san + sz * 0.035} rx={sz * 0.40} ry={H * 0.014}
+          {/* ── CÙNG LỖI LƠ LỬNG, NHÁNH SONG SONG  (4/9/2026) ───────────────────────────
+              Sáng nay em chữa "vật treo trên mặt đất" ở hai chỗ (`SoLieu` và lớp cảnh của
+              `KichGiaiThich`) rồi dừng. Rà lại MỌI chỗ vẽ biểu tượng thì còn đúng chỗ này:
+              cùng công thức `san − sz*0,5` (đáy hình thật ở 0,435 nên vật treo 0,068·sz) và
+              cùng cái bóng đặt DƯỚI mặt sàn (`san + 0,035·sz`) — chân với bóng cách nhau
+              0,103·sz.
+
+              Hai chỗ còn lại (`ChiaDoi` bố cục căn giữa và `KinhLup`) KHÔNG có mặt sàn, nên
+              `0,5` ở đó là phép căn giữa đúng, không phải cùng lỗi. Ghi ra để lần sau khỏi
+              "sửa cho đều" rồi làm lệch hai khuôn đang đúng.
+
+              Đây đúng họ lỗi §6 mà dự án vấp nhiều lần — và lần này người vá một nhánh rồi
+              bỏ nhánh song song chính là em. */}
+          <ellipse cx={x} cy={san} rx={sz * 0.40} ry={H * 0.014}
                    fill="#000000" opacity={0.13} />
-          <g transform={`translate(${x} ${san - sz * 0.5})`}><BieuTuong ten={d.bt || ""} s={sz} /></g>
+          <g transform={`translate(${x} ${san - sz * DAY_HINH})`}><BieuTuong ten={d.bt || ""} s={sz} /></g>
           {/* KHOẢNG CÁCH TÍNH TỪ CỠ CHỮ, KHÔNG TỪ MỘT PHÂN SỐ CỐ ĐỊNH.
               Bản đầu đặt nhãn ở `san + 0,075·H` và số ở `san + 0,150·H` — nghe như cách nhau
               đủ, nhưng số cao tới 0,082·H nên đỉnh nó (0,150 − 0,082 = 0,068) nằm TRÊN chân
