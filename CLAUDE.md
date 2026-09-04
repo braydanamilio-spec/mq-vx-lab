@@ -2336,3 +2336,194 @@ chứ không bằng mã thoát của pip.
 
 Cách nhận ra rẻ nhất, đã dùng đêm nay: liệt kê mọi trường CÓ trong nhịp, liệt kê mọi trường
 engine ĐỌC (`grep "N\.\w+"`), rồi lấy hiệu hai tập. Bốn phút, ra ngay hai trường chết.
+
+---
+
+## 17. LUẬT RÚT TỪ NGÀY 4/9 — BỘ GIẢI THÍCH, VÒNG NÂNG TEMPLATE
+
+Ngày anh chê bốn lần liên tiếp — *"xấu"*, *"chồng chéo"*, *"chưa thể hiện được cái nói"*,
+*"to chà bá vô"* — và cả bốn lần đều đúng. Bài học lớn nhất: **em vá ba vòng cùng một họ lỗi
+trước khi chịu dừng lại đi tìm gốc.** §2 đã viết sẵn điều đó và em vẫn đi qua nó.
+
+### 17.1 Một hằng số đúng ở ngữ cảnh nó ĐƯỢC ĐO, sai ở ngữ cảnh mới — kể cả khi tự tay đo
+
+Em đo bốn ảnh tham khảo anh gửi ra *"nhân vật chiếm 55–65% chiều cao"* rồi chỉnh thẳng tới đó.
+Anh: *"to chà bá vô, không hợp"*. Anh đúng: trong ảnh tham khảo nhân vật to vì nó ngồi trong
+một **căn phòng đầy đủ** — sofa, đèn, chậu cây, sàn gỗ — nên khung vẫn cân. Bản mình chỉ có
+tường trơn, nên cùng tỉ lệ ấy đọc ra một hình dán khổng lồ giữa nền trống.
+
+**Chép một tỉ lệ mà không chép MẬT ĐỘ BỐI CẢNH sinh ra nó là chép nửa vời.** Một con số đo từ
+ảnh người khác mang theo mọi giả định của ảnh ấy.
+
+### 17.2 Một kích thước chịu hai ràng buộc mà công thức chỉ mã hoá một
+
+`s0 = min(H*0,54, W*0,62)` kẹp hộp chủ thể như thể hình VUÔNG. Hình người vẽ ra cao 0,867·s
+rộng 0,30·s — cao gấp ba lần rộng. Ở khung dọc thì trần NGANG chặn trước, nên nhân vật cao 30%
+khung trong khi chỉ rộng 19%: **cái chặn bề ngang ghìm chiều cao để giữ một bề ngang còn thừa
+hơn tám mươi phần trăm.**
+
+Và đó cũng là lý do khung đọc ra CHỒNG CHÉO — một chủ thể nhỏ đứng giữa những món đồ cùng cỡ
+thì mắt đọc ra va chạm, không đọc ra chiều sâu.
+
+**Luật:** khi kẹp một kích thước bằng `min(trần_cao, trần_ngang)`, hỏi *"hình này có vuông
+không?"* Không vuông thì phải khai TỈ LỆ THẬT và quy đổi qua nó. Chỉ khai hình đã ĐO; hình
+chưa đo để mặc định — §13.7 đã trả giá sáu lần cho việc đoán một hằng số.
+
+### 17.3 Chọn từ hồ chung KHÔNG tạo được bản sắc — bản sắc phải KHAI RIÊNG
+
+Anh muốn mỗi kênh có nét riêng để người xem nhớ. Đo 153 cặp kênh: trùng trung bình 0,39, cặp
+tệ nhất `whatif`/`survive` trùng **79%**. Nguyên nhân là SỐ HỌC:
+
+    trục `ss` 3 lựa chọn — mỗi kênh dùng 2 · trục `chart` 3 dùng 2 · trục `so` 4 dùng 2
+
+Chọn 2 trong 3 cho 18 kênh thì trùng là **bắt buộc**. §15.15 đúng hình dạng — *hồ quá nhỏ so
+với số lần rút* — nhưng ở đây **nới hồ không giải được**: bản sắc mà chọn từ hồ chung thì hai
+kênh vẫn có thể rút trúng nhau.
+
+**Luật:** đa dạng thì CHỌN được, bản sắc thì phải **KHAI**. Và đặt dấu ấn vào thứ ĐÃ hiện trong
+mọi khung (đường chân trời · nét quanh con số) thay vì thêm một món đồ mới — thêm đồ là thêm
+thứ để chồng chéo. `DAU_AN`: 5 × 4 = 20 tổ hợp cho 18 kênh, cổng canh tính duy nhất.
+
+### 17.4 Ba lớp cùng chọn giữa khung, không lớp nào biết lớp nào
+
+Năm khung anh gửi (đồng hồ đè tủ · cốc đè hạt cà phê · mặt trời đè vai người · số đè quả cầu ·
+chữ chạy xuyên chân người) là **một gốc**: `CanhVe` đặt đồ bằng toạ độ ghi cứng quanh giữa
+khung, chủ thể cũng vẽ ở giữa, chữ cũng ở giữa. Ba công thức độc lập.
+
+Ba việc chữa, và thứ tự quan trọng:
+1. **Hỏi theo VAI, không liệt kê ngoại lệ.** Điều kiện cũ loại đúng `so_lieu` khỏi lớp chủ
+   thể. Nhưng `dem`, `truc`, `chart`, `chia_doi`, `the_chu`, `kinh_lup` cũng là SƠ ĐỒ tự vẽ
+   kín khung. Liệt kê phía CẢNH (`canh`, `nhom`) thì khuôn thêm sau mặc định không chồng lớp
+   — hướng an toàn. §13.9: danh sách ngoại lệ là danh sách vô hạn.
+2. **Đĩa tách lớp sau chủ thể**, màu lấy từ chính nền — cách nhà đã giải bài này cho ảnh bìa
+   (§13.27). Bản đầu 0,92 đọc ra một QUẦNG SÁNG, tức thành vật thứ ba trong khung, đúng cái
+   nó sinh ra để tránh. 0,58 mới đúng: người xem không được nhận ra là có nó.
+3. **Bối cảnh không liên quan thì BỎ, đừng làm mờ.** Đo: 222/264 nhịp `canh` không có nơi
+   chốn nào nên rơi về `NenPhong` — vẽ sẵn một căn phòng chung có cửa sổ. Bản vá trước đẩy
+   cửa sổ ra góc và làm mờ, tức vẫn giữ một thứ vô can. Một bối cảnh không liên quan thì
+   không phải bối cảnh, nó là nhiễu.
+
+### 17.5 Đồ vật chỉ được lấy từ LỜI. Câu tả cảnh không được ĐƯA VÀO đồ vật mới
+
+`_bt_canh` nối `loi` và `ve` thành MỘT chuỗi rồi quét bảng từ khoá. `ve` tả trọn bối cảnh nên
+đầy danh từ của phông nền. Đo nhịp thật: câu *"Up while it is still dark."* khớp **không danh
+từ nào**, rơi xuống `ve` — *"a night watchman … shuttered houses"* — và khung hiện một NGÔI
+NHÀ cho một câu nói về bóng tối. Đó đúng là *"chưa thể hiện được cái nói"*.
+
+**Luật:** khi ghép hai nguồn để tìm một thứ, hỏi *"nguồn nào được phép QUYẾT, nguồn nào chỉ
+được XÁC NHẬN"*. Gộp chung một chuỗi là cho cả hai quyền quyết như nhau. Cùng bài học §15.3:
+*đo một phép nối là đo một văn bản không ai viết ra.*
+
+Hệ quả phải giải tiếp: câu không có danh từ vẽ được thì vẽ NGƯỜI, và `nguoi` lên 64% nhịp
+`canh`. Cơ chế chống trùng cũ sẽ đổi chúng sang đồ vật của kênh — kéo đúng lỗi vừa sửa quay
+lại. Nên **người được phép lặp, cái đổi là TƯ THẾ** — đúng như ảnh tham khảo: khung nào cũng
+có người, cái khác nhau là ngồi/nằm/chỉ tay/đưa đồ. Lặp một hình ĐÚNG chỉ nhàm; thay bằng một
+hình SAI thì khung nói một đằng lời nói một nẻo.
+
+### 17.6 Chốt chặn độ dài cắt trong im lặng — và nó cắt đúng thứ đang bị phàn nàn
+
+`_prompt` ghép theo ưu tiên rồi `break` khi vượt trần. Đo 872 tổ hợp thật: **286 (32%) mất một
+vế**, và vế mất là **luật sàn** (chặn người lơ lửng) cùng **bảng màu kênh** (chặn lệch chất
+ảnh) — hai thứ anh phàn nàn nhiều nhất. Bốn gốc, ba trong bốn là câu luật đúng ở ngữ cảnh cũ:
+
+| gốc | vì sao sai |
+|---|---|
+| `no circular vignette, no round badge, no border` | FLUX không có negative prompt — `kiem_nen.CAM_NGHICH` đã ghi bài học này từ `no furniture`. Ba danh từ TRÒN liền nhau đẻ ra đúng vignette tròn |
+| `"centre of the frame is empty"` | chép từ bộ truyện tranh, nơi người là VECTOR dán lên nền AI. Bộ này để mô hình vẽ luôn người → NÓI NGƯỢC với `"subject centred"` trong cùng prompt |
+| `"đồ đạc dồn hai mép"` | cắt 9:16 mất 44% bề ngang → dặn mô hình đặt bối cảnh vào đúng dải sắp biến mất |
+| `_luat` nói lại `"standing eye level"` | 106/109 câu cảnh đã tự chứa nó (§15.12) |
+
+32% → 4%. **Luật:** hàm nào vừa GHÉP vừa TỰ CẮT cho vừa trần thì phải **khai ra đã cắt vế
+nào** (§14.13) — không có lời khai thì không cổng nào đặt sau nó bắt được.
+
+### 17.7 Trần đếm ở BIẾN MODULE, mà mỗi tập là một tiến trình riêng
+
+`TRAN_ANH_LUONG` (120 ảnh/luồng/lượt) đếm bằng `sinh._da_ve`, một thuộc tính HÀM.
+`render_giai_thich_18.yml` có vòng `while` chạy TỪNG TẬP bằng một lệnh `python` riêng, nên bộ
+đếm chết theo tiến trình và trần thật là *"120 ảnh mỗi TẬP"*. Đo lượt thật: **8.059 ảnh thay
+vì 2.160 — vượt 3,7 lần**, và nó chạy vắt qua 00:00 UTC nên vét luôn hạn mức CF của cả ngày
+hôm sau.
+
+§15.23 đã ghi đúng câu luật này cho `ghi_trang_thai` và chỗ này không áp dụng. **Luật:** mọi
+bộ đếm dùng để CHẶN phải sống ở TỆP, không ở biến — và phải hỏi *"phạm vi nó tự nhận có bằng
+phạm vi nó thật sự đếm không?"*
+
+### 17.8 Nhánh dự phòng không trả lời được câu hỏi thì đừng trả tiền cho câu trả lời
+
+`health_guardian` chạy mỗi giờ. Thiếu composite index → rơi xuống `q.limit(200).stream()`. Bản
+vá trước đúng ở chỗ ngừng **KẾT LUẬN** từ 200 tài liệu không sắp xếp, nhưng vẫn **ĐỌC** chúng:
+**4.800 lượt/ngày, ~10% hạn mức free, đổi lấy một kết quả bị vứt ngay dòng sau.** *Vá đúng một
+nửa: sửa phần kết luận, để nguyên phần tiêu tốn.*
+
+Và: index `owner+status+created_at DESC` **CÓ** trong `firestore.indexes.json` nhưng **chưa
+được triển khai**. **Khai một index không phải là có nó** — chỗ dễ tin nhầm nhất, vì tệp đọc
+lên rất thuyết phục.
+
+Phát hiện kèm: guardian còn **tự bấm `gh workflow run` render mỗi giờ**. Tắt cron chưa đủ để
+dừng render — luôn hỏi *"còn cửa nào khác mở workflow này không?"*
+
+### 17.9 Bytecode cũ thắng mã nguồn, và xoá `__pycache__` không chữa được
+
+`ast.literal_eval` đọc tệp ra `(3,3)`; `import` trong **cùng tiến trình, cùng tệp, cùng sha1**
+trả `(0,1)`. macOS giữ bytecode **ngoài cây dự án**:
+
+```bash
+find ~/Library/Caches/com.apple.python -name "<ten>*.pyc" -delete
+```
+
+Bài thử ngược chỉ đổi vài CHỮ SỐ nên kích thước tệp không đổi, khôi phục trong cùng một giây
+nên mtime không phân biệt được → Python dùng lại pyc biên dịch từ bản PHÁ. **Tệp đúng, git
+sạch, AST đúng, chương trình chạy sai** — tốn bảy vòng chẩn đoán.
+
+**Luật:** bài thử ngược nào ghi đè `.py` rồi khôi phục thì phải xoá bytecode ở CẢ HAI chỗ.
+Và khi mã nguồn với thời gian chạy bất đồng mà mọi thứ khác đều đúng, **nghi bytecode trước
+khi nghi logic**.
+
+### 17.10 Cổng đọc CHÚ THÍCH thành mã — ba lần trong một ngày
+
+`kiem_nen._doc_ma` đã ghi bài học này từ 1/9, và hôm nay em dính lại **ba lần**: cổng trần ảnh
+đọc chú thích kể lại lỗi cũ; cổng ngữ pháp tố oan `"HOW LONG TO WALK TO THE MOON?"`; cổng
+short-cắt-từ-long đọc **docstring** trích lại lỗi cũ.
+
+Cái thứ ba đáng nói riêng: em bỏ chú thích `#` nhưng **docstring là chuỗi, không phải chú
+thích**. Chữa bằng `ast` — lấy MÃ THẬT thay vì cắt chuỗi:
+
+```python
+b = fn.body
+if isinstance(b[0], ast.Expr) and isinstance(b[0].value, ast.Constant): b = b[1:]
+ma = "\n".join(ast.unparse(x) for x in b)
+```
+
+### 17.11 "1 long : 3 short" — short phải THẬT SỰ cắt từ long
+
+`short_tu_long` có đúng cái tên ấy và gọi `mot_tap(ma, idx + chuong)` — dựng một tập short MỚI
+ở chỉ số lệch, không liên quan gì tới bản dài. Docstring nói một đằng, mã làm một nẻo (§15.25).
+
+Đo 36 bộ thật: một bộ tốn 25,8 ảnh CF, trong đó 6,1 của ba short và **0 ảnh dùng lại được của
+long**. Chạy 24/7 là **3.566 ảnh/ngày vẽ thừa** (21 điểm phần trăm hạn mức), cộng với việc
+short mất đúng lợi thế *"nhặt khoảnh khắc mạnh nhất của bản dài ra"*.
+
+Chữa: đọc `out/v9_<ma>_<idx>_long.json` — tệp props mà chính lượt dựng bản dài đã ghi, mang
+`nhip` ĐÃ CÓ `nenAnh`. Cắt đoạn nhịp của chương theo `muc`, giữ nguyên `nenAnh`, dựng lại ở
+khung dọc; engine dùng `objectFit: cover` nên ảnh 16:9 tự cắt giữa, mà prompt vốn dặn chủ thể
+ở giữa nên phần mất là hai mép trống.
+
+Hai chi tiết dễ bỏ sót:
+- **Tiêu đề = chính TÊN CHƯƠNG**, không nối tiêu đề bản dài vào (ra chuỗi ba tầng gạch ngang).
+- **Cắt từ long thì TUYỆT ĐỐI không gọi CF**, kể cả cho nhịp mà bản dài vẽ hụt — một short ăn
+  theo mà tự đặt hàng CF thì nó không còn là bản cắt ra, và trần hạn mức tính theo bộ 1:3
+  cũng sai theo.
+
+### 17.12 Số đo hạn mức CF, đo ngày 4/9
+
+| | |
+|---|---|
+| cung | 97 khoá × 10.000 neuron ÷ 58 neuron/ảnh = **16.724 ảnh/ngày**, hồi lúc **00:00 UTC = 07:00 VN** |
+| một tập | short **2 ảnh** · long **20 ảnh** (23–25% số nhịp; 75% còn lại vẽ bằng code) |
+| một bộ 1:3 | 25,8 ảnh — xuống **19,9** khi short cắt thật từ long |
+| 24/7 hết công suất | 589 bộ/ngày = 589 long + 1.767 short → **90% hồ**, còn **69%** nếu short cắt thật |
+| Actions | repo PUBLIC → **miễn phí không giới hạn**, không phải nút thắt |
+| token LLM | **0** — kịch bản bộ giải thích sinh bằng Python tất định |
+
+**Cạn CF không làm hỏng render** — nhịp vượt trần rơi về cảnh vẽ bằng code, video vẫn ra. Đó
+là đánh đổi có kiểm soát, không phải sự cố.

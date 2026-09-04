@@ -2852,9 +2852,65 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
 # Quan hệ giữa hai bản: CHƯƠNG k của bản dài = tập ngắn thứ (idx + k). Cùng một bộ sinh, cùng
 # một dữ liệu, cùng những con số — chỉ khác khuôn hình và nhịp. Nên không có nguy cơ hai bản
 # nói khác nhau, thứ sẽ xảy ra nếu viết hai kịch bản riêng.
-def short_tu_long(ma: str, idx: int, chuong: int) -> str:
-    """Dựng bản short 9:16 từ ĐÚNG kịch bản của chương `chuong` trong bản dài `idx`."""
-    return mot_tap(ma, idx + chuong, doc=True, long=False)
+def short_tu_long(ma: str, idx: int, chuong: int, so_chuong: int = 10) -> str:
+    """Short 9:16 CẮT RA từ chương `chuong` của bản dài `idx` — dùng lại ảnh của bản dài.
+
+    ── VÌ SAO VIẾT LẠI  (4/9/2026) ─────────────────────────────────────────────────────────
+    Anh: *"1 long 3 short, mà 3 short là tận dụng từ long ra, nhặt hook hay ra dựng lại"*.
+    Bản cũ có đúng cái TÊN ấy và làm việc khác: `mot_tap(ma, idx + chuong, long=False)` —
+    tức dựng một tập short MỚI ở chỉ số lệch, không liên quan gì tới bản dài.
+
+    Đo trên 36 bộ thật: một bộ (1 long + 3 short) tốn 25,8 ảnh CF, trong đó 6,1 ảnh là của ba
+    short và **0 ảnh dùng lại được của long**. Chạy 24/7 thì đó là 3.566 ảnh/ngày vẽ thừa —
+    21 điểm phần trăm hạn mức — cộng với việc short mất đúng lợi thế "nhặt khoảnh khắc mạnh
+    nhất của bản dài ra".
+
+    Docstring nói một đằng, mã làm một nẻo, và không có gì báo. Cùng họ §15.25.
+
+    ── CÁCH LÀM ────────────────────────────────────────────────────────────────────────────
+    Đọc `out/v9_<ma>_<idx>_long.json` — tệp props mà chính lượt dựng bản dài đã ghi, và nó
+    mang `nhip` ĐÃ CÓ `nenAnh`. Cắt lấy đoạn nhịp của chương, giữ nguyên `nenAnh`, dựng lại
+    ở khung dọc. Engine đặt ảnh bằng `objectFit: cover` nên ảnh 16:9 vào khung 9:16 tự cắt
+    giữa — mà prompt vốn đã dặn chủ thể ở giữa khung, nên phần bị cắt là hai mép trống.
+    Không có tệp ấy (chưa dựng bản dài) thì trả "" và nói rõ, KHÔNG lặng lẽ dựng một short
+    rời: dựng nhầm một tập không ai đặt hàng còn tệ hơn không dựng.
+    """
+    pj = os.path.join(GOC, "out", f"v9_{ma}_{idx:04d}_long.json")
+    if not os.path.exists(pj):
+        print(f"   ⓘ {ma}: chưa có bản dài {idx} (thiếu {os.path.basename(pj)}) — "
+              f"bỏ qua short cắt-từ-long. Dựng bản dài trước.")
+        return ""
+    try:
+        nhip_dai = (json.loads(io.open(pj, encoding="utf-8").read()) or {}).get("nhip") or []
+    except Exception as e:
+        print(f"   ⚠ đọc {os.path.basename(pj)} hỏng ({str(e)[:60]}) — bỏ qua")
+        return ""
+    k, tieu, hook, hook_phu, _n, muc = kich_ban(ma, idx, True, so_chuong)
+    if not k or not muc:
+        return ""
+    if chuong >= len(muc):
+        print(f"   ⓘ {ma}: bản dài chỉ có {len(muc)} chương, không có chương {chuong}")
+        return ""
+    dau = muc[chuong][0]
+    cuoi = muc[chuong + 1][0] if chuong + 1 < len(muc) else len(nhip_dai)
+    lat = [dict(x) for x in nhip_dai[dau:cuoi]]
+    if not lat:
+        return ""
+    # ── HOOK PHẢI LÀ CỦA CHÍNH CHƯƠNG ẤY ────────────────────────────────────────────────
+    # Bê nguyên hook của bản dài sang thì ba short của một bản dài mở đầu giống hệt nhau —
+    # đúng thứ anh phê về lặp mô-típ. Tên chương là câu ngắn nhất mô tả đúng nội dung đoạn
+    # vừa cắt, nên nó là hook tự nhiên của short này.
+    ten_chuong = muc[chuong][1]
+    _cf = sum(1 for x in lat if x.get("nenAnh"))
+    print(f"   ✂ cắt chương {chuong + 1}/{len(muc)} của bản dài {idx}: {len(lat)} nhịp · "
+          f"{_cf} ảnh DÙNG LẠI của bản dài (0 lượt CF mới)")
+    # TIÊU ĐỀ = CHÍNH TÊN CHƯƠNG. Nối `tieu` của bản dài vào ra chuỗi ba tầng gạch ngang
+    # ("How Loud Is It — 3 answers — How loud is a vacuum cleaner") — vừa dài quá mức YouTube
+    # hiển thị, vừa lặp tên kênh vốn đã nằm ngay cạnh video. Tên chương tự nó đã là một câu
+    # hỏi trọn vẹn và cụ thể hơn tiêu đề bản dài, tức đúng thứ một short cần.
+    return mot_tap(ma, idx, doc=True, long=False,
+                   san=(ten_chuong or tieu, ten_chuong or hook, hook_phu, lat,
+                        f"_c{chuong + 1}"))
 
 
 # ── BIỂU TƯỢNG DỰ PHÒNG CHO KHUÔN `canh`  (2/9/2026) ────────────────────────────────────────
@@ -4263,11 +4319,23 @@ def ghi_tap(ma: str, idx: int) -> None:
 
 
 def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
-            so_chuong: int = 10) -> str:
-    k, tieu, hook, hook_phu, nhip, muc = kich_ban(ma, idx, long, so_chuong)
+            so_chuong: int = 10, san=None) -> str:
+    """Dựng một tập. `san` = (tiêu đề, hook, hook phụ, nhịp, hậu tố slug) đã chuẩn bị sẵn.
+
+    `san` cho phép dựng một tập từ kịch bản CẮT RA từ tập khác — xem `short_tu_long`. Nhịp
+    truyền vào đã mang sẵn `nenAnh`, nên bước vẽ ảnh bị bỏ qua hoàn toàn và tập ấy tốn 0 lượt
+    CF. Không đi đường này thì "short cắt từ long" chỉ là tên gọi.
+    """
+    if san:
+        k = next((x for x in KENH if x["ma"] == ma), None)
+        tieu, hook, hook_phu, nhip, _hau = san
+        muc = []
+    else:
+        k, tieu, hook, hook_phu, nhip, muc = kich_ban(ma, idx, long, so_chuong)
+        _hau = ""
     if not k:
         return ""
-    slug = f"{ma}_{idx:04d}" + ("_long" if long else "")
+    slug = f"{ma}_{idx:04d}" + ("_long" if long else "") + _hau
     print(f"\n▶ {k['ten']} · {tieu}", flush=True)
 
     hat = sum(ord(c) for c in ma) + idx
@@ -4300,7 +4368,16 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
                if str(k if isinstance(k, str) else k.get("key", "")).startswith("cf:")]
         if _ks:
             _mk = MAU_KENH.get(ma, {})
-            _na = nen_gt.sinh_tap(ma, idx, nhip, _ks, doc=doc,
+            # ĐÃ CÓ ẢNH SẴN THÌ KHÔNG GỌI CF. Nhịp cắt ra từ bản dài mang theo `nenAnh` của
+            # bản dài; gọi lại `sinh_tap` sẽ vẽ ảnh MỚI cho cùng cảnh ấy — vừa tốn hạn mức vừa
+            # làm short khác hình với long, tức mất đúng lợi thế của việc cắt ra.
+            # CẮT TỪ BẢN DÀI THÌ TUYỆT ĐỐI KHÔNG GỌI CF. Đo lượt thử: bản dài vẽ hụt 1/3
+            # cảnh (cạn hạn mức), và short cắt ra lại đi vẽ bù đúng cảnh ấy — tức "0 lượt CF
+            # mới" chỉ đúng khi bản dài may mắn vẽ đủ. Một short ăn theo mà lại tự đặt hàng
+            # CF thì nó không còn là bản cắt ra nữa, và cái trần hạn mức tính theo bộ 1:3
+            # cũng sai theo. Cảnh thiếu ảnh rơi về lớp vẽ bằng code, y như mọi nhịp khác.
+            _na = 0 if (san or all((not x.get("ve")) or x.get("nenAnh") for x in nhip)) \
+                  else nen_gt.sinh_tap(ma, idx, nhip, _ks, doc=doc,
                                   mau_chu=_mk.get("chu", ""), mau_nen=_mk.get("nen", ""))
             # Mẫu số chỉ đếm nhịp THẬT SỰ đặt hàng CF. Nhịp `canh_ve` vẽ bằng code là
             # nhịp đã có hình, không phải nhịp thiếu hình — đếm chúng vào đây thì dòng

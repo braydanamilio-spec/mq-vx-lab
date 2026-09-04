@@ -2570,6 +2570,8 @@ def main():
     check("cổng hình lấy khung ở nhịp CÓ phụ đề", t_kiem_hinh_lay_dung_khung)
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
+    check("short cắt từ long phải dùng lại ảnh, không gọi CF mới",
+          t_short_cat_tu_long_khong_goi_cf)
     check("mỗi kênh một dấu ấn riêng, không kênh nào trùng", t_dau_an_kenh_duy_nhat)
     check("guardian không đọc bừa Firestore ở nhánh không kết luận được",
           t_guardian_khong_doc_bua)
@@ -7363,6 +7365,52 @@ def t_guardian_khong_doc_bua():
         # nhìn cả câu lệnh nhiều dòng: lùi tối đa 6 dòng để bắt truy vấn viết vắt dòng
         khoi = ma[max(0, ma.rfind("\n", 0, max(0, dau - 400))):m.end()]
         assert "limit(" in khoi, f"`.stream()` không có trần: ...{dong.strip()[-90:]}"
+
+
+def t_short_cat_tu_long_khong_goi_cf():
+    """Short cắt từ bản dài phải DÙNG LẠI ảnh của bản dài, không đặt hàng CF mới.
+
+    Anh: *"1 long 3 short, mà 3 short là tận dụng từ long ra"*. Bản cũ của `short_tu_long`
+    có đúng cái tên ấy và gọi `mot_tap(ma, idx + chuong)` — dựng một tập short MỚI ở chỉ số
+    lệch, không liên quan gì tới bản dài. Docstring nói một đằng, mã làm một nẻo (§15.25).
+
+    Đo trên 36 bộ thật: một bộ (1 long + 3 short) tốn 25,8 ảnh CF, trong đó 6,1 ảnh của ba
+    short và **0 ảnh dùng lại được của long**. Chạy 24/7 là 3.566 ảnh/ngày vẽ thừa — 21 điểm
+    phần trăm hạn mức — và short mất đúng lợi thế "nhặt khoảnh khắc mạnh nhất của bản dài".
+
+    Cổng soi MÃ chứ không chạy render: chạy thì cần một bản dài đã dựng, tức cần hạn mức và
+    vài phút — cổng phải rẻ để nó được chạy mỗi lần.
+    """
+    import os
+    import re
+    import giai_thich as G
+    # ── BỎ CẢ CHÚ THÍCH LẪN DOCSTRING TRƯỚC KHI QUÉT ───────────────────────────────────
+    # Bản đầu chỉ bỏ chú thích `#` và báo đỏ ngay: docstring của `short_tu_long` TRÍCH LẠI
+    # lỗi cũ (`mot_tap(ma, idx + chuong)`) để giải thích vì sao phải viết lại. Cổng đọc lời
+    # kể về con dao thành con dao — lần thứ ba dính đúng bẫy này trong một ngày, nên lần này
+    # dùng `ast` để lấy MÃ THẬT thay vì cắt chuỗi.
+    import ast
+    src = io.open(os.path.abspath(G.__file__), encoding="utf-8").read()
+    cay = ast.parse(src)
+    ham = {n.name: n for n in cay.body if isinstance(n, ast.FunctionDef)}
+    assert "short_tu_long" in ham and "mot_tap" in ham, "thiếu hàm cần soi"
+
+    def _ma_that(fn):
+        b = list(fn.body)
+        if b and isinstance(b[0], ast.Expr) and isinstance(b[0].value, ast.Constant) \
+                and isinstance(b[0].value.value, str):
+            b = b[1:]                                  # bỏ docstring
+        return "\n".join(ast.unparse(x) for x in b)
+
+    than = _ma_that(ham["short_tu_long"])
+    assert "idx + chuong" not in than, (
+        "short_tu_long lại dựng tập MỚI ở chỉ số lệch thay vì cắt từ bản dài")
+    assert "_long.json" in than, "short_tu_long không đọc props của bản dài"
+    assert "nenAnh" in than, "short_tu_long không mang `nenAnh` của bản dài sang"
+    # Và `mot_tap` phải BỎ HẲN bước vẽ khi nhận kịch bản cắt sẵn.
+    mt = _ma_that(ham["mot_tap"])
+    assert re.search(r"_na = 0 if \(san or|_na = 0 if san or", mt), (
+        "mot_tap còn gọi nen_gt.sinh_tap cho kịch bản cắt sẵn — short sẽ tự đặt hàng CF")
 
 
 def t_dau_an_kenh_duy_nhat():
