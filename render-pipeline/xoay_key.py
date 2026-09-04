@@ -29,6 +29,7 @@ khoảng 16.000 ảnh/ngày, và ảnh NGAY SAU đó vẫn sinh thành công.
 Mọi chỗ gọi ảnh CF đều phải đi qua đây, kể cả trong GitHub Actions.
 """
 import io
+import json
 import os
 import time
 import random
@@ -194,6 +195,33 @@ def ghi_trang_thai(owner: str = "") -> int:
     # để dashboard nói đúng, và nó cắt 810 lần gọi xuống còn ~2 lần mỗi luồng.
     # Dấu mốc để ở tệp `/tmp` nên nó chặn được CẢ khi mỗi tập là một tiến trình riêng — biến
     # module không sống qua ranh giới tiến trình, đó là lý do không dùng biến.
+    # ── VÀ MỘT LUỒNG GHI, KHÔNG PHẢI MƯỜI TÁM  (4/9/2026) ────────────────────────────────
+    # Bản 3/9 cắt TẦN SUẤT (30 phút một lần) nhưng không cắt SỐ NGƯỜI GHI và không cắt GIÁ
+    # MỖI LẦN. Đo lại bằng số học trên chính cấu hình đang chạy:
+    #
+    #     vòng lặp 285 phút ÷ 30 phút   = 10 lần mỗi luồng mỗi lượt
+    #     × 18 luồng × 295 doc `gemini_keys` = **53.100 lượt ĐỌC mỗi lượt workflow**
+    #     × 5 mốc cron mỗi ngày          = ~265.000   (trần free: 50.000/ngày)
+    #
+    # Tức MỘT lượt đã vượt trần ngày. Và nó VÔ HÌNH với bức tường ngân sách, vì bản đồ khoá
+    # gọi `.stream()` trần chứ không qua `_stream_at()` — thứ duy nhất tính tiền. Đúng câu đã
+    # ghi ở đầu `firestore_bridge`: *"sổ chỉ nhìn thấy ~3% sự thật"*.
+    #
+    # Ba việc, mỗi việc cắt một chiều khác nhau:
+    #   1. TẦN SUẤT — mốc 30 phút (đã có).
+    #   2. SỐ NGƯỜI GHI — trạng thái khoá là ảnh chụp TOÀN HỆ, không phải của một luồng. Mười
+    #      tám luồng cùng ghi là ghi mười tám lần một sự thật. Chỉ luồng khai `GHI_SO_KHOA=1`
+    #      mới làm; các luồng khác về sớm, không đọc một doc nào.
+    #   3. GIÁ MỖI LẦN — bản đồ khoá đệm ra ĐĨA (`/tmp`), nên nó tốn 295 lượt đọc một lần cho
+    #      cả lượt chạy thay vì một lần mỗi 30 phút. Biến module không sống qua ranh giới tiến
+    #      trình, mà mỗi tập là một tiến trình — đúng lý do mốc thời gian đã phải ra tệp.
+    #
+    # Sau ba việc: 295 đọc × 5 lượt = **~1.500 lượt/ngày = 3% trần**, thay cho 265.000.
+    # `get(K) or "1"` chứ không `get(K, "1")`: workflow đặt `GHI_SO_KHOA: ''` cho luồng khác
+    # thì dạng hai tham số trả về chuỗi RỖNG — mặc định không bao giờ đỡ, và cả 18 luồng lại
+    # cùng ghi. §15.19 đã trả giá đúng chỗ này, và selftest có cổng canh nó.
+    if (os.environ.get("GHI_SO_KHOA") or "1") not in ("1", "yes", "true"):
+        return 0
     import time as _t
     _dau = "/tmp/mm0_ghi_khoa_lan_cuoi"
     try:
@@ -236,15 +264,37 @@ def ghi_trang_thai(owner: str = "") -> int:
         # Khớp theo `last4` — chính thứ dashboard hiển thị và chắc chắn có ở cả hai phía. Tốn
         # MỘT truy vấn cho cả lượt chạy (đệm theo tiến trình), đổi lấy việc cơ chế thật sự chạy.
         if not hasattr(ghi_trang_thai, "_ban_do"):
+            # ĐỆM RA ĐĨA, không đệm vào biến module. Mỗi tập là một TIẾN TRÌNH riêng, nên biến
+            # module chết theo tập và bản đồ 295 doc bị dựng lại mỗi 30 phút mỗi luồng — xem
+            # phép tính ở đầu hàm. Tệp `/tmp` sống qua mọi tiến trình của cùng một lượt chạy.
+            _bdt = "/tmp/mm0_ban_do_khoa.json"
             bd = {}
             try:
-                for d in db.collection("gemini_keys").where("owner", "==", owner).stream():
-                    x = d.to_dict() or {}
-                    l4 = str(x.get("last4") or "")[-4:]
-                    if l4:
-                        bd[l4] = d.id
-            except Exception as e:
-                print(f"   ⚠ không dựng được bản đồ khoá ({str(e)[:60]}) — bỏ ghi sổ lượt này")
+                if _t.time() - os.path.getmtime(_bdt) < 21600:      # 6 giờ
+                    bd = json.loads(io.open(_bdt, encoding="utf-8").read()) or {}
+            except Exception:
+                bd = {}
+            if not bd:
+                # Bản đồ là một lượt ĐỌC ~295 doc, nên nó phải hỏi ngân sách ĐỌC (bản trước chỉ
+                # hỏi ngân sách GHI) và phải đi qua `_stream_at` để CÓ VÀO SỔ. Một lối đọc không
+                # vào sổ thì bức tường không bao giờ thấy nó, và đó đúng là cách 53.000 lượt đọc
+                # mỗi lượt chạy đi qua mà mọi con số vẫn báo an toàn.
+                if not FB.con_ngan_sach("doc"):
+                    print("   ⏹ hoãn dựng bản đồ khoá — ngân sách ĐỌC đã qua 70%")
+                    return 0
+                try:
+                    for d in FB._stream_at(
+                            db.collection("gemini_keys").where("owner", "==", owner)):
+                        x = d.to_dict() or {}
+                        l4 = str(x.get("last4") or "")[-4:]
+                        if l4:
+                            bd[l4] = d.id
+                    try:
+                        io.open(_bdt, "w", encoding="utf-8").write(json.dumps(bd))
+                    except Exception:
+                        pass
+                except Exception as e:
+                    print(f"   ⚠ không dựng được bản đồ khoá ({str(e)[:60]}) — bỏ ghi sổ lượt này")
             ghi_trang_thai._ban_do = bd
             print(f"   🗺 bản đồ khoá: {len(bd)} doc khớp theo 4 ký tự cuối")
         _bd = ghi_trang_thai._ban_do

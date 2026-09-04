@@ -97,11 +97,26 @@ const _rang_cua = (W: number, y0: number, cao: number, day: number,
 
    Mực lấy từ chính bảng màu (nấc sẫm nhất, sẫm thêm) chứ không dùng đen tuyệt đối: đen
    thuần trên một cảnh sa mạc ấm đọc ra vết cắt dán. */
-const _muc = (c: Bang) => _pha(c.nhan, -0.45);
+/* ── MỘT THỨ MỰC CHO CẢ KHUNG  (4/9/2026) ──────────────────────────────────────────────────
+   Bản trước lấy mực từ chính bảng màu (`nhan` sẫm thêm 45%), với lý do *"đen thuần trên một
+   cảnh sa mạc ấm đọc ra vết cắt dán"*. Lý do ấy nghe đúng và **sai theo bằng chứng**: mấy
+   ảnh tham chiếu anh gửi đều là cảnh ấm (sa mạc, chợ đất nện, phòng gỗ) và mọi vật trong đó
+   đều viền bằng một thứ mực gần đen — nó không hề đọc ra cắt dán, nó đọc ra "cùng một cây bút".
+
+   Và có một ràng buộc mà bản trước không thấy: **nhân vật đã viền `#2C2722`**. Mực của cảnh
+   pha theo từng nơi chốn nghĩa là mỗi nơi một cây bút khác, còn nhân vật thì luôn một cây —
+   nên nhân vật luôn lệch khỏi cảnh dù cảnh nào cũng "hợp màu của nó".
+
+   Cùng một thứ mực cho cả khung. Không phải đen thuần (#000) mà là đen ấm, đúng thứ
+   `BieuTuong` đang dùng. */
+const _muc = (_c: Bang) => "#2C2722";
 
 /** Bóng tiếp đất — MỌI vật đứng trên sàn đều phải có, không trừ vật nào (ràng buộc 3). */
 const Bong: React.FC<{ x: number; y: number; r: number }> = ({ x, y, r }) => (
-  <ellipse cx={x} cy={y} rx={r} ry={r * 0.17} fill="#000000" opacity={0.13} />
+  /* `stroke="none"`: nhóm cha nay mang nét mực và SVG kế thừa nó xuống mọi con. Bóng đổ là
+     một VÙNG MỜ, không phải một vật — viền quanh nó biến bóng thành một cái đĩa đen nằm dưới
+     chân. Mọi hình "không phải vật" trong tệp này đều phải tự tắt nét. */
+  <ellipse cx={x} cy={y} rx={r} ry={r * 0.17} fill="#000000" opacity={0.13} stroke="none" />
 );
 
 type Bang = { xa: string; giua: string; gan: string; troi: string; troiD: string;
@@ -167,21 +182,94 @@ export const _sacHoa = (hex: string, h2: number, s2: number, t: number): string 
   return "#" + v.map((x) => Math.round((x + mm) * 255).toString(16).padStart(2, "0")).join("");
 };
 
+/* ── NƠI CÓ MẶT ĐẤT TỐI THẬT SỰ ────────────────────────────────────────────────────────
+   Sau khi sàn được sáng trở lại, `troi` (trời đêm) rơi vào 173 — vừa đủ để `PhuDe` chọn
+   mực tối, và một cảnh đêm có mặt đất SÁNG thì sai hẳn về bản chất.
+
+   Đây không phải ngoại lệ cần vá: mặt đất dưới trời đêm tối là ĐÚNG. Nên nó khai riêng,
+   rơi xuống dưới 118 và `PhuDe` tự chọn mực trắng — cùng cơ chế, hai kết quả, không có
+   nhánh đặc biệt nào trong mã phụ đề. */
+const DAY_TOI: Record<string, number> = { troi: -0.62 };
+
 /** Nơi TRONG NHÀ: phía trên không phải bầu trời mà là tường/trần. */
 const TRONG_NHA = new Set(["kho", "van_phong", "nha_may"]);
 
+/* ── NÂNG BÃO HOÀ, KHÔNG ĐỔI ĐỘ SÁNG  (4/9/2026) ────────────────────────────────────────
+   Đo pixel ba khung: bão hoà **7–36%, phần lớn quanh 20%** — đó là lý do khung đọc ra
+   "xỉn" dù không có màu nào sai. Nguyên do ở công thức: mọi dải pha từ `nen` (gần trắng,
+   bão hoà ~5%) với `mau`, và trộn với một màu gần trắng thì KÉO BÃO HOÀ XUỐNG.
+
+   Không chữa bằng cách trộn thêm `mau`: trộn đổi cả độ sáng, mà độ sáng ở đây là nấc
+   chiều sâu — cùng lỗi đã mắc khi ép sắc cho sa mạc. Nâng thẳng thành phần S của HSL,
+   giữ nguyên H và L, thì ba dải xa/giữa/gần vẫn cách nhau đúng như cũ.
+
+   1,55× đưa 20% lên ~31%: đủ để màu "có chất" mà chưa sang vùng rực rỡ. Tranh phẳng
+   chuyên nghiệp sống ở khoảng 25–45% bão hoà; trên 60% là chất poster quảng cáo, và nó
+   đánh nhau với đồ hoạ số liệu đè lên trên. */
+const _dam = (hex: string, k: number): string => {
+  const m = /^#([0-9a-f]{6})$/i.exec((hex || "").trim());
+  if (!m) return hex;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255);
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  if (!d) return hex;
+  let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h *= 60; if (h < 0) h += 360;
+  const S = Math.min(0.78, (d / (1 - Math.abs(2 * l - 1))) * k);
+  const C = (1 - Math.abs(2 * l - 1)) * S, X = C * (1 - Math.abs(((h / 60) % 2) - 1));
+  const mm = l - C / 2, q = Math.floor(h / 60) % 6;
+  const v = [[C, X, 0], [X, C, 0], [0, C, X], [0, X, C], [X, 0, C], [C, 0, X]][q];
+  return "#" + v.map((x) => Math.round((x + mm) * 255).toString(16).padStart(2, "0")).join("");
+};
+
 /** Bảng màu của một cảnh — pha TỪ màu kênh, rồi kéo về sắc neo của nơi chốn. */
+/* ── BÃO HOÀ: ĐO RỒI MỚI CHỈNH  (4/9/2026) ─────────────────────────────────────────────────
+   Đo pixel trên hai khung vẽ code vừa dựng (bỏ dải chữ): **bão hoà 20–22%**, độ sáng 218/255.
+   Mấy ảnh tham chiếu anh gửi nằm ở **28–42%** (cát ~42%, trời ~29%, tường kem ~28%).
+
+   Chú thích ngay dưới đã ghi đúng khoảng cần tới (*"25–45%"*) và `_dam(…, 1.55)` đã có — nhưng
+   nó chỉ ăn vào ba dải VẬT (`xa/giua/gan/nhan`), còn TRỜI và SÀN thì không, mà hai thứ ấy
+   chiếm gần hết diện tích khung. Nên số đo tổng vẫn nằm nguyên ở 20%: bản vá đúng chỗ nhỏ,
+   bỏ trống chỗ lớn — cùng họ "vá một nhánh, để nguyên nhánh song song" (§6).
+
+   Nay dải trời và dải sàn cũng đi qua `_dam`. Hệ số nhẹ hơn dải vật (1,25–1,35 thay vì 1,55):
+   chúng là NỀN, và nền rực bằng vật thì đồ hoạ số liệu đè lên trên hết đọc được. */
 const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
-  troi:   _pha(_tron(nen, mau, 0.06 + am * 0.05), 0.16),
-  troiD:  _pha(_tron(nen, mau, 0.16 + am * 0.10), 0.02),
-  xa:     _pha(_tron(nen, mau, 0.30), -0.06),
-  giua:   _pha(_tron(nen, mau, 0.44), -0.20),
-  gan:    _pha(_tron(nen, mauPhu || mau, 0.52), -0.34),
-  san:    _pha(_tron(nen, mau, 0.22), -0.16),
-  sanD:   _pha(_tron(nen, mau, 0.26), -0.34),
-  // Đáy khung: đúng mức `NenPhong` đo được để chữ trắng đạt 4,5:1 (§ràng buộc 4).
-  sanDay: _pha(_tron(nen, mau, 0.30), -0.70),
-  nhan:   _pha(_tron(nen, mauPhu || mau, 0.62), -0.44),
+  /* ── VÀ TỈ LỆ PHA, KHÔNG PHẢI HỆ SỐ NHÂN  (đo lần hai) ─────────────────────────────────
+     Thêm `_dam` vào hai dải nền xong, đo lại: **22% → 23%**. Gần như không đổi, và lý do là
+     số học: `_dam` nhân THÀNH PHẦN S của HSL, mà `_tron(nen, mau, 0.06)` cho ra một màu gần
+     trắng có S ≈ 0,05 — nhân 1,3 thì vẫn 0,065. Nhân một số gần 0 với một hệ số nhỏ thì vẫn
+     gần 0; muốn màu có chất thì phải cho nó NHIỀU MÀU hơn, tức tăng tỉ lệ pha.
+     Đây đúng bài học "đo lại sau khi sửa": bản vá thứ nhất đúng hướng và sai đòn bẩy. */
+  troi:   _dam(_pha(_tron(nen, mau, 0.18 + am * 0.06), 0.14), 1.30),
+  troiD:  _dam(_pha(_tron(nen, mau, 0.30 + am * 0.10), 0.00), 1.45),
+  xa:     _dam(_pha(_tron(nen, mau, 0.30), -0.06), 1.55),
+  giua:   _dam(_pha(_tron(nen, mau, 0.44), -0.20), 1.55),
+  gan:    _dam(_pha(_tron(nen, mauPhu || mau, 0.52), -0.34), 1.55),
+  san:    _dam(_pha(_tron(nen, mau, 0.38), -0.14), 1.35),
+  sanD:   _dam(_pha(_tron(nen, mau, 0.44), -0.30), 1.35),
+  /* ── ĐÁY KHUNG SÁNG LÊN: −0,70 → −0,22  (4/9/2026) ────────────────────────────────────
+     Anh xem và nói *"nó hơi tối và xấu thiếu chuyên nghiệp"*. Đo pixel ba khung:
+
+         trời/tường 0-35%   sáng 74–87%
+         giữa      35-70%   sáng 72–74%
+         sàn       70-85%   sáng 57–71%
+         ĐÁY       85-100%  sáng **34–40%**     <- một dải bùn nâu chiếm 15% MỌI khung
+
+     Dải ấy không phải lỗi vẽ — nó là bản vá cho phụ đề: chữ TRẮNG cần nền dưới ~118/255
+     mới đạt 4,5:1 (WCAG AA). Tức là ta đang làm tối một phần bảy mỗi khung để cứu hai dòng
+     chữ. Tra chuẩn nghề thì cách ấy đứng cuối bảng: hộp nền > viền chữ > bóng đổ, và bóng
+     đổ đơn thuần THẤT BẠI trên nền sáng — nên dự án bù bằng cách hạ nền xuống.
+
+     Nhưng engine ĐÃ có lối ra đúng: `PhuDe` tự đổi sang MỰC TỐI + quầng trắng khi nền sáng
+     (`sangNen >= 170`). Nó chỉ chưa bao giờ chạy cho cảnh vẽ code, vì `sangDay` chỉ được đo
+     trên tệp ảnh CF — không có ảnh thì `sangNen = -1` và nhánh mực trắng luôn thắng.
+     Đúng họ lỗi số 6: cơ chế có, một nhánh dùng, nhánh song song bỏ quên.
+
+     Nay `sangDayCanh` cho engine biết độ sáng đáy của cảnh vẽ code, nên sàn được sáng trở
+     lại và phụ đề tự chọn mực. −0,22 giữ đủ chênh lệch để đáy khung vẫn "nặng" hơn chân
+     trời (thiếu nó thì khung trôi), mà không còn là một mảng bùn. */
+  sanDay: _pha(_tron(nen, mau, 0.30), -0.04),
+  nhan:   _dam(_pha(_tron(nen, mauPhu || mau, 0.62), -0.44), 1.55),
 });
 
 type P = { W: number; H: number; san: number; c: Bang; hat: number; r: number[] };
@@ -292,9 +380,10 @@ const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
       {/* Vạch tim đường: về phía chân trời thì NGẮN LẠI, HẸP LẠI và GẦN NHAU — ba thứ cùng
           co mới ra chiều sâu; co một thứ thì nó chỉ ra một dãy gạch nhỏ dần. */}
       {[0.015, 0.055, 0.115, 0.200, 0.315].map((t, i) => (
+        /* Vạch tim đường là SƠN trên mặt đường, không phải vật đứng trên đường — không viền. */
         <rect key={i} x={W * 0.5 - W * (0.004 + t * 0.030)} y={san + H * t}
               width={W * (0.008 + t * 0.060)} height={H * (0.008 + t * 0.045)}
-              fill={c.troi} opacity={0.55 + t} />
+              fill={c.troi} stroke="none" opacity={0.55 + t} />
       ))}
       {/* Cột điện: khoảng cách và chiều cao đều LỆCH theo hạt. Hàng cột cách đều tăm tắp
           là dấu hiệu số một của "ghép bằng vòng lặp" — mắt bắt được nhịp đều ngay cả khi
@@ -439,8 +528,10 @@ const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
     <g>
       {Array.from({ length: 26 }, (_, i) => {
         const q = _rang(hat + i * 7, 2);
+        /* Sao KHÔNG viền: nét mực dày bằng cả ngôi sao thì nó thành một chấm đen. Cùng luật
+           với `Bong` — vật thì có nét, hiệu ứng thì không. */
         return (<circle key={i} cx={W * q[0]} cy={H * 0.04 + q[1] * (san - H * 0.16)}
-                        r={W * (0.0035 + q[1] * 0.004)} fill={c.troiD}
+                        r={W * (0.0035 + q[1] * 0.004)} fill={c.troiD} stroke="none"
                         opacity={0.35 + q[0] * 0.5} />);
       })}
       <circle cx={W * (0.24 + r[0] * 0.5)} cy={H * 0.15} r={W * 0.10} fill={c.giua} />
@@ -454,12 +545,39 @@ const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
 
 export const TEN_NOI_VE = Object.keys(NOI_VE);
 
+/** Độ sáng 0–255 của dải đáy một cảnh vẽ code — để `PhuDe` chọn mực như nó vẫn làm với ảnh.
+ *  Tính từ CHÍNH bảng màu sẽ được vẽ, không tính lại bằng công thức thứ hai: hai chỗ tính
+ *  cùng một thứ là hai chỗ để lệch nhau, và lệch kiểu ấy không báo lỗi (§15.3). */
+export const sangDayCanh = (noi: string, nen: string, mau: string, mauPhu = ""): number => {
+  const sac = SAC_NOI[noi];
+  let h = _bang(nen, mau, mauPhu, 0).sanDay;
+  if (sac) h = _sacHoa(h, sac[0], sac[1], 0.20);
+  if (DAY_TOI[noi]) h = _pha(h, DAY_TOI[noi]);
+  const m = /^#([0-9a-f]{6})$/i.exec(h);
+  if (!m) return -1;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16));
+  return Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+};
+
 /* ══════════════════════════════════════════════════════════════════════════════════════ */
 export const CanhVe: React.FC<{
   W: number; H: number; noi: string; nen: string; mau: string; mauPhu?: string;
-  hat?: number; p?: number; am?: number;
-}> = ({ W, H, noi, nen, mau, mauPhu = "", hat = 0, p = 0, am = 0 }) => {
-  const san = chanTroi(H, hat);
+  hat?: number; p?: number; am?: number; hatSan?: number;
+}> = ({ W, H, noi, nen, mau, mauPhu = "", hat = 0, p = 0, am = 0, hatSan }) => {
+  /* ── HAI HẠT, HAI VIỆC  (4/9/2026) ─────────────────────────────────────────────────────
+     `hat` ở đây làm HAI việc cùng lúc: sinh đường bao lởm chởm của cảnh (phải đổi theo TỪNG
+     nhịp, nếu không thì ba cảnh `duong` trong một tập ra đúng một con đường) và đặt ĐƯỜNG
+     CHÂN TRỜI (phải giống mọi lớp khác của tập, nếu không thì nhịp vẽ code có một mặt sàn
+     còn nhịp đồ hoạ có mặt sàn khác).
+
+     Hai ràng buộc ngược nhau, và bản trước chỉ mã hoá được một: `KichGiaiThich` truyền
+     `canh_hat` (hạt RIÊNG của nhịp) nên chân trời đổi theo. Đo trên 18 tập đã dựng:
+     **13/17 nhịp vẽ code có sàn lệch khỏi phần còn lại của tập**. Chính điều kiện số 1 ở
+     đầu tệp này (*"cùng ĐƯỜNG CHÂN TRỜI"*) bị phá bởi bản vá cho điều kiện đa dạng.
+
+     Đúng họ lỗi §6 — một biến chịu hai ràng buộc mà công thức chỉ mã hoá một. Tách ra:
+     `hat` lo hình dáng, `hatSan` lo mặt sàn. */
+  const san = chanTroi(H, hatSan ?? hat);
   const sac = SAC_NOI[noi];
   const c0 = _bang(nen, mau, mauPhu, am);
   // 0,72 cho các dải cảnh: đủ để cát ra cát và băng ra băng. `sanDay` chỉ 0,20 — đó là dải
@@ -468,6 +586,7 @@ export const CanhVe: React.FC<{
     ? (Object.fromEntries(Object.entries(c0).map(
         ([k, v]) => [k, _sacHoa(v as string, sac[0], sac[1], k === "sanDay" ? 0.20 : 0.72)])) as Bang)
     : c0;
+  if (DAY_TOI[noi]) { c.sanDay = _pha(c.sanDay, DAY_TOI[noi]); c.sanD = _pha(c.sanD, DAY_TOI[noi] * 0.5); }
   const trong = TRONG_NHA.has(noi);
   const r = _rang(hat + 101, 8);
   const ve = NOI_VE[noi] || NOI_VE.dong;
@@ -512,7 +631,28 @@ export const CanhVe: React.FC<{
         )}
         <rect x={0} y={san} width={W} height={H - san} fill={`url(#${id}s)`} />
         {/* Nhích rất nhẹ theo tiến độ nhịp: cảnh đứng chết thì đọc ra ảnh tĩnh dán vào phim. */}
-        <g transform={`translate(0 ${-p * H * 0.008})`}>{ve({ W, H, san, c, hat, r })}</g>
+        {/* ── NÉT MỰC PHỦ CẢ CẢNH, KẾ THỪA CHỨ KHÔNG VẼ TAY TỪNG HÌNH  (4/9/2026) ────────
+            Anh chọn giữ xen kẽ ảnh AI với cảnh vẽ code, và kéo lớp code lại gần chất tranh.
+            Soi hai lớp cạnh nhau thì thứ tách chúng ra KHÔNG phải màu — mà là **nét**:
+
+                ảnh AI      : mọi vật có viền mực đen dày, nhân vật cũng vậy
+                cảnh code   : gần như không hình nào có viền, chỉ là mảng màu phẳng
+
+            Nên nhân vật (có viền) đứng trong một thế giới không viền — hai chất liệu, và
+            người xem đọc ra "dán vào" trong nửa giây (§12.10: lệch phong cách là đòn bẩy
+            lớn nhất, và chỉnh màu không cứu được nó).
+
+            SVG kế thừa `stroke`/`stroke-width` xuống con, nên đặt MỘT lần ở nhóm cha thì
+            mọi hình chỉ-có-`fill` tự có viền — không phải sửa tay hàng chục hình trong mười
+            nơi chốn, và nơi chốn thêm sau này cũng tự có nét. Hình nào cần khác thì tự khai
+            `stroke` của nó và nó thắng (mấy hình đã khai sẵn giữ nguyên).
+
+            `vectorEffect="non-scaling-stroke"` KHÔNG dùng ở đây: khung dựng đúng cỡ thật nên
+            nét đã đúng tỉ lệ, còn thuộc tính ấy sẽ làm nét dày như nhau ở mọi cỡ hình. */}
+        <g transform={`translate(0 ${-p * H * 0.008})`}
+           stroke={_muc(c)} strokeWidth={W * 0.005} strokeLinejoin="round" strokeLinecap="round">
+          {ve({ W, H, san, c, hat, r })}
+        </g>
         <rect x={0} y={0} width={W} height={H} fill={`url(#${id}q)`} />
       </svg>
     </AbsoluteFill>

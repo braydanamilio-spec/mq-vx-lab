@@ -29,6 +29,7 @@ import argparse
 import io
 import json
 import os
+import re
 import subprocess
 
 GOC = os.path.dirname(os.path.abspath(__file__))
@@ -3361,6 +3362,32 @@ KHUON_SO_DO = ("dem", "kinh_lup")
 # tỉ lệ, nên nó là NÚT VẶN duy nhất của chính sách — đừng rải điều kiện ra nhiều chỗ.
 CANH_MOI = 3
 
+# ── CHỦ THỂ × NƠI CHỐN: HỎI CẶP, KHÔNG CHỈ HỎI TỪNG TRỤC  (4/9/2026) ═══════════════════════
+# Bộ lịch chọn NƠI CHỐN theo kênh (`NOI_KENH`) và CHỦ THỂ theo nội dung câu (`bt`) — hai trục
+# độc lập, không trục nào hỏi trục kia. Soi 15 nhịp vẽ code đã dựng thì ra hai cặp vô nghĩa:
+#
+#     duong × giuong    một cái giường đặt giữa lòng đường
+#     pho   × trai_dat  quả Địa Cầu đứng trên vỉa hè
+#
+# 2/15 — ít, nhưng khi xảy ra thì HỎNG CẢ KHUNG, và nó không tốn một lượt gọi AI nào để chữa
+# nên nó thuộc nấc `don()`: máy sửa được thì máy sửa (§13.23).
+#
+# KHÔNG liệt kê cặp cấm — danh sách cặp là danh sách vô hạn (§13.9). Hai cặp trên sinh ra từ
+# đúng một quy luật: **quy mô**. Vật thiên văn không đứng trên mặt sàn ở cỡ người; đồ đạc
+# trong nhà không nằm ngoài trời. Hai lớp đóng, không phải một bảng mở.
+_BT_THIEN_VAN = {"trai_dat", "mat_trang", "mat_troi"}
+_BT_TRONG_NHA = {"giuong", "dan_piano"}
+_NOI_TRONG_NHA = {"kho", "van_phong", "nha_may"}
+
+
+def _hop_noi(bt: str, noi: str) -> bool:
+    """Chủ thể `bt` có đứng được ở nơi chốn `noi` không."""
+    if bt in _BT_THIEN_VAN:
+        return False                      # không mặt sàn nào hợp — để nền phẳng lo
+    if bt in _BT_TRONG_NHA:
+        return noi in _NOI_TRONG_NHA
+    return True
+
 
 def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
     """Gán `canh_ve` (tên nơi chốn) cho nhịp sẽ vẽ bằng code, và bỏ `ve` của nhịp ấy.
@@ -3385,7 +3412,18 @@ def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
             lay = (dem_canh % CANH_MOI == 0)
         if not lay:
             continue
-        n["canh_ve"] = noi[(hat + i) % len(noi)]
+        # Lọc nơi chốn theo chủ thể của CHÍNH nhịp này, rồi mới xoay. Xoay trước lọc sau là
+        # lại rơi đúng bẫy §15.1 (cắt trước lọc sau) ở một hình dạng khác.
+        _bt = str(n.get("bt") or "")
+        _hop = [x for x in noi if _hop_noi(_bt, x)]
+        if not _hop:
+            # KHÔNG có nơi nào hợp -> bỏ hẳn `canh_ve`, để nhịp rơi về nền phẳng `NenPhong`.
+            # Nền phẳng là một mặt sàn trung tính: nó không nói gì SAI về nội dung câu, còn
+            # một nơi chốn sai thì nói. Và không quay về `noi` đầy đủ — quay về danh sách gốc
+            # là vô hiệu hoá chính phép lọc vừa làm (§14.2).
+            n.pop("ve", None)
+            continue
+        n["canh_ve"] = _hop[(hat + i) % len(_hop)]
         # ── HẠT RIÊNG CHO TỪNG NHỊP  (4/9/2026, sau khi SOI KHUNG) ──────────────────────
         # `CanhVe` sinh đường bao lởm chởm và vị trí vật từ một hạt. Bản đầu truyền `hat`
         # của TẬP, nên mọi nhịp `duong` trong một tập ra **đúng cùng một con đường** — và
@@ -3670,6 +3708,79 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     return k, tieu, hook, hook_phu, nhip, muc
 
 
+TAP_SO = os.path.join(GOC, "out", "so_tap_gt.json")
+
+
+def tap_ke(ma: str) -> int:
+    """Số tập kế tiếp CHƯA dựng của kênh `ma`.
+
+    ── VÌ SAO PHẢI CÓ HÀM NÀY  (4/9/2026) ──────────────────────────────────────────────────
+    `--tu` mặc định 0 và workflow không truyền nó:
+
+        python giai_thich.py --kenh "$MA" --long --ngang --chuong 40     -> idx 0
+        python giai_thich.py --kenh "$MA" --so 4                         -> idx 0,1,2,3
+
+    Cả hai nằm TRONG một vòng `while` chạy tới hết ngân sách 285 phút, và workflow nổ 5 mốc
+    cron mỗi ngày. Bộ sinh thì TẤT ĐỊNH theo `(kênh, idx)`. Nên mỗi vòng, mỗi lượt, mỗi ngày
+    đều dựng lại **đúng năm tập ấy**, ghi đè lên đúng năm tên tệp ấy, rồi đẩy lên kho.
+
+    Chú thích của chính workflow hứa *"~25 video mỗi luồng mỗi lượt, ×18 luồng ≈ 450
+    video/lượt"*. Con số video thì đúng; số video KHÁC NHAU là 5 mỗi kênh, phần còn lại là
+    bản sao. Và một kênh đăng cùng một tập nhiều lần mỗi ngày là đúng thứ chính sách
+    "inauthentic content" của YouTube nêu tên (§13.17) — nặng hơn hẳn chuyện tốn công dựng.
+
+    Không có gì báo, vì về mặt kỹ thuật không có gì hỏng — đúng họ lỗi §15.11 của bộ thiên
+    nhiên (*tất định + số thứ tự bằng tay = sinh trùng*), lần này ở bộ giải thích.
+
+    ── SỔ ĐẶT Ở ĐÂU ────────────────────────────────────────────────────────────────────────
+    Hai nguồn, lấy số LỚN HƠN:
+      1. tệp sổ `out/so_tap_gt.json` — sống qua nhiều lượt trên cùng một máy;
+      2. quét chính `out/v9_<ma>_NNNN.mp4` — đúng khi sổ bị xoá mà video còn đó.
+    Runner GitHub thì khởi tạo trắng mỗi lượt, nên đường CHÍNH ở đó là biến môi trường
+    `GT_TAP_GOC` (workflow đặt từ `github.run_number`, xem `render_giai_thich_18.yml`) —
+    một con số tăng đều, không tốn hạn mức, và không đụng Firestore.
+    """
+    goc = 0
+    try:
+        goc = int(os.environ.get("GT_TAP_GOC", "0") or 0)
+    except ValueError:
+        goc = 0
+    n = goc
+    try:
+        with io.open(TAP_SO, encoding="utf-8") as f:
+            n = max(n, int(json.load(f).get(ma, 0)))
+    except Exception:
+        pass
+    try:
+        rx = re.compile(rf"^v9_{re.escape(ma)}_(\d{{4}})(_long)?\.mp4$")
+        for t in os.listdir(os.path.join(GOC, "out")):
+            m = rx.match(t)
+            if m:
+                n = max(n, int(m.group(1)) + 1)
+    except Exception:
+        pass
+    return n
+
+
+def ghi_tap(ma: str, idx: int) -> None:
+    """Ghi vào sổ rằng tập `idx` của kênh `ma` đã dựng. Hỏng thì im — sổ chỉ là một trong
+    hai nguồn, và nguồn kia (quét `out/`) vẫn đứng."""
+    try:
+        d = {}
+        try:
+            with io.open(TAP_SO, encoding="utf-8") as f:
+                d = json.load(f) or {}
+        except Exception:
+            d = {}
+        if int(d.get(ma, 0)) <= idx:
+            d[ma] = idx + 1
+            os.makedirs(os.path.dirname(TAP_SO), exist_ok=True)
+            with io.open(TAP_SO, "w", encoding="utf-8") as f:
+                json.dump(d, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+
 def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             so_chuong: int = 10) -> str:
     k, tieu, hook, hook_phu, nhip, muc = kich_ban(ma, idx, long, so_chuong)
@@ -3713,6 +3824,23 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             # Mẫu số chỉ đếm nhịp THẬT SỰ đặt hàng CF. Nhịp `canh_ve` vẽ bằng code là
             # nhịp đã có hình, không phải nhịp thiếu hình — đếm chúng vào đây thì dòng
             # "vẽ 39/134 cảnh" sẽ đọc ra như một lượt hỏng nặng ngay hôm đầu bật xen kẽ.
+            # ── ẢNH KHÔNG RA THÌ RƠI VỀ CẢNH VẼ CODE, KHÔNG RƠI VỀ PHÒNG TRỐNG  (4/9/2026)
+            # Một nhịp đặt ảnh CF mà không có ảnh (hồ cạn · 4 lượt vẽ đều trượt cổng · quá
+            # tối) trước đây rơi xuống `NenPhong` — một căn phòng trơn không nói gì về nội
+            # dung câu. Nay nó nhận đúng nơi chốn của kênh, tức vẫn là một CẢNH.
+            #
+            # Đây là mắt xích làm cả dây chuyền tự chạy được: hồ CF cạn giữa chừng thì
+            # phần còn lại của tập không xấu đi thành phòng trống, nó chỉ chuyển sang lớp
+            # vẽ code — lớp không gọi mạng nên không bao giờ hỏng theo (§7, bốn tầng nền).
+            _noi = NOI_KENH.get(ma) or ("dong", "pho", "van_phong")
+            _hut = 0
+            for _j, _x in enumerate(nhip):
+                if _x.get("ve") and not _x.get("nenAnh"):
+                    _x["canh_ve"] = _noi[(_lech_kenh(ma) + _j) % len(_noi)]
+                    _x["canh_hat"] = (_lech_kenh(ma) + _j * 7919) % 100000
+                    _hut += 1
+            if _hut:
+                print(f"   ↩ {_hut} nhịp không có ảnh CF -> dùng cảnh vẽ bằng code")
             _cn = sum(1 for x in nhip if x.get("ve"))
             _cv = sum(1 for x in nhip if x.get("canh_ve"))
             # NÓI RÕ VÌ SAO THIẾU, KHÔNG CHỈ NÓI THIẾU BAO NHIÊU  (2/9/2026)
@@ -3841,13 +3969,19 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
     d.sort()
     print(f"   ✅ {os.path.basename(out)} ({os.path.getsize(out)/1e6:.1f} MB · {dai:.1f}s · "
           f"{len(nhip)} nhịp · trung vị {d[len(d)//2]:.1f}s · dài nhất {d[-1]:.1f}s · {am})")
+    # Ghi sổ CHỈ khi video đã thành tệp. Ghi ở đầu hàm là đánh dấu "xong" cho một tập còn có
+    # thể hỏng giữa chừng, và lượt sau sẽ nhảy qua nó — mất tập mà không ai biết.
+    ghi_tap(ma, idx)
     return out
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--kenh", default="")
-    ap.add_argument("--tu", type=int, default=0)
+    # `--tu` là TUỲ CHỌN ÉP, không phải mặc định 0. Xem `tap_ke()`: mặc định 0 cộng với bộ
+    # sinh tất định là công thức sinh trùng, và nó không báo gì cả.
+    ap.add_argument("--tu", type=int, default=-1,
+                    help="ép số tập bắt đầu; bỏ trống thì máy tự đếm tập kế tiếp (tap_ke)")
     ap.add_argument("--so", type=int, default=1)
     ap.add_argument("--ngang", action="store_true", help="dựng bản 16:9 thay vì 9:16")
     ap.add_argument("--long", action="store_true", help="bản dài (chương theo dòng dữ liệu)")
@@ -3876,13 +4010,27 @@ def main() -> int:
         a.ngang = True
         print("   ↔ bản dài -> ép 16:9 (bản dài không có phiên bản dọc)")
     ds = [x.strip() for x in a.kenh.split(",") if x.strip()] or [k["ma"] for k in KENH]
+
+    # SỐ TẬP TÍNH RIÊNG CHO TỪNG KÊNH. Bản cũ dùng `a.tu + i + j` — một mốc chung cộng chỉ số
+    # kênh trong danh sách, nên hai kênh không bao giờ ở cùng một chỗ trong lịch của CHÍNH
+    # chúng, và `j` làm kênh thứ hai bắt đầu ở tập 1 dù nó chưa có tập 0. Mỗi kênh có lịch
+    # riêng thì mỗi kênh phải đếm riêng.
+    def _goc(de: str) -> int:
+        return a.tu if a.tu >= 0 else tap_ke(de)
+
     if a.short_tu_long > 0:
         ra = [v for de in ds for c in range(a.short_tu_long)
-              if (v := short_tu_long(de, a.tu, c))]
+              if (v := short_tu_long(de, _goc(de), c))]
     else:
-        ra = [v for j, de in enumerate(ds) for i in range(a.so)
-              if (v := mot_tap(de, a.tu + i + j, doc=not a.ngang, long=a.long,
-                               so_chuong=a.chuong))]
+        ra = []
+        for de in ds:
+            g = _goc(de)
+            if a.tu < 0:
+                print(f"   📓 {de}: tập kế tiếp = {g}")
+            for i in range(a.so):
+                v = mot_tap(de, g + i, doc=not a.ngang, long=a.long, so_chuong=a.chuong)
+                if v:
+                    ra.append(v)
     print(f"\n✅ {len(ra)}/{len(ds) * a.so} video")
     return 0 if ra else 1
 

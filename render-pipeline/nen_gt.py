@@ -187,12 +187,17 @@ def _luat(ve: str, doc: bool = False) -> str:
 # Siết chất vẽ và giữ nền có màu là HAI việc, và câu siết phải làm việc thứ nhất mà không phá
 # việc thứ hai. Nay mọi mức đều khẳng định NỀN CÓ MÀU — cùng họ lỗi với dải mờ màu đen: chữa
 # một trục thì đừng phá trục bên cạnh.
+# Mỗi mức siết nay khẳng định CẢ HAI: chất vẽ phẳng VÀ nền sáng. Bản cũ chỉ nói về chất
+# vẽ, nên một ảnh bị đánh trượt vì quá tối được vẽ lại bằng một câu không hề nhắc tới độ
+# sáng — tức vẽ lại mà không đổi thứ đang hỏng (§16.4: một vòng thử lại phải đổi ĐẦU VÀO).
 SIET = (
-    "children's picture-book illustration, felt-tip pen line work, flat filled colours",
+    "children's picture-book illustration, felt-tip pen line work, flat filled colours, "
+    "bright daylight scene on a light background",
     "simple flat vector clip art, solid colour fills, no shading at all, "
-    "the background is one solid mid-tone colour",
+    "the background is one solid LIGHT mid-tone colour, bright overall",
     "bold poster-style flat illustration, three flat colours only, "
-    "the background is a single saturated colour filling the whole frame",
+    "the background is a single light saturated colour filling the whole frame, "
+    "high key, nothing dark",
 )
 
 KEP_GU = ("flat 2D cartoon illustration, thick black ink outlines, "
@@ -487,6 +492,35 @@ def sang_day(tep: str) -> int:
         return -1
 
 
+# ── SÀN ĐỘ SÁNG TOÀN ẢNH  (4/9/2026) ──────────────────────────────────────────────────────
+# Anh xem và nói *"nó hơi tối và xấu thiếu chuyên nghiệp"*. Đo bảy ảnh CF của MỘT tập:
+#
+#     49 · 35 · 141 · 175 · 173 · 178 · 27      (trên thang 255)
+#
+# Ba ảnh ở 11–20% độ sáng — gần đen — nằm cạnh bốn ảnh 55–70%. Nên vấn đề không chỉ là
+# "tối": nó là **BIÊN ĐỘ**. Một tập nhảy từ 11% sang 70% rồi về 11% đọc ra chắp vá, và đó
+# đúng là thứ người xem gọi là "thiếu chuyên nghiệp".
+#
+# Vì sao mô hình vẽ tối: câu phong cách nói `bright saturated palette` — đó là độ RỰC của
+# màu, không phải độ SÁNG của nền. Mô hình được tự do chọn nền tối, và với nhịp có chữ
+# "4 AM" hay "before light" thì nó chọn đêm. §16.2 đã ghi đúng cái bẫy này một lần rồi:
+# prompt cấm/nói đúng thứ mình muốn, chứ không nói thứ mình tưởng.
+#
+# Sàn 90/255 (35%) chọn theo phân bố đo được: nó chặt hơn hẳn ba ảnh hỏng (27–50) và
+# thoáng hơn hẳn bốn ảnh đạt (141–178), tức nằm giữa hai cụm chứ không cắt vào cụm nào.
+SAN_SANG = int(os.environ.get("SAN_SANG_ANH", "90") or 90)
+
+
+def do_sang(tep: str) -> int:
+    """Độ sáng trung bình 0–255 của cả ảnh. -1 nếu không đọc được."""
+    try:
+        from PIL import Image
+        im = Image.open(tep).convert("L").resize((48, 48))
+        return int(sum(im.getdata()) / 2304)
+    except Exception:
+        return -1
+
+
 def do_phang(tep: str):
     """Độ 'phẳng' của ảnh: 0 = ảnh chụp thật, 1 = hình vẽ phẳng. None nếu không đo được.
 
@@ -621,6 +655,68 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
     return ra
 
 
+# ══ SỔ CẠNH ẢNH — MỘT TỆP JSON NHỎ ĐI KÈM MỖI ẢNH  (4/9/2026) ═══════════════════════════════
+# Hai lỗi khác nhau cùng cần đúng một thứ, nên chúng dùng chung một sổ:
+#
+#   1. CACHE LẤY NHẦM CẢNH. Tên tệp không mang nội dung cảnh, nên "đã có tệp" bị đọc thành
+#      "đã có ĐÚNG cảnh này". Sổ giữ vân tay câu cảnh -> so được.
+#   2. CHỈNH MÀU CHỒNG LỚP. `to_mau` ghi đè tại chỗ và được gọi mỗi lượt dựng, kể cả khi ảnh
+#      lấy từ cache. Mỗi lượt hạ bão hoà 14% và kéo tông về màu kênh, nên hiệu ứng CỘNG DỒN.
+#      Đo trên một ảnh thật, lặp đúng hàm ấy: bão hoà 163 -> 154 -> 144 -> 120 (5 lượt) ->
+#      82 (12 lượt) -> 55 (20 lượt). Và đo trên 290 ảnh đang có, xếp theo kênh:
+#         odds 14 · howbig 15 · howmuch 16   (kênh dựng đi dựng lại nhiều nhất)
+#         dayinlife 72 · rightnow 72 · howhot 139   (kênh mới dựng một hai lượt)
+#      Chênh gần MƯỜI LẦN giữa hai đầu — đó không phải "bảng màu kênh", đó là số lượt dựng.
+#      Bộ ảnh xám bợt mà anh nhìn thấy chính là cái này.
+#      Sổ ghi "ảnh này đã chỉnh màu rồi" -> chỉnh đúng MỘT lần trong đời mỗi ảnh.
+#
+# Vì sao là tệp riêng chứ không nhét vào EXIF: `to_mau` lưu lại bằng PIL và không giữ EXIF,
+# nên một cờ đặt trong ảnh sẽ bị chính bước cần đánh dấu xoá đi.
+def _so(dest: str) -> str:
+    return dest + ".so.json"
+
+
+def _doc_so(dest: str) -> dict:
+    try:
+        import json
+        with open(_so(dest), "r", encoding="utf-8") as f:
+            d = json.load(f)
+        return d if isinstance(d, dict) else {}
+    except Exception:
+        return {}
+
+
+def _ghi_so(dest: str, **kw) -> None:
+    """Ghi/cập nhật sổ. Hỏng thì im — mất sổ chỉ làm ảnh bị vẽ lại, không làm hỏng tập."""
+    try:
+        import json
+        d = _doc_so(dest)
+        d.update(kw)
+        with open(_so(dest), "w", encoding="utf-8") as f:
+            json.dump(d, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def _van_tay(ve: str) -> str:
+    import hashlib
+    return hashlib.sha1((ve or "").strip().encode("utf-8")).hexdigest()[:16]
+
+
+def _so_khop(dest: str, ve: str) -> bool:
+    """Ảnh đang có CÓ ĐÚNG là ảnh của câu cảnh này không."""
+    return bool(ve) and _doc_so(dest).get("ve") == _van_tay(ve)
+
+
+def can_to_mau(dest: str) -> bool:
+    """Ảnh này đã được chỉnh màu chưa. Chưa thì mới được chỉnh — chỉnh hai lần là hỏng."""
+    return not _doc_so(dest).get("toMau")
+
+
+def danh_dau_to_mau(dest: str) -> None:
+    _ghi_so(dest, toMau=True)
+
+
 def _ten(ma: str, idx: int, i: int) -> str:
     return f"{ma}_{idx:04d}_{i:02d}.jpg"
 
@@ -638,7 +734,24 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
     hw = "d" if doc else "n"
     dest = os.path.join(THU, _ten(ma, idx, i).replace(".jpg", f"_{hw}.jpg"))
     rel = f"gt_nen/{_ten(ma, idx, i).replace('.jpg', f'_{hw}.jpg')}"
-    if os.path.exists(dest) and os.path.getsize(dest) > 20000:
+    # ── CACHE PHẢI KHOÁ THEO CHÍNH CÂU CẢNH  (4/9/2026) ────────────────────────────────
+    # Khoá cũ là `(kênh, số tập, chỉ số nhịp, hướng khung)` — KHÔNG có nội dung cảnh trong đó.
+    # Nhưng nhịp thứ `i` của tập 0 hôm nay và nhịp thứ `i` của tập 0 hôm qua là HAI CẢNH KHÁC
+    # NHAU: kịch bản đổi mỗi lượt (`doi_loi`, `ap_gu`, bộ lịch). Nên mỗi lượt dựng lại, mọi
+    # nhịp đều "trúng cache" và nhận về ảnh của một cảnh khác hẳn.
+    #
+    # Đo được, và đây là lỗi HÌNH nặng nhất của cả bộ: kênh HOW BIG đặt hàng
+    #   nhịp 3  "a school bus and a blue whale side by side at true relative scale"
+    #   nhịp 4  "a school bus alone, centred, clean side profile"
+    #   nhịp 6  "a blue whale alone, filling most of the frame"
+    # và **cả sáu ảnh** trả về đúng một thứ: mấy người que đứng trong phòng có đồng hồ treo
+    # tường. Sáu tệp cùng mang mtime một giây — dấu vân tay của "không gọi mạng lần nào".
+    #
+    # Không đổi tên tệp (đổi tên là bỏ trắng 290 ảnh đang có và đẻ ra một bãi tệp mồ côi).
+    # Đặt một SỔ cạnh ảnh: vân tay của câu cảnh đã vẽ ra nó. Khớp thì dùng lại thật; lệch
+    # hoặc chưa có sổ thì vẽ lại. Ảnh cũ không có sổ sẽ được vẽ lại một lần — đúng điều cần,
+    # vì chúng vừa lạc cảnh vừa đã bị chỉnh màu chồng nhiều lượt (xem `_da_to_mau`).
+    if os.path.exists(dest) and os.path.getsize(dest) > 20000 and _so_khop(dest, ve):
         return rel
     if not ve:
         return ""
@@ -731,8 +844,12 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
         # Đây là cổng đắt nhất trong bộ: nó ngăn một tập có mười lăm ảnh thuộc mười lăm thế
         # giới. Lệch phong cách là lỗi người xem thấy trong nửa giây, mà mọi thước đo cũ đều mù.
         _d = do_phang(dest)
-        _xau = _d is not None and (_d < SAN_PHANG or
-                                   (moc is not None and abs(_d - moc) > NGUONG_LECH))
+        # Cổng độ sáng đi CÙNG cổng chất vẽ, không thành một vòng riêng: hai cổng cùng
+        # chữa bằng một việc (vẽ lại với prompt siết hơn), nên tách ra chỉ tốn thêm lượt.
+        _s = do_sang(dest)
+        _toi = 0 <= _s < SAN_SANG
+        _xau = _toi or (_d is not None and (_d < SAN_PHANG or
+                                            (moc is not None and abs(_d - moc) > NGUONG_LECH)))
         if _xau:
             if lan < 3:
                 os.remove(dest)
@@ -762,6 +879,10 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
                 print(f"     ⚠ CỔNG CHỮ TẮT ({type(e).__name__}: {str(e)[:60]}) — "
                       f"ảnh có chữ bịa sẽ lọt qua")
         sinh._da_ve = getattr(sinh, "_da_ve", 0) + 1
+        # Ghi sổ NGAY SAU khi mọi cổng đã nhận, không ghi lúc tải xong: sổ nói "ảnh này là ảnh
+        # ĐÃ DUYỆT của câu cảnh này". Ghi sớm là hứa hộ cho một ảnh có thể còn bị xoá ở dòng dưới.
+        # `toMau=False` tường minh: ảnh vừa vẽ chưa qua chỉnh màu, và `sinh_tap` đọc đúng cờ này.
+        _ghi_so(dest, ve=_van_tay(ve), toMau=False)
         return rel
     # BỐN LƯỢT ĐỀU HỎNG — cũng phải nói. Đây là nhánh im lặng thứ hai: nhịp này mất cảnh mà
     # không có dấu vết nào, nên nhìn từ log nó y hệt một nhịp chưa từng được yêu cầu vẽ.
@@ -834,10 +955,15 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
             # CHỈNH MÀU sau khi cổng đã nhận — để cổng đo đúng thứ mô hình trả về, không đo
             # thứ mình vừa sửa. Hiệu quả nhẹ (đã đo: gần như không thấy trên ảnh tối), nhưng
             # rẻ (36 ms) và cộng dồn với vignette + grain thì đủ để cả tập có chung một chất.
-            if mau_chu and mau_nen:
+            # ── VÀ CHỈ CHỈNH MỘT LẦN TRONG ĐỜI MỖI ẢNH  (4/9/2026) ────────────────────────
+            # `to_mau` ghi đè TẠI CHỖ. Ảnh lấy từ cache vẫn đi qua đây, nên mỗi lượt dựng lại
+            # là thêm một lớp hạ bão hoà 14% + một lớp kéo tông. Xem số đo ở khối `_so`:
+            # 20 lượt đưa bão hoà 163 xuống 55. Cờ trong sổ cắt hẳn việc cộng dồn.
+            if mau_chu and mau_nen and can_to_mau(duong):
                 try:
                     from to_mau import to_mau as _tm
-                    _tm(duong, mau_chu, mau_nen)
+                    if _tm(duong, mau_chu, mau_nen):
+                        danh_dau_to_mau(duong)
                 except Exception:
                     pass
     # ── SOI LẠI BA ẢNH ĐẦU  (1/9/2026) ──────────────────────────────────────────────────────

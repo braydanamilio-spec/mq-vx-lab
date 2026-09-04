@@ -2571,6 +2571,7 @@ def main():
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
     check("sổ trạng thái khoá có chốt chặn theo thời gian", t_ghi_khoa_co_chot)
+    check("mặt sàn nằm trên vùng chữ (vật chạm sàn mà không bị che)", t_san_khong_dam_vao_chu)
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
@@ -2817,12 +2818,47 @@ def t_khong_tron_so():
                 continue                  # workflow đã nghỉ -> không đòi
             for m_ in re.finditer(r"python3? (\w+)\.py", ma_):
                 can_.add(m_.group(1) + ".py")
+    # ── VÀ ĐI THEO `import`, KHÔNG DỪNG Ở TỆP ĐƯỢC GỌI TỪ WORKFLOW  (4/9/2026) ──────────
+    # Phạm vi cũ = "tệp mà workflow gõ tên". `xoay_key.py` không nằm trong đó — nó được
+    # `giai_thich.py` và `nen_gt.py` import. Nên lối đọc `gemini_keys` của nó chưa bao giờ
+    # bị soi, và nó tiêu **53.100 lượt ĐỌC mỗi lượt workflow** (18 luồng × 10 lần × 295 doc)
+    # ngoài tầm nhìn của bức tường ngân sách — trên trần 50.000 CẢ NGÀY.
+    #
+    # Đây đúng thứ bệnh mà chính docstring này mô tả (*"cổng chỉ kiểm những cái nó được liệt
+    # kê sẵn"*), chỉ khác là lần trước phạm vi thiếu một TỆP, lần này thiếu cả một TẦNG.
+    # Một tệp chạy trong đường tự động dù được gọi trực tiếp hay được import thì đều tiêu
+    # cùng một hạn mức — nên phạm vi phải là BAO ĐÓNG theo import, không phải danh sách gọi.
+    _da_ = set()
+    while True:
+        _moi_ = can_ - _da_
+        if not _moi_:
+            break
+        for _t2 in sorted(_moi_):
+            _da_.add(_t2)
+            _p2 = os.path.join(GOC_, _t2)
+            if not os.path.exists(_p2):
+                continue
+            _s2 = io.open(_p2, encoding="utf-8").read()
+            for _m2 in re.finditer(r"^\s*(?:import|from)\s+(\w+)", _s2, re.M):
+                _c2 = _m2.group(1) + ".py"
+                if os.path.exists(os.path.join(GOC_, _c2)):
+                    can_.add(_c2)
     tron = []
     for tep_ in sorted(can_):
         p_ = os.path.join(GOC_, tep_)
         if not os.path.exists(p_):
             continue
-        src = io.open(p_, encoding="utf-8").read().split("\n")
+        _ca = io.open(p_, encoding="utf-8").read()
+        # ── CHỈ SOI TỆP CÓ ĐỤNG FIRESTORE  (4/9/2026) ──────────────────────────────────
+        # `.stream()` không phải từ riêng của Firestore. Mở rộng phạm vi theo import xong,
+        # cổng tố ngay `tts_karaoke.py: async for chunk in comm.stream()` — đó là luồng âm
+        # thanh của `edge-tts`, không tiêu một lượt đọc Firestore nào.
+        # Cổng bắt oan còn tệ hơn cổng không bắt (§13.8): một dòng đỏ giả làm người ta tắt
+        # cổng, và lỗi thật nằm cạnh nó chìm theo. Tệp không nhắc tới Firestore thì không có
+        # gì ở đây để đếm — bỏ qua cả tệp, và không nới lỏng gì với tệp có đụng.
+        if not re.search(r"firestore|collection\(|_db_", _ca):
+            continue
+        src = _ca.split("\n")
         trong_doc_ = False           # đang ở trong docstring?
         for i, ln in enumerate(src):
             # Chú thích trong DOCSTRING không bắt đầu bằng `#`, nên phép lọc cũ tố oan mọi
@@ -7231,11 +7267,61 @@ def t_ghi_khoa_co_chot():
     src = _io.open(_o.path.join(g, "xoay_key.py"), encoding="utf-8").read()
     i = src.find("def ghi_trang_thai")
     assert i > 0, "không tìm thấy ghi_trang_thai"
-    than = src[i:i + 4000]
+    # ── CẮT ĐÚNG THÂN HÀM, KHÔNG CẮT 4.000 KÝ TỰ  (4/9/2026) ────────────────────────────
+    # `src[i:i+4000]` là một cửa sổ đoán. Thêm mấy dòng chú thích vào đầu hàm là chốt chặn
+    # thời gian rơi ra ngoài cửa sổ, và cổng báo ĐỎ cho một hàm hoàn toàn đúng — đúng lúc
+    # đang sửa chính hàm ấy để tiết kiệm hạn mức. Cổng bắt oan thì người ta tắt cổng (§13.8).
+    # Cắt tới `def` kế tiếp ở cột 0: đó là ranh giới thật của thân hàm, không phải một con số.
+    j = src.find("\ndef ", i + 1)
+    than = src[i:j if j > 0 else len(src)]
     assert "getmtime" in than or "time.time" in than or "_t.time" in than, \
         "ghi_trang_thai không còn chốt chặn thời gian -> sẽ ghi mỗi tập và cạn hạn mức"
     assert "/tmp/" in than, \
         "chốt chặn dùng biến module thay vì tệp -> không sống qua ranh giới tiến trình"
+    # ── VÀ BA CHIỀU KHÁC, MỖI CHIỀU MỘT LẦN ĐÃ TRẢ GIÁ  (4/9/2026) ──────────────────────
+    # Chốt thời gian cắt TẦN SUẤT, nhưng nó không cắt SỐ NGƯỜI GHI (18 luồng cùng ghi một
+    # sự thật) và không cắt GIÁ MỖI LẦN (dựng lại bản đồ 295 doc `gemini_keys`). Số học trên
+    # cấu hình đang chạy: 10 lần × 18 luồng × 295 doc = **53.100 lượt ĐỌC mỗi lượt workflow**,
+    # trên trần 50.000 CẢ NGÀY. Chốt thời gian một mình báo XANH cho đúng cảnh ấy.
+    assert "GHI_SO_KHOA" in than, \
+        "thiếu cờ một-luồng-ghi -> 18 luồng cùng ghi một ảnh chụp, nhân 18 lần chi phí"
+    assert "_stream_at" in than, \
+        "bản đồ khoá đọc thẳng `.stream()` -> không vào sổ ngân sách, bức tường không thấy"
+    assert 'con_ngan_sach("doc")' in than, \
+        "bản đồ khoá là một lượt ĐỌC nhưng chỉ hỏi ngân sách GHI"
+
+
+def t_san_khong_dam_vao_chu():
+    """Mặt sàn phải nằm HẲN TRÊN vùng chữ — nếu không thì "chạm sàn" và "không bị che" đánh nhau.
+
+    Đo bằng pixel trên khung dựng thật (4/9): dải nhãn trắng chiếm 0,72–0,76·H, dải phụ đề
+    0,80–0,85·H. `chanTroi` cũ trả 0,66 · 0,73 · **0,80**·H — hai biến thể trong ba rơi thẳng
+    vào vùng chữ.
+
+    Hậu quả không phải "hơi xấu": nó làm hai yêu cầu của anh loại trừ nhau. Vật đứng đúng trên
+    đất thì bị dải chữ cắt ngang bụng; nhấc vật lên khỏi chữ thì nó **lơ lửng** (đo được 213
+    pixel). Không bản vá nào ở phía vật giải được, vì mâu thuẫn nằm ở chỗ hai lớp cùng đòi một
+    dải ngang của khung.
+
+    Cổng này giữ ranh giới ấy. Ai nới `chanTroi` xuống dưới 0,72 là hình lại bị chữ cắt, và
+    người sửa sẽ đi tìm lỗi ở phía nhân vật — đúng chỗ KHÔNG có lỗi.
+    """
+    import io as _io
+    import os as _o
+    import re as _re
+
+    g = _o.path.dirname(_o.path.abspath(__file__))
+    src = _io.open(_o.path.join(_o.path.dirname(g), "engine-remotion", "src", "gt", "Khuon.tsx"),
+                   encoding="utf-8").read()
+    i = src.find("export const chanTroi")
+    assert i > 0, "mất hàm chanTroi"
+    than = src[i:src.find("};", i)]
+    so = [float(x) for x in _re.findall(r"H \* \(|([01]\.\d+)", than) if x]
+    assert so, f"không đọc được phân số nào trong chanTroi: {than[:120]}"
+    TRAN = 0.72          # mép TRÊN của dải nhãn, đo bằng pixel trên khung thật
+    xau = [x for x in so if x >= TRAN]
+    assert not xau, (f"chân trời {xau} chạm/vượt vùng chữ (mép trên {TRAN}·H) — vật đứng trên "
+                     f"sàn sẽ bị dải chữ cắt ngang, và nhấc lên thì lơ lửng")
 
 
 def t_bia_lay_nhip_dinh():

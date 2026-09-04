@@ -279,9 +279,70 @@ export const _tron = (a: string, b: string, t: number): string => {
    nhau ở mỗi tập — 5/6 số tập lệch, chỉ 1/6 trùng.
 
    Nay mọi lớp hỏi cùng một hàm. Ai nhận `H` khác thì tự quy đổi bằng tỉ lệ của mình. */
+/* ── MẶT SÀN PHẢI NẰM TRÊN VÙNG CHỮ  (4/9/2026) ────────────────────────────────────────────
+   Anh: *"tránh lỗi che khuất chồng chéo … người ko lơ lửng."* Hai câu ấy nghe như hai việc,
+   nhưng ở đây chúng là MỘT: đo bằng pixel trên khung vừa dựng —
+
+       dải nhãn trắng ("NOON — WORK")   0,72·H … 0,76·H
+       dải phụ đề                        0,80·H … 0,85·H
+       chân trời cũ                      0,66 · 0,73 · **0,80**·H
+
+   Hai biến thể trong ba rơi thẳng vào vùng chữ. Nên vật ĐỨNG ĐÚNG trên mặt đất thì bị dải
+   chữ cắt ngang bụng; còn muốn vật không bị cắt thì phải nhấc nó lên khỏi mặt đất — tức
+   **lơ lửng**. Hai lời phê của anh là hai đầu của cùng một mâu thuẫn, và không bản vá nào ở
+   phía vật giải được: chọn đằng nào cũng sai một đằng.
+
+   Chữa ở chỗ sinh ra mâu thuẫn: kéo mặt sàn lên trên vùng chữ. Cả nền, cả vật, cả bóng đổ
+   đều đọc hàm này nên chúng dịch cùng nhau — đó là lý do hàm này tồn tại (một nguồn sự thật).
+   Và đây cũng chính là bố cục của mấy ảnh anh gửi: chân trời ở khoảng hai phần ba khung,
+   nhân vật đứng trọn trên dải đất, chữ nằm hẳn dưới, không lớp nào chạm lớp nào.
+
+   Ba biến thể vẫn giữ (nền đổi theo tập), chỉ hạ trần: cao nhất 0,70 để còn 0,02·H lề trước
+   khi chạm mép dải nhãn. */
 export const chanTroi = (H: number, hat: number = 0): number => {
   const k = Math.abs(hat) % 6;
-  return H * (k === 1 ? 0.80 : k === 4 ? 0.66 : 0.73);
+  return H * (k === 1 ? 0.70 : k === 4 ? 0.60 : 0.66);
+};
+
+/* ── BỀ NGANG MỘT CHUỖI, ƯỚC LƯỢNG THEO TỪNG KÝ TỰ  (4/9/2026) ─────────────────────────────
+   Cả hai chỗ ép cỡ chữ trong tệp này đều dùng `(W * k / s.length) * 1,6x` — tức giả định
+   MỌI ký tự rộng như nhau, khoảng 0,61em. Với chữ số thì gần đúng; với CHỮ HOA thì sai hẳn:
+   trong Poppins Black, `M`/`W` rộng ~0,95em còn `1`/`.`/`,` chỉ ~0,30–0,55em.
+
+   Hậu quả soi được trên khung thật: SURVIVE hiện `PROBABLY` bị cắt cụt CẢ HAI mép, WHAT
+   WEIGHS hiện `24,000` cũng cụt. Cùng một công thức, hai chuỗi khác loại ký tự.
+
+   Đây là họ lỗi *"một kích thước chịu hai ràng buộc mà công thức chỉ mã hoá một"* (§6): cỡ
+   chữ phụ thuộc CẢ số ký tự LẪN ký tự nào. Nay cộng bề ngang thật của từng ký tự.
+   Số đo là ước lượng có chủ ý (không đo font lúc chạy được trong SVG tĩnh), và nó ước
+   lượng THỪA — thà chữ nhỏ hơn một chút còn hơn tràn khỏi khung. */
+/* ── ĐÁY CỦA MỘT BIỂU TƯỢNG  (4/9/2026) ────────────────────────────────────────────────────
+   Mọi biểu tượng vẽ trong hộp tâm-ở-giữa cỡ `s`, nhưng KHÔNG hình nào chạm hết ±0,5·s: hình
+   `nguoi` có bàn chân ở +0,432·s, mấy hình đồ vật quanh +0,43…+0,44.
+
+   Nên khi đặt "tâm hình ở `san − 0,5·s`" thì đáy hình dừng ở `san − 0,068·s`: hình **treo trên
+   mặt đất** một khoảng bằng 6,8% cỡ của nó, và bóng đổ vẽ ở `san + 0,03·s` lại nằm tách hẳn
+   bên dưới. Hai thứ cùng nói "vật này không đứng trên nền".
+
+   Đặt tên và dùng chung, thay vì để mỗi chỗ tự đoán một phân số — đó chính là cách hằng số
+   0,5 lọt vào ba chỗ khác nhau mà không chỗ nào sai rõ ràng. */
+export const DAY_HINH = 0.435;
+
+export const _emChu = (s: string): number => {
+  let e = 0;
+  for (const c of s || "") {
+    if (c === " ") e += 0.30;
+    else if (".,:'’|".includes(c)) e += 0.30;
+    else if (c === "1") e += 0.45;
+    else if (c === "$") e += 0.60;
+    else if (c >= "0" && c <= "9") e += 0.62;
+    else if (c >= "a" && c <= "z") e += 0.60;
+    else if ("MW".includes(c)) e += 0.95;
+    else if ("IJ".includes(c)) e += 0.40;
+    else if (c >= "A" && c <= "Z") e += 0.74;
+    else e += 0.66;
+  }
+  return Math.max(e, 0.5);
 };
 
 export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string;
@@ -319,7 +380,10 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
   const sanD = _pha(_tron(nen, mau, 0.26), -0.34);
   // -0,70 và chặng bắt đầu ở 0,55: đo lần đầu (-0,62 / 0,62) cho 4,31–5,44:1, tức một
   // trong ba mốc vẫn hụt chuẩn 4,5. Hiệu chỉnh theo SỐ ĐO, không theo cảm giác (§13.7).
-  const sanDay = _pha(_tron(nen, mau, 0.34), -0.70);
+  // −0,70 → −0,22, cùng lý do và cùng lượt sửa với `CanhVe._bang.sanDay`: xem chú thích ở
+  // đó. Hai nền phải đi CÙNG MỨC, nếu không thì một tập có hai độ sáng đáy khác nhau và
+  // mắt đọc ra "chắp vá" ở đúng chỗ phụ đề đứng.
+  const sanDay = _pha(_tron(nen, mau, 0.34), -0.22);
   const vach = _pha(mau, -0.55);
   const id = `np${Math.round(W)}_${k}`;
   return (
@@ -641,8 +705,9 @@ export const chuHopNen = (uu: string, nen: string, dam = "#2C2722", nhat = "#F4F
 
 export const SoLieu: React.FC<{
   W: number; H: number; so: string; don: string; chu: string; bt: string; mau: string; p: number;
-  tren_anh?: boolean; nen?: string; bo?: number; kieu?: number;
-}> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false, nen = "#EFE7D6", bo = 0, kieu = 0 }) => {
+  tren_anh?: boolean; nen?: string; bo?: number; kieu?: number; san?: number;
+}> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false, nen = "#EFE7D6", bo = 0, kieu = 0,
+        san = 0 }) => {
   /* ── BỐ CỤC PHẢI ĐỔI THEO HƯỚNG KHUNG ────────────────────────────────────────────────
      Anh: *"bản 16:9 đang bị che khuất."* Đúng, và gốc rễ là mọi vị trí ở đây tính theo `H`.
      Khung dọc cao 1920 nên `H*0.20` cho chữ số là vừa; khung ngang chỉ cao 1080 nên cùng công
@@ -713,7 +778,7 @@ export const SoLieu: React.FC<{
   const kA = tren_anh ? (Math.abs(kieu) % 4 === 1 ? 1 : 0) : (Math.abs(kieu) % 4);
   // Canh trái chỉ có 0,80·W cho chữ số (chừa chỗ cho hình bên phải); giữa thì được 0,88·W.
   const beNgang = kA === 1 ? 0.62 : kA === 3 ? 0.96 : 0.88;
-  const cs = Math.min(H * cCao * (kA === 3 ? 1.35 : 1), (W * beNgang / Math.max(1, so.length)) * 1.65);
+  const cs = Math.min(H * cCao * (kA === 3 ? 1.35 : 1), (W * beNgang) / _emChu(so));
   // đáy dòng đơn vị = yCao·H + cs·0.56 ; chừa thêm 0,5·cs rồi mới đặt chú thích
   /* `cd` khai sau `yChu` trong bản cũ, nên `yChu` không thể cộng nó vào và đành dùng `cs*0.56`
      — chính con số vừa sai ở dòng đơn vị. Nâng khai báo `cd` lên đây để CẢ HAI chỗ dùng cùng
@@ -814,10 +879,38 @@ export const SoLieu: React.FC<{
                  `360,000,000` của RIGHT NOW đều bị cắt mất mép phải — soi lưới thấy ngay.
                  `cs` vốn đã chịu ràng buộc bề ngang ở `beNgang`, nhưng nhân 1,55 thì phá mất
                  ràng buộc ấy. Ràng buộc phải áp SAU mọi phép nhân, không phải trước. */
-              fontSize={Math.min(cs * 1.55, (W * 0.98 / Math.max(1, soHien.length)) * 1.62)}
-              fill={mau} opacity={0.16 * q}>{soHien}</text>
+              /* 4/9 — bề ngang đo theo TỪNG KÝ TỰ (`_emChu`), và trần 0,90·W chứ không 0,98:
+                 chữ nền là thứ chạm mép đầu tiên nên nó cần lề, không cần sát mép. */
+              fontSize={Math.min(cs * 1.55, (W * 0.90) / _emChu(soHien))}
+              /* ĐỘ MỜ THEO CÁI NÓ NẰM TRÊN. 0,16 cố định là con số của một nền phẳng sáng;
+                 đặt trên một ảnh CF nhiều chi tiết thì nó tan vào ảnh và đọc ra một VẾT BẨN,
+                 không đọc ra một con số (§15.11 — phóng to hai lần vẫn không đọc được thì
+                 thứ sai là VAI của nó, ở đây là độ tương phản). Trên ảnh thì đậm hơn. */
+              fill={mau} opacity={(tren_anh ? 0.30 : 0.20) * q}>{soHien}</text>
       ) : null}
-      {bt ? <g transform={`translate(${kA === 1 ? W * 0.76 : W / 2} ${H * (ngang ? 0.62 : tren_anh ? 0.70 : 0.64)})`} opacity={tren_anh ? 0.92 : 1}>
+      {/* ── CHÂN PHẢI CHẠM SÀN, KHÔNG ĐỨNG Ở PHÂN SỐ CỐ ĐỊNH  (4/9/2026) ────────────────
+          Anh: *"người ko lơ lửng nha."* Đo trên khung HOW LONG vừa dựng, bằng pixel:
+
+              nét nhân vật  y = 0,407·H … 0,616·H
+              mặt sàn       y = 0,727·H       -> **lơ lửng 0,111·H = 213 pixel**
+
+          Gốc rễ không phải một con số sai mà là HAI HỆ QUY CHIẾU: `KichGiaiThich` dựng khuôn
+          này bằng `<SoLieu H={H * 0.80}>`, nên mọi phân số bên trong đây tính trên 80% khung.
+          `0,64` ở đây rơi vào `0,80 × 0,64 = 0,512·H` của khung thật — đúng chỗ đo được — còn
+          `chanTroi()` trả `0,73·H` của khung THẬT. Hai lớp cùng chọn chỗ theo "H" mà "H" của
+          chúng là hai thứ khác nhau, nên không ai lệch mà hình vẫn lơ lửng.
+
+          Đúng họ lỗi §6 *chép hằng số sang hệ quy chiếu khác*: không báo lỗi, chỉ làm hình sai.
+
+          Nay `KichGiaiThich` truyền THẲNG mặt sàn (đã quy đổi về hệ của khuôn này) và biểu
+          tượng neo ĐÁY vào đó. Thiếu `san` thì giữ nguyên nếp cũ — khuôn này còn dùng ở chỗ
+          không có mặt đất. */}
+      {bt ? <g transform={`translate(${kA === 1 ? W * 0.76 : W / 2} ${
+              san > 0 ? san - (tren_anh ? Math.min(H * 0.26, W * 0.28)
+                               : (kA === 1 ? Math.min(H * 0.32, W * 0.42)
+                                           : Math.min(H * 0.40, W * 0.66))) * DAY_HINH
+                      : H * (ngang ? 0.62 : tren_anh ? 0.70 : 0.64)})`}
+             opacity={tren_anh ? 0.92 : 1}>
         {/* CỠ BIỂU TƯỢNG THEO VAI TRÒ, không một cỡ cho hai vai trò khác nhau.
             Trên ảnh, biểu tượng chỉ là phụ chú -> nhỏ là đúng. KHÔNG có ảnh thì biểu tượng LÀ
             hình của cả khung, và cỡ 0,30 cho ra khung 60% trống (soi `howmuch` nhịp 0). Ảnh
@@ -1438,7 +1531,21 @@ export const Chart: React.FC<{
        căn giữa, không phải giãn ra cho đầy. */
     const oCao = Math.min((H * 0.62) / Math.max(1, cot.length), H * 0.17);
     const rCham0 = oCao * 0.21;
-    const x1 = kC === 2 ? W * 0.94 - rCham0 - W * 0.13 : W * 0.94;
+    const cS = Math.min(oCao * 0.44, H * 0.040);
+    /* ── CHỖ CHO CON SỐ PHẢI ĐO, KHÔNG ĐOÁN — VÀ PHẢI CHỪA Ở CẢ HAI KIỂU  (4/9/2026) ────
+       Bản trước chỉ chừa cho kiểu 2 (chấm–gậy), và chừa bằng một hằng số đoán `W*0,13`.
+       Kiểu 1 (cột ngang) để nguyên `x1 = W*0,94`, trong khi con số vẫn vẽ ở
+       `x0 + dai + W*0,018` — tức cột dài nhất (theo định nghĩa `dai = x1 - x0`) đẩy số
+       của nó ra **ngoài mép phải**. Và cột dài nhất luôn tồn tại: nó là cột `max`.
+       Soi khung: HOW LONG hiện `77…` cụt, ODDS hiện `29…` cụt — cả hai đều là kiểu 1.
+
+       Đúng họ lỗi §6 *vá một nhánh, để nguyên nhánh song song*, và chú thích ngay trên
+       đây đã kể lại đúng họ lỗi ấy khi vá nhánh kia. Nay một phép chừa cho cả hai, và đo
+       từ CHÍNH chuỗi sắp vẽ (`_bac`) thay vì từ một hằng số: `_bac(1.2e9)` ra `1.2B` (4
+       ký tự) còn `_bac(30300)` ra `30.3K` (5) — chênh nhau đủ để một hằng số sai một bên. */
+    const soDai = Math.max(...cot.map((c) => `${_bac(c.v)}`.length), 1);
+    const chuaSo = W * 0.018 + cS * 0.60 * soDai + W * 0.012;
+    const x1 = W * 0.94 - chuaSo - (kC === 2 ? rCham0 : 0);
     /* Căn khối vào GIỮA vùng vẽ, không dồn lên đầu một dải cố định. Với hai dòng thì công
        thức cũ đặt tâm khối ở 0,45·H — soi khung thấy đồ hoạ nằm hẳn nửa trên và nửa dưới trống
        trơn. Vùng vẽ đã trừ dải phụ đề rồi nên tâm của nó chính là tâm thị giác. */
@@ -1470,7 +1577,6 @@ export const Chart: React.FC<{
           const dai = Math.max((x1 - x0) * (Math.abs(c.v) / max),
                                kC === 2 ? rCham * 2.4 : W * 0.018) * qi;
           const la = c === dinh;
-          const cS = Math.min(oCao * 0.44, H * 0.040);
           return (
             <g key={i}>
               <text x={xNhan - W * 0.015} y={y + cN * 0.34} textAnchor="end" fontFamily={F} fontWeight={800}

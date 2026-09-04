@@ -1,8 +1,8 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
-import { chanTroi, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong } from "./Khuon";
-import { CanhVe } from "./CanhVe";
+import { chanTroi, DAY_HINH, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong } from "./Khuon";
+import { CanhVe, sangDayCanh } from "./CanhVe";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    PHIM GIẢI THÍCH — bảy khuôn hình, nhịp cắt 2,1 giây  (1/9/2026)
@@ -292,7 +292,16 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
 
      Đặt ở MỘT biến thay vì ba điều kiện rời, vì ba chỗ vẽ biểu tượng (nền · `SoLieu` ·
      `KinhLup`) từng lệch nhau đúng theo kiểu ấy. */
-  const btVe = (N.nenAnh || N.canh_ve) ? "" : (N.bt || "");
+  /* ── CẢNH VẼ CODE VẪN CẦN MỘT CHỦ THỂ  (4/9/2026) ────────────────────────────────────
+     Điều kiện cũ tắt biểu tượng cho CẢ `canh_ve`, với lý do "cảnh vẽ code cũng là nền CÓ
+     NỘI DUNG". Lý do ấy đúng cho `nenAnh` — ảnh CF vẽ sẵn chủ thể trong ảnh — và SAI cho
+     `canh_ve`: `CanhVe` chỉ dựng BỐI CẢNH (kệ hàng, bàn ghế, mái nhà máy), không vẽ chủ thể
+     của câu.
+     Hậu quả soi được: kênh DAY IN LIFE có 4/8 nhịp vẽ code, và cả bốn ra một căn phòng
+     trống — kể cả **nhịp mở đầu**, tức đúng ba giây quyết định người xem có lướt hay không.
+     Cả 50/50 nhịp `canh` đều mang sẵn `bt`; nó chỉ bị chặn ở đây.
+     Đây là chiều NGƯỢC của cùng họ lỗi §6: bản trước gộp hai nhánh vốn khác nhau. */
+  const btVe = N.nenAnh ? "" : (N.bt || "");
 
   const Nen = (
     <>
@@ -300,7 +309,16 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
         <Img src={staticFile(N.nenAnh)}
              style={{ position: "absolute", inset: 0, width: W, height: H, objectFit: "cover",
                       transform: `scale(${kb})` }} />
-      ) : N.canh_ve ? (
+      ) : (N.noi && !N.canh_ve) ? (
+        <NenQue noi={N.noi} W={W} H={H} san={sanY} nguoi={NGUOI} t={t} />
+      ) : (
+        /* ── MỘT NHÁNH DUY NHẤT CHO MỌI NỀN VẼ BẰNG CODE  (4/9/2026) ────────────────────
+           Trước bản này `canh_ve` là một nhánh RIÊNG, đứng trước nhánh nền phẳng — nên khối
+           vẽ CHỦ THỂ (bóng đổ chân, biểu tượng, vệt chân kế thừa) chỉ tồn tại ở nhánh nền
+           phẳng và không bao giờ chạy cho cảnh vẽ code. Gộp lại: cùng một nhánh, chỉ khác
+           tấm nền phía sau. Thêm một loại nền mới sau này cũng không làm mất chủ thể nữa. */
+        <AbsoluteFill>
+          {N.canh_ve ? (
         /* ── CẢNH VẼ BẰNG CODE — lớp XEN KẼ, không phải lớp dự phòng  (4/9/2026) ──────────
            Đặt NGAY SAU `nenAnh` và TRƯỚC `noi`: `canh_ve` là một quyết định biên tập do
            Python đưa ra (xem `giai_thich.NOI_KENH` — vì sao, và tỉ lệ bao nhiêu), còn `noi`
@@ -317,22 +335,20 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                    cùng nơi chốn trong một tập phải ra hai đường bao khác nhau. Python
                    quyết và ghi vào nhịp — engine không tự suy, vì chọn ở hai nơi là hai
                    nơi để lệch nhau. */
-                hat={N.canh_hat ?? hat} p={p} />
-      ) : N.noi ? (
-        <NenQue noi={N.noi} W={W} H={H} san={sanY} nguoi={NGUOI} t={t} />
-      ) : (
+                hat={N.canh_hat ?? hat} hatSan={hat} p={p} />
+          ) : (
         /* NƠI CHỐN RỖNG = câu này TRỪU TƯỢNG (nói về con số, về vũ trụ, về ý niệm).
            Dựng nền trơn có đường chân trời, không dựng phòng ốc. Bản đầu mặc định về
            "phong_khach", nên một câu về tốc độ ánh sáng lại diễn trong phòng khách có sofa —
            nền ấy nói một điều SAI về nội dung câu, tệ hơn hẳn nền trống. */
-          <AbsoluteFill>
-            {/* 3/9 — DÙNG CHUNG `NenPhong` VỚI MỌI KHUÔN CODE.
-                Nhánh này từng tự vẽ gradient + sàn riêng, nên một video có thể có HAI kiểu nền
-                khác nhau: nhịp `canh` không ảnh dùng gradient này, còn `chart`/`chia_doi` dùng
-                nền phẳng. Hai nền khác nhau trong cùng một tập là chỗ mắt đọc ra "chắp vá".
-                Nay cả hai đi qua cùng một bề mặt — cùng tường, cùng sàn, cùng quầng sáng, và
-                cùng đổi kiểu theo `hat` nên vẫn đa dạng giữa các tập. */}
+        /* 3/9 — DÙNG CHUNG `NenPhong` VỚI MỌI KHUÔN CODE.
+           Nhánh này từng tự vẽ gradient + sàn riêng, nên một video có thể có HAI kiểu nền
+           khác nhau: nhịp `canh` không ảnh dùng gradient này, còn `chart`/`chia_doi` dùng
+           nền phẳng. Hai nền khác nhau trong cùng một tập là chỗ mắt đọc ra "chắp vá".
+           Nay cả hai đi qua cùng một bề mặt — cùng tường, cùng sàn, cùng quầng sáng, và
+           cùng đổi kiểu theo `hat` nên vẫn đa dạng giữa các tập. */
             <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />
+          )}
             {/* CHỦ THỂ CỦA KHUNG — vẽ ĐẶC, không mờ.  (3/9/2026)
                 Bản trước để `opacity: 0.34` với lý do "thuộc về căn phòng, không lơ lửng như
                 hình dán". Lý do ấy đúng khi vật là thứ PHỤ đứng sau một ảnh hoặc một khối số.
@@ -408,9 +424,16 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                                    fill="#000000" opacity={0.10 * (1 - lui * 0.7)} />
                         );
                       })}
-                      <ellipse cx={cx} cy={sanY + sz * 0.03} rx={sz * 0.34} ry={sz * 0.055}
+                      {/* BÓNG ĐỔ NẰM ĐÚNG MẶT SÀN, không nằm dưới nó. `sanY + sz*0,03` đẩy
+                          bóng xuống dưới đường chân trời một khoảng đổi theo cỡ hình — nên
+                          hình càng to thì bóng càng rời xa chân, và mắt đọc ra "vật lơ lửng
+                          có một vệt bẩn bên dưới". Bóng là thứ NEO vật vào nền, nên nó phải ở
+                          đúng chỗ vật chạm nền. */}
+                      <ellipse cx={cx} cy={sanY} rx={sz * 0.34} ry={sz * 0.048}
                                fill="#000000" opacity={0.13} />
-                      <g transform={`translate(${cx} ${sanY - sz * 0.5})`}>
+                      {/* Đáy hình chạm sàn: xem `DAY_HINH`. `0,5` giả định hình chạm hết hộp
+                          của nó, mà không hình nào chạm — nên vật treo 6,8% cỡ của nó. */}
+                      <g transform={`translate(${cx} ${sanY - sz * DAY_HINH})`}>
                         <BieuTuong ten={btVe} s={sz} />
                       </g>
                     </>
@@ -418,7 +441,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                 })()}
               </svg>
             ) : null}
-          </AbsoluteFill>
+        </AbsoluteFill>
       )}
     </>
   );
@@ -445,6 +468,15 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                        phải để đứng cạnh ảnh. */}
                    <SoLieu W={W} H={H * 0.80} so={N.so || ""} don={N.don || ""} chu={N.chu || ""}
                            bt={btVe} mau={mau} p={p}
+                           /* MẶT SÀN — TRUYỀN THẲNG PIXEL, KHÔNG QUY ĐỔI.
+                              `SoLieu` nhận `H={H*0.80}` nên các PHÂN SỐ bên trong nó (0,64·H…)
+                              là phân số của 0,8·H — nhưng hộp không bị CO, nó chỉ được khai
+                              chiều cao nhỏ hơn. Toạ độ pixel vì thế ánh xạ 1:1 với khung thật.
+                              Bản đầu em chia `sanY/0.80` theo phản xạ "đổi hệ quy chiếu" và
+                              đẩy nhân vật xuống 25% — đo lại thấy chân ở 0,722·H trong khi sàn
+                              ở 0,66·H. Cùng một họ lỗi hai lần liên tiếp, lần này là quy đổi
+                              THỪA thay vì quy đổi THIẾU: phải đo, đừng suy (§13.4). */
+                           san={sanY}
                            tren_anh={!!N.nenAnh} nen={nenTrang}
                            /* `bo` là trục bố cục THỨ HAI của `SoLieu` (đổi cỡ và chỗ đặt khối
                               số). Bản cũ tính ngay tại đây bằng `hat % 3` — tức engine tự
@@ -604,7 +636,12 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
       }} />
       <AbsoluteFill style={{
         pointerEvents: "none",
-        background: `radial-gradient(120% 78% at 50% 46%, #00000000 52%, #00000048 100%)`,
+        /* 4/9 — NHẸ TAY LẠI: #48 (28% đen) -> #24 (14%), và bắt đầu muộn hơn (52% -> 64%).
+             Đo mép đáy ba khung: sáng 25–32%. Vignette không phải thủ phạm duy nhất, nhưng
+             nó cộng vào MỌI khung kể cả khung đã sáng, nên nó là cái rẻ nhất để nới.
+             Vignette tồn tại để dẫn mắt vào giữa (§12.12) — 14% vẫn làm được việc ấy; 28%
+             thì nó thôi dẫn mắt và bắt đầu làm tối phim. */
+        background: `radial-gradient(120% 78% at 50% 46%, #00000000 64%, #00000024 100%)`,
       }} />
       <AbsoluteFill style={{
         pointerEvents: "none", opacity: 0.05, mixBlendMode: "overlay",
@@ -635,7 +672,12 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                   /* Độ sáng dải đáy của ẢNH nhịp này — `nen_gt.sang_day` đo lúc sinh và ghi
                      vào nhịp. Nhịp không có ảnh thì -1, và `PhuDe` giữ mực trắng vì sàn phòng
                      đã được làm sẫm ở mép dưới. */
-                  sangNen={Number((N as any)?.sangDay ?? -1)} />}
+                  /* Cảnh vẽ code cũng phải khai độ sáng đáy, không chỉ ảnh CF — nếu
+                     không thì nhánh "nền sáng thì đổi mực" của `PhuDe` không bao giờ
+                     chạy cho chúng, và ta lại phải làm tối sàn để cứu chữ. */
+                  sangNen={N.canh_ve
+                    ? sangDayCanh(N.canh_ve, nenTrang, mau, mauPhu)
+                    : Number((N as any)?.sangDay ?? -1)} />}
 
       {/* ══ ĐÃ BỎ DẢI TÊN KÊNH (1/9/2026) ══════════════════════════════════════════════
           Đóng dấu tên kênh lên MỌI khung là thói quen của kênh nhỏ — nó lấy mất 5% chiều cao

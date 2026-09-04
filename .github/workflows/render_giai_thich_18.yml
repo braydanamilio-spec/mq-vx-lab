@@ -261,6 +261,12 @@ jobs:
           OWNER_UID: ${{ secrets.OWNER_UID }}
           HOT_KEY: ${{ secrets.HOT_KEY }}
           RENDER_OWNER: ${{ secrets.OWNER_UID }}
+          # ── CHỈ LUỒNG 1 GHI SỔ SỨC KHOẺ KHOÁ  (4/9/2026) ──────────────────────────────
+          # Sổ trạng thái khoá là ảnh chụp của TOÀN HỆ, không phải của một luồng — mười tám
+          # luồng cùng ghi là ghi mười tám lần cùng một sự thật, và mỗi lần phải đọc 295 doc
+          # `gemini_keys` để dựng bản đồ. Xem phép tính ở `xoay_key.ghi_trang_thai`:
+          # 53.100 lượt ĐỌC mỗi lượt workflow, trên trần 50.000 CẢ NGÀY.
+          GHI_SO_KHOA: ${{ matrix.luong == 1 && '1' || '0' }}
           GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
           CF_KEYS: ${{ secrets.CF_KEYS }}
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
@@ -278,6 +284,20 @@ jobs:
             VONG=$((VONG+1))
             CON=$(( (HET - $(date +%s)) / 60 ))
             echo "══ [$MA] vòng $VONG — còn $CON phút ══"
+
+            # ── SỐ TẬP PHẢI TIẾN LÊN QUA CÁC LƯỢT  (4/9/2026) ────────────────────────────
+            # Hai lệnh dựng dưới đây không truyền `--tu`, và mặc định cũ của nó là **0**. Bộ
+            # sinh thì tất định theo `(kênh, số tập)`. Nên mỗi vòng của mỗi lượt của mỗi ngày
+            # dựng lại ĐÚNG cùng năm tập, ghi đè đúng năm tên tệp, rồi đẩy cả năm lên kho.
+            # Chú thích ở trên hứa "~450 video/lượt" — số VIDEO thì đúng, số video KHÁC NHAU
+            # là 5 mỗi kênh. Và đăng lặp lại một tập nhiều lần mỗi ngày là đúng thứ chính
+            # sách "inauthentic content" của YouTube nêu tên (§13.17).
+            #
+            # `github.run_number` tăng đều theo từng lượt workflow, có sẵn, không tốn hạn mức
+            # và không đụng Firestore. Nhân 200 để chừa chỗ cho ~25 tập mỗi kênh mỗi lượt;
+            # trong một lượt thì `tap_ke()` tự tiến lên bằng cách quét `out/`.
+            export GT_TAP_GOC=$(( ${{ github.run_number }} * 200 ))
+            echo "   📓 mốc tập của lượt này: $GT_TAP_GOC"
 
             python bao_chay.py --kenh "$MA" --loai long --trang_thai rendering || true
             # ── XIN 40 CHƯƠNG, MÃ TỰ KẸP THEO TRẦN TỪNG KÊNH  (3/9/2026) ──────────────────
