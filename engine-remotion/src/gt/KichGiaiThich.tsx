@@ -257,6 +257,11 @@ const _samMau = (h: string, t: number): string => {
       .toString(16).padStart(2, "0")).join("");
 };
 
+/* Khuôn nào là một CẢNH (cần một chủ thể đứng trong bối cảnh) và khuôn nào là một SƠ ĐỒ (tự
+   vẽ kín khung). Liệt kê phía CẢNH chứ không phía sơ đồ: khuôn thêm sau mặc định là sơ đồ,
+   tức mặc định KHÔNG chồng thêm lớp — hướng an toàn. */
+const KHUON_CANH = new Set(["canh", "nhom"]);
+
 export const KichGiaiThich: React.FC<PropsGT> = ({
   nhip = [], tu = [], voMp3 = "", nhac = "", nhacVol = 0.13,
   tieuDe = "", handle = "", mau = "#E0533D", mauPhu = "#2F7D6B", doc = false, hat = 0,
@@ -379,7 +384,19 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                 Cổng đã có ở `SoLieu` chỉ chặn *ảnh + biểu tượng*, không chặn *biểu tượng +
                 biểu tượng* — đúng họ "vá một nhánh, để nguyên nhánh song song".
                 Nhường cho lớp trên: nó biết bố cục nên đặt đúng chỗ hơn. */}
-            {btVe && String((N as any)?.khuon || "") !== "so_lieu" ? (
+            {/* ── CHỦ THỂ CHỈ VẼ CHO KHUÔN *CẢNH*, KHÔNG VẼ CHO KHUÔN *SƠ ĐỒ*  (4/9) ─────
+                Điều kiện cũ loại đúng `so_lieu`. Nhưng `so_lieu` không phải khuôn sơ đồ duy
+                nhất — `dem`, `truc`, `chart`, `chia_doi`, `the_chu`, `kinh_lup` đều tự vẽ kín
+                khung bằng đồ hoạ của chúng. Vẽ thêm một chủ thể phía sau là hai sơ đồ trong
+                một khung.
+                Anh gửi khung DAY IN LIFE: tám mặt trời xếp lưới VÀ một người đứng giữa, chữ
+                "19 miles" chạy xuyên qua chân người. Ba lớp, không lớp nào biết lớp nào.
+                Chú thích ngay dưới đã ghi đúng họ lỗi này (*"cổng chỉ chặn ảnh + biểu tượng,
+                không chặn biểu tượng + biểu tượng"*) và bản vá ấy chỉ liệt kê MỘT khuôn —
+                đúng §13.9: danh sách ngoại lệ là danh sách vô hạn. Nay hỏi ngược lại, và hỏi
+                theo VAI: khuôn này là một CẢNH hay một SƠ ĐỒ? Cảnh thì cần chủ thể; sơ đồ
+                thì chủ thể của nó chính là đồ hoạ nó vẽ. */}
+            {btVe && KHUON_CANH.has(String((N as any)?.khuon || "canh")) ? (
               <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
                    style={{ position: "absolute", left: 0, top: 0 }}>
                 {(() => {
@@ -452,6 +469,36 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                           đúng chỗ vật chạm nền. */}
                       <ellipse cx={cx} cy={sanY} rx={sz * 0.34} ry={sz * 0.048}
                                fill="#000000" opacity={0.13} />
+                      {/* ── ĐĨA TÁCH LỚP SAU CHỦ THỂ  (4/9/2026) ────────────────────────
+                          Anh gửi bốn khung: đồng hồ đè lên dãy tủ · cốc cà phê đè lên hạt và
+                          hai cột · mặt trời đè vai người · số "560" đè quả cầu. Cùng một gốc:
+                          `CanhVe` đặt đồ đạc bằng toạ độ ghi cứng, phần lớn quanh giữa khung
+                          (`W*0.415–0.585`, `W*0.46–0.71`), còn chủ thể cũng vẽ ở giữa. Hai lớp
+                          chọn chỗ độc lập và không lớp nào biết lớp kia.
+                          Sửa toạ độ của từng cảnh trong `CanhVe` là sửa vài chục hàm và vẫn
+                          hở ở cảnh thêm sau. Cách nhà đã dùng cho đúng bài này ở ảnh bìa
+                          (§13.27): **một đĩa mờ đặt SAU biểu tượng** — cách mọi hãng đặt logo
+                          lên một khung hình bất kỳ. Nó không xoá đồ đạc, nó tách CHIỀU SÂU,
+                          nên chủ thể đọc ra ngay cả khi có vật phía sau.
+                          Màu lấy từ chính nền (`nenTrang`) chứ không phải trắng/đen: đĩa trắng
+                          trên nền ấm đọc ra một vệt bẩn, còn đĩa cùng tông thì đọc ra khoảng
+                          lùi. Bo theo cỡ hình, mờ dần ra mép để không thành một cái huy hiệu
+                          tròn — đúng thứ §TRAN_KHUNG vừa phải đi cấm ở phía prompt. */}
+                      <defs>
+                        <radialGradient id={`dia${Math.round(cx)}`}>
+                          {/* Ba nấc, và cả ba đo bằng MẮT ở cỡ thật, không chọn cho đẹp
+                              số: bản đầu 0,92/0,82/0 đọc ra một QUẦNG SÁNG rõ rệt — nó tách
+                              được chủ thể nhưng lại thành một vật thứ ba trong khung, đúng
+                              cái nó sinh ra để tránh. Đĩa tách lớp làm đúng việc khi người
+                              xem KHÔNG nhận ra là có nó: chỉ vừa đủ dìm đồ đạc phía sau. */}
+                          <stop offset="0%" stopColor={nenTrang} stopOpacity={0.58} />
+                          <stop offset="45%" stopColor={nenTrang} stopOpacity={0.46} />
+                          <stop offset="100%" stopColor={nenTrang} stopOpacity={0} />
+                        </radialGradient>
+                      </defs>
+                      <ellipse cx={cx} cy={sanY - sz * DAY_HINH}
+                               rx={sz * 0.78} ry={sz * 0.80}
+                               fill={`url(#dia${Math.round(cx)})`} />
                       {/* Đáy hình chạm sàn: xem `DAY_HINH`. `0,5` giả định hình chạm hết hộp
                           của nó, mà không hình nào chạm — nên vật treo 6,8% cỡ của nó. */}
                       <g transform={`translate(${cx} ${sanY - sz * DAY_HINH})`}>

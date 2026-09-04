@@ -1029,12 +1029,32 @@ export const Truc: React.FC<{
   const n = Math.max(3, Math.min(W, H) * 0.007);
   const doc = H > W * 1.2;
   const so = Math.max(1, moc.length);
+  /* ── `vt` LÀ CHỈ SỐ, KHÔNG PHẢI PHÂN SỐ  (4/9/2026) ──────────────────────────────────
+     Python ghi `vt = len(moc) - 1` — tức chỉ số của mốc đang nói tới. Engine dùng thẳng nó
+     làm hệ số: `cy = y0 + (y1 - y0) * vt`. Với trục 3 mốc, `vt = 2` đẩy chấm xuống **gấp
+     đôi chiều dài trục**, tức RA NGOÀI KHUNG — chấm nhấn biến mất hoàn toàn.
+     Không lộ ra suốt vì trục cũ gần như luôn có ĐÚNG HAI mốc: `vt = 1` thì công thức sai
+     ấy tình cờ cho ra đúng đáy trục. Sáng nay em hạ sàn xuống 3 mốc, và cùng lúc làm lộ
+     lỗi này — mốc thứ ba không bao giờ được nhấn.
+     Đúng họ lỗi *mượn giá trị cho việc nó không sinh ra để làm*: một chỉ số bị đọc thành
+     một tỉ lệ, và hai thứ ấy trùng nhau đúng ở n = 2. */
+  const fv = so > 1 ? Math.max(0, Math.min(1, vt / (so - 1))) : 0.5;
 
   if (doc) {
-    const y0 = H * 0.10, y1 = H * 0.80, x = W * 0.26;
+    /* ── TRỤC DỌC ĐANG BỎ TRỐNG BA PHẦN TƯ KHUNG  (4/9/2026) ──────────────────────────
+       Đo tỉ lệ mực phủ vùng nội dung trên 90 khung của 6 clip: trung vị 26,8%, và **bốn
+       trong sáu khung trống nhất đều là khuôn này**, thấp tới 3,9%. Đường trục nằm ở
+       `W*0.26` với hai ba nhãn ngắn bên phải, còn lại là nền trơn.
+       Ba việc, không việc nào đụng tới nghĩa của trục:
+         · trục dịch sang trái (0,26 -> 0,18) để phần đọc được rộng ra
+         · mỗi mốc kéo một ĐƯỜNG DẪN mảnh sang mép phải — vừa lấp dọc vừa giúp mắt bám
+           mốc, đúng cách bảng số liệu in vẫn làm
+         · cỡ chữ trần 0,042·H -> 0,058·H; nhãn hai ba chữ ở cỡ cũ đọc ra như chú thích
+       Không thêm hình mới: `moc` không mang biểu tượng, bịa ra một cái là bịa dữ liệu. */
+    const y0 = H * 0.10, y1 = H * 0.80, x = W * 0.18;
     const oCao = (y1 - y0) / Math.max(1, so - 1 || 1);
-    const cN = (t: string) => Math.min(H * 0.042, oCao * 0.52,
-                                       (W * 0.62 / Math.max(1, t.length)) * 1.55);
+    const cN = (t: string) => Math.min(H * 0.058, oCao * 0.52,
+                                       (W * 0.70 / Math.max(1, t.length)) * 1.55);
     return (
       <g>
         <line x1={x} y1={y0} x2={x} y2={y0 + (y1 - y0) * ch} stroke="#2C2722" strokeWidth={n} />
@@ -1047,19 +1067,22 @@ export const Truc: React.FC<{
           const c = cN(m.nhan || "");
           return (
             <g key={i} opacity={ch >= f - 0.02 ? 1 : 0}>
+              {/* đường dẫn sang mép phải — lấp khoảng trống VÀ giúp mắt bám mốc */}
+              <line x1={x + W * 0.034} y1={y} x2={W * 0.92} y2={y}
+                    stroke="#2C2722" strokeWidth={Math.max(1, n * 0.18)} opacity={0.22} />
               <line x1={x - W * 0.030} y1={y} x2={x + W * 0.030} y2={y}
                     stroke="#2C2722" strokeWidth={n * 0.8} />
-              <text x={x + W * 0.055} y={y + c * 0.34} fontFamily={F} fontWeight={900}
+              <text x={x + W * 0.055} y={y - c * 0.22} fontFamily={F} fontWeight={900}
                     fontSize={c} fill="#2C2722">{m.nhan}</text>
               {m.phu ? (
-                <text x={x + W * 0.055} y={y + c * 1.34} fontFamily={F} fontWeight={700}
+                <text x={x + W * 0.055} y={y + c * 0.78} fontFamily={F} fontWeight={700}
                       fontSize={c * 0.66} fill="#5A544C">{m.phu}</text>
               ) : null}
             </g>
           );
         })}
         {vt >= 0 ? (
-          <circle cx={x} cy={y0 + (y1 - y0) * vt} r={W * 0.026 * (1 + 0.18 * Math.sin(p * 12))}
+          <circle cx={x} cy={y0 + (y1 - y0) * fv} r={W * 0.026 * (1 + 0.18 * Math.sin(p * 12))}
                   fill={mau} stroke="#FFFFFF" strokeWidth={n} />
         ) : null}
       </g>
@@ -1090,7 +1113,7 @@ export const Truc: React.FC<{
         );
       })}
       {vt >= 0 ? (
-        <circle cx={x0 + (x1 - x0) * vt} cy={y} r={H * 0.026 * (1 + 0.18 * Math.sin(p * 12))}
+        <circle cx={x0 + (x1 - x0) * fv} cy={y} r={H * 0.026 * (1 + 0.18 * Math.sin(p * 12))}
                 fill={mau} stroke="#FFFFFF" strokeWidth={n} />
       ) : null}
     </g>

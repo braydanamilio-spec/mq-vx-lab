@@ -1929,7 +1929,9 @@ def sinh_odds(i):
               "pages upon pages, no end visible", "",
               "a plain room dwarfed by the calendar", "one tiny figure at the base",
               "restrained palette")),
-    _n("chart", "Next to things you fear.", don="1 in N",
+    # `don` là NHÃN HIỆN RA, không phải chỗ ghi công thức. "1 in N" lên màn hình nguyên văn
+    # là "1 IN N" — soi khung ODDS thấy ngay ở đầu biểu đồ. Chuỗi mẫu lọt ra sản phẩm.
+    _n("chart", "Next to things you fear.", don="1 in this many",
        # Mốc so sánh phải khác chính mục của chương — khi bộ lịch phát trúng chương "lightning"
        # thì hai cột bằng nhau và trục phẳng lì. Cùng gốc với `_moc_khac` ở `chia_doi`.
        cot=[_moc_khac([{"nhan": "lightning", "v": 1222000, "so": 1222000},
