@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
-import { chanTroi, DAY_HINH, coHinh, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong } from "./Khuon";
+import { chanTroi, DAY_HINH, coHinh, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong, tiLe} from "./Khuon";
 import { CanhVe, sangDayCanh } from "./CanhVe";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
@@ -409,7 +409,25 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                      nên phóng to giờ chỉ ăn vào khoảng trống — trước hai bản vá ấy thì
                      phóng to sẽ đâm thẳng vào dải chữ. Thứ tự sửa quyết định được phép
                      sửa cái gì. */
-                  const s0 = Math.min(H * 0.54, W * 0.62);
+                  /* ── HỘP CHỦ THỂ ĐANG BỊ BỀ NGANG GHÌM  (4/9/2026) ────────────────
+                     Anh: *"vẫn còn xấu và chồng chéo, chưa thể hiện được cái nói"* — sau
+                     ba vòng em vá chồng chéo bằng ba cách khác nhau. §2: sửa vòng thứ ba
+                     mà vẫn cùng họ lỗi thì thứ sai là cách tiếp cận.
+                     Đo thay vì đoán. Hình người vẽ ra cao 0,867·s và rộng 0,30·s — cao gấp
+                     ba lần rộng. Hộp `s` lấy `min(H*0,54, W*0,62)`; ở khung dọc 1080×1920
+                     thì `W*0,62 = 670` chặn trước `H*0,54 = 1037`. Kết quả: nhân vật cao
+                     **581px = 30% khung** trong khi chỉ rộng 19% khung.
+                     Tức cái chặn bề ngang đang ghìm chiều cao để giữ một bề ngang còn thừa
+                     hơn tám mươi phần trăm. Bốn ảnh tham khảo anh gửi đều để nhân vật
+                     chiếm 55–65% chiều cao — đó là thứ tách "một cảnh có nhân vật" khỏi
+                     "một phông nền có dán hình nhỏ", và nó cũng là lý do khung mình đọc ra
+                     CHỒNG CHÉO: một chủ thể nhỏ đứng giữa những món đồ cùng cỡ thì mắt đọc
+                     ra va chạm, không đọc ra chiều sâu.
+                     Trần mới: không hình nào vẽ rộng quá hộp của nó, nên `W*0,90` đủ bảo
+                     đảm lọt khung cho cả hình bè ngang nhất (xe buýt, máy bay). Chiều cao
+                     vẫn do `traTren` chặn ở dưới, nên chủ thể không bao giờ đội lên vùng
+                     số hay vùng chữ. */
+                  const s0 = Math.min(H * 0.68, W * 0.90);
                   /* Lệch trái/giữa/phải theo `hat` — chủ thể đứng chính giữa ở MỌI tập là dấu
                      hiệu khuôn mẫu rõ nhất, đúng thứ luật YouTube gọi là "bố cục giống nhau". */
                   /* Đổi theo `hat` (tập) VÀ theo mốc vào của chính nhịp (`N.s`) — chỉ theo
@@ -438,7 +456,15 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                      công thức chưa mã hoá: **chiều cao còn lại phía trên dải phụ đề**.
                      Đúng họ lỗi §6 — một kích thước chịu hai ràng buộc mà công thức chỉ có một. */
                   const traTren = sanY - H * 0.02;          // khoảng trống từ đỉnh khung tới sàn
-                  const sz = Math.min(s0 * cz, traTren * 1.92) * coHinh(btVe);
+                  /* Quy đổi qua TỈ LỆ THẬT của hình (xem `TI_LE`), thay vì kẹp hộp
+                     vuông bằng hai trần rồi lấy min. Trần cao đo bằng khoảng trống thật
+                     từ đỉnh vùng nội dung xuống mặt sàn; trần ngang vẫn giữ để hình bè
+                     ngang không tràn khung. Với hình người, trần ngang thôi chặn — đúng
+                     như nó phải thế, vì nhân vật là hình cao. */
+                  const tl = tiLe(btVe);
+                  const caoDuoc = Math.min(traTren - H * 0.04, H * 0.62);
+                  const sz = Math.min(caoDuoc / tl.cao, (W * 0.90) / tl.rong, s0 * cz * 2)
+                             * coHinh(btVe);
                   /* ── QUY TẮC D: CẢNH SAU KẾ THỪA CẢNH TRƯỚC  (4/9/2026) ──────────────
                      §12.11 D: *cảnh sau mang dấu vết cảnh trước (vệt chân dài dần)* — thứ tách
                      một CHUỖI CẢNH khỏi một chuỗi hình rời rạc.
@@ -502,7 +528,9 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                       {/* Đáy hình chạm sàn: xem `DAY_HINH`. `0,5` giả định hình chạm hết hộp
                           của nó, mà không hình nào chạm — nên vật treo 6,8% cỡ của nó. */}
                       <g transform={`translate(${cx} ${sanY - sz * DAY_HINH})`}>
-                        <BieuTuong ten={btVe} s={sz} />
+                        {/* `tu` do Python quyết theo chính lời của nhịp — xem `_rai_tu_the`.
+                            Engine chỉ đọc, đúng nguyên tắc §15.3. */}
+                        <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0} />
                       </g>
                     </>
                   );

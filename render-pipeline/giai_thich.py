@@ -3345,6 +3345,68 @@ def _rai_khuon(ma: str, nhip: list, idx: int = 0) -> list:
     return nhip
 
 
+# ══ TƯ THẾ NHÂN VẬT — CHỌN THEO CHÍNH CÂU  (4/9/2026) ══════════════════════════════════════
+# Năm tư thế trong `BieuTuong` (xem chú thích ở đó). Chọn ở đây chứ không ở engine, vì engine
+# không đọc được lời — §15.3: nơi CHỌN và nơi biết nội dung phải là một, rồi TRUYỀN KẾT QUẢ.
+#
+# Ưu tiên NGHĨA trước, xoay vòng sau: câu có động từ chỉ hành động thì tư thế phải nói đúng
+# hành động ấy; câu không có thì mới xoay theo chỉ số nhịp để hai nhịp liền nhau khác nhau.
+# Làm ngược lại (xoay trước, khớp nghĩa sau) thì được đa dạng mà mất nghĩa — đúng lỗi vừa sửa
+# ở `_rai_hinh`.
+TU_THE = (
+    (1, ("look", "see", "notice", "number", "count", "many", "much", "big", "more",
+         "that is", "here is", "this is")),                      # chỉ tay lên
+    (2, ("tired", "quit", "still", "again", "every day", "no end", "wait", "long",
+         "hard", "work", "past dark", "keep")),                   # mệt, buông tay
+    (3, ("why", "how", "what if", "would you", "could you", "who", "?",
+         "nobody", "no one", "never")),                           # dang tay, thắc mắc
+    (4, ("walk", "walking", "go", "goes", "went", "run", "move", "start", "leave",
+         "arrive", "take", "give", "hand")),                      # bước đi, đưa tay
+)
+
+
+def _tu_the(loi: str, j: int) -> int:
+    """Tư thế cho một nhịp có nhân vật. 0 = đứng trung tính."""
+    t = f" {str(loi or '').lower()} "
+    for tu, khoa in TU_THE:
+        for w in khoa:
+            if w in t:
+                return tu
+    return (j % 4) + 1 if j else 0      # nhịp hook giữ tư thế trung tính
+
+
+def _rai_tu_the(nhip: list) -> list:
+    """Gán `tu` cho mọi nhịp vẽ nhân vật, và không để hai nhịp liền nhau trùng tư thế."""
+    # PHẠM VI PHẢI KHỚP CHỖ NHÂN VẬT THẬT SỰ ĐƯỢC VẼ TOÀN KHUNG: `canh` · `nhom` ·
+    # `kinh_lup`. Bản đầu xét mọi nhịp có `bt="nguoi"`, kể cả `so_lieu` — mà `so_lieu` vẽ
+    # biểu tượng nhỏ trong khối số, không vẽ nhân vật. Hậu quả: một nhịp `so_lieu` xen giữa
+    # hai nhịp `canh` làm đứt mạch so sánh, nên hai nhịp `canh` liền nhau (thứ người xem
+    # THẬT SỰ thấy nối nhau) vẫn lọt tư thế trùng. Cổng bắt được đúng hai ca ấy.
+    # Đây là lỗi lệch phạm vi mà chú thích trong chính cổng đã cảnh báo — lần này hàm lệch,
+    # không phải cổng lệch.
+    truoc = -1
+    for j, n in enumerate(nhip):
+        # CHỈ so giữa những nhịp THẬT SỰ vẽ nhân vật toàn khung, và KHÔNG cắt mạch ở nhịp
+        # không vẽ gì. Hai bản trước đều sai một đầu:
+        #   · xét mọi `bt="nguoi"` -> tính cả `so_lieu` (vẽ biểu tượng nhỏ trong khối số,
+        #     không vẽ nhân vật), nên hai nhịp `canh` liền nhau vẫn lọt tư thế trùng;
+        #   · cắt mạch ở nhịp không phải người -> hai nhịp `nhom` KHÔNG CÓ hình xen giữa
+        #     làm mạch reset, và người xem vẫn thấy hai nhân vật cùng tư thế nối nhau.
+        # Định nghĩa đúng là *nhịp có vẽ nhân vật*, và nhịp không vẽ gì thì trong suốt.
+        if (n.get("khuon") or "") not in ("canh", "nhom", "kinh_lup"):
+            continue
+        if (n.get("bt") or "") != "nguoi":
+            continue
+        t = _tu_the(n.get("loi") or "", j)
+        if t == truoc:
+            # Trùng thì lệch một bậc trong năm tư thế. Khác với chuyện đổi BIỂU TƯỢNG: đổi
+            # tư thế không đổi thứ đang được vẽ, nên nó không bao giờ làm sai nghĩa câu.
+            t = (t + 1) % 5
+        n["tu"] = t
+        truoc = t
+    return nhip
+
+
 def _rai_hinh(ma: str, nhip: list, idx: int = 0) -> list:
     """Không nhịp cảnh nào dùng lại biểu tượng của nhịp ngay trước.
 
@@ -3361,12 +3423,30 @@ def _rai_hinh(ma: str, nhip: list, idx: int = 0) -> list:
         if (n.get("khuon") or "") not in ("canh", "kinh_lup"):
             continue
         b = n.get("bt") or ""
+        # ── NGƯỜI ĐƯỢC PHÉP LẶP  (4/9/2026) ─────────────────────────────────────────────
+        # Sau khi buộc đồ vật phải lấy từ LỜI, `nguoi` chiếm 64% nhịp `canh` — vì phần lớn
+        # câu không chứa danh từ vẽ được. Cho phép chống-trùng đổi những nhịp ấy đi thì nó
+        # lại nhặt đồ vật trong phông nền, tức kéo đúng lỗi vừa sửa quay lại.
+        # Bốn ảnh anh gửi đều có người ở MỌI khung, và cái đổi giữa khung này với khung kia
+        # là TƯ THẾ và BIỂU CẢM, không phải đổi người thành cái đồng hồ. Nhân vật lặp lại là
+        # DÀN DIỄN VIÊN của chương trình, không phải một lỗi lặp.
+        if b == "nguoi":
+            truoc = b
+            continue
         if b and b == truoc:
-            for t in range(len(bo)):
-                c = bo[(idx + j + t) % len(bo)]
-                if c != truoc:
-                    b = c
-                    break
+            # ── HÌNH KHỚP THỨ HAI CỦA CHÍNH CÂU ẤY, TRƯỚC ĐÃ  (4/9/2026) ─────────────
+            # Bản cũ nhảy thẳng sang bộ hình của kênh, tức đổi lấy đa dạng bằng cách bỏ
+            # hẳn nghĩa — soi khung ra ngôi nhà cho câu nói về đêm tối. Nay hỏi lại chính
+            # câu xem nó còn khớp hình nào khác không.
+            c = next((x for x in _bt_canh_ds(n.get("loi", ""), n.get("ve", ""))
+                      if x != truoc), "")
+            if not c:
+                # Câu không còn hình nào khớp. GIỮ NGUYÊN hình trùng thay vì mượn một hình
+                # của kênh: lặp một hình ĐÚNG thì chỉ nhàm, còn thay bằng một hình SAI thì
+                # khung nói một đằng lời nói một nẻo — lỗi nặng hơn hẳn, và đúng thứ tự ưu
+                # tiên mà docstring của hàm này vẫn luôn khai.
+                c = b
+            b = c
             n["bt"] = b
         truoc = b
     return nhip
@@ -3812,13 +3892,63 @@ def _so_hook(hp: str):
     return -v if m.group(1) else v
 
 
+def _bt_canh_ds(loi: str, ve: str = "") -> list:
+    """MỌI biểu tượng khớp câu, xếp hạng — khớp trong LỜI trước, trong câu tả cảnh sau.
+
+    ── VÌ SAO CẦN DANH SÁCH  (4/9/2026) ────────────────────────────────────────────────
+    `_bt_canh` trả đúng một hình. Khi hai nhịp liền nhau ra cùng hình, `_rai_hinh` đổi nhịp
+    sau sang **một hình bất kỳ trong bộ của kênh** — chọn thuần cho đa dạng, không xét
+    nghĩa. Soi khung: câu *"Up while it is still dark"* (cảnh: người gác đêm, áo choàng
+    dài, đèn lồng) nhận một NGÔI NHÀ; *"Now just wait"* (cảnh: lọ thuỷ tinh đựng xu) nhận
+    một MẶT TRỜI. Đó đúng là lời anh phê *"chưa thể hiện được cái nói"*.
+    Chú thích của chính `_rai_hinh` viết *"hình đúng nghĩa quan trọng hơn hình đa dạng"* —
+    rồi làm ngược lại ở đúng nhánh trùng. Có danh sách thì nhịp sau lấy được hình khớp
+    THỨ HAI của chính câu ấy: vừa khác hình trước, vừa vẫn đúng nghĩa.
+
+    ── VÌ SAO LỜI TRƯỚC, CẢNH SAU ──────────────────────────────────────────────────────
+    `ve` tả trọn bối cảnh nên đầy danh từ của PHÔNG NỀN. Gộp hai nguồn vào một chuỗi thì
+    hình được chọn theo cái đứng trong nền chứ không theo cái câu đang nói. Cùng bài học
+    §15.3: đo một phép nối là đo một văn bản không ai viết ra.
+    """
+    ra = []
+    for nguon in (str(loi or ""), str(ve or "")):
+        t = f" {nguon} ".lower()
+        for bt, tu in _BT_TU:
+            if bt in ra:
+                continue
+            for w in tu:
+                if f" {w} " in t or f" {w}s " in t or f" {w}." in t or f" {w}," in t:
+                    ra.append(bt)
+                    break
+    return ra
+
+
 def _bt_canh(loi: str, ve: str = "") -> str:
-    """Biểu tượng cho một nhịp `canh` — lấy từ CHÍNH lời của nhịp. Không chắc thì trả ""."""
-    t = f" {str(loi or '')} {str(ve or '')} ".lower()
-    for bt, tu in _BT_TU:
-        for w in tu:
-            if f" {w} " in t or f" {w}s " in t or f" {w}." in t or f" {w}," in t:
-                return bt
+    """Biểu tượng cho một nhịp `canh` — ưu tiên khớp trong LỜI, rồi mới tới câu tả cảnh.
+
+    Bản trước nối `loi` và `ve` thành MỘT chuỗi rồi quét. Nhưng `ve` tả trọn bối cảnh nên
+    đầy danh từ của phông nền, và chúng thắng ngay khi bảng `_BT_TU` xếp chúng lên trước:
+    câu *"Up while it is still dark."* với cảnh *"a night watchman … moving out of a small
+    room"* nhận một NGÔI NHÀ, vì `ve` có chữ "room". Khung nói một đằng, lời nói một nẻo —
+    đúng lời anh phê *"chưa thể hiện được cái nói"*.
+    Xem `_bt_canh_ds`: quét hai nguồn RIÊNG, lời trước.
+    """
+    # ── ĐỒ VẬT CHỈ LẤY TỪ LỜI. CÂU TẢ CẢNH KHÔNG ĐƯỢC ĐƯA VÀO ĐỒ VẬT MỚI  (4/9/2026) ──────
+    # Đo trên nhịp thật: câu *"Up while it is still dark."* khớp **không danh từ nào** trong
+    # bảng, nên nó rơi xuống `ve` — và `ve` tả *"a night watchman … a narrow old town street
+    # at night, shuttered houses"*. Chữ "house" của PHÔNG NỀN thắng, và khung hiện một ngôi
+    # nhà cho một câu nói về bóng tối.
+    #
+    # Bốn ảnh anh gửi xử lý đúng ca này bằng NHÂN VẬT ĐANG DIỄN — người trở dậy trong tối,
+    # tay cầm đèn lồng — chứ không bằng một đồ vật. Câu không có danh từ vẽ được thì thứ diễn
+    # đạt nó là hành động của người, không phải một món đồ nhặt trong nền.
+    #
+    # Nên `ve` chỉ còn được dùng để CHỌN GIỮA các ứng viên (xem `_rai_hinh` nhánh trùng), chứ
+    # không được đưa vào ứng viên đầu tiên. Đúng thứ tự ưu tiên mà đoạn dưới vẫn luôn khai:
+    # *đồ vật phải khớp từ mới vẽ; NGƯỜI là mặc định an toàn.*
+    ds = _bt_canh_ds(loi, "")
+    if ds:
+        return ds[0]
     # ── KHÔNG KHỚP TỪ NÀO -> VẼ NGƯỜI  (3/9/2026) ──────────────────────────────────────────
     # Bản đầu trả "" với lý do *"không biết ≠ đoán bừa"*. Lý do ấy đúng với ĐỒ VẬT: gắn một cái
     # ô tô vào câu nói về vũ trụ là nói một điều SAI, tệ hơn nền trống.
@@ -3996,6 +4126,9 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     nhip = _rai_truc(ma, nhip, idx)
     nhip = _rai_dem(ma, nhip, idx)
     nhip = _rai_kinh_lup(ma, nhip, idx)
+    # SAU MỌI LƯỢT CHÈN, xem §15.19 — lượt RẢI phải chạy sau lượt CHÈN, nếu không thì
+    # nhịp hook (chèn ở `insert(0, …)`) không bao giờ được gán.
+    nhip = _rai_tu_the(nhip)
     nhip = _rai_ss(ma, nhip, idx)
     nhip = _rai_so(ma, nhip, idx)
     nhip = _rai_chart(ma, nhip, idx)

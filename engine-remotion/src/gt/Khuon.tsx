@@ -27,8 +27,8 @@ const F = "Poppins, Arial Black, sans-serif";
 
 /* Biểu tượng vẽ bằng code. Cố ý ít và thô: mỗi cái phải đọc được ở 1/6 chiều ngang khung trên
    màn hình điện thoại, nên chi tiết nhiều chỉ thành vết bẩn. */
-export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string }> =
-({ ten, s, mau = "#2C2722" }) => {
+export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: number }> =
+({ ten, s, mau = "#2C2722", tu = 0 }) => {
   const k = (v: number) => v * s;
   const n = Math.max(2, s * 0.055);
   const P = (d: string, f = "none", w = 1) => (
@@ -158,21 +158,70 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string }> =
         {/* ÁO vẽ TRƯỚC đầu, để cổ áo chui xuống dưới cằm chứ không cắt ngang mặt */}
         {N(`M ${-k(0.105)} ${vaiY} Q 0 ${vaiY - k(0.030)} ${k(0.105)} ${vaiY}
             L ${k(0.092)} ${k(0.16)} L ${-k(0.092)} ${k(0.16)} Z`, "#46505C")}
-        {/* TAY gập ở khuỷu; hai bên lệch nhau chút ít cho đỡ đối xứng máy móc */}
-        {N(`M ${-k(0.105)} ${vaiY + k(0.045)} L ${-k(0.185)} ${k(0.045)} L ${-k(0.155)} ${k(0.16)}`)}
-        {N(`M ${k(0.105)} ${vaiY + k(0.045)} L ${k(0.195)} ${k(0.035)} L ${k(0.172)} ${k(0.145)}`)}
-        {/* CHÂN gập ở gối, bàn chân bẻ ngang để nhân vật ĐỨNG chứ không lơ lửng */}
-        {N(`M ${-k(0.050)} ${k(0.16)} L ${-k(0.078)} ${k(0.30)} L ${-k(0.060)} ${k(0.42)} L ${-k(0.125)} ${k(0.432)}`)}
-        {N(`M ${k(0.050)} ${k(0.16)} L ${k(0.078)} ${k(0.30)} L ${k(0.060)} ${k(0.42)} L ${k(0.125)} ${k(0.432)}`)}
+        {/* ── NĂM TƯ THẾ, KHÔNG PHẢI MỘT  (4/9/2026) ─────────────────────────────────────
+            Sau khi buộc đồ vật phải lấy từ LỜI, `nguoi` chiếm 64% nhịp `canh` — và bốn nhịp
+            người liên tiếp với MỘT tư thế đứng, MỘT nụ cười là đúng lời anh phê *"lặp đi lặp
+            lại cùng một mô-típ"*. Đổi người thành cái đồng hồ để lấy đa dạng thì hỏng nghĩa,
+            nên lối thoát duy nhất là để chính nhân vật DIỄN.
+            Bốn ảnh anh gửi làm đúng thế: mọi khung đều có người, và cái đổi giữa khung này với
+            khung kia là TƯ THẾ và BIỂU CẢM — ngồi cúi viết, nằm co bên lửa, đứng chỉ tay, đưa
+            món đồ. Không khung nào đổi nhân vật thành một biểu tượng.
+            Tay và chân vốn là bốn nét rời, nên tư thế chỉ là đổi toạ độ, không đổi kiến trúc. */}
+        {tu === 1 ? (<>
+          {/* chỉ tay lên — câu nêu một con số hoặc một sự thật */}
+          {N(`M ${-k(0.105)} ${vaiY + k(0.045)} L ${-k(0.175)} ${k(0.060)} L ${-k(0.150)} ${k(0.16)}`)}
+          {N(`M ${k(0.105)} ${vaiY + k(0.040)} L ${k(0.185)} ${-k(0.140)} L ${k(0.205)} ${-k(0.300)}`)}
+        </>) : tu === 2 ? (<>
+          {/* hai tay buông xuôi, vai chùng — mệt, chịu đựng */}
+          {N(`M ${-k(0.100)} ${vaiY + k(0.060)} L ${-k(0.140)} ${k(0.080)} L ${-k(0.132)} ${k(0.215)}`)}
+          {N(`M ${k(0.100)} ${vaiY + k(0.060)} L ${k(0.140)} ${k(0.080)} L ${k(0.132)} ${k(0.215)}`)}
+        </>) : tu === 3 ? (<>
+          {/* hai tay dang ra — câu hỏi, ngơ ngác */}
+          {N(`M ${-k(0.105)} ${vaiY + k(0.045)} L ${-k(0.215)} ${-k(0.010)} L ${-k(0.255)} ${-k(0.090)}`)}
+          {N(`M ${k(0.105)} ${vaiY + k(0.045)} L ${k(0.215)} ${-k(0.010)} L ${k(0.255)} ${-k(0.090)}`)}
+        </>) : tu === 4 ? (<>
+          {/* một tay đưa ra trước — trao, chỉ vào vật bên cạnh */}
+          {N(`M ${-k(0.105)} ${vaiY + k(0.045)} L ${-k(0.165)} ${k(0.070)} L ${-k(0.148)} ${k(0.180)}`)}
+          {N(`M ${k(0.105)} ${vaiY + k(0.050)} L ${k(0.230)} ${k(0.010)} L ${k(0.320)} ${k(0.020)}`)}
+        </>) : (<>
+          {N(`M ${-k(0.105)} ${vaiY + k(0.045)} L ${-k(0.185)} ${k(0.045)} L ${-k(0.155)} ${k(0.16)}`)}
+          {N(`M ${k(0.105)} ${vaiY + k(0.045)} L ${k(0.195)} ${k(0.035)} L ${k(0.172)} ${k(0.145)}`)}
+        </>)}
+        {/* CHÂN gập ở gối, bàn chân bẻ ngang để nhân vật ĐỨNG chứ không lơ lửng.
+            Tư thế 3 và 4 bước đi: một chân trước một chân sau. */}
+        {tu === 3 || tu === 4 ? (<>
+          {N(`M ${-k(0.050)} ${k(0.16)} L ${-k(0.135)} ${k(0.30)} L ${-k(0.150)} ${k(0.42)} L ${-k(0.215)} ${k(0.432)}`)}
+          {N(`M ${k(0.050)} ${k(0.16)} L ${k(0.105)} ${k(0.30)} L ${k(0.075)} ${k(0.42)} L ${k(0.140)} ${k(0.432)}`)}
+        </>) : (<>
+          {N(`M ${-k(0.050)} ${k(0.16)} L ${-k(0.078)} ${k(0.30)} L ${-k(0.060)} ${k(0.42)} L ${-k(0.125)} ${k(0.432)}`)}
+          {N(`M ${k(0.050)} ${k(0.16)} L ${k(0.078)} ${k(0.30)} L ${k(0.060)} ${k(0.42)} L ${k(0.125)} ${k(0.432)}`)}
+        </>)}
         {/* ĐẦU chiếm khoảng một phần ba chiều cao — tỉ lệ ấy là thứ làm hình đọc ra nhân
             vật thay vì sơ đồ người. */}
         <circle cx="0" cy={-k(0.285)} r={k(0.150)} fill="#FFFFFF"
                 stroke={mau} strokeWidth={k(0.019)} />
         <ellipse cx={-k(0.050)} cy={-k(0.295)} rx={k(0.019)} ry={k(0.026)} fill={mau} />
         <ellipse cx={k(0.050)} cy={-k(0.295)} rx={k(0.019)} ry={k(0.026)} fill={mau} />
-        {N(`M ${-k(0.078)} ${-k(0.358)} L ${-k(0.026)} ${-k(0.374)}`, "none", wM)}
-        {N(`M ${k(0.026)} ${-k(0.374)} L ${k(0.078)} ${-k(0.358)}`, "none", wM)}
-        {N(`M ${-k(0.036)} ${-k(0.228)} Q 0 ${-k(0.202)} ${k(0.036)} ${-k(0.228)}`, "none", wM)}
+        {/* LÔNG MÀY + MIỆNG THEO TƯ THẾ. Ảnh tham khảo: người ngồi viết có lông mày XUÔI và
+            miệng thẳng; người kể chuyện có miệng mở. Mặt bất động là thứ làm cả loạt khung
+            đọc ra "cùng một hình dán", kể cả khi thân đã đổi tư thế. */}
+        {tu === 2 ? (<>
+          {N(`M ${-k(0.078)} ${-k(0.352)} L ${-k(0.026)} ${-k(0.336)}`, "none", wM)}
+          {N(`M ${k(0.026)} ${-k(0.336)} L ${k(0.078)} ${-k(0.352)}`, "none", wM)}
+        </>) : tu === 3 ? (<>
+          {N(`M ${-k(0.082)} ${-k(0.386)} Q ${-k(0.052)} ${-k(0.408)} ${-k(0.022)} ${-k(0.390)}`, "none", wM)}
+          {N(`M ${k(0.022)} ${-k(0.390)} Q ${k(0.052)} ${-k(0.408)} ${k(0.082)} ${-k(0.386)}`, "none", wM)}
+        </>) : (<>
+          {N(`M ${-k(0.078)} ${-k(0.358)} L ${-k(0.026)} ${-k(0.374)}`, "none", wM)}
+          {N(`M ${k(0.026)} ${-k(0.374)} L ${k(0.078)} ${-k(0.358)}`, "none", wM)}
+        </>)}
+        {tu === 2
+          ? N(`M ${-k(0.032)} ${-k(0.220)} L ${k(0.032)} ${-k(0.220)}`, "none", wM)
+          : tu === 3
+          ? <ellipse cx="0" cy={-k(0.216)} rx={k(0.026)} ry={k(0.032)} fill={mau} />
+          : tu === 1 || tu === 4
+          ? N(`M ${-k(0.044)} ${-k(0.234)} Q 0 ${-k(0.186)} ${k(0.044)} ${-k(0.234)}`, "none", wM)
+          : N(`M ${-k(0.036)} ${-k(0.228)} Q 0 ${-k(0.202)} ${k(0.036)} ${-k(0.228)}`, "none", wM)}
       </g>);
     }
     case "dien_thoai": return <g>{P(`M ${-k(0.22)} ${-k(0.42)} h ${k(0.44)} v ${k(0.84)} h ${-k(0.44)} Z`, "#20262E")}
@@ -346,6 +395,26 @@ export const DAY_HINH = 0.435;
 const _NHO = new Set(["dong_ho", "coc", "giay", "dien_thoai", "tien", "hop",
                       "nguyen_tu", "te_bao", "vi_khuan"]);
 export const coHinh = (ten: string): number => (_NHO.has(ten) ? 0.58 : 1);
+
+/* ══ TỈ LỆ THẬT CỦA HÌNH TRONG HỘP CỦA NÓ  (4/9/2026) ═══════════════════════════════════
+   `BieuTuong` nhận một cỡ `s` và vẽ trong một hộp VUÔNG s×s. Nhưng không hình nào vuông, và
+   hình người thì cao gấp ba lần rộng — đo trên chính toạ độ của `case "nguoi"`: đỉnh đầu ở
+   −0,432·s, chân ở +0,435·s (= `DAY_HINH`), vai rộng ±0,105·s, kể cả tay dang thì ±0,15·s.
+   Tức nó dùng **0,867 chiều cao hộp và 0,30 bề ngang hộp**.
+
+   Hậu quả: chỗ gọi kẹp `s` bằng `min(trần_cao, trần_ngang)` như thể hình vuông, nên trần
+   NGANG chặn trước và ghìm chiều cao xuống — nhân vật cao 30% khung trong khi chỉ rộng 19%.
+   Đây là họ lỗi *một kích thước chịu hai ràng buộc mà công thức chỉ mã hoá một* đã ghi ở
+   đầu tệp luật.
+
+   Bảng này để chỗ gọi quy đổi được: cỡ hộp cần thiết để hình cao `h` là `h / cao`, và bề
+   ngang hình khi ấy là `s × rong`. Chỉ khai hình đã ĐO; hình chưa đo mặc định 1,0×1,0 —
+   tức giữ nguyên hành vi cũ, không đoán. Hình nào thấy còn nhỏ thì ĐO RỒI THÊM, đừng ước
+   lượng: §13.7 đã trả giá sáu lần cho việc đoán một hằng số thay vì đo vật thật. */
+export const TI_LE: Record<string, { cao: number; rong: number }> = {
+  nguoi: { cao: 0.867, rong: 0.30 },
+};
+export const tiLe = (ten: string) => TI_LE[ten] || { cao: 1, rong: 1 };
 
 export const _emChu = (s: string): number => {
   let e = 0;

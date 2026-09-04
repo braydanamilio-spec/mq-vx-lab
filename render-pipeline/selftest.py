@@ -7827,18 +7827,38 @@ def t_gu_hinh_khac_nhau():
     xau = []
     for k in G.KENH:
         for i in range(4):
-            nh = G._rai_hinh(k["ma"], G.BO_SINH[k["ma"]](i)[3], i)
+            # ĐI QUA ĐÚNG ĐƯỜNG MÃ THẬT: `kich_ban` chạy cả `_rai_hinh` lẫn `_rai_tu_the`.
+            # Gọi thẳng `_rai_hinh` là bỏ mất lượt gán tư thế, tức cổng đo một sản phẩm không
+            # tồn tại (§13.15) — và nó sẽ báo đỏ cho những nhịp người vốn đã được phân biệt
+            # bằng tư thế.
+            nh = G.kich_ban(k["ma"], i)[4]
             truoc = ""
+            truocTu = -1
             # PHẠM VI phải khớp `_rai_hinh` — cả `canh` lẫn `kinh_lup` đều vẽ biểu tượng.
             # Cổng đi qua ít khuôn hơn hàm thì nó thấy "nha, nha liền nhau" ở hai nhịp thật ra
             # có một nhịp kính lúp xen giữa. Cổng và hàm lệch phạm vi thì cổng báo lỗi giả.
             for n in nh:
-                if (n.get("khuon") or "") not in ("canh", "kinh_lup"):
+                if (n.get("khuon") or "") not in ("canh", "nhom", "kinh_lup"):
                     continue
+                if not (n.get("bt") or ""):
+                    continue        # nhịp không vẽ hình thì trong suốt, không cắt mạch
                 b = n.get("bt") or ""
+                # ── NGƯỜI ĐƯỢC LẶP, NHƯNG TƯ THẾ PHẢI KHÁC  (4/9/2026) ───────────────
+                # Luật cũ cấm mọi biểu tượng lặp liền kề. Nó đúng cho ĐỒ VẬT — hai cái
+                # đồng hồ liền nhau là một khung lặp. Nó SAI cho nhân vật: sau khi buộc đồ
+                # vật phải lấy từ LỜI, `nguoi` chiếm 64% nhịp `canh`, và ép đổi đi thì hệ
+                # lại nhặt đồ vật trong phông nền — đúng lỗi "khung nói một đằng lời nói
+                # một nẻo" vừa phải sửa.
+                # Bốn ảnh tham chiếu đều có người ở MỌI khung; cái đổi là TƯ THẾ. Nên cổng
+                # đổi theo: người lặp thì phải lặp với một tư thế khác.
                 if b and b == truoc:
-                    xau.append(f'{k["ma"]} tập {i}: {b} hai nhịp liền')
+                    if b == "nguoi":
+                        if (n.get("tu") or 0) == truocTu:
+                            xau.append(f'{k["ma"]} tập {i}: người hai nhịp liền CÙNG tư thế')
+                    else:
+                        xau.append(f'{k["ma"]} tập {i}: {b} hai nhịp liền')
                 truoc = b
+                truocTu = n.get("tu") or 0
     assert not xau, "lặp biểu tượng liền kề: " + "; ".join(xau[:3])
 
     qua = [(a, b, sorted(set(G.GU_HINH[a]) & set(G.GU_HINH[b])))
