@@ -48,7 +48,6 @@ export type NhipGT = {
   so?: string; don?: string; chu?: string; bt?: string;
   moc?: { nhan: string; phu?: string }[]; vt?: number;
   x?: number; y?: number; nhan?: string;
-  tep?: string;
 };
 
 export type PropsGT = {
@@ -447,9 +446,18 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
         return { nen: Nen,
                  lop: N.dai_chu ? <DaiChu W={W} H={H * 0.80} chu={N.dai_chu} p={p} /> : null };
       case "dem":
+        /* `dai_chu` đỡ cho `chu`.  (4/9/2026)
+           Mọi khuôn khác vẽ `dai_chu`, riêng nhánh này bỏ nó — nên nhịp `howlong` bản dài
+           ghi `dai_chu: "CAR — 11 months"` mà KHÔNG có `chu`, và người xem nhận 11 biểu
+           tượng không nhãn: mất đúng thứ quy tắc C cần (đếm được thì phải biết đếm cái gì).
+           Đỡ vào chính ô nhãn của `Dem` chứ không chồng thêm một lớp `DaiChu` — ô ấy đã
+           nằm đúng chỗ dưới lưới và tự co cỡ chữ theo bề ngang, còn chồng lớp thì một
+           nhịp có cả hai trường sẽ hiện hai dòng đè nhau. */
         return { nen: Nen,
                  lop: <Dem W={W} H={H * 0.80} n={N.n || 4} ngay={N.ngay !== false}
-                           chu={N.chu || ""} p={p} mau={mau} /> };
+                           chu={N.chu || N.dai_chu
+                                || (N.so && N.don ? `${N.so} ${N.don}` : "")}
+                             p={p} mau={mau} /> };
       case "chart":
         return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} anTroi />,
                  lop: <Chart W={W} H={H * 0.80} cot={N.cot || []} don={N.don || ""}
@@ -464,11 +472,6 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                                  Engine KHÔNG tự suy ra: chọn ở hai nơi là hai nơi để lệch nhau,
                                  và lệch kiểu ấy không báo lỗi, chỉ dựng ra bố cục khác. */
                               bo={N.bo_the ?? hat} /> };
-      case "anh":
-        return { nen: N.tep ? (
-          <Img src={staticFile(N.tep)} style={{ position: "absolute", inset: 0, width: W, height: H,
-                objectFit: "cover", transform: `scale(${1.04 + p * 0.05})` }} />
-        ) : Nen, lop: null };
       default: {
         /* QUY TẮC D — CẢNH SAU KẾ THỪA CẢNH TRƯỚC.
            Bằng chứng: vệt dấu chân của nhân vật DÀI THÊM RA qua từng cảnh trong cùng một mạch.

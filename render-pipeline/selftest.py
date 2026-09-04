@@ -2544,6 +2544,7 @@ def main():
     check("không đọc lại cùng một câu trong vòng 12 nhịp", t_khong_lap_loi_gan)
     check("bản dài đủ dài để bật quảng cáo giữa video", t_ban_dai_du_dai)
     check("không `const` nào bị dùng trước khai báo (vùng chết tạm thời)", t_khong_tdz)
+    check("mọi trường nhịp có người vẽ ở đúng nhánh khuôn", t_moi_truong_co_nguoi_doc)
     check("cổng hình lấy khung ở nhịp CÓ phụ đề", t_kiem_hinh_lay_dung_khung)
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
@@ -7331,6 +7332,25 @@ def t_khong_tdz():
     r = _sp.run([_s.executable, _o.path.join(g, "kiem_tdz.py")],
                 capture_output=True, text=True, cwd=g)
     assert r.returncode == 0, "kiem_tdz báo lỗi:\n" + (r.stdout or r.stderr)[:400]
+
+
+def t_moi_truong_co_nguoi_doc():
+    """Mỗi trường nhịp phải được engine vẽ ở ĐÚNG NHÁNH khuôn của nó.
+
+    §16.6 đã ghi hai lần "trường được GHI mà không ai ĐỌC", và phép soi cả tệp bỏ lọt biến
+    thể khó hơn: trường CÓ được đọc — chỉ là ở nhánh khác. Nhịp `howlong` bản dài, khuôn
+    `dem`, ghi `dai_chu` và `so`+`don`; ba nhánh khác vẽ `dai_chu`, riêng `dem` thì không,
+    nên người xem nhận 11 biểu tượng KHÔNG NHÃN. Đúng họ lỗi số 6.
+
+    Cổng đã thử ngược cả hai lỗi thật (bỏ lại từng cái -> exit 1) và trạng thái sạch (0).
+    """
+    import os as _o
+    import subprocess as _sp
+    import sys as _s
+    g = _o.path.dirname(_o.path.abspath(__file__))
+    r = _sp.run([_s.executable, _o.path.join(g, "kiem_truong.py")],
+                capture_output=True, text=True, cwd=g)
+    assert r.returncode == 0, "kiem_truong báo lỗi:\n" + (r.stdout or r.stderr)[:400]
 
 
 def t_moi_nhip_co_bo_cuc():

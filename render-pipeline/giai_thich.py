@@ -2720,14 +2720,16 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
     # ── TỔNG HỢP ────────────────────────────────────────────────────────────────────────
     # Chỉ bản dài mới làm được: đặt cả mười chương cạnh nhau trên một trục. Đây là lý do người
     # xem ngồi hết 8 phút thay vì xem một bản ngắn.
-    cot = []
-    ten_ch = []
+    # Nhãn chương tính MỘT LƯỢT cho cả loạt, không tính lẻ từng chương: phép chống thoái
+    # hoá trong `_nhan_chuong` so các tiêu đề VỚI NHAU, nên nó cần cả loạt mới quyết được
+    # (một tiêu đề đứng một mình không cho biết đâu là khung chung).
+    _tieu, _hook = [], []
     for c in range(min(so_chuong, 6)):
         t2, _h2, hp2, _n2 = bo(vi_tri_long(ma, idx, c))
-        ten_ch.append(_nhan(_danh_tu(t2)))
-        v = _so_hook(hp2)
-        if v is not None:
-            cot.append({"nhan": _nhan(_danh_tu(t2)), "v": v})
+        _tieu.append(t2)
+        _hook.append(_so_hook(hp2))
+    ten_ch = _nhan_chuong(_tieu)
+    cot = [{"nhan": nh, "v": v} for nh, v in zip(ten_ch, _hook) if v is not None]
     # ── BIỂU ĐỒ CHỈ VẼ KHI CÓ SỐ THẬT  (3/9/2026) ──────────────────────────────────────────
     # Bản đầu cạo số bằng `"".join(ch for ch in hp2.split()[0] if ch.isdigit())`. Đo trên cả 18
     # kênh: **5 kênh** (whatif · survive · dayinlife · wheregoes · therules) không có một con số
@@ -2743,8 +2745,25 @@ def sinh_long(ma: str, idx: int, so_chuong: int = 10):
     if len(cot) >= 2 and len({round(c["v"], 6) for c in cot}) >= 2:
         nhip.append(_n("chart", _loi("tong", idx), don="compared", cot=cot, dinh=True))
     elif len(ten_ch) >= 2:
-        nhip.append(_n("the_chu", _loi("tong", idx),
-                       chu=" · ".join(ten_ch[:4]), dinh=True))
+        # Danh sách chương đi vào `the`, KHÔNG vào `chu`.  (4/9/2026)
+        # Bản vá §15.13 hôm qua ghi `chu=` — nhưng `TheChu` vẽ `N.the || N.loi` và chưa bao
+        # giờ đọc `chu`, nên thứ người xem thấy vẫn chỉ là câu dẫn *"Here they all are, side
+        # by side."* cạnh một khung trống: một câu trỏ tới cái không có ở đó. Bản vá đi được
+        # đúng nửa đường và không có gì báo (§16.6 — trường được GHI mà không ai ĐỌC).
+        # Hai vế ngăn bằng `|` vì `TheChu` xuống dòng ở đó; bốn nhãn một dòng thì chữ bé lại.
+        # Khử trùng trước khi lấy bốn: "air traffic controller" và "Apollo mission
+        # controller" cùng rút ra `controller`, và một danh sách bốn mục trùng hai thì
+        # người xem đọc ra lỗi chứ không đọc ra bốn chương.
+        _l, _thay = [], set()
+        for x in ten_ch:
+            _kx = (x or "").lower()          # KHÔNG đặt tên `k`: `k` là hồ sơ kênh ở phạm vi này
+            if x and _kx not in _thay:
+                _thay.add(_kx); _l.append(x)
+            if len(_l) == 4:
+                break
+        nhip.append(_n("the_chu", _loi("tong", idx), dinh=True,
+                       the=(" · ".join(_l[:2]) + "|" + " · ".join(_l[2:])) if len(_l) > 2
+                           else " · ".join(_l)))
     nhip.append(_n("canh", _loi("ket", idx), dinh=True,
                    ve=_ve("one simple cartoon figure seen from behind, small in the frame",
                           "looking out over a wide open view",
@@ -3208,6 +3227,62 @@ def _be(m: float) -> str:
     if lan < 2:
         return "about a hair wide"
     return f"1/{lan:,.0f} of a hair"
+
+
+def _bo_so_thu_tu(s: str) -> str:
+    import re as _re
+    return _re.sub(r"^\s*\d+[.)]\s*", "", str(s or "").strip())
+
+
+def _cat_khung(tieu: list[str]) -> list[str]:
+    """Bỏ phần KHUNG dùng chung của các tiêu đề chương, giữ phần khác nhau."""
+    ds = [_bo_so_thu_tu(t).split() for t in tieu if _bo_so_thu_tu(t)]
+    if len(ds) < 3:
+        return [" ".join(x) for x in ds]
+
+    def _chung(lay):
+        n = 0
+        while n < min(len(x) for x in ds) - 1:
+            if len({lay(x, n).lower() for x in ds}) != 1:
+                break
+            n += 1
+        return n
+
+    dau = _chung(lambda x, n: x[n])
+    cuoi = _chung(lambda x, n: x[-1 - n])
+    return [" ".join(x[dau: len(x) - cuoi] or x[dau:] or x) for x in ds]
+
+
+def _nhan_chuong(tieu: list[str]) -> list[str]:
+    """Nhãn ngắn cho từng chương — dùng cho cột biểu đồ tổng hợp và thẻ liệt kê.
+
+    Vì sao không chỉ gọi `_danh_tu`  (4/9/2026)
+    ────────────────────────────────────────────
+    §15.21 đã chữa một lần cho ODDS và REAL COST bằng danh sách `_DAU_NGU` chép tay. Đo
+    lại cả 18 kênh thì bốn kênh vẫn thoái hoá, và tệ hơn hẳn mức ấy:
+
+        HOW LONG    10 chương -> nhãn `Walking` ×10      YEARS OF  -> `Years` ×10
+        DAY IN LIFE 10 chương -> nhãn `day`     ×10      WHERE GOES-> `goes`  ×8
+
+    Tức biểu đồ tổng hợp — nhịp bán cả bản dài — có mười cột mang **một chữ**. Thêm bốn
+    đầu ngữ nữa vào `_DAU_NGU` chỉ hoãn lỗi tới kênh thứ mười chín (§13.9: nhận ra quy
+    luật sinh ra ngoại lệ, đừng liệt kê chúng).
+
+    Quy luật ấy đo được, không cần đoán ngữ pháp: mỗi kênh có một KHUNG CÂU cố định
+    (*"A day in the life of…"*, *"Where your … goes"*), và thứ phân biệt các chương là
+    đúng phần KHÁC NHAU giữa chúng. Cắt phần chung ở hai đầu là xong.
+
+    Nhưng cắt cho MỌI kênh thì sai chiều — đo được ODDS `flight -> cancelled`,
+    `parachute -> hole`, vì cắt khung lấy mất chữ `of` mà `_DAU_NGU` cần. Nên chỉ cắt khi
+    nhãn hiện tại THOÁI HOÁ (một chữ dùng cho quá nửa số chương) **và** cắt xong thật sự
+    ra nhiều nhãn riêng hơn. Đo trên 18 kênh: bật cho 4 kênh, tắt cho 14 — và cả bốn đều
+    đọc tay thấy khá lên rõ (§13.23: đo bằng kết quả cuối, không bằng số ca bắt được).
+    """
+    goc = [_nhan(_danh_tu(_bo_so_thu_tu(t))) for t in tieu]
+    if len(goc) < 3 or len(set(goc)) * 2 >= len(goc):
+        return goc
+    moi = [_nhan(_danh_tu(x)) for x in _cat_khung(tieu)]
+    return moi if len(set(moi)) > len(set(goc)) else goc
 
 
 def _danh_tu(s: str) -> str:
