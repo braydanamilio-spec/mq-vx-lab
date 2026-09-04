@@ -76,6 +76,9 @@ def giu_lai() -> set:
         return {m.upper() for m in re.findall(r"^\s{2}([A-Z0-9_]+):", s, re.M)}
 
 
+_mu = [0]        # đếm bản ghi GIỮ LẠI vì không đọc được tên kênh
+
+
 def _ten(c) -> str:
     return str(c.get("name") or c.get("kenh") or c.get("channel") or "").upper().replace(" ", "")
 
@@ -330,7 +333,19 @@ def don(that: bool = False, owner: str = "") -> int:
         moc = lot[-1]
         for d in lot:
             j = d.to_dict() or {}
-            if _ten(j) in giu or any(x in _ten(j) for x in CAM_DUNG):
+            _t = _ten(j)
+            # ── KHÔNG BIẾT ≠ ĐÃ NGHỈ  (4/9/2026, §15.6) ──────────────────────────────────
+            # `_ten` trả `""` khi bản ghi thiếu CẢ `name`/`kenh`/`channel`. Chuỗi rỗng không
+            # nằm trong `giu` và không chứa chuỗi nào của `CAM_DUNG`, nên nó rơi thẳng
+            # xuống `lo.delete(...)`: mọi bản ghi thiếu trường kênh bị XOÁ VĨNH VIỄN.
+            #
+            # Video vẫn nằm trên Drive, nhưng sổ mất — nên `count_done()` tưởng kênh còn
+            # thiếu và dựng lại, còn `kiem_kho` phải đoán kênh theo tên tệp. Đúng luật đã
+            # trả giá ở `don_drive_kenh`: bằng chứng đọc không được thì GIỮ, và BÁO RA.
+            if not _t:
+                _mu[0] += 1
+                continue
+            if _t in giu or any(x in _t for x in CAM_DUNG):
                 continue
             lo.delete(d.reference)
             n_j += 1
@@ -346,6 +361,11 @@ def don(that: bool = False, owner: str = "") -> int:
               f" — phần còn lại dọn tiếp ở lượt sau")
     else:
         print(f"   ✓ soi hết {doc} bản ghi · xoá {n_j} · không còn bản ghi kênh cũ nào")
+    if _mu[0]:
+        # Nói ra, vì "giữ lại vì không đọc được" là một trạng thái cần người xem: nhiều bản
+        # ghi thiếu trường kênh nghĩa là một đường GHI nào đó đang hỏng ở phía trên.
+        print(f"   ⚠ giữ lại {_mu[0]} bản ghi vì KHÔNG đọc được tên kênh "
+              f"(thiếu cả name/kenh/channel) — không biết ≠ đã nghỉ")
 
     # Sổ đếm: đặt lại theo số THẬT còn lại, không để nguyên con số cũ.
     # Đây chính là chỗ đã sinh ra con số "2088" đứng lì trên dashboard sau khi anh dọn kho —

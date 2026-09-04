@@ -262,6 +262,8 @@ jobs:
           python day_kho.py --publish ../_autopublisher --that || true
 
       - name: Gói kết quả
+        # `always()`: bước gói là bản sao lưu duy nhất của video chưa lên kho (§10.1).
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phantich-luong-${{ matrix.luong }}

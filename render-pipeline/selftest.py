@@ -2545,6 +2545,7 @@ def main():
     check("bản dài đủ dài để bật quảng cáo giữa video", t_ban_dai_du_dai)
     check("không `const` nào bị dùng trước khai báo (vùng chết tạm thời)", t_khong_tdz)
     check("mọi trường nhịp có người vẽ ở đúng nhánh khuôn", t_moi_truong_co_nguoi_doc)
+    check("giao kèo chuỗi `Drive file id:` giữa hai repo còn khớp", t_giao_keo_chuoi_lien_repo)
     check("cổng hình lấy khung ở nhịp CÓ phụ đề", t_kiem_hinh_lay_dung_khung)
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
@@ -7332,6 +7333,40 @@ def t_khong_tdz():
     r = _sp.run([_s.executable, _o.path.join(g, "kiem_tdz.py")],
                 capture_output=True, text=True, cwd=g)
     assert r.returncode == 0, "kiem_tdz báo lỗi:\n" + (r.stdout or r.stderr)[:400]
+
+
+def t_giao_keo_chuoi_lien_repo():
+    """`day_kho` nhận diện thành công bằng CHUỖI do repo KHÁC in ra — phải có cổng canh.
+
+    `day_kho.day_mot` coi một lượt đẩy là thành công khi tìm được `Drive file id:` trong
+    stdout của `MM0-AutoPublisher/src/enqueue.py`. Đó là một giao kèo giữa hai repo, và nó
+    được viết bằng một chuỗi trần trong `print` — đổi một chữ ở repo kia thì:
+
+        mọi lượt đẩy bị chấm HỎNG -> 3 lần thử -> `break` -> cả 18 luồng dừng -> 0 video/ngày
+
+    và triệu chứng đọc ra y hệt "hạ tầng Drive hỏng", tức sẽ mất một buổi đi tìm sai chỗ.
+    Cổng này rẻ và bắt đúng lúc đổi, không phải lúc chạy thật.
+
+    Không tìm thấy repo publish thì BỎ QUA (máy này có thể chưa checkout nó) — nhưng nói
+    rõ là bỏ qua, không im lặng cho xanh.
+    """
+    import os as _o
+    import re as _re
+    g = _o.path.dirname(_o.path.abspath(__file__))
+    dk = _o.path.join(g, "day_kho.py")
+    src = open(dk, encoding="utf-8").read()
+    m = _re.search(r'_re\.search\(r"([^"]*Drive file id[^"]*)"', src)
+    assert m, "day_kho.py không còn dò `Drive file id:` — cập nhật cổng này"
+    # Lấy phần chữ thuần của biểu thức để tìm trong repo kia.
+    can = "Drive file id:"
+    for ung in (_o.path.join(g, "..", "MM0-AutoPublisher", "src", "enqueue.py"),
+                _o.path.join(g, "..", "_autopublisher", "src", "enqueue.py")):
+        if _o.path.exists(ung):
+            assert can in open(ung, encoding="utf-8").read(), (
+                f"day_kho dò {can!r} nhưng {ung} KHÔNG in chuỗi ấy — "
+                f"mọi lượt đẩy sẽ bị chấm hỏng và cả 18 luồng dừng")
+            return
+    print("      (bỏ qua: chưa checkout repo publish trên máy này)")
 
 
 def t_moi_truong_co_nguoi_doc():

@@ -153,8 +153,35 @@ def main() -> int:
         print("⚠️ không có video nào để đẩy")
         return 0
 
-    n = sum(day_mot(f, a.publish, biet, a.that) for f in ds)
-    _tong = len(ds)
+    # ── GHI SỔ TỆP ĐÃ LÊN KHO — để workflow chỉ XOÁ THỨ CHỨNG MINH ĐƯỢC  (4/9/2026) ─────
+    # `render_giai_thich_18.yml` chạy `rm -f out/v9_*.mp4 …` ngay sau khi bước đẩy trả 0.
+    # Mà hàm này chỉ trả 1 khi đẩy được **0** tệp — đẩy 4/5 vẫn trả 0. Nên tệp thứ 5, thứ
+    # KHÔNG lên được Drive, bị `rm` xoá; `upload-artifact` chạy sau nên không cứu; cổng
+    # "Chốt" đếm `ls out/v9_*.mp4` ra 0 và lượt XANH.
+    #
+    # Mất video có hệ thống mà dashboard báo xanh — §12.8 ở cấp TỆP, và là dạng đắt nhất
+    # vì không để lại dấu vết nào để lần sau truy.
+    #
+    # Không chữa bằng cách cho cả lượt hỏng khi đẩy thiếu: đẩy hụt một tệp là chuyện sẽ
+    # xảy ra (429, mạng), và cho đỏ cả lượt thì mất luôn 4 tệp đã lên. Chữa bằng luật §15.6:
+    # chỉ xoá thứ CHỨNG MINH ĐƯỢC là đã lên. Tệp không có bằng chứng thì GIỮ LẠI, và nó đi
+    # vào artifact — vòng sau `enqueue.py` gặp lại nó sẽ đẩy tiếp.
+    xong = []
+    for f in ds:
+        if day_mot(f, a.publish, biet, a.that):
+            xong.append(os.path.basename(f))
+    n, _tong = len(xong), len(ds)
+    try:
+        with open(os.path.join(OUT, ".da_day.txt"), "w", encoding="utf-8") as _s:
+            _s.write("\n".join(xong))
+    except Exception as _e:
+        # Không ghi được sổ thì workflow sẽ KHÔNG xoá gì cả (nó đọc sổ, không dùng glob).
+        # Giữ thừa tệp là chuyện dọn được; xoá nhầm thì không.
+        print(f"   ⚠️ không ghi được sổ tệp đã đẩy ({str(_e)[:60]}) — vòng sau sẽ không dọn,"
+              f" đĩa đầy dần nhưng KHÔNG mất tệp nào")
+    if a.that and _tong and n < _tong:
+        print(f"   ⚠️ {_tong - n}/{_tong} tệp KHÔNG lên được kho — giữ lại trong out/ và gói"
+              f" vào artifact, KHÔNG xoá. Vòng sau thử lại.")
     print(f"\n{'✅' if n else '⚠️'} {n}/{len(ds)} video vào hàng đợi đăng"
           f"{'' if a.that else '  (chạy thử — thêm --that để đẩy thật)'}")
     # THOÁT MÃ THEO KẾT QUẢ, KHÔNG THEO VIỆC ĐÃ CHẠY  (2/9/2026)

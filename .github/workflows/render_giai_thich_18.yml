@@ -337,8 +337,29 @@ jobs:
               break
             fi
 
-            # Dọn tệp đã đẩy để vòng sau không dựng đè và ổ đĩa không đầy.
-            rm -f out/v9_*.mp4 out/v9_*.jpg out/v9_*.tai.json 2>/dev/null || true
+            # ── DỌN THEO SỔ, KHÔNG DỌN THEO GLOB  (4/9/2026) ────────────────────────
+            # Bản cũ `rm -f out/v9_*` chạy ngay sau khi bước đẩy trả 0. Nhưng `day_kho.py`
+            # chỉ trả 1 khi đẩy được **0** tệp — đẩy 4/5 vẫn trả 0, nên tệp thứ 5 (thứ
+            # KHÔNG lên được Drive) bị xoá; `upload-artifact` chạy sau nên không cứu được;
+            # cổng "Chốt" đếm `ls out/v9_*.mp4` ra 0 và cả lượt XANH. Mất video có hệ thống
+            # mà dashboard báo xanh — §12.8 ở cấp TỆP.
+            #
+            # Nay `day_kho.py` ghi `out/.da_day.txt` liệt kê đúng những tệp CÓ mã tệp Drive.
+            # Xoá theo sổ ấy. Không có sổ -> KHÔNG xoá gì (§15.6: không biết ≠ đã xong).
+            if [ -s out/.da_day.txt ]; then
+              _n=0
+              while IFS= read -r _t; do
+                [ -n "$_t" ] || continue
+                _b="${_t%.mp4}"
+                rm -f "out/$_b.mp4" "out/$_b.jpg" "out/$_b.tai.json" 2>/dev/null || true
+                _n=$((_n+1))
+              done < out/.da_day.txt
+              _con=$(ls out/v9_*.mp4 2>/dev/null | wc -l | tr -d ' ')
+              echo "   🧹 dọn $_n tệp đã lên kho · giữ lại $_con tệp chưa lên (sẽ vào artifact)"
+              rm -f out/.da_day.txt
+            else
+              echo "   🧹 không có sổ tệp đã đẩy — KHÔNG dọn gì. Đĩa đầy dần nhưng không mất tệp."
+            fi
           done
           echo "══ [$MA] xong $VONG vòng ══"
 
@@ -355,6 +376,11 @@ jobs:
         run: cd render-pipeline && python kiem_kho.py --ghi --owner "$OWNER_UID" || true
 
       - name: Gói kết quả
+        # `if: always()` — bước NÀY là bản sao lưu duy nhất của video chưa lên được kho.
+        # Không có nó thì bất kỳ bước nào phía trên hỏng (hoặc job quá giờ) sẽ bỏ qua đây và
+        # mất trắng mọi tệp còn trong `out/` — đúng §10.1, và là chỗ đắt nhất để mất vì
+        # video đã dựng xong rồi. Rà 4/9: KHÔNG workflow render nào có `always()` ở bước gói.
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: giaithich-luong-${{ matrix.luong }}

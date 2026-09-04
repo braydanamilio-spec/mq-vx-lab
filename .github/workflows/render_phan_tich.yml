@@ -122,6 +122,8 @@ jobs:
           ls -la out/*.mp4 | tail -20
 
       - name: Gói kết quả
+        # `always()`: bước gói là bản sao lưu duy nhất của video chưa lên kho (§10.1).
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phantich-lo-${{ inputs.lo || github.event.client_payload.lo || '1' }}
