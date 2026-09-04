@@ -68,6 +68,27 @@ def day_mot(mp4: str, thu_publish: str, biet: set, that: bool) -> bool:
            "--desc", yt.get("description") or "",
            "--tags", ",".join(yt.get("tags") or [])[:300],
            "--platforms", ",".join(nen) or "youtube"]
+    # ── ẢNH BÌA: CÓ TỆP, CÓ TÊN TRONG SỔ, KHÔNG AI GỬI ĐI  (4/9/2026) ───────────────────
+    # `enqueue.py` nhận `--thumbnail` và `upload_to_queue` biết đẩy nó lên Drive rồi trả về
+    # `thumb_id`. `sieu_gt.py` sinh ra `v9_<slug>.jpg` và ghi tên nó vào `.tai.json`
+    # (`"thumbnail": "v9_dayinlife_0000.jpg"`). Hai đầu đều sẵn sàng — chỉ dòng lệnh ở giữa
+    # không nối.
+    #
+    # Hậu quả đo được trên dashboard: **90/90 video "thiếu thumb"**. Con số tròn trịa ấy là
+    # dấu hiệu quen thuộc — không phải dữ liệu hỏng rải rác mà là một mắt xích không tồn tại.
+    # Sáng nay em sửa `enqueue` ghi `thumb_id` vào D1 và tưởng đã xong; nhưng `thumb_id` luôn
+    # rỗng vì chưa bao giờ có ảnh nào được gửi lên. Sửa đúng nửa dưới của một mắt xích đứt thì
+    # con số vẫn không đổi, và em suýt báo cáo là đã chữa.
+    #
+    # Ảnh bìa không phải chuyện làm đẹp: YouTube lấy nó làm ảnh đại diện, và với short thì nó
+    # là thứ quyết định người ta bấm vào hay lướt qua.
+    _bia = os.path.join(os.path.dirname(os.path.abspath(mp4)),
+                        d.get("thumbnail") or (os.path.basename(mp4)[:-4] + ".jpg"))
+    if os.path.exists(_bia):
+        cmd += ["--thumbnail", _bia]
+    else:
+        print(f"   ⚠ {os.path.basename(mp4)}: không thấy ảnh bìa {os.path.basename(_bia)} "
+              f"-> video lên kho KHÔNG có ảnh đại diện")
     if not that:
         print(f"   (thử) {kenh:18s} {os.path.basename(mp4)} -> {'+'.join(nen)}")
         return True
