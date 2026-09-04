@@ -3874,6 +3874,7 @@ def _rai_tu_the(nhip: list, ma_kenh: str = "") -> list:
     # Đây là lỗi lệch phạm vi mà chú thích trong chính cổng đã cảnh báo — lần này hàm lệch,
     # không phải cổng lệch.
     truoc = -1
+    dem_ng = 0
     for j, n in enumerate(nhip):
         # CHỈ so giữa những nhịp THẬT SỰ vẽ nhân vật toàn khung, và KHÔNG cắt mạch ở nhịp
         # không vẽ gì. Hai bản trước đều sai một đầu:
@@ -3898,7 +3899,12 @@ def _rai_tu_the(nhip: list, ma_kenh: str = "") -> list:
         # một khuôn mặt trắng nhưng khác tóc khác áo.
         # Đổi theo NHỊP, không theo tập: người xem so hai khung liền nhau, không so hai tập
         # (§14.9). Lệch pha theo kênh để hai kênh không ra cùng thứ tự dàn diễn viên.
-        n["nv"] = (j + _lech_kenh(ma_kenh)) % 4 if ma_kenh else j % 4
+        # ĐẾM THEO NHỊP NGƯỜI, không theo chỉ số nhịp bất kỳ. Dùng `j` thì hai nhịp người
+        # cách nhau 2 nhịp, nên `% 4` chỉ ra HAI giá trị trong một tập — soi bốn khung
+        # `therules` thấy cả bốn cùng một áo. Dàn bốn người thành hai người, và cơ chế vẫn
+        # "chạy đúng" nên không có gì báo.
+        n["nv"] = (dem_ng + _lech_kenh(ma_kenh)) % 4 if ma_kenh else dem_ng % 4
+        dem_ng += 1
         truoc = t
     return nhip
 

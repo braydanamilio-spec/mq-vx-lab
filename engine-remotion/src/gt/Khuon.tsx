@@ -30,10 +30,18 @@ const F = () => chu();
 
 /* Biểu tượng vẽ bằng code. Cố ý ít và thô: mỗi cái phải đọc được ở 1/6 chiều ngang khung trên
    màn hình điện thoại, nên chi tiết nhiều chỉ thành vết bẩn. */
-/* Bốn màu áo cho dàn nhân vật. Không lấy màu thương hiệu: màu ấy đã dùng cho đồ hoạ và
-   con số, nên nhân vật mặc nó thì người và biểu đồ đọc ra cùng một lớp. Bốn tông trung
-   tính đủ khác nhau ở cỡ nhỏ, và đều đủ sẫm để đường nét đen trên nền sáng vẫn nổi. */
-const AO = ["#46505C", "#6E5A4A", "#4A6157", "#5B5470"];
+/* Bốn màu áo cho dàn nhân vật. Không lấy màu thương hiệu: màu ấy đã dùng cho đồ hoạ và con
+   số, nên nhân vật mặc nó thì người và biểu đồ đọc ra cùng một lớp.
+
+   ── CHỌN LẠI SAU KHI SOI KHUNG CỠ THẬT  (4/9/2026) ──────────────────────────────────────
+   Bộ cũ `#46505C · #6E5A4A · #4A6157 · #5B5470` đo ra chênh độ chói chỉ **0,033** — bốn màu
+   cùng sẫm, cùng xỉn. Soi sáu khung dựng thật: mọi nhân vật đọc ra CÙNG MỘT áo xanh than, tức
+   dàn bốn người thành một người. Cơ chế chạy đúng (`nv` có đổi, tới được engine, `AO[nv]`
+   được dùng) — chỉ có bảng màu không tách được ở cỡ điện thoại.
+   Đây là §15.9 ở dạng màu: *một hình chỉ đúng ở cỡ nó được vẽ ra không phải một hình đúng.*
+   Bộ mới chênh chói **0,071** (gấp đôi) và góc màu gần nhau nhất 48°: lam đậm · gạch nung ·
+   lục cỏ · mận. Vẫn đủ trầm để không tranh với màu thương hiệu, vẫn đủ sẫm để nét đen nổi. */
+const AO = ["#3E5A78", "#A65A3C", "#5E7A4A", "#7A4A63"];
 
 export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: number; nv?: number }> =
 ({ ten, s, mau = "#2C2722", tu = 0, nv = 0 }) => {
