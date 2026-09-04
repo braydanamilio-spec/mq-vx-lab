@@ -88,8 +88,16 @@ CHUA_CHO = ("top third empty sky or wall, bottom fifth empty ground, "
 # và bối cảnh bị cắt cụt. Đúng chỗ anh nói "không rõ bối cảnh".
 # Không câu nào trong prompt nói về RÌA khung; thứ không viết ra thì mô hình tự chọn (§15.2),
 # và kho ảnh minh hoạ đầy icon dạng huy hiệu nên nó hay chọn hình tròn.
-TRAN_KHUNG = ("the picture fills the whole rectangular frame edge to edge, no circular "
-              "vignette, no round badge, no border, ")
+# ── BỎ BA VẾ VIẾT NGHỊCH  (4/9/2026) ──────────────────────────────────────────────────────
+# `kiem_nen.CAM_NGHICH` ghi rõ, và đã trả giá một lần ở bộ khác: *"FLUX không có negative
+# prompt: mọi danh từ trong câu đều là thứ nó sẽ vẽ. `no furniture` vì thế đẻ ra đúng cái đồ
+# chắn giữa khung mà nó định cấm."* Bản trên viết `no circular vignette, no round badge,
+# no border` — ba danh từ tròn đứng liền nhau, ngay sau câu tả khung. Tức là câu sinh ra để
+# CHẶN vignette tròn đang mời mô hình vẽ đúng vignette tròn, và đó chính là khung anh gửi
+# kèm lời "vẫn không rõ bối cảnh".
+# Vế KHẲNG ĐỊNH đứng ngay trước đã nói trọn điều cần nói. Bỏ ba vế nghịch: đúng hơn về cơ
+# chế, và trả lại 46 ký tự cho bảng màu kênh — thứ đang bị cắt ở 32% prompt.
+TRAN_KHUNG = "the picture fills the whole rectangular frame edge to edge, "
 KHUNG_DOC = ("tall vertical composition, subject centred, nothing important in the outer "
              "quarter left or right, " + TRAN_KHUNG + CHUA_CHO)
 KHUNG_NGANG = ("wide horizontal composition, subject centred, " + TRAN_KHUNG + CHUA_CHO)
@@ -117,17 +125,47 @@ SAN_DOC_NGOAI = SAN_DOC + ", open outdoor scene, no interior, no walls, no ceili
 # không dùng chung engine và sửa chéo là cách chắc chắn làm hỏng bộ kia (§10). Viết bản gọn
 # riêng ở đây, giữ đủ BA MỆNH LỆNH bắt buộc của §7 mà `kiem_nen.py` canh:
 #   1. wide shot ngang tầm mắt   2. sàn chạy hết bề ngang ở dải dưới   3. giữa khung trống
-GON_TRONG = ("wide shot at standing eye level, floor runs unbroken across the bottom third "
-             "from edge to edge, furniture pushed to the left and right edges, centre of the "
-             "frame is empty walkable floor")
-GON_NGOAI = ("wide shot at standing eye level, ground runs unbroken across the bottom third "
-             "from edge to edge, scenery pushed to the left and right edges, centre of the "
-             "frame is open empty ground, no walls, no ceiling")
+# ── HAI VẾ CỦA BỘ TRUYỆN TRANH, BỎ ĐI  (4/9/2026) ─────────────────────────────────────────
+# Hai câu này chép từ `kich_hai.SAN_NEN` (§7). Ở đó chúng ĐÚNG, vì bộ truyện tranh dán người
+# VECTOR lên ảnh AI — nên giữa khung phải trống để còn chỗ dán, và đồ đạc phải dạt ra hai mép
+# để không đè lên người. Bộ giải thích đã bỏ hẳn cơ chế ấy: người do chính mô hình vẽ, nằm
+# trong ảnh. §12.5 đúng từng chữ — *một câu luật đúng trong ngữ cảnh nó sinh ra, sai ở ngữ
+# cảnh mới*.
+#
+# Hai bằng chứng nó đang gây hại, không chỉ thừa:
+#   1. NÓI NGƯỢC VỚI `KHUNG_DOC`. Khung dặn *"subject centred, everything important in the
+#      middle band"*; câu này dặn *"centre of the frame is empty walkable floor"*. Hai lệnh
+#      trái nhau trong cùng một prompt, và mô hình chọn bên nào là chuyện may rủi — đúng thứ
+#      làm chủ thể lúc có lúc không.
+#   2. DỒN ĐỒ VÀO DẢI SẮP BỊ CẮT. §12.5 đã đo: cắt vuông xuống 9:16 mất 44% bề ngang, nên
+#      *"dồn đồ đạc ra hai mép"* là dặn mô hình đặt bối cảnh vào đúng phần sẽ biến mất — và
+#      "không rõ bối cảnh" là lời phê anh nhắc lại nhiều lần nhất.
+#
+# Giữ lại đúng vế CHỐNG NGƯỜI LƠ LỬNG (sàn liền mạch suốt phần ba dưới) và vế tầm máy. Không
+# thêm `nen_gt.py` vào `kiem_nen.TEP`: cổng ấy đòi đủ bốn mệnh lệnh của BỘ TRUYỆN TRANH, tức
+# nó sẽ đòi lại đúng hai vế vừa bỏ.
+GON_TRONG = ("wide shot at standing eye level, "
+             "floor runs unbroken across the bottom third from edge to edge")
+GON_NGOAI = ("wide shot at standing eye level, "
+             "ground runs unbroken across the bottom third from edge to edge, "
+             "outdoors under open sky")
 
 
 def _luat(ve: str, doc: bool = False) -> str:
+    """Luật sàn — và KHÔNG nói lại thứ câu cảnh đã nói.
+
+    Đo trên 109 câu cảnh thật của 18 kênh: **106 câu (97%) đã tự chứa "standing eye level"**,
+    vì `giai_thich` ghép sẵn vế ấy vào mô tả cảnh. Nên vế mở đầu của `GON_*` là một bản sao
+    đứng cách bản gốc vài trăm ký tự, và nó tiêu 32 ký tự của một ngân sách đang cắt mất bảng
+    màu kênh ở 6% prompt.
+    Nói hai lần không làm mô hình nghe rõ hơn — nó chỉ đẩy một luật khác ra khỏi câu. §15.12:
+    *mỗi ràng buộc chỉ được sống ở đúng một chỗ.*
+    """
     ngoai = bool(_NGOAI.search(ve or ""))
-    return GON_NGOAI if ngoai else GON_TRONG
+    r = GON_NGOAI if ngoai else GON_TRONG
+    if "standing eye level" in (ve or ""):
+        r = r.split(", ", 1)[1]
+    return r
 
 
 # ══ KẸP PHONG CÁCH — KHỐI ĐỨNG NGAY SAU CHỦ THỂ, CHƯA BAO GIỜ BỊ CẮT ═══════════════════════
@@ -515,6 +553,36 @@ def sang_day(tep: str) -> int:
 # thoáng hơn hẳn bốn ảnh đạt (141–178), tức nằm giữa hai cụm chứ không cắt vào cụm nào.
 SAN_SANG = int(os.environ.get("SAN_SANG_ANH", "90") or 90)
 
+# ── SIẾT DẦN KHI CỔNG ĐÁNH TRƯỢT  (khôi phục 4/9/2026) ───────────────────────────────────
+# Bảng này được VIẾT hôm 3/9 và bị một lượt cắt hụt xoá mất phần khai báo, trong khi `_prompt`
+# vẫn gọi nó ở dòng 691. Nghĩa là mọi lần cổng chất vẽ đánh trượt đều `NameError` — tức đúng
+# cái vòng vẽ lại mà bảng này sinh ra để phục vụ đã chết câm kể từ lúc ấy. Không có lỗi nào
+# báo ra ngoài, vì `goi_xoay` bọc lời gọi trong `except Exception` và chỉ đếm nó là "một khoá
+# hỏng", nên nhìn từ log thì y hệt mạng chập chờn. Cùng họ 12.8: hỏng mà vẫn báo xanh.
+#
+# BA BẬC, và mỗi bậc nói MẠNH HƠN về đúng thứ hai cổng đang đo:
+#   `do_phang` — ảnh ngả sang ảnh chụp (đổ bóng mềm, chiều sâu quang học)
+#   `do_sang`  — ảnh quá tối (mô hình tự chọn nền tối khi không được dặn)
+# Hai cổng chữa bằng MỘT việc nên chúng đi chung một bảng, không tách hai vòng.
+#
+# HAI ĐIỀU KHÔNG ĐƯỢC LÀM, cả hai đã trả giá:
+#   1. **Không đẩy nền về TRẮNG.** Bản đầu viết *"on a blank white page"*; FLUX làm đúng và ra
+#      một trang trắng, rồi `kiem_chelap` bắt 8 nhịp có nền sáng TB 237 trên trần 150 — phụ đề
+#      trắng đè nền trắng, chữ tàng hình. Siết chất vẽ và giữ nền CÓ MÀU là hai việc; câu siết
+#      phải làm việc thứ nhất mà không phá việc thứ hai. `selftest.t_prompt_canh_dung_truoc`
+#      canh đúng điều này.
+#   2. **Không nói "no shading" trơn.** Ảnh tham chiếu anh gửi CÓ đổ bóng mềm; cấm gradient là
+#      ép mô hình vẽ clipart phẳng (§16.2). Thứ cần cấm là chiều sâu QUANG HỌC — bóng đổ dài,
+#      tiêu cự, ánh sáng ngược — không phải mọi chuyển sắc.
+SIET = (
+    "flat 2D illustration, not a photograph",
+    "bold flat vector illustration on a mid-tone coloured ground, "
+    "clean even lighting, no photographic depth of field",
+    "poster-flat 2D artwork, solid colour shapes with clean ink outlines, "
+    "a clearly coloured mid-tone background, bright even light, "
+    "absolutely not a photograph and not a 3D render",
+)
+
 
 def do_sang(tep: str) -> int:
     """Độ sáng trung bình 0–255 của cả ảnh. -1 nếu không đọc được."""
@@ -631,12 +699,34 @@ def _sac_thai(ma: str) -> str:
     Không cho mỗi kênh một PHONG CÁCH khác (đã thử và hỏng: trộn ảnh thật với cartoon làm
     30/74 ảnh lệch nhau). Cho mỗi kênh một SẮC THÁI trong cùng một phong cách: viền dày hay
     mảnh, có viền hay không, nét máy hay nét tay, bảng màu rộng hay hạn chế ba màu.
-    Bốn thứ ấy đủ để mười kênh không nhìn ra cùng một xưởng, mà không kéo cái nào về ảnh thật."""
+    Bốn thứ ấy đủ để mười kênh không nhìn ra cùng một xưởng, mà không kéo cái nào về ảnh thật.
+
+    ── BỎ VẾ NÓI VỀ BẢNG MÀU  (4/9/2026) ──────────────────────────────────────────────────
+    `GU_RIENG` viết trước khi có `_bang_mau`, nên bốn kênh mang sẵn một vế bảng màu MƠ HỒ:
+    *"restrained three-color palette"* · *"high-contrast palette"* · *"muted earthy palette"*
+    · *"warm limited palette"*. Nay chúng đứng ngay SAU câu nêu đích danh ba màu của kênh, và
+    hai câu ấy nói ngược nhau — `speedof` vừa được dặn "steel blue nền trắng dịu" vừa được
+    dặn "bảng màu tương phản cao".
+    Cắt ở ĐÂY chứ không sửa `GU_RIENG`: bảng ấy là nguồn dùng chung (giọng · nhạc · sắc thái)
+    và cửa sổ khác đang làm trên cùng tệp. Nơi mâu thuẫn phát sinh là chỗ ghép prompt, nên nơi
+    chữa cũng là chỗ ấy.
+    Lợi thêm: `_bang_mau` và vế này là hai vế CUỐI của prompt, tức hai vế bị chốt chặn cắt
+    trước nhất — bỏ chữ thừa ở đây là trả chỗ cho chính bảng màu.
+    """
     try:
         from giai_thich import GU_RIENG
-        return GU_RIENG.get(ma, ("", "", ""))[2]
+        v = GU_RIENG.get(ma, ("", "", ""))[2]
     except Exception:
         return ""
+    giu = [c.strip() for c in v.split(",")
+           if c.strip() and "palette" not in c.lower()]
+    return ", ".join(giu)
+
+
+# Vế nào bị chốt chặn độ dài cắt bỏ — xem chú thích trong `_prompt`. Danh sách toàn cục vì
+# `_prompt` được gọi từ nhiều chỗ và cái cần biết là "cả tập này đã mất vế nào", không phải
+# "lượt gọi thứ mấy đã mất".
+_DA_CAT: list = []
 
 
 def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool = False,
@@ -742,6 +832,13 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
         # mà bên kia sẽ chạy* — không mô hình hoá lại. Ở đây tôi chốt trên bản nháp, còn bên kia
         # gửi bản đã bọc.
         if len(thu) > 2048 - 175:      # 159 lớp bọc + 16 đệm cho `style` dài hơn
+            # ── CẮT THÌ PHẢI KHAI RA  (4/9/2026) ────────────────────────────────────────
+            # Bản trước `break` trong im lặng, và §14.13 đã trả giá đúng cho hình dạng này:
+            # *khi một hàm vừa ĐO vừa TỰ SỬA thì cổng đặt sau nó luôn xanh*. Ở đây tệ hơn một
+            # bậc — không có cổng nào cả, nên một mệnh đề của prompt biến mất khỏi bản gửi đi
+            # mà không ai duyệt việc bỏ mệnh đề nào. Đo được **30% tổ hợp** đang sát trần.
+            # Nay ghi lại vế bị bỏ; `sinh()` in ra một lần mỗi tập, và selftest đọc cờ này.
+            _DA_CAT.append(x[:48])
             break                  # cắt từ đuôi: vế càng sau càng ít quan trọng
         ra = thu
     return ra

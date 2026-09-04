@@ -522,7 +522,14 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                     the centre*), nên giữa khung là chỗ đúng để soi. */
                  lop: <KinhLup W={W} H={H * 0.80} x={W * (N.x ?? 0.50)} y={H * 0.80 * (N.y ?? 0.44)}
                                nhan={N.nhan || ""} mau={mau} p={p}
-                               bt={btVe}
+                               /* 4/9 — `N.bt`, KHÔNG PHẢI `btVe`. `btVe` xoá biểu tượng khi có
+                                  ảnh, và đúng ở lớp CẢNH: ở đó biểu tượng là lớp ĐÈ lên ảnh,
+                                  hai lớp cùng nói một điều. Trong ống kính thì ngược hẳn —
+                                  biểu tượng LÀ nội dung được soi. Truyền `btVe` vào đây tức là
+                                  bảo `KinhLup` rơi xuống nhánh phóng-lát-ảnh đúng lúc nó CÓ
+                                  ảnh, mà chú thích của chính hàm ấy đã đo ba lần là ra đĩa
+                                  trắng. Một câu luật đúng ở ngữ cảnh sinh ra nó, sai ở đây. */
+                               bt={N.bt || ""}
                                con={N.nenAnh ? (
                                  <image href={staticFile(N.nenAnh)} x={0} y={0}
                                         width={W} height={H * 0.80}

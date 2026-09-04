@@ -2570,6 +2570,12 @@ def main():
     check("cổng hình lấy khung ở nhịp CÓ phụ đề", t_kiem_hinh_lay_dung_khung)
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
+    check("prompt ảnh: chốt độ dài không cắt mất luật sàn / bảng màu",
+          t_prompt_khong_cat_mat_luat)
+    check("prompt ảnh: không có vế viết NGHỊCH (FLUX vẽ ra thứ bị cấm)",
+          t_prompt_khong_viet_nghich)
+    check("prompt ảnh: không vừa dặn chủ thể ở giữa vừa dặn giữa khung trống",
+          t_prompt_khong_noi_nguoc_ve_giua_khung)
     check("sổ trạng thái khoá có chốt chặn theo thời gian", t_ghi_khoa_co_chot)
     check("mặt sàn nằm trên vùng chữ (vật chạm sàn mà không bị che)", t_san_khong_dam_vao_chu)
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
@@ -7223,6 +7229,98 @@ def t_gu_bo_cuc_rieng():
            if sum(1 for x, y in zip(bo(a), bo(b)) if x == y) > 3]
     assert not qua, ("cặp kênh giống quá 3/5 trục gu: "
                      + "; ".join(f"{a}/{b}" for a, b in qua[:3]))
+
+
+def t_prompt_khong_cat_mat_luat():
+    """Chốt chặn độ dài prompt không được cắt mất LUẬT SÀN hay BẢNG MÀU.
+
+    `_prompt` ghép theo thứ tự ưu tiên rồi `break` khi vượt 1.873 ký tự — im lặng. Đo trên 872
+    tổ hợp thật (18 kênh × 3 tập × mọi nhịp có cảnh × 4 mức siết × dọc/ngang): **286 tổ hợp
+    (32%) đang mất một vế**, và vế bị mất chính là hai thứ anh phàn nàn nhiều nhất — luật sàn
+    (*"ground runs unbroken"*, thứ chặn người lơ lửng) và bảng màu kênh (thứ chặn lệch chất
+    ảnh giữa các cảnh trong một tập).
+
+    Đây là §14.13 ở dạng nặng nhất: hàm vừa ĐO vừa TỰ SỬA, nên không cổng nào đặt sau nó bắt
+    được — và ở đây còn không có cổng nào cả. Bốn bản sửa (bỏ ba vế viết nghịch · bỏ hai vế
+    của bộ truyện tranh · bỏ chữ bảng màu mơ hồ trong sắc thái · bỏ vế tầm máy nói lại) đưa
+    32% xuống 4%.
+
+    Trần 8% chứ không phải 0: 4% còn lại chỉ mất vế SẮC THÁI (vế ít thiệt nhất, đứng cuối
+    đúng theo thiết kế), và đặt trần bằng 0 sẽ biến cổng này thành cổng bắt oan ngay lần đầu
+    ai đó thêm một kênh có câu cảnh dài. Trần 8% cho chỗ thở gấp đôi hiện tại mà vẫn bắt
+    được ngay nếu ai thêm một khối vào prompt.
+    """
+    import nen_gt as N, giai_thich as G
+    ct = tong = 0
+    matluat = []
+    for k in G.KENH:
+        for idx in range(2):
+            try:
+                _, _, _, _, nhip, _ = G.kich_ban(k["ma"], idx)
+            except Exception:
+                continue
+            for n in nhip:
+                ve = n.get("ve") or ""
+                if not ve:
+                    continue
+                for st in range(4):
+                    for doc in (True, False):
+                        tong += 1
+                        N._DA_CAT.clear()
+                        N._prompt(ve, k.get("tam") or "", N.GU_CARTOON, k["ma"], doc, siet=st)
+                        if N._DA_CAT:
+                            ct += 1
+                            # LUẬT SÀN bị cắt là lỗi NẶNG, không có hạn ngạch nào cả.
+                            if "runs unbroken" in N._DA_CAT[0]:
+                                matluat.append((k["ma"], st))
+    assert tong > 300, f"chỉ đo được {tong} tổ hợp — bài kiểm hỏng, không phải mã lành"
+    assert not matluat, f"LUẬT SÀN bị cắt khỏi prompt ở {len(matluat)} tổ hợp: {matluat[:4]}"
+    assert ct * 100 <= tong * 8, f"{ct}/{tong} prompt bị cắt mất vế ({ct*100//tong}%) — trần 8%"
+
+
+def t_prompt_khong_viet_nghich():
+    """Prompt không được chứa vế viết NGHỊCH — FLUX vẽ ra chính danh từ bị cấm.
+
+    `kiem_nen.CAM_NGHICH` đã ghi và đã trả giá: *"`no furniture` đẻ ra đúng cái đồ chắn giữa
+    khung mà nó định cấm"*. `TRAN_KHUNG` của bộ này viết `no circular vignette, no round
+    badge, no border` — ba danh từ TRÒN đứng liền nhau ngay sau câu tả khung, và khung anh
+    gửi kèm lời *"vẫn không rõ bối cảnh"* đúng là một minh hoạ nằm gọn trong một hình tròn.
+
+    Cổng canh cả prompt đã ghép, không canh riêng một hằng số: câu nghịch có thể vào từ
+    `KEP_GU`, `khung`, `_luat` hay `SIET`.
+    """
+    import re
+    import nen_gt as N
+    xau = re.compile(r"\bno (?:circular|round|border|furniture|objects?|text)\b", re.I)
+    # HAI CẢNH, HAI NHÁNH. `_luat` rẽ theo `_NGOAI`: một cảnh chỉ soi được một nửa số vế, và
+    # bản đầu của cổng này chỉ có cảnh vỉa hè — tức nhánh TRONG NHÀ chưa từng được soi.
+    for ve in ("a person walking on a wide sidewalk",       # -> GON_NGOAI
+               "a person sitting at a kitchen table"):      # -> GON_TRONG
+        for doc in (True, False):
+            for st in range(4):
+                p = N._prompt(ve, "", N.GU_CARTOON, "howlong", doc, siet=st)
+                m = xau.search(p)
+                assert not m, f"prompt chứa vế viết nghịch {m.group(0)!r} ({ve[:20]}, siet={st})"
+
+
+def t_prompt_khong_noi_nguoc_ve_giua_khung():
+    """Không được vừa dặn 'chủ thể ở giữa' vừa dặn 'giữa khung để trống'.
+
+    Hai câu ấy từng cùng nằm trong một prompt: `KHUNG_DOC` nói *"subject centred, everything
+    important in the middle band"*, `GON_TRONG` nói *"centre of the frame is empty walkable
+    floor"*. Câu sau chép từ `kich_hai.SAN_NEN` (§7), nơi nó ĐÚNG vì bộ truyện tranh dán người
+    vector lên nền AI nên phải chừa chỗ dán. Bộ này để mô hình vẽ luôn người — §12.5.
+    Mô hình chọn bên nào là may rủi, và đó là thứ làm chủ thể lúc có lúc không.
+    """
+    import nen_gt as N
+    for ve in ("a person walking on a wide sidewalk",       # -> GON_NGOAI
+               "a person sitting at a kitchen table"):      # -> GON_TRONG
+      for doc in (True, False):
+        p = N._prompt(ve, "", N.GU_CARTOON, "howlong", doc).lower()
+        if "subject centred" in p or "middle band" in p:
+            for c in ("centre of the frame is empty", "center of the frame is empty",
+                      "centre of the frame is open", "center of the frame is open"):
+                assert c not in p, f"prompt vừa dặn chủ thể ở giữa vừa dặn giữa khung trống: {c!r}"
 
 
 def t_prompt_canh_dung_dau():

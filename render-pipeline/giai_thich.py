@@ -3131,6 +3131,120 @@ def _rai_ss(ma: str, nhip: list, idx: int = 0) -> list:
     return nhip
 
 
+def _rai_truc(ma: str, nhip: list, idx: int = 0) -> list:
+    """Một số tập vẽ phép so sánh bằng TRỤC thay vì bằng biểu đồ cột.
+
+    ── VÌ SAO  (4/9/2026) ──────────────────────────────────────────────────────────────────
+    Đo phân bố khuôn trên 18 kênh × 6 tập = 840 nhịp:
+
+        canh 35,7% · so_lieu 29,2% · chia_doi 12,9% · the_chu 7,9% · chart 7,1%
+        dem 4,4% · nhom 1,4% · truc 0,7% · kinh_lup 0,7%
+
+    Hai khuôn gánh 65%, ba khuôn cộng lại 2,8%. `truc` và `kinh_lup` có tên trong bảng mà
+    thực tế gần như không tồn tại — 6 nhịp trên 840. Đó chính là lời anh chê từ đầu: *"cứ
+    lặp đi lặp lại cùng một mô-típ"*.
+
+    Không đổi nhãn được: `Truc` cần `moc` (dãy mốc có thứ tự) chứ không đọc `cot`. Nhưng
+    nhịp `chart` ĐÃ MANG đúng dữ liệu ấy — một dãy (tên, giá trị) đã sắp. Cùng một phép so
+    sánh, hai cách vẽ: cột thì so DIỆN TÍCH, trục thì so VỊ TRÍ. Nên đây không phải một khuôn
+    mới cần nội dung mới, mà là một cách đọc khác của nội dung đang có.
+
+    Xoay theo TẬP, không theo nhịp: một tập chỉ có một hai nhịp `chart`, đổi trong tập thì
+    người xem không thấy gì; đổi giữa các tập mới là thứ họ cảm được (§14.9 — đa dạng phải
+    nằm ở chỗ người xem NHÌN THẤY, và thứ họ thấy là hai tập liền nhau).
+    """
+    if idx % 2 == 0:
+        return nhip                      # tập chẵn giữ biểu đồ cột
+    for n in nhip:
+        if (n.get("khuon") or "") != "chart":
+            continue
+        cot = n.get("cot") or []
+        if len(cot) < 2:
+            continue                     # trục cần ít nhất hai mốc mới đọc ra là một trục
+        # Trục đọc từ NHỎ tới LỚN. Biểu đồ cột không cần sắp (mắt so chiều cao), trục thì có:
+        # mốc để lộn xộn trên một đường thẳng là mất đúng thứ trục sinh ra để nói.
+        sap = sorted(cot, key=lambda c: abs(float(c.get("v") or 0)))
+        n["khuon"] = "truc"
+        n["moc"] = [{"nhan": str(c.get("nhan") or ""), "phu": _bac_gon(c.get("v"))}
+                    for c in sap]
+        n["vt"] = len(sap) - 1           # mốc lớn nhất là mốc đang nói tới
+        n.pop("cot", None)
+    return nhip
+
+
+def _bac_gon(v) -> str:
+    """Số rút gọn cho nhãn mốc: 24000 -> 24K. Nhãn trục ngắn thì mắt đọc được cả dãy."""
+    try:
+        x = abs(float(v))
+    except (TypeError, ValueError):
+        return ""
+    for m, k in ((1e9, "B"), (1e6, "M"), (1e3, "K")):
+        if x >= m:
+            return f"{x / m:.1f}".rstrip("0").rstrip(".") + k
+    return f"{x:.0f}" if x >= 10 else f"{x:.1f}".rstrip("0").rstrip(".")
+
+
+_SO_NGUYEN = re.compile(r"^\s*([0-9]{1,2})\s*$")
+
+
+def _rai_dem(ma: str, nhip: list, idx: int = 0) -> list:
+    """Số NHỎ thì cho người xem ĐẾM, đừng bắt họ đọc.
+
+    §12.11 quy tắc C: *thời gian trôi vẽ bằng SỐ LƯỢNG biểu tượng để người xem ĐẾM, không đọc
+    "hai tuần sau"*. Khuôn `dem` dựng ra đúng cho việc ấy và đang dùng 4,4%, trong khi `so_lieu`
+    gánh 29,2% — trong đó có những nhịp mà con số là **một số nguyên nhỏ**, tức đúng loại đếm
+    được bằng mắt.
+
+    Chỉ đổi khi số từ 3 đến 20: dưới ba thì không thành một lượng để đếm, trên hai mươi thì mắt
+    thôi đếm và chuyển sang ước lượng — mất đúng thứ khuôn này sinh ra để làm (chính chú thích
+    của `Dem` trong engine đã ghi giới hạn ấy).
+
+    Một nhịp mỗi tập, xoay theo `idx` để hai tập liền nhau không đổi cùng một chỗ.
+    """
+    ung = [n for n in nhip
+           if (n.get("khuon") or "") == "so_lieu" and not n.get("nenAnh")
+           and _SO_NGUYEN.match(str(n.get("so") or ""))
+           and 3 <= int(_SO_NGUYEN.match(str(n.get("so"))).group(1)) <= 20]
+    if not ung:
+        return nhip
+    n = ung[idx % len(ung)]
+    n["khuon"] = "dem"
+    n["n"] = int(_SO_NGUYEN.match(str(n["so"])).group(1))
+    return nhip
+
+
+def _rai_kinh_lup(ma: str, nhip: list, idx: int = 0) -> list:
+    """Thỉnh thoảng SOI GẦN một cảnh thay vì chỉ nhìn toàn cảnh.
+
+    `kinh_lup` dùng 6/840 nhịp — có tên trong bảng mà gần như không tồn tại. Nó không cần nội
+    dung mới: nhịp `canh` CÓ ẢNH đã đủ mọi thứ, chỉ thiếu điểm soi.
+
+    Đặt điểm soi vào GIỮA-TRÊN khung, nơi chủ thể đứng — chú thích của `KinhLup` trong engine
+    ghi lại một lần nó "phóng to chỗ trống" vì điểm soi để tuỳ tiện. Không đặt nhãn: nhãn phải
+    gọi đúng tên thứ được soi, mà ta chỉ biết mã biểu tượng tiếng Việt — đặt bừa một chữ còn
+    tệ hơn không có chữ.
+
+    Một nhịp mỗi ba tập: soi gần là một nhấn mạnh, dùng dày thì hết là nhấn mạnh.
+    """
+    if idx % 3 != 1:
+        return nhip
+    # LỌC THEO `ve`, KHÔNG THEO `nenAnh`. Ảnh chỉ tồn tại SAU khi `nen_gt.sinh_tap` chạy,
+    # còn hàm này chạy lúc sinh kịch bản — lọc theo `nenAnh` thì điều kiện không bao giờ
+    # đúng và khuôn này đứng nguyên 0,7%. Bản đầu của em mắc đúng thế, và số đo là thứ
+    # duy nhất phát hiện ra: sau khi thêm, tỉ lệ `kinh_lup` KHÔNG đổi một chút nào.
+    # `ve` là lời hứa sẽ có ảnh; hứa không thành thì `KinhLup` soi biểu tượng `bt` — mọi
+    # nhịp `canh` đều có `bt`, nên không có đường nào dẫn tới ống kính rỗng.
+    ung = [n for n in nhip
+           if (n.get("khuon") or "") == "canh" and n.get("ve") and not n.get("canh_ve")]
+    if not ung:
+        return nhip
+    n = ung[len(ung) // 2]               # nhịp giữa mạch, không phải mở đầu hay kết
+    n["khuon"] = "kinh_lup"
+    n["x"] = 0.50
+    n["y"] = 0.42
+    return nhip
+
+
 def _rai_khuon(ma: str, nhip: list, idx: int = 0) -> list:
     """Gán bố cục thẻ chữ cho từng nhịp, xoay trong BA bố cục của kênh.
 
@@ -3796,6 +3910,9 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     # chèn sau không đi qua thứ đã chạy trước.
     nhip = _rai_hinh(ma, nhip, idx)
     nhip = _rai_khuon(ma, nhip, idx)
+    nhip = _rai_truc(ma, nhip, idx)
+    nhip = _rai_dem(ma, nhip, idx)
+    nhip = _rai_kinh_lup(ma, nhip, idx)
     nhip = _rai_ss(ma, nhip, idx)
     nhip = _rai_so(ma, nhip, idx)
     nhip = _rai_chart(ma, nhip, idx)
