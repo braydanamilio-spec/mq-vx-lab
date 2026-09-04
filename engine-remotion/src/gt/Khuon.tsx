@@ -1166,12 +1166,30 @@ export const DaiChu: React.FC<{ W: number; H: number; chu: string; p: number }> 
 ({ W, H, chu, p }) => {
   if (!chu) return null;
   const q = Math.min(1, p / 0.25);
-  const fs = Math.min(H * (W > H ? 0.055 : 0.075), (W * 0.80 / Math.max(1, chu.length)) * 1.5);
+  /* ── VIÊN NHÃN GỌN, KHÔNG PHẢI THANH TRẮNG CẮT NGANG KHUNG  (4/9/2026) ─────────────────
+     Anh gửi khung DAY IN LIFE: thanh trắng "4 AM — UP" **cắt ngang thân cô y tá**, và dưới
+     nó phụ đề lại chồng lên tiếp. Bản cũ vẽ `<rect>` chạy HẾT bề ngang, tô đặc trắng 94% —
+     nó không phải một nhãn, nó là một dải băng dán đè lên ảnh.
+
+     Đây đúng dấu hiệu nghiệp dư số một ở §12.12 (*hộp nền bo góc quanh chữ — mặc định của
+     trình tạo phụ đề điện thoại*), chỉ khác màu. Không ảnh tham chiếu nào của anh có một
+     dải như vậy.
+
+     Ba thay đổi, mỗi cái chữa một điều anh nêu:
+       · bề ngang bằng ĐÚNG chữ + lề  -> hết cắt ngang khung, ảnh còn nguyên hai bên
+       · nền là MỰC của khung (#2C2722), chữ sáng -> đọc được trên mọi ảnh, và cùng một
+         thứ mực với nét vẽ nhân vật nên nó thuộc về khung thay vì dán lên khung
+       · bo tròn hẳn thành viên thuốc, đặt cao hơn một chút để chừa chỗ cho phụ đề */
+  const fs = Math.min(H * (W > H ? 0.048 : 0.060), (W * 0.62) / _emChu(chu));
+  const rong = fs * _emChu(chu.toUpperCase()) + fs * 1.5;
+  const cao = fs * 1.62;
+  const y0 = H - cao - fs * 0.55;
   return (
     <g opacity={q}>
-      <rect x="0" y={H - fs * 1.7} width={W} height={fs * 1.7} fill="#FFFFFF" opacity={0.94} />
-      <text x={W / 2} y={H - fs * 0.48} textAnchor="middle" fontFamily={F} fontWeight={900}
-            fontSize={fs} fill="#2C2722" letterSpacing={fs * 0.06}>{chu.toUpperCase()}</text>
+      <rect x={(W - rong) / 2} y={y0} width={rong} height={cao} rx={cao / 2}
+            fill="#2C2722" opacity={0.90} />
+      <text x={W / 2} y={y0 + cao * 0.68} textAnchor="middle" fontFamily={F} fontWeight={900}
+            fontSize={fs} fill="#F6F1E7" letterSpacing={fs * 0.10}>{chu.toUpperCase()}</text>
     </g>
   );
 };

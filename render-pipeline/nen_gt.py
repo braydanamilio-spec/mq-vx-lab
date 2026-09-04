@@ -303,8 +303,16 @@ KHOA_VAI = {
     "wheregoes": "a minimal isometric worker in an orange hi-vis vest and white hard hat, no face",
     "survive":  "a lean man in his early thirties, short dark hair, a heavy brown fur wrap over "
                 "one shoulder, weathered skin, plain simple features",
-    "dayinlife": "a man in his late twenties, short dark hair, thick eyebrows, a plain worn "
-                 "linen tunic, plain simple features",
+    # ── KÊNH XOAY NGHỀ THÌ KHOÁ PHẢI LÀ NÉT VẼ, KHÔNG PHẢI DANH TÍNH  (4/9/2026) ──────
+    # `sinh_dayinlife` xoay hẳn nghề theo tập: lính La Mã · thợ bánh · lái tàu điện ngầm ·
+    # kiểm soát không lưu · y tá ca đêm… Khoá cũ tả MỘT người cụ thể ("đàn ông cuối hai
+    # mươi, tóc đen ngắn, áo chẽn vải thô") nên nó **đánh nhau với chính câu cảnh**: tập y tá
+    # ra prompt vừa "a night-shift nurse" vừa "a man in a linen tunic".
+    # Thứ cần giữ nguyên qua các khung là NÉT VẼ và KHUÔN MẶT, không phải danh tính — danh
+    # tính đã nằm sẵn ở câu cảnh và đổi theo tập là đúng ý đồ của kênh.
+    "dayinlife": "drawn with a plain oval face, two simple dot eyes, one thin mouth line, "
+                 "thick black outline and no shading on the face — same face, same line "
+                 "weight in every shot",
     # 8 kênh bổ sung — mỗi khoá là MỘT silhouette + MỘT màu đặc + MỘT phụ kiện, không tả mặt.
     # Đây là ba quy tắc đã rút ra: mô hình tái tạo hình khối đơn giản rất đáng tin, tái tạo
     # khuôn mặt tinh tế rất tệ.
@@ -327,14 +335,90 @@ KHOA_VAI = {
 
 # Cảnh nào CÓ NGƯỜI thì mới gắn khoá. Cảnh vẽ đồ vật, biểu đồ, phong cảnh trống thì gắn vào chỉ
 # tổ khiến mô hình nhét thêm một người không ai cần.
+# ── ĐỪNG LIỆT KÊ NGHỀ — NHẬN RA QUY LUẬT SINH RA CHÚNG  (4/9/2026) ─────────────────────────
+# Bản cũ là một danh sách chép tay: `soldier · baker · keeper · watchman` — đúng ba nghề mà ai
+# đó đã vấp phải rồi thêm vào. Thử lại trên mười nghề thật của kênh DAY IN LIFE:
+#
+#     soldier ✔   watchman ✔   baker ✔
+#     nurse ✘   farmer ✘   driver ✘   teacher ✘   miner ✘   fisherman ✘   pilot ✘
+#
+# Bảy trên mười trượt, và mỗi lần trượt là **không khoá nhân vật** — nên bốn khung của cùng
+# một tập ra bốn người khác nhau (tóc đen búi · vàng · cam · trắng). Đó chính là thứ anh nhìn
+# thấy: "không toát lên được ý truyền đạt", vì người xem không nhận ra đang theo dõi AI cả.
+#
+# §13.9 đã trả giá cho đúng chuyện này ở bộ Kling: *danh sách ngoại lệ là danh sách VÔ HẠN* —
+# thêm `nurse` hôm nay thì mai vấp `welder`, `librarian`, `paramedic`.
+#
+# Quy luật sinh ra chúng: tiếng Anh đặt tên người làm nghề bằng một nhúm HẬU TỐ đóng
+# (-er/-or/-ist/-ian/-man/-woman/-ess) cộng một ít từ gốc Latin không theo hậu tố (nurse,
+# chef, clerk, guard, cook, maid, pilot, judge). Nhúm sau ngắn và ĐÓNG THẬT — nó không đẻ
+# thêm như danh sách nghề.
 _CO_NGUOI = re.compile(
-    r"\b(figure|person|people|man|woman|child|adult|crowd|silhouette|worker|sprinter|"
-    r"soldier|baker|keeper|watchman|someone|hand|hands)\b", re.I)
+    r"\b(figure|person|people|man|men|woman|women|child|children|adult|crowd|silhouette|"
+    r"someone|hand|hands|"
+    r"\w{3,}(?:er|or|ist|ian|man|men|woman|women|ess)|"
+    r"nurse|chef|clerk|guard|cook|maid|pilot|judge|\w*medic|crew|staff)\b", re.I)
+
+
+def _chu_ngu(ve: str) -> str:
+    """Cụm CHỦ NGỮ của câu cảnh — phần trước giới từ/dấu phẩy đầu tiên.
+
+    Vì sao cần: luật hậu tố `-er/-or/…` bắt được mọi nghề, nhưng nó cũng bắt **water · paper ·
+    counter · tower** khi chúng nằm ở giữa câu. Thử ngược ra ngay: *"a single glass of water on
+    a table"* bị nhận là cảnh có người — và gắn khoá nhân vật vào một cảnh đồ vật thì mô hình
+    nhét thêm một người không ai cần, đúng cái hại mà chú thích gốc đã cảnh báo.
+
+    `_ve()` luôn đặt CHỦ THỂ lên đầu, nên chỉ cần soi cụm đầu là đủ và hết bắt oan:
+        "a night-shift nurse alone, rising stiffly"  -> "a night-shift nurse alone"   ✔ người
+        "a single glass of water on a table"         -> "a single glass"              ✔ đồ vật
+        "a school bus alone, centred"                -> "a school bus alone"          ✔ đồ vật
+    """
+    dau = re.split(r",| of | on | in | with | at | and | beside | next to ", ve or "", 1)[0]
+    return dau.strip()
+
+
+# ── ĐỒ VẬT TÌNH CỜ KẾT THÚC BẰNG HẬU TỐ NGƯỜI LÀM  (4/9/2026) ──────────────────────────────
+# Luật hậu tố bắt được mọi nghề, và bắt luôn `tower · water · counter` khi chúng là CHỦ NGỮ:
+# thử ngược ra *"a tall paper tower on a counter"* bị nhận là cảnh có người.
+#
+# Không viết tay danh sách đồ vật — nó vô hạn y như danh sách nghề. Nhưng tập đồ vật mà DỰ ÁN
+# NÀY nói tới thì hữu hạn và đã khai sẵn: đó là các thứ trong bảng dữ liệu (`QUANG_DUONG`,
+# `CO_LON`, `KHOI_LUONG`…) cộng tên biểu tượng trong engine. Lấy từ đó thì tập loại trừ tự lớn
+# theo dữ liệu, không phải theo trí nhớ người sửa.
+def _do_vat() -> set:
+    ra = {"tower", "water", "counter", "paper", "container", "computer", "monitor", "elevator",
+          "escalator", "refrigerator", "radiator", "generator", "calculator"}
+    try:
+        import giai_thich as _G
+        for ten in ("QUANG_DUONG", "CO_LON", "KHOI_LUONG", "AM_THANH", "NHIET_DO",
+                    "CUC_NHO", "PHI_AN", "XAC_SUAT"):
+            for hang in getattr(_G, ten, []) or []:
+                if isinstance(hang, (list, tuple)) and hang and isinstance(hang[0], str):
+                    ra |= {w.lower() for w in re.findall(r"[A-Za-z]{3,}", hang[0])}
+    except Exception:
+        pass
+    return ra
+
+
+_DO_VAT = None
+
+
+def _la_nguoi(ve: str) -> bool:
+    """Cảnh này có CHỦ THỂ LÀ NGƯỜI không — soi chủ ngữ, trừ đi đồ vật dự án biết tên."""
+    global _DO_VAT
+    if _DO_VAT is None:
+        _DO_VAT = _do_vat()
+    cn = _chu_ngu(ve)
+    for m in _CO_NGUOI.finditer(cn):
+        if m.group(0).lower() not in _DO_VAT:
+            return True
+    return False
 
 
 def _khoa(ma: str, ve: str) -> str:
     k = KHOA_VAI.get(ma, "")
-    if not k or not _CO_NGUOI.search(ve or ""):
+    # Soi CHỦ NGỮ, không soi cả câu — xem `_chu_ngu`.
+    if not k or not _la_nguoi(ve):
         return ""
     return f"the same recurring character in every shot: {k}. "
 

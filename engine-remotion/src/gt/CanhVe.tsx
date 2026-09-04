@@ -268,7 +268,21 @@ const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
      Nay `sangDayCanh` cho engine biết độ sáng đáy của cảnh vẽ code, nên sàn được sáng trở
      lại và phụ đề tự chọn mực. −0,22 giữ đủ chênh lệch để đáy khung vẫn "nặng" hơn chân
      trời (thiếu nó thì khung trôi), mà không còn là một mảng bùn. */
-  sanDay: _pha(_tron(nen, mau, 0.30), -0.04),
+  /* ── DẢI SÀN PHẢI SẪM DẦN, KHÔNG ĐƯỢC ĐẢO CHIỀU  (4/9/2026, sau khi cổng bắt) ──────────
+     Khi nâng bão hoà em đổi tỉ lệ pha của `san` (0,22 -> 0,38) và `sanD` (0,26 -> 0,44) mà
+     **để nguyên `sanDay` ở 0,30**. Ba chặng của dải sàn thành 0,38 -> 0,44 -> 0,30: nó sẫm
+     rồi **sáng trở lại ở đúng đáy khung** — chỗ phụ đề nằm.
+
+     Cổng `kiem_hinh` bắt ngay: bản dài `howlong` **87/100**, tương phản phụ đề **1,7:1** trên
+     sàn 4,5:1. Đo tay ba khung: 1,0 · 1,3 · 1,5:1 — chữ trắng trên nền gần trắng.
+
+     Bài học của chính bản vá này: đổi một mắt trong một dãy có THỨ TỰ thì phải đổi cả dãy.
+     Ba giá trị ấy không phải ba tham số độc lập — chúng là ba chặng của một gradient, và
+     quan hệ giữa chúng (sẫm dần) mới là thứ mã hoá ý định. `sangDayCanh` đọc chính giá trị
+     này để bảo engine chọn mực phụ đề, nên sai ở đây làm sai luôn cả phép chọn mực.
+
+     Giữ đúng thứ tự: 0,38 -> 0,44 -> 0,56, và sẫm thêm ở chặng cuối. */
+  sanDay: _dam(_pha(_tron(nen, mau, 0.56), -0.20), 1.35),
   nhan:   _dam(_pha(_tron(nen, mauPhu || mau, 0.62), -0.44), 1.55),
 });
 
