@@ -339,12 +339,23 @@ const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
         return (<g key={i}>
           <rect x={bw * i} y={san - h} width={bw * 0.94} height={h}
                 fill={i % 2 ? c.giua : c.xa} />
-          {/* cửa sổ: lưới chấm sáng, đủ để đọc ra "toà nhà" mà không thành hoa văn */}
-          {Array.from({ length: Math.max(2, Math.floor(h / (H * 0.055))) }, (_, j) => (
-            <rect key={j} x={bw * i + bw * 0.16} y={san - h + H * 0.022 + j * H * 0.055}
-                  width={bw * 0.62} height={H * 0.018}
-                  fill={c.troi} opacity={r[(i + j) % r.length] > 0.42 ? 0.5 : 0.14} />
-          ))}
+          {/* ── Ô CỬA SỔ LÀ LỖ TỐI, KHÔNG PHẢI DẢI SÁNG  (4/9/2026) ────────────────────
+              Bản trước vẽ mỗi tầng một DẢI ngang sáng màu trời. Ở ảnh mẫu (khu chợ đất
+              nện) cửa sổ và cửa ra vào đều là **lỗ tối** — và đó là lý do dãy nhà ở đó
+              đọc ra "nhà", còn dãy của mình đọc ra "biểu đồ cột có kẻ sọc".
+              Một dải ngang chạy hết bề ngang nhà không giống cửa sổ ở bất kỳ đâu; hai ô
+              vuông nhỏ cạnh nhau thì giống ngay. */}
+          {Array.from({ length: Math.max(2, Math.floor(h / (H * 0.062))) }, (_, j) =>
+            [0, 1].map((k2) => (
+              <rect key={`${j}-${k2}`}
+                    x={bw * i + bw * (0.20 + k2 * 0.38)} y={san - h + H * 0.026 + j * H * 0.062}
+                    width={bw * 0.22} height={H * 0.028} rx={W * 0.002}
+                    fill={_muc(c)} opacity={r[(i + j + k2) % r.length] > 0.38 ? 0.60 : 0.24} />
+            )))}
+          {/* CỬA RA VÀO ở chân nhà: thứ nói "người đi vào được", và nó neo toà nhà xuống
+              mặt đất — thiếu nó thì khối nhà nào cũng có thể là một cái hộp bất kỳ. */}
+          <rect x={bw * i + bw * 0.36} y={san - H * 0.055} width={bw * 0.24} height={H * 0.055}
+                rx={W * 0.003} fill={_muc(c)} opacity={0.55} />
         </g>);
       })}
       <g>
@@ -502,11 +513,64 @@ const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
   /* VĂN PHÒNG — bàn, màn hình, rèm lá dọc. THE RULES · HIDDEN FEE · REAL COST */
   van_phong: ({ W, H, san, c, r }) => (
     <g>
-      {Array.from({ length: 9 }, (_, i) => (
-        <rect key={i} x={W * (0.04 + i * 0.105)} y={H * 0.10} width={W * 0.055}
-              height={san - H * 0.34} fill={c.xa} opacity={i % 2 ? 0.5 : 0.28} />
-      ))}
-      {[0.14, 0.56].map((x, i) => (
+      {/* ── ĐỒ VẬT GỌI TÊN ĐƯỢC, KHÔNG PHẢI HOA VĂN  (4/9/2026) ─────────────────────────
+          Bản trước dựng tường bằng chín vạch dọc. Có nét mực rồi thì chín vạch ấy đọc ra
+          một hàng rào, và không có nét thì đọc ra hoa văn giấy dán — cả hai đều không phải
+          "văn phòng". Soi ảnh anh gửi: căn phòng ở đó nhận ra được nhờ **ba vật gọi tên
+          được** — cửa sổ có trời, đồng hồ treo tường, chậu cây — chứ không nhờ bề mặt.
+          Nguyên tắc chung cho mọi nơi chốn: một nơi chốn = vài vật ai cũng gọi tên được,
+          không phải một lớp vân bề mặt. */}
+      {/* CỬA SỔ: khung + trời + hai đám mây + song chữ thập */}
+      <g>
+        <rect x={W * 0.06} y={san - H * 0.42} width={W * 0.30} height={H * 0.26}
+              fill={c.troi} />
+        <ellipse cx={W * 0.14} cy={san - H * 0.34} rx={W * 0.045} ry={H * 0.022}
+                 fill="#FFFFFF" opacity={0.75} stroke="none" />
+        <ellipse cx={W * 0.26} cy={san - H * 0.28} rx={W * 0.035} ry={H * 0.017}
+                 fill="#FFFFFF" opacity={0.6} stroke="none" />
+        <line x1={W * 0.21} y1={san - H * 0.42} x2={W * 0.21} y2={san - H * 0.16} />
+        <line x1={W * 0.06} y1={san - H * 0.29} x2={W * 0.36} y2={san - H * 0.29} />
+      </g>
+      {/* ── VÙNG CẤM CỦA CHỦ THỂ: 0,30–0,80·W  (4/9/2026) ─────────────────────────────
+          Chủ thể đứng ở cx = 0,38…0,62·W (lệch theo hạt) với bề ngang tới 0,31·W, nên nó
+          quét hết dải **0,30–0,78·W**. Đồng hồ đặt ở 0,70 rơi thẳng vào đó và nằm sau đầu
+          nhân vật — đúng lỗi che khuất anh vừa nhắc, chỉ khác chỗ.
+          Đồ trang trí treo tường phải nằm NGOÀI dải ấy: trái < 0,30 hoặc phải > 0,80. */}
+      {/* ĐỒNG HỒ TREO TƯỜNG: mặt tròn + hai kim. Kim lệch theo hạt -> mỗi tập một giờ khác. */}
+      <g>
+        <circle cx={W * 0.87} cy={san - H * 0.40} r={W * 0.058} fill={c.troi} />
+        <line x1={W * 0.87} y1={san - H * 0.40} x2={W * 0.87} y2={san - H * 0.434} />
+        <line x1={W * 0.87} y1={san - H * 0.40}
+              x2={W * (0.87 + 0.032 * Math.cos(r[2] * 6.28))}
+              y2={san - H * 0.40 + H * 0.019 * Math.sin(r[2] * 6.28)} />
+      </g>
+      {/* CHẬU CÂY: chậu hình thang + ba tán lá. Vật sống duy nhất trong phòng, và là thứ
+          làm căn phòng đọc ra "có người dùng" thay vì "sơ đồ nội thất". */}
+      {/* Lùi vào 0,86–0,95 và to lên: bản đầu đặt ở 0,90–0,965 nên tán lá chạm mép phải,
+          và ở cỡ cũ nó đọc ra một vệt xanh chứ không ra cái cây. Vật ở mép khung phải lùi
+          vào bằng ÍT NHẤT bán kính của chính nó. */}
+      <g>
+        <path d={`M ${W * 0.865} ${san} L ${W * 0.945} ${san}
+                  L ${W * 0.932} ${san - H * 0.058} L ${W * 0.878} ${san - H * 0.058} Z`}
+              fill={c.gan} />
+        <ellipse cx={W * 0.905} cy={san - H * 0.098} rx={W * 0.036} ry={H * 0.042} fill={c.nhan} />
+        <ellipse cx={W * 0.872} cy={san - H * 0.074} rx={W * 0.026} ry={H * 0.030} fill={c.nhan} />
+        <ellipse cx={W * 0.938} cy={san - H * 0.076} rx={W * 0.026} ry={H * 0.030} fill={c.nhan} />
+      </g>
+      {/* ── CHỪA KHOẢNG TRỐNG CHO CHỦ THỂ  (4/9/2026) ───────────────────────────────────
+          Anh: *"tránh lỗi che khuất chồng chéo."* Hai cái bàn ở 0,14 và 0,56 (mỗi cái rộng
+          0,30) phủ 0,14–0,44 và 0,56–0,86; chủ thể đứng quanh 0,38–0,62 với bề ngang ~0,30
+          nên nó luôn cắt qua ít nhất một mặt bàn — và vì chủ thể vẽ SAU nên chân nó nằm ĐÈ
+          lên mặt bàn, đọc ra "đứng xuyên qua bàn".
+
+          Không sửa bằng thứ tự vẽ: cho chủ thể ra sau bàn thì nửa dưới bị che, mà nhịp này
+          chủ thể mới là thứ cần nhìn. Sửa bằng BỐ CỤC — một cái bàn, dồn hẳn sang trái, đúng
+          cách ảnh mẫu dựng căn phòng: đồ đạc một bên, người đứng ở khoảng trống bên kia.
+          Dải 0,46–0,98 để trống hẳn cho chủ thể.
+
+          Đây là ràng buộc mà mọi nơi chốn phải theo, không riêng văn phòng: cảnh là SÂN
+          KHẤU, và sân khấu phải có chỗ cho diễn viên đứng. */}
+      {[0.06].map((x, i) => (
         <g key={`b${i}`}>
           <rect x={W * x} y={san - H * 0.115} width={W * 0.30} height={H * 0.020} fill={c.gan}
                 stroke={_muc(c)} strokeWidth={W * 0.004} />

@@ -328,6 +328,25 @@ export const chanTroi = (H: number, hat: number = 0): number => {
    0,5 lọt vào ba chỗ khác nhau mà không chỗ nào sai rõ ràng. */
 export const DAY_HINH = 0.435;
 
+/* ── VẬT NHỎ PHẢI VẼ NHỎ  (4/9/2026) ───────────────────────────────────────────────────────
+   Sau khi phóng chủ thể lên 0,54·H (để nhân vật thôi bé như hình dán), soi khung DAY IN LIFE:
+   **cái đồng hồ treo tường cao bằng nửa khung**, đè lên cả dãy nhà phía sau. Cùng một con số
+   đúng cho người thì phi lý cho một vật cầm tay.
+
+   Gốc: mọi biểu tượng dùng CHUNG một cỡ, tức mã đang giả định mọi vật to bằng nhau. Chữa
+   không phải bằng cách hạ cỡ chung xuống — làm thế thì người lại bé như cũ.
+
+   Phân loại theo KÍCH THƯỚC THẬT NGOÀI ĐỜI, không phải theo danh sách tuỳ ý:
+     · vật to hơn người (xe buýt · máy bay · cá voi · nhà · Trái Đất) -> giữ nguyên, vì
+       chính sự TO là thông điệp của mấy kênh ấy;
+     · người -> 1,0, nó là thước đo;
+     · vật cầm tay (đồng hồ · cốc · giấy · điện thoại · tiền · hộp) -> 0,58.
+   Vật không khai thì mặc định 1,0: thà một vật hơi to còn hơn một vật biến mất, và danh sách
+   này chỉ cần liệt kê ĐÚNG nhóm cầm tay. */
+const _NHO = new Set(["dong_ho", "coc", "giay", "dien_thoai", "tien", "hop",
+                      "nguyen_tu", "te_bao", "vi_khuan"]);
+export const coHinh = (ten: string): number => (_NHO.has(ten) ? 0.58 : 1);
+
 export const _emChu = (s: string): number => {
   let e = 0;
   for (const c of s || "") {
@@ -918,9 +937,9 @@ export const SoLieu: React.FC<{
         {/* Bố cục canh trái đẩy hình sang x = 0,76·W, nên bề ngang còn lại chỉ 0,48·W. Giữ cỡ
             0,66·W thì hình TRÀN khỏi mép phải — soi khung WHAT IF thấy cái hộp bị cắt đôi.
             Cỡ biểu tượng phải theo CHỖ NÓ ĐỨNG, không phải theo cả khung. */}
-        <BieuTuong ten={bt} s={tren_anh ? Math.min(H * 0.26, W * 0.28)
+        <BieuTuong ten={bt} s={(tren_anh ? Math.min(H * 0.26, W * 0.28)
                               : (kA === 1 ? Math.min(H * 0.32, W * 0.42)
-                                          : Math.min(H * 0.40, W * 0.66))} /></g> : null}
+                                          : Math.min(H * 0.40, W * 0.66))) * coHinh(bt)} /></g> : null}
       {/* Kiểu 3 vẽ số ở lớp NỀN phía trên rồi, nên ở đây bỏ khối số đi — vẽ hai lần thì con
           số đậm chồng lên chính bóng mờ của nó. */}
       <g transform={`translate(${kA === 1 ? W * 0.08 : W / 2} ${H * yCao}) scale(${0.86 + q * 0.14})`}

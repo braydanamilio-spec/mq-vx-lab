@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
-import { chanTroi, DAY_HINH, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong } from "./Khuon";
+import { chanTroi, DAY_HINH, coHinh, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong } from "./Khuon";
 import { CanhVe, sangDayCanh } from "./CanhVe";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
@@ -371,7 +371,16 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
               <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
                    style={{ position: "absolute", left: 0, top: 0 }}>
                 {(() => {
-                  const s0 = Math.min(H * 0.42, W * 0.48);
+                  /* ── CHỦ THỂ PHẢI LÀ CHỦ THỂ  (4/9/2026) ──────────────────────────────
+                     Đo trên khung dựng thật: nét nhân vật cao **0,30·H**, và khoảng trống
+                     phía trên chiếm gần nửa khung. Mọi ảnh anh gửi đều để chủ thể chiếm
+                     quá nửa chiều cao — đó là thứ tách "một cảnh có nhân vật" khỏi "một
+                     phông nền có dán hình nhỏ ở góc".
+                     Chân đã neo vào mặt sàn (`DAY_HINH`) và mặt sàn đã lên trên vùng chữ,
+                     nên phóng to giờ chỉ ăn vào khoảng trống — trước hai bản vá ấy thì
+                     phóng to sẽ đâm thẳng vào dải chữ. Thứ tự sửa quyết định được phép
+                     sửa cái gì. */
+                  const s0 = Math.min(H * 0.54, W * 0.62);
                   /* Lệch trái/giữa/phải theo `hat` — chủ thể đứng chính giữa ở MỌI tập là dấu
                      hiệu khuôn mẫu rõ nhất, đúng thứ luật YouTube gọi là "bố cục giống nhau". */
                   /* Đổi theo `hat` (tập) VÀ theo mốc vào của chính nhịp (`N.s`) — chỉ theo
@@ -400,7 +409,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                      công thức chưa mã hoá: **chiều cao còn lại phía trên dải phụ đề**.
                      Đúng họ lỗi §6 — một kích thước chịu hai ràng buộc mà công thức chỉ có một. */
                   const traTren = sanY - H * 0.02;          // khoảng trống từ đỉnh khung tới sàn
-                  const sz = Math.min(s0 * cz, traTren * 1.92);
+                  const sz = Math.min(s0 * cz, traTren * 1.92) * coHinh(btVe);
                   /* ── QUY TẮC D: CẢNH SAU KẾ THỪA CẢNH TRƯỚC  (4/9/2026) ──────────────
                      §12.11 D: *cảnh sau mang dấu vết cảnh trước (vệt chân dài dần)* — thứ tách
                      một CHUỖI CẢNH khỏi một chuỗi hình rời rạc.
