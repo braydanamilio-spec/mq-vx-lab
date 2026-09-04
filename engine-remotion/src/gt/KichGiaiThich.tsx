@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
-import { chanTroi, DAY_HINH, coHinh, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong, tiLe} from "./Khuon";
+import { chanTroi, DAY_HINH, coHinh, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong, tiLe, nguonSang} from "./Khuon";
 import { CanhVe, sangDayCanh } from "./CanhVe";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
@@ -550,6 +550,27 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                             Engine chỉ đọc, đúng nguyên tắc §15.3. */}
                         <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
                                    nv={(N as any)?.nv ?? 0} />
+                      {/* ── ÁNH SÁNG PHỦ LÊN CHỦ THỂ  (4/9/2026) ─────────────────────────
+                          Bốn ảnh anh gửi: ba người ngồi quanh lửa đều có **viền cam trên
+                          nửa mặt phía lửa**. Đó là thứ tách "nhân vật đứng trong một cảnh
+                          có ánh sáng" khỏi "hình dán đặt trên một nền sáng" — và nó là
+                          khoảng cách rõ nhất còn lại giữa bản mình với ảnh tham khảo.
+                          Không cắt hình theo đường bao nhân vật (SVG không làm rẻ được):
+                          phủ một lớp ấm TOÀN KHUNG có tâm ở đúng nguồn sáng, vẽ SAU nhân
+                          vật. Phần nhân vật gần nguồn ăn nhiều ánh sáng hơn phần xa — đúng
+                          cách tranh phẳng giả lập ánh sáng, và nó cũng nối nhân vật vào
+                          cùng một hệ sáng với nền thay vì để hai lớp sáng độc lập.
+                          Độ đục thấp: đây là lớp NỐI, không phải lớp tô màu. */}
+                      <defs>
+                        <radialGradient id={`ls${Math.round(cx)}`}>
+                          <stop offset="0%" stopColor="#FFD9A0" stopOpacity={0.30} />
+                          <stop offset="60%" stopColor="#FFD9A0" stopOpacity={0.10} />
+                          <stop offset="100%" stopColor="#FFD9A0" stopOpacity={0} />
+                        </radialGradient>
+                      </defs>
+                      <ellipse cx={nguonSang(W, hat)} cy={sanY - sz * 0.42}
+                               rx={W * 0.72} ry={H * 0.42}
+                               fill={`url(#ls${Math.round(cx)})`} />
                       </g>
                     </>
                   );

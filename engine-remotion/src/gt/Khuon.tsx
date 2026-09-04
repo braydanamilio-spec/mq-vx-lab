@@ -464,12 +464,22 @@ export const _emChu = (s: string): number => {
   return Math.max(e, 0.5);
 };
 
+/* ══ NGUỒN SÁNG — MỘT NGUỒN SỰ THẬT CHO CẢ NỀN LẪN NHÂN VẬT  (4/9/2026) ═════════════════
+   `NenPhong` tính chỗ đặt quầng sáng bằng `hat % 6`. Lớp nhân vật cần ĐÚNG chỗ ấy để viền
+   sáng rơi về đúng phía — mà lớp ấy nằm ở tệp khác. Chép công thức sang là tạo nguồn sự thật
+   thứ hai, và §15.3 đã trả giá: sửa một nơi, nơi kia vẫn dựng theo công thức cũ, không lỗi
+   nào báo. Nên tách ra một hàm, hai nơi cùng gọi. */
+export const nguonSang = (W: number, hat: number): number => {
+  const k = Math.abs(hat) % 6;
+  return W * (k === 2 ? 0.24 : k === 5 ? 0.78 : 0.50);
+};
+
 export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string;
                                   hat?: number; anTroi?: boolean; anCua?: boolean }> =
 ({ W, H, nen, mau, hat = 0, anTroi = false, anCua = false }) => {
   const k = Math.abs(hat) % 6;
   const yS = chanTroi(H, hat);            // nguồn sự thật duy nhất — xem `chanTroi`
-  const xS = W * (k === 2 ? 0.24 : k === 5 ? 0.78 : 0.50);      // nguồn sáng lệch trái/phải/giữa
+  const xS = nguonSang(W, hat);       // nguồn sáng lệch trái/phải/giữa — xem `nguonSang`
   /* 3/9 — PHA THEO MÀU THƯƠNG HIỆU, KHÔNG CHỈ THEO `nen`.
      Bản đầu dựng phòng từ `nen` của kênh. Đo bảng màu thật thì `nen` của MỌI kênh đều gần
      trắng — `#E8E9E6` · `#F2F0EA` · `#EEF1F3` · `#EDEEF2` — nên tường và sàn pha ra vẫn trắng,
@@ -516,16 +526,40 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
           <stop offset="0.55" stopColor={sanD} />
           <stop offset="1" stopColor={sanDay} />
         </linearGradient>
+        {/* ── ÁNH SÁNG PHẢI ẤM, KHÔNG PHẢI TRẮNG  (4/9/2026) ────────────────────────────
+            Quầng sáng cũ dùng `#FFFFFF`: nó LÀM SÁNG mà không LÀM ẤM, nên khung đọc ra
+            "nền nhạt" chứ không đọc ra "có một nguồn sáng ở đây". Bốn ảnh anh gửi đều có
+            một nguồn ấm rõ — ngọn đèn hắt vũng vàng lên tường, đống lửa hắt cam lên mặt
+            người — và đó là thứ khác biệt lớn nhất còn lại so với bản mình.
+            `#FFE9C2` là ánh đèn sợi đốt; giữ độ đục cũ nên độ sáng không đổi, chỉ đổi SẮC. */}
         <radialGradient id={`${id}g`} cx="50%" cy="50%" r="50%">
-          <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.55} />
-          <stop offset="0.55" stopColor="#FFFFFF" stopOpacity={0.16} />
-          <stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
+          <stop offset="0" stopColor="#FFE9C2" stopOpacity={0.62} />
+          <stop offset="0.55" stopColor="#FFDFAE" stopOpacity={0.20} />
+          <stop offset="1" stopColor="#FFDFAE" stopOpacity={0} />
         </radialGradient>
+        {/* Vũng sáng ĐỔ XUỐNG SÀN. Quầng cũ chỉ phủ mảng tường (`ry = yS*0,86`), nên ánh
+            sáng dừng đúng ở đường chân trời — một nguồn sáng không rọi xuống sàn thì mắt
+            đọc ra một vệt sơn trên tường, không đọc ra ánh sáng. */}
+        <radialGradient id={`${id}gs`} cx="50%" cy="50%" r="50%">
+          <stop offset="0" stopColor="#FFE4B4" stopOpacity={0.34} />
+          <stop offset="0.6" stopColor="#FFE4B4" stopOpacity={0.10} />
+          <stop offset="1" stopColor="#FFE4B4" stopOpacity={0} />
+        </radialGradient>
+        {/* Bóng phía ĐỐI DIỆN. Ánh sáng chỉ đọc ra là "có hướng" khi phía kia tối đi — sáng
+            đều khắp khung thì nó là độ sáng, không phải nguồn sáng. */}
+        <linearGradient id={`${id}b`} x1={xS < W * 0.5 ? "1" : "0"} y1="0"
+                        x2={xS < W * 0.5 ? "0" : "1"} y2="0">
+          <stop offset="0" stopColor="#2A2118" stopOpacity={0.20} />
+          <stop offset="0.55" stopColor="#2A2118" stopOpacity={0.05} />
+          <stop offset="1" stopColor="#2A2118" stopOpacity={0} />
+        </linearGradient>
       </defs>
 
       <rect x={0} y={0} width={W} height={yS} fill={`url(#${id}t)`} />
       {/* quầng sáng — thứ tạo chiều sâu mà nền phẳng không có */}
       <ellipse cx={xS} cy={yS * 0.52} rx={W * 0.62} ry={yS * 0.86} fill={`url(#${id}g)`} />
+      {/* bóng phía đối diện nguồn — vẽ TRÊN tường, dưới mọi thứ khác */}
+      <rect x={0} y={0} width={W} height={yS} fill={`url(#${id}b)`} />
 
       {/* ── KHUNG CỬA SỔ PHẢI Ở SAU, KHÔNG Ở GIỮA  (3/9/2026) ─────────────────────────────
           Bản đầu vẽ khung cửa rộng 0,40·W đặt ngay tại nguồn sáng `xS`, độ mờ 0,30. Với nhịp
@@ -569,6 +603,14 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
       ) : null}
 
       <rect x={0} y={yS} width={W} height={H - yS} fill={`url(#${id}s)`} />
+      {/* VŨNG SÁNG TRÊN SÀN — hình bầu dục dẹt, tâm thẳng dưới nguồn. Ánh sáng dừng ở đường
+          chân trời thì đọc ra một vệt sơn trên tường; đổ tiếp xuống sàn mới đọc ra nguồn
+          sáng. Dẹt vì mặt sàn nhìn nghiêng: một vòng tròn trên sàn chiếu lên khung là ellipse
+          bẹt, và vẽ nó tròn là cách chắc chắn để sàn đọc ra một bức tường thứ hai. */}
+      <ellipse cx={xS} cy={yS + (H - yS) * 0.34} rx={W * 0.56} ry={(H - yS) * 0.46}
+               fill={`url(#${id}gs)`} />
+      {/* bóng phía đối diện, tiếp tục xuống sàn để hai nửa khung không đứt mạch sáng */}
+      <rect x={0} y={yS} width={W} height={H - yS} fill={`url(#${id}b)`} opacity={0.72} />
       {/* ── ẨN CHÂN TRỜI KHI KHUÔN CÓ TRỤC RIÊNG  (4/9/2026) ─────────────────────────────
           Rà soát tìm ra bốn "mặt sàn" cùng tồn tại: phòng 0,73·H · chủ thể 0,66·H · biểu đồ
           0,64·H · so sánh tỉ lệ 0,48·H. Phản xạ đầu là ép cả ba lớp kia xuống sàn phòng — em
