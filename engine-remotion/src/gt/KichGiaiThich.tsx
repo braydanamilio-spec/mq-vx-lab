@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
-import { ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong } from "./Khuon";
+import { chanTroi, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong } from "./Khuon";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    PHIM GIẢI THÍCH — bảy khuôn hình, nhịp cắt 2,1 giây  (1/9/2026)
@@ -257,7 +257,10 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
   const p = kep((t - N.s) / Math.max(0.4, N.e - N.s));      // 0..1 trong nhịp
   const vao = kep((t - N.s) / 0.22);                        // 0..1 lúc vừa cắt vào
 
-  const SAN = 0.66, sanY = H * SAN, NGUOI = H * (doc ? 0.38 : 0.46);
+  /* Mặt sàn hỏi `chanTroi` — nguồn sự thật duy nhất, xem chú thích của nó trong `Khuon.tsx`.
+     Hằng `SAN = 0.66` cũ ghi cứng và KHÔNG đổi theo `hat`, trong khi chân trời của căn phòng
+     thì có: 5/6 số tập chủ thể và bóng của nó lơ lửng trên sàn. */
+  const sanY = chanTroi(H, hat), SAN = sanY / H, NGUOI = H * (doc ? 0.38 : 0.46);
 
   /* Nền: ưu tiên ảnh AI vẽ ĐÚNG THEO LỜI của nhịp này (anh dặn), không có thì `NenQue` vẽ
      bằng code. Hai tầng, tầng dưới không bao giờ hỏng vì không gọi mạng. */
@@ -303,7 +306,17 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                 Soi lưới bản dài SURVIVE: 3/6 khung rơi đúng vào cảnh ấy.
                 Thứ làm vật thuộc về căn phòng không phải độ mờ mà là **bóng đổ chân** — nên vẽ
                 bóng ellipse trên sàn, và vẽ vật đặc ở trên. */}
-            {N.bt ? (
+            {/* ── KHÔNG VẼ BIỂU TƯỢNG KHI LỚP TRÊN ĐÃ VẼ  (4/9/2026) ─────────────────────
+                Nhịp `so_lieu` không có ảnh thì `SoLieu` TỰ vẽ `bt` (nó nhận
+                `bt={N.nenAnh ? "" : N.bt}`), ở cỡ và chỗ riêng của bố cục ấy. Lớp nền này vẽ
+                thêm một lần nữa ở mặt sàn — **hai biểu tượng giống hệt nhau trong một khung**,
+                khác cỡ, khác chỗ.
+                Đo: 42/245 nhịp `so_lieu` KHÔNG có prompt ảnh nào (không bao giờ có ảnh) nên
+                chắc chắn dính; 203 nhịp còn lại dính mỗi khi hồ CF cạn.
+                Cổng đã có ở `SoLieu` chỉ chặn *ảnh + biểu tượng*, không chặn *biểu tượng +
+                biểu tượng* — đúng họ "vá một nhánh, để nguyên nhánh song song".
+                Nhường cho lớp trên: nó biết bố cục nên đặt đúng chỗ hơn. */}
+            {N.bt && String((N as any)?.khuon || "") !== "so_lieu" ? (
               <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
                    style={{ position: "absolute", left: 0, top: 0 }}>
                 {(() => {
@@ -357,7 +370,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
   const than = () => {
     switch (N.khuon) {
       case "chia_doi":
-        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
+        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} anTroi />,
                  lop: <ChiaDoi W={W} H={H * 0.80} trai={N.trai || {}} phai={N.phai || {}} mau={mau} p={p}
                                nen={nenTrang}
                                /* `bo_ss` do Python quyết — cùng lý do với `bo_the`. */
@@ -405,7 +418,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                  lop: <Dem W={W} H={H * 0.80} n={N.n || 4} ngay={N.ngay !== false}
                            chu={N.chu || ""} p={p} mau={mau} /> };
       case "chart":
-        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
+        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} anTroi />,
                  lop: <Chart W={W} H={H * 0.80} cot={N.cot || []} don={N.don || ""}
                              mau={mau} mauPhu={mauPhu} p={p} nen={nenTrang} hat={hat}
                              /* `kieu_chart` do Python quyết — xem `GU_CHART`. */

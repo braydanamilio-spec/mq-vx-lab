@@ -210,10 +210,34 @@ const _tron = (a: string, b: string, t: number): string => {
   }).join("");
 };
 
-export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string; hat?: number }> =
-({ W, H, nen, mau, hat = 0 }) => {
+/* ── MỘT NGUỒN SỰ THẬT CHO ĐƯỜNG CHÂN TRỜI  (4/9/2026) ──────────────────────────────────────
+   Rà soát tìm ra **BỐN mặt sàn khác nhau cùng tồn tại trong một khung**, và mỗi lớp tự vẽ bóng
+   tiếp đất của mình ở mặt sàn riêng ấy:
+
+       NenPhong chân trời   0,730·H     (và đổi 0,66 / 0,73 / 0,80 theo `hat`)
+       chủ thể `canh`       0,660·H     hằng `SAN` ghi cứng ở KichGiaiThich
+       Chart yDay           0,640·H     (0,80 trong hệ H*0,80)
+       ChiaDoi tỉ lệ        0,480·H     (0,60 trong hệ H*0,80)
+
+   Hậu quả: cột biểu đồ lơ lửng 0,09·H TRÊN sàn phòng, khối so sánh lơ lửng 0,25·H, chủ thể
+   `canh` lơ lửng 0,07·H — và cả bốn đều có bóng tiếp đất, nên mắt thấy bóng ở một chỗ và mặt
+   sàn ở chỗ khác. Đây đúng họ lỗi §6: *chép hằng sang hệ quy chiếu khác* — 0,60 và 0,80 đo
+   trong hệ `H*0,80`, còn 0,66 và 0,73 đo trong hệ khung đầy, và không ai quy đổi.
+
+   Tệ hơn: chân trời của `NenPhong` ĐỔI THEO TẬP (`hat`), nên ba lớp kia lệch một lượng khác
+   nhau ở mỗi tập — 5/6 số tập lệch, chỉ 1/6 trùng.
+
+   Nay mọi lớp hỏi cùng một hàm. Ai nhận `H` khác thì tự quy đổi bằng tỉ lệ của mình. */
+export const chanTroi = (H: number, hat: number = 0): number => {
   const k = Math.abs(hat) % 6;
-  const yS = H * (k === 1 ? 0.80 : k === 4 ? 0.66 : 0.73);      // đường chân trời đổi theo kiểu
+  return H * (k === 1 ? 0.80 : k === 4 ? 0.66 : 0.73);
+};
+
+export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string;
+                                  hat?: number; anTroi?: boolean }> =
+({ W, H, nen, mau, hat = 0, anTroi = false }) => {
+  const k = Math.abs(hat) % 6;
+  const yS = chanTroi(H, hat);            // nguồn sự thật duy nhất — xem `chanTroi`
   const xS = W * (k === 2 ? 0.24 : k === 5 ? 0.78 : 0.50);      // nguồn sáng lệch trái/phải/giữa
   /* 3/9 — PHA THEO MÀU THƯƠNG HIỆU, KHÔNG CHỈ THEO `nen`.
      Bản đầu dựng phòng từ `nen` của kênh. Đo bảng màu thật thì `nen` của MỌI kênh đều gần
@@ -307,7 +331,19 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
       ) : null}
 
       <rect x={0} y={yS} width={W} height={H - yS} fill={`url(#${id}s)`} />
-      <rect x={0} y={yS} width={W} height={Math.max(2, H * 0.0035)} fill={vach} opacity={0.34} />
+      {/* ── ẨN CHÂN TRỜI KHI KHUÔN CÓ TRỤC RIÊNG  (4/9/2026) ─────────────────────────────
+          Rà soát tìm ra bốn "mặt sàn" cùng tồn tại: phòng 0,73·H · chủ thể 0,66·H · biểu đồ
+          0,64·H · so sánh tỉ lệ 0,48·H. Phản xạ đầu là ép cả ba lớp kia xuống sàn phòng — em
+          đã thử và SAI hai lần: phép quy đổi giữa hai hệ `H` và `H*0,80` nhầm, và quan trọng
+          hơn là ép xuống thì **không còn chỗ cho nhãn dưới trục**.
+          Gốc không phải mặt sàn lệch, mà là HAI ĐƯỜNG SÀN CÙNG HIỆN: biểu đồ đã có trục riêng
+          làm mặt đất, phòng lại vẽ thêm một vạch chân trời ở độ cao khác. Mắt thấy hai đường
+          ngang thì đọc ra "chắp vá", chứ không đọc ra vật lơ lửng.
+          Nên: khuôn nào tự mang mặt đất (biểu đồ · so sánh · đếm) thì phòng chỉ giữ tường và
+          quầng sáng, bỏ vạch chân trời và bỏ luôn mảng sàn sẫm. */}
+      {anTroi ? null : (
+        <rect x={0} y={yS} width={W} height={Math.max(2, H * 0.0035)} fill={vach} opacity={0.34} />
+      )}
 
       {/* bóng tiếp đất mềm ngay dưới chân trời — đồ hoạ đè lên sẽ như đứng trên sàn, không lơ lửng */}
       <ellipse cx={W / 2} cy={yS + H * 0.012} rx={W * 0.40} ry={H * 0.022} fill="#000000" opacity={0.07} />
@@ -1191,16 +1227,30 @@ export const TheChu: React.FC<{
   if (k6 === 4) {
     /* NÊM CHÉO — mảng màu cắt chéo từ đáy trái. Đường chéo là thứ duy nhất trong cả bộ khuôn
        không nằm ngang hay dọc, nên nó phá nhịp mạnh nhất. Dùng thưa. */
+    /* ── KHOẢNG CÁCH SỐ / TIÊU ĐỀ TÍNH TỪ CỠ CHỮ  (4/9/2026) ────────────────────────────
+       Bản trước đặt số ở `H*0,40` và khối tiêu đề ở `H*0,64` — hai phân số CỐ ĐỊNH cách nhau
+       0,24·H. Nhưng khối tiêu đề neo ở TÂM, nên nửa trên của nó cao tới
+       `(dòng/2)·fsz·1,16 + fsz·0,34`; với 4 dòng ở `fsz = 0,135·H` thì nửa trên là **0,36·H**,
+       đỉnh khối chạm y = 0,28·H — trong khi chữ số chiếm 0,32–0,40·H, CÙNG `x = 0,08·W`.
+       Đếm trên dữ liệu thật: **11 thẻ chương** rơi đúng tổ hợp (bố cục nêm chéo · có số · ≥4
+       dòng), ví dụ `survive` chương 5 "Could you survive a night in the Everglades".
+
+       Đây là lần thứ NĂM cùng một lỗi trong dự án (§15.10): hai phân số cố định không mã hoá
+       được quan hệ "dòng này nằm dưới dòng kia". Nay suy từ chính cỡ chữ, và kẹp trần 0,80·H
+       để khối không tụt xuống dải phụ đề. */
     const fsz = coChu(0.72, dongT.length);
+    const nuaTren = (dongT.length / 2) * fsz * 1.16 + fsz * 0.34;
+    const cSo = H * 0.085;
+    const yTieu = Math.min(H * 0.80, Math.max(H * 0.52, H * 0.30 + cSo * 0.9 + nuaTren));
     return (
       <g opacity={q}>
         <rect x={0} y={0} width={W} height={H} fill={nen} />
         <path d={`M 0 ${H * 0.16} L ${W} ${H * -0.06} L ${W} ${H} L 0 ${H} Z`} fill={mau} />
         {soCh ? (
-          <text x={W * 0.08} y={H * 0.40} fontFamily={F} fontWeight={900}
-                fontSize={H * 0.085} fill={chuSang} opacity={0.55}>{soCh}</text>
+          <text x={W * 0.08} y={H * 0.30} fontFamily={F} fontWeight={900}
+                fontSize={cSo} fill={chuSang} opacity={0.55}>{soCh}</text>
         ) : null}
-        {khoi(W * 0.08, H * 0.64, "start", fsz, chuSang)}
+        {khoi(W * 0.08, yTieu, "start", fsz, chuSang)}
       </g>
     );
   }

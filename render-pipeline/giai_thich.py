@@ -2069,8 +2069,16 @@ def sinh_howhot(i):
        phai={"nhan": ten, "bt": bt, "so": f"{f:,}°F"}, dinh=True),
     _n("the_chu", "Your body has a very narrow window.",
        the="Your body has|a very narrow window."),
-    _n("so_lieu", "Outside it, minutes matter.", so=f"{c:,.0f}", don="degrees celsius",
-       chu="the same temperature, other scale", bt=bt),
+    # ── BỎ NHỊP ĐỘ C  (4/9/2026) ───────────────────────────────────────────────────────
+    # Nhịp này hiện "DEGREES CELSIUS" tràn màn hình trên một kênh MỸ — đúng thứ §12.13 cấm:
+    # người xem Mỹ đọc độ C là biết ngay không phải kênh của mình. Và nó là nhịp DUY NHẤT
+    # trong cả tệp dùng hệ mét, tức một ngoại lệ lọt qua chứ không phải một quyết định.
+    #
+    # Không đổi sang °F rồi giữ nguyên câu: "cùng nhiệt độ, thang khác" chỉ có nghĩa khi thang
+    # kia là thang người xem dùng. Kênh này sống bằng việc quy con số về thứ CẢM ĐƯỢC, nên thay
+    # bằng khoảng cách tới THÂN NHIỆT — mốc duy nhất ai cũng mang sẵn trong người.
+    _n("so_lieu", "Outside it, minutes matter.", so=f"{abs(f - 98.6):,.0f}",
+       don="degrees from your body", chu="how far this is from 98.6°F", bt=bt),
     _n("chart", _loi("so_sanh", i), don="degrees fahrenheit",
        cot=[{"nhan": "room", "v": 70}, {"nhan": "boiling", "v": 212},
             {"nhan": _nhan(_danh_tu(ten)), "v": f}], dinh=True),
@@ -2093,15 +2101,23 @@ def sinh_smallest(i):
        ve=_ve(f"{lon[0]} shown enormous and clear, filling the frame",
               "magnified far beyond life size", "", "a plain backdrop",
               "the object sharp and central", "clean cool palette")),
-    _n("so_lieu", "Now go smaller.", so=f"{lan:,.0f}x", don="smaller", bt="trai_dat", dinh=True,
+    _n("so_lieu", "Now go smaller.", so=f"{lan:,.0f}x", don="smaller", bt=nho[2], dinh=True,
        ve=_ve(f"{nho[0]} shown as a tiny speck beside {lon[0]}",
               "almost invisible next to it", "", "a plain backdrop",
               "both objects on the same flat line", "clean cool palette")),
     _n("the_chu", "Your eyes stop long before this.",
        the="Your eyes stop|long before this."),
+    # ── BỎ MÉT VÀ KÝ HIỆU KHOA HỌC  (4/9/2026) ────────────────────────────────────────
+    # Nhịp này hiện `5e-04 m` — vừa hệ MÉT trên kênh Mỹ, vừa ký hiệu khoa học mà người xem phổ
+    # thông không đọc được. Chú thích của bảng `CUC_NHO` hứa "quy ra đơn vị người Mỹ cảm được"
+    # và chưa bao giờ được nối.
+    #
+    # Và dùng ICON THẬT của bảng thay vì ghim cứng `hop`/`cay`: bảng đã có `nguyen_tu` ·
+    # `te_bao` · `vi_khuan` cho từng mục mà KHÔNG chỗ nào đọc — nên nguyên tử hiện ra một CÁI
+    # CÂY, hồng cầu hiện ra một cái hộp. Đúng họ lỗi §16.6.
     _n("chia_doi", "Both, at true scale.",
-       trai={"nhan": lon[0], "bt": "hop", "so": f"{lon[1]:.0e} m"},
-       phai={"nhan": nho[0], "bt": "cay", "so": f"{nho[1]:.0e} m"}, dinh=True),
+       trai={"nhan": lon[0], "bt": lon[2], "so": _be(lon[1])},
+       phai={"nhan": nho[0], "bt": nho[2], "so": _be(nho[1])}, dinh=True),
     _n("canh", "Everything you are is built from that.", dinh=True,
        ve=_ve("one person's outline filled with countless tiny dots",
               "standing still, made visibly of small parts", "calm",
@@ -3173,6 +3189,31 @@ _DAU_NGU = ("odds", "chance", "chances", "risk", "cost", "price", "number", "amo
             "height", "surface", "depth", "total")
 
 _GIOI = ("at", "of", "in", "on", "from", "with", "for", "by", "to", "up", "over", "near")
+
+
+TOC_M = 7.0e-5          # bề ngang sợi tóc người, mét — mốc nhỏ nhất người ta còn NHÌN THẤY
+
+
+def _be(m: float) -> str:
+    """Quy một chiều dài (mét) sang cách nói người Mỹ CẢM ĐƯỢC.  (4/9/2026)
+
+    Trên 1/1000 inch thì nói bằng inch. Nhỏ hơn thì inch cũng vô nghĩa, nên nói bằng SỐ LẦN so
+    với bề ngang SỢI TÓC — thứ nhỏ nhất mắt thường còn thấy, nên nó là mốc duy nhất người xem
+    có sẵn trong đầu. `5e-04 m` không gợi ra gì; "1/70 sợi tóc" thì gợi ra ngay.
+    """
+    if m <= 0:
+        return ""
+    inch = m / 0.0254
+    if inch >= 1:
+        return f"{inch:,.0f} in"
+    if inch >= 0.01:
+        return f"{inch:.2f} in"
+    lan = TOC_M / m
+    if lan < 1:
+        return f"{1/lan:,.0f} hairs wide"
+    if lan < 2:
+        return "about a hair wide"
+    return f"1/{lan:,.0f} of a hair"
 
 
 def _danh_tu(s: str) -> str:
