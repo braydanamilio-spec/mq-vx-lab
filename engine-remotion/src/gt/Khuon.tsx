@@ -233,8 +233,12 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
             miệng thẳng; người kể chuyện có miệng mở. Mặt bất động là thứ làm cả loạt khung
             đọc ra "cùng một hình dán", kể cả khi thân đã đổi tư thế. */}
         {tu === 2 ? (<>
-          {N(`M ${-k(0.078)} ${-k(0.352)} L ${-k(0.026)} ${-k(0.336)}`, "none", wM)}
-          {N(`M ${k(0.026)} ${-k(0.336)} L ${k(0.078)} ${-k(0.352)}`, "none", wM)}
+          {/* MÀY XUÔI RA NGOÀI = MỆT. Bản trước cho đầu trong THẤP hơn đầu ngoài — đó là
+              mày CHỤM VÀO GIỮA, tức nét giận dữ, và anh đọc ra đúng thế. Buồn/mệt thì
+              ngược lại: đầu trong CAO, đuôi ngoài xuôi xuống. Một dấu trừ, hai cảm xúc
+              trái ngược — và không có cách nào thấy ngoài việc nhìn khuôn mặt đã dựng. */}
+          {N(`M ${-k(0.078)} ${-k(0.330)} L ${-k(0.026)} ${-k(0.356)}`, "none", wM)}
+          {N(`M ${k(0.026)} ${-k(0.356)} L ${k(0.078)} ${-k(0.330)}`, "none", wM)}
         </>) : tu === 3 ? (<>
           {N(`M ${-k(0.082)} ${-k(0.386)} Q ${-k(0.052)} ${-k(0.408)} ${-k(0.022)} ${-k(0.390)}`, "none", wM)}
           {N(`M ${k(0.022)} ${-k(0.390)} Q ${k(0.052)} ${-k(0.408)} ${k(0.082)} ${-k(0.386)}`, "none", wM)}
@@ -997,11 +1001,23 @@ export const SoLieu: React.FC<{
       ) : null}
       {/* Kiểu 2 — DẢI MÀU ôm lấy khối số. Căn phòng vẫn thấy trên và dưới dải, nên khuôn này
           là chỗ nghỉ mắt giữa những khuôn tràn nền. */}
-      {kA === 2 ? (
-        <rect x={0} y={H * (yCao - (ngang ? 0.15 : 0.12))} width={W}
-              height={H * (ngang ? 0.30 : 0.25)} fill={mau}
-              opacity={0.94 * Math.min(1, p / 0.3)} />
-      ) : null}
+      {kA === 2 ? (() => {
+        /* ── DẢI PHẢI PHỦ TỚI DÒNG CHÚ THÍCH  (4/9/2026) ────────────────────────────────
+           Chiều cao dải là một HẰNG SỐ (0,25·H), còn `yChu` thì tính ra — nên dòng chú
+           thích rơi xuống DƯỚI mép dải bất cứ khi nào nó dài hoặc số cao. Soi khung
+           REAL COST: *"assuming a 7% annual return"* chạy xuyên qua dãy nhà phía sau, đúng
+           lời anh phê về chồng chéo.
+           Đây là họ lỗi đã trả giá ba lần trong hai ngày: *hai phân số cố định đặt cạnh
+           nhau không mã hoá được quan hệ "cái này nằm trong cái kia"* (§15.10). Nay đáy dải
+           SUY TỪ `yChu` — dải luôn ôm trọn thứ nó phải ôm, dù số cao hay chú thích dài. */
+        const dTren = yCao - (ngang ? 0.15 : 0.12);
+        const dDuoi = (chu ? yChu + cChu / H * 0.55 : yCao + (ngang ? 0.15 : 0.13)) + 0.022;
+        return (
+          <rect x={0} y={H * dTren} width={W}
+                height={H * Math.max(ngang ? 0.30 : 0.25, dDuoi - dTren)} fill={mau}
+                opacity={0.94 * Math.min(1, p / 0.3)} />
+        );
+      })() : null}
       {/* Kiểu 3 — SỐ LÀM NỀN: chữ số chiếm gần hết khung ở độ mờ thấp, HÌNH đứng trước và là
           thứ mắt đọc trước. Đảo hẳn thứ bậc so với ba kiểu kia, nên nó là biến thể khác nhất. */}
       {kA === 3 ? (
@@ -1097,8 +1113,13 @@ export const SoLieu: React.FC<{
                    textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F} fontWeight={700}
                    fontSize={cChu}
                    fill={tren_anh ? "#EDE9E1" : chuHopNen("#3A342C", nen)}
-                   style={tren_anh ? { filter: `drop-shadow(0 0 ${H * 0.015}px #000000ee) drop-shadow(0 ${H * 0.004}px ${H * 0.011}px #000000cc)` }
-                                   : undefined}>{chu}</text> : null}
+                   /* BÓNG MỀM CẢ KHI KHÔNG NẰM TRÊN ẢNH. Nhánh `undefined` cũ giả định nền
+                      dưới chú thích luôn phẳng — sai từ lúc có cảnh vẽ bằng code: dãy nhà,
+                      cây, bàn ghế đều nằm ngay dưới dòng này. Bóng nhẹ hơn nhánh ảnh, đủ
+                      tách chữ khỏi nét sau lưng mà không thành viền cứng (§12.12). */
+                   style={{ filter: tren_anh
+                     ? `drop-shadow(0 0 ${H * 0.015}px #000000ee) drop-shadow(0 ${H * 0.004}px ${H * 0.011}px #000000cc)`
+                     : `drop-shadow(0 ${H * 0.003}px ${H * 0.009}px #00000088)` }}>{chu}</text> : null}
     </g>
   );
 };
@@ -1494,7 +1515,16 @@ export const TheChu: React.FC<{
     const fsz = coChu(0.78, dongT.length);
     return (
       <g opacity={q}>
-        <rect x={0} y={0} width={W} height={H} fill={mau} />
+        {/* ── TẤM MÀU PHỦ, KHÔNG PHẢI TẤM MÀU ĐẶC  (4/9/2026) ─────────────────────────
+            Anh soi khung WHAT IF: *"Nothing at all."* trên một mảng cam kín khung, đọc ra
+            một khung TRỐNG chứ không ra một câu khẳng định.
+            Thẻ chữ là thiết bị đúng — §12.11 quy tắc E: lời chuyển sang khẳng định thì hình
+            chuyển sang thẻ chữ. Cái sai là nó XOÁ SẠCH cảnh phía sau. `Nen` vẫn được dựng
+            ngay dưới lớp này, nên chỉ cần hạ độ đục là cảnh hiện mờ trở lại: câu vẫn là thứ
+            mắt đọc trước, mà khung không còn rỗng.
+            0,80 đo bằng mắt: 0,94 vẫn đọc ra tấm đặc, dưới 0,70 thì chữ bắt đầu tranh chấp
+            với nét sau lưng. */}
+        <rect x={0} y={0} width={W} height={H} fill={mau} opacity={0.80} />
         <text x={W * 0.99} y={H * 0.98} textAnchor="end" fontFamily={F} fontWeight={900}
               fontSize={H * 1.28} fill={chuSang} opacity={0.13}>{soCh}</text>
         {khoi(W * 0.08, H * 0.5, "start", fsz, chuSang)}
