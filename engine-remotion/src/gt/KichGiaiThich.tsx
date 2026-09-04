@@ -372,7 +372,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                       đứng. Một bối cảnh không liên quan thì không phải bối cảnh, nó là nhiễu:
                       bỏ đi vừa hết chồng chéo vừa hết vô can, một nhát hai lỗi. */
                   anCua={!!btVe}
-                />
+                dauAn={(N as any)?.dau_an ?? 0} />
           )}
             {/* CHỦ THỂ CỦA KHUNG — vẽ ĐẶC, không mờ.  (3/9/2026)
                 Bản trước để `opacity: 0.34` với lý do "thuộc về căn phòng, không lơ lửng như
@@ -585,7 +585,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
   const than = () => {
     switch (N.khuon) {
       case "chia_doi":
-        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} anTroi />,
+        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} anTroi dauAn={(N as any)?.dau_an ?? 0} />,
                  lop: <ChiaDoi W={W} H={H * 0.80} trai={N.trai || {}} phai={N.phai || {}} mau={mau} p={p}
                                nen={nenTrang}
                                /* `bo_ss` do Python quyết — cùng lý do với `bo_the`.
@@ -621,13 +621,14 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                               `kieu`, SAI cho `bo`, nên sửa bảng `GU_SO` không chạm được nửa
                               còn lại của khuôn chiếm 29% số nhịp.
                               Nay Python ghi `bo_so` vào nhịp; đây chỉ là đường lui. */
+                           dauAnSo={(N as any)?.dau_an_so ?? 0}
                            bo={N.bo_so ?? (hat % 3)}
                            /* `kieu_so` do Python quyết — xem `GU_SO`. Engine chỉ đọc. */
                            kieu={N.kieu_so ?? 0} />
                    {N.dai_chu ? <DaiChu W={W} H={H * 0.80} chu={N.dai_chu} p={p} /> : null}
                  </g> };
       case "truc":
-        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
+        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} dauAn={(N as any)?.dau_an ?? 0} />,
                  lop: <Truc W={W} H={H * 0.80} moc={N.moc || []} vt={N.vt ?? -1} mau={mau} p={p} /> };
       case "kinh_lup":
         return { nen: Nen,
@@ -670,13 +671,13 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                                 || (N.so && N.don ? `${N.so} ${N.don}` : "")}
                              p={p} mau={mau} /> };
       case "chart":
-        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} anTroi />,
+        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} anTroi dauAn={(N as any)?.dau_an ?? 0} />,
                  lop: <Chart W={W} H={H * 0.80} cot={N.cot || []} don={N.don || ""}
                              mau={mau} mauPhu={mauPhu} p={p} nen={nenTrang} hat={hat}
                              /* `kieu_chart` do Python quyết — xem `GU_CHART`. */
                              kieu={N.kieu_chart ?? 0} /> };
       case "the_chu":
-        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} />,
+        return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} dauAn={(N as any)?.dau_an ?? 0} />,
                  lop: <TheChu W={W} H={H * 0.80} chu={N.the || N.loi} p={p} mau={mau}
                               nen={nenTrang}
                               /* `bo_the` do Python quyết và ghi vào nhịp — xem `GU_KHUON`.

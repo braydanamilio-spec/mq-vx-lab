@@ -2992,6 +2992,37 @@ GU_SS = {
 #   0 giữa · 1 canh trái · 2 dải màu · 3 số làm nền
 # Mỗi kênh dùng HAI, chọn theo tính cách: kênh về tiền và về con số lớn hợp kiểu 0/2 (con số là
 # nhân vật chính); kênh kể chuyện hợp kiểu 1/3 (hình là nhân vật chính).
+# ══ DẤU ẤN KÊNH — KHAI RIÊNG, KHÔNG CHỌN TỪ HỒ CHUNG  (4/9/2026) ═══════════════════════════
+# Anh: *"mỗi channel có nét riêng để người xem nhớ tới style mỗi channel"*.
+#
+# Đo hồ sơ hình hiện tại giữa 153 cặp kênh: trung bình trùng 0,39, và cặp tệ nhất — `whatif`
+# với `survive` — trùng **79%**. Nguyên nhân là SỐ HỌC chứ không phải thiết kế:
+#
+#     trục `ss`    có 3 lựa chọn, mỗi kênh dùng 2
+#     trục `chart` có 3 lựa chọn, mỗi kênh dùng 2
+#     trục `so`    có 4 lựa chọn, mỗi kênh dùng 2
+#
+# Chọn 2 trong 3 cho 18 kênh thì trùng là BẮT BUỘC. §15.15 đã ghi đúng hình dạng này: *cơ chế
+# chạy đúng, hồ quá nhỏ so với số lần rút* — không có gì hỏng để mà sửa, chỉ có một con số cần
+# lớn hơn. Nhưng ở đây nới hồ không giải được, vì bản sắc mà CHỌN TỪ hồ chung thì hai kênh
+# vẫn có thể rút trúng nhau. Bản sắc phải là thứ **khai riêng**, duy nhất theo thiết kế.
+#
+# Hai trục, đặt vào hai thứ ĐÃ hiện trong mọi khung nên không thêm món đồ nào:
+#   `san` 0-4  cách vẽ ĐƯỜNG CHÂN TRỜI (liền · đôi · đứt · tan một bên · chấm)
+#   `so`  0-3  nét quanh CON SỐ        (không · gạch dưới · ngoặc vuông · vạch nhấn lệch)
+# 5 × 4 = 20 tổ hợp cho 18 kênh, mỗi kênh một tổ hợp không đụng ai — `selftest` canh điều đó.
+#
+# Gán theo CHẤT kênh, không gán vòng tròn: kênh số liệu lấy nét kỹ thuật (đứt, ngoặc vuông),
+# kênh kể chuyện đời thường lấy nét mềm (chấm, không dấu), kênh dứt khoát lấy nét đậm.
+DAU_AN = {
+    "howlong":    (0, 1), "howbig":     (1, 0), "realcost":   (2, 2), "howmuch":    (3, 1),
+    "whatif":     (4, 0), "survive":    (3, 3), "dayinlife":  (4, 2), "wheregoes":  (0, 3),
+    "therules":   (2, 0), "speedof":    (3, 2), "odds":       (2, 1), "hiddenfee":  (1, 2),
+    "yearsof":    (4, 1), "howloud":    (0, 2), "whatweighs": (1, 1), "rightnow":   (2, 3),
+    "howhot":     (1, 3), "smallest":   (4, 3),
+}
+
+
 GU_SO = {
     "howlong":    (0, 1), "howbig":     (3, 0), "realcost":   (2, 0), "howmuch":    (0, 2),
     "whatif":     (1, 3), "survive":    (3, 1), "dayinlife":  (1, 0), "wheregoes":  (1, 2),
@@ -4136,6 +4167,11 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     # SAU MỌI LƯỢT CHÈN, xem §15.19 — lượt RẢI phải chạy sau lượt CHÈN, nếu không thì
     # nhịp hook (chèn ở `insert(0, …)`) không bao giờ được gán.
     nhip = _rai_tu_the(nhip, ma)
+    # DẤU ẤN KÊNH — ghi vào MỌI nhịp. Python quyết, engine chỉ đọc (§15.3): engine không
+    # biết mã kênh, và tính lại ở đó là tạo nguồn sự thật thứ hai.
+    _da = DAU_AN.get(ma, (0, 0))
+    for _n in nhip:
+        _n["dau_an"], _n["dau_an_so"] = _da
     nhip = _rai_ss(ma, nhip, idx)
     nhip = _rai_so(ma, nhip, idx)
     nhip = _rai_chart(ma, nhip, idx)

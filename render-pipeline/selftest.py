@@ -2570,6 +2570,7 @@ def main():
     check("cổng hình lấy khung ở nhịp CÓ phụ đề", t_kiem_hinh_lay_dung_khung)
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
+    check("mỗi kênh một dấu ấn riêng, không kênh nào trùng", t_dau_an_kenh_duy_nhat)
     check("tiêu đề/hook/prompt phải đúng ngữ pháp tiếng Anh", t_tieu_de_dung_ngu_phap)
     check("nhịp truc: đủ 3 mốc, không mốc nào trùng", t_truc_du_moc_va_khong_trung)
     check("tiêu đề so sánh: hai vế viết hoa đối xứng", t_tieu_de_viet_hoa_doi_xung)
@@ -7325,6 +7326,35 @@ def t_truc_du_moc_va_khong_trung():
                 if len(set(ky)) != len(ky):
                     loi.append((k["ma"], idx, f"mốc trùng: {ky}"))
     assert not loi, f"{len(loi)} nhịp truc hỏng: {loi[:3]}"
+
+
+def t_dau_an_kenh_duy_nhat():
+    """Mỗi kênh một DẤU ẤN riêng, không kênh nào trùng kênh nào.
+
+    Anh muốn *"mỗi channel có nét riêng để người xem nhớ tới style"*. Đo hồ sơ hình cũ trên
+    153 cặp kênh: trung bình trùng 0,39, cặp tệ nhất `whatif`/`survive` trùng **79%**. Nguyên
+    nhân là số học — trục `ss` và `chart` mỗi trục 3 lựa chọn mà mỗi kênh dùng 2, nên với 18
+    kênh thì trùng là BẮT BUỘC (§15.15: cơ chế đúng, hồ quá nhỏ so với số lần rút).
+
+    Bản sắc vì thế không được là thứ CHỌN TỪ hồ chung — chọn thì hai kênh vẫn rút trúng nhau.
+    `DAU_AN` khai riêng từng kênh, và cổng này canh đúng cái tính "riêng" ấy: nó là điều kiện
+    duy nhất khiến bảng có nghĩa. Thiếu cổng thì kênh thứ 19 thêm vào sẽ lặng lẽ trùng một
+    kênh cũ, và không có gì báo — đúng thứ đã xảy ra với `GU_SS`.
+    """
+    import collections
+    import giai_thich as G
+    assert len(G.DAU_AN) == len(G.KENH), (
+        f"DAU_AN có {len(G.DAU_AN)} kênh nhưng bảng KENH có {len(G.KENH)}")
+    thieu = [k["ma"] for k in G.KENH if k["ma"] not in G.DAU_AN]
+    assert not thieu, f"kênh chưa khai dấu ấn: {thieu}"
+    c = collections.Counter(G.DAU_AN.values())
+    trung = {v: n for v, n in c.items() if n > 1}
+    assert not trung, f"dấu ấn TRÙNG giữa các kênh: {trung}"
+    # Và phải THẬT SỰ tới được nhịp — bảng đúng mà không ai đọc thì như chưa có (§15.12).
+    for m in ("howlong", "survive", "whatif"):
+        n = G.kich_ban(m, 0)[4][0]
+        assert n.get("dau_an") == G.DAU_AN[m][0], f"{m}: dau_an không vào nhịp"
+        assert n.get("dau_an_so") == G.DAU_AN[m][1], f"{m}: dau_an_so không vào nhịp"
 
 
 def t_tieu_de_dung_ngu_phap():

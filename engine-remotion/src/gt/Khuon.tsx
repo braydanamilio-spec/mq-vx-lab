@@ -475,8 +475,9 @@ export const nguonSang = (W: number, hat: number): number => {
 };
 
 export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string;
-                                  hat?: number; anTroi?: boolean; anCua?: boolean }> =
-({ W, H, nen, mau, hat = 0, anTroi = false, anCua = false }) => {
+                                  hat?: number; anTroi?: boolean; anCua?: boolean;
+                                  dauAn?: number }> =
+({ W, H, nen, mau, hat = 0, anTroi = false, anCua = false, dauAn = 0 }) => {
   const k = Math.abs(hat) % 6;
   const yS = chanTroi(H, hat);            // nguồn sự thật duy nhất — xem `chanTroi`
   const xS = nguonSang(W, hat);       // nguồn sáng lệch trái/phải/giữa — xem `nguonSang`
@@ -621,7 +622,46 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
           ngang thì đọc ra "chắp vá", chứ không đọc ra vật lơ lửng.
           Nên: khuôn nào tự mang mặt đất (biểu đồ · so sánh · đếm) thì phòng chỉ giữ tường và
           quầng sáng, bỏ vạch chân trời và bỏ luôn mảng sàn sẫm. */}
-      {anTroi ? null : (
+      {/* ── ĐƯỜNG CHÂN TRỜI LÀ DẤU ẤN RIÊNG CỦA KÊNH  (4/9/2026) ────────────────────────
+          Anh muốn *"mỗi channel có nét riêng để người xem nhớ tới style"*. Đo hồ sơ hình
+          hiện tại: `whatif` và `survive` trùng **79%**, trung bình 153 cặp là 0,39 — và
+          nguyên nhân là SỐ HỌC, không phải thiết kế: trục `ss` có 3 lựa chọn mà mỗi kênh
+          dùng 2, trục `chart` có 3 dùng 2. Chọn 2 trong 3 cho 18 kênh thì trùng là bắt
+          buộc (§15.15: cơ chế đúng, hồ quá nhỏ so với số lần rút).
+          Nên bản sắc KHÔNG được là thứ chọn từ hồ chung — nó phải KHAI RIÊNG. Đường chân
+          trời là chỗ rẻ nhất để đặt: nó đã hiện trong MỌI khung của MỌI nhịp, nên đổi cách
+          vẽ nó là đổi một thứ người xem thấy suốt mà không thêm một món đồ nào vào khung.
+          Năm kiểu, gán riêng từng kênh, không xoay vòng. */}
+      {anTroi ? null : dauAn === 1 ? (
+        /* NÉT ĐÔI — một vạch đậm, một vạch mảnh ngay dưới */
+        <>
+          <rect x={0} y={yS} width={W} height={Math.max(2, H * 0.0035)} fill={vach} opacity={0.34} />
+          <rect x={0} y={yS + H * 0.010} width={W} height={Math.max(1, H * 0.0016)}
+                fill={vach} opacity={0.20} />
+        </>
+      ) : dauAn === 2 ? (
+        /* NÉT ĐỨT thưa — đọc ra "đường kẻ kỹ thuật", hợp kênh số liệu */
+        <line x1={0} y1={yS + H * 0.0018} x2={W} y2={yS + H * 0.0018} stroke={vach}
+              strokeWidth={Math.max(2, H * 0.0035)} opacity={0.34}
+              strokeDasharray={`${W * 0.045} ${W * 0.022}`} />
+      ) : dauAn === 3 ? (
+        /* VẠCH DÀY chỉ nửa khung, tan dần — dứt khoát một bên */
+        <>
+          <defs>
+            <linearGradient id={`${id}vt`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor={vach} stopOpacity={0.42} />
+              <stop offset="0.62" stopColor={vach} stopOpacity={0.30} />
+              <stop offset="1" stopColor={vach} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <rect x={0} y={yS} width={W} height={Math.max(3, H * 0.0055)} fill={`url(#${id}vt)`} />
+        </>
+      ) : dauAn === 4 ? (
+        /* HÀNG CHẤM — nhẹ nhất, hợp kênh kể chuyện đời thường */
+        <line x1={0} y1={yS + H * 0.0018} x2={W} y2={yS + H * 0.0018} stroke={vach}
+              strokeWidth={Math.max(3, H * 0.005)} opacity={0.30} strokeLinecap="round"
+              strokeDasharray={`${H * 0.001} ${W * 0.028}`} />
+      ) : (
         <rect x={0} y={yS} width={W} height={Math.max(2, H * 0.0035)} fill={vach} opacity={0.34} />
       )}
 
@@ -884,8 +924,9 @@ export const chuHopNen = (uu: string, nen: string, dam = "#2C2722", nhat = "#F4F
 export const SoLieu: React.FC<{
   W: number; H: number; so: string; don: string; chu: string; bt: string; mau: string; p: number;
   tren_anh?: boolean; nen?: string; bo?: number; kieu?: number; san?: number;
+  dauAnSo?: number;
 }> = ({ W, H, so, don, chu, bt, mau, p, tren_anh = false, nen = "#EFE7D6", bo = 0, kieu = 0,
-        san = 0 }) => {
+        san = 0, dauAnSo = 0 }) => {
   /* ── BỐ CỤC PHẢI ĐỔI THEO HƯỚNG KHUNG ────────────────────────────────────────────────
      Anh: *"bản 16:9 đang bị che khuất."* Đúng, và gốc rễ là mọi vị trí ở đây tính theo `H`.
      Khung dọc cao 1920 nên `H*0.20` cho chữ số là vừa; khung ngang chỉ cao 1080 nên cùng công
@@ -1121,6 +1162,41 @@ export const SoLieu: React.FC<{
               style={{ filter: tren_anh
                 ? `drop-shadow(0 ${H * 0.004}px ${H * 0.012}px #000000cc)`
                 : `drop-shadow(0 ${H * 0.003}px ${H * 0.008}px #00000033)` }}>{soHien}</text>
+        {/* ── DẤU ẤN KÊNH TRÊN CON SỐ  (4/9/2026) ────────────────────────────────────────
+            Trục bản sắc thứ hai, đi cùng kiểu đường chân trời (xem `NenPhong` · `dauAn`).
+            5 kiểu chân trời × 4 kiểu số = 20 tổ hợp, đủ cho 18 kênh mỗi kênh MỘT tổ hợp
+            duy nhất — bản sắc phải KHAI RIÊNG chứ không chọn từ hồ chung, vì chọn 2 trong
+            3 cho 18 kênh thì trùng là bắt buộc về mặt số học.
+            Con số là chỗ đắt giá nhất để đặt dấu ấn: nó là thứ to nhất trong khung, xuất
+            hiện ở 26% số nhịp, và người xem nhìn nó lâu nhất. Cả bốn kiểu đều chỉ THÊM một
+            nét quanh số, không đụng vào chính chữ số — chữ số phải đọc được trước đã. */}
+        {(() => {
+          const wS = _emChu(soHien) * cs;      // bề ngang thật của chuỗi số
+          const x0 = kA === 1 ? 0 : -wS / 2;
+          const m = tren_anh ? "#FFFFFF" : (kA === 2 ? chuHopNen("#FFFFFF", mau) : mau);
+          if (dauAnSo === 1) {
+            return <rect x={x0} y={cs * 0.20} width={wS} height={Math.max(3, cs * 0.055)}
+                         fill={m} opacity={0.85} rx={cs * 0.02} />;
+          }
+          if (dauAnSo === 2) {
+            /* hai ngoặc vuông ôm hai đầu — nét toà soạn, không viền kín nên không thành hộp */
+            const h = cs * 0.72, w = cs * 0.13, t = Math.max(3, cs * 0.045);
+            return (<>
+              <path d={`M ${x0 - cs * 0.16 + w} ${-h * 0.86} L ${x0 - cs * 0.16} ${-h * 0.86}
+                        L ${x0 - cs * 0.16} ${h * 0.20} L ${x0 - cs * 0.16 + w} ${h * 0.20}`}
+                    fill="none" stroke={m} strokeWidth={t} opacity={0.55} />
+              <path d={`M ${x0 + wS + cs * 0.16 - w} ${-h * 0.86} L ${x0 + wS + cs * 0.16} ${-h * 0.86}
+                        L ${x0 + wS + cs * 0.16} ${h * 0.20} L ${x0 + wS + cs * 0.16 - w} ${h * 0.20}`}
+                    fill="none" stroke={m} strokeWidth={t} opacity={0.55} />
+            </>);
+          }
+          if (dauAnSo === 3) {
+            /* một vạch NGẮN lệch trái dưới số — dấu nhấn, không phải gạch chân */
+            return <rect x={x0} y={cs * 0.22} width={wS * 0.34} height={Math.max(4, cs * 0.075)}
+                         fill={m} opacity={0.9} rx={cs * 0.03} />;
+          }
+          return null;
+        })()}
         {/* 2/9 — BÓNG MỀM RỘNG, KHÔNG PHẢI BÓNG MỎNG.
             Anh: *"nhớ tránh tràn hay che khuất."* Phóng to khung mở đầu: số "124" đọc tốt, còn
             dòng "a jet at takeoff" bị **các tia đen của nền cắt ngang qua chữ**. Dải mờ đã làm
