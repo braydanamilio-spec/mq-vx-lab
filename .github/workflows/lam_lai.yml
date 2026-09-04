@@ -89,7 +89,13 @@ jobs:
             # `don_video_cu.py` — xoá sạch khi lượt render đang chạy là giết luôn thứ vừa làm ra.
             python src/don_video_cu.py --truoc "${{ github.event.inputs.truoc }}" --that
           else
-            python src/wipe_queue.py --scope store
+            # `--don-ban-ghi`: xoá TỆP rồi xoá luôn BẢN GHI render_jobs của những kho
+            # vừa dọn XONG. Không có cờ này thì tệp mất mà bản ghi còn, và dashboard —
+            # vốn đếm bản ghi chứ không đếm tệp (§12.9) — vẫn hiện đủ số cũ. Anh đã hỏi
+            # đúng chuyện ấy: *'sao vẫn hiện 90 videos chưa dọn sạch'* trong khi hồ chứa
+            # hiện 0 B. Luồng NÀY có mục đích là làm lại từ đầu nên nó được bật; lệnh
+            # `wipe_queue` chạy tay vẫn mặc định KHÔNG đụng bản ghi.
+            python src/wipe_queue.py --scope store --don-ban-ghi
           fi
 
       - name: Xoá bản ghi job của 18 kênh (hai kho phải đi cùng nhau)
