@@ -9094,3 +9094,59 @@ khoá **không khớp được**, để lần sau lệch hệ quy chiếu thì l
 
 **Luật.** Khi hai hệ trao đổi định danh, hỏi *"id này do AI cấp, và bên kia có dùng cùng loại
 id không?"* — sự tồn tại của trường `id` không chứng minh hai bên nói cùng một thứ.
+
+---
+
+## 9k — 4/9/2026 · MỘT HẰNG SỐ ĐƯỢC DÙNG MÀ CHƯA BAO GIỜ ĐƯỢC KHAI
+
+**Triệu chứng.** Ảnh CF lệch chất vẽ, và vòng "vẽ lại với prompt siết hơn" không bao giờ cải
+thiện được gì.
+
+**Gốc rễ.** `nen_gt._prompt` gọi `SIET[min(siet-1, len(SIET)-1)]` — và **không commit nào từng
+khai `SIET`**. Nó bị mất trong một lượt cắt hụt hôm 3/9 (cùng lượt ấy `KEP_GU` cũng bị xoá,
+nhưng `KEP_GU` được khôi phục còn `SIET` thì không). Mọi lần cổng chất vẽ đánh trượt đều ném
+`NameError`, và `goi_xoay` bọc lời gọi trong `except Exception` rồi đếm nó là "một khoá hỏng" —
+nên từ log nó trông y hệt mạng chập chờn.
+
+**Họ lỗi.** *Hỏng mà vẫn báo xanh* (§12.8), biến thể: **lỗi thật bị một lớp `except` rộng dịch
+sang một loại lỗi hoàn toàn khác**. Một `NameError` (mã sai) bị báo cáo như lỗi mạng (hạ tầng),
+nên người đọc log đi tìm ở phía hạ tầng.
+
+**Cách nhận ra rẻ nhất:** `pyflakes` bắt được trong một giây. Ở đây thứ phát hiện ra nó là một
+selftest đang đọc `N.SIET` cho việc khác — tức nó lộ ra do **may**, không do ai đi tìm.
+
+---
+
+## 9k1 — CHỐT CHẶN ĐỘ DÀI PROMPT CẮT ĐÚNG HAI THỨ ANH PHÀN NÀN
+
+**Triệu chứng.** Người lơ lửng và ảnh lệch màu, dai dẳng qua nhiều vòng sửa — trong khi luật sàn
+và bảng màu kênh đều đã được viết vào prompt và đọc lên rất đúng.
+
+**Bằng chứng.** Đo 872 tổ hợp thật (18 kênh × 3 tập × mọi nhịp có cảnh × 4 mức siết × dọc/ngang):
+**286 tổ hợp (32%)** mất một vế ở chốt chặn 1.873 ký tự, và vế bị mất là `ground runs unbroken`
+(46 ca) cùng `limited palette:` (đủ dạng, ~110 ca).
+
+**Bốn gốc, không phải một** — và ba trong bốn là một câu luật ĐÚNG ở ngữ cảnh sinh ra nó:
+
+| gốc | vì sao sai ở đây |
+|---|---|
+| `TRAN_KHUNG` viết `no circular vignette, no round badge, no border` | FLUX không có negative prompt. `kiem_nen.CAM_NGHICH` đã ghi bài học này từ `no furniture`, và bộ giải thích vi phạm nó — ba danh từ TRÒN liền nhau, đúng cái vignette tròn anh chụp lại |
+| `GON_*` mang *"centre of the frame is empty"* | chép từ `kich_hai.SAN_NEN` (§7), nơi nó đúng vì người là VECTOR dán lên nền AI. Bộ này để mô hình vẽ luôn người → câu ấy NÓI NGƯỢC với `KHUNG_DOC` (*"subject centred"*) trong cùng một prompt |
+| `GON_*` mang *"đồ đạc dồn hai mép"* | cắt vuông xuống 9:16 mất 44% bề ngang → dặn mô hình đặt bối cảnh vào đúng dải sắp biến mất. "Không rõ bối cảnh" là lời phê anh nhắc nhiều nhất |
+| `_luat` nói lại *"standing eye level"* | 106/109 câu cảnh đã tự chứa nó. §15.12: mỗi ràng buộc chỉ sống ở đúng một chỗ |
+
+Cộng thêm `_sac_thai` mang chữ bảng màu mơ hồ (*"high-contrast palette"*) đứng ngay sau câu nêu
+đích danh ba màu — thừa và nói ngược.
+
+**Kết quả:** 32% → **4%**, và 4% còn lại chỉ mất vế sắc thái (vế ít thiệt nhất, đứng cuối đúng
+theo thiết kế).
+
+**Luật.** Khi một hàm ghép rồi **tự cắt** cho vừa trần, nó phải **khai ra đã cắt vế nào**
+(§14.13) — không có lời khai thì không cổng nào đặt sau nó bắt được, và ở đây suốt nhiều ngày
+không hề có cổng nào cả. Và trước khi thêm chữ vào một prompt có trần, hỏi *"chữ này đẩy vế nào
+ra khỏi câu?"* — ngân sách prompt là trò chơi tổng bằng không.
+
+**Cổng:** `selftest.t_prompt_khong_cat_mat_luat` (trần 8%, luật sàn thì 0 dung sai) ·
+`t_prompt_khong_viet_nghich` · `t_prompt_khong_noi_nguoc_ve_giua_khung`. Cả ba thử ngược đủ hai
+chiều VÀ đủ hai nhánh trong/ngoài nhà — bản đầu chỉ có cảnh vỉa hè, tức nhánh trong nhà chưa
+từng được soi.
