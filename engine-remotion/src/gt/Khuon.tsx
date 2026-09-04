@@ -1189,7 +1189,7 @@ export const SoLieu: React.FC<{
          opacity={kA === 3 ? 0 : q}>
         <text x="0" y="0" textAnchor={kA === 1 || kA === 5 ? "start" : "middle"} fontFamily={F()} fontWeight={900}
               fontSize={cs}
-              fill={tren_anh ? "#FFFFFF" : (kA === 2 ? chuHopNen("#FFFFFF", mau) : "#2C2722")}
+              fill={tren_anh ? "#FFFFFF" : (kA === 2 || kA === 5 ? chuHopNen("#FFFFFF", mau) : "#2C2722")}
               style={{ filter: tren_anh
                 ? `drop-shadow(0 ${H * 0.004}px ${H * 0.012}px #000000cc)`
                 : `drop-shadow(0 ${H * 0.003}px ${H * 0.008}px #00000033)` }}>{soHien}</text>
@@ -1251,7 +1251,7 @@ export const SoLieu: React.FC<{
             `cd` vào, nên công thức đúng ở mọi tổ hợp cỡ. */}
         {don ? <text x="0" y={yDon} textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F()} fontWeight={800}
                      fontSize={cd}
-                     fill={tren_anh ? "#F2EFE9" : (kA === 2 ? chuHopNen("#F2EFE9", mau) : chuHopNen(mau, nen))}
+                     fill={tren_anh ? "#F2EFE9" : (kA === 2 || kA === 5 ? chuHopNen("#F2EFE9", mau) : chuHopNen(mau, nen))}
                      letterSpacing={2}
                      style={{ filter: tren_anh
                        ? `drop-shadow(0 0 ${H * 0.016}px #000000ee) drop-shadow(0 ${H*0.004}px ${H*0.010}px #000000cc)`

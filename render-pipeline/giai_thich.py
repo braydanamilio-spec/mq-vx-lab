@@ -3225,6 +3225,27 @@ GU_SS = {
 #
 # Gán theo CHẤT kênh, không gán vòng tròn: kênh số liệu lấy nét kỹ thuật (đứt, ngoặc vuông),
 # kênh kể chuyện đời thường lấy nét mềm (chấm, không dấu), kênh dứt khoát lấy nét đậm.
+# ══ ĐÃ THỬ VÀ BỎ: CHẤT GIẤY VẼ TAY  (4/9/2026) ════════════════════════════════════════════
+# Anh chốt kiểu "chì + màu" sau khi soi bốn biến thể chuyển ảnh bằng Python. Em dựng thử một
+# lớp chất giấy (sợi giấy dọc + ố giấy) ở LỚP HOÀN THIỆN của engine — đặt ở đó vì phép chuyển
+# nét chì bằng Python chỉ chạm được ảnh CF, còn cảnh vẽ bằng code dựng bằng SVG trong trình
+# duyệt; áp riêng cho ảnh CF là làm hai loại khung lệch chất trong cùng một tập.
+#
+# ĐO RỒI BỎ. Dựng thật ba kênh rồi so A/B ở CỠ THẬT (không ở lưới thu nhỏ — lưới 290px làm em
+# đọc nhầm là "bạc màu", trong khi khung đầy đủ hoàn toàn sạch):
+#     bão hoà trước 0,099 -> sau 0,092   · gần như không đổi
+#     tăng cường độ 3 lần -> VẪN không đọc ra chất giấy
+# Nhiễu SVG ở độ phân giải video, đi qua nén H.264, thì tan hết. Một hiệu ứng không ai nhìn
+# thấy mà vẫn tốn thời gian dựng là GÁNH NẶNG, không phải tính năng — nên gỡ, không giữ lại
+# "cho có".
+#
+# Và bài học đắt hơn: thứ làm nên vẻ "chì + màu" trong ảnh mẫu là HAI việc khác — khử bão hoà
+# xuống ~0,5 và nhấn nét. Lớp giấy không làm việc nào trong hai việc ấy, tức em đã cài SAI
+# CÁCH cho đúng yêu cầu. Khử bão hoà thì lại đụng trục bản sắc màu vừa dựng (18 góc cách nhau
+# ≥17°), nên nếu làm thì phải làm ở tầng khác và đánh đổi phải nói rõ trước.
+# Ghi ra đây để phiên sau không đi làm lại đúng cái vừa bị bác (§13.22).
+
+
 DAU_AN = {
     "howlong":    (0, 1), "howbig":     (1, 0), "realcost":   (2, 2), "howmuch":    (3, 1),
     "whatif":     (4, 0), "survive":    (3, 3), "dayinlife":  (4, 2), "wheregoes":  (0, 3),
@@ -3704,7 +3725,16 @@ THEM_NHIP: dict[str, tuple[str, str, str]] = {
                    "No fire, no shelter, no second attempt.",
                    "Preparation is the whole of the answer."),
 }
-SAN_NHIP = 11         # 11 nhịp × 1,62 giây đo được ≈ 18 giây — xem `t_short_du_y_va_hook`
+# ── HIỆU CHỈNH SAU KHI ĐO CLIP THẬT  (4/9/2026) ───────────────────────────────────────────
+# Đặt 11 nhịp vì đo được 1,62 giây/nhịp trên các clip dựng TRƯỚC khi thêm nhịp. Dựng lại 6
+# clip sau khi thêm: **2,21 giây/nhịp** — lệch 37%, và 11 nhịp ra 23–26 giây, vượt băng
+# 18–22 anh chốt.
+# Gốc: hằng cũ đo trên bộ nhịp CŨ. Nhịp em thêm (quy đổi · đời sống · đối chiếu · hệ quả) có
+# câu dài hơn nhịp trung bình, nên chính việc thêm nhịp làm đổi luôn cái hằng số dùng để tính
+# số nhịp cần thêm. §13.6 — hằng số sống lâu hơn ngữ cảnh sinh ra nó; đổi một hàm thì phải đi
+# soát mọi hằng số hàm ấy từng nuôi.
+# 18 ÷ 2,21 ≈ 8. Sàn 8, và băng thật là 8–10 nhịp.
+SAN_NHIP = 9          # 9 nhịp × 2,21 giây đo lại ≈ 20 giây, giữa băng 18–22 — xem `t_short_du_y_va_hook`
 
 
 # ══ HAI NHỊP ĐỔI THEO TẬP — LẤY TỪ CHÍNH BẢNG DỮ LIỆU CỦA KÊNH  (4/9/2026) ═════════════════
@@ -3755,6 +3785,17 @@ def _hai_nhip_du_lieu(ma: str, idx: int, bt: str) -> list:
         except Exception:
             return []
         khac = re.sub(r"^(The |A |An |How |What |Where |Could you |Years of )", "", str(khac)).strip()
+        # ── PHẢI LÀ CỤM DANH TỪ, KHÔNG PHẢI MỆNH ĐỀ  (soi khung 4/9) ──────────────────
+        # Khung RIGHT NOW ra câu vỡ: *"Now put many people are in the air right now beside
+        # it."* — tiêu đề của kênh ấy là một MỆNH ĐỀ ("how many people are in the air right
+        # now"), và cắt tiền tố xong vẫn còn nguyên động từ.
+        # Khuôn câu `"Now put {x} beside it"` chỉ nhận một cụm danh từ. Thà BỎ nhịp còn hơn
+        # ghép ra một câu sai: nhịp thiếu chỉ làm short ngắn hơn một chút, câu sai thì người
+        # xem đọc ra máy viết.
+        if (len(khac.split()) > 6
+                or re.search(r"\b(is|are|was|were|do|does|did|goes|go|comes|come|"
+                             r"takes|take|will|would|can|could)\b", khac, re.I)):
+            return []
         if not khac:
             return []
         return [
@@ -3791,6 +3832,13 @@ def _day_du_y(ma: str, nhip: list, idx: int = 0) -> list:
     # Mượn biểu tượng của nhịp áp chót để hai nhịp mới thuộc về cùng một cảnh, không nhảy
     # sang một thế giới khác ngay trước cú chốt.
     bt = next((n.get("bt") for n in reversed(nhip[:-1]) if n.get("bt")), "nguoi")
+    # ── THÊM ĐÚNG SỐ CÒN THIẾU, KHÔNG THÊM ĐỦ BỘ  (4/9/2026) ───────────────────────────
+    # Bản trước luôn chèn cả năm nhịp, nên kênh thiếu 2 cũng nhận 5 và vọt lên 24 giây — vượt
+    # băng 18–22 ở phía kia. Chốt chặn đúng hướng mà không đếm thì nó bắn quá đích.
+    # Xếp theo GIÁ TRỊ giảm dần, rồi cắt: quy đổi (con số về thứ cảm được, §12.13) > hệ quả
+    # (thứ mang đi được) > đối chiếu dữ liệu (đổi theo tập) > câu đời sống. Thiếu một nhịp thì
+    # nhịp ấy phải là nhịp đáng nhất, không phải nhịp đầu danh sách.
+    can = max(0, SAN_NHIP - len(nhip))
     moi = [
         _n("so_lieu", quy, so=(nhip[0].get("so") or ""), don=(nhip[0].get("don") or ""),
            bt=bt, dinh=True),
@@ -3803,8 +3851,16 @@ def _day_du_y(ma: str, nhip: list, idx: int = 0) -> list:
     ]
     # Hai nhịp dữ liệu chèn GIỮA phần viết tay và câu hệ quả: chúng là bằng chứng, và bằng
     # chứng phải đứng trước kết luận.
-    moi += _hai_nhip_du_lieu(ma, idx, bt)
     moi.append(_n("the_chu", he, the=he.replace(". ", ".|")))
+    moi += _hai_nhip_du_lieu(ma, idx, bt)
+    # `moi` đang xếp: quy đổi · đời sống · hệ quả · hai nhịp dữ liệu. Cắt theo nhu cầu, nhưng
+    # LUÔN giữ câu hệ quả — short kết ở một dữ kiện thì không ai mang đi được gì.
+    if can < len(moi):
+        giu = moi[:max(1, can)]
+        _he = moi[2]
+        if _he not in giu:
+            giu = giu[:-1] + [_he] if len(giu) > 1 else [_he]
+        moi = giu
     return nhip[:-1] + moi + nhip[-1:]
 
 
