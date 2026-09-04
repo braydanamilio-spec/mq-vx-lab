@@ -373,8 +373,12 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
         return { nen: <NenPhong W={W} H={H} nen={nenTrang} mau={mau} hat={hat} anTroi />,
                  lop: <ChiaDoi W={W} H={H * 0.80} trai={N.trai || {}} phai={N.phai || {}} mau={mau} p={p}
                                nen={nenTrang}
-                               /* `bo_ss` do Python quyết — cùng lý do với `bo_the`. */
-                               hat={N.bo_ss ?? hat} /> };
+                               /* `bo_ss` do Python quyết — cùng lý do với `bo_the`.
+                                  Truyền RIÊNG `hat` (hạt của tập) để bo góc và độ đậm tấm nền
+                                  vẫn đổi theo TẬP. Bản cũ nhét `bo_ss` vào chỗ `hat`, nên hai
+                                  thứ khác hẳn nhau dùng chung một con số: tấm nền hết đổi theo
+                                  tập, và biến thể `rx` nhỏ nhất không bao giờ đạt tới. */
+                               hat={N.bo_ss ?? 0} hatTap={hat} /> };
       case "so_lieu":
         return { nen: Nen,
                  lop: <g>
@@ -385,7 +389,15 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                        phải để đứng cạnh ảnh. */}
                    <SoLieu W={W} H={H * 0.80} so={N.so || ""} don={N.don || ""} chu={N.chu || ""}
                            bt={N.nenAnh ? "" : (N.bt || "")} mau={mau} p={p}
-                           tren_anh={!!N.nenAnh} nen={nenTrang} bo={hat % 3}
+                           tren_anh={!!N.nenAnh} nen={nenTrang}
+                           /* `bo` là trục bố cục THỨ HAI của `SoLieu` (đổi cỡ và chỗ đặt khối
+                              số). Bản cũ tính ngay tại đây bằng `hat % 3` — tức engine tự
+                              quyết, không có đối ứng nào ở Python, trong khi dòng ngay dưới
+                              ghi "`kieu_so` do Python quyết… Engine chỉ đọc". Câu ấy đúng cho
+                              `kieu`, SAI cho `bo`, nên sửa bảng `GU_SO` không chạm được nửa
+                              còn lại của khuôn chiếm 29% số nhịp.
+                              Nay Python ghi `bo_so` vào nhịp; đây chỉ là đường lui. */
+                           bo={N.bo_so ?? (hat % 3)}
                            /* `kieu_so` do Python quyết — xem `GU_SO`. Engine chỉ đọc. */
                            kieu={N.kieu_so ?? 0} />
                    {N.dai_chu ? <DaiChu W={W} H={H * 0.80} chu={N.dai_chu} p={p} /> : null}

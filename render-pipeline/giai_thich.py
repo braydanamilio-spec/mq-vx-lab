@@ -3091,6 +3091,10 @@ def _rai_so(ma: str, nhip: list, idx: int = 0) -> list:
         if (n.get("khuon") or "") != "so_lieu":
             continue
         n["kieu_so"] = bo[0] if j == 0 else bo[(idx + d) % len(bo)]
+        # Trục bố cục THỨ HAI của `SoLieu`: cỡ và chỗ đặt khối số. Engine từng tự tính bằng
+        # `hat % 3` — tức một quyết định nằm ngoài mọi bảng gu, và sửa `GU_SO` không chạm tới
+        # được. Nay Python quyết cả hai trục, engine chỉ đọc (§15.3).
+        n["bo_so"] = (idx + d) % 3
         d += 1
     return nhip
 

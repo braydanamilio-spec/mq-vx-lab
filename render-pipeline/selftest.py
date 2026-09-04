@@ -7351,14 +7351,17 @@ def t_moi_nhip_co_bo_cuc():
     """
     import giai_thich as G
 
-    can = {"so_lieu": "kieu_so", "the_chu": "bo_the", "chia_doi": "bo_ss"}
+    # `bo_so` là trục bố cục THỨ HAI của `so_lieu` — engine từng tự tính bằng `hat % 3`, tức
+    # một quyết định nằm ngoài mọi bảng gu. Canh nó ở đây để nó không lặng lẽ quay về engine.
+    can = {"so_lieu": ("kieu_so", "bo_so"), "the_chu": ("bo_the",), "chia_doi": ("bo_ss",)}
     thieu = []
     for k in G.KENH:
         for i in range(3):
             for j, n in enumerate(G.kich_ban(k["ma"], i)[4]):
-                truong = can.get(n.get("khuon") or "")
-                if truong and n.get(truong) is None:
-                    thieu.append(f'{k["ma"]} tập {i} nhịp {j} ({n.get("khuon")}) thiếu {truong}')
+                for truong in (can.get(n.get("khuon") or "") or ()):
+                    if n.get(truong) is None:
+                        thieu.append(f'{k["ma"]} tập {i} nhịp {j} '
+                                     f'({n.get("khuon")}) thiếu {truong}')
     assert not thieu, "nhịp thiếu bố cục: " + "; ".join(thieu[:4])
 
     # Và mọi bố cục phải THẬT SỰ được dùng — bảng gu có 6 kiểu thẻ mà chỉ dùng 2 thì thừa 4.

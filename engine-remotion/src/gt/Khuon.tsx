@@ -353,8 +353,8 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
 
 export const ChiaDoi: React.FC<{
   W: number; H: number; trai: any; phai: any; mau: string; p: number;
-  nen?: string; hat?: number;
-}> = ({ W, H, trai, phai, mau, p, nen = "#F2F0EA", hat = 0 }) => {
+  nen?: string; hat?: number; hatTap?: number;
+}> = ({ W, H, trai, phai, mau, p, nen = "#F2F0EA", hat = 0, hatTap = 0 }) => {
   /* CỠ CHỮ PHẢI CHỊU CẢ HAI RÀNG BUỘC.
      Bản đầu tính cỡ chữ chỉ theo CHIỀU CAO khung (`H*0.105`). Trên khung ngang 16:9 thì vừa;
      trên khung dọc 9:16 mỗi cột chỉ rộng 540px mà cỡ chữ vẫn là 202px, nên "1.08 billion km/h"
@@ -405,7 +405,11 @@ export const ChiaDoi: React.FC<{
       </g>
     );
   };
-  const kk = Math.abs(hat) % 3;
+  /* `kk` nuôi bo góc và độ đậm tấm nền — nó phải đổi theo TẬP, nên đọc `hatTap` chứ không đọc
+     `hat` (chỗ gọi đang dùng `hat` để truyền CHỈ SỐ BỐ CỤC). Hai khái niệm khác hẳn nhau dùng
+     chung một con số thì cả hai cùng sai: tấm nền hết đổi theo tập, và biến thể `rx` nhỏ nhất
+     không bao giờ đạt tới vì nhánh dùng `kk` chỉ chạy khi bố cục thuộc {0, 2}. */
+  const kk = Math.abs(hatTap) % 3;
 
   /* ── BA BỐ CỤC SO SÁNH  (3/9/2026) ──────────────────────────────────────────────────────
      Anh: *"2 loại này a thấy xấu nhàm chán mà nó cứ lặp đi lặp lại cùng 1 motip hoài."* Khuôn
