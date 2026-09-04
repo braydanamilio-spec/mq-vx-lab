@@ -3389,6 +3389,106 @@ def _hop_noi(bt: str, noi: str) -> bool:
     return True
 
 
+# ══ ĐẠO CỤ NÓI RA CON SỐ  (4/9/2026) ═══════════════════════════════════════════════════════
+# Anh: *"vẫn không toát lên được ý truyền đạt."* So với mấy ảnh anh gửi thì đây là khác biệt
+# sâu nhất, và nó không nằm ở nét vẽ:
+#
+#     ảnh mẫu   : một người ngồi bàn, CHỒNG GIẤY cao, ĐỒNG HỒ TƯỜNG chỉ 5:01
+#     bản của ta: "a night-shift nurse walking away from camera, back turned"
+#
+# Ảnh mẫu nói ra ý mà không cần lời: cái đồng hồ chỉ 5 giờ chiều cạnh chồng giấy chưa vơi
+# CHÍNH LÀ mệnh đề "vẫn còn ngồi đây". Bản của ta chỉ có một tư thế, nên lời phải gánh hết —
+# và người xem không đọc phụ đề trong nửa giây đầu.
+#
+# Cơ chế: mỗi nhịp cảnh mang một ĐẠO CỤ đo được đại lượng đang nói. Con số đã nằm sẵn trong
+# nhịp (`so`/`don`) — chưa ai đưa nó vào câu cảnh.
+#
+# Ánh xạ theo ĐẠI LƯỢNG, không theo từng chuỗi đơn vị: `don` có ~30 dạng chữ ("dollars a
+# year", "dollars in 30 years"…) nhưng chỉ quy về chừng mười đại lượng. Bắt theo đại lượng
+# thì đơn vị viết kiểu gì cũng trúng, và thêm kênh mới không phải thêm dòng.
+DAO_CU: tuple = (
+    # Mỗi đại lượng vài ĐẠO CỤ khác nhau, xoay theo chỉ số nhịp. Một tập bốn cảnh mà cả bốn
+    # cùng "a roadside distance sign" thì đạo cụ lại thành một kiểu đơn điệu mới — đúng cái
+    # bệnh vừa chữa ở tầng khuôn hình, chỉ ở tầng đồ vật.
+    (("century", "centuries", "year", "decade"),
+     ("a wall calendar with most pages torn off", "a stack of dated ledgers",
+      "a tree stump with its growth rings showing")),
+    (("day",),
+     ("a row of torn-off calendar pages pinned up", "a line of chalk tally marks on a wall")),
+    (("hour", "time to arrive"),
+     ("a round wall clock", "a wristwatch held up close", "an hourglass on a shelf")),
+    (("second", "minute"),
+     ("a stopwatch held in one hand", "a kitchen timer mid-count")),
+    (("mph", "speed"),
+     ("a car speedometer dial", "a roadside speed display board")),
+    (("mile", "feet", "foot", "distance"),
+     ("a roadside distance sign", "a folding tape measure pulled out",
+      "a worn pair of boots beside a trail marker")),
+    (("decibel", "loud", "energy of"),
+     ("a handheld sound level meter", "a pair of ear defenders on a hook")),
+    (("pound", "heavier", "weigh"),
+     ("a floor scale with a round dial", "a hanging luggage scale")),
+    (("fahrenheit", "degree"),
+     ("a wall thermometer", "a car dashboard temperature readout")),
+    (("dollar", "price", "cost", "fee"),
+     ("a long paper receipt curling off a till", "a stack of banknotes under a clip",
+      "a bank statement pinned to a fridge")),
+    (("calorie",),
+     ("a printed label on a food packet", "a lunch tray with the meal laid out")),
+    (("people", "population"),
+     ("a dense crowd of small identical figures", "a full stadium seen from the stands")),
+)
+
+
+def _dao_cu(don: str, i: int = 0) -> str:
+    """Đạo cụ đo được đại lượng của `don`. Không khớp thì trả rỗng — thà không có đạo cụ còn
+    hơn có một đạo cụ nói sai đại lượng (tỉ lệ, phần trăm, "1 in N" không có vật đo nào)."""
+    d = str(don or "").lower()
+    # ── ĐẠI LƯỢNG NẰM Ở TỪ ĐẦU  (đo lại sau khi thử) ──────────────────────────────────
+    # Quét chuỗi con trên CẢ câu cho ra hai ánh xạ sai: "dollars in 30 years" trúng "year"
+    # -> ra tấm lịch (nó nói về TIỀN), và "hours a day" trúng "day" -> cũng ra lịch (nó nói
+    # về GIỜ). Trong mọi dạng `don` của dự án, đại lượng luôn là TỪ ĐẦU và phần sau chỉ là
+    # bổ ngữ ("… a year", "… in 30 years", "… a day"). Nên soi từ đầu trước, hết mới soi cả
+    # câu — không thêm ngoại lệ nào, chỉ đọc đúng chỗ.
+    dau = d.split()[0] if d.split() else ""
+    for tu, vat in DAO_CU:
+        if any(t in dau for t in tu):
+            return vat[i % len(vat)]
+    for tu, vat in DAO_CU:
+        if any(t in d for t in tu):
+            return vat[i % len(vat)]
+    return ""
+
+
+# Số NGẮN thì cho mô hình vẽ lên đạo cụ; số dài thì tuyệt đối không.
+# §12.7 đã đo: chuỗi <= 4 ký tự không dấu đúng 5/6 lần, còn "238,900" sai 2/2 — ra "23 8,900"
+# và "238.900". Người xem đọc ra "máy làm" trong nửa giây.
+_SO_NGAN = re.compile(r"^[0-9]{1,4}$")
+
+
+def _gan_dao_cu(nhip: list) -> None:
+    """Gắn đạo cụ vào TIỀN CẢNH của mỗi nhịp cảnh có con số.
+
+    Đơn vị lấy của chính nhịp, không có thì lấy của nhịp số liệu gần nhất phía trước — đó là
+    con số mà cảnh này đang minh hoạ."""
+    don_gan, so_gan, _k = "", "", 0
+    for n in nhip:
+        if n.get("don"):
+            don_gan, so_gan = str(n["don"]), str(n.get("so") or "")
+        ve = n.get("ve")
+        if not ve or n.get("canh_ve"):
+            continue
+        vat = _dao_cu(n.get("don") or don_gan, _k)
+        _k += 1
+        if not vat:
+            continue
+        so = str(n.get("so") or so_gan).strip()
+        doc = f" reading {so}" if _SO_NGAN.match(so) else ""
+        # Chèn vào TRƯỚC câu máy quay (câu cuối của `_ve`) để nó nằm ở tiền cảnh, không bị
+        # đẩy ra sau chỗ cắt.
+        n["ve"] = ve + f", in the foreground {vat}{doc}"
+
+
 def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
     """Gán `canh_ve` (tên nơi chốn) cho nhịp sẽ vẽ bằng code, và bỏ `ve` của nhịp ấy.
 
@@ -3703,6 +3803,11 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     nhip = _tranh_lap_gan(nhip, ma)
     # Xen kẽ ảnh CF với cảnh vẽ bằng code — cũng phải chạy SAU mọi lượt chèn, vì nó đếm
     # nhịp `canh` theo THỨ TỰ CUỐI CÙNG. Xem khối `NOI_KENH` để biết vì sao và tỉ lệ bao nhiêu.
+    # ĐẠO CỤ TRƯỚC, RẢI CẢNH CODE SAU. `_rai_canh_ve` bỏ `ve` của những nhịp nó nhận, nên
+    # chạy sau nó là gắn đạo cụ vào một trường sắp bị xoá — công cốc và không ai thấy.
+    # Cùng họ §15.19: mọi lượt RẢI phải chạy sau mọi lượt CHÈN, và ngược lại ở đây là mọi
+    # lượt SỬA `ve` phải chạy trước lượt XOÁ `ve`.
+    _gan_dao_cu(nhip)
     _rai_canh_ve(nhip, ma, _lech_kenh(ma) + idx * 7919)
 
     return k, tieu, hook, hook_phu, nhip, muc
