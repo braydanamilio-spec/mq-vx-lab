@@ -553,6 +553,48 @@ def sang_day(tep: str) -> int:
 # thoáng hơn hẳn bốn ảnh đạt (141–178), tức nằm giữa hai cụm chứ không cắt vào cụm nào.
 SAN_SANG = int(os.environ.get("SAN_SANG_ANH", "90") or 90)
 
+
+# ══ SỔ ĐẾM ẢNH CỦA CẢ LUỒNG — Ở TỆP, KHÔNG Ở BIẾN  (4/9/2026) ══════════════════════════════
+# Trần `TRAN_ANH_LUONG` đếm bằng `sinh._da_ve`, một thuộc tính HÀM. Chú thích của nó ghi
+# *"120 ảnh/luồng/lượt × 18 luồng × 4 lượt/ngày = 8.640 ảnh = 52% sức hồ"* — con số đúng cho
+# một giả định sai: rằng một luồng là một tiến trình.
+#
+# `render_giai_thich_18.yml` có vòng `while` chạy TỪNG TẬP bằng một lệnh `python` riêng, nên
+# bộ đếm chết theo tiến trình và trần thật là *"120 ảnh mỗi TẬP"*. Đo trên lượt 33819928469
+# (18 luồng, 4,5 giờ, bấm tay lúc 23:59 UTC): **8.059 ảnh CF** thay vì 2.160 — vượt 3,7 lần,
+# và nó vét sạch hạn mức của NGÀY HÔM SAU vì CF hồi lúc 00:00 UTC, đúng lúc lượt ấy đang chạy.
+# Hậu quả anh nhìn thấy: 9.175/17.234 nhịp không có ảnh, và cả ngày hôm sau không vẽ được gì.
+#
+# §15.23 đã ghi đúng câu này rồi — *"dấu mốc để ở tệp `/tmp` chứ không phải biến module, vì
+# mỗi tập có thể là một tiến trình riêng"* — và chỗ này không áp dụng. Cùng họ lỗi, khác tệp.
+#
+# Tệp đặt theo GITHUB_RUN_ID nên lượt sau bắt đầu lại từ 0; mỗi luồng là một runner riêng nên
+# `/tmp` vốn đã tách sẵn giữa các luồng, không cần thêm khoá.
+# `or` chứ không phải tham số thứ hai: biến môi trường ĐẶT MÀ RỖNG sẽ phá mặc định của
+# `.get(K, "mđ")` — sổ rơi vào thư mục "" và mọi lượt ghi im lặng hỏng, tức trần ảnh biến mất
+# đúng lúc nó cần nhất. `selftest.t_khong_tron_so` canh dạng này.
+_ANH_TEP = os.path.join(os.environ.get("TMPDIR") or "/tmp",
+                        "mm0_anh_luong_%s.txt" % (os.environ.get("GITHUB_RUN_ID") or "cucbo"))
+
+
+def _da_ve() -> int:
+    """Số ảnh CF luồng này đã vẽ — đọc từ tệp, nên sống qua mọi tiến trình của luồng."""
+    try:
+        with open(_ANH_TEP) as f:
+            return int(f.read().strip() or 0)
+    except Exception:
+        return 0
+
+
+def _ghi_da_ve(n: int) -> None:
+    # Hỏng thì BỎ QUA, không ném: trần ảnh là việc tiết kiệm, không phải việc thiết yếu —
+    # để nó làm chết một lượt dựng là đổi sai chiều.
+    try:
+        with open(_ANH_TEP, "w") as f:
+            f.write(str(n))
+    except Exception:
+        pass
+
 # ── SIẾT DẦN KHI CỔNG ĐÁNH TRƯỢT  (khôi phục 4/9/2026) ───────────────────────────────────
 # Bảng này được VIẾT hôm 3/9 và bị một lượt cắt hụt xoá mất phần khai báo, trong khi `_prompt`
 # vẫn gọi nó ở dòng 691. Nghĩa là mọi lần cổng chất vẽ đánh trượt đều `NameError` — tức đúng
@@ -978,9 +1020,10 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
     #
     # 120 ảnh/luồng/lượt × 18 luồng × 4 lượt/ngày = 8.640 ảnh = 52% sức hồ, còn biên cho việc khác.
     _tran = int(os.environ.get("TRAN_ANH_LUONG", "120") or 120)
-    if _tran > 0 and getattr(sinh, "_da_ve", 0) >= _tran:
-        if getattr(sinh, "_da_ve", 0) == _tran:
-            sinh._da_ve += 1        # +1 để câu này chỉ in một lần
+    _dv = _da_ve()                 # ĐỌC TỆP, không đọc biến — xem `_ANH_TEP`
+    if _tran > 0 and _dv >= _tran:
+        if _dv == _tran:
+            _ghi_da_ve(_dv + 1)     # +1 để câu này chỉ in một lần trong cả luồng
             print(f"     🎚 đã vẽ {_tran} ảnh AI trong lượt này — các cảnh sau dùng lớp vẽ bằng "
                   f"code để giữ hạn mức cho những luồng còn lại (đặt TRAN_ANH_LUONG để đổi)")
         return ""
@@ -1067,7 +1110,7 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
                 sinh._da_bao = True
                 print(f"     ⚠ CỔNG CHỮ TẮT ({type(e).__name__}: {str(e)[:60]}) — "
                       f"ảnh có chữ bịa sẽ lọt qua")
-        sinh._da_ve = getattr(sinh, "_da_ve", 0) + 1
+        _ghi_da_ve(_da_ve() + 1)
         # Ghi sổ NGAY SAU khi mọi cổng đã nhận, không ghi lúc tải xong: sổ nói "ảnh này là ảnh
         # ĐÃ DUYỆT của câu cảnh này". Ghi sớm là hứa hộ cho một ảnh có thể còn bị xoá ở dòng dưới.
         # `toMau=False` tường minh: ảnh vừa vẽ chưa qua chỉnh màu, và `sinh_tap` đọc đúng cờ này.

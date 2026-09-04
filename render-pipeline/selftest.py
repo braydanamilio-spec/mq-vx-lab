@@ -2570,6 +2570,8 @@ def main():
     check("cổng hình lấy khung ở nhịp CÓ phụ đề", t_kiem_hinh_lay_dung_khung)
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
+    check("trần ảnh CF phải đếm ở TỆP (vòng while chạy mỗi tập một tiến trình)",
+          t_tran_anh_song_qua_tien_trinh)
     check("prompt ảnh: chốt độ dài không cắt mất luật sàn / bảng màu",
           t_prompt_khong_cat_mat_luat)
     check("prompt ảnh: không có vế viết NGHỊCH (FLUX vẽ ra thứ bị cấm)",
@@ -7229,6 +7231,63 @@ def t_gu_bo_cuc_rieng():
            if sum(1 for x, y in zip(bo(a), bo(b)) if x == y) > 3]
     assert not qua, ("cặp kênh giống quá 3/5 trục gu: "
                      + "; ".join(f"{a}/{b}" for a, b in qua[:3]))
+
+
+def t_tran_anh_song_qua_tien_trinh():
+    """Trần ảnh CF phải đếm ở TỆP, không đếm ở biến module.
+
+    `render_giai_thich_18.yml` có vòng `while` chạy TỪNG TẬP bằng một lệnh `python` riêng.
+    Bản trước đếm bằng `sinh._da_ve` — một thuộc tính hàm, chết theo tiến trình — nên trần
+    *"120 ảnh mỗi luồng mỗi lượt"* thực chất là *"120 ảnh mỗi TẬP"*.
+
+    Đo trên lượt thật 33819928469 (18 luồng, 4,5 giờ): **8.059 ảnh CF** thay vì 2.160, vượt
+    3,7 lần. Nó chạy vắt qua 00:00 UTC — mốc CF hồi hạn mức — nên vét luôn hạn mức của cả
+    ngày hôm sau, và 8/8 khoá thử sáng hôm sau đều trả *"you have used up your daily free
+    allocation of 10,000 neurons"*.
+
+    §15.23 đã ghi đúng câu luật này cho `ghi_trang_thai` và chỗ này không áp dụng.
+    """
+    import os
+    import nen_gt as N
+    goc = os.environ.get("GITHUB_RUN_ID")
+    os.environ["GITHUB_RUN_ID"] = "selftest_tran_anh"
+    import importlib
+    importlib.reload(N)
+    try:
+        try:
+            os.remove(N._ANH_TEP)
+        except Exception:
+            pass
+        assert N._da_ve() == 0, "sổ chưa sạch trước khi đo"
+        N._ghi_da_ve(7)
+        # Đọc lại bằng một MODULE MỚI TINH — mô phỏng đúng tiến trình python kế tiếp của vòng
+        # `while`. Biến module sẽ ra 0 ở đây; tệp thì ra 7.
+        importlib.reload(N)
+        assert N._da_ve() == 7, (
+            f"sổ đếm ảnh KHÔNG sống qua tiến trình (đọc lại ra {N._da_ve()}, chờ 7) — "
+            "trần TRAN_ANH_LUONG sẽ nhân lên theo số tập mỗi luồng")
+        # Và trần phải THẬT SỰ đọc sổ ấy, không đọc thuộc tính hàm.
+        # QUÉT MÃ, KHÔNG QUÉT CHÚ THÍCH. Bản đầu của cổng này báo đỏ ngay lần chạy đầu vì
+        # nó đọc trúng dòng chú thích kể lại lỗi cũ ("đếm bằng `sinh._da_ve`") — đúng bài
+        # học `kiem_nen._doc_ma` đã trả giá: *cổng đọc lời kể về con dao thành con dao*.
+        import re as _re
+        src = io.open(os.path.join(os.path.dirname(os.path.abspath(N.__file__)),
+                                   "nen_gt.py"), encoding="utf-8").read()
+        ma = _re.sub(r"(?m)^\s*#.*$", "", src)
+        ma = _re.sub(r'(?<!["\\])#(?![^\n"]*").*$', "", ma, flags=_re.M)
+        assert "sinh._da_ve" not in ma, \
+            "còn dùng `sinh._da_ve` — bộ đếm quay lại sống trong tiến trình"
+        assert "_da_ve()" in ma, "trần ảnh không đọc sổ tệp"
+    finally:
+        try:
+            os.remove(N._ANH_TEP)
+        except Exception:
+            pass
+        if goc is None:
+            os.environ.pop("GITHUB_RUN_ID", None)
+        else:
+            os.environ["GITHUB_RUN_ID"] = goc
+        importlib.reload(N)
 
 
 def t_prompt_khong_cat_mat_luat():
