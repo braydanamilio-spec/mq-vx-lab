@@ -121,9 +121,60 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string }> =
       q ${k(0.04)} ${k(0.1)} ${k(0.13)} ${k(0.08)} q ${-k(0.1)} ${-k(0.24)} ${k(0.13)} ${-k(0.42)}
       q ${-k(0.02)} ${k(0.2)} ${k(0.14)} ${k(0.24)} q ${k(0.1)} ${-k(0.06)} ${k(0.06)} ${-k(0.16)}
       q ${k(0.2)} ${k(0.24)} ${-k(0.26)} ${k(0.68)} Z`, "#E8862E")}</g>;
-    case "nguoi": return <g><circle cx="0" cy={-k(0.3)} r={k(0.14)} fill="#FFFFFF" stroke={mau} strokeWidth={n} />
-      {P(`M 0 ${-k(0.16)} v ${k(0.3)}`, "none", 1.2)}{P(`M ${-k(0.2)} ${-k(0.06)} L 0 ${-k(0.12)} L ${k(0.2)} ${-k(0.06)}`, "none", 1.1)}
-      {P(`M 0 ${k(0.14)} l ${-k(0.16)} ${k(0.28)}`, "none", 1.2)}{P(`M 0 ${k(0.14)} l ${k(0.16)} ${k(0.28)}`, "none", 1.2)}</g>;
+    /* ── NGƯỜI  (vẽ lại 4/9/2026 theo ảnh tham chiếu anh gửi) ────────────────────────────
+       Bản cũ: đầu tròn RỖNG · thân một nét thẳng · tay chữ V · hai nét chân. Anh xem khung
+       và nói thẳng *"người que vẽ hơi xấu"* — đúng, và đọc mã thì thấy vì sao: nó có đủ bộ
+       phận của một con người mà thiếu cả ba thứ làm nó thành một NHÂN VẬT.
+
+       Đối chiếu ảnh tham chiếu, ba thứ ấy là:
+         1. MẶT  — hai mắt bầu dục, hai lông mày, một miệng. Không có mặt thì hình chỉ nói
+                   "có một người"; có mặt thì nó nói "người này đang thấy thế nào". Lông mày
+                   làm phần lớn việc ấy.
+         2. ÁO   — thân là một KHỐI đặc có viền, không phải một nét. Nét thì rỗng, và rỗng
+                   thì ở cỡ nhỏ nó biến mất (§15.9 — nét rỗng chết khi thu nhỏ).
+         3. KHỚP — tay chân gập ở khuỷu và gối. Bốn nét thẳng toả từ một điểm đọc ra ngôi
+                   sao; gập một nhịp là đọc ra người đang đứng.
+
+       Cỡ nhỏ vẫn phải đọc được: hình này còn dùng ở bố cục so sánh, thu còn 34% (§15.9).
+       Nên mắt là KHỐI ĐẶC (co bao nhiêu vẫn thấy), lông mày dày gần bằng nét chính, và áo
+       là mảng màu — ba thứ sống sót qua phép thu, khác hẳn nét mảnh. */
+    case "nguoi": {
+      /* ── NÉT RIÊNG, KHÔNG MƯỢN NÉT CHUNG  (đo lại sau khi soi ảnh cận) ────────────────
+         Bản vẽ lại lần đầu dùng `n` (= 0,055·s) như mọi biểu tượng khác. Soi ảnh cận thì
+         nét ấy NUỐT hết chi tiết: lông mày dính vào viền đầu, miệng thành một cục, hai
+         tay thành hai khối đen. Đo trên ảnh tham chiếu anh gửi: viền khoảng **1,8% chiều
+         cao hình**, tức chỉ bằng một phần ba `n`.
+         `n` đúng cho biểu tượng đồ vật (ít chi tiết, cần dày để đọc ở cỡ nhỏ) và sai ở
+         đây vì mặt người là chỗ chi tiết dày đặc nhất trong cả bảng hình. Đúng §6 —
+         mượn một giá trị cho việc nó không sinh ra để làm. */
+      const w = k(0.017);                 // nét thân/chi
+      const wM = k(0.013);                // nét nét mặt — mảnh hơn, nhưng vẫn là KHỐI ĐẶC
+      const N = (d: string, f = "none", ww = w) => (
+        <path d={d} fill={f} stroke={mau} strokeWidth={ww}
+              strokeLinejoin="round" strokeLinecap="round" />
+      );
+      const vaiY = -k(0.10);
+      return (<g>
+        {/* ÁO vẽ TRƯỚC đầu, để cổ áo chui xuống dưới cằm chứ không cắt ngang mặt */}
+        {N(`M ${-k(0.105)} ${vaiY} Q 0 ${vaiY - k(0.030)} ${k(0.105)} ${vaiY}
+            L ${k(0.092)} ${k(0.16)} L ${-k(0.092)} ${k(0.16)} Z`, "#46505C")}
+        {/* TAY gập ở khuỷu; hai bên lệch nhau chút ít cho đỡ đối xứng máy móc */}
+        {N(`M ${-k(0.105)} ${vaiY + k(0.045)} L ${-k(0.185)} ${k(0.045)} L ${-k(0.155)} ${k(0.16)}`)}
+        {N(`M ${k(0.105)} ${vaiY + k(0.045)} L ${k(0.195)} ${k(0.035)} L ${k(0.172)} ${k(0.145)}`)}
+        {/* CHÂN gập ở gối, bàn chân bẻ ngang để nhân vật ĐỨNG chứ không lơ lửng */}
+        {N(`M ${-k(0.050)} ${k(0.16)} L ${-k(0.078)} ${k(0.30)} L ${-k(0.060)} ${k(0.42)} L ${-k(0.125)} ${k(0.432)}`)}
+        {N(`M ${k(0.050)} ${k(0.16)} L ${k(0.078)} ${k(0.30)} L ${k(0.060)} ${k(0.42)} L ${k(0.125)} ${k(0.432)}`)}
+        {/* ĐẦU chiếm khoảng một phần ba chiều cao — tỉ lệ ấy là thứ làm hình đọc ra nhân
+            vật thay vì sơ đồ người. */}
+        <circle cx="0" cy={-k(0.285)} r={k(0.150)} fill="#FFFFFF"
+                stroke={mau} strokeWidth={k(0.019)} />
+        <ellipse cx={-k(0.050)} cy={-k(0.295)} rx={k(0.019)} ry={k(0.026)} fill={mau} />
+        <ellipse cx={k(0.050)} cy={-k(0.295)} rx={k(0.019)} ry={k(0.026)} fill={mau} />
+        {N(`M ${-k(0.078)} ${-k(0.358)} L ${-k(0.026)} ${-k(0.374)}`, "none", wM)}
+        {N(`M ${k(0.026)} ${-k(0.374)} L ${k(0.078)} ${-k(0.358)}`, "none", wM)}
+        {N(`M ${-k(0.036)} ${-k(0.228)} Q 0 ${-k(0.202)} ${k(0.036)} ${-k(0.228)}`, "none", wM)}
+      </g>);
+    }
     case "dien_thoai": return <g>{P(`M ${-k(0.22)} ${-k(0.42)} h ${k(0.44)} v ${k(0.84)} h ${-k(0.44)} Z`, "#20262E")}
       {P(`M ${-k(0.16)} ${-k(0.34)} h ${k(0.32)} v ${k(0.6)} h ${-k(0.32)} Z`, "#6FB7E8", 0)}</g>;
     case "trai_dat": return <g><circle cx="0" cy="0" r={k(0.42)} fill="#5A93C8" stroke={mau} strokeWidth={n} />
