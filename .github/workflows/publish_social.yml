@@ -5,7 +5,11 @@ name: MM0 Publish FB+Instagram (public runner)
 
 on:
   schedule:
-    - cron: "15,45 * * * *"   # lệch 15' so với YouTube
+    # 96 lượt/ngày — nhiều gấp đôi luồng YouTube, cho cùng một loại việc và cùng một kiểu
+    # đọc (`list_social_queue` quét tới 2.000 mục mỗi lượt). Chính docstring của hàm ấy đã
+    # ghi *"644 mục × 96 lượt cron = 123% trần"*. Hạ về 12 lượt/ngày, vẫn lệch giờ so với
+    # luồng YouTube để hai bên không cùng đọc một lúc.  (4/9/2026)
+    - cron: "35 1-23/2 * * *"   # mỗi 2 giờ, lệch 30' so với YouTube
   workflow_dispatch:
     inputs:
       dry_run: { description: "Chạy thử (không đăng)", type: boolean, default: false }

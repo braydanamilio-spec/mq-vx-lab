@@ -199,8 +199,21 @@ jobs:
       # `render_job` bên **D1** — một kho khác. Chính mã worker đã ghi: *"hai kho dữ liệu song
       # song thì lệnh dọn phải đụng cả hai"*, và tôi đã dọn một kho rồi báo xong.
       # Danh sách giữ lại vẫn đọc từ `channels.yaml`, không chép tay.
+      # ── VÀ NÓ KHÔNG THUỘC VỀ ĐƯỜNG RENDER  (4/9/2026) ────────────────────────────────
+      # `don_sach.py` khai `TRAN_DOC = 6000` — trần lượt ĐỌC cho MỘT lần chạy. Nó phân trang
+      # 300 một lô cho tới khi xoá đủ 1.500 hoặc đọc hết 6.000. Đặt ở đây nghĩa là nó chạy
+      # theo NHỊP RENDER: 5 mốc cron mỗi ngày × tới 6.000 = **30.000 lượt đọc/ngày = 60%
+      # hạn mức**, cho một việc dọn mà sau lần đầu gần như không còn gì để xoá.
+      #
+      # Anh: *"suốt ngày bị cạn quota."* Đây là một trong hai chỗ tiêu đều đặn nhất, và cả
+      # hai đều tiêu vì TẦN SUẤT chứ không vì lỗi: dọn bản ghi là việc theo NGÀY, đăng bài là
+      # việc theo GIỜ — không việc nào là việc theo lượt render.
+      #
+      # Nay chỉ chạy ở mốc cron ĐẦU TIÊN trong ngày (00:20 UTC). Bốn mốc còn lại bỏ qua, nên
+      # 30.000 -> tối đa 6.000 lượt/ngày. `don_kho.yml` và `don_sach.yml` vẫn bấm tay được
+      # khi cần dọn gấp.
       - name: Dọn bản ghi kênh đã nghỉ (Firestore + D1)
-        if: matrix.luong == 1
+        if: matrix.luong == 1 && startsWith(github.event.schedule, '20 0 ')
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
@@ -387,7 +400,12 @@ jobs:
       - name: Đối chiếu số kho với Drive (số thật, không đếm bản ghi)
         # CHỈ LUỒNG 1. Bước này đi hết mọi kho Drive; chạy ở cả 18 luồng song song là quét
         # Drive 18 lượt cho cùng một kết quả — vừa phí vừa dễ chạm trần API.
-        if: matrix.luong == 1
+        # ── VÀ CHỈ MỘT LẦN MỖI NGÀY  (4/9/2026) ────────────────────────────────────────
+        # Nó liệt kê tệp trong **100 kho Drive** để đếm số thật. Đó là hàng nghìn lượt gọi
+        # Drive API, và con số nó đối chiếu (kho có bao nhiêu video) đổi theo NGÀY chứ không
+        # theo lượt render. Chạy 5 lần/ngày là trả giá 5 lần cho một con số dùng một lần.
+        # Cùng lý do với bước dọn ở trên: việc theo ngày thì chạy theo ngày.
+        if: matrix.luong == 1 && startsWith(github.event.schedule, '20 0 ')
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}

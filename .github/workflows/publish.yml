@@ -6,7 +6,23 @@ name: MM0 Publish YouTube (public runner)
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # mỗi 30 phút
+    # ── NHỊP CRON PHẢI KHỚP NĂNG LỰC ĐĂNG, KHÔNG KHỚP CẢM GIÁC "CÀNG DÀY CÀNG TỐT" (4/9/2026)
+    #
+    # Anh: *"suốt ngày bị cạn quota."* Đo lại đường đăng thì đây là chỗ tiêu ĐỀU ĐẶN nhất hệ,
+    # và nó tiêu vì tần suất chứ không vì một lỗi:
+    #
+    #     mỗi lượt cron đọc:  yt_queue (tới 2.000 mục) + render_jobs done/chưa-xếp (300)
+    #     48 lượt/ngày     ->  hàng đợi 600 mục đã là ~43.000 lượt ĐỌC/ngày
+    #     trần cả ngày     ->  50.000
+    #
+    # Tức đường đăng một mình có thể ăn gần trọn hạn mức, và nó làm việc ấy MỖI NGÀY — khớp
+    # đúng điều anh mô tả. Và hàng đợi chỉ phình: YouTube giữ ~6 video/kênh/ngày (18 kênh
+    # ≈ 108/ngày) trong khi dây chuyền dựng ~450/lượt, nên chi phí tăng tuyến tính mãi mãi.
+    #
+    # Chạy 30 phút một lần để đăng ~6 video mỗi kênh mỗi ngày là kiểm 48 lần cho một việc xảy
+    # ra vài lần. Hai giờ một lần vẫn dày hơn nhu cầu (12 lượt cho ~6 lần đăng), mà cắt thẳng
+    # 4× lượt đọc. Item lỡ giờ không mất: `publish_yt_queue` có catch-up cho cron trễ.
+    - cron: "5 */2 * * *"   # mỗi 2 giờ (12 lượt/ngày) — xem lý do ở trên
   workflow_dispatch:
     inputs:
       dry_run: { description: "Chạy thử (không upload)", type: boolean, default: false }
