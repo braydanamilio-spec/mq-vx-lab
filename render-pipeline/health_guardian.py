@@ -122,6 +122,20 @@ def check_alive() -> bool:
             # nó. Vẫn fail-open như cũ, chỉ khác là không tốn gì.
             print(f"   ⚠️ không sắp được theo created_at ({str(_e)[:70]}) — thiếu composite index")
             docs = []
+            # ── TỰ CHỮA: ĐẶT HÀNG TẠO INDEX NGAY TẠI CHỖ PHÁT HIỆN  (4/9/2026) ───────────
+            # Index đã KHAI trong `dashboard/firestore.indexes.json` nhưng chưa ai triển khai,
+            # nên guardian fail-open suốt — tức cái canh gác của cả hệ không canh gì, và nó
+            # im lặng về chính chuyện ấy trừ một dòng cảnh báo mỗi giờ mà không ai đọc.
+            #
+            # Gọi ở ĐÂY chứ không thành một bước riêng chạy mỗi giờ: chỗ này là chỗ DUY NHẤT
+            # biết chắc index đang thiếu. Index đã có thì hàm này không bao giờ chạy, tức
+            # không tốn gì ở trạng thái lành — đúng nguyên tắc "trả tiền khi hỏng, không trả
+            # tiền khi lành".
+            try:
+                import bao_dam_index
+                bao_dam_index.bao_dam()
+            except Exception as _ee:
+                print(f"   ⓘ không đặt được index ({type(_ee).__name__}) — vẫn fail-open")
         recent = [d for d in docs if (d.to_dict() or {}).get("created_at", "") >= cutoff]
         if recent:
             print(f"   ✅ {len(recent)} video 'done' trong {SILENT_HOURS}h qua -> hệ thống sống khoẻ.")

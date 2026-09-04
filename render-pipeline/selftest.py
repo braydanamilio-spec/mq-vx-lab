@@ -2575,6 +2575,8 @@ def main():
     check("mỗi kênh một dấu ấn riêng, không kênh nào trùng", t_dau_an_kenh_duy_nhat)
     check("guardian không đọc bừa Firestore ở nhánh không kết luận được",
           t_guardian_khong_doc_bua)
+    check("guardian không bấm chạy workflow mà người vận hành đã TẮT",
+          t_guardian_ton_trong_cong_tac_tat)
     check("tiêu đề/hook/prompt phải đúng ngữ pháp tiếng Anh", t_tieu_de_dung_ngu_phap)
     check("nhịp truc: đủ 3 mốc, không mốc nào trùng", t_truc_du_moc_va_khong_trung)
     check("tiêu đề so sánh: hai vế viết hoa đối xứng", t_tieu_de_viet_hoa_doi_xung)
@@ -7330,6 +7332,42 @@ def t_truc_du_moc_va_khong_trung():
                 if len(set(ky)) != len(ky):
                     loi.append((k["ma"], idx, f"mốc trùng: {ky}"))
     assert not loi, f"{len(loi)} nhịp truc hỏng: {loi[:3]}"
+
+
+def t_guardian_ton_trong_cong_tac_tat():
+    """Guardian không được bấm chạy một workflow mà người vận hành đã TẮT.
+
+    Anh tắt `render_giai_thich_18.yml` để dừng render trong lúc sửa template, rồi phát hiện
+    guardian VẪN bấm nó mỗi giờ — một CỬA THỨ HAI mở workflow mà người tắt không hề biết.
+    Hôm nay nó chỉ vô hại nhờ may: `gh workflow run` trên workflow đã tắt thì hỏng. Đổi hành
+    vi ấy, hoặc tắt cron bằng cách khác, là guardian âm thầm khởi động lại cả dây chuyền.
+
+    Luật: một hệ tự động được phép TỰ CHỮA, nhưng không được phép ĐI NGƯỢC một quyết định con
+    người vừa ra. Trạng thái `disabled_manually` chính là quyết định ấy và hỏi được bằng một
+    lệnh API — hỏi trước khi bấm thì "tắt workflow" thành công tắc DUY NHẤT và đáng tin.
+    """
+    import os
+    import re
+    goc = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    p = os.path.join(goc, ".github", "workflows", "health_guardian.yml")
+    # ── BỎ DÒNG CHÚ THÍCH TRƯỚC KHI QUÉT ───────────────────────────────────────────────
+    # Bản đầu của cổng này báo đỏ ngay, vì `gh workflow run` xuất hiện LẦN ĐẦU trong chính
+    # dòng chú thích giải thích bản vá — nên `find` dừng ở đó và phần "hỏi trạng thái" nằm
+    # SAU nó bị coi như không tồn tại.
+    # Đây là lần thứ TƯ trong một ngày cổng đọc lời kể về con dao thành con dao
+    # (`kiem_nen._doc_ma` đã ghi bài học từ 1/9). Nay nó thành thói quen: **quét mã thì bỏ
+    # chú thích trước, luôn luôn** — với YAML/shell là dòng bắt đầu bằng `#`, với Python còn
+    # phải bỏ cả docstring vì docstring là CHUỖI chứ không phải chú thích.
+    src = io.open(p, encoding="utf-8").read()
+    ma = "\n".join(d for d in src.splitlines() if not d.lstrip().startswith("#"))
+    i = ma.find("gh workflow run")
+    assert i > 0, "guardian không còn bấm workflow — nếu cố ý thì xoá cổng này"
+    truoc = ma[:i]
+    assert re.search(r"actions/workflows/\$WF\W.*state", truoc, re.S), (
+        "guardian bấm `gh workflow run` mà KHÔNG hỏi trạng thái workflow trước — "
+        "tắt workflow sẽ không dừng được nó")
+    assert 'if [ "$TT" != "active" ]' in truoc, (
+        "thiếu chốt chặn: chỉ bấm khi workflow đang `active`")
 
 
 def t_guardian_khong_doc_bua():

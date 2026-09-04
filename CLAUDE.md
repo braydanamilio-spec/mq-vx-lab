@@ -2527,3 +2527,52 @@ Hai chi tiết dễ bỏ sót:
 
 **Cạn CF không làm hỏng render** — nhịp vượt trần rơi về cảnh vẽ bằng code, video vẫn ra. Đó
 là đánh đổi có kiểm soát, không phải sự cố.
+
+### 17.13 Hệ tự động được TỰ CHỮA, nhưng không được ĐI NGƯỢC quyết định con người
+
+`health_guardian` bấm `gh workflow run render_giai_thich_18.yml` mỗi giờ khi thấy 5h không có
+lượt dựng — cơ chế đúng, sinh ra vì cron repo này không đáng tin (§10.2). Nhưng anh tắt
+workflow để dừng render trong lúc sửa template, và guardian **vẫn bấm**. Đó là một **cửa thứ
+hai** mở workflow mà người tắt không hề biết; hôm nay nó chỉ vô hại nhờ may, vì `gh workflow
+run` trên workflow đã tắt thì hỏng.
+
+**Luật:** trước khi một bước tự động khởi động thứ gì, hỏi *"con người có vừa tắt nó không?"*
+Trạng thái `disabled_manually` hỏi được bằng một lệnh API. Hỏi rồi mới bấm thì "tắt workflow"
+thành công tắc **duy nhất** và đáng tin — thay vì một trong hai cửa mà chỉ một cửa nhìn thấy.
+
+Và khi tắt một luồng, luôn `grep` xem **còn chỗ nào bấm nó không**:
+
+```bash
+grep -rn "workflow run\|workflow_dispatch\|repository_dispatch" .github/ | grep <ten_luong>
+```
+
+### 17.14 "Khai một index" không phải "có index" — và chỗ tự chữa phải đặt ở chỗ PHÁT HIỆN
+
+Index `render_jobs: owner+status+created_at DESC` có trong `dashboard/firestore.indexes.json`
+suốt, mà Firestore vẫn trả `400 The query requires an index`: tệp ấy chỉ là **bản khai**, phải
+deploy mới thành index thật, và không workflow nào làm việc đó. Hậu quả: guardian fail-open
+suốt — cái canh gác của cả hệ **không canh gì**, và im lặng về chính chuyện ấy.
+
+`bao_dam_index.py` tạo index còn thiếu qua Firestore Admin API (idempotent), và được gọi
+**ngay tại chỗ bắt được lỗi thiếu index** chứ không thành một bước chạy mỗi giờ. Chỗ ấy là chỗ
+DUY NHẤT biết chắc index đang thiếu, nên khi hệ lành thì hàm không bao giờ chạy: **trả tiền khi
+hỏng, không trả tiền khi lành.**
+
+Ba chi tiết đã trả giá ở nơi khác và được mang sang: dùng chính client mà mã thật dùng (không
+đọc lại biến môi trường — `render_jobs` ở Project B khi shard bật); `User-Agent` ở mọi lệnh gọi
+(§13.15); và hỏng mềm ở mọi nhánh — đây là bước tối ưu, không được làm đỏ lượt guardian (§13.3).
+
+### 17.15 Quét mã thì BỎ CHÚ THÍCH TRƯỚC — bốn lần trong một ngày
+
+`kiem_nen._doc_ma` ghi bài học này từ 1/9 (*"cổng đọc lời kể về con dao thành con dao"*), và
+ngày 4/9 em dính lại **bốn lần**: cổng trần ảnh · cổng ngữ pháp · cổng short-cắt-từ-long · cổng
+công tắc tắt. Cả bốn đều vì chú thích **trích lại chính lỗi cũ** để giải thích bản vá — tức
+càng viết chú thích tử tế càng dễ tự bắn vào chân.
+
+Nay là thói quen bắt buộc, và nhớ hai dạng:
+
+```python
+ma = re.sub(r"(?m)^\s*#.*$", "", src)            # YAML · shell · Python: chú thích dòng
+b = fn.body                                       # Python: DOCSTRING là CHUỖI, không phải
+if isinstance(b[0].value, ast.Constant): b = b[1:]   # chú thích -> phải bỏ bằng ast
+```

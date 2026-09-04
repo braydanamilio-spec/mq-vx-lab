@@ -53,6 +53,23 @@ jobs:
           GH_TOKEN: ${{ secrets.AUTOPUBLISHER_TOKEN }}
         run: |
           WF="render_giai_thich_18.yml"
+          # ── TÔN TRỌNG CÔNG TẮC TẮT  (4/9/2026) ──────────────────────────────────────────
+          # Anh tắt `render_giai_thich_18.yml` để dừng render trong lúc sửa template, rồi phát
+          # hiện guardian VẪN bấm nó mỗi giờ. Đó là một CỬA THỨ HAI mở workflow mà người tắt
+          # không hề biết — và hôm nay nó chỉ vô hại nhờ may: `gh workflow run` trên workflow
+          # đã tắt thì hỏng. Nếu GitHub đổi hành vi ấy, hoặc nếu ai bật lại workflow rồi tắt
+          # cron bằng cách khác, guardian sẽ âm thầm khởi động lại cả dây chuyền.
+          #
+          # Luật: một hệ tự động được phép TỰ CHỮA, nhưng không được phép ĐI NGƯỢC một quyết
+          # định con người vừa ra. Trạng thái `disabled_manually` chính là quyết định ấy, và
+          # nó hỏi được bằng một lệnh API. Hỏi trước khi bấm thì "tắt workflow" trở thành công
+          # tắc DUY NHẤT và đáng tin — thay vì một trong hai cửa.
+          TT=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF" --jq '.state' 2>/dev/null || echo "unknown")
+          if [ "$TT" != "active" ]; then
+            echo "   ⏸ $WF đang '$TT' — người vận hành đã tắt có chủ đích. KHÔNG bấm thay."
+            echo "   (bật lại bằng: gh workflow enable $WF)"
+            exit 0
+          fi
           # ── CỬA SỔ 20h -> 5h  (3/9/2026) ────────────────────────────────────────────────
           # Anh: *"sao ko có render nào chạy mà để nguyên, bấm thủ công cho nó chạy."*
           #
