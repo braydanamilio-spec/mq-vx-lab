@@ -2981,7 +2981,26 @@ def short_tu_long(ma: str, idx: int, chuong: int, so_chuong: int = 10) -> str:
     Không có tệp ấy (chưa dựng bản dài) thì trả "" và nói rõ, KHÔNG lặng lẽ dựng một short
     rời: dựng nhầm một tập không ai đặt hàng còn tệ hơn không dựng.
     """
+    # ── DÙNG BẢN DÀI THẬT SỰ CÓ TRÊN ĐĨA, KHÔNG TÍNH LẠI CHỈ SỐ  (4/9/2026) ─────────────
+    # Chạy thật đầu-cuối và hỏng ngay: bản dài dựng ở tập **0002** (`tap_ke` đếm tập kế
+    # tiếp), còn `--short-tu-long` gọi `_goc(de)` và đi tìm tập **0003**. Hai đường tính chỉ
+    # số độc lập cho một câu hỏi duy nhất — "bản dài nào" — nên chúng lệch nhau ngay lượt
+    # đầu, và thông điệp *"chưa có bản dài 3"* đọc ra như thiếu dữ liệu chứ không như lệch
+    # chỉ số.
+    # Chữa bằng cách hỏi ĐĨA thay vì tính lại: bản dài vừa dựng là tệp props MỚI NHẤT của
+    # kênh. §13.15 — dùng chính vật thật, đừng mô hình hoá lại nó.
     pj = os.path.join(GOC, "out", f"v9_{ma}_{idx:04d}_long.json")
+    if not os.path.exists(pj):
+        import glob as _g
+        _ds = sorted(_g.glob(os.path.join(GOC, "out", f"v9_{ma}_*_long.json")),
+                     key=os.path.getmtime, reverse=True)
+        if _ds:
+            pj = _ds[0]
+            try:
+                idx = int(os.path.basename(pj).split("_")[2])
+            except Exception:
+                pass
+            print(f"   ⓘ {ma}: dùng bản dài mới nhất {os.path.basename(pj)}")
     if not os.path.exists(pj):
         print(f"   ⓘ {ma}: chưa có bản dài {idx} (thiếu {os.path.basename(pj)}) — "
               f"bỏ qua short cắt-từ-long. Dựng bản dài trước.")
