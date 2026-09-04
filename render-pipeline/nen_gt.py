@@ -656,6 +656,7 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
     # xuống tầng nền vẽ bằng code — tầng ấy không gọi mạng nên không bao giờ hỏng.
     if getattr(sinh, "_can", 0):
         sinh._can += 1
+        sinh._can_tap = getattr(sinh, "_can_tap", 0) + 1
         return ""
     # ── TRẦN ẢNH AI MỖI LUỒNG MỖI LƯỢT  (3/9/2026) ─────────────────────────────────────────
     # Anh: *"nhiều key thế sao cạn vậy, tìm nguyên nhân."* Đo xong thì thủ phạm là **số vòng
@@ -779,7 +780,20 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
     gu = GU_KENH.get(KENH_GU.get(ma, "que"), GU)
     # Đặt lại bộ đếm lý do MỖI TẬP — không đặt lại thì con số cộng dồn qua cả short lẫn long
     # và bản tổng kết nói về một tập khác với tập đang chạy.
-    for _t in ("_can", "_hong", "_het"):
+    # ── `_can` KHÔNG được reset theo tập  (4/9/2026) ────────────────────────────────────
+    # `_hong`/`_het` là bộ đếm BÁO CÁO của một tập — reset đúng. `_can` thì khác hẳn: nó là
+    # cờ "hồ CF đã cạn hạn mức ngày", tức trạng thái của CẢ TIẾN TRÌNH. Hạn mức free của CF
+    # hồi lúc 00:00 giờ Thái Bình Dương, nên trong một lượt chạy nó không bao giờ tự đầy lại.
+    #
+    # Xoá cờ ấy mỗi tập làm vô hiệu hoá đúng cơ chế mà chú thích ở dòng 645 dựng lên để
+    # chống: mỗi tập mới lại xoay trọn 97 khoá chết, mỗi khoá một vòng mạng cộng
+    # `time.sleep(0.25)`, và khoá 429 còn thêm 1,2 giây. Với 45 tập một luồng thì đó là
+    # hàng nghìn lượt gọi vô ích — và nhìn từ ngoài y hệt "mạng chậm", đúng cái bẫy §12.1.
+    #
+    # Gộp một cờ TRẠNG THÁI với một bộ đếm BÁO CÁO vào cùng một tên là họ lỗi §14.8 (hai
+    # ngân sách khác bản chất chung một bộ đếm). Tách ra: `_can` giữ nguyên qua các tập,
+    # `_can_tap` mới là con số của tập này.
+    for _t in ("_hong", "_het", "_can_tap"):
         if hasattr(sinh, _t):
             delattr(sinh, _t)
     n = 0
@@ -788,7 +802,11 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
     _dau = []       # (chỉ số nhịp, prompt) của những ảnh vẽ TRƯỚC khi có mốc
     for i, x in enumerate(nhip):
         ve = x.get("ve") or ""
-        if not ve:
+        # `canh_ve` = nhịp này vẽ nơi chốn bằng code, ĐỪNG gọi CF (xem `giai_thich.NOI_KENH`).
+        # `_rai_canh_ve` đã bỏ `ve` của những nhịp ấy, nên điều kiện dưới đủ; giữ phép kiểm
+        # tường minh này làm hàng rào thứ hai vì đây là CỬA DUY NHẤT đi tới lệnh gọi CF —
+        # một chỗ sót ở đây là tiền thật, và nó sẽ không báo gì.
+        if not ve or x.get("canh_ve"):
             continue
         rel = sinh(ma, idx, i, ve, keys, x.get("tam_trang", ""), gu, doc, moc)
         if rel:

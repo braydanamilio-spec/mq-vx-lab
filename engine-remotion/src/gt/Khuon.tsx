@@ -188,7 +188,7 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string }> =
    ══════════════════════════════════════════════════════════════════════════════════════════ */
 
 /* Làm sáng / làm sẫm một mã màu — dùng dựng bảng màu phòng từ đúng màu nền của kênh. */
-const _pha = (h: string, t: number): string => {
+export const _pha = (h: string, t: number): string => {
   const m = /^#([0-9a-f]{6})$/i.exec((h || "").trim());
   if (!m) return h;
   return "#" + [0, 2, 4].map((i) => {
@@ -199,7 +199,7 @@ const _pha = (h: string, t: number): string => {
 };
 
 /* Trộn hai mã màu theo tỉ lệ — dùng cho tường/sàn của `NenPhong`, xem chú thích tại chỗ. */
-const _tron = (a: string, b: string, t: number): string => {
+export const _tron = (a: string, b: string, t: number): string => {
   const ma = /^#([0-9a-f]{6})$/i.exec((a || "").trim());
   const mb = /^#([0-9a-f]{6})$/i.exec((b || "").trim());
   if (!ma || !mb) return a;

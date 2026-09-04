@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
 import { chanTroi, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong } from "./Khuon";
+import { CanhVe } from "./CanhVe";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    PHIM GIẢI THÍCH — bảy khuôn hình, nhịp cắt 2,1 giây  (1/9/2026)
@@ -48,6 +49,8 @@ export type NhipGT = {
   so?: string; don?: string; chu?: string; bt?: string;
   moc?: { nhan: string; phu?: string }[]; vt?: number;
   x?: number; y?: number; nhan?: string;
+  canh_ve?: string;          // nơi chốn vẽ bằng code — thay cho ảnh CF ở nhịp này
+  canh_hat?: number;         // hạt riêng của nhịp — hai cảnh cùng nơi phải khác nhau
 };
 
 export type PropsGT = {
@@ -282,6 +285,24 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
         <Img src={staticFile(N.nenAnh)}
              style={{ position: "absolute", inset: 0, width: W, height: H, objectFit: "cover",
                       transform: `scale(${kb})` }} />
+      ) : N.canh_ve ? (
+        /* ── CẢNH VẼ BẰNG CODE — lớp XEN KẼ, không phải lớp dự phòng  (4/9/2026) ──────────
+           Đặt NGAY SAU `nenAnh` và TRƯỚC `noi`: `canh_ve` là một quyết định biên tập do
+           Python đưa ra (xem `giai_thich.NOI_KENH` — vì sao, và tỉ lệ bao nhiêu), còn `noi`
+           là lưới an toàn của bộ truyện tranh. Hai thứ khác hẳn nhau về ý định, nên thứ tự
+           ở đây là một phần của chính sách chứ không phải tiện tay.
+
+           Đo trước khi làm: 999/1.640 nhịp (60%) đặt một ảnh CF, riêng `canh` là 586/586.
+           Sau khi xen kẽ: 403/1.640 = 24%. Một tập HOW LONG từ 134 ảnh còn 39.
+
+           `CanhVe` dùng CHUNG `chanTroi(H, hat)` với `NenPhong`, nên nhịp vẽ code và nhịp
+           đồ hoạ có cùng một mặt sàn — thiếu điều đó thì hai loại nhịp đọc ra hai bộ phim. */
+        <CanhVe W={W} H={H} noi={N.canh_ve} nen={nenTrang} mau={mau} mauPhu={mauPhu}
+                /* `canh_hat` là hạt RIÊNG của nhịp này, không phải hạt của tập: hai nhịp
+                   cùng nơi chốn trong một tập phải ra hai đường bao khác nhau. Python
+                   quyết và ghi vào nhịp — engine không tự suy, vì chọn ở hai nơi là hai
+                   nơi để lệch nhau. */
+                hat={N.canh_hat ?? hat} p={p} />
       ) : N.noi ? (
         <NenQue noi={N.noi} W={W} H={H} san={sanY} nguoi={NGUOI} t={t} />
       ) : (

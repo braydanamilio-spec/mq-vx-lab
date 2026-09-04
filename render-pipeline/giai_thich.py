@@ -3285,6 +3285,108 @@ def _nhan_chuong(tieu: list[str]) -> list[str]:
     return moi if len(set(moi)) > len(set(goc)) else goc
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# XEN KẼ ẢNH CF VỚI CẢNH VẼ BẰNG CODE                                        (4/9/2026)
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# ĐO ĐƯỢC TRƯỚC KHI SỬA: 18 kênh, tập 0, short + long = 1.640 nhịp, trong đó **999 nhịp
+# (60%) đặt một ảnh Cloudflare**. Riêng khuôn `canh` là 586/586 — một trăm phần trăm. Một
+# tập HOW LONG tiêu **134 ảnh**; 18 kênh một vòng là 2.412 ảnh. §16.5 đã đo hồ CF cạn sạch
+# ở 14.900 ảnh. Nên ở mức "vài nghìn video mỗi ngày" thì đây là một BỨC TƯỜNG, không phải
+# một nút thắt nới ra được — và không lời khuyên tối ưu nào đổi được điều đó.
+#
+# HAI CÂU HỎI, VÀ CHỈ CÂU THỨ HAI MỚI DẪN TỚI LỜI GIẢI
+#   sai : "làm sao gọi CF rẻ hơn?"      -> tiết kiệm vài chục phần trăm, tường vẫn ở đó
+#   đúng: "nhịp nào KHÔNG CẦN ảnh CF?"  -> đo được, và câu trả lời là phần lớn
+#
+# HAI LOẠI NHỊP KHÔNG CẦN ẢNH CF
+#
+#   1. NHỊP CÓ ĐỒ HOẠ PHỦ KHUNG (`so_lieu` · `dem` · `nhom` · `kinh_lup`) — 413 nhịp.
+#      Ở những nhịp này thứ mang nghĩa là con số, lưới biểu tượng, vòng kính lúp; nền chỉ
+#      là BỐI CẢNH. Trả tiền một ảnh AI để rồi đè 70% diện tích nó bằng một thẻ số là mua
+#      thứ không ai nhìn. Và có bằng chứng trực tiếp: cổng `kiem_chelap` sinh ra chính vì
+#      chữ trắng đè lên ảnh sáng ở đúng khuôn `so_lieu`.
+#
+#   2. CỨ BA NHỊP `canh` THÌ MỘT nhịp vẽ bằng code — 195 nhịp.
+#      Đây KHÔNG phải mẹo hạ hạn mức. Bộ luật nối cảnh của chính bộ này (§12.11) nói cảnh
+#      sau kế thừa cảnh trước và mệnh đề song song thì khung hình song song; một nhịp
+#      "đặt lại bối cảnh" xen giữa các nhịp tả chủ thể là NHỊP DỰNG PHIM, và nó có tác
+#      dụng ngay cả khi hạn mức CF vô hạn.
+#
+# CÒN LẠI THÌ CF VẼ — đúng chỗ nó hơn hẳn: một chủ thể CỤ THỂ đang làm một việc CỤ THỂ.
+# Mười nơi chốn trong `CanhVe.tsx` vẽ được NƠI CHỐN, không vẽ được "một người thợ xây hải
+# đăng năm 1890". Ranh giới đặt đúng ở đó.
+#
+# KẾT QUẢ ĐO LẠI: 391/1.640 = **24%** (trước: 60%). Một tập HOW LONG còn ~33 ảnh.
+#
+# VÀ NÓ PHẢI TẤT ĐỊNH: `hat` + chỉ số nhịp, không dùng `random`, để dựng lại một tập cũ ra
+# đúng cảnh cũ. Cùng lý do §13.13 cấm `hash()` của Python ở chỗ này.
+
+# Mỗi kênh dùng 3–4 nơi chốn HỢP THẾ GIỚI của nó, không dùng cả mười.
+# Đây là cùng cơ chế `mo_cam` của bộ Kling (§14.2): bộ lịch không được phát cho một kênh
+# thứ mà thế giới ấy không diễn được. Kênh nói về hoá đơn khách sạn thì không có sa mạc;
+# kênh sinh tồn thì không có văn phòng.
+NOI_KENH: dict[str, tuple[str, ...]] = {
+    "howlong":    ("duong", "dong", "pho"),
+    "howbig":     ("bien", "troi", "pho"),
+    "realcost":   ("van_phong", "pho", "nha_may"),
+    "howmuch":    ("kho", "van_phong", "nha_may"),
+    "whatif":     ("pho", "dong", "duong"),
+    "survive":    ("bang", "sa_mac", "dong"),
+    "dayinlife":  ("kho", "nha_may", "van_phong"),
+    "wheregoes":  ("kho", "nha_may", "bien"),
+    "therules":   ("van_phong", "pho", "duong"),
+    "speedof":    ("duong", "troi", "bien"),
+    "odds":       ("van_phong", "pho", "dong"),
+    "hiddenfee":  ("van_phong", "pho", "kho"),
+    "yearsof":    ("van_phong", "pho", "dong"),
+    "howloud":    ("pho", "nha_may", "kho"),
+    "whatweighs": ("kho", "bien", "nha_may"),
+    "rightnow":   ("pho", "duong", "troi"),
+    "howhot":     ("sa_mac", "nha_may", "bang"),
+    "smallest":   ("troi", "bien", "van_phong"),
+}
+
+# Khuôn có đồ hoạ phủ khung — nền chỉ là bối cảnh, không cần ảnh AI.
+KHUON_PHU = ("so_lieu", "dem", "nhom", "kinh_lup")
+
+# Cứ N nhịp `canh` thì một nhịp vẽ bằng code. 3 cho ra 24% CF; đổi số này là đổi thẳng
+# tỉ lệ, nên nó là NÚT VẶN duy nhất của chính sách — đừng rải điều kiện ra nhiều chỗ.
+CANH_MOI = 3
+
+
+def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
+    """Gán `canh_ve` (tên nơi chốn) cho nhịp sẽ vẽ bằng code, và bỏ `ve` của nhịp ấy.
+
+    Bỏ `ve` là phần quan trọng: `nen_gt.sinh_tap` quyết định gọi CF bằng chính trường ấy,
+    nên để lại `ve` là vẫn tốn một lượt gọi rồi vứt kết quả đi — tức "sửa" mà không tiết
+    kiệm gì, và không có gì báo.
+    """
+    noi = NOI_KENH.get(ma) or ("dong", "pho", "van_phong")
+    dem_canh = 0
+    for i, n in enumerate(nhip):
+        kh = n.get("khuon") or ""
+        lay = False
+        if kh in KHUON_PHU:
+            lay = True
+        elif kh == "canh":
+            dem_canh += 1
+            lay = (dem_canh % CANH_MOI == 0)
+        if not lay:
+            continue
+        n["canh_ve"] = noi[(hat + i) % len(noi)]
+        # ── HẠT RIÊNG CHO TỪNG NHỊP  (4/9/2026, sau khi SOI KHUNG) ──────────────────────
+        # `CanhVe` sinh đường bao lởm chởm và vị trí vật từ một hạt. Bản đầu truyền `hat`
+        # của TẬP, nên mọi nhịp `duong` trong một tập ra **đúng cùng một con đường** — và
+        # một tập 16 nhịp có tới ba nhịp `duong`. Đó chính là lời anh chê từ đầu: *"cứ lặp
+        # đi lặp lại cùng 1 motip hoài"*, chỉ là ở một tầng khác.
+        #
+        # Số đo đẹp che mất nó: mười nơi chốn được dùng đều, và "mười nơi dùng đều" KHÔNG
+        # phải thứ người xem cảm được — thứ họ cảm được là "hai cảnh trong một tập có
+        # trông khác nhau không" (§14.9, đã trả giá đúng chỗ này ở bộ Kling).
+        n["canh_hat"] = (hat + i * 7919) % 100000
+        n.pop("ve", None)
+
+
 def _danh_tu(s: str) -> str:
     """Danh từ chính của một cụm — dùng làm NHÃN cột và nhãn vế so sánh.  (3/9/2026)
 
@@ -3549,6 +3651,9 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     nhip = _rai_chart(ma, nhip, idx)
     # Khử lặp gần — chạy SAU mọi lượt rải và sau khối hook, vì nó đọc thứ tự cuối cùng.
     nhip = _tranh_lap_gan(nhip, ma)
+    # Xen kẽ ảnh CF với cảnh vẽ bằng code — cũng phải chạy SAU mọi lượt chèn, vì nó đếm
+    # nhịp `canh` theo THỨ TỰ CUỐI CÙNG. Xem khối `NOI_KENH` để biết vì sao và tỉ lệ bao nhiêu.
+    _rai_canh_ve(nhip, ma, _lech_kenh(ma) + idx * 7919)
 
     return k, tieu, hook, hook_phu, nhip, muc
 
@@ -3593,7 +3698,11 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             _mk = MAU_KENH.get(ma, {})
             _na = nen_gt.sinh_tap(ma, idx, nhip, _ks, doc=doc,
                                   mau_chu=_mk.get("chu", ""), mau_nen=_mk.get("nen", ""))
+            # Mẫu số chỉ đếm nhịp THẬT SỰ đặt hàng CF. Nhịp `canh_ve` vẽ bằng code là
+            # nhịp đã có hình, không phải nhịp thiếu hình — đếm chúng vào đây thì dòng
+            # "vẽ 39/134 cảnh" sẽ đọc ra như một lượt hỏng nặng ngay hôm đầu bật xen kẽ.
             _cn = sum(1 for x in nhip if x.get("ve"))
+            _cv = sum(1 for x in nhip if x.get("canh_ve"))
             # NÓI RÕ VÌ SAO THIẾU, KHÔNG CHỈ NÓI THIẾU BAO NHIÊU  (2/9/2026)
             # "vẽ 6/42" một mình không hành động được: 36 cảnh thiếu vì cạn hạn mức thì phải đi
             # thêm khoá CF; vì prompt bị chặn NSFW thì phải sửa chữ; vì bốn lượt vẽ đều hỏng thì
@@ -3622,11 +3731,15 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             if len(nhip) >= 4:
                 _dau = next((x for x in nhip if x.get("nenAnh")), None)
                 _cuoi = nhip[-1]
-                if _dau is not None and not _cuoi.get("nenAnh") and _dau is not _cuoi:
+                # `not _cuoi.get("canh_ve")`: nhịp cuối vẽ bằng code thì nó ĐÃ có hình.
+                # Gán `nenAnh` đè lên nó là xoá mất cảnh vẽ code — và engine ưu tiên
+                # `nenAnh` nên sẽ không có lỗi nào báo, chỉ là mất một cảnh.
+                if (_dau is not None and not _cuoi.get("nenAnh")
+                        and not _cuoi.get("canh_ve") and _dau is not _cuoi):
                     _cuoi["nenAnh"] = _dau["nenAnh"]
                     print("   ↩ kết vòng: cảnh cuối dùng lại hình mở đầu (ghép liền khi phát lại)")
 
-            print(f"   🎨 vẽ {_na}/{_cn} cảnh bằng CF"
+            print(f"   🎨 vẽ {_na}/{_cn} cảnh bằng CF · {_cv} cảnh vẽ bằng code"
                   + ("" if _na == _cn else "  (số còn lại dùng nền vẽ bằng code"
                      + (" — " + " · ".join(_ly) if _ly else "") + ")"))
         else:

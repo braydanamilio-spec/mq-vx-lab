@@ -1,0 +1,502 @@
+import React from "react";
+import { AbsoluteFill } from "remotion";
+import { chanTroi, _tron, _pha } from "./Khuon";
+
+/* ══════════════════════════════════════════════════════════════════════════════════════
+   CẢNH VẼ BẰNG CODE — lớp XEN KẼ với ảnh CF, không phải lớp dự phòng   (4/9/2026)
+   ══════════════════════════════════════════════════════════════════════════════════════
+
+   VÌ SAO CÓ TỆP NÀY
+   ─────────────────
+   Đo trên 18 kênh, tập 0, cả short lẫn long: **999/1.640 nhịp (60%) đặt một ảnh CF**, và
+   riêng nhịp `canh` là 586/586 — một trăm phần trăm. Một tập HOW LONG tiêu **134 ảnh**.
+   §16.5 đã đo hồ CF cạn sạch ở 14.900 ảnh. Nên ở mức "vài nghìn video mỗi ngày" thì đường
+   ảnh CF là một bức tường, không phải một nút thắt nới ra được.
+
+   Repo ĐÃ có một lớp vẽ bằng code (`que/NenQue`) và `KichGiaiThich` đã gọi nó — nhưng chỉ
+   khi `nenAnh` VẮNG, tức nó là lưới an toàn chứ chưa bao giờ là một lựa chọn có chủ ý. Và
+   mười nơi chốn của nó đều là trong nhà (bếp · phòng khách · phòng tắm): thế giới của bộ
+   truyện tranh sinh ra nó, không phải thế giới bộ giải thích (kho hàng · băng giá · vũ trụ
+   · nhà máy). Đúng §12.5 — một tài sản đúng ở ngữ cảnh nó sinh ra, sai ở ngữ cảnh mới.
+
+   ĐIỀU KIỆN ĐỂ XEN KẼ KHÔNG ĐỌC RA "CHẮP VÁ"
+   ──────────────────────────────────────────
+   Người xem chấp nhận hai chất liệu trong một phim khi chúng chia nhau BỐN thứ. Cả bốn
+   đều là ràng buộc mã, không phải lời khuyên:
+
+     1. cùng ĐƯỜNG CHÂN TRỜI  -> `chanTroi(H, hat)`, đúng hàm mà `NenPhong` dùng
+     2. cùng BẢNG MÀU         -> mọi màu pha ra từ `nen` + `mau` của kênh, không hằng số rời
+     3. cùng LUẬT TIẾP ĐẤT    -> vật đứng trên sàn thì có bóng ellipse, không trừ vật nào
+     4. cùng SÀN SẪM DẦN Ở ĐÁY-> để phụ đề trắng giữ tương phản ≥ 4,5:1 (WCAG AA)
+
+   Thiếu (1) thì hai loại nhịp có hai mặt sàn; thiếu (4) thì cổng `kiem_hinh` sẽ đánh trượt
+   đúng những nhịp vẽ bằng code — và đó là cách chắc chắn để kết luận nhầm rằng "vẽ code
+   xấu hơn" trong khi thứ sai chỉ là một dải sáng ở đáy khung.
+
+   VÌ SAO SILHOUETTE, KHÔNG PHẢI NÉT VIỀN
+   ──────────────────────────────────────
+   §15.9 đã trả giá: con hươu vẽ bằng ba đường KHÔNG TÔ, thu xuống 34% thì ra một cái móc
+   câu — độ dày nét không co theo hình. Mọi hình ở đây là KHỐI ĐẶC, và chiều sâu làm bằng
+   ba nấc giá trị của cùng một sắc, không làm bằng đường viền.
+
+   VÀ VÌ SAO PROFILE PHẢI LỞM CHỞM
+   ───────────────────────────────
+   Thứ tách "được thiết kế" khỏi "ghép bằng hình chữ nhật" là đường bao KHÔNG ĐỀU. `_rang`
+   sinh dãy lệch tất định từ hạt, nên cùng một tập luôn ra cùng một cảnh (dựng lại được),
+   còn hai tập khác nhau ra hai đường bao khác nhau.
+   ══════════════════════════════════════════════════════════════════════════════════════ */
+
+/** Dãy số tất định trong [0,1) — thay cho Math.random, để dựng lại tập cũ ra đúng hình cũ. */
+const _rang = (hat: number, n: number): number[] => {
+  const ra: number[] = [];
+  let x = (Math.abs(Math.trunc(hat)) % 100000) + 12345;
+  for (let i = 0; i < n; i++) {
+    x = (x * 1103515245 + 12345) & 0x7fffffff;   // LCG cổ điển, đủ cho việc lệch hình
+    ra.push((x >>> 8) / 0x7fffff);
+  }
+  return ra;
+};
+
+/** Đường bao lởm chởm từ trái sang phải, đóng kín xuống đáy `day`. */
+const _bao = (W: number, y0: number, bien: number, day: number,
+              hat: number, dot: number): string => {
+  const r = _rang(hat, dot + 1);
+  const b = [`M 0 ${day}`, `L 0 ${y0 + (r[0] - 0.5) * bien}`];
+  for (let i = 1; i <= dot; i++) {
+    const x = (W * i) / dot;
+    b.push(`L ${x.toFixed(1)} ${(y0 + (r[i] - 0.5) * bien).toFixed(1)}`);
+  }
+  b.push(`L ${W} ${day}`, "Z");
+  return b.join(" ");
+};
+
+/** Đường bao răng cưa NHỌN — núi, băng, thông. Cùng hạt thì cùng hình. */
+const _rang_cua = (W: number, y0: number, cao: number, day: number,
+                   hat: number, dinh: number): string => {
+  const r = _rang(hat + 77, dinh * 2);
+  const b = [`M 0 ${day}`, `L 0 ${y0}`];
+  for (let i = 0; i < dinh; i++) {
+    const x0 = (W * i) / dinh, x1 = (W * (i + 0.5)) / dinh, x2 = (W * (i + 1)) / dinh;
+    b.push(`L ${x1.toFixed(1)} ${(y0 - cao * (0.45 + r[i] * 0.55)).toFixed(1)}`,
+           `L ${x2.toFixed(1)} ${(y0 - cao * r[dinh + i] * 0.28).toFixed(1)}`);
+    void x0;
+  }
+  b.push(`L ${W} ${day}`, "Z");
+  return b.join(" ");
+};
+
+/** Bóng tiếp đất — MỌI vật đứng trên sàn đều phải có, không trừ vật nào (ràng buộc 3). */
+const Bong: React.FC<{ x: number; y: number; r: number }> = ({ x, y, r }) => (
+  <ellipse cx={x} cy={y} rx={r} ry={r * 0.17} fill="#000000" opacity={0.13} />
+);
+
+type Bang = { xa: string; giua: string; gan: string; troi: string; troiD: string;
+              san: string; sanD: string; sanDay: string; nhan: string };
+
+/* ── MỘT NƠI CHỐN CÓ ÁNH SÁNG CỦA RIÊNG NÓ  (4/9/2026, sau khi SOI KHUNG) ────────────────
+   Bản đầu pha MỌI màu từ `nen` + `mau` của kênh — nghe đúng ("giữ bản sắc kênh"), và soi
+   khung thì sa mạc của SURVIVE ra **nâu tím**, băng giá cũng ra nâu tím. Hai nơi lẽ ra
+   không thể nhầm được lại trông y hệt nhau, và không nơi nào đọc ra đúng tên của nó.
+
+   Cùng họ lỗi số 6 của CLAUDE.md: *mượn một giá trị cho việc nó không sinh ra để làm*.
+   Màu thương hiệu sinh ra để nói "đây là kênh nào", không sinh ra để nói "đây là đâu".
+
+   Nên mỗi nơi khai một SẮC NEO, và bảng màu pha kênh → sắc neo 45%: đủ để cát ra cát và
+   băng ra băng, vẫn đủ để hai kênh cùng vẽ sa mạc ra hai sắc cát khác nhau. Nơi không
+   khai sắc neo (phố, đồng, kho…) thì giữ nguyên màu kênh như cũ — chỉ những nơi có ánh
+   sáng ĐẶC TRƯNG mới cần, và ép sắc cho mọi nơi là mất bản sắc kênh để lấy về không gì. */
+const SAC_NOI: Record<string, [number, number]> = {
+  // [góc sắc độ, độ bão hoà]. Không khai bằng mã hex: trộn hex là trộn cả ĐỘ SÁNG, mà độ
+  // sáng ở đây chính là nấc chiều sâu — trộn vào là san phẳng nó.
+  sa_mac: [38, 0.52],    // cát dưới nắng cao
+  bang:   [200, 0.34],   // băng trong bóng râm — lam nhạt, KHÔNG trắng tinh
+  bien:   [198, 0.40],
+  troi:   [232, 0.44],   // trời đêm sâu, để sao đọc được
+};
+
+/* Kéo SẮC và ĐỘ BÃO HOÀ về phía một nơi chốn, GIỮ NGUYÊN độ sáng.
+
+   Bản đầu trộn thẳng hai mã hex và soi khung thì không ăn: nền của SURVIVE vốn là xám
+   `#E8E9E6`, nên trộn 45% về một sắc cát nhạt chỉ làm nó sáng hơn — `#c0aba5` thành
+   `#c7c4c6`, vẫn xám. Đo ra ngay bằng `node`, và đó là lý do phải đo thay vì nhìn mã.
+
+   Độ sáng phải giữ nguyên vì ba nấc `xa`/`giua`/`gan` LÀ chiều sâu của cảnh; đổi chúng là
+   phá thứ làm cảnh có lớp. Nên phép đúng là chuyển sắc, không phải trộn màu. */
+export const _sacHoa = (hex: string, h2: number, s2: number, t: number): string => {
+  const m = /^#([0-9a-f]{6})$/i.exec((hex || "").trim());
+  if (!m) return hex;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255);
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  let h = 0;
+  if (d) {
+    h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h *= 60; if (h < 0) h += 360;
+  }
+  const sa = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+  // ── SẮC LÀ MỘT ĐÍCH, KHÔNG PHẢI MỘT QUÃNG ĐƯỜNG  (sửa sau khi ĐO bằng `node`) ───────
+  // Bản đầu nội suy sắc theo đường ngắn nhất với hệ số `t`. Đo ra: nền xám của SURVIVE ở
+  // sắc 14°, đích băng ở 200° — hai giá trị gần ĐỐI CỰC, nên đi 72% đường ngắn nhất dừng
+  // lại ở 249°: **màu tím**. Đúng thứ luật nội suy sinh ra để tránh, ở một ca nó không
+  // che được. Và mắt không bắt được điều này khi đọc mã — chỉ phép đo bắt.
+  //
+  // Nghĩ lại thì "đi 72% quãng đường tới sắc của cát" vốn không có nghĩa gì: sa mạc thì
+  // MÀU CÁT, không phải màu lưng chừng giữa cát và màu kênh. Nên sắc lấy trọn từ nơi
+  // chốn, còn `t` chỉ điều tiết ĐỘ BÃO HOÀ — đó mới là chỗ giữ được sức mạnh của kênh
+  // (kênh trầm thì sa mạc trầm, kênh tươi thì sa mạc tươi), và nó không bao giờ đổi sắc.
+  const H = ((h2 % 360) + 360) % 360;
+  const S = sa + (s2 - sa) * t;
+  void h;
+  const C = (1 - Math.abs(2 * l - 1)) * S, X = C * (1 - Math.abs(((H / 60) % 2) - 1));
+  const mm = l - C / 2;
+  const k = Math.floor(H / 60) % 6;
+  const v = [[C, X, 0], [X, C, 0], [0, C, X], [0, X, C], [X, 0, C], [C, 0, X]][k];
+  return "#" + v.map((x) => Math.round((x + mm) * 255).toString(16).padStart(2, "0")).join("");
+};
+
+/** Nơi TRONG NHÀ: phía trên không phải bầu trời mà là tường/trần. */
+const TRONG_NHA = new Set(["kho", "van_phong", "nha_may"]);
+
+/** Bảng màu của một cảnh — pha TỪ màu kênh, rồi kéo về sắc neo của nơi chốn. */
+const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
+  troi:   _pha(_tron(nen, mau, 0.06 + am * 0.05), 0.16),
+  troiD:  _pha(_tron(nen, mau, 0.16 + am * 0.10), 0.02),
+  xa:     _pha(_tron(nen, mau, 0.30), -0.06),
+  giua:   _pha(_tron(nen, mau, 0.44), -0.20),
+  gan:    _pha(_tron(nen, mauPhu || mau, 0.52), -0.34),
+  san:    _pha(_tron(nen, mau, 0.22), -0.16),
+  sanD:   _pha(_tron(nen, mau, 0.26), -0.34),
+  // Đáy khung: đúng mức `NenPhong` đo được để chữ trắng đạt 4,5:1 (§ràng buộc 4).
+  sanDay: _pha(_tron(nen, mau, 0.30), -0.70),
+  nhan:   _pha(_tron(nen, mauPhu || mau, 0.62), -0.44),
+});
+
+type P = { W: number; H: number; san: number; c: Bang; hat: number; r: number[] };
+
+/* ── MƯỜI NƠI CHỐN CỦA THẾ GIỚI GIẢI THÍCH ──────────────────────────────────────────────
+   Chọn mười, không chọn mười sáu: §15.9 và §14.4 đều dạy rằng một hình chỉ đúng ở cỡ nó
+   được vẽ ra thì không phải hình đúng, và mười nơi vẽ kỹ hơn hẳn mười sáu nơi vẽ vội.
+   Mỗi nơi nhận `hat` nên có ba biến thể theo tập -> 30 diện mạo, xen kẽ với ảnh CF.        */
+const NOI_VE: Record<string, (p: P) => React.ReactNode> = {
+
+  /* KHO HÀNG — giá cao, thùng, vì kèo mái. Thế giới của DAY IN LIFE · WHAT WEIGHS · HOW MUCH */
+  kho: ({ W, H, san, c, hat, r }) => {
+    const cao = san - H * 0.30, k = 3 + Math.abs(hat) % 2;
+    return (<g>
+      {/* vì kèo mái — nét chéo lặp, thứ nói "nhà xưởng" chỉ bằng một hình */}
+      {Array.from({ length: 7 }, (_, i) => (
+        <path key={`k${i}`} d={`M ${(W * i) / 6} ${H * 0.06} L ${(W * (i + 0.5)) / 6} ${H * 0.16}
+                                L ${(W * (i + 1)) / 6} ${H * 0.06}`}
+              stroke={c.xa} strokeWidth={W * 0.006} fill="none" opacity={0.5} />
+      ))}
+      {Array.from({ length: k }, (_, i) => {
+        const bw = W / (k + 0.4), x = bw * (i + 0.2);
+        const h = (san - cao) * (0.74 + r[i] * 0.26);
+        return (<g key={i}>
+          <rect x={x} y={san - h} width={bw * 0.8} height={h} fill={c.giua} />
+          {[0.30, 0.62].map((t, j) => (
+            <rect key={j} x={x} y={san - h + h * t} width={bw * 0.8} height={H * 0.012}
+                  fill={c.gan} opacity={0.8} />
+          ))}
+          {/* thùng trên kệ — kích cỡ lệch nhau, đều nhau thì đọc ra hình nền lặp */}
+          {[0, 1].map((j) => (
+            <rect key={`t${j}`} x={x + bw * (0.06 + j * 0.40)} y={san - h + h * 0.30 - H * 0.05}
+                  width={bw * 0.30} height={H * (0.038 + r[(i + j) % r.length] * 0.016)}
+                  fill={c.nhan} opacity={0.9} />
+          ))}
+        </g>);
+      })}
+    </g>);
+  },
+
+  /* NHÀ MÁY — ống khói, bồn, cầu trục. HOW HOT · WHERE GOES · REAL COST */
+  nha_may: ({ W, H, san, c, r }) => (
+    <g>
+      <path d={_bao(W, san - H * 0.20, H * 0.09, san, 991, 8)} fill={c.xa} />
+      {[0.10, 0.30, 0.72].map((x, i) => (
+        <rect key={i} x={W * x} y={san - H * (0.26 + r[i] * 0.14)} width={W * 0.055}
+              height={H * (0.26 + r[i] * 0.14)} fill={c.giua} />
+      ))}
+      {[0.46, 0.60].map((x, i) => (
+        <g key={`b${i}`}>
+          <rect x={W * x} y={san - H * 0.17} width={W * 0.11} height={H * 0.17}
+                rx={W * 0.05} fill={c.gan} />
+          <Bong x={W * (x + 0.055)} y={san} r={W * 0.075} />
+        </g>
+      ))}
+      {/* đường ống nối hai bồn — chi tiết nhỏ nhưng nó là thứ nói "đây là nhà máy" */}
+      <rect x={W * 0.46} y={san - H * 0.13} width={W * 0.25} height={H * 0.016} fill={c.nhan} />
+    </g>
+  ),
+
+  /* PHỐ — đường bao nhà, cột đèn, lòng đường. HOW LOUD · WHAT IF · RIGHT NOW · ODDS */
+  pho: ({ W, H, san, c, hat, r }) => {
+    const n = 7 + Math.abs(hat) % 3;
+    return (<g>
+      {Array.from({ length: n }, (_, i) => {
+        const bw = W / n, h = H * (0.14 + r[i] * 0.26);
+        return (<g key={i}>
+          <rect x={bw * i} y={san - h} width={bw * 0.94} height={h}
+                fill={i % 2 ? c.giua : c.xa} />
+          {/* cửa sổ: lưới chấm sáng, đủ để đọc ra "toà nhà" mà không thành hoa văn */}
+          {Array.from({ length: Math.max(2, Math.floor(h / (H * 0.055))) }, (_, j) => (
+            <rect key={j} x={bw * i + bw * 0.16} y={san - h + H * 0.022 + j * H * 0.055}
+                  width={bw * 0.62} height={H * 0.018}
+                  fill={c.troi} opacity={r[(i + j) % r.length] > 0.42 ? 0.5 : 0.14} />
+          ))}
+        </g>);
+      })}
+      <g>
+        <rect x={W * 0.80} y={san - H * 0.30} width={W * 0.012} height={H * 0.30} fill={c.gan} />
+        <circle cx={W * 0.806} cy={san - H * 0.30} r={W * 0.026} fill={c.nhan} />
+        <Bong x={W * 0.806} y={san} r={W * 0.030} />
+      </g>
+    </g>);
+  },
+
+  /* ĐƯỜNG DÀI — dải đường thu về điểm tụ, cột mốc, đồi xa. HOW LONG · SPEED OF */
+  duong: ({ W, H, san, c, r }) => (
+    <g>
+      <path d={_bao(W, san - H * 0.13, H * 0.07, san, 313, 9)} fill={c.xa} />
+      {/* ── CHIỀU CỦA CON ĐƯỜNG  (sửa 4/9/2026 sau khi SOI KHUNG) ────────────────────────
+          Bản đầu vẽ rộng ở chân trời và hẹp dần xuống đáy khung. Soi khung thì nó đọc ra
+          một CÁI PHỄU khoét xuống sàn, không đọc ra con đường — vì phối cảnh thật thì
+          chỗ GẦN mắt là chỗ RỘNG, và chân trời là chỗ hẹp.
+          Không lỗi nào báo: hình vẫn dựng, màu vẫn đúng, cổng vẫn xanh. Chỉ có mắt thấy.
+          Đúng §5 — cổng chấm điểm chỉ biết thứ nó được dạy để đo. */}
+      {/* Lề đường sáng hơn mặt đường một nấc: không có nó thì hình nêm đọc ra một VỆT
+          SÁNG chiếu xuống sàn chứ không ra con đường. Hai vệt lề là thứ rẻ nhất nói
+          "đây là mặt đường", rẻ hơn nhiều so với vẽ thêm vật hai bên. */}
+      {/* Miệng đường ở chân trời phải RỘNG, không thu về một điểm: thu về điểm thì hai
+          cạnh gặp nhau và hình đọc ra KIM TỰ THÁP. Đường thật ở xa vẫn còn bề ngang —
+          nó biến mất vì bị vật che, không vì hẹp bằng không. */}
+      <path d={`M ${W * 0.415} ${san} L ${W * 0.585} ${san}
+                L ${W * 0.98} ${H * 1.02} L ${W * 0.02} ${H * 1.02} Z`}
+            fill={c.xa} opacity={0.85} />
+      <path d={`M ${W * 0.435} ${san} L ${W * 0.565} ${san}
+                L ${W * 0.93} ${H * 1.02} L ${W * 0.07} ${H * 1.02} Z`}
+            fill={c.giua} />
+      {/* Vạch tim đường: về phía chân trời thì NGẮN LẠI, HẸP LẠI và GẦN NHAU — ba thứ cùng
+          co mới ra chiều sâu; co một thứ thì nó chỉ ra một dãy gạch nhỏ dần. */}
+      {[0.015, 0.055, 0.115, 0.200, 0.315].map((t, i) => (
+        <rect key={i} x={W * 0.5 - W * (0.004 + t * 0.030)} y={san + H * t}
+              width={W * (0.008 + t * 0.060)} height={H * (0.008 + t * 0.045)}
+              fill={c.troi} opacity={0.55 + t} />
+      ))}
+      {/* Cột điện: khoảng cách và chiều cao đều LỆCH theo hạt. Hàng cột cách đều tăm tắp
+          là dấu hiệu số một của "ghép bằng vòng lặp" — mắt bắt được nhịp đều ngay cả khi
+          không nhìn thẳng vào nó. Hai cột gần mép ngoài thấp hơn: gợi chiều sâu. */}
+      {[0.09, 0.27, 0.71, 0.93].map((x0, i) => {
+        const x = x0 + (r[i] - 0.5) * 0.05;
+        const h = 0.09 + r[(i + 3) % r.length] * 0.08;
+        return (<g key={`c${i}`}>
+          <rect x={W * x} y={san - H * h} width={W * 0.009} height={H * h} fill={c.gan} />
+          <rect x={W * (x - 0.016)} y={san - H * h} width={W * 0.041} height={H * 0.008}
+                fill={c.gan} />
+          <Bong x={W * (x + 0.005)} y={san} r={W * 0.022} />
+        </g>);
+      })}
+    </g>
+  ),
+
+  /* ĐỒNG — đồi thoải, hàng cây, hàng rào. WHAT IF · YEARS OF · SURVIVE */
+  dong: ({ W, H, san, c, hat, r }) => (
+    <g>
+      <path d={_bao(W, san - H * 0.15, H * 0.10, san, hat + 5, 6)} fill={c.xa} />
+      <path d={_bao(W, san - H * 0.07, H * 0.05, san, hat + 31, 8)} fill={c.giua} />
+      {[0.12, 0.26, 0.66, 0.86].map((x, i) => {
+        const s = H * (0.10 + r[i] * 0.07);
+        return (<g key={i}>
+          <rect x={W * x - W * 0.008} y={san - s * 0.55} width={W * 0.016} height={s * 0.55}
+                fill={c.nhan} />
+          <ellipse cx={W * x} cy={san - s * 0.72} rx={s * 0.42} ry={s * 0.38} fill={c.gan} />
+          <Bong x={W * x} y={san} r={s * 0.40} />
+        </g>);
+      })}
+    </g>
+  ),
+
+  /* BIỂN — dải nước, con sóng, mỏm đá. HOW BIG · WHERE GOES · SMALLEST */
+  bien: ({ W, H, san, c, r }) => (
+    <g>
+      <rect x={0} y={san - H * 0.20} width={W} height={H * 0.20} fill={c.giua} />
+      {[0.04, 0.09, 0.15].map((t, i) => (
+        <path key={i} d={_bao(W, san - H * (0.20 - t), H * 0.012, san, 700 + i * 13, 12)}
+              fill={c.xa} opacity={0.55 - i * 0.12} />
+      ))}
+      {[0.16, 0.82].map((x, i) => (
+        <g key={`d${i}`}>
+          <path d={`M ${W * (x - 0.07)} ${san} L ${W * (x - 0.02)} ${san - H * (0.07 + r[i] * 0.05)}
+                    L ${W * (x + 0.03)} ${san - H * 0.03} L ${W * (x + 0.08)} ${san} Z`}
+                fill={c.gan} />
+          <Bong x={W * x} y={san} r={W * 0.075} />
+        </g>
+      ))}
+    </g>
+  ),
+
+  /* BĂNG — sống băng răng cưa, tảng trôi, trời lạnh. SURVIVE · HOW HOT (cực lạnh) */
+  bang: ({ W, H, san, c, hat, r }) => (
+    <g>
+      <path d={_rang_cua(W, san - H * 0.06, H * 0.22, san, hat + 9, 5)} fill={c.xa} />
+      <path d={_rang_cua(W, san - H * 0.01, H * 0.11, san, hat + 61, 7)} fill={c.giua} />
+      {/* Tảng băng nổi: DẸT và SÁNG hơn mặt băng, có một mặt vát bắt sáng. Bản đầu vẽ hình
+          thang TỐI hơn nền nên nó đọc ra ba cái lều. Băng nhận ra được nhờ nó sáng hơn thứ
+          quanh nó — đó là toàn bộ lý do băng trông như băng. */}
+      {[0.20, 0.57, 0.87].map((x, i) => {
+        const w = 0.10 + r[i] * 0.05, h = 0.020 + r[(i + 1) % r.length] * 0.022;
+        return (<g key={i}>
+          <path d={`M ${W * (x - w)} ${san + H * 0.022}
+                    L ${W * (x - w * 0.55)} ${san - H * h}
+                    L ${W * (x + w * 0.40)} ${san - H * h * 0.72}
+                    L ${W * (x + w)} ${san + H * 0.022} Z`}
+                fill={_pha(c.troi, 0.10)} />
+          <path d={`M ${W * (x - w * 0.55)} ${san - H * h}
+                    L ${W * (x + w * 0.40)} ${san - H * h * 0.72}
+                    L ${W * (x + w * 0.20)} ${san + H * 0.022}
+                    L ${W * (x - w * 0.20)} ${san + H * 0.022} Z`}
+                fill={c.xa} opacity={0.45} />
+        </g>);
+      })}
+    </g>
+  ),
+
+  /* SA MẠC — cồn cát chồng lớp, khối đá, mặt trời thấp. HOW HOT · SURVIVE */
+  sa_mac: ({ W, H, san, c, hat, r }) => (
+    <g>
+      {/* Mặt trời phải SÁNG HƠN trời. Bản đầu tô bằng `c.gan` — nấc SẪM NHẤT của bảng —
+          nên nó ra một vệt tối, và một vệt tối trên trời đọc ra vết bẩn chứ không ra mặt
+          trời. Cùng họ §6: mượn một giá trị cho việc nó không sinh ra để làm. */}
+      <circle cx={W * (0.22 + r[0] * 0.56)} cy={san - H * 0.21} r={W * 0.075}
+              fill={_pha(c.troi, 0.42)} />
+      <path d={_bao(W, san - H * 0.12, H * 0.07, san, hat + 17, 5)} fill={c.xa} />
+      <path d={_bao(W, san - H * 0.05, H * 0.05, san, hat + 43, 4)} fill={c.giua} />
+      {/* Khối đá: đa giác lệch, KHÔNG phải chữ nhật bo góc. Soi khung bản đầu thì hai hình
+          chữ nhật đọc ra hai cục xám vô nghĩa — đá nhận ra được nhờ mặt vát và đỉnh lệch,
+          không nhờ nó đứng trên mặt đất. Cùng bài học §15.5 (vây cá voi nhận ra nhờ mép
+          sau cong, không nhờ nó nhọn). */}
+      {[0.66, 0.81].map((x, i) => {
+        // Bề ngang 9–15% W, không phải 5–8,5%: soi khung bản đầu thì hai khối ra hai cái
+        // gai mảnh. Khối đá đọc được là nhờ nó BỆ VỆ — cao mà hẹp thì thành cột, không
+        // thành đá. Cùng bài học §15.9: hình phải giữ được bóng dáng, không giữ được nét.
+        const w = 0.09 + r[i] * 0.06, h = 0.05 + r[(i + 2) % r.length] * 0.05;
+        return (<g key={i}>
+          <path d={`M ${W * x} ${san}
+                    L ${W * (x + w * 0.30)} ${san - H * h}
+                    L ${W * (x + w * 0.64)} ${san - H * h * 0.82}
+                    L ${W * (x + w)} ${san} Z`} fill={c.nhan} />
+          <path d={`M ${W * (x + w * 0.30)} ${san - H * h}
+                    L ${W * (x + w * 0.64)} ${san - H * h * 0.82}
+                    L ${W * (x + w * 0.58)} ${san} L ${W * (x + w * 0.36)} ${san} Z`}
+                fill={c.gan} opacity={0.45} />
+          <Bong x={W * (x + w * 0.5)} y={san} r={W * w * 0.72} />
+        </g>);
+      })}
+    </g>
+  ),
+
+  /* VĂN PHÒNG — bàn, màn hình, rèm lá dọc. THE RULES · HIDDEN FEE · REAL COST */
+  van_phong: ({ W, H, san, c, r }) => (
+    <g>
+      {Array.from({ length: 9 }, (_, i) => (
+        <rect key={i} x={W * (0.04 + i * 0.105)} y={H * 0.10} width={W * 0.055}
+              height={san - H * 0.34} fill={c.xa} opacity={i % 2 ? 0.5 : 0.28} />
+      ))}
+      {[0.14, 0.56].map((x, i) => (
+        <g key={`b${i}`}>
+          <rect x={W * x} y={san - H * 0.115} width={W * 0.30} height={H * 0.020} fill={c.gan} />
+          <rect x={W * (x + 0.02)} y={san - H * 0.095} width={W * 0.016} height={H * 0.095}
+                fill={c.giua} />
+          <rect x={W * (x + 0.26)} y={san - H * 0.095} width={W * 0.016} height={H * 0.095}
+                fill={c.giua} />
+          <rect x={W * (x + 0.09)} y={san - H * (0.20 + r[i] * 0.02)} width={W * 0.13}
+                height={H * 0.085} rx={W * 0.006} fill={c.nhan} />
+          <Bong x={W * (x + 0.15)} y={san} r={W * 0.16} />
+        </g>
+      ))}
+    </g>
+  ),
+
+  /* TRỜI — sao, vành hành tinh, đường cong mặt đất. HOW BIG · SPEED OF · SMALLEST */
+  troi: ({ W, H, san, c, hat, r }) => (
+    <g>
+      {Array.from({ length: 26 }, (_, i) => {
+        const q = _rang(hat + i * 7, 2);
+        return (<circle key={i} cx={W * q[0]} cy={H * 0.04 + q[1] * (san - H * 0.16)}
+                        r={W * (0.0035 + q[1] * 0.004)} fill={c.troiD}
+                        opacity={0.35 + q[0] * 0.5} />);
+      })}
+      <circle cx={W * (0.24 + r[0] * 0.5)} cy={H * 0.15} r={W * 0.10} fill={c.giua} />
+      <circle cx={W * (0.24 + r[0] * 0.5) - W * 0.03} cy={H * 0.13} r={W * 0.075}
+              fill={c.xa} opacity={0.55} />
+      <path d={`M ${-W * 0.2} ${san + H * 0.16} Q ${W * 0.5} ${san - H * 0.10} ${W * 1.2} ${san + H * 0.16} Z`}
+            fill={c.gan} />
+    </g>
+  ),
+};
+
+export const TEN_NOI_VE = Object.keys(NOI_VE);
+
+/* ══════════════════════════════════════════════════════════════════════════════════════ */
+export const CanhVe: React.FC<{
+  W: number; H: number; noi: string; nen: string; mau: string; mauPhu?: string;
+  hat?: number; p?: number; am?: number;
+}> = ({ W, H, noi, nen, mau, mauPhu = "", hat = 0, p = 0, am = 0 }) => {
+  const san = chanTroi(H, hat);
+  const sac = SAC_NOI[noi];
+  const c0 = _bang(nen, mau, mauPhu, am);
+  // 0,72 cho các dải cảnh: đủ để cát ra cát và băng ra băng. `sanDay` chỉ 0,20 — đó là dải
+  // phụ đề, và mọi phép đổi màu ở đó phải nhường cho ràng buộc tương phản 4,5:1.
+  const c: Bang = sac
+    ? (Object.fromEntries(Object.entries(c0).map(
+        ([k, v]) => [k, _sacHoa(v as string, sac[0], sac[1], k === "sanDay" ? 0.20 : 0.72)])) as Bang)
+    : c0;
+  const trong = TRONG_NHA.has(noi);
+  const r = _rang(hat + 101, 8);
+  const ve = NOI_VE[noi] || NOI_VE.dong;
+  const k = Math.abs(hat) % 6;
+  const xS = W * (k === 2 ? 0.24 : k === 5 ? 0.78 : 0.50);   // cùng quy tắc nguồn sáng với NenPhong
+  const id = `cv${Math.abs(hat) % 9973}`;
+
+  return (
+    <AbsoluteFill>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute" }}>
+        <defs>
+          <linearGradient id={`${id}t`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={c.troi} />
+            <stop offset="100%" stopColor={c.troiD} />
+          </linearGradient>
+          {/* Sàn sẫm dần: ba chặng, chặng cuối chỉ ở 18% đáy — cùng cách `NenPhong` đạt
+              4,5:1 cho chữ trắng mà không tối cả căn cảnh (§ràng buộc 4). */}
+          <linearGradient id={`${id}s`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={c.san} />
+            <stop offset="55%" stopColor={c.sanD} />
+            <stop offset="100%" stopColor={c.sanDay} />
+          </linearGradient>
+          <radialGradient id={`${id}q`} cx={xS / W} cy={(san - H * 0.22) / H} r="0.62">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.16} />
+            <stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
+          </radialGradient>
+        </defs>
+
+        {/* Nơi TRONG NHÀ không có bầu trời. Bản đầu vẽ dải chuyển sáng-tối cho mọi nơi, nên
+            vì kèo mái của kho và rèm của văn phòng treo lơ lửng giữa một khoảng trời —
+            §12.5 lần nữa: một luật đúng ở ngoài trời, sai ở trong nhà.
+            Tường: phẳng, hơi sẫm ở SÁT TRẦN (bóng đọng ở góc trên là thứ mắt đọc ra "có
+            trần"), cộng một đường chỉ trần mảnh. */}
+        {trong ? (
+          <>
+            <rect x={0} y={0} width={W} height={san} fill={c.troiD} />
+            <rect x={0} y={0} width={W} height={H * 0.10} fill={c.xa} opacity={0.34} />
+            <rect x={0} y={H * 0.10} width={W} height={H * 0.006} fill={c.xa} opacity={0.5} />
+          </>
+        ) : (
+          <rect x={0} y={0} width={W} height={san} fill={`url(#${id}t)`} />
+        )}
+        <rect x={0} y={san} width={W} height={H - san} fill={`url(#${id}s)`} />
+        {/* Nhích rất nhẹ theo tiến độ nhịp: cảnh đứng chết thì đọc ra ảnh tĩnh dán vào phim. */}
+        <g transform={`translate(0 ${-p * H * 0.008})`}>{ve({ W, H, san, c, hat, r })}</g>
+        <rect x={0} y={0} width={W} height={H} fill={`url(#${id}q)`} />
+      </svg>
+    </AbsoluteFill>
+  );
+};

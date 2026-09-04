@@ -1864,15 +1864,36 @@ def t_tsx_khong_dung_bien_truoc_khi_khai():
     tsc = _os.path.join(eng, "node_modules", ".bin", "tsc")
     if not _os.path.exists(tsc):
         return                      # máy chưa cài phụ thuộc: bỏ qua, không phải lỗi mã
-    tep = sorted(_g.glob(_os.path.join(eng, "src", "v4", "*.tsx"))
-                 + _g.glob(_os.path.join(eng, "src", "v2", "*.tsx")))
+    # ── TỰ TÌM PHẠM VI, KHÔNG CẦM DANH SÁCH CHÉP TAY  (4/9/2026) ────────────────────────
+    # Bản cũ chỉ soi `v4` và `v2` — hai bộ CŨ. Thư mục `gt` (18 kênh giải thích, bộ đang
+    # chạy hằng ngày) không nằm trong danh sách, nên nó chưa từng được cổng này soi. Đúng
+    # §13.2: cổng cầm danh sách chép tay là cổng che lỗi thật.
+    #
+    # Đo trước khi mở rộng (§13.22 — đọc tay các ca cổng bắt trước khi tin nó): năm thư mục
+    # `gt` · `v4` · `v2` · `comic` · `que` cho **0 lỗi phạm vi/TDZ**, nên mở rộng không sinh
+    # một dòng đỏ giả nào. Nếu có thì phải dọn trước khi bật, không bật rồi để đỏ (§15.19).
+    tep = sorted(_g.glob(_os.path.join(eng, "src", "*", "*.tsx")))
     if not tep:
         return
     r = _sp.run([tsc, "--noEmit", "--jsx", "react", "--esModuleInterop", "--skipLibCheck",
                  "--target", "es2020", "--moduleResolution", "node", "--lib", "es2020,dom"] + tep,
-                capture_output=True, text=True, timeout=600)
-    xau = [l for l in (r.stdout or "").splitlines() if "TS2448" in l or "TS2454" in l]
-    assert not xau, ("dùng biến trước khi khai báo (esbuild không bắt được, chỉ nổ lúc render): "
+                capture_output=True, text=True, timeout=900)
+    # ── TS2304 CŨNG PHẢI BẮT  (4/9/2026) ────────────────────────────────────────────────
+    # Hôm nay một hàm vẽ nơi chốn dùng `r[i]` mà không nhận `r` trong tham số. `esbuild`
+    # báo XANH (nó chỉ chuyển cú pháp, không phân tích phạm vi), nên cả cổng §12.2 lẫn cổng
+    # `t_tsx_dich_duoc` đều cho qua. Render "thành công" ba lượt liền — bằng BUNDLE CŨ trong
+    # `node_modules/.cache` — nên em soi khung của mã cũ và đi sửa những thứ không hỏng.
+    #
+    # Bài học vượt ra ngoài ca này: §12.2 nói "esbuild mới là cổng thật" và điều đó ĐÚNG cho
+    # lỗi cú pháp, nhưng KHÔNG ĐỦ. Hai bộ dịch bắt hai loại lỗi khác nhau, và không bộ nào
+    # phủ được bộ kia:
+    #     esbuild bắt : cú pháp JSX mà tsc bỏ qua (chú thích giữa các thuộc tính)
+    #     tsc bắt     : phạm vi biến — TS2304 (không có tên), TS2448/TS2454 (vùng chết)
+    # Phải chạy CẢ HAI. Và khi một bản dựng "thành công" đáng ngờ, XOÁ ĐỆM rồi dựng lại —
+    # đệm bundle biến một bản dựng hỏng thành một bản dựng cũ, thứ khó nhận ra nhất.
+    xau = [l for l in (r.stdout or "").splitlines()
+           if "TS2448" in l or "TS2454" in l or "TS2304" in l]
+    assert not xau, ("lỗi PHẠM VI BIẾN mà esbuild không bắt được (chỉ nổ lúc render): "
                      + " · ".join(x.strip()[:110] for x in xau[:3]))
 
 
