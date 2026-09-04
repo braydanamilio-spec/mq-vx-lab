@@ -3218,8 +3218,30 @@ def _rai_truc(ma: str, nhip: list, idx: int = 0) -> list:
         if (n.get("khuon") or "") != "chart":
             continue
         cot = n.get("cot") or []
-        if len(cot) < 2:
-            continue                     # trục cần ít nhất hai mốc mới đọc ra là một trục
+        # ── KHỬ TRÙNG TRƯỚC, RỒI MỚI ĐẾM  (soi khung 4/9) ──────────────────────────────
+        # Trục `speedof` hiện **"jet 560" HAI LẦN** trên cùng một trục. Bản đầu dựng `moc`
+        # thẳng từ `cot` mà không khử trùng, trong khi `cot` ĐƯỢC PHÉP có hai mục cùng tên:
+        # biểu đồ cột vẽ hai cột cạnh nhau nên mắt vẫn phân biệt, còn trục thì hai mốc trùng
+        # rơi đúng một chỗ và đọc ra là lỗi. Cùng dữ liệu, hai cách vẽ, hai ràng buộc khác
+        # nhau — và bản chuyển đổi chỉ mang theo ràng buộc của bên nguồn.
+        # Khử theo CẶP (nhãn, giá trị), không theo nhãn: hai mốc cùng tên khác giá trị là dữ
+        # liệu thật và phải giữ.
+        thay, sach = set(), []
+        for c in cot:
+            k = (str(c.get("nhan") or "").strip().lower(), _bac_gon(c.get("v")))
+            if k in thay:
+                continue
+            thay.add(k)
+            sach.append(c)
+        # ── BA MỐC, KHÔNG PHẢI HAI ────────────────────────────────────────────────────────
+        # Trần cũ là hai. Soi khung `howbig` và `odds`: trục hai mốc ra một đường dọc với một
+        # nhãn ở đỉnh, một ở đáy và khoảng trống chiếm **hai phần ba khung** — đúng chỗ anh
+        # chê "khung trống, không toát lên được ý". Hai điểm không dựng được cảm giác THANG
+        # ĐO; và `chia_doi` nói đúng nội dung ấy mà kín khung hơn hẳn, nên bỏ qua ở đây là
+        # đổi lấy một khuôn tốt hơn, không phải mất một khuôn.
+        if len(sach) < 3:
+            continue
+        cot = sach
         # Trục đọc từ NHỎ tới LỚN. Biểu đồ cột không cần sắp (mắt so chiều cao), trục thì có:
         # mốc để lộn xộn trên một đường thẳng là mất đúng thứ trục sinh ra để nói.
         sap = sorted(cot, key=lambda c: abs(float(c.get("v") or 0)))

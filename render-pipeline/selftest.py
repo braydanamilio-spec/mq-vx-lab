@@ -2571,6 +2571,7 @@ def main():
     check("cổng khuôn lời đếm theo VIDEO, không theo câu", t_kiem_khuon_dem_theo_video)
     check("prompt ảnh: CÂU CẢNH đứng trước khối phong cách", t_prompt_canh_dung_dau)
     check("tiêu đề/hook/prompt phải đúng ngữ pháp tiếng Anh", t_tieu_de_dung_ngu_phap)
+    check("nhịp truc: đủ 3 mốc, không mốc nào trùng", t_truc_du_moc_va_khong_trung)
     check("tiêu đề so sánh: hai vế viết hoa đối xứng", t_tieu_de_viet_hoa_doi_xung)
     check("trần ảnh CF phải đếm ở TỆP (vòng while chạy mỗi tập một tiến trình)",
           t_tran_anh_song_qua_tien_trinh)
@@ -7290,6 +7291,40 @@ def t_tran_anh_song_qua_tien_trinh():
         else:
             os.environ["GITHUB_RUN_ID"] = goc
         importlib.reload(N)
+
+
+def t_truc_du_moc_va_khong_trung():
+    """Mỗi nhịp `truc` phải có ≥3 mốc và không mốc nào trùng.
+
+    Soi khung demo 4/9: trục `speedof` hiện **"jet 560" hai lần**, còn `howbig` và `odds` ra
+    một đường dọc hai nhãn với hai phần ba khung trống.
+
+    Gốc: `_rai_truc` đổi `chart` -> `truc` bằng cách dựng `moc` thẳng từ `cot`. `cot` ĐƯỢC
+    PHÉP có hai mục cùng tên (cột vẽ cạnh nhau, mắt vẫn phân biệt) và được phép chỉ có hai
+    mục (hai cột vẫn kín khung). Trục thì không: mốc trùng rơi đúng một chỗ, và hai mốc trên
+    một đường thẳng không dựng được cảm giác thang đo.
+
+    Cùng dữ liệu, hai cách vẽ, hai ràng buộc khác nhau — và bản chuyển đổi chỉ mang theo
+    ràng buộc của bên NGUỒN. Đây là họ lỗi sẽ quay lại ở mọi phép đổi khuôn sau này.
+    """
+    import giai_thich as G
+    loi = []
+    for k in G.KENH:
+        for idx in range(12):
+            try:
+                _, _, _, _, nhip, _ = G.kich_ban(k["ma"], idx)
+            except Exception:
+                continue
+            for n in nhip:
+                if (n.get("khuon") or "") != "truc":
+                    continue
+                m = n.get("moc") or []
+                if len(m) < 3:
+                    loi.append((k["ma"], idx, f"chỉ {len(m)} mốc"))
+                ky = [(str(x.get("nhan") or "").strip().lower(), x.get("phu")) for x in m]
+                if len(set(ky)) != len(ky):
+                    loi.append((k["ma"], idx, f"mốc trùng: {ky}"))
+    assert not loi, f"{len(loi)} nhịp truc hỏng: {loi[:3]}"
 
 
 def t_tieu_de_dung_ngu_phap():
