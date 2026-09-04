@@ -350,8 +350,29 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                      Đúng họ lỗi §6 — một kích thước chịu hai ràng buộc mà công thức chỉ có một. */
                   const traTren = sanY - H * 0.02;          // khoảng trống từ đỉnh khung tới sàn
                   const sz = Math.min(s0 * cz, traTren * 1.92);
+                  /* ── QUY TẮC D: CẢNH SAU KẾ THỪA CẢNH TRƯỚC  (4/9/2026) ──────────────
+                     §12.11 D: *cảnh sau mang dấu vết cảnh trước (vệt chân dài dần)* — thứ tách
+                     một CHUỖI CẢNH khỏi một chuỗi hình rời rạc.
+                     `ap_gu` đã ghi `ke_thua` (cảnh thứ mấy trong một mạch) cho **94/300 nhịp
+                     `canh`** ở 7 kênh, engine khai kiểu cho nó, và có năm dòng chú thích mô tả
+                     quy tắc này ngay trên nhánh dựng — nhưng `N.ke_thua` KHÔNG xuất hiện một
+                     lần nào trong cả ba tệp TSX. Quy tắc D chưa từng được dựng, và chú thích
+                     Python còn khẳng định "Engine dùng nó để…".
+                     Nay vẽ đúng thứ luật mô tả: mỗi cảnh trong mạch để lại thêm một vệt chân
+                     trên sàn, mờ dần về phía sau. Cảnh 1 không có vệt nào (chưa có gì trước
+                     nó), cảnh 4 có ba vệt — người xem đọc ra "vẫn đang đi tiếp". */
+                  const mach = Math.max(0, Math.min(6, Number(N.ke_thua ?? 0) - 1));
                   return (
                     <>
+                      {Array.from({ length: mach }).map((_, m) => {
+                        const lui = (m + 1) / (mach + 1);
+                        return (
+                          <ellipse key={`vet${m}`}
+                                   cx={cx - sz * 0.30 * (m + 1)} cy={sanY + sz * 0.03}
+                                   rx={sz * 0.13} ry={sz * 0.026}
+                                   fill="#000000" opacity={0.10 * (1 - lui * 0.7)} />
+                        );
+                      })}
                       <ellipse cx={cx} cy={sanY + sz * 0.03} rx={sz * 0.34} ry={sz * 0.055}
                                fill="#000000" opacity={0.13} />
                       <g transform={`translate(${cx} ${sanY - sz * 0.5})`}>
