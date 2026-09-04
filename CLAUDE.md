@@ -2543,8 +2543,23 @@ thành công tắc **duy nhất** và đáng tin — thay vì một trong hai c�
 Và khi tắt một luồng, luôn `grep` xem **còn chỗ nào bấm nó không**:
 
 ```bash
-grep -rn "workflow run\|workflow_dispatch\|repository_dispatch" .github/ | grep <ten_luong>
+# HAI câu, và câu thứ hai mới là câu bắt được. Đổi `render_giai_thich_18` khi cần.
+cd "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026"
+grep -rln "render_giai_thich_18" .github/workflows/     # tệp nào NHẮC tới luồng
+grep -rn "gh workflow run\|/dispatches" .github/workflows/   # chỗ nào BẤM workflow (bất kỳ)
 ```
+
+**Vì sao phải hai câu.** Câu đầu tiên em đưa cho anh — `grep "workflow run" … | grep <tên>` —
+chạy ra **0**, tức nó bỏ sót đúng thủ phạm vừa tìm được: guardian bấm qua biến
+(`gh workflow run "$WF"`), nên dòng lệnh **không chứa tên luồng**. Lọc theo tên trên cùng một
+dòng là giả định lệnh gọi viết tên ra tường minh, và đường gián tiếp luôn phá giả định ấy.
+
+Cùng họ lỗi với mọi cổng quét chuỗi trong tệp luật này: **phép quét chỉ thấy thứ nó được dạy để
+thấy.** Khi câu hỏi là *"còn cửa nào mở thứ này không"*, hãy liệt kê MỌI cửa rồi đọc tay, đừng
+lọc trước theo tên.
+
+*(Và `<...>` trong zsh là lệnh CHUYỂN HƯỚNG chứ không phải chỗ điền — dán nguyên câu có ngoặc
+nhọn thì shell báo `parse error near '\n'`. Viết ví dụ bằng tên THẬT.)*
 
 ### 17.14 "Khai một index" không phải "có index" — và chỗ tự chữa phải đặt ở chỗ PHÁT HIỆN
 
