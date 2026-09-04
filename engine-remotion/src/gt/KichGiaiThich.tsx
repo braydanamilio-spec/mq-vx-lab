@@ -28,7 +28,8 @@ import { CanhVe, sangDayCanh } from "./CanhVe";
    ══════════════════════════════════════════════════════════════════════════════════════════ */
 
 const kep = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
-const F = "Poppins, Arial Black, sans-serif";
+import { chu, datChu } from "./Chu";
+const F = () => chu();
 
 export type NhipGT = {
   s: number; e: number;
@@ -54,6 +55,7 @@ export type NhipGT = {
 };
 
 export type PropsGT = {
+  ma?: string;                     // mã kênh — chọn PHÔNG CHỮ, xem `Chu.tsx`
   nhip?: NhipGT[];
   tu?: { t: number; d: number; w: string }[];
   voMp3?: string; nhac?: string; nhacVol?: number;
@@ -162,7 +164,7 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string;
       <div style={{
         position: "absolute", left: W * 0.08, right: W * 0.08, bottom: H * 0.075,
         display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0 0.30em",
-        fontFamily: F, fontWeight: 700, fontSize: fs, lineHeight: 1.25,
+        fontFamily: F(), fontWeight: 700, fontSize: fs, lineHeight: 1.25,
         textAlign: "center", letterSpacing: "-0.01em",
         /* 3/9 — SIẾT QUẦNG SAU KHI ĐO. Bỏ dải đen xong, cổng `kiem_hinh` báo tương phản phụ đề
              **4,2:1 < 4,5:1** — sát chuẩn nhưng dưới chuẩn. Đây đúng cái đã xảy ra hồi 1/9 khi bỏ
@@ -265,13 +267,18 @@ const KHUON_CANH = new Set(["canh", "nhom"]);
 export const KichGiaiThich: React.FC<PropsGT> = ({
   nhip = [], tu = [], voMp3 = "", nhac = "", nhacVol = 0.13,
   tieuDe = "", handle = "", mau = "#E0533D", mauPhu = "#2F7D6B", doc = false, hat = 0,
-  nenTrang = "#EFE7D6", chuTrang = "#2C2722",
+  nenTrang = "#EFE7D6", chuTrang = "#2C2722", ma = "",
 }) => {
   const frame = useCurrentFrame();
   const { fps, width: W, height: H } = useVideoConfig();
   const t = frame / fps;
 
   const N = nhip.find((x) => t >= x.s && t < x.e) || nhip[nhip.length - 1];
+  /* PHÔNG CỦA KÊNH — đặt MỘT LẦN, trước khi dựng bất cứ con nào. React dựng cây từ trên
+     xuống trong cùng một lượt đồng bộ nên mọi `F()` bên dưới đọc đúng phông này. Đặt sau
+     `if (!N)` thì khung rỗng sẽ giữ phông của kênh dựng TRƯỚC — hiếm, nhưng là đúng loại lỗi
+     không ai tìm ra. Xem `Chu.tsx`. */
+  datChu(ma);
   if (!N) return <AbsoluteFill style={{ background: nenTrang }} />;
   const p = kep((t - N.s) / Math.max(0.4, N.e - N.s));      // 0..1 trong nhịp
   const vao = kep((t - N.s) / 0.22);                        // 0..1 lúc vừa cắt vào

@@ -751,27 +751,46 @@ def _lau(gio: float) -> tuple:
 #   · sinh tồn -> xám đá lạnh + gỉ sắt
 #   · khoa học vui -> cát ấm + cam cháy, tông duy nhất được phép tươi
 # `nen` là nền trơn (khuôn chia đôi, trục, thẻ chữ, và cảnh trừu tượng không có ảnh).
+# ── GÓC MÀU TRẢI ĐỀU VÒNG TRÒN  (4/9/2026) ────────────────────────────────────────────────
+# Đo bảng cũ: **8/18 kênh chen trong dải 3°–31°** (cam/đỏ) trong khi cả cung 267°–360° bỏ
+# trống, và năm cặp cách nhau **≤2°** — tức mắt đọc ra cùng một màu. Khoảng cách trung bình
+# lại đúng 20°, bằng mức lý tưởng: con số trung bình che mất HÌNH DẠNG của phân bố.
+#
+# Nay 18 góc cách nhau ≥17°, gán theo NGHĨA kênh: nhiệt/báo động ở cung đỏ, tiền ở cung lục,
+# tốc độ/quy mô ở cung lam, may rủi/giả định ở cung tím.
+#
+# ── HAI PHÉP CHỈNH KHÔNG BỎ ĐƯỢC ─────────────────────────────────────────────────────────
+# 1. GIỮ ĐỘ CHÓI, KHÔNG GIỮ S/V. Bản đầu em xoay góc màu mà giữ nguyên bão hoà và độ sáng —
+#    độ chói lệch từ 3,4 lần lên **4,7 lần**, `yearsof` vàng-lục chói 0,309 so với trung vị
+#    0,128. Trên nền kem nó nhợt đi và chữ trắng đè lên hụt tương phản. Cùng S,V ở hai góc
+#    màu khác nhau KHÔNG cho cùng độ sáng cảm nhận. Nay dò nhị phân trên V để khớp đúng độ
+#    chói cũ của từng kênh.
+# 2. TRẦN BÃO HOÀ RIÊNG CUNG HỒNG/TÍM. Cùng một S đọc rất khác nhau: 0,78 ở cam là đất nung
+#    ấm, ở magenta là đèn neon — `howlong` ra `#F8317A` chói mắt. Cung 265–350 hạ trần 0,58.
+#
+# Kết quả đo: chói 0,070–0,235 (3,4×, bằng bảng cũ) · tương phản chữ trắng thấp nhất 3,68:1
+# (đạt AA cho chữ lớn, và `chuHopNen` vẫn tự đổi màu chữ theo nền).
 MAU_KENH = {
-    "howlong":  {"nen": "#F4EDE0", "mau": "#D9622B", "phu": "#2F6E8A", "chu": "#2E2A24"},
-    "howbig":   {"nen": "#EEF1F3", "mau": "#1F6F7A", "phu": "#C9552F", "chu": "#22282B"},
-    "realcost": {"nen": "#F2F0EA", "mau": "#1E6B4E", "phu": "#8A5A2E", "chu": "#232622"},
-    "howmuch":  {"nen": "#EEF0F4", "mau": "#43418F", "phu": "#C98A2E", "chu": "#232336"},
-    "whatif":   {"nen": "#F5F0E6", "mau": "#B4523A", "phu": "#2F7D8A", "chu": "#2B2622"},
-    "survive":  {"nen": "#E8E9E6", "mau": "#8A3F2E", "phu": "#4E6B54", "chu": "#232522"},
-    "dayinlife":{"nen": "#F0E7D6", "mau": "#8A6134", "phu": "#3E6E8C", "chu": "#2A241B"},
-    "wheregoes":{"nen": "#EDF0F2", "mau": "#2F6E9E", "phu": "#C9762F", "chu": "#212629"},
-    "therules": {"nen": "#EFF1EA", "mau": "#C0603A", "phu": "#4E7C4A", "chu": "#252722"},
-    "speedof":  {"nen": "#EAF0F5", "mau": "#21618C", "phu": "#D9622B", "chu": "#1F272E"},
+    "howlong":  {"nen": "#F4EDE0", "mau": "#D75A88", "phu": "#2F6E8A", "chu": "#2E2A24"},
+    "howbig":   {"nen": "#EEF1F3", "mau": "#216E83", "phu": "#C9552F", "chu": "#22282B"},
+    "realcost": {"nen": "#F2F0EA", "mau": "#1E6C45", "phu": "#8A5A2E", "chu": "#232622"},
+    "howmuch":  {"nen": "#EEF0F4", "mau": "#573C85", "phu": "#C98A2E", "chu": "#232336"},
+    "whatif":   {"nen": "#F5F0E6", "mau": "#B04A8E", "phu": "#2F7D8A", "chu": "#2B2622"},
+    "survive":  {"nen": "#E8E9E6", "mau": "#6B5124", "phu": "#4E6B54", "chu": "#232522"},
+    "dayinlife":{"nen": "#F0E7D6", "mau": "#6E6C2A", "phu": "#3E6E8C", "chu": "#2A241B"},
+    "wheregoes":{"nen": "#EDF0F2", "mau": "#405FD8", "phu": "#C9762F", "chu": "#212629"},
+    "therules": {"nen": "#EFF1EA", "mau": "#BC4FBC", "phu": "#4E7C4A", "chu": "#252722"},
+    "speedof":  {"nen": "#EAF0F5", "mau": "#245E99", "phu": "#D9622B", "chu": "#1F272E"},
     # ── 8 kênh bổ sung. Màu chọn để KHÔNG trùng cặp nào ở trên: mỗi kênh phải nhận ra được
     # khi đứng cạnh mười bảy kênh kia trong danh sách đề xuất của YouTube.
-    "odds":      {"nen": "#F1EDF5", "mau": "#6B3FA0", "phu": "#C9A227", "chu": "#241F2E"},
-    "hiddenfee": {"nen": "#F0F2EE", "mau": "#2C6E49", "phu": "#B4522E", "chu": "#1F2620"},
-    "yearsof":   {"nen": "#F5F1E8", "mau": "#A3542B", "phu": "#3E6E7C", "chu": "#2A2520"},
-    "howloud":   {"nen": "#EDEEF2", "mau": "#C2352E", "phu": "#2F5D8A", "chu": "#20242B"},
-    "whatweighs": {"nen": "#EFF0EC", "mau": "#4A5C2B", "phu": "#B4603A", "chu": "#22261E"},
-    "rightnow":  {"nen": "#ECF1F4", "mau": "#1F7A8C", "phu": "#D97E36", "chu": "#1E272B"},
-    "howhot":    {"nen": "#F6EFE6", "mau": "#C24E1E", "phu": "#3B5E7A", "chu": "#2B231C"},
-    "smallest":  {"nen": "#EDEFF4", "mau": "#3A4E9B", "phu": "#8FA33E", "chu": "#1F2330"},
+    "odds":      {"nen": "#F1EDF5", "mau": "#753D92", "phu": "#C9A227", "chu": "#241F2E"},
+    "hiddenfee": {"nen": "#F0F2EE", "mau": "#2C6F2F", "phu": "#B4522E", "chu": "#1F2620"},
+    "yearsof":   {"nen": "#F5F1E8", "mau": "#59721E", "phu": "#3E6E7C", "chu": "#2A2520"},
+    "howloud":   {"nen": "#EDEEF2", "mau": "#C52F3B", "phu": "#2F5D8A", "chu": "#20242B"},
+    "whatweighs": {"nen": "#EFF0EC", "mau": "#3F5E2C", "phu": "#B4603A", "chu": "#22261E"},
+    "rightnow":  {"nen": "#ECF1F4", "mau": "#1C7D75", "phu": "#D97E36", "chu": "#1E272B"},
+    "howhot":    {"nen": "#F6EFE6", "mau": "#BC5326", "phu": "#3B5E7A", "chu": "#2B231C"},
+    "smallest":  {"nen": "#EDEFF4", "mau": "#4C43B2", "phu": "#8FA33E", "chu": "#1F2330"},
 }
 
 KENH = [
@@ -3697,25 +3716,62 @@ def _nhan_chuong(tieu: list[str]) -> list[str]:
 # Đây là cùng cơ chế `mo_cam` của bộ Kling (§14.2): bộ lịch không được phát cho một kênh
 # thứ mà thế giới ấy không diễn được. Kênh nói về hoá đơn khách sạn thì không có sa mạc;
 # kênh sinh tồn thì không có văn phòng.
+# ══ NƠI CHỐN CỦA TỪNG KÊNH — NĂM, KHÔNG PHẢI BA  (nới 4/9/2026) ════════════════════════════
+# Đo: mỗi kênh khai ĐÚNG BA nơi và dùng trung bình 2,9 — tức phép xoay chạy tốt, trần nằm ở
+# BẢNG. Trong khi `CanhVe` vẽ được MƯỜI cảnh: kho · nha_may · van_phong · pho · duong · dong
+# · bien · bang · sa_mac · troi. Ba trên mười là bỏ phí bảy cảnh đã dựng xong.
+#
+# Đây đúng dạng §15.15: *cơ chế chạy đúng, hồ quá nhỏ so với số lần rút* — không có gì hỏng
+# để sửa, chỉ có một con số cần lớn hơn. Năm nơi cho gần gấp đôi độ đa dạng bối cảnh trong
+# MỘT kênh mà không phải vẽ thêm cảnh nào.
+#
+# RÀNG BUỘC KHÔNG ĐƯỢC PHÁ: chỉ thêm nơi mà THẾ GIỚI kênh ấy diễn được. `survive` (băng, sa
+# mạc, đồng hoang) không thể nhận `van_phong`; `smallest` không thể nhận `nha_may`. §14.2 đã
+# trả giá đúng chuyện này ở bộ thiên nhiên — bộ lịch phát cho DOG PARK một nhịp "khói bốc lên"
+# trong khi công viên chó ngoài trời không có gì bốc khói được, và không cổng nào bắt vì cổng
+# đo tay nghề chứ không đo vật lý của thế giới.
+#
+# Nên mỗi kênh nới theo ĐÚNG chất của nó, không nới đều:
+#   · kênh đời thường/tiền bạc  -> thêm nơi người ta thật sự đi qua trong ngày
+#   · kênh khoảng cách/tốc độ   -> thêm địa hình rộng
+#   · kênh cực đoan (nhiệt, sinh tồn) -> chỉ thêm nơi cực đoan
 NOI_KENH: dict[str, tuple[str, ...]] = {
-    "howlong":    ("duong", "dong", "pho"),
-    "howbig":     ("bien", "troi", "pho"),
-    "realcost":   ("van_phong", "pho", "nha_may"),
-    "howmuch":    ("kho", "van_phong", "nha_may"),
-    "whatif":     ("pho", "dong", "duong"),
-    "survive":    ("bang", "sa_mac", "dong"),
-    "dayinlife":  ("kho", "nha_may", "van_phong"),
-    "wheregoes":  ("kho", "nha_may", "bien"),
-    "therules":   ("van_phong", "pho", "duong"),
-    "speedof":    ("duong", "troi", "bien"),
-    "odds":       ("van_phong", "pho", "dong"),
-    "hiddenfee":  ("van_phong", "pho", "kho"),
-    "yearsof":    ("van_phong", "pho", "dong"),
-    "howloud":    ("pho", "nha_may", "kho"),
-    "whatweighs": ("kho", "bien", "nha_may"),
-    "rightnow":   ("pho", "duong", "troi"),
-    "howhot":     ("sa_mac", "nha_may", "bang"),
-    "smallest":   ("troi", "bien", "van_phong"),
+    # khoảng cách · đi bộ: mọi địa hình đi qua được
+    "howlong":    ("duong", "dong", "pho", "sa_mac", "bien"),
+    # so sánh KÍCH THƯỚC: cần nơi có vật to để đối chiếu
+    "howbig":     ("bien", "troi", "pho", "nha_may", "sa_mac"),
+    # tiền bạc đời thường: nơi người ta tiêu tiền và kiếm tiền
+    "realcost":   ("van_phong", "pho", "nha_may", "kho", "duong"),
+    # thang con số: nơi có SỐ LƯỢNG lớn nhìn thấy được
+    "howmuch":    ("kho", "van_phong", "nha_may", "pho", "troi"),
+    # "nếu ai cũng…": nơi đông người
+    "whatif":     ("pho", "dong", "duong", "bien", "van_phong"),
+    # sinh tồn: CHỈ nơi khắc nghiệt — không thêm nơi có mái che
+    "survive":    ("bang", "sa_mac", "dong", "bien", "troi"),
+    # một ngày của nghề xưa: nơi làm việc
+    "dayinlife":  ("kho", "nha_may", "van_phong", "dong", "pho"),
+    # đồ vật đi đâu: theo đường vận chuyển
+    "wheregoes":  ("kho", "nha_may", "bien", "duong", "pho"),
+    # luật về tài sản: nơi có ranh giới sở hữu
+    "therules":   ("van_phong", "pho", "duong", "dong", "kho"),
+    # tốc độ: nơi có thứ di chuyển nhanh
+    "speedof":    ("duong", "troi", "bien", "pho", "sa_mac"),
+    # xác suất: nơi đời thường, việc thường
+    "odds":       ("van_phong", "pho", "dong", "duong", "kho"),
+    # bên trong một cái giá: chuỗi cung ứng
+    "hiddenfee":  ("van_phong", "pho", "kho", "nha_may", "duong"),
+    # số năm của đời người: nơi người ta sống qua
+    "yearsof":    ("van_phong", "pho", "dong", "duong", "kho"),
+    # độ ồn: nơi ồn và nơi tĩnh, cần cả hai để so
+    "howloud":    ("pho", "nha_may", "kho", "duong", "dong"),
+    # khối lượng: nơi có vật nặng
+    "whatweighs": ("kho", "bien", "nha_may", "duong", "pho"),
+    # ngay lúc này có bao nhiêu người: nơi đông và nơi vắng
+    "rightnow":   ("pho", "duong", "troi", "dong", "van_phong"),
+    # nhiệt độ: CHỈ nơi cực đoan + nơi có nguồn nhiệt
+    "howhot":     ("sa_mac", "nha_may", "bang", "troi", "bien"),
+    # thang cực nhỏ: nơi trừu tượng, không đồ đạc lớn tranh chỗ
+    "smallest":   ("troi", "bien", "van_phong", "dong", "bang"),
 }
 
 # Khuôn có đồ hoạ phủ khung — nền chỉ là bối cảnh, không cần ảnh AI.
@@ -4129,8 +4185,15 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
         nhip = doi_loi(ap_gu(ma, idx, nhip), idx)
         # Cấp biểu tượng dự phòng cho `canh` — xem `_bt_canh`. Chỉ cấp khi nhịp CHƯA có, nên
         # không bao giờ đè lên biểu tượng đã chọn tay trong khuôn kịch bản.
+        # ── `nhom` VÀ `kinh_lup` CŨNG CẦN BIỂU TƯỢNG DỰ PHÒNG  (4/9/2026) ─────────────
+        # Bản trước chỉ cấp cho `canh`. Nhưng `nhom` vẽ một dải chữ trên nền, và `kinh_lup`
+        # vẽ một vòng tròn — cả hai RỖNG nếu không có gì để soi. Cổng `kiem_hinh` vừa được
+        # sửa để nhìn thấy chúng, và nó bắt 12 nhịp `nhom` trống trên 840 nhịp: đúng khung
+        # WHAT IF "Now one hundred" — hàng cây với một nhãn, không có ai.
+        # Ba khuôn cùng một nhu cầu, và bản vá cũ chỉ chạm một — §6, vá một nhánh để nguyên
+        # nhánh song song.
         for _x in nhip:
-            if (_x.get("khuon") or "") == "canh" and not _x.get("bt"):
+            if (_x.get("khuon") or "") in ("canh", "nhom", "kinh_lup") and not _x.get("bt"):
                 _b = _bt_canh(_x.get("loi") or "", _x.get("ve") or "")
                 if _b:
                     _x["bt"] = _b
@@ -4453,7 +4516,9 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
     dai = round(nhip[-1]["e"] + 0.35, 2)
 
     mk = MAU_KENH.get(ma, {"nen": "#F3EEE4", "mau": k["mau"], "phu": k["phu"], "chu": "#2C2722"})
-    props = {"nhip": nhip, "tu": tu, "voMp3": rel,
+    # `ma` sang engine để nó chọn PHÔNG CHỮ của kênh (xem `gt/Chu.tsx`). Không suy từ
+    # `tieuDe` ở engine: tiêu đề đổi theo tập, mã kênh thì không.
+    props = {"ma": ma, "nhip": nhip, "tu": tu, "voMp3": rel,
              "nhac": _nhac(ma, long), "nhacVol": _am_nhac(_nhac(ma, long)),
              # HẠT GIỐNG THEO TẬP. Trước bản này `hat` được TÍNH ở trên rồi bỏ đó — engine
              # không bao giờ nhận, nên mọi tập của một kênh dựng y hệt nhau. Cùng họ lỗi

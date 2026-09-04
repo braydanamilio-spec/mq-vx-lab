@@ -79,10 +79,28 @@ def truoc(props: dict) -> tuple:
     # Soi khung `howmuch` nhịp 0: một thẻ số đặt giữa nền xám, 60% khung không có gì. Nhịp ấy
     # không khai `ve` nên phép đo "thiếu ảnh" ở trên KHÔNG thấy nó — nó không thiếu ảnh, nó
     # không định có ảnh. Phải hỏi câu khác: *nhịp này có gì để NHÌN không?*
-    TU_VE = {"chia_doi", "truc", "kinh_lup", "the_chu", "dem", "chart", "nhom"}
+    # ── "TỰ VẼ" KHÔNG CÓ NGHĨA LÀ "LUÔN CÓ GÌ ĐỂ NHÌN"  (4/9/2026) ─────────────────────
+    # Bảy khuôn này được MIỄN kiểm khung trống với giả định chúng tự vẽ kín khung. Đo trên
+    # 840 nhịp thật: **282 nhịp (34%)** thuộc diện miễn ấy mà không có hình nào — và giả định
+    # chỉ đúng với những khuôn vẽ từ DỮ LIỆU (`chart` có cột, `truc` có mốc, `chia_doi` có hai
+    # vế, `dem` có số đếm). Ba khuôn còn lại vẽ từ thứ có thể RỖNG:
+    #     `nhom`     -> chỉ một dải chữ nếu không có `bt`
+    #     `the_chu`  -> một mảng màu nếu không có `the`
+    #     `kinh_lup` -> một vòng tròn nếu không có `bt` lẫn ảnh
+    # Soi khung WHAT IF "Now one hundred": nhịp `nhom` không biểu tượng ra hàng cây với một
+    # nhãn, và cổng cho điểm tối đa.
+    # Đây là §13.9 ở dạng ngược: một danh sách MIỄN TRỪ cũng vô hạn như danh sách ngoại lệ, và
+    # nó nguy hơn vì mỗi mục thêm vào là một vùng cổng thôi nhìn. Nên tách theo NGUỒN HÌNH:
+    # khuôn vẽ từ dữ liệu thì miễn, khuôn vẽ từ một trường có thể rỗng thì phải KIỂM trường ấy.
+    TU_VE = {"chia_doi", "truc", "dem", "chart"}          # vẽ từ dữ liệu — luôn có hình
+    CAN_NGUON = {"nhom": ("bt", "nenAnh"),                # vẽ từ trường có thể rỗng
+                 "the_chu": ("the", "dai_chu", "loi"),
+                 "kinh_lup": ("bt", "nenAnh")}
     tr = [i for i, n in enumerate(nhip)
-          if n.get("khuon") not in TU_VE
-          and not n.get("nenAnh") and not n.get("ve") and not n.get("bt")]
+          if (n.get("khuon") in CAN_NGUON
+              and not any(n.get(k) for k in CAN_NGUON[n["khuon"]]))
+          or (n.get("khuon") not in TU_VE and n.get("khuon") not in CAN_NGUON
+              and not n.get("nenAnh") and not n.get("ve") and not n.get("bt"))]
     if tr:
         bao.append(f"KHUNG TRỐNG ở nhịp {tr[:5]} — không ảnh, không biểu tượng, không đồ hoạ")
         diem -= min(20, 7 * len(tr))

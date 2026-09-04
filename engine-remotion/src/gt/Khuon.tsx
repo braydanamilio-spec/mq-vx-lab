@@ -23,7 +23,10 @@ import React from "react";
    "Một người gánh 25 ký" không nói lên gì; "25 ký, bằng đứa con bảy tuổi của bạn" thì nhớ đời.
    ══════════════════════════════════════════════════════════════════════════════════════════ */
 
-const F = "Poppins, Arial Black, sans-serif";
+/* Phông đọc TẠI CHỖ VẼ, không cache — xem `Chu.tsx`. `F()` chứ không `F`: một hằng
+   đọc lúc nạp mô-đun sẽ khoá cứng phông của kênh dựng ĐẦU TIÊN. */
+import { chu } from "./Chu";
+const F = () => chu();
 
 /* Biểu tượng vẽ bằng code. Cố ý ít và thô: mỗi cái phải đọc được ở 1/6 chiều ngang khung trên
    màn hình điện thoại, nên chi tiết nhiều chỉ thành vết bẩn. */
@@ -708,18 +711,18 @@ export const ChiaDoi: React.FC<{
             sàn ấy phải để lại bóng, thiếu một vật là mắt đọc ra ngay. */}
         <ellipse cx="0" cy={H * 0.60} rx={H * 0.115} ry={H * 0.020}
                  fill="#000000" opacity={0.13} />
-        <text x="0" y={H * 0.20} textAnchor="middle" fontFamily={F} fontWeight={900}
+        <text x="0" y={H * 0.20} textAnchor="middle" fontFamily={F()} fontWeight={900}
               fontSize={cNhan} fill="#2C2722"
               letterSpacing={1}>{(d.nhan || "").toUpperCase()}</text>
         <g transform={`translate(0 ${H * 0.44}) scale(${1 + (1 - q) * 0.12})`}>
           <BieuTuong ten={d.bt || ""} s={H * 0.30} />
         </g>
         {d.so ? (
-          <text x="0" y={H * 0.76} textAnchor="middle" fontFamily={F} fontWeight={900}
+          <text x="0" y={H * 0.76} textAnchor="middle" fontFamily={F()} fontWeight={900}
                 fontSize={cSo} fill={mau}>{d.so}</text>
         ) : null}
         {d.phu ? (
-          <text x="0" y={H * 0.845} textAnchor="middle" fontFamily={F} fontWeight={700}
+          <text x="0" y={H * 0.845} textAnchor="middle" fontFamily={F()} fontWeight={700}
                 fontSize={cPhu} fill="#5A544C">{d.phu}</text>
         ) : null}
       </g>
@@ -810,9 +813,9 @@ export const ChiaDoi: React.FC<{
             const yN = san + H * 0.070 + cN;
             return (
               <>
-                <text x={x} y={yN} textAnchor="middle" fontFamily={F} fontWeight={900}
+                <text x={x} y={yN} textAnchor="middle" fontFamily={F()} fontWeight={900}
                       fontSize={cN} fill="#2C2722" letterSpacing={1}>{(d.nhan || "").toUpperCase()}</text>
-                <text x={x} y={yN + cS * 1.18} textAnchor="middle" fontFamily={F} fontWeight={900}
+                <text x={x} y={yN + cS * 1.18} textAnchor="middle" fontFamily={F()} fontWeight={900}
                       fontSize={cS} fill={mau}>{d.so}</text>
               </>
             );
@@ -838,11 +841,11 @@ export const ChiaDoi: React.FC<{
       const sz = Math.min(H * 0.20, W * 0.15);
       return (
         <g opacity={qq}>
-          <text x={W * 0.09} y={y + H * 0.015} fontFamily={F} fontWeight={900}
+          <text x={W * 0.09} y={y + H * 0.015} fontFamily={F()} fontWeight={900}
                 fontSize={Math.min(H * 0.052, (W * 0.34 / Math.max(1, (d.nhan || "").length)) * 1.5)}
                 fill="#2C2722" letterSpacing={1}>{(d.nhan || "").toUpperCase()}</text>
           <g transform={`translate(${W * 0.50} ${y})`}><BieuTuong ten={d.bt || ""} s={sz} /></g>
-          <text x={W * 0.91} y={y + H * 0.030} textAnchor="end" fontFamily={F} fontWeight={900}
+          <text x={W * 0.91} y={y + H * 0.030} textAnchor="end" fontFamily={F()} fontWeight={900}
                 fontSize={Math.min(H * 0.095, (W * 0.34 / Math.max(1, (d.so || "").length)) * 1.55)}
                 fill={mau}>{d.so}</text>
         </g>
@@ -1104,7 +1107,7 @@ export const SoLieu: React.FC<{
       {/* Kiểu 3 — SỐ LÀM NỀN: chữ số chiếm gần hết khung ở độ mờ thấp, HÌNH đứng trước và là
           thứ mắt đọc trước. Đảo hẳn thứ bậc so với ba kiểu kia, nên nó là biến thể khác nhất. */}
       {kA === 3 ? (
-        <text x={W / 2} y={H * (ngang ? 0.58 : 0.52)} textAnchor="middle" fontFamily={F}
+        <text x={W / 2} y={H * (ngang ? 0.58 : 0.52)} textAnchor="middle" fontFamily={F()}
               fontWeight={900}
               /* Số nền phải VỪA KHUNG. `cs*1,55` bỏ qua bề ngang, nên `100` của SPEED OF và
                  `360,000,000` của RIGHT NOW đều bị cắt mất mép phải — soi lưới thấy ngay.
@@ -1156,7 +1159,7 @@ export const SoLieu: React.FC<{
           số đậm chồng lên chính bóng mờ của nó. */}
       <g transform={`translate(${kA === 1 ? W * 0.08 : W / 2} ${H * yCao}) scale(${0.86 + q * 0.14})`}
          opacity={kA === 3 ? 0 : q}>
-        <text x="0" y="0" textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F} fontWeight={900}
+        <text x="0" y="0" textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F()} fontWeight={900}
               fontSize={cs}
               fill={tren_anh ? "#FFFFFF" : (kA === 2 ? chuHopNen("#FFFFFF", mau) : "#2C2722")}
               style={{ filter: tren_anh
@@ -1218,7 +1221,7 @@ export const SoLieu: React.FC<{
             Đây là lần thứ TƯ cùng một lỗi (§15.10): hai dòng chữ đặt cạnh nhau bằng một phân số
             của dòng TRÊN, mà quan hệ "dòng này nằm dưới dòng kia" cần cỡ của CẢ HAI. Nay cộng
             `cd` vào, nên công thức đúng ở mọi tổ hợp cỡ. */}
-        {don ? <text x="0" y={yDon} textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F} fontWeight={800}
+        {don ? <text x="0" y={yDon} textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F()} fontWeight={800}
                      fontSize={cd}
                      fill={tren_anh ? "#F2EFE9" : (kA === 2 ? chuHopNen("#F2EFE9", mau) : chuHopNen(mau, nen))}
                      letterSpacing={2}
@@ -1228,7 +1231,7 @@ export const SoLieu: React.FC<{
                      >{don.toUpperCase()}</text> : null}
       </g>
       {chu ? <text x={kA === 1 ? W * 0.08 : W / 2} y={H * yChu}
-                   textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F} fontWeight={700}
+                   textAnchor={kA === 1 ? "start" : "middle"} fontFamily={F()} fontWeight={700}
                    fontSize={cChu}
                    fill={tren_anh ? "#EDE9E1" : chuHopNen("#3A342C", nen)}
                    /* BÓNG MỀM CẢ KHI KHÔNG NẰM TRÊN ẢNH. Nhánh `undefined` cũ giả định nền
@@ -1311,10 +1314,10 @@ export const Truc: React.FC<{
                     stroke="#2C2722" strokeWidth={Math.max(1, n * 0.18)} opacity={0.22} />
               <line x1={x - W * 0.030} y1={y} x2={x + W * 0.030} y2={y}
                     stroke="#2C2722" strokeWidth={n * 0.8} />
-              <text x={x + W * 0.055} y={y - c * 0.22} fontFamily={F} fontWeight={900}
+              <text x={x + W * 0.055} y={y - c * 0.22} fontFamily={F()} fontWeight={900}
                     fontSize={c} fill="#2C2722">{m.nhan}</text>
               {m.phu ? (
-                <text x={x + W * 0.055} y={y + c * 0.78} fontFamily={F} fontWeight={700}
+                <text x={x + W * 0.055} y={y + c * 0.78} fontFamily={F()} fontWeight={700}
                       fontSize={c * 0.66} fill="#5A544C">{m.phu}</text>
               ) : null}
             </g>
@@ -1344,9 +1347,9 @@ export const Truc: React.FC<{
         return (
           <g key={i} opacity={hien ? 1 : 0}>
             <line x1={x} y1={y - H * 0.035} x2={x} y2={y + H * 0.035} stroke="#2C2722" strokeWidth={n * 0.8} />
-            <text x={x} y={y - H * 0.065} textAnchor="middle" fontFamily={F} fontWeight={900}
+            <text x={x} y={y - H * 0.065} textAnchor="middle" fontFamily={F()} fontWeight={900}
                   fontSize={c} fill="#2C2722">{m.nhan}</text>
-            {m.phu ? <text x={x} y={y + H * 0.10} textAnchor="middle" fontFamily={F} fontWeight={700}
+            {m.phu ? <text x={x} y={y + H * 0.10} textAnchor="middle" fontFamily={F()} fontWeight={700}
                            fontSize={c * 0.66} fill="#5A544C">{m.phu}</text> : null}
           </g>
         );
@@ -1400,7 +1403,7 @@ export const KinhLup: React.FC<{
             strokeWidth={Math.max(3, H * 0.006)} />
       <circle cx={x} cy={y} r={H * 0.014} fill={mau} stroke="#2C2722" strokeWidth={2} />
       {nhan ? (
-        <text x={cx} y={cy + r + H * 0.075} textAnchor="middle" fontFamily={F} fontWeight={800}
+        <text x={cx} y={cy + r + H * 0.075} textAnchor="middle" fontFamily={F()} fontWeight={800}
               fontSize={H * 0.042} fill="#2C2722">{nhan}</text>
       ) : null}
     </g>
@@ -1450,7 +1453,7 @@ export const DaiChu: React.FC<{ W: number; H: number; chu: string; p: number }> 
     <g opacity={q}>
       <rect x={(W - rong) / 2} y={y0} width={rong} height={cao} rx={cao / 2}
             fill="#2C2722" opacity={0.90} />
-      <text x={W / 2} y={y0 + cao * 0.68} textAnchor="middle" fontFamily={F} fontWeight={900}
+      <text x={W / 2} y={y0 + cao * 0.68} textAnchor="middle" fontFamily={F()} fontWeight={900}
             fontSize={fs} fill="#F6F1E7" letterSpacing={fs * 0.10}>{chu.toUpperCase()}</text>
     </g>
   );
@@ -1525,7 +1528,7 @@ export const Dem: React.FC<{
         );
       })}
       {chu ? (
-        <text x={W / 2} y={vung.y + vung.h + H * 0.075} textAnchor="middle" fontFamily={F}
+        <text x={W / 2} y={vung.y + vung.h + H * 0.075} textAnchor="middle" fontFamily={F()}
               fontWeight={900}
               fontSize={Math.min(H * 0.055, (W * 0.84 / Math.max(1, chu.length)) * 1.6)}
               fill={mau} letterSpacing={1}>{chu}</text>
@@ -1621,7 +1624,7 @@ export const TheChu: React.FC<{
     <g transform={`translate(${x} ${y}) scale(${vao})`}>
       {dongT.map((d, i) => (
         <text key={i} x="0" y={(i - (dongT.length - 1) / 2) * fsz * 1.16 + fsz * 0.34}
-              textAnchor={neo} fontFamily={F} fontWeight={900}
+              textAnchor={neo} fontFamily={F()} fontWeight={900}
               fontSize={fsz} fill={mauChu} letterSpacing={fsz * 0.005}>{d.trim()}</text>
       ))}
     </g>
@@ -1643,7 +1646,7 @@ export const TheChu: React.FC<{
             0,80 đo bằng mắt: 0,94 vẫn đọc ra tấm đặc, dưới 0,70 thì chữ bắt đầu tranh chấp
             với nét sau lưng. */}
         <rect x={0} y={0} width={W} height={H} fill={mau} opacity={0.80} />
-        <text x={W * 0.99} y={H * 0.98} textAnchor="end" fontFamily={F} fontWeight={900}
+        <text x={W * 0.99} y={H * 0.98} textAnchor="end" fontFamily={F()} fontWeight={900}
               fontSize={H * 1.28} fill={chuSang} opacity={0.13}>{soCh}</text>
         {khoi(W * 0.08, H * 0.5, "start", fsz, chuSang)}
       </g>
@@ -1664,7 +1667,7 @@ export const TheChu: React.FC<{
         <rect x={0} y={y0} width={W} height={cao} fill={mau} />
         {soCh ? (
           <>
-            <text x={W * 0.055} y={y0 + cao * 0.5 + cao * 0.22} fontFamily={F} fontWeight={900}
+            <text x={W * 0.055} y={y0 + cao * 0.5 + cao * 0.22} fontFamily={F()} fontWeight={900}
                   fontSize={cao * 0.62} fill={chuSang} opacity={0.42}>{soCh}</text>
             <line x1={rSo} y1={y0 + cao * 0.20} x2={rSo} y2={y0 + cao * 0.80}
                   stroke={chuSang} strokeWidth={Math.max(2, W * 0.0016)} opacity={0.42} />
@@ -1693,7 +1696,7 @@ export const TheChu: React.FC<{
             nhỏ vẫn đúng vai vì vai của nó là NHÃN, không phải tiêu đề. */}
         {soCh ? (
           <text x={W * 0.09} y={yT - fsz * (dongT.length * 0.62) - H * 0.034}
-                fontFamily={F} fontWeight={900} fontSize={H * 0.040}
+                fontFamily={F()} fontWeight={900} fontSize={H * 0.040}
                 fill={mau} letterSpacing={H * 0.010}>{`CHAPTER ${soCh}`}</text>
         ) : null}
         {khoi(W * 0.09, yT, "start", fsz, chuToi)}
@@ -1723,7 +1726,7 @@ export const TheChu: React.FC<{
         <rect x={0} y={0} width={W} height={H} fill={nen} />
         <path d={`M 0 ${H * 0.16} L ${W} ${H * -0.06} L ${W} ${H} L 0 ${H} Z`} fill={mau} />
         {soCh ? (
-          <text x={W * 0.08} y={H * 0.30} fontFamily={F} fontWeight={900}
+          <text x={W * 0.08} y={H * 0.30} fontFamily={F()} fontWeight={900}
                 fontSize={cSo} fill={chuSang} opacity={0.55}>{soCh}</text>
         ) : null}
         {khoi(W * 0.08, yTieu, "start", fsz, chuSang)}
@@ -1740,7 +1743,7 @@ export const TheChu: React.FC<{
       <g opacity={q}>
         <rect x={0} y={0} width={W} height={H} fill={nen} />
         <circle cx={cx} cy={cy} r={r * (0.9 + q * 0.1)} fill={mau} />
-        <text x={cx} y={cy + r * 0.36} textAnchor="middle" fontFamily={F} fontWeight={900}
+        <text x={cx} y={cy + r * 0.36} textAnchor="middle" fontFamily={F()} fontWeight={900}
               fontSize={r * 1.05} fill={chuSang}>{soCh}</text>
         {khoi(cx + r * 1.30, cy, "start", fsz, chuToi)}
       </g>
@@ -1754,7 +1757,7 @@ export const TheChu: React.FC<{
       <g transform={`translate(${W / 2} ${H / 2}) scale(${vao})`}>
         {dong.map((d, i) => (
           <text key={i} x="0" y={(i - (dong.length - 1) / 2) * fs * 1.16 + fs * 0.34}
-                textAnchor="middle" fontFamily={F} fontWeight={900}
+                textAnchor="middle" fontFamily={F()} fontWeight={900}
                 fontSize={fs} fill={chuThe} letterSpacing={fs * 0.005}>{d.trim()}</text>
         ))}
       </g>
@@ -1875,7 +1878,7 @@ export const Chart: React.FC<{
     return (
       <g>
         {don ? (
-          <text x={W / 2} y={H * 0.075} textAnchor="middle" fontFamily={F} fontWeight={800}
+          <text x={W / 2} y={H * 0.075} textAnchor="middle" fontFamily={F()} fontWeight={800}
                 fontSize={Math.min(H * 0.042, (W * 0.8 / Math.max(1, don.length)) * 1.7)}
                 fill={mauPhu} letterSpacing={2}>{don.toUpperCase()}</text>
         ) : null}
@@ -1900,7 +1903,7 @@ export const Chart: React.FC<{
           const la = c === dinh;
           return (
             <g key={i}>
-              <text x={xNhan - W * 0.015} y={y + cN * 0.34} textAnchor="end" fontFamily={F} fontWeight={800}
+              <text x={xNhan - W * 0.015} y={y + cN * 0.34} textAnchor="end" fontFamily={F()} fontWeight={800}
                     fontSize={cN} fill="#3A342C">{c.nhan}</text>
               {kC === 1 ? (
                 <rect x={x0} y={y - oCao * 0.28} width={dai} height={oCao * 0.56} rx={bo}
@@ -1916,7 +1919,7 @@ export const Chart: React.FC<{
               )}
               {/* Số phải đứng SAU chấm, không phải sau đầu gậy — nếu không nó nằm trong chấm. */}
               <text x={x0 + dai + (kC === 2 ? rCham : 0) + W * 0.018} y={y + cS * 0.34}
-                    fontFamily={F} fontWeight={900}
+                    fontFamily={F()} fontWeight={900}
                     fontSize={cS} fill={la ? mau : _pha(mau, -0.34)} opacity={qi}>{_bac(c.v * qi)}</text>
             </g>
           );
@@ -1953,11 +1956,11 @@ export const Chart: React.FC<{
                      fill="#000000" opacity={0.15 * qi} />
             <rect x={x} y={yDay - h} width={w} height={h} rx={bo}
                   fill={la ? mau : nhat} stroke="#2C2722" strokeWidth={Math.max(2, H * 0.004)} />
-            <text x={x + w / 2} y={yDay - h - H * 0.018} textAnchor="middle" fontFamily={F}
+            <text x={x + w / 2} y={yDay - h - H * 0.018} textAnchor="middle" fontFamily={F()}
                   fontWeight={900} fontSize={cs} fill={la ? mau : _pha(mau, -0.34)} opacity={qi}>
               {_bac(so)}
             </text>
-            <text x={x + w / 2} y={yDay + H * 0.055} textAnchor="middle" fontFamily={F}
+            <text x={x + w / 2} y={yDay + H * 0.055} textAnchor="middle" fontFamily={F()}
                   fontWeight={800} fontSize={cn} fill="#3A342C">{c.nhan}</text>
           </g>
         );
@@ -1965,7 +1968,7 @@ export const Chart: React.FC<{
       <line x1={x0} y1={yDay} x2={x0 + b * cot.length} y2={yDay}
             stroke="#2C2722" strokeWidth={Math.max(3, H * 0.006)} />
       {don ? (
-        <text x={W / 2} y={H * 0.145} textAnchor="middle" fontFamily={F} fontWeight={800}
+        <text x={W / 2} y={H * 0.145} textAnchor="middle" fontFamily={F()} fontWeight={800}
               fontSize={Math.min(H * 0.042, (W * 0.8 / Math.max(1, don.length)) * 1.7)}
               fill={mauPhu} letterSpacing={2}>{don.toUpperCase()}</text>
       ) : null}

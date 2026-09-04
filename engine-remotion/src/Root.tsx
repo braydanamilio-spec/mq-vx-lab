@@ -3,6 +3,14 @@ import { Composition } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Poppins";
 loadFont("normal", { weights: ["400", "600", "700", "800", "900"] }); // load Poppins THẬT (trước đây fallback Arial) -> chữ sắc, chuẩn cho mọi kênh
 import { loadFont as loadAnton } from "@remotion/google-fonts/Anton";
+/* Ba phông cho DẤU ẤN KÊNH của bộ giải thích — xem `gt/Chu.tsx`. Phải nạp Ở ĐÂY: `Chu.tsx`
+   chỉ khai TÊN họ phông, và tên không nạp thì trình dựng lặng lẽ rơi về Arial. Đó là dạng
+   hỏng khó thấy nhất — chữ vẫn hiện, chỉ là 18 kênh lại về chung một phông, đúng cái vừa đi
+   sửa. Nạp một lần ở gốc, mọi composition dùng chung. */
+import { loadFont as loadOswald } from "@remotion/google-fonts/Oswald";
+import { loadFont as loadArchivo } from "@remotion/google-fonts/Archivo";
+import { loadFont as loadRubik } from "@remotion/google-fonts/Rubik";
+loadOswald(); loadArchivo(); loadRubik();
 loadAnton();  // Anton = condensed heavy display -> hook/số kiểu top data-channel USA (thay Poppins bo tròn generic)
 import { LongBroke, calcLong } from "./LongBroke";
 import { ShortGen, calcShortGen } from "./ShortGen";
