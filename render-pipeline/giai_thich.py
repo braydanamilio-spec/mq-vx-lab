@@ -4335,6 +4335,53 @@ def _gan_dao_cu(nhip: list) -> None:
         n["ve"] = ve + f", in the foreground {vat}{doc}"
 
 
+_KHO_ICON = None
+
+
+def _kho_icon():
+    """Đọc chỉ mục icon từ chính tệp engine dùng — MỘT nguồn sự thật (§13.5)."""
+    global _KHO_ICON
+    if _KHO_ICON is None:
+        f = os.path.join(os.path.dirname(__file__), "..", "engine-remotion", "src", "gt", "KhoIcon.ts")
+        try:
+            t = open(f, encoding="utf-8").read()
+            i = t.index("KHO_ICON: Record<string, Icon> = ") + len("KHO_ICON: Record<string, Icon> = ")
+            _KHO_ICON = set(json.loads(t[i:t.rindex(";")]).keys())
+        except Exception:
+            _KHO_ICON = set()
+    return _KHO_ICON
+
+
+def _rai_icon(nhip: list, ma: str) -> None:
+    """Chọn cho mỗi nhịp CẢNH một icon khớp CHỮ trong câu.
+
+    ── VÌ SAO ĐỔI  (5/9/2026) ─────────────────────────────────────────────────────────────
+    `_bt_canh` ánh xạ câu vào **23 biểu tượng em tự vẽ**. Đó là gốc của cả hai lời chê nặng
+    nhất: "hình que" (chất vẽ là trần của người viết code) và "lặp đi lặp lại" (23 đích cho
+    hàng nghìn nhịp — §15.15, hồ quá nhỏ so với số lần rút).
+    Kho icon có ~400 từ, và quan trọng hơn: khoá của nó là CHỮ TRONG CÂU, nên hai câu khác
+    nhau gần như luôn ra hai hình khác nhau, không cần cơ chế chống trùng nào.
+
+    Từ ĐỨNG SAU được ưu tiên: tiếng Anh đặt thông tin mới ở cuối câu (*"It decides your
+    fence"* — `fence` mới là thứ câu nói tới, `decides` chỉ là động từ dẫn). Quét từ phải
+    sang trái là mã hoá đúng điều đó, và rẻ hơn hẳn mọi phép phân tích cú pháp.
+    """
+    kho = _kho_icon()
+    if not kho:
+        return
+    dung = set()
+    for n in nhip:
+        if (n.get("khuon") or "canh") not in ("canh", "nhom"):
+            continue
+        tu = [w for w in re.findall(r"[a-z]{3,}", (n.get("loi") or "").lower()) if w in kho]
+        if not tu:
+            continue
+        # Chưa dùng trong tập này thì ưu tiên; hết thì đành lấy lại còn hơn không có hình.
+        moi = [w for w in tu if w not in dung]
+        n["icon"] = (moi or tu)[-1]
+        dung.add(n["icon"])
+
+
 _KHO_TU = None
 
 
@@ -4829,6 +4876,7 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     _rai_canh_ve(nhip, ma, _lech_kenh(ma) + idx * 7919)
     # SAU `_rai_canh_ve`: nhịp nào nhận được tranh nhập thì bỏ luôn cảnh vẽ code của nó —
     # hai cảnh trong một khung là đúng thứ vừa đi sửa.
+    _rai_icon(nhip, ma)
     _rai_hinh_nhap(nhip, ma, idx)
     for _n in nhip:
         if _n.get("hinh_nhap"):

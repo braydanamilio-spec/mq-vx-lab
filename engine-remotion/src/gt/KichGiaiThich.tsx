@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
 import { TuVe } from "./TuVe";
+import { IconVe, co_icon } from "./IconVe";
 import { HinhNhap, co_hinh_nhap } from "./HinhNhap";
 import { chanTroi, DAY_HINH, coHinh, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong, tiLe, nguonSang} from "./Khuon";
 import { CanhVe, sangDayCanh } from "./CanhVe";
@@ -637,10 +638,32 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                             §14.9: chọn sai đại lượng thì số đo đẹp mà sản phẩm vẫn lặp —
                             thứ người xem cảm được là "hai nhịp liền nhau có khác nhau
                             không", không phải "cả kho có được dùng đều không". */}
-                        <TuVe p={p / 0.26}>
-                          <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
-                                     nv={(N as any)?.nv ?? 0} />
-                        </TuVe>
+                        {/* ── ICON THẮNG BIỂU TƯỢNG TỰ VẼ  (5/9/2026) ────────────────
+                            Xem `IconVe.tsx` và `tai_icon.py`. Icon do hoạ sĩ vẽ, chọn theo
+                            đúng chữ trong câu, ~400 từ thay vì 23 biểu tượng.
+                            Đáy icon neo vào MẶT SÀN (`IconVe` dịch `-vh*k`, tức gốc toạ độ
+                            nằm ở đáy hình), nên nó đứng trên sàn ở mọi icon — khác hẳn
+                            tranh unDraw vốn mang mặt đất riêng và lơ lửng một lượng khác
+                            nhau ở từng bức. */}
+                        {co_icon(String((N as any)?.icon || "")) ? (
+                          /* ── BÙ LẠI PHÉP NÂNG CỦA LỚP CHA  (5/9/2026) ──────────────────
+                             Thẻ cha đã dịch lên `sz * DAY_HINH` để ĐÁY của `BieuTuong` chạm
+                             sàn — `DAY_HINH` là phần hình người không chạm hết hộp của nó.
+                             `IconVe` thì tự neo đáy (nó dịch `-vh*k`), nên đi qua thẻ cha là
+                             bị nâng LẦN HAI: soi khung thấy icon tràn hẳn khỏi mép trên và
+                             mặt sàn thì trống với một cái bóng không chủ.
+                             Đúng họ lỗi §6 *chép hằng số sang hệ quy chiếu khác* — không báo
+                             lỗi, chỉ làm hình sai. Cộng lại đúng lượng đã trừ. */
+                          <g transform={`translate(0 ${sz * DAY_HINH})`}>
+                            <IconVe tu={String((N as any).icon)} s={sz * 0.96} p={p / 0.26}
+                                    mau={mau} mauPhu={mauPhu} />
+                          </g>
+                        ) : (
+                          <TuVe p={p / 0.26}>
+                            <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
+                                       nv={(N as any)?.nv ?? 0} />
+                          </TuVe>
+                        )}
                       {/* ── ÁNH SÁNG PHỦ LÊN CHỦ THỂ  (4/9/2026) ─────────────────────────
                           Bốn ảnh anh gửi: ba người ngồi quanh lửa đều có **viền cam trên
                           nửa mặt phía lửa**. Đó là thứ tách "nhân vật đứng trong một cảnh
