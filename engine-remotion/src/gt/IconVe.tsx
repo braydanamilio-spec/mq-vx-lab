@@ -46,7 +46,7 @@ export const IconVe: React.FC<{
     <g transform={`translate(${-vw * k / 2} ${-vh * k}) scale(${k})`}>
       <style>{`#${id} *{stroke-dasharray:1;stroke-dashoffset:${(1 - q).toFixed(3)};`
              + `fill-opacity:${m.toFixed(3)}}`}</style>
-      <g id={id} color={mauPhu || mau} dangerouslySetInnerHTML={{ __html: ruot }} />
+      <g id={id} color="#2C2722"  /* MỰC, không phải màu kênh — xem chú thích ở `ruot` */ dangerouslySetInnerHTML={{ __html: ruot }} />
     </g>
   );
 };

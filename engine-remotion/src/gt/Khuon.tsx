@@ -155,73 +155,107 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
        Nên mắt là KHỐI ĐẶC (co bao nhiêu vẫn thấy), lông mày dày gần bằng nét chính, và áo
        là mảng màu — ba thứ sống sót qua phép thu, khác hẳn nét mảnh. */
     case "nguoi": {
-      /* ── NÉT RIÊNG, KHÔNG MƯỢN NÉT CHUNG  (đo lại sau khi soi ảnh cận) ────────────────
-         Bản vẽ lại lần đầu dùng `n` (= 0,055·s) như mọi biểu tượng khác. Soi ảnh cận thì
-         nét ấy NUỐT hết chi tiết: lông mày dính vào viền đầu, miệng thành một cục, hai
-         tay thành hai khối đen. Đo trên ảnh tham chiếu anh gửi: viền khoảng **1,8% chiều
-         cao hình**, tức chỉ bằng một phần ba `n`.
-         `n` đúng cho biểu tượng đồ vật (ít chi tiết, cần dày để đọc ở cỡ nhỏ) và sai ở
-         đây vì mặt người là chỗ chi tiết dày đặc nhất trong cả bảng hình. Đúng §6 —
-         mượn một giá trị cho việc nó không sinh ra để làm. */
-      const w = k(0.017);                 // nét thân/chi
-      const wM = k(0.013);                // nét nét mặt — mảnh hơn, nhưng vẫn là KHỐI ĐẶC
-      const N = (d: string, f = "none", ww = w) => (
-        <path d={d} fill={f} stroke={mau} strokeWidth={ww}
+      /* ══ NGƯỜI QUE THEO CHUẨN CÁC KÊNH TRĂM TRIỆU VIEW  (5/9/2026) ═══════════════════
+         Soi ảnh khung của những kênh mà ba video hướng dẫn Canva lấy làm mẫu (10M · 39M ·
+         50M · 79M · 90M · 129M view). Phong cách của họ ĐƠN GIẢN HƠN thứ em đang làm, và
+         khác ở sáu chỗ đo được:
+
+           1. THUẦN NÉT, không tô màu   <- em đang tô áo màu đặc
+           2. nét RUN TAY, có chỗ chồng <- em đang vẽ thẳng đều tuyệt đối
+           3. mắt TO có con ngươi       <- em đang vẽ hai chấm đen
+           4. bàn tay/bàn chân Ô-VAN    <- em đang để đầu nét cụt
+           5. một PHỤ KIỆN nhận dạng    <- em không có
+           6. nền có VÂN GIẤY           <- em đang dùng gradient
+
+         Điều quan trọng nhất: cả phong cách ấy là LINE ART. Không mảng màu nào. Nghĩa là
+         code làm được trọn vẹn — không cần một tệp Canva nào cho nhân vật.
+
+         Em đã đi sai hướng suốt: cố tô màu và đổ bóng cho đẹp, trong khi các kênh ấy
+         KHÔNG TÔ GÌ CẢ — họ thắng bằng nét và biểu cảm.                                   */
+      const w = k(0.017);
+      const wM = k(0.013);
+
+      /* Nhiễu TẤT ĐỊNH: cùng một nhân vật ở cùng tư thế luôn run giống hệt nhau, nên hình
+         không "sôi" giữa các khung. Viết phép băm ra tường minh — `Math.random` thì mỗi
+         khung một kiểu, còn `hash()` của Python đã trả giá ở §13.13. */
+      const rnd = (i: number) => {
+        const x = Math.sin(nv * 17.31 + tu * 7.13 + i * 3.77) * 43758.5453;
+        return (x - Math.floor(x)) - 0.5;
+      };
+      /* Nối các điểm bằng cung cong lệch nhẹ khỏi đường thẳng — đó là toàn bộ bí quyết
+         "nét vẽ tay". Biên độ 9% chiều dài đoạn: đủ để mắt đọc ra tay người, chưa đủ để
+         hình méo. */
+      const NET = (pts: number[][], key: number): string => {
+        let d = `M ${pts[0][0]} ${pts[0][1]}`;
+        for (let i = 1; i < pts.length; i++) {
+          const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+          const dx = x1 - x0, dy = y1 - y0;
+          const len = Math.sqrt(dx * dx + dy * dy) || 1;
+          const o = rnd(key * 13 + i) * len * 0.09;
+          d += ` Q ${(x0 + x1) / 2 - (dy / len) * o} ${(y0 + y1) / 2 + (dx / len) * o} ${x1} ${y1}`;
+        }
+        return d;
+      };
+      const N = (d: string, ww = w) => (
+        <path d={d} fill="none" stroke={mau} strokeWidth={ww}
               strokeLinejoin="round" strokeLinecap="round" />
       );
-      const vaiY = -k(0.10);
+      /* Chi = một nét + BÀN TAY/BÀN CHÂN ô-van ở đầu mút. Chi tiết bé xíu này là thứ tách
+         "người que có bàn tay" khỏi "bốn cái que cắm vào nhau" — đo trên ảnh mẫu thì mọi
+         nhân vật đều có, không một ngoại lệ. */
+      const CHI = (pts: number[][], key: number, ban = true) => {
+        const [ex, ey] = pts[pts.length - 1];
+        const [px, py] = pts[pts.length - 2];
+        const a = Math.atan2(ey - py, ex - px);
+        return (<g key={key}>
+          {N(NET(pts, key))}
+          {ban ? <ellipse cx={ex} cy={ey} rx={k(0.030)} ry={k(0.019)}
+                          transform={`rotate(${(a * 180) / Math.PI} ${ex} ${ey})`}
+                          fill="#FFFFFF" stroke={mau} strokeWidth={wM} /> : null}
+        </g>);
+      };
+
+      const vaiY = -k(0.10);          // chỗ tay mọc ra khỏi thân
+      const hong = k(0.16);           // chỗ chân mọc ra
+      const dauY = -k(0.285), dauR = k(0.150);
+
+      /* Năm tư thế — toạ độ giữ nguyên bản cũ, chỉ đổi điểm BẮT ĐẦU về trục thân (x = 0),
+         vì bỏ áo rồi thì không còn bờ vai để tay mọc ra. */
+      const TAY: number[][][][] = [
+        [[[0, vaiY + k(0.02)], [-k(0.185), k(0.045)], [-k(0.155), k(0.16)]],
+         [[0, vaiY + k(0.02)], [k(0.195), k(0.035)], [k(0.172), k(0.145)]]],
+        [[[0, vaiY + k(0.02)], [-k(0.175), k(0.060)], [-k(0.150), k(0.16)]],
+         [[0, vaiY + k(0.02)], [k(0.185), -k(0.140)], [k(0.205), -k(0.300)]]],
+        [[[0, vaiY + k(0.04)], [-k(0.140), k(0.080)], [-k(0.132), k(0.215)]],
+         [[0, vaiY + k(0.04)], [k(0.140), k(0.080)], [k(0.132), k(0.215)]]],
+        [[[0, vaiY + k(0.02)], [-k(0.215), -k(0.010)], [-k(0.255), -k(0.090)]],
+         [[0, vaiY + k(0.02)], [k(0.215), -k(0.010)], [k(0.255), -k(0.090)]]],
+        [[[0, vaiY + k(0.02)], [-k(0.165), k(0.070)], [-k(0.148), k(0.180)]],
+         [[0, vaiY + k(0.03)], [k(0.230), k(0.010)], [k(0.320), k(0.020)]]],
+      ];
+      const t5 = ((tu % 5) + 5) % 5;
+      const buoc = t5 === 3 || t5 === 4;
+      const CHAN: number[][][] = buoc
+        ? [[[0, hong], [-k(0.135), k(0.30)], [-k(0.150), k(0.42)]],
+           [[0, hong], [k(0.105), k(0.30)], [k(0.075), k(0.42)]]]
+        : [[[0, hong], [-k(0.078), k(0.30)], [-k(0.060), k(0.42)]],
+           [[0, hong], [k(0.078), k(0.30)], [k(0.060), k(0.42)]]];
+
       return (<g>
-        {/* ÁO vẽ TRƯỚC đầu, để cổ áo chui xuống dưới cằm chứ không cắt ngang mặt */}
-        {N(`M ${-k(0.105)} ${vaiY} Q 0 ${vaiY - k(0.030)} ${k(0.105)} ${vaiY}
-            L ${k(0.092)} ${k(0.16)} L ${-k(0.092)} ${k(0.16)} Z`, AO[nv % AO.length])}
-        {/* ── NĂM TƯ THẾ, KHÔNG PHẢI MỘT  (4/9/2026) ─────────────────────────────────────
-            Sau khi buộc đồ vật phải lấy từ LỜI, `nguoi` chiếm 64% nhịp `canh` — và bốn nhịp
-            người liên tiếp với MỘT tư thế đứng, MỘT nụ cười là đúng lời anh phê *"lặp đi lặp
-            lại cùng một mô-típ"*. Đổi người thành cái đồng hồ để lấy đa dạng thì hỏng nghĩa,
-            nên lối thoát duy nhất là để chính nhân vật DIỄN.
-            Bốn ảnh anh gửi làm đúng thế: mọi khung đều có người, và cái đổi giữa khung này với
-            khung kia là TƯ THẾ và BIỂU CẢM — ngồi cúi viết, nằm co bên lửa, đứng chỉ tay, đưa
-            món đồ. Không khung nào đổi nhân vật thành một biểu tượng.
-            Tay và chân vốn là bốn nét rời, nên tư thế chỉ là đổi toạ độ, không đổi kiến trúc. */}
-        {tu === 1 ? (<>
-          {/* chỉ tay lên — câu nêu một con số hoặc một sự thật */}
-          {N(`M ${-k(0.105)} ${vaiY + k(0.045)} L ${-k(0.175)} ${k(0.060)} L ${-k(0.150)} ${k(0.16)}`)}
-          {N(`M ${k(0.105)} ${vaiY + k(0.040)} L ${k(0.185)} ${-k(0.140)} L ${k(0.205)} ${-k(0.300)}`)}
-        </>) : tu === 2 ? (<>
-          {/* hai tay buông xuôi, vai chùng — mệt, chịu đựng */}
-          {N(`M ${-k(0.100)} ${vaiY + k(0.060)} L ${-k(0.140)} ${k(0.080)} L ${-k(0.132)} ${k(0.215)}`)}
-          {N(`M ${k(0.100)} ${vaiY + k(0.060)} L ${k(0.140)} ${k(0.080)} L ${k(0.132)} ${k(0.215)}`)}
-        </>) : tu === 3 ? (<>
-          {/* hai tay dang ra — câu hỏi, ngơ ngác */}
-          {N(`M ${-k(0.105)} ${vaiY + k(0.045)} L ${-k(0.215)} ${-k(0.010)} L ${-k(0.255)} ${-k(0.090)}`)}
-          {N(`M ${k(0.105)} ${vaiY + k(0.045)} L ${k(0.215)} ${-k(0.010)} L ${k(0.255)} ${-k(0.090)}`)}
-        </>) : tu === 4 ? (<>
-          {/* một tay đưa ra trước — trao, chỉ vào vật bên cạnh */}
-          {N(`M ${-k(0.105)} ${vaiY + k(0.045)} L ${-k(0.165)} ${k(0.070)} L ${-k(0.148)} ${k(0.180)}`)}
-          {N(`M ${k(0.105)} ${vaiY + k(0.050)} L ${k(0.230)} ${k(0.010)} L ${k(0.320)} ${k(0.020)}`)}
-        </>) : (<>
-          {N(`M ${-k(0.105)} ${vaiY + k(0.045)} L ${-k(0.185)} ${k(0.045)} L ${-k(0.155)} ${k(0.16)}`)}
-          {N(`M ${k(0.105)} ${vaiY + k(0.045)} L ${k(0.195)} ${k(0.035)} L ${k(0.172)} ${k(0.145)}`)}
-        </>)}
-        {/* CHÂN gập ở gối, bàn chân bẻ ngang để nhân vật ĐỨNG chứ không lơ lửng.
-            Tư thế 3 và 4 bước đi: một chân trước một chân sau. */}
-        {tu === 3 || tu === 4 ? (<>
-          {N(`M ${-k(0.050)} ${k(0.16)} L ${-k(0.135)} ${k(0.30)} L ${-k(0.150)} ${k(0.42)} L ${-k(0.215)} ${k(0.432)}`)}
-          {N(`M ${k(0.050)} ${k(0.16)} L ${k(0.105)} ${k(0.30)} L ${k(0.075)} ${k(0.42)} L ${k(0.140)} ${k(0.432)}`)}
-        </>) : (<>
-          {N(`M ${-k(0.050)} ${k(0.16)} L ${-k(0.078)} ${k(0.30)} L ${-k(0.060)} ${k(0.42)} L ${-k(0.125)} ${k(0.432)}`)}
-          {N(`M ${k(0.050)} ${k(0.16)} L ${k(0.078)} ${k(0.30)} L ${k(0.060)} ${k(0.42)} L ${k(0.125)} ${k(0.432)}`)}
-        </>)}
-        {/* ĐẦU chiếm khoảng một phần ba chiều cao — tỉ lệ ấy là thứ làm hình đọc ra nhân
-            vật thay vì sơ đồ người. */}
-        <circle cx="0" cy={-k(0.285)} r={k(0.150)} fill="#FFFFFF"
-                stroke={mau} strokeWidth={k(0.019)} />
-        {/* ── TÓC: BỐN KIỂU  (4/9/2026) ───────────────────────────────────────────────────
-            Anh: *"lặp đi lặp lại 1 nhân vật, nhàm chán, không ra đâu cả"*. Tư thế thôi chưa
-            đủ — bốn ảnh anh gửi có NHIỀU NGƯỜI KHÁC NHAU: người tóc bù, người tóc dài tết
-            bím, người có râu. Cùng một khuôn mặt trắng, cái tách họ ra là TÓC và MÀU ÁO.
-            Vẽ SAU vòng đầu để tóc đè lên đường viền trên, đúng cách ảnh tham chiếu làm —
-            tóc mọc ra ngoài khối đầu chứ không nằm gọn bên trong. */}
+        {/* THÂN là MỘT NÉT, không phải một cái áo. Đây là thay đổi lớn nhất so với bản cũ. */}
+        {N(NET([[0, dauY + dauR * 0.92], [0, hong]], 1))}
+        {TAY[t5].map((a, i) => CHI(a, 20 + i))}
+        {CHAN.map((c, i) => CHI(c, 40 + i))}
+
+        {/* ĐẦU: ô-van hơi lệch tròn + xoay nhẹ — một hình tròn hoàn hảo đọc ra hình học,
+            một ô-van lệch đọc ra nét bút. */}
+        <ellipse cx="0" cy={dauY} rx={dauR * 1.02} ry={dauR * 0.97}
+                 transform={`rotate(${rnd(3) * 5} 0 ${dauY})`}
+                 fill="#FFFFFF" stroke={mau} strokeWidth={k(0.019)} />
+
+        {/* TÓC vẽ SAU vòng đầu để nó đè lên đường viền trên — tóc mọc RA NGOÀI khối đầu,
+            đúng cách mọi ảnh mẫu làm. Đây là món tô đặc thứ hai (cùng với phụ kiện), và
+            hai món ấy là toàn bộ mảng đen trong một hình thuần nét. */}
         {nv % 4 === 1 ? (
           <path d={`M ${-k(0.150)} ${-k(0.300)} q ${k(0.030)} ${-k(0.140)} ${k(0.150)} ${-k(0.148)}
                     q ${k(0.122)} ${k(0.008)} ${k(0.150)} ${k(0.148)}
@@ -237,33 +271,73 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
                     q ${k(0.108)} ${k(0.008)} ${k(0.148)} ${k(0.140)}
                     l ${-k(0.052)} ${k(0.016)} q ${-k(0.030)} ${-k(0.072)} ${-k(0.096)} ${-k(0.070)}
                     q ${-k(0.066)} ${k(0.002)} ${-k(0.096)} ${k(0.070)} Z`} fill={mau} />
-        ) : null}
-        <ellipse cx={-k(0.050)} cy={-k(0.295)} rx={k(0.019)} ry={k(0.026)} fill={mau} />
-        <ellipse cx={k(0.050)} cy={-k(0.295)} rx={k(0.019)} ry={k(0.026)} fill={mau} />
-        {/* LÔNG MÀY + MIỆNG THEO TƯ THẾ. Ảnh tham khảo: người ngồi viết có lông mày XUÔI và
-            miệng thẳng; người kể chuyện có miệng mở. Mặt bất động là thứ làm cả loạt khung
-            đọc ra "cùng một hình dán", kể cả khi thân đã đổi tư thế. */}
-        {tu === 2 ? (<>
-          {/* MÀY XUÔI RA NGOÀI = MỆT. Bản trước cho đầu trong THẤP hơn đầu ngoài — đó là
-              mày CHỤM VÀO GIỮA, tức nét giận dữ, và anh đọc ra đúng thế. Buồn/mệt thì
-              ngược lại: đầu trong CAO, đuôi ngoài xuôi xuống. Một dấu trừ, hai cảm xúc
-              trái ngược — và không có cách nào thấy ngoài việc nhìn khuôn mặt đã dựng. */}
-          {N(`M ${-k(0.078)} ${-k(0.330)} L ${-k(0.026)} ${-k(0.356)}`, "none", wM)}
-          {N(`M ${k(0.026)} ${-k(0.356)} L ${k(0.078)} ${-k(0.330)}`, "none", wM)}
-        </>) : tu === 3 ? (<>
-          {N(`M ${-k(0.082)} ${-k(0.386)} Q ${-k(0.052)} ${-k(0.408)} ${-k(0.022)} ${-k(0.390)}`, "none", wM)}
-          {N(`M ${k(0.022)} ${-k(0.390)} Q ${k(0.052)} ${-k(0.408)} ${k(0.082)} ${-k(0.386)}`, "none", wM)}
+        ) : (
+          /* nv%4 === 0: vài sợi tóc dựng — ảnh mẫu nào cũng có 2–3 sợi trên đỉnh đầu,
+             kể cả nhân vật "hói". Thiếu chúng thì đầu đọc ra quả trứng. */
+          <g>
+            {N(NET([[-k(0.040), -k(0.424)], [-k(0.016), -k(0.470)]], 11), wM)}
+            {N(NET([[k(0.004), -k(0.432)], [k(0.030), -k(0.478)]], 12), wM)}
+            {N(NET([[k(0.046), -k(0.418)], [k(0.072), -k(0.456)]], 13), wM)}
+          </g>
+        )}
+
+        {/* MẮT TO CÓ CON NGƯƠI — bản cũ chỉ có con ngươi, nên mặt đọc ra hai lỗ đen.
+            Ảnh mẫu: tròng trắng lớn, con ngươi nhỏ hơn hẳn, đặt hơi lệch theo hướng nhìn. */}
+        {[-1, 1].map((sg) => (
+          <g key={sg}>
+            <ellipse cx={sg * k(0.052)} cy={-k(0.298)} rx={k(0.036)} ry={k(0.044)}
+                     fill="#FFFFFF" stroke={mau} strokeWidth={wM} />
+            <ellipse cx={sg * k(0.052) + (buoc ? sg * k(0.008) : 0)} cy={-k(0.292)}
+                     rx={k(0.017)} ry={k(0.021)} fill={mau} />
+          </g>
+        ))}
+
+        {/* LÔNG MÀY — thứ mang toàn bộ cảm xúc. Xem chú thích bản cũ: đầu trong CAO,
+            đuôi ngoài xuôi = mệt; ngược lại thành giận dữ. Một dấu trừ, hai cảm xúc. */}
+        {t5 === 2 ? (<>
+          {N(NET([[-k(0.100), -k(0.362)], [-k(0.026), -k(0.392)]], 5), wM)}
+          {N(NET([[k(0.026), -k(0.392)], [k(0.100), -k(0.362)]], 6), wM)}
+        </>) : t5 === 3 ? (<>
+          {N(NET([[-k(0.104), -k(0.404)], [-k(0.022), -k(0.420)]], 5), wM)}
+          {N(NET([[k(0.022), -k(0.420)], [k(0.104), -k(0.404)]], 6), wM)}
         </>) : (<>
-          {N(`M ${-k(0.078)} ${-k(0.358)} L ${-k(0.026)} ${-k(0.374)}`, "none", wM)}
-          {N(`M ${k(0.026)} ${-k(0.374)} L ${k(0.078)} ${-k(0.358)}`, "none", wM)}
+          {N(NET([[-k(0.100), -k(0.386)], [-k(0.026), -k(0.400)]], 5), wM)}
+          {N(NET([[k(0.026), -k(0.400)], [k(0.100), -k(0.386)]], 6), wM)}
         </>)}
-        {tu === 2
-          ? N(`M ${-k(0.032)} ${-k(0.220)} L ${k(0.032)} ${-k(0.220)}`, "none", wM)
-          : tu === 3
-          ? <ellipse cx="0" cy={-k(0.216)} rx={k(0.026)} ry={k(0.032)} fill={mau} />
-          : tu === 1 || tu === 4
-          ? N(`M ${-k(0.044)} ${-k(0.234)} Q 0 ${-k(0.186)} ${k(0.044)} ${-k(0.234)}`, "none", wM)
-          : N(`M ${-k(0.036)} ${-k(0.228)} Q 0 ${-k(0.202)} ${k(0.036)} ${-k(0.228)}`, "none", wM)}
+
+        {/* MIỆNG rộng hơn hẳn bản cũ — ảnh mẫu nào miệng cũng chiếm gần nửa bề ngang đầu. */}
+        {t5 === 2
+          ? N(NET([[-k(0.046), -k(0.208)], [k(0.046), -k(0.208)]], 7), wM)
+          : t5 === 3
+          ? <ellipse cx="0" cy={-k(0.206)} rx={k(0.032)} ry={k(0.040)}
+                     fill="#FFFFFF" stroke={mau} strokeWidth={wM} />
+          : <path d={`M ${-k(0.072)} ${-k(0.238)} Q 0 ${-k(0.168)} ${k(0.072)} ${-k(0.238)}`}
+                  fill="none" stroke={mau} strokeWidth={wM} strokeLinecap="round" />}
+
+        {/* PHỤ KIỆN — trục nhận dạng. Ảnh mẫu dùng đúng một món cho mỗi nhân vật (cà vạt
+            tô đen), và chính món ấy làm người xem nhận ra "lại anh chàng ấy". Đây là chỗ
+            18 kênh lấy bản sắc mà không cần một tệp Canva nào. */}
+        {nv % 4 === 0 ? (
+          /* cà vạt — món duy nhất được TÔ ĐẶC trong cả hình, nên nó hút mắt */
+          <path d={`M ${-k(0.026)} ${-k(0.118)} L ${k(0.026)} ${-k(0.118)}
+                    L ${k(0.040)} ${k(0.020)} L 0 ${k(0.072)} L ${-k(0.040)} ${k(0.020)} Z`}
+                fill={mau} />
+        ) : nv % 4 === 2 ? (<>
+          {/* kính tròn */}
+          <circle cx={-k(0.052)} cy={-k(0.298)} r={k(0.062)} fill="none"
+                  stroke={mau} strokeWidth={wM} />
+          <circle cx={k(0.052)} cy={-k(0.298)} r={k(0.062)} fill="none"
+                  stroke={mau} strokeWidth={wM} />
+          {N(NET([[-k(0.010), -k(0.300)], [k(0.010), -k(0.300)]], 8), wM)}
+        </>) : nv % 4 === 3 ? (
+          /* mũ vành */
+          <g>
+            {N(NET([[-k(0.170), -k(0.402)], [k(0.170), -k(0.402)]], 9))}
+            <path d={`M ${-k(0.112)} ${-k(0.404)} q 0 ${-k(0.120)} ${k(0.112)} ${-k(0.116)}
+                      q ${k(0.112)} ${-k(0.004)} ${k(0.112)} ${k(0.116)} Z`}
+                  fill="none" stroke={mau} strokeWidth={w} strokeLinejoin="round" />
+          </g>
+        ) : null}
       </g>);
     }
     case "dien_thoai": return <g>{P(`M ${-k(0.22)} ${-k(0.42)} h ${k(0.44)} v ${k(0.84)} h ${-k(0.44)} Z`, "#20262E")}
@@ -503,8 +577,8 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
 
      Đây là chỗ dễ sai theo hướng ngược lại: pha mạnh thì phòng thành một khối màu và nuốt đồ
      hoạ. 0,12 / 0,26 là mức giữ được cả hai. */
-  const tuong = _pha(_tron(nen, mau, 0.10), 0.18);
-  const tuongD = _pha(_tron(nen, mau, 0.14), -0.02);
+  const tuong = _pha(_tron(nen, mau, 0.04), 0.10);
+  const tuongD = _pha(_tron(nen, mau, 0.05), -0.02);
   /* ── BỎ NỀN CHIA SÁNG/TỐI  (5/9/2026) ─────────────────────────────────────────────
      Anh: *"bỏ cái template có nền chia này thấy hơi tối khó chịu"*. Đúng, và đo được: dải
      sàn sẫm chiếm **28% chiều cao mọi khung**, tối hơn tường 34% — mắt đọc ra một khung bị
@@ -514,7 +588,7 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
      mất, mà dải thì còn. Đúng họ lỗi "hằng số sống lâu hơn ngữ cảnh sinh ra nó" (§13.6).
      Nay sàn gần cùng tông với tường; thứ phân biệt sàn với tường là ĐƯỜNG CHÂN TRỜI và
      quầng sáng, không phải một mảng tối. */
-  const san = _pha(_tron(nen, mau, 0.20), k === 3 ? -0.10 : -0.05);
+  const san = _pha(_tron(nen, mau, 0.07), k === 3 ? -0.08 : -0.04);
   /* ── MÉP SÀN PHẢI ĐỦ SẪM CHO CHỮ TRẮNG ĐỌC ĐƯỢC  (3/9/2026) ─────────────────────────────
      Cổng `kiem_hinh` chấm bản dài HOW LOUD 84/100 với lý do *"tương phản phụ đề 2.6:1 < 4,5:1
      (chuẩn WCAG AA)"*. Đo pixel dải phụ đề ở năm mốc: sáng TB **133–184**, tương phản với chữ
@@ -527,7 +601,7 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
      Để đạt 4,5:1 với chữ trắng thì nền phải xuống dưới ~118/255. `-0.34` cho ra 133–184; cần
      sẫm hơn nữa ở ĐÁY, nên thêm một chặng thứ ba trong dải chuyển chỉ ở 18% cuối — phần trên
      của sàn giữ nguyên độ sáng để căn phòng không tối đi. */
-  const sanD = _pha(_tron(nen, mau, 0.23), -0.09);
+  const sanD = _pha(_tron(nen, mau, 0.08), -0.07);
   // -0,70 và chặng bắt đầu ở 0,55: đo lần đầu (-0,62 / 0,62) cho 4,31–5,44:1, tức một
   // trong ba mốc vẫn hụt chuẩn 4,5. Hiệu chỉnh theo SỐ ĐO, không theo cảm giác (§13.7).
   // −0,70 → −0,22, cùng lý do và cùng lượt sửa với `CanhVe._bang.sanDay`: xem chú thích ở
@@ -537,7 +611,7 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
      đổi một mắt trong một dãy có thứ tự thì phải đổi cả dãy, và `sangDayCanh` đọc chính
      giá trị này để bảo engine chọn mực phụ đề. 0,05 -> 0,09 -> 0,14: vẫn sẫm dần, nhưng
      biên độ bằng một phần ba bản cũ nên mắt không còn đọc ra hai nửa. */
-  const sanDay = _pha(_tron(nen, mau, 0.27), -0.14);
+  const sanDay = _pha(_tron(nen, mau, 0.10), -0.11);
   const vach = _pha(mau, -0.55);
   const id = `np${Math.round(W)}_${k}`;
   return (
@@ -691,6 +765,34 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
 
       {/* bóng tiếp đất mềm ngay dưới chân trời — đồ hoạ đè lên sẽ như đứng trên sàn, không lơ lửng */}
       <ellipse cx={W / 2} cy={yS + H * 0.012} rx={W * 0.40} ry={H * 0.022} fill="#000000" opacity={0.07} />
+
+      {/* ══ VÂN GIẤY  (5/9/2026) ═══════════════════════════════════════════════════════
+          Mọi kênh người-que trăm triệu view đều đặt hình trên GIẤY có vân, không đặt trên
+          một mảng màu phẳng. Đó là thứ mắt đọc ra "vẽ tay" trước cả khi kịp nhìn nhân vật.
+
+          Em đã thêm vân giấy một lần rồi TỰ BỎ ĐI, ghi vào chú thích "đã thử và bỏ — nhìn
+          không thấy". Đó là kết luận sai: nhìn không thấy nghĩa là làm CHƯA ĐỦ RÕ, không
+          phải nó vô dụng. Lần này 0,16 (bản cũ ~0,04) và đo bằng mắt ở cỡ thật.
+
+          `feTurbulence` vẽ trên GPU nên không tốn gì; `baseFrequency` cao cho hạt mịn như
+          sợi giấy, thấp thì ra mây. 0,9 là hạt giấy; dưới 0,3 là vệt loang. */}
+      <defs>
+        <filter id={`${id}gi`} x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4"
+                        seed={Math.abs(hat) % 100} result="n" />
+          <feColorMatrix in="n" type="saturate" values="0" />
+        </filter>
+        {/* Mép giấy sẫm hơn giữa tờ — có ở mọi ảnh mẫu, và nó khác hẳn gradient trời-đất
+            mà em vừa phải đi bỏ: cái này là ĐẶC TÍNH CỦA GIẤY, không phải một mảng tối
+            chiếm một phần ba khung. */}
+        <radialGradient id={`${id}me`} cx="0.5" cy="0.5" r="0.75">
+          <stop offset="0.55" stopColor="#4A3520" stopOpacity="0" />
+          <stop offset="1" stopColor="#4A3520" stopOpacity="0.16" />
+        </radialGradient>
+      </defs>
+      <rect x={0} y={0} width={W} height={H} filter={`url(#${id}gi)`}
+            opacity={0.16} style={{ mixBlendMode: "multiply" }} />
+      <rect x={0} y={0} width={W} height={H} fill={`url(#${id}me)`} />
     </svg>
   );
 };

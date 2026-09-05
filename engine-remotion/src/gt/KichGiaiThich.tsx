@@ -830,6 +830,27 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
         transform: `scale(${1.02 - vao * 0.02})`,
       }}>
         {nen}
+        {/* ══ VÂN GIẤY — LỚP TRÊN CÙNG CỦA NỀN  (5/9/2026) ═════════════════════════════
+            Bản đầu em đặt vân giấy BÊN TRONG `NenPhong`. Sai: `NenPhong` chỉ chạy cho một
+            phần nhịp — nhịp có `canh_ve` đi qua `CanhVe`, nhịp có ảnh đi qua `Img`. Soi lưới
+            thì 3/4 khung không có vân giấy nào, và em suýt kết luận "feTurbulence không
+            chạy" trong khi nó chạy đúng ở đúng một nhánh.
+            Đây là họ lỗi §6 quen thuộc: đặt một thứ DÙNG CHUNG vào trong một nhánh.
+            Nay nó phủ MỌI nhánh nền, và nằm dưới chủ thể + chữ nên không làm mờ chúng. */
+        }
+        <AbsoluteFill style={{ mixBlendMode: "multiply", opacity: 0.22 }}>
+          <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+            <defs>
+              <filter id="giay0" x="0" y="0" width="100%" height="100%">
+                {/* 0,85 cho hạt mịn như sợi giấy. Dưới 0,3 ra vệt loang như mây — thử rồi. */}
+                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4"
+                              seed={Math.abs(hat) % 100} result="n" />
+                <feColorMatrix in="n" type="saturate" values="0" />
+              </filter>
+            </defs>
+            <rect x={0} y={0} width={W} height={H} filter="url(#giay0)" />
+          </svg>
+        </AbsoluteFill>
         {lop ? (
           <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute", inset: 0 }}>
             {lop}

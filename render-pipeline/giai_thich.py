@@ -772,26 +772,26 @@ def _lau(gio: float) -> tuple:
 # Kết quả đo: chói 0,070–0,235 (3,4×, bằng bảng cũ) · tương phản chữ trắng thấp nhất 3,68:1
 # (đạt AA cho chữ lớn, và `chuHopNen` vẫn tự đổi màu chữ theo nền).
 MAU_KENH = {
-    "howlong":  {"nen": "#F4EDE0", "mau": "#D75A88", "phu": "#2F6E8A", "chu": "#2E2A24"},
-    "howbig":   {"nen": "#EEF1F3", "mau": "#216E83", "phu": "#C9552F", "chu": "#22282B"},
-    "realcost": {"nen": "#F2F0EA", "mau": "#1E6C45", "phu": "#8A5A2E", "chu": "#232622"},
-    "howmuch":  {"nen": "#EEF0F4", "mau": "#573C85", "phu": "#C98A2E", "chu": "#232336"},
-    "whatif":   {"nen": "#F5F0E6", "mau": "#B04A8E", "phu": "#2F7D8A", "chu": "#2B2622"},
-    "survive":  {"nen": "#E8E9E6", "mau": "#6B5124", "phu": "#4E6B54", "chu": "#232522"},
-    "dayinlife":{"nen": "#F0E7D6", "mau": "#6E6C2A", "phu": "#3E6E8C", "chu": "#2A241B"},
-    "wheregoes":{"nen": "#EDF0F2", "mau": "#405FD8", "phu": "#C9762F", "chu": "#212629"},
-    "therules": {"nen": "#EFF1EA", "mau": "#BC4FBC", "phu": "#4E7C4A", "chu": "#252722"},
-    "speedof":  {"nen": "#EAF0F5", "mau": "#245E99", "phu": "#D9622B", "chu": "#1F272E"},
+    "howlong":  {"nen": "#EAD2BE", "mau": "#D75A88", "phu": "#2F6E8A", "chu": "#2E2A24"},
+    "howbig":   {"nen": "#D8D4BE", "mau": "#216E83", "phu": "#C9552F", "chu": "#22282B"},
+    "realcost": {"nen": "#D7D4B7", "mau": "#1E6C45", "phu": "#8A5A2E", "chu": "#232622"},
+    "howmuch":  {"nen": "#DDCFBE", "mau": "#573C85", "phu": "#C98A2E", "chu": "#232336"},
+    "whatif":   {"nen": "#E6D0BF", "mau": "#B04A8E", "phu": "#2F7D8A", "chu": "#2B2622"},
+    "survive":  {"nen": "#DFD1B4", "mau": "#6B5124", "phu": "#4E6B54", "chu": "#232522"},
+    "dayinlife":{"nen": "#DFD4B5", "mau": "#6E6C2A", "phu": "#3E6E8C", "chu": "#2A241B"},
+    "wheregoes":{"nen": "#DBD2C6", "mau": "#405FD8", "phu": "#C9762F", "chu": "#212629"},
+    "therules": {"nen": "#E7D1C3", "mau": "#BC4FBC", "phu": "#4E7C4A", "chu": "#252722"},
+    "speedof":  {"nen": "#D8D2C0", "mau": "#245E99", "phu": "#D9622B", "chu": "#1F272E"},
     # ── 8 kênh bổ sung. Màu chọn để KHÔNG trùng cặp nào ở trên: mỗi kênh phải nhận ra được
     # khi đứng cạnh mười bảy kênh kia trong danh sách đề xuất của YouTube.
-    "odds":      {"nen": "#F1EDF5", "mau": "#753D92", "phu": "#C9A227", "chu": "#241F2E"},
-    "hiddenfee": {"nen": "#F0F2EE", "mau": "#2C6F2F", "phu": "#B4522E", "chu": "#1F2620"},
-    "yearsof":   {"nen": "#F5F1E8", "mau": "#59721E", "phu": "#3E6E7C", "chu": "#2A2520"},
-    "howloud":   {"nen": "#EDEEF2", "mau": "#C52F3B", "phu": "#2F5D8A", "chu": "#20242B"},
-    "whatweighs": {"nen": "#EFF0EC", "mau": "#3F5E2C", "phu": "#B4603A", "chu": "#22261E"},
-    "rightnow":  {"nen": "#ECF1F4", "mau": "#1C7D75", "phu": "#D97E36", "chu": "#1E272B"},
-    "howhot":    {"nen": "#F6EFE6", "mau": "#BC5326", "phu": "#3B5E7A", "chu": "#2B231C"},
-    "smallest":  {"nen": "#EDEFF4", "mau": "#4C43B2", "phu": "#8FA33E", "chu": "#1F2330"},
+    "odds":      {"nen": "#E0CFBF", "mau": "#753D92", "phu": "#C9A227", "chu": "#241F2E"},
+    "hiddenfee": {"nen": "#D9D4B5", "mau": "#2C6F2F", "phu": "#B4522E", "chu": "#1F2620"},
+    "yearsof":   {"nen": "#DDD4B3", "mau": "#59721E", "phu": "#3E6E7C", "chu": "#2A2520"},
+    "howloud":   {"nen": "#E8CDB6", "mau": "#C52F3B", "phu": "#2F5D8A", "chu": "#20242B"},
+    "whatweighs": {"nen": "#DBD2B5", "mau": "#3F5E2C", "phu": "#B4603A", "chu": "#22261E"},
+    "rightnow":  {"nen": "#D7D5BC", "mau": "#1C7D75", "phu": "#D97E36", "chu": "#1E272B"},
+    "howhot":    {"nen": "#E7D1B4", "mau": "#BC5326", "phu": "#3B5E7A", "chu": "#2B231C"},
+    "smallest":  {"nen": "#DCCFC2", "mau": "#4C43B2", "phu": "#8FA33E", "chu": "#1F2330"},
 }
 
 KENH = [
@@ -4877,7 +4877,15 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     # SAU `_rai_canh_ve`: nhịp nào nhận được tranh nhập thì bỏ luôn cảnh vẽ code của nó —
     # hai cảnh trong một khung là đúng thứ vừa đi sửa.
     _rai_icon(nhip, ma)
-    _rai_hinh_nhap(nhip, ma, idx)
+    # ── TẮT LỚP TRANH unDRAW  (5/9/2026) ────────────────────────────────────────────────
+    # Tranh unDraw là mảng màu phẳng có bảng màu riêng. Sau khi chốt phong cách NÉT MỰC
+    # TRÊN GIẤY (theo các kênh 10M–129M view), nó thành chất liệu thứ hai trong cùng một
+    # khung — và §12.10 đã đo: *lệch phong cách giữa các hình là đòn bẩy lớn nhất*, lớn hơn
+    # hẳn màu sắc. Một bức tô màu phẳng cạnh một hình vẽ nét đọc ra "ghép từ hai nơi".
+    # Giữ nguyên cả đường ống (`_rai_hinh_nhap` · `HinhNhap.tsx` · `KhoSVG.ts`) — bật lại
+    # chỉ là bỏ một dòng. Xoá đi thì lần sau phải dựng lại từ đầu.
+    if os.environ.get("GT_TRANH_NHAP"):
+        _rai_hinh_nhap(nhip, ma, idx)
     for _n in nhip:
         if _n.get("hinh_nhap"):
             _n.pop("canh_ve", None)

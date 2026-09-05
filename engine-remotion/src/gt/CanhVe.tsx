@@ -262,16 +262,16 @@ const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
      trắng có S ≈ 0,05 — nhân 1,3 thì vẫn 0,065. Nhân một số gần 0 với một hệ số nhỏ thì vẫn
      gần 0; muốn màu có chất thì phải cho nó NHIỀU MÀU hơn, tức tăng tỉ lệ pha.
      Đây đúng bài học "đo lại sau khi sửa": bản vá thứ nhất đúng hướng và sai đòn bẩy. */
-  troi:   _dam(_pha(_tron(nen, mau, 0.18 + am * 0.06), 0.14), 1.30),
-  troiD:  _dam(_pha(_tron(nen, mau, 0.30 + am * 0.10), 0.00), 1.45),
-  xa:     _dam(_pha(_tron(nen, mau, 0.30), -0.06), 1.55),
-  giua:   _dam(_pha(_tron(nen, mau, 0.44), -0.20), 1.55),
+  troi:   _dam(_pha(_tron(nen, mau, 0.05 + am * 0.02), 0.14), 1.30),
+  troiD:  _dam(_pha(_tron(nen, mau, 0.08 + am * 0.03), 0.00), 1.45),
+  xa:     _dam(_pha(_tron(nen, mau, 0.09), -0.04), 1.55),
+  giua:   _dam(_pha(_tron(nen, mau, 0.12), -0.12), 1.55),
   gan:    _vat(0, nen, mau),          // vật ở gần — gỗ, xem `VAT_LIEU`
   vat2:   _vat(1, nen, mau),
   vat3:   _vat(2, nen, mau),
   vat4:   _vat(3, nen, mau),
-  san:    _dam(_pha(_tron(nen, mau, 0.34), -0.05), 1.35),   // bỏ nền chia — xem `NenPhong.san`
-  sanD:   _dam(_pha(_tron(nen, mau, 0.38), -0.09), 1.35),
+  san:    _dam(_pha(_tron(nen, mau, 0.10), -0.04), 1.35),   // bỏ nền chia — xem `NenPhong.san`
+  sanD:   _dam(_pha(_tron(nen, mau, 0.12), -0.07), 1.35),
   /* ── ĐÁY KHUNG SÁNG LÊN: −0,70 → −0,22  (4/9/2026) ────────────────────────────────────
      Anh xem và nói *"nó hơi tối và xấu thiếu chuyên nghiệp"*. Đo pixel ba khung:
 
@@ -307,7 +307,7 @@ const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
      này để bảo engine chọn mực phụ đề, nên sai ở đây làm sai luôn cả phép chọn mực.
 
      Giữ đúng thứ tự: 0,38 -> 0,44 -> 0,56, và sẫm thêm ở chặng cuối. */
-  sanDay: _dam(_pha(_tron(nen, mau, 0.42), -0.14), 1.35),
+  sanDay: _dam(_pha(_tron(nen, mau, 0.15), -0.11), 1.35),
   nhan:   _pha(_vat(2, nen, mauPhu || mau), -0.16),   // điểm nhấn — đất nung
 });
 
