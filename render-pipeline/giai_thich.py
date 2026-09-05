@@ -4607,6 +4607,14 @@ def _giu_chan(nhip: list) -> None:
             b["tu"] = (int(a["tu"]) + 2) % 5
         else:
             b.pop("bt", None)
+            # GỠ HÌNH MÀ KHÔNG THAY GÌ VÀO LÀ ĐẺ RA KHUNG TRỐNG — đúng thứ anh soi ra hai
+            # lần. Bộ khử trùng sinh ra để chống LẶP, không phải để chống CÓ HÌNH; nó không
+            # được phép để lại một khung rỗng làm giá phải trả.
+            if not any(b.get(f) for f in ("ve", "canh_ve", "canva", "hinh_nhap")):
+                _c2 = re.split(r"[.!?]", (b.get("loi") or "").strip())[0].strip()
+                if _c2 and len(_c2.split()) <= 9:
+                    b["khuon"] = "the_chu"
+                    b["the"] = _c2
 
     # ── 2. KẾT GHÉP VÒNG ────────────────────────────────────────────────────────────────
     # Nhịp cuối mượn HÌNH của nhịp đầu — chỉ hình, không mượn lời: lời cuối vẫn là cú chốt,
@@ -4722,8 +4730,11 @@ def _gop_hai_ho(nhip: list) -> None:
             # · "DAY YOURS" — đọc như mảnh gãy chứ không như một câu tuyên bố, vì cú chốt
             # tiếng Anh nằm ở QUAN HỆ giữa hai vế chứ không ở hai chữ cuối. Câu trừu tượng
             # của bộ này vốn đã ngắn (5–7 chữ), nên trọn câu vừa khít một thẻ chữ.
-            _cau = (n.get("loi") or "").strip().rstrip(".")
-            if _cau and len(_cau.split()) <= 8 and _cau not in _da_the:
+            # Lấy MỆNH ĐỀ ĐẦU chứ không đòi cả dòng ≤ 8 chữ: nhiều nhịp có hai mệnh đề
+            # ("The word changes by three letters. The gap does not.") nên điều kiện cũ chặn
+            # đúng những câu cần thẻ nhất — anh soi ra một khung TRỐNG HOÀN TOÀN.
+            _cau = re.split(r"[.!?]", (n.get("loi") or "").strip())[0].strip()
+            if _cau and len(_cau.split()) <= 9 and _cau not in _da_the:
                 n["khuon"] = "the_chu"
                 n["the"] = _cau
                 # KHÔNG tự gán `bo_the` ở đây. Đã có cơ chế gán theo GU CỦA KÊNH (mỗi kênh
@@ -5350,6 +5361,15 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     _rai_canva(nhip, ma, idx)
     _chinh_ti_le_cf(nhip)
     _giu_chan(nhip)
+    # `_giu_chan` còn SINH RA thẻ chữ (khi bộ khử trùng gỡ hình), mà `_rai_khuon` đã chạy
+    # xong từ trước — nên gọi lại lượt nữa. Hàm chỉ gán chứ không tạo nên chạy lại an toàn.
+    # Và dọn trường của họ cũ: một nhịp vừa đổi sang thẻ chữ mà còn mang `cam`/`tu` là để
+    # lại thứ ghi-mà-không-ai-đọc, cổng `kiem_truong` bắt đúng (§15.12).
+    for _n in nhip:
+        if (_n.get("khuon") or "") == "the_chu":
+            for _f in ("cam", "tu", "nv", "so", "don", "chu", "cot", "muc"):
+                _n.pop(_f, None)
+    _rai_khuon(ma, nhip, idx)
     _rai_icon(nhip, ma)
     # ── TẮT LỚP TRANH unDRAW  (5/9/2026) ────────────────────────────────────────────────
     # Tranh unDraw là mảng màu phẳng có bảng màu riêng. Sau khi chốt phong cách NÉT MỰC
