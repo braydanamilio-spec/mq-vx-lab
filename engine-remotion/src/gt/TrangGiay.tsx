@@ -88,19 +88,25 @@ export const TrangGiay: React.FC<{
           <feColorMatrix type="saturate" values="0" />
         </filter>
         {/* quầng sáng giữa trang — TÂM khung, bán kính lớn, chuyển rất mềm */}
-        <radialGradient id={`${id}s`} cx="0.5" cy="0.47" r="0.78">
-          <stop offset="0%"   stopColor="#FBF4E6" />
-          <stop offset="42%"  stopColor="#F2E6CD" />
-          <stop offset="78%"  stopColor="#E4CFA8" />
-          <stop offset="100%" stopColor="#D8BE90" />
+        {/* 5/9 (đợt ba) — KRAFT, KHÔNG PHẢI GIẤY DA CŨ.
+            Anh: *"nền papper craft chưa chuẩn"*. Bản trước em làm giấy DA: ố loang to, chuyển
+            sắc mạnh từ tâm ra mép. Giấy kraft thì khác hẳn — nó ĐỀU, hơi ngả nâu đỏ, và cái
+            làm nên chất của nó là SỢI GIẤY li ti chứ không phải vệt ố. Nên: biên độ chuyển
+            sắc hẹp lại (4 chặng gần nhau thay vì trải rộng), ố giảm còn một nửa, và thêm một
+            tầng sợi mảnh. */}
+        <radialGradient id={`${id}s`} cx="0.5" cy="0.46" r="0.82">
+          <stop offset="0%"   stopColor="#EFE0C6" />
+          <stop offset="45%"  stopColor="#E8D6B8" />
+          <stop offset="80%"  stopColor="#DEC8A4" />
+          <stop offset="100%" stopColor="#D3BA93" />
         </radialGradient>
       </defs>
 
       <rect x={0} y={0} width={W} height={H} fill={`url(#${id}s)`} />
       <rect x={0} y={0} width={W} height={H} filter={`url(#${id}o)`}
-            opacity={0.20} style={{ mixBlendMode: "multiply" }} />
-      <rect x={0} y={0} width={W} height={H} filter={`url(#${id}t)`}
             opacity={0.10} style={{ mixBlendMode: "multiply" }} />
+      <rect x={0} y={0} width={W} height={H} filter={`url(#${id}t)`}
+            opacity={0.16} style={{ mixBlendMode: "multiply" }} />
 
       {/* mép trang: hơi run, rất nhạt */}
       <path d={_run(W * 0.035, H * 0.022, W * 0.965, H * 0.022, W * 0.0012, hat)}

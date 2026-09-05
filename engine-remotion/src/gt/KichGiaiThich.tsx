@@ -178,7 +178,14 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string;
              mảng tối, chỉ tăng tương phản đúng chỗ chữ đứng. */
         /* Quầng phải NGƯỢC sắc với mực: chữ đậm trên nền sáng cần quầng SÁNG để tách, quầng
            đen quanh chữ đen thì không tách được gì. */
-        textShadow: (Number(sangNen ?? -1) >= 117)
+        /* 5/9 — TRÊN GIẤY: MỰC ĐẬM, QUẦNG SÁNG MẢNH.
+           Nhịp vẽ bằng code không có `sangDay` (bằng -1) nên nhánh dưới chọn CHỮ TRẮNG VIỀN
+           ĐEN — đúng cho một ảnh tối, sai hoàn toàn trên giấy kraft sáng: đó là thứ anh gọi
+           là "màu chữ xấu". Giấy có độ sáng ~230 và ĐỀU, nên chữ đậm đọc tốt và chỉ cần một
+           quầng sáng rất mảnh để tách nét khỏi vệt ố. */
+        textShadow: laGiay()
+          ? `0 0 ${H * 0.004}px #FBF4E6cc, 0 0 ${H * 0.010}px #FBF4E699`
+          : (Number(sangNen ?? -1) >= 117)
           ? `0 0 ${H * 0.006}px #FFFFFFff, 0 0 ${H * 0.014}px #FFFFFFff, 0 0 ${H * 0.026}px #FFFFFFee, 0 0 ${H * 0.040}px #FFFFFFaa`
           : `0 0 ${H * 0.006}px #000000ff, 0 0 ${H * 0.013}px #000000ff, 0 0 ${H * 0.024}px #000000ee, 0 0 ${H * 0.038}px #000000aa, 0 ${H * 0.003}px ${H * 0.009}px #000000ee`,
         pointerEvents: "none",
@@ -211,8 +218,14 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string;
         {(() => {
           const sd = Number(sangNen ?? -1);
           const sang = sd >= 117;   // >= 117 thì mực TỐI đạt 4,5:1 — xem dẫn giải ở trên
-          const mucThuong = sang ? "#14161C" : "#FFFFFF";
-          const mucDoc = sang ? "#8A4B00" : "#FFD400";
+          /* 5/9 — TRÊN GIẤY: mực nâu đen của bút máy, chữ nhấn dùng MÀU KÊNH.
+             Bản cũ chỉ có hai lựa chọn "#14161C đen kịt" hoặc "#FFFFFF trắng", và chữ nhấn
+             là `#FFD400` vàng chói — cả hai đều là bảng màu của video nền tối. Trên giấy
+             kraft thì đen kịt đọc ra "dán chữ máy tính lên giấy", còn vàng chói thì loè.
+             Mực thật trên giấy không bao giờ đen tuyệt đối: `#2A241C` là nâu-đen của mực,
+             và chữ nhấn lấy chính màu kênh nên nhấn cũng là bản sắc. */
+          const mucThuong = laGiay() ? "#2A241C" : (sang ? "#14161C" : "#FFFFFF");
+          const mucDoc = laGiay() ? mau : (sang ? "#8A4B00" : "#FFD400");
           return cua.map((w, k) => (
             <span key={k} style={{ color: a + k === i ? mucDoc : mucThuong }}>{w.w}</span>
           ));
@@ -365,7 +378,12 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
         <Img src={staticFile(N.nenAnh)}
              style={{ position: "absolute", inset: 0, width: W, height: H, objectFit: "cover",
                       transform: `scale(${kb})` }} />
-      ) : (N.noi && !N.canh_ve) ? (
+      ) : (N.noi && !N.canh_ve && !laGiay()) ? (
+        /* 5/9 — TRÊN GIẤY KHÔNG CÓ BỐI CẢNH. Anh: *"vẫn còn bối cảnh lung tung đằng
+           sau nên bỏ hết"*. Đúng: `NenQue` và `CanhVe` vẽ phòng ốc/nhà cửa/đồi núi mà
+           câu đang nói KHÔNG hề nhắc tới — 222/264 nhịp `canh` không có nơi chốn nào cả
+           (đã đo 4/9). Một bối cảnh không liên quan thì không phải bối cảnh, nó là nhiễu.
+           Trang giấy trắng đằng sau chủ thể mạnh hơn một căn phòng vô can. */
         <NenQue noi={N.noi} W={W} H={H} san={sanY} nguoi={NGUOI} t={t} />
       ) : (
         /* ── MỘT NHÁNH DUY NHẤT CHO MỌI NỀN VẼ BẰNG CODE  (4/9/2026) ────────────────────
@@ -381,7 +399,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
               rời để dán lên nền khác.
               Đây đúng luật đã rút sáng nay và lần này áp cho một lớp mới: MỘT KHUNG MỘT BỨC
               TRANH. Có hình nhập thì nó LÀ cảnh — nền chỉ còn tường và sàn. */}
-          {N.canh_ve && !(N as any)?.hinh_nhap ? (
+          {N.canh_ve && !(N as any)?.hinh_nhap && !laGiay() ? (
         /* ── CẢNH VẼ BẰNG CODE — lớp XEN KẼ, không phải lớp dự phòng  (4/9/2026) ──────────
            Đặt NGAY SAU `nenAnh` và TRƯỚC `noi`: `canh_ve` là một quyết định biên tập do
            Python đưa ra (xem `giai_thich.NOI_KENH` — vì sao, và tỉ lệ bao nhiêu), còn `noi`

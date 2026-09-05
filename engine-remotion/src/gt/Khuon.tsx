@@ -259,6 +259,11 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
         {/* TÓC vẽ SAU vòng đầu để nó đè lên đường viền trên — tóc mọc RA NGOÀI khối đầu,
             đúng cách mọi ảnh mẫu làm. Đây là món tô đặc thứ hai (cùng với phụ kiện), và
             hai món ấy là toàn bộ mảng đen trong một hình thuần nét. */}
+        {/* 5/9 — TÓC VÀ CÀ VẠT BỚT ĐEN. Soi khung: trên một cái đầu trắng, mảng tóc đen
+            phủ nửa đầu cộng cà vạt đen to là HAI KHỐI ĐẶC — mắt đọc ra "vẽ vội bằng bút bảng"
+            chứ không đọc ra nét. Ảnh mẫu để tóc là mảng MỎNG ôm đỉnh đầu.
+            Hạ độ đục thay vì vẽ lại đường: giữ nguyên hình, chỉ bớt sức nặng. */}
+        <g opacity={0.82}>
         {nv % 4 === 1 ? (
           <path d={`M ${-k(0.150)} ${-k(0.300)} q ${k(0.030)} ${-k(0.140)} ${k(0.150)} ${-k(0.148)}
                     q ${k(0.122)} ${k(0.008)} ${k(0.150)} ${k(0.148)}
@@ -283,6 +288,8 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
             {N(NET([[k(0.046), -k(0.418)], [k(0.072), -k(0.456)]], 13), wM)}
           </g>
         )}
+
+        </g>
 
         {/* MẮT TO CÓ CON NGƯƠI — bản cũ chỉ có con ngươi, nên mặt đọc ra hai lỗ đen.
             Ảnh mẫu: tròng trắng lớn, con ngươi nhỏ hơn hẳn, đặt hơi lệch theo hướng nhìn. */}
@@ -322,9 +329,9 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
             18 kênh lấy bản sắc mà không cần một tệp Canva nào. */}
         {nv % 4 === 0 ? (
           /* cà vạt — món duy nhất được TÔ ĐẶC trong cả hình, nên nó hút mắt */
-          <path d={`M ${-k(0.026)} ${-k(0.118)} L ${k(0.026)} ${-k(0.118)}
-                    L ${k(0.040)} ${k(0.020)} L 0 ${k(0.072)} L ${-k(0.040)} ${k(0.020)} Z`}
-                fill={mau} />
+          <path d={`M ${-k(0.018)} ${-k(0.118)} L ${k(0.018)} ${-k(0.118)}
+                    L ${k(0.027)} ${k(0.016)} L 0 ${k(0.058)} L ${-k(0.027)} ${k(0.016)} Z`}
+                fill={mau} opacity={0.85} />
         ) : nv % 4 === 2 ? (<>
           {/* kính tròn */}
           <circle cx={-k(0.046)} cy={-k(0.296)} r={k(0.045)} fill="none"
