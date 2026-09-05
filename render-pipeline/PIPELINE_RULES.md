@@ -9290,3 +9290,48 @@ bước làm đẹp chứ không phải mắt xích giao hàng (§13.3).
 **Một chi tiết suýt hỏng:** bước chép phải đặt SAU mọi `actions/checkout`. Mặc định
 `clean: true` chạy `git clean -ffdx`, thứ **xoá cả tệp bị gitignore** — tức xoá đúng thư mục
 vừa chép vào. Chú thích cảnh báo chuyện này đã nằm sẵn trong workflow từ trước.
+
+## 9k6 — 5/9/2026 · RÀ SOÁT TOÀN BỘ 18 KÊNH: BA LỖI ẨN, KHÔNG CỔNG NÀO BẮT ĐƯỢC TRƯỚC
+
+Anh yêu cầu rà soát lại toàn bộ 18 kênh để nâng chất lượng. Đo trên TOÀN BỘ kênh (không chỉ
+kênh đang sửa dở) lộ ra ba lỗi mà mọi cổng trước đó đều xanh — vì mỗi cổng chỉ đo một góc.
+
+**1. 5/18 KÊNH MỌI TẬP MỞ BẰNG ĐÚNG MỘT CÂU.** `dayinlife`/`wheregoes`/`therules`/`odds`/
+`hiddenfee` — tiêu đề tập đổi đúng (dùng cho YouTube), nhưng CÂU MỞ MIỆNG hiện trên khung
+thì không. Gốc: `_gh = f"{catchphrase}. {chủ_đề}"` luôn dài 13–18 chữ, vượt trần 11, nên
+nhánh dự phòng `f"{catchphrase}."` chạy **100% số lần** — không phải hiếm, mà là đường duy
+nhất. Sửa: khi vượt trần thì RÚT GỌN chủ đề còn vài chữ nội dung cuối, không BỎ hẳn.
+Đây đúng lỗi §13.24: hệ tối ưu đúng thứ được bảo tối ưu (hook ≤11 chữ, điểm cao) và bỏ quên
+mục tiêu thật (tập phải phân biệt được). Cái giá: điểm hook trung bình 99,4 -> 98,0 (9 kênh
+giờ >8 chữ) — đánh đổi ĐÚNG HƯỚNG, vì năm tập giống hệt nhau tệ hơn nhiều so với hook dài
+thêm một hai chữ.
+
+**2. `bt` LÀ HAI TRƯỜNG KHÁC NGHĨA TUỲ KHUÔN, CƠ CHẾ VÒNG LẶP CHÉP MÙ QUA RANH GIỚI ẤY.**
+Ở `so_lieu`, `bt` là tên một icon BÉ cạnh con số. Ở `canh`, `bt` là tên một bố cục NGƯỜI ĐẦY
+ĐỦ cần thêm `tu` (tư thế). Cơ chế "kết ghép vòng" (nhịp cuối mượn hình nhịp đầu) chép thẳng
+`dau["bt"]` sang `cuoi` bất kể khuôn khác nhau: `howbig` tập 2 dính đúng — hook (so_lieu,
+bt="nguoi"=icon bé) chép "nguoi" sang nhịp cuối (canh) mà không kèm `tu`, ra một bố cục
+người ở tư thế mặc định, trùng tư thế nhịp liền trước. Đúng họ lỗi "chép hằng sang hệ quy
+chiếu khác" (đã trả giá ở toạ độ hoạt hình, §11). Sửa: khi `dau` là `so_lieu`/`chart`, nhân
+bản NGUYÊN KHỐI (khuôn+so+don+chu+kieu_so+bo_so) thay vì chỉ mượn `bt`.
+
+**3. BA NƠI CHỈNH TƯ THẾ, NƠI CUỐI CÙNG CHẠY SAU LƯỚI KHỬ TRÙNG NÊN ĐÈ LẠI.** Sau khi sửa
+(2), cổng vẫn báo `wheregoes` lặp tư thế — nhưng ở một CẶP KHÁC. Trace: lưới khử trùng liền
+kề (định nghĩa liền kề THEO CON MẮT, bỏ qua khuôn không vẽ hình) chạy tại mục "1b", nhưng
+mục "2. KẾT GHÉP VÒNG" chạy SAU nó lại tự sửa nhịp áp chót bằng liền kề THÔ (`nhip[-2]`),
+tạo ra một va chạm MỚI với một nhịp mà đoạn "2" không hề biết tới. Sửa: bỏ hẳn đoạn tự sửa
+trong mục "2", dời lưới "1b" xuống chạy SAU CÙNG — một lưới đặt trước cái làm rơi thì không
+đỡ được gì (đúng bài học `_khong_de_trong`, §9k5 phía trên).
+
+**Số đo sau khi sửa cả ba, trên toàn bộ 18 kênh × 4 tập (72 tập):**
+
+    kênh lặp câu mở cả 4 tập : 5/18  ->  0/18
+    nhịp trống               : giữ 0/288 (không hồi lại)
+    kết ghép vòng            : 100% (giả) -> 94% thật — số cũ có lỗi (2) ẩn bên trong
+    điểm kịch bản trung bình : 99,4 -> 98,0 (đánh đổi có chủ đích, xem mục 1)
+
+**Luật rút ra, đáng nhớ nhất buổi:** một con số đẹp (100% ghép vòng, 99,4 điểm) không chứng
+minh được gì nếu chưa RÀ TRÊN TOÀN BỘ phạm vi — mọi lỗi trên đều chỉ lộ ra khi đo cả 18 kênh
+thay vì kênh đang sửa dở. Và git stash trên repo có cửa sổ khác đang làm phải tránh tuyệt
+đối (§15.18) — nó gộp luôn brand_gt/* của cửa sổ kia; `git stash pop` cứu lại kịp nhưng đó
+là may, không phải cách làm đúng.

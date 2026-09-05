@@ -4636,14 +4636,74 @@ def _giu_chan(nhip: list) -> None:
         if len(nhip) > 1 and nhip[1].get("bt") == "nguoi_ss":
             nhip[1].pop("bt", None)
 
-    # ── 1b. KHÔNG HAI NHỊP LIỀN CÙNG MỘT HÌNH ───────────────────────────────────────────
+    # ── 2. KẾT GHÉP VÒNG ────────────────────────────────────────────────────────────────
+    # Nhịp cuối mượn HÌNH của nhịp đầu — chỉ hình, không mượn lời: lời cuối vẫn là cú chốt,
+    # nếu không thì tập ấy không kết thúc mà chỉ dừng lại.
+    # Gỡ luôn `ve` của nhịp cuối: `ve` là PROMPT chứ không phải ảnh, để nguyên thì ở lượt có
+    # CF nó sẽ đè lên hình hook và vòng lặp hở đúng chỗ quan trọng nhất.
+    if cuoi is not dau:
+        cuoi.pop("ve", None)
+        # ── `bt` LÀ HAI TRƯỜNG KHÁC NGHĨA TUỲ KHUÔN — CHÉP MÙ THÌ CHÉP SAI NGHĨA ───────────
+        # Rà soát toàn bộ 18 kênh: 61% hook là khuôn `so_lieu` — ở đó `bt` là tên một ICON
+        # BÉ đứng cạnh con số ("nguoi" = hình người nhỏ trang trí). Ở khuôn `canh`, `bt` là
+        # tên một BỐ CỤC NGƯỜI ĐẦY ĐỦ cần thêm `tu` (tư thế). Bản trước chép thẳng `dau["bt"]`
+        # sang `cuoi` bất kể khuôn khác nhau — `howbig` tập 2 dính đúng: hook (so_lieu,
+        # bt="nguoi" = icon bé) chép "nguoi" sang nhịp cuối (canh) mà không có `tu`, engine
+        # vẽ một bố cục người ĐẦY ĐỦ ở tư thế mặc định, và nó trùng tư thế nhịp liền trước.
+        # Đây đúng họ lỗi "chép hằng sang hệ quy chiếu khác" (đã trả giá ở tọa độ hoạt hình).
+        #
+        # Nếu hook là `so_lieu`/`chart`: nhân bản NGUYÊN KHỐI (khuôn + số + đơn vị + icon) —
+        # đó mới thật sự là "khung cuối trùng khung đầu", không phải một icon rơi lạc chỗ.
+        if (dau.get("khuon") or "canh") in ("so_lieu", "chart"):
+            # `kieu_so`/`bo_so` là bố cục CỦA CHÍNH NHỊP `so_lieu`, giống `kieu_chart` của
+            # `chart` — chép cùng lô với `so`/`don`, nếu không cổng `t_moi_nhip_co_bo_cuc`
+            # bắt đúng nhịp vừa nhân bản là "thiếu bố cục" dù có đủ số liệu.
+            for f in ("khuon", "so", "don", "chu", "cot", "muc", "bt", "kieu_chart",
+                      "kieu_so", "bo_so"):
+                if dau.get(f) is not None:
+                    cuoi[f] = dau[f]
+                else:
+                    cuoi.pop(f, None)
+            cuoi.pop("tu", None)          # so_lieu không dùng tư thế — dọn trường thừa
+            cuoi["cam"] = dau.get("cam") or cuoi.get("cam")
+        else:
+            for f in ("bt", "canva", "hinh_nhap"):
+                if dau.get(f):
+                    for g in ("bt", "canva", "hinh_nhap"):
+                        cuoi.pop(g, None)
+                    cuoi[f] = dau[f]
+                    cuoi["cam"] = dau.get("cam") or cuoi.get("cam")
+                    # Kề nhau ở ĐẦU KIA: nhịp áp chót cũng có thể mang đúng hình vừa chép
+                    # sang nhịp cuối. Kề nhau là quan hệ HAI CHIỀU, dọn một phía là dọn nửa
+                    # việc. Vòng lặp đòi nhịp cuối TRÙNG nhịp đầu, kể cả TƯ THẾ.
+                    if dau.get("tu") is not None:
+                        cuoi["tu"] = dau["tu"]
+                break
+        # ── KỀ NHAU LÀ QUAN HỆ HAI CHIỀU, VÀ EM ĐÃ TỰ DỌN SAI CHỖ  (5/9/2026) ────────────
+        # Bản trước tự sửa `nhip[-2]` (nhịp áp chót) ngay tại đây, dùng liền kề THÔ. Nhưng
+        # dedup "1b" bên dưới mới là nơi biết liền kề ĐÚNG (theo con mắt, bỏ qua khuôn
+        # không vẽ hình) — và nó chạy SAU đoạn này nên đè lại đúng cái vừa sửa, đẻ ra một
+        # collision MỚI ở một cặp khác (`wheregoes` tập 2: sửa nhịp áp chót lại làm nó
+        # trùng nhịp4, một nhịp áp chót "không biết" tới). Bỏ hẳn đoạn tự sửa ở đây — dời
+        # "1b" xuống chạy SAU toàn bộ mục 2, để nó là LƯỚI CUỐI CÙNG duy nhất, đúng nguyên
+        # tắc đã trả giá ở `_khong_de_trong`: một lưới đặt trước cái làm rơi thì không đỡ
+        # được gì.    # ── 1b. KHÔNG HAI NHỊP LIỀN CÙNG MỘT HÌNH ───────────────────────────────────────────
     # Cổng `gu hình` bắt đúng: hai nhịp liền cùng một biểu tượng thì người xem đọc ra "đứng
     # hình", và ở nhịp cắt 2 giây thì đó là bốn giây không có gì đổi.
     # Dọn TOÀN DANH SÁCH chứ không vá hai đầu: em đã vá phía hook rồi phía kết, và lần nào
     # cổng cũng chỉ ra một cặp khác — vì kề nhau là tính chất của CẢ DÃY, không phải của hai
     # mút. Người thì đổi TƯ THẾ (giữ hình, §17.5), vật thì bỏ hẳn.
-    for q in range(1, len(nhip)):
-        a, b = nhip[q - 1], nhip[q]
+    # ── "LIỀN KỀ" PHẢI CÙNG PHẠM VI VỚI CỔNG selftest, KHÔNG PHẢI LIỀN KỀ TRONG DANH SÁCH
+    # THÔ  (5/9/2026, rà soát toàn bộ 18 kênh) ─────────────────────────────────────────────
+    # Đo: `wheregoes` tập 2 có nhịp4(canh,nguoi) · nhịp5(so_lieu) · nhịp6(the_chu) ·
+    # nhịp7(canh,nguoi) — nhịp4 và nhịp7 KHÔNG liền nhau trong danh sách thô nên vòng lặp cũ
+    # bỏ qua, nhưng `so_lieu`/`the_chu` tự vẽ kín khung nên MẮT thấy nhịp4 và nhịp7 đứng
+    # NGAY CẠNH NHAU. Cổng `selftest` định nghĩa liền kề đúng theo con mắt (bỏ qua khuôn
+    # không vẽ hình); vòng lặp này định nghĩa theo chỉ số danh sách. Hai định nghĩa lệch
+    # nhau thì cổng bắt được thứ bộ khử trùng bỏ lọt.
+    _hienHinh = [n for n in nhip if (n.get("khuon") or "canh") in ("canh", "nhom", "kinh_lup")]
+    for q in range(1, len(_hienHinh)):
+        a, b = _hienHinh[q - 1], _hienHinh[q]
         if not b.get("bt") or b.get("bt") != a.get("bt"):
             continue
         if str(b["bt"]).startswith("nguoi") and a.get("tu") is not None:
@@ -4659,35 +4719,7 @@ def _giu_chan(nhip: list) -> None:
                     b["khuon"] = "the_chu"
                     b["the"] = _c2
 
-    # ── 2. KẾT GHÉP VÒNG ────────────────────────────────────────────────────────────────
-    # Nhịp cuối mượn HÌNH của nhịp đầu — chỉ hình, không mượn lời: lời cuối vẫn là cú chốt,
-    # nếu không thì tập ấy không kết thúc mà chỉ dừng lại.
-    # Gỡ luôn `ve` của nhịp cuối: `ve` là PROMPT chứ không phải ảnh, để nguyên thì ở lượt có
-    # CF nó sẽ đè lên hình hook và vòng lặp hở đúng chỗ quan trọng nhất.
-    if cuoi is not dau:
-        cuoi.pop("ve", None)
-        for f in ("bt", "canva", "hinh_nhap"):
-            if dau.get(f):
-                for g in ("bt", "canva", "hinh_nhap"):
-                    cuoi.pop(g, None)
-                cuoi[f] = dau[f]
-                cuoi["cam"] = dau.get("cam") or cuoi.get("cam")
-                # Kề nhau ở ĐẦU KIA: nhịp áp chót cũng có thể mang đúng hình vừa chép sang
-                # nhịp cuối. Lượt trước em chỉ dọn ở phía hook nên cổng vẫn đỏ — kề nhau là
-                # quan hệ HAI CHIỀU, dọn một phía là dọn nửa việc.
-                # Vòng lặp đòi nhịp cuối TRÙNG nhịp đầu, kể cả TƯ THẾ — nên chép cả `tu`.
-                if dau.get("tu") is not None:
-                    cuoi["tu"] = dau["tu"]
-                if len(nhip) > 2:
-                    ap = nhip[-2]
-                    # Kề nhau là quan hệ HAI CHIỀU: dọn một phía là dọn nửa việc. Nhịp cuối
-                    # không được đổi (nó phải khớp hook), nên nhịp áp chót nhường.
-                    if ap.get(f) == dau[f]:
-                        if f == "bt" and ap.get("tu") is not None and cuoi.get("tu") is not None:
-                            ap["tu"] = (int(cuoi["tu"]) + 2) % 5      # đổi tư thế, giữ hình
-                        else:
-                            ap.pop(f, None)
-                break
+
 
 
 def _gop_hai_ho(nhip: list) -> None:
@@ -5346,9 +5378,26 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
         _m = HOOK_LOI[ma].strip().rstrip(".")
         _c = _cau_hook(hook, HOOK_LOI[ma])
         _gh = f"{_m}. {_c}"
-        # Trần 11 chữ ~ 4 giây đọc. Quá dài thì lấy MỖI mâu thuẫn: thà mất chủ đề ở giây đầu
-        # còn hơn mất người xem ở giây đầu — chủ đề còn cả tập để nói.
-        nhip[0]["loi"] = _gh if len(_gh.split()) <= 11 else f"{_m}."
+        # ── 5/9 — RÀ SOÁT TOÀN BỘ 18 KÊNH: TRẦN 11 CHỮ LUÔN KÍCH HOẠT ────────────────────
+        # Đo trên 40 tập của 5 kênh này: câu ghép NGẮN NHẤT đã 13 chữ, dài nhất 18. Tức
+        # nhánh dự phòng `f"{_m}."` chạy 100% số lần — không phải một trường hợp hiếm, mà là
+        # ĐƯỜNG DUY NHẤT. Hậu quả: `dayinlife` · `wheregoes` · `therules` · `odds` ·
+        # `hiddenfee` — MỌI TẬP mở bằng đúng một câu, bất kể nội dung tập là gì.
+        #
+        # Đây đúng lỗi đã trả giá ở nơi khác trong ngày (đợt sinh script hôm 3/9): hệ tối ưu
+        # đúng thứ được bảo tối ưu (hook ngắn, điểm cao) và bỏ quên mục tiêu thật (tập phải
+        # PHÂN BIỆT được với nhau). Năm tập giống hệt nhau là thứ chính anh chê "nhàm chán"
+        # suốt đêm nay, chỉ là ở lớp KỊCH BẢN chứ không phải lớp hình vẽ.
+        #
+        # Sửa: khi câu ghép quá dài, đừng BỎ chủ đề — RÚT GỌN nó về vài chữ NỘI DUNG cuối
+        # (đã lọc từ hư từ), vẫn đủ để phân biệt tập mà không kéo dài cả câu hỏi.
+        if len(_gh.split()) <= 11:
+            nhip[0]["loi"] = _gh
+        else:
+            _dh = " ".join(w for w in re.findall(r"[A-Za-z0-9$]+", hook)
+                            if w.lower() not in _BO_TU)
+            _dh = " ".join(_dh.split()[-4:])
+            nhip[0]["loi"] = f"{_m}. {_dh.capitalize()}." if _dh else f"{_m}."
         nhip[0]["dinh"] = True
     # ── RẢI BỐ CỤC — SAU KHI ĐÃ CHÈN HOOK  (3/9/2026) ──────────────────────────────────────
     # Một chỗ hẹp duy nhất cho CẢ short và long; đặt trong từng nhánh là hai chỗ để lệch nhau.
