@@ -4192,7 +4192,17 @@ KHUON_SO_DO = ("dem", "kinh_lup")
 # (cậu bé + chồng báo) đẹp vì **một khung một bức tranh**, không phải vì nó dìm khéo.
 #
 # Nên: khuôn nào tự vẽ đồ hoạ của nó thì nền phía sau phải là mặt phẳng trung tính.
-KHUON_TU_VE = ("so_lieu", "dem", "kinh_lup", "chart", "truc", "chia_doi", "the_chu")
+# `the_chu` KHÔNG có trong danh sách, và đó là một quyết định, không phải sót:
+# anh soi khung "The word changes by three letters" và nói *"đừng làm kiểu chữ trên nền
+# không này rất xấu và chán"*. Đúng — nhưng gốc không nằm ở thẻ chữ, nó nằm ở CÁI PHÍA SAU.
+# `TheChu` phủ một tấm màu 0,80 chứ không phải 1,00, và chú thích tại chỗ ghi rõ vì sao:
+# *"chỉ cần hạ độ đục là cảnh hiện mờ trở lại, khung không còn rỗng"*. Lý do ấy đúng — với
+# điều kiện có một cảnh để hiện. Đưa `the_chu` vào danh sách này là cắt mất đúng cái cảnh
+# ấy, nên tấm màu phủ lên một bức tường trơn và đọc ra mảng màu đặc. §12.5 một lần nữa:
+# tấm phủ mờ là giải pháp đúng cho ngữ cảnh có cảnh, và vô nghĩa ở ngữ cảnh không có.
+# Thẻ chữ khác các khuôn còn lại ở một chỗ quyết định: nó KHÔNG vẽ sơ đồ, nên nó không
+# tranh chỗ với cảnh — và nó đã mang sẵn tấm phủ làm nền đọc chữ.
+KHUON_TU_VE = ("so_lieu", "dem", "kinh_lup", "chart", "truc", "chia_doi")
 
 # Cứ N nhịp `canh` thì một nhịp vẽ bằng code. 3 cho ra 24% CF; đổi số này là đổi thẳng
 # tỉ lệ, nên nó là NÚT VẶN duy nhất của chính sách — đừng rải điều kiện ra nhiều chỗ.
@@ -4349,6 +4359,13 @@ def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
         lay = False
         if kh in KHUON_PHU:
             lay = True
+        elif kh == "the_chu":
+            # Thẻ chữ LUÔN có cảnh phía sau — xem chú thích ở `KHUON_TU_VE`. Không đi qua
+            # nhánh `CANH_MOI` (cấp cho một phần ba nhịp `canh`) vì thẻ chữ không cạnh
+            # tranh hạn mức CF: nó không bao giờ đặt ảnh, nên cảnh vẽ code là lớp DUY NHẤT
+            # nó có. Cấp một phần ba tức để hai phần ba thẻ chữ nằm trên tường trơn — đúng
+            # cái anh vừa chê.
+            lay = True
         elif kh == "canh":
             dem_canh += 1
             lay = (dem_canh % CANH_MOI == 0)
@@ -4357,7 +4374,10 @@ def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
         # Lọc nơi chốn theo chủ thể của CHÍNH nhịp này, rồi mới xoay. Xoay trước lọc sau là
         # lại rơi đúng bẫy §15.1 (cắt trước lọc sau) ở một hình dạng khác.
         _bt = str(n.get("bt") or "")
-        _hop = [x for x in noi if _hop_noi(_bt, x)]
+        # Thẻ chữ không có `bt`, nên phép lọc theo chủ thể không nói gì về nó — mọi nơi
+        # chốn đều hợp. Không có dòng này thì `_hop` rỗng và thẻ chữ lại rơi về tường trơn,
+        # tức bản sửa trên không có hiệu lực (§6: sửa một mắt, quên mắt kế bên).
+        _hop = list(noi) if kh == "the_chu" else [x for x in noi if _hop_noi(_bt, x)]
         if not _hop:
             # KHÔNG có nơi nào hợp -> bỏ hẳn `canh_ve`, để nhịp rơi về nền phẳng `NenPhong`.
             # Nền phẳng là một mặt sàn trung tính: nó không nói gì SAI về nội dung câu, còn

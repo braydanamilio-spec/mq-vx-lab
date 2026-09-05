@@ -1,6 +1,8 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
+import { TuVe } from "./TuVe";
+import { HinhNhap, co_hinh_nhap } from "./HinhNhap";
 import { chanTroi, DAY_HINH, coHinh, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong, tiLe, nguonSang} from "./Khuon";
 import { CanhVe, sangDayCanh } from "./CanhVe";
 
@@ -342,7 +344,15 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
            phẳng và không bao giờ chạy cho cảnh vẽ code. Gộp lại: cùng một nhánh, chỉ khác
            tấm nền phía sau. Thêm một loại nền mới sau này cũng không làm mất chủ thể nữa. */
         <AbsoluteFill>
-          {N.canh_ve ? (
+          {/* ── HÌNH NHẬP LÀ CẢ MỘT CẢNH, KHÔNG PHẢI MỘT VẬT  (5/9/2026) ────────────
+              Soi lưới: khung có hình unDraw hiện HAI bộ cây — một bộ của `CanhVe` mình vẽ,
+              một bộ nằm sẵn trong chính bức unDraw. Hình của kho ấy được vẽ như một bức
+              tranh hoàn chỉnh (người + cây + mặt trời + mặt đất), không như một hình cắt
+              rời để dán lên nền khác.
+              Đây đúng luật đã rút sáng nay và lần này áp cho một lớp mới: MỘT KHUNG MỘT BỨC
+              TRANH. Có hình nhập thì nó LÀ cảnh — nền chỉ còn tường và sàn. */}
+          {N.canh_ve && !(btVe && co_hinh_nhap(btVe)
+                          && KHUON_CANH.has(String((N as any)?.khuon || "canh"))) ? (
         /* ── CẢNH VẼ BẰNG CODE — lớp XEN KẼ, không phải lớp dự phòng  (4/9/2026) ──────────
            Đặt NGAY SAU `nenAnh` và TRƯỚC `noi`: `canh_ve` là một quyết định biên tập do
            Python đưa ra (xem `giai_thich.NOI_KENH` — vì sao, và tỉ lệ bao nhiêu), còn `noi`
@@ -586,8 +596,35 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                       <g transform={`translate(${cx} ${sanY - sz * DAY_HINH})`}>
                         {/* `tu` do Python quyết theo chính lời của nhịp — xem `_rai_tu_the`.
                             Engine chỉ đọc, đúng nguyên tắc §15.3. */}
-                        <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
-                                   nv={(N as any)?.nv ?? 0} />
+                        {/* Chủ thể tự vẽ ra như cảnh — xem `TuVe.tsx`. Chậm hơn nền một
+                            nhịp (0,26 thay vì 0,20) để mắt đọc được thứ tự: cảnh dựng lên
+                            trước, rồi nhân vật bước vào. Vẽ cùng lúc thì hai thứ tranh sự
+                            chú ý và không thứ nào được nhìn. */}
+                        {/* ── HÌNH NHẬP THẮNG HÌNH TỰ VẼ  (5/9/2026) ─────────────────
+                            Xem `HinhNhap.tsx`. Điều kiện là `co_hinh_nhap(btVe)`, không
+                            phải một danh sách tên chép tay: kho hình do `tai_svg.py` sinh
+                            ra và sẽ nở thêm, nên engine phải HỎI kho chứ đừng giữ một bản
+                            sao của nó (§13.2 — cổng cầm danh sách chép tay là cổng che lỗi).
+                            `bien` lấy TƯ THẾ đã rải sẵn: `_rai_tu_the` phát năm tư thế cho
+                            54% số nhịp, và nếu ở đây lấy một hình cố định thì cả trục đa
+                            dạng ấy bị vứt đi ngay chỗ nó đáng lẽ hiện ra. */}
+                        {/* ── `bien` PHẢI ĐỔI THEO NHỊP  (5/9/2026, sau khi soi lưới) ────
+                            Bản đầu lấy `tu + nv`. Soi bốn khung thì BA khung liền nhau ra
+                            đúng một hình — vì `tu` và `nv` là hằng trên cả một mạch cảnh
+                            (chúng rải theo thứ tự NGƯỜI xuất hiện, không theo nhịp). Đúng
+                            §14.9: chọn sai đại lượng thì số đo đẹp mà sản phẩm vẫn lặp —
+                            thứ người xem cảm được là "hai nhịp liền nhau có khác nhau
+                            không", không phải "cả kho có được dùng đều không". */}
+                        {co_hinh_nhap(btVe) ? (
+                          <HinhNhap bt={btVe} s={sz * 0.95} p={p / 0.26}
+                                    bien={(N as any)?.canh_hat ?? Math.round((N?.s ?? 0) * 37)}
+                                    mau={mau} mauPhu={mauPhu} nen={nenTrang} />
+                        ) : (
+                          <TuVe p={p / 0.26}>
+                            <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
+                                       nv={(N as any)?.nv ?? 0} />
+                          </TuVe>
+                        )}
                       {/* ── ÁNH SÁNG PHỦ LÊN CHỦ THỂ  (4/9/2026) ─────────────────────────
                           Bốn ảnh anh gửi: ba người ngồi quanh lửa đều có **viền cam trên
                           nửa mặt phía lửa**. Đó là thứ tách "nhân vật đứng trong một cảnh

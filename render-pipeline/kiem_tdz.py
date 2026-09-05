@@ -106,7 +106,16 @@ def soi_mot(duong: str) -> list:
             # nó đều là lỗi thật.
             if re.search(r"\(\s*(?:\w+\s*,\s*)*" + re.escape(ten) + r"\s*(?:,[^)]*)?\)\s*=>", truoc):
                 continue
-            if re.search(r"\b" + re.escape(ten) + r"\b", truoc):
+            # ── `.ten` LÀ THUỘC TÍNH, KHÔNG PHẢI BIẾN  (5/9/2026) ──────────────────
+            # Cổng tố oan `const ruot = h.ruot...` trong `HinhNhap.tsx`: `h.ruot` là truy
+            # cập thuộc tính của một object khác, hoàn toàn hợp lệ ở trước dòng khai báo.
+            # `\b` không phân biệt được hai thứ ấy vì dấu chấm cũng là ranh giới từ.
+            # Cùng lý do phải chữa chứ không bỏ qua: một dòng đỏ giả không phiền, nó CHE —
+            # lỗi thật nằm cạnh nó sẽ bị đọc lướt qua (§13.8, đã trả giá 3 lần).
+            # Cũng loại luôn `{ ten: ... }` (khoá của object) và `ten:` trong kiểu.
+            _sach = re.sub(r"\.\s*" + re.escape(ten) + r"\b", "", truoc)
+            _sach = re.sub(r"\b" + re.escape(ten) + r"\s*:", "", _sach)
+            if re.search(r"\b" + re.escape(ten) + r"\b", _sach):
                 dong = goc[:dau + kb.start()].count("\n") + 1
                 loi.append((os.path.basename(duong), m.group(1), ten, dong))
     return loi

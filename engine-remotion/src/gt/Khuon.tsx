@@ -1112,7 +1112,15 @@ export const SoLieu: React.FC<{
       ) : null}
       {/* Kiểu 2 — DẢI MÀU ôm lấy khối số. Căn phòng vẫn thấy trên và dưới dải, nên khuôn này
           là chỗ nghỉ mắt giữa những khuôn tràn nền. */}
-      {kA === 2 ? (() => {
+      {/* ── KHÔNG CÓ SỐ THÌ KHÔNG CÓ DẢI  (5/9/2026) ─────────────────────────────────
+          Anh soi khung THE RULES nhịp 5: một vệt màu tím nằm ngang phía trên, bên dưới
+          trống trơn. Nhịp ấy có `so = ""` — câu định tính, không lượng hoá được.
+          Dải màu tồn tại để ÔM LẤY khối số (chú thích ngay dưới nói đúng thế). Không có số
+          thì nó ôm chỗ trống, và người xem đọc ra một lỗi dựng chứ không đọc ra một bố cục.
+          Cùng họ §15.20: *sàn tồn tại để "bé" không bị đọc thành "thiếu"* — một phần tử phụ
+          trợ mà thứ nó phụ trợ biến mất thì bản thân nó phải biến mất theo, chứ không được
+          đứng lại một mình. */}
+      {kA === 2 && soHien ? (() => {
         /* ── DẢI PHẢI PHỦ TỚI DÒNG CHÚ THÍCH  (4/9/2026) ────────────────────────────────
            Chiều cao dải là một HẰNG SỐ (0,25·H), còn `yChu` thì tính ra — nên dòng chú
            thích rơi xuống DƯỚI mép dải bất cứ khi nào nó dài hoặc số cao. Soi khung
@@ -1135,7 +1143,7 @@ export const SoLieu: React.FC<{
           còn lại. Khối phải ĐỦ RỘNG cho chuỗi số dài nhất, nên bề ngang suy từ `_emChu` chứ
           không phải một phân số cố định — số "360,000,000" và số "8" cần hai khối khác nhau,
           và một hằng số phục vụ cả hai thì hoặc tràn hoặc thừa (§15.10). */}
-      {kA === 5 ? (() => {
+      {kA === 5 && soHien ? (() => {   /* cùng lý do: khối góc ôm con số, không có số thì bỏ */
         const w5 = Math.min(W * 0.72, _emChu(soHien) * cs + W * 0.10);
         const h5 = H * (ngang ? 0.30 : 0.26);
         return <rect x={0} y={H * (yCao - (ngang ? 0.16 : 0.14))} width={w5} height={h5}
@@ -1723,7 +1731,12 @@ export const TheChu: React.FC<{
             mắt đọc trước, mà khung không còn rỗng.
             0,80 đo bằng mắt: 0,94 vẫn đọc ra tấm đặc, dưới 0,70 thì chữ bắt đầu tranh chấp
             với nét sau lưng. */}
-        <rect x={0} y={0} width={W} height={H} fill={mau} opacity={0.80} />
+        {/* 0,80 -> 0,62  (5/9/2026). Anh: *"đừng làm kiểu chữ trên nền không này rất xấu
+            và chán"*. Chú thích ngay trên nói tấm phủ để "cảnh hiện mờ trở lại" — nhưng
+            `the_chu` khi ấy KHÔNG được cấp cảnh nào (nó nằm trong `KHUON_TU_VE`), nên tấm
+            phủ phủ lên một bức tường trơn và đọc ra mảng màu đặc. Nay Python cấp cảnh cho
+            25/25 thẻ chữ, và độ đục hạ xuống mức cảnh thật sự đọc được. */}
+        <rect x={0} y={0} width={W} height={H} fill={mau} opacity={0.62} />
         <text x={W * 0.99} y={H * 0.98} textAnchor="end" fontFamily={F()} fontWeight={900}
               fontSize={H * 1.28} fill={chuSang} opacity={0.13}>{soCh}</text>
         {khoi(W * 0.08, H * 0.5, "start", fsz, chuSang)}

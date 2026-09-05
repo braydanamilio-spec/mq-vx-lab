@@ -1,4 +1,5 @@
 import React from "react";
+import { TuVe } from "./TuVe";
 import { AbsoluteFill } from "remotion";
 import { chanTroi, _tron, _pha } from "./Khuon";
 
@@ -757,9 +758,19 @@ export const CanhVe: React.FC<{
 
             `vectorEffect="non-scaling-stroke"` KHÔNG dùng ở đây: khung dựng đúng cỡ thật nên
             nét đã đúng tỉ lệ, còn thuộc tính ấy sẽ làm nét dày như nhau ở mọi cỡ hình. */}
+        {/* ── NÉT TỰ VẼ RA  (5/9/2026) ─────────────────────────────────────────────
+            Xem `TuVe.tsx` cho cơ chế và vì sao không cần đo chiều dài đường.
+
+            `p` là tiến độ của cả nhịp (0 -> 1). Nét phải vẽ xong SỚM hơn nhiều, nếu không
+            thì người xem đọc chữ phụ đề xong mà hình vẫn đang mọc — chữ và hình phải nói
+            cùng một câu tại cùng một lúc. Chia cho 0,42 nghĩa là nét xong ở 42% nhịp, tức
+            khoảng 0,45 giây với nhịp trung vị 2,3 giây: đủ để mắt bắt được động tác vẽ, và
+            80% nhịp còn lại là một khung TĨNH hoàn chỉnh — xem chú thích `MOC_MAU`. */}
         <g transform={`translate(0 ${-p * H * 0.008})`}
            stroke={_muc(c)} strokeWidth={W * 0.005} strokeLinejoin="round" strokeLinecap="round">
-          {ve({ W, H, san, c, hat, r })}
+          <TuVe p={p / 0.20}>
+            {ve({ W, H, san, c, hat, r })}
+          </TuVe>
         </g>
         <rect x={0} y={0} width={W} height={H} fill={`url(#${id}q)`} />
       </svg>
