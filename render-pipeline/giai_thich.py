@@ -4529,6 +4529,22 @@ HO_SO = ("so_lieu", "dem", "truc", "kinh_lup", "chia_doi", "the_chu")
 HO_NGUOI = ("canh", "nhom")
 
 
+# Mười khoảnh khắc CÓ NGƯỜI. Dựng từ chính `TINH_HUONG` chứ không chép tay: thêm một
+# khoảnh khắc mới ở đó thì bảng này tự có, không có nguồn sự thật thứ hai (§13.5).
+_HO_CO_NGUOI = ("di", "nghi", "mang", "nhin", "dong", "vui",
+                "buc_boi", "sung_sot", "nghi_ngo", "man_hinh")
+# Hai vốn từ cho hai bố cục đạo cụ. Ngắn và ĐÓNG — đây là khái niệm, không phải danh
+# sách ngoại lệ (§13.9): "so sánh hai lượng" và "không hình dung nổi" là hai ý hữu hạn.
+_CO_LUONG = {"thousand", "million", "billion", "trillion", "hundred", "dozen"}
+_SS = {"versus", "compared", "bigger", "smaller", "larger", "apart", "difference",
+       "gap", "twice", "times", "against", "between", "than"}
+_NGHI = {"brain", "head", "mind", "imagine", "understand", "grasp", "sense",
+         "picture", "guess", "think", "scale", "instinct"}
+_TU_NGUOI: set = set()
+for _k in _HO_CO_NGUOI:
+    _TU_NGUOI |= TINH_HUONG[_k][0]
+
+
 def _gop_hai_ho(nhip: list) -> None:
     """9 khuôn -> 2 họ. Giữ `chart` khi nhịp có dữ liệu cột thật (nó là trạng thái so sánh
     của chính họ SỐ, không phải một họ thứ ba)."""
@@ -4563,7 +4579,35 @@ def _gop_hai_ho(nhip: list) -> None:
     for n in nhip:
         if (n.get("khuon") or "canh") != "canh":
             continue
-        if not any(n.get(f) for f in ("ve", "bt", "canh_ve", "canva", "hinh_nhap")):
+        if any(n.get(f) for f in ("ve", "bt", "canh_ve", "canva", "hinh_nhap")):
+            continue
+        # ── NGƯỜI CHỈ XUẤT HIỆN KHI CÂU NÓI VỀ MỘT NGƯỜI ĐANG LÀM GÌ  (5/9/2026) ─────────
+        # Anh: *"tự dưng cho người vô không hợp, không nói lên được nội dung"*.
+        # Đúng, và đây là lỗi em tự tạo ở lượt gộp: em cấp `nguoi` cho MỌI nhịp rỗng để
+        # không còn khung trống. Nhưng "không trống" không phải là "nói được nội dung" —
+        # một người đứng cạnh câu *"Two words. One letter apart."* không nói gì cả.
+        #
+        # Đo trên 16 tập: 29 nhịp cảnh không có ảnh, trong đó **9 nhịp (31%) là câu TRỪU
+        # TƯỢNG** — "The habit, or the number." · "None of that was instinct." — không có
+        # người nào trong câu để mà vẽ.
+        #
+        # `TINH_HUONG` đã sẵn có phía CÂU cho mười khoảnh khắc có người (đi · nghỉ · mang ·
+        # nhìn · đông · vui · bực · sửng sốt · nghĩ ngợi · màn hình). Câu chạm vào một trong
+        # số đó thì vẽ người; không chạm thì để TRỐNG. Khung chỉ có chữ trên giấy là một
+        # nhịp hợp lệ — nó cho mắt nghỉ giữa hai khung đông. Cắm một hình vô can vào đó mới
+        # là thứ người xem đọc ra "làm cho có".
+        tu = {w for w in re.findall(r"[a-z]{3,}", (n.get("loi") or "").lower())}
+        # ── ĐẠO CỤ KỂ NỘI DUNG, KHÔNG PHẢI NGƯỜI ĐỨNG KHÔNG ─────────────────────────────
+        # Anh gửi hai ảnh: một người cầm `$` bé và `$` khổng lồ; bốn người ngẩng nhìn đám
+        # mây có chữ. Cả hai đều KỂ được câu đang nói — người đứng không thì không.
+        #
+        # `_SS` là chỗ đắt nhất của 18 kênh này: mọi kênh đều là "X so với Y", nên một
+        # người cầm hai vật chênh cỡ chính là nội dung vẽ ra thành hình.
+        if len(tu & _CO_LUONG) >= 2 or (tu & _SS):
+            n["bt"] = "nguoi_ss"
+        elif tu & _NGHI:
+            n["bt"] = "nguoi_nghi"
+        elif tu & _TU_NGUOI:
             n["bt"] = "nguoi"
 
 

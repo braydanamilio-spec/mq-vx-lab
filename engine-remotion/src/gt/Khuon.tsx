@@ -155,7 +155,18 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
        Cỡ nhỏ vẫn phải đọc được: hình này còn dùng ở bố cục so sánh, thu còn 34% (§15.9).
        Nên mắt là KHỐI ĐẶC (co bao nhiêu vẫn thấy), lông mày dày gần bằng nét chính, và áo
        là mảng màu — ba thứ sống sót qua phép thu, khác hẳn nét mảnh. */
-    case "nguoi": {
+    /* ── BA BỐ CỤC NGƯỜI, KHÁC NHAU Ở ĐẠO CỤ  (5/9/2026) ────────────────────────────────
+       Anh gửi hai ảnh và nói: *"phải vẽ được kiểu như này, liên quan cái được nói tới"*.
+       Ảnh thứ hai CHÍNH LÀ nội dung kênh này: một người cầm `$` bé một bên và `$` khổng lồ
+       bên kia — đó là "triệu so với tỉ" VẼ RA THÀNH HÌNH.
+       Bản trước em chỉ có một bố cục: người đứng không. Người đứng không thì không kể được
+       gì; cái kể chuyện là ĐẠO CỤ trong tay và tỉ lệ giữa chúng.
+         nguoi     — đứng, cho câu nói về một người đang làm gì
+         nguoi_ss  — hai tay cầm hai vật CHÊNH LỆCH CỠ (ảnh 2 của anh)
+         nguoi_nghi— ngẩng nhìn đám mây nghĩ có một CHỮ trong đó (ảnh 1 của anh)            */
+    case "nguoi":
+    case "nguoi_ss":
+    case "nguoi_nghi": {
       /* ══ NGƯỜI QUE THEO CHUẨN CÁC KÊNH TRĂM TRIỆU VIEW  (5/9/2026) ═══════════════════
          Soi ảnh khung của những kênh mà ba video hướng dẫn Canva lấy làm mẫu (10M · 39M ·
          50M · 79M · 90M · 129M view). Phong cách của họ ĐƠN GIẢN HƠN thứ em đang làm, và
@@ -271,7 +282,10 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
         [[[0, vaiY], [-k(0.100), k(0.185)]],
          [[0, vaiY], [k(0.130), k(0.135)], [k(0.285), k(0.110)]]],
       ];
-      const t5 = ((tu % 5) + 5) % 5;
+      /* 5/9 — `nguoi_ss` ÉP tư thế dang ngang. Soi khung: đạo cụ đặt ở toạ độ tay dang
+         ngang trong khi thân đang ở tư thế buông xuôi — hai chỗ không khớp nên `$` lơ lửng
+         giữa trời. Nơi ĐẶT đạo cụ và nơi VẼ tay phải là một (§15.3). */
+      const t5 = ten === "nguoi_ss" ? 2 : ((tu % 5) + 5) % 5;
       const buoc = t5 === 3 || t5 === 4;
       const CHAN: number[][][] = buoc
         ? [[[0, hong], [-k(0.150), k(0.545)]],
@@ -330,6 +344,39 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
           : <path d={`M ${-dauR * 0.40} ${dauY + dauR * 0.34}
                       Q 0 ${dauY + dauR * (t5 === 3 ? 0.20 : 0.74)} ${dauR * 0.40} ${dauY + dauR * 0.34}`}
                   fill="none" stroke={mau} strokeWidth={wM} strokeLinecap="round" />}
+
+        {/* ── ĐẠO CỤ: thứ thật sự kể nội dung ─────────────────────────────────────────── */}
+        {ten === "nguoi_ss" ? (() => {
+          /* Hai vật cùng KÝ HIỆU, khác hẳn CỠ — chênh lệch cỡ chính là thông điệp. Tay
+             phải luôn cầm vật LỚN vì mắt người đọc trái-sang-phải, nên vật lớn ở cuối
+             hành trình nhìn là chỗ nhấn. */
+          const [tx, ty] = TAY[2][0][1], [px, py] = TAY[2][1][1];
+          return (
+            <g>
+              {/* Đầu chiếm x ±0,126 và y −0,435…−0,183. Vật lớn phải nằm NGOÀI vùng ấy:
+                  đẩy ra x 0,36 và hạ chân chữ xuống, nếu không nó trùm lên mặt — đúng lỗi
+                  soi khung bắt được ở lượt đầu. */}
+              <text x={tx - k(0.045)} y={ty + k(0.055)} textAnchor="middle" fontFamily={F()}
+                    fontSize={k(0.17)} fontWeight={900} fill={mau}>$</text>
+              <text x={px + k(0.115)} y={py + k(0.145)} textAnchor="middle" fontFamily={F()}
+                    fontSize={k(0.46)} fontWeight={900} fill={mau}>$</text>
+            </g>
+          );
+        })() : ten === "nguoi_nghi" ? (
+          /* Mây nghĩ + một CHỮ. Mây vẽ bằng năm cung tròn chồng nhau — đúng cách ảnh mẫu
+             làm, và nó phải NẰM TRÊN đầu chứ không cạnh đầu, vì nó là suy nghĩ. */
+          <g>
+            {[[-0.30, -0.74, 0.135], [-0.10, -0.83, 0.165], [0.13, -0.79, 0.150],
+              [0.30, -0.70, 0.120], [0.02, -0.66, 0.145]].map(([cx2, cy2, r2], q) => (
+              <circle key={q} cx={k(cx2)} cy={dauY + k(cy2)} r={k(r2)}
+                      fill="#FFFFFF" stroke={mau} strokeWidth={w} />
+            ))}
+            {[[0.10, -0.50, 0.030], [0.14, -0.44, 0.022], [0.17, -0.39, 0.016]].map(([cx2, cy2, r2], q) => (
+              <circle key={`b${q}`} cx={k(cx2)} cy={dauY + k(cy2)} r={k(r2)}
+                      fill="#FFFFFF" stroke={mau} strokeWidth={wM} />
+            ))}
+          </g>
+        ) : null}
       </g>);
     }
     case "dien_thoai": return <g>{P(`M ${-k(0.22)} ${-k(0.42)} h ${k(0.44)} v ${k(0.84)} h ${-k(0.44)} Z`, "#20262E")}
