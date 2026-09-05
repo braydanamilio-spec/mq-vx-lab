@@ -4378,6 +4378,114 @@ def _kho_canva():
     return _KHO_CANVA
 
 
+# ── TẦNG TÌNH HUỐNG — cầu nối giữa hai vốn từ không gặp nhau ─────────────────────────────
+#
+# Đo ngày 5/9 trên 216 tập: kho 117 hình chỉ có **17 hình từng được dùng**, 6 kênh không có
+# hình nào, và 54/60 chữ đầu của kho (`holding` · `businessman` · `sitting` · `angry`) KHÔNG
+# xuất hiện trong bất kỳ kịch bản nào. Vì hai bên nói hai thứ khác nhau:
+#
+#     kho tả BỨC ẢNH   : holding · walking · thinking · frustrated · pointing · sitting
+#     kịch bản tả THẾ GIỚI: noon · driveway · fence · rent · tickets · blink
+#
+# Và câu thì rất ngắn, phần lớn trừu tượng: *"No breaks."* · *"Now ten people."* ·
+# *"Numbers alone mean nothing."* Ghép theo CHỮ TRÙNG NHAU là bất khả về cấu trúc — thêm
+# 400 hình cùng tác giả chỉ thêm hàng chết, không thêm một khớp nào.
+#
+# Nên hỏi câu khác: KHÔNG phải *"câu có chứa danh từ của hình không"* mà *"đây có phải cùng
+# một KHOẢNH KHẮC không"*. Hình người chung chung là tài sản chung chung — thứ định vị nó là
+# tư thế và cảm xúc, đúng hai thứ mà thẻ của kho ghi.
+#
+# Mỗi tình huống khai HAI phía: chữ phía CÂU, thẻ phía HÌNH. Đây không phải danh sách ngoại
+# lệ (§13.9) — nó là một tập khái niệm ĐÓNG, và mỗi mục đều đọc tay để chắc nó không bịa.
+# Nhưng KHÔNG phải hình nào cũng được ghép theo tình huống. Đọc tay 24 cặp đầu tiên thì
+# 14 cặp sai, và sai theo đúng một kiểu: hình có NHIỀU thẻ trúng mọi tình huống một cách
+# tình cờ — `gallery museum painting running stolen thief` nhận được *"So no. Do not walk."*
+# (ra một tên trộm), `during flood house` nhận *"Every day. For life."* (ra một trận lụt).
+#
+# Khác biệt thật nằm ở chỗ này:
+#
+#   hình CHUNG CHUNG (chỉ tư thế + cảm xúc)  -> ghép theo tình huống ĐƯỢC. Một người mệt
+#                                               ngồi xuống hợp với mọi câu nói về mệt.
+#   hình CÓ CẢNH CỤ THỂ (lụt · trộm · cây)   -> BẮT BUỘC câu phải nhắc đúng danh từ ấy.
+#                                               Không ai được vẽ lụt cho câu không nói lụt.
+#
+# Nên `VON_DANG` liệt kê vốn từ TƯ THẾ + CẢM XÚC. Hình nào có thẻ nằm trọn trong đó là hình
+# chung chung; hình nào thò ra một danh từ cảnh thì danh từ ấy phải xuất hiện trong câu.
+# §17.5: lặp một hình ĐÚNG chỉ nhàm, thay bằng hình SAI thì khung nói một đằng lời một nẻo.
+VON_DANG: set[str] = {
+    "holding","thinking","walking","sitting","running","standing","pointing","carrying",
+    "looking","watching","showing","offering","asking","reading","writing","waiting",
+    "angry","frustrated","sad","tired","shocked","smiling","unhappy","confused","unsure",
+    "surprised","lonely","happy","exhausted","stressed","worried","bored","calm",
+    "man","woman","person","people","character","figures","figure","guy","girl","couple",
+    "two","team","group","pose","gesture","hands","hand","arms","arm","legs","head","open",
+    "something","anything","behind","away","between","forward","back","down","together",
+    "thought","question","answer","decide","choose","choices","choice","crossroad","idea",
+    "sleeping","rest","empty","blank","alone","success","loving","heart","cute","kind",
+    "exclamation","marks","mark","symbols","surrounded","big","small","new","old","young",
+}
+
+
+TINH_HUONG: dict[str, tuple[set, set]] = {
+    "di":      ({"walk","walking","walks","step","steps","road","trip","travel","journey",
+                 "mile","miles","arrive","arrives","start","starts","go","goes","drive",
+                 "driveway","run","running","moving","move","away","path"},
+                {"walking","walk","path","running","run","travel","journey","road","away","way"}),
+    "nghi":    ({"rest","sleep","sleeping","tired","break","breaks","stop","stops","quit",
+                 "wait","waiting","slow","night","bed","sit","sits","sitting","done"},
+                {"tired","sleeping","sitting","rest","sleep","exhausted","sits"}),
+    "nghi_ngo":({"think","thinks","thinking","imagine","guess","wonder","idea",
+                 "decide","decides","choose","choice","choices",
+                 "question","answer","why","maybe","sure","unsure","confused"},
+                {"thinking","thought","question","answer","confused","unsure","decide",
+                 "choose","choices","crossroad","asking","about","problem","looking"}),
+    "sung_sot":({"never","nobody","nothing","impossible","wrong","actually","really",
+                 "suddenly","turns","surprise","shocked","wait","cannot","not"},
+                {"shocked","surprised","exclamation","marks","surprise","mark"}),
+    "buc_boi":({"angry","mad","argue","fight","complain","frustrated","annoy","hate",
+                "bad","worse","worst","fault","blame"},
+               {"angry","frustrated","unhappy","sad","gesture","fight","fighter","problem"}),
+    "tien":    ({"money","cost","costs","price","pay","pays","paid","rent","bill","bills",
+                 "fee","fees","dollar","dollars","cheap","expensive","ticket","tickets",
+                 "buy","buys","sell","free","worth","spend","charge","charges"},
+                {"money","businessman","success","carrying","holding","paper"}),
+    "giay_to":({"paper","form","forms","rule","rules","sign","signs","contract","list",
+                "write","writes","writing","note","notes","report","desk","office","work",
+                "works","job","read","reads","label","print"},
+               {"paper","sheet","writing","pen","desk","office","worker","sign","blank",
+                "torn","scroll","businessman","holding"}),
+    "nha":     ({"house","home","homes","roof","door","doors","room","rooms","apartment",
+                 "kitchen","floor","wall","walls","fence","yard","building","window"},
+                {"house","roof","door","home","locked","building"}),
+    "dong":    ({"everyone","everybody","people","crowd","million","thousand","billion",
+                 "group","team","together","city","population","person","persons"},
+                {"team","figures","couple","two","crowd","group","people"}),
+    "thoi_gian":({"hour","hours","minute","minutes","day","days","year","years","noon",
+                  "clock","time","times","late","week","weeks","month","months","second",
+                  "seconds","morning","today","tomorrow","already","still","long"},
+                 {"clock","time","waiting","during","alarm"}),
+    "mot_minh":({"alone","nobody","empty","nothing","lost","single","only","one","last",
+                 "gone","missing","blank"},
+                {"empty","blank","alone","lonely","lost","missing"}),
+    "mang":    ({"carry","carries","carrying","hold","holds","holding","lift","lifts",
+                 "weigh","weighs","heavy","pound","pounds","load","pull","push","drop",
+                 "dropped","stack","pile"},
+                {"carrying","holding","heavy","hands","hand","lifting"}),
+    "nhin":    ({"look","looks","watch","watches","watching","see","sees","seeing",
+                 "notice","eyes","blink","show","shows","behind","hidden","hide"},
+                {"looking","watching","behind","pointing","showing","something","offering"}),
+    "man_hinh":({"phone","scroll","screen","app","apps","text","message","tap","online",
+                 "internet","click"},
+                {"scroll","phone","screen"}),
+    "nuoc_lua":({"fire","burn","burns","hot","heat","flame","flood","water","rain","wet",
+                 "cold","ice","melt","boil"},
+                {"fire","flood","water","burning"}),
+    "vui":     ({"win","wins","good","better","best","happy","enjoy","love","nice",
+                 "great","easy","success"},
+                {"smiling","success","happy","open","arms","loving","heart"}),
+}
+
+
 def _rai_canva(nhip: list, ma: str, idx: int) -> None:
     """Chọn cho mỗi nhịp CẢNH một bức tranh Canva khớp NGHĨA của câu.
 
@@ -4393,7 +4501,7 @@ def _rai_canva(nhip: list, ma: str, idx: int) -> None:
     kho = _kho_canva()
     if not kho:
         return
-    dung = set()
+    dung: dict[str, int] = {}
     for n in nhip:
         if (n.get("khuon") or "canh") not in ("canh", "nhom"):
             continue
@@ -4401,20 +4509,35 @@ def _rai_canva(nhip: list, ma: str, idx: int) -> None:
               if w not in _BO_TU}
         if not tu:
             continue
+        # TÌNH HUỐNG của câu: câu ngắn thường trúng 1–2 tình huống, câu rỗng nghĩa trúng 0.
+        th = {k for k, (cau, _) in TINH_HUONG.items() if tu & cau}
         tot, diem = None, 0.0
         for ten, tt in kho:
-            c = len(tu & tt)
-            if not c:
+            # (a) chữ trùng thẳng — mạnh nhất khi có, vì nó là nghĩa đen
+            d = len(tu & tt) / (len(tt) ** 0.5)
+            # (b) cùng khoảnh khắc — đường DUY NHẤT với tới hình người chung chung
+            rieng = tt - VON_DANG          # danh từ CẢNH của hình này
+            if rieng and not (tu & rieng):
+                # Hình có cảnh cụ thể mà câu không nhắc tới cảnh ấy: cấm hẳn đường tình
+                # huống. Đây là chỗ chặn "tên trộm cho câu không nói trộm".
+                if not d:
+                    continue
+            elif th:
+                hop = sum(1 for k in th if tt & TINH_HUONG[k][1])
+                if hop:
+                    # Chia cho SỐ THẺ của hình: hình tám thẻ trúng mọi tình huống một cách
+                    # tình cờ, hình ba thẻ trúng vì nó thật sự nói về khoảnh khắc ấy.
+                    d += 0.42 * hop / ((len(th) * len(tt)) ** 0.5)
+            if not d:
                 continue
-            d = c / (len(tt) ** 0.5)
-            if ten in dung:
-                d *= 0.25          # không dùng lại trong cùng một tập
+            d *= 0.25 ** dung.get(ten, 0)   # dùng lại trong cùng tập thì tụt hẳn
             if d > diem:
                 tot, diem = ten, d
-        # Sàn 0,30: dưới mức này hình khớp quá lỏng, hiện lên hại hơn không hiện.
+        # Sàn 0,30: dưới mức này hình khớp quá lỏng, hiện lên hại hơn không hiện. Một hình
+        # SAI tệ hơn không hình — khung nói một đằng, lời nói một nẻo (§17.5).
         if tot and diem >= 0.30:
             n["canva"] = tot
-            dung.add(tot)
+            dung[tot] = dung.get(tot, 0) + 1
 
 
 def _rai_icon(nhip: list, ma: str) -> None:
