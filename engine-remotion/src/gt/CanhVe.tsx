@@ -691,6 +691,11 @@ export const CanhVe: React.FC<{
     <AbsoluteFill>
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute" }}>
         <defs>
+        {/* rút bão hoà + hạ độ đục: mảng tô thành phác chì, nét viền giữ nguyên độ đen */}
+        <filter id={`muc${Math.abs(hat) % 13}`} colorInterpolationFilters="sRGB">
+          <feColorMatrix type="saturate" values="0.12" />
+          <feComponentTransfer><feFuncA type="linear" slope="0.42" /></feComponentTransfer>
+        </filter>
           <linearGradient id={`${id}t`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={c.troi} />
             <stop offset="100%" stopColor={c.troiD} />
@@ -758,7 +763,16 @@ export const CanhVe: React.FC<{
             cùng một câu tại cùng một lúc. Chia cho 0,42 nghĩa là nét xong ở 42% nhịp, tức
             khoảng 0,45 giây với nhịp trung vị 2,3 giây: đủ để mắt bắt được động tác vẽ, và
             80% nhịp còn lại là một khung TĨNH hoàn chỉnh — xem chú thích `MOC_MAU`. */}
+        {/* ── 5/9 — TRÊN GIẤY, MẢNG MÀU THÀNH NÉT MỰC NHẠT ────────────────────────────
+            Soi khung sau khi bỏ trời và sàn: cảnh vẫn ra **nhà mái đỏ, trời xanh, dãy nhà
+            xám đặc** nằm trên giấy — hai chất liệu chửi nhau còn nặng hơn lúc còn căn phòng,
+            vì giấy thì mềm mà mảng màu thì phẳng lì.
+            Không sửa tay hàng chục hình trong mười nơi chốn: một BỘ LỌC ở nhóm cha rút bão
+            hoà và hạ độ đục của mọi mảng tô, còn nét viền (đã khai `stroke` ở chính nhóm này)
+            vẫn đen. Kết quả đọc ra "phác chì rồi đi mực" — đúng chất một trang sổ tay.
+            Cùng cách đã dùng cho `NenPhong`: chặn ở MỘT chỗ cha thay vì sửa mọi chỗ con. */}
         <g transform={`translate(0 ${-p * H * 0.008})`}
+           filter={laGiay() ? `url(#muc${Math.abs(hat) % 13})` : undefined}
            stroke={_muc(c)} strokeWidth={W * 0.005} strokeLinejoin="round" strokeLinecap="round">
           <TuVe p={p / 0.20}>
             {ve({ W, H, san, c, hat, r })}

@@ -173,8 +173,10 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
 
          Em đã đi sai hướng suốt: cố tô màu và đổ bóng cho đẹp, trong khi các kênh ấy
          KHÔNG TÔ GÌ CẢ — họ thắng bằng nét và biểu cảm.                                   */
-      const w = k(0.017);
-      const wM = k(0.013);
+      /* 5/9 — NÉT MẢNH HƠN. Anh: *"nhân vật kiểu thô thiển xấu"*. Nét 0,017 trên một
+         hình cao 0,9 đọc ra bút dạ bản to; ảnh mẫu dùng nét mảnh và ĐỀU. */
+      const w = k(0.0125);
+      const wM = k(0.0092);
 
       /* Nhiễu TẤT ĐỊNH: cùng một nhân vật ở cùng tư thế luôn run giống hệt nhau, nên hình
          không "sôi" giữa các khung. Viết phép băm ra tường minh — `Math.random` thì mỗi
@@ -210,7 +212,7 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
         const a = Math.atan2(ey - py, ex - px);
         return (<g key={key}>
           {N(NET(pts, key))}
-          {ban ? <ellipse cx={ex} cy={ey} rx={k(0.030)} ry={k(0.019)}
+          {ban ? <ellipse cx={ex} cy={ey} rx={k(0.020)} ry={k(0.0125)}
                           transform={`rotate(${(a * 180) / Math.PI} ${ex} ${ey})`}
                           fill="#FFFFFF" stroke={mau} strokeWidth={wM} /> : null}
         </g>);
@@ -286,10 +288,10 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
             Ảnh mẫu: tròng trắng lớn, con ngươi nhỏ hơn hẳn, đặt hơi lệch theo hướng nhìn. */}
         {[-1, 1].map((sg) => (
           <g key={sg}>
-            <ellipse cx={sg * k(0.052)} cy={-k(0.298)} rx={k(0.036)} ry={k(0.044)}
+            <ellipse cx={sg * k(0.046)} cy={-k(0.296)} rx={k(0.023)} ry={k(0.028)}
                      fill="#FFFFFF" stroke={mau} strokeWidth={wM} />
-            <ellipse cx={sg * k(0.052) + (buoc ? sg * k(0.008) : 0)} cy={-k(0.292)}
-                     rx={k(0.017)} ry={k(0.021)} fill={mau} />
+            <ellipse cx={sg * k(0.046) + (buoc ? sg * k(0.006) : 0)} cy={-k(0.291)}
+                     rx={k(0.0115)} ry={k(0.0142)} fill={mau} />
           </g>
         ))}
 
@@ -312,7 +314,7 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
           : t5 === 3
           ? <ellipse cx="0" cy={-k(0.206)} rx={k(0.032)} ry={k(0.040)}
                      fill="#FFFFFF" stroke={mau} strokeWidth={wM} />
-          : <path d={`M ${-k(0.072)} ${-k(0.238)} Q 0 ${-k(0.168)} ${k(0.072)} ${-k(0.238)}`}
+          : <path d={`M ${-k(0.050)} ${-k(0.232)} Q 0 ${-k(0.186)} ${k(0.050)} ${-k(0.232)}`}
                   fill="none" stroke={mau} strokeWidth={wM} strokeLinecap="round" />}
 
         {/* PHỤ KIỆN — trục nhận dạng. Ảnh mẫu dùng đúng một món cho mỗi nhân vật (cà vạt
@@ -325,9 +327,9 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
                 fill={mau} />
         ) : nv % 4 === 2 ? (<>
           {/* kính tròn */}
-          <circle cx={-k(0.052)} cy={-k(0.298)} r={k(0.062)} fill="none"
+          <circle cx={-k(0.046)} cy={-k(0.296)} r={k(0.045)} fill="none"
                   stroke={mau} strokeWidth={wM} />
-          <circle cx={k(0.052)} cy={-k(0.298)} r={k(0.062)} fill="none"
+          <circle cx={k(0.046)} cy={-k(0.296)} r={k(0.045)} fill="none"
                   stroke={mau} strokeWidth={wM} />
           {N(NET([[-k(0.010), -k(0.300)], [k(0.010), -k(0.300)]], 8), wM)}
         </>) : nv % 4 === 3 ? (
@@ -1827,7 +1829,12 @@ export const TheChu: React.FC<{
   const daiT = Math.max(...dongT.map((d) => d.length), 1);
   const k6 = Math.abs(bo) % 6;
   const vao = 0.97 + q * 0.03;
-  const chuSang = chuHopNen("#FFFFFF", mau);
+  /* 5/9 — SÁU BỐ CỤC, EM MỚI SỬA MỘT. Bản trước đổi `nenThe` về giấy nhưng năm bố cục còn
+     lại vẫn `fill={mau}` tràn khung, nên soi khung vẫn thấy tấm tím — §6 lần nữa: vá một
+     nhánh, để nguyên nhánh song song. Trên trang giấy thì KHÔNG bố cục nào được đổ kín màu
+     kênh; màu kênh chỉ còn ở vạch và ở chữ nhấn. */
+  const trenGiay = laGiay();
+  const chuSang = trenGiay ? "#2C2722" : chuHopNen("#FFFFFF", mau);
   const chuToi = chuHopNen("#2C2722", nen);
 
   /* Cỡ chữ tính lại theo BỀ NGANG THẬT mỗi bố cục cho phép — bố cục canh trái chỉ có 0,80·W,
@@ -1865,7 +1872,7 @@ export const TheChu: React.FC<{
             `the_chu` khi ấy KHÔNG được cấp cảnh nào (nó nằm trong `KHUON_TU_VE`), nên tấm
             phủ phủ lên một bức tường trơn và đọc ra mảng màu đặc. Nay Python cấp cảnh cho
             25/25 thẻ chữ, và độ đục hạ xuống mức cảnh thật sự đọc được. */}
-        <rect x={0} y={0} width={W} height={H} fill={mau} opacity={0.62} />
+        {trenGiay ? null : <rect x={0} y={0} width={W} height={H} fill={mau} opacity={0.62} />}
         <text x={W * 0.99} y={H * 0.98} textAnchor="end" fontFamily={F()} fontWeight={900}
               fontSize={H * 1.28} fill={chuSang} opacity={0.13}>{soCh}</text>
         {khoi(W * 0.08, H * 0.5, "start", fsz, chuSang)}
@@ -1884,7 +1891,9 @@ export const TheChu: React.FC<{
     const fsz = Math.min(coChu(soCh ? 0.68 : 0.84, dongT.length), (cao * 0.80) / (dongT.length * 1.2));
     return (
       <g opacity={q}>
-        <rect x={0} y={y0} width={W} height={cao} fill={mau} />
+        {trenGiay
+          ? <rect x={0} y={y0} width={W} height={Math.max(2, W * 0.003)} fill={mau} opacity={0.85} />
+          : <rect x={0} y={y0} width={W} height={cao} fill={mau} />}
         {soCh ? (
           <>
             <text x={W * 0.055} y={y0 + cao * 0.5 + cao * 0.22} fontFamily={F()} fontWeight={900}
@@ -1920,7 +1929,8 @@ export const TheChu: React.FC<{
           const yTren = yT - caoChu / 2 - fsz * 0.30;
           return (<>
             <rect x={W * 0.055} y={yTren} width={Math.max(4, W * 0.012)}
-                  height={caoChu * Math.min(1, q * 1.5)} fill={mau} rx={W * 0.004} />
+                  height={caoChu * Math.min(1, q * 1.5)} fill={mau} rx={W * 0.004}
+                  opacity={trenGiay ? 0.18 : 1} />
             {/* dấu ngoặc kép lớn, rất mờ — nói "đây là một câu tuyên bố" mà không tranh chỗ */}
             <text x={W * 0.055} y={yTren - fsz * 0.10} fontFamily={F()} fontWeight={900}
                   fontSize={fsz * 2.4} fill={mau} opacity={0.13}>&#8220;</text>
