@@ -494,8 +494,15 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                      dùng: `const` đọc trước dòng khai là `ReferenceError` lúc chạy mà
                      `esbuild` vẫn xanh (§15.18, đã trả giá một lần ở `Chart`). */
                   const _canhVe = !!(N as any)?.canh_ve;
-                  const _dam = _canhVe ? 0.90 : 0.58;
-                  const _ban = _canhVe ? 1.02 : 0.78;
+                  /* 0,90 / 1,02 là bản đầu và nó ĐI QUÁ: soi clip demo thì cái đĩa
+                     xoá luôn cả căn cảnh nó sinh ra để tách khỏi — khung còn lại một
+                     bức tường trơn với một cái bóng. Chữa gốc đã nằm ở phía Python
+                     (khuôn sơ đồ không nhận cảnh vẽ nữa), nên ở đây chỉ cần đủ để tách
+                     chiều sâu, không cần xoá.
+                     0,74 / 0,90: đồ đạc sau lưng chủ thể lùi hẳn một bậc mà vẫn ĐỌC ĐƯỢC
+                     là đồ đạc — đúng như ảnh tham chiếu, nơi cái tủ vẫn rõ nét ở mép trái. */
+                  const _dam = _canhVe ? 0.74 : 0.58;
+                  const _ban = _canhVe ? 0.90 : 0.78;
                   /* ── QUY TẮC D: CẢNH SAU KẾ THỪA CẢNH TRƯỚC  (4/9/2026) ──────────────
                      §12.11 D: *cảnh sau mang dấu vết cảnh trước (vệt chân dài dần)* — thứ tách
                      một CHUỖI CẢNH khỏi một chuỗi hình rời rạc.

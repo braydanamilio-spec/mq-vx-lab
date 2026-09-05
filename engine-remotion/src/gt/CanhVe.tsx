@@ -120,7 +120,8 @@ const Bong: React.FC<{ x: number; y: number; r: number }> = ({ x, y, r }) => (
 );
 
 type Bang = { xa: string; giua: string; gan: string; troi: string; troiD: string;
-              san: string; sanD: string; sanDay: string; nhan: string };
+              san: string; sanD: string; sanDay: string; nhan: string;
+              vat2: string; vat3: string; vat4: string };
 
 /* ── MỘT NƠI CHỐN CÓ ÁNH SÁNG CỦA RIÊNG NÓ  (4/9/2026, sau khi SOI KHUNG) ────────────────
    Bản đầu pha MỌI màu từ `nen` + `mau` của kênh — nghe đúng ("giữ bản sắc kênh"), và soi
@@ -233,6 +234,26 @@ const _dam = (hex: string, k: number): string => {
 
    Nay dải trời và dải sàn cũng đi qua `_dam`. Hệ số nhẹ hơn dải vật (1,25–1,35 thay vì 1,55):
    chúng là NỀN, và nền rực bằng vật thì đồ hoạ số liệu đè lên trên hết đọc được. */
+/* ── ĐỒ VẬT PHẢI CÓ MÀU CỦA CHÍNH NÓ  (5/9/2026) ────────────────────────────────────────
+   Anh gửi ảnh tham chiếu (cậu bé + chồng báo) và nói kiểu vẽ ấy đúng hơn. Đo màu ảnh ấy:
+   tường kem · tủ NÂU · áo MẬN · quần XANH · sàn CAM · đồng hồ nâu sẫm — **sáu sắc độ trong
+   một khung**.
+
+   Bảng dưới đây thì mọi mục đều là `_tron(nen, mau, x)`: một sắc duy nhất pha loãng dần.
+   Nên cảnh vẽ code đọc ra một khối bóng đơn sắc chứ không đọc ra một bức tranh, và không
+   độ tương phản nào cứu được — thiếu SỐ LƯỢNG SẮC, không thiếu độ đậm.
+
+   Đúng §14.5: *`chinh` là màu của DẤU HIỆU, không phải màu của bộ phim.* Màu kênh thuộc về
+   con số và chữ (chỗ nó phải nhận ra được ở 48px); đồ đạc trong cảnh cần bảng màu riêng.
+
+   Bốn màu vật liệu tuyệt đối — gỗ · xanh rêu · đất nung · xanh đá — mỗi màu pha 18% về phía
+   màu kênh để mười tám kênh vẫn khác nhau, nhưng KHÔNG pha nhiều hơn: pha nhiều là quay lại
+   đúng chỗ đơn sắc vừa đi ra. Chọn bốn màu này vì chúng là bảng của tranh minh hoạ giấy ấm,
+   và cả bốn đều đọc được trên nền kem lẫn nền sẫm. */
+const VAT_LIEU = ["#8A6A4F", "#7E8C6A", "#B0724E", "#5E7285"];
+const _vat = (i: number, nen: string, mau: string): string =>
+  _pha(_tron(VAT_LIEU[i % VAT_LIEU.length], mau, 0.18), 0.00);
+
 const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
   /* ── VÀ TỈ LỆ PHA, KHÔNG PHẢI HỆ SỐ NHÂN  (đo lần hai) ─────────────────────────────────
      Thêm `_dam` vào hai dải nền xong, đo lại: **22% → 23%**. Gần như không đổi, và lý do là
@@ -244,7 +265,10 @@ const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
   troiD:  _dam(_pha(_tron(nen, mau, 0.30 + am * 0.10), 0.00), 1.45),
   xa:     _dam(_pha(_tron(nen, mau, 0.30), -0.06), 1.55),
   giua:   _dam(_pha(_tron(nen, mau, 0.44), -0.20), 1.55),
-  gan:    _dam(_pha(_tron(nen, mauPhu || mau, 0.52), -0.34), 1.55),
+  gan:    _vat(0, nen, mau),          // vật ở gần — gỗ, xem `VAT_LIEU`
+  vat2:   _vat(1, nen, mau),
+  vat3:   _vat(2, nen, mau),
+  vat4:   _vat(3, nen, mau),
   san:    _dam(_pha(_tron(nen, mau, 0.38), -0.14), 1.35),
   sanD:   _dam(_pha(_tron(nen, mau, 0.44), -0.30), 1.35),
   /* ── ĐÁY KHUNG SÁNG LÊN: −0,70 → −0,22  (4/9/2026) ────────────────────────────────────
@@ -283,7 +307,7 @@ const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
 
      Giữ đúng thứ tự: 0,38 -> 0,44 -> 0,56, và sẫm thêm ở chặng cuối. */
   sanDay: _dam(_pha(_tron(nen, mau, 0.56), -0.20), 1.35),
-  nhan:   _dam(_pha(_tron(nen, mauPhu || mau, 0.62), -0.44), 1.55),
+  nhan:   _pha(_vat(2, nen, mauPhu || mau), -0.16),   // điểm nhấn — đất nung
 });
 
 type P = { W: number; H: number; san: number; c: Bang; hat: number; r: number[] };
@@ -662,7 +686,13 @@ export const CanhVe: React.FC<{
   // phụ đề, và mọi phép đổi màu ở đó phải nhường cho ràng buộc tương phản 4,5:1.
   const c: Bang = sac
     ? (Object.fromEntries(Object.entries(c0).map(
-        ([k, v]) => [k, _sacHoa(v as string, sac[0], sac[1], k === "sanDay" ? 0.20 : 0.72)])) as Bang)
+        /* Vật liệu (`gan` · `vat2-4` · `nhan`) chỉ nhận 0,28 ánh sáng của nơi chốn, không
+           0,72: ở 0,72 thì sa mạc nhuộm cái tủ thành cát và cả khung lại về đơn sắc — đúng
+           chỗ bảng `VAT_LIEU` vừa đi ra. Ánh sáng của nơi chốn phải CHẠM vào đồ vật, không
+           được THAY màu của chúng. */
+        ([k, v]) => [k, _sacHoa(v as string, sac[0], sac[1],
+                                k === "sanDay" ? 0.20
+                                : /^(gan|vat[234]|nhan)$/.test(k) ? 0.28 : 0.72)])) as Bang)
     : c0;
   if (DAY_TOI[noi]) { c.sanDay = _pha(c.sanDay, DAY_TOI[noi]); c.sanD = _pha(c.sanD, DAY_TOI[noi] * 0.5); }
   const trong = TRONG_NHA.has(noi);

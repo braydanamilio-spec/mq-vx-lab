@@ -4850,7 +4850,8 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
     try:
         import the_he_2 as T2
         import nen_gt
-        _ks = [k for k in (T2.keys_cuc_bo() or [])
+        _ks = [] if os.environ.get("GT_KHONG_CF") else [
+               k for k in (T2.keys_cuc_bo() or [])
                if str(k if isinstance(k, str) else k.get("key", "")).startswith("cf:")]
         if _ks:
             _mk = MAU_KENH.get(ma, {})
@@ -4876,15 +4877,6 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             # Đây là mắt xích làm cả dây chuyền tự chạy được: hồ CF cạn giữa chừng thì
             # phần còn lại của tập không xấu đi thành phòng trống, nó chỉ chuyển sang lớp
             # vẽ code — lớp không gọi mạng nên không bao giờ hỏng theo (§7, bốn tầng nền).
-            _noi = NOI_KENH.get(ma) or ("dong", "pho", "van_phong")
-            _hut = 0
-            for _j, _x in enumerate(nhip):
-                if _x.get("ve") and not _x.get("nenAnh"):
-                    _x["canh_ve"] = _noi[(_lech_kenh(ma) + _j) % len(_noi)]
-                    _x["canh_hat"] = (_lech_kenh(ma) + _j * 7919) % 100000
-                    _hut += 1
-            if _hut:
-                print(f"   ↩ {_hut} nhịp không có ảnh CF -> dùng cảnh vẽ bằng code")
             _cn = sum(1 for x in nhip if x.get("ve"))
             _cv = sum(1 for x in nhip if x.get("canh_ve"))
             # NÓI RÕ VÌ SAO THIẾU, KHÔNG CHỈ NÓI THIẾU BAO NHIÊU  (2/9/2026)
@@ -4930,6 +4922,34 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
             print("   ⚠ không có khoá CF — toàn bộ dùng nền vẽ bằng code")
     except Exception as e:
         print(f"   ⚠ vẽ cảnh hỏng ({str(e)[:70]}) — dùng nền vẽ bằng code")
+
+    # ── LƯỚI AN TOÀN PHẢI Ở NGOÀI CÁI NÓ ĐỠ  (5/9/2026) ─────────────────────────────────
+    # Vòng gán cảnh dự phòng này trước đây nằm BÊN TRONG `if _ks:` — tức nó chỉ chạy khi hồ
+    # khoá CF không rỗng. Ba nhánh thoát khác (hồ rỗng · `--khong-cf` · khối vẽ ném lỗi) đều
+    # bỏ qua nó, và cả ba đều IN RA rằng "toàn bộ dùng nền vẽ bằng code" — một câu nói dối:
+    # không nhịp nào được gán `canh_ve`, nên engine rơi xuống `NenPhong`, một bức tường trơn.
+    #
+    # Đo trên clip demo `--khong-cf`: 5 nhịp `canh`, chỉ **1** có cảnh, 4 khung còn lại là
+    # tường trắng có một cái bóng. Đúng họ lỗi §12.8 — hỏng mà vẫn báo xanh, và ở đây câu báo
+    # còn mô tả chính xác điều đáng lẽ phải xảy ra.
+    #
+    # Một lưới an toàn đặt bên trong nhánh thành công thì nó không phải lưới an toàn.
+    _noi = NOI_KENH.get(ma) or ("dong", "pho", "van_phong")
+    _hut = 0
+    for _j, _x in enumerate(nhip):
+        # `KHUON_TU_VE`: khuôn tự vẽ đồ hoạ thì KHÔNG nhận cảnh vẽ — xem chú thích ở chỗ
+        # khai báo. Đây là chỗ gán `canh_ve` THỨ HAI trong tệp, và bản sửa lúc đầu chỉ chạm
+        # vào chỗ thứ nhất; thiếu dòng này thì `so_lieu` lại có cả một cảnh kho sau lưng
+        # ngay khi hồ CF cạn (§6 — vá một nhánh, để nguyên nhánh song song).
+        if (_x.get("khuon") or "") in KHUON_TU_VE or not _x.get("ve") or _x.get("nenAnh"):
+            continue
+        _bt = str(_x.get("bt") or "")
+        _hop = [x for x in _noi if _hop_noi(_bt, x)] or list(_noi)
+        _x["canh_ve"] = _hop[(_lech_kenh(ma) + _j) % len(_hop)]
+        _x["canh_hat"] = (_lech_kenh(ma) + _j * 7919) % 100000
+        _hut += 1
+    if _hut:
+        print(f"   ↩ {_hut} nhịp không có ảnh CF -> dùng cảnh vẽ bằng code")
 
     # Mốc nhịp lấy từ ĐỘ DÀI TIẾNG NÓI, không đặt cứng: câu ngắn thì cảnh ngắn. Đây chính là
     # cơ chế cho ra nhịp 2,1 giây — nó nằm ở khâu VIẾT (câu 5-8 chữ), không ở khâu dựng.
@@ -5030,6 +5050,13 @@ def main() -> int:
                     help="ép số tập bắt đầu; bỏ trống thì máy tự đếm tập kế tiếp (tap_ke)")
     ap.add_argument("--so", type=int, default=1)
     ap.add_argument("--ngang", action="store_true", help="dựng bản 16:9 thay vì 9:16")
+    # ── SOI LỚP VECTOR PHẢI CHỦ ĐỘNG ĐƯỢC  (5/9/2026) ──────────────────────────────────
+    # Anh chê năm khung "chồng chéo, nghiệp dư", và em mất một vòng mới biết cả năm đều là
+    # LỚP DỰ PHÒNG — hồ CF cạn nên không nhịp nào có ảnh. Tức lớp ấy quyết định phần lớn
+    # những gì anh thật sự nhìn thấy, mà cách duy nhất để soi nó là **chờ hồ cạn**.
+    # Một lớp chỉ kiểm được khi hạ tầng hỏng là một lớp không được kiểm.
+    ap.add_argument("--khong-cf", action="store_true",
+                    help="dựng 100%% bằng đồ hoạ code, không gọi CF (để soi lớp dự phòng)")
     ap.add_argument("--long", action="store_true", help="bản dài (chương theo dòng dữ liệu)")
     # Anh: *"long demo e dựng ngắn a coi là được, nào vào dựng thật thì scale lên."*
     # Đúng: cấu trúc bản dài (mở đầu -> thẻ chương -> các chương -> biểu đồ tổng hợp -> chốt)
@@ -5038,6 +5065,11 @@ def main() -> int:
     ap.add_argument("--short-tu-long", type=int, default=-1, metavar="N",
                     help="dựng N short 9:16 từ kịch bản N chương đầu của bản dài")
     a = ap.parse_args()
+    if a.khong_cf:
+        # Truyền qua biến môi trường chứ không qua tham số hàm: đường sinh ảnh nằm sâu bốn
+        # tầng gọi, và nhét thêm một tham số vào cả bốn là bốn chỗ để quên một chỗ.
+        os.environ["GT_KHONG_CF"] = "1"
+        print("   🎨 chế độ KHÔNG CF — mọi hình vẽ bằng code")
     # ── BẢN DÀI LUÔN LÀ 16:9  (2/9/2026) ────────────────────────────────────────────────────
     # Anh gửi khung hình: bản dài ra **9:16 dọc**, hai mép đen, chữ tràn.
     #
