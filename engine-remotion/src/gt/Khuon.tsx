@@ -218,9 +218,17 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
         </g>);
       };
 
-      const vaiY = -k(0.10);          // chỗ tay mọc ra khỏi thân
-      const hong = k(0.16);           // chỗ chân mọc ra
-      const dauY = -k(0.285), dauR = k(0.150);
+      /* ── TỈ LỆ ĐO TỪ ẢNH MẪU ANH GỬI  (5/9/2026) ────────────────────────────────────
+         Anh: *"tự xây dựng vẽ stick figure như dạng chuẩn 100% này"* + 5 ảnh mẫu.
+         Em ĐO trên ảnh thay vì chỉnh cảm tính (sáu vòng chỉnh cảm tính đã hỏng cả sáu):
+
+             đầu 27% chiều cao · thân 34% · chân 38%
+
+         Bản cũ: đầu 33% · thân 29% — ĐẦU TO HƠN THÂN, đó là toàn bộ cảm giác "thô".
+         Ảnh mẫu có thêm hai thứ bản cũ không có: một cái CỔ nhìn thấy được, và CHÂN DÀI.  */
+      const vaiY = -k(0.133);         // vai — thấp hơn đáy đầu một đoạn, tạo ra cái CỔ
+      const hong = k(0.185);          // hông
+      const dauY = -k(0.309), dauR = k(0.126);
 
       /* Năm tư thế — toạ độ giữ nguyên bản cũ, chỉ đổi điểm BẮT ĐẦU về trục thân (x = 0),
          vì bỏ áo rồi thì không còn bờ vai để tay mọc ra. */
@@ -239,10 +247,10 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
       const t5 = ((tu % 5) + 5) % 5;
       const buoc = t5 === 3 || t5 === 4;
       const CHAN: number[][][] = buoc
-        ? [[[0, hong], [-k(0.135), k(0.30)], [-k(0.150), k(0.42)]],
-           [[0, hong], [k(0.105), k(0.30)], [k(0.075), k(0.42)]]]
-        : [[[0, hong], [-k(0.078), k(0.30)], [-k(0.060), k(0.42)]],
-           [[0, hong], [k(0.078), k(0.30)], [k(0.060), k(0.42)]]];
+        ? [[[0, hong], [-k(0.140), k(0.38)], [-k(0.155), k(0.545)]],
+           [[0, hong], [k(0.110), k(0.38)], [k(0.080), k(0.545)]]]
+        : [[[0, hong], [-k(0.070), k(0.38)], [-k(0.052), k(0.545)]],
+           [[0, hong], [k(0.070), k(0.38)], [k(0.052), k(0.545)]]];
 
       return (<g>
         {/* THÂN là MỘT NÉT, không phải một cái áo. Đây là thay đổi lớn nhất so với bản cũ. */}
@@ -250,104 +258,51 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
         {TAY[t5].map((a, i) => CHI(a, 20 + i))}
         {CHAN.map((c, i) => CHI(c, 40 + i))}
 
-        {/* ĐẦU: ô-van hơi lệch tròn + xoay nhẹ — một hình tròn hoàn hảo đọc ra hình học,
-            một ô-van lệch đọc ra nét bút. */}
+        {/* ── KHUÔN MẶT THEO ẢNH MẪU ─────────────────────────────────────────────────
+            Bốn khác biệt so với bản cũ, mỗi cái đọc được trực tiếp từ ảnh anh gửi:
+              · MẮT là hai ô-van ĐEN ĐẶC nhỏ — không phải tròng trắng có con ngươi. Đây là
+                thứ tách "nét vẽ tay" khỏi "hoạt hình trẻ con", và là lỗi nặng nhất bản cũ.
+              · TÓC là 2–4 SỢI mảnh mọc ra khỏi đỉnh — không phải mảng đen phủ nửa đầu.
+              · MIỆNG một nét cong, không tô, không há.
+              · KHÔNG phụ kiện. Ảnh mẫu nào cũng sạch; cà vạt đen là mảng đặc thứ hai làm
+                hình nặng nề. Bản sắc kênh nằm ở phông và màu chữ, không nằm ở cà vạt. */}
         <ellipse cx="0" cy={dauY} rx={dauR * 1.02} ry={dauR * 0.97}
-                 transform={`rotate(${rnd(3) * 5} 0 ${dauY})`}
-                 fill="#FFFFFF" stroke={mau} strokeWidth={k(0.019)} />
+                 transform={`rotate(${rnd(3) * 4} 0 ${dauY})`}
+                 fill="#FFFFFF" stroke={mau} strokeWidth={w} />
 
-        {/* TÓC vẽ SAU vòng đầu để nó đè lên đường viền trên — tóc mọc RA NGOÀI khối đầu,
-            đúng cách mọi ảnh mẫu làm. Đây là món tô đặc thứ hai (cùng với phụ kiện), và
-            hai món ấy là toàn bộ mảng đen trong một hình thuần nét. */}
-        {/* 5/9 — TÓC VÀ CÀ VẠT BỚT ĐEN. Soi khung: trên một cái đầu trắng, mảng tóc đen
-            phủ nửa đầu cộng cà vạt đen to là HAI KHỐI ĐẶC — mắt đọc ra "vẽ vội bằng bút bảng"
-            chứ không đọc ra nét. Ảnh mẫu để tóc là mảng MỎNG ôm đỉnh đầu.
-            Hạ độ đục thay vì vẽ lại đường: giữ nguyên hình, chỉ bớt sức nặng. */}
-        <g opacity={0.82}>
-        {nv % 4 === 1 ? (
-          <path d={`M ${-k(0.150)} ${-k(0.300)} q ${k(0.030)} ${-k(0.140)} ${k(0.150)} ${-k(0.148)}
-                    q ${k(0.122)} ${k(0.008)} ${k(0.150)} ${k(0.148)}
-                    q ${-k(0.060)} ${-k(0.060)} ${-k(0.150)} ${-k(0.052)}
-                    q ${-k(0.092)} ${-k(0.008)} ${-k(0.150)} ${k(0.052)} Z`} fill={mau} />
-        ) : nv % 4 === 2 ? (
-          <path d={`M ${-k(0.152)} ${-k(0.270)} q ${-k(0.010)} ${-k(0.190)} ${k(0.152)} ${-k(0.178)}
-                    q ${k(0.162)} ${-k(0.012)} ${k(0.152)} ${k(0.178)}
-                    l ${-k(0.038)} ${k(0.010)} q ${k(0.006)} ${-k(0.128)} ${-k(0.114)} ${-k(0.126)}
-                    q ${-k(0.120)} ${-k(0.002)} ${-k(0.114)} ${k(0.126)} Z`} fill={mau} />
-        ) : nv % 4 === 3 ? (
-          <path d={`M ${-k(0.148)} ${-k(0.296)} q ${k(0.040)} ${-k(0.132)} ${k(0.148)} ${-k(0.140)}
-                    q ${k(0.108)} ${k(0.008)} ${k(0.148)} ${k(0.140)}
-                    l ${-k(0.052)} ${k(0.016)} q ${-k(0.030)} ${-k(0.072)} ${-k(0.096)} ${-k(0.070)}
-                    q ${-k(0.066)} ${k(0.002)} ${-k(0.096)} ${k(0.070)} Z`} fill={mau} />
-        ) : (
-          /* nv%4 === 0: vài sợi tóc dựng — ảnh mẫu nào cũng có 2–3 sợi trên đỉnh đầu,
-             kể cả nhân vật "hói". Thiếu chúng thì đầu đọc ra quả trứng. */
-          <g>
-            {N(NET([[-k(0.040), -k(0.424)], [-k(0.016), -k(0.470)]], 11), wM)}
-            {N(NET([[k(0.004), -k(0.432)], [k(0.030), -k(0.478)]], 12), wM)}
-            {N(NET([[k(0.046), -k(0.418)], [k(0.072), -k(0.456)]], 13), wM)}
-          </g>
-        )}
+        {/* tóc: 2–4 sợi, số sợi đổi theo nhân vật nên dàn vai vẫn phân biệt được */}
+        {[0, 1, 2, 3].slice(0, 2 + (nv % 3)).map((h) => {
+          const gx = (h - 1.1) * dauR * 0.34;
+          return (
+            <g key={`t${h}`}>
+              {N(NET([[gx, dauY - dauR * 0.93], [gx + dauR * 0.16, dauY - dauR * 1.34]], 60 + h), wM)}
+            </g>
+          );
+        })}
 
-        </g>
-
-        {/* MẮT TO CÓ CON NGƯƠI — bản cũ chỉ có con ngươi, nên mặt đọc ra hai lỗ đen.
-            Ảnh mẫu: tròng trắng lớn, con ngươi nhỏ hơn hẳn, đặt hơi lệch theo hướng nhìn. */}
+        {/* mắt: ô-van ĐEN ĐẶC. Nhìn theo hướng bước đi. */}
         {[-1, 1].map((sg) => (
-          <g key={sg}>
-            <ellipse cx={sg * k(0.046)} cy={-k(0.296)} rx={k(0.023)} ry={k(0.028)}
-                     fill="#FFFFFF" stroke={mau} strokeWidth={wM} />
-            <ellipse cx={sg * k(0.046) + (buoc ? sg * k(0.006) : 0)} cy={-k(0.291)}
-                     rx={k(0.0115)} ry={k(0.0142)} fill={mau} />
-          </g>
+          <ellipse key={`m${sg}`}
+                   cx={sg * dauR * 0.34 + (buoc ? sg * dauR * 0.05 : 0)}
+                   cy={dauY - dauR * 0.16}
+                   rx={dauR * 0.115} ry={dauR * 0.165} fill={mau} />
         ))}
 
-        {/* LÔNG MÀY — thứ mang toàn bộ cảm xúc. Xem chú thích bản cũ: đầu trong CAO,
-            đuôi ngoài xuôi = mệt; ngược lại thành giận dữ. Một dấu trừ, hai cảm xúc. */}
+        {/* lông mày: mang toàn bộ cảm xúc — đầu trong cao = mệt, ngược lại = giận */}
         {t5 === 2 ? (<>
-          {N(NET([[-k(0.100), -k(0.362)], [-k(0.026), -k(0.392)]], 5), wM)}
-          {N(NET([[k(0.026), -k(0.392)], [k(0.100), -k(0.362)]], 6), wM)}
+          {N(NET([[-dauR * 0.62, dauY - dauR * 0.52], [-dauR * 0.16, dauY - dauR * 0.72]], 5), wM)}
+          {N(NET([[dauR * 0.16, dauY - dauR * 0.72], [dauR * 0.62, dauY - dauR * 0.52]], 6), wM)}
         </>) : t5 === 3 ? (<>
-          {N(NET([[-k(0.104), -k(0.404)], [-k(0.022), -k(0.420)]], 5), wM)}
-          {N(NET([[k(0.022), -k(0.420)], [k(0.104), -k(0.404)]], 6), wM)}
-        </>) : (<>
-          {N(NET([[-k(0.100), -k(0.386)], [-k(0.026), -k(0.400)]], 5), wM)}
-          {N(NET([[k(0.026), -k(0.400)], [k(0.100), -k(0.386)]], 6), wM)}
-        </>)}
+          {N(NET([[-dauR * 0.64, dauY - dauR * 0.76], [-dauR * 0.14, dauY - dauR * 0.86]], 5), wM)}
+          {N(NET([[dauR * 0.14, dauY - dauR * 0.86], [dauR * 0.64, dauY - dauR * 0.76]], 6), wM)}
+        </>) : null}
 
-        {/* MIỆNG rộng hơn hẳn bản cũ — ảnh mẫu nào miệng cũng chiếm gần nửa bề ngang đầu. */}
+        {/* miệng: MỘT nét cong. Cười khi vui, thẳng khi trung tính, cong xuống khi mệt. */}
         {t5 === 2
-          ? N(NET([[-k(0.046), -k(0.208)], [k(0.046), -k(0.208)]], 7), wM)
-          : t5 === 3
-          ? <ellipse cx="0" cy={-k(0.206)} rx={k(0.032)} ry={k(0.040)}
-                     fill="#FFFFFF" stroke={mau} strokeWidth={wM} />
-          : <path d={`M ${-k(0.050)} ${-k(0.232)} Q 0 ${-k(0.186)} ${k(0.050)} ${-k(0.232)}`}
+          ? N(NET([[-dauR * 0.34, dauY + dauR * 0.46], [dauR * 0.34, dauY + dauR * 0.46]], 7), wM)
+          : <path d={`M ${-dauR * 0.40} ${dauY + dauR * 0.34}
+                      Q 0 ${dauY + dauR * (t5 === 3 ? 0.20 : 0.74)} ${dauR * 0.40} ${dauY + dauR * 0.34}`}
                   fill="none" stroke={mau} strokeWidth={wM} strokeLinecap="round" />}
-
-        {/* PHỤ KIỆN — trục nhận dạng. Ảnh mẫu dùng đúng một món cho mỗi nhân vật (cà vạt
-            tô đen), và chính món ấy làm người xem nhận ra "lại anh chàng ấy". Đây là chỗ
-            18 kênh lấy bản sắc mà không cần một tệp Canva nào. */}
-        {nv % 4 === 0 ? (
-          /* cà vạt — món duy nhất được TÔ ĐẶC trong cả hình, nên nó hút mắt */
-          <path d={`M ${-k(0.018)} ${-k(0.118)} L ${k(0.018)} ${-k(0.118)}
-                    L ${k(0.027)} ${k(0.016)} L 0 ${k(0.058)} L ${-k(0.027)} ${k(0.016)} Z`}
-                fill={mau} opacity={0.85} />
-        ) : nv % 4 === 2 ? (<>
-          {/* kính tròn */}
-          <circle cx={-k(0.046)} cy={-k(0.296)} r={k(0.045)} fill="none"
-                  stroke={mau} strokeWidth={wM} />
-          <circle cx={k(0.046)} cy={-k(0.296)} r={k(0.045)} fill="none"
-                  stroke={mau} strokeWidth={wM} />
-          {N(NET([[-k(0.010), -k(0.300)], [k(0.010), -k(0.300)]], 8), wM)}
-        </>) : nv % 4 === 3 ? (
-          /* mũ vành */
-          <g>
-            {N(NET([[-k(0.170), -k(0.402)], [k(0.170), -k(0.402)]], 9))}
-            <path d={`M ${-k(0.112)} ${-k(0.404)} q 0 ${-k(0.120)} ${k(0.112)} ${-k(0.116)}
-                      q ${k(0.112)} ${-k(0.004)} ${k(0.112)} ${k(0.116)} Z`}
-                  fill="none" stroke={mau} strokeWidth={w} strokeLinejoin="round" />
-          </g>
-        ) : null}
       </g>);
     }
     case "dien_thoai": return <g>{P(`M ${-k(0.22)} ${-k(0.42)} h ${k(0.44)} v ${k(0.84)} h ${-k(0.44)} Z`, "#20262E")}

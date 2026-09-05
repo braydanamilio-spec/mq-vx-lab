@@ -66,57 +66,19 @@ const _run = (x1: number, y1: number, x2: number, y2: number, bien: number, hat:
      · vệt ố                  — nhiễu tần số THẤP, nhân multiply, chỗ đậm chỗ nhạt
      · thớ giấy               — nhiễu tần số CAO, biên độ nhỏ
    Tần số thấp cho ố, tần số cao cho thớ. Dùng một tần số cho cả hai thì ra vân đá. */
+/* ── 5/9 (chốt) — NỀN TRẮNG ────────────────────────────────────────────────────────────
+   Anh: *"videos e dùng hết nền trắng đi cho a, a thấy nền trắng đẹp"* — và năm ảnh mẫu
+   anh gửi đều là NÉT ĐEN TRÊN TRẮNG, không một tấm nào có giấy.
+   Nền trắng giải luôn ba thứ đã cãi nhau suốt buổi: hết chuyện giấy sáng hay tối, hết
+   chuyện chữ trắng viền đen hay mực nâu (trên trắng thì mực đen là hiển nhiên), và hết
+   chuyện tranh cảnh tô màu chửi nhau với nền.
+   Giữ nguyên tên `TrangGiay` và công tắc `datGiay` để không phải sửa 21 chỗ gọi — thứ đổi
+   là BỀ MẶT, không phải kiến trúc. Bảng kraft vẫn nằm trong lịch sử git nếu cần lấy lại. */
 export const TrangGiay: React.FC<{
   W: number; H: number; nen: string; mau: string; hat?: number;
-}> = ({ W, H, nen, mau, hat = 0 }) => {
-  const id = `giay${Math.abs(hat) % 97}`;
-  const le = W * 0.085;
-  return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
-         style={{ position: "absolute", left: 0, top: 0 }}>
-      <defs>
-        {/* ố: tần số THẤP -> mảng loang to bằng nắm tay, đúng như giấy ẩm lâu ngày */}
-        <filter id={`${id}o`} x="0" y="0" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.013"
-                        numOctaves={4} seed={hat % 50} />
-          <feColorMatrix type="saturate" values="0" />
-        </filter>
-        {/* thớ: tần số CAO -> hạt mịn */}
-        <filter id={`${id}t`} x="0" y="0" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.85"
-                        numOctaves={3} seed={(hat + 17) % 50} />
-          <feColorMatrix type="saturate" values="0" />
-        </filter>
-        {/* quầng sáng giữa trang — TÂM khung, bán kính lớn, chuyển rất mềm */}
-        {/* 5/9 (đợt ba) — KRAFT, KHÔNG PHẢI GIẤY DA CŨ.
-            Anh: *"nền papper craft chưa chuẩn"*. Bản trước em làm giấy DA: ố loang to, chuyển
-            sắc mạnh từ tâm ra mép. Giấy kraft thì khác hẳn — nó ĐỀU, hơi ngả nâu đỏ, và cái
-            làm nên chất của nó là SỢI GIẤY li ti chứ không phải vệt ố. Nên: biên độ chuyển
-            sắc hẹp lại (4 chặng gần nhau thay vì trải rộng), ố giảm còn một nửa, và thêm một
-            tầng sợi mảnh. */}
-        <radialGradient id={`${id}s`} cx="0.5" cy="0.46" r="0.82">
-          <stop offset="0%"   stopColor="#EFE0C6" />
-          <stop offset="45%"  stopColor="#E8D6B8" />
-          <stop offset="80%"  stopColor="#DEC8A4" />
-          <stop offset="100%" stopColor="#D3BA93" />
-        </radialGradient>
-      </defs>
-
-      <rect x={0} y={0} width={W} height={H} fill={`url(#${id}s)`} />
-      <rect x={0} y={0} width={W} height={H} filter={`url(#${id}o)`}
-            opacity={0.10} style={{ mixBlendMode: "multiply" }} />
-      <rect x={0} y={0} width={W} height={H} filter={`url(#${id}t)`}
-            opacity={0.16} style={{ mixBlendMode: "multiply" }} />
-
-      {/* mép trang: hơi run, rất nhạt */}
-      <path d={_run(W * 0.035, H * 0.022, W * 0.965, H * 0.022, W * 0.0012, hat)}
-            stroke="#6B5636" strokeWidth={Math.max(1, W * 0.0012)} fill="none" opacity={0.16} />
-      <path d={_run(W * 0.035, H * 0.978, W * 0.965, H * 0.978, W * 0.0012, hat + 11)}
-            stroke="#6B5636" strokeWidth={Math.max(1, W * 0.0012)} fill="none" opacity={0.16} />
-
-      {/* vạch lề màu kênh — chỗ duy nhất màu kênh chạm vào nền */}
-      <path d={_run(le, H * 0.022, le, H * 0.978, W * 0.0010, hat + 5)}
-            stroke={mau} strokeWidth={Math.max(1.5, W * 0.0018)} fill="none" opacity={0.26} />
-    </svg>
-  );
-};
+}> = ({ W, H }) => (
+  <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
+       style={{ position: "absolute", left: 0, top: 0 }}>
+    <rect x={0} y={0} width={W} height={H} fill="#FFFFFF" />
+  </svg>
+);
