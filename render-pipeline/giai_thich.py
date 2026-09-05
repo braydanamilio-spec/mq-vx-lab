@@ -4642,7 +4642,8 @@ def _giu_chan(nhip: list) -> None:
 def _gop_hai_ho(nhip: list) -> None:
     """9 khuôn -> 2 họ. Giữ `chart` khi nhịp có dữ liệu cột thật (nó là trạng thái so sánh
     của chính họ SỐ, không phải một họ thứ ba)."""
-    for n in nhip:
+    _da_the: set = set()   # câu đã lên thẻ trong tập này — không lặp
+    for _vt, n in enumerate(nhip):
         k = n.get("khuon") or "canh"
         if k in HO_NGUOI:
             n["khuon"] = "canh"
@@ -4708,6 +4709,28 @@ def _gop_hai_ho(nhip: list) -> None:
             n["bt"] = "nguoi_nghi"
         elif tu & _TU_NGUOI:
             n["bt"] = "nguoi"
+        else:
+            # ── CÂU TRỪU TƯỢNG: CHỮ LÀM HÌNH, KHÔNG PHẢI KHOẢNG TRỐNG ────────────────────
+            # Lượt trước em bỏ hẳn hình ở những nhịp này để tránh "cắm người vô duyên", và
+            # anh soi ra ngay: *"vẫn trống"*. Bỏ trắng không phải giải pháp — nó là không
+            # làm gì, và một khung trống trên nền giấy đọc ra CHƯA LÀM XONG.
+            # Cách đúng: lấy chính CÂU làm hình. Vẫn thuộc họ SỐ/CHỮ (chữ trên giấy), không
+            # đẻ ra ngôn ngữ hình thứ ba.
+            # Chỉ lấy 1–2 chữ CUỐI có nghĩa: cú chốt câu tiếng Anh nằm ở đuôi, và lấy trọn
+            # câu thì nó trùng đúng dòng phụ đề ngay dưới.
+            # Lấy TRỌN câu, không trích hai chữ cuối. Trích ra "OR NUMBER" · "KNOW KNEW"
+            # · "DAY YOURS" — đọc như mảnh gãy chứ không như một câu tuyên bố, vì cú chốt
+            # tiếng Anh nằm ở QUAN HỆ giữa hai vế chứ không ở hai chữ cuối. Câu trừu tượng
+            # của bộ này vốn đã ngắn (5–7 chữ), nên trọn câu vừa khít một thẻ chữ.
+            _cau = (n.get("loi") or "").strip().rstrip(".")
+            if _cau and len(_cau.split()) <= 8 and _cau not in _da_the:
+                n["khuon"] = "the_chu"
+                n["the"] = _cau
+                # KHÔNG tự gán `bo_the` ở đây. Đã có cơ chế gán theo GU CỦA KÊNH (mỗi kênh
+                # dùng 3 trong 6 bố cục — đó là bản sắc, §15.2), và nó chạy SAU. Em tự gán
+                # thì đè lên gu và sáu bố cục co lại còn ba — đúng dòng đỏ cổng báo.
+                # Nơi BIẾT bản sắc kênh mới được quyết; chỗ này chỉ tạo ra nhịp.
+                _da_the.add(_cau)
 
 
 def _chinh_ti_le_cf(nhip: list) -> None:
@@ -4729,6 +4752,17 @@ def _rai_canva(nhip: list, ma: str, idx: int) -> None:
     Điểm khớp chia cho căn bậc hai số từ của tên, cùng lý do đã dùng ở `_rai_hinh_nhap`:
     tên dài dễ trúng một từ vu vơ, không chia thì tên dài luôn thắng.
     """
+    # ── 5/9 — TẮT: MỘT VIDEO MỘT NÉT ────────────────────────────────────────────────
+    # Anh: *"sao lấy râu ông nọ cắm cằm bà kia thế"* — và trước đó đã dặn *"đừng râu ông nọ
+    # cắm cằm ông kia"*. Đúng: một tập đang có HAI nét — hình Canva vẽ tay của Zdenek Sasek
+    # và hình que em vẽ bằng code — xen kẽ nhau.
+    # Kho Canva ĐÚNG TÁC GIẢ chỉ có **18 hình** (cổng `kiem_tac_gia` đo được 18/118), không
+    # đủ phủ một tập, nên nó buộc phải xen vào giữa nét khác. Không phải kho xấu — kho quá
+    # nhỏ để làm nét CHÍNH, mà làm nét phụ thì thành trộn.
+    # Nét vẽ bằng code phủ được mọi nhịp, nên nó là nét chính. Bật lại kho Canva bằng
+    # GT_CANVA=1 khi nào nó đủ lớn để dùng MỘT MÌNH cho cả tập.
+    if os.environ.get("GT_CANVA", "") != "1":
+        return
     kho = _kho_canva()
     if not kho:
         return
@@ -5288,6 +5322,10 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     # SAU MỌI LƯỢT CHÈN, xem §15.19 — lượt RẢI phải chạy sau lượt CHÈN, nếu không thì
     # nhịp hook (chèn ở `insert(0, …)`) không bao giờ được gán.
     _gop_hai_ho(nhip)          # gộp TRƯỚC: hình người mới sinh cũng phải được cấp tư thế
+    # Lượt gộp SINH RA thẻ chữ mới (câu trừu tượng -> chữ làm hình), mà `_rai_khuon` đã chạy
+    # xong từ trước nên những thẻ ấy không có `bo_the` — cổng bắt đúng. Gọi lại một lượt:
+    # hàm ấy chỉ gán, không tạo, nên chạy hai lần là an toàn (idempotent).
+    _rai_khuon(ma, nhip, idx)
     nhip = _rai_tu_the(nhip, ma)
     # DẤU ẤN KÊNH — ghi vào MỌI nhịp. Python quyết, engine chỉ đọc (§15.3): engine không
     # biết mã kênh, và tính lại ở đó là tạo nguồn sự thật thứ hai.
