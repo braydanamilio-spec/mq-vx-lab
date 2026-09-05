@@ -8004,7 +8004,14 @@ def t_moi_nhip_co_bo_cuc():
             for n in G.kich_ban(k["ma"], i)[4]:
                 if (n.get("khuon") or "") == "the_chu":
                     dung[n.get("bo_the")] += 1
-    assert len(dung) >= 6, f"chỉ {len(dung)}/6 bố cục thẻ chữ được dùng -> bảng gu thừa"
+    # 5/9 — `the_chu` đã được GỘP vào hai họ hình (xem `giai_thich._gop_hai_ho`): anh chốt
+    # rằng lộn xộn nằm trong một video, và năm khuôn không mang dữ liệu riêng bị bỏ. Nên
+    # đường đang giao đi KHÔNG sinh nhịp `the_chu` nào nữa, và bảng 6 bố cục ấy chỉ còn phục
+    # vụ template cũ (bật lại bằng `datGiay(false)`, giữ để đối chiếu theo §3).
+    # Cổng giữ nguyên RĂNG cho trường hợp thật: hễ CÓ sinh thẻ chữ thì phải dùng đủ 6 — dùng
+    # 2 trong 6 mới là bảng thừa. Vắng mặt hoàn toàn là một quyết định, không phải một lỗi.
+    if dung:
+        assert len(dung) >= 6, f"chỉ {len(dung)}/6 bố cục thẻ chữ được dùng -> bảng gu thừa"
 
 
 def t_gu_hinh_khac_nhau():

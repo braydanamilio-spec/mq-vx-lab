@@ -4536,12 +4536,24 @@ def _gop_hai_ho(nhip: list) -> None:
         k = n.get("khuon") or "canh"
         if k in HO_NGUOI:
             n["khuon"] = "canh"
+        # Gộp xong phải DỌN trường của khuôn cũ: `the` (câu tuyên bố) và `bo_the` (bố cục
+        # thẻ chữ) chỉ có nghĩa với `the_chu`. Để nguyên thì nhịp mang một trường không nhánh
+        # nào đọc — đúng §15.12, và cổng `kiem_truong` bắt được ngay lượt chạy đầu.
         elif k in HO_SO or k == "chart":
             n["khuon"] = "chart" if n.get("cot") else "so_lieu"
             # nhịp SỐ mà không có số thì không phải nhịp SỐ — trả về họ NGƯỜI, đừng dựng một
             # khung số rỗng (đó đúng là mấy khung trống anh soi thấy).
             if n["khuon"] == "so_lieu" and not n.get("so"):
                 n["khuon"] = "canh"
+        # Nhịp đổi họ thì trường của họ CŨ phải đi theo. `chu`/`don`/`cot`/`muc` chỉ có
+        # nghĩa với họ SỐ; `the`/`bo_the` chỉ có nghĩa với thẻ chữ. Để sót một trường là
+        # để lại một thứ ghi-mà-không-ai-đọc, và cổng `kiem_truong` bắt đúng nó.
+        if n["khuon"] == "canh":
+            for f in ("the", "bo_the", "chu", "don", "cot", "muc"):
+                n.pop(f, None)
+        elif n["khuon"] != "the_chu":
+            n.pop("the", None)
+            n.pop("bo_the", None)
     # ── MỌI NHỊP `canh` PHẢI CÓ NGƯỜI ────────────────────────────────────────────────────
     # Soi khung sau lượt gộp đầu: HAI khung trống hẳn, chỉ có giấy và phụ đề. Vì `chia_doi`
     # và `the_chu` mang hình bằng chính BỐ CỤC của chúng — bỏ bố cục đi là không còn gì để
