@@ -195,8 +195,8 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
              0,007 -> thẳng đuột, đọc ra đường máy tính
              0,016 -> cong nhẹ một lần: đây là nét tay
          Và nét mảnh lại: 0,0165 quá đậm với hình cao 0,9. */
-      const w = k(0.0135);
-      const wM = k(0.0100);
+      const w = k(0.0112);          // mảnh hơn nữa theo yêu cầu
+      const wM = k(0.0086);
 
       /* Nhiễu TẤT ĐỊNH: cùng một nhân vật ở cùng tư thế luôn run giống hệt nhau, nên hình
          không "sôi" giữa các khung. Viết phép băm ra tường minh — `Math.random` thì mỗi
@@ -208,21 +208,28 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
       /* Nối các điểm bằng cung cong lệch nhẹ khỏi đường thẳng — đó là toàn bộ bí quyết
          "nét vẽ tay". Biên độ 9% chiều dài đoạn: đủ để mắt đọc ra tay người, chưa đủ để
          hình méo. */
+      /* ── NÉT TAY = NHIỀU DAO ĐỘNG NHỎ, KHÔNG PHẢI MỘT CUNG  (5/9/2026) ───────────────
+         Ba vòng chỉnh biên độ mà anh vẫn nói *"chưa phải vẽ tay run run tự nhiên"* — vì em
+         chỉnh sai đại lượng. Hàm cũ vẽ MỘT cung cho mỗi đoạn: biên độ nhỏ thì ra đường
+         thẳng, biên độ lớn thì ra một đường cong đều — cả hai đều không phải nét tay.
+         Nét tay thật có **nhiều dao động nhỏ dọc theo đường**: tay người không giữ được
+         hướng quá một hai centimet. Nên chia mỗi đoạn làm BA khúc, mỗi khúc lệch một chút
+         theo hướng riêng. Cùng biên độ nhỏ, nhưng ba lần thì mắt đọc ra nét tay. */
       const NET = (pts: number[][], key: number): string => {
+        const CHIA = 3;                       // số khúc mỗi đoạn
+        const BIEN = 0.030;                   // biên độ mỗi khúc, theo chiều dài KHÚC
         let d = `M ${pts[0][0]} ${pts[0][1]}`;
         for (let i = 1; i < pts.length; i++) {
           const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
           const dx = x1 - x0, dy = y1 - y0;
           const len = Math.sqrt(dx * dx + dy * dy) || 1;
-          /* 5/9 — 0,09 -> 0,025. Anh: *"nét vẽ và tỉ lệ xem lại"*. Đo trên ảnh mẫu: tay
-             và chân gần như THẲNG, chỉ lệch rất nhẹ. Biên độ 9% làm mỗi chi cong hẳn một
-             bên — mắt đọc ra "run tay", không đọc ra "vẽ tay". Nét vẽ tay đẹp là nét TỰ
-             TIN: đi thẳng, chỉ sai một chút ở chỗ nối. */
-          /* 5/9 (lần hai) — 0,025 -> 0,007. Anh vẫn thấy "tay run". Ở nét mảnh thì 2,5%
-             chiều dài đã đủ để mắt bắt được độ cong; nét vẽ tay ĐẸP là nét gần như thẳng,
-             chỉ sai ở đầu mút. Giữ một chút để nó không thành đường máy tính. */
-          const o = rnd(key * 13 + i) * len * 0.016;
-          d += ` Q ${(x0 + x1) / 2 - (dy / len) * o} ${(y0 + y1) / 2 + (dx / len) * o} ${x1} ${y1}`;
+          const nx = -dy / len, ny = dx / len;          // pháp tuyến
+          for (let q = 1; q <= CHIA; q++) {
+            const t0 = (q - 1) / CHIA, t1 = q / CHIA, tm = (t0 + t1) / 2;
+            const o = rnd(key * 31 + i * 7 + q) * (len / CHIA) * (BIEN * CHIA);
+            d += ` Q ${x0 + dx * tm + nx * o} ${y0 + dy * tm + ny * o}` +
+                 ` ${x0 + dx * t1} ${y0 + dy * t1}`;
+          }
         }
         return d;
       };
@@ -1412,10 +1419,17 @@ export const SoLieu: React.FC<{
         const _cho = _cheo ? Math.max(0, _tran) / (DAY_HINH + 0.5) : _mong;
         const _co = Math.min(_mong, _cho);
         if (!bt || _co < _mong * 0.40) return null;
+        /* ── 5/9 — BIỂU TƯỢNG PHẢI CÙNG TRỤC VỚI CON SỐ ──────────────────────────────────
+           Anh gửi khung: "12 / DAYS" canh TRÁI ở đỉnh, cái đồng hồ nằm PHẢI ở giữa, khoảng
+           giữa trống 0,47·H. Gốc: bố cục `kA===1` đặt con số ở `W*0,08` (canh trái) còn khối
+           này đặt biểu tượng ở `W*0,76` — hai đầu khung, không chỗ nào biết chỗ kia. Đúng họ
+           lỗi §17.4: hai lớp cùng chọn vị trí.
+           Nay biểu tượng BÁM theo trục con số, và kéo lên gần hơn để hai thứ đọc ra MỘT
+           khối chứ không phải hai vật rơi ở hai góc. */
         return (
-      <g transform={`translate(${kA === 1 ? W * 0.76 : kA === 5 ? W * 0.62 : W / 2} ${
+      <g transform={`translate(${kA === 1 ? W * 0.26 : W / 2} ${
               san > 0 ? san - _co * DAY_HINH
-                      : H * (ngang ? 0.62 : tren_anh ? 0.70 : 0.64)})`}
+                      : H * (ngang ? 0.56 : tren_anh ? 0.62 : 0.54)})`}
              opacity={tren_anh ? 0.92 : 1}>
         {/* CỠ BIỂU TƯỢNG THEO VAI TRÒ, không một cỡ cho hai vai trò khác nhau.
             Trên ảnh, biểu tượng chỉ là phụ chú -> nhỏ là đúng. KHÔNG có ảnh thì biểu tượng LÀ
