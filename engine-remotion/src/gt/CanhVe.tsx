@@ -270,8 +270,8 @@ const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
   vat2:   _vat(1, nen, mau),
   vat3:   _vat(2, nen, mau),
   vat4:   _vat(3, nen, mau),
-  san:    _dam(_pha(_tron(nen, mau, 0.38), -0.14), 1.35),
-  sanD:   _dam(_pha(_tron(nen, mau, 0.44), -0.30), 1.35),
+  san:    _dam(_pha(_tron(nen, mau, 0.34), -0.05), 1.35),   // bỏ nền chia — xem `NenPhong.san`
+  sanD:   _dam(_pha(_tron(nen, mau, 0.38), -0.09), 1.35),
   /* ── ĐÁY KHUNG SÁNG LÊN: −0,70 → −0,22  (4/9/2026) ────────────────────────────────────
      Anh xem và nói *"nó hơi tối và xấu thiếu chuyên nghiệp"*. Đo pixel ba khung:
 
@@ -307,7 +307,7 @@ const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
      này để bảo engine chọn mực phụ đề, nên sai ở đây làm sai luôn cả phép chọn mực.
 
      Giữ đúng thứ tự: 0,38 -> 0,44 -> 0,56, và sẫm thêm ở chặng cuối. */
-  sanDay: _dam(_pha(_tron(nen, mau, 0.56), -0.20), 1.35),
+  sanDay: _dam(_pha(_tron(nen, mau, 0.42), -0.14), 1.35),
   nhan:   _pha(_vat(2, nen, mauPhu || mau), -0.16),   // điểm nhấn — đất nung
 });
 

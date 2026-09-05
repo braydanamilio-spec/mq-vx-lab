@@ -4335,6 +4335,86 @@ def _gan_dao_cu(nhip: list) -> None:
         n["ve"] = ve + f", in the foreground {vat}{doc}"
 
 
+_KHO_TU = None
+
+
+def _kho_hinh_nhap():
+    """Đọc chỉ mục kho hình từ chính tệp engine dùng — MỘT nguồn sự thật.
+
+    Không chép danh sách sang Python: `KhoSVG.ts` do `tai_svg.py` sinh ra và sẽ đổi mỗi lần
+    chạy lại. Giữ một bản sao ở đây là dựng nguồn thứ hai, và nó sẽ lệch đúng vào lúc không
+    ai nhìn (§13.5 — bốn nguồn sự thật cho một danh sách kênh, đã trả giá).
+    """
+    global _KHO_TU
+    if _KHO_TU is None:
+        f = os.path.join(os.path.dirname(__file__), "..", "engine-remotion", "src", "gt", "KhoSVG.ts")
+        try:
+            t = open(f, encoding="utf-8").read()
+            i = t.index("KHO_SVG: HinhSVG[] = ") + len("KHO_SVG: HinhSVG[] = ")
+            j = t.index(";\nexport const CHI_SO", i)
+            _KHO_TU = [(h["ten"], set(h["tu"])) for h in json.loads(t[i:j])]
+        except Exception:
+            _KHO_TU = []
+    return _KHO_TU
+
+
+_BO_TU = {"the", "and", "for", "you", "your", "that", "this", "with", "from", "are", "was",
+          "not", "but", "all", "one", "out", "get", "got", "its", "has", "had", "who", "why",
+          "how", "what", "when", "where", "them", "they", "does", "did", "will", "can"}
+
+
+def _rai_hinh_nhap(nhip: list, ma: str, idx: int) -> None:
+    """Chọn cho mỗi nhịp CẢNH một bức tranh khớp NGHĨA của câu đang nói.
+
+    ── VÌ SAO ĐỔI CÁCH LÀM  (5/9/2026) ────────────────────────────────────────────────────
+    Anh soi ba vòng liền: *"vẫn xấu lơ lửng và lặp đi lặp lại quá nhiều, đổi cách làm mới"*.
+    Anh đúng ở cả ba, và cả ba chảy ra từ MỘT chỗ: em đang **dán một bức tranh vào trong một
+    bức tranh khác**.
+
+      · LƠ LỬNG — hình unDraw mang theo mặt đất của chính nó ở ~0,55·H, sàn của mình ở
+        0,72·H. Nhân vật đứng trên đất của bức tranh, cái bóng của mình nằm tách phía dưới.
+        Không hằng số nào chữa được, vì mỗi hình có một mặt đất ở một độ cao khác nhau.
+      · LẶP — bảng chép tay ánh xạ BIỂU TƯỢNG -> HÌNH, mà biểu tượng chỉ có 23 giá trị và
+        `nguoi` chiếm 54% số nhịp. Hai hình cho hơn một nửa số khung.
+      · SAI NGHĨA — cùng một người hiện cho mọi câu, vì `nguoi` là vai trung tính.
+
+    Nên: ánh xạ CÂU -> HÌNH (1.362 đích thay vì 19), và hình nhập chiếm TRỌN khung — không
+    còn sàn thứ hai để mà lệch. Một khung một bức tranh, đúng luật đã rút sáng nay.
+
+    Điểm khớp = số từ chung giữa lời và tên hình, chia cho căn bậc hai số từ của tên: tên dài
+    dễ trúng một từ vu vơ, không chia thì `a-better-world` thắng mọi câu có chữ `world`.
+    """
+    kho = _kho_hinh_nhap()
+    if not kho:
+        return
+    dung = set()
+    for i, n in enumerate(nhip):
+        if (n.get("khuon") or "canh") not in ("canh", "nhom"):
+            continue
+        tu = {w for w in re.findall(r"[a-z]{3,}", (n.get("loi") or "").lower())
+              if w not in _BO_TU}
+        if not tu:
+            continue
+        tot, diem = None, 0.0
+        for ten, tt in kho:
+            c = len(tu & tt)
+            if not c:
+                continue
+            d = c / (len(tt) ** 0.5)
+            # KHÔNG dùng lại hình đã dùng trong CHÍNH tập này. Kho 300 hình mà một tập chỉ
+            # 9–16 nhịp, nên ràng buộc này gần như không bao giờ ép phải lấy hình kém hơn —
+            # mà nó chặn đứng đúng cái lặp anh chê.
+            if ten in dung:
+                d *= 0.25
+            if d > diem:
+                tot, diem = ten, d
+        # Sàn: dưới mức này thì hình khớp quá lỏng, hiện lên còn hại hơn không hiện —
+        # một bức tranh sai nghĩa chiếm trọn khung là chỗ người xem đọc ra "máy làm".
+        if tot and diem >= 0.30:
+            n["hinh_nhap"] = tot
+            dung.add(tot)
+
+
 def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
     """Gán `canh_ve` (tên nơi chốn) cho nhịp sẽ vẽ bằng code, và bỏ `ve` của nhịp ấy.
 
@@ -4747,6 +4827,13 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     # lượt SỬA `ve` phải chạy trước lượt XOÁ `ve`.
     _gan_dao_cu(nhip)
     _rai_canh_ve(nhip, ma, _lech_kenh(ma) + idx * 7919)
+    # SAU `_rai_canh_ve`: nhịp nào nhận được tranh nhập thì bỏ luôn cảnh vẽ code của nó —
+    # hai cảnh trong một khung là đúng thứ vừa đi sửa.
+    _rai_hinh_nhap(nhip, ma, idx)
+    for _n in nhip:
+        if _n.get("hinh_nhap"):
+            _n.pop("canh_ve", None)
+            _n.pop("ve", None)
 
     return k, tieu, hook, hook_phu, nhip, muc
 

@@ -505,7 +505,16 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
      hoạ. 0,12 / 0,26 là mức giữ được cả hai. */
   const tuong = _pha(_tron(nen, mau, 0.10), 0.18);
   const tuongD = _pha(_tron(nen, mau, 0.14), -0.02);
-  const san = _pha(_tron(nen, mau, 0.22), k === 3 ? -0.26 : -0.16);
+  /* ── BỎ NỀN CHIA SÁNG/TỐI  (5/9/2026) ─────────────────────────────────────────────
+     Anh: *"bỏ cái template có nền chia này thấy hơi tối khó chịu"*. Đúng, và đo được: dải
+     sàn sẫm chiếm **28% chiều cao mọi khung**, tối hơn tường 34% — mắt đọc ra một khung bị
+     chia đôi, không đọc ra một căn phòng.
+     Dải ấy chỉ tồn tại vì chữ phụ đề TRẮNG cần nền tối để đạt 4,5:1. Nhưng `PhuDe` đã tự
+     đổi sang MỰC TỐI khi nền sáng (`sangDayCanh`) từ 4/9 — tức lý do sinh ra dải này đã
+     mất, mà dải thì còn. Đúng họ lỗi "hằng số sống lâu hơn ngữ cảnh sinh ra nó" (§13.6).
+     Nay sàn gần cùng tông với tường; thứ phân biệt sàn với tường là ĐƯỜNG CHÂN TRỜI và
+     quầng sáng, không phải một mảng tối. */
+  const san = _pha(_tron(nen, mau, 0.20), k === 3 ? -0.10 : -0.05);
   /* ── MÉP SÀN PHẢI ĐỦ SẪM CHO CHỮ TRẮNG ĐỌC ĐƯỢC  (3/9/2026) ─────────────────────────────
      Cổng `kiem_hinh` chấm bản dài HOW LOUD 84/100 với lý do *"tương phản phụ đề 2.6:1 < 4,5:1
      (chuẩn WCAG AA)"*. Đo pixel dải phụ đề ở năm mốc: sáng TB **133–184**, tương phản với chữ
@@ -518,13 +527,17 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
      Để đạt 4,5:1 với chữ trắng thì nền phải xuống dưới ~118/255. `-0.34` cho ra 133–184; cần
      sẫm hơn nữa ở ĐÁY, nên thêm một chặng thứ ba trong dải chuyển chỉ ở 18% cuối — phần trên
      của sàn giữ nguyên độ sáng để căn phòng không tối đi. */
-  const sanD = _pha(_tron(nen, mau, 0.26), -0.34);
+  const sanD = _pha(_tron(nen, mau, 0.23), -0.09);
   // -0,70 và chặng bắt đầu ở 0,55: đo lần đầu (-0,62 / 0,62) cho 4,31–5,44:1, tức một
   // trong ba mốc vẫn hụt chuẩn 4,5. Hiệu chỉnh theo SỐ ĐO, không theo cảm giác (§13.7).
   // −0,70 → −0,22, cùng lý do và cùng lượt sửa với `CanhVe._bang.sanDay`: xem chú thích ở
   // đó. Hai nền phải đi CÙNG MỨC, nếu không thì một tập có hai độ sáng đáy khác nhau và
   // mắt đọc ra "chắp vá" ở đúng chỗ phụ đề đứng.
-  const sanDay = _pha(_tron(nen, mau, 0.34), -0.22);
+  /* Ba chặng phải SẪM DẦN, không được đảo chiều — bài học đã trả giá ở `CanhVe._bang`:
+     đổi một mắt trong một dãy có thứ tự thì phải đổi cả dãy, và `sangDayCanh` đọc chính
+     giá trị này để bảo engine chọn mực phụ đề. 0,05 -> 0,09 -> 0,14: vẫn sẫm dần, nhưng
+     biên độ bằng một phần ba bản cũ nên mắt không còn đọc ra hai nửa. */
+  const sanDay = _pha(_tron(nen, mau, 0.27), -0.14);
   const vach = _pha(mau, -0.55);
   const id = `np${Math.round(W)}_${k}`;
   return (

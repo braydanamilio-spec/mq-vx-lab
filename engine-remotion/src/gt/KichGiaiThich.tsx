@@ -331,7 +331,30 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
 
   const Nen = (
     <>
-      {N.nenAnh ? (
+      {/* ── TRANH NHẬP LÀ CẢ KHUNG  (5/9/2026) ─────────────────────────────────────────
+          Anh: *"vẫn xấu lơ lửng và lặp đi lặp lại quá nhiều, đổi cách làm mới"*. Ba vòng
+          trước em co bức tranh về một hộp rồi neo đáy vào SÀN CỦA MÌNH — nhưng mỗi bức
+          unDraw mang theo mặt đất của chính nó ở một độ cao khác nhau, nên nhân vật đứng
+          trên đất của bức tranh còn bóng của mình nằm tách phía dưới. Không hằng số nào
+          chữa được vì con số ấy khác ở từng bức.
+          Nay bức tranh chiếm TRỌN khung: một mặt đất duy nhất, của chính nó. Không sàn thứ
+          hai, không bóng thứ hai, không cảnh thứ hai — nên không còn gì để lệch.
+          Chọn hình do Python quyết theo NGHĨA của câu (`_rai_hinh_nhap`, 300 hình chứ không
+          phải 2), engine chỉ đọc — §15.3: nơi CHỌN và nơi biết bản sắc phải là một. */}
+      {(N as any)?.hinh_nhap ? (
+        <AbsoluteFill>
+          <div style={{ position: "absolute", inset: 0, background: nenTrang }} />
+          <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
+               style={{ position: "absolute", left: 0, top: 0 }}>
+            {/* Canh giữa vùng NỘI DUNG (trên dải phụ đề), không giữa khung: nửa dưới khung
+                dành cho chữ, và một bức tranh canh giữa khung thì chân nó chui vào chữ. */}
+            <g transform={`translate(${W / 2} ${sanY * 0.52})`}>
+              <HinhNhap bt={String((N as any).hinh_nhap)} s={W * 0.94} p={p / 0.26}
+                        mau={mau} mauPhu={mauPhu} nen={nenTrang} />
+            </g>
+          </svg>
+        </AbsoluteFill>
+      ) : N.nenAnh ? (
         <Img src={staticFile(N.nenAnh)}
              style={{ position: "absolute", inset: 0, width: W, height: H, objectFit: "cover",
                       transform: `scale(${kb})` }} />
@@ -351,8 +374,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
               rời để dán lên nền khác.
               Đây đúng luật đã rút sáng nay và lần này áp cho một lớp mới: MỘT KHUNG MỘT BỨC
               TRANH. Có hình nhập thì nó LÀ cảnh — nền chỉ còn tường và sàn. */}
-          {N.canh_ve && !(btVe && co_hinh_nhap(btVe)
-                          && KHUON_CANH.has(String((N as any)?.khuon || "canh"))) ? (
+          {N.canh_ve && !(N as any)?.hinh_nhap ? (
         /* ── CẢNH VẼ BẰNG CODE — lớp XEN KẼ, không phải lớp dự phòng  (4/9/2026) ──────────
            Đặt NGAY SAU `nenAnh` và TRƯỚC `noi`: `canh_ve` là một quyết định biên tập do
            Python đưa ra (xem `giai_thich.NOI_KENH` — vì sao, và tỉ lệ bao nhiêu), còn `noi`
@@ -615,16 +637,10 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                             §14.9: chọn sai đại lượng thì số đo đẹp mà sản phẩm vẫn lặp —
                             thứ người xem cảm được là "hai nhịp liền nhau có khác nhau
                             không", không phải "cả kho có được dùng đều không". */}
-                        {co_hinh_nhap(btVe) ? (
-                          <HinhNhap bt={btVe} s={sz * 0.95} p={p / 0.26}
-                                    bien={(N as any)?.canh_hat ?? Math.round((N?.s ?? 0) * 37)}
-                                    mau={mau} mauPhu={mauPhu} nen={nenTrang} />
-                        ) : (
-                          <TuVe p={p / 0.26}>
-                            <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
-                                       nv={(N as any)?.nv ?? 0} />
-                          </TuVe>
-                        )}
+                        <TuVe p={p / 0.26}>
+                          <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
+                                     nv={(N as any)?.nv ?? 0} />
+                        </TuVe>
                       {/* ── ÁNH SÁNG PHỦ LÊN CHỦ THỂ  (4/9/2026) ─────────────────────────
                           Bốn ảnh anh gửi: ba người ngồi quanh lửa đều có **viền cam trên
                           nửa mặt phía lửa**. Đó là thứ tách "nhân vật đứng trong một cảnh

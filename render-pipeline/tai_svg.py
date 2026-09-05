@@ -71,42 +71,48 @@ def _vai(hex6):
 
 THE_HINH = ("path", "rect", "circle", "ellipse", "line", "polyline", "polygon")
 
-# Ánh xạ biểu tượng của mình -> tên tệp unDraw. `nguoi` có NĂM tư thế vì `_rai_tu_the` đã
-# rải năm tư thế cho 54% số nhịp — nạp một hình người duy nhất là vứt bỏ trục đa dạng ấy.
-BANG = {
-    # ── HÌNH NGƯỜI PHẢI TRUNG TÍNH  (5/9/2026, sau khi soi lưới) ────────────────────────
-    # Bản đầu lấy cả `questions` và `decide`. Soi khung: `questions` vẽ một DẤU HỎI khổng lồ
-    # chiếm nửa khung, và nó hiện trên ba câu chẳng liên quan gì tới câu hỏi
-    # (*"Then the letter arrives"* · *"It decides your fence"*). `stand-out` thì có cả một
-    # đám người mờ phía sau, tranh chỗ với cảnh mình đã vẽ.
-    #
-    # Hình unDraw MANG SẴN NGHĨA của nó. `nguoi` trong hệ mình là một vai TRUNG TÍNH — nó
-    # đứng thay cho "một người" ở bất kỳ câu nào — nên chỉ được lấy những hình mà thứ duy
-    # nhất trong khung là con người. Hình mang biểu tượng riêng phải được gán cho ĐÚNG khái
-    # niệm ấy, không được dùng làm hình người chung.
-    # `walk-dreaming` hoá ra vẽ MỘT CON GẤU, `dog-walking` có thêm con chó, `questions` có
-    # một dấu hỏi khổng lồ. Ba lần liên tiếp cùng một bài học: **hình unDraw mang sẵn chủ đề
-    # của nó**, nên không tên nào đoán được bằng cách đọc tên tệp — phải NHÌN.
-    # `nguoi` là vai trung tính (đứng thay cho "một người" ở câu bất kỳ), nên chỉ nhận hình
-    # mà thứ duy nhất trong khung là con người. Hai hình, và thà ít mà đúng còn hơn nhiều mà
-    # có tập nói về lá thư lại hiện một con gấu tím.
-    "nguoi":      ["walking-outside", "relaxing-walk"],
-    "dong_ho":    ["time-management", "in-no-time"],
-    "tien":       ["transfer-money", "savings"],
-    "xe":         ["car-repair"],
-    "nha":        ["buy-house", "house-searching"],
-    "may_bay":    ["airport"],
-    "xe_buyt":    ["bus-stop"],
-    "trai_dat":   ["around-the-world"],
-    "dien_thoai": ["phone-call"],
-    "cay":        ["social-tree"],
-    "mat_troi":   ["sunny-day"],
-    "giay":       ["contract"],
-    "hop":        ["delivery-truck"],
-    "giuong":     ["sleep-analysis"],
-    "lua":        ["fire"],
-    "coc":        ["coffee-time"],
-}
+# ── CHỌN HÌNH THEO NGHĨA CỦA CÂU, KHÔNG THEO BẢNG CHÉP TAY  (5/9/2026) ─────────────────
+# Bảng cũ ánh xạ 16 biểu tượng -> 19 tệp. Hai hậu quả anh nhìn ra ngay:
+#   · LẶP — `nguoi` chiếm 54% số nhịp mà chỉ có 2 hình, nên cứ vài nhịp lại đúng một người.
+#   · SAI NGHĨA — `nguoi` là vai trung tính, nên nó hiện cùng một người cho mọi câu, và khi
+#     em nới bảng ra thì lại vớ phải con gấu (`walk-dreaming`) và dấu hỏi (`questions`).
+#
+# Gốc: bảng ấy ánh xạ BIỂU TƯỢNG -> HÌNH, mà biểu tượng chỉ có 23 giá trị. Kho có 1.362 hình
+# với tên tệp là tiếng Anh mô tả (`bus-stop` · `contract` · `savings` · `a-better-world`), và
+# lời của mình cũng là tiếng Anh. Nên ánh xạ đúng là CÂU -> HÌNH, và nó có 1.362 đích thay vì
+# 19. Đa dạng và đúng nghĩa cùng được giải bằng một phép đổi, không phải hai.
+#
+# Nhúng bao nhiêu: mỗi hình ~16KB trong mô-đun TS. Nhúng cả 1.362 là ~22MB — quá nặng cho
+# khâu gói của Remotion. Nên nhúng 300 hình được CHỌN theo chính vốn từ của 18 kênh (694 từ,
+# đo bằng `kich_ban`), tức mỗi hình nhúng vào đều có cơ hội được dùng thật.
+CAN = 300
+DUNG = ("the", "and", "for", "you", "your", "that", "this", "with", "from", "are", "was",
+        "not", "but", "all", "one", "out", "get", "got", "its", "has", "had", "who", "why",
+        "how", "what", "when", "where", "them", "they", "does", "did", "will", "can")
+
+
+def _tu(s):
+    return {w for w in re.findall(r"[a-z]{3,}", s.lower()) if w not in DUNG}
+
+
+def _von_tu():
+    """Vốn từ thật của 18 kênh — đọc từ `kich_ban`, không chép tay (§13.2)."""
+    import collections
+    import giai_thich as G
+    c = collections.Counter()
+    for k in G.KENH:
+        for idx in range(1900, 1908):
+            for n in G.kich_ban(k["ma"], idx)[4]:
+                c.update(_tu(n.get("loi") or ""))
+    return c
+
+
+def _danh_sach():
+    """Tên mọi tệp SVG trong kho."""
+    u = "https://api.github.com/repos/balazser/undraw-svg-collection/git/trees/main?recursive=1"
+    rq = urllib.request.Request(u, headers={"User-Agent": "mm0/1.0"})
+    d = json.loads(urllib.request.urlopen(rq, timeout=40).read().decode())
+    return [x["path"].split("/")[-1][:-4] for x in d["tree"] if x["path"].endswith(".svg")]
 
 
 def _tai(ten):
@@ -148,37 +154,53 @@ def _chuan(svg):
 
 
 def main() -> int:
-    kho = {}
-    tong = bo = 0
-    for bt, ds in BANG.items():
-        kho[bt] = []
-        for ten in ds:
-            svg = _tai(ten)
-            if not svg:
-                bo += 1
-                continue
-            c = _chuan(svg)
-            if not c:
-                print(f"   ⚠ {ten}: có <style>/<image> hoặc thiếu viewBox — bỏ")
-                bo += 1
-                continue
-            kho[bt].append({"ten": ten, "vb": c[0], "ruot": c[1]})
-            tong += 1
-        if not kho[bt]:
-            del kho[bt]
-    if not kho:
-        raise RuntimeError("không tải được hình nào — KHÔNG ghi đè kho cũ")
+    von = _von_tu()
+    ten = _danh_sach()
+    print(f"   kho có {len(ten)} hình · vốn từ 18 kênh: {len(von)} từ")
+
+    # Điểm của một hình = tổng tần suất những từ trong TÊN nó mà lời của mình có dùng.
+    # Hình không dính từ nào thì điểm 0 và không bao giờ được chọn lúc dựng — nhúng nó vào
+    # là nhúng 16KB để không dùng.
+    diem = []
+    for t in ten:
+        tt = _tu(t.replace("-", " "))
+        d = sum(von.get(w, 0) for w in tt)
+        if d:
+            diem.append((d, t, tt))
+    diem.sort(reverse=True)
+    lay = diem[:CAN]
+    print(f"   {len(diem)} hình dính vốn từ · nhúng {len(lay)}")
+
+    kho, bo = [], 0
+    for k, (d, t, tt) in enumerate(lay):
+        svg = _tai(t)
+        if not svg:
+            bo += 1
+            continue
+        c = _chuan(svg)
+        if not c:
+            bo += 1
+            continue
+        kho.append({"ten": t, "tu": sorted(tt), "vb": c[0], "ruot": c[1]})
+        if (k + 1) % 50 == 0:
+            print(f"      … {k + 1}/{len(lay)}")
+    if len(kho) < 50:
+        raise RuntimeError(f"chỉ lấy được {len(kho)} hình — KHÔNG ghi đè kho cũ")
 
     with open(RA, "w", encoding="utf-8") as f:
         f.write("/* SINH TỰ ĐỘNG bởi `render-pipeline/tai_svg.py` — ĐỪNG SỬA TAY.\n"
                 "   Nguồn: unDraw (gương MIT `balazser/undraw-svg-collection`).\n"
-                "   Giấy phép unDraw: dùng thương mại tự do, KHÔNG phải ghi nguồn.\n"
-                "   Bốn mã màu gốc đã đổi thành biến để engine thay bằng màu kênh. */\n")
-        f.write("export type HinhSVG = { ten: string; vb: string; ruot: string };\n")
-        f.write("export const KHO_SVG: Record<string, HinhSVG[]> = ")
-        f.write(json.dumps(kho, ensure_ascii=False, indent=1))
+                "   Giấy phép unDrau: dùng thương mại tự do, KHÔNG phải ghi nguồn.\n"
+                "   `tu` là các từ trong tên hình — Python dùng nó để chọn hình theo lời\n"
+                "   của từng nhịp (xem `giai_thich._rai_hinh_nhap`). */\n")
+        f.write("export type HinhSVG = { ten: string; tu: string[]; vb: string; ruot: string };\n")
+        f.write("export const KHO_SVG: HinhSVG[] = ")
+        f.write(json.dumps(kho, ensure_ascii=False))
         f.write(";\n")
-    print(f"   ✅ {tong} hình vào kho · {bo} bỏ · {len(kho)} biểu tượng có hình")
+        f.write("export const CHI_SO: Record<string, number> = "
+                + json.dumps({h["ten"]: i for i, h in enumerate(kho)}) + ";\n")
+    mb = os.path.getsize(RA) / 1e6
+    print(f"   ✅ {len(kho)} hình vào kho · {bo} bỏ · {mb:.1f} MB")
     return 0
 
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { KHO_SVG } from "./KhoSVG";
+import { KHO_SVG, CHI_SO } from "./KhoSVG";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════
    HÌNH VẼ NHẬP TỪ KHO NGOÀI  (5/9/2026)
@@ -60,20 +60,25 @@ const _pha = (hex: string, k: number): string => {
   return "#" + v.map((x) => x.toString(16).padStart(2, "0")).join("");
 };
 
-export const co_hinh_nhap = (bt: string): boolean => !!(KHO_SVG as any)[bt]?.length;
+export const co_hinh_nhap = (ten: string): boolean => CHI_SO[ten] !== undefined;
 
 export const HinhNhap: React.FC<{
   bt: string; s: number; bien?: number; p?: number;
   mau: string; mauPhu?: string; nen?: string;
 }> = ({ bt, s, bien = 0, p = 1, mau, mauPhu = "", nen = "#F2F0EA" }) => {
-  const ds = (KHO_SVG as any)[bt] as { ten: string; vb: string; ruot: string }[] | undefined;
-  if (!ds || !ds.length) return null;
-  const h = ds[Math.abs(bien) % ds.length];
+  const k0 = CHI_SO[bt];
+  if (k0 === undefined) return null;
+  const h = KHO_SVG[k0];
 
   const [, , vw, vh] = h.vb.split(/\s+/).map(Number);
-  /* Vừa hộp `s × s` theo cạnh DÀI, không theo cạnh ngang: hình unDraw có tỉ lệ rất khác
-     nhau (888×677 · 840×736), và kẹp theo một cạnh thì cạnh kia tràn. Cùng bài học §17.2. */
-  const k = s / Math.max(vw || 1, vh || 1);
+  /* ── TRANH NHẬP CHIẾM TRỌN KHUNG  (5/9/2026, sau khi anh chê "lơ lửng") ────────────────
+     Bản trước co hình về một hộp `s × s` rồi neo đáy vào SÀN CỦA MÌNH. Nhưng mỗi bức unDraw
+     mang theo mặt đất của chính nó ở một độ cao khác nhau (~0,55 của khung nó), nên nhân
+     vật đứng trên đất của bức tranh còn bóng của mình nằm tách phía dưới — và không hằng
+     số nào chữa được, vì con số ấy khác nhau ở từng bức.
+     Nay bức tranh LÀ cả khung: một mặt đất duy nhất, của chính nó. `s` được hiểu là BỀ
+     NGANG khung, và hình canh giữa theo chiều dọc trong vùng nội dung. */
+  const k = s / Math.max(vw || 1, 1);
 
   const q = Math.max(0, Math.min(1, p));
   const m = q <= 0.28 ? 0 : Math.min(1, (q - 0.28) / 0.72);
