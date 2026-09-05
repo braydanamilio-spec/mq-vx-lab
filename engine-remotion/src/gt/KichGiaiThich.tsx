@@ -3,6 +3,7 @@ import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img }
 import { NenQue } from "../que/NenQue";
 import { TuVe } from "./TuVe";
 import { IconVe, co_icon } from "./IconVe";
+import { CanvaVe, co_canva } from "./CanvaVe";
 import { HinhNhap, co_hinh_nhap } from "./HinhNhap";
 import { chanTroi, DAY_HINH, coHinh, ChiaDoi, SoLieu, Truc, KinhLup, DaiChu, Dem, TheChu, Chart, BieuTuong, NenPhong, tiLe, nguonSang} from "./Khuon";
 import { CanhVe, sangDayCanh } from "./CanhVe";
@@ -645,7 +646,17 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                             nằm ở đáy hình), nên nó đứng trên sàn ở mọi icon — khác hẳn
                             tranh unDraw vốn mang mặt đất riêng và lơ lửng một lượng khác
                             nhau ở từng bức. */}
-                        {co_icon(String((N as any)?.icon || "")) ? (
+                        {/* ── THỨ TỰ ƯU TIÊN CỦA LỚP CHỦ THỂ  (5/9/2026) ────────────────
+                            1. hình Canva  — hoạ sĩ vẽ, nét mực, khớp lời theo từ khoá
+                            2. icon        — Iconify, đúng nghĩa nhưng là icon giao diện
+                            3. BieuTuong   — hình que em tự vẽ, trần chất lượng thấp nhất
+                            Xếp thế vì anh đã chê (3) suốt, và (1) là thứ duy nhất do người
+                            vẽ. Mỗi bậc chỉ chạy khi bậc trên không có hình cho nhịp ấy. */}
+                        {co_canva(String((N as any)?.canva || "")) ? (
+                          <CanvaVe tep={String((N as any).canva)} W={W} H={H}
+                                   san={sanY} p={p} mau={mau}
+                                   dx={cx} dy={sanY - sz * DAY_HINH} />
+                        ) : co_icon(String((N as any)?.icon || "")) ? (
                           /* ── BÙ LẠI PHÉP NÂNG CỦA LỚP CHA  (5/9/2026) ──────────────────
                              Thẻ cha đã dịch lên `sz * DAY_HINH` để ĐÁY của `BieuTuong` chạm
                              sàn — `DAY_HINH` là phần hình người không chạm hết hộp của nó.

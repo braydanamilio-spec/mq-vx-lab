@@ -66,3 +66,7 @@ render-pipeline/README.md
 render-pipeline/out_thumbcheck/
 
 render-pipeline/out/
+
+# Hình Canva Pro: licence cho DÙNG bên trong video, không cho phát tán tệp rời — mà repo này
+# PUBLIC. Tệp gốc nằm ở repo riêng `braydanamilio-spec/mm0-kho-canva`, workflow checkout về.
+render-pipeline/kho_canva/

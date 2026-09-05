@@ -4352,6 +4352,71 @@ def _kho_icon():
     return _KHO_ICON
 
 
+_KHO_CANVA = None
+
+
+def _kho_canva():
+    """Chỉ mục kho hình Canva — đọc từ chính tệp engine dùng, MỘT nguồn sự thật (§13.5)."""
+    global _KHO_CANVA
+    if _KHO_CANVA is None:
+        f = os.path.join(os.path.dirname(__file__), "..", "engine-remotion", "src", "gt", "KhoCanva.ts")
+        try:
+            t = open(f, encoding="utf-8").read()
+            i = t.index("KHO_CANVA: Record<string, HinhCanva> = ") + len("KHO_CANVA: Record<string, HinhCanva> = ")
+            # `engine-remotion/public/**` nằm trong .gitignore, nên bản khai (KhoCanva.ts, CÓ
+            # trong git) đi tới Actions còn ẢNH thì không. Gán `canva` lúc ấy = engine trỏ vào
+            # tệp trống -> nhân vật biến mất khỏi 14% nhịp, KHÔNG lỗi nào báo (§12.8).
+            # Nên nguồn sự thật cuối cùng là ẢNH CÓ MẶT, không phải bản khai.
+            d = os.path.join(os.path.dirname(f), "..", "..", "public", "canva")
+            _KHO_CANVA = [(k, set(v["tu"])) for k, v in json.loads(t[i:t.rindex(";")]).items()
+                          if os.path.exists(os.path.join(d, k))]
+            if not _KHO_CANVA:
+                print("   ⚠️ kho Canva: bản khai có %d hình, thư mục ảnh có 0 -> bỏ qua lớp Canva"
+                      % len(json.loads(t[i:t.rindex(';')])), file=sys.stderr)
+        except Exception:
+            _KHO_CANVA = []
+    return _KHO_CANVA
+
+
+def _rai_canva(nhip: list, ma: str, idx: int) -> None:
+    """Chọn cho mỗi nhịp CẢNH một bức tranh Canva khớp NGHĨA của câu.
+
+    Kho là hình do hoạ sĩ vẽ (Canva Elements, tác giả `zdeneksasek`), toàn bộ NÉT MỰC —
+    nên engine tô bằng màu kênh và 18 kênh không thể lệch tông nhau.
+
+    Ưu tiên hơn `icon` và hơn `BieuTuong` tự vẽ: đây là hình người thật do hoạ sĩ vẽ, còn
+    hai đường kia là icon giao diện và hình que em vẽ bằng code — anh đã chê cả hai.
+
+    Điểm khớp chia cho căn bậc hai số từ của tên, cùng lý do đã dùng ở `_rai_hinh_nhap`:
+    tên dài dễ trúng một từ vu vơ, không chia thì tên dài luôn thắng.
+    """
+    kho = _kho_canva()
+    if not kho:
+        return
+    dung = set()
+    for n in nhip:
+        if (n.get("khuon") or "canh") not in ("canh", "nhom"):
+            continue
+        tu = {w for w in re.findall(r"[a-z]{3,}", (n.get("loi") or "").lower())
+              if w not in _BO_TU}
+        if not tu:
+            continue
+        tot, diem = None, 0.0
+        for ten, tt in kho:
+            c = len(tu & tt)
+            if not c:
+                continue
+            d = c / (len(tt) ** 0.5)
+            if ten in dung:
+                d *= 0.25          # không dùng lại trong cùng một tập
+            if d > diem:
+                tot, diem = ten, d
+        # Sàn 0,30: dưới mức này hình khớp quá lỏng, hiện lên hại hơn không hiện.
+        if tot and diem >= 0.30:
+            n["canva"] = tot
+            dung.add(tot)
+
+
 def _rai_icon(nhip: list, ma: str) -> None:
     """Chọn cho mỗi nhịp CẢNH một icon khớp CHỮ trong câu.
 
@@ -4876,6 +4941,7 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     _rai_canh_ve(nhip, ma, _lech_kenh(ma) + idx * 7919)
     # SAU `_rai_canh_ve`: nhịp nào nhận được tranh nhập thì bỏ luôn cảnh vẽ code của nó —
     # hai cảnh trong một khung là đúng thứ vừa đi sửa.
+    _rai_canva(nhip, ma, idx)
     _rai_icon(nhip, ma)
     # ── TẮT LỚP TRANH unDRAW  (5/9/2026) ────────────────────────────────────────────────
     # Tranh unDraw là mảng màu phẳng có bảng màu riêng. Sau khi chốt phong cách NÉT MỰC

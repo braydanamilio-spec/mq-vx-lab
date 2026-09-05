@@ -122,6 +122,21 @@ jobs:
           repository: ${{ secrets.AUTOPUBLISHER_REPO }}
           token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
           path: _autopublisher
+
+      # KHO HÌNH CANVA — repo RIÊNG TƯ.
+      # `mq-vx-lab` và `mm0-auto-publisher` đều PUBLIC, mà licence Canva cho dùng hình bên
+      # trong video chứ không cho phát tán tệp rời. Nên tệp gốc nằm ở `mm0-kho-canva`.
+      # Hỏng mềm có chủ ý: `giai_thich._kho_canva()` lọc bản khai theo ẢNH CÓ MẶT, nên thiếu
+      # kho thì lớp Canva bị bỏ qua và nhịp rơi về icon — video vẫn ra. Đây là bước LÀM ĐẸP,
+      # không phải mắt xích giao hàng, nên nó không được quyền làm đỏ cả luồng (§13.3).
+      - name: Kho hình Canva (riêng tư)
+        id: kho_canva
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: braydanamilio-spec/mm0-kho-canva
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _kho
       - uses: actions/setup-node@v4
         with: { node-version: "20", cache: npm, cache-dependency-path: engine-remotion/package-lock.json }
       - uses: actions/setup-python@v5
@@ -267,6 +282,20 @@ jobs:
       # Tỉ lệ 1 dài : 4 ngắn — bản dài là chỗ bật quảng cáo giữa video, bản ngắn là chỗ kéo
       # người xem. Một vòng ≈ 44 + 4×2 = 52 phút, ngân sách 285 phút ⇒ ~5 vòng ⇒ ~25 video mỗi
       # luồng mỗi lượt, ×18 luồng ≈ 450 video/lượt.
+      # Chép MUỘN, sau mọi `actions/checkout`: mặc định `clean: true` chạy `git clean -ffdx`,
+      # thứ xoá cả tệp bị gitignore — mà `engine-remotion/public/**` chính là gitignore. Chép
+      # sớm là chép vào chỗ sắp bị dọn.
+      - name: Trải kho Canva vào engine
+        run: |
+          if [ -d _kho/canva ]; then
+            mkdir -p engine-remotion/public/canva
+            cp _kho/canva/*.png engine-remotion/public/canva/
+            echo "kho Canva: $(ls engine-remotion/public/canva/*.png | wc -l) hình"
+          else
+            echo "⚠️ KHÔNG có kho Canva (checkout hỏng: ${{ steps.kho_canva.outcome }})."
+            echo "   Lớp Canva bị bỏ qua, nhịp rơi về icon. Video vẫn ra, kém đẹp hơn."
+          fi
+
       - name: Dựng liên tục (không đợi luồng khác)
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json

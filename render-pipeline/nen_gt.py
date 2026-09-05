@@ -28,6 +28,7 @@ của một tập trông như MỘT bộ phim chứ không như 250 ảnh nhặt
 """
 import io
 import os
+import time
 import re
 
 GOC = os.path.dirname(os.path.abspath(__file__))
@@ -577,9 +578,27 @@ _ANH_TEP = os.path.join(os.environ.get("TMPDIR") or "/tmp",
                         "mm0_anh_luong_%s.txt" % (os.environ.get("GITHUB_RUN_ID") or "cucbo"))
 
 
+# Bộ đếm CŨ thì phải quên đi — nếu không, cái trần thành cái KHOÁ VĨNH VIỄN.  (5/9/2026)
+#
+# Trên Actions, tên tệp mang `GITHUB_RUN_ID` nên mỗi lượt một tệp riêng và nó tự hết hạn.
+# Ở máy anh KHÔNG có biến ấy, nên mọi lượt chạy đời đời dùng chung một tệp `cucbo` — nó bò
+# lên 120 rồi ở đó mãi, và từ giây phút ấy `sinh()` trả rỗng cho MỌI lượt render, IM LẶNG.
+#
+# Đo được cái giá: cả buổi chiều em báo cáo "0% nhịp có ảnh AI" và đi dựng lại toàn bộ lớp
+# vector vì tưởng hồ CF cạn — trong khi hồ đang ở 80% và thứ chặn là chính bộ đếm này.
+# Đúng §12.8 ở dạng tệ nhất: hỏng, không báo gì, và còn dẫn người đọc đi sai hướng cả ngày.
+#
+# Một cái trần bảo vệ NGÂN SÁCH CỦA MỘT LƯỢT CHẠY thì nó phải hết hiệu lực khi lượt ấy kết
+# thúc. Không có mã lượt để mà biết, thì dùng THỜI GIAN: quá hai giờ coi như lượt khác.
+_ANH_HAN = 7200
+
+
 def _da_ve() -> int:
     """Số ảnh CF luồng này đã vẽ — đọc từ tệp, nên sống qua mọi tiến trình của luồng."""
     try:
+        if (not os.environ.get("GITHUB_RUN_ID")
+                and time.time() - os.path.getmtime(_ANH_TEP) > _ANH_HAN):
+            return 0                      # tệp của một lượt đã xong từ lâu
         with open(_ANH_TEP) as f:
             return int(f.read().strip() or 0)
     except Exception:
@@ -821,7 +840,24 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
         # `siet - 1`: lần trượt THỨ NHẤT dùng câu siết thứ nhất. Viết `min(siet, …)` là hụt
         # một bậc — câu nhẹ nhất không bao giờ được dùng, và ảnh nhảy thẳng sang mức siết mạnh.
         (SIET[min(siet - 1, len(SIET) - 1)] + ", ") if siet else "",
-        "a flat cartoon drawing of " + ve + mt + ",",             # 1. CHÍNH CẢNH — đứng đầu
+        # ── MỘT CHẤT LIỆU CHO CẢ BỘ PHIM  (5/9/2026) ────────────────────────────────
+        # Anh hỏi đúng chỗ sẽ lệch: lớp vector nay là NÉT MỰC TRÊN GIẤY (kho hình Canva +
+        # nền kraft có vân), còn CF vẫn vẽ "flat cartoon drawing" — tranh màu có nền riêng.
+        # Hai chất liệu trong một tập, và §12.10 đã đo: lệch phong cách là đòn bẩy lớn hơn
+        # hẳn màu sắc. Người xem đọc ra "ghép từ hai nơi" trong nửa giây.
+        #
+        # Sửa ở PROMPT chứ không ở khâu dựng: bảo mô hình vẽ đúng chất ngay từ đầu rẻ hơn
+        # nhiều so với chỉnh màu ảnh đã vẽ xong — và §12.10 cũng đã đo rằng chỉnh màu
+        # KHÔNG cứu được lệch phong cách.
+        #
+        # Ba mệnh đề, không thừa chữ nào: nét mực (chất) · giấy kraft (nền) · không tô màu
+        # (thứ tách nó khỏi "cartoon"). FLUX không có negative prompt nên phải khẳng định
+        # dương — "monochrome ink" nói được điều mà "no colour" không nói được (§12.1).
+        # Câu này phải NGẮN: nó đứng đầu nên không bao giờ bị cắt, nhưng mỗi ký tự nó
+        # chiếm là một ký tự lấy khỏi phần đuôi — và đuôi là chỗ luật sàn nằm. Bản đầu dài
+        # 58 ký tự làm `howlong` ở mức siết 3 mất LUẬT SÀN; cổng selftest chặn ngay.
+        # Đúng §17.6: hàm vừa ghép vừa tự cắt thì mọi thứ thêm vào đầu đều lấy từ đuôi.
+        "a black ink line drawing of " + ve + mt + ", ink on kraft paper,",   # 1. CHÍNH CẢNH
         KEP_GU + ",",              # 1b. kẹp phong cách ngắn — xem `KEP_GU`
         _khoa(ma, ve).rstrip(),    # 2. khoá nhân vật (rỗng nếu cảnh không có người)
         # 3. chính cảnh của nhịp này — CÓ NEO PHONG CÁCH DÁN NGAY TRƯỚC CHỦ THỂ.
@@ -1022,10 +1058,18 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
     _tran = int(os.environ.get("TRAN_ANH_LUONG", "120") or 120)
     _dv = _da_ve()                 # ĐỌC TỆP, không đọc biến — xem `_ANH_TEP`
     if _tran > 0 and _dv >= _tran:
-        if _dv == _tran:
-            _ghi_da_ve(_dv + 1)     # +1 để câu này chỉ in một lần trong cả luồng
-            print(f"     🎚 đã vẽ {_tran} ảnh AI trong lượt này — các cảnh sau dùng lớp vẽ bằng "
-                  f"code để giữ hạn mức cho những luồng còn lại (đặt TRAN_ANH_LUONG để đổi)")
+        # ── IN MỘT LẦN MỖI TIẾN TRÌNH, KHÔNG MỘT LẦN MỖI TỆP ĐẾM  (5/9/2026) ────────────
+        # Bản cũ in khi `_dv == _tran` rồi ghi +1 để khỏi in lại — tức câu này in đúng MỘT
+        # lần trong cả đời tệp đếm, và mọi tiến trình sau đó câm tuyệt đối. Cộng với chuyện
+        # tệp không bao giờ hết hạn ở máy anh, kết quả là: hàng chục lượt render liên tiếp
+        # không có một ảnh AI nào và KHÔNG NÓI GÌ.
+        # Một lượt dựng phải luôn khai được vì sao nó không có ảnh — đó là khác biệt giữa
+        # "cạn hạn mức" (đi thêm khoá) và "chạm trần tự đặt" (đổi một biến môi trường).
+        if not getattr(sinh, "_da_bao_tran", False):
+            sinh._da_bao_tran = True
+            print(f"     🎚 đã vẽ {_dv} ảnh AI trong lượt này (trần {_tran}) — các cảnh sau "
+                  f"dùng lớp vẽ bằng code. Đặt TRAN_ANH_LUONG để đổi, hoặc xoá "
+                  f"{_ANH_TEP} nếu đây là lượt mới.")
         return ""
 
     import datastory_ci as DS
