@@ -516,7 +516,17 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                      phút có mười tám cảnh chồng khít lên nhau. Đúng luật 14.9: đa dạng phải
                      nằm ở thứ người xem NHÌN THẤY, mà thứ họ thấy là hai cảnh liền nhau. */
                   const kv = Math.abs(hat + Math.round(N.s * 7)) % 6;
-                  const cx = W * [0.5, 0.38, 0.62, 0.5, 0.42, 0.58][kv];
+                  /* 5/9 — NHỊP SỐ THÌ BIỂU TƯỢNG PHẢI CÙNG TRỤC VỚI CON SỐ.
+                     Anh: *"bố cục tỉ lệ chưa hài hoà, chưa khớp"* kèm khung có con số nằm
+                     bên trái và cái đồng hồ nằm bên phải, giữa trống hoác.
+                     Gốc: `SoLieu` đặt con số theo bố cục riêng của nó, còn biểu tượng đặt ở
+                     `cx` xoay 0,38–0,62 theo nhịp — HAI LỚP CÙNG CHỌN VỊ TRÍ, không lớp nào
+                     biết lớp kia (§17.4, đúng họ lỗi đã trả giá ở đợt template).
+                     Xoay chỗ đứng là cơ chế đa dạng ĐÚNG cho nhịp CẢNH — nơi chỉ có một vật
+                     trong khung. Ở nhịp SỐ thì trong khung đã có hai thứ, và hai thứ lệch
+                     trục nhau đọc ra "chắp vá" chứ không đọc ra "đa dạng". */
+                  const laSo = (N.khuon || "") === "so_lieu";
+                  const cx = laSo ? W * 0.5 : W * [0.5, 0.38, 0.62, 0.5, 0.42, 0.58][kv];
                   /* ── CỠ KHUNG: XA · VỪA · GẦN  (3/9/2026) ────────────────────────────────
                      `canh` chiếm **35% tổng số nhịp** — nhiều nhất trong bộ. Trước bản này mọi
                      cảnh vẽ chủ thể ở ĐÚNG MỘT CỠ (`s0`), chỉ đổi chỗ đứng. Xem một tập tám
@@ -711,7 +721,8 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                         ) : (
                           <TuVe p={p / 0.26}>
                             <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
-                                       nv={(N as any)?.nv ?? 0} />
+                                       nv={(N as any)?.nv ?? 0}
+                                       cam={String((N as any)?.cam || "")} />
                           </TuVe>
                         )}
                       {/* ── ÁNH SÁNG PHỦ LÊN CHỦ THỂ  (4/9/2026) ─────────────────────────

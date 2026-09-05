@@ -44,8 +44,9 @@ const F = () => chu();
    lục cỏ · mận. Vẫn đủ trầm để không tranh với màu thương hiệu, vẫn đủ sẫm để nét đen nổi. */
 const AO = ["#3E5A78", "#A65A3C", "#5E7A4A", "#7A4A63"];
 
-export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: number; nv?: number }> =
-({ ten, s, mau = "#2C2722", tu = 0, nv = 0 }) => {
+export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: number;
+                                   nv?: number; cam?: string }> =
+({ ten, s, mau = "#2C2722", tu = 0, nv = 0, cam = "" }) => {
   const k = (v: number) => v * s;
   const n = Math.max(2, s * 0.055);
   const P = (d: string, f = "none", w = 1) => (
@@ -186,8 +187,16 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
          KHÔNG TÔ GÌ CẢ — họ thắng bằng nét và biểu cảm.                                   */
       /* 5/9 — NÉT MẢNH HƠN. Anh: *"nhân vật kiểu thô thiển xấu"*. Nét 0,017 trên một
          hình cao 0,9 đọc ra bút dạ bản to; ảnh mẫu dùng nét mảnh và ĐỀU. */
-      const w = k(0.0165);          // dày hơn theo yêu cầu — nét đậm đọc chắc hơn
-      const wM = k(0.0120);
+      /* ── BA VÒNG CHỈNH NÉT, VÀ ANH TÁCH ĐƯỢC HAI THỨ EM GỘP LÀM MỘT ─────────────────
+         "tay run" ≠ "có nét tay". Run là nét ngoằn ngoèo nhiều chỗ; nét tay là một đường
+         hơi CONG MỘT LẦN rồi đi thẳng. `NET` vốn cong đúng một lần ở giữa mỗi đoạn, nên
+         thứ cần chỉnh chỉ là BIÊN ĐỘ:
+             0,09  -> ngoằn ngoèo, đọc ra run tay
+             0,007 -> thẳng đuột, đọc ra đường máy tính
+             0,016 -> cong nhẹ một lần: đây là nét tay
+         Và nét mảnh lại: 0,0165 quá đậm với hình cao 0,9. */
+      const w = k(0.0135);
+      const wM = k(0.0100);
 
       /* Nhiễu TẤT ĐỊNH: cùng một nhân vật ở cùng tư thế luôn run giống hệt nhau, nên hình
          không "sôi" giữa các khung. Viết phép băm ra tường minh — `Math.random` thì mỗi
@@ -212,7 +221,7 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
           /* 5/9 (lần hai) — 0,025 -> 0,007. Anh vẫn thấy "tay run". Ở nét mảnh thì 2,5%
              chiều dài đã đủ để mắt bắt được độ cong; nét vẽ tay ĐẸP là nét gần như thẳng,
              chỉ sai ở đầu mút. Giữ một chút để nó không thành đường máy tính. */
-          const o = rnd(key * 13 + i) * len * 0.007;
+          const o = rnd(key * 13 + i) * len * 0.016;
           d += ` Q ${(x0 + x1) / 2 - (dy / len) * o} ${(y0 + y1) / 2 + (dx / len) * o} ${x1} ${y1}`;
         }
         return d;
@@ -293,7 +302,17 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
         : [[[0, hong], [-k(0.062), k(0.545)]],
            [[0, hong], [k(0.062), k(0.545)]]];
 
-      return (<g>
+      /* ── BỐ CỤC PHẢI VỪA KHUNG, ĐO CHỨ KHÔNG ƯỚC  (5/9/2026) ────────────────────────
+         Anh gửi khung có `$` lớn BỊ CẮT ở mép phải. Đo theo chính toạ độ trong mã:
+
+             mép trái −0,342 · mép phải +0,492 · bề ngang 0,833 · tâm lệch +0,075
+
+         Hộp chủ thể chỉ 0,62 nên bố cục tràn ra 0,21 — và vì tâm lệch phải, nó tràn hẳn
+         một bên. Hai con số ấy chính là hai phép biến hình cần dùng: dịch trái 0,075 rồi
+         thu về 0,74. Không ước lượng bằng mắt (§1: khi con số và con mắt bất đồng, đo). */
+      const _ssFit = ten === "nguoi_ss"
+        ? `scale(0.74) translate(${-k(0.075)} 0)` : undefined;
+      return (<g transform={_ssFit}>
         {/* THÂN là MỘT NÉT, không phải một cái áo. Đây là thay đổi lớn nhất so với bản cũ. */}
         {N(NET([[0, dauY + dauR * 0.92], [0, hong]], 1))}
         {TAY[t5].map((a, i) => CHI(a, 20 + i))}
@@ -329,21 +348,43 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
                    rx={dauR * 0.115} ry={dauR * 0.165} fill={mau} />
         ))}
 
-        {/* lông mày: mang toàn bộ cảm xúc — đầu trong cao = mệt, ngược lại = giận */}
-        {t5 === 2 ? (<>
-          {N(NET([[-dauR * 0.62, dauY - dauR * 0.52], [-dauR * 0.16, dauY - dauR * 0.72]], 5), wM)}
-          {N(NET([[dauR * 0.16, dauY - dauR * 0.72], [dauR * 0.62, dauY - dauR * 0.52]], 6), wM)}
-        </>) : t5 === 3 ? (<>
-          {N(NET([[-dauR * 0.64, dauY - dauR * 0.76], [-dauR * 0.14, dauY - dauR * 0.86]], 5), wM)}
-          {N(NET([[dauR * 0.14, dauY - dauR * 0.86], [dauR * 0.64, dauY - dauR * 0.76]], 6), wM)}
-        </>) : null}
-
-        {/* miệng: MỘT nét cong. Cười khi vui, thẳng khi trung tính, cong xuống khi mệt. */}
-        {t5 === 2
-          ? N(NET([[-dauR * 0.34, dauY + dauR * 0.46], [dauR * 0.34, dauY + dauR * 0.46]], 7), wM)
-          : <path d={`M ${-dauR * 0.40} ${dauY + dauR * 0.34}
-                      Q 0 ${dauY + dauR * (t5 === 3 ? 0.20 : 0.74)} ${dauR * 0.40} ${dauY + dauR * 0.34}`}
-                  fill="none" stroke={mau} strokeWidth={wM} strokeLinecap="round" />}
+        {/* ── BIỂU CẢM THEO NGHĨA CỦA CÂU, KHÔNG THEO TƯ THẾ  (5/9/2026) ────────────────
+            Anh: *"nhân vật nhớ có đa dạng cảm xúc biểu cảm phù hợp"*.
+            Bản trước lông mày và miệng chạy theo `t5` — tức theo TƯ THẾ. Nên một câu giận
+            và một câu vui mà cùng tư thế đứng thì cùng một khuôn mặt, còn hai câu cùng cảm
+            xúc mà khác tư thế lại khác mặt. Cảm xúc là chuyện của LỜI, tư thế là chuyện của
+            THÂN — buộc chúng vào nhau là sai từ gốc.
+            Sáu biểu cảm, mỗi cái đổi HAI thứ (mày + miệng) vì một thứ thôi thì đọc không ra. */}
+        {(() => {
+          const R = dauR;
+          const may = (trIn: number, trOut: number) => (<>
+            {N(NET([[-R * 0.62, dauY + R * trOut], [-R * 0.16, dauY + R * trIn]], 5), wM)}
+            {N(NET([[R * 0.16, dauY + R * trIn], [R * 0.62, dauY + R * trOut]], 6), wM)}
+          </>);
+          const cong = (sau: number) =>
+            <path d={`M ${-R * 0.40} ${dauY + R * 0.34} Q 0 ${dauY + R * sau} ${R * 0.40} ${dauY + R * 0.34}`}
+                  fill="none" stroke={mau} strokeWidth={wM} strokeLinecap="round" />;
+          switch (cam) {
+            case "vui":        // cười rộng, mày thả lỏng
+              return <>{cong(0.86)}</>;
+            case "buon":       // mày nhướn TRONG lên, miệng cong xuống
+              return <>{may(-0.78, -0.52)}{cong(-0.10)}</>;
+            case "gian":       // mày chúi TRONG xuống, miệng thẳng
+              return <>{may(-0.50, -0.80)}
+                {N(NET([[-R * 0.34, dauY + R * 0.46], [R * 0.34, dauY + R * 0.46]], 7), wM)}</>;
+            case "ngac_nhien": // mày nhướn CAO, miệng chữ O
+              return <>{may(-0.94, -0.90)}
+                <ellipse cx={0} cy={dauY + R * 0.46} rx={R * 0.17} ry={R * 0.21}
+                         fill="#FFFFFF" stroke={mau} strokeWidth={wM} /></>;
+            case "nghi":       // một mày nhướn — mặt "không chắc"
+              return <>
+                {N(NET([[-R * 0.62, dauY - R * 0.60], [-R * 0.16, dauY - R * 0.74]], 5), wM)}
+                {N(NET([[R * 0.16, dauY - R * 0.84], [R * 0.62, dauY - R * 0.80]], 6), wM)}
+                {N(NET([[-R * 0.26, dauY + R * 0.46], [R * 0.30, dauY + R * 0.40]], 7), wM)}</>;
+            default:           // trung tính: miệng cong nhẹ, không mày
+              return cong(0.74);
+          }
+        })()}
 
         {/* ── ĐẠO CỤ: thứ thật sự kể nội dung ─────────────────────────────────────────── */}
         {ten === "nguoi_ss" ? (() => {

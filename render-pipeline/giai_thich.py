@@ -4535,6 +4535,16 @@ _HO_CO_NGUOI = ("di", "nghi", "mang", "nhin", "dong", "vui",
                 "buc_boi", "sung_sot", "nghi_ngo", "man_hinh")
 # Hai vốn từ cho hai bố cục đạo cụ. Ngắn và ĐÓNG — đây là khái niệm, không phải danh
 # sách ngoại lệ (§13.9): "so sánh hai lượng" và "không hình dung nổi" là hai ý hữu hạn.
+# ── BIỂU CẢM DỰNG TỪ `TINH_HUONG`, KHÔNG VIẾT BẢNG THỨ HAI ───────────────────────────────
+# Lượt đầu em viết sáu vốn từ mới và đo được **5/95 nhịp** có biểu cảm — 95% trung tính, tức
+# vẫn đúng cái anh chê. Vốn từ tự viết luôn hẹp, và §13.9 đã nói: danh sách là vô hạn.
+# `TINH_HUONG` đã có sẵn vốn từ rộng cho mười khoảnh khắc; biểu cảm chỉ là một PHÉP CHIẾU từ
+# khoảnh khắc sang khuôn mặt. Một nguồn sự thật, và thêm chữ ở đó thì biểu cảm tự có (§13.5).
+CAM_TU_HO = {
+    "vui": "vui", "buc_boi": "gian", "sung_sot": "ngac_nhien",
+    "nghi_ngo": "nghi", "nghi": "buon", "mot_minh": "buon",
+}
+
 _CO_LUONG = {"thousand", "million", "billion", "trillion", "hundred", "dozen"}
 _SS = {"versus", "compared", "bigger", "smaller", "larger", "apart", "difference",
        "gap", "twice", "times", "against", "between", "than"}
@@ -4603,6 +4613,11 @@ def _gop_hai_ho(nhip: list) -> None:
         #
         # `_SS` là chỗ đắt nhất của 18 kênh này: mọi kênh đều là "X so với Y", nên một
         # người cầm hai vật chênh cỡ chính là nội dung vẽ ra thành hình.
+        # biểu cảm gán TRƯỚC, độc lập với tư thế — hai trục khác nhau
+        for _ho, _cam in CAM_TU_HO.items():
+            if tu & TINH_HUONG[_ho][0]:
+                n["cam"] = _cam
+                break
         if len(tu & _CO_LUONG) >= 2 or (tu & _SS):
             n["bt"] = "nguoi_ss"
         elif tu & _NGHI:
