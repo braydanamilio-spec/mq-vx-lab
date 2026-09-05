@@ -1,4 +1,5 @@
 import React from "react";
+import { TrangGiay, laGiay } from "./TrangGiay";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    BẢY KHUÔN HÌNH — bộ phim giải thích  (1/9/2026)
@@ -563,6 +564,10 @@ export const NenPhong: React.FC<{ W: number; H: number; nen: string; mau: string
                                   hat?: number; anTroi?: boolean; anCua?: boolean;
                                   dauAn?: number }> =
 ({ W, H, nen, mau, hat = 0, anTroi = false, anCua = false, dauAn = 0 }) => {
+  /* 5/9 — CHẶN Ở ĐÂY, KHÔNG SỬA 21 CHỖ GỌI. `NenPhong` là thứ mà cả bốn vòng vá vừa rồi
+     cùng dùng — nên đây là chỗ duy nhất cần đổi để đổi được cả template (§2: sửa vòng thứ
+     ba mà vẫn cùng họ lỗi thì đi tìm thứ cả ba cùng dùng). */
+  if (laGiay()) return <TrangGiay W={W} H={H} nen={nen} mau={mau} hat={hat} />;
   const k = Math.abs(hat) % 6;
   const yS = chanTroi(H, hat);            // nguồn sự thật duy nhất — xem `chanTroi`
   const xS = nguonSang(W, hat);       // nguồn sáng lệch trái/phải/giữa — xem `nguonSang`

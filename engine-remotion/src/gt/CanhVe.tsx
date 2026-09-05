@@ -1,4 +1,5 @@
 import React from "react";
+import { laGiay } from "./TrangGiay";
 import { TuVe } from "./TuVe";
 import { AbsoluteFill } from "remotion";
 import { chanTroi, _tron, _pha } from "./Khuon";
@@ -712,7 +713,13 @@ export const CanhVe: React.FC<{
             §12.5 lần nữa: một luật đúng ở ngoài trời, sai ở trong nhà.
             Tường: phẳng, hơi sẫm ở SÁT TRẦN (bóng đọng ở góc trên là thứ mắt đọc ra "có
             trần"), cộng một đường chỉ trần mảnh. */}
-        {trong ? (
+        {/* ── 5/9 — TRÊN TRANG GIẤY THÌ KHÔNG VẼ TRỜI, KHÔNG VẼ SÀN ───────────────────
+            `CanhVe` là nhánh nền SONG SONG với `NenPhong`: đổi `NenPhong` sang trang giấy mà
+            để nguyên nhánh này thì 6/8 khung ra giấy còn 2/8 vẫn là phòng có trời xanh xám và
+            sàn nâu — soi lưới thấy ngay. Đúng §6: vá một nhánh, để nguyên nhánh song song.
+            Trên giấy, cảnh còn lại đúng phần NÉT MỰC của nó — xe vẫn là xe, nhà vẫn là nhà,
+            nhưng nằm trên trang chứ không đứng trong phòng. */}
+        {laGiay() ? null : trong ? (
           <>
             <rect x={0} y={0} width={W} height={san} fill={c.troiD} />
             <rect x={0} y={0} width={W} height={H * 0.10} fill={c.xa} opacity={0.34} />
@@ -721,7 +728,9 @@ export const CanhVe: React.FC<{
         ) : (
           <rect x={0} y={0} width={W} height={san} fill={`url(#${id}t)`} />
         )}
-        <rect x={0} y={san} width={W} height={H - san} fill={`url(#${id}s)`} />
+        {laGiay() ? null : (
+          <rect x={0} y={san} width={W} height={H - san} fill={`url(#${id}s)`} />
+        )}
         {/* Nhích rất nhẹ theo tiến độ nhịp: cảnh đứng chết thì đọc ra ảnh tĩnh dán vào phim. */}
         {/* ── NÉT MỰC PHỦ CẢ CẢNH, KẾ THỪA CHỨ KHÔNG VẼ TAY TỪNG HÌNH  (4/9/2026) ────────
             Anh chọn giữ xen kẽ ảnh AI với cảnh vẽ code, và kéo lớp code lại gần chất tranh.

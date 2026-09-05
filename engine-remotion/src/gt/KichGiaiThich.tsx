@@ -1,4 +1,5 @@
 import React from "react";
+import { datGiay, laGiay } from "./TrangGiay";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig, Img } from "remotion";
 import { NenQue } from "../que/NenQue";
 import { TuVe } from "./TuVe";
@@ -283,6 +284,10 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
      `if (!N)` thì khung rỗng sẽ giữ phông của kênh dựng TRƯỚC — hiếm, nhưng là đúng loại lỗi
      không ai tìm ra. Xem `Chu.tsx`. */
   datChu(ma);
+  /* 5/9 — TEMPLATE TRANG GIẤY. Đặt cùng chỗ với `datChu` vì cùng lý do: một lần ở gốc thì
+     không có chỗ nào để quên. Tắt bằng GT_PHONG=1 nếu cần dựng lại bản phòng cũ để đối
+     chiếu (§3: giữ bản cũ tới khi bản mới được duyệt). */
+  datGiay(true);
   if (!N) return <AbsoluteFill style={{ background: nenTrang }} />;
   const p = kep((t - N.s) / Math.max(0.4, N.e - N.s));      // 0..1 trong nhịp
   const vao = kep((t - N.s) / 0.22);                        // 0..1 lúc vừa cắt vào
@@ -565,7 +570,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                           hình càng to thì bóng càng rời xa chân, và mắt đọc ra "vật lơ lửng
                           có một vệt bẩn bên dưới". Bóng là thứ NEO vật vào nền, nên nó phải ở
                           đúng chỗ vật chạm nền. */}
-                      <ellipse cx={cx} cy={sanY} rx={sz * 0.34} ry={sz * 0.048}
+                      <ellipse cx={cx} cy={sanY} rx={laGiay() ? 0 : sz * 0.34} ry={sz * 0.048}
                                fill="#000000" opacity={0.13} />
                       {/* ── ĐĨA TÁCH LỚP SAU CHỦ THỂ  (4/9/2026) ────────────────────────
                           Anh gửi bốn khung: đồng hồ đè lên dãy tủ · cốc cà phê đè lên hạt và
@@ -612,7 +617,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                           <stop offset="100%" stopColor={nenTrang} stopOpacity={0} />
                         </radialGradient>
                       </defs>
-                      <ellipse cx={cx} cy={sanY - sz * DAY_HINH}
+                      <ellipse cx={cx} cy={sanY - sz * DAY_HINH} display={laGiay() ? "none" : undefined}
                                rx={sz * _ban} ry={sz * (_ban + 0.02)}
                                fill={`url(#dia${Math.round(cx)})`} />
                       {/* Đáy hình chạm sàn: xem `DAY_HINH`. `0,5` giả định hình chạm hết hộp
@@ -700,7 +705,7 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                           <stop offset="100%" stopColor="#FFD9A0" stopOpacity={0} />
                         </radialGradient>
                       </defs>
-                      <ellipse cx={nguonSang(W, hat)} cy={sanY - sz * 0.42}
+                      <ellipse cx={nguonSang(W, hat)} cy={sanY - sz * 0.42} display={laGiay() ? "none" : undefined}
                                rx={W * 0.72} ry={H * 0.42}
                                fill={`url(#ls${Math.round(cx)})`} />
                       </g>
