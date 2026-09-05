@@ -2560,6 +2560,7 @@ def main():
     check("bài nghiệm thu bắt được đúng lỗi đã lọt", t_nghiem_thu_bat_duoc_loi_that)
     check("nhịp so sánh không có hai vế bằng nhau", t_chia_doi_hai_ve_khac_nhau)
     check("biểu đồ không vẽ trục toàn số 0 hoặc trục phẳng", t_chart_co_so_that)
+    check("KHÔNG nhịp nào trống (không hình, không chữ)", t_khong_nhip_nao_trong)
     check("gu hình mỗi kênh một bộ, không lặp biểu tượng liền kề", t_gu_hinh_khac_nhau)
     check("mọi nhịp có khuôn đổi bố cục đều ĐƯỢC GÁN bố cục", t_moi_nhip_co_bo_cuc)
     check("không đọc lại cùng một câu trong vòng 12 nhịp", t_khong_lap_loi_gan)
@@ -8012,6 +8013,31 @@ def t_moi_nhip_co_bo_cuc():
     # 2 trong 6 mới là bảng thừa. Vắng mặt hoàn toàn là một quyết định, không phải một lỗi.
     if dung:
         assert len(dung) >= 6, f"chỉ {len(dung)}/6 bố cục thẻ chữ được dùng -> bảng gu thừa"
+
+
+def t_khong_nhip_nao_trong():
+    """KHÔNG nhịp nào được rỗng — không hình, không số, không chữ.
+
+    Anh soi ra khung trống BA LẦN, và ba lần em vá một điều kiện rồi báo "còn 1%". 1% của
+    344 nhịp là bốn khung trắng giao tới tay người xem, và một khung trắng giữa video đọc ra
+    "chưa làm xong" — nặng hơn mọi lỗi thẩm mỹ khác trong buổi.
+    Cổng này đo trên TOÀN BỘ 18 kênh × 4 tập, và nó là loại cổng chỉ có một ngưỡng đúng: 0.
+    """
+    import giai_thich as G          # cùng cách mọi chốt khác nạp mô-đun
+    trong = []
+    for k in G.KENH:
+        for i in range(4):
+            try:
+                nhip = G.kich_ban(k["ma"], i)[4]
+            except Exception:
+                continue
+            for j, n in enumerate(nhip):
+                if (n.get("khuon") or "canh") not in ("canh", "nhom"):
+                    continue            # khuôn SỐ/CHART/THẺ tự vẽ kín khung
+                if any(n.get(f) for f in ("ve", "bt", "canh_ve", "canva", "hinh_nhap")):
+                    continue
+                trong.append(f'{k["ma"]} tập {i} nhịp {j}: {str(n.get("loi"))[:40]}')
+    assert not trong, f"{len(trong)} nhịp TRỐNG (không hình, không chữ): {trong[:4]}"
 
 
 def t_gu_hinh_khac_nhau():

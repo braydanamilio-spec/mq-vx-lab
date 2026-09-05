@@ -4555,6 +4555,49 @@ for _k in _HO_CO_NGUOI:
     _TU_NGUOI |= TINH_HUONG[_k][0]
 
 
+def _khong_de_trong(nhip: list) -> None:
+    """LƯỚI CHẶN CUỐI: không nhịp nào được phép rỗng. Chạy SAU mọi lượt khác.
+
+    ── VÌ SAO PHẢI LÀ MỘT LƯỚI, KHÔNG PHẢI THÊM MỘT ĐIỀU KIỆN  (5/9/2026) ────────────────
+    Anh soi ra khung trống **ba lần**, và ba lần em vá một điều kiện: nới độ dài câu, sửa bộ
+    khử trùng, đổi cách trích mệnh đề. Mỗi lần con số tụt (3% -> 1%) nhưng KHÔNG BAO GIỜ về
+    không — vì mỗi bản vá chỉ đóng một đường vào chỗ rỗng, mà số đường vào thì em không đếm
+    hết được.
+
+    Đây đúng §2: *sửa vòng thứ ba mà vẫn cùng một họ lỗi thì dừng lại, đi tìm thứ cả ba cùng
+    dùng*. Thứ cả ba cùng dùng là: **không có ai chịu trách nhiệm cuối cùng cho việc nhịp
+    phải có hình**. Nên đặt một lưới, và nó không có nhánh nào trả về tay không:
+
+        1. mệnh đề nào đó của câu đủ ngắn  -> thẻ chữ
+        2. tập có con số                   -> khuôn SỐ, mượn số của tập
+        3. còn lại                         -> hình so sánh (luôn dựng được)
+
+    Nhánh 3 không cần dữ liệu gì nên nó KHÔNG THỂ trượt. Đó là điều kiện để gọi là lưới.
+    """
+    for i, n in enumerate(nhip):
+        if any(n.get(f) for f in ("ve", "bt", "canh_ve", "canva", "hinh_nhap")):
+            continue
+        if (n.get("khuon") or "canh") not in ("canh", "nhom"):
+            continue                     # khuôn SỐ/CHART/THẺ tự vẽ kín khung
+        # 1 — thử mọi mệnh đề, không chỉ mệnh đề đầu
+        for _c in re.split(r"[.!?]", (n.get("loi") or "")):
+            _c = _c.strip()
+            if _c and len(_c.split()) <= 9:
+                n["khuon"] = "the_chu"
+                n["the"] = _c
+                break
+        else:
+            # 2 — mượn con số của một nhịp khác trong tập
+            _ng = next((x for x in nhip if x.get("so") and x.get("don")), None)
+            if _ng:
+                n["khuon"] = "so_lieu"
+                n["so"], n["don"] = _ng["so"], _ng["don"]
+            else:
+                # 3 — nhánh KHÔNG THỂ TRƯỢT
+                n["bt"] = "nguoi_ss"
+                n["cam"] = "ngac_nhien"
+
+
 def _giu_chan(nhip: list) -> None:
     """Hai đòn giữ chân, cả hai là CẤU TRÚC chứ không phải hình đẹp hơn.
 
@@ -5369,6 +5412,10 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
         if (_n.get("khuon") or "") == "the_chu":
             for _f in ("cam", "tu", "nv", "so", "don", "chu", "cot", "muc"):
                 _n.pop(_f, None)
+    # LƯỚI CHẶN CUỐI đặt ở ĐÂY, sau mọi lượt có thể làm rỗng một nhịp. Lượt trước em đặt
+    # nó ngay sau lượt gộp — rồi `_giu_chan` chạy sau và lại gỡ hình đi, nên số khung trống
+    # không đổi. Một cái lưới đặt trước cái làm rơi thì không đỡ được gì.
+    _khong_de_trong(nhip)
     _rai_khuon(ma, nhip, idx)
     _rai_icon(nhip, ma)
     # ── TẮT LỚP TRANH unDRAW  (5/9/2026) ────────────────────────────────────────────────
