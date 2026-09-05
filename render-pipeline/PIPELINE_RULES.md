@@ -9217,3 +9217,76 @@ logic**:
 ```bash
 find ~/Library/Caches/com.apple.python -name "<ten>*.pyc" -delete
 ```
+
+## 9k4 — 5/9/2026 · HAI VỐN TỪ KHÔNG GẶP NHAU, VÀ TỈ LỆ KHỚP CAO LÀ BẰNG CHỨNG CỔNG SAI
+
+**Triệu chứng.** Kho 117 hình Canva ghép được 13% nhịp cảnh. Phản xạ đầu tiên: kho nhỏ quá,
+đi tải thêm 400 hình.
+
+**Số đo bác lại.** Trong 117 hình chỉ **17 hình từng được dùng một lần**, 100 hình chưa lần
+nào khớp, 6/18 kênh không có hình nào. Và 54/60 chữ đầu của kho không xuất hiện trong bất kỳ
+kịch bản nào — vì hai bên nói hai thứ khác nhau:
+
+```
+kho tả BỨC ẢNH     : holding · businessman · walking · thinking · frustrated · sitting
+kịch bản tả THẾ GIỚI: noon · driveway · fence · rent · tickets · blink
+```
+
+Tải thêm 400 hình cùng tác giả **chỉ thêm hàng chết**. Nút thắt là PHÉP GHÉP, không phải cỡ kho.
+
+**Gốc rễ.** Câu hỏi đang hỏi sai: *"câu có chứa danh từ của hình không"*. Câu trong bộ này rất
+ngắn và phần lớn trừu tượng (*"No breaks."* · *"Now ten people."*), còn hình người chung chung
+được định vị bằng TƯ THẾ và CẢM XÚC. Câu đúng là *"đây có phải cùng một KHOẢNH KHẮC không"*.
+
+**Và bản sửa đầu tiên sai theo hướng ngược.** `TINH_HUONG` (16 khoảnh khắc, khai hai phía) đẩy
+khớp 13% → **57%**. Đọc tay 24 cặp: **14 cặp SAI**, vài cặp sai lố —
+
+| câu | hình ra |
+|---|---|
+| *"So no. Do not walk."* | `gallery museum painting running stolen thief` — một tên trộm |
+| *"Every day. For life."* | `during flood house` — một trận lụt |
+| *"Roughly a week."* | `between money time torn` |
+
+Hình NHIỀU THẺ trúng mọi tình huống một cách tình cờ. **Tỉ lệ khớp 57% là bằng chứng cổng sai,
+không phải cổng tốt** (đúng 13.22).
+
+**Chữa.** Tách hai loại hình, và ranh giới là một phép `set` chứ không phải một danh sách:
+
+```
+hình chỉ có TƯ THẾ + CẢM XÚC (thẻ ⊆ VON_DANG) -> ghép theo tình huống ĐƯỢC
+hình thò ra một danh từ CẢNH                   -> câu BẮT BUỘC phải nhắc đúng danh từ ấy
+```
+
+Cộng chia điểm cho **số thẻ của hình**, để hình ba thẻ thắng hình tám thẻ. Kết quả: 17% khớp,
+đọc tay 12 cặp thì 10 đúng. **17% hình đúng hơn 57% hình sai** (§17.5).
+
+**Họ lỗi.** *Đo hai vốn từ mà không hỏi chúng có nói cùng một thứ không.* Cùng họ 13.5 (*đo
+CHUỖI khi thứ cần đo là NỘI DUNG*), và cùng họ 13.22 (*tỉ lệ bắt cao cũng có thể là bằng chứng
+cổng sai — phải đọc tay các ca nó bắt*).
+
+**Kèm hai chữ hai nghĩa phải bỏ khỏi phía câu** (13.22: *một chữ có hai nghĩa là chữ không dùng
+làm cổng được*): `picture` là lời dẫn *"hãy hình dung X"* chứ không phải trạng thái nghĩ ngợi —
+và câu sau nó luôn có một danh từ cụ thể đáng vẽ hơn; `couple` thì *"a couple of weeks"* áp đảo
+*"cặp đôi"*.
+
+**Đơn hàng đi săn tiếp, đo ra chứ không đoán:** chỉ **18/117** hình là hình chung chung tái
+dùng được. Khoảnh khắc còn thủng: `thoi_gian` 0 hình · `nghi` 1 · `di`/`giay_to`/`mang`/`tien`/
+`vui` mỗi thứ 2. Săn HÌNH NGƯỜI CHUNG CHUNG cho những ô ấy, đừng săn thêm minh hoạ cảnh.
+
+## 9k5 — 5/9/2026 · BẢN KHAI ĐI TỚI ACTIONS, ẢNH THÌ KHÔNG
+
+`engine-remotion/public/**` nằm trong `.gitignore`. Nên `KhoCanva.ts` (bản khai, nằm trong
+`src/`) đi tới runner còn 117 tệp PNG thì không. Python vẫn gán `canva`, engine vẫn trỏ vào
+`staticFile(...)` — **nhân vật biến mất khỏi các nhịp ấy, không lỗi nào báo** (§12.8).
+
+Chữa ở nơi QUYẾT ĐỊNH: `_kho_canva()` lọc bản khai theo **ảnh CÓ MẶT**, không theo bản khai.
+Thử ngược đủ hai chiều (§13.11): đủ ảnh → 117, giấu thư mục ảnh → 0 và in ra lý do.
+
+Đường giao: repo RIÊNG `braydanamilio-spec/mm0-kho-canva` (licence Canva cho DÙNG hình bên
+trong video, không cho phát tán tệp rời — mà `mq-vx-lab` và `mm0-auto-publisher` đều PUBLIC).
+Dùng lại đúng cơ chế checkout-repo-thứ-hai workflow đã có (§13.1), hỏng mềm có chủ ý vì đây là
+bước làm đẹp chứ không phải mắt xích giao hàng (§13.3).
+
+**Một chi tiết suýt hỏng:** bước chép phải đặt SAU mọi `actions/checkout`. Mặc định
+`clean: true` chạy `git clean -ffdx`, thứ **xoá cả tệp bị gitignore** — tức xoá đúng thư mục
+vừa chép vào. Chú thích cảnh báo chuyện này đã nằm sẵn trong workflow từ trước.
