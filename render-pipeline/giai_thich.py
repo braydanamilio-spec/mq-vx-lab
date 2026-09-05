@@ -4486,6 +4486,30 @@ TINH_HUONG: dict[str, tuple[set, set]] = {
 }
 
 
+# ── CHÍNH SÁCH ẢNH: SƠ ĐỒ VẼ BẰNG CODE, CẢNH MỚI DÙNG ẢNH AI ─────────────────────────────
+#
+# Đo 5/9 trên 16 tập dài: 46% số nhịp đặt ảnh CF, và nó chia rất lệch —
+#
+#     canh      67%      so_lieu   96%      mọi khuôn còn lại  0%
+#
+# `so_lieu` là khuôn CON SỐ và BIỂU ĐỒ. Đặt ảnh AI sau lưng một con số là chỗ tệ nhất để
+# dùng ảnh AI: nền ảnh làm con số khó đọc, mỗi tập một chất ảnh khác nhau, và FLUX vẽ chữ
+# số thì sai (§12.7 — số dài có dấu ra 0/2 đúng). Sơ đồ vẽ bằng code thì nét sạch, màu theo
+# kênh, và NHẤT QUÁN TUYỆT ĐỐI giữa mọi tập — mà §12.10 đã đo rằng lệch phong cách giữa các
+# ảnh là đòn bẩy lớn nhất của cả bộ.
+#
+# Nên: họ khuôn SƠ ĐỒ không bao giờ nhận ảnh AI; ảnh AI để dành cho `canh`/`nhom`, nơi cần
+# một nơi chốn thật mà code không vẽ nổi.
+KHUON_SO_DO = ("so_lieu", "chart", "dem", "truc", "chia_doi", "kinh_lup", "the_chu")
+
+
+def _chinh_ti_le_cf(nhip: list) -> None:
+    """Gỡ `ve` khỏi mọi nhịp thuộc họ SƠ ĐỒ. Một chỗ duy nhất, gọi cuối `kich_ban`."""
+    for n in nhip:
+        if (n.get("khuon") or "canh") in KHUON_SO_DO and n.get("ve"):
+            n.pop("ve", None)
+
+
 def _rai_canva(nhip: list, ma: str, idx: int) -> None:
     """Chọn cho mỗi nhịp CẢNH một bức tranh Canva khớp NGHĨA của câu.
 
@@ -4554,6 +4578,19 @@ def _rai_icon(nhip: list, ma: str) -> None:
     fence"* — `fence` mới là thứ câu nói tới, `decides` chỉ là động từ dẫn). Quét từ phải
     sang trái là mã hoá đúng điều đó, và rẻ hơn hẳn mọi phép phân tích cú pháp.
     """
+    # ── 5/9 — TẮT MẶC ĐỊNH: ICON CHỌN TỪ CHỮ TRỪU TƯỢNG RA KÝ HIỆU VÔ NGHĨA ───────────
+    # Soi khung bản demo: một dấu `#` khổng lồ và một mũi tên tròn lơ lửng giữa thành phố.
+    # Đo trên 16 tập: 38 lượt cấp icon, và chữ kích hoạt gần như toàn là ĐỘNG TỪ / TRẠNG TỪ /
+    # danh từ trừu tượng —
+    #
+    #     now(7) · off · once · own · keep · mean · wrong · quit · touch · hold · look · life
+    #
+    # chỉ `bus` là danh từ vẽ được. Đúng §17.5: đồ vật chỉ được lấy từ LỜI, mà những chữ này
+    # không có hình — nên icon khớp được là icon giao diện, và người xem đọc ra "ký hiệu dán
+    # vào cho có". Nhịp không có vật vẽ được thì §17.5 đã chốt: vẽ NGƯỜI, đổi TƯ THẾ.
+    # Bật lại bằng GT_ICON=1 khi nào lọc được theo danh từ cụ thể.
+    if os.environ.get("GT_ICON", "") != "1":
+        return
     kho = _kho_icon()
     if not kho:
         return
@@ -5065,6 +5102,7 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     # SAU `_rai_canh_ve`: nhịp nào nhận được tranh nhập thì bỏ luôn cảnh vẽ code của nó —
     # hai cảnh trong một khung là đúng thứ vừa đi sửa.
     _rai_canva(nhip, ma, idx)
+    _chinh_ti_le_cf(nhip)
     _rai_icon(nhip, ma)
     # ── TẮT LỚP TRANH unDRAW  (5/9/2026) ────────────────────────────────────────────────
     # Tranh unDraw là mảng màu phẳng có bảng màu riêng. Sau khi chốt phong cách NÉT MỰC

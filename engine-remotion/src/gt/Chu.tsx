@@ -28,12 +28,22 @@
    tập, nên để nó cạnh engine thì chỉ có một chỗ khai. Nhưng vẫn phải khai TƯỜNG MINH từng
    kênh — gán vòng tròn thì hai kênh cạnh nhau trong bảng lại trùng phông (§17.3). */
 
+/* 5/9 — TÊN HỌ CHỮ LẤY TỪ CHÍNH TRÌNH NẠP, KHÔNG GHI CỨNG.
+   Bảng cũ ghi `"Archivo, …"` trong khi `Phong.tsx` nạp gói **ArchivoBlack**, mà tên họ chữ
+   thật của gói ấy là "Archivo Black". CSS xin "Archivo" -> không khớp -> rơi âm thầm về
+   `Arial Black` cho 4 kênh (howmuch · speedof · hiddenfee · smallest), và KHÔNG có lỗi nào
+   báo: chữ vẫn hiện, chỉ là hiện bằng phông khác.
+   `Phong.PHONG` suy tên từ chính lời gọi `loadFont()`, nên nó không thể lệch. Một nguồn sự
+   thật, đúng §13.5. */
+import { PHONG } from "../Phong";
+
+const _du = (ten: string, du: string) => `${PHONG[ten] || ten}, ${du}`;
 const HO: Record<string, string> = {
-  poppins: "Poppins, Arial Black, sans-serif",
-  anton:   "Anton, Arial Black, sans-serif",
-  oswald:  "Oswald, Arial Narrow, sans-serif",
-  archivo: "Archivo, Arial Black, sans-serif",
-  rubik:   "Rubik, Arial Black, sans-serif",
+  poppins: _du("poppins", "Arial Black, sans-serif"),
+  anton:   _du("anton",   "Arial Black, sans-serif"),
+  oswald:  _du("oswald",  "Arial Narrow, sans-serif"),
+  archivo: _du("archivo", "Arial Black, sans-serif"),
+  rubik:   _du("rubik",   "Arial Black, sans-serif"),
 };
 
 /* Gán tường minh. 18 kênh trên 5 phông nên trùng là KHÔNG tránh được — khác `DAU_AN` (20 tổ

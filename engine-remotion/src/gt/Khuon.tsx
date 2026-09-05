@@ -1786,8 +1786,17 @@ export const TheChu: React.FC<{
      Nó cũng làm nhịp chốt trông như một tấm biển dán đè lên phim, đúng thứ luật ấy cấm.
      Nay: lời tuyên bố TRÀN KHUNG trên nền màu kênh — đúng cách các kênh Mỹ hàng đầu đóng một ý.
      Màu chữ chọn bằng đo tương phản, vì màu kênh mỗi kênh một độ sáng. */
-  const nenThe = mau;
-  const chuThe = chuHopNen("#FFFFFF", nenThe);
+  /* ── 5/9 — THẺ CHỮ VỀ NỀN GIẤY, MÀU KÊNH CHỈ CÒN Ở HAI VẠCH ────────────────────────────
+     Quyết định 3/9 (*"lời tuyên bố TRÀN KHUNG trên nền màu kênh"*) đúng ở thời của nó, nhưng
+     ngược hướng đã chốt hôm nay: nền giấy · sơ đồ vẽ bằng code · ảnh AI chỉ 27%.
+     Soi khung bản demo: hai nhịp liền nhau là một TẤM TÍM PHỦ KÍN KHUNG — giữa một tập mà mọi
+     khung khác đều tông giấy ấm. Không phải nó xấu tự thân; nó là MẢNG MÀU DUY NHẤT trong tập,
+     nên mắt đọc ra "tấm bìa dán đè lên phim" — đúng thứ §12.12 xếp vào dấu hiệu nghiệp dư.
+     Nay chữ nằm THẲNG TRÊN GIẤY như một trang sách, màu kênh rút về hai vạch trên/dưới. Bản
+     sắc vẫn còn (vạch mang màu kênh, phông mang chất kênh) mà tông cả tập không bị vỡ. */
+  const nenThe = nen;
+  const chuThe = chuHopNen("#2C2722", nenThe);
+  const vachThe = mau;
 
   /* ── SÁU BỐ CỤC, KHÔNG MỘT  (3/9/2026) ──────────────────────────────────────────────────
      Anh gửi hai khung và nói: *"2 loại này a thấy xấu nhàm chán mà nó cứ lặp đi lặp lại cùng
@@ -1993,9 +2002,9 @@ export const TheChu: React.FC<{
         const dK = Math.max(2, H * 0.0022);
         return (<>
           <rect x={W / 2 - rongK / 2} y={H / 2 - caoK / 2 - fs * 0.62}
-                width={rongK * Math.min(1, q * 1.4)} height={dK} fill={chuThe} opacity={0.45} />
+                width={rongK * Math.min(1, q * 1.4)} height={dK} fill={vachThe} opacity={0.9} />
           <rect x={W / 2 - rongK / 2} y={H / 2 + caoK / 2 + fs * 0.30}
-                width={rongK * Math.min(1, q * 1.4)} height={dK} fill={chuThe} opacity={0.45} />
+                width={rongK * Math.min(1, q * 1.4)} height={dK} fill={vachThe} opacity={0.9} />
         </>);
       })()}
       <g transform={`translate(${W / 2} ${H / 2}) scale(${vao})`}>
