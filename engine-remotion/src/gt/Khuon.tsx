@@ -1512,7 +1512,7 @@ export const SoLieu: React.FC<{
                      letterSpacing={2}
                      style={{ filter: tren_anh
                        ? `drop-shadow(0 0 ${H * 0.016}px #000000ee) drop-shadow(0 ${H*0.004}px ${H*0.010}px #000000cc)`
-                       : `drop-shadow(0 ${H*0.003}px ${H*0.009}px #00000099)` }}
+                       : (laGiay() ? undefined : `drop-shadow(0 ${H*0.003}px ${H*0.009}px #00000099)`) }}
                      >{don.toUpperCase()}</text> : null}
       </g>
       {chu ? <text x={kA === 1 ? W * 0.08 : W / 2} y={H * yChu}
@@ -1525,7 +1525,7 @@ export const SoLieu: React.FC<{
                       tách chữ khỏi nét sau lưng mà không thành viền cứng (§12.12). */
                    style={{ filter: tren_anh
                      ? `drop-shadow(0 0 ${H * 0.015}px #000000ee) drop-shadow(0 ${H * 0.004}px ${H * 0.011}px #000000cc)`
-                     : `drop-shadow(0 ${H * 0.003}px ${H * 0.009}px #00000088)` }}>{chu}</text> : null}
+                     : (laGiay() ? undefined : `drop-shadow(0 ${H * 0.003}px ${H * 0.009}px #00000088)`) }}>{chu}</text> : null}
     </g>
   );
 };

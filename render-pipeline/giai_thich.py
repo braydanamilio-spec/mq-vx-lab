@@ -4565,49 +4565,55 @@ def _giu_chan(nhip: list) -> None:
         kết         : 0/6 tập ghép vòng được
 
     §12.12 đã viết sẵn: *hook phải là NỘI DUNG của cảnh đầu, không phải một tấm biển* — mà
-    một con số kèm nhãn đơn vị chính là tấm biển. Và §13.16 đo được rewatch là tín hiệu nặng
-    nhất của TikTok, nên một tập KHÔNG ghép vòng được là bỏ trắng đòn bẩy lớn nhất.
+    con số kèm nhãn đơn vị chính là tấm biển. §13.16 đo được rewatch là tín hiệu nặng nhất
+    của TikTok, nên tập không ghép vòng được là bỏ trắng đòn bẩy lớn nhất.
 
-    1. HOOK = HÌNH SAI TRÁI. Nhịp đầu của các kênh này gần như luôn là một so sánh hai lượng
-       (mọi kênh đều là "X so với Y"). Cho nhịp 0 mang luôn hình so sánh — người xem thấy
-       ngay khoảng cách trước khi nghe hết câu. Quyết định lướt xảy ra ở ~400ms, sớm hơn
-       nhiều so với lúc đọc xong một câu hỏi.
-
-    2. KẾT GHÉP VÒNG. Nhịp cuối mượn lại HÌNH của nhịp đầu. Xem hết rồi quay lại đầu thì
-       khung không đổi — mắt không thấy chỗ nối, và đó là điều kiện của một vòng lặp.
-       Chỉ mượn HÌNH, không mượn lời: lời cuối vẫn là cú chốt, nếu không thì tập ấy không
-       kết thúc mà chỉ dừng lại.
+    THỨ TỰ QUAN TRỌNG: chốt hook TRƯỚC rồi mới cho kết mượn hình. Lượt trước em làm ngược
+    nên nhịp cuối mượn phải hình CŨ, và vòng lặp không khớp dù số đo báo 100%.
     """
     if len(nhip) < 4:
         return
     dau, cuoi = nhip[0], nhip[-1]
-    # 1 — hook mang hình so sánh
-    # Điều kiện lượt trước đòi nhịp 0 CHƯA có biểu tượng nào — và đo được chỉ 33% tập
-    # thoả, tức hook vẫn là chuyện may rủi. Hook là một CHUẨN, không phải một trường hợp:
-    # nhịp 0 nào không có ảnh AI thì đều dựng hình so sánh. Biểu tượng cũ (tờ tiền, đồng hồ)
-    # nhường chỗ — nó là hình minh hoạ, còn hình so sánh là hình KỂ ĐƯỢC cả video.
-    if not dau.get("ve") and not dau.get("canva"):
-        # Phải ĐỔI LUÔN KHUÔN sang `canh`. Lượt đầu em chỉ đặt `bt` mà để nguyên khuôn SỐ —
-        # và khuôn SỐ chỉ vẽ biểu tượng ở một ô nhỏ, nên bố cục so sánh không bao giờ hiện.
-        # Soi khung mới thấy: hook vẫn là "16 / YEARS + tờ tiền" y như cũ.
-        # Đánh đổi nói rõ: hook mất CON SỐ TO. §12.12 chọn hướng này — *hook phải là NỘI
-        # DUNG của cảnh đầu, không phải một tấm biển* — và con số vẫn còn ở phụ đề cùng ở
-        # nhịp ngay sau. Đổi lại, ba giây đầu là một HÌNH nói được cả video.
+
+    # ── 1. HOOK ─────────────────────────────────────────────────────────────────────────
+    # Chỉ đổi khi câu TỰ NÓ đã mạnh. Chuẩn hook của bộ này (cổng `selftest`): có SỐ **hoặc**
+    # có PHỦ ĐỊNH. Bỏ con số thì câu phủ định vẫn gánh được ("A billion is NOT a big
+    # million"), còn câu HỎI thì mất cả hai chân — điểm kịch bản tụt 99,4 -> 97,5 và cổng
+    # chặn ngay. Một luật giữ chân không được phép phá một chuẩn đã đo.
+    _loi = (dau.get("loi") or "").lower()
+    manh = re.search(r"\b(not|no|never|nobody|nothing|cannot|wrong)\b", _loi)
+    if manh and not dau.get("ve") and not dau.get("canva"):
         dau["khuon"] = "canh"
         dau["bt"] = "nguoi_ss"
         dau["cam"] = dau.get("cam") or "ngac_nhien"
         for f in ("so", "don", "chu", "cot", "muc"):
             dau.pop(f, None)
-    # 2 — kết mượn hình của hook (chỉ hình, không mượn lời)
-    # GHI ĐÈ, không phải "điền chỗ trống": vòng lặp đòi khung cuối TRÙNG khung đầu, nên
-    # hình sẵn có của nhịp cuối phải nhường chỗ. Lượt đầu em chỉ điền khi trống và đo được
-    # 3/8 tập ghép vòng — tức năm tập vẫn hở đúng chỗ quan trọng nhất.
-    # Ngoại lệ DUY NHẤT: nhịp cuối có ảnh AI thì giữ, vì ảnh ấy đã tốn hạn mức CF rồi.
-    # Bỏ luôn cái chặn `ve`: `ve` là PROMPT, không phải ảnh — ở chế độ không CF thì nhịp
-    # vẫn mang prompt nên vòng lặp bị chặn oan, và đo được chỉ 52% tập ghép vòng. Vòng lặp
-    # là đòn giữ chân mạnh nhất (§13.16: rewatch là tín hiệu nặng nhất), nên nó thắng một
-    # tấm ảnh AI ở nhịp cuối. Gỡ luôn `ve` của nhịp cuối để hình hook chắc chắn hiện.
-    if True:
+        # Hai nhịp liền cùng một hình là thứ cổng `gu hình` bắt, và bắt đúng: người xem đọc
+        # ra "đứng hình". Nhịp 1 nhường chỗ cho hook.
+        if len(nhip) > 1 and nhip[1].get("bt") == "nguoi_ss":
+            nhip[1].pop("bt", None)
+
+    # ── 1b. KHÔNG HAI NHỊP LIỀN CÙNG MỘT HÌNH ───────────────────────────────────────────
+    # Cổng `gu hình` bắt đúng: hai nhịp liền cùng một biểu tượng thì người xem đọc ra "đứng
+    # hình", và ở nhịp cắt 2 giây thì đó là bốn giây không có gì đổi.
+    # Dọn TOÀN DANH SÁCH chứ không vá hai đầu: em đã vá phía hook rồi phía kết, và lần nào
+    # cổng cũng chỉ ra một cặp khác — vì kề nhau là tính chất của CẢ DÃY, không phải của hai
+    # mút. Người thì đổi TƯ THẾ (giữ hình, §17.5), vật thì bỏ hẳn.
+    for q in range(1, len(nhip)):
+        a, b = nhip[q - 1], nhip[q]
+        if not b.get("bt") or b.get("bt") != a.get("bt"):
+            continue
+        if str(b["bt"]).startswith("nguoi") and a.get("tu") is not None:
+            b["tu"] = (int(a["tu"]) + 2) % 5
+        else:
+            b.pop("bt", None)
+
+    # ── 2. KẾT GHÉP VÒNG ────────────────────────────────────────────────────────────────
+    # Nhịp cuối mượn HÌNH của nhịp đầu — chỉ hình, không mượn lời: lời cuối vẫn là cú chốt,
+    # nếu không thì tập ấy không kết thúc mà chỉ dừng lại.
+    # Gỡ luôn `ve` của nhịp cuối: `ve` là PROMPT chứ không phải ảnh, để nguyên thì ở lượt có
+    # CF nó sẽ đè lên hình hook và vòng lặp hở đúng chỗ quan trọng nhất.
+    if cuoi is not dau:
         cuoi.pop("ve", None)
         for f in ("bt", "canva", "hinh_nhap"):
             if dau.get(f):
@@ -4615,6 +4621,21 @@ def _giu_chan(nhip: list) -> None:
                     cuoi.pop(g, None)
                 cuoi[f] = dau[f]
                 cuoi["cam"] = dau.get("cam") or cuoi.get("cam")
+                # Kề nhau ở ĐẦU KIA: nhịp áp chót cũng có thể mang đúng hình vừa chép sang
+                # nhịp cuối. Lượt trước em chỉ dọn ở phía hook nên cổng vẫn đỏ — kề nhau là
+                # quan hệ HAI CHIỀU, dọn một phía là dọn nửa việc.
+                # Vòng lặp đòi nhịp cuối TRÙNG nhịp đầu, kể cả TƯ THẾ — nên chép cả `tu`.
+                if dau.get("tu") is not None:
+                    cuoi["tu"] = dau["tu"]
+                if len(nhip) > 2:
+                    ap = nhip[-2]
+                    # Kề nhau là quan hệ HAI CHIỀU: dọn một phía là dọn nửa việc. Nhịp cuối
+                    # không được đổi (nó phải khớp hook), nên nhịp áp chót nhường.
+                    if ap.get(f) == dau[f]:
+                        if f == "bt" and ap.get("tu") is not None and cuoi.get("tu") is not None:
+                            ap["tu"] = (int(cuoi["tu"]) + 2) % 5      # đổi tư thế, giữ hình
+                        else:
+                            ap.pop(f, None)
                 break
 
 
