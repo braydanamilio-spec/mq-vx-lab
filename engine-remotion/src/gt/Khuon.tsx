@@ -175,8 +175,8 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
          KHÔNG TÔ GÌ CẢ — họ thắng bằng nét và biểu cảm.                                   */
       /* 5/9 — NÉT MẢNH HƠN. Anh: *"nhân vật kiểu thô thiển xấu"*. Nét 0,017 trên một
          hình cao 0,9 đọc ra bút dạ bản to; ảnh mẫu dùng nét mảnh và ĐỀU. */
-      const w = k(0.0125);
-      const wM = k(0.0092);
+      const w = k(0.0165);          // dày hơn theo yêu cầu — nét đậm đọc chắc hơn
+      const wM = k(0.0120);
 
       /* Nhiễu TẤT ĐỊNH: cùng một nhân vật ở cùng tư thế luôn run giống hệt nhau, nên hình
          không "sôi" giữa các khung. Viết phép băm ra tường minh — `Math.random` thì mỗi
@@ -194,7 +194,14 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
           const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
           const dx = x1 - x0, dy = y1 - y0;
           const len = Math.sqrt(dx * dx + dy * dy) || 1;
-          const o = rnd(key * 13 + i) * len * 0.09;
+          /* 5/9 — 0,09 -> 0,025. Anh: *"nét vẽ và tỉ lệ xem lại"*. Đo trên ảnh mẫu: tay
+             và chân gần như THẲNG, chỉ lệch rất nhẹ. Biên độ 9% làm mỗi chi cong hẳn một
+             bên — mắt đọc ra "run tay", không đọc ra "vẽ tay". Nét vẽ tay đẹp là nét TỰ
+             TIN: đi thẳng, chỉ sai một chút ở chỗ nối. */
+          /* 5/9 (lần hai) — 0,025 -> 0,007. Anh vẫn thấy "tay run". Ở nét mảnh thì 2,5%
+             chiều dài đã đủ để mắt bắt được độ cong; nét vẽ tay ĐẸP là nét gần như thẳng,
+             chỉ sai ở đầu mút. Giữ một chút để nó không thành đường máy tính. */
+          const o = rnd(key * 13 + i) * len * 0.007;
           d += ` Q ${(x0 + x1) / 2 - (dy / len) * o} ${(y0 + y1) / 2 + (dx / len) * o} ${x1} ${y1}`;
         }
         return d;
@@ -226,31 +233,51 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
 
          Bản cũ: đầu 33% · thân 29% — ĐẦU TO HƠN THÂN, đó là toàn bộ cảm giác "thô".
          Ảnh mẫu có thêm hai thứ bản cũ không có: một cái CỔ nhìn thấy được, và CHÂN DÀI.  */
-      const vaiY = -k(0.133);         // vai — thấp hơn đáy đầu một đoạn, tạo ra cái CỔ
+      const vaiY = -k(0.168);         // tay mọc NGAY DƯỚI CẰM — ảnh mẫu không có vai
       const hong = k(0.185);          // hông
       const dauY = -k(0.309), dauR = k(0.126);
 
-      /* Năm tư thế — toạ độ giữ nguyên bản cũ, chỉ đổi điểm BẮT ĐẦU về trục thân (x = 0),
-         vì bỏ áo rồi thì không còn bờ vai để tay mọc ra. */
+      /* ── NĂM TƯ THẾ, MỖI CHI LÀ MỘT NÉT THẲNG  (5/9/2026) ────────────────────────────
+         Anh: *"stick nó đâu vẽ khớp giống e đâu"*. Đo lại ảnh mẫu: mỗi cánh tay là MỘT
+         đoạn thẳng từ dưới cằm tới bàn tay — không có khuỷu, không có bờ vai. Bản cũ khai
+         BA điểm mỗi chi nên luôn có một chỗ gập, và chỗ gập ấy là thứ làm hình đọc ra
+         "người máy" thay vì "nét vẽ tay".
+         Năm tư thế lấy thẳng từ năm ảnh anh gửi:
+           0 buông xuôi · 1 giơ tay chào · 2 dang ngang · 3 bước đi · 4 chỉ về trước       */
+      /* ── TAY BUÔNG THÌ THẲNG, TAY LÀM ĐỘNG TÁC THÌ CÓ KHUỶU  (5/9/2026) ──────────────
+         Anh: *"tay thẳng thì ko có khuỷu tay, còn tay thực hiện hành động tư thế thì vẫn
+         có khuỷu tay"*. Soi lại năm ảnh mẫu thì đúng thế, không có ngoại lệ:
+
+             tay buông / dang ngang  -> MỘT nét thẳng, không khuỷu
+             tay giơ chào            -> khuỷu: ra ngang rồi gập LÊN
+             tay cầm/chỉ             -> khuỷu: xuống chéo rồi đưa RA TRƯỚC
+
+         Bản trước em làm thẳng HẾT cả năm tư thế — sửa quá tay theo hướng ngược lại. Một
+         cánh tay giơ mà không có khuỷu thì nó là cái que chĩa lên, không phải động tác. */
       const TAY: number[][][][] = [
-        [[[0, vaiY + k(0.02)], [-k(0.185), k(0.045)], [-k(0.155), k(0.16)]],
-         [[0, vaiY + k(0.02)], [k(0.195), k(0.035)], [k(0.172), k(0.145)]]],
-        [[[0, vaiY + k(0.02)], [-k(0.175), k(0.060)], [-k(0.150), k(0.16)]],
-         [[0, vaiY + k(0.02)], [k(0.185), -k(0.140)], [k(0.205), -k(0.300)]]],
-        [[[0, vaiY + k(0.04)], [-k(0.140), k(0.080)], [-k(0.132), k(0.215)]],
-         [[0, vaiY + k(0.04)], [k(0.140), k(0.080)], [k(0.132), k(0.215)]]],
-        [[[0, vaiY + k(0.02)], [-k(0.215), -k(0.010)], [-k(0.255), -k(0.090)]],
-         [[0, vaiY + k(0.02)], [k(0.215), -k(0.010)], [k(0.255), -k(0.090)]]],
-        [[[0, vaiY + k(0.02)], [-k(0.165), k(0.070)], [-k(0.148), k(0.180)]],
-         [[0, vaiY + k(0.03)], [k(0.230), k(0.010)], [k(0.320), k(0.020)]]],
+        // 0 — buông xuôi: thẳng
+        [[[0, vaiY], [-k(0.105), k(0.190)]],
+         [[0, vaiY], [k(0.105), k(0.190)]]],
+        // 1 — giơ tay chào: tay phải CÓ KHUỶU (ra ngang rồi gập lên), tay trái buông thẳng
+        [[[0, vaiY], [-k(0.098), k(0.185)]],
+         [[0, vaiY], [k(0.185), vaiY + k(0.150)], [k(0.205), vaiY - k(0.130)]]],
+        // 2 — dang ngang: thẳng cả hai
+        [[[0, vaiY], [-k(0.250), -k(0.010)]],
+         [[0, vaiY], [k(0.250), -k(0.010)]]],
+        // 3 — bước đi: thẳng, vung lệch pha
+        [[[0, vaiY], [-k(0.165), k(0.130)]],
+         [[0, vaiY], [k(0.150), k(0.060)]]],
+        // 4 — chỉ về trước: tay phải CÓ KHUỶU (xuống chéo rồi đưa ra trước)
+        [[[0, vaiY], [-k(0.100), k(0.185)]],
+         [[0, vaiY], [k(0.130), k(0.135)], [k(0.285), k(0.110)]]],
       ];
       const t5 = ((tu % 5) + 5) % 5;
       const buoc = t5 === 3 || t5 === 4;
       const CHAN: number[][][] = buoc
-        ? [[[0, hong], [-k(0.140), k(0.38)], [-k(0.155), k(0.545)]],
-           [[0, hong], [k(0.110), k(0.38)], [k(0.080), k(0.545)]]]
-        : [[[0, hong], [-k(0.070), k(0.38)], [-k(0.052), k(0.545)]],
-           [[0, hong], [k(0.070), k(0.38)], [k(0.052), k(0.545)]]];
+        ? [[[0, hong], [-k(0.150), k(0.545)]],
+           [[0, hong], [k(0.092), k(0.545)]]]
+        : [[[0, hong], [-k(0.062), k(0.545)]],
+           [[0, hong], [k(0.062), k(0.545)]]];
 
       return (<g>
         {/* THÂN là MỘT NÉT, không phải một cái áo. Đây là thay đổi lớn nhất so với bản cũ. */}

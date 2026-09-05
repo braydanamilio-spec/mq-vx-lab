@@ -224,10 +224,19 @@ const PhuDe: React.FC<{ tu: any[]; t: number; W: number; H: number; mau: string;
              kraft thì đen kịt đọc ra "dán chữ máy tính lên giấy", còn vàng chói thì loè.
              Mực thật trên giấy không bao giờ đen tuyệt đối: `#2A241C` là nâu-đen của mực,
              và chữ nhấn lấy chính màu kênh nên nhấn cũng là bản sắc. */
+          /* 5/9 — KARAOKE VÀNG. Anh: *"karaoke text chữ vàng khi chạy"*.
+             Chữ đang đọc chuyển VÀNG, các chữ khác giữ mực nâu-đen. Trên giấy nâu sáng
+             (#EAD7C0, độ sáng 218) thì vàng thuần `#FFD400` gần như tàng hình — hai màu
+             cùng sáng. Nên vàng phải ĐẬM hơn giấy (`#E8A000`, sáng ~168) và có một viền
+             mực rất mảnh: viền làm chữ tách khỏi nền mà không biến nó thành khối đen. */
           const mucThuong = laGiay() ? "#2A241C" : (sang ? "#14161C" : "#FFFFFF");
-          const mucDoc = laGiay() ? mau : (sang ? "#8A4B00" : "#FFD400");
+          const mucDoc = laGiay() ? "#E8A000" : (sang ? "#8A4B00" : "#FFD400");
           return cua.map((w, k) => (
-            <span key={k} style={{ color: a + k === i ? mucDoc : mucThuong }}>{w.w}</span>
+            <span key={k} style={{
+              color: a + k === i ? mucDoc : mucThuong,
+              /* viền chỉ cho chữ ĐANG ĐỌC — chữ thường không cần vì mực đã tương phản cao */
+              WebkitTextStroke: (a + k === i && laGiay()) ? `${Math.max(1, H * 0.0016)}px #4A3A18` : undefined,
+            }}>{w.w}</span>
           ));
         })()}
       </div>

@@ -74,11 +74,36 @@ const _run = (x1: number, y1: number, x2: number, y2: number, bien: number, hat:
    chuyện tranh cảnh tô màu chửi nhau với nền.
    Giữ nguyên tên `TrangGiay` và công tắc `datGiay` để không phải sửa 21 chỗ gọi — thứ đổi
    là BỀ MẶT, không phải kiến trúc. Bảng kraft vẫn nằm trong lịch sử git nếu cần lấy lại. */
+/* ── 5/9 (chốt lại) — GIẤY NÂU SÁNG, MÀU ĐO TỪ 20 TẤM ANH NHẤN SAO ────────────────────
+   Anh: *"nền trắng hơi rẻ tiền, e làm nền brown paper"*.
+   Không đoán màu nữa: em tải 20 tấm anh đã nhấn sao trên Canva rồi đo pixel —
+
+       trung bình RGB (234, 215, 192) · độ sáng 218 · nhám (độ lệch) 6,7
+
+   Đó là lý do bảng kraft trước anh chê TỐI: em dùng #C9A87C (sáng ~170), tối hơn gu anh
+   chọn tới 48 mức. Nay lấy đúng con số đo được, và giữ nhám ở mức thấp đúng như đo. */
 export const TrangGiay: React.FC<{
   W: number; H: number; nen: string; mau: string; hat?: number;
-}> = ({ W, H }) => (
-  <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
-       style={{ position: "absolute", left: 0, top: 0 }}>
-    <rect x={0} y={0} width={W} height={H} fill="#FFFFFF" />
-  </svg>
-);
+}> = ({ W, H, hat = 0 }) => {
+  const id = `g${Math.abs(hat) % 89}`;
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
+         style={{ position: "absolute", left: 0, top: 0 }}>
+      <defs>
+        <filter id={`${id}t`} x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" seed={hat % 50} />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <filter id={`${id}v`} x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.007" numOctaves="3" seed={(hat + 9) % 50} />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+      </defs>
+      <rect x={0} y={0} width={W} height={H} fill="#EAD7C0" />
+      <rect x={0} y={0} width={W} height={H} filter={`url(#${id}v)`}
+            opacity={0.06} style={{ mixBlendMode: "multiply" }} />
+      <rect x={0} y={0} width={W} height={H} filter={`url(#${id}t)`}
+            opacity={0.13} style={{ mixBlendMode: "multiply" }} />
+    </svg>
+  );
+};
