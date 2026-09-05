@@ -655,7 +655,14 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                              Đúng họ lỗi §6 *chép hằng số sang hệ quy chiếu khác* — không báo
                              lỗi, chỉ làm hình sai. Cộng lại đúng lượng đã trừ. */
                           <g transform={`translate(0 ${sz * DAY_HINH})`}>
-                            <IconVe tu={String((N as any).icon)} s={sz * 0.96} p={p / 0.26}
+                            {/* ── ICON LÀ ĐẠO CỤ, KHÔNG PHẢI CHỦ THỂ  (5/9/2026) ─────────────────
+                              `sz` là cỡ của CHỦ THỂ (nhân vật cao 45% khung). Cho icon mượn
+                              nguyên cỡ ấy thì cái cây, cái phong bì choán nửa khung và đọc
+                              ra một biểu tượng ứng dụng phóng to, không đọc ra một cảnh.
+                              Ảnh mẫu: đạo cụ cao bằng khoảng nửa nhân vật và ĐỨNG CẠNH, vì
+                              nó là thứ nhân vật nói tới chứ không phải nhân vật.
+                              Đúng §6 — mượn một giá trị cho việc nó không sinh ra để làm. */}
+                          <IconVe tu={String((N as any).icon)} s={sz * 0.50} p={p / 0.26}
                                     mau={mau} mauPhu={mauPhu} />
                           </g>
                         ) : (

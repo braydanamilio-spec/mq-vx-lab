@@ -264,51 +264,34 @@ const _bang = (nen: string, mau: string, mauPhu: string, am: number): Bang => ({
      Đây đúng bài học "đo lại sau khi sửa": bản vá thứ nhất đúng hướng và sai đòn bẩy. */
   troi:   _dam(_pha(_tron(nen, mau, 0.05 + am * 0.02), 0.14), 1.30),
   troiD:  _dam(_pha(_tron(nen, mau, 0.08 + am * 0.03), 0.00), 1.45),
-  xa:     _dam(_pha(_tron(nen, mau, 0.09), -0.04), 1.55),
-  giua:   _dam(_pha(_tron(nen, mau, 0.12), -0.12), 1.55),
-  gan:    _vat(0, nen, mau),          // vật ở gần — gỗ, xem `VAT_LIEU`
-  vat2:   _vat(1, nen, mau),
-  vat3:   _vat(2, nen, mau),
-  vat4:   _vat(3, nen, mau),
-  san:    _dam(_pha(_tron(nen, mau, 0.10), -0.04), 1.35),   // bỏ nền chia — xem `NenPhong.san`
+  /* ── ĐỒ VẬT LÀ NÉT, KHÔNG PHẢI MẢNG MÀU  (5/9/2026) ──────────────────────────────────
+     Sau khi chốt chuẩn mực-trên-giấy, những mảng màu này thành chất liệu thứ hai: nhân vật
+     vẽ bằng nét, đồ đạc là khối màu pastel không viền. Soi khung thấy ngay hai lớp dán lên
+     nhau — §12.10 đã đo rằng lệch phong cách là đòn bẩy lớn hơn hẳn màu sắc.
+     Ảnh mẫu của các kênh trăm triệu view: mọi đồ vật đều là NÉT MỰC, ruột để giấy lộ qua,
+     chỉ vài chỗ nhỏ tô đặc làm điểm nhấn. Nên ruột đồ vật nay gần bằng màu giấy — nét mực
+     do thẻ `<g stroke>` ở dưới lo, đã có sẵn. */
+  xa:     _pha(nen, 0.03),
+  giua:   _pha(nen, -0.02),
+  gan:    _pha(nen, -0.06),
+  vat2:   _pha(nen, 0.05),
+  vat3:   _pha(nen, -0.04),
+  vat4:   _pha(nen, -0.09),
+  /* Điểm nhấn giữ màu kênh — đây là chỗ DUY NHẤT trong cảnh có màu, nên nó hút mắt đúng
+     như cái cà vạt tô đen trong ảnh mẫu. Một khung một điểm nhấn. */
+  nhan:   _pha(_tron(nen, mauPhu || mau, 0.55), -0.10),
+  /* ── BA MÀU MẶT SÀN — KHÔI PHỤC  (5/9/2026) ─────────────────────────────────────────
+     Lượt sửa "đồ vật thành nét" ngay trên đây thay cả khối từ `xa:` tới `nhan:`, và XOÁ
+     NHẦM ba khoá này. TypeScript không kêu vì `Bang` nhận thiếu khoá qua phép ép kiểu ở
+     `_sacHoa`, nên nó hỏng LÚC CHẠY: `fill={undefined}` cho ra ĐEN, và đáy khung thành
+     một dải đen chiếm một phần ba.
+     Đúng họ lỗi §15.2 — thay một khối lớn thì phải đếm lại khoá trước và sau. Nếu chỉ nhìn
+     mã thì khối mới đọc rất gọn gàng; chỉ khung dựng ra mới nói thật.
+     Ba chặng phải SẪM DẦN, không được đảo chiều: `sangDayCanh` đọc chính `sanDay` để bảo
+     engine chọn mực phụ đề (§ chú thích dài ở bản trước). */
+  san:    _dam(_pha(_tron(nen, mau, 0.10), -0.04), 1.35),
   sanD:   _dam(_pha(_tron(nen, mau, 0.12), -0.07), 1.35),
-  /* ── ĐÁY KHUNG SÁNG LÊN: −0,70 → −0,22  (4/9/2026) ────────────────────────────────────
-     Anh xem và nói *"nó hơi tối và xấu thiếu chuyên nghiệp"*. Đo pixel ba khung:
-
-         trời/tường 0-35%   sáng 74–87%
-         giữa      35-70%   sáng 72–74%
-         sàn       70-85%   sáng 57–71%
-         ĐÁY       85-100%  sáng **34–40%**     <- một dải bùn nâu chiếm 15% MỌI khung
-
-     Dải ấy không phải lỗi vẽ — nó là bản vá cho phụ đề: chữ TRẮNG cần nền dưới ~118/255
-     mới đạt 4,5:1 (WCAG AA). Tức là ta đang làm tối một phần bảy mỗi khung để cứu hai dòng
-     chữ. Tra chuẩn nghề thì cách ấy đứng cuối bảng: hộp nền > viền chữ > bóng đổ, và bóng
-     đổ đơn thuần THẤT BẠI trên nền sáng — nên dự án bù bằng cách hạ nền xuống.
-
-     Nhưng engine ĐÃ có lối ra đúng: `PhuDe` tự đổi sang MỰC TỐI + quầng trắng khi nền sáng
-     (`sangNen >= 170`). Nó chỉ chưa bao giờ chạy cho cảnh vẽ code, vì `sangDay` chỉ được đo
-     trên tệp ảnh CF — không có ảnh thì `sangNen = -1` và nhánh mực trắng luôn thắng.
-     Đúng họ lỗi số 6: cơ chế có, một nhánh dùng, nhánh song song bỏ quên.
-
-     Nay `sangDayCanh` cho engine biết độ sáng đáy của cảnh vẽ code, nên sàn được sáng trở
-     lại và phụ đề tự chọn mực. −0,22 giữ đủ chênh lệch để đáy khung vẫn "nặng" hơn chân
-     trời (thiếu nó thì khung trôi), mà không còn là một mảng bùn. */
-  /* ── DẢI SÀN PHẢI SẪM DẦN, KHÔNG ĐƯỢC ĐẢO CHIỀU  (4/9/2026, sau khi cổng bắt) ──────────
-     Khi nâng bão hoà em đổi tỉ lệ pha của `san` (0,22 -> 0,38) và `sanD` (0,26 -> 0,44) mà
-     **để nguyên `sanDay` ở 0,30**. Ba chặng của dải sàn thành 0,38 -> 0,44 -> 0,30: nó sẫm
-     rồi **sáng trở lại ở đúng đáy khung** — chỗ phụ đề nằm.
-
-     Cổng `kiem_hinh` bắt ngay: bản dài `howlong` **87/100**, tương phản phụ đề **1,7:1** trên
-     sàn 4,5:1. Đo tay ba khung: 1,0 · 1,3 · 1,5:1 — chữ trắng trên nền gần trắng.
-
-     Bài học của chính bản vá này: đổi một mắt trong một dãy có THỨ TỰ thì phải đổi cả dãy.
-     Ba giá trị ấy không phải ba tham số độc lập — chúng là ba chặng của một gradient, và
-     quan hệ giữa chúng (sẫm dần) mới là thứ mã hoá ý định. `sangDayCanh` đọc chính giá trị
-     này để bảo engine chọn mực phụ đề, nên sai ở đây làm sai luôn cả phép chọn mực.
-
-     Giữ đúng thứ tự: 0,38 -> 0,44 -> 0,56, và sẫm thêm ở chặng cuối. */
   sanDay: _dam(_pha(_tron(nen, mau, 0.15), -0.11), 1.35),
-  nhan:   _pha(_vat(2, nen, mauPhu || mau), -0.16),   // điểm nhấn — đất nung
 });
 
 type P = { W: number; H: number; san: number; c: Bang; hat: number; r: number[] };
