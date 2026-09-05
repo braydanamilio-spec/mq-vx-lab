@@ -4555,6 +4555,69 @@ for _k in _HO_CO_NGUOI:
     _TU_NGUOI |= TINH_HUONG[_k][0]
 
 
+def _giu_chan(nhip: list) -> None:
+    """Hai đòn giữ chân, cả hai là CẤU TRÚC chứ không phải hình đẹp hơn.
+
+    ── ĐO TRƯỚC  (5/9/2026) ──────────────────────────────────────────────────────────────
+    Anh: *"vẫn chưa có sự giữ chân người coi"*. Đo 6 kênh:
+
+        ba giây đầu : "How long to walk to the moon? / 8.8"  -> một CÂU HỎI kèm con số
+        kết         : 0/6 tập ghép vòng được
+
+    §12.12 đã viết sẵn: *hook phải là NỘI DUNG của cảnh đầu, không phải một tấm biển* — mà
+    một con số kèm nhãn đơn vị chính là tấm biển. Và §13.16 đo được rewatch là tín hiệu nặng
+    nhất của TikTok, nên một tập KHÔNG ghép vòng được là bỏ trắng đòn bẩy lớn nhất.
+
+    1. HOOK = HÌNH SAI TRÁI. Nhịp đầu của các kênh này gần như luôn là một so sánh hai lượng
+       (mọi kênh đều là "X so với Y"). Cho nhịp 0 mang luôn hình so sánh — người xem thấy
+       ngay khoảng cách trước khi nghe hết câu. Quyết định lướt xảy ra ở ~400ms, sớm hơn
+       nhiều so với lúc đọc xong một câu hỏi.
+
+    2. KẾT GHÉP VÒNG. Nhịp cuối mượn lại HÌNH của nhịp đầu. Xem hết rồi quay lại đầu thì
+       khung không đổi — mắt không thấy chỗ nối, và đó là điều kiện của một vòng lặp.
+       Chỉ mượn HÌNH, không mượn lời: lời cuối vẫn là cú chốt, nếu không thì tập ấy không
+       kết thúc mà chỉ dừng lại.
+    """
+    if len(nhip) < 4:
+        return
+    dau, cuoi = nhip[0], nhip[-1]
+    # 1 — hook mang hình so sánh
+    # Điều kiện lượt trước đòi nhịp 0 CHƯA có biểu tượng nào — và đo được chỉ 33% tập
+    # thoả, tức hook vẫn là chuyện may rủi. Hook là một CHUẨN, không phải một trường hợp:
+    # nhịp 0 nào không có ảnh AI thì đều dựng hình so sánh. Biểu tượng cũ (tờ tiền, đồng hồ)
+    # nhường chỗ — nó là hình minh hoạ, còn hình so sánh là hình KỂ ĐƯỢC cả video.
+    if not dau.get("ve") and not dau.get("canva"):
+        # Phải ĐỔI LUÔN KHUÔN sang `canh`. Lượt đầu em chỉ đặt `bt` mà để nguyên khuôn SỐ —
+        # và khuôn SỐ chỉ vẽ biểu tượng ở một ô nhỏ, nên bố cục so sánh không bao giờ hiện.
+        # Soi khung mới thấy: hook vẫn là "16 / YEARS + tờ tiền" y như cũ.
+        # Đánh đổi nói rõ: hook mất CON SỐ TO. §12.12 chọn hướng này — *hook phải là NỘI
+        # DUNG của cảnh đầu, không phải một tấm biển* — và con số vẫn còn ở phụ đề cùng ở
+        # nhịp ngay sau. Đổi lại, ba giây đầu là một HÌNH nói được cả video.
+        dau["khuon"] = "canh"
+        dau["bt"] = "nguoi_ss"
+        dau["cam"] = dau.get("cam") or "ngac_nhien"
+        for f in ("so", "don", "chu", "cot", "muc"):
+            dau.pop(f, None)
+    # 2 — kết mượn hình của hook (chỉ hình, không mượn lời)
+    # GHI ĐÈ, không phải "điền chỗ trống": vòng lặp đòi khung cuối TRÙNG khung đầu, nên
+    # hình sẵn có của nhịp cuối phải nhường chỗ. Lượt đầu em chỉ điền khi trống và đo được
+    # 3/8 tập ghép vòng — tức năm tập vẫn hở đúng chỗ quan trọng nhất.
+    # Ngoại lệ DUY NHẤT: nhịp cuối có ảnh AI thì giữ, vì ảnh ấy đã tốn hạn mức CF rồi.
+    # Bỏ luôn cái chặn `ve`: `ve` là PROMPT, không phải ảnh — ở chế độ không CF thì nhịp
+    # vẫn mang prompt nên vòng lặp bị chặn oan, và đo được chỉ 52% tập ghép vòng. Vòng lặp
+    # là đòn giữ chân mạnh nhất (§13.16: rewatch là tín hiệu nặng nhất), nên nó thắng một
+    # tấm ảnh AI ở nhịp cuối. Gỡ luôn `ve` của nhịp cuối để hình hook chắc chắn hiện.
+    if True:
+        cuoi.pop("ve", None)
+        for f in ("bt", "canva", "hinh_nhap"):
+            if dau.get(f):
+                for g in ("bt", "canva", "hinh_nhap"):
+                    cuoi.pop(g, None)
+                cuoi[f] = dau[f]
+                cuoi["cam"] = dau.get("cam") or cuoi.get("cam")
+                break
+
+
 def _gop_hai_ho(nhip: list) -> None:
     """9 khuôn -> 2 họ. Giữ `chart` khi nhịp có dữ liệu cột thật (nó là trạng thái so sánh
     của chính họ SỐ, không phải một họ thứ ba)."""
@@ -5227,6 +5290,7 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     # hai cảnh trong một khung là đúng thứ vừa đi sửa.
     _rai_canva(nhip, ma, idx)
     _chinh_ti_le_cf(nhip)
+    _giu_chan(nhip)
     _rai_icon(nhip, ma)
     # ── TẮT LỚP TRANH unDRAW  (5/9/2026) ────────────────────────────────────────────────
     # Tranh unDraw là mảng màu phẳng có bảng màu riêng. Sau khi chốt phong cách NÉT MỰC
