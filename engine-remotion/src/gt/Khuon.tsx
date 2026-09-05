@@ -27,6 +27,7 @@ import { TrangGiay, laGiay } from "./TrangGiay";
 /* Phông đọc TẠI CHỖ VẼ, không cache — xem `Chu.tsx`. `F()` chứ không `F`: một hằng
    đọc lúc nạp mô-đun sẽ khoá cứng phông của kênh dựng ĐẦU TIÊN. */
 import { chu } from "./Chu";
+import { TuVe } from "./TuVe";
 const F = () => chu();
 
 /* Biểu tượng vẽ bằng code. Cố ý ít và thô: mỗi cái phải đọc được ở 1/6 chiều ngang khung trên
@@ -45,14 +46,24 @@ const F = () => chu();
 const AO = ["#3E5A78", "#A65A3C", "#5E7A4A", "#7A4A63"];
 
 export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: number;
-                                   nv?: number; cam?: string }> =
-({ ten, s, mau = "#2C2722", tu = 0, nv = 0, cam = "" }) => {
+                                   nv?: number; cam?: string; p?: number }> =
+({ ten, s, mau = "#2C2722", tu = 0, nv = 0, cam = "", p = 1 }) => {
+  /* ── 5/9 — NÉT TỰ VẼ PHẢI BỌC Ở ĐÂY, KHÔNG PHẢI Ở NƠI GỌI ────────────────────────────
+     Rà soát: mọi nơi gọi đều bọc `<TuVe p={...}><BieuTuong .../></TuVe>` — và KHÔNG MỘT
+     NHỊP NÀO có vẽ dần. Đo trên khung thật: nhân vật hiện ĐẦY ĐỦ ở 3% tiến độ nhịp, y hệt
+     ở 83%. Gốc: `TuVe.di()` chỉ đệ quy vào THẺ SVG NGUYÊN THUỶ (`path`/`circle`/...) —
+     `BieuTuong` là một COMPONENT (hàm), nên `typeof kieu === "string"` sai ngay từ bước
+     đầu, và `di()` trả nguyên bản không đổi gì. Bọc TuVe BÊN NGOÀI một component không vẽ
+     được gì; nó chỉ vẽ được khi đứng NGAY CẠNH thẻ SVG thật. Đây đúng họ lỗi "cơ chế đã có
+     mà chưa ai gọi" (§13.1) — chỉ là ở đây cơ chế được gọi SAI VỊ TRÍ, không phải bị quên.
+     Chuyển `p` vào làm PROP của chính `BieuTuong`, bọc `TuVe` ở nơi mọi thứ trả về ĐỀU LÀ
+     thẻ SVG thô — tức bên trong hàm này, không phải ở lời gọi nó. */
   const k = (v: number) => v * s;
   const n = Math.max(2, s * 0.055);
   const P = (d: string, f = "none", w = 1) => (
     <path d={d} fill={f} stroke={mau} strokeWidth={n * w} strokeLinejoin="round" strokeLinecap="round" />
   );
-  switch (ten) {
+  const _hinh = (() => { switch (ten) {
     /* ── MƯỜI HÌNH THÊM 1/9 ─────────────────────────────────────────────────────────────────
        Bộ cũ có 13 hình cho tất cả bảng dữ liệu, nên hình bị gán theo CÁI GẦN NHẤT CÒN TRỐNG và
        nói sai chuyện ở phần lớn trường hợp. Đo được mức chồng lấn:
@@ -448,7 +459,8 @@ export const BieuTuong: React.FC<{ ten: string; s: number; mau?: string; tu?: nu
     case "hop":  return <g>{P(`M ${-k(0.4)} ${-k(0.2)} h ${k(0.8)} v ${k(0.56)} h ${-k(0.8)} Z`, "#C9A06A")}
       {P(`M ${-k(0.44)} ${-k(0.34)} h ${k(0.88)} v ${k(0.14)} h ${-k(0.88)} Z`, "#B08A56")}</g>;
     default:     return <circle cx="0" cy="0" r={k(0.36)} fill={mau} opacity={0.25} />;
-  }
+  } })();
+  return <TuVe p={p}>{_hinh}</TuVe>;
 };
 
 /* ── KHUÔN 2: CHIA ĐÔI ────────────────────────────────────────────────────────────────────

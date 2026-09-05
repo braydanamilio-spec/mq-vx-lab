@@ -719,11 +719,13 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                                     mau={mau} mauPhu={mauPhu} />
                           </g>
                         ) : (
-                          <TuVe p={p / 0.26}>
-                            <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
-                                       nv={(N as any)?.nv ?? 0}
-                                       cam={String((N as any)?.cam || "")} />
-                          </TuVe>
+                          /* `p` truyền THẲNG vào BieuTuong, không bọc TuVe ở đây nữa —
+                             xem chú thích trong `Khuon.tsx`: bọc ngoài một component không
+                             vẽ được gì, vì TuVe chỉ đệ quy vào thẻ SVG thô. */
+                          <BieuTuong ten={btVe} s={sz} tu={(N as any)?.tu ?? 0}
+                                     nv={(N as any)?.nv ?? 0}
+                                     cam={String((N as any)?.cam || "")}
+                                     p={p / 0.26} />
                         )}
                       {/* ── ÁNH SÁNG PHỦ LÊN CHỦ THỂ  (4/9/2026) ─────────────────────────
                           Bốn ảnh anh gửi: ba người ngồi quanh lửa đều có **viền cam trên
