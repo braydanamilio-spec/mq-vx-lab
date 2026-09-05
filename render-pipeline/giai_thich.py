@@ -4174,6 +4174,26 @@ NOI_KENH: dict[str, tuple[str, ...]] = {
 KHUON_PHU = ("so_lieu", "nhom")
 KHUON_SO_DO = ("dem", "kinh_lup")
 
+# ── KHUÔN TỰ VẼ ĐỒ HOẠ THÌ KHÔNG NHẬN *CẢNH VẼ CODE*  (5/9/2026) ────────────────────────
+# Anh soi khung THE RULES nhịp 5: một khối số liệu và một nhân vật đứng trước **cả một cảnh
+# kho đầy tủ**. Ba bức tranh trong một khung.
+#
+# `so_lieu` nằm trong `KHUON_PHU` nên nó luôn được cấp nền — và điều đó ĐÚNG cho nền ẢNH:
+# ảnh CF là bề mặt mềm, `SoLieu` đã có sẵn dải chuyển tối phủ lên (`tren_anh`) nên con số
+# vẫn đọc được và bức ảnh vẫn làm nền. Nhưng `canh_ve` là bề mặt **nét mực đen, mảng màu
+# đặc** — không có dải nào phủ lên nó, và mọi vật trong cảnh đều tranh chỗ với khối số.
+#
+# Đúng §12.5 lần nữa: *"khuôn này được cấp nền"* là một luật đúng ở ngữ cảnh nền ảnh, và sai
+# khi đem sang ngữ cảnh nền vẽ. Hai loại nền không thay thế nhau được chỉ vì cùng nằm phía
+# sau.
+#
+# Phản xạ đầu của em là DÌM cảnh xuống sau chủ thể bằng một cái đĩa mờ. Đó là vá triệu
+# chứng: nó không bỏ bức tranh thứ ba đi, nó chỉ làm mờ bức ấy — và ảnh tham chiếu anh gửi
+# (cậu bé + chồng báo) đẹp vì **một khung một bức tranh**, không phải vì nó dìm khéo.
+#
+# Nên: khuôn nào tự vẽ đồ hoạ của nó thì nền phía sau phải là mặt phẳng trung tính.
+KHUON_TU_VE = ("so_lieu", "dem", "kinh_lup", "chart", "truc", "chia_doi", "the_chu")
+
 # Cứ N nhịp `canh` thì một nhịp vẽ bằng code. 3 cho ra 24% CF; đổi số này là đổi thẳng
 # tỉ lệ, nên nó là NÚT VẶN duy nhất của chính sách — đừng rải điều kiện ra nhiều chỗ.
 CANH_MOI = 3
@@ -4319,6 +4339,12 @@ def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
         if kh in KHUON_SO_DO:
             # Sơ đồ: bỏ ảnh CF, KHÔNG gán nơi chốn -> engine rơi về nền phẳng `NenPhong`.
             n.pop("ve", None)
+            continue
+        if kh in KHUON_TU_VE:
+            # Tự vẽ đồ hoạ: GIỮ `ve` (ảnh CF là bề mặt mềm, đã có dải chuyển tối phủ lên)
+            # nhưng KHÔNG bao giờ gán `canh_ve`. Hai loại nền không thay thế nhau được —
+            # xem chú thích ở `KHUON_TU_VE`. Bỏ `ve` ở đây là cắt mất đúng cái nền ĐẸP để
+            # tránh cái nền XẤU, tức chữa bằng cách bỏ cả hai.
             continue
         lay = False
         if kh in KHUON_PHU:

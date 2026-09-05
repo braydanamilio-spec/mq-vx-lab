@@ -1175,10 +1175,39 @@ export const SoLieu: React.FC<{
           Nay `KichGiaiThich` truyền THẲNG mặt sàn (đã quy đổi về hệ của khuôn này) và biểu
           tượng neo ĐÁY vào đó. Thiếu `san` thì giữ nguyên nếp cũ — khuôn này còn dùng ở chỗ
           không có mặt đất. */}
-      {bt ? <g transform={`translate(${kA === 1 ? W * 0.76 : kA === 5 ? W * 0.62 : W / 2} ${
-              san > 0 ? san - (tren_anh ? Math.min(H * 0.26, W * 0.28)
-                               : (kA === 1 ? Math.min(H * 0.32, W * 0.42)
-                                           : Math.min(H * 0.40, W * 0.66))) * DAY_HINH
+      {/* ── CỠ BIỂU TƯỢNG SUY TỪ CHỖ KHỐI SỐ CÒN CHỪA LẠI  (5/9/2026) ──────────────────
+          Anh soi khung 2,000 CALORIES A DAY: con số nằm ĐÈ lên biểu tượng. Gốc không phải
+          một hằng số sai — mà là hai lớp cùng canh giữa (`x = W/2`) và mỗi lớp tự chọn chỗ
+          đứng bằng công thức riêng: khối số theo `yA`, biểu tượng theo `san`. Không lớp nào
+          biết lớp kia chiếm dải nào, nên chồng nhau là chuyện SỚM MUỘN, không phải rủi ro.
+
+          Đúng họ lỗi §15.10 (*hai phân số cố định không mã hoá được quan hệ "nằm dưới"*) và
+          §6 (*vá một nhánh, để nguyên nhánh song song*) — `kA===1` và `kA===5` đã tách nhau
+          theo CHIỀU NGANG nên chúng không dính; ba kiểu canh giữa còn lại thì chưa ai tách.
+
+          Nay chỗ cho biểu tượng là một phép trừ, không phải một hằng số:
+
+              đáy khối số   = chân của dòng thấp hơn (số · chú thích)
+              trần cho hình = mặt sàn − đáy khối số − khe hở
+              cỡ cho phép   = trần / (DAY_HINH + 0,5)      ← hình vẽ giữa gốc toạ độ
+
+          Không đủ chỗ (dưới 40% cỡ mong muốn) thì BỎ HẲN biểu tượng: một hình bị bóp còn
+          một phần ba đọc ra vết bẩn chứ không đọc ra vật (§15.11), và khuôn số liệu vốn đã
+          có chủ thể là chính con số. */}
+      {(() => {
+        const _cheo = kA !== 1 && kA !== 5;         // ba kiểu canh giữa — hai lớp cùng trục
+        const _mong = tren_anh ? Math.min(H * 0.26, W * 0.28)
+                     : (kA === 1 ? Math.min(H * 0.32, W * 0.42)
+                                 : Math.min(H * 0.40, W * 0.66));
+        const _dayChu = Math.max(H * yA + cs * 0.10,
+                                 chu ? H * yChu + cChu * 0.30 : 0);
+        const _tran = san > 0 ? san - _dayChu - H * 0.030 : H;
+        const _cho = _cheo ? Math.max(0, _tran) / (DAY_HINH + 0.5) : _mong;
+        const _co = Math.min(_mong, _cho);
+        if (!bt || _co < _mong * 0.40) return null;
+        return (
+      <g transform={`translate(${kA === 1 ? W * 0.76 : kA === 5 ? W * 0.62 : W / 2} ${
+              san > 0 ? san - _co * DAY_HINH
                       : H * (ngang ? 0.62 : tren_anh ? 0.70 : 0.64)})`}
              opacity={tren_anh ? 0.92 : 1}>
         {/* CỠ BIỂU TƯỢNG THEO VAI TRÒ, không một cỡ cho hai vai trò khác nhau.
@@ -1188,9 +1217,8 @@ export const SoLieu: React.FC<{
         {/* Bố cục canh trái đẩy hình sang x = 0,76·W, nên bề ngang còn lại chỉ 0,48·W. Giữ cỡ
             0,66·W thì hình TRÀN khỏi mép phải — soi khung WHAT IF thấy cái hộp bị cắt đôi.
             Cỡ biểu tượng phải theo CHỖ NÓ ĐỨNG, không phải theo cả khung. */}
-        <BieuTuong ten={bt} s={(tren_anh ? Math.min(H * 0.26, W * 0.28)
-                              : (kA === 1 ? Math.min(H * 0.32, W * 0.42)
-                                          : Math.min(H * 0.40, W * 0.66))) * coHinh(bt)} /></g> : null}
+        <BieuTuong ten={bt} s={_co * coHinh(bt)} /></g>);
+      })()}
       {/* Kiểu 3 vẽ số ở lớp NỀN phía trên rồi, nên ở đây bỏ khối số đi — vẽ hai lần thì con
           số đậm chồng lên chính bóng mờ của nó. */}
       <g transform={`translate(${kA === 1 || kA === 5 ? W * 0.08 : W / 2} ${H * yA}) scale(${0.86 + q * 0.14})`}
@@ -1411,6 +1439,20 @@ export const KinhLup: React.FC<{
   const cx = W * 0.72, cy = H * 0.34;
   return (
     <g>
+      {/* ── PHẢI CÓ VẬT ĐỂ MÀ SOI  (5/9/2026) ─────────────────────────────────────────────
+          Soi khung THE RULES *"It is written right here."*: một vòng tròn ở góc trên phải với
+          một hình bé xíu bên trong, và **hai phần ba khung không có gì**. Kính lúp là thiết bị
+          nói *"nhìn kỹ vào THỨ NÀY"* — mà trong khung không hề có "thứ này", chỉ có cái kính.
+          Nên vẽ chính vật ấy LỚN và mờ giữa khung, rồi kính lúp soi lại nó ở cỡ lớn hơn. Cùng
+          một hình ở hai cỡ đọc ra ngay là "phóng to", không cần giải thích. Vật nền mờ 0,22 để
+          nó là ĐỐI TƯỢNG chứ không tranh với ống kính.
+          Đây cũng là lần thứ ba khuôn này phải sửa vì cùng một bệnh (chú thích 1/9 và 3/9 ở
+          dưới) — hai lần trước chữa cái NẰM TRONG ống kính, lần này chữa cái nằm NGOÀI nó. */}
+      {bt ? (
+        <g transform={`translate(${W * 0.42} ${H * 0.52})`} opacity={0.22}>
+          <BieuTuong ten={bt} s={Math.min(H * 0.46, W * 0.62)} />
+        </g>
+      ) : null}
       <defs><clipPath id="lup"><circle cx={cx} cy={cy} r={r} /></clipPath></defs>
       {/* 3/9 — KHÔNG CÓ GÌ ĐỂ PHÓNG THÌ VẼ BIỂU TƯỢNG, ĐỪNG VẼ ĐĨA TRẮNG.
           Chú thích 1/9 ngay trên đã ghi đúng bệnh ("kính lúp đang phóng to chỗ trống") và chữa
@@ -1721,8 +1763,27 @@ export const TheChu: React.FC<{
     return (
       <g opacity={q}>
         <rect x={0} y={0} width={W} height={H} fill={nen} />
-        <rect x={W * 0.09} y={yT - fsz * (dongT.length * 0.62) - H * 0.085}
-              width={W * 0.20 * Math.min(1, q * 1.6)} height={H * 0.017} fill={mau} />
+        {/* ── THANH DỌC ÔM KHỐI CHỮ, KHÔNG PHẢI VẠCH NGANG NGẮN  (5/9/2026) ─────────────
+            Soi khung THE RULES *"Ask before you build, not after."*: một vạch ngang bé tí ở
+            trên rồi chữ đen trên nền trơn — 70% khung không có gì, và cái vạch đọc ra như
+            một vết thừa chứ không ra một phần của bố cục.
+            Vạch NGANG không neo được vào chữ: nó dài cố định `W*0,20` trong khi khối chữ cao
+            bao nhiêu tuỳ số dòng, nên hai thứ không bao giờ ăn khớp. Thanh DỌC thì suy chiều
+            cao TỪ khối chữ, nên nó luôn ôm đúng — đây là khuôn pull-quote của báo in, và nó
+            đọc ra "trích dẫn" chứ không đọc ra "trang trí".
+            Cùng bài học §15.10: hai hằng số cạnh nhau không mã hoá được quan hệ "cái này ôm
+            cái kia" — quan hệ ấy phải TÍNH từ cỡ chữ thật. */}
+        {(() => {
+          const caoChu = fsz * (dongT.length * 1.16);
+          const yTren = yT - caoChu / 2 - fsz * 0.30;
+          return (<>
+            <rect x={W * 0.055} y={yTren} width={Math.max(4, W * 0.012)}
+                  height={caoChu * Math.min(1, q * 1.5)} fill={mau} rx={W * 0.004} />
+            {/* dấu ngoặc kép lớn, rất mờ — nói "đây là một câu tuyên bố" mà không tranh chỗ */}
+            <text x={W * 0.055} y={yTren - fsz * 0.10} fontFamily={F()} fontWeight={900}
+                  fontSize={fsz * 2.4} fill={mau} opacity={0.13}>&#8220;</text>
+          </>);
+        })()}
         {/* EYEBROW CÓ CHỮ, KHÔNG PHẢI MỘT CHỮ SỐ TRẦN.
             Thử hai lần: cỡ 0,042·H rồi 0,072·H — cả hai lần soi khung đều ra một vết nhỏ khó
             hiểu bên trên vạch màu. Vấn đề không phải CỠ mà là NGHĨA: một chữ số đứng một mình
@@ -1790,6 +1851,25 @@ export const TheChu: React.FC<{
   return (
     <g opacity={q}>
       <rect x={0} y={0} width={W} height={H} fill={nenThe} />
+      {/* ── HAI ĐƯỜNG KẺ ÔM KHỐI CHỮ  (5/9/2026) ──────────────────────────────────────────
+          Bố cục này vốn là "tràn màu, chữ canh giữa" — mạnh nhưng TRỐNG: một mảng màu kín
+          khung với chữ ở giữa, không có gì nói cho mắt biết khối chữ bắt đầu và kết thúc ở
+          đâu. Anh soi khung WHAT IF *"Nothing at all."* và đọc ra một khung rỗng.
+          Hai đường kẻ ngắn trên và dưới là cách sách in đóng khung một câu trích: chúng
+          KHÔNG thêm vật vào khung, chúng chỉ nói ranh giới. Chiều dài suy từ bề ngang khối
+          chữ nên câu dài câu ngắn đều ôm đúng.
+          Vẽ mờ 0,45 và mảnh: đủ để mắt thấy có khung, không đủ để tranh với câu. */}
+      {(() => {
+        const caoK = fs * (dong.length * 1.16);
+        const rongK = Math.min(W * 0.62, Math.max(...dong.map((d) => _emChu(d.trim()))) * fs * 0.62);
+        const dK = Math.max(2, H * 0.0022);
+        return (<>
+          <rect x={W / 2 - rongK / 2} y={H / 2 - caoK / 2 - fs * 0.62}
+                width={rongK * Math.min(1, q * 1.4)} height={dK} fill={chuThe} opacity={0.45} />
+          <rect x={W / 2 - rongK / 2} y={H / 2 + caoK / 2 + fs * 0.30}
+                width={rongK * Math.min(1, q * 1.4)} height={dK} fill={chuThe} opacity={0.45} />
+        </>);
+      })()}
       <g transform={`translate(${W / 2} ${H / 2}) scale(${vao})`}>
         {dong.map((d, i) => (
           <text key={i} x="0" y={(i - (dong.length - 1) / 2) * fs * 1.16 + fs * 0.34}

@@ -490,6 +490,12 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                   const caoDuoc = Math.min(traTren - H * 0.04, H * 0.45);
                   const sz = Math.min(caoDuoc / tl.cao, (W * 0.90) / tl.rong, s0 * cz * 2)
                              * coHinh(btVe);
+                  /* Đĩa tách lớp — xem chú thích tại chỗ vẽ. Khai ở đây, TRƯỚC mọi chỗ
+                     dùng: `const` đọc trước dòng khai là `ReferenceError` lúc chạy mà
+                     `esbuild` vẫn xanh (§15.18, đã trả giá một lần ở `Chart`). */
+                  const _canhVe = !!(N as any)?.canh_ve;
+                  const _dam = _canhVe ? 0.90 : 0.58;
+                  const _ban = _canhVe ? 1.02 : 0.78;
                   /* ── QUY TẮC D: CẢNH SAU KẾ THỪA CẢNH TRƯỚC  (4/9/2026) ──────────────
                      §12.11 D: *cảnh sau mang dấu vết cảnh trước (vệt chân dài dần)* — thứ tách
                      một CHUỖI CẢNH khỏi một chuỗi hình rời rạc.
@@ -535,6 +541,8 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                           trên nền ấm đọc ra một vệt bẩn, còn đĩa cùng tông thì đọc ra khoảng
                           lùi. Bo theo cỡ hình, mờ dần ra mép để không thành một cái huy hiệu
                           tròn — đúng thứ §TRAN_KHUNG vừa phải đi cấm ở phía prompt. */}
+                      {/* Cảnh vẽ code phía sau thì cần dìm mạnh và rộng hơn hẳn; tường
+                          trơn thì giữ nguyên mức đã đo. */}
                       <defs>
                         <radialGradient id={`dia${Math.round(cx)}`}>
                           {/* Ba nấc, và cả ba đo bằng MẮT ở cỡ thật, không chọn cho đẹp
@@ -542,13 +550,29 @@ export const KichGiaiThich: React.FC<PropsGT> = ({
                               được chủ thể nhưng lại thành một vật thứ ba trong khung, đúng
                               cái nó sinh ra để tránh. Đĩa tách lớp làm đúng việc khi người
                               xem KHÔNG nhận ra là có nó: chỉ vừa đủ dìm đồ đạc phía sau. */}
-                          <stop offset="0%" stopColor={nenTrang} stopOpacity={0.58} />
-                          <stop offset="45%" stopColor={nenTrang} stopOpacity={0.46} />
+                          {/* ── ĐỘ MẠNH THEO CÁI NẰM SAU NÓ  (5/9/2026) ──────────────
+                              Ba nấc dưới đây được đo trên nền TƯỜNG TRƠN, và ở đó chúng
+                              đúng: 0,58 vừa đủ tách chiều sâu mà người xem không nhận ra
+                              có một cái đĩa. Nhưng nhịp `canh_ve` đặt sau chủ thể cả một
+                              CẢNH VẼ — tủ, đồng hồ, núi, bia mộ — và cùng con số ấy chỉ
+                              dìm được 42%: anh gửi bốn khung, khung nào đồ đạc cũng xuyên
+                              qua chủ thể.
+                              Đúng §12.5: một con số đúng ở ngữ cảnh nó được đo, sai ở ngữ
+                              cảnh mới. Đĩa tách lớp không có MỘT độ mạnh đúng — nó có một
+                              CÔNG VIỆC (tách chủ thể khỏi thứ phía sau), và công sức cần
+                              bỏ ra phụ thuộc thứ phía sau bận đến đâu.
+                              Ảnh tham chiếu anh gửi (cậu bé + chồng báo) làm đúng việc này
+                              bằng bố cục: tủ dạt hẳn mép trái, tường sau lưng để TRỐNG.
+                              Mình không di được đồ đạc của mười nơi chốn, nhưng dìm chúng
+                              sau lưng chủ thể cho cùng một kết quả — và dìm bằng chính màu
+                              tường nên nó đọc ra khoảng lùi, không đọc ra tấm dán. */}
+                          <stop offset="0%" stopColor={nenTrang} stopOpacity={_dam} />
+                          <stop offset="45%" stopColor={nenTrang} stopOpacity={_dam * 0.79} />
                           <stop offset="100%" stopColor={nenTrang} stopOpacity={0} />
                         </radialGradient>
                       </defs>
                       <ellipse cx={cx} cy={sanY - sz * DAY_HINH}
-                               rx={sz * 0.78} ry={sz * 0.80}
+                               rx={sz * _ban} ry={sz * (_ban + 0.02)}
                                fill={`url(#dia${Math.round(cx)})`} />
                       {/* Đáy hình chạm sàn: xem `DAY_HINH`. `0,5` giả định hình chạm hết hộp
                           của nó, mà không hình nào chạm — nên vật treo 6,8% cỡ của nó. */}
