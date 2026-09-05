@@ -4503,6 +4503,58 @@ TINH_HUONG: dict[str, tuple[set, set]] = {
 KHUON_SO_DO = ("so_lieu", "chart", "dem", "truc", "chia_doi", "kinh_lup", "the_chu")
 
 
+# ── HAI HỌ HÌNH CHO CẢ TẬP  (5/9/2026) ───────────────────────────────────────────────────
+#
+# Anh: *"xấu, không phù hợp, lộn xộn"* — và chốt rằng lộn xộn nằm TRONG một video.
+#
+# Đo trên 16 tập: một tập 23 giây đi qua **năm ngôn ngữ hình khác nhau** — biểu đồ cột ·
+# thanh trượt · thẻ chữ · hình người · bảng chia đôi. Người xem chưa kịp học cách đọc một
+# kiểu thì đã sang kiểu khác.
+#
+# Và phần lớn sự đa dạng ấy là GIẢ. Đếm trường dữ liệu riêng của từng khuôn:
+#
+#     so_lieu  41 nhịp -> có `so` + `don`      chart  6 -> có `cot`     the_chu 14 -> có `the`
+#     chia_doi 18 · kinh_lup 8 · truc 4 · nhom 4  ->  KHÔNG có trường nào cả
+#
+# Năm khuôn sau không mang thông tin gì mà một khuôn khác không mang được — chúng chỉ là năm
+# cách vẽ khác nhau cho cùng một câu. Bỏ chúng không mất một dữ kiện nào, chỉ mất sự lộn xộn.
+#
+# HAI HỌ, và ranh giới là một câu hỏi có thật: *nhịp này nói một CON SỐ hay kể một CẢNH?*
+#
+#     SỐ    -> `so_lieu` (hoặc `chart` khi có dữ liệu cột thật — cùng một họ, hai trạng thái)
+#     NGƯỜI -> `canh`
+#
+# Quyết ở Python và ghi vào nhịp, engine chỉ đọc — cùng nguyên tắc `bo_the`/`kieu_so` (§15.3).
+HO_SO = ("so_lieu", "dem", "truc", "kinh_lup", "chia_doi", "the_chu")
+HO_NGUOI = ("canh", "nhom")
+
+
+def _gop_hai_ho(nhip: list) -> None:
+    """9 khuôn -> 2 họ. Giữ `chart` khi nhịp có dữ liệu cột thật (nó là trạng thái so sánh
+    của chính họ SỐ, không phải một họ thứ ba)."""
+    for n in nhip:
+        k = n.get("khuon") or "canh"
+        if k in HO_NGUOI:
+            n["khuon"] = "canh"
+        elif k in HO_SO or k == "chart":
+            n["khuon"] = "chart" if n.get("cot") else "so_lieu"
+            # nhịp SỐ mà không có số thì không phải nhịp SỐ — trả về họ NGƯỜI, đừng dựng một
+            # khung số rỗng (đó đúng là mấy khung trống anh soi thấy).
+            if n["khuon"] == "so_lieu" and not n.get("so"):
+                n["khuon"] = "canh"
+    # ── MỌI NHỊP `canh` PHẢI CÓ NGƯỜI ────────────────────────────────────────────────────
+    # Soi khung sau lượt gộp đầu: HAI khung trống hẳn, chỉ có giấy và phụ đề. Vì `chia_doi`
+    # và `the_chu` mang hình bằng chính BỐ CỤC của chúng — bỏ bố cục đi là không còn gì để
+    # vẽ. Đây là cái giá của việc gộp, và nó phải được trả bằng một hình thay thế chứ không
+    # phải bằng một khung rỗng.
+    # §17.5 đã chốt: nhịp không có vật vẽ được thì vẽ NGƯỜI, cái đổi là TƯ THẾ.
+    for n in nhip:
+        if (n.get("khuon") or "canh") != "canh":
+            continue
+        if not any(n.get(f) for f in ("ve", "bt", "canh_ve", "canva", "hinh_nhap")):
+            n["bt"] = "nguoi"
+
+
 def _chinh_ti_le_cf(nhip: list) -> None:
     """Gỡ `ve` khỏi mọi nhịp thuộc họ SƠ ĐỒ. Một chỗ duy nhất, gọi cuối `kich_ban`."""
     for n in nhip:
@@ -5080,6 +5132,7 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     nhip = _rai_kinh_lup(ma, nhip, idx)
     # SAU MỌI LƯỢT CHÈN, xem §15.19 — lượt RẢI phải chạy sau lượt CHÈN, nếu không thì
     # nhịp hook (chèn ở `insert(0, …)`) không bao giờ được gán.
+    _gop_hai_ho(nhip)          # gộp TRƯỚC: hình người mới sinh cũng phải được cấp tư thế
     nhip = _rai_tu_the(nhip, ma)
     # DẤU ẤN KÊNH — ghi vào MỌI nhịp. Python quyết, engine chỉ đọc (§15.3): engine không
     # biết mã kênh, và tính lại ở đó là tạo nguồn sự thật thứ hai.
