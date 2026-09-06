@@ -99,7 +99,19 @@ export const SoPanel: React.FC<{
     // Cú nảy vào khung, không trượt: con số là lời hứa của cả tập và phải tới trước khi
     // ngón tay người xem kịp quyết định.
     const nay = 1.18 - 0.18 * (1 - Math.pow(1 - kep(p / 0.18), 3));
-    const co = u * (hien.length > 8 ? 0.20 : hien.length > 5 ? 0.25 : 0.31);
+    /* ── CỠ CHỮ CHỊU HAI RÀNG BUỘC: CAO **VÀ** NGANG  (soi khung 6/9/2026) ─────────────
+       Bậc theo độ dài chuỗi ở dưới chỉ mã hoá CHIỀU CAO, và `vua()` cũng chỉ kẹp chiều cao.
+       Bề ngang thì không ai canh — nên `31,622,776,602` (14 ký tự) ra cỡ 0,20·u = 216px,
+       tức bề ngang ước 14 × 216 × 0,62 ≈ 1.875px trên một ô rộng 1.080px.
+       Soi khung 56% `v11_howloud_0006`: màn hình hiện **`622,776,60`** — mất cả đầu lẫn đuôi,
+       và người xem đọc ra một con số KHÁC hẳn con số thật.
+
+       §17.2 lần thứ ba trong ngày: một kích thước chịu hai ràng buộc mà công thức chỉ mã hoá
+       một. Chữ số Poppins 900 rộng khoảng 0,62em, dấu phẩy hẹp hơn — lấy 0,62 cho cả chuỗi là
+       ước lượng CAO, tức an toàn: ước cao thì chữ nhỏ hơn cần một chút, ước thấp thì lại tràn. */
+    const RONG_CHU = 0.62;
+    const coCao = u * (hien.length > 8 ? 0.20 : hien.length > 5 ? 0.25 : 0.31);
+    const co = Math.min(coCao, (w * 0.90) / Math.max(1, hien.length * RONG_CHU));
     const khoi = co * 0.95 + u * 0.035 + Math.max(3, u * 0.014)
                + (lop.don ? u * 0.03 + u * 0.072 * 1.2 : 0) + DEM;
     return (
