@@ -2591,3 +2591,90 @@ ma = re.sub(r"(?m)^\s*#.*$", "", src)            # YAML · shell · Python: chú
 b = fn.body                                       # Python: DOCSTRING là CHUỖI, không phải
 if isinstance(b[0].value, ast.Constant): b = b[1:]   # chú thích -> phải bỏ bằng ast
 ```
+
+---
+
+## 18. TỰ LÀM — LUẬT RÚT TỪ NGÀY 6/9
+
+Anh: *"github e cũng có tk, firebase e cũng có hết, terminal cũng có, ko tự làm mà suốt ngày
+kêu."* Và anh đúng. Ghi ra đây vì đây không phải một lời nhắc lịch sự — nó là một lỗi làm
+CHẬM việc, và nó lặp nhiều lần trong một buổi.
+
+### 18.1 Quyền đã cấp thì đừng xin lại
+
+Trên máy này có sẵn: `gh` đã đăng nhập · `firebase` đã đăng nhập · `git` push được · toàn quyền
+terminal. Những việc sau **làm thẳng, không hỏi**:
+
+| việc | lệnh |
+|---|---|
+| cập nhật secret | `grep '^cf:' render-pipeline/.keys.local \| gh secret set CF_KEYS` |
+| đẩy commit | `git push` |
+| kéo khoá về máy | `python3 lay_key_cuc_bo.py [--project <shard>]` |
+| đọc lượt chạy Actions | `gh run list` · `gh api repos/<owner>/<repo>/actions/...` |
+
+Ranh giới còn lại vẫn giữ: **không** `gh workflow run` để "thử" (§8, đã vi phạm hai lần, tốn
+quota thật) · **không** tạo thông tin đăng nhập mới · **không** xoá vĩnh viễn dữ liệu.
+Ngoài ba cái đó thì tự làm.
+
+### 18.2 Trước khi nói "không làm được", `grep` xem repo đã có cơ chế chưa
+
+Em kết luận *"không lấy khoá CF về được, anh phải tự dán"*, rồi đi **tra tài liệu Cloudflare**
+để chứng minh token không xem lại được. Tài liệu ấy đúng, và **hoàn toàn không phải câu hỏi**:
+khoá của hệ này nằm ở **hồ Firestore**, không nằm ở Cloudflare. `lay_key_cuc_bo.py` đã tồn tại
+từ 29/8 và kéo chúng về bằng chính phiên `firebase` đăng nhập sẵn.
+
+Cái giá: một vòng qua lại vô ích, và anh phải nói *"trước mày lấy bình thường mà"* thì em mới
+đi tìm. Đúng §13.1 ở dạng đắt nhất — *cơ chế đã có sẵn, hỏi "cái gì CHẠY nó?" trước khi kết
+luận là không có*.
+
+**Luật:** câu *"không làm được"* chỉ được nói SAU khi đã `grep` tên việc ấy trong repo. Và khi
+anh nói "trước làm được", giả định sai gần như luôn là của em (§13.15).
+
+### 18.3 Hồ khoá nằm ở NHIỀU shard, và script kéo về thì GHI ĐÈ
+
+Đo ngày 6/9 — ba nguồn, ba tập khoá KHÁC NHAU:
+
+| nguồn | tài khoản CF | đóng góp mới |
+|---|---|---|
+| `.keys.local` trên máy | 94 | 94 |
+| Firestore project mặc định | 77 | 0 (tập con) |
+| Firestore **shard B** (`--project mm0-shard-b`) | 97 | **+1** |
+| hợp cả ba, khử trùng theo TÀI KHOẢN | **112** | |
+
+Hai bẫy:
+
+1. **`lay_key_cuc_bo.py` GHI ĐÈ `.keys.local`, không ghép.** Chạy nó một mình làm hồ tụt từ
+   94 xuống 77 — mất 37 tài khoản chỉ có ở tệp cũ. **Luôn sao lưu trước, ghép sau.**
+2. **Khử trùng phải theo TÀI KHOẢN**, không theo dòng: một tài khoản khai hai token không cho
+   thêm một neuron nào (hạn mức thuộc về tài khoản), nó chỉ làm mọi phép đếm sức chứa nói dối.
+
+```bash
+cd "/Users/mrquyenbk/Documents/MM0 YOUTUBE 2026/render-pipeline"
+cp .keys.local /tmp/keys.bak                 # BẮT BUỘC — script sau đây ghi đè
+python3 lay_key_cuc_bo.py                    # project mặc định
+python3 lay_key_cuc_bo.py --project mm0-shard-b
+# rồi ghép /tmp/keys.bak với kết quả, khử trùng theo trường thứ hai của `cf:<acc>:<token>`
+```
+
+### 18.4 Secret `GROQ_KEYS` từng KHÔNG TỒN TẠI
+
+`phim_canh._khoa_groq` có hẳn một chú thích *"repo này KHÔNG có secret tên đó"* và một đường
+dự phòng chạy `@cf/openai/gpt-oss-120b`. Nghĩa là mọi bảng phân cảnh trên Actions đang **tiêu
+neuron ẢNH để viết CHỮ**. Đã tạo secret ngày 6/9.
+
+**Họ lỗi:** *một đường dự phòng chạy tốt sẽ che mất việc đường chính chưa bao giờ được nối.*
+Khi thấy một hàm có tầng dự phòng, hỏi luôn: **tầng chính có thật sự chạy lần nào không?**
+
+### 18.5 Báo cáo: nói cái gì đổi và ĐO ĐƯỢC BAO NHIÊU
+
+Mẫu báo cáo dùng cả ngày và anh không phàn nàn lần nào:
+
+```
+· một bảng: trước -> sau, kèm ĐƠN VỊ  (410 -> 2.169 tập short, 5,3×)
+· lỗi thì nói GỐC RỄ, không nói triệu chứng
+· thứ CỐ Ý không làm thì nói ra, kèm lý do (§13.22)
+· thứ chưa đo được thì ghi "chưa đo được", đừng đoán
+```
+
+Không kể lại quá trình, không xin phép giữa chừng, không hỏi "anh muốn em làm tiếp không" khi
+việc đã được giao. Anh giao "làm lần lượt hết" thì làm hết rồi báo một lần.
