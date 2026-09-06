@@ -391,8 +391,12 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
         lượng), kho cũ còn JPEG hai chữ số, và cả hai phải cùng dùng được."""
         if f"{de}_{i:03d}" in _bo:
             return ""
+        # `_{i:02d}.webp` thêm 6/9/2026: kho hai-chữ-số đời cũ vốn còn là JPEG 1024×1024 và
+        # chiếm 67 MB cho 169 tệp — 43% dung lượng thư mục cho 10% số tệp. Nén sang WebP thì
+        # phải nhận CẢ tên mới ở đây, nếu không thì 161 nền đang được dùng làm dự phòng biến
+        # mất im lặng và tập rơi về nền vector (§15.12: đổi tên tệp mà quên chỗ ĐỌC).
         for ten in (f"comic_nen/{de}_{i:03d}.webp", f"comic_nen/{de}_{i:03d}.jpg",
-                    f"comic_nen/{de}_{i:02d}.jpg"):
+                    f"comic_nen/{de}_{i:02d}.webp", f"comic_nen/{de}_{i:02d}.jpg"):
             if os.path.exists(os.path.join(PUB, ten)):
                 return ten
         return ""
