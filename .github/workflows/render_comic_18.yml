@@ -1,0 +1,228 @@
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# BỘ COMIC GIẢI THÍCH — 18 KÊNH, 18 LUỒNG  (6/9/2026)
+#
+# VÌ SAO CÓ LUỒNG RIÊNG, KHÔNG SỬA `render_giai_thich_18.yml`
+#   §10 — hai bộ, hai xưởng, đừng trộn. Bộ cũ dựng `KichGiaiThich` và **vẽ ảnh AI cho mỗi
+#   nhịp** (20 ảnh/tập dài). Bộ này dựng `KichComic` và dùng **kho nền vẽ sẵn**: chi phí ảnh
+#   của một tập bằng 0, nên trần sản lượng chuyển từ hạn mức CF sang thời gian máy. Trộn hai
+#   thứ ấy vào một workflow là cách chắc chắn để một bản sửa ở bộ này làm hỏng bộ kia.
+#
+# ĐIỀU KIỆN ĐỦ ĐỂ CHẠY ĐƯỢC — kiểm ngay đầu job, không đợi tới lúc dựng hỏng:
+#   · kho nền có ảnh cho kênh ấy (thiếu thì kênh rơi về hai phòng mặc định — §7 tầng dự phòng)
+#   · `edge-tts` import được (§16.5 — hỏng ở bước CÀI là hỏng mắt xích đầu tiên, mất trọn luồng)
+#   · `.tai.json` sinh ra được (§10.3 — thiếu nó là có video mà không đăng được)
+#
+# BỐN MỐC CRON: §10.2, `cron` repo này đã chứng minh là không đáng tin (đo được tick bỏ hẳn).
+# Job `chot` đếm lượt CÓ JOB DỰNG THẬT CHẠY — không đếm `conclusion == success`, vì một lượt bị
+# chính cổng ấy bỏ qua cũng kết thúc là `success` và sẽ tự khoá vĩnh viễn (§12.8).
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+name: Render 18 kênh comic giải thích
+
+on:
+  schedule:
+    - cron: "20 8 * * *"
+    - cron: "20 9 * * *"
+    - cron: "20 10 * * *"
+    - cron: "20 11 * * *"
+  workflow_dispatch:
+    inputs:
+      so_tap:
+        description: "Số tập mỗi kênh trong một lượt"
+        default: "3"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  chot:
+    runs-on: ubuntu-latest
+    outputs:
+      chay: ${{ steps.q.outputs.chay }}
+    steps:
+      - id: q
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "chay=yes" >> $GITHUB_OUTPUT; echo "bấm tay -> chạy"; exit 0
+          fi
+          CUT=$(date -u -d '5 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-5H +%Y-%m-%dT%H:%M:%SZ)
+          IDS=$(gh api "repos/${{ github.repository }}/actions/workflows/render_comic_18.yml/runs?per_page=20" \
+              --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }})
+                     | select(.created_at > \"$CUT\")
+                     | select(.conclusion == \"success\" or .status == \"in_progress\")][].id")
+          N=0
+          for RID in $IDS; do
+            # ĐẾM JOB `dung` THẬT SỰ CHẠY, không đếm kết luận của cả lượt: một lượt bị cổng này
+            # bỏ qua vẫn kết thúc `success` (job `dung` chỉ `skipped`, mà `skipped` không làm
+            # hỏng lượt), nên đếm theo `conclusion` sẽ làm mỗi lượt bỏ qua LÀM MỚI dấu success
+            # và cửa sổ không bao giờ trôi hết. Đã đo: dashboard xanh suốt trong khi 0 artifact.
+            K=$(gh api "repos/${{ github.repository }}/actions/runs/$RID/jobs?per_page=100" \
+                --jq '[.jobs[] | select(.name | startswith("dung"))
+                       | select(.conclusion == "success" or .status == "in_progress")] | length' \
+                2>/dev/null || echo 0)
+            if [ "${K:-0}" -gt 0 ]; then N=$((N+1)); fi
+          done
+          echo "lượt CÓ DỰNG THẬT trong 5h: $N"
+          if [ "${N:-0}" -gt 0 ]; then
+            echo "chay=no" >> $GITHUB_OUTPUT
+          else
+            echo "chay=yes" >> $GITHUB_OUTPUT
+          fi
+
+  dung:
+    needs: chot
+    if: needs.chot.outputs.chay == 'yes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix:
+        kenh: [howlong, howbig, realcost, howmuch, whatif, survive, dayinlife, wheregoes,
+               therules, speedof, odds, hiddenfee, yearsof, howloud, whatweighs, rightnow,
+               howhot, smallest]
+    steps:
+      - uses: actions/checkout@v4
+
+      # Checkout repo đăng bài NGAY ĐẦU JOB: `actions/checkout` mặc định `clean: true`, nên
+      # đặt nó sau bước dựng là đánh cược rằng nó chỉ dọn đúng thư mục `path:`.
+      - name: Checkout repo đăng bài
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Thư viện — GHIM và kiểm bằng `import`
+        run: |
+          # §16.5 — hỏng ở bước CÀI là hỏng ở mắt xích đầu tiên: cả luồng mất trọn. Đo được
+          # 2/18 luồng chết `ResolutionImpossible` cho `edge-tts` trong khi 16 luồng cùng bước
+          # ấy chạy được, tức lỗi MẠNG chứ không phải xung đột thật — vì không ghim phiên bản,
+          # pip phải lùi qua ~30 bản, mỗi lần lùi một vòng mạng.
+          # Và kiểm bằng `import`, KHÔNG bằng mã thoát của pip (§15.3).
+          for i in 1 2 3; do
+            python -m pip install -q --upgrade pip && \
+            python -m pip install -q "edge-tts==6.1.12" Pillow && break
+            echo "   ⚠ cài hụt lần $i/3"; sleep 20
+          done
+          python -c "import edge_tts, PIL; print('edge-tts + Pillow OK')"
+          cd engine-remotion && npm ci --no-audit --no-fund
+
+      # Khoá dịch vụ ghi ở BƯỚC RIÊNG, sớm. Nó từng nằm bên trong bước "đẩy video", trong khi
+      # hai bước khác trỏ vào chính tệp ấy — tức phụ thuộc vào tác dụng phụ của một bước không
+      # liên quan, và mất khoá thì Firestore báo "không dùng được", đọc y hệt hạn mức cạn.
+      - name: Khoá dịch vụ
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+
+      - name: Cổng TRƯỚC khi dựng
+        run: |
+          cd render-pipeline
+          # Chạy cổng trước, không sau: dựng 18 luồng × 3 tập rồi mới biết code hỏng là đốt
+          # ~5 giờ runner cho thứ phải bỏ đi (§16.7 — đã trả giá 1.280 video mang engine chưa vá).
+          python selftest.py
+          python kiem_phim.py
+          python kiem_nen.py
+          python kiem_tdz.py
+
+      - name: Kho nền có đủ cho kênh này không
+        run: |
+          cd render-pipeline
+          python - <<'PY'
+          import json, io, os, sys
+          ma = "${{ matrix.kenh }}"
+          N = "../engine-remotion/public/comic_nen"
+          kho = json.load(io.open("nen_kho.json", encoding="utf-8")).get(ma) or []
+          co = sum(1 for i in range(len(kho))
+                   if os.path.exists(os.path.join(N, f"{ma}_{i:03d}.webp")))
+          # MỌI SỐ 0 PHẢI CÓ MẪU SỐ (§15.2): "0 nền trên 300 mô tả" và "0 nền vì chưa soạn mô
+          # tả" là hai chuyện khác hẳn nhau, dẫn tới hai hành động khác hẳn nhau.
+          print(f"kho nền {ma}: {co}/{len(kho)} ảnh")
+          if co == 0:
+              # Không CHẶN: `pilot_hai.phong_cua` có tầng dự phòng nên kênh vẫn dựng được bằng
+              # nền mặc định. Nhưng phải NÓI RA — im lặng thì mười tám kênh nhìn giống nhau mà
+              # không ai biết vì sao (§7, bốn tầng nền).
+              print(f"::warning::{ma} chưa có nền nào — dựng bằng nền mặc định, hình sẽ đơn điệu")
+          PY
+
+      - name: Dựng ${{ matrix.kenh }}
+        id: ve
+        env:
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+          MM0_KEYS: ${{ secrets.MM0_KEYS }}
+          GT_KHONG_CF: "1"
+        run: |
+          cd render-pipeline
+          SO=${{ github.event.inputs.so_tap || 3 }}
+          # Chỉ số tập lấy theo NGÀY để hai lượt cùng ngày không dựng trùng, và để tập tiến lên
+          # mỗi ngày mà không cần trạng thái nào sống qua các lượt chạy — trên Actions thì
+          # không có trạng thái nào sống cả (§13.13).
+          NGAY=$(( ( $(date -u +%s) / 86400 ) % 100000 ))
+          for k in $(seq 0 $((SO-1))); do
+            IDX=$(( NGAY * SO + k ))
+            echo "── ${{ matrix.kenh }} tập $IDX"
+            # `--khong-ve-nen`: kho nền là việc của `kho_nen.yml`, không phải của luồng dựng.
+            # Trộn vào đây là để một luồng dựng đói ảnh đi tranh hạn mức với 17 luồng khác.
+            python -u pilot_hai.py --kenh ${{ matrix.kenh }} --tu $IDX --khong-ve-nen || true
+          done
+          # ĐẾM SẢN PHẨM, không đọc mã thoát (§15.3). Một tập chỉ tính là xong khi có ĐỦ bốn
+          # mảnh — `pilot_hai` trả rỗng nếu thiếu, nhưng cổng ở đây không được tin vào đó.
+          N=$(ls out/v11_${{ matrix.kenh }}_*.tai.json 2>/dev/null | wc -l | tr -d ' ')
+          echo "n=$N" >> "$GITHUB_OUTPUT"
+          echo "::notice::${{ matrix.kenh }}: $N tập có đủ bộ giao hàng"
+
+      # ── MẮT XÍCH SANG KHÂU ĐĂNG  (cổng `kiem_az` bắt thiếu bước này) ────────────────────
+      # Không có nó thì video chỉ nằm trong artifact, và artifact HẾT HẠN — dựng xong rồi mất
+      # trắng, mà lượt vẫn xanh. Đúng §15.3: bước có sản phẩm thì phải kiểm sản phẩm ĐÃ ĐI ĐÂU,
+      # không phải chỉ kiểm nó đã sinh ra.
+      - name: Đẩy vào hàng đợi đăng
+        id: day
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          RENDER_OWNER: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: |
+          cd render-pipeline
+          ok=0
+          for i in 1 2 3; do
+            if python day_kho.py --publish ../_autopublisher --that; then ok=1; break; fi
+            echo "   ⚠ đẩy kho hụt lần $i/3 — chờ 60s rồi thử lại"; sleep 60
+          done
+          # KHÔNG `|| true` ở đây: đây là mắt xích cuối, và `|| true` ở mắt xích cuối là cách
+          # để 18/18 luồng in dấu tích xanh trong khi hàng đợi đăng có 0 bản ghi (§13.3).
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+
+      - name: Gói artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: comic-${{ matrix.kenh }}
+          path: |
+            render-pipeline/out/v11_*.mp4
+            render-pipeline/out/v11_*.jpg
+            render-pipeline/out/v11_*.tai.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Không ra tập nào thì lượt phải ĐỎ
+        run: |
+          # §13.3 — `|| true` ở mắt xích cuối làm hỏng mà vẫn báo xanh. Lượt đỏ khiến ba mốc
+          # cron sau tự thử lại; lượt xanh rỗng thì không ai biết và cửa sổ 5h còn chặn tiếp.
+          if [ "${{ steps.ve.outputs.n }}" = "0" ]; then
+            echo "::error::${{ matrix.kenh }}: 0 tập có đủ bộ giao hàng"; exit 1
+          fi
+          if [ "${{ steps.day.outputs.ok }}" != "1" ]; then
+            echo "::error::${{ matrix.kenh }}: dựng được nhưng KHÔNG đẩy được vào hàng đợi"
+            exit 1
+          fi

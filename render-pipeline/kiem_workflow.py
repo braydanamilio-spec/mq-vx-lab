@@ -33,6 +33,14 @@ CAP = {
     "render_phan_tich.yml": ("kich_v2.py", "kich_v2_long.py", True),
     "render_phan_tich_18.yml": ("kich_v2.py", "kich_v2_long.py", True),
     "render_giai_thich_18.yml": ("giai_thich.py", "giai_thich.py", True),
+    # 6/9 — bộ COMIC giải thích: cùng kịch bản `giai_thich.py`, khác ENGINE (`KichComic` thay
+    # cho `KichGiaiThich`) và khác kinh tế ảnh (dùng kho nền vẽ sẵn, 0 ảnh AI mỗi tập). Nên nó
+    # là workflow riêng, đúng §10 — hai bộ, hai xưởng.
+    # Tệp gói tên `pilot_<kênh>_<idx>` chứ không `v9_*`: `pilot_hai.py` đặt tên như vậy, và cổng
+    # này so tên gói với tên bộ dựng THẬT, nên khai sai ở đây là tự tạo một dòng đỏ giả.
+    "render_comic_18.yml": ("pilot_hai.py", None, True),
+    # `render_phim_18.yml` (bộ v10) cũng chưa khai — cổng đã bắt đúng, khai nốt.
+    "render_phim_18.yml": ("phim.py", "phim.py", True),
 }
 
 
@@ -84,7 +92,12 @@ def main() -> int:
             print(f"  ✅ {wf:24s} gói {'/'.join(sorted(goi))}_*  (khớp {py})")
 
         # ── BỘ GIAO HÀNG: ngắn · DÀI · ảnh bìa · chữ đăng ────────────────────────────────
-        if os.path.exists(os.path.join(GOC, py_dai)):
+        # `py_dai = None` = bộ này CỐ Ý không có bản dài. Không phải mọi bộ đều nên có: bộ
+        # comic dựng SHORT, còn bản dài của cùng 18 kênh do bộ v10 (`render_phim_18.yml`) lo —
+        # anh chốt "short đi bộ comic, long đi bộ v10, hai bộ hai xưởng" (§10).
+        # Khai `None` thay vì lặp lại tên tệp short: khai lặp lại là nói dối cổng để nó im, và
+        # một cổng bị nói dối thì lần sau nó không bắt được ca thật (§13.8).
+        if py_dai and os.path.exists(os.path.join(GOC, py_dai)):
             if f"python {py_dai}" not in ma:
                 loi.append(f"{wf}: không dựng bản dài — `{py_dai}` có trong repo mà workflow "
                            f"không gọi tới (mất chỗ bật quảng cáo giữa video)")

@@ -312,7 +312,14 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
 
     cau = [(x["chu"], 0 if x["ai"] == "a" else 1, x["cx"]) for x in thoai]
     kieuA, kieuB, ghiA, ghiB, ga, gb = KC.vai_va_giong(kk)
-    slug = f"pilot_{ma}_{idx:04d}"
+    # ── TIỀN TỐ `v11_`, KHÔNG PHẢI `pilot_`  (6/9/2026) ──────────────────────────────────
+    # `day_kho.py --mau` mặc định quét `v3_* · v3L_* · v5_* · v5L_* · v9_*`. Tệp tên `pilot_*`
+    # KHÔNG nằm trong danh sách ấy, nên bước đẩy sẽ quét, không thấy gì, in "0 video vào hàng
+    # đợi" và **thoát 0** — dựng xong 18 kênh rồi mất trắng, mà lượt vẫn xanh.
+    # Cổng `kiem_workflow` bắt được triệu chứng ("không gói tệp video nào") vì nó đòi tiền tố
+    # `v<số>_`; đi nới cổng là chữa cái báo động thay vì chữa cái hỏng.
+    # `v11_` = thế hệ COMIC GIẢI THÍCH, đứng sau `v9_` (giải thích) và `v10_` (phim).
+    slug = f"v11_{ma}_{idx:04d}"
     rel = f"{slug}.mp3"
     try:
         dur, tu, moc = doc_hai_giong(cau, ga, gb, os.path.join(PUB, rel))
@@ -468,6 +475,26 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
         print(f"   ❌ render hỏng: {(r.stderr or r.stdout or '')[-260:]}"); return ""
     lam_thumb(out, cau[0][0], g["ten"], g["nen"], os.path.join(GOC, "out", f"{slug}.jpg"))
     am = chuan(out)
+
+    # ── BỘ GIAO HÀNG PHẢI ĐỦ BỐN THỨ  (6/9/2026) ─────────────────────────────────────────
+    # §10.3: bộ giao hàng của một tập là **ngắn · dài · ảnh bìa · `.tai.json`**. Pilot tới giờ
+    # chỉ ra `.mp4` + `.jpg` + tệp props — tức **có video mà không đăng được**, và một lượt
+    # render 18 kênh sẽ chạy xanh trọn vẹn rồi cho ra số 0 ở khâu đăng.
+    # Đây đúng dạng đã trả giá ở §15.10: một dây chuyền dừng nửa đường trông y hệt một dây
+    # chuyền hoàn chỉnh. Nối trước khi dựng workflow, không phải sau.
+    try:
+        import phim_dang as PD
+        co = PD.giao_hang(slug, out, ma, g["ten"], tieu, hook, hook_phu,
+                          dur, False, nhip)
+        _t = "✅" if all(co.values()) else "❌"
+        print(f"   {_t} giao hàng: " + " · ".join(f"{k}{'✓' if v else '✗'}"
+                                                  for k, v in co.items()))
+        if not all(co.values()):
+            return ""          # thiếu một mảnh thì KHÔNG tính là tập xong (§15.3)
+    except Exception as e:
+        print(f"   ❌ giao hàng hỏng: {str(e)[:140]}")
+        return ""
+
     print(f"   ✅ {out}  ({os.path.getsize(out)/1e6:.1f} MB · {dur:.0f}s · "
           f"{len(luot)} panel{' · ' + am if am else ''})")
     return out

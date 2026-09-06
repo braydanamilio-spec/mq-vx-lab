@@ -157,7 +157,11 @@ def main() -> int:
     # `v9_` = 18 kênh GIẢI THÍCH (1/9). Thiếu tiền tố ở đây là video dựng xong mà không bao giờ
     # lên Drive — và bước này báo "⚠️ không có video nào để đẩy" rồi trả 0, tức lượt chạy vẫn
     # XANH. Mỗi thế hệ mới phải thêm tiền tố vào đây; cổng `kiem_az.py` canh đúng chỗ này.
-    ap.add_argument("--mau", default="v3_*.mp4,v3L_*.mp4,v5_*.mp4,v5L_*.mp4,v9_*.mp4",
+    # `v11_` = 18 kênh COMIC GIẢI THÍCH (6/9). Thiếu tiền tố ở đây là video dựng xong mà không
+    # bao giờ được nhặt — bước đẩy quét, không thấy gì, in 0 rồi thoát 0. Cùng cái bẫy mà dòng
+    # chú thích ngay trên đã ghi cho `v9_`.
+    ap.add_argument("--mau",
+                    default="v3_*.mp4,v3L_*.mp4,v5_*.mp4,v5L_*.mp4,v9_*.mp4,v11_*.mp4",
                     help="mẫu tên video cần đẩy, cách nhau bằng dấu phẩy")
     ap.add_argument("--that", action="store_true", help="đẩy thật (mặc định chỉ in ra để xem)")
     a = ap.parse_args()

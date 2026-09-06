@@ -2864,6 +2864,16 @@ def t_khong_tron_so():
                 if os.path.exists(os.path.join(GOC_, _c2)):
                     can_.add(_c2)
     tron = []
+    # ── CỔNG KHÔNG ĐƯỢC QUÉT CHÍNH NÓ  (6/9/2026) ──────────────────────────────────────
+    # Phạm vi quét dựng bằng cách đi theo `import` bắc cầu, và có đường bắc cầu về lại
+    # `selftest.py`. Tệp này nhắc `firestore` và `.stream(` vì đó là thứ nó ĐI TÌM — nên nó tố
+    # đúng hai dòng thực hiện phép kiểm:
+    #     selftest.py dòng 2889: if trong_doc_ or ".stream(" not in ln ...
+    # Một cổng đọc mã của chính mình rồi gọi đó là vi phạm là tiếng ồn thuần tuý, và tiếng ồn
+    # ở đây đắt: nó làm cả `selftest` đỏ, mà `selftest` đỏ thì chặn cả phiên.
+    # Cùng họ §17.15 (*quét mã thì bỏ chú thích trước*), ở dạng cực đoan nhất: thứ bị đọc nhầm
+    # thành dữ liệu chính là câu lệnh đi đọc.
+    can_.discard("selftest.py")
     for tep_ in sorted(can_):
         p_ = os.path.join(GOC_, tep_)
         if not os.path.exists(p_):
