@@ -2705,3 +2705,73 @@ Mẫu báo cáo dùng cả ngày và anh không phàn nàn lần nào:
 
 Không kể lại quá trình, không xin phép giữa chừng, không hỏi "anh muốn em làm tiếp không" khi
 việc đã được giao. Anh giao "làm lần lượt hết" thì làm hết rồi báo một lần.
+
+### 18.6 Bảng đầy mà kênh vẫn cạn: trần nằm ở BỘ SINH, không ở dữ liệu
+
+`howmuch` dừng ở 24 tập. Phản xạ đúng-nghe là "nới bảng" — và nó sai. Nới ra 34 dòng mới thì
+cả 34 cho **đúng một tiêu đề**, vì tiêu đề chỉ ghép hai cột `nho`/`lon` còn đơn vị nằm ở cột
+khác. Nới bảng trước khi sửa bộ sinh là **nới vào hư không**.
+
+Soi tiếp thì thấy lỗi nặng hơn nhiều: `sinh_howmuch` đọc ra `vn`, `vl`, `don`, `bt` ở dòng đầu
+rồi **không dùng vào đâu** — thẻ chia đôi, hai nhịp số liệu và biểu đồ đều ghi cứng
+`million · billion · seconds`. Nên **23/24 tập** mang tiêu đề *"A thousand days versus a million
+days"* rồi đọc lên *"Count a million seconds"* và vẽ biểu đồ 1.000.000 vs 1.000.000.000.
+
+Không cổng nào bắt được, và không thể bắt được bằng cách quét: **chữ hợp lệ, số hợp lệ, chỉ là
+chúng thuộc về tập khác.** Đây là §15.12 ở dạng nặng nhất — không phải "trường được ghi mà không
+ai đọc", mà là "chỗ lẽ ra đọc trường thì đọc một hằng số".
+
+**Phép soi rẻ, chạy được cho MỌI bộ sinh** — AST, tên gán ở ba dòng đầu trừ đi tên được đọc
+trong thân:
+
+```python
+gan = {t.id for st in b[:3] if isinstance(st, ast.Assign)
+       for t in ast.walk(st.targets[0]) if isinstance(t, ast.Name)}
+doc = {n.id for n in ast.walk(ast.Module(body=b, type_ignores=[]))
+       if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+print(sorted(gan - doc))
+```
+
+Chạy trên 18 bộ sinh ra 5 kênh. Ba là bản mét cố ý bỏ (`km2`, `kmh2`, `c` — §12.13 kênh Mỹ),
+**hai là lỗi thật**: `odds` và `rightnow` đặt tiêu đề *"X against Y"* rồi không nhịp nào cho
+thấy Y. Người xem bấm vào vì cuộc so ấy và không bao giờ được xem nó.
+
+**Luật:** khi một kênh cạn nội dung, hỏi *"dữ liệu có chảy hết vào sản phẩm chưa?"* TRƯỚC khi
+hỏi *"lấy thêm dữ liệu ở đâu?"*. Và hiệu của hai tập tên — gán mà không đọc — là phép đo rẻ
+nhất để trả lời câu ấy.
+
+### 18.7 Nhãn của một VẾ SO SÁNH ngược chiều nhãn của một ĐỒ VẬT
+
+`_nhan` giữ các từ CUỐI, đúng cho tên đồ vật (*"a yellow school bus"* → `school bus`). Đem
+dùng cho một vế của cuộc so sánh thì hỏng, vì nghĩa nằm ở **ĐẦU** còn đuôi là câu đệm dùng
+chung cả bảng: *"asleep right now"* → `right now`, *"being struck by lightning this year"* →
+`this year`. Hai cột khác nhau mang **cùng một nhãn**, và nhãn ấy không nói gì.
+
+Đúng §15.21 (đầu ngữ đo lường không phải chủ thể), chỉ khác chỗ đứng: ở đó đầu ngữ nằm ở đầu,
+ở đây câu đệm nằm ở đuôi. **Một hàm nhãn mang theo giả định về CHỖ NGHĨA NẰM** — dùng lại ở
+loại chuỗi khác là phải hỏi lại câu ấy (§12.5).
+
+Hai lỗi con cùng lộ ra ở đây:
+- `replace("a ", "", 1)` bỏ mạo từ **ở bất kỳ đâu**: *"in a car"* → `in car`. Neo `^`.
+- cắt xong còn từ chức năng đứng đầu: *"listening to music"* → `to music`. Mắt đọc giới từ
+  trước danh từ thì hiểu là **còn thiếu vế** — không cụt mà vẫn vô nghĩa.
+
+Đo trước khi tin: 2.730 nhãn của 18 kênh, 41 nhãn đổi, **đọc tay cả 19 dạng**. Không ca nào
+xấu đi — đó mới là điều kiện để ship, không phải "cổng xanh" (§13.22).
+
+### 18.8 Chi phí tăng theo KÍCH THƯỚC KHO trong khi việc thật tăng theo PHẦN MỚI
+
+`nen_tag.py --ai` gắn nhóm chủ đề cho kho nền. Bản đầu gọi model trên **toàn bộ** danh sách mỗi
+lượt — đúng ở lần chạy đầu (kho rỗng), sai kể từ lần thứ hai. Kho lớn dần theo tuần, nên mỗi
+lượt bổ sung ~800 nền mới lại trả tiền gắn lại 5.118 nền đã có thẻ. Đo: **246/5.118** mục thật
+sự cần gắn — 95% là trả tiền cho việc đã xong.
+
+Và cái bẫy đi kèm: **không workflow nào gọi `nen_tag.py`** (§13.1, lần thứ chín). Hậu quả không
+phải một lỗi mà là một **sự mòn dần**: `phong_cua` chỉ chọn nền theo nội dung khi tìm được ≥3
+nền cùng nhóm, nên phần vừa vẽ thêm không bao giờ được chọn theo nội dung. Tính năng vẫn "chạy",
+vẫn báo xanh, và mỗi ngày bỏ qua nhiều hơn hôm trước.
+
+**Luật:** với mọi việc chạy lặp trên một kho lớn dần, hỏi *"chi phí một lượt tỉ lệ với cái gì?"*
+Nếu nó tỉ lệ với KÍCH THƯỚC kho chứ không với PHẦN MỚI thì nó sẽ chết vì chính thành công của
+mình. Và mỗi lần thêm một bước sinh dữ liệu, đi tìm mọi bảng **dẫn xuất** từ dữ liệu ấy — bảng
+nào không được cập nhật cùng lượt thì cơ chế đọc nó sẽ mòn im lặng.
