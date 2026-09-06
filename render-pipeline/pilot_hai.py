@@ -135,9 +135,25 @@ _CHUC = {2:"twenty",3:"thirty",4:"forty",5:"fifty",6:"sixty",7:"seventy",8:"eigh
 
 
 def _doc_so(n: int) -> str:
-    """Số thành CHỮ như người Mỹ đọc. Chỉ cần tới hàng nghìn — số lớn hơn thì mô hình gần như
-    luôn viết bằng chữ số ("125,893 times"), và cổng đã bắt được dạng ấy."""
-    if n < 0 or n > 9999:
+    """Số thành CHỮ như người Mỹ đọc.
+
+    ── TRẦN 9999 LÀ MỘT GIẢ ĐỊNH, VÀ NÓ SAI  (đo 6/9/2026) ────────────────────────────────
+    Chú thích cũ: *"chỉ cần tới hàng nghìn — số lớn hơn thì mô hình gần như luôn viết bằng chữ
+    số, và cổng đã bắt được dạng ấy"*. Nghe hợp lý, và đọc bản thảo thật thì sai:
+
+        "That gap is thirty-one thousand six hundred twenty-three times more energy"
+
+    31.623 > 9999 nên hàm trả CHUỖI RỖNG, `bool(c)` false, cổng kết luận "chưa đọc" — rồi đốt
+    **2 vòng gọi AI** để bắt viết lại một câu đã đúng, và cuối cùng vẫn in `số liệu THIẾU`.
+    §13.8: cổng bắt oan tệ hơn cổng không bắt, và ở đây nó còn tiêu hạn mức.
+
+    Cùng họ với mọi lỗi hôm nay: một chú thích đọc rất có căn cứ, viết đúng ở thời của nó, và
+    không ai đi đo lại khi ngữ cảnh đổi — ở đây ngữ cảnh đổi vì chính em bắt mô hình PHẢI đọc
+    con số lên, nên nó bắt đầu viết số lớn bằng chữ (§12.5).
+
+    Nay đệ quy tới hàng tỉ. Trần 10^12 chỉ để chặn đầu ra vô nghĩa, không phải một giới hạn
+    thật của tiếng Anh."""
+    if n < 0 or n >= 10 ** 12:
         return ""
     if n < 20:
         return _DON_VI[n]
@@ -147,8 +163,11 @@ def _doc_so(n: int) -> str:
     if n < 1000:
         t, r = divmod(n, 100)
         return _DON_VI[t] + " hundred" + (" " + _doc_so(r) if r else "")
-    t, r = divmod(n, 1000)
-    return _doc_so(t) + " thousand" + (" " + _doc_so(r) if r else "")
+    for goc, ten in ((10 ** 9, "billion"), (10 ** 6, "million"), (1000, "thousand")):
+        if n >= goc:
+            t, r = divmod(n, goc)
+            return _doc_so(t) + " " + ten + (" " + _doc_so(r) if r else "")
+    return ""
 
 
 def so_tren_man(n: dict) -> str:
