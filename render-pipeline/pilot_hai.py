@@ -170,6 +170,47 @@ def _doc_so(n: int) -> str:
     return ""
 
 
+def _doc_gon(s: str) -> str:
+    """Con số cho LỜI NÓI. Màn hình giữ số CHÍNH XÁC; miệng người thì không đọc được nó.
+
+    ── VÌ SAO  (soi khung vòng thứ sáu, 6/9/2026) ─────────────────────────────────────────
+    Cổng `_du_so` đòi mọi con số trên bảng phải được đọc lên (anh dặn — nhiều người NGHE mà
+    không nhìn). Với `31,622,776,602x` thì mô hình làm đúng điều được bảo:
+
+        "That's thirty-one billion six hundred twenty-two million seven hundred seventy-six
+         thousand six hundred two times the energy."
+
+    18 chữ, bong bóng NĂM DÒNG, che hẳn khối số phía dưới. Và không luật nào cứu được: không
+    câu tiếng Anh nào chứa con số ấy trong mười chữ. Trần chữ và cổng đọc-số **đánh nhau**, và
+    em đã đi sửa hình học ba vòng trước khi nhận ra hai luật của chính mình mâu thuẫn.
+
+    Người thật nói "ba mươi mốt tỉ lần". Con số chính xác là việc của MÀN HÌNH — nó ở đó, code
+    tính ra, người xem đọc được. Lời nói mang QUY MÔ.
+
+    Rút gọn do CODE, không do mô hình: đây là con số chảy vào sản phẩm, và AI không bao giờ
+    được cấp một con số.
+    """
+    m = re.match(r"^([^\d\-]*)(-?[\d,]+(?:\.\d+)?)(.*)$", str(s or "").strip())
+    if not m:
+        return str(s or "")
+    dau, so, duoi = m.group(1), m.group(2), m.group(3)
+    try:
+        v = float(so.replace(",", ""))
+    except ValueError:
+        return str(s or "")
+    for goc, ten in ((1e9, "billion"), (1e6, "million")):
+        if abs(v) >= goc:
+            r = v / goc
+            # Một chữ số thập phân tới 100: "31.6 billion" khớp với `31,622,776,602` đang hiện
+            # trên màn, còn làm tròn thành "32 billion" thì TAI nghe một số, MẮT thấy số khác.
+            sr = f"{r:.1f}".rstrip("0").rstrip(".") if r < 100 else f"{r:.0f}"
+            # `31,622,776,602x` -> hậu tố "x" phải thành chữ đọc được, không dính vào đơn vị
+            # ("32 billionx" là thứ không ai đọc lên được).
+            hau = " times" if duoi[:1].lower() == "x" else duoi
+            return f"{dau}{sr} {ten}{hau}".strip()
+    return str(s or "")
+
+
 def so_tren_man(n: dict) -> str:
     """Con số mà panel này SẼ HIỆN, viết thành lời đọc được. Rỗng = panel không có số.
 
@@ -187,7 +228,7 @@ def so_tren_man(n: dict) -> str:
     def g(v):
         return " ".join(str(v).split()) if v not in (None, "") else ""
     if n.get("so"):
-        return (g(n["so"]) + " " + g(n.get("don"))).strip()
+        return (_doc_gon(g(n["so"])) + " " + g(n.get("don"))).strip()
     t, ph = n.get("trai"), n.get("phai")
     if isinstance(t, dict) and isinstance(ph, dict) and t.get("so") and ph.get("so"):
         return f"{g(t['so'])} for {g(t.get('nhan'))} against {g(ph['so'])} for {g(ph.get('nhan'))}"
@@ -254,8 +295,21 @@ def _du_so(loi: list, thoai: list, man: list = None) -> list:
         _cl = _cl.replace(_d, "-")
     def _da_doc(x):
         v = re.sub(r"[^\d.]", "", x).rstrip(".")
-        if not v or "." in v:
+        if not v:
             return False
+        # ── SỐ THẬP PHÂN CŨNG ĐỌC ĐƯỢC  (đo 6/9/2026) ──────────────────────────────────
+        # Bản cũ trả False cho mọi số có dấu chấm. Đúng khi mọi con số đều nguyên; sai kể từ
+        # lúc `_doc_gon` bắt đầu sinh "31.6 billion" cho lời nói — mô hình viết
+        # *"thirty-one point six billion"*, hoàn toàn đúng, và cổng chấm trượt.
+        # Cùng họ với mọi lỗi hôm nay: một bản sửa ở tầng trên đổi ngữ cảnh của một hàm ở
+        # tầng dưới, và hàm ấy giữ nguyên giả định cũ (§12.5).
+        if "." in v:
+            ng, _, le = v.partition(".")
+            le = le.rstrip("0")
+            if not ng.isdigit() or not le.isdigit() or len(le) > 1:
+                return False
+            c = _doc_so(int(ng))
+            return bool(c) and f"{c} point {_doc_so(int(le))}" in _cl
         c = _doc_so(int(v))
         return bool(c) and c in _cl
     # So theo CHỮ SỐ, bỏ dấu phẩy và ký hiệu: mô hình viết "43,107 dollars" hay "43107 dollars"
