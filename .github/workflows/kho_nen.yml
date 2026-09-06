@@ -113,6 +113,29 @@ jobs:
               print(f"⚠ {len(rong)} kênh CHƯA CÓ NỀN NÀO: {', '.join(rong)}")
           PY
 
+      - name: Gắn nhóm chủ đề cho nền MỚI
+        # §13.1 — cơ chế đã có (`nen_tag.py`), thiếu đúng thứ GỌI nó. Không có bước này thì kho
+        # lớn dần mà bảng thẻ đứng yên: `pilot_hai.phong_cua` chỉ chọn theo nhóm khi tìm được
+        # ≥3 nền cùng nhóm, nên nền chưa gắn thẻ KHÔNG BAO GIỜ được chọn theo nội dung — tính
+        # năng vẫn "chạy", chỉ là nó lặng lẽ bỏ qua đúng phần vừa vẽ thêm.
+        # Gắn thẻ dùng Groq (chữ), không đụng hạn mức ẢNH của bước trên.
+        continue-on-error: true
+        env:
+          GROQ_KEYS: ${{ secrets.GROQ_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+          MM0_KEYS: ${{ secrets.MM0_KEYS }}
+        run: |
+          cd render-pipeline
+          python -u nen_tag.py --ai
+          python - <<'PY'
+          import json, io
+          the = json.load(io.open("nen_tag.json", encoding="utf-8"))
+          kho = json.load(io.open("nen_kho.json", encoding="utf-8"))
+          mt = sum(len(v) for v in kho.values())
+          co = sum(1 for v in the.values() if v)
+          print(f"thẻ: {co}/{mt} nơi chốn có nhóm ({co*100//max(1,mt)}%)")
+          PY
+
       - name: Commit kho mới
         run: |
           cd "$GITHUB_WORKSPACE"
@@ -120,7 +143,8 @@ jobs:
           git config user.email "bot@users.noreply.github.com"
           # NÊU ĐÍCH DANH đường dẫn, không bao giờ `git add -A` — §15.18: repo này có nhiều
           # cửa sổ cùng làm, và một lần `-A` đã quét bản sửa dở của cửa sổ khác vào commit.
-          git add engine-remotion/public/comic_nen/*.webp render-pipeline/nen_kho.json || true
+          git add engine-remotion/public/comic_nen/*.webp \
+                  render-pipeline/nen_kho.json render-pipeline/nen_tag.json || true
           if git diff --cached --quiet; then
             echo "không có gì mới để commit"
             exit 0

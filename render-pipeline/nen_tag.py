@@ -219,15 +219,25 @@ def main():
         if os.path.exists(RA):
             cu = json.load(io.open(RA, encoding="utf-8"))
         ds_k = [x for x in (a.kenh.split(",") if a.kenh else sorted(kho)) if x in kho]
+        # ── CHỈ GẮN MỤC CHƯA CÓ THẺ  (6/9/2026) ─────────────────────────────────────────
+        # Bản đầu gọi `_phan_ai` trên TOÀN BỘ `ds` mỗi lượt. Đúng ở lần chạy đầu (kho rỗng) và
+        # sai kể từ lần thứ hai: kho nền lớn dần theo tuần, nên mỗi lượt bổ sung ~800 nền mới
+        # lại trả tiền để gắn lại 5.118 nền đã có thẻ. Chi phí tăng theo KÍCH THƯỚC KHO trong
+        # khi việc thật tăng theo SỐ NỀN MỚI — hai đại lượng khác hẳn nhau.
+        # Cùng §17.14: trả tiền khi hỏng, không trả tiền khi lành.
         for ma in ds_k:
             nhom = list(NK.VUNG.get(ma) or NK.VUNG["dayinlife"])
             ds = kho[ma]
-            v = _phan_ai(ma, ds, nhom, khoa)
+            can = [i for i in range(len(ds)) if not cu.get(f"{ma}_{i:03d}")]
+            if not can:
+                print(f"   {ma:<12} đủ thẻ ({len(ds)}) — bỏ qua")
+                continue
+            v = _phan_ai(ma, [ds[i] for i in can], nhom, khoa)
             n = 0
-            for i, x in enumerate(v):
+            for i, x in zip(can, v):
                 if x is not None:
                     cu[f"{ma}_{i:03d}"] = nhom[x]; n += 1
-            print(f"   {ma:<12} {n}/{len(ds)} nền có nhóm")
+            print(f"   {ma:<12} +{n}/{len(can)} nền mới có nhóm (kho {len(ds)})")
             io.open(RA, "w", encoding="utf-8").write(json.dumps(cu, ensure_ascii=False, indent=0))
         import collections
         c = collections.Counter(v for v in cu.values() if v)
