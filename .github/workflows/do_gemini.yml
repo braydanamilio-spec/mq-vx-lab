@@ -1,0 +1,158 @@
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# ĐO HẠN MỨC GEMINI TRÊN RUNNER MỸ  (6/9/2026)
+#
+# Anh hỏi: *"gemini cho tạo ảnh nhiều hơn cf, đã dùng chưa, đủ render 18 luồng 24/7 không?"*
+#
+# ── VÌ SAO PHẢI CÓ WORKFLOW NÀY THAY VÌ MỘT CON SỐ ───────────────────────────────────────
+# Đo từ máy anh: **68/68 khoá Gemini trả 429** với `quota_limit_value: "0"`,
+# `quota_location: "asia-east1"`. Và không chỉ model ảnh — `gemini-2.5-flash-lite` (model
+# CHỮ) cũng trả đúng lỗi ấy. Tức Google không phục vụ bậc free cho vùng này, chứ không phải
+# hạn mức ảnh cạn. Từ Việt Nam, Gemini đóng góp ĐÚNG BẰNG 0.
+#
+# Còn con số trên runner Mỹ thì Google **không công bố**: trang rate-limits ghi thẳng
+# *"Rate limits depend on a variety of factors and can be viewed in Google AI Studio"*. Nên
+# không có nguồn nào để trích, và §13.1 cấm viết một giới hạn không có đơn vị và nguồn.
+#
+# Workflow này là cách rẻ nhất để biến câu hỏi thành số: chạy đúng một lần trên runner Mỹ,
+# KHÔNG dựng video, KHÔNG tốn hạn mức CF. Nó trả lời ba câu:
+#   1. Bao nhiêu khoá vẽ được ảnh ở vùng Mỹ (mẫu 20 khoá)?
+#   2. Một khoá vẽ được bao nhiêu ảnh trước khi chạm trần? (bơm cạn ĐÚNG MỘT khoá)
+#   3. Ảnh Gemini có cùng chất với ảnh CF không? (gói 2 ảnh mẫu vào artifact để soi bằng mắt)
+#
+# ANH BẤM TAY. Luật cứng số 1: không `gh workflow run` để "kiểm tra".
+# ══════════════════════════════════════════════════════════════════════════════════════════
+name: Đo hạn mức Gemini (chạy tay)
+
+on:
+  workflow_dispatch:
+    inputs:
+      so_khoa:
+        description: "số khoá lấy mẫu để đếm khoá còn sống"
+        default: "20"
+      model:
+        description: "model ảnh cần đo"
+        default: "gemini-3.1-flash-image"
+
+jobs:
+  do:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Đo
+        env:
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          SO_KHOA: ${{ github.event.inputs.so_khoa || '20' }}
+          MODEL: ${{ github.event.inputs.model || 'gemini-3.1-flash-image' }}
+        run: |
+          mkdir -p mau
+          python - <<'PY'
+          import base64, json, os, subprocess, time
+
+          MODEL = os.environ["MODEL"]
+          N = int(os.environ["SO_KHOA"])
+          ks = []
+          for bien in ("GEMINI_KEYS", "CF_KEYS"):
+              for d in (os.environ.get(bien, "") or "").replace(",", "\n").splitlines():
+                  d = d.strip()
+                  if d.startswith("AIza") or d.startswith("AQ."):
+                      ks.append(d)
+          ks = list(dict.fromkeys(ks))
+          print(f"hồ khoá Gemini: {len(ks)}")
+          if not ks:
+              print("❌ secret GEMINI_KEYS không chứa khoá Gemini nào — dừng"); raise SystemExit(1)
+
+          P = ("hand-drawn doodle animation still from a whiteboard explainer cartoon. Any "
+               "person is a stick figure with a round white head and thin black limbs. Thick "
+               "wobbly ink outlines, flat colour. SCENE: a nurse walks down an empty hospital "
+               "corridor at night. No text anywhere.")
+
+          def ve(key, ra=None, kieu=0):
+              u = (f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}"
+                   f":generateContent?key={key}")
+              # BA BIẾN THỂ LỆNH GỌI. Anh hỏi *"gọi đúng model chưa"* — đây là chỗ trả lời dứt
+              # điểm: nếu lệnh gọi sai thì API trả **400 INVALID_ARGUMENT**, không trả 429.
+              # 429 nghĩa là lệnh gọi hợp lệ và server chỉ từ chối vì hạn mức. Vẫn thử cả ba
+              # để không ai phải hỏi lại.
+              gc = [{"responseModalities": ["IMAGE"], "imageConfig": {"aspectRatio": "9:16"}},
+                    {"responseModalities": ["TEXT", "IMAGE"]},
+                    {}][kieu]
+              body = {"contents": [{"parts": [{"text": P}]}]}
+              if gc:
+                  body["generationConfig"] = gc
+              p = subprocess.run(["curl", "-s", "--max-time", "180",
+                                  "-H", "Content-Type: application/json",
+                                  "-H", "User-Agent: mm0-do/1.0",
+                                  "-d", json.dumps(body), u],
+                                 capture_output=True, text=True)
+              try:
+                  d = json.loads(p.stdout)
+              except Exception:
+                  return None, "phản hồi lạ"
+              for c in d.get("candidates", []):
+                  for part in (c.get("content", {}) or {}).get("parts", []):
+                      b = part.get("inlineData") or part.get("inline_data")
+                      if b and b.get("data"):
+                          raw = base64.b64decode(b["data"])
+                          if ra:
+                              open(ra, "wb").write(raw)
+                          return len(raw), ""
+              e = d.get("error") or {}
+              chi = ""
+              for det in e.get("details", []):
+                  md = det.get("metadata") or {}
+                  if md:
+                      chi = f"{md.get('quota_limit')}={md.get('quota_limit_value')} @ {md.get('quota_location')}"
+              return None, f"{e.get('code')} {str(e.get('message'))[:90]} | {chi}"
+
+          # ── 0. LỆNH GỌI CÓ ĐÚNG KHÔNG ────────────────────────────────────────────────
+          print("\n0) ba biến thể lệnh gọi trên khoá đầu (400 = gọi sai · 429 = gọi đúng, hết hạn mức)")
+          for kieu, ten in enumerate(("chỉ IMAGE", "TEXT+IMAGE", "không khai modalities")):
+              n, err = ve(ks[0], None, kieu)
+              print(f"     {ten:24} -> {'OK' if n else err}")
+
+          # ── 1. BAO NHIÊU KHOÁ VẼ ĐƯỢC ────────────────────────────────────────────────
+          song = 0
+          ly = {}
+          for i, k in enumerate(ks[:N]):
+              n, err = ve(k, "mau/gemini_%d.png" % i if song == 0 else None)
+              if n:
+                  song += 1
+              else:
+                  ly[err[:70]] = ly.get(err[:70], 0) + 1
+              time.sleep(0.4)
+          print(f"\n1) {song}/{min(N, len(ks))} khoá vẽ được ở vùng của runner này")
+          for a, b in sorted(ly.items(), key=lambda x: -x[1]):
+              print(f"     {b:3}×  {a}")
+
+          # ── 2. MỘT KHOÁ VẼ ĐƯỢC BAO NHIÊU ẢNH ────────────────────────────────────────
+          # Bơm ĐÚNG MỘT khoá tới khi nó từ chối — cùng cách đã đo CF ra "37 ảnh/tài khoản".
+          # Chỉ chạy khi bước 1 cho thấy khoá sống, và trần 120 để không treo job.
+          if song:
+              kk = next(k for k in ks[:N] if ve(k)[0])
+              d = 0
+              for i in range(120):
+                  n, err = ve(kk)
+                  if not n:
+                      print(f"\n2) MỘT khoá vẽ được {d} ảnh rồi dừng: {err}")
+                      break
+                  d += 1
+                  time.sleep(0.3)
+              else:
+                  print(f"\n2) MỘT khoá vẽ ≥120 ảnh mà chưa chạm trần (dừng ở trần đo)")
+              print(f"   -> hồ {len(ks)} khoá ≈ {len(ks) * d if d else '≥' + str(len(ks) * 120)} ảnh/ngày")
+              print(f"   NHU CẦU: 1 long + 3 short × 18 kênh = 2.218 ảnh/ngày (đã cộng 25% vẽ lại)")
+          else:
+              print("\n2) bỏ qua — không khoá nào vẽ được, hồ Gemini đóng góp 0 ở vùng này")
+          PY
+      - name: Gói ảnh mẫu để soi bằng mắt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mau-gemini-${{ github.run_number }}
+          path: mau/*.png
+          if-no-files-found: ignore
+          retention-days: 7

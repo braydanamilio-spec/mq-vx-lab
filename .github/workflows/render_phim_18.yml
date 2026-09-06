@@ -1,0 +1,261 @@
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# BỘ PHIM v10 — 18 KÊNH GIẢI THÍCH, 18 LUỒNG  (6/9/2026)
+#
+# Bộ THỨ SÁU của repo. KHÔNG dùng chung engine hay workflow với năm bộ kia (§10): bộ giải
+# thích cũ chạy `giai_thich.py` + `GiaiThichDoc`; bộ này chạy `phim.py` + `PhimDoc/PhimNgang`.
+# Hai workflow sống song song có chủ ý — bản cũ vẫn dựng được cho tới khi anh chốt bản mới.
+#
+# ── NGÂN SÁCH ẢNH LÀ RÀNG BUỘC CHÍNH, KHÔNG PHẢI THỜI GIAN ────────────────────────────────
+# Đo 6/9 trên tài khoản thật: 10.000 neuron/ngày là MỘT hồ chung cho mọi model của một tài
+# khoản CF (bơm cạn bằng klein-9b rồi gọi schnell trên chính nó -> vẫn báo cạn). 97 tài khoản
+# => 970.000 neuron/ngày.
+#
+#     flux-2-klein-9b  ~270 neuron/ảnh  ->  3.592 ảnh/ngày   (chất cao nhất trong nhóm free)
+#     flux-2-klein-4b  ~111 neuron/ảnh  ->  8.738 ảnh/ngày
+#     flux-1-schnell    ~58 neuron/ảnh  -> 16.724 ảnh/ngày
+#
+# Nhu cầu đo trên chính 18 kênh: bản dài 10 chương ~73 cảnh, bản ngắn ~8 cảnh.
+#     1 long + 3 short/kênh/ngày  = 1.774 ảnh, +25% vẽ lại = 2.218  ->  62% hồ  ✅
+#     1 long + 5 short            = 2.077 -> 2.596               ->  72% hồ  ✅
+#     2 long + 6 short            = 3.548 -> 4.435               -> 123% hồ  ❌ phải tụt 4b
+#
+# `PHIM_TRAN_ANH` chặn ở mức LUỒNG, và bộ đếm sống ở TỆP chứ không ở biến — §17.7 đã đo được
+# đúng lỗi này ở bộ cũ: trần khai "120 ảnh mỗi luồng" mà mỗi tập là một tiến trình `python`
+# riêng, nên nó thành "120 ảnh mỗi TẬP" và một lượt vẽ 8.059 ảnh thay vì 2.160.
+#
+# ── TRẦN THỜI GIAN (§10.1: đo, nhân đôi cho runner 2 nhân, cộng 30%) ──────────────────────
+#   short 9:16  17 giây video · 8 ảnh   ->  ~1,5 phút ở máy  ->  ~3 phút runner
+#   long 16:9   70 giây · 36 ảnh        ->  ~4 phút ở máy    ->  ~8 phút runner
+#   long 10 chương ~230 giây · 73 ảnh   ->  ~10 phút ở máy   ->  ~20 phút runner
+#   một vòng (1 long + 3 short) ≈ 29 phút runner + 5 phút cài = 34.
+# Trần job 300, vòng lặp dừng khi còn dưới 45 phút — chừa chỗ gói artifact. Job quá giờ thì
+# `upload-artifact` KHÔNG chạy và mất cả video đã dựng xong (§10.1).
+# ══════════════════════════════════════════════════════════════════════════════════════════
+name: Render 18 kênh PHIM v10
+
+on:
+  schedule:
+    # BỐN MỐC RẢI ĐỀU (§10.2). `cron` của repo này đã chứng minh không đáng tin — `cleanup.yml`
+    # khai "0 3 * * *" mà nổ lúc 17:37/09:37/08:38/00:36, và hai tick đầu của
+    # `render_phan_tich_18.yml` bị bỏ hẳn. Job `chot` chặn ba lượt thừa nên bốn mốc chỉ tốn
+    # bốn lượt kiểm 5 giây.
+    # Giờ lệch hẳn hai workflow kia để 18 luồng không giành runner.
+    - cron: "40 2 * * *"
+    - cron: "40 8 * * *"
+    - cron: "40 14 * * *"
+    - cron: "40 20 * * *"
+  workflow_dispatch:
+    inputs:
+      kieu:
+        description: "kỹ thuật dựng hình (bỏ trống = gu riêng từng kênh; doo = người que)"
+        default: "doo"
+      chuong:
+        description: "số chương bản dài"
+        default: "10"
+
+concurrency:
+  group: phim-18
+  cancel-in-progress: false
+
+jobs:
+  # ĐẾM LƯỢT CÓ DỰNG THẬT, không đếm lượt "kết luận success". §12.8: một lượt bị chính cổng
+  # này bỏ qua cũng kết thúc `success` (job `dung` chỉ `skipped`, mà `skipped` không làm hỏng
+  # lượt), nên đếm `conclusion == success` là tự khoá vĩnh viễn — đo được trên repo này 1/9:
+  # 01:21 dựng 10/10 job ra 10 artifact; 08:34 dựng 0/1 job ra 0 artifact, dashboard xanh cả hai.
+  chot:
+    runs-on: ubuntu-latest
+    outputs:
+      chay: ${{ steps.q.outputs.chay }}
+    steps:
+      - id: q
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "chay=yes" >> $GITHUB_OUTPUT; exit 0
+          fi
+          TU=$(date -u -d '20 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          N=0
+          for ID in $(gh api "repos/${{ github.repository }}/actions/workflows/render_phim_18.yml/runs?per_page=20" \
+                        --jq ".workflow_runs[] | select(.created_at > \"$TU\") | .id"); do
+            # Hỏi thẳng JOB `dung` của từng lượt: chỉ đếm lượt mà job dựng THẬT SỰ chạy.
+            C=$(gh api "repos/${{ github.repository }}/actions/runs/$ID/jobs?per_page=100" \
+                  --jq '[.jobs[] | select(.name | startswith("dung")) | select(.conclusion=="success")] | length')
+            N=$((N + C))
+          done
+          if [ "$N" -gt 0 ]; then
+            echo "đã có $N job dựng thành công trong 20 giờ qua — bỏ qua lượt này"
+            echo "chay=no" >> $GITHUB_OUTPUT
+          else
+            echo "chay=yes" >> $GITHUB_OUTPUT
+          fi
+
+  dung:
+    needs: chot
+    if: needs.chot.outputs.chay == 'yes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix:
+        luong: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+    steps:
+      - uses: actions/checkout@v4
+      # Checkout repo đăng bài NGAY ĐẦU JOB: `actions/checkout` mặc định `clean: true`, đặt nó
+      # sau bước dựng là đánh cược rằng nó chỉ dọn đúng thư mục `path:`.
+      - name: Checkout repo đăng bài
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: npm, cache-dependency-path: engine-remotion/package-lock.json }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Cache Chrome Remotion
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.remotion
+            ~/.cache/remotion
+          key: remotion-chrome-${{ hashFiles('engine-remotion/package-lock.json') }}
+
+      - name: Cài đặt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+            libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 \
+            libasound2t64 libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg
+          # THỬ LẠI BA LẦN. Bước cài là mắt xích ĐẦU TIÊN: hỏng ở đây thì cả luồng mất trọn,
+          # nên nó phải là chỗ được bảo vệ nhất (§16.5). Ghim phiên bản cắt phần lớn nguyên
+          # nhân; thử lại lo nốt phần mạng. Và kiểm bằng `import`, không bằng mã thoát của pip.
+          for _i in 1 2 3; do
+            pip install --quiet -c render-pipeline/constraints.txt edge-tts pyyaml requests && break
+            echo "  ⚠ cài lần $_i hỏng — thử lại sau 20 giây"; sleep 20
+          done
+          python -c "import edge_tts" || { echo "❌ không cài được edge-tts sau 3 lần"; exit 1; }
+          pip install --quiet pillow
+          python -c "import PIL" || { echo "❌ thiếu pillow — cổng ảnh sẽ tắt"; exit 1; }
+          cd engine-remotion && npm ci && npx remotion browser ensure
+
+      # Cổng chạy TRƯỚC bước dựng — hỏng thì biết ngay, không tốn cả lượt render.
+      - name: Cổng
+        run: |
+          cd render-pipeline
+          python kiem_phim.py
+          # Bộ dựng THẬT là esbuild, không phải tsc: §12.2 đo được một chú thích JSX làm
+          # `tsc --noEmit` xanh mà `esbuild` chết.
+          cd ../engine-remotion
+          npx esbuild src/phim/*.tsx src/Root.tsx --loader:.tsx=tsx --outdir=/tmp/_chk --log-level=error
+
+      # Một thứ ba bước cùng cần thì nó là BƯỚC RIÊNG, không phải tác dụng phụ của bước đầu
+      # tiên tình cờ cần nó (§15.4).
+      - name: Khoá dịch vụ
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+
+      - name: Chọn kênh của luồng
+        id: k
+        run: |
+          cd render-pipeline
+          MA=$(python -c "import phim_gu as G; print(list(G.KENH)[${{ matrix.luong }} - 1])")
+          echo "ma=$MA" >> $GITHUB_OUTPUT
+          echo "luồng ${{ matrix.luong }} -> kênh $MA"
+
+      - name: Dựng liên tục
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          RENDER_OWNER: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+          # TRẦN ẢNH MỖI LUỒNG. 3.592 (trần klein-9b) ÷ 18 luồng = 199; đặt 160 để chừa chỗ
+          # cho vẽ lại và cho lượt cron sau trong ngày. Bộ đếm ở tệp, xem `phim_anh._da_ve`.
+          PHIM_TRAN_ANH: "160"
+        run: |
+          cd render-pipeline
+          pip install --quiet 'google-api-python-client>=2.120,<3' 'google-auth>=2.29,<3' \
+            'google-cloud-firestore>=2.27,<2.29' 'google-api-core>=2.30,<2.35' 'PyYAML>=6.0,<7' || true
+          MA="${{ steps.k.outputs.ma }}"
+          KIEU="${{ github.event.inputs.kieu || 'doo' }}"
+          CHUONG="${{ github.event.inputs.chuong || '10' }}"
+          NGAN_SACH=250          # phút cho cả vòng lặp (trần job 300 -> chừa 50)
+          CAN_MOT_VONG=45        # phút tối thiểu còn lại mới dám mở vòng mới
+          HET=$(( $(date +%s) + NGAN_SACH*60 ))
+          VONG=0
+          CAN=0
+          while [ $(( $(date +%s) + CAN_MOT_VONG*60 )) -lt $HET ] && [ "$CAN" = "0" ]; do
+            VONG=$((VONG+1))
+            echo "══ [$MA] vòng $VONG — còn $(( (HET - $(date +%s)) / 60 )) phút ══"
+            # Mốc tập lấy từ số lượt chạy: hai lượt khác nhau không bao giờ dựng trùng số tập.
+            GOC=$(( ${{ github.run_number }} * 100 + VONG * 4 ))
+
+            # MÃ THOÁT 3 = HẾT HẠN MỨC ẢNH, khác hẳn 1 = hỏng thật. `|| true` nuốt cả hai
+            # thì luồng cứ dựng tiếp cho tới hết 250 phút, mỗi tập đều cạn, mỗi tập đều đốt
+            # một vòng xoay 97 tài khoản — và log vẫn xanh (§13.3).
+            python phim.py --kenh "$MA" --tu $GOC --long --chuong "$CHUONG" \
+                           --kieu "$KIEU" --luong 8; RC=$?
+            if [ "$RC" = "3" ]; then
+              echo "   ⏸ [$MA] hết hạn mức ảnh — dừng vòng lặp, mốc cron sau chạy tiếp"
+              CAN=1
+            else
+              python phim.py --kenh "$MA" --tu $((GOC+1)) --so 3 \
+                             --kieu "$KIEU" --luong 8; RC=$?
+              [ "$RC" = "3" ] && { echo "   ⏸ [$MA] hết hạn mức ảnh ở bản ngắn"; CAN=1; }
+            fi
+
+            # BỘ GIAO HÀNG PHẢI ĐỦ BỐN THỨ (§10.3). Kiểm SẢN PHẨM trên đĩa, không kiểm mã
+            # thoát (§15.3): một tiến trình thoát 0 mà không sinh tệp nào vẫn là hỏng.
+            python - <<'PY'
+          import glob, os, sys
+          mp4 = sorted(glob.glob("out/v10_*.mp4"))
+          thieu = [m for m in mp4 if not (os.path.exists(m[:-4] + ".jpg")
+                                          and os.path.exists(m[:-4] + ".tai.json"))]
+          print(f"   📦 {len(mp4)} video · {len(mp4)-len(thieu)} đủ bộ giao hàng")
+          for m in thieu:
+              print("   ❌ thiếu bìa hoặc .tai.json:", os.path.basename(m))
+          PY
+
+            ok=0
+            for i in 1 2 3; do
+              if python day_kho.py --publish ../_autopublisher --that --mau 'v10_*.mp4'; then ok=1; break; fi
+              echo "   ⚠ đẩy kho hụt lần $i/3 — chờ 60s rồi thử lại"; sleep 60
+            done
+            if [ "$ok" != "1" ]; then
+              # §13.3 — `|| true` ở MẮT XÍCH CUỐI là cách chắc chắn để hỏng mà vẫn báo xanh.
+              # Dựng tiếp cũng không giao được; để lượt đỏ cho mốc cron sau tự thử lại.
+              echo "   ⛔ [$MA] đẩy kho hỏng sau 3 lần — DỪNG vòng lặp"
+              exit 1
+            fi
+            # Xoá theo SỔ mà bước đẩy ghi, không xoá bằng glob: glob xoá luôn tệp vừa dựng mà
+            # chưa kịp đẩy, và lúc ấy "0 tệp còn lại" đọc ra y hệt "đã đẩy hết".
+            if [ -s out/.da_day.txt ]; then
+              while IFS= read -r _t; do
+                [ -n "$_t" ] || continue
+                _b="${_t%.mp4}"
+                rm -f "out/$_b.mp4" "out/$_b.jpg" "out/$_b.tai.json" "out/$_b.canh.json" || true
+              done < out/.da_day.txt
+            fi
+          done
+          # HẾT HẠN MỨC KHÔNG PHẢI LỖI — lượt vẫn XANH, và bốn mốc cron trong ngày sẽ tự chạy
+          # tiếp từ chỗ đang dở (sổ cảnh + cache ảnh giữ nguyên tiến độ). Cho lượt ĐỎ ở đây là
+          # dạy người ta bỏ qua báo động (§15.12).
+          [ "$CAN" = "1" ] && echo "══ [$MA] dừng sớm vì hết hạn mức ảnh, KHÔNG phải lỗi ══"
+          exit 0
+
+      - name: Gói phần chưa đẩy được
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phim-${{ steps.k.outputs.ma }}-${{ github.run_number }}
+          path: |
+            render-pipeline/out/v10_*.mp4
+            render-pipeline/out/v10_*.jpg
+            render-pipeline/out/v10_*.tai.json
+            render-pipeline/out/v10_*.canh.json
+          if-no-files-found: ignore
+          retention-days: 5
