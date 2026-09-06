@@ -73,6 +73,40 @@ BANG = {
               ("xa", "what is behind it, 6 to 14 words"),
               ("gan", "what is on the ground in front, 5 to 12 words"),
               ("sang", "the light and colour mood, 5 to 12 words, no camera words")]),
+ # ── VÌ SAO HAI BẢNG NÀY KHÔNG CẦN CỔNG ĐỐI CHỨNG  (đo 6/9/2026) ────────────────────────────
+ # Em từng gộp bốn kênh "tiền/khảo sát" lại và nói cả bốn cần bảng số công bố. Đọc lại dữ liệu
+ # thì hai trong bốn KHÔNG hề khẳng định điều gì về thế giới:
+ #   THOI_QUEN — giá nằm TRONG TÊN: *"a $6 coffee every morning"*. Video không nói "cà phê giá
+ #     6 đô"; nó nói "GIẢ SỬ bạn mua một ly 6 đô mỗi sáng" rồi tính lãi kép. Con số là TIỀN ĐỀ,
+ #     không phải khẳng định — không có gì để đối chứng, và bắt nó qua cổng đối chứng là hỏi
+ #     thế giới một câu mà video không hề đặt ra.
+ #   MOC_LON  — "một triệu so với một tỉ" là toán thuần tuý. Không có sự kiện nào cả.
+ # Cái phải giữ ở đây là NHẤT QUÁN NỘI BỘ: số trong tên phải bằng đúng cột số. Lệch một chữ là
+ # màn hình nói một đằng, lời nói một nẻo — thứ tệ hơn một con số sai nguồn.
+ "THOI_QUEN": dict(
+   kenh="realcost", bt=3, ve=None, cuoi=True, so=1, khop_ten=True,
+   so_don="dollars", so_bien=(0.5, 500), so_sai=None,
+   nhom=("coffee, tea and drinks", "lunch and takeaway", "subscriptions and apps",
+         "transport and parking", "snacks and convenience stores", "phone and internet",
+         "gym, hobbies and classes", "cigarettes, vapes and lottery",
+         "delivery fees and tips", "small household buys"),
+   mo="everyday spending habits an American repeats, each written with its price inside the name",
+   truong=[("viec", 'the habit WITH its price inside, 4 to 8 words, starting "a". '
+                    'Example shape: "a $6 coffee every morning", "a $15 streaming subscription"'),
+           ("gia", "just the dollar amount from that name, a plain number, no $ and no commas"),
+           ("lan", "how many times a year it happens: 365 daily, 260 workdays, 52 weekly, "
+                   "12 monthly, 4 quarterly")]),
+ "MOC_LON": dict(
+   kenh="howmuch", bt=5, ve=None, cuoi=True, cot_ten=4,   # bản sắc = ĐƠN VỊ, xem `_ic`
+   nhom=("time", "money", "distance", "counting objects", "food and drink",
+         "steps and movement", "paper and writing", "data and files",
+         "people and crowds", "nature and small things"),
+   mo="units where the gap between a million and a billion of them becomes shocking",
+   truong=[("nho", 'the smaller amount in words, 2 to 3 words. Example: "a million"'),
+           ("nho_v", "that amount as a plain number, no commas"),
+           ("lon", 'the bigger amount in words, 2 to 3 words. Example: "a billion"'),
+           ("lon_v", "that amount as a plain number, no commas"),
+           ("don", "the unit being counted, 1 to 3 words. Example: \"seconds\", \"dollar bills\"")]),
  "TOC_DO": dict(
    kenh="speedof", bt=None, ve=2, cuoi=False, so=1,
    # Bảng DUY NHẤT ở đây có con số, nên nó phải qua **cổng đối chứng** của `bang_mo_rong`:
@@ -220,7 +254,14 @@ def mot_bang(ten, muc_tieu, khoa, mo_moi=30):
     dt = BANG[ten]
     cu = list(getattr(G, ten))
     _c = dt.get("cuoi", False)
-    co = {_dau_thuc(r[0], _c) for r in cu}
+    # ── CỘT MANG BẢN SẮC KHÔNG PHẢI LÚC NÀO CŨNG LÀ CỘT ĐẦU  (đo 6/9/2026) ────────────────
+    # `MOC_LON` viết ('a million', 1e6, 'a billion', 1e9, 'seconds', 'tien'). Cột đầu là ĐỘ LỚN
+    # — mọi dòng đều "a million"/"a thousand", nên khử trùng theo nó loại 31/31 dòng mới.
+    # Bản sắc ở đây là ĐƠN VỊ ĐƯỢC ĐẾM ("seconds" · "dollar bills") — thứ người xem thấy khác
+    # nhau giữa hai tập. Cùng quy luật đã trả giá bốn lần hôm nay (*từ mà khuôn câu bắt phải có
+    # thì không mang bản sắc*), chỉ khác là ở đây nó chiếm nguyên một CỘT.
+    _ic = dt.get("cot_ten", 0)
+    co = {_dau_thuc(str(r[_ic]), _c) for r in cu}
     them = []
     print(f"\n══ {ten} ({dt['kenh']})  {len(cu)} -> {muc_tieu} mục")
     # Hai ngân sách KHÁC BẢN CHẤT, hai bộ đếm (§14.8): `lan` đếm mẻ đã xin, `hong` đếm lượt
@@ -233,7 +274,11 @@ def mot_bang(ten, muc_tieu, khoa, mo_moi=30):
         khoas = "\n".join(f'  "{k}": {m}' for k, m in _tr)
         luat = "\n".join(f"- {m}" for _k, m in _tr)
         sysp = LENH.format(khoa=khoas, luat=luat, co="  " + ", ".join(sorted(co)))
-        nh = NHOM[ten][(len(cu) + len(them)) % len(NHOM[ten])]
+        # Nhóm khai TRONG đặc tả bảng đứng trước bảng toàn cục — bảng mới thì khai tại chỗ,
+        # không phải sửa hai nơi. Thiếu cả hai thì `KeyError`, và đó là điều ĐÚNG: một bảng
+        # không có nhóm chủ đề sẽ lặp ngay từ mẻ thứ hai (đo được 48/50 dòng trùng).
+        _nh = dt.get("nhom") or NHOM[ten]
+        nh = _nh[(len(cu) + len(them)) % len(_nh)]
         t = PC._goi(sysp, f"Give {mo_moi} rows: {dt['mo']}. "
                           f"Draw them all from this area: {nh}.", khoa)
         tho = _mang(t)
@@ -258,6 +303,15 @@ def mot_bang(ten, muc_tieu, khoa, mo_moi=30):
                 vi["có chữ/biển"] = vi.get("có chữ/biển", 0) + 1; continue
             if NGHICH.search(canh):
                 vi["viết nghịch"] = vi.get("viết nghịch", 0) + 1; continue
+            if dt.get("khop_ten"):
+                # Số trong tên phải BẰNG cột số. Không phải chuyện thẩm mỹ: bộ sinh in tên ra
+                # tiêu đề và in cột số ra bảng, nên lệch nhau là màn hình cãi lời nói.
+                import re as _re
+                _t = _re.search(r"\$\s*([\d.,]+)", gt[0])
+                _c = _re.sub(r"[^\d.]", "", str(gt[dt["so"]]) or "")
+                if not _t or _t.group(1).replace(",", "") != _c:
+                    vi["số trong tên lệch cột số"] = vi.get("số trong tên lệch cột số", 0) + 1
+                    continue
             if dt.get("so") is not None:
                 try:
                     _v = float(re.sub(r"[^\d.\-]", "", gt[dt["so"]]) or 0)
@@ -273,7 +327,7 @@ def mot_bang(ten, muc_tieu, khoa, mo_moi=30):
             w = len(gt[0].split())
             if not (2 <= w <= 8):
                 vi["dạng tên"] = vi.get("dạng tên", 0) + 1; continue
-            d = _dau_thuc(gt[0], _c)
+            d = _dau_thuc(str(gt[_ic]), _c)
             if d in co:
                 vi["trùng"] = vi.get("trùng", 0) + 1; continue
             co.add(d)
@@ -287,7 +341,11 @@ def mot_bang(ten, muc_tieu, khoa, mo_moi=30):
             them.append(tuple(gt)); nhan += 1
         # ── CỔNG ĐỐI CHỨNG, chỉ cho bảng CÓ CỘT SỐ ────────────────────────────────────
         # Chạy sau vòng lọc để hỏi một lượt cho cả mẻ (song song), thay vì một lượt mỗi dòng.
-        if dt.get("so") is not None and them:
+        # Có cột SỐ không có nghĩa là phải đối chứng. `THOI_QUEN` có cột giá, nhưng giá ấy là
+        # TIỀN ĐỀ video tự nêu ("giả sử một ly 6 đô"), không phải khẳng định về thế giới — hỏi
+        # thế giới một câu mà video không đặt ra thì câu trả lời không dùng vào đâu được.
+        # Điều kiện đúng là "bảng có khai CÂU HỎI LẠNH không", không phải "có cột số không".
+        if dt.get("so_lanh") and them:
             _moi = them[len(them) - nhan:]
             hai = BM.doi_chung([r[0] for r in _moi], dt["so_lanh"], khoa)
             giu, an = [], 0

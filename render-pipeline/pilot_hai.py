@@ -633,12 +633,57 @@ DO_VAI_3 = {
 }
 
 
+
+
+# Trang phục VAI THỨ TƯ — cùng phép suy từ câu tả như `DO_VAI_3`.
+# Bốn vai cho **12 cặp có thứ tự** thay vì 6: gấp đôi số cuộc trò chuyện khác nhau,
+# và không tốn một ảnh nào.
+DO_VAI_4 = {
+ "howlong": dict(ao='#3FA46A', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='duoi_ngua', kieuAo='somi'),   # Eli
+ "howbig": dict(ao='#E39BB4', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='ngan', kieuAo='somi'),   # Lena
+ "realcost": dict(ao='#EDE3CE', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#B9BFC4', kieuToc='ngan', kieuAo='somi'),   # Graham
+ "howmuch": dict(ao='#2A2A2A', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#D9503F', kieuToc='xoan', kieuAo='thun'),   # Mira
+ "whatif": dict(ao='#E08A3C', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='ngan', kieuAo='somi'),   # Jace
+ "survive": dict(ao='#E8C24A', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='duoi_ngua', kieuAo='somi'),   # Tara
+ "dayinlife": dict(ao='#B9BFC4', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#B9BFC4', kieuToc='ngan', kieuAo='thun'),   # Eli
+ "wheregoes": dict(ao='#E08A3C', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#6B4A2F', kieuToc='duoi_ngua', kieuAo='thun'),   # Mara
+ "therules": dict(ao='#F2F2F2', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='trocs', kieuAo='thun'),   # Sam
+ "speedof": dict(ao='#2A2A2A', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#2E8B8B', kieuToc='duoi_ngua', kieuAo='thun'),   # Rita
+ "odds": dict(ao='#7B2233', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='ngan', kieuAo='somi'),   # Milo
+ "hiddenfee": dict(ao='#2E8B8B', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='bob', kieuAo='thun'),   # Nina
+ "yearsof": dict(ao='#3A3A3A', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='ngan', kieuAo='thun', rau='quai'),   # Milo
+ "howloud": dict(ao='#2A2A2A', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='ngan', kieuAo='thun'),   # Jax
+ "whatweighs": dict(ao='#F2F2F2', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='xoan', kieuAo='polo'),   # Nora
+ "rightnow": dict(ao='#4E6E8E', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#D8D8D8', kieuToc='bob', kieuAo='thun'),   # Lena
+ "howhot": dict(ao='#2B5FA8', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='duoi_ngua', kieuAo='somi'),   # Cass
+}
+
+_DO_ALL: dict = {}
+
+
 def do_vai(ma: str, cap=(0, 1)) -> tuple:
-    """Trang phục cho CẶP vai đang nói. `cap` là hai chỉ số trong dàn ba vai."""
+    """Trang phục cho CẶP vai đang nói. `cap` là hai chỉ số trong dàn vai.
+
+    ── VÌ SAO CÓ `do_vai_all.json`  (6/9/2026) ─────────────────────────────────────────────
+    Dàn vai đi từ 2 lên 6 người/kênh, mà trang phục thì viết tay ở `DO_VAI` (2 bộ) rồi vá thêm
+    `DO_VAI_3`, `DO_VAI_4`. Vá tới bộ thứ năm là lúc phải dừng: bốn bảng song song cho cùng một
+    thứ là bốn chỗ để quên một chỗ.
+    `do_vai_all.json` sinh từ CHÍNH câu tả trong `phim_gu.VAI` cho MỌI vai — một nguồn, đủ dài
+    bằng dàn vai, và tự đúng khi dàn vai dài thêm. Ba bảng cũ giữ làm tầng dưới cho kênh chưa
+    có tệp."""
+    if not _DO_ALL:
+        try:
+            _DO_ALL.update(json.load(io.open(os.path.join(GOC, "do_vai_all.json"),
+                                             encoding="utf-8")))
+        except Exception:
+            _DO_ALL["_"] = []
+    _all = _DO_ALL.get(ma)
+    if _all:
+        return dict(_all[cap[0] % len(_all)]), dict(_all[cap[1] % len(_all)])
     ds = list(DO_VAI.get(ma) or [])
-    b3 = DO_VAI_3.get(ma)
-    if b3:
-        ds = ds + [b3]
+    for _b in (DO_VAI_3.get(ma), DO_VAI_4.get(ma)):
+        if _b:
+            ds = ds + [_b]
     if not ds:
         return {}, {}
     return dict(ds[cap[0] % len(ds)]), dict(ds[cap[1] % len(ds)])

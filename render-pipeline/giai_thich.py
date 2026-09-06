@@ -1785,6 +1785,18 @@ def vi_tri_long(ma: str, idx: int, chuong: int) -> int:
 # Cùng bài học với `BIEN_THE` 3 -> 6 sáng nay: **cơ chế chạy đúng, hồ quá nhỏ so với số lần rút**
 # — không có gì hỏng để sửa, chỉ có một con số cần lớn hơn.
 LOI_MAU = {
+    # ── HAI HỌ CHO NHỊP CẶP  (6/9/2026) ─────────────────────────────────────────────────
+    # `sinh_howloud` nay lấy một CẶP làm chủ đề, và hai nhịp mới của nó ban đầu viết CỨNG một
+    # câu. Bản ngắn không sao; bản dài nối 30 chương nên câu ấy đọc lại 30 lần — selftest bắt
+    # đúng 18 ca "đọc lại trong vòng 12 nhịp".
+    # Mọi nhịp lặp lại qua nhiều chương đều phải rút từ một họ câu, không được viết cứng. Đây
+    # là cơ chế §15.15 đã dựng sẵn; em chỉ quên dùng nó cho nhịp mới.
+    "canh_doi": ["Put the two next to each other.", "Set them side by side.",
+                 "Line the two up.", "Hold one against the other.",
+                 "Now stand them together.", "Two of them, together."],
+    "chenh": ["The gap is not what it looks like.", "That gap is bigger than it looks.",
+              "The distance between them is not small.", "It is not a close call.",
+              "The two are further apart than they look.", "That difference is the whole story."],
     "mo": ["Here is the number.", "Start with the number.", "This is where it starts.",
            "Look at this first.", "One number, to begin.",
            "Begin with the figure.", "The number first.", "Here is where it opens."],
@@ -4841,10 +4853,34 @@ def sinh_yearsof(i):
 
 
 def sinh_howloud(i):
-    ten, db, bt = _lay(AM_THANH, i)
+    # ── CHỦ ĐỀ LÀ MỘT CẶP, MỐC NEO VẪN LÀ TIẾNG NÓI  (6/9/2026) ─────────────────────────────
+    # Anh muốn hàng trăm nghìn tập không trùng. Nút thắt không phải dữ liệu mà là CƠ CHẾ: rút
+    # một mục cho độ sâu = n (300 tập); rút một CẶP cho n(n−1) = **89.700 tập** từ đúng bảng ấy.
+    #
+    # Nhưng không được bỏ mốc 60 dB. Decibel chỉ dễ hiểu khi có một thứ người xem BIẾT SẴN đứng
+    # cạnh, và "tiếng nói thường" là thứ ấy — bỏ nó đi thì "111 so với 30" chỉ là hai con số.
+    # Nên: CẶP đi vào tiêu đề (thứ quyết định tập này khác tập kia), mốc neo ở lại trong thân
+    # bài (thứ quyết định người xem có hiểu không). Hai việc khác nhau, hai chỗ khác nhau.
+    #
+    # `_cap_ti` bảo đảm hai mục cách nhau ≥1,3 lần theo dB — nếu không thì "tiếng thì thầm so
+    # với tiếng lật trang" là một tập không có gì để nói (§14.6: điểm cao và bản thảo vô nghĩa
+    # cùng tồn tại được).
+    a, b_ = _cap_ti(AM_THANH, i, ti=1.3)
+    (ten, db, bt), (ten2, db2, bt2) = (a, b_) if a[1] >= b_[1] else (b_, a)
     lan = 10 ** ((db - 60) / 10.0)
-    return (f"How loud is {ten}", f"HOW LOUD IS {ten.upper()}", f"{db} DECIBELS",
+    gap = 10 ** ((db - db2) / 10.0)
+    return (f"How loud is {ten} next to {ten2}",
+            f"HOW LOUD IS {ten.upper()}", f"{db} DECIBELS",
             [
+    # Nhịp so trực tiếp hai chủ thể — lý do cặp ấy đứng chung một tập.
+    _n("chia_doi", _loi("canh_doi", i),
+       trai={"nhan": ten2, "bt": bt2, "so": f"{db2} dB"},
+       phai={"nhan": ten, "bt": bt, "so": f"{db} dB"}, dinh=True),
+    _n("so_lieu", _loi("chenh", i), so=f"{gap:,.0f}x",
+       don="more sound energy", chu=f"{ten} against {ten2}", bt=bt, dinh=True,
+       ve=_ve("two simple sound-wave shapes side by side, one far larger than the other",
+              "radiating outward from two points", "", "a plain backdrop",
+              "both sources sharp and central", "high-contrast palette")),
     _n("so_lieu", _loi("so", i), so=f"{db}", don="decibels", chu=ten, bt=bt, dinh=True,
        ve=_ve(f"{ten} shown clearly, sound waves radiating outward",
               "loud, waves rippling out", "", "a plain backdrop",
