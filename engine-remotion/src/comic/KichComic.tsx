@@ -517,6 +517,30 @@ const TheHook: React.FC<{ chu: string; W: number; H: number; p: number; mau: str
 
 // ── DỰNG PHIM ─────────────────────────────────────────────────────────────────────────────
 /** Cỡ cảnh của từng lượt. Đây là quyết định dựng phim, không để engine tự đo. */
+/**
+ * Chiều cao nhân vật trong khung, THEO TỪNG PANEL.
+ *
+ * ── VÌ SAO  (6/9/2026) ─────────────────────────────────────────────────────────────────────
+ * `tiLe` khai ở `NET_KENH`, tức MỘT giá trị cho cả kênh — nên mọi panel trong một tập có nhân
+ * vật cao đúng bằng nhau, đứng đúng một chỗ. `coCanh` đã xen kẽ rộng/cận (hai người / một
+ * người), nhưng trong nhánh "một người" thì cỡ không đổi lần nào: soi năm khung liên tiếp thấy
+ * cùng một cỡ, cùng một vị trí.
+ *
+ * Không thể chữa bằng cách đẩy nhân vật lệch sang mép: nền được `SAN_NEN` ép **đồ dồn hai mép,
+ * giữa trống**, nên lệch mép là đứng đè lên đồ đạc (§7). Trục còn lại là CHIỀU CAO, và nó
+ * không đụng luật nào.
+ *
+ * Biên 0,54–0,68 lấy đúng dải mà `PropsComic.tiLe` đã khai là an toàn — không nới ra, vì ngoài
+ * dải ấy là đầu chạm bong bóng hoặc chân lọt khỏi mặt sàn.
+ * Lệch pha theo `hat` để hai tập của cùng một kênh không đi cùng một chuỗi cỡ (§11, ba tầng
+ * đa dạng: nội dung · bản dựng · nơi chốn).
+ */
+const tiLeCua = (i: number, n: number, hat: number, goc: number): number => {
+  if (i === 0 || i === n - 1) return goc;          // mở màn và cú chốt giữ cỡ chuẩn của kênh
+  const b = [-0.05, 0.04, 0, 0.06, -0.03, 0.02][(i + hat) % 6];
+  return Math.max(0.54, Math.min(0.68, goc + b));
+};
+
 const coCanh = (i: number, n: number, hat: number): boolean => {
   if (i === 0) return true;                 // mở màn: cho biết ai đang ở với ai
   if (i === n - 1) return true;             // cú chốt: phải thấy mặt người nghe sững ra
@@ -648,7 +672,7 @@ export const KichComic: React.FC<PropsComic> = ({
            anhNen={(anhNens && anhNens[ix]) || anhNen}
            soLieu={(soLieu && soLieu[ix]) || null} haiHuoc={haiHuoc}
            sang={(sangs && sangs[ix]) || sang}
-           netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLe}
+           netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLeCua(ix, luot.length, hat, tiLe)}
            bongDuoi={bongDuoi} boKhung={boKhung} chuNo={chuNo}
            hook={ix === 0 ? kep((giay - Lx.s) / 1.15) : 0} />
   );

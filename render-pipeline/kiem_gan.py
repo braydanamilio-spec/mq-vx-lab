@@ -48,6 +48,18 @@ def engine_ve() -> dict[str, set]:
         # dưới dạng so sánh — thêm tay, kèm lý do, thay vì nới lỏng phép đo.
         "kieuToc": set(re.findall(r'k === "(\w+)"', s)) | {"ngan"},
         "rau": set(re.findall(r'kieu\.rau === "(\w+)"', s)),
+        # ── CỬ CHỈ: LẤY TỪ `TenCuChi` CỦA ENGINE  (6/9/2026) ────────────────────────────
+        # `DienVien.tsx` dùng `CU_CHI[cuChi] || CU_CHI.nghi` — một tên cử chỉ SAI không ném lỗi,
+        # nó lặng lẽ thành "đứng yên". Đo được: vòng xoay trong `kich_hai.cu_chi_cua` gọi
+        # `chong_nanh` và `ngan_ngam`, cả hai KHÔNG có trong `TenCuChi`, nên vòng sáu chỗ thật
+        # ra chỉ có ba cử chỉ và ba chỗ còn lại đều đứng yên.
+        # Triệu chứng duy nhất là "nhân vật hay đứng yên" — thứ người ta đổ cho thẩm mỹ, không
+        # ai nghĩ là một tên viết sai. Đúng dạng nguy nhất: nhánh dự phòng che mất lỗi gán.
+        # Đọc thẳng khai báo kiểu, KHÔNG chép danh sách sang đây (xem đầu tệp).
+        "cuChi": set(re.findall(r'"(\w+)"',
+                     (re.search(r"export type TenCuChi\s*=([^;]+);",
+                                _doc(os.path.join(ENG, "v2", "DienVien.tsx")))
+                      or type("x", (), {"group": lambda *_: ""})()).group(1))),
     }
 
 
@@ -64,7 +76,8 @@ def bang_gan() -> dict[str, set]:
     KIỂM SẢN PHẨM, không phải cổng dịch mã.
     """
     import glob, json
-    ra: dict[str, set] = {"phuKien": set(), "mu": set(), "kieuToc": set(), "rau": set()}
+    ra: dict[str, set] = {"phuKien": set(), "mu": set(), "kieuToc": set(), "rau": set(),
+                          "cuChi": set()}
     n = 0
     for f in sorted(glob.glob(os.path.join(GOC, "out", "v*.json"))):
         try:
@@ -85,6 +98,11 @@ def bang_gan() -> dict[str, set]:
                 for t in ra:
                     if nv.get(t):
                         ra[t].add(str(nv[t]))
+        # `cuChi` không nằm trong hồ sơ nhân vật mà trong TỪNG LƯỢT — nó đổi theo panel, đó
+        # chính là lý do nó tồn tại. Quét cả `luot` thì mới thấy giá trị thật đi tới engine.
+        for l in (d.get("luot") or []):
+            if isinstance(l, dict) and l.get("cuChi"):
+                ra["cuChi"].add(str(l["cuChi"])); n += 1
     ra["_dem"] = n
     return ra
 
@@ -98,7 +116,10 @@ def main() -> int:
     print(f"  đọc {dem} hồ sơ nhân vật từ out/*.json\n")
     loi = []
     print("  trường      engine vẽ được                              bảng gán")
-    for t in ("kieuToc", "mu", "phuKien", "rau"):
+    # Danh sách trường viết TAY ở đây là nguồn sự thật thứ hai — thêm trường vào `bang_gan`
+    # mà quên thêm ở đây thì cổng vẫn in ✅ và im lặng bỏ qua trường mới. Đúng bệnh mà đầu tệp
+    # này đã cảnh báo. Duyệt thẳng những trường HAI BÊN cùng khai.
+    for t in sorted(k for k in gan if k in ve):
         thieu = {x for x in gan[t] if x and x not in ve[t]}
         print(f"  {t:<11} {', '.join(sorted(ve[t])) or '(không cái nào)':<42} "
               f"{', '.join(sorted(x for x in gan[t] if x)) or '—'}")

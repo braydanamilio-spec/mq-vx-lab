@@ -256,7 +256,7 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
 def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     import giai_thich as G
     import kich_comic as KC
-    from kich_hai import doc_hai_giong, lam_thumb
+    from kich_hai import doc_hai_giong
     from chuan_am import chuan
 
     g = GU.gu(ma)
@@ -473,7 +473,17 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
                        cwd=ENG, capture_output=True, text=True, timeout=2400)
     if r.returncode or not os.path.exists(out):
         print(f"   ❌ render hỏng: {(r.stderr or r.stdout or '')[-260:]}"); return ""
-    lam_thumb(out, cau[0][0], g["ten"], g["nen"], os.path.join(GOC, "out", f"{slug}.jpg"))
+    # ── KHÔNG DÙNG `lam_thumb` Ở BỘ NÀY  (đo 6/9/2026) ───────────────────────────────────
+    # `lam_thumb` viết cho bộ `kich_hai`, nơi khung phim KHÔNG có bong bóng và không có bảng số
+    # — nên nó tự vẽ một lớp chữ hook đè lên. Ở bộ comic giải thích thì khung ĐÃ mang sẵn cả
+    # hai, và kết quả là **ba tầng chữ chồng nhau**, cộng thêm nhãn dưới in ra `v11_howhot_0040`
+    # (slug) thay vì con số. §12.5 đúng dạng: câu luật đúng ở ngữ cảnh nó sinh ra, sai ở đây.
+    #
+    # Và nó vốn đã bị vứt: `giao_hang` -> `lam_bia` ghi đè CÙNG một tệp ngay sau đó. Đo bằng
+    # cách so pixel: ảnh bìa đang lưu KHỚP HOÀN TOÀN khung thô — tức mọi công dựng template
+    # xưa nay đều đi thẳng vào thùng rác, im lặng.
+    # §16.3 đã trả giá ba vòng cho đúng câu hỏi này và kết luận: khung hook của bộ này đã mang
+    # thông điệp bằng chính đồ hoạ của nó, **không cần lớp chữ thứ hai**.
     am = chuan(out)
 
     # ── BỘ GIAO HÀNG PHẢI ĐỦ BỐN THỨ  (6/9/2026) ─────────────────────────────────────────

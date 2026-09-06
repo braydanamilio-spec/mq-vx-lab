@@ -589,8 +589,24 @@ def cu_chi_cua(chu: str, i: int, cuoi: bool) -> str:
         return "mo_tay"                       # cú chốt: mở rộng tay, "đấy, xong"
     if "?" in t:
         return "chi" if t.strip().startswith(("what", "why", "who")) else "nhun_vai"
-    if any(c.isdigit() for c in t) or any(w in t for w in (" one", " two", " four", " nine", " forty", " hundred")):
-        return "dem"                          # có con số thì đếm ngón tay
+    # ── ĐẾM NGÓN TAY CHỈ CÓ NGHĨA VỚI SỐ ĐẾM ĐƯỢC  (đo 6/9/2026) ────────────────────────
+    # Luật cũ: câu có chữ số -> `dem`. Đúng ở bộ HÀI, nơi con số hiếm. Sai hẳn ở bộ COMIC GIẢI
+    # THÍCH sau khi em bắt **mọi con số trên bảng phải được đọc thành lời** — nay gần như câu
+    # nào cũng có chữ số, và đo được **6/9 panel cùng một cử chỉ `dem`**. Chính bản sửa cho
+    # anh đã tạo ra sự đơn điệu này: §12.5, một luật đúng ở ngữ cảnh nó sinh ra.
+    # Và về nghĩa: giơ ngón tay đếm "ba bước lùi" thì người xem hiểu; đếm "125.893 lần" thì
+    # không — cử chỉ ấy nói dối về thứ nó đang làm.
+    _n = re.findall(r"\d[\d,\.]*", t)
+    _nho = any(x.replace(",", "").replace(".", "").isdigit()
+               and int(x.replace(",", "").split(".")[0] or 0) <= 12 for x in _n)
+    # Chữ số viết bằng CHỮ chỉ tính khi nó đứng một mình. Đo tập `v11_howhot_0041`: mô hình
+    # đọc *"three thousand four hundred degrees"*, và phép so cũ bắt chữ **" four"** bên trong
+    # đó rồi kết luận "số đếm được" — 5/11 panel cùng cử chỉ đếm ngón tay cho một con số ba
+    # nghìn. Cùng họ với mọi lỗi hôm nay: **một từ nằm lọt trong một cụm lớn hơn** (§15.3).
+    _chu = re.search(r"\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b"
+                     r"(?!\s+(hundred|thousand|million|billion))", t)
+    if _nho or _chu:
+        return "dem"                          # số ĐẾM ĐƯỢC thì đếm ngón tay
     if any(w in t for w in _PHU):
         return "khoanh_tay"                   # phủ định: khép người lại
     if t.strip().startswith(("i think", "maybe", "then ", "so ")):
@@ -599,7 +615,15 @@ def cu_chi_cua(chu: str, i: int, cuoi: bool) -> str:
     # cũng dùng nó — nên nó ra 20 lần trên mười tập, gần một phần ba tổng số lượt. Một cử chỉ
     # biên độ lớn dùng dày như thế thì thôi làm dấu nhấn và thành thói quen khua tay.
     # Vòng mới lấy toàn cử chỉ NHỎ, để dành "mở tay" cho đúng chỗ nó có nghĩa: cú chốt.
-    return ["nghi", "dem", "chong_nanh", "chi", "ngan_ngam", "suy_nghi"][i % 6]
+    # ── HAI TÊN CHẾT TRONG VÒNG XOAY  (đo 6/9/2026) ─────────────────────────────────────
+    # `chong_nanh` và `ngan_ngam` KHÔNG có trong `TenCuChi` của engine, và `DienVien.tsx` dùng
+    # `CU_CHI[cuChi] || CU_CHI.nghi` — cử chỉ lạ **âm thầm thành đứng yên**. Nên vòng sáu chỗ
+    # này thật ra chỉ có ba cử chỉ, ba chỗ còn lại đều là `nghi`.
+    # Không một lỗi nào báo: giá trị hợp lệ về kiểu, engine có nhánh dự phòng, và triệu chứng
+    # duy nhất là "nhân vật hay đứng yên" — thứ người ta đổ cho thẩm mỹ.
+    # Tám cử chỉ engine vẽ được: nghi · chi · mo_tay · dem · suy_nghi · nhun_vai · gio_len ·
+    # khoanh_tay. `mo_tay` để dành cho cú chốt (xem trên), nên vòng lấy sáu cái còn lại.
+    return ["nghi", "dem", "gio_len", "chi", "nhun_vai", "suy_nghi"][i % 6]
 
 CU_CHI = ["mo_tay", "chi", "nhun_vai", "dem", "suy_nghi", "khoanh_tay"]
 # 30/8 — HIỆU ỨNG ÂM DỒN VÀO CÚ CHỐT, KHÔNG RẢI ĐỀU.
