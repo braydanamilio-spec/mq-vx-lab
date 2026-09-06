@@ -2656,6 +2656,33 @@ python3 lay_key_cuc_bo.py --project mm0-shard-b
 # rồi ghép /tmp/keys.bak với kết quả, khử trùng theo trường thứ hai của `cf:<acc>:<token>`
 ```
 
+### 18.3b HỒ KHOÁ THIẾU LÀ DO ĐỌC THIẾU, KHÔNG PHẢI DO GHI NHẦM KHO
+
+Đây là bài học đắt nhất của cả đoạn, và anh là người chỉ ra: *"trên web đếm đúng mà"* ·
+*"check xem có ghi nhầm ở đâu ko"*.
+
+`lay_key_cuc_bo._doc()` gọi `?pageSize=300` rồi lấy `documents` và **dừng** — không theo
+`nextPageToken`. Dashboard có **363 khoá**, nên mọi bản ghi sau cái thứ 300 **chưa bao giờ về
+máy**. Không lỗi nào báo: HTTP 200, JSON hợp lệ, danh sách đầy đủ về mặt cú pháp.
+
+Trước khi nhìn vào chính lời gọi ấy, em đã đổ cho **ba** thứ khác:
+
+| em đoán | thật ra |
+|---|---|
+| Cloudflare không cho xem lại token | đúng, và KHÔNG LIÊN QUAN — khoá nằm ở Firestore |
+| khoá nằm ở shard khác | đã kéo cả ba shard, vẫn thiếu |
+| khoá nằm trong `localStorage` trình duyệt | không hề |
+
+Sau khi theo `nextPageToken`: **363 khoá · 124 Cloudflare — khớp CHÍNH XÁC dashboard.**
+
+**Luật.** Khi con số của mình nhỏ hơn con số trên giao diện, nghi **phép ĐỌC của mình trước**,
+đừng nghi kho dữ liệu. Và mọi lời gọi API danh sách phải trả lời được câu *"hết chưa?"* — một
+danh sách không kèm dấu hết là một danh sách có hai nghĩa ngược nhau (§15.2), mà mã chỉ đọc một.
+
+`grep -rn "pageSize" --include="*.py"` sau mỗi lần thêm một lối đọc mới. Còn một chỗ cùng hình
+dạng đã ghi nhận: `backup_vault.py:167` (`pageSize=50`, không phân trang) — hậu quả ngược lại,
+bản sao lưu cũ hơn cái thứ 50 không bao giờ bị dọn.
+
 ### 18.4 Secret `GROQ_KEYS` từng KHÔNG TỒN TẠI
 
 `phim_canh._khoa_groq` có hẳn một chú thích *"repo này KHÔNG có secret tên đó"* và một đường

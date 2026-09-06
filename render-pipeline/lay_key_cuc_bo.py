@@ -65,11 +65,30 @@ def _access_token() -> str:
 
 
 def _doc(proj: str, col: str, tok: str) -> list:
-    u = (f"https://firestore.googleapis.com/v1/projects/{proj}/databases/(default)/documents/"
-         f"{col}?pageSize=300")
-    req = urllib.request.Request(u, headers={"Authorization": f"Bearer {tok}"})
-    with urllib.request.urlopen(req, timeout=45) as r:
-        return (json.loads(r.read().decode()) or {}).get("documents") or []
+    """Đọc TRỌN collection — theo `nextPageToken` cho tới hết.
+
+    ── VÌ SAO  (đo 6/9/2026) ───────────────────────────────────────────────────────────────
+    Bản cũ gọi `?pageSize=300` rồi lấy `documents` và dừng. Dashboard đếm **363 khoá**, nên
+    mọi bản ghi sau cái thứ 300 **chưa bao giờ về máy** — và không có lỗi nào báo: HTTP 200,
+    JSON hợp lệ, danh sách đầy đủ về mặt cú pháp.
+    Triệu chứng nhìn từ ngoài là "hồ khoá ít hơn dashboard", và em đã đi đổ cho ba thứ khác
+    (Cloudflare không cho xem lại token · khoá nằm ở shard khác · khoá nằm trong localStorage)
+    trước khi nhìn vào chính lời gọi.
+
+    Đúng §15.1: **phép CẮT đặt trước phép LỌC**. Và đúng §15.2: một danh sách trả về không kèm
+    "còn nữa hay hết rồi" thì nó có hai nghĩa ngược nhau, mà mã chỉ đọc một nghĩa.
+    """
+    ra, tok_trang = [], ""
+    while True:
+        u = (f"https://firestore.googleapis.com/v1/projects/{proj}/databases/(default)/documents/"
+             f"{col}?pageSize=300" + (f"&pageToken={tok_trang}" if tok_trang else ""))
+        req = urllib.request.Request(u, headers={"Authorization": f"Bearer {tok}"})
+        with urllib.request.urlopen(req, timeout=45) as r:
+            d = json.loads(r.read().decode()) or {}
+        ra += d.get("documents") or []
+        tok_trang = d.get("nextPageToken") or ""
+        if not tok_trang:
+            return ra
 
 
 def _gia_tri(f: dict):
@@ -102,7 +121,8 @@ def main() -> int:
         if not k or len(str(k)) < 20:
             continue
         # Bỏ key đang bị phạt/tắt: lấy về cũng không dùng được, chỉ tổ làm lượt vẽ hụt.
-        if str(_gia_tri(f.get("status") or {}) or "").lower() in ("dead", "disabled", "off"):
+        if (not os.environ.get("LAY_TAT_CA")) and \
+           str(_gia_tri(f.get("status") or {}) or "").lower() in ("dead", "disabled", "off"):
             nghi += 1
             continue
         keys.append(str(k))
