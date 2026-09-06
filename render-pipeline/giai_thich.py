@@ -1674,6 +1674,284 @@ THOI_QUEN = [
     ('a $16 delivery fee twice a week', 16, 104, 'xe'),
     ('a $3 snack every afternoon', 3, 365, 'hop'),
     ('a $22 music and video bundle', 22, 12, 'dien_thoai'),
+
+    # ── NỐI THÊM 6/9/2026 · 273 mục qua bốn cổng của `bang_van.py`
+    #    (dạng · không người · không chữ · không viết nghịch · không trùng).
+    #    Bảng này KHÔNG có con số nào, nên không có gì để đối chứng và cũng
+    #    không đụng tới luật nền 'AI không bao giờ cấp một con số'.
+    ('a $5 delivery fee for lunch', 5, 365, 'tien'),
+    ('a $0.85 candy bar after school', 0.85, 260, 'nguoi'),
+    ('a $5 bottle of liquid soap', 5, 52, 'nguoi'),
+    ('a $1.25 small pretzel', 1.25, 365, 'nguoi'),
+    ('a $4 family phone line addition', 4, 12, 'dien_thoai'),
+    ('a $2 bus fare each ride', 2, 260, 'xe_buyt'),
+    ('a $18 mop head', 18, 365, 'nguoi'),
+    ('a $3 trail mix pouch on hike', 3, 52, 'nguoi'),
+    ('a $6 delivery fee for pharmacy items', 6, 12, 'tien'),
+    ('a $3 tip for takeout', 3, 365, 'nguoi'),
+    ('a $14 grilled cheese sandwich', 14, 260, 'nguoi'),
+    ('a $27 quarterly phone bill surcharge', 27, 4, 'dien_thoai'),
+    ('a $3 sponge pack in kitchen', 3, 12, 'nguoi'),
+    ('a $1.49 basic language flashcards', 1.49, 12, 'nguoi'),
+    ('a $2 coconut water after travel', 2, 12, 'coc'),
+    ('a $4 tip on laundry pickup', 4, 365, 'nguoi'),
+    ('a $1.20 protein bar post-workout', 1.2, 52, 'nguoi'),
+    ('a $17 can of paint touch-up', 17, 4, 'nguoi'),
+    ('a $1.3 mini muffin', 1.3, 365, 'nguoi'),
+    ('a $15 tea latte every weekend', 15, 52, 'nguoi'),
+    ('a $4 delivery cost for grocery restock', 4, 260, 'tien'),
+    ('a $33 window screen', 33, 365, 'dien_thoai'),
+    ('a $17 mobile hotspot tax', 17, 12, 'nguoi'),
+    ('a $4 delivery fee for gaming gear', 4, 12, 'tien'),
+    ('a $5 tip for pizza leftovers', 5, 52, 'nguoi'),
+    ('a $1 bag of chips', 1, 365, 'nguoi'),
+    ('a $4 lottery ticket for big draw', 4, 12, 'nguoi'),
+    ('a $2 cat litter bag in utility closet', 2, 12, 'meo'),
+    ('a $12 drawer knob', 12, 365, 'nguoi'),
+    ('a $3 watermelon juice in summer', 3, 12, 'nguoi'),
+    ('a $8 delivery fee for BBQ meals', 8, 365, 'tien'),
+    ('a $0.90 dried mango slice treat', 0.9, 260, 'nguoi'),
+    ('a $28 set of drawer organizers', 28, 4, 'nguoi'),
+    ('a $12 monthly cloud storage upgrade', 12, 12, 'nguoi'),
+    ('a $6 rice bowl with tofu', 6, 260, 'nguoi'),
+    ('a $13.75 premium router lease', 13.75, 12, 'nguoi'),
+    ('a $4 delivery surcharge on frozen foods', 4, 365, 'nguoi'),
+    ('a $7 delivery fee for breakfast', 7, 365, 'tien'),
+    ('a $2.25 microwave popcorn movie night', 2.25, 52, 'giuong'),
+    ('a $9 roll of aluminum foil', 9, 12, 'nguoi'),
+    ('a $1.8 jerky stick', 1.8, 365, 'nguoi'),
+    ('a $4 latte each weekday morning', 4, 260, 'nguoi'),
+    ('a $2.10 toll bridge fee each crossing', 2.1, 260, 'tien'),
+    ('a $25 oven mitt', 25, 365, 'nguoi'),
+    ('a $2.9 microwave burrito after shift', 2.9, 260, 'nguoi'),
+    ('a $5 delivery surcharge for birthday cakes', 5, 12, 'nguoi'),
+    ('a $7 tip for weekend brunch', 7, 52, 'nguoi'),
+    ('a $5 pretzel with mustard', 5, 365, 'nguoi'),
+    ('a $9 weekly mobile security app', 9, 52, 'dien_thoai'),
+    ('a $6 laundry detergent pod in laundry room', 6, 12, 'nha'),
+    ('a $6 kitchen timer', 6, 365, 'nguoi'),
+    ('a $3 berry smoothie on Sundays', 3, 52, 'nguoi'),
+    ('a $8 delivery surcharge for desserts', 8, 365, 'nguoi'),
+    ('a $1.00 bottled iced tea afternoon', 1, 260, 'nguoi'),
+    ('a $22 tube of silicone sealant', 22, 4, 'nguoi'),
+    ('a $0.70 caramel bite', 0.7, 365, 'nguoi'),
+    ('a $40 swimming lesson every Wednesday', 40, 52, 'nguoi'),
+    ('a $7 premium video chat', 7, 12, 'nguoi'),
+    ('a $2 soda fountain refill', 2, 365, 'nguoi'),
+    ('a $9 lottery ticket each quarter', 9, 4, 'nguoi'),
+    ('a $1.50 energy drink after work', 1.5, 260, 'coc'),
+    ('a $4 box of trash bags', 4, 12, 'nguoi'),
+    ('a $0.75 pack of nuts', 0.75, 365, 'nguoi'),
+    ('a $2 international roaming minute rate', 2, 260, 'dong_ho'),
+    ('a $7 water filter cartridge in fridge', 7, 12, 'coc'),
+    ('a $17 silicone mat', 17, 365, 'nguoi'),
+    ('a $0.75 gum pack at the register', 0.75, 365, 'nguoi'),
+    ('a $1 tip for coffee run', 1, 260, 'coc'),
+    ('a $45 dance workshop quarterly', 45, 4, 'nguoi'),
+    ('a $4 hot dog stand', 4, 365, 'meo'),
+    ('a $9 daily mobile gaming data', 9, 365, 'nguoi'),
+    ('a $2 iced tea beverage', 2, 260, 'nguoi'),
+    ('a $7.49 premium recipe planner', 7.49, 12, 'nguoi'),
+    ('a $4 herbal infusion before bed', 4, 365, 'giuong'),
+    ('a $6 delivery fee for tacos', 6, 365, 'tien'),
+    ('a $1.80 jerky strip after gym', 1.8, 52, 'nguoi'),
+    ('a $16 set of replacement batteries', 16, 4, 'nguoi'),
+    ('a $2.1 instant noodle', 2.1, 365, 'nguoi'),
+    ('a $12 pumpkin spice latte each fall week', 12, 52, 'dong_ho'),
+    ('a $4 delivery cost for dinner kits', 4, 260, 'tien'),
+    ('a $32 cleaning caddy', 32, 365, 'nguoi'),
+    ('a $19 data rollover option', 19, 12, 'nguoi'),
+    ('a $5 delivery surcharge for wine bottles', 5, 12, 'nguoi'),
+    ('a $3 tip for morning bagel', 3, 260, 'nguoi'),
+    ('a $8 cheese quesadilla', 8, 260, 'nguoi'),
+    ('a $5 pack of cigarettes on vacation', 5, 12, 'nguoi'),
+    ('a $3 cleaning spray bottle on countertop', 3, 12, 'nguoi'),
+    ('a $11 coat hook', 11, 365, 'nguoi'),
+    ('a $3 green juice after yoga', 3, 52, 'nguoi'),
+    ('a $5 delivery surcharge for ice cream', 5, 365, 'nguoi'),
+    ('a $1.45 mini donut for break', 1.45, 260, 'nguoi'),
+    ('a $27 roll of extension cord', 27, 4, 'nguoi'),
+    ('a $20 quarterly device insurance', 20, 4, 'nguoi'),
+    ('a $4 noodle cup from kiosk', 4, 260, 'coc'),
+    ('a $3 weekly video streaming', 3, 52, 'nguoi'),
+    ('a $0.95 soda bottle', 0.95, 365, 'nguoi'),
+    ('a $3 tip on pizza order', 3, 365, 'nguoi'),
+    ('a $1.30 trail mix for road trips', 1.3, 52, 'nguoi'),
+    ('a $8 can of air freshener', 8, 12, 'nguoi'),
+    ('a $3 protein shake', 3, 365, 'nguoi'),
+    ('a $10 mobile device insurance premium', 10, 12, 'nguoi'),
+    ('a $8 monthly public transit pass', 8, 12, 'xe_buyt'),
+    ('a $23 trash can liner', 23, 365, 'nguoi'),
+    ('a $3.5 mini donut from bakery', 3.5, 52, 'nguoi'),
+    ('a $7 delivery fee for electronics', 7, 12, 'tien'),
+    ('a $1 extra fee per meal', 1, 365, 'tien'),
+    ('a $9 pork bao buns', 9, 52, 'nguoi'),
+    ('a $19 monthly video conference credit', 19, 12, 'nguoi'),
+    ('a $4 light bulb pack on shelf', 4, 12, 'nguoi'),
+    ('a $4 candle tin', 4, 365, 'nguoi'),
+    ('a $2 chai blend on chilly evenings', 2, 52, 'nguoi'),
+    ('a $7 delivery fee for burgers', 7, 365, 'tien'),
+    ('a $0.60 caramel popcorn at movies', 0.6, 12, 'nguoi'),
+    ('a $21 roll of copper tape', 21, 4, 'nguoi'),
+    ('a $1.1 sweet roll', 1.1, 365, 'nguoi'),
+    ('a $10 painting class every Tuesday', 10, 52, 'nguoi'),
+    ('a $0.99 voicemail transcription', 0.99, 365, 'nguoi'),
+    ('a $4 fruit cup after meetings', 4, 260, 'coc'),
+    ('a $4 vape cartridge every morning', 4, 365, 'nguoi'),
+    ('a $4 delivery surcharge for cosmetics', 4, 12, 'nguoi'),
+    ('a $3 roll of kitchen towels', 3, 52, 'nguoi'),
+    ('a $3 bar of candy', 3, 365, 'nguoi'),
+    ('a $1 lottery ticket every morning', 1, 365, 'nguoi'),
+    ('a $2 pot holder set on stove', 2, 12, 'nguoi'),
+    ('a $16 pantry jar', 16, 365, 'nguoi'),
+    ('a $2.5 pretzel stick from aisle', 2.5, 365, 'nguoi'),
+    ('a $5 delivery surcharge for flowers', 5, 12, 'nguoi'),
+    ('a $12 pottery class per month', 12, 12, 'nguoi'),
+    ('a $11 kebab street vendor', 11, 52, 'nguoi'),
+    ('a $22 quarterly router replacement', 22, 4, 'nguoi'),
+    ('a $6 fish taco packet', 6, 260, 'nguoi'),
+    ('a $5.49 stock market tracker', 5.49, 12, 'nguoi'),
+    ('a $5 smoothie after gym session', 5, 52, 'nguoi'),
+    ('a $9 delivery surcharge for catering', 9, 365, 'nguoi'),
+    ('a $0.55 chocolate coin for cravings', 0.55, 365, 'nguoi'),
+    ('a $15 roll of pantry zip ties', 15, 12, 'nguoi'),
+    ('a $3.5 frozen burrito', 3.5, 365, 'nguoi'),
+    ('a $7 vanilla latte each Saturday', 7, 52, 'nguoi'),
+    ('a $5 delivery cost for lunch boxes', 5, 260, 'tien'),
+    ('a $30 laundry basket', 30, 365, 'nguoi'),
+    ('a $0.9 pack of dried seaweed', 0.9, 365, 'nguoi'),
+    ('a $6 delivery fee for laundry service', 6, 12, 'tien'),
+    ('a $6 tip for weekend BBQ', 6, 52, 'nguoi'),
+    ('a $14 veggie pizza slice', 14, 52, 'nguoi'),
+    ('a $2 lottery ticket each payday', 2, 26, 'nguoi'),
+    ('a $8 toilet paper pack in bathroom', 8, 12, 'nguoi'),
+    ('a $10 doormat strip', 10, 365, 'nguoi'),
+    ('a $4 oat milk latte on Mondays', 4, 52, 'nguoi'),
+    ('a $7 delivery fee for ramen', 7, 365, 'tien'),
+    ('a $1.60 oat bar before class', 1.6, 260, 'nguoi'),
+    ('a $26 box of charcoal briquettes', 26, 4, 'nguoi'),
+    ('a $10 weekly data add-on', 10, 52, 'nguoi'),
+    ('a $6 salad bowl on weekdays', 6, 260, 'nguoi'),
+    ('a $1.25 ringtone download', 1.25, 365, 'nguoi'),
+    ('a $1.4 chocolate coin', 1.4, 365, 'nguoi'),
+    ('a $6 delivery surcharge for dinner', 6, 365, 'nguoi'),
+    ('a $1.10 pack of nuts mid-day', 1.1, 260, 'dong_ho'),
+    ('a $7 pack of laundry pods', 7, 52, 'nguoi'),
+    ('a $0.99 candy floss', 0.99, 365, 'nguoi'),
+    ('a $9 mobile hotspot data cap increase', 9, 12, 'nguoi'),
+    ('a $5 parking meter downtown hourly', 5, 260, 'nguoi'),
+    ('a $20 toilet brush', 20, 365, 'nguoi'),
+    ('a $1.8 iced tea bottle on hot day', 1.8, 260, 'dong_ho'),
+    ('a $3 tip for sandwich drop-off', 3, 260, 'nguoi'),
+    ('a $6 tip for pizza night', 6, 52, 'giuong'),
+    ('a $2 soda fountain drink', 2, 365, 'coc'),
+    ('a $21 quarterly cable-to-fiber conversion', 21, 4, 'nguoi'),
+    ('a $5 dish detergent bottle in sink', 5, 12, 'nguoi'),
+    ('a $11.49 advanced workout library', 11.49, 12, 'nguoi'),
+    ('a $5 almond milk latte on rainy mornings', 5, 52, 'nguoi'),
+    ('a $3 tip on grocery bag drop', 3, 365, 'nguoi'),
+    ('a $2.50 mini pizza from freezer', 2.5, 52, 'nguoi'),
+    ('a $20 box of dryer sheets', 20, 12, 'nguoi'),
+    ('a $2.6 microwave popcorn', 2.6, 365, 'nguoi'),
+    ('a $15 pottery workshop every month', 15, 12, 'nguoi'),
+    ('a $3 delivery cost for breakfast parcels', 3, 260, 'tien'),
+    ('a $8 quinoa bowl on workdays', 8, 260, 'nguoi'),
+    ('a $9 pack of cigarettes on Saturdays', 9, 52, 'nguoi'),
+    ('a $5 delivery fee for sporting goods', 5, 12, 'tien'),
+    ('a $2 pack of dish sponges', 2, 365, 'nguoi'),
+    ('a $1.5 pack of gum', 1.5, 365, 'nguoi'),
+    ('a $2 lottery ticket each Sunday', 2, 52, 'nguoi'),
+    ('a $5 garbage can liner pack in garage', 5, 12, 'nguoi'),
+    ('a $15 fire alarm', 15, 365, 'lua'),
+    ('a $2 bottle of water at checkout', 2, 365, 'coc'),
+    ('a $4 delivery fee for groceries', 4, 52, 'tien'),
+    ('a $0.99 mini chocolate bar evening', 0.99, 365, 'nguoi'),
+    ('a $9 chicken wrap combo', 9, 260, 'nguoi'),
+    ('a $7 daily app data purchase', 7, 365, 'dien_thoai'),
+    ('a $3 bean burrito deal', 3, 260, 'nguoi'),
+    ('a $2.49 ad-free news aggregator', 2.49, 12, 'nguoi'),
+    ('a $1 iced tea on hot days', 1, 52, 'dong_ho'),
+    ('a $5 delivery fee for snacks', 5, 365, 'tien'),
+    ('a $1.40 fruit cup in the afternoon', 1.4, 260, 'coc'),
+    ('a $14 refill of dishwasher detergent', 14, 12, 'nguoi'),
+    ('a $1.4 mini cookie', 1.4, 365, 'nguoi'),
+    ('a $9 craft soda monthly tasting', 9, 12, 'nguoi'),
+    ('a $3 tip for holiday gift orders', 3, 4, 'nguoi'),
+    ('a $28 fridge magnet', 28, 365, 'nguoi'),
+    ('a $1.1 packet of instant oatmeal', 1.1, 260, 'nguoi'),
+    ('a $4 delivery charge for office supplies', 4, 12, 'nguoi'),
+    ('a $5 tip for birthday cake', 5, 12, 'nguoi'),
+    ('a $11 chicken nuggets box', 11, 260, 'nguoi'),
+    ('a $9 pack of cigarettes during holidays', 9, 52, 'nguoi'),
+    ('a $2 razor blade refill in bathroom drawer', 2, 12, 'nguoi'),
+    ('a $9 picture frame', 9, 365, 'nguoi'),
+    ('a $2 peach iced tea on picnics', 2, 12, 'nguoi'),
+    ('a $6 delivery charge for sandwiches', 6, 365, 'nguoi'),
+    ('a $0.80 banana chip snack pack', 0.8, 260, 'nguoi'),
+    ('a $25 pack of replacement faucet washers', 25, 4, 'nguoi'),
+    ('a $5 energy drink on weekends', 5, 104, 'coc'),
+    ('a $5 burrito from food truck', 5, 260, 'xe'),
+    ('a $13 mobile insurance policy', 13, 12, 'nguoi'),
+    ('a $3.2 fruit snack pouch', 3.2, 365, 'nguoi'),
+    ('a $4 tip on grocery delivery', 4, 365, 'nguoi'),
+    ('a $2.00 bottle of sparkling water', 2, 365, 'coc'),
+    ('a $6 set of light bulbs', 6, 12, 'nguoi'),
+    ('a $1.5 popcorn bag', 1.5, 365, 'nguoi'),
+    ('a $6 premium call waiting feature', 6, 12, 'dien_thoai'),
+    ('a $3 subway ticket each trip', 3, 260, 'nguoi'),
+    ('a $19 broom handle', 19, 365, 'nguoi'),
+    ('a $2.25 fruit cup from cooler', 2.25, 260, 'coc'),
+    ('a $4 delivery charge for pet food', 4, 12, 'meo'),
+    ('a $5 fast-food order fee', 5, 260, 'tien'),
+    ('a $3 bag of chips side', 3, 365, 'nguoi'),
+    ('a $4 daily texting app charge', 4, 365, 'dien_thoai'),
+    ('a $2 trash bag box in pantry', 2, 12, 'nguoi'),
+    ('a $9.79 premium photo storage', 9.79, 12, 'nguoi'),
+    ('a $3 carrot juice on health day', 3, 12, 'dong_ho'),
+    ('a $5 delivery charge for smoothies', 5, 365, 'nguoi'),
+    ('a $0.70 pack of raisins on desk', 0.7, 260, 'nguoi'),
+    ('a $18 bottle of window cleaner', 18, 12, 'nguoi'),
+    ('a $3.2 canned soup', 3.2, 365, 'nguoi'),
+    ('a $20 spin class each Monday', 20, 52, 'nguoi'),
+    ('a $7 delivery cost for party trays', 7, 12, 'tien'),
+    ('a $34 doorstop wedge', 34, 365, 'nguoi'),
+    ('a $4 pack of cigarettes every morning', 4, 365, 'nguoi'),
+    ('a $7 delivery charge for home décor', 7, 12, 'nha'),
+    ('a $9 tip for holiday gifts', 9, 4, 'nguoi'),
+    ('a $2 bottle of soda', 2, 365, 'nguoi'),
+    ('a $7 pack of cigarettes on birthdays', 7, 12, 'nguoi'),
+    ('a $8 air freshener spray in hallway', 8, 12, 'nguoi'),
+    ('a $13 key rack', 13, 365, 'nguoi'),
+    ('a $4 hazelnut latte on Fridays', 4, 52, 'nguoi'),
+    ('a $6 delivery charge for breakfast burritos', 6, 365, 'nguoi'),
+    ('a $2.75 frozen waffle breakfast rush', 2.75, 52, 'nguoi'),
+    ('a $8 sandwich from deli', 8, 365, 'nguoi'),
+    ('a $8 weekly mobile hotspot rental', 8, 52, 'nguoi'),
+    ('a $7 chicken salad wrap', 7, 260, 'nguoi'),
+    ('a $0.99 extra cloud backup', 0.99, 12, 'nguoi'),
+    ('a $4 delivery charge for party platters', 4, 365, 'nguoi'),
+    ('a $8 delivery charge for sushi', 8, 365, 'nguoi'),
+    ('a $0.65 pretzel stick on the go', 0.65, 365, 'nguoi'),
+    ('a $11 bottle of hand sanitizer', 11, 52, 'nguoi'),
+    ('a $2.75 trail mix', 2.75, 365, 'nguoi'),
+    ('a $6 cappuccino on weekend brunches', 6, 52, 'nguoi'),
+    ('a $8 delivery cost for holiday feasts', 8, 4, 'tien'),
+    ('a $26 pot holder', 26, 365, 'nguoi'),
+    ('a $2.6 chocolate covered almonds', 2.6, 52, 'nguoi'),
+    ('a $8 delivery fee for furniture', 8, 12, 'tien'),
+    ('a $9 tip for holiday feast', 9, 4, 'nguoi'),
+    ('a $12 curry rice bowl', 12, 52, 'nguoi'),
+    ('a $2 lottery ticket every Friday', 2, 52, 'nguoi'),
+    ('a $1 toothbrush set on bathroom counter', 1, 12, 'nguoi'),
+    ('a $7 plant pot', 7, 365, 'cay'),
+    ('a $1 mint water during study sessions', 1, 260, 'coc'),
+    ('a $5 delivery fee for salads', 5, 365, 'tien'),
+    ('a $1.75 instant noodle cup midnight', 1.75, 52, 'coc'),
+    ('a $23 set of cloth napkins', 23, 12, 'nguoi'),
+    ('a $2.8 cheese cracker', 2.8, 365, 'nguoi'),
+    ('a $12 guitar lesson each Thursday', 12, 52, 'nguoi'),
+    ('a $2 weekly data boost', 2, 52, 'nguoi'),
+    ('a $3 soda can', 3, 365, 'nguoi'),
 ]
 
 
@@ -2377,7 +2655,11 @@ def sinh_howlong(i):
     Nên trường `ve` đứng ngay cạnh `loi`: người viết nhịp là người biết nhịp ấy đang nói gì,
     nên cũng là người duy nhất viết đúng được prompt cho nó. Tách hai việc ra hai chỗ là cách
     chắc chắn để hình lệch lời — đúng cái đã xảy ra khi tôi để `noi` cho một bảng regex đoán."""
-    ten, km, bt, kieu, troi = _lay(QUANG_DUONG, i)
+    # Cặp làm chủ đề — xem `sinh_howloud`. Ở kênh này cú so tự nhiên là HAI QUÃNG ĐƯỜNG:
+    # "đi bộ tới Mặt Trăng so với đi bộ vòng quanh Trái Đất". `ti=2` vì hai quãng chênh dưới
+    # gấp đôi thì cả tập chỉ còn một con số nhắc lại hai lần.
+    _a, _b = _cap_ti(QUANG_DUONG, i, ti=2.0)
+    (ten, km, bt, kieu, troi), (ten2, km2, _b2, kieu2, _t2) = (_a, _b) if _a[1] >= _b[1] else (_b, _a)
     # `gt_de` cho tiêu đề và chữ hook, `gt_kc` cho câu đọc — xem `GIOI_TU`, hai cột khác nhau.
     gt_de, gt_kc = GIOI_TU.get(kieu, ("to ", "to "))
     gio_b = km / DI_BO_MPH
@@ -2386,7 +2668,14 @@ def sinh_howlong(i):
     sm, um = _lau(km / MAY_BAY_MPH)
     sa, ua = _lau(km / AS_MPS / 3600)
     ngay = max(1, min(20, int(gio_b / 24)))
-    return (f"Walking {gt_de}{ten}",
+    # Vế sau: bỏ giới từ CHỈ KHI nó là "to" — `next to` đã cấp sẵn chữ ấy. Các kiểu khác có
+    # giới từ riêng ("all the way around the Earth") và bỏ chúng thì câu gãy: cổng ngữ pháp
+    # bắt đúng "next to all the way around the Earth".
+    # Hai lần sửa cho một câu, và cả hai lần đều vì tưởng giới từ chỉ có MỘT dạng.
+    _gt2 = GIOI_TU.get(kieu2, ("to ", "to "))[0]
+    _v2 = ten2 if _gt2.strip() == "to" else f"{_gt2}{ten2}"
+    _noi = "next to" if _gt2.strip() == "to" else "against"
+    return (f"Walking {gt_de}{ten} {_noi} {_v2}",
             f"HOW LONG TO WALK {gt_de.upper()}{ten.upper()}?", f"{sb} {ub.upper()}",
             [
     _n("chia_doi", "You walk. Light does not.",
@@ -2551,11 +2840,13 @@ def sinh_howbig(i):
 
 
 def sinh_realcost(i):
-    ten, gia, lan, bt = _lay(THOI_QUEN, i)
+    # Cặp làm chủ đề — xem `sinh_howloud`. Ghép cặp nhân độ sâu lên n(n−1) mà KHÔNG cần
+    # một dòng dữ liệu mới: bảng 30 mục cho 870 tập thay vì 30.
+    (ten, gia, lan, bt), (ten2, _g2, _l2, _b2) = _cap_ti(THOI_QUEN, i, ti=1.5)
     nam = gia * lan
     m10 = sum(nam * (1.07 ** k) for k in range(10))
     m30 = sum(nam * (1.07 ** k) for k in range(30))
-    return (f"The real cost of {ten}",
+    return (f"The real cost of {ten} and {ten2}",
             f"WHAT {ten.upper()} REALLY COSTS", _tien(m30) + " OVER 30 YEARS",
             [
     _n("canh", "It feels like nothing.", tam_trang="ngay",
@@ -3021,8 +3312,10 @@ MOI_NGUOI = [("everyone flushed at once", "hop", "a vast grid of identical bathr
 
 def sinh_whatif(i):
     ds = MOI_NGUOI
-    ten, bt, canh = _lay(ds, i)
-    return (f"What if {ten}",
+    # Cặp làm chủ đề — xem `sinh_howloud`. Bảng này không có cột SỐ nên dùng `_cap`
+    # (đã bảo đảm hai mục khác nhau và phủ hết n(n−1) tổ hợp).
+    (ten, bt, canh), (ten2, _b2, _c2) = _cap(ds, i)
+    return (f"What if {ten}, and what if {ten2}",
             f"WHAT IF {ten.upper()}?", "",
             [
     _n("canh", "One person does it.", ve=_ve("one single ordinary person alone in the frame",
@@ -3375,9 +3668,11 @@ SONG_SOT = [("a day in the Ice Age", "a frozen tundra under heavy grey sky, bare
 
 
 def sinh_survive(i):
+    # Cặp làm chủ đề — "một tuần không lửa HAY một đêm giữa sa mạc" vẫn đúng câu hỏi của kênh,
+    # và buộc người xem chọn một bên trước khi nghe câu trả lời (§13.16: cú lật đặt ở cuối).
     ds = SONG_SOT
-    ten, canh = _lay(ds, i)
-    return (f"Could you survive {ten}",
+    (ten, canh), (ten2, _c2) = _cap(ds, i)
+    return (f"Could you survive {ten} or {ten2}",
             f"COULD YOU SURVIVE {ten.upper()}?", "PROBABLY NOT",
             [
     _n("canh", "You. Dropped here.", tam_trang="lanh", dinh=True,
@@ -3818,9 +4113,13 @@ MOT_NGAY = [("a Roman soldier",
 def sinh_dayinlife(i):
     # Mỗi nghề ba mảnh: NƠI (ba lớp xa-giữa-gần) · ĐỒ NGHỀ · ÁNH SÁNG. Ba mảnh này đi vào ba
     # tầng khác nhau của prompt, nên tách sẵn ở đây thay vì nhét chung một chuỗi.
+    # Cặp làm chủ đề. Ở kênh này so sánh KHÔNG làm mất bản sắc mà làm rõ nó: "một ngày của
+    # lính La Mã so với lính thời nay" vẫn là *một ngày của ai*, và cú so mới là thứ đáng xem.
+    # Không dùng `_cap_ti` vì bảng này không có cột SỐ để so tỉ lệ — `_cap` là đủ (nó đã bảo
+    # đảm hai mục khác nhau và phủ hết n(n−1) tổ hợp).
     ds = MOT_NGAY
-    ten, canh, do, sang = _lay(ds, i)
-    return (f"A day in the life of {ten}",
+    (ten, canh, do, sang), (ten2, _c2, _d2, _s2) = _cap(ds, i)
+    return (f"A day in the life of {ten} next to {ten2}",
             f"A DAY IN THE LIFE OF {ten.upper()}", "",
             [
     _n("canh", "The day starts before light.", dinh=True, tam_trang="dem",
@@ -4097,8 +4396,10 @@ DI_DAU = [("the thing you put in recycling", "hop",
 
 def sinh_wheregoes(i):
     ds = DI_DAU
-    ten, bt, canh = _lay(ds, i)
-    return (f"Where {ten} goes",
+    # Cặp làm chủ đề — xem `sinh_howloud`. Bảng này không có cột SỐ nên dùng `_cap`
+    # (đã bảo đảm hai mục khác nhau và phủ hết n(n−1) tổ hợp).
+    (ten, bt, canh), (ten2, _b2, _c2) = _cap(ds, i)
+    return (f"Where {ten} goes and where {ten2} goes",
             f"WHERE DOES {ten.upper()} GO?", "",
             [
     _n("canh", "You put it in the bin.", dinh=True, ve=canh),
@@ -4474,8 +4775,10 @@ LUAT_NGAM = [("your own driveway",
 
 def sinh_therules(i):
     ds = LUAT_NGAM
-    ten, canh = _lay(ds, i)
-    return (f"The rule about {ten}",
+    # Cặp làm chủ đề — xem `sinh_howloud`. Bảng này không có cột SỐ nên dùng `_cap`
+    # (đã bảo đảm hai mục khác nhau và phủ hết n(n−1) tổ hợp).
+    (ten, canh), (ten2, _c2) = _cap(ds, i)
+    return (f"The rule about {ten} and the rule about {ten2}",
             f"THERE IS A RULE ABOUT {ten.upper()}", "",
             [
     _n("canh", "You own it. You paid for it.", dinh=True, tam_trang="ngay", ve=canh),
@@ -4721,14 +5024,17 @@ TOC_DO = [("a sneeze", 100,
 
 
 def sinh_speedof(i):
+    # Cặp làm chủ đề — xem `sinh_howloud`. Mốc neo (tốc độ đi bộ) ở lại thân bài.
+    # `ti=1.5`: hai tốc độ chênh dưới rưỡi thì không ai thấy đó là một cuộc so.
     ds = TOC_DO
-    ten, kmh, canh = _lay(ds, i)
+    _a, _b = _cap_ti(ds, i, ti=1.5)
+    (ten, kmh, canh), (ten2, kmh2, _c2) = (_a, _b) if _a[1] >= _b[1] else (_b, _a)
     lan = kmh / DI_BO_MPH
     # Biểu tượng phải là HÌNH CỦA CHÍNH VẬT đang đo (quy tắc G). Bản trước gán cứng "xe" cho
     # mọi chủ thể, nên nhịp nói "a commercial jet" mà hình ra ô tô.
     bt_ten = ("may_bay" if "jet" in ten else "nguoi" if ("human" in ten or "sneeze" in ten)
               else "cay" if "raindrop" in ten else "nguoi")
-    return (f"The speed of {ten}",
+    return (f"The speed of {ten} next to {ten2}",
             f"HOW FAST IS {ten.upper()}?", f"{kmh} MPH",
             [
     _n("canh", "It happens too fast to see.", dinh=True, ve=canh),
@@ -4759,12 +5065,17 @@ def sinh_speedof(i):
 
 # ══ TÁM BỘ SINH BỔ SUNG ═════════════════════════════════════════════════════════════════════
 def sinh_odds(i):
-    ten, N, bt = _lay(XAC_SUAT, i)
+    # Cặp làm chủ đề — xem `sinh_howloud`. Với xác suất thì so sánh còn TỰ NHIÊN hơn nữa: "1
+    # trên 292 triệu" không gợi ra gì, nhưng "khả năng này so với khả năng kia" thì ai cũng
+    # xếp hạng được trong đầu. `ti=8`: hai khả năng chênh dưới 8 lần thì cuộc so không có cú
+    # lật nào.
+    _a, _b = _cap_ti(XAC_SUAT, i, ti=8)
+    (ten, N, bt), (ten2, N2, bt2) = (_a, _b) if _a[1] >= _b[1] else (_b, _a)
     # Quy xác suất về thứ CẢM ĐƯỢC: bao nhiêu năm nếu thử mỗi ngày một lần. Con số "1 trên 292
     # triệu" không gợi ra gì; "mua mỗi ngày trong 800.000 năm" thì nhớ đời.
     nam = N / 365.25
     sn, un = _lau(nam * 365.25 * 24)
-    return (f"The odds of {ten}", f"THE ODDS OF {ten.upper()}", f"1 IN {N:,}",
+    return (f"The odds of {ten} against {ten2}", f"THE ODDS OF {ten.upper()}", f"1 IN {N:,}",
             [
     _n("so_lieu", "These are the real odds.", so=f"1 in {N:,}", don="", bt=bt, dinh=True,
        ve=_ve("one single lottery ticket lying alone on a plain surface",
@@ -4797,9 +5108,12 @@ def sinh_odds(i):
 
 
 def sinh_hiddenfee(i):
-    ten, gia, phan = _lay(PHI_AN, i)
+    # Cặp làm chủ đề — xem `sinh_howloud`. Ghép cặp nhân độ sâu lên n(n−1) mà KHÔNG cần
+    # một dòng dữ liệu mới: bảng 30 mục cho 870 tập thay vì 30.
+    (ten, gia, phan), (ten2, _g2, _p2) = _cap(PHI_AN, i)
     lon = max(phan, key=lambda x: x[1])
-    return (f"What is inside {ten}", f"WHAT IS INSIDE {ten.upper()}", f"{lon[1]}% {lon[0].upper()}",
+    return (f"What is inside {ten} and inside {ten2}",
+            f"WHAT IS INSIDE {ten.upper()}", f"{lon[1]}% {lon[0].upper()}",
             [
     _n("so_lieu", "You pay this.", so=_tien(gia), don="", bt="tien", dinh=True,
        ve=_ve("one hand paying at a counter", "handing over payment", "ordinary, unthinking",
@@ -4824,10 +5138,13 @@ def sinh_hiddenfee(i):
 
 
 def sinh_yearsof(i):
-    ten, gio, bt = _lay(DOI_NGUOI, i)
+    # Cặp làm chủ đề — xem `sinh_howloud`. Ghép cặp nhân độ sâu lên n(n−1) mà KHÔNG cần
+    # một dòng dữ liệu mới: bảng 30 mục cho 870 tập thay vì 30.
+    (ten, gio, bt), (ten2, _g2, _b2) = _cap_ti(DOI_NGUOI, i, ti=1.6)
     tong = gio * 365.25 * 79          # tuổi thọ trung bình Mỹ ~79
     sn, un = _lau(tong)
-    return (f"Years of your life spent {ten}", f"HOW LONG YOU SPEND {ten.upper()}", f"{sn} {un.upper()}",
+    return (f"Years of your life spent {ten} against {ten2}",
+            f"HOW LONG YOU SPEND {ten.upper()}", f"{sn} {un.upper()}",
             [
     _n("canh", "It is a few hours a day.", ve=_ve(f"one person {ten}",
               "doing it casually, as always", "unremarkable", "a plain everyday setting",
@@ -4962,12 +5279,15 @@ NGAY_LUC_NAY = [("asleep right now", 0.42, "dong_ho"), ("in a car right now", 0.
 
 def sinh_rightnow(i):
     ds = NGAY_LUC_NAY
-    ten, ti, bt = _lay(ds, i)
+    # Cặp làm chủ đề — xem `sinh_howloud`. Ghép cặp nhân độ sâu lên n(n−1) mà KHÔNG cần
+    # một dòng dữ liệu mới: bảng 30 mục cho 870 tập thay vì 30.
+    (ten, ti, bt), (ten2, ti2, _b2) = _cap_ti(ds, i, ti=1.8)
     n = int(8_000_000_000 * ti)
     # Quy về đơn vị tai người nghe ra: "3360 MILLION" không ai đọc, "3.4 BILLION" thì đọc ngay.
     gon = (f"{n/1e9:.1f} BILLION".replace(".0 ", " ") if n >= 1e9
            else f"{n/1e6:.0f} MILLION" if n >= 1e6 else f"{n:,}")
-    return (f"How many people are {ten}", f"HOW MANY PEOPLE ARE {ten.upper()}", gon,
+    return (f"How many people are {ten} against {ten2}",
+            f"HOW MANY PEOPLE ARE {ten.upper()}", gon,
             [
     _n("canh", "Right now, while you watch this.", dinh=True,
        ve=_ve("one person alone, mid-ordinary-moment", "caught in a normal instant", "neutral",
@@ -4991,10 +5311,18 @@ def sinh_rightnow(i):
 
 
 def sinh_howhot(i):
-    ten, f, bt = _lay(NHIET_DO, i)
+    # Cặp làm chủ đề — xem lý do đầy đủ ở `sinh_howloud`. Ở đây mốc neo tự nhiên là NHIỆT ĐỘ
+    # CƠ THỂ / phòng ấm, và nó vẫn nằm trong thân bài; cặp chỉ vào tiêu đề.
+    # `ti=1.6` theo ĐỘ F: hai thứ chênh dưới 1,6 lần thì "nóng hơn" không thành một tập.
+    _a, _b = _cap_ti(NHIET_DO, i, ti=1.6)
+    (ten, f, bt), (ten2, f2, bt2) = (_a, _b) if _a[1] >= _b[1] else (_b, _a)
     c = (f - 32) * 5 / 9
-    return (f"How hot is {ten}", f"HOW HOT IS {ten.upper()}", f"{f:,}°F",
+    _lan = (f / f2) if f2 else 1
+    return (f"How hot is {ten} next to {ten2}", f"HOW HOT IS {ten.upper()}", f"{f:,}°F",
             [
+    _n("chia_doi", _loi("canh_doi", i),
+       trai={"nhan": ten2, "bt": bt2, "so": f"{f2:,}°F"},
+       phai={"nhan": ten, "bt": bt, "so": f"{f:,}°F"}, dinh=True),
     _n("so_lieu", _loi("so", i), so=f"{f:,}", don="degrees fahrenheit", chu=ten,
        bt=bt, dinh=True,
        ve=_ve(f"{ten} shown clearly, heat shimmering above it",

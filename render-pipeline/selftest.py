@@ -7562,7 +7562,12 @@ def t_tieu_de_dung_ngu_phap():
         # Bản đầu viết `to \w+ … to` và tố oan "HOW LONG TO WALK TO THE MOON?" — hai chữ
         # "to" ấy có hai vai khác nhau (chỉ mục đích và chỉ đích đến), đều đúng. 28 dòng đỏ
         # giả, đúng cái làm lỗi thật nằm cạnh bị chìm (§13.2).
-        (re.compile(r"\b(?:distance|Walking)\s+to\s+[\w' ]+?\s+to\s", re.I),
+        # 6/9 — NỚI LẦN HAI. `sinh_howlong` nay lấy một CẶP quãng đường, nên tiêu đề đúng là
+        # "Walking to the Sun next to the Moon": hai chữ "to", và chữ thứ hai thuộc cụm
+        # **next to** — một giới từ ghép, không phải một đích đến thứ hai.
+        # Luật này viết cho dạng MỘT chủ thể và sai ở dạng cặp (§12.5). Chặn `next to` trước
+        # khi đếm, thay vì nới lỏng cả biểu thức.
+        (re.compile(r"\b(?:distance|Walking)\s+to\s+[\w' ]+?\s+(?<!next )to\s", re.I),
          "cụm quãng đường có hai chữ 'to'"),
         (re.compile(r"\bdistance to a (?:marathon|cross|year)\b", re.I), "'distance to' + một chặng"),
         (re.compile(r"\b(?:distance|length|height) of the (?:length|height)\b", re.I),
