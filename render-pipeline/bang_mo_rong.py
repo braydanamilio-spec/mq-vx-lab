@@ -169,11 +169,18 @@ DANG = {
  "mao_tu": dict(
     luat='- "ten" is 2 to 7 words and starts with "a", "an" or "the". '
          'Example shape: "a chainsaw at full throttle", "the surface of Venus".',
-    kiem=r"^(a|an|the)\b"),
+    # Nới sau khi ĐO (§13.21): mẻ đầu cho `QUANG_DUONG` bị loại **49/50** vì "dạng tên", và
+    # đọc tay thì cả 49 đều đúng — chúng là TUYẾN ("Denver to Salt Lake City") và TÊN RIÊNG
+    # ("Mount Everest"), hai dạng có sẵn trong chính bảng gốc. Biểu thức chỉ nhận mạo từ là
+    # biểu thức hẹp hơn dữ liệu nó canh, và làm cổng trên nó là chế tạo thêm một cỗ máy bắt oan.
+    kiem=r"^(a|an|the)\b|^[A-Z][a-z]+|\bto\b"),
  "dong_tu": dict(
     luat='- "ten" is a 1-to-6-word activity phrase in the -ing form, with NO article in front. '
          'Example shape: "sleeping", "looking at a phone", "winning a state lottery".',
-    kiem=r"^[a-z]+ing\b"),
+    # Cùng phép đo, cùng kết luận: `XAC_SUAT` bị loại 45/50. Bảng gốc có cả dạng động từ
+    # ("winning the big lottery jackpot") lẫn dạng danh từ — và cả hai đều ghép đúng vào câu
+    # "The odds of ___". Nhận cả hai.
+    kiem=r"^[a-z]+ing\b|^(a|an|the)\b"),
 }
 
 # Mười vùng đời sống, xoay vòng — xem chú thích ở chỗ dùng.
@@ -250,11 +257,32 @@ def _json_mang(t):
 _BO = {"a", "an", "the", "at", "of", "in", "on", "to", "from", "one", "single", "full", "its"}
 
 
+# Từ mà KHUÔN CÂU bắt phải có thì không mang bản sắc — đã trả giá ba lần trong một buổi ở
+# `bang_van.py`: "a day in the Ice Age" cho `day`, "everyone jumped" cho `everyone`.
+_KHUON = {"distance", "odds", "chance", "probability", "trip", "route", "journey", "way",
+          "winning", "being", "getting", "having", "day", "week", "night", "year"}
+
+
 def _dau(ten):
-    """Danh từ CHÍNH của một tên — dùng để chống trùng. `_dau` phải bỏ mạo từ và giới từ, nếu
-    không thì "a chainsaw" và "a chainsaw at full throttle" đọc ra hai thứ khác nhau."""
-    tu = [w for w in re.findall(r"[a-z]+", ten.lower()) if w not in _BO]
+    """Danh từ CHÍNH của một tên — bỏ mạo từ, giới từ và từ khuôn."""
+    tu = [w for w in re.findall(r"[a-z]+", ten.lower())
+          if w not in _BO and w not in _KHUON]
     return tu[0] if tu else ten.lower()
+
+
+def _van_tay(ten):
+    """Vân tay để chống trùng: TẬP các từ nội dung, không phải một từ.
+
+    ── VÌ SAO ĐỔI  (đo 6/9/2026) ───────────────────────────────────────────────────────────
+    Chống trùng bằng MỘT từ đầu làm `QUANG_DUONG` loại 53/54 dòng mới và `XAC_SUAT` loại 45/48
+    — đọc tay thì gần như tất cả đều là nơi chốn KHÁC NHAU. Gốc: bảng tuyến viết "Denver to
+    Salt Lake City" · "Denver to Cheyenne" — cùng thành phố xuất phát, khác đích, mà phép so
+    chỉ nhìn từ đầu.
+    Một từ không đủ mang bản sắc của một cụm. So bằng TẬP TỪ thì "Denver to Cheyenne" và
+    "Denver to Salt Lake City" khác nhau, còn "a chainsaw" và "a chainsaw" thì vẫn trùng.
+    Đúng §13.5: chọn phép đo theo thứ người xem cảm được, không theo thứ dễ tính."""
+    return frozenset(w for w in re.findall(r"[a-z]+", ten.lower())
+                     if w not in _BO and w not in _KHUON)
 
 
 def _lech(a, b, sai):
@@ -299,7 +327,8 @@ def doi_chung(ten_ds, cau, khoa):
 def mot_bang(ten_bang, muc_tieu, khoa, mo_moi=48):
     dt = BANG[ten_bang]
     cu = list(getattr(G, ten_bang))
-    co_dau = {_dau(r[0]) for r in cu}
+    co_dau = {_van_tay(r[0]) for r in cu}
+    co_ten = {str(r[0]) for r in cu}
     them, nguon = [], []
     print(f"\n══ {ten_bang}  {len(cu)} -> {muc_tieu} mục")
 
@@ -308,7 +337,10 @@ def mot_bang(ten_bang, muc_tieu, khoa, mo_moi=48):
         n = min(mo_moi, thieu + 12)          # xin dư, vì cổng sẽ loại bớt
         dg = DANG[dt.get("dang", "mao_tu")]
         sysp = LENH.format(don=dt["don"], dang=dg["luat"],
-                           co="  " + ", ".join(sorted(co_dau)))
+                           # Danh sách "đừng lặp" gửi cho AI phải là TÊN người đọc được,
+                           # không phải vân tay nội bộ. Giữ hai thứ tách bạch: `co_dau` để
+                           # MÁY so, `co_ten` để NGƯỜI (và mô hình) đọc.
+                           co="  " + ", ".join(sorted(co_ten)[:220]))
         # Xin theo NHÓM CHỦ ĐỀ, xoay vòng. Mẻ trước không chia nhóm thì tới mẻ thứ tám có
         # 48/50 dòng trùng danh từ chính — mô hình quay lại đúng cái hồ nó vừa múc. Nhóm là
         # cách rẻ nhất ép nó sang một vùng khác của trí nhớ; không nhóm thì trần thật của một
@@ -347,10 +379,10 @@ def mot_bang(ten_bang, muc_tieu, khoa, mo_moi=48):
             bt = _bt(ten, dt["bt0"])
             if not (dt["bien"][0] <= so <= dt["bien"][1]):
                 vi["ngoài biên vật lý"] = vi.get("ngoài biên vật lý", 0) + 1; continue
-            d = _dau(ten)
+            d = _van_tay(ten)
             if d in co_dau:
                 vi["trùng danh từ chính"] = vi.get("trùng danh từ chính", 0) + 1; continue
-            co_dau.add(d)
+            co_dau.add(d); co_ten.add(ten)
             qua.append((ten, so, bt))
 
         # ── cổng 4: đối chứng ────────────────────────────────────────────────────────────────
@@ -360,7 +392,7 @@ def mot_bang(ten_bang, muc_tieu, khoa, mo_moi=48):
             if not _lech(so, so2, dt["sai"]):
                 an += 1
                 vi["đối chứng lệch"] = vi.get("đối chứng lệch", 0) + 1
-                co_dau.discard(_dau(ten))
+                co_dau.discard(_van_tay(ten))
                 continue
             them.append((ten, so, bt))
             nguon.append({"bang": ten_bang, "ten": ten, "so": so, "doi_chung": so2,

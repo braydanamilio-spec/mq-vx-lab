@@ -137,10 +137,20 @@ def _no(bang, r):
 
 
 def _dau(ten):
-    tu = [w for w in re.findall(r"[a-z]+", ten.lower())
-          if w not in {"a", "an", "the", "at", "of", "in", "on", "to", "from", "one",
-                       "single", "full", "its"}]
-    return tu[0] if tu else ten.lower()
+    """Vân tay chống trùng: TẬP từ nội dung, không phải một từ.
+
+    ── VÌ SAO  (đo 6/9/2026) ───────────────────────────────────────────────────────────────
+    Bản đầu so bằng từ-nội-dung ĐẦU TIÊN, cùng phép mà `bang_mo_rong` dùng. Hậu quả đo được ở
+    khâu NỐI: `XAC_SUAT` sinh 105 dòng hợp lệ mà chỉ **3 dòng** vào được bảng — 102 dòng bị
+    loại vì trùng một từ đầu ("winning …", "being …"). Bộ sinh đã sửa sang tập từ, còn bộ nối
+    thì không: đúng họ *vá một nhánh, để nguyên nhánh song song* (§6), và nhánh im lặng hơn
+    vì nó chỉ làm SỐ DÒNG NHẬN ÍT ĐI, không báo lỗi nào.
+    Hai chỗ so trùng phải dùng CÙNG một phép — nếu không thì công của chỗ này bị chỗ kia vứt."""
+    return frozenset(w for w in re.findall(r"[a-z]+", ten.lower())
+                     if w not in {"a", "an", "the", "at", "of", "in", "on", "to", "from",
+                                  "one", "single", "full", "its", "distance", "odds",
+                                  "chance", "probability", "trip", "route", "journey",
+                                  "winning", "being", "getting", "having"})
 
 
 def _cuoi_bang(src, ten):

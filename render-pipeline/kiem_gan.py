@@ -71,6 +71,13 @@ def bang_gan() -> dict[str, set]:
             d = json.load(io.open(f, encoding="utf-8"))
         except Exception:
             continue
+        # `out/` chứa nhiều loại tệp; một số có MẢNG ở cấp trên cùng. `d.get` trên một list
+        # ném `AttributeError`, và `selftest` bọc cổng này nên nó hiện ra thành một lời tố
+        # RỖNG: *"có giá trị được gán mà engine không vẽ:"* — không kèm một tên nào.
+        # Cổng đỏ không kèm bằng chứng thì không ai sửa được, và nó dạy người ta bỏ qua báo
+        # động (§15.12 lật ngược). Bỏ qua tệp sai hình dạng, đừng chết theo nó.
+        if not isinstance(d, dict):
+            continue
         for khoa in ("kieuTuyA", "kieuTuyB", "kieu"):
             nv = d.get(khoa)
             if isinstance(nv, dict):

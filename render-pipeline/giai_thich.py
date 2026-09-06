@@ -171,6 +171,71 @@ QUANG_DUONG = [                                  # dặm
     ('the length of the Golden Gate Bridge', 1.7, 'trai_dat', 'den', 'length of the Golden Gate Bridge'),
     ('the walk across the Golden Gate Bridge', 1.7, 'nguoi', 'den', 'walk across the Golden Gate Bridge'),
     ('a bike ride across the Brooklyn Bridge', 1, 'xe', 'den', 'bike ride across the Brooklyn Bridge'),
+
+    # ── NỐI THÊM 6/9/2026 · 25 mục, mỗi mục qua bốn cổng của
+    #    `bang_mo_rong.py`; xuất xứ ở `bang_nguon_*.json`. Con số là ĐỀ NGHỊ
+    #    của AI đã sống sót qua một lượt ĐỐI CHỨNG độc lập, không phải hằng
+    #    số tra từ sách — nên nếu một mục nào bị người xem bắt sai, sửa THẲNG
+    #    ở đây và giữ nguyên cơ chế.
+    ('Denver to Salt Lake City', 520, 'trai_dat', 'tuyen', ''),
+    ('Portland to Boise', 429, 'trai_dat', 'tuyen', ''),
+    ('Philadelphia to Pittsburgh', 304, 'trai_dat', 'tuyen', ''),
+    ('Las Vegas to Los Angeles', 270, 'trai_dat', 'tuyen', ''),
+    ('Atlanta to Charlotte', 244, 'trai_dat', 'tuyen', ''),
+    ('Miami to Orlando', 236, 'xe', 'tuyen', ''),
+    ('Boston to New York', 215, 'trai_dat', 'tuyen', ''),
+    ('Nashville to Memphis', 212, 'trai_dat', 'tuyen', ''),
+    ('Dallas to Austin', 195, 'trai_dat', 'tuyen', ''),
+    ('Seattle to Portland', 175, 'trai_dat', 'tuyen', ''),
+    ('Seattle to Portland', 174, 'trai_dat', 'tuyen', ''),
+    ('Detroit to Cleveland', 170, 'trai_dat', 'tuyen', ''),
+    ('Phoenix to Tucson', 116, 'trai_dat', 'tuyen', ''),
+    ('Indianapolis to Louisville', 115, 'trai_dat', 'tuyen', ''),
+    ('Hartford to Provid Providence', 100, 'trai_dat', 'tuyen', ''),
+    ('Chicago to Milwaukee', 92, 'may_bay', 'tuyen', ''),
+    ('San Francisco to Sacramento', 87, 'trai_dat', 'tuyen', ''),
+    ('New\xa0Orleans to Baton\xa0Rouge', 81, 'trai_dat', 'tuyen', ''),
+    ('Denver to Colorado Springs', 70, 'trai_dat', 'tuyen', ''),
+    ('Kansas\xa0City to Topeka', 61, 'trai_dat', 'tuyen', ''),
+    ('Salt\xa0Lake\xa0City to Provo', 46, 'trai_dat', 'tuyen', ''),
+    ('Washington D.C. to Baltimore', 39, 'xe_buyt', 'tuyen', ''),
+    ('Dallas to Fort Worth', 32, 'xe', 'tuyen', ''),
+    ('Raleigh to Durham', 25, 'trai_dat', 'tuyen', ''),
+    ('Minneapolis to St.\u202fPaul', 11, 'trai_dat', 'tuyen', ''),
+
+    # ── NỐI THÊM 6/9/2026 · 28 mục, mỗi mục qua bốn cổng của
+    #    `bang_mo_rong.py`; xuất xứ ở `bang_nguon_*.json`. Con số là ĐỀ NGHỊ
+    #    của AI đã sống sót qua một lượt ĐỐI CHỨNG độc lập, không phải hằng
+    #    số tra từ sách — nên nếu một mục nào bị người xem bắt sai, sửa THẲNG
+    #    ở đây và giữ nguyên cơ chế.
+    ('Denver to Salt Lake City', 520, 'trai_dat', 'tuyen', ''),
+    ('Portland to Boise', 429, 'trai_dat', 'tuyen', ''),
+    ('Philadelphia to Pittsburgh', 304, 'trai_dat', 'tuyen', ''),
+    ('Las Vegas to Los Angeles', 270, 'trai_dat', 'tuyen', ''),
+    ('Atlanta to Charlotte', 244, 'trai_dat', 'tuyen', ''),
+    ('Miami to Orlando', 236, 'xe', 'tuyen', ''),
+    ('Nashville to Memphis', 212, 'trai_dat', 'tuyen', ''),
+    ('Dallas to Austin', 195, 'trai_dat', 'tuyen', ''),
+    ('Seattle to Portland', 175, 'trai_dat', 'tuyen', ''),
+    ('Seattle to Portland by car', 174, 'xe', 'tuyen', ''),
+    ('Detroit to Cleveland', 170, 'trai_dat', 'tuyen', ''),
+    ('Phoenix to Tucson', 116, 'trai_dat', 'tuyen', ''),
+    ('Indianapolis to Louisville', 115, 'trai_dat', 'tuyen', ''),
+    ('Hartford to Provid Providence', 100, 'trai_dat', 'tuyen', ''),
+    ('Chicago to Milwaukee', 92, 'may_bay', 'tuyen', ''),
+    ('New\xa0Orleans to Baton\xa0Rouge', 81, 'trai_dat', 'tuyen', ''),
+    ('road trip from Austin to San\xa0Antonio', 80, 'trai_dat', 'tuyen', ''),
+    ('Denver to Colorado Springs', 70, 'trai_dat', 'tuyen', ''),
+    ('Kansas\xa0City to Topeka', 61, 'trai_dat', 'tuyen', ''),
+    ('Salt\xa0Lake\xa0City to Provo', 46, 'trai_dat', 'tuyen', ''),
+    ('Washington D.C. to Baltimore', 39, 'xe_buyt', 'tuyen', ''),
+    ('Dallas to Fort Worth', 32, 'xe', 'tuyen', ''),
+    ('Raleigh to Durham', 25, 'trai_dat', 'tuyen', ''),
+    ('the span of the Lake Pontchartrain Causeway', 23.9, 'trai_dat', 'den', 'span of the Lake Pontchartrain Causeway'),
+    ('Minneapolis to St.\u202fPaul', 11, 'trai_dat', 'tuyen', ''),
+    ('Atlanta Midtown to Hartsfield-Jackson Airport', 7, 'trai_dat', 'tuyen', ''),
+    ('the drive along the Las Vegas Strip', 4, 'xe', 'den', 'drive along the Las Vegas Strip'),
+    ('the distance across the Brooklyn Bridge', 1.1, 'trai_dat', 'den', 'distance across the Brooklyn Bridge'),
 ]
 
 # Giới từ theo loại: (cho câu "Walking …" và chữ hook, cho câu "The distance …").
@@ -468,6 +533,119 @@ XAC_SUAT = [                                        # (việc, mẫu số 1-trê
     ('taking antibiotics', 3, 'tien'),
     ('a common cold in a year', 2, 'dong_ho'),
     ('catching a cold', 2, 'tien'),
+
+    # ── NỐI THÊM 6/9/2026 · 3 mục, mỗi mục qua bốn cổng của
+    #    `bang_mo_rong.py`; xuất xứ ở `bang_nguon_*.json`. Con số là ĐỀ NGHỊ
+    #    của AI đã sống sót qua một lượt ĐỐI CHỨNG độc lập, không phải hằng
+    #    số tra từ sách — nên nếu một mục nào bị người xem bắt sai, sửa THẲNG
+    #    ở đây và giữ nguyên cơ chế.
+    ('earning an Olympic qualifying time in swimming', 400, 'dong_ho'),
+    ('encountering a raccoon in your trash', 8, 'tien'),
+    ('watching a robin build a nest', 7, 'tien'),
+
+    # ── NỐI THÊM 6/9/2026 · 98 mục, mỗi mục qua bốn cổng của
+    #    `bang_mo_rong.py`; xuất xứ ở `bang_nguon_*.json`. Con số là ĐỀ NGHỊ
+    #    của AI đã sống sót qua một lượt ĐỐI CHỨNG độc lập, không phải hằng
+    #    số tra từ sách — nên nếu một mục nào bị người xem bắt sai, sửa THẲNG
+    #    ở đây và giữ nguyên cơ chế.
+    ('being a victim of a workplace shooting', 400000, 'tien'),
+    ('having a child with Tay-Sachs disease', 35000, 'tien'),
+    ('having a child with albinism', 17000, 'tien'),
+    ('being a victim of a revenge porn distribution', 14000, 'tien'),
+    ('hitting a hole-in-one on a par-3', 12500, 'tien'),
+    ('landing a perfect 300 game in bowling', 9000, 'tien'),
+    ('having triplets', 8000, 'tien'),
+    ('having a child with hemophilia', 5000, 'tien'),
+    ('being born with a congenital cataract', 5000, 'tien'),
+    ('winning a world championship in e-sports', 3000, 'trai_dat'),
+    ('hitting a 500-meter javelin throw in competition', 2500, 'tien'),
+    ('experiencing a false arrest by police', 2500, 'tien'),
+    ('being a victim of a sextortion attempt', 2500, 'tien'),
+    ('having a child with cystic fibrosis', 2500, 'tien'),
+    ('having a child with a Y-chromosome microdeletion', 2500, 'te_bao'),
+    ('suffering a pedestrian injury in a city', 2000, 'tien'),
+    ('having a gene for high-altitude adaptation', 2000, 'tien'),
+    ('winning a Grand Slam title in tennis', 1500, 'tien'),
+    ('being born with a clubfoot', 1500, 'tien'),
+    ('being a victim of a home invasion robbery', 1500, 'nha'),
+    ('winning a world title in mixed martial arts', 1400, 'trai_dat'),
+    ('having a child with spina bifida', 1200, 'tien'),
+    ('being born with a double-crowned tooth', 1200, 'tien'),
+    ('having a child with a congenital hearing loss', 1000, 'tien'),
+    ('having a child with a neural tube defect', 1000, 'tien'),
+    ('being born with a gene for high-altitude adaptation', 1000, 'tien'),
+    ('being a victim of a counterfeit money transaction', 1000, 'tien'),
+    ('being born with a cleft palate', 800, 'tien'),
+    ('having a child with Down syndrome', 700, 'tien'),
+    ('being born with a cleft palate (non-syndromic)', 700, 'tien'),
+    ('being born with an extra rib', 500, 'tien'),
+    ('experiencing a false emergency 911 call', 400, 'dien_thoai'),
+    ('having a child with a BRCA1 mutation', 400, 'tien'),
+    ('experiencing a motorcycle crash', 300, 'xe'),
+    ('being denied entry at a border checkpoint', 300, 'tien'),
+    ('having twins', 300, 'tien'),
+    ('having a child with a hereditary hemochromatosis gene', 300, 'tien'),
+    ('winning a local 5k race', 250, 'tien'),
+    ('experiencing a car theft', 250, 'xe'),
+    ('having a car stolen', 200, 'xe'),
+    ('winning a state high school wrestling tournament', 200, 'tien'),
+    ('being born with red hair', 200, 'tien'),
+    ('having a gene for red hair', 200, 'tien'),
+    ('being a victim of a phishing email', 180, 'tien'),
+    ('winning a national high school basketball state title', 160, 'tien'),
+    ('winning a high school state championship in wrestling', 150, 'tien'),
+    ('getting into a minor car accident', 100, 'xe'),
+    ('being born with a heart murmur', 100, 'te_bao'),
+    ('having a credit card fraud charge', 100, 'tien'),
+    ('being a carrier of Gaucher disease mutation', 100, 'tien'),
+    ('seeing a herd of elk in a valley', 85, 'tien'),
+    ('having a hotel reservation double-booked', 80, 'tien'),
+    ('having a child with autism spectrum disorder', 68, 'tien'),
+    ('seeing a bobcat in a forest', 60, 'cay'),
+    ('experiencing a baggage delay over 12 hours', 50, 'dong_ho'),
+    ('seeing a porcupine crossing a trail', 50, 'tien'),
+    ('getting a phishing email', 50, 'tien'),
+    ('finding a centipede in your shoe', 45, 'nguoi'),
+    ('hitting a double in a baseball inning', 45, 'tien'),
+    ('receiving a fraudulent charity solicitation call', 45, 'dien_thoai'),
+    ('seeing a moose near a highway', 38, 'xe'),
+    ('seeing a beaver dam in a local stream', 30, 'tien'),
+    ('having a crow follow you while walking', 26, 'nguoi'),
+    ('getting a flat tire on a road trip', 25, 'tien'),
+    ('being a carrier of cystic fibrosis', 25, 'tien'),
+    ('seeing a fox in suburban woods', 24, 'cay'),
+    ('being startled by a jumping spider', 22, 'tien'),
+    ('missing a connecting flight', 20, 'may_bay'),
+    ('receiving a spam call', 20, 'dien_thoai'),
+    ('watching a raccoon wash its food', 16, 'tien'),
+    ('finding a ladybug on a leaf', 14, 'cay'),
+    ('getting a passport photo rejected', 13, 'tien'),
+    ('being a carrier of sickle-cell trait', 12, 'te_bao'),
+    ('having a gene for blue eyes', 12, 'nguoi'),
+    ('being born with a single-eyebrow (unibrow)', 12, 'tien'),
+    ('breaking a bone', 12, 'tien'),
+    ('being ticketed for speeding', 10, 'tien'),
+    ('spotting a butterfly on a garden flower', 9, 'tien'),
+    ('getting a travel insurance claim denied', 7, 'tien'),
+    ('getting a sunburn on a tropical vacation', 6, 'tien'),
+    ('having a housefly land on your food', 6, 'tien'),
+    ('being born with a gene for lactose persistence', 6, 'tien'),
+    ('finding a dead spider in your home', 5, 'nha'),
+    ('being born with a genetic predisposition to eczema', 5, 'tien'),
+    ('having attached earlobes', 5, 'tien'),
+    ('having a gene for cilantro aversion', 5, 'tien'),
+    ('having a genetic predisposition to migraines', 5, 'tien'),
+    ('suffering a seasick episode on a cruise', 4, 'tien'),
+    ('having dimples', 4, 'tien'),
+    ('being able to roll the tongue', 4, 'tien'),
+    ('being bitten by a mosquito', 3, 'tien'),
+    ("having a widow's peak", 3, 'tien'),
+    ('having a gene for lactose intolerance', 3, 'tien'),
+    ('having a gene for freckles', 3, 'tien'),
+    ('having a gene for lactose persistence', 3, 'tien'),
+    ('missing a bus by seconds', 3, 'xe_buyt'),
+    ('having a cleft chin', 2, 'tien'),
+    ('having a gene for brown eyes', 2, 'nguoi'),
 ]
 PHI_AN = [                                          # (thứ, giá, các phần %)
     ("a $6 coffee", 6.00, [("the beans", 6), ("the cup and lid", 4),
@@ -849,6 +1027,34 @@ AM_THANH = [                                        # (thứ, decibel)
     ('a glider soaring in quiet air', 35, 'may_bay'),
     ('the empty conference room', 35, 'nha'),
     ('a whispering coworker at desk', 35, 'nha'),
+
+    # ── NỐI THÊM 6/9/2026 · 22 mục, mỗi mục qua bốn cổng của
+    #    `bang_mo_rong.py`; xuất xứ ở `bang_nguon_*.json`. Con số là ĐỀ NGHỊ
+    #    của AI đã sống sót qua một lượt ĐỐI CHỨNG độc lập, không phải hằng
+    #    số tra từ sách — nên nếu một mục nào bị người xem bắt sai, sửa THẲNG
+    #    ở đây và giữ nguyên cơ chế.
+    ('the thunderous crash of a building collapse nearby', 120, 'nha'),
+    ('a deafening steel door crash', 119, 'nha'),
+    ('the industrial plant whistle', 118, 'cay'),
+    ('a powerful pneumatic tool', 108, 'nguoi'),
+    ('an intense construction drill', 106, 'nha'),
+    ('a large conference room microphone feedback', 100, 'nha'),
+    ('a heavy metal trash compactor', 98, 'nguoi'),
+    ('the roar of a construction jackhammer outside', 95, 'nguoi'),
+    ('a loud ringtone from a desk phone', 95, 'dien_thoai'),
+    ('a pneumatic stapler firing', 92, 'nguoi'),
+    ('the electric kettle whistle', 85, 'coc'),
+    ('the emergency exit sign beeping', 80, 'nguoi'),
+    ('a ceiling tile being dropped', 76, 'nha'),
+    ('a metal chair being pulled across the floor', 72, 'nha'),
+    ('a steady scanner scanning', 65, 'nguoi'),
+    ('the whine of a fax transmission', 65, 'nguoi'),
+    ('a subtle coffee pot brewing', 55, 'coc'),
+    ('a coffee machine brewing', 55, 'coc'),
+    ('a soft mouse click', 42, 'nguoi'),
+    ('the air-conditioner low setting', 42, 'nguoi'),
+    ('a water cooler dispensing', 42, 'coc'),
+    ('the low hum of a server rack', 38, 'nguoi'),
 ]
 KHOI_LUONG = [                                      # (thứ, pound) — mạnh nhất trước
     ("a school bus", 24000, "xe_buyt"), ("a small car", 2900, "xe"),
@@ -1046,6 +1252,28 @@ KHOI_LUONG = [                                      # (thứ, pound) — mạnh 
     ('a credit card', 0.01, 'nguoi'),
     ('a paper clip', 0.001, 'nguoi'),
     ('a postage stamp', 0.001, 'nguoi'),
+
+    # ── NỐI THÊM 6/9/2026 · 16 mục, mỗi mục qua bốn cổng của
+    #    `bang_mo_rong.py`; xuất xứ ở `bang_nguon_*.json`. Con số là ĐỀ NGHỊ
+    #    của AI đã sống sót qua một lượt ĐỐI CHỨNG độc lập, không phải hằng
+    #    số tra từ sách — nên nếu một mục nào bị người xem bắt sai, sửa THẲNG
+    #    ở đây và giữ nguyên cơ chế.
+    ('a freight train car', 80000, 'xe'),
+    ('a semi-trailer truck', 70000, 'xe'),
+    ('a heavy-duty garbage truck', 26000, 'xe'),
+    ('a double-decker bus', 25000, 'xe_buyt'),
+    ('a passenger taxi cab', 4200, 'xe'),
+    ('a metal road barrier', 2000, 'nguoi'),
+    ('a concrete highway barrier', 1500, 'xe'),
+    ('a portable traffic signal unit', 250, 'xe'),
+    ('a fire hydrant', 250, 'lua'),
+    ('a steel road sign', 45, 'nguoi'),
+    ('a folding bicycle', 30, 'xe'),
+    ('a compact electric scooter', 27, 'xe'),
+    ('a handheld traffic sign', 7, 'xe'),
+    ('a pair of rollerblades', 5, 'nguoi'),
+    ('a paper traffic sign', 5, 'xe'),
+    ('a wooden curb marker', 3, 'nguoi'),
 ]
 _KHOI_LUONG_CU = [
     ("a housecat", 10, "meo"), ("a car tire", 25, "xe"),
@@ -1312,6 +1540,30 @@ NHIET_DO = [                                        # (thứ, độ F) — mạn
     ('a block of ice cream', 0.0, 'lua'),
     ('a frozen pizza straight from the freezer', 0.0, 'lua'),
     ('a backyard freezer', 0.0, 'lua'),
+
+    # ── NỐI THÊM 6/9/2026 · 18 mục, mỗi mục qua bốn cổng của
+    #    `bang_mo_rong.py`; xuất xứ ở `bang_nguon_*.json`. Con số là ĐỀ NGHỊ
+    #    của AI đã sống sót qua một lượt ĐỐI CHỨNG độc lập, không phải hằng
+    #    số tra từ sách — nên nếu một mục nào bị người xem bắt sai, sửa THẲNG
+    #    ở đây và giữ nguyên cơ chế.
+    ('a scorching pizza stone in a wood-fired oven', 600, 'cay'),
+    ('the oil surface in a deep-fryer at 400°F', 400, 'lua'),
+    ('a toaster set to dark brown', 350, 'lua'),
+    ('the iron on cotton setting', 350, 'lua'),
+    ('the heat of a preheated oven at 350°F', 350, 'lua'),
+    ('the steam iron steam burst', 212, 'lua'),
+    ('the temperature of a fresh-baked croissant interior', 210, 'lua'),
+    ('the interior of a slow cooker on high', 200, 'lua'),
+    ('the coffee maker brewing water', 200, 'coc'),
+    ('a freshly brewed coffee', 160, 'coc'),
+    ('a heated towel rack', 140, 'lua'),
+    ('a kitchen countertop on a hot summer day', 95, 'dong_ho'),
+    ('a sunny windowsill on a summer day', 85, 'dong_ho'),
+    ('a cool draft from an open window', 60, 'nha'),
+    ('a cold water faucet', 50, 'coc'),
+    ('the air in a winter garage', 50, 'lua'),
+    ('the ice-cream maker during churn', 20, 'lua'),
+    ('the freezer compartment of a fridge', 0.0, 'nha'),
 ]
 CUC_NHO = [                                         # (thứ, mét) — mạnh nhất trước
     ("a single atom", 1e-10, "nguyen_tu"), ("a virus", 1e-7, "vi_khuan"),

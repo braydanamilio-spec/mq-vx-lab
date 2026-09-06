@@ -1,0 +1,529 @@
+{
+ "XAC_SUAT": [
+  [
+   "missing a connecting flight",
+   20.0,
+   "may_bay"
+  ],
+  [
+   "experiencing a baggage delay over 12 hours",
+   50.0,
+   "dong_ho"
+  ],
+  [
+   "getting a flat tire on a road trip",
+   25.0,
+   "tien"
+  ],
+  [
+   "being ticketed for speeding",
+   10.0,
+   "tien"
+  ],
+  [
+   "having a car stolen",
+   200.0,
+   "xe"
+  ],
+  [
+   "getting into a minor car accident",
+   100.0,
+   "xe"
+  ],
+  [
+   "suffering a pedestrian injury in a city",
+   2000.0,
+   "tien"
+  ],
+  [
+   "experiencing a motorcycle crash",
+   300.0,
+   "tien"
+  ],
+  [
+   "suffering a seasick episode on a cruise",
+   4.0,
+   "tien"
+  ],
+  [
+   "being denied entry at a border checkpoint",
+   300.0,
+   "tien"
+  ],
+  [
+   "having a hotel reservation double‑booked",
+   80.0,
+   "tien"
+  ],
+  [
+   "getting a travel insurance claim denied",
+   7.0,
+   "tien"
+  ],
+  [
+   "getting a sunburn on a tropical vacation",
+   6.0,
+   "tien"
+  ],
+  [
+   "getting a passport photo rejected",
+   13.0,
+   "tien"
+  ],
+  [
+   "being bitten by a mosquito",
+   3.0,
+   "tien"
+  ],
+  [
+   "finding a dead spider in your home",
+   5.0,
+   "nha"
+  ],
+  [
+   "having a housefly land on your food",
+   6.0,
+   "tien"
+  ],
+  [
+   "watching a robin build a nest",
+   7.0,
+   "tien"
+  ],
+  [
+   "encountering a raccoon in your trash",
+   8.0,
+   "tien"
+  ],
+  [
+   "spotting a butterfly on a garden flower",
+   9.0,
+   "tien"
+  ],
+  [
+   "finding a ladybug on a leaf",
+   14.0,
+   "cay"
+  ],
+  [
+   "watching a raccoon wash its food",
+   16.0,
+   "tien"
+  ],
+  [
+   "being startled by a jumping spider",
+   22.0,
+   "tien"
+  ],
+  [
+   "seeing a fox in suburban woods",
+   24.0,
+   "cay"
+  ],
+  [
+   "having a crow follow you while walking",
+   26.0,
+   "nguoi"
+  ],
+  [
+   "seeing a beaver dam in a local stream",
+   30.0,
+   "tien"
+  ],
+  [
+   "seeing a moose near a highway",
+   38.0,
+   "xe"
+  ],
+  [
+   "finding a centipede in your shoe",
+   45.0,
+   "tien"
+  ],
+  [
+   "seeing a porcupine crossing a trail",
+   50.0,
+   "tien"
+  ],
+  [
+   "seeing a bobcat in a forest",
+   60.0,
+   "cay"
+  ],
+  [
+   "seeing a herd of elk in a valley",
+   85.0,
+   "tien"
+  ],
+  [
+   "winning a local 5k race",
+   250.0,
+   "tien"
+  ],
+  [
+   "hitting a hole‑in‑one on a par‑3",
+   12500.0,
+   "tien"
+  ],
+  [
+   "winning a high school state championship in wrestling",
+   150.0,
+   "tien"
+  ],
+  [
+   "qualifying for the NCAA tournament in basketball",
+   100.0,
+   "tien"
+  ],
+  [
+   "hitting a double in a baseball inning",
+   45.0,
+   "tien"
+  ],
+  [
+   "winning a Grand Slam title in tennis",
+   1500.0,
+   "tien"
+  ],
+  [
+   "earning an Olympic qualifying time in swimming",
+   400.0,
+   "dong_ho"
+  ],
+  [
+   "hitting a 500‑meter javelin throw in competition",
+   2500.0,
+   "tien"
+  ],
+  [
+   "winning a world championship in e‑sports",
+   3000.0,
+   "trai_dat"
+  ],
+  [
+   "landing a perfect 300 game in bowling",
+   9000.0,
+   "tien"
+  ],
+  [
+   "winning a state high school wrestling tournament",
+   200.0,
+   "tien"
+  ],
+  [
+   "being selected for an All‑Star game in MLB",
+   85.0,
+   "tien"
+  ],
+  [
+   "winning a world title in mixed martial arts",
+   1400.0,
+   "trai_dat"
+  ],
+  [
+   "winning a national high school basketball state title",
+   160.0,
+   "tien"
+  ],
+  [
+   "receiving a spam call claiming IRS fraud",
+   30.0,
+   "dien_thoai"
+  ],
+  [
+   "being a victim of a phishing email",
+   180.0,
+   "tien"
+  ],
+  [
+   "receiving a fraudulent charity solicitation call",
+   45.0,
+   "dien_thoai"
+  ],
+  [
+   "experiencing a false arrest by police",
+   2500.0,
+   "tien"
+  ],
+  [
+   "being a victim of a sextortion attempt",
+   2500.0,
+   "tien"
+  ],
+  [
+   "experiencing a false emergency 911 call",
+   400.0,
+   "dien_thoai"
+  ],
+  [
+   "being a victim of a revenge porn distribution",
+   14000.0,
+   "tien"
+  ],
+  [
+   "having twins",
+   300.0,
+   "tien"
+  ],
+  [
+   "having triplets",
+   8000.0,
+   "tien"
+  ],
+  [
+   "being born with red hair",
+   200.0,
+   "tien"
+  ],
+  [
+   "having a child with Down syndrome",
+   700.0,
+   "tien"
+  ],
+  [
+   "having a child with cystic fibrosis",
+   2500.0,
+   "tien"
+  ],
+  [
+   "having a child with hemophilia",
+   5000.0,
+   "tien"
+  ],
+  [
+   "having a child with Tay‑Sachs disease",
+   35000.0,
+   "tien"
+  ],
+  [
+   "having a child with spina bifida",
+   1200.0,
+   "tien"
+  ],
+  [
+   "being born with a cleft palate",
+   800.0,
+   "tien"
+  ],
+  [
+   "being born with a clubfoot",
+   1500.0,
+   "tien"
+  ],
+  [
+   "being born with a heart murmur",
+   100.0,
+   "te_bao"
+  ],
+  [
+   "having a child with autism spectrum disorder",
+   68.0,
+   "tien"
+  ],
+  [
+   "having a child with ADHD",
+   20.0,
+   "tien"
+  ],
+  [
+   "having a child with albinism",
+   17000.0,
+   "tien"
+  ],
+  [
+   "having a child with a congenital hearing loss",
+   1000.0,
+   "tien"
+  ],
+  [
+   "being born with a congenital cataract",
+   5000.0,
+   "tien"
+  ],
+  [
+   "having a child with a neural tube defect",
+   1000.0,
+   "tien"
+  ],
+  [
+   "having a child with a BRCA1 mutation",
+   400.0,
+   "tien"
+  ],
+  [
+   "having a child with a hereditary hemochromatosis gene",
+   300.0,
+   "tien"
+  ],
+  [
+   "having a child with a Y‑chromosome microdeletion",
+   2500.0,
+   "tien"
+  ],
+  [
+   "being born with a gene for high‑altitude adaptation",
+   1000.0,
+   "tien"
+  ],
+  [
+   "being born with a gene for lactose persistence",
+   6.0,
+   "tien"
+  ],
+  [
+   "being born with a genetic predisposition to eczema",
+   5.0,
+   "tien"
+  ],
+  [
+   "receiving a spam call",
+   20.0,
+   "dien_thoai"
+  ],
+  [
+   "getting a phishing email",
+   50.0,
+   "tien"
+  ],
+  [
+   "having a credit card fraud charge",
+   100.0,
+   "tien"
+  ],
+  [
+   "experiencing a car theft",
+   250.0,
+   "xe"
+  ],
+  [
+   "being a victim of a counterfeit money transaction",
+   1000.0,
+   "tien"
+  ],
+  [
+   "being a victim of a home invasion robbery",
+   1500.0,
+   "nha"
+  ],
+  [
+   "being a victim of a workplace shooting",
+   400000.0,
+   "tien"
+  ],
+  [
+   "having a widow’s peak",
+   3.0,
+   "tien"
+  ],
+  [
+   "having dimples",
+   4.0,
+   "tien"
+  ],
+  [
+   "having attached earlobes",
+   5.0,
+   "tien"
+  ],
+  [
+   "being able to roll the tongue",
+   4.0,
+   "tien"
+  ],
+  [
+   "being able to taste PROP (bitter)",
+   2.0,
+   "tien"
+  ],
+  [
+   "having a cleft chin",
+   2.0,
+   "tien"
+  ],
+  [
+   "being born with an extra rib",
+   500.0,
+   "tien"
+  ],
+  [
+   "having a gene for lactose intolerance",
+   3.0,
+   "tien"
+  ],
+  [
+   "having a gene for cilantro aversion",
+   5.0,
+   "tien"
+  ],
+  [
+   "being a carrier of cystic fibrosis",
+   25.0,
+   "tien"
+  ],
+  [
+   "being a carrier of sickle‑cell trait",
+   12.0,
+   "te_bao"
+  ],
+  [
+   "having a gene for red hair",
+   200.0,
+   "tien"
+  ],
+  [
+   "having a gene for freckles",
+   3.0,
+   "tien"
+  ],
+  [
+   "having a gene for brown eyes",
+   2.0,
+   "nguoi"
+  ],
+  [
+   "having a gene for blue eyes",
+   12.0,
+   "nguoi"
+  ],
+  [
+   "having a genetic predisposition to migraines",
+   5.0,
+   "tien"
+  ],
+  [
+   "having a gene for high‑altitude adaptation",
+   2000.0,
+   "tien"
+  ],
+  [
+   "having a gene for lactose persistence",
+   3.0,
+   "tien"
+  ],
+  [
+   "being born with a single‑eyebrow (unibrow)",
+   12.0,
+   "tien"
+  ],
+  [
+   "having a gene for hypervariable immune response (HLA‑DR4)",
+   10.0,
+   "tien"
+  ],
+  [
+   "being born with a cleft palate (non‑syndromic)",
+   700.0,
+   "tien"
+  ],
+  [
+   "being born with a double‑crowned tooth",
+   1200.0,
+   "tien"
+  ],
+  [
+   "being a carrier of Gaucher disease mutation",
+   100.0,
+   "tien"
+  ]
+ ]
+}

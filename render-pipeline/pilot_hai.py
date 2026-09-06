@@ -260,7 +260,21 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     from chuan_am import chuan
 
     g = GU.gu(ma)
-    vai = GU.dan_vai_khai(ma)[:2]
+    # ── CẶP NÓI CHUYỆN XOAY THEO TẬP  (6/9/2026) ─────────────────────────────────────────
+    # Bản cũ lấy `[:2]` — hai người đầu, mọi tập, mọi kênh. Ba vai khai sẵn thì vai thứ ba
+    # không bao giờ lên hình (§15.12), và người xem thấy đúng một cuộc trò chuyện lặp lại.
+    # Dàn ba vai cho **6 cặp có thứ tự**; ai hỏi và ai trả lời là hai vai khác nhau, nên thứ
+    # tự có nghĩa. Dùng đúng phép của `giai_thich._cap`: bước nhảy TĂNG DẦN theo vòng, phủ hết
+    # n·(n−1) cặp mà không cần nhớ gì giữa các lần chạy — quan trọng vì trên Actions không có
+    # trạng thái nào sống qua hai lượt.
+    _dan = GU.dan_vai_khai(ma)
+    _n = max(1, len(_dan))
+    if _n >= 2:
+        _b = (idx // _n) % (_n - 1) + 1
+        _i, _j = idx % _n, (idx % _n + _b) % _n
+    else:
+        _i = _j = 0
+    vai = [_dan[_i], _dan[_j]]
     if len(vai) < 2:
         print("   ❌ kênh này chưa khai đủ hai vai"); return ""
 
@@ -321,7 +335,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     tuyA, tuyB = KC._hai_bong(kk)
     tuyA.update(ghiA); tuyB.update(ghiB)
     # Dàn vai nói lời CUỐI: nó đứng sau `_hai_bong` và sau `vai_va_giong` nên nó ghi đè cả hai.
-    dA, dB = do_vai(ma)
+    dA, dB = do_vai(ma, (_i, _j))
     tuyA.update(dA); tuyB.update(dB)
     noi_idx = idx % max(1, len(phong))
 
@@ -547,11 +561,50 @@ def kiem_do_vai() -> list:
     return loi
 
 
-def do_vai(ma: str) -> tuple:
-    d = DO_VAI.get(ma)
-    if d:
-        return dict(d[0]), dict(d[1])
-    return {}, {}
+
+
+# ══ VAI THỨ BA — TRANG PHỤC  (6/9/2026) ══════════════════════════════════════════════════════
+# `phim_gu.VAI` khai **ba** vai cho MỖI kênh, tả rất kỹ (tuổi, tóc, áo, màu). Đường dựng thì
+# lấy `[:2]` — nên 18/18 vai thứ ba được viết ra rồi **không ai đọc**, đúng §15.12: một trường
+# chỉ được ghi mà không được đọc là một trường chưa tồn tại.
+# Hậu quả nhìn thấy được: tập *"a day in the life of a subway train operator"* vẫn do Nurse
+# Tara ↔ Dr Vance nói, vì cặp không bao giờ xoay.
+#
+# Màu và kiểu ở đây SUY TỪ CHÍNH câu tả trong `VAI` ('white crew cut, grey university
+# sweatshirt' -> tóc trắng, áo hoodie xám), không bịa thêm: hai chỗ tả cùng một người mà nói
+# khác nhau thì ảnh AI và người vector sẽ là hai người (§11 — đừng tạo nguồn thứ hai).
+# Mọi giá trị đã qua `kiem_gan.py` — engine có nhánh vẽ cho từng cái.
+DO_VAI_3 = {
+ "howlong": dict(ao='#8A8F94', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#F2F2F2', kieuToc='ngan', kieuAo='hoodie'),   # Coach Pete
+ "howbig": dict(ao='#8B6BB8', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#3A2E28', kieuToc='duoi_ngua', kieuAo='hoodie'),   # Dot
+ "realcost": dict(ao='#3E6E8C', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#F2F2F2', kieuToc='ngan', kieuAo='somi', rau='ria', mu='luoi_trai'),   # Uncle Walt
+ "howmuch": dict(ao='#8A8F94', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='ngan', kieuAo='somi'),   # Mr Okoye
+ "whatif": dict(ao='#3E6E8C', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#4A3728', kieuToc='trocs', kieuAo='somi', rau='quai'),   # Gus
+ "survive": dict(ao='#6B7A45', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#8A8F94', kieuToc='ngan', kieuAo='somi', rau='ria'),   # Ranger Ellis
+ "dayinlife": dict(ao='#3FA46A', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#F2F2F2', kieuToc='ngan', kieuAo='thun'),   # Mr Hollis
+ "wheregoes": dict(ao='#3E6E8C', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#3A2E28', kieuToc='xoan', kieuAo='thun'),   # Otis
+ "therules": dict(ao='#C8A97E', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#2A2A2A', kieuToc='bui', kieuAo='somi'),   # Officer Mel
+ "speedof": dict(ao='#6B4A2F', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#F2F2F2', kieuToc='ngan', kieuAo='somi', rau='de', mu='cao_bo'),   # Pop Harlan
+ "odds": dict(ao='#D9A0B0', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#F2F2F2', kieuToc='xoan', kieuAo='cardigan'),   # Grandma Pearl
+ "hiddenfee": dict(ao='#3E6E8C', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#C4642A', kieuToc='ngan', kieuAo='polo'),   # Chet
+ "yearsof": dict(ao='#F2F2F2', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#6B4A2F', kieuToc='ngan', kieuAo='thun'),   # Young Hal
+ "howloud": dict(ao='#D9503F', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#E0C060', kieuToc='duoi_ngua', kieuAo='somi'),   # Little Ann
+ "whatweighs": dict(ao='#3FA46A', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#6B4A2F', kieuToc='ngan', kieuAo='thun'),   # Chip
+ "rightnow": dict(ao='#8B6BB8', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#8A8F94', kieuToc='bui', kieuAo='cardigan'),   # Mrs Reyes
+ "howhot": dict(ao='#F2F2F2', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#E0C060', kieuToc='xoan', kieuAo='thun'),   # Skip
+ "smallest": dict(ao='#E08A3C', aoTrong='#FFFFFF', quan='#3A3A3A', toc='#2A2A2A', kieuToc='ngan', kieuAo='thun'),   # Ravi
+}
+
+
+def do_vai(ma: str, cap=(0, 1)) -> tuple:
+    """Trang phục cho CẶP vai đang nói. `cap` là hai chỉ số trong dàn ba vai."""
+    ds = list(DO_VAI.get(ma) or [])
+    b3 = DO_VAI_3.get(ma)
+    if b3:
+        ds = ds + [b3]
+    if not ds:
+        return {}, {}
+    return dict(ds[cap[0] % len(ds)]), dict(ds[cap[1] % len(ds)])
 
 
 # Bốn phòng cho mỗi kênh — vẽ một lần. Chỉ khai kênh pilot; kênh khác dùng bản mặc định.
