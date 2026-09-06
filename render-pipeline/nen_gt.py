@@ -1164,24 +1164,20 @@ def sinh(ma: str, idx: int, i: int, ve: str, tam_trang: str = "", gu: str = "",
             print(f"     🪫 nhịp {i}: cả hồ CF+Gemini đều cạn/đang nghỉ — từ đây các cảnh "
                   f"còn lại dùng nền vẽ bằng code (sẽ đếm tổng ở cuối tập)")
         return ""
-    # ── TRẦN ẢNH AI MỖI LUỒNG MỖI LƯỢT  (3/9/2026) ─────────────────────────────────────────
+    # ── TRẦN ẢNH AI MỖI LUỒNG MỖI LƯỢT  (3/9, nâng lại 6/9/2026) ────────────────────────────
     # Anh: *"nhiều key thế sao cạn vậy, tìm nguyên nhân."* Đo xong thì thủ phạm là **số vòng
-    # lặp**, không phải số key và cũng không phải vòng thử lại:
+    # lặp**, không phải số key và cũng không phải vòng thử lại — và trần 120 hôm 3/9 được
+    # tính khi hồ CHỈ có CF (16.724 ảnh/ngày) VÀ khi 1/3 nhịp `canh` còn bị xen kẽ sang vẽ
+    # code trước cả khi thử (`CANH_MOI`, nay đã tắt — xem `_rai_canh_ve`).
     #
-    #     sức hồ        : 97 tài khoản × 10.000 neuron ÷ 58 = 16.724 ảnh/ngày
-    #     tỉ lệ vẽ lại  : 19 lượt trên ~812 nhịp = **2,3%** (hệ số 1,02× — không đáng kể)
-    #     nhu cầu thật  : 18 luồng × 14 vòng × 58 nhịp × 1,02 = **14.900 ảnh = 89% sức hồ**
+    # Cả hai điều kiện ấy đổi rồi: hồ nay là CF+Gemini gộp (~16.724 + 68 khoá × 500 =
+    # **~50.700 ảnh/ngày**), và MỌI nhịp `canh` đều được thử vẽ thật — tức nhu cầu mỗi tập
+    # cao hơn hẳn so với lúc 1/3 số nhịp bị chặn từ đầu. Giữ trần cũ (120) sẽ tự tạo lại
+    # đúng cái xen kẽ vừa tắt, chỉ là chặn ở cuối thay vì ở đầu.
     #
-    # Trước khi có vòng lặp liên tục thì nhu cầu là 828 ảnh = **4%**. Vòng lặp làm sản lượng
-    # nhảy 36 → 872 video, và nhu cầu ảnh nhảy 4% → 89%. Sản lượng và ảnh AI đánh nhau trực tiếp.
-    #
-    # Chặn ở đâu cũng phải trả giá, nên chọn chỗ trả giá RẺ NHẤT: giới hạn **số ảnh mỗi luồng**,
-    # không giảm số video. Tập đầu của luồng có ảnh AI đầy đủ; tập sau dùng lớp vẽ bằng code —
-    # vẫn ra video, vẫn giao được, chỉ khác chất. Đó là đánh đổi có kiểm soát, thay vì để hồ cạn
-    # giữa chừng rồi MỌI tập sau đó mất ảnh một cách ngẫu nhiên.
-    #
-    # 120 ảnh/luồng/lượt × 18 luồng × 4 lượt/ngày = 8.640 ảnh = 52% sức hồ, còn biên cho việc khác.
-    _tran = int(os.environ.get("TRAN_ANH_LUONG", "120") or 120)
+    # 280 ảnh/luồng/lượt × 18 luồng × 5 lượt/ngày = 25.200 ảnh = ~50% sức hồ gộp — cùng biên
+    # an toàn (~50%) với trần cũ, tính lại trên sức hồ MỚI.
+    _tran = int(os.environ.get("TRAN_ANH_LUONG", "280") or 280)
     _dv = _da_ve()                 # ĐỌC TỆP, không đọc biến — xem `_ANH_TEP`
     if _tran > 0 and _dv >= _tran:
         # ── IN MỘT LẦN MỖI TIẾN TRÌNH, KHÔNG MỘT LẦN MỖI TỆP ĐẾM  (5/9/2026) ────────────

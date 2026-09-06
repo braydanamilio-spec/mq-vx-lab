@@ -5094,8 +5094,22 @@ def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
             # cái anh vừa chê.
             lay = True
         elif kh == "canh":
+            # ── 6/9/2026 — TẮT XEN KẼ: `canh` PHẢI THỬ CF/GEMINI, KHÔNG CHE TRƯỚC ────────
+            # `CANH_MOI` được đặt ra khi hồ ảnh CHỈ có CF (~16.700 ảnh/ngày, phải để dành).
+            # Từ khi `sinh()` gộp cả CF+Gemini (~50.000 ảnh/ngày, xem commit trước), lý do
+            # tiết kiệm ấy không còn nặng như cũ — mà cái giá của xen kẽ thì vẫn y nguyên:
+            # 1/3 nhịp `canh` KHÔNG BAO GIỜ được thử vẽ ảnh, luôn luôn rơi thẳng xuống
+            # người que trên nền trơn. Anh soi đúng một video toàn người que và nói thẳng:
+            # *"kêu là 100% ảnh footage videos là từ cf và gemini... mà"* — đúng ý anh đã
+            # chốt từ trước: *"còn lại ảnh mà cần đúng bối cảnh và khớp thì 100% gemini +
+            # cf"*, chỉ chart/số liệu mới vẽ code.
+            #
+            # Nay MỌI nhịp `canh` đều giữ `ve` và thử CF/Gemini trong `sinh()`; `canh_ve`
+            # (người que + nền vẽ code) chỉ còn là lưới đỡ THẬT SỰ khi CẢ HAI nhà đều thua
+            # (xem `sinh()`: "4 lượt vẽ đều hỏng" hoặc "cả hồ CF+Gemini đều cạn") — không
+            # còn là một chính sách tiết kiệm áp trước khi thử.
             dem_canh += 1
-            lay = (dem_canh % CANH_MOI == 0)
+            lay = False
         if not lay:
             continue
         # Lọc nơi chốn theo chủ thể của CHÍNH nhịp này, rồi mới xoay. Xoay trước lọc sau là
