@@ -2775,3 +2775,52 @@ vẫn báo xanh, và mỗi ngày bỏ qua nhiều hơn hôm trước.
 Nếu nó tỉ lệ với KÍCH THƯỚC kho chứ không với PHẦN MỚI thì nó sẽ chết vì chính thành công của
 mình. Và mỗi lần thêm một bước sinh dữ liệu, đi tìm mọi bảng **dẫn xuất** từ dữ liệu ấy — bảng
 nào không được cập nhật cùng lượt thì cơ chế đọc nó sẽ mòn im lặng.
+
+### 18.9 Một lời khai SAI đắt gấp đôi, vì nó dặn phiên sau ĐỪNG THỬ
+
+Docstring `phim_anh.py` viết, rất có căn cứ: *"trang giá chính thức ghi **Not available** cho
+free tier => sinh ảnh qua API BẮT BUỘC trả phí => hồ Gemini đóng góp 0 ảnh Ở MỌI VÙNG, kể cả
+runner Mỹ."* Anh bác: *"trước gemini a nhớ là có tạo ảnh thành công qua api được, ngày 15–20
+ảnh"* · *"do sai model thôi, trước giờ a chưa từng trả phí"*.
+
+Hỏi thẳng API thì **chính lời từ chối bác câu ấy**:
+
+```
+quotaId : GenerateRequestsPerDayPerProjectPerModel-FreeTier
+metric  : generate_content_free_tier_requests
+location: global
+```
+
+Có một hạn mức tên `-FreeTier` cho model **ẢNH** thì free tier tồn tại. Thứ chặn ở máy anh là
+câu khác hẳn: `limit 'Request limit per minute for a REGION'`.
+
+**Cách tách hai giả thuyết bằng một lệnh gọi:** `models.list` là lệnh **CHỈ ĐỌC**, không dính
+gì tới sinh ảnh — mà nó cũng trả đúng 429 ấy. Vậy nguyên nhân không thể là model, không thể là
+trả phí; nó là **vùng**. Một phép thử chọn được thứ *không liên quan tới giả thuyết đang nghi*
+sẽ loại giả thuyết ấy trong một nhát.
+
+Ba lỗi kèm theo, và cả ba làm nhánh Gemini **không đóng góp nổi một ảnh kể cả ở nơi nó chạy
+được** — tức mọi số đo "Gemini = 0" đều đo chính ba lỗi này, không đo Gemini:
+
+| lỗi | vì sao chí mạng |
+|---|---|
+| `gs[:10]` trên hồ 85 khoá | mọi kết luận rút từ **12%** hồ (§15.2 — số 0 cần mẫu số) |
+| mọi `RESOURCE_EXHAUSTED` cho nghỉ **90 phút** | lời từ chối hay gặp nhất kèm `retryDelay: 32s`; một lượt thử dồn dập khoá sạch 85 khoá **trong một phút** (§14.8) |
+| thử **2/6** model, không thử `-lite-` | bản "lite" thường là bản có hạn mức free rộng nhất |
+
+**Ba luật:**
+
+1. **Một lời khai "không làm được" phải ghi ĐO BẰNG GÌ, Ở ĐÂU, NGÀY NÀO** — và không được suy
+   rộng ra ngữ cảnh chưa đo. Câu *"kể cả runner Mỹ"* chưa bao giờ được đo ở runner Mỹ; nó là
+   một suy đoán mặc áo kết luận, và nó chặn mọi lần thử sau.
+2. **Trước khi tin một lời khai trong repo, hỏi nó dựa trên bao nhiêu phần trăm của hồ.**
+3. **Không suy ra được từ đây thì đo ở ĐÓ.** §8 cấm bấm workflow để thử, nên câu hỏi được gắn
+   thành một bước trong lượt cron sẵn có — hằng ngày tự trả lời, một lệnh gọi, không lượt chạy
+   thêm nào.
+
+Và một ràng buộc ngược chiều: **tầng cứu hỏng MỀM sẽ im lặng nhận việc đúng lúc tầng chính
+cạn.** Với kho nền, "đúng lúc CF cạn" là đúng lúc kho đang bổ sung nhiều nhất — nên một tập sẽ
+có phòng của model này cạnh phòng của model kia, và kho nền dùng suốt đời kênh. `chi_cf=True`.
+Ảnh TỪNG TẬP thì ngược lại: ở đó phương án còn lại là cảnh vẽ bằng code, một bước nhảy thị giác
+lớn hơn nhiều, nên tầng cứu Gemini là đúng. **Cùng một tầng cứu, hai chỗ dùng, hai quyết định
+ngược nhau — và §12.5 nói phải hỏi lại ở mỗi chỗ.**
