@@ -54,6 +54,7 @@ import { KichQue, calcQue } from "./que/KichQue";
 // giây, bảy khuôn hình xoay vòng, bốn khuôn thuần code. Xem PHAN_TICH_GIAI_THICH.md.
 // Hai bản: ngang cho long 7-10 phút, dọc cho short cắt ra từ chính bản long ấy.
 import { KichGiaiThich, calcGT } from "./gt/KichGiaiThich";
+import { Phim, calcPhim } from "./phim/Phim";
 // Brand kit 10 kênh giải thích — vẽ bằng code vì avatar/banner mang TÊN KÊNH và chữ phải
 // đúng tuyệt đối (FLUX đo được 5/6 đúng: chấp nhận cho khung phim thoáng qua, không chấp
 // nhận cho ảnh đứng vĩnh viễn trên trang kênh).
@@ -321,6 +322,12 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="GiaiThichDoc" component={KichGiaiThich as any} durationInFrames={1800} fps={30}
                  width={1080} height={1920} calculateMetadata={calcGT as any}
                  defaultProps={{ doc: true }} />
+    <Composition id="PhimDoc" component={Phim as any} durationInFrames={900} fps={30}
+                 width={1080} height={1920} calculateMetadata={calcPhim as any}
+                 defaultProps={{ doc: true }} />
+    <Composition id="PhimNgang" component={Phim as any} durationInFrames={900} fps={30}
+                 width={1920} height={1080} calculateMetadata={calcPhim as any}
+                 defaultProps={{ doc: false }} />
     <Composition id="KichQue" component={KichQue as any} durationInFrames={450} fps={30}
                  width={1080} height={1920} calculateMetadata={calcQue as any} />
     <Composition id="KichComic" component={KichComic as any} durationInFrames={600} fps={30}
