@@ -296,6 +296,31 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
               for x in ds if str(x.get("chu") or "").strip()]
         if len(ra) < 4:
             continue
+        # ── TRẦN SỐ LƯỢT: MÁY CẮT, KHÔNG ĐỐT MỘT VÒNG GỌI AI  (đo 6/9/2026) ─────────────
+        # Luật 5 nói "giữ đúng số lượt bằng số câu dẫn, nhiều nhất hơn hai" — và chỉ CHẤM chứ
+        # không CHẶN, tức nó là lời khuyên (§13.3). Sau khi em hạ trần chữ 12 -> 10 và thêm
+        # "mỗi lượt nhiều nhất MỘT con số", mô hình bắt đầu TÁCH một câu dẫn thành hai lượt:
+        # đo `howloud` tập 6 ra **18 lượt / 53 giây** trong khi 9 câu dẫn -> 33 giây.
+        # Bản sửa của em tạo ra hồi quy này, đúng §12.5.
+        #
+        # Không chặn để bắt viết lại: hại của nó là video dài gấp rưỡi, không phải hình hỏng —
+        # máy sửa được thì máy sửa (§13.12 · nấc `don()` của §13.23). Cắt phần GIỮA và giữ lượt
+        # CUỐI, vì lượt cuối là cú chốt: cắt từ đuôi thì mất đúng chỗ đóng bài.
+        # Bỏ lượt KHÔNG mang chữ số trước: cắt bừa phần giữa có thể làm rơi một con số bắt
+        # buộc, và cổng `_du_so` ngay dưới sẽ bắt viết lại — tức bản "máy tự sửa" lại đi đốt
+        # đúng cái vòng gọi AI mà nó sinh ra để tiết kiệm.
+        _tran_luot = len(loi) + 2
+        if len(ra) > _tran_luot:
+            _giu = [i for i, x in enumerate(ra) if any(c.isdigit() for c in x["chu"])]
+            _giu = set(_giu) | {0, len(ra) - 1}
+            _bo = [i for i in range(len(ra)) if i not in _giu][: len(ra) - _tran_luot]
+            if len(ra) - len(_bo) > _tran_luot:          # vẫn dư -> cắt tiếp phần giữa
+                _con = [x for i, x in enumerate(ra) if i not in set(_bo)]
+                _con = _con[:_tran_luot - 1] + [_con[-1]]
+                ra = _con
+            else:
+                ra = [x for i, x in enumerate(ra) if i not in set(_bo)]
+            print(f"   ✂ {_tran_luot + len(_bo)} lượt -> {len(ra)} (bỏ lượt không mang số)")
         thieu = _du_so(loi, ra, man)
         if not thieu:
             return ra
