@@ -2943,25 +2943,159 @@ MOC_LON = [
     ('a million breaths', 1000000, 'a billion breaths', 1000000000, 'breaths', 'nguoi'),
     ('a million raindrops', 1000000, 'a billion raindrops', 1000000000, 'raindrops', 'coc'),
     ('a thousand seconds', 1000, 'a billion seconds', 1000000000, 'seconds', 'dong_ho'),
+    ('a million seconds', 1000000, 'a billion seconds', 1000000000, 'seconds', 'dong_ho'),
+    ('a billion seconds', 1000000000, 'a trillion seconds', 1000000000000, 'seconds', 'dong_ho'),
+    ('a billion dollars', 1000000000, 'a trillion dollars', 1000000000000, 'dollars', 'tien'),
+    ('a thousand steps', 1000, 'a million steps', 1000000, 'steps', 'nguoi'),
+    ('a billion steps', 1000000000, 'a trillion steps', 1000000000000, 'steps', 'nguoi'),
+    ('a million days', 1000000, 'a billion days', 1000000000, 'days', 'dong_ho'),
+    ('a billion days', 1000000000, 'a trillion days', 1000000000000, 'days', 'dong_ho'),
+    ('a thousand grains', 1000, 'a million grains', 1000000, 'grains', 'hop'),
+    ('a billion grains', 1000000000, 'a trillion grains', 1000000000000, 'grains', 'hop'),
+    ('a thousand people', 1000, 'a million people', 1000000, 'people', 'nguoi'),
+    ('a billion people', 1000000000, 'a trillion people', 1000000000000, 'people', 'nguoi'),
+    ('a billion miles', 1000000000, 'a trillion miles', 1000000000000, 'miles', 'xe'),
+    ('a thousand words', 1000, 'a million words', 1000000, 'words', 'giay'),
+    ('a billion words', 1000000000, 'a trillion words', 1000000000000, 'words', 'giay'),
+    ('a million hours', 1000000, 'a billion hours', 1000000000, 'hours', 'dong_ho'),
+    ('a billion hours', 1000000000, 'a trillion hours', 1000000000000, 'hours', 'dong_ho'),
+    ('a thousand drops', 1000, 'a million drops', 1000000, 'drops', 'coc'),
+    ('a billion drops', 1000000000, 'a trillion drops', 1000000000000, 'drops', 'coc'),
+    ('a thousand cells', 1000, 'a million cells', 1000000, 'cells', 'te_bao'),
+    ('a billion cells', 1000000000, 'a trillion cells', 1000000000000, 'cells', 'te_bao'),
+    ('a thousand stars', 1000, 'a million stars', 1000000, 'stars', 'mat_troi'),
+    ('a million stars', 1000000, 'a billion stars', 1000000000, 'stars', 'mat_troi'),
+    ('a thousand minutes', 1000, 'a million minutes', 1000000, 'minutes', 'dong_ho'),
+    ('a billion minutes', 1000000000, 'a trillion minutes', 1000000000000, 'minutes', 'dong_ho'),
+    ('a thousand pages', 1000, 'a million pages', 1000000, 'pages', 'giay'),
+    ('a billion pages', 1000000000, 'a trillion pages', 1000000000000, 'pages', 'giay'),
+    ('a thousand heartbeats', 1000, 'a million heartbeats', 1000000, 'heartbeats', 'nguoi'),
+    ('a billion heartbeats', 1000000000, 'a trillion heartbeats', 1000000000000, 'heartbeats', 'nguoi'),
+    ('a thousand atoms', 1000, 'a million atoms', 1000000, 'atoms', 'nguyen_tu'),
+    ('a billion atoms', 1000000000, 'a trillion atoms', 1000000000000, 'atoms', 'nguyen_tu'),
+    ('a thousand bytes', 1000, 'a million bytes', 1000000, 'bytes', 'dien_thoai'),
+    ('a billion bytes', 1000000000, 'a trillion bytes', 1000000000000, 'bytes', 'dien_thoai'),
+    ('a thousand breaths', 1000, 'a million breaths', 1000000, 'breaths', 'nguoi'),
+    ('a billion breaths', 1000000000, 'a trillion breaths', 1000000000000, 'breaths', 'nguoi'),
+    ('a thousand raindrops', 1000, 'a million raindrops', 1000000, 'raindrops', 'coc'),
+    ('a billion raindrops', 1000000000, 'a trillion raindrops', 1000000000000, 'raindrops', 'coc'),
+    ('a thousand coffee beans', 1000, 'a million coffee beans', 1000000, 'coffee beans', 'coc'),
+    ('a million coffee beans', 1000000, 'a billion coffee beans', 1000000000, 'coffee beans', 'coc'),
+    ('a billion coffee beans', 1000000000, 'a trillion coffee beans', 1000000000000, 'coffee beans', 'coc'),
+    ('a thousand tea leaves', 1000, 'a million tea leaves', 1000000, 'tea leaves', 'nguoi'),
+    ('a million tea leaves', 1000000, 'a billion tea leaves', 1000000000, 'tea leaves', 'nguoi'),
+    ('a billion tea leaves', 1000000000, 'a trillion tea leaves', 1000000000000, 'tea leaves', 'nguoi'),
+    ('a thousand granola bars', 1000, 'a million granola bars', 1000000, 'granola bars', 'nguoi'),
+    ('a million granola bars', 1000000, 'a billion granola bars', 1000000000, 'granola bars', 'nguoi'),
+    ('a billion granola bars', 1000000000, 'a trillion granola bars', 1000000000000, 'granola bars', 'nguoi'),
+    ('a thousand pasta noodles', 1000, 'a million pasta noodles', 1000000, 'pasta noodles', 'nguoi'),
+    ('a million pasta noodles', 1000000, 'a billion pasta noodles', 1000000000, 'pasta noodles', 'nguoi'),
+    ('a billion pasta noodles', 1000000000, 'a trillion pasta noodles', 1000000000000, 'pasta noodles', 'nguoi'),
+    ('a thousand cereal flakes', 1000, 'a million cereal flakes', 1000000, 'cereal flakes', 'nguoi'),
+    ('a million cereal flakes', 1000000, 'a billion cereal flakes', 1000000000, 'cereal flakes', 'nguoi'),
+    ('a billion cereal flakes', 1000000000, 'a trillion cereal flakes', 1000000000000, 'cereal flakes', 'nguoi'),
+    ('a thousand chocolate chips', 1000, 'a million chocolate chips', 1000000, 'chocolate chips', 'nguoi'),
+    ('a million chocolate chips', 1000000, 'a billion chocolate chips', 1000000000, 'chocolate chips', 'nguoi'),
+    ('a billion chocolate chips', 1000000000, 'a trillion chocolate chips', 1000000000000, 'chocolate chips', 'nguoi'),
+    ('a thousand marshmallows', 1000, 'a million marshmallows', 1000000, 'marshmallows', 'nguoi'),
+    ('a million marshmallows', 1000000, 'a billion marshmallows', 1000000000, 'marshmallows', 'nguoi'),
+    ('a billion marshmallows', 1000000000, 'a trillion marshmallows', 1000000000000, 'marshmallows', 'nguoi'),
+    ('a thousand popcorn kernels', 1000, 'a million popcorn kernels', 1000000, 'popcorn kernels', 'nguoi'),
+    ('a million popcorn kernels', 1000000, 'a billion popcorn kernels', 1000000000, 'popcorn kernels', 'nguoi'),
+    ('a billion popcorn kernels', 1000000000, 'a trillion popcorn kernels', 1000000000000, 'popcorn kernels', 'nguoi'),
+    ('a thousand peppercorns', 1000, 'a million peppercorns', 1000000, 'peppercorns', 'nguoi'),
+    ('a million peppercorns', 1000000, 'a billion peppercorns', 1000000000, 'peppercorns', 'nguoi'),
+    ('a billion peppercorns', 1000000000, 'a trillion peppercorns', 1000000000000, 'peppercorns', 'nguoi'),
+    ('a thousand sugar cubes', 1000, 'a million sugar cubes', 1000000, 'sugar cubes', 'nguoi'),
+    ('a million sugar cubes', 1000000, 'a billion sugar cubes', 1000000000, 'sugar cubes', 'nguoi'),
+    ('a billion sugar cubes', 1000000000, 'a trillion sugar cubes', 1000000000000, 'sugar cubes', 'nguoi'),
+    ('a thousand salt crystals', 1000, 'a million salt crystals', 1000000, 'salt crystals', 'nguoi'),
+    ('a million salt crystals', 1000000, 'a billion salt crystals', 1000000000, 'salt crystals', 'nguoi'),
+    ('a billion salt crystals', 1000000000, 'a trillion salt crystals', 1000000000000, 'salt crystals', 'nguoi'),
+    ('a thousand cocoa nibs', 1000, 'a million cocoa nibs', 1000000, 'cocoa nibs', 'nguoi'),
+    ('a million cocoa nibs', 1000000, 'a billion cocoa nibs', 1000000000, 'cocoa nibs', 'nguoi'),
+    ('a billion cocoa nibs', 1000000000, 'a trillion cocoa nibs', 1000000000000, 'cocoa nibs', 'nguoi'),
+    ('a thousand almond pieces', 1000, 'a million almond pieces', 1000000, 'almond pieces', 'nguoi'),
+    ('a million almond pieces', 1000000, 'a billion almond pieces', 1000000000, 'almond pieces', 'nguoi'),
+    ('a billion almond pieces', 1000000000, 'a trillion almond pieces', 1000000000000, 'almond pieces', 'nguoi'),
+    ('a thousand walnut halves', 1000, 'a million walnut halves', 1000000, 'walnut halves', 'nguoi'),
+    ('a million walnut halves', 1000000, 'a billion walnut halves', 1000000000, 'walnut halves', 'nguoi'),
+    ('a billion walnut halves', 1000000000, 'a trillion walnut halves', 1000000000000, 'walnut halves', 'nguoi'),
+    ('a thousand mustard seeds', 1000, 'a million mustard seeds', 1000000, 'mustard seeds', 'nguoi'),
+    ('a million mustard seeds', 1000000, 'a billion mustard seeds', 1000000000, 'mustard seeds', 'nguoi'),
+    ('a billion mustard seeds', 1000000000, 'a trillion mustard seeds', 1000000000000, 'mustard seeds', 'nguoi'),
+    ('a thousand biscuit crumbs', 1000, 'a million biscuit crumbs', 1000000, 'biscuit crumbs', 'nguoi'),
+    ('a million biscuit crumbs', 1000000, 'a billion biscuit crumbs', 1000000000, 'biscuit crumbs', 'nguoi'),
+    ('a billion biscuit crumbs', 1000000000, 'a trillion biscuit crumbs', 1000000000000, 'biscuit crumbs', 'nguoi'),
+    ('a thousand pretzel twists', 1000, 'a million pretzel twists', 1000000, 'pretzel twists', 'nguoi'),
+    ('a million pretzel twists', 1000000, 'a billion pretzel twists', 1000000000, 'pretzel twists', 'nguoi'),
+    ('a billion pretzel twists', 1000000000, 'a trillion pretzel twists', 1000000000000, 'pretzel twists', 'nguoi'),
+    ('a thousand pancake bites', 1000, 'a million pancake bites', 1000000, 'pancake bites', 'nguoi'),
+    ('a million pancake bites', 1000000, 'a billion pancake bites', 1000000000, 'pancake bites', 'nguoi'),
+    ('a billion pancake bites', 1000000000, 'a trillion pancake bites', 1000000000000, 'pancake bites', 'nguoi'),
+    ('a thousand waffle squares', 1000, 'a million waffle squares', 1000000, 'waffle squares', 'nguoi'),
+    ('a million waffle squares', 1000000, 'a billion waffle squares', 1000000000, 'waffle squares', 'nguoi'),
+    ('a billion waffle squares', 1000000000, 'a trillion waffle squares', 1000000000000, 'waffle squares', 'nguoi'),
+    ('a thousand donut holes', 1000, 'a million donut holes', 1000000, 'donut holes', 'nguoi'),
+    ('a million donut holes', 1000000, 'a billion donut holes', 1000000000, 'donut holes', 'nguoi'),
+    ('a billion donut holes', 1000000000, 'a trillion donut holes', 1000000000000, 'donut holes', 'nguoi'),
+    ('a thousand euro coins', 1000, 'a million euro coins', 1000000, 'euro coins', 'nguoi'),
+    ('a million euro coins', 1000000, 'a billion euro coins', 1000000000, 'euro coins', 'nguoi'),
+    ('a billion euro coins', 1000000000, 'a trillion euro coins', 1000000000000, 'euro coins', 'nguoi'),
+    ('a thousand pound notes', 1000, 'a million pound notes', 1000000, 'pound notes', 'nguoi'),
+    ('a million pound notes', 1000000, 'a billion pound notes', 1000000000, 'pound notes', 'nguoi'),
+    ('a billion pound notes', 1000000000, 'a trillion pound notes', 1000000000000, 'pound notes', 'nguoi'),
 ]
 
 
 def sinh_howmuch(i):
     nho, vn, lon, vl, don, bt = _lay(MOC_LON, i)
-    s1, u1 = _lau(vn / 3600)
-    s2, u2 = _lau(vl / 3600)
-    return (f"{_hoa(nho)} versus {lon}",
-            f"{lon.upper()} IS NOT A BIG {nho.upper().replace('A ', '')}", f"{s2} {u2.upper()}",
-            [
-    _n("chia_doi", "Two words. One letter apart.",
-       trai={"nhan": "million", "bt": "tien", "so": "1,000,000"},
-       phai={"nhan": "billion", "bt": "tien", "so": "1,000,000,000"}, dinh=True),
+    # ── MỘT DÒNG BẢNG PHẢI CHẢY VÀO CẢ TẬP, KHÔNG CHỈ VÀO TIÊU ĐỀ  (6/9/2026) ────────────
+    # Bản cũ ghi cứng "million · billion · seconds" ở thẻ chia đôi, ở hai nhịp số liệu và ở
+    # biểu đồ, trong khi TIÊU ĐỀ lại lấy từ bảng. Đo được **23/24 dòng** cho ra một tập mà
+    # thân bài nói khác tiêu đề: "A thousand days versus a million days" rồi đọc "Count a
+    # million seconds" và vẽ biểu đồ 1.000.000 vs 1.000.000.000 — ba con số không thuộc về
+    # tập ấy. Không cổng nào bắt được vì chữ hợp lệ, số hợp lệ, chỉ là chúng của tập khác.
+    #
+    # Đây là §15.12 ở dạng nặng nhất: `vn`, `vl`, `don`, `bt` đều được ĐỌC RA ở dòng đầu rồi
+    # KHÔNG dùng vào đâu — một trường chỉ được ghi mà không ai đọc thì coi như chưa tồn tại,
+    # và ở đây còn tệ hơn: chỗ lẽ ra dùng nó thì dùng một hằng số chép cứng.
+    #
+    # Hệ quả thứ hai, chỉ lộ ra khi đi nới bảng: mọi dòng mới mà TÊN không tự mang đơn vị đều
+    # cho ra CÙNG một tiêu đề, vì tiêu đề chỉ ghép `nho`/`lon`. Nên bảng không nới được —
+    # trần nằm ở bộ sinh chứ không ở dữ liệu.
+    _bo_mao = lambda t: re.sub(r"^an?\s+", "", t)
+    ten_n, ten_l = _bo_mao(nho), _bo_mao(lon)                  # "thousand days"
+    nhan_n = ten_n.replace(f" {don}", "").strip() or ten_n     # "thousand"
+    nhan_l = ten_l.replace(f" {don}", "").strip() or ten_l
+    ti = vl / vn if vn else 0
+
+    # Đơn vị thời gian thì quy về thứ tai người nghe ra được (xem `_lau`); còn lại giữ chính
+    # con số, và mốc hook là BỘI SỐ — đại lượng đúng cho mọi đơn vị, vì cả kênh nói bội số.
+    GIO = {"seconds": 1 / 3600, "minutes": 1 / 60, "hours": 1.0, "days": 24.0}
+    gio = GIO.get(don)
+    if gio:
+        s1, u1 = _lau(vn * gio)
+        s2, u2 = _lau(vl * gio)
+        moc = f"{s2} {u2.upper()}"
+    else:
+        s1, u1 = f"{vn:,.0f}", don
+        s2, u2 = f"{vl:,.0f}", don
+        moc = f"{ti:,.0f}x"
+
+    nhip = [
+    _n("chia_doi", "Two words. Worlds apart.",
+       trai={"nhan": nhan_n, "bt": bt, "so": f"{vn:,.0f}"},
+       phai={"nhan": nhan_l, "bt": bt, "so": f"{vl:,.0f}"}, dinh=True),
     _n("canh", _loi("than", i),
        ve=_ve("a simplified human silhouette standing between two identical blank boxes",
               "shrugging, both palms turned up", "genuinely unable to tell them apart",
               "a plain pale wall, the two boxes exactly the same size",
               "a clean floor strip", "even soft light, restrained muted palette")),
-    _n("so_lieu", "Count a million seconds.", so=s1, don=u1, bt="dong_ho", dinh=True,
+    ]
+    if gio:
+        nhip += [
+    _n("so_lieu", f"Count {nho}.", so=s1, don=u1, bt=bt, dinh=True,
        ve=_ve("one large plain clock face with blank unmarked dial",
               "hands frozen, hanging alone", "",
               "an empty pale wall, generous negative space all around",
@@ -2972,23 +3106,49 @@ def sinh_howmuch(i):
               "a calm plain hallway with one simple door",
               "a clean floor with a soft shadow under the case",
               "soft daylight from the side, calm muted palette")),
-    _n("so_lieu", "Now count a billion.", so=s2, don=u2, bt="dong_ho", dinh=True,
+    _n("so_lieu", f"Now count {lon}.", so=s2, don=u2, bt=bt, dinh=True,
        ve=_ve("an enormous clock face with a blank unmarked dial",
               "filling almost the entire frame",
               "a tiny simplified human silhouette standing at its base, overwhelmed",
               "a plain pale backdrop, nothing else",
               "a clean floor strip at the very bottom",
               "dramatic light from the upper left, restrained muted palette")),
-    _n("chart", "Same scale. Look again.", don="seconds",
-       cot=[{"nhan": "million", "v": 1000000}, {"nhan": "billion", "v": 1000000000}], dinh=True),
-    _n("canh", "One is a trip. One is a life.", dinh=True,
-       ve=_ve("a small suitcase and an entire lifetime of belongings side by side",
-              "the suitcase tiny, the pile of belongings enormous",
-              "",
-              "a plain pale wall, generous empty space",
-              "both objects sharp on a clean floor, a soft shadow under each",
+        ]
+    else:
+        nhip += [
+    _n("so_lieu", f"Count {nho}.", so=s1, don=u1, bt=bt, dinh=True,
+       ve=_ve(f"one modest heap of {don} resting on a plain low table",
+              "settled in a neat mound, nothing spilling", "",
+              "an empty pale wall, generous negative space all around",
+              "a clean table edge in the foreground",
               "soft even light, restrained muted palette")),
-            ])
+    _n("canh", "That is one heap.",
+       ve=_ve(f"a simplified human silhouette standing beside a waist-high heap of {don}",
+              "one hand resting on top of the heap", "unimpressed, entirely at ease",
+              "a plain pale wall, nothing else in the room",
+              "a clean floor with a soft shadow under the heap",
+              "soft daylight from the side, calm muted palette")),
+    _n("so_lieu", f"Now count {lon}.", so=s2, don=u2, bt=bt, dinh=True,
+       ve=_ve(f"an enormous mountain of {don} filling almost the entire frame",
+              "towering, spilling toward the edges",
+              "a tiny simplified human silhouette standing at its base, overwhelmed",
+              "a plain pale backdrop, nothing else",
+              "a clean floor strip at the very bottom",
+              "dramatic light from the upper left, restrained muted palette")),
+        ]
+    nhip += [
+    _n("chart", "Same scale. Look again.", don=don,
+       cot=[{"nhan": nhan_n, "v": vn}, {"nhan": nhan_l, "v": vl}], dinh=True),
+    _n("canh", "One is a trip. One is a life." if gio
+               else "One is a heap. One is a mountain.", dinh=True,
+       ve=_ve(f"one small pile of {don} and one vastly larger pile side by side",
+              "the small pile tiny, the large pile enormous", "",
+              "a plain pale wall, generous empty space",
+              "both piles sharp on a clean floor, a soft shadow under each",
+              "soft even light, restrained muted palette")),
+    ]
+    return (f"{_hoa(nho)} versus {lon}",
+            f"{lon.upper()} IS NOT A BIG {nho.upper().replace('A ', '')}", moc, nhip)
 
 
 # ── MOI_NGUOI: NÂNG TỪ DANH SÁCH NỘI BỘ LÊN BẢNG MODULE  (6/9/2026) ───────────────────────
@@ -5682,6 +5842,16 @@ BIEN_THE = {
 # lâu hơn, và §12.11 đã đo rằng nhịp cắt là việc của khâu VIẾT.
 BIEN_THE_THEM = {
 
+"Two words. Worlds apart.": ("Two words. Nothing alike.", "Same ending. Different world.",
+    "Two words that sound close.", "One word, then another. Not close.", "They rhyme. That is all.",
+    "Two names. No comparison."),
+"That is one heap.": ("That is a single pile.", "That is one pile of them.", "One heap, that size.",
+    "That much fits right there.", "That is the small one.", "One mound. That is all."),
+"One is a heap. One is a mountain.": ("One is a pile. One is a landscape.",
+    "One you can stand beside. One you cannot.", "One fits the room. One does not.",
+    "One is a mound. One is terrain.", "One you could move. One you could not.",
+    "A pile, and then a mountain."),
+
 "You walk. Light does not.": ("Light travels. You walk.", "One of you is walking.", "Light does not take steps."),
 "Nobody has ever done this.": ("Nobody has made this trip.", "It has never been attempted.", "No record of anyone doing it."),
 "So start walking.": ("So take the first step.", "So get moving.", "Start walking, then."),
@@ -5801,8 +5971,10 @@ BIEN_THE_THEM = {
 }
 
 for _k, _v in BIEN_THE_THEM.items():
-    if _k in BIEN_THE:
-        BIEN_THE[_k] = tuple(BIEN_THE[_k]) + tuple(_v)
+    # Bản cũ chỉ NỚI khoá đã có, nên một khoá MỚI thêm vào bảng này biến mất không một lời nào
+    # — đúng §15.12: viết ra một trường rồi không ai đọc thì nó chưa tồn tại. Đo hôm 6/9: 115/115
+    # khoá khớp nên chưa mất gì, nhưng cái bẫy nằm sẵn cho lần thêm câu sau.
+    BIEN_THE[_k] = tuple(BIEN_THE.get(_k, ())) + tuple(_v)
 
 
 def doi_loi(nhip: list, idx: int) -> list:
