@@ -2824,3 +2824,95 @@ có phòng của model này cạnh phòng của model kia, và kho nền dùng s
 Ảnh TỪNG TẬP thì ngược lại: ở đó phương án còn lại là cảnh vẽ bằng code, một bước nhảy thị giác
 lớn hơn nhiều, nên tầng cứu Gemini là đúng. **Cùng một tầng cứu, hai chỗ dùng, hai quyết định
 ngược nhau — và §12.5 nói phải hỏi lại ở mỗi chỗ.**
+
+### 18.10 Sửa hình học hai vòng cho một lỗi của khâu VIẾT
+
+Soi khung 16,4s `v11_howhot_0040`: bong bóng thoại bốn dòng che mất nhãn `3,800` của cột
+SURFACE — đúng con số cả tập sinh ra để nói.
+
+Em đi sửa **hình học** hai vòng. Vòng một (`tran`, đầu dưới) đúng và đã có sẵn. Vòng hai
+(`dinh`, đầu trên) **làm tệ hơn hẳn**: khối số bị đẩy xuống 0,46·h rồi bị `tran` bóp lại thành
+một mẩu nằm sau đầu nhân vật. Lý do là em dùng **sai đại lượng** — `chuaTren` (0,44·h) là chỗ
+CHỪA để tính cỡ nhân vật, không phải đáy bong bóng thật (~0,17·h).
+
+Gốc nằm ở khâu viết, cách đó hai tệp: `so_tren_man` ghép đơn vị cho TỪNG cột biểu đồ, nên nó
+sinh ra gợi ý `"70 degrees fahrenheit and 212 degrees fahrenheit and 3800 degrees fahrenheit"`,
+và mô hình chép gần nguyên văn thành một câu **13 chữ**. Bong bóng cao theo số dòng; hình học
+không có chỗ để nhường, câu thì có. Đơn vị nói một lần: 12 chữ → 6.
+
+**Luật:** khi hai lớp tranh chỗ, hỏi *"lớp nào đang lớn hơn mức nó cần?"* trước khi đi dịch
+lớp kia. Và §16.3 lần nữa: sửa vòng thứ ba mà vẫn cùng họ lỗi thì thứ sai là CÁCH TIẾP CẬN.
+
+Đi kèm là §14.16 ở dạng thuần: luật *"số trên màn phải được đọc lên"* (anh dặn, vì nhiều người
+NGHE mà không nhìn) được thoả bằng cách **rẻ nhất** — dán số + đơn vị vào 6/9 câu của tập. Chỗ
+hở nằm ở phần em không viết ra: em nói *phải đọc số*, không nói *đọc mấy lần*.
+
+### 18.11 Cổng so CHUỖI khi thứ cần đo là KHOẢNG CÁCH
+
+Hai lỗi trong một đêm, cùng hình dạng, hai tệp khác nhau:
+
+| cổng | so cái gì | lọt cái gì |
+|---|---|---|
+| trang phục | `d["ao"] in dung` — chuỗi bằng nhau | `#3A3A3A` vs `#2A2A2A` (lệch 16/255) — hai nhân vật đứng cạnh nhau trông y hệt |
+| `_du_so` | `_doc_so(59)` = `fifty-nine` ASCII | mô hình viết `Fifty‑nine` với U+2011 — **đốt 3 vòng gọi AI mỗi tập** |
+
+Cả hai đều báo XANH/ĐỎ một cách tự tin trong khi đo nhầm đại lượng. Chữa:
+- trang phục → khoảng cách RGB **có trọng số** (mắt nhạy với lục hơn lam). Đo 270 cặp của 18
+  kênh: trung vị 261, tệ nhất 48 — **hai đầu tách hẳn nên sàn đặt được**. Sàn 110, và 160 cho
+  hai vai cùng kiểu tóc, vì lúc ấy màu là dấu hiệu duy nhất còn lại (§17.2).
+- `_du_so` → chuẩn hoá cả **sáu** dạng gạch nối Unicode. Dòng ấy đã chuẩn hoá U+2019 từ trước;
+  thiếu đúng họ ký tự bên cạnh.
+
+**Luật:** trước khi viết một cổng, hỏi *"thứ người xem cảm được là BẰNG NHAU hay là GẦN NHAU?"*
+Nếu là gần nhau thì phép so bằng nhau sẽ luôn xanh, và nó xanh ngay ở ca tệ nhất.
+
+Và cổng khoảng cách vừa viết **báo sai lý do ngay lần chạy đầu**: bốn kênh có màu hoàn toàn
+đạt (135–179 trên sàn 110) vẫn hiện ra như lỗi màu, vì nhánh trượt thật là "3–4 người cùng
+kiểu áo" mà thông điệp lại in khoảng cách. **Một dòng cảnh báo nói sai nguyên nhân dẫn người
+đọc đi sửa thứ không hỏng** — mỗi điều kiện phải in đúng lý do của nó.
+
+### 18.12 Đếm theo NHÓM, đừng đếm tổng — chỗ lãng phí nằm ở nhóm nhỏ
+
+Anh dặn tối ưu lưu trữ kho nền. Đếm tổng thì thấy "157 MB, hơi nhiều". Đếm theo nhóm:
+
+    1.585 tệp  .webp  1344×768    90 MB   (kho mới)
+      170 tệp  .jpg   1024×1024   67 MB   (kho hai-chữ-số đời cũ)
+
+**10% số tệp ăn 43% dung lượng.** Nén sang WebP: 67 MB → 3,9 MB (−95%), và chúng không phải
+rác — 161/169 vẫn đang được dùng làm nền dự phòng vì kho mới mới phủ 31%.
+
+Ba điều rút ra:
+
+1. **`actions/checkout` mặc định `--depth 1`**, nên thứ CI tải mỗi lượt là CÂY LÀM VIỆC, không
+   phải lịch sử. Tối ưu cây làm việc có tác dụng thật; 18 luồng × 4 mốc cron mỗi ngày.
+2. **Nén lại tệp ĐÃ COMMIT là làm nặng thêm**: git giữ bản cũ trong lịch sử, nên "tiết kiệm
+   50 MB" thật ra là *cộng* thêm vào `.git`. Tối ưu một kho CÓ LỊCH SỬ phải hỏi *"thứ này thêm
+   hay bớt vào lịch sử?"* trước khi hỏi nó nhỏ hơn bao nhiêu. (Nhóm 170 tệp trên vẫn đáng làm
+   vì tỉ lệ 95% quá lớn; nhóm 1.585 tệp thì không.)
+3. **Đổi đuôi tệp thì phải sửa chỗ ĐỌC.** `_co` tra bốn tên cố định, trong đó có
+   `{de}_{i:02d}.jpg`. Quên nó thì 161 nền biến mất im lặng và tập rơi về nền vector (§15.12).
+
+### 18.13 Vẽ SAI CHIỀU cho khung đích — 68% mỗi tệp chưa ai từng nhìn thấy
+
+`ve_kho` vẽ `doc=False` → 1344×768, trong khi panel comic là khung DỌC 1080×1920 và
+`NenPanel` đặt ảnh bằng `objectFit: cover`. Đo chính phép cover ấy:
+
+    ngang 1344×768 -> phóng 2,50x · dùng 432/1344 px =  32% ảnh
+    dọc   768×1344 -> phóng 1,43x · dùng 756/768  px =  98% ảnh
+
+Điểm ảnh THẬT tới màn hình: **0,33 MP so với 1,02 MP — gấp 3,1 lần cho CÙNG một giá neuron**
+(flux-2 tính theo megapixel, hai cỡ bằng nhau).
+
+Không lỗi nào báo, vì ảnh vẫn đúng và vẫn hiện ra. Cùng họ §15.12 (*thứ được sinh ra mà không
+ai đọc*), chỉ khác là ở đây "không ai đọc" là 68% số điểm ảnh của **mọi tệp trong kho**.
+
+**Câu hỏi anh hỏi và nó chặn đúng chỗ em suýt sai:** *"ngang dùng cho long hay sao, long short
+phải đồng nhất?"* — phải đo trước khi đổi. Đo: kho `comic_nen` có **đúng một** nơi đọc là
+`pilot_hai` (short dọc). Bản long của 18 kênh là `phim.py`, nó vẽ ảnh riêng vào `phim_nen/`;
+`kich_comic_long` (bộ hài cũ, 16:9) dùng nền màu, không đụng kho này. Nên đổi sang dọc là an
+toàn — nhưng **câu hỏi ấy bắt buộc phải hỏi**, vì nếu có hai nơi đọc với hai khung khác nhau
+thì một chiều duy nhất là sai với một trong hai (§12.5).
+
+**Luật:** mỗi lần chọn kích thước/tỉ lệ cho một tài sản dùng lại, đi tìm MỌI nơi đọc nó rồi
+tính phép fit ở từng nơi. Và 1.585 nền ngang cũ không bị xoá — bộ vẽ tự nâng cấp chúng, xếp
+SAU lượt phủ nền còn thiếu, để hạn mức đi vào chỗ chưa có trước.
