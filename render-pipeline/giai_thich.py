@@ -1007,7 +1007,14 @@ def _ve(chu: str, lam: str = "", cam: str = "", xa: str = "", gan: str = "",
     if cam:
         p.append(cam)
     if xa:
-        p.append(f"behind them {xa}")
+        # ── 6/9/2026 — "BEHIND THEM" BỊA RA NGƯỜI KHÔNG CÓ TRONG CÂU ────────────────────
+        # Soi khung thật kênh `smallest`: câu chỉ tả MỘT VẬT phóng to ("a smartphone
+        # transistor shown enormous and clear") — không hề có người. Nhưng cụm cũ luôn
+        # viết "behind THEM", và đại từ "them" không có ai để chỉ trong câu. Mô hình
+        # không kiểm ngữ pháp — nó đọc "behind them" và TỰ VẼ THÊM người để khớp đại từ,
+        # ra đúng khung "hai người đứng chồng chéo cạnh một khối đen khổng lồ" anh chê.
+        # Bỏ hẳn đại từ: an toàn với cả chủ thể người lẫn vật, không mời thêm ai vào khung.
+        p.append(f"{xa} in the background")
     if gan:
         p.append(f"near the bottom of the frame {gan}")
     # `sang` giữ lại NHƯNG chỉ lấy phần bảng màu, bỏ phần hướng sáng và đổ bóng.
@@ -4575,10 +4582,51 @@ def _khong_de_trong(nhip: list) -> None:
     Nhánh 3 không cần dữ liệu gì nên nó KHÔNG THỂ trượt. Đó là điều kiện để gọi là lưới.
     """
     for i, n in enumerate(nhip):
-        if any(n.get(f) for f in ("ve", "bt", "canh_ve", "canva", "hinh_nhap")):
+        # ── 6/9/2026 — `canh_ve` MỘT MÌNH KHÔNG PHẢI "ĐÃ CÓ HÌNH"  ──────────────────────
+        # Soi khung thật: nhịp "And they keep going." ra một nền gần trắng, chỉ có phụ đề.
+        # Gốc: `_gop_hai_ho` gán `bt` theo từ vựng câu, và khi câu trừu tượng trùng đúng
+        # một câu đã lên thẻ chữ trước đó trong tập (`_cau in _da_the`) thì nhánh ấy bỏ
+        # cuộc TRONG IM LẶNG — nhịp không có `bt`, không có `the`. `_rai_canh_ve` chạy sau
+        # vẫn gán `canh_ve` cho nó (chỉ cần đúng khuôn + tới lượt xoay), và danh sách bỏ
+        # qua ở đây đọc "có `canh_ve`" thành "đã có hình" nên lưới không chặn.
+        #
+        # Nhưng `CanhVe` (engine) chỉ dựng BỐI CẢNH — kệ hàng, bàn ghế, mái nhà máy — KHÔNG
+        # vẽ chủ thể của câu (xem chú thích trong `KichGiaiThich.tsx`: "`canh_ve` KHÔNG vẽ
+        # chủ thể của câu"). Engine đã có sẵn cơ chế vẽ CẢ HAI (`canh_ve` làm nền + `bt` làm
+        # chủ thể chồng lên trên — xem `btVe` trong `KichGiaiThich.tsx`), nên bỏ `canh_ve`
+        # khỏi danh sách "đã đủ" ở đây không mất gì: nhịp vẫn giữ nguyên nền đã chọn, chỉ
+        # được lưới bổ sung thêm chủ thể nếu còn thiếu.
+        if any(n.get(f) for f in ("ve", "bt", "canva", "hinh_nhap")):
             continue
         if (n.get("khuon") or "canh") not in ("canh", "nhom"):
             continue                     # khuôn SỐ/CHART/THẺ tự vẽ kín khung
+        if n.get("canh_ve"):
+            # Đã có NỀN (bối cảnh do `_rai_canh_ve` chọn) — chỉ thiếu CHỦ THỂ. Đừng đổi
+            # sang `the_chu`: nó bỏ hẳn `canh_ve` đã chọn cho một bố cục khác, và để lại
+            # đúng trường mồ côi cổng `kiem_truong` bắt (`dai_chu` ghi cho `canh` mà
+            # `the_chu` không đọc). Giữ nguyên nền, chỉ thêm chủ thể chồng lên — đúng cơ
+            # chế `btVe` đã có sẵn.
+            #
+            # `bt="nguoi"` chứ không phải `"nguoi_ss"`: cổng `t_gu_hinh_khac_nhau` cho
+            # NGƯỜI lặp liền kề miễn TƯ THẾ khác (`tu` khác), nhưng bắt mọi biểu tượng
+            # KHÁC lặp liền kề vô điều kiện — `nguoi_ss` cứng dễ trùng đúng láng giềng.
+            #
+            # `tu` phải khác nhịp HIỂN THỊ liền trước theo đúng nghĩa của cổng — tức nhịp
+            # gần nhất (lùi về trước) có khuôn `canh/nhom/kinh_lup` VÀ có `bt` (bỏ qua
+            # nhịp không vẽ hình, chúng "trong suốt" với cổng). Dùng `i % 5` (vị trí
+            # trong danh sách THÔ) không đủ — hai nhịp liền kề đúng nghĩa của cổng có thể
+            # cách nhau vài chỉ số thô nếu có nhịp SỐ/CHỮ chen giữa.
+            _tu_truoc = None
+            for _p in range(i - 1, -1, -1):
+                _pn = nhip[_p]
+                if (_pn.get("khuon") or "") in ("canh", "nhom", "kinh_lup") and _pn.get("bt"):
+                    if _pn.get("bt") == "nguoi":
+                        _tu_truoc = _pn.get("tu") or 0
+                    break
+            n["bt"] = "nguoi"
+            n["tu"] = ((_tu_truoc + 1) % 5) if _tu_truoc is not None else 0
+            n["cam"] = "ngac_nhien"
+            continue
         # 1 — thử mọi mệnh đề, không chỉ mệnh đề đầu
         for _c in re.split(r"[.!?]", (n.get("loi") or "")):
             _c = _c.strip()

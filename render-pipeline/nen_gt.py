@@ -179,10 +179,11 @@ def _luat(ve: str, doc: bool = False) -> str:
 # đã tả kỹ thì mô hình đọc ra HAI vật và vẽ một hình bầu dục trắng dán đè lên mặt đã vẽ —
 # đúng khung anh gửi.
 KEP_GU = (
-    "flat 2D cartoon illustration, thick black ink outlines, "
-    "each head IS a plain white oval: two dot eyes, one short mouth line, no nose, "
-    "no shading; hair always drawn, also from behind, never a bare oval; "
-    "objects are simple flat shapes with the same outlines; "
+    "flat 2D cartoon illustration, confident bold black ink outlines, "
+    "each head is a simple round shape with warm pale skin tone, two dot eyes, "
+    "one short mouth line, no nose, minimal shading; hair always drawn, also from "
+    "behind, never a bare head; "
+    "objects are simple shapes filled with warm rich colour, same bold outlines; "
     "no photo texture, no lens blur, not 3D; "
     "modern animated explainer style, gentle soft shading for volume; "
     "background always LIGHT and warm, never dark or desaturated; "
@@ -859,15 +860,13 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
     # `siet - 1`: lần trượt THỨ NHẤT dùng câu siết thứ nhất. Viết `min(siet, …)` là hụt một
     # bậc — câu nhẹ nhất không bao giờ được dùng, và ảnh nhảy thẳng sang mức siết mạnh.
     _siet_txt = (SIET[min(siet - 1, len(SIET) - 1)] + ", ") if siet else ""
-    # ── MỘT CHẤT LIỆU CHO CẢ BỘ PHIM  (5/9/2026) ────────────────────────────────────────
-    # Anh hỏi đúng chỗ sẽ lệch: lớp vector nay là NÉT MỰC TRÊN GIẤY (kho hình Canva + nền
-    # kraft có vân), còn CF vẫn vẽ "flat cartoon drawing" — tranh màu có nền riêng. Hai chất
-    # liệu trong một tập, và §12.10 đã đo: lệch phong cách là đòn bẩy lớn hơn hẳn màu sắc.
-    # Người xem đọc ra "ghép từ hai nơi" trong nửa giây.
-    #
-    # Ba mệnh đề, không thừa chữ nào: nét mực (chất) · giấy kraft (nền) · không tô màu (thứ
-    # tách nó khỏi "cartoon"). FLUX không có negative prompt nên phải khẳng định dương —
-    # "monochrome ink" nói được điều mà "no colour" không nói được (§12.1).
+    # ── MỘT CHẤT LIỆU CHO CẢ BỘ PHIM  (5/9, bỏ giấy kraft 6/9/2026) ─────────────────────
+    # Bản 5/9 ép thêm ", ink on kraft paper," để khớp nền giấy có vân của lớp vector — nhưng
+    # KEP_GU (dán ngay sau, xem `_bat_buoc`) đã tự quyết định màu nền theo luật riêng của nó
+    # ("background always LIGHT and warm"), nên hai lớp tranh nhau: một câu đòi giấy kraft cụ
+    # thể, một câu đòi "nền sáng ấm" chung chung. Anh: *"ko cần nền paper nữa đâu sao đẹp là
+    # được"* — bỏ hẳn ràng buộc vật liệu nền, để KEP_GU với FLUX tự chọn màu nền đẹp nhất cho
+    # từng cảnh (đã đo: xanh navy đêm, be/kem ban ngày — đều đẹp, không cần ép giấy kraft).
     #
     # ── 5/9/2026 — CÂU CẢNH KHÔNG ĐƯỢC MẤT TOÀN BỘ  ─────────────────────────────────────
     # Câu này từng đứng trong danh sách vừa ghép vừa cắt như mọi câu khác — và khi nó là
@@ -882,8 +881,8 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
     # Chữa bằng CẮT BỚT chứ không XOÁ SẠCH: nếu không đủ chỗ, bỏ `mt` (mô tả sáng/thời tiết —
     # phụ) trước, rồi cắt `ve` ở BIÊN TỪ (không cắt giữa chữ) cho vừa — luôn giữ lại ít nhất
     # một phần câu tả cảnh, dù ngắn, còn hơn không có gì.
-    _canh_day = _siet_txt + "a black ink line drawing of " + ve + mt + ", ink on kraft paper,"
-    _canh_khong_mt = _siet_txt + "a black ink line drawing of " + ve + ", ink on kraft paper,"
+    _canh_day = _siet_txt + "a black ink line drawing of " + ve + mt + ","
+    _canh_khong_mt = _siet_txt + "a black ink line drawing of " + ve + ","
 
     def _canh_vua(budget: int) -> str:
         if len(_canh_day) <= budget:
@@ -892,7 +891,7 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
             return _canh_khong_mt
         # Vẫn không vừa dù đã bỏ `mt` — cắt `ve` ở biên từ. Đuôi cố định (đủ để CF vẫn hiểu
         # đây là một cảnh) chiếm chỗ trước, phần còn lại dành cho `ve`.
-        duoi = ", ink on kraft paper,"
+        duoi = ","
         dau = _siet_txt + "a black ink line drawing of "
         con = budget - len(dau) - len(duoi)
         if con <= 10:      # không còn đủ chỗ để nói được gì có nghĩa — vẫn trả một mẩu
