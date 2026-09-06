@@ -15,16 +15,33 @@ bốn bộ khác — §10 của CLAUDE.md: hai bộ, hai xưởng, đừng trộ
     1  cf:flux-2-klein-9b      768×1344 nguyên bản · 37 ảnh/tài khoản/ngày · 97 tài khoản
     2  cf:flux-2-klein-4b      768×1344 · ≥90 ảnh/tài khoản/ngày · chất gần bằng 9b
     3  cf:flux-1-schnell       tầng chót của CF: vuông 1024, phải cắt, nhưng gần như vô tận
-    4  gemini-3.1-flash-image  hai lớp chặn, và lớp thứ hai mới là lớp quyết định:
-                               (a) từ VN mọi khoá trả 429 `quota_limit_value: 0` @asia-east1 —
-                                   và đo được cả model CHỮ cũng vậy, nên đó là chuyện VÙNG;
-                               (b) trang giá chính thức ghi **"Not available"** cho free tier ở
-                                   cả gemini-2.5-flash-image, gemini-3-pro-image và
-                                   gemini-3.1-flash-image. Sinh ảnh qua API BẮT BUỘC trả phí.
-                               => hồ Gemini đóng góp 0 ảnh Ở MỌI VÙNG, kể cả runner Mỹ.
-                               Giữ tầng này vì nó hỏng mềm và vì khoá bật thanh toán sẽ dùng
-                               được ngay, nhưng MỌI phép tính sản lượng chỉ được dựa vào CF.
-    5  gemini-2.5-flash-image  (Google khai ngừng phục vụ 2/10/2026)
+    4  gemini-3.1-flash-lite-image   ĐO LẠI 6/9/2026 bằng khoá thật — LỜI KHAI CŨ Ở ĐÂY SAI.
+    5  gemini-3.1-flash-image        Anh nói *"trước gemini a nhớ là có tạo ảnh thành công qua
+    6  gemini-3.1-flash-image-preview api được, ngày 15-20 ảnh"*, và anh đúng (§13.15 lần nữa).
+    7  gemini-3-pro-image-preview
+    8  gemini-2.5-flash-image        Bản cũ viết "trang giá ghi Not available cho free tier =>
+                               sinh ảnh qua API BẮT BUỘC trả phí => hồ Gemini đóng góp 0 ảnh Ở
+                               MỌI VÙNG, kể cả runner Mỹ". Hỏi thẳng API thì lời từ chối tự
+                               bác câu ấy:
+
+                                 quotaId : GenerateRequestsPerDayPerProjectPerModel-FreeTier
+                                 metric  : generate_content_free_tier_requests
+                                 location: global            (KHÔNG phải asia-east1)
+
+                               Có một hạn mức tên `-FreeTier` cho model ẢNH thì free tier TỒN
+                               TẠI. Thứ chặn ở máy anh là câu thứ hai, và nó nói rõ đại lượng:
+
+                                 'API requests' · limit 'Request limit per minute for a REGION'
+
+                               tức trần theo PHÚT theo VÙNG, chạm ngay ở lệnh gọi ĐẦU TIÊN từ
+                               VN — không phải trần ngày, không phải "phải trả phí". Runner
+                               GitHub ở vùng khác nên con số ấy không suy ra được từ đây.
+
+                               BÀI HỌC: một lời khai đọc rất có căn cứ ("trang giá chính thức
+                               ghi…") vẫn có thể sai, và nó đắt gấp đôi vì nó dặn phiên sau
+                               ĐỪNG THỬ. Trang giá nói về `gemini-3.1-flash-image`; hồ khoá
+                               thấy SÁU model ảnh, trong đó `-lite-` chưa bao giờ được thử.
+                               §12.1: một lệnh gọi mất nửa giây, tin nhầm mất cả tháng.
 KHÔNG xen kẽ, KHÔNG ngẫu nhiên. Trong mỗi tầng CF, tài khoản chọn theo BĂM của (kênh, tập,
 nhịp, lần thử) nên 97 tài khoản được trải đều; và mỗi luồng chỉ nhìn thấy một lát cắt RỜI NHAU
 `cf[w::số_luồng]` nên hai luồng không bao giờ bốc trúng một tài khoản.
@@ -126,6 +143,12 @@ NGHI_CAN = 90 * 60
 # mỗi phút trôi qua, mà không vứt tài khoản đi cả tiếng rưỡi. Xem `_het_han` để biết vì sao
 # hai loại lỗi này KHÔNG được dùng chung một thời gian nghỉ.
 NGHI_BAN = 45
+
+# Sáu model ảnh mà khoá thật NHÌN THẤY (hỏi `models.list` ngày 6/9). Bản cũ chỉ thử HAI, và
+# không thử `-lite-` — bản "lite" thường là bản có hạn mức free rộng nhất. Xếp lite trước.
+MODEL_GEM = ("gemini-3.1-flash-lite-image", "gemini-3.1-flash-image",
+             "gemini-3.1-flash-image-preview", "gemini-2.5-flash-image",
+             "gemini-3-pro-image-preview")
 
 
 def suc_khoe(ks: dict = None) -> tuple:
@@ -275,6 +298,34 @@ def _ban(msg: str) -> bool:
 KHONG_VUNG = "quota_limit_value"
 
 
+def _gem_phut(msg: str) -> bool:
+    """Trần theo PHÚT (hoặc theo vùng) — cùng khoá dùng lại được sau vài chục giây.
+
+    ── VÌ SAO PHẢI TÁCH  (6/9/2026) ────────────────────────────────────────────────────────
+    Bản cũ coi mọi `RESOURCE_EXHAUSTED` là CẠN NGÀY và cho khoá nghỉ 90 phút. Nhưng lời từ
+    chối đo được nhiều nhất lại là:
+
+        'API requests' · limit 'Request limit per minute for a region'   · retryDelay 32s
+
+    tức một cái trần 32 GIÂY. Cho nghỉ 90 phút vì một cái trần 32 giây thì chỉ cần một lượt
+    thử dồn dập là cả hồ 85 khoá bị khoá sạch trong vòng một phút, và phần còn lại của lượt
+    chạy không còn khoá Gemini nào — hồ trông như đã cạn trong khi nó chưa vẽ nổi một ảnh.
+
+    Đây đúng họ lỗi §14.8: hai ngân sách khác bản chất gộp vào một bộ đếm. Đổi khoá không
+    chữa được trần VÙNG (mọi khoá đi chung một IP), còn trần NGÀY thì đổi khoá là chữa được —
+    hai thứ ấy đòi hai cách xử lý ngược nhau.
+    """
+    m = msg.lower()
+    return ("per minute" in m or "perminute" in m or "for a region" in m
+            or "retrydelay" in m.replace("_", ""))
+
+
+def _gem_ngay(msg: str) -> bool:
+    """Cạn hạn mức NGÀY của khoá — đổi khoá là chữa được."""
+    m = msg.lower()
+    return "perday" in m.replace("_", "").replace(" ", "") or "per day" in m
+
+
 def _gemini(model: str, prompt: str, key: str, ar: str, tam: str):
     u = (f"https://generativelanguage.googleapis.com/v1beta/models/{model}"
          f":generateContent?key={key}")
@@ -294,7 +345,9 @@ def _gemini(model: str, prompt: str, key: str, ar: str, tam: str):
             b = part.get("inlineData") or part.get("inline_data")
             if b and b.get("data"):
                 return base64.b64decode(b["data"]), ""
-    e = json.dumps(d.get("error") or d)[:220]
+    # 600 chứ không phải 220: `details[].quotaId` nằm SAU `message`, mà chính quotaId mới
+    # phân biệt được trần NGÀY với trần PHÚT. Cắt ngắn là ném đi đúng thứ cần đọc (§15.2).
+    e = json.dumps(d.get("error") or d)[:600]
     return None, e
 
 
@@ -378,7 +431,7 @@ def _clamp(p: str, ma: str, i: int) -> str:
 
 
 def ve(prompt: str, ma: str, idx: int, i: int, doc: bool = True,
-       ks: dict = None, lan_toi_da: int = 3) -> str:
+       ks: dict = None, lan_toi_da: int = 3, chi_cf: bool = False) -> str:
     """Vẽ MỘT cảnh. Trả đường tương đối trong `public/` hoặc "" nếu không vẽ được.
 
     Có sẵn trong cache (cùng vân tay prompt) thì trả ngay, không gọi mạng — nên chạy lại một
@@ -458,17 +511,22 @@ def ve(prompt: str, ma: str, idx: int, i: int, doc: bool = True,
             if raw:
                 break
         # ── TẦNG 2: GEMINI (chỉ sống ở runner Mỹ) ───────────────────────────────────────
-        if not raw:
+        if not raw and not chi_cf:
             ar = "9:16" if doc else "16:9"
-            for model in ("gemini-3.1-flash-image", "gemini-2.5-flash-image"):
+            for model in MODEL_GEM:
                 gs = [g for g in ks["gem"] if _song(("gem", g))]
-                for g in gs[:10]:
+                # KHÔNG `gs[:10]`. Hồ có 85 khoá và bản cũ chỉ nhìn 10 khoá ĐẦU — 75 khoá còn
+                # lại chưa bao giờ được gọi một lần nào, nên mọi câu "hồ Gemini đóng góp 0"
+                # đều là kết luận rút từ 12% hồ (§15.2: một con số 0 cần mẫu số).
+                for g in gs:
                     raw, loi = _gemini(model, p, g, ar, tam)
                     if raw:
                         break
-                    if KHONG_VUNG in loi or "RESOURCE_EXHAUSTED" in loi:
+                    if _gem_phut(loi):          # trần 32 giây, KHÔNG phải cạn ngày
+                        _cho(("gem", g), NGHI_BAN)
+                        continue
+                    if _gem_ngay(loi) or KHONG_VUNG in loi or "RESOURCE_EXHAUSTED" in loi:
                         _cho(("gem", g), NGHI_CAN)
-                        _ghi("Gemini không có hạn mức ở vùng này")
                         continue
                     _ghi("Gemini lỗi")
                 if raw:

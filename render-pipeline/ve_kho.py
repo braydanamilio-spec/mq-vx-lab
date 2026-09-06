@@ -99,8 +99,16 @@ def mot_kenh(ma: str, ds: list, luong: int, ks, tran: int = 0) -> tuple:
         i, p = cap
         dest = os.path.join(NEN, f"{ma}_{i:03d}.jpg")
         try:
+            # `chi_cf=True` — KHO NỀN CHỈ ĐƯỢC MỘT CHẤT VẼ  (6/9/2026)
+            # Anh chốt sáng nay: *"đổi model là đổi CHẤT"*, và 1.081 nền đầu đã vẽ bằng
+            # klein-9b. Nhánh Gemini của `A.ve` hỏng mềm nên nó IM LẶNG nhận việc khi CF cạn —
+            # tức đúng lúc kho đang được bổ sung nhiều nhất. Hậu quả không phải một lỗi báo ra
+            # mà là một TẬP có phòng vẽ bằng model này đứng cạnh phòng vẽ bằng model kia, và
+            # kho nền thì dùng suốt đời kênh nên không sửa lại được.
+            # Ảnh TỪNG TẬP thì ngược lại: ở đó Gemini là tầng cứu, vì phương án còn lại là
+            # cảnh vẽ bằng code — một bước nhảy thị giác lớn hơn nhiều.
             rel = A.ve(f"{PH.GU_NEN} {SAN_NEN}. The room is: {p}.", ma, 0, 900 + i,
-                       doc=False, ks=ks)
+                       doc=False, ks=ks, chi_cf=True)
         except Exception:
             rel = None
         if not rel:

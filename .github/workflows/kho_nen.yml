@@ -113,6 +113,42 @@ jobs:
               print(f"⚠ {len(rong)} kênh CHƯA CÓ NỀN NÀO: {', '.join(rong)}")
           PY
 
+      - name: Đo Gemini ảnh có sống ở VÙNG CỦA RUNNER không
+        # Câu hỏi này KHÔNG trả lời được từ máy anh: ở VN mọi lệnh gọi — kể cả `models.list`
+        # chỉ-đọc — trả `limit 'Request limit per minute for a region'`, tức trần theo VÙNG.
+        # Runner GitHub ở vùng khác, nên con số ấy không suy ra được; và §8 cấm bấm
+        # `gh workflow run` để thử. Nên đo ở đây: lượt cron hằng ngày tự trả lời, một lệnh gọi.
+        #
+        # Đây là chỗ RẺ NHẤT để hỏi: nếu Gemini sống ở vùng runner thì hai luồng render tập
+        # (`render_phim_18` · `render_comic_18`) có thêm một tầng cứu THẬT thay vì rơi xuống
+        # cảnh vẽ bằng code khi CF cạn. Kho nền thì KHÔNG dùng Gemini (`chi_cf=True`) — một
+        # chất vẽ, anh đã chốt.
+        continue-on-error: true
+        env:
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+          MM0_KEYS: ${{ secrets.MM0_KEYS }}
+        run: |
+          cd render-pipeline
+          python - <<'PY'
+          import tempfile, phim_anh as A
+          gs = A.khoa().get("gem", [])
+          print(f"hồ Gemini: {len(gs)} khoá")
+          if not gs:
+              print("::warning::không có khoá Gemini"); raise SystemExit
+          P = ("A flat illustrated cartoon of a small tidy workshop interior, wide shot, "
+               "camera at standing eye level, floor clearly visible across the lower third, "
+               "open space in the centre of the frame, muted palette, textless image.")
+          tam = tempfile.mktemp(suffix=".json")
+          for n, m in enumerate(A.MODEL_GEM):
+              raw, e = A._gemini(m, P, gs[(n * 7) % len(gs)], "16:9", tam)
+              if raw:
+                  print(f"::notice::GEMINI SỐNG ở vùng runner — {m} vẽ được {len(raw)//1024} KB")
+                  break
+              print(f"  {m}: {e[:150]}")
+          else:
+              print("::notice::Gemini không vẽ được ở vùng runner (xem lời từ chối bên trên)")
+          PY
+
       - name: Gắn nhóm chủ đề cho nền MỚI
         # §13.1 — cơ chế đã có (`nen_tag.py`), thiếu đúng thứ GỌI nó. Không có bước này thì kho
         # lớn dần mà bảng thẻ đứng yên: `pilot_hai.phong_cua` chỉ chọn theo nhóm khi tìm được
