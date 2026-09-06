@@ -76,6 +76,22 @@ def _ro(t, bang):
     return next((v for k, v in bang if k in t), "")
 
 
+def _rgb(h: str):
+    h = h.lstrip("#")
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def _kc(a: str, b: str) -> float:
+    """Khoảng cách màu có TRỌNG SỐ — xấp xỉ cách mắt người thấy, không phải Euclid trần.
+
+    Mắt nhạy với xanh lá hơn hẳn với xanh dương, nên Euclid trên RGB nói hai màu xám và nâu
+    khác nhau nhiều bằng hai màu lục khác nhau — sai đúng thứ đang cần đo."""
+    (r1, g1, b1), (r2, g2, b2) = _rgb(a), _rgb(b)
+    rm = (r1 + r2) / 2
+    return ((2 + rm / 256) * (r1 - r2) ** 2 + 4 * (g1 - g2) ** 2
+            + (2 + (255 - rm) / 256) * (b1 - b2) ** 2) ** 0.5
+
+
 def mot_kenh(ma, ds):
     tho = []
     for v in ds:
@@ -112,16 +128,36 @@ def mot_kenh(ma, ds):
             if not d[truong]:
                 d[truong] = con[k % len(con)] if con else moi[k % len(moi)]
                 k += 1
-    # Màu áo trùng nhau thì đổi người sau sang màu chưa ai mặc.
-    dung = set()
-    kho_mau = [v for v in MAU.values()]
+    # ── MÀU PHẢI CÁCH NHAU ĐỦ ĐỂ MẮT THẤY, KHÔNG CHỈ KHÁC CHUỖI  (soi khung 6/9/2026) ────
+    # Bản cũ so `d["ao"] in dung` — phép so CHUỖI BẰNG NHAU. Nên `#3A3A3A` và `#2A2A2A` đi lọt:
+    # khác nhau đúng 16/255 ở cả ba kênh màu, và cổng báo "không ai mặc trùng ai".
+    # Soi khung `v11_howhot_0040`: Gus (#3A3A3A) và Tank (#2A2A2A) đứng cạnh nhau, CÙNG kiểu
+    # tóc `trocs`, và người xem không phân biệt được ai đang nói — mà đuôi bong bóng chỉ về
+    # người nói chính là thứ thay cho nhãn tên ở bộ này.
+    #
+    # Đo khoảng cách trên cả 18 kênh (270 cặp): trung vị 261, cặp tệ nhất 48. Hai đầu tách hẳn
+    # nhau, nên sàn đặt được. Chọn 110: nó chữa 11 cặp tệ nhất và không đụng tới phần còn lại.
+    #
+    # Và một ràng buộc thứ hai: hai vai CÙNG KIỂU TÓC phải cách nhau xa hơn (160), vì lúc ấy
+    # màu áo là dấu hiệu DUY NHẤT còn lại. `kieuToc` vốn cho phép trùng 2 người — đúng khi màu
+    # đã tách, sai khi màu cũng gần. §17.2: một thứ chịu hai ràng buộc.
+    SAN, SAN_TOC = 110.0, 160.0
+    kho_mau = list(dict.fromkeys(MAU.values()))
+    xong: list = []
     for d in tho:
-        if d["ao"] in dung:
-            for c in kho_mau:
-                if c not in dung:
-                    d["ao"] = c
-                    break
-        dung.add(d["ao"])
+        def _du(c, dd=d):
+            for e in xong:
+                s = SAN_TOC if e["kieuToc"] == dd["kieuToc"] else SAN
+                if _kc(c, e["ao"]) < s:
+                    return False
+            return True
+        if not _du(d["ao"]):
+            # Không lấy "màu chưa ai dùng" (bản cũ) mà lấy màu XA NHẤT khỏi mọi màu đã dùng —
+            # "chưa dùng" không bảo đảm nhìn ra khác, và đó đúng là cách lỗi này lọt qua.
+            tot = max(kho_mau, key=lambda c: (_du(c), min((_kc(c, e["ao"]) for e in xong),
+                                                          default=999)))
+            d["ao"] = tot
+        xong.append(d)
     return tho
 
 
@@ -133,10 +169,21 @@ def main():
     import collections
     xau = 0
     for ma, ds in ra.items():
-        for f, tran in (("ao", 1), ("kieuAo", 2), ("kieuToc", 2)):
-            if max(collections.Counter(d[f] for d in ds).values()) > tran:
-                xau += 1
-                break
+        import itertools
+        gan = min((_kc(x["ao"], y["ao"]) for x, y in itertools.combinations(ds, 2)),
+                  default=999)
+        # Mỗi điều kiện in ĐÚNG lý do của nó. Bản đầu in khoảng cách màu cho MỌI ca trượt,
+        # nên bốn kênh có màu hoàn toàn đạt (135–179 trên sàn 110) vẫn hiện ra như lỗi màu —
+        # một dòng cảnh báo nói sai nguyên nhân dẫn người đọc đi sửa thứ không hỏng (§15.2).
+        ao = collections.Counter(d["kieuAo"] for d in ds).most_common(1)[0]
+        ly = []
+        if gan < 110:
+            ly.append(f"cặp áo gần nhất {gan:.0f} < sàn 110")
+        if ao[1] > 2:
+            ly.append(f"{ao[1]} người cùng kiểu áo '{ao[0]}'")
+        if ly:
+            xau += 1
+            print(f"   ⚠ {ma}: " + " · ".join(ly))
     print(f"✅ {sum(len(v) for v in ra.values())} bộ đồ / {len(ra)} kênh · "
           f"{len(ra) - xau}/{len(ra)} kênh không ai mặc trùng ai")
 

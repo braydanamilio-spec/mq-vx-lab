@@ -603,7 +603,31 @@ def cu_chi_cua(chu: str, i: int, cuoi: bool) -> str:
     # đọc *"three thousand four hundred degrees"*, và phép so cũ bắt chữ **" four"** bên trong
     # đó rồi kết luận "số đếm được" — 5/11 panel cùng cử chỉ đếm ngón tay cho một con số ba
     # nghìn. Cùng họ với mọi lỗi hôm nay: **một từ nằm lọt trong một cụm lớn hơn** (§15.3).
-    _chu = re.search(r"\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b"
+    # ── VÒNG BA: CHẶN CẢ PHÍA TRƯỚC, VÀ BỎ HẲN "ONE"  (đọc tay 6/9/2026) ────────────────
+    # Vòng trước chỉ chặn phía SAU (`không đi trước hundred/thousand`). Đọc tay đủ 13 ca mà
+    # nhánh này bắn trên 6 tập thật thì **8 ca sai**, và cả 8 theo một QUY LUẬT chứ không phải
+    # một danh sách ngoại lệ (§13.9):
+    #
+    #   "seventy-five for vacuum"          -> bắt `five`   (nằm sau dấu nối)
+    #   "thirty-two times"                 -> bắt `two`    (nằm sau dấu nối)
+    #   "two hundred twelve degrees"       -> bắt `twelve` (nằm sau `hundred`)
+    #   "three thousand one hundred one"   -> bắt `one`    (nằm sau `thousand`)
+    #   "hold one against the other"       -> bắt `one`    (ĐẠI TỪ, không phải số đếm)
+    #   "one beside the other"             -> bắt `one`    (đại từ)
+    #
+    # Hai luật đủ để diệt cả tám: (a) từ số không được đứng ngay SAU một từ số khác hoặc sau
+    # dấu nối — hàng chục và bậc lớn là một lớp ĐÓNG nên liệt kê được hết, khác hẳn danh sách
+    # ngoại lệ vô hạn; (b) bỏ `one` khỏi bảng, vì trong tiếng Anh nó gần như luôn là đại từ,
+    # và giơ MỘT ngón tay cũng chẳng phải một cử chỉ đọc ra được.
+    # Giữ nguyên 5 ca đúng: "three steps back", "add ten, then multiply by ten", "ten more is
+    # ten times more" — đó mới là số ĐẾM ĐƯỢC bằng ngón tay.
+    _TRUOC = (r"(?<![-\u2010-\u2015])"
+              r"(?<!\bhundred )(?<!\bthousand )(?<!\bmillion )(?<!\bbillion )"
+              r"(?<!\btwenty )(?<!\bthirty )(?<!\bforty )(?<!\bfifty )"
+              r"(?<!\bsixty )(?<!\bseventy )(?<!\beighty )(?<!\bninety )")
+    _chu = re.search(_TRUOC +
+                     r"\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b"
+                     r"(?!\s*[-\u2010-\u2015])"
                      r"(?!\s+(hundred|thousand|million|billion))", t)
     if _nho or _chu:
         return "dem"                          # số ĐẾM ĐƯỢC thì đếm ngón tay
@@ -623,7 +647,11 @@ def cu_chi_cua(chu: str, i: int, cuoi: bool) -> str:
     # duy nhất là "nhân vật hay đứng yên" — thứ người ta đổ cho thẩm mỹ.
     # Tám cử chỉ engine vẽ được: nghi · chi · mo_tay · dem · suy_nghi · nhun_vai · gio_len ·
     # khoanh_tay. `mo_tay` để dành cho cú chốt (xem trên), nên vòng lấy sáu cái còn lại.
-    return ["nghi", "dem", "gio_len", "chi", "nhun_vai", "suy_nghi"][i % 6]
+    # `dem` ĐÃ RA KHỎI vòng mặc định (6/9/2026): vòng này chỉ chạy khi câu KHÔNG có số đếm
+    # được nào — mà đếm ngón tay cho một câu không có số thì cử chỉ ấy nói dối về thứ nó đang
+    # làm, đúng lý do đã viết mười dòng phía trên. Nó chiếm 1/6 vòng, cộng dồn với nhánh chữ
+    # số thành 29/60 ô của sáu tập đo được. `khoanh_tay` vào thay: cũng là cử chỉ nhỏ.
+    return ["nghi", "khoanh_tay", "gio_len", "chi", "nhun_vai", "suy_nghi"][i % 6]
 
 CU_CHI = ["mo_tay", "chi", "nhun_vai", "dem", "suy_nghi", "khoanh_tay"]
 # 30/8 — HIỆU ỨNG ÂM DỒN VÀO CÚ CHỐT, KHÔNG RẢI ĐỀU.
