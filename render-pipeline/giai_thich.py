@@ -5253,12 +5253,16 @@ def sinh_odds(i):
               "restrained palette")),
     # `don` là NHÃN HIỆN RA, không phải chỗ ghi công thức. "1 in N" lên màn hình nguyên văn
     # là "1 IN N" — soi khung ODDS thấy ngay ở đầu biểu đồ. Chuỗi mẫu lọt ra sản phẩm.
-    _n("chart", "Next to things you fear.", don="1 in this many",
-       # Mốc so sánh phải khác chính mục của chương — khi bộ lịch phát trúng chương "lightning"
-       # thì hai cột bằng nhau và trục phẳng lì. Cùng gốc với `_moc_khac` ở `chia_doi`.
-       cot=[_moc_khac([{"nhan": "lightning", "v": 1222000, "so": 1222000},
-                       {"nhan": "a shark bite", "v": 3748067, "so": 3748067}], N),
-            {"nhan": _nhan(ten.split()[0]), "v": N}], dinh=True),
+    # ── CỘT SO SÁNH LÀ VẾ THỨ HAI CỦA CHÍNH TIÊU ĐỀ  (6/9/2026) ──────────────────────
+    # Tiêu đề hứa "The odds of X against Y", rồi biểu đồ đem X so với hai mốc CHÉP CỨNG
+    # (sét đánh · cá mập cắn) — `ten2` và `N2` được đọc ra ở dòng đầu rồi không tới nhịp nào.
+    # Người xem bấm vào vì cuộc so ấy và không bao giờ được xem nó. Cùng họ với `howmuch`
+    # sáng nay: trường của bảng dừng lại ở tiêu đề, thân bài chạy bằng hằng số.
+    # `_cap_ti(..., ti=8)` đã bảo đảm hai vế chênh ≥8 lần, nên không cần `_moc_khac` nữa —
+    # cột không bao giờ bằng nhau, và cú lật mạnh hơn vì nó trả lời đúng câu tiêu đề hỏi.
+    _n("chart", f"Next to {ten2}.", don="1 in this many",
+       cot=[{"nhan": _nhan_ve(ten2), "v": N2},
+            {"nhan": _nhan_ve(ten), "v": N}], dinh=True),
     _n("canh", "Somebody still wins.", dinh=True,
        ve=_ve("one small figure holding a ticket, arms half raised",
               "standing alone in an enormous empty stadium", "quietly stunned",
@@ -5444,8 +5448,11 @@ def sinh_rightnow(i):
     (ten, ti, bt), (ten2, ti2, _b2) = _cap_ti(ds, i, ti=1.8)
     n = int(8_000_000_000 * ti)
     # Quy về đơn vị tai người nghe ra: "3360 MILLION" không ai đọc, "3.4 BILLION" thì đọc ngay.
-    gon = (f"{n/1e9:.1f} BILLION".replace(".0 ", " ") if n >= 1e9
-           else f"{n/1e6:.0f} MILLION" if n >= 1e6 else f"{n:,}")
+    # Là HÀM chứ không phải một phép tính tại chỗ, vì cả hai vế của cuộc so phải rút gọn bằng
+    # đúng một phép — hai vế rút gọn khác nhau thì biểu đồ so hai đơn vị khác nhau.
+    _gon = lambda x: (f"{x/1e9:.1f} BILLION".replace(".0 ", " ") if x >= 1e9
+                      else f"{x/1e6:.0f} MILLION" if x >= 1e6 else f"{x:,}")
+    gon = _gon(n)
     return (f"How many people are {ten} against {ten2}",
             f"HOW MANY PEOPLE ARE {ten.upper()}", gon,
             [
@@ -5457,9 +5464,13 @@ def sinh_rightnow(i):
               "all of them still, all at once", "",
               "an enormous open plain filled with people", "the front row sharp",
               "bright palette")),
-    _n("chia_doi", "You, and all of them.",
-       trai={"nhan": "you", "bt": "nguoi", "so": "1"},
-       phai={"nhan": "them", "bt": bt, "so": f"{n/1e6:.0f} mn"}, dinh=True),
+    # Thẻ chia đôi là chỗ DUY NHẤT của tập đủ chỗ cho hai vế, và tiêu đề hứa so hai VIỆC
+    # ("How many people are X against Y"). Bản cũ dùng nó cho "bạn với họ" — một ý hay nhưng
+    # không phải ý đã bán ở tiêu đề, nên `ten2`/`ti2` chết ở dòng unpack. Ý "bạn với họ" vẫn
+    # sống trong hai nhịp chốt phía dưới; cuộc so trong tiêu đề thì không còn chỗ nào khác.
+    _n("chia_doi", "Both, at this same second.",
+       trai={"nhan": _nhan_ve(ten), "bt": bt, "so": gon},
+       phai={"nhan": _nhan_ve(ten2), "bt": _b2, "so": _gon(int(8_000_000_000 * ti2))}, dinh=True),
     _n("the_chu", "Nothing you do is only yours.",
        the="Nothing you do|is only yours.", dinh=True),
     _n("canh", "That is the whole point.", dinh=True,
@@ -5841,6 +5852,10 @@ BIEN_THE = {
 # Giọng giữ nguyên: câu ngắn, khẳng định, tiếng Anh Mỹ, 2–7 chữ. Câu dài hơn thì cảnh phải giữ
 # lâu hơn, và §12.11 đã đo rằng nhịp cắt là việc của khâu VIẾT.
 BIEN_THE_THEM = {
+
+"Both, at this same second.": ("Both of them, this second.", "Two things, one moment.",
+    "Both happening as you watch.", "The same second, both of them.", "Both, right this second.",
+    "One second. Both of these."),
 
 "Two words. Worlds apart.": ("Two words. Nothing alike.", "Same ending. Different world.",
     "Two words that sound close.", "One word, then another. Not close.", "They rhyme. That is all.",
@@ -8504,6 +8519,20 @@ def _rai_canh_ve(nhip: list, ma: str, hat: int) -> None:
         n.pop("ve", None)
 
 
+
+# ── NHÃN MỘT VẾ CỦA CUỘC SO SÁNH  (6/9/2026) ────────────────────────────────────────────────
+# `_nhan` giữ các từ CUỐI, vì với tên đồ vật thì danh từ chính nằm ở cuối ("school bus").
+# Vế của một cuộc so sánh thì ngược: nghĩa nằm ở ĐẦU và đuôi là câu đệm thời gian dùng chung
+# cho mọi mục trong bảng. Đo: "asleep right now" ra `right now`, "being struck by lightning
+# this year" ra `this year` — hai cột biểu đồ khác nhau mang CÙNG một nhãn, và nhãn ấy không
+# nói gì. Đúng §15.21: đầu ngữ đo lường không phải chủ thể, chỉ khác là ở đây nó nằm ở đuôi.
+_DUOI_DEM = re.compile(r"\s+(?:right now|this year|today|per year|a year|each year|"
+                       r"every year|in your life|in a lifetime|at this moment)\s*$", re.I)
+
+
+def _nhan_ve(t: str, toi_da: int = 11) -> str:
+    return _nhan(_DUOI_DEM.sub("", str(t or "").strip()), toi_da)
+
 def _danh_tu(s: str) -> str:
     """Danh từ chính của một cụm — dùng làm NHÃN cột và nhãn vế so sánh.  (3/9/2026)
 
@@ -8666,13 +8695,26 @@ def _bt_canh(loi: str, ve: str = "") -> str:
 #
 # Cắt theo TỪ: giữ nguyên nếu vừa, không thì bỏ bớt từ đầu (thường là mạo từ / bổ ngữ) và giữ
 # từ CUỐI — vì từ cuối mới là danh từ chính ("bus", "whale"). Không bao giờ để lại một từ cụt.
+_TU_CHUC = {"to", "in", "on", "at", "of", "by", "for", "with", "a", "an", "the", "and", "or",
+            "from", "into", "as", "per", "your", "their", "its", "being"}
+
+
 def _nhan(t: str, toi_da: int = 11) -> str:
-    t = str(t or "").replace("a ", "", 1).replace("the ", "", 1).strip()
+    # Mạo từ chỉ bỏ được ở ĐẦU chuỗi. `replace("a ", "", 1)` bắt cả "a " nằm giữa câu, nên
+    # "in a car" ra "in car" và "on a plane" ra "on plane" — sai ngữ pháp ngay trên khung hình.
+    # Lỗi im lặng vì nó chỉ hiện ở nhãn có mạo từ ở giữa, mà phần lớn nhãn thì không (6/9/2026).
+    t = re.sub(r"^(?:an?|the)\s+", "", str(t or "").strip())
     if len(t) <= toi_da:
         return t
     tu = t.split()
     while len(tu) > 1 and len(" ".join(tu)) > toi_da:
         tu.pop(0)                 # bỏ từ ĐẦU, giữ danh từ chính ở cuối
+    # Cắt xong có thể còn một TỪ CHỨC NĂNG đứng đầu — "listening to music" ra `to music`,
+    # "in a meeting" ra `a meeting`. Nhãn ấy không cụt và vẫn vô nghĩa: mắt đọc giới từ trước
+    # danh từ thì hiểu là còn thiếu vế. Bỏ đến khi từ đầu mang nghĩa, nhưng KHÔNG BAO GIỜ bỏ
+    # từ cuối cùng — thà một nhãn hơi lạ còn hơn một nhãn rỗng (6/9/2026).
+    while len(tu) > 1 and tu[0].lower() in _TU_CHUC:
+        tu.pop(0)
     con = " ".join(tu)
     # MỘT TỪ ĐƠN THÌ KHÔNG CẮT.  (3/9/2026)
     # Bản trước cắt cứng ở `toi_da`, nên nhãn cột `conversation` (12 ký tự) hiện ra là
