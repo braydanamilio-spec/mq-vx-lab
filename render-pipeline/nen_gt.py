@@ -224,6 +224,26 @@ KENH_GU = {m: "que" for m in
             "rightnow", "howhot", "smallest")}
 GU = GU_CARTOON
 
+# ── STYLE NGẮN CHO Ô `style=` CỦA `_generate_image_ai`  (5/9/2026) ─────────────────────────
+# `_generate_image_ai`/`_cf_flux_image` nhét CHÍNH `style` vào wrap: `f"A {style} of: {prompt}"`
+# — và `gu`/`GU_CARTOON` (324 ký tự) đã NÓI LẠI gần như nguyên văn thứ `KEP_GU` (embedded
+# trong THÂN prompt) đã nói: cả hai đều có "modern animated explainer style", "background
+# always light", "the setting is exactly the place named above, drawn with its own props,
+# never a blank backdrop". Comment ở dòng 193 nói đã tách "đúng bốn điều KEP_GU không nói",
+# nhưng đọc lại nội dung thật thì `GU_CARTOON` đang lặp gần trọn — hai khối trôi dần về
+# giống nhau qua nhiều lần sửa mà không ai gộp lại.
+#
+# Kết quả đo được: truyền `style=gu` (324 ký tự) làm `tran_boc_toi_da` tính ra mức dự phòng
+# tới 610–769 ký tự (thay vì ~490 khi thử bằng một chuỗi style ngắn) — ngân sách còn lại cho
+# phần THÂN prompt (scene + KEP_GU + khoá nhân vật + SACH + khung) hụt tới mức KEP_GU và
+# `_khoa` bị cắt ở 40%/30% tổ hợp — hỏng NẶNG hơn cả thứ 324 ký tự kia định bảo vệ.
+#
+# `_generate_image_ai`'s ô `style=` chỉ cần một NEO NGẮN để câu "A {style} of:" đọc thông,
+# không cần nhắc lại toàn bộ luật — luật đã nằm trong THÂN prompt rồi. Dùng CHÍNH constant
+# này ở CẢ HAI nơi (`_prompt()`'s `tran_boc_toi_da` VÀ `sinh()`'s `style=`) — khác constant ở
+# hai nơi là tái diễn đúng lỗi 2048 vừa vá (đo một chuỗi, gửi một chuỗi khác).
+STYLE_NGAN = "flat 2D cartoon illustration"
+
 # ══ KHOÁ NHÂN VẬT ═══════════════════════════════════════════════════════════════════════════
 # Anh: *"nhớ khoá nhân vật để cho đồng bộ cả channel cho nó đỡ lộn xộn, xây dựng bộ nhân vật để
 # dùng chung để AI vẽ ra có nét theo niche."*
@@ -832,33 +852,56 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
     # Nay đúng như chú thích: cảnh trước, khoá nhân vật, rồi phong cách. Neo phong cách vẫn dán
     # ngay trước chủ thể ("a flat cartoon drawing of …") nên chủ thể gợi-ảnh-chụp vẫn bị ghìm —
     # đó là hai việc khác nhau và cả hai đều cần.
+    # ── SIẾT DẦN THEO LẦN THỬ  (3/9/2026) ────────────────────────────────────────────────
+    # `siet` là số lần cổng chất vẽ đã đánh trượt ảnh này. Xem chú thích ở `sinh()`: vẽ lại
+    # bằng CÙNG một prompt là vô nghĩa vì FLUX schnell không nhận `seed`. Mỗi lần trượt thì
+    # đổi chính prompt, và đổi theo hướng cổng đang đo — nói mạnh hơn về CHẤT VẼ.
+    # `siet - 1`: lần trượt THỨ NHẤT dùng câu siết thứ nhất. Viết `min(siet, …)` là hụt một
+    # bậc — câu nhẹ nhất không bao giờ được dùng, và ảnh nhảy thẳng sang mức siết mạnh.
+    _siet_txt = (SIET[min(siet - 1, len(SIET) - 1)] + ", ") if siet else ""
+    # ── MỘT CHẤT LIỆU CHO CẢ BỘ PHIM  (5/9/2026) ────────────────────────────────────────
+    # Anh hỏi đúng chỗ sẽ lệch: lớp vector nay là NÉT MỰC TRÊN GIẤY (kho hình Canva + nền
+    # kraft có vân), còn CF vẫn vẽ "flat cartoon drawing" — tranh màu có nền riêng. Hai chất
+    # liệu trong một tập, và §12.10 đã đo: lệch phong cách là đòn bẩy lớn hơn hẳn màu sắc.
+    # Người xem đọc ra "ghép từ hai nơi" trong nửa giây.
+    #
+    # Ba mệnh đề, không thừa chữ nào: nét mực (chất) · giấy kraft (nền) · không tô màu (thứ
+    # tách nó khỏi "cartoon"). FLUX không có negative prompt nên phải khẳng định dương —
+    # "monochrome ink" nói được điều mà "no colour" không nói được (§12.1).
+    #
+    # ── 5/9/2026 — CÂU CẢNH KHÔNG ĐƯỢC MẤT TOÀN BỘ  ─────────────────────────────────────
+    # Câu này từng đứng trong danh sách vừa ghép vừa cắt như mọi câu khác — và khi nó là
+    # câu ĐẦU TIÊN không vừa, `ra` vẫn đang RỖNG, nên cả câu biến mất, không phải cắt bớt.
+    # Soi khung thật của bản pilot đầu tiên: 36% tổ hợp rơi đúng vào ca này — nghĩa là 36%
+    # ảnh được gửi đi với một prompt CHỈ CÓ LUẬT PHONG CÁCH, KHÔNG MỘT CHỮ NÀO TẢ CẢNH. Mô
+    # hình khi đó vẽ đúng những gì nó được bảo: một hình bất kỳ hợp phong cách, không liên
+    # quan gì tới nội dung nhịp. Đây là lỗi NẶNG HƠN việc mất phong cách (KEP_GU) — ít nhất
+    # ảnh sai phong cách còn đúng NỘI DUNG; ảnh này đúng phong cách nhưng sai/không có nội
+    # dung, tức vẫn là "ảnh không liên quan" dù trông có vẻ đúng bộ.
+    #
+    # Chữa bằng CẮT BỚT chứ không XOÁ SẠCH: nếu không đủ chỗ, bỏ `mt` (mô tả sáng/thời tiết —
+    # phụ) trước, rồi cắt `ve` ở BIÊN TỪ (không cắt giữa chữ) cho vừa — luôn giữ lại ít nhất
+    # một phần câu tả cảnh, dù ngắn, còn hơn không có gì.
+    _canh_day = _siet_txt + "a black ink line drawing of " + ve + mt + ", ink on kraft paper,"
+    _canh_khong_mt = _siet_txt + "a black ink line drawing of " + ve + ", ink on kraft paper,"
+
+    def _canh_vua(budget: int) -> str:
+        if len(_canh_day) <= budget:
+            return _canh_day
+        if len(_canh_khong_mt) <= budget:
+            return _canh_khong_mt
+        # Vẫn không vừa dù đã bỏ `mt` — cắt `ve` ở biên từ. Đuôi cố định (đủ để CF vẫn hiểu
+        # đây là một cảnh) chiếm chỗ trước, phần còn lại dành cho `ve`.
+        duoi = ", ink on kraft paper,"
+        dau = _siet_txt + "a black ink line drawing of "
+        con = budget - len(dau) - len(duoi)
+        if con <= 10:      # không còn đủ chỗ để nói được gì có nghĩa — vẫn trả một mẩu
+            return (dau + ve[:max(10, con)] + duoi)[:budget]
+        ve_cat = ve[:con].rsplit(" ", 1)[0] if " " in ve[:con] else ve[:con]
+        return dau + ve_cat + duoi
+
     phan = [
-        # ── SIẾT DẦN THEO LẦN THỬ  (3/9/2026) ────────────────────────────────────────────
-        # `siet` là số lần cổng chất vẽ đã đánh trượt ảnh này. Xem chú thích ở `sinh()`: vẽ lại
-        # bằng CÙNG một prompt là vô nghĩa vì FLUX schnell không nhận `seed`. Mỗi lần trượt thì
-        # đổi chính prompt, và đổi theo hướng cổng đang đo — nói mạnh hơn về CHẤT VẼ.
-        # `siet - 1`: lần trượt THỨ NHẤT dùng câu siết thứ nhất. Viết `min(siet, …)` là hụt
-        # một bậc — câu nhẹ nhất không bao giờ được dùng, và ảnh nhảy thẳng sang mức siết mạnh.
-        (SIET[min(siet - 1, len(SIET) - 1)] + ", ") if siet else "",
-        # ── MỘT CHẤT LIỆU CHO CẢ BỘ PHIM  (5/9/2026) ────────────────────────────────
-        # Anh hỏi đúng chỗ sẽ lệch: lớp vector nay là NÉT MỰC TRÊN GIẤY (kho hình Canva +
-        # nền kraft có vân), còn CF vẫn vẽ "flat cartoon drawing" — tranh màu có nền riêng.
-        # Hai chất liệu trong một tập, và §12.10 đã đo: lệch phong cách là đòn bẩy lớn hơn
-        # hẳn màu sắc. Người xem đọc ra "ghép từ hai nơi" trong nửa giây.
-        #
-        # Sửa ở PROMPT chứ không ở khâu dựng: bảo mô hình vẽ đúng chất ngay từ đầu rẻ hơn
-        # nhiều so với chỉnh màu ảnh đã vẽ xong — và §12.10 cũng đã đo rằng chỉnh màu
-        # KHÔNG cứu được lệch phong cách.
-        #
-        # Ba mệnh đề, không thừa chữ nào: nét mực (chất) · giấy kraft (nền) · không tô màu
-        # (thứ tách nó khỏi "cartoon"). FLUX không có negative prompt nên phải khẳng định
-        # dương — "monochrome ink" nói được điều mà "no colour" không nói được (§12.1).
-        # Câu này phải NGẮN: nó đứng đầu nên không bao giờ bị cắt, nhưng mỗi ký tự nó
-        # chiếm là một ký tự lấy khỏi phần đuôi — và đuôi là chỗ luật sàn nằm. Bản đầu dài
-        # 58 ký tự làm `howlong` ở mức siết 3 mất LUẬT SÀN; cổng selftest chặn ngay.
-        # Đúng §17.6: hàm vừa ghép vừa tự cắt thì mọi thứ thêm vào đầu đều lấy từ đuôi.
-        "a black ink line drawing of " + ve + mt + ", ink on kraft paper,",   # 1. CHÍNH CẢNH
-        KEP_GU + ",",              # 1b. kẹp phong cách ngắn — xem `KEP_GU`
+        # `KEP_GU` KHÔNG còn ở đây — xem lý do trong khối `_bat_buoc` bên dưới.
         _khoa(ma, ve).rstrip(),    # 2. khoá nhân vật (rỗng nếu cảnh không có người)
         # 3. chính cảnh của nhịp này — CÓ NEO PHONG CÁCH DÁN NGAY TRƯỚC CHỦ THỂ.
         #
@@ -883,11 +926,9 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
         #
         # Nay: mọi luật NGẮN đứng trước, khối phong cách dài đứng cuối — nếu phải cắt thì cắt
         # đúng thứ đã có bản rút gọn ở `KEP_GU`.
-        SACH + ",",                # 4. bề mặt sạch — câu CẤM CHỮ, ngắn và không được mất
-        khung + ",",               # 5. luật khung: chừa chỗ cho chữ + cấm bố cục tròn
-        _luat(ve, doc) + ",",      # 6. luật sàn — ba mệnh lệnh bắt buộc (§7)
-        _bang_mau(ma) + ",",      # 7. BẢNG MÀU KÊNH — xem `_bang_mau`
-        _sac_thai(ma) + ",",       # 8. sắc thái riêng của kênh
+        # `SACH`/`khung`/`_luat`/`_bang_mau`/`_sac_thai` KHÔNG nằm trong danh sách này nữa —
+        # cả năm đều tự nhận là "không được mất" ngay trong chú thích của chính chúng, nên
+        # cả năm đều thuộc nhóm bắt buộc — xem lý do ngay dưới.
         # ── MỘT LUẬT LUÔN BỊ CẮT LÀ MỘT LUẬT KHÔNG TỒN TẠI  (4/9/2026) ────────────────
         # Neo bối cảnh Mỹ từng là mục cuối. Đo trên 168 prompt của 18 kênh: **153 cái bị
         # cắt mất nó** — tức nó gần như chưa bao giờ được gửi đi, trong khi vẫn chiếm chỗ
@@ -895,31 +936,106 @@ def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool 
         # Nay ba chữ "an everyday American setting" nằm trong `KEP_GU` — khối đứng ngay sau
         # chủ thể và chưa bao giờ bị cắt. Rẻ hơn 80 ký tự và thật sự tới nơi.
     ]
-    ra = ""
-    for x in phan:
-        if not x:
-            continue
-        thu = (ra + " " + x).strip()
-        # ── TRỪ LỚP BỌC MÀ `_cf_flux_image` THÊM VÀO  (3/9/2026) ────────────────────────
-        # Trần 2048 là của chuỗi **gửi đi**, không phải của chuỗi hàm này ghép ra. `_cf_flux_image`
-        # còn bọc thêm `"Absolutely no text… A <style> of: {prompt}. Textless image."` — **159 ký
-        # tự**. Nên chốt ở 2048 là chốt sai chuỗi: prompt 1989 ký tự lọt cổng rồi bị CF trả
-        # `HTTP 400 Length of '/prompt' must be <= 2048`, đúng lúc vừa viết lại phong cách.
-        #
-        # Cùng bài học 13.7: *cổng phải nhận CHÍNH thứ sắp giao đi và ghép bằng CHÍNH phép ghép
-        # mà bên kia sẽ chạy* — không mô hình hoá lại. Ở đây tôi chốt trên bản nháp, còn bên kia
-        # gửi bản đã bọc.
-        if len(thu) > 2048 - 175:      # 159 lớp bọc + 16 đệm cho `style` dài hơn
-            # ── CẮT THÌ PHẢI KHAI RA  (4/9/2026) ────────────────────────────────────────
-            # Bản trước `break` trong im lặng, và §14.13 đã trả giá đúng cho hình dạng này:
-            # *khi một hàm vừa ĐO vừa TỰ SỬA thì cổng đặt sau nó luôn xanh*. Ở đây tệ hơn một
-            # bậc — không có cổng nào cả, nên một mệnh đề của prompt biến mất khỏi bản gửi đi
-            # mà không ai duyệt việc bỏ mệnh đề nào. Đo được **30% tổ hợp** đang sát trần.
-            # Nay ghi lại vế bị bỏ; `sinh()` in ra một lần mỗi tập, và selftest đọc cờ này.
-            _DA_CAT.append(x[:48])
-            break                  # cắt từ đuôi: vế càng sau càng ít quan trọng
-        ra = thu
-    return ra
+    # ── TRỪ LỚP BỌC MÀ `_generate_image_ai` THÊM VÀO  (3/9, vá lại 5/9/2026) ─────────────
+    # Trần 2048 là của chuỗi **gửi đi**, không phải của chuỗi hàm này ghép ra.
+    #
+    # Bản 3/9 trừ cứng 175 (159 ký tự bọc CF/Gemini + 16 đệm) — đúng cho lúc `sinh()` còn
+    # gọi THẲNG `_cf_flux_image`. Từ khi nó đổi sang gọi `_generate_image_ai` (hồ CF+Gemini
+    # gộp — xem `sinh()`), hàm ấy còn tự nối THÊM hai lớp TRƯỚC lớp bọc kia: `_bo_mat_chu`
+    # (tối đa ~159 ký tự, khi prompt gọi tên thứ có mặt chữ) rồi `_salt_prompt` (~172 ký tự,
+    # LUÔN LUÔN). Mức trừ cũ chỉ đủ cho MỘT trong BA lớp — đo thật một lượt dựng kênh
+    # `howlong`: **15/15 nhịp gửi CF đều trả `400 Length of '/prompt' must be <= 2048`**.
+    #
+    # Gọi thẳng `datastory_ci.tran_boc_toi_da(gu)` thay vì chép một hằng số khác: đúng bài
+    # học 13.7 (*cổng phải nhận CHÍNH thứ sắp giao đi và ghép bằng CHÍNH phép ghép mà bên
+    # kia sẽ chạy*) — ba lớp bọc kia đổi câu chữ thì trần ở đây tự cập nhật theo, không cần
+    # nhớ ra mà sửa một hằng số thứ hai.
+    try:
+        import datastory_ci as _DSb
+    except Exception:
+        _DSb = None
+
+    # ── KEP_GU + SACH + KHUNG + LUẬT SÀN + BẢNG MÀU + SẮC THÁI: KHÔNG ĐƯỢC CẮT  (5/9/2026) ──
+    # Sáu câu NGẮN nhưng QUAN TRỌNG NHẤT. Ba vòng đo liên tiếp mới lộ hết:
+    #   vòng 1 — chỉ kéo `_luat`/`_bang_mau`/`_sac_thai` ra: `khung` hứng chỗ hụt, cắt 54%.
+    #   vòng 2 — kéo thêm `SACH`+`khung` ra: `KEP_GU` hứng chỗ hụt, cắt 36% (177/496).
+    #   vòng 3 — SOI KHUNG THẬT của bản pilot đầu tiên mới thấy hậu quả: ba cảnh CF vẽ ra
+    #   MỘT PHONG CÁCH KHÁC HẲN — minh hoạ tả thực có bóng đổ, có trăng sao, không còn là
+    #   "flat 2D cartoon, đầu hình oval trắng, không bóng đổ" — đúng kiểu lỗi "trộn hai
+    #   phong cách trong một video" đã bị phàn nàn ở phiên trước. Số đo (36% cắt) đọc trên
+    #   giấy nghe không nghiêm trọng; nhìn ẢNH THẬT mới thấy nó hỏng NẶNG — đúng bài học
+    #   §16.1: điểm số/tỉ lệ phần trăm không nói được "đẹp hay xấu", phải soi khung mới biết.
+    #
+    # Cả sáu câu đều tự nhận "không được mất" ngay trong chú thích của chính chúng ở các
+    # bản sửa trước — nên cả sáu đều thuộc nhóm này.
+    #
+    # Kéo ra khỏi danh sách vừa ghép vừa cắt, trừ thẳng chỗ của chúng khỏi ngân sách phần
+    # CÒN LẠI (giờ chỉ còn: câu tả cảnh + khoá nhân vật — đúng phần NỘI DUNG BIẾN ĐỘNG theo
+    # từng nhịp, khác với sáu câu LUẬT/PHONG CÁCH cố định ở trên), rồi nối vào ở CUỐI sau
+    # khi phần còn lại đã tự cắt xong — cách duy nhất bảo đảm "không hạn ngạch nào cả" bằng
+    # TOÁN, không bằng may rủi thứ tự (đúng lỗi §14.13: *"một luật luôn bị cắt là một luật
+    # không tồn tại"* — `_sac_thai` từng đứng cuối danh sách cuttable và bị cắt 496/496 tổ
+    # hợp, tức chưa từng thật sự được gửi đi).
+    _luat_txt = _luat(ve, doc)
+    _bm_txt = _bang_mau(ma)
+    _st_txt = _sac_thai(ma)
+    _bat_buoc = (", ".join(x for x in (KEP_GU, SACH, khung, _luat_txt, _bm_txt, _st_txt) if x) + ","
+                 if any((KEP_GU, SACH, khung, _luat_txt, _bm_txt, _st_txt)) else "")
+    _du_bat_buoc = (1 + len(_bat_buoc)) if _bat_buoc else 0    # +1 cho dấu cách sẽ nối
+
+    def _ghep(tran_boc: int) -> str:
+        budget_tong = 2048 - tran_boc - _du_bat_buoc
+        canh = _canh_vua(max(0, budget_tong))
+        if canh != _canh_day:
+            # Câu cảnh phải RÚT NGẮN — khai ra để `sinh()`/selftest biết (cùng cờ với các
+            # vế khác, dù đây là CẮT chứ không phải BỎ HẲN).
+            _DA_CAT.append(("[cảnh bị rút ngắn] " + _canh_day)[:48])
+        # ── 6/9/2026 — KEP_GU DÁN NGAY SAU CHỦ THỂ, KHÔNG PHẢI CUỐI CÂU  ────────────────
+        # Đưa KEP_GU vào `_bat_buoc` (5/9) bảo đảm nó KHÔNG BAO GIỜ bị cắt — nhưng đẩy nó
+        # xuống CUỐI câu, đúng chỗ mô hình khuếch tán đọc NHẸ NHẤT (chính comment ở đầu
+        # `_prompt()` đã nói: *"Mô hình khuếch tán đọc phần đầu nặng ký hơn"*). Soi khung
+        # thật: ảnh CF vẫn ra minh hoạ bút mực tả thực — đầu người có tóc/mặt chi tiết,
+        # không phải "oval trắng, hai chấm mắt" như KEP_GU đặt hàng. Khoá cứng NỘI DUNG
+        # không cứu được khi VỊ TRÍ làm nó bị át bởi 300+ ký tự tả cảnh đứng trước.
+        # Nối `_bat_buoc` (KEP_GU+SACH+khung+luật) ngay sau câu cảnh — trước cả `_khoa` —
+        # để nó về đúng vị trí đã có ý định ban đầu ("neo phong cách dán ngay trước chủ
+        # thể... rồi khoá nhân vật, rồi phong cách" — nay: chủ thể, PHONG CÁCH, khoá).
+        ra = f"{canh} {_bat_buoc}".strip() if _bat_buoc else canh
+        for x in phan:
+            if not x:
+                continue
+            thu = (ra + " " + x).strip()
+            if len(thu) > 2048 - tran_boc:
+                # ── CẮT THÌ PHẢI KHAI RA  (4/9/2026) ────────────────────────────────────
+                # Bản trước `break` trong im lặng, và §14.13 đã trả giá đúng cho hình dạng
+                # này: *khi một hàm vừa ĐO vừa TỰ SỬA thì cổng đặt sau nó luôn xanh*. Ở đây
+                # tệ hơn một bậc — không có cổng nào cả, nên một mệnh đề của prompt biến
+                # mất khỏi bản gửi đi mà không ai duyệt việc bỏ mệnh đề nào.
+                # Nay ghi lại vế bị bỏ; `sinh()` in ra một lần mỗi tập, selftest đọc cờ này.
+                _DA_CAT.append(x[:48])
+                break              # cắt từ đuôi: vế càng sau càng ít quan trọng
+            ra = thu
+        return ra
+
+    # ── HAI VÒNG: THỬ MỨC SIẾT NHẸ TRƯỚC, CHỈ SIẾT NẶNG KHI THẬT SỰ CẦN  (5/9/2026) ─────
+    # `_bo_mat_chu` (bên `datastory_ci`) chỉ nối thêm 159 ký tự khi prompt gọi tên một thứ
+    # CÓ MẶT CHỮ (biển hiệu, giấy tờ, xe cộ…) — không phải MỌI prompt. Nhưng `nen_gt` phải
+    # QUYẾT trước khi biết chuỗi cuối cùng trông ra sao, nên vòng đầu cắt theo giả định
+    # NHẸ (không tính 159 ký tự ấy), rồi tự kiểm bằng chính `datastory_ci.co_mat_chu()` —
+    # nếu bản vừa ghép ra THẬT SỰ kích nó, cắt lại lần hai với mức dự phòng ĐẦY ĐỦ. Không
+    # làm thế thì mọi prompt đều bị cắt bớt cho một lớp bọc mà phần lớn chúng chẳng dùng
+    # tới (đo được: siết cứng theo trường hợp xấu nhất đẩy tỉ lệ mất `KEP_GU`/`_khoa` lên
+    # tới 40% — hỏng nặng hơn cả cái đang được phòng).
+    if _DSb is not None:
+        _boc_nhe = _DSb.tran_boc_toi_da(STYLE_NGAN, co_the_co_mat_chu=False)
+        ket = _ghep(_boc_nhe)
+        if _DSb.co_mat_chu(ket):
+            _DA_CAT.clear()
+            ket = _ghep(_DSb.tran_boc_toi_da(STYLE_NGAN, co_the_co_mat_chu=True))
+        return ket
+    # Không import được `datastory_ci` — quay về mức dự phòng ĐẦY ĐỦ cho an toàn (đo thật
+    # với `STYLE_NGAN`: 473 ký tự).
+    return _ghep(473)
 
 
 # ══ SỔ CẠNH ẢNH — MỘT TỆP JSON NHỎ ĐI KÈM MỖI ẢNH  (4/9/2026) ═══════════════════════════════
@@ -988,7 +1104,7 @@ def _ten(ma: str, idx: int, i: int) -> str:
     return f"{ma}_{idx:04d}_{i:02d}.jpg"
 
 
-def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str = "",
+def sinh(ma: str, idx: int, i: int, ve: str, tam_trang: str = "", gu: str = "",
          doc: bool = True, moc: float = None) -> str:
     """Vẽ một cảnh. Trả đường dẫn tương đối trong `public/`, hoặc "" nếu không vẽ được.
 
@@ -1034,9 +1150,20 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
     #
     # Cạn hồ là trạng thái của CẢ TIẾN TRÌNH, không phải của một cảnh. Biết rồi thì đi thẳng
     # xuống tầng nền vẽ bằng code — tầng ấy không gọi mạng nên không bao giờ hỏng.
-    if getattr(sinh, "_can", 0):
-        sinh._can += 1
+    #
+    # ── 5/9/2026 — BỎ CỜ NHỚ RIÊNG, DÙNG THẲNG `_ai_candidates`  ────────────────────────
+    # Cờ cũ chỉ nhớ "CF đã cạn" (đặt bởi `CanThat`, chỉ CF mới ném). Từ khi `sinh()` gọi
+    # `DS._generate_image_ai` (hồ CF + Gemini gộp, xem dưới), hồ nào cạn cũng phải chặn —
+    # và `datastory_ci._ai_candidates` đã tự nhớ khoá nào đang nghỉ (`_ve_chet`, có hạn),
+    # tra trong bộ nhớ nên không tốn mạng. Giữ thêm một cờ sticky ở đây là NHỚ HAI LẦN
+    # cùng một việc, và cờ sticky còn tệ hơn: khoá 429 hết nghỉ giữa tập vẫn bị khoá cứng.
+    import datastory_ci as _DSc
+    if not _DSc._ai_candidates(""):
+        sinh._can = getattr(sinh, "_can", 0) + 1
         sinh._can_tap = getattr(sinh, "_can_tap", 0) + 1
+        if sinh._can == 1:
+            print(f"     🪫 nhịp {i}: cả hồ CF+Gemini đều cạn/đang nghỉ — từ đây các cảnh "
+                  f"còn lại dùng nền vẽ bằng code (sẽ đếm tổng ở cuối tập)")
         return ""
     # ── TRẦN ẢNH AI MỖI LUỒNG MỖI LƯỢT  (3/9/2026) ─────────────────────────────────────────
     # Anh: *"nhiều key thế sao cạn vậy, tìm nguyên nhân."* Đo xong thì thủ phạm là **số vòng
@@ -1073,11 +1200,21 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
         return ""
 
     import datastory_ci as DS
-    from xoay_key import goi_xoay, CanThat
 
-    # (Đã bỏ seed: endpoint FLUX của CF trả HTTP 400 khi có `seed`. `hat0` chỉ còn dùng để
-    #  xoay khoá cho đều, không còn hứa hẹn tái lập ảnh.)
-    hat0 = (sum(ord(c) for c in ma) * 7919 + idx * 131 + i) % 4294967295
+    # (Đã bỏ seed: endpoint FLUX của CF trả HTTP 400 khi có `seed`. Khoá không còn xoay ở
+    #  đây nữa — `_generate_image_ai` tự xoay theo hồ đã nạp ở `set_ai_pool` bên `sinh_tap`.)
+
+    # ── 5/9/2026 — HỒ GỘP CF + GEMINI, KHÔNG CÒN RIÊNG CF  ──────────────────────────────
+    # Anh: *"ảnh kết hợp cả cf + gemini nha"*. Cơ chế NÀY ĐÃ CÓ SẴN trong `datastory_ci.py`
+    # (`set_ai_pool` + `_ai_candidates` + `_generate_image_ai`) và đang chạy thật ở nhiều
+    # chỗ khác (`kich_hai.py`, `kich_v2.py`) — CF đứng trước (rẻ, ~172 ảnh/khoá/ngày), cạn
+    # mới chạm Gemini (rộng hơn, ~500 ảnh/khoá/ngày, quota TÁCH RIÊNG khỏi khâu viết chữ,
+    # và bộ này viết kịch bản 100% bằng code nên không tranh hạn mức với ai). Bộ giải thích
+    # trước nay tự dựng một đường CHỈ-CF riêng (`goi_xoay`+`_cf_flux_image`) — đúng luật
+    # 13.1/17.1: *"cơ chế đã có sẵn — hỏi cái gì CHẠY nó trước khi viết cái mới"*, nên nối
+    # vào đường chung thay vì giữ hai đường song song (họ lỗi số 6, vá một nhánh để nguyên
+    # nhánh kia). `set_ai_pool(keys, channel=ma)` được gọi Ở ĐẦU `sinh_tap()` — ở đây chỉ
+    # cần gọi `_generate_image_ai(..., None, ...)` để nó DÙNG hồ đã nạp.
 
     # ── LOẠI VÌ CÓ CHỮ THÌ VẼ LẠI, ĐỪNG BỎ ──────────────────────────────────────────────
     # Mẻ trước kênh `realcost` chỉ được 4/7 cảnh. Không phải API hỏng — cổng `_co_chu` bắt
@@ -1092,26 +1229,16 @@ def sinh(ma: str, idx: int, i: int, ve: str, keys, tam_trang: str = "", gu: str 
     # cả mạng hỏng). Chỉ siết prompt khi trượt vì chất vẽ; mạng hỏng thì prompt không có tội.
     _siet = 0
     for lan in range(4):
-        def _thu(kk, _s=_siet):
-            return DS._cf_flux_image(_prompt(ve, tam_trang, gu, ma, doc, siet=_s), dest, kk) and \
-                os.path.getsize(dest) > 20000
-
-        try:
-            ok, _tk = goi_xoay(keys, _thu, hat=hat0 + lan)
-        except CanThat:
-            # ── CẠN HẠN MỨC PHẢI NÓI RA, VÀ NÓI MỘT LẦN  (2/9/2026) ─────────────────────
-            # Đo trên lượt 33631376874: bản dài vẽ được **6/42 cảnh**, tức 36 cảnh rơi về nền
-            # vẽ bằng code — mà log chỉ có 8 dòng lỗi. 36 ảnh biến mất KHÔNG để lại một dòng
-            # nào, vì cả ba nhánh thoát của hàm này đều `return ""` trong im lặng.
-            #
-            # Hậu quả không phải "thiếu log": chất lượng tập tụt hẳn (chấm 78/100 và 84/100
-            # trên sàn 90) mà không ai biết vì sao, nên người đọc đi tìm lỗi ở khâu dựng —
-            # trong khi lỗi nằm ở khâu vẽ, và nằm ở một chỗ không nói gì.
+        if lan and not DS._ai_candidates(""):
+            # Cạn NGAY TRONG lúc thử lại một cảnh (hồ vừa hết ở lượt trước) — nói một lần,
+            # đừng gọi `_generate_image_ai` thêm để nó tự in một dòng cảnh báo trùng ý.
             sinh._can = getattr(sinh, "_can", 0) + 1
             if sinh._can == 1:
-                print(f"     🪫 nhịp {i}: CF cạn hạn mức — từ đây các cảnh còn lại dùng nền "
-                      f"vẽ bằng code (sẽ đếm tổng ở cuối tập)")
+                print(f"     🪫 nhịp {i}: cả hồ CF+Gemini đều cạn/đang nghỉ — từ đây các cảnh "
+                      f"còn lại dùng nền vẽ bằng code (sẽ đếm tổng ở cuối tập)")
             return ""
+        ok = DS._generate_image_ai(_prompt(ve, tam_trang, gu, ma, doc, siet=_siet), dest,
+                                    None, style=STYLE_NGAN) and os.path.getsize(dest) > 20000
         if not ok:
             sinh._hong = getattr(sinh, "_hong", 0) + 1
             continue
@@ -1171,9 +1298,20 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
              mau_chu: str = "", mau_nen: str = "") -> int:
     """Vẽ mọi cảnh của một tập. Trả số ảnh vẽ được.
 
-    Chạy TUẦN TỰ chứ không song song: `goi_xoay` xoay khoá theo trạng thái chung, chạy song
-    song thì nhiều luồng cùng đâm vào một khoá đã 429 và cả mẻ hỏng theo. Chậm hơn nhưng đúng.
+    Chạy TUẦN TỰ chứ không song song: hồ khoá xoay theo trạng thái chung (`datastory_ci._AI_POOL`),
+    chạy song song thì nhiều luồng cùng đâm vào một khoá đã 429 và cả mẻ hỏng theo. Chậm hơn nhưng đúng.
     """
+    # NẠP HỒ CF+GEMINI MỘT LẦN MỖI TẬP (5/9/2026) — cửa DUY NHẤT `sinh()` đi qua để lấy khoá
+    # là `datastory_ci._ai_candidates`/`_generate_image_ai`, và cả hai đọc từ `_AI_POOL` do
+    # `set_ai_pool` nạp. Không gọi ở đây thì hồ rỗng, `_ai_candidates` luôn trả `[]`, và MỌI
+    # cảnh của bộ giải thích rơi về nền vẽ code — đúng kiểu hỏng câm quen thuộc của bộ này.
+    # Xoay theo TÊN KÊNH (giống 16 chỗ gọi khác) để 18 luồng song song không cùng bốc một khoá.
+    try:
+        import datastory_ci as _DSp
+        _DSp.set_ai_pool(keys, ma)
+    except Exception as _e:
+        print(f"   ⚠ nạp hồ ảnh AI hỏng ({type(_e).__name__}: {str(_e)[:60]}) — "
+              f"cảnh sẽ dùng nền vẽ bằng code")
     gu = GU_KENH.get(KENH_GU.get(ma, "que"), GU)
     # Đặt lại bộ đếm lý do MỖI TẬP — không đặt lại thì con số cộng dồn qua cả short lẫn long
     # và bản tổng kết nói về một tập khác với tập đang chạy.
@@ -1205,7 +1343,7 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
         # một chỗ sót ở đây là tiền thật, và nó sẽ không báo gì.
         if not ve or x.get("canh_ve"):
             continue
-        rel = sinh(ma, idx, i, ve, keys, x.get("tam_trang", ""), gu, doc, moc)
+        rel = sinh(ma, idx, i, ve, x.get("tam_trang", ""), gu, doc, moc)
         if rel:
             x["nenAnh"] = rel
             # Đo ngay lúc ảnh còn trong tay — xem `sang_day`. Engine đọc để chọn màu phụ đề.
@@ -1257,17 +1395,18 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
             if d is None or abs(d - moc) <= NGUONG_LECH:
                 continue
             print(f"     ↻ nhịp {i}: chất vẽ {d:.2f} lệch khỏi mốc {moc:.2f} — vẽ lại")
-            rel2 = sinh(ma, idx, i, ve, keys, nhip[i].get("tam_trang", ""), gu, doc, moc)
+            rel2 = sinh(ma, idx, i, ve, nhip[i].get("tam_trang", ""), gu, doc, moc)
             if rel2:
                 nhip[i]["nenAnh"] = rel2
                 _sd2 = sang_day(os.path.join(THU, os.path.basename(rel2)))
                 if _sd2 >= 0:
                     nhip[i]["sangDay"] = _sd2
-    # Ghi sổ sức khoẻ khoá TỪ LƯỢT DÙNG THẬT — xem `xoay_key.ghi_trang_thai`.
-    # Đặt ở cuối tập, không đặt sau mỗi ảnh: mỗi tập một lượt ghi lô thay vì hàng trăm.
-    try:
-        import xoay_key as _XK
-        _XK.ghi_trang_thai(os.environ.get("OWNER_UID", ""))
-    except Exception:
-        pass
+    # ── 5/9/2026 — BỎ LƯỢT XẢ `_QUAN_SAT`, ĐÃ TRỞ THÀNH LỆNH RỖNG ──────────────────────
+    # Sổ này gom quan sát của `goi_xoay` (chỉ CF) rồi xả LÔ vào cuối tập. Từ khi `sinh()`
+    # đổi sang `DS._generate_image_ai` (xem trên), khâu vẽ ảnh không còn gọi `goi_xoay` —
+    # nó ghi trạng thái NGAY LÚC DÙNG, TỪNG KHOÁ MỘT, qua `datastory_ci.bao_key` ->
+    # `firestore_bridge.mark_key_alive` (đúng hàm khắc `dead_since`/`dead_kind`, phân biệt
+    # rõ "cạn hạn mức" với "chết hẳn" — điều mà lượt xả lô cũ KHÔNG làm, vì nó ghi thẳng
+    # bằng `db.batch().set()` mà không đụng tới `dead_since`). Gọi `ghi_trang_thai` ở đây
+    # giờ luôn gặp `_QUAN_SAT` rỗng và `return 0` câm lặng — giữ lại là giữ một lệnh chết.
     return n

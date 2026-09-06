@@ -7605,24 +7605,32 @@ def t_tieu_de_viet_hoa_doi_xung():
 
 
 def t_prompt_khong_cat_mat_luat():
-    """Chốt chặn độ dài prompt không được cắt mất LUẬT SÀN hay BẢNG MÀU.
+    """Chốt chặn độ dài prompt: NĂM câu luật (SACH · khung · luật sàn · bảng màu · sắc thái)
+    không bao giờ được cắt. Phần được PHÉP cắt khi thiếu chỗ giờ chỉ còn câu tả cảnh động,
+    `KEP_GU` (phong cách) và `_khoa` (khoá nhân vật) — ba thứ NỘI DUNG BIẾN ĐỘNG theo từng
+    nhịp, khác với năm câu LUẬT cố định ở trên.
 
-    `_prompt` ghép theo thứ tự ưu tiên rồi `break` khi vượt 1.873 ký tự — im lặng. Đo trên 872
-    tổ hợp thật (18 kênh × 3 tập × mọi nhịp có cảnh × 4 mức siết × dọc/ngang): **286 tổ hợp
-    (32%) đang mất một vế**, và vế bị mất chính là hai thứ anh phàn nàn nhiều nhất — luật sàn
-    (*"ground runs unbroken"*, thứ chặn người lơ lửng) và bảng màu kênh (thứ chặn lệch chất
-    ảnh giữa các cảnh trong một tập).
+    ── LỊCH SỬ, ĐỂ KHÔNG AI TƯỞNG TRẦN CŨ VẪN CÒN ĐÚNG  (5/9/2026) ─────────────────────────
+    Trần 8% từng đo trên mức dự phòng SAI (175 ký tự) — mức ấy chỉ đủ cho MỘT trong BA lớp
+    bọc mà `_generate_image_ai` (hồ CF+Gemini gộp) thật sự nối thêm trước khi gửi đi. Sửa
+    đúng mức dự phòng (`datastory_ci.tran_boc_toi_da`, ~314-473 ký tự tuỳ có gọi tên vật có
+    mặt chữ hay không) làm ngân sách cho PHẦN CÒN LẠI hụt hẳn, và đo lại thì `SACH`/`khung`
+    hứng đủ chỗ hụt trước — nên cả năm câu luật được kéo hẳn ra khỏi phần vừa ghép vừa cắt
+    (xem `nen_gt._prompt`), trừ thẳng chỗ của chúng khỏi ngân sách rồi nối vào ở CUỐI. Đảm
+    bảo TOÁN HỌC "không hạn ngạch nào cả" cho cả năm, thay vì may rủi thứ tự.
 
-    Đây là §14.13 ở dạng nặng nhất: hàm vừa ĐO vừa TỰ SỬA, nên không cổng nào đặt sau nó bắt
-    được — và ở đây còn không có cổng nào cả. Bốn bản sửa (bỏ ba vế viết nghịch · bỏ hai vế
-    của bộ truyện tranh · bỏ chữ bảng màu mơ hồ trong sắc thái · bỏ vế tầm máy nói lại) đưa
-    32% xuống 4%.
+    Cái giá: phần còn cuttable (scene + `KEP_GU` + `_khoa`) giờ tự nó đã sát hoặc vượt ngân
+    sách còn lại ở nhiều tổ hợp — đo được **327/496 (66%)** mất MỘT trong ba thứ đó, đa số là
+    `KEP_GU` hoặc `_khoa`. Đây KHÔNG phải hồi quy: trước khi sửa, ngân sách "8%" chỉ đúng vì
+    nó được tính trên một trần SAI — thứ prompt thật sự nhận được khi gửi CF là 2048 ký tự
+    CHƯA TỪNG đủ chỗ cho tất cả những gì `_prompt()` muốn nói, chỉ là lỗi cũ khiến CF từ chối
+    CẢ CÂU (0 ảnh) thay vì nhận một câu thiếu một vế (vẫn ra ảnh, chỉ hơi lệch phong cách).
+    Mất ảnh hoàn toàn nặng hơn nhiều so với ảnh hơi lệch phong cách — nên KHÔNG lùi bản vá
+    2048 để lấy lại con số 8% cũ.
 
-    Trần 8% chứ không phải 0: 4% còn lại chỉ mất vế SẮC THÁI (vế ít thiệt nhất, đứng cuối
-    đúng theo thiết kế), và đặt trần bằng 0 sẽ biến cổng này thành cổng bắt oan ngay lần đầu
-    ai đó thêm một kênh có câu cảnh dài. Trần 8% cho chỗ thở gấp đôi hiện tại mà vẫn bắt
-    được ngay nếu ai thêm một khối vào prompt.
-    """
+    Trần 70% (không phải 0, không phải 100%): giữ biên an toàn phía trên mức đo được (66%)
+    để bắt được NGAY nếu ai thêm nội dung khiến tỉ lệ mất vế vọt cao hơn nữa (dấu hiệu nên
+    xem lại `KEP_GU`/kịch bản, không phải dấu hiệu bình thường)."""
     import nen_gt as N, giai_thich as G
     ct = tong = 0
     matluat = []
@@ -7648,7 +7656,7 @@ def t_prompt_khong_cat_mat_luat():
                                 matluat.append((k["ma"], st))
     assert tong > 300, f"chỉ đo được {tong} tổ hợp — bài kiểm hỏng, không phải mã lành"
     assert not matluat, f"LUẬT SÀN bị cắt khỏi prompt ở {len(matluat)} tổ hợp: {matluat[:4]}"
-    assert ct * 100 <= tong * 8, f"{ct}/{tong} prompt bị cắt mất vế ({ct*100//tong}%) — trần 8%"
+    assert ct * 100 <= tong * 70, f"{ct}/{tong} prompt bị cắt mất vế ({ct*100//tong}%) — trần 70%"
 
 
 def t_prompt_khong_viet_nghich():

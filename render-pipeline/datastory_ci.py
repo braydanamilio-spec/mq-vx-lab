@@ -650,13 +650,27 @@ def _bo_mat_chu(prompt: str) -> str:
     hình quay LƯNG lại — vẫn đúng chủ thể, vẫn đọc ra ngay là hồ sơ, mà không còn một mặt phẳng
     nào để máy điền chữ vào.
     Đây là cách duy nhất tôi thử mà không phụ thuộc vào việc mô hình có nghe lời hay không."""
-    t = str(prompt or "")
-    thap = t.lower()
-    if not any(f" {d}" in f" {thap}" or thap.startswith(d) for d in _DANH_TU_CHU):
-        return t
-    return (t + ", seen edge-on from the side or closed and stacked, "
-                "no flat page or screen surface facing the viewer, "
-                "focus on texture edges and shadow rather than any surface")
+    if not co_mat_chu(prompt):
+        return str(prompt or "")
+    return str(prompt) + _MAT_CHU_THEM
+
+
+# ── 5/9/2026 — THIẾU BIÊN TỪ PHÍA SAU  ──────────────────────────────────────────────────
+# Bản cũ dò `f" {d}" in f" {thap}"` — chỉ chặn biên ĐẦU (đứng sau dấu cách), không chặn biên
+# CUỐI — nên "car" khớp cả bên trong "cartoon", "bar" khớp cả bên trong "bare", "bus" khớp cả
+# bên trong "business", "van" khớp cả bên trong "advance". Đo được: `KEP_GU` — khối PHONG
+# CÁCH đứng trong MỌI prompt của bộ giải thích — chứa "cartoon" và "bare oval", nên hàm cũ ĐÃ
+# LUÔN LUÔN nối thêm `_MAT_CHU_THEM` cho 100% prompt, dù cảnh không hề gọi tên một thứ có mặt
+# chữ nào. Cùng họ lỗi §13.9 (gốc từ ngắn cộng `\w*`/thiếu biên là một cái bẫy) — ở đây bẫy là
+# thiếu `\b` phía sau, không phải `\w*` phía sau.
+_RE_MAT_CHU = re.compile(r"\b(?:" + "|".join(re.escape(d) for d in _DANH_TU_CHU) + r")\b")
+
+
+def co_mat_chu(prompt: str) -> bool:
+    """Prompt có gọi tên một thứ CÓ MẶT CHỮ không — public để caller (`nen_gt._prompt`) tự
+    biết TRƯỚC khi gửi liệu `_bo_mat_chu` có nối thêm `_MAT_CHU_THEM` hay không, thay vì luôn
+    giả định trường hợp xấu nhất và cắt bớt nội dung một cách oan uổng cho MỌI prompt."""
+    return bool(_RE_MAT_CHU.search(str(prompt or "").lower()))
 
 
 def _salt_prompt(prompt: str) -> str:
@@ -666,6 +680,42 @@ def _salt_prompt(prompt: str) -> str:
     if not prompt:
         return prompt
     return f"{_bo_mat_chu(prompt)}, {random.choice(_VARY)}, {_CAM_CHU}"
+
+
+# Khối `_bo_mat_chu` cộng thêm nếu prompt gọi tên thứ có mặt chữ — TÁCH THÀNH HẰNG SỐ để
+# `tran_boc_toi_da` đo đúng cùng chuỗi mà `_bo_mat_chu` thật sự nối, không phải một bản chép
+# tay có thể lệch bất cứ lúc nào hàm kia đổi câu chữ.
+_MAT_CHU_THEM = (", seen edge-on from the side or closed and stacked, "
+                 "no flat page or screen surface facing the viewer, "
+                 "focus on texture edges and shadow rather than any surface")
+
+
+def tran_boc_toi_da(style: str = "", co_the_co_mat_chu: bool = True) -> int:
+    """Số ký tự TỐI ĐA mà `_generate_image_ai` sẽ CỘNG THÊM vào một prompt trước khi gửi đi.
+
+    ── VÌ SAO CẦN HÀM NÀY  (5/9/2026) ──────────────────────────────────────────────────────
+    `nen_gt._prompt()` tự cắt câu ở 2048 trừ một mức bù cho lớp bọc CF/Gemini (159 ký tự) —
+    nhưng mức bù ấy được đo hồi `nen_gt.sinh()` còn gọi thẳng `_cf_flux_image`, TRƯỚC KHI nó
+    đổi sang gọi `_generate_image_ai` (hồ CF+Gemini gộp). Hàm này còn tự nối THÊM hai lớp nữa
+    trước khi tới lớp bọc kia: `_bo_mat_chu` (tối đa 159 ký tự, khi prompt gọi tên thứ có mặt
+    chữ) rồi `_salt_prompt` (172 ký tự, LUÔN LUÔN). Đo thật một lượt: khoảng 15/15 nhịp của
+    kênh `howlong` gửi CF đều trả `400 Length of '/prompt' must be <= 2048` — đúng vì mức bù
+    cũ (175) chỉ đủ cho MỘT trong BA lớp bọc đang chồng lên nhau.
+
+    Trả CHÍNH SỐ ĐO, không phải hằng số chép tay: caller gọi hàm này thay vì tự cộng 159+159+
+    172, để nếu `_VARY`/`_CAM_CHU`/`_MAT_CHU_THEM`/câu bọc CF đổi thì trần tự cập nhật theo —
+    đúng luật 13.7 (đo thẳng vật thật, đừng mô hình hoá lại).
+
+    `co_the_co_mat_chu=False`: caller ĐÃ tự kiểm bằng `co_mat_chu()` trên đúng nội dung sắp
+    gửi và biết chắc `_bo_mat_chu` sẽ KHÔNG nối thêm gì — bớt 159 ký tự dự phòng. Mặc định
+    `True` (giả định xấu nhất) vì phần lớn caller gọi hàm này TRƯỚC khi biết nội dung cuối
+    cùng (đang trong lúc cắt để RA nội dung cuối cùng đó — trứng và gà)."""
+    _sty = style or DEFAULT_AI_STYLE
+    boc = (f"Absolutely no text, letters, words, numbers, signage or watermarks "
+           f"anywhere in the image. A {_sty} of: . Textless image.")
+    salt = ", " + max(_VARY, key=len) + ", " + _CAM_CHU
+    mat_chu = len(_MAT_CHU_THEM) if co_the_co_mat_chu else 0
+    return len(boc) + mat_chu + len(salt)
 
 
 # Cờ "đã báo pool cạn" — khai ngay cạnh nơi dùng. Để tận cuối file thì đọc mã phải nhảy

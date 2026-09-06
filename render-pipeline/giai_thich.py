@@ -5596,16 +5596,21 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
         print("   ❌ thiếu mốc — BỎ")
         return ""
 
-    # ── VẼ CẢNH BẰNG CF ─────────────────────────────────────────────────────────────────
+    # ── VẼ CẢNH BẰNG CF + GEMINI  (5/9/2026) ────────────────────────────────────────────
     # Chạy TRƯỚC render, không trong lúc render: một ảnh hỏng thì chỉ nhịp ấy rơi về nền vẽ
     # bằng code, chứ không làm cả tập chết giữa chừng. Đây là bài học bốn tầng nền của bộ
     # truyện tranh — thứ gì gọi mạng phải có tầng không gọi mạng đứng dưới.
+    #
+    # Trước đây lọc CHỈ giữ khoá `cf:` — khoá Gemini (`AIza...`, không có tiền tố) đọc được
+    # từ `keys_cuc_bo()` (biến `GEMINI_KEYS`/`.keys.local`) vẫn nằm trong danh sách trả về,
+    # rồi bị vứt NGAY Ở ĐÂY trước khi tới `nen_gt`. Bộ này viết kịch bản 100% bằng code (0
+    # lượt Gemini dùng cho chữ), nên 68 khoá Gemini nằm không hoàn toàn — trong khi hồ ảnh
+    # ghép CF+Gemini (`datastory_ci.set_ai_pool`) đã chạy thật ở các bộ khác. Anh: *"ảnh kết
+    # hợp cả cf + gemini nha"* — bỏ lọc, để `nen_gt.sinh_tap` tự nạp cả hai vào một hồ.
     try:
         import the_he_2 as T2
         import nen_gt
-        _ks = [] if os.environ.get("GT_KHONG_CF") else [
-               k for k in (T2.keys_cuc_bo() or [])
-               if str(k if isinstance(k, str) else k.get("key", "")).startswith("cf:")]
+        _ks = [] if os.environ.get("GT_KHONG_CF") else (T2.keys_cuc_bo() or [])
         if _ks:
             _mk = MAU_KENH.get(ma, {})
             # ĐÃ CÓ ẢNH SẴN THÌ KHÔNG GỌI CF. Nhịp cắt ra từ bản dài mang theo `nenAnh` của
@@ -5733,14 +5738,12 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False,
              "nenTrang": mk["nen"], "chuTrang": mk["chu"],
              "dai": dai, "doc": doc}
     _ = (hook, hook_phu)   # thẻ hook đã bỏ theo yêu cầu; giữ biến để bộ sinh không phải sửa
-    # Xả sổ sức khoẻ khoá của CẢ BA NHÀ (cf ở `nen_gt`, gemini/groq ở `key_manager`) — đặt ở đây
-    # vì khâu VIẾT KỊCH BẢN dùng gemini/groq mà không đi qua `sinh_tap`, nên nếu chỉ xả trong ấy
-    # thì 173 khoá của hai nhà kia vẫn không bao giờ được ghi.
-    try:
-        import xoay_key as _XK
-        _XK.ghi_trang_thai(os.environ.get("OWNER_UID", ""))
-    except Exception:
-        pass
+    # ── 5/9/2026 — BỎ LƯỢT XẢ `_QUAN_SAT`  ──────────────────────────────────────────────
+    # Chú thích cũ ở đây nói "khâu viết kịch bản dùng gemini/groq" — SAI ngay từ đầu, vì
+    # bộ này viết kịch bản 100% bằng code, chưa từng `import key_manager`. Nguồn duy nhất
+    # từng nạp sổ này là `goi_xoay` (CF) bên `nen_gt.sinh()`, và hàm ấy đã đổi sang
+    # `DS._generate_image_ai` (ghi trạng thái thẳng qua `bao_key`/`mark_key_alive`, không
+    # qua sổ lô này nữa) — xem `nen_gt.sinh_tap`. Gọi ở đây giờ luôn gặp sổ rỗng.
     pj = os.path.join(GOC, "out", f"v9_{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
     io.open(pj, "w", encoding="utf-8").write(json.dumps(props, ensure_ascii=False))
