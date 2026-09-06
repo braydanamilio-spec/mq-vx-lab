@@ -93,6 +93,22 @@
   {
    "ten": "Oren",
    "ta": "45-year-old man, greying sideburns, maroon lab coat, pocket notebook, inquisitive"
+  },
+  {
+   "ten": "Petra",
+   "ta": "19-year-old woman, black box braids, olive hoodie over a white tee, black cargo trousers, red canvas shoes, tablet, quick"
+  }
+ ],
+ "hiddenfee": [
+  {
+   "ten": "Tobias",
+   "ta": "62-year-old man, bald with a white beard, rust cardigan over a cream shirt, dark trousers, wooden pencil behind the ear, unhurried bookkeeper"
+  }
+ ],
+ "howmuch": [
+  {
+   "ten": "Suri",
+   "ta": "27-year-old woman, dark hair in a neat bob, navy hoodie over a white tee, olive trousers, canvas shoes, hand tally counter, counts out loud"
   }
  ]
 }

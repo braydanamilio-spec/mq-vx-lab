@@ -192,6 +192,14 @@
    "toc": "#8C4A2F",
    "kieuToc": "duoi_ngua",
    "kieuAo": "somi"
+  },
+  {
+   "ao": "#2C3E50",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#4A3728",
+   "kieuToc": "bob",
+   "kieuAo": "hoodie"
   }
  ],
  "whatif": [
@@ -587,7 +595,7 @@
    "quan": "#3A3A3A",
    "toc": "#8C4A2F",
    "kieuToc": "bob",
-   "kieuAo": "cardigan"
+   "kieuAo": "hoodie"
   },
   {
    "ao": "#3FA46A",
@@ -596,6 +604,15 @@
    "toc": "#8A8F94",
    "kieuToc": "ngan",
    "kieuAo": "somi"
+  },
+  {
+   "ao": "#B5542E",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#F2F2F2",
+   "kieuToc": "trocs",
+   "kieuAo": "cardigan",
+   "rau": "de"
   }
  ],
  "yearsof": [
@@ -893,6 +910,14 @@
    "kieuToc": "roi",
    "kieuAo": "somi",
    "rau": "quai"
+  },
+  {
+   "ao": "#6B7A45",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#2A2A2A",
+   "kieuToc": "duoi_ngua",
+   "kieuAo": "hoodie"
   }
  ]
 }
