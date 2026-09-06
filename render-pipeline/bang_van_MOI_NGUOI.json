@@ -1,0 +1,1374 @@
+{
+ "MOI_NGUOI": [
+  [
+   "everyone sang a chorus together",
+   "nguoi",
+   "a vast stadium filled with swirling clouds of vibrating air, rippling across the empty seats"
+  ],
+  [
+   "everyone clapped their hands simultaneously",
+   "nguoi",
+   "a quiet auditorium filled with concentric rings of resonant waves echoing off polished walls"
+  ],
+  [
+   "everyone whistled a tune at once",
+   "nguoi",
+   "an open field covered in floating musical notes drifting above the grass and sky"
+  ],
+  [
+   "everyone shouted a greeting simultaneously",
+   "nguoi",
+   "a bustling market square filled with bright bursts of audible color swirling above stalls"
+  ],
+  [
+   "everyone laughed loudly at once",
+   "nguoi",
+   "a large theater lobby filled with shimmering giggle ripples bouncing off marble columns"
+  ],
+  [
+   "everyone yodeled on a hill simultaneously",
+   "nguoi",
+   "a rolling meadow filled with echoing mountain calls bouncing off distant peaks"
+  ],
+  [
+   "everyone chanted a mantra at once",
+   "nguoi",
+   "a serene garden terrace filled with rhythmic pulse circles glowing above stone tiles"
+  ],
+  [
+   "everyone sang a lullaby in unison",
+   "nguoi",
+   "a cozy cabin interior filled with warm melodic mist curling around wooden beams"
+  ],
+  [
+   "everyone dropped bottles simultaneously",
+   "nguoi",
+   "a beach shoreline littered with colorful glass bottles sparkling among the sand dunes"
+  ],
+  [
+   "everyone placed paper in bins",
+   "nguoi",
+   "a suburban street lined with overflowing paper recycling containers spilling crisp sheets onto the curb"
+  ],
+  [
+   "everyone dumped food scraps",
+   "nguoi",
+   "a community garden compost heap swelling with vegetable peels, fruit skins, and leafy waste"
+  ],
+  [
+   "everyone flushed plastic bags",
+   "nguoi",
+   "a city park pond surface dotted with floating translucent bags drifting among lily pads"
+  ],
+  [
+   "everyone tossed old tires",
+   "nguoi",
+   "an industrial lot scattered with black rubber tires piled in chaotic circles"
+  ],
+  [
+   "everyone dumped cardboard boxes",
+   "nguoi",
+   "a warehouse floor covered in flattened brown boxes forming a maze of corrugated layers"
+  ],
+  [
+   "everyone poured oil waste",
+   "nguoi",
+   "a garage floor slick with dark oily puddles reflecting the ceiling lights"
+  ],
+  [
+   "everyone dumped newspaper stacks",
+   "nguoi",
+   "a bus stop shelter piled with crisp newspaper sheets creating a white mound"
+  ],
+  [
+   "everyone dumped old clothes",
+   "nguoi",
+   "a thrift shop backroom overflowing with folded shirts, jeans, and jackets spilling onto the racks"
+  ],
+  [
+   "everyone emptied ashtrays",
+   "nguoi",
+   "a café patio table surrounded by ash-filled trays releasing gray powder into the air"
+  ],
+  [
+   "everyone dumped glass shards",
+   "coc",
+   "a laboratory floor scattered with glittering broken glass fragments catching the overhead lights"
+  ],
+  [
+   "everyone dumped used diapers",
+   "nguoi",
+   "a daycare playroom floor covered with white disposable diapers forming a soft mound"
+  ],
+  [
+   "everyone poured paint cans",
+   "nguoi",
+   "an artist studio floor splashed with bright paint cans spilling vivid colors onto the concrete"
+  ],
+  [
+   "everyone tossed coffee grounds",
+   "coc",
+   "a kitchen counter scattered with dark coffee grounds forming a thick brown carpet"
+  ],
+  [
+   "everyone dumped old magazines",
+   "nguoi",
+   "a waiting room floor stacked with glossy magazines creating a colorful paper hill"
+  ],
+  [
+   "everyone tossed plastic wrap",
+   "nguoi",
+   "a kitchen island covered with translucent cling film shimmering under the lamp"
+  ],
+  [
+   "everyone dumped broken dishes",
+   "nguoi",
+   "a dining hall floor littered with ceramic shards reflecting fragments of light"
+  ],
+  [
+   "everyone poured used oil",
+   "nguoi",
+   "a restaurant kitchen drain filled with amber liquid pooling in the sink basin"
+  ],
+  [
+   "everyone dumped old receipts",
+   "nguoi",
+   "a office hallway carpeted with crumpled paper strips forming a gray carpet"
+  ],
+  [
+   "everyone dumped garden pots",
+   "nguoi",
+   "a balcony terrace filled with broken clay pots and shattered ceramic pieces"
+  ],
+  [
+   "everyone poured ink cartridges",
+   "nguoi",
+   "a printer room table stacked with colorful ink cartridges spilling tiny droplets onto the surface"
+  ],
+  [
+   "everyone dumped old CDs",
+   "nguoi",
+   "a hallway floor shimmering with rainbow‑colored disc fragments catching the ceiling light"
+  ],
+  [
+   "everyone tossed plastic straws",
+   "nguoi",
+   "a movie theater aisle littered with bright plastic straws forming a colorful line on the carpet"
+  ],
+  [
+   "everyone brushed their teeth",
+   "nguoi",
+   "A bathroom counter covered with toothpaste tubes, toothbrushes, and a glass of minty mouthwash"
+  ],
+  [
+   "everyone poured coffee",
+   "coc",
+   "A kitchen island cluttered with coffee mugs, steaming pots, and scattered coffee beans"
+  ],
+  [
+   "everyone tied their shoes",
+   "nguoi",
+   "A hallway floor strewn with laces, sneaker soles, and colorful shoe polish bottles"
+  ],
+  [
+   "everyone opened their curtains",
+   "nguoi",
+   "A sunrise-lit living room filled with fluttering curtains, sunbeams, and potted ferns"
+  ],
+  [
+   "everyone fed their pets",
+   "meo",
+   "A kitchen nook piled with pet bowls, kibble piles, and wagging tails toys"
+  ],
+  [
+   "everyone checked their phones",
+   "dien_thoai",
+   "A coffee table scattered with smartphones, chargers, and glowing notification icons"
+  ],
+  [
+   "everyone watered plants",
+   "cay",
+   "A balcony garden brimming with watering cans, soil trays, and sprouting seedlings"
+  ],
+  [
+   "everyone folded laundry",
+   "nguoi",
+   "A bedroom floor stacked with neatly folded shirts, socks, and soft blankets"
+  ],
+  [
+   "everyone made their bed",
+   "giuong",
+   "A cozy bedroom displaying neatly spread sheets, fluffy pillows, and a tidy comforter"
+  ],
+  [
+   "everyone brushed their hair",
+   "nguoi",
+   "A bathroom vanity covered with combs, hairbrushes, and bottles of styling gel"
+  ],
+  [
+   "everyone opened the fridge",
+   "nguoi",
+   "A kitchen fridge interior filled with colorful vegetables, milk cartons, and fruit bowls"
+  ],
+  [
+   "everyone cleaned their windows",
+   "nguoi",
+   "A sunlit porch with sparkling glass panes, spray bottles, and microfiber cloths"
+  ],
+  [
+   "everyone brewed tea",
+   "nguoi",
+   "A kitchen countertop crowded with teapots, loose leaf tins, and steaming cups"
+  ],
+  [
+   "everyone turned on fans",
+   "nguoi",
+   "A living room filled with rotating fans, breezy ribbons, and hanging plants"
+  ],
+  [
+   "everyone stretched arms",
+   "nguoi",
+   "A yoga mat area dotted with foam rollers, yoga blocks, and scented candles"
+  ],
+  [
+   "everyone took a shower",
+   "nguoi",
+   "A bathroom stall filled with showerheads, fluffy towels, and scented soap bars"
+  ],
+  [
+   "everyone organized drawers",
+   "nguoi",
+   "A study desk with open drawers, neatly arranged pens, and colorful paper clips"
+  ],
+  [
+   "everyone fed breakfast cereal",
+   "nguoi",
+   "A breakfast table piled with cereal boxes, milk cartons, and crunchy bowls"
+  ],
+  [
+   "everyone opened a window",
+   "nguoi",
+   "A breezy balcony showing open windows, fluttering curtains, and potted herbs"
+  ],
+  [
+   "everyone checked the news",
+   "nguoi",
+   "A living room coffee table with newspapers, tablets, and a steaming tea pot"
+  ],
+  [
+   "everyone polished their glasses",
+   "coc",
+   "A nightstand with eyeglass cases, cleaning cloths, and sparkling lenses"
+  ],
+  [
+   "everyone set a timer",
+   "nguoi",
+   "A kitchen counter displaying digital timers, cooking pots, and fresh herbs"
+  ],
+  [
+   "everyone turned on the heater",
+   "nguoi",
+   "A cozy lounge filled with radiators, warm blankets, and a glowing fireplace"
+  ],
+  [
+   "everyone honked simultaneously",
+   "nguoi",
+   "a bustling city avenue lined with parked cars, moving buses, and a river of motorcycles"
+  ],
+  [
+   "everyone accelerated at once",
+   "nguoi",
+   "an open highway stretching under a clear sky, dozens of trucks and cars surging forward"
+  ],
+  [
+   "everyone turned on headlights",
+   "nguoi",
+   "a twilight boulevard illuminated by glowing headlights of taxis, SUVs, and street sweepers"
+  ],
+  [
+   "everyone played loud music",
+   "nguoi",
+   "a downtown parking lot where cars vibrate, speakers blaring, and exhaust pipes humming"
+  ],
+  [
+   "everyone flashed turn signals",
+   "nguoi",
+   "a roundabout crowded with cars, trucks, and bicycles signaling left and right in sync"
+  ],
+  [
+   "everyone shifted gears rapidly",
+   "nguoi",
+   "a steep hill climb where trucks, cars, and motorcycles grunt as they change speeds"
+  ],
+  [
+   "everyone honked horns politely",
+   "nguoi",
+   "a city crosswalk filled with taxis, buses, and delivery scooters echoing short beeps"
+  ],
+  [
+   "everyone activated hazard lights",
+   "nguoi",
+   "a construction zone lane where trucks and diggers flash amber lights amid dust"
+  ],
+  [
+   "everyone rolled down sunroofs",
+   "nguoi",
+   "a sunny coastal road with convertibles, minivans, and scooters enjoying breezes"
+  ],
+  [
+   "everyone checked mirrors simultaneously",
+   "nguoi",
+   "a busy intersection where cars, buses, and bicycles reflect the sky in side mirrors"
+  ],
+  [
+   "everyone tapped brakes lightly",
+   "nguoi",
+   "a narrow alley packed with motorcycles, mopeds, and compact cars gently slowing together"
+  ],
+  [
+   "everyone turned on windshield wipers",
+   "nguoi",
+   "a rainy downtown avenue where trucks, sedans, and buses spray water across the pavement"
+  ],
+  [
+   "everyone pressed the gas pedal",
+   "nguoi",
+   "a straight desert highway where convoy of pickups, SUVs, and motorcycles surge forward"
+  ],
+  [
+   "everyone opened trunk lids",
+   "nguoi",
+   "a suburban driveway lined with family cars, sports cars, and a few bicycles exposing cargo"
+  ],
+  [
+   "everyone turned on seat belts",
+   "nguoi",
+   "a highway rest area where parked cars, RVs, and vans show buckled straps"
+  ],
+  [
+   "everyone pressed the horn softly",
+   "nguoi",
+   "a quiet residential lane filled with bicycles, compact cars, and a delivery cart"
+  ],
+  [
+   "everyone opened sun visors",
+   "mat_troi",
+   "a bright morning street where sedans, hatchbacks, and scooters block glare with visor flaps"
+  ],
+  [
+   "everyone shifted to reverse",
+   "nguoi",
+   "a loading dock where trucks, vans, and carts back up in coordinated motion"
+  ],
+  [
+   "everyone checked tire pressure",
+   "nguoi",
+   "a service station lane with cars, bikes, and scooters lined up beside fuel pumps"
+  ],
+  [
+   "everyone opened glove compartments",
+   "nguoi",
+   "a parking lot under trees where sedans, coupes, and minivans expose interior panels"
+  ],
+  [
+   "everyone flicked windshield defrosters",
+   "nguoi",
+   "a cold winter road with buses, trucks, and cars steaming as heat rises"
+  ],
+  [
+   "everyone turned on cruise control",
+   "nguoi",
+   "an endless freeway where a steady stream of cars, trucks, and RVs maintain constant speed"
+  ],
+  [
+   "everyone activated turn signals left",
+   "nguoi",
+   "a four‑lane avenue where vehicles line up, lights blinking left as they prepare to merge"
+  ],
+  [
+   "everyone turned on hazard blinkers",
+   "nguoi",
+   "a busy tunnel filled with buses, trucks, and cars flashing amber lights in unison"
+  ],
+  [
+   "everyone tossed paper today",
+   "nguoi",
+   "a quiet streetside bin brimming with crumpled newspaper, glossy magazines, and loose office sheets"
+  ],
+  [
+   "everyone recycled glass simultaneously",
+   "coc",
+   "a city recycling depot piled high with clear bottles, colored jars, and shattered shards sparkling under sun"
+  ],
+  [
+   "everyone cleared cardboard boxes collectively",
+   "nguoi",
+   "a warehouse courtyard stacked with flattened cardboard, corrugated sheets, and broken packing inserts"
+  ],
+  [
+   "everyone tossed used napkins simultaneously",
+   "nguoi",
+   "a school cafeteria trash can piled with crumpled paper towels, stained napkins, and disposable wipes"
+  ],
+  [
+   "everyone tossed plastic cutlery simultaneously",
+   "nguoi",
+   "a fast‑food waste container filled with bent forks, bent spoons, and broken knives"
+  ],
+  [
+   "everyone tossed used batteries simultaneously",
+   "nguoi",
+   "a hazardous waste station crowded with cylindrical cells, corroded terminals, and plastic casings"
+  ],
+  [
+   "everyone dumped broken umbrellas simultaneously",
+   "nguoi",
+   "a rainy‑day shelter floor covered with snapped ribs, torn canopies, and tangled handles"
+  ],
+  [
+   "everyone cleared discarded flyers simultaneously",
+   "nguoi",
+   "a community board bin crowded with glossy sheets, colorful graphics, and torn corners"
+  ],
+  [
+   "everyone deposited checks at once",
+   "nguoi",
+   "a modern teller area scattered with glossy envelopes and stacked green sheets"
+  ],
+  [
+   "everyone transferred funds instantly",
+   "nguoi",
+   "a data center hallway illuminated by rows of blinking server racks and humming cables"
+  ],
+  [
+   "everyone requested loan approvals",
+   "nguoi",
+   "a conference room with large wooden table covered in thick contract binders"
+  ],
+  [
+   "everyone exchanged currencies simultaneously",
+   "nguoi",
+   "a spacious exchange floor with colorful piles of foreign paper and metallic discs"
+  ],
+  [
+   "everyone set up automatic savings",
+   "nguoi",
+   "a bright kitchen countertop with open notebooks, calculators, and jars of coins"
+  ],
+  [
+   "everyone checked credit scores",
+   "nguoi",
+   "a comfortable lounge with plush sofas, coffee tables, and stacked financial brochures"
+  ],
+  [
+   "everyone applied for credit cards",
+   "nguoi",
+   "a polished desk area piled with glossy card packets and sleek plastic sleeves"
+  ],
+  [
+   "everyone requested balance statements",
+   "nguoi",
+   "a tidy filing shelf stocked with thick bound ledgers and paper folders"
+  ],
+  [
+   "everyone activated mobile wallets",
+   "nguoi",
+   "a bustling café counter with rows of smartphones, chargers, and frothy drinks"
+  ],
+  [
+   "everyone audited personal expenses",
+   "nguoi",
+   "a home study desk cluttered with spreadsheets, pens, and stacked receipts"
+  ],
+  [
+   "everyone made charitable donations",
+   "nguoi",
+   "a community hall with large donation boxes overflowing with paper notes and ribbons"
+  ],
+  [
+   "everyone purchased stocks simultaneously",
+   "nguoi",
+   "an open-plan trading floor with rows of glowing ticker boards and humming computers"
+  ],
+  [
+   "everyone reviewed mortgage terms",
+   "nguoi",
+   "a quiet library corner surrounded by tall shelves of thick finance manuals"
+  ],
+  [
+   "everyone set up direct deposits",
+   "nguoi",
+   "a corporate break room with coffee pots, snack bowls, and printed payroll sheets"
+  ],
+  [
+   "everyone requested account closures",
+   "nguoi",
+   "a sterile office corridor lined with locked filing cabinets and empty desk trays"
+  ],
+  [
+   "everyone reviewed transaction histories",
+   "nguoi",
+   "a sunlit study area filled with open laptops, stacks of paper, and potted plants"
+  ],
+  [
+   "everyone updated beneficiary information",
+   "nguoi",
+   "a quiet waiting area with comfortable chairs, low tables, and decorative lamps"
+  ],
+  [
+   "everyone set up two‑factor authentication",
+   "nguoi",
+   "a sleek gadget showcase with smartphones, hardware keys, and glowing LEDs"
+  ],
+  [
+   "everyone opened high‑yield accounts",
+   "nguoi",
+   "a bright atrium with glass walls, indoor plants, and decorative fountains"
+  ],
+  [
+   "everyone verified identity documents",
+   "nguoi",
+   "a secure verification booth filled with scanners, document trays, and bright task lighting"
+  ],
+  [
+   "everyone adjusted interest rates personally",
+   "nguoi",
+   "a modern finance lab with digital dashboards, glowing graphs, and sleek workstations"
+  ],
+  [
+   "everyone applied for overdraft protection",
+   "nguoi",
+   "a small office nook with piles of forms, staplers, and a ticking wall clock"
+  ],
+  [
+   "everyone tossed a soda can",
+   "nguoi",
+   "a wide riverbank strewn with sparkling aluminum cans reflecting the sunrise"
+  ],
+  [
+   "everyone dropped a plastic bottle",
+   "nguoi",
+   "a bustling beach dotted with countless translucent bottles shimmering under bright sky"
+  ],
+  [
+   "everyone folded a newspaper",
+   "nguoi",
+   "a quiet downtown square piled with crisp sheets forming soft white hills"
+  ],
+  [
+   "everyone placed a cardboard box",
+   "nguoi",
+   "an open parking lot covered in stacked brown boxes creating a maze of angles"
+  ],
+  [
+   "everyone recycled a glass jar",
+   "coc",
+   "a garden path lined with glimmering glass jars catching morning light"
+  ],
+  [
+   "everyone tossed a tin foil",
+   "nguoi",
+   "a rooftop terrace glittering with crinkled silver sheets fluttering like tiny flags"
+  ],
+  [
+   "everyone dropped a coffee cup",
+   "coc",
+   "a commuter station floor littered with white ceramic cups forming a sea of circles"
+  ],
+  [
+   "everyone placed a plastic bag",
+   "nguoi",
+   "a suburban street lined with translucent bags swaying gently in the breeze"
+  ],
+  [
+   "everyone threw a snack wrapper",
+   "nguoi",
+   "a playground sandbox filled with colorful foil wrappers forming a mosaic pattern"
+  ],
+  [
+   "everyone dropped a yogurt container",
+   "nguoi",
+   "a farmer's market aisle overflowing with smooth plastic tubs arranged in rows"
+  ],
+  [
+   "everyone tossed a bottle cap",
+   "nguoi",
+   "a gravel path sprinkled with metallic caps shimmering like scattered stars"
+  ],
+  [
+   "everyone dumped a banana peel",
+   "nguoi",
+   "a park trail littered with yellow peels curling on the ground like ribbons"
+  ],
+  [
+   "everyone tossed a plastic straw",
+   "nguoi",
+   "a beach boardwalk scattered with bright straws resembling colorful confetti"
+  ],
+  [
+   "everyone placed a juice carton",
+   "nguoi",
+   "a school courtyard piled with pastel cartons creating a soft pastel mound"
+  ],
+  [
+   "everyone threw a paper napkin",
+   "nguoi",
+   "a restaurant patio strewn with crumpled white napkins like fluffy clouds"
+  ],
+  [
+   "everyone placed a broken umbrella",
+   "nguoi",
+   "a bus stop awash with colorful canopy frames forming a kaleidoscopic canopy"
+  ],
+  [
+   "everyone dumped a milk jug",
+   "nguoi",
+   "a farmyard surrounded by white jugs forming a gentle white wall"
+  ],
+  [
+   "everyone placed a paper plate",
+   "nguoi",
+   "a picnic meadow scattered with white plates forming a patterned blanket"
+  ],
+  [
+   "everyone set up online banking",
+   "nguoi",
+   "a modern data center corridor lined with blinking server racks and cooling ducts humming softly"
+  ],
+  [
+   "everyone changed PIN numbers",
+   "nguoi",
+   "a sleek security office filled with rows of keypad panels, glass cabinets, and soft amber lighting"
+  ],
+  [
+   "everyone checked account balances",
+   "nguoi",
+   "a quiet library reading room with tall bookshelves, green lamps, and a central wooden table"
+  ],
+  [
+   "everyone updated beneficiary details",
+   "nguoi",
+   "a corporate headquarters lobby adorned with marble pillars, potted ficus trees, and a polished stone floor"
+  ],
+  [
+   "everyone paid utility bills",
+   "tien",
+   "a municipal utility office filled with rows of filing cabinets, ticking wall clocks, and soft carpeted aisles"
+  ],
+  [
+   "everyone set up automatic transfers",
+   "nguoi",
+   "an open‑plan tech hub with modular desks, whiteboard walls, and hanging pendant lights"
+  ],
+  [
+   "everyone activated mobile alerts",
+   "nguoi",
+   "a contemporary call center floor with rows of ergonomic chairs, soft carpeting, and large acoustic panels"
+  ],
+  [
+   "everyone requested debit card replacements",
+   "nguoi",
+   "a service counter area with rows of metal trays, soft beige walls, and a ceiling of acoustic tiles"
+  ],
+  [
+   "everyone set up escrow services",
+   "nguoi",
+   "a legal firm conference room with dark mahogany table, leather chairs, and a wall of framed certificates"
+  ],
+  [
+   "everyone paid mortgage installments",
+   "tien",
+   "a suburban bank branch lobby with a large indoor fountain, marble pillars, and a tiled floor pattern"
+  ],
+  [
+   "everyone reviewed transaction history",
+   "nguoi",
+   "a quiet audit office with rows of filing cabinets, green desk lamps, and a low humming HVAC system"
+  ],
+  [
+   "everyone set up tax withholding",
+   "nguoi",
+   "a government tax office with high ceilings, rows of wooden cubicles, and a polished brass chandelier"
+  ],
+  [
+   "everyone emptied coffee cups at once",
+   "coc",
+   "a modern office lobby featuring sleek metal recycling stations stacked with white disposable coffee cups"
+  ],
+  [
+   "everyone dropped glass jars at once",
+   "coc",
+   "a quiet suburban street corner with green recycling containers overflowing with clear glass jars"
+  ],
+  [
+   "everyone tossed snack wrappers simultaneously",
+   "nguoi",
+   "a school playground surrounded by bright recycling bins overflowing with colorful snack packet wrappers"
+  ],
+  [
+   "everyone dropped used cotton swabs simultaneously",
+   "nguoi",
+   "a beauty salon reception with recycling bins filled with white cotton swab sticks"
+  ],
+  [
+   "everyone dropped used mascara tubes simultaneously",
+   "nguoi",
+   "a makeup boutique entrance with recycling bins packed with slender plastic mascara tubes"
+  ],
+  [
+   "everyone used microwaves at once",
+   "nguoi",
+   "a kitchen showroom, dozens of microwave ovens humming, interior lights flickering, steam rising from dishes"
+  ],
+  [
+   "everyone charged electric cars simultaneously",
+   "xe",
+   "a large parking garage, rows of vehicles with glowing plugs, indicator LEDs flashing green in unison"
+  ],
+  [
+   "everyone switched on electric heaters simultaneously",
+   "nguoi",
+   "a mountain lodge lounge, multiple wall heaters glowing red, warm air swirling, frost melting from windows"
+  ],
+  [
+   "everyone turned on electric toothbrushes",
+   "nguoi",
+   "a bathroom exhibit, many brushes vibrating, bristles moving, tiny lights blinking on handles"
+  ],
+  [
+   "everyone activated smart speakers at noon",
+   "nguoi",
+   "a modern kitchen island, numerous devices glowing blue, sound waves illustrated as concentric circles"
+  ],
+  [
+   "everyone used electric shavers at once",
+   "nguoi",
+   "a grooming salon, many shavers buzzing, metal heads moving, mist of tiny droplets rising"
+  ],
+  [
+   "everyone switched on electric grills simultaneously",
+   "nguoi",
+   "an outdoor market, multiple grills heating, flames licking metal, smoke curling above stalls"
+  ],
+  [
+   "everyone powered up electric blankets at night",
+   "giuong",
+   "a dormitory hallway, beds with faint orange glows, blankets radiating gentle warmth"
+  ],
+  [
+   "everyone turned on electric lawn mowers",
+   "nguoi",
+   "a suburban cul-de-sac, many mowers cutting grass, blades whirring, green clippings forming clouds"
+  ],
+  [
+   "everyone switched on electric snow blowers",
+   "nguoi",
+   "a winter park, multiple machines blowing snow, white plumes swirling, motors humming in cold air"
+  ],
+  [
+   "everyone started electric water pumps",
+   "coc",
+   "a farm irrigation field, pumps humming, water jets arcing, canals filling with flowing streams"
+  ],
+  [
+   "everyone activated electric air purifiers",
+   "nguoi",
+   "an office atrium, tall units with spinning filters, soft blue lights, clean air swirling visibly"
+  ],
+  [
+   "everyone powered up electric scooters in a mall",
+   "nguoi",
+   "a shopping corridor, rows of scooters docked, indicator LEDs pulsing, floor reflecting bright colors"
+  ],
+  [
+   "everyone turned on electric ceiling fans in offices",
+   "nguoi",
+   "a corporate hallway, multiple ceiling fans rotating, blades a blur, cool air rippling through vents"
+  ],
+  [
+   "everyone started electric snow melt systems",
+   "nguoi",
+   "a city street, pavement embedded with glowing strips, snow disappearing as heat radiates upward"
+  ],
+  [
+   "everyone powered up electric hot tubs",
+   "lua",
+   "a resort pool area, several tubs bubbling, water steaming, underwater lights casting ripples"
+  ],
+  [
+   "everyone jumped in kitchens",
+   "nguoi",
+   "a bright kitchen cluttered with floating spoons, tumbling bowls, and swirling steam from simmering pots"
+  ],
+  [
+   "everyone walked through parks",
+   "nguoi",
+   "a sunny park dotted with rustling leaves, swaying benches, and fluttering kite tails against blue sky"
+  ],
+  [
+   "everyone jumped on rooftops",
+   "nguoi",
+   "a city skyline roof garden filled with potted herbs, loose tiles, and humming bees buzzing around"
+  ],
+  [
+   "everyone walked along beaches",
+   "nguoi",
+   "a wide sandy shore scattered with seashells, rolling waves, and driftwood logs under a golden sunrise"
+  ],
+  [
+   "everyone jumped in living rooms",
+   "nha",
+   "a cozy living room packed with plush cushions, wobbling coffee tables, and a flickering lamp casting warm light"
+  ],
+  [
+   "everyone walked through libraries",
+   "nguoi",
+   "a quiet library aisles lined with towering shelves, scattered bookmarks, and dust motes dancing in sunlight"
+  ],
+  [
+   "everyone jumped on train platforms",
+   "nguoi",
+   "a bustling platform filled with rolling suitcases, bright ticket kiosks, and a cascade of departing trains"
+  ],
+  [
+   "everyone walked across bridges",
+   "nguoi",
+   "a steel bridge arching over a river, lined with rusted railings, hanging lanterns, and flowing water below"
+  ],
+  [
+   "everyone jumped in grocery aisles",
+   "nguoi",
+   "an aisle brimming with stacked crates, hanging fruit, and colorful produce spilling onto the floor"
+  ],
+  [
+   "everyone walked through museums",
+   "nguoi",
+   "a grand hall filled with marble statues, polished floors, and soft spotlights illuminating artifacts"
+  ],
+  [
+   "everyone jumped in schoolyards",
+   "nguoi",
+   "a playground crowded with squeaky swings, bright slides, and scattered chalk drawings on the pavement"
+  ],
+  [
+   "everyone walked down stairwells",
+   "nguoi",
+   "a dim stairwell lined with worn carpet, flickering bulbs, and a cascade of hanging vines"
+  ],
+  [
+   "everyone jumped on gym floors",
+   "nguoi",
+   "a gymnasium echoing with rubber mats, dangling jump ropes, and a hoop suspended from the ceiling"
+  ],
+  [
+   "everyone walked through markets",
+   "nguoi",
+   "a bustling market square filled with stalls of fabric, baskets of spices, and hanging lanterns swaying"
+  ],
+  [
+   "everyone jumped on balcony railings",
+   "nguoi",
+   "a balcony overlooking a city, adorned with potted succulents, wind chimes, and fluttering curtains"
+  ],
+  [
+   "everyone walked across parking lots",
+   "nguoi",
+   "an expansive lot dotted with striped lines, parked cars, and scattered tire marks under a clear sky"
+  ],
+  [
+   "everyone jumped in theater lobbies",
+   "nguoi",
+   "a marble lobby with plush carpets, towering columns, and glowing sconces casting soft shadows"
+  ],
+  [
+   "everyone walked through subway tunnels",
+   "nguoi",
+   "a underground tunnel lined with tiled walls, glowing neon strips, and echoing train whistles"
+  ],
+  [
+   "everyone jumped in office corridors",
+   "nguoi",
+   "a long corridor with glass partitions, potted ferns, and a row of humming coffee machines"
+  ],
+  [
+   "everyone walked across airport terminals",
+   "nguoi",
+   "a spacious terminal filled with rolling luggage carts, departure boards, and rows of waiting chairs"
+  ],
+  [
+   "everyone jumped on playground sandboxes",
+   "nguoi",
+   "a sandbox brimming with golden sand, scattered toy trucks, and a small wooden bridge"
+  ],
+  [
+   "everyone walked through botanical gardens",
+   "nguoi",
+   "a garden path winding among blooming roses, cascading waterfalls, and fluttering butterflies"
+  ],
+  [
+   "everyone jumped in kitchen pantries",
+   "nguoi",
+   "a pantry stacked with canned goods, hanging pots, and a rope ladder leaning against shelves"
+  ],
+  [
+   "everyone walked across city squares",
+   "nguoi",
+   "a stone plaza surrounded by fountains, stone benches, and a towering clock tower ticking"
+  ],
+  [
+   "everyone walked through airport runways",
+   "nguoi",
+   "a long runway marked with white lights, distant aircraft, and a stretch of endless tarmac"
+  ],
+  [
+   "everyone jumped in backyard pools",
+   "nguoi",
+   "a backyard pool shimmering with ripples, floating pool toys, and a line of sun umbrellas"
+  ],
+  [
+   "everyone walked along riverbanks",
+   "nguoi",
+   "a calm riverbank lined with reeds, smooth stones, and a wooden dock stretching outward"
+  ],
+  [
+   "everyone walked through art galleries",
+   "nguoi",
+   "a white-walled gallery displaying abstract paintings, sleek pedestals, and soft track lighting"
+  ],
+  [
+   "everyone jumped on carnival rides",
+   "nguoi",
+   "a carnival midway filled with colorful tents, spinning wheels, and a cascade of cotton candy clouds"
+  ],
+  [
+   "everyone walked across desert dunes",
+   "nguoi",
+   "a vast dune field under a blazing sun, dotted with tumbleweeds, sand ripples, and distant mirages"
+  ],
+  [
+   "everyone leapt over curbs",
+   "nguoi",
+   "a quiet suburban sidewalk bordered by flower beds, garden gnomes, and rows of mailboxes"
+  ],
+  [
+   "everyone hopped onto buses",
+   "xe_buyt",
+   "a busy bus depot filled with waiting benches, ticket kiosks, and overhead luggage racks"
+  ],
+  [
+   "everyone bounced on trampolines",
+   "nguoi",
+   "an indoor gymnasium with foam mats, rubberized flooring, and a wall of climbing ropes"
+  ],
+  [
+   "everyone marched through plazas",
+   "nguoi",
+   "a historic square paved with cobblestones, surrounded by fountains, statues, and blooming lavender bushes"
+  ],
+  [
+   "everyone vaulted over fences",
+   "nguoi",
+   "a rural pasture enclosed by wooden fences, dotted with hay bales and grazing sheep"
+  ],
+  [
+   "everyone hopped onto trains",
+   "nguoi",
+   "a bustling train station with platforms, luggage trolleys, and rows of waiting benches"
+  ],
+  [
+   "everyone darted through alleys",
+   "nguoi",
+   "a narrow city alley lined with brick walls, fire escapes, and stacked crates"
+  ],
+  [
+   "everyone hopped onto skateboards",
+   "nguoi",
+   "a skate park filled with concrete ramps, railings, and scattered skate decks"
+  ],
+  [
+   "everyone leapt over puddles",
+   "nguoi",
+   "a rain‑slicked sidewalk dotted with rain gutters, street lamps, and reflective puddles"
+  ],
+  [
+   "everyone vaulted across playgrounds",
+   "nguoi",
+   "a city playground with swings, slides, sandboxes, and colorful rubber tiles"
+  ],
+  [
+   "everyone hopped onto scooters",
+   "nguoi",
+   "a bike lane bordered by trees, trash cans, and painted lane markings"
+  ],
+  [
+   "everyone sprinted along boardwalks",
+   "nguoi",
+   "a seaside boardwalk lined with wooden planks, beach umbrellas, and seagull nests"
+  ],
+  [
+   "everyone leaped over logs",
+   "nguoi",
+   "a forest trail covered in moss, fallen logs, and clusters of pine cones"
+  ],
+  [
+   "everyone hopped across stepping stones",
+   "nguoi",
+   "a shallow creek dotted with smooth stones, water lilies, and dragonflies hovering"
+  ],
+  [
+   "everyone dashed through airports",
+   "nguoi",
+   "an airport terminal with rolling luggage carts, departure boards, and rows of waiting chairs"
+  ],
+  [
+   "everyone sprinted through stadiums",
+   "nguoi",
+   "a large arena with tiered seats, bright spotlights, and a polished wooden floor"
+  ],
+  [
+   "everyone hopped across frozen lakes",
+   "nguoi",
+   "a winter lake surface covered with thin ice, snow drifts, and scattered pine trees"
+  ],
+  [
+   "everyone vaulted over garden walls",
+   "nguoi",
+   "a backyard garden with flowerbeds, watering cans, and a low brick wall"
+  ],
+  [
+   "everyone hopped onto elevators",
+   "nguoi",
+   "a modern office lobby with glass elevators, potted plants, and sleek marble flooring"
+  ],
+  [
+   "everyone leapt over hedges",
+   "nguoi",
+   "a manicured garden with trimmed hedges, stone pathways, and decorative garden statues"
+  ],
+  [
+   "everyone jumped at sunrise",
+   "nguoi",
+   "a quiet hillside bathed in gold, wildflowers swaying, birds soaring, mist lingering over pine trees"
+  ],
+  [
+   "everyone walked through rain",
+   "nguoi",
+   "a cobblestone lane under heavy clouds, puddles glimmering, lanterns flickering, vines dripping with water"
+  ],
+  [
+   "everyone sprinted through forest",
+   "cay",
+   "a dense woodland path, ferns unfurling, mushrooms clustering, shafts of light piercing the canopy"
+  ],
+  [
+   "everyone bounded over rocks",
+   "nguoi",
+   "a rugged coastline, jagged cliffs, seafoam crashing, gulls circling, tide pools shimmering"
+  ],
+  [
+   "everyone shuffled through snow",
+   "nguoi",
+   "a pine forest blanketed in fresh snow, icicles hanging, animal tracks weaving between trunks"
+  ],
+  [
+   "everyone hopped across ponds",
+   "nguoi",
+   "a lily‑filled pond, water lilies opening, dragonflies skimming surface, reeds swaying gently"
+  ],
+  [
+   "everyone lunged into caves",
+   "nguoi",
+   "a dark cavern mouth, stalactites hanging, glowworms twinkling, underground river flowing silently"
+  ],
+  [
+   "everyone galloped through meadows",
+   "nguoi",
+   "a golden meadow, buttercups blooming, butterflies fluttering, distant hills rolling under clear sky"
+  ],
+  [
+   "everyone stepped onto stairs",
+   "nguoi",
+   "an ancient stone staircase winding up a hill, moss covering steps, sunrise peeking over the ridge"
+  ],
+  [
+   "everyone hopped onto docks",
+   "nguoi",
+   "a wooden pier stretching into calm lake, fishing nets hanging, water lilies drifting nearby"
+  ],
+  [
+   "everyone walked through orchards",
+   "nguoi",
+   "rows of apple trees heavy with fruit, blossoms falling, bees buzzing among fragrant petals"
+  ],
+  [
+   "everyone leapt over streams",
+   "nguoi",
+   "a crystal creek winding through a valley, smooth stones glistening, moss-covered banks, rainbows forming"
+  ],
+  [
+   "everyone marched through vineyards",
+   "nguoi",
+   "vine rows laden with grapes, wooden trellises, distant hills, sunrise casting amber light"
+  ],
+  [
+   "everyone bounded over potholes",
+   "nguoi",
+   "an old cobbled lane, cracked stones, wild thyme sprouting, morning dew sparkling"
+  ],
+  [
+   "everyone sprinted across fields",
+   "nguoi",
+   "a wheat field swaying, golden stalks rippling, distant wind turbines turning slowly"
+  ],
+  [
+   "everyone walked along cliffs",
+   "nguoi",
+   "a sheer cliff edge overlooking turquoise sea, seabirds gliding, sea spray misting the air"
+  ],
+  [
+   "everyone leapt onto balconies",
+   "nguoi",
+   "a courtyard with stone arches, climbing roses, lanterns hanging, night sky full of stars"
+  ],
+  [
+   "everyone exchanged foreign currency",
+   "nguoi",
+   "an international exchange hall filled with colorful stacks of bills and rotating coin dispensers"
+  ],
+  [
+   "everyone set up automatic payments",
+   "nguoi",
+   "a quiet back‑office room lined with humming printers and stacks of receipt rolls"
+  ],
+  [
+   "everyone requested cash advances",
+   "nguoi",
+   "a bustling teller area with brass cash drawers overflowing with banknotes"
+  ],
+  [
+   "everyone updated security passwords",
+   "nguoi",
+   "a secure password vault room filled with locked keychains and digital keypads"
+  ],
+  [
+   "everyone enrolled in insurance plans",
+   "nguoi",
+   "a tidy policy office with stacks of glossy policy books and soft carpeted floors"
+  ],
+  [
+   "everyone made breakfast at once",
+   "nguoi",
+   "a bright dining table overloaded with pancakes, fruit bowls, butter knives, and syrup drizzles"
+  ],
+  [
+   "everyone walked their dogs simultaneously",
+   "meo",
+   "a suburban street lined with wagging leashes, leashed collars, and blooming flowerbeds"
+  ],
+  [
+   "everyone left work at five",
+   "nguoi",
+   "an office lobby filled with rolling chairs, coffee cups, and a sunrise through glass doors"
+  ],
+  [
+   "everyone cooked dinner simultaneously",
+   "nguoi",
+   "a spacious kitchen stove surrounded by sizzling pans, herbs, and fragrant steam"
+  ],
+  [
+   "everyone set alarms for tomorrow",
+   "nguoi",
+   "a nightstand cluttered with digital clocks, alarm buttons, and soft nightlights"
+  ],
+  [
+   "everyone read books before sleep",
+   "giuong",
+   "a quiet reading nook filled with open books, soft cushions, and a warm lamp glow"
+  ],
+  [
+   "everyone opened mailboxes simultaneously",
+   "nguoi",
+   "a suburban cul-de-sac dotted with metal boxes spilling envelopes, flyers, and small parcels"
+  ],
+  [
+   "everyone checked the weather morning",
+   "nguoi",
+   "a kitchen window sill holding rain gauges, potted herbs, and a bright sunrise"
+  ],
+  [
+   "everyone organized closets at weekend",
+   "nguoi",
+   "a bedroom hallway filled with hanging racks, shoe boxes, and colorful scarves"
+  ],
+  [
+   "everyone polished shoes before outing",
+   "nguoi",
+   "a entryway rug covered with shoe polish pots, brushes, and gleaming leather shoes"
+  ],
+  [
+   "everyone turned on radios at lunch",
+   "nguoi",
+   "a kitchen counter surrounded by small radios, coffee mugs, and a midday sunbeam"
+  ],
+  [
+   "everyone locked doors at night",
+   "giuong",
+   "a hallway lined with sturdy doors, keychains, and a quiet humming of night insects"
+  ],
+  [
+   "everyone cleaned dishes after meals",
+   "nguoi",
+   "a kitchen sink filled with sudsy plates, forks, and a gleaming faucet"
+  ],
+  [
+   "everyone braked hard",
+   "nguoi",
+   "a mountain pass winding through hills, cars and motorcycles slowing abruptly on the curve"
+  ],
+  [
+   "everyone flashed high beams",
+   "nguoi",
+   "a rural lane at night, headlights piercing darkness across rows of trucks and vans"
+  ],
+  [
+   "everyone revved engines",
+   "xe",
+   "a parking lot beside a mall, rows of cars idling, exhaust clouds rising"
+  ],
+  [
+   "everyone changed lanes",
+   "nguoi",
+   "a multilane expressway, vehicles weaving smoothly between orange stripes under a sunrise"
+  ],
+  [
+   "everyone sounded horns",
+   "nguoi",
+   "a bustling city intersection, traffic signals green, cars and taxis emitting short bursts of sound"
+  ],
+  [
+   "everyone pulled over",
+   "nguoi",
+   "a rest area beside a highway, parking spaces filling with stopped cars and RVs"
+  ],
+  [
+   "everyone engaged four‑wheel drive",
+   "xe",
+   "a rugged off‑road trail, mud splashing as SUVs climb steep inclines together"
+  ],
+  [
+   "everyone pressed the parking brake",
+   "nguoi",
+   "a crowded parking garage, rows of vehicles halted on concrete ramps"
+  ],
+  [
+   "everyone turned on GPS voice",
+   "nguoi",
+   "a suburban cul‑de‑sac, quiet streets echoing with soft navigation prompts from many cars"
+  ],
+  [
+   "everyone started electric motors",
+   "nguoi",
+   "an electric‑vehicle charging lane, silent cars gliding forward with soft hums"
+  ],
+  [
+   "everyone released handbrake",
+   "nguoi",
+   "a steep hill overlook, cars rolling gently downhill in a coordinated glide"
+  ],
+  [
+   "everyone engaged lane‑keeping assist",
+   "nguoi",
+   "a straight city boulevard, vehicles hugging centerlines with invisible guidance"
+  ],
+  [
+   "everyone activated emergency flashers",
+   "nguoi",
+   "a construction zone at dusk, flashing red lights on dozens of work trucks and vans"
+  ],
+  [
+   "everyone posted a selfie simultaneously",
+   "nguoi",
+   "a bustling rooftop garden drenched in countless glowing rectangular panels reflecting twilight"
+  ],
+  [
+   "everyone sent a text message at once",
+   "dien_thoai",
+   "a wide riverbank lined with tiny flickering bubbles rising like fireflies across the water"
+  ],
+  [
+   "everyone checked the weather forecast",
+   "nguoi",
+   "a mountain summit blanketed by soft pastel clouds that pulse with rhythmic glows"
+  ],
+  [
+   "everyone liked a post at the same moment",
+   "nguoi",
+   "a calm lake surface rippling with thousands of tiny golden ripples spreading outward"
+  ],
+  [
+   "everyone opened a new tab simultaneously",
+   "nguoi",
+   "a spacious library aisle filled with hovering translucent pages fluttering like butterflies"
+  ],
+  [
+   "everyone posted a comment on a video",
+   "nguoi",
+   "a city square illuminated by a cascade of multicolored speech bubbles floating above the pavement"
+  ],
+  [
+   "everyone turned on video chat",
+   "nguoi",
+   "a high‑rise balcony filled with dozens of tiny holographic frames hovering in the night sky"
+  ],
+  [
+   "everyone opened a map app simultaneously",
+   "dien_thoai",
+   "a winding road tunnel glowing with animated route lines that snake along the walls"
+  ],
+  [
+   "everyone posted a review online",
+   "nguoi",
+   "a cozy café patio covered in floating star icons that twinkle above the tables"
+  ],
+  [
+   "everyone clicked a link at once",
+   "nguoi",
+   "a modern office lobby bathed in a cascade of bright arrows arching across the ceiling"
+  ],
+  [
+   "everyone posted a birthday wish simultaneously",
+   "nguoi",
+   "a rooftop observatory where colorful balloons drift upward, each pulsing with soft light"
+  ],
+  [
+   "everyone added a friend on a network",
+   "nguoi",
+   "a quiet forest clearing where luminous vines intertwine, forming a glowing web overhead"
+  ],
+  [
+   "everyone changed their profile picture",
+   "nguoi",
+   "a suburban driveway lined with rotating mirrors that reflect shifting colors like sunrise"
+  ],
+  [
+   "everyone turned on airplane mode simultaneously",
+   "nguoi",
+   "a quiet hilltop where tiny lanterns dim together, creating a soft twilight blanket"
+  ],
+  [
+   "everyone turned on push notifications",
+   "nguoi",
+   "a sleek subway platform where tiny bells glow amber and sway with each passing train"
+  ],
+  [
+   "everyone cleared their cache simultaneously",
+   "nguoi",
+   "an ancient courtyard where dust motes sparkle and rise like tiny fireworks"
+  ],
+  [
+   "everyone turned on a VPN at once",
+   "nguoi",
+   "a dense urban alley where glowing tunnels appear along the walls, weaving in and out"
+  ]
+ ]
+}

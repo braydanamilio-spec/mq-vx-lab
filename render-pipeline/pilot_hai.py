@@ -122,6 +122,29 @@ Return ONLY a JSON array: [{"ai":"a","chu":"...","cx":"trung_tinh"}]
 _SO = re.compile(r"\$?\d[\d,\.]*\s*(?:%|K|M|B)?")
 
 
+_DON_VI = {0:"zero",1:"one",2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven",8:"eight",
+           9:"nine",10:"ten",11:"eleven",12:"twelve",13:"thirteen",14:"fourteen",15:"fifteen",
+           16:"sixteen",17:"seventeen",18:"eighteen",19:"nineteen"}
+_CHUC = {2:"twenty",3:"thirty",4:"forty",5:"fifty",6:"sixty",7:"seventy",8:"eighty",9:"ninety"}
+
+
+def _doc_so(n: int) -> str:
+    """Số thành CHỮ như người Mỹ đọc. Chỉ cần tới hàng nghìn — số lớn hơn thì mô hình gần như
+    luôn viết bằng chữ số ("125,893 times"), và cổng đã bắt được dạng ấy."""
+    if n < 0 or n > 9999:
+        return ""
+    if n < 20:
+        return _DON_VI[n]
+    if n < 100:
+        c, d = divmod(n, 10)
+        return _CHUC[c] + ("-" + _DON_VI[d] if d else "")
+    if n < 1000:
+        t, r = divmod(n, 100)
+        return _DON_VI[t] + " hundred" + (" " + _doc_so(r) if r else "")
+    t, r = divmod(n, 1000)
+    return _doc_so(t) + " thousand" + (" " + _doc_so(r) if r else "")
+
+
 def so_tren_man(n: dict) -> str:
     """Con số mà panel này SẼ HIỆN, viết thành lời đọc được. Rỗng = panel không có số.
 
@@ -157,8 +180,32 @@ def _du_so(loi: list, thoai: list, man: list = None) -> list:
     hoàn toàn về số. Nên chỗ gọi PHẢI truyền `man`; cổng dưới đây canh việc ấy."""
     goc = set()
     for t in list(loi) + list(man or []):
-        goc |= {x.strip() for x in _SO.findall(t) if any(c.isdigit() for c in x)}
+        ds = [x.strip() for x in _SO.findall(t) if any(c.isdigit() for c in x)]
+        # ── BIỂU ĐỒ: CHỈ ĐÒI CON SỐ LỚN NHẤT  (đo 6/9/2026) ─────────────────────────────
+        # Một nhịp `chart` mang 3–4 cột, và bắt đọc đủ cả bốn thì câu dài lê thê rồi vẫn trượt:
+        # đo trên `howloud` thấy 3 vòng viết lại liên tiếp đều thiếu một cột. Cột lớn nhất là
+        # cột chốt — nói nó ra là người nghe nắm được quy mô; ba cột kia là hình, không phải lời.
+        if " and " in t and len(ds) >= 3:
+            def _v(x):
+                try:
+                    return float(re.sub(r"[^\d.]", "", x) or 0)
+                except Exception:
+                    return 0.0
+            ds = [max(ds, key=_v)]
+        goc |= set(ds)
     co = " ".join(x.get("chu", "") for x in thoai)
+    # ── SỐ ĐỌC BẰNG CHỮ CŨNG LÀ ĐỌC  (đo 6/9/2026) ─────────────────────────────────────
+    # Mô hình đôi khi viết *"one hundred ten decibels"* thay vì *"110 decibels"*. Với người
+    # NGHE thì đó còn tự nhiên hơn — mà cổng cũ chấm trượt và đốt ba vòng viết lại cho một
+    # bản vốn đúng (§13.8: cổng bắt oan tệ hơn cổng không bắt).
+    # Nên nới CHÍNH XÁC một dạng: sinh chuỗi chữ của từng con số rồi tìm nó trong lời thoại.
+    _cl = co.lower().replace("\u2019", "'")
+    def _da_doc(x):
+        v = re.sub(r"[^\d.]", "", x).rstrip(".")
+        if not v or "." in v:
+            return False
+        c = _doc_so(int(v))
+        return bool(c) and c in _cl
     # So theo CHỮ SỐ, bỏ dấu phẩy và ký hiệu: mô hình viết "43,107 dollars" hay "43107 dollars"
     # đều là đọc đúng con số, và phạt cách viết thứ hai là bắt oan (§13.8).
     def rut(x):
@@ -171,7 +218,8 @@ def _du_so(loi: list, thoai: list, man: list = None) -> list:
             v = v.rstrip("0").rstrip(".")
         return v
     cs = {rut(x) for x in _SO.findall(co)}
-    return sorted(s for s in goc if s not in co and rut(s) and rut(s) not in cs)
+    return sorted(s for s in goc
+                  if s not in co and rut(s) and rut(s) not in cs and not _da_doc(s))
 
 
 def doi_thoai(loi: list, vai: list, man: list = None) -> list:
@@ -300,6 +348,36 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     # chưa truyền. Một phòng cho cả 18 panel đọc ra là đứng yên; bốn phòng xoay vòng thì mỗi
     # ba panel đổi cảnh một lần, đúng nhịp một cuộc trò chuyện đi qua vài chỗ trong ca trực.
     co = [j for j in range(len(phong)) if _co(j)]
+
+    # ── CHỌN NỀN THEO NỘI DUNG TẬP  (anh yêu cầu, 6/9/2026) ──────────────────────────────
+    # Anh: *"chia theo từng group tag key phù hợp mỗi channel để khi lấy ảnh nó tự động với
+    # nội dung kịch bản"*. Trước đó bộ chọn chỉ là một bước nhảy tất định — nó lo đúng một
+    # việc (đừng lặp phòng) và MÙ với nội dung. Đo được:
+    #     HOW LOUD «crowd chant at a music festival» -> xưởng bảo trì · làn rải nhựa đường
+    #     REAL COST «a $12 lunch every workday»      -> trạm bơm dầu diesel
+    # Đa dạng mà không liên quan vẫn là khung nói một đằng lời nói một nẻo (§17.5).
+    #
+    # `nen_tag.json` gắn mỗi nền vào một trong mười NHÓM CHỦ ĐỀ của kênh; tập cũng được chấm
+    # vào đúng mười nhóm ấy. Khớp theo NHÓM chứ không theo từ, vì nền viết "a bleacher tier,
+    # steel railings" còn tập nói "stadium" — không một từ nào trùng (§13.5).
+    #
+    # Ba tầng, tầng dưới không bao giờ gọi mạng:
+    #     nền CÙNG NHÓM với tập  ->  nếu đủ ≥3 nền thì dùng riêng nhóm ấy
+    #     không đủ                ->  dùng cả kho (hành vi cũ, vẫn đúng)
+    #     chưa có thẻ             ->  dùng cả kho
+    try:
+        import nen_tag as NT
+        _the = json.load(io.open(os.path.join(GOC, "nen_tag.json"), encoding="utf-8"))
+        _nh = NT.nhom_tap(ma, tieu + ". " + " ".join(loi))
+        _hop = [j for j in co if _the.get(f"{de}_{j:03d}") and
+                _the.get(f"{de}_{j:03d}") == _nh] if _nh else []
+        if len(_hop) >= 3:
+            print(f"   🎯 nhóm nền «{_nh}» — {len(_hop)}/{len(co)} nền hợp nội dung")
+            co = _hop
+        elif _nh:
+            print(f"   🎯 nhóm «{_nh}» chỉ có {len(_hop)} nền — dùng cả kho")
+    except Exception as e:
+        print(f"   ⚠ không đọc được nen_tag.json ({str(e)[:40]}) — dùng cả kho")
     # ── CHỌN PHÒNG: BƯỚC NGUYÊN TỐ CÙNG NHAU, KHÔNG PHẢI LIỀN KỀ  (6/9/2026) ──────────────
     # Bản cũ lấy `(i//3 + noi_idx) % len(co_nen)` — ba panel một phòng, rồi phòng KẾ TIẾP trong
     # danh sách. Với kho 100 chỗ soạn theo NHÓM CHỦ ĐỀ, ba phòng liền nhau trong danh sách là

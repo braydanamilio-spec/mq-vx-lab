@@ -1,0 +1,1684 @@
+{
+ "MOT_NGAY": [
+  [
+   "a sushi chef",
+   "bright kitchen island with bamboo cutting board, stainless steel knives, rice barrels, hanging lanterns, wooden shelves, steam clouds",
+   "white chef coat, black apron, sushi knife, rubber shoes, hair net",
+   "soft warm glow from hanging paper lanterns reflecting off polished surfaces"
+  ],
+  [
+   "an Italian pizza baker",
+   "stone oven with flickering fire, wooden prep table, flour-dusted brick walls, hanging copper pots, herb bundles",
+   "red striped shirt, flour-dusted apron, wooden pizza peel, sturdy boots",
+   "golden orange light spilling from the open oven mouth"
+  ],
+  [
+   "a street taco vendor",
+   "metal cart with sizzling grill, stacked corn tortillas, chilies in clay bowls, colorful awning, steam rising",
+   "light denim jacket, bandana, grill tongs, reusable water bottle, sturdy sandals",
+   "bright midday sun casting sharp shadows on the cart"
+  ],
+  [
+   "an Ethiopian coffee roaster",
+   "clay roasting drum on a fire pit, sacks of green beans, wooden spoon, woven baskets, aromatic smoke",
+   "linen shirt, leather apron, wooden roasting paddle, protective gloves",
+   "soft amber light filtering through the smoke-filled air"
+  ],
+  [
+   "a French pastry chef",
+   "marble countertop with piping bags, tiered trays of croissants, sugar crystals, pastel walls, butter churn",
+   "white double-breasted coat, pastel chef hat, whisk, measuring spoons, non-slip shoes",
+   "gentle diffused light from a skylight above the pastry station"
+  ],
+  [
+   "an Indian spice blender",
+   "wooden mortar and pestle, rows of glass jars, vibrant turmeric piles, hanging copper pans, fragrant steam",
+   "cotton kurta, simple apron, spice scoops, wooden spoon, soft sandals",
+   "warm golden light spilling from a low hanging oil lamp"
+  ],
+  [
+   "a Japanese ramen master",
+   "large simmering pot, bamboo ladles, stacked noodles, dried seaweed sheets, steam vents, wooden floorboards",
+   "black chef jacket, thick apron, ladle, chopsticks, rubber kitchen mats",
+   "steady glow from a hanging lantern casting gentle shadows"
+  ],
+  [
+   "a Mexican mole maker",
+   "heavy cast-iron cauldron, dried chilies, chocolate blocks, wooden ladle, woven baskets, fragrant steam curls",
+   "lightweight shirt, embroidered apron, wooden spoon, sturdy boots",
+   "rich reddish light from a nearby stove fire"
+  ],
+  [
+   "a Brazilian churrasco chef",
+   "open grill with rotating skewers, charred wood planks, hanging garlic braids, smoky haze, tiled floor",
+   "checked shirt, leather apron, long tongs, heat-resistant gloves, sturdy sandals",
+   "bright orange flare from the glowing coals"
+  ],
+  [
+   "a Korean kimchi fermenter",
+   "large earthenware jars, bamboo lids, hanging red peppers, wooden cutting board, misty air, stone floor",
+   "simple linen shirt, apron with pockets, wooden mallet, cloth napkin",
+   "soft cool light from a recessed ceiling fixture"
+  ],
+  [
+   "a Lebanese mezze platter artist",
+   "ceramic plates stacked, olives in glass bowls, fresh herbs, brass bowls, woven table runner, citrus scent",
+   "white tunic, embroidered vest, small serving tray, wooden spoon, comfortable sandals",
+   "warm daylight filtering through a lattice window"
+  ],
+  [
+   "a Thai street noodle cook",
+   "wok over high flame, bamboo steam basket, fresh herbs, lime wedges, hanging chili strings, misty steam",
+   "light raincoat, apron with pockets, metal spatula, heat-resistant gloves",
+   "bright flickering light from the open flame"
+  ],
+  [
+   "a German pretzel baker",
+   "large stone oven, dough trays, wooden rolling pins, malt barrels, hanging copper hooks, flour clouds",
+   "blue work shirt, flour-dusted apron, dough scraper, sturdy shoes",
+   "soft yellow light spilling from the oven doorway"
+  ],
+  [
+   "a Moroccan tagine chef",
+   "clay tagine pots, copper spice bowls, woven rugs, hanging dried oranges, fragrant steam, mosaic floor",
+   "linen robe, leather belt, wooden spoon, spice ladle, soft slippers",
+   "warm amber glow from a low oil lantern"
+  ],
+  [
+   "a vegan smoothie bar operator",
+   "glass blenders, rows of fresh fruit, bamboo cutting boards, recycled jars, green plants, soft countertop",
+   "eco-friendly shirt, reusable apron, stainless steel strainer, wooden spoon, canvas shoes",
+   "bright natural light from a large front window"
+  ],
+  [
+   "an Irish pub bartender",
+   "polished wood bar, copper taps, stacked barrels, hanging hops, amber glassware, stone fireplace backdrop",
+   "dark vest, crisp white shirt, bar spoon, pocket watch, sturdy boots",
+   "soft golden glow from the fireplace flames"
+  ],
+  [
+   "a Spanish paella chef",
+   "large shallow pan over open fire, saffron threads, rice piles, seafood trays, wooden spoon, tiled patio floor",
+   "light linen shirt, apron with embroidered pattern, wooden ladle, heat-resistant gloves",
+   "bright sunny light spilling across the patio"
+  ],
+  [
+   "a Chinese dim sum steward",
+   "steamer baskets stacked, bamboo trays, soy sauce dishes, porcelain cups, hanging ginger, gentle steam rise",
+   "simple mandarin collar shirt, waist apron, bamboo spatula, cloth napkin",
+   "soft white light from a ceiling lantern"
+  ],
+  [
+   "a Peruvian ceviche master",
+   "marble slab, bowls of citrus juice, fresh fish fillets, sliced onions, cilantro bunches, sea salt crystals",
+   "light breathable shirt, apron with pockets, fish fillet knife, rubber sandals",
+   "cool crisp light from a nearby window"
+  ],
+  [
+   "a Swedish fika host",
+   "round wooden table, cinnamon buns, coffee pot, glass jars of jam, soft rug, pastel walls",
+   "cozy cardigan, simple skirt, tea kettle, wooden spoon, wool slippers",
+   "gentle warm light from a hanging pendant lamp"
+  ],
+  [
+   "a Haitian griot grill operator",
+   "charcoal grill, hanging pork pieces, pineapple slices, wooden skewers, smoky haze, rustic stone wall",
+   "colorful shirt, apron with fringe, grill tongs, heat-resistant gloves",
+   "deep orange glow from the glowing coals"
+  ],
+  [
+   "an Australian coffee roaster",
+   "metal drum roaster, burlap bean sacks, stainless steel grinder, wooden crates, aromatic steam, concrete floor",
+   "casual shirt, denim apron, metal scoop, protective goggles, sturdy boots",
+   "soft morning light filtering through industrial windows"
+  ],
+  [
+   "a Filipino halo‑halo maker",
+   "large clear bowls, shaved ice piles, sweet beans, coconut strips, colorful syrups, tropical plants",
+   "light cotton shirt, patterned apron, plastic spoon, straw hat for shade",
+   "bright tropical light streaming through open shutters"
+  ],
+  [
+   "a Belgian waffle artisan",
+   "iron waffle iron, powdered sugar dust, fresh berries, maple syrup bottles, wooden serving board, tiled floor",
+   "white chef jacket, red striped apron, metal spatula, non‑slip shoes",
+   "warm honey‑colored light from a hanging bulb"
+  ],
+  [
+   "a Turkish baklava cutter",
+   "layered pastry trays, pistachio piles, honey drizzles, copper pans, marble countertop, fragrant steam",
+   "light cotton tunic, apron with decorative fringe, sharp pastry knife, comfortable slippers",
+   "soft golden light from a low hanging lantern"
+  ],
+  [
+   "a South African braai master",
+   "open charcoal grill, meat skewers, maize porridge pots, wooden firewood stacks, smoke curls, stone patio",
+   "checked shirt, leather apron, long grilling fork, heat‑proof gloves",
+   "bright red‑orange light from the glowing embers"
+  ],
+  [
+   "a Greek souvlaki cook",
+   "metal rotisserie, stacked pita breads, olive oil bottles, lemon wedges, hanging oregano bunches, tiled floor",
+   "white shirt, blue apron, metal tongs, wooden spatula, comfortable sandals",
+   "clear bright light from a sunny courtyard"
+  ],
+  [
+   "a Jamaican jerk chef",
+   "smoking pit, hanging Scotch bonnet peppers, wooden planks, coconut shells, fragrant smoke, bamboo mat floor",
+   "bright patterned shirt, apron with pockets, metal grill fork, heat‑resistant gloves",
+   "deep amber light from the fire pit"
+  ],
+  [
+   "a Canadian maple syrup tapper",
+   "wooden sugar shack, copper boiling vats, maple sap buckets, pine branches, steam rising, stone hearth",
+   "flannel shirt, wool vest, metal tap spout, rubber boots",
+   "soft warm light from a hanging oil lantern"
+  ],
+  [
+   "a steam locomotive engineer",
+   "a long iron rail line stretching across rolling hills, distant mountains, and a stone bridge under a cloudy sky",
+   "a dark wool coat, leather gloves, brass pocket watch, and a folded railway timetable",
+   "soft amber glow from a lantern hanging on the locomotive cab"
+  ],
+  [
+   "an ocean liner captain",
+   "a massive wooden deck with polished railings, towering smokestacks, and gentle waves lapping against the hull at sunset",
+   "a navy double‑breasted coat, gold epaulettes, a captain’s hat, and a brass sextant",
+   "warm golden light spilling from a lantern on the wheelhouse"
+  ],
+  [
+   "a horse‑drawn carriage driver",
+   "cobblestone streets lined with gas‑lit lanterns, street vendors' stalls, and a bustling marketplace square",
+   "a leather apron, sturdy boots, a wide‑brimmed hat, and a set of reins",
+   "flickering orange light from the street lanterns"
+  ],
+  [
+   "an intercity bus conductor",
+   "a modern highway rest area with a concrete shelter, fuel pumps, and a row of parked buses under a bright sky",
+   "a crisp uniform shirt, name badge, handheld ticket scanner, and a clipboard",
+   "clear daylight filtering through a translucent roof"
+  ],
+  [
+   "a river ferry operator",
+   "a calm riverbank with wooden piers, floating buoys, and a small dock shaded by willow trees",
+   "a waterproof jacket, rubber boots, a life jacket, and a handheld radio",
+   "soft silver light reflected off the water’s surface"
+  ],
+  [
+   "a cargo ship deckhand",
+   "a sprawling steel deck crowded with stacked containers, massive winches, and a rusted crane against a stormy horizon",
+   "a high‑visibility vest, steel‑toed boots, a heavy rope coil, and a weathered cap",
+   "dim gray light from a lantern mounted on the deck rail"
+  ],
+  [
+   "a mountain tram operator",
+   "a steep alpine pass with wooden support towers, cable lines, and a snowy plateau under a pale sunrise",
+   "a insulated parka, thick gloves, a woolen scarf, and a handheld control panel",
+   "cool blue light spilling from sunrise over the peaks"
+  ],
+  [
+   "an aerial tramway technician",
+   "a high‑altitude station perched on a cliff, cable cars hanging, and pine forests below a clear sky",
+   "a safety harness, reflective jacket, toolkit belt, and a portable radio",
+   "bright daylight illuminating the metal cables"
+  ],
+  [
+   "a cruise ship deck manager",
+   "a sun‑drenched promenade deck with lounge chairs, palm trees, and a turquoise ocean stretching to the horizon",
+   "a navy blazer, crisp white shirt, polished shoes, and a clipboard",
+   "warm golden light spilling from a rooftop lantern"
+  ],
+  [
+   "a historic stagecoach guard",
+   "a dusty desert trail with tumbleweeds, a wooden water trough, and distant mesas under a blazing sun",
+   "a leather coat, wide‑brimmed hat, a revolver, and a leather satchel",
+   "harsh yellow light beating down on the sand"
+  ],
+  [
+   "a modern tram conductor",
+   "a city street with paved tracks, modern streetlights, and a glass‑covered tram stop shelter",
+   "a smart‑tech uniform, digital ticket scanner, headset, and a compact tablet",
+   "soft white glow from the streetlights"
+  ],
+  [
+   "a polar research sled pilot",
+   "a frozen tundra with snow‑covered sleds, scientific tents, and distant icebergs under a pale aurora",
+   "a insulated parka, fur‑lined boots, a GPS device, and a sled harness",
+   "cool greenish light dancing across the icy horizon"
+  ],
+  [
+   "an interplanetary cargo shuttle operator",
+   "a futuristic docking bay with metallic platforms, hovering cargo pods, and a vast starfield beyond a transparent dome",
+   "a sleek nano‑fabric suit, data glove, holo‑tablet, and a compact thruster pack",
+   "soft silver light streaming through the dome"
+  ],
+  [
+   "a city scooter fleet manager",
+   "a bustling pedestrian plaza with charging stations, concrete pads, and decorative planters under a clear sky",
+   "a casual polo shirt, smart watch, tablet, and a set of spare batteries",
+   "bright daylight casting crisp shadows on the pavement"
+  ],
+  [
+   "a high‑speed rail conductor",
+   "a sleek platform with glass walls, polished tiles, and a digital arrival board glowing softly",
+   "a tailored uniform, badge, handheld scanner, and a sleek black briefcase",
+   "cool white light from recessed ceiling fixtures"
+  ],
+  [
+   "a vintage trolley driver",
+   "a cobbled avenue with streetlamps, flower boxes, and an old electric trolley parked beside a curb",
+   "a woolen cap, leather gloves, a brass key ring, and a pocket ledger",
+   "soft amber glow from the streetlamps"
+  ],
+  [
+   "a desert caravan guide",
+   "a wide sand dune valley with a line of camels, a stone oasis, and a setting sun painting the sky",
+   "a flowing robe, leather sandals, a curved dagger, and a water skin",
+   "rich orange light spilling across the dunes"
+  ],
+  [
+   "a ski lift operator",
+   "a snowy mountain slope with wooden chair lifts, pine trees, and a chalet roof against a crisp blue sky",
+   "a insulated jacket, snow boots, a safety harness, and a handheld ticket scanner",
+   "crisp white light of a high‑altitude noon"
+  ],
+  [
+   "an electric vehicle charging attendant",
+   "a modern parking garage with rows of charging stalls, sleek concrete columns, and soft ambient lighting",
+   "a branded polo shirt, tablet, tool kit, and a safety vest",
+   "cool blue light emanating from the charging units"
+  ],
+  [
+   "an emergency nurse",
+   "bright tiled corridor, stainless steel cabinets, rolling beds, glass window, potted plant, polished floor",
+   "blue scrubs, name badge, digital tablet, stethoscope, penlight",
+   "soft fluorescent wash across the hallway, steady hum"
+  ],
+  [
+   "a wartime field medic",
+   "muddy tent floor, canvas walls, sandbags, wooden stretcher, lantern, sand‑covered ground",
+   "khaki jacket, bandage roll, compact rifle, field kit, rugged boots",
+   "dim lantern light flickering through canvas, amber shadows"
+  ],
+  [
+   "a 19th century apothecary",
+   "oak shelves, glass jars, wooden counter, brass scales, hanging dried herbs, stone floor",
+   "long coat, leather belt, mortar and pestle, measuring spoon, pocket watch",
+   "golden glow from oil lamp, gentle reflections"
+  ],
+  [
+   "an obstetrician",
+   "soft pastel walls, birthing pool, folded blankets, wooden chair, window with curtains, polished tiles",
+   "white coat, stethoscope, ultrasound probe, clipboard, comfortable shoes",
+   "calm daylight streaming through curtains, warm ambience"
+  ],
+  [
+   "a dental hygienist",
+   "white tiled floor, dental chairs, stainless trays, hanging mirrors, plant pot, ceiling vent",
+   "green uniform, protective glasses, ultrasonic scaler, floss dispenser, mask",
+   "clear cool light from ceiling fixtures, steady illumination"
+  ],
+  [
+   "a radiology technician",
+   "large imaging machine, lead‑lined walls, control console, rolling cart, tiled floor, window blind",
+   "gray scrubs, lead apron, handheld dosimeter, clipboard, comfortable shoes",
+   "soft indirect lighting from recessed panels, muted brightness"
+  ],
+  [
+   "a hospice caregiver",
+   "cozy room, soft rug, armchair, bedside table, framed photo, gentle curtains",
+   "comfortable cardigan, warm socks, clipboard, calming scent bottle, gentle smile",
+   "soft warm light from floor lamp, comforting aura"
+  ],
+  [
+   "a lab pathologist",
+   "microscope stations, glass slides, stainless cabinets, white tiles, ceiling vents, plant in corner",
+   "white coat, latex gloves, slide box, notebook, comfortable shoes",
+   "cool neutral light from ceiling fixtures, precise illumination"
+  ],
+  [
+   "an anesthesiologist",
+   "operating table, breathing machines, medication cart, ceiling lights, polished floor, glass window",
+   "blue scrubs, mask, syringe, monitoring device, calm demeanor",
+   "bright clinical light from ceiling, clear visibility"
+  ],
+  [
+   "a medical researcher",
+   "laboratory benches, glass beakers, incubator, whiteboard, floor‑to‑ceiling windows, smooth floor",
+   "lab coat, safety goggles, clipboard, pipette, sturdy shoes",
+   "natural daylight flooding the lab, energizing glow"
+  ],
+  [
+   "a trauma surgeon",
+   "emergency bay, stainless tables, hanging lights, crash cart, large windows, polished floor",
+   "scrub suit, surgical glove, scalpel, hemostat, focused expression",
+   "intense white glare from overhead lights, urgent brightness"
+  ],
+  [
+   "a psychiatric therapist",
+   "soft sofa, bookshelf, window with plants, warm rug, lamp on side table, calm walls",
+   "casual sweater, notebook, pen, glasses, gentle shoes",
+   "warm mellow light from table lamp, soothing tone"
+  ],
+  [
+   "a fertility specialist",
+   "glass cabinets, microscope, soft carpet, window with curtains, gentle lighting, wooden desk",
+   "white coat, tablet, lab pipette, calm demeanor, soft shoes",
+   "soft diffused light from ceiling, calming ambience"
+  ],
+  [
+   "a dialysis nurse",
+   "row of machines, water filters, plastic chairs, tiled floor, ceiling vents, window blind",
+   "light blue scrubs, blood pressure cuff, clipboard, gentle smile, comfortable shoes",
+   "steady cool light from ceiling panels, clinical calm"
+  ],
+  [
+   "a transplant coordinator",
+   "large conference table, whiteboard, potted plant, floor‑to‑ceiling windows, soft carpet, ceiling lights",
+   "business‑casual attire, tablet, clipboard, phone, calm expression",
+   "clear daylight streaming through windows, bright and hopeful"
+  ],
+  [
+   "a surgical resident",
+   "sterile operating room, hanging lights, steel table, instrument tray, glass wall, tiled floor",
+   "green scrub, surgical cap, handheld suction, pen, focused eyes",
+   "bright sterile light from overhead, precise clarity"
+  ],
+  [
+   "a wound care nurse",
+   "treatment chairs, sterile trays, hanging lamps, clean curtains, soft carpet, window with blinds",
+   "blue scrubs, dressing kit, gloves, gentle smile, supportive shoes",
+   "soft warm light from ceiling lamps, comforting tone"
+  ],
+  [
+   "an ancient Egyptian papyrus farmer",
+   "lush riverbank, tall reeds, mud‑filled irrigation channels, mudbrick walls surrounding the plot",
+   "linen shirt, leather sandals, reed basket filled with cut stalks",
+   "warm golden light filtering through palm fronds"
+  ],
+  [
+   "a Viking longship rower",
+   "calm fjord water, towering pine trees, mist rising from surface, wooden shields stacked on shore",
+   "leather tunic, fur cloak, wooden oar, iron axe at belt",
+   "soft dawn light shimmering across still water"
+  ],
+  [
+   "an Arctic seal hunter",
+   "ice floes glittering, polar bear tracks, cracked sea ice, aurora faintly glowing above",
+   "fur‑lined parkas, heavy boots, harpoon, sled harness",
+   "pale twilight casting a cool blue wash"
+  ],
+  [
+   "an early 20th century radiographer",
+   "brick examination room with wooden examination table, heavy lead shield, glass window, metal cabinets, tiled floor",
+   "white lab coat, thick rubber gloves, lead apron, wooden stool, clipboard",
+   "steady incandescent glow from a hanging bulb casting even light across the room"
+  ],
+  [
+   "a neonatal specialist",
+   "warm nursery with incubators, pastel walls, soft blankets, wooden rocking chairs, gentle curtains",
+   "light‑colored coat, soft stethoscope, small notebook, baby scale, gentle smile",
+   "soft diffused daylight filtered through sheer curtains bathing the room"
+  ],
+  [
+   "an orthopedic surgeon",
+   "spacious operating theater with stainless steel table, sterile drapes, surgical lights, wall‑mounted cabinets, polished tiles",
+   "green scrub suit, surgical mask, scalpel, orthopedic drill, sterile gloves",
+   "focused bright surgical lamps casting sharp shadows on the operating table"
+  ],
+  [
+   "an ambulance paramedic",
+   "compact ambulance interior with stretcher, medical bag, oxygen tank, dashboard lights, black rubber flooring",
+   "high‑visibility jacket, helmet, trauma kit, handheld defibrillator, radio",
+   "steady blue emergency lights flashing softly along the ceiling"
+  ],
+  [
+   "an immunology specialist",
+   "clean lab area with refrigerated freezers, microscope stations, sterile countertops, glass partitions, muted flooring",
+   "protective gown, latex gloves, pipette, data tablet, calm expression",
+   "cool white LEDs casting a crisp, clinical illumination"
+  ],
+  [
+   "a clinical psychologist",
+   "cozy therapy room with sofa, bookshelf, soft rug, floor lamp, window with blinds",
+   "casual shirt, notebook, soothing voice, gentle smile, coffee cup",
+   "warm golden light from a floor lamp creating a relaxed mood"
+  ],
+  [
+   "a rural clinic doctor",
+   "small wooden clinic with waiting bench, simple desk, medicine cabinet, window view of fields, tiled floor",
+   "light‑blue coat, stethoscope, prescription pad, pocket watch, friendly grin",
+   "soft natural light entering through a single wide window"
+  ],
+  [
+   "a forensic pathologist",
+   "cold autopsy suite with stainless steel table, steel instruments, stainless walls, ventilation hood, tiled floor",
+   "white lab coat, surgical gloves, scalpels, evidence bag, careful eyes",
+   "bright white surgical lights highlighting the work surface"
+  ],
+  [
+   "an obstetric midwife",
+   "bright birthing suite with birthing pool, soft curtains, wooden birthing chair, pastel walls, gentle lighting",
+   "comforting gown, supportive shoes, birthing ball, warm blanket, encouraging voice",
+   "soft natural daylight streaming through a high window"
+  ],
+  [
+   "an illuminated manuscript scribe",
+   "a quiet scriptorium with wooden desks, parchment stacks, ink pots, candle holders, stone walls",
+   "simple linen robe, quill pen, ink satchel, parchment roll tucked under arm",
+   "soft flickering candlelight casting gentle shadows on the desk"
+  ],
+  [
+   "a castle steward",
+   "a grand hall with long wooden tables, barrels, hanging tapestries, stone arches, empty goblets",
+   "fur‑lined coat, leather boots, ledger book, brass ring on finger",
+   "bright midday sun streaming through high stained‑glass windows"
+  ],
+  [
+   "a town baker",
+   "a rustic bakery with brick ovens, flour sacks, wooden carts, hanging loaves, clay pots",
+   "flour‑dusted apron, baker's hat, wooden rolling pin, basket of dough",
+   "golden sunrise light spilling through a small front window"
+  ],
+  [
+   "a cathedral stone mason",
+   "a construction site with half‑erected arches, stone blocks, wooden scaffolding, chisels, sand piles",
+   "heavy leather apron, sturdy boots, mason's hammer, measuring rod",
+   "bright overcast sky casting even light over the stone"
+  ],
+  [
+   "a guild master weaver",
+   "a workshop with large wooden loom, skeins of dyed yarn, spindles, wooden crates, hanging tapestries",
+   "linen shirt, woolen vest, wooden shuttle, measuring tape belt",
+   "warm midday glow through a high mullioned window"
+  ],
+  [
+   "a royal falconer",
+   "a palace terrace with marble columns, ornamental fountains, stone statues, wind‑blown grasses, distant hills",
+   "embroidered cloak, feathered cap, leather gauntlet, falcon perch",
+   "crisp morning light sparkling on the fountain water"
+  ],
+  [
+   "a minstrel",
+   "a tavern corner with wooden tables, empty mugs, a cracked lute stand, hanging lanterns, straw rugs",
+   "colorful doublet, leather boots, lute case, feathered hat",
+   "warm candlelight dancing across the rough wooden beams"
+  ],
+  [
+   "a monastery scribe",
+   "a stone cloister with stone benches, wooden lectern, candle holders, stacks of vellum, quiet garden view",
+   "rough wool robe, reed pen, ink pot, small wooden cross pendant",
+   "soft glow of multiple candles flickering in the night"
+  ],
+  [
+   "an astronaut botanist",
+   "metallic space station module, hydroponic trays stacked in rows, a window showing Earth below",
+   "light‑weight suit, data tablet, small gardening tools, sealed nutrient packs",
+   "cool artificial LED panels bathing the trays in steady white light"
+  ],
+  [
+   "an alpine cheese maker",
+   "mountain meadow with scattered pine trees, a stone cheese cave entrance, grazing goats nearby",
+   "thick wool vest, leather apron, cheese‑making knife, wooden ladle, basket",
+   "soft golden light filtering through mountain mist"
+  ],
+  [
+   "a wandering minstrel",
+   "a forest clearing with mossy stones, a small fire pit, fallen logs, and scattered pine cones",
+   "colorful doublet, lute strapped across chest, leather boots, and a feathered cap",
+   "soft firelight dancing on the surrounding trees"
+  ],
+  [
+   "a shipwright apprentice",
+   "a dockyard with wooden hulls, rope coils, tar barrels, and a thatched shed",
+   "oil‑stained smock, wooden mallet, measuring tape, and a bundle of shavings",
+   "soft dusk light glowing over the water’s surface"
+  ],
+  [
+   "a village healer",
+   "a cottage interior with herbal bundles, stone mortar, wooden shelves, and a thatched roof window",
+   "simple linen dress, leather satchel, wooden spoon, and a bundle of dried sage",
+   "soft afternoon light filtering through a small window"
+  ],
+  [
+   "an espresso barista",
+   "a sleek coffee counter with stainless steel espresso machine, glass jars of beans, brushed metal shelves",
+   "black shirt, denim apron, tamping tool, reusable cup",
+   "cool white illumination from under‑counter LED strips"
+  ],
+  [
+   "a grill pit manager",
+   "an open fire pit surrounded by brick walls, metal grill grates, hanging meat hooks, charcoal piles",
+   "heavy denim jacket, leather gloves, steel spatula, tongs",
+   "bright orange flicker from roaring flames"
+  ],
+  [
+   "an ice‑cream scooper",
+   "a colorful ice‑cream counter with pastel tubs, chrome freezer, striped awning, decorative cones stacked",
+   "bright pink shirt, white cap, metal scoop, napkin dispenser",
+   "cheerful daylight filtered through frosted glass doors"
+  ],
+  [
+   "a food truck chef",
+   "a painted van kitchen with stainless steel grill, hanging spice racks, rolling serving window, bright awning",
+   "green bandana, short‑sleeve shirt, utility belt, handheld thermometer",
+   "vivid daylight reflected off metal surfaces"
+  ],
+  [
+   "a sous‑chef",
+   "a busy line kitchen with stainless steel prep tables, hanging pots, stainless trays, stacked pans",
+   "black chef jacket, white apron, sharp chef’s knife, timer",
+   "steady cool light from overhead fluorescent panels"
+  ],
+  [
+   "a wine sommelier",
+   "a dimly lit cellar with wooden racks, stacked barrels, stone walls, soft candle clusters",
+   "crisp white shirt, black vest, tasting glass, corkscrew",
+   "gentle amber glow from candlelight"
+  ],
+  [
+   "a pizza oven operator",
+   "a stone brick oven surrounded by wooden prep table, hanging pizza peel, flour dust clouds",
+   "red checkered apron, flour‑stained shirt, wooden pizza peel, heat‑resistant gloves",
+   "radiant orange heat from the open oven"
+  ],
+  [
+   "a dim sum chef",
+   "a bamboo steamer station with metal racks, porcelain bowls, hanging herbs, polished wok",
+   "light cotton jacket, bamboo hat, bamboo steam basket, ladle",
+   "soft warm light from hanging paper lanterns"
+  ],
+  [
+   "a chocolatier",
+   "a quiet workshop with marble countertop, tempered chocolate molds, glass jars of nuts, brass thermometer",
+   "white lab coat, silicone gloves, chocolate spatula, cooling rack",
+   "muted golden light from low pendant bulbs"
+  ],
+  [
+   "a ramen broth master",
+   "a large simmering pot surrounded by wooden shelves, dried kelp bundles, ceramic bowls, hanging ladles",
+   "black apron, thick sleeves, ladle, wooden spoon",
+   "deep amber light from simmering broth"
+  ],
+  [
+   "a cocktail mixologist",
+   "a polished bar top with mirrored back, rows of glass bottles, copper shakers, citrus garnish tray",
+   "black vest, crisp shirt, cocktail shaker, muddler",
+   "cool blue glow from LED backlighting"
+  ],
+  [
+   "a farm‑to‑table chef",
+   "a rustic kitchen with reclaimed wood table, hanging herbs, mason jars of vegetables, stone mortar",
+   "linen apron, earth‑tone shirt, wooden spoon, basket of carrots",
+   "natural sunlight through open window"
+  ],
+  [
+   "a pastry decorator",
+   "a bright workbench with pastel fondant rolls, piping bags, edible glitter jars, marble slab",
+   "white smock, colorful gloves, piping tip set, small spatula",
+   "clear daylight from large skylight"
+  ],
+  [
+   "a barbecue pit pitmaster",
+   "a large smoker with brick walls, hanging meat hooks, cedar planks, metal firebox",
+   "flannel shirt, denim apron, heat‑proof gloves, basting brush",
+   "rich orange radiance from smoking wood"
+  ],
+  [
+   "a noodle maker",
+   "a long wooden table with flour dust, rolling pins, stainless steel dough cutter, hanging pasta racks",
+   "white apron, cotton shirt, noodle cutter, wooden rolling pin",
+   "bright daylight filtering through high windows"
+  ],
+  [
+   "a taco stand operator",
+   "a colorful stall with metal grill, hanging chili strings, stacked corn tortillas, wooden serving board",
+   "bright shirt, straw hat, tongs, lime squeezer",
+   "vivid midday sun casting warm shadows"
+  ],
+  [
+   "a bakery dough mixer",
+   "a spacious prep area with industrial mixer, flour sacks, wooden rolling pins, metal shelving",
+   "gray chef coat, flour‑specked gloves, mixing paddle, timer",
+   "steady cool illumination from ceiling fluorescents"
+  ],
+  [
+   "a coffee roaster",
+   "a dark roasting room with copper roaster, burlap bean sacks, steel cooling trays, hanging thermometer",
+   "heavy denim jacket, protective gloves, scoop, tasting cup",
+   "warm amber glow from glowing roaster"
+  ],
+  [
+   "a hospital pharmacist",
+   "compact pharmacy room, shelves of labeled bottles, dispensing counter, computer terminal, safety cabinet",
+   "white lab coat, safety glasses, pill counter, prescription pad",
+   "bright fluorescent glow reflecting off polished countertops"
+  ],
+  [
+   "an oncology pharmacist",
+   "secure medication room, locked cabinets, chemotherapy vials, biohazard bins, stainless steel workbench",
+   "white coat, protective gloves, dose‑calculator device, safety glasses",
+   "clinical white light from ceiling panels highlighting safety equipment"
+  ],
+  [
+   "a physiotherapy aide",
+   "rehabilitation gym, exercise mats, resistance bands, balance boards, wall‑mounted mirror, large window",
+   "sports‑style polo shirt, sneakers, water bottle, clipboard",
+   "natural daylight flooding the space through floor‑to‑ceiling glass"
+  ],
+  [
+   "a mental health therapist",
+   "counselling office, plush sofa, bookshelf, soft rug, floor lamp, window with blinds",
+   "soft cardigan, notepad, calming tea mug",
+   "warm amber light from a standing lamp beside the sofa"
+  ],
+  [
+   "a Renaissance alchemist",
+   "a vaulted workshop with stone hearth, copper alembics, and shelves of dried herbs and minerals",
+   "a velvet robe, leather belt, and a glass vial",
+   "golden firelight dancing across stained glass windows"
+  ],
+  [
+   "a present‑day virologist",
+   "a biosafety level‑3 lab with sealed cabinets, air‑flow hoods, and rows of incubators",
+   "a full protective suit, respirator, and a data pad",
+   "cool blue light from filtered ceiling panels"
+  ],
+  [
+   "a contemporary pharmacologist",
+   "a lab with pill‑press machines, glass vials, and a refrigerated compound freezer",
+   "a lab coat, latex gloves, and a barcode scanner",
+   "steady white light from ceiling fluorescent strips"
+  ],
+  [
+   "a 21st‑century solar‑farm engineer",
+   "expansive field of gleaming panels, desert‑like soil, distant wind turbines, clear sky",
+   "safety vest, hard hat, tablet, insulated gloves",
+   "bright sun casting mirror‑like reflections"
+  ],
+  [
+   "a stone mason",
+   "sunlit quarry with towering limestone blocks, wooden scaffolding, dust clouds drifting over rugged cliffs",
+   "worn leather apron, heavy hammer, chisel tucked in belt",
+   "warm golden rays filtering through thin cloud cover"
+  ],
+  [
+   "an olive harvester",
+   "grove of silver‑green trees, baskets stacked on stone crates, ancient terracotta amphorae scattered nearby",
+   "linen tunic, woven basket, curved sickle at belt",
+   "soft midday glow shimmering through rustling leaves"
+  ],
+  [
+   "a bronze caster",
+   "open workshop with clay molds, molten metal vats, ash‑covered stone floor, smoke rising from a furnace",
+   "sturdy leather gloves, bronze hammer, protective apron",
+   "bright furnace fire casting flickering orange light"
+  ],
+  [
+   "a potter",
+   "clay‑filled workshop, turning wheel, stacked amphorae, kiln emitting soft heat, stray pottery shards",
+   "simple wool tunic, apron with pockets, wooden carving tool",
+   "warm glow from the glowing kiln"
+  ],
+  [
+   "a grain merchant",
+   "market stall with wooden beams, sacks of golden wheat, scale stones, woven baskets, sand‑covered ground",
+   "linen vest, leather satchel, bronze weighing pan",
+   "bright sun casting sharp shadows on the stall"
+  ],
+  [
+   "a glassblower",
+   "open furnace area with glowing crucible, glass tubes on wooden racks, sand piles, charcoal fire",
+   "heat‑resistant apron, long tongs, leather gloves",
+   "intense orange light from the furnace flames"
+  ],
+  [
+   "an apothecary",
+   "stone counter with mortar and pestle, glass jars of herbs, dried vines hanging, low wooden shelf",
+   "linen coat, satchel of dried herbs, small bronze scale",
+   "soft candlelight flickering on the counter"
+  ],
+  [
+   "a papyrus maker",
+   "shallow riverbank with stacked reed bundles, drying racks, mud‑filled vats, wooden paddles",
+   "linen shirt, reed cutter, basket of wet strips",
+   "gentle sunlight glinting on the water surface"
+  ],
+  [
+   "a temple sculptor",
+   "carved marble courtyard, half‑finished statue, chisel marks, stone dust clouds, marble blocks stacked",
+   "simple tunic, leather belt with carving tools, protective cloth",
+   "cool morning light casting gentle shadows"
+  ],
+  [
+   "a loom operator",
+   "large wooden loom, skeins of dyed wool, woven tapestries hanging, straw‑filled floor",
+   "linen apron, wooden shuttle, measuring rod",
+   "soft daylight filtering through a high window"
+  ],
+  [
+   "a marble cutter",
+   "quarry with massive stone blocks, wooden sledges, dust clouds, ancient tools laid on a bench",
+   "heavy leather belt, copper chisel, wooden mallet",
+   "bright sun striking the marble surfaces"
+  ],
+  [
+   "a monk copyist",
+   "a cloistered scriptorium with wooden desks, parchment piles, ink wells, wooden shelves, stone arches",
+   "simple brown robe, wooden stylus, inkpot, small candle holder",
+   "gentle candlelight flickering over the stone floor"
+  ],
+  [
+   "a battlefield medic",
+   "muddy trench with sandbags, wooden crates, a makeshift stretcher, and a field tent",
+   "khaki uniform, bandage roll, small first‑aid kit, and a whistle",
+   "dawn light breaking over the horizon illuminating the trench"
+  ],
+  [
+   "a World War II field surgeon",
+   "makeshift operating tent with canvas walls, wooden table, medical instruments, and sandbags outside",
+   "olive drab coat, scalpel, bandage roll, and a field compass",
+   "dim lantern light swinging gently above the table"
+  ],
+  [
+   "an African market grill cook",
+   "open grill with charcoal, rows of skewers, woven basket of vegetables, clay pots, hanging lanterns",
+   "cotton dashiki, sturdy sandals, metal tongs, wooden spatula, small woven pouch",
+   "golden glow of charcoal fire mixing with lantern light"
+  ],
+  [
+   "an EMT trainee",
+   "spacious ambulance garage with stacked stretchers, medical kits on shelves, open garage doors showing city street",
+   "lightweight waterproof jacket, utility belt with trauma shears, compact backpack",
+   "soft natural daylight streaming through high windows onto polished concrete"
+  ],
+  [
+   "a 911 dispatcher",
+   "dimly lit control room filled with glowing consoles, stacked folders, acoustic panels, coffee mugs on desks",
+   "formal shirt, headset microphone, wristwatch, slim notebook",
+   "warm amber desk lamps illuminating the workstation area"
+  ],
+  [
+   "a search and rescue pilot",
+   "airfield hangar with a sleek rescue helicopter, fuel trucks, open runway, distant mountains",
+   "flight suit with patches, flight helmet, navigation tablet strapped to wrist",
+   "bright sunrise light spilling across the tarmac and hangar doors"
+  ],
+  [
+   "a marine rescue swimmer",
+   "coastal lifeboat station with lifeboats on cradles, ropes coiled, sea gulls perched on railings",
+   "wetsuit, rescue board strapped to back, waterproof watch",
+   "clear sky light reflecting off calm water and metal hulls"
+  ],
+  [
+   "a hazardous‑materials officer",
+   "industrial yard with sealed drums, containment tents, decontamination shower, rusted metal fences",
+   "full hazmat suit, respirator mask, sealed gloves, detection device",
+   "harsh white ceiling lights highlighting the safety barriers"
+  ],
+  [
+   "a canine handler",
+   "training arena with obstacle tunnels, scent barrels, padded flooring, bright safety cones",
+   "tactical vest, utility belt, dog harness, whistle on collar",
+   "even daylight from skylights casting uniform illumination"
+  ],
+  [
+   "a fire investigation specialist",
+   "burned warehouse interior with charred beams, soot‑covered floor, broken windows, scattered debris",
+   "protective coat, fire‑proof gloves, evidence bag, handheld scanner",
+   "muted orange glow from lingering flames reflected on walls"
+  ],
+  [
+   "a paramedic supervisor",
+   "medical response vehicle bay with stretchers, defibrillators on carts, organized supply racks, open garage doors",
+   "scrubs, stethoscope, tablet, medical bag slung across shoulder",
+   "bright daylight pouring through large overhead doors"
+  ],
+  [
+   "a flood relief coordinator",
+   "riverbank staging area with sandbags piled, inflatable boats, floating barriers, wooden pallets",
+   "rain‑proof jacket, waterproof boots, rescue rope, handheld GPS",
+   "soft overcast light diffusing across the wet ground"
+  ],
+  [
+   "a wildfire air‑crew member",
+   "remote helipad surrounded by tall pines, fire‑suppression tanks, charcoal‑blackened soil, smoke plume",
+   "flame‑resistant suit, fire‑retardant helmet, portable pump, safety goggles",
+   "harsh midday sun beating down on the clearing"
+  ],
+  [
+   "a disaster medical technician",
+   "field triage tent with rows of stretchers, medical trays, portable lights, sandbags outside",
+   "lightweight scrubs, medical badge, compact trauma kit, headlamp",
+   "warm lantern light flickering inside the canvas shelter"
+  ],
+  [
+   "a coastal storm‑watch officer",
+   "cliffside watchtower with weather instruments, wind‑swept flag, sea spray mist, rugged stone steps",
+   "windbreaker, binoculars, waterproof notebook, radio communicator",
+   "brisk sea‑air light with occasional sun bursts"
+  ],
+  [
+   "a crisis‑call volunteer",
+   "small community center room with folding chairs, bulletin board, coffee pot, window overlooking park",
+   "casual shirt, headset, notebook, comforting plush toy",
+   "gentle late‑afternoon sun filtering through curtains"
+  ],
+  [
+   "a rescue diver",
+   "boat dock with submerged training pool, ladders, life vests hanging, water ripples",
+   "dry‑suit, scuba mask, buoyancy device, waterproof tablet",
+   "bright midday sun sparkling on the water surface"
+  ],
+  [
+   "a volcanic eruption monitor",
+   "mountain observatory with seismic sensors, ash‑filled sky, metal rails, protective dome",
+   "heat‑resistant coverall, respirator mask, data logger, sturdy gloves",
+   "glowing red light from distant lava flow"
+  ],
+  [
+   "a traffic collision analyst",
+   "highway rest area with broken barriers, overturned vehicle, scattered debris, road markings",
+   "reflective vest, safety vest, clipboard, measuring tape",
+   "bright noon sun casting sharp shadows on the asphalt"
+  ],
+  [
+   "a storm‑damage carpenter",
+   "storm‑hit neighborhood street with fallen trees, broken fences, scattered lumber, muddy ground",
+   "work shirt, tool belt, safety glasses, hammer",
+   "overcast sky providing muted, even illumination"
+  ],
+  [
+   "a chemical‑spill responder",
+   "industrial plant yard with containment berms, yellow drums, spill kits, steel barriers",
+   "full hazmat suit, chemical detector, sealed gloves, portable decontamination unit",
+   "bright white safety lights casting clean illumination"
+  ],
+  [
+   "a canal boat captain",
+   "calm waterway bordered by willow trees, stone bridges, floating reeds, and a distant mill",
+   "blue raincoat, straw hat, wooden walking stick, leather boots, brass compass",
+   "cool morning light reflecting off the water’s surface"
+  ],
+  [
+   "an airline flight attendant",
+   "spacious aircraft aisle with rows of seats, overhead bins, safety cards, polished metal walls",
+   "navy uniform, crisp badge, slim belt, silver name tag, comfortable shoes",
+   "soft cabin lighting with a warm, inviting hue"
+  ],
+  [
+   "a bicycle courier",
+   "urban alley with brick walls, fire escapes, graffiti‑free murals, and stacked crates",
+   "lightweight jacket, messenger bag, helmet, reflective vest, sturdy sneakers",
+   "clear morning sun streaming through narrow gaps between buildings"
+  ],
+  [
+   "a freight ship deckhand",
+   "vast ocean deck with cargo crates, ropes, metal railings, and distant gulls",
+   "water‑resistant coat, steel-toe boots, weathered cap, cargo ledger, gloves",
+   "silver moonlight reflecting off the rolling sea"
+  ],
+  [
+   "a space shuttle flight controller",
+   "control room with glowing consoles, rows of chairs, cable bundles, and large windows overlooking launch pad",
+   "formal suit, badge, digital tablet, headset, polished loafers",
+   "soft ambient glow from panels illuminating the space"
+  ],
+  [
+   "a ferry terminal ticket agent",
+   "harbor dock with wooden piers, moored boats, gulls perched on railings, and water ripples",
+   "light blouse, name tag, ledger, pen, sensible flats",
+   "soft sunrise light shimmering on the calm water"
+  ],
+  [
+   "a trolley car driver",
+   "city street with tram tracks, vintage street lamps, cobblestones, and storefront awnings",
+   "dark uniform, cap, handheld conductor’s box, leather gloves, sturdy boots",
+   "soft amber glow from street lamps during early evening"
+  ],
+  [
+   "an Egyptian scribe",
+   "a quiet reed‑paper desk in a stone library, papyrus scrolls stacked, wooden shelves, clay jars, lotus motifs",
+   "linen robe, reed pen, satchel of scrolls, simple sandals",
+   "soft daylight filtering through high lattice windows"
+  ],
+  [
+   "a Babylonian baker",
+   "a mud‑brick oven yard, flatbread on stone slabs, wheat sacks, clay pots, fire pits, desert backdrop",
+   "linen shirt, apron, wooden paddle, woven basket",
+   "glowing orange firelight reflecting off the baked loaves"
+  ],
+  [
+   "an Assyrian chariot maker",
+   "a workshop with wooden frames, bronze wheels, leather straps, tools hanging, dust motes, stone floor",
+   "leather apron, heavy boots, hammer, chisel, protective headband",
+   "sunlight streaming through a high opening, casting sharp shadows"
+  ],
+  [
+   "a Phoenician shipwright",
+   "a dockside shed with timber planks, rope coils, tar barrels, gulls overhead, calm sea beyond",
+   "linen shirt, rope belt, carpenter’s knife, measuring tape",
+   "soft golden glow of sunrise over the water"
+  ],
+  [
+   "a Minoan fresco painter",
+   "a palace wall with fresh plaster, pigment palettes, brushes, ceramic jars, columns, garden vines",
+   "light tunic, paint‑stained apron, wooden palette, fine brushes",
+   "diffused daylight through an open atrium"
+  ],
+  [
+   "a Persian carpet weaver",
+   "a tent interior with loom, dyed wool skeins, wooden beams, patterned rugs hanging, desert sand outside",
+   "loose robe, weaving needles, small pouch of dyes, soft slippers",
+   "warm glow of oil lamps casting gentle light"
+  ],
+  [
+   "an Incan stone mason",
+   "a high mountain terrace with cut stone blocks, sand piles, wooden levers, llamas grazing nearby",
+   "woven poncho, stone‑carving tools, leather belt, sturdy sandals",
+   "bright mountain sun lighting the quarry"
+  ],
+  [
+   "a Hittite metalworker",
+   "a cave‑like forge with bronze crucible, anvils, charcoal piles, stone arches, echoing clangs",
+   "thick leather apron, protective gloves, hammer, tongs, metal ingots",
+   "fiery orange light from the molten metal"
+  ],
+  [
+   "a Sumerian brewer",
+   "a clay‑pot brewery beside a canal, fermenting vats, barley sacks, reed mats, water troughs",
+   "linen shirt, straw hat, wooden ladle, clay cup",
+   "soft twilight reflecting off the water’s surface"
+  ],
+  [
+   "a Mayan jade cutter",
+   "a stone workshop with jade blocks, grinding stones, obsidian blades, tropical vines, hummingbirds nearby",
+   "woven waistcloth, stone hammer, chisel, small leather pouch",
+   "bright filtered light through canopy openings"
+  ],
+  [
+   "a Carthaginian glassblower",
+   "a sand‑filled workshop with furnace, glass rods, metal tongs, mosaic tiles, desert wind outside",
+   "protective apron, heat‑resistant gloves, blowpipe, small cloth bag",
+   "intense furnace glow illuminating molten glass"
+  ],
+  [
+   "a Nubian goldsmith",
+   "a riverside stall with gold nuggets, wooden molds, crucible, palm thatch roof, reeds swaying",
+   "linen vest, small hammer, tongs, gold dust pouch",
+   "bright river reflections shimmering on the metal"
+  ],
+  [
+   "a field medic",
+   "dusty tent camp, canvas walls, fold‑out medical table, sandbags, portable generator humming",
+   "camouflage vest, combat boots, first‑aid kit, compact defibrillator",
+   "steady yellow floodlight casting sharp shadows"
+  ],
+  [
+   "a camel caravan guide",
+   "endless desert dunes, scattered oasis palms, sand ripples, distant mirage, stone cairns",
+   "loose linen robe, headscarf, leather satchel, walking stick",
+   "bright midday sun casting sharp shadows on sand"
+  ],
+  [
+   "a gondola operator",
+   "narrow canal with stone bridges, rippling water, lantern‑lit banks, blooming vines, distant bell tower",
+   "striped shirt, straw hat, wooden oar, leather belt",
+   "soft golden glow from lanterns reflecting on water"
+  ],
+  [
+   "a sailboat skipper",
+   "calm harbor with wooden piers, moored yachts, gulls perched, seafoam lapping, lighthouse beam",
+   "striped tee, sailing gloves, rope coil, waterproof watch",
+   "soft evening glow reflecting off calm water"
+  ],
+  [
+   "a kayak river guide",
+   "rocky river gorge with pine cliffs, swirling water, fallen logs, misty spray, sunlit spray",
+   "quick‑dry shirt, waterproof pouch, paddle, life jacket",
+   "dappled sunlight piercing through canopy onto water"
+  ],
+  [
+   "a tram driver",
+   "urban tramway with overhead wires, polished tracks, cobblestone streets, park benches, flowering trees",
+   "dark uniform jacket, cap, control panel gloves, badge",
+   "steady fluorescent light from street fixtures"
+  ],
+  [
+   "a glider pilot",
+   "rolling hillside launch field with grassy runway, wind socks, wooden hangar, distant clouds",
+   "flight suit, helmet, harness, altimeter",
+   "clear blue light bathing the open sky"
+  ],
+  [
+   "a bike‑share maintenance worker",
+   "city plaza with bike racks, potted plants, stone fountain, bench, sunrise sky",
+   "high‑visibility vest, tool belt, wrench, water bottle",
+   "soft morning light casting gentle hues"
+  ],
+  [
+   "a roller‑coaster operator",
+   "amusement park midway with tracks, safety barriers, colorful flags, concession stalls, twilight sky",
+   "bright polo shirt, badge, safety whistle, handheld control panel",
+   "vivid neon lights glowing against dusk"
+  ],
+  [
+   "an itinerant minstrel",
+   "a village square paved with cobblestones, market stalls empty, wooden fountain, stone bench, lantern posts",
+   "colorful doublet, leather boots, lute case, feathered hat, small pouch",
+   "golden twilight washing over the square"
+  ],
+  [
+   "a telemedicine physician",
+   "a home office with a laptop on a desk, potted plant, framed certificates, and a wall clock",
+   "smart casual shirt, headset, and a coffee mug beside a notepad",
+   "cool daylight from a nearby window filtered through blinds"
+  ],
+  [
+   "a railway signal operator",
+   "elevated signal tower beside tracks, red and green lights, wooden fence, and a misty valley below",
+   "dark coat, signal lever, pocket flashlight, and a brass badge",
+   "cool morning mist illuminated by signal lamps"
+  ],
+  [
+   "an Edo period sushi chef",
+   "tatami mat floor, low wooden counter, bamboo shoots, ceramic plates, hanging lanterns, polished bamboo rails",
+   "simple kimono, wooden clapper, sushi knife, rice paddle, straw hat",
+   "soft yellow light from paper lanterns glowing gently"
+  ],
+  [
+   "an Ottoman coffee house barista",
+   "carpeted floor, low wooden benches, copper coffee pots, brass trays, hanging lanterns, intricate tiles, incense smoke",
+   "cotton tunic, leather sandals, copper coffee scoop, decorative pipe",
+   "warm amber light from hanging lanterns"
+  ],
+  [
+   "a colonial American tavern cook",
+   "rough timber beams, stone hearth, hanging iron pots, wooden barrels, woven tablecloths, animal hide rug, candle sconces",
+   "homespun shirt, leather apron, wooden ladle, iron skillet",
+   "soft candlelight flickering alongside the fireplace"
+  ],
+  [
+   "a circus ringmaster",
+   "bright big top tent interior, striped red and white canopy, wooden beams, colorful bunting hanging from poles",
+   "tailored red coat, black top hat, silver cane, polished black boots",
+   "warm amber glow from chandeliers casting soft shadows on the canvas"
+  ],
+  [
+   "an opera singer",
+   "ornate stage with velvet curtains, grand piano, marble columns, gilded railings, plush red seats empty",
+   "elegant black evening gown, delicate pearl necklace, silk gloves, crystal clutch",
+   "golden spotlights sweeping across the stage, bathing it in luminous warmth"
+  ],
+  [
+   "a ballet dancer",
+   "spacious rehearsal studio, mirrored wall, wooden barre, soft pastel walls, scattered ribbons on floor",
+   "fitted pink leotard, sheer tutu, pink ballet slippers, hair bun",
+   "gentle natural light streaming through high windows, creating bright patches"
+  ],
+  [
+   "an esports commentator",
+   "modern streaming studio, LED backdrops, sleek desk, gaming chairs, soundproof foam panels",
+   "graphic hoodie, headphones, wireless mic, gaming mouse, casual sneakers",
+   "cool blue LED strips illuminating the room with a futuristic hue"
+  ],
+  [
+   "a stand‑up comedian",
+   "small comedy club stage, brick backdrop, single microphone stand, low table, red curtains, empty audience seats",
+   "casual jeans, graphic tee, sneakers, notebook in pocket",
+   "focused spot lamp creating a bright circle on the floor"
+  ],
+  [
+   "a Broadway choreographer",
+   "large rehearsal hall, sprung floor, mirrored wall, rows of folding chairs, stacked music stands",
+   "black leggings, fitted shirt, sneakers, clipboard, water bottle",
+   "bright daylight pouring through tall windows, creating crisp illumination"
+  ],
+  [
+   "a film stunt coordinator",
+   "abandoned warehouse set, broken windows, concrete floor, stacked crates, exposed beams, safety mats",
+   "utility vest, black cargo pants, sturdy boots, walkie‑talkie, safety goggles",
+   "harsh industrial lights casting stark shadows on the concrete"
+  ],
+  [
+   "a professional surfer",
+   "sun‑kissed beach, rolling waves, palm trees, wooden board racks, sandy shoreline, distant cliffs",
+   "wetsuit, board leash, surfboard tucked under arm, sunglasses",
+   "bright tropical sun casting dazzling reflections on the water"
+  ],
+  [
+   "a graffiti artist",
+   "urban alley, brick wall covered in paint splatters, metal fire escape, overturned trash cans, puddles",
+   "hooded hoodie, cargo pants, spray cans, bandana, canvas sneakers",
+   "soft streetlamp glow creating a muted amber wash"
+  ],
+  [
+   "a classical violinist",
+   "concert hall stage, polished wooden floor, grand piano, velvet curtains, ornate chandelier, empty rows of seats",
+   "black formal dress, silver violin, bow, music stand, elegant shoes",
+   "soft warm light from chandelier bathing the stage"
+  ],
+  [
+   "a skate‑park photographer",
+   "concrete skate park, ramps, rails, graffiti walls, scattered skate decks, chain‑link fence",
+   "camouflage jacket, cargo shorts, camera strap, beanie, sneakers",
+   "bright midday sun casting sharp shadows across the ramps"
+  ],
+  [
+   "a salsa dance instructor",
+   "dance studio with polished wood floor, mirrored wall, colorful wall murals, stacked stereo speakers, empty chairs",
+   "flowing red dress, dance shoes, hair comb, water bottle",
+   "warm golden light from ceiling fixtures illuminating the floor"
+  ],
+  [
+   "a marathon runner",
+   "city street early morning, lined with trees, empty sidewalks, street lamps, distant skyline, road markings",
+   "technical running shirt, shorts, shoes, hydration belt, wristwatch",
+   "cool dawn light casting a pale blue hue"
+  ],
+  [
+   "a karaoke bar manager",
+   "private karaoke room, plush velvet sofas, decorative wall panels, small coffee table, soundproof doors",
+   "smart casual blazer, dress shirt, badge, tablet, polished shoes",
+   "soft warm lighting from wall sconces creating a cozy ambience"
+  ],
+  [
+   "a shipyard carpenter",
+   "a bustling dock with timber piles, half‑built hulls, rope coils, wooden crates, and a wind‑blown sail",
+   "wears canvas shirt, leather belt, carries a plane and a drawknife",
+   "bright midday sun reflects off the water and wood"
+  ],
+  [
+   "an operating theatre surgeon",
+   "large sterile suite with overhead surgical lights, stainless tables, anesthesia machine, and rolled surgical drapes",
+   "green surgical gown, mask, double gloves, and a sleek scalpel",
+   "intense focused spotlights creating crisp, shadow‑free illumination"
+  ],
+  [
+   "a steamship captain",
+   "a polished wooden bridge with brass helm, rope coiled on a barrel, oil lanterns hanging from the railings, gentle ocean mist",
+   "naval coat with gold buttons, a leather hat, a pocket watch, a sextant tucked in coat pocket",
+   "soft amber glow from hanging oil lanterns reflecting on polished wood"
+  ],
+  [
+   "an airship mechanic",
+   "a massive canvas-filled hangar, rows of brass gas valves, wooden scaffolding, crates of spare propellers, light streaming through skylights",
+   "oil‑stained overalls, leather gloves, a toolkit belt, a leather cap with goggles hanging",
+   "bright daylight filtering through high glass panes onto the metallic floor"
+  ],
+  [
+   "a hyperloop operator",
+   "low‑profile tunnel control chamber, sleek consoles, a transparent tube view, neon safety lines, a polished steel floor",
+   "technical jumpsuit, a data tablet, a magnetic badge, a pair of insulated gloves",
+   "clean white LEDs lining the control panels and tunnel walls"
+  ],
+  [
+   "a riverboat steward",
+   "wooden deck with polished railings, a polished bar counter, lanterns, a paddle wheel partially visible, mist rising from water",
+   "white shirt with a black vest, a bow tie, a serving tray, a pocket watch",
+   "warm glow from lanterns reflecting on the river surface"
+  ],
+  [
+   "a logistics drone pilot",
+   "open rooftop with a landing pad, metal racks, a wind turbine, a weather‑proof console, sunrise over the skyline",
+   "lightweight flight suit, a tablet, a headset, a compact battery pack",
+   "early morning light casting long shadows across the rooftop"
+  ],
+  [
+   "an apprentice cobbler",
+   "a narrow wooden shop with rows of shoe lasts, leather rolls, a leather-cutting table, and a brass shoe‑making press",
+   "linen shirt, canvas apron, small leather mallet, measuring tape coiled at waist",
+   "soft daylight streaming through a dusty window onto the workbench"
+  ],
+  [
+   "a traditional potter",
+   "a mud‑lined studio with a turning wheel, stacked clay blocks, drying racks, and a kiln emitting soft smoke",
+   "apron smeared with clay, wooden paddle, shaping rib, and a water bucket",
+   "soft natural light spilling from an open doorway onto the wet clay"
+  ],
+  [
+   "a Byzantine mosaicist",
+   "marble floor with tiny colored stones, wooden mixing trays, frescoed arches, candle holders",
+   "linen smock, palette of pigments, tiny trowel, leather satchel",
+   "warm candlelight flickering across the mosaic"
+  ],
+  [
+   "a Shang dynasty oracle",
+   "bronze cauldron on stone altar, pine incense smoke, dragon motifs carved on walls",
+   "silk robe, jade pendant, wooden divination sticks, bronze bells",
+   "soft amber glow from oil lamps surrounding the altar"
+  ],
+  [
+   "a Olmec stone carver",
+   "jagged limestone quarry, massive stone blocks, wooden sleds, tropical vines climbing cliffs",
+   "woven bark shirt, stone chisel, wooden mallet, sand sandals",
+   "bright midday sun beating on the quarry walls"
+  ],
+  [
+   "a Etruscan tomb painter",
+   "underground chamber walls, fresco pigments, stone benches, torches set in niches",
+   "wool tunic, paintbrushes, pigment jars, leather belt",
+   "flickering torchlight casting warm shadows"
+  ],
+  [
+   "a Celtic ironworker",
+   "open forge beside a river, red-hot iron bars, stone anvil, willow branches",
+   "leather apron, iron hammer, tongs, soot‑stained boots",
+   "glowing furnace light mixing with river reflections"
+  ],
+  [
+   "a Parthian horse archer",
+   "grassland camp, wooden archery range, sandbags, distant hills, wind‑swept grasses",
+   "leather armor, composite bow, quiver of arrows, riding boots",
+   "bright clear sky casting sharp light over the camp"
+  ],
+  [
+   "a Athenian playwright",
+   "open theater stone stage, marble columns, ivy vines, audience stone seats, distant sea view",
+   "white chiton, lyre, scroll of script, sandals",
+   "soft evening light glowing behind the columns"
+  ],
+  [
+   "a Hellenistic mathematician",
+   "marble study room, scrolls on wooden shelves, abacus, potted fig tree, open window",
+   "white robe, stylus, wax tablet, simple sandals",
+   "soft daylight pouring through the window"
+  ],
+  [
+   "a blacksmith",
+   "a stone forge with glowing ember pits, iron bars, hanging leather apron, and a wooden anvil stand",
+   "wearing a soot‑stained leather apron, heavy iron gauntlets, sturdy boots, and a hammer",
+   "warm amber glow emanates from the furnace and flickering sparks"
+  ],
+  [
+   "an organ builder",
+   "a workshop filled with wooden pipes, brass windchests, intricate carvings, and a large drafting table",
+   "dressed in a dark waistcoat, leather belt, and carrying a tuning fork",
+   "cool morning light reflects off polished metal and polished wood"
+  ],
+  [
+   "a bookbinder",
+   "a quiet room with wooden presses, stacks of vellum sheets, leather rolls, and a copper binding press",
+   "wearing a linen vest, thin gloves, and a small leather mallet",
+   "soft lamplight glows amber, casting warm shadows on the table"
+  ],
+  [
+   "a silversmith",
+   "a bright workshop with a small furnace, silver ingots, polishing cloths, and a set of delicate tools",
+   "clad in a white apron, protective goggles, and holding a tiny hammer",
+   "clear white light from a skylight shines on polished surfaces"
+  ],
+  [
+   "a candle maker",
+   "a tidy studio with rows of melted wax vats, wick spools, wooden molds, and a gentle fan",
+   "wearing a cotton apron, rubber gloves, and a small ladle",
+   "soft golden light flickers from nearby candles, creating a warm ambience"
+  ],
+  [
+   "a tanner",
+   "a rustic cellar with vats of tannic solution, hanging animal hides, wooden racks, and a stone mortar",
+   "dressed in a heavy leather coat, boots, and a wide‑brimmed hat",
+   "dim natural light filters through a small grate, casting muted tones"
+  ],
+  [
+   "a weaver",
+   "a spacious loft with a large wooden loom, skeins of dyed yarn, wooden spindles, and a basket of finished cloth",
+   "wearing a simple linen dress, a woven belt, and holding a shuttle",
+   "bright midday sun pours through high windows, lighting the vibrant threads"
+  ],
+  [
+   "a watchmaker",
+   "a tiny bench surrounded by brass gears, tiny screwdrivers, magnifying glass, and rows of pocket watches",
+   "clad in a crisp white shirt, tweed vest, and delicate tweezers",
+   "focused lamp light casts a focused glow over the intricate parts"
+  ],
+  [
+   "a stonemason",
+   "an open yard with massive stone blocks, chisels, wooden mallets, and a sand‑filled trench",
+   "wearing a thick canvas shirt, leather apron, and sturdy boots",
+   "bright sun glints off dust‑covered stone surfaces"
+  ],
+  [
+   "a basket weaver",
+   "a shaded corner with bundles of willow rods, woven trays, a wooden workbench, and a drying rack",
+   "dressed in a light cotton smock, barefoot, and holding a flexible reed",
+   "soft dappled light filters through leafy branches overhead"
+  ],
+  [
+   "a candlewick cutter",
+   "a narrow backroom with rows of dried cotton threads, metal cutters, and a small oil lamp",
+   "wearing a simple apron, gloves, and a small scalpel‑like cutter",
+   "warm glow from the oil lamp bathes the workspace"
+  ],
+  [
+   "a leather cutter",
+   "a workshop with hanging leather hides, wooden cutting boards, brass shears, and a stack of finished belts",
+   "clad in a heavy apron, sturdy boots, and holding a sharp leather knife",
+   "bright daylight streams through a high window, highlighting the grain of the leather"
+  ],
+  [
+   "a goldsmith apprentice",
+   "a compact studio with tiny crucibles, gold nuggets, polishing wheels, and a set of delicate pliers",
+   "wearing a white smock, protective gloves, and a small magnifying visor",
+   "clear focused light from a desk lamp shines on the metal"
+  ],
+  [
+   "a textile dyer",
+   "a large vat room with steaming dye baths, wooden racks, colorful cloth strips, and a steam vent",
+   "dressed in a rubber apron, rubber boots, and holding a wooden paddle",
+   "soft steam‑filled light creates a hazy, colorful glow"
+  ],
+  [
+   "a ceramic tile maker",
+   "a tiled floor studio with molds, glaze buckets, drying racks, and a kiln opening emitting faint heat",
+   "clad in a dusty apron, gloves, and a small brush for glazing",
+   "warm orange light glows from the kiln, casting patterned shadows"
+  ],
+  [
+   "a parchment maker",
+   "a quiet attic with vats of plant pulp, drying frames, wooden rollers, and stacked parchment sheets",
+   "wearing a linen smock, soft gloves, and a wooden spatula",
+   "soft natural light filters through a small attic window, creating gentle highlights"
+  ],
+  [
+   "a lute maker",
+   "a workshop filled with wooden soundboards, catgut strings, carving tools, and a drying rack of finished instruments",
+   "dressed in a simple tunic, leather apron, and holding a fine carving knife",
+   "warm midday sun streams through a skylight, illuminating the polished wood"
+  ],
+  [
+   "a copper boiler maker",
+   "an industrial loft with copper sheets, rivet guns, pipe racks, and a large unfinished boiler shell",
+   "clad in a heavy coat, steel-toe boots, and holding a rivet hammer",
+   "bright industrial light pours from high windows, reflecting off copper surfaces"
+  ],
+  [
+   "a shoemaker",
+   "a compact shop with wooden lasts, leather strips, stitching awls, and a wall of polished shoes",
+   "wearing a canvas apron, sturdy shoes, and holding a small awl",
+   "soft warm light from a hanging lantern glows over the leather"
+  ],
+  [
+   "a miller",
+   "a stone mill room with a turning wheel, grain sacks, wooden gears, and a sack of flour",
+   "dressed in a woolen coat, simple trousers, and a wooden grain scoop",
+   "steady daylight filters through a small grate, casting linear shadows on the millstones"
+  ],
+  [
+   "a stained‑glass artisan",
+   "a studio with colored glass sheets, lead cames, soldering iron, and a large wooden table covered in designs",
+   "clad in a white smock, protective gloves, and holding a small cutting wheel",
+   "bright natural light streams through a north‑facing window, lighting the glass fragments"
+  ],
+  [
+   "a rope maker",
+   "a tall building with hemp bundles, twisting machines, coil racks, and a basket of finished ropes",
+   "wearing a rough canvas shirt, sturdy boots, and a small coil cutter",
+   "soft daylight pours from a high window, highlighting the twisted fibers"
+  ],
+  [
+   "a metal caster",
+   "a furnace room with molten metal ladles, sand molds, cooling racks, and a stack of iron ingots",
+   "dressed in a heat‑resistant coat, gloves, and holding a metal tongs",
+   "intense orange glow from the furnace reflects on the surrounding walls"
+  ],
+  [
+   "a tapestry weaver",
+   "a vaulted room with massive looms, dyed yarn skeins, wooden spindles, and a wall of half‑finished tapestries",
+   "wearing a long linen dress, a woven sash, and a small shuttle",
+   "soft filtered sunlight filters through stained‑glass windows, casting colored patterns"
+  ],
+  [
+   "a pottery kiln operator",
+   "a brick kiln chamber with stacked clay pots, glowing coals, ventilation pipes, and a wooden loading cart",
+   "clad in a thick apron, heat‑resistant gloves, and holding a metal tongs",
+   "deep red heat radiates from the kiln, bathing the space in warm light"
+  ],
+  [
+   "a furrier",
+   "a workshop with hanging pelts, trimming shears, wooden drying racks, and a fur‑stitching bench",
+   "wearing a fur‑lined coat, gloves, and holding a small stitching needle",
+   "soft daylight filters through a frosted window, highlighting the soft textures"
+  ],
+  [
+   "an Inuit seal hunter preparing a feast",
+   "snow‑covered igloo interior with seal skins draped, stone fire pit, and a wooden carving table",
+   "fur‑lined parkas, insulated boots, and a bone carving knife",
+   "soft glow from the fire illuminating the icy walls"
+  ],
+  [
+   "an urban disaster coordinator",
+   "busy street intersection, overturned cars, debris piles, scattered fire hydrants, broken streetlights",
+   "bright reflective vest, sturdy boots, tablet, walkie‑talkie, safety helmet",
+   "sharp white floodlights casting stark shadows on wet pavement"
+  ],
+  [
+   "a maritime rescue pilot",
+   "coastal helipad with sand dunes, a rescue hoist, fuel drums, wind‑blown seaweed",
+   "flight suit, flight helmet, navigation tablet, survival vest, gloves",
+   "cool blue dawn light reflecting off distant waves"
+  ],
+  [
+   "a mass‑casualty triage nurse",
+   "field tent with red cross tarp, stretchers, medical bags, a portable oxygen tank, sandbags",
+   "light scrubs, stethoscope, triage tags, headlamp, compact med‑kit",
+   "soft lantern glow illuminating the tent interior"
+  ],
+  [
+   "an avalanche safety technician",
+   "snow‑covered slope with buried probes, a rescue sled, pine trees, a compact snowmobile",
+   "thermal parka, snow boots, avalanche beacon, shovel, insulated gloves",
+   "cold pale light of a high‑altitude winter sun"
+  ],
+  [
+   "a rapid‑response veterinary medic",
+   "mobile clinic van parked beside a barn, medical cabinets, a portable ultrasound, hay bales",
+   "lab coat, stethoscope, syringes, portable cooler, sturdy boots",
+   "warm midday sun streaming through open doors"
+  ],
+  [
+   "a building collapse inspector",
+   "ruined structure with twisted steel beams, dust clouds, scattered debris, a safety barrier",
+   "hard hat, high‑visibility vest, inspection clipboard, flashlight, sturdy gloves",
+   "dim natural light filtered through broken windows"
+  ],
+  [
+   "a humanitarian water‑purification specialist",
+   "campground with large filtration units, barrels, solar panels, a shaded tarp, sand piles",
+   "light work shirt, utility belt, filter cartridges, water testing strips, cap",
+   "bright sunlight reflected off clear water tanks"
+  ],
+  [
+   "a nuclear incident safety officer",
+   "containment yard with shielding walls, concrete slabs, monitoring consoles, steel drums, warning cones",
+   "radiation badge, lead apron, dosimeter, hard hat, thick gloves",
+   "steady low‑intensity amber glow from safety lamps"
+  ],
+  [
+   "a pandemic response field medic",
+   "temporary clinic tent with isolation curtains, portable ventilators, sanitizer stations, stacked medical crates",
+   "protective gown, N95 mask, gloves, handheld pulse oximeter, insulated bag",
+   "cool fluorescent lighting humming above the rows of beds"
+  ],
+  [
+   "a wildlife disease outbreak monitor",
+   "forest ranger station with sample trays, microscopes, a log pile, a small greenhouse",
+   "field jacket, gloves, sample vials, handheld scanner, notebook",
+   "dappled sunlight filtering through dense canopy"
+  ],
+  [
+   "a post‑earthquake structural assessor",
+   "city block with cracked pavement, fallen streetlamps, scattered bricks, a temporary fence, dust clouds",
+   "hard hat, safety vest, laser distance meter, clipboard, sturdy boots",
+   "soft diffused light through lingering dust"
+  ],
+  [
+   "a paleobotanist",
+   "a cluttered greenhouse bench with fossilized leaves, terracotta pots, glass jars of amber, and a sand table",
+   "khaki field coat, wide brim hat, magnifying glass, leather notebook, sturdy boots",
+   "soft amber glow filtering through translucent greenhouse panes"
+  ],
+  [
+   "an immunologist",
+   "a sterile bench with pipette racks, petri dishes, refrigerated incubator, and a wall of glass shelves",
+   "white lab coat, latex gloves, safety goggles, clipboards, digital timer",
+   "bright overhead fluorescents casting even illumination across the workspace"
+  ],
+  [
+   "a quantum physicist",
+   "a low‑vibration room with cryogenic chamber, superconducting coils, laser array, and a floating magnetic levitation platform",
+   "black insulated jacket, rubber‑soled shoes, handheld spectrometer, notebook with silver pen",
+   "cool blue LED strips lining the walls, pulsing gently"
+  ],
+  [
+   "an astrobiologist",
+   "a simulated Martian habitat with red sand, sealed growth chambers, hydroponic racks, and a compact rover model",
+   "lightweight polymer suit, portable microscope, data tablet, utility belt with sample vials",
+   "warm amber light from a dome‑shaped lamp mimicking sunrise"
+  ],
+  [
+   "a climatologist",
+   "a climate‑modeling chamber with wind tunnels, temperature gauges, humidity domes, and a rotating Earth globe model",
+   "lightweight insulated jacket, digital hygrometer, notebook, portable anemometer, sturdy boots",
+   "soft diffuse daylight simulated by large overhead panels"
+  ],
+  [
+   "a materials scientist",
+   "a high‑temperature furnace area with alloy crucibles, rolling presses, electron microscope, and a metal‑dust collection tray",
+   "heat‑resistant apron, thick gloves, safety goggles, alloy sample holder, metal detector",
+   "intense orange glow from furnace reflected on nearby steel surfaces"
+  ],
+  [
+   "a pharmacologist",
+   "a drug‑discovery lab with compound libraries, robotic pipetting arm, incubators, and a glass‑covered synthesis table",
+   "white coat, nitrile gloves, pill‑pressing tool, tablet computer, safety glasses",
+   "bright cool white lighting highlighting each reaction vessel"
+  ],
+  [
+   "an archaeobotanist",
+   "a sand‑filled dig table with ancient seed pods, clay pots, microscopes, and a drying rack of parchment",
+   "linen shirt, canvas vest, tweezers, magnifying visor, leather satchel",
+   "warm golden light from a hanging lantern casting gentle shadows"
+  ],
+  [
+   "a nanotechnologist",
+   "a clean‑room floor with atom‑scale manipulators, silicon wafers, dust‑free benches, and a vacuum chamber",
+   "full‑body anti‑static suit, gloves with fingertip sensors, micro‑probe, data glove",
+   "soft blue illumination from low‑glare LEDs lining the walls"
+  ],
+  [
+   "a paleoanthropologist",
+   "a fossil preparation lab with sandstone blocks, grinding wheels, dust‑collection hoods, and a wall of skeletal casts",
+   "sturdy denim jacket, leather gloves, handheld chisel, field notebook, protective goggles",
+   "warm incandescent glow from industrial bulbs casting gentle highlights"
+  ],
+  [
+   "a biochemist",
+   "a reaction‑vessel station with glass beakers, stir plates, pH meters, and a refrigerated reagent fridge",
+   "white lab coat, rubber gloves, pipette set, analytical balance, safety glasses",
+   "clear bright light from ceiling floodlights creating crisp shadows"
+  ],
+  [
+   "a cryobiologist",
+   "a sub‑zero chamber with liquid nitrogen tanks, cryo‑preservation racks, insulated workbench, and frost‑covered windows",
+   "thermal insulated coat, insulated gloves, cryo‑tube carrier, digital thermometer, goggles",
+   "cold bluish light emitted from chilled LED panels lining the walls"
+  ],
+  [
+   "a botanical illustrator",
+   "a studio‑lab hybrid with herbarium shelves, watercolor palettes, magnifying lamp, and a large drafting table",
+   "cotton smock, sketchbook, fine brushes, colored pencils, light‑weight apron",
+   "soft daylight‑mimicking lamp casting gentle, even light across the canvas"
+  ],
+  [
+   "a neurophysiologist",
+   "a brain‑mapping suite with electrode arrays, EEG caps, sound‑proof walls, and a reclining patient chair",
+   "gray lab coat, conductive gel packets, handheld stimulator, clipboard, safety glasses",
+   "focused cool white light from adjustable desk lamps"
+  ],
+  [
+   "a spectroscopist",
+   "a optics lab with diffraction gratings, prism arrays, laser benches, and a dark‑room enclosure",
+   "lab coat, safety goggles, fiber‑optic probe, calibration blocks, notebook",
+   "precise narrow beams of white light from overhead spotlights"
+  ],
+  [
+   "a renewable‑energy researcher",
+   "a solar‑cell testing area with photovoltaic panels, multimeters, sun‑simulator lamps, and a battery bank rack",
+   "lightweight lab jacket, insulated gloves, voltage meter, data logger, safety glasses",
+   "bright simulated sunlight flooding the workbench from a large arc lamp"
+  ],
+  [
+   "a geochemist",
+   "a rock‑analysis station with crushing mill, X‑ray diffractometer, acid‑resistant bench, and stacked sample jars",
+   "heavy lab coat, acid‑resistant gloves, handheld pH meter, sample scoop, safety goggles",
+   "steady bright illumination from ceiling floodlights, highlighting mineral colors"
+  ],
+  [
+   "a plant physiologist",
+   "a growth‑chamber greenhouse with adjustable LED panels, hydroponic racks, misting system, and a sensor array wall",
+   "lightweight lab coat, moisture sensor glove, portable chlorophyll meter, notebook",
+   "vivid green light from programmable LED strips bathing the plants"
+  ],
+  [
+   "a radiobiologist",
+   "a radiation‑shielded lab with lead‑lined walls, dosimeter stations, irradiator chamber, and a glass‑covered sample rack",
+   "lead‑lined apron, dosimeter badge, protective goggles, sample carrier, clipboard",
+   "muted amber glow from low‑intensity safety lamps"
+  ],
+  [
+   "a synthetic biologist",
+   "a bio‑fabrication bench with 3D‑printer bioplotters, gel vats, sterile hood, and a wall of DNA helix murals",
+   "white lab coat, sterile gloves, pipette gun, tablet, safety glasses",
+   "bright cool white light from recessed ceiling panels"
+  ],
+  [
+   "an atmospheric chemist",
+   "a high‑altitude simulation chamber with pressure gauges, gas mixers, aerosol generators, and a transparent observation dome",
+   "thermal jacket, portable gas analyzer, safety goggles, data logger, sturdy boots",
+   "soft blue illumination from internal LEDs mimicking clear sky"
+  ],
+  [
+   "an Olympic sprinter",
+   "a stadium track lane surrounded by a clear sky, white starting blocks, and a smooth red rubber surface",
+   "a sleek aerodynamic suit, lightweight spikes, wristband, visor",
+   "bright natural sunlight streaming through open stadium arches"
+  ],
+  [
+   "a jazz saxophonist",
+   "a small club stage with a polished piano, brass drum set, and low‑hanging vintage bulbs",
+   "a black tuxedo, polished shoes, saxophone case, pocket square",
+   "warm golden light from low‑hanging bulbs bathing the stage"
+  ],
+  [
+   "an MMA referee",
+   "a cage arena with chain‑link walls, a padded floor, and a metal entrance gate",
+   "a black shirt, white armbands, whistle, clipboard, athletic shoes",
+   "bright white floodlights illuminating the cage interior"
+  ],
+  [
+   "a concert lighting designer",
+   "a large arena stage with truss structures, speaker stacks, and a glossy floor",
+   "a black shirt, tablet, headset, utility belt, reflective safety vest",
+   "multicolored moving beams sweeping across the stage surface"
+  ],
+  [
+   "a theater makeup artist",
+   "a backstage makeup station with mirrored vanity, lighted ring, and rows of cosmetic jars",
+   "a white coat, brush set, palette, disposable sponges, gloves",
+   "soft diffused light from a ring lamp creating even illumination"
+  ],
+  [
+   "a parkour trainer",
+   "an urban training area with concrete walls, railings, low platforms, and scattered mats",
+   "a breathable tee, cargo pants, training shoes, wrist tape, water bottle",
+   "midday sun casting crisp shadows across the concrete"
+  ],
+  [
+   "a competitive chef",
+   "a televised kitchen arena with stainless steel counters, burners, and a large overhead exhaust hood",
+   "a white chef coat, tall hat, knife set, apron, timer",
+   "bright white kitchen lights highlighting every surface"
+  ]
+ ]
+}

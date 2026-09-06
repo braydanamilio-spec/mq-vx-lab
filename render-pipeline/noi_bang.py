@@ -206,6 +206,18 @@ def main():
         for r in moi:
             khoi += "    " + repr(r) + ",\n"
         vt = _cuoi_bang(src, b)
+        # ── DẤU PHẨY CỦA MỤC CUỐI  (đo 6/9/2026) ─────────────────────────────────────────
+        # `_cuoi_bang` trả về vị trí NGAY TRƯỚC dấu `]`. Nếu mục cuối của bảng cũ không có dấu
+        # phẩy treo thì khối mới dính thẳng vào nó: `("a", "b")\n    ("c", "d"),` — Python đọc
+        # ra một LỜI GỌI HÀM, và nổ `TypeError: 'tuple' object is not callable` ngay lúc import.
+        # Cú pháp vẫn hợp lệ nên `ast.parse` báo xanh; chỉ `import` mới nổ. Đây đúng §12.2 lật
+        # ngược: **phân tích cú pháp xanh không có nghĩa là chạy được**.
+        # Bảng số thoát nạn vì chúng tình cờ đều có dấu phẩy treo — tức nó là một quả mìn đang
+        # chờ bảng đầu tiên không có.
+        _tr = src[:vt].rstrip()
+        if not _tr.endswith(","):
+            src = _tr + ",\n" + src[vt:]
+            vt = len(_tr) + 2
         src = src[:vt] + khoi + src[vt:]
         dem[b] = (len(cu), len(cu) + len(moi))
 

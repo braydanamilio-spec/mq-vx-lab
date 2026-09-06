@@ -1,0 +1,1811 @@
+{
+ "TOC_DO": [
+  [
+   "the orbit of a low Earth satellite",
+   17500,
+   [
+    "_VE",
+    "an artificial craft circling the planet at high velocity",
+    "the instant it passes over the sun-lit side of the globe",
+    "",
+    "the deep blue atmosphere fading into black space behind",
+    "the bright edge of Earth's curvature ahead",
+    "crisp white light with deep midnight blue"
+   ]
+  ],
+  [
+   "the swift passage of a Venusian cloud",
+   180,
+   [
+    "_VE",
+    "thick sulfuric clouds drifting across the planet's lower atmosphere",
+    "the moment a bright patch reflects sunlight",
+    "",
+    "the endless amber haze fading into distant horizon behind",
+    "the luminous cloud front moving toward the observer",
+    "soft golden light with muted yellow tones"
+   ]
+  ],
+  [
+   "the high-speed gust of a Neptune wind",
+   1500,
+   [
+    "_VE",
+    "supersonic methane-rich winds whipping across a deep blue world",
+    "the moment a dark storm cloud rolls forward",
+    "",
+    "the endless cobalt ocean of clouds receding behind",
+    "the fierce white-capped wave of wind ahead",
+    "deep indigo light with icy white streaks"
+   ]
+  ],
+  [
+   "a racing marlin",
+   50,
+   [
+    "_VE",
+    "the marlin surges ahead, its spear-like nose leading",
+    "in the instant it bursts from depth",
+    "",
+    "deep, dark water receding rapidly",
+    "a shimmering ribbon of water ahead",
+    "intense sapphire with bright white highlights"
+   ]
+  ],
+  [
+   "a slow moving tram",
+   5,
+   [
+    "_VE",
+    "the tram glides slowly past the riverbank",
+    "at the instant the doors close gently",
+    "",
+    "a grassy embankment dotted with wildflowers",
+    "a paved track runs parallel to the water",
+    "muted teal light with misty reflections"
+   ]
+  ],
+  [
+   "a cruising bicycle",
+   12,
+   [
+    "_VE",
+    "the bike pedals smoothly along the park path",
+    "when the rider shifts gears lightly",
+    "",
+    "a canopy of oak trees shades the left side",
+    "a paved loop curves ahead into distance",
+    "bright green daylight with dappled sunbeams"
+   ]
+  ],
+  [
+   "a mountain bike",
+   18,
+   [
+    "_VE",
+    "the bike darts over rocky trail bumps",
+    "when the rider lifts off a small jump",
+    "",
+    "a forest floor littered with pine needles",
+    "a narrow dirt track winds forward",
+    "crisp cool light with hints of amber"
+   ]
+  ],
+  [
+   "a highway sedan",
+   55,
+   [
+    "_VE",
+    "the sedan cruises smoothly on the open highway",
+    "when the driver eases onto the next lane",
+    "",
+    "a stretch of median with tall grasses",
+    "asphalt ribbon disappearing into distant hills",
+    "clear bright sky with light blue tone"
+   ]
+  ],
+  [
+   "a compact electric bike",
+   22,
+   [
+    "_VE",
+    "the e-bike zips past the river promenade",
+    "as the motor engages smoothly",
+    "",
+    "a reflective water surface dotted with reeds",
+    "a paved bike lane runs parallel",
+    "fresh morning light with pastel pink hue"
+   ]
+  ],
+  [
+   "a touring motorcycle",
+   65,
+   [
+    "_VE",
+    "the motorcycle winds along a mountain pass",
+    "when the rider leans into a sharp turn",
+    "",
+    "steep cliffs covered with evergreen trees",
+    "a curving road climbs toward the summit",
+    "crisp alpine white with icy blue hints"
+   ]
+  ],
+  [
+   "the supersonic shock of a meteor entering atmosphere",
+   25000,
+   [
+    "_VE",
+    "a burning rock tearing through thin air at high speed",
+    "when it ignites at the edge of the thermosphere",
+    "",
+    "star-filled night sky behind the glowing trail",
+    "a bright, incandescent fireball racing forward",
+    "fiery orange with intense white core"
+   ]
+  ],
+  [
+   "a prairie dog",
+   6,
+   [
+    "_VE",
+    "the prairie dog scurries through its burrow entrance rapidly",
+    "at the moment its tiny paws touch ground",
+    "",
+    "a mound of loose earth and tumbleweed behind",
+    "a sun-warmed patch of short grass ahead",
+    "soft golden light with a hint of lavender"
+   ]
+  ],
+  [
+   "a feral horse",
+   30,
+   [
+    "_VE",
+    "the horse gallops across open fields with thunderous rhythm",
+    "at the precise beat of its fourth stride",
+    "",
+    "a cloud of kicked-up grass and dust behind",
+    "a rolling meadow of tall golden reeds ahead",
+    "warm honey-toned light with deep orange highlights"
+   ]
+  ],
+  [
+   "the African wild dog",
+   35,
+   [
+    "_VE",
+    "the wild dog darts through tall savanna grass swiftly",
+    "in the flash of its sudden turn",
+    "",
+    "a thin line of sun-scorched earth behind",
+    "a thicket of acacia leaves rustling ahead",
+    "vivid sunlit gold with subtle teal shadows"
+   ]
+  ],
+  [
+   "a pronghorn antelope",
+   60,
+   [
+    "_VE",
+    "the pronghorn sprints across open plains with endurance",
+    "at the exact beat of its rhythmic stride",
+    "",
+    "a low horizon of muted grasses behind",
+    "a distant line of wind-swept sage ahead",
+    "clear blue sky light with warm amber tint"
+   ]
+  ],
+  [
+   "the regional jet",
+   420,
+   [
+    "_VE",
+    "the regional jet streaks past the mountain ridge",
+    "as it pierces a thin veil of cloud",
+    "",
+    "snow-capped peaks dusted with late-spring pine",
+    "a valley of emerald fir forest below",
+    "bright high-altitude light with icy white highlights"
+   ]
+  ],
+  [
+   "the tilt-rotor aircraft",
+   300,
+   [
+    "_VE",
+    "the tilt-rotor lifts and transitions to forward flight",
+    "as its rotors tilt forward over a lagoon",
+    "",
+    "a shallow lagoon edged with mangrove roots and water lilies",
+    "a distant coral reef visible beneath crystal water",
+    "tranquil turquoise light with gentle sun flecks"
+   ]
+  ],
+  [
+   "a cargo helicopter",
+   160,
+   [
+    "_VE",
+    "the cargo helicopter hovers low above a forest clearing",
+    "when its rotors churn a steady breeze",
+    "",
+    "a dense pine forest with shafts of light filtering down",
+    "a moss-covered log bridge crossing a sparkling creek",
+    "dappled green light with warm amber highlights"
+   ]
+  ],
+  [
+   "a vintage biplane",
+   110,
+   [
+    "_VE",
+    "the vintage biplane loops gently over a pasture",
+    "as its fabric wings flutter in the breeze",
+    "",
+    "a rolling green meadow with scattered oak trees",
+    "a narrow dirt road winding toward distant hills",
+    "soft golden light with muted green tones"
+   ]
+  ],
+  [
+   "the stealth bomber",
+   600,
+   [
+    "_VE",
+    "the stealth bomber glides low over a canyon",
+    "when its angular shape cuts the thin air",
+    "",
+    "rugged red rock walls streaked with lichen",
+    "a river carving a silver ribbon through the gorge",
+    "muted earth tones under a hazy amber sky"
+   ]
+  ],
+  [
+   "a skydiving plane",
+   130,
+   [
+    "_VE",
+    "the skydiving plane climbs slowly to altitude",
+    "as its rear door opens to a gust of wind",
+    "",
+    "a wide open plain dotted with lone tumbleweeds",
+    "a cluster of white clouds drifting ahead",
+    "clear bright light with subtle pastel clouds"
+   ]
+  ],
+  [
+   "a low-altitude patrol aircraft",
+   250,
+   [
+    "_VE",
+    "the patrol aircraft sweeps low over a marshland",
+    "as its wheels skim the misty water surface",
+    "",
+    "shallow wetlands dotted with cattails and reeds",
+    "a thin line of fog rolling ahead",
+    "cool silver light with gentle green reflections"
+   ]
+  ],
+  [
+   "a turkey vulture gliding",
+   28,
+   [
+    "_VE",
+    "broad wings held flat, drifting lazily",
+    "instant as it passes a lone cactus",
+    "",
+    "arid desert plain with scattered sagebrush",
+    "a rocky outcrop casting long shadows",
+    "soft amber light with muted brown tones"
+   ]
+  ],
+  [
+   "the golden eagle diving",
+   120,
+   [
+    "_VE",
+    "muscular form plunging with fierce intensity",
+    "second it pierces the wind above a cliff",
+    "",
+    "rugged mountain slope covered in alpine grasses",
+    "a sheer drop opening to a crystal lake",
+    "intense white light with stark gray shadows"
+   ]
+  ],
+  [
+   "a pelican gliding",
+   23,
+   [
+    "_VE",
+    "large bill open, wings steady above water",
+    "second it skims a calm lagoon",
+    "",
+    "a shallow lagoon fringed with mangrove roots",
+    "a sandy beach stretching toward distant horizon",
+    "soft teal water with gentle sunrise glow"
+   ]
+  ],
+  [
+   "a snow goose flying",
+   55,
+   [
+    "_VE",
+    "V-formation cutting through cold air",
+    "instant as they turn over a frozen lake",
+    "",
+    "a frozen lake glittering with ice crystals",
+    "a snow-covered pine forest bordering the shore",
+    "crisp winter light with pale blue tones"
+   ]
+  ],
+  [
+   "a casual jogging pace",
+   6,
+   [
+    "_VE",
+    "a runner moves rhythmically along a paved path",
+    "the second the foot lifts off the ground",
+    "",
+    "a tree-lined park with fallen leaves covering the trail",
+    "a smooth asphalt stretch disappearing into the distance",
+    "warm golden light with hints of early sunrise"
+   ]
+  ],
+  [
+   "a sprinter's start",
+   15,
+   [
+    "_VE",
+    "muscles contract as the athlete launches from blocks",
+    "the flash of the starter gun's echo",
+    "",
+    "a track stadium with red rubberized lanes",
+    "a clear straightaway disappearing into the horizon",
+    "sharp sunrise orange with deepening shadows"
+   ]
+  ],
+  [
+   "a cyclist's sprint",
+   30,
+   [
+    "_VE",
+    "a rider leans low, pedaling hard on a flat road",
+    "the instant the chain engages the rear cog",
+    "",
+    "an open highway bordered by distant hills",
+    "a smooth asphalt ribbon ahead under bright sky",
+    "clear daylight with crisp cyan highlights"
+   ]
+  ],
+  [
+   "the burst of a 100-meter dash",
+   22,
+   [
+    "_VE",
+    "an athlete propels forward, muscles firing explosively",
+    "the precise moment the starting blocks release",
+    "",
+    "a stadium track surrounded by cheering crowds",
+    "a clean lane stretching toward the finish line",
+    "vivid stadium lighting with golden highlights"
+   ]
+  ],
+  [
+   "a rowing eight's sprint",
+   13,
+   [
+    "_VE",
+    "eight rowers pull in perfect unison on a river",
+    "the instant the oars slice through water together",
+    "",
+    "a calm lake edged with reeds and distant hills",
+    "a long smooth waterway ahead under bright sky",
+    "soft teal light with gentle sunrise blush"
+   ]
+  ],
+  [
+   "a speed skater's glide",
+   28,
+   [
+    "_VE",
+    "a skater pushes forward, blades cutting thin ice",
+    "the instant the blade pushes off the surface",
+    "",
+    "an indoor arena with frosted glass walls",
+    "a polished oval track curving ahead",
+    "cool silver light with faint pink reflections"
+   ]
+  ],
+  [
+   "a hurdler's clearance",
+   18,
+   [
+    "_VE",
+    "an athlete launches over a low barrier with swift legs",
+    "the split second the foot clears the hurdle",
+    "",
+    "a track field surrounded by tall bleachers",
+    "a series of dark hurdles ahead in a line",
+    "bright daylight with crisp shadow play"
+   ]
+  ],
+  [
+   "a boxer's jab",
+   25,
+   [
+    "_VE",
+    "a fist snaps forward with crisp, focused power",
+    "the fraction when the glove contacts the target pad",
+    "",
+    "a gym ring surrounded by ropes and padded walls",
+    "a smooth canvas floor stretching ahead",
+    "intense white light with deep charcoal shadows"
+   ]
+  ],
+  [
+   "the glide of a luge sled",
+   70,
+   [
+    "_VE",
+    "an athlete leans low, sled humming down an ice track",
+    "the moment the steel runners bite the frozen surface",
+    "",
+    "a winding icy tunnel flanked by frosted walls",
+    "a sleek icy curve disappearing into darkness",
+    "cold blue illumination with stark white highlights"
+   ]
+  ],
+  [
+   "a marathon runner's rhythm",
+   8,
+   [
+    "_VE",
+    "a runner maintains steady stride over long distance",
+    "the precise beat of each footfall on pavement",
+    "",
+    "a city boulevard lined with tall lampposts",
+    "a smooth road extending beyond the horizon",
+    "soft sunrise orange with gentle gray mist"
+   ]
+  ],
+  [
+   "the flick of a table tennis rally",
+   60,
+   [
+    "_VE",
+    "a paddle snaps, sending the ball zipping across the table",
+    "the instant the rubber contacts the tiny sphere",
+    "",
+    "a quiet room with a smooth wooden table",
+    "a bright white net stretched tightly ahead",
+    "soft daylight with gentle teal reflections"
+   ]
+  ],
+  [
+   "a desert sandstorm",
+   40,
+   [
+    "_VE",
+    "massive dunes shifting as wind lifts fine grains",
+    "the instant visibility drops to a veil",
+    "",
+    "vast flat dunes rippling under a scorching sun",
+    "a solitary rocky outcrop rising ahead",
+    "harsh golden light with burning orange undertones"
+   ]
+  ],
+  [
+   "the gust of a tornado",
+   150,
+   [
+    "_VE",
+    "rotating funnel tearing across an open plain",
+    "the moment the vortex touches the earth",
+    "",
+    "flattened prairie grass swirling in chaotic patterns",
+    "a line of broken trees torn away ahead",
+    "violent dark violet light with stark crimson flashes"
+   ]
+  ],
+  [
+   "a rapid swallow",
+   20,
+   [
+    "_VE",
+    "the esophagus contracts in a swift peristaltic wave",
+    "when the bolus passes the upper sphincter quickly",
+    "",
+    "the throat muscles tighten behind the moving food",
+    "the stomach entrance opens forward awaiting the next bite",
+    "soft amber glow with gentle amber undertones"
+   ]
+  ],
+  [
+   "the International Space Station orbit",
+   17400,
+   [
+    "_VE",
+    "the massive laboratory gliding silently above the atmosphere",
+    "the instant it passes directly over the observer's latitude",
+    "",
+    "the curvature of Earth fading into the dark void below",
+    "the sleek metallic body moving swiftly across the horizon",
+    "sharp contrast of bright Earth blues and deep black space"
+   ]
+  ],
+  [
+   "a Jupiter storm swirl",
+   400,
+   [
+    "_VE",
+    "the Great Red Spot rotating with colossal force",
+    "the exact moment a band of clouds curls tighter",
+    "",
+    "layers of swirling brown, orange, and white gases below",
+    "the massive vortex expanding rapidly ahead",
+    "deep rust reds blended with bright cream highlights"
+   ]
+  ],
+  [
+   "a Neptune wind gust",
+   1200,
+   [
+    "_VE",
+    "deep blue clouds whipping across a frozen world",
+    "the moment a dark vortex forms near the pole",
+    "",
+    "a dark, star-filled sky over a sapphire-hued atmosphere",
+    "the swift, swirling storm moving across the horizon",
+    "cold indigo with flashes of bright cyan"
+   ]
+  ],
+  [
+   "a leaping marlin",
+   55,
+   [
+    "_VE",
+    "marlin arches out of the sea in a powerful leap",
+    "when its spear-like bill cuts the air",
+    "",
+    "deep blue depths recede behind the jump",
+    "sunlit spray sparkling ahead",
+    "bright indigo with golden spray highlights"
+   ]
+  ],
+  [
+   "a soaring flying fish",
+   30,
+   [
+    "_VE",
+    "flying fish bursts out of water, gliding briefly in air",
+    "when the splash lifts its wing-like fins",
+    "",
+    "a ripple-filled sea surface behind",
+    "clear sky over calm water ahead",
+    "bright sky blue with sun-kissed gold"
+   ]
+  ],
+  [
+   "the lightning-fast sailfish sprint",
+   68,
+   [
+    "_VE",
+    "sailfish accelerates, its dorsal fin unfurled like a sail",
+    "in the split-second it pierces a wave crest",
+    "",
+    "a distant reef wall fades behind",
+    "a clear, sun-lit corridor ahead",
+    "electric azure with bright silver flash"
+   ]
+  ],
+  [
+   "a steady rowing stroke",
+   5,
+   [
+    "_VE",
+    "an athlete pulls the oar through water in rhythm",
+    "at the moment the blade enters the water",
+    "",
+    "a calm river flanked by reeds and low willow branches",
+    "the river widening toward a distant bend",
+    "crisp morning light with silver-gray reflections"
+   ]
+  ],
+  [
+   "the moderate sprint",
+   12,
+   [
+    "_VE",
+    "a sprinter dashes with powerful, quick strides",
+    "when the front foot lands hard on the track",
+    "",
+    "a synthetic track surrounded by stadium bleachers and distant trees",
+    "the straightaway lane stretching ahead",
+    "bright midday sun with sharp white glare"
+   ]
+  ],
+  [
+   "a wind turbine blade",
+   70,
+   [
+    "_VE",
+    "the blade slices through air in a graceful arc",
+    "when gusts reach peak velocity",
+    "",
+    "a rolling hill dotted with low grasses",
+    "a horizon of distant mountains under clear sky",
+    "soft sunrise light with pastel pinks"
+   ]
+  ],
+  [
+   "a tongue lick",
+   7,
+   [
+    "_VE",
+    "the tongue darts forward to taste a surface",
+    "when the tip contacts the palate briefly",
+    "",
+    "behind the mandibular ridge, a smooth mucosal layer lies",
+    "in front, the taste buds sparkle on the tongue surface",
+    "fresh minty green light with soft highlights"
+   ]
+  ],
+  [
+   "the rush of a Martian dust storm",
+   50,
+   [
+    "_VE",
+    "fine red dust swirling across the planet's surface",
+    "as the storm engulfs a crater rim",
+    "",
+    "a barren ochre plain behind",
+    "a towering wall of dust ahead",
+    "muted rust orange with a faint rose haze"
+   ]
+  ],
+  [
+   "a coyote",
+   30,
+   [
+    "_VE",
+    "the coyote sprints across the open sagebrush",
+    "as its howl rises over the hills",
+    "",
+    "dry sage and tumbleweeds roll behind",
+    "a dust-kissed trail stretches ahead",
+    "bright orange sunrise with crisp teal shadows"
+   ]
+  ],
+  [
+   "a bobcat",
+   32,
+   [
+    "_VE",
+    "the bobcat streaks through the scrubland",
+    "when its whiskers twitch at a rustling mouse",
+    "",
+    "low bramble and pine needles lie behind",
+    "a narrow footpath cuts forward",
+    "deep forest green light with warm amber accents"
+   ]
+  ],
+  [
+   "a elk",
+   40,
+   [
+    "_VE",
+    "the elk thunders through the alpine meadow",
+    "when its antlers catch a flash of light",
+    "",
+    "rocky outcrops and low pines linger behind",
+    "a wide valley floor opens forward",
+    "crisp mountain blue with bright white highlights"
+   ]
+  ],
+  [
+   "a moose",
+   45,
+   [
+    "_VE",
+    "the moose lumbers across the wet marshland",
+    "as its massive hooves splash shallow water",
+    "",
+    "reeds and cattails rustle behind",
+    "a mist-filled channel lies ahead",
+    "cool teal mist with muted sunrise pink"
+   ]
+  ],
+  [
+   "a greyhound",
+   55,
+   [
+    "_VE",
+    "the greyhound races across the open field",
+    "when its lean body leans into the wind",
+    "",
+    "soft clover and low weeds sway behind",
+    "a straight track of compacted earth ahead",
+    "bright daylight blue with crisp white glare"
+   ]
+  ],
+  [
+   "a antelope",
+   65,
+   [
+    "_VE",
+    "the antelope bounds over the rolling foothills",
+    "as its horns catch the sunrise",
+    "",
+    "low brush and scattered rocks linger behind",
+    "a gentle slope climbs forward",
+    "soft pink light with cool teal shadows"
+   ]
+  ],
+  [
+   "a drifting fog",
+   1,
+   [
+    "_VE",
+    "thick mist gliding across the meadow grasses",
+    "at the moment the sunrise lifts the veil",
+    "",
+    "dewy wildflowers hiding beneath a silvery veil",
+    "bare earth slowly emerging from the haze",
+    "cool greys and muted lavender in early light"
+   ]
+  ],
+  [
+   "a sandstorm surge",
+   40,
+   [
+    "_VE",
+    "massive grains of sand spiraling across a flat desert",
+    "as the vortex lifts the dunes into motion",
+    "",
+    "dry, cracked playa stretching to the horizon",
+    "bare, sun-baked horizon barely visible through haze",
+    "warm ochre light with a dusty amber veil"
+   ]
+  ],
+  [
+   "a cough",
+   80,
+   [
+    "_VE",
+    "air rushes out of the lungs through the throat",
+    "when the diaphragm contracts sharply and the glottis snaps open",
+    "",
+    "the tracheal walls and bronchi behind the burst",
+    "the mouth opening leading to the outside world",
+    "sharp silver light with a hint of teal"
+   ]
+  ],
+  [
+   "the rotation of Earth",
+   1000,
+   [
+    "_VE",
+    "the planet turning eastward beneath a night sky",
+    "a continuous, smooth spin seen from space",
+    "",
+    "a dark oceanic swath with cloud shadows behind",
+    "the bright sunrise cresting over the horizon ahead",
+    "deep navy fading to warm sunrise orange"
+   ]
+  ],
+  [
+   "the common hedgehog",
+   3,
+   [
+    "_VE",
+    "the hedgehog shuffles along a leaf-covered forest floor",
+    "when it lifts its spines and continues forward",
+    "",
+    "a carpet of fallen oak leaves and pine needles",
+    "a narrow trail of crushed leaves and small berries",
+    "dappled forest shade with cool green tones"
+   ]
+  ],
+  [
+   "a mule deer",
+   38,
+   [
+    "_VE",
+    "the mule deer leaps over a small creek",
+    "as its hooves splash water droplets into the air",
+    "",
+    "a clear mountain stream bordered by mossy rocks",
+    "a shallow, wet crossing of smooth stones",
+    "cool morning light with gentle turquoise reflections"
+   ]
+  ],
+  [
+   "the black-tailed jackrabbit",
+   40,
+   [
+    "_VE",
+    "the jackrabbit bounds across a sun-baked desert plain",
+    "when its long ears flick in the hot wind",
+    "",
+    "endless flat desert with distant mesas under a blazing sky",
+    "a long, straight track of disturbed sand",
+    "intense golden light with scorching orange tones"
+   ]
+  ],
+  [
+   "a classic motorcycle",
+   65,
+   [
+    "_VE",
+    "the motorcycle cruises down the coastal boulevard",
+    "as the wind whistles through the open fairing",
+    "",
+    "a row of palm trees swaying in the breeze behind it",
+    "a sun-kissed road hugging the shoreline ahead",
+    "golden sunset light with warm amber highlights"
+   ]
+  ],
+  [
+   "a single-engine trainer",
+   120,
+   [
+    "_VE",
+    "a red-painted trainer climbing gently above pine forests",
+    "the precise moment its nose lifts toward a cloud",
+    "",
+    "dense evergreen canopy fading into misty valleys",
+    "a clear clearing with a sparkling lake below",
+    "fresh sunrise tones with warm amber highlights"
+   ]
+  ],
+  [
+   "a business turbofan",
+   560,
+   [
+    "_VE",
+    "a twin-engine business jet soaring above cumulus layers",
+    "the moment its engines roar into full thrust",
+    "",
+    "vast desert dunes rippling beneath a clear sky",
+    "a distant mountain ridge catching sunrise light",
+    "vivid orange-pink horizon with deep azure overhead"
+   ]
+  ],
+  [
+   "a subsonic trainer jet",
+   350,
+   [
+    "_VE",
+    "a low-profile trainer jet climbing steadily above clouds",
+    "the moment its afterburner flickers to life",
+    "",
+    "snow-covered plateau with sparkling white surface",
+    "a narrow valley with a frozen river below",
+    "crisp white light with pale blue shadows"
+   ]
+  ],
+  [
+   "a turboprop commuter plane",
+   350,
+   [
+    "_VE",
+    "a twin-engine turboprop cruising over coastal cliffs",
+    "the moment its propellers spin in perfect sync",
+    "",
+    "craggy shoreline with sea-foam crashing below",
+    "a winding coastal road hugging the cliffs",
+    "fresh sea-blue light with gentle gold highlights"
+   ]
+  ],
+  [
+   "the reusable launch booster",
+   15000,
+   [
+    "_VE",
+    "a booster descending rapidly under controlled thrust",
+    "the precise moment its grid fins adjust direction",
+    "",
+    "sparse desert with scattered rock formations",
+    "a wide flat plain stretching toward the horizon",
+    "warm amber light with deep shadowed reds"
+   ]
+  ],
+  [
+   "the intercontinental ballistic missile",
+   15000,
+   [
+    "_VE",
+    "a missile streaking upward in a bright white plume",
+    "the exact instant its booster ignites with thunderous roar",
+    "",
+    "military launch complex with concrete bunkers",
+    "a clear sky turning orange from the exhaust",
+    "intense white fire against deep midnight blue"
+   ]
+  ],
+  [
+   "a meadow vole",
+   4,
+   [
+    "_VE",
+    "the vole darts through tall meadow grasses",
+    "during a quiet moment just after sunrise",
+    "",
+    "a sea of emerald grass swaying under a soft pink sky",
+    "a narrow clearing of dew-wet clover",
+    "fresh pastel light with gentle lime accents"
+   ]
+  ],
+  [
+   "the brown bear run",
+   40,
+   [
+    "_VE",
+    "the bear charges through a pine forest trail",
+    "in the hush of a late-afternoon drizzle",
+    "",
+    "a moss-laden fallen log beside a shallow creek",
+    "a narrow earthen path slick with fresh rain",
+    "muted teal light with soft brown undertones"
+   ]
+  ],
+  [
+   "the impala sprint",
+   55,
+   [
+    "_VE",
+    "the impala rockets across a savanna thicket",
+    "in the flash of a sudden thunderstorm break",
+    "",
+    "a low thicket of acacia leaves trembling in wind",
+    "a narrow dry riverbed glistening with rain",
+    "stormy grey light with bright silver highlights"
+   ]
+  ],
+  [
+   "a commuter electric bike",
+   18,
+   [
+    "_VE",
+    "the bike glides smoothly along a park pathway",
+    "the exact moment the pedal assist engages",
+    "",
+    "a line of flowering cherry trees arches behind",
+    "a paved loop curves ahead",
+    "soft daylight with gentle rose tint"
+   ]
+  ],
+  [
+   "the Cessna 172",
+   120,
+   [
+    "_VE",
+    "a small propeller plane cruises above a patchwork field",
+    "the instant its engine hums at steady rpm",
+    "",
+    "golden wheat fields stretching toward a distant ridge",
+    "a narrow river glimmering in the sunlight",
+    "bright daylight with clear blue tones"
+   ]
+  ],
+  [
+   "the Airbus A320",
+   530,
+   [
+    "_VE",
+    "a commercial jet pierces a thin layer of clouds",
+    "the instant it reaches cruising altitude above the ocean",
+    "",
+    "a vast expanse of deep blue ocean below",
+    "a faint horizon line of distant islands",
+    "crisp high-altitude light with cool cyan shades"
+   ]
+  ],
+  [
+   "the Boeing 747",
+   560,
+   [
+    "_VE",
+    "a massive four-engine airliner glides over a desert sunrise",
+    "the moment its massive winglets slice the warm air",
+    "",
+    "endless dunes rippling under a pink-orange sky",
+    "a narrow strip of paved runway ahead",
+    "vivid sunrise with fiery orange and soft pink"
+   ]
+  ],
+  [
+   "the F-22 Raptor",
+   1500,
+   [
+    "_VE",
+    "an agile stealth fighter streaks over a pine forest",
+    "the moment it pulls a tight vertical climb",
+    "",
+    "dense evergreen trees casting long shadows",
+    "a smooth meadow clearing ahead",
+    "bright midday sun with crisp green highlights"
+   ]
+  ],
+  [
+   "a Falcon 9 first stage",
+   18000,
+   [
+    "_VE",
+    "a rocket booster ignites, soaring straight up from the pad",
+    "the moment thrust reaches maximum thrust",
+    "",
+    "a coastal launch complex with rolling dunes",
+    "a clear blue sky opening ahead",
+    "bright white flare against deep indigo sky"
+   ]
+  ],
+  [
+   "the SR-71 Blackbird",
+   2190,
+   [
+    "_VE",
+    "the legendary spy plane darts across a sunrise horizon",
+    "the instant it hits Mach 3",
+    "",
+    "a barren salt flat reflecting pink light",
+    "a thin ribbon of heat haze ahead",
+    "high-contrast amber light with metallic sheen"
+   ]
+  ],
+  [
+   "the Concorde",
+   1350,
+   [
+    "_VE",
+    "the iconic supersonic liner glides over the Atlantic at dusk",
+    "the instant its nose pierces the twilight horizon",
+    "",
+    "a calm sea shimmering with amber reflections",
+    "a thin line of distant clouds ahead",
+    "rich twilight blues with warm orange accents"
+   ]
+  ],
+  [
+   "a hot-air balloon",
+   8,
+   [
+    "_VE",
+    "a colorful balloon drifts lazily above a sunrise valley",
+    "the instant the burner releases a gentle flame",
+    "",
+    "rolling hills covered in misty pine forests",
+    "a narrow river winding through the valley",
+    "soft pastel sunrise with pink and peach hues"
+   ]
+  ],
+  [
+   "the Voyager 1 probe",
+   38000,
+   [
+    "_VE",
+    "the probe sails silently beyond the heliosphere into interstellar space",
+    "the instant it passes the termination shock",
+    "",
+    "a blackness speckled with distant stars",
+    "a faint glow of distant galaxies ahead",
+    "deep midnight blue with subtle violet glimmer"
+   ]
+  ],
+  [
+   "a military transport helicopter",
+   160,
+   [
+    "_VE",
+    "a heavy lift helicopter hovers over a rugged canyon",
+    "the moment its rotors create a steady vortex",
+    "",
+    "steep red rock walls bathed in late afternoon sun",
+    "a narrow gorge opening ahead",
+    "warm sandstone glow with amber highlights"
+   ]
+  ],
+  [
+   "the Orion crew capsule",
+   25000,
+   [
+    "_VE",
+    "the capsule rockets away from Earth on a fiery ascent",
+    "the instant its launch tower releases its grip",
+    "",
+    "a sprawling launch complex surrounded by desert scrub",
+    "a bright plume of smoke stretching forward",
+    "intense sunrise orange with deep charcoal shadows"
+   ]
+  ],
+  [
+   "the X-15 rocket plane",
+   4500,
+   [
+    "_VE",
+    "the X-15 rockets upward, leaving a fiery tail",
+    "the instant it exceeds Mach 5",
+    "",
+    "a barren desert launch pad under a clear sky",
+    "a thin column of ionized air ahead",
+    "bright white flare against deep sapphire sky"
+   ]
+  ],
+  [
+   "a crop-dusting biplane",
+   110,
+   [
+    "_VE",
+    "a low-flying biplane sprays fields in tight passes",
+    "the moment its spray nozzles emit a fine mist",
+    "",
+    "golden wheat fields shimmering under a summer sun",
+    "a narrow furrow of freshly sprayed crops ahead",
+    "warm golden light with soft amber shadows"
+   ]
+  ],
+  [
+   "the SpaceX Starship",
+   18000,
+   [
+    "_VE",
+    "the massive Starship rockets skyward with roaring engines",
+    "the instant its nose cone separates",
+    "",
+    "a sprawling coastal launch complex with rugged cliffs",
+    "a bright column of flame stretching forward",
+    "intense sunrise orange with darkening indigo sky"
+   ]
+  ],
+  [
+   "a paragliding wing",
+   25,
+   [
+    "_VE",
+    "a colorful paraglider drifts over a sun-lit valley",
+    "the moment thermal lifts the wing higher",
+    "",
+    "lush green valley dotted with wildflower patches",
+    "a winding river glinting in the distance",
+    "soft late-morning light with gentle green tones"
+   ]
+  ],
+  [
+   "the Ariane 5 rocket",
+   19000,
+   [
+    "_VE",
+    "the Ariane rocket lifts off, shedding stages in succession",
+    "the instant the first stage separates cleanly",
+    "",
+    "a desert launch site framed by distant mountains",
+    "a bright plume of flame and smoke ahead",
+    "bright sunrise gold with deepening navy shadows"
+   ]
+  ],
+  [
+   "the B-2 stealth bomber",
+   630,
+   [
+    "_VE",
+    "the stealth bomber glides low over a moonlit desert",
+    "the instant its radar-absorbing surface shimmers",
+    "",
+    "silvery dunes under a deep midnight blue sky",
+    "a faint line of distant star-filled horizon",
+    "soft moonlight with muted teal and indigo hues"
+   ]
+  ],
+  [
+   "a jet-powered sailplane",
+   210,
+   [
+    "_VE",
+    "a sailplane with a small jet engine climbs steeply",
+    "the moment the jet ignites and thrust builds",
+    "",
+    "a rugged alpine valley with snow-capped peaks",
+    "a clear blue sky opening ahead",
+    "crisp alpine light with bright cyan highlights"
+   ]
+  ],
+  [
+   "a blue tang",
+   6,
+   [
+    "_VE",
+    "the blue tang darts quickly around a coral head",
+    "as it changes direction to chase a passing fish",
+    "",
+    "brightly colored staghorn coral forming a maze",
+    "a patch of swaying sea fans ahead",
+    "vivid turquoise light with sparkling highlights"
+   ]
+  ],
+  [
+   "a barracuda",
+   30,
+   [
+    "_VE",
+    "the barracuda rockets forward with a sleek, streamlined body",
+    "in the split second it lunges for prey",
+    "",
+    "open water dotted with floating kelp fronds",
+    "a school of silvery fish shimmering ahead",
+    "sharp silver light with high contrast shadows"
+   ]
+  ],
+  [
+   "a sailfish",
+   68,
+   [
+    "_VE",
+    "the sailfish slices through water, dorsal fin raised high",
+    "as it accelerates to its maximum sprint",
+    "",
+    "vast ocean surface reflecting bright midday sun",
+    "a ripple trail left behind in the water",
+    "bright white glare with crisp cyan tones"
+   ]
+  ],
+  [
+   "a shortfin mako shark",
+   60,
+   [
+    "_VE",
+    "the mako shark cuts through currents with rapid tail flicks",
+    "when it reaches top speed chasing a tuna",
+    "",
+    "a deep trench opening to open sea",
+    "a distant pod of dolphins leaping ahead",
+    "intense sapphire light with strong reflections"
+   ]
+  ],
+  [
+   "a flying fish",
+   35,
+   [
+    "_VE",
+    "the flying fish bursts out of the water, gliding briefly",
+    "at the moment its fins spread like wings",
+    "",
+    "calm sea surface with gentle ripples",
+    "a spray of droplets sparkling ahead",
+    "golden sunrise light with warm orange tones"
+   ]
+  ],
+  [
+   "the oceanic manta ray",
+   20,
+   [
+    "_VE",
+    "the massive manta glides gracefully, wings beating slowly",
+    "as it turns to follow a plankton bloom",
+    "",
+    "a deep blue pelagic zone with faint light shafts",
+    "a dense cloud of shimmering plankton ahead",
+    "soft lavender glow with gentle highlights"
+   ]
+  ],
+  [
+   "a marlin",
+   50,
+   [
+    "_VE",
+    "the marlin rockets forward, spear-like bill cutting water",
+    "as it accelerates to chase a schooling fish",
+    "",
+    "a clear blue expanse with distant coral at the horizon",
+    "a shimmering line of silver fish ahead",
+    "bright cyan light with sparkling highlights"
+   ]
+  ],
+  [
+   "a dolphin pod leader",
+   22,
+   [
+    "_VE",
+    "the dolphin speeds ahead, leaping briefly above water",
+    "when it signals the pod to turn",
+    "",
+    "a sun-lit sea surface with gentle waves",
+    "a spray of seafoam trailing ahead",
+    "vivid turquoise with sparkling sun flecks"
+   ]
+  ],
+  [
+   "a swordfish",
+   55,
+   [
+    "_VE",
+    "the swordfish slices through water with its elongated bill",
+    "when it bursts forward in a hunting strike",
+    "",
+    "a deep ocean trench illuminated by faint light",
+    "a flash of silver ahead as a fish flees",
+    "cold steel-gray light with sharp contrasts"
+   ]
+  ],
+  [
+   "a hammerhead shark",
+   25,
+   [
+    "_VE",
+    "the hammerhead glides with its wide head scanning ahead",
+    "as it circles a school of fish",
+    "",
+    "a dimly lit reef plateau with hanging algae",
+    "a dense swarm of silver fish ahead",
+    "muted teal with subtle amber undertones"
+   ]
+  ],
+  [
+   "a thresher shark",
+   27,
+   [
+    "_VE",
+    "the thresher swings its long tail and speeds forward",
+    "in the moment it snaps at a schooling fish",
+    "",
+    "a dark abyss with faint bioluminescent patches",
+    "a glowing trail of fish ahead",
+    "deep midnight blue with pulsing violet glows"
+   ]
+  ],
+  [
+   "a reef manta ray",
+   18,
+   [
+    "_VE",
+    "the manta glides effortlessly, wings undulating gently",
+    "when it follows a current through a coral corridor",
+    "",
+    "a narrow passage of branching coral arches",
+    "a bright sand channel ahead",
+    "crystalline turquoise with bright highlights"
+   ]
+  ],
+  [
+   "an ultralight over a quiet lake",
+   45,
+   [
+    "_VE",
+    "the tiny aircraft skims the water's surface in calm",
+    "the instant the propeller cuts a faint ripple",
+    "",
+    "still mirror-like lake reflecting pale sunrise over pine trees",
+    "a smooth waterline leading toward a misty horizon",
+    "soft pastel blues blended with gentle pink"
+   ]
+  ],
+  [
+   "a fighter jet afterburner burst",
+   1800,
+   [
+    "_VE",
+    "the combat plane erupts forward with roaring flames",
+    "the split second the exhaust ignites bright orange",
+    "",
+    "a smoky trail of burnt ozone lingering behind the jet",
+    "a blazing orange-red flare lighting the forward air",
+    "intense fiery orange with deep crimson shadows"
+   ]
+  ],
+  [
+   "a sailplane in ridge lift",
+   40,
+   [
+    "_VE",
+    "the glider rides a steady wind along a cliff",
+    "the moment the wing catches the upward current",
+    "",
+    "a sheer limestone cliff dropping into a green valley behind",
+    "a long ridge line extending forward",
+    "bright sunrise gold with cool teal shadows"
+   ]
+  ],
+  [
+   "a modern electric trainer aircraft",
+   110,
+   [
+    "_VE",
+    "the silent plane glides over a quiet field",
+    "the moment the electric motor hums softly",
+    "",
+    "a golden meadow swaying under a clear sky behind",
+    "a low horizon line of distant trees ahead",
+    "bright daylight with fresh turquoise tones"
+   ]
+  ],
+  [
+   "a gentle breath",
+   1,
+   [
+    "_VE",
+    "air flows in and out through the nasal passage",
+    "the precise second the diaphragm lowers slightly",
+    "",
+    "the soft inner lining of the throat behind the airflow",
+    "the open airway leading toward the lungs",
+    "calm teal light with subtle lavender shadows"
+   ]
+  ],
+  [
+   "a fast lunar eclipse shadow",
+   1300,
+   [
+    "_VE",
+    "the Earth's shadow racing across the Moon's surface",
+    "the moment the umbra covers a crater rim",
+    "",
+    "a deep midnight sky behind the darkened moon",
+    "a silvered glow of the penumbra ahead",
+    "cool slate blue with faint amber highlights"
+   ]
+  ],
+  [
+   "the blazing trail of a re-entry capsule",
+   18000,
+   [
+    "_VE",
+    "a capsule hurtling back through Earth's atmosphere",
+    "the moment it ignites a searing plasma sheath",
+    "",
+    "a black night sky behind the glowing arc",
+    "a fierce orange-red flame ahead",
+    "intense scarlet light with bright yellow bursts"
+   ]
+  ],
+  [
+   "the albatross winging",
+   40,
+   [
+    "_VE",
+    "the giant seabird skimming ocean breezes",
+    "when it rides a steady gust aloft",
+    "",
+    "a vast expanse of deep blue sea below",
+    "a distant horizon line of water ahead",
+    "cool turquoise with soft white highlights"
+   ]
+  ],
+  [
+   "a peregrine falcon stooping",
+   180,
+   [
+    "_VE",
+    "the swift bird plunging with razor focus",
+    "at the precise moment it dives toward prey",
+    "",
+    "a rugged cliffside with wind-carved rocks",
+    "a narrow gorge opening ahead",
+    "sharp steel-blue light with crisp shadows"
+   ]
+  ],
+  [
+   "the frigatebird soaring",
+   35,
+   [
+    "_VE",
+    "the seabird gliding on warm ocean breezes",
+    "as it circles above a distant reef",
+    "",
+    "a turquoise lagoon surrounded by coral cliffs",
+    "a stretch of open sea ahead",
+    "vivid teal with sun-kissed highlights"
+   ]
+  ],
+  [
+   "a kingfisher darting",
+   25,
+   [
+    "_VE",
+    "the bright bird plunging toward a creek",
+    "when it snaps at a flashing fish",
+    "",
+    "a crystal-clear creek edged with mossy stones",
+    "a smooth river rock formation ahead",
+    "emerald green with sparkling silver accents"
+   ]
+  ],
+  [
+   "a sprint start",
+   15,
+   [
+    "_VE",
+    "an athlete exploding forward from the blocks",
+    "the exact moment the starter pistol fires",
+    "",
+    "a synthetic track edged by rubberized lanes",
+    "the starting line painted in bold white",
+    "intense white light with a cool blue tint"
+   ]
+  ],
+  [
+   "a downhill ski turn",
+   30,
+   [
+    "_VE",
+    "a skier carving a swift arc down a snowy slope",
+    "the instant the edge bites into the powder",
+    "",
+    "snow-covered pine forest stretching behind the run",
+    "glistening white trail disappearing into the valley",
+    "crisp white light with icy blue highlights"
+   ]
+  ],
+  [
+   "the golf swing",
+   85,
+   [
+    "_VE",
+    "a golfer driving the ball with a powerful arc",
+    "the moment the clubface strikes the ball",
+    "",
+    "a manicured fairway bordered by rolling hills",
+    "the green carpet stretching toward the distant flag",
+    "golden afternoon light with warm amber tones"
+   ]
+  ],
+  [
+   "the baseball pitch",
+   95,
+   [
+    "_VE",
+    "a pitcher hurling a fastball with a sharp release",
+    "the exact instant the ball leaves the fingertips",
+    "",
+    "a dirt mound surrounded by neatly trimmed grass",
+    "the home-plate area gleaming under stadium lights",
+    "cool steel blue with crisp white highlights"
+   ]
+  ],
+  [
+   "the javelin run-up",
+   13,
+   [
+    "_VE",
+    "an athlete gathering speed before the throw",
+    "the precise moment the foot plants for launch",
+    "",
+    "a sand runway edged by low grass",
+    "the distant field where the javelin will land",
+    "bright sunrise gold with soft teal accents"
+   ]
+  ],
+  [
+   "a galloping mustang",
+   45,
+   [
+    "_VE",
+    "the mustang thunders across the open range",
+    "when its mane streams back in the wind",
+    "",
+    "dusty plain strewn with sagebrush and tumbleweed",
+    "a distant line of distant mesas",
+    "high noon glare with bright cerulean sky"
+   ]
+  ],
+  [
+   "a bounding springbok",
+   55,
+   [
+    "_VE",
+    "the springbok leaps high over a low ridge",
+    "in the precise moment its back legs extend",
+    "",
+    "low scrubland dotted with yellow wildflowers",
+    "a distant line of acacia trees",
+    "warm sunrise glow with pastel pinks"
+   ]
+  ],
+  [
+   "a fleeing desert hare",
+   30,
+   [
+    "_VE",
+    "the hare bolts across the sand dunes rapidly",
+    "when its ears flatten against the wind",
+    "",
+    "fine sand ripples catching the low sun",
+    "a distant dune crest glowing orange",
+    "soft golden light with faint teal shadows"
+   ]
+  ],
+  [
+   "a darting African wildcat",
+   35,
+   [
+    "_VE",
+    "the wildcat darts low across the scrub quickly",
+    "as its tail flicks for balance",
+    "",
+    "dense low brush with scattered stones",
+    "a narrow dry creek bed",
+    "soft twilight with muted lavender tones"
+   ]
+  ],
+  [
+   "a rushing elk calf",
+   35,
+   [
+    "_VE",
+    "the calf bolts across a riverbank meadow energetically",
+    "as its hooves splash through shallow water",
+    "",
+    "wet grasses shimmering with reflected sky",
+    "a low bank of smooth stones",
+    "bright sunrise light with rosy undertones"
+   ]
+  ],
+  [
+   "the swing of a baseball bat",
+   70,
+   [
+    "_VE",
+    "the wooden bat arcs swiftly through the air",
+    "the precise moment it contacts the ball",
+    "",
+    "dusty infield with scattered dirt and faint sunlight",
+    "a clean patch of grass beyond the home plate",
+    "bright daylight with crisp white highlights"
+   ]
+  ],
+  [
+   "a ski slalom turn",
+   40,
+   [
+    "_VE",
+    "skis carve a tight curve through fresh powder",
+    "the moment the edges bite the snow",
+    "",
+    "snow-covered slope with pine trees lining the side",
+    "the next gate pole waiting ahead",
+    "bright winter light with icy blue highlights"
+   ]
+  ],
+  [
+   "a boxing jab",
+   20,
+   [
+    "_VE",
+    "the glove rockets forward in a crisp straight line",
+    "the instant the fist contacts the target pad",
+    "",
+    "leather boxing ring canvas with faint scuff marks",
+    "the padded focus mitt held steady ahead",
+    "warm amber glow with subtle shadow depth"
+   ]
+  ],
+  [
+   "a pole vault clearance",
+   12,
+   [
+    "_VE",
+    "the athlete propels upward over the high bar",
+    "the instant the pole bends and releases energy",
+    "",
+    "sand pit with scattered footprints and a distant stadium wall",
+    "the cross-bar silhouetted against a clear sky",
+    "bright daylight with soft white clouds"
+   ]
+  ],
+  [
+   "a soccer free-kick strike",
+   55,
+   [
+    "_VE",
+    "the foot snaps forward sending the ball curving",
+    "the exact moment the ball leaves the shoe",
+    "",
+    "well-maintained grass pitch with faint divot marks",
+    "the goalpost framed by a clear sky backdrop",
+    "vivid green light with bright white glare"
+   ]
+  ],
+  [
+   "a windsurfing gust push",
+   22,
+   [
+    "_VE",
+    "the sail catches wind propelling the board forward",
+    "the exact moment the sail billows fully",
+    "",
+    "sparkling sea surface with distant horizon and low clouds",
+    "the water ahead rippling under the moving board",
+    "crisp teal light with golden sun sparkle"
+   ]
+  ],
+  [
+   "the great horned owl swooping",
+   50,
+   [
+    "_VE",
+    "broad wings beating in a silent rush",
+    "at the moment it dives toward a shadowed branch",
+    "",
+    "a dark forest floor carpeted in pine needles",
+    "a moss-covered fallen log",
+    "deep dusk light with muted indigo shades"
+   ]
+  ],
+  [
+   "the ruby-throated hummingbird darting",
+   25,
+   [
+    "_VE",
+    "tiny body flickering between blossoms",
+    "in the flash it sips nectar",
+    "",
+    "a vine of bright red trumpet flowers",
+    "a droplet of pollen glinting",
+    "vivid sunrise with coral and gold highlights"
+   ]
+  ],
+  [
+   "a supercar",
+   150,
+   [
+    "_VE",
+    "the supercar rockets along a coastal freeway",
+    "the moment the rev counter hits the red line",
+    "",
+    "cliffs dropping sharply into turquoise water",
+    "a smooth paved stretch hugging the shoreline",
+    "intense midday glare with sharp teal reflections"
+   ]
+  ],
+  [
+   "a twin-engine maritime patrol aircraft",
+   340,
+   [
+    "_VE",
+    "the patrol plane cruises low, radar humming softly",
+    "as it skims over gentle ocean waves",
+    "",
+    "a calm sea stretching to distant horizon",
+    "a thin line of water glistening ahead",
+    "soft teal light with pale sunrise pink"
+   ]
+  ],
+  [
+   "a medium-range missile carrier aircraft",
+   560,
+   [
+    "_VE",
+    "the carrier streaks, missile bays open briefly",
+    "as the launch doors swing outward",
+    "",
+    "a remote desert scrubland with scattered rocks",
+    "a straight runway disappearing into heat haze",
+    "harsh white glare with muted rust tones"
+   ]
+  ],
+  [
+   "the long-range strategic bomber",
+   620,
+   [
+    "_VE",
+    "the bomber cruises high, engines humming deep",
+    "as it passes through thin cirrus clouds",
+    "",
+    "a wide expanse of open sky with distant sun",
+    "a faint line of distant mountains ahead",
+    "cool steel gray with soft sunrise pink"
+   ]
+  ],
+  [
+   "a snowmobile",
+   65,
+   [
+    "_VE",
+    "the sled tears across packed snow leaving a spray",
+    "when the rider twists the throttle forward",
+    "",
+    "fresh powder drifting behind the track",
+    "a white-covered hill stretching forward under pale sky",
+    "crisp icy light with faint lavender shades"
+   ]
+  ]
+ ]
+}

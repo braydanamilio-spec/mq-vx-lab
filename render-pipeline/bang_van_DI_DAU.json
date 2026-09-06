@@ -1,0 +1,2240 @@
+{
+ "DI_DAU": [
+  [
+   "the used lithium phone battery",
+   "dien_thoai",
+   [
+    "_VE",
+    "a flat rectangular lithium cell with cracked edges",
+    "resting on a plastic recycling chute",
+    "",
+    "behind the chute a wall of reclaimed wood panels",
+    "a thin layer of dark gravel",
+    "cool blue light with subtle teal hints"
+   ]
+  ],
+  [
+   "the empty alkaline kitchen battery",
+   "nguoi",
+   [
+    "_VE",
+    "a bright orange cylindrical battery missing its top",
+    "balanced on a metal sorting tray",
+    "",
+    "behind the tray a concrete pillar with moss patches",
+    "a smooth concrete floor speckled with dust",
+    "gentle golden sunrise with warm pastel shades"
+   ]
+  ],
+  [
+   "the discarded car battery",
+   "xe",
+   [
+    "_VE",
+    "a large heavy lead-acid battery with rusted terminals",
+    "parked inside an open-air hazardous waste pit",
+    "",
+    "behind the pit a chain-link fence topped with barbed wire",
+    "wet mud mixed with broken glass shards",
+    "dim overcast sky with muted gray tones"
+   ]
+  ],
+  [
+   "the spent alkaline 9-volt battery",
+   "nguoi",
+   [
+    "_VE",
+    "a rectangular black battery with peeled plastic cover",
+    "resting on a rusted steel grating",
+    "",
+    "behind the grating a concrete wall with graffiti spray patterns",
+    "a thin layer of cracked paint",
+    "muted teal light with deep indigo shadows"
+   ]
+  ],
+  [
+   "the coffee grounds from filter",
+   "coc",
+   [
+    "_VE",
+    "wet brown coffee grounds soaked in water",
+    "sitting in a kitchen sink drain pipe",
+    "",
+    "behind the pipe a tiled wall with faint grout lines",
+    "a slick stone floor with tiny water droplets",
+    "soft morning light with warm amber hue"
+   ]
+  ],
+  [
+   "the citrus peel from juicer",
+   "nguoi",
+   [
+    "_VE",
+    "bright orange lemon rind dripping with juice",
+    "floating in a bathroom bathtub drain",
+    "",
+    "behind the tub a frosted glass panel and tiled edge",
+    "smooth porcelain tiles glistening with water",
+    "cool daylight with gentle teal tone"
+   ]
+  ],
+  [
+   "the soap suds from shower",
+   "nguoi",
+   [
+    "_VE",
+    "fluffy white bubbles clinging to tile",
+    "rolling down a shower drain channel",
+    "",
+    "behind the channel a curved glass wall with mist",
+    "smooth stone floor slick with water",
+    "bright cool light with pale blue mood"
+   ]
+  ],
+  [
+   "the hair clippings from sink",
+   "nguoi",
+   [
+    "_VE",
+    "tiny dark strands tangled in water",
+    "settling at the bottom of a bathroom sink drain",
+    "",
+    "behind the sink a marble countertop with a faucet",
+    "polished ceramic tiles dotted with droplets",
+    "soft warm glow with subtle amber shade"
+   ]
+  ],
+  [
+   "the vegetable peel from sink",
+   "nguoi",
+   [
+    "_VE",
+    "green cucumber rind slick with water",
+    "spinning in a kitchen garbage disposal whirl",
+    "",
+    "behind the disposal a dark cabinet door",
+    "stainless steel floor with a faint sheen",
+    "bright daylight with fresh lime hue"
+   ]
+  ],
+  [
+   "the melted ice from freezer",
+   "nguoi",
+   [
+    "_VE",
+    "clear water pooling with tiny ice shards",
+    "draining through a laundry room floor drain",
+    "",
+    "behind the drain a stack of clean towels",
+    "gray concrete slab wet with meltwater",
+    "cool neutral light with soft silver tone"
+   ]
+  ],
+  [
+   "the shampoo residue from tub",
+   "nguoi",
+   [
+    "_VE",
+    "viscous lavender shampoo slick on surfaces",
+    "collecting in a bathtub overflow pipe",
+    "",
+    "behind the pipe a tiled wall with subtle pattern",
+    "smooth white tiles glistening with foam",
+    "soft pastel light with lavender tint"
+   ]
+  ],
+  [
+   "the dishwater suds from sink",
+   "nguoi",
+   [
+    "_VE",
+    "frothy white bubbles mixed with grease",
+    "swirling inside a kitchen sink trap",
+    "",
+    "behind the trap a wooden cabinet with open doors",
+    "bright stainless steel countertop with water streaks",
+    "warm daylight with creamy ivory glow"
+   ]
+  ],
+  [
+   "the spilled milk from counter",
+   "nguoi",
+   [
+    "_VE",
+    "creamy white milk spreading across floor",
+    "flowing toward a hallway floor drain",
+    "",
+    "behind the drain a painted wall with soft texture",
+    "light oak floor with milk sheen",
+    "soft morning light with buttery yellow tone"
+   ]
+  ],
+  [
+   "the garden runoff water",
+   "coc",
+   [
+    "_VE",
+    "muddy water carrying small leaves",
+    "traveling through an outdoor rain gutter",
+    "",
+    "behind the gutter a brick garden wall with vines",
+    "gravel path wet with runoff",
+    "dappled sunlight with earthy green mood"
+   ]
+  ],
+  [
+   "the fish tank water exchange",
+   "coc",
+   [
+    "_VE",
+    "clear aquarium water mixed with tiny algae",
+    "pouring into a bathroom floor drain",
+    "",
+    "behind the drain a tiled shower enclosure",
+    "non-slip floor tiles speckled with droplets",
+    "cool bright light with aqua tint"
+   ]
+  ],
+  [
+   "the laundry rinse water",
+   "coc",
+   [
+    "_VE",
+    "clear water tinged with fabric softener scent",
+    "draining from a washing machine into a utility drain",
+    "",
+    "behind the machine a row of stacked laundry baskets",
+    "concrete floor with faint suds residue",
+    "soft indoor glow with pastel blue hue"
+   ]
+  ],
+  [
+   "the toothpaste slurry",
+   "nguoi",
+   [
+    "_VE",
+    "minty white paste mixed with water",
+    "running down a bathroom sink drain",
+    "",
+    "behind the sink a porcelain countertop with a toothbrush holder",
+    "smooth ceramic tiles with a thin film",
+    "bright cool light with fresh mint hue"
+   ]
+  ],
+  [
+   "the fruit juice splash",
+   "nguoi",
+   [
+    "_VE",
+    "vivid orange juice mixed with water droplets",
+    "dripping into a kitchen floor drain",
+    "",
+    "behind the drain a tiled backsplash with subtle pattern",
+    "linoleum floor with sticky orange sheen",
+    "vivid daylight with citrus orange glow"
+   ]
+  ],
+  [
+   "the aquarium water change",
+   "coc",
+   [
+    "_VE",
+    "clear water with tiny fish food particles",
+    "pouring into a bathroom utility sink drain",
+    "",
+    "behind the sink a tiled wall with subtle mosaic",
+    "non-slip mat wet with droplets",
+    "calm daylight with soft aqua tint"
+   ]
+  ],
+  [
+   "the battered car door",
+   "xe",
+   [
+    "_VE",
+    "rusted steel panel with dented hinge",
+    "leaning against a pile of shredded metal",
+    "",
+    "behind a tangled heap of discarded engine blocks and tubing",
+    "scrap metal fragments scattered on a dusty ground",
+    "dim amber glow with muted orange tones"
+   ]
+  ],
+  [
+   "the cracked windshield glass",
+   "coc",
+   [
+    "_VE",
+    "shattered transparent pane with jagged edges",
+    "lying flat on a gravel driveway",
+    "",
+    "near a rusted chassis surrounded by twisted steel rods",
+    "small shards glittering among coarse sand",
+    "soft cool light with pale blue shadows"
+   ]
+  ],
+  [
+   "the dented car bumper",
+   "xe",
+   [
+    "_VE",
+    "heavy plastic and metal bumper with deep dents",
+    "resting on a sloping scrap yard ramp",
+    "",
+    "behind a mound of crushed aluminum cans and brackets",
+    "gravel and oil stains covering the surface",
+    "warm golden light with subtle brown hues"
+   ]
+  ],
+  [
+   "the rusted exhaust pipe",
+   "nguoi",
+   [
+    "_VE",
+    "curved steel pipe coated in orange rust",
+    "coiled on a wooden pallet",
+    "",
+    "adjacent to a stack of broken radiators and copper coils",
+    "dry earth dotted with tiny metal flakes",
+    "muted sunrise light with gentle pink shades"
+   ]
+  ],
+  [
+   "the shattered side mirror",
+   "nguoi",
+   [
+    "_VE",
+    "glass and plastic mirror with broken frame",
+    "propped against a rusted tire stack",
+    "",
+    "behind a pile of twisted metal springs and bolts",
+    "gritty sand covering the base of the mirror",
+    "cool twilight glow with deep indigo tones"
+   ]
+  ],
+  [
+   "the worn out car seat",
+   "xe",
+   [
+    "_VE",
+    "fabric upholstered cushion with frayed edges",
+    "folded on a concrete slab",
+    "",
+    "near a heap of dented steel frames and suspension arms",
+    "dusty ground littered with loose screws",
+    "soft sunrise light with warm honey hue"
+   ]
+  ],
+  [
+   "the broken steering wheel",
+   "nguoi",
+   [
+    "_VE",
+    "black leather wheel with cracked rim",
+    "resting on a metal grate",
+    "",
+    "behind a tower of discarded brake discs and rotors",
+    "scattered grit and small metal shards",
+    "subtle overcast light with muted gray tones"
+   ]
+  ],
+  [
+   "the corroded battery case",
+   "nguoi",
+   [
+    "_VE",
+    "large plastic container with leaking acid stains",
+    "lying inside a rusted metal cage",
+    "",
+    "adjacent to a pile of shredded copper wires and cables",
+    "wet soil dotted with dark puddles",
+    "dim greenish light with faint teal shadows"
+   ]
+  ],
+  [
+   "the twisted car frame",
+   "xe",
+   [
+    "_VE",
+    "bent steel skeleton with jagged edges",
+    "balanced on a tilted steel beam",
+    "",
+    "behind a mound of crushed engine blocks and pistons",
+    "coarse gravel covering the lower beams",
+    "harsh midday light with bright white glare"
+   ]
+  ],
+  [
+   "the shredded car seat belt",
+   "xe",
+   [
+    "_VE",
+    "woven web of frayed nylon strands",
+    "coiled on a rusted steel barrel",
+    "",
+    "near a pile of twisted metal springs and clips",
+    "gritty sand mixed with loose bolts",
+    "cool early-morning light with pale teal shade"
+   ]
+  ],
+  [
+   "the old sedan chassis",
+   "nguoi",
+   [
+    "_VE",
+    "rusted steel frame with faded paint",
+    "sitting on a dusty junkyard floor",
+    "",
+    "behind a mound of tangled wire and oil drums",
+    "gravel and broken glass scattered nearby",
+    "soft amber glow with muted shadows"
+   ]
+  ],
+  [
+   "the bent suspension arm",
+   "nguoi",
+   [
+    "_VE",
+    "long metal arm with twisted joints",
+    "propped on a rusted tire stack",
+    "",
+    "next to a pile of broken brake lines",
+    "wet mud with scattered leaves",
+    "soft green light with subtle fog"
+   ]
+  ],
+  [
+   "the cardboard box you recycle",
+   "nguoi",
+   [
+    "_VE",
+    "large corrugated cardboard box with flaps folded",
+    "stacked in a recycling bin near the curb",
+    "",
+    "a row of wooden pallets awaiting collection trucks",
+    "crumpled newspaper pieces scattered on the concrete",
+    "soft morning light with muted gray tones"
+   ]
+  ],
+  [
+   "the paper towel roll discarded",
+   "nguoi",
+   [
+    "_VE",
+    "empty white paper towel roll with a few sheets left",
+    "lying on a compost heap beside a garden path",
+    "",
+    "a stone wall covered in moss and lichen",
+    "loose soil mixed with fallen leaves",
+    "dappled sunlight casting warm amber hues"
+   ]
+  ],
+  [
+   "the glossy magazine you toss",
+   "nguoi",
+   [
+    "_VE",
+    "shiny full-color magazine pages slightly torn",
+    "piled on a curbside waste container",
+    "",
+    "a graffiti-free brick fence with ivy vines",
+    "a thin layer of dust on the pavement",
+    "cool blue light with a hint of teal"
+   ]
+  ],
+  [
+   "the pizza box after a night",
+   "giuong",
+   [
+    "_VE",
+    "brown pizza cardboard with grease stains",
+    "slightly collapsed on a recycling station shelf",
+    "",
+    "a metal recycling bin with a hinged lid",
+    "a few stray pepperoni bits on the floor",
+    "warm orange glow of late afternoon"
+   ]
+  ],
+  [
+   "the cereal box you recycle",
+   "nguoi",
+   [
+    "_VE",
+    "brightly colored cereal box with torn corners",
+    "standing upright in a cardboard collection bin",
+    "",
+    "a row of stacked wooden crates in the alley",
+    "a thin carpet of shredded paper shreds",
+    "soft pastel light with gentle lavender tones"
+   ]
+  ],
+  [
+   "the junk mail bundle you discard",
+   "nguoi",
+   [
+    "_VE",
+    "stack of glossy flyers and envelopes",
+    "overflowing a small recycling tote",
+    "",
+    "a concrete wall with climbing vines",
+    "a scattering of torn paper fragments",
+    "bright daylight with crisp white brightness"
+   ]
+  ],
+  [
+   "the unit you ship",
+   "nguoi",
+   [
+    "_VE",
+    "a slim laptop with chipped hinge",
+    "balanced on a metal conveyor belt in a warehouse",
+    "",
+    "behind a row of stacked wooden crates with weathered paint",
+    "under a thin layer of spilled oil droplets",
+    "neutral white illumination with subtle gray tones"
+   ]
+  ],
+  [
+   "the console you discard",
+   "nguoi",
+   [
+    "_VE",
+    "a gaming console with dented case",
+    "sitting atop a glass table in a quiet showroom",
+    "",
+    "behind a wall of frosted glass panels",
+    "next to a smooth stone floor with tiny pebbles",
+    "warm golden light with soft brown hue"
+   ]
+  ],
+  [
+   "the speaker you recycle",
+   "nguoi",
+   [
+    "_VE",
+    "a portable Bluetooth speaker with scratched surface",
+    "placed on a pine bench beside a garden path",
+    "",
+    "behind a low hedge of evergreen shrubs",
+    "on a mulch carpet dotted with pine needles",
+    "gentle sunrise orange with faint pink undertones"
+   ]
+  ],
+  [
+   "the router you replace",
+   "nguoi",
+   [
+    "_VE",
+    "a wireless router with broken antenna",
+    "lying on a metal shelf in a dim hallway",
+    "",
+    "behind a series of ventilation grilles with rust streaks",
+    "on a concrete floor with scattered dust motes",
+    "cool cyan light with muted teal shadows"
+   ]
+  ],
+  [
+   "the keyboard you retire",
+   "nguoi",
+   [
+    "_VE",
+    "a mechanical keyboard with missing keys",
+    "placed on a steel tray in an industrial loft",
+    "",
+    "behind a brick wall with exposed mortar joints",
+    "on a polished concrete slab with faint oil sheen",
+    "muted amber light with faint rust tones"
+   ]
+  ],
+  [
+   "the mouse you discard",
+   "nguoi",
+   [
+    "_VE",
+    "a wireless mouse with frayed cable",
+    "lying on a velvet cushion in a quiet nook",
+    "",
+    "behind a low bookshelf filled with antique volumes",
+    "on a plush carpet with muted burgundy threads",
+    "warm rose glow with soft mauve accents"
+   ]
+  ],
+  [
+   "the charger you toss",
+   "nguoi",
+   [
+    "_VE",
+    "a power adapter with broken plug",
+    "stacked on a ceramic tile floor near a doorway",
+    "",
+    "behind a row of potted succulents in terracotta pots",
+    "surrounded by scattered sand grains and tiny stones",
+    "cool mint light with gentle seafoam tones"
+   ]
+  ],
+  [
+   "the battery you recycle",
+   "nguoi",
+   [
+    "_VE",
+    "a lithium battery pack with corroded terminals",
+    "resting on a steel tray in a recycling bin area",
+    "",
+    "behind a wall of stacked metal drums with rust patches",
+    "on a gritty concrete base with spilled grit",
+    "soft teal illumination with faint gray undertones"
+   ]
+  ],
+  [
+   "the headset you donate",
+   "nguoi",
+   [
+    "_VE",
+    "a VR headset with cracked visor",
+    "lying on a glass shelf in a tech exhibit",
+    "",
+    "behind a backdrop of soft fabric panels",
+    "on a polished marble floor with subtle veining",
+    "cool lavender light with subtle violet hue"
+   ]
+  ],
+  [
+   "the camera you send",
+   "nguoi",
+   [
+    "_VE",
+    "a digital camera with dented body",
+    "placed on a wooden crate in a shipping area",
+    "",
+    "behind a stack of bubble wrap sheets",
+    "on a rough timber floor with stray splinters",
+    "warm amber glow with faint copper tint"
+   ]
+  ],
+  [
+   "the drone you send",
+   "nguoi",
+   [
+    "_VE",
+    "a quadcopter with broken propeller",
+    "sitting on a metal platform in an open garage",
+    "",
+    "behind a stack of spare batteries and wires",
+    "on a concrete floor dusted with fine grit",
+    "muted steel blue with faint charcoal hints"
+   ]
+  ],
+  [
+   "the hard drive you recycle",
+   "xe",
+   [
+    "_VE",
+    "a portable SSD with dented case",
+    "resting on a wooden pallet in a storage room",
+    "",
+    "behind a row of sealed plastic containers",
+    "on a rough concrete slab with scattered sawdust",
+    "cool silver light with subtle violet undertone"
+   ]
+  ],
+  [
+   "the earphones you discard",
+   "nguoi",
+   [
+    "_VE",
+    "a set of earbuds with tangled cord",
+    "placed on a fabric pouf in a lounge area",
+    "",
+    "behind a low bookshelf with assorted knick-knacks",
+    "on a soft carpet with muted teal threads",
+    "warm peach glow with gentle rose tint"
+   ]
+  ],
+  [
+   "the power strip you recycle",
+   "nguoi",
+   [
+    "_VE",
+    "a surge protector with broken switches",
+    "lying on a metal tray beside a workbench",
+    "",
+    "behind a wall of exposed piping and ducts",
+    "on a concrete floor with scattered metal shavings",
+    "neutral gray light with faint blue undertones"
+   ]
+  ],
+  [
+   "the smartwatch you replace",
+   "nguoi",
+   [
+    "_VE",
+    "a fitness band with broken clasp",
+    "lying on a ceramic tile near a plant pot",
+    "",
+    "behind a low wall of stacked garden stones",
+    "on a smooth pebble path with tiny leaves",
+    "soft teal light with gentle seafoam hue"
+   ]
+  ],
+  [
+   "the USB hub you discard",
+   "nguoi",
+   [
+    "_VE",
+    "a hub with missing ports and bent pins",
+    "resting on a metal shelf in a utility room",
+    "",
+    "behind a row of hanging tool belts",
+    "on a concrete slab with scattered metal clips",
+    "neutral white illumination with subtle gray cast"
+   ]
+  ],
+  [
+   "the smart speaker you donate",
+   "nguoi",
+   [
+    "_VE",
+    "a cylindrical speaker with dented body",
+    "sitting on a marble pedestal near a plant",
+    "",
+    "behind a wall of glass tiles with subtle veining",
+    "on a polished stone floor with faint sparkle",
+    "cool sapphire light with gentle blue tint"
+   ]
+  ],
+  [
+   "the VR headset you recycle",
+   "nguoi",
+   [
+    "_VE",
+    "a headset with torn strap and foggy lenses",
+    "resting on a plush beanbag in a dim lounge",
+    "",
+    "behind a curtain of dark velvet drapes",
+    "on a soft carpet with muted charcoal fibers",
+    "warm deep red light with faint burgundy shade"
+   ]
+  ],
+  [
+   "the laptop charger you discard",
+   "nguoi",
+   [
+    "_VE",
+    "a brick-shaped charger with cracked casing",
+    "placed on a rusted metal tray beside a tool bench",
+    "",
+    "behind a wall of stacked wooden pallets",
+    "on a gritty concrete floor with oil stains",
+    "cool steel blue with faint gray highlights"
+   ]
+  ],
+  [
+   "the apple core you discard",
+   "nguoi",
+   [
+    "_VE",
+    "a brownish apple core with seeds",
+    "lying in a shallow compost bin",
+    "",
+    "surrounded by damp leaf litter and soil fragments",
+    "soft earth mixed with tiny wood chips",
+    "warm amber glow with gentle shadows"
+   ]
+  ],
+  [
+   "the banana peel you toss",
+   "nguoi",
+   [
+    "_VE",
+    "a yellow banana peel with brown spots",
+    "curled at the edge of a compost heap",
+    "",
+    "behind a mound of shredded newspaper and straw",
+    "loose compost granules and fallen garden twigs",
+    "soft sunrise gold with subtle orange hue"
+   ]
+  ],
+  [
+   "the carrot tops you cut",
+   "nguoi",
+   [
+    "_VE",
+    "green carrot tops with thin stems",
+    "scattered across a compost tray",
+    "",
+    "behind a pile of shredded cabbage leaves",
+    "coarse compost fibers and small stone pieces",
+    "fresh morning green with soft diffused light"
+   ]
+  ],
+  [
+   "the tea bags you empty",
+   "nguoi",
+   [
+    "_VE",
+    "used tea bags with dried leaves",
+    "nestled in a compost bin corner",
+    "",
+    "behind a layer of fallen autumn leaves",
+    "loose, crumbly soil and tiny bark shards",
+    "warm amber tone with gentle orange undertones"
+   ]
+  ],
+  [
+   "the eggshell fragments you crush",
+   "nguoi",
+   [
+    "_VE",
+    "crushed white eggshell pieces",
+    "spread over a compost pile surface",
+    "",
+    "behind a mound of vegetable peels and stems",
+    "rich dark compost and a few tiny stones",
+    "soft daylight white with a faint yellow cast"
+   ]
+  ],
+  [
+   "the bread crust leftovers",
+   "nguoi",
+   [
+    "_VE",
+    "dry golden-brown bread crust",
+    "lying on top of a compost layer",
+    "",
+    "behind a pile of shredded lettuce and kale",
+    "soft compost earth and scattered seed shells",
+    "warm sunrise gold with gentle shadows"
+   ]
+  ],
+  [
+   "the rice husk bits you discard",
+   "nguoi",
+   [
+    "_VE",
+    "tiny pale rice husks and grains",
+    "mixed into a compost bin bottom",
+    "",
+    "behind a layer of moist soil and mulch",
+    "fine compost particles and a few wood chips",
+    "soft daylight beige with a hint of green"
+   ]
+  ],
+  [
+   "the potato peel strips",
+   "nguoi",
+   [
+    "_VE",
+    "thin amber potato peels",
+    "sprawled across a compost tray",
+    "",
+    "behind a heap of carrot tops and beet leaves",
+    "loose earthy compost and a few pebbles",
+    "soft warm light with a hint of amber"
+   ]
+  ],
+  [
+   "the onion skin layers",
+   "nguoi",
+   [
+    "_VE",
+    "dry papery onion skins",
+    "layered in a compost bin corner",
+    "",
+    "behind a pile of vegetable scraps and coffee grounds",
+    "crushed compost and tiny twig fragments",
+    "muted amber with subtle teal highlights"
+   ]
+  ],
+  [
+   "the mushroom stems you cut",
+   "nguoi",
+   [
+    "_VE",
+    "soft brown mushroom stems",
+    "nestled among composted leaves",
+    "",
+    "behind a mound of shredded newspaper and straw",
+    "moist compost and a few fallen pine needles",
+    "gentle dusk purple with warm undertones"
+   ]
+  ],
+  [
+   "the avocado pit you toss",
+   "nguoi",
+   [
+    "_VE",
+    "large dark green avocado pit",
+    "sitting at the base of a compost heap",
+    "",
+    "behind a layer of broken fruit skins and pulp",
+    "rich dark compost and small stone pieces",
+    "deep earth brown with soft golden light"
+   ]
+  ],
+  [
+   "the tomato seed shells",
+   "nguoi",
+   [
+    "_VE",
+    "tiny orange tomato seed shells",
+    "scattered across a compost bin floor",
+    "",
+    "behind a pile of vegetable peels and leaves",
+    "fine compost granules and a few bits of bark",
+    "bright daylight orange with gentle shadows"
+   ]
+  ],
+  [
+   "the corn cob remnants",
+   "nguoi",
+   [
+    "_VE",
+    "dry yellowish corn cob fragments",
+    "stacked in a compost corner",
+    "",
+    "behind a mound of shredded newspaper and straw",
+    "wet compost and small leaf pieces",
+    "warm golden light with soft green hints"
+   ]
+  ],
+  [
+   "the herb stems you trim",
+   "nguoi",
+   [
+    "_VE",
+    "green basil and parsley stems",
+    "sprinkled over a compost tray",
+    "",
+    "behind a heap of vegetable waste and coffee grounds",
+    "soft earth and tiny pine needles",
+    "fresh spring green with gentle sunlight"
+   ]
+  ],
+  [
+   "the cheese rind scraps",
+   "nguoi",
+   [
+    "_VE",
+    "yellowish cheese rind pieces",
+    "placed on top of a compost heap",
+    "",
+    "behind a mound of vegetable scraps and coffee grounds",
+    "soft compost and scattered leaf fragments",
+    "warm buttery light with gentle shadows"
+   ]
+  ],
+  [
+   "the pumpkin seed shells",
+   "nguoi",
+   [
+    "_VE",
+    "cracked orange pumpkin seed shells",
+    "scattered across a compost tray",
+    "",
+    "behind a heap of shredded newspaper and straw",
+    "soft earth and tiny bark pieces",
+    "soft autumn orange with gentle shadows"
+   ]
+  ],
+  [
+   "the leafy kale stems",
+   "nguoi",
+   [
+    "_VE",
+    "dark green kale stems with ribs",
+    "layered in a compost bin",
+    "",
+    "behind a mound of vegetable peels and coffee grounds",
+    "rich compost soil and small stone bits",
+    "vibrant forest green with warm sunlight"
+   ]
+  ],
+  [
+   "the beetroot tops you cut",
+   "nguoi",
+   [
+    "_VE",
+    "deep red beet tops with veins",
+    "tucked into a compost pile",
+    "",
+    "behind a layer of shredded leaves and straw",
+    "moist compost and a few pine needles",
+    "rich ruby glow with soft amber light"
+   ]
+  ],
+  [
+   "the popcorn kernels leftovers",
+   "nguoi",
+   [
+    "_VE",
+    "yellowish popped corn kernels",
+    "spread on a compost tray surface",
+    "",
+    "behind a mound of vegetable scraps and coffee grounds",
+    "soft earth and tiny leaf fragments",
+    "warm sunrise gold with gentle shadows"
+   ]
+  ],
+  [
+   "the grape seed husks",
+   "nguoi",
+   [
+    "_VE",
+    "tiny brown grape seed husks",
+    "mixed into a compost bin",
+    "",
+    "behind a pile of shredded newspaper and straw",
+    "rich dark compost and small stones",
+    "soft dusk purple with warm amber tones"
+   ]
+  ],
+  [
+   "the zucchini ends you cut",
+   "nguoi",
+   [
+    "_VE",
+    "dark green zucchini ends with seeds",
+    "stacked in a compost bin corner",
+    "",
+    "behind a layer of moist soil and mulch",
+    "soft earth and small bark pieces",
+    "cool garden green with warm sunlit highlights"
+   ]
+  ],
+  [
+   "the outdated tablet with faded display",
+   "nguoi",
+   [
+    "_VE",
+    "a rectangular tablet with a cracked glass front",
+    "leaning against a stack of printed manuals",
+    "",
+    "a concrete floor lined with discarded packaging material",
+    "a few loose bolts and a bent metal clip",
+    "soft greenish hue with calming pastel vibe"
+   ]
+  ],
+  [
+   "the busted gaming console with missing vent",
+   "nguoi",
+   [
+    "_VE",
+    "a black gaming console with a cracked front panel",
+    "sitting on a concrete slab beside a power strip",
+    "",
+    "a backdrop of stacked cardboard boxes and foam inserts",
+    "scattered plastic clips and a broken controller joystick",
+    "cool teal lighting with subtle futuristic vibe"
+   ]
+  ],
+  [
+   "the dead digital camera with shattered lens",
+   "nguoi",
+   [
+    "_VE",
+    "a compact digital camera with a broken glass lens",
+    "leaning against a metal filing cabinet",
+    "",
+    "a wall of reclaimed wood panels with hanging cables",
+    "a few loose memory cards and a torn strap",
+    "muted lavender light with tranquil pastel mood"
+   ]
+  ],
+  [
+   "the tossed out printer with jammed rollers",
+   "nguoi",
+   [
+    "_VE",
+    "a bulky white printer with paper stuck inside",
+    "standing on a wooden pallet beside a stack of boxes",
+    "",
+    "a dimly lit storage aisle lined with metal shelves",
+    "a pile of shredded paper scraps and ink cartridges",
+    "soft amber light with warm inviting mood"
+   ]
+  ],
+  [
+   "the obsolete router with broken antennas",
+   "nguoi",
+   [
+    "_VE",
+    "a small gray router with cracked plastic housing",
+    "sitting on a concrete slab next to a power outlet",
+    "",
+    "a wall of exposed brick with hanging cable bundles",
+    "a few tangled Ethernet cables lying loose",
+    "cool cyan lighting with modern sleek feel"
+   ]
+  ],
+  [
+   "the junked external hard drive with dented case",
+   "xe",
+   [
+    "_VE",
+    "a black external hard drive with a cracked shell",
+    "resting on a metal grid tray",
+    "",
+    "a concrete floor with a scattering of old packaging foam",
+    "a small pile of zip ties and broken USB plugs",
+    "soft greenish glow with calming tech vibe"
+   ]
+  ],
+  [
+   "the useless Bluetooth speaker with cracked dome",
+   "nguoi",
+   [
+    "_VE",
+    "a compact Bluetooth speaker with a shattered front dome",
+    "standing on a wooden pallet beside a pile of cables",
+    "",
+    "a dimly lit garage corner with stacked pallets",
+    "a few loose speaker drivers and torn fabric mesh",
+    "cool teal light with relaxed calm mood"
+   ]
+  ],
+  [
+   "the soggy paper towel",
+   "nguoi",
+   [
+    "_VE",
+    "white, crumpled sheet soaked in water",
+    "lying flat in the bathtub overflow groove",
+    "",
+    "behind the groove a smooth porcelain surface with faint steam",
+    "a shallow pool of clear water at its edge",
+    "gentle diffused light with pale teal tint"
+   ]
+  ],
+  [
+   "the rinsed vegetable peels",
+   "nguoi",
+   [
+    "_VE",
+    "green and orange fragments of carrots and cucumbers",
+    "scattered in the kitchen sink drain basket",
+    "",
+    "behind the basket a stainless steel sink basin with water droplets",
+    "a thin sheet of running water flowing over the basket",
+    "fresh natural light with soft green shade"
+   ]
+  ],
+  [
+   "the leftover pasta water",
+   "coc",
+   [
+    "_VE",
+    "starchy, cloudy liquid collected in a pot",
+    "sitting in a stainless pot on the kitchen counter near the sink",
+    "",
+    "behind the pot a wooden cabinet with a subtle grain pattern",
+    "a small splash of water spilling onto the countertop",
+    "bright natural light with warm honey tone"
+   ]
+  ],
+  [
+   "the soaked cotton swab",
+   "nguoi",
+   [
+    "_VE",
+    "white stick with a damp, fluffy tip",
+    "lying in a bathroom drain cover slot",
+    "",
+    "behind the slot a smooth ceramic basin with a faint shine",
+    "a small pool of clear water surrounding the swab",
+    "soft warm light with gentle peach tint"
+   ]
+  ],
+  [
+   "the wet cardboard box",
+   "nguoi",
+   [
+    "_VE",
+    "brown corrugated sheet soaked through with water",
+    "stacked near a utility room floor drain",
+    "",
+    "behind the stack a painted concrete wall with faint texture",
+    "a shallow puddle of water covering the floor",
+    "soft warm light with earthy amber tone"
+   ]
+  ],
+  [
+   "the drained aquarium water",
+   "coc",
+   [
+    "_VE",
+    "clear liquid with tiny floating plant fragments",
+    "collecting in a shallow basin beside a bathroom drain",
+    "",
+    "behind the basin a tiled floor with subtle grout lines",
+    "a thin layer of water covering the basin bottom",
+    "soft pastel light with muted teal hue"
+   ]
+  ],
+  [
+   "the emptied chemical spray can",
+   "nguoi",
+   [
+    "_VE",
+    "a silver aerosol container with rusted nozzle",
+    "resting against a cracked concrete wall",
+    "",
+    "near a pile of broken garden hoses and wilted vines",
+    "covered in a thin layer of dried dust",
+    "muted teal light casting gentle shadows"
+   ]
+  ],
+  [
+   "the crumpled cardboard box",
+   "nguoi",
+   [
+    "_VE",
+    "a torn cardboard shipping container",
+    "lying flat on a recycling conveyor belt",
+    "",
+    "a row of stacked wooden pallets behind the belt",
+    "scattered shredded paper pieces on the floor",
+    "soft warm amber glow with gentle shadows"
+   ]
+  ],
+  [
+   "the flattened pizza box",
+   "nguoi",
+   [
+    "_VE",
+    "a flattened cardboard pizza container",
+    "resting against a recycling bin wall",
+    "",
+    "a stack of empty milk cartons behind it",
+    "a small puddle of water from a leaky pipe",
+    "bright daylight yellow with soft shadows"
+   ]
+  ],
+  [
+   "the torn paper envelope",
+   "nguoi",
+   [
+    "_VE",
+    "a ripped white mailing envelope",
+    "sliding down a chute into a bin",
+    "",
+    "a row of cardboard tubes behind the chute",
+    "a thin carpet of loose fibers on the floor",
+    "soft pastel green light with calm ambience"
+   ]
+  ],
+  [
+   "the sealed cardboard parcel",
+   "nguoi",
+   [
+    "_VE",
+    "a taped cardboard shipping package",
+    "sitting on a pallet in a sorting area",
+    "",
+    "rows of wooden crates behind the pallet",
+    "a thin line of adhesive tape on the floor",
+    "soft golden hour light with warm tones"
+   ]
+  ],
+  [
+   "the ripped paper bag",
+   "nguoi",
+   [
+    "_VE",
+    "a torn grocery paper bag",
+    "hanging from a recycling hook",
+    "",
+    "a stack of cardboard milk cartons behind the hook",
+    "a few loose plastic fragments on the ground",
+    "cool morning blue light with gentle shadows"
+   ]
+  ],
+  [
+   "the folded paper shopping list",
+   "nguoi",
+   [
+    "_VE",
+    "a folded sheet of lined paper",
+    "tucked into a recycling bag",
+    "",
+    "a row of cardboard delivery boxes behind the bag",
+    "a few stray paperclips on the floor",
+    "warm sunrise gold with subtle glow"
+   ]
+  ],
+  [
+   "the abandoned e-reader",
+   "nguoi",
+   [
+    "_VE",
+    "slim tablet, faded backlight, cracked edge",
+    "lying on a stone countertop beside a kettle",
+    "",
+    "a window view of a rainy street and distant trees",
+    "a few crumbs of dried tea leaves on the surface",
+    "muted teal light with soft gray undertones"
+   ]
+  ],
+  [
+   "the faded wool sweater",
+   "nguoi",
+   [
+    "_VE",
+    "a chunky wool sweater in muted gray",
+    "folded on a weathered pine table",
+    "",
+    "behind the table a window overlooking misty hills",
+    "a rug of soft woven fibers under the sweater",
+    "cool bluish light with subtle gray shadows"
+   ]
+  ],
+  [
+   "the stained canvas tote",
+   "nguoi",
+   [
+    "_VE",
+    "a canvas tote bag splattered with coffee stains",
+    "resting on a stone ledge",
+    "",
+    "behind the ledge a low stone wall covered in vines",
+    "a scattering of smooth river stones below",
+    "soft golden light with warm amber tones"
+   ]
+  ],
+  [
+   "the frayed knit hat",
+   "nguoi",
+   [
+    "_VE",
+    "a knitted beanie with loose yarn strands",
+    "propped against a metal fire pit",
+    "",
+    "behind the pit a pine forest fading into dusk",
+    "a bed of pine needles surrounding the hat",
+    "deep orange glow with subtle crimson shadows"
+   ]
+  ],
+  [
+   "the mismatched sock pair",
+   "nguoi",
+   [
+    "_VE",
+    "two wool socks, one striped, one plain",
+    "tangled around a garden gnome's foot",
+    "",
+    "behind the gnome a flowerbed bursting with daisies",
+    "a patch of moist soil at the gnome's base",
+    "bright sunrise light with fresh green highlights"
+   ]
+  ],
+  [
+   "the stale bread crust",
+   "nguoi",
+   [
+    "_VE",
+    "dry golden slice with uneven edges",
+    "sinking into an anaerobic digester chamber",
+    "",
+    "behind a thick concrete wall lined with pipes",
+    "muddy slurry covering the chamber floor",
+    "muted brown tones with faint orange highlights"
+   ]
+  ],
+  [
+   "the disposable razor",
+   "nguoi",
+   [
+    "_VE",
+    "metal handle with plastic cartridge and blades",
+    "moving through a shredding carousel",
+    "",
+    "behind a rotating cage of steel rods",
+    "tiny metal curls resting on the conveyor",
+    "bright white light with subtle blue tint"
+   ]
+  ],
+  [
+   "the plastic bottle you recycle",
+   "nguoi",
+   [
+    "_VE",
+    "a clear PET bottle with a blue cap",
+    "floating gently on a slow moving stream",
+    "",
+    "dense reeds swaying beside a misty marshland",
+    "smooth river stones glistening with algae",
+    "soft twilight blue with a calm glow"
+   ]
+  ],
+  [
+   "the aluminum can from soda",
+   "nguoi",
+   [
+    "_VE",
+    "shiny silver can with a dented rim",
+    "spinning slowly in a whirlpool of water",
+    "",
+    "overgrown cattails framing a quiet pond",
+    "muddy sand mixed with tiny shells",
+    "warm amber light reflecting off ripples"
+   ]
+  ],
+  [
+   "the wilted lettuce leaf",
+   "cay",
+   [
+    "_VE",
+    "a limp green leaf with brown edges",
+    "lying on a wooden cutting board",
+    "",
+    "against a tiled kitchen backsplash",
+    "a scattering of tiny pebbles on the floor",
+    "muted jade light with a cool tone"
+   ]
+  ],
+  [
+   "the soft mushroom cap",
+   "nguoi",
+   [
+    "_VE",
+    "a smooth brown cap of a button mushroom",
+    "settled on a wicker basket",
+    "",
+    "under a hanging copper pot rack",
+    "a rug of shredded newspaper underneath",
+    "earthy brown light with a hint of green"
+   ]
+  ],
+  [
+   "the peeled cucumber skin",
+   "nguoi",
+   [
+    "_VE",
+    "a long strip of pale green cucumber peel",
+    "coiled inside a glass jar",
+    "",
+    "behind a shelf of mason jars",
+    "a layer of moist compost fibers below",
+    "fresh morning light with light teal hue"
+   ]
+  ],
+  [
+   "the crushed grape seed",
+   "nguoi",
+   [
+    "_VE",
+    "a handful of tiny dark grape seeds",
+    "scattered across a ceramic plate",
+    "",
+    "against a backdrop of hanging dried herbs",
+    "a thin film of sand-like soil ahead",
+    "soft violet glow with calm undertones"
+   ]
+  ],
+  [
+   "the sliced kiwi skin",
+   "nguoi",
+   [
+    "_VE",
+    "bright green fuzzy skin of a kiwi fruit",
+    "arranged in a circular pattern on a slate",
+    "",
+    "near a small indoor fountain",
+    "wet moss covering the floor nearby",
+    "cool mint light with subtle sparkle"
+   ]
+  ],
+  [
+   "the dried herb stem",
+   "nguoi",
+   [
+    "_VE",
+    "a slender brown stem of dried basil",
+    "lying on a terracotta pot",
+    "",
+    "behind a collection of glass spice jars",
+    "a sprinkle of tiny charcoal granules ahead",
+    "soft sage light with muted green tones"
+   ]
+  ],
+  [
+   "the spoiled fish remains",
+   "nguoi",
+   [
+    "_VE",
+    "slimy, pinkish fish carcass fragments",
+    "sinking into a deep anaerobic lagoon",
+    "",
+    "reed-like aeration pipes rise beyond the waterline",
+    "muddy sludge covering the lagoon bottom",
+    "murky greenish glow with occasional bubbles"
+   ]
+  ],
+  [
+   "the soda can you recycle",
+   "nguoi",
+   [
+    "_VE",
+    "shiny aluminum cylinder with crinkled top",
+    "balanced on a rusted metal bin edge",
+    "",
+    "a narrow alley lined with overflowing cardboard boxes",
+    "a puddle of rainwater reflecting the can",
+    "soft twilight blue with a hint of orange glow"
+   ]
+  ],
+  [
+   "the glass jar of jam",
+   "coc",
+   [
+    "_VE",
+    "clear glass jar with a faded lid",
+    "standing upright in a glass recycling chute",
+    "",
+    "a stone pathway bordered by low hedges and ferns",
+    "a smear of spilled fruit puree on the stones",
+    "gentle sunrise gold with soft violet shadows"
+   ]
+  ],
+  [
+   "the tin can of soup",
+   "nguoi",
+   [
+    "_VE",
+    "rust-speckled metal can with a dented rim",
+    "tilted inside a yellow recycling drum",
+    "",
+    "a concrete slab littered with fallen leaves",
+    "a small puddle of oily residue nearby",
+    "soft dusk lavender with a faint orange hue"
+   ]
+  ],
+  [
+   "the metal bottle cap",
+   "nguoi",
+   [
+    "_VE",
+    "shiny steel cap with a dented edge",
+    "spilling onto a metal sorting conveyor",
+    "",
+    "a concrete loading dock with stacked crates",
+    "a thin line of oil slick on the concrete",
+    "soft sunrise gold with muted cyan"
+   ]
+  ],
+  [
+   "the smashed portable speaker with torn mesh",
+   "nguoi",
+   [
+    "_VE",
+    "a cylindrical device with exposed wiring",
+    "lying on a sun-warmed patio tile",
+    "",
+    "next to a low wooden fence covered in moss",
+    "surrounded by scattered seashells and sand",
+    "warm amber light with late-afternoon glow"
+   ]
+  ],
+  [
+   "the fried gaming console with melted plastic",
+   "nguoi",
+   [
+    "_VE",
+    "a bulky box with scorched corners",
+    "sitting on a rusted metal fire pit",
+    "",
+    "behind a stack of pine logs ready for burning",
+    "on a bed of dark charcoal dust",
+    "deep orange light with smoky undertones"
+   ]
+  ],
+  [
+   "the stripped car battery",
+   "xe",
+   [
+    "_VE",
+    "an empty lead-acid car battery casing",
+    "placed on a steel grating platform",
+    "",
+    "adjacent to a stack of copper cable reels",
+    "small puddles of acidic liquid stain the floor",
+    "soft greenish light with muted industrial feel"
+   ]
+  ],
+  [
+   "the alkaline can you toss",
+   "nguoi",
+   [
+    "_VE",
+    "bright orange rectangular household power source",
+    "resting inside a cracked plastic container",
+    "",
+    "behind a pile of dried cardboard boxes and tape rolls",
+    "a thin layer of dust and shredded paper",
+    "cool fluorescent light with pastel yellow hue"
+   ]
+  ],
+  [
+   "the lithium pack you discard",
+   "nguoi",
+   [
+    "_VE",
+    "thin flexible energy strip with silver contacts",
+    "coiled on a metal tray",
+    "",
+    "behind a rusted metal cabinet and old paint cans",
+    "a smear of oil and grease stains",
+    "dim teal lighting with subtle blue undertones"
+   ]
+  ],
+  [
+   "the expired milk carton",
+   "nguoi",
+   [
+    "_VE",
+    "creamy, slightly curdled cardboard container",
+    "floating in a high-rate anaerobic digester",
+    "",
+    "surrounded by sealed steel tanks and vent pipes",
+    "bubbles of methane rising slowly",
+    "deep indigo light with subtle green undertones"
+   ]
+  ],
+  [
+   "the crinkled soda can",
+   "nguoi",
+   [
+    "_VE",
+    "shiny aluminum cylinder with dented top",
+    "resting on a metal recycling hopper",
+    "",
+    "behind a stack of rusted wooden pallets",
+    "surrounded by scattered crushed newspaper pieces",
+    "soft amber glow with warm muted tones"
+   ]
+  ],
+  [
+   "the chipped coffee cup",
+   "coc",
+   [
+    "_VE",
+    "white ceramic mug with a small crack",
+    "sitting on a gray plastic bin edge",
+    "",
+    "near a row of overturned cardboard boxes",
+    "a thin layer of coffee grounds dusting the floor",
+    "cool morning light with pale blue hue"
+   ]
+  ],
+  [
+   "the bubble wrap envelope",
+   "nguoi",
+   [
+    "_VE",
+    "transparent plastic film filled with air pockets",
+    "rolled up near a loading dock",
+    "",
+    "against a wall of stacked pallets and crates",
+    "a glossy strip of discarded packaging tape",
+    "cool bluish light with subtle silver hints"
+   ]
+  ],
+  [
+   "the padded envelope",
+   "nguoi",
+   [
+    "_VE",
+    "soft foam-lined envelope with bubble corners",
+    "sitting on a shelf beside reusable bags",
+    "",
+    "behind a stack of reusable tote containers",
+    "a thin carpet of dust motes near the base",
+    "gentle teal lighting with calm undertones"
+   ]
+  ],
+  [
+   "the kraft paper wrap",
+   "nguoi",
+   [
+    "_VE",
+    "brown kraft paper with twine fastened tightly",
+    "folded over a wooden crate in a corner",
+    "",
+    "next to a row of empty cardboard boxes",
+    "a smear of adhesive residue on the floor",
+    "warm honey-colored glow with soft shadows"
+   ]
+  ],
+  [
+   "the poly mailer bag",
+   "nguoi",
+   [
+    "_VE",
+    "lightweight plastic bag with zip seal",
+    "inflated and hanging from a rack hook",
+    "",
+    "above a row of empty shipping containers",
+    "a small pile of crushed bubble sheets",
+    "soft lavender hue with diffused illumination"
+   ]
+  ],
+  [
+   "the wooden crate lid",
+   "nguoi",
+   [
+    "_VE",
+    "sturdy pine lid with metal hinges",
+    "resting on top of an open crate",
+    "",
+    "behind a stack of reclaimed wooden pallets",
+    "a scattering of pine shavings on the ground",
+    "rich amber light with subtle warm shadows"
+   ]
+  ],
+  [
+   "the insulated thermal bag",
+   "nguoi",
+   [
+    "_VE",
+    "white insulated carrier with reflective lining",
+    "placed on a cooling rack near a door",
+    "",
+    "against a wall of stacked insulation panels",
+    "a few stray pieces of foil foil",
+    "cool silver light with crisp contrast"
+   ]
+  ],
+  [
+   "the zip-tie bundle",
+   "nguoi",
+   [
+    "_VE",
+    "cluster of bright nylon zip ties",
+    "spilled onto a concrete floor near a cart",
+    "",
+    "behind a row of empty cardboard tubes",
+    "a thin film of spilled packing tape",
+    "neutral gray light with subtle blue tint"
+   ]
+  ],
+  [
+   "the reusable bubble pouch",
+   "nguoi",
+   [
+    "_VE",
+    "fabric pouch filled with reusable bubbles",
+    "hung from a pegboard near a sorting table",
+    "",
+    "next to a stack of empty poly mailers",
+    "a few stray bubbles rolled on the ground",
+    "cool cyan lighting with subtle sparkle"
+   ]
+  ],
+  [
+   "the postage stamp sheet",
+   "nguoi",
+   [
+    "_VE",
+    "grid of adhesive stamps on paper",
+    "scattered across a wooden pallet",
+    "",
+    "against a wall of empty envelope bins",
+    "a few torn stamp corners on the floor",
+    "soft ivory glow with muted highlights"
+   ]
+  ],
+  [
+   "the foam corner protector",
+   "nguoi",
+   [
+    "_VE",
+    "triangular foam piece with adhesive backing",
+    "stuck on the side of a wooden crate",
+    "",
+    "behind a line of empty cardboard boxes",
+    "a thin film of foam dust on the ground",
+    "soft lavender glow with calm ambience"
+   ]
+  ],
+  [
+   "the recycled paper envelope",
+   "nguoi",
+   [
+    "_VE",
+    "brown envelope made from recycled fibers",
+    "lying flat on a metal sorting tray",
+    "",
+    "behind a row of empty cardboard dividers",
+    "a few torn envelope edges on the floor",
+    "warm amber glow with subtle shadows"
+   ]
+  ],
+  [
+   "the protective foam sheet",
+   "nguoi",
+   [
+    "_VE",
+    "thin sheet of white packing foam",
+    "folded over a stack of parcels",
+    "",
+    "next to a pile of empty bubble wrap rolls",
+    "a thin layer of foam dust on the ground",
+    "cool bluish light with muted highlights"
+   ]
+  ],
+  [
+   "the retired smartwatch",
+   "nguoi",
+   [
+    "_VE",
+    "a small rectangular device with a dented band",
+    "placed on a rotating platform for battery removal",
+    "",
+    "behind a glass enclosure where lithium cells are extracted",
+    "a puddle of spilled electrolyte on a steel tray",
+    "soft pink light with a warm pastel feel"
+   ]
+  ],
+  [
+   "the denim jacket you donate",
+   "nguoi",
+   [
+    "_VE",
+    "a faded blue denim jacket with metal buttons",
+    "hanging on a wooden rack in a charity shop",
+    "",
+    "behind the rack a wall of stacked cardboard boxes",
+    "a polished concrete floor with scattered fabric tags",
+    "soft warm light with amber tones"
+   ]
+  ],
+  [
+   "the knitted sweater for recycling",
+   "nguoi",
+   [
+    "_VE",
+    "a chunky wool sweater in pastel pink",
+    "folded on a wicker basket beside a donation bin",
+    "",
+    "behind the basket a row of wooden pallets holding other textiles",
+    "a light dusted floor with tiny pine needles",
+    "gentle sunrise glow with peach hues"
+   ]
+  ],
+  [
+   "the silk scarf sent abroad",
+   "nguoi",
+   [
+    "_VE",
+    "a delicate silk scarf with floral pattern",
+    "rolled inside a padded envelope on a shipping table",
+    "",
+    "behind the table a stack of wooden crates ready for loading",
+    "a smooth stone tile with a few stray threads",
+    "cool morning light with pale blue shade"
+   ]
+  ],
+  [
+   "the cotton t-shirt for upcycling",
+   "nguoi",
+   [
+    "_VE",
+    "a plain white cotton t-shirt with small tear",
+    "spread on a cutting board in a workshop",
+    "",
+    "behind the board a wall of hanging fabric scraps",
+    "a reclaimed barn floor dotted with sawdust",
+    "bright daylight with crisp white ambience"
+   ]
+  ],
+  [
+   "the polyester jacket for resale",
+   "nguoi",
+   [
+    "_VE",
+    "a bright orange polyester jacket with reflective strips",
+    "hung on a metal hook in a storefront window",
+    "",
+    "behind the window a row of mannequins draped in garments",
+    "a glossy tiled floor with faint footprints",
+    "soft golden light with warm orange tint"
+   ]
+  ],
+  [
+   "the linen sheet for donation",
+   "nguoi",
+   [
+    "_VE",
+    "a crisp white linen sheet folded neatly",
+    "stacked on a wooden shelf in a shelter storage room",
+    "",
+    "behind the shelf a wall of painted brick",
+    "a polished concrete floor with a few stray linens",
+    "muted daylight with cool gray tones"
+   ]
+  ],
+  [
+   "the vintage dress for charity auction",
+   "nguoi",
+   [
+    "_VE",
+    "a floral vintage dress with lace trim",
+    "displayed on a vintage wooden mannequin in a gallery",
+    "",
+    "behind the mannequin a velvet drape and antique frames",
+    "a polished hardwood floor with scattered rose petals",
+    "warm amber light with soft rose glow"
+   ]
+  ],
+  [
+   "the fleece blanket for recycling",
+   "nguoi",
+   [
+    "_VE",
+    "a thick teal fleece blanket with fringe edges",
+    "rolled on a metal cart in a textile recycling plant",
+    "",
+    "behind the cart a series of conveyor belts and sorting bins",
+    "a gritty concrete floor with specks of dust",
+    "industrial white light with cool steel hue"
+   ]
+  ],
+  [
+   "the canvas tote bag for reuse",
+   "nguoi",
+   [
+    "_VE",
+    "a sturdy canvas tote bag with natural fibers",
+    "leaning against a wooden crate in a market stall",
+    "",
+    "behind the crate a row of hanging dried herbs",
+    "a cobblestone floor with a few loose stones",
+    "late afternoon sun with mellow amber shade"
+   ]
+  ],
+  [
+   "the wool coat for second-hand shop",
+   "dong_ho",
+   [
+    "_VE",
+    "a heavy charcoal wool coat with deep pockets",
+    "hanged on a brass hook near a wooden bench",
+    "",
+    "behind the bench a wall of reclaimed timber panels",
+    "a stone tiled floor with faint footprints",
+    "soft diffused light with cool slate tint"
+   ]
+  ],
+  [
+   "the pair of denim jeans for upcycle",
+   "nguoi",
+   [
+    "_VE",
+    "a pair of distressed denim jeans with frayed cuffs",
+    "pinned on a cork board in a maker space",
+    "",
+    "behind the board a shelf of paint cans and brushes",
+    "a reclaimed wood floor with scattered sawdust",
+    "bright morning light with fresh green hue"
+   ]
+  ],
+  [
+   "the crocheted blanket for reuse",
+   "nguoi",
+   [
+    "_VE",
+    "a colorful crocheted blanket with geometric motifs",
+    "spread over a low wooden table in a community center",
+    "",
+    "behind the table a bookshelf filled with fabric swatches",
+    "a polished cement floor with a few stray yarn pieces",
+    "bright natural light with vibrant rainbow hue"
+   ]
+  ],
+  [
+   "the rechargeable laptop battery",
+   "nguoi",
+   [
+    "_VE",
+    "large rectangular laptop battery with vents",
+    "leaning against a rusted metal pipe",
+    "",
+    "a wall of stacked steel drums behind",
+    "crushed gravel covering the floor",
+    "cool cyan light with faint teal accents"
+   ]
+  ],
+  [
+   "the small electric toothbrush battery",
+   "nguoi",
+   [
+    "_VE",
+    "tiny cylindrical battery from a toothbrush",
+    "placed on a woven bamboo mat",
+    "",
+    "a row of empty tin cans behind",
+    "a thin layer of sawdust on the ground",
+    "warm amber light with soft honey tones"
+   ]
+  ],
+  [
+   "the electric bike battery",
+   "nguoi",
+   [
+    "_VE",
+    "large rectangular lithium-ion bike battery",
+    "standing upright on a concrete platform",
+    "",
+    "a line of empty cardboard tubes behind",
+    "a thin layer of spilled coffee grounds",
+    "bright white illumination with crisp cool shadows"
+   ]
+  ],
+  [
+   "the newspaper bundle",
+   "nguoi",
+   [
+    "_VE",
+    "stacked sheets of gray printed paper",
+    "piled in a paper recycling chute",
+    "",
+    "a wooden fence with vines behind the chute",
+    "a carpet of crumpled paper bits at the base",
+    "muted daylight with warm honey colour"
+   ]
+  ],
+  [
+   "the steel canister",
+   "nguoi",
+   [
+    "_VE",
+    "large cylindrical steel container with rust patches",
+    "resting on a metal sorting platform",
+    "",
+    "a row of industrial drums behind the platform",
+    "a smear of oil stain on the concrete floor",
+    "industrial glow with steel-gray ambience"
+   ]
+  ],
+  [
+   "the biodegradable packing peanuts",
+   "nguoi",
+   [
+    "_VE",
+    "fluffy corn-based pellets in a white sack",
+    "spilled onto a low platform beside a packing station",
+    "",
+    "behind a stack of cardboard sheets waiting for use",
+    "a smooth concrete pad dotted with loose pellets",
+    "fresh greenish light with a lively vibe"
+   ]
+  ],
+  [
+   "the recyclable plastic wrap",
+   "nguoi",
+   [
+    "_VE",
+    "clear stretch film on a dispenser roll",
+    "partially unrolled across a workbench beside a box",
+    "",
+    "behind a row of empty cardboard boxes awaiting fill",
+    "a polished concrete surface with faint footprints",
+    "bright white light with a crisp energy"
+   ]
+  ],
+  [
+   "the eco-friendly packing paper",
+   "nguoi",
+   [
+    "_VE",
+    "recycled kraft paper sheets crumpled for cushioning",
+    "scattered across a packing station beside a box",
+    "",
+    "behind a stack of empty cardboard boxes awaiting reuse",
+    "a rough wooden floor with soft dust",
+    "soft forest green light with a calm ambience"
+   ]
+  ],
+  [
+   "the satin pillowcase you replace",
+   "nguoi",
+   [
+    "_VE",
+    "a smooth satin pillowcase in deep burgundy",
+    "tucked inside a wicker laundry basket",
+    "",
+    "behind an open window with sheer curtains",
+    "a polished wooden floor with a faint rug pattern",
+    "soft evening glow with muted rose tones"
+   ]
+  ],
+  [
+   "the corduroy pants you no longer need",
+   "nguoi",
+   [
+    "_VE",
+    "a pair of dark brown corduroy trousers",
+    "hanged on a metal coat rack in a hallway",
+    "",
+    "behind a cracked plaster wall with faded paint",
+    "a worn linoleum floor with subtle scuff marks",
+    "neutral daylight with cool gray shadows"
+   ]
+  ],
+  [
+   "the flannel shirt you retire",
+   "nguoi",
+   [
+    "_VE",
+    "a red-black checked flannel shirt with cuffed sleeves",
+    "folded on a reclaimed pine table",
+    "",
+    "behind a brick fireplace with stone mantle",
+    "a rustic stone floor dusted with ash",
+    "warm hearth light with deep orange tones"
+   ]
+  ],
+  [
+   "the lace curtain you discard",
+   "nguoi",
+   [
+    "_VE",
+    "a sheer white lace curtain with delicate trim",
+    "draped over a rusted iron rod in a garden shed",
+    "",
+    "behind a stack of old wooden crates",
+    "a cobblestone patio with scattered pebbles",
+    "soft diffused light with cool ivory tones"
+   ]
+  ],
+  [
+   "the microfiber towel you replace",
+   "nguoi",
+   [
+    "_VE",
+    "a teal microfiber towel with soft loops",
+    "rolled on a stainless steel countertop",
+    "",
+    "behind a glass door leading to a patio",
+    "a tiled floor with faint water ripples",
+    "bright clean light with crisp turquoise hints"
+   ]
+  ],
+  [
+   "the terry cloth bathrobe you replace",
+   "nguoi",
+   [
+    "_VE",
+    "a plush terry cloth bathrobe in soft peach",
+    "draped over a ceramic vase on a balcony",
+    "",
+    "behind a lattice trellis with blooming vines",
+    "a tiled balcony floor with tiny sea shells",
+    "late morning light with warm coral hues"
+   ]
+  ],
+  [
+   "the burlap sack you discard",
+   "nguoi",
+   [
+    "_VE",
+    "a coarse natural burlap sack with rope handles",
+    "standing upright on a wooden pallet",
+    "",
+    "behind a stack of old wooden barrels",
+    "a rough concrete floor with dust patches",
+    "soft overcast light with muted earth tones"
+   ]
+  ],
+  [
+   "the mesh laundry bag you retire",
+   "nguoi",
+   [
+    "_VE",
+    "a white mesh laundry bag with zippered closure",
+    "placed on a metal drying rack outdoors",
+    "",
+    "behind a row of potted herbs",
+    "a sun-warmed wooden deck with tiny footprints",
+    "bright sunny light with crisp white highlights"
+   ]
+  ],
+  [
+   "the velvet cushion you donate",
+   "nguoi",
+   [
+    "_VE",
+    "a plush velvet cushion in royal purple",
+    "propped against a stone garden wall",
+    "",
+    "behind a blooming lavender bush",
+    "a gravel path with soft moss edges",
+    "evening glow with deep violet undertones"
+   ]
+  ],
+  [
+   "the nylon windbreaker you toss",
+   "nguoi",
+   [
+    "_VE",
+    "a lightweight nylon windbreaker in electric orange",
+    "leaning against a metal fence post",
+    "",
+    "behind a cluster of wind-swept grasses",
+    "a compacted earth ground with scattered twigs",
+    "strong midday sun with vibrant orange highlights"
+   ]
+  ],
+  [
+   "the spandex leggings you discard",
+   "nguoi",
+   [
+    "_VE",
+    "a glossy black spandex legging with seamless seams",
+    "coiled on a steel pipe near a loading dock",
+    "",
+    "behind a stack of wooden pallets",
+    "a concrete slab with faint oil stains",
+    "cool industrial light with muted charcoal hues"
+   ]
+  ],
+  [
+   "the hemp tote bag you retire",
+   "nguoi",
+   [
+    "_VE",
+    "a natural hemp tote bag with braided straps",
+    "hung from a reclaimed iron hook on a wall",
+    "",
+    "behind a weathered brick chimney",
+    "a cobblestone courtyard with scattered leaves",
+    "warm late-day light with soft amber tones"
+   ]
+  ],
+  [
+   "the plush stuffed animal costume you donate",
+   "huou",
+   [
+    "_VE",
+    "a fluffy plush costume resembling a bunny in pastel pink",
+    "folded on a soft rug in a playroom corner",
+    "",
+    "behind a low wooden bookshelf filled with toys",
+    "a plush carpet with subtle pastel speckles",
+    "gentle morning light with sweet pink hues"
+   ]
+  ],
+  [
+   "the rolled-up gift wrap",
+   "nguoi",
+   [
+    "_VE",
+    "a festive patterned paper roll",
+    "coiled neatly on a kitchen counter",
+    "",
+    "a stack of empty jars on a shelf behind",
+    "a few stray confetti pieces on the tile",
+    "soft pastel light with rosy undertones"
+   ]
+  ]
+ ]
+}
