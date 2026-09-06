@@ -478,8 +478,8 @@ const Panel: React.FC<{
  * cũng là một phần của hook. Che mặt để nhường chỗ cho chữ là đổi chác lỗ.
  */
 const TheHook: React.FC<{ chu: string; W: number; H: number; p: number; mau: string;
-                          duoi?: boolean }> =
-({ chu, W, H, p, mau, duoi }) => {
+                          duoi?: boolean; day?: number }> =
+({ chu, W, H, p, mau, duoi, day = 0 }) => {
   if (!chu || p >= 1) return null;
   const vao = kep(p / 0.09);                    // bật lên trong 0,2 giây đầu
   const ra = kep((p - 0.86) / 0.14);            // rồi trượt lên và mờ đi
@@ -497,10 +497,23 @@ const TheHook: React.FC<{ chu: string; W: number; H: number; p: number; mau: str
          Ở kênh giải thích, ba giây đầu phải cho thấy AI đang nói với AI — che mặt là bỏ đi
          thứ duy nhất phân biệt format này với một video lời dẫn.
          20 kênh hài không truyền `duoi` nên chúng không đổi một pixel. */
+      /* ── ĐÁY THẺ PHẢI ĐO TỪ ĐÁY Ô, KHÔNG TỪ ĐÁY KHUNG HÌNH  (soi khung 6/9/2026) ────
+         `bottom: H * 0.055` đo từ đáy KHUNG (106px ở 1920). Đáy Ô truyện nằm cao hơn thế:
+         `LE + CAO_TEN` = 106px... nghe như vừa khít, và đó đúng là chỗ bẫy — thẻ còn có
+         `boxShadow` 12px và một cú trượt XUỐNG `ra * H*0.10` = 192px lúc thoát. Soi khung 6%
+         của `v11_howhot_0040`: thẻ cam "40°F" nằm đè lên nét mực đáy ô, bóng của nó tràn hẳn
+         ra ngoài khung truyện.
+         Nay nhận `day` = khoảng cách thật từ đáy khung tới đáy ô (chính `LE + CAO_TEN` mà
+         `KichComic` đã tính để dựng ô), cộng một khoảng thở — không thêm một hằng số đoán
+         nào (§13.7).
+         Và cú thoát trượt LÊN cho cả hai kiểu: trượt xuống thì dù đặt đâu nó cũng sẽ cắt qua
+         mép ô ở cuối animation. Một hướng chuyển động không bao giờ ra khỏi khung thì không
+         cần canh nó nữa. */
       position: "absolute", left: 0, right: 0,
-      top: duoi ? undefined : H * 0.62, bottom: duoi ? H * 0.055 : undefined,
+      top: duoi ? undefined : H * 0.62,
+      bottom: duoi ? day + H * 0.028 : undefined,
       display: "flex", justifyContent: "center", pointerEvents: "none", zIndex: 9,
-      transform: `translateY(${(duoi ? ra * H * 0.10 : -ra * H * 0.14)}px) scale(${sc})`,
+      transform: `translateY(${-ra * H * (duoi ? 0.06 : 0.14)}px) scale(${sc})`,
       opacity: 1 - ra,
     }}>
       <div style={{
@@ -723,7 +736,7 @@ export const KichComic: React.FC<PropsComic> = ({
           Lại là họ lỗi "một hằng phục vụ hai thứ biến thiên độc lập": thời lượng thẻ và độ dài
           video biến thiên riêng, mà công thức chỉ mã hoá một. */}
       <TheHook chu={hook} W={width} H={height} p={kep(giay / (hookGiay || 2.2))} mau={mau}
-                 duoi={hookDuoi} />
+                 duoi={hookDuoi} day={LE + CAO_TEN} />
 
       {voMp3 ? <Audio src={staticFile(voMp3)} /> : null}
       {/* ÂM LƯỢNG NHẠC — 31/8. Hằng cũ `0.16` dùng chung cho 10 tệp có độ to gốc trải 26 dB
