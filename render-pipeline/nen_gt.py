@@ -810,6 +810,87 @@ def _sac_thai(ma: str) -> str:
 # "lượt gọi thứ mấy đã mất".
 _DA_CAT: list = []
 
+# Khoá Groq cho `_lam_giau_canh` — nạp một lần mỗi tập ở `sinh_tap()` (nơi ĐANG SẴN `keys`
+# đầy đủ), đọc lại ở `sinh()`. Biến module thay vì tham số hàm: `sinh()` đã bỏ tham số `keys`
+# sau khi đổi sang `_generate_image_ai`/`set_ai_pool` (xem lịch sử) — thêm lại một tham số chỉ
+# cho việc này là mở lại đúng chỗ vừa dọn.
+_GROQ_KEYS: list = []
+
+# ══ LÀM GIÀU CÂU TẢ CẢNH BẰNG GROQ  (6/9/2026) ═══════════════════════════════════════════════
+# Anh: *"cf vẽ gì mà quá sơ sài ko bằng tự viết prompt tạo nữa"*. Đúng — câu `ve` trước khi tới
+# đây là do CODE PYTHON ghép cứng theo mẫu câu cố định (`_ve()`), không phải một mô hình ngôn
+# ngữ viết. Một mẫu câu cố định thì luôn tả đủ Ý nhưng không bao giờ có CHI TIẾT bất ngờ — đúng
+# thứ khiến ảnh CF ra "sơ sài".
+#
+# Groq (100 khoá × 14.400 lượt/ngày = 1,44 triệu lượt/ngày, xem phiên trước) đang KHÔNG được
+# dùng một lượt nào cho bộ này (kịch bản viết 100% bằng code) — nên gọi nó để VIẾT LẠI câu tả
+# cảnh cho giàu chi tiết điện ảnh hơn, TRƯỚC KHI ghép vào `_prompt()`, không tốn quota nào đang
+# dùng cho việc khác.
+#
+# BA RÀO CHẮN bắt buộc, cả ba đều từ bài học đã trả giá trong chính tệp này:
+#   1. KHÔNG ĐƯỢC thêm nhân vật/vật thể KHÔNG có trong câu gốc — đúng lỗi "behind them" vừa
+#      sửa (§ commit trước): mô hình rảnh tay là mô hình BỊA.
+#   2. Giữ NGẮN (~180 ký tự) — hàm này chạy trước khi `_prompt()` cắt theo trần 2048, viết dài
+#      là tự đẩy KEP_GU/luật sàn ra khỏi câu ở khâu sau (§13.7 vòng nữa).
+#   3. Lỗi/không có khoá/hết giờ -> trả NGUYÊN câu gốc, KHÔNG BAO GIỜ chặn render — cùng luật
+#      với `_generate_image_ai`: một lớp tối ưu không được phép làm sập lớp bên dưới nó.
+_GIAU_HE_THONG = (
+    "You add ONE vivid, filmable visual detail to a scene description for an AI image "
+    "generator. Rules: keep the exact same subject and action, do not add new people, "
+    "animals or objects that are not already implied, do not mention any readable text, "
+    "signage or logos, do not describe camera/lens/photography terms, describe only what "
+    "a flat 2D cartoon illustration would show. Reply with ONLY the rewritten sentence, "
+    "under 30 words, no quotes, no preamble.")
+
+
+def _lam_giau_canh(ve: str) -> str:
+    """Groq viết lại `ve` cho giàu chi tiết hơn. Trả nguyên `ve` nếu bất cứ điều gì hỏng.
+
+    Đọc khoá từ `_GROQ_KEYS` (nạp ở `sinh_tap`), không nhận tham số — xem chú thích ở đó."""
+    if not ve:
+        return ve
+    _gsk = list(_GROQ_KEYS)
+    if not _gsk:
+        return ve
+    import urllib.request as _ur
+    import urllib.error as _ue
+    import json as _js
+    import random as _rd
+    _rd.shuffle(_gsk)
+    for _k in _gsk[:4]:      # tối đa 4 khoá — hỏng thì trả về gốc, đừng xoay hết cả trăm khoá
+        try:
+            # ── `gpt-oss-120b` LÀ MODEL SUY LUẬN — ĐO THẬT 6/9/2026 ─────────────────────
+            # Gọi thẳng với `max_tokens: 120` (không `reasoning_effort`) trả về
+            # `content: ""`, `finish_reason: "length"` — model tiêu HẾT 120 token cho
+            # trường `reasoning` (suy nghĩ trước khi trả lời) rồi bị cắt trước khi kịp
+            # viết câu trả lời thật vào `content`. Hàm cứ ngỡ "gọi thành công, câu rỗng
+            # thì bỏ" — SAI: gọi thành công thật, chỉ là chưa tới lượt trả lời.
+            # `reasoning_effort: "low"` + `max_tokens` đủ rộng cho CẢ suy nghĩ lẫn câu trả
+            # lời (đo: suy nghĩ tốn ~60 token) mới ra `finish_reason: "stop"` kèm nội dung.
+            body = {
+                "model": "openai/gpt-oss-120b",
+                "messages": [{"role": "system", "content": _GIAU_HE_THONG},
+                             {"role": "user", "content": ve}],
+                "temperature": 0.8, "max_tokens": 350,
+                "reasoning_effort": "low",
+            }
+            req = _ur.Request(
+                "https://api.groq.com/openai/v1/chat/completions",
+                data=_js.dumps(body).encode(),
+                headers={"Authorization": f"Bearer {_k}", "Content-Type": "application/json",
+                         "User-Agent": "Mozilla/5.0 (compatible; MM0-render/1.0)"})
+            with _ur.urlopen(req, timeout=15) as r:
+                out = _js.load(r)
+            txt = (out.get("choices") or [{}])[0].get("message", {}).get("content", "").strip()
+            txt = txt.strip('"').strip()
+            # Ngắn bất thường (mô hình trả rỗng/lỗi format) hoặc dài bất thường (bỏ qua rào 2)
+            # -> không tin, dùng bản gốc còn hơn một câu hỏng.
+            if 10 <= len(txt) <= 260:
+                return txt
+        except (_ue.HTTPError, _ue.URLError, TimeoutError, Exception):
+            continue
+    return ve
+
 
 def _prompt(ve: str, tam_trang: str = "", gu: str = "", ma: str = "", doc: bool = False,
             siet: int = 0) -> str:
@@ -1222,6 +1303,11 @@ def sinh(ma: str, idx: int, i: int, ve: str, tam_trang: str = "", gu: str = "",
     # nên ảnh lệch bị xoá ở CẢ lần cuối, và nhịp ấy mất hẳn cảnh — tệ hơn một ảnh hơi khác chất.
     # `_siet` đếm số lần cổng CHẤT VẼ đánh trượt — khác với `lan` (đếm mọi loại thất bại, kể
     # cả mạng hỏng). Chỉ siết prompt khi trượt vì chất vẽ; mạng hỏng thì prompt không có tội.
+    # LÀM GIÀU MỘT LẦN, không phải mỗi lần thử lại: `_lam_giau_canh` tốn một lượt gọi Groq
+    # thật, gọi lại 4 lần cho 4 lượt thử là 4 lượt Groq cho một cảnh — và `siet` (bên dưới)
+    # đã lo phần "viết lại cho khác" khi trượt CHẤT VẼ; đây là lo phần "viết lại cho giàu
+    # chi tiết" một lần duy nhất, trước khi bước vào vòng thử.
+    ve = _lam_giau_canh(ve)
     _siet = 0
     for lan in range(4):
         if lan and not DS._ai_candidates(""):
@@ -1307,6 +1393,10 @@ def sinh_tap(ma: str, idx: int, nhip: list, keys, doc: bool = True,
     except Exception as _e:
         print(f"   ⚠ nạp hồ ảnh AI hỏng ({type(_e).__name__}: {str(_e)[:60]}) — "
               f"cảnh sẽ dùng nền vẽ bằng code")
+    # Nạp khoá Groq cho `_lam_giau_canh` — xem chú thích ở đó. `set_ai_pool` ở trên đã LỌC
+    # BỎ khoá `gsk_` khỏi hồ vẽ ảnh (Groq không vẽ được), nên phải tự lọc lại từ `keys` gốc.
+    _GROQ_KEYS[:] = [str(k.get("key") if isinstance(k, dict) else k) for k in (keys or [])
+                     if str(k.get("key") if isinstance(k, dict) else k).startswith("gsk_")]
     gu = GU_KENH.get(KENH_GU.get(ma, "que"), GU)
     # Đặt lại bộ đếm lý do MỖI TẬP — không đặt lại thì con số cộng dồn qua cả short lẫn long
     # và bản tổng kết nói về một tập khác với tập đang chạy.
