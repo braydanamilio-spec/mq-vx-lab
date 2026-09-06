@@ -63,9 +63,24 @@ def nen_webp(jpg: str, xoa_goc=True) -> int:
         return 0
     try:
         cu = os.path.getsize(jpg)
-        # quality 82 / method 6: đo trên nền cartoon phẳng thì 82 không phân biệt được với 95
-        # bằng mắt, mà nhỏ hơn ~40%. `method=6` nén chậm hơn nhưng đây là việc chạy MỘT LẦN.
-        Image.open(jpg).convert("RGB").save(out, "WEBP", quality=82, method=6)
+        # ── q82 -> q55  (anh dặn tối ưu lưu trữ, đo 6/9/2026) ──────────────────────────
+        # Đo trên 12 mẫu, và đo ĐÚNG THỨ NGƯỜI XEM THẤY chứ không đo tệp: mô phỏng lại đúng
+        # phép của engine (cover vào 1080×1920 rồi `blur(2.4px)`) cho cả bản cũ và bản nén,
+        # rồi lấy hiệu từng điểm ảnh:
+        #
+        #     q=55  →  35% nhỏ hơn · lệch trung bình 0,52/255  (0,2%)
+        #     q=45  →  41% nhỏ hơn · lệch 0,59/255
+        #     q=35  →  47% nhỏ hơn · lệch 0,70/255
+        #
+        # Chọn 55 chứ không 35: chênh lệch dung lượng giữa chúng chỉ còn 12 điểm phần trăm,
+        # trong khi q thấp là chỗ nhiễu khối bắt đầu hiện ra ở những nền có mảng màu lớn —
+        # và kho này dùng suốt đời kênh nên không có đường lùi.
+        #
+        # CHỈ ÁP CHO ẢNH VẼ MỚI. 1.585 ảnh đã commit thì nén lại là SAI: git giữ cả bản cũ
+        # trong lịch sử, nên "tiết kiệm 50 MB" thật ra là CỘNG THÊM 37 MB vào `.git` và không
+        # bớt một byte nào ở bản đã có. Tối ưu một kho có lịch sử phải hỏi *"thứ này thêm hay
+        # bớt vào lịch sử?"* trước khi hỏi nó nhỏ hơn bao nhiêu.
+        Image.open(jpg).convert("RGB").save(out, "WEBP", quality=55, method=6)
         moi = os.path.getsize(out)
         if moi < 4000:                      # nén hỏng -> giữ nguyên JPEG, đừng mất ảnh
             os.remove(out); return 0
@@ -76,17 +91,47 @@ def nen_webp(jpg: str, xoa_goc=True) -> int:
         return 0
 
 
+def _la_ngang(ma: str, i: int) -> bool:
+    """Ảnh của nền này có phải bản NGANG đời đầu không (rộng > cao)."""
+    try:
+        from PIL import Image
+    except Exception:
+        return False
+    for e in (".webp", ".jpg"):
+        f = os.path.join(NEN, f"{ma}_{i:03d}{e}")
+        if os.path.exists(f):
+            try:
+                w, h = Image.open(f).size
+                return w > h
+            except Exception:
+                return False
+    return False
+
+
 def mot_kenh(ma: str, ds: list, luong: int, ks, tran: int = 0) -> tuple:
     """Vẽ những nền còn thiếu của một kênh. Trả (số vẽ mới, số đã có, số hỏng)."""
     from kich_hai import SAN_NEN
     os.makedirs(NEN, exist_ok=True)
     thieu = []
+    cu_ngang = []
     co = 0
     for i, p in enumerate(ds):
         if _co_anh(ma, i):
             co += 1
+            if _la_ngang(ma, i):
+                cu_ngang.append((i, p))
             continue
         thieu.append((i, p))
+    # ── NÂNG CẤP NỀN NGANG CŨ — CHỈ SAU KHI ĐÃ PHỦ ĐỦ  (6/9/2026) ────────────────────────
+    # 1.585 nền đầu vẽ ở 1344×768 (ngang) trong khi panel là khung dọc, nên chỉ 32% mỗi ảnh
+    # tới được màn hình. Vẽ lại chúng ở 768×1344 cho gấp 3,1 lần điểm ảnh thật — nhưng KHÔNG
+    # được tranh hạn mức với việc phủ nền còn thiếu: một kênh có 30/300 nền thì thứ nó cần là
+    # 270 nền nữa, không phải 30 nền nét hơn.
+    # Nên xếp sau, và chỉ chạy khi `thieu` đã rỗng. Kho tự về MỘT CHẤT qua vài ngày mà không
+    # phải xoá gì và không phải quyết định gì (anh dặn: bổ sung dần cả tuần cũng được).
+    if not thieu and cu_ngang:
+        thieu = cu_ngang
+        print(f"      {ma}: đã phủ đủ — nâng cấp {len(cu_ngang)} nền ngang sang dọc")
     if tran:
         thieu = thieu[:tran]
     if not thieu:
@@ -107,8 +152,25 @@ def mot_kenh(ma: str, ds: list, luong: int, ks, tran: int = 0) -> tuple:
             # kho nền thì dùng suốt đời kênh nên không sửa lại được.
             # Ảnh TỪNG TẬP thì ngược lại: ở đó Gemini là tầng cứu, vì phương án còn lại là
             # cảnh vẽ bằng code — một bước nhảy thị giác lớn hơn nhiều.
+            # ── VẼ DỌC, KHÔNG VẼ NGANG  (đo 6/9/2026) ──────────────────────────────────
+            # Kho nền vẽ `doc=False` -> 1344×768. Panel comic là khung DỌC 1080×1920, và
+            # `NenPanel` đặt ảnh bằng `objectFit: cover`. Đo phép cover ấy:
+            #
+            #     ngang 1344×768 -> phóng 2,50x · dùng 432/1344 px =  32% ảnh
+            #     dọc   768×1344 -> phóng 1,43x · dùng 756/768  px =  98% ảnh
+            #
+            # Tức 68% mỗi ảnh bị cắt bỏ, và dải còn lại bị phóng to 2,5 lần. Tính bằng pixel
+            # THẬT tới được màn hình: 432×768 = 0,33 MP so với 756×1344 = 1,02 MP — **gấp 3,1
+            # lần** cho CÙNG một giá neuron (flux-2 tính theo megapixel, hai cỡ bằng nhau).
+            #
+            # Không lỗi nào báo vì ảnh vẫn đúng, vẫn hiện ra; chỉ là hai phần ba nó chưa bao
+            # giờ được ai nhìn thấy. Cùng họ §15.12 — thứ được sinh ra mà không ai đọc — chỉ
+            # khác là ở đây "không ai đọc" là 68% số điểm ảnh của mọi tệp trong kho.
+            #
+            # `doc=True` cũng là mặc định của `A.ve`; chỗ này truyền `doc=False` một cách tường
+            # minh, tức nó là một QUYẾT ĐỊNH đã ghi ra — và là quyết định sai cho khung dọc.
             rel = A.ve(f"{PH.GU_NEN} {SAN_NEN}. The room is: {p}.", ma, 0, 900 + i,
-                       doc=False, ks=ks, chi_cf=True)
+                       doc=True, ks=ks, chi_cf=True)
         except Exception:
             rel = None
         if not rel:

@@ -102,7 +102,13 @@ RULES
    written exactly as given and its unit in ordinary spoken words. Write "111 decibels", not
    "that loud"; write "43,107 dollars", not "that much". A viewer listening without watching
    has to get the number from the voice alone. Do not put [ON SCREEN: ...] itself in the line.
-2. One line per turn, 5 to 12 words. Speakers alternate; the same person never speaks twice
+1c. Say each figure ONCE, in its own turn. Do not repeat a figure that an earlier turn already
+   said, and do not repeat the unit inside one line: write "70, 212 and 3,800 degrees",
+   never "70 degrees and 212 degrees and 3,800 degrees". A turn carries at most ONE figure.
+   Long turns are a real defect here, not a style note: the speech balloon grows with the
+   line and a four-line balloon covers the number card underneath it.
+2. One line per turn, 5 to 10 words — measured, not estimated: a 13-word turn wraps to
+   four balloon lines and swallows the top third of the panel. Speakers alternate; the same person never speaks twice
    in a row.
 3. The first speaker is the one who is curious or complaining. The second is the one who
    knows the number.
@@ -168,7 +174,25 @@ def so_tren_man(n: dict) -> str:
         return f"{g(t['so'])} for {g(t.get('nhan'))} against {g(ph['so'])} for {g(ph.get('nhan'))}"
     cot = n.get("cot") or []
     if cot:
-        return " and ".join(f"{c.get('v')} {g(n.get('don'))}".strip() for c in cot[:3])
+        # ── ĐƠN VỊ NÓI MỘT LẦN, KHÔNG MỖI CỘT MỘT LẦN  (soi khung 6/9/2026) ─────────────
+        # Bản cũ ghép `f"{v} {don}"` cho TỪNG cột, nên với ba cột nó sinh ra:
+        #     "70 degrees fahrenheit and 212 degrees fahrenheit and 3800 degrees fahrenheit"
+        # Chuỗi ấy đi thẳng vào `[ON SCREEN: ...]`, và mô hình chép lại gần nguyên văn:
+        #     "See 70 degrees fahrenheit, 212 degrees fahrenheit, and 3,800 degrees
+        #      fahrenheit together"                                        — 13 chữ.
+        # Hậu quả KHÔNG dừng ở câu văn: bong bóng bốn dòng chiếm 0,17·h và CHE mất nhãn
+        # `3,800` của cột SURFACE — đúng con số cả tập sinh ra để nói. Em đã đi sửa hình học
+        # hai vòng (`tran` rồi `dinh`) trước khi chịu nhìn lên nguồn của chuỗi; vòng thứ hai
+        # còn làm khối số teo lại nằm sau đầu nhân vật. §16.3: sửa vòng thứ ba mà vẫn cùng
+        # họ lỗi thì thứ sai là CÁCH TIẾP CẬN — hình học không có chỗ để nhường, câu mới có.
+        #
+        # Và đây là §14.16: luật *"số trên màn phải được đọc lên"* (anh dặn, vì nhiều người
+        # NGHE mà không nhìn) đang được thoả bằng cách RẺ NHẤT mà câu chữ cho phép. Chỗ hở
+        # nằm ở phần em không viết ra: em nói *phải đọc số*, không nói *đọc mấy lần*.
+        v = [str(c.get("v")) for c in cot[:3]]
+        d = g(n.get("don"))
+        ten = (", ".join(v[:-1]) + " and " + v[-1]) if len(v) > 1 else v[0]
+        return (ten + (" " + d if d else "")).strip()
     return ""
 
 
@@ -199,7 +223,16 @@ def _du_so(loi: list, thoai: list, man: list = None) -> list:
     # NGHE thì đó còn tự nhiên hơn — mà cổng cũ chấm trượt và đốt ba vòng viết lại cho một
     # bản vốn đúng (§13.8: cổng bắt oan tệ hơn cổng không bắt).
     # Nên nới CHÍNH XÁC một dạng: sinh chuỗi chữ của từng con số rồi tìm nó trong lời thoại.
+    # ── CHUẨN HOÁ DẤU NỐI TRƯỚC KHI SO  (soi khung 6/9/2026) ───────────────────────────
+    # `_doc_so(59)` sinh `fifty-nine` với gạch nối ASCII; mô hình viết `Fifty‑nine` với U+2011
+    # (gạch nối KHÔNG NGẮT DÒNG). Hai chuỗi khác nhau đúng một mã ký tự, cùng một cách đọc —
+    # và cổng chấm trượt rồi ĐỐT BA VÒNG gọi AI cho một bản vốn đúng, mỗi tập, mọi kênh
+    # (§13.8: cổng bắt oan tệ hơn cổng không bắt).
+    # Dòng này đã chuẩn hoá U+2019 từ trước; thiếu đúng họ ký tự bên cạnh. Gom cả họ: mô hình
+    # rải en dash / em dash / gạch nối kiểu chữ tuỳ câu, và mỗi cái là một lần bắt oan nữa.
     _cl = co.lower().replace("\u2019", "'")
+    for _d in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212"):
+        _cl = _cl.replace(_d, "-")
     def _da_doc(x):
         v = re.sub(r"[^\d.]", "", x).rstrip(".")
         if not v or "." in v:
