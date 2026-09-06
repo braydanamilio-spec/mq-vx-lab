@@ -131,15 +131,33 @@ export const SoPanel: React.FC<{
       return (
         <div style={{ opacity: q, borderLeft: `${Math.max(3, u * 0.016)}px solid ${m}`,
                       paddingLeft: u * 0.05, marginBottom: u * 0.05 }}>
-          <div style={{ fontFamily: chu, fontWeight: 700, fontSize: u * 0.052,
-                        color: "#FFFFFF", opacity: 0.85 }}>
+          {/* ── CỠ NHÃN THEO ĐỘ DÀI NHÃN  (6/9/2026) ────────────────────────────────
+              Soi khung `v11_howhot_0042`: nhãn *"the rocket engine chamber"* hiện ra
+              **"THE ROCKET ENGIN"** — cụt giữa chữ. Cỡ chữ là một hằng theo `u` (cạnh ngắn
+              của panel), nên nó mã hoá ĐÚNG MỘT ràng buộc: vừa panel. Ràng buộc thứ hai —
+              vừa ĐỘ DÀI CHUỖI — không được mã hoá ở đâu cả.
+              Đúng họ lỗi §17.2: *một kích thước chịu hai ràng buộc mà công thức chỉ mã hoá
+              một*. Bảng luật đã ghi nó ba lần (cỡ chữ theo ô mà không theo chuỗi; chỗ chừa
+              bong bóng cố định trong khi câu dài ngắn khác nhau).
+              Chữa bằng cách để chuỗi tham gia phép tính, và cho phép xuống dòng thứ hai —
+              nhãn hai dòng vẫn đọc được, nhãn cụt thì không. */}
+          <div style={{ fontFamily: chu, fontWeight: 700,
+                        fontSize: u * (String(c.nhan || "").length > 22 ? 0.038
+                                       : String(c.nhan || "").length > 14 ? 0.045 : 0.052),
+                        color: "#FFFFFF", opacity: 0.85,
+                        lineHeight: 1.12, overflowWrap: "anywhere" }}>
             {String(c.nhan || "").toUpperCase()}</div>
           <div style={{ fontFamily: chu, fontWeight: 900, fontSize: u * 0.105,
                         color: "#FFFFFF", lineHeight: 1.05 }}>{c.so}</div>
         </div>
       );
     };
-    const khoi = 2 * (u * 0.052 * 1.25 + u * 0.105 * 1.05 + u * 0.05) + DEM;
+    // Nhãn dài xuống hai dòng thì khối CAO HƠN — `vua()` phải biết, nếu không nó tính thiếu
+    // và khối lại đè lên đỉnh đầu nhân vật, đúng lỗi `tran` vừa chữa ở đầu tệp này.
+    const _dai = Math.max(String(lop.trai?.nhan || "").length,
+                          String(lop.phai?.nhan || "").length);
+    const _dong = _dai > 22 ? 2 : 1;
+    const khoi = 2 * (u * 0.052 * 1.25 * _dong + u * 0.105 * 1.05 + u * 0.05) + DEM;
     return (
       <div style={{ ...chung, alignItems: "stretch", left: w * 0.08, right: w * 0.08,
                     transform: `scale(${vua(khoi)})`, transformOrigin: "50% 0%" }}>
