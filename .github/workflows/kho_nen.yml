@@ -1,0 +1,135 @@
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# KHO NỀN 18 KÊNH — BỔ SUNG DẦN, MỖI NGÀY MỘT ÍT  (6/9/2026)
+#
+# VÌ SAO CÓ LUỒNG NÀY
+#   Nền comic vẽ MỘT LẦN rồi dùng mãi: tập thứ một nghìn vẫn dùng đúng ảnh ấy, nên chi phí ảnh
+#   của một tập bằng 0 và trần sản lượng chuyển từ hạn mức ảnh sang thời gian máy. Nhưng kho
+#   ban đầu thì đắt: 18 kênh × 300 nơi chốn = 5.400 nền, và `flux-2-klein-9b` ở 1344×768 tốn
+#   1.369 neuron/ảnh (giá tra tài liệu Cloudflare) = ~7 nền/tài khoản/ngày.
+#
+#   Với 113 tài khoản đó là ~825 nền/ngày, tức **khoảng một tuần** cho cả kho. Anh chốt: giữ
+#   model đẹp nhất và bổ sung dần, không cần đủ ngay — vì đổi sang model rẻ (24 lần rẻ hơn) thì
+#   trong CÙNG một tập sẽ có phòng của model này cạnh phòng của model kia. Kho nền dùng suốt
+#   đời kênh, nên MỘT CHẤT VẼ quan trọng hơn tiết kiệm một tuần hạn mức.
+#
+# BỐN MỐC CRON, KHÔNG PHẢI MỘT — §10.2: cron của repo này không đáng tin (đo được tick bỏ hẳn).
+# Bốn mốc nổ cả bốn cũng vô hại: lượt sau thấy ảnh đã có thì bỏ qua, tốn 0 lượt gọi.
+#
+# GIỜ CHẠY: 12:00–15:00 UTC, tức SAU mốc hồi hạn mức Cloudflare (00:00 UTC) và LỆCH hẳn khỏi
+# 08:20–11:20 UTC của luồng render (§13.6 — chọn giờ theo mốc hồi của tài nguyên nó cần).
+# `NEN_TRAN_LUOT` là trần CỨNG cho mỗi lượt: việc bổ sung kho không bao giờ được nuốt hạn mức
+# mà đường render đang cần (§13.7 — "số nhỏ" không phải bảo vệ, chỉ trần cứng mới là).
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+name: MM0 Kho nền 18 kênh (bổ sung dần)
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+    - cron: "0 13 * * *"
+    - cron: "0 14 * * *"
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+    inputs:
+      tran:
+        description: "Trần số nền vẽ trong lượt này"
+        default: "400"
+      muc_tieu:
+        description: "Số nơi chốn mục tiêu mỗi kênh"
+        default: "300"
+
+permissions:
+  contents: write
+
+concurrency:
+  # Hai lượt cùng vẽ rồi cùng commit sẽ đá nhau ở bước push. Một lượt tại một thời điểm, và
+  # KHÔNG huỷ lượt đang chạy — nó đang giữ ảnh chưa commit.
+  group: kho-nen
+  cancel-in-progress: false
+
+jobs:
+  bo_sung:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Thư viện
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q Pillow
+          python -c "import PIL; print('Pillow', PIL.__version__)"
+
+      - name: Soạn thêm nơi chốn (Groq — không tốn hạn mức ảnh)
+        continue-on-error: true          # soạn hỏng thì vẫn vẽ nốt phần đã soạn
+        env:
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+          MM0_KEYS: ${{ secrets.MM0_KEYS }}
+        run: |
+          cd render-pipeline
+          python -u nen_kho.py --so "${{ github.event.inputs.muc_tieu || 300 }}"
+
+      - name: Vẽ nền còn thiếu (rải vòng tròn, có trần)
+        id: ve
+        env:
+          CF_KEYS: ${{ secrets.CF_KEYS }}
+          GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+          NEN_TRAN_LUOT: ${{ github.event.inputs.tran || 400 }}
+        run: |
+          cd render-pipeline
+          TRUOC=$(ls ../engine-remotion/public/comic_nen/*.webp 2>/dev/null | wc -l | tr -d ' ')
+          echo "truoc=$TRUOC" >> "$GITHUB_OUTPUT"
+          # Hồ cạn KHÔNG phải sự cố ở luồng này — nó là trạng thái bình thường của một việc
+          # chạy nhiều ngày. Nên bước này không được làm đỏ cả lượt; bước kiểm dưới mới phán.
+          python -u ve_kho.py --so "${{ github.event.inputs.muc_tieu || 300 }}" \
+                              --vong 12 --luong 5 || true
+          SAU=$(ls ../engine-remotion/public/comic_nen/*.webp 2>/dev/null | wc -l | tr -d ' ')
+          echo "sau=$SAU" >> "$GITHUB_OUTPUT"
+          echo "::notice::kho nền $TRUOC -> $SAU (+$((SAU-TRUOC)))"
+
+      - name: Kiểm SẢN PHẨM, không kiểm mã thoát
+        # §15.3 — bước nào có sản phẩm đầu ra thì cổng của nó phải đếm SẢN PHẨM. `ve_kho.py`
+        # thoát 0 cả khi không vẽ được ảnh nào (hồ cạn), nên mã thoát không nói được gì.
+        # Và mọi con số 0 phải đi kèm MẪU SỐ (§15.2): "0 ảnh mới trên 5.400 mục tiêu, kho đang
+        # có 1.081" là một câu; "0 ảnh mới" một mình là hai nghĩa ngược nhau.
+        run: |
+          cd render-pipeline
+          python - <<'PY'
+          import json, os, io, collections
+          N = "../engine-remotion/public/comic_nen"
+          kho = json.load(io.open("nen_kho.json", encoding="utf-8"))
+          c = collections.Counter(f.rsplit("_", 1)[0] for f in os.listdir(N) if f.endswith(".webp"))
+          thieu = {m: len(v) - c.get(m, 0) for m, v in kho.items()}
+          co = sum(c.values()); mt = sum(len(v) for v in kho.values())
+          print(f"kho: {co}/{mt} nền · {len(kho)} kênh")
+          for m in sorted(kho, key=lambda x: -thieu[x])[:6]:
+              print(f"   {m:<12} {c.get(m,0):>4}/{len(kho[m]):<4} còn thiếu {thieu[m]}")
+          rong = [m for m in kho if c.get(m, 0) == 0]
+          if rong:
+              print(f"⚠ {len(rong)} kênh CHƯA CÓ NỀN NÀO: {', '.join(rong)}")
+          PY
+
+      - name: Commit kho mới
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git config user.name "mm0-bot"
+          git config user.email "bot@users.noreply.github.com"
+          # NÊU ĐÍCH DANH đường dẫn, không bao giờ `git add -A` — §15.18: repo này có nhiều
+          # cửa sổ cùng làm, và một lần `-A` đã quét bản sửa dở của cửa sổ khác vào commit.
+          git add engine-remotion/public/comic_nen/*.webp render-pipeline/nen_kho.json || true
+          if git diff --cached --quiet; then
+            echo "không có gì mới để commit"
+            exit 0
+          fi
+          N=$(git diff --cached --name-only | wc -l | tr -d ' ')
+          git commit -m "Kho nền: +$N tệp (bổ sung tự động)"
+          # Lượt khác có thể vừa push; rebase rồi thử lại thay vì hỏng.
+          for i in 1 2 3; do
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push && exit 0
+            sleep 10
+          done
+          echo "::error::push hỏng sau 3 lần"; exit 1

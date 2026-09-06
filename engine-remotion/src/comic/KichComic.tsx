@@ -5,6 +5,7 @@ import { KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVi
 import type { Luot } from "../v4/KichHai";
 import { NenPanel, NenGan, DaoCu, doDaoCu } from "./NenComic";
 import { noiCuaTap, Noi, SAN } from "./NoiChon";
+import { SoPanel, LopComic } from "./SoComic";
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // KỊCH COMIC — 31/8/2026
@@ -207,11 +208,13 @@ const BongNguoi: React.FC<{ x: number; y: number; k: number; cao: number; huong:
 const Panel: React.FC<{
   L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
-  dangNoi: boolean; hai?: boolean; noi: Noi; anhNen?: string;
+  dangNoi: boolean; hai?: boolean; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
+  haiHuoc?: boolean;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
   sang?: { huong: number; manh: number; mau?: string; sang?: number };
-}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, noi, anhNen,
+}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, noi, anhNen, soLieu,
+        haiHuoc = true,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
         bongDuoi = false, boKhung = 0, chuNo = "BOOM!", sang }) => {
   const { w, h } = o;
@@ -310,7 +313,7 @@ const Panel: React.FC<{
       // rất chậm (3,5% trong cả cảnh) không ai gọi tên được, nhưng nó là khác biệt giữa "một
       // đoạn phim" và "một bức tranh có tiếng". Cú chốt thì rung nhẹ — cú đấm của trò đùa.
       transform: `scale(${trn(0.985, 1, bat(p)) * (1 + kep(trong / 3.2) * 0.035)})`
-                 + (L.chot && trong > 0.25 && trong < 0.75
+                 + (L.chot && haiHuoc && trong > 0.25 && trong < 0.75
                     ? ` translate(${Math.sin(trong * 62) * 5}px, ${Math.cos(trong * 54) * 4}px)` : ""),
     }}>
       <NenPanel kenh={kenh} noi={noi} anh={anhNen} w={w} h={h} mau={mau} mauPhu={mauPhu} hat={hat + thuTu * 13}
@@ -427,6 +430,18 @@ const Panel: React.FC<{
           Panel ấy phải có mặt mà không có bong bóng: một bong bóng rỗng trên màn hình đọc ra
           là lỗi render, không đọc ra là im lặng. Im lặng có chủ ý là ngôn ngữ của truyện
           tranh — chữ nổ và nét mặt gánh phần còn lại. */}
+      {/* LỚP SỐ LIỆU — xem đầu `SoComic.tsx`. Nằm TRÊN nền, DƯỚI bong bóng thoại: bong bóng
+          dẫn nhịp, con số chứng minh. Kênh hài không truyền `soLieu` nên 20 kênh đang chạy
+          không đổi một pixel. */}
+      {soLieu ? (
+        /* `tran` = ĐỈNH ĐẦU người cao nhất trong ô. Cùng phép tính mà `BongNguoi` đang dùng
+           (`yChan` − chiều cao người × tỉ lệ), nên hai lớp không thể lệch nhau. Thiếu nó thì
+           nhãn cột nằm đúng chỗ cái đầu — đã đo ở khung 16,0s của pilot realcost. */
+        <SoPanel lop={soLieu} w={w} h={h} p={kep(trong / 0.9)} mau={mau} phu={mauPhu}
+                 tran={yChan - CAO_NGUOI * (doiNguoi ? caoMax : (noiA ? caoA : caoB)) * k}
+                 chu="Poppins, Arial, sans-serif" />
+      ) : null}
+
       {L.nar ? (
       <BongThoai chu={L.nar} tu={tu} giay={giay} W={w} H={h}
                  ben={canRong ? (noiA ? "phai" : "trai") : (noiA ? "trai" : "phai")}
@@ -436,7 +451,12 @@ const Panel: React.FC<{
                  p={kep(trong / 0.3)} mau={mauPhu} la={L.chot === true} />
       ) : null}
 
-      {L.chot && trong > 0.25 ? (
+      {/* CHỮ NỔ VÀ CÚ RUNG LÀ ĐỒ NGHỀ CỦA HÀI, KHÔNG PHẢI CỦA GIẢI THÍCH.
+          Pilot ra khung cuối nổ "HUH?" trên câu *"YOUR JOB IS YOUR WHOLE LIFE, NOT PART"* —
+          một câu kết trầm, không phải cú đùa. Engine bắn hiệu ứng punchline vào một chỗ không
+          có punchline, và khán giả đọc ra là hệ thống không hiểu nó đang kể gì.
+          `haiHuoc={false}` tắt cả hai. Mặc định BẬT nên 20 kênh hài không đổi. */}
+      {L.chot && trong > 0.25 && haiHuoc ? (
         <ChuNo chu={chuNo} w={w} h={h} p={kep((trong - 0.25) / 0.45)} mau={mau} tren={bongDuoi} />
       ) : null}
     </div>
@@ -457,19 +477,31 @@ const Panel: React.FC<{
  * Đặt ở NỬA DƯỚI khung, không phải giữa: giữa là chỗ khuôn mặt, mà mặt đang diễn ở giây đầu
  * cũng là một phần của hook. Che mặt để nhường chỗ cho chữ là đổi chác lỗ.
  */
-const TheHook: React.FC<{ chu: string; W: number; H: number; p: number; mau: string }> =
-({ chu, W, H, p, mau }) => {
+const TheHook: React.FC<{ chu: string; W: number; H: number; p: number; mau: string;
+                          duoi?: boolean }> =
+({ chu, W, H, p, mau, duoi }) => {
   if (!chu || p >= 1) return null;
   const vao = kep(p / 0.09);                    // bật lên trong 0,2 giây đầu
   const ra = kep((p - 0.86) / 0.14);            // rồi trượt lên và mờ đi
   const sc = vao < 1 ? trn(0.82, 1.04, bat(vao)) : trn(1.04, 1, muot(kep((p - 0.09) / 0.08)));
   const n = Math.max(6, chu.length);
-  const fs = Math.max(34, Math.min(96, Math.sqrt((W * 0.86 * H * 0.2) / 0.62 / n)));
+  const fs = Math.max(28, Math.min(duoi ? 62 : 96,
+                      Math.sqrt((W * 0.86 * H * (duoi ? 0.11 : 0.2)) / 0.62 / n)));
   return (
     <div style={{
-      position: "absolute", left: 0, right: 0, top: H * 0.62,
+      /* ── HAI KIỂU THẺ HOOK  (6/9/2026) ──────────────────────────────────────────────
+         Mặc định: tấm biển giữa khung — đúng cho kênh HÀI, nơi hook là một câu gây choáng và
+         hai giây đầu chưa cần nhìn mặt ai.
+         `duoi`: dải sát đáy — cho kênh GIẢI THÍCH. Anh soi ra khung 1 của pilot: chữ tiêu đề
+         nằm ngay trên mặt hai nhân vật, đúng §12.12 (*thẻ tiêu đề to đè lên ba giây đầu*).
+         Ở kênh giải thích, ba giây đầu phải cho thấy AI đang nói với AI — che mặt là bỏ đi
+         thứ duy nhất phân biệt format này với một video lời dẫn.
+         20 kênh hài không truyền `duoi` nên chúng không đổi một pixel. */
+      position: "absolute", left: 0, right: 0,
+      top: duoi ? undefined : H * 0.62, bottom: duoi ? H * 0.055 : undefined,
       display: "flex", justifyContent: "center", pointerEvents: "none", zIndex: 9,
-      transform: `translateY(${-ra * H * 0.14}px) scale(${sc})`, opacity: 1 - ra,
+      transform: `translateY(${(duoi ? ra * H * 0.10 : -ra * H * 0.14)}px) scale(${sc})`,
+      opacity: 1 - ra,
     }}>
       <div style={{
         background: mau, border: "9px solid #14110F", borderRadius: 10,
@@ -533,6 +565,10 @@ export type PropsComic = {
   // một hướng sáng riêng. Bản ngắn không truyền thì rơi về `anhNen`/`sang` như cũ — đường chạy
   // đã duyệt không đụng gì.
   anhNens?: string[];
+  // Lớp số liệu theo TỪNG panel. Bỏ trống -> không vẽ gì, nên bộ hài 20 kênh không đổi.
+  soLieu?: (LopComic | null)[];
+  hookDuoi?: boolean;   // thẻ hook thành dải sát đáy thay vì biển giữa khung
+  haiHuoc?: boolean;    // false -> tắt chữ nổ + cú rung chốt (kênh giải thích)
   sangs?: ({ huong: number; manh: number; mau?: string; sang?: number } | null)[];
   hookGiay?: number;  // thẻ hook hiện bao nhiêu giây (mặc định 2.2)
   netMuc?: number;    // độ dày viền mực: 5 (mảnh, sạch) .. 10 (thô, mạnh)
@@ -559,7 +595,7 @@ export const KichComic: React.FC<PropsComic> = ({
   nhacVol = 0.16,
   kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", handle = "", mau = "#F0483C",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
-  sang, anhNens, sangs, hookGiay,
+  sang, anhNens, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
 }) => {
@@ -610,6 +646,7 @@ export const KichComic: React.FC<PropsComic> = ({
            hai={typeof (Lx as any).canh === "boolean" ? (Lx as any).canh : coCanh(ix, luot.length, hat)}
            dangNoi={dangNoi} noi={noi}
            anhNen={(anhNens && anhNens[ix]) || anhNen}
+           soLieu={(soLieu && soLieu[ix]) || null} haiHuoc={haiHuoc}
            sang={(sangs && sangs[ix]) || sang}
            netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLe}
            bongDuoi={bongDuoi} boKhung={boKhung} chuNo={chuNo}
@@ -661,7 +698,8 @@ export const KichComic: React.FC<PropsComic> = ({
           hơn một phần ba video, và thẻ nằm ở 62% chiều cao nên nó che người suốt quãng ấy.
           Lại là họ lỗi "một hằng phục vụ hai thứ biến thiên độc lập": thời lượng thẻ và độ dài
           video biến thiên riêng, mà công thức chỉ mã hoá một. */}
-      <TheHook chu={hook} W={width} H={height} p={kep(giay / (hookGiay || 2.2))} mau={mau} />
+      <TheHook chu={hook} W={width} H={height} p={kep(giay / (hookGiay || 2.2))} mau={mau}
+                 duoi={hookDuoi} />
 
       {voMp3 ? <Audio src={staticFile(voMp3)} /> : null}
       {/* ÂM LƯỢNG NHẠC — 31/8. Hằng cũ `0.16` dùng chung cho 10 tệp có độ to gốc trải 26 dB

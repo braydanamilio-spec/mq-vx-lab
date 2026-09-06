@@ -1,0 +1,587 @@
+[
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the interstate from Denver to Salt Lake City",
+  "so": 520.0,
+  "doi_chung": 520.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "a commuter rail from Boston to Providence",
+  "so": 50.0,
+  "doi_chung": 50.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "a ferry ride across San Francisco Bay",
+  "so": 7.0,
+  "doi_chung": 7.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the turnpike connecting Oklahoma City and Tulsa",
+  "so": 105.0,
+  "doi_chung": 106.0,
+  "ti_so": 0.991,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the railway from Seattle to Portland",
+  "so": 175.0,
+  "doi_chung": 173.0,
+  "ti_so": 1.012,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the length of the Golden Gate Bridge",
+  "so": 1.7,
+  "doi_chung": 1.7,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the distance across the Brooklyn Bridge",
+  "so": 1.1,
+  "doi_chung": 1.1,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the span of the Lake Pontchartrain Causeway",
+  "so": 23.9,
+  "doi_chung": 24.0,
+  "ti_so": 0.996,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the walk across the Golden Gate Bridge",
+  "so": 1.7,
+  "doi_chung": 1.7,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the drive along the Las Vegas Strip",
+  "so": 4.0,
+  "doi_chung": 4.2,
+  "ti_so": 0.952,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the trek from Seattle to Portland by car",
+  "so": 174.0,
+  "doi_chung": 174.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the commute from Washington D.C. to Baltimore",
+  "so": 39.0,
+  "doi_chung": 40.0,
+  "ti_so": 0.975,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "a bike ride across the Brooklyn Bridge",
+  "so": 1.0,
+  "doi_chung": 1.1,
+  "ti_so": 0.909,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the highway from Dallas to Fort Worth",
+  "so": 32.0,
+  "doi_chung": 32.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the journey from Atlanta Midtown to Hartsfield‑Jackson Airport",
+  "so": 7.0,
+  "doi_chung": 7.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the train stretch from Philadelphia to Baltimore",
+  "so": 100.0,
+  "doi_chung": 100.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "a road trip from Austin to San Antonio",
+  "so": 80.0,
+  "doi_chung": 80.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the intercity bus from New York to Boston",
+  "so": 215.0,
+  "doi_chung": 215.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "a weekend road trip from Nashville to Memphis",
+  "so": 210.0,
+  "doi_chung": 210.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "a scenic rail line from Seattle to Tacoma",
+  "so": 35.0,
+  "doi_chung": 35.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "a desert road trip from Phoenix to Sedona",
+  "so": 120.0,
+  "doi_chung": 115.0,
+  "ti_so": 1.043,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "the regional train from Boston to Providence",
+  "so": 50.0,
+  "doi_chung": 50.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "QUANG_DUONG",
+  "ten": "a coastal drive from Baltimore to Ocean City",
+  "so": 135.0,
+  "doi_chung": 140.0,
+  "ti_so": 0.964,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a common cold in a year",
+  "so": 2.0,
+  "doi_chung": 2.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a broken bone from a fall",
+  "so": 30.0,
+  "doi_chung": 100.0,
+  "ti_so": 0.3,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "the flu vaccine causing mild fever",
+  "so": 4.0,
+  "doi_chung": 10.0,
+  "ti_so": 0.4,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a concussion from a sports collision",
+  "so": 70.0,
+  "doi_chung": 100.0,
+  "ti_so": 0.7,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "the chance of a blood clot after surgery",
+  "so": 500.0,
+  "doi_chung": 200.0,
+  "ti_so": 2.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a urinary tract infection each year",
+  "so": 20.0,
+  "doi_chung": 5.0,
+  "ti_so": 4.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a severe asthma attack at night",
+  "so": 250.0,
+  "doi_chung": 100.0,
+  "ti_so": 2.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a gallbladder removal complication",
+  "so": 300.0,
+  "doi_chung": 100.0,
+  "ti_so": 3.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a sinus infection after a cold",
+  "so": 15.0,
+  "doi_chung": 10.0,
+  "ti_so": 1.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a rare autoimmune disease diagnosis",
+  "so": 50000.0,
+  "doi_chung": 100000.0,
+  "ti_so": 0.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a migraine episode",
+  "so": 5.0,
+  "doi_chung": 8.0,
+  "ti_so": 0.625,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a dental cavity by age 30",
+  "so": 8.0,
+  "doi_chung": 2.0,
+  "ti_so": 4.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a mild allergic reaction to pollen",
+  "so": 6.0,
+  "doi_chung": 10.0,
+  "ti_so": 0.6,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a heart attack in a middle‑aged adult",
+  "so": 250.0,
+  "doi_chung": 100.0,
+  "ti_so": 2.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a sudden cardiac arrest while exercising",
+  "so": 5000.0,
+  "doi_chung": 10000.0,
+  "ti_so": 0.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a herniated disc in the lumbar region",
+  "so": 400.0,
+  "doi_chung": 1000.0,
+  "ti_so": 0.4,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a life‑threatening anaphylaxis from medication",
+  "so": 4000.0,
+  "doi_chung": 10000.0,
+  "ti_so": 0.4,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a deep‑vein thrombosis after surgery",
+  "so": 800.0,
+  "doi_chung": 200.0,
+  "ti_so": 4.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a miscarriage in the first trimester",
+  "so": 4.0,
+  "doi_chung": 4.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a premature birth before 37 weeks",
+  "so": 10.0,
+  "doi_chung": 10.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a torn anterior cruciate ligament",
+  "so": 250.0,
+  "doi_chung": 100.0,
+  "ti_so": 2.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a stroke in a year",
+  "so": 500.0,
+  "doi_chung": 400.0,
+  "ti_so": 1.25,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a diagnosis of type 2 diabetes",
+  "so": 15.0,
+  "doi_chung": 10.0,
+  "ti_so": 1.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a bout of severe asthma attack",
+  "so": 250.0,
+  "doi_chung": 100.0,
+  "ti_so": 2.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a case of appendicitis in adulthood",
+  "so": 150.0,
+  "doi_chung": 100.0,
+  "ti_so": 1.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a sprained ankle during sports",
+  "so": 30.0,
+  "doi_chung": 100.0,
+  "ti_so": 0.3,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a food poisoning",
+  "so": 25.0,
+  "doi_chung": 7.0,
+  "ti_so": 3.571,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a seasonal flu",
+  "so": 6.0,
+  "doi_chung": 5.0,
+  "ti_so": 1.2,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a chickenpox infection",
+  "so": 10.0,
+  "doi_chung": 4.0,
+  "ti_so": 2.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a herpes simplex outbreak",
+  "so": 20.0,
+  "doi_chung": 5.0,
+  "ti_so": 4.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a cataract development",
+  "so": 12.0,
+  "doi_chung": 3.0,
+  "ti_so": 4.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a glaucoma diagnosis",
+  "so": 300.0,
+  "doi_chung": 100.0,
+  "ti_so": 3.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a testicular cancer",
+  "so": 1000.0,
+  "doi_chung": 250.0,
+  "ti_so": 4.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a type 1 diabetes diagnosis",
+  "so": 300.0,
+  "doi_chung": 300.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a hypertension diagnosis",
+  "so": 4.0,
+  "doi_chung": 3.0,
+  "ti_so": 1.333,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a obesity diagnosis",
+  "so": 5.0,
+  "doi_chung": 3.0,
+  "ti_so": 1.667,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a blood clot in the lung (pulmonary embolism)",
+  "so": 600.0,
+  "doi_chung": 1000.0,
+  "ti_so": 0.6,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a spinal cord injury",
+  "so": 15000.0,
+  "doi_chung": 25000.0,
+  "ti_so": 0.6,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a sleep apnea diagnosis",
+  "so": 20.0,
+  "doi_chung": 5.0,
+  "ti_so": 4.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a carpal tunnel surgery",
+  "so": 2500.0,
+  "doi_chung": 1000.0,
+  "ti_so": 2.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a fracture of the wrist",
+  "so": 1900.0,
+  "doi_chung": 500.0,
+  "ti_so": 3.8,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "a mole turning malignant",
+  "so": 25000.0,
+  "doi_chung": 10000.0,
+  "ti_so": 2.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ }
+]

@@ -15,6 +15,15 @@ engine-remotion/public/**
 !engine-remotion/public/img/_fallback.jpg
 !engine-remotion/public/music/
 !engine-remotion/public/comic_nen/
+# 6/9 — DÒNG TRÊN MỘT MÌNH KHÔNG ĐỦ, và nó đã im lặng suốt.
+# `public/**` loại MỌI TỆP ở mọi cấp. Mở lại một THƯ MỤC không mở lại nội dung của nó — git
+# đọc `!.../comic_nen/` là "đừng loại chính thư mục này", rồi vẫn loại từng tệp bên trong.
+# Đo: `git check-ignore -v comic_nen/howloud_000.webp` -> khớp `public/**`, tức **cả kho nền
+# chưa bao giờ lên git**. Chú thích ngay dưới đây đã ghi đúng triệu chứng ấy từ 1/9 ("CẢ 110
+# ẢNH NỀN cũng vậy") và bản vá lúc ấy chỉ thêm dòng thư mục — nên nó không chữa gì.
+# Phải liệt kê ĐUÔI TỆP thì ngoại lệ mới ăn:
+!engine-remotion/public/comic_nen/*.webp
+!engine-remotion/public/comic_nen/*.json
 # 1/9 — NỀN 3D VÀ HAI BẢNG SỐ ĐO PHẢI ĐI THEO GIT.
 # Lượt 00:44 UTC chết ở cổng `kiem_am` với "thiếu số đo âm lượng": `music/am_luong.json` và
 # `comic_nen/huong_sang.json` chưa bao giờ lên git, và CẢ 110 ẢNH NỀN cũng vậy. Nghĩa là mọi

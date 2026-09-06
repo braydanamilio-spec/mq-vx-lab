@@ -1,0 +1,1712 @@
+[
+ {
+  "bang": "AM_THANH",
+  "ten": "a soft mouse click",
+  "so": 42.0,
+  "doi_chung": 35.0,
+  "ti_so": 1.2,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a subtle coffee pot brewing",
+  "so": 55.0,
+  "doi_chung": 50.0,
+  "ti_so": 1.1,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a typical phone ring",
+  "so": 70.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a routine copier operation",
+  "so": 75.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.071,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a steady scanner scanning",
+  "so": 65.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.929,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a consistent stapler use",
+  "so": 60.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.857,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a coffee machine brewing",
+  "so": 55.0,
+  "doi_chung": 60.0,
+  "ti_so": 0.917,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the mechanical keyboard typing",
+  "so": 62.0,
+  "doi_chung": 55.0,
+  "ti_so": 1.127,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a mouse click",
+  "so": 38.0,
+  "doi_chung": 35.0,
+  "ti_so": 1.086,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the telephone ringtone",
+  "so": 70.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the fax machine sending",
+  "so": 50.0,
+  "doi_chung": 50.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the paper shredder running",
+  "so": 78.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.114,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the air‑conditioner low setting",
+  "so": 42.0,
+  "doi_chung": 40.0,
+  "ti_so": 1.05,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the document scanner",
+  "so": 46.0,
+  "doi_chung": 50.0,
+  "ti_so": 0.92,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the vending machine dispensing",
+  "so": 60.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.857,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the elevator arriving",
+  "so": 73.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.043,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the hallway chatter",
+  "so": 55.0,
+  "doi_chung": 60.0,
+  "ti_so": 0.917,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the door slam",
+  "so": 80.0,
+  "doi_chung": 75.0,
+  "ti_so": 1.067,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the foot traffic in the lobby",
+  "so": 52.0,
+  "doi_chung": 60.0,
+  "ti_so": 0.867,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the chair rolling across carpet",
+  "so": 45.0,
+  "doi_chung": 45.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the fluorescent light hum",
+  "so": 42.0,
+  "doi_chung": 35.0,
+  "ti_so": 1.2,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the HVAC vent blowing",
+  "so": 48.0,
+  "doi_chung": 50.0,
+  "ti_so": 0.96,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the rubber band snap on a binder",
+  "so": 66.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.943,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the recycling bin lid closing",
+  "so": 50.0,
+  "doi_chung": 55.0,
+  "ti_so": 0.909,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the emergency exit sign beeping",
+  "so": 80.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.143,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the desktop computer boot chime",
+  "so": 60.0,
+  "doi_chung": 60.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the mailroom package drop",
+  "so": 58.0,
+  "doi_chung": 65.0,
+  "ti_so": 0.892,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the electric kettle whistle",
+  "so": 85.0,
+  "doi_chung": 80.0,
+  "ti_so": 1.062,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the low hum of a server rack",
+  "so": 38.0,
+  "doi_chung": 40.0,
+  "ti_so": 0.95,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a water cooler dispensing",
+  "so": 42.0,
+  "doi_chung": 50.0,
+  "ti_so": 0.84,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the rustle of a stapler",
+  "so": 44.0,
+  "doi_chung": 40.0,
+  "ti_so": 1.1,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a keyboard typing rapidly",
+  "so": 46.0,
+  "doi_chung": 50.0,
+  "ti_so": 0.92,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a printer loading paper",
+  "so": 50.0,
+  "doi_chung": 50.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the whirr of a photocopier",
+  "so": 53.0,
+  "doi_chung": 55.0,
+  "ti_so": 0.964,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the clatter of a lunchroom tray stacker",
+  "so": 62.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.886,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the beep of a fire alarm test",
+  "so": 71.0,
+  "doi_chung": 85.0,
+  "ti_so": 0.835,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the clang of a metal filing cabinet latch",
+  "so": 75.0,
+  "doi_chung": 75.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a shredder cutting a stack of paper",
+  "so": 82.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.171,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the roar of a construction jackhammer outside",
+  "so": 95.0,
+  "doi_chung": 100.0,
+  "ti_so": 0.95,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a fire alarm sounding fully",
+  "so": 108.0,
+  "doi_chung": 95.0,
+  "ti_so": 1.137,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a siren from an emergency vehicle passing",
+  "so": 120.0,
+  "doi_chung": 110.0,
+  "ti_so": 1.091,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the slam of a glass office door",
+  "so": 78.0,
+  "doi_chung": 80.0,
+  "ti_so": 0.975,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a metal chair being pulled across the floor",
+  "so": 72.0,
+  "doi_chung": 65.0,
+  "ti_so": 1.108,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a scanner scanning a thick document",
+  "so": 54.0,
+  "doi_chung": 60.0,
+  "ti_so": 0.9,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a ceiling tile being dropped",
+  "so": 76.0,
+  "doi_chung": 75.0,
+  "ti_so": 1.013,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the thud of a briefcase hitting the floor",
+  "so": 81.0,
+  "doi_chung": 75.0,
+  "ti_so": 1.08,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a pneumatic stapler firing",
+  "so": 92.0,
+  "doi_chung": 110.0,
+  "ti_so": 0.836,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a large conference room microphone feedback",
+  "so": 100.0,
+  "doi_chung": 100.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a loud ringtone from a desk phone",
+  "so": 95.0,
+  "doi_chung": 85.0,
+  "ti_so": 1.118,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the empty conference room",
+  "so": 35.0,
+  "doi_chung": 35.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a distant HVAC vent hum",
+  "so": 40.0,
+  "doi_chung": 40.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the copier loading click",
+  "so": 60.0,
+  "doi_chung": 60.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the projector lamp ignition",
+  "so": 75.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.071,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the construction jackhammer outside",
+  "so": 105.0,
+  "doi_chung": 100.0,
+  "ti_so": 1.05,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the street siren passing by",
+  "so": 110.0,
+  "doi_chung": 110.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the airplane overhead fly‑by",
+  "so": 115.0,
+  "doi_chung": 100.0,
+  "ti_so": 1.15,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the industrial plant whistle",
+  "so": 118.0,
+  "doi_chung": 110.0,
+  "ti_so": 1.073,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the breakroom microwave beep",
+  "so": 68.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.971,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the parking lot car horn",
+  "so": 100.0,
+  "doi_chung": 110.0,
+  "ti_so": 0.909,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the reception desk bell chime",
+  "so": 75.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.071,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a stapler being used",
+  "so": 70.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the filing cabinet drawer closing",
+  "so": 60.0,
+  "doi_chung": 55.0,
+  "ti_so": 1.091,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the whiteboard marker squeaking",
+  "so": 68.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.971,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the conference room projector fan whirring",
+  "so": 42.0,
+  "doi_chung": 40.0,
+  "ti_so": 1.05,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a folder being thumped on a table",
+  "so": 65.0,
+  "doi_chung": 60.0,
+  "ti_so": 1.083,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a phone notification ping",
+  "so": 55.0,
+  "doi_chung": 60.0,
+  "ti_so": 0.917,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the copy room door closing",
+  "so": 58.0,
+  "doi_chung": 60.0,
+  "ti_so": 0.967,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a stack of CDs being shuffled",
+  "so": 75.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.071,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a wooden chair leg scraping floor",
+  "so": 62.0,
+  "doi_chung": 65.0,
+  "ti_so": 0.954,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the thump of a stack of binders falling",
+  "so": 68.0,
+  "doi_chung": 65.0,
+  "ti_so": 1.046,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the pop of a bubble wrap sheet",
+  "so": 70.0,
+  "doi_chung": 75.0,
+  "ti_so": 0.933,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the whine of a fax transmission",
+  "so": 65.0,
+  "doi_chung": 55.0,
+  "ti_so": 1.182,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the chime of an office clock",
+  "so": 58.0,
+  "doi_chung": 60.0,
+  "ti_so": 0.967,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the clank of a metal filing cabinet drawer",
+  "so": 73.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.043,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the crack of a wooden chair breaking",
+  "so": 88.0,
+  "doi_chung": 80.0,
+  "ti_so": 1.1,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the boom of a nearby fireworks display",
+  "so": 125.0,
+  "doi_chung": 120.0,
+  "ti_so": 1.042,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the clink of glassware in a kitchen area",
+  "so": 60.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.857,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the hum of a server rack",
+  "so": 45.0,
+  "doi_chung": 45.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the buzz of a fluorescent light fixture",
+  "so": 40.0,
+  "doi_chung": 35.0,
+  "ti_so": 1.143,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the click of a mouse button",
+  "so": 42.0,
+  "doi_chung": 35.0,
+  "ti_so": 1.2,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the bang of a dropped monitor",
+  "so": 80.0,
+  "doi_chung": 75.0,
+  "ti_so": 1.067,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the thwack of a stapler hitting paper",
+  "so": 70.0,
+  "doi_chung": 65.0,
+  "ti_so": 1.077,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a whir of a coffee grinder",
+  "so": 78.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.114,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the ding of a microwave timer",
+  "so": 70.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the murmur of coworkers chatting",
+  "so": 45.0,
+  "doi_chung": 50.0,
+  "ti_so": 0.9,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a hiss of a dehumidifier",
+  "so": 50.0,
+  "doi_chung": 45.0,
+  "ti_so": 1.111,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a whispering coworker at desk",
+  "so": 35.0,
+  "doi_chung": 30.0,
+  "ti_so": 1.167,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the clack of a keyboard typing rapidly",
+  "so": 50.0,
+  "doi_chung": 50.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the chatter of a small meeting room",
+  "so": 54.0,
+  "doi_chung": 50.0,
+  "ti_so": 1.08,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the blast of a fire alarm test",
+  "so": 88.0,
+  "doi_chung": 85.0,
+  "ti_so": 1.035,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "the thunderous crash of a building collapse nearby",
+  "so": 120.0,
+  "doi_chung": 120.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a common water dispenser splash",
+  "so": 76.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.086,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a usual breakroom microwave ping",
+  "so": 78.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.114,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a strong printer carriage slam",
+  "so": 95.0,
+  "doi_chung": 85.0,
+  "ti_so": 1.118,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a heavy metal trash compactor",
+  "so": 98.0,
+  "doi_chung": 100.0,
+  "ti_so": 0.98,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a sudden alarm siren",
+  "so": 103.0,
+  "doi_chung": 110.0,
+  "ti_so": 0.936,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a intense construction drill",
+  "so": 106.0,
+  "doi_chung": 100.0,
+  "ti_so": 1.06,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a powerful pneumatic tool",
+  "so": 108.0,
+  "doi_chung": 110.0,
+  "ti_so": 0.982,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a deafening steel door crash",
+  "so": 119.0,
+  "doi_chung": 130.0,
+  "ti_so": 0.915,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a shattering window impact",
+  "so": 125.0,
+  "doi_chung": 110.0,
+  "ti_so": 1.136,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a reverberating metal rack collapse",
+  "so": 133.0,
+  "doi_chung": 120.0,
+  "ti_so": 1.108,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a cataclysmic building collapse",
+  "so": 135.0,
+  "doi_chung": 150.0,
+  "ti_so": 0.9,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a explosive firework test",
+  "so": 137.0,
+  "doi_chung": 150.0,
+  "ti_so": 0.913,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a massive structural failure",
+  "so": 140.0,
+  "doi_chung": 150.0,
+  "ti_so": 0.933,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "AM_THANH",
+  "ten": "a supersonic jet overflight",
+  "so": 150.0,
+  "doi_chung": 140.0,
+  "ti_so": 1.071,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a glass of iced water",
+  "so": 32.0,
+  "doi_chung": 35.0,
+  "ti_so": 0.914,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a chilled salad bowl",
+  "so": 38.0,
+  "doi_chung": 40.0,
+  "ti_so": 0.95,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a cold water faucet",
+  "so": 50.0,
+  "doi_chung": 55.0,
+  "ti_so": 0.909,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the pantry shelf in summer",
+  "so": 70.0,
+  "doi_chung": 80.0,
+  "ti_so": 0.875,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a room‑temperature loaf of bread",
+  "so": 75.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.071,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the living‑room carpet on a mild day",
+  "so": 68.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.971,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the bathroom mirror after a hot shower",
+  "so": 104.0,
+  "doi_chung": 105.0,
+  "ti_so": 0.99,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a freshly brewed coffee",
+  "so": 160.0,
+  "doi_chung": 155.0,
+  "ti_so": 1.032,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a simmering soup pot",
+  "so": 190.0,
+  "doi_chung": 190.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the oven preheat on bake",
+  "so": 350.0,
+  "doi_chung": 350.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a toasted bagel",
+  "so": 370.0,
+  "doi_chung": 350.0,
+  "ti_so": 1.057,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the broiler setting on high",
+  "so": 500.0,
+  "doi_chung": 500.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the grill grate on medium‑high",
+  "so": 425.0,
+  "doi_chung": 400.0,
+  "ti_so": 1.062,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a cast‑iron skillet heating",
+  "so": 400.0,
+  "doi_chung": 350.0,
+  "ti_so": 1.143,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a pot of boiling water",
+  "so": 212.0,
+  "doi_chung": 212.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the dishwasher interior during cycle",
+  "so": 140.0,
+  "doi_chung": 140.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a microwave heated bowl",
+  "so": 165.0,
+  "doi_chung": 150.0,
+  "ti_so": 1.1,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the ice‑cream maker during churn",
+  "so": 20.0,
+  "doi_chung": 20.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the wine cooler set to red",
+  "so": 60.0,
+  "doi_chung": 55.0,
+  "ti_so": 1.091,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the kettle after whistle",
+  "so": 212.0,
+  "doi_chung": 212.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a steaming mug of tea",
+  "so": 185.0,
+  "doi_chung": 185.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the interior of a slow cooker on high",
+  "so": 200.0,
+  "doi_chung": 200.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a caramelized onion pan",
+  "so": 340.0,
+  "doi_chung": 350.0,
+  "ti_so": 0.971,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a block of ice cream",
+  "so": 0.0,
+  "doi_chung": 0.0,
+  "ti_so": null,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a frozen pizza straight from the freezer",
+  "so": 0.0,
+  "doi_chung": 0.0,
+  "ti_so": null,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a crisp head of lettuce",
+  "so": 40.0,
+  "doi_chung": 40.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a soda pulled from the ice bin",
+  "so": 42.0,
+  "doi_chung": 35.0,
+  "ti_so": 1.2,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a loaf of bread sitting on the countertop",
+  "so": 68.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.971,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a bowl of cereal with milk",
+  "so": 70.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a mug of tea",
+  "so": 140.0,
+  "doi_chung": 160.0,
+  "ti_so": 0.875,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a saucepan of simmering soup",
+  "so": 185.0,
+  "doi_chung": 190.0,
+  "ti_so": 0.974,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a pan of fried eggs",
+  "so": 225.0,
+  "doi_chung": 300.0,
+  "ti_so": 0.75,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a casserole dish warming in a low oven",
+  "so": 250.0,
+  "doi_chung": 200.0,
+  "ti_so": 1.25,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a baked potato crisped on a rack",
+  "so": 400.0,
+  "doi_chung": 425.0,
+  "ti_so": 0.941,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a furnace‑type outdoor pizza oven",
+  "so": 1000.0,
+  "doi_chung": 800.0,
+  "ti_so": 1.25,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a blacksmith‑style forge used for culinary experiments",
+  "so": 1150.0,
+  "doi_chung": 1500.0,
+  "ti_so": 0.767,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a backyard freezer",
+  "so": 0.0,
+  "doi_chung": 0.0,
+  "ti_so": null,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a sunny windowsill on a summer day",
+  "so": 85.0,
+  "doi_chung": 85.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a sizzling skillet with onions",
+  "so": 300.0,
+  "doi_chung": 350.0,
+  "ti_so": 0.857,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a broiling turkey in the oven",
+  "so": 425.0,
+  "doi_chung": 500.0,
+  "ti_so": 0.85,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a refrigerated wine cellar",
+  "so": 55.0,
+  "doi_chung": 55.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a cool draft from an open window",
+  "so": 60.0,
+  "doi_chung": 55.0,
+  "ti_so": 1.091,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a lukewarm bath towel",
+  "so": 100.0,
+  "doi_chung": 100.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a heated towel rack",
+  "so": 140.0,
+  "doi_chung": 120.0,
+  "ti_so": 1.167,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a frosty glass of lemonade",
+  "so": 32.0,
+  "doi_chung": 35.0,
+  "ti_so": 0.914,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a scorching pizza stone in a wood‑fired oven",
+  "so": 600.0,
+  "doi_chung": 700.0,
+  "ti_so": 0.857,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a preheated Dutch oven for stew",
+  "so": 300.0,
+  "doi_chung": 350.0,
+  "ti_so": 0.857,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the freezer compartment of a fridge",
+  "so": 0.0,
+  "doi_chung": 0.0,
+  "ti_so": null,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a bag of ice cubes",
+  "so": 32.0,
+  "doi_chung": 32.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a toaster set to dark brown",
+  "so": 350.0,
+  "doi_chung": 350.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a waffle iron heating up",
+  "so": 375.0,
+  "doi_chung": 350.0,
+  "ti_so": 1.071,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a rice cooker at completion",
+  "so": 212.0,
+  "doi_chung": 212.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a caramel sauce melting in a saucepan",
+  "so": 240.0,
+  "doi_chung": 240.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a chocolate chip cookie baking",
+  "so": 350.0,
+  "doi_chung": 350.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a kitchen countertop on a hot summer day",
+  "so": 95.0,
+  "doi_chung": 85.0,
+  "ti_so": 1.118,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "a sous‑vide water bath set to 140°F",
+  "so": 140.0,
+  "doi_chung": 140.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the stovetop simmer setting",
+  "so": 185.0,
+  "doi_chung": 190.0,
+  "ti_so": 0.974,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the coffee maker brewing water",
+  "so": 200.0,
+  "doi_chung": 200.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the iron on cotton setting",
+  "so": 350.0,
+  "doi_chung": 350.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the hair dryer on high",
+  "so": 250.0,
+  "doi_chung": 200.0,
+  "ti_so": 1.25,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the sauna bench in home sauna",
+  "so": 190.0,
+  "doi_chung": 150.0,
+  "ti_so": 1.267,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the indoor thermostat summer setting",
+  "so": 78.0,
+  "doi_chung": 78.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the candy melting pot",
+  "so": 240.0,
+  "doi_chung": 250.0,
+  "ti_so": 0.96,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the caramelizing sugar pan",
+  "so": 340.0,
+  "doi_chung": 350.0,
+  "ti_so": 0.971,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the roasted turkey interior temperature",
+  "so": 165.0,
+  "doi_chung": 165.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the grilled cheese sandwich surface",
+  "so": 320.0,
+  "doi_chung": 350.0,
+  "ti_so": 0.914,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the steam iron steam burst",
+  "so": 212.0,
+  "doi_chung": 212.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the barbecue smoker low smoke",
+  "so": 225.0,
+  "doi_chung": 225.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the air in a winter garage",
+  "so": 50.0,
+  "doi_chung": 40.0,
+  "ti_so": 1.25,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the water in a tepid bath",
+  "so": 95.0,
+  "doi_chung": 100.0,
+  "ti_so": 0.95,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the heat of a preheated oven at 350°F",
+  "so": 350.0,
+  "doi_chung": 350.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the temperature of a fresh‑baked croissant interior",
+  "so": 210.0,
+  "doi_chung": 190.0,
+  "ti_so": 1.105,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the metal doorknob in the hallway",
+  "so": 55.0,
+  "doi_chung": 70.0,
+  "ti_so": 0.786,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the plastic cutting board in a warm room",
+  "so": 62.0,
+  "doi_chung": 75.0,
+  "ti_so": 0.827,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the stainless steel sink after rinsing",
+  "so": 78.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.114,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the cotton dish towel on a warm counter",
+  "so": 95.0,
+  "doi_chung": 75.0,
+  "ti_so": 1.267,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the silicone baking mat after use",
+  "so": 200.0,
+  "doi_chung": 200.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the spice rack near the stove",
+  "so": 95.0,
+  "doi_chung": 75.0,
+  "ti_so": 1.267,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the aluminum foil sheet after baking potatoes",
+  "so": 380.0,
+  "doi_chung": 350.0,
+  "ti_so": 1.086,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the wall outlet near the refrigerator",
+  "so": 80.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.143,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the outside of a chilled bottle of soda",
+  "so": 38.0,
+  "doi_chung": 40.0,
+  "ti_so": 0.95,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the floor near a sunny window",
+  "so": 72.0,
+  "doi_chung": 80.0,
+  "ti_so": 0.9,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the handle of a turned‑off dishwasher",
+  "so": 78.0,
+  "doi_chung": 70.0,
+  "ti_so": 1.114,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the baking sheet after roasting vegetables",
+  "so": 425.0,
+  "doi_chung": 400.0,
+  "ti_so": 1.062,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "NHIET_DO",
+  "ten": "the oil surface in a deep‑fryer at 400°F",
+  "so": 400.0,
+  "doi_chung": 400.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ }
+]

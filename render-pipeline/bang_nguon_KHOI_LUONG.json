@@ -1,0 +1,614 @@
+[
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a skateboard",
+  "so": 7.0,
+  "doi_chung": 9.0,
+  "ti_so": 0.778,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a pair of rollerblades",
+  "so": 5.0,
+  "doi_chung": 3.5,
+  "ti_so": 1.429,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a streetlight",
+  "so": 200.0,
+  "doi_chung": 200.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a mailbox",
+  "so": 30.0,
+  "doi_chung": 20.0,
+  "ti_so": 1.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a bicycle",
+  "so": 22.0,
+  "doi_chung": 20.0,
+  "ti_so": 1.1,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a scooter",
+  "so": 28.0,
+  "doi_chung": 30.0,
+  "ti_so": 0.933,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a metro car",
+  "so": 72000.0,
+  "doi_chung": 85000.0,
+  "ti_so": 0.847,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a double‑decker bus",
+  "so": 25000.0,
+  "doi_chung": 25000.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a garbage truck",
+  "so": 20000.0,
+  "doi_chung": 20000.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a tow truck",
+  "so": 15000.0,
+  "doi_chung": 12000.0,
+  "ti_so": 1.25,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a motorcycle",
+  "so": 430.0,
+  "doi_chung": 500.0,
+  "ti_so": 0.86,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "an electric scooter",
+  "so": 30.0,
+  "doi_chung": 27.0,
+  "ti_so": 1.111,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a locomotive",
+  "so": 210000.0,
+  "doi_chung": 200000.0,
+  "ti_so": 1.05,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a street curb stone",
+  "so": 150.0,
+  "doi_chung": 200.0,
+  "ti_so": 0.75,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a road sign frame",
+  "so": 80.0,
+  "doi_chung": 50.0,
+  "ti_so": 1.6,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a municipal snow plow",
+  "so": 12000.0,
+  "doi_chung": 15000.0,
+  "ti_so": 0.8,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a streetcar",
+  "so": 55000.0,
+  "doi_chung": 65000.0,
+  "ti_so": 0.846,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a curb stone",
+  "so": 200.0,
+  "doi_chung": 200.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a pedestrian crossing button",
+  "so": 3.0,
+  "doi_chung": 2.0,
+  "ti_so": 1.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a parking meter",
+  "so": 45.0,
+  "doi_chung": 50.0,
+  "ti_so": 0.9,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a bike rack",
+  "so": 30.0,
+  "doi_chung": 20.0,
+  "ti_so": 1.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a trolley bus",
+  "so": 32000.0,
+  "doi_chung": 30000.0,
+  "ti_so": 1.067,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a delivery van",
+  "so": 5500.0,
+  "doi_chung": 5000.0,
+  "ti_so": 1.1,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a subway car",
+  "so": 80000.0,
+  "doi_chung": 70000.0,
+  "ti_so": 1.143,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a commuter rail car",
+  "so": 95000.0,
+  "doi_chung": 70000.0,
+  "ti_so": 1.357,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a semi‑trailer truck",
+  "so": 70000.0,
+  "doi_chung": 80000.0,
+  "ti_so": 0.875,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a railroad tie",
+  "so": 130.0,
+  "doi_chung": 200.0,
+  "ti_so": 0.65,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a light‑rail vehicle",
+  "so": 65000.0,
+  "doi_chung": 80000.0,
+  "ti_so": 0.812,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a portable traffic signal unit",
+  "so": 250.0,
+  "doi_chung": 180.0,
+  "ti_so": 1.389,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a heavy‑duty garbage truck",
+  "so": 26000.0,
+  "doi_chung": 20000.0,
+  "ti_so": 1.3,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a curbside trash bin",
+  "so": 40.0,
+  "doi_chung": 30.0,
+  "ti_so": 1.333,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a highway guardrail post",
+  "so": 120.0,
+  "doi_chung": 150.0,
+  "ti_so": 0.8,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a diesel bus chassis",
+  "so": 15000.0,
+  "doi_chung": 12000.0,
+  "ti_so": 1.25,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a paper traffic sign",
+  "so": 5.0,
+  "doi_chung": 5.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a trolleybus",
+  "so": 28000.0,
+  "doi_chung": 30000.0,
+  "ti_so": 0.933,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a passenger taxi cab",
+  "so": 4200.0,
+  "doi_chung": 4000.0,
+  "ti_so": 1.05,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a fuel tanker truck",
+  "so": 90000.0,
+  "doi_chung": 80000.0,
+  "ti_so": 1.125,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a steel road sign",
+  "so": 45.0,
+  "doi_chung": 40.0,
+  "ti_so": 1.125,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a compact electric scooter",
+  "so": 27.0,
+  "doi_chung": 27.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a transit bus",
+  "so": 28000.0,
+  "doi_chung": 30000.0,
+  "ti_so": 0.933,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a wooden curb marker",
+  "so": 3.0,
+  "doi_chung": 3.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a handheld traffic sign",
+  "so": 7.0,
+  "doi_chung": 5.0,
+  "ti_so": 1.4,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a folding bicycle",
+  "so": 30.0,
+  "doi_chung": 22.0,
+  "ti_so": 1.364,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a utility cart",
+  "so": 35.0,
+  "doi_chung": 35.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a public bike share bike",
+  "so": 50.0,
+  "doi_chung": 45.0,
+  "ti_so": 1.111,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a mid‑size gasoline sedan",
+  "so": 3400.0,
+  "doi_chung": 3400.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a freight train car",
+  "so": 80000.0,
+  "doi_chung": 70000.0,
+  "ti_so": 1.143,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a traffic cone",
+  "so": 9.0,
+  "doi_chung": 9.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a metal road barrier",
+  "so": 2000.0,
+  "doi_chung": 2000.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a high‑speed train car",
+  "so": 90000.0,
+  "doi_chung": 100000.0,
+  "ti_so": 0.9,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a recycling bin",
+  "so": 30.0,
+  "doi_chung": 30.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a police cruiser",
+  "so": 4200.0,
+  "doi_chung": 4000.0,
+  "ti_so": 1.05,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a concrete highway barrier",
+  "so": 1500.0,
+  "doi_chung": 2000.0,
+  "ti_so": 0.75,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a downtown electric trolley",
+  "so": 42000.0,
+  "doi_chung": 30000.0,
+  "ti_so": 1.4,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "the charter bus",
+  "so": 26000.0,
+  "doi_chung": 30000.0,
+  "ti_so": 0.867,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "the intercity train car",
+  "so": 56000.0,
+  "doi_chung": 50000.0,
+  "ti_so": 1.12,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a fire hydrant",
+  "so": 250.0,
+  "doi_chung": 250.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "KHOI_LUONG",
+  "ten": "a taxi cab",
+  "so": 4000.0,
+  "doi_chung": 4000.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "CO_LON",
+  "ten": "the height of a newborn baby",
+  "so": 1.8,
+  "doi_chung": 1.7,
+  "ti_so": 1.059,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "CO_LON",
+  "ten": "the length of a typical adult foot",
+  "so": 1.0,
+  "doi_chung": 0.8,
+  "ti_so": 1.25,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "CO_LON",
+  "ten": "the width of a standard operating table",
+  "so": 3.0,
+  "doi_chung": 2.5,
+  "ti_so": 1.2,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "CO_LON",
+  "ten": "the average human",
+  "so": 5.9,
+  "doi_chung": 5.5,
+  "ti_so": 1.073,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "CO_LON",
+  "ten": "a newborn infant",
+  "so": 1.5,
+  "doi_chung": 1.7,
+  "ti_so": 0.882,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "CO_LON",
+  "ten": "the femur bone",
+  "so": 1.8,
+  "doi_chung": 1.5,
+  "ti_so": 1.2,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "CO_LON",
+  "ten": "the spinal column",
+  "so": 2.5,
+  "doi_chung": 2.3,
+  "ti_so": 1.087,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "CO_LON",
+  "ten": "the aorta",
+  "so": 1.2,
+  "doi_chung": 1.0,
+  "ti_so": 1.2,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "CO_LON",
+  "ten": "the esophagus",
+  "so": 1.0,
+  "doi_chung": 0.8,
+  "ti_so": 1.25,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "CO_LON",
+  "ten": "a human forearm length",
+  "so": 1.0,
+  "doi_chung": 0.8,
+  "ti_so": 1.25,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ }
+]

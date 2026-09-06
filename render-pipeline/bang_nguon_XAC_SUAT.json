@@ -1,0 +1,164 @@
+[
+ {
+  "bang": "XAC_SUAT",
+  "ten": "spotting a four‑leaf clover",
+  "so": 10000.0,
+  "doi_chung": 10000.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "seeing a double rainbow",
+  "so": 10000.0,
+  "doi_chung": 10000.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "missing a bus by seconds",
+  "so": 3.0,
+  "doi_chung": 10.0,
+  "ti_so": 0.3,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "receiving a birthday card on your exact birthday",
+  "so": 365.0,
+  "doi_chung": 365.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "hitting the Powerball jackpot",
+  "so": 292201338.0,
+  "doi_chung": 292201338.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "spinning a single zero on European roulette",
+  "so": 37.0,
+  "doi_chung": 37.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "catching a cold",
+  "so": 2.0,
+  "doi_chung": 2.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "developing hypertension",
+  "so": 3.0,
+  "doi_chung": 3.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "suffering a migraine",
+  "so": 5.0,
+  "doi_chung": 7.0,
+  "ti_so": 0.714,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "experiencing food poisoning",
+  "so": 7.0,
+  "doi_chung": 6.0,
+  "ti_so": 1.167,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "breaking a bone",
+  "so": 12.0,
+  "doi_chung": 10.0,
+  "ti_so": 1.2,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "undergoing cataract surgery",
+  "so": 15.0,
+  "doi_chung": 10.0,
+  "ti_so": 1.5,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "surviving a heart attack",
+  "so": 20.0,
+  "doi_chung": 5.0,
+  "ti_so": 4.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "dying from lung cancer",
+  "so": 25.0,
+  "doi_chung": 15.0,
+  "ti_so": 1.667,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "capturing a poker royal flush",
+  "so": 649740.0,
+  "doi_chung": 649740.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "landing a craps “hard six” roll",
+  "so": 36.0,
+  "doi_chung": 36.0,
+  "ti_so": 1.0,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "taking antibiotics",
+  "so": 3.0,
+  "doi_chung": 5.0,
+  "ti_so": 0.6,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ },
+ {
+  "bang": "XAC_SUAT",
+  "ten": "sustaining a concussion",
+  "so": 110.0,
+  "doi_chung": 100.0,
+  "ti_so": 1.1,
+  "model": "openai/gpt-oss-120b",
+  "ngay": "2026-09-06"
+ }
+]
